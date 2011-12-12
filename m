@@ -1,279 +1,157 @@
-From: Anssi Hannula <anssi.hannula@iki.fi>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: raid6 rebuild not starting
-Date: Mon, 12 Dec 2011 07:22:17 +0200
-Message-ID: <CAP+ghcLLkAbPVy8LO4Hq6ncNr3=tvGGHB1tJ9Wih=Cjbty+zuw@mail.gmail.com>
+Date: Mon, 12 Dec 2011 16:42:40 +1100
+Message-ID: <20111212164240.01e8d1fb@notabene.brown>
 References: <4EE455B2.2040105@iki.fi>
 	<20111212140119.35dbf92e@notabene.brown>
+	<CAP+ghcLLkAbPVy8LO4Hq6ncNr3=tvGGHB1tJ9Wih=Cjbty+zuw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=001517475b6478f12c04b3de519b
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/cy20aAiIRTdmsjq9Og0Uyip"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111212140119.35dbf92e@notabene.brown>
+In-Reply-To: <CAP+ghcLLkAbPVy8LO4Hq6ncNr3=tvGGHB1tJ9Wih=Cjbty+zuw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Anssi Hannula <anssi.hannula@iki.fi>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---001517475b6478f12c04b3de519b
-Content-Type: text/plain; charset=ISO-8859-1
+--Sig_/cy20aAiIRTdmsjq9Og0Uyip
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Dec 12, 2011 at 5:01 AM, NeilBrown <neilb@suse.de> wrote:
-> On Sun, 11 Dec 2011 09:03:14 +0200 Anssi Hannula <anssi.hannula@iki.fi> w=
-rote:
->
->> Hi!
->>
->> After I rebooted during a raid6 rebuild, the rebuild didn't start again.
->> Instead, there is a flood of "RAID conf printout"s that seemingly happen
->> on array activity.
->>
->> All the devices show up properly in --detail and two devices are marked
->> as "spare rebuilding", and I can access the contents of the array just
->> fine, but the rebuild doesn't actually start. Is this a bug or am I
->> missing something? :)
->>
->> I was initially on 2.6.38.8, but also tried 3.1.4 which seems to have
->> the same issue. mdadm is 3.1.5.
->>
->> I'm not using start_ro and writing to the array doesn't trigger a
->> rebuild either.
->>
->> Attached are --examine outputs before assembly, kernel log output on
->> assembly, /proc/mdstat and --detail after assembly (on 3.1.4).
->>
->
-> Thank you for the very detailed problem report.
+On Mon, 12 Dec 2011 07:22:17 +0200 Anssi Hannula <anssi.hannula@iki.fi> wro=
+te:
 
-Thanks for the quick response :)
+> On Mon, Dec 12, 2011 at 5:01 AM, NeilBrown <neilb@suse.de> wrote:
+> > On Sun, 11 Dec 2011 09:03:14 +0200 Anssi Hannula <anssi.hannula@iki.fi>=
+ wrote:
+> >
+> >> Hi!
+> >>
+> >> After I rebooted during a raid6 rebuild, the rebuild didn't start agai=
+n.
+> >> Instead, there is a flood of "RAID conf printout"s that seemingly happ=
+en
+> >> on array activity.
+> >>
+> >> All the devices show up properly in --detail and two devices are marked
+> >> as "spare rebuilding", and I can access the contents of the array just
+> >> fine, but the rebuild doesn't actually start. Is this a bug or am I
+> >> missing something? :)
+> >>
+> >> I was initially on 2.6.38.8, but also tried 3.1.4 which seems to have
+> >> the same issue. mdadm is 3.1.5.
+> >>
+> >> I'm not using start_ro and writing to the array doesn't trigger a
+> >> rebuild either.
+> >>
+> >> Attached are --examine outputs before assembly, kernel log output on
+> >> assembly, /proc/mdstat and --detail after assembly (on 3.1.4).
+> >>
+> >
+> > Thank you for the very detailed problem report.
+>=20
+> Thanks for the quick response :)
+>=20
+> > Unfortunately it is a complete mystery to me what is happening.
+> >
+> > The repeated "RAID conf printout" messages are almost certainly coming =
+from
+> > the end of raid5_remove_disk.
+> > It is being called from remove_and_add_spares for each of the two devic=
+es
+> > that are being rebuilt. =C2=A0raid5_remove_disk declines to remove them=
+ because it
+> > can keep rebuilding them.
+> >
+> > remove_and_add_spares then counts them and notes there are 2.
+> > md_check_recovery notes that this is > 0, so it should create a thread =
+to run
+> > md_do_sync.
+> >
+> > md_do_sync should then print out a message like
+> > =C2=A0md: recovery of RAID array md0
+> >
+> > but it doesn't. =C2=A0So something went wrong.
+> > There are three reasons that md_do_sync might not print a message:
+> >
+> > 1/ MD_RECOVERY_DONE is set. =C2=A0As only md_do_sync ever sets it, that=
+ is
+> > =C2=A0 =C2=A0unlikely, and in any case md_check_recovery clears it.
+> > 2/ mddev->ro !=3D 0. =C2=A0It is only ever set to 0, 1, or 2. =C2=A0If =
+it is 1 or 2
+> > =C2=A0 then we would be able to see that in /proc/mdstat as a "(readonl=
+y)"
+> > =C2=A0 status. =C2=A0But we don't.
+> > 3/ MD_RECOVERY_INTR is set. Again, md_check_recovery clears this. =C2=
+=A0It does
+> > =C2=A0 get set if kthread_should_stop() returns 'true', but that should=
+ only
+> > =C2=A0 happen if kthread_stop() was called. =C2=A0That is only called by
+> > =C2=A0 md_unregister_thread and I cannot see any way that could be call.
+> >
+> > So. =C2=A0No idea.
+> >
+> > Are you compiling these kernels yourself?
+>=20
+> Nope (used Mageia kernels), but I did now (3.1.5).
+>=20
+> > If so, could you:
+> > =C2=A0- put a printk in the top of md_do_sync to report the values of
+> > =C2=A0 mddev->recovery and mddev->ro
+> > =C2=A0- print a message whenever md_unregister_thread is called
+> > =C2=A0- in md_check_recovery, in the
+> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (mddev->ro) {
+> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0/* Only thing we do on a ro array is remove
+> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 * failed devices.
+> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 */
+> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0mdk_rdev_t *rdev;
+> >
+> > =C2=A0in statement, print the value of mddev->ro.
+> >
+> > Then see which of those printk's fire, and what they tell us.
+>=20
+> Only the last one does, and mddev->ro =3D=3D 0.
+>=20
+> For reference, attached is the used patch and resulting log output.
+>=20
 
-> Unfortunately it is a complete mystery to me what is happening.
->
-> The repeated "RAID conf printout" messages are almost certainly coming fr=
-om
-> the end of raid5_remove_disk.
-> It is being called from remove_and_add_spares for each of the two devices
-> that are being rebuilt. =A0raid5_remove_disk declines to remove them beca=
-use it
-> can keep rebuilding them.
->
-> remove_and_add_spares then counts them and notes there are 2.
-> md_check_recovery notes that this is > 0, so it should create a thread to=
- run
-> md_do_sync.
->
-> md_do_sync should then print out a message like
-> =A0md: recovery of RAID array md0
->
-> but it doesn't. =A0So something went wrong.
-> There are three reasons that md_do_sync might not print a message:
->
-> 1/ MD_RECOVERY_DONE is set. =A0As only md_do_sync ever sets it, that is
-> =A0 =A0unlikely, and in any case md_check_recovery clears it.
-> 2/ mddev->ro !=3D 0. =A0It is only ever set to 0, 1, or 2. =A0If it is 1 =
-or 2
-> =A0 then we would be able to see that in /proc/mdstat as a "(readonly)"
-> =A0 status. =A0But we don't.
-> 3/ MD_RECOVERY_INTR is set. Again, md_check_recovery clears this. =A0It d=
-oes
-> =A0 get set if kthread_should_stop() returns 'true', but that should only
-> =A0 happen if kthread_stop() was called. =A0That is only called by
-> =A0 md_unregister_thread and I cannot see any way that could be call.
->
-> So. =A0No idea.
->
-> Are you compiling these kernels yourself?
+Thanks.
 
-Nope (used Mageia kernels), but I did now (3.1.5).
+So it isn't running md_do_sync at all. Odd.
 
-> If so, could you:
-> =A0- put a printk in the top of md_do_sync to report the values of
-> =A0 mddev->recovery and mddev->ro
-> =A0- print a message whenever md_unregister_thread is called
-> =A0- in md_check_recovery, in the
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (mddev->ro) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* Only thing we do on a r=
-o array is remove
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 * failed devices.
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 */
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0mdk_rdev_t *rdev;
->
-> =A0in statement, print the value of mddev->ro.
->
-> Then see which of those printk's fire, and what they tell us.
+Could please add:
+  - call "WARN_ON(1);" in print_raid5_conf() so we get a stack trace and can
+    see who is calling it.
+  - print the value that remove_and_add_spares is going to return.
 
-Only the last one does, and mddev->ro =3D=3D 0.
+Thanks,
+NeilBrown
 
-For reference, attached is the used patch and resulting log output.
+--Sig_/cy20aAiIRTdmsjq9Og0Uyip
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
---=20
-Anssi Hannula
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
---001517475b6478f12c04b3de519b
-Content-Type: text/plain; charset=US-ASCII; name="dmesg-dbg.txt"
-Content-Disposition: attachment; filename="dmesg-dbg.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gw31904p1
+iQIVAwUBTuWUUDnsnt1WYoG5AQLuLQ//eBjGy1zLVCOQMlSJv8IbZcKuGtSO7X3x
+ypAzGvvkpdN9CXBmYJ+lqiqfTNluWGTjjesmarSGU+TMayR6Yxb36EseO77lKZn1
+lIXveZK0FPVk+0b8H3Xe6DO/nbhP8KCswMx/7OT0lN0FiNXA5TcMCHsCeaG9Utmb
+iuqmtSXXLFE7e1VkFlhGyKER8rDTG+87wfEzQ1CQcjft2MrUgREYLLKmqhAHkuXp
+ZvfD/25+3IKhhRYER+kx9BkA0jDKdSFTh6IN8WMBa8YyBhSjWEbZP2JUyXHU3Hg4
+v4ubRKr1yOLdkkRQ6Xt5EXtYJzXHU10JyKKDtJ62Z418ay7CHAOLy8te/nb7xktf
+f9FqKq6jvejNDQ82DWBIhsqONDrR4wCdRtfK1i+rvcfWpSEuKqxOMim6OCee441j
+RAHZqnHS9/OnxNYxMdoB8prKVnmwdP1PO2j8Op+BiyEJjjy2LLlQsIzgRohcjh0w
+FGxxnL4zneVpvBxZmDn6Ob7Uby8E8IIMRPB02vnfO2oKY6tgqgoVFKaspTuiyJ0P
+A354Av8BWiN2H0gL8xwc9a2RvxxG1k2xi8g8BQkmoF7U7AShSWnfe34Y6nK/ZKJb
+1bJROGNrsAXMiKcbOo2PC/L3jU9gcHcueaP4TVmLSAMx475axW6lr9+BMJL9/CfK
++R8COSKyT5g=
+=57hq
+-----END PGP SIGNATURE-----
 
-WyAgIDQ2LjM1NjU1OV0gbWQ6IG1kMCBzdG9wcGVkLgpbICAgNDYuMzYzNzczXSBtZDogYmluZDxz
-ZHExPgpbICAgNDYuMzYzOTIwXSBtZDogYmluZDxzZGsxPgpbICAgNDYuMzY0MDM1XSBtZDogYmlu
-ZDxzZGgxPgpbICAgNDYuMzY0MTcwXSBtZDogYmluZDxzZGoxPgpbICAgNDYuMzY0NTY3XSBtZDog
-YmluZDxzZGwxPgpbICAgNDYuMzY0OTcyXSBtZDogYmluZDxzZHAxPgpbICAgNDYuMzY1MTg0XSBt
-ZDogYmluZDxzZGYxPgpbICAgNDYuMzY1NjAzXSBtZDogYmluZDxzZG0xPgpbICAgNDYuMzY2MDI1
-XSBtZDogYmluZDxzZG4xPgpbICAgNDYuMzY2MjE5XSBtZDogYmluZDxzZGkxPgpbICAgNDYuMzY2
-NDY0XSBtZDogYmluZDxzZGcxPgpbICAgNDYuMzY2NzUxXSBtZDogYmluZDxzZGUxPgpbICAgNDYu
-MzY3MjIyXSBtZDogYmluZDxzZG8xPgpbICAgNDYuMzc0Njg3XSBhc3luY190eDogYXBpIGluaXRp
-YWxpemVkIChhc3luYykKWyAgIDQ2LjU0NzIyOF0gcmFpZDY6IGludDY0eDEgICAyNzIzIE1CL3MK
-WyAgIDQ2LjcxNzA0M10gcmFpZDY6IGludDY0eDIgICAzNTMzIE1CL3MKWyAgIDQ2Ljg4NjkyOF0g
-cmFpZDY6IGludDY0eDQgICAyMzk4IE1CL3MKWyAgIDQ3LjA1Njc5NV0gcmFpZDY6IGludDY0eDgg
-ICAyNDgyIE1CL3MKWyAgIDQ3LjIyNjYxN10gcmFpZDY6IHNzZTJ4MSAgICA3MzY4IE1CL3MKWyAg
-IDQ3LjM5NjQ2NV0gcmFpZDY6IHNzZTJ4MiAgICA4Njg2IE1CL3MKWyAgIDQ3LjU2NjMzM10gcmFp
-ZDY6IHNzZTJ4NCAgICA5NjE0IE1CL3MKWyAgIDQ3LjU2NjMzNl0gcmFpZDY6IHVzaW5nIGFsZ29y
-aXRobSBzc2UyeDQgKDk2MTQgTUIvcykKWyAgIDQ3LjU3MzkzMV0geG9yOiBhdXRvbWF0aWNhbGx5
-IHVzaW5nIGJlc3QgY2hlY2tzdW1taW5nIGZ1bmN0aW9uOiBnZW5lcmljX3NzZQpbICAgNDcuNjE2
-NTY3XSAgICBnZW5lcmljX3NzZTogMTI4NDkuNjAwIE1CL3NlYwpbICAgNDcuNjE2NTY5XSB4b3I6
-IHVzaW5nIGZ1bmN0aW9uOiBnZW5lcmljX3NzZSAoMTI4NDkuNjAwIE1CL3NlYykKWyAgIDQ3LjYy
-NTg1Ml0gbWQ6IHJhaWQ2IHBlcnNvbmFsaXR5IHJlZ2lzdGVyZWQgZm9yIGxldmVsIDYKWyAgIDQ3
-LjYyNTg1NF0gbWQ6IHJhaWQ1IHBlcnNvbmFsaXR5IHJlZ2lzdGVyZWQgZm9yIGxldmVsIDUKWyAg
-IDQ3LjYyNTg1NV0gbWQ6IHJhaWQ0IHBlcnNvbmFsaXR5IHJlZ2lzdGVyZWQgZm9yIGxldmVsIDQK
-WyAgIDQ3LjYyNjI3NV0gbWQvcmFpZDptZDA6IGRldmljZSBzZG8xIG9wZXJhdGlvbmFsIGFzIHJh
-aWQgZGlzayAwClsgICA0Ny42MjYyNzddIG1kL3JhaWQ6bWQwOiBkZXZpY2Ugc2RuMSBvcGVyYXRp
-b25hbCBhcyByYWlkIGRpc2sgOQpbICAgNDcuNjI2Mjc5XSBtZC9yYWlkOm1kMDogZGV2aWNlIHNk
-bTEgb3BlcmF0aW9uYWwgYXMgcmFpZCBkaXNrIDgKWyAgIDQ3LjYyNjI4MF0gbWQvcmFpZDptZDA6
-IGRldmljZSBzZHAxIG9wZXJhdGlvbmFsIGFzIHJhaWQgZGlzayA2ClsgICA0Ny42MjYyODFdIG1k
-L3JhaWQ6bWQwOiBkZXZpY2Ugc2RsMSBvcGVyYXRpb25hbCBhcyByYWlkIGRpc2sgNQpbICAgNDcu
-NjI2MjgzXSBtZC9yYWlkOm1kMDogZGV2aWNlIHNkajEgb3BlcmF0aW9uYWwgYXMgcmFpZCBkaXNr
-IDQKWyAgIDQ3LjYyNjI4NF0gbWQvcmFpZDptZDA6IGRldmljZSBzZGsxIG9wZXJhdGlvbmFsIGFz
-IHJhaWQgZGlzayAyClsgICA0Ny42MjYyODVdIG1kL3JhaWQ6bWQwOiBkZXZpY2Ugc2RxMSBvcGVy
-YXRpb25hbCBhcyByYWlkIGRpc2sgMQpbICAgNDcuNjI2ODk5XSBtZC9yYWlkOm1kMDogYWxsb2Nh
-dGVkIDEwNTkya0IKWyAgIDQ3LjYyNzA0OV0gbWQvcmFpZDptZDA6IHJhaWQgbGV2ZWwgNiBhY3Rp
-dmUgd2l0aCA4IG91dCBvZiAxMCBkZXZpY2VzLCBhbGdvcml0aG0gMgpbICAgNDcuNjI3MTUwXSBS
-QUlEIGNvbmYgcHJpbnRvdXQ6ClsgICA0Ny42MjcxNTJdICAtLS0gbGV2ZWw6NiByZDoxMCB3ZDo4
-ClsgICA0Ny42MjcxNTVdICBkaXNrIDAsIG86MSwgZGV2OnNkbzEKWyAgIDQ3LjYyNzE1N10gIGRp
-c2sgMSwgbzoxLCBkZXY6c2RxMQpbICAgNDcuNjI3MTYzXSAgZGlzayAyLCBvOjEsIGRldjpzZGsx
-ClsgICA0Ny42MjcxNjVdICBkaXNrIDMsIG86MSwgZGV2OnNkaDEKWyAgIDQ3LjYyNzE2N10gIGRp
-c2sgNCwgbzoxLCBkZXY6c2RqMQpbICAgNDcuNjI3MTY5XSAgZGlzayA1LCBvOjEsIGRldjpzZGwx
-ClsgICA0Ny42MjcxNzFdICBkaXNrIDYsIG86MSwgZGV2OnNkcDEKWyAgIDQ3LjYyNzE3M10gIGRp
-c2sgNywgbzoxLCBkZXY6c2RmMQpbICAgNDcuNjI3MTc1XSAgZGlzayA4LCBvOjEsIGRldjpzZG0x
-ClsgICA0Ny42MjcxNzddICBkaXNrIDksIG86MSwgZGV2OnNkbjEKWyAgIDQ3LjYyNzMzN10gY3Jl
-YXRlZCBiaXRtYXAgKDE1IHBhZ2VzKSBmb3IgZGV2aWNlIG1kMApbICAgNDguMDI4MzQ5XSBtZDA6
-IGJpdG1hcCBpbml0aWFsaXplZCBmcm9tIGRpc2s6IHJlYWQgMS8xIHBhZ2VzLCBzZXQgMjU3IG9m
-IDI5ODA5IGJpdHMKWyAgIDQ4LjQ3NjA5OV0gbWQwOiBkZXRlY3RlZCBjYXBhY2l0eSBjaGFuZ2Ug
-ZnJvbSAwIHRvIDE2MDAzMTY5Nzc5NzEyClsgICA0OC40NzY3MzldIG1kMDogaW4gbWRfY2hlY2tf
-cmVjb3ZlcnkoKSwgbWRkZXYtPnJvID0gMApbICAgNDguNDc2NzQyXSBSQUlEIGNvbmYgcHJpbnRv
-dXQ6ClsgICA0OC40NzY3NDRdICAtLS0gbGV2ZWw6NiByZDoxMCB3ZDo4ClsgICA0OC40NzY3NDZd
-ICBkaXNrIDAsIG86MSwgZGV2OnNkbzEKWyAgIDQ4LjQ3Njc0OF0gIGRpc2sgMSwgbzoxLCBkZXY6
-c2RxMQpbICAgNDguNDc2NzQ5XSAgZGlzayAyLCBvOjEsIGRldjpzZGsxClsgICA0OC40NzY3NTFd
-ICBkaXNrIDMsIG86MSwgZGV2OnNkaDEKWyAgIDQ4LjQ3Njc1M10gIGRpc2sgNCwgbzoxLCBkZXY6
-c2RqMQpbICAgNDguNDc2NzU0XSAgZGlzayA1LCBvOjEsIGRldjpzZGwxClsgICA0OC40NzY3NTZd
-ICBkaXNrIDYsIG86MSwgZGV2OnNkcDEKWyAgIDQ4LjQ3Njc1N10gIGRpc2sgNywgbzoxLCBkZXY6
-c2RmMQpbICAgNDguNDc2NzU4XSAgZGlzayA4LCBvOjEsIGRldjpzZG0xClsgICA0OC40NzY3NjBd
-ICBkaXNrIDksIG86MSwgZGV2OnNkbjEKWyAgIDQ4LjQ3Njc2MV0gUkFJRCBjb25mIHByaW50b3V0
-OgpbICAgNDguNDc2NzYyXSAgLS0tIGxldmVsOjYgcmQ6MTAgd2Q6OApbICAgNDguNDc2NzYzXSAg
-ZGlzayAwLCBvOjEsIGRldjpzZG8xClsgICA0OC40NzY3NjRdICBkaXNrIDEsIG86MSwgZGV2OnNk
-cTEKWyAgIDQ4LjQ3Njc2Nl0gIGRpc2sgMiwgbzoxLCBkZXY6c2RrMQpbICAgNDguNDc2NzY3XSAg
-ZGlzayAzLCBvOjEsIGRldjpzZGgxClsgICA0OC40NzY3NjhdICBkaXNrIDQsIG86MSwgZGV2OnNk
-ajEKWyAgIDQ4LjQ3Njc3MF0gIGRpc2sgNSwgbzoxLCBkZXY6c2RsMQpbICAgNDguNDc2NzcxXSAg
-ZGlzayA2LCBvOjEsIGRldjpzZHAxClsgICA0OC40NzY3NzJdICBkaXNrIDcsIG86MSwgZGV2OnNk
-ZjEKWyAgIDQ4LjQ3Njc3M10gIGRpc2sgOCwgbzoxLCBkZXY6c2RtMQpbICAgNDguNDc2Nzc1XSAg
-ZGlzayA5LCBvOjEsIGRldjpzZG4xClsgICA0OC40NzY3NzVdIFJBSUQgY29uZiBwcmludG91dDoK
-WyAgIDQ4LjQ3Njc3N10gIC0tLSBsZXZlbDo2IHJkOjEwIHdkOjgKWyAgIDQ4LjQ3Njc3OF0gIGRp
-c2sgMCwgbzoxLCBkZXY6c2RvMQpbICAgNDguNDc2Nzc5XSAgZGlzayAxLCBvOjEsIGRldjpzZHEx
-ClsgICA0OC40NzY3ODBdICBkaXNrIDIsIG86MSwgZGV2OnNkazEKWyAgIDQ4LjQ3Njc4MV0gIGRp
-c2sgMywgbzoxLCBkZXY6c2RoMQpbICAgNDguNDc2NzgzXSAgZGlzayA0LCBvOjEsIGRldjpzZGox
-ClsgICA0OC40NzY3ODRdICBkaXNrIDUsIG86MSwgZGV2OnNkbDEKWyAgIDQ4LjQ3Njc4NV0gIGRp
-c2sgNiwgbzoxLCBkZXY6c2RwMQpbICAgNDguNDc2Nzg2XSAgZGlzayA3LCBvOjEsIGRldjpzZGYx
-ClsgICA0OC40NzY3ODhdICBkaXNrIDgsIG86MSwgZGV2OnNkbTEKWyAgIDQ4LjQ3Njc4OV0gIGRp
-c2sgOSwgbzoxLCBkZXY6c2RuMQpbICAgNDguNDc2NzkwXSBSQUlEIGNvbmYgcHJpbnRvdXQ6Clsg
-ICA0OC40NzY3OTFdICAtLS0gbGV2ZWw6NiByZDoxMCB3ZDo4ClsgICA0OC40NzY3OTJdICBkaXNr
-IDAsIG86MSwgZGV2OnNkbzEKWyAgIDQ4LjQ3Njc5M10gIGRpc2sgMSwgbzoxLCBkZXY6c2RxMQpb
-ICAgNDguNDc2Nzk1XSAgZGlzayAyLCBvOjEsIGRldjpzZGsxClsgICA0OC40NzY3OTZdICBkaXNr
-IDMsIG86MSwgZGV2OnNkaDEKWyAgIDQ4LjQ3Njc5OF0gIGRpc2sgNCwgbzoxLCBkZXY6c2RqMQpb
-ICAgNDguNDc2Nzk5XSAgZGlzayA1LCBvOjEsIGRldjpzZGwxClsgICA0OC40NzY4MDBdICBkaXNr
-IDYsIG86MSwgZGV2OnNkcDEKWyAgIDQ4LjQ3NjgwMl0gIGRpc2sgNywgbzoxLCBkZXY6c2RmMQpb
-ICAgNDguNDc2ODAzXSAgZGlzayA4LCBvOjEsIGRldjpzZG0xClsgICA0OC40NzY4MDRdICBkaXNr
-IDksIG86MSwgZGV2OnNkbjEKWyAgIDQ4LjQ3NjgwNV0gUkFJRCBjb25mIHByaW50b3V0OgpbICAg
-NDguNDc2ODA2XSAgLS0tIGxldmVsOjYgcmQ6MTAgd2Q6OApbICAgNDguNDc2ODA3XSAgZGlzayAw
-LCBvOjEsIGRldjpzZG8xClsgICA0OC40NzY4MDldICBkaXNrIDEsIG86MSwgZGV2OnNkcTEKWyAg
-IDQ4LjQ3NjgxMF0gIGRpc2sgMiwgbzoxLCBkZXY6c2RrMQpbICAgNDguNDc2ODExXSAgZGlzayAz
-LCBvOjEsIGRldjpzZGgxClsgICA0OC40NzY4MTJdICBkaXNrIDQsIG86MSwgZGV2OnNkajEKWyAg
-IDQ4LjQ3NjgxM10gIGRpc2sgNSwgbzoxLCBkZXY6c2RsMQpbICAgNDguNDc2ODE1XSAgZGlzayA2
-LCBvOjEsIGRldjpzZHAxClsgICA0OC40NzY4MTZdICBkaXNrIDcsIG86MSwgZGV2OnNkZjEKWyAg
-IDQ4LjQ3NjgxN10gIGRpc2sgOCwgbzoxLCBkZXY6c2RtMQpbICAgNDguNDc2ODE5XSAgZGlzayA5
-LCBvOjEsIGRldjpzZG4xClsgICA0OC40ODgyMTBdICBtZDA6IHVua25vd24gcGFydGl0aW9uIHRh
-YmxlClsgICA0OS4zMjg1OTVdIG1kMTogaW4gbWRfY2hlY2tfcmVjb3ZlcnkoKSwgbWRkZXYtPnJv
-ID0gMApbICAgNDkuMzI5NjkyXSBFWFQ0LWZzIChkbS0wKTogcmUtbW91bnRlZC4gT3B0czogKG51
-bGwpClsgICA0OS41MzQ4MjldIG1kMTogaW4gbWRfY2hlY2tfcmVjb3ZlcnkoKSwgbWRkZXYtPnJv
-ID0gMApbICAgNDkuNzkyMTk2XSBtZDA6IGluIG1kX2NoZWNrX3JlY292ZXJ5KCksIG1kZGV2LT5y
-byA9IDAKWyAgIDUwLjM0OTk0NF0gUkFJRCBjb25mIHByaW50b3V0OgpbICAgNTAuMzQ5OTQ5XSAg
-LS0tIGxldmVsOjYgcmQ6MTAgd2Q6OApbICAgNTAuMzQ5OTUyXSAgZGlzayAwLCBvOjEsIGRldjpz
-ZG8xClsgICA1MC4zNDk5NTVdICBkaXNrIDEsIG86MSwgZGV2OnNkcTEKWyAgIDUwLjM0OTk1N10g
-IGRpc2sgMiwgbzoxLCBkZXY6c2RrMQpbICAgNTAuMzQ5OTU5XSAgZGlzayAzLCBvOjEsIGRldjpz
-ZGgxClsgICA1MC4zNDk5NjFdICBkaXNrIDQsIG86MSwgZGV2OnNkajEKWyAgIDUwLjM0OTk2NF0g
-IGRpc2sgNSwgbzoxLCBkZXY6c2RsMQpbICAgNTAuMzQ5OTY2XSAgZGlzayA2LCBvOjEsIGRldjpz
-ZHAxClsgICA1MC4zNDk5NjhdICBkaXNrIDcsIG86MSwgZGV2OnNkZjEKWyAgIDUwLjM0OTk3MF0g
-IGRpc2sgOCwgbzoxLCBkZXY6c2RtMQpbICAgNTAuMzQ5OTcyXSAgZGlzayA5LCBvOjEsIGRldjpz
-ZG4xClsgICA1MC4zNDk5NzRdIFJBSUQgY29uZiBwcmludG91dDoKWyAgIDUwLjM0OTk3Nl0gIC0t
-LSBsZXZlbDo2IHJkOjEwIHdkOjgKWyAgIDUwLjM0OTk3OF0gIGRpc2sgMCwgbzoxLCBkZXY6c2Rv
-MQpbICAgNTAuMzQ5OTgwXSAgZGlzayAxLCBvOjEsIGRldjpzZHExClsgICA1MC4zNDk5ODJdICBk
-aXNrIDIsIG86MSwgZGV2OnNkazEKWyAgIDUwLjM0OTk4NF0gIGRpc2sgMywgbzoxLCBkZXY6c2Ro
-MQpbICAgNTAuMzQ5OTg2XSAgZGlzayA0LCBvOjEsIGRldjpzZGoxClsgICA1MC4zNDk5ODhdICBk
-aXNrIDUsIG86MSwgZGV2OnNkbDEKWyAgIDUwLjM0OTk5MF0gIGRpc2sgNiwgbzoxLCBkZXY6c2Rw
-MQpbICAgNTAuMzQ5OTkyXSAgZGlzayA3LCBvOjEsIGRldjpzZGYxClsgICA1MC4zNDk5OTRdICBk
-aXNrIDgsIG86MSwgZGV2OnNkbTEKWyAgIDUwLjM0OTk5Nl0gIGRpc2sgOSwgbzoxLCBkZXY6c2Ru
-MQpbICAgNTAuMzQ5OTk3XSBSQUlEIGNvbmYgcHJpbnRvdXQ6ClsgICA1MC4zNDk5OTldICAtLS0g
-bGV2ZWw6NiByZDoxMCB3ZDo4ClsgICA1MC4zNTAwMDFdICBkaXNrIDAsIG86MSwgZGV2OnNkbzEK
-WyAgIDUwLjM1MDAwM10gIGRpc2sgMSwgbzoxLCBkZXY6c2RxMQpbICAgNTAuMzUwMDA1XSAgZGlz
-ayAyLCBvOjEsIGRldjpzZGsxClsgICA1MC4zNTAwMDddICBkaXNrIDMsIG86MSwgZGV2OnNkaDEK
-WyAgIDUwLjM1MDAwOV0gIGRpc2sgNCwgbzoxLCBkZXY6c2RqMQpbICAgNTAuMzUwMDExXSAgZGlz
-ayA1LCBvOjEsIGRldjpzZGwxClsgICA1MC4zNTAwMTNdICBkaXNrIDYsIG86MSwgZGV2OnNkcDEK
-WyAgIDUwLjM1MDAxNV0gIGRpc2sgNywgbzoxLCBkZXY6c2RmMQpbICAgNTAuMzUwMDE3XSAgZGlz
-ayA4LCBvOjEsIGRldjpzZG0xClsgICA1MC4zNTAwMTldICBkaXNrIDksIG86MSwgZGV2OnNkbjEK
-WyAgIDUwLjM1MDAyMF0gUkFJRCBjb25mIHByaW50b3V0OgpbICAgNTAuMzUwMDIyXSAgLS0tIGxl
-dmVsOjYgcmQ6MTAgd2Q6OApbICAgNTAuMzUwMDI0XSAgZGlzayAwLCBvOjEsIGRldjpzZG8xClsg
-ICA1MC4zNTAwMjZdICBkaXNrIDEsIG86MSwgZGV2OnNkcTEKWyAgIDUwLjM1MDAyOF0gIGRpc2sg
-MiwgbzoxLCBkZXY6c2RrMQpbICAgNTAuMzUwMDMwXSAgZGlzayAzLCBvOjEsIGRldjpzZGgxClsg
-ICA1MC4zNTAwMzJdICBkaXNrIDQsIG86MSwgZGV2OnNkajEKWyAgIDUwLjM1MDAzNF0gIGRpc2sg
-NSwgbzoxLCBkZXY6c2RsMQpbICAgNTAuMzUwMDM2XSAgZGlzayA2LCBvOjEsIGRldjpzZHAxClsg
-ICA1MC4zNTAwMzhdICBkaXNrIDcsIG86MSwgZGV2OnNkZjEKWyAgIDUwLjM1MDA0MF0gIGRpc2sg
-OCwgbzoxLCBkZXY6c2RtMQpbICAgNTAuMzUwMDQyXSAgZGlzayA5LCBvOjEsIGRldjpzZG4xClsg
-ICA1MC4zNTAwNDNdIFJBSUQgY29uZiBwcmludG91dDoKWyAgIDUwLjM1MDA0NV0gIC0tLSBsZXZl
-bDo2IHJkOjEwIHdkOjgKWyAgIDUwLjM1MDA0N10gIGRpc2sgMCwgbzoxLCBkZXY6c2RvMQpbICAg
-NTAuMzUwMDQ5XSAgZGlzayAxLCBvOjEsIGRldjpzZHExClsgICA1MC4zNTAwNTFdICBkaXNrIDIs
-IG86MSwgZGV2OnNkazEKWyAgIDUwLjM1MDA1M10gIGRpc2sgMywgbzoxLCBkZXY6c2RoMQpbICAg
-NTAuMzUwMDU1XSAgZGlzayA0LCBvOjEsIGRldjpzZGoxClsgICA1MC4zNTAwNTddICBkaXNrIDUs
-IG86MSwgZGV2OnNkbDEKWyAgIDUwLjM1MDA1OV0gIGRpc2sgNiwgbzoxLCBkZXY6c2RwMQpbICAg
-NTAuMzUwMDYxXSAgZGlzayA3LCBvOjEsIGRldjpzZGYxClsgICA1MC4zNTAwNjNdICBkaXNrIDgs
-IG86MSwgZGV2OnNkbTEKWyAgIDUwLjM1MDA2NV0gIGRpc2sgOSwgbzoxLCBkZXY6c2RuMQpbICAg
-NTAuOTQxNjI1XSBFWFQ0LWZzIChkbS0yKTogbW91bnRlZCBmaWxlc3lzdGVtIHdpdGggb3JkZXJl
-ZCBkYXRhIG1vZGUuIE9wdHM6IChudWxsKQpbICAgNTAuOTY2ODI1XSBFWFQ0LWZzIChkbS0zKTog
-bW91bnRlZCBmaWxlc3lzdGVtIHdpdGggb3JkZXJlZCBkYXRhIG1vZGUuIE9wdHM6IChudWxsKQpb
-ICAgNTAuOTc5MDI1XSBFWFQ0LWZzIChkbS01KTogbW91bnRlZCBmaWxlc3lzdGVtIHdpdGggb3Jk
-ZXJlZCBkYXRhIG1vZGUuIE9wdHM6IChudWxsKQpbICAgNTAuOTkxNzM2XSBFWFQ0LWZzIChzZGEx
-KTogbW91bnRlZCBmaWxlc3lzdGVtIHdpdGggb3JkZXJlZCBkYXRhIG1vZGUuIE9wdHM6IChudWxs
-KQpbICAgNTEuMDA2ODU2XSBsb29wOiBtb2R1bGUgbG9hZGVkClsgICA1MS4wMzM2OTBdIG1kMTog
-aW4gbWRfY2hlY2tfcmVjb3ZlcnkoKSwgbWRkZXYtPnJvID0gMAo=
---001517475b6478f12c04b3de519b
-Content-Type: text/x-patch; charset=US-ASCII; name="dbg.patch"
-Content-Disposition: attachment; filename="dbg.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gw319v7s2
-
-LS0tIG1kLW9yaWcvbWQuYwkyMDExLTEwLTI0IDEwOjEwOjA1LjAwMDAwMDAwMCArMDMwMAorKysg
-My4xLjQtTUQvbWQuYwkyMDExLTEyLTEyIDA2OjI2OjQzLjM4ODQwMTU5NiArMDIwMApAQCAtNjQ0
-Miw2ICs2NDQyLDcgQEAgbWRrX3RocmVhZF90ICptZF9yZWdpc3Rlcl90aHJlYWQodm9pZCAoKgog
-dm9pZCBtZF91bnJlZ2lzdGVyX3RocmVhZChtZGtfdGhyZWFkX3QgKip0aHJlYWRwKQogewogCW1k
-a190aHJlYWRfdCAqdGhyZWFkID0gKnRocmVhZHA7CisJcHJpbnRrKEtFUk5fSU5GTyAibWRfdW5y
-ZWdpc3Rlcl90aHJlYWQoKVxuIik7CiAJaWYgKCF0aHJlYWQpCiAJCXJldHVybjsKIAlkcHJpbnRr
-KCJpbnRlcnJ1cHRpbmcgTUQtdGhyZWFkIHBpZCAlZFxuIiwgdGFza19waWRfbnIodGhyZWFkLT50
-c2spKTsKQEAgLTY5OTYsNiArNjk5Nyw4IEBAIHZvaWQgbWRfZG9fc3luYyhtZGRldl90ICptZGRl
-dikKIAltZGtfcmRldl90ICpyZGV2OwogCWNoYXIgKmRlc2M7CiAKKwlwcmludGsoS0VSTl9JTkZP
-ICIlczogbWRfZG9fc3luYygpLCByZWNvdmVyeT0weCVseCwgcm89JWRcbiIsIAorCQkJbWRuYW1l
-KG1kZGV2KSwgbWRkZXYtPnJlY292ZXJ5LCBtZGRldi0+cm8pOwogCS8qIGp1c3QgaW5jYXNlIHRo
-cmVhZCByZXN0YXJ0cy4uLiAqLwogCWlmICh0ZXN0X2JpdChNRF9SRUNPVkVSWV9ET05FLCAmbWRk
-ZXYtPnJlY292ZXJ5KSkKIAkJcmV0dXJuOwpAQCAtNzQ0NSw2ICs3NDUyLDggQEAgdm9pZCBtZF9j
-aGVja19yZWNvdmVyeShtZGRldl90ICptZGRldikKIAlpZiAobWRkZXZfdHJ5bG9jayhtZGRldikp
-IHsKIAkJaW50IHNwYXJlcyA9IDA7CiAKKwkJcHJpbnRrKEtFUk5fSU5GTyAiJXM6IGluIG1kX2No
-ZWNrX3JlY292ZXJ5KCksIG1kZGV2LT5ybyA9ICVkXG4iLAorCQkJCW1kbmFtZShtZGRldiksIG1k
-ZGV2LT5ybyk7CiAJCWlmIChtZGRldi0+cm8pIHsKIAkJCS8qIE9ubHkgdGhpbmcgd2UgZG8gb24g
-YSBybyBhcnJheSBpcyByZW1vdmUKIAkJCSAqIGZhaWxlZCBkZXZpY2VzLgo=
---001517475b6478f12c04b3de519b--
+--Sig_/cy20aAiIRTdmsjq9Og0Uyip--
