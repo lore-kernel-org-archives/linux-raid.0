@@ -1,8 +1,8 @@
 From: "Kwolek, Adam" <adam.kwolek@intel.com>
 Subject: RE: [PATCH] imsm: FIX: Use first map only in migration record disk
  operations
-Date: Mon, 12 Dec 2011 08:30:28 +0000
-Message-ID: <79556383A0E1384DB3A3903742AAC04A056A3F@IRSMSX101.ger.corp.intel.com>
+Date: Mon, 12 Dec 2011 11:55:35 +0000
+Message-ID: <79556383A0E1384DB3A3903742AAC04A056A94@IRSMSX101.ger.corp.intel.com>
 References: <20111209115720.5396.83087.stgit@gklab-128-013.igk.intel.com>
  <20111212161907.0b35fc80@notabene.brown>
 Mime-Version: 1.0
@@ -16,7 +16,8 @@ To: NeilBrown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-
+I'm sending second answer with more information /below/
+.
 
 > -----Original Message-----
 > From: NeilBrown [mailto:neilb@suse.de]
@@ -82,19 +83,33 @@ List-Id: linux-raid.ids
 > 
 > Patch doesn't apply (Without fuzz) as in my code this is just
 >                 int slot;
+
+
+It should be put after patch:  imsm: FIX: Correct make everything and variable initialization
+Sent: Thu 12/8/2011 2:47 PM
+
+In this  patch variable initialization was changed.
+
 > 
 > It doesn't need to be initialised from what I can see, so I've left it as it is.
 
 
-Without this initialization 'make everything' fails /warning: 'slot' may be used uninitialized/.
-
-BR
-Adam
+Without this initialization 'make everything' fails for me /warning: 'slot' may be used uninitialized/.
 
 
 > 
 > Pending confirmation of the earlier patch (vol not used), I've applied these
 > last 3:
+
+As I've pointed above second correction for 'make everything'  is missing.
+I'll resend corrected ' imsm: FIX: Limit migration record operation by disk slot not by index' also,
+as you pointed for correction.
+
+If you would have all those patches in one series, please let me know.
+
+BR
+Adam
+
 > 
 > Subject: [PATCH] imsm: FIX: Limit migration record operation by disk slot not
 > by index
