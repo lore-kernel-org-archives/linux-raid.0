@@ -1,35 +1,47 @@
-From: Jonathan Tripathy <jonnyt@abpni.co.uk>
-Subject: Mount Linux Raid Array on new install
-Date: Tue, 13 Dec 2011 20:49:15 +0000
-Message-ID: <4EE7BA4B.7070709@abpni.co.uk>
+From: Troy Telford <ttelford.groups@gmail.com>
+Subject: RAID-6 disk superblock issue
+Date: Tue, 13 Dec 2011 15:42:20 -0700
+Message-ID: <jc8kca$mf$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Everyone,
+I have a RAID-6 array I'm having trouble with:
 
-I've got a pretty basic question and I hope someone can help me.
+md2 : active raid6 sdl1[6] sdh1[0] sdm1[5] sdk1[3] sdj1[2] sdi1[1]
+      1953535488 blocks level 6, 128k chunk, algorithm 2 [6/5] [UUUU_U]
+      [>....................]  recovery =  0.0% (27164/488383872) 
+finish=599.1min speed=13582K/sec
 
-Currently, I have a server with 4 spindles. The 4 spindles (sda, sdb, 
-sdc and sdd) have the follow MD RAID arrays on them:
+- When the system boots (or when I attempt to build the array), I get a 
+message that /dev/sdl and /dev/sdl1 have the same superblock, and that 
+I should zero one.
+- So, I zero the superblock using 'mdadm --zero-superblock /dev/sdl (or 
+/dev/sdl1; doesn't matter which I use).
+- I then re-add the device to the array (and the RAID-6 array recovers, 
+as above.)
+- The next time I boot, I get the exact same error message.
 
-RAID1 (all 4 disks) for host OS (/)
-RAID1 (all 4 disks) for swap
-RAID1 (all 4 disks) for /boot
-RAID10 (all 4 disks) for LVM
 
-I wish to move my host OS onto a USB flash disk, and use my metal 
-spindles solely for the RAID10 LVM. Assuming I install a fresh copy of 
-CentOS onto a USB stick, how would I go about re-mounting the RAID10 
-array, without destroying any data? Obviously, I don't care about the 
-swap or boot partitions. Also, the old host OS on the spindles would be 
-handy to keep, however it wouldn't be the end of the world if I lost 
-this. The important issue is to keep the data from the LVM array.
+- It doesn't seem to matter which (between the device or the partition) 
+that I zero the superblock on.  I get the same error message at boot 
+(when the drive is being assembled).
+- Since it's redundant data anyway, I've tried dd'ing from /dev/zero 
+over the drive, repartitioning the drive, and then adding the drive to 
+the array. Same behavior.
 
-Any advice is appreciated
+- My mdadm.conf just has the array itself, and the array's UUID. It 
+doesn't explicitly list devices.
 
-Thanks
+So what am I missing? There's got to be a way I can get the array to 
+assemble at boot, instead of having to manually --zero-superblock every 
+time.
+-- 
+Troy Telford
+
+
