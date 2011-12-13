@@ -1,69 +1,59 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 3/3] imsm: FIX: return correct status from load_imsm_migr_rec()
-Date: Tue, 13 Dec 2011 11:12:26 +0100
-Message-ID: <20111213101226.15703.61859.stgit@gklab-128-013.igk.intel.com>
-References: <20111213101210.15703.14918.stgit@gklab-128-013.igk.intel.com>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: Raid0 expansion problem in md
+Date: Tue, 13 Dec 2011 15:45:30 +0000
+Message-ID: <79556383A0E1384DB3A3903742AAC04A05F9CF@IRSMSX101.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111213101210.15703.14918.stgit@gklab-128-013.igk.intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
+To: "neilb@suse.de" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-load_imsm_migr_rec() should see difference between no migration record due
-to no migration in progress and loading migration record error.
-Additional return value (-2) was introduced to this function.
+Hi Neil,
 
-Using new status load_super_imsm_all() can correctly check loading
-migration record status.
+On the latest md neil_for-linus branch I've found raid0 migration problem.
+During OLCE in user space everything goes fine, but in kernel process is not moved forward.
+/older md works fine/
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
+It is stopped in md in reshape_request() in line (near raid5.c:3957)
+    wait_event(conf->wait_for_overlap, atomic_read(&conf->reshape_stripes)==0);
 
- super-intel.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+I've found that this problem is a side effect of patch:
+    md/raid5: abort any pending parity operations when array fails.
+and added line in this patch:
+     sh->reconstruct_state = 0;
 
-diff --git a/super-intel.c b/super-intel.c
-index e8e21f4..3a34f5a 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -2120,6 +2120,7 @@ static struct imsm_dev *imsm_get_device_during_migration(
-  * Returns:
-  *	 0 : success
-  *	-1 : fail
-+ *	-2 : no migration in progress
-  ******************************************************************************/
- static int load_imsm_migr_rec(struct intel_super *super, struct mdinfo *info)
- {
-@@ -2137,7 +2138,7 @@ static int load_imsm_migr_rec(struct intel_super *super, struct mdinfo *info)
- 	/* nothing to load,no migration in progress?
- 	*/
- 	if (dev == NULL)
--		return 0;
-+		return -2;
- 	map = get_imsm_map(dev, MAP_0);
- 
- 	if (info) {
-@@ -4079,13 +4080,16 @@ static int load_super_imsm_all(struct supertype *st, int fd, void **sbp,
- 
- 	/* load migration record */
- 	err = load_imsm_migr_rec(super, NULL);
--	if (err) {
-+	if (err == -1) {
-+		/* migration is in progress,
-+		 * but migr_rec cannot be loaded,
-+		 */
- 		err = 4;
- 		goto error;
- 	}
- 
- 	/* Check migration compatibility */
--	if (check_mpb_migr_compatibility(super) != 0) {
-+	if ((err == 0) && (check_mpb_migr_compatibility(super) != 0)) {
- 		fprintf(stderr, Name ": Unsupported migration detected");
- 		if (devname)
- 			fprintf(stderr, " on %s\n", devname);
+During OLCE we are going inside because condition
+    if (s.failed > conf->max_degraded)
+with values:
+     locked=1 uptodate=5 to_read=0 to_write=0 failed=2 failed_num=4,1
 
+and sh->reconstruct_state is set to 0 (reconstruct_state_idle) from 6 (reconstruct_state_result)
+When sh->reconstruct_state is not reset raid0 migration is executed without problem.
+Problem is probably in not executed code for finishing reconstruction (around raid5.c:3300)
+
+In our case field s.failed should not reach value 2 but we've got it for failed_num = 4,1. 
+It seems that '1' is failed disk for stripe in old array geometry and 4 is failed disk for stripe in new array geometry.
+This means that degradation during reshape is counted two times /final stripe degradation is sum of old and new geometry degradation/.
+When we reading (from old array) and writing (to new geometry) a degraded stripe  and degradation is on different positions (raid0 OLCE case) analyse_stripe() gives
+us false failure information. Possible that we should have old_failed and new_failed counters to know in what geometry (old/new) failure occurs.
+
+
+Here is reproduction script:
+
+export IMSM_NO_PLATFORM=1
+#create container
+mdadm -C /dev/md/imsm0 -amd -e imsm -n 4 /dev/sdb /dev/sdc /dev/sde /dev/sdd -R
+#create array
+mdadm -C /dev/md/raid0vol_0 -amd -l 0 --chunk 64 --size  1048 -n 1 /dev/sdb  -R --force
+#start reshape
+mdadm --grow /dev/md/imsm0 --raid-devices 4
+
+
+Please let me know your opinion.
+
+BR
+Adam
