@@ -1,37 +1,59 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: Split-Brain Protection for MD arrays
-Date: Tue, 13 Dec 2011 11:50:24 +0200
-Message-ID: <CAGRgLy5=8TOKdJYvBof87CGA3d_pkqTMwqdRmO0gU_Yj7ivmTg@mail.gmail.com>
-References: <CAGRgLy6=-naSGJw_tgiD5=ab7gWxyeQ2ysu-yCKa064Jih+cfA@mail.gmail.com>
-	<201112122118.28351.plr.vincent@gmail.com>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 1/3] FIX: Do not allow for multiple reshape_array() execution
+	during reshape_container() call
+Date: Tue, 13 Dec 2011 11:12:10 +0100
+Message-ID: <20111213101210.15703.14918.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201112122118.28351.plr.vincent@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Vincent Pelletier <plr.vincent@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-Vincent,
-thanks for reviewing.
+It can happen during reshape restart that reshape_array() can exit without
+error (e.g. Grow.c:1915) and reshape is not moved to next array.
+reshape_array() is called again for the same device.
+Do not allow for such execution and check if last reshaped array is not
+the current one.
+This patch can be treat not as solution, but it allows for such errors
+detection.
 
-> I would suggest one thing:
-> Use a fixed increment for "metadata version" number.
-Yes, that is what's happening in MD. The doc was confusing about the
-"timestamp" part.
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+---
 
-> Admitedly, fixed increment exposes user to problems if he decides to
-> independently run two halves of a split brain, start making their data
-> diverge, reach a point (controlable) where version number is at some
-> convenient value and then let the array assemble itself and burst in fire.
-> Though, user has to jump through hoops to reach this.
+ Grow.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-Yes, so for that case I was thinking that once the user decides to
-ignore the split-brain warning and still go ahead with the assemble,
-then drives that are not accessible at that point will not be used
-from now on ("external entity" should take care about that). The doc
-mentions that as well.
+diff --git a/Grow.c b/Grow.c
+index 184a973..1828f83 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -2462,6 +2462,7 @@ int reshape_container(char *container, char *devname,
+ {
+ 	struct mdinfo *cc = NULL;
+ 	int rv = restart;
++	int last_devnum = -1;
+ 
+ 	/* component_size is not meaningful for a container,
+ 	 * so pass '-1' meaning 'no change'
+@@ -2546,6 +2547,17 @@ int reshape_container(char *container, char *devname,
+ 		if (!adev)
+ 			adev = content->text_version;
+ 
++		if (last_devnum == mdstat->devnum) {
++			/* do not allow for reentry reshape_array()
++			 * for the same device. It can happen when resahpe_array
++			 */
++			printf(Name ": Multiple reshape execution detected for "
++			       "device  %s.", adev);
++			close(fd);
++			break;
++		}
++		last_devnum = mdstat->devnum;
++
+ 		sysfs_init(content, fd, mdstat->devnum);
+ 
+ 		rv = reshape_array(container, fd, adev, st,
 
-Thanks,
- Alex.
