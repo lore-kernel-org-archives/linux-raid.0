@@ -1,109 +1,37 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 2/2] imsm: FIX: Use first map only in migration record
- disk operations
-Date: Tue, 13 Dec 2011 07:54:53 +0000
-Message-ID: <79556383A0E1384DB3A3903742AAC04A05E842@IRSMSX101.ger.corp.intel.com>
-References: <20111212110745.8849.76773.stgit@gklab-128-013.igk.intel.com>
-	<20111212110753.8849.40342.stgit@gklab-128-013.igk.intel.com>
- <20111213132632.39bfe8aa@notabene.brown>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: Split-Brain Protection for MD arrays
+Date: Tue, 13 Dec 2011 11:50:24 +0200
+Message-ID: <CAGRgLy5=8TOKdJYvBof87CGA3d_pkqTMwqdRmO0gU_Yj7ivmTg@mail.gmail.com>
+References: <CAGRgLy6=-naSGJw_tgiD5=ab7gWxyeQ2ysu-yCKa064Jih+cfA@mail.gmail.com>
+	<201112122118.28351.plr.vincent@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111213132632.39bfe8aa@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <201112122118.28351.plr.vincent@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
+To: Vincent Pelletier <plr.vincent@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Vincent,
+thanks for reviewing.
 
+> I would suggest one thing:
+> Use a fixed increment for "metadata version" number.
+Yes, that is what's happening in MD. The doc was confusing about the
+"timestamp" part.
 
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Tuesday, December 13, 2011 3:27 AM
-> To: Kwolek, Adam
-> Cc: linux-raid@vger.kernel.org; Ciechanowski, Ed; Labun, Marcin; Williams,
-> Dan J
-> Subject: Re: [PATCH 2/2] imsm: FIX: Use first map only in migration record
-> disk operations
-> 
-> On Mon, 12 Dec 2011 12:07:53 +0100 Adam Kwolek
-> <adam.kwolek@intel.com> wrote:
-> 
-> > This patch is addition to patch:
-> >     "imsm: FIX: Limit migration record operation by disk slot not by index"
-> > Location of migration record (2 first slots) should be taken on up to
-> > date information. It is in first map.
-> > Change slot verification to use first map only.
-> >
-> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> 
-> Thanks.
-> 
-> I've applied this and the others, including the "make everything" fix that I
-> somehow missed before.
-> I've pushed it all out to the git tree.  Could you please check that I haven't
-> missed anything.
-> 
-> Thanks,
-> 
-> NeilBrown
+> Admitedly, fixed increment exposes user to problems if he decides to
+> independently run two halves of a split brain, start making their data
+> diverge, reach a point (controlable) where version number is at some
+> convenient value and then let the array assemble itself and burst in fire.
+> Though, user has to jump through hoops to reach this.
 
-Thank you for adding patches. All looks ok :)
+Yes, so for that case I was thinking that once the user decides to
+ignore the split-brain warning and still go ahead with the assemble,
+then drives that are not accessible at that point will not be used
+from now on ("external entity" should take care about that). The doc
+mentions that as well.
 
-BR
-Adam
-
-> 
-> 
-> > ---
-> >
-> >  super-intel.c |    8 ++++----
-> >  1 files changed, 4 insertions(+), 4 deletions(-)
-> >
-> > diff --git a/super-intel.c b/super-intel.c index d90d96b..bfbaf10
-> > 100644
-> > --- a/super-intel.c
-> > +++ b/super-intel.c
-> > @@ -1178,8 +1178,8 @@ void examine_migr_rec_imsm(struct intel_super
-> > *super)
-> >
-> >  		printf("\nMigration Record Information:");
-> >
-> > -		/* map under migration */
-> > -		map = get_imsm_map(dev, MAP_1);
-> > +		/* first map under migration */
-> > +		map = get_imsm_map(dev, MAP_0);
-> >  		if (map)
-> >  			slot = get_imsm_disk_slot(map, super->disks-
-> >index);
-> >  		if ((map == NULL) || (slot > 1) || (slot < 0)) { @@ -2131,7
-> +2131,7
-> > @@ static int load_imsm_migr_rec(struct intel_super *super, struct
-> mdinfo *info)
-> >  	*/
-> >  	if (dev == NULL)
-> >  		return 0;
-> > -	map = get_imsm_map(dev, MAP_1);
-> > +	map = get_imsm_map(dev, MAP_0);
-> >
-> >  	if (info) {
-> >  		for (sd = info->devs ; sd ; sd = sd->next) { @@ -2257,7
-> +2257,7 @@
-> > static int write_imsm_migr_rec(struct supertype *st)
-> >  		dev = get_imsm_dev(super, super->current_vol < 0 ? 0 :
-> >  					  super->current_vol);
-> >
-> > -	map = get_imsm_map(dev, MAP_X);
-> > +	map = get_imsm_map(dev, MAP_0);
-> >
-> >  	for (sd = super->disks ; sd ; sd = sd->next) {
-> >  		int slot;
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> > in the body of a message to majordomo@vger.kernel.org More
-> majordomo
-> > info at  http://vger.kernel.org/majordomo-info.html
-
+Thanks,
+ Alex.
