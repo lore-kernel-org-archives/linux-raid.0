@@ -1,180 +1,100 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [md PATCH 00/16] hot-replace support for RAID4/5/6
-Date: Wed, 14 Dec 2011 14:18:51 -0800
-Message-ID: <CAA9_cmfWEnLnvrShVp3BL+WsEApS+nsWBZfao-qM2_habqFCtg@mail.gmail.com>
-References: <20111026014240.21110.28487.stgit@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH] md/raid5: fix bug that could result in reads from a failed
+ device.
+Date: Thu, 15 Dec 2011 10:54:39 +1100
+Message-ID: <20111215105439.628fe074@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/CXr/I+/NlhO+kIHGMMfHyHO"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111026014240.21110.28487.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: stable@vger.kernel.org
+Cc: linux RAID <linux-raid@vger.kernel.org>, Alexander Lyakas <alex.bolshoy@gmail.com>, tim.gardner@canonical.com
 List-Id: linux-raid.ids
 
-On Tue, Oct 25, 2011 at 6:43 PM, NeilBrown <neilb@suse.de> wrote:
-> The following series - on top of my for-linus branch which should app=
-ear in
-> 3.2-rc1 eventually - implements hot-replace for RAID4/5/6. =A0This is=
- almost
-> certainly the most requested feature over the last few years.
-> The whole series can be pulled from my md-devel branch:
-> =A0 git://neil.brown.name/md md-devel
-> (please don't do a full clone, it is not a very fast link).
-
-Some belated comments based on the commit ids at the time:
-
-88eeb3d md: refine interpretation of "hold_active =3D=3D UNTIL_IOCTL".
-9c22832 md: take a reference to mddev during sysfs access.
-a7d6ae4 md: remove test for duplicate device when setting slot number.
-6deecf2 md: change hot_remove_disk to take an rdev rather than a number=
-=2E
-
-last 4 reviewed-by.
-
-f248f8c md: create externally visible flags for supporting hot-replace.
-
-'replaceable' just strikes me as a confusing name as all devices are
-nominally "replaceable", but whether you want it to be actively
-replaced is a different consideration.  What about "incumbent" to mark
-the disk as currently holding a position we want it to vacate and
-remove any potential confusion with 'replacement'.
-
-ce8fd05 md/raid5: allow each slot to have an extra replacement device
-fd7557d md/raid5: raid5.h cleanup
-15e9a58 md/raid5: remove redundant bio initialisations.
-
-last 3 reviewed-by.
-
-37aebb5 md/raid5: preferentially read from replacement device if possib=
-le.
-
-+                       /* This flag does not apply to '.replacement'
-+                        * only to .rdev, so make sure to check that*/
-+                       struct md_rdev *rdev2 =3D rcu_dereference(
-+                               conf->disks[i].rdev);
-+                       if (rdev2 =3D=3D rdev)
-+                               clear_bit(R5_Insync, &dev->flags);
-+                       if (!test_bit(Faulty, &rdev2->flags)) {
-
-can't rdev2 be NULL here?
-
-@@ -4201,7 +4241,6 @@ static int  retry_aligned_read(struct r5conf
-*conf, struct bio *raid_bio)
-                        return handled;
-                }
-
--               set_bit(R5_ReadError, &sh->dev[dd_idx].flags);
-                if (!add_stripe_bio(sh, raid_bio, dd_idx, 0)) {
-                        release_stripe(sh);
-                        raid5_set_bi_hw_segments(raid_bio, scnt);
+--Sig_/CXr/I+/NlhO+kIHGMMfHyHO
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
 
-Should this one liner be broken out for -stable?
+hi Greg,
+ When I sent you a backport of 355840e for 3.0.y I messed up and missed half
+ of the required patch.  This is the other half.  So if 3.0 is still open f=
+or
+ updates I would appreciate you applying this.
 
-8e2c0f9 md/raid5: allow removal for failed replacement devices.
-17df00a md/raid5: writes should get directed to replacement as well as =
-original.
-
-last 2 reviewed-by
-
-dba5a681 md/raid5:  detect and handle replacements during recovery.
-
-This one got me looking back to recall the rules about when
-rcu_deference must be used for an rdev (the ones outlined in commit
-9910f16a "md: fix up some rdev rcu locking in raid5/6").  But the
-casual future reader may have a hard time finding that commit.  Maybe
-we could introduce our own rdev_deref() macro so that sparse and
-lockdep can automatically validate rdev derefences like below.
-
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 8d8e139..6023583 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -357,9 +357,14 @@ enum {
+Thanks,
+NeilBrown
 
 
- struct disk_info {
--       struct md_rdev  *rdev, *replacement;
-+       struct md_rdev __rcu *rdev,
-+       struct md_rdev __rcu *replacement;
- };
+From: NeilBrown <neilb@suse.de>
+Date: Thu, 15 Dec 2011 10:49:58 +1100
+Subject: [PATCH] md/raid5: fix bug that could result in reads from a failed
+ device.
 
-+#define rdev_deref(p, md, sh) \
-+       rcu_dereference_check((p), (md) ? mddev_is_locked(md) : 1 || \
-+                                  (sh) ? test_bit(STRIPE_SYNCING,
-&(sh)->state) : 1)
-+
- struct r5conf {
-        struct hlist_head       *stripe_hashtbl;
-        struct mddev            *mddev;
+commit 355840e7a7e56bb2834fd3b0da64da5465f8aeaa upstream.
 
-=2E..but not sure if it's worth the code uglification.
+commit a847627709b3402163d99f7c6fda4a77bcd6b51b in linux-3.0.9
+attempted to backport this to 3.0 but only made one change were two
+were necessary.  This add the second change.
+
+This bug was introduced in 415e72d034c50520ddb7ff79e7d1792c1306f0c9
+which was in 2.6.36.
+
+There is a small window of time between when a device fails and when
+it is removed from the array.  During this time we might still read
+from it, but we won't write to it - so it is possible that we could
+read stale data.
+
+We didn't need the test of 'Faulty' before because the test on
+In_sync is sufficient.  Since we started allowing reads from the early
+part of non-In_sync devices we need a test on Faulty too.
+
+This is suitable for any kernel from 2.6.36 onwards, though the patch
+might need a bit of tweaking in 3.0 and earlier.
+
+Signed-off-by: NeilBrown <neilb@suse.de>
+---
+ drivers/md/raid5.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index cbb50d3..1f6c68d 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3078,7 +3078,7 @@ static void handle_stripe5(struct stripe_head *sh)
+ 			/* Not in-sync */;
+ 		else if (test_bit(In_sync, &rdev->flags))
+ 			set_bit(R5_Insync, &dev->flags);
+-		else {
++		else if (!test_bit(Faulty, &rdev->flags)) {
+ 			/* could be in-sync depending on recovery/reshape status */
+ 			if (sh->sector + STRIPE_SECTORS <=3D rdev->recovery_offset)
+ 				set_bit(R5_Insync, &dev->flags);
+--=20
+1.7.7
 
 
-Nit, not sure if it's worth fixing but this one introduces some
-inconsistent line wrapping around logical operators... "at the end" vs
-"beginning of next line"
+--Sig_/CXr/I+/NlhO+kIHGMMfHyHO
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-+               if (rdev
-+                   && !test_bit(Faulty, &rdev->flags)
-+                   && !test_bit(In_sync, &rdev->flags)
-+                   && !rdev_set_badblocks(rdev, sh->sector,
-+                                          STRIPE_SECTORS, 0))
-+                       abort =3D 1;
-+               rdev =3D conf->disks[i].replacement;
-+               if (rdev
-+                   && !test_bit(Faulty, &rdev->flags)
-+                   && !test_bit(In_sync, &rdev->flags)
-+                   && !rdev_set_badblocks(rdev, sh->sector,
-+                                          STRIPE_SECTORS, 0))
-                        abort =3D 1;
-        }
-        if (abort) {
-@@ -2456,6 +2475,22 @@ handle_failed_sync(struct r5conf *conf, struct
-stripe_head *sh,
-        }
- }
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-+static int want_replace(struct stripe_head *sh, int disk_idx)
-+{
-+       struct md_rdev *rdev;
-+       int rv =3D 0;
-+       /* Doing recovery so rcu locking not required */
-+       rdev =3D sh->raid_conf->disks[disk_idx].replacement;
-+       if (rdev &&
-+           !test_bit(Faulty, &rdev->flags) &&
-+           !test_bit(In_sync, &rdev->flags) &&
-+           (rdev->recovery_offset <=3D sh->sector ||
-+            rdev->mddev->recovery_cp <=3D sh->sector))
-+               rv =3D 1;
-+
-+       return rv;
+iQIVAwUBTuk3Pznsnt1WYoG5AQKejg/+NQC/WpHWt3yhPCQXCL48l6rPRTbcWK2N
+8exFLi+XibelO9UYahERceWC70dQ/M/P7gqGwx2F8ocpQsoIOXdrpz3FsppfHdaX
+FnmNwjEJy1PHxPINVHNTH2vFbPpe3UeAHpIxwv/9OgzcMBOYT1uJdCIf/S9x50Rr
+fMidaSYJKootuwwl7eO79c84s0wSKMQQKRfFg7sM92ao7dQ5nVZhZWuMFmOPB/2m
+3dAEEhWHVWb5d8N08NoOZHNvacYehSyTxWBYOGkrY6M/18mvnk0+Vkig/9Ue6fcM
+kBZjGq/782JoBXyt+k0X91fHY6Gh2bv0/O/7pSMgoP+O5DGNE0EemqsYjmXAnOPb
+L9jtvkCVHvo9HFdeaNfFmCqBd4X+8N7N0xh/tHcZvb039KjfXhVynC6UFKau7v7X
+Pc7yZeMSJCxqPIaKgYjy9P5dpwUmIRl7UVnc+SDv9nOtsVUOyNbcDEwlGst1QozI
+aF1MVmJaDVmwaVBVJKv0JaPfzo7Q03rlOb09DsXGa/87f7R2qPlLjDElmR2CHdjw
+PDAq0DL3F6sg7dEvQSQKTvmPe7dtEIGEyV1pvqisg3UDOvB+iQvb+iiHXXGbQBS8
+p5rCgAmAjszvqeltLMH7CfgdJ7OgDmH88QhvI5+RRX+KWJUINrWlQDF26xBYpsoi
+r4jJlsgJmFc=
+=vVZn
+-----END PGP SIGNATURE-----
 
-2693b9e md/raid5: handle activation of replacement device when
-recovery completes.
-
-I questioned not needing a barrier in raid5_end_write_request after
-finding conf->disks[i].replacement =3D=3D NULL until I found the note i=
-n
-raid5_end_read_request about the rdev being pinned until all i/o
-returns.  Maybe a similar note to raid5_end_write_request?
-
-d6db3d0 md/raid5: recognise replacements when assembling array.
-6cdb4fb md/raid5: If there is a spare and a replaceable device, start
-replacement.
-0124565 md/raid5: Mark device replaceable when we see a write error.
-
-last 3 reviewed-by.
-
-058c478..678a66d
-raid10 and raid1 patches not reviewed.
-
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/CXr/I+/NlhO+kIHGMMfHyHO--
