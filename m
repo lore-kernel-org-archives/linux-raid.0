@@ -1,84 +1,34 @@
-From: "Gail Kelly" <gjabaay771@aol.com>
-Subject: Did you instruct Mrs. Jenny Maria Moore?
-Date: Wed, 14 Dec 2011 12:03:56 -0800
-Message-ID: <201112141305.pBED53tG022662__37989.7591578358$1323868231$gmane$org@ims-m13.mx.aol.com>
-Reply-To: <s.barristerdavid@yahoo.com.ph>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 0/3] Enable mdadm UT execution for imsm
+Date: Wed, 14 Dec 2011 16:06:55 +0100
+Message-ID: <20111214150448.21483.16231.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_009D_01C2A9A6.6396C5FE"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
+3 mdadm UT (08, 09, 15) are not working now. 
+This series fixes those UT execution.
 
-------=_NextPart_000_009D_01C2A9A6.6396C5FE
-Content-Type: text/plain;
-	charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+BR
+Adam
 
-Did you instruct one Mrs. Jenny Maria Moore, whose information's is below, to claim and receive the payment on your behalf?
-Read the below attached document for complete details and respond promptly
+---
 
-------=_NextPart_000_009D_01C2A9A6.6396C5FE
-Content-Type: application/octet-stream;
-	name="Message From Gail Kelly.rtf"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="Message From Gail Kelly.rtf"
+Adam Kwolek (3):
+      imsm: FIX: UT '08imsm-overlap' fails
+      imsm: FIX: 'UT 09imsm-assemble' fails
+      imsm: FIX: Chunk size migration is not possible
 
-e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcZGVmZjBcZGVmbGFuZzEwMzN7XGZv
-bnR0Ymx7XGYwXGZzd2lzc1xmY2hhcnNldDAgQXJpYWw7fX0NCntcKlxnZW5l
-cmF0b3IgTXNmdGVkaXQgNS40MS4yMS4yNTA5O31cdmlld2tpbmQ0XHVjMVxw
-YXJkXGYwXGZzMjAgV2VsY29tZSB0byBXZXN0cGFjLCBUaGUgQXVzdHJhbGlh
-J3MgRmlyc3QgQmFuay5ccGFyDQoyODMtMjg1IEtlbnQgU3RyZWV0XHBhcg0K
-U3lkbmV5IE5TVyAyMDAwLCBBdXN0cmFsaWFccGFyDQoxMzAwIDM2OSA4NzZc
-cGFyDQpXZWJzaXRlOiBodHRwOi8vd3d3Lndlc3RwYWMuY29tLmF1L1xwYXIN
-ClxwYXINClxwYXINClVQREFURSBZT1VSIE9OTElORSBBQ0NPVU5UIEZPUiBT
-RUNVUklUWSBSRUFTT05TIElOIFJFR0FSRFMgVE8gVEhFIFRSQU5TRkVSIE9G
-IFlPVVIgRlVORC4gXHBhcg0KXHBhcg0KQXR0ZW50aW9uIEZyb20gTXJzLiBH
-YWlsIEtlbGx5IHRoZSAoQ0VPKSBvZiBXZXN0cGFjLCB0aGUgZmlyc3QgZmVt
-YWxlIENFTyBvZiBhIG1ham9yIEF1c3RyYWxpYW4gYmFuay5ccGFyDQpccGFy
-DQpEaWQgeW91IGluc3RydWN0IG9uZSBNcnMuIEplbm55IE1hcmlhIE1vb3Jl
-LCB3aG9zZSBpbmZvcm1hdGlvbidzIGlzIGJlbG93LCB0byBjbGFpbSBhbmQg
-cmVjZWl2ZSB0aGUgcGF5bWVudCBvbiB5b3VyIGJlaGFsZj9ccGFyDQogXHBh
-cg0KVGhpcyBtb3JuaW5nIE1ycy4gSmVubnkgTWFyaWEgTW9vcmUgY2FtZSB0
-byB0aGUgb2ZmaWNlIGNsYWltaW5nIHRoYXQgeW91IGhhdmUgaW5zdHJ1Y3Rl
-ZCBoaW0gdG8gY29tZSByZWNlaXZlIHlvdXIgcGF5bWVudCBvbiB5b3VyIGJl
-aGFsZiwgSSBoYXZlIGFzayBoaW0gdG8gY29tZSBiYWNrIHRvbW9ycm93IGFz
-IHRoZXkgZGlkIG5vdCBwcm92aWRlIGFueSBwb3dlciBvZiBhbiBhdHRvcm5l
-eSBmcm9tIHlvdSB3aGljaCB3aWxsIHByb29mIHRoYXQgeW91IHRob3JvdWdo
-bHkgc2VuZCBoaW0sIFRoaXMgd2FzIHRvIGVuYWJsZSBtZSBjb250YWN0IHlv
-dSB0byB2ZXJpZnkgaG93IGdlbnVpbmUgdGhpcyBwZW9wbGUgYXJlIHRvIHlv
-dS5ccGFyDQpccGFyDQpJIGhlcmVieSBzZW5kIHRvIHlvdSB0aGUgaW5mb3Jt
-YXRpb24gc3VibWl0dGVkIGJ5IE1ycy4gSmVubnkgTWFyaWEgTW9vcmUsIHdp
-dGggYW4gYXBwbGljYXRpb24gdG8gcGF5IHRoZSBhY2Nlc3MgY2hhcmdlIGlu
-IG90aGVyIHRvIGhhdmUgYWNjZXNzIHRvIHRyYW5zZmVyIG1vbmV5IGZyb20g
-eW91ciBvbmxpbmUgYWNjb3VudCB0byBoaXMgYmFuayBhY2NvdW50LCBQbGVh
-c2UgYXMgYSBtYXR0ZXIgb2YgdXJnZW5jeSwgeW91IGFyZSByZXF1aXJlZCB0
-byB2ZXJpZnkgdGhlIGZvbGxvd2luZyBpbmZvcm1hdGlvbiBhbmQgaW5mb3Jt
-IHVzIGlmIHlvdSBhcmUgYXdhcmUgb3Iga25vdyBhbnl0aGluZyBhYm91dCB0
-aGlzLlxwYXINCjIuIERpZCB5b3Ugc2lnbiBhbnkgJ0RlZWQgb2YgQXNzaWdu
-bWVudCcgaW4gaGlzIGZhdm9yIHRoZXJlYnkgbWFraW5nIGhpbSB0aGUgY3Vy
-cmVudCBiZW5lZmljaWFyeSB3aXRoIHRoZSBmb2xsb3dpbmcgYWNjb3VudCBk
-ZXRhaWxzOiBccGFyDQpccGFyDQpBY2NvdW50IE5hbWU6IE1ycy4gSmVubnkg
-TWFyaWEgTW9vcmUgXHBhcg0KQS9DICM6IDExNC0xMDI1NTY3LTgsIFxwYXIN
-CkJhbmsgTmFtZTogQ2l0eSBCYW5rIG9mIENhbmFkYSBccGFyDQpTd2lmdCBD
-b2RlOiBTQkNMIDExSzMzMy5ccGFyDQpccGFyDQpGaW5hbGx5LCB5b3UgYXJl
-IGhlcmVieSBhZHZpc2VkIHRvIGluZGljYXRlIHRvIHRoaXMgaG9ub3JhYmxl
-IG9mZmljZSB3aXRoIGltbWVkaWF0ZSBlZmZlY3QsIGlmIHlvdSBhcmUgdGhl
-IHBlcnNvbiB0aGF0IGluc3RydWN0ZWQgTXJzLiBKZW5ueSBNYXJpYSBNb29y
-ZSB0byBjb21lIGZvciB0aGUgY2xhaW0gb2YgeW91ciBmdW5kIHdvcnRoIG9m
-ICQxMCw1MDAuMDAwLjAwIChUZW4gTWlsbGlvbiwgRml2ZSBIdW5kcmVkIFRo
-b3VzYW5kIFVuaXRlZCBTdGF0ZXMgRG9sbGFycyksIHRvIGVuYWJsZSB1cyBl
-bmRvcnNlIGZvciB0aGUgZmluYWwgcGF5bWVudCBhcHByb3ZhbCBvcmRlciBv
-biBoaXMgYmVoYWxmLCBBcyBoZSBpcyByZWFkeSB0byBwYXkgdGhlIGFjY2Vz
-cyBjaGFyZ2UgdG8gaGF2ZSB0aGUgb25saW5lIGFjY291bnQgZGV0YWlscy4g
-U2hvdWxkIEluIGNhc2UgeW91IG5lZWQgYW55IG1vcmUgaW5mb3JtYXRpb24s
-IEtpbmRseSBsZXQgbWUga25vdy5ccGFyDQpccGFyDQpccGFyDQpFbmRlYXZv
-ciB0byBzZW5kIHlvdXIgcmVwbHkgZm9yIHVyZ2VudCBhdHRlbnRpb24gV2Ug
-c2hhbGwgYmUgd2FpdGluZyBmb3IgeW91ciB1cmdlbnQgYW5kIHByb21wdCBy
-ZXNwb25zZS5ccGFyDQogXHBhcg0KQmVzdCBSZWdhcmRzLFxwYXINCkdhaWwg
-S2VsbHlccGFyDQpDRU8gV2VzdHBhYyBBdXN0cmFsaWEgXHBhcg0KfQ0KAA==
 
-------=_NextPart_000_009D_01C2A9A6.6396C5FE--
+ Assemble.c    |    2 ++
+ Incremental.c |    3 +++
+ super-intel.c |   52 +++++++++++++++++++++++++++++++++++++++++-----------
+ 3 files changed, 46 insertions(+), 11 deletions(-)
+
+-- 
+Signature
