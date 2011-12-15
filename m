@@ -1,54 +1,72 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Last call for mdadm-3.2.3.
-Date: Thu, 15 Dec 2011 15:10:18 +1100
-Message-ID: <20111215151018.504ed1ce@notabene.brown>
+Subject: Re: Data scribbling for raid6 is wrong?
+Date: Thu, 15 Dec 2011 15:27:23 +1100
+Message-ID: <20111215152723.1d2bcca0@notabene.brown>
+References: <CAAV8rnKoga_DM1qh28ZGEsJMZAKPYDZcVFfLBSH9kPNHysf7LQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/prVK7NphfJJ+c7PTLNJkPHo"; protocol="application/pgp-signature"
+ boundary="Sig_/.DAPd5Bkc8_=H8jpPY50reT"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAAV8rnKoga_DM1qh28ZGEsJMZAKPYDZcVFfLBSH9kPNHysf7LQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux RAID <linux-raid@vger.kernel.org>
+To: Tao Guo <glorioustao@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/prVK7NphfJJ+c7PTLNJkPHo
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/.DAPd5Bkc8_=H8jpPY50reT
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
+On Thu, 15 Dec 2011 11:15:42 +0800 Tao Guo <glorioustao@gmail.com> wrote:
 
-Hi all,
- I plan to release mdadm-3.2.3 sometime next week with whatever happens to =
-be
- in my 'master' branch at the time.  And I'll try not to break it between n=
-ow
- and then.  Then I'll open 3.3 devel properly.
+> Hi all,
+>=20
+> Today I checked the raid6's scribbling code, and I think there may be
+> some improvements to handle bad sectors:
 
- So if anyone has a bug fix or other smallish issue they have been sitting =
-on
- for a while, now is a good time to let me know.
+I think the common term is "scrubbing" rather than "scribbling".
 
-Thanks,
+>=20
+> If we have one bad sector(with corrupted data) in the data block,
+> scribbling thread will find parity mismatch and will try to
+> recompute&rewrite P&Q, but that will cause final data loss.
+> Since we have P & Q,=C2=A0 actually we can try to use them and find out t=
+he
+> wrong data block then fix it.
+>=20
+> But the algorithm to find the bad data block seems not
+> straightforward... Does anyone know if there is any paper discussed
+> this issue before?
+>=20
+> Update: I just found there is one talk about this in FAST08:
+> http://www.usenix.org/events/fast08/tech/krioukov.html.
+> But that approach will add checksums.etc. For bare-bones raid6, does
+> any guru have any better ideas?
+
+http://neil.brown.name/blog/20100211050355
+
 NeilBrown
 
---Sig_/prVK7NphfJJ+c7PTLNJkPHo
+--Sig_/.DAPd5Bkc8_=H8jpPY50reT
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTulzKjnsnt1WYoG5AQJd/w/7BUxLWJz8X/RFWli4lGpFQfL88Ks/u8TU
-NPFuj/n5u4Nnt64eY46TIJI5uLWnGICcjyE7rNXIdRR69X05PeJCRJ/iZ2hGQjZW
-kkyEXzhG1ndKYzSX3baeUqDL8y8rusDAYx7JPhp1YYs380Rw+0zckkU7TpLuMGI3
-wgl+TfCyZ87bn91LoimxyJhicP7sG6aTAqU1h1MH7HA+AITgXGCAFQF5PrKxKpyv
-a8LqeGmxkXPmc3rkkcuNQ8/0YykMrRv/MzUNJtE7M+ZQjopJSjsundLdxQnAulFB
-R6ug+g2uzZGLGSlm+gxq5pdzEptva3mj1ocA2PVbpSbLBqTaClXxzHa/LNBmdk5o
-rbquHkv7Y70dT673k9aSfvquIZ5SWVGdGGRF2kcWGk8hfLAKcrBKCgt0m8/Z4tFv
-MxCmltng3RmbRCFGIc1Ff2Ytbf1oOpSQLOXvClUlTnP4zU5s3eEYVVlNN7GHeaNW
-6Vk2F4VvnUEDBEpCAX6Gf+cZfpKp4B5/cdR2HAERwi6HNgvXIBBycCJXPgFyJ/vh
-SyACWtxnvDMlGItwv8mk0k6jNvawrngeIUQs0X8a/HrpQ0edovs+LJ3+Wz7xsKaR
-9yf0FC5KudYqsKVUK1gPpy3JfBlSUfBBumwH86b3Ghwd2wBP1y65poXGHLTETbNj
-ORqDofjGSBc=
-=L3GW
+iQIVAwUBTul3Kznsnt1WYoG5AQIHvxAAs1OrcLmFOjdyEVN8ZYsawDT51CjT4qYt
+M7NLuZsNdx2A4BbYRXPRtkwdCzmAtzY+vzt4IEQyD8JBrg+MKPdqiUH8F3qpsPUT
+4V/QNmcliPxP/zK9wLAklODoe/TMsk/jnKQ4hIOS+8LhEbzMp2lMMeYWYcmQt8+v
+0gGmI0yjlNuVlO68C9Cdyezf+0OUGMn8uPn9YtWEy4CYl7yHmyRNNYHyct56Vljb
+3lFcyFGtCne6mz17zvOdgzoo1gDBbPdY50hJhoFanuU/Tbf8sn2cUaKMLG4JJI5q
+TBGDBrcvLUNkHA7onTcZOsgX9MuVudDOY6Dsyh1gxsUGudRGIS2s9o2p6NRdleG4
+ETKxwfCjD+fRc71+3DKxQ2PJEEP/AjGPrRHXpArU541yv+S00VWE9onHhTC9/LAg
+PP0IKZH5+xXmvfp9swl6mffHfjRvjn/t9t+TeQK9ex2Zb9M7AYWPBwdTn66GkgVb
+xWCRfLG0pRLpzICH3NVzFUQLpc1QxgqJIh4ixodtSVMZE7cmp56R3c19Co0q3Xlw
+fYZBG5UY9ExPjenMRpPO+g8mX3T0OBGiEIkcf7pSyiqm4R3Oba5eAmY/CSLfG6TP
+STkrY6qZWbNnmv5xHhdDM902Lgbm8KTj/y+4ajg7xE2djOmILchp44Alkk+EQv4J
+E44uYssTmHw=
+=Orl+
 -----END PGP SIGNATURE-----
 
---Sig_/prVK7NphfJJ+c7PTLNJkPHo--
+--Sig_/.DAPd5Bkc8_=H8jpPY50reT--
