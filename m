@@ -1,127 +1,293 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: Data scribbling for raid6 is wrong?
-Date: Thu, 15 Dec 2011 10:33:24 +0100
-Message-ID: <jccev9$ldt$1@dough.gmane.org>
-References: <CAAV8rnKoga_DM1qh28ZGEsJMZAKPYDZcVFfLBSH9kPNHysf7LQ@mail.gmail.com> <20111215152723.1d2bcca0@notabene.brown>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [PATCH 2/3] imsm: FIX: 'UT 09imsm-assemble' fails
+Date: Thu, 15 Dec 2011 10:28:08 +0000
+Message-ID: <79556383A0E1384DB3A3903742AAC04A060FAC@IRSMSX101.ger.corp.intel.com>
+References: <20111214150448.21483.16231.stgit@gklab-128-013.igk.intel.com>
+	<20111214150712.21483.48715.stgit@gklab-128-013.igk.intel.com>
+ <20111215150114.68ee8522@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111215152723.1d2bcca0@notabene.brown>
+In-Reply-To: <20111215150114.68ee8522@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-On 15/12/2011 05:27, NeilBrown wrote:
-> On Thu, 15 Dec 2011 11:15:42 +0800 Tao Guo<glorioustao@gmail.com>  wrote:
->
->> Hi all,
->>
->> Today I checked the raid6's scribbling code, and I think there may be
->> some improvements to handle bad sectors:
->
-> I think the common term is "scrubbing" rather than "scribbling".
->
->>
->> If we have one bad sector(with corrupted data) in the data block,
->> scribbling thread will find parity mismatch and will try to
->> recompute&rewrite P&Q, but that will cause final data loss.
->> Since we have P&  Q,  actually we can try to use them and find out the
->> wrong data block then fix it.
->>
->> But the algorithm to find the bad data block seems not
->> straightforward... Does anyone know if there is any paper discussed
->> this issue before?
->>
->> Update: I just found there is one talk about this in FAST08:
->> http://www.usenix.org/events/fast08/tech/krioukov.html.
->> But that approach will add checksums.etc. For bare-bones raid6, does
->> any guru have any better ideas?
->
-> http://neil.brown.name/blog/20100211050355
->
-
-I've read this before, but I've had another think about it in the case 
-of RAID6.
-
-I agree that there is little point in a complex repair algorithm in most 
-cases - without additional knowledge of the ordering of the writes in a 
-stripe, you don't know which blocks are new data, and which are old 
-data.  So even if you have a 5-way mirror and 4 of them agree, it could 
-still be the fifth block that is the new data.  As you say in your blog, 
-the only correct thing to do is a simple repair to get consistency, and 
-let the filesystem figure out if the data is usable or not.
-
-The only situation when a smart repair could make sense is for a RAID6 
-array, when the array is off-line (as you say, you never want to risk 
-changing data that the filesystem may already have read - thus any 
-change to the data blocks in the stripe must be done off-line).  If a 
-RAID6 stripe is read, and found to be inconsistent, it is possible to 
-try to find a consistent subset.  The algorithm to do so is quite 
-straightforward, if a little slow (I'll explain it if anyone is 
-interested).  And if such a consistent sub-stripe is found, then you can 
-be very confident that this means the data is correct (the chances of it 
-not being correct are truly minuscule, not just "small"), and the single 
-block is inconsistent.
-
-The question then is what could lead to a stripe with one inconsistent 
-block.  Perhaps only the one block had been written before power 
-failure, or perhaps only the one block was still to be written before 
-the crash.  Or perhaps in the case of a single block partial write to 
-the stripe, the data block had been written but neither of the parity 
-blocks had been updated.  Or perhaps that one block has had some sort of 
-error (read or write) that was not flagged by the disk controller.  It 
-is therefore often a better choice, or at least no worse, to choose this 
-block to change when making the stripe consistent, rather than picking 
-on the P and Q blocks.
-
-When doing online scrubbing, priority has to go to giving the filesystem 
-consistent data - this means using the "simple" approach of 
-re-generating P and Q.  That is also by far the faster method, which is 
-a useful bonus when online and working.
-
-So if we assume that "smart" recovery of RAID6 during offline resyncs is 
-technically better on average than "simple" recovery, the question then 
-becomes one of whether it is worth implementing.  To answer that, we 
-have to look at the situations where it would be useful, the complexity 
-of the code, and the benefits of having it.
-
-As explained in the blog entry, there are a few cases that can lead to 
-inconsistent stripes.  These are either serious hardware errors or 
-serious administrator errors, neither of which benefit much from any 
-sort of automatic recovery, or crashes or power fails in the middle of a 
-stripe write.  Assuming that people that pay for the reliability of 
-RAID6 in extra disk costs also often buy an UPS and pick stable kernels 
-and distributions, such events are going to be very rare.
-
-The code won't be too complex - but it still means extra code and extra 
-work in testing.
-
-We already know that the filesystem will have to cope with bad stripes 
-anyway - a journalled filesystem will know that the stripe is 
-questionable after a crash, and will ensure that the metadata is 
-consistent.  But smart recovery increases the chance that file data is 
-also saved.  Of course, it gives no guarantees - sometimes it will 
-roll-back a single-block change, sometimes it will complete the stripe 
-write.
-
-Ultimately, which I think such "smart" recovery would give slightly 
-better data recovery on average, it's worst case behaviour is not any 
-worse than the "simple" recovery, and it would very rarely be triggered 
-in practice.  There are many other features on the raid developers' 
-"things to do" lists that will be of much more benefit than implementing 
-this.
 
 
+> -----Original Message-----
+> From: NeilBrown [mailto:neilb@suse.de]
+> Sent: Thursday, December 15, 2011 5:01 AM
+> To: Kwolek, Adam
+> Cc: linux-raid@vger.kernel.org; Ciechanowski, Ed; Labun, Marcin; Williams,
+> Dan J
+> Subject: Re: [PATCH 2/3] imsm: FIX: 'UT 09imsm-assemble' fails
+> 
+> On Wed, 14 Dec 2011 16:07:12 +0100 Adam Kwolek
+> <adam.kwolek@intel.com> wrote:
+> 
+> > Problem was introduced by patch (2011-06-08):
+> >    getinfo_super now clears the 'info' structure before filling it in.
+> >
+> > Field update private is not managed here and pointer associated
+> > outside is cleaned up.
+> > Add code for field update_private cleaning preservation.
+> > In places where in patch
+> >   'getinfo_super now clears the 'info' structure before filling it in.'
+> > cleaning structure was removed, cleaning update_private field was
+> > added as getinfo_super() cannot be responsible for this pointer
+> management.
+> >
+> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> > ---
+> >
+> >  Assemble.c    |    2 ++
+> >  Incremental.c |    3 +++
+> >  super-intel.c |    9 +++++++++
+> >  3 files changed, 14 insertions(+), 0 deletions(-)
+> >
+> > diff --git a/Assemble.c b/Assemble.c
+> > index fac2bad..c8b538f 100644
+> > --- a/Assemble.c
+> > +++ b/Assemble.c
+> > @@ -422,6 +422,7 @@ int Assemble(struct supertype *st, char *mddev,
+> >  					int uuid[4];
+> >
+> >  					content = &info;
+> > +					info.update_private = NULL
+> >  					tst->ss->getinfo_super(tst, content,
+> NULL);
+> >
+> >  					if (!parse_uuid(ident->container,
+> uuid) || @@ -485,6 +486,7 @@
+> > int Assemble(struct supertype *st, char *mddev,
+> >  		} else {
+> >
+> >  			content = &info;
+> > +			info.update_private = NULL
+> >  			tst->ss->getinfo_super(tst, content, NULL);
+> >
+> >  			if (!ident_matches(ident, content, tst, diff --git
+> a/Incremental.c
+> > b/Incremental.c index d3724a4..112a1ec 100644
+> > --- a/Incremental.c
+> > +++ b/Incremental.c
+> > @@ -205,6 +205,7 @@ int Incremental(char *devname, int verbose, int
+> runstop,
+> >  	}
+> >  	close (dfd); dfd = -1;
+> >
+> > +	info.update_private = NULL
+> >  	st->ss->getinfo_super(st, &info, NULL);
+> >
+> >  	/* 3/ Check if there is a match in mdadm.conf */ @@ -404,6 +405,7
+> @@
+> > int Incremental(char *devname, int verbose, int runstop,
+> >  				goto out_unlock;
+> >  			}
+> >  			close(dfd2);
+> > +			info.update_private = NULL
+> >  			st2->ss->getinfo_super(st2, &info2, NULL);
+> >  			st2->ss->free_super(st2);
+> >  			if (info.array.level != info2.array.level || @@ -1382,6
+> +1384,7 @@
+> > static int Incremental_container(struct supertype *st, char *devname,
+> >  	int ra_blocked = 0;
+> >  	int ra_all = 0;
+> >
+> > +	info.update_private = NULL
+> >  	st->ss->getinfo_super(st, &info, NULL);
+> >
+> >  	if ((runstop > 0 && info.container_enough >= 0) || diff --git
+> > a/super-intel.c b/super-intel.c index e1073ef..5e1d278 100644
+> > --- a/super-intel.c
+> > +++ b/super-intel.c
+> > @@ -2365,8 +2365,13 @@ static void getinfo_super_imsm_volume(struct
+> supertype *st, struct mdinfo *info,
+> >  	char *devname;
+> >  	unsigned int component_size_alligment;
+> >  	int map_disks = info->array.raid_disks;
+> > +	void *update_private_saver = info->update_private;
+> >
+> >  	memset(info, 0, sizeof(*info));
+> > +	/* preserve pointer cleanup, as someone elese is pointer owner
+> > +	 */
+> > +	info->update_private = update_private_saver;
+> > +
+> >  	if (prev_map)
+> >  		map_to_analyse = prev_map;
+> >
+> > @@ -2601,12 +2606,16 @@ static void getinfo_super_imsm(struct
+> supertype *st, struct mdinfo *info, char *
+> >  	int max_enough = -1;
+> >  	int i;
+> >  	struct imsm_super *mpb;
+> > +	void *update_private_saver = info->update_private;
+> >
+> >  	if (super->current_vol >= 0) {
+> >  		getinfo_super_imsm_volume(st, info, map);
+> >  		return;
+> >  	}
+> >  	memset(info, 0, sizeof(*info));
+> > +	/* preserve pointer cleanup, as someone elese is pointer owner
+> > +	 */
+> > +	info->update_private = update_private_saver;
+> >
+> >  	/* Set raid_disks to zero so that Assemble will always pull in valid
+> >  	 * spares
+> >
+> 
+> You didn't really think I'd let that through, did you :-)
+> 
+> I've written an alternate which gets rid of update_private.
+> 
+> Could you and Dan please review and check it performs as required.
+> 
+> Thanks,
+> NeilBrown
 
-Of course, there is another resync/repair strategy that is even simpler 
-than the "simple" one used today, and even faster.  If a stripe is found 
-to be inconsistent, we could simply zero out the whole stripe.  It would 
-be no worse than the worst case situation with any other algorithm.  It 
-is also arguably better to give the filesystem no data rather than 
-possibly bad data.
 
 
+Don't you think that condition should set rv variable in opposite way? E.g.:
+ +		} else {
+ +			if (info->uuid[0] != info->uuid[1] ||
+ +			    info->uuid[1] != info->uuid[2] ||
+ +			    info->uuid[2] != info->uuid[3])
+ +				rv = 0;
+ +			else
+ +				rv = -1;
+  		}
+
+I think that when condition is true, this means "random" value and update should be performed.
+
+BR
+Adam
 
 
-
+> 
+> 
+> commit 8606be19835abaf888d0fbd1729dcda82a8b2815
+> Author: NeilBrown <neilb@suse.de>
+> Date:   Thu Dec 15 14:59:12 2011 +1100
+> 
+>     Remove update_private
+> 
+>     This fields doesn't work any more as ->getinfo_super clears the info
+>     structure at an awkward time.  So get rid of it and do it differently.
+> 
+>     The issue is that the metadata handler cannot tell if the uuid it has
+>     was randomly generated or explicitly requested, except on the first
+>     call.
+>     And we don't want to accept explicit requests for IMSM.
+>     So when it was auto-generated, make it look distinctive by having the
+>     same int copied in all 4 positions.  If someone requests a uuid like
+>     that, I guess they get away with it.
+> 
+>     Reported-by: Adam Kwolek <adam.kwolek@intel.com>
+>     Signed-off-by: NeilBrown <neilb@suse.de>
+> 
+> diff --git a/Assemble.c b/Assemble.c
+> index fac2bad..74fb6a3 100644
+> --- a/Assemble.c
+> +++ b/Assemble.c
+> @@ -706,7 +706,6 @@ int Assemble(struct supertype *st, char *mddev,
+>  	bitmap_done = 0;
+>  #endif
+>  	/* Ok, no bad inconsistancy, we can try updating etc */
+> -	content->update_private = NULL;
+>  	devices = malloc(num_devs * sizeof(*devices));
+>  	devmap = calloc(num_devs * content->array.raid_disks, 1);
+>  	for (tmpdev = devlist; tmpdev; tmpdev=tmpdev->next) if (tmpdev-
+> >used == 1) { @@ -891,8 +890,6 @@ int Assemble(struct supertype *st, char
+> *mddev,
+>  		}
+>  		devcnt++;
+>  	}
+> -	free(content->update_private);
+> -	content->update_private = NULL;
+> 
+>  	if (devcnt == 0) {
+>  		fprintf(stderr, Name ": no devices found for %s\n", diff --git
+> a/mdadm.h b/mdadm.h index 1351d42..4f3533f 100644
+> --- a/mdadm.h
+> +++ b/mdadm.h
+> @@ -217,11 +217,6 @@ struct mdinfo {
+>  	unsigned long		cache_size; /* size of raid456 stripe cache*/
+>  	int			mismatch_cnt;
+>  	char			text_version[50];
+> -	void 			*update_private; /* for passing metadata-
+> format
+> -						  * specific update data
+> -						  * between successive calls
+> to
+> -						  * update_super()
+> -						  */
+> 
+>  	int container_member; /* for assembling external-metatdata arrays
+>  			       * This is to be used internally by metadata diff --
+> git a/super-intel.c b/super-intel.c index e1073ef..78781c7 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -2791,25 +2791,30 @@ static int update_super_imsm(struct supertype
+> *st, struct mdinfo *info,
+> 
+>  	mpb = super->anchor;
+> 
+> -	if (strcmp(update, "uuid") == 0 && uuid_set && !info-
+> >update_private)
+> -		rv = -1;
+> -	else if (strcmp(update, "uuid") == 0 && uuid_set && info-
+> >update_private) {
+> -		mpb->orig_family_num = *((__u32 *) info-
+> >update_private);
+> -		rv = 0;
+> -	} else if (strcmp(update, "uuid") == 0) {
+> -		__u32 *new_family = malloc(sizeof(*new_family));
+> -
+> -		/* update orig_family_number with the incoming random
+> -		 * data, report the new effective uuid, and store the
+> -		 * new orig_family_num for future updates.
+> +	if (strcmp(update, "uuid") == 0) {
+> +		/* We take this to mean that the family_num should be
+> updated.
+> +		 * However that is much smaller than the uuid so we cannot
+> really
+> +		 * allow an explicit uuid to be given.  And it is hard to reliably
+> +		 * know if one was.
+> +		 * So if !uuid_set we know the current uuid is random and
+> just used
+> +		 * the first 'int' and copy it to the other 3 positions.
+> +		 * Otherwise we require the 4 'int's to be the same as would
+> be the
+> +		 * case if we are using a random uuid.  So an explicit uuid will
+> be
+> +		 * accepted as long as all for ints are the same... which
+> shouldn't
+> +hurt
+>  		 */
+> -		if (new_family) {
+> -			memcpy(&mpb->orig_family_num, info->uuid,
+> sizeof(__u32));
+> -			uuid_from_super_imsm(st, info->uuid);
+> -			*new_family = mpb->orig_family_num;
+> -			info->update_private = new_family;
+> +		if (uuid_set) {
+> +			info->uuid[1] = info->uuid[2] = info->uuid[3] = info-
+> >uuid[0];
+>  			rv = 0;
+> +		} else {
+> +			if (info->uuid[0] != info->uuid[1] ||
+> +			    info->uuid[1] != info->uuid[2] ||
+> +			    info->uuid[2] != info->uuid[3])
+> +				rv = -1;
+> +			else
+> +				rv = 0;
+>  		}
+> +		if (rv == 0)
+> +			mpb->orig_family_num = info->uuid[0];
+>  	} else if (strcmp(update, "assemble") == 0)
+>  		rv = 0;
+>  	else
