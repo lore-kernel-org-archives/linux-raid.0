@@ -1,178 +1,127 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 3/3] imsm: FIX: UT '08imsm-overlap' fails
-Date: Thu, 15 Dec 2011 08:01:21 +0000
-Message-ID: <79556383A0E1384DB3A3903742AAC04A060EEA@IRSMSX101.ger.corp.intel.com>
-References: <20111214150448.21483.16231.stgit@gklab-128-013.igk.intel.com>
-	<20111214150720.21483.27249.stgit@gklab-128-013.igk.intel.com>
-	<CABE8wwt44LbrKEGJjoUyjOt5zDP2=uO60hVPYfWpxMHi+EuQwg@mail.gmail.com>
-	<20111215150314.7e5694c7@notabene.brown>
- <CABE8wwvfzxM1e2S7XOotMHWT40JF6sbRH3mW688dpuWmwoCtZQ@mail.gmail.com>
+From: David Brown <david@westcontrol.com>
+Subject: Re: Data scribbling for raid6 is wrong?
+Date: Thu, 15 Dec 2011 10:33:24 +0100
+Message-ID: <jccev9$ldt$1@dough.gmane.org>
+References: <CAAV8rnKoga_DM1qh28ZGEsJMZAKPYDZcVFfLBSH9kPNHysf7LQ@mail.gmail.com> <20111215152723.1d2bcca0@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CABE8wwvfzxM1e2S7XOotMHWT40JF6sbRH3mW688dpuWmwoCtZQ@mail.gmail.com>
-Content-Language: en-US
+In-Reply-To: <20111215152723.1d2bcca0@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Williams, Dan J" <dan.j.williams@intel.com>, NeilBrown <neilb@suse.de>
-Cc: "Labun, Marcin" <Marcin.Labun@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-=46rom: Williams, Dan J [mailto:dan.j.williams@intel.com]=20
-Sent: Thursday, December 15, 2011 6:16 AM
-To: NeilBrown
-Cc: Labun, Marcin; Ciechanowski, Ed; linux-raid@vger.kernel.org; Kwolek=
-, Adam
-Subject: Re: [PATCH 3/3] imsm: FIX: UT '08imsm-overlap' fails
-
-
-On Dec 14, 2011 8:03 PM, "NeilBrown" <neilb@suse.de> wrote:
+On 15/12/2011 05:27, NeilBrown wrote:
+> On Thu, 15 Dec 2011 11:15:42 +0800 Tao Guo<glorioustao@gmail.com>  wrote:
 >
-> On Wed, 14 Dec 2011 10:21:07 -0800 "Williams, Dan J"
-> <dan.j.williams@intel.com> wrote:
+>> Hi all,
+>>
+>> Today I checked the raid6's scribbling code, and I think there may be
+>> some improvements to handle bad sectors:
 >
-> > On Wed, Dec 14, 2011 at 7:07 AM, Adam Kwolek <adam.kwolek@intel.com=
-> wrote:
-> > > Problem was introduced by patch (2011-09-19):
-> > > =A0 Create: Allow to create two volumes of different sizes within=
- one container
-> > >
-> > > To resolve problem check requested disks number not against all d=
-isks
-> > > recorded in metadata, but against disks number set in array map s=
-tructure.
-> > >
-> > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> > > ---
-> > >
-> > > =A0super-intel.c | =A0 24 ++++++++++++++++++++----
-> > > =A01 files changed, 20 insertions(+), 4 deletions(-)
-> > >
-> > > diff --git a/super-intel.c b/super-intel.c
-> > > index 5e1d278..3c10d29 100644
-> > > --- a/super-intel.c
-> > > +++ b/super-intel.c
-> > > @@ -5318,10 +5318,26 @@ static int validate_geometry_imsm_volume(=
-struct supertype *st, int level,
-> > >
-> > > =A0 =A0 =A0 =A0mpb =3D super->anchor;
-> > >
-> > > - =A0 =A0 =A0 if (mpb->num_raid_devs > 0 && mpb->num_disks !=3D r=
-aiddisks) {
-> > > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 fprintf(stderr, Name ": the option-=
-rom requires all "
-> > > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 "member disks to be=
- a member of all volumes.\n");
-> > > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 0;
-> > > + =A0 =A0 =A0 /* check if currently verified volume spans the sam=
-e disks number
-> > > + =A0 =A0 =A0 =A0* as all other arrays that belongs to metadata.
-> > > + =A0 =A0 =A0 =A0* Do not allow to create volume with different d=
-isks number
-> > > + =A0 =A0 =A0 =A0* than curently is used.
-> > > + =A0 =A0 =A0 =A0*/
-> > > + =A0 =A0 =A0 for (i =3D 0; i < mpb->num_raid_devs; i++) {
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* There is any already existing ar=
-ray in metadata
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct imsm_dev *dev =3D get_imsm_d=
-ev(super, i);
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct imsm_map *map =3D NULL;
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (dev)
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 map =3D get_imsm_ma=
-p(dev, MAP_0);
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (map) {
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (raiddisks !=3D =
-map->num_members) {
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 fpr=
-intf(stderr, Name ": the option-rom requires"
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 " all member disks to be a member of "
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 "all volumes.\n");
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ret=
-urn 0;
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
-> >
-> > I'd prefer to move this check back to the other 'orom' checks in
-> > validate_geometry_imsm_volume(), and make it dependent on the prese=
-nce
-> > of the orom.
-> >
-> > diff --git a/super-intel.c b/super-intel.c
-> > index 07d47b5..9885b98 100644
-> > --- a/super-intel.c
-> > +++ b/super-intel.c
-> > @@ -5122,12 +5122,6 @@ static int validate_geometry_imsm_volume(str=
-uct
-> > supertype *st, int level,
-> > =A0 =A0 =A0 if (!super)
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 0;
-> >
-> > - =A0 =A0 if (mpb->num_raid_devs > 0 && mpb->num_disks !=3D raiddis=
-ks) {
-> > - =A0 =A0 =A0 =A0 =A0 =A0 fprintf(stderr, Name ": the option-rom re=
-quires all "
-> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 "member disks to be a mem=
-ber of all volumes.\n");
-> > - =A0 =A0 =A0 =A0 =A0 =A0 return 0;
-> > - =A0 =A0 }
-> > -
-> > =A0 =A0 =A0 if (!validate_geometry_imsm_orom(super, level, layout, =
-raiddisks,
-> > chunk, verbose)) {
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 fprintf(stderr, Name ": RAID gemetry va=
-lidation failed. "
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 "Cannot proceed with th=
-e action(s).\n");
-> > @@ -5206,6 +5200,11 @@ static int validate_geometry_imsm_volume(str=
-uct
-> > supertype *st, int level,
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 fprintf(stderr, Name ": The option-rom =
-requires all member"
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 " disks to be a member =
-of all volumes\n");
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 0;
-> > + =A0 =A0 } else if (super->orom && mpb->num_raid_devs > 0 &&
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0mpb->num_disks !=3D raiddisks) {
-> > + =A0 =A0 =A0 =A0 =A0 =A0 fprintf(stderr, Name ": The option-rom re=
-quires all member"
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 " disks to be a member of=
- all volumes\n");
-> > + =A0 =A0 =A0 =A0 =A0 =A0 return 0;
-> > =A0 =A0 =A0 }
-> >
-> > =A0 =A0 =A0 /* retrieve the largest free space block */
+> I think the common term is "scrubbing" rather than "scribbling".
 >
+>>
+>> If we have one bad sector(with corrupted data) in the data block,
+>> scribbling thread will find parity mismatch and will try to
+>> recompute&rewrite P&Q, but that will cause final data loss.
+>> Since we have P&  Q,  actually we can try to use them and find out the
+>> wrong data block then fix it.
+>>
+>> But the algorithm to find the bad data block seems not
+>> straightforward... Does anyone know if there is any paper discussed
+>> this issue before?
+>>
+>> Update: I just found there is one talk about this in FAST08:
+>> http://www.usenix.org/events/fast08/tech/krioukov.html.
+>> But that approach will add checksums.etc. For bare-bones raid6, does
+>> any guru have any better ideas?
 >
-> Hi Dan,
-> =A0I think you are presenting this as an alternate - is that correct?
-Yes.
-> It seems a lit simpler - does it do enough?
-I believe so, I'd like Adam to confirm.
+> http://neil.brown.name/blog/20100211050355
+>
 
-I'm not sure if checking mpb->num_disks !=3D raiddisks is enough /or it=
- is rather too much/.
-In disk list could be different number of members than in map (e.g. reb=
-uild when disks list is longer).
-It was UT08* failure cause and I thing using maps length is better.
+I've read this before, but I've had another think about it in the case 
+of RAID6.
 
-I'm not sure, if making it dependent on the presence of the orom makes =
-us happy from compatibility point of view.
-We shouldn't make metadata OROM incompatible. Every array can be mounte=
-d on OROM platform later, what scenario for such case?
+I agree that there is little point in a complex repair algorithm in most 
+cases - without additional knowledge of the ordering of the writes in a 
+stripe, you don't know which blocks are new data, and which are old 
+data.  So even if you have a 5-way mirror and 4 of them agree, it could 
+still be the fifth block that is the new data.  As you say in your blog, 
+the only correct thing to do is a simple repair to get consistency, and 
+let the filesystem figure out if the data is usable or not.
 
-BR
-Adam
+The only situation when a smart repair could make sense is for a RAID6 
+array, when the array is off-line (as you say, you never want to risk 
+changing data that the filesystem may already have read - thus any 
+change to the data blocks in the stripe must be done off-line).  If a 
+RAID6 stripe is read, and found to be inconsistent, it is possible to 
+try to find a consistent subset.  The algorithm to do so is quite 
+straightforward, if a little slow (I'll explain it if anyone is 
+interested).  And if such a consistent sub-stripe is found, then you can 
+be very confident that this means the data is correct (the chances of it 
+not being correct are truly minuscule, not just "small"), and the single 
+block is inconsistent.
 
-(forgive brevity replying from phone)
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The question then is what could lead to a stripe with one inconsistent 
+block.  Perhaps only the one block had been written before power 
+failure, or perhaps only the one block was still to be written before 
+the crash.  Or perhaps in the case of a single block partial write to 
+the stripe, the data block had been written but neither of the parity 
+blocks had been updated.  Or perhaps that one block has had some sort of 
+error (read or write) that was not flagged by the disk controller.  It 
+is therefore often a better choice, or at least no worse, to choose this 
+block to change when making the stripe consistent, rather than picking 
+on the P and Q blocks.
+
+When doing online scrubbing, priority has to go to giving the filesystem 
+consistent data - this means using the "simple" approach of 
+re-generating P and Q.  That is also by far the faster method, which is 
+a useful bonus when online and working.
+
+So if we assume that "smart" recovery of RAID6 during offline resyncs is 
+technically better on average than "simple" recovery, the question then 
+becomes one of whether it is worth implementing.  To answer that, we 
+have to look at the situations where it would be useful, the complexity 
+of the code, and the benefits of having it.
+
+As explained in the blog entry, there are a few cases that can lead to 
+inconsistent stripes.  These are either serious hardware errors or 
+serious administrator errors, neither of which benefit much from any 
+sort of automatic recovery, or crashes or power fails in the middle of a 
+stripe write.  Assuming that people that pay for the reliability of 
+RAID6 in extra disk costs also often buy an UPS and pick stable kernels 
+and distributions, such events are going to be very rare.
+
+The code won't be too complex - but it still means extra code and extra 
+work in testing.
+
+We already know that the filesystem will have to cope with bad stripes 
+anyway - a journalled filesystem will know that the stripe is 
+questionable after a crash, and will ensure that the metadata is 
+consistent.  But smart recovery increases the chance that file data is 
+also saved.  Of course, it gives no guarantees - sometimes it will 
+roll-back a single-block change, sometimes it will complete the stripe 
+write.
+
+Ultimately, which I think such "smart" recovery would give slightly 
+better data recovery on average, it's worst case behaviour is not any 
+worse than the "simple" recovery, and it would very rarely be triggered 
+in practice.  There are many other features on the raid developers' 
+"things to do" lists that will be of much more benefit than implementing 
+this.
+
+
+
+Of course, there is another resync/repair strategy that is even simpler 
+than the "simple" one used today, and even faster.  If a stripe is found 
+to be inconsistent, we could simply zero out the whole stripe.  It would 
+be no worse than the worst case situation with any other algorithm.  It 
+is also arguably better to give the filesystem no data rather than 
+possibly bad data.
+
+
+
+
+
