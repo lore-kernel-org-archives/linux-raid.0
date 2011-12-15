@@ -1,146 +1,166 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/3] imsm: FIX: Chunk size migration is not possible
-Date: Thu, 15 Dec 2011 15:01:59 +1100
-Message-ID: <20111215150159.44f8e1c9@notabene.brown>
+Subject: Re: [PATCH 3/3] imsm: FIX: UT '08imsm-overlap' fails
+Date: Thu, 15 Dec 2011 15:03:14 +1100
+Message-ID: <20111215150314.7e5694c7@notabene.brown>
 References: <20111214150448.21483.16231.stgit@gklab-128-013.igk.intel.com>
-	<20111214150704.21483.66299.stgit@gklab-128-013.igk.intel.com>
+	<20111214150720.21483.27249.stgit@gklab-128-013.igk.intel.com>
+	<CABE8wwt44LbrKEGJjoUyjOt5zDP2=uO60hVPYfWpxMHi+EuQwg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/KfFM6MzxLye1ckRq0u6M+GB"; protocol="application/pgp-signature"
+ boundary="Sig_/3v1UVpnOAJAepk3hY4LkVYR"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111214150704.21483.66299.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <CABE8wwt44LbrKEGJjoUyjOt5zDP2=uO60hVPYfWpxMHi+EuQwg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: Adam Kwolek <adam.kwolek@intel.com>, linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com
 List-Id: linux-raid.ids
 
---Sig_/KfFM6MzxLye1ckRq0u6M+GB
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/3v1UVpnOAJAepk3hY4LkVYR
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 14 Dec 2011 16:07:05 +0100 Adam Kwolek <adam.kwolek@intel.com> wrot=
+On Wed, 14 Dec 2011 10:21:07 -0800 "Williams, Dan J"
+<dan.j.williams@intel.com> wrote:
+
+> On Wed, Dec 14, 2011 at 7:07 AM, Adam Kwolek <adam.kwolek@intel.com> wrot=
 e:
-
-> Chunk size only migration for raid0 and raid5 is not possible.
-> (mdadm UT 15* fails). Mdadm exits with information:
->    mdadm: imsm unknown layout 0xffffffff for this raid level 0
+> > Problem was introduced by patch (2011-09-19):
+> > =C2=A0 Create: Allow to create two volumes of different sizes within on=
+e container
+> >
+> > To resolve problem check requested disks number not against all disks
+> > recorded in metadata, but against disks number set in array map structu=
+re.
+> >
+> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> > ---
+> >
+> > =C2=A0super-intel.c | =C2=A0 24 ++++++++++++++++++++----
+> > =C2=A01 files changed, 20 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/super-intel.c b/super-intel.c
+> > index 5e1d278..3c10d29 100644
+> > --- a/super-intel.c
+> > +++ b/super-intel.c
+> > @@ -5318,10 +5318,26 @@ static int validate_geometry_imsm_volume(struct=
+ supertype *st, int level,
+> >
+> > =C2=A0 =C2=A0 =C2=A0 =C2=A0mpb =3D super->anchor;
+> >
+> > - =C2=A0 =C2=A0 =C2=A0 if (mpb->num_raid_devs > 0 && mpb->num_disks !=
+=3D raiddisks) {
+> > - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 fprintf(stderr, Name=
+ ": the option-rom requires all "
+> > - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 "member disks to be a member of all volumes.\n");
+> > - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return 0;
+> > + =C2=A0 =C2=A0 =C2=A0 /* check if currently verified volume spans the =
+same disks number
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0* as all other arrays that belongs to meta=
+data.
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0* Do not allow to create volume with diffe=
+rent disks number
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0* than curently is used.
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0*/
+> > + =C2=A0 =C2=A0 =C2=A0 for (i =3D 0; i < mpb->num_raid_devs; i++) {
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 /* There is any alre=
+ady existing array in metadata
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0*/
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 struct imsm_dev *dev=
+ =3D get_imsm_dev(super, i);
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 struct imsm_map *map=
+ =3D NULL;
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (dev)
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 map =3D get_imsm_map(dev, MAP_0);
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (map) {
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 if (raiddisks !=3D map->num_members) {
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 fprintf(stderr, Name ": the option-rom =
+requires"
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 " all membe=
+r disks to be a member of "
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 "all volume=
+s.\n");
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return 0;
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 }
+> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 }
 >=20
-> Problem was introduced in patch (2011-11-16):
->    imsm: platform capabilities are not validated during level migration
+> I'd prefer to move this check back to the other 'orom' checks in
+> validate_geometry_imsm_volume(), and make it dependent on the presence
+> of the orom.
 >=20
-> During chunk size migration layout variable is not set correctly.
-> Set it correctly for this migration type.
+> diff --git a/super-intel.c b/super-intel.c
+> index 07d47b5..9885b98 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -5122,12 +5122,6 @@ static int validate_geometry_imsm_volume(struct
+> supertype *st, int level,
+>  	if (!super)
+>  		return 0;
 >=20
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> -	if (mpb->num_raid_devs > 0 && mpb->num_disks !=3D raiddisks) {
+> -		fprintf(stderr, Name ": the option-rom requires all "
+> -			"member disks to be a member of all volumes.\n");
+> -		return 0;
+> -	}
+> -
+>  	if (!validate_geometry_imsm_orom(super, level, layout, raiddisks,
+> chunk, verbose)) {
+>  		fprintf(stderr, Name ": RAID gemetry validation failed. "
+>  			"Cannot proceed with the action(s).\n");
+> @@ -5206,6 +5200,11 @@ static int validate_geometry_imsm_volume(struct
+> supertype *st, int level,
+>  		fprintf(stderr, Name ": The option-rom requires all member"
+>  			" disks to be a member of all volumes\n");
+>  		return 0;
+> +	} else if (super->orom && mpb->num_raid_devs > 0 &&
+> +		   mpb->num_disks !=3D raiddisks) {
+> +		fprintf(stderr, Name ": The option-rom requires all member"
+> +			" disks to be a member of all volumes\n");
+> +		return 0;
+>  	}
+>=20
+>  	/* retrieve the largest free space block */
 
 
-Applied, thanks.
+Hi Dan,
+ I think you are presenting this as an alternate - is that correct?
+It seems a lit simpler - does it do enough?
+
+Or is it just a precursor, and then we apply Adam's patch changing the same
+code but in a different location?
+
+Slightly confused...
 
 NeilBrown
 
 
-
-
-
-
-
-> ---
->=20
->  super-intel.c |   19 ++++++++++++-------
->  1 files changed, 12 insertions(+), 7 deletions(-)
->=20
-> diff --git a/super-intel.c b/super-intel.c
-> index 3a34f5a..e1073ef 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -9050,8 +9050,10 @@ enum imsm_reshape_type imsm_analyze_change(struct =
-supertype *st,
->  	int change =3D -1;
->  	int check_devs =3D 0;
->  	int chunk;
-> -	int devNumChange=3D0;
-> -	int layout =3D -1;
-> +	/* number of added/removed disks in operation result */
-> +	int devNumChange =3D 0;
-> +	/* imsm compatible layout value for array geometry verification */
-> +	int imsm_layout =3D -1;
-> =20
->  	getinfo_super_imsm_volume(st, &info, NULL);
->  	if ((geo->level !=3D info.array.level) &&
-> @@ -9069,14 +9071,14 @@ enum imsm_reshape_type imsm_analyze_change(struct=
- supertype *st,
->  					change =3D -1;
->  					goto analyse_change_exit;
->  				}
-> -				layout =3D  geo->layout;
-> +				imsm_layout =3D  geo->layout;
->  				check_devs =3D 1;
->  				devNumChange =3D 1; /* parity disk added */
->  			} else if (geo->level =3D=3D 10) {
->  				change =3D CH_TAKEOVER;
->  				check_devs =3D 1;
->  				devNumChange =3D 2; /* two mirrors added */
-> -				layout =3D 0x102; /* imsm supported layout */
-> +				imsm_layout =3D 0x102; /* imsm supported layout */
->  			}
->  			break;
->  		case 1:
-> @@ -9085,7 +9087,7 @@ enum imsm_reshape_type imsm_analyze_change(struct s=
-upertype *st,
->  				change =3D CH_TAKEOVER;
->  				check_devs =3D 1;
->  				devNumChange =3D -(geo->raid_disks/2);
-> -				layout =3D 0; /* imsm raid0 layout */
-> +				imsm_layout =3D 0; /* imsm raid0 layout */
->  			}
->  			break;
->  		}
-> @@ -9120,8 +9122,11 @@ enum imsm_reshape_type imsm_analyze_change(struct =
-supertype *st,
->  			change =3D -1;
->  			goto analyse_change_exit;
->  		}
-> -	} else
-> +	} else {
->  		geo->layout =3D info.array.layout;
-> +		if (imsm_layout =3D=3D -1)
-> +			imsm_layout =3D info.array.layout;
-> +	}
-> =20
->  	if ((geo->chunksize > 0) && (geo->chunksize !=3D UnSet)
->  	    && (geo->chunksize !=3D info.array.chunk_size))
-> @@ -9132,7 +9137,7 @@ enum imsm_reshape_type imsm_analyze_change(struct s=
-upertype *st,
->  	chunk =3D geo->chunksize / 1024;
->  	if (!validate_geometry_imsm(st,
->  				    geo->level,
-> -				    layout,
-> +				    imsm_layout,
->  				    geo->raid_disks + devNumChange,
->  				    &chunk,
->  				    geo->size,
-
-
---Sig_/KfFM6MzxLye1ckRq0u6M+GB
+--Sig_/3v1UVpnOAJAepk3hY4LkVYR
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTulxNznsnt1WYoG5AQL4aw//cqo0s0S1RZY+C4Nsv2fPsPDRaR2MoP9K
-SN6IeeTVrkLFyNPqyKhBOayWEXsYEjHEgJZb+ITk2ymDv15k0DnAWHzNNPJMMf/b
-voFhlivfoiCWgQKlXL2BQyb18VOvvIfQ7NN0qAZf41nQF+DzP1k1thK28r7+4THe
-O64w6ZaPPT6VJ46ES06DuchtfSthCN0bOsjzrKeB3syqWJbNOnqJ2OBtZBwMuWhl
-LTwKHsZGkb6ke9u70bRTjzEhV+/wski7pFqbdGNCym4HeadkegdWYTLgngPxZ/Oh
-WpI/8ReCrpFPxUbr4z70N9sqMU22HuNSbMoc3VG1LaqO5rKDT+z7C33OYlLDeolu
-kj7QGtNwYRuQEuZUy4rGhWtFbk+iKG5bztOZKb2rlL6f7kI7jHxYekOh8QagPpPV
-Dhoxgc4uvMjpZryl/nIdvohTCBUlCv0jvS9jIGCoFWFGcvXtxWmXYz2NBY7+VInS
-Nyh5rYtb9Pxd5RXB1ExIZvnzNkOGQK6SXwrLmBMEA6rJddml2gw1gBu53LhsGjmB
-1t85h591jx1M7jJKFrdjC2c5Meso6vXEybdLCcj5qLbAAYqK6p+gUIjBzTrcs8ib
-19cLwHMqyO4RRlHv/R+GRzCWz41am9I2fR1HJQ9tQfaAGGHbgersmDBJLaLarnrc
-iNf0LQcIkzU=
-=yLt1
+iQIVAwUBTulxgjnsnt1WYoG5AQK9TQ/+M2Z92DihA30NjCKzus4YUvaeIWT+N2EM
+8C/nobXA5B6bFooqXuuzvYFFGiKnA9LLUEgymguxf+ryY0KVhBHAyqCp2ACeEm3H
+v4A1DWuZcgc8yPSWXh9SnuPstO3XUoeV/rn0txp2XMWIprzwlx4CpAVX1k/WhR5h
+DfIRNqs5n5cwSv3/5jxRuGbsdwTsFWos4Di7LSsxxX9e+gBh1tLowLkeWZ6t1z7z
+bShslErJ4tDJ7yJd1IeYchzxfSEWG8Sc4v+tlw6QdH39Yt4zo7v17ZGkDbFQHZqQ
+0Y8M89rjq0NEYRShqsj/N/IaFH4XfXM9TOnYDkfbOG9o0gbKCfg8fRzGhHV8B/eL
+lOGYnQxJjfdfq4ZwCx7wpi7jM6hRzWiNhJzxdK2iRqpwRdrjG2SyDmuO8IfrXPND
+elNuZTamDM8XBb0zXjQsk/7dnAUxO8TL8L0UjHNbjqANaWj6L613NO59yZS08F6G
+IIPlj4bwRZe5uHKlYGjt0MGb3rK3HG8K9HVPPT2fbsDUzzY8yo2pgpxYwlRtnwoC
+Dt+RyjRTmxM+J6TApJF46K+AWGwjDGHgd+f4u9m4VUXsVH5a0ONexQD5TXd0NExs
+mbXAgPTRXdQY/WzY2Z9OZR1un2bCq/Y66E++qoCDjab2d+2e3t8tAp7PfG2jGdaD
+zkXQ6TkGygM=
+=Irzb
 -----END PGP SIGNATURE-----
 
---Sig_/KfFM6MzxLye1ckRq0u6M+GB--
+--Sig_/3v1UVpnOAJAepk3hY4LkVYR--
