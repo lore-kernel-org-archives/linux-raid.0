@@ -1,112 +1,174 @@
-From: "Williams, Dan J" <dan.j.williams@intel.com>
-Subject: Re: [md PATCH 00/16] hot-replace support for RAID4/5/6
-Date: Wed, 14 Dec 2011 23:14:04 -0800
-Message-ID: <CABE8wwtKvNamQM3VfYFHwGQ0BhV2xBtYgqV1=Rmjc=6J3Bqogw@mail.gmail.com>
-References: <20111026014240.21110.28487.stgit@notabene.brown>
-	<CAA9_cmfWEnLnvrShVp3BL+WsEApS+nsWBZfao-qM2_habqFCtg@mail.gmail.com>
-	<20111215171850.335da016@notabene.brown>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [PATCH 3/3] imsm: FIX: UT '08imsm-overlap' fails
+Date: Thu, 15 Dec 2011 08:01:21 +0000
+Message-ID: <79556383A0E1384DB3A3903742AAC04A060EEA@IRSMSX101.ger.corp.intel.com>
+References: <20111214150448.21483.16231.stgit@gklab-128-013.igk.intel.com>
+	<20111214150720.21483.27249.stgit@gklab-128-013.igk.intel.com>
+	<CABE8wwt44LbrKEGJjoUyjOt5zDP2=uO60hVPYfWpxMHi+EuQwg@mail.gmail.com>
+	<20111215150314.7e5694c7@notabene.brown>
+ <CABE8wwvfzxM1e2S7XOotMHWT40JF6sbRH3mW688dpuWmwoCtZQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-2
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111215171850.335da016@notabene.brown>
+In-Reply-To: <CABE8wwvfzxM1e2S7XOotMHWT40JF6sbRH3mW688dpuWmwoCtZQ@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: "Williams, Dan J" <dan.j.williams@intel.com>, NeilBrown <neilb@suse.de>
+Cc: "Labun, Marcin" <Marcin.Labun@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Dec 14, 2011 at 10:18 PM, NeilBrown <neilb@suse.de> wrote:
->> f248f8c md: create externally visible flags for supporting hot-repla=
-ce.
->>
->> 'replaceable' just strikes me as a confusing name as all devices are
->> nominally "replaceable", but whether you want it to be actively
->> replaced is a different consideration. =A0What about "incumbent" to =
-mark
->> the disk as currently holding a position we want it to vacate and
->> remove any potential confusion with 'replacement'.
+
+
+=46rom: Williams, Dan J [mailto:dan.j.williams@intel.com]=20
+Sent: Thursday, December 15, 2011 6:16 AM
+To: NeilBrown
+Cc: Labun, Marcin; Ciechanowski, Ed; linux-raid@vger.kernel.org; Kwolek=
+, Adam
+Subject: Re: [PATCH 3/3] imsm: FIX: UT '08imsm-overlap' fails
+
+
+On Dec 14, 2011 8:03 PM, "NeilBrown" <neilb@suse.de> wrote:
 >
-> Fair point. =A0I had wondered if I should not have the flag and just =
-use the
-> "write_error" flag. =A0However the meaning is slightly different.
+> On Wed, 14 Dec 2011 10:21:07 -0800 "Williams, Dan J"
+> <dan.j.williams@intel.com> wrote:
 >
-> I don't really like "incumbent" as it gives no indication that there =
-is a
-> desire to replace the device. =A0Maybe "want_replacement" ??
-
-Yeah that works.  I was hung up on the previous scheme only differing
-the in "able" vs "ment" suffix, so a "want_" prefix fits the bill.
-
->> 37aebb5 md/raid5: preferentially read from replacement device if pos=
-sible.
-[..]
->> Should this one liner be broken out for -stable?
->> Do you see a particular problem that this fixes that is already poss=
-ible
-> without hot-replace?
-
-I would need to think it through a bit further, but the changelog was
-sufficiently convincing so I thought I would ask.
-
->> Nit, not sure if it's worth fixing but this one introduces some
->> inconsistent line wrapping around logical operators... "at the end" =
-vs
->> "beginning of next line"
->>
-[..]
+> > On Wed, Dec 14, 2011 at 7:07 AM, Adam Kwolek <adam.kwolek@intel.com=
+> wrote:
+> > > Problem was introduced by patch (2011-09-19):
+> > > =A0 Create: Allow to create two volumes of different sizes within=
+ one container
+> > >
+> > > To resolve problem check requested disks number not against all d=
+isks
+> > > recorded in metadata, but against disks number set in array map s=
+tructure.
+> > >
+> > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> > > ---
+> > >
+> > > =A0super-intel.c | =A0 24 ++++++++++++++++++++----
+> > > =A01 files changed, 20 insertions(+), 4 deletions(-)
+> > >
+> > > diff --git a/super-intel.c b/super-intel.c
+> > > index 5e1d278..3c10d29 100644
+> > > --- a/super-intel.c
+> > > +++ b/super-intel.c
+> > > @@ -5318,10 +5318,26 @@ static int validate_geometry_imsm_volume(=
+struct supertype *st, int level,
+> > >
+> > > =A0 =A0 =A0 =A0mpb =3D super->anchor;
+> > >
+> > > - =A0 =A0 =A0 if (mpb->num_raid_devs > 0 && mpb->num_disks !=3D r=
+aiddisks) {
+> > > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 fprintf(stderr, Name ": the option-=
+rom requires all "
+> > > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 "member disks to be=
+ a member of all volumes.\n");
+> > > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 0;
+> > > + =A0 =A0 =A0 /* check if currently verified volume spans the sam=
+e disks number
+> > > + =A0 =A0 =A0 =A0* as all other arrays that belongs to metadata.
+> > > + =A0 =A0 =A0 =A0* Do not allow to create volume with different d=
+isks number
+> > > + =A0 =A0 =A0 =A0* than curently is used.
+> > > + =A0 =A0 =A0 =A0*/
+> > > + =A0 =A0 =A0 for (i =3D 0; i < mpb->num_raid_devs; i++) {
+> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* There is any already existing ar=
+ray in metadata
+> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
+> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct imsm_dev *dev =3D get_imsm_d=
+ev(super, i);
+> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct imsm_map *map =3D NULL;
+> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (dev)
+> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 map =3D get_imsm_ma=
+p(dev, MAP_0);
+> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (map) {
+> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (raiddisks !=3D =
+map->num_members) {
+> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 fpr=
+intf(stderr, Name ": the option-rom requires"
+> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 " all member disks to be a member of "
+> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 "all volumes.\n");
+> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ret=
+urn 0;
+> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+> >
+> > I'd prefer to move this check back to the other 'orom' checks in
+> > validate_geometry_imsm_volume(), and make it dependent on the prese=
+nce
+> > of the orom.
+> >
+> > diff --git a/super-intel.c b/super-intel.c
+> > index 07d47b5..9885b98 100644
+> > --- a/super-intel.c
+> > +++ b/super-intel.c
+> > @@ -5122,12 +5122,6 @@ static int validate_geometry_imsm_volume(str=
+uct
+> > supertype *st, int level,
+> > =A0 =A0 =A0 if (!super)
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 0;
+> >
+> > - =A0 =A0 if (mpb->num_raid_devs > 0 && mpb->num_disks !=3D raiddis=
+ks) {
+> > - =A0 =A0 =A0 =A0 =A0 =A0 fprintf(stderr, Name ": the option-rom re=
+quires all "
+> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 "member disks to be a mem=
+ber of all volumes.\n");
+> > - =A0 =A0 =A0 =A0 =A0 =A0 return 0;
+> > - =A0 =A0 }
+> > -
+> > =A0 =A0 =A0 if (!validate_geometry_imsm_orom(super, level, layout, =
+raiddisks,
+> > chunk, verbose)) {
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 fprintf(stderr, Name ": RAID gemetry va=
+lidation failed. "
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 "Cannot proceed with th=
+e action(s).\n");
+> > @@ -5206,6 +5200,11 @@ static int validate_geometry_imsm_volume(str=
+uct
+> > supertype *st, int level,
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 fprintf(stderr, Name ": The option-rom =
+requires all member"
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 " disks to be a member =
+of all volumes\n");
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 0;
+> > + =A0 =A0 } else if (super->orom && mpb->num_raid_devs > 0 &&
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0mpb->num_disks !=3D raiddisks) {
+> > + =A0 =A0 =A0 =A0 =A0 =A0 fprintf(stderr, Name ": The option-rom re=
+quires all member"
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 " disks to be a member of=
+ all volumes\n");
+> > + =A0 =A0 =A0 =A0 =A0 =A0 return 0;
+> > =A0 =A0 =A0 }
+> >
+> > =A0 =A0 =A0 /* retrieve the largest free space block */
 >
-> Thanks.
-> I almost always prefer 'at the start' as import things should be obvi=
-ous.
-> So I have updated 'want_replace'.
-
-=2E..and here I've been an 'at the end' Sneetch and convinced myself
-that it's easier to read...
-
->>
->> 2693b9e md/raid5: handle activation of replacement device when
->> recovery completes.
->>
->> I questioned not needing a barrier in raid5_end_write_request after
->> finding conf->disks[i].replacement =3D=3D NULL until I found the not=
-e in
->> raid5_end_read_request about the rdev being pinned until all i/o
->> returns. =A0Maybe a similar note to raid5_end_write_request?
 >
-> I like adding explanatory notes ... but I'm not quite sure what you a=
-re
-> suggesting here. =A0Could you be a little more explicit? =A0Thanks.
->
+> Hi Dan,
+> =A0I think you are presenting this as an alternate - is that correct?
+Yes.
+> It seems a lit simpler - does it do enough?
+I believe so, I'd like Adam to confirm.
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 59f5b05..8074515 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1758,7 +1758,8 @@ static void raid5_end_write_request(struct bio
-*bi, int error)
-                                replacement =3D 1;
-                        else
-                                /* rdev was removed and 'replacement'
--                                * replaced it.
-+                                * replaced it.  rdev is not removed
-+                                * until all requests are finished.
-                                 */
-                                rdev =3D conf->disks[i].rdev;
-                        break;
+I'm not sure if checking mpb->num_disks !=3D raiddisks is enough /or it=
+ is rather too much/.
+In disk list could be different number of members than in map (e.g. reb=
+uild when disks list is longer).
+It was UT08* failure cause and I thing using maps length is better.
 
->> 058c478..678a66d
->> raid10 and raid1 patches not reviewed.
->
-> That's what a Christmas break is for, isn't it??
+I'm not sure, if making it dependent on the presence of the orom makes =
+us happy from compatibility point of view.
+We shouldn't make metadata OROM incompatible. Every array can be mounte=
+d on OROM platform later, what scenario for such case?
 
-True, maybe that's my "wish I could find the time to do more code
-review" wish coming true :-).
+BR
+Adam
 
-> Thanks for all the review - I really appreciate it.
->
-
-Anytime.
-
+(forgive brevity replying from phone)
 --
 Dan
 --
