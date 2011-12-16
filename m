@@ -1,28 +1,23 @@
-From: Bruce Stenning <b.stenning@indigovision.com>
-Subject: RE: BUG_ON triggered in worker_enter_idle, after power failure
- caused potential RAID corruption (kernel 2.6.39.4)
-Date: Fri, 16 Dec 2011 16:23:17 +0000
-Message-ID: <C1438B59050E1B4C9482FF3266AD6BA32D9B2997C8@gretna.indigovision.com>
+From: "Williams, Dan J" <dan.j.williams@intel.com>
+Subject: Re: [PATCH] imsm: make messages more understandable
+Date: Fri, 16 Dec 2011 09:59:04 -0800
+Message-ID: <CABE8wwue6yRmWbtf2KogFDOtcDeNycStYHTYPRN_cmLZ==3AWw@mail.gmail.com>
+References: <20111216140452.20625.63109.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <20111216140452.20625.63109.stgit@gklab-128-085.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-I wrote:
-> Has anyone seen similar problems with RAID issues triggering this or
-> similar BUG_ON statements in workqueue?  I have done some extensive
-> web searching and delving through the latest git repositories, but
-> have not found anything that stands out so far.
+On Fri, Dec 16, 2011 at 6:04 AM, Lukasz Dorau <lukasz.dorau@intel.com> wrote:
+> The printed messages should be more appropriate and understandable
+> for user. If maxsize is equal 0, this means there is no free space left
+> on device. If size is greater than maxsize, this means there is not enough
+> space to create a new volume of given size.
+>
+> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
 
-These problems have been tracked down to the following issue:
-
-http://article.gmane.org/gmane.linux.raid/33553
-
-Bruce.
-
-
-Latest News at: http://www.indigovision.com/index.php/en/news.html
+Acked-by: Dan Williams <dan.j.williams@intel.com>
