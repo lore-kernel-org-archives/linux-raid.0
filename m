@@ -1,110 +1,113 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 3/3] imsm: FIX: UT '08imsm-overlap' fails
-Date: Tue, 20 Dec 2011 10:38:45 +1100
-Message-ID: <20111220103845.0b9ae8e2@notabene.brown>
-References: <20111214150448.21483.16231.stgit@gklab-128-013.igk.intel.com>
-	<20111214150720.21483.27249.stgit@gklab-128-013.igk.intel.com>
-	<CABE8wwt44LbrKEGJjoUyjOt5zDP2=uO60hVPYfWpxMHi+EuQwg@mail.gmail.com>
-	<20111215150314.7e5694c7@notabene.brown>
-	<CABE8wwvfzxM1e2S7XOotMHWT40JF6sbRH3mW688dpuWmwoCtZQ@mail.gmail.com>
-	<79556383A0E1384DB3A3903742AAC04A060EEA@IRSMSX101.ger.corp.intel.com>
-	<CABE8wwu1RNQsHPHZ7xWNsQ6-qym4LHQjsnf+LT8qrZpdHkQ-Hg@mail.gmail.com>
-	<79556383A0E1384DB3A3903742AAC04A061319@IRSMSX101.ger.corp.intel.com>
+From: Chris Worley <worleys@gmail.com>
+Subject: Re: RAID50, despite chunk setting, does everything in 4KB blocks
+Date: Mon, 19 Dec 2011 16:56:16 -0700
+Message-ID: <CANWz5fg9e9A_FZDY28m38_c+EZ=NdjCBcqYhbW+8Qyyc1=BRxg@mail.gmail.com>
+References: <CANWz5fhEz20oi9fXVuxngywMu6mZQtghMKCBCAwm5uOVXOD__w@mail.gmail.com>
+	<20111220102415.1bb30e78@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/uKRP/zNqKJzmDcxpaZ.4I=Z"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <79556383A0E1384DB3A3903742AAC04A061319@IRSMSX101.ger.corp.intel.com>
+In-Reply-To: <20111220102415.1bb30e78@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Kwolek, Adam" <adam.kwolek@intel.com>
-Cc: "Williams, Dan J" <dan.j.williams@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linuxraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/uKRP/zNqKJzmDcxpaZ.4I=Z
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 16 Dec 2011 08:32:07 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
-wrote:
-
-
-> I've checked, you are right. OROM check will resolve problem.
-> Do you post your patch or I should do it? We are short of time regarding =
-Neil's plans about v3.2.3
->=20
+On Mon, Dec 19, 2011 at 4:24 PM, NeilBrown <neilb@suse.de> wrote:
+> On Mon, 19 Dec 2011 15:43:13 -0700 Chris Worley <worleys@gmail.com> w=
+rote:
 >
+>> It doesn't really matter what chunk sizes I set, but, for example, I
+>> create=A0three RAID5's of 5 drives each with a chunk size of 32K, an=
+d
+>> create a RAID0 comprised of the three RAID5's with a chunk size of
+>> 64K:
+>>
+>> md0=A0: active raid0 md27[2] md26[1] md25[0]
+>> =A0 =A0 =A0 1885098048 blocks super 1.2 64k chunks
+>>
+>> If I write to one of the RAID5's, using:
+>>
+>> # dd of=3D/dev/md27 =A0if=3D/dev/zero bs=3D1024k oflag=3Ddirect
+>>
+>> ... then "iostat -dmx 2" shows the drives being written to in 32K
+>> chunks (avgrq-sz=3D64), as you'd expect.
+>>
+>> But, writing to the RAID0 that's striping the RAID5's, shows
+>> everything being written in 4KB chunks (iostat shows=A0avgrq-sz=3D8)=
+ to
+>> the RAID0 as well as to the RAID5's.
+>
+> When writing to a RAID5 it *always* submits request to the lower laye=
+rs in
+> PAGE sized units. =A0This makes it much easier to keep parity and dat=
+a aligned.
+>
+> The queue on the underlying device should sort the requests and =A0gr=
+oup them
+> together and your evidence suggests that it does.
+>
+> When writing to the RAID5 through a RAID0 it will only see 64K at a t=
+ime but
+> that shouldn't won't make any difference to its behaviour and should =
+change
+> the way the requests finally get to the device.
+>
+> So I have no idea why you see a difference.
+>
+> I suspect lots of block-layer tracing, and lots of staring at code an=
+d lots
+> of head scratching would be needed to understand what is really going=
+ in.
 
-I've created a commit myself.  See below.
+Note that "max_segments" for the raid0 =3D 1, and max_segment_size =3D
+4096, which tells Linux that the md can only take a single 4KB page
+per IO request.
 
-Thanks,
-NeilBrown
+The scheduler shouldn't be involved in the transaction between the
+RAID0 and RAID5, as neither uses the scheduler, so it shouldn't merge
+there, but it also shouldn't be fragmenting.
 
-=46rom 5fe62b9455b6b43f050f3a52610ce1048a44623c Mon Sep 17 00:00:00 2001
-From: "Williams, Dan J" <dan.j.williams@intel.com>
-Date: Wed, 14 Dec 2011 18:21:07 -0800
-Subject: [PATCH] imsm: FIX: UT '08imsm-overlap' fails
+Not having the RAID0 send the larger chunks to the RAID5's may cause
+more fragmentation than the drive's scheduler will be able to
+re-merge.
 
-Make test for all sub arrays having the same number of devices
-dependant on the option ROM requirements being checked.
-08imsm-overlap disables the OROM check but then fails because this
-test causes it to.
-
-Reported-by: Adam Kwolek <adam.kwolek@intel.com>
-Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/super-intel.c b/super-intel.c
-index 9074485..0e77537 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5314,12 +5314,6 @@ static int validate_geometry_imsm_volume(struct supe=
-rtype *st, int level,
-=20
- 	mpb =3D super->anchor;
-=20
--	if (mpb->num_raid_devs > 0 && mpb->num_disks !=3D raiddisks) {
--		fprintf(stderr, Name ": the option-rom requires all "
--			"member disks to be a member of all volumes.\n");
--		return 0;
--	}
--
- 	if (!validate_geometry_imsm_orom(super, level, layout, raiddisks, chunk, =
-verbose)) {
- 		fprintf(stderr, Name ": RAID gemetry validation failed. "
- 			"Cannot proceed with the action(s).\n");
-@@ -5398,6 +5392,11 @@ static int validate_geometry_imsm_volume(struct supe=
-rtype *st, int level,
- 		fprintf(stderr, Name ": The option-rom requires all member"
- 			" disks to be a member of all volumes\n");
- 		return 0;
-+	} else if (super->orom && mpb->num_raid_devs > 0 &&
-+		   mpb->num_disks !=3D raiddisks) {
-+		fprintf(stderr, Name ": The option-rom requires all member"
-+			" disks to be a member of all volumes\n");
-+		return 0;
- 	}
-=20
- 	/* retrieve the largest free space block */
-
---Sig_/uKRP/zNqKJzmDcxpaZ.4I=Z
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBTu/LBTnsnt1WYoG5AQLsnQ/+NHIOewTDudFiiUbjg+0mkojjHgSv5VWd
-oJSt5DUEoyXO0y75Ql9xvt/EYLeE9n0u5xpzr2iOOitR1YWKds+eTaLtFNabOgvm
-sfPdovLz1DsoYuTEYlGpB2DQRFjxG8YmGQjTUyPZ3V4Boj6phw3MEf01gA1e3uDg
-mNaRb2ov9c5k9q5emoBZX8gCwKc/fKZsJ5qRPnfzQ/qj8I6s/YFuYBH8G1TAHgWY
-hLhquAGb/op1NTRsHLmIOuwvQgUbUFAHhx/xSMKSenY834xca85HQdphjOaWVOov
-6iVotjjUE0uMRPWZsYqWpIoKzcJooh/Z1+Cs2/G16vbjc4XDAhC1w70xWzCwlXtC
-+juGJ9wzHVobI5w71vP0cNAubwXuE3GTstRuLvHgwU8kULfFWaT4ykdTQAe0Le9q
-OVlqn2deCqpv9y+8flLxX4qK3y8CJanqiNWCUt8Y8QcM28RLFnZGxAo4N66apyOf
-7q++mtQgeai+lqvVPfVAwUw/OfH0JYEIgOx9JQ1Leh1ITXrusOrUsc6GsGdGf6tv
-KptBTvMdwEMnXHvRNMSdIKJzNVncbk5XeMDjSftQ3vPcEYOhEEOkYQyFDvUZR2gL
-5FO11BmL9JhzgpaI4ZcuE0ZLTxKaSY62JCkPOb4m14fIEHuXtjuRvx7CLPT30EwB
-oaoYYDIhPVg=
-=HkYj
------END PGP SIGNATURE-----
-
---Sig_/uKRP/zNqKJzmDcxpaZ.4I=Z--
+Chris
+>
+>
+>>
+>> Why is that? =A0Note that this is true for reading too. =A0Note I do=
+n't
+>> see the same problem when using RAID10 (via striped RAID1's) or
+>> RAID100 (via striped RAID10's).
+>
+> RAID1 and RAID10 don't split things into pages so I can imagine that =
+they
+> might life easier for the scheduler.
+>
+> But the scheduler should =A0still get it right for RAID5 ....
+>
+>
+> So - its a mystery. =A0Sorry.
+>
+> NeilBrown
+>
+>
+>>
+>> ... this is on SLES11 using a=A02.6.32.43-0.5 kernel.
+>>
+>> Thanks,
+>>
+>> Chris
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
