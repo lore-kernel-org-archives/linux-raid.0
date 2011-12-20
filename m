@@ -1,99 +1,103 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 3/3] imsm: FIX: UT '08imsm-overlap' fails
-Date: Tue, 20 Dec 2011 08:02:50 +0000
-Message-ID: <79556383A0E1384DB3A3903742AAC04A061915@IRSMSX101.ger.corp.intel.com>
-References: <20111214150448.21483.16231.stgit@gklab-128-013.igk.intel.com>
-	<20111214150720.21483.27249.stgit@gklab-128-013.igk.intel.com>
-	<CABE8wwt44LbrKEGJjoUyjOt5zDP2=uO60hVPYfWpxMHi+EuQwg@mail.gmail.com>
-	<20111215150314.7e5694c7@notabene.brown>
-	<CABE8wwvfzxM1e2S7XOotMHWT40JF6sbRH3mW688dpuWmwoCtZQ@mail.gmail.com>
-	<79556383A0E1384DB3A3903742AAC04A060EEA@IRSMSX101.ger.corp.intel.com>
-	<CABE8wwu1RNQsHPHZ7xWNsQ6-qym4LHQjsnf+LT8qrZpdHkQ-Hg@mail.gmail.com>
-	<79556383A0E1384DB3A3903742AAC04A061319@IRSMSX101.ger.corp.intel.com>
- <20111220103845.0b9ae8e2@notabene.brown>
+From: =?UTF-8?Q?BERTRAND_Jo=C3=ABl?= <joel.bertrand@systella.fr>
+Subject: Adding a new disk after disk failure on raid6 volume
+Date: Tue, 20 Dec 2011 09:46:13 +0100
+Message-ID: <75d55f4581b6ae45b8131ff989836028@systella.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain;
+ charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111220103845.0b9ae8e2@notabene.brown>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "Williams, Dan J" <dan.j.williams@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello,
 
+I use several softraid volumes for a very long time. Last week, a disk 
+has crashed on a raid6 volume and I have tried to replace faulty disk. 
+Today, when Linux boots, it only assembles this volume if the new disk 
+is marked as 'faulty' or 'removed', and I don't understand...
 
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Tuesday, December 20, 2011 12:39 AM
-> To: Kwolek, Adam
-> Cc: Williams, Dan J; Labun, Marcin; Ciechanowski, Ed; linux-
-> raid@vger.kernel.org
-> Subject: Re: [PATCH 3/3] imsm: FIX: UT '08imsm-overlap' fails
-> 
-> On Fri, 16 Dec 2011 08:32:07 +0000 "Kwolek, Adam"
-> <adam.kwolek@intel.com>
-> wrote:
-> 
-> 
-> > I've checked, you are right. OROM check will resolve problem.
-> > Do you post your patch or I should do it? We are short of time
-> > regarding Neil's plans about v3.2.3
-> >
-> >
-> 
-> I've created a commit myself.  See below.
+System is a sparc64-smp server running linux debian/testing :
 
+Root rayleigh:[~] > uname -a
+Linux rayleigh 2.6.36.2 #1 SMP Sun Jan 2 11:50:13 CET 2011 sparc64 
+GNU/Linux
+Root rayleigh:[~] > dpkg-query -l | grep mdadm
+ii  mdadm                                 3.2.2-1
 
-Thanks :)
+Faulty device is /dev/sde1 :
 
-> 
-> Thanks,
-> NeilBrown
-> 
-> From 5fe62b9455b6b43f050f3a52610ce1048a44623c Mon Sep 17 00:00:00
-> 2001
-> From: "Williams, Dan J" <dan.j.williams@intel.com>
-> Date: Wed, 14 Dec 2011 18:21:07 -0800
-> Subject: [PATCH] imsm: FIX: UT '08imsm-overlap' fails
-> 
-> Make test for all sub arrays having the same number of devices dependant
-> on the option ROM requirements being checked.
-> 08imsm-overlap disables the OROM check but then fails because this test
-> causes it to.
-> 
-> Reported-by: Adam Kwolek <adam.kwolek@intel.com>
-> Signed-off-by: NeilBrown <neilb@suse.de>
-> 
-> diff --git a/super-intel.c b/super-intel.c index 9074485..0e77537 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -5314,12 +5314,6 @@ static int validate_geometry_imsm_volume(struct
-> supertype *st, int level,
-> 
->  	mpb = super->anchor;
-> 
-> -	if (mpb->num_raid_devs > 0 && mpb->num_disks != raiddisks) {
-> -		fprintf(stderr, Name ": the option-rom requires all "
-> -			"member disks to be a member of all volumes.\n");
-> -		return 0;
-> -	}
-> -
->  	if (!validate_geometry_imsm_orom(super, level, layout, raiddisks,
-> chunk, verbose)) {
->  		fprintf(stderr, Name ": RAID gemetry validation failed. "
->  			"Cannot proceed with the action(s).\n"); @@ -5398,6
-> +5392,11 @@ static int validate_geometry_imsm_volume(struct supertype
-> *st, int level,
->  		fprintf(stderr, Name ": The option-rom requires all member"
->  			" disks to be a member of all volumes\n");
->  		return 0;
-> +	} else if (super->orom && mpb->num_raid_devs > 0 &&
-> +		   mpb->num_disks != raiddisks) {
-> +		fprintf(stderr, Name ": The option-rom requires all member"
-> +			" disks to be a member of all volumes\n");
-> +		return 0;
->  	}
-> 
->  	/* retrieve the largest free space block */
+Root rayleigh:[~] > cat /proc/mdstat
+Personalities : [raid1] [raid6] [raid5] [raid4]
+md7 : active raid6 sdc1[0] sdi1[6] sdh1[5] sdg1[4] sdf1[3] sdd1[1]
+       359011840 blocks level 6, 64k chunk, algorithm 2 [7/6] [UU_UUUU]
+
+All disks (/dev/sd[cdefghi]) are same model (Fujitsu SCA-2 73 GB) and 
+each disk only contains one partition (type FD, linux autodetect). If I 
+add /dev/sde1 to raid6 with mdadm -a /dev/md7 /dev/sde1, disk is added 
+and my raid6 runs with all disks. But I obtain the same superblock on 
+/dev/sde1 and /dev/sde ! If I remove /dev/sde superblock, /dev/sde1 one 
+disappears also (i think that both superblocks are the same).
+
+For information :
+
+Root rayleigh:[~] > mdadm --examine --scan
+ARRAY /dev/md6 UUID=a003dce6:121c0c4a:3f886e0a:7567841c
+ARRAY /dev/md0 UUID=7439e08d:fc4de395:22484380:bdd49890
+ARRAY /dev/md1 UUID=d035cc29:f693b530:a3f65a60:fc74e45f
+ARRAY /dev/md2 UUID=dd9b6218:838d551e:e9582b84:96b48232
+ARRAY /dev/md3 UUID=d5639361:22e3ea3e:1405d837:f1e5c9ea
+ARRAY /dev/md4 UUID=41b4f376:e14d8be1:f3ff4b3c:33ab8d40
+ARRAY /dev/md5 UUID=cba7995c:045168a1:f998aa64:f0e66714
+ARRAY /dev/md7 UUID=3c07a5ac:79f3ad38:980f40e8:743f4cce
+Root rayleigh:[~] > mdadm --examine /dev/sdc
+/dev/sdc:
+    MBR Magic : 55aa
+Partition[0] :    143637102 sectors at           63 (type fd)
+Root rayleigh:[~] > mdadm --examine /dev/sdc1
+/dev/sdc1:
+           Magic : a92b4efc
+         Version : 0.90.00
+            UUID : 3c07a5ac:79f3ad38:980f40e8:743f4cce (local to host 
+rayleigh)
+   Creation Time : Sun Dec 17 16:56:20 2006
+      Raid Level : raid6
+   Used Dev Size : 71802368 (68.48 GiB 73.53 GB)
+      Array Size : 359011840 (342.38 GiB 367.63 GB)
+    Raid Devices : 7
+   Total Devices : 6
+Preferred Minor : 7
+
+     Update Time : Tue Dec 20 09:38:02 2011
+           State : clean
+  Active Devices : 6
+Working Devices : 6
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 464688f - correct
+          Events : 1602268
+
+          Layout : left-symmetric
+      Chunk Size : 64K
+
+       Number   Major   Minor   RaidDevice State
+this     0       8       33        0      active sync   /dev/sdc1
+
+    0     0       8       33        0      active sync   /dev/sdc1
+    1     1       8       49        1      active sync   /dev/sdd1
+    2     2       0        0        2      faulty removed
+    3     3       8       81        3      active sync   /dev/sdf1
+    4     4       8       97        4      active sync   /dev/sdg1
+    5     5       8      113        5      active sync   /dev/sdh1
+    6     6       8      129        6      active sync   /dev/sdi1
+Root rayleigh:[~] >
+
+All disks return same information except /dev/sde when it is running 
+(mdadm --examine /dev/sde and mdadm --examine /dev/sde1 return the same 
+information). What is my mistake ? Is this a known issue ?
+
+Best regards,
+
+JB
