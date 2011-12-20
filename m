@@ -1,119 +1,139 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID50, despite chunk setting, does everything in 4KB blocks
-Date: Tue, 20 Dec 2011 11:08:06 +1100
-Message-ID: <20111220110806.221173c6@notabene.brown>
-References: <CANWz5fhEz20oi9fXVuxngywMu6mZQtghMKCBCAwm5uOVXOD__w@mail.gmail.com>
-	<20111220102415.1bb30e78@notabene.brown>
-	<CANWz5fg9e9A_FZDY28m38_c+EZ=NdjCBcqYhbW+8Qyyc1=BRxg@mail.gmail.com>
+Subject: Re: [md PATCH 00/16] hot-replace support for RAID4/5/6
+Date: Tue, 20 Dec 2011 16:18:20 +1100
+Message-ID: <20111220161820.0830ef18@notabene.brown>
+References: <20111026014240.21110.28487.stgit@notabene.brown>
+	<CAA9_cmfWEnLnvrShVp3BL+WsEApS+nsWBZfao-qM2_habqFCtg@mail.gmail.com>
+	<20111215171850.335da016@notabene.brown>
+	<CABE8wwtKvNamQM3VfYFHwGQ0BhV2xBtYgqV1=Rmjc=6J3Bqogw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/0WaTiiKkGbPNCqSu4LebfQ7"; protocol="application/pgp-signature"
+ boundary="Sig_/mnWoUo8VxmKuwf7FQ6Dpckz"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CANWz5fg9e9A_FZDY28m38_c+EZ=NdjCBcqYhbW+8Qyyc1=BRxg@mail.gmail.com>
+In-Reply-To: <CABE8wwtKvNamQM3VfYFHwGQ0BhV2xBtYgqV1=Rmjc=6J3Bqogw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Worley <worleys@gmail.com>
-Cc: linuxraid <linux-raid@vger.kernel.org>
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/0WaTiiKkGbPNCqSu4LebfQ7
+--Sig_/mnWoUo8VxmKuwf7FQ6Dpckz
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 19 Dec 2011 16:56:16 -0700 Chris Worley <worleys@gmail.com> wrote:
+On Wed, 14 Dec 2011 23:14:04 -0800 "Williams, Dan J"
+<dan.j.williams@intel.com> wrote:
 
-> On Mon, Dec 19, 2011 at 4:24 PM, NeilBrown <neilb@suse.de> wrote:
-> > On Mon, 19 Dec 2011 15:43:13 -0700 Chris Worley <worleys@gmail.com> wro=
-te:
-> >
-> >> It doesn't really matter what chunk sizes I set, but, for example, I
-> >> create=C2=A0three RAID5's of 5 drives each with a chunk size of 32K, a=
-nd
-> >> create a RAID0 comprised of the three RAID5's with a chunk size of
-> >> 64K:
+> On Wed, Dec 14, 2011 at 10:18 PM, NeilBrown <neilb@suse.de> wrote:
+> >> f248f8c md: create externally visible flags for supporting hot-replace.
 > >>
-> >> md0=C2=A0: active raid0 md27[2] md26[1] md25[0]
-> >> =C2=A0 =C2=A0 =C2=A0 1885098048 blocks super 1.2 64k chunks
-> >>
-> >> If I write to one of the RAID5's, using:
-> >>
-> >> # dd of=3D/dev/md27 =C2=A0if=3D/dev/zero bs=3D1024k oflag=3Ddirect
-> >>
-> >> ... then "iostat -dmx 2" shows the drives being written to in 32K
-> >> chunks (avgrq-sz=3D64), as you'd expect.
-> >>
-> >> But, writing to the RAID0 that's striping the RAID5's, shows
-> >> everything being written in 4KB chunks (iostat shows=C2=A0avgrq-sz=3D8=
-) to
-> >> the RAID0 as well as to the RAID5's.
+> >> 'replaceable' just strikes me as a confusing name as all devices are
+> >> nominally "replaceable", but whether you want it to be actively
+> >> replaced is a different consideration. =C2=A0What about "incumbent" to=
+ mark
+> >> the disk as currently holding a position we want it to vacate and
+> >> remove any potential confusion with 'replacement'.
 > >
-> > When writing to a RAID5 it *always* submits request to the lower layers=
- in
-> > PAGE sized units. =C2=A0This makes it much easier to keep parity and da=
-ta aligned.
+> > Fair point. =C2=A0I had wondered if I should not have the flag and just=
+ use the
+> > "write_error" flag. =C2=A0However the meaning is slightly different.
 > >
-> > The queue on the underlying device should sort the requests and =C2=A0g=
-roup them
-> > together and your evidence suggests that it does.
-> >
-> > When writing to the RAID5 through a RAID0 it will only see 64K at a tim=
-e but
-> > that shouldn't won't make any difference to its behaviour and should ch=
-ange
-> > the way the requests finally get to the device.
-> >
-> > So I have no idea why you see a difference.
-> >
-> > I suspect lots of block-layer tracing, and lots of staring at code and =
-lots
-> > of head scratching would be needed to understand what is really going i=
-n.
+> > I don't really like "incumbent" as it gives no indication that there is=
+ a
+> > desire to replace the device. =C2=A0Maybe "want_replacement" ??
 >=20
-> Note that "max_segments" for the raid0 =3D 1, and max_segment_size =3D
-> 4096, which tells Linux that the md can only take a single 4KB page
-> per IO request.
+> Yeah that works.  I was hung up on the previous scheme only differing
+> the in "able" vs "ment" suffix, so a "want_" prefix fits the bill.
 
-Ah, of course.  RAID5 sets a merge_bvec_fn so that there is some chance that
-read requests can bypass the cache.
-As RAID0 doesn't honour the merge_bvec_fn (maybe it should) it sets the max
-request size to 1 page.
-
-RAID10 sets a merge_bvec_fn too so RAID0 will be sending it requests in
-1-page pieces.
+I've changed it all to "want_replacements" and agree that is it clearer.
 
 >=20
-> The scheduler shouldn't be involved in the transaction between the
-> RAID0 and RAID5, as neither uses the scheduler, so it shouldn't merge
-> there, but it also shouldn't be fragmenting.
+> >> 37aebb5 md/raid5: preferentially read from replacement device if possi=
+ble.
+> [..]
+> >> Should this one liner be broken out for -stable?
+> >> Do you see a particular problem that this fixes that is already possib=
+le
+> > without hot-replace?
 >=20
-> Not having the RAID0 send the larger chunks to the RAID5's may cause
-> more fragmentation than the drive's scheduler will be able to
-> re-merge.
+> I would need to think it through a bit further, but the changelog was
+> sufficiently convincing so I thought I would ask.
 
-How hard can it be to merge a few (thousand) requests??? :-)
+I'm pretty sure it isn't really needed before replacements is added but
+thanks for checking.
 
+>=20
+> >> Nit, not sure if it's worth fixing but this one introduces some
+> >> inconsistent line wrapping around logical operators... "at the end" vs
+> >> "beginning of next line"
+> >>
+> [..]
+> >
+> > Thanks.
+> > I almost always prefer 'at the start' as import things should be obviou=
+s.
+> > So I have updated 'want_replace'.
+>=20
+> ...and here I've been an 'at the end' Sneetch and convinced myself
+> that it's easier to read...
+>=20
+> >>
+> >> 2693b9e md/raid5: handle activation of replacement device when
+> >> recovery completes.
+> >>
+> >> I questioned not needing a barrier in raid5_end_write_request after
+> >> finding conf->disks[i].replacement =3D=3D NULL until I found the note =
+in
+> >> raid5_end_read_request about the rdev being pinned until all i/o
+> >> returns. =C2=A0Maybe a similar note to raid5_end_write_request?
+> >
+> > I like adding explanatory notes ... but I'm not quite sure what you are
+> > suggesting here. =C2=A0Could you be a little more explicit? =C2=A0Thank=
+s.
+> >
+>=20
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 59f5b05..8074515 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -1758,7 +1758,8 @@ static void raid5_end_write_request(struct bio
+> *bi, int error)
+>                                 replacement =3D 1;
+>                         else
+>                                 /* rdev was removed and 'replacement'
+> -                                * replaced it.
+> +                                * replaced it.  rdev is not removed
+> +                                * until all requests are finished.
+>                                  */
+>                                 rdev =3D conf->disks[i].rdev;
+>                         break;
+>=20
+
+I've added that - thanks.
+
+
+Thanks,
 NeilBrown
 
-
---Sig_/0WaTiiKkGbPNCqSu4LebfQ7
+--Sig_/mnWoUo8VxmKuwf7FQ6Dpckz
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTu/R5jnsnt1WYoG5AQKnYBAApIGq5cuepbuj0cznZle2B0RpMfkmi70g
-MSZovvxE4UaHdf+o44fJdvFPCTuBU5iHny162K85uQl3M6jEN0nMLD237HlgNPaY
-wJ9qVxiN9HRTwlRlnq3WDOTj+idw5S9zl4FzvAVoiuDlKsidP/IH3F1v7kFCs8nC
-VbI+QojgJyYQBNSim34ngBeoQvQuX8d7U4T1YhOSZQbQKSGaynUcSWLgHihfq5QY
-T71uF1gReGuYCTRFrjUaXAH+FtOUKkY+uEOrLw9i48k5XqUzrC1WyFEriNBMVwuX
-pLHWmqXkoL0TeyUsL3755nGFQ/aIf613uTk8N/N5Da7FaxkLZxAe6PO/M3HNOfnr
-nyw6H8Quq7o+ivRBw16A4wOadEqQXfX5wkXHO/jPQlyDApChmh9Kp9MmQ0J/BKQL
-VtxZiZlHr1y0es65dZzXdd8bMxtEXj4EuOPDH/HIF2WcwSXMf5SJfJ8B6ZEYcNZU
-VpIXFsULrExRdc8Qdgf4Zb4xO3HU+pV7Xl/zZfX+7qJKbWCFYoQHOgq7AOBckPlW
-izYwMfl8rIjxEPsjhphoEEBzM8/xYJ4QEYKktEsw8oiFxoAJVySzk9OrlkAgMvoc
-Q6of4FG+rw4wjD4oPypk2VU1v/zUt/9+n5Zw+YPa3yMq0ehVKCjr+BrVU6kFp1mm
-DAoXd1gUwQs=
-=UyVX
+iQIVAwUBTvAanDnsnt1WYoG5AQIAQhAAuCG6hsTJcMQ9rfSXI5xjs2CpKcS4d7h3
+ISpBGxKR8nRlNPoZO/Xsv0X/DMj8ZxeANRU/iRHGLQeGJ6JwbJMgRFzcmmXYg2Hm
+fGeT+s0bMN9yjX+HZGsYA5IFqpDxu4dv8jkULeRyVmyn/6tt4tsmNXYoiT2ZYrSb
+UJhHNL/EJAX6A2i8SyZkRPS0D+5EI6IEQ3mkrRViwaEWZrJcw/JSQ+Hb3JGbCfR7
+ba7GiwKYHUSbj2EqjWWhw3O8IGluY+sjkIAaKODS7qG/6wAwiDz8vAYIExXJa/Wj
+wYjcAV8zQSOlJz8dGHXmg7PeK58B4YbA0xkS5srcToP0AEyeeUpj4kPnsUpnz98V
+Hg4SLyifnMy41mm4gHHYZMwTzacE695Y+7EYcr67FBROfL3BsHhRTyHIFK2ZdYv0
+n4D5WpR3erMPafjcMT+YElBPUVUPleH5IKcrWKpgJK+mqcAi07eINiYaUCSSR5Q3
+wK3TdWObDqLXwW+86rNa0jgOC8s8eaZF87Zz00IyrAHqF9wngstwY0HvkJv42SmA
+7XchyZKhhGMLY25Q5p/EG6fPGUBZSV46NR8BQf4wEEQW/ubmpwQih/WBy7BfU1zm
+EBBikTeYszpt5JLtQ8xFxB/OSgioEARiIgP3OGejk98ahMfe2ryvj7Jk7r5sX5yP
+eYAcWo9hocM=
+=qQxK
 -----END PGP SIGNATURE-----
 
---Sig_/0WaTiiKkGbPNCqSu4LebfQ7--
+--Sig_/mnWoUo8VxmKuwf7FQ6Dpckz--
