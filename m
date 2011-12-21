@@ -1,22 +1,103 @@
-From: =?ISO-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>
-Subject: Re: Adding a new disk after disk failure on raid6 volume
-Date: Tue, 20 Dec 2011 23:17:08 +0100
-Message-ID: <4EF10964.1070501@systella.fr>
-References: <75d55f4581b6ae45b8131ff989836028@systella.fr> <20111220092146.GA10387@cthulhu.home.robinhill.me.uk> <4EF073F7.50805@anonymous.org.uk>
+From: "Williams, Dan J" <dan.j.williams@intel.com>
+Subject: [CFP] Linux Storage, Filesystem & Memory Management Summit 2012
+ (April 1-2)
+Date: Wed, 21 Dec 2011 09:26:05 -0800
+Message-ID: <CABE8wws67dn0fwhTCs_XqH0g_CxGuT+hPQH9cVFe1xx5t_O9Jw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4EF073F7.50805@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-	Thanks a lot. Now /dev/sde and /dev/sde1 don't have same superbloc. My 
-raid volume is rebuilding and I shall try to reboot this server as soon 
-as possible to check.
+The annual Linux Storage, Filesystem and Memory Management Summit for
+2012 will be held on the 2 days preceding the Linux Foundation
+Collaboration Summit at Hotel Nikko in San Francisco, CA:
 
-	Regards,
+       https://events.linuxfoundation.org/events/lsfmm-summit
+       https://events.linuxfoundation.org/events/collaboration-summit/
 
-	JKB
+We'd therefore like to issue a call for agenda proposals that are
+suitable for cross-track discussion as well as more technical subjects
+for discussion in the breakout sessions.
+
+1) Suggestions for agenda topics should be sent before February 5th
+2012 to:
+
+lsf-pc@lists.linux-foundation.org
+
+and optionally cc the Linux list which would be most interested in it:
+
+SCSI: linux-scsi@vger.kernel.org
+FS: linux-fsdevel@vger.kernel.org
+MM: linux-mm@kvack.org
+
+Please remember to tag your subject with [LSF/MM TOPIC] to make it
+easier to track. Agenda topics and attendees will be selected by the
+programme committee, but the final agenda will be formed by consensus
+of the attendees on the day.
+
+We'll try to cap attendance at around 25-30 per track to facilitate
+discussions although the final numbers will depend on the room sizes at
+the venue.
+
+2) Requests to attend should be sent to:
+
+lsf-pc@lists.linux-foundation.org
+
+please summarize what expertise you will bring to the meeting, and what
+you'd like to discuss.  please also tag your email with [ATTEND] so
+there's less chance of it getting lost in the large mail pile.
+
+Presentations are allowed to guide discussion, but are strongly
+discouraged.  There will be no recording or audio bridge, however
+written minutes will be published as in previous years:
+
+2011:
+
+http://lwn.net/Articles/436871/
+http://lwn.net/Articles/437066/
+
+2010:
+http://lwn.net/Articles/399148/
+http://lwn.net/Articles/399313/
+http://lwn.net/Articles/400589/
+
+2009:
+http://lwn.net/Articles/327601/
+http://lwn.net/Articles/327740/
+http://lwn.net/Articles/328347/
+
+Prior years:
+http://www.usenix.org/events/lsf08/tech/lsf08sums.pdf
+http://www.usenix.org/publications/login/2007-06/openpdfs/lsf07sums.pdf
+
+3) If you have feedback on last year's meeting that we can use to
+improve this year's, please also send that to:
+
+lsf-pc@lists.linux-foundation.org
+
+Thank you on behalf of the Program Committee:
+
+Storage
+
+Jens Axboe
+James Bottomley
+Vivek Goyal
+Dan Williams
+
+Filesystems
+
+Trond Myklebust
+Chris Mason
+Christoph Hellwig
+Theodore Ts'o
+Mingming Cao
+Jan Kara
+Joel Becker
+
+MM
+
+Andrea Arcangeli
+Hugh Dickins
+Mel Gorman
