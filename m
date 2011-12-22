@@ -1,149 +1,88 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm --monitor as non-root ?
-Date: Fri, 23 Dec 2011 07:55:04 +1100
-Message-ID: <20111223075504.054b0383@notabene.brown>
-References: <20111222132815.GA26042@rivendell.home.ouaza.com>
+Subject: Re: [md PATCH 00/16] hot-replace support for RAID4/5/6
+Date: Fri, 23 Dec 2011 08:14:24 +1100
+Message-ID: <20111223081424.682a1597@notabene.brown>
+References: <20111026014240.21110.28487.stgit@notabene.brown>
+	<CAA9_cmfWEnLnvrShVp3BL+WsEApS+nsWBZfao-qM2_habqFCtg@mail.gmail.com>
+	<20111215171850.335da016@notabene.brown>
+	<CABE8wwtKvNamQM3VfYFHwGQ0BhV2xBtYgqV1=Rmjc=6J3Bqogw@mail.gmail.com>
+	<20111220161820.0830ef18@notabene.brown>
+	<20111222215442.Horde.VHSHGZk8pphO85kS1Gs7yvA@cakebox.homeunix.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/iqlHMNYnzslHX/f/qU9Jls0"; protocol="application/pgp-signature"
+ boundary="Sig_/svj7=jrtIi.j0OBx_iBvwXb"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111222132815.GA26042@rivendell.home.ouaza.com>
+In-Reply-To: <20111222215442.Horde.VHSHGZk8pphO85kS1Gs7yvA@cakebox.homeunix.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Raphael Hertzog <hertzog@debian.org>, linux-raid@vger.kernel.org
+To: Alexander =?UTF-8?B?S8O8aG4=?= <alexander.kuehn@nagilum.de>
+Cc: "Williams, Dan J" <dan.j.williams@intel.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/iqlHMNYnzslHX/f/qU9Jls0
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/svj7=jrtIi.j0OBx_iBvwXb
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 22 Dec 2011 14:28:15 +0100 Raphael Hertzog <hertzog@debian.org> wro=
-te:
-
-> Hello,
->=20
-> I'm interested in having desktop notifications for change in the status
-> of my RAID devices and I saw your comment here:
-> http://neil.brown.name/blog/20090129234603-021
->=20
-> Unfortunately that doesn't work well in practice. The monitoring program
-> must be run from the user's session and apparently mdadm --monitor
-> only works as root:
-> $ mdadm --monitor --no-sharing --alert notify-send
-> mdadm: must be super-user to perform this action
->=20
-> Is there a way to let mdadm do the monitoring for us without requiring
-> root rights?
-
-That is reasonable.  The next release of mdadm (later today) will not impose
-that limitation - patch below.
-
-Unfortunately the kernel does impose a limitation.  I'll fix it for 3.3, but
-until then you will need to apply the second patch below.
-
+On Thu, 22 Dec 2011 21:54:42 +0100 Alexander K=C3=BChn
+<alexander.kuehn@nagilum.de> wrote:
 
 >=20
-> Cheers,
+> Zitat von NeilBrown <neilb@suse.de>:
 >=20
-> PS: Is there a better place for this kind of feature requests ? Feel
-> free to forward this mail to record it there (should it exist).
+> > On Wed, 14 Dec 2011 23:14:04 -0800 "Williams, Dan J"
+> > <dan.j.williams@intel.com> wrote:
+> >
+> >> On Wed, Dec 14, 2011 at 10:18 PM, NeilBrown <neilb@suse.de> wrote:
+> >> >> f248f8c md: create externally visible flags for supporting hot-repl=
+ace.
+> >> >>
+> >> >> 'replaceable' just strikes me as a confusing name as all devices are
+> >> >> nominally "replaceable", but whether you want it to be actively
+> >> >> replaced is a different consideration. =C2=A0What about "incumbent"=
+ to mark
+> >> >> the disk as currently holding a position we want it to vacate and
+> >> >> remove any potential confusion with 'replacement'.
+>=20
+> 'vacating' strikes me as the obvious choice, no?
 
-Best place is linux-raid@vger.kernel.org (you don't need to subscribe).  I'=
-ve
-Cced this reply there.
+Interesting suggestion, but not quite the right meaning.
+
+The bit can be set before a replacement is available.  So it isn't a
+statement about what is happening to the device, but about what should
+happening to the device.
+The meaning we want is "replace this device as soon as possible".
+
+I don't think there is one word that really has a meaning like that.
+"replaceable" was the closest I could get but that means "can be replaced"
+rather than "should be replaced" and as Dan pointed out that is a significa=
+nt
+difference.
+
+Maybe "deprecated"?? However I don't think using that would improve clarity.
 
 Thanks,
 NeilBrown
 
 
-
-=46rom ba3903d416524e0fb002eca971ce6026e5f2c3af Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Fri, 23 Dec 2011 07:42:23 +1100
-Subject: [PATCH] allow --monitor to be run by non-privileged use.
-
-Providing --no-sharing is given, monitoring should be permitted.
-
-Unfortunately the kernel current rejects GET_DISK_INFO and
-GET_ARRAY_INFO for non-privileged users which is unjustified.
-The info is available in sysfs and we could get it from there,
-but for now, require the kernel to be fixed.
-
-Reported-by: Raphael Hertzog <hertzog@debian.org>
-Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/mdadm.c b/mdadm.c
-index c6a887a..f07fac2 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -1209,7 +1209,8 @@ int main(int argc, char *argv[])
- 		require_homehost =3D 0;
- 	}
-=20
--	if ((mode !=3D MISC || devmode !=3D 'E') &&
-+	if (!((mode =3D=3D MISC && devmode =3D=3D 'E')
-+	      || (mode =3D=3D MONITOR && spare_sharing =3D=3D 0)) &&
- 	    geteuid() !=3D 0) {
- 		fprintf(stderr, Name ": must be super-user to perform this action\n");
- 		exit(1);
-
-
-
-=46rom b56ca899650a7ad4f40b2986086f411286e90c4a Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Fri, 23 Dec 2011 07:46:36 +1100
-Subject: [PATCH] md: allow non-privileged uses to GET_*_INFO about raid
- arrays.
-
-The info is already available in /proc/mdstat and /sys/block in
-an accessible form so there is no point in putting a road-block in
-the ioctl for information gathering.
-
-Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 9dfa2d1..87022b5 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6129,8 +6129,15 @@ static int md_ioctl(struct block_device *bdev, fmode=
-_t mode,
- 	struct mddev *mddev =3D NULL;
- 	int ro;
-=20
--	if (!capable(CAP_SYS_ADMIN))
--		return -EACCES;
-+	switch (cmd) {
-+	case RAID_VERSION:
-+	case GET_ARRAY_INFO:
-+	case GET_DISK_INFO:
-+		break;
-+	default:
-+		if (!capable(CAP_SYS_ADMIN))
-+			return -EACCES;
-+	}
-=20
- 	/*
- 	 * Commands dealing with the RAID driver but not any
-
---Sig_/iqlHMNYnzslHX/f/qU9Jls0
+--Sig_/svj7=jrtIi.j0OBx_iBvwXb
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTvOZKDnsnt1WYoG5AQJrbQ//Wa4MHlfyLmyia2/fxJiovb1/tiXt3ttU
-6G8lGMnAFGMBydgaIz6vVHoJ/ZAhzQ1V682XmhhomCGLia4N8sSw+VsDAUwn4j/3
-yeDXCa/I8YLKcT0gBdcucUgkbuEfbeXvTFJzRifApAjK1DFYinKCDsfAFSFFLgBe
-UJBdJ1mbi2/ZTCv3TvHCa13apfUR+SjI6gFlwV995v4BYpYD8S/0jl/FKJHVEq/5
-53equ2rm8hiGt1kurrcPTi4nifavaS52M7UZ0kazoywndSGpS8H0+Sz2dY+gkT+z
-wBit53jxY7VZp+QagpUZOH1a1yjLFwNEZtQ9Nct7ctCwVna69+sEs8BP3o9rLWcH
-Egr+5ZNeBiidIOFYBdt9pLMTahd58Anm7hXgv6UlWPZXf7OQ5QgphN2iOGPeMiuk
-uKmGTi5jLE5IhU8JJtEik4/VjRwc52u+5QmrBoWLwK+0qPZJxkejy16Q+16xf3Dq
-z9wgmwHdBsoeR7vzWrlsGZzg6M1T1USgkKWJTzX3zMqM9qCrMEb4nDl+21Yf6aUg
-oUake3BswAu0x3MxhTTrD+2GeymoozRWWNteLNkd3UPUMn2jGRhjU+n2KoT1oSpY
-EIr+CMbpjBPvKuXjWLOKRsWGlQmF3G1arDanvZygyjow7isCgXe15fiwpuO+ohhX
-f0o9cvdVxuY=
-=bDX3
+iQIVAwUBTvOdsDnsnt1WYoG5AQJOMA//ZKO7phRsBpl2k38UZP6m35xe5VG+EGiw
+bpfO+BGvsrQARp4W3AZPZ/g2RYs10GPlLG51eqCuonPJy9+ZJ5ROjOqb6l7eG87S
+yYpmRNW85Dcqxcgvi0kn8kx7bkXQOxWblQL0+SuAiSnyUIz90+qs0q4CO4SqIv6v
+F25RsyqmePgTYYeCxr2R4uLhTsAXcHVrOjx8/XnGR4RtksIfRyB9XZ2nNOn5IzlA
+KzDzFDNypVRU1ryCaFMJqFzSkjFkTAt6dJ3/peJwdgNU0Dc/k767e3VJY58XTfFB
+0fTm87TRm30rlfozL+19QeAhqJQMe+uqMJ9WbBBbhBwSS3h+5B6Zahq7eS3sNnsN
+jjO9vNIyZEikrPUfZUiiCEghtY5I1gX3R/ogcoUUk1ag7bP2xP+C1dketSnAmajP
+3zOY0ePkFIS8U7FZ+EA94cCt1RbMCs3w0Avvs4dURhcRuzHgbLwpNlo1/uFiR5Nd
+mE/aX7ncBh1f0ngSvkxpFhY1VM+VSS2d7j/Y+txd0g212Dl8Q534c/17yRm3qF4U
+jnKFojDBBSwM7AjjIBA4W4pwO0D2RhLSVtAFetS4NVWCdq3TXwrA3WahhQBQ+iVU
+YGYD2h+JlGYgQn69Xhg+JeOH2/ogeK05WPSiRM9MqEn3qoZwidd7FnOi+TQ9INrs
+56zacX2sMUs=
+=w/7c
 -----END PGP SIGNATURE-----
 
---Sig_/iqlHMNYnzslHX/f/qU9Jls0--
+--Sig_/svj7=jrtIi.j0OBx_iBvwXb--
