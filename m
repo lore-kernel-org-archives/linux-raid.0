@@ -1,103 +1,48 @@
-From: "Williams, Dan J" <dan.j.williams@intel.com>
-Subject: [CFP] Linux Storage, Filesystem & Memory Management Summit 2012
- (April 1-2)
-Date: Wed, 21 Dec 2011 09:26:05 -0800
-Message-ID: <CABE8wws67dn0fwhTCs_XqH0g_CxGuT+hPQH9cVFe1xx5t_O9Jw@mail.gmail.com>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH] FIX: Verify if array name doesn't exist already
+Date: Thu, 22 Dec 2011 15:21:10 +0100
+Message-ID: <20111222142109.5678.19199.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, dm-devel@redhat.com
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-The annual Linux Storage, Filesystem and Memory Management Summit for
-2012 will be held on the 2 days preceding the Linux Foundation
-Collaboration Summit at Hotel Nikko in San Francisco, CA:
+When e.g. array name (an) is correct and it is the same as container name (cn),
+file element creation /dev/md/an will replace /dev/md/cn.
+This can cause that user cannot access container using /dev/md/cn.
 
-       https://events.linuxfoundation.org/events/lsfmm-summit
-       https://events.linuxfoundation.org/events/collaboration-summit/
+Verify during array creation if chosen name is not already existing one.
 
-We'd therefore like to issue a call for agenda proposals that are
-suitable for cross-track discussion as well as more technical subjects
-for discussion in the breakout sessions.
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+---
 
-1) Suggestions for agenda topics should be sent before February 5th
-2012 to:
+ Create.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
-lsf-pc@lists.linux-foundation.org
+diff --git a/Create.c b/Create.c
+index 5d1548b..e522d8e 100644
+--- a/Create.c
++++ b/Create.c
+@@ -558,6 +558,17 @@ int Create(struct supertype *st, char *mddev,
+ 		map_unlock(&map);
+ 		return 1;
+ 	}
++	/* verify if chosen_name is not in use,
++	 * it could be in conflict with already existing device
++	 * e.g. container, array
++	 */
++	if (stat(chosen_name, &stb) != -1) {
++		fprintf(stderr, Name ": Array name %s is in use already.\n",
++			chosen_name);
++		close(mdfd);
++		map_unlock(&map);
++		return 1;
++	}
+ 	mddev = chosen_name;
+ 
+ 	vers = md_get_version(mdfd);
 
-and optionally cc the Linux list which would be most interested in it:
-
-SCSI: linux-scsi@vger.kernel.org
-FS: linux-fsdevel@vger.kernel.org
-MM: linux-mm@kvack.org
-
-Please remember to tag your subject with [LSF/MM TOPIC] to make it
-easier to track. Agenda topics and attendees will be selected by the
-programme committee, but the final agenda will be formed by consensus
-of the attendees on the day.
-
-We'll try to cap attendance at around 25-30 per track to facilitate
-discussions although the final numbers will depend on the room sizes at
-the venue.
-
-2) Requests to attend should be sent to:
-
-lsf-pc@lists.linux-foundation.org
-
-please summarize what expertise you will bring to the meeting, and what
-you'd like to discuss.  please also tag your email with [ATTEND] so
-there's less chance of it getting lost in the large mail pile.
-
-Presentations are allowed to guide discussion, but are strongly
-discouraged.  There will be no recording or audio bridge, however
-written minutes will be published as in previous years:
-
-2011:
-
-http://lwn.net/Articles/436871/
-http://lwn.net/Articles/437066/
-
-2010:
-http://lwn.net/Articles/399148/
-http://lwn.net/Articles/399313/
-http://lwn.net/Articles/400589/
-
-2009:
-http://lwn.net/Articles/327601/
-http://lwn.net/Articles/327740/
-http://lwn.net/Articles/328347/
-
-Prior years:
-http://www.usenix.org/events/lsf08/tech/lsf08sums.pdf
-http://www.usenix.org/publications/login/2007-06/openpdfs/lsf07sums.pdf
-
-3) If you have feedback on last year's meeting that we can use to
-improve this year's, please also send that to:
-
-lsf-pc@lists.linux-foundation.org
-
-Thank you on behalf of the Program Committee:
-
-Storage
-
-Jens Axboe
-James Bottomley
-Vivek Goyal
-Dan Williams
-
-Filesystems
-
-Trond Myklebust
-Chris Mason
-Christoph Hellwig
-Theodore Ts'o
-Mingming Cao
-Jan Kara
-Joel Becker
-
-MM
-
-Andrea Arcangeli
-Hugh Dickins
-Mel Gorman
