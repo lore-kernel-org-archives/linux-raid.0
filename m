@@ -1,60 +1,23 @@
-From: Gordon Henderson <gordon@drogon.net>
+From: Asdo <asdo@shiftmail.org>
 Subject: Re: It is safe to stop Raid being reshaped
-Date: Wed, 28 Dec 2011 18:15:50 +0000 (GMT)
-Message-ID: <alpine.DEB.2.00.1112281810440.10295@unicorn.drogon.net>
+Date: Wed, 28 Dec 2011 20:02:36 +0100
+Message-ID: <4EFB67CC.7010500@shiftmail.org>
 References: <CAK90R-Bc8z3vOcitrqyEk0Lb7Pgr+ghwL7Zfq4HZRxJ1-jNHag@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="180569313-1976608233-1325096151=:10295"
+Content-Type: text/plain; format=flowed; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAK90R-Bc8z3vOcitrqyEk0Lb7Pgr+ghwL7Zfq4HZRxJ1-jNHag@mail.gmail.com>
+In-reply-to: <CAK90R-Bc8z3vOcitrqyEk0Lb7Pgr+ghwL7Zfq4HZRxJ1-jNHag@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jeremy Thompson <jeremythompson82@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---180569313-1976608233-1325096151=:10295
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8BIT
-
-On Wed, 28 Dec 2011, Jeremy Thompson wrote:
-
-> I was dumb and stacked them pretty close to each other and before
-> since they were not under heavy use, there were no problems... however
-> now that the drives are under heavy use... I am seeing these errors
-> come up. I'd like to re-arrange the drives so they have more airflow
-> and also help try and prevent the errors from showing.  So with that
-> in mind, would it be at all possible to stop the reshaping process,
-> re-arrange the drives, then get the reshaping process back up and
-> running?
-
-I'm not 100% sure about stopping the reshape, however I can tell you how 
-to check the drive temperatures, if you've not already done this.
-
-Use the hddtemp program.
-
-e.g.
-
-   # hddtemp /dev/sd{a,b}
-   /dev/sda: SAMSUNG HD204UI: 25°C
-   /dev/sdb: SAMSUNG HD204UI: 22°C
-
-Then check the temperatures against the manufacturers recomendations.
-
-IF you don't have hddtemp in your distro, try smartctl and look for 
-parameter 194.
-
-   # smartctl -a /dev/sda | fgrep 194
-   194 Temperature_Celsius     0x0002   064   064   000    Old_age   Always       -       23 (Lifetime Min/Max 17/27)
-
-However if you're seeing errors, then who knows... Cabling, motherboard, 
-etc. are all possible culprits as well as physical surface defects... You
-can find out more with smartctl -
-
-   # smartctl -a /dev/sda
-
-and so on.
-
-Gordon
---180569313-1976608233-1325096151=:10295--
+My opinion is: don't stop the array!
+Errors are not necessarily caused by heat, probably more a controller or 
+firmware issue, which will present identically if you restart the 
+reshaping process.
+Also, this kind of issues on my 3ware controller are harmless. You could 
+better ask this to SCSI people, but there are up to 5 retries (for EACH 
+scsi command) by the scsi layer after these resets happen.
+Stopping the reshape is much more risky imho.
