@@ -1,76 +1,44 @@
-From: Konstantinos Skarlatos <k.skarlatos@gmail.com>
-Subject: Re: Btrfs: blocked for more than 120 seconds, made worse by 3.2 rc7
-Date: Wed, 28 Dec 2011 23:58:10 +0200
-Message-ID: <4EFB90F2.9030107@gmail.com>
-References: <4EFB6D4F.6070002@gmail.com> <20111228214832.GG12731@dastard>
+From: Asdo <asdo@shiftmail.org>
+Subject: Re: It is safe to stop Raid being reshaped
+Date: Thu, 29 Dec 2011 03:02:47 +0100
+Message-ID: <4EFBCA47.9010401@shiftmail.org>
+References: <CAK90R-Bc8z3vOcitrqyEk0Lb7Pgr+ghwL7Zfq4HZRxJ1-jNHag@mail.gmail.com>
+ <4EFB67CC.7010500@shiftmail.org>
+ <CAK90R-ATCf6iSgod4ktvaaiDmGaiaAPFQ+On=t0Ob4g6tUWhYA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; format=flowed; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111228214832.GG12731@dastard>
+In-reply-to: <CAK90R-ATCf6iSgod4ktvaaiDmGaiaAPFQ+On=t0Ob4g6tUWhYA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-kernel@vger.kernel.org, Linux Btrfs <linux-btrfs@vger.kernel.org>, Chris Mason <chris.mason@oracle.com>, linux-raid@vger.kernel.org
+To: Jeremy Thompson <jeremythompson82@gmail.com>
+Cc: Asdo <asdo@shiftmail.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On =CE=A4=CE=B5=CF=84=CE=AC=CF=81=CF=84=CE=B7, 28 =CE=94=CE=B5=CE=BA=CE=
-=AD=CE=BC=CE=B2=CF=81=CE=B9=CE=BF=CF=82 2011 11:48:32 =CE=BC=CE=BC, Dav=
-e Chinner wrote:
-> On Wed, Dec 28, 2011 at 09:26:07PM +0200, Konstantinos Skarlatos wrot=
-e:
->> Hello all:
->> I have two machines with btrfs, that give me the "blocked for more
->> than 120 seconds" message. After that I cannot write anything to
->> disk, i am unable to unmount the btrfs filesystem and i can only
->> reboot with sysrq-trigger.
->>
->> It always happens when i write many files with rsync over network.
->> When i used 3.2rc6 it happened randomly on both machines after
->> 50-500gb of writes. with rc7 it happens after much less writes,
->> probably 10gb or so, but only on machine 1 for the time being.
->> machine 2 has not crashed yet after 200gb of writes and I am still
->> testing that.
->>
->> machine 1: btrfs on a 6tb sparse file, mounted as loop, on a xfs
->> filesystem that lies on a 10TB md raid5. mount options
->> compress=3Dzlib,compress-force
->>
->> machine 2: btrfs over md raid 5 (4x2TB)=3D5.5TB filesystem. mount
->> options compress=3Dzlib,compress-force
->>
->> pastebins:
->>
->> machine1:
->> 3.2rc7 http://pastebin.com/u583G7jK
->> 3.2rc6 http://pastebin.com/L12TDaXa
->
-> These two are caused by it taking longer than 120s for XFS to fsync
-> the loop file. Writing a signficant chunk of a sparse 6TB file on a
-> software RAID5  volume is going to take some time.  However, if IO
-> is not occurring, then somewhere below XFS an IO has gone missing
-> (MD or hardware problem) because the fsync on the XFS file is
-> blocked waiting for an IO completion.
->
->> machine2:
->> 3.2rc6 http://pastebin.com/khD0wGXx
->> 3.2rc7 (not crashed yet)
-Crashed a few hours ago, here is the rc7 pastebin
-http://pastebin.com/gvfUm0az=20
->
-> These don't have XFS in the picture, but also appear to be hung
-> waiting on IO completion with MD stuck in
-> make_request()->get_active_stripe(). That, to me, indicates an MD
-> problem.....
->
-Added the linux-raid mailing list
-Please reply to me too, because i am not subscribed.
+On 12/28/11 20:06, Jeremy Thompson wrote:
+> The RAID array consists of drives that are on cheap SATA controllers
+> no RAID function on them.  That is why I chose to use mdadm instead of
+> a true RAID card.
 
-> Cheers,
->
-> Dave.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Me too, I meant 3ware used as classic sata controller
+
+> So the errors would happen regardless if heat was an issue?
+
+I think that with temperature you would get a different error: disk 
+going completely offline due to thermal shutdown.
+Anyway Gordon showed you how to check for temperatures; try that.
+Another way is via "smartctl -a /dev/sdX"
+
+SCSI errors are usually due to cabling, not perfect firmware, not 
+perfect controller, not perfect controller drivers.
+If you show us the exact error we can be a bit more precise.
+Note: 5 retries (for each scsi command) by the SCSI layer also applies 
+to SATA disks, which is your case
+
+> I'll wait until the reshape is done then, shutdown the machine and
+> re-arrange the drives before I add another drive to the array.
+
+Yes this would be my suggestion, but I don't know everything.
+
+Have a look at the temperatures though, and compare to max temp by your 
+HDD specs. I suggest you don't stop the array if they are lower.
