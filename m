@@ -1,29 +1,63 @@
-From: Brad Campbell <brad@fnarfbargle.com>
-Subject: Re: RAID5 alignment issues with 4K/AF drives (WD green ones)
-Date: Fri, 30 Dec 2011 14:24:40 +0800
-Message-ID: <4EFD5928.100@fnarfbargle.com>
-References: <A0933627-0D84-496C-B7B7-4FE265C2A212@gmail.com>
+From: Steve Carlson <stevengcarlson@gmail.com>
+Subject: RAID0 partition set to spare
+Date: Fri, 30 Dec 2011 02:21:25 -0600
+Message-ID: <CA+q4O7N5D7c-dDYtW_BH3tUPK2NdAnq0agMAczTXQKji=QH3dw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A0933627-0D84-496C-B7B7-4FE265C2A212@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michele Codutti <codutti@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 30/12/11 07:28, Michele Codutti wrote:
-> Hi all, I'm writing to this mailing list because I cannot figure out why I had some performance issues with my three WD20EARS (2TB Western Digital "Green" 4K/AF drive).
-> These drives has a (sequential) write throughput around 100MB/s. When I combine them in a RAID0 configuration the throughput is around 300 MB/s and in a RAID1 configuration they preserve a single drive performance of 100MB/s.
-> When I combine all three drives in a RAID5 configuration the (individual) performance falls around 40MB/s.
-> I get the same performance level when I do individual misaligned writes (ex: dd if=/dev/zero bs=6K of=/dev/sda).
-> The drives are not partitioned. I'm using the default chunk size (512K) and the default metadata superblock version (1.2).
-> I had not formatted the RAID or any single drive during my test i had directly used the raw devices.
-> I'm using a 11.10 ubuntu with 3.0.0 linux kernel and 3.1.4 mdadm.
-> The hardware is a HP microserver.
->
-Just a thought, but do you have the "XP mode" jumper removed on all drives?
+I'm an enthusiast and don't have any experience managing raids.  I got
+here through a series of steps starting out in basic linux help on
+IRC, so bear with me if I don't know how to do something and please
+try to be verbose/explicit in responses.
 
-Regards,
-Brad
+I have a Synology DS207 2 drive NAS that I set up in RAID0 using their
+automated tools back in 2008.  I didn't manually set the raid up, so I
+have no implicit knowledge on how it's all held together.  I had an
+electrician over and went through a series of power cycles, and the
+disks were in their current state when he had left (Dec 21ish).  MD2
+refuses to assemble without adding SDB3 as swap.
+
+Syonology uses a slimmed down embedded BusyBox install.  I have photos
+on the disk that aren't backed up, so I'd really prefer to keep the
+data intact, but completely understand I took the risk of losing the
+data with RAID0.
+
+I didn't want a 20 page email, so hopefully http links with the
+pertinent info will be acceptable.
+
+Marble> uname -a
+Linux Marble 2.6.24 #1594 Fri Feb 25 19:00:24 CST 2011 ppc GNU/Linux
+synology_ppc824x_207
+
+cat /proc/mdstat
+http://dl.dropbox.com/u/2776371/raid/cat_proc_mdstat.txt
+
+mdadm --examine
+http://dl.dropbox.com/u/2776371/raid/mdadm_examine_all_drives.txt
+
+smartctl -a /dev/sda
+http://dl.dropbox.com/u/2776371/raid/smartctl_a_sda.txt
+
+smartctl -a /dev/sdb
+http://dl.dropbox.com/u/2776371/raid/smartctl_a_sdb.txt
+
+cat /var/log/messages | grep 'error'
+http://dl.dropbox.com/u/2776371/raid/cat_var_log_messages_pipe_grep_error.txt
+
+mdadm --stop /dev/md2 && mdadm --assemble /dev/md2 /dev/sd[ab]3
+http://dl.dropbox.com/u/2776371/raid/stop_assemble_md2_dmesg.txt
+
+mdadm --stop /dev/md2 && mdadm --assemble --force /dev/md2 /dev/sd[ab]3
+http://dl.dropbox.com/u/2776371/raid/stop_assemble_force_md2_dmesg.txt
+
+dmesg from boot
+http://dl.dropbox.com/u/2776371/raid/boot_dmesg.txt
+
+Please let me know if there's any other info I can provide to help
+diagnose the issue.
+
+Thanks in advance.
