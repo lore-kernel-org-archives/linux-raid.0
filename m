@@ -1,41 +1,27 @@
-From: Zdenek Kaspar <zkaspar82@gmail.com>
-Subject: Re: RAID5 alignment issues with 4K/AF drives (WD green ones)
-Date: Fri, 30 Dec 2011 03:00:34 +0100
-Message-ID: <4EFD1B42.3040009@gmail.com>
-References: <A0933627-0D84-496C-B7B7-4FE265C2A212@gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: It is safe to stop Raid being reshaped
+Date: Fri, 30 Dec 2011 05:31:05 +0100 (CET)
+Message-ID: <alpine.DEB.2.00.1112300528300.808@uplift.swm.pp.se>
+References: <CAK90R-Bc8z3vOcitrqyEk0Lb7Pgr+ghwL7Zfq4HZRxJ1-jNHag@mail.gmail.com> <4EFB67CC.7010500@shiftmail.org> <CAK90R-ATCf6iSgod4ktvaaiDmGaiaAPFQ+On=t0Ob4g6tUWhYA@mail.gmail.com> <4EFBCA47.9010401@shiftmail.org> <CAK90R-A9BmfjO4DtA+n+pXvv9ud39G8QqkvNOJ6c0Mo3aaBNow@mail.gmail.com>
+ <4EFCF93F.6000607@fnarfbargle.com> <CAK90R-DWAAhOx_yJsVev4+szUmkkPr-fpvT0jUFD_W1aMNhYRw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A0933627-0D84-496C-B7B7-4FE265C2A212@gmail.com>
+In-Reply-To: <CAK90R-DWAAhOx_yJsVev4+szUmkkPr-fpvT0jUFD_W1aMNhYRw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jeremy Thompson <jeremythompson82@gmail.com>
+Cc: Brad Campbell <brad@fnarfbargle.com>, Asdo <asdo@shiftmail.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Dne 30.12.2011 0:28, Michele Codutti napsal(a):
-> Hi all, I'm writing to this mailing list because I cannot figure out why I had some performance issues with my three WD20EARS (2TB Western Digital "Green" 4K/AF drive).
-> These drives has a (sequential) write throughput around 100MB/s. When I combine them in a RAID0 configuration the throughput is around 300 MB/s and in a RAID1 configuration they preserve a single drive performance of 100MB/s.
-> When I combine all three drives in a RAID5 configuration the (individual) performance falls around 40MB/s.
-> I get the same performance level when I do individual misaligned writes (ex: dd if=/dev/zero bs=6K of=/dev/sda).
-> The drives are not partitioned. I'm using the default chunk size (512K) and the default metadata superblock version (1.2).
-> I had not formatted the RAID or any single drive during my test i had directly used the raw devices.
-> I'm using a 11.10 ubuntu with 3.0.0 linux kernel and 3.1.4 mdadm.
-> The hardware is a HP microserver.
-> 
-> Could you give me some advice?
-> Thanks in advance.
-> 
-> Michele--
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Thu, 29 Dec 2011, Jeremy Thompson wrote:
 
-There must be some misalignment somewhere :( Do all drives really report
-as 4K to the OS - physical_block_size, logical_block_size under
-/sys/block/sdX/queue/ ??
+> I thought about this as well - I have an Enermax 450 in there right 
+> now... I'll have to look for a higher watt power supply next I guess.
 
-NB: how does it perform with partitions starting at sector 2048 (check
-all disks with fdisk -lu /dev/sdX).
+Also look at how your feeds are balanced. Some PSUs have two rails, 
+putting all drives on a single rail causes your load handling capacity to 
+go down significantly. I recommend getting a single rail PSU as well, well 
+above the capacity you think you need.
 
-HTH, Z.
-
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
