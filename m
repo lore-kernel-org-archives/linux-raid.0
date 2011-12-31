@@ -1,38 +1,38 @@
-From: jlcenter@comcast.net
-Subject: Install grub2 to /dev/md126 fails
-Date: Sat, 31 Dec 2011 03:59:13 +0000 (UTC)
-Message-ID: <760811954.244872.1325303953552.JavaMail.root@sz0019a.westchester.pa.mail.comcast.net>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: RAID0 partition set to spare
+Date: Sat, 31 Dec 2011 11:08:42 +0100
+Message-ID: <4EFEDF2A.5060408@redhat.com>
+References: <CA+q4O7N5D7c-dDYtW_BH3tUPK2NdAnq0agMAczTXQKji=QH3dw@mail.gmail.com>	<4EFD9956.5050703@redhat.com> <CA+q4O7NS-2_1MxtXx5U4Qk66QHdXncUhm816utjuWVx8EJoGKQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CA+q4O7NS-2_1MxtXx5U4Qk66QHdXncUhm816utjuWVx8EJoGKQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Steve Carlson <stevengcarlson@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On 12/31/11 04:03, Steve Carlson wrote:
+> Hi Jes,
+> 
+> The system has mostly been sitting powered down while I'm not trying
+> to fix it.  Both drives reporting 37c temps right now.
+> 
+> mdadm --stop /dev/md2 && dmesg -c && mdadm --assemble /dev/md2 /dev/sd[ab]3
+> http://dl.dropbox.com/u/2776371/raid/mdadm_stop_dmesg_c_mdadm_assemble.txt
 
-I've been trying to install Ubuntu 11.10 on a mdadm imsm raid1 array, but it fails installing grub.  I had to chroot /target to install mdadm from the distribution.  I've also upgraded to the latest version of mdadm, hoping this would fix the problem.  This is the error I'm getting:
+Hi Steve,
 
-root@ubuntu:/# grub-install --recheck /dev/md/V1
-/usr/sbin/grub-probe: error: no such disk.
-Auto-detection of a filesystem of /dev/md126p3 failed.
-Try with --recheck.
-If the problem persists please report this together with the output of "/usr/sbin/grub-probe --device-map="/boot/grub/device.map" --target=fs -v /boot/grub" to <bug-grub@gnu.org>
+What I meant here is that I would like to see the dmesg output at this
+point, to see if there were any read errors reported during the assembly.
 
-Here's how mdadm sees my config:
+> I also ran extended self tests just to be thorough, and they both came
+> back error free.  I'm unsure as to whether that puts them in the clear
+> for bad sectors though.
 
-root@ubuntu:/dev# mdadm --examine --scan
-ARRAY metadata=imsm UUID=92ae2913:95d651ca:62154f33:7069b04c
-ARRAY /dev/md/V1 container=92ae2913:95d651ca:62154f33:7069b04c member=0 UUID=71b12777:c6a51a84:5b0f1d11:0bd6e497
+There were read errors in the dmesg output you posted earlier, which is
+why I am wary of it.
 
-I also tried with several variations of /dev/md126, etc., but always with the same result.  I also tried to install directly to one of the disks in the array, but this didn't work, either.  When I ran grub-probe, I got the following error:
-
-/usr/sbin/grub-probe: info: opening mduuid/71b12777c6a51a845b0f1d110bd6e497,3.
-/usr/sbin/grub-probe: error: no such disk.
-
-What could be causing this problem?  How do I fix it?  Please let me know if I need to supply more information to troubleshoot this problem.
-
-Thanks.
-
-    -John
+Cheers,
+Jes
