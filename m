@@ -1,38 +1,38 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: RAID5 alignment issues with 4K/AF drives (WD green ones)
-Date: Sat, 31 Dec 2011 04:12:19 +0100 (CET)
-Message-ID: <alpine.DEB.2.00.1112310410290.808@uplift.swm.pp.se>
-References: <A0933627-0D84-496C-B7B7-4FE265C2A212@gmail.com> <4EFD1B42.3040009@gmail.com> <CALFpzo7bo_DijDNRKJzPP+ecvcZkeFOwHp52TqmXi4zkszrbJg@mail.gmail.com> <alpine.DEB.2.00.1112300549430.808@uplift.swm.pp.se>
- <CALFpzo4GynxhdBT7vO4EmjpavkZ7HGqdbeMiYmj9-z4UQgN+7w@mail.gmail.com>
+From: jlcenter@comcast.net
+Subject: Install grub2 to /dev/md126 fails
+Date: Sat, 31 Dec 2011 03:59:13 +0000 (UTC)
+Message-ID: <760811954.244872.1325303953552.JavaMail.root@sz0019a.westchester.pa.mail.comcast.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CALFpzo4GynxhdBT7vO4EmjpavkZ7HGqdbeMiYmj9-z4UQgN+7w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marcus Sorensen <shadowsor@gmail.com>
-Cc: Zdenek Kaspar <zkaspar82@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 29 Dec 2011, Marcus Sorensen wrote:
+Hi,
 
->> Poster already said they're not partitioned.
->
-> Correct. using partitioning allows you to adjust the alignment, so for
-> example if the MD superblock at the front moves the start of the
-> exported MD device out of alignment with the base disks, you could
-> compensate for it by starting your partition on the correct offset.
+I've been trying to install Ubuntu 11.10 on a mdadm imsm raid1 array, but it fails installing grub.  I had to chroot /target to install mdadm from the distribution.  I've also upgraded to the latest version of mdadm, hoping this would fix the problem.  This is the error I'm getting:
 
-Unless he has used the XP jumper, it's impossible to misalign MD if 
-running without partitions, afaik.
+root@ubuntu:/# grub-install --recheck /dev/md/V1
+/usr/sbin/grub-probe: error: no such disk.
+Auto-detection of a filesystem of /dev/md126p3 failed.
+Try with --recheck.
+If the problem persists please report this together with the output of "/usr/sbin/grub-probe --device-map="/boot/grub/device.map" --target=fs -v /boot/grub" to <bug-grub@gnu.org>
 
-> If he's writing full stripes he doesn't need to calculate parity by 
-> reading. I'm not sure how the MD layer determines this though, unless 
-> he's adding a sync or o_direct flag to his test he should be writing 
-> full stripes regardless of the blocksize he sets.
+Here's how mdadm sees my config:
 
-I've seen MD do 10% reads in this situation, I believe the handling of 
-this is not optimal and sometimes there will be reads. Niel can probably 
-tell a lot more about what might be going on.
+root@ubuntu:/dev# mdadm --examine --scan
+ARRAY metadata=imsm UUID=92ae2913:95d651ca:62154f33:7069b04c
+ARRAY /dev/md/V1 container=92ae2913:95d651ca:62154f33:7069b04c member=0 UUID=71b12777:c6a51a84:5b0f1d11:0bd6e497
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+I also tried with several variations of /dev/md126, etc., but always with the same result.  I also tried to install directly to one of the disks in the array, but this didn't work, either.  When I ran grub-probe, I got the following error:
+
+/usr/sbin/grub-probe: info: opening mduuid/71b12777c6a51a845b0f1d110bd6e497,3.
+/usr/sbin/grub-probe: error: no such disk.
+
+What could be causing this problem?  How do I fix it?  Please let me know if I need to supply more information to troubleshoot this problem.
+
+Thanks.
+
+    -John
