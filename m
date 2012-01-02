@@ -1,108 +1,89 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] FIX: Cannot remove failed disk from container
-Date: Tue, 3 Jan 2012 10:31:04 +1100
-Message-ID: <20120103103104.3f179d73@notabene.brown>
-References: <20111229132738.5659.99578.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: Install grub2 to /dev/md126 fails
+Date: Tue, 3 Jan 2012 10:34:01 +1100
+Message-ID: <20120103103401.2d90498e@notabene.brown>
+References: <760811954.244872.1325303953552.JavaMail.root@sz0019a.westchester.pa.mail.comcast.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ZljIYvI9ngtki+=bHo6bIw+"; protocol="application/pgp-signature"
+ boundary="Sig_/JatZzoxsK21cr6X0TRUfVjm"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111229132738.5659.99578.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <760811954.244872.1325303953552.JavaMail.root@sz0019a.westchester.pa.mail.comcast.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
+To: jlcenter@comcast.net
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/ZljIYvI9ngtki+=bHo6bIw+
+--Sig_/JatZzoxsK21cr6X0TRUfVjm
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 29 Dec 2011 14:27:38 +0100 Adam Kwolek <adam.kwolek@intel.com> wrot=
-e:
+On Sat, 31 Dec 2011 03:59:13 +0000 (UTC) jlcenter@comcast.net wrote:
 
-> When disk is failed by mdadm e.g.:
->     mdadm -f /dev/md/raid_array /dev/sdX
-> and then it is tried to be removed from container e.g.:
->     mdadm --remove /dev/md/container /dev/sdX
+> Hi,
 >=20
-> mdadm refuses it with information:
->     mdadm: /dev/sdX is still in use, cannot remove.
+> I've been trying to install Ubuntu 11.10 on a mdadm imsm raid1 array, but=
+ it fails installing grub.  I had to chroot /target to install mdadm from t=
+he distribution.  I've also upgraded to the latest version of mdadm, hoping=
+ this would fix the problem.  This is the error I'm getting:
 >=20
-> Problem was introduced in commit:
->     monitor: don't unblock a device that isn't blocked.
->     /2011-12-06/
-> Disk without unblocking it cannot be really removed from array
-> and reference to if is still reported under 'holders' sysfs entry.
+> root@ubuntu:/# grub-install --recheck /dev/md/V1
+> /usr/sbin/grub-probe: error: no such disk.
+> Auto-detection of a filesystem of /dev/md126p3 failed.
+> Try with --recheck.
+> If the problem persists please report this together with the output of "/=
+usr/sbin/grub-probe --device-map=3D"/boot/grub/device.map" --target=3Dfs -v=
+ /boot/grub" to <bug-grub@gnu.org>
 >=20
-> As this commit is necessary for managing degraded array during
-> reshape and rebuild code for unconditional unblocking disk on removal
-> is added.
-> Guard for setting DS_UNBLOCK during reshape/rebuild avoids process
-> performance degradation.
+> Here's how mdadm sees my config:
+>=20
+> root@ubuntu:/dev# mdadm --examine --scan
+> ARRAY metadata=3Dimsm UUID=3D92ae2913:95d651ca:62154f33:7069b04c
+> ARRAY /dev/md/V1 container=3D92ae2913:95d651ca:62154f33:7069b04c member=
+=3D0 UUID=3D71b12777:c6a51a84:5b0f1d11:0bd6e497
+>=20
+> I also tried with several variations of /dev/md126, etc., but always with=
+ the same result.  I also tried to install directly to one of the disks in =
+the array, but this didn't work, either.  When I ran grub-probe, I got the =
+following error:
+>=20
+> /usr/sbin/grub-probe: info: opening mduuid/71b12777c6a51a845b0f1d110bd6e4=
+97,3.
+> /usr/sbin/grub-probe: error: no such disk.
+>=20
+> What could be causing this problem?  How do I fix it?  Please let me know=
+ if I need to supply more information to troubleshoot this problem.
+>=20
 
-You seem to be addressing the symptom rather than understanding the real
-problem.
+Sounds like a problem with 'grub'.  I suggest you find a list for discussing
+that tool.
 
-If a device isn't marked as 'blocked' then it simply doesn't make any sense
-to "unblock" it - that cannot do anything useful.
+Feel free to keep linux-raid on 'cc' as the outcome may be interesting for =
+us
+too.
 
-If the commit you identify broke things for you, then we need to understand
-exactly why.  What exactly is the problem, how was the code previously
-allowing things to work?  What is the minimal thing we need to do to allow
-things to work again?
-
-Just setting DS_UNBLOCK because it seems to work but without a clear
-justification isn't acceptable.
-
+Thanks,
 NeilBrown
 
-
->=20
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> ---
->=20
->  monitor.c |    6 ++++++
->  1 files changed, 6 insertions(+), 0 deletions(-)
->=20
-> diff --git a/monitor.c b/monitor.c
-> index 29bde18..ce66625 100644
-> --- a/monitor.c
-> +++ b/monitor.c
-> @@ -346,6 +346,12 @@ static int read_and_act(struct active_array *a)
->  				a->next_state =3D active;
->  			}
->  			if (a->curr_state > readonly)
-> +				/* For disk removal when no md process
-> +				 * /e.g. reshape/ is in progress, trigger
-> +				 * unconditional device unblock first
-> +				 */
-> +				if (a->curr_action =3D=3D idle)
-> +					mdi->next_state |=3D DS_UNBLOCK;
->  				mdi->next_state |=3D DS_REMOVE;
->  		}
->  	}
-
-
---Sig_/ZljIYvI9ngtki+=bHo6bIw+
+--Sig_/JatZzoxsK21cr6X0TRUfVjm
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTwI+ODnsnt1WYoG5AQJsyA/9GuQs0Dg+cdovhvfej0+8i0X9wWQ/8jl1
-+rCujgOoXkt2sTJDuCFXz5LqrXNVBC3Lfcv9YmgMq9n7VKhKxHTOvAPNEP7tvXGK
-U6z5Xt34DQQJjGGQsTEQwUBZR27YAbd00gvsFsI2QyYKGU+tyrTfMpnr6IR2w8s/
-XPw54EZMi9WpexkqV/IKlF7bb6YThoCG/3W1PU2TMOu6GFafxpW5uQw+PeeFHnRG
-oWMt4VykgJ+rXoLDXLMSWB1RJAEj60VLJQ7C9KJLtGJGN3zaJHedSDHsPaA41UeE
-e9oGXiILkAsAgHZF4dWkRW2J03kXSYNqLby1nf60NbYg4cP/HchS/gzk8/GlxOBb
-3rZzGviaQ6pN+zPcKyCiAT7A6+WQGZcvnWV7afM1vyDoQYAth3livM2PZbtKfVoD
-YWGoV6vg7T2uCbh0jfvNg08lU5xXsNVUWawwdxCIpKtPqlxe9b7BVFUFzNSWTFpQ
-bYUNM0pF/grTPzmNPcSVnfC0APssh0lvbfT0EESDvVFt39rtRM4sRT6d93VC46ol
-E1mi4Mbv9jEMApGDg1GiU4b8cOupTkwRFxLY/a5tQ6V5uc0Ls1zYn29DDuShNFG1
-KTfjUiVHtpPX0O3YHw9EwR6ghgGPugNLf3V2zNUk/gMKjXqzVvhDwiDX4jmb+3Hx
-F7IVkHh3/mE=
-=9dQP
+iQIVAwUBTwI+6Tnsnt1WYoG5AQJ9kw//ZkmRiMpZvQv+eOmBI+kr41LZyJcZyo0s
+Y/7/luJL58gL4geEjVRbngRH0LqGZ+K7/YqMuBuXBT8WtJeZdoRFtSyebU2O6N5A
+WtcFpb81z0X8Q8L7InFlFsbX5kO64fSKXc8vgrf30hv3uyFyN6ZbwgNdZMUfK3qw
+shUNsKRWu1ThnkqEmAA9F2lNuV5c2OZsV5GjmaokLECAaMFRZA546IMzC4R+NY6k
+AtMiWgPBT1SD45bOupa3ddu01z1XGGHKPOftysvGHDIDsQbKeAiwffBbl/zYx5TF
+YrGy/XHrP6NHfe0qCsMjQGwMY4KjMlDKio939YrFbvFXRrhUnw7KEGsd07Mky4pm
+HmuqzDXosM1icnfKScUQnz99aAc89nl7eR0SjQ2wFZjue2hVv8maob/V6J9uCJ/X
+BBIEEMIqErXJeux3tnwsNANuygrsYN+PtY54Q64vr+yrqFoYoGTuBQyrTuZfB45j
+Lz+S4qiRbBVYsV+SVjAiFnIEEh+8gYz70gYm+FCFOVJ0WDDrYJw3s+gHrOZ2tJWL
+ed5Xm/Hrave0t322RglVuj75mVwZqQq3FKFoJtt/b0UgfHpfuS3KhaCXVVC6lYTr
+LUs780FAy9uiCTdmuIsGsfHBA+f13pX9mJ/SUMVUIqawJznta+io3ysqOCJjgnEL
+G1Xr7ICcc1s=
+=UTWY
 -----END PGP SIGNATURE-----
 
---Sig_/ZljIYvI9ngtki+=bHo6bIw+--
+--Sig_/JatZzoxsK21cr6X0TRUfVjm--
