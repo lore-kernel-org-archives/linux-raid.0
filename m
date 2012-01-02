@@ -1,86 +1,108 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH][RFC] 	RAID5/DMA/memcpy: zero copy the bio page when
- possible
-Date: Tue, 3 Jan 2012 10:13:35 +1100
-Message-ID: <20120103101335.3f8f81bc@notabene.brown>
-References: <1325049608-8638-1-git-send-email-b29237@freescale.com>
+Subject: Re: [PATCH] FIX: Cannot remove failed disk from container
+Date: Tue, 3 Jan 2012 10:31:04 +1100
+Message-ID: <20120103103104.3f179d73@notabene.brown>
+References: <20111229132738.5659.99578.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Zz8cUdVP/qSD7eNKg_PXgYF"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1325049608-8638-1-git-send-email-b29237@freescale.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: b29237@freescale.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, r58472@freescale.com
+ boundary="Sig_/ZljIYvI9ngtki+=bHo6bIw+"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20111229132738.5659.99578.stgit@gklab-128-013.igk.intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
---Sig_/Zz8cUdVP/qSD7eNKg_PXgYF
+--Sig_/ZljIYvI9ngtki+=bHo6bIw+
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 28 Dec 2011 13:20:08 +0800 <b29237@freescale.com> wrote:
+On Thu, 29 Dec 2011 14:27:38 +0100 Adam Kwolek <adam.kwolek@intel.com> wrot=
+e:
 
-> From: Forrest shi <b29237@freescale.com>
+> When disk is failed by mdadm e.g.:
+>     mdadm -f /dev/md/raid_array /dev/sdX
+> and then it is tried to be removed from container e.g.:
+>     mdadm --remove /dev/md/container /dev/sdX
 >=20
-> 	use bio page directly instead of copying the bio page to stripe
-> 	header page when possible.
+> mdadm refuses it with information:
+>     mdadm: /dev/sdX is still in use, cannot remove.
 >=20
-> 	Signed-off-by: Forrest Shi<b29237@freescale.com>
+> Problem was introduced in commit:
+>     monitor: don't unblock a device that isn't blocked.
+>     /2011-12-06/
+> Disk without unblocking it cannot be really removed from array
+> and reference to if is still reported under 'holders' sysfs entry.
+>=20
+> As this commit is necessary for managing degraded array during
+> reshape and rebuild code for unconditional unblocking disk on removal
+> is added.
+> Guard for setting DS_UNBLOCK during reshape/rebuild avoids process
+> performance degradation.
 
-I'm sorry but if you want anyone to review this and comment on it you need =
-to
-give us a bit more help - like telling us what the purpose of the patch is.
+You seem to be addressing the symptom rather than understanding the real
+problem.
 
-There are a couple of hints but what is needed is a 'big picture'
-description.  What is the problem you are fixing?  How are you fixing it?
-What are the costs/benefits?
+If a device isn't marked as 'blocked' then it simply doesn't make any sense
+to "unblock" it - that cannot do anything useful.
 
-> @@ -754,10 +764,16 @@ ops_run_compute5(struct stripe_head *sh, struct rai=
-d5_percpu *percpu)
->  		__func__, (unsigned long long)sh->sector, target);
->  	BUG_ON(!test_bit(R5_Wantcompute, &tgt->flags));
-> =20
-> -	for (i =3D disks; i--; )
-> +	for (i =3D disks; i--; ) {
-> +		struct r5dev *dev =3D &sh->dev[i];
-> +		struct page *pg =3D dev->page;
->  		if (i !=3D target)
-> -			xor_srcs[count++] =3D sh->dev[i].page;
-> -
-> +#ifdef CONFIG_OPTIMIZE_FSL_DMA_MEMCPY
-> +			if (test_bit(R5_DirectAccess, &dev->flags))
-> +				pg =3D dev->req.bi_io_vec[0].bv_page;
-> +#endif
-> +			xor_srcs[count++] =3D pg;
-> +	}
->  	atomic_inc(&sh->count);
+If the commit you identify broke things for you, then we need to understand
+exactly why.  What exactly is the problem, how was the code previously
+allowing things to work?  What is the minimal thing we need to do to allow
+things to work again?
 
-And something is very wrong here.  I think you need { } around the body of
-the 'if' statement.
+Just setting DS_UNBLOCK because it seems to work but without a clear
+justification isn't acceptable.
 
 NeilBrown
 
 
---Sig_/Zz8cUdVP/qSD7eNKg_PXgYF
+>=20
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> ---
+>=20
+>  monitor.c |    6 ++++++
+>  1 files changed, 6 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/monitor.c b/monitor.c
+> index 29bde18..ce66625 100644
+> --- a/monitor.c
+> +++ b/monitor.c
+> @@ -346,6 +346,12 @@ static int read_and_act(struct active_array *a)
+>  				a->next_state =3D active;
+>  			}
+>  			if (a->curr_state > readonly)
+> +				/* For disk removal when no md process
+> +				 * /e.g. reshape/ is in progress, trigger
+> +				 * unconditional device unblock first
+> +				 */
+> +				if (a->curr_action =3D=3D idle)
+> +					mdi->next_state |=3D DS_UNBLOCK;
+>  				mdi->next_state |=3D DS_REMOVE;
+>  		}
+>  	}
+
+
+--Sig_/ZljIYvI9ngtki+=bHo6bIw+
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTwI6Hznsnt1WYoG5AQJyNg//RDkgu+EIibzC+Atu4kS8wnvgpEoQ0Cyi
-5NEiRUAHhcAhvf+yvm+qNQsZmEF79rwzFdMLbV9DXvMeCcnPUsxPtlXW9+8HN1uq
-OIhl40fJvNddl7ryIZeqxjPcr6/MxqLxe/C9M0OnmMLtLZy7G/OmKCWJRr6a6cUP
-WAjYy6Mguw8DHNpjYLRF3bJPN2zMGCtTNW8mlAAgdtLY4X92iSnSMR/LEvQw8YBf
-eAwXigEIpLcLbzaPYcgP4s1TIhT+gNZVn6dN4sRrntajcWgWUBuTqicqlVZhbWSE
-tX0yJvX3Y6ANCAcOFEtSQQcROiI+2TKUwBPm0Cm9FxpM5MSo9y9figkzn6M7AQJj
-yq95p158HBKKeyu5rFEkyTF1yIi7tPap/0oqBVXj3RnJWyOO6t81lP/U5qka0jWL
-k23EzjD5l2bWQ99vYeOpkxAN83WtvcYv5uiTq3CxnftIA9XBuzIz1gi8J6xa4LBR
-pTBVtE4SBpmiUrxggs/IqklAOvVyZAibEUxJLeEXplyKQbjP1N8SlwJYOgYY+PRs
-pIml5FIqO6dBXXPyE6Cf+GGc0jtXY/ZZmw7QLCwRuo7kVTgudHqYqG+E6Pu42pmk
-7Vgb30aC9vdKn6H+V7kFBzFhFYd8DnYyv7Vkxjm+43+Y8hnHk8fRjK6X0zfENMcW
-iG6HRpiRHd8=
-=Byx3
+iQIVAwUBTwI+ODnsnt1WYoG5AQJsyA/9GuQs0Dg+cdovhvfej0+8i0X9wWQ/8jl1
++rCujgOoXkt2sTJDuCFXz5LqrXNVBC3Lfcv9YmgMq9n7VKhKxHTOvAPNEP7tvXGK
+U6z5Xt34DQQJjGGQsTEQwUBZR27YAbd00gvsFsI2QyYKGU+tyrTfMpnr6IR2w8s/
+XPw54EZMi9WpexkqV/IKlF7bb6YThoCG/3W1PU2TMOu6GFafxpW5uQw+PeeFHnRG
+oWMt4VykgJ+rXoLDXLMSWB1RJAEj60VLJQ7C9KJLtGJGN3zaJHedSDHsPaA41UeE
+e9oGXiILkAsAgHZF4dWkRW2J03kXSYNqLby1nf60NbYg4cP/HchS/gzk8/GlxOBb
+3rZzGviaQ6pN+zPcKyCiAT7A6+WQGZcvnWV7afM1vyDoQYAth3livM2PZbtKfVoD
+YWGoV6vg7T2uCbh0jfvNg08lU5xXsNVUWawwdxCIpKtPqlxe9b7BVFUFzNSWTFpQ
+bYUNM0pF/grTPzmNPcSVnfC0APssh0lvbfT0EESDvVFt39rtRM4sRT6d93VC46ol
+E1mi4Mbv9jEMApGDg1GiU4b8cOupTkwRFxLY/a5tQ6V5uc0Ls1zYn29DDuShNFG1
+KTfjUiVHtpPX0O3YHw9EwR6ghgGPugNLf3V2zNUk/gMKjXqzVvhDwiDX4jmb+3Hx
+F7IVkHh3/mE=
+=9dQP
 -----END PGP SIGNATURE-----
 
---Sig_/Zz8cUdVP/qSD7eNKg_PXgYF--
+--Sig_/ZljIYvI9ngtki+=bHo6bIw+--
