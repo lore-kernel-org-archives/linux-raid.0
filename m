@@ -1,47 +1,56 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: Install grub2 to /dev/md126 fails
-Date: Tue, 03 Jan 2012 11:55:31 +0100
-Message-ID: <4F02DEA3.4050901@redhat.com>
-References: <760811954.244872.1325303953552.JavaMail.root@sz0019a.westchester.pa.mail.comcast.net>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Is this RAID recoverable???
+Date: Tue, 03 Jan 2012 08:26:08 -0500
+Message-ID: <4F0301F0.40206@turmel.org>
+References: <CAHw_BJ3fGd2ZN5ORs4+DSxz57AhT6jq7oL+cs_4MaztZX0sgUQ@mail.gmail.com> <20120103153757.5487e6fa@natsu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <760811954.244872.1325303953552.JavaMail.root@sz0019a.westchester.pa.mail.comcast.net>
+In-Reply-To: <20120103153757.5487e6fa@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: jlcenter@comcast.net
-Cc: linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.ru>
+Cc: Paul Richter <iamcomcy@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/31/11 04:59, jlcenter@comcast.net wrote:
-> Hi,
-> 
-> I've been trying to install Ubuntu 11.10 on a mdadm imsm raid1 array, but it fails installing grub.  I had to chroot /target to install mdadm from the distribution.  I've also upgraded to the latest version of mdadm, hoping this would fix the problem.  This is the error I'm getting:
-> 
-> root@ubuntu:/# grub-install --recheck /dev/md/V1
-> /usr/sbin/grub-probe: error: no such disk.
-> Auto-detection of a filesystem of /dev/md126p3 failed.
-> Try with --recheck.
-> If the problem persists please report this together with the output of "/usr/sbin/grub-probe --device-map="/boot/grub/device.map" --target=fs -v /boot/grub" to <bug-grub@gnu.org>
-> 
-> Here's how mdadm sees my config:
-> 
-> root@ubuntu:/dev# mdadm --examine --scan
-> ARRAY metadata=imsm UUID=92ae2913:95d651ca:62154f33:7069b04c
-> ARRAY /dev/md/V1 container=92ae2913:95d651ca:62154f33:7069b04c member=0 UUID=71b12777:c6a51a84:5b0f1d11:0bd6e497
-> 
-> I also tried with several variations of /dev/md126, etc., but always with the same result.  I also tried to install directly to one of the disks in the array, but this didn't work, either.  When I ran grub-probe, I got the following error:
-> 
-> /usr/sbin/grub-probe: info: opening mduuid/71b12777c6a51a845b0f1d110bd6e497,3.
-> /usr/sbin/grub-probe: error: no such disk.
-> 
-> What could be causing this problem?  How do I fix it?  Please let me know if I need to supply more information to troubleshoot this problem.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Did your raid device(s) get added to /boot/grub2/device.map correctly?
-If not, does it install properly if you add the devices there manually?
+Hi Paul, Roman,
 
-I've had a pile of problems with grub2 on Fedora, including something
-like this.
+On 01/03/2012 04:37 AM, Roman Mamedov wrote:
+> On Tue, 3 Jan 2012 10:41:04 +0400
+> Paul Richter <iamcomcy@gmail.com> wrote:
+> 
+>> Researched the net as much as possible, added this to wiki page:
+>> http://en.wikipedia.org/wiki/Mdadm#Recovering_from_a_loss_of_raid_superblock
+> 
+> Oh, so it was you who originally wrote those instructions? :)
+> See http://permalink.gmane.org/gmane.linux.raid/35538
 
-Cheers,
-Jes
+I was going to cite myself ...
+
+> And also you probably mean http://en.wikipedia.org/w/index.php?title=Mdadm&oldid=468952888#Recovering_from_a_loss_of_raid_superblock
+> because that part was nuked from the wikipedia page already.
+
+As to the original question:  The odds are poor, but not zero.  If you
+read my advice to Marcin, you know that some information from your
+original array is needed.  Do you have any of it?
+
+The array size error that mount reports suggests that you are close
+to correct.  I suspect the original array was created with a different
+data offset from the new array.  The default for that changed around
+mdadm v2.6.9.
+
+HTH,
+
+Phil
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iEYEARECAAYFAk8DAe4ACgkQBP+iHzflm3Ad+QCeJa7af9gammN2kGDFd+7qGMsM
+rX0An0A0GXfJR3W4J0odv4LE8/rgsa+M
+=8TYC
+-----END PGP SIGNATURE-----
