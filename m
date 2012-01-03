@@ -1,63 +1,82 @@
-From: Roman Mamedov <rm@romanrm.ru>
+From: Paul Richter <iamcomcy@gmail.com>
 Subject: Re: Is this RAID recoverable???
-Date: Tue, 3 Jan 2012 19:36:19 +0600
-Message-ID: <20120103193619.6587d920@natsu>
+Date: Tue, 3 Jan 2012 18:22:40 +0400
+Message-ID: <CAHw_BJ3qH+BgAxY3PHFUU_CH2EDf88xvn6V=rV71fzA-xUcLvw@mail.gmail.com>
 References: <CAHw_BJ3fGd2ZN5ORs4+DSxz57AhT6jq7oL+cs_4MaztZX0sgUQ@mail.gmail.com>
 	<20120103153757.5487e6fa@natsu>
-	<CAHw_BJ1=z-qNq+KXyjV6ZjBfxRdtQM6x1wVpxDQsiW2b-54O_A@mail.gmail.com>
+	<4F0301F0.40206@turmel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/omi0bMG/2Et=TSqW7ZIqDTz"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHw_BJ1=z-qNq+KXyjV6ZjBfxRdtQM6x1wVpxDQsiW2b-54O_A@mail.gmail.com>
+In-Reply-To: <4F0301F0.40206@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul Richter <iamcomcy@gmail.com>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Roman Mamedov <rm@romanrm.ru>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/omi0bMG/2Et=TSqW7ZIqDTz
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Phil!
+Thanks for throwing in! Do you have the older default values? I
+suredon't. And how do you add offsets the the --create command?
+mdadm --create --assume-clean /dev/md1 --chunk=3D4096
+--level=3D6--raid-devices=3D6 /dev/sdc1 /dev/sdd1 /dev/sdf1 /dev/sde1
+missingmissing
+Is what I am working with now.
+Many thanks!
+This 8TB represents the last 8 years of my life on the net. Built
+thisRAID to protect that 'investment'. :'-(
+TIA
 
-On Tue, 3 Jan 2012 13:59:36 +0400
-Paul Richter <iamcomcy@gmail.com> wrote:
-
-> Yeah, that was me, based on the best info that could be found.
->=20
-> Perhaps, rather than just nuke that page, leaving everyone with nothing,
-> you guys will write a correct one? That would likely be more useful.
-> Clearly this problem comes up often enough that a page needs to be writte=
-n.
-
-The section was nuked not because of its inaccuracy, but simply because Wik=
-ipedia does not condone adding "HOWTO content" into it:
- =20
-  http://en.wikipedia.org/wiki/Wikipedia:What_Wikipedia_is_not#NOTHOWTO
-
-And not by me or any of linux-raid subscribers, but by someone from the Wik=
-ipedia community, I assume.
-
-P.S. don't forget to use "Reply to All" when replying to the mailing list.
-
---=20
-With respect,
-Roman
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-"Stallman had a printer,
-with code he could not see.
-So he began to tinker,
-and set the software free."
-
---Sig_/omi0bMG/2Et=TSqW7ZIqDTz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk8DBFMACgkQTLKSvz+PZwhHlACfbgqR1GqoZCw8lSfrs6cGKqvg
-hDgAn0n8n2hwOX2yoa9Ucna7tMvqEq6d
-=MXxv
------END PGP SIGNATURE-----
-
---Sig_/omi0bMG/2Et=TSqW7ZIqDTz--
+Paul
+On Tue, Jan 3, 2012 at 5:26 PM, Phil Turmel <philip@turmel.org> wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+>
+> Hi Paul, Roman,
+>
+> On 01/03/2012 04:37 AM, Roman Mamedov wrote:
+>> On Tue, 3 Jan 2012 10:41:04 +0400
+>> Paul Richter <iamcomcy@gmail.com> wrote:
+>>
+>>> Researched the net as much as possible, added this to wiki page:
+>>> http://en.wikipedia.org/wiki/Mdadm#Recovering_from_a_loss_of_raid_s=
+uperblock
+>>
+>> Oh, so it was you who originally wrote those instructions? :)
+>> See http://permalink.gmane.org/gmane.linux.raid/35538
+>
+> I was going to cite myself ...
+>
+>> And also you probably mean http://en.wikipedia.org/w/index.php?title=
+=3DMdadm&oldid=3D468952888#Recovering_from_a_loss_of_raid_superblock
+>> because that part was nuked from the wikipedia page already.
+>
+> As to the original question: =C2=A0The odds are poor, but not zero. =C2=
+=A0If you
+> read my advice to Marcin, you know that some information from your
+> original array is needed. =C2=A0Do you have any of it?
+>
+> The array size error that mount reports suggests that you are close
+> to correct. =C2=A0I suspect the original array was created with a dif=
+ferent
+> data offset from the new array. =C2=A0The default for that changed ar=
+ound
+> mdadm v2.6.9.
+>
+> HTH,
+>
+> Phil
+>
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v2.0.18 (GNU/Linux)
+> Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+>
+> iEYEARECAAYFAk8DAe4ACgkQBP+iHzflm3Ad+QCeJa7af9gammN2kGDFd+7qGMsM
+> rX0An0A0GXfJR3W4J0odv4LE8/rgsa+M
+> =3D8TYC
+> -----END PGP SIGNATURE-----
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
