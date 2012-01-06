@@ -1,61 +1,47 @@
-From: pg@lxra2.to.sabi.co.UK (Peter Grandi)
-Subject: Re: SMART, RAID and real world experience of failures.
-Date: Fri, 6 Jan 2012 11:22:03 +0000
-Message-ID: <20230.55643.346235.891308@tree.ty.sabi.co.UK>
-References: <4F063808.6040000@crc.id.au>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: implications of partitioning and raid
+Date: Fri, 06 Jan 2012 05:34:09 -0600
+Message-ID: <4F06DC31.20008@hardwarefreak.com>
+References: <1325778034.4777.44.camel@hermosa.lnx.copansys.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F063808.6040000@crc.id.au>
+In-Reply-To: <1325778034.4777.44.camel@hermosa.lnx.copansys.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: "Peter W. Morreale" <morreale@sgi.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-[ ... ]
+On 1/5/2012 9:40 AM, Peter W. Morreale wrote:
 
-> I got a SMART error email yesterday from my home server with a
-> 4 x 1Tb RAID6. [ ... ]
+> Assume a portion of disk 1 goes 'bad' (localized within one of those
+> partitions), is noticed by md and a rebuild is warranted.
 
-That's an (euphemism alert) imaginative setup. Why not a 4 drive
-RAID10? In general there are vanishingly few cases in which
-RAID6 makes sense, and in the 4 drive case a RAID10 makes even
-more sense than usual. Especially with the really cool setup
-options that MD RAID10 offers.
+How often does only a "portion" of a disk go bad these days?  Typically
+this would mean unrecoverable read/write errors for a set of LBA
+sectors.  Physically, with the majority of today's disks, these
+perceived sector defects are actually the result of head actuator and/or
+spindle bearing wear beyond tolerances, not magnetic defects in the
+platters.
 
-[ ... ]
+Thus, any such defective "portions" are typically doing to "grow" fairly
+rapidly.  Which means, in your scenario, both arrays are going to need
+new spare partitions and a rebuild in short order, as an entire disk is
+failing, not just a portion thereof.
 
->> dd if=/dev/zero of=/dev/sdd bs=10M
->> mdadm /dev/md2 --manage --add /dev/sdd
-> < a resync occurred here, afterwards >
+RAID - Redundant Array of Inexpensive Disks
+RAIP - Redundant Array of Inexpensive Partitions
 
-That means that *two* writes-over have been done, one by way of
-'dd' and one by way of resyncing.
+Aside from sounding like a sexual crime, there are many other obvious
+reasons why the latter has never been coined nor considered a storage
+standard by anyone.
 
-Usually if one wants to "refresh"/"retest" a drive doing a
-SECURITY ERASE UNIT is possibly more suitable than a zero-over:
+There are valid reasons for partition based arrays, such as booting from
+disks with wonky offset requirements (e.g. advanced format drives).
+IMHO the scenario you've presented here is not a valid case for
+partition based arrays.
 
-  http://www.sabi.co.uk/blog/12-one.html#120104c
-
-but before the security erase was available the zero-over was
-the choice.
-
-> This makes me ponder. Has the drive recovered? Has the sector
-> with the read failure been remapped and hidden from view? Is
-> it still (more?)  likely to fail in the near future?
-
-Uhmmm, slightly naive questions. A 1TB drive has almost 2
-billion sectors, so "bad" sectors should be common.
-
-But the main point is that what is a "bad" sector is a messy
-story, and most "bad" sectors are really marginal (and an
-argument can be made that most sectors are marginal or else PRML
-encoding would not be necessary). So many things can go wrong,
-and not all fatally. For example when writing some "bad" sectors
-the drive was vibrating a bit more and the head was accordingly
-a little bit off, etc.
-
-Writing-over some marginal sectors often refreshes the
-recording, and it is no longer marginal, and otherwise as you
-guessed the drive can substitute the sector with a spare
-(something that it cannot really do on reading of course).
+-- 
+Stan
