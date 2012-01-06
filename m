@@ -1,83 +1,73 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: What just happened to my disks/RAID5 array?
-Date: Fri, 06 Jan 2012 09:51:32 -0500
-Message-ID: <4F070A74.3010208@turmel.org>
-References: <4E6F13F7.6070507@truschnigg.info> <4E6F4091.7050206@turmel.org> <4E6FA76A.90206@truschnigg.info> <4E7092F1.5010209@turmel.org> <4E70EFA8.4080706@truschnigg.info> <4E70FE5B.5080601@turmel.org> <20120106105143.GA2932@vault.local> <4F06F410.4070807@turmel.org> <20120106134625.GA3027@vault.local>
+From: Jan Kasprzak <kas@fi.muni.cz>
+Subject: Re: RAID-10 explicitly defined drive pairs?
+Date: Fri, 6 Jan 2012 16:08:23 +0100
+Message-ID: <20120106150823.GX25976@fi.muni.cz>
+References: <20111212115459.GC20730@fi.muni.cz>
+ <4EE61EAE.20101@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120106134625.GA3027@vault.local>
+Content-Disposition: inline
+In-Reply-To: <4EE61EAE.20101@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Johannes Truschnigg <johannes@truschnigg.info>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: John Robinson <john.robinson@anonymous.org.uk>
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+John Robinson wrote:
+: On 12/12/2011 11:54, Jan Kasprzak wrote:
+: >	Is there any way how to tell mdadm explicitly how to set up
+: >the pairs of mirrored drives inside a RAID-10 volume?
+: 
+: If you're using RAID10,n2 (the default layout) then adjacent pairs
+: of drives in the create command will be mirrors, so your command
+: line should be something like:
+: 
+: # mdadm --create /dev/mdX -l10 -pn2 -n44 /dev/shelf1drive1
+: /dev/shelf2drive1 /dev/shelf1drive2 ...
 
-On 01/06/2012 08:46 AM, Johannes Truschnigg wrote:
-> Good morning Phil,
-> 
-> thanks for tuning in again! :)
-> 
-> On Fri, Jan 06, 2012 at 08:16:00AM -0500, Phil Turmel wrote:
->> Warning!  I saw bug report on LKML yesterday involving LVM and the brand new
->> kernel v3.2, so you might want to pull back.  v3.1.5 was known good in that
->> report.
-> 
-> Ok, thanks for the warning - will try to find the thread where the bug is
-> described, and consider downgrading to 3.1.x instead!
+	OK, this works, thanks!
 
-https://lkml.org/lkml/2012/1/5/76
+: Having said that, if you think there's a real chance of a shelf
+: failing, you probably ought to think about adding more redundancy
+: within the shelves so that you can survive another drive failure or
+: two while you're running on just one shelf.
 
-Note that it involves ext4 and LVM snapshots, so may not apply to you.  But the
-bug hasn't been clearly identified, so my paranoid approach to kernels would
-keep me off of it. (On production systems, of course.  I regularly run -rc
-kernels on my laptop.)
+	I am aware of that. I don't think the whole shelf will fail,
+but who knows :-)
 
->> I'm guessing that /dev/sda contains your boot and root filesystems, and that
->> this isn't an error.
-> 
-> You are correct, sorry I did not mention that initially. These devices are not
-> supposed to end up as parts of any md arrays.
-> 
->> Those slot numbers are *really* important.
-> 
-> What is the significance of the individual slot numbers there?
+: If you are sticking with RAID10, you can potentially get double the
+: read performance using the far layout - -pf2 - and with the same
+: order of drives you can still survive a shelf failure, though your
+: use of port multipliers may well limit your performance anyway.
 
-You would need them if you ever ran into some catastrophic problem where
-"--create --assume-clean" was needed.
+	On the older hardware I have a majority of writes, so the far
+layout is probably not good for me (reads can be cached pretty well
+at the OS level).
 
->> Yes, --assemble --force.
-> 
-> Ok, will fire that command as soon as I checked out the LVM bug you mentioned.
+	After some experiments with my new hardware, I have discovered
+one more serious problem: I have simulated an enclosure failure,
+so half of the disks forming the RAID-10 volume disappeared.
+After removing them using mdadm --remove, and adding them back,
+iostat reports that they are resynced one disk a time, not all
+just-added disks in parallel.
 
-Actually, given the /proc/mdstat contents you reported, you might be able to just
-do "mdadm --run /dev/md0"
+	Is there any way of adding more than one disk to the degraded
+RAID-10 volume, and get the volume restored as fast as the hardware permits?
+Otherwise, it would be better for us to discard RAID-10 altogether,
+and use several independent RAID-1 volumes joined together using LVM
+(which we will probably use on top of the RAID-10 volume anyway).
 
->> May I suggest getting an lsdrv [1] report, which will give you the serial numbers
->> of your disks versus the device assignments, for later reference.  And again
->> after it's all running, for completeness.
-> 
-> I have attached a file with the relevant lsdrv (great little program btw) to
-> this message - should I expect changes to it after my array is up (well,
-> except for the components not to be recognized as spare, of course)?
+	I have tried mdadm --add /dev/mdN /dev/sd.. /dev/sd.. /dev/sd..,
+but it behaves the same way as issuing mdadm --add one drive at a time.
 
-The output will change substantially, as it attempts to map the entire
-storage tree, reporting all serials, uuids, and labels, along with other
-useful information.  I have a future number of enhancements in mind, but
-it's a spare-time project.  I'm glad you like it, though.
+	Thanks,
 
-You don't need the report for this incident, though.  Just stick it with your
-backups.  And make a new one any time you change your setup.
+-Yenya
 
-Phil
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iEYEARECAAYFAk8HCnIACgkQBP+iHzflm3BN/gCfawVFbIvdeHhC9Z1BkTu6VcWu
-7VMAn3SmwyK3WCdF0Fl+z1QNSCMrWu63
-=sYlI
------END PGP SIGNATURE-----
+-- 
+| Jan "Yenya" Kasprzak  <kas at {fi.muni.cz - work | yenya.net - private}> |
+| GPG: ID 1024/D3498839      Fingerprint 0D99A7FB206605D7 8B35FCDE05B18A5E |
+| http://www.fi.muni.cz/~kas/    Journal: http://www.fi.muni.cz/~kas/blog/ |
+Please don't top post and in particular don't attach entire digests to your
+mail or we'll all soon be using bittorrent to read the list.     --Alan Cox
