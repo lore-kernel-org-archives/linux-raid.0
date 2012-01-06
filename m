@@ -1,73 +1,110 @@
-From: Jan Kasprzak <kas@fi.muni.cz>
-Subject: Re: RAID-10 explicitly defined drive pairs?
-Date: Fri, 6 Jan 2012 16:08:23 +0100
-Message-ID: <20120106150823.GX25976@fi.muni.cz>
-References: <20111212115459.GC20730@fi.muni.cz>
- <4EE61EAE.20101@anonymous.org.uk>
+From: Johannes Truschnigg <johannes@truschnigg.info>
+Subject: Re: What just happened to my disks/RAID5 array?
+Date: Fri, 6 Jan 2012 16:28:19 +0100
+Message-ID: <20120106152819.GA3061@vault.local>
+References: <4E6F13F7.6070507@truschnigg.info>
+ <4E6F4091.7050206@turmel.org>
+ <4E6FA76A.90206@truschnigg.info>
+ <4E7092F1.5010209@turmel.org>
+ <4E70EFA8.4080706@truschnigg.info>
+ <4E70FE5B.5080601@turmel.org>
+ <20120106105143.GA2932@vault.local>
+ <4F06F410.4070807@turmel.org>
+ <20120106134625.GA3027@vault.local>
+ <4F070A74.3010208@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="BOKacYhQ+x31HxR3"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4EE61EAE.20101@anonymous.org.uk>
+In-Reply-To: <4F070A74.3010208@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
-Cc: John Robinson <john.robinson@anonymous.org.uk>
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-John Robinson wrote:
-: On 12/12/2011 11:54, Jan Kasprzak wrote:
-: >	Is there any way how to tell mdadm explicitly how to set up
-: >the pairs of mirrored drives inside a RAID-10 volume?
-: 
-: If you're using RAID10,n2 (the default layout) then adjacent pairs
-: of drives in the create command will be mirrors, so your command
-: line should be something like:
-: 
-: # mdadm --create /dev/mdX -l10 -pn2 -n44 /dev/shelf1drive1
-: /dev/shelf2drive1 /dev/shelf1drive2 ...
 
-	OK, this works, thanks!
+--BOKacYhQ+x31HxR3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-: Having said that, if you think there's a real chance of a shelf
-: failing, you probably ought to think about adding more redundancy
-: within the shelves so that you can survive another drive failure or
-: two while you're running on just one shelf.
+On Fri, Jan 06, 2012 at 09:51:32AM -0500, Phil Turmel wrote:
+> [...]
+> https://lkml.org/lkml/2012/1/5/76
+>=20
+> Note that it involves ext4 and LVM snapshots, so may not apply to you.  B=
+ut the
+> bug hasn't been clearly identified, so my paranoid approach to kernels wo=
+uld
+> keep me off of it. (On production systems, of course.  I regularly run -rc
+> kernels on my laptop.)
 
-	I am aware of that. I don't think the whole shelf will fail,
-but who knows :-)
+I arrived at the same conclusion, and decided to stick with 3.2.0 for now.
 
-: If you are sticking with RAID10, you can potentially get double the
-: read performance using the far layout - -pf2 - and with the same
-: order of drives you can still survive a shelf failure, though your
-: use of port multipliers may well limit your performance anyway.
+> [...]
+> You would need them if you ever ran into some catastrophic problem where
+> "--create --assume-clean" was needed.
 
-	On the older hardware I have a majority of writes, so the far
-layout is probably not good for me (reads can be cached pretty well
-at the OS level).
+Thanks, I will keep that information in a secure place then.
 
-	After some experiments with my new hardware, I have discovered
-one more serious problem: I have simulated an enclosure failure,
-so half of the disks forming the RAID-10 volume disappeared.
-After removing them using mdadm --remove, and adding them back,
-iostat reports that they are resynced one disk a time, not all
-just-added disks in parallel.
+> [...]
+> Actually, given the /proc/mdstat contents you reported, you might be able=
+ to just
+> do "mdadm --run /dev/md0"
 
-	Is there any way of adding more than one disk to the degraded
-RAID-10 volume, and get the volume restored as fast as the hardware permits?
-Otherwise, it would be better for us to discard RAID-10 altogether,
-and use several independent RAID-1 volumes joined together using LVM
-(which we will probably use on top of the RAID-10 volume anyway).
+Probably, yes. I stopped the array, --assemble --force'd it, and everything
+was up again. The LVM metadata proved consistent, and a read-only fsck of t=
+he
+filesystem on top of the only LV defined on the array told me that there we=
+re
+some (very) minor fs inconsistencies. They were corrected by a secind fsck
+run, and everything seems perfectly fine again :) I don't keep checksums of
+the inodes' data, but I tested with a bunch of archives stored in the fs, a=
+nd
+there were no CRC errors or the like to be found.
 
-	I have tried mdadm --add /dev/mdN /dev/sd.. /dev/sd.. /dev/sd..,
-but it behaves the same way as issuing mdadm --add one drive at a time.
+> The output will change substantially, as it attempts to map the entire
+> storage tree, reporting all serials, uuids, and labels, along with other
+> useful information.  I have a future number of enhancements in mind, but
+> it's a spare-time project.  I'm glad you like it, though.
 
-	Thanks,
+I noticed it did, yes - it's even more nifty than I thought ;) I noticed th=
+at
+it would die with an uncaught exception (sorry, I had noted it down in a fi=
+le
+in /tmp, but I involuntarily lost it upon rebooting) if you had an LVM VG/LV
+showing up in `lvs` that wasn't "active"/had no corresponding device nodes =
+in
+/dev; you may want to look into that some time.
 
--Yenya
+> You don't need the report for this incident, though.  Just stick it with =
+your
+> backups.  And make a new one any time you change your setup.
 
--- 
-| Jan "Yenya" Kasprzak  <kas at {fi.muni.cz - work | yenya.net - private}> |
-| GPG: ID 1024/D3498839      Fingerprint 0D99A7FB206605D7 8B35FCDE05B18A5E |
-| http://www.fi.muni.cz/~kas/    Journal: http://www.fi.muni.cz/~kas/blog/ |
-Please don't top post and in particular don't attach entire digests to your
-mail or we'll all soon be using bittorrent to read the list.     --Alan Cox
+Will do. Thanks again for your guidance and support! Have a nice day!
+
+--=20
+with best regards:
+- Johannes Truschnigg ( johannes@truschnigg.info )
+
+www:   http://johannes.truschnigg.info/
+phone: +43 650 2 133337
+xmpp:  johannes@truschnigg.info
+
+Please do not bother me with HTML-eMail or attachments. Thank you.
+
+--BOKacYhQ+x31HxR3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk8HExMACgkQnnUApj8OcoLQVgCfXO4FoWmkS/X7PALyBFnoozEl
+B5IAnj0kBdDAyQld+ar9QaaWkrLDtZqA
+=MpA9
+-----END PGP SIGNATURE-----
+
+--BOKacYhQ+x31HxR3--
