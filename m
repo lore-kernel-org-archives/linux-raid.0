@@ -1,69 +1,22 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: SMART, RAID and real world experience of failures.
-Date: Fri, 6 Jan 2012 06:42:22 +0600
-Message-ID: <20120106064222.38c0f1b5@natsu>
-References: <4F063808.6040000@crc.id.au>
+From: jlcenter@comcast.net
+Subject: Re: Install grub2 to /dev/md126 fails
+Date: Fri, 6 Jan 2012 03:43:32 +0000 (UTC)
+Message-ID: <1737559486.454681.1325821412593.JavaMail.root@sz0019a.westchester.pa.mail.comcast.net>
+References: <20120103103401.2d90498e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/H_ixVYiYZZO1bipsyZWaLQt"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F063808.6040000@crc.id.au>
+In-Reply-To: <20120103103401.2d90498e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steven Haigh <netwiz@crc.id.au>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/H_ixVYiYZZO1bipsyZWaLQt
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Fri, 06 Jan 2012 10:53:44 +1100
-Steven Haigh <netwiz@crc.id.au> wrote:
+I'm going to try again to build the raid1 array, but I was wondering if the GPT partitions should be created first on the physical disks, then create & assemble the array?  Or, if the array should be created & assembled, then partition the array?  I'm raiding the whole disk(s), not partitions.  My feeling is that the array should be built first, then partitioned, but I have been known to be wrong... :-)  Also, is there any special order to the partitions, i.e., does the bios boot partition have to be the first partition on the array?
 
-> So, in the spirit of experimentation, I did the following:
-> # mdadm /dev/md2 --manage --fail /dev/sdd
-> # mdadm /dev/md2 --manage --remove /dev/sdd
-> # dd if=3D/dev/zero of=3D/dev/sdd bs=3D10M
-> # mdadm /dev/md2 --manage --add /dev/sdd
+Thanks.
 
-Congratulations on doing absolutely the right thing, IMO :)
+    -John
 
-> Has the sector with the read failure been remapped and hidden from view?
-
-More likely the drive decided the sector wasn't bad, after all. E.g. by ove=
-rwriting the sector and thus allowing the drive to throw away old user data=
- from it, you have also let the drive to rewrite the ECC or system area of =
-that sector, or whatever they have today in hard drives on the low level.
-
-If it was indeed remapped, then the logic would also require an increase in=
- Reallocated_Sector_Ct; but SMART attribute readings do have a lot of pecul=
-iarities, many of which are also vendor-specific.
-
-> Is it still (more?) likely to fail in the near future?
-
-In my experience not at all, unless you start getting stuff like this every=
- week.
-
---=20
-With respect,
-Roman
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-"Stallman had a printer,
-with code he could not see.
-So he began to tinker,
-and set the software free."
-
---Sig_/H_ixVYiYZZO1bipsyZWaLQt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk8GQ28ACgkQTLKSvz+PZwi/vwCfWQDSHpqkiw1aVzmkyN6XRmyT
-MMkAn29pPXZPgcMBVQD6JGYaYuj6OAaJ
-=Mro0
------END PGP SIGNATURE-----
-
---Sig_/H_ixVYiYZZO1bipsyZWaLQt--
