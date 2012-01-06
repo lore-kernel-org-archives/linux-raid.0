@@ -1,47 +1,72 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: implications of partitioning and raid
-Date: Fri, 06 Jan 2012 05:34:09 -0600
-Message-ID: <4F06DC31.20008@hardwarefreak.com>
-References: <1325778034.4777.44.camel@hermosa.lnx.copansys.com>
-Reply-To: stan@hardwarefreak.com
+From: Steven Haigh <netwiz@crc.id.au>
+Subject: Re: SMART, RAID and real world experience of failures.
+Date: Fri, 06 Jan 2012 22:40:28 +1100
+Message-ID: <4F06DDAC.1050501@crc.id.au>
+References: <4F063808.6040000@crc.id.au> <20230.55643.346235.891308@tree.ty.sabi.co.UK>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1325778034.4777.44.camel@hermosa.lnx.copansys.com>
+In-Reply-To: <20230.55643.346235.891308@tree.ty.sabi.co.UK>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Peter W. Morreale" <morreale@sgi.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 1/5/2012 9:40 AM, Peter W. Morreale wrote:
+On 6/01/2012 10:22 PM, Peter Grandi wrote:
+> [ ... ]
+>
+>> I got a SMART error email yesterday from my home server with a
+>> 4 x 1Tb RAID6. [ ... ]
+>
+> That's an (euphemism alert) imaginative setup. Why not a 4 drive
+> RAID10? In general there are vanishingly few cases in which
+> RAID6 makes sense, and in the 4 drive case a RAID10 makes even
+> more sense than usual. Especially with the really cool setup
+> options that MD RAID10 offers.
 
-> Assume a portion of disk 1 goes 'bad' (localized within one of those
-> partitions), is noticed by md and a rebuild is warranted.
+The main reason is the easy ability to grow the RAID6 to an extra drive 
+when I need the space. I've just about allocated all of the array to 
+various VMs and file storage. One thats full, its easier to add another 
+1Tb drive, grow the RAID, grow the PV and then either add more LVs or 
+grow the ones that need it. Sadly, I don't have the cash flow to just 
+replace the 1Tb drives with 2Tb drives or whatever the flavour of the 
+month is after 2 years.
 
-How often does only a "portion" of a disk go bad these days?  Typically
-this would mean unrecoverable read/write errors for a set of LBA
-sectors.  Physically, with the majority of today's disks, these
-perceived sector defects are actually the result of head actuator and/or
-spindle bearing wear beyond tolerances, not magnetic defects in the
-platters.
+>> This makes me ponder. Has the drive recovered? Has the sector
+>> with the read failure been remapped and hidden from view? Is
+>> it still (more?)  likely to fail in the near future?
+>
+> Uhmmm, slightly naive questions. A 1TB drive has almost 2
+> billion sectors, so "bad" sectors should be common.
+>
+> But the main point is that what is a "bad" sector is a messy
+> story, and most "bad" sectors are really marginal (and an
+> argument can be made that most sectors are marginal or else PRML
+> encoding would not be necessary). So many things can go wrong,
+> and not all fatally. For example when writing some "bad" sectors
+> the drive was vibrating a bit more and the head was accordingly
+> a little bit off, etc.
+>
+> Writing-over some marginal sectors often refreshes the
+> recording, and it is no longer marginal, and otherwise as you
+> guessed the drive can substitute the sector with a spare
+> (something that it cannot really do on reading of course).
 
-Thus, any such defective "portions" are typically doing to "grow" fairly
-rapidly.  Which means, in your scenario, both arrays are going to need
-new spare partitions and a rebuild in short order, as an entire disk is
-failing, not just a portion thereof.
+This is what I was wondering... The drive has been running for about 1.9 
+years - pretty much 24/7. From checking the seagate web site, its still 
+under warranty until the end of 2012.
 
-RAID - Redundant Array of Inexpensive Disks
-RAIP - Redundant Array of Inexpensive Partitions
-
-Aside from sounding like a sexual crime, there are many other obvious
-reasons why the latter has never been coined nor considered a storage
-standard by anyone.
-
-There are valid reasons for partition based arrays, such as booting from
-disks with wonky offset requirements (e.g. advanced format drives).
-IMHO the scenario you've presented here is not a valid case for
-partition based arrays.
+I guess it seems that the best thing to do is monitor the drive as I 
+have been doing and see if its a once off or becomes a regular 
+occurrence. My system does a check of the RAID every week as part of the 
+cron setup, so I'd hope things like this get picked up before it starts 
+losing any redundancy.
 
 -- 
-Stan
+Steven Haigh
+
+Email: netwiz@crc.id.au
+Web: http://www.crc.id.au
+Phone: (03) 9001 6090 - 0412 935 897
+Fax: (03) 8338 0299
+
