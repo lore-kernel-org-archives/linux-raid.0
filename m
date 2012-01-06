@@ -1,93 +1,154 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: SMART, RAID and real world experience of failures.
-Date: Fri, 06 Jan 2012 08:38:49 -0500
-Message-ID: <4F06F969.1010205@turmel.org>
-References: <4F063808.6040000@crc.id.au> <20230.55643.346235.891308@tree.ty.sabi.co.UK> <4F06DDAC.1050501@crc.id.au>
+From: Johannes Truschnigg <johannes@truschnigg.info>
+Subject: Re: What just happened to my disks/RAID5 array?
+Date: Fri, 6 Jan 2012 14:46:25 +0100
+Message-ID: <20120106134625.GA3027@vault.local>
+References: <4E6F13F7.6070507@truschnigg.info>
+ <4E6F4091.7050206@turmel.org>
+ <4E6FA76A.90206@truschnigg.info>
+ <4E7092F1.5010209@turmel.org>
+ <4E70EFA8.4080706@truschnigg.info>
+ <4E70FE5B.5080601@turmel.org>
+ <20120106105143.GA2932@vault.local>
+ <4F06F410.4070807@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="aVD9QWMuhilNxW9f"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F06DDAC.1050501@crc.id.au>
+Content-Disposition: inline
+In-Reply-To: <4F06F410.4070807@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steven Haigh <netwiz@crc.id.au>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/06/2012 06:40 AM, Steven Haigh wrote:
-> On 6/01/2012 10:22 PM, Peter Grandi wrote:
->> [ ... ]
->> 
->>> I got a SMART error email yesterday from my home server with a 4
->>> x 1Tb RAID6. [ ... ]
->> 
->> That's an (euphemism alert) imaginative setup. Why not a 4 drive 
->> RAID10? In general there are vanishingly few cases in which RAID6
->> makes sense, and in the 4 drive case a RAID10 makes even more sense
->> than usual. Especially with the really cool setup options that MD
->> RAID10 offers.
 
-In this case, the raid6 can suffer the loss of any two drives and
-continue operating.  Raid10 cannot, unless you give up more space
-for triple redundancy.
+--aVD9QWMuhilNxW9f
+Content-Type: multipart/mixed; boundary="k1lZvvs/B4yU6o8G"
+Content-Disposition: inline
 
-Basic trade-off:  speed vs. safety.
 
-> The main reason is the easy ability to grow the RAID6 to an extra
-> drive when I need the space. I've just about allocated all of the
-> array to various VMs and file storage. One thats full, its easier to
-> add another 1Tb drive, grow the RAID, grow the PV and then either add
-> more LVs or grow the ones that need it. Sadly, I don't have the cash
-> flow to just replace the 1Tb drives with 2Tb drives or whatever the
-> flavour of the month is after 2 years.
+--k1lZvvs/B4yU6o8G
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Watch out for the change in SCTERC support.  I replaced some 1T Seagate
-desktop drives on a home server with newer 2T desktop drives, which
-appeared to be Seagate's recommended successors to the older models.  
+Good morning Phil,
 
-But no SCTERC support.  My fault for not rechecking the spec sheet, but
-still.  Shouldn't have been pitched as a "successor", IMO.
+thanks for tuning in again! :)
 
-Some Hitachi desktop drives still show STCERC on their specs, but I fear
-that'll change before I'm ready to spend again.
+On Fri, Jan 06, 2012 at 08:16:00AM -0500, Phil Turmel wrote:
+> Warning!  I saw bug report on LKML yesterday involving LVM and the brand =
+new
+> kernel v3.2, so you might want to pull back.  v3.1.5 was known good in th=
+at
+> report.
 
->>> This makes me ponder. Has the drive recovered? Has the sector 
->>> with the read failure been remapped and hidden from view? Is it
->>> still (more?)  likely to fail in the near future?
->> 
->> Uhmmm, slightly naive questions. A 1TB drive has almost 2 billion
->> sectors, so "bad" sectors should be common.
->> 
->> But the main point is that what is a "bad" sector is a messy story,
->> and most "bad" sectors are really marginal (and an argument can be
->> made that most sectors are marginal or else PRML encoding would not
->> be necessary). So many things can go wrong, and not all fatally.
->> For example when writing some "bad" sectors the drive was vibrating
->> a bit more and the head was accordingly a little bit off, etc.
->> 
->> Writing-over some marginal sectors often refreshes the recording,
->> and it is no longer marginal, and otherwise as you guessed the
->> drive can substitute the sector with a spare (something that it
->> cannot really do on reading of course).
+Ok, thanks for the warning - will try to find the thread where the bug is
+described, and consider downgrading to 3.1.x instead!
 
-Also keep in mind that modern hard drives have manufacturing defects
-that are mapped at the factory, and excluded from all further use.
-Those don't show in the statistics.
+> I'm guessing that /dev/sda contains your boot and root filesystems, and t=
+hat
+> this isn't an error.
 
-> This is what I was wondering... The drive has been running for about
-> 1.9 years - pretty much 24/7. From checking the seagate web site, its
-> still under warranty until the end of 2012.
-> 
-> I guess it seems that the best thing to do is monitor the drive as I
-> have been doing and see if its a once off or becomes a regular
-> occurrence. My system does a check of the RAID every week as part of
-> the cron setup, so I'd hope things like this get picked up before it
-> starts losing any redundancy.
+You are correct, sorry I did not mention that initially. These devices are =
+not
+supposed to end up as parts of any md arrays.
 
-You might also want to perform a "repair" scrub the next time this kind
-of problem appears.  ("check" is most appropriate in the cron job,
-though.) It might have saved you a bunch of time, while maintaining the
-extra redundancy on the rest of the array.
+> Those slot numbers are *really* important.
 
-Phil
- 
+What is the significance of the individual slot numbers there?
 
+
+> Yes, --assemble --force.
+
+Ok, will fire that command as soon as I checked out the LVM bug you mention=
+ed.
+
+> May I suggest getting an lsdrv [1] report, which will give you the serial=
+ numbers
+> of your disks versus the device assignments, for later reference.  And ag=
+ain
+> after it's all running, for completeness.
+
+I have attached a file with the relevant lsdrv (great little program btw) to
+this message - should I expect changes to it after my array is up (well,
+except for the components not to be recognized as spare, of course)?
+
+> HTH,
+
+It sure did - thanks a bunch! :)
+
+--=20
+with best regards:
+- Johannes Truschnigg ( johannes@truschnigg.info )
+
+www:   http://johannes.truschnigg.info/
+phone: +43 650 2 133337
+xmpp:  johannes@truschnigg.info
+
+Please do not bother me with HTML-eMail or attachments. Thank you.
+
+--k1lZvvs/B4yU6o8G
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: attachment; filename="lsdrv-output.txt"
+Content-Transfer-Encoding: quoted-printable
+
+# ./lsdrv=20
+PCI [pata_via] 04:00.0 IDE interface: VIA Technologies, Inc. VT6415 PATA ID=
+E Host Controller
+=E2=94=9Cscsi 0:0:0:0 ATA TRANSCEND {20090625_D40D51BB}
+=E2=94=82=E2=94=94sda 1.87g [8:0] Partitioned (dos)
+=E2=94=82 =E2=94=94sda1 1.87g [8:1] ext2 'VIRTUE' {ff586bcd-b1fd-4c08-a0ea-=
+08e2e1c7b8f9}
+=E2=94=82  =E2=94=94Mounted as /dev/root @ /
+=E2=94=94scsi 1:x:x:x [Empty]
+PCI [ahci] 00:11.0 SATA controller: Advanced Micro Devices [AMD] nee ATI SB=
+7x0/SB8x0/SB9x0 SATA Controller [AHCI mode] (rev 40)
+=E2=94=9Cscsi 2:0:0:0 ATA SAMSUNG HD154UI {S1XWJDWS803396}
+=E2=94=82=E2=94=94sdb 1.36t [8:16] MD raid5 (none/5) (w/ sdd,sdf,sdc,sde) s=
+pare 'virtue:0' {19e260e6-db3c-ad86-0541-487da1bae605}
+=E2=94=82 =E2=94=94md0 0.00k [9:0] MD vNone None (None) inactive, None (Non=
+e) 0/sec
+=E2=94=82                  Empty/Unknown
+=E2=94=9Cscsi 3:0:0:0 ATA SAMSUNG HD154UI {S1XWJDWZ419775}
+=E2=94=82=E2=94=94sdc 1.36t [8:32] MD raid5 (none/5) (w/ sdb,sdd,sdf,sde) s=
+pare 'virtue:0' {19e260e6-db3c-ad86-0541-487da1bae605}
+=E2=94=82 =E2=94=94md0 0.00k [9:0] MD vNone None (None) inactive, None (Non=
+e) 0/sec
+=E2=94=82                  Empty/Unknown
+=E2=94=9Cscsi 4:0:0:0 ATA SAMSUNG HD154UI {S1XWJDWS803467}
+=E2=94=82=E2=94=94sdd 1.36t [8:48] MD raid5 (none/5) (w/ sdb,sdf,sdc,sde) s=
+pare 'virtue:0' {19e260e6-db3c-ad86-0541-487da1bae605}
+=E2=94=82 =E2=94=94md0 0.00k [9:0] MD vNone None (None) inactive, None (Non=
+e) 0/sec
+=E2=94=82                  Empty/Unknown
+=E2=94=9Cscsi 5:0:0:0 ATA SAMSUNG HD154UI {S1XWJDWS803469}
+=E2=94=82=E2=94=94sde 1.36t [8:64] MD raid5 (none/5) (w/ sdb,sdd,sdf,sdc) s=
+pare 'virtue:0' {19e260e6-db3c-ad86-0541-487da1bae605}
+=E2=94=82 =E2=94=94md0 0.00k [9:0] MD vNone None (None) inactive, None (Non=
+e) 0/sec
+=E2=94=82                  Empty/Unknown
+=E2=94=9Cscsi 6:0:0:0 ATA SAMSUNG HD154UI {S1XWJDWS803405}
+=E2=94=82=E2=94=94sdf 1.36t [8:80] MD raid5 (none/5) (w/ sdb,sdd,sdc,sde) s=
+pare 'virtue:0' {19e260e6-db3c-ad86-0541-487da1bae605}
+=E2=94=82 =E2=94=94md0 0.00k [9:0] MD vNone None (None) inactive, None (Non=
+e) 0/sec
+=E2=94=82                  Empty/Unknown
+=E2=94=94scsi 7:x:x:x [Empty]
+
+--k1lZvvs/B4yU6o8G--
+
+--aVD9QWMuhilNxW9f
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk8G+zAACgkQnnUApj8OcoKnkACfe11LwHmcP+4rDzYMnN91n7a6
+aIUAn13cnV43DPEdx5//MMEbwiDgjPAf
+=bB47
+-----END PGP SIGNATURE-----
+
+--aVD9QWMuhilNxW9f--
