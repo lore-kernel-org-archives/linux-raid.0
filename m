@@ -1,46 +1,49 @@
-From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
-Subject: Re: RAID-10 explicitly defined drive pairs?
-Date: Sat, 7 Jan 2012 14:25:18 +0000
-Message-ID: <20232.21966.952905.343604@tree.ty.sabi.co.UK>
-References: <20111212115459.GC20730@fi.muni.cz>
-	<4EE61EAE.20101@anonymous.org.uk>
-	<20120106150823.GX25976@fi.muni.cz>
-	<20231.9177.523012.471046@tree.ty.sabi.co.UK>
-	<20120106201150.GB13358@fi.muni.cz>
-	<4F077BE1.4050408@hardwarefreak.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Install grub2 to /dev/md126 fails
+Date: Sat, 07 Jan 2012 15:39:06 +0000
+Message-ID: <4F08671A.6090403@anonymous.org.uk>
+References: <123493149.466191.1325863934205.JavaMail.root@sz0019a.westchester.pa.mail.comcast.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F077BE1.4050408@hardwarefreak.com>
+In-Reply-To: <123493149.466191.1325863934205.JavaMail.root@sz0019a.westchester.pa.mail.comcast.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: jlcenter@comcast.net
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 06/01/2012 15:32, jlcenter@comcast.net wrote:
+> Hi,
+>
+> I'm going to try again to build the raid1 array, but I was wondering
+> if the GPT partitions should be created first on the physical disks,
+> then create&  assemble the array?  Or, if the array should be
+> created&  assembled, then partition the array?  I'm raiding the whole
+> disk(s), not partitions.  Reading the wiki, I get the impression the
+> first way is preferable, but most of the descriptions I've read
+> on-line suggest doing the latter.   Also, for mdadm with GPT
+> partitions, is there any preferred order to the partitions, i.e.,
+> does the bios boot partition have to be the first partition on the
+> array?
 
->> And I suspect that XFS swidth/sunit settings will still work
->> with RAID-10 parameters even over plain LVM logical volume on
->> top of that RAID 10, while the settings would be more tricky
->> when used with interleaved LVM logical volume on top of
->> several RAID-1 pairs (LVM interleaving uses LE/PE-sized
->> stripes, IIRC).
+If my understanding is correct, you want an IMSM array that can be 
+booted by a uEFI BIOS? In which case, I think you need an array over the 
+whole disks (which might give you a /dev/md127 for a container, and 
+/dev/md126 for the data), GPT partition table over that, first partition 
+a GPT boot partition (so you will be installing GRUB2 to /dev/md126p1 - 
+this is NOT a filesystem partition), and then whatever you want after 
+that, e.g. to keep it simple a /dev/md126p2 for swap and /dev/md126p3 
+for your filesystem.
 
-Stripe alignment is only relevant for parity RAID types, as it
-is meant to minimize read-modify-write. There is no RMW problem
-with RAID0, RAID1 or combinations. But there is a case for
-'sunit'/'swidth' with single flash based SSDs as they do have a
-RMW-like issue with erase blocks. In other cases whether they
-are of benefit is rather questionable.
+If you don't have a uEFI BIOS, it gets more complicated; you will need a 
+hybrid MBR with a traditional boot sector and at least the GPT boot 
+partition exposed :-(
 
-> One would use a linear concatenation and drive parallelism
-> with XFS allocation groups, i.e. for a 24 drive chassis you'd
-> setup an mdraid or lvm linear array of 12 RAID1 pairs and
-> format with something like: $ mkfs.xfs -d agcount=24 [device]
-> As long as one's workload writes files relatively evenly
-> across 24 or more directories, one receives fantastic
-> concurrency/parallelism, in this case 24 concurrent
-> transactions, 2 to each mirror pair.
+Caveat: I've read a lot but I haven't actually done this, so I may be 
+talking rubbish...
 
-That to me sounds a bit too fragile ; RAID0 is almost always
-preferable to "concat", even with AG multiplication, and I would
-be avoiding LVM more than avoiding MD.
+Cheers,
+
+John.
+
