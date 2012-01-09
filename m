@@ -1,94 +1,96 @@
-From: Larkin Lowrey <llowrey@nuclearwinter.com>
-Subject: Raid5 device hangs in active state
-Date: Sun, 08 Jan 2012 16:03:10 -0600
-Message-ID: <4F0A129E.5020706@nuclearwinter.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: recovery from multiple failures
+Date: Sun, 08 Jan 2012 19:11:57 -0500
+Message-ID: <4F0A30CD.60904@turmel.org>
+References: <eu9pt8xa4l.ln2@goaway.wombat.san-francisco.ca.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <eu9pt8xa4l.ln2@goaway.wombat.san-francisco.ca.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've been chasing a fault since "upgrading" from Fedora 15 to Fedora 16.
-When under heavy IO load my root volume will hang and block any
-additional writes. Reading appears to be ok but I can't tell if I'm
-reading the actual md device or cache memory. This problem occurs most
-often when doing a weekly check of all md devices in the early AM hours
-and particularly when the check fires before my backup job completes.
-The checks do appear to complete normally, and without error.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-There are no error or warning messages in any log or in the console.
-There is no indication of any problem except that any IO of the root
-volume will hang and ctrl-c does not get me back to a prompt.
+Hi Keith,
 
-Interestingly, to me, when in this state, 'iostat -dx 1' shows the root
-LVM volume at 100% utilization yet neither the mv physical volume nor
-any of the constituent devices show any activity and all read 0%
-utilization. IO wait reads 50% (6 core machine) so it appears that
-something is waiting for an event that will never occur.
+On 01/08/2012 03:12 PM, Keith Keller wrote:
+> Hi all,
+> 
+> I recently had an experience very similar to what's posted on the wiki:
+> 
+> https://raid.wiki.kernel.org/articles/r/a/i/RAID_Recovery_d376.html
 
-The md device showed a value of 26 for stripe_cache_active during the
-most recent occurrence and that number did not change over time.
-Further, mdadm -D /dev/md0 showed the following:
+This page describes the older --examine output format, fortunately, since
+that is what you seem to have.
 
-dev/md0:
-        Version : 1.2
-  Creation Time : Tue Dec 21 16:28:52 2010
-     Raid Level : raid5
-     Array Size : 2180641792 (2079.62 GiB 2232.98 GB)
-  Used Dev Size : 311520256 (297.09 GiB 319.00 GB)
-   Raid Devices : 8
-  Total Devices : 8
-    Persistence : Superblock is persistent
+> From what I can piece together from the logs, my controller went a
+> little crazy, and dropped a whole bunch of drives in a span of about
+> 10 minutes.  I attempted to look at the output of mdadm --examine, as
+> documented in the wiki, but the format appears to have changed, so I
+> am unclear where to go next.
+> 
+> I'm going to include the entire mdadm --examine output below, but as I
+> was looking at it, I was wondering if the analogous scenario to the wiki
+> situation is to look at the array slots:
+> 
+> $ grep Slot raid.status |cut -f1 -d '('
+>     Array Slot : 0 
+>     Array Slot : 0 
+>     Array Slot : 13 
+>     Array Slot : 4 
+>     Array Slot : 10 
+>     Array Slot : 6 
+>     Array Slot : 7 
+>     Array Slot : 9 
+>     Array Slot : 8 
+>     Array Slot : 11 
+>     Array Slot : 2 
+>     Array Slot : 4 
+>     Array Slot : 12 
 
-    Update Time : Sun Jan  8 03:31:42 2012
-          State : active
- Active Devices : 8
-Working Devices : 8
- Failed Devices : 0
-  Spare Devices : 0
+You are confusing "Slot" with "Role", aka "Raid Device".  All of your devices
+report their own role between 0 and 8, except for slot #12, which is "empty".
 
-         Layout : left-symmetric
-     Chunk Size : 64K
+> There are two separate arrays on this box; the problematic one is
+> 24363b01:90deb9b5:4b51e5df:68b8b6ea.  Will I be able to recover this
+> array with an appropriate mdadm --create --assume-clean command, and if
+> so, how would I go about determining the correct order in which to
+> specify the drives?  The big confusing part for me is, as a 9 device
+> RAID6, I'd expect to see device slots 0-8, but here I see slots 10
+> through 13, and I am unclear how to get the order exactly right.
 
-           Name : ****.****.com:1  (local to host ****.****.com)
-           UUID : 4e95a658:13a5a387:dd62bdbe:ea655271
-         Events : 736102
+- From what I can see, you should use "--assemble --force".  The wiki does
+not recommend this, but is wrong.  There is no advantage to "--create
+- --assume-clean" in this situation, and opportunities for catastrophic
+destruction.  Only if "--assemble --force" fails, and not from "device in use"
+reports, should you move to "--create".
 
-    Number   Major   Minor   RaidDevice State
-       0       8        2        0      active sync   /dev/sda2
-       1       8       18        1      active sync   /dev/sdb2
-       9       8       34        2      active sync   /dev/sdc2
-       3       8       50        3      active sync   /dev/sdd2
-       4       8       66        4      active sync   /dev/sde2
-       5       8       82        5      active sync   /dev/sdf2
-       6       8       98        6      active sync   /dev/sdg2
-       8       8      114        7      active sync   /dev/sdh2
+Another word of warning:  Your --examine output reports Data Offset == 264
+on all of your devices.  You cannot use "--create --assume-clean" with a
+new version of mdadm, as it will create with the new default Data Offset of
+2048.
 
-I noted that state is active and not idle. The output of 'mdadm -D
-/dev/md0' did not change between executions.
+> My mdadm --examine (which I have also saved separately) is below.  If
+> you need any more information let me know.  Thanks!
 
-It appears that either something is deadlocked somewhere or some other
-event was missed and something is waiting forever for it to happen. I
-was able to read from /dev/md0 and all the constituent devices via dd
-and 'smartctl -a' did not indicate any problems. I was able to read from
-/proc/mdstat and no problems were indicated.
+This is very good.  And clearly shows that "--assemble --force" should
+succeed.  You will probably want to run an fsck to deal with the ten minutes
+of inconsistent data, but that should be the only losses.  A "check" or
+"repair" pass should also be run.
 
-I have no idea how to debug this further. What else should I look at
-when I encounter this problem? What kind of logging can I enable which
-might show additional, and hopefully useful, information when the
-problem occurs?
+HTH,
 
-I'm running Fedora 16 with the latest packages updated via yum. The
-mdadm is v3.2.2 - 17th June 2011 and the kernel is 3.1.6-1.fc16.x86_64.
+Phil
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-I have 6 devices connected to the AMD SB850 ACHI SATA controller and 2
-devices to the built-in JMicron JMB362/363 controller to make /dev/md0.
-I also have 6 devices connected to 3 sil3132 SATA controllers to make
-/dev/md1. I have never encountered this problem with md1 but its I/O is
-no where near as great.
-
-Suggestions?
-
---Larkin
+iEYEARECAAYFAk8KMMoACgkQBP+iHzflm3CWmACfQqsqxua7Kp9q5ydpPV5Rtxih
+Uc0An0rCW6p8ni4caecGLFoLDxin3wEE
+=Gnmb
+-----END PGP SIGNATURE-----
