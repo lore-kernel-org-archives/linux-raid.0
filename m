@@ -1,161 +1,156 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: raid1d crash at boot
-Date: Mon, 9 Jan 2012 12:35:52 +1100
-Message-ID: <20120109123552.4a5f44de@notabene.brown>
-References: <20111119134139.GA30570@rere.qmqm.pl>
-	<20120107125303.GA4862@rere.qmqm.pl>
+From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Subject: Re: recovery from multiple failures
+Date: Sun, 08 Jan 2012 17:43:11 -0800
+Message-ID: <fatpt8x1so.ln2@goaway.wombat.san-francisco.ca.us>
+References: <eu9pt8xa4l.ln2@goaway.wombat.san-francisco.ca.us>
+ <4F0A30CD.60904@turmel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/tB70hh0Kpf_F2aaqaDTXrun"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120107125303.GA4862@rere.qmqm.pl>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/tB70hh0Kpf_F2aaqaDTXrun
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On 2012-01-09, Phil Turmel <philip@turmel.org> wrote:
+>
+> On 01/08/2012 03:12 PM, Keith Keller wrote:
+>> 
+>> I'm going to include the entire mdadm --examine output below, but as I
+>> was looking at it, I was wondering if the analogous scenario to the wiki
+>> situation is to look at the array slots:
+>> 
+>> $ grep Slot raid.status |cut -f1 -d '('
+>>     Array Slot : 0 
+>>     Array Slot : 0 
+>>     Array Slot : 13 
+>>     Array Slot : 4 
+>>     Array Slot : 10 
+>>     Array Slot : 6 
+>>     Array Slot : 7 
+>>     Array Slot : 9 
+>>     Array Slot : 8 
+>>     Array Slot : 11 
+>>     Array Slot : 2 
+>>     Array Slot : 4 
+>>     Array Slot : 12 
+>
+> You are confusing "Slot" with "Role", aka "Raid Device".  All of your devices
+> report their own role between 0 and 8, except for slot #12, which is "empty".
 
-On Sat, 7 Jan 2012 13:53:04 +0100 Micha=C5=82 Miros=C5=82aw <mirq-linux@rer=
-e.qmqm.pl>
-wrote:
+That brings up another question, then: how did you determine the role?
+Is it the capital U in the Array State line, or is it something obvious
+I'm missing, or something unobvious that I should look at?  I mostly
+just want to know what to look for in the future.
 
-> On Sat, Nov 19, 2011 at 02:41:39PM +0100, Micha=C5=82 Miros=C5=82aw wrote:
-> > I get following BUG_ON tripped while booting, before rootfs is mounted =
-by
-> > Debian's initrd. This started to happen for kernels since sometime
-> > during 3.1-rcX.
-> >=20
-> > [    6.246170] ------------[ cut here ]------------
-> > [    6.246246] kernel BUG at /mnt/src-tmp/jaja/git/qmqm/drivers/scsi/sc=
-si_lib.c:1153!
-> > [    6.246347] invalid opcode: 0000 [#1] PREEMPT SMP
-> > [    6.246558] CPU 5
-> > [    6.246614] Modules linked in: usb_storage uas firewire_ohci firewir=
-e_core crc_itu_t xhci_hcd [last unloaded: scsi_wait_scan]
-> > [    6.247131]
-> > [    6.247194] Pid: 288, comm: md1_raid1 Not tainted 3.2.0-rc2mq+ #5 Sy=
-stem manufacturer System Product Name/P8Z68-V PRO
-> > [    6.247422] RIP: 0010:[<ffffffff812443a1>]  [<ffffffff812443a1>] scs=
-i_setup_fs_cmnd+0x45/0x83
-> > [    6.247563] RSP: 0018:ffff8804140d1bd0  EFLAGS: 00010046
-> > [    6.247634] RAX: 0000000000000000 RBX: ffff88041d463800 RCX: 0000000=
-0ffffffff
-> > [    6.247710] RDX: 00000000ffffffff RSI: ffff8804142fd600 RDI: ffff880=
-41d463800
-> > [    6.247785] RBP: ffff8804142fd600 R08: 00000000ffffffff R09: 0000000=
-000017a00
-> > [    6.247861] R10: ffff88041d464000 R11: ffff88041d464000 R12: 0000000=
-000000800
-> > [    6.247936] R13: 0000000000000001 R14: ffff88041d463800 R15: 0000000=
-000000000
-> > [    6.248013] FS:  0000000000000000(0000) GS:ffff88042fb40000(0000) kn=
-lGS:0000000000000000
-> > [    6.248104] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> > [    6.248176] CR2: 000000000042b200 CR3: 0000000001605000 CR4: 0000000=
-0000406e0
-> > [    6.248252] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000=
-000000000
-> > [    6.248328] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000=
-000000400
-> > [    6.248404] Process md1_raid1 (pid: 288, threadinfo ffff8804140d0000=
-, task ffff88041539a4c0)
-> > [    6.248495] Stack:
-> > [    6.248557]  0000000000000000 ffff8804142fd600 ffff8804142fd600 ffff=
-ffff8124a9be
-> > [    6.248819]  ffff8804142fe3a0 ffff8804142fd600 ffff88041d463848 ffff=
-ffff811a5d67
-> > [    6.249084]  ffff8804142fe3a0 ffff880415452400 ffff8804156f0000 0000=
-0000fffffa2b
-> > [    6.249346] Call Trace:
-> > [    6.249414]  [<ffffffff8124a9be>] ? sd_prep_fn+0x2cd/0xb72
-> > [    6.249490]  [<ffffffff811a5d67>] ? cfq_dispatch_requests+0x6f2/0x82c
-> > [    6.249567]  [<ffffffff8119a168>] ? blk_peek_request+0xc8/0x1bf
-> > [    6.249638]  [<ffffffff81243d83>] ? scsi_request_fn+0x64/0x406
-> > [    6.249708]  [<ffffffff8119a526>] ? blk_flush_plug_list+0x186/0x1b7
-> > [    6.249780]  [<ffffffff8119a562>] ? blk_finish_plug+0xb/0x2a
-> > [    6.249849]  [<ffffffff812a400f>] ? raid1d+0x91/0xb22
-> > [    6.249919]  [<ffffffff81031729>] ? get_parent_ip+0x9/0x1b
-> > [    6.249990]  [<ffffffff813a5c9e>] ? sub_preempt_count+0x83/0x94
-> > [    6.250060]  [<ffffffff813a202a>] ? schedule+0x73f/0x772
-> > [    6.250129]  [<ffffffff813a5d49>] ? add_preempt_count+0x9a/0x9c
-> > [    6.250199]  [<ffffffff813a330b>] ? _raw_spin_lock_irqsave+0x13/0x31
-> > [    6.250271]  [<ffffffff812a9bb4>] ? md_thread+0xfe/0x11c
-> > [    6.250340]  [<ffffffff8104f6c6>] ? add_wait_queue+0x3c/0x3c
-> > [    6.250410]  [<ffffffff812a9ab6>] ? signal_pending+0x17/0x17
-> > [    6.250479]  [<ffffffff8104f045>] ? kthread+0x76/0x7e
-> > [    6.250548]  [<ffffffff813a8c34>] ? kernel_thread_helper+0x4/0x10
-> > [    6.250618]  [<ffffffff8104efcf>] ? kthread_worker_fn+0x139/0x139
-> > [    6.250688]  [<ffffffff813a8c30>] ? gs_change+0xb/0xb
-> > [    6.250754] Code: 85 c0 74 1d 48 8b 00 48 85 c0 74 15 48 8b 40 50 48=
- 85 c0 74 0c 48 89 ee 48 89 df ff d0 85 c0 75 44 66 83 bd d0 00 00 00 00 75=
- 02 <0f> 0b 48 89 ee 48 89 df e8 b6 e9 ff ff 48 85 c0 48 89 c2 74 20
-> > [    6.253544] RIP  [<ffffffff812443a1>] scsi_setup_fs_cmnd+0x45/0x83
-> > [    6.253658]  RSP <ffff8804140d1bd0>
-> > [    6.253722] ---[ end trace 533b0b5008dd7cee ]---
-> > [    6.253788] note: md1_raid1[288] exited with preempt_count 1
->=20
-> I've bisected this to following commit. It's not trivially revertable on =
-v3.2,
-> but I'll do some tries with it.
+> - From what I can see, you should use "--assemble --force".  The wiki does
+> not recommend this, but is wrong.  There is no advantage to "--create
+> - --assume-clean" in this situation, and opportunities for catastrophic
+> destruction.  Only if "--assemble --force" fails, and not from "device in use"
+> reports, should you move to "--create".
 
-Thanks for doing that - it is a great help.
+So, if a rebuild already started with new disks, will --force get
+confused by the array's state?  Or is md smart enough to look at the
+last update times to assemble the disks that are most up to date, or are
+otherwise smart enough not to assemble disks in a really bad way?
 
-And you were right - the write-mostly flag is relevant.
+> Another word of warning:  Your --examine output reports Data Offset == 264
+> on all of your devices.  You cannot use "--create --assume-clean" with a
+> new version of mdadm, as it will create with the new default Data Offset of
+> 2048.
 
-Please test this patch - it should fix the problem.
+Great, thanks for the pointer.  I currently have version 2.6.9 of mdadm,
+which IIRC is fairly old.
 
-Thanks,
-NeilBrown
+> This is very good.  And clearly shows that "--assemble --force" should
+> succeed.  You will probably want to run an fsck to deal with the ten minutes
+> of inconsistent data, but that should be the only losses.  A "check" or
+> "repair" pass should also be run.
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index cc24f0c..a368db2 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -531,8 +531,17 @@ static int read_balance(struct r1conf *conf, struct r1=
-bio *r1_bio, int *max_sect
- 		if (test_bit(WriteMostly, &rdev->flags)) {
- 			/* Don't balance among write-mostly, just
- 			 * use the first as a last resort */
--			if (best_disk < 0)
-+			if (best_disk < 0) {
-+				if (is_badblock(rdev, this_sector, sectors,
-+						&first_bad, &bad_sectors)) {
-+					if (first_bad < this_sector)
-+						/* Cannot use this */
-+						continue;
-+					best_good_sectors =3D first_bad - this_sector;
-+				} else
-+					best_good_sectors =3D sectors;
- 				best_disk =3D disk;
-+			}
- 			continue;
- 		}
- 		/* This is a reasonable device to use.  It might
+Okay: here's what happened when I made the attempt:
+
+#  mdadm  --assemble --scan --uuid=24363b01:90deb9b5:4b51e5df:68b8b6ea
+#  --config=mdadm.conf  --force
+/dev/md0: File exists
+mdadm: forcing event count in /dev/sdb1(0) from 106059 upto 106120
+mdadm: forcing event count in /dev/sdg1(3) from 106059 upto 106120
+mdadm: forcing event count in /dev/sdf1(6) from 106059 upto 106120
+mdadm: forcing event count in /dev/sdh1(7) from 106059 upto 106120
+mdadm: forcing event count in /dev/sdj1(8) from 106059 upto 106120
+mdadm: failed to RUN_ARRAY /dev/md/0: Input/output error
+
+Here's what appeared in dmesg:
+
+md/raid:md0: not clean -- starting background reconstruction
+md/raid:md0: device sdb1 operational as raid disk 0
+md/raid:md0: device sdj1 operational as raid disk 8
+md/raid:md0: device sdh1 operational as raid disk 7
+md/raid:md0: device sdf1 operational as raid disk 6
+md/raid:md0: device sdi1 operational as raid disk 5
+md/raid:md0: device sde1 operational as raid disk 4
+md/raid:md0: device sdk1 operational as raid disk 2
+md/raid:md0: device sdc1 operational as raid disk 1
+md/raid:md0: allocated 9522kB
+md/raid:md0: cannot start dirty degraded array.
+RAID conf printout:
+ --- level:6 rd:9 wd:8
+ disk 0, o:1, dev:sdb1
+ disk 1, o:1, dev:sdc1
+ disk 2, o:1, dev:sdk1
+ disk 3, o:1, dev:sdg1
+ disk 4, o:1, dev:sde1
+ disk 5, o:1, dev:sdi1
+ disk 6, o:1, dev:sdf1
+ disk 7, o:1, dev:sdh1
+ disk 8, o:1, dev:sdj1
+md/raid:md0: failed to run raid set.
+md: pers->run() failed ...
+
+And finally, mdadm -D:
+
+# mdadm -D /dev/md0
+/dev/md0:
+        Version : 1.01
+  Creation Time : Thu Sep 29 21:26:35 2011
+     Raid Level : raid6
+  Used Dev Size : 1953113920 (1862.63 GiB 1999.99 GB)
+   Raid Devices : 9
+  Total Devices : 10
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Sat Jan  7 22:50:29 2012
+          State : active, degraded, Not Started
+ Active Devices : 8
+Working Devices : 10
+ Failed Devices : 0
+  Spare Devices : 2
+
+     Chunk Size : 64K
+
+           Name : 0
+           UUID : 24363b01:90deb9b5:4b51e5df:68b8b6ea
+         Events : 106120
+
+    Number   Major   Minor   RaidDevice State
+       0       8       17        0      active sync   /dev/sdb1
+      13       8       33        1      active sync   /dev/sdc1
+      11       8      161        2      active sync   /dev/sdk1
+       6       8       97        3      spare rebuilding   /dev/sdg1
+       4       8       65        4      active sync   /dev/sde1
+       9       8      129        5      active sync   /dev/sdi1
+      10       8       81        6      active sync   /dev/sdf1
+       7       8      113        7      active sync   /dev/sdh1
+       8       8      145        8      active sync   /dev/sdj1
+
+      12       8      177        -      spare   /dev/sdl1
+
+Now I really don't know where to go from here.  Any thoughts?  Will
+doing a check help at this point, or just make things worse?
+
+--keith
+
+-- 
+kkeller@wombat.san-francisco.ca.us
 
 
---Sig_/tB70hh0Kpf_F2aaqaDTXrun
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBTwpEeDnsnt1WYoG5AQIYmxAAiWtgaYTe5WnCbxZwwe/1XROAug9W1yX5
-IThy6Ljt1g5+eABQvtsgV5iWqQ/h1qs6gTTfdtD/2YoLjTpwPwtBUkMWeA50LrO9
-P99dEq0m7MDHc7BlZrU/GtgDz5Q70jrA8iOXB4039DljVq0ZmZ1Zg5xJ8XFEIjkL
-sP9n4+F276palkTdVVWyWoUnLP1M2HlKb2P8Tj77lDk5SuZxdKzOVv1jXNkA1Vlo
-gShKY3hCz5oTyWX/hLW1Ctmx2Y07trwfl66WeXSz7dygIVbEzGWcMCx04drT3Lr5
-Oj0NcZfMtdP/Iu/La39hCpp2s3S88OU8AzE/35fyOvnxXVb+XkrHwstVs0AnsPwa
-YD49PCL3YZu6P9MWqUf8P9SKRLpJoRicdjaPHKMnoICc1YYDVIQq+4Y06LnOKlTe
-TNxjA1HGlDuPkkdbkDE4Y/Cgj+wsc56Kgq4fsutGls38NbkOX8AOUYkZtEnpObwe
-xDLj8gwtTLRd105L+I/Jz89YAqO2BHkb0C2spTgt8WyuGAP46N0PzGATG+ToT1w0
-E1Q2IM20gptjw631m0JVCJ1nAv594HackVeM/OpkGJvBiLu9tSCVOgpHPKtiToU6
-c0BtCG2yuM25BIv2SgQyyWaIGD1+8+lDdmwtTWPoU2iYnfHEhTMsICPA0BjUkmPv
-Jsw2hyy8iMo=
-=5LhT
------END PGP SIGNATURE-----
-
---Sig_/tB70hh0Kpf_F2aaqaDTXrun--
