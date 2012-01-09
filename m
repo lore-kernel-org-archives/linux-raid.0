@@ -1,27 +1,38 @@
-From: Sven Hartrumpf <hartrumpf@gmx.net>
-Subject: Wiki problems
-Date: Mon, 09 Jan 2012 11:26:16 +0100 (CET)
-Message-ID: <20120109.112616.632868945383103460.hartrumpf@gmx.net>
+From: Mikhail Balabin <mbalabin@gmail.com>
+Subject: Re: polling mdX/md/degraded in sysfs
+Date: Mon, 9 Jan 2012 16:35:27 +0600
+Message-ID: <CAC9iW=v+NaHOZ_QBqvHKA2iXsx9OHkuUBsjmkS9+XaKmpe7cJg@mail.gmail.com>
+References: <CAC9iW=taiG0=JOXcrEDOWKoHswEAp1uRTP2UP=4MepBXNf2Lrg@mail.gmail.com>
+ <CAGRgLy5CsmEU_-GnvXH3ffqK4Wnj7V6a_-TWnhA3ysbo2HKGqQ@mail.gmail.com> <20120109114433.6cf3c47a@notabene.brown>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120109114433.6cf3c47a@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Alexander Lyakas <alex.bolshoy@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi.
+2012/1/9 NeilBrown <neilb@suse.de>:
+> On Sun, 8 Jan 2012 11:06:59 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
+> wrote:
+>
+>> Hi,
+>> well, at least according to 2.6.38-8 kernel code, this attribute is
+>> notified in 3 cases:
+>> # When the array is started (e.g., via RUN_ARRAY ioctl)
+>> # When "reshape" is initiated via sysfs
+>> # When a spare is activated after successful completion of
+>> resync/recover/check/replair
+>>
+>
+> Hmm... it really should notify when a disk fails.
+>
+> Mikhail: could you please test if this patch makes it work better for you?
 
-Many links on the Wiki seem to be broken, e.g.
+Ok, I'll try to test the patch against 3.2 today.
 
-https://raid.wiki.kernel.org/articles/r/e/c/Special~RecentChanges_e0d0.html
+> Thanks,
+> NeilBrown
 
-Same for the search function, e.g.
-
-https://raid.wiki.kernel.org/index.php?title=Special%3ASearch&search=raid6&go=Go
-
-I think the Wiki is a central information resource for Linux RAID, so please
-consider improving the situation :-)
-
-Greetings
-Sven
+Mikhail Balabin
