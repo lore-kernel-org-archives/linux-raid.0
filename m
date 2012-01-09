@@ -1,38 +1,52 @@
-From: Mikhail Balabin <mbalabin@gmail.com>
-Subject: Re: polling mdX/md/degraded in sysfs
-Date: Mon, 9 Jan 2012 16:35:27 +0600
-Message-ID: <CAC9iW=v+NaHOZ_QBqvHKA2iXsx9OHkuUBsjmkS9+XaKmpe7cJg@mail.gmail.com>
-References: <CAC9iW=taiG0=JOXcrEDOWKoHswEAp1uRTP2UP=4MepBXNf2Lrg@mail.gmail.com>
- <CAGRgLy5CsmEU_-GnvXH3ffqK4Wnj7V6a_-TWnhA3ysbo2HKGqQ@mail.gmail.com> <20120109114433.6cf3c47a@notabene.brown>
+From: Art -kwaak- van Breemen <ard@telegraafnet.nl>
+Subject: Re: raid 1 bug with write-mostly and administrative failed disk
+Date: Mon, 9 Jan 2012 14:25:16 +0100
+Message-ID: <20120109132516.GG3692@telegraafnet.nl>
+References: <20120109123552.4a5f44de@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120109114433.6cf3c47a@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <20120109123552.4a5f44de@notabene.brown>
+ <20120109123403.1286fd36@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Alexander Lyakas <alex.bolshoy@gmail.com>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2012/1/9 NeilBrown <neilb@suse.de>:
-> On Sun, 8 Jan 2012 11:06:59 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
-> wrote:
->
->> Hi,
->> well, at least according to 2.6.38-8 kernel code, this attribute is
->> notified in 3 cases:
->> # When the array is started (e.g., via RUN_ARRAY ioctl)
->> # When "reshape" is initiated via sysfs
->> # When a spare is activated after successful completion of
->> resync/recover/check/replair
->>
->
-> Hmm... it really should notify when a disk fails.
->
-> Mikhail: could you please test if this patch makes it work better for you?
+Hi,
 
-Ok, I'll try to test the patch against 3.2 today.
+On Mon, Jan 09, 2012 at 12:34:03PM +1100, NeilBrown wrote:
+> On Thu, 5 Jan 2012 22:30:23 +0100 Art -kwaak- van Breemen
+> <ard@telegraafnet.nl> wrote:
+> 
+> > Anyway: I found a small bug in raid1, with write-behind and
+> > write-mostly, occuring at least on 3.1.4 and 3.2 .
+>
+> I never tested write-behind :-(
 
-> Thanks,
-> NeilBrown
+Well, I (un?)fortunately had a testcase were I was exchanging disks from a raid
+array for ssd.
 
-Mikhail Balabin
+> Please confirm that this patch fixes it for you.
+
+My latest testcase:
+mdadm --create -l 1 -n 2 --bitmap=internal /dev/md3 -W /dev/sdb6 /dev/sda6
+works like a charm now for 3.2 :-).
+
+Proof:
+md3 : active raid1 sda6[1](W) sdb6[0](W)
+      2103478 blocks super 1.2 [2/2] [UU]
+      bitmap: 1/1 pages [4KB], 65536KB chunk
+
+Failing disk 1 and then reading it works.
+
+Thanks Neil! I can be very happy now (3.1 is a very stable
+series so I guess 3.2 is stable too :-) ).
+But trying to understand the patch: we have selected a disk but we
+did not have determined the amount of readable sectors on that
+disk so it defaulted to 0?
+
+Thanks again!
+Regards,
+Ard van Breemen
