@@ -1,74 +1,76 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: RAID-10 explicitly defined drive pairs?
-Date: Tue, 10 Jan 2012 10:25:20 -0600
-Message-ID: <4F0C6670.9040508@hardwarefreak.com>
-References: <20111212115459.GC20730@fi.muni.cz> <4EE61EAE.20101@anonymous.org.uk> <20120106150823.GX25976@fi.muni.cz> <20231.9177.523012.471046@tree.ty.sabi.co.UK> <20120106201150.GB13358@fi.muni.cz> <4F077BE1.4050408@hardwarefreak.com> <20232.21966.952905.343604@tree.ty.sabi.co.UK> <4F087211.5020000@hardwarefreak.com> <20234.61352.443686.100881@tree.ty.sabi.co.UK> <4F0BB690.4040904@hardwarefreak.com> <20120110151336.568f5da4@notabene.brown>
-Reply-To: stan@hardwarefreak.com
+From: Bobby Kent <bpkent@wholeworldwindow.net>
+Subject: RE: Meaning of "Used Dev Space" in "mdadm --detail" output for a 6
+ disk RAID10 array
+Date: Tue, 10 Jan 2012 14:11:34 -0500
+Message-ID: <00b901cccfcb$ab5225a0$01f670e0$@wholeworldwindow.net>
+References: <007601cccf3e$72191470$564b3d50$@wholeworldwindow.net>
+ <20120110140851.56f53921@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120110151336.568f5da4@notabene.brown>
+In-reply-to: <20120110140851.56f53921@notabene.brown>
+Content-language: en-us
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Peter Grandi <pg@lxra2.for.sabi.co.UK>, Linux RAID <linux-raid@vger.kernel.org>
+To: 'NeilBrown' <neilb@suse.de>
+Cc: 'linux-raid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 1/9/2012 10:13 PM, NeilBrown wrote:
+On Monday, January 09, 2012 22:09 -0500 On Behalf Of NeilBrown <
+linux-raid-owner@vger.kernel.org> wrote:
 
->> IIRC from a previous discussion I had with Neil Brown on this list,
->> mdraid0, as with all the striped array code, runs as a single kernel
->> thread, limiting its performance to that of a single CPU.  A linear
->> concatenation does not run as a single kernel thread, but is simply an
->> offset calculation routine that, IIRC, executes on the same CPU as the
->> caller.  Thus one can theoretically achieve near 100% CPU scalability
->> when using concat instead of mdraid0.  So the issue isn't partial stripe
->> writes at the media level, but the CPU overhead caused by millions of
->> the little bastards with heavy random IOPS workloads, along with
->> increased numbers of smaller IOs through the SCSI/SATA interface,
->> causing more interrupts thus more CPU time, etc.
->>
->> I've not run into this single stripe thread limitation myself, but have
->> read multiple cases where OPs can't get maximum performance from their
->> storage hardware because their top level mdraid stripe thread is peaking
->> a single CPU in their X-way system.  Moving from RAID10 to a linear
->> concat gets around this limitation for small file random IOPS workloads.
->>  Only when using XFS and a proper AG configuration, obviously.  This is
->> my recollection of Neil's description of the code behavior.  I could
->> very well have misunderstood, and I'm sure he'll correct me if that's
->> the case, or you, or both. ;)
+> On Mon, 09 Jan 2012 21:20:39 -0500 Bobby Kent
+<bpkent@wholeworldwindow.net>
+> wrote:
 > 
-> (oh dear, someone is Wrong on the Internet! Quick, duck into the telephone
-> booth and pop out as ....)
+>>  Is Used Dev Space a measure of the capacity on each member device used
+by the array? 
 > 
-> Hi Stan,
->  I think you must be misremembering.
-> Neither RAID0 or Linear have any threads involved.  They just redirect the
-> request to the appropriate devices.  Multiple threads can submit multiple
-> requests down through RAID0 and Linear concurrently.
+> Yes.
 > 
-> RAID1, RAID10, and RAID5/6 are different.  For reads they normally are have
-> no contention with other requests, but for writes things to get
-> single-threaded at some point.
-> 
-> Hm... you text above sometime talks about RAID0 vs Linear, and sometimes
-> about RAID10 vs Linear.  So maybe you are remembering correctly, but
-> presenting incorrectly in part ....
+> NeilBrown
 
-Yes, I believe that's where we are.  My apologies for allowing myself to
-become slightly confused.  I'm sure I'm the only human being working
-with Linux to ever become so. ;)
+Hey NeilBrown,
 
-Peter kept referencing RAID0 after I'd explicitly referenced RAID10 in
-my statement.  I guess I assumed he was simply referring to the striped
-component of RAID10, which apparently wasn't the case.
+Many thanks for clearing that up. 
 
-So I did recall correctly that mdraid10 does have some threading
-limitations.  So what needs clarification at this point is whether those
-limitations are greater than any such limitations with the concatenated
-RAID1 pair case using XFS AGs to drive the parallelism.
+On the metadata question the mdadm man page at
+http://linux.die.net/man/8/mdadm implies that the driving criteria for
+upgrading from 0.90 is use of HDDs with > 2 TB capacity or > 28 HDDs within
+a raid device, neither of which are in my current plans, though I imagine at
+some point I'll purchase larger HDDs.  Are there any other factors I should
+consider (e.g. kernel version compatibility)?
 
-Thanks for your input Neil, and for your clarifications thus far.
+In my previous mail I might have been a little clearer in describing the
+hangs/lock ups I was experiencing, as there may have been an unintended
+implication that md was somehow at fault.  What I observed was that after
+several hours of uptime the system would hang/lock up, nothing was written
+to syslog, the desktop froze (mouse unresponsive, clock did not advance,
+etc), network unresponsive (could not get a ping response), HDD access LED
+was on.  Hitting the reset button appeared to be my only option to get back
+to a working system (on one occasion my machine was left in this state for
+90+ mins).  I am typically unwilling to hit the reset button, I probably did
+it more times last week (3 times after the "downgrading" to 3.0.6 kernel)
+than in the prior 18 months.
 
--- 
-Stan
+It was the LED that lead me to wonder about a resync following a hard stop,
+and after discovering resyncs had not completed I left my machine booted to
+the login prompt (rather than logged into in KDE) one night.  To further
+muddy the waters the lock ups occurred while I was making some configuration
+changes in order to implement real time processing for audio software.  I've
+backed these out prior to the "login prompt boot", and, on balance, I
+suspect these may have been the ultimate cause.  Speculation of course,
+though without evidence to the contrary, I typically assume issues are of my
+own creation rather than the fault of otherwise perfectly stable software
+and hardware.  The original question about mdadm output was more a sanity
+check that the arrays were configured consistent with expectations.
+
+I'm thinking of setting both LOCKUP_DETECTOR and DETECT_HUNG_TASK in future
+kernel builds, hopefully these will provide additional information should
+something similar happen in the future.  Are there any other recommended
+kernel settings I should implement?
+
+Thanks again,
+
+Bobby
+
