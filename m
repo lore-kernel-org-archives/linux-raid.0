@@ -1,142 +1,73 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Meaning of "Used Dev Space" in "mdadm --detail" output for a 6
- disk RAID10 array
-Date: Wed, 11 Jan 2012 06:48:57 +1100
-Message-ID: <20120111064857.491a31b2@notabene.brown>
-References: <007601cccf3e$72191470$564b3d50$@wholeworldwindow.net>
-	<20120110140851.56f53921@notabene.brown>
-	<00b901cccfcb$ab5225a0$01f670e0$@wholeworldwindow.net>
+Subject: [PULL REQUEST]  two bugfixes for md.
+Date: Wed, 11 Jan 2012 09:27:35 +1100
+Message-ID: <20120111092735.01fe9de2@notabene.brown>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/SRUNmur5L/xPONW9EZx0xC3"; protocol="application/pgp-signature"
+ boundary="Sig_/yfC=H=.qNeHO2V=l4O03tBI"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <00b901cccfcb$ab5225a0$01f670e0$@wholeworldwindow.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bobby Kent <bpkent@wholeworldwindow.net>
-Cc: 'linux-raid' <linux-raid@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>, Art -kwaak- van Breemen <ard@telegraafnet.nl>, Mikhail Balabin <mbalabin@gmail.com>
 List-Id: linux-raid.ids
 
---Sig_/SRUNmur5L/xPONW9EZx0xC3
+--Sig_/yfC=H=.qNeHO2V=l4O03tBI
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 10 Jan 2012 14:11:34 -0500 Bobby Kent <bpkent@wholeworldwindow.net>
-wrote:
+The following changes since commit 19d671695e1931ebfd75b2b888778201aefe35ca:
 
-> On Monday, January 09, 2012 22:09 -0500 On Behalf Of NeilBrown <
-> linux-raid-owner@vger.kernel.org> wrote:
->=20
-> > On Mon, 09 Jan 2012 21:20:39 -0500 Bobby Kent
-> <bpkent@wholeworldwindow.net>
-> > wrote:
-> >=20
-> >>  Is Used Dev Space a measure of the capacity on each member device used
-> by the array?=20
-> >=20
-> > Yes.
-> >=20
-> > NeilBrown
->=20
-> Hey NeilBrown,
->=20
-> Many thanks for clearing that up.=20
->=20
-> On the metadata question the mdadm man page at
-> http://linux.die.net/man/8/mdadm implies that the driving criteria for
-> upgrading from 0.90 is use of HDDs with > 2 TB capacity or > 28 HDDs with=
-in
-> a raid device, neither of which are in my current plans, though I imagine=
- at
-> some point I'll purchase larger HDDs.  Are there any other factors I shou=
-ld
-> consider (e.g. kernel version compatibility)?
+  md/raid1: Mark device want_replacement when we see a write error. (2011-1=
+2-23 10:17:57 +1100)
 
-Some newer features - such as bad-block lists - are only supported for 1.x
-metadata.
+are available in the git repository at:
 
-Certainly use 1.x for new arrays, but I wouldn't bother converting old arra=
-ys
-unless you wanted to convert to large devices (and current kernel/mdadm can
-handle 4TB with 0.90 - the 2TB limit was a bug).
+  git://neil.brown.name/md md-3.3-fixes
 
->=20
-> In my previous mail I might have been a little clearer in describing the
-> hangs/lock ups I was experiencing, as there may have been an unintended
-> implication that md was somehow at fault.  What I observed was that after
-> several hours of uptime the system would hang/lock up, nothing was written
-> to syslog, the desktop froze (mouse unresponsive, clock did not advance,
-> etc), network unresponsive (could not get a ping response), HDD access LED
-> was on.  Hitting the reset button appeared to be my only option to get ba=
-ck
-> to a working system (on one occasion my machine was left in this state for
-> 90+ mins).  I am typically unwilling to hit the reset button, I probably =
-did
-> it more times last week (3 times after the "downgrading" to 3.0.6 kernel)
-> than in the prior 18 months.
+for you to fetch changes up to 307729c8bc5b5a41361af8af95906eee7552acb1:
 
-I would try alt-sysrq-P or alt-sysrq-T to try to find out what is hanging.
+  md/raid1: perform bad-block tests for WriteMostly devices too. (2012-01-1=
+1 08:35:17 +1100)
 
+----------------------------------------------------------------
+(from the branch description for md-scratch local branch)
 
->=20
-> It was the LED that lead me to wonder about a resync following a hard sto=
-p,
-> and after discovering resyncs had not completed I left my machine booted =
-to
-> the login prompt (rather than logged into in KDE) one night.  To further
-> muddy the waters the lock ups occurred while I was making some configurat=
-ion
-> changes in order to implement real time processing for audio software.  I=
-'ve
-> backed these out prior to the "login prompt boot", and, on balance, I
-> suspect these may have been the ultimate cause.  Speculation of course,
-> though without evidence to the contrary, I typically assume issues are of=
- my
-> own creation rather than the fault of otherwise perfectly stable software
-> and hardware.  The original question about mdadm output was more a sanity
-> check that the arrays were configured consistent with expectations.
->=20
-> I'm thinking of setting both LOCKUP_DETECTOR and DETECT_HUNG_TASK in futu=
-re
-> kernel builds, hopefully these will provide additional information should
-> something similar happen in the future.  Are there any other recommended
-> kernel settings I should implement?
+for-linus
+Two bugfixes for md.
 
-Nothing springs to mind.
+One is a recently introduced regression that affects an unusual
+configuration with a guaranteed BUG_ON.  Has been tagged for -stable.
+The other is minor missing functionality.
 
-NeilBrown
+----------------------------------------------------------------
+NeilBrown (2):
+      md: notify the 'degraded' sysfs attribute on failure.
+      md/raid1: perform bad-block tests for WriteMostly devices too.
 
+ drivers/md/md.c    |    6 ++++++
+ drivers/md/raid1.c |   11 ++++++++++-
+ 2 files changed, 16 insertions(+), 1 deletions(-)
 
->=20
-> Thanks again,
->=20
-> Bobby
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/SRUNmur5L/xPONW9EZx0xC3
+--Sig_/yfC=H=.qNeHO2V=l4O03tBI
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTwyWKTnsnt1WYoG5AQJZYQ/+MaIsGgsIjRRpYW73Y3hiZaDvc6VJieJx
-mnIiAHTMu+yLewINZP/cdMDevwTDcTSGu87LsOHJlEqCmVcJ6/g2NKt9ty38n2Bq
-qvOc0eu9dGejFJjZyNMTRfuzgwxVrM8hc9Uaoxa/S4xtkoh9/WpZzQf3tPymkpnZ
-udHI8ZCtL3au41KLpMEOqpKRsbK2I5Gf7mRO4fS8wrkoE4/Wk13UTFMHgNGFu7Vi
-kNN2JO9HlleAJ6OVtTWpfN83qdk8FeHejajE91MTaxDYiN5xrR8fKlkTaZAaLPhZ
-S8KxOWKKw0yzxQDPj86XRu+Xuitwr3HM0DFveyzQdgG/hCV8ec9zX8K+AHhoTfbU
-4I395WH03q6A9L7S6pXA4bskjsozykVbhvIMsB3eZNs0MFBzeUIob6yLF7Z0ro4S
-2ZCIHLIc2XSptVNHTSYqJOa1qrpM9nPgObEBOX2WpaTFUBRcBQUELeDBgS2/TUCT
-klPG25o4HCBV9Z4FjXbPFdCjxfeUGsC624fONDU77bPIXMNbNCzuWXaczGsZXTo/
-XZ4FjCWwr0nAwHiBlpvThypdYRE8oRqh/BQulMaWptKXC1tbIwKONorhve1Ers/+
-1o3P+bKJgGuNv3GICZtUn3FmsDKUxZII+0IsnMrXjwLGWDsF6yZ/R5eA738fJjVk
-mZvpnpxCmyw=
-=lciW
+iQIVAwUBTwy7Vznsnt1WYoG5AQJXpBAAtLgSdfBm+iD4l9u8kVcgbPXJhGS1V171
+/w0W811Glzt8eG0dQGe7RMEHlxYhFQsTvZPxXsX4H2qxMafxjHKThwflE5vobJd2
+d3DjhtfV3f+WNCPezkuzK3ecx88Otw4GyPEuy6FSz+zS/rB65NiNHnqYibGX7+7+
+T1Hm5a8/hrT8MyC/+2GWF+YZaVPOfW+cH4cNeAotiBe6m5lA5k95z/K0q4chYSZn
+gKU+IV4mHZYVc9IQp4dq/8ezjbChMn4zWcUqIY1r4YeTPSYzbxOoe6Ai1xfGWuQe
+AWq0ZJRmX2eVpO12YLLQS3oyJANUxPzRTr0r8m2jJqGXQKqAJBpsJu1ih1QPIIuA
+NJRRPj1n7Nnouy+MFXbllVB+otfPXDxnSa/YlIMumYZ3eQvTzfFuonFoNKqc/ebc
+gOJRlSaNyR1zHUirc7yrmiNRqorKeQzPnCVbwX3e0zW2NkC+Xan5mue/KV0yoZ5W
+nIbTQ1xzqrAK6gdyAcY3qnXYHvJ6c0KT/pXtIpb8DOKHCiAUZg5DlV/7jdfUpS1w
+lQlTs/fcN50q5lEZpBm/wDZNlFKEvIKJctS77GnrrAGAq/fCfLhC8zBilQIrNsAN
+dP0bVu0Ao2WglPCgC2beGqwPEbn8UJjo8qda/D61UqbjPbKIuhAuebQI0qV17ViJ
+GRrEWAcZk6Y=
+=mngm
 -----END PGP SIGNATURE-----
 
---Sig_/SRUNmur5L/xPONW9EZx0xC3--
+--Sig_/yfC=H=.qNeHO2V=l4O03tBI--
