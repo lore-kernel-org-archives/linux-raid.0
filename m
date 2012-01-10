@@ -1,136 +1,198 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID-10 explicitly defined drive pairs?
-Date: Tue, 10 Jan 2012 15:13:36 +1100
-Message-ID: <20120110151336.568f5da4@notabene.brown>
-References: <20111212115459.GC20730@fi.muni.cz>
-	<4EE61EAE.20101@anonymous.org.uk>
-	<20120106150823.GX25976@fi.muni.cz>
-	<20231.9177.523012.471046@tree.ty.sabi.co.UK>
-	<20120106201150.GB13358@fi.muni.cz>
-	<4F077BE1.4050408@hardwarefreak.com>
-	<20232.21966.952905.343604@tree.ty.sabi.co.UK>
-	<4F087211.5020000@hardwarefreak.com>
-	<20234.61352.443686.100881@tree.ty.sabi.co.UK>
-	<4F0BB690.4040904@hardwarefreak.com>
+From: Gilbert Kowarzyk <kowarzyk@grm.polymtl.ca>
+Subject: Renaming MD devices (metadata=1.1)
+Date: Tue, 10 Jan 2012 01:12:58 -0500
+Message-ID: <4F0BD6EA.8010007@grm.polymtl.ca>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/vyM7.CFZVeD/rhp/qjN7ueO"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F0BB690.4040904@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: Peter Grandi <pg@lxra2.for.sabi.co.UK>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/vyM7.CFZVeD/rhp/qjN7ueO
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-On Mon, 09 Jan 2012 21:54:56 -0600 Stan Hoeppner <stan@hardwarefreak.com>
-wrote:
+Hello,   - Jan 10, 2012
 
-> On 1/9/2012 7:46 AM, Peter Grandi wrote:
->=20
-> > Those able to do a web search with the relevant keywords and
-> > read documentation can find some mentions of single SSD RMW and
-> > address/length alignment, for example here:
-> >=20
-> >   http://research.cs.wisc.edu/adsl/Publications/ssd-usenix08.pdf
-> >   http://research.microsoft.com/en-us/projects/flashlight/winhec08-ssd.=
-pptx
-> >   http://www.cse.ohio-state.edu/hpcs/WWW/HTML/publications/papers/TR-09=
--2.pdf
-> >=20
-> > Mentioned in passing as something pretty obvious, and there are
-> > other similar mentions that come up in web searches because it
-> > is a pretty natural application of thinking about RMW issues.
->=20
-> Yes, I've read such things.  I was eluding to the fact that there are at
-> least a half dozen different erase block sizes and algorithms in use by
-> different SSD manufacturers.  There is no standard.  And not all of them
-> are published.  There is no reliable way to do such optimization
-> generically.
->=20
-> > Now I eagerly await your explanation of the amazing "Hoeppner
-> > effect" by which address/length aligned writes on RAID0/1/10
-> > have significant benefits and of the audacious "Hoeppner
-> > principle" by which 'concat' is as good as RAID0 over the same
-> > disks.
->=20
-> IIRC from a previous discussion I had with Neil Brown on this list,
-> mdraid0, as with all the striped array code, runs as a single kernel
-> thread, limiting its performance to that of a single CPU.  A linear
-> concatenation does not run as a single kernel thread, but is simply an
-> offset calculation routine that, IIRC, executes on the same CPU as the
-> caller.  Thus one can theoretically achieve near 100% CPU scalability
-> when using concat instead of mdraid0.  So the issue isn't partial stripe
-> writes at the media level, but the CPU overhead caused by millions of
-> the little bastards with heavy random IOPS workloads, along with
-> increased numbers of smaller IOs through the SCSI/SATA interface,
-> causing more interrupts thus more CPU time, etc.
->=20
-> I've not run into this single stripe thread limitation myself, but have
-> read multiple cases where OPs can't get maximum performance from their
-> storage hardware because their top level mdraid stripe thread is peaking
-> a single CPU in their X-way system.  Moving from RAID10 to a linear
-> concat gets around this limitation for small file random IOPS workloads.
->  Only when using XFS and a proper AG configuration, obviously.  This is
-> my recollection of Neil's description of the code behavior.  I could
-> very well have misunderstood, and I'm sure he'll correct me if that's
-> the case, or you, or both. ;)
+I am having problems renaming a few md devices and I've been trying
+out different things, but none of them seem to work.
 
-(oh dear, someone is Wrong on the Internet! Quick, duck into the telephone
-booth and pop out as ....)
+The md devices were created with metadata=1.1.
 
-Hi Stan,
- I think you must be misremembering.
-Neither RAID0 or Linear have any threads involved.  They just redirect the
-request to the appropriate devices.  Multiple threads can submit multiple
-requests down through RAID0 and Linear concurrently.
+Some sites talk about changing the preferred minor, but I haven't even
+found that entry for these devices.
 
-RAID1, RAID10, and RAID5/6 are different.  For reads they normally are have
-no contention with other requests, but for writes things to get
-single-threaded at some point.
+This is all on CentOS 6.2.
 
-Hm... you text above sometime talks about RAID0 vs Linear, and sometimes
-about RAID10 vs Linear.  So maybe you are remembering correctly, but
-presenting incorrectly in part ....
+Below is the info for one of these devices I am having trouble with. I
+would like to name it /dev/md9 but after a reboot it renames itself
+/dev/md126.
 
-NeilBrown
+# mdadm --detail /dev/md127
+=================================>
+/dev/md127:
+        Version : 1.1
+  Creation Time : Sun Jan  8 04:58:25 2012
+     Raid Level : raid1
+     Array Size : 1843198844 (1757.81 GiB 1887.44 GB)
+  Used Dev Size : 1843198844 (1757.81 GiB 1887.44 GB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
 
->=20
-> Dave Chinner had some input WRT XFS on concat for this type of workload,
-> stating it's a little better than RAID10 (ambiguous as to hard/soft).
-> Did you read that thread Peter?  I know you're on the XFS list as well.
->  I can't exactly recall at this time Dave's specific reasoning, I'll try
-> to dig it up.  I'm thinking it had to do with the different distribution
-> of metadata IOs between the two AG layouts, and the amount of total head
-> seeking required for the workload being somewhat higher for RAID10 than
-> for the concat of RAID1 pairs.  Again, I could be wrong on that, but it
-> seems familiar.  That discussion was many months ago.
->=20
+  Intent Bitmap : Internal
+
+    Update Time : Mon Jan  9 23:47:52 2012
+          State : active
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+           Name : xyz.homelinux.com:9  (local to host xyz.homelinux.com)
+           UUID : 0fa7f737:7806ca61:fb89edd6:14aa351a
+         Events : 20
+
+    Number   Major   Minor   RaidDevice State
+       0       8       33        0      active sync   /dev/sdc1
+       1       8       49        1      active sync   /dev/sdd1
+<=================================
 
 
---Sig_/vyM7.CFZVeD/rhp/qjN7ueO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+# mdadm --examine /dev/sdc1
+=================================>
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 1.1
+    Feature Map : 0x1
+     Array UUID : 0fa7f737:7806ca61:fb89edd6:14aa351a
+           Name : xyz.homelinux.com:9  (local to host xyz.homelinux.com)
+  Creation Time : Sun Jan  8 04:58:25 2012
+     Raid Level : raid1
+   Raid Devices : 2
+
+ Avail Dev Size : 3686397952 (1757.81 GiB 1887.44 GB)
+     Array Size : 3686397688 (1757.81 GiB 1887.44 GB)
+  Used Dev Size : 3686397688 (1757.81 GiB 1887.44 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 0 sectors
+          State : clean
+    Device UUID : 73fb0ea3:e08fd3c6:b3e41f50:c1e3a2ac
+
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Tue Jan 10 00:04:29 2012
+       Checksum : e6bfee2 - correct
+         Events : 20
+
+
+   Device Role : Active device 0
+   Array State : AA ('A' == active, '.' == missing)
+<=================================
+
+
+# mdadm --examine /dev/sdd1
+=================================>
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 1.1
+    Feature Map : 0x1
+     Array UUID : 0fa7f737:7806ca61:fb89edd6:14aa351a
+           Name : xyz.homelinux.com:9  (local to host xyz.homelinux.com)
+  Creation Time : Sun Jan  8 04:58:25 2012
+     Raid Level : raid1
+   Raid Devices : 2
+
+ Avail Dev Size : 3686397952 (1757.81 GiB 1887.44 GB)
+     Array Size : 3686397688 (1757.81 GiB 1887.44 GB)
+  Used Dev Size : 3686397688 (1757.81 GiB 1887.44 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 0 sectors
+          State : clean
+    Device UUID : e6cec1cb:40cab8c8:d1cb2a07:af3f2517
+
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Tue Jan 10 00:04:29 2012
+       Checksum : 5a914fc1 - correct
+         Events : 20
+
+
+   Device Role : Active device 1
+   Array State : AA ('A' == active, '.' == missing)
+=================================
+
+
+# mdadm --examine --scan /dev/sdc1
+=================================>
+ARRAY /dev/md/9 metadata=1.1 UUID=0fa7f737:7806ca61:fb89edd6:14aa351a
+name=xyz.homelinux.com:9
+<=================================
+
+
+# mdadm --examine --scan /dev/sdd1
+=================================>
+ARRAY /dev/md/9 metadata=1.1 UUID=0fa7f737:7806ca61:fb89edd6:14aa351a
+name=xyz.homelinux.com:9
+<=================================
+
+
+# mdadm --detail --scan
+=================================>
+ARRAY /dev/md/xyz.homelinux.com:9 metadata=1.1
+name=xyz.homelinux.com:9 UUID=0fa7f737:7806ca61:fb89edd6:14aa351a
+<=================================
+
+# blkid
+=================================>
+/dev/md127: UUID="c301cf13-cfaf-4f56-887e-c648caf5a931" TYPE="ext4"
+<=================================
+
+in /etc/fstab I have:
+=================================>
+UUID=c301cf13-cfaf-4f56-887e-c648caf5a931 /DATA    ext4  defaults 1 2
+<=================================
+
+and in /etc/mdadm.conf I have:
+=================================>
+ARRAY /dev/md/xyz.homelinux.com:9 metadata=1.1
+name=xyz.homelinux.com:9 UUID=0fa7f737:7806ca61:fb89edd6:14aa351a
+<=================================
+
+
+To me, the line that looks suspicious is the one we get from "mdadm
+- --detail --scan". All the devices that "look right" say "ARRAY
+/dev/md/X" where X is a number.
+
+I fixed this temporarily by stopping the array and re-assembling it with:
+
+mdadm --assemble /dev/md9 --name=9 --update=name /dev/sdc1 /dev/sdd1
+
+
+Then the mdadm --detail --scan line says:
+ARRAY /dev/md/9 metadata=1.1 name=xyz.homelinux.com:9
+UUID=0fa7f737:7806ca61:fb89edd6:14aa351a
+
+... which makes more sense to me (it looks like the other ones.
+
+Yet, when I reboot the computer this "temporarily fixed" array returns
+to /dev/md127.
+
+I have since redone these steps saving the changes in the
+/etc/mdadm.conf file, but after a reboot the same thing happens
+(despite the /etc/mdadm.conf file saying otherwise).
+
+So, I've run out of ideas... help?
+
+Thanks in advance!
+
+Gilbert
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+Version: GnuPG v1.4.11 (Darwin)
+Comment: digital signature
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-iQIVAwUBTwu68Dnsnt1WYoG5AQK7RQ/+JQjr0Zd87y9pujaPez2lIOJUO6vRbBJl
-EWry2mJc7fQXabnlYOG6+WV5RoGcP1+OwM5zvfMuR4ar9nNGbPJTQUooRn1A+f1Y
-m152lv0VqWT8uZxVgDHgrir0o/ReNPe5PXaCEAXBLOoq0hjOUol4NtskspHZyds6
-MXE9IBmFGi4I2fwe42fZGqx7AC0Bn/toQlfQH0icklRTNhvt6EDd5li8DmNIC7PV
-+mGFMfSwdVhs/eqDqNYVFCgokLzrVLA3ZWRksB9DGWVXqUfybX52gEw+jKj8qqko
-SSU4ijLX6qlCQjDT807wBwXD2yn05qVaSq3/Qb3Q9KC4WJ6ZK+WNQZQCZiKaA9m3
-CysicxhBrFmeNAup4tYIBiOAaFcPAMiTEVCwmOzpACDBI1iISiRwIr1QYGYDTcCl
-1aq8rgQurmX2Az8TrVNIvh3T73QTMDugGBqz8mP8oLUCeFHrtlXZg823HTYTOjTG
-EzjxpAZcOfIZFzE2SFrf7qc+syf6bkqBsepi07zaPTcsXC+z7QxVUQqN8v7XfrRh
-HGSgWweWGt+DPedqTjpDHjL2abYVuYFB2LQQn/pEh+NjCkHzPpVe28ISc7mbtk/c
-VjcaKV2u2cJq5Jp0TxPFBeNasBtHDSKqnL4g6T+ZudQ/B/sbYLOmDA6eT7vkCORl
-CSwIZOYe22A=
-=kUOT
+iEYEARECAAYFAk8L1ugACgkQOYVp1RpLsmUeIwCfa2zFkMzq9UtxrFtl6Qr4U9Qs
+kT4AniCJDeJHS2DxOD1G3vYGJ1O+8oNK
+=QpQl
 -----END PGP SIGNATURE-----
-
---Sig_/vyM7.CFZVeD/rhp/qjN7ueO--
