@@ -1,39 +1,25 @@
-From: Bobby Kent <bpkent@wholeworldwindow.net>
-Subject: RE: Meaning of "Used Dev Space" in "mdadm --detail" output for a 6
- disk RAID10 array
-Date: Tue, 10 Jan 2012 19:44:42 -0500
-Message-ID: <00de01cccffa$34e8afe0$9eba0fa0$@wholeworldwindow.net>
-References: <007601cccf3e$72191470$564b3d50$@wholeworldwindow.net>
- <20120110140851.56f53921@notabene.brown>
- <00b901cccfcb$ab5225a0$01f670e0$@wholeworldwindow.net>
- <20120111064857.491a31b2@notabene.brown>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: raid array with 3T disks and GPT partition
+Date: Tue, 10 Jan 2012 14:40:19 -0500
+Message-ID: <4F0C9423.6000201@cfl.rr.com>
+References: <20110901154759.GA32649@apartia.fr> <20110901155913.GA20825@cthulhu.home.robinhill.me.uk> <20110901163334.GA13347@apartia.fr> <4E5FB8EC.5040801@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <20120111064857.491a31b2@notabene.brown>
-Content-language: en-us
+In-Reply-To: <4E5FB8EC.5040801@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'NeilBrown' <neilb@suse.de>
-Cc: 'linux-raid' <linux-raid@vger.kernel.org>
+To: Doug Ledford <dledford@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday, January 10, 2012 14:49 On Behalf Of NeilBrown <
-linux-raid-owner@vger.kernel.org> wrote:
+On 9/1/2011 12:55 PM, Doug Ledford wrote:
+> Non-FS Data, which we hijacked for our purposes as it will keep the
+> system (any OS in fact) from thinking there should be a filesystem
+> there, leaving it free for us to pick up anytime in the boot process.
 
->> Are there any other factors I should consider (e.g. kernel version 
->> compatibility)?
->
-> Some newer features - such as bad-block lists - are only supported 
-> for 1.x metadata.
-> 
-> Certainly use 1.x for new arrays, but I wouldn't bother converting 
-> old arrays unless you wanted to convert to large devices (and current 
-> kernel/mdadm can handle 4TB with 0.90 - the 2TB limit was a bug).
-
-Many thanks for this and the other recommendations.  I'll be sure to add
-MAGIC_SYSRQ to my kernel config in addition to LOCKUP_DETECTOR and
-DETECT_HUNG_TASK.
-
-Bobby
+What do you mean?  Linux doesn't care what the partition type code says. 
+  I brought that up on lkml a year or so back that it should at least 
+respect the hidden flag and not expose that partition, but nobody seemed 
+interested.
 
