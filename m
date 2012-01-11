@@ -1,49 +1,67 @@
-From: Josh Reynolds <josh.reynolds@yagermaterials.com>
-Subject: RAID10 only using 2/4 drives
-Date: Wed, 11 Jan 2012 08:51:34 -0600
-Message-ID: <4F0DA1F6.9070700@yagermaterials.com>
+From: Gilbert Kowarzyk <kowarzyk@grm.polymtl.ca>
+Subject: Re: Renaming MD devices (metadata=1.1)
+Date: Wed, 11 Jan 2012 11:01:33 -0500
+Message-ID: <4F0DB25D.3030805@grm.polymtl.ca>
+References: <4F0BD6EA.8010007@grm.polymtl.ca> <4F0C1A03.8020509@ziu.info> <4F0D272A.2060000@grm.polymtl.ca> <20120111172047.6af5571f@notabene.brown> <4F0D2EBF.5070807@grm.polymtl.ca> <20120111180347.0d177edf@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120111180347.0d177edf@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Michal Soltys <soltys@ziu.info>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello! 1st post on this mailing list, so be gentle.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I've got a production Ubuntu box that I used the installer to create a 
-raid10 system on several months ago. I pretty much setup the box and 
-then left it alone, to run a couple of different things and some vm's.
+Hello,
 
-I really started to realize something was wrong fairly recently when my 
-disk size was showing approx 1/2 of what I thought it should for a 
-raid10. Also, my disk speeds were... not something I'd expect for 4 drives.
+>> Why do we have these choices, and when should each be used?
+> 
+> 1.0 (at the end) is best for RAID1 when booting from the device as
+> the boot-load just doesn't see the RAID at all.
+> 
+> 1.1 (at the start) is generally good because various different
+> things have metadata at the start, so there is no chance of
+> confusion about what is using that devices - each possible users
+> will overwrite the metadata of the others. It is also easier to
+> make the devices larger if you don't need to move the metadata.
+> 
+> 1.2 (4K from the start) has most of the benefits for 1.1 but works
+> for booting with newer boot loaders - they still want sector 0 for
+> a boot sector but understand the md superblock.
 
-After looking into it, I realized mdadm had marked two of the drives as 
-spares. WTF.
+I see. Makes also loads of sense.
 
-To make sure that I wasn't crazy, I wiped out a partition on each drive, 
-and created a raid10 by hand. My original system array is md0, the other 
-is md1.
+I had two more quick questions:
 
-----------------------------
-josh@virtserver:~$ cat /proc/mdstat
-Personalities : [raid0] [raid1] [raid10]
-md1 : active raid10 sda2[0] sdd2[3] sdc2[2] sdb2[1]
-       46868480 blocks super 1.2 512K chunks 2 far-copies [4/4] [UUUU]
+1.- when would one want to turn off bitmaps? I turned them on, but I
+haven't found why one may want them off (or for what they should be
+turned off).
 
-md0 : active raid10 sdd3[4](S) sdb3[3](S) sdc3[2] sda3[0]
-       951370752 blocks super 1.2 512K chunks 2 far-copies [2/2] [UU]
-       bitmap: 3/8 pages [12KB], 65536KB chunk
----------------------------
+2.- if I ever have a mismatch_cnt different than zero, how would I go
+about finding which drive has the correct info, which was the one that
+got corrupted, and how to obtain the correct one?
+In the past I've changed the "CHECK" to "REPAIR" in the configuration
+script that checks the RAID arrays periodically
+(/etc/sysconfig/raid-check), but from what I understood it's a bit of
+luck which one the automatic script will choose out of the two drives
+(assuming raid1). Should I let it be automatic (with "repair"), and if
+not (if I have to check which one is correct manually), where could I
+find information to read about how to do this (I am assuming the
+answer may be long)?
 
-I notice the 2nd array I created is showing the raid1 and raid0 
-personalities... and I have a feeling that's what is gimping the md0 array?
+Thanks!
 
-I've tried fail/remove/adding those two partitions marked as spares, and 
-it never adds them back as active members.
+Gilbert
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (Darwin)
+Comment: digital signature
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-HELP! :)
-
-  - Josh
+iEYEARECAAYFAk8NslwACgkQOYVp1RpLsmXUYQCfcAv/q33vjS2oqrxdey2wTEtn
+yzwAnAhd7KT8Ye4JYO65MWm0dZZaa3d0
+=yOmI
+-----END PGP SIGNATURE-----
