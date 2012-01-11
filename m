@@ -1,126 +1,125 @@
-From: Gilbert Kowarzyk <kowarzyk@grm.polymtl.ca>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: Renaming MD devices (metadata=1.1)
-Date: Wed, 11 Jan 2012 01:39:59 -0500
-Message-ID: <4F0D2EBF.5070807@grm.polymtl.ca>
-References: <4F0BD6EA.8010007@grm.polymtl.ca> <4F0C1A03.8020509@ziu.info> <4F0D272A.2060000@grm.polymtl.ca> <20120111172047.6af5571f@notabene.brown>
+Date: Wed, 11 Jan 2012 18:03:47 +1100
+Message-ID: <20120111180347.0d177edf@notabene.brown>
+References: <4F0BD6EA.8010007@grm.polymtl.ca>
+	<4F0C1A03.8020509@ziu.info>
+	<4F0D272A.2060000@grm.polymtl.ca>
+	<20120111172047.6af5571f@notabene.brown>
+	<4F0D2EBF.5070807@grm.polymtl.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120111172047.6af5571f@notabene.brown>
+In-Reply-To: <4F0D2EBF.5070807@grm.polymtl.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Gilbert Kowarzyk <kowarzyk@grm.polymtl.ca>
 Cc: Michal Soltys <soltys@ziu.info>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-Hello!
-
-[...]
->>> As the /dev/md9 was explicitly given in this form, the 
->>> MD_DEVNAME was not present in 'mdadm --detail --export' output,
->>> thus /dev/md/9 was not created by mdadm's udev rules - but it
->>> would have been if you had done mdadm --assemble /dev/md/9 ...
->> 
->> Ok, I think I follow this, but I am not sure.
->> 
->> What you are saying is that I am getting /dev/md127 because it's
->>  not being created by udev right?
-> 
-> You are getting md127 because you asked for 
-> "/dev/md/xyz.home.linux.com:9" so it gave you that (look in 
-> /dev/md) but it needs to give an 'mdXX' name to the kernel so it 
-> chose 127 (because that is where it starts looking for free 
-> numbers) and used that.  Don't worry about  the /dev/mdXX.  You 
-> asked for "/dev/md/xyz.home.linux.com:9' in mdadm.conf,  you got, 
-> so just use it and ignore the rest.
-
-OK, I think it makes sense now.
-
-
-[...]
->> so expliciting the metadata=x is not needed? What's its use?
-> 
-> Documentation. It doesn't hurt, and I want "mdadm -Db" to report 
-> it, so if I allow it in mdadm.conf then it is easier to use the 
-> output of "mdadm -Db" in mdadm.conf.
-
-I see. Well, that's also good to know.
-
-While we are at it, what is the reasons types 1.0, 1.1 and 1.2 exist?
-- From what I understand "either at the end (for 1.0), at the start (for
-1.1) or 4K from the start (for 1.2)".
-
-Why do we have these choices, and when should each be used?
-
-
->>> So to sum it up - if '9' is what you're after - then the ARRAY
->>>  line with just UUID is all you should be needing - and you 
->>> should always get /dev/md/9 (pointing to something else 
->>> assigned dynamically).
->>> 
->>> If udevd is not running (hardly interesting case anymore), then
->>> mdadm will fall back to the pre-udev behavior and setup the
->>> nodes itself, though the rules are slightly different then.
->> 
->> I just left ARRAY UUID=0fa7f737:7806ca61:fb89edd6:14aa351a in 
->> /etc/mdadm.conf, rebooted, and it's still appearing as 
->> /dev/md127.
-> 
-> Just as I would expect.  You didn't ask for a specific number, so 
-> it just chose an arbitrary one.
-
-Ok.
-
-
->> So I am not sure why... What may I be missing?
-> 
-> Don't know.  Maybe you are expecting something that isn't needed.
-> 
-> What exactly do you want?  And why?
-
-Well, to be honest, what I *really* wanted was to understand why I
-wasn't able to rename the arrays. I wanted to understand what the
-system was doing, because I don't like not understanding why my setup
-doesn't behave the way I expect it to. So, I wanted to learn what I
-was missing in my understanding.
-
-How I came about wanting to know this is because I tried renaming the
-devices, and it wasn't working, despite me reading different people's
-posts on the net. I tried reading the documentation too, but I somehow
-missed reading about the updating of initramfs (I thought I only
-needed to do that if the device where "/" is changed names).
-
-Indeed, I could have continued keeping these devices named /dev/md127
-etc (there is no harm in having those names), but my mind just doesn't
-work that way...
-I had the need of understanding what was happening and why whatever I
-was trying to do wasn't working :)
-
-So I came about to your contributions to the source code, then to your
-blog page, then from there to emailing this list as you suggested :)
-
-I figured that if I were to ask these questions, I had to give as much
-info as possible to avoid wasting your time (which is why I pasted all
-the info I thought could matter, and tried to organize it a bit... as
-far as I had come to understand it).
-
-That's the whole story.
-
-So thanks again for taking the time for reading all of this :)
-You guys were really responsive!
-
-I wish you all a nice week!
-
-Gilbert
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (Darwin)
-Comment: digital signature
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iEYEARECAAYFAk8NLrgACgkQOYVp1RpLsmU91gCghIixD+I5czrVAlNifcr7A20Z
-QqIAoJaveKMWAzNybI4R1gX0YTsYoYal
-=wjtT
------END PGP SIGNATURE-----
+LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBXZWQs
+IDExIEphbiAyMDEyIDAxOjM5OjU5IC0wNTAwIEdpbGJlcnQgS293YXJ6eWsgPGtvd2FyenlrQGdy
+bS5wb2x5bXRsLmNhPg0Kd3JvdGU6DQoNCj4gLS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0Ut
+LS0tLQ0KPiBIYXNoOiBTSEExDQo+IA0KPiBIZWxsbyENCj4gDQo+IFsuLi5dDQo+ID4+PiBBcyB0
+aGUgL2Rldi9tZDkgd2FzIGV4cGxpY2l0bHkgZ2l2ZW4gaW4gdGhpcyBmb3JtLCB0aGUgDQo+ID4+
+PiBNRF9ERVZOQU1FIHdhcyBub3QgcHJlc2VudCBpbiAnbWRhZG0gLS1kZXRhaWwgLS1leHBvcnQn
+IG91dHB1dCwNCj4gPj4+IHRodXMgL2Rldi9tZC85IHdhcyBub3QgY3JlYXRlZCBieSBtZGFkbSdz
+IHVkZXYgcnVsZXMgLSBidXQgaXQNCj4gPj4+IHdvdWxkIGhhdmUgYmVlbiBpZiB5b3UgaGFkIGRv
+bmUgbWRhZG0gLS1hc3NlbWJsZSAvZGV2L21kLzkgLi4uDQo+ID4+IA0KPiA+PiBPaywgSSB0aGlu
+ayBJIGZvbGxvdyB0aGlzLCBidXQgSSBhbSBub3Qgc3VyZS4NCj4gPj4gDQo+ID4+IFdoYXQgeW91
+IGFyZSBzYXlpbmcgaXMgdGhhdCBJIGFtIGdldHRpbmcgL2Rldi9tZDEyNyBiZWNhdXNlIGl0J3MN
+Cj4gPj4gIG5vdCBiZWluZyBjcmVhdGVkIGJ5IHVkZXYgcmlnaHQ/DQo+ID4gDQo+ID4gWW91IGFy
+ZSBnZXR0aW5nIG1kMTI3IGJlY2F1c2UgeW91IGFza2VkIGZvciANCj4gPiAiL2Rldi9tZC94eXou
+aG9tZS5saW51eC5jb206OSIgc28gaXQgZ2F2ZSB5b3UgdGhhdCAobG9vayBpbiANCj4gPiAvZGV2
+L21kKSBidXQgaXQgbmVlZHMgdG8gZ2l2ZSBhbiAnbWRYWCcgbmFtZSB0byB0aGUga2VybmVsIHNv
+IGl0IA0KPiA+IGNob3NlIDEyNyAoYmVjYXVzZSB0aGF0IGlzIHdoZXJlIGl0IHN0YXJ0cyBsb29r
+aW5nIGZvciBmcmVlIA0KPiA+IG51bWJlcnMpIGFuZCB1c2VkIHRoYXQuICBEb24ndCB3b3JyeSBh
+Ym91dCAgdGhlIC9kZXYvbWRYWC4gIFlvdSANCj4gPiBhc2tlZCBmb3IgIi9kZXYvbWQveHl6Lmhv
+bWUubGludXguY29tOjknIGluIG1kYWRtLmNvbmYsICB5b3UgZ290LCANCj4gPiBzbyBqdXN0IHVz
+ZSBpdCBhbmQgaWdub3JlIHRoZSByZXN0Lg0KPiANCj4gT0ssIEkgdGhpbmsgaXQgbWFrZXMgc2Vu
+c2Ugbm93Lg0KPiANCj4gDQo+IFsuLi5dDQo+ID4+IHNvIGV4cGxpY2l0aW5nIHRoZSBtZXRhZGF0
+YT14IGlzIG5vdCBuZWVkZWQ/IFdoYXQncyBpdHMgdXNlPw0KPiA+IA0KPiA+IERvY3VtZW50YXRp
+b24uIEl0IGRvZXNuJ3QgaHVydCwgYW5kIEkgd2FudCAibWRhZG0gLURiIiB0byByZXBvcnQgDQo+
+ID4gaXQsIHNvIGlmIEkgYWxsb3cgaXQgaW4gbWRhZG0uY29uZiB0aGVuIGl0IGlzIGVhc2llciB0
+byB1c2UgdGhlIA0KPiA+IG91dHB1dCBvZiAibWRhZG0gLURiIiBpbiBtZGFkbS5jb25mLg0KPiAN
+Cj4gSSBzZWUuIFdlbGwsIHRoYXQncyBhbHNvIGdvb2QgdG8ga25vdy4NCj4gDQo+IFdoaWxlIHdl
+IGFyZSBhdCBpdCwgd2hhdCBpcyB0aGUgcmVhc29ucyB0eXBlcyAxLjAsIDEuMSBhbmQgMS4yIGV4
+aXN0Pw0KPiAtIEZyb20gd2hhdCBJIHVuZGVyc3RhbmQgImVpdGhlciBhdCB0aGUgZW5kIChmb3Ig
+MS4wKSwgYXQgdGhlIHN0YXJ0IChmb3INCj4gMS4xKSBvciA0SyBmcm9tIHRoZSBzdGFydCAoZm9y
+IDEuMikiLg0KPiANCj4gV2h5IGRvIHdlIGhhdmUgdGhlc2UgY2hvaWNlcywgYW5kIHdoZW4gc2hv
+dWxkIGVhY2ggYmUgdXNlZD8NCg0KMS4wIChhdCB0aGUgZW5kKSBpcyBiZXN0IGZvciBSQUlEMSB3
+aGVuIGJvb3RpbmcgZnJvbSB0aGUgZGV2aWNlIGFzIHRoZQ0KYm9vdC1sb2FkIGp1c3QgZG9lc24n
+dCBzZWUgdGhlIFJBSUQgYXQgYWxsLg0KDQoxLjEgKGF0IHRoZSBzdGFydCkgaXMgZ2VuZXJhbGx5
+IGdvb2QgYmVjYXVzZSB2YXJpb3VzIGRpZmZlcmVudCB0aGluZ3MgaGF2ZQ0KbWV0YWRhdGEgYXQg
+dGhlIHN0YXJ0LCBzbyB0aGVyZSBpcyBubyBjaGFuY2Ugb2YgY29uZnVzaW9uIGFib3V0IHdoYXQg
+aXMgdXNpbmcNCnRoYXQgZGV2aWNlcyAtIGVhY2ggcG9zc2libGUgdXNlcnMgd2lsbCBvdmVyd3Jp
+dGUgdGhlIG1ldGFkYXRhIG9mIHRoZSBvdGhlcnMuDQpJdCBpcyBhbHNvIGVhc2llciB0byBtYWtl
+IHRoZSBkZXZpY2VzIGxhcmdlciBpZiB5b3UgZG9uJ3QgbmVlZCB0byBtb3ZlIHRoZQ0KbWV0YWRh
+dGEuDQoNCjEuMiAoNEsgZnJvbSB0aGUgc3RhcnQpIGhhcyBtb3N0IG9mIHRoZSBiZW5lZml0cyBm
+b3IgMS4xIGJ1dCB3b3JrcyBmb3INCmJvb3Rpbmcgd2l0aCBuZXdlciBib290IGxvYWRlcnMgLSB0
+aGV5IHN0aWxsIHdhbnQgc2VjdG9yIDAgZm9yIGEgYm9vdCBzZWN0b3INCmJ1dCB1bmRlcnN0YW5k
+IHRoZSBtZCBzdXBlcmJsb2NrLg0KDQoNCj4gDQo+IA0KPiA+Pj4gU28gdG8gc3VtIGl0IHVwIC0g
+aWYgJzknIGlzIHdoYXQgeW91J3JlIGFmdGVyIC0gdGhlbiB0aGUgQVJSQVkNCj4gPj4+ICBsaW5l
+IHdpdGgganVzdCBVVUlEIGlzIGFsbCB5b3Ugc2hvdWxkIGJlIG5lZWRpbmcgLSBhbmQgeW91IA0K
+PiA+Pj4gc2hvdWxkIGFsd2F5cyBnZXQgL2Rldi9tZC85IChwb2ludGluZyB0byBzb21ldGhpbmcg
+ZWxzZSANCj4gPj4+IGFzc2lnbmVkIGR5bmFtaWNhbGx5KS4NCj4gPj4+IA0KPiA+Pj4gSWYgdWRl
+dmQgaXMgbm90IHJ1bm5pbmcgKGhhcmRseSBpbnRlcmVzdGluZyBjYXNlIGFueW1vcmUpLCB0aGVu
+DQo+ID4+PiBtZGFkbSB3aWxsIGZhbGwgYmFjayB0byB0aGUgcHJlLXVkZXYgYmVoYXZpb3IgYW5k
+IHNldHVwIHRoZQ0KPiA+Pj4gbm9kZXMgaXRzZWxmLCB0aG91Z2ggdGhlIHJ1bGVzIGFyZSBzbGln
+aHRseSBkaWZmZXJlbnQgdGhlbi4NCj4gPj4gDQo+ID4+IEkganVzdCBsZWZ0IEFSUkFZIFVVSUQ9
+MGZhN2Y3Mzc6NzgwNmNhNjE6ZmI4OWVkZDY6MTRhYTM1MWEgaW4gDQo+ID4+IC9ldGMvbWRhZG0u
+Y29uZiwgcmVib290ZWQsIGFuZCBpdCdzIHN0aWxsIGFwcGVhcmluZyBhcyANCj4gPj4gL2Rldi9t
+ZDEyNy4NCj4gPiANCj4gPiBKdXN0IGFzIEkgd291bGQgZXhwZWN0LiAgWW91IGRpZG4ndCBhc2sg
+Zm9yIGEgc3BlY2lmaWMgbnVtYmVyLCBzbyANCj4gPiBpdCBqdXN0IGNob3NlIGFuIGFyYml0cmFy
+eSBvbmUuDQo+IA0KPiBPay4NCj4gDQo+IA0KPiA+PiBTbyBJIGFtIG5vdCBzdXJlIHdoeS4uLiBX
+aGF0IG1heSBJIGJlIG1pc3Npbmc/DQo+ID4gDQo+ID4gRG9uJ3Qga25vdy4gIE1heWJlIHlvdSBh
+cmUgZXhwZWN0aW5nIHNvbWV0aGluZyB0aGF0IGlzbid0IG5lZWRlZC4NCj4gPiANCj4gPiBXaGF0
+IGV4YWN0bHkgZG8geW91IHdhbnQ/ICBBbmQgd2h5Pw0KPiANCj4gV2VsbCwgdG8gYmUgaG9uZXN0
+LCB3aGF0IEkgKnJlYWxseSogd2FudGVkIHdhcyB0byB1bmRlcnN0YW5kIHdoeSBJDQo+IHdhc24n
+dCBhYmxlIHRvIHJlbmFtZSB0aGUgYXJyYXlzLiBJIHdhbnRlZCB0byB1bmRlcnN0YW5kIHdoYXQg
+dGhlDQo+IHN5c3RlbSB3YXMgZG9pbmcsIGJlY2F1c2UgSSBkb24ndCBsaWtlIG5vdCB1bmRlcnN0
+YW5kaW5nIHdoeSBteSBzZXR1cA0KPiBkb2Vzbid0IGJlaGF2ZSB0aGUgd2F5IEkgZXhwZWN0IGl0
+IHRvLiBTbywgSSB3YW50ZWQgdG8gbGVhcm4gd2hhdCBJDQo+IHdhcyBtaXNzaW5nIGluIG15IHVu
+ZGVyc3RhbmRpbmcuDQoNCkNvbW1lbmRhYmxlIQ0KDQpOZWlsQnJvd24NCg0KDQo+IA0KPiBIb3cg
+SSBjYW1lIGFib3V0IHdhbnRpbmcgdG8ga25vdyB0aGlzIGlzIGJlY2F1c2UgSSB0cmllZCByZW5h
+bWluZyB0aGUNCj4gZGV2aWNlcywgYW5kIGl0IHdhc24ndCB3b3JraW5nLCBkZXNwaXRlIG1lIHJl
+YWRpbmcgZGlmZmVyZW50IHBlb3BsZSdzDQo+IHBvc3RzIG9uIHRoZSBuZXQuIEkgdHJpZWQgcmVh
+ZGluZyB0aGUgZG9jdW1lbnRhdGlvbiB0b28sIGJ1dCBJIHNvbWVob3cNCj4gbWlzc2VkIHJlYWRp
+bmcgYWJvdXQgdGhlIHVwZGF0aW5nIG9mIGluaXRyYW1mcyAoSSB0aG91Z2h0IEkgb25seQ0KPiBu
+ZWVkZWQgdG8gZG8gdGhhdCBpZiB0aGUgZGV2aWNlIHdoZXJlICIvIiBpcyBjaGFuZ2VkIG5hbWVz
+KS4NCj4gDQo+IEluZGVlZCwgSSBjb3VsZCBoYXZlIGNvbnRpbnVlZCBrZWVwaW5nIHRoZXNlIGRl
+dmljZXMgbmFtZWQgL2Rldi9tZDEyNw0KPiBldGMgKHRoZXJlIGlzIG5vIGhhcm0gaW4gaGF2aW5n
+IHRob3NlIG5hbWVzKSwgYnV0IG15IG1pbmQganVzdCBkb2Vzbid0DQo+IHdvcmsgdGhhdCB3YXku
+Li4NCj4gSSBoYWQgdGhlIG5lZWQgb2YgdW5kZXJzdGFuZGluZyB3aGF0IHdhcyBoYXBwZW5pbmcg
+YW5kIHdoeSB3aGF0ZXZlciBJDQo+IHdhcyB0cnlpbmcgdG8gZG8gd2Fzbid0IHdvcmtpbmcgOikN
+Cj4gDQo+IFNvIEkgY2FtZSBhYm91dCB0byB5b3VyIGNvbnRyaWJ1dGlvbnMgdG8gdGhlIHNvdXJj
+ZSBjb2RlLCB0aGVuIHRvIHlvdXINCj4gYmxvZyBwYWdlLCB0aGVuIGZyb20gdGhlcmUgdG8gZW1h
+aWxpbmcgdGhpcyBsaXN0IGFzIHlvdSBzdWdnZXN0ZWQgOikNCj4gDQo+IEkgZmlndXJlZCB0aGF0
+IGlmIEkgd2VyZSB0byBhc2sgdGhlc2UgcXVlc3Rpb25zLCBJIGhhZCB0byBnaXZlIGFzIG11Y2gN
+Cj4gaW5mbyBhcyBwb3NzaWJsZSB0byBhdm9pZCB3YXN0aW5nIHlvdXIgdGltZSAod2hpY2ggaXMg
+d2h5IEkgcGFzdGVkIGFsbA0KPiB0aGUgaW5mbyBJIHRob3VnaHQgY291bGQgbWF0dGVyLCBhbmQg
+dHJpZWQgdG8gb3JnYW5pemUgaXQgYSBiaXQuLi4gYXMNCj4gZmFyIGFzIEkgaGFkIGNvbWUgdG8g
+dW5kZXJzdGFuZCBpdCkuDQo+IA0KPiBUaGF0J3MgdGhlIHdob2xlIHN0b3J5Lg0KPiANCj4gU28g
+dGhhbmtzIGFnYWluIGZvciB0YWtpbmcgdGhlIHRpbWUgZm9yIHJlYWRpbmcgYWxsIG9mIHRoaXMg
+OikNCj4gWW91IGd1eXMgd2VyZSByZWFsbHkgcmVzcG9uc2l2ZSENCj4gDQo+IEkgd2lzaCB5b3Ug
+YWxsIGEgbmljZSB3ZWVrIQ0KPiANCj4gR2lsYmVydA0KPiAtLS0tLUJFR0lOIFBHUCBTSUdOQVRV
+UkUtLS0tLQ0KPiBWZXJzaW9uOiBHbnVQRyB2MS40LjExIChEYXJ3aW4pDQo+IENvbW1lbnQ6IGRp
+Z2l0YWwgc2lnbmF0dXJlDQo+IENvbW1lbnQ6IFVzaW5nIEdudVBHIHdpdGggTW96aWxsYSAtIGh0
+dHA6Ly9lbmlnbWFpbC5tb3pkZXYub3JnLw0KPiANCj4gaUVZRUFSRUNBQVlGQWs4TkxyZ0FDZ2tR
+T1lWcDFScExzbVU5MWdDZ2hJaXhEK0k1Y3pyVkFsTmlmY3I3QTIwWg0KPiBRcUlBb0phdmVLTVdB
+ek55Ykk0UjFnWDBZVHNZb1lhbA0KPiA9d2p0VA0KPiAtLS0tLUVORCBQR1AgU0lHTkFUVVJFLS0t
+LS0NCg0KLS0tLS1CRUdJTiBQR1AgU0lHTkFUVVJFLS0tLS0NClZlcnNpb246IEdudVBHIHYyLjAu
+MTggKEdOVS9MaW51eCkNCg0KaVFJVkF3VUJUdzAwVXpuc250MVdZb0c1QVFLamNoQUF1Y2Z2elAy
+R1V5L1ZNbmlPdmlseWtQazN3Y0hJM1h5Ng0Kb3hqNkVJb2FCdkorOFhSc2hZM3h4aGd6dXA3VHc1
+NUtGVld3YjdSVE9DdGtYZnBORm1odjVKMHphSDhuWGxPOQ0Kejh1WHRmb0ZmQzZBMkN0VnhZMEpQ
+R2FpeHFDSW8rSmtKZ3VLelNBZWExNXFoOWc2V1JkSmliWGxodW5pK2EzUw0KMzViaXJ4bjkxRlZm
+dnlDQWl0aXBLcUxGdXpFVHQyNEhjbTY3R0lpMkRFRVhOZ3RrQU81amtpcXRlSlpYTXRtUA0KTGwy
+V3NtZFRGMmU0Q3dSakJkMFZ3djZOcU1PZzEwS3BSV2RPZ3NJM1JXNXJTZGdyeEpDajhZUG1rY1JZ
+dVdtMQ0KV2d5TlZQRit6WDdRcUZCUGEwa0s4Ylo5bGJUWk0yMEtySTRucWFiMGVqVHI5aXl4d3B6
+Y0pPTnRlQWY0QTN2dw0KYlJrT09wTGN3T3d4VzRBalg3T3l3Q2hjRFpOVkpIck9aZkpUbFdNOVcz
+dXJHUGhQYnVMQ2pJKzNSTWR5cnhHdg0KeXhaQkJUektId0M1SG05MzRaZXRaemUyMkpUZER4M3hw
+eitUWlRYOExxcExyQUhJem9zK0FwOVJTRFo4c24wMA0KcUZPekt6WTVtOHlCUWt0RDJvQ2VCQWVr
+S3htQklCZVE0SFE5VE94V09HUEdqTXE3Mk1VZGt2WXBzM2hIN1I4Wg0KbEdSU0h0MU95bmxYL3p0
+L3A0KzBKZkMwSHFaaGFmRkR4U3RSRVdndkplbVVzKzcrdjBsTnJUYmU2WUlIT0xiYg0KdHlDcE1t
+M0JhVmhkUzhLY2hUTERJakVuL1RqWjl4eUdKTTRnMDljV2lENXRhV0xlb3FkTlVpU1grVjVqMmlo
+UA0KOEdjaitUNTdvbW89DQo9V0V4Rw0KLS0tLS1FTkQgUEdQIFNJR05BVFVSRS0tLS0tDQo=
