@@ -1,108 +1,81 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: RAID10 only using 2/4 drives
-Date: Wed, 11 Jan 2012 15:43:41 +0000
-Message-ID: <20120111154341.GA11455@cthulhu.home.robinhill.me.uk>
-References: <4F0DA1F6.9070700@yagermaterials.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Renaming MD devices (metadata=1.1)
+Date: Thu, 12 Jan 2012 10:04:26 +1100
+Message-ID: <20120112100426.4c4656c8@notabene.brown>
+References: <4F0BD6EA.8010007@grm.polymtl.ca>
+	<4F0C1A03.8020509@ziu.info>
+	<4F0D272A.2060000@grm.polymtl.ca>
+	<20120111172047.6af5571f@notabene.brown>
+	<4F0D2EBF.5070807@grm.polymtl.ca>
+	<20120111180347.0d177edf@notabene.brown>
+	<4F0DB25D.3030805@grm.polymtl.ca>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="NzB8fVQJ5HfG6fxh"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4F0DA1F6.9070700@yagermaterials.com>
+In-Reply-To: <4F0DB25D.3030805@grm.polymtl.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Josh Reynolds <josh.reynolds@yagermaterials.com>
-Cc: linux-raid@vger.kernel.org
+To: Gilbert Kowarzyk <kowarzyk@grm.polymtl.ca>
+Cc: Michal Soltys <soltys@ziu.info>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
---NzB8fVQJ5HfG6fxh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Wed Jan 11, 2012 at 08:51:34AM -0600, Josh Reynolds wrote:
-
-> Hello! 1st post on this mailing list, so be gentle.
->=20
-> I've got a production Ubuntu box that I used the installer to create a=20
-> raid10 system on several months ago. I pretty much setup the box and=20
-> then left it alone, to run a couple of different things and some vm's.
->=20
-> I really started to realize something was wrong fairly recently when my=
-=20
-> disk size was showing approx 1/2 of what I thought it should for a=20
-> raid10. Also, my disk speeds were... not something I'd expect for 4 drive=
-s.
->=20
-> After looking into it, I realized mdadm had marked two of the drives as=
-=20
-> spares. WTF.
->=20
-> To make sure that I wasn't crazy, I wiped out a partition on each drive,=
-=20
-> and created a raid10 by hand. My original system array is md0, the other=
-=20
-> is md1.
->=20
-> ----------------------------
-> josh@virtserver:~$ cat /proc/mdstat
-> Personalities : [raid0] [raid1] [raid10]
-> md1 : active raid10 sda2[0] sdd2[3] sdc2[2] sdb2[1]
->        46868480 blocks super 1.2 512K chunks 2 far-copies [4/4] [UUUU]
->=20
-> md0 : active raid10 sdd3[4](S) sdb3[3](S) sdc3[2] sda3[0]
->        951370752 blocks super 1.2 512K chunks 2 far-copies [2/2] [UU]
->        bitmap: 3/8 pages [12KB], 65536KB chunk
-> ---------------------------
->=20
-> I notice the 2nd array I created is showing the raid1 and raid0=20
-> personalities... and I have a feeling that's what is gimping the md0 arra=
-y?
->=20
-No, that's nothing to do with it. The "Personalities" line is printed as
-a header and just reports all the personalities loaded (it doesn't just
-apply to the array immediately following). Presumably something on your
-system is loading the raid0 and raid1 modules (or they're compiled in)
-as they're not required for raid10.
-
-> I've tried fail/remove/adding those two partitions marked as spares, and=
-=20
-> it never adds them back as active members.
->=20
-That won't make any difference, no. The array configuration shows it's
-configured as a 2-disk array, so any extra disks added will just stay as
-spares. I can't see any way for this to have happened without having
-explicitly created the array with 2 active drives and 2 spares
-specified. Either that's a bug in the Ubuntu installer, or there was a
-mistake/misunderstanding made when specifying the parameters.
-
-Unfortunately you can't currently grow a RAID10 array, so your only
-option would be to recreate the array. If it's your root filesystem then
-you'll need to do this via a boot CD. You can do it without losing data
-(hopefully) by dropping the two spares from the array and creating a
-new, degraded, RAID-10 array using these. Then copy the data across,
-drop the old array, and finally add those drives into the new array.
-Providing there's no errors during the final rebuild process, then no
-data will be lost. Of course, a backup would definitely be recommended
-prior to carrying this out.
-
-HTH,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---NzB8fVQJ5HfG6fxh
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (GNU/Linux)
-
-iEYEARECAAYFAk8Nri0ACgkQShxCyD40xBLdWgCgzgDWyeDVabsfaYF4WJzbDZd9
-Z10AoKwiWLSB7XwO9lxRw0GPA7SYtLz9
-=1HtM
------END PGP SIGNATURE-----
-
---NzB8fVQJ5HfG6fxh--
+LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBXZWQs
+IDExIEphbiAyMDEyIDExOjAxOjMzIC0wNTAwIEdpbGJlcnQgS293YXJ6eWsgPGtvd2FyenlrQGdy
+bS5wb2x5bXRsLmNhPg0Kd3JvdGU6DQoNCj4gLS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0Ut
+LS0tLQ0KPiBIYXNoOiBTSEExDQo+IA0KPiBIZWxsbywNCj4gDQo+ID4+IFdoeSBkbyB3ZSBoYXZl
+IHRoZXNlIGNob2ljZXMsIGFuZCB3aGVuIHNob3VsZCBlYWNoIGJlIHVzZWQ/DQo+ID4gDQo+ID4g
+MS4wIChhdCB0aGUgZW5kKSBpcyBiZXN0IGZvciBSQUlEMSB3aGVuIGJvb3RpbmcgZnJvbSB0aGUg
+ZGV2aWNlIGFzDQo+ID4gdGhlIGJvb3QtbG9hZCBqdXN0IGRvZXNuJ3Qgc2VlIHRoZSBSQUlEIGF0
+IGFsbC4NCj4gPiANCj4gPiAxLjEgKGF0IHRoZSBzdGFydCkgaXMgZ2VuZXJhbGx5IGdvb2QgYmVj
+YXVzZSB2YXJpb3VzIGRpZmZlcmVudA0KPiA+IHRoaW5ncyBoYXZlIG1ldGFkYXRhIGF0IHRoZSBz
+dGFydCwgc28gdGhlcmUgaXMgbm8gY2hhbmNlIG9mDQo+ID4gY29uZnVzaW9uIGFib3V0IHdoYXQg
+aXMgdXNpbmcgdGhhdCBkZXZpY2VzIC0gZWFjaCBwb3NzaWJsZSB1c2Vycw0KPiA+IHdpbGwgb3Zl
+cndyaXRlIHRoZSBtZXRhZGF0YSBvZiB0aGUgb3RoZXJzLiBJdCBpcyBhbHNvIGVhc2llciB0bw0K
+PiA+IG1ha2UgdGhlIGRldmljZXMgbGFyZ2VyIGlmIHlvdSBkb24ndCBuZWVkIHRvIG1vdmUgdGhl
+IG1ldGFkYXRhLg0KPiA+IA0KPiA+IDEuMiAoNEsgZnJvbSB0aGUgc3RhcnQpIGhhcyBtb3N0IG9m
+IHRoZSBiZW5lZml0cyBmb3IgMS4xIGJ1dCB3b3Jrcw0KPiA+IGZvciBib290aW5nIHdpdGggbmV3
+ZXIgYm9vdCBsb2FkZXJzIC0gdGhleSBzdGlsbCB3YW50IHNlY3RvciAwIGZvcg0KPiA+IGEgYm9v
+dCBzZWN0b3IgYnV0IHVuZGVyc3RhbmQgdGhlIG1kIHN1cGVyYmxvY2suDQo+IA0KPiBJIHNlZS4g
+TWFrZXMgYWxzbyBsb2FkcyBvZiBzZW5zZS4NCj4gDQo+IEkgaGFkIHR3byBtb3JlIHF1aWNrIHF1
+ZXN0aW9uczoNCj4gDQo+IDEuLSB3aGVuIHdvdWxkIG9uZSB3YW50IHRvIHR1cm4gb2ZmIGJpdG1h
+cHM/IEkgdHVybmVkIHRoZW0gb24sIGJ1dCBJDQo+IGhhdmVuJ3QgZm91bmQgd2h5IG9uZSBtYXkg
+d2FudCB0aGVtIG9mZiAob3IgZm9yIHdoYXQgdGhleSBzaG91bGQgYmUNCj4gdHVybmVkIG9mZiku
+DQoNClRoZXJlIGNhbiBiZSBhIHBlcmZvcm1hbmNlIGltcGFjdCAtIHdyaXRlcyBjYW4gYmUgYSBi
+aXQgc2xvd2VyIHdpdGggYml0bWFwcy4NCklmIHRoYXQgaXMgbW9yZSBpbXBvcnRhbnQgdG8geW91
+IHRoYXQgcmVzeW5jIHNwZWVkIGFmdGVyIGEgY3Jhc2ggeW91IG1pZ2h0DQp0dXJuIHRoZW0gb2Zm
+Lg0KVG8gY2hhbmdlIHRoZSBjaHVuay1zaXplIG9mIHRoZSBiaXRtYXAgeW91IG5lZWQgdG8gdHVy
+biB0aGVtIG9mZiwgdGhlbiBvbg0KYWdhaW4uDQpJZiB5b3Ugd2FudCB0byByZXNoYXBlIHRoZSBh
+cnJheSB5b3UgY3VycmVudGx5IG5lZWQgdG8gdHVybiB0aGUgYml0bWFwIG9mZg0KZmlyc3QgKGJl
+Y2F1c2UgdGhlIGJpdG1hcCBkb2Vzbid0IGF1dG9tYXRpY2FsbHkgcmVzaXplKS4NCllvdSB0dXJu
+IHRoZSBiaXRtYXAgb2ZmIHdpdGgNCiAgIG1kYWRtIC0tZ3JvdyAvZGV2L21kWFggLS1iaXRtYXA9
+bm9uZQ0KDQo+IA0KPiAyLi0gaWYgSSBldmVyIGhhdmUgYSBtaXNtYXRjaF9jbnQgZGlmZmVyZW50
+IHRoYW4gemVybywgaG93IHdvdWxkIEkgZ28NCj4gYWJvdXQgZmluZGluZyB3aGljaCBkcml2ZSBo
+YXMgdGhlIGNvcnJlY3QgaW5mbywgd2hpY2ggd2FzIHRoZSBvbmUgdGhhdA0KPiBnb3QgY29ycnVw
+dGVkLCBhbmQgaG93IHRvIG9idGFpbiB0aGUgY29ycmVjdCBvbmU/DQoNCiJjb3JyZWN0IiBpcyBu
+b3QgYSB3ZWxsIGRlZmluZWQgY29uY2VwdCBoZXJlLg0KDQo+IEluIHRoZSBwYXN0IEkndmUgY2hh
+bmdlZCB0aGUgIkNIRUNLIiB0byAiUkVQQUlSIiBpbiB0aGUgY29uZmlndXJhdGlvbg0KPiBzY3Jp
+cHQgdGhhdCBjaGVja3MgdGhlIFJBSUQgYXJyYXlzIHBlcmlvZGljYWxseQ0KPiAoL2V0Yy9zeXNj
+b25maWcvcmFpZC1jaGVjayksIGJ1dCBmcm9tIHdoYXQgSSB1bmRlcnN0b29kIGl0J3MgYSBiaXQg
+b2YNCj4gbHVjayB3aGljaCBvbmUgdGhlIGF1dG9tYXRpYyBzY3JpcHQgd2lsbCBjaG9vc2Ugb3V0
+IG9mIHRoZSB0d28gZHJpdmVzDQo+IChhc3N1bWluZyByYWlkMSkuIFNob3VsZCBJIGxldCBpdCBi
+ZSBhdXRvbWF0aWMgKHdpdGggInJlcGFpciIpLCBhbmQgaWYNCj4gbm90IChpZiBJIGhhdmUgdG8g
+Y2hlY2sgd2hpY2ggb25lIGlzIGNvcnJlY3QgbWFudWFsbHkpLCB3aGVyZSBjb3VsZCBJDQo+IGZp
+bmQgaW5mb3JtYXRpb24gdG8gcmVhZCBhYm91dCBob3cgdG8gZG8gdGhpcyAoSSBhbSBhc3N1bWlu
+ZyB0aGUNCj4gYW5zd2VyIG1heSBiZSBsb25nKT8NCg0KVGhpczogIGh0dHA6Ly9uZWlsLmJyb3du
+Lm5hbWUvYmxvZy8yMDEwMDIxMTA1MDM1NQ0KdG91Y2hlcyBvbiB0aGUgdG9waWMgLi4uIGFuZCBp
+cyBsb25nLg0KDQoNCk5laWxCcm93bg0KLS0tLS1CRUdJTiBQR1AgU0lHTkFUVVJFLS0tLS0NClZl
+cnNpb246IEdudVBHIHYyLjAuMTggKEdOVS9MaW51eCkNCg0KaVFJVkF3VUJUdzRWZWpuc250MVdZ
+b0c1QVFMNDF4QUFydkZzSENyUWplRUJTWTFDZTlhbXI0aG9IUzM0bm10RQ0KamhnOHovVmJzdEFK
+SHFLR0dlbWdFOTZDODd5b0trY0pPQkFSdzlVaFp0d3dYOTlEVXpZZXJSaGt5Sm5OTHA5ag0KYk1k
+Q3o3L3VGazByNlFXVnNrVDhVZmp6K1BaQUxXMDAvTEQ2dC9UUVdzcTNGMzdEMEk2QUs1SmVIcVBn
+a1ZtQg0KK3doNjdOOTNlTFNUWjhacXFZUDZKaXQzRmw4WEtxSUpsNUZKVU85SlpCMG10bU1UU2gw
+eEZOUmJkZHdrNzN2MQ0KQm9iSTIyNkhKSzJPSGVXa2dOMnNOcXhaMDE0a3E0M25xQnNNRDExTk52
+WmlKc3dCaEVSSG5tT0VJcDNQa29CUQ0Kd2xlR1lDM0ZOcHE3bnRjNk8yaDA0NGF4N0Q3ZExEY2pK
+Z05wWCt6bVlkMlFrUFZPazBYQnN4aWZBUXNHOTdjdA0Ka3FCUlJmZm9wSDFBUkNqRWZtR0FmVllu
+ZTlWcGtPMVFLRmpHNFEvaGEyMTUxVjMzWndSQ05SYVNSOUZFRi9qcA0KSmIrcUhPemJkOUk2SnIy
+RXB1TGVvU293ZGVPRWVjQlNZalB3L1NOR3hOSG1RQkt0ei9rdk1SQU9yb0w4aVVnVg0KZnU5dENO
+TUJmR1F5amJ6SzJaQzRPUUFwMmpSV2RIQklQNUlLQ2w5MnhVcUNDK1lNNGVpMWFqVlNGeVB0V0sw
+Yw0KU3FQWXpVWDZXNnFTSEZxSFdlYSttUlp1VzYzdHUzc2RYUWwrTHNOUHltUjZvQlFoeTdLeDZK
+NDBTQmt0clZNVw0KaVBEZnZjbVJqSFRDZGVwL0tqWVRjV000dE5xekwzbnkzYjhsUDk5RHBXODIy
+bnJkVDkzaHlOYnJLN0dHdmVpVQ0KQXFtYWVnMGI4ZUk9DQo9Y3BOcQ0KLS0tLS1FTkQgUEdQIFNJ
+R05BVFVSRS0tLS0tDQo=
