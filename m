@@ -1,36 +1,49 @@
-From: Lukasz Dorau <lukasz.dorau@intel.com>
-Subject: [PATCH] fix: Monitor sometimes crashes
-Date: Wed, 11 Jan 2012 11:04:08 +0100
-Message-ID: <20120111100408.686.15194.stgit@gklab-128-085.igk.intel.com>
+From: Josh Reynolds <josh.reynolds@yagermaterials.com>
+Subject: RAID10 only using 2/4 drives
+Date: Wed, 11 Jan 2012 08:51:34 -0600
+Message-ID: <4F0DA1F6.9070700@yagermaterials.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, marcin.labun@intel.com, ed.ciechanowski@intel.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The "char cnt [40]" buffer is sometimes too small to hold all message
-- in such case monitor crashes.
-The buffer must be larger to be able to hold all message.
+Hello! 1st post on this mailing list, so be gentle.
 
-Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
----
- Monitor.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I've got a production Ubuntu box that I used the installer to create a 
+raid10 system on several months ago. I pretty much setup the box and 
+then left it alone, to run a couple of different things and some vm's.
 
-diff --git a/Monitor.c b/Monitor.c
-index 8bc8824..4352a0d 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -563,7 +563,7 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
- 		struct mdinfo *sra =
- 			sysfs_read(-1, st->devnum, GET_MISMATCH);
- 		if (sra && sra->mismatch_cnt > 0) {
--			char cnt[40];
-+			char cnt[44];
- 			sprintf(cnt, " mismatches found: %d (on raid level %d)",
- 				sra->mismatch_cnt, array.level);
- 			alert("RebuildFinished", dev, cnt, ainfo);
+I really started to realize something was wrong fairly recently when my 
+disk size was showing approx 1/2 of what I thought it should for a 
+raid10. Also, my disk speeds were... not something I'd expect for 4 drives.
 
+After looking into it, I realized mdadm had marked two of the drives as 
+spares. WTF.
+
+To make sure that I wasn't crazy, I wiped out a partition on each drive, 
+and created a raid10 by hand. My original system array is md0, the other 
+is md1.
+
+----------------------------
+josh@virtserver:~$ cat /proc/mdstat
+Personalities : [raid0] [raid1] [raid10]
+md1 : active raid10 sda2[0] sdd2[3] sdc2[2] sdb2[1]
+       46868480 blocks super 1.2 512K chunks 2 far-copies [4/4] [UUUU]
+
+md0 : active raid10 sdd3[4](S) sdb3[3](S) sdc3[2] sda3[0]
+       951370752 blocks super 1.2 512K chunks 2 far-copies [2/2] [UU]
+       bitmap: 3/8 pages [12KB], 65536KB chunk
+---------------------------
+
+I notice the 2nd array I created is showing the raid1 and raid0 
+personalities... and I have a feeling that's what is gimping the md0 array?
+
+I've tried fail/remove/adding those two partitions marked as spares, and 
+it never adds them back as active members.
+
+HELP! :)
+
+  - Josh
