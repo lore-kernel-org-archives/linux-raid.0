@@ -1,81 +1,76 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Renaming MD devices (metadata=1.1)
-Date: Thu, 12 Jan 2012 10:04:26 +1100
-Message-ID: <20120112100426.4c4656c8@notabene.brown>
-References: <4F0BD6EA.8010007@grm.polymtl.ca>
-	<4F0C1A03.8020509@ziu.info>
-	<4F0D272A.2060000@grm.polymtl.ca>
-	<20120111172047.6af5571f@notabene.brown>
-	<4F0D2EBF.5070807@grm.polymtl.ca>
-	<20120111180347.0d177edf@notabene.brown>
-	<4F0DB25D.3030805@grm.polymtl.ca>
+Subject: Re: [PATCH] fix: Monitor sometimes crashes
+Date: Thu, 12 Jan 2012 10:40:34 +1100
+Message-ID: <20120112104034.15168a26@notabene.brown>
+References: <20120111100408.686.15194.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/EbGHlM7cvw+jIa/OOJw7rAz"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F0DB25D.3030805@grm.polymtl.ca>
+In-Reply-To: <20120111100408.686.15194.stgit@gklab-128-085.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gilbert Kowarzyk <kowarzyk@grm.polymtl.ca>
-Cc: Michal Soltys <soltys@ziu.info>, linux-raid@vger.kernel.org
+To: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBXZWQs
-IDExIEphbiAyMDEyIDExOjAxOjMzIC0wNTAwIEdpbGJlcnQgS293YXJ6eWsgPGtvd2FyenlrQGdy
-bS5wb2x5bXRsLmNhPg0Kd3JvdGU6DQoNCj4gLS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0Ut
-LS0tLQ0KPiBIYXNoOiBTSEExDQo+IA0KPiBIZWxsbywNCj4gDQo+ID4+IFdoeSBkbyB3ZSBoYXZl
-IHRoZXNlIGNob2ljZXMsIGFuZCB3aGVuIHNob3VsZCBlYWNoIGJlIHVzZWQ/DQo+ID4gDQo+ID4g
-MS4wIChhdCB0aGUgZW5kKSBpcyBiZXN0IGZvciBSQUlEMSB3aGVuIGJvb3RpbmcgZnJvbSB0aGUg
-ZGV2aWNlIGFzDQo+ID4gdGhlIGJvb3QtbG9hZCBqdXN0IGRvZXNuJ3Qgc2VlIHRoZSBSQUlEIGF0
-IGFsbC4NCj4gPiANCj4gPiAxLjEgKGF0IHRoZSBzdGFydCkgaXMgZ2VuZXJhbGx5IGdvb2QgYmVj
-YXVzZSB2YXJpb3VzIGRpZmZlcmVudA0KPiA+IHRoaW5ncyBoYXZlIG1ldGFkYXRhIGF0IHRoZSBz
-dGFydCwgc28gdGhlcmUgaXMgbm8gY2hhbmNlIG9mDQo+ID4gY29uZnVzaW9uIGFib3V0IHdoYXQg
-aXMgdXNpbmcgdGhhdCBkZXZpY2VzIC0gZWFjaCBwb3NzaWJsZSB1c2Vycw0KPiA+IHdpbGwgb3Zl
-cndyaXRlIHRoZSBtZXRhZGF0YSBvZiB0aGUgb3RoZXJzLiBJdCBpcyBhbHNvIGVhc2llciB0bw0K
-PiA+IG1ha2UgdGhlIGRldmljZXMgbGFyZ2VyIGlmIHlvdSBkb24ndCBuZWVkIHRvIG1vdmUgdGhl
-IG1ldGFkYXRhLg0KPiA+IA0KPiA+IDEuMiAoNEsgZnJvbSB0aGUgc3RhcnQpIGhhcyBtb3N0IG9m
-IHRoZSBiZW5lZml0cyBmb3IgMS4xIGJ1dCB3b3Jrcw0KPiA+IGZvciBib290aW5nIHdpdGggbmV3
-ZXIgYm9vdCBsb2FkZXJzIC0gdGhleSBzdGlsbCB3YW50IHNlY3RvciAwIGZvcg0KPiA+IGEgYm9v
-dCBzZWN0b3IgYnV0IHVuZGVyc3RhbmQgdGhlIG1kIHN1cGVyYmxvY2suDQo+IA0KPiBJIHNlZS4g
-TWFrZXMgYWxzbyBsb2FkcyBvZiBzZW5zZS4NCj4gDQo+IEkgaGFkIHR3byBtb3JlIHF1aWNrIHF1
-ZXN0aW9uczoNCj4gDQo+IDEuLSB3aGVuIHdvdWxkIG9uZSB3YW50IHRvIHR1cm4gb2ZmIGJpdG1h
-cHM/IEkgdHVybmVkIHRoZW0gb24sIGJ1dCBJDQo+IGhhdmVuJ3QgZm91bmQgd2h5IG9uZSBtYXkg
-d2FudCB0aGVtIG9mZiAob3IgZm9yIHdoYXQgdGhleSBzaG91bGQgYmUNCj4gdHVybmVkIG9mZiku
-DQoNClRoZXJlIGNhbiBiZSBhIHBlcmZvcm1hbmNlIGltcGFjdCAtIHdyaXRlcyBjYW4gYmUgYSBi
-aXQgc2xvd2VyIHdpdGggYml0bWFwcy4NCklmIHRoYXQgaXMgbW9yZSBpbXBvcnRhbnQgdG8geW91
-IHRoYXQgcmVzeW5jIHNwZWVkIGFmdGVyIGEgY3Jhc2ggeW91IG1pZ2h0DQp0dXJuIHRoZW0gb2Zm
-Lg0KVG8gY2hhbmdlIHRoZSBjaHVuay1zaXplIG9mIHRoZSBiaXRtYXAgeW91IG5lZWQgdG8gdHVy
-biB0aGVtIG9mZiwgdGhlbiBvbg0KYWdhaW4uDQpJZiB5b3Ugd2FudCB0byByZXNoYXBlIHRoZSBh
-cnJheSB5b3UgY3VycmVudGx5IG5lZWQgdG8gdHVybiB0aGUgYml0bWFwIG9mZg0KZmlyc3QgKGJl
-Y2F1c2UgdGhlIGJpdG1hcCBkb2Vzbid0IGF1dG9tYXRpY2FsbHkgcmVzaXplKS4NCllvdSB0dXJu
-IHRoZSBiaXRtYXAgb2ZmIHdpdGgNCiAgIG1kYWRtIC0tZ3JvdyAvZGV2L21kWFggLS1iaXRtYXA9
-bm9uZQ0KDQo+IA0KPiAyLi0gaWYgSSBldmVyIGhhdmUgYSBtaXNtYXRjaF9jbnQgZGlmZmVyZW50
-IHRoYW4gemVybywgaG93IHdvdWxkIEkgZ28NCj4gYWJvdXQgZmluZGluZyB3aGljaCBkcml2ZSBo
-YXMgdGhlIGNvcnJlY3QgaW5mbywgd2hpY2ggd2FzIHRoZSBvbmUgdGhhdA0KPiBnb3QgY29ycnVw
-dGVkLCBhbmQgaG93IHRvIG9idGFpbiB0aGUgY29ycmVjdCBvbmU/DQoNCiJjb3JyZWN0IiBpcyBu
-b3QgYSB3ZWxsIGRlZmluZWQgY29uY2VwdCBoZXJlLg0KDQo+IEluIHRoZSBwYXN0IEkndmUgY2hh
-bmdlZCB0aGUgIkNIRUNLIiB0byAiUkVQQUlSIiBpbiB0aGUgY29uZmlndXJhdGlvbg0KPiBzY3Jp
-cHQgdGhhdCBjaGVja3MgdGhlIFJBSUQgYXJyYXlzIHBlcmlvZGljYWxseQ0KPiAoL2V0Yy9zeXNj
-b25maWcvcmFpZC1jaGVjayksIGJ1dCBmcm9tIHdoYXQgSSB1bmRlcnN0b29kIGl0J3MgYSBiaXQg
-b2YNCj4gbHVjayB3aGljaCBvbmUgdGhlIGF1dG9tYXRpYyBzY3JpcHQgd2lsbCBjaG9vc2Ugb3V0
-IG9mIHRoZSB0d28gZHJpdmVzDQo+IChhc3N1bWluZyByYWlkMSkuIFNob3VsZCBJIGxldCBpdCBi
-ZSBhdXRvbWF0aWMgKHdpdGggInJlcGFpciIpLCBhbmQgaWYNCj4gbm90IChpZiBJIGhhdmUgdG8g
-Y2hlY2sgd2hpY2ggb25lIGlzIGNvcnJlY3QgbWFudWFsbHkpLCB3aGVyZSBjb3VsZCBJDQo+IGZp
-bmQgaW5mb3JtYXRpb24gdG8gcmVhZCBhYm91dCBob3cgdG8gZG8gdGhpcyAoSSBhbSBhc3N1bWlu
-ZyB0aGUNCj4gYW5zd2VyIG1heSBiZSBsb25nKT8NCg0KVGhpczogIGh0dHA6Ly9uZWlsLmJyb3du
-Lm5hbWUvYmxvZy8yMDEwMDIxMTA1MDM1NQ0KdG91Y2hlcyBvbiB0aGUgdG9waWMgLi4uIGFuZCBp
-cyBsb25nLg0KDQoNCk5laWxCcm93bg0KLS0tLS1CRUdJTiBQR1AgU0lHTkFUVVJFLS0tLS0NClZl
-cnNpb246IEdudVBHIHYyLjAuMTggKEdOVS9MaW51eCkNCg0KaVFJVkF3VUJUdzRWZWpuc250MVdZ
-b0c1QVFMNDF4QUFydkZzSENyUWplRUJTWTFDZTlhbXI0aG9IUzM0bm10RQ0KamhnOHovVmJzdEFK
-SHFLR0dlbWdFOTZDODd5b0trY0pPQkFSdzlVaFp0d3dYOTlEVXpZZXJSaGt5Sm5OTHA5ag0KYk1k
-Q3o3L3VGazByNlFXVnNrVDhVZmp6K1BaQUxXMDAvTEQ2dC9UUVdzcTNGMzdEMEk2QUs1SmVIcVBn
-a1ZtQg0KK3doNjdOOTNlTFNUWjhacXFZUDZKaXQzRmw4WEtxSUpsNUZKVU85SlpCMG10bU1UU2gw
-eEZOUmJkZHdrNzN2MQ0KQm9iSTIyNkhKSzJPSGVXa2dOMnNOcXhaMDE0a3E0M25xQnNNRDExTk52
-WmlKc3dCaEVSSG5tT0VJcDNQa29CUQ0Kd2xlR1lDM0ZOcHE3bnRjNk8yaDA0NGF4N0Q3ZExEY2pK
-Z05wWCt6bVlkMlFrUFZPazBYQnN4aWZBUXNHOTdjdA0Ka3FCUlJmZm9wSDFBUkNqRWZtR0FmVllu
-ZTlWcGtPMVFLRmpHNFEvaGEyMTUxVjMzWndSQ05SYVNSOUZFRi9qcA0KSmIrcUhPemJkOUk2SnIy
-RXB1TGVvU293ZGVPRWVjQlNZalB3L1NOR3hOSG1RQkt0ei9rdk1SQU9yb0w4aVVnVg0KZnU5dENO
-TUJmR1F5amJ6SzJaQzRPUUFwMmpSV2RIQklQNUlLQ2w5MnhVcUNDK1lNNGVpMWFqVlNGeVB0V0sw
-Yw0KU3FQWXpVWDZXNnFTSEZxSFdlYSttUlp1VzYzdHUzc2RYUWwrTHNOUHltUjZvQlFoeTdLeDZK
-NDBTQmt0clZNVw0KaVBEZnZjbVJqSFRDZGVwL0tqWVRjV000dE5xekwzbnkzYjhsUDk5RHBXODIy
-bnJkVDkzaHlOYnJLN0dHdmVpVQ0KQXFtYWVnMGI4ZUk9DQo9Y3BOcQ0KLS0tLS1FTkQgUEdQIFNJ
-R05BVFVSRS0tLS0tDQo=
+--Sig_/EbGHlM7cvw+jIa/OOJw7rAz
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 11 Jan 2012 11:04:08 +0100 Lukasz Dorau <lukasz.dorau@intel.com>
+wrote:
+
+> The "char cnt [40]" buffer is sometimes too small to hold all message
+> - in such case monitor crashes.
+> The buffer must be larger to be able to hold all message.
+>=20
+> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+> ---
+>  Monitor.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/Monitor.c b/Monitor.c
+> index 8bc8824..4352a0d 100644
+> --- a/Monitor.c
+> +++ b/Monitor.c
+> @@ -563,7 +563,7 @@ static int check_array(struct state *st, struct mdsta=
+t_ent *mdstat,
+>  		struct mdinfo *sra =3D
+>  			sysfs_read(-1, st->devnum, GET_MISMATCH);
+>  		if (sra && sra->mismatch_cnt > 0) {
+> -			char cnt[40];
+> +			char cnt[44];
+>  			sprintf(cnt, " mismatches found: %d (on raid level %d)",
+>  				sra->mismatch_cnt, array.level);
+>  			alert("RebuildFinished", dev, cnt, ainfo);
+
+Applied, thanks.
+Plus I changed it to "snprintf" and made the 'cnt' even larger.
+Should probably use asprintf there...
+
+Thanks,
+NeilBrown
+
+--Sig_/EbGHlM7cvw+jIa/OOJw7rAz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBTw4d8jnsnt1WYoG5AQJt3xAAs34un1IT6RRTH5/Fr2ucI1MUdPd4pPha
+2D+cHDCDHKC7S41xE8gOsJUQnR0DPfF7z0uJBx5M/TzBBoXlAsGp/6TjWf9hYRUO
+XdAfYeAki23jwdGgk1gZYIr7sfFPQfPaGcpHafX5wyXuBf5EGoqbUlWYL24n8cws
+SW67FH0iPNGoUovauI5X8eiiGz8ceWKbEinZtLXaRGHU28ikUKSMt2ZmK9wN3iqL
+xHoUW4UFya3sWIBF0inqP+o71l9Kff9D/QvjqmNJ/40E7ve4vid5AKUNhfc6Ui96
+WLtjoQmkycMu4WPvntsdPx5rkiCpyMqKEvFawvBJrl4p4u+gBX/bNc32y1vikLJl
+j4h2XYRXP3HA/qCzH0FPt87qaC9xi9dt6sYpt/UHttQeI6dlHwLIUr6lyJupsNF6
+5ZByYbYdT225sfyPGoA+uUbZTV39IZUsM+tfyhi8JALvGt6DiWQEZ+w983JPh1mU
+KHGBAL0N+Le/2p1dFaQkt6FImwBY9eXqxu8L5YZySj/mXba+5ep2BkeH+xNpIEi5
+FT29p9cv79144Bw3vmVCjLJEkkIfRzg62CsvzIQiCx4ACkyKPN7x/bRN94cTqKAG
+XtSEzgLo7JXnlR8mb/KRNWH/6qwqV2xgaCK5Oh3WsJBkm/GSAZr+dpdnIOdvoL6P
+LAhqYSOKjnk=
+=ErcE
+-----END PGP SIGNATURE-----
+
+--Sig_/EbGHlM7cvw+jIa/OOJw7rAz--
