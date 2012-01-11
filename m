@@ -1,125 +1,371 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Renaming MD devices (metadata=1.1)
-Date: Wed, 11 Jan 2012 18:03:47 +1100
-Message-ID: <20120111180347.0d177edf@notabene.brown>
-References: <4F0BD6EA.8010007@grm.polymtl.ca>
-	<4F0C1A03.8020509@ziu.info>
-	<4F0D272A.2060000@grm.polymtl.ca>
-	<20120111172047.6af5571f@notabene.brown>
-	<4F0D2EBF.5070807@grm.polymtl.ca>
+From: <b29237@freescale.com>
+Subject: [PATCH][RFC]      RAID5/DMA/memcpy: zero copy the bio page when possible
+Date: Wed, 11 Jan 2012 15:47:34 +0800
+Message-ID: <1326268054-26996-1-git-send-email-b29237@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F0D2EBF.5070807@grm.polymtl.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gilbert Kowarzyk <kowarzyk@grm.polymtl.ca>
-Cc: Michal Soltys <soltys@ziu.info>, linux-raid@vger.kernel.org
+To: neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, r58472@freescale.com
+Cc: Forrest shi <b29237@freescale.com>
 List-Id: linux-raid.ids
 
-LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBXZWQs
-IDExIEphbiAyMDEyIDAxOjM5OjU5IC0wNTAwIEdpbGJlcnQgS293YXJ6eWsgPGtvd2FyenlrQGdy
-bS5wb2x5bXRsLmNhPg0Kd3JvdGU6DQoNCj4gLS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0Ut
-LS0tLQ0KPiBIYXNoOiBTSEExDQo+IA0KPiBIZWxsbyENCj4gDQo+IFsuLi5dDQo+ID4+PiBBcyB0
-aGUgL2Rldi9tZDkgd2FzIGV4cGxpY2l0bHkgZ2l2ZW4gaW4gdGhpcyBmb3JtLCB0aGUgDQo+ID4+
-PiBNRF9ERVZOQU1FIHdhcyBub3QgcHJlc2VudCBpbiAnbWRhZG0gLS1kZXRhaWwgLS1leHBvcnQn
-IG91dHB1dCwNCj4gPj4+IHRodXMgL2Rldi9tZC85IHdhcyBub3QgY3JlYXRlZCBieSBtZGFkbSdz
-IHVkZXYgcnVsZXMgLSBidXQgaXQNCj4gPj4+IHdvdWxkIGhhdmUgYmVlbiBpZiB5b3UgaGFkIGRv
-bmUgbWRhZG0gLS1hc3NlbWJsZSAvZGV2L21kLzkgLi4uDQo+ID4+IA0KPiA+PiBPaywgSSB0aGlu
-ayBJIGZvbGxvdyB0aGlzLCBidXQgSSBhbSBub3Qgc3VyZS4NCj4gPj4gDQo+ID4+IFdoYXQgeW91
-IGFyZSBzYXlpbmcgaXMgdGhhdCBJIGFtIGdldHRpbmcgL2Rldi9tZDEyNyBiZWNhdXNlIGl0J3MN
-Cj4gPj4gIG5vdCBiZWluZyBjcmVhdGVkIGJ5IHVkZXYgcmlnaHQ/DQo+ID4gDQo+ID4gWW91IGFy
-ZSBnZXR0aW5nIG1kMTI3IGJlY2F1c2UgeW91IGFza2VkIGZvciANCj4gPiAiL2Rldi9tZC94eXou
-aG9tZS5saW51eC5jb206OSIgc28gaXQgZ2F2ZSB5b3UgdGhhdCAobG9vayBpbiANCj4gPiAvZGV2
-L21kKSBidXQgaXQgbmVlZHMgdG8gZ2l2ZSBhbiAnbWRYWCcgbmFtZSB0byB0aGUga2VybmVsIHNv
-IGl0IA0KPiA+IGNob3NlIDEyNyAoYmVjYXVzZSB0aGF0IGlzIHdoZXJlIGl0IHN0YXJ0cyBsb29r
-aW5nIGZvciBmcmVlIA0KPiA+IG51bWJlcnMpIGFuZCB1c2VkIHRoYXQuICBEb24ndCB3b3JyeSBh
-Ym91dCAgdGhlIC9kZXYvbWRYWC4gIFlvdSANCj4gPiBhc2tlZCBmb3IgIi9kZXYvbWQveHl6Lmhv
-bWUubGludXguY29tOjknIGluIG1kYWRtLmNvbmYsICB5b3UgZ290LCANCj4gPiBzbyBqdXN0IHVz
-ZSBpdCBhbmQgaWdub3JlIHRoZSByZXN0Lg0KPiANCj4gT0ssIEkgdGhpbmsgaXQgbWFrZXMgc2Vu
-c2Ugbm93Lg0KPiANCj4gDQo+IFsuLi5dDQo+ID4+IHNvIGV4cGxpY2l0aW5nIHRoZSBtZXRhZGF0
-YT14IGlzIG5vdCBuZWVkZWQ/IFdoYXQncyBpdHMgdXNlPw0KPiA+IA0KPiA+IERvY3VtZW50YXRp
-b24uIEl0IGRvZXNuJ3QgaHVydCwgYW5kIEkgd2FudCAibWRhZG0gLURiIiB0byByZXBvcnQgDQo+
-ID4gaXQsIHNvIGlmIEkgYWxsb3cgaXQgaW4gbWRhZG0uY29uZiB0aGVuIGl0IGlzIGVhc2llciB0
-byB1c2UgdGhlIA0KPiA+IG91dHB1dCBvZiAibWRhZG0gLURiIiBpbiBtZGFkbS5jb25mLg0KPiAN
-Cj4gSSBzZWUuIFdlbGwsIHRoYXQncyBhbHNvIGdvb2QgdG8ga25vdy4NCj4gDQo+IFdoaWxlIHdl
-IGFyZSBhdCBpdCwgd2hhdCBpcyB0aGUgcmVhc29ucyB0eXBlcyAxLjAsIDEuMSBhbmQgMS4yIGV4
-aXN0Pw0KPiAtIEZyb20gd2hhdCBJIHVuZGVyc3RhbmQgImVpdGhlciBhdCB0aGUgZW5kIChmb3Ig
-MS4wKSwgYXQgdGhlIHN0YXJ0IChmb3INCj4gMS4xKSBvciA0SyBmcm9tIHRoZSBzdGFydCAoZm9y
-IDEuMikiLg0KPiANCj4gV2h5IGRvIHdlIGhhdmUgdGhlc2UgY2hvaWNlcywgYW5kIHdoZW4gc2hv
-dWxkIGVhY2ggYmUgdXNlZD8NCg0KMS4wIChhdCB0aGUgZW5kKSBpcyBiZXN0IGZvciBSQUlEMSB3
-aGVuIGJvb3RpbmcgZnJvbSB0aGUgZGV2aWNlIGFzIHRoZQ0KYm9vdC1sb2FkIGp1c3QgZG9lc24n
-dCBzZWUgdGhlIFJBSUQgYXQgYWxsLg0KDQoxLjEgKGF0IHRoZSBzdGFydCkgaXMgZ2VuZXJhbGx5
-IGdvb2QgYmVjYXVzZSB2YXJpb3VzIGRpZmZlcmVudCB0aGluZ3MgaGF2ZQ0KbWV0YWRhdGEgYXQg
-dGhlIHN0YXJ0LCBzbyB0aGVyZSBpcyBubyBjaGFuY2Ugb2YgY29uZnVzaW9uIGFib3V0IHdoYXQg
-aXMgdXNpbmcNCnRoYXQgZGV2aWNlcyAtIGVhY2ggcG9zc2libGUgdXNlcnMgd2lsbCBvdmVyd3Jp
-dGUgdGhlIG1ldGFkYXRhIG9mIHRoZSBvdGhlcnMuDQpJdCBpcyBhbHNvIGVhc2llciB0byBtYWtl
-IHRoZSBkZXZpY2VzIGxhcmdlciBpZiB5b3UgZG9uJ3QgbmVlZCB0byBtb3ZlIHRoZQ0KbWV0YWRh
-dGEuDQoNCjEuMiAoNEsgZnJvbSB0aGUgc3RhcnQpIGhhcyBtb3N0IG9mIHRoZSBiZW5lZml0cyBm
-b3IgMS4xIGJ1dCB3b3JrcyBmb3INCmJvb3Rpbmcgd2l0aCBuZXdlciBib290IGxvYWRlcnMgLSB0
-aGV5IHN0aWxsIHdhbnQgc2VjdG9yIDAgZm9yIGEgYm9vdCBzZWN0b3INCmJ1dCB1bmRlcnN0YW5k
-IHRoZSBtZCBzdXBlcmJsb2NrLg0KDQoNCj4gDQo+IA0KPiA+Pj4gU28gdG8gc3VtIGl0IHVwIC0g
-aWYgJzknIGlzIHdoYXQgeW91J3JlIGFmdGVyIC0gdGhlbiB0aGUgQVJSQVkNCj4gPj4+ICBsaW5l
-IHdpdGgganVzdCBVVUlEIGlzIGFsbCB5b3Ugc2hvdWxkIGJlIG5lZWRpbmcgLSBhbmQgeW91IA0K
-PiA+Pj4gc2hvdWxkIGFsd2F5cyBnZXQgL2Rldi9tZC85IChwb2ludGluZyB0byBzb21ldGhpbmcg
-ZWxzZSANCj4gPj4+IGFzc2lnbmVkIGR5bmFtaWNhbGx5KS4NCj4gPj4+IA0KPiA+Pj4gSWYgdWRl
-dmQgaXMgbm90IHJ1bm5pbmcgKGhhcmRseSBpbnRlcmVzdGluZyBjYXNlIGFueW1vcmUpLCB0aGVu
-DQo+ID4+PiBtZGFkbSB3aWxsIGZhbGwgYmFjayB0byB0aGUgcHJlLXVkZXYgYmVoYXZpb3IgYW5k
-IHNldHVwIHRoZQ0KPiA+Pj4gbm9kZXMgaXRzZWxmLCB0aG91Z2ggdGhlIHJ1bGVzIGFyZSBzbGln
-aHRseSBkaWZmZXJlbnQgdGhlbi4NCj4gPj4gDQo+ID4+IEkganVzdCBsZWZ0IEFSUkFZIFVVSUQ9
-MGZhN2Y3Mzc6NzgwNmNhNjE6ZmI4OWVkZDY6MTRhYTM1MWEgaW4gDQo+ID4+IC9ldGMvbWRhZG0u
-Y29uZiwgcmVib290ZWQsIGFuZCBpdCdzIHN0aWxsIGFwcGVhcmluZyBhcyANCj4gPj4gL2Rldi9t
-ZDEyNy4NCj4gPiANCj4gPiBKdXN0IGFzIEkgd291bGQgZXhwZWN0LiAgWW91IGRpZG4ndCBhc2sg
-Zm9yIGEgc3BlY2lmaWMgbnVtYmVyLCBzbyANCj4gPiBpdCBqdXN0IGNob3NlIGFuIGFyYml0cmFy
-eSBvbmUuDQo+IA0KPiBPay4NCj4gDQo+IA0KPiA+PiBTbyBJIGFtIG5vdCBzdXJlIHdoeS4uLiBX
-aGF0IG1heSBJIGJlIG1pc3Npbmc/DQo+ID4gDQo+ID4gRG9uJ3Qga25vdy4gIE1heWJlIHlvdSBh
-cmUgZXhwZWN0aW5nIHNvbWV0aGluZyB0aGF0IGlzbid0IG5lZWRlZC4NCj4gPiANCj4gPiBXaGF0
-IGV4YWN0bHkgZG8geW91IHdhbnQ/ICBBbmQgd2h5Pw0KPiANCj4gV2VsbCwgdG8gYmUgaG9uZXN0
-LCB3aGF0IEkgKnJlYWxseSogd2FudGVkIHdhcyB0byB1bmRlcnN0YW5kIHdoeSBJDQo+IHdhc24n
-dCBhYmxlIHRvIHJlbmFtZSB0aGUgYXJyYXlzLiBJIHdhbnRlZCB0byB1bmRlcnN0YW5kIHdoYXQg
-dGhlDQo+IHN5c3RlbSB3YXMgZG9pbmcsIGJlY2F1c2UgSSBkb24ndCBsaWtlIG5vdCB1bmRlcnN0
-YW5kaW5nIHdoeSBteSBzZXR1cA0KPiBkb2Vzbid0IGJlaGF2ZSB0aGUgd2F5IEkgZXhwZWN0IGl0
-IHRvLiBTbywgSSB3YW50ZWQgdG8gbGVhcm4gd2hhdCBJDQo+IHdhcyBtaXNzaW5nIGluIG15IHVu
-ZGVyc3RhbmRpbmcuDQoNCkNvbW1lbmRhYmxlIQ0KDQpOZWlsQnJvd24NCg0KDQo+IA0KPiBIb3cg
-SSBjYW1lIGFib3V0IHdhbnRpbmcgdG8ga25vdyB0aGlzIGlzIGJlY2F1c2UgSSB0cmllZCByZW5h
-bWluZyB0aGUNCj4gZGV2aWNlcywgYW5kIGl0IHdhc24ndCB3b3JraW5nLCBkZXNwaXRlIG1lIHJl
-YWRpbmcgZGlmZmVyZW50IHBlb3BsZSdzDQo+IHBvc3RzIG9uIHRoZSBuZXQuIEkgdHJpZWQgcmVh
-ZGluZyB0aGUgZG9jdW1lbnRhdGlvbiB0b28sIGJ1dCBJIHNvbWVob3cNCj4gbWlzc2VkIHJlYWRp
-bmcgYWJvdXQgdGhlIHVwZGF0aW5nIG9mIGluaXRyYW1mcyAoSSB0aG91Z2h0IEkgb25seQ0KPiBu
-ZWVkZWQgdG8gZG8gdGhhdCBpZiB0aGUgZGV2aWNlIHdoZXJlICIvIiBpcyBjaGFuZ2VkIG5hbWVz
-KS4NCj4gDQo+IEluZGVlZCwgSSBjb3VsZCBoYXZlIGNvbnRpbnVlZCBrZWVwaW5nIHRoZXNlIGRl
-dmljZXMgbmFtZWQgL2Rldi9tZDEyNw0KPiBldGMgKHRoZXJlIGlzIG5vIGhhcm0gaW4gaGF2aW5n
-IHRob3NlIG5hbWVzKSwgYnV0IG15IG1pbmQganVzdCBkb2Vzbid0DQo+IHdvcmsgdGhhdCB3YXku
-Li4NCj4gSSBoYWQgdGhlIG5lZWQgb2YgdW5kZXJzdGFuZGluZyB3aGF0IHdhcyBoYXBwZW5pbmcg
-YW5kIHdoeSB3aGF0ZXZlciBJDQo+IHdhcyB0cnlpbmcgdG8gZG8gd2Fzbid0IHdvcmtpbmcgOikN
-Cj4gDQo+IFNvIEkgY2FtZSBhYm91dCB0byB5b3VyIGNvbnRyaWJ1dGlvbnMgdG8gdGhlIHNvdXJj
-ZSBjb2RlLCB0aGVuIHRvIHlvdXINCj4gYmxvZyBwYWdlLCB0aGVuIGZyb20gdGhlcmUgdG8gZW1h
-aWxpbmcgdGhpcyBsaXN0IGFzIHlvdSBzdWdnZXN0ZWQgOikNCj4gDQo+IEkgZmlndXJlZCB0aGF0
-IGlmIEkgd2VyZSB0byBhc2sgdGhlc2UgcXVlc3Rpb25zLCBJIGhhZCB0byBnaXZlIGFzIG11Y2gN
-Cj4gaW5mbyBhcyBwb3NzaWJsZSB0byBhdm9pZCB3YXN0aW5nIHlvdXIgdGltZSAod2hpY2ggaXMg
-d2h5IEkgcGFzdGVkIGFsbA0KPiB0aGUgaW5mbyBJIHRob3VnaHQgY291bGQgbWF0dGVyLCBhbmQg
-dHJpZWQgdG8gb3JnYW5pemUgaXQgYSBiaXQuLi4gYXMNCj4gZmFyIGFzIEkgaGFkIGNvbWUgdG8g
-dW5kZXJzdGFuZCBpdCkuDQo+IA0KPiBUaGF0J3MgdGhlIHdob2xlIHN0b3J5Lg0KPiANCj4gU28g
-dGhhbmtzIGFnYWluIGZvciB0YWtpbmcgdGhlIHRpbWUgZm9yIHJlYWRpbmcgYWxsIG9mIHRoaXMg
-OikNCj4gWW91IGd1eXMgd2VyZSByZWFsbHkgcmVzcG9uc2l2ZSENCj4gDQo+IEkgd2lzaCB5b3Ug
-YWxsIGEgbmljZSB3ZWVrIQ0KPiANCj4gR2lsYmVydA0KPiAtLS0tLUJFR0lOIFBHUCBTSUdOQVRV
-UkUtLS0tLQ0KPiBWZXJzaW9uOiBHbnVQRyB2MS40LjExIChEYXJ3aW4pDQo+IENvbW1lbnQ6IGRp
-Z2l0YWwgc2lnbmF0dXJlDQo+IENvbW1lbnQ6IFVzaW5nIEdudVBHIHdpdGggTW96aWxsYSAtIGh0
-dHA6Ly9lbmlnbWFpbC5tb3pkZXYub3JnLw0KPiANCj4gaUVZRUFSRUNBQVlGQWs4TkxyZ0FDZ2tR
-T1lWcDFScExzbVU5MWdDZ2hJaXhEK0k1Y3pyVkFsTmlmY3I3QTIwWg0KPiBRcUlBb0phdmVLTVdB
-ek55Ykk0UjFnWDBZVHNZb1lhbA0KPiA9d2p0VA0KPiAtLS0tLUVORCBQR1AgU0lHTkFUVVJFLS0t
-LS0NCg0KLS0tLS1CRUdJTiBQR1AgU0lHTkFUVVJFLS0tLS0NClZlcnNpb246IEdudVBHIHYyLjAu
-MTggKEdOVS9MaW51eCkNCg0KaVFJVkF3VUJUdzAwVXpuc250MVdZb0c1QVFLamNoQUF1Y2Z2elAy
-R1V5L1ZNbmlPdmlseWtQazN3Y0hJM1h5Ng0Kb3hqNkVJb2FCdkorOFhSc2hZM3h4aGd6dXA3VHc1
-NUtGVld3YjdSVE9DdGtYZnBORm1odjVKMHphSDhuWGxPOQ0Kejh1WHRmb0ZmQzZBMkN0VnhZMEpQ
-R2FpeHFDSW8rSmtKZ3VLelNBZWExNXFoOWc2V1JkSmliWGxodW5pK2EzUw0KMzViaXJ4bjkxRlZm
-dnlDQWl0aXBLcUxGdXpFVHQyNEhjbTY3R0lpMkRFRVhOZ3RrQU81amtpcXRlSlpYTXRtUA0KTGwy
-V3NtZFRGMmU0Q3dSakJkMFZ3djZOcU1PZzEwS3BSV2RPZ3NJM1JXNXJTZGdyeEpDajhZUG1rY1JZ
-dVdtMQ0KV2d5TlZQRit6WDdRcUZCUGEwa0s4Ylo5bGJUWk0yMEtySTRucWFiMGVqVHI5aXl4d3B6
-Y0pPTnRlQWY0QTN2dw0KYlJrT09wTGN3T3d4VzRBalg3T3l3Q2hjRFpOVkpIck9aZkpUbFdNOVcz
-dXJHUGhQYnVMQ2pJKzNSTWR5cnhHdg0KeXhaQkJUektId0M1SG05MzRaZXRaemUyMkpUZER4M3hw
-eitUWlRYOExxcExyQUhJem9zK0FwOVJTRFo4c24wMA0KcUZPekt6WTVtOHlCUWt0RDJvQ2VCQWVr
-S3htQklCZVE0SFE5VE94V09HUEdqTXE3Mk1VZGt2WXBzM2hIN1I4Wg0KbEdSU0h0MU95bmxYL3p0
-L3A0KzBKZkMwSHFaaGFmRkR4U3RSRVdndkplbVVzKzcrdjBsTnJUYmU2WUlIT0xiYg0KdHlDcE1t
-M0JhVmhkUzhLY2hUTERJakVuL1RqWjl4eUdKTTRnMDljV2lENXRhV0xlb3FkTlVpU1grVjVqMmlo
-UA0KOEdjaitUNTdvbW89DQo9V0V4Rw0KLS0tLS1FTkQgUEdQIFNJR05BVFVSRS0tLS0tDQo=
+From: Forrest shi <b29237@freescale.com>
+
+     each disk holds one page in the stripe header, the page works as a
+     buffer cache for raid computing and it is copied to and from bio page
+     which requested by upper level read/write call.
+
+     if the write access would overwrite the whole page, the copy from
+     bio page to stripe header page could be avoid. We can do xor directly
+     on the bio page.
+
+     this patch implements this strategy and improves raid5 write performance.
+
+     Signed-off-by: Forrest Shi<b29237@freescale.com>
+---
+ drivers/dma/Kconfig        |    8 +++
+ drivers/md/raid5.c         |  125 ++++++++++++++++++++++++++++++++++++++-----
+ drivers/md/raid5.h         |    6 ++
+ include/linux/page-flags.h |   11 ++++
+ mm/filemap.c               |   21 +++++++
+ 5 files changed, 156 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/dma/Kconfig b/drivers/dma/Kconfig
+index dd8e959..28f960b 100644
+--- a/drivers/dma/Kconfig
++++ b/drivers/dma/Kconfig
+@@ -280,6 +280,14 @@ config ASYNC_TX_DMA
+ 
+ 	  If unsure, say N.
+ 
++config RAID_ZERO_COPY 
++        bool "Optimized DMA/XOR offload: reduce raid5 memcpy which offloaded for dma"
++        depends on ASYNC_TX_DMA
++        help
++          This allows the async_tx api try to reduce raid5 memcpy operations for
++          dma. If you have dma device to support memcpy offloading, you can set
++          it as Y, else N.
++
+ config DMATEST
+ 	tristate "DMA Test client"
+ 	depends on DMA_ENGINE
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index cbb50d3..33afeeb 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3,7 +3,8 @@
+  *	   Copyright (C) 1996, 1997 Ingo Molnar, Miguel de Icaza, Gadi Oxman
+  *	   Copyright (C) 1999, 2000 Ingo Molnar
+  *	   Copyright (C) 2002, 2003 H. Peter Anvin
+- *
++ *	   Copyright (C) 2010, Freescale Semiconductor, Inc. All rights
++ *		reserved.
+  * RAID-4/5/6 management functions.
+  * Thanks to Penguin Computing for making the RAID-6 development possible
+  * by donating a test server!
+@@ -558,6 +559,14 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 				set_bit(STRIPE_DEGRADED, &sh->state);
+ 			pr_debug("skip op %ld on disc %d for sector %llu\n",
+ 				bi->bi_rw, i, (unsigned long long)sh->sector);
++#ifdef CONFIG_RAID_ZERO_COPY
++			if (test_bit(R5_DirectAccess, &sh->dev[i].flags)) {
++				struct page *pg = sh->dev[i].page;
++				BUG_ON(sh->dev[i].req.bi_io_vec[0].bv_page ==
++					pg);
++				sh->dev[i].req.bi_io_vec[0].bv_page = pg;
++			}
++#endif
+ 			clear_bit(R5_LOCKED, &sh->dev[i].flags);
+ 			set_bit(STRIPE_HANDLE, &sh->state);
+ 		}
+@@ -685,6 +694,7 @@ static void ops_run_biofill(struct stripe_head *sh)
+ 			dev->read = rbi = dev->toread;
+ 			dev->toread = NULL;
+ 			spin_unlock_irq(&conf->device_lock);
++
+ 			while (rbi && rbi->bi_sector <
+ 				dev->sector + STRIPE_SECTORS) {
+ 				tx = async_copy_data(0, rbi, dev->page,
+@@ -754,10 +764,17 @@ ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 		__func__, (unsigned long long)sh->sector, target);
+ 	BUG_ON(!test_bit(R5_Wantcompute, &tgt->flags));
+ 
+-	for (i = disks; i--; )
+-		if (i != target)
+-			xor_srcs[count++] = sh->dev[i].page;
+-
++	for (i = disks; i--; ) {
++		struct r5dev *dev = &sh->dev[i];
++		struct page *pg = dev->page;
++		if (i != target) {
++#ifdef CONFIG_RAID_ZERO_COPY
++			if (test_bit(R5_DirectAccess, &dev->flags))
++				pg = dev->req.bi_io_vec[0].bv_page;
++#endif
++			xor_srcs[count++] = pg;
++		}
++	}
+ 	atomic_inc(&sh->count);
+ 
+ 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_ZERO_DST, NULL,
+@@ -993,8 +1010,14 @@ ops_run_prexor(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 	for (i = disks; i--; ) {
+ 		struct r5dev *dev = &sh->dev[i];
+ 		/* Only process blocks that are known to be uptodate */
+-		if (test_bit(R5_Wantdrain, &dev->flags))
+-			xor_srcs[count++] = dev->page;
++		if (test_bit(R5_Wantdrain, &dev->flags)) {
++			struct page *pg = dev->page;
++#ifdef CONFIG_RAID_ZERO_COPY
++			if (test_bit(R5_DirectAccess, &dev->flags))
++				pg = dev->req.bi_io_vec[0].bv_page;
++#endif
++			xor_srcs[count++] = pg;
++		}
+ 	}
+ 
+ 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_DROP_DST, tx,
+@@ -1004,6 +1027,32 @@ ops_run_prexor(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 	return tx;
+ }
+ 
++#ifdef CONFIG_RAID_ZERO_COPY
++static struct page *raid5_zero_copy(struct bio *bio, sector_t sector)
++{
++	sector_t bi_sector = bio->bi_sector;
++	struct page *page = NULL;
++	struct bio_vec *bv;
++	int i;
++
++	bio_for_each_segment(bv, bio, i) {
++		if (sector == bi_sector)
++			page = bio_iovec_idx(bio, i)->bv_page;
++
++		bi_sector += bio_iovec_idx(bio, i)->bv_len >> 9;
++		if (bi_sector >= sector + STRIPE_SECTORS) {
++			/* check if the stripe is covered by one page */
++			if (page == bio_iovec_idx(bio, i)->bv_page) {
++				SetPageConstant(page);
++				return page;
++			}
++			return NULL;
++		}
++	}
++	return NULL;
++}
++#endif
++
+ static struct dma_async_tx_descriptor *
+ ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
+ {
+@@ -1025,8 +1074,28 @@ ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
+ 			dev->towrite = NULL;
+ 			BUG_ON(dev->written);
+ 			wbi = dev->written = chosen;
++#ifdef CONFIG_RAID_ZERO_COPY
++			set_bit(R5_LOCKED, &dev->flags);
++			BUG_ON(test_bit(R5_DirectAccess, &dev->flags));
+ 			spin_unlock(&sh->lock);
+ 
++			if (!wbi->bi_next && test_bit(R5_OVERWRITE, &dev->flags)
++					&& test_bit(R5_Insync, &dev->flags)) {
++				struct page *pg = raid5_zero_copy(wbi,
++								dev->sector);
++				if (pg) {
++					dev->req.bi_io_vec[0].bv_page = pg;
++					set_bit(R5_DirectAccess, &dev->flags);
++					clear_bit(R5_UPTODATE, &dev->flags);
++					clear_bit(R5_OVERWRITE, &dev->flags);
++					continue;
++				}
++			}
++			clear_bit(R5_OVERWRITE, &dev->flags);
++			set_bit(R5_UPTODATE, &dev->flags);
++#else
++			spin_unlock(&sh->lock);
++#endif
+ 			while (wbi && wbi->bi_sector <
+ 				dev->sector + STRIPE_SECTORS) {
+ 				if (wbi->bi_rw & REQ_FUA)
+@@ -1102,15 +1171,29 @@ ops_run_reconstruct5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 		xor_dest = xor_srcs[count++] = sh->dev[pd_idx].page;
+ 		for (i = disks; i--; ) {
+ 			struct r5dev *dev = &sh->dev[i];
+-			if (dev->written)
+-				xor_srcs[count++] = dev->page;
++			struct page *pg = dev->page;
++
++			if (dev->written) {
++#ifdef CONFIG_RAID_ZERO_COPY
++				if (test_bit(R5_DirectAccess, &dev->flags))
++					pg = dev->req.bi_io_vec[0].bv_page;
++#endif
++				xor_srcs[count++] = pg;
++			}
+ 		}
+ 	} else {
+ 		xor_dest = sh->dev[pd_idx].page;
+ 		for (i = disks; i--; ) {
+ 			struct r5dev *dev = &sh->dev[i];
+-			if (i != pd_idx)
+-				xor_srcs[count++] = dev->page;
++			struct page *pg = dev->page;
++
++			if (i != pd_idx) {
++#ifdef CONFIG_RAID_ZERO_COPY
++				if (test_bit(R5_DirectAccess, &dev->flags))
++					pg = dev->req.bi_io_vec[0].bv_page;
++#endif
++				xor_srcs[count++] = pg;
++			}
+ 		}
+ 	}
+ 
+@@ -1637,6 +1720,7 @@ static void raid5_end_read_request(struct bio * bi, int error)
+ 			md_error(conf->mddev, rdev);
+ 		}
+ 	}
++
+ 	rdev_dec_pending(conf->disks[i].rdev, conf->mddev);
+ 	clear_bit(R5_LOCKED, &sh->dev[i].flags);
+ 	set_bit(STRIPE_HANDLE, &sh->state);
+@@ -1666,15 +1750,19 @@ static void raid5_end_write_request(struct bio *bi, int error)
+ 		md_error(conf->mddev, conf->disks[i].rdev);
+ 
+ 	rdev_dec_pending(conf->disks[i].rdev, conf->mddev);
+-	
++#ifdef CONFIG_RAID_ZERO_COPY
++	if (test_bit(R5_DirectAccess, &sh->dev[i].flags)) {
++		BUG_ON(sh->dev[i].req.bi_io_vec[0].bv_page == sh->dev[i].page);
++		sh->dev[i].req.bi_io_vec[0].bv_page = sh->dev[i].page;
++	}
++#endif
+ 	clear_bit(R5_LOCKED, &sh->dev[i].flags);
+ 	set_bit(STRIPE_HANDLE, &sh->state);
+ 	release_stripe(sh);
+ }
+ 
+-
+ static sector_t compute_blocknr(struct stripe_head *sh, int i, int previous);
+-	
++
+ static void raid5_build_block(struct stripe_head *sh, int i, int previous)
+ {
+ 	struct r5dev *dev = &sh->dev[i];
+@@ -2505,7 +2593,11 @@ static void handle_stripe_clean_event(raid5_conf_t *conf,
+ 		if (sh->dev[i].written) {
+ 			dev = &sh->dev[i];
+ 			if (!test_bit(R5_LOCKED, &dev->flags) &&
+-				test_bit(R5_UPTODATE, &dev->flags)) {
++				(test_bit(R5_UPTODATE, &dev->flags)
++#ifdef CONFIG_RAID_ZERO_COPY
++				|| test_bit(R5_DirectAccess, &dev->flags)
++#endif
++			)) {
+ 				/* We can return any write requests */
+ 				struct bio *wbi, *wbi2;
+ 				int bitmap_end = 0;
+@@ -2513,6 +2605,9 @@ static void handle_stripe_clean_event(raid5_conf_t *conf,
+ 				spin_lock_irq(&conf->device_lock);
+ 				wbi = dev->written;
+ 				dev->written = NULL;
++#ifdef CONFIG_RAID_ZERO_COPY
++				clear_bit(R5_DirectAccess, &dev->flags);
++#endif
+ 				while (wbi && wbi->bi_sector <
+ 					dev->sector + STRIPE_SECTORS) {
+ 					wbi2 = r5_next_bio(wbi, dev->sector);
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 3ca77a2..b1db89f 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -276,6 +276,12 @@ struct r6_state {
+ 				    */
+ #define R5_Wantdrain	13 /* dev->towrite needs to be drained */
+ #define R5_WantFUA	14	/* Write should be FUA */
++
++#ifdef CONFIG_RAID_ZERO_COPY
++#define R5_DirectAccess 15 /* access cached pages directly instead of
++                                       * sh pages */
++#endif
++
+ /*
+  * Write method
+  */
+diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
+index 6081493..fc74541 100644
+--- a/include/linux/page-flags.h
++++ b/include/linux/page-flags.h
+@@ -104,6 +104,9 @@ enum pageflags {
+ #ifdef CONFIG_MEMORY_FAILURE
+ 	PG_hwpoison,		/* hardware poisoned page. Don't touch */
+ #endif
++#ifdef CONFIG_RAID_ZERO_COPY
++        PG_constant,            /* const page not modified during raid5 io */
++#endif
+ #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+ 	PG_compound_lock,
+ #endif
+@@ -196,6 +199,14 @@ static inline int __TestClearPage##uname(struct page *page) { return 0; }
+ 
+ struct page;	/* forward declaration */
+ 
++#ifdef CONFIG_RAID_ZERO_COPY
++#define PageConstant(page) test_bit(PG_constant, &(page)->flags)
++#define SetPageConstant(page) set_bit(PG_constant, &(page)->flags)
++#define ClearPageConstant(page) clear_bit(PG_constant, &(page->flags))
++#define TestSetPageConstant(page) test_and_set_bit(PG_constant, &(page)->flags)
++extern void clear_page_constant(struct page *page);
++#endif
++
+ TESTPAGEFLAG(Locked, locked)
+ PAGEFLAG(Error, error) TESTCLEARFLAG(Error, error)
+ PAGEFLAG(Referenced, referenced) TESTCLEARFLAG(Referenced, referenced)
+diff --git a/mm/filemap.c b/mm/filemap.c
+index a8251a8..5052b72 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -28,6 +28,11 @@
+ #include <linux/backing-dev.h>
+ #include <linux/pagevec.h>
+ #include <linux/blkdev.h>
++
++#ifdef CONFIG_RAID_ZERO_COPY
++#include <linux/rmap.h>
++#endif
++
+ #include <linux/security.h>
+ #include <linux/syscalls.h>
+ #include <linux/cpuset.h>
+@@ -636,10 +641,26 @@ void end_page_writeback(struct page *page)
+ 		BUG();
+ 
+ 	smp_mb__after_clear_bit();
++
++#ifdef CONFIG_RAID_ZERO_COPY
++	clear_page_constant(page);
++#endif
++
+ 	wake_up_page(page, PG_writeback);
+ }
+ EXPORT_SYMBOL(end_page_writeback);
+ 
++#ifdef CONFIG_RAID_ZERO_COPY
++void clear_page_constant(struct page *page)
++{
++	if (PageConstant(page)) {
++		ClearPageConstant(page);
++		SetPageUptodate(page);
++	}
++}
++EXPORT_SYMBOL(clear_page_constant);
++#endif
++
+ /**
+  * __lock_page - get a lock on the page, assuming we need to sleep to get it
+  * @page: the page to lock
+-- 
+1.7.0.4
+
+
