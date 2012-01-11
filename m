@@ -1,14 +1,32 @@
-From: <b29237@freescale.com>
-Subject: [PATCH][RFC]      RAID5/DMA/memcpy: zero copy the bio page when possible
-Date: Wed, 11 Jan 2012 15:47:34 +0800
-Message-ID: <1326268054-26996-1-git-send-email-b29237@freescale.com>
+From: Shi Xuelin-B29237 <B29237@freescale.com>
+Subject: RE: [PATCH][RFC]      RAID5/DMA/memcpy: zero copy the bio page when
+ possible
+Date: Wed, 11 Jan 2012 07:48:37 +0000
+Message-ID: <DBB740589CE8814680DECFE34BE197AB166583@039-SN1MPN1-006.039d.mgd.msft.net>
+References: <1326268054-26996-1-git-send-email-b29237@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, r58472@freescale.com
-Cc: Forrest shi <b29237@freescale.com>
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1326268054-26996-1-git-send-email-b29237@freescale.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "neilb@suse.de" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Li Yang-R58472 <r58472@freescale.com>
+Cc: Shi Xuelin-B29237 <B29237@freescale.com>
 List-Id: linux-raid.ids
+
+Revised version according to NeilBrown's comments.
+Add more description about the patch and fix one typo error of {}.
+
+Thanks,
+Forrest
+
+-----Original Message-----
+From: Shi Xuelin-B29237 
+Sent: 2012年1月11日 15:48
+To: neilb@suse.de; linux-raid@vger.kernel.org; linux-kernel@vger.kernel.org; Li Yang-R58472
+Cc: Shi Xuelin-B29237
+Subject: [PATCH][RFC] RAID5/DMA/memcpy: zero copy the bio page when possible
 
 From: Forrest shi <b29237@freescale.com>
 
@@ -31,8 +49,7 @@ From: Forrest shi <b29237@freescale.com>
  mm/filemap.c               |   21 +++++++
  5 files changed, 156 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/dma/Kconfig b/drivers/dma/Kconfig
-index dd8e959..28f960b 100644
+diff --git a/drivers/dma/Kconfig b/drivers/dma/Kconfig index dd8e959..28f960b 100644
 --- a/drivers/dma/Kconfig
 +++ b/drivers/dma/Kconfig
 @@ -280,6 +280,14 @@ config ASYNC_TX_DMA
@@ -50,8 +67,7 @@ index dd8e959..28f960b 100644
  config DMATEST
  	tristate "DMA Test client"
  	depends on DMA_ENGINE
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index cbb50d3..33afeeb 100644
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c index cbb50d3..33afeeb 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
 @@ -3,7 +3,8 @@
@@ -86,8 +102,7 @@ index cbb50d3..33afeeb 100644
 +
  			while (rbi && rbi->bi_sector <
  				dev->sector + STRIPE_SECTORS) {
- 				tx = async_copy_data(0, rbi, dev->page,
-@@ -754,10 +764,17 @@ ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 				tx = async_copy_data(0, rbi, dev->page, @@ -754,10 +764,17 @@ ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
  		__func__, (unsigned long long)sh->sector, target);
  	BUG_ON(!test_bit(R5_Wantcompute, &tgt->flags));
  
@@ -101,15 +116,13 @@ index cbb50d3..33afeeb 100644
 +		if (i != target) {
 +#ifdef CONFIG_RAID_ZERO_COPY
 +			if (test_bit(R5_DirectAccess, &dev->flags))
-+				pg = dev->req.bi_io_vec[0].bv_page;
-+#endif
++				pg = dev->req.bi_io_vec[0].bv_page; #endif
 +			xor_srcs[count++] = pg;
 +		}
 +	}
  	atomic_inc(&sh->count);
  
- 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_ZERO_DST, NULL,
-@@ -993,8 +1010,14 @@ ops_run_prexor(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_ZERO_DST, NULL, @@ -993,8 +1010,14 @@ ops_run_prexor(struct stripe_head *sh, struct raid5_percpu *percpu,
  	for (i = disks; i--; ) {
  		struct r5dev *dev = &sh->dev[i];
  		/* Only process blocks that are known to be uptodate */
@@ -119,20 +132,17 @@ index cbb50d3..33afeeb 100644
 +			struct page *pg = dev->page;
 +#ifdef CONFIG_RAID_ZERO_COPY
 +			if (test_bit(R5_DirectAccess, &dev->flags))
-+				pg = dev->req.bi_io_vec[0].bv_page;
-+#endif
++				pg = dev->req.bi_io_vec[0].bv_page; #endif
 +			xor_srcs[count++] = pg;
 +		}
  	}
  
- 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_DROP_DST, tx,
-@@ -1004,6 +1027,32 @@ ops_run_prexor(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_DROP_DST, tx, @@ -1004,6 +1027,32 @@ ops_run_prexor(struct stripe_head *sh, struct raid5_percpu *percpu,
  	return tx;
  }
  
 +#ifdef CONFIG_RAID_ZERO_COPY
-+static struct page *raid5_zero_copy(struct bio *bio, sector_t sector)
-+{
++static struct page *raid5_zero_copy(struct bio *bio, sector_t sector) {
 +	sector_t bi_sector = bio->bi_sector;
 +	struct page *page = NULL;
 +	struct bio_vec *bv;
@@ -156,10 +166,7 @@ index cbb50d3..33afeeb 100644
 +}
 +#endif
 +
- static struct dma_async_tx_descriptor *
- ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
- {
-@@ -1025,8 +1074,28 @@ ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
+ static struct dma_async_tx_descriptor *  ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)  { @@ -1025,8 +1074,28 @@ ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
  			dev->towrite = NULL;
  			BUG_ON(dev->written);
  			wbi = dev->written = chosen;
@@ -199,8 +206,7 @@ index cbb50d3..33afeeb 100644
 +			if (dev->written) {
 +#ifdef CONFIG_RAID_ZERO_COPY
 +				if (test_bit(R5_DirectAccess, &dev->flags))
-+					pg = dev->req.bi_io_vec[0].bv_page;
-+#endif
++					pg = dev->req.bi_io_vec[0].bv_page; #endif
 +				xor_srcs[count++] = pg;
 +			}
  		}
@@ -215,8 +221,7 @@ index cbb50d3..33afeeb 100644
 +			if (i != pd_idx) {
 +#ifdef CONFIG_RAID_ZERO_COPY
 +				if (test_bit(R5_DirectAccess, &dev->flags))
-+					pg = dev->req.bi_io_vec[0].bv_page;
-+#endif
++					pg = dev->req.bi_io_vec[0].bv_page; #endif
 +				xor_srcs[count++] = pg;
 +			}
  		}
@@ -250,18 +255,15 @@ index cbb50d3..33afeeb 100644
  static sector_t compute_blocknr(struct stripe_head *sh, int i, int previous);
 -	
 +
- static void raid5_build_block(struct stripe_head *sh, int i, int previous)
- {
+ static void raid5_build_block(struct stripe_head *sh, int i, int previous)  {
  	struct r5dev *dev = &sh->dev[i];
 @@ -2505,7 +2593,11 @@ static void handle_stripe_clean_event(raid5_conf_t *conf,
  		if (sh->dev[i].written) {
  			dev = &sh->dev[i];
  			if (!test_bit(R5_LOCKED, &dev->flags) &&
 -				test_bit(R5_UPTODATE, &dev->flags)) {
-+				(test_bit(R5_UPTODATE, &dev->flags)
-+#ifdef CONFIG_RAID_ZERO_COPY
-+				|| test_bit(R5_DirectAccess, &dev->flags)
-+#endif
++				(test_bit(R5_UPTODATE, &dev->flags) #ifdef CONFIG_RAID_ZERO_COPY
++				|| test_bit(R5_DirectAccess, &dev->flags) #endif
 +			)) {
  				/* We can return any write requests */
  				struct bio *wbi, *wbi2;
@@ -271,13 +273,10 @@ index cbb50d3..33afeeb 100644
  				wbi = dev->written;
  				dev->written = NULL;
 +#ifdef CONFIG_RAID_ZERO_COPY
-+				clear_bit(R5_DirectAccess, &dev->flags);
-+#endif
++				clear_bit(R5_DirectAccess, &dev->flags); #endif
  				while (wbi && wbi->bi_sector <
  					dev->sector + STRIPE_SECTORS) {
- 					wbi2 = r5_next_bio(wbi, dev->sector);
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 3ca77a2..b1db89f 100644
+ 					wbi2 = r5_next_bio(wbi, dev->sector); diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h index 3ca77a2..b1db89f 100644
 --- a/drivers/md/raid5.h
 +++ b/drivers/md/raid5.h
 @@ -276,6 +276,12 @@ struct r6_state {
@@ -287,14 +286,12 @@ index 3ca77a2..b1db89f 100644
 +
 +#ifdef CONFIG_RAID_ZERO_COPY
 +#define R5_DirectAccess 15 /* access cached pages directly instead of
-+                                       * sh pages */
-+#endif
++                                       * sh pages */ #endif
 +
  /*
   * Write method
   */
-diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
-index 6081493..fc74541 100644
+diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h index 6081493..fc74541 100644
 --- a/include/linux/page-flags.h
 +++ b/include/linux/page-flags.h
 @@ -104,6 +104,9 @@ enum pageflags {
@@ -312,18 +309,15 @@ index 6081493..fc74541 100644
  struct page;	/* forward declaration */
  
 +#ifdef CONFIG_RAID_ZERO_COPY
-+#define PageConstant(page) test_bit(PG_constant, &(page)->flags)
-+#define SetPageConstant(page) set_bit(PG_constant, &(page)->flags)
-+#define ClearPageConstant(page) clear_bit(PG_constant, &(page->flags))
-+#define TestSetPageConstant(page) test_and_set_bit(PG_constant, &(page)->flags)
-+extern void clear_page_constant(struct page *page);
++#define PageConstant(page) test_bit(PG_constant, &(page)->flags) 
++#define SetPageConstant(page) set_bit(PG_constant, &(page)->flags) 
++#define ClearPageConstant(page) clear_bit(PG_constant, &(page->flags)) 
++#define TestSetPageConstant(page) test_and_set_bit(PG_constant, 
++&(page)->flags) extern void clear_page_constant(struct page *page); 
 +#endif
 +
  TESTPAGEFLAG(Locked, locked)
- PAGEFLAG(Error, error) TESTCLEARFLAG(Error, error)
- PAGEFLAG(Referenced, referenced) TESTCLEARFLAG(Referenced, referenced)
-diff --git a/mm/filemap.c b/mm/filemap.c
-index a8251a8..5052b72 100644
+ PAGEFLAG(Error, error) TESTCLEARFLAG(Error, error)  PAGEFLAG(Referenced, referenced) TESTCLEARFLAG(Referenced, referenced) diff --git a/mm/filemap.c b/mm/filemap.c index a8251a8..5052b72 100644
 --- a/mm/filemap.c
 +++ b/mm/filemap.c
 @@ -28,6 +28,11 @@
@@ -352,8 +346,7 @@ index a8251a8..5052b72 100644
  EXPORT_SYMBOL(end_page_writeback);
  
 +#ifdef CONFIG_RAID_ZERO_COPY
-+void clear_page_constant(struct page *page)
-+{
++void clear_page_constant(struct page *page) {
 +	if (PageConstant(page)) {
 +		ClearPageConstant(page);
 +		SetPageUptodate(page);
@@ -365,7 +358,5 @@ index a8251a8..5052b72 100644
  /**
   * __lock_page - get a lock on the page, assuming we need to sleep to get it
   * @page: the page to lock
--- 
+--
 1.7.0.4
-
-
