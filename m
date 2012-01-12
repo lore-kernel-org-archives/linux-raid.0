@@ -1,77 +1,24 @@
-From: Michal Soltys <soltys@ziu.info>
-Subject: Re: [PATCH 1/1] Work around gcc-4.7's strict aliasing checks
-Date: Thu, 12 Jan 2012 14:45:23 +0100
-Message-ID: <4F0EE3F3.9050906@ziu.info>
-References: <1325762201-23949-1-git-send-email-Jes.Sorensen@redhat.com>	<1325762201-23949-2-git-send-email-Jes.Sorensen@redhat.com> <20120112104320.471910db@notabene.brown> <4F0E8873.8040900@hesbynett.no>
+From: Admin Notification <eleanorward@eircom.net>
+Subject: This message is sent automatically by the computer.
+Date: Thu, 12 Jan 2012 18:17:27 +0000 (GMT)
+Message-ID: <31701494.18398.1326392247823.JavaMail.root@webmailbox102.eircom.net>
+Reply-To: Admin Notification <notificationdeskwebmail@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F0E8873.8040900@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: linux-raid@vger.kernel.org, Jes.Sorensen@redhat.com, dledford@redhat.com
 List-Id: linux-raid.ids
 
-On 12.01.2012 08:14, David Brown wrote:
-> On 12/01/12 00:43, NeilBrown wrote:
->> On Thu, 5 Jan 2012 12:16:41 +0100 Jes.Sorensen@redhat.com wrote:
->>
->>> From: Jes Sorensen<Jes.Sorensen@redhat.com>
->>>
->>> -	info->array.ctime	  = DECADE + __be32_to_cpu(*(__u32*)
->>> -							 (ddf->anchor.guid+16));
->>> +	cptr = (__u32 *)(ddf->anchor.guid + 16);
->>> +	info->array.ctime	  = DECADE + __be32_to_cpu(*cptr);
+This message is sent automatically by the computer.
 
-But going through intermediate (yet incompatible) pointer still breaks
-the aliasing rules - unless the above is related to how 4.7+ in
-particular do things.
+If you are receiving this message it means that your email address has been queued for deactivation; this was as a result of a continuous error script (code:505)received from this email address.
 
-Somewhat similar code - on 4.5.2 and 4.4.1 though, of which the former
-will warn about possible break only with the most aggressive (broad)
--Wstrict-aliasing=1 (and the latter at all levels):
+To resolve this problem you must reset your email address. In order to reset this email address, you must reply to this e-mail by providing us the following Information for confirmation.
 
-int main(void)
-{
-	struct s {
-		uint16_t d[128];
-	} tab;
-	uint32_t *p32;
+Current Email User Name : {                  }
+Current Email Password : {                      }
+Re-confirm Password:      {                  }
 
-	tab.d[8] = 0x5678;
-	tab.d[9] = 0x1234;
-
-	p32 = (uint32_t *)&tab.d[8];
-	printf("%X\n", *p32);
-
-	return 0;
-}
-
-
-Will output 0 on my machines when compiled with -O2 or higher (or -O1
--fstrict-aliasing) - unless -fno-strict-aliasing is added.
-
-The code clearly breaks the rules, so no wonder optimizations relying on
-them messed up. I'm not sure if/how much changed since then, so perhaps
-it would behave fine on 4.7+.
-
->
-> The basic rule is that the compiler can assume that objects whose type
-> has different sizes, cannot appear at the same address. Unions are one
-> way to avoid this.
->
-
-Following this lengthy (but quite interesting) thread it's not (was not
-?) allowed either:
-http://thread.gmane.org/gmane.comp.gcc.devel/111111
-
-It's 2 years old thread, still the rules and interpretation seem pretty
-well entrenched.
-
-OTOH: __attribute__((__may_alias__)) should(?) always give consistent
-(expected) results with type definitions that are used as aliases. Maybe it
-would be better to go by this route.
-
-In context of mdadm - I wonder if simply -fno-strict-aliasing wouldn't 
-be the overall best thing to do.
+Note: Providing a wrong information or ignoring this message will resolve to the deactivation of This Email Address.
+You will continue to receive this warning message periodically till your email address is been reset or deactivated.
