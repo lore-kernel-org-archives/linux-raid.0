@@ -1,95 +1,168 @@
-From: Gilbert Kowarzyk <kowarzyk@grm.polymtl.ca>
-Subject: Re: Renaming MD devices (metadata=1.1)
-Date: Wed, 11 Jan 2012 19:08:46 -0500
-Message-ID: <4F0E248E.1020705@grm.polymtl.ca>
-References: <4F0BD6EA.8010007@grm.polymtl.ca> <4F0C1A03.8020509@ziu.info> <4F0D272A.2060000@grm.polymtl.ca> <20120111172047.6af5571f@notabene.brown> <4F0D2EBF.5070807@grm.polymtl.ca> <20120111180347.0d177edf@notabene.brown> <4F0DB25D.3030805@grm.polymtl.ca> <20120112100426.4c4656c8@notabene.brown>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: [PATCH 1/1] Work around gcc-4.7's strict aliasing checks
+Date: Thu, 12 Jan 2012 08:14:59 +0100
+Message-ID: <4F0E8873.8040900@hesbynett.no>
+References: <1325762201-23949-1-git-send-email-Jes.Sorensen@redhat.com>	<1325762201-23949-2-git-send-email-Jes.Sorensen@redhat.com> <20120112104320.471910db@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120112100426.4c4656c8@notabene.brown>
+In-Reply-To: <20120112104320.471910db@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Michal Soltys <soltys@ziu.info>, linux-raid@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, linux-raid@vger.kernel.org, dledford@redhat.com
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On 12/01/12 00:43, NeilBrown wrote:
+> On Thu,  5 Jan 2012 12:16:41 +0100 Jes.Sorensen@redhat.com wrote:
+>
+>> From: Jes Sorensen<Jes.Sorensen@redhat.com>
+>>
+>> Signed-off-by: Jes Sorensen<Jes.Sorensen@redhat.com>
+>> ---
+>>   sha1.c      |    8 +++++---
+>>   super-ddf.c |   22 ++++++++++++++--------
+>>   2 files changed, 19 insertions(+), 11 deletions(-)
+>>
+>> diff --git a/sha1.c b/sha1.c
+>> index 556d9ca..0258515 100644
+>> --- a/sha1.c
+>> +++ b/sha1.c
+>> @@ -101,6 +101,7 @@ sha1_finish_ctx (struct sha1_ctx *ctx, void *resbuf)
+>>     /* Take yet unprocessed bytes into account.  */
+>>     md5_uint32 bytes = ctx->buflen;
+>>     size_t pad;
+>> +  md5_uint32 *ptr;
+>>
+>>     /* Now count remaining bytes.  */
+>>     ctx->total[0] += bytes;
+>> @@ -111,9 +112,10 @@ sha1_finish_ctx (struct sha1_ctx *ctx, void *resbuf)
+>>     memcpy (&ctx->buffer[bytes], fillbuf, pad);
+>>
+>>     /* Put the 64-bit file length in *bits* at the end of the buffer.  */
+>> -  *(md5_uint32 *)&ctx->buffer[bytes + pad + 4] = SWAP (ctx->total[0]<<  3);
+>> -  *(md5_uint32 *)&ctx->buffer[bytes + pad] = SWAP ((ctx->total[1]<<  3) |
+>> -						    (ctx->total[0]>>  29));
+>> +  ptr = (md5_uint32 *)&ctx->buffer[bytes + pad + 4];
+>> +  *ptr = SWAP (ctx->total[0]<<  3);
+>> +  ptr = (md5_uint32 *)&ctx->buffer[bytes + pad];
+>> +  *ptr = SWAP ((ctx->total[1]<<  3) | (ctx->total[0]>>  29));
+>>
+>>     /* Process last bytes.  */
+>>     sha1_process_block (ctx->buffer, bytes + pad + 8, ctx);
+>> diff --git a/super-ddf.c b/super-ddf.c
+>> index b5b0b42..abd6793 100644
+>> --- a/super-ddf.c
+>> +++ b/super-ddf.c
+>> @@ -1336,6 +1336,7 @@ static void getinfo_super_ddf(struct supertype *st, struct mdinfo *info, char *m
+>>   {
+>>   	struct ddf_super *ddf = st->sb;
+>>   	int map_disks = info->array.raid_disks;
+>> +	__u32 *cptr;
+>>
+>>   	if (ddf->currentconf) {
+>>   		getinfo_super_ddf_bvd(st, info, map);
+>> @@ -1347,8 +1348,9 @@ static void getinfo_super_ddf(struct supertype *st, struct mdinfo *info, char *m
+>>   	info->array.level	  = LEVEL_CONTAINER;
+>>   	info->array.layout	  = 0;
+>>   	info->array.md_minor	  = -1;
+>> -	info->array.ctime	  = DECADE + __be32_to_cpu(*(__u32*)
+>> -							 (ddf->anchor.guid+16));
+>> +	cptr = (__u32 *)(ddf->anchor.guid + 16);
+>> +	info->array.ctime	  = DECADE + __be32_to_cpu(*cptr);
+>> +
+>>   	info->array.utime	  = 0;
+>>   	info->array.chunk_size	  = 0;
+>>   	info->container_enough	  = 1;
+>> @@ -1407,6 +1409,7 @@ static void getinfo_super_ddf_bvd(struct supertype *st, struct mdinfo *info, cha
+>>   	int j;
+>>   	struct dl *dl;
+>>   	int map_disks = info->array.raid_disks;
+>> +	__u32 *cptr;
+>>
+>>   	memset(info, 0, sizeof(*info));
+>>   	/* FIXME this returns BVD info - what if we want SVD ?? */
+>> @@ -1416,8 +1419,8 @@ static void getinfo_super_ddf_bvd(struct supertype *st, struct mdinfo *info, cha
+>>   	info->array.layout	  = rlq_to_layout(vc->conf.rlq, vc->conf.prl,
+>>   						  info->array.raid_disks);
+>>   	info->array.md_minor	  = -1;
+>> -	info->array.ctime	  = DECADE +
+>> -		__be32_to_cpu(*(__u32*)(vc->conf.guid+16));
+>> +	cptr = (__u32 *)(vc->conf.guid + 16);
+>> +	info->array.ctime	  = DECADE + __be32_to_cpu(*cptr);
+>>   	info->array.utime	  = DECADE + __be32_to_cpu(vc->conf.timestamp);
+>>   	info->array.chunk_size	  = 512<<  vc->conf.chunk_shift;
+>>   	info->custom_array_size	  = 0;
+>> @@ -2192,6 +2195,7 @@ static int add_to_super_ddf(struct supertype *st,
+>>   	struct phys_disk_entry *pde;
+>>   	unsigned int n, i;
+>>   	struct stat stb;
+>> +	__u32 *tptr;
+>>
+>>   	if (ddf->currentconf) {
+>>   		add_to_super_ddf_bvd(st, dk, fd, devname);
+>> @@ -2220,8 +2224,9 @@ static int add_to_super_ddf(struct supertype *st,
+>>   	tm = localtime(&now);
+>>   	sprintf(dd->disk.guid, "%8s%04d%02d%02d",
+>>   		T10, tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
+>> -	*(__u32*)(dd->disk.guid + 16) = random32();
+>> -	*(__u32*)(dd->disk.guid + 20) = random32();
+>> +	tptr = (__u32 *)(dd->disk.guid + 16);
+>> +	*tptr++ = random32();
+>> +	*tptr = random32();
+>>
+>>   	do {
+>>   		/* Cannot be bothered finding a CRC of some irrelevant details*/
+>> @@ -2967,6 +2972,7 @@ static struct mdinfo *container_content_ddf(struct supertype *st, char *subarray
+>>   		unsigned int j;
+>>   		struct mdinfo *this;
+>>   		char *ep;
+>> +		__u32 *cptr;
+>>
+>>   		if (subarray&&
+>>   		(strtoul(subarray,&ep, 10) != vc->vcnum ||
+>> @@ -2986,8 +2992,8 @@ static struct mdinfo *container_content_ddf(struct supertype *st, char *subarray
+>>   		this->array.md_minor      = -1;
+>>   		this->array.major_version = -1;
+>>   		this->array.minor_version = -2;
+>> -		this->array.ctime         = DECADE +
+>> -			__be32_to_cpu(*(__u32*)(vc->conf.guid+16));
+>> +		cptr = (__u32 *)(vc->conf.guid + 16);
+>> +		this->array.ctime         = DECADE + __be32_to_cpu(*cptr);
+>>   		this->array.utime	  = DECADE +
+>>   			__be32_to_cpu(vc->conf.timestamp);
+>>   		this->array.chunk_size	  = 512<<  vc->conf.chunk_shift;
+>
+>
+> Applied - thanks...
+>
+> Do you understand this stuff?  If this really "fixing" anything, or is it
+> still doing something bad, but is now hiding it from gcc's warning so we just
+> don't get told how naughty we are?
+>
+> Should these things be changed to use unions ??
+>
 
-Awesome!
+I don't understand much about the code in question (having not read it), 
+but I /do/ understand a little about pointer aliasing.  And at first 
+glance, this looks to me like it might be glossing over the problems. 
+Maybe it will help now - but that depends on optimisation levels and 
+exact code generation.
 
-Thanks for the info!
+The basic rule is that the compiler can assume that objects whose type 
+has different sizes, cannot appear at the same address.  Unions are one 
+way to avoid this.
 
-Gilbert
+The relevant parts of the gcc manual are definitely worth reading:
 
+<http://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html#index-fstrict_002daliasing-849>
 
-On 12-01-11 6:04 PM, NeilBrown wrote:
-> On Wed, 11 Jan 2012 11:01:33 -0500 Gilbert Kowarzyk
-> <kowarzyk@grm.polymtl.ca> wrote:
-> 
->> -----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1
-> 
->> Hello,
-> 
->>>> Why do we have these choices, and when should each be used?
->>> 
->>> 1.0 (at the end) is best for RAID1 when booting from the device
->>> as the boot-load just doesn't see the RAID at all.
->>> 
->>> 1.1 (at the start) is generally good because various different 
->>> things have metadata at the start, so there is no chance of 
->>> confusion about what is using that devices - each possible
->>> users will overwrite the metadata of the others. It is also
->>> easier to make the devices larger if you don't need to move the
->>> metadata.
->>> 
->>> 1.2 (4K from the start) has most of the benefits for 1.1 but
->>> works for booting with newer boot loaders - they still want
->>> sector 0 for a boot sector but understand the md superblock.
-> 
->> I see. Makes also loads of sense.
-> 
->> I had two more quick questions:
-> 
->> 1.- when would one want to turn off bitmaps? I turned them on,
->> but I haven't found why one may want them off (or for what they
->> should be turned off).
-> 
-> There can be a performance impact - writes can be a bit slower with
-> bitmaps. If that is more important to you that resync speed after a
-> crash you might turn them off. To change the chunk-size of the
-> bitmap you need to turn them off, then on again. If you want to
-> reshape the array you currently need to turn the bitmap off first
-> (because the bitmap doesn't automatically resize). You turn the
-> bitmap off with mdadm --grow /dev/mdXX --bitmap=none
-> 
-> 
->> 2.- if I ever have a mismatch_cnt different than zero, how would
->> I go about finding which drive has the correct info, which was
->> the one that got corrupted, and how to obtain the correct one?
-> 
-> "correct" is not a well defined concept here.
-> 
->> In the past I've changed the "CHECK" to "REPAIR" in the
->> configuration script that checks the RAID arrays periodically 
->> (/etc/sysconfig/raid-check), but from what I understood it's a
->> bit of luck which one the automatic script will choose out of the
->> two drives (assuming raid1). Should I let it be automatic (with
->> "repair"), and if not (if I have to check which one is correct
->> manually), where could I find information to read about how to do
->> this (I am assuming the answer may be long)?
-> 
-> This:  http://neil.brown.name/blog/20100211050355 touches on the
-> topic ... and is long.
-> 
-> 
-> NeilBrown
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (Darwin)
-Comment: digital signature
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+<http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wstrict_002daliasing_003dn-349>
 
-iEYEARECAAYFAk8OJIsACgkQOYVp1RpLsmUE5QCfduzOuF9EPCJoUbXWsq0kYhZF
-OioAnichYkAyv8r1VLdcMoDSU2aiGF0Q
-=44rt
------END PGP SIGNATURE-----
+Make sure you enable -Wstrict-aliasing=3 - this will let the compiler 
+warn you of potential problems.  As a last resort, it is also possible 
+to use pragmas to turn off strict-aliasing in the relevant functions.
+
+mvh.,
+
+David
+
