@@ -1,7 +1,8 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 2/4] FIX: External metadata sometimes is not updated
-Date: Thu, 12 Jan 2012 08:12:39 +0100
-Message-ID: <20120112071239.5168.24015.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 3/4] FIX: mdmon check in reshape_container() can cause a
+	problem
+Date: Thu, 12 Jan 2012 08:12:47 +0100
+Message-ID: <20120112071247.5168.52909.stgit@gklab-128-013.igk.intel.com>
 References: <20120112070822.5168.97729.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,31 +14,35 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-External metadata sometimes is not updated.
-It can be observed during 2 raid0 arrays Capacity Expansion.
-New array size is not set, because metadata is not updated and on the reshape
-end mdadm doesn't read new array size from metadata.
-This happens when mdmon finishes his work (due to takeover to raid0),
-before all metadata updates are processed.
+When raid0 reshape is executed mdmon can dissappear due to raid level
+takeover operation. If this happen before mdmon check, mdadm would treat
+it as error condition. It is not true for this case.
 
-Make sure that all updates are flushed to disk before executing takeover.
+Remove mdmon check from reshape_container() function.
+Error condition check will remain using reshape_array() reentry test
+for the same array (line 2577).
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ Grow.c |    6 ------
+ 1 files changed, 0 insertions(+), 6 deletions(-)
 
 diff --git a/Grow.c b/Grow.c
-index f0422d2..061ddf1 100644
+index 061ddf1..b52d34b 100644
 --- a/Grow.c
 +++ b/Grow.c
-@@ -2396,6 +2396,7 @@ started:
- 		/* Re-load the metadata as much could have changed */
- 		int cfd = open_dev(st->container_dev);
- 		if (cfd >= 0) {
-+			ping_manager(container);
- 			ping_monitor(container);
- 			st->ss->free_super(st);
- 			st->ss->load_container(st, cfd, container);
+@@ -2608,12 +2608,6 @@ int reshape_container(char *container, char *devname,
+ 		restart = 0;
+ 		if (rv)
+ 			break;
+-		rv = !mdmon_running(devname2devnum(container));
+-		if (rv) {
+-			printf(Name ": Mdmon is not found. "
+-			       "Cannot continue container reshape.\n");
+-			break;
+-		}
+ 	}
+ 	if (!rv)
+ 		unfreeze(st);
 
