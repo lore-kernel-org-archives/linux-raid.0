@@ -1,58 +1,63 @@
-From: Tomasz Chmielewski <tch@wpkg.org>
-Subject: Re: not able to resize/grow RAID-1 (beyond 1 TB?)
-Date: Sat, 14 Jan 2012 22:15:59 +0100
-Message-ID: <4F11F08F.4070706@wpkg.org>
-References: <4F109576.5090604@wpkg.org> <4F11E4F4.1030309@stud.tu-ilmenau.de>
+From: Steve Carlson <stevengcarlson@gmail.com>
+Subject: Re: RAID0 partition set to spare
+Date: Sat, 14 Jan 2012 15:42:58 -0600
+Message-ID: <CA+q4O7NjK6Aj3Djs2g+qPu69=knOKvu9=wFy-YLdmw4Fi3k2Gw@mail.gmail.com>
+References: <CA+q4O7N5D7c-dDYtW_BH3tUPK2NdAnq0agMAczTXQKji=QH3dw@mail.gmail.com>
+	<4EFD9956.5050703@redhat.com>
+	<CA+q4O7NS-2_1MxtXx5U4Qk66QHdXncUhm816utjuWVx8EJoGKQ@mail.gmail.com>
+	<4EFEDF2A.5060408@redhat.com>
+	<CA+q4O7NhcEhYLre45+u6V8nnmCg1EYi=3Lbn4_5AS6Ei5J1mTQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15;
-	format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F11E4F4.1030309@stud.tu-ilmenau.de>
+In-Reply-To: <CA+q4O7NhcEhYLre45+u6V8nnmCg1EYi=3Lbn4_5AS6Ei5J1mTQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stefan.huebner@stud.tu-ilmenau.de, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/14/2012 09:26 PM, Stefan /*St0fF*/ H=FCbner wrote:
-> Hi Tomasz,
+On Sat, Dec 31, 2011 at 5:37 PM, Steve Carlson <stevengcarlson@gmail.co=
+m> wrote:
+>> On Sat, Dec 31, 2011 at 4:08 AM, Jes Sorensen wrote:
+>> Hi Steve,
+>>
+>> What I meant here is that I would like to see the dmesg output at th=
+is
+>> point, to see if there were any read errors reported during the asse=
+mbly.
+>>
+>>> I also ran extended self tests just to be thorough, and they both c=
+ame
+>>> back error free. =A0I'm unsure as to whether that puts them in the =
+clear
+>>> for bad sectors though.
+>>
+>> There were read errors in the dmesg output you posted earlier, which=
+ is
+>> why I am wary of it.
+>>
+>> Cheers,
+>> Jes
 >
-> at first: if you had 1TB drives before, dd'ed them to the new 3TB dri=
-ves
-> and changed the partitioning scheme accordingly - that all looks OK.
-> The weird thing here is that 1TB disks never had 1024GiB, but 931GiB.
-> So the reshape has already happened to "the system's maximum".
+> Jes,
 >
-> I do suspect you have a 32bit system and mdadm is not the latest vers=
-ion?
-
-No, the system was 64 bit from the very beginning; mdadm may not be the=
-=20
-latest one, but is far from being obsoletes, too (Debian Squeeze).
-
-The issue is actually solved now.
-
-What I had to do was:
-
-mdadm /dev/md2 -f /dev/sdb3
-mdadm /dev/md2 -r /dev/sdb3
-# not necessarily 10 MB needs cleaning, but it's a small number...
-dd if=3D/dev/zero of=3D/dev/sdb3 bs=3D1M count=3D10
-mdadm /dev/md2 -a /dev/sdb3
-# wait till it syncs, and do the same for /dev/sda3
-reboot
-
-
-If I did the same without dd if=3D/dev/zero, it somehow didn't want to=20
-work and /dev/md2 was still only 1 TB big.
-Unless I've messed up somewhere!
+> This is /var/log/messages from boot to stopping and reassembling md2.
+> I think this is what you wanted, I'm not sure what more I can give
+> you.
+> http://dl.dropbox.com/u/2776371/raid/mdadm_stop_dmesg_c_mdadm_assembl=
+e_var_log_message.txt
+>
+> -Steve
 
 
 
---=20
-Tomasz Chmielewski
-http://wpkg.org
+Hi all,
 
+This is still unresolved.  What else could I try short of breaking and
+rebuilding the array?
 
+Thanks,
+Steve
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
