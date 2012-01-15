@@ -1,191 +1,103 @@
-From: Steve Vialle <vevets3@gmail.com>
-Subject: [New Here] Need some help recovering failed Raid-5, Cant seem to re-create the same size array.
-Date: Sun, 15 Jan 2012 17:33:04 +1300
-Message-ID: <1979195.K3igYoDXoV@local.domain>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: RAID0 partition set to spare
+Date: Sun, 15 Jan 2012 16:18:31 +1100
+Message-ID: <20120115161831.6e46f413@notabene.brown>
+References: <CA+q4O7N5D7c-dDYtW_BH3tUPK2NdAnq0agMAczTXQKji=QH3dw@mail.gmail.com>
+	<4EFD9956.5050703@redhat.com>
+	<CA+q4O7NS-2_1MxtXx5U4Qk66QHdXncUhm816utjuWVx8EJoGKQ@mail.gmail.com>
+	<4EFEDF2A.5060408@redhat.com>
+	<CA+q4O7NhcEhYLre45+u6V8nnmCg1EYi=3Lbn4_5AS6Ei5J1mTQ@mail.gmail.com>
+	<CA+q4O7NjK6Aj3Djs2g+qPu69=knOKvu9=wFy-YLdmw4Fi3k2Gw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/lHEFi94f/tptThzoXVa77k8"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CA+q4O7NjK6Aj3Djs2g+qPu69=knOKvu9=wFy-YLdmw4Fi3k2Gw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Steve Carlson <stevengcarlson@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-First off, Hi all.
-First time posting to _any_ mailing list so feel free to correct any 
-misdemeanors on my part :-)
+--Sig_/lHEFi94f/tptThzoXVa77k8
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-My situation is this:
-I decided to convert my operational raid-5 (5x2Tb devices + 1 spare) into a 
-raid-6 using all 6 devices.
+On Sat, 14 Jan 2012 15:42:58 -0600 Steve Carlson <stevengcarlson@gmail.com>
+wrote:
 
-During the reshape, devices 0 & 2 failed due to a dodgy power cable :-(
+> On Sat, Dec 31, 2011 at 5:37 PM, Steve Carlson <stevengcarlson@gmail.com>=
+ wrote:
+> >> On Sat, Dec 31, 2011 at 4:08 AM, Jes Sorensen wrote:
+> >> Hi Steve,
+> >>
+> >> What I meant here is that I would like to see the dmesg output at this
+> >> point, to see if there were any read errors reported during the assemb=
+ly.
+> >>
+> >>> I also ran extended self tests just to be thorough, and they both came
+> >>> back error free. =C2=A0I'm unsure as to whether that puts them in the=
+ clear
+> >>> for bad sectors though.
+> >>
+> >> There were read errors in the dmesg output you posted earlier, which is
+> >> why I am wary of it.
+> >>
+> >> Cheers,
+> >> Jes
+> >
+> > Jes,
+> >
+> > This is /var/log/messages from boot to stopping and reassembling md2.
+> > I think this is what you wanted, I'm not sure what more I can give
+> > you.
+> > http://dl.dropbox.com/u/2776371/raid/mdadm_stop_dmesg_c_mdadm_assemble_=
+var_log_message.txt
+> >
+> > -Steve
+>=20
+>=20
+>=20
+> Hi all,
+>=20
+> This is still unresolved.  What else could I try short of breaking and
+> rebuilding the array?
 
-*REBOOT* && replace cable.
+I don't know how the array could have got in this state.  IO errors on a
+RAID0 don't mark the devices as faulty.
+You would have to explicitly
+   mdadm /dev/md2 --fail /dev/sdb3
+or something like that - and I doubt you did that.
 
-I attempted to assemble & restart the reshape with the 2 devices plugged back 
-in:
-$>mdadm --assemble /dev/md3 /dev/sdg1 /dev/sdf1 /dev/sdi1 /dev/sde1 /dev/sdh1 
-/dev/sdj1 --backup-file=/root/backup-md3
+Anyway:
+ mdadm -S /dev/md2
+ mdadm -C /dev/md2 -e 0.90 -c 64 -l 0 -n 2 /dev/sda3 /dev/sdb3
 
-Got:
-mdadm: device 6 in /dev/md3 has wrong state in superblock, but /dev/sdg1 seems 
-ok                          
-mdadm: accepting backup with timestamp 1326496445 for array with timestamp 
-1326504140                             
-mdadm: restoring critical section                                                                                 
-mdadm: /dev/md3 assembled from 3 drives,  1 rebuilding and 2 spares - not 
-enough to start the array.
+should get you going again.  All the data should be there except for anythi=
+ng
+that the hard drive has decided to keep for itself.
 
-$> mdadm -S /dev/md3
+NeilBrown
 
-I then set up a dm sandbox with 
-dmsetup create sdg1 --table "0 3907027120 snapshot /dev/sdg1 /dev/loop0 N 1" 
-etc. for each drive (I am under the impression this will keep me from 
-buggering things up further, seems to work as advertised)
+--Sig_/lHEFi94f/tptThzoXVa77k8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Attempted to asemble the array again with --force:
-$>mdadm --assemble /dev/md3 /dev/mapper/sdg1 /dev/mapper/sdf1 /dev/mapper/sdi1 
-/dev/mapper/sde1 /dev/mapper/sdh1 /dev/mapper/sdj1 --backup-file=/root/backup-
-md3 --force
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-Got:
-mdadm: clearing FAULTY flag for device 0 in /dev/md3 for /dev/mapper/sdg1                                         
-mdadm: Marking array /dev/md3 as 'clean'                                                                          
-mdadm: accepting backup with timestamp 1326496445 for array with timestamp 
-1326504140                             
-mdadm: restoring critical section                                                                                 
-mdadm: /dev/md3 assembled from 3 drives,  1 rebuilding and 2 spares - not 
-enough to start the array.
+iQIVAwUBTxJhpznsnt1WYoG5AQK0OBAAvqNppMp4Wtg2cDTmhAOWWm9xWBn6Uyvr
+FQ8N1InEiPLfc19QmqHllFEZ0hkLkC9KitCoG55k4rrzlWY9wFJMQLnbsY3p5hOY
++PA3Kic5EMOqSOQDaISpquj3PhDgrMiRWCJwgVkRd9yoWyEY9VgAE2aC2/4Vr4t8
+wvv9c40oYdaEgdmlGucRfGZMpP+oWa4kK8UFQGXvMC7tYIyMMa+jrk2wawMMzl1N
+StjjddlhDhH5kuJbwpacGl1gzZiUPIo+segsquGXQ7+D3rXXZOZh0VuwJjcNDac3
+uwgUU913JN6TuMIZR861pJ48pJRveJp57dMEFHC2tbYj9YYe53seKcNEQOusvItH
+4JHk6XyqZm9Y34kEq6SDEoBA1LTjAo2bxLFi5WdQ7sbqWymV6YprqSKVxG4Kf5IG
+fS96faRxasl4hLrmTHjqB6BhMrlQzmA94foxO8om0kXjLVLhahBPtH6fOF0fSDm7
+zOicYrDoFuZsL3OJ7vE9WIChhDKPNrn4jVVkEUHGYv2/PzDOyVyQQViS7jIDkNbV
+5T7xh8rRThd3ZPCB2m8XHeMrX0oqcnC93hjBTOhsgWCP5DwEy5xegNU24Gb+l9Zd
+C0xaFkPXKZ7q7laSvUkIQSGzZYNuCFwpUBvEH/Trx2rhlowfj5J0lD9SIwjLGxlJ
+fLeUNz8NGAw=
+=FrYK
+-----END PGP SIGNATURE-----
 
-Looks like my 2 (Presumably ok) devices in slot 0&2 have been marked as spare?
-As I have been unable to find a way to reverse this, I tried recreating the 
-array with the original raid-5 order & layout: 
-<https://raid.wiki.kernel.org/articles/r/a/i/RAID_Recovery_d376.html>
-
-System log snippet from last array start prior to interrupted reshape:
-                   
-md/raid:md3: device sdh1 operational as raid disk 4              
-md/raid:md3: device sdi1 operational as raid disk 2              
-md/raid:md3: device sdg1 operational as raid disk 0              
-md/raid:md3: device sdf1 operational as raid disk 1              
-md/raid:md3: device sde1 operational as raid disk 3              
-md/raid:md3: allocated 5320kB                                    
-md/raid:md3: raid level 5 active with 5 out of 5 devices, algorithm 2                                                                                                              
-md3: detected capacity change from 0 to 8001586462720
-
-This gives the device order as sdg1, sdf1, sdi1, sde1, sdh1
-I know the chunk size == 128K
-The layout == left-symmetric
-And the metadata == 1.2
-
-So:
-
-$>mdadm -S /dev/md3
-$>mdadm --create --metadata=1.2 --level=5 --chunk=128K --layout=left-symmetric 
---raid-devices=5 --assume-clean /dev/md3 /dev/mapper/sdg1 /dev/mapper/sdf1 
-/dev/mapper/sdi1 /dev/mapper/sde1 /dev/mapper/sdh1
-
-The array starts as expected, but fsck can't find a superblock.
-Testdisk finds a superblock:
-Partition  Start        End                    Size in sectors
-ext4         32  0  1  1953512351 1 4 15628098560
-
-But the filesystem appears larger than the array:
-Disk /dev/md3 - 8001 GB / 7452 GiB - CHS 1953512192 2 4
-
-Examining logs shows:
-Original raid5 > md3: detected capacity change from 0 to 8001586462720
-New raid5 >      md3: detected capacity change from 0 to 8001585938432
-i.e. 524,288 smaller.
-
-Comparing the output of $>mdadm -E [any disk in array]:
-Failed raid-6:
-
-/dev/mapper/sde1:                                                                                                 
-          Magic : a92b4efc                                                                                        
-        Version : 1.2                                                                                             
-    Feature Map : 0x4                                                                                             
-     Array UUID : 06a7fdac:3b560176:9fc05905:34f97822                                                             
-           Name : Damnation:3                                                                                     
-  Creation Time : Sun Jun 12 14:38:45 2011                                                                        
-     Raid Level : raid6                                                                                           
-   Raid Devices : 6                                                                                               
-                                                                                                                  
- Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)                                                             
-     Array Size : 15628098560 (7452.06 GiB 8001.59 GB)                                                            
-  Used Dev Size : 3907024640 (1863.01 GiB 2000.40 GB)                                                             
-    Data Offset : 2048 sectors                                                                                    
-   Super Offset : 8 sectors                                                                                       
-          State : clean                                                                                           
-    Device UUID : 4fcba3d0:3219c5d9:e847abe8:c8c93e03                                                             
-                                                                                                                  
-  Reshape pos'n : 232030208 (221.28 GiB 237.60 GB)                                                                
-     New Layout : left-symmetric                                                                                  
-                                                                                                                  
-    Update Time : Sat Jan 14 14:22:20 2012                                                                        
-       Checksum : f214fb99 - correct                                                                              
-         Events : 193807                                                                                          
-                                                                                                                  
-         Layout : left-symmetric-6                                                                                
-     Chunk Size : 128K                                                                                            
-                                                                                                                  
-   Device Role : Active device 3                                                                                  
-   Array State : .A.AAA ('A' == active, '.' == missing)
-
-New raid-5 (Should be the same as above but raid5 / left-symmetric?):
-
-/dev/mapper/sde1:                                                                                                 
-          Magic : a92b4efc                                                                                        
-        Version : 1.2                                                                                             
-    Feature Map : 0x0                                                                                             
-     Array UUID : e6e1fa47:fa23ea0c:4cabf95d:1aa9c21d                                                             
-           Name : (none):3  (local to host (none))                                                                
-  Creation Time : Sun Jan 15 06:03:21 2012                                                                        
-     Raid Level : raid5                                                                                           
-   Raid Devices : 5                                                                                               
-                                                                                                                  
- Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)                                                             
-     Array Size : 15628097536 (7452.06 GiB 8001.59 GB)                                                            
-  Used Dev Size : 3907024384 (1863.01 GiB 2000.40 GB)                                                             
-    Data Offset : 2048 sectors                                                                                    
-   Super Offset : 8 sectors                                                                                       
-          State : clean                                                                                           
-    Device UUID : 7d4fe0db:fbd649f7:d62d9df8:39dafe20                                                             
-                                                                                                                  
-    Update Time : Sun Jan 15 06:03:21 2012                                                                        
-       Checksum : 7823d35e - correct                                                                              
-         Events : 0                                                                                               
-                                                                                                                  
-         Layout : left-symmetric                                                                                  
-     Chunk Size : 128K                                                                                            
-                                                                                                                  
-   Device Role : Active device 3                                                                                  
-   Array State : AAAAA ('A' == active, '.' == missing) 
-
-
-Note Avail Dev Size is the same, but Array Size 15628097536 < 15628098560 by 
-1024 and Used Dev Size 3907024384 < 3907024640 by 256
-
-I have tried many combinations of level, layout & stripe size (Though I am 
-certain I had it right the first time) to no avail.
-
-Any idea where those 256b are going?
-I see little hope of recovering the filesystem if the array size != original 
-layout.
-
-Any help MUCH appreciated, I have scoured the WWW and been to #linux-raid on 
-freenode.
-From what I can tell, recreating the array has worked for others in a similar 
-situation... But they all managed to create something _identical_ to the 
-original array.
-
-Thank you for taking the time to read this.
-Steve.
-<steve_v@orcon.net.nz>
-<vevets3@gmail.com>
-
-
-
-
-
-
+--Sig_/lHEFi94f/tptThzoXVa77k8--
