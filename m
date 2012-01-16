@@ -1,49 +1,34 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [PATCH] There's no need to include linux/version.h in
- drivers/md/dm-bufio.c
-Date: Sun, 15 Jan 2012 17:29:00 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.1201151728510.26479@hs20-bc2-1.build.redhat.com>
-References: <alpine.LNX.2.00.1201152110290.13389@swampdragon.chaosbits.net>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [PATCH] md: Remove annoying debug message when restarting
+Date: Mon, 16 Jan 2012 08:33:07 +0100
+Message-ID: <20120116073307.GC15641@elte.hu>
+References: <1326662055-7098-1-git-send-email-levinsasha928@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1201152110290.13389@swampdragon.chaosbits.net>
+Content-Disposition: inline
+In-Reply-To: <1326662055-7098-1-git-send-email-levinsasha928@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jesper Juhl <jj@chaosbits.net>
-Cc: dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@kernel.org
+To: Sasha Levin <levinsasha928@gmail.com>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Acked-by: Mikulas Patocka <mpatocka@redhat.com>
 
-On Sun, 15 Jan 2012, Jesper Juhl wrote:
+* Sasha Levin <levinsasha928@gmail.com> wrote:
 
-> As 'make versioncheck' points out, drivers/md/dm-bufio.c has no need
-> to include linux/version.h, so this patch removes the unneeded
-> include.
+> This patch removes the "md: stopping all md devices" message when shutting
+> down/restarting.
 > 
-> Signed-off-by: Jesper Juhl <jj@chaosbits.net>
-> ---
->  drivers/md/dm-bufio.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
+> On Sat, 2012-01-14 at 09:43 +0100, Ingo Molnar wrote:
+> > Btw. #2, that annoying 'md: stopping' message should be gotten
+> > rid of. Some moron added that to the kernel as a one-day debug
+> > printout to debug a software-RAID hang during development of the
+> > code, about 15 years ago. (Oh, that was me.)
 > 
-> diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-> index 0a6806f..b6e58c7 100644
-> --- a/drivers/md/dm-bufio.c
-> +++ b/drivers/md/dm-bufio.c
-> @@ -12,7 +12,6 @@
->  #include <linux/dm-io.h>
->  #include <linux/slab.h>
->  #include <linux/vmalloc.h>
-> -#include <linux/version.h>
->  #include <linux/shrinker.h>
->  #include <linux/module.h>
->  
-> -- 
-> 1.7.8.3
-> 
-> 
-> -- 
-> Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
-> Don't top-post http://www.catb.org/jargon/html/T/top-post.html
-> Plain text mails only, please.
-> 
+> Signed-off-by: Sasha Levin <levinsasha928@gmail.com>
+
+Acked-by: Ingo Molnar <mingo@elte.hu>
+
+Thanks,
+
+	Ingo
