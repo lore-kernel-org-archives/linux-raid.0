@@ -1,43 +1,104 @@
-From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
-Subject: Re: RAID6, failed device, unresponsive system?
-Date: Tue, 17 Jan 2012 12:02:12 +0000
-Message-ID: <20245.25412.868844.285385@tree.ty.sabi.co.UK>
-References: <CADNH=7FyxQ=C=gdirjpTsc5q0tJ2=SSXtryRM36icTH=ncC_0A@mail.gmail.com>
-	<CADNH=7GrCN5ec5YahZvAGiHTW65eiptE74KN=F1oe_gGQpHTow@mail.gmail.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [PATCH 0/4] add --initrd argument to mdadm/mdmon
+Date: Tue, 17 Jan 2012 14:57:16 -0500
+Message-ID: <4F15D29C.7070504@redhat.com>
+References: <1326797330-4488-1-git-send-email-Jes.Sorensen@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigC32E5CE91F184A3A4255999F"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADNH=7GrCN5ec5YahZvAGiHTW65eiptE74KN=F1oe_gGQpHTow@mail.gmail.com>
+In-Reply-To: <1326797330-4488-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: Jes.Sorensen@redhat.com
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, kay@redhat.com, harald@redhat.com, lpoetter@redhat.com, mschmidt@redhat.com
 List-Id: linux-raid.ids
 
-[ ... ]
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigC32E5CE91F184A3A4255999F
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
->> Why is the system unresponsive, shouldn't it still be OK
->> after a drive failure?
+On 01/17/2012 05:48 AM, Jes.Sorensen@redhat.com wrote:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>=20
+> Hi,
+>=20
+> In order to resolve the problem with reboots hanging on systems with /
+> on an IMSM RAID, systemd needs to be able to see that a given mdadm
+> and mdmon process was launched from the initramfs, and allow it to
+> survive until it gets back to there, so it can unmount the root
+> filesystem safely.
+>=20
+> These patches introduces the --initrd argument to mdadm which makes it
+> change the first character of argv[0] to '@' to match the convention
+> set by systemd.
+>=20
+> In addition I also changed mdmon to use getopt_long to make it easier
+> to add more command line arguments to it. Note that I went through
+> great effort to preserve the behavior, even though the old code did
+> some somewhat dodgy stuff using changing the arvg buffer pointing to
+> the '--all' argument.
+>=20
+> Comments?
+>=20
+> Thanks,
+> Jes
+>=20
+> Jes Sorensen (4):
+>   mdmon: Use getopt_long() to parse command line options
+>   Add --initrd argument to mdadm
+>   Add --initrd argument to mdmon
+>   Spawn mdmon with --initrd if mdadm was launched with --initrd
+>=20
+>  ReadMe.c |    3 ++
+>  mdadm.c  |   11 ++++++++++
+>  mdadm.h  |    3 ++
+>  mdmon.c  |   64 +++++++++++++++++++++++++++++++++++++++++++++++++++---=
+-------
+>  util.c   |   17 ++++++++++++---
+>  5 files changed, 83 insertions(+), 15 deletions(-)
+>=20
 
-There is a bit of a difference between a "drive failure" and
-some/several bad sectors on a drive.
+Patch set looks reasonable to me, although you missed adding the new
+option to the mdadm man page.
 
-It is also to wonder whether the partially defective drive has
-been "failed" and "removed" from the MD set and perhaps
-"deleted" using '/sys/block/sdb/device/delete'.
+Do we have a specific systemd version for which we know that --initrd is
+needed, or a version before which it is the wrong thing to do?
 
-> Hm, I'm seeing this in dmesg, could it be related? (ioctl lock)
+Ditto for dracut, do we know what the minimum version of dracut is
+before it will use the --initrd parameter on its mdadm calls?
 
-> [425480.928740] md/raid:md0: read error corrected (8 sectors at
-> 223617240 on sdb1)
 
-Note the "read error corrected" (*corrected*) and that is is "8
-sectors" may indicate it is one of the drives with 4096B sectors
-that is configured as if it has 512B ones.
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: 0E572FDD
+	      http://people.redhat.com/dledford
 
-[ ... ]
 
-Overall it is likely that you have just implicitly discovered
-how important short settings for Error Recovery Control are, and
-to choose drives that allow you to set them:
 
-  http://www.sabi.co.uk/blog/1103Mar.html#110331
+--------------enigC32E5CE91F184A3A4255999F
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iQIcBAEBAgAGBQJPFdKcAAoJELgmozMOVy/db5sP/2+vU9zaiErBDuo9RF7g5sTw
+8U9zAPMjlEMMWwzMKdtxn77Ie/T+vaS7wT1O2xl5jrnzX0qUt8FA7MZKVVOKYl6Q
+8b8nwdVogxa8sDOYW1EB/pxc1u107OrWpkGM+EqbuSjpTKnGXek1ZRstROoLDflJ
+HLw/J16I99z3yLa4a/78HaQl5saY4C1ua6sYZ2lW7z3io9nr0eoh1bAP1bY56VS/
+LjcqocrtIIhyt6owa4gkGr5Fy6XLj6aYUT/bhfDspLwGFMKwIoyu2LL9HKUeLc3Y
+nFbOcbl4ORa7fQT6ehz9g4nSc0hz0cEhvyPLbiLtH7pCQVJmjHoNTanZJmTGQ/xn
+ijLgtXPi8FB0DCkGw3WtE1RjCPMxO6wP9xqtZylIxstm++6pu7PkGDiHJS5w/FpH
+NLBOEkK/YRONRBeqysDKDTTStXxo5FiTL3cUYiHx2SCP41N6jSFDFU6V5dEUIxS/
+iQnADQljNxodh3U6cmeQEuR9smjddA4hh6B+p8DWegm1jS63McQHh/zZin8YIVza
+R+E6dBKfB0uMth676I4nWzO0rHaNVyPQA4sv0wkdjCOeIX9JTa1wOYC1RQxfX4dP
+L1SiYInn9NH0VN3MyTqzgIno17Tet9bvfup1kvc8XDLf0FnVMlaDJQkgN1pCQHkV
+oPbwRwq+5gtpNl7tMZUr
+=MdHj
+-----END PGP SIGNATURE-----
+
+--------------enigC32E5CE91F184A3A4255999F--
