@@ -1,33 +1,51 @@
-From: Brad Campbell <brad@fnarfbargle.com>
-Subject: Re: mvsas with 3.1 (mdraid+xfs locked up, single drive w/xfs not
- locked up)
-Date: Tue, 17 Jan 2012 11:55:41 +0800
-Message-ID: <4F14F13D.2000407@fnarfbargle.com>
-References: <201201131144.58044.thomas@fjellstrom.ca> <201201162000.54940.thomas@fjellstrom.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <201201162000.54940.thomas@fjellstrom.ca>
-Sender: linux-scsi-owner@vger.kernel.org
-To: thomas@fjellstrom.ca
-Cc: linux-kernel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, ayan@marvell.com, andy yan <andyysj@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH 0/4] add --initrd argument to mdadm/mdmon
+Date: Tue, 17 Jan 2012 11:48:46 +0100
+Message-ID: <1326797330-4488-1-git-send-email-Jes.Sorensen@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dledford@redhat.com, kay@redhat.com, harald@redhat.com, lpoetter@redhat.com, mschmidt@redhat.com
 List-Id: linux-raid.ids
 
-On 17/01/12 11:00, Thomas Fjellstrom wrote:
->
-> Here's something interesting though, I just tried writing to the one disk on
-> the card that isn't part of the mdraid raid5 volume. It is fine. I can read
-> from it and write to it. So something to do with mdraid, or the XFS filesystem
-> (or both) is causing a bad interaction with the card itself.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Try doing IO to multiple drives simultaneously. I had a SIL card that would corrupt data when used 
-in RAID, but not single drive IO tests. I could make it fail by doing multiple dd/cp/md5sum to two 
-drives simultaneously.
+Hi,
 
-Do yourself a favour. Whack it on fleabay and sell it to a Windows user, then get something 
-supported. Leave enough scatter around that people thinking of buying a card with that Marvell 
-chipset will stay clear.
+In order to resolve the problem with reboots hanging on systems with /
+on an IMSM RAID, systemd needs to be able to see that a given mdadm
+and mdmon process was launched from the initramfs, and allow it to
+survive until it gets back to there, so it can unmount the root
+filesystem safely.
 
-Regards,
-Brad
+These patches introduces the --initrd argument to mdadm which makes it
+change the first character of argv[0] to '@' to match the convention
+set by systemd.
+
+In addition I also changed mdmon to use getopt_long to make it easier
+to add more command line arguments to it. Note that I went through
+great effort to preserve the behavior, even though the old code did
+some somewhat dodgy stuff using changing the arvg buffer pointing to
+the '--all' argument.
+
+Comments?
+
+Thanks,
+Jes
+
+Jes Sorensen (4):
+  mdmon: Use getopt_long() to parse command line options
+  Add --initrd argument to mdadm
+  Add --initrd argument to mdmon
+  Spawn mdmon with --initrd if mdadm was launched with --initrd
+
+ ReadMe.c |    3 ++
+ mdadm.c  |   11 ++++++++++
+ mdadm.h  |    3 ++
+ mdmon.c  |   64 +++++++++++++++++++++++++++++++++++++++++++++++++++----------
+ util.c   |   17 ++++++++++++---
+ 5 files changed, 83 insertions(+), 15 deletions(-)
+
+-- 
+1.7.8.3
+
