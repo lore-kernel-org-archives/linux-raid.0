@@ -1,77 +1,59 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Invalidating the pages read from a disk which md marks as
- faulty later
-Date: Thu, 19 Jan 2012 07:19:55 +1100
-Message-ID: <20120119071955.03a3fe9d@notabene.brown>
-References: <CAHhTtBVqgv1Spgvkux55-K=y7CEYWs1qFQHXDSU_Kwu_NsuTaQ@mail.gmail.com>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [PATCH 2/4] Add --initrd argument to mdadm
+Date: Thu, 19 Jan 2012 07:25:08 +0000
+Message-ID: <79556383A0E1384DB3A3903742AAC04A06F48F@IRSMSX101.ger.corp.intel.com>
+References: <1326797330-4488-1-git-send-email-Jes.Sorensen@redhat.com>
+ <1326797330-4488-3-git-send-email-Jes.Sorensen@redhat.com>
+ <79556383A0E1384DB3A3903742AAC04A06DAEE@IRSMSX101.ger.corp.intel.com>
+ <4F169A24.60109@redhat.com>
+ <79556383A0E1384DB3A3903742AAC04A06F09D@IRSMSX101.ger.corp.intel.com>
+ <4F16F6C9.1050108@redhat.com> <4F16F77C.6000405@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/50VqzFG69mCKYyQlqZuJdxe"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHhTtBVqgv1Spgvkux55-K=y7CEYWs1qFQHXDSU_Kwu_NsuTaQ@mail.gmail.com>
+In-Reply-To: <4F16F77C.6000405@redhat.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Krishnakumar R <krishnakumar.kernel@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: "neilb@suse.de" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "dledford@redhat.com" <dledford@redhat.com>, "kay@redhat.com" <kay@redhat.com>, "harald@redhat.com" <harald@redhat.com>, "lpoetter@redhat.com" <lpoetter@redhat.com>, "mschmidt@redhat.com" <mschmidt@redhat.com>
 List-Id: linux-raid.ids
 
---Sig_/50VqzFG69mCKYyQlqZuJdxe
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, 18 Jan 2012 20:11:38 +0530 Krishnakumar R
-<krishnakumar.kernel@gmail.com> wrote:
 
-> Hi,
->=20
-> Does md invalidate the pages in the page cache for data read (earlier) fr=
-om
-> the disk, which md finds faulty, lets say due to an I/O error ?
-> The assumption here is that since md found a disk to be faulty, the data
-> which was earlier read and cached can be considered invalid. Thoughts ?
-> I would assume that the pages would be backed by md device, hence is it
-> possible to figure out which pages were given out with data from an
-> underlying disk inorder to invalidate them ?
->=20
->
+> -----Original Message-----
+> From: Jes Sorensen [mailto:Jes.Sorensen@redhat.com]
+> Sent: Wednesday, January 18, 2012 5:47 PM
+> To: Kwolek, Adam
+> Cc: neilb@suse.de; linux-raid@vger.kernel.org; dledford@redhat.com;
+> kay@redhat.com; harald@redhat.com; lpoetter@redhat.com;
+> mschmidt@redhat.com
+> Subject: Re: [PATCH 2/4] Add --initrd argument to mdadm
+> 
+> On 01/18/12 17:43, Jes Sorensen wrote:
+> >> We should tell to mdadm for boot device assembly to be prepared for
+> >> > fs pivot when reshape is in progress. We can do this by specifying
+> >> > 2 options in command line, but in real world "someone will forget
+> >> > about something", so I think '--iinitrd' can have '--freeze-reshape'
+> >> > functionality also /without freeze-reshape option removal for
+> >> > separate use when raid will not be a boot device/. As I wrote
+> >> > before it needs to set one variable during command line parsing in
+> >> > mdadm.c only.
+> > If there is already a --freeze-reshape option, then I think it is
+> > better to have the boot scripts set that explicitly. The initramfs
+> > stage isn't really something we expect users or admins to mess with
+> > manually, so it ought to work for that. However if there is no option
+> > for this, and I just need to set the variable when detecting --initrd,
+> > then I can add that to the patchset no problem.
+> 
+> I guess I should add here, that I am not strongly opposed to setting
+> freeze_reshape for initrd. I am just wary of setting multiple flags magically
+> without it being obvious to the user/admin.
+> 
+> Cheers,
+> Jes
 
-Sorry, but this doesn't make any sense.
+Up to you.
 
-When you read from a disk, the disk drive itself does a CRC check to confirm
-the data is valid.  It if isn't you don't get to see the data.  If it is, w=
-hy
-would you want to invalidate it?
-
-If a device is "Faulty", that doesn't mean it has corrupted data.  It means
-it has inaccessible on unchangeable data.
-
-Though I might have  misunderstood you.  If you think I have, please give a
-more detailed scenario of the situation that should be handled differently.
-
-In any case, once md has returned the data to the caller there is nothing it
-can do to "invalidate" it.
-
-NeilBrown
-
---Sig_/50VqzFG69mCKYyQlqZuJdxe
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBTxcpaznsnt1WYoG5AQKLBw/+I3vxWI7LMmJykQyGH5wZmJfH0feeKWbW
-1yO+BgLffaQqvlP7XsCr018kn2yS8eteYRPYtyy7kPtYIZp7jdTcaAc0nfrFMJ7v
-l+Yl2MyXtNzWnM503tf9fEZ9PJLPXK0Zp1n1isO77pYwgG0dviaT+OFXlG19DtFs
-2tzmL+6tAObua6qBV4r1fVGuS73CFdPE47dGxyajwWQSVMJn4FPzmcBc8fbV9Fcu
-TWpBdWzBDqxZQjthwuXHNXw+fXS8JPG5pA7TTrVoDtW6upwuroSRJBVDx21CJmdv
-n6uWDR00zfFt8ON9/Wn2S3ojj0xCED3X4Qb9AhordkX+ef/Cfh72IO4O9hsGwXAg
-dhchKvU6MZroJW9sOKyUEeLv2d++5mYMqrtIUFQ36oFbN1D3WXE/99RuISczBUSX
-mm+tfJ55BO24BMnJxwX511W3QTqIIyDnls7hlh48SKKDYDHoz1wzujJHtry/ToLQ
-RdrXWJIbhQBEIpOmko7KthHiWlrWqkc5fi10aW546h22TsNI+/GfInW+oAPMbjyJ
-Z7TqdzOJUbhSszkSBK9TWm//C7GmUUYxn0SaTyHPKnz5vbO6/NO4UeVFS3SlEcq/
-+69lSwvqS8/X0DuIEerFisNbCa2YD2IoS7/KpRJ+TdiO+WmbQ7tJiGt9UM1sEHGw
-Qejn7G1GEfg=
-=1YKg
------END PGP SIGNATURE-----
-
---Sig_/50VqzFG69mCKYyQlqZuJdxe--
+BR
+Adam
