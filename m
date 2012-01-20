@@ -1,25 +1,36 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: Raid 6--best practices
-Date: Fri, 20 Jan 2012 03:06:19 +0000
-Message-ID: <CADNH=7Fb5tV+_z4eeOW0K8X+FVtUnaKxtT04qBSh_WQNT+kTDg@mail.gmail.com>
+From: Shain Miley <SMiley@npr.org>
+Subject: RE: Raid 6--best practices
+Date: Thu, 19 Jan 2012 22:16:46 -0500
+Message-ID: <CF17461882827E43AD7DF6E471FFA903834EFD7859@EXCHANGE.ads.npr.org>
 References: <4F173D3D.6070902@npr.org>
 	<CF17461882827E43AD7DF6E471FFA903834EFD7853@EXCHANGE.ads.npr.org>
-	<CF17461882827E43AD7DF6E471FFA903834EFD7858@EXCHANGE.ads.npr.org>
+	<CF17461882827E43AD7DF6E471FFA903834EFD7858@EXCHANGE.ads.npr.org>,<CADNH=7Fb5tV+_z4eeOW0K8X+FVtUnaKxtT04qBSh_WQNT+kTDg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CF17461882827E43AD7DF6E471FFA903834EFD7858@EXCHANGE.ads.npr.org>
+In-Reply-To: <CADNH=7Fb5tV+_z4eeOW0K8X+FVtUnaKxtT04qBSh_WQNT+kTDg@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Shain Miley <SMiley@npr.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
+
+Mathias,
+Thank you very much for the helpful advice.
+
+Shain
+
+________________________________________
+=46rom: Mathias Bur=E9n [mathias.buren@gmail.com]
+Sent: Thursday, January 19, 2012 10:06 PM
+To: Shain Miley
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Raid 6--best practices
 
 On 20 January 2012 02:54, Shain Miley <SMiley@npr.org> wrote:
 > Hello all,
 > I have been doing some research into possible alternatives to our
-> OpenSolaris/ZFS/Gluster file server. =C2=A0The main reason behind thi=
-s is,
+> OpenSolaris/ZFS/Gluster file server.  The main reason behind this is,
 > due to RedHat's recent purchase of Gluster, our current configuration
 > will no longer be supported and even before the acquisition, the upgr=
 ade
@@ -33,17 +44,15 @@ ace
 >
 > My questions really are:
 >
-> a) =C2=A0 =C2=A0What is the maximum number of drives typically seen i=
-n a RAID-6
-> setup like this? =C2=A0I noticed when looking at the Backblaze blog, =
-that
-> they are using RAID-6 with 15 disks (13 + 2 for parity). =C2=A0That n=
-umber seemed
+> a)    What is the maximum number of drives typically seen in a RAID-6
+> setup like this?  I noticed when looking at the Backblaze blog, that
+> they are using RAID-6 with 15 disks (13 + 2 for parity).  That number=
+ seemed
 > kind of high to me....but I was wondering what others on the list tho=
 ught.
 >
-> b) =C2=A0 =C2=A0Would you recommend using any specific Linux distro o=
-ver any other?
+> b)    Would you recommend using any specific Linux distro over any ot=
+her?
 > Right now I am trying to decide between Debian and Ubuntu....but I wo=
 uld be open to
 > any others...if there was a legitimate reason to do so (performance, =
@@ -57,8 +66,7 @@ stability, etc) in terms of the Raid codebase.
 > To unsubscribe from this list: send the line "unsubscribe linux-raid"=
  in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
 Hi,
@@ -70,6 +78,8 @@ really. Pick the one you're comfortable with.
 Good luck!
 
 /M
+
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
