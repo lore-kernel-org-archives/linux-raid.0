@@ -1,33 +1,40 @@
-From: Lennart Poettering <lpoetter@redhat.com>
-Subject: Re: [PATCH 0/4] add --initrd argument to mdadm/mdmon
-Date: Sat, 21 Jan 2012 02:27:30 +0100
-Message-ID: <4F1A1482.9070809@redhat.com>
-References: <1326797330-4488-1-git-send-email-Jes.Sorensen@redhat.com> <4F15D29C.7070504@redhat.com>
+From: Anssi Hannula <anssi.hannula@iki.fi>
+Subject: Re: Preventative replacement of active RAID1 disks
+Date: Sat, 21 Jan 2012 18:09:49 +0200
+Message-ID: <4F1AE34D.8030209@iki.fi>
+References: <4F16FB90.5000905@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F15D29C.7070504@redhat.com>
+In-Reply-To: <4F16FB90.5000905@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Jes.Sorensen@redhat.com, neilb@suse.de, linux-raid@vger.kernel.org, kay@redhat.com, harald@redhat.com, mschmidt@redhat.com, Lennart Poettering <lennart@poettering.net>
+To: Jan Ceuleers <jan.ceuleers@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 17.01.2012 20:57, Doug Ledford wrote:
+On 18.01.2012 19:04, Jan Ceuleers wrote:
+> List,
+> 
+> I have two 2-partition RAID1 sets, each with a spare. The SMART info for
+> both active disks suggests that I should replace them. Both of them. I
+> based this on the Seek_Error_Rate in the smartctl -a output (below).
 
->
-> Patch set looks reasonable to me, although you missed adding the new
-> option to the mdadm man page.
+[...]
+> Model Family:     Seagate Barracuda 7200.12 family
+> Device Model:     ST3500418AS
+>   7 Seek_Error_Rate         0x000f   079   060   030    Pre-fail 
+> Always       -       93484948
+[...]
+> Model Family:     Seagate Barracuda 7200.12 family
+> Device Model:     ST3500418AS
+>   7 Seek_Error_Rate         0x000f   079   060   030    Pre-fail 
+> Always       -       97304022
+[...]
 
-If you decide to document this it might make sense to add a reference to 
-http://www.freedesktop.org/wiki/Software/systemd/RootStorageDaemons 
-which explains the semantics in a bit more detail.
+I don't think these indicate any issue with the drives, all of my
+Seagate disks have random big values in that attribute (from 11717390 to
+103488378525).
 
-> Do we have a specific systemd version for which we know that --initrd is
-> needed, or a version before which it is the wrong thing to do?
-
-Well, systemd honours the '@' starting with v38, and for older versions 
-the '@' is practically a NOP, but not break anything that wasn't broken 
-anyway ;-)
-
-Lennart
+-- 
+Anssi Hannula
