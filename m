@@ -1,89 +1,110 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 0/4] add --initrd argument to mdadm/mdmon
-Date: Sun, 22 Jan 2012 22:25:33 +1100
-Message-ID: <20120122222533.42ba46b2@notabene.brown>
-References: <1326797330-4488-1-git-send-email-Jes.Sorensen@redhat.com>
-	<4F15D29C.7070504@redhat.com>
-	<4F15D710.7080104@redhat.com>
+From: linbloke <linbloke@fastmail.fm>
+Subject: Re: Raid 6--best practices
+Date: Mon, 23 Jan 2012 10:25:45 +1100
+Message-ID: <4F1C9AF9.2000201@fastmail.fm>
+References: <4F173D3D.6070902@npr.org> <CF17461882827E43AD7DF6E471FFA903834EFD7853@EXCHANGE.ads.npr.org> <CF17461882827E43AD7DF6E471FFA903834EFD7858@EXCHANGE.ads.npr.org>,<CADNH=7Fb5tV+_z4eeOW0K8X+FVtUnaKxtT04qBSh_WQNT+kTDg@mail.gmail.com> <CF17461882827E43AD7DF6E471FFA903834EFD7859@EXCHANGE.ads.npr.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/mwoNHyHnoV_W3neZVQ7dqq6"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F15D710.7080104@redhat.com>
+In-Reply-To: <CF17461882827E43AD7DF6E471FFA903834EFD7859@EXCHANGE.ads.npr.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Doug Ledford <dledford@redhat.com>, linux-raid@vger.kernel.org, kay@redhat.com, harald@redhat.com, lpoetter@redhat.com, mschmidt@redhat.com
+To: Shain Miley <SMiley@npr.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/mwoNHyHnoV_W3neZVQ7dqq6
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 20/01/12 2:16 PM, Shain Miley wrote:
+> Mathias,
+> Thank you very much for the helpful advice.
+>
+> Shain
+>
+> ________________________________________
+> From: Mathias Bur=E9n [mathias.buren@gmail.com]
+> Sent: Thursday, January 19, 2012 10:06 PM
+> To: Shain Miley
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: Raid 6--best practices
+>
+> On 20 January 2012 02:54, Shain Miley<SMiley@npr.org>  wrote:
+>> Hello all,
+>> I have been doing some research into possible alternatives to our
+>> OpenSolaris/ZFS/Gluster file server.  The main reason behind this is=
+,
+>> due to RedHat's recent purchase of Gluster, our current configuratio=
+n
+>> will no longer be supported and even before the acquisition, the upg=
+rade
+>> path for the OpenSolaris/ZFS stack was murky at best.
+>>
+>> The current servers in question consist of a total of 48, 2TB drives=
+=2E
+>> My thought was that I would setup a total of 6 RAID-6 arrays (each
+>> containing 7 drives + a spare or a flat 8 drive RAID-6 config) and p=
+lace
+>> LVM + XFS on top of that.
+>>
+>> My questions really are:
+>>
+>> a)    What is the maximum number of drives typically seen in a RAID-=
+6
+>> setup like this?  I noticed when looking at the Backblaze blog, that
+>> they are using RAID-6 with 15 disks (13 + 2 for parity).  That numbe=
+r seemed
+>> kind of high to me....but I was wondering what others on the list th=
+ought.
+>>
+>> b)    Would you recommend using any specific Linux distro over any o=
+ther?
+>> Right now I am trying to decide between Debian and Ubuntu....but I w=
+ould be open to
+>> any others...if there was a legitimate reason to do so (performance,=
+ stability, etc) in terms of the Raid codebase.
+>>
+>> Thanks in advance,
+>>
+>> Shain
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> Hi,
+>
+> Personally I wouldn't use more than 10 HDDs in a RAID6 setup (+ spare
+> perhaps). Regarding the choice of distribution, it doesn't matter
+> really. Pick the one you're comfortable with.
+>
+> Good luck!
+>
+> /M
 
-On Tue, 17 Jan 2012 21:16:16 +0100 Jes Sorensen <Jes.Sorensen@redhat.com>
-wrote:
+Whilst I love Debian, I find the release schedule a bit frustrating. If=
+=20
+you can hold off until May (a big stretch for projects wanting to go=20
+now, I know), then it may be worth looking at Ubuntu 12.04 LTS and get =
+5=20
+years of supported OS.
 
-> On 01/17/12 20:57, Doug Ledford wrote:
-> > Patch set looks reasonable to me, although you missed adding the new
-> > option to the mdadm man page.
-> >=20
-> > Do we have a specific systemd version for which we know that --initrd is
-> > needed, or a version before which it is the wrong thing to do?
-> >=20
-> > Ditto for dracut, do we know what the minimum version of dracut is
-> > before it will use the --initrd parameter on its mdadm calls?
->=20
-> I actually did this on purpose - or rather I left it out of the help
-> message on purpose. The option is really only meant to be used by
-> dracut/systemd, it doesn't make much sense for normal users/admins to
-> play with it directly.
+https://wiki.ubuntu.com/PrecisePangolin/ReleaseSchedule
 
-You left it out of the help message for mdmon, but included it in the help
-message for mdadm!
+Just a thought. Get Debian stability and Ubuntu long term support.
 
->=20
-> If you think it makes sense, I can add documentation for it.
+Cheers,
 
-I think it should be in the help messages and definitely should be in the m=
-an
-page.
+Josh
 
-If you fix that up and the other little things I've identified, then I'll
-apply it .... providing we have a name that I can live with.
-
-Thanks,
-NeilBrown
-
-
->=20
-> Right now I believe dracut isn't ready to call mdadm with --initrd,
-> however systemd in rawhide is aware of the '@' hack. I am not sure of
-> the specific version, but we should document the final minimum versions
-> once it's all sorted so all distros know which versions to pick.
->=20
-> Cheers,
-> Jes
-
-
---Sig_/mwoNHyHnoV_W3neZVQ7dqq6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBTxvyLTnsnt1WYoG5AQJAIBAAll0cFCNLJX/RgsmklW+60zYKhQWKWwno
-BR2KdYj6q8cEk3UonBY33bllpC2xcWYnKe36n77F5L4eMt4SPDIhB8z1EG6/QJjA
-tt7uWbWjENqh0R/ufOu9HCYDXxxNFlWKAFsSekU/bgTaVlXTjsPKzTRhAGNY5xRZ
-W6MP262qpNMDxNGNbDlWHeYDLxp/wgQzDQBv0L/iqMFKPZaHU1g5pyt4VlBshIML
-bVkPysLGMYyNcppsqr6aZt8Kd3KIK/GDYcB26NOx4VEn0EphT9mv4Eta0G6trWO9
-IthQnEIAzcMNlhb485AB4WuPuifSzFJtQ1VEn+HIW7m717D0QPbCNfWmhxBuSt4H
-w54lWBHFRvXpu+EbFOxo+32g4Joe3IyHpGquPMZFeGwNdclJrzlMXbE5vlOmjc/s
-gZzSFrB1XddJn3FqGzeSvPJI62zotulwCwUgZtdXzWX6jcyBWz1W/WryQsnJiTIr
-Bc+FyZi8PfchzAwNwhvX7ePGJCSs9J+WScWVY+Im37Bxb6TNn6KOcbuTRCNu30yz
-UKt6+0tE21wcL1hsjKeBi7j/5KPxJc4dzjMNaajVXXWCwdf9C1Rnx7vv6kqne6EZ
-2IpXNde64BUntix7K6qErkXcK1nnuDXeWzP9zh17Qd1K3ur76BE4pgAqIMaCmFjy
-U5L7sT9OIwk=
-=w2TE
------END PGP SIGNATURE-----
-
---Sig_/mwoNHyHnoV_W3neZVQ7dqq6--
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
