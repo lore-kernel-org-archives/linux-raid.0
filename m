@@ -1,124 +1,87 @@
 From: NeilBrown <neilb@suse.de>
 Subject: Re: [PATCH 2/4] Add --initrd argument to mdadm
-Date: Sun, 22 Jan 2012 22:17:58 +1100
-Message-ID: <20120122221758.412b18d4@notabene.brown>
+Date: Sun, 22 Jan 2012 22:20:38 +1100
+Message-ID: <20120122222038.659c34fb@notabene.brown>
 References: <1326797330-4488-1-git-send-email-Jes.Sorensen@redhat.com>
 	<1326797330-4488-3-git-send-email-Jes.Sorensen@redhat.com>
+	<79556383A0E1384DB3A3903742AAC04A06DAEE@IRSMSX101.ger.corp.intel.com>
+	<4F169A24.60109@redhat.com>
+	<79556383A0E1384DB3A3903742AAC04A06F09D@IRSMSX101.ger.corp.intel.com>
+	<4F16F6C9.1050108@redhat.com>
+	<4F16F77C.6000405@redhat.com>
+	<79556383A0E1384DB3A3903742AAC04A06F48F@IRSMSX101.ger.corp.intel.com>
+	<4F1974AA.4050801@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/UyIgty/C7=XN1aPXc5wE7N1"; protocol="application/pgp-signature"
+ boundary="Sig_/LHf9otBRdA=76IADWoqdYJ+"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1326797330-4488-3-git-send-email-Jes.Sorensen@redhat.com>
+In-Reply-To: <4F1974AA.4050801@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: linux-raid@vger.kernel.org, dledford@redhat.com, kay@redhat.com, harald@redhat.com, lpoetter@redhat.com, mschmidt@redhat.com
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: "Kwolek, Adam" <adam.kwolek@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "dledford@redhat.com" <dledford@redhat.com>, "kay@redhat.com" <kay@redhat.com>, "harald@redhat.com" <harald@redhat.com>, "lpoetter@redhat.com" <lpoetter@redhat.com>, "mschmidt@redhat.com" <mschmidt@redhat.com>
 List-Id: linux-raid.ids
 
---Sig_/UyIgty/C7=XN1aPXc5wE7N1
+--Sig_/LHf9otBRdA=76IADWoqdYJ+
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 17 Jan 2012 11:48:48 +0100 Jes.Sorensen@redhat.com wrote:
+On Fri, 20 Jan 2012 15:05:30 +0100 Jes Sorensen <Jes.Sorensen@redhat.com>
+wrote:
 
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> On 01/19/12 08:25, Kwolek, Adam wrote:
+> >>> If there is already a --freeze-reshape option, then I think it is
+> >>> > > better to have the boot scripts set that explicitly. The initramfs
+> >>> > > stage isn't really something we expect users or admins to mess wi=
+th
+> >>> > > manually, so it ought to work for that. However if there is no op=
+tion
+> >>> > > for this, and I just need to set the variable when detecting --in=
+itrd,
+> >>> > > then I can add that to the patchset no problem.
+> >> >=20
+> >> > I guess I should add here, that I am not strongly opposed to setting
+> >> > freeze_reshape for initrd. I am just wary of setting multiple flags =
+magically
+> >> > without it being obvious to the user/admin.
+> >> >=20
+> >> > Cheers,
+> >> > Jes
+> > Up to you.
 >=20
-> When --initrd is parsed, mdadm will change the first character of
-> argv[0] to '@'. This is used to signal to systemd that mdadm was
-> launched from initramfs and should not be shut down before returning
-> to the initramfs.
->=20
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-> ---
->  ReadMe.c |    3 +++
->  mdadm.c  |   10 ++++++++++
->  mdadm.h  |    1 +
->  3 files changed, 14 insertions(+), 0 deletions(-)
->=20
-> diff --git a/ReadMe.c b/ReadMe.c
-> index 9aa798b..49dc04f 100644
-> --- a/ReadMe.c
-> +++ b/ReadMe.c
-> @@ -111,6 +111,7 @@ struct option long_options[] =3D {
->      {"kill-subarray", 1, 0, KillSubarray},
->      {"update-subarray", 1, 0, UpdateSubarray},
->      {"udev-rules", 2, 0, UdevRules},
-> +    {"initrd", 0, 0, InitrdOpt},
-> =20
->      /* synonyms */
->      {"monitor",   0, 0, 'F'},
-> @@ -268,6 +269,8 @@ char OptionHelp[] =3D
->  "  --query       -Q   : Display general information about how a\n"
->  "                       device relates to the md driver\n"
->  "  --auto-detect      : Start arrays auto-detected by the kernel\n"
-> +"  --initrd           : Set first character of argv[0] to @ to indicate =
-the\n"
-> +"                       application was launched from initrd.\n"
->  ;
->  /*
->  "\n"
-> diff --git a/mdadm.c b/mdadm.c
-> index f07fac2..c0ccf55 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -174,6 +174,16 @@ int main(int argc, char *argv[])
->  				homehost =3D optarg;
->  			continue;
-> =20
-> +		/*
-> +		 * --initrd sets first char of argv[0] to @. This is used
-> +		 * by systemd to signal that the tast was launched from
-> +		 * initrd/initramfs and should be preserved during shutdown
-> +		 */
-> +		case InitrdOpt:
-> +			c =3D argv[0];
-> +			c[0] =3D '@';
-> +			continue;
+> Ok, I will leave it up to Neil/Kay/Harald - what do you guys think?
+> Should we make --initrd set the freeze_reshape flag, or better to expect
+> the initramfs scripts to specify it directly?
+>
 
-Why not:
-                        argv[0][0] =3D '@';
-??
+I would like to keep these two options separate.
+It might be worth noting in the man page that --freeze-reshape would normal=
+ly
+be used with --whatever-we-call-the-new-flag, but I don't think they should
+be the same option.
 
-Also I'm wondering about the choice of "initrd" as the option name.
-After all, we mostly use initramfs these days.
-
- --preboot ??
- --systemd-root-storage-daemon ??
-
-OK, the second is a joke, and the first is introducing terminology that isn=
-'t
-widely used...
-
- --for-root
-??
-
-I'm open to suggestions, but I'm not seeing --initrd as the best choice just
-yet.
-
-Otherwise this and 1/4 are OK.
-
-Thanks,
+thanks,
 NeilBrown
 
---Sig_/UyIgty/C7=XN1aPXc5wE7N1
+--Sig_/LHf9otBRdA=76IADWoqdYJ+
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTxvwZjnsnt1WYoG5AQI1Cw/+I+//nrt23DSYCppgrlbfiyH4NkHtIyhs
-WxwHXsnUEy4bVT6YUpzp5oEucDun6/d0IgtwDF8zVLpEKW7qHVN48TNMJlXx4K6Z
-QsAVkAMJrcd6IFOpz8/2ff5YebHZOhroYezsvPoAvUp7qn61B9Xc0VcE0Sowzcxc
-pY02jNMsftp6Ad++R6RqhA4wtk4CY2VpIzJAfnkwwrtLTsmSmA03l9zXW9hVzOMr
-Tu656UCOlagXjjkTe/Y//XR5i9qmASiotmZt8QPAT82Ok3glQ3NhqKwBHleWlE3m
-2Qmjby4tzMAKC4eh4n49lcnzyi5MzQKYl1P8Vs5WweAdsFmCLykqc35o6pjRt7Tb
-4AIzRLCZuo7vNSoV6NkVQYGaC3CZBHtWnxs3uQ1WcUX2suEFY6krhvFTw1iWHi8h
-niu4raSI2ip6mOomlcTbsI/2EZ2EEqU5PQwCf0hSSj5jfaQijqsX2EKfMguYZF7F
-60i+lYtqslsXR7+4EJTporzeqRp8A4odb6LhiDWAKyrG/2HaWqf2jKn3Zk/AFYZW
-RBCkCH1bnLO4k0EvnWg3uw7rNdxI/5WtQ+n5nbY2bkJGlAVI/VPhKQajMs7A5IOo
-wI/J3ZN//0pO3eJUGUTIEdNwpCw1vg5E0T3fiVDV5VzUkcEbThSEGfIUoSHyUACu
-qtLcObZL6sY=
-=+ZP8
+iQIVAwUBTxvxBjnsnt1WYoG5AQJ+9BAAmSXEHq/jgmKj/nxd9MC4RrkY40DnLpaa
+BUaw7akP856WZe5EK59s/0qorLkFhdj85JkKIncUfxPBYCUZWsMsK8NgSoYsX5p/
+ak8Eo/rluONFT3Bni74L4CGVHjIVC/8SR19DBm7LsV5AKRzcHFrDc9u6amjSUtTo
+nTLIHp2OMI2YBKOSZxBJZuyxRxcygwF6Gtu2ZuY8ncytFJGZ4ZU2n/i0/xLFJ9Dn
+URz7iw/NMBFI/nolK5YtQQr1O/jsFj2Q9E+kKImVxeUjm3+FVIKCNHF6ls7Cgl+M
+GRdtZJAo7jPPvQRqdS89wkbsiuTAr57vA66PqTXdplHy/mkGPv6lIBEBudng/cOP
+joR6GbYD+1NAlWJ3peZ/iJH1y41+5DU8vOrYbGk0ldAqB8U7lVRwni3smHxMSvNP
+91/atwl3v9Y85TwFhgYTIQg9nUFnjE236uhLedUxtEPyS+xXLdv27vD9+HmADATX
+ic6ST1E6Ho5SjTAmqDP0LSND6U19iSghiGAI1+86r767URggN3ErcmHtfGtPOLl9
+sv6DHA/KS71mXa4S4To6wut9xygYhWHEJrUjm24I2gZY0CPkEG9ToDh4zvm/ZctI
+bBxMP2ymBFDTjgMBBzhCaEb7YzyRVLBTNSQv4ASDu3GC4WdqN6zF5cV1IcK5wlWS
+nIT/MU2kT3o=
+=0g13
 -----END PGP SIGNATURE-----
 
---Sig_/UyIgty/C7=XN1aPXc5wE7N1--
+--Sig_/LHf9otBRdA=76IADWoqdYJ+--
