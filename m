@@ -1,77 +1,101 @@
-From: Jeremy Sanders <jeremy@jeremysanders.net>
-Subject: Drive goes into slow state with uncorrectable sectors, but does not fail
-Date: Mon, 23 Jan 2012 16:02:52 +0000
-Message-ID: <jfk0bd$ei4$1@dough.gmane.org>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [PATCH v2 0/4] add --preboot argument to mdadm/mdmon
+Date: Mon, 23 Jan 2012 11:24:25 -0500
+Message-ID: <4F1D89B9.9080802@redhat.com>
+References: <1327317505-14782-1-git-send-email-Jes.Sorensen@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7Bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigC8113CD05C241BFCFB67149E"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1327317505-14782-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jes.Sorensen@redhat.com
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, kay@redhat.com, harald@redhat.com, lpoetter@redhat.com, mschmidt@redhat.com
 List-Id: linux-raid.ids
 
-We have a drive in a RAID 1 that has gone into a slow state after a MD data 
-check, running Scientific Linux 6.1. It has ~3200 pending sectors (no 
-uncorrectable or reallocated sectors) and it is "healthy" according to 
-smartctl. Doing a raid check now runs at ~100 kB/s, but doesn't produce any 
-MD errors. It's a Maxtor 6H500F0.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigC8113CD05C241BFCFB67149E
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-The initial error messages on the drive were
-Jan 22 04:00:47 xserv2 kernel: ata3: EH in SWNCQ mode,QC:qc_active 
-0x7FFFEFFF sactive 0x7FFFEFFF
-Jan 22 04:00:47 xserv2 kernel: ata3: SWNCQ:qc_active 0x1102E00D defer_bits 
-0x6EFD0FF2 last_issue_tag 0x3
-Jan 22 04:00:47 xserv2 kernel:  dhfis 0x1102E00D dmafis 0x0 sdbfis 
-0x6EFD1FF2
-Jan 22 04:00:47 xserv2 kernel: ata3: ATA_REG 0x40 ERR_REG 0x0
-Jan 22 04:00:47 xserv2 kernel: ata3: tag : dhfis dmafis sdbfis sacitve
-Jan 22 04:00:47 xserv2 kernel: ata3: tag 0x0: 1 0 0 1  
-Jan 22 04:00:47 xserv2 kernel: ata3: tag 0x2: 1 0 0 1  
-Jan 22 04:00:47 xserv2 kernel: ata3: tag 0x3: 1 0 0 1  
-Jan 22 04:00:47 xserv2 kernel: ata3: tag 0xd: 1 0 0 1  
-Jan 22 04:00:47 xserv2 kernel: ata3: tag 0xe: 1 0 0 1  
-Jan 22 04:00:47 xserv2 kernel: ata3: tag 0xf: 1 0 0 1  
-Jan 22 04:00:47 xserv2 kernel: ata3: tag 0x11: 1 0 0 1  
-Jan 22 04:00:47 xserv2 kernel: ata3: tag 0x18: 1 0 0 1  
-Jan 22 04:00:47 xserv2 kernel: ata3: tag 0x1c: 1 0 0 1  
-Jan 22 04:00:47 xserv2 kernel: ata3.00: exception Emask 0x0 SAct 0x7fffefff 
-SErr 0x0 action 0x6 frozen
-Jan 22 04:00:47 xserv2 kernel: ata3.00: failed command: READ FPDMA QUEUED
-Jan 22 04:00:47 xserv2 kernel: ata3.00: cmd 
-60/80:00:00:a1:72/00:00:01:00:00/40 tag 0 ncq 65536 in
-Jan 22 04:00:47 xserv2 kernel:         res 
-40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-Jan 22 04:00:47 xserv2 kernel: ata3.00: status: { DRDY }
-...
-Jan 22 04:00:47 xserv2 kernel: ata3: hard resetting link
-Jan 22 04:00:47 xserv2 kernel: ata3: nv: skipping hardreset on occupied port
-Jan 22 04:00:49 xserv2 kernel: ata3: SATA link up 3.0 Gbps (SStatus 123 
-SControl 300)
-Jan 22 04:00:49 xserv2 kernel: ata3.00: configured for UDMA/133
-Jan 22 04:00:49 xserv2 kernel: ata3.00: device reported invalid CHS sector 0
-Jan 22 04:00:49 xserv2 kernel: ata3.00: device reported invalid CHS sector 0
-...
-Jan 22 04:00:49 xserv2 kernel: ata3: EH complete
-Jan 22 04:01:19 xserv2 kernel: ata3: EH in SWNCQ mode,QC:qc_active 
-0x2F3FFFF7 sactive 0x2F3FFFF7
-Jan 22 04:01:19 xserv2 kernel: ata3: SWNCQ:qc_active 0x2F3FFFF7 defer_bits 
-0x0 last_issue_tag 0x1d
-Jan 22 04:01:19 xserv2 kernel:  dhfis 0x2F3FFFF7 dmafis 0x0 sdbfis 
-0x10C00008
+On 01/23/2012 06:18 AM, Jes.Sorensen@redhat.com wrote:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>=20
+> Hi,
+>=20
+> Here is v2 of the systemd/dracut fixes for preboot handling in
+> mdadm/mdmon. I have changed the argument over from --initrd to
+> --preboot as Neil suggested, as well as fixed up the minor code nits
+> and added documentation to the man pages.
+>=20
+> It shows up that I didn't need to add a separate enum for the command
+> line arguments in mdmon since mdadm.h gets pulled in so we can reuse
+> those. If we find that to be an issue, we can always create a separate
+> one later.
 
-This repeats several times. Stangely ata3 is reported to be the other drive 
-on bootup, so I don't know what's going on there. The drive with the bad 
-sectors is very slow if you try to time it with dd, but the other drive is 
-fine.
+I'm not sure I like --preboot.  I understand the difficulty in finding
+just the right option name, but to me, preboot sounds like an option you
+would use if you are doing pre-processing of something for a later
+invokation to use.  And that isn't the case here, so the gut level
+understanding won't match up with the man page/help output understanding
+and I try to avoid that as much as possible.  Since the distinct element
+is that we want to keep running both before and after the normal root
+filesystem is mounted and we want all files we open to be off of the
+root filesystem namespace, maybe --offroot (which is odd enough by
+itself to forestall any gut reactions and prompt a trip to the help/man
+pages as opposed to guessing what the option means)?
 
-Unfortunately, although the system is very unresponsive, md is not failing 
-the bad drive. Is this just a case of a drive not properly realising that 
-it's faulty, or is md missing these errors?
+> Cheers,
+> Jes
+>=20
+> Jes Sorensen (4):
+>   mdmon: Use getopt_long() to parse command line options
+>   Add --preboot argument to mdadm
+>   Add --preboot argument to mdmon
+>   Spawn mdmon with --preboot if mdadm was launched with --preboot
+>=20
+>  ReadMe.c   |    5 +++++
+>  mdadm.8.in |   12 ++++++++++++
+>  mdadm.c    |   10 ++++++++++
+>  mdadm.h    |    3 +++
+>  mdmon.8    |   12 +++++++++++-
+>  mdmon.c    |   60 +++++++++++++++++++++++++++++++++++++++++++++++++---=
+--------
+>  util.c     |   17 +++++++++++++----
+>  7 files changed, 103 insertions(+), 16 deletions(-)
+>=20
 
-When you do a MD "check", does this actually verify that the data is the 
-same on both drives?
 
-Jeremy
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: 0E572FDD
+	      http://people.redhat.com/dledford
 
 
 
+--------------enigC8113CD05C241BFCFB67149E
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iQIcBAEBAgAGBQJPHYm5AAoJELgmozMOVy/dfCYP/0OrPY3XFGZk6TMO8hIpu9oe
+p6cZdxPrZdgBYLmUb/mmI9kQaLIYt9k20Z1GB9UcPB4HtJWmBYBz4gSl57R0wxZ6
+wG6nMCguFPO/VgJP4kgLeuTx8FCNZ5gdj+POk34q0weBEX4VdxomjdeLMHGI2PNU
+GqKDQp1MqkGsOwZScaOyNuGVBJ3o8dR6/1Q4dSdVga45HTNHEMb6hn5UMEeCKMrx
+50tMDf7ZLSl9DWVHoGGE7PTtizNcML/nxy+7mUJV0fLwRWgBNzhkSPo4+r0DJx3k
+FkR/rLRrjUrZIf59U3JtvGwc2EaKeMCzuzzFEfFRgMCLfV1e95x6tmnddYHgGKLz
+RixtZOHk5Qd4c+uaG6tqWGrtgsI7Iw/uuWfemf3NOh6Pyu28071Kiz5DMMuH5ObN
+6eJH01t2Z+x73fXrasV3qUpSMyNRPWeE15yCYONx8WQTE6qaruOkZ+stbrx/YiJ/
+Yrg3vZzRCVjvoBFXRtA0YAka6v8hBnV1IfASrJPHnbh37Jjrp94qqxzxESPqQsdi
+dIMd1YZsDrFfsXm0mrOlO2oljJ6PG/97DYEXihH+ABrk5Mo7kRoyQ5sJPKpIMna/
+3dNO6uQikwJ5leGoe3FWJE5O9e89Z6bfEEmauOFz1XmYIepvAApzokj0+OO1pcM2
+dCTf/6gkrVUHzdEwstnm
+=iVN+
+-----END PGP SIGNATURE-----
+
+--------------enigC8113CD05C241BFCFB67149E--
