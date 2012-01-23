@@ -1,79 +1,48 @@
-From: Lukasz Dorau <lukasz.dorau@intel.com>
-Subject: [PATCH] fix: do not overwrite existing devices' symlinks
-Date: Mon, 23 Jan 2012 13:06:52 +0100
-Message-ID: <20120123120652.20165.47998.stgit@gklab-128-085.igk.intel.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH 1/1] Work around gcc-4.7's strict aliasing checks
+Date: Mon, 23 Jan 2012 13:50:45 +0100
+Message-ID: <4F1D57A5.7070104@redhat.com>
+References: <20120112104320.471910db@notabene.brown> <1327193360-4446-1-git-send-email-soltys@ziu.info>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1327193360-4446-1-git-send-email-soltys@ziu.info>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, marcin.labun@intel.com, ed.ciechanowski@intel.com
+To: Michal Soltys <soltys@ziu.info>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, dledford@redhat.com
 List-Id: linux-raid.ids
 
-If the device's name is given in /etc/mdadm.conf, create_mddev()
-does not check if the map contains a device of this name (mdopen.c:140).
-If it does, the symlink of that name will be overwritten.
+On 01/22/12 01:49, Michal Soltys wrote:
+> Below is approach to the "problem" from a bit different angle - using
+> alias-permitting type definitions consistently where necessary - so assuring
+> compiler won't (shouldn't ?) pursue any funny ideas no matter what. I'd guess
+> it's the "right" thing to do - aside from going kernel way and using
+> -fno-strict-aliasing everywhere (or #pragmas).
+> 
+> The compilation goes cleanly at Wstrict-aliasing=1 - so most aggresive yet most
+> dumb at the same time (note, not checked on 4.7, but obviously I included
+> necessary equivalent changes to the Jes's patch).
+> 
+> Anyway - side effects of Wstrict-aliasing=1 are false positives - quite a few
+> of them actually (funcion argument casts where only pointers are involved, some
+> pointers which are not dereferenced "nearby" and/or in the same block) - but
+> false negatives should be (almost ?) nonexistent.  As mdadm is rather critical,
+> and itself compiled with Wall, Wextra and Werror - I assume to be extra careful
+> - this should complement those settings well.
+> 
+> On a bad side of this approach - it doesn't necessary make the code prettier,
+> and might make people ask "the hell is this ...".
 
-create_mddev() has been changed. Now it checks if the map contains
-a device of the name given in /etc/mdadm.conf.
-If it does, the appropriate suffix is added to the given name.
+Hi Michal,
 
-Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
----
- mdopen.c |   16 +++++++++++-----
- 1 files changed, 11 insertions(+), 5 deletions(-)
+Personally I'd rather have someone who knows about the ddf on disk
+format go through the code and fix properly. We're all going through the
+code trying to come up with workarounds for gcc (myself included),
+rather than fixing the code.
 
-diff --git a/mdopen.c b/mdopen.c
-index eac1c1f..3078de6 100644
---- a/mdopen.c
-+++ b/mdopen.c
-@@ -147,10 +147,12 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
- 	char *cname;
- 	char devname[20];
- 	char cbuf[400];
-+	struct map_ent *map = NULL;
-+	int dev_conflict = 0;
-+
- 	if (chosen == NULL)
- 		chosen = cbuf;
- 
--
- 	if (autof == 0)
- 		autof = ci->autof;
- 
-@@ -277,17 +279,21 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
- 	else
- 		sprintf(devname, "/dev/md%d", num);
- 
--	if (cname[0] == 0 && name) {
-+	if ((cname[0] != 0) && map_by_name(&map, cname))
-+		dev_conflict = 1;
-+
-+	if ((cname[0] == 0 && name) || dev_conflict) {
- 		/* Need to find a name if we can
- 		 * We don't completely trust 'name'.  Truncate to
- 		 * reasonable length and remove '/'
- 		 */
- 		char *cp;
--		struct map_ent *map = NULL;
- 		int conflict = 1;
- 		int unum = 0;
- 		int cnlen;
--		strncpy(cname, name, 200);
-+
-+		if (!dev_conflict)
-+			strncpy(cname, name, 200);
- 		cname[200] = 0;
- 		while ((cp = strchr(cname, '/')) != NULL)
- 			*cp = '-';
-@@ -312,7 +318,7 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
- 		}
- 	}
- 
--	if (dev && dev[0] == '/')
-+	if ((dev && dev[0] == '/') && (!dev_conflict))
- 		strcpy(chosen, dev);
- 	else if (cname[0] == 0)
- 		strcpy(chosen, devname);
+IMHO adding more ugly typedefs is a situation of where the cure is worse
+than the disease.
 
+Cheers,
+Jes
