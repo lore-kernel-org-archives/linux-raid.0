@@ -1,64 +1,44 @@
-From: Michal Soltys <soltys@ziu.info>
-Subject: Re: [PATCH 1/1] Work around gcc-4.7's strict aliasing checks
-Date: Tue, 24 Jan 2012 01:59:38 +0100
-Message-ID: <4F1E027A.40007@ziu.info>
-References: <20120112104320.471910db@notabene.brown> <1327193360-4446-1-git-send-email-soltys@ziu.info> <4F1D57A5.7070104@redhat.com>
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+Subject: nonstandard raid(4-ish) scheme
+Date: Tue, 24 Jan 2012 04:00:15 +0100
+Message-ID: <20120124030015.GQ11921@wantstofly.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F1D57A5.7070104@redhat.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org, dledford@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12-01-23 13:50, Jes Sorensen wrote:
-> On 01/22/12 01:49, Michal Soltys wrote:
->>  Below is approach to the "problem" from a bit different angle -
->>  using alias-permitting type definitions consistently where necessary
->>  - so assuring compiler won't (shouldn't ?) pursue any funny ideas no
->>  matter what. I'd guess it's the "right" thing to do - aside from
->>  going kernel way and using -fno-strict-aliasing everywhere (or
->>  #pragmas).
->>
->>  The compilation goes cleanly at Wstrict-aliasing=1 - so most
->>  aggresive yet most dumb at the same time (note, not checked on 4.7,
->>  but obviously I included necessary equivalent changes to the Jes's
->>  patch).
->>
->>  Anyway - side effects of Wstrict-aliasing=1 are false positives -
->>  quite a few of them actually (funcion argument casts where only
->>  pointers are involved, some pointers which are not dereferenced
->>  "nearby" and/or in the same block) - but false negatives should be
->>  (almost ?) nonexistent.  As mdadm is rather critical, and itself
->>  compiled with Wall, Wextra and Werror - I assume to be extra careful
->>  - this should complement those settings well.
->>
->>  On a bad side of this approach - it doesn't necessary make the code
->>  prettier, and might make people ask "the hell is this ...".
-> 
-> Hi Michal,
-> 
-> Personally I'd rather have someone who knows about the ddf on disk
-> format go through the code and fix properly.
-> IMHO adding more ugly typedefs is a situation of where the cure is
-> worse than the disease.
+(I'm not on the list, please CC on replies.)
 
-Btw, the patch went through the whole mdadm, not just ddf part. And
-afaik, if we aim to be formally correct - there's no going around
-typedefs (which are required for "may_alias" on simple types).
-Otherwise, it just tricking gcc into not issuing warnings (even if
-the chance of actual problems occuring is absolutely minuscule).
+Hi!
 
-> We're all going through the code trying to come up with workarounds
-> for gcc (myself included), rather than fixing the code.
+While recently setting up a media server for a HTPC, I was wondering
+whether it'd be possible to set things up so that most disks can be
+kept spun down most of the time.
 
-Well, IMHO the [probably] best workaround for now would be
--fno-strict-aliasing then - which avoids warnings, ugly attribute
-[over]use, and should assure expected behavior.
+Since the majority of the I/O on this sort of server is reads, the
+first idea was to store (directories of) media files entirely on
+individual disks, i.e. to not distribute them over all disks by
+striping, as that would require spinning up each disk on reads.  So,
+creating a large RAID(5/6) array out of all of the disks wouldn't be
+option here.
 
-Say, near the top of Makefile:
+RAID1ing pairs of disks would work, but this is somewhat wasteful,
+as it eats up half of your space.
 
--CFLAGS = $(CWFLAGS) $(CXFLAGS) -DSendmail=\""$(MAILCMD)"\" $(CONFFILEFLAGS) $(DIRFLAGS)
-+CFLAGS = $(CWFLAGS) $(CXFLAGS) -fno-strict-aliasing -DSendmail=\""$(MAILCMD)"\" $(CONFFILEFLAGS) $(DIRFLAGS)
+The ideal way of doing this would be to take N-1 disks out of your N
+disk set, and create separate filesystems on each of the disks, and
+store different sets of files on them, while using the last disk,
+disk N, as a parity disk of the N-1 data disks.
+
+This is equivalent to raid4 with the stripe size equal the size of
+one disk, and where the data disks get individual /dev/mdX entries
+instead of being concatenated into one large /dev/mdX.
+
+Would this be easy to implement?
+
+
+thanks,
+Lennert
