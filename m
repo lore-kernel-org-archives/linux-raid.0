@@ -1,44 +1,32 @@
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-Subject: nonstandard raid(4-ish) scheme
-Date: Tue, 24 Jan 2012 04:00:15 +0100
-Message-ID: <20120124030015.GQ11921@wantstofly.org>
+From: David Brown <david@westcontrol.com>
+Subject: Re: [PATCH 1/1] Work around gcc-4.7's strict aliasing checks
+Date: Tue, 24 Jan 2012 10:18:57 +0100
+Message-ID: <jflta6$vnr$1@dough.gmane.org>
+References: <20120112104320.471910db@notabene.brown> <1327193360-4446-1-git-send-email-soltys@ziu.info> <4F1D57A5.7070104@redhat.com> <4F1E027A.40007@ziu.info>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <4F1E027A.40007@ziu.info>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-(I'm not on the list, please CC on replies.)
+On 24/01/2012 01:59, Michal Soltys wrote:
+>
+> Well, IMHO the [probably] best workaround for now would be
+> -fno-strict-aliasing then - which avoids warnings, ugly attribute
+> [over]use, and should assure expected behavior.
+>
+> Say, near the top of Makefile:
+>
+> -CFLAGS = $(CWFLAGS) $(CXFLAGS) -DSendmail=\""$(MAILCMD)"\" $(CONFFILEFLAGS) $(DIRFLAGS)
+> +CFLAGS = $(CWFLAGS) $(CXFLAGS) -fno-strict-aliasing -DSendmail=\""$(MAILCMD)"\" $(CONFFILEFLAGS) $(DIRFLAGS)
 
-Hi!
-
-While recently setting up a media server for a HTPC, I was wondering
-whether it'd be possible to set things up so that most disks can be
-kept spun down most of the time.
-
-Since the majority of the I/O on this sort of server is reads, the
-first idea was to store (directories of) media files entirely on
-individual disks, i.e. to not distribute them over all disks by
-striping, as that would require spinning up each disk on reads.  So,
-creating a large RAID(5/6) array out of all of the disks wouldn't be
-option here.
-
-RAID1ing pairs of disks would work, but this is somewhat wasteful,
-as it eats up half of your space.
-
-The ideal way of doing this would be to take N-1 disks out of your N
-disk set, and create separate filesystems on each of the disks, and
-store different sets of files on them, while using the last disk,
-disk N, as a parity disk of the N-1 data disks.
-
-This is equivalent to raid4 with the stripe size equal the size of
-one disk, and where the data disks get individual /dev/mdX entries
-instead of being concatenated into one large /dev/mdX.
-
-Would this be easy to implement?
+Another option is using #pragma's in the source code to turn on 
+"no-strict-aliasing" - I don't know what the preferences are on #pragma 
+versus Makefile options.  Personally, I prefer a #pragma in a case like 
+this, as it ties the option closer to the code that requires it - but 
+obviously the Linux code style preferences must be followed.
 
 
-thanks,
-Lennert
