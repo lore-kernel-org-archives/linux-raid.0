@@ -1,81 +1,89 @@
-From: Jes.Sorensen@redhat.com
-Subject: [PATCH 4/4] Spawn mdmon with --offroot if mdadm was launched with --offroot
-Date: Wed, 25 Jan 2012 16:18:04 +0100
-Message-ID: <1327504684-9219-5-git-send-email-Jes.Sorensen@redhat.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [PATCH v3 0/4] add --offroot argument to mdadm/mdmon
+Date: Wed, 25 Jan 2012 11:02:15 -0500
+Message-ID: <4F202787.70001@redhat.com>
 References: <1327504684-9219-1-git-send-email-Jes.Sorensen@redhat.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig49E23BB7DA191ACEBC4460E1"
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1327504684-9219-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dledford@redhat.com, kay@redhat.com, harald@redhat.com, lpoetter@redhat.com, mschmidt@redhat.com
+To: Jes.Sorensen@redhat.com
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, kay@redhat.com, harald@redhat.com, lpoetter@redhat.com, mschmidt@redhat.com
 List-Id: linux-raid.ids
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig49E23BB7DA191ACEBC4460E1
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- mdadm.c |    1 +
- mdadm.h |    2 ++
- util.c  |   17 +++++++++++++----
- 3 files changed, 16 insertions(+), 4 deletions(-)
+On 1/25/2012 10:18 AM, Jes.Sorensen@redhat.com wrote:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>=20
+> Hi,
+>=20
+> Here is v3, also known as the perfect<tm> version of the of the
+> systemd/dracut fixes for preboot/offroot/initrd handling in
+> mdadm/mdmon. I have changed the argument now to --offroot based on the
+> input I received.=20
+>=20
+> Cheers,
+> Jes
+>=20
+>=20
+> Jes Sorensen (4):
+>   mdmon: Use getopt_long() to parse command line options
+>   Add --offroot argument to mdadm
+>   Add --offroot argument to mdmon
+>   Spawn mdmon with --offroot if mdadm was launched with --offroot
+>=20
+>  ReadMe.c   |    5 +++++
+>  mdadm.8.in |   12 ++++++++++++
+>  mdadm.c    |   10 ++++++++++
+>  mdadm.h    |    3 +++
+>  mdmon.8    |   12 +++++++++++-
+>  mdmon.c    |   59 ++++++++++++++++++++++++++++++++++++++++++++++++----=
+-------
+>  util.c     |   17 +++++++++++++----
+>  7 files changed, 102 insertions(+), 16 deletions(-)
+>=20
 
-diff --git a/mdadm.c b/mdadm.c
-index 78f28d5..1efa3e8 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -181,6 +181,7 @@ int main(int argc, char *argv[])
- 		 */
- 		case OffRootOpt:
- 			argv[0][0] = '@';
-+			__offroot = 1;
- 			continue;
- 
- 		case ':':
-diff --git a/mdadm.h b/mdadm.h
-index fec93aa..d862b3e 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1383,3 +1383,5 @@ static inline int xasprintf(char **strp, const char *fmt, ...) {
- 
- #define PROCESS_DELAYED -2
- #define PROCESS_PENDING -3
-+
-+extern int __offroot;
-diff --git a/util.c b/util.c
-index 6985a70..4ba44e6 100644
---- a/util.c
-+++ b/util.c
-@@ -32,6 +32,8 @@
- #include	<dirent.h>
- #include	<signal.h>
- 
-+int __offroot;
-+
- /*
-  * following taken from linux/blkpg.h because they aren't
-  * anywhere else and it isn't safe to #include linux/ * stuff.
-@@ -1622,10 +1624,17 @@ int start_mdmon(int devnum)
- 				skipped = 0;
- 
- 		for (i=0; paths[i]; i++)
--			if (paths[i][0])
--				execl(paths[i], "mdmon",
--				      devnum2devname(devnum),
--				      NULL);
-+			if (paths[i][0]) {
-+				if (__offroot) {
-+					execl(paths[i], "mdmon", "--offroot",
-+					      devnum2devname(devnum),
-+					      NULL);
-+				} else {
-+					execl(paths[i], "mdmon",
-+					      devnum2devname(devnum),
-+					      NULL);
-+				}
-+			}
- 		exit(1);
- 	case -1: fprintf(stderr, Name ": cannot run mdmon. "
- 			 "Array remains readonly\n");
--- 
-1.7.8.3
+Acked-by: Doug Ledford <dledford@redhat.com>
 
+
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: 0E572FDD
+	      http://people.redhat.com/dledford
+
+Infiniband specific RPMs available at
+	      http://people.redhat.com/dledford/Infiniband
+
+
+--------------enig49E23BB7DA191ACEBC4460E1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iQIcBAEBAgAGBQJPICeHAAoJELgmozMOVy/dSj8QAKn+//8Hf1wzddkgiVrH3Dzi
+sflQeQVaNVlDlmpfFmmKaQQT62k4f5B0hbqdZuJdHq3D68Rye506AqbSt+3nU8kA
+8dli3UbdUQvKF1P6woUmwCu6H38KMNyQbpUsM2DGf1oqoOa9xT3ADZS08La7/PCn
+5yaIet9p3rOtWIoq2tIbZmmcMNRP65LZFJJg0NYeDwzQbr5XX1YLdQU3Jyz+0yzs
+8pD3HjClDY5l++0S/CAMmZ5WjqGALOGM7GUO3jS9HrNHqVipWFFqH+wGaSMxATf+
+qp9AANRmUYvY4F31XrB28dUCZdpKboFqlomPKtvx9KSm4zK9eFfMbsxf/2dy/U5E
+nrxb38wEmp9vjgGpT+CKJKbsgXqknr1pZurCT+Yj79lnrQdtAGuP81BprGXQWT9J
+eGFhJm4O1nRcPt5xnSI+rS18ft3Xn72mnHU6bX3DvqhOjy1Vjw0iCzLzrJC2kVN1
+X75GZfFuhdCHBG1+GCpSMg9OTaIPSa759nOUixzC8Ne+2P+NSyRIzR55wbKDiOWy
+01AKMdml5Dr9H9xMxDb8MDM3+9GqxLxqemrfrRqnlB/Kfhi5wjTzpUG1v8RBZzOF
+2N1VnxYJszGy4Io5kc+/Dm8irURSLn9MjGHpBcmvoIZvM4NdKOLMGAl1P7hWKn6e
+XTqbVd5r5Ji/Un9ofbWK
+=J1Zf
+-----END PGP SIGNATURE-----
+
+--------------enig49E23BB7DA191ACEBC4460E1--
