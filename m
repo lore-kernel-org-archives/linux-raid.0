@@ -1,131 +1,164 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/4] Add --initrd argument to mdadm
-Date: Wed, 25 Jan 2012 22:37:17 +1100
-Message-ID: <20120125223717.156d6c64@notabene.brown>
-References: <1326797330-4488-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1326797330-4488-3-git-send-email-Jes.Sorensen@redhat.com>
-	<20120122221758.412b18d4@notabene.brown>
-	<4F1D358C.9070508@redhat.com>
-	<4F1DBF6F.40209@redhat.com>
-	<1327351849.6323.9.camel@mop>
-	<4F1FDF41.6000909@redhat.com>
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
+Subject: Re: Raid 6--best practices
+Date: Wed, 25 Jan 2012 12:28:00 +0000
+Message-ID: <20255.62800.372861.309853@tree.ty.sabi.co.UK>
+References: <4F173D3D.6070902@npr.org>
+	<CF17461882827E43AD7DF6E471FFA903834EFD7853@EXCHANGE.ads.npr.org>
+	<CF17461882827E43AD7DF6E471FFA903834EFD7858@EXCHANGE.ads.npr.org>
+	<jfbfk6$gqk$1@dough.gmane.org>
+	<4F199C09.80202@npr.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/.gVdxjLDrwZT93s+ADnAPbI"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F1FDF41.6000909@redhat.com>
+In-Reply-To: <4F199C09.80202@npr.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Kay Sievers <kay@redhat.com>, Lennart Poettering <lpoetter@redhat.com>, linux-raid@vger.kernel.org, dledford@redhat.com, harald@redhat.com, mschmidt@redhat.com
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/.gVdxjLDrwZT93s+ADnAPbI
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+>> I have been doing some research into possible alternatives to
+>> our OpenSolaris/ZFS/Gluster file server. The main reason
+>> behind this is, due to RedHat's recent purchase of Gluster,
+>> our current configuration will no longer be supported and
+>> even before the acquisition, the upgrade path for the
+>> OpenSolaris/ZFS stack was murky at best.
 
-On Wed, 25 Jan 2012 11:53:53 +0100 Jes Sorensen <Jes.Sorensen@redhat.com>
-wrote:
+You could be using FreeBSD/ZFS, or just keep using Gluster
+indeed as you seem going to do, which is quite good overall, and
+the sale to RH just means it will have *much* better chance of
+being maintained for the foreseeable future, but not OpenSolaris.
 
-> On 01/23/12 21:50, Kay Sievers wrote:
-> > On Mon, 2012-01-23 at 21:13 +0100, Lennart Poettering wrote:
-> >> On 23.01.2012 11:25, Jes Sorensen wrote:
-> >>> I was trying to come up with a better name, and I think --preboot is =
-the
-> >>> best I have seen so far. Other ideas I had were:
-> >>>   --systemd-root
-> >>>   --no-shutdown
-> >>> however I like --preboot better, so I will go with that, unless someo=
-ne
-> >>> starts throwing things at me.
-> >>
-> >> I figure it's a bit of bike-shedding, but I'd like to ask you to stick=
-=20
-> >> to --initramfs or so if possible, simply because we're interested to=20
-> >> reuse the same name for that switch for all storage daemons which need=
-=20
-> >> this, and the spec currently suggests --initramfs, and I'd prefer to=20
-> >> avoid notifying all users of that change if we change it...
-> >=20
-> > Last time you and I decided to rename it to --initrd, so the document
-> > does not say --initramfs.
-> >=20
-> > Back to square one. :)
->=20
-> Neil,
->=20
-> In the light of the discussion so far, do you have any preference for
-> --preboot/--preroot/--initrd/--offroot
->=20
+>> The current servers in question consist of a total of 48, 2TB
+>> drives. My thought was that I would setup a total of 6 RAID-6
+>> arrays (each containing 7 drives + a spare or a flat 8 drive
+>> RAID-6 config) and place LVM + XFS on top of that.
 
-How about
-   -@
+That's the usual (euphemism alert) imaginative setup that
+follows what I call a "syntactic" logic (it is syntactically
+valid!).
 
-A single-character which reflects what it actually does :-)
+Note: You could have 1-2 spares and share them among all sets.
 
-I don't like --initrd because it is just wrong.
+Also, the 2TB drives are likely to be consumer-grade ones with
+ERC disabled, unless you chose carefully or got lucky.
 
-I can live with the others.
+>> My questions really are: a) What is the maximum number of
+>> drives typically seen in a RAID-6 setup like this?
 
-I think --offroot is closest to the right meaning (it is both pre and post).
-I confess a little discomfort with the word "off" as it can mean both "not =
-on"
-and "was on".
+Any number up to 48. Really, because "typically seen" is a naive
+question, because what is "typically seen" could be pretty bad.
 
-"Did you run mdadm off root, or off /usr ??  Neither, I ran it from initram=
-fs
-which is off root."
+>> I noticed when looking at the Backblaze blog, that they are
+>> using RAID-6 with 15 disks (13 + 2 for parity).
 
-But I agree with Doug that the term is sufficiently unusual that people are
-unlikely to assume anything about it, so it should be safe.
+Backblaze have a very special application. A wide RAID6 _might_
+make sense for them.
 
-I'm tempted to suggest something completely different that starts with --no=
--,
-like
-  --no-session-manage
-but the word 'manage' already has a couple of meaning for mdadm.
+>> That number seemed kind of high to me....
 
-So I'm leaning towards --offroot  though I'd go for --outside-root if it we=
-re
-a bit shorter.
+That's good you seem to be a bit less (euphemism alert)
+audacious than most sysadms, who just love very wide RAID6,
+because of an assumption that I find (euphemism alert)
+fascinating:
 
-Maybe we need a name for this thing that exists before root is mounted and
-remains until after root is unmounted.  If we had a name for that which
-reflected its reality, that would work for me.
- --initial-root
-isn't too bad but probably could be better.
- --outer-root
-??
+     http://WWW.sabi.co.UK/blog/1103Mar.html#110331
 
+What matters to me is the percentage of redundancy adjusted by
+disk set geometry and implications for rebuild.
 
-Yes, I know - you wanted a decision and I've just created more options !!
+In general, unless someone really knows better, RAID10 or RAID1
+should be the only choices. Of course everybody knows better :-).
 
- --offroot
+>> but I was wondering what others on the list thought.
 
-then.
-(maybe)
+I personally think that the best practice with both RAID6 and
+LVM2 is never to use them (with minuscule exceptions), and in
+particular never to use 'concat'.
 
-NeilBrown
+>> b) Would you recommend using any specific Linux distro over
+>> any other?  Right now I am trying to decide between Debian and
+>> Ubuntu....but I would be open to any others...if there was a
+>> legitimate reason to do so (performance, stability, etc) in
+>> terms of the Raid codebase.
 
---Sig_/.gVdxjLDrwZT93s+ADnAPbI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Does not matter that much, but you might want a distro that
+comes with some kind of "enterprise support", like RHEL or SLES
+or derivatives, or Ubuntu LTS. Of course these at most points in
+time are relatively old.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+> At this point we are storing mostly larger files such as audio
+> (.wav, .mp3, etc) and video files in various formats.  The
+> initial purpose of this particular file server was meant to be
+> a long term media storage 'archive'. The current setup was
+> constructed to minimize data loss and maximize uptime, and
+> other considerations such as speed were secondary.  [ ... ]
+> The initial specification called for relatively low reads and
+> writes, since we are basically placing the files there
+> once(via CIFS or NFS), and they are rarely if ever going to
+> get updated or re-written.
 
-iQIVAwUBTx/pbTnsnt1WYoG5AQLkrw//RVrPxD5aJA4P02YeOZ7ozN0OB2iZazSN
-VCHXhYoKIgqHnTbePYrVWZl5cq/aX0OiECg4dHM/E0GhH3fz6g5zz71Jzolj83hp
-x47Be6Hb2NWDy9/pp3j3Cs0smgO2rGYTVD4NcYzruyIrjiFP+G/mcuazveIXTwJA
-zTO4flMpOzCs5dC2lU755UIoK8hun0Xgvs+T/mJcrZgQoue2YloP2rcoBSf/Yei7
-I3Z2WxS9+LsChdZz9e06GSS4Bns6oLXe70173yPnnfjtulhKzJtkWOVJvE3G9nD/
-GPIkQTEaDGmr4zS4X67D8yeC6Plu3bNIeA+QhepDVfpcJXjDuH/CFk5Oed8Td3k1
-qHW5qoehoUj5uzksDRModX/aCN3vv/E+WuI9IF+R2PmBRJIh2SHtxF6e0gm7c1PQ
-PCAOS27RqbcgAhRBena47NH4JjOot+JtZAbpv8VAzXb53teaplOWi4rYvIZbYlw6
-ich1iDxlgxGMn9puUJODPDBtZamZ3qVoLg3z8KAoN/VtGwZ+pyFTm/ClXmzzuOvS
-9XnpHIyP0uW6VO6dm7os9eFebR7lQKobMuqax4b3sWJwwSgVr2/+WmHhP+kvHVnf
-7NxxpKL4jg0MdB55PhaoWpOjF/ZT+ejfni84FLutJ/oWurS2iNOmyYKjNT/dIC/l
-7DuqkRzhldk=
-=doTG
------END PGP SIGNATURE-----
+> Uptime is relatively important, although given that we are
+> using Gluster, we should have access to our data if we have a
+> node failure, the issue then becomes having to sync up the
+> data which is always a little pain...but should not involve
+> any downtime.
 
---Sig_/.gVdxjLDrwZT93s+ADnAPbI--
+Fortunately you are storing relatively large files, so a
+filetree is not a totally inappropriate container for that.
+Still I would use a database for "blobs" of that size, for many
+reasons.
+
+Since your application is essentially append/read only, you can
+just fill one filetree, remount it RO, and start filling another
+one, and so on, so you don't really need to have a shared free
+space pool, or you could use Gluster over each single
+independent filetree.
+
+If you have a layer of redundancy anyhow (e.g. DRBD or Gluster
+replicated volumes) as you seem to have I would use a number of
+narrow RAID5 sets, something like 2+1 or 4+1 (at most), as the
+independent filetrees. Because your application is like that it
+seems one of the few suited to RAID5:
+
+  http://www.sabi.co.uk/blog/1104Apr.html#110401
+
+As a completely different alternative, if you really really need
+a single free space pool, you could consider a complete change
+to Lustre over DRBD, but I think that Gluster over XFS over
+RAID10 or RAID5 would be good.
+
+> In terms of array rebuilding times, I think I would like to
+> minimize them to the extent possible, but I understand they
+> will be a reality given this setup.
+
+Also consider 'fsck' time and space. A nice set of 2+1 RAID5
+could be reasonable here.
+
+> We have two 3ware 9650SE-24M8 in each node, but I was planning
+> on trying to just export the disks as JBODs, and try not to
+> use the cards for anything other then exporting the disks to
+> the OS.
+
+3ware firmware has been known to have horrifying firmware
+issues:
+
+  http://makarevitch.org/rant/3ware/
+  http://www.mattheaton.com/?p=160
+
+Note that the really noticeable bugs are behavioural ones, as in
+poor request scheduling under load, and they happen even in
+single drive mode. This is sad, because up to series 7000 I had
+a good impression of 3ware HAs. But many nights spent trying to
+compensate for the many issues of series 9000 have changed my
+opinion.
+
+Most other RAID HAs are also buggy, consider for example:
+
+  http://www.gridpp.rl.ac.uk/blog/2011/01/12/sata-raid-controller-experiences-at-the-tier1/
+
+In general using MD is rather more reliable. My usual list of
+things should be defaults unless one knows a lot better: MD,
+RAID10, SCT ERC, JFS or XFS, GPT partitioning; of things to
+avoid unless there are special cases: firmware based RAID HAs,
+any parity RAID level or 'concat', drives without ERC, ext3 (and
+ext4), LVM2 or MBR partitioning.
