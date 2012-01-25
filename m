@@ -1,151 +1,189 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: LVM striping RAID volumes
-Date: Wed, 25 Jan 2012 18:56:01 +0100
-Message-ID: <4F204231.6040701@hesbynett.no>
-References: <1327467050.3474.303.camel@slacker>	<jfok2p$6vg$1@dough.gmane.org> <20256.2521.77580.864903@tree.ty.sabi.co.UK>
+From: Seth Jennings <spartacus06@gmail.com>
+Subject: Help please: 2-5 tps on write with 98% iowait
+Date: Wed, 25 Jan 2012 12:15:56 -0600
+Message-ID: <CAG-w=x54HyGxnjSHjBCpqYXvOOwpWd4dOHCJBYTTuvPHu_ViCA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20256.2521.77580.864903@tree.ty.sabi.co.UK>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 25/01/12 14:55, Peter Grandi wrote:
->>> 2) must support passing TRIM commands through the RAID layer
->>> (e.g. ext4->LVM->RAID->SSD) to avoid write amplification that
->>> reduces SSD lifetime and performance
->
->> That's not really necessary with modern SSD's - TRIM is
->> overrated. Garbage collection on current generations is so
->> much better than on earlier models that you generally don't
->> have to worry about TRIM.
->
-> Unfortunately not necessarily just for write amplification, and
-> the "cleaner" (aka garbage collector) is really helped by TRIM.
->
-> The really big deal is that the FTL in the flash SSD cannot
-> figure out which flash-pages are unused, and cannot use a simple
-> heuristic like "it is all zeroes" because filesystem code do not
-> zero unused logical sectors when they are released but writes
-> them only much later when they are allocated. TRIM is just a a
-> way to ''write'' a logical sector as unused without zero-filling
-> it (or other implicit marks).
->
->> Dropping TRIM makes your life /much/ easier with SSD's,
->> especially when you want raid.  According to some benchmarks
->> I've seen, it also makes the disk measurably faster.
->
-> While something like TRIM is really important, there is a bad
-> reputation of TRIM, but it is due to SATA TRIM being specified
-> badly, as it is specified to be synchronous (or cache-flushing
-> or queue flushing).
->
+The write performance on my raid5 took a nose dive yesterday and I can't
+figure out what is to blame. iostat is showing 98% iowait with 2-5 tps per
+array disk (?!).  I'm including as much information as I can think to include
+without overwhelming anyone inclined to help me debug this.
 
-I've read about this in a few places - there are several failing points=
-=20
-in SATA TRIM that make it difficult to implement and much less useful=20
-than it could be.
+Also, I'm familiar with kernel internals/debugging so just let me know if you
+need more information.
 
-One problem is that TRIM is synchronous, as you say.  That means if it=20
-is used during deletes, it makes them much slower - potentially very=20
-much slower.  Secondly, there is no consistency as to what is read back=
-=20
-from a trimmed sector.  Had it always been read as zero, it would suit=20
-much better for raid.
-
->
-> Anyhow, apart from write amplification, the really big deal is
-> maximum write latency (and relatedly read latency!). Consider
-> this scary comparison:
->
->    http://www.storagereview.com/images/samsung_830_raid_256gb_write_l=
-atency.png
->
-> as discussed in one of my many recent flash SSD blog entries:
->
->    http://www.sabi.co.uk/blog/12-one.html#120115
->
-> Since erasing a flash-block can take a long time, it is very
-> important for minimizing the highest write latency that the FTL
-> have available a pool of pre-erased flash-blocks, so they can be
-> written (OR'ed) to directly ("overprovisioning" in most flash
-> SSDs is done to allow this too).
->
-
-Overprovisioning is the key here.  When the SSD has more flash space=20
-than is visible to the OS, then that space is always guaranteed free -=20
-though not necessarily in contiguous erase blocks.  The more such free=20
-space there is, the higher the chances of their being free full blocks=20
-when they are needed, and the more flexibility the SSD firmware has in=20
-combining partly-written blocks to free up full erase blocks.
-
-So if you have sufficient free space due to overprovisioning, you quite=
-=20
-simply do not need TRIM, as TRIM is just an expensive way of increasing=
-=20
-this free space.
-
-How much overprovisioning you want depends on how much you want to=20
-reduce the risk of unexpected latencies, and how much extra space you=20
-are willing to pay for.  More expensive (or rather, higher quality)=20
-SSD's have more overprovisioning.  You can also make your own=20
-overprovisioning by simply not allocating all the disk when partitionin=
-g=20
-it (or using a smaller "size" when using the whole disk in an mdadm=20
-raid).  Since there is an area that is never written to, it is=20
-effectively extra overprovisioned space.
-
-
-> The problem is that the "cleaner" (aka garbage collector) can
-> only pack "used" flash-pages together, thus creating empty
-> flash-blocks, if it knows which logical sectors and thus
-> flash-pages are "unused".
->
-> Since the TRIM command is synchronous it is often a bad idea to
-> use it on every logical sector deallocation in filesystem code,
-> but it or FITRIM should be used at least periodically (for
-> example during 'fsck') to tell the FTL which logical sectors are
-> unused so it can rebuild the pool of empty flash-blocks, and
-> doing it periodically would work around the synchronous nature
-> of SATA TRIM.
->
-> Also TRIM and FITRIM are useful for any case of virtualization,
-> not just for flash SSD layers, for example for "sparse" (aka
-> thin provisioning) VM disk images.
->
-> It would be nice if MD passed on TRIM or at least FITRIM, and I
-> have just done a search and there is a discussion of some issues
-> with that here:
->
-> http://lkml.indiana.edu/hypermail/linux/kernel/1011.2/02184.html
->
->   =ABthe only really complex part is sending something like that
->    into MDraid, because that one set of ranges might explode into
->    thousands of ranges and then have to be coalesced back down to
->    a more manageable number of ranges.
->
->    ie. with a simple raid 0, each range will need to be broken
->    into a bunch of stride sized ranges, then the contiguous
->    strides on each spindle coalesced back into larger ranges.
->
->    But if MDraid can handle discards now with one range, it
->    should not be that hard to teach it handle a group of ranges.=BB
->
-> This perplexes me because the logic should be identical to that
-> of writing: TRIM is in effect a variant of WRITE.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
+Thanks
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Seth
+
+======================
+All disks are SATA and pass SMART health assessment. No errors in dmesg.
+
+Setup:
+/dev/sda: 250GB single part
+/dev/sdb: 250GB single part
+/dev/sdc: 500GB, 2x250GB parts
+/dev/sdd: 320GB, 250GB and 70GB parts
+
+/dev/sda:
+ Timing cached reads:   2294 MB in  2.00 seconds = 1147.32 MB/sec
+ Timing buffered disk reads: 186 MB in  3.02 seconds =  61.69 MB/sec
+sjennings@cerebrum:~$ sudo hdparm -Tt /dev/sdb
+
+/dev/sdb:
+ Timing cached reads:   2250 MB in  2.00 seconds = 1125.59 MB/sec
+ Timing buffered disk reads: 184 MB in  3.01 seconds =  61.05 MB/sec
+
+/dev/sdc:
+ Timing cached reads:   2172 MB in  2.00 seconds = 1086.00 MB/sec
+ Timing buffered disk reads: 392 MB in  3.01 seconds = 130.36 MB/sec
+
+/dev/sdd:
+ Timing cached reads:   2220 MB in  2.00 seconds = 1110.60 MB/sec
+ Timing buffered disk reads: 236 MB in  3.02 seconds =  78.15 MB/sec
+
+/dev/md0:
+        Version : 0.90
+  Creation Time : Mon Jul 12 08:32:58 2010
+     Raid Level : raid5
+     Array Size : 732587712 (698.65 GiB 750.17 GB)
+  Used Dev Size : 244195904 (232.88 GiB 250.06 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Wed Jan 25 09:51:25 2012
+          State : clean
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           UUID : cf70d928:8ad26aac:17383c13:03badee3
+         Events : 0.2068
+
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       8       17        1      active sync   /dev/sdb1
+       2       8       34        2      active sync   /dev/sdc2
+       3       8       49        3      active sync   /dev/sdd1
+
+
+--- Physical volume ---
+  PV Name               /dev/md0
+  VG Name               raid5vg
+  PV Size               698.65 GiB / not usable 1.44 MiB
+  Allocatable           yes
+  PE Size               4.00 MiB
+  Total PE              178854
+  Free PE               57254
+  Allocated PE          121600
+  PV UUID               F038RQ-reR4-BSPy-43lA-UJI4-uoMY-XQk23n
+
+  --- Volume group ---
+  VG Name               raid5vg
+  System ID
+  Format                lvm2
+  Metadata Areas        1
+  Metadata Sequence No  47
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                6
+  Open LV               3
+  Max PV                0
+  Cur PV                1
+  Act PV                1
+  VG Size               698.65 GiB
+  PE Size               4.00 MiB
+  Total PE              178854
+  Alloc PE / Size       121600 / 475.00 GiB
+  Free  PE / Size       57254 / 223.65 GiB
+  VG UUID               9KjnCN-l4gT-jUkR-gqt5-DyDR-GeGX-20DmJc
+
+  --- Logical volume ---
+  LV Name                /dev/raid5vg/home
+  VG Name                raid5vg
+  LV UUID                flP8gL-adJq-Ur0d-Nsl0-olZ8-tzpi-fjqGi6
+  LV Write Access        read/write
+  LV Status              available
+  # open                 1
+  LV Size                250.00 GiB
+  Current LE             64000
+  Segments               2
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     768
+  Block device           252:0
+
+/dev/mapper/raid5vg-home is mounted at /home type ext4 (rw,noatime)
+
+read /home (dm-0 on md0):
+
+dd if=ubuntu-11.04-alternate-i386.iso of=/dev/null (not in page cache)
+1419416+0 records in
+1419416+0 records out
+726740992 bytes (727 MB) copied, 5.65182 s, 129 MB/s
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           2.99    0.00   27.36   21.39    0.00   48.26
+
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+sda             531.00     37632.00         0.00      37632          0
+sdb             451.00     37648.00         0.00      37648          0
+sdc             532.00     37760.00         0.00      37760          0
+md0            2751.00    150912.00         0.00     150912          0
+sdd             453.00     37712.00         0.00      37712          0
+dm-0           2751.00    150912.00         0.00     150912          0
+
+so reading is good.
+
+write /home:
+
+dd if=/dev/zero of=zeroes
+<ctrl-c>
+208385+0 records in
+208384+0 records out
+106692608 bytes (107 MB) copied, 27.6739 s, 3.9 MB/s
+
+qavg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           0.52    0.00    1.55   97.94    0.00    0.00
+
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+sda               2.00       192.00       444.00        192        444
+sdb               5.00       192.00      1020.00        192       1020
+sdc               3.00       192.00       444.00        192        444
+md0              34.00       768.00      1344.00        768       1344
+sdd               5.00       192.00      1020.00        192       1020
+dm-0             34.00       768.00      1344.00        768       1344
+
+so writing is aweful (2-5 tps per disk with 98% iowait?!).
+
+write /dev/sdc1 (non-raid part in /dev/sdc)
+
+dd if=/dev/zero of=zeroes bs=4096 count=100000
+100000+0 records in
+100000+0 records out
+409600000 bytes (410 MB) copied, 2.64131 s, 155 MB/s
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           1.50    0.00   32.00   57.00    0.00    9.50
+
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+sda               0.00         0.00         0.00          0          0
+sdb               0.00         0.00         0.00          0          0
+sdc             267.00         0.00    135680.00          0     135680
+md0               0.00         0.00         0.00          0          0
+sdd               0.00         0.00         0.00          0          0
+dm-0              0.00         0.00         0.00          0          0
+
+so writing to non-raid partition of one of the disks is good.
