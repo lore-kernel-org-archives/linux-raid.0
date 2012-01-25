@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 2/4] Add --offroot argument to mdadm
-Date: Wed, 25 Jan 2012 16:18:02 +0100
-Message-ID: <1327504684-9219-3-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 3/4] Add --offroot argument to mdmon
+Date: Wed, 25 Jan 2012 16:18:03 +0100
+Message-ID: <1327504684-9219-4-git-send-email-Jes.Sorensen@redhat.com>
 References: <1327504684-9219-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1327504684-9219-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -12,52 +12,32 @@ List-Id: linux-raid.ids
 
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-When --offroot is specified, mdadm will change the first character of
-argv[0] to '@'. This is used to signal to systemd that mdadm was
-launched from initramfs and should not be shut down before returning
-to the initramfs.
-
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- ReadMe.c   |    5 +++++
- mdadm.8.in |   12 ++++++++++++
- mdadm.c    |    9 +++++++++
- mdadm.h    |    1 +
- 4 files changed, 27 insertions(+), 0 deletions(-)
+ mdmon.8 |   12 +++++++++++-
+ mdmon.c |    8 ++++++++
+ 2 files changed, 19 insertions(+), 1 deletions(-)
 
-diff --git a/ReadMe.c b/ReadMe.c
-index 9aa798b..a60e11b 100644
---- a/ReadMe.c
-+++ b/ReadMe.c
-@@ -111,6 +111,7 @@ struct option long_options[] = {
-     {"kill-subarray", 1, 0, KillSubarray},
-     {"update-subarray", 1, 0, UpdateSubarray},
-     {"udev-rules", 2, 0, UdevRules},
-+    {"offroot", 0, 0, OffRootOpt},
+diff --git a/mdmon.8 b/mdmon.8
+index 8c1ce5f..a9178b6 100644
+--- a/mdmon.8
++++ b/mdmon.8
+@@ -5,7 +5,7 @@ mdmon \- monitor MD external metadata arrays
  
-     /* synonyms */
-     {"monitor",   0, 0, 'F'},
-@@ -268,6 +269,10 @@ char OptionHelp[] =
- "  --query       -Q   : Display general information about how a\n"
- "                       device relates to the md driver\n"
- "  --auto-detect      : Start arrays auto-detected by the kernel\n"
-+"  --offroot          : Set first character of argv[0] to @ to indicate the\n"
-+"                       application was launched from initrd/initramfs and\n"
-+"                       should not be shutdown by systemd as part of the\n"
-+"                       regular shutdown process.\n"
- ;
- /*
- "\n"
-diff --git a/mdadm.8.in b/mdadm.8.in
-index 27be110..4f06a88 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -255,6 +255,18 @@ Avoid printing purely informative messages.  With this,
- will be silent unless there is something really important to report.
+ .SH SYNOPSIS
  
- .TP
+-.BI mdmon " [--all] [--takeover] CONTAINER"
++.BI mdmon " [--all] [--takeover] [--offroot] CONTAINER"
+ 
+ .SH OVERVIEW
+ The 2.6.27 kernel brings the ability to support external metadata arrays.
+@@ -165,6 +165,16 @@ argument is over-written with the name of the container.  To allow for
+ containers with names longer than 5 characters, this argument can be
+ arbitrarily extended, e.g. to
+ .BR \-\-all-active-arrays .
++.TP
 +.BR \-\-offroot
-+Set first character of argv[0] to @ to indicate mdadm was launched
++Set first character of argv[0] to @ to indicate mdmon was launched
 +from initrd/initramfs and should not be shutdown by systemd as part of
 +the regular shutdown process. This option is normally only used by
 +the system's initscripts. Please see here for more details on how
@@ -65,44 +45,42 @@ index 27be110..4f06a88 100644
 +.IP
 +.B http://www.freedesktop.org/wiki/Software/systemd/RootStorageDaemons
 +.PP
-+
-+
-+.TP
- .BR \-f ", " \-\-force
- Be more forceful about certain operations.  See the various modes for
- the exact meaning of this option in different contexts.
-diff --git a/mdadm.c b/mdadm.c
-index f07fac2..78f28d5 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -174,6 +174,15 @@ int main(int argc, char *argv[])
- 				homehost = optarg;
- 			continue;
  
-+		/*
-+		 * --offroot sets first char of argv[0] to @. This is used
-+		 * by systemd to signal that the tast was launched from
-+		 * initrd/initramfs and should be preserved during shutdown
-+		 */
+ .PP
+ Note that
+diff --git a/mdmon.c b/mdmon.c
+index a65c4a4..2093476 100644
+--- a/mdmon.c
++++ b/mdmon.c
+@@ -272,6 +272,10 @@ void usage(void)
+ "  --help        -h   : This message\n"
+ "  --all              : All devices\n"
+ "  --takeover    -t   : Takeover container\n"
++"  --offroot          : Set first character of argv[0] to @ to indicate the\n"
++"                       application was launched from initrd/initramfs and\n"
++"                       should not be shutdown by systemd as part of the\n"
++"                       regular shutdown process.\n"
+ );
+ 	exit(2);
+ }
+@@ -291,6 +295,7 @@ int main(int argc, char *argv[])
+ 		{"all", 0, NULL, 'a'},
+ 		{"takeover", 0, NULL, 't'},
+ 		{"help", 0, NULL, 'h'},
++		{"offroot", 0, NULL, OffRootOpt},
+ 		{NULL, 0, NULL, 0}
+ 	};
+ 
+@@ -304,6 +309,9 @@ int main(int argc, char *argv[])
+ 			container_name = optarg;
+ 			takeover = 1;
+ 			break;
 +		case OffRootOpt:
 +			argv[0][0] = '@';
-+			continue;
-+
- 		case ':':
- 		case '?':
- 			fputs(Usage, stderr);
-diff --git a/mdadm.h b/mdadm.h
-index 381ef86..fec93aa 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -321,6 +321,7 @@ enum special_options {
- 	UdevRules,
- 	FreezeReshape,
- 	Continue,
-+	OffRootOpt,
- };
- 
- /* structures read from config file */
++			break;
+ 		case 'h':
+ 		default:
+ 			usage();
 -- 
 1.7.8.3
 
