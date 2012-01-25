@@ -1,70 +1,124 @@
-From: Andrei Warkentin <awarkentin@vmware.com>
-Subject: Re: LVM striping RAID volumes
-Date: Wed, 25 Jan 2012 12:59:36 -0800 (PST)
-Message-ID: <274466957.91999.1327525176550.JavaMail.root@zimbra-prod-mbox-2.vmware.com>
-References: <20256.2521.77580.864903@tree.ty.sabi.co.UK>
+From: Mandeep Singh Baines <msb@chromium.org>
+Subject: Re: [dm-crypt] Kernel BUG (fs/bio.c:1499) when copying more files
+ to an encrypted device
+Date: Wed, 25 Jan 2012 15:46:12 -0800
+Message-ID: <20120125234612.GM4656@google.com>
+References: <20120125021413.GI4656@google.com>
+ <1327478794.47118.YahooMailClassic@web24104.mail.ird.yahoo.com>
+ <20120125182027.GJ4656@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20256.2521.77580.864903@tree.ty.sabi.co.UK>
+In-Reply-To: <20120125182027.GJ4656@google.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg@lxra2.to.sabi.co.UK>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Mandeep Singh Baines <msb@chromium.org>
+Cc: Luzipher McLeod <luziphermcleod@yahoo.ie>, dm-crypt@saout.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-H Peter,
++cc linux-raid
 
------ Original Message -----
-> From: "Peter Grandi" <pg@lxra2.to.sabi.co.UK>
-> To: "Linux RAID" <linux-raid@vger.kernel.org>
-> Sent: Wednesday, January 25, 2012 8:55:37 AM
-> Subject: Re: LVM striping RAID volumes
+Mandeep Singh Baines (msb@chromium.org) wrote:
+> Luzipher McLeod (luziphermcleod@yahoo.ie) wrote:
+> > Hi Mandeep,
+> >=20
+> > Thanks fpr your quick answer. So, what can be done about this ? Sho=
+uld I try to apply that patch you linked to ? (but I guess a patch from=
+ 2007 won't apply cleanly ...)
+> >=20
 >=20
-> It would be nice if MD passed on TRIM or at least FITRIM, and I
-> have just done a search and there is a discussion of some issues
-> with that here:
+> Hi Luzipher,
 >=20
-> http://lkml.indiana.edu/hypermail/linux/kernel/1011.2/02184.html
+> I wouldn't apply the patch directly. Just copy bio_multi_split (might
+> need to do some forward porting) and then modify linear_make_request =
+to
+> use bio_multi_split instead of bio_split.
 >=20
->  =C2=ABthe only really complex part is sending something like that
->   into MDraid, because that one set of ranges might explode into
->   thousands of ranges and then have to be coalesced back down to
->   a more manageable number of ranges.
+> But I'm not really an expert on this particular code. I'm hoping some=
+one
+> else will confirm that this is in fact the bug and not a side effect =
+of
+> something else. Its seem reasonble that you could get a bio that is
+> multi-page and falls on a boundary (spans two or more devices). So I
+> suspect this is the bug.
 >=20
->   ie. with a simple raid 0, each range will need to be broken
->   into a bunch of stride sized ranges, then the contiguous
->   strides on each spindle coalesced back into larger ranges.
+> Regards,
+> Mandeep
 >=20
->   But if MDraid can handle discards now with one range, it
->   should not be that hard to teach it handle a group of ranges.=C2=BB
->=20
-> This perplexes me because the logic should be identical to that
-> of writing: TRIM is in effect a variant of WRITE.
-> --
-
-That comment perplexes me as well. Who cares how many TRIMs go down int=
-o the
-slave devices? My understanding is that it was the drive's job to figur=
-e out
-TRIM-coalescing on it's own - the block queue limits at the very least =
-specify a "max discard"
-size, not a minimum one. (btw FITRIM is an fs ioctl afaik, it gets tran=
-slated into
-REQ_DISCARDs).
-
-Anyway, I was just looking at supporting REQ_DISCARD within RAID1. I do=
-n't see it being
-any different than handling other BIO flags like REQ_FUA etc. The only =
-bit to watch out
-for are not sending DISCARDs to a device which doesn't support them. I =
-was looking at
-discard as part of some other investigation which I will write about at=
- a later point, but
-if there was specific interest, I could refactor it out and post it for=
- review.
-
-A
+> > Regards,
+> > Luzipher
+> >=20
+> >=20
+> >=20
+> > --- On Wed, 25/1/12, Mandeep Singh Baines <msb@chromium.org> wrote:
+> >=20
+> > > From: Mandeep Singh Baines <msb@chromium.org>
+> > > Subject: Re: [dm-crypt] Kernel BUG (fs/bio.c:1499) when copying m=
+ore files to an encrypted device
+> > > To: "Luzipher McLeod" <luziphermcleod@yahoo.ie>
+> > > Cc: dm-crypt@saout.de, "NeilBrown" <neilb@suse.de>
+> > > Date: Wednesday, 25 January, 2012, 2:14
+> > > Luzipher McLeod (luziphermcleod@yahoo.ie)
+> > > wrote:
+> > > > Hi :-)
+> > > >=20
+> > > > A few days ago I encountered a kernel bug while copying
+> > > files to an encrypted filesystem. The specific stack for the
+> > > filesystem is: btrfs-on-crypt-on-mdraid. Vasts amounts of
+> > > data copied without problems (about 6.3TB with 1.1 TB
+> > > remaining), but when copying a certain directory, the kernel
+> > > bug surfaces. I repeatedly deleted the affected directory
+> > > and tried to re-copy it, but it always fails at the same
+> > > point (or close to that). More recent test showed that I
+> > > could copy a few more files to the filesystem to a different
+> > > directory, but it very quickly failed there as well (a few
+> > > megabytes later).
+> > > > After talking to the btrfs devs on freenode (as btrfs
+> > > is the most experimental thing in the stack, they came to
+> > > the conclusion that it's most probably the crypto layer.
+> > > >=20
+> > > > Some details:
+> > > > gentoo kernel 3.2.1 (custom config and ubuntu config)
+> > > > mdraid: linear, 4 disks, each 2TB (total 8TB)
+> > > > crypt: setup via cryptsetup -c aes-xts-plain64 -h plain
+> > > -s 512 -d - create tempraid /dev/md/tempraid_lin
+> > > >=20
+> > > > I'd appreciate any help with this and would be happy to
+> > > test patches or provide more debug info.
+> > > >=20
+> > > > Thanks and Regards,
+> > > > Luzipher
+> > > >=20
+> > > >=20
+> > > >=20
+> > > >=20
+> > > > The kernel bug output retrieved by netconsole (also at
+> > > http://pastebin.com/sjJy7QE4 ):
+> > > >=A0 =A0=A0=A0[=A0 294.538422] netconsole:
+> > > local port 6666
+> > > >=A0 =A0=A0=A0[=A0 333.423583] SysRq :
+> > > Changing Loglevel
+> > > >=A0 =A0=A0=A0[=A0 333.423609] Loglevel
+> > > set to 9
+> > > >=A0 =A0=A0=A0[=A0 424.248405]
+> > > ------------[ cut here ]------------
+> > > >=A0 =A0=A0=A0[=A0 424.248447] kernel BUG
+> > > at fs/bio.c:1499!
+> > >=20
+> > > Hi Luzipher,
+> > >=20
+> > > Looks like the BUG is because bio_split only works on
+> > > single-page iovecs.
+> > >=20
+> > > I see a relevant (old) patch from Neil Brown here:
+> > >=20
+> > > https://lkml.org/lkml/2007/7/30/496
+> > >=20
+> > > Regards,
+> > > Mandeep
+> > >=20
+> >=20
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
