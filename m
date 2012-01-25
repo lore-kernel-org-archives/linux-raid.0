@@ -1,43 +1,61 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 2/4] Add --initrd argument to mdadm
-Date: Wed, 25 Jan 2012 11:53:53 +0100
-Message-ID: <4F1FDF41.6000909@redhat.com>
-References: <1326797330-4488-1-git-send-email-Jes.Sorensen@redhat.com>		<1326797330-4488-3-git-send-email-Jes.Sorensen@redhat.com>	 <20120122221758.412b18d4@notabene.brown> <4F1D358C.9070508@redhat.com>	 <4F1DBF6F.40209@redhat.com> <1327351849.6323.9.camel@mop>
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
+Subject: Re: raid array with 3T disks and GPT partition
+Date: Wed, 25 Jan 2012 11:15:26 +0000
+Message-ID: <20255.58446.978866.969959@tree.ty.sabi.co.UK>
+References: <20110901154759.GA32649@apartia.fr>
+	<20110901155913.GA20825@cthulhu.home.robinhill.me.uk>
+	<20110901163334.GA13347@apartia.fr>
+	<4E5FB8EC.5040801@redhat.com>
+	<4F0C9423.6000201@cfl.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1327351849.6323.9.camel@mop>
+In-Reply-To: <4F0C9423.6000201@cfl.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Kay Sievers <kay@redhat.com>, Lennart Poettering <lpoetter@redhat.com>, linux-raid@vger.kernel.org, dledford@redhat.com, harald@redhat.com, mschmidt@redhat.com
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 01/23/12 21:50, Kay Sievers wrote:
-> On Mon, 2012-01-23 at 21:13 +0100, Lennart Poettering wrote:
->> On 23.01.2012 11:25, Jes Sorensen wrote:
->>> I was trying to come up with a better name, and I think --preboot is the
->>> best I have seen so far. Other ideas I had were:
->>>   --systemd-root
->>>   --no-shutdown
->>> however I like --preboot better, so I will go with that, unless someone
->>> starts throwing things at me.
->>
->> I figure it's a bit of bike-shedding, but I'd like to ask you to stick 
->> to --initramfs or so if possible, simply because we're interested to 
->> reuse the same name for that switch for all storage daemons which need 
->> this, and the spec currently suggests --initramfs, and I'd prefer to 
->> avoid notifying all users of that change if we change it...
-> 
-> Last time you and I decided to rename it to --initrd, so the document
-> does not say --initramfs.
-> 
-> Back to square one. :)
+[ ... ]
 
-Neil,
+>> Non-FS Data, which we hijacked for our purposes as it will
+>> keep the system (any OS in fact) from thinking there should
+>> be a filesystem there, leaving it free for us to pick up
+>> anytime in the boot process.
 
-In the light of the discussion so far, do you have any preference for
---preboot/--preroot/--initrd/--offroot
+> What do you mean?  Linux doesn't care what the partition type
+> code says. I brought that up on lkml a year or so back that
+> it should at least respect the hidden flag and not expose that
+> partition, but nobody seemed interested.
 
-Cheers,
-Jes
+Probably you were posting to the wrong mailing list, as 'Linux'
+(the kernel) indeed does not and should not care about the
+partition type code, because all it does is to enumerate
+partitions reading them from the label (if any) wrapping them as
+block-devices, and the only filetree that 'Linux' mounts is the
+'/' one in the block-device that is explicitly indicated (in the
+kernel image or at boot).
+
+Automounting, if any, is done by system or user daemons and the
+logic (and whether the 'hidden' flag is respected) they follow is
+distribution specific. LKML is not where that should be discussed.
+
+The only case where partition types matter to the kernel is for
+auto-detection of RAID members, but that is somewhat obsolete as
+the man-page says:
+
+http://linux.die.net/man/8/mdadm
+ =ABIn-kernel autodetect is not recommended for new installations.
+  Using mdadm to detect and assemble arrays - possibly in an
+  initrd - is substantially more flexible and should be preferred.=BB
+
+And even as to the '/' filetree, in general 'Linux' nowadays in
+most distros boots only from an 'initrd' and even mounting the '/'
+filesystem is done from the 'initrd', and any rules about mounting
+which block-devices in the 'initrd' or later in some automount
+daemon configuration.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
