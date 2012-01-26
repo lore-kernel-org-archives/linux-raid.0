@@ -1,108 +1,145 @@
 From: NeilBrown <neilb@suse.de>
 Subject: Re: sb->resync_offset value after resync failure
-Date: Thu, 26 Jan 2012 11:41:26 +1100
-Message-ID: <20120126114126.02c1c1ac@notabene.brown>
+Date: Thu, 26 Jan 2012 11:51:32 +1100
+Message-ID: <20120126115132.75d9d8bd@notabene.brown>
 References: <CAGRgLy44uKSggEsrU4Fx7op7iVjoPPq-doMdYjxnSGDm6krf9A@mail.gmail.com>
-	<CAGRgLy5B7kGDVYVqtnSUxdN9s89mPiYAp-TS7+=BirS2WhM74Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/SsFAA6h_HQCTjY=SKe.n=8_"; protocol="application/pgp-signature"
+ boundary="Sig_/ArI2OTDwz6B3YnDBeNaeqpS"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy5B7kGDVYVqtnSUxdN9s89mPiYAp-TS7+=BirS2WhM74Q@mail.gmail.com>
+In-Reply-To: <CAGRgLy44uKSggEsrU4Fx7op7iVjoPPq-doMdYjxnSGDm6krf9A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Alexander Lyakas <alex.bolshoy@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/SsFAA6h_HQCTjY=SKe.n=8_
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/ArI2OTDwz6B3YnDBeNaeqpS
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 24 Jan 2012 16:25:04 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
+On Thu, 19 Jan 2012 18:19:55 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
 wrote:
 
-> Hello Neil,
-> I hope you can find some time to look at my doubts in the email below.
-> Meanwhile I realized I have more doubts about resync. Hopefully, you
-> will be able to give some information on those too...
+> Greetings,
+> I am looking into a scenario, in which the md raid5/6 array is
+> resyncing (e.g., after a fresh creation) and there is a drive failure.
+> As written in Neil's blog entry "Closing the RAID5 write hole"
+> (http://neil.brown.name/blog/20110614101708): "if a device fails
+> during the resync, md doesn't take special action - it just allows the
+> array to be used without a resync even though there could be corrupt
+> data".
 >=20
-> # I am looking at "--force" parameter for assembly, and also for
-> "start_dirty_degraded" kernel parameters. They are actually very
-> different:
-> "force" marks the array as clean (sets sb->resync_offset=3DMaxSector).
-> While if start_dirty_degraded=3D=3D1, kernel actually starts resyncing the
-> array. For RAID5, it starts and stops immediately (correct?) But for
-> RAID6 coming up with one missing drive, kernel will do the resync
-> using the remaining redundant drive.
-> So start_dirty_degraded=3D=3D1 is "better" then just forgetting about
-> resync with "--force", isn't it? Because we will still have one parity
-> block correct.
+> However, I noticed that at this point sb->resync_offset in the
+> superblock is not set to MaxSector. At this point if a drive is
+> added/re-added to the array, then drive recovery starts, i.e., md
+> assumes that data/parity on the surviving drives are correct, and uses
+> them to rebuild the new drive. This state of data/parity being correct
+> should be reflected as sb->resync_offset=3D=3DMaxSector, shouldn't it?
+>=20
+> One issue that I ran into is the following: I reached a situation in
+> which during array assembly: sb->resync_offset=3D=3Dsb->size. At this
+> point, the following code in mdadm
+> assumes that array is clean:
+> info->array.state =3D
+>     (__le64_to_cpu(sb->resync_offset) >=3D __le64_to_cpu(sb->size))
+>  =C2=A0=C2=A0=C2=A0 ? 1 : 0;
+> As a result, mdadm lets the array assembly flow through fine to the
+> kernel, but in the kernel the following code refuses to start the
+> array:
+> =C2=A0=C2=A0=C2=A0 if (mddev->degraded > dirty_parity_disks &&
+> =C2=A0=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0 mddev->recovery_cp !=3D MaxSector) {
+>=20
+> At this point, speciying --force to mdadm --assembly doesn't help,
+> because mdadm thinks that array is clean (clean=3D=3D1), and therefore
+> doesn't do the "force-array" update, which would knock off the
+> sb->resync_offset value. So there is no way to start the array, unless
+> specifying the start_dirty_degraded=3D1 kernel parameter.
+>=20
+> So one question is: should mdadm compare sb->resync_offset to
+> MaxSector and not to sb->size? In the kernel code, resync_offset is
+> always compared to MaxSector.
 
-Correct.  Degraded RAID5  is either clean or faulty.  There is no sense in
-which such an array can be simply "dirty" as there is no redundancy.
-
-Singly-degraded RAID6 can be "dirty" as it still has one disk of redundancy=
-=20
-which could be inconsistent with the rest.  So there is an extra state that
-we need to handle which we currently do no.
+Yes, mdadm should be consistent with the kernel.  Patches welcome.
 
 >=20
-> Do you think the following logic is appropriate: always set
-> start_dirty_degraded=3D1 kernel parameter. In mdadm during assembly
-> detect dirty+degraded, and if "force" is not given - abort. If "force"
-> is given, don't knock off sb->resync_offset (like code does today),
-> assemble the array and let the kernel start resync (if there is still
-> a redundant drive).
+> Another question is: whether sb->resync_offset should be set to
+> MaxSector by the kernel as soon as it starts rebuilding a drive? I
+> think this would be consistent with what Neil wrote in the blog entry.
 
-I would rather export mddev->ok_start_degraded via sysfs. Then mdadm can
-respond to the --force flag on a dirty/degraded RAID6 by either setting the
-flag if it exists, or marking the array 'clean' and starting a 'repair'.
+Maybe every time we update ->curr_resync_completed we should update
+->recovery_cp as well if it is below the new ->curre_resync_completed ??
+
 
 >=20
-> # I saw an explanation on the list, that for RAID6 always a full
-> stripe is rewritten. Given this, I think I don't understand why the
-> initial resync of the array is needed. For those areas
-> never written to, the parity may remain incorrect, because reading
-> data from there is not expected to return anything meaningful. For
-> those areas written, the parity will be
-> recalculated while writing. So reading from those areas should have
-> correct parity in degraded mode. I must be missing something here for
-> sure, can you tell me what?
+> Here is the scenario to reproduce the issue I described:
+> # Create a raid6 array with 4 drives A,B,C,D. Array starts resyncing.
+> # Fail drive D. Array aborts the resync and then immediately restarts
+> it (it seems to checkpoint the mddev->recovery_cp, but I am not sure
+> that it restarts from that checkpoint)
+> # Re-add drive D to the array. It is added as a spare, array continues re=
+syncing
+> # Fail drive C. Array aborts the resync, and then starts rebuilding
+> drive D. At this point sb->resync_offset is some valid value (usually
+> 0, not MaxSectors and not sb->size).
 
-The initial sync isn't needed and you are free to specify --assume-clean if
-you like.
-However I don't guarantee that RAID6 will always perform reconstruct-write
-(rather than read-modify-write).
-Also, most people scrub their arrays periodically and if you haven't done an
-initial sync, the first time you do a scrub you will likely get a high
-mismatch count, which might be confusing.
+Does it start the rebuilding from the start?  I hope it does.
 
-So I resync by default because it is safest.  If you know what you are doin=
-g,
-then explicitly disabling that is perfectly OK.
+> # Stop the array. At this point sb->resync offset is sb->size in all
+> the superblocks.
+
+At some point in there you had a RAID6 with two missing devices, so it is
+either failed or completely in-sync.  I guess we assume the latter.
+Is that wrong?
+
+>=20
+> Another question I have: when exactly md decides to update the
+> sb->resync_offset in the superblock? I am playing with similar
+> scenarios with raid5, and sometimes I end up with MaxSectors and
+> sometimes with valid values. From the code, it looks like only this
+> logic updates it:
+> 	if (mddev->in_sync)
+> 		sb->resync_offset =3D cpu_to_le64(mddev->recovery_cp);
+> 	else
+> 		sb->resync_offset =3D cpu_to_le64(0);
+> except for resizing and setting through sysfs. But I don't understand
+> how this value should be managed in general.
+
+I'm not sure what you are asking here .... that code explains exactly when
+resync_offset should be set, and how.
+What more is there to say?
 
 NeilBrown
 
---Sig_/SsFAA6h_HQCTjY=SKe.n=8_
+
+>=20
+> Thanks!
+> Alex.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/ArI2OTDwz6B3YnDBeNaeqpS
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTyChNjnsnt1WYoG5AQJglQ//QJyV4gHmLrKetrZ5wEyFwVLrG71Fsztl
-reoi8rXVe8For6r1AkLHU33alDJnfm7NcgSKx7tdlCF8p7223/jI3BZm1lqkld+f
-4wE4de3KLJVgNejimpWL4r1kXITufeUeFf7PIVXl2GPZGkUm3pl2D0jQjwkm6vCl
-U8JmyGwM1s7BxpBpapV2ykMnnFe6BU0SlaoGGnP5FkCiebXrZSI7Zigh54n1lRWR
-eX6yAVKMAYudgKbl9HXJQPzlCtI3BQSc5Xv67FDNR2amHaKGr9K5jJhngl3Db3mu
-KQvSIVU1w8gnbV2atjRcSLwsO7nuo5uRWQ6MTuT+yAxT5La7Z8FeYF+0frrPkY27
-7cCG749NIL42b1Csh+6YAe99w2Xwte5nSV4e6CzkLOHWM/C15Z/xHe7Y6RU0Qp4e
-uH0s4ikhbQp7WhqCAkaXoqaBEvlQXtuMCxhYCahm05bmYlH8XqoqDhCmIZelZy5x
-ciBnIvFqTTw0GKPlUrnUw6atwkamkTSL1jPGY4ygZzk1rqC12A9xeSFJANJ8Wgzm
-EpiEn9XN10Gr16F3F7XGjvdO7euLJyPq895tPPGHkmRMQV5AAxMEvaph1V1XaGLI
-4QqgTI6hU0t4i+dA5+TyGORIYGXaow63mMwEUHTIY8dZuRLzgcjhedc/cF5PDiGP
-JlHpCyC61No=
-=Xk1s
+iQIVAwUBTyCjlDnsnt1WYoG5AQLfSg//dCb0m3BAAmIlpanzT100HA7XmxI+OrAq
+sCAnRwC2UpTrjYbNPmdildQ4OqGcFe1aGN8VoXdiNjLZ/SsY/mZx33X3Qn0gOncn
+qbRD2+OPfeytEaVA0BcI6weFkJmSSM0+U6buabGxkglPBw0n3grhujwkKasuMION
+aem0vlAfPChEzVbDOmApfA3tO0FB/tWpJuVlnbVFDHHU1XzwH+6yIpCOCfhO8Jsb
+psOCPn/2VegTtzC64ruBp6ZntfeRql16QATGDxN1gS2Lsm7BwJLV2o+UibPkUHjU
+KZc1YYZJQWmiB/fwFle55HxGqe/qARX2/set2yWGQecBRnNP/9dppa4pWHuF3D1e
+HjcKEVXQxLS6GXnubuQ1v6IRqVgEYv8kT4ODkr+T+tkZIQWZ3rqoCJWLffirZhxu
+rb3q2rLeC17AIeT3bKXBQYENLX2MlmVxg00rNj4xigCNpnxkFUomxicAYAdbmjJ4
+5KeCiRX78ABxrmhIexz7BwNr1kM3vpXSgW86lRJps3pfbe1MQ/B0RwtK8xiC8YWv
+rs1uWrcdxidrSW+nF9XBBsDH6GIv9yIl6nl+kHw0C8vnuwPMyf7LjWTQrIge6btY
+4/vqPxuWqmCt+FbADq4IiIa0PTGZVJ33Ny+56SXvtuRuiSxulHhXOn1IqH/V2hkV
+eb/IghZDSLc=
+=ruVB
 -----END PGP SIGNATURE-----
 
---Sig_/SsFAA6h_HQCTjY=SKe.n=8_--
+--Sig_/ArI2OTDwz6B3YnDBeNaeqpS--
