@@ -1,126 +1,108 @@
-From: Mandeep Singh Baines <msb@chromium.org>
-Subject: Re: [dm-crypt] Kernel BUG (fs/bio.c:1499) when copying more files
- to an encrypted device
-Date: Wed, 25 Jan 2012 15:46:12 -0800
-Message-ID: <20120125234612.GM4656@google.com>
-References: <20120125021413.GI4656@google.com>
- <1327478794.47118.YahooMailClassic@web24104.mail.ird.yahoo.com>
- <20120125182027.GJ4656@google.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: sb->resync_offset value after resync failure
+Date: Thu, 26 Jan 2012 11:41:26 +1100
+Message-ID: <20120126114126.02c1c1ac@notabene.brown>
+References: <CAGRgLy44uKSggEsrU4Fx7op7iVjoPPq-doMdYjxnSGDm6krf9A@mail.gmail.com>
+	<CAGRgLy5B7kGDVYVqtnSUxdN9s89mPiYAp-TS7+=BirS2WhM74Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/SsFAA6h_HQCTjY=SKe.n=8_"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120125182027.GJ4656@google.com>
-Content-Disposition: inline
+In-Reply-To: <CAGRgLy5B7kGDVYVqtnSUxdN9s89mPiYAp-TS7+=BirS2WhM74Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mandeep Singh Baines <msb@chromium.org>
-Cc: Luzipher McLeod <luziphermcleod@yahoo.ie>, dm-crypt@saout.de, linux-raid@vger.kernel.org
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-+cc linux-raid
+--Sig_/SsFAA6h_HQCTjY=SKe.n=8_
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Mandeep Singh Baines (msb@chromium.org) wrote:
-> Luzipher McLeod (luziphermcleod@yahoo.ie) wrote:
-> > Hi Mandeep,
-> >=20
-> > Thanks fpr your quick answer. So, what can be done about this ? Sho=
-uld I try to apply that patch you linked to ? (but I guess a patch from=
- 2007 won't apply cleanly ...)
-> >=20
+On Tue, 24 Jan 2012 16:25:04 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
+
+> Hello Neil,
+> I hope you can find some time to look at my doubts in the email below.
+> Meanwhile I realized I have more doubts about resync. Hopefully, you
+> will be able to give some information on those too...
 >=20
-> Hi Luzipher,
+> # I am looking at "--force" parameter for assembly, and also for
+> "start_dirty_degraded" kernel parameters. They are actually very
+> different:
+> "force" marks the array as clean (sets sb->resync_offset=3DMaxSector).
+> While if start_dirty_degraded=3D=3D1, kernel actually starts resyncing the
+> array. For RAID5, it starts and stops immediately (correct?) But for
+> RAID6 coming up with one missing drive, kernel will do the resync
+> using the remaining redundant drive.
+> So start_dirty_degraded=3D=3D1 is "better" then just forgetting about
+> resync with "--force", isn't it? Because we will still have one parity
+> block correct.
+
+Correct.  Degraded RAID5  is either clean or faulty.  There is no sense in
+which such an array can be simply "dirty" as there is no redundancy.
+
+Singly-degraded RAID6 can be "dirty" as it still has one disk of redundancy=
+=20
+which could be inconsistent with the rest.  So there is an extra state that
+we need to handle which we currently do no.
+
 >=20
-> I wouldn't apply the patch directly. Just copy bio_multi_split (might
-> need to do some forward porting) and then modify linear_make_request =
-to
-> use bio_multi_split instead of bio_split.
+> Do you think the following logic is appropriate: always set
+> start_dirty_degraded=3D1 kernel parameter. In mdadm during assembly
+> detect dirty+degraded, and if "force" is not given - abort. If "force"
+> is given, don't knock off sb->resync_offset (like code does today),
+> assemble the array and let the kernel start resync (if there is still
+> a redundant drive).
+
+I would rather export mddev->ok_start_degraded via sysfs. Then mdadm can
+respond to the --force flag on a dirty/degraded RAID6 by either setting the
+flag if it exists, or marking the array 'clean' and starting a 'repair'.
+
 >=20
-> But I'm not really an expert on this particular code. I'm hoping some=
-one
-> else will confirm that this is in fact the bug and not a side effect =
-of
-> something else. Its seem reasonble that you could get a bio that is
-> multi-page and falls on a boundary (spans two or more devices). So I
-> suspect this is the bug.
->=20
-> Regards,
-> Mandeep
->=20
-> > Regards,
-> > Luzipher
-> >=20
-> >=20
-> >=20
-> > --- On Wed, 25/1/12, Mandeep Singh Baines <msb@chromium.org> wrote:
-> >=20
-> > > From: Mandeep Singh Baines <msb@chromium.org>
-> > > Subject: Re: [dm-crypt] Kernel BUG (fs/bio.c:1499) when copying m=
-ore files to an encrypted device
-> > > To: "Luzipher McLeod" <luziphermcleod@yahoo.ie>
-> > > Cc: dm-crypt@saout.de, "NeilBrown" <neilb@suse.de>
-> > > Date: Wednesday, 25 January, 2012, 2:14
-> > > Luzipher McLeod (luziphermcleod@yahoo.ie)
-> > > wrote:
-> > > > Hi :-)
-> > > >=20
-> > > > A few days ago I encountered a kernel bug while copying
-> > > files to an encrypted filesystem. The specific stack for the
-> > > filesystem is: btrfs-on-crypt-on-mdraid. Vasts amounts of
-> > > data copied without problems (about 6.3TB with 1.1 TB
-> > > remaining), but when copying a certain directory, the kernel
-> > > bug surfaces. I repeatedly deleted the affected directory
-> > > and tried to re-copy it, but it always fails at the same
-> > > point (or close to that). More recent test showed that I
-> > > could copy a few more files to the filesystem to a different
-> > > directory, but it very quickly failed there as well (a few
-> > > megabytes later).
-> > > > After talking to the btrfs devs on freenode (as btrfs
-> > > is the most experimental thing in the stack, they came to
-> > > the conclusion that it's most probably the crypto layer.
-> > > >=20
-> > > > Some details:
-> > > > gentoo kernel 3.2.1 (custom config and ubuntu config)
-> > > > mdraid: linear, 4 disks, each 2TB (total 8TB)
-> > > > crypt: setup via cryptsetup -c aes-xts-plain64 -h plain
-> > > -s 512 -d - create tempraid /dev/md/tempraid_lin
-> > > >=20
-> > > > I'd appreciate any help with this and would be happy to
-> > > test patches or provide more debug info.
-> > > >=20
-> > > > Thanks and Regards,
-> > > > Luzipher
-> > > >=20
-> > > >=20
-> > > >=20
-> > > >=20
-> > > > The kernel bug output retrieved by netconsole (also at
-> > > http://pastebin.com/sjJy7QE4 ):
-> > > >=A0 =A0=A0=A0[=A0 294.538422] netconsole:
-> > > local port 6666
-> > > >=A0 =A0=A0=A0[=A0 333.423583] SysRq :
-> > > Changing Loglevel
-> > > >=A0 =A0=A0=A0[=A0 333.423609] Loglevel
-> > > set to 9
-> > > >=A0 =A0=A0=A0[=A0 424.248405]
-> > > ------------[ cut here ]------------
-> > > >=A0 =A0=A0=A0[=A0 424.248447] kernel BUG
-> > > at fs/bio.c:1499!
-> > >=20
-> > > Hi Luzipher,
-> > >=20
-> > > Looks like the BUG is because bio_split only works on
-> > > single-page iovecs.
-> > >=20
-> > > I see a relevant (old) patch from Neil Brown here:
-> > >=20
-> > > https://lkml.org/lkml/2007/7/30/496
-> > >=20
-> > > Regards,
-> > > Mandeep
-> > >=20
-> >=20
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> # I saw an explanation on the list, that for RAID6 always a full
+> stripe is rewritten. Given this, I think I don't understand why the
+> initial resync of the array is needed. For those areas
+> never written to, the parity may remain incorrect, because reading
+> data from there is not expected to return anything meaningful. For
+> those areas written, the parity will be
+> recalculated while writing. So reading from those areas should have
+> correct parity in degraded mode. I must be missing something here for
+> sure, can you tell me what?
+
+The initial sync isn't needed and you are free to specify --assume-clean if
+you like.
+However I don't guarantee that RAID6 will always perform reconstruct-write
+(rather than read-modify-write).
+Also, most people scrub their arrays periodically and if you haven't done an
+initial sync, the first time you do a scrub you will likely get a high
+mismatch count, which might be confusing.
+
+So I resync by default because it is safest.  If you know what you are doin=
+g,
+then explicitly disabling that is perfectly OK.
+
+NeilBrown
+
+--Sig_/SsFAA6h_HQCTjY=SKe.n=8_
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBTyChNjnsnt1WYoG5AQJglQ//QJyV4gHmLrKetrZ5wEyFwVLrG71Fsztl
+reoi8rXVe8For6r1AkLHU33alDJnfm7NcgSKx7tdlCF8p7223/jI3BZm1lqkld+f
+4wE4de3KLJVgNejimpWL4r1kXITufeUeFf7PIVXl2GPZGkUm3pl2D0jQjwkm6vCl
+U8JmyGwM1s7BxpBpapV2ykMnnFe6BU0SlaoGGnP5FkCiebXrZSI7Zigh54n1lRWR
+eX6yAVKMAYudgKbl9HXJQPzlCtI3BQSc5Xv67FDNR2amHaKGr9K5jJhngl3Db3mu
+KQvSIVU1w8gnbV2atjRcSLwsO7nuo5uRWQ6MTuT+yAxT5La7Z8FeYF+0frrPkY27
+7cCG749NIL42b1Csh+6YAe99w2Xwte5nSV4e6CzkLOHWM/C15Z/xHe7Y6RU0Qp4e
+uH0s4ikhbQp7WhqCAkaXoqaBEvlQXtuMCxhYCahm05bmYlH8XqoqDhCmIZelZy5x
+ciBnIvFqTTw0GKPlUrnUw6atwkamkTSL1jPGY4ygZzk1rqC12A9xeSFJANJ8Wgzm
+EpiEn9XN10Gr16F3F7XGjvdO7euLJyPq895tPPGHkmRMQV5AAxMEvaph1V1XaGLI
+4QqgTI6hU0t4i+dA5+TyGORIYGXaow63mMwEUHTIY8dZuRLzgcjhedc/cF5PDiGP
+JlHpCyC61No=
+=Xk1s
+-----END PGP SIGNATURE-----
+
+--Sig_/SsFAA6h_HQCTjY=SKe.n=8_--
