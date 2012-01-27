@@ -1,124 +1,39 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: RAID-6 recovery questions
-Date: Fri, 27 Jan 2012 12:30:36 +0000
-Message-ID: <CADNH=7FucU4vxjSom=n=vChHDCAvmZWWagsCgT-WEZE-pyhwKA@mail.gmail.com>
-References: <20120127081025.GA22388@jurassic>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [PATCH 0/4] Reshape problems during double raid0 processing
+Date: Fri, 27 Jan 2012 13:58:51 +0000
+Message-ID: <79556383A0E1384DB3A3903742AAC04A0731D7@IRSMSX101.ger.corp.intel.com>
+References: <20120112070822.5168.97729.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120127081025.GA22388@jurassic>
+In-Reply-To: <20120112070822.5168.97729.stgit@gklab-128-013.igk.intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Mukund Sivaraman <muks@banu.com>
-Cc: linux-raid@vger.kernel.org
+To: "neilb@suse.de" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-On 27 January 2012 08:10, Mukund Sivaraman <muks@banu.com> wrote:
-> Hi all
->
-> I am interested in building a 3TB * 8 disk RAID-6 array for
-> personal use. I am looking for info related to md recovery in the cas=
-e
-> of failure.
->
-> I want to rely on the md RAID-6 array to some extent. It is a large
-> capacity array, and it is not financially feasible for me to have an
-> external mirror of it.
->
-> It seems that distributions like Fedora have a raid-check script for
-> periodic patrol read check, which is bound to reduce the risk of
-> surprise read errors during recovery.
->
-> In the unlikely case of 2 disk failure, a RAID-6 array loses redundan=
-cy,
-> but the array is still available.
->
-> When a disk reports errors reading blocks, it's likely that the rest =
-of
-> the disk is readable, save for the bad blocks. In large capacity disk=
-s
-> available today, bad blocks are very common (as SMART output on year-=
-old
-> disks will show). (Rewriting these bad blocks should make the disk re=
-map
-> them and make them available again.)
->
-> My questions:
->
-> 1. During recovery after 1-disk failure, what happens if there are
-> read errors on more than one disk? From what I've understood it seems
-> that if there is a read error during recovery, the entire disk is mar=
-ked
-> as failed. It's very probable that these bad blocks are in different
-> places on different disks. Is it mathematically possible (RAID-6) to
-> recover such an array completely (rewriting the bad blocks with data
-> from other disks)? What options are available to recover from such a
-> situation?
->
-> Figure:
->
-> +---+---+---+---+---+---+---+---+
-> | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | =C2=A0RAID-6 array
-> +---+---+---+---+---+---+---+---+
-> =C2=A0^ =C2=A0 ^ =C2=A0 ^ =C2=A0\---------v-------/
-> =C2=A0| =C2=A0 | =C2=A0 | =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ok
-> dead =C2=A0| =C2=A0 |
-> =C2=A0 =C2=A0 =C2=A0| =C2=A0 +- partial read errors
-> =C2=A0 =C2=A0 =C2=A0+----- partial read errors
->
-> {read_error_blocks(3)} intersect {read_error_blocks(2)} =3D NUL.
->
->
-> 2. During recovery after 2-disk failure, what happens if there are
-> read errors? =C2=A0Is it possible to overwrite the bad blocks with ze=
-ros (so
-> they are remapped and don't error anymore) and force them back into t=
-he
-> same array configuration so that most of the filesystem can be recove=
-red
-> (except for the data in the bad blocks) ?
->
-> 3. What is the raid6check(8) tool useful for, which checks non-degrad=
-ed
-> arrays? =C2=A0Doesn't "echo check > /sys/block/$dev/md/sync_action" d=
-o the
-> same?
->
->
-> Kind regards,
->
-> Mukund
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
-
-Hi,
-
-(this caters to question 1 & 2)
-I run a 7x 2TB array myself, which has had 2 drive failure the last ~2
-years (the age of the array). The first time went smooth, MD kicked
-out the bad drive almost immediately, and when I got the new drive it
-rebuilt happily and everything was fine. The other time (see the last
-few days on this mailing list) the drive wasn't kicked out straight
-away - it kept retrying to read/write those bad sectors, and stalling
-the entire system. I was unable to sync or anything, so I had to pull
-the power, pull the bad disk, then power on the system again and
-perform a RAID6 check (which turned out fine).
-
-Lesson learned, you'll want a drive to get kicked out ASAP if it's
-reporting errors. When it's kicked out, you can test it yourself while
-your RAID6 still chugs along, and if you can fix the errors, stick it
-back into the array. If not, RMA the drive.
-
-3: I dunno.
-
-Kind regards,
-Mathias
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SGVsbG8gTmVpbCwNCg0KQ2FuIHlvdSBoYXZlIGEgbG9vayBhdCB0aGlzIHNlcmllcz8NCg0KVGhh
+bmsgeW91DQpBZGFtDQoNCg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogbGlu
+dXgtcmFpZC1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1yYWlkLW93bmVyQHZn
+ZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIEFkYW0gS3dvbGVrDQpTZW50OiBUaHVyc2RheSwg
+SmFudWFyeSAxMiwgMjAxMiA4OjEyIEFNDQpUbzogbmVpbGJAc3VzZS5kZQ0KQ2M6IGxpbnV4LXJh
+aWRAdmdlci5rZXJuZWwub3JnOyBDaWVjaGFub3dza2ksIEVkOyBMYWJ1biwgTWFyY2luOyBXaWxs
+aWFtcywgRGFuIEoNClN1YmplY3Q6IFtQQVRDSCAwLzRdIFJlc2hhcGUgcHJvYmxlbXMgZHVyaW5n
+IGRvdWJsZSByYWlkMCBwcm9jZXNzaW5nDQoNClRoZSBmb2xsb3dpbmcgc2VyaWVzIGZpeGVzIHBy
+b2JsZW1zIGZvdW5kIGR1cmluZyBkb3VibGUgcmFpZDAgY29udGFpbmVyIHJlc2hhcGUuDQoxLiBT
+ZWNvbmQgcmFpZDAgcmVzaGFwZSBkb2Vzbid0IHN0YXJ0DQoyLiBTZWNvbmQgcmFpZDAgYXJyYXkg
+cmVzaGFwZSBpcyBub3QgZmluYWxpemVkIGluIG1ldGFkYXRhDQoNCkJSDQpBZGFtDQoNCi0tLQ0K
+DQpBZGFtIEt3b2xlayAoNCk6DQogICAgICBGSVg6IFR5cG8gZXJyb3IgaW4gZnByaW50IGNvbW1h
+bmQNCiAgICAgIEZJWDogbWRtb24gY2hlY2sgaW4gcmVzaGFwZV9jb250YWluZXIoKSBjYW4gY2F1
+c2UgYSBwcm9ibGVtDQogICAgICBGSVg6IEV4dGVybmFsIG1ldGFkYXRhIHNvbWV0aW1lcyBpcyBu
+b3QgdXBkYXRlZA0KICAgICAgRklYOiBUYWtlb3ZlciBtZG1vbiB3aGVuIGdyb3cgaXMgY29udGlu
+dWVkIGZyb20gY29tbWFuZCBsaW5lDQoNCg0KIEdyb3cuYyAgfCAgIDExICsrKystLS0tLS0tDQog
+bWRhZG0uaCB8ICAgIDEgKw0KIHV0aWwuYyAgfCAgIDUzICsrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tDQogMyBmaWxlcyBjaGFuZ2VkLCA0OSBpbnNl
+cnRpb25zKCspLCAxNiBkZWxldGlvbnMoLSkNCg0KLS0NClNpZ25hdHVyZQ0KLS0NClRvIHVuc3Vi
+c2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1y
+YWlkIiBpbiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9y
+ZyBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9t
+by1pbmZvLmh0bWwNCg==
