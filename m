@@ -1,39 +1,90 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 0/4] Reshape problems during double raid0 processing
-Date: Fri, 27 Jan 2012 13:58:51 +0000
-Message-ID: <79556383A0E1384DB3A3903742AAC04A0731D7@IRSMSX101.ger.corp.intel.com>
-References: <20120112070822.5168.97729.stgit@gklab-128-013.igk.intel.com>
+From: Jonathan Brassow <jbrassow@redhat.com>
+Subject: [PATCH] DM RAID: Fix memory corruption caused by repeated calls to
+ bitmap_load
+Date: Fri, 27 Jan 2012 08:53:53 -0600
+Message-ID: <1327676033.9152.7.camel@f14.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120112070822.5168.97729.stgit@gklab-128-013.igk.intel.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "neilb@suse.de" <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
+To: dm-devel@redhat.com, linux-raid@vger.kernel.org
+Cc: neilb@suse.de
 List-Id: linux-raid.ids
 
-SGVsbG8gTmVpbCwNCg0KQ2FuIHlvdSBoYXZlIGEgbG9vayBhdCB0aGlzIHNlcmllcz8NCg0KVGhh
-bmsgeW91DQpBZGFtDQoNCg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogbGlu
-dXgtcmFpZC1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1yYWlkLW93bmVyQHZn
-ZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIEFkYW0gS3dvbGVrDQpTZW50OiBUaHVyc2RheSwg
-SmFudWFyeSAxMiwgMjAxMiA4OjEyIEFNDQpUbzogbmVpbGJAc3VzZS5kZQ0KQ2M6IGxpbnV4LXJh
-aWRAdmdlci5rZXJuZWwub3JnOyBDaWVjaGFub3dza2ksIEVkOyBMYWJ1biwgTWFyY2luOyBXaWxs
-aWFtcywgRGFuIEoNClN1YmplY3Q6IFtQQVRDSCAwLzRdIFJlc2hhcGUgcHJvYmxlbXMgZHVyaW5n
-IGRvdWJsZSByYWlkMCBwcm9jZXNzaW5nDQoNClRoZSBmb2xsb3dpbmcgc2VyaWVzIGZpeGVzIHBy
-b2JsZW1zIGZvdW5kIGR1cmluZyBkb3VibGUgcmFpZDAgY29udGFpbmVyIHJlc2hhcGUuDQoxLiBT
-ZWNvbmQgcmFpZDAgcmVzaGFwZSBkb2Vzbid0IHN0YXJ0DQoyLiBTZWNvbmQgcmFpZDAgYXJyYXkg
-cmVzaGFwZSBpcyBub3QgZmluYWxpemVkIGluIG1ldGFkYXRhDQoNCkJSDQpBZGFtDQoNCi0tLQ0K
-DQpBZGFtIEt3b2xlayAoNCk6DQogICAgICBGSVg6IFR5cG8gZXJyb3IgaW4gZnByaW50IGNvbW1h
-bmQNCiAgICAgIEZJWDogbWRtb24gY2hlY2sgaW4gcmVzaGFwZV9jb250YWluZXIoKSBjYW4gY2F1
-c2UgYSBwcm9ibGVtDQogICAgICBGSVg6IEV4dGVybmFsIG1ldGFkYXRhIHNvbWV0aW1lcyBpcyBu
-b3QgdXBkYXRlZA0KICAgICAgRklYOiBUYWtlb3ZlciBtZG1vbiB3aGVuIGdyb3cgaXMgY29udGlu
-dWVkIGZyb20gY29tbWFuZCBsaW5lDQoNCg0KIEdyb3cuYyAgfCAgIDExICsrKystLS0tLS0tDQog
-bWRhZG0uaCB8ICAgIDEgKw0KIHV0aWwuYyAgfCAgIDUzICsrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tDQogMyBmaWxlcyBjaGFuZ2VkLCA0OSBpbnNl
-cnRpb25zKCspLCAxNiBkZWxldGlvbnMoLSkNCg0KLS0NClNpZ25hdHVyZQ0KLS0NClRvIHVuc3Vi
-c2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1y
-YWlkIiBpbiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9y
-ZyBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9t
-by1pbmZvLmh0bWwNCg==
+Neil,
+
+I came across this bug when testing snapshots of RAID volumes.  The
+snapshot code performs multiple suspend/resume cycles on the underlying
+LV, which is what caused me to notice that 'bitmap_load' was being
+called multiple times and causing memory corruption.  As I explain in
+the patch header, I'm pretty sure that avoiding the repeat call to
+'bitmap_load' and kicking the MD thread instead is all that is needed.
+(It certainly works in all my tests.)  However, please let me know if
+there is anything I'm not aware of.
+
+Thanks,
+ brassow
+
+Prevent DM RAID from loading bitmap twice.
+
+The life cycle of a device-mapper target is:
+1) create
+2) resume
+3) suspend
+*) possibly repeat from 2
+4) destroy
+
+The dm-raid target is unconditionally calling MD's bitmap_load function upon
+every resume.  If steps 2 & 3 above are repeated, bitmap_load is called
+multiple times.  It is only written to be called once; otherwise, it allocates
+new memory for the bitmap (without freeing the old) and incrementing the number
+of pages it thinks it has without zeroing first.  This ultimately leads to
+access beyond allocated memory and lost memory.
+
+Simply avoiding the bitmap_load call upon resume is not sufficient.  If the
+target was suspended while the initial recovery was only partially complete,
+it needs to be restarted when the target is resumed.  This is why
+'md_wakeup_thread' is called on the before issuing the 'mddev_resume'.
+
+Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+
+Index: linux-upstream/drivers/md/dm-raid.c
+===================================================================
+--- linux-upstream.orig/drivers/md/dm-raid.c
++++ linux-upstream/drivers/md/dm-raid.c
+@@ -56,7 +56,8 @@ struct raid_dev {
+ struct raid_set {
+ 	struct dm_target *ti;
+ 
+-	uint64_t print_flags;
++	uint32_t bitmap_loaded;
++	uint32_t print_flags;
+ 
+ 	struct mddev md;
+ 	struct raid_type *raid_type;
+@@ -1135,7 +1136,7 @@ static int raid_status(struct dm_target 
+ 				raid_param_cnt += 2;
+ 		}
+ 
+-		raid_param_cnt += (hweight64(rs->print_flags & ~DMPF_REBUILD) * 2);
++		raid_param_cnt += (hweight32(rs->print_flags & ~DMPF_REBUILD) * 2);
+ 		if (rs->print_flags & (DMPF_SYNC | DMPF_NOSYNC))
+ 			raid_param_cnt--;
+ 
+@@ -1247,7 +1248,12 @@ static void raid_resume(struct dm_target
+ {
+ 	struct raid_set *rs = ti->private;
+ 
+-	bitmap_load(&rs->md);
++	if (!rs->bitmap_loaded) {
++		bitmap_load(&rs->md);
++		rs->bitmap_loaded = 1;
++	} else
++		md_wakeup_thread(rs->md.thread);
++
+ 	mddev_resume(&rs->md);
+ }
+ 
+
+
