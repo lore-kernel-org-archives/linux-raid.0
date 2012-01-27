@@ -1,168 +1,252 @@
-From: Roger Heflin <rogerheflin@gmail.com>
+From: Seth Jennings <spartacus06@gmail.com>
 Subject: Re: Help please: 2-5 tps on write with 98% iowait
-Date: Thu, 26 Jan 2012 20:38:10 -0600
-Message-ID: <CAAMCDeePC8B4=Vsdux2z20XHJmP3w7XQ3ceoWMD8Cf78MnCzJA@mail.gmail.com>
+Date: Thu, 26 Jan 2012 20:42:16 -0600
+Message-ID: <CAG-w=x5JAzDtPyWzVVNdozXsd1acboU-E9s8N0WjUkHz4KuxJw@mail.gmail.com>
 References: <CAG-w=x54HyGxnjSHjBCpqYXvOOwpWd4dOHCJBYTTuvPHu_ViCA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CAG-w=x54HyGxnjSHjBCpqYXvOOwpWd4dOHCJBYTTuvPHu_ViCA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Seth Jennings <spartacus06@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gV2VkLCBKYW4gMjUsIDIwMTIgYXQgMTI6MTUgUE0sIFNldGggSmVubmluZ3MgPHNwYXJ0YWN1
-czA2QGdtYWlsLmNvbT4gd3JvdGU6Cj4gVGhlIHdyaXRlIHBlcmZvcm1hbmNlIG9uIG15IHJhaWQ1
-IHRvb2sgYSBub3NlIGRpdmUgeWVzdGVyZGF5IGFuZCBJIGNhbid0Cj4gZmlndXJlIG91dCB3aGF0
-IGlzIHRvIGJsYW1lLiBpb3N0YXQgaXMgc2hvd2luZyA5OCUgaW93YWl0IHdpdGggMi01IHRwcyBw
-ZXIKPiBhcnJheSBkaXNrICg/ISkuIMKgSSdtIGluY2x1ZGluZyBhcyBtdWNoIGluZm9ybWF0aW9u
-IGFzIEkgY2FuIHRoaW5rIHRvIGluY2x1ZGUKPiB3aXRob3V0IG92ZXJ3aGVsbWluZyBhbnlvbmUg
-aW5jbGluZWQgdG8gaGVscCBtZSBkZWJ1ZyB0aGlzLgo+Cj4gQWxzbywgSSdtIGZhbWlsaWFyIHdp
-dGgga2VybmVsIGludGVybmFscy9kZWJ1Z2dpbmcgc28ganVzdCBsZXQgbWUga25vdyBpZiB5b3UK
-PiBuZWVkIG1vcmUgaW5mb3JtYXRpb24uCj4KPiBUaGFua3MKPiAtLQo+IFNldGgKPgo+ID09PT09
-PT09PT09PT09PT09PT09PT0KPiBBbGwgZGlza3MgYXJlIFNBVEEgYW5kIHBhc3MgU01BUlQgaGVh
-bHRoIGFzc2Vzc21lbnQuIE5vIGVycm9ycyBpbiBkbWVzZy4KPgo+IFNldHVwOgo+IC9kZXYvc2Rh
-OiAyNTBHQiBzaW5nbGUgcGFydAo+IC9kZXYvc2RiOiAyNTBHQiBzaW5nbGUgcGFydAo+IC9kZXYv
-c2RjOiA1MDBHQiwgMngyNTBHQiBwYXJ0cwo+IC9kZXYvc2RkOiAzMjBHQiwgMjUwR0IgYW5kIDcw
-R0IgcGFydHMKPgo+IC9kZXYvc2RhOgo+IMKgVGltaW5nIGNhY2hlZCByZWFkczogwqAgMjI5NCBN
-QiBpbiDCoDIuMDAgc2Vjb25kcyA9IDExNDcuMzIgTUIvc2VjCj4gwqBUaW1pbmcgYnVmZmVyZWQg
-ZGlzayByZWFkczogMTg2IE1CIGluIMKgMy4wMiBzZWNvbmRzID0gwqA2MS42OSBNQi9zZWMKPiBz
-amVubmluZ3NAY2VyZWJydW06fiQgc3VkbyBoZHBhcm0gLVR0IC9kZXYvc2RiCj4KPiAvZGV2L3Nk
-YjoKPiDCoFRpbWluZyBjYWNoZWQgcmVhZHM6IMKgIDIyNTAgTUIgaW4gwqAyLjAwIHNlY29uZHMg
-PSAxMTI1LjU5IE1CL3NlYwo+IMKgVGltaW5nIGJ1ZmZlcmVkIGRpc2sgcmVhZHM6IDE4NCBNQiBp
-biDCoDMuMDEgc2Vjb25kcyA9IMKgNjEuMDUgTUIvc2VjCj4KPiAvZGV2L3NkYzoKPiDCoFRpbWlu
-ZyBjYWNoZWQgcmVhZHM6IMKgIDIxNzIgTUIgaW4gwqAyLjAwIHNlY29uZHMgPSAxMDg2LjAwIE1C
-L3NlYwo+IMKgVGltaW5nIGJ1ZmZlcmVkIGRpc2sgcmVhZHM6IDM5MiBNQiBpbiDCoDMuMDEgc2Vj
-b25kcyA9IDEzMC4zNiBNQi9zZWMKPgo+IC9kZXYvc2RkOgo+IMKgVGltaW5nIGNhY2hlZCByZWFk
-czogwqAgMjIyMCBNQiBpbiDCoDIuMDAgc2Vjb25kcyA9IDExMTAuNjAgTUIvc2VjCj4gwqBUaW1p
-bmcgYnVmZmVyZWQgZGlzayByZWFkczogMjM2IE1CIGluIMKgMy4wMiBzZWNvbmRzID0gwqA3OC4x
-NSBNQi9zZWMKPgo+IC9kZXYvbWQwOgo+IMKgIMKgIMKgIMKgVmVyc2lvbiA6IDAuOTAKPiDCoENy
-ZWF0aW9uIFRpbWUgOiBNb24gSnVsIDEyIDA4OjMyOjU4IDIwMTAKPiDCoCDCoCBSYWlkIExldmVs
-IDogcmFpZDUKPiDCoCDCoCBBcnJheSBTaXplIDogNzMyNTg3NzEyICg2OTguNjUgR2lCIDc1MC4x
-NyBHQikKPiDCoFVzZWQgRGV2IFNpemUgOiAyNDQxOTU5MDQgKDIzMi44OCBHaUIgMjUwLjA2IEdC
-KQo+IMKgIFJhaWQgRGV2aWNlcyA6IDQKPiDCoFRvdGFsIERldmljZXMgOiA0Cj4gUHJlZmVycmVk
-IE1pbm9yIDogMAo+IMKgIMKgUGVyc2lzdGVuY2UgOiBTdXBlcmJsb2NrIGlzIHBlcnNpc3RlbnQK
-Pgo+IMKgIMKgVXBkYXRlIFRpbWUgOiBXZWQgSmFuIDI1IDA5OjUxOjI1IDIwMTIKPiDCoCDCoCDC
-oCDCoCDCoFN0YXRlIDogY2xlYW4KPiDCoEFjdGl2ZSBEZXZpY2VzIDogNAo+IFdvcmtpbmcgRGV2
-aWNlcyA6IDQKPiDCoEZhaWxlZCBEZXZpY2VzIDogMAo+IMKgU3BhcmUgRGV2aWNlcyA6IDAKPgo+
-IMKgIMKgIMKgIMKgIExheW91dCA6IGxlZnQtc3ltbWV0cmljCj4gwqAgwqAgQ2h1bmsgU2l6ZSA6
-IDY0Swo+Cj4gwqAgwqAgwqAgwqAgwqAgVVVJRCA6IGNmNzBkOTI4OjhhZDI2YWFjOjE3MzgzYzEz
-OjAzYmFkZWUzCj4gwqAgwqAgwqAgwqAgRXZlbnRzIDogMC4yMDY4Cj4KPiDCoCDCoE51bWJlciDC
-oCBNYWpvciDCoCBNaW5vciDCoCBSYWlkRGV2aWNlIFN0YXRlCj4gwqAgwqAgwqAgMCDCoCDCoCDC
-oCA4IMKgIMKgIMKgIMKgMSDCoCDCoCDCoCDCoDAgwqAgwqAgwqBhY3RpdmUgc3luYyDCoCAvZGV2
-L3NkYTEKPiDCoCDCoCDCoCAxIMKgIMKgIMKgIDggwqAgwqAgwqAgMTcgwqAgwqAgwqAgwqAxIMKg
-IMKgIMKgYWN0aXZlIHN5bmMgwqAgL2Rldi9zZGIxCj4gwqAgwqAgwqAgMiDCoCDCoCDCoCA4IMKg
-IMKgIMKgIDM0IMKgIMKgIMKgIMKgMiDCoCDCoCDCoGFjdGl2ZSBzeW5jIMKgIC9kZXYvc2RjMgo+
-IMKgIMKgIMKgIDMgwqAgwqAgwqAgOCDCoCDCoCDCoCA0OSDCoCDCoCDCoCDCoDMgwqAgwqAgwqBh
-Y3RpdmUgc3luYyDCoCAvZGV2L3NkZDEKPgo+Cj4gLS0tIFBoeXNpY2FsIHZvbHVtZSAtLS0KPiDC
-oFBWIE5hbWUgwqAgwqAgwqAgwqAgwqAgwqAgwqAgL2Rldi9tZDAKPiDCoFZHIE5hbWUgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgcmFpZDV2Zwo+IMKgUFYgU2l6ZSDCoCDCoCDCoCDCoCDCoCDCoCDCoCA2
-OTguNjUgR2lCIC8gbm90IHVzYWJsZSAxLjQ0IE1pQgo+IMKgQWxsb2NhdGFibGUgwqAgwqAgwqAg
-wqAgwqAgeWVzCj4gwqBQRSBTaXplIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDQuMDAgTWlCCj4gwqBU
-b3RhbCBQRSDCoCDCoCDCoCDCoCDCoCDCoCDCoDE3ODg1NAo+IMKgRnJlZSBQRSDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCA1NzI1NAo+IMKgQWxsb2NhdGVkIFBFIMKgIMKgIMKgIMKgIMKgMTIxNjAwCj4g
-wqBQViBVVUlEIMKgIMKgIMKgIMKgIMKgIMKgIMKgIEYwMzhSUS1yZVI0LUJTUHktNDNsQS1VSkk0
-LXVvTVktWFFrMjNuCj4KPiDCoC0tLSBWb2x1bWUgZ3JvdXAgLS0tCj4gwqBWRyBOYW1lIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIHJhaWQ1dmcKPiDCoFN5c3RlbSBJRAo+IMKgRm9ybWF0IMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgbHZtMgo+IMKgTWV0YWRhdGEgQXJlYXMgwqAgwqAgwqAgwqAxCj4gwqBN
-ZXRhZGF0YSBTZXF1ZW5jZSBObyDCoDQ3Cj4gwqBWRyBBY2Nlc3MgwqAgwqAgwqAgwqAgwqAgwqAg
-cmVhZC93cml0ZQo+IMKgVkcgU3RhdHVzIMKgIMKgIMKgIMKgIMKgIMKgIHJlc2l6YWJsZQo+IMKg
-TUFYIExWIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgMAo+IMKgQ3VyIExWIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgNgo+IMKgT3BlbiBMViDCoCDCoCDCoCDCoCDCoCDCoCDCoCAzCj4gwqBNYXggUFYg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAwCj4gwqBDdXIgUFYgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAxCj4gwqBBY3QgUFYgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAxCj4gwqBWRyBTaXplIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIDY5OC42NSBHaUIKPiDCoFBFIFNpemUgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgNC4wMCBNaUIKPiDCoFRvdGFsIFBFIMKgIMKgIMKgIMKgIMKgIMKgIMKgMTc4ODU0Cj4gwqBB
-bGxvYyBQRSAvIFNpemUgwqAgwqAgwqAgMTIxNjAwIC8gNDc1LjAwIEdpQgo+IMKgRnJlZSDCoFBF
-IC8gU2l6ZSDCoCDCoCDCoCA1NzI1NCAvIDIyMy42NSBHaUIKPiDCoFZHIFVVSUQgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgOUtqbkNOLWw0Z1QtalVrUi1ncXQ1LUR5RFItR2VHWC0yMERtSmMKPgo+IMKg
-LS0tIExvZ2ljYWwgdm9sdW1lIC0tLQo+IMKgTFYgTmFtZSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oC9kZXYvcmFpZDV2Zy9ob21lCj4gwqBWRyBOYW1lIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgcmFp
-ZDV2Zwo+IMKgTFYgVVVJRCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoGZsUDhnTC1hZEpxLVVyMGQt
-TnNsMC1vbFo4LXR6cGktZmpxR2k2Cj4gwqBMViBXcml0ZSBBY2Nlc3MgwqAgwqAgwqAgwqByZWFk
-L3dyaXRlCj4gwqBMViBTdGF0dXMgwqAgwqAgwqAgwqAgwqAgwqAgwqBhdmFpbGFibGUKPiDCoCMg
-b3BlbiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAxCj4gwqBMViBTaXplIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgMjUwLjAwIEdpQgo+IMKgQ3VycmVudCBMRSDCoCDCoCDCoCDCoCDCoCDCoCA2NDAw
-MAo+IMKgU2VnbWVudHMgwqAgwqAgwqAgwqAgwqAgwqAgwqAgMgo+IMKgQWxsb2NhdGlvbiDCoCDC
-oCDCoCDCoCDCoCDCoCBpbmhlcml0Cj4gwqBSZWFkIGFoZWFkIHNlY3RvcnMgwqAgwqAgYXV0bwo+
-IMKgLSBjdXJyZW50bHkgc2V0IHRvIMKgIMKgIDc2OAo+IMKgQmxvY2sgZGV2aWNlIMKgIMKgIMKg
-IMKgIMKgIDI1MjowCj4KPiAvZGV2L21hcHBlci9yYWlkNXZnLWhvbWUgaXMgbW91bnRlZCBhdCAv
-aG9tZSB0eXBlIGV4dDQgKHJ3LG5vYXRpbWUpCj4KPiByZWFkIC9ob21lIChkbS0wIG9uIG1kMCk6
-Cj4KPiBkZCBpZj11YnVudHUtMTEuMDQtYWx0ZXJuYXRlLWkzODYuaXNvIG9mPS9kZXYvbnVsbCAo
-bm90IGluIHBhZ2UgY2FjaGUpCj4gMTQxOTQxNiswIHJlY29yZHMgaW4KPiAxNDE5NDE2KzAgcmVj
-b3JkcyBvdXQKPiA3MjY3NDA5OTIgYnl0ZXMgKDcyNyBNQikgY29waWVkLCA1LjY1MTgyIHMsIDEy
-OSBNQi9zCj4KPiBhdmctY3B1OiDCoCV1c2VyIMKgICVuaWNlICVzeXN0ZW0gJWlvd2FpdCDCoCVz
-dGVhbCDCoCAlaWRsZQo+IMKgIMKgIMKgIMKgIMKgIDIuOTkgwqAgwqAwLjAwIMKgIDI3LjM2IMKg
-IDIxLjM5IMKgIMKgMC4wMCDCoCA0OC4yNgo+Cj4gRGV2aWNlOiDCoCDCoCDCoCDCoCDCoCDCoHRw
-cyDCoCDCoGtCX3JlYWQvcyDCoCDCoGtCX3dydG4vcyDCoCDCoGtCX3JlYWQgwqAgwqBrQl93cnRu
-Cj4gc2RhIMKgIMKgIMKgIMKgIMKgIMKgIDUzMS4wMCDCoCDCoCAzNzYzMi4wMCDCoCDCoCDCoCDC
-oCAwLjAwIMKgIMKgIMKgMzc2MzIgwqAgwqAgwqAgwqAgwqAwCj4gc2RiIMKgIMKgIMKgIMKgIMKg
-IMKgIDQ1MS4wMCDCoCDCoCAzNzY0OC4wMCDCoCDCoCDCoCDCoCAwLjAwIMKgIMKgIMKgMzc2NDgg
-wqAgwqAgwqAgwqAgwqAwCj4gc2RjIMKgIMKgIMKgIMKgIMKgIMKgIDUzMi4wMCDCoCDCoCAzNzc2
-MC4wMCDCoCDCoCDCoCDCoCAwLjAwIMKgIMKgIMKgMzc3NjAgwqAgwqAgwqAgwqAgwqAwCj4gbWQw
-IMKgIMKgIMKgIMKgIMKgIMKgMjc1MS4wMCDCoCDCoDE1MDkxMi4wMCDCoCDCoCDCoCDCoCAwLjAw
-IMKgIMKgIDE1MDkxMiDCoCDCoCDCoCDCoCDCoDAKPiBzZGQgwqAgwqAgwqAgwqAgwqAgwqAgNDUz
-LjAwIMKgIMKgIDM3NzEyLjAwIMKgIMKgIMKgIMKgIDAuMDAgwqAgwqAgwqAzNzcxMiDCoCDCoCDC
-oCDCoCDCoDAKPiBkbS0wIMKgIMKgIMKgIMKgIMKgIDI3NTEuMDAgwqAgwqAxNTA5MTIuMDAgwqAg
-wqAgwqAgwqAgMC4wMCDCoCDCoCAxNTA5MTIgwqAgwqAgwqAgwqAgwqAwCj4KPiBzbyByZWFkaW5n
-IGlzIGdvb2QuCj4KPiB3cml0ZSAvaG9tZToKPgo+IGRkIGlmPS9kZXYvemVybyBvZj16ZXJvZXMK
-PiA8Y3RybC1jPgo+IDIwODM4NSswIHJlY29yZHMgaW4KPiAyMDgzODQrMCByZWNvcmRzIG91dAo+
-IDEwNjY5MjYwOCBieXRlcyAoMTA3IE1CKSBjb3BpZWQsIDI3LjY3MzkgcywgMy45IE1CL3MKPgo+
-IHFhdmctY3B1OiDCoCV1c2VyIMKgICVuaWNlICVzeXN0ZW0gJWlvd2FpdCDCoCVzdGVhbCDCoCAl
-aWRsZQo+IMKgIMKgIMKgIMKgIMKgIDAuNTIgwqAgwqAwLjAwIMKgIMKgMS41NSDCoCA5Ny45NCDC
-oCDCoDAuMDAgwqAgwqAwLjAwCj4KPiBEZXZpY2U6IMKgIMKgIMKgIMKgIMKgIMKgdHBzIMKgIMKg
-a0JfcmVhZC9zIMKgIMKga0Jfd3J0bi9zIMKgIMKga0JfcmVhZCDCoCDCoGtCX3dydG4KPiBzZGEg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgMi4wMCDCoCDCoCDCoCAxOTIuMDAgwqAgwqAgwqAgNDQ0LjAw
-IMKgIMKgIMKgIMKgMTkyIMKgIMKgIMKgIMKgNDQ0Cj4gc2RiIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IDUuMDAgwqAgwqAgwqAgMTkyLjAwIMKgIMKgIMKgMTAyMC4wMCDCoCDCoCDCoCDCoDE5MiDCoCDC
-oCDCoCAxMDIwCj4gc2RjIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDMuMDAgwqAgwqAgwqAgMTkyLjAw
-IMKgIMKgIMKgIDQ0NC4wMCDCoCDCoCDCoCDCoDE5MiDCoCDCoCDCoCDCoDQ0NAo+IG1kMCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoDM0LjAwIMKgIMKgIMKgIDc2OC4wMCDCoCDCoCDCoDEzNDQuMDAgwqAg
-wqAgwqAgwqA3NjggwqAgwqAgwqAgMTM0NAo+IHNkZCDCoCDCoCDCoCDCoCDCoCDCoCDCoCA1LjAw
-IMKgIMKgIMKgIDE5Mi4wMCDCoCDCoCDCoDEwMjAuMDAgwqAgwqAgwqAgwqAxOTIgwqAgwqAgwqAg
-MTAyMAo+IGRtLTAgwqAgwqAgwqAgwqAgwqAgwqAgMzQuMDAgwqAgwqAgwqAgNzY4LjAwIMKgIMKg
-IMKgMTM0NC4wMCDCoCDCoCDCoCDCoDc2OCDCoCDCoCDCoCAxMzQ0Cj4KPiBzbyB3cml0aW5nIGlz
-IGF3ZWZ1bCAoMi01IHRwcyBwZXIgZGlzayB3aXRoIDk4JSBpb3dhaXQ/ISkuCj4KPiB3cml0ZSAv
-ZGV2L3NkYzEgKG5vbi1yYWlkIHBhcnQgaW4gL2Rldi9zZGMpCj4KPiBkZCBpZj0vZGV2L3plcm8g
-b2Y9emVyb2VzIGJzPTQwOTYgY291bnQ9MTAwMDAwCj4gMTAwMDAwKzAgcmVjb3JkcyBpbgo+IDEw
-MDAwMCswIHJlY29yZHMgb3V0Cj4gNDA5NjAwMDAwIGJ5dGVzICg0MTAgTUIpIGNvcGllZCwgMi42
-NDEzMSBzLCAxNTUgTUIvcwo+Cj4gYXZnLWNwdTogwqAldXNlciDCoCAlbmljZSAlc3lzdGVtICVp
-b3dhaXQgwqAlc3RlYWwgwqAgJWlkbGUKPiDCoCDCoCDCoCDCoCDCoCAxLjUwIMKgIMKgMC4wMCDC
-oCAzMi4wMCDCoCA1Ny4wMCDCoCDCoDAuMDAgwqAgwqA5LjUwCj4KPiBEZXZpY2U6IMKgIMKgIMKg
-IMKgIMKgIMKgdHBzIMKgIMKga0JfcmVhZC9zIMKgIMKga0Jfd3J0bi9zIMKgIMKga0JfcmVhZCDC
-oCDCoGtCX3dydG4KPiBzZGEgwqAgwqAgwqAgwqAgwqAgwqAgwqAgMC4wMCDCoCDCoCDCoCDCoCAw
-LjAwIMKgIMKgIMKgIMKgIDAuMDAgwqAgwqAgwqAgwqAgwqAwIMKgIMKgIMKgIMKgIMKgMAo+IHNk
-YiDCoCDCoCDCoCDCoCDCoCDCoCDCoCAwLjAwIMKgIMKgIMKgIMKgIDAuMDAgwqAgwqAgwqAgwqAg
-MC4wMCDCoCDCoCDCoCDCoCDCoDAgwqAgwqAgwqAgwqAgwqAwCj4gc2RjIMKgIMKgIMKgIMKgIMKg
-IMKgIDI2Ny4wMCDCoCDCoCDCoCDCoCAwLjAwIMKgIMKgMTM1NjgwLjAwIMKgIMKgIMKgIMKgIMKg
-MCDCoCDCoCAxMzU2ODAKPiBtZDAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgMC4wMCDCoCDCoCDCoCDC
-oCAwLjAwIMKgIMKgIMKgIMKgIDAuMDAgwqAgwqAgwqAgwqAgwqAwIMKgIMKgIMKgIMKgIMKgMAo+
-IHNkZCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAwLjAwIMKgIMKgIMKgIMKgIDAuMDAgwqAgwqAgwqAg
-wqAgMC4wMCDCoCDCoCDCoCDCoCDCoDAgwqAgwqAgwqAgwqAgwqAwCj4gZG0tMCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoDAuMDAgwqAgwqAgwqAgwqAgMC4wMCDCoCDCoCDCoCDCoCAwLjAwIMKgIMKgIMKg
-IMKgIMKgMCDCoCDCoCDCoCDCoCDCoDAKPgo+IHNvIHdyaXRpbmcgdG8gbm9uLXJhaWQgcGFydGl0
-aW9uIG9mIG9uZSBvZiB0aGUgZGlza3MgaXMgZ29vZC4KPiAtLQo+IFRvIHVuc3Vic2NyaWJlIGZy
-b20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1yYWlkIiBpbgo+
-IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnCj4gTW9y
-ZSBtYWpvcmRvbW8gaW5mbyBhdCDCoGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWlu
-Zm8uaHRtbAoKRG93bmxvYWQgdGhpcyBuaWNlIHRvb2wgZnJvbSBJQk0gKG5tb24pCmh0dHA6Ly93
-d3cuaWJtLmNvbS9kZXZlbG9wZXJ3b3Jrcy9haXgvbGlicmFyeS9hdS1hbmFseXplX2FpeC8KCkdv
-IGludG8gdGhlIGRpc2sgcGllY2Ugb2YgaXQgKGl0IG1heSBiZSBuZWNlc3NhcnkgdG8gaGF2ZSBh
-IHRlcm1pbmFsCndpbmRvdyB3aXRoIGxvdHMgb2YgbGluZXMsIGFuZCB0byB0dXJuIG9mZiB0aGUg
-cGllY2VzIHlvdSBkb24ndCBuZWVkCnJpZ2h0IG5vdykuCgp1c2luZyBpdCB5b3UgbWF5IGJlIGFi
-bGUgdG8gaWRlbnRpZnkgYSBzaW5nbGUgZGlzayB0aGF0IGlzIGNhdXNpbmcgdGhlCndhaXQgdGlt
-ZSBpc3N1ZXMuCgpOb3RlIHRoYXQgaWYgYSBkaXNrIGlzIGdldHRpbmcgYmFkIGJsb2NrcyBpdCB3
-b24ndCBiZSBtYXJrZWQgYXMgZmFpbGVkCmluIHNtYXJ0IHVudGlsIGl0IHJ1bnMgb3V0IG9mIHJl
-cGxhY2VtZW50IGJsb2NrcywgYW5kIHdoZW4gaXQgaXMgZG9pbmcKdGhvc2UgcmV0cmllcyBwZXJm
-b3JtYW5jZSB3aWxsIGJlIGRvd25yaWdodCBjcmFwcHkuLi5JIGhhZCAzIGRpc2tzCmZhaWwgYSBj
-b3VwbGUgb2YgbW9udGhzIGFnbyBhbmQgdGhleSB0b29rIGRheXMgZm9yIGVhY2ggdG8gcnVuIG91
-dCBvZgpyZXBsYWNlbWVudCBibG9ja3MuICAgIEkgaGF2ZSBnb25lIHRvIGtlZXBpbmcgYSBzbWFy
-dCBydW4gZm9yIGVhY2gKZGlzayBmb3IgZWFjaCBkYXkgYW5kIHRoZW4gaWYgdGhpcyBoYXBwZW5z
-IGFnYWluIGNhbiBnbyBsb29rIGF0IHRoYXQKaW5mbyBhbiBzZWUgaG93IHRoZSBiYWQgYmxvY2tz
-IGhhdmUgYmVlbiBjaGFuZ2luZyBvbiBhIGdpdmVuIGRldmljZS4KCkFsc28gaWYgdGhlIHJhaWQg
-aXMgZG9pbmcgcmV3cml0ZXMgb2YgYmFkIGJsb2NrcyBpdCBzaG91bGQgc2hvdwptZXNzYWdlcyBp
-biBkbWVzZywgYnV0IGlmIHRoZSBkaXNrcyBhcmUgYWJsZSB0byBldmVudHVhbGx5IHJlcmVhZCB0
-aGUKYmxvY2tzIGFuIHJlbG9jYXRlcyB0aGVtIHdpdGhvdXQgbWQgaGF2aW5nIHRvIGRvIHRoZSBy
-ZXdyaXRlIGl0IHdvbid0CnNob3cgaW4gZG1lc2cuCg==
+Thanks for all the help!  iostat -x was enough for me to see that one
+of my disks was
+bad.  I kicked it out of the array manually and order was restored.
+
+I responded to Doug earlier but didn't reply to the list as well.
+Sorry about that.
+
+On Wed, Jan 25, 2012 at 12:15 PM, Seth Jennings <spartacus06@gmail.com>=
+ wrote:
+> The write performance on my raid5 took a nose dive yesterday and I ca=
+n't
+> figure out what is to blame. iostat is showing 98% iowait with 2-5 tp=
+s per
+> array disk (?!). =A0I'm including as much information as I can think =
+to include
+> without overwhelming anyone inclined to help me debug this.
+>
+> Also, I'm familiar with kernel internals/debugging so just let me kno=
+w if you
+> need more information.
+>
+> Thanks
+> --
+> Seth
+>
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> All disks are SATA and pass SMART health assessment. No errors in dme=
+sg.
+>
+> Setup:
+> /dev/sda: 250GB single part
+> /dev/sdb: 250GB single part
+> /dev/sdc: 500GB, 2x250GB parts
+> /dev/sdd: 320GB, 250GB and 70GB parts
+>
+> /dev/sda:
+> =A0Timing cached reads: =A0 2294 MB in =A02.00 seconds =3D 1147.32 MB=
+/sec
+> =A0Timing buffered disk reads: 186 MB in =A03.02 seconds =3D =A061.69=
+ MB/sec
+> sjennings@cerebrum:~$ sudo hdparm -Tt /dev/sdb
+>
+> /dev/sdb:
+> =A0Timing cached reads: =A0 2250 MB in =A02.00 seconds =3D 1125.59 MB=
+/sec
+> =A0Timing buffered disk reads: 184 MB in =A03.01 seconds =3D =A061.05=
+ MB/sec
+>
+> /dev/sdc:
+> =A0Timing cached reads: =A0 2172 MB in =A02.00 seconds =3D 1086.00 MB=
+/sec
+> =A0Timing buffered disk reads: 392 MB in =A03.01 seconds =3D 130.36 M=
+B/sec
+>
+> /dev/sdd:
+> =A0Timing cached reads: =A0 2220 MB in =A02.00 seconds =3D 1110.60 MB=
+/sec
+> =A0Timing buffered disk reads: 236 MB in =A03.02 seconds =3D =A078.15=
+ MB/sec
+>
+> /dev/md0:
+> =A0 =A0 =A0 =A0Version : 0.90
+> =A0Creation Time : Mon Jul 12 08:32:58 2010
+> =A0 =A0 Raid Level : raid5
+> =A0 =A0 Array Size : 732587712 (698.65 GiB 750.17 GB)
+> =A0Used Dev Size : 244195904 (232.88 GiB 250.06 GB)
+> =A0 Raid Devices : 4
+> =A0Total Devices : 4
+> Preferred Minor : 0
+> =A0 =A0Persistence : Superblock is persistent
+>
+> =A0 =A0Update Time : Wed Jan 25 09:51:25 2012
+> =A0 =A0 =A0 =A0 =A0State : clean
+> =A0Active Devices : 4
+> Working Devices : 4
+> =A0Failed Devices : 0
+> =A0Spare Devices : 0
+>
+> =A0 =A0 =A0 =A0 Layout : left-symmetric
+> =A0 =A0 Chunk Size : 64K
+>
+> =A0 =A0 =A0 =A0 =A0 UUID : cf70d928:8ad26aac:17383c13:03badee3
+> =A0 =A0 =A0 =A0 Events : 0.2068
+>
+> =A0 =A0Number =A0 Major =A0 Minor =A0 RaidDevice State
+> =A0 =A0 =A0 0 =A0 =A0 =A0 8 =A0 =A0 =A0 =A01 =A0 =A0 =A0 =A00 =A0 =A0=
+ =A0active sync =A0 /dev/sda1
+> =A0 =A0 =A0 1 =A0 =A0 =A0 8 =A0 =A0 =A0 17 =A0 =A0 =A0 =A01 =A0 =A0 =A0=
+active sync =A0 /dev/sdb1
+> =A0 =A0 =A0 2 =A0 =A0 =A0 8 =A0 =A0 =A0 34 =A0 =A0 =A0 =A02 =A0 =A0 =A0=
+active sync =A0 /dev/sdc2
+> =A0 =A0 =A0 3 =A0 =A0 =A0 8 =A0 =A0 =A0 49 =A0 =A0 =A0 =A03 =A0 =A0 =A0=
+active sync =A0 /dev/sdd1
+>
+>
+> --- Physical volume ---
+> =A0PV Name =A0 =A0 =A0 =A0 =A0 =A0 =A0 /dev/md0
+> =A0VG Name =A0 =A0 =A0 =A0 =A0 =A0 =A0 raid5vg
+> =A0PV Size =A0 =A0 =A0 =A0 =A0 =A0 =A0 698.65 GiB / not usable 1.44 M=
+iB
+> =A0Allocatable =A0 =A0 =A0 =A0 =A0 yes
+> =A0PE Size =A0 =A0 =A0 =A0 =A0 =A0 =A0 4.00 MiB
+> =A0Total PE =A0 =A0 =A0 =A0 =A0 =A0 =A0178854
+> =A0Free PE =A0 =A0 =A0 =A0 =A0 =A0 =A0 57254
+> =A0Allocated PE =A0 =A0 =A0 =A0 =A0121600
+> =A0PV UUID =A0 =A0 =A0 =A0 =A0 =A0 =A0 F038RQ-reR4-BSPy-43lA-UJI4-uoM=
+Y-XQk23n
+>
+> =A0--- Volume group ---
+> =A0VG Name =A0 =A0 =A0 =A0 =A0 =A0 =A0 raid5vg
+> =A0System ID
+> =A0Format =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0lvm2
+> =A0Metadata Areas =A0 =A0 =A0 =A01
+> =A0Metadata Sequence No =A047
+> =A0VG Access =A0 =A0 =A0 =A0 =A0 =A0 read/write
+> =A0VG Status =A0 =A0 =A0 =A0 =A0 =A0 resizable
+> =A0MAX LV =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A00
+> =A0Cur LV =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A06
+> =A0Open LV =A0 =A0 =A0 =A0 =A0 =A0 =A0 3
+> =A0Max PV =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A00
+> =A0Cur PV =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A01
+> =A0Act PV =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A01
+> =A0VG Size =A0 =A0 =A0 =A0 =A0 =A0 =A0 698.65 GiB
+> =A0PE Size =A0 =A0 =A0 =A0 =A0 =A0 =A0 4.00 MiB
+> =A0Total PE =A0 =A0 =A0 =A0 =A0 =A0 =A0178854
+> =A0Alloc PE / Size =A0 =A0 =A0 121600 / 475.00 GiB
+> =A0Free =A0PE / Size =A0 =A0 =A0 57254 / 223.65 GiB
+> =A0VG UUID =A0 =A0 =A0 =A0 =A0 =A0 =A0 9KjnCN-l4gT-jUkR-gqt5-DyDR-GeG=
+X-20DmJc
+>
+> =A0--- Logical volume ---
+> =A0LV Name =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/dev/raid5vg/home
+> =A0VG Name =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0raid5vg
+> =A0LV UUID =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0flP8gL-adJq-Ur0d-Nsl0-olZ8-=
+tzpi-fjqGi6
+> =A0LV Write Access =A0 =A0 =A0 =A0read/write
+> =A0LV Status =A0 =A0 =A0 =A0 =A0 =A0 =A0available
+> =A0# open =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 1
+> =A0LV Size =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0250.00 GiB
+> =A0Current LE =A0 =A0 =A0 =A0 =A0 =A0 64000
+> =A0Segments =A0 =A0 =A0 =A0 =A0 =A0 =A0 2
+> =A0Allocation =A0 =A0 =A0 =A0 =A0 =A0 inherit
+> =A0Read ahead sectors =A0 =A0 auto
+> =A0- currently set to =A0 =A0 768
+> =A0Block device =A0 =A0 =A0 =A0 =A0 252:0
+>
+> /dev/mapper/raid5vg-home is mounted at /home type ext4 (rw,noatime)
+>
+> read /home (dm-0 on md0):
+>
+> dd if=3Dubuntu-11.04-alternate-i386.iso of=3D/dev/null (not in page c=
+ache)
+> 1419416+0 records in
+> 1419416+0 records out
+> 726740992 bytes (727 MB) copied, 5.65182 s, 129 MB/s
+>
+> avg-cpu: =A0%user =A0 %nice %system %iowait =A0%steal =A0 %idle
+> =A0 =A0 =A0 =A0 =A0 2.99 =A0 =A00.00 =A0 27.36 =A0 21.39 =A0 =A00.00 =
+=A0 48.26
+>
+> Device: =A0 =A0 =A0 =A0 =A0 =A0tps =A0 =A0kB_read/s =A0 =A0kB_wrtn/s =
+=A0 =A0kB_read =A0 =A0kB_wrtn
+> sda =A0 =A0 =A0 =A0 =A0 =A0 531.00 =A0 =A0 37632.00 =A0 =A0 =A0 =A0 0=
+=2E00 =A0 =A0 =A037632 =A0 =A0 =A0 =A0 =A00
+> sdb =A0 =A0 =A0 =A0 =A0 =A0 451.00 =A0 =A0 37648.00 =A0 =A0 =A0 =A0 0=
+=2E00 =A0 =A0 =A037648 =A0 =A0 =A0 =A0 =A00
+> sdc =A0 =A0 =A0 =A0 =A0 =A0 532.00 =A0 =A0 37760.00 =A0 =A0 =A0 =A0 0=
+=2E00 =A0 =A0 =A037760 =A0 =A0 =A0 =A0 =A00
+> md0 =A0 =A0 =A0 =A0 =A0 =A02751.00 =A0 =A0150912.00 =A0 =A0 =A0 =A0 0=
+=2E00 =A0 =A0 150912 =A0 =A0 =A0 =A0 =A00
+> sdd =A0 =A0 =A0 =A0 =A0 =A0 453.00 =A0 =A0 37712.00 =A0 =A0 =A0 =A0 0=
+=2E00 =A0 =A0 =A037712 =A0 =A0 =A0 =A0 =A00
+> dm-0 =A0 =A0 =A0 =A0 =A0 2751.00 =A0 =A0150912.00 =A0 =A0 =A0 =A0 0.0=
+0 =A0 =A0 150912 =A0 =A0 =A0 =A0 =A00
+>
+> so reading is good.
+>
+> write /home:
+>
+> dd if=3D/dev/zero of=3Dzeroes
+> <ctrl-c>
+> 208385+0 records in
+> 208384+0 records out
+> 106692608 bytes (107 MB) copied, 27.6739 s, 3.9 MB/s
+>
+> qavg-cpu: =A0%user =A0 %nice %system %iowait =A0%steal =A0 %idle
+> =A0 =A0 =A0 =A0 =A0 0.52 =A0 =A00.00 =A0 =A01.55 =A0 97.94 =A0 =A00.0=
+0 =A0 =A00.00
+>
+> Device: =A0 =A0 =A0 =A0 =A0 =A0tps =A0 =A0kB_read/s =A0 =A0kB_wrtn/s =
+=A0 =A0kB_read =A0 =A0kB_wrtn
+> sda =A0 =A0 =A0 =A0 =A0 =A0 =A0 2.00 =A0 =A0 =A0 192.00 =A0 =A0 =A0 4=
+44.00 =A0 =A0 =A0 =A0192 =A0 =A0 =A0 =A0444
+> sdb =A0 =A0 =A0 =A0 =A0 =A0 =A0 5.00 =A0 =A0 =A0 192.00 =A0 =A0 =A010=
+20.00 =A0 =A0 =A0 =A0192 =A0 =A0 =A0 1020
+> sdc =A0 =A0 =A0 =A0 =A0 =A0 =A0 3.00 =A0 =A0 =A0 192.00 =A0 =A0 =A0 4=
+44.00 =A0 =A0 =A0 =A0192 =A0 =A0 =A0 =A0444
+> md0 =A0 =A0 =A0 =A0 =A0 =A0 =A034.00 =A0 =A0 =A0 768.00 =A0 =A0 =A013=
+44.00 =A0 =A0 =A0 =A0768 =A0 =A0 =A0 1344
+> sdd =A0 =A0 =A0 =A0 =A0 =A0 =A0 5.00 =A0 =A0 =A0 192.00 =A0 =A0 =A010=
+20.00 =A0 =A0 =A0 =A0192 =A0 =A0 =A0 1020
+> dm-0 =A0 =A0 =A0 =A0 =A0 =A0 34.00 =A0 =A0 =A0 768.00 =A0 =A0 =A01344=
+=2E00 =A0 =A0 =A0 =A0768 =A0 =A0 =A0 1344
+>
+> so writing is aweful (2-5 tps per disk with 98% iowait?!).
+>
+> write /dev/sdc1 (non-raid part in /dev/sdc)
+>
+> dd if=3D/dev/zero of=3Dzeroes bs=3D4096 count=3D100000
+> 100000+0 records in
+> 100000+0 records out
+> 409600000 bytes (410 MB) copied, 2.64131 s, 155 MB/s
+>
+> avg-cpu: =A0%user =A0 %nice %system %iowait =A0%steal =A0 %idle
+> =A0 =A0 =A0 =A0 =A0 1.50 =A0 =A00.00 =A0 32.00 =A0 57.00 =A0 =A00.00 =
+=A0 =A09.50
+>
+> Device: =A0 =A0 =A0 =A0 =A0 =A0tps =A0 =A0kB_read/s =A0 =A0kB_wrtn/s =
+=A0 =A0kB_read =A0 =A0kB_wrtn
+> sda =A0 =A0 =A0 =A0 =A0 =A0 =A0 0.00 =A0 =A0 =A0 =A0 0.00 =A0 =A0 =A0=
+ =A0 0.00 =A0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A0 =A00
+> sdb =A0 =A0 =A0 =A0 =A0 =A0 =A0 0.00 =A0 =A0 =A0 =A0 0.00 =A0 =A0 =A0=
+ =A0 0.00 =A0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A0 =A00
+> sdc =A0 =A0 =A0 =A0 =A0 =A0 267.00 =A0 =A0 =A0 =A0 0.00 =A0 =A0135680=
+=2E00 =A0 =A0 =A0 =A0 =A00 =A0 =A0 135680
+> md0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 0.00 =A0 =A0 =A0 =A0 0.00 =A0 =A0 =A0=
+ =A0 0.00 =A0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A0 =A00
+> sdd =A0 =A0 =A0 =A0 =A0 =A0 =A0 0.00 =A0 =A0 =A0 =A0 0.00 =A0 =A0 =A0=
+ =A0 0.00 =A0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A0 =A00
+> dm-0 =A0 =A0 =A0 =A0 =A0 =A0 =A00.00 =A0 =A0 =A0 =A0 0.00 =A0 =A0 =A0=
+ =A0 0.00 =A0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A0 =A00
+>
+> so writing to non-raid partition of one of the disks is good.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
