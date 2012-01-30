@@ -1,127 +1,84 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 4/4] Spawn mdmon with --offroot if mdadm was launched
- with --offroot
-Date: Mon, 30 Jan 2012 12:10:36 +1100
-Message-ID: <20120130121036.09243aa0@notabene.brown>
-References: <1327504684-9219-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1327504684-9219-5-git-send-email-Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH] imsm: fix, the second array need to have the whole
+ available space on devices
+Date: Mon, 30 Jan 2012 12:21:46 +1100
+Message-ID: <20120130122146.44866b14@notabene.brown>
+References: <F9123E44003394499FDD2B17C60621D408A87C@IRSMSX101.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/SeJ7yh3mBoaACuVmvcryEzz"; protocol="application/pgp-signature"
+ boundary="Sig_/9Xbl2OMI485ekZ7cEWmZ_gK"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1327504684-9219-5-git-send-email-Jes.Sorensen@redhat.com>
+In-Reply-To: <F9123E44003394499FDD2B17C60621D408A87C@IRSMSX101.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: linux-raid@vger.kernel.org, dledford@redhat.com, kay@redhat.com, harald@redhat.com, lpoetter@redhat.com, mschmidt@redhat.com
+To: "Labun, Marcin" <Marcin.Labun@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Kwolek, Adam" <adam.kwolek@intel.com>
 List-Id: linux-raid.ids
 
---Sig_/SeJ7yh3mBoaACuVmvcryEzz
+--Sig_/9Xbl2OMI485ekZ7cEWmZ_gK
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 25 Jan 2012 16:18:04 +0100 Jes.Sorensen@redhat.com wrote:
+On Fri, 27 Jan 2012 15:28:36 +0000 "Labun, Marcin" <Marcin.Labun@intel.com>
+wrote:
 
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> Fix the case with creating an array with given container in command line
+> instead of real devices:
+> mdadm -CR /dev/md/raid0 -l 0 -n 2 -z5G /dev/md/imsm
 >=20
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> Signed-off-by: Marcin Labun <marcin.labun@intel.com>
 > ---
->  mdadm.c |    1 +
->  mdadm.h |    2 ++
->  util.c  |   17 +++++++++++++----
->  3 files changed, 16 insertions(+), 4 deletions(-)
+>  super-intel.c |    9 ++++++++-
+>  1 files changed, 8 insertions(+), 1 deletions(-)
 >=20
-> diff --git a/mdadm.c b/mdadm.c
-> index 78f28d5..1efa3e8 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -181,6 +181,7 @@ int main(int argc, char *argv[])
->  		 */
->  		case OffRootOpt:
->  			argv[0][0] =3D '@';
-> +			__offroot =3D 1;
->  			continue;
-> =20
->  		case ':':
-> diff --git a/mdadm.h b/mdadm.h
-> index fec93aa..d862b3e 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -1383,3 +1383,5 @@ static inline int xasprintf(char **strp, const char=
- *fmt, ...) {
-> =20
->  #define PROCESS_DELAYED -2
->  #define PROCESS_PENDING -3
-> +
-> +extern int __offroot;
-> diff --git a/util.c b/util.c
-> index 6985a70..4ba44e6 100644
-> --- a/util.c
-> +++ b/util.c
-> @@ -32,6 +32,8 @@
->  #include	<dirent.h>
->  #include	<signal.h>
-> =20
-> +int __offroot;
-> +
->  /*
->   * following taken from linux/blkpg.h because they aren't
->   * anywhere else and it isn't safe to #include linux/ * stuff.
-> @@ -1622,10 +1624,17 @@ int start_mdmon(int devnum)
->  				skipped =3D 0;
-> =20
->  		for (i=3D0; paths[i]; i++)
-> -			if (paths[i][0])
-> -				execl(paths[i], "mdmon",
-> -				      devnum2devname(devnum),
-> -				      NULL);
-> +			if (paths[i][0]) {
-> +				if (__offroot) {
-> +					execl(paths[i], "mdmon", "--offroot",
-> +					      devnum2devname(devnum),
-> +					      NULL);
+> diff --git a/super-intel.c b/super-intel.c
+> index 0e9269f..03e10bd 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -5525,8 +5525,15 @@ static int reserve_space(struct supertype *st, int=
+ raiddisks,
+>  			size /=3D 2 * chunk;
+>  			size *=3D 2 * chunk;
+>  		}
+> +		maxsize =3D size;
+> +	}
+> +	if (!check_env("IMSM_NO_PLATFORM") &&
+> +	    mpb->num_raid_devs > 0 && size && size !=3D maxsize) {
+> +		fprintf(stderr, Name ": attempting to create a second "
+> +			"volume with size less then remaining space. "
+> +			"Aborting...\n");
+> +		return 0;
+>  	}
+> -
+>  	cnt =3D 0;
+>  	for (dl =3D super->disks; dl; dl =3D dl->next)
+>  		if (dl->e)
 
-I just occurred to me that this could be:
+It is a shame that we need the same test in two different places...
 
-    execl(paths[i], "@mdmon", devnum2devname(devnum));
-
-which seems simpler... but I'll leave it as it is.
-
-All applied - thanks.
-
+I've applied this patch,
+Thanks,
 NeilBrown
 
-
-> +				} else {
-> +					execl(paths[i], "mdmon",
-> +					      devnum2devname(devnum),
-> +					      NULL);
-> +				}
-> +			}
->  		exit(1);
->  	case -1: fprintf(stderr, Name ": cannot run mdmon. "
->  			 "Array remains readonly\n");
-
-
---Sig_/SeJ7yh3mBoaACuVmvcryEzz
+--Sig_/9Xbl2OMI485ekZ7cEWmZ_gK
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTyXuDDnsnt1WYoG5AQLvBhAAqlMUJEQvbGxQWEn9bqfkIPXsRikNgVZJ
-QI97HE1NvT30yh46Wzxmyku95UqowYzSDG5MXS4icVN79mbOa2NDSwQwf0megqHw
-r2AYybx8LeVOSV/L7zHrL568NjZoRrtJKbuu+y5oENlsDVXFHTYzt4Z9PKO9Xfzk
-4g09AsZ2Z3rrXFGg5LAGmAGAZEl8NvOEH87LK4gdCOprEmMuujeykukAucevP3nE
-jj6A5TEpH9DOVutW/jfC2GSC/xLOHv+MnAxpxbKTKfd9Q5VAsq5xNG/4tzPbObFb
-UKJeL2ypQOL4gn3tUdakgVatF5c60KjzIe6vNq5fO+2KXyWqkxWcy+/gd1d6NtTk
-mG7YJrC3IpHB6N12vdWjKZ8BapiK+I5f+WCV2EmzdzMzScK9mUGcW5ayRFtiIilV
-IoAwKOk9n2MiTpOAo/1pKoR9Bq+Wmk0N1RVPFy97Tv7Wz/QbM65hVhuTroe7Yo5q
-hoY57lTGa7I+0Wkf8P/cCH1z6O2n/qalE9zGYZnV7qhlCh7SQD2sR9zQ3C/ZCZ4y
-bORoFs8YRIhZr8qrqPkx50HlpEQsKD4n9eBAXR/mOzuHHl+cy1r0t783k+OS9r77
-q5yH7SuUCbAD6PSyMHc6utP2TDA+78mRKc1Ed6oYCNnKPB+rZEEI2UEtyqDOmdEx
-2gxgBnX3Mig=
-=QlZp
+iQIVAwUBTyXwqjnsnt1WYoG5AQJR6BAAkpOWOV+7C7DmAuA7jIQm/NR/sgGDrF65
+f4OrQ7frUeeZWSAbGzgKnhBCfVYuwlfb67JJ3Iw5wbTRpQZILRtKvAdRgMC7XwG7
+xl5t5lghd3wE0ibo78VyxrR2bGwPu0zhmxQvRECuq/fdRZByEzIwEULbeSfiS3y7
+Ilyt0xudYtSpVfJ+pJGH9sOwl36pdutsdkSPDDXciJ/K6tCejalZhndLsAUN5eGy
+gq877vuHIiBVuIc64rXl3Sk79oAG6EpQc/XylKmOOrQBZQSaul6M0SzkZzIZd5BA
+gtewxWwwOM1/hz1LJqiQhbgyyUz+llDW95jLJFhmVH9AVT54yWkv2ctv7obqNoTE
+Enogr04Mm6B45zB8ix1Qeh2eOppHtPAHNnJomqigrqDj2tzBTeOZEXbQDMg2mXk2
+PK7oK9yo9ErUzFhHxoj3wsBzyyJuUBUlYe5S0Ab1BvS2pJ+f4FRpoqVYRcd37k8b
+9Xqoa3NCTxpKtXgOpXmutfD0DW8Vv1JF8kddHfgWCRWM9oe8jsHzgRccQA95Q9nk
+daCkrs8aYzxKjjZzK4+E+eecUTLeRjSWIokC4N2zLa3UtWjZtewaSbjOkMK0nk/U
+YZXtit//Jub5gc7KtgTNDdIACF6veFTbh/Gja8Fgvfe/3il7g2ptHZoHesiu3Vys
+9moymMivNCQ=
+=cMGT
 -----END PGP SIGNATURE-----
 
---Sig_/SeJ7yh3mBoaACuVmvcryEzz--
+--Sig_/9Xbl2OMI485ekZ7cEWmZ_gK--
