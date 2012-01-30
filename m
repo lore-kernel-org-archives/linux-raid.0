@@ -1,170 +1,148 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] fix: do not overwrite existing devices' symlinks
-Date: Tue, 31 Jan 2012 09:13:57 +1100
-Message-ID: <20120131091357.18fa2b75@notabene.brown>
-References: <20120123120652.20165.47998.stgit@gklab-128-085.igk.intel.com>
-	<20120130122728.3aa8da9a@notabene.brown>
-	<D9FFE20C522965449E182ACE73889AEB07067C@IRSMSX101.ger.corp.intel.com>
+Subject: Re: [PATCH] DM RAID: Fix memory corruption caused by repeated calls
+ to bitmap_load
+Date: Tue, 31 Jan 2012 10:10:31 +1100
+Message-ID: <20120131101031.2a15eb96@notabene.brown>
+References: <1327676033.9152.7.camel@f14.redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/+LqTM15KUF35JVb_KTGCA0g"; protocol="application/pgp-signature"
+ boundary="Sig_/BDGZpC0E1xwzBhZjpUDHY40"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <D9FFE20C522965449E182ACE73889AEB07067C@IRSMSX101.ger.corp.intel.com>
+In-Reply-To: <1327676033.9152.7.camel@f14.redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: Jonathan Brassow <jbrassow@redhat.com>
+Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/+LqTM15KUF35JVb_KTGCA0g
+--Sig_/BDGZpC0E1xwzBhZjpUDHY40
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 30 Jan 2012 12:13:05 +0000 "Dorau, Lukasz" <lukasz.dorau@intel.com>
+On Fri, 27 Jan 2012 08:53:53 -0600 Jonathan Brassow <jbrassow@redhat.com>
 wrote:
 
-> > -----Original Message-----
-> > From: NeilBrown [mailto:neilb@suse.de]
-> > Sent: Monday, January 30, 2012 2:27 AM
-> > To: Dorau, Lukasz
-> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Labun, Marcin; Ciechan=
-owski,
-> > Ed
-> > Subject: Re: [PATCH] fix: do not overwrite existing devices' symlinks
-> >=20
-> > On Mon, 23 Jan 2012 13:06:52 +0100 Lukasz Dorau <lukasz.dorau@intel.com>
-> > wrote:
-> >=20
-> > > If the device's name is given in /etc/mdadm.conf, create_mddev()
-> > > does not check if the map contains a device of this name (mdopen.c:14=
-0).
-> > > If it does, the symlink of that name will be overwritten.
-> > >
-> > > create_mddev() has been changed. Now it checks if the map contains
-> > > a device of the name given in /etc/mdadm.conf.
-> > > If it does, the appropriate suffix is added to the given name.
-> > >
-> > > Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
-> >=20
-> > Can you please remind me what the big picture problem is here??
-> >=20
-> > It seem like you are suggesting that if
-> >    /dev/md/thing
-> >=20
-> > is given in mdadm.conf, but some other array is already assembled with =
-the
-> > name /dev/md/thing, then the array from mdadm.conf should be assembled =
-as
-> >    /dev/md/thing0
-> > or something like that - is that correct?
-> >=20
-> > I don't think we want that.  If there is a name conflict like  this wit=
-h a
-> > name given in mdadm.conf, then one of the arrays should fail to assembl=
-e as
-> > this is really a fairly serious configuration error.
-> >=20
-> > Or did I misunderstand?
-> >=20
+> Neil,
 >=20
+> I came across this bug when testing snapshots of RAID volumes.  The
+> snapshot code performs multiple suspend/resume cycles on the underlying
+> LV, which is what caused me to notice that 'bitmap_load' was being
+> called multiple times and causing memory corruption.  As I explain in
+> the patch header, I'm pretty sure that avoiding the repeat call to
+> 'bitmap_load' and kicking the MD thread instead is all that is needed.
+> (It certainly works in all my tests.)  However, please let me know if
+> there is anything I'm not aware of.
 >=20
-> > -----Original Message-----
-> > From: NeilBrown [mailto:neilb@suse.de]
-> > Sent: Monday, January 30, 2012 2:30 AM
-> > To: Dorau, Lukasz
-> > Subject: Re: mdadm: checking dev's names from mdadm.conf - question
-> >=20
-> > On Fri, 20 Jan 2012 09:27:58 +0000 "Dorau, Lukasz" <lukasz.dorau@intel.=
-com>
-> > wrote:
-> >=20
-> > > Hi
-> > >
-> > > Is it OK that mdadm does not check if a symlink of the name given in
-> > /etc/mdadm.conf already exists (in function create_mddev() in mdopen.c:=
-140) ?
-> > >
-> > > For example:
-> > > If we modify the original /etc/mdadm.conf file:
-> > >
-> > > ARRAY metadata=3Dimsm UUID=3De92bcf10:ca6b3fbd:95904441:5472d320
-> > > ARRAY /dev/md/vol1 container=3De92bcf10:ca6b3fbd:95904441:5472d320
-> > member=3D0 UUID=3Dea776aa6:4691d6ee:9400457e:73e1e9d9
-> > > ARRAY metadata=3Dimsm UUID=3Dd61a8e6a:ed4e8ed6:dc0f4fb7:f839907e
-> > > ARRAY /dev/md/vol2 container=3Dd61a8e6a:ed4e8ed6:dc0f4fb7:f839907e
-> > member=3D0 UUID=3Db33bbd5e:964c7acc:66cfdfcc:7a938902
-> > >
-> > > by adding the 2nd container 's name /dev/md/imsm0 to the 3rd line:
-> > >
-> > > ARRAY metadata=3Dimsm UUID=3De92bcf10:ca6b3fbd:95904441:5472d320
-> > > ARRAY /dev/md/vol1 container=3De92bcf10:ca6b3fbd:95904441:5472d320
-> > member=3D0 UUID=3Dea776aa6:4691d6ee:9400457e:73e1e9d9
-> > > ARRAY /dev/md/imsm0 metadata=3Dimsm
-> > UUID=3Dd61a8e6a:ed4e8ed6:dc0f4fb7:f839907e
-> > > ARRAY /dev/md/vol2 container=3Dd61a8e6a:ed4e8ed6:dc0f4fb7:f839907e
-> > member=3D0 UUID=3Db33bbd5e:964c7acc:66cfdfcc:7a938902
-> > >
-> > > mdadm will create the first container /dev/md127 and the symlink of d=
-efault
-> > name /dev/md/imsm0 (and the first volume /dev/md126 with symlink
-> > /dev/md/vol1).
-> > > Later it will create the second container /dev/md125 and the symlink =
-of the
-> > name given in /etc/mdadm.conf - /dev/md/imsm0 - the same as the name of
-> > the first container.
-> > >
-> > > Mdadm does not check if the symlink of the given name already exists =
-and it
-> > _overwrites_ the first symlink. Is it OK or maybe should it be correcte=
-d?
-> > >
-> >=20
-> > Ahhh.. this is where the big-picture bit is...
-> >=20
-> > I don't have a big problem with it over-writing the symlink - that is w=
-hat
-> > you asked for in a way.
-> >=20
-> > However I also wouldn't have a problem with mdadm refusing the assemble=
- the
-> > second container as its name is already in use.
-> >=20
+> Thanks,
+>  brassow
+
+Thanks.  I've applied it and pushed it to my for-next branch, with
+a small change to the patch description:
+
 >=20
+> Prevent DM RAID from loading bitmap twice.
 >=20
-> So, are you going to apply this patch or do you want it to be fixed in an=
-other way?
+> The life cycle of a device-mapper target is:
+> 1) create
+> 2) resume
+> 3) suspend
+> *) possibly repeat from 2
+> 4) destroy
+>=20
+> The dm-raid target is unconditionally calling MD's bitmap_load function u=
+pon
+> every resume.  If steps 2 & 3 above are repeated, bitmap_load is called
+> multiple times.  It is only written to be called once; otherwise, it allo=
+cates
+> new memory for the bitmap (without freeing the old) and incrementing the =
+number
+> of pages it thinks it has without zeroing first.  This ultimately leads to
+> access beyond allocated memory and lost memory.
+>=20
+> Simply avoiding the bitmap_load call upon resume is not sufficient.  If t=
+he
+> target was suspended while the initial recovery was only partially comple=
+te,
+> it needs to be restarted when the target is resumed.  This is why
+> 'md_wakeup_thread' is called on the before issuing the 'mddev_resume'.
+                               ^^^^^^
 
-The approaches I said were OK were:
-  1/ over-write the symlink
-  2/ refuse to assemble the second container
+I removed "on the "
 
-The approach the patch takes is
-  3/ use a different name to the one in mdadm.conf
-
-As 3 !=3D 1 and 3 !=3D 2, I'm not going to apply the patch.
-
+Thanks,
 NeilBrown
 
 
---Sig_/+LqTM15KUF35JVb_KTGCA0g
+
+>=20
+> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+>=20
+> Index: linux-upstream/drivers/md/dm-raid.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-upstream.orig/drivers/md/dm-raid.c
+> +++ linux-upstream/drivers/md/dm-raid.c
+> @@ -56,7 +56,8 @@ struct raid_dev {
+>  struct raid_set {
+>  	struct dm_target *ti;
+> =20
+> -	uint64_t print_flags;
+> +	uint32_t bitmap_loaded;
+> +	uint32_t print_flags;
+> =20
+>  	struct mddev md;
+>  	struct raid_type *raid_type;
+> @@ -1135,7 +1136,7 @@ static int raid_status(struct dm_target=20
+>  				raid_param_cnt +=3D 2;
+>  		}
+> =20
+> -		raid_param_cnt +=3D (hweight64(rs->print_flags & ~DMPF_REBUILD) * 2);
+> +		raid_param_cnt +=3D (hweight32(rs->print_flags & ~DMPF_REBUILD) * 2);
+>  		if (rs->print_flags & (DMPF_SYNC | DMPF_NOSYNC))
+>  			raid_param_cnt--;
+> =20
+> @@ -1247,7 +1248,12 @@ static void raid_resume(struct dm_target
+>  {
+>  	struct raid_set *rs =3D ti->private;
+> =20
+> -	bitmap_load(&rs->md);
+> +	if (!rs->bitmap_loaded) {
+> +		bitmap_load(&rs->md);
+> +		rs->bitmap_loaded =3D 1;
+> +	} else
+> +		md_wakeup_thread(rs->md.thread);
+> +
+>  	mddev_resume(&rs->md);
+>  }
+> =20
+>=20
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/BDGZpC0E1xwzBhZjpUDHY40
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTycWJTnsnt1WYoG5AQLNxBAAqXYyzbkcTq5su44IL5qlA7WZMDajUu9x
-J9imBOa562UbiLuMUtuCVlQ/Vqyro0kRIym4Z0KZZ+25IHS+QcskjB7nPcfmu7nh
-e70Z/FPSyHokmB2QV0+khxOHuXVm948u4CVW01+KIsATeeaiQIeBICtwLNkBoVzN
-Yez4lNyg33wFtccwhTPAhHlzrc0GExdqVYMjeRZ5MA48ldbv0I23eSNbTr/V88+R
-t0e8COdhC0Y0qUoOVKiNIMTexk5xyqSxRA1HUrchPa5dyc0puku52Nc8bY7PKJn0
-PKkuaWbCVaeCyMXTiBjsGt8UBb1WVnxDfnQioJBjCl1qWN8qXenvMfWH95r6Wn5a
-wmQ+VsKESKMnMM3ZVbZFaek3e6+yIXLeZNHipUjZZszruRqMYw1vZ+kbbwM2PxPt
-CHiuaOcUOv4kzWtbjrpTEd5QApWtXcTFRN/W4VBTQ2DB9t/8KzkRWjv+puU3hCib
-R4XvRtsZoEuXG6qvQm6CfD3kbp3jszJFab2TyCOaNM4ljXZ08BycSK5zw7UT13g3
-kfRTk2ZsdGrbS6rNYfq9Fv6AYKp7RWEAbwXlfBbcQURVgcDXHMMDqfIEHT2cWGzV
-74VH2gBVjU3oY1PoiwerZ6VcsJI33eGEIJODGVOJx+Y7T4grbrvDc4oCwB2giMDr
-CKAf3ArCS1A=
-=7P8H
+iQIVAwUBTycjZznsnt1WYoG5AQLZ1g//cV7s5qg9Nr3UbhQaDCM+3fxdYFU6SNe4
+T8QuSL4FSrn5dPRydKrKwW5WNFvLC/I+UhkJKJ92NclAyskS45FV3mBZuYR/d2kV
+0o80Z6l9rR4fzKGBFJXAUwldHZH0IOZ8XedgHtlWq+sLft6zWNzv+OyTmRELNk0G
+U28U+mXDfnq3R2RNPEQ5pB6paMLNcv5hUdGlToNvUdGJx8qusnGOLWMtrZkIILzw
+nhvJ9u7iplZ69+LTB4whq6POYTb+3iY0frmJ38Zhkt7eBcj+O69ymChHXmpZvnf5
+vCx7jFkgdz4EV2F0I418KGuKgyY8TdawVcMALcUU+RXN5WcuW2aelAU4mXuWjFpB
+Q4Ltfnf2UmjwFSGouQaRGOpiIBHojHxiSH0f0UaL7O4ASGMcHc330Ogd7bTJjKo9
+AcscHwLPbyRSEXp6JAlFTN2HFAe1SBhtzGY2Wc2kG7nX6xbLkA8F55rCoUcRRF1d
+F3zrYcfGmzZS6VHupsKL+8ZCJOFFuxGbGZesi9LafWoQVSW1mL3EvSIpGfwCGaOs
+9Y2DUn6fR3A/Y6vSkwr9r5OpEHOUA7OJLb4IFse5c19W67530/eRma47uGeUW9kW
+u7wd6y+ZygPCtfo8a3p77AG9RRuhax0v53Oc9/tdvNPkQ877ONdhHQ9NlvuWfV3h
+1ftorbg5Z3Y=
+=0G0d
 -----END PGP SIGNATURE-----
 
---Sig_/+LqTM15KUF35JVb_KTGCA0g--
+--Sig_/BDGZpC0E1xwzBhZjpUDHY40--
