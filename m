@@ -1,228 +1,351 @@
-From: Luzipher McLeod <luziphermcleod-CVfgzVlYcRg@public.gmane.org>
-Subject: Re: Kernel BUG (fs/bio.c:1499) when copying more files
-	to an encrypted device
-Date: Mon, 30 Jan 2012 00:46:09 +0000 (GMT)
-Message-ID: <1327884369.77187.YahooMailClassic@web24106.mail.ird.yahoo.com>
-References: <20120125234612.GM4656@google.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 5/5] imsm: verify maximum supported active volumes in
+ assembly
+Date: Mon, 30 Jan 2012 12:02:32 +1100
+Message-ID: <20120130120232.236c5343@notabene.brown>
+References: <F9123E44003394499FDD2B17C60621D4075DE9@IRSMSX101.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <dm-crypt-bounces-4q3lyFh4P1g@public.gmane.org>
-In-Reply-To: <20120125234612.GM4656-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-Unsubscribe: <http://www.saout.de/mailman/options/dm-crypt>,
- <mailto:dm-crypt-request-4q3lyFh4P1g@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://www.saout.de/pipermail/dm-crypt>
-List-Post: <mailto:dm-crypt-4q3lyFh4P1g@public.gmane.org>
-List-Help: <mailto:dm-crypt-request-4q3lyFh4P1g@public.gmane.org?subject=help>
-List-Subscribe: <http://www.saout.de/mailman/listinfo/dm-crypt>,
- <mailto:dm-crypt-request-4q3lyFh4P1g@public.gmane.org?subject=subscribe>
-Errors-To: dm-crypt-bounces-4q3lyFh4P1g@public.gmane.org
-Sender: dm-crypt-bounces-4q3lyFh4P1g@public.gmane.org
-To: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: dm-crypt-4q3lyFh4P1g@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/ngGNCIeHGsVj1r8yK/Mm5qx"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <F9123E44003394499FDD2B17C60621D4075DE9@IRSMSX101.ger.corp.intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Labun, Marcin" <Marcin.Labun@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Kwolek, Adam" <adam.kwolek@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-Hi Mandeep,
+--Sig_/ngGNCIeHGsVj1r8yK/Mm5qx
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-sorry for the long delay, I couldn't get around to try this earlier.
-I did as you suggested and copied the bio_multi_split function into bio.c, =
-and added its signature to bio.h (as done by the original patch by Neil Bro=
-wn). Then I replaced the call to bio_split with bio_multi_split in linear_m=
-ake_request.
-Unfortunately I fail with the forward-porting. Compilation results in:
+On Fri, 13 Jan 2012 11:20:27 +0000 "Labun, Marcin" <Marcin.Labun@intel.com>
+wrote:
 
-fs/bio.c: In function 'bio_multi_split':
-fs/bio.c:1585:23: error: 'struct bio' has no member named 'bi_iocnt'
-fs/bio.c:1591:8: error: 'struct bio' has no member named 'bi_offset'
-fs/bio.c:1592:15: error: 'struct bio' has no member named 'bi_offset'
-fs/bio.c:1593:5: error: 'struct bio' has no member named 'bi_offset'
-fs/bio.c:1598:12: error: 'struct bio' has no member named 'bi_offset'
-make[1]: *** [fs/bio.o] Error 1
-make: *** [fs] Error 2
+> Subject: [PATCH 5/5] imsm: verify maximum supported active volumes in ass=
+embly
+>=20
+> Block assemblation of volumes when the total number of supported
+> volumes is exceeded.
+>=20
+> Signed-off-by: Marcin Labun <marcin.labun@intel.com>
 
-Further examination reveals, that 'struct bio', as defined in blk_types.h r=
-eally doesn't have those members anymore and I can't determine an easy repl=
-acement for those. The whole original patch also doesn't touch 'struct bio'=
-, so I'm at a loss what to do.
+hi,
+ I've applied the first four in this series, but I don't like this one.
 
-Thanks for any pointers or hints how to resolve this !
+1/ I don't think there is any need to impose this restriction when
+   assembling an array - only when creating a new volume in an array.
 
-Regards,
-Luzipher
+2/ The check_volumes_number approach feels clumsy ... there must be a
+   a better way (Assuming it is needed at all).
+
+NeilBrown
 
 
+> ---
+>  Assemble.c    |    3 +-
+>  Grow.c        |    6 +++-
+>  Incremental.c |    3 +-
+>  mdadm.h       |    1 +
+>  super-intel.c |   73 +++++++++++++++++++++++++++++++++++++++++++--------=
+-----
+>  util.c        |    1 +
+>  6 files changed, 66 insertions(+), 21 deletions(-)
+>=20
+> diff --git a/Assemble.c b/Assemble.c
+> index fd94461..1d2604f 100644
+> --- a/Assemble.c
+> +++ b/Assemble.c
+> @@ -438,7 +438,7 @@ int Assemble(struct supertype *st, char *mddev,
+>  			if (verbose > 0)
+>  				fprintf(stderr, Name ": looking in container %s\n",
+>  					devname);
+> -
+> +			tst->check_volumes_number =3D 1;
+>  			for (content =3D tst->ss->container_content(tst, NULL);
+>  			     content;
+>  			     content =3D content->next) {
+> @@ -460,6 +460,7 @@ int Assemble(struct supertype *st, char *mddev,
+>  				} else
+>  					break;
+>  			}
+> +			tst->check_volumes_number =3D 0;
+>  			if (!content) {
+>  				tmpdev->used =3D 2;
+>  				goto loop; /* empty container */
+> diff --git a/Grow.c b/Grow.c
+> index 5dab37c..3a8b5c3 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -1493,8 +1493,9 @@ int Grow_reshape(char *devname, int fd, int quiet, =
+char *backup_file,
+>  		if (st->ss->container_content) {
+>  			struct mdinfo *cc =3D NULL;
+>  			struct mdinfo *content =3D NULL;
+> -
+> +			st->check_volumes_number =3D 1;
+>  			cc =3D st->ss->container_content(st, subarray);
+> +			st->check_volumes_number =3D 0;
+>  			for (content =3D cc; content ; content =3D content->next) {
+>  				int allow_reshape =3D 1;
+> =20
+> @@ -3813,8 +3814,9 @@ int Grow_continue_command(char *devname, int fd,
+>  			ret_val =3D 1;
+>  			goto Grow_continue_command_exit;
+>  		}
+> -
+> +		st->check_volumes_number =3D 1;
+>  		cc =3D st->ss->container_content(st, subarray);
+> +		st->check_volumes_number =3D 0;
+>  		for (content =3D cc; content ; content =3D content->next) {
+>  			char *array;
+>  			int allow_reshape =3D 1;
+> diff --git a/Incremental.c b/Incremental.c
+> index 60175af..0e37f98 100644
+> --- a/Incremental.c
+> +++ b/Incremental.c
+> @@ -1407,8 +1407,9 @@ static int Incremental_container(struct supertype *=
+st, char *devname,
+>  		trustworthy =3D LOCAL;
+>  	else
+>  		trustworthy =3D FOREIGN;
+> -
+> +	st->check_volumes_number =3D 1;
+>  	list =3D st->ss->container_content(st, NULL);
+> +	st->check_volumes_number =3D 0;
+>  	/* when nothing to activate - quit */
+>  	if (list =3D=3D NULL)
+>  		return 0;
+> diff --git a/mdadm.h b/mdadm.h
+> index f274ae7..ac96bc4 100644
+> --- a/mdadm.h
+> +++ b/mdadm.h
+> @@ -849,6 +849,7 @@ struct supertype {
+>  	int minor_version;
+>  	int max_devs;
+>  	int container_dev;    /* devnum of container */
+> +	int check_volumes_number;
+>  	void *sb;
+>  	void *info;
+>  	int ignore_hw_compat; /* used to inform metadata handlers that it shoul=
+d ignore
+> diff --git a/super-intel.c b/super-intel.c
+> index 51826bc..7fc1841 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -497,6 +497,9 @@ static const char *_sys_dev_type[] =3D {
+>  	[SYS_DEV_SAS] =3D "SAS",
+>  	[SYS_DEV_SATA] =3D "SATA"
+>  };
+> +#ifndef MDASSEMBLE
+> +static int imsm_find_array_minor_by_subdev(int subdev, int container, in=
+t *minor);
+> +#endif
+> =20
+>  const char *get_sys_dev_type(enum sys_dev_type type)
+>  {
+> @@ -616,6 +619,7 @@ static struct supertype *match_metadata_desc_imsm(cha=
+r *arg)
+>  	st->ss =3D &super_imsm;
+>  	st->max_devs =3D IMSM_MAX_DEVICES;
+>  	st->minor_version =3D 0;
+> +	st->check_volumes_number =3D 0;
+>  	st->sb =3D NULL;
+>  	return st;
+>  }
+> @@ -5658,6 +5662,7 @@ count_volumes_list(struct md_list *devlist, char *h=
+omehost,
+>  	}
+>  	if (*found !=3D 0) {
+>  		int err;
+> +		st->check_volumes_number =3D 0;
+>  		if ((err =3D load_super_imsm_all(st, -1, &st->sb, NULL, devlist, 0)) =
+=3D=3D 0) {
+>  			struct mdinfo *iter, *head =3D st->ss->container_content(st, NULL);
+>  			for (iter =3D head; iter; iter =3D iter->next) {
+> @@ -5701,7 +5706,7 @@ count_volumes_list(struct md_list *devlist, char *h=
+omehost,
+> =20
+> =20
+>  static int
+> -count_volumes(char *hba, int dpa, int verbose)
+> +count_volumes(char *hba, int dpa, int active_only, int verbose)
+>  {
+>  	struct md_list *devlist =3D NULL;
+>  	int count =3D 0;
+> @@ -5712,10 +5717,14 @@ count_volumes(char *hba, int dpa, int verbose)
+>  	if (devlist =3D=3D NULL)
+>  		return 0;
+>  	 =20
+> -	count =3D active_arrays_by_format("imsm", hba, &devlist, dpa, verbose);
+> +	count =3D active_arrays_by_format("imsm", hba, &devlist, /*subarray,*/
+> +					dpa, verbose);
+>  	dprintf(" path: %s active arrays: %d\n", hba, count);
+>  	if (devlist =3D=3D NULL)
+>  		return 0;
+> +	if (active_only)
+> +		goto release;
+> +
+>  	do  {
+>  		found =3D 0;
+>  		count +=3D count_volumes_list(devlist,
+> @@ -5726,7 +5735,8 @@ count_volumes(char *hba, int dpa, int verbose)
+>  	} while (found);
+>  =09
+>  	dprintf("path: %s total number of volumes: %d\n", hba, count);
+> -=09
+> +
+> + release:=09
+>  	while(devlist) {
+>  		struct md_list *dv =3D devlist;
+>  		devlist =3D devlist->next;
+> @@ -5815,6 +5825,17 @@ static int validate_geometry_imsm_volume(struct su=
+pertype *st, int level,
+>  			"Cannot proceed with the action(s).\n");
+>  		return 0;
+>  	}
+> +	if (super->orom) {
+> +		int count =3D count_volumes(super->hba->path,
+> +					  super->orom->dpa,
+> +					  0, /* count all volumes */
+> +					  verbose);
+> +		if (super->orom->vphba <=3D count) {
+> +			pr_vrb(": platform does not support more then %d raid volumes.\n",
+> +			       super->orom->vphba);
+> +			return 0;
+> +		}
+> +	}
+>  	if (!dev) {
+>  		/* General test:  make sure there is space for
+>  		 * 'raiddisks' device extents of size 'size' at a given
+> @@ -5956,15 +5977,6 @@ static int validate_geometry_imsm_volume(struct su=
+pertype *st, int level,
+> =20
+>  	*freesize =3D maxsize;
+>  =09
+> -	if (super->orom) {
+> -		int count =3D count_volumes(super->hba->path,
+> -				      super->orom->dpa, verbose);
+> -		if (super->orom->vphba <=3D count) {
+> -			pr_vrb(": platform does not support more then %d raid volumes.\n",
+> -			       super->orom->vphba);
+> -			return 0;
+> -		}
+> -	}
+>  	return 1;
+>  }
+> =20
+> @@ -6091,7 +6103,9 @@ static int validate_geometry_imsm(struct supertype =
+*st, int level, int layout,
+>  			if (super->orom && freesize) {
+>  				int count;
+>  				count =3D count_volumes(super->hba->path,
+> -						      super->orom->dpa, verbose);
+> +						      super->orom->dpa,
+> +						      0, /* count all volumes */
+> +						      verbose);
+>  				if (super->orom->vphba <=3D count) {
+>  					pr_vrb(": platform does not support more"
+>  					       "then %d raid volumes.\n",
+> @@ -6414,7 +6428,9 @@ static struct mdinfo *container_content_imsm(struct=
+ supertype *st, char *subarra
+>  	int sb_errors =3D 0;
+>  	struct dl *d;
+>  	int spare_disks =3D 0;
+> -
+> +#ifndef MDASSEMBLE
+> +	int count =3D -1;
+> +#endif
+>  	/* do not assemble arrays when not all attributes are supported */
+>  	if (imsm_check_attributes(mpb->attributes) =3D=3D 0) {
+>  		sb_errors =3D 1;
+> @@ -6428,8 +6444,6 @@ static struct mdinfo *container_content_imsm(struct=
+ supertype *st, char *subarra
+>  			"Arrays activation is blocked.\n");
+>  		sb_errors =3D 1;
+>  	}
+> -
+> -
+>  	/* count spare devices, not used in maps
+>  	 */
+>  	for (d =3D super->disks; d; d =3D d->next)
+> @@ -6444,6 +6458,7 @@ static struct mdinfo *container_content_imsm(struct=
+ supertype *st, char *subarra
+>  		int slot;
+>  #ifndef MDASSEMBLE
+>  		int chunk;
+> +		int devnum;
+>  #endif
+>  		char *ep;
+> =20
+> @@ -6502,7 +6517,31 @@ static struct mdinfo *container_content_imsm(struc=
+t supertype *st, char *subarra
+>  			this->array.state |=3D
+>  			  (1<<MD_SB_BLOCK_CONTAINER_RESHAPE) |
+>  			  (1<<MD_SB_BLOCK_VOLUME);
+> -
+> +#ifndef MDASSEMBLE
+> +		/* for inactive arrays check blocking condition */
+> +		if ((super->orom) &&
+> +		    (st->check_volumes_number) &&
+> +		    (imsm_find_array_minor_by_subdev(i,
+> +						     st->container_dev,
+> +						     &devnum) !=3D 0)) {
+> +			/* get volumes number */
+> +			if (count =3D=3D -1)
+> +				count =3D count_volumes(super->hba->path,
+> +						      super->orom->dpa,
+> +						      1, /* active only */
+> +						      0);
+> +			count++;
+> +			if (super->orom->vphba < count) {
+> +				this->array.state |=3D
+> +				  (1<<MD_SB_BLOCK_CONTAINER_RESHAPE) |
+> +				  (1<<MD_SB_BLOCK_VOLUME);
+> +				fprintf(stderr, Name ": platform does not support more then %d raid =
+volumes.\n"
+> +					"Array %s activation is blocked.\n\n",
+> +					super->orom->vphba,
+> +					dev->volume);
+> +			}
+> +		  }
+> +#endif		=09
+>  		for (slot =3D 0 ; slot <  map->num_members; slot++) {
+>  			unsigned long long recovery_start;
+>  			struct mdinfo *info_d;
+> diff --git a/util.c b/util.c
+> index e95a366..ea18915 100644
+> --- a/util.c
+> +++ b/util.c
+> @@ -1020,6 +1020,7 @@ struct supertype *dup_super(struct supertype *orig)
+>  	st->ss =3D orig->ss;
+>  	st->max_devs =3D orig->max_devs;
+>  	st->minor_version =3D orig->minor_version;
+> +	st->check_volumes_number =3D orig->check_volumes_number;
+>  	st->sb =3D NULL;
+>  	st->info =3D NULL;
+>  	return st;
 
 
---- On Wed, 25/1/12, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org> wrote:
+--Sig_/ngGNCIeHGsVj1r8yK/Mm5qx
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-> From: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-> Subject: Re: [dm-crypt] Kernel BUG (fs/bio.c:1499) when copying more file=
-s to an encrypted device
-> To: "Mandeep Singh Baines" <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-> Cc: "Luzipher McLeod" <luziphermcleod-CVfgzVlYcRg@public.gmane.org>, dm-crypt-4q3lyFh4P1g@public.gmane.org, linux=
--raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Date: Wednesday, 25 January, 2012, 23:46
-> +cc linux-raid
-> =
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-> Mandeep Singh Baines (msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org)
-> wrote:
-> > Luzipher McLeod (luziphermcleod-CVfgzVlYcRg@public.gmane.org)
-> wrote:
-> > > Hi Mandeep,
-> > > =
+iQIVAwUBTyXsKDnsnt1WYoG5AQI0hhAAxALCZHhoRogZ+2cCgyenrd3coXpalwIC
+KxQlMNcIb5G9LRTiBhh1tgc+CAdftrkFtO8Zcb4d6S16TuxkRqnsWV+p3p9Zh1+l
+JBUaCuABkfOsFlj7UI2Ewl1Zml3mfWZVr4F6Zo4UiLpLlK6iMUCMXmTiLCpp28s6
+epHMQGcSVE0OeT5CnSXF5d49Tn8MIIiTu+5K3Yq3qjAYz5PaQG7m/HSBjW0jhY+I
+0v5DKegNiSF+HxBl851yHe2Kd/mth/5ZxWXB0fh96GTrMRd6q4zUjcWX/JWjWgE2
+dUEdh45A8qWH1vBGSbfOwufkPKTQLnQZtqvmewQolnNC5SJgVJXqLamhi2TdpRuT
+1EAFX95Fxpj5shixeTMmhm+BtM0bSLiddxisdLTN+Sf6yr9gHMYZf2cmk9YWiDmg
+FYraSp6dU7hlS3rgyrHQrMwaTFY1TpaIhSOfIH/JvSohSda4XXRuwzpkipazLOw2
+S+XPP9hbTwFCmoA0JF/VEP5adb+kNjy4mWrBoDqhMozqpHr9OF5J9Y2J+CiYQhp/
+vR1Sgdp066rO8C1BvUzK7yqFgfd0Y3+AUMtuswUnA32LEmLVKwDDPJ/nswS3AW+X
+L8Q4hHTtHPwzpevCPpJvGvAsPtGr1Np71f//82E3SCftLDMhKNwLYRMO6w+1Pd1D
+PMO6uXiyaYE=
+=6aVI
+-----END PGP SIGNATURE-----
 
-> > > Thanks fpr your quick answer. So, what can be done
-> about this ? Should I try to apply that patch you linked to
-> ? (but I guess a patch from 2007 won't apply cleanly ...)
-> > > =
-
-> > =
-
-> > Hi Luzipher,
-> > =
-
-> > I wouldn't apply the patch directly. Just copy
-> bio_multi_split (might
-> > need to do some forward porting) and then modify
-> linear_make_request to
-> > use bio_multi_split instead of bio_split.
-> > =
-
-> > But I'm not really an expert on this particular code.
-> I'm hoping someone
-> > else will confirm that this is in fact the bug and not
-> a side effect of
-> > something else. Its seem reasonble that you could get a
-> bio that is
-> > multi-page and falls on a boundary (spans two or more
-> devices). So I
-> > suspect this is the bug.
-> > =
-
-> > Regards,
-> > Mandeep
-> > =
-
-> > > Regards,
-> > > Luzipher
-> > > =
-
-> > > =
-
-> > > =
-
-> > > --- On Wed, 25/1/12, Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-> wrote:
-> > > =
-
-> > > > From: Mandeep Singh Baines <msb-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-> > > > Subject: Re: [dm-crypt] Kernel BUG
-> (fs/bio.c:1499) when copying more files to an encrypted
-> device
-> > > > To: "Luzipher McLeod" <luziphermcleod-CVfgzVlYcRg@public.gmane.org>
-> > > > Cc: dm-crypt-4q3lyFh4P1g@public.gmane.org,
-> "NeilBrown" <neilb-l3A5Bk7waGM@public.gmane.org>
-> > > > Date: Wednesday, 25 January, 2012, 2:14
-> > > > Luzipher McLeod (luziphermcleod-CVfgzVlYcRg@public.gmane.org)
-> > > > wrote:
-> > > > > Hi :-)
-> > > > > =
-
-> > > > > A few days ago I encountered a kernel
-> bug while copying
-> > > > files to an encrypted filesystem. The
-> specific stack for the
-> > > > filesystem is: btrfs-on-crypt-on-mdraid.
-> Vasts amounts of
-> > > > data copied without problems (about 6.3TB
-> with 1.1 TB
-> > > > remaining), but when copying a certain
-> directory, the kernel
-> > > > bug surfaces. I repeatedly deleted the
-> affected directory
-> > > > and tried to re-copy it, but it always fails
-> at the same
-> > > > point (or close to that). More recent test
-> showed that I
-> > > > could copy a few more files to the filesystem
-> to a different
-> > > > directory, but it very quickly failed there
-> as well (a few
-> > > > megabytes later).
-> > > > > After talking to the btrfs devs on
-> freenode (as btrfs
-> > > > is the most experimental thing in the stack,
-> they came to
-> > > > the conclusion that it's most probably the
-> crypto layer.
-> > > > > =
-
-> > > > > Some details:
-> > > > > gentoo kernel 3.2.1 (custom config and
-> ubuntu config)
-> > > > > mdraid: linear, 4 disks, each 2TB (total
-> 8TB)
-> > > > > crypt: setup via cryptsetup -c
-> aes-xts-plain64 -h plain
-> > > > -s 512 -d - create tempraid
-> /dev/md/tempraid_lin
-> > > > > =
-
-> > > > > I'd appreciate any help with this and
-> would be happy to
-> > > > test patches or provide more debug info.
-> > > > > =
-
-> > > > > Thanks and Regards,
-> > > > > Luzipher
-> > > > > =
-
-> > > > > =
-
-> > > > > =
-
-> > > > > =
-
-> > > > > The kernel bug output retrieved by
-> netconsole (also at
-> > > > http://pastebin.com/sjJy7QE4 ):
-> > > > >=A0 =A0=A0=A0[=A0 294.538422] netconsole:
-> > > > local port 6666
-> > > > >=A0 =A0=A0=A0[=A0 333.423583] SysRq :
-> > > > Changing Loglevel
-> > > > >=A0 =A0=A0=A0[=A0 333.423609] Loglevel
-> > > > set to 9
-> > > > >=A0 =A0=A0=A0[=A0 424.248405]
-> > > > ------------[ cut here ]------------
-> > > > >=A0 =A0=A0=A0[=A0 424.248447] kernel BUG
-> > > > at fs/bio.c:1499!
-> > > > =
-
-> > > > Hi Luzipher,
-> > > > =
-
-> > > > Looks like the BUG is because bio_split only
-> works on
-> > > > single-page iovecs.
-> > > > =
-
-> > > > I see a relevant (old) patch from Neil Brown
-> here:
-> > > > =
-
-> > > > https://lkml.org/lkml/2007/7/30/496
-> > > > =
-
-> > > > Regards,
-> > > > Mandeep
-> > > > =
-
-> > > =
-
-> =
-
-_______________________________________________
-dm-crypt mailing list
-dm-crypt-4q3lyFh4P1g@public.gmane.org
-http://www.saout.de/mailman/listinfo/dm-crypt
+--Sig_/ngGNCIeHGsVj1r8yK/Mm5qx--
