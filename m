@@ -1,130 +1,170 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 5/5] imsm: verify maximum supported active volumes in
- assembly
-Date: Tue, 31 Jan 2012 09:10:56 +1100
-Message-ID: <20120131091056.4c64c089@notabene.brown>
-References: <F9123E44003394499FDD2B17C60621D4075DE9@IRSMSX101.ger.corp.intel.com>
-	<20120130120232.236c5343@notabene.brown>
-	<F9123E44003394499FDD2B17C60621D408AE9B@IRSMSX101.ger.corp.intel.com>
+Subject: Re: [PATCH] fix: do not overwrite existing devices' symlinks
+Date: Tue, 31 Jan 2012 09:13:57 +1100
+Message-ID: <20120131091357.18fa2b75@notabene.brown>
+References: <20120123120652.20165.47998.stgit@gklab-128-085.igk.intel.com>
+	<20120130122728.3aa8da9a@notabene.brown>
+	<D9FFE20C522965449E182ACE73889AEB07067C@IRSMSX101.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/d_XrQawB+zuMMG_OVbAGK.p"; protocol="application/pgp-signature"
+ boundary="Sig_/+LqTM15KUF35JVb_KTGCA0g"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <F9123E44003394499FDD2B17C60621D408AE9B@IRSMSX101.ger.corp.intel.com>
+In-Reply-To: <D9FFE20C522965449E182ACE73889AEB07067C@IRSMSX101.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Labun, Marcin" <Marcin.Labun@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Kwolek, Adam" <adam.kwolek@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
+To: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
---Sig_/d_XrQawB+zuMMG_OVbAGK.p
+--Sig_/+LqTM15KUF35JVb_KTGCA0g
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 30 Jan 2012 10:24:25 +0000 "Labun, Marcin" <Marcin.Labun@intel.com>
+On Mon, 30 Jan 2012 12:13:05 +0000 "Dorau, Lukasz" <lukasz.dorau@intel.com>
 wrote:
 
-> Hi,
+> > -----Original Message-----
+> > From: NeilBrown [mailto:neilb@suse.de]
+> > Sent: Monday, January 30, 2012 2:27 AM
+> > To: Dorau, Lukasz
+> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Labun, Marcin; Ciechan=
+owski,
+> > Ed
+> > Subject: Re: [PATCH] fix: do not overwrite existing devices' symlinks
 > >=20
-> > hi,
-> >  I've applied the first four in this series, but I don't like this one.
+> > On Mon, 23 Jan 2012 13:06:52 +0100 Lukasz Dorau <lukasz.dorau@intel.com>
+> > wrote:
 > >=20
-> > 1/ I don't think there is any need to impose this restriction when
-> >    assembling an array - only when creating a new volume in an array.
-> We want to support only as many volumes as OROM (platform) supports. Disk=
-s with IMSM metadata may be carried from other systems.
-
-I don't think that makes sense.
-
-There are two important issues here.
-
-1/ we don't want to make a change to an array which will make that array
-  inaccessible to the OROM.
-2/ we don't want to make it difficult for users to get their data.
-
-
-So any create or grow attempt which could lead to the OROM being unable to
-access the array should be stopped (unless explicitly over-ridden).
-
-But any attempt to access data on any array (i.e. assemble an array) should
-succeed no matter whether it is compatible with the OROM or not.
-
-So --create and --grow should check for platform compatibility.
---assemble should not.
-
---examine and --detail should probably report if the array is incompatible
-with the OROM.
-
-
+> > > If the device's name is given in /etc/mdadm.conf, create_mddev()
+> > > does not check if the map contains a device of this name (mdopen.c:14=
+0).
+> > > If it does, the symlink of that name will be overwritten.
+> > >
+> > > create_mddev() has been changed. Now it checks if the map contains
+> > > a device of the name given in /etc/mdadm.conf.
+> > > If it does, the appropriate suffix is added to the given name.
+> > >
+> > > Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+> >=20
+> > Can you please remind me what the big picture problem is here??
+> >=20
+> > It seem like you are suggesting that if
+> >    /dev/md/thing
+> >=20
+> > is given in mdadm.conf, but some other array is already assembled with =
+the
+> > name /dev/md/thing, then the array from mdadm.conf should be assembled =
+as
+> >    /dev/md/thing0
+> > or something like that - is that correct?
+> >=20
+> > I don't think we want that.  If there is a name conflict like  this wit=
+h a
+> > name given in mdadm.conf, then one of the arrays should fail to assembl=
+e as
+> > this is really a fairly serious configuration error.
+> >=20
+> > Or did I misunderstand?
+> >=20
 >=20
+>=20
+> > -----Original Message-----
+> > From: NeilBrown [mailto:neilb@suse.de]
+> > Sent: Monday, January 30, 2012 2:30 AM
+> > To: Dorau, Lukasz
+> > Subject: Re: mdadm: checking dev's names from mdadm.conf - question
 > >=20
-> > 2/ The check_volumes_number approach feels clumsy ... there must be a
-> >    a better way (Assuming it is needed at all).
-> container_content handler is to check OROM capabilities and mark unsuppor=
-ted volumes with=20
-> disable bits (array.state:MD_SB_BLOCK_CONTAINER_RESHAPE and MD_SB_BLOCK_V=
-OLUME). The caller function shall interpret the bits and act
-> accordingly to the context (for instance block activation but display the=
- volume information). I think that this restriction
-> falls into that area. However, there are only a few situations when this =
-info is really needed ie. When volumes are activated in various ways.
-> Therefore I thought it makes sense to pass the info if counting of activa=
-te volumes is really needed.=20
-> More straightforward option is to add another input parameters to contain=
-er_content and change it in numerous places.
-> Do you prefer this way? Or add a specialized handler to count the volumes=
- when it is needed?
+> > On Fri, 20 Jan 2012 09:27:58 +0000 "Dorau, Lukasz" <lukasz.dorau@intel.=
+com>
+> > wrote:
+> >=20
+> > > Hi
+> > >
+> > > Is it OK that mdadm does not check if a symlink of the name given in
+> > /etc/mdadm.conf already exists (in function create_mddev() in mdopen.c:=
+140) ?
+> > >
+> > > For example:
+> > > If we modify the original /etc/mdadm.conf file:
+> > >
+> > > ARRAY metadata=3Dimsm UUID=3De92bcf10:ca6b3fbd:95904441:5472d320
+> > > ARRAY /dev/md/vol1 container=3De92bcf10:ca6b3fbd:95904441:5472d320
+> > member=3D0 UUID=3Dea776aa6:4691d6ee:9400457e:73e1e9d9
+> > > ARRAY metadata=3Dimsm UUID=3Dd61a8e6a:ed4e8ed6:dc0f4fb7:f839907e
+> > > ARRAY /dev/md/vol2 container=3Dd61a8e6a:ed4e8ed6:dc0f4fb7:f839907e
+> > member=3D0 UUID=3Db33bbd5e:964c7acc:66cfdfcc:7a938902
+> > >
+> > > by adding the 2nd container 's name /dev/md/imsm0 to the 3rd line:
+> > >
+> > > ARRAY metadata=3Dimsm UUID=3De92bcf10:ca6b3fbd:95904441:5472d320
+> > > ARRAY /dev/md/vol1 container=3De92bcf10:ca6b3fbd:95904441:5472d320
+> > member=3D0 UUID=3Dea776aa6:4691d6ee:9400457e:73e1e9d9
+> > > ARRAY /dev/md/imsm0 metadata=3Dimsm
+> > UUID=3Dd61a8e6a:ed4e8ed6:dc0f4fb7:f839907e
+> > > ARRAY /dev/md/vol2 container=3Dd61a8e6a:ed4e8ed6:dc0f4fb7:f839907e
+> > member=3D0 UUID=3Db33bbd5e:964c7acc:66cfdfcc:7a938902
+> > >
+> > > mdadm will create the first container /dev/md127 and the symlink of d=
+efault
+> > name /dev/md/imsm0 (and the first volume /dev/md126 with symlink
+> > /dev/md/vol1).
+> > > Later it will create the second container /dev/md125 and the symlink =
+of the
+> > name given in /etc/mdadm.conf - /dev/md/imsm0 - the same as the name of
+> > the first container.
+> > >
+> > > Mdadm does not check if the symlink of the given name already exists =
+and it
+> > _overwrites_ the first symlink. Is it OK or maybe should it be correcte=
+d?
+> > >
+> >=20
+> > Ahhh.. this is where the big-picture bit is...
+> >=20
+> > I don't have a big problem with it over-writing the symlink - that is w=
+hat
+> > you asked for in a way.
+> >=20
+> > However I also wouldn't have a problem with mdadm refusing the assemble=
+ the
+> > second container as its name is already in use.
+> >=20
+>=20
+>=20
+> So, are you going to apply this patch or do you want it to be fixed in an=
+other way?
 
-Hmmm.. so the issue is that a single controller can have multiple separate
-containers (families?) with their own metadata.
-So a controller with 4 ports could have a 2-device container with a RAID1 a=
-nd
-a RAID0, and a separate 2-device container with just a RAID10.
+The approaches I said were OK were:
+  1/ over-write the symlink
+  2/ refuse to assemble the second container
 
-And maybe the controller has a limit of 3 arrays, so adding another array to
-the second pair would be an error.
+The approach the patch takes is
+  3/ use a different name to the one in mdadm.conf
 
-Is that the right sort of scenario?
-
-So when assembling the second container we don't need to look at the first
-one, but when adding an array to the second, we do need to look at the first
-one.
-And looking at the first one is a little expensive so we don't want to do it
-if we don't have to.  Still correct?
-
-It sounds to me like validate_geometry is the place to check for other
-containers on the controller.  That should be called at exactly the times y=
-ou
-need.... for create anyway.  Might also need it in reshape_super as well.
-
-Would that work?
-
-Alternately, we probably do want it for --examine so we can report possible
-problems... maybe it isn't that expensive and we can always do the check??
-How expensive would it be to always do the check on number of volumes??
-
+As 3 !=3D 1 and 3 !=3D 2, I'm not going to apply the patch.
 
 NeilBrown
 
---Sig_/d_XrQawB+zuMMG_OVbAGK.p
+
+--Sig_/+LqTM15KUF35JVb_KTGCA0g
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTycVcDnsnt1WYoG5AQLJLA//S7Jq2ISGfUg4GbyP3M7aYYcjD44RLG0X
-R1oeIiy/wM1fsVDZibcMEGfiW5DfzBPKMh3VqqYUSIIF4N04uoJ9d2uzWGkLir3e
-5vSOZbarKNJWyffjtCxGsGT9jUIg+K14B57tzWB4QME23j7GGzjQReAx+p8CiHKi
-TQ02cQD2raNxFRgP9cIbU7Pxn0scVdN3ZIrHhWxG7kbGreencnU3hc0FG38VtMD5
-lcEEwo+TZqIsIgBF8tIHT8vtfe5ndwJoFI6+G/NBmUnqK1qXrsn1bvY7gePbWtJE
-DzGQHp45wWwTIxQIAatucJ/+QRcSNnvKRn22P0KlHpCTIqUT35hDP2ICssMCIXec
-6GxZDDib9P9qMpahl3G4ioCoGUnRtc0CDOopKrrO05Pu4BPyBqwc8N/zdvonaydh
-QNHyH4Jlix1oa1hBajiJ61+kcYW42BngV3RA+0aXcH6kQU81oOTVoDxv6GkkzDTs
-iRHuvIHf0dNgiYorIunsuBQnPxCW/4ece12DeyoHrvFSqgSnYBgqBzCjBgrLnyNp
-AKRw/0qJOdmQyWCTOb/Hsz9PclYD4Q8DZ6hvbn5qGidAwhm+qjLuWXTLbQhbD57s
-7B4CrWGHDVwnMf1aAUFQI0neVBgI0gS9VSGNCBWmqKNwCv2xxXGbHvTPQJN9TSEq
-hIiLX5eTKaU=
-=pXtf
+iQIVAwUBTycWJTnsnt1WYoG5AQLNxBAAqXYyzbkcTq5su44IL5qlA7WZMDajUu9x
+J9imBOa562UbiLuMUtuCVlQ/Vqyro0kRIym4Z0KZZ+25IHS+QcskjB7nPcfmu7nh
+e70Z/FPSyHokmB2QV0+khxOHuXVm948u4CVW01+KIsATeeaiQIeBICtwLNkBoVzN
+Yez4lNyg33wFtccwhTPAhHlzrc0GExdqVYMjeRZ5MA48ldbv0I23eSNbTr/V88+R
+t0e8COdhC0Y0qUoOVKiNIMTexk5xyqSxRA1HUrchPa5dyc0puku52Nc8bY7PKJn0
+PKkuaWbCVaeCyMXTiBjsGt8UBb1WVnxDfnQioJBjCl1qWN8qXenvMfWH95r6Wn5a
+wmQ+VsKESKMnMM3ZVbZFaek3e6+yIXLeZNHipUjZZszruRqMYw1vZ+kbbwM2PxPt
+CHiuaOcUOv4kzWtbjrpTEd5QApWtXcTFRN/W4VBTQ2DB9t/8KzkRWjv+puU3hCib
+R4XvRtsZoEuXG6qvQm6CfD3kbp3jszJFab2TyCOaNM4ljXZ08BycSK5zw7UT13g3
+kfRTk2ZsdGrbS6rNYfq9Fv6AYKp7RWEAbwXlfBbcQURVgcDXHMMDqfIEHT2cWGzV
+74VH2gBVjU3oY1PoiwerZ6VcsJI33eGEIJODGVOJx+Y7T4grbrvDc4oCwB2giMDr
+CKAf3ArCS1A=
+=7P8H
 -----END PGP SIGNATURE-----
 
---Sig_/d_XrQawB+zuMMG_OVbAGK.p--
+--Sig_/+LqTM15KUF35JVb_KTGCA0g--
