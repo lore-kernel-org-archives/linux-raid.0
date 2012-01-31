@@ -1,220 +1,253 @@
-From: John Gehring <john.gehring@gmail.com>
-Subject: Re: RAID6 - repeated hot-pulls issue
-Date: Tue, 31 Jan 2012 08:46:31 -0700
-Message-ID: <CALwOXvJMh0L3KFX8Ckfq_KLAFXBdJ-hJeRZj97_AoU_rrBhwAg@mail.gmail.com>
-References: <CALwOXvL6avy3f76TcpMdMxqObCRY-SphRErjo-j1=iun-etBpA@mail.gmail.com>
-	<20111205171540.4fe659e2@notabene.brown>
-	<CAGRgLy6BkFhWS_2JfVgAuniLX3A1i3N_hBMjtnjAX3J0Ms8Xpg@mail.gmail.com>
-	<CALwOXvL9c32=BstLn7BHF2PkwnS3UOM-cOGSRQep=eWX7FQiwA@mail.gmail.com>
-	<CAGRgLy4TjDyQ9MH6sXBLrhmfd9D4dvSwqh4SB8J-vjowovrdYw@mail.gmail.com>
+From: Luzipher McLeod <luziphermcleod@yahoo.ie>
+Subject: Re: [dm-crypt] Kernel BUG (fs/bio.c:1499) when copying more files to an encrypted device
+Date: Tue, 31 Jan 2012 23:26:05 +0000 (GMT)
+Message-ID: <1328052365.7861.YahooMailClassic@web24101.mail.ird.yahoo.com>
+References: <1327884369.77187.YahooMailClassic@web24106.mail.ird.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy4TjDyQ9MH6sXBLrhmfd9D4dvSwqh4SB8J-vjowovrdYw@mail.gmail.com>
+In-Reply-To: <1327884369.77187.YahooMailClassic@web24106.mail.ird.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: dm-crypt@saout.de, Mandeep Singh Baines <msb@chromium.org>
 List-Id: linux-raid.ids
 
-The fix still leaves me wondering why the drive pull works the first
-time, but not the second.  Does a replacement drive have some other
-property/flag/state that causes it to behave differently? I noticed
-that I could reproduce this problem by:
+Hi list,
 
-- create and start an incomplete raid set (minus one drive) (8 drive ra=
-id set)
-- add the missing device and let it sync
-- start IO
-- pull a drive
+I just wanted to know if there is interest in solving this bug (see bel=
+ow). I'd need some help with creating a working patch for bio_multi_spl=
+it, so I could test if it solves my problem.
+If nobody has any further suggestions, I'll just use lvm instead of lin=
+ear, as it's a temporary backup anyway.
 
-In this case, the failure is on the first drive pull, but the
-remaining common step in the test is the adding/resyncing of a device.
-I'm wondering if when a device is added or re-added to a raid set if
-some flag is left hanging in the wrong state.
+Thanks and regards,
+Luzipher
 
-Just to be clear, the fix
-(http://www.spinics.net/lists/raid/msg34881.html) does take care of
-the scenario described just above, but I'm still left a little
-uncertain about what was wrong in the first place.
 
-Regards,
 
-John G
+--- On Mon, 30/1/12, Luzipher McLeod <luziphermcleod@yahoo.ie> wrote:
 
-On Tue, Jan 31, 2012 at 3:49 AM, Alexander Lyakas
-<alex.bolshoy@gmail.com> wrote:
->
-> John,
-> yes, your scenario is exactly the one we were hitting. Strangely I di=
-d
-> not see anybody else complaining about this issue.
->
-> Alex.
->
->
-> On Mon, Jan 30, 2012 at 10:55 PM, John Gehring <john.gehring@gmail.co=
-m> wrote:
-> > Alex,
-> >
-> > Thank you very much for bringing that thread to my attention! That =
-fixed the
-> > problem I outlined below in my earlier post. It also fixed another =
-problem
-> > which I'll briefly outline in case someone else is trying to connec=
-t the
-> > dots with the same issue:
-> >
-> > - linux 2.6.38.8
-> > - 3 device RAID5 array
-> > - mdadm zero-superblock each of the three devices
-> > - mdadm create ...
-> > - start IO on the new md device
-> > - pull a device from the raid set
-> >
-> > At this point, raid gets stuck in a loop resyncing, then for some r=
-eason,
-> > resyncing again, and again, and ... And each resync would happen vi=
-rtually
-> > instantaneously.
-> >
-> > Thanks again.
-> >
-> > John G
-> >
-> > On Sat, Jan 21, 2012 at 10:16 AM, Alexander Lyakas <alex.bolshoy@gm=
-ail.com>
+> From: Luzipher McLeod <luziphermcleod@yahoo.ie>
+> Subject: Re: [dm-crypt] Kernel BUG (fs/bio.c:1499) when copying more =
+files to an encrypted device
+> To: "Mandeep Singh Baines" <msb@chromium.org>
+> Cc: dm-crypt@saout.de, linux-raid@vger.kernel.org
+> Date: Monday, 30 January, 2012, 0:46
+> Hi Mandeep,
+>=20
+> sorry for the long delay, I couldn't get around to try this
+> earlier.
+> I did as you suggested and copied the bio_multi_split
+> function into bio.c, and added its signature to bio.h (as
+> done by the original patch by Neil Brown). Then I replaced
+> the call to bio_split with bio_multi_split in
+> linear_make_request.
+> Unfortunately I fail with the forward-porting. Compilation
+> results in:
+>=20
+> fs/bio.c: In function 'bio_multi_split':
+> fs/bio.c:1585:23: error: 'struct bio' has no member named
+> 'bi_iocnt'
+> fs/bio.c:1591:8: error: 'struct bio' has no member named
+> 'bi_offset'
+> fs/bio.c:1592:15: error: 'struct bio' has no member named
+> 'bi_offset'
+> fs/bio.c:1593:5: error: 'struct bio' has no member named
+> 'bi_offset'
+> fs/bio.c:1598:12: error: 'struct bio' has no member named
+> 'bi_offset'
+> make[1]: *** [fs/bio.o] Error 1
+> make: *** [fs] Error 2
+>=20
+> Further examination reveals, that 'struct bio', as defined
+> in blk_types.h really doesn't have those members anymore and
+> I can't determine an easy replacement for those. The whole
+> original patch also doesn't touch 'struct bio', so I'm at a
+> loss what to do.
+>=20
+> Thanks for any pointers or hints how to resolve this !
+>=20
+> Regards,
+> Luzipher
+>=20
+>=20
+>=20
+>=20
+> --- On Wed, 25/1/12, Mandeep Singh Baines <msb@chromium.org>
+> wrote:
+>=20
+> > From: Mandeep Singh Baines <msb@chromium.org>
+> > Subject: Re: [dm-crypt] Kernel BUG (fs/bio.c:1499) when
+> copying more files to an encrypted device
+> > To: "Mandeep Singh Baines" <msb@chromium.org>
+> > Cc: "Luzipher McLeod" <luziphermcleod@yahoo.ie>,
+> dm-crypt@saout.de,
+> linux-raid@vger.kernel.org
+> > Date: Wednesday, 25 January, 2012, 23:46
+> > +cc linux-raid
+> >=20
+> > Mandeep Singh Baines (msb@chromium.org)
 > > wrote:
-> >>
-> >> Hi John,
-> >> not sure if still relevant, but you may be affected by a bug in
-> >> 2.6.38-8 kernel. We hit exactly the same issue with raid5/6.
-> >>
-> >> Please take a look at this (long) email thread:
-> >> http://www.spinics.net/lists/raid/msg34881.html
-> >>
-> >> Eventually (please look towards the end of the thread) Neil provid=
-ed a
-> >> patch, which solved the issue.
-> >>
-> >> Thanks,
-> >> =A0Alex.
-> >>
-> >>
-> >>
-> >>
-> >> On Mon, Dec 5, 2011 at 8:15 AM, NeilBrown <neilb@suse.de> wrote:
-> >> > On Fri, 2 Dec 2011 09:34:40 -0700 John Gehring <john.gehring@gma=
-il.com>
-> >> > wrote:
-> >> >
-> >> >> I am having trouble with a hot-pull scenario.
-> >> >>
-> >> >> - linux 2.6.38.8
-> >> >> - LSI 2008 sas
-> >> >> - RAID6 via md
-> >> >> - 8 drives (2 TB each)
-> >> >>
-> >> >> Suspect sequence:
-> >> >>
-> >> >> 1 - Create Raid6 array using all 8 drives (/dev/md1). Each driv=
-e is
-> >> >> partitioned identically with two partitions. The second partiti=
-on of
-> >> >> each drive is used for the raid set. The size of the partition =
-varies,
-> >> >> but I have been using a 4GB partition for testing in order to h=
-ave
-> >> >> quick re-sync times.
-> >> >> 2 - Wait for raid re-sync to complete.
-> >> >> 3 - Start read-only IO against /dev/md1 via following command:=A0=
- dd
-> >> >> if=3D/dev/md1 of=3D/dev/null bs=3D1=A0 This step insures that p=
-ulled drives
-> >> >> are detected by the md.
-> >> >> 4 - Physically pull a drive from the array.
-> >> >> 5 - Verify that the md has removed the drive/device from the ar=
-ray.
-> >> >> mdadm --detail /dev/md1 should show it as faulty and removed fr=
-om the
-> >> >> array.
-> >> >> 6 - Remove the device from the raid array:=A0 mdadm /dev/md1 -r
-> >> >> /dev/sd[?]2
-> >> >> 7 - Re-insert the drive back into the slot.
-> >> >> 8 - Take a look at dmesg to see what device name has been assig=
-ned.
-> >> >> Typically has the same letter assigned as before.
-> >> >> 9 - Add the drive back into the raid array: mdadm /dev/md1 -a
-> >> >> /dev/sd[?]2=A0=A0 Now some folks might say that I should use --=
-re-add, but
-> >> >> the mdadm documentation states that re-add will be used anyway =
-if the
-> >> >> system detects that a drive has been 're-inserted'. Additionall=
-y, the
-> >> >> mdadm response to this command shows that an 'add' or 'readd' w=
-as
-> >> >> executed depending on the state of the disk inserted.
-> >> >> --All is apparently going fine at this point. The add command s=
-ucceeds
-> >> >> and cat /proc/mdstat shows the re-sync in progress and it event=
-ually
-> >> >> finishes.
-> >> >> --Now for the interesting part.
-> >> >> 10 - Verify that the dd command is still running.
-> >> >> 11 - Pull the same drive again.
-> >> >>
-> >> >> This time, the device is not removed from the array, although i=
-t is
-> >> >> marked as faulty in the /proc/mdstat report.
-> >> >>
-> >> >> In mdadm --detail /dev/md1, the device is still in the raid set=
- and is
-> >> >> marked as "faulty spare rebuilding". I have not found a command=
- that
-> >> >> will remove drive from the raid set at this point. There were a=
- couple
-> >> >> of instances/tests where after 10+ minutes, the device came out=
- of the
-> >> >> array and was simply marked faulty, at which point I could add =
-a new
-> >> >> drive, but that has been the exception. Usually, it remains in =
-the
-> >> >> 'faulty spare rebuilding' mode.
-> >> >>
-> >> >> I don't understand why there is different behavior the second t=
-ime the
-> >> >> drive is pulled. I tried zeroing out both partitions on the dri=
-ve,
-> >> >> re-partitioning, mdadm --zero-superblock, but still the same be=
-havior.
-> >> >> If I pull a drive and replace it, I am able to do a subsequent =
-pull of
-> >> >> the new drive without trouble, albeit only once.
-> >> >>
-> >> >> Comments? Suggestions? I'm glad to provide more info.
-> >> >>
-> >> >
-> >> > Yes, strange.
-> >> >
-> >> > The only think that should stop you being able to remove the dev=
-ice is
-> >> > if
-> >> > there are outstanding IO requests.
-> >> >
-> >> > Maybe the driver is being slow in aborting requests the second t=
-ime.
-> >> > =A0Could
-> >> > be a driver bug on the LSI.
-> >> >
-> >> > You could try using blktrace to watch all the requests and make =
-sure
-> >> > every
-> >> > request that starts also completes....
-> >> >
-> >> > NeilBrown
-> >> >
-> >
-> >
+> > > Luzipher McLeod (luziphermcleod@yahoo.ie)
+> > wrote:
+> > > > Hi Mandeep,
+> > > >=20
+> > > > Thanks fpr your quick answer. So, what can be
+> done
+> > about this ? Should I try to apply that patch you
+> linked to
+> > ? (but I guess a patch from 2007 won't apply cleanly
+> ...)
+> > > >=20
+> > >=20
+> > > Hi Luzipher,
+> > >=20
+> > > I wouldn't apply the patch directly. Just copy
+> > bio_multi_split (might
+> > > need to do some forward porting) and then modify
+> > linear_make_request to
+> > > use bio_multi_split instead of bio_split.
+> > >=20
+> > > But I'm not really an expert on this particular
+> code.
+> > I'm hoping someone
+> > > else will confirm that this is in fact the bug and
+> not
+> > a side effect of
+> > > something else. Its seem reasonble that you could
+> get a
+> > bio that is
+> > > multi-page and falls on a boundary (spans two or
+> more
+> > devices). So I
+> > > suspect this is the bug.
+> > >=20
+> > > Regards,
+> > > Mandeep
+> > >=20
+> > > > Regards,
+> > > > Luzipher
+> > > >=20
+> > > >=20
+> > > >=20
+> > > > --- On Wed, 25/1/12, Mandeep Singh Baines
+> <msb@chromium.org>
+> > wrote:
+> > > >=20
+> > > > > From: Mandeep Singh Baines <msb@chromium.org>
+> > > > > Subject: Re: [dm-crypt] Kernel BUG
+> > (fs/bio.c:1499) when copying more files to an
+> encrypted
+> > device
+> > > > > To: "Luzipher McLeod" <luziphermcleod@yahoo.ie>
+> > > > > Cc: dm-crypt@saout.de,
+> > "NeilBrown" <neilb@suse.de>
+> > > > > Date: Wednesday, 25 January, 2012, 2:14
+> > > > > Luzipher McLeod (luziphermcleod@yahoo.ie)
+> > > > > wrote:
+> > > > > > Hi :-)
+> > > > > >=20
+> > > > > > A few days ago I encountered a
+> kernel
+> > bug while copying
+> > > > > files to an encrypted filesystem. The
+> > specific stack for the
+> > > > > filesystem is:
+> btrfs-on-crypt-on-mdraid.
+> > Vasts amounts of
+> > > > > data copied without problems (about
+> 6.3TB
+> > with 1.1 TB
+> > > > > remaining), but when copying a certain
+> > directory, the kernel
+> > > > > bug surfaces. I repeatedly deleted the
+> > affected directory
+> > > > > and tried to re-copy it, but it always
+> fails
+> > at the same
+> > > > > point (or close to that). More recent
+> test
+> > showed that I
+> > > > > could copy a few more files to the
+> filesystem
+> > to a different
+> > > > > directory, but it very quickly failed
+> there
+> > as well (a few
+> > > > > megabytes later).
+> > > > > > After talking to the btrfs devs on
+> > freenode (as btrfs
+> > > > > is the most experimental thing in the
+> stack,
+> > they came to
+> > > > > the conclusion that it's most probably
+> the
+> > crypto layer.
+> > > > > >=20
+> > > > > > Some details:
+> > > > > > gentoo kernel 3.2.1 (custom config
+> and
+> > ubuntu config)
+> > > > > > mdraid: linear, 4 disks, each 2TB
+> (total
+> > 8TB)
+> > > > > > crypt: setup via cryptsetup -c
+> > aes-xts-plain64 -h plain
+> > > > > -s 512 -d - create tempraid
+> > /dev/md/tempraid_lin
+> > > > > >=20
+> > > > > > I'd appreciate any help with this
+> and
+> > would be happy to
+> > > > > test patches or provide more debug
+> info.
+> > > > > >=20
+> > > > > > Thanks and Regards,
+> > > > > > Luzipher
+> > > > > >=20
+> > > > > >=20
+> > > > > >=20
+> > > > > >=20
+> > > > > > The kernel bug output retrieved by
+> > netconsole (also at
+> > > > > http://pastebin.com/sjJy7QE4 ):
+> > > > > >=A0 =A0=A0=A0[=A0 294.538422]
+> netconsole:
+> > > > > local port 6666
+> > > > > >=A0 =A0=A0=A0[=A0 333.423583] SysRq :
+> > > > > Changing Loglevel
+> > > > > >=A0 =A0=A0=A0[=A0 333.423609] Loglevel
+> > > > > set to 9
+> > > > > >=A0 =A0=A0=A0[=A0 424.248405]
+> > > > > ------------[ cut here ]------------
+> > > > > >=A0 =A0=A0=A0[=A0 424.248447] kernel BUG
+> > > > > at fs/bio.c:1499!
+> > > > >=20
+> > > > > Hi Luzipher,
+> > > > >=20
+> > > > > Looks like the BUG is because bio_split
+> only
+> > works on
+> > > > > single-page iovecs.
+> > > > >=20
+> > > > > I see a relevant (old) patch from Neil
+> Brown
+> > here:
+> > > > >=20
+> > > > > https://lkml.org/lkml/2007/7/30/496
+> > > > >=20
+> > > > > Regards,
+> > > > > Mandeep
+> > > > >=20
+> > > >=20
+> >=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
+>=20
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
