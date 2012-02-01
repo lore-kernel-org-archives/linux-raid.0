@@ -1,55 +1,45 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Found data loss report with write-mostly
-Date: Wed, 1 Feb 2012 12:14:37 +1100
-Message-ID: <20120201121437.538503ea@notabene.brown>
-References: <4F288C82.6000601@shiftmail.org>
+From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Subject: Re: rebuild raid6 after two failures
+Date: Tue, 31 Jan 2012 20:42:28 -0800
+Message-ID: <kesmv8xc66.ln2@goaway.wombat.san-francisco.ca.us>
+References: <8eekv8xpcn.ln2@goaway.wombat.san-francisco.ca.us>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/q/voJhLzFSkPazwVwSD4Kvx"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F288C82.6000601@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/q/voJhLzFSkPazwVwSD4Kvx
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 2012-01-31, Keith Keller <kkeller@wombat.san-francisco.ca.us> wrote:
+>
+> I recently had a RAID6 lose two drives in quick succession, with one
+> spare already in place.  The rebuild started fine with the spare, but
+> now that I've replaced the failed disks, should I expect the current
+> rebuild to finish, then rebuild on another spare?
 
-On Wed, 01 Feb 2012 01:51:14 +0100 Asdo <asdo@shiftmail.org> wrote:
+[snip]
 
-> I came across this page
-> http://superuser.com/questions/379472/how-does-one-enable-write-mostly-wi=
-th-linux-raid
-> (a data loss report using write-mostly in linux 3.1)
-> I thought I would report it here
+Well, for better or worse, this is now a moot question--I had another
+drive kicked out of the array, I believe prematurely by the controller.
+I was able to --assemble --force the array, and it is now rebuilding
+two spares instead of one.  AFAIR there was no activity on the
+filesystem at the time, so I am optimistic that the filesystem should be
+fine after an fsck.  Thanks to the advice from last time which suggested
+--assemble --force instead of --assume-clean in this situation.
 
-Thanks.
-This is fixed in 3.1.10, 3.2.2, and 3.3-rc1.
+Could it have been the older version of mdadm that didn't tell the
+kernel to start rebuilding the added spare?  I have made 3.2.3 my
+default mdadm, which I hope alleviates some of the issues I've had with
+rebuilds not starting.  (As an aside, I've also bitten the bullet and
+decided to swap out all the WD-EARS drives for real RAID drives; ideally
+I'd replace the controller, but I don't want to invest the time needed
+to replace and test all the components properly.)
 
-NeilBrown
+--keith
 
---Sig_/q/voJhLzFSkPazwVwSD4Kvx
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+-- 
+kkeller@wombat.san-francisco.ca.us
 
-iQIVAwUBTyiR/jnsnt1WYoG5AQII4A/+OBN3OC9L5dbLRwYw5MH5KPVle3JcTNr7
-ziP5MsbiAlaUkPmnq0GWRCQew4+0jYzXUshldQgpK1pF/DHuDezKndvbBDn4HTex
-sq3SUZaa6DdIa0X+y+16qDRPxEWEW3jjeOdPCYV3tR8vfWf/agml8j9pMkMOllhH
-M0J8tzGU9ICN8cKnxQPSZhKfyWcbBEwCAYtcCrZx8ahnqdo6MV3dYks9DzYMv7Wv
-Dg5xT8acOqzPUvCqpjjOige/hHoKYCMDqqm3Fbdi+TH1KTm/vcddIqBjSjtENqTg
-rxWZtFjPHxbgmh3HctOxWQDk7KcsuklocL56ZrpkrcK6bOeICRyeUzaAAXrFYq2E
-XYENIzSRhj6qxMHAS7yQeTWGZuouvyyAjJeB2fyQsk0ZlIXCqYSYFKCyuufeOnFL
-n8eXqAsOi5LUc1jPe9/mKYBaARs2c+g3G0JDeMflNAlq0UcOVCBGWcNg1o9cldir
-LktYEkg2GHqFZxOmQObl64CtZmFbknP2Fi2qdUug1H/3Ejrqj7f80yQjXHcBXF7s
-b89nwXQEvNoki7jPp5YQbsYUJkfeK+Js8yBgwZyTrTZ+9YyGhAqnMnfKCPQzQY0m
-uBkSpcnEx6ZKc9A2HxABTkYL6ZpntHewKpb2s1bEsAUtSSzvypyJDqIhab4RZInC
-kFBQG9sX5tE=
-=BIuB
------END PGP SIGNATURE-----
 
---Sig_/q/voJhLzFSkPazwVwSD4Kvx--
