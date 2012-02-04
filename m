@@ -1,47 +1,46 @@
-From: Jiri Kosina <jkosina@suse.cz>
-Subject: Re: [PATCH] There's no need to include linux/version.h in
- drivers/md/dm-bufio.c
-Date: Fri, 3 Feb 2012 22:38:56 +0100 (CET)
-Message-ID: <alpine.LNX.2.00.1202032238380.25026@pobox.suse.cz>
-References: <alpine.LNX.2.00.1201152110290.13389@swampdragon.chaosbits.net> <Pine.LNX.4.64.1201151728510.26479@hs20-bc2-1.build.redhat.com>
+From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
+	<stefan.huebner@stud.tu-ilmenau.de>
+Subject: Re: using dd (or dd_rescue) to salvage array
+Date: Sat, 04 Feb 2012 19:01:36 +0100
+Message-ID: <4F2D7280.8020500@stud.tu-ilmenau.de>
+References: <8eekv8xpcn.ln2@goaway.wombat.san-francisco.ca.us> <kesmv8xc66.ln2@goaway.wombat.san-francisco.ca.us> <0cdtv8xv8f.ln2@goaway.wombat.san-francisco.ca.us>
+Reply-To: stefan.huebner@stud.tu-ilmenau.de
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.1201151728510.26479@hs20-bc2-1.build.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Jesper Juhl <jj@chaosbits.net>, dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <0cdtv8xv8f.ln2@goaway.wombat.san-francisco.ca.us>
+Sender: linux-raid-owner@vger.kernel.org
+To: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 15 Jan 2012, Mikulas Patocka wrote:
-
-> Acked-by: Mikulas Patocka <mpatocka@redhat.com>
+Am 03.02.2012 17:08, schrieb Keith Keller:
+> On 2012-02-01, Keith Keller <kkeller@wombat.san-francisco.ca.us> wrote:
+>>
+>> Well, for better or worse, this is now a moot question--I had another
+>> drive kicked out of the array, I believe prematurely by the controller.
 > 
-> On Sun, 15 Jan 2012, Jesper Juhl wrote:
+> It turns out to be worse--the drive does in fact appear to be failing,
+> which would be the third failure on this RAID6 array.  I had what might
+> be a crazy thought--would it be worth the trouble to attempt to use dd
+> (or dd_rescue, a tool I found that claims to continue on bad blocks) to
+> write the disk image to another disk, and attempt a rebuild with the new
+> disk?  Or am I just wasting my time?  (The array is hosting an rsnapshot
+> backup set, so I can recreate the latest snapshot, but it'll take a
+> while.  So it'd be nice to save the array if it's possible and not time-
+> consuming.)
 > 
-> > As 'make versioncheck' points out, drivers/md/dm-bufio.c has no need
-> > to include linux/version.h, so this patch removes the unneeded
-> > include.
-> > 
-> > Signed-off-by: Jesper Juhl <jj@chaosbits.net>
-> > ---
-> >  drivers/md/dm-bufio.c |    1 -
-> >  1 files changed, 0 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-> > index 0a6806f..b6e58c7 100644
-> > --- a/drivers/md/dm-bufio.c
-> > +++ b/drivers/md/dm-bufio.c
-> > @@ -12,7 +12,6 @@
-> >  #include <linux/dm-io.h>
-> >  #include <linux/slab.h>
-> >  #include <linux/vmalloc.h>
-> > -#include <linux/version.h>
-> >  #include <linux/shrinker.h>
-> >  #include <linux/module.h>
+> Thanks for your help!
+> 
+> --keith
+> 
+Hi Keith,
 
-As this doesn't seem to be present in -next, I am taking it. Thanks,
+actually, ddrescue is THE WAY TO GO in this case.  Don't use the old
+ddrescue, but the GNU version.  Some distros call it gddrescue, on
+gentoo the old one is called dd-rescue and the gnu-one ddrescue.  Just
+check it out: http://www.gnu.org/software/ddrescue/ddrescue.html
 
--- 
-Jiri Kosina
-SUSE Labs
+Good luck,
+Stefan
