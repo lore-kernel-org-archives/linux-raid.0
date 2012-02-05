@@ -1,46 +1,97 @@
-From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
-	<stefan.huebner@stud.tu-ilmenau.de>
-Subject: Re: using dd (or dd_rescue) to salvage array
-Date: Sat, 04 Feb 2012 19:01:36 +0100
-Message-ID: <4F2D7280.8020500@stud.tu-ilmenau.de>
-References: <8eekv8xpcn.ln2@goaway.wombat.san-francisco.ca.us> <kesmv8xc66.ln2@goaway.wombat.san-francisco.ca.us> <0cdtv8xv8f.ln2@goaway.wombat.san-francisco.ca.us>
-Reply-To: stefan.huebner@stud.tu-ilmenau.de
+From: Dag Nygren <dag@newtech.fi>
+Subject: Hand in Raid-5 code
+Date: Sun, 05 Feb 2012 18:55:58 +0200
+Message-ID: <1363014.L0fQ1kFyFY@eseries>
+Reply-To: dag@newtech.fi
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0cdtv8xv8f.ln2@goaway.wombat.san-francisco.ca.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Am 03.02.2012 17:08, schrieb Keith Keller:
-> On 2012-02-01, Keith Keller <kkeller@wombat.san-francisco.ca.us> wrote:
->>
->> Well, for better or worse, this is now a moot question--I had another
->> drive kicked out of the array, I believe prematurely by the controller.
-> 
-> It turns out to be worse--the drive does in fact appear to be failing,
-> which would be the third failure on this RAID6 array.  I had what might
-> be a crazy thought--would it be worth the trouble to attempt to use dd
-> (or dd_rescue, a tool I found that claims to continue on bad blocks) to
-> write the disk image to another disk, and attempt a rebuild with the new
-> disk?  Or am I just wasting my time?  (The array is hosting an rsnapshot
-> backup set, so I can recreate the latest snapshot, but it'll take a
-> while.  So it'd be nice to save the array if it's possible and not time-
-> consuming.)
-> 
-> Thanks for your help!
-> 
-> --keith
-> 
-Hi Keith,
+Hi!
 
-actually, ddrescue is THE WAY TO GO in this case.  Don't use the old
-ddrescue, but the GNU version.  Some distros call it gddrescue, on
-gentoo the old one is called dd-rescue and the gnu-one ddrescue.  Just
-check it out: http://www.gnu.org/software/ddrescue/ddrescue.html
+Using lessfs on top of an XFS on top on a software RAID-5 and see this =
+freeze=20
+happening about once a week. Usually during heavy load.
 
-Good luck,
-Stefan
+=46eb 5 02:51:04 mythserv kernel: INFO: task lessfs:2687 blocked for mo=
+re than=20
+120 seconds.
+=46eb 5 02:51:04 mythserv kernel: =E2=80=9Cecho 0 >=20
+/proc/sys/kernel/hung_task_timeout_secs=E2=80=9D disables this message.
+=46eb 5 02:51:04 mythserv kernel: lessfs D ffff88006faf1998 0 2687 1 0=C3=
+=9700000000
+=46eb 5 02:51:04 mythserv kernel: ffff880066579828 0000000000000086 fff=
+f8800665797b8=20
+ffffffff00000000
+=46eb 5 02:51:04 mythserv kernel: ffff88006faf1620 0000000000013300 fff=
+f880066579fd8=20
+ffff880066578010
+=46eb 5 02:51:04 mythserv kernel: ffff880066579fd8 0000000000013300 fff=
+fffff81655020=20
+ffff88006faf1620
+=46eb 5 02:51:04 mythserv kernel: Call Trace:
+=46eb 5 02:51:04 mythserv kernel: [] schedule+0x3f/0=C3=9760
+=46eb 5 02:51:04 mythserv kernel: [] get_active_stripe+0x2ea/0=C3=97790=
+ [raid456]
+=46eb 5 02:51:04 mythserv kernel: [] ? try_to_wake_up+0x2b0/0x2b0
+=46eb 5 02:51:04 mythserv kernel: [] make_request+0x1ae/0=C3=97460 [rai=
+d456]
+=46eb 5 02:51:04 mythserv kernel: [] ? wake_up_bit+0=C3=9740/0=C3=9740
+=46eb 5 02:51:04 mythserv kernel: [] md_make_request+0xd5/0=C3=97200
+=46eb 5 02:51:04 mythserv kernel: [] generic_make_request+0xbf/0xf0
+=46eb 5 02:51:04 mythserv kernel: [] submit_bio+0=C3=9785/0=C3=97110
+=46eb 5 02:51:04 mythserv kernel: [] ? __bio_add_page+0=C3=97110/0=C3=97=
+250
+=46eb 5 02:51:04 mythserv kernel: [] xfs_submit_ioend_bio+0=C3=9757/0=C3=
+=9780 [xfs]
+=46eb 5 02:51:04 mythserv kernel: [] xfs_submit_ioend+0xf6/0=C3=97110 [=
+xfs]
+=46eb 5 02:51:04 mythserv kernel: [] xfs_vm_writepage+0=C3=97230/0=C3=97=
+500 [xfs]
+=46eb 5 02:51:04 mythserv kernel: [] __writepage+0=C3=9717/0=C3=9740
+=46eb 5 02:51:04 mythserv kernel: [] write_cache_pages+0=C3=97221/0x4a0
+=46eb 5 02:51:04 mythserv kernel: [] ? tomoyo_init_request_info+0x3f/0=C3=
+=9770
+=46eb 5 02:51:04 mythserv kernel: [] ? set_page_dirty+0=C3=9770/0=C3=97=
+70
+=46eb 5 02:51:04 mythserv kernel: [] generic_writepages+0=C3=9751/0=C3=97=
+80
+=46eb 5 02:51:04 mythserv kernel: [] xfs_vm_writepages+0=C3=9753/0=C3=97=
+70 [xfs]
+=46eb 5 02:51:04 mythserv kernel: [] do_writepages+0=C3=9721/0=C3=9740
+=46eb 5 02:51:04 mythserv kernel: [] __filemap_fdatawrite_range+0x5b/0=C3=
+=9760
+=46eb 5 02:51:04 mythserv kernel: [] filemap_write_and_wait_range+0x5a/=
+0=C3=9780
+=46eb 5 02:51:04 mythserv kernel: [] xfs_file_fsync+0=C3=9768/0x2d0 [xf=
+s]
+=46eb 5 02:51:04 mythserv kernel: [] vfs_fsync_range+0x2b/0=C3=9740
+=46eb 5 02:51:04 mythserv kernel: [] vfs_fsync+0x1c/0=C3=9720
+=46eb 5 02:51:04 mythserv kernel: [] do_fsync+0x3a/0=C3=9760
+=46eb 5 02:51:04 mythserv kernel: [] sys_fsync+0=C3=9710/0=C3=9720
+=46eb 5 02:51:04 mythserv kernel: [] system_call_fastpath+0=C3=9716/0x1=
+b
+
+Any hints? Or any debugging I can do to help? I did find a similar cas =
+from=20
+2008, but that is supposed to be fixed now.
+This also started after updating the kernel to the 3.x series. At the m=
+oment=20
+using 3.2.2 and still seeing it.
+
+--=20
+Dag Nygren                               email: dag@newtech.fi
+Oy Espoon NewTech Ab                     phone: +358 9 8024910
+Tr=C3=A4sktorpet 3                              fax: +358 9 8024916
+02360 ESBO                              Mobile: +358 400 426312
+=46INLAND
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
