@@ -1,23 +1,21 @@
-From: Joel <jdy@cryregarder.com>
-Subject: Re: Some md/mdadm bugs
-Date: Mon, 6 Feb 2012 18:50:24 +0000 (UTC)
-Message-ID: <loom.20120206T194940-811@post.gmane.org>
-References: <4F2ADF45.4040103@shiftmail.org> <20120203081717.195bfec8@notabene.brown> <4F2B1519.5010500@shiftmail.org> <loom.20120206T175724-186@post.gmane.org> <4F302045.2090300@shiftmail.org>
+From: wilsonjonathan <piercing_male@hotmail.com>
+Subject: Would different hd speeds affect md raid?
+Date: Mon, 6 Feb 2012 19:54:38 +0000
+Message-ID: <BLU0-SMTP42258229182D2BB3BC44EB798740@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Asdo <asdo <at> shiftmail.org> writes:
+I was just wondering a quick question... If a system had a failed
+1.5Gbps speed sata (out of 3 in a raid 5) and it was replaced with a
+3Gbps speed drive would the difference affect the speed of the raid, or
+would it be no different to its original 3 * 1.5Gbps speed.
 
-
-> No, it is really --incremental --fail :
-> it behaves like --incremental --fail, while --incremental --force is an 
-> illegal combination for mdadm (I just tried)
-
-Shoot!  You are absolutely right.  My manpage reading skills must need serious
-refreshment!
+I'm curious as to if the speed difference would affect overall speeds as
+obviously 2 drives would be running at half the speed of the other
+drives.
 
