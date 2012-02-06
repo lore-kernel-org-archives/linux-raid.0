@@ -1,75 +1,176 @@
-From: Stefan *St0fF* Huebner <st0ff@gmx.net>
-Subject: Re: using dd (or dd_rescue) to salvage array
-Date: Mon, 06 Feb 2012 22:37:38 +0100
-Message-ID: <4F304822.8000102@gmx.net>
-References: <8eekv8xpcn.ln2@goaway.wombat.san-francisco.ca.us> <kesmv8xc66.ln2@goaway.wombat.san-francisco.ca.us> <0cdtv8xv8f.ln2@goaway.wombat.san-francisco.ca.us> <4F2D7280.8020500@stud.tu-ilmenau.de> <8q0309x4kf.ln2@goaway.wombat.san-francisco.ca.us>
-Reply-To: st0ff@npl.de
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Some md/mdadm bugs
+Date: Tue, 7 Feb 2012 09:20:05 +1100
+Message-ID: <20120207092005.7c11171a@notabene.brown>
+References: <4F2ADF45.4040103@shiftmail.org>
+	<20120203081717.195bfec8@notabene.brown>
+	<4F2B1519.5010500@shiftmail.org>
+	<4F3008DA.8060402@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/.stEbyvfr_uh_.LucY6NFEp"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8q0309x4kf.ln2@goaway.wombat.san-francisco.ca.us>
+In-Reply-To: <4F3008DA.8060402@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Cc: linux-raid@vger.kernel.org
+To: Asdo <asdo@shiftmail.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 05.02.2012 20:10, Keith Keller wrote:
-> On 2012-02-04, Stefan /*St0fF*/ H=C3=BCbner<stefan.huebner@stud.tu-il=
-menau.de>  wrote:
->> actually, ddrescue is THE WAY TO GO in this case.  Don't use the old
->> ddrescue, but the GNU version.  Some distros call it gddrescue, on
->> gentoo the old one is called dd-rescue and the gnu-one ddrescue.  Ju=
-st
->> check it out: http://www.gnu.org/software/ddrescue/ddrescue.html
-> Thanks for the advice, Stefan.  Frustratingly enough, I will get a
-> chance to try GNU ddrescue despite my impatience--I originally used
-> dd_rescue to try to get an image of the failing drive, and while that
-> succeeded just fine (only lost 8k), the target ended up reporting ECC
-> errors during the rebuild!  So I've taken a new image with ddrescue
-> to a tested drive (again, losing 8k), and am hoping that it goes bett=
-er.
-> (At the moment I'm just attempting a one-spare rebuild, which I'm hop=
-ing
-> will go faster than a two-disk build, and therefore report any proble=
-ms
-> sooner.)
->
-> I realized after reading my initial post that I wasn't 100% clear wha=
-t I
-> was asking.  I knew that some sort of dd would work, but I'd only don=
-e
-> it before in a filesystem context, and didn't know how mdraid would
-> react.  So I am curious, does anyone know what I might expect when th=
-e
-> rebuild gets to the part on the new image where the data was lost?  W=
-ill
-> it just create a problem on the filesystem, or might something worse
-> happen?  Should I run a check if the rebuild completes successfully?
-> And will mismatch_cnt get populated by the rebuild, or would I need a
-> check to expose mismatches?
->
-> --keith
->
- From the logical point of view those lost 8k would create bad data -=20
-i.e. a filesystem problem OR simply corrupted data.  That depends on=20
-which blocks exactly are bad.  If you were using lvm it could even be=20
-worse, like broken metadata.
+--Sig_/.stEbyvfr_uh_.LucY6NFEp
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-It would be good if those 8k were "in a row" - that way at max 3=20
-fs-blocks (when using 4k fs-blocksize) would be corrupted.  If you're=20
-lucky, you won't even notice - like me: my system SSD broke down=20
-lately.  I ddrescued as much as I could, but around 250k are gone.  I'm=
-=20
-dual-booting windows and gentoo and I have not yet encountered a proble=
-m=20
-from the missing data.  Lucky me...
+On Mon, 06 Feb 2012 18:07:38 +0100 Asdo <asdo@shiftmail.org> wrote:
 
-Cheers,
-Stefan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> On 02/02/12 23:58, Asdo wrote:
+> >
+> >>> Now it doesn't happen:
+> >>> When I reinserted the disk, udev triggered the --incremental, to
+> >>> reinsert the device, but mdadm refused to do anything because the old
+> >>> slot was still occupied with a failed+detached device. I manually
+> >>> removed the device from the raid then I ran --incremental, but mdadm
+> >>> still refused to re-add the device to the RAID because the array was
+> >>> running. I think that if it is a re-add, and especially if the=20
+> >>> bitmap is
+> >>> active, I can't think of a situation in which the user would *not* wa=
+nt
+> >>> to do an incremental re-add even if the array is running.
+> >> Hmmm.. that doesn't seem right.  What version of mdadm are you running?
+> >
+> > 3.1.4
+> >
+> >> Maybe a newer one would get this right.
+> > I need to try...
+> > I think I need that.
+>=20
+> Hi Neil,
+>=20
+> Still some problems on mdadm 3.2.2 (from Ubuntu Precise) apparently:
+>=20
+> Problem #1:
+>=20
+> # mdadm -If /dev/sda4
+> mdadm: incremental removal requires a kernel device name, not a file:=20
+> /dev/sda4
+>=20
+> however this works:
+>=20
+> # mdadm -If sda4
+> mdadm: set sda4 faulty in md3
+> mdadm: hot removed sda4 from md3
+>=20
+> Is this by design?
+
+Yes.
+
+>                     Would your udev rule
+> ACTION=3D=3D"remove", RUN+=3D"/sbin/mdadm -If $name"
+> trigger the first or the second kind of invocation?
+
+Yes.
+
+>=20
+>=20
+> Problem #2:
+>=20
+> by reinserting sda, it became sdax, and the array is still running like=20
+> this:
+>=20
+> md3 : active raid1 sdb4[2]
+>        10485688 blocks super 1.0 [2/1] [_U]
+>        bitmap: 0/160 pages [0KB], 32KB chunk
+>=20
+> please note the bitmap is active
+
+True, but there is nothing in it (0 pages).  That implies that no bits are
+set.  I guess that is possible if nothing has been written to the array sin=
+ce
+the other device was removed.
+
+>=20
+> so now I'm trying auto hot-add:
+>=20
+> # mdadm  -I /dev/sdax4
+> mdadm: not adding /dev/sdax4 to active array (without --run) /dev/md3
+>=20
+> still the old problem I mentioned with 3.1.4.
+
+I need to see -E and -X output on both drives to be able to see what is
+happening here.  Also the content of /etc/mdadm.conf might be relevant.
+If you could supply that info I might be able to explain what is happening.
+
+
+
+> Trying more ways: (even with the "--run" which is suggested)
+>=20
+> # mdadm --run -I /dev/sdax4
+> mdadm: -I would set mdadm mode to "incremental", but it is already set=20
+> to "misc".
+>=20
+> # mdadm -I --run /dev/sdax4
+> mdadm: failed to add /dev/sdax4 to /dev/md3: Invalid argument.
+>=20
+
+Hmm... I'm able to reproduce something like this.
+
+Following patch seems to fix it, but I need to check the code more
+thoroughly to be sure.  Note that this will *not* fix the "not adding ... n=
+ot
+active array" problem.
+
+NeilBrown
+
+
+diff --git a/Incremental.c b/Incremental.c
+index 60175af..2be0d05 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -415,19 +415,19 @@ int Incremental(char *devname, int verbose, int runst=
+op,
+ 				goto out_unlock;
+ 			}
+ 		}
+-		info2.disk.major =3D major(stb.st_rdev);
+-		info2.disk.minor =3D minor(stb.st_rdev);
++		info.disk.major =3D major(stb.st_rdev);
++		info.disk.minor =3D minor(stb.st_rdev);
+ 		/* add disk needs to know about containers */
+ 		if (st->ss->external)
+ 			sra->array.level =3D LEVEL_CONTAINER;
+-		err =3D add_disk(mdfd, st, sra, &info2);
++		err =3D add_disk(mdfd, st, sra, &info);
+ 		if (err < 0 && errno =3D=3D EBUSY) {
+ 			/* could be another device present with the same
+ 			 * disk.number. Find and reject any such
+ 			 */
+ 			find_reject(mdfd, st, sra, info.disk.number,
+ 				    info.events, verbose, chosen_name);
+-			err =3D add_disk(mdfd, st, sra, &info2);
++			err =3D add_disk(mdfd, st, sra, &info);
+ 		}
+ 		if (err < 0) {
+ 			fprintf(stderr, Name ": failed to add %s to %s: %s.\n",
+
+--Sig_/.stEbyvfr_uh_.LucY6NFEp
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBTzBSFTnsnt1WYoG5AQL0Mg/+JKTPX05RyXDwFdJesHBwYUYLocOKpCbT
+9+AeIREWw6FV03WAPRc3BMI52a1VQKkYht1LQgzlbkPMOr6zy4ca1fnuEEog0FGO
+cJQ34GNsbDW+kvSkm2V3Rvlwhg/PKqCJf0iUTATbmyWpcKnvea3Q8CqmvXDzBtbR
+o8TOeYzIVpLiuMURyeN6ucFp3UqDA2REJswsohzOCLqLH/63+agurjFYv0crmIOa
+LOXyDx0zddiN6PMqIyxp9JY0D39rDpzyx5l4rvekcaGbgC1paesACdZ9CL7IAhtz
+5uK0le3rVP7TfxLa62r3QshXnaD3q/0yKpj1F+O+7+bvAfNPj8gJjJ/HEWZNx+Pt
+Ic1HWddvvePtv2OT+0UQBMg8r8WFQf4H/QFBB5VrzYlkFq4cFYelPWBQcnmx3OTm
+y9ai7mKgpj+1u3PsVlAfbNZImyiDXONR0om4n0N/Ssa+3wZHvbWbIPfwQanad6Pi
+UUaI6SiKlj1Yvc/5bhblqHMAmqcbhYIawiSYYC3syGcgJOjS+MtE1v2XMHMNh8r5
+Iq8D/aJun3+p3AGbHwuhb8bC2WQ2+Hw0hP2S3K13PepE1Y7vs/x6ElrkQSJsjYj6
+SkDUPvIL88F6oFCXnz96+MJz6DK94uIWN506+iXJXslxMQRJt9vbgLJsiZDonLXY
+CxMsyDrXqCw=
+=HDyF
+-----END PGP SIGNATURE-----
+
+--Sig_/.stEbyvfr_uh_.LucY6NFEp--
