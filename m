@@ -1,60 +1,37 @@
-From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Subject: Re: using dd (or dd_rescue) to salvage array
-Date: Sun, 05 Feb 2012 11:10:32 -0800
-Message-ID: <8q0309x4kf.ln2@goaway.wombat.san-francisco.ca.us>
-References: <8eekv8xpcn.ln2@goaway.wombat.san-francisco.ca.us>
- <kesmv8xc66.ln2@goaway.wombat.san-francisco.ca.us>
- <0cdtv8xv8f.ln2@goaway.wombat.san-francisco.ca.us>
- <4F2D7280.8020500@stud.tu-ilmenau.de>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: [PATCH] getinfo_super1: when deciding whether the array is clean or
+ dirty, compare sb->resync_offset against MaxSector and not against sb->size
+Date: Mon, 6 Feb 2012 13:25:19 +0200
+Message-ID: <CAGRgLy6W4pJWQwuEwBWkjUq6+TzNaVs59RzLu6zLs7N2w69_MA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2012-02-04, Stefan /*St0fF*/ H=FCbner <stefan.huebner@stud.tu-ilmena=
-u.de> wrote:
->
-> actually, ddrescue is THE WAY TO GO in this case.  Don't use the old
-> ddrescue, but the GNU version.  Some distros call it gddrescue, on
-> gentoo the old one is called dd-rescue and the gnu-one ddrescue.  Jus=
-t
-> check it out: http://www.gnu.org/software/ddrescue/ddrescue.html
+From c1bc75c72f62c6583f17caa2d02a09dc72fbac74 Mon Sep 17 00:00:00 2001
+From: Alex Lyakas <alex@zadarastorage.com>
+Date: Mon, 6 Feb 2012 13:24:15 +0200
+Subject: [PATCH] getinfo_super1: when deciding whether the array is clean or
+ dirty, compare sb->resync_offset against MaxSector and not
+ against sb->size
 
-Thanks for the advice, Stefan.  Frustratingly enough, I will get a
-chance to try GNU ddrescue despite my impatience--I originally used
-dd_rescue to try to get an image of the failing drive, and while that
-succeeded just fine (only lost 8k), the target ended up reporting ECC
-errors during the rebuild!  So I've taken a new image with ddrescue
-to a tested drive (again, losing 8k), and am hoping that it goes better=
-=2E
-(At the moment I'm just attempting a one-spare rebuild, which I'm hopin=
-g
-will go faster than a two-disk build, and therefore report any problems
-sooner.)
+With RAID6 resyncing and subsequent drive failures, it is possible to
+reach the case, in which sb->resync_offset==sb->size. This happens
+when resync is aborted due to drive failures, a
 
-I realized after reading my initial post that I wasn't 100% clear what =
-I
-was asking.  I knew that some sort of dd would work, but I'd only done
-it before in a filesystem context, and didn't know how mdraid would
-react.  So I am curious, does anyone know what I might expect when the
-rebuild gets to the part on the new image where the data was lost?  Wil=
-l
-it just create a problem on the filesystem, or might something worse
-happen?  Should I run a check if the rebuild completes successfully?
-And will mismatch_cnt get populated by the rebuild, or would I need a
-check to expose mismatches?
+diff --git a/super1.c b/super1.c
+index 867aa58..c643bd3 100644
+--- a/super1.c
++++ b/super1.c
+@@ -573,7 +573,7 @@ static void getinfo_super1(struct supertype *st,
+struct mdinfo *info, char *map)
+        info->array.utime = __le64_to_cpu(sb->utime);
+        info->array.chunk_size = __le32_to_cpu(sb->chunksize)*512;
+        info->array.state =
+-               (__le64_to_cpu(sb->resync_offset) >= __le64_to_cpu(sb->size))
++               (__le64_to_cpu(sb->resync_offset) != MaxSector)
+                ? 1 : 0;
 
---keith
-
---=20
-kkeller-usenet@wombat.san-francisco.ca.us
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+        info->data_offset = __le64_to_cpu(sb->data_offset);
