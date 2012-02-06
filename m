@@ -1,176 +1,145 @@
 From: NeilBrown <neilb@suse.de>
 Subject: Re: Some md/mdadm bugs
-Date: Tue, 7 Feb 2012 09:20:05 +1100
-Message-ID: <20120207092005.7c11171a@notabene.brown>
+Date: Tue, 7 Feb 2012 09:31:56 +1100
+Message-ID: <20120207093156.290bd52b@notabene.brown>
 References: <4F2ADF45.4040103@shiftmail.org>
 	<20120203081717.195bfec8@notabene.brown>
 	<4F2B1519.5010500@shiftmail.org>
 	<4F3008DA.8060402@shiftmail.org>
+	<4F30204A.1060206@shiftmail.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/.stEbyvfr_uh_.LucY6NFEp"; protocol="application/pgp-signature"
+ boundary="Sig_/IQ/s_nrUCmUsVvEWEqp2Jjc"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F3008DA.8060402@shiftmail.org>
+In-Reply-To: <4F30204A.1060206@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Asdo <asdo@shiftmail.org>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/.stEbyvfr_uh_.LucY6NFEp
+--Sig_/IQ/s_nrUCmUsVvEWEqp2Jjc
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 06 Feb 2012 18:07:38 +0100 Asdo <asdo@shiftmail.org> wrote:
+On Mon, 06 Feb 2012 19:47:38 +0100 Asdo <asdo@shiftmail.org> wrote:
 
-> On 02/02/12 23:58, Asdo wrote:
-> >
-> >>> Now it doesn't happen:
-> >>> When I reinserted the disk, udev triggered the --incremental, to
-> >>> reinsert the device, but mdadm refused to do anything because the old
-> >>> slot was still occupied with a failed+detached device. I manually
-> >>> removed the device from the raid then I ran --incremental, but mdadm
-> >>> still refused to re-add the device to the RAID because the array was
-> >>> running. I think that if it is a re-add, and especially if the=20
-> >>> bitmap is
-> >>> active, I can't think of a situation in which the user would *not* wa=
-nt
-> >>> to do an incremental re-add even if the array is running.
-> >> Hmmm.. that doesn't seem right.  What version of mdadm are you running?
-> >
-> > 3.1.4
-> >
-> >> Maybe a newer one would get this right.
-> > I need to try...
-> > I think I need that.
+> One or two more bug(s) in 3.2.2
+> (note: my latest mail I am replying to is still valid)
 >=20
-> Hi Neil,
+> AUTO line in mdadm.conf does not appear to work any longer in 3.2.2=20
+> compared to mdadm 3.1.4
+> Now this line
 >=20
-> Still some problems on mdadm 3.2.2 (from Ubuntu Precise) apparently:
+> "AUTO -all"
 >=20
-> Problem #1:
+> still autoassembles every array.
+> There are many arrays not declared in my mdadm.conf, and which are not=20
+> for this host (hostname is different)
+> but mdadm still autoassembles everything, e.g.:
 >=20
-> # mdadm -If /dev/sda4
-> mdadm: incremental removal requires a kernel device name, not a file:=20
-> /dev/sda4
+> # mdadm -I /dev/sdr8
+> mdadm: /dev/sdr8 attached to /dev/md/perftest:r0d24, not enough to start=
+=20
+> (1).
 >=20
-> however this works:
->=20
-> # mdadm -If sda4
-> mdadm: set sda4 faulty in md3
-> mdadm: hot removed sda4 from md3
->=20
-> Is this by design?
+> (note: "perftest" is even not the hostname)
 
-Yes.
+Odd.. it works for me:
 
->                     Would your udev rule
-> ACTION=3D=3D"remove", RUN+=3D"/sbin/mdadm -If $name"
-> trigger the first or the second kind of invocation?
+# cat /etc/mdadm.conf=20
+AUTO -all
+# mdadm -Iv /dev/sda
+mdadm: /dev/sda has metadata type 1.x for which auto-assembly is disabled
+# mdadm -V
+mdadm - v3.2.2 - 17th June 2011
+#=20
 
-Yes.
-
->=20
->=20
-> Problem #2:
->=20
-> by reinserting sda, it became sdax, and the array is still running like=20
-> this:
->=20
-> md3 : active raid1 sdb4[2]
->        10485688 blocks super 1.0 [2/1] [_U]
->        bitmap: 0/160 pages [0KB], 32KB chunk
->=20
-> please note the bitmap is active
-
-True, but there is nothing in it (0 pages).  That implies that no bits are
-set.  I guess that is possible if nothing has been written to the array sin=
-ce
-the other device was removed.
-
->=20
-> so now I'm trying auto hot-add:
->=20
-> # mdadm  -I /dev/sdax4
-> mdadm: not adding /dev/sdax4 to active array (without --run) /dev/md3
->=20
-> still the old problem I mentioned with 3.1.4.
-
-I need to see -E and -X output on both drives to be able to see what is
-happening here.  Also the content of /etc/mdadm.conf might be relevant.
-If you could supply that info I might be able to explain what is happening.
+Can you show the complete output of the same commands (with sdr8 in place o=
+f sda of course :-)
 
 
-
-> Trying more ways: (even with the "--run" which is suggested)
 >=20
-> # mdadm --run -I /dev/sdax4
-> mdadm: -I would set mdadm mode to "incremental", but it is already set=20
-> to "misc".
+> I have just regressed to mdadm 3.1.4 to confirm that it worked back=20
+> then, and yes, I confirm that 3.1.4 was not doing any action upon:
+> # mdadm -I /dev/sdr8
+> --> nothing done
+> when the line in config was:
+> "AUTO -all"
+> or even
+> "AUTO +homehost -all"
+> which is the line I am normally using.
 >=20
-> # mdadm -I --run /dev/sdax4
-> mdadm: failed to add /dev/sdax4 to /dev/md3: Invalid argument.
 >=20
+> This is a problem in our fairly large system with 80+ HDDs and many=20
+> partitions which I am testing now which is full of every kind of arrays..=
+..
+> I am normally using : "AUTO +homehost -all"  to prevent assembling a=20
+> bagzillion of arrays at boot, also because doing that gives race=20
+> conditions at boot and drops me to initramfs shell (see below next bug).
+>=20
+>=20
+>=20
+>=20
+>=20
+> Another problem with 3.2.2:
+>=20
+> At boot, this is from a serial dump:
+>=20
+> udevd[218]: symlink '../../sdx13'=20
+> '/dev/disk/by-partlabel/Linux\x20RAID.udev-tmp' failed: File exists
+> udevd[189]: symlink '../../sdb1'=20
+> '/dev/disk/by-partlabel/Linux\x20RAID.udev-tmp' failed: File exists
+>=20
+> And sdb1 is not correctly inserted into array /dev/md0 which hence=20
+> starts degraded and so I am dropped into an initramfs shell.
+> This looks like a race condition... I don't know if this is fault of=20
+> udev, udev rules or mdadm...
+> This is with mdadm 3.2.2 and kernel 3.0.13 (called 3.0.0-15-server by=20
+> Ubuntu) on Ubuntu oneiric 11.10
+> Having also the above bug of nonworking AUTO line, this problem happens=20
+> a lot with 80+ disks and lots of partitions. If the auto line worked, I=20
+> would have postponed most of the assembly's at a very late stage in the=20
+> boot process, maybe after a significant "sleep".
+>=20
+>=20
+> Actually this race condition could be an ubuntu udev script bug :
+>=20
+> Here are the ubuntu udev rules files I could find, related to mdadm or=20
+> containing "by-partlabel":
 
-Hmm... I'm able to reproduce something like this.
+It does look like a udev thing more than an mdadm thing.
 
-Following patch seems to fix it, but I need to check the code more
-thoroughly to be sure.  Note that this will *not* fix the "not adding ... n=
-ot
-active array" problem.
+What do
+   /dev/blkid -o udev -p /dev/sdb1
+and
+   /dev/blkid -o udev -p /dev/sdx12
+
+report?
 
 NeilBrown
 
 
-diff --git a/Incremental.c b/Incremental.c
-index 60175af..2be0d05 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -415,19 +415,19 @@ int Incremental(char *devname, int verbose, int runst=
-op,
- 				goto out_unlock;
- 			}
- 		}
--		info2.disk.major =3D major(stb.st_rdev);
--		info2.disk.minor =3D minor(stb.st_rdev);
-+		info.disk.major =3D major(stb.st_rdev);
-+		info.disk.minor =3D minor(stb.st_rdev);
- 		/* add disk needs to know about containers */
- 		if (st->ss->external)
- 			sra->array.level =3D LEVEL_CONTAINER;
--		err =3D add_disk(mdfd, st, sra, &info2);
-+		err =3D add_disk(mdfd, st, sra, &info);
- 		if (err < 0 && errno =3D=3D EBUSY) {
- 			/* could be another device present with the same
- 			 * disk.number. Find and reject any such
- 			 */
- 			find_reject(mdfd, st, sra, info.disk.number,
- 				    info.events, verbose, chosen_name);
--			err =3D add_disk(mdfd, st, sra, &info2);
-+			err =3D add_disk(mdfd, st, sra, &info);
- 		}
- 		if (err < 0) {
- 			fprintf(stderr, Name ": failed to add %s to %s: %s.\n",
 
---Sig_/.stEbyvfr_uh_.LucY6NFEp
+--Sig_/IQ/s_nrUCmUsVvEWEqp2Jjc
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTzBSFTnsnt1WYoG5AQL0Mg/+JKTPX05RyXDwFdJesHBwYUYLocOKpCbT
-9+AeIREWw6FV03WAPRc3BMI52a1VQKkYht1LQgzlbkPMOr6zy4ca1fnuEEog0FGO
-cJQ34GNsbDW+kvSkm2V3Rvlwhg/PKqCJf0iUTATbmyWpcKnvea3Q8CqmvXDzBtbR
-o8TOeYzIVpLiuMURyeN6ucFp3UqDA2REJswsohzOCLqLH/63+agurjFYv0crmIOa
-LOXyDx0zddiN6PMqIyxp9JY0D39rDpzyx5l4rvekcaGbgC1paesACdZ9CL7IAhtz
-5uK0le3rVP7TfxLa62r3QshXnaD3q/0yKpj1F+O+7+bvAfNPj8gJjJ/HEWZNx+Pt
-Ic1HWddvvePtv2OT+0UQBMg8r8WFQf4H/QFBB5VrzYlkFq4cFYelPWBQcnmx3OTm
-y9ai7mKgpj+1u3PsVlAfbNZImyiDXONR0om4n0N/Ssa+3wZHvbWbIPfwQanad6Pi
-UUaI6SiKlj1Yvc/5bhblqHMAmqcbhYIawiSYYC3syGcgJOjS+MtE1v2XMHMNh8r5
-Iq8D/aJun3+p3AGbHwuhb8bC2WQ2+Hw0hP2S3K13PepE1Y7vs/x6ElrkQSJsjYj6
-SkDUPvIL88F6oFCXnz96+MJz6DK94uIWN506+iXJXslxMQRJt9vbgLJsiZDonLXY
-CxMsyDrXqCw=
-=HDyF
+iQIVAwUBTzBU3Dnsnt1WYoG5AQLTeQ//UPn2zpOEbm/yuLa9htMjLFW2f/YKuBBx
+DHgMqsJkRh8IPMAhssHVAtlWE0sd0wtEQ0m1MaHU6lLtO9IWXqAkEZjFi4N8+gqF
+2Yw7tJ0EKvvNxKG4cUFEdRZoiEjmDOLKjvDGXiqo+fCi7pQJYVaomE1L9PTpLEz1
+UJHEP3hMIaV7VxMfp6mqQKM+3M0twcQKcAXL5sHH30qNrHqWkNSXQrN+As10lVFU
+btH+8DlciijDGTTDFjlkc7fVIDCvi7uKAgVJvnw+2nR74c9c2wrbaKarOWp/vG61
+GlttKvoQswHWR6SMk/LiLS/J6gbCtei+UBY1Nb6BXUhjlA6RHPDQJMvnfC0b/XI4
+Kh5PuiU7NtN56IPmMQa8SIu8MOK0AyjmplVZcX5UU6PG687V9h/2bQ70YuGK55XR
+FGjBmuOQdW/GsxFPy0H1s3qhRiR4y4jhIef8ewOMbZAX91Ju3OEWFinukgCzaMEw
+6Bt71mZj/CDDTzS09EYTbG/013nSXjcx8S6gvJY46LkLkHogTDacEBpxUBFDPL7c
+di/NtnuabQIxuG/eR4JgsIpgolQKfM+UrwSkp0pwI++/L0ZYO1mCSMQNyvbnt6C/
+QfzbHUEnsR9PZDncavnDT1ThKGE7GxDsKLiEA3U9/FvigPjtcbQjvPjVlXWS1Y5C
+QzeFBl1H/vE=
+=d+Ba
 -----END PGP SIGNATURE-----
 
---Sig_/.stEbyvfr_uh_.LucY6NFEp--
+--Sig_/IQ/s_nrUCmUsVvEWEqp2Jjc--
