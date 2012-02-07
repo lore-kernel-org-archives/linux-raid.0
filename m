@@ -1,43 +1,71 @@
-From: Phil Turmel <philip@turmel.org>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: Please Help! RAID5 -> 6 reshapre gone bad
-Date: Mon, 06 Feb 2012 22:38:27 -0500
-Message-ID: <4F309CB3.2080400@turmel.org>
-References: <CAOANJV-V8ZTXBvQxxMnEnv24p8A-fAas-6x65ifW5yp35ZqHnA@mail.gmail.com> <4F30893F.4000709@turmel.org> <CAOANJV955ZdLexRTjVkQzTMapAaMitq5eqxP0rUvDjjLh4Wgzw@mail.gmail.com> <4F309313.2070406@turmel.org> <k4i609x025.ln2@goaway.wombat.san-francisco.ca.us>
+Date: Tue, 7 Feb 2012 14:39:41 +1100
+Message-ID: <20120207143941.58c3ccb6@notabene.brown>
+References: <CAOANJV-V8ZTXBvQxxMnEnv24p8A-fAas-6x65ifW5yp35ZqHnA@mail.gmail.com>
+	<20120207133947.5c4b9a59@notabene.brown>
+	<20120207141023.22cce706@notabene.brown>
+	<CAOANJV_jC_jvUuNuB96ARwJDyg1KAR1ind6uvjTFb4pfuyaHag@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/o1hKw3UOL_atpm4yVhyreer"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <k4i609x025.ln2@goaway.wombat.san-francisco.ca.us>
+In-Reply-To: <CAOANJV_jC_jvUuNuB96ARwJDyg1KAR1ind6uvjTFb4pfuyaHag@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+To: Richard Herd <2001oddity@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/06/2012 10:24 PM, Keith Keller wrote:
-> On 2012-02-07, Phil Turmel <philip@turmel.org> wrote:
->>
->> I understand the constraints, as I pinch pennies at home and at the
->> office (I own my engineering firm).  I've made do with cheap desktop
->> drives that do support ERC.  I got burned when Seagate dropped ERC on
->> their latest desktop drives.  Hitachi Deskstar is the only affordable
->> model on the market that still support ERC.
-> 
-> I can testify that the EARS/EADS drives can be troublesome (see my
-> recent threads on the list).  I also found out that apparently the
-> flooding in Thailand is delaying all drive vendors' enterprise drives--
-> they seem to be one of the few factories that make an essential part,
-> and their factories are all underwater.
-> 
-> Have others had success with mdraid and the Deskstar drives?  I wouldn't
-> mind saving a little money if the drives will actually work, especially
-> if I can get them in before April (the earliest one vendor thinks
-> they might be able to start building drives again).
+--Sig_/o1hKw3UOL_atpm4yVhyreer
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Ow.  I haven't actually bought any yet... I was hoping the prices would
-come down before I needed to.  Sounds like I'll be waiting longer than
-I expected.
+On Tue, 7 Feb 2012 14:19:06 +1100 Richard Herd <2001oddity@gmail.com> wrote:
 
-But, I reviewed the OEM documentation for the 7K3000 family, and they
-clearly document support for the SCT ERC commands (para 9.18.1.2).
+> Hi Neil,
+>=20
+> Thanks.
+>=20
+> FYI, I've cloned your git repo and compiled and tried using your code.
+>  Unfortunately everything looks the same as below (exactly same
+> output, exactly same dmesg - still wants to kick non-fresh sdc from
+> the array at assemble).
 
-Phil
+Strange.
+
+Please report output of=20
+  git describe HEAD
+
+and also run the 'mdadm --assemble --force ....' with -vvv as well, and
+report all of the output.
+
+Also I think some of you devices have changed named a bit.  Make sure you
+list exactly the 6 devices that were recently in the array. i.e. exactly
+those that report something sensible to "mdadm -E /dev/WHATEVER"
+
+NeilBrown
+
+
+--Sig_/o1hKw3UOL_atpm4yVhyreer
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBTzCc/Tnsnt1WYoG5AQKX6xAAsmPZh4suJQZ5+8La3wxh5oEfc+kwz8Jw
+JKeAbR0D7DMlELQ+m9Y3YvBrFlRbwI8qtFsu/z2J27QrHZhRkU7+SeGF2UqDXMWi
+ZyNKeCk9Aw4aM4ip9YQ1HldVQCFO5jg590RIkUi2/m7E706egfeUCMQ/6ArGOAoZ
+AMuvkK3H630VZ7+sIO9bSfwlcRS/ldEuCoTPSu8ZUdyB6FWiUlVVtrLOREP2pLW4
+8BvLd2G94MTi8ZUh27slVozgrjEuRICs7RNB1CbDpueOT0gaLPp9RRW/D80kd+FI
+59illYXx9w2rD0Ih3iMqeoBndajt4HVkOZnHfRGat1SO7kVF0l/cyNYJSygKONMc
+tKP4eq7maffV+IlUMHOIFMU90cKdzSnCe2GDOM0wtQPxvloSDRw4T9bwHkNTthJc
+U9peNgLG+99AO9KcxhDyXKxWhq+CxX+wzHRx4fDEVNcwMLBjJbO5WeA4Dl3bYHIS
+zfx5mCI9wHWv8Nd0tdk6pPrEkHRs/MFxd8zsX13ndhslL1OjZinwHuzRHQa4AtSo
+79GdRsCPqU6Dn02dui1kOegvdYitpkmADZSIVslJcXsqjXIHDDbjkoxt/wFLoei6
+U23ThDb8TrnoM99Hbu6aAosper2p5RWC9DoM4YCYAvtt0gjybN2wCeeX9Jw83G3u
+k3aZWXjmlco=
+=7p1U
+-----END PGP SIGNATURE-----
+
+--Sig_/o1hKw3UOL_atpm4yVhyreer--
