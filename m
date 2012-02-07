@@ -1,50 +1,37 @@
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Subject: imsm raid is always readonly on boot
-Date: Tue, 07 Feb 2012 12:58:17 +0100
-Message-ID: <4F3111D9.2060303@profihost.ag>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 04/12] imsm: FIX: imsm_get_allowed_degradation() doesn't count
+	degradation for raid1
+Date: Tue, 07 Feb 2012 15:03:27 +0100
+Message-ID: <20120207140327.20627.55518.stgit@gklab-128-013.igk.intel.com>
+References: <20120207135940.20627.33309.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120207135940.20627.33309.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com, lukasz.dorau@intel.com
 List-Id: linux-raid.ids
 
-Hi,
+Missing case raid1 added to function.
 
-i'm running 3.0.18 as kernel (renamed to 2.6.40) and mdadm 3.2.2.
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+---
 
-I'm trying to get an intel fake raid running but it is always set to
-readonly on boot after running
-mdadm --assemble --scan --run --force --auto=yes
+ super-intel.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-But i've absolutely no idea why.
+diff --git a/super-intel.c b/super-intel.c
+index 17034bb..19a2c84 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -8771,6 +8771,7 @@ static int imsm_get_allowed_degradation(int level, int raid_disks,
+ 					struct imsm_dev *dev)
+ {
+ 	switch (level) {
++	case 1:
+ 	case 10:{
+ 		int ret_val = 0;
+ 		struct imsm_map *map;
 
-My mdadm.conf:
-# by default (built-in), scan all partitions (/proc/partitions) and all
-# containers for MD superblocks. alternatively, specify devices to scan,
-using
-# wildcards if desired.
-#DEVICE partitions containers
-
-# auto-create devices with Debian standard permissions
-CREATE owner=root group=disk mode=0660 auto=yes
-
-# automatically tag new arrays as belonging to the local system
-HOMEHOST <ignore>
-
-# instruct the monitoring daemon where to send mail alerts
-MAILADDR root
-
-# definitions of existing MD arrays
-ARRAY metadata=imsm UUID=24cdb70d:101f4c4b:23dfa5cb:3f176b6a
-ARRAY /dev/md126 container=24cdb70d:101f4c4b:23dfa5cb:3f176b6a member=0
-UUID=84aa9982:ed593d80:ee7c7f53:e2944038
-
-
-~# cat /sys/block/md126/md/array_state
-readonly
-
-What's wrong? Thanks!
-
-Stefan
