@@ -1,71 +1,44 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Please Help! RAID5 -> 6 reshapre gone bad
-Date: Tue, 7 Feb 2012 14:39:41 +1100
-Message-ID: <20120207143941.58c3ccb6@notabene.brown>
-References: <CAOANJV-V8ZTXBvQxxMnEnv24p8A-fAas-6x65ifW5yp35ZqHnA@mail.gmail.com>
-	<20120207133947.5c4b9a59@notabene.brown>
-	<20120207141023.22cce706@notabene.brown>
-	<CAOANJV_jC_jvUuNuB96ARwJDyg1KAR1ind6uvjTFb4pfuyaHag@mail.gmail.com>
+From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Subject: Re: using dd (or dd_rescue) to salvage array
+Date: Mon, 06 Feb 2012 19:44:19 -0800
+Message-ID: <j9j609x9a5.ln2@goaway.wombat.san-francisco.ca.us>
+References: <8eekv8xpcn.ln2@goaway.wombat.san-francisco.ca.us>
+ <kesmv8xc66.ln2@goaway.wombat.san-francisco.ca.us>
+ <0cdtv8xv8f.ln2@goaway.wombat.san-francisco.ca.us>
+ <4F2D7280.8020500@stud.tu-ilmenau.de>
+ <8q0309x4kf.ln2@goaway.wombat.san-francisco.ca.us>
+ <4F304822.8000102@gmx.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/o1hKw3UOL_atpm4yVhyreer"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOANJV_jC_jvUuNuB96ARwJDyg1KAR1ind6uvjTFb4pfuyaHag@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Herd <2001oddity@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/o1hKw3UOL_atpm4yVhyreer
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 2012-02-06, Stefan *St0fF* Huebner <st0ff@gmx.net> wrote:
+>
+>  From the logical point of view those lost 8k would create bad data - 
+> i.e. a filesystem problem OR simply corrupted data.  That depends on 
+> which blocks exactly are bad.  If you were using lvm it could even be 
+> worse, like broken metadata.
 
-On Tue, 7 Feb 2012 14:19:06 +1100 Richard Herd <2001oddity@gmail.com> wrote:
+I am using LVM, so I'll just have to hope for the best.  I haven't yet
+done an xfs_repair, but I will do that soon.  I just made my volume
+active, and vgchange didn't complain, so I'm guessing that's a good
+sign.
 
-> Hi Neil,
->=20
-> Thanks.
->=20
-> FYI, I've cloned your git repo and compiled and tried using your code.
->  Unfortunately everything looks the same as below (exactly same
-> output, exactly same dmesg - still wants to kick non-fresh sdc from
-> the array at assemble).
+> It would be good if those 8k were "in a row" - that way at max 3 
+> fs-blocks (when using 4k fs-blocksize) would be corrupted.
 
-Strange.
+It was--it looks like it was really just that one spot on the drive.  So
+I am hopeful that any errors that are a result of the lost 8k will be
+reparable by xfs_repair.
 
-Please report output of=20
-  git describe HEAD
-
-and also run the 'mdadm --assemble --force ....' with -vvv as well, and
-report all of the output.
-
-Also I think some of you devices have changed named a bit.  Make sure you
-list exactly the 6 devices that were recently in the array. i.e. exactly
-those that report something sensible to "mdadm -E /dev/WHATEVER"
-
-NeilBrown
+--keith
 
 
---Sig_/o1hKw3UOL_atpm4yVhyreer
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+-- 
+kkeller@wombat.san-francisco.ca.us
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTzCc/Tnsnt1WYoG5AQKX6xAAsmPZh4suJQZ5+8La3wxh5oEfc+kwz8Jw
-JKeAbR0D7DMlELQ+m9Y3YvBrFlRbwI8qtFsu/z2J27QrHZhRkU7+SeGF2UqDXMWi
-ZyNKeCk9Aw4aM4ip9YQ1HldVQCFO5jg590RIkUi2/m7E706egfeUCMQ/6ArGOAoZ
-AMuvkK3H630VZ7+sIO9bSfwlcRS/ldEuCoTPSu8ZUdyB6FWiUlVVtrLOREP2pLW4
-8BvLd2G94MTi8ZUh27slVozgrjEuRICs7RNB1CbDpueOT0gaLPp9RRW/D80kd+FI
-59illYXx9w2rD0Ih3iMqeoBndajt4HVkOZnHfRGat1SO7kVF0l/cyNYJSygKONMc
-tKP4eq7maffV+IlUMHOIFMU90cKdzSnCe2GDOM0wtQPxvloSDRw4T9bwHkNTthJc
-U9peNgLG+99AO9KcxhDyXKxWhq+CxX+wzHRx4fDEVNcwMLBjJbO5WeA4Dl3bYHIS
-zfx5mCI9wHWv8Nd0tdk6pPrEkHRs/MFxd8zsX13ndhslL1OjZinwHuzRHQa4AtSo
-79GdRsCPqU6Dn02dui1kOegvdYitpkmADZSIVslJcXsqjXIHDDbjkoxt/wFLoei6
-U23ThDb8TrnoM99Hbu6aAosper2p5RWC9DoM4YCYAvtt0gjybN2wCeeX9Jw83G3u
-k3aZWXjmlco=
-=7p1U
------END PGP SIGNATURE-----
-
---Sig_/o1hKw3UOL_atpm4yVhyreer--
