@@ -1,253 +1,439 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: sb->resync_offset value after resync failure
-Date: Tue, 7 Feb 2012 11:55:11 +1100
-Message-ID: <20120207115511.619f44e7@notabene.brown>
-References: <CAGRgLy44uKSggEsrU4Fx7op7iVjoPPq-doMdYjxnSGDm6krf9A@mail.gmail.com>
-	<20120126115132.75d9d8bd@notabene.brown>
-	<CAGRgLy6DWGzWCYjTer2DGv5rpU_78_mPvubKAUv1FiQE40HcbA@mail.gmail.com>
-	<20120202091919.1d6dce52@notabene.brown>
-	<CAGRgLy75f6Q8Gi0NBiMMFmNz5MSWQdiAaMLRFJUYPzFezMM-pw@mail.gmail.com>
+From: Richard Herd <2001oddity@gmail.com>
+Subject: Please Help! RAID5 -> 6 reshapre gone bad
+Date: Tue, 7 Feb 2012 12:34:48 +1100
+Message-ID: <CAOANJV-V8ZTXBvQxxMnEnv24p8A-fAas-6x65ifW5yp35ZqHnA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/EbSxMVC=aEsy50k_3rGkVtq"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy75f6Q8Gi0NBiMMFmNz5MSWQdiAaMLRFJUYPzFezMM-pw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/EbSxMVC=aEsy50k_3rGkVtq
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Hey guys,
 
-On Mon, 6 Feb 2012 13:41:57 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
-wrote:
+I'm in a bit of a pickle here and if any mdadm kings could step in and
+throw some advice my way I'd be very grateful :-)
 
-> Hi Neil,
->=20
-> >> # After resync is aborted/interrupted, recovery_cp is updated (either
-> >> to MaxSector or another value). However, the superblock is not updated
-> >> at this point. If there is no additional activity on the array, the
-> >> superblock will not be updated. I saw cases when resync completes
-> >> fine, recovery_cp is set to MaxSector, but not persisted in the
-> >> superblock. If I crash the machine at this point, then after reboot,
-> >> array is still considered as dirty (has valid resync_offset in
-> >> superblock). Is there an option to force the superblock update at this
-> >> point?
-> >
-> > My we just need to move the 'skip:' label to before:
-> >
-> > =C2=A0 =C2=A0 =C2=A0 =C2=A0set_bit(MD_CHANGE_DEVS, &mddev->flags);
-> >
-> > it is that flag which causes the superblock to be updated.
->=20
-> Thanks for the hint, will try it. For production though I'm a bit
-> afraid to recompile my own kernel at this point.
->=20
-> >
-> >>
-> >> # When resync aborts due to drive failure, then MD_RECOVERY_INTR is
-> >> set, and sync_request() returns mddev->dev_sectors - sector_nr. As a
-> >> result, recovery_cp is set to device size, and that's what I see in my
-> >> raid6 scenario. At this point three things can happen:
-> >> 1) If there is additional drive to resync (like in raid6), then resync
-> >> restarts (from sector 0)
-> >
-> > It should really just keep resyncing from where it is up to, shouldn't =
-it?
-> According to the code:
-> 		else if (!mddev->bitmap)
-> 			j =3D mddev->recovery_cp;
-> if the array has a bitmap, then it starts from j=3D=3D0.
+Quick bit of background - little NAS based on an AMD E350 running
+Ubuntu 10.04. Running a software RAID 5 from 5x2TB disks. =A0Every few
+months one of the drives would fail a request and get kicked from the
+array (as is becoming common for these larger multi TB drives they
+tolerate the occasional bad sector by reallocating from a pool of
+spares (but that's a whole other story)). =A0This happened across a
+variety of brands and two different controllers. I'd simply add the
+disk that got popped back in and let it re-sync. =A0SMART tests always
+in good health.
 
-Good point.  When there is a bitmap the recovery_cp number if irrelevant as
-the bitmap stores equivalent information with might finer detail.
+It did make me nervous though. =A0So I decided I'd add a second disk fo=
+r
+a bit of extra redundancy, making the array a RAID 6 - the thinking
+was the occasional disk getting kicked and re-added from a RAID 6
+array wouldn't present as much risk as a single disk getting kicked
+from a RAID 5.
 
->=20
-> >
-> >> 2) If there is a spare, it starts rebuilding the spare, and, as a
-> >> result, persists sb->resync_offset=3D=3Dsb->size in the superblock
+So first off, I added the 6th disk as a hotspare to the RAID5 array.
+So I now had my 5 disk RAID 5 + hotspare.
 
-I just looked into this and tested it and I don't agree.
-->resync_offset does not get set to sb->size.  It gets set to the value that
-curr_resync got up to which is correct ..  or fairly close, it should really
-be curr_resync_completed.
+I then found that mdadm 2.6.7 (in the repositories) isn't actually
+capable of a 5->6 reshape. =A0So I pulled the latest 3.2.3 sources and
+compiled myself a new version of mdadm.
 
-So I don't think there is a big problem there.
+With the newer version of mdadm, it was happy to do the reshape - so I
+set it off on it's merry way, using an esata HD (mounted at /usb :-P)
+for the backupfile:
 
-> >
-> > Hmm.. that's wrong too. =C2=A0It make some sense for RAID5 as if there =
-is a spare
-> > recovering we must assume the rest of the array is in-sync. =C2=A0But n=
-ot for
-> > RAID6.
-> >
-> >> 3) Otherwise, it restarts the resync (due to valid recovery_cp),
-> >> immediately finishes it, and sets recovery_cp=3DMaxSector (but not
-> >> necessarily writes the superblock right away).
-> >
-> > This bit seems right - assuming you are referring to the 'raid5, no spa=
-re'
-> > case.
-> Yes, and also to raid6 with two drives failed during resync.
+root@raven:/# mdadm --grow /dev/md0 --level=3D6 --raid-devices=3D6
+--backup-file=3D/usb/md0.backup
 
-Yes.
+It would take a week to reshape, but it was ona UPS & happily ticking
+along. =A0The array would be online the whole time so I was in no rush.
+Content, I went to get some shut-eye.
 
->=20
-> >> > Maybe every time we update ->curr_resync_completed we should update
-> >> > ->recovery_cp as well if it is below the new ->curre_resync_complete=
-d ??
-> >>
-> >> I'm not sure it will help a lot. Except for not loading part of the
-> >> bitmap (which I am unsure about), the real value if recovery_cp does
-> >> not really matter. Is this correct?
-> >
-> > It is stored in the metadata so if you stop the array in the middle of a
-> > resync, then start the array again, the resync starts from wherever it =
-was up
-> > to. =C2=A0So having a correct value certainly is useful.
-> > (Having a value that is less than the correct value is no a big problem,
-> > have a value that is too big would be bad).
->=20
-> Neil, as I pointed out earlier, it looks like resync always starts
-> from j=3D=3D0, if there is a bitmap. So there is no real importance for
-> the exact value of recovery_cp (I think). Only whether it is MaxSector
-> or not. Am I missing something?
+I got up this morning and took a quick look in /proc/mdstat to see how
+things were going and saw things had failed spectacularly. =A0At least
+two disks had been kicked from the array and the whole thing had
+crumbled.
 
-Yes, when you have a bitmap recovery_cp is much less important.
+Ouch.
 
->=20
-> >
-> >>
-> >> I have another question about md_check_recovery() this code:
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 if (mddev->safemode &&
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 !atomic_read(&mddev->writes_pending) &&
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 !mddev->in_sync &&
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 mddev->recovery_cp =3D=3D MaxSector) {
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 mddev->in_sync =3D 1;
-> >> Why mddev->recovery_cp =3D=3D MaxSector is checked here? =C2=A0This ba=
-sically
-> >> means that if we have a valid recovery_cp, then in_sync will never be
-> >> set to 1, and this code:
-> >> =C2=A0 =C2=A0 =C2=A0 if (mddev->in_sync)
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 sb->resync_offset =3D=
- cpu_to_le64(mddev->recovery_cp);
-> >> =C2=A0 =C2=A0 =C2=A0 else
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 sb->resync_offset =3D=
- cpu_to_le64(0);
-> >> should always set resync_offset to 0. I saw that "in_sync" basically
-> >> tells whether there are pending/in-flight writes.
-> >
-> > If recovery_cp !=3D MaxSector, then the array is not considered to be '=
-clean'
-> > so we don't want to mark it as 'clean'.
-> > On a graceful shutdown we do get in_sync to 1 - in __md_stop_writes.
-> > Maybe we could do it at other times if the array is idle - not sure.
->=20
-> It looks like I am missing something. If 'in_sync'=3D=3D0, then
-> resync_offset will always be 0 in the superblock. If 'in_sync'=3D=3D1,
-> then recovery_cp will be in the superblock. But the code in
-> md_check_recovery() only sets in_sync=3D1 if there is no recovery_cp. If
-> there is a valid recovery_cp, then in_sync will not be set to 1 and
-> the superblock will always contain 0. That's why I am wondering why we
-> are checking recovery_cp here? To end up having a valid recovery_cp in
-> the superblock...we need recovery_cp=3D=3DMaxSectors. Strange?
+I tried to assembe the array, to see if it would continue the reshape:
 
-->resync_offset is only really meaningful and useful after a clean shutdown
-of the array.  The clean-shutdown code path uses a different rule for=20
-setting in_sync to 1.  In that case you do get a useful value written to
-->resync_offset.
+root@raven:/# mdadm -Avv --backup-file=3D/usb/md0.backup /dev/md0
+/dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sdf1 /dev/sdg1
 
+Unfortunately mdadm had decided that the backup-file was out of date
+(timestamps didn't match) and was erroring with: Failed to restore
+critical section for reshape, sorry..
 
->=20
-> Can you please answer two more questions?
->=20
-> 1) When testing the sb->resync offset patch with the latest version of
-> mdadm, some of my unit tests failed due to failure in "--add".
-> Debugging with strace reveals following:
-> write_bitmap1() calls awrite() with 4096b buffer that was allocated on
-> the stack in this function, and is not aligned. However, the fd in use
-> was opened with O_RDWR|O_EXCL|O_DIRECT. As a result, write() fails
-> with errno=3D=3DEINVAL. This appears to be regression at least vs
-> mdadm-3.1.5, in which aligned buffer was used.
-> Portions of strace:
-> open("/dev/sdj", O_RDWR|O_EXCL|O_DIRECT) =3D 4
-> ...
-> ioctl(4, BLKSSZGET, 0x7fffa70b98d4)     =3D 0
-> write(4, "bitm\4\0\0\0G*8\34m\245\261\253\34\341\312\3\214S\203\247\200\0=
-\0\0\0\0\0\0"...,
-> 512) =3D -1 EINVAL (Invalid argument)
-> The buffer pointer at this point is 0x7fffa70b9930 (clearly not aligned t=
-o 512).
-> Do you want me to perhaps prepare a patch, which simply __aligns__ the
-> buffer on the stack?
+Chances are things were in such a mess that backup file wasn't going
+to be used anyway, so I blocked the timestamp check with: export
+MDADM_GROW_ALLOW_OLD=3D1
 
-Hmmm... I messed that up, didn't I?
-I think I'd rather fix awrite so that it *always* does an aligned write.
+That allowed me to assemble the array, but not run it as there were
+not enough disks to start it.
 
-I'll make a patch - thanks.
+This is the current state of the array:
 
->=20
-> 2) Why in md_check_recovery(), rebuilding a spare is preferrable over
-> resyncing the parity by this code:
-> 		} else if ((spares =3D remove_and_add_spares(mddev))) {
-> 			clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
-> 			clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
-> 			clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
-> 			set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
-> 		} else if (mddev->recovery_cp < MaxSector) {
-> 			set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
-> 			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
->=20
-> This leads to situation, in which array "remembers" that it has to
-> complete resync (in sb->resync_offset), but after the spare completes
-> rebuilding, the bitmap is cleared, and subsequent resync starts and
-> immediately completes. Was that decision to prefer rebuild over resync
-> intentional?
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md0 : inactive sdb1[1] sdd1[5] sdf1[4] sda1[2]
+=A0 =A0 =A0 7814047744 blocks super 0.91
 
-Yes.
+unused devices: <none>
 
-In most cases rebuilding the spare will bring the array back into sync anyw=
-ay.
+root@raven:/# mdadm --detail /dev/md0
+/dev/md0:
+=A0 =A0 =A0 =A0 Version : 0.91
+=A0 Creation Time : Tue Jul 12 23:05:01 2011
+=A0 =A0 =A0Raid Level : raid6
+=A0 Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
+=A0 =A0Raid Devices : 6
+=A0 Total Devices : 4
+Preferred Minor : 0
+=A0 =A0 Persistence : Superblock is persistent
 
-Also rebuilding a spare will do more to improve redundancy than a resync.
+=A0 =A0 Update Time : Tue Feb =A07 09:32:29 2012
+=A0 =A0 =A0 =A0 =A0 State : active, FAILED, Not Started
+=A0Active Devices : 3
+Working Devices : 4
+=A0Failed Devices : 0
+=A0 Spare Devices : 1
 
-There might be room for improvement here for RAID6 - if the array is dirty
-and degrade we should both resync and recover at the same time ... and it is
-possible that we already do.  I'd need to look more closely at the code to =
-be
-sure.
+=A0 =A0 =A0 =A0 =A0Layout : left-symmetric-6
+=A0 =A0 =A0Chunk Size : 64K
 
-Thanks,
-NeilBrown
+=A0 =A0 =A0New Layout : left-symmetric
 
+=A0 =A0 =A0 =A0 =A0 =A0UUID : 9a76d1bd:2aabd685:1fc5fe0e:7751cfd7 (loca=
+l to host raven)
+=A0 =A0 =A0 =A0 =A0Events : 0.1848341
 
---Sig_/EbSxMVC=aEsy50k_3rGkVtq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+=A0 =A0 Number =A0 Major =A0 Minor =A0 RaidDevice State
+=A0 =A0 =A0 =A00 =A0 =A0 =A0 0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A00 =A0 =A0=
+ =A0removed
+=A0 =A0 =A0 =A01 =A0 =A0 =A0 8 =A0 =A0 =A0 17 =A0 =A0 =A0 =A01 =A0 =A0 =
+=A0active sync =A0 /dev/sdb1
+=A0 =A0 =A0 =A02 =A0 =A0 =A0 8 =A0 =A0 =A0 =A01 =A0 =A0 =A0 =A02 =A0 =A0=
+ =A0active sync =A0 /dev/sda1
+=A0 =A0 =A0 =A03 =A0 =A0 =A0 0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A03 =A0 =A0=
+ =A0removed
+=A0 =A0 =A0 =A04 =A0 =A0 =A0 8 =A0 =A0 =A0 81 =A0 =A0 =A0 =A04 =A0 =A0 =
+=A0active sync =A0 /dev/sdf1
+=A0 =A0 =A0 =A05 =A0 =A0 =A0 8 =A0 =A0 =A0 49 =A0 =A0 =A0 =A05 =A0 =A0 =
+=A0spare rebuilding =A0 /dev/sdd1
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+The two removed disks:
+[ 3020.998529] md: kicking non-fresh sdc1 from array!
+[ 3021.012672] md: kicking non-fresh sdg1 from array!
 
-iQIVAwUBTzB2bznsnt1WYoG5AQJ40RAAkROkVZK1bh8MJDkyT8DUSW90uNBCVR1l
-wqKRnaIzPEJg6exRGy++j5r/xQlZD63vwBU0HSpJAe/8sdXxxBGgmWJPCLPmgLMQ
-mjb2iR/qVpje4mPLJ2JrQJYT/S9MzdXpV/eKHziJqWfXCEUsKJr4wvN41jGRrRUe
-V/12szU8KqBlkjUksRz4xJIUvuEjMW0UhbuXKY4NQNOJ//+8kcitvGNzpDWUeDID
-a31bwYACWbMHnhzAt+RrFhu70p9LV0TFpCYuhSYraconWO6xfBINQauW7h6biCKj
-OT5Xo4Yp3zSVGAo/V+SUo81jdo+Yro9dBKGO9kgAPeXlvapI6t/CznM0N8SRp6G9
-Dy/bxkryDDD2qNBji03R7d4HXD1gtYs0kN67DyVAk6dSwKk/1AwiHxAk7c2E6Dh7
-wJx8u+VQpKvVCroKw8Y76KtwKskVg0S3IyO2T1s6k0oQJMT7D2jhW6sbcovMEXPW
-n+Zh3mGE1f0JXDiGEHMFi5Bm4xYgR4nG+tRDQlSfQjvuswWnc2l4NjZPOC+IBaoJ
-SVJfj4Zu7EaomPJmi7KDp/qzVNBBN8pmz7qS59I+Wp9OLEIGZeRA7M7gAf4c8W8t
-NUrim05T+wUuA/JyIc6kxCSWiO3Yd+adVSk/pbdUs/bBYLVd9FZg2WZmTi9GNzQA
-jKPcG21KGpE=
-=+F53
------END PGP SIGNATURE-----
+Attempted to re-add the disks (same for both):
+root@raven:/# mdadm /dev/md0 --add /dev/sdg1
+mdadm: /dev/sdg1 reports being an active member for /dev/md0, but a
+--re-add fails.
+mdadm: not performing --add as that would convert /dev/sdg1 in to a spa=
+re.
+mdadm: To make this a spare, use "mdadm --zero-superblock /dev/sdg1" fi=
+rst.
 
---Sig_/EbSxMVC=aEsy50k_3rGkVtq--
+With a failed array the last thing we want to do is add spares and
+trigger a resync so obviously I haven't zeroed the superblocks and
+added yet.
+
+Checked and two disks really are out of sync:
+root@raven:/# mdadm --examine /dev/sd[a-h]1 | grep Event
+=A0 =A0 =A0 =A0 =A0Events : 1848341
+=A0 =A0 =A0 =A0 =A0Events : 1848341
+=A0 =A0 =A0 =A0 =A0Events : 1848333
+=A0 =A0 =A0 =A0 =A0Events : 1848341
+=A0 =A0 =A0 =A0 =A0Events : 1848341
+=A0 =A0 =A0 =A0 =A0Events : 1772921
+
+I'll post the output of --examine on all the disks below - if anyone
+has any advice I'd really appreciate it (Neil Brown doesn't read these
+forums does he?!?). =A0I would usually move next to recreating the arra=
+y
+and using assume-clean but since it's right in the middle of a reshape
+I'm not inclined to try.
+
+Critical stuff is of course backed up, but there is some user data not
+covered by backups that I'd like to try and restore if at all
+possible.
+
+Thanks
+
+root@raven:/# mdadm --examine /dev/sd[a-h]1
+/dev/sda1:
+=A0 =A0 =A0 =A0 =A0 Magic : a92b4efc
+=A0 =A0 =A0 =A0 Version : 0.91.00
+=A0 =A0 =A0 =A0 =A0 =A0UUID : 9a76d1bd:2aabd685:1fc5fe0e:7751cfd7 (loca=
+l to host raven)
+=A0 Creation Time : Tue Jul 12 23:05:01 2011
+=A0 =A0 =A0Raid Level : raid6
+=A0 Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
+=A0 =A0 =A0Array Size : 7814047744 (7452.06 GiB 8001.58 GB)
+=A0 =A0Raid Devices : 6
+=A0 Total Devices : 6
+Preferred Minor : 0
+
+=A0 Reshape pos'n : 307740672 (293.48 GiB 315.13 GB)
+=A0 =A0 =A0New Layout : left-symmetric
+
+=A0 =A0 Update Time : Tue Feb =A07 09:32:29 2012
+=A0 =A0 =A0 =A0 =A0 State : clean
+=A0Active Devices : 4
+Working Devices : 4
+=A0Failed Devices : 1
+=A0 Spare Devices : 0
+=A0 =A0 =A0 =A0Checksum : 3c0c8563 - correct
+=A0 =A0 =A0 =A0 =A0Events : 1848341
+
+=A0 =A0 =A0 =A0 =A0Layout : left-symmetric-6
+=A0 =A0 =A0Chunk Size : 64K
+
+=A0 =A0 =A0 Number =A0 Major =A0 Minor =A0 RaidDevice State
+this =A0 =A0 2 =A0 =A0 =A0 8 =A0 =A0 =A0 17 =A0 =A0 =A0 =A02 =A0 =A0 =A0=
+active sync =A0 /dev/sdb1
+
+=A0 =A00 =A0 =A0 0 =A0 =A0 =A0 0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A00 =A0 =
+=A0 =A0removed
+=A0 =A01 =A0 =A0 1 =A0 =A0 =A0 8 =A0 =A0 =A0 33 =A0 =A0 =A0 =A01 =A0 =A0=
+ =A0active sync =A0 /dev/sdc1
+=A0 =A02 =A0 =A0 2 =A0 =A0 =A0 8 =A0 =A0 =A0 17 =A0 =A0 =A0 =A02 =A0 =A0=
+ =A0active sync =A0 /dev/sdb1
+=A0 =A03 =A0 =A0 3 =A0 =A0 =A0 0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A03 =A0 =
+=A0 =A0faulty removed
+=A0 =A04 =A0 =A0 4 =A0 =A0 =A0 8 =A0 =A0 =A0 81 =A0 =A0 =A0 =A04 =A0 =A0=
+ =A0active sync =A0 /dev/sdf1
+=A0 =A05 =A0 =A0 5 =A0 =A0 =A0 8 =A0 =A0 =A0 65 =A0 =A0 =A0 =A05 =A0 =A0=
+ =A0active =A0 /dev/sde1
+
+/dev/sdb1:
+=A0 =A0 =A0 =A0 =A0 Magic : a92b4efc
+=A0 =A0 =A0 =A0 Version : 0.91.00
+=A0 =A0 =A0 =A0 =A0 =A0UUID : 9a76d1bd:2aabd685:1fc5fe0e:7751cfd7 (loca=
+l to host raven)
+=A0 Creation Time : Tue Jul 12 23:05:01 2011
+=A0 =A0 =A0Raid Level : raid6
+=A0 Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
+=A0 =A0 =A0Array Size : 7814047744 (7452.06 GiB 8001.58 GB)
+=A0 =A0Raid Devices : 6
+=A0 Total Devices : 6
+Preferred Minor : 0
+
+=A0 Reshape pos'n : 307740672 (293.48 GiB 315.13 GB)
+=A0 =A0 =A0New Layout : left-symmetric
+
+=A0 =A0 Update Time : Tue Feb =A07 09:32:29 2012
+=A0 =A0 =A0 =A0 =A0 State : clean
+=A0Active Devices : 4
+Working Devices : 4
+=A0Failed Devices : 1
+=A0 Spare Devices : 0
+=A0 =A0 =A0 =A0Checksum : 3c0c8571 - correct
+=A0 =A0 =A0 =A0 =A0Events : 1848341
+
+=A0 =A0 =A0 =A0 =A0Layout : left-symmetric-6
+=A0 =A0 =A0Chunk Size : 64K
+
+=A0 =A0 =A0 Number =A0 Major =A0 Minor =A0 RaidDevice State
+this =A0 =A0 1 =A0 =A0 =A0 8 =A0 =A0 =A0 33 =A0 =A0 =A0 =A01 =A0 =A0 =A0=
+active sync =A0 /dev/sdc1
+
+=A0 =A00 =A0 =A0 0 =A0 =A0 =A0 0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A00 =A0 =
+=A0 =A0removed
+=A0 =A01 =A0 =A0 1 =A0 =A0 =A0 8 =A0 =A0 =A0 33 =A0 =A0 =A0 =A01 =A0 =A0=
+ =A0active sync =A0 /dev/sdc1
+=A0 =A02 =A0 =A0 2 =A0 =A0 =A0 8 =A0 =A0 =A0 17 =A0 =A0 =A0 =A02 =A0 =A0=
+ =A0active sync =A0 /dev/sdb1
+=A0 =A03 =A0 =A0 3 =A0 =A0 =A0 0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A03 =A0 =
+=A0 =A0faulty removed
+=A0 =A04 =A0 =A0 4 =A0 =A0 =A0 8 =A0 =A0 =A0 81 =A0 =A0 =A0 =A04 =A0 =A0=
+ =A0active sync =A0 /dev/sdf1
+=A0 =A05 =A0 =A0 5 =A0 =A0 =A0 8 =A0 =A0 =A0 65 =A0 =A0 =A0 =A05 =A0 =A0=
+ =A0active =A0 /dev/sde1
+
+/dev/sdc1:
+=A0 =A0 =A0 =A0 =A0 Magic : a92b4efc
+=A0 =A0 =A0 =A0 Version : 0.91.00
+=A0 =A0 =A0 =A0 =A0 =A0UUID : 9a76d1bd:2aabd685:1fc5fe0e:7751cfd7 (loca=
+l to host raven)
+=A0 Creation Time : Tue Jul 12 23:05:01 2011
+=A0 =A0 =A0Raid Level : raid6
+=A0 Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
+=A0 =A0 =A0Array Size : 7814047744 (7452.06 GiB 8001.58 GB)
+=A0 =A0Raid Devices : 6
+=A0 Total Devices : 6
+Preferred Minor : 0
+
+=A0 Reshape pos'n : 307740672 (293.48 GiB 315.13 GB)
+=A0 =A0 =A0New Layout : left-symmetric
+
+=A0 =A0 Update Time : Tue Feb =A07 07:12:01 2012
+=A0 =A0 =A0 =A0 =A0 State : clean
+=A0Active Devices : 5
+Working Devices : 5
+=A0Failed Devices : 0
+=A0 Spare Devices : 0
+=A0 =A0 =A0 =A0Checksum : 3c0c6478 - correct
+=A0 =A0 =A0 =A0 =A0Events : 1848333
+
+=A0 =A0 =A0 =A0 =A0Layout : left-symmetric-6
+=A0 =A0 =A0Chunk Size : 64K
+
+=A0 =A0 =A0 Number =A0 Major =A0 Minor =A0 RaidDevice State
+this =A0 =A0 3 =A0 =A0 =A0 8 =A0 =A0 =A0 49 =A0 =A0 =A0 =A03 =A0 =A0 =A0=
+active sync =A0 /dev/sdd1
+
+=A0 =A00 =A0 =A0 0 =A0 =A0 =A0 0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A00 =A0 =
+=A0 =A0removed
+=A0 =A01 =A0 =A0 1 =A0 =A0 =A0 8 =A0 =A0 =A0 33 =A0 =A0 =A0 =A01 =A0 =A0=
+ =A0active sync =A0 /dev/sdc1
+=A0 =A02 =A0 =A0 2 =A0 =A0 =A0 8 =A0 =A0 =A0 17 =A0 =A0 =A0 =A02 =A0 =A0=
+ =A0active sync =A0 /dev/sdb1
+=A0 =A03 =A0 =A0 3 =A0 =A0 =A0 8 =A0 =A0 =A0 49 =A0 =A0 =A0 =A03 =A0 =A0=
+ =A0active sync =A0 /dev/sdd1
+=A0 =A04 =A0 =A0 4 =A0 =A0 =A0 8 =A0 =A0 =A0 81 =A0 =A0 =A0 =A04 =A0 =A0=
+ =A0active sync =A0 /dev/sdf1
+=A0 =A05 =A0 =A0 5 =A0 =A0 =A0 8 =A0 =A0 =A0 65 =A0 =A0 =A0 =A05 =A0 =A0=
+ =A0active =A0 /dev/sde1
+
+/dev/sdd1:
+=A0 =A0 =A0 =A0 =A0 Magic : a92b4efc
+=A0 =A0 =A0 =A0 Version : 0.91.00
+=A0 =A0 =A0 =A0 =A0 =A0UUID : 9a76d1bd:2aabd685:1fc5fe0e:7751cfd7 (loca=
+l to host raven)
+=A0 Creation Time : Tue Jul 12 23:05:01 2011
+=A0 =A0 =A0Raid Level : raid6
+=A0 Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
+=A0 =A0 =A0Array Size : 7814047744 (7452.06 GiB 8001.58 GB)
+=A0 =A0Raid Devices : 6
+=A0 Total Devices : 6
+Preferred Minor : 0
+
+=A0 Reshape pos'n : 307740672 (293.48 GiB 315.13 GB)
+=A0 =A0 =A0New Layout : left-symmetric
+
+=A0 =A0 Update Time : Tue Feb =A07 09:32:29 2012
+=A0 =A0 =A0 =A0 =A0 State : clean
+=A0Active Devices : 4
+Working Devices : 4
+=A0Failed Devices : 1
+=A0 Spare Devices : 0
+=A0 =A0 =A0 =A0Checksum : 3c0c8595 - correct
+=A0 =A0 =A0 =A0 =A0Events : 1848341
+
+=A0 =A0 =A0 =A0 =A0Layout : left-symmetric-6
+=A0 =A0 =A0Chunk Size : 64K
+
+=A0 =A0 =A0 Number =A0 Major =A0 Minor =A0 RaidDevice State
+this =A0 =A0 5 =A0 =A0 =A0 8 =A0 =A0 =A0 65 =A0 =A0 =A0 =A05 =A0 =A0 =A0=
+active =A0 /dev/sde1
+
+=A0 =A00 =A0 =A0 0 =A0 =A0 =A0 0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A00 =A0 =
+=A0 =A0removed
+=A0 =A01 =A0 =A0 1 =A0 =A0 =A0 8 =A0 =A0 =A0 33 =A0 =A0 =A0 =A01 =A0 =A0=
+ =A0active sync =A0 /dev/sdc1
+=A0 =A02 =A0 =A0 2 =A0 =A0 =A0 8 =A0 =A0 =A0 17 =A0 =A0 =A0 =A02 =A0 =A0=
+ =A0active sync =A0 /dev/sdb1
+=A0 =A03 =A0 =A0 3 =A0 =A0 =A0 0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A03 =A0 =
+=A0 =A0faulty removed
+=A0 =A04 =A0 =A0 4 =A0 =A0 =A0 8 =A0 =A0 =A0 81 =A0 =A0 =A0 =A04 =A0 =A0=
+ =A0active sync =A0 /dev/sdf1
+=A0 =A05 =A0 =A0 5 =A0 =A0 =A0 8 =A0 =A0 =A0 65 =A0 =A0 =A0 =A05 =A0 =A0=
+ =A0active =A0 /dev/sde1
+
+/dev/sdf1:
+=A0 =A0 =A0 =A0 =A0 Magic : a92b4efc
+=A0 =A0 =A0 =A0 Version : 0.91.00
+=A0 =A0 =A0 =A0 =A0 =A0UUID : 9a76d1bd:2aabd685:1fc5fe0e:7751cfd7 (loca=
+l to host raven)
+=A0 Creation Time : Tue Jul 12 23:05:01 2011
+=A0 =A0 =A0Raid Level : raid6
+=A0 Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
+=A0 =A0 =A0Array Size : 7814047744 (7452.06 GiB 8001.58 GB)
+=A0 =A0Raid Devices : 6
+=A0 Total Devices : 6
+Preferred Minor : 0
+
+=A0 Reshape pos'n : 307740672 (293.48 GiB 315.13 GB)
+=A0 =A0 =A0New Layout : left-symmetric
+
+=A0 =A0 Update Time : Tue Feb =A07 09:32:29 2012
+=A0 =A0 =A0 =A0 =A0 State : clean
+=A0Active Devices : 4
+Working Devices : 4
+=A0Failed Devices : 1
+=A0 Spare Devices : 0
+=A0 =A0 =A0 =A0Checksum : 3c0c85a7 - correct
+=A0 =A0 =A0 =A0 =A0Events : 1848341
+
+=A0 =A0 =A0 =A0 =A0Layout : left-symmetric-6
+=A0 =A0 =A0Chunk Size : 64K
+
+=A0 =A0 =A0 Number =A0 Major =A0 Minor =A0 RaidDevice State
+this =A0 =A0 4 =A0 =A0 =A0 8 =A0 =A0 =A0 81 =A0 =A0 =A0 =A04 =A0 =A0 =A0=
+active sync =A0 /dev/sdf1
+
+=A0 =A00 =A0 =A0 0 =A0 =A0 =A0 0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A00 =A0 =
+=A0 =A0removed
+=A0 =A01 =A0 =A0 1 =A0 =A0 =A0 8 =A0 =A0 =A0 33 =A0 =A0 =A0 =A01 =A0 =A0=
+ =A0active sync =A0 /dev/sdc1
+=A0 =A02 =A0 =A0 2 =A0 =A0 =A0 8 =A0 =A0 =A0 17 =A0 =A0 =A0 =A02 =A0 =A0=
+ =A0active sync =A0 /dev/sdb1
+=A0 =A03 =A0 =A0 3 =A0 =A0 =A0 0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A03 =A0 =
+=A0 =A0faulty removed
+=A0 =A04 =A0 =A0 4 =A0 =A0 =A0 8 =A0 =A0 =A0 81 =A0 =A0 =A0 =A04 =A0 =A0=
+ =A0active sync =A0 /dev/sdf1
+=A0 =A05 =A0 =A0 5 =A0 =A0 =A0 8 =A0 =A0 =A0 65 =A0 =A0 =A0 =A05 =A0 =A0=
+ =A0active =A0 /dev/sde1
+
+/dev/sdg1:
+=A0 =A0 =A0 =A0 =A0 Magic : a92b4efc
+=A0 =A0 =A0 =A0 Version : 0.91.00
+=A0 =A0 =A0 =A0 =A0 =A0UUID : 9a76d1bd:2aabd685:1fc5fe0e:7751cfd7 (loca=
+l to host raven)
+=A0 Creation Time : Tue Jul 12 23:05:01 2011
+=A0 =A0 =A0Raid Level : raid6
+=A0 Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
+=A0 =A0 =A0Array Size : 7814047744 (7452.06 GiB 8001.58 GB)
+=A0 =A0Raid Devices : 6
+=A0 Total Devices : 6
+Preferred Minor : 0
+
+=A0 Reshape pos'n : 307740672 (293.48 GiB 315.13 GB)
+=A0 =A0 =A0New Layout : left-symmetric
+
+=A0 =A0 Update Time : Tue Feb =A07 01:06:46 2012
+=A0 =A0 =A0 =A0 =A0 State : clean
+=A0Active Devices : 6
+Working Devices : 6
+=A0Failed Devices : 0
+=A0 Spare Devices : 0
+=A0 =A0 =A0 =A0Checksum : 3c09c1d2 - correct
+=A0 =A0 =A0 =A0 =A0Events : 1772921
+
+=A0 =A0 =A0 =A0 =A0Layout : left-symmetric-6
+=A0 =A0 =A0Chunk Size : 64K
+
+=A0 =A0 =A0 Number =A0 Major =A0 Minor =A0 RaidDevice State
+this =A0 =A0 0 =A0 =A0 =A0 8 =A0 =A0 =A0 97 =A0 =A0 =A0 =A00 =A0 =A0 =A0=
+active sync =A0 /dev/sdg1
+
+=A0 =A00 =A0 =A0 0 =A0 =A0 =A0 8 =A0 =A0 =A0 97 =A0 =A0 =A0 =A00 =A0 =A0=
+ =A0active sync =A0 /dev/sdg1
+=A0 =A01 =A0 =A0 1 =A0 =A0 =A0 8 =A0 =A0 =A0 33 =A0 =A0 =A0 =A01 =A0 =A0=
+ =A0active sync =A0 /dev/sdc1
+=A0 =A02 =A0 =A0 2 =A0 =A0 =A0 8 =A0 =A0 =A0 17 =A0 =A0 =A0 =A02 =A0 =A0=
+ =A0active sync =A0 /dev/sdb1
+=A0 =A03 =A0 =A0 3 =A0 =A0 =A0 8 =A0 =A0 =A0 49 =A0 =A0 =A0 =A03 =A0 =A0=
+ =A0active sync =A0 /dev/sdd1
+=A0 =A04 =A0 =A0 4 =A0 =A0 =A0 8 =A0 =A0 =A0 81 =A0 =A0 =A0 =A04 =A0 =A0=
+ =A0active sync =A0 /dev/sdf1
+=A0 =A05 =A0 =A0 5 =A0 =A0 =A0 8 =A0 =A0 =A0 65 =A0 =A0 =A0 =A05 =A0 =A0=
+ =A0active =A0 /dev/sde1
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
