@@ -1,49 +1,65 @@
-From: Asif Iqbal <vadud3@gmail.com>
-Subject: remove one md and add its disk to the other md
-Date: Wed, 8 Feb 2012 17:21:39 -0500
-Message-ID: <CAOHBbgWzHUUMeQSeXDGJv1+Na=8oM3iB1VN7mMUvhHqgLaU1dw@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: metadata 1.2 advantages?
+Date: Thu, 9 Feb 2012 10:59:34 +1100
+Message-ID: <20120209105934.36189d93@notabene.brown>
+References: <4F323A00.8050506@profihost.ag>
+	<4F32F435.60405@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/aO+7/ymRd8dGYtkaT2kMfvN"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4F32F435.60405@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi All
+--Sig_/aO+7/ymRd8dGYtkaT2kMfvN
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I have two raid10s
+On Wed, 08 Feb 2012 14:16:21 -0800 "H. Peter Anvin" <hpa@zytor.com> wrote:
 
-md3 : active raid10 sdh2[3] sdf2[1] sdg2[2] sde2[0]
-      143371392 blocks 64K chunks 2 near-copies [4/4] [UUUU]
+> On 02/08/2012 01:01 AM, Stefan Priebe - Profihost AG wrote:
+> > Hi,
+> >=20
+> > for now i'm still using grub 0.97 which can only understand metadata
+> > 0.9. Are there any advantages of the 1.2 metadata format?
+> >=20
+>=20
+> There are a lot of advantages to the 1.x metadata format, but 1.0 is the
+> easiest for bootloaders to deal with.  1.0, 1.1 and 1.2 is the same
+> format, just with the superblock in different places.
 
-md2 : active raid10 sdg1[4] sdc1[0] sdd1[1] sdh1[5] sdf1[3] sde1[2]
-      214684224 blocks 64K chunks 2 near-copies [6/6] [UUUUUU]
+Hi Peter,
+ wasn't it you who told be that 1.2 was best for boot loaders, as 1.0 uses
+block 0 which the bootloader also wants, while 1.2 uses a later block.
+That is why 1.2 is the default.
 
+??
 
-I like to remove md3 and add its slices to md2. All the slices are of
-same sizes.
+NeilBrown
 
-Then I like to make sure PV recognizes the size increase.
+--Sig_/aO+7/ymRd8dGYtkaT2kMfvN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-root@apa-splunk-02:~# pvdisplay /dev/md2
-  --- Physical volume ---
-  PV Name               /dev/md2
-  VG Name               splunk
-  PV Size               204.74 GiB / not usable 576.00 KiB
-  Allocatable           yes
-  PE Size               4.00 MiB
-  Total PE              52413
-  Free PE               1213
-  Allocated PE          51200
-  PV UUID               S3QuJK-dSU5-cjZZ-mcHe-dyux-V3Qo-YIe2oO
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-What is recommended way to do it? I am using ubuntu lucid server lts 64bit
+iQIVAwUBTzMMZjnsnt1WYoG5AQKgzw//WbEjPXOEPt2DXksBFJzQ3ETtGeESjiHv
+RQW46YXHfUc9nPCxW/Ukh8nLXzkmSUPbDGG7nx6vSiK4fyLwD6/lRUlcbr5lsqzX
+NF1UyLlFJD0ZjGuM/23dIyv/Y5nqVa1eaCQUgoH3dZWT0PKgpj3A5fZ175MID73M
+ljymXksOrvHXOvvpaW5uPxkg5kWHkPcuowmLkiF540upsCL1w32PeVdAKzgGVxb2
+NV7WAGP0WYB42uPVwqhgYJqKSdpoWrRF+WPzaQHqkA4Tn4qzADmxKsCW7LfsMRnl
+hHKvNreTPoGtsc5SZgMjEF78Bbk9Qc1iTlSEJXCQCFPWwaZ2DHz9zRFX0ln68YLF
+j3SFxyvQZBVDiO7WzyT/ql2O/atnRB466S71AEL6aorM0tKVGyCzN0uGTAuxszsN
+lffuGWaIFr14RMnXGPHBoxavooZXMCj0Lj2l42fIHk8FS0nKttAYhwm+mJJF+4o2
+o0jgCW/IGraLoEArINGWhxt+GMbycb5jJ7MjE2wZGLhWHxjbKAkpAkT2aAo+/mWg
+YFE4dFo3Ssx9YQma3LvRGCkAggdngwmLiOdpdvj02iBsiCTtlDyi6lOWrxMRmVDR
+WacyDVo2Nz0EPUlLMUCHIY4oUGvhyA3ge/O4mV8o7n1O/5uo+DAAsIU9OXe93KsL
+X+YsOYknAwo=
+=ICkd
+-----END PGP SIGNATURE-----
 
-Thanks for your help
-
-
--- 
-Asif Iqbal
-PGP Key: 0xE62693C5 KeyServer: pgp.mit.edu
-A: Because it messes up the order in which people normally read text.
-Q: Why is top-posting such a bad thing?
+--Sig_/aO+7/ymRd8dGYtkaT2kMfvN--
