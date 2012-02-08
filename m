@@ -1,47 +1,33 @@
-From: CoolCold <coolthecold@gmail.com>
-Subject: Re: write-intent bitmapping
-Date: Wed, 8 Feb 2012 23:50:30 +0400
-Message-ID: <CAGqmV7q7_oQ7NOj5H7ERh8rPuTW4Ao+pG_ZyLG13-q4AXKhPEQ@mail.gmail.com>
-References: <4F323A64.3020609@profihost.ag>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: metadata 1.2 advantages?
+Date: Wed, 08 Feb 2012 14:16:21 -0800
+Message-ID: <4F32F435.60405@zytor.com>
+References: <4F323A00.8050506@profihost.ag>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F323A64.3020609@profihost.ag>
+In-Reply-To: <4F323A00.8050506@profihost.ag>
 Sender: linux-raid-owner@vger.kernel.org
 To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Feb 8, 2012 at 1:03 PM, Stefan Priebe - Profihost AG
-<s.priebe@profihost.ag> wrote:
+On 02/08/2012 01:01 AM, Stefan Priebe - Profihost AG wrote:
 > Hi,
->
-> what is the normal procedure to activate write-intent bitmapping? Cre=
-ate
-> array - wait 1-2 hours until it is in sync and then turn it on manual=
-ly?
-> Or is there a better way without having to remind the fact that i've =
-to
-> turn it on after full sync.
-I'm adding them right on array creation.
+> 
+> for now i'm still using grub 0.97 which can only understand metadata
+> 0.9. Are there any advantages of the 1.2 metadata format?
+> 
 
->
-> Greets
-> Stefan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+There are a lot of advantages to the 1.x metadata format, but 1.0 is the
+easiest for bootloaders to deal with.  1.0, 1.1 and 1.2 is the same
+format, just with the superblock in different places.
+
+	-hpa
 
 
+-- 
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
 
---=20
-Best regards,
-[COOLCOLD-RIPN]
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
