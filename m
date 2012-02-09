@@ -1,106 +1,57 @@
-From: Dag Nygren <dag@newtech.fi>
-Subject: Re: Hang in Raid-5 code (Old bug back?)
-Date: Thu, 09 Feb 2012 04:55:11 +0200
-Message-ID: <8881584.REWxvMC81A@eseries>
-References: <1363014.L0fQ1kFyFY@eseries>
-Reply-To: Dag Nygren <dag@newtech.fi>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: add another disk to existing raid 0, ie grow raid 0 possible?
+Date: Thu, 9 Feb 2012 14:50:54 +1100
+Message-ID: <20120209145054.4443a48b@notabene.brown>
+References: <4F212A59.1070008@oldum.net>
+	<CADNH=7GXJ0DW7K5DqSgoYYsa2eSWzE9P46R=Qrehu1pFXqnpyQ@mail.gmail.com>
+	<20120126215713.0c24db62@notabene.brown>
+	<4F21396D.7030308@oldum.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1363014.L0fQ1kFyFY@eseries>
+In-Reply-To: <4F21396D.7030308@oldum.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Nikolay Kichukov <hijacker@oldum.net>
+Cc: Mathias =?UTF-8?B?QnVyw6lu?= <mathias.buren@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-s=C3=B6ndag 05 februari 2012 18:55:58 skrev  Dag Nygren:
-> Hi!
->=20
-> Using lessfs on top of an XFS on top on a software RAID-5 and see thi=
-s
-> freeze happening about once a week. Usually during heavy load.
-
-No comments on the stuff below? Nobody else?
-Increased the stripe_cache_size to 4096 according to the workaround for=
- ths=20
-old similiar bug. Is the bug back in the recent kernels?
-
-Has not seen any freezes since that workaround but oth they weren't tha=
-t=20
-frequent earlier either.
-
-
-> Feb 5 02:51:04 mythserv kernel: INFO: task lessfs:2687 blocked for mo=
-re than
-> 120 seconds.
-> Feb 5 02:51:04 mythserv kernel: =E2=80=9Cecho 0 >
-> /proc/sys/kernel/hung_task_timeout_secs=E2=80=9D disables this messag=
-e.
-> Feb 5 02:51:04 mythserv kernel: lessfs D ffff88006faf1998 0 2687 1
-> 0=C3=9700000000 Feb 5 02:51:04 mythserv kernel: ffff880066579828
-> 0000000000000086 ffff8800665797b8 ffffffff00000000
-> Feb 5 02:51:04 mythserv kernel: ffff88006faf1620 0000000000013300
-> ffff880066579fd8 ffff880066578010
-> Feb 5 02:51:04 mythserv kernel: ffff880066579fd8 0000000000013300
-> ffffffff81655020 ffff88006faf1620
-> Feb 5 02:51:04 mythserv kernel: Call Trace:
-> Feb 5 02:51:04 mythserv kernel: [] schedule+0x3f/0=C3=9760
-> Feb 5 02:51:04 mythserv kernel: [] get_active_stripe+0x2ea/0=C3=97790=
- [raid456]
-> Feb 5 02:51:04 mythserv kernel: [] ? try_to_wake_up+0x2b0/0x2b0
-> Feb 5 02:51:04 mythserv kernel: [] make_request+0x1ae/0=C3=97460 [rai=
-d456]
-> Feb 5 02:51:04 mythserv kernel: [] ? wake_up_bit+0=C3=9740/0=C3=9740
-> Feb 5 02:51:04 mythserv kernel: [] md_make_request+0xd5/0=C3=97200
-> Feb 5 02:51:04 mythserv kernel: [] generic_make_request+0xbf/0xf0
-> Feb 5 02:51:04 mythserv kernel: [] submit_bio+0=C3=9785/0=C3=97110
-> Feb 5 02:51:04 mythserv kernel: [] ? __bio_add_page+0=C3=97110/0=C3=97=
-250
-> Feb 5 02:51:04 mythserv kernel: [] xfs_submit_ioend_bio+0=C3=9757/0=C3=
-=9780 [xfs]
-> Feb 5 02:51:04 mythserv kernel: [] xfs_submit_ioend+0xf6/0=C3=97110 [=
-xfs]
-> Feb 5 02:51:04 mythserv kernel: [] xfs_vm_writepage+0=C3=97230/0=C3=97=
-500 [xfs]
-> Feb 5 02:51:04 mythserv kernel: [] __writepage+0=C3=9717/0=C3=9740
-> Feb 5 02:51:04 mythserv kernel: [] write_cache_pages+0=C3=97221/0x4a0
-> Feb 5 02:51:04 mythserv kernel: [] ? tomoyo_init_request_info+0x3f/0=C3=
-=9770
-> Feb 5 02:51:04 mythserv kernel: [] ? set_page_dirty+0=C3=9770/0=C3=97=
-70
-> Feb 5 02:51:04 mythserv kernel: [] generic_writepages+0=C3=9751/0=C3=97=
-80
-> Feb 5 02:51:04 mythserv kernel: [] xfs_vm_writepages+0=C3=9753/0=C3=97=
-70 [xfs]
-> Feb 5 02:51:04 mythserv kernel: [] do_writepages+0=C3=9721/0=C3=9740
-> Feb 5 02:51:04 mythserv kernel: [] __filemap_fdatawrite_range+0x5b/0=C3=
-=9760
-> Feb 5 02:51:04 mythserv kernel: [] filemap_write_and_wait_range+0x5a/=
-0=C3=9780
-> Feb 5 02:51:04 mythserv kernel: [] xfs_file_fsync+0=C3=9768/0x2d0 [xf=
-s]
-> Feb 5 02:51:04 mythserv kernel: [] vfs_fsync_range+0x2b/0=C3=9740
-> Feb 5 02:51:04 mythserv kernel: [] vfs_fsync+0x1c/0=C3=9720
-> Feb 5 02:51:04 mythserv kernel: [] do_fsync+0x3a/0=C3=9760
-> Feb 5 02:51:04 mythserv kernel: [] sys_fsync+0=C3=9710/0=C3=9720
-> Feb 5 02:51:04 mythserv kernel: [] system_call_fastpath+0=C3=9716/0x1=
-b
->=20
-> Any hints? Or any debugging I can do to help? I did find a similar ca=
-s from
-> 2008, but that is supposed to be fixed now.
-> This also started after updating the kernel to the 3.x series. At the=
- moment
-> using 3.2.2 and still seeing it.
---=20
-Dag Nygren                               email: dag@newtech.fi
-Oy Espoon NewTech Ab                     phone: +358 9 8024910
-Tr=C3=A4sktorpet 3                              fax: +358 9 8024916
-02360 ESBO                              Mobile: +358 400 426312
-=46INLAND
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBUaHUs
+IDI2IEphbiAyMDEyIDEzOjMwOjUzICswMjAwIE5pa29sYXkgS2ljaHVrb3YgPGhpamFja2VyQG9s
+ZHVtLm5ldD4NCndyb3RlOg0KDQo+IC0tLS0tQkVHSU4gUEdQIFNJR05FRCBNRVNTQUdFLS0tLS0N
+Cj4gSGFzaDogU0hBMQ0KPiANCj4gSGVsbG8gTmVpbCwNCj4gDQo+IEhlcmUgZ29lcyB0aGUgZGV0
+YWlscy4gT25jZSBhZ2Fpbiwgbm8gdmFsdWFibGUgZGF0YSwganVzdCBjdXJpb3VzIHdoYXQgaGFz
+IGdvbmUgd3JvbmcgaW4gdGhhdCBjYXNlOg0KPiANCj4gZG1lc2cgb3V0cHV0LCBmaXJzdCBJIHN0
+b3BwZWQgbWQyLCB0aGVuIGFzc2VtYmxlZCBpdCBhZ2FpbiB0byBwZXJmb3JtIHRoZSBncm93Lg0K
+PiBodHRwOi8vcGFzdGViaW4uY29tL0hrUFZFS2FkDQo+IA0KPiBtZGFkbSAtRSBvdXRwdXQ6DQo+
+IGh0dHA6Ly9wYXN0ZWJpbi5jb20vcEpDanZySkUNCj4gDQo+IFRoZSBzeXN0ZW0gcnVucyBHTlUv
+RGViaWFuIHRlc3Rpbmcgd2l0aCBsYXRlc3QgdXBkYXRlcyBmcm9tIHNlY3VyaXR5LXRlc3Rpbmcg
+YXBwbGllZC4NCj4gS2VybmVsOiAzLjEuMC0xLWFtZDY0DQo+IG1kYWRtOiAgMy4yLjItMQ0KPiAN
+Cj4gTGV0IG1lIGtub3cgc2hvdWxkIHlvdSBuZWVkIGFueSBmdXJ0aGVyIGluZm9ybWF0aW9uLg0K
+DQpJJ3ZlIGZpbmFsbHkgaGFkIGEgbG9vayBhdCB0aGlzIGFuZCB1bmZvcnR1bmF0ZWx5IGNhbm5v
+dCBmaW5kIHRoZSBwcm9ibGVtLg0KVGhlIG1haW4gcmVhc29uIGJlaW5nIHRoYXQgSSBjYW5ub3Qg
+cmVwcm9kdWNlIGl0Lg0KSSBidWlsdCB0aGUgc2FtZSBrZXJuZWwgYW5kIG1kYWRtIGFuZCBjcmVh
+dGVkIGEgdmVyeSBzaW1pbGFyIGFycmF5IGFuZA0KdHJpZWQgdG8gZ3JvdyBpdCBhbmQgaXQgYWxs
+IHdlbnQgc21vb3RobHkuDQoNCkluIHlvdXIgY2FzZSBpdCBkaWRuJ3Qgc3RhcnQgdGhlIHJlc2hh
+cGUgYXQgYWxsIChyZXNoYXBlIHBvc2l0aW9uIHdhcyB6ZXJvKSBzbw0Kc29tZXRoaW5nIHdlbnQg
+d3JvbmcgdmVyeSBlYXJseS4NCg0KSWYgeW91IGZlZWwgbGlrZSB0cnlpbmcgdG8gcmVwcm9kdWNl
+IGl0IGFnYWluIHRoYXQgbWlnaHQgYmUgaGVscGZ1bC4NClRoZW4gSSB3b3VsZCBhc2sgeW91IHRv
+IHJ1biB0aGUgIm1kYWRtIC0tZ3JvdyIgY29tbWFuZCB1bmRlciANCiAgICBzdHJhY2UgLW8gL3Rt
+cC9mb28gLWYgbWRhZG0gLS1ncm93IC4uLi4NCg0KYW5kIHNlbmQgbWUgdGhlIC90bXAvZm9vLiAg
+QnV0IEkgd29uJ3QgYmUgc3VycHJpc2VkIGlmIHlvdSBjYW5ub3QgcmVwcm9kdWNlLg0KU2FkIHJl
+YWxseS4NCg0KVGhhbmtzIGFueXdheSwNCk5laWxCcm93bg0KLS0tLS1CRUdJTiBQR1AgU0lHTkFU
+VVJFLS0tLS0NClZlcnNpb246IEdudVBHIHYyLjAuMTggKEdOVS9MaW51eCkNCg0KaVFJVkF3VUJU
+ek5Dbmpuc250MVdZb0c1QVFLWW1RLzdCcFFNanFqZ2NleU1nYmw1eEZFM3JOZjBSYWlhNU9nMA0K
+NVVyeFF0TkREK3JLblFnSFVOM1dKaXpYWitUK3FOMEZBRnhVczRYQXJSZFpDTk4zUUhlTXhkU3Yx
+aDNEUFZ0YQ0Kcm9LeGplUk5nTEtmMTFHR202Vnc0ejh3SmxmaHZGMHBEVzdTVnlzSU8vMElYQnkx
+T0s3bGwzajQ1SGpwMFR6NA0KTDQ2Ly9Zc3JScWlqR3o4ZW9PaDdRWE1GMllWRWFENlE1eGJxTTRU
+TDRCc292c2wyaWk5YVRXbEVUcFd1aC9HQg0KYy9wMnVVNEk2RzNILzdmcGQza0YyL1VJd29SNWt3
+VWFjUklDbW40a3dxNHdUTWp6UEZjL3JIeW5GRi9BWk1IUg0KUHJkUy9CRzVwd3I3NUlNbkluRnVL
+ZUxLNUx2bHdXemNuRHdXeDVHUmhKaTBMbFlsd3MySkpyTWJBbm4vemJyTQ0KbXpOUVVaSzh5K2ow
+Qm81eEFycGw5RDcxNWZHeGFqbVB5SEluSFIzdk9INXhPa0lXOElya3VlM1R4VnlxL29VRA0KSEVs
+akU2dEJkT3A5bWVpRUNUQVA0TEJMZVFteW9oSVB3NzIyRi9xc2M1NG5HM2RZenRSVjB2RkpmdHVi
+dzFYMA0KTEF6UXJ4enF5NmxTV25HeUpqRS9rWEVxY0lGUHFVdzRxN0ptWEVLZTVRRG9QTlJvOUtQ
+Vk8wc0xVQis3TzNPZg0KSVhNVHhmOEd6L201dGZzeDNEbVNSVm5aa3dwd3dscjJHVUh1c0ZUUWRy
+blFZZktoR2pyRncyN3lnZHZtdnF0Vg0KenVFVmYydHIyRy9lR0J0MkE5VnYraHRoWnpZcGVzdjFK
+VDA0Z0E5ZG55UXlJZkZoQTE1SkFYUEpPcUFYdjhEMw0KOGY3MCt5dmpsQmc9DQo9bDl4Ug0KLS0t
+LS1FTkQgUEdQIFNJR05BVFVSRS0tLS0tDQo=
