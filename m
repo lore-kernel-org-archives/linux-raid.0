@@ -1,57 +1,83 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: add another disk to existing raid 0, ie grow raid 0 possible?
-Date: Thu, 9 Feb 2012 14:50:54 +1100
-Message-ID: <20120209145054.4443a48b@notabene.brown>
-References: <4F212A59.1070008@oldum.net>
-	<CADNH=7GXJ0DW7K5DqSgoYYsa2eSWzE9P46R=Qrehu1pFXqnpyQ@mail.gmail.com>
-	<20120126215713.0c24db62@notabene.brown>
-	<4F21396D.7030308@oldum.net>
+From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Subject: [long] general advice: config recommendations
+Date: Wed, 08 Feb 2012 22:45:18 -0800
+Message-ID: <uk6c09xju8.ln2@goaway.wombat.san-francisco.ca.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F21396D.7030308@oldum.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nikolay Kichukov <hijacker@oldum.net>
-Cc: Mathias =?UTF-8?B?QnVyw6lu?= <mathias.buren@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBUaHUs
-IDI2IEphbiAyMDEyIDEzOjMwOjUzICswMjAwIE5pa29sYXkgS2ljaHVrb3YgPGhpamFja2VyQG9s
-ZHVtLm5ldD4NCndyb3RlOg0KDQo+IC0tLS0tQkVHSU4gUEdQIFNJR05FRCBNRVNTQUdFLS0tLS0N
-Cj4gSGFzaDogU0hBMQ0KPiANCj4gSGVsbG8gTmVpbCwNCj4gDQo+IEhlcmUgZ29lcyB0aGUgZGV0
-YWlscy4gT25jZSBhZ2Fpbiwgbm8gdmFsdWFibGUgZGF0YSwganVzdCBjdXJpb3VzIHdoYXQgaGFz
-IGdvbmUgd3JvbmcgaW4gdGhhdCBjYXNlOg0KPiANCj4gZG1lc2cgb3V0cHV0LCBmaXJzdCBJIHN0
-b3BwZWQgbWQyLCB0aGVuIGFzc2VtYmxlZCBpdCBhZ2FpbiB0byBwZXJmb3JtIHRoZSBncm93Lg0K
-PiBodHRwOi8vcGFzdGViaW4uY29tL0hrUFZFS2FkDQo+IA0KPiBtZGFkbSAtRSBvdXRwdXQ6DQo+
-IGh0dHA6Ly9wYXN0ZWJpbi5jb20vcEpDanZySkUNCj4gDQo+IFRoZSBzeXN0ZW0gcnVucyBHTlUv
-RGViaWFuIHRlc3Rpbmcgd2l0aCBsYXRlc3QgdXBkYXRlcyBmcm9tIHNlY3VyaXR5LXRlc3Rpbmcg
-YXBwbGllZC4NCj4gS2VybmVsOiAzLjEuMC0xLWFtZDY0DQo+IG1kYWRtOiAgMy4yLjItMQ0KPiAN
-Cj4gTGV0IG1lIGtub3cgc2hvdWxkIHlvdSBuZWVkIGFueSBmdXJ0aGVyIGluZm9ybWF0aW9uLg0K
-DQpJJ3ZlIGZpbmFsbHkgaGFkIGEgbG9vayBhdCB0aGlzIGFuZCB1bmZvcnR1bmF0ZWx5IGNhbm5v
-dCBmaW5kIHRoZSBwcm9ibGVtLg0KVGhlIG1haW4gcmVhc29uIGJlaW5nIHRoYXQgSSBjYW5ub3Qg
-cmVwcm9kdWNlIGl0Lg0KSSBidWlsdCB0aGUgc2FtZSBrZXJuZWwgYW5kIG1kYWRtIGFuZCBjcmVh
-dGVkIGEgdmVyeSBzaW1pbGFyIGFycmF5IGFuZA0KdHJpZWQgdG8gZ3JvdyBpdCBhbmQgaXQgYWxs
-IHdlbnQgc21vb3RobHkuDQoNCkluIHlvdXIgY2FzZSBpdCBkaWRuJ3Qgc3RhcnQgdGhlIHJlc2hh
-cGUgYXQgYWxsIChyZXNoYXBlIHBvc2l0aW9uIHdhcyB6ZXJvKSBzbw0Kc29tZXRoaW5nIHdlbnQg
-d3JvbmcgdmVyeSBlYXJseS4NCg0KSWYgeW91IGZlZWwgbGlrZSB0cnlpbmcgdG8gcmVwcm9kdWNl
-IGl0IGFnYWluIHRoYXQgbWlnaHQgYmUgaGVscGZ1bC4NClRoZW4gSSB3b3VsZCBhc2sgeW91IHRv
-IHJ1biB0aGUgIm1kYWRtIC0tZ3JvdyIgY29tbWFuZCB1bmRlciANCiAgICBzdHJhY2UgLW8gL3Rt
-cC9mb28gLWYgbWRhZG0gLS1ncm93IC4uLi4NCg0KYW5kIHNlbmQgbWUgdGhlIC90bXAvZm9vLiAg
-QnV0IEkgd29uJ3QgYmUgc3VycHJpc2VkIGlmIHlvdSBjYW5ub3QgcmVwcm9kdWNlLg0KU2FkIHJl
-YWxseS4NCg0KVGhhbmtzIGFueXdheSwNCk5laWxCcm93bg0KLS0tLS1CRUdJTiBQR1AgU0lHTkFU
-VVJFLS0tLS0NClZlcnNpb246IEdudVBHIHYyLjAuMTggKEdOVS9MaW51eCkNCg0KaVFJVkF3VUJU
-ek5Dbmpuc250MVdZb0c1QVFLWW1RLzdCcFFNanFqZ2NleU1nYmw1eEZFM3JOZjBSYWlhNU9nMA0K
-NVVyeFF0TkREK3JLblFnSFVOM1dKaXpYWitUK3FOMEZBRnhVczRYQXJSZFpDTk4zUUhlTXhkU3Yx
-aDNEUFZ0YQ0Kcm9LeGplUk5nTEtmMTFHR202Vnc0ejh3SmxmaHZGMHBEVzdTVnlzSU8vMElYQnkx
-T0s3bGwzajQ1SGpwMFR6NA0KTDQ2Ly9Zc3JScWlqR3o4ZW9PaDdRWE1GMllWRWFENlE1eGJxTTRU
-TDRCc292c2wyaWk5YVRXbEVUcFd1aC9HQg0KYy9wMnVVNEk2RzNILzdmcGQza0YyL1VJd29SNWt3
-VWFjUklDbW40a3dxNHdUTWp6UEZjL3JIeW5GRi9BWk1IUg0KUHJkUy9CRzVwd3I3NUlNbkluRnVL
-ZUxLNUx2bHdXemNuRHdXeDVHUmhKaTBMbFlsd3MySkpyTWJBbm4vemJyTQ0KbXpOUVVaSzh5K2ow
-Qm81eEFycGw5RDcxNWZHeGFqbVB5SEluSFIzdk9INXhPa0lXOElya3VlM1R4VnlxL29VRA0KSEVs
-akU2dEJkT3A5bWVpRUNUQVA0TEJMZVFteW9oSVB3NzIyRi9xc2M1NG5HM2RZenRSVjB2RkpmdHVi
-dzFYMA0KTEF6UXJ4enF5NmxTV25HeUpqRS9rWEVxY0lGUHFVdzRxN0ptWEVLZTVRRG9QTlJvOUtQ
-Vk8wc0xVQis3TzNPZg0KSVhNVHhmOEd6L201dGZzeDNEbVNSVm5aa3dwd3dscjJHVUh1c0ZUUWRy
-blFZZktoR2pyRncyN3lnZHZtdnF0Vg0KenVFVmYydHIyRy9lR0J0MkE5VnYraHRoWnpZcGVzdjFK
-VDA0Z0E5ZG55UXlJZkZoQTE1SkFYUEpPcUFYdjhEMw0KOGY3MCt5dmpsQmc9DQo9bDl4Ug0KLS0t
-LS1FTkQgUEdQIFNJR05BVFVSRS0tLS0tDQo=
+Hello fellow RAIDers,
+
+I'm looking for some pointers on how I might best configure my modest
+mdraid array.  After some unfortunate hardware failures, it looks like I
+will not be able to recover my existing array.  (This is a minor
+annoyance, which is why I'm leaning towards starting over instead of
+spending more time trying to recover.)
+
+My basic situation: I have a 16-bay chassis attached to a 3ware 9550
+controller.  I'm really unhappy with the controller, but am wary of
+replacing it for various reasons (hard to find PCI-X controllers, very
+hard to find 16-port PCI-X controllers, cards I've found would need
+cables replaced as well).  And, as we've talked about on list,
+enterprise-class drives are hard to find as well, at least for a few
+months, so I need to battle my EARS/EADS drives for at least a little
+longer.  (I do have 5 RE4 drives I can use, and may test some of the
+Hitachis we've talked about.)  My last array was a 10x2TB RAID6
+resulting in about 15TB of usable storage; at the time it was ~90% full,
+but if my snapshots are gone I may have some time where I don't get
+quite that full.
+
+I am looking for the best compromise between maximizing storage,
+defending against the EADS drives, the potential to recover from
+multiple drive failures, and being able to swap out the EADS drives
+quickly once I'm able to get better drives.  Easy, right?  ;-)
+
+So, some options I'm tossing around:
+
+-- [ot] LVM or no LVM?  I am certainly not well-versed in LVM, but
+it's certainly possible that LVM helped contribute to not being able
+to recover the existing filesystem.  I am wondering if it is worth
+the extra overhead (and metadata) to get the benefits of LVM if the odds
+are slim that I'll have storage I can't integrate into the md RAID
+arrays.  I know that's OT, but...
+
+--RAID6, RAID50, RAID5s+LVM, separate RAID5s?  RAID6 maximizes storage,
+but has longer rebuild times; any RAID5 combination makes rebuilds (and
+reshapes?) faster, but I worry that there's less leeway in an individual
+RAID5 if there's one with multiple EADS drives.  One option I had in
+mind was to throw as many of my enterprise drives at my more important
+snapshots, and put the EADS drives all together to snapshot the less
+important data.  So perhaps I could have a RAID6 that included all the
+RE4 drives, plus two EADS drives, for ~9TB usable, and a RAID5 or RAID6
+with four or five drives for the rest.  Or I could make two four drive
+RAID5s, either in a RAID50 or LVM, for ~11TB usable (I would want to
+find another RE4 or equivalent for this).
+
+Are there any appreciable advantages of RAID50 over RAID5s grouped
+together by LVM or vice-versa?  They seem very similar superficially.
+Can I add a disk and reshape one member of a RAID50 without modifying
+the other?  I don't think the 3ware 9550 supports that.  This situation
+seems like it's the stereotypical use case for LVM, but perhaps a plain
+RAID50 has advantages that make it preferable.
+
+--Finally, the age-old argument: whole disks or partitions?  I wonder if
+this is the mdraid equivalent of emacs vs. vi.  :)  I used partitions in
+the last array, but TBH I wasn't all that happy with it, though I
+couldn't explain why.  It could be I'm just used to working with whole
+disks on RAID controllers.
+
+--Any other pointers/advice/gotchas?
+
+Thanks for reading--if you've made it this far I probably owe you a
+beer!
+
+--keith
+
+-- 
+kkeller@wombat.san-francisco.ca.us
+
+
