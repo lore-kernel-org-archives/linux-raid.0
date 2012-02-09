@@ -1,77 +1,82 @@
-From: Asif Iqbal <vadud3@gmail.com>
-Subject: Re: remove one md and add its disk to the other md
-Date: Wed, 8 Feb 2012 19:57:13 -0500
-Message-ID: <CAOHBbgV2+JN=jMp-zwmXPKLjXOnn+nktW1WrDPx0yZgjvApdCw@mail.gmail.com>
-References: <CAOHBbgWzHUUMeQSeXDGJv1+Na=8oM3iB1VN7mMUvhHqgLaU1dw@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: metadata 1.2 advantages?
+Date: Thu, 9 Feb 2012 12:02:47 +1100
+Message-ID: <20120209120247.1d2629c2@notabene.brown>
+References: <4F323A00.8050506@profihost.ag>
+	<4F32F435.60405@zytor.com>
+	<20120209105934.36189d93@notabene.brown>
+	<4F331570.7010800@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/XH.zcJ.1W+IAOqjUIA2jU/S"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOHBbgWzHUUMeQSeXDGJv1+Na=8oM3iB1VN7mMUvhHqgLaU1dw@mail.gmail.com>
+In-Reply-To: <4F331570.7010800@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Feb 8, 2012 at 5:21 PM, Asif Iqbal <vadud3@gmail.com> wrote:
-> Hi All
->
-> I have two raid10s
->
-> md3 : active raid10 sdh2[3] sdf2[1] sdg2[2] sde2[0]
-> =A0 =A0 =A0143371392 blocks 64K chunks 2 near-copies [4/4] [UUUU]
->
-> md2 : active raid10 sdg1[4] sdc1[0] sdd1[1] sdh1[5] sdf1[3] sde1[2]
-> =A0 =A0 =A0214684224 blocks 64K chunks 2 near-copies [6/6] [UUUUUU]
->
->
-> I like to remove md3 and add its slices to md2. All the slices are of
-> same sizes.
->
-> Then I like to make sure PV recognizes the size increase.
->
-> root@apa-splunk-02:~# pvdisplay /dev/md2
-> =A0--- Physical volume ---
-> =A0PV Name =A0 =A0 =A0 =A0 =A0 =A0 =A0 /dev/md2
-> =A0VG Name =A0 =A0 =A0 =A0 =A0 =A0 =A0 splunk
-> =A0PV Size =A0 =A0 =A0 =A0 =A0 =A0 =A0 204.74 GiB / not usable 576.00=
- KiB
-> =A0Allocatable =A0 =A0 =A0 =A0 =A0 yes
-> =A0PE Size =A0 =A0 =A0 =A0 =A0 =A0 =A0 4.00 MiB
-> =A0Total PE =A0 =A0 =A0 =A0 =A0 =A0 =A052413
-> =A0Free PE =A0 =A0 =A0 =A0 =A0 =A0 =A0 1213
-> =A0Allocated PE =A0 =A0 =A0 =A0 =A051200
-> =A0PV UUID =A0 =A0 =A0 =A0 =A0 =A0 =A0 S3QuJK-dSU5-cjZZ-mcHe-dyux-V3Q=
-o-YIe2oO
->
-> What is recommended way to do it? I am using ubuntu lucid server lts =
-64bit
->
-> Thanks for your help
+--Sig_/XH.zcJ.1W+IAOqjUIA2jU/S
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-never mind.
+On Wed, 08 Feb 2012 16:38:08 -0800 "H. Peter Anvin" <hpa@zytor.com> wrote:
 
-I found it easier to just create another PV /dev/md3 and then vgextend =
-the VG
-by adding the new PV into it.
+> On 02/08/2012 03:59 PM, NeilBrown wrote:
+> > On Wed, 08 Feb 2012 14:16:21 -0800 "H. Peter Anvin" <hpa@zytor.com>
+> > wrote:
+> >=20
+> >> On 02/08/2012 01:01 AM, Stefan Priebe - Profihost AG wrote:
+> >>> Hi,
+> >>>=20
+> >>> for now i'm still using grub 0.97 which can only understand
+> >>> metadata 0.9. Are there any advantages of the 1.2 metadata
+> >>> format?
+> >>>=20
+> >>=20
+> >> There are a lot of advantages to the 1.x metadata format, but 1.0
+> >> is the easiest for bootloaders to deal with.  1.0, 1.1 and 1.2 is
+> >> the same format, just with the superblock in different places.
+> >=20
+> > Hi Peter, wasn't it you who told be that 1.2 was best for boot
+> > loaders, as 1.0 uses block 0 which the bootloader also wants, while
+> > 1.2 uses a later block. That is why 1.2 is the default.
+> >=20
+>=20
+> No, 1.1 uses block 0 which the bootloader wants.
+>=20
+> Bootloaders need no special enabling to support 0.9 or 1.0 RAID-1.
+> 1.2 requires special enabling, but is workable.
 
+Doh - of course. Wasn't thinking straight.
+So 1.0 is good for boot loaders
+   1.1 is bad for boot loaders
+   1.2 is OK for boot loaders and good for other reasons (resizeable device=
+s).
 
->
->
-> --
-> Asif Iqbal
-> PGP Key: 0xE62693C5 KeyServer: pgp.mit.edu
-> A: Because it messes up the order in which people normally read text.
-> Q: Why is top-posting such a bad thing?
+Thanks,
+NeilBrown
 
+--Sig_/XH.zcJ.1W+IAOqjUIA2jU/S
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
---=20
-Asif Iqbal
-PGP Key: 0xE62693C5 KeyServer: pgp.mit.edu
-A: Because it messes up the order in which people normally read text.
-Q: Why is top-posting such a bad thing?
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+iQIVAwUBTzMbNznsnt1WYoG5AQIYehAAj9TNkK2NouFpSoEhHHPoy7nj5xegj7HJ
+fD9aMgHzksbH9RMBdnDP6+UVMaqlLRFQoecszqUQltki7PyOc/J//14OQBhZfn+9
+OBul9Ve0hfPWL3fcsz3jXBMjlkS6TOws7anR7hH/2WfQJyIUIwdQZ36hvjlCs7ch
+WZYvVKxLSGClTwU+/kKxjbxWr+bat9OFwbRflXMseIuCmtqZ25J/vjyq+YyfJT7P
+1FKvZoZfUnAzedT3c4gN8uOub6Hf/16vNsio9Vu8NTuER6xSb+begbu5srGDkB6p
+OQQCWpaEs1u8c6GLz374/4kxYq4iMmOux4hJaMqaPwq9L436k+NwLzKwg1Vc8GHN
+UpX7Sk89rs45MfC+0OTOMQBZmVVLf0tizKNuQ5N+06Wvhp52w0Q0j5j4W97Lt4jN
+vnDYsKmxMP2xWox1LZ1rgipF14la3mlHnW0u/oiSNOdhrqX8AWLWp+NGuoOjNbAP
+Zb31GAUDTEz996Oiudgm4xbCrdheqXR7e7N0t83e5upUuvg2uhK3gnbQiQgmZCgK
+NwH1pDwqIFxinBzSJ67H45+MSNTfxt4H4WbqnnpQ3U+7OYEUmvkYcpNiCb+vpo67
+72NREex7AZZ7CBJWstboqNdJ60OJOSlwI7KHzJyLOInHWdgL7TMhaOWZR7NmYOqp
+HS8nK/K9fp0=
+=Bc1Y
+-----END PGP SIGNATURE-----
+
+--Sig_/XH.zcJ.1W+IAOqjUIA2jU/S--
