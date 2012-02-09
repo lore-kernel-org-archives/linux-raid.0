@@ -1,83 +1,192 @@
-From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Subject: [long] general advice: config recommendations
-Date: Wed, 08 Feb 2012 22:45:18 -0800
-Message-ID: <uk6c09xju8.ln2@goaway.wombat.san-francisco.ca.us>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [PATCH 08/12] FIX: use md position to reshape restart
+Date: Thu, 9 Feb 2012 08:16:16 +0000
+Message-ID: <79556383A0E1384DB3A3903742AAC04A0986DE@IRSMSX101.ger.corp.intel.com>
+References: <20120207135940.20627.33309.stgit@gklab-128-013.igk.intel.com>
+	<20120207140359.20627.10861.stgit@gklab-128-013.igk.intel.com>
+ <20120209123625.13dd5ae4@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120209123625.13dd5ae4@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Dorau, Lukasz" <lukasz.dorau@intel.com>
 List-Id: linux-raid.ids
 
-Hello fellow RAIDers,
-
-I'm looking for some pointers on how I might best configure my modest
-mdraid array.  After some unfortunate hardware failures, it looks like I
-will not be able to recover my existing array.  (This is a minor
-annoyance, which is why I'm leaning towards starting over instead of
-spending more time trying to recover.)
-
-My basic situation: I have a 16-bay chassis attached to a 3ware 9550
-controller.  I'm really unhappy with the controller, but am wary of
-replacing it for various reasons (hard to find PCI-X controllers, very
-hard to find 16-port PCI-X controllers, cards I've found would need
-cables replaced as well).  And, as we've talked about on list,
-enterprise-class drives are hard to find as well, at least for a few
-months, so I need to battle my EARS/EADS drives for at least a little
-longer.  (I do have 5 RE4 drives I can use, and may test some of the
-Hitachis we've talked about.)  My last array was a 10x2TB RAID6
-resulting in about 15TB of usable storage; at the time it was ~90% full,
-but if my snapshots are gone I may have some time where I don't get
-quite that full.
-
-I am looking for the best compromise between maximizing storage,
-defending against the EADS drives, the potential to recover from
-multiple drive failures, and being able to swap out the EADS drives
-quickly once I'm able to get better drives.  Easy, right?  ;-)
-
-So, some options I'm tossing around:
-
--- [ot] LVM or no LVM?  I am certainly not well-versed in LVM, but
-it's certainly possible that LVM helped contribute to not being able
-to recover the existing filesystem.  I am wondering if it is worth
-the extra overhead (and metadata) to get the benefits of LVM if the odds
-are slim that I'll have storage I can't integrate into the md RAID
-arrays.  I know that's OT, but...
-
---RAID6, RAID50, RAID5s+LVM, separate RAID5s?  RAID6 maximizes storage,
-but has longer rebuild times; any RAID5 combination makes rebuilds (and
-reshapes?) faster, but I worry that there's less leeway in an individual
-RAID5 if there's one with multiple EADS drives.  One option I had in
-mind was to throw as many of my enterprise drives at my more important
-snapshots, and put the EADS drives all together to snapshot the less
-important data.  So perhaps I could have a RAID6 that included all the
-RE4 drives, plus two EADS drives, for ~9TB usable, and a RAID5 or RAID6
-with four or five drives for the rest.  Or I could make two four drive
-RAID5s, either in a RAID50 or LVM, for ~11TB usable (I would want to
-find another RE4 or equivalent for this).
-
-Are there any appreciable advantages of RAID50 over RAID5s grouped
-together by LVM or vice-versa?  They seem very similar superficially.
-Can I add a disk and reshape one member of a RAID50 without modifying
-the other?  I don't think the 3ware 9550 supports that.  This situation
-seems like it's the stereotypical use case for LVM, but perhaps a plain
-RAID50 has advantages that make it preferable.
-
---Finally, the age-old argument: whole disks or partitions?  I wonder if
-this is the mdraid equivalent of emacs vs. vi.  :)  I used partitions in
-the last array, but TBH I wasn't all that happy with it, though I
-couldn't explain why.  It could be I'm just used to working with whole
-disks on RAID controllers.
-
---Any other pointers/advice/gotchas?
-
-Thanks for reading--if you've made it this far I probably owe you a
-beer!
-
---keith
-
--- 
-kkeller@wombat.san-francisco.ca.us
 
 
+> -----Original Message-----
+> From: NeilBrown [mailto:neilb@suse.de]
+> Sent: Thursday, February 09, 2012 02:36
+> To: Kwolek, Adam
+> Cc: linux-raid@vger.kernel.org; Ciechanowski, Ed; Labun, Marcin; Williams, Dan
+> J; Dorau, Lukasz
+> Subject: Re: [PATCH 08/12] FIX: use md position to reshape restart
+> 
+> On Tue, 07 Feb 2012 15:03:59 +0100 Adam Kwolek <adam.kwolek@intel.com>
+> wrote:
+> 
+> > When reshape is broken, it can occur that metadata is not saved properly.
+> > This can cause that reshape process is farther in md than metadata states.
+> >
+> > On reshape restart use md position as start position, if it is farther
+> > than position specified in metadata. Opposite situation treat as error.
+> >
+> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> > ---
+> >
+> >  Grow.c |   86 +++++++++++++++++++++++++++++++++++++++++++++-----------
+> --------
+> >  1 files changed, 60 insertions(+), 26 deletions(-)
+> >
+> > diff --git a/Grow.c b/Grow.c
+> > index 70bdee1..0668a16 100644
+> > --- a/Grow.c
+> > +++ b/Grow.c
+> > @@ -1862,6 +1862,55 @@ release:
+> >  	return rv;
+> >  }
+> >
+> > +/* verify_reshape_position()
+> > + *	Function checks if reshape position in metadata is not farther
+> > + *	than position in md.
+> > + * Return value:
+> > + *	 0 : not valid sysfs entry
+> > + *		it can be caused by not started reshape, it should be started
+> > + *		by reshape array or raid0 array is before takeover
+> > + *	-1 :	error, reshape position is obviously wrong
+> > + *	 1 :	success, reshape progress correct or updated
+> > +*/
+> > +static int verify_reshape_position(struct mdinfo *info, int level) {
+> > +	int ret_val = 0;
+> > +	char buf[40];
+> > +
+> > +	/* read sync_max, failure can mean raid0 array */
+> > +	if (sysfs_get_str(info, NULL, "sync_max", buf, 40) > 0) {
+> > +		char *ep;
+> > +		unsigned long long position = strtoull(buf, &ep, 0);
+> > +
+> > +		dprintf(Name": Read sync_max sysfs entry is: %s\n", buf);
+> > +		if (!(ep == buf || (*ep != 0 && *ep != '\n' && *ep != ' '))) {
+> > +			position *= get_data_disks(level,
+> > +						   info->new_layout,
+> > +						   info->array.raid_disks);
+> > +			if (info->reshape_progress < position) {
+> > +				dprintf("Corrected reshape progress (%llu) to "
+> > +					"md position (%llu)\n",
+> > +					info->reshape_progress, position);
+> > +				info->reshape_progress = position;
+> > +				ret_val = 1;
+> > +			} else if (info->reshape_progress > position) {
+> > +				fprintf(stderr, Name ": Fatal error: array "
+> > +					"reshape was not properly frozen "
+> > +					"(expected reshape position is %llu, "
+> > +					"but reshape progress is %llu.\n",
+> > +					position, info->reshape_progress);
+> > +				ret_val = -1;
+> > +			} else {
+> > +				dprintf("Reshape position in md and metadata "
+> > +					"are the same;");
+> > +				ret_val = 1;
+> > +			}
+> > +		}
+> > +	}
+> > +
+> > +	return ret_val;
+> > +}
+> > +
+> >  static int reshape_array(char *container, int fd, char *devname,
+> >  			 struct supertype *st, struct mdinfo *info,
+> >  			 int force, struct mddev_dev *devlist, @@ -2251,9
+> +2300,16 @@
+> > started:
+> >
+> >  	sra->new_chunk = info->new_chunk;
+> >
+> > -	if (restart)
+> > +	if (restart) {
+> > +		/* for external metadata checkpoint saved by mdmon can be
+> lost
+> > +		 * or missed /due to e.g. crash/. Check if md is not during
+> > +		 * restart farther than metadata points to.
+> > +		 * If so, this means metadata information is obsolete.
+> > +		 */
+> > +		if (st->ss->external)
+> > +			verify_reshape_position(info, reshape.level);
+> >  		sra->reshape_progress = info->reshape_progress;
+> > -	else {
+> > +	} else {
+> >  		sra->reshape_progress = 0;
+> >  		if (reshape.after.data_disks < reshape.before.data_disks)
+> >  			/* start from the end of the new array */ @@ -3765,8
+> +3821,6 @@
+> > int Grow_continue_command(char *devname, int fd,
+> >  	char buf[40];
+> >  	int cfd = -1;
+> >  	int fd2 = -1;
+> > -	char *ep;
+> > -	unsigned long long position;
+> >
+> >  	dprintf("Grow continue from command line called for %s\n",
+> >  		devname);
+> > @@ -3894,28 +3948,8 @@ int Grow_continue_command(char *devname, int
+> fd,
+> >  	/* verify that array under reshape is started from
+> >  	 * correct position
+> >  	 */
+> > -	ret_val = sysfs_get_str(content, NULL, "sync_max", buf, 40);
+> > -	if (ret_val <= 0) {
+>                     ^^^
+> 
+> This test is '<=' however ...
+> 
+> 
+> > -		fprintf(stderr, Name
+> > -			": cannot open verify reshape progress for %s (%i)\n",
+> > -			content->sys_name, ret_val);
+> > -		ret_val = 1;
+> > -		goto Grow_continue_command_exit;
+> > -	}
+> > -	dprintf(Name ": Read sync_max sysfs entry is: %s\n", buf);
+> > -	position = strtoull(buf, &ep, 0);
+> > -	if (ep == buf || (*ep != 0 && *ep != '\n' && *ep != ' ')) {
+> > -		fprintf(stderr, Name ": Fatal error: array reshape was"
+> > -			" not properly frozen\n");
+> > -		ret_val = 1;
+> > -		goto Grow_continue_command_exit;
+> > -	}
+> > -	position *= get_data_disks(map_name(pers, mdstat->level),
+> > -				   content->new_layout,
+> > -				   content->array.raid_disks);
+> > -	if (position != content->reshape_progress) {
+> > -		fprintf(stderr, Name ": Fatal error: array reshape was"
+> > -			" not properly frozen.\n");
+> > +	if (verify_reshape_position(content,
+> > +				    map_name(pers, mdstat->level)) < 0) {
+>                                                                    ^^
+> 
+> this one is just '<'.  However it looks like it should be the same.
+> 
+> Was there a reason for the change, or was it an oversight?
+> 
+> Thanks,
+> NeilBrown
+> 
+> 
+> 
+> 
+> >  		ret_val = 1;
+> >  		goto Grow_continue_command_exit;
+> >  	}
+
+
+Removed code is put in to function verify_reshape_position() for use in current location and reshape_array(),
+as calculated new position in Grow_continue_command() cannot be passed to reshape_array(), it has to be calculated again.
+
+This is what you are mention above?
+
+BR
+Adam
