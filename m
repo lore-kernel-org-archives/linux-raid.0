@@ -1,103 +1,106 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 00/12] Problems during restart container reshape
-Date: Thu, 9 Feb 2012 12:39:23 +1100
-Message-ID: <20120209123923.14638b58@notabene.brown>
-References: <20120207135940.20627.33309.stgit@gklab-128-013.igk.intel.com>
+From: Dag Nygren <dag@newtech.fi>
+Subject: Re: Hang in Raid-5 code (Old bug back?)
+Date: Thu, 09 Feb 2012 04:55:11 +0200
+Message-ID: <8881584.REWxvMC81A@eseries>
+References: <1363014.L0fQ1kFyFY@eseries>
+Reply-To: Dag Nygren <dag@newtech.fi>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Q=eK9AbaWLbteZmnAu7kiM_"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120207135940.20627.33309.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <1363014.L0fQ1kFyFY@eseries>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com, lukasz.dorau@intel.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/Q=eK9AbaWLbteZmnAu7kiM_
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 07 Feb 2012 15:02:55 +0100 Adam Kwolek <adam.kwolek@intel.com> wrot=
-e:
-
-> This series corrects problems occurred during restart multi arrays reshap=
-e:
->  1. Assembled incrementally array during reshape is assembled degraded
->  2. Reshape cannot be continued after reboot. '--continue' gives  an error
->  3. When raid0 arrays are reshaped, first array is reshaped only
->  4. Size doesn't change on second raid0 array
-> Please note that patch 'imsm: FIX: No new missing disks are allowed durin=
-g general migration' can be easily extended by:
->  - Narrow it to incremental assembly only
->  - Array can be pushed to be assembled by using e.g. 'force' option durin=
-g incremental assembly.
+s=C3=B6ndag 05 februari 2012 18:55:58 skrev  Dag Nygren:
+> Hi!
 >=20
-> Other issue addressed in this series is chunk size change from 128k to 4k=
- problem.
+> Using lessfs on top of an XFS on top on a software RAID-5 and see thi=
+s
+> freeze happening about once a week. Usually during heavy load.
+
+No comments on the stuff below? Nobody else?
+Increased the stripe_cache_size to 4096 according to the workaround for=
+ ths=20
+old similiar bug. Is the bug back in the recent kernels?
+
+Has not seen any freezes since that workaround but oth they weren't tha=
+t=20
+frequent earlier either.
+
+
+> Feb 5 02:51:04 mythserv kernel: INFO: task lessfs:2687 blocked for mo=
+re than
+> 120 seconds.
+> Feb 5 02:51:04 mythserv kernel: =E2=80=9Cecho 0 >
+> /proc/sys/kernel/hung_task_timeout_secs=E2=80=9D disables this messag=
+e.
+> Feb 5 02:51:04 mythserv kernel: lessfs D ffff88006faf1998 0 2687 1
+> 0=C3=9700000000 Feb 5 02:51:04 mythserv kernel: ffff880066579828
+> 0000000000000086 ffff8800665797b8 ffffffff00000000
+> Feb 5 02:51:04 mythserv kernel: ffff88006faf1620 0000000000013300
+> ffff880066579fd8 ffff880066578010
+> Feb 5 02:51:04 mythserv kernel: ffff880066579fd8 0000000000013300
+> ffffffff81655020 ffff88006faf1620
+> Feb 5 02:51:04 mythserv kernel: Call Trace:
+> Feb 5 02:51:04 mythserv kernel: [] schedule+0x3f/0=C3=9760
+> Feb 5 02:51:04 mythserv kernel: [] get_active_stripe+0x2ea/0=C3=97790=
+ [raid456]
+> Feb 5 02:51:04 mythserv kernel: [] ? try_to_wake_up+0x2b0/0x2b0
+> Feb 5 02:51:04 mythserv kernel: [] make_request+0x1ae/0=C3=97460 [rai=
+d456]
+> Feb 5 02:51:04 mythserv kernel: [] ? wake_up_bit+0=C3=9740/0=C3=9740
+> Feb 5 02:51:04 mythserv kernel: [] md_make_request+0xd5/0=C3=97200
+> Feb 5 02:51:04 mythserv kernel: [] generic_make_request+0xbf/0xf0
+> Feb 5 02:51:04 mythserv kernel: [] submit_bio+0=C3=9785/0=C3=97110
+> Feb 5 02:51:04 mythserv kernel: [] ? __bio_add_page+0=C3=97110/0=C3=97=
+250
+> Feb 5 02:51:04 mythserv kernel: [] xfs_submit_ioend_bio+0=C3=9757/0=C3=
+=9780 [xfs]
+> Feb 5 02:51:04 mythserv kernel: [] xfs_submit_ioend+0xf6/0=C3=97110 [=
+xfs]
+> Feb 5 02:51:04 mythserv kernel: [] xfs_vm_writepage+0=C3=97230/0=C3=97=
+500 [xfs]
+> Feb 5 02:51:04 mythserv kernel: [] __writepage+0=C3=9717/0=C3=9740
+> Feb 5 02:51:04 mythserv kernel: [] write_cache_pages+0=C3=97221/0x4a0
+> Feb 5 02:51:04 mythserv kernel: [] ? tomoyo_init_request_info+0x3f/0=C3=
+=9770
+> Feb 5 02:51:04 mythserv kernel: [] ? set_page_dirty+0=C3=9770/0=C3=97=
+70
+> Feb 5 02:51:04 mythserv kernel: [] generic_writepages+0=C3=9751/0=C3=97=
+80
+> Feb 5 02:51:04 mythserv kernel: [] xfs_vm_writepages+0=C3=9753/0=C3=97=
+70 [xfs]
+> Feb 5 02:51:04 mythserv kernel: [] do_writepages+0=C3=9721/0=C3=9740
+> Feb 5 02:51:04 mythserv kernel: [] __filemap_fdatawrite_range+0x5b/0=C3=
+=9760
+> Feb 5 02:51:04 mythserv kernel: [] filemap_write_and_wait_range+0x5a/=
+0=C3=9780
+> Feb 5 02:51:04 mythserv kernel: [] xfs_file_fsync+0=C3=9768/0x2d0 [xf=
+s]
+> Feb 5 02:51:04 mythserv kernel: [] vfs_fsync_range+0x2b/0=C3=9740
+> Feb 5 02:51:04 mythserv kernel: [] vfs_fsync+0x1c/0=C3=9720
+> Feb 5 02:51:04 mythserv kernel: [] do_fsync+0x3a/0=C3=9760
+> Feb 5 02:51:04 mythserv kernel: [] sys_fsync+0=C3=9710/0=C3=9720
+> Feb 5 02:51:04 mythserv kernel: [] system_call_fastpath+0=C3=9716/0x1=
+b
 >=20
-> BR
-> Adam
->=20
-> ---
->=20
-> Adam Kwolek (12):
->       FIX: Do not try to (continue) reshape using inactive array
->       FIX: restart reshape when reshape process is stopped just between 2=
- reshapes
->       imsm: FIX: Clear migration record when migration switches to next v=
-olume.
->       imsm: FIX: use md position to reshape restart
->       FIX: use md position to reshape restart
->       imsm: FIX: Chunk size migration problem
->       Flush mdmon before next reshape step during container operation
->       Fix: Sometimes mdmon throws core dump during reshape
->       imsm: FIX: imsm_get_allowed_degradation() doesn't count degradation=
- for raid1
->       FIX: Array is not run when expansion disks are added
->       imsm: FIX: No new missing disks are allowed during general migration
->       FIX: NULL pointer to strdup() can be passed
->=20
->=20
->  Assemble.c    |    2 -
->  Grow.c        |  124 ++++++++++++++++++++++++++++++++++++++++++++-------=
-------
->  managemon.c   |    6 +++
->  msg.c         |   10 +++++
->  msg.h         |    1=20
->  super-intel.c |   47 +++++++++++++++++++---
->  util.c        |    5 +-
->  7 files changed, 159 insertions(+), 36 deletions(-)
->=20
+> Any hints? Or any debugging I can do to help? I did find a similar ca=
+s from
+> 2008, but that is supposed to be fixed now.
+> This also started after updating the kernel to the 3.x series. At the=
+ moment
+> using 3.2.2 and still seeing it.
+--=20
+Dag Nygren                               email: dag@newtech.fi
+Oy Espoon NewTech Ab                     phone: +358 9 8024910
+Tr=C3=A4sktorpet 3                              fax: +358 9 8024916
+02360 ESBO                              Mobile: +358 400 426312
+=46INLAND
 
-Thanks for these.  I have provisionally applied them all however I won't pu=
-sh
-them out until I get confirmation about the '<=3D' or '<' issue that I
-mentioned separately.
-
-Thanks,
-
-NeilBrown
-
---Sig_/Q=eK9AbaWLbteZmnAu7kiM_
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBTzMjyznsnt1WYoG5AQJvPg//ULR2o9zNgGKr6pesmjrAj37BWlJAeFeN
-j3x52eeh0wetQz9jArx8143cKdl/7oebcONn/+X0SXp51Z+v9SgpP9lt9RZVtm2E
-z/rI/E5jnSV+NiTMlcJfb78IsyR2owkSpRjgNvDnFbTujp87g4eUDLW2JaswO6Cp
-BOadrN8bwndKiKl0BeXEOxLWRrJqXG1W9t4Ncpwkd/GMJR3qarqy6BNepj2HahGT
-BT3wzgR8FHxONJ+LON8BObmUGLn38atD11j6NuxGHAvwfAg8CutY+ETNtMpDjo25
-hWJHbUyBIq+m2PFTcfctDpcHcA4SU6rt4SqGXUsIlax8Lr5AcUcVwrWa5LCGm4kG
-AOWZoO0LNdbTRKaXEih9RIGbcGBo9sy/vnK24IawktedeS+xmkIFcK05dX4T2ooU
-TsWjw8RbjVA32K2mOTioQIdiB41V8JXfqngDxn1h9vzFRb7AyAuU92IZHMDZyxGv
-cvN3KyWAYozyhGZgyOHNKp778OCr/wIUXdNJv8dK81us6vxW8Bel9IZhXtoL9yfh
-2PLQGmueq8Kb+WTNQmMwla2BjSdwBHd+H6JiXrBESdu19jaycYXHtBYxk+ceZ6A3
-8Jc2cMP4oYa5G3n4ymUXzoxf9VF8Fd3MPH1OPbxDQbevsfHXJo7LIzxpgIZkxwe1
-C0YWqsilKUU=
-=4ybM
------END PGP SIGNATURE-----
-
---Sig_/Q=eK9AbaWLbteZmnAu7kiM_--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
