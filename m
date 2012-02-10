@@ -1,308 +1,197 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 08/12] FIX: use md position to reshape restart
-Date: Thu, 9 Feb 2012 10:53:53 +0000
-Message-ID: <79556383A0E1384DB3A3903742AAC04A098834@IRSMSX101.ger.corp.intel.com>
-References: <20120207135940.20627.33309.stgit@gklab-128-013.igk.intel.com>
-	<20120207140359.20627.10861.stgit@gklab-128-013.igk.intel.com>
-	<20120209123625.13dd5ae4@notabene.brown>
-	<79556383A0E1384DB3A3903742AAC04A0986DE@IRSMSX101.ger.corp.intel.com>
-	<20120209201903.24b899fb@notabene.brown>
-	<79556383A0E1384DB3A3903742AAC04A0987B0@IRSMSX101.ger.corp.intel.com>
- <20120209211930.5a899e4b@notabene.brown>
- <79556383A0E1384DB3A3903742AAC04A09880C@IRSMSX101.ger.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <79556383A0E1384DB3A3903742AAC04A09880C@IRSMSX101.ger.corp.intel.com>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: "Kwolek, Adam" <adam.kwolek@intel.com>, NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Dorau, Lukasz" <lukasz.dorau@intel.com>
+From: Cong Wang <amwang@redhat.com>
+Subject: [PATCH 17/60] md: remove the second argument of k[un]map_atomic()
+Date: Fri, 10 Feb 2012 13:39:38 +0800
+Message-ID: <1328852421-19678-18-git-send-email-amwang@redhat.com>
+References: <1328852421-19678-1-git-send-email-amwang@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1328852421-19678-1-git-send-email-amwang@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Cong Wang <amwang@redhat.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Acked-by: NeilBrown <neilb@suse.de>
+Signed-off-by: Cong Wang <amwang@redhat.com>
+---
+ drivers/md/bitmap.c |   42 +++++++++++++++++++++---------------------
+ 1 files changed, 21 insertions(+), 21 deletions(-)
 
-
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Kwolek, Adam
-> Sent: Thursday, February 09, 2012 11:24
-> To: NeilBrown
-> Cc: linux-raid@vger.kernel.org; Ciechanowski, Ed; Labun, Marcin; Williams, Dan
-> J; Dorau, Lukasz
-> Subject: RE: [PATCH 08/12] FIX: use md position to reshape restart
-> 
-> 
-> 
-> > -----Original Message-----
-> > From: NeilBrown [mailto:neilb@suse.de]
-> > Sent: Thursday, February 09, 2012 11:20
-> > To: Kwolek, Adam
-> > Cc: linux-raid@vger.kernel.org; Ciechanowski, Ed; Labun, Marcin;
-> > Williams, Dan J; Dorau, Lukasz
-> > Subject: Re: [PATCH 08/12] FIX: use md position to reshape restart
-> >
-> > On Thu, 9 Feb 2012 09:49:01 +0000 "Kwolek, Adam"
-> > <adam.kwolek@intel.com>
-> > wrote:
-> >
-> > >
-> > >
-> > > > -----Original Message-----
-> > > > From: NeilBrown [mailto:neilb@suse.de]
-> > > > Sent: Thursday, February 09, 2012 10:19
-> > > > To: Kwolek, Adam
-> > > > Cc: linux-raid@vger.kernel.org; Ciechanowski, Ed; Labun, Marcin;
-> > > > Williams, Dan J; Dorau, Lukasz
-> > > > Subject: Re: [PATCH 08/12] FIX: use md position to reshape restart
-> > > >
-> > > > On Thu, 9 Feb 2012 08:16:16 +0000 "Kwolek, Adam"
-> > > > <adam.kwolek@intel.com>
-> > > > wrote:
-> > > >
-> > > > >
-> > > > >
-> > > > > > -----Original Message-----
-> > > > > > From: NeilBrown [mailto:neilb@suse.de]
-> > > > > > Sent: Thursday, February 09, 2012 02:36
-> > > > > > To: Kwolek, Adam
-> > > > > > Cc: linux-raid@vger.kernel.org; Ciechanowski, Ed; Labun,
-> > > > > > Marcin; Williams, Dan J; Dorau, Lukasz
-> > > > > > Subject: Re: [PATCH 08/12] FIX: use md position to reshape
-> > > > > > restart
-> > > > > >
-> > > > > > On Tue, 07 Feb 2012 15:03:59 +0100 Adam Kwolek
-> > > > > > <adam.kwolek@intel.com>
-> > > > > > wrote:
-> > > > > >
-> > > > > > > When reshape is broken, it can occur that metadata is not
-> > > > > > > saved
-> > properly.
-> > > > > > > This can cause that reshape process is farther in md than
-> > > > > > > metadata
-> > states.
-> > > > > > >
-> > > > > > > On reshape restart use md position as start position, if it
-> > > > > > > is farther than position specified in metadata. Opposite
-> > > > > > > situation treat as
-> > > > error.
-> > > > > > >
-> > > > > > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> > > > > > > ---
-> > > > > > >
-> > > > > > >  Grow.c |   86
-> +++++++++++++++++++++++++++++++++++++++++++++--
-> > ----
-> > > > -----
-> > > > > > --------
-> > > > > > >  1 files changed, 60 insertions(+), 26 deletions(-)
-> > > > > > >
-> > > > > > > diff --git a/Grow.c b/Grow.c index 70bdee1..0668a16 100644
-> > > > > > > --- a/Grow.c
-> > > > > > > +++ b/Grow.c
-> > > > > > > @@ -1862,6 +1862,55 @@ release:
-> > > > > > >  	return rv;
-> > > > > > >  }
-> > > > > > >
-> > > > > > > +/* verify_reshape_position()
-> > > > > > > + *	Function checks if reshape position in metadata is not farther
-> > > > > > > + *	than position in md.
-> > > > > > > + * Return value:
-> > > > > > > + *	 0 : not valid sysfs entry
-> > > > > > > + *		it can be caused by not started reshape, it should be
-> > > > started
-> > > > > > > + *		by reshape array or raid0 array is before takeover
-> > > > > > > + *	-1 :	error, reshape position is obviously wrong
-> > > > > > > + *	 1 :	success, reshape progress correct or updated
-> > > > > > > +*/
-> > > > > > > +static int verify_reshape_position(struct mdinfo *info, int level) {
-> > > > > > > +	int ret_val = 0;
-> > > > > > > +	char buf[40];
-> > > > > > > +
-> > > > > > > +	/* read sync_max, failure can mean raid0 array */
-> > > > > > > +	if (sysfs_get_str(info, NULL, "sync_max", buf, 40) > 0) {
-> > > > > > > +		char *ep;
-> > > > > > > +		unsigned long long position = strtoull(buf, &ep, 0);
-> > > > > > > +
-> > > > > > > +		dprintf(Name": Read sync_max sysfs entry is: %s\n",
-> > buf);
-> > > > > > > +		if (!(ep == buf || (*ep != 0 && *ep != '\n' && *ep != '
-> > > > > > > +')))
-> > {
-> > > > > > > +			position *= get_data_disks(level,
-> > > > > > > +						   info->new_layout,
-> > > > > > > +						   info-
-> > >array.raid_disks);
-> > > > > > > +			if (info->reshape_progress < position) {
-> > > > > > > +				dprintf("Corrected reshape progress
-> > (%llu) to "
-> > > > > > > +					"md position (%llu)\n",
-> > > > > > > +					info->reshape_progress,
-> > position);
-> > > > > > > +				info->reshape_progress = position;
-> > > > > > > +				ret_val = 1;
-> > > > > > > +			} else if (info->reshape_progress > position) {
-> > > > > > > +				fprintf(stderr, Name ": Fatal error:
-> > array "
-> > > > > > > +					"reshape was not properly
-> > frozen "
-> > > > > > > +					"(expected reshape position is
-> > %llu, "
-> > > > > > > +					"but reshape progress is
-> > %llu.\n",
-> > > > > > > +					position, info-
-> > >reshape_progress);
-> > > > > > > +				ret_val = -1;
-> > > > > > > +			} else {
-> > > > > > > +				dprintf("Reshape position in md and
-> > metadata "
-> > > > > > > +					"are the same;");
-> > > > > > > +				ret_val = 1;
-> > > > > > > +			}
-> > > > > > > +		}
-> > > > > > > +	}
-> > > > > > > +
-> > > > > > > +	return ret_val;
-> > > > > > > +}
-> > > > > > > +
-> > > > > > >  static int reshape_array(char *container, int fd, char *devname,
-> > > > > > >  			 struct supertype *st, struct mdinfo *info,
-> > > > > > >  			 int force, struct mddev_dev *devlist, @@ -
-> > 2251,9
-> > > > > > +2300,16 @@
-> > > > > > > started:
-> > > > > > >
-> > > > > > >  	sra->new_chunk = info->new_chunk;
-> > > > > > >
-> > > > > > > -	if (restart)
-> > > > > > > +	if (restart) {
-> > > > > > > +		/* for external metadata checkpoint saved by mdmon
-> > can be
-> > > > > > lost
-> > > > > > > +		 * or missed /due to e.g. crash/. Check if md is not
-> > during
-> > > > > > > +		 * restart farther than metadata points to.
-> > > > > > > +		 * If so, this means metadata information is obsolete.
-> > > > > > > +		 */
-> > > > > > > +		if (st->ss->external)
-> > > > > > > +			verify_reshape_position(info, reshape.level);
-> > > > > > >  		sra->reshape_progress = info->reshape_progress;
-> > > > > > > -	else {
-> > > > > > > +	} else {
-> > > > > > >  		sra->reshape_progress = 0;
-> > > > > > >  		if (reshape.after.data_disks <
-> > reshape.before.data_disks)
-> > > > > > >  			/* start from the end of the new array */ @@ -
-> > 3765,8
-> > > > > > +3821,6 @@
-> > > > > > > int Grow_continue_command(char *devname, int fd,
-> > > > > > >  	char buf[40];
-> > > > > > >  	int cfd = -1;
-> > > > > > >  	int fd2 = -1;
-> > > > > > > -	char *ep;
-> > > > > > > -	unsigned long long position;
-> > > > > > >
-> > > > > > >  	dprintf("Grow continue from command line called for %s\n",
-> > > > > > >  		devname);
-> > > > > > > @@ -3894,28 +3948,8 @@ int Grow_continue_command(char
-> > > > > > > *devname, int
-> > > > > > fd,
-> > > > > > >  	/* verify that array under reshape is started from
-> > > > > > >  	 * correct position
-> > > > > > >  	 */
-> > > > > > > -	ret_val = sysfs_get_str(content, NULL, "sync_max", buf, 40);
-> > > > > > > -	if (ret_val <= 0) {
-> > > > > >                     ^^^
-> > > > > >
-> > > > > > This test is '<=' however ...
-> > > > > >
-> > > > > >
-> > > > > > > -		fprintf(stderr, Name
-> > > > > > > -			": cannot open verify reshape progress for %s
-> > (%i)\n",
-> > > > > > > -			content->sys_name, ret_val);
-> > > > > > > -		ret_val = 1;
-> > > > > > > -		goto Grow_continue_command_exit;
-> > > > > > > -	}
-> > > > > > > -	dprintf(Name ": Read sync_max sysfs entry is: %s\n", buf);
-> > > > > > > -	position = strtoull(buf, &ep, 0);
-> > > > > > > -	if (ep == buf || (*ep != 0 && *ep != '\n' && *ep != ' ')) {
-> > > > > > > -		fprintf(stderr, Name ": Fatal error: array reshape was"
-> > > > > > > -			" not properly frozen\n");
-> > > > > > > -		ret_val = 1;
-> > > > > > > -		goto Grow_continue_command_exit;
-> > > > > > > -	}
-> > > > > > > -	position *= get_data_disks(map_name(pers, mdstat->level),
-> > > > > > > -				   content->new_layout,
-> > > > > > > -				   content->array.raid_disks);
-> > > > > > > -	if (position != content->reshape_progress) {
-> > > > > > > -		fprintf(stderr, Name ": Fatal error: array reshape was"
-> > > > > > > -			" not properly frozen.\n");
-> > > > > > > +	if (verify_reshape_position(content,
-> > > > > > > +				    map_name(pers, mdstat->level)) < 0)
-> > {
-> > > > > >
-> > > > > > ^^
-> > > > > >
-> > > > > > this one is just '<'.  However it looks like it should be the same.
-> > > > > >
-> > > > > > Was there a reason for the change, or was it an oversight?
-> > > > > >
-> > > > > > Thanks,
-> > > > > > NeilBrown
-> > > > > >
-> > > > > >
-> > > > > >
-> > > > > >
-> > > > > > >  		ret_val = 1;
-> > > > > > >  		goto Grow_continue_command_exit;
-> > > > > > >  	}
-> > > > >
-> > > > >
-> > > > > Removed code is put in to function verify_reshape_position() for
-> > > > > use in current location and reshape_array(), as calculated new
-> > > > > position in
-> > > > Grow_continue_command() cannot be passed to reshape_array(), it
-> > > > has to be calculated again.
-> > > > >
-> > > > > This is what you are mention above?
-> > > >
-> > > > Not exactly.
-> > > >
-> > > > The original code would print an error if
-> > > >       sysfs_get_str(content, NULL, "sync_max", buf, 40); returns 0 or
-> negative.
-> > > > The new code will not print an error if that returns zero.
-> > > >
-> > > > i.e. you changed a '<=' into a '<'.  I wondered if there was some
-> > > > reason for that - something that I was missing.
-> > > >
-> > > > NeilBrown
-> > >
-> > > Yes, you are right. I've missed '0' case during code reorganization.
-> > > You would fix this or you want me to post additional patch?
-> >
-> > Thanks.
-> > I already fixed it - I've just pushed my current tree with all your patches out.
-> >
-> > Thanks,
-> > NeilBrown
-> 
-> Maybe this is better.
-> During this quick update, I've removed by mistake 'ret_val' variable initialization
-> in this patch also, this would be not good ;).
-> 
-> BR
-> Adam
-
-
-I've looked at changes you pushed and this is not exactly the same I've intended to be /look my quick patch with ret_val variable initialization caution/.
-Reading 0 length reshape position is an error, absence of sysfs entry is not always an error /raid0 case/.
-
-BR
-Adam
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in the body of
-> a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index cdf36b1..045e086 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -457,7 +457,7 @@ void bitmap_update_sb(struct bitmap *bitmap)
+ 		return;
+ 	}
+ 	spin_unlock_irqrestore(&bitmap->lock, flags);
+-	sb = kmap_atomic(bitmap->sb_page, KM_USER0);
++	sb = kmap_atomic(bitmap->sb_page);
+ 	sb->events = cpu_to_le64(bitmap->mddev->events);
+ 	if (bitmap->mddev->events < bitmap->events_cleared)
+ 		/* rocking back to read-only */
+@@ -467,7 +467,7 @@ void bitmap_update_sb(struct bitmap *bitmap)
+ 	/* Just in case these have been changed via sysfs: */
+ 	sb->daemon_sleep = cpu_to_le32(bitmap->mddev->bitmap_info.daemon_sleep/HZ);
+ 	sb->write_behind = cpu_to_le32(bitmap->mddev->bitmap_info.max_write_behind);
+-	kunmap_atomic(sb, KM_USER0);
++	kunmap_atomic(sb);
+ 	write_page(bitmap, bitmap->sb_page, 1);
+ }
+ 
+@@ -478,7 +478,7 @@ void bitmap_print_sb(struct bitmap *bitmap)
+ 
+ 	if (!bitmap || !bitmap->sb_page)
+ 		return;
+-	sb = kmap_atomic(bitmap->sb_page, KM_USER0);
++	sb = kmap_atomic(bitmap->sb_page);
+ 	printk(KERN_DEBUG "%s: bitmap file superblock:\n", bmname(bitmap));
+ 	printk(KERN_DEBUG "         magic: %08x\n", le32_to_cpu(sb->magic));
+ 	printk(KERN_DEBUG "       version: %d\n", le32_to_cpu(sb->version));
+@@ -497,7 +497,7 @@ void bitmap_print_sb(struct bitmap *bitmap)
+ 	printk(KERN_DEBUG "     sync size: %llu KB\n",
+ 			(unsigned long long)le64_to_cpu(sb->sync_size)/2);
+ 	printk(KERN_DEBUG "max write behind: %d\n", le32_to_cpu(sb->write_behind));
+-	kunmap_atomic(sb, KM_USER0);
++	kunmap_atomic(sb);
+ }
+ 
+ /*
+@@ -525,7 +525,7 @@ static int bitmap_new_disk_sb(struct bitmap *bitmap)
+ 	}
+ 	bitmap->sb_page->index = 0;
+ 
+-	sb = kmap_atomic(bitmap->sb_page, KM_USER0);
++	sb = kmap_atomic(bitmap->sb_page);
+ 
+ 	sb->magic = cpu_to_le32(BITMAP_MAGIC);
+ 	sb->version = cpu_to_le32(BITMAP_MAJOR_HI);
+@@ -533,7 +533,7 @@ static int bitmap_new_disk_sb(struct bitmap *bitmap)
+ 	chunksize = bitmap->mddev->bitmap_info.chunksize;
+ 	BUG_ON(!chunksize);
+ 	if (!is_power_of_2(chunksize)) {
+-		kunmap_atomic(sb, KM_USER0);
++		kunmap_atomic(sb);
+ 		printk(KERN_ERR "bitmap chunksize not a power of 2\n");
+ 		return -EINVAL;
+ 	}
+@@ -571,7 +571,7 @@ static int bitmap_new_disk_sb(struct bitmap *bitmap)
+ 	bitmap->flags |= BITMAP_HOSTENDIAN;
+ 	sb->version = cpu_to_le32(BITMAP_MAJOR_HOSTENDIAN);
+ 
+-	kunmap_atomic(sb, KM_USER0);
++	kunmap_atomic(sb);
+ 
+ 	return 0;
+ }
+@@ -603,7 +603,7 @@ static int bitmap_read_sb(struct bitmap *bitmap)
+ 		return err;
+ 	}
+ 
+-	sb = kmap_atomic(bitmap->sb_page, KM_USER0);
++	sb = kmap_atomic(bitmap->sb_page);
+ 
+ 	chunksize = le32_to_cpu(sb->chunksize);
+ 	daemon_sleep = le32_to_cpu(sb->daemon_sleep) * HZ;
+@@ -664,7 +664,7 @@ success:
+ 		bitmap->events_cleared = bitmap->mddev->events;
+ 	err = 0;
+ out:
+-	kunmap_atomic(sb, KM_USER0);
++	kunmap_atomic(sb);
+ 	if (err)
+ 		bitmap_print_sb(bitmap);
+ 	return err;
+@@ -689,7 +689,7 @@ static int bitmap_mask_state(struct bitmap *bitmap, enum bitmap_state bits,
+ 		return 0;
+ 	}
+ 	spin_unlock_irqrestore(&bitmap->lock, flags);
+-	sb = kmap_atomic(bitmap->sb_page, KM_USER0);
++	sb = kmap_atomic(bitmap->sb_page);
+ 	old = le32_to_cpu(sb->state) & bits;
+ 	switch (op) {
+ 	case MASK_SET:
+@@ -703,7 +703,7 @@ static int bitmap_mask_state(struct bitmap *bitmap, enum bitmap_state bits,
+ 	default:
+ 		BUG();
+ 	}
+-	kunmap_atomic(sb, KM_USER0);
++	kunmap_atomic(sb);
+ 	return old;
+ }
+ 
+@@ -881,12 +881,12 @@ static void bitmap_file_set_bit(struct bitmap *bitmap, sector_t block)
+ 	bit = file_page_offset(bitmap, chunk);
+ 
+ 	/* set the bit */
+-	kaddr = kmap_atomic(page, KM_USER0);
++	kaddr = kmap_atomic(page);
+ 	if (bitmap->flags & BITMAP_HOSTENDIAN)
+ 		set_bit(bit, kaddr);
+ 	else
+ 		__set_bit_le(bit, kaddr);
+-	kunmap_atomic(kaddr, KM_USER0);
++	kunmap_atomic(kaddr);
+ 	pr_debug("set file bit %lu page %lu\n", bit, page->index);
+ 	/* record page number so it gets flushed to disk when unplug occurs */
+ 	set_page_attr(bitmap, page, BITMAP_PAGE_DIRTY);
+@@ -1050,10 +1050,10 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
+ 				 * if bitmap is out of date, dirty the
+ 				 * whole page and write it out
+ 				 */
+-				paddr = kmap_atomic(page, KM_USER0);
++				paddr = kmap_atomic(page);
+ 				memset(paddr + offset, 0xff,
+ 				       PAGE_SIZE - offset);
+-				kunmap_atomic(paddr, KM_USER0);
++				kunmap_atomic(paddr);
+ 				write_page(bitmap, page, 1);
+ 
+ 				ret = -EIO;
+@@ -1061,12 +1061,12 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
+ 					goto err;
+ 			}
+ 		}
+-		paddr = kmap_atomic(page, KM_USER0);
++		paddr = kmap_atomic(page);
+ 		if (bitmap->flags & BITMAP_HOSTENDIAN)
+ 			b = test_bit(bit, paddr);
+ 		else
+ 			b = test_bit_le(bit, paddr);
+-		kunmap_atomic(paddr, KM_USER0);
++		kunmap_atomic(paddr);
+ 		if (b) {
+ 			/* if the disk bit is set, set the memory bit */
+ 			int needed = ((sector_t)(i+1) << (CHUNK_BLOCK_SHIFT(bitmap))
+@@ -1209,10 +1209,10 @@ void bitmap_daemon_work(struct mddev *mddev)
+ 			    mddev->bitmap_info.external == 0) {
+ 				bitmap_super_t *sb;
+ 				bitmap->need_sync = 0;
+-				sb = kmap_atomic(bitmap->sb_page, KM_USER0);
++				sb = kmap_atomic(bitmap->sb_page);
+ 				sb->events_cleared =
+ 					cpu_to_le64(bitmap->events_cleared);
+-				kunmap_atomic(sb, KM_USER0);
++				kunmap_atomic(sb);
+ 				write_page(bitmap, bitmap->sb_page, 1);
+ 			}
+ 			spin_lock_irqsave(&bitmap->lock, flags);
+@@ -1235,7 +1235,7 @@ void bitmap_daemon_work(struct mddev *mddev)
+ 						  -1);
+ 
+ 				/* clear the bit */
+-				paddr = kmap_atomic(page, KM_USER0);
++				paddr = kmap_atomic(page);
+ 				if (bitmap->flags & BITMAP_HOSTENDIAN)
+ 					clear_bit(file_page_offset(bitmap, j),
+ 						  paddr);
+@@ -1244,7 +1244,7 @@ void bitmap_daemon_work(struct mddev *mddev)
+ 						file_page_offset(bitmap,
+ 								 j),
+ 						paddr);
+-				kunmap_atomic(paddr, KM_USER0);
++				kunmap_atomic(paddr);
+ 			} else if (*bmc <= 2) {
+ 				*bmc = 1; /* maybe clear the bit next time */
+ 				set_page_attr(bitmap, page, BITMAP_PAGE_PENDING);
+-- 
+1.7.7.6
