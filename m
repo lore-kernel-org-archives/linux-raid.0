@@ -1,76 +1,70 @@
-From: Nikolay Kichukov <hijacker@oldum.net>
-Subject: Re: add another disk to existing raid 0, ie grow raid 0 possible?
-Date: Fri, 10 Feb 2012 16:10:09 +0200
-Message-ID: <4F352541.2050207@oldum.net>
-References: <4F212A59.1070008@oldum.net>	<CADNH=7GXJ0DW7K5DqSgoYYsa2eSWzE9P46R=Qrehu1pFXqnpyQ@mail.gmail.com>	<20120126215713.0c24db62@notabene.brown>	<4F21396D.7030308@oldum.net> <20120209145054.4443a48b@notabene.brown>
+From: CoolCold <coolthecold@gmail.com>
+Subject: XFS on top RAID10 with odd drives count and 2 near copies
+Date: Fri, 10 Feb 2012 19:17:01 +0400
+Message-ID: <CAGqmV7o7AQFY1K-1JLDk02Cv6GpAUQFjiSdM2Wbdbu6Zh_t0Wg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120209145054.4443a48b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+I've got server with 7 SATA drives ( Hetzner's XS13 to be precise )
+and created mdadm's raid10 with two near copies, then put LVM on it.
+Now I'm planning to create xfs filesystem, but a bit confused about
+stripe width/stripe unit values.
 
-Hi Neil,
-Do you think it will make sense to try to replicate using loop devices?
+As drives count is 7 and copies count is 2, so simple calculation
+gives me datadrives count "3.5" which looks ugly. If I understand the
+whole idea of sunit/swidth right, it should fill (or buffer) the full
+stripe (sunit * data disks) and then do write, so optimization takes
+place and all disks will work at once.
 
-Cheers,
-- -Nik
+My imagination draws such data distribution:
 
-On 02/09/2012 05:50 AM, NeilBrown wrote:
-> On Thu, 26 Jan 2012 13:30:53 +0200 Nikolay Kichukov <hijacker@oldum.net>
-> wrote:
-> 
->> -----BEGIN PGP SIGNED MESSAGE-----
->> Hash: SHA1
-> 
->> Hello Neil,
-> 
->> Here goes the details. Once again, no valuable data, just curious what has gone wrong in that case:
-> 
->> dmesg output, first I stopped md2, then assembled it again to perform the grow.
->> http://pastebin.com/HkPVEKad
-> 
->> mdadm -E output:
->> http://pastebin.com/pJCjvrJE
-> 
->> The system runs GNU/Debian testing with latest updates from security-testing applied.
->> Kernel: 3.1.0-1-amd64
->> mdadm:  3.2.2-1
-> 
->> Let me know should you need any further information.
-> 
-> I've finally had a look at this and unfortunately cannot find the problem.
-> The main reason being that I cannot reproduce it.
-> I built the same kernel and mdadm and created a very similar array and
-> tried to grow it and it all went smoothly.
-> 
-> In your case it didn't start the reshape at all (reshape position was zero) so
-> something went wrong very early.
-> 
-> If you feel like trying to reproduce it again that might be helpful.
-> Then I would ask you to run the "mdadm --grow" command under 
->     strace -o /tmp/foo -f mdadm --grow ....
-> 
-> and send me the /tmp/foo.  But I won't be surprised if you cannot reproduce.
-> Sad really.
-> 
-> Thanks anyway,
-> NeilBrown
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+A1 A1 A2 A2 A3 A3 A4
+A4 A5 A5 A6 A6 A7 A7
+A8 A8 A9 A9 A10 A10 A11
+A11 ...
 
-iQEcBAEBAgAGBQJPNSVBAAoJEDFLYVOGGjgX6b8H/28J1Ju3ccFq5awOnErcrqMP
-eaIwiZx6MNLObHliPdycISqjQdvEy5TcGPr5bL+WbLqkPEhe4OVkQm6mOwHoup/1
-p0YuhOpsxMihkLwuZWL2bYKhd4Jg29fT4sXgjdDSYyqyuxvSowr+CI/EhuYzuuHr
-fiw4YDM8mCNRjhd6Z10IwbpdUujoL5hNTrmXSqHZGaCfvyxK5Bjwl9DNyXc7k9Pt
-seryw/hJwTIsCBnmjFZ4XlgLpKNTCIK7TPNsrAJ50UOkXRVBBeEGuUg+rIQe+07T
-0bja5MAHA9YgDofvSY4HFl3EYpo6hQy69QrO0bY6gwJ9VPkYxmRwZCELiV2fQsM=
-=Sebf
------END PGP SIGNATURE-----
+So, there are two optimal variants to do writes:
+a) 4 chunks write to affect 7 drives (one drive will be affected twice)
+b) 7 chunks write to affect 7 drives (every drive will be affected
+twice, but may be caching/merging will take place somehow)
+
+My read load going be near random read ( sending pictures over http )
+and looks like it doesn't matter how it will be set with sunit/swidth.
+
+My current raid setup is:
+    root@datastor1:~# cat /proc/mdstat
+    Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+    md3 : active raid10 sdg5[6] sdf5[5] sde5[4] sdd5[3] sdc5[2] sdb5[1] sda5[0]
+          10106943808 blocks super 1.2 64K chunks 2 near-copies [7/7] [UUUUUUU]
+          [>....................]  resync =  0.8%
+(81543680/10106943808) finish=886.0min speed=188570K/sec
+          bitmap: 76/76 pages [304KB], 65536KB chunk
+
+
+
+Almost default mkfs.xfs creating options produced:
+
+    root@datastor1:~# mkfs.xfs -l lazy-count=1 /dev/data/db -f
+    meta-data=/dev/data/db       isize=256    agcount=32, agsize=16777216 blks
+             =                       sectsz=512   attr=2, projid32bit=0
+    data     =                       bsize=4096   blocks=536870912, imaxpct=5
+             =                       sunit=16     swidth=112 blks
+    naming   =version 2              bsize=4096   ascii-ci=0
+    log      =internal log           bsize=4096   blocks=262144, version=2
+             =                       sectsz=512   sunit=16 blks, lazy-count=1
+    realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+
+As I can see, it is created 112/16 = 7 chunks swidth, which correlate
+with my version b) , and I guess I will leave it this way.
+
+So, I'll be glad if anyone can review my thoughts and share yours.
+
+
+-- 
+Best regards,
+[COOLCOLD-RIPN]
