@@ -1,71 +1,65 @@
-From: Jeff W <jeff.welling@gmail.com>
-Subject: RAID6 ext3 problems
-Date: Sun, 12 Feb 2012 12:47:38 -0500
-Message-ID: <CAKXovcuTayKF2RKw3hYTBEdYsFM=bcV0xbc=UwYHCNTm+t-3GQ@mail.gmail.com>
-References: <CAKXovctDQdiMWEdzh6Jg8OkEjXX5OHZ+hubFV-GRsc8S2QHohQ@mail.gmail.com>
-	<CAKXovctARfGAkug=ZA0EYm1uB=V0_5BXWyNisVZYip0VBpJxtA@mail.gmail.com>
-	<CAK2H+eerAkwup2UcAu2v=_4+=Bg_FBCqZmjGjmcLQA+2ozmvbg@mail.gmail.com>
-	<CAKXovcvvTioOP+JKd8b5-Hc1GZhAiqB85=A4d-cCP03uDPiGkg@mail.gmail.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: RAID corruption with kernel 3.2?
+Date: Sun, 12 Feb 2012 10:00:07 -0800
+Message-ID: <4F37FE27.9050309@zytor.com>
+References: <4F372848.5050105@zytor.com> <CADNH=7GGPdi87v2nJ1Jfsnym133uYdTiJ4yhtj8mJew2FMjFJQ@mail.gmail.com> <4F374363.8040306@zytor.com> <alpine.LRH.2.02.1202121551560.8312@diagnostix.dwd.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKXovcvvTioOP+JKd8b5-Hc1GZhAiqB85=A4d-cCP03uDPiGkg@mail.gmail.com>
+In-Reply-To: <alpine.LRH.2.02.1202121551560.8312@diagnostix.dwd.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Holger Kiehl <Holger.Kiehl@dwd.de>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, Feb 12, 2012 at 12:31 PM, Mark Knecht <markknecht@gmail.com> wr=
-ote:
-> Jeff,
-> =A0 I suspect that you'll need to provide more technical info for the
-> heavy hitters to give good responses.
-Thanks for the feedback Mark!
+On 02/12/2012 08:06 AM, Holger Kiehl wrote:
+>>
+>> The current suspicion -- but we don't know yet -- is that this is a
+>> problem on Sandy Bridge and some Penryn CPUs which have the XSAVE
+>> instruction, but we might very well be completely wrong on that.
+>>
+> I have NOT seen any corruptions. Have a dual CPU (8 cores) system with
+> the following CPU:
+> 
+>    cat /proc/cpuinfo
+>    processor       : 0
+>    vendor_id       : GenuineIntel
+>    cpu family      : 6
+>    model           : 23
+>    model name      : Intel(R) Xeon(R) CPU           X5460  @ 3.16GHz
+>    stepping        : 10
+>    microcode       : 0xa07
+>    cpu MHz         : 1999.000
+>    cache size      : 6144 KB
+>    physical id     : 0
+>    siblings        : 4
+>    core id         : 0
+>    cpu cores       : 4
+>    apicid          : 0
+>    initial apicid  : 0
+>    fpu             : yes
+>    fpu_exception   : yes
+>    cpuid level     : 13
+>    wp              : yes
+>    flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr
+> pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe
+> syscall nx lm constant_tsc arch_perfmon pebs bts rep_good nopl
+> aperfmperf pni dtes64 monitor ds_cpl vmx est tm2 ssse3 cx16 xtpr pdcm
+> dca sse4_1 xsave lahf_lm dts tpr_shadow vnmi flexpriority
+>    bogomips        : 6317.90
+>    clflush size    : 64
+>    cache_alignment : 64
+>    address sizes   : 38 bits physical, 48 bits virtual
+>    power management:
+> 
 
->
-> mdadm -D /dev/md3
+Okay, so that's Penryn, it has XSAVE but not XSAVEOPT.  Very interesting
+data point, I appreciate the info!
 
-/dev/md1:
-Version:00.90
-Creation Time: Wed Sep 22 01:54:39 2010
-Raid Level: raid6
-Array Size: 2441437440 (2328.34 GiB 2500.03 GB)
-Used Dev Size: 488287488 (465.67 GiB 500.01 GB)
-Raid Devices: 7
-Total Devices: 6
-Preferred Minor: 1
-Persistence: Superblock is persistent
+	-hpa
 
-Update Time: Sun Feb 12 11:01:35 2012
-State: clean, degraded
-Active Devices: 6
-Working Devices: 6
-=46ailed Devices: 0
-Spare Devices: 0
+-- 
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
 
-Chunk Size: 64K
-
-UUID: 82b58a02:0ea23fd4:bd4f9dde:33a158c6
-Events: 0.5652574
-
-Number =A0 =A0 Major =A0 =A0 Minor =A0 =A0 RaidDevice =A0 =A0 State
-0 =A0 =A0 8 =A0 =A0 0 =A0 =A0 0 =A0 =A0 active sync =A0 /dev/sda
-1 =A0 =A0 8 =A0 =A0 81 =A0 =A0 1 =A0 =A0 active sync =A0 /dev/sdf1
-2 =A0 =A0 8 =A0 =A0 33 =A0 =A0 2 =A0 =A0 active sync =A0 /dev/sdc1
-3 =A0 =A0 8 =A0 =A0 39 =A0 =A0 3 =A0 =A0 active sync =A0 /dev/sdd1
-4 =A0 =A0 8 =A0 =A0 64 =A0 =A0 4 =A0 =A0 active sync =A0 /dev/sde
-5 =A0 =A0 8 =A0 =A0 97 =A0 =A0 5 =A0 =A0 active sync =A0 /dev/sdg1
-6 =A0 =A0 0 =A0 =A0 0 =A0 =A0 6 =A0 =A0 removed
-
->
-> HTH,
-> Mark
-If there is anything else I can provide just ask, thanks for the tip Ma=
-rk!
-
-Jeff.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
