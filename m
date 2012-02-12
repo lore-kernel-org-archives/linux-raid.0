@@ -1,100 +1,43 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: RAID6 ext3 problems
-Date: Sun, 12 Feb 2012 12:52:25 -0800
-Message-ID: <CAK2H+edraUOVSE5QGG++hr4XmJUbG_d-pawtNzT5rDd-RAK6ig@mail.gmail.com>
-References: <CAKXovctDQdiMWEdzh6Jg8OkEjXX5OHZ+hubFV-GRsc8S2QHohQ@mail.gmail.com>
-	<CAKXovctARfGAkug=ZA0EYm1uB=V0_5BXWyNisVZYip0VBpJxtA@mail.gmail.com>
-	<CAK2H+eerAkwup2UcAu2v=_4+=Bg_FBCqZmjGjmcLQA+2ozmvbg@mail.gmail.com>
-	<CAKXovcvvTioOP+JKd8b5-Hc1GZhAiqB85=A4d-cCP03uDPiGkg@mail.gmail.com>
-	<CAK2H+eds+2wu6Nep639mZ1dkOMmxdzqp4_7-o=QJO_qqcTWr9g@mail.gmail.com>
-	<CAKXovctDA28Gk61EJF_1-6kX2kMwRG8yyza4VFsKpzwsiHOEGQ@mail.gmail.com>
-	<CAK2H+ee3ERstCsh4ju9kfU0gpFenHqUuMdtjnhFthK8C--NoXw@mail.gmail.com>
-	<CAKXovcs-UORdS6d8XYuDa=CF2rMX8H+PX2Y_Gh5N2Oze8Ni+-A@mail.gmail.com>
-	<CAK2H+efLnZTvAFcCN=2GTJo6FErFhm330xG6tPNFNxs=5gOPSA@mail.gmail.com>
-	<CAKXovcuCz9UZrk8+hMsJ_zuST2ZqZBtzhBYewX7ZXA2chruHKg@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: add another disk to existing raid 0, ie grow raid 0 possible?
+Date: Mon, 13 Feb 2012 09:07:27 +1100
+Message-ID: <20120213090727.1d06291f@notabene.brown>
+References: <4F212A59.1070008@oldum.net>
+	<CADNH=7GXJ0DW7K5DqSgoYYsa2eSWzE9P46R=Qrehu1pFXqnpyQ@mail.gmail.com>
+	<20120126215713.0c24db62@notabene.brown>
+	<4F21396D.7030308@oldum.net>
+	<20120209145054.4443a48b@notabene.brown>
+	<4F352541.2050207@oldum.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKXovcuCz9UZrk8+hMsJ_zuST2ZqZBtzhBYewX7ZXA2chruHKg@mail.gmail.com>
+In-Reply-To: <4F352541.2050207@oldum.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeff W <jeff.welling@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Nikolay Kichukov <hijacker@oldum.net>
+Cc: Mathias =?UTF-8?B?QnVyw6lu?= <mathias.buren@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, Feb 12, 2012 at 12:27 PM, Jeff W <jeff.welling@gmail.com> wrote=
-:
->>
->> So what _actually_ happens when you issue the commands? Please post
->> back the results of
->>
->> cat /proc/mdstat
->
-> jeff@Shmee:~$ cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4]
-> md1 : active raid6 sda[0] sdf1[1] sdg1[5] sde[4] sdd1[3] sdc1[2]
-> =C2=A0 =C2=A0 =C2=A02441437440 blocks level 6, 64k chunk, algorithm 2=
- [7/6] [UUUUUU_]
->
-> unused devices: <none>
->
->
->>
->> and
->>
->> mount /dev/mdWHATEVER /mountpoint
->
-> jeff@Shmee:~$ sudo mount /dev/md1 /mnt
-> [sudo] password for jeff:
-> mount: wrong fs type, bad option, bad superblock on /dev/md1,
-> =C2=A0 =C2=A0 =C2=A0 missing codepage or helper program, or other err=
-or
-> =C2=A0 =C2=A0 =C2=A0 In some cases useful info is found in syslog - t=
-ry
-> =C2=A0 =C2=A0 =C2=A0 dmesg | tail =C2=A0or so
->
->
-> jeff@Shmee:~$ dmesg | tail
-> [48532.584428] [drm] nouveau 0000:01:00.0: Setting dpms mode 0 on vga
-> encoder (output 0)
-> [49369.880015] [drm] nouveau 0000:01:00.0: Setting dpms mode 1 on vga
-> encoder (output 0)
-> [50470.240278] [drm] nouveau 0000:01:00.0: Setting dpms mode 0 on vga
-> encoder (output 0)
-> [50522.284317] usb 2-6: USB disconnect, address 4
-> [52848.285524] [drm] nouveau 0000:01:00.0: Setting dpms mode 1 on vga
-> encoder (output 0)
-> [52940.534516] [drm] nouveau 0000:01:00.0: Setting dpms mode 0 on vga
-> encoder (output 0)
-> [53540.724023] [drm] nouveau 0000:01:00.0: Setting dpms mode 1 on vga
-> encoder (output 0)
-> [54039.813485] [drm] nouveau 0000:01:00.0: Setting dpms mode 0 on vga
-> encoder (output 0)
-> [58210.212241] EXT3-fs error (device md1): ext3_check_descriptors:
-> Block bitmap for group 6016 not in group (block 277891307)!
-> [58210.247230] EXT3-fs: group descriptors corrupted!
->
-> Is that more helpful?
-> Thanks!
-> Jeff.
-
-I think it will be to others. It's a bit above my pay grade unfortunate=
-ly.
-
-Doing a quick Google of
-
-RAID ext3_check_descriptors
-
-turns up others having similar issues to yours (I think) with a few
-posts that look like solutions, or possible solutions.
-
-IMPORTANT: My first inclination was to suggest an fsck but one post I
-found made it sound like that hurt his RAID so read carefully before
-doing anything that might cause more hard.
-
-- Mark
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBGcmks
+IDEwIEZlYiAyMDEyIDE2OjEwOjA5ICswMjAwIE5pa29sYXkgS2ljaHVrb3YgPGhpamFja2VyQG9s
+ZHVtLm5ldD4NCndyb3RlOg0KDQo+IC0tLS0tQkVHSU4gUEdQIFNJR05FRCBNRVNTQUdFLS0tLS0N
+Cj4gSGFzaDogU0hBMQ0KPiANCj4gSGkgTmVpbCwNCj4gRG8geW91IHRoaW5rIGl0IHdpbGwgbWFr
+ZSBzZW5zZSB0byB0cnkgdG8gcmVwbGljYXRlIHVzaW5nIGxvb3AgZGV2aWNlcz8NCg0KSXQgY2Vy
+dGFpbmx5IHdvbid0IGh1cnQuICBJdCBtaWdodCBub3QgYWNoaWV2ZSBhbnl0aGluZyB0aG91Z2gu
+DQpHaXZlIGl0IGEgdHJ5IC4uLiBpdCB5b3UgbWFuYWdlIHRvIHJlcHJvZHVjZSwgbGV0IG1lIGtu
+b3cuDQoNClRoYW5rcywNCk5laWxCcm93bg0KLS0tLS1CRUdJTiBQR1AgU0lHTkFUVVJFLS0tLS0N
+ClZlcnNpb246IEdudVBHIHYyLjAuMTggKEdOVS9MaW51eCkNCg0KaVFJVkF3VUJUemc0SHpuc250
+MVdZb0c1QVFMN014QUFzRWRRQXlaWElWYjhLYnZEMlJXcmJpTElaN241emhJNA0KbVV0bU1sMU9V
+Z1ZoZ1dCdDZRTEJLRERDOVJYb1FZMzU2MDd3NnNVMEd1TjRpMkZKN0tIaGRFbHhPTHppUVpBTg0K
+RzkwNnc3TExBV1U0cjZRK09TM01DNGhrRndNOE5LNEdwMHhFUHpwVG5IOE5scjMwVHpSenJlWlFU
+MU1wbFRrYg0KMGFrNU9EKzhpWHpHWmhOVDYxc0p5R2hSVTdLM2FUcDY4OCtDS2RkNUVIc2MyMk5s
+KzZlR29uWWpCWjZUWXpWWA0KOVhlQkF4cVA1NWt2Z05Qd2FoSFdZWlVvM2RDanVYWk1nNVN2b2hU
+MzJ0eW4wWU94WG9NTElSTHd1cDhsWExGUA0Kdkx3MXYvQi96Z3ZFMGRraWt0NjYxT1AwZDVBQ25L
+cE1OMzFzUlZQQjN5ZWJNMXdBTzU3Mk1xTjRLc2JDVUk4VQ0KZEliQ3JLMnNqaE5DWTBhRENwK2tN
+cUJxV2VXOWNpam1QdU9pYXFIeU9XamZCb3EyZkh3WlBidHY1RXdVaUE0Yw0KQW1lWEZnWHdsZXgr
+dFpsek5XUCtCWGZnbmsrU1R4RW5RTXNZaEhwZnpiNXBmK2xkMGo2QnRHaUZKS2pCT05KMQ0KRWp5
+ODM0WkE2eTB1UmkycmR0R21HT2s1NEtHWHJ1MDRVNC9QS0VoTDFoVjZzQnoyNS9RY3BmbW9udlEy
+L3k5TA0KU0pqTUM5VGp1b3FnZzB3a2ZjTUFZeEErV1Y0blUxR1JOZFlZUDFneThjWHRNUzcxQ3p4
+cktWK1pZNFpLRXRiSg0Kc2JRUmJaQ0o2MHFDL3ArOTlHc21UVWxDVEtCT1pFMVBNdnlFRkhNVWVR
+RVl0T0syL000QjFvTkFTYjQ5aEVpUw0KVWlrcVBwQ3NjT2c9DQo9cC9kcA0KLS0tLS1FTkQgUEdQ
+IFNJR05BVFVSRS0tLS0tDQo=
