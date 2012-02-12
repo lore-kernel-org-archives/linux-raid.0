@@ -1,65 +1,56 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: RAID corruption with kernel 3.2?
-Date: Sun, 12 Feb 2012 10:00:07 -0800
-Message-ID: <4F37FE27.9050309@zytor.com>
-References: <4F372848.5050105@zytor.com> <CADNH=7GGPdi87v2nJ1Jfsnym133uYdTiJ4yhtj8mJew2FMjFJQ@mail.gmail.com> <4F374363.8040306@zytor.com> <alpine.LRH.2.02.1202121551560.8312@diagnostix.dwd.de>
+From: Jeff W <jeff.welling@gmail.com>
+Subject: Re: RAID6 ext3 problems
+Date: Sun, 12 Feb 2012 13:43:43 -0500
+Message-ID: <CAKXovctDA28Gk61EJF_1-6kX2kMwRG8yyza4VFsKpzwsiHOEGQ@mail.gmail.com>
+References: <CAKXovctDQdiMWEdzh6Jg8OkEjXX5OHZ+hubFV-GRsc8S2QHohQ@mail.gmail.com>
+	<CAKXovctARfGAkug=ZA0EYm1uB=V0_5BXWyNisVZYip0VBpJxtA@mail.gmail.com>
+	<CAK2H+eerAkwup2UcAu2v=_4+=Bg_FBCqZmjGjmcLQA+2ozmvbg@mail.gmail.com>
+	<CAKXovcvvTioOP+JKd8b5-Hc1GZhAiqB85=A4d-cCP03uDPiGkg@mail.gmail.com>
+	<CAK2H+eds+2wu6Nep639mZ1dkOMmxdzqp4_7-o=QJO_qqcTWr9g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.02.1202121551560.8312@diagnostix.dwd.de>
+In-Reply-To: <CAK2H+eds+2wu6Nep639mZ1dkOMmxdzqp4_7-o=QJO_qqcTWr9g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Holger Kiehl <Holger.Kiehl@dwd.de>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Mark Knecht <markknecht@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/12/2012 08:06 AM, Holger Kiehl wrote:
->>
->> The current suspicion -- but we don't know yet -- is that this is a
->> problem on Sandy Bridge and some Penryn CPUs which have the XSAVE
->> instruction, but we might very well be completely wrong on that.
->>
-> I have NOT seen any corruptions. Have a dual CPU (8 cores) system with
-> the following CPU:
-> 
->    cat /proc/cpuinfo
->    processor       : 0
->    vendor_id       : GenuineIntel
->    cpu family      : 6
->    model           : 23
->    model name      : Intel(R) Xeon(R) CPU           X5460  @ 3.16GHz
->    stepping        : 10
->    microcode       : 0xa07
->    cpu MHz         : 1999.000
->    cache size      : 6144 KB
->    physical id     : 0
->    siblings        : 4
->    core id         : 0
->    cpu cores       : 4
->    apicid          : 0
->    initial apicid  : 0
->    fpu             : yes
->    fpu_exception   : yes
->    cpuid level     : 13
->    wp              : yes
->    flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr
-> pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe
-> syscall nx lm constant_tsc arch_perfmon pebs bts rep_good nopl
-> aperfmperf pni dtes64 monitor ds_cpl vmx est tm2 ssse3 cx16 xtpr pdcm
-> dca sse4_1 xsave lahf_lm dts tpr_shadow vnmi flexpriority
->    bogomips        : 6317.90
->    clflush size    : 64
->    cache_alignment : 64
->    address sizes   : 38 bits physical, 48 bits virtual
->    power management:
-> 
+On Sun, Feb 12, 2012 at 1:33 PM, Mark Knecht <markknecht@gmail.com> wro=
+te:
+> Hi Jeff,
+> =A0 In case you start laboring under a false perception, please
+> understand I am _not_ a heavy hitter. :-)
+>
+> =A0 OK, so those results raise two questions for me:
+>
+> 1) Was it intentional to use all of /dev/sde - I.e. - no partition al=
+a
+> sde1- or is that something strange that needs to be investigated?
 
-Okay, so that's Penryn, it has XSAVE but not XSAVEOPT.  Very interesting
-data point, I appreciate the info!
+Using sde instead of sde1 was a mistake I made a long time ago that I
+had planned to fix, but a sudden need to relocate put off my plans to
+fix it since it was working in the configuration it was in.
 
-	-hpa
+>
+> 2) For the device that has been removed (possibly /dev/sdb1?) what do
+> you get with an --examine command?
 
--- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
+The drive that has been removed from the array has been physically
+removed from the system, it is unplugged. It was flooding the system
+log with error messages while plugged in.
 
+> Also, you might try smartctl on the missing drive to investigate
+> whether the internal electronics identified a problem.
+>
+> HTH,
+> Mark
+
+Thanks,
+Jeff.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
