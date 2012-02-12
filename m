@@ -1,39 +1,31 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
 Subject: Re: RAID corruption with kernel 3.2?
-Date: Sun, 12 Feb 2012 04:14:53 +0000
-Message-ID: <CADNH=7GGPdi87v2nJ1Jfsnym133uYdTiJ4yhtj8mJew2FMjFJQ@mail.gmail.com>
-References: <4F372848.5050105@zytor.com>
+Date: Sat, 11 Feb 2012 20:43:15 -0800
+Message-ID: <4F374363.8040306@zytor.com>
+References: <4F372848.5050105@zytor.com> <CADNH=7GGPdi87v2nJ1Jfsnym133uYdTiJ4yhtj8mJew2FMjFJQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F372848.5050105@zytor.com>
+In-Reply-To: <CADNH=7GGPdi87v2nJ1Jfsnym133uYdTiJ4yhtj8mJew2FMjFJQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
+To: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>
 Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12 February 2012 02:47, H. Peter Anvin <hpa@zytor.com> wrote:
-> Has anyone seen RAID-5 or -6 corruption with kernel 3.2 on systems
-> previously stable? =C2=A0If so, please let me know your hardware
-> configuration... we're trying to track down a problem, and RAID *migh=
-t*
-> be part of it...
+On 02/11/2012 08:14 PM, Mathias Bur=C3=A9n wrote:
 >
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0-hpa
+> Details? My>3.2 RAID6 still works fine.
 >
-> --
-> H. Peter Anvin, Intel Open Source Technology Center
-> I work for Intel. =C2=A0I don't speak on their behalf.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
 
-Details? My >3.2 RAID6 still works fine.
+What is your hardware configuration?  Especially your CPU?
+
+The current suspicion -- but we don't know yet -- is that this is a=20
+problem on Sandy Bridge and some Penryn CPUs which have the XSAVE=20
+instruction, but we might very well be completely wrong on that.
+
+	-hpa
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
