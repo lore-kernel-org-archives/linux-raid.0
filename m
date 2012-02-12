@@ -1,95 +1,82 @@
-From: Holger Kiehl <Holger.Kiehl@dwd.de>
-Subject: Re: RAID corruption with kernel 3.2?
-Date: Sun, 12 Feb 2012 16:06:23 +0000 (GMT)
-Message-ID: <alpine.LRH.2.02.1202121551560.8312@diagnostix.dwd.de>
-References: <4F372848.5050105@zytor.com> <CADNH=7GGPdi87v2nJ1Jfsnym133uYdTiJ4yhtj8mJew2FMjFJQ@mail.gmail.com> <4F374363.8040306@zytor.com>
+From: Jeff W <jeff.welling@gmail.com>
+Subject: RAID6 ext3 problems
+Date: Sun, 12 Feb 2012 12:16:04 -0500
+Message-ID: <CAKXovctARfGAkug=ZA0EYm1uB=V0_5BXWyNisVZYip0VBpJxtA@mail.gmail.com>
+References: <CAKXovctDQdiMWEdzh6Jg8OkEjXX5OHZ+hubFV-GRsc8S2QHohQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-1730033388-1329062783=:8312"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F374363.8040306@zytor.com>
+In-Reply-To: <CAKXovctDQdiMWEdzh6Jg8OkEjXX5OHZ+hubFV-GRsc8S2QHohQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Hello to all!
+I've had a problem with my system that involves a RAID array with
+mdadm on Debian linux and the ext3 filesystem. My partition on the
+RAID array won't let me mount it anymore.
 
---8323328-1730033388-1329062783=:8312
-Content-Type: TEXT/PLAIN; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8BIT
+I have/had a RAID6 array of 7 500GB drives, formatted as one large
+ext3 partition.=A0 This array resided in a system that booted from a
+separate 320GB hard drive, but recently that system drive bit the dust
+and so was replaced. Upon reinstalling Debian on the system drive,
+`mdadm --assemble --scan` didn't assemble the RAID array as it had in
+times past, so I used 'fdisk -l' to find all the drives marked with
+'fd' (Linux RAID) and manually did `mdadm --assemble /dev/md0
+/dev/sdc1...` with the names of all the fd-marked drives (a command
+I've also used to successfully assemble the array before). That
+attempt didn't work because it said one of the drives was busy, and
+I've determined after the fact that it was because I misread of
+misunderstood the output of the first time I ran `mdadm --assemble
+--scan` because it seems that it had in fact created two arrays, one
+of the arrays (md0) containing one of the drives and the other array
+(md1) containing the rest of the drives.=A0 This confusing situation ha=
+d
+me concerned, I now know rightfully so, about data loss so I read the
+man page for mdadm and googled looking for a hint at how to
+troubleshoot or solve this, and I came across the `--examine` option
+which I used to look at each of the drives marked with Linux RAID. All
+of them except one, (sda1) had the same UID and what appeared to be
+the correct metadata for the RAID array I was trying to recover, so I
+tried assembling with the UID option which gave me an array with 5 out
+of 7 of the component drives. So, it had missed a drive -- sda1. If
+your wondering about the 7th drive, it didn't survive the move I went
+through just before this, but RAID6 documentation says it can sustain
+2 drive failures and continue operating, and I have only sustained two
+drive failures right now. So unless one more drive dies, I should
+still be able to access that array -- correct me if I'm wrong?
+Anyway, after I got the 5 out of 7 drives in the array, I manually
+added the 6th drive, sda1 to the array and it began repairing itself.
+Phew, I thought, so I tried to mount the array, which I have done in
+the past and was successful, but not this time. This time it threw the
+same error as before, mount couldn't detect the filesystem type
+because of some kind of superblock error.
 
-Hello,
+Now, it's probably self-evident at this point that I'm not an expert,
+but I'm hoping that you are and that you'll at least be able to tell
+me what I did wrong so as to avoid doing it again, and at best be able
+to tell me how I could recover my data.=A0 At this point I'm confused
+about what happened and how I could have possibly gotten myself in
+this situation.=A0 The RAID array wasn't assembled when I was
+reinstalling Debian so that shouldn't have been able to wipe the
+partition on the array, though it could have wiped sda1, but then, how
+did the partition/superblock on the RAID disappear...
+At present I've installed Ubuntu to the system drive, which in
+hindsight was not an intelligent move because now I don't know what
+version of mdadm I was using on Debian, though I was using 'stable'
+with no apt pinning. I'm running testdisk to analyze the drives, I was
+hoping it would be able to find a backup of the superblock but so far
+all it's finding is HFS partitions which doesn't seem promising.
 
-On Sat, 11 Feb 2012, H. Peter Anvin wrote:
+If anyone can shed any light on what I did wrong, if I encountered
+some kind of known bug or unintentionally did this myself through
+improper use of mdadm, any help at all would be hugely appreciated.
 
-> On 02/11/2012 08:14 PM, Mathias Burén wrote:
->>
->>  Details? My>3.2 RAID6 still works fine.
->> 
->
-> What is your hardware configuration?  Especially your CPU?
->
-> The current suspicion -- but we don't know yet -- is that this is a problem 
-> on Sandy Bridge and some Penryn CPUs which have the XSAVE instruction, but we 
-> might very well be completely wrong on that.
->
-I have NOT seen any corruptions. Have a dual CPU (8 cores) system with
-the following CPU:
-
-    cat /proc/cpuinfo
-    processor       : 0
-    vendor_id       : GenuineIntel
-    cpu family      : 6
-    model           : 23
-    model name      : Intel(R) Xeon(R) CPU           X5460  @ 3.16GHz
-    stepping        : 10
-    microcode       : 0xa07
-    cpu MHz         : 1999.000
-    cache size      : 6144 KB
-    physical id     : 0
-    siblings        : 4
-    core id         : 0
-    cpu cores       : 4
-    apicid          : 0
-    initial apicid  : 0
-    fpu             : yes
-    fpu_exception   : yes
-    cpuid level     : 13
-    wp              : yes
-    flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx lm constant_tsc arch_perfmon pebs bts rep_good nopl aperfmperf pni dtes64 monitor ds_cpl vmx est tm2 ssse3 cx16 xtpr pdcm dca sse4_1 xsave lahf_lm dts tpr_shadow vnmi flexpriority
-    bogomips        : 6317.90
-    clflush size    : 64
-    cache_alignment : 64
-    address sizes   : 38 bits physical, 48 bits virtual
-    power management:
-
-Has the following softraids:
-
-    cat /proc/mdstat
-    Personalities : [raid1] [raid6] [raid5] [raid4]
-    md3 : active raid1 sdf2[1] sdc2[0]
-          70613632 blocks [2/2] [UU]
-
-    md1 : active raid1 sdd2[1] sda2[0]
-          70613632 blocks [2/2] [UU]
-
-    md2 : active raid1 sdb2[0] sde2[1]
-          70613632 blocks [2/2] [UU]
-
-    md4 : active raid6 sdn1[7] sdm1[6] sdk1[4] sdl1[5] sdh1[1] sdj1[3] sdi1[2] sdg1[0]
-          1754480640 blocks level 6, 2048k chunk, algorithm 2 [8/8] [UUUUUUUU]
-
-    md0 : active raid1 sdb1[1] sdd1[3] sdf1[5] sde1[4] sdc1[2] sda1[0]
-          521984 blocks [6/6] [UUUUUU]
-
-The devices under md4 are hardware raid1 on two external SAS boxes.
-Kernel currently is 3.2.1 with some security fixes. This system distributes
-daily more then 5 TiB (9 million files) and so far no one has reported
-any problems to me. I have several other systems with the same CPU (lower
-clock) and software Raid6 but with local attached disks. They also have
-no problems. Kernels there are 3.2.5.
-
-Regards,
-Holger
---8323328-1730033388-1329062783=:8312--
+Thanks in advance,
+Jeff.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
