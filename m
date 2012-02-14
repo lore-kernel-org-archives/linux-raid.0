@@ -1,94 +1,50 @@
-From: Jes.Sorensen@redhat.com
-Subject: [PATCH] Use posix_memalign() for memory used to write bitmaps
-Date: Tue, 14 Feb 2012 11:52:13 +0100
-Message-ID: <1329216733-7081-1-git-send-email-Jes.Sorensen@redhat.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: XFS on top RAID10 with odd drives count and 2 near copies
+Date: Tue, 14 Feb 2012 05:10:27 -0600
+Message-ID: <4F3A4123.1050508@hardwarefreak.com>
+References: <CAGqmV7o7AQFY1K-1JLDk02Cv6GpAUQFjiSdM2Wbdbu6Zh_t0Wg@mail.gmail.com> <4F35E925.6000003@hardwarefreak.com> <CAGqmV7rBa39U-RWkzH-cTci1pNrrY1sfS=DkyK1wHE80bMt6qA@mail.gmail.com> <4F38FD5D.1010201@hardwarefreak.com> <CAGqmV7o6SNGV_A=iP2-uJXAJpPwh83GuqTZ-BzuY6vceMJJPVg@mail.gmail.com> <20120213230228.GA5822@www5.open-std.org> <CAGqmV7qoKW-7S26VwOS5szRRfvkr_cKh=ggXkXueMifhjJMhfA@mail.gmail.com> <4F3A23F1.6090908@westcontrol.com>
+Reply-To: stan@hardwarefreak.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4F3A23F1.6090908@westcontrol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: alexandermurashkin@msn.com, linux-raid@vger.kernel.org
+To: David Brown <david@westcontrol.com>
+Cc: CoolCold <coolthecold@gmail.com>, keld@keldix.com, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On 2/14/2012 3:05 AM, David Brown wrote:
 
-This makes super[01].c properly align buffers used for the bitmap
-using posix_memalign() to make sure the writes don't fail in case the
-bitmap is opened using O_DIRECT.
+> I believe that if you have XFS on LVM, then making a snapshot will first
+> "freeze" the filesystem, take the snapshot, then "thaw" the filesystem.
+>  This process will sync the system, flushing out outstanding writes, and
+> delay new writes until the "thaw" - thus you get a bit better than a
+> "power-off copy".  In particular, you don't get zeroed-out files no
+> matter what you've done with your barrier settings.
 
-This is based on https://bugzilla.redhat.com/show_bug.cgi?id=789898
-and an initial patch by Alexander Murashkin.
+xfs_freeze[1] was a feature/command carried over from IRIX to Linux
+during the XFS port.  This functionality was later moved from the XFS
+layer into the VFS layer.  Now FS freezing is fully automatic when an
+LVM snapshot is taken.  Now in the VFS layer, this works with any
+filesystem type, EXT2/3/4, Reiser, JFS, XFS.  I don't have the date or
+kernel rev handy where this was integrated in mainline.  It's been at
+least a couple/few years.  I'm not inclined to dig it up.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- super0.c |    8 +++++---
- super1.c |    7 +++++--
- 2 files changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/super0.c b/super0.c
-index dab85db..d53f025 100644
---- a/super0.c
-+++ b/super0.c
-@@ -1065,13 +1065,11 @@ static int write_bitmap0(struct supertype *st, int fd)
- 	int rv = 0;
- 
- 	int towrite, n;
--	char abuf[4096+4096];
--	char *buf = (char*)(((long)(abuf+4096))&~4095L);
-+	void *buf;
- 
- 	if (!get_dev_size(fd, NULL, &dsize))
- 		return 1;
- 
--
- 	if (dsize < MD_RESERVED_SECTORS*512)
- 		return -1;
- 
-@@ -1082,6 +1080,9 @@ static int write_bitmap0(struct supertype *st, int fd)
- 	if (lseek64(fd, offset + 4096, 0)< 0LL)
- 		return 3;
- 
-+	if (posix_memalign(&buf, 4096, 4096))
-+		return -ENOMEM;
-+
- 	memset(buf, 0xff, 4096);
- 	memcpy(buf,  ((char*)sb)+MD_SB_BYTES, sizeof(bitmap_super_t));
- 	towrite = 60*1024;
-@@ -1100,6 +1101,7 @@ static int write_bitmap0(struct supertype *st, int fd)
- 	if (towrite)
- 		rv = -2;
- 
-+	free(buf);
- 	return rv;
- }
- 
-diff --git a/super1.c b/super1.c
-index cfa237a..a18952a 100644
---- a/super1.c
-+++ b/super1.c
-@@ -1641,12 +1641,14 @@ static int write_bitmap1(struct supertype *st, int fd)
- 	struct mdp_superblock_1 *sb = st->sb;
- 	bitmap_super_t *bms = (bitmap_super_t*)(((char*)sb)+1024);
- 	int rv = 0;
--
-+	void *buf;
- 	int towrite, n;
--	char buf[4096];
- 
- 	locate_bitmap1(st, fd);
- 
-+	if (posix_memalign(&buf, 4096, 4096))
-+		return -ENOMEM;
-+
- 	memset(buf, 0xff, 4096);
- 	memcpy(buf, ((char*)sb)+1024, sizeof(bitmap_super_t));
- 
-@@ -1669,6 +1671,7 @@ static int write_bitmap1(struct supertype *st, int fd)
- 	if (towrite)
- 		rv = -2;
- 
-+	free(buf);
- 	return rv;
- }
- 
+[1] xfs_freeze(8)
+
+NAME
+       xfs_freeze - suspend access to an XFS filesystem
+
+SYNOPSIS
+       xfs_freeze -f | -u mount-point
+
+DESCRIPTION
+       xfs_freeze suspends and resumes access to an XFS filesystem (see
+xfs(5)).
+[...]
+
+
 -- 
-1.7.4.4
-
+Stan
