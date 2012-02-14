@@ -1,49 +1,55 @@
 From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: XFS on top RAID10 with odd drives count and 2 near copies
-Date: Mon, 13 Feb 2012 20:49:01 -0600
-Message-ID: <4F39CB9D.2050500@hardwarefreak.com>
-References: <CAGqmV7o7AQFY1K-1JLDk02Cv6GpAUQFjiSdM2Wbdbu6Zh_t0Wg@mail.gmail.com> <4F35E925.6000003@hardwarefreak.com> <CAGqmV7rBa39U-RWkzH-cTci1pNrrY1sfS=DkyK1wHE80bMt6qA@mail.gmail.com> <4F38FD5D.1010201@hardwarefreak.com> <CAGqmV7o6SNGV_A=iP2-uJXAJpPwh83GuqTZ-BzuY6vceMJJPVg@mail.gmail.com>
+Date: Mon, 13 Feb 2012 21:49:06 -0600
+Message-ID: <4F39D9B2.3050305@hardwarefreak.com>
+References: <CAGqmV7o7AQFY1K-1JLDk02Cv6GpAUQFjiSdM2Wbdbu6Zh_t0Wg@mail.gmail.com> <4F35E925.6000003@hardwarefreak.com> <CAGqmV7rBa39U-RWkzH-cTci1pNrrY1sfS=DkyK1wHE80bMt6qA@mail.gmail.com> <4F38FD5D.1010201@hardwarefreak.com> <CAGqmV7o6SNGV_A=iP2-uJXAJpPwh83GuqTZ-BzuY6vceMJJPVg@mail.gmail.com> <20120213230228.GA5822@www5.open-std.org>
 Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGqmV7o6SNGV_A=iP2-uJXAJpPwh83GuqTZ-BzuY6vceMJJPVg@mail.gmail.com>
+In-Reply-To: <20120213230228.GA5822@www5.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: keld@keldix.com
+Cc: CoolCold <coolthecold@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2/13/2012 3:40 PM, CoolCold wrote:
+On 2/13/2012 5:02 PM, keld@keldix.com wrote:
 
-> While doing this dirty tests, I've seen found that linear md over 3
-> subvolumes doesn't support barriers and XFS states this:
-> Feb 13 21:39:41 sigma2 kernel: [22336.925917] Filesystem "md6":
-> Disabling barriers, trial barrier write failed
-> though this doesn't help on iozone random write tests
+> And anyway, I think a 7 spindle raid10,f2 would be much faster than 
+> a md linear array setup, both for small files and for largish
+> sequential files. But try it out and report to us what you find.
 
-When using mdraid and a disk controller without BBWC, write barriers
-need to be, must be, enabled and working to guarantee journal
-consistency.  If barriers are disabled here you're risking the integrity
-of the entire filesystem.  Whatever is causing barriers to be disabled
-needs to be fixed.  You should definitely ask about this on the XFS
-mailing list.  You will want to post your complete mdraid
-configuration--the 3 RAID1s and the linear, and your xfs_info output,
-and describe the underlying storage hardware--controller(s), disks, etc.
- Maybe Neil might have some insight here as well.
+The results of the target workload should be interesting, given the
+apparent 7 spindles of stripe width of mdraid10,f2, and only 3 effective
+spindles with the linear array of mirror pairs, an apparent 4 spindle
+deficit.
 
->> I would recommend copying 48k of those actual picture files evenly
->> across 12 directories, for 4K files per dir.  Then use something like
->> curl-loader with a whole lot of simulated clients to hammer on the
->> files.  This allows you to test web server performance and IO
->> performance simultaneously.
-> 
-> Yes, this will be more realistic, of course.
+> I would expect  a linear md, and also most other MD raids would tend to perform better in 
+> the almost empty state, as the files will be placed on the faster parts of the spindles.
 
-By far.  Definitely more pain to setup though.  If you can get a
-synthetic benchy to batch create the ~50K files randomly across the 12
-dirs and then randomly read them out after flushing the caches, that
-should be pretty close to real world use as well.
+This is not the case with XFS.
+
+> raid10,f2 would have a more uniform performance as it gets filled, because read access to 
+> files would still be to the faster parts of the spindles.
+
+This may be the case with EXTx, Reiser, etc, but not with XFS.
+
+XFS creates its allocation groups uniformly across the storage device.
+So assuming your filesystem contains more than a handful of directories,
+even a very young XFS will have directories and files stored from outer
+to inner tracks.
+
+This layout of AGs, and the way XFS makes use of them, is directly
+responsible for much of XFS' high performance.  For example, a single
+file create operation on a full EXTx filesystem will exhibit a ~30ms
+combined seek delay with an average 3.5" SATA disk.  With XFS it will be
+~10ms.  This is because with EXTx the directories are at the outer edge
+and the free space is on the far inner edge.  With XFS the directory and
+free space area few tracks apart within the same allocation group.  Once
+you seek the directory in the AG, the seek latency from there to the
+track with the free space may be less than 1ms.  The seek distance
+principal here is the same for single disks and RAID.
 
 -- 
 Stan
