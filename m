@@ -1,76 +1,83 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: XFS on top RAID10 with odd drives count and 2 near copies
-Date: Tue, 14 Feb 2012 10:05:53 +0100
-Message-ID: <4F3A23F1.6090908@westcontrol.com>
-References: <CAGqmV7o7AQFY1K-1JLDk02Cv6GpAUQFjiSdM2Wbdbu6Zh_t0Wg@mail.gmail.com> <4F35E925.6000003@hardwarefreak.com> <CAGqmV7rBa39U-RWkzH-cTci1pNrrY1sfS=DkyK1wHE80bMt6qA@mail.gmail.com> <4F38FD5D.1010201@hardwarefreak.com> <CAGqmV7o6SNGV_A=iP2-uJXAJpPwh83GuqTZ-BzuY6vceMJJPVg@mail.gmail.com> <20120213230228.GA5822@www5.open-std.org> <CAGqmV7qoKW-7S26VwOS5szRRfvkr_cKh=ggXkXueMifhjJMhfA@mail.gmail.com>
+From: Nikolay Kichukov <hijacker@oldum.net>
+Subject: Re: add another disk to existing raid 0, ie grow raid 0 possible?
+Date: Tue, 14 Feb 2012 11:43:30 +0200
+Message-ID: <4F3A2CC2.4090101@oldum.net>
+References: <4F212A59.1070008@oldum.net>	<CADNH=7GXJ0DW7K5DqSgoYYsa2eSWzE9P46R=Qrehu1pFXqnpyQ@mail.gmail.com>	<20120126215713.0c24db62@notabene.brown>	<4F21396D.7030308@oldum.net>	<20120209145054.4443a48b@notabene.brown>	<4F352541.2050207@oldum.net> <20120213090727.1d06291f@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGqmV7qoKW-7S26VwOS5szRRfvkr_cKh=ggXkXueMifhjJMhfA@mail.gmail.com>
+In-Reply-To: <20120213090727.1d06291f@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: keld@keldix.com, stan@hardwarefreak.com, Linux RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 14/02/2012 08:31, CoolCold wrote:
-> On Tue, Feb 14, 2012 at 3:02 AM,<keld@keldix.com>  wrote:
->> On Tue, Feb 14, 2012 at 01:40:25AM +0400, CoolCold wrote:
->>> On Mon, Feb 13, 2012 at 4:09 PM, Stan
->>> Hoeppner<stan@hardwarefreak.com>  wrote:
->>>> On 2/12/2012 2:16 PM, CoolCold wrote:
->>>>> First of all, Stan, thanks for such detailed answer, I
->>>>> greatly appreciate this!
->>>>
->>>> You're welcome. ?You may or may not appreciate this reply. ?It
->>>> got really long. ?I tried to better explain the XFS+md linear
->>>> array setup.
->>>>
->>>>> There are several reasons for this - 1) I've made decision to
->>>>> use LMV for all "data" volumes (those are except /, /boot,
->>>>> /home , etc) ?2) there will be mysql database which will need
->>>>> backups with snapshots 3)
->>>>
->>>> So you need LVM for snaps, got it.
->>
->>
->> Well, I do not think LVM gives you snaps. I think you need to close
->> down the mysql database to have a consistent DB, then make backup,
->> then reactivate mysql. I may be wrong, tho.
-> You are a bit wrong here. MySQL in general supports two storage
-> types - MyISAM&  InnoDB. While InnoDB is ACID transactional engine,
-> MyISAM isn't. So, one should be able to backup InnoDB with snapshots
-> without interrupting workload and it will do recovery/transaction
-> rollbackup on startup. For MyISAM engine, snapshots will produce
-> unpredictable results as partial update may happen. But, snapshots
-> are useful in any case, because they allow to do backup in 4 steps:
-> 1) "FLUSH TABLES WITH READ LOCK" - this will flush all buffers and
-> close databases 2) lvcreate -s&&  unlock tables.... - doing snapshot
-> of data and releasing lock 3) copying it somewhere 4) lvremove .... -
-> releasing snapshot
->
-> So, in such situation, work will stop for 1)&  2) , not cosuming time
-> for 3) .
->
->
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Very roughly speaking, taking an LVM snapshot is like pulling the plug 
-on the system - if the database engine is able to recover reliably from 
-a power fail (by replaying logs, or whatever), then it can restore data 
-copied by a snapshot.  I don't know MySQL well enough to say if it can 
-do such recovery.
-
-I believe that if you have XFS on LVM, then making a snapshot will first 
-"freeze" the filesystem, take the snapshot, then "thaw" the filesystem. 
-  This process will sync the system, flushing out outstanding writes, 
-and delay new writes until the "thaw" - thus you get a bit better than a 
-"power-off copy".  In particular, you don't get zeroed-out files no 
-matter what you've done with your barrier settings.
-
-I think ext4 also freezes in the same way, but only with later kernels.
-
-mvh.,
-
-David
+Hello Neil,
+Here is the result, I think I managed to reproduce it as it has converted the raid0 to raid4.
 
 
+so commands in sequence:
+
+mdadm --verbose --create /dev/md/mdtest --level=0 --raid-devices=2 --metadata=1.2 /dev/loop0 /dev/loop1
+mdadm: chunk size defaults to 512K
+mdadm: array /dev/md/mdtest started.
+
+strace -o /tmp/foo -f mdadm --grow /dev/md/mdtest --raid-devices=3 --add /dev/loop2
+mdadm: level of /dev/md/mdtest changed to raid4
+mdadm: /dev/loop2 not large enough to join array
+mdadm: Need to backup 3072K of critical section..
+mdadm: /dev/md/mdtest: Cannot grow - need a spare or backup-file to backup critical section
+mdadm: aborting level change
+
+
+The 3 devices are equal sizes, all 200MB in size:
+
+- -rw-r--r--  1 root     root     209715200 Feb 14 11:28 raid_device1.loopback
+- -rw-r--r--  1 root     root     209715200 Feb 14 11:28 raid_device2.loopback
+- -rw-r--r--  1 root     root     209715200 Feb 14 11:17 raid_device3.loopback
+
+
+Output of mdadm -E :
+
+http://pastebin.com/WBhgP4L5
+
+Contents of /tmp/foo:
+
+http://pastebin.com/jcietEaa
+
+Let me know if you need any more information to debug this.
+
+Thanks,
+- -Nik
+
+On 02/13/2012 12:07 AM, NeilBrown wrote:
+> On Fri, 10 Feb 2012 16:10:09 +0200 Nikolay Kichukov <hijacker@oldum.net>
+> wrote:
+> 
+>> -----BEGIN PGP SIGNED MESSAGE-----
+>> Hash: SHA1
+> 
+>> Hi Neil,
+>> Do you think it will make sense to try to replicate using loop devices?
+> 
+> It certainly won't hurt.  It might not achieve anything though.
+> Give it a try ... it you manage to reproduce, let me know.
+> 
+> Thanks,
+> NeilBrown
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iQEcBAEBAgAGBQJPOizCAAoJEDFLYVOGGjgXylEIAK0JwigUO+E+L0GqdlYoU/N8
+5zdEBZ+0yu0VjsyKPAhOTz5g9348lNRPFyuQkOlGoDm3T06WxAbgo/Hh1kS2Q4IT
+sWjw2w9NQI6qE0sRJPZS7Xie57M/dLVvNGUcLGvYCYTqXZQlAZbMf0tr8BCg8A6F
+ddkvagi+QPyQg9NQultRhHwt10Ed6D2J1NFbnpoytoJy+27lwGfom1hmGKdtLVZG
+2ZRoGtzk2yhomF8qgY4xujClZSaF7HaZc1eJ0FDDoUvQfEHEtjImSd/BbwAiUpsH
+zv8aNn2Gik5v1RAHq8eOCg148J/XY/4RVD05zKj7fQqnphiwZGdirSKWv9YQCN0=
+=VwH2
+-----END PGP SIGNATURE-----
