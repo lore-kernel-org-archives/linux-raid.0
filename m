@@ -1,44 +1,37 @@
-From: johnny@ch.cablemas.com
-Subject: Hi Dear
-Date: Tue, 14 Feb 2012 10:30:02 -0000
-Message-ID: <fc0eef21a9efff47bbfa6396ac9817e2.squirrel__15460.0633810789$1329225022$gmane$org@200.79.192.5>
-Reply-To: katenorman0211@yahoo.com
+From: Robert Woodworth <robertjwoodworth@gmail.com>
+Subject: SES Enclosure Management.
+Date: Tue, 14 Feb 2012 10:30:37 -0700
+Message-ID: <CAB9NSeUBZXdGRkNNzYjC-KmJjv_AUp4bD_dJH2XyzkuO7PUPcw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Has anyone ever thought of integrating SES managed enclosures into the
+kernel RAID system?  I briefly looked through the archives and have
+not found anything on the topic.
+
+Some HW based RAID controllers do this flawlessly now, there is no
+reason why the kernel RAID cannot also.  (LSI MegaRAID)
+
+1) When a drive is part if a managed enclosure, the RAID system should
+address it by location instead of by enumerated device node.  The SES
+device in the enclosure can map the physical slot to a physical drive.
+ The RAID admin (mdamd) should be able to add/fail/identify devices
+based on slot.
+
+2) If the RAID system fails a drive, it should notify the SES
+management and turn on the fail bit and the fail LED.
+
+3) The RAID system should be able to turn on the 'identify' bit and
+LEDs for an array or a single drive.
+
+I'm currently doing firmware on a managed enclosure.  Although my
+vendor only supports LSI MegaRAID, there is no reason why my
+enclosures cannot work in the same manner on a kernel RAID system.
 
 
 
-Hello
-
-My name is Kate i would like to be a  friend with you
-
-i have more to discuss with you once i hear from you
-
-thanks
-
-ms kate
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D
-
-Hallo
-
-Mein Name ist Kate Ich m=F6chte ein Freund mit dir sein
-
-Ich habe mehr zu besprechen mit Ihnen, sobald ich von Ihnen zu h=F6ren
-
-dank
-
-=46rau Kate
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Request for comments...
