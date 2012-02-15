@@ -1,97 +1,67 @@
-From: Robin Hill <robin@robinhill.me.uk>
+From: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
 Subject: Re: mdadm dropped disk, won't re-add
-Date: Wed, 15 Feb 2012 14:45:36 +0000
-Message-ID: <20120215144536.GC18336@cthulhu.home.robinhill.me.uk>
-References: <1329314322.3574.16.camel@z6>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="eRtJSFbw+EEWtPj3"
+Date: Thu, 16 Feb 2012 00:01:26 +0100
+Message-ID: <E7B5E9EB-B341-459D-9C4E-C6E964DCAF6F@physik.fu-berlin.de>
+References: <1329314322.3574.16.camel@z6> <20120215144536.GC18336@cthulhu.home.robinhill.me.uk>
+Mime-Version: 1.0 (Apple Message framework v1257)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1329314322.3574.16.camel@z6>
+In-Reply-To: <20120215144536.GC18336@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+To: Robin Hill <robin@robinhill.me.uk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
---eRtJSFbw+EEWtPj3
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Feb 15, 2012, at 3:45 PM, Robin Hill wrote:
 
-On Wed Feb 15, 2012 at 02:58:42PM +0100, John Paul Adrian Glaubitz wrote:
+>> I have tried re-adding sdc1 with the --re-add command, but mdadm again
+>> refuses to re-add the drive.
+>> 
+> That's a safety measure. If it can't actually re-add the drive then it
+> fails, rather than changing to do an --add instead (as older mdadm
+> versions did), potentially losing data.
 
-> Hello,
->=20
-> I have a rather big problem with my Linux software RAID5.
->=20
-> It consists of 4 SATA disks each 1 TB in size, resulting in a 3 TB RAID5
-> volume (/dev/md0 assembled from /dev/sd{b,c,d,e}1.
->=20
-> Today, mdadm kicked disk sde1 from the RAID since the cable seemed to
-> make problems. I shutdown the machine, replaced the cable and tried
-> re-adding the disk, however, mdadm refused to add the drive.
->=20
-> So I re-partioned sde1 and added it as a new devices, mdadm instantly
-> started rebuilding the raid. Unfortunately, during the rebuild, mdadm
-> decided to kick sdc1 and I have now ended up with two drives failing.
->=20
-> I have tried re-adding sdc1 with the --re-add command, but mdadm again
-> refuses to re-add the drive.
->=20
-That's a safety measure. If it can't actually re-add the drive then it
-fails, rather than changing to do an --add instead (as older mdadm
-versions did), potentially losing data.
+Aha, thanks for clarifying.
 
-> I haven't changed anything since as I don't know what to do further. I
-> don't want to make any further damage to the raid and hope that someone
-> knows how to restore it.
->=20
-> My primary question is whether mdadm actually deletes any important data
-> on the remaining disks (sd{b,c,d}1) while rebuilding or whether it just
-> writes data to the newly added disk sde1.
->=20
-It just writes data/checksums to the newly added disk. The only writes
-to the remaining disks will be if other applications are writing to the
-array during the rebuild process.
+>> My primary question is whether mdadm actually deletes any important data
+>> on the remaining disks (sd{b,c,d}1) while rebuilding or whether it just
+>> writes data to the newly added disk sde1.
+>> 
+> It just writes data/checksums to the newly added disk. The only writes
+> to the remaining disks will be if other applications are writing to the
+> array during the rebuild process.
 
-> mdadm is version 3.2.3, kernel is Linux 3.2.0 on Debian Wheezy.
->=20
-> Can anyone give further advise?
->=20
-What errors does dmesg give about why sdc1 was failed? You'll need to
-fix that before you try recovering the array. If it's a drive error then
-using ddrescue to clone it (or as much of it as possible) to sde1 would
-probably be your best bet, then get a replacement drive.
+Great :). I was hoping so.
 
-Once you've fixed that issue then you should be able to force assemble
-the array (mdadm -S /dev/md0; mdadm -Af /dev/md0) and continue/restart
-the recovery process. I'd recommend doing a fsck on the filesystem
-afterwards as well, especially if you've replaced sdc.
+>> Can anyone give further advise?
+>> 
+> What errors does dmesg give about why sdc1 was failed? You'll need to
+> fix that before you try recovering the array. If it's a drive error then
+> using ddrescue to clone it (or as much of it as possible) to sde1 would
+> probably be your best bet, then get a replacement drive.
 
-If the force assembly fails then try it with added verbosity (mdadm -S
-/dev/md0; mdadm -Afvvv /dev/md0) and post the output from that (and from
-dmesg) and hopefully someone will be able to figure out what's going
-wrong.
+Those were errors related to the cable, the SATA link failed, the disk is ok,
+smart log is clean.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+> Once you've fixed that issue then you should be able to force assemble
+> the array (mdadm -S /dev/md0; mdadm -Af /dev/md0) and continue/restart
+> the recovery process. I'd recommend doing a fsck on the filesystem
+> afterwards as well, especially if you've replaced sdc.
 
---eRtJSFbw+EEWtPj3
-Content-Type: application/pgp-signature
+It did work, the raid is now rebuilding. I had actually had a friend who has
+more expertise (he is a casual kernel hacker himself) have a look at it and
+he fixed everything.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (GNU/Linux)
+Basically, he reassembled the array from sd{b,c,d}1 with the --force option,
+corrected the partitioning on the sde disk (I created a partition larger than
+on the other disks accidentally, so he just copied the partition table from
+one of the other disks in the array) and then added sde1 as a new disk.
 
-iEYEARECAAYFAk87xQ8ACgkQShxCyD40xBKKwwCgr6f9s8KBq/vobAz1omzHFbeY
-3zgAnjy/QQ2vTXpgU3aPYys+0pfttTIx
-=jUv2
------END PGP SIGNATURE-----
+Raid is no rebuilding and will be finished in 4 hours.
 
---eRtJSFbw+EEWtPj3--
+Thanks a lot for your quick help!
+
+Adrian
