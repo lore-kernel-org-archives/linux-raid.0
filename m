@@ -1,94 +1,32 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Add a spare to a poorly defined raid1
-Date: Wed, 15 Feb 2012 12:44:38 +0000
-Message-ID: <20120215124438.GA18336@cthulhu.home.robinhill.me.uk>
-References: <4F3BA338.6030204@cogweb.net>
+From: keld@keldix.com
+Subject: Re: XFS on top RAID10 with odd drives count and 2 near copies
+Date: Wed, 15 Feb 2012 14:08:29 +0100
+Message-ID: <20120215130829.GA6452@www5.open-std.org>
+References: <CAGqmV7o7AQFY1K-1JLDk02Cv6GpAUQFjiSdM2Wbdbu6Zh_t0Wg@mail.gmail.com> <4F35E925.6000003@hardwarefreak.com> <CAGqmV7rBa39U-RWkzH-cTci1pNrrY1sfS=DkyK1wHE80bMt6qA@mail.gmail.com> <4F38FD5D.1010201@hardwarefreak.com> <CAGqmV7o6SNGV_A=iP2-uJXAJpPwh83GuqTZ-BzuY6vceMJJPVg@mail.gmail.com> <20120213230228.GA5822@www5.open-std.org> <4F39D9B2.3050305@hardwarefreak.com> <20120214113832.GA6157@www5.open-std.org> <4F3AEDEF.2000608@hardwarefreak.com> <4F3BA0B8.2000405@westcontrol.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Qxx1br4bt0+wmkIi"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4F3BA338.6030204@cogweb.net>
+In-Reply-To: <4F3BA0B8.2000405@westcontrol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Liontooth <lionteeth@cogweb.net>
-Cc: linux-raid@vger.kernel.org
+To: David Brown <david@westcontrol.com>
+Cc: stan@hardwarefreak.com, CoolCold <coolthecold@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Wed, Feb 15, 2012 at 01:10:32PM +0100, David Brown wrote:
+> 
+> Reads will normally be taken from the outer halves (A1 and B1), since 
+> these have faster throughput, and keeping the heads there means half the 
+> head movement (actually less than that on average).  But if the system 
+> happens to be reading from (or writing to) A1, and needs access to data 
+> that is also on A1, it can read it from B2 in parallel.
 
---Qxx1br4bt0+wmkIi
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+reads in raid10,far will allways come from the lowest block available disk,
+that is the fastest disk on most hardware disks. This is to prevent
+oddly characteriscs disks from not striping: when two disks with eg slightly
+different access times were read from, the IO driver could tend to favourize
+the faster, and thus make overall operations slower. This also works in
+degraded mode. I wrote the one-line patch:-)
 
-On Wed Feb 15, 2012 at 05:51:12 +0530, David Liontooth wrote:
-
->=20
-> Not knowing what I was doing, I created a RAID1 with a single drive and=
-=20
-> a spare, as below.
->=20
-> I'd like to add the spare to the array. How do I do this without rebootin=
-g?
->=20
-> Cheers,
-> Dave
->=20
->=20
-> # definitions of existing MD arrays
-> ARRAY /dev/md0 level=3Draid1 num-devices=3D1=20
-> UUID=3D9921faab:5d93510e:0db287f1:dc103b07
->     spares=3D1
->=20
-> # mdadm --detail /dev/md0
-> /dev/md0:
->          Version : 0.90
->    Creation Time : Fri Jul 18 14:57:40 2008
->       Raid Level : raid1
->       Array Size : 104320 (101.89 MiB 106.82 MB)
->    Used Dev Size : 104320 (101.89 MiB 106.82 MB)
->     Raid Devices : 1
->    Total Devices : 2
-> Preferred Minor : 0
->      Persistence : Superblock is persistent
->=20
->      Update Time : Wed Feb 15 03:37:11 2012
->            State : clean
->   Active Devices : 1
-> Working Devices : 2
->   Failed Devices : 0
->    Spare Devices : 1
->=20
->             UUID : 9921faab:5d93510e:0db287f1:dc103b07
->           Events : 0.218
->=20
->      Number   Major   Minor   RaidDevice State
->         0       8        1        0      active sync   /dev/sda1
->=20
->         1       8       17        -      spare   /dev/sdb1
->=20
-
-That's a straightforward one - you just need to increase the number of
-active members in the array:
-
-    mdadm --grow /dev/md0 -n 2
-
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---Qxx1br4bt0+wmkIi
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (GNU/Linux)
-
-iEYEARECAAYFAk87qLUACgkQShxCyD40xBJTSACeI0XwRPFqacn0L4ER9ctOrBqr
-VLQAoNQtPp74AQjNMxlTvS24azF4JeHn
-=F3kZ
------END PGP SIGNATURE-----
-
---Qxx1br4bt0+wmkIi--
+Best regards
+Keld
