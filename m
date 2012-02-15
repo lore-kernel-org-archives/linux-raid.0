@@ -1,73 +1,97 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: XFS on top RAID10 with odd drives count and 2 near copies
-Date: Wed, 15 Feb 2012 16:40:38 +0100
-Message-ID: <4F3BD1F6.8080309@westcontrol.com>
-References: <CAGqmV7o7AQFY1K-1JLDk02Cv6GpAUQFjiSdM2Wbdbu6Zh_t0Wg@mail.gmail.com> <4F35E925.6000003@hardwarefreak.com> <CAGqmV7rBa39U-RWkzH-cTci1pNrrY1sfS=DkyK1wHE80bMt6qA@mail.gmail.com> <4F38FD5D.1010201@hardwarefreak.com> <CAGqmV7o6SNGV_A=iP2-uJXAJpPwh83GuqTZ-BzuY6vceMJJPVg@mail.gmail.com> <20120213230228.GA5822@www5.open-std.org> <4F39D9B2.3050305@hardwarefreak.com> <20120214113832.GA6157@www5.open-std.org> <4F3AEDEF.2000608@hardwarefreak.com> <20120215083058.GA8821@cthulhu.home.robinhill.me.uk> <4F3BB385.4000608@hardwarefreak.com>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: mdadm dropped disk, won't re-add
+Date: Wed, 15 Feb 2012 14:45:36 +0000
+Message-ID: <20120215144536.GC18336@cthulhu.home.robinhill.me.uk>
+References: <1329314322.3574.16.camel@z6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="eRtJSFbw+EEWtPj3"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F3BB385.4000608@hardwarefreak.com>
+Content-Disposition: inline
+In-Reply-To: <1329314322.3574.16.camel@z6>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: keld@keldix.com, CoolCold <coolthecold@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 15/02/2012 14:30, Stan Hoeppner wrote:
-> On 2/15/2012 2:30 AM, Robin Hill wrote:
->> On Tue Feb 14, 2012 at 05:27:43PM -0600, Stan Hoeppner wrote:
->>
->>> Maybe I simply don't understand this 'magic' of the f2 and far layouts.
->>>   If you only read the "faster half" of a spindle, does this mean writes
->>> go to the slower half?  If that's the case, how can you read data that's
->>> never been written?
->>>
->> Writes go to both halves, as normal for a mirrored setup, which is why
->
-> Huh?  A 'normal' RAID setup mirrors one disk to another.  You're
-> describing data being mirrored from the outer half of a single disk to
-> the inner half.  Where's the Redundancy in this?  This doesn't make sense.
->
 
-Like Robin said, and like I said in my earlier post, the second copy is 
-on a different disk.
+--eRtJSFbw+EEWtPj3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->> its write performance is lower than that of a near layout array (more
->> head movement required). Reads will (normally) come from the faster
->> (outer) half of the disk though, so read performance is better. In most
->> cases workloads are read-heavy, so this comes out as a significant gain.
->
-> Again, this makes no sense.  You're simply repeating what David said.
-> Neither of you seem to really understand this, or are simply unable to
-> explain it correctly, technically.
->
+On Wed Feb 15, 2012 at 02:58:42PM +0100, John Paul Adrian Glaubitz wrote:
 
-As far as I can see, you are the only one in this thread who doesn't 
-understand this.  I'm not sure where the problem lies, as several people 
-(including me) have given you explanations that seem pretty clear to me. 
-  But maybe there is some fundamental point that we are assuming is 
-obvious, but you don't get - hopefully it will suddenly click in place 
-for you.
+> Hello,
+>=20
+> I have a rather big problem with my Linux software RAID5.
+>=20
+> It consists of 4 SATA disks each 1 TB in size, resulting in a 3 TB RAID5
+> volume (/dev/md0 assembled from /dev/sd{b,c,d,e}1.
+>=20
+> Today, mdadm kicked disk sde1 from the RAID since the cable seemed to
+> make problems. I shutdown the machine, replaced the cable and tried
+> re-adding the disk, however, mdadm refused to add the drive.
+>=20
+> So I re-partioned sde1 and added it as a new devices, mdadm instantly
+> started rebuilding the raid. Unfortunately, during the rebuild, mdadm
+> decided to kick sdc1 and I have now ended up with two drives failing.
+>=20
+> I have tried re-adding sdc1 with the --re-add command, but mdadm again
+> refuses to re-add the drive.
+>=20
+That's a safety measure. If it can't actually re-add the drive then it
+fails, rather than changing to do an --add instead (as older mdadm
+versions did), potentially losing data.
 
-Have a look at this:
+> I haven't changed anything since as I don't know what to do further. I
+> don't want to make any further damage to the raid and hope that someone
+> knows how to restore it.
+>=20
+> My primary question is whether mdadm actually deletes any important data
+> on the remaining disks (sd{b,c,d}1) while rebuilding or whether it just
+> writes data to the newly added disk sde1.
+>=20
+It just writes data/checksums to the newly added disk. The only writes
+to the remaining disks will be if other applications are writing to the
+array during the rebuild process.
 
-<http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10>
+> mdadm is version 3.2.3, kernel is Linux 3.2.0 on Debian Wheezy.
+>=20
+> Can anyone give further advise?
+>=20
+What errors does dmesg give about why sdc1 was failed? You'll need to
+fix that before you try recovering the array. If it's a drive error then
+using ddrescue to clone it (or as much of it as possible) to sde1 would
+probably be your best bet, then get a replacement drive.
 
-Forget writes for a moment.  Forget the second copy on the inner halves 
-of the disks.  Then as far as reading is concerned, the raid10,f2 layout 
-looks /exactly/ like a raid0 stripe, using only the outer halves of the 
-disks.  That means large reads use all the spindles as they read whole 
-stripes at a time, just like raid0.  And because all data is on the 
-outer halves of the disks, the average bandwidth is higher than if it 
-were spread over the whole disk, and the average seek is faster because 
-the head movement is smaller - this is standard "short stroking" speed 
-improvement.
+Once you've fixed that issue then you should be able to force assemble
+the array (mdadm -S /dev/md0; mdadm -Af /dev/md0) and continue/restart
+the recovery process. I'd recommend doing a fsck on the filesystem
+afterwards as well, especially if you've replaced sdc.
 
-Write performance is lower because it needs more head movement to make 
-the second copy in the inner halves of the disks (as well as the copy to 
-the outer halves).  But if you have a reasonable read-to-write ratio, 
-the total performance is higher overall.
+If the force assembly fails then try it with added verbosity (mdadm -S
+/dev/md0; mdadm -Afvvv /dev/md0) and post the output from that (and from
+dmesg) and hopefully someone will be able to figure out what's going
+wrong.
 
-> Maybe Neil will jump into the fray and answer my original question.
->
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
+--eRtJSFbw+EEWtPj3
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (GNU/Linux)
+
+iEYEARECAAYFAk87xQ8ACgkQShxCyD40xBKKwwCgr6f9s8KBq/vobAz1omzHFbeY
+3zgAnjy/QQ2vTXpgU3aPYys+0pfttTIx
+=jUv2
+-----END PGP SIGNATURE-----
+
+--eRtJSFbw+EEWtPj3--
