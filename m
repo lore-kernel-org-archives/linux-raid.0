@@ -1,110 +1,146 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm segfault at assemble
-Date: Thu, 16 Feb 2012 14:12:25 +1100
-Message-ID: <20120216141225.2fb47604@notabene.brown>
-References: <201202150854.32303.arekm@maven.pl>
+Subject: Re: [PATCH] Use posix_memalign() for memory used to write bitmaps
+Date: Thu, 16 Feb 2012 14:17:35 +1100
+Message-ID: <20120216141735.4065bf8a@notabene.brown>
+References: <1329216733-7081-1-git-send-email-Jes.Sorensen@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/iHKDWuzJni92nGx3Msthzow"; protocol="application/pgp-signature"
+ boundary="Sig_/N/ztLC+NA.vxid4.Dnnh4Sh"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201202150854.32303.arekm@maven.pl>
+In-Reply-To: <1329216733-7081-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Arkadiusz =?UTF-8?B?TWnFm2tpZXdpY3o=?= <arekm@maven.pl>
-Cc: linux-raid@vger.kernel.org
+To: Jes.Sorensen@redhat.com
+Cc: alexandermurashkin@msn.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/iHKDWuzJni92nGx3Msthzow
-Content-Type: text/plain; charset=UTF-8
+--Sig_/N/ztLC+NA.vxid4.Dnnh4Sh
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 15 Feb 2012 08:54:32 +0100 Arkadiusz Mi=C5=9Bkiewicz <arekm@maven.p=
-l>
-wrote:
+On Tue, 14 Feb 2012 11:52:13 +0100 Jes.Sorensen@redhat.com wrote:
 
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
 >=20
-> Hi,
+> This makes super[01].c properly align buffers used for the bitmap
+> using posix_memalign() to make sure the writes don't fail in case the
+> bitmap is opened using O_DIRECT.
 >=20
-> mapfile.c:434=20
->=20
-> struct mddev_ident *match =3D conf_match(st, info, NULL, 0, NULL);
->=20
-> so devname is NULL and that's passed down to fnmatch in match_oneof causi=
-ng=20
-> segfault.
->=20
-> Looked at git and it seems to be the same as in mine 3.2.3 version.
->=20
-> Starting program: /sbin/mdadm --assemble --scan --auto=3Dyes
->=20
-> Program received signal SIGSEGV, Segmentation fault.
-> 0xb7ef9f15 in fnmatch () from /lib/libc.so.6
-> (gdb) bt
-> #0  0xb7ef9f15 in fnmatch () from /lib/libc.so.6
-> #1  0x08051caf in match_oneof (devices=3D0x80dea79 ",/dev/sdb3", devname=
-=3D0x0) at=20
-> config.c:958
-> #2  0x08052051 in conf_match (st=3D0x80def50, info=3D0x80e11b8, devname=
-=3D0x0,=20
-> verbose=3D0, rvp=3D0x0) at config.c:1049
-> #3  0x080a8e0c in RebuildMap () at mapfile.c:434
-> #4  0x080a865b in map_read (melp=3D0xbffff8a4) at mapfile.c:201
-> #5  0x080a8526 in map_lock (melp=3D0xbffff8a4) at mapfile.c:145
-> #6  0x0804e0f6 in main (argc=3D4, argv=3D0xbffffc54) at mdadm.c:1320
->=20
+> This is based on https://bugzilla.redhat.com/show_bug.cgi?id=3D789898
+> and an initial patch by Alexander Murashkin.
 
-Thanks for the report.
+hi Jes,
 
-This should fix it.
+I suspect that
 
+http://neil.brown.name/git?p=3Dmdadm;a=3Dcommitdiff;h=3D6ef89052d85b8137b8a=
+7100f761d896ae6f61001
+
+is the fix you want.  But I'll probably apply yours as well.
+
+Thanks,
 NeilBrown
 
 
-commit 9f1b0f0f1ed0dd4752be65348a24971335cd50e8
-Author: NeilBrown <neilb@suse.de>
-Date:   Thu Feb 16 14:11:57 2012 +1100
+>=20
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> ---
+>  super0.c |    8 +++++---
+>  super1.c |    7 +++++--
+>  2 files changed, 10 insertions(+), 5 deletions(-)
+>=20
+> diff --git a/super0.c b/super0.c
+> index dab85db..d53f025 100644
+> --- a/super0.c
+> +++ b/super0.c
+> @@ -1065,13 +1065,11 @@ static int write_bitmap0(struct supertype *st, in=
+t fd)
+>  	int rv =3D 0;
+> =20
+>  	int towrite, n;
+> -	char abuf[4096+4096];
+> -	char *buf =3D (char*)(((long)(abuf+4096))&~4095L);
+> +	void *buf;
+> =20
+>  	if (!get_dev_size(fd, NULL, &dsize))
+>  		return 1;
+> =20
+> -
+>  	if (dsize < MD_RESERVED_SECTORS*512)
+>  		return -1;
+> =20
+> @@ -1082,6 +1080,9 @@ static int write_bitmap0(struct supertype *st, int =
+fd)
+>  	if (lseek64(fd, offset + 4096, 0)< 0LL)
+>  		return 3;
+> =20
+> +	if (posix_memalign(&buf, 4096, 4096))
+> +		return -ENOMEM;
+> +
+>  	memset(buf, 0xff, 4096);
+>  	memcpy(buf,  ((char*)sb)+MD_SB_BYTES, sizeof(bitmap_super_t));
+>  	towrite =3D 60*1024;
+> @@ -1100,6 +1101,7 @@ static int write_bitmap0(struct supertype *st, int =
+fd)
+>  	if (towrite)
+>  		rv =3D -2;
+> =20
+> +	free(buf);
+>  	return rv;
+>  }
+> =20
+> diff --git a/super1.c b/super1.c
+> index cfa237a..a18952a 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -1641,12 +1641,14 @@ static int write_bitmap1(struct supertype *st, in=
+t fd)
+>  	struct mdp_superblock_1 *sb =3D st->sb;
+>  	bitmap_super_t *bms =3D (bitmap_super_t*)(((char*)sb)+1024);
+>  	int rv =3D 0;
+> -
+> +	void *buf;
+>  	int towrite, n;
+> -	char buf[4096];
+> =20
+>  	locate_bitmap1(st, fd);
+> =20
+> +	if (posix_memalign(&buf, 4096, 4096))
+> +		return -ENOMEM;
+> +
+>  	memset(buf, 0xff, 4096);
+>  	memcpy(buf, ((char*)sb)+1024, sizeof(bitmap_super_t));
+> =20
+> @@ -1669,6 +1671,7 @@ static int write_bitmap1(struct supertype *st, int =
+fd)
+>  	if (towrite)
+>  		rv =3D -2;
+> =20
+> +	free(buf);
+>  	return rv;
+>  }
+> =20
 
-    config: conf_match should ignore devname when not set.
-   =20
-    mapfile:RebuildMap calls conf_match with no devname, so we must be
-    careful not to use it.
-   =20
-    Reported-by: Arkadiusz Mi=C5=9Bkiewicz <arekm@maven.pl>
-    Signed-off-by: NeilBrown <neilb@suse.de>
 
-diff --git a/config.c b/config.c
-index 6027b2f..d8f48e1 100644
---- a/config.c
-+++ b/config.c
-@@ -1045,7 +1045,7 @@ struct mddev_ident *conf_match(struct supertype *st,
- 					array_list->devname);
- 			continue;
- 		}
--		if (array_list->devices &&
-+		if (array_list->devices && devname &&
- 		    !match_oneof(array_list->devices, devname)) {
- 			if (verbose >=3D 2 && array_list->devname)
- 				fprintf(stderr, Name
-
---Sig_/iHKDWuzJni92nGx3Msthzow
+--Sig_/N/ztLC+NA.vxid4.Dnnh4Sh
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTzx0GTnsnt1WYoG5AQKcdBAAoGcoYtLQUWYydZlw63exXyBSVo8SPiH+
-fFonmCc7veO1TCiie8kVeo2qwguZxcG5QQpkYDs65YMobIGFPuZL6BcAih1mSygz
-B2+bxArOeJVx6s81EV6pl6zj1KoCmLBkQAh6A0S26HolJW7pHToWG7xImOZ/17tD
-vcgrQDnoAK/8i2Qj0RvkTNK2B3OqFdf64Wit9vhwMWTcp4K3OqJ/UuScpLDvnwsv
-TEUmaSF196VjUvloYgaQyUe74Kj222Xa17an0uep+RSGDiA8BN7gWl51wJ6D6d8m
-Xxd0S2vGV9svJyF22pxJxVXqW/e65C/syEToFXiaUWVreXcSzRF2fjJGhpqREfxZ
-rS7cl9sqkGlA5Fh+aMU6C/q+M0xNg/6rg/eySleen1A2FsQBYhEVOMQe2GURgrp7
-ou+vCh9Oc9NCccEoIK3qVayPjUJvccNQX95PRwV4vGbLw367P+SfVDZjtvwkM1Fv
-uKZLpxNyG86FMH8RnFYYP/z5Fe4WU3Ya+xWSF9wD9ixK2Yo+FDP5pwt5u4zjJsNN
-fTlyedCqh+1e+habrfGXrTYZu0pn9+g3Lo+uMFnR1iu3+C9TgqHC6B9+Cu3KoGms
-HPG8GIhrieP+p5Q6/JgM3oovrxVf/hfizfkWgtS2iuKzjYQRi9oBsieLNdmoce0B
-41GjIU6JTEU=
-=+Kad
+iQIVAwUBTzx1Tznsnt1WYoG5AQKwsg/+MA1lkyhfxLd26G5iGIAl8JsXX5x2xTgl
+9vRLPRHCB1dcXJ8pKhgTidBEbkx66XtOSi9SjtGpT0dgFv4ml8svXLroXNt6ZK/X
+X6pn8USzWfl/FgUJiyy2DzCnli+TzzeRNwyO/5ZYu7NkTkMyf67DTLa2XSB5tf7s
+q0SvxJqFRaqfTb9BMZSt8IvQMiDnfhhotlwXHStocW+rUD67Y19bt1atTMwhs76B
+7G+WFfMqigBwVIpDsSoVMCZqcqKf/7cnXGekQCIQKPikMJc1ci3X2hADr9NlI56g
+exLuvBJCjhMATVsObCn2ZcynFI01wAUWxwufcee0ht03EzAFpr0ui1ccNThbALk7
+fSsWfuOr+KfuMrViIxJOCmBQ5pUALkfI6wtUa7NCYuL1ji8VMWS99T+3WWxxo1rG
+g0VoAO4PQAq3h5WZI9mxW0u6WX/RkKx1JHnJTkeO2dCx8aDSgwxgosCnDpL3vhhb
+T5XFJvevivBcmBGv7lhQuLpOWZLyJpQ0L/4fXEr2fO9TqvMyzjmiWMDjcrEn3R28
+RX5cYdkjkOaHP1ek9GTqiVYBMBuorXQN1t7aXj7QUDSFkxJ76XCRQyjCY5ELSoXf
+FKmP1InGoa5X+v+6JFDSXHQ54saggan/Jz+nv5FhhR9BIIgbF1goyuG6EsiQz4qy
+OH8jR0BzJ8c=
+=P1UT
 -----END PGP SIGNATURE-----
 
---Sig_/iHKDWuzJni92nGx3Msthzow--
+--Sig_/N/ztLC+NA.vxid4.Dnnh4Sh--
