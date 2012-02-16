@@ -1,146 +1,56 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Use posix_memalign() for memory used to write bitmaps
-Date: Thu, 16 Feb 2012 14:17:35 +1100
-Message-ID: <20120216141735.4065bf8a@notabene.brown>
-References: <1329216733-7081-1-git-send-email-Jes.Sorensen@redhat.com>
+Subject: Re: add another disk to existing raid 0, ie grow raid 0 possible?
+Date: Thu, 16 Feb 2012 17:55:53 +1100
+Message-ID: <20120216175553.654595b4@notabene.brown>
+References: <4F212A59.1070008@oldum.net>
+	<CADNH=7GXJ0DW7K5DqSgoYYsa2eSWzE9P46R=Qrehu1pFXqnpyQ@mail.gmail.com>
+	<20120126215713.0c24db62@notabene.brown>
+	<4F21396D.7030308@oldum.net>
+	<20120209145054.4443a48b@notabene.brown>
+	<4F352541.2050207@oldum.net>
+	<20120213090727.1d06291f@notabene.brown>
+	<4F3A2CC2.4090101@oldum.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/N/ztLC+NA.vxid4.Dnnh4Sh"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1329216733-7081-1-git-send-email-Jes.Sorensen@redhat.com>
+In-Reply-To: <4F3A2CC2.4090101@oldum.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: alexandermurashkin@msn.com, linux-raid@vger.kernel.org
+To: Nikolay Kichukov <hijacker@oldum.net>
+Cc: Mathias =?UTF-8?B?QnVyw6lu?= <mathias.buren@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/N/ztLC+NA.vxid4.Dnnh4Sh
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 14 Feb 2012 11:52:13 +0100 Jes.Sorensen@redhat.com wrote:
-
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->=20
-> This makes super[01].c properly align buffers used for the bitmap
-> using posix_memalign() to make sure the writes don't fail in case the
-> bitmap is opened using O_DIRECT.
->=20
-> This is based on https://bugzilla.redhat.com/show_bug.cgi?id=3D789898
-> and an initial patch by Alexander Murashkin.
-
-hi Jes,
-
-I suspect that
-
-http://neil.brown.name/git?p=3Dmdadm;a=3Dcommitdiff;h=3D6ef89052d85b8137b8a=
-7100f761d896ae6f61001
-
-is the fix you want.  But I'll probably apply yours as well.
-
-Thanks,
-NeilBrown
-
-
->=20
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-> ---
->  super0.c |    8 +++++---
->  super1.c |    7 +++++--
->  2 files changed, 10 insertions(+), 5 deletions(-)
->=20
-> diff --git a/super0.c b/super0.c
-> index dab85db..d53f025 100644
-> --- a/super0.c
-> +++ b/super0.c
-> @@ -1065,13 +1065,11 @@ static int write_bitmap0(struct supertype *st, in=
-t fd)
->  	int rv =3D 0;
-> =20
->  	int towrite, n;
-> -	char abuf[4096+4096];
-> -	char *buf =3D (char*)(((long)(abuf+4096))&~4095L);
-> +	void *buf;
-> =20
->  	if (!get_dev_size(fd, NULL, &dsize))
->  		return 1;
-> =20
-> -
->  	if (dsize < MD_RESERVED_SECTORS*512)
->  		return -1;
-> =20
-> @@ -1082,6 +1080,9 @@ static int write_bitmap0(struct supertype *st, int =
-fd)
->  	if (lseek64(fd, offset + 4096, 0)< 0LL)
->  		return 3;
-> =20
-> +	if (posix_memalign(&buf, 4096, 4096))
-> +		return -ENOMEM;
-> +
->  	memset(buf, 0xff, 4096);
->  	memcpy(buf,  ((char*)sb)+MD_SB_BYTES, sizeof(bitmap_super_t));
->  	towrite =3D 60*1024;
-> @@ -1100,6 +1101,7 @@ static int write_bitmap0(struct supertype *st, int =
-fd)
->  	if (towrite)
->  		rv =3D -2;
-> =20
-> +	free(buf);
->  	return rv;
->  }
-> =20
-> diff --git a/super1.c b/super1.c
-> index cfa237a..a18952a 100644
-> --- a/super1.c
-> +++ b/super1.c
-> @@ -1641,12 +1641,14 @@ static int write_bitmap1(struct supertype *st, in=
-t fd)
->  	struct mdp_superblock_1 *sb =3D st->sb;
->  	bitmap_super_t *bms =3D (bitmap_super_t*)(((char*)sb)+1024);
->  	int rv =3D 0;
-> -
-> +	void *buf;
->  	int towrite, n;
-> -	char buf[4096];
-> =20
->  	locate_bitmap1(st, fd);
-> =20
-> +	if (posix_memalign(&buf, 4096, 4096))
-> +		return -ENOMEM;
-> +
->  	memset(buf, 0xff, 4096);
->  	memcpy(buf, ((char*)sb)+1024, sizeof(bitmap_super_t));
-> =20
-> @@ -1669,6 +1671,7 @@ static int write_bitmap1(struct supertype *st, int =
-fd)
->  	if (towrite)
->  		rv =3D -2;
-> =20
-> +	free(buf);
->  	return rv;
->  }
-> =20
-
-
---Sig_/N/ztLC+NA.vxid4.Dnnh4Sh
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBTzx1Tznsnt1WYoG5AQKwsg/+MA1lkyhfxLd26G5iGIAl8JsXX5x2xTgl
-9vRLPRHCB1dcXJ8pKhgTidBEbkx66XtOSi9SjtGpT0dgFv4ml8svXLroXNt6ZK/X
-X6pn8USzWfl/FgUJiyy2DzCnli+TzzeRNwyO/5ZYu7NkTkMyf67DTLa2XSB5tf7s
-q0SvxJqFRaqfTb9BMZSt8IvQMiDnfhhotlwXHStocW+rUD67Y19bt1atTMwhs76B
-7G+WFfMqigBwVIpDsSoVMCZqcqKf/7cnXGekQCIQKPikMJc1ci3X2hADr9NlI56g
-exLuvBJCjhMATVsObCn2ZcynFI01wAUWxwufcee0ht03EzAFpr0ui1ccNThbALk7
-fSsWfuOr+KfuMrViIxJOCmBQ5pUALkfI6wtUa7NCYuL1ji8VMWS99T+3WWxxo1rG
-g0VoAO4PQAq3h5WZI9mxW0u6WX/RkKx1JHnJTkeO2dCx8aDSgwxgosCnDpL3vhhb
-T5XFJvevivBcmBGv7lhQuLpOWZLyJpQ0L/4fXEr2fO9TqvMyzjmiWMDjcrEn3R28
-RX5cYdkjkOaHP1ek9GTqiVYBMBuorXQN1t7aXj7QUDSFkxJ76XCRQyjCY5ELSoXf
-FKmP1InGoa5X+v+6JFDSXHQ54saggan/Jz+nv5FhhR9BIIgbF1goyuG6EsiQz4qy
-OH8jR0BzJ8c=
-=P1UT
------END PGP SIGNATURE-----
-
---Sig_/N/ztLC+NA.vxid4.Dnnh4Sh--
+LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBUdWUs
+IDE0IEZlYiAyMDEyIDExOjQzOjMwICswMjAwIE5pa29sYXkgS2ljaHVrb3YgPGhpamFja2VyQG9s
+ZHVtLm5ldD4NCndyb3RlOg0KDQo+IC0tLS0tQkVHSU4gUEdQIFNJR05FRCBNRVNTQUdFLS0tLS0N
+Cj4gSGFzaDogU0hBMQ0KPiANCj4gSGVsbG8gTmVpbCwNCj4gSGVyZSBpcyB0aGUgcmVzdWx0LCBJ
+IHRoaW5rIEkgbWFuYWdlZCB0byByZXByb2R1Y2UgaXQgYXMgaXQgaGFzIGNvbnZlcnRlZCB0aGUg
+cmFpZDAgdG8gcmFpZDQuDQo+IA0KPiANCj4gc28gY29tbWFuZHMgaW4gc2VxdWVuY2U6DQo+IA0K
+PiBtZGFkbSAtLXZlcmJvc2UgLS1jcmVhdGUgL2Rldi9tZC9tZHRlc3QgLS1sZXZlbD0wIC0tcmFp
+ZC1kZXZpY2VzPTIgLS1tZXRhZGF0YT0xLjIgL2Rldi9sb29wMCAvZGV2L2xvb3AxDQo+IG1kYWRt
+OiBjaHVuayBzaXplIGRlZmF1bHRzIHRvIDUxMksNCj4gbWRhZG06IGFycmF5IC9kZXYvbWQvbWR0
+ZXN0IHN0YXJ0ZWQuDQo+IA0KPiBzdHJhY2UgLW8gL3RtcC9mb28gLWYgbWRhZG0gLS1ncm93IC9k
+ZXYvbWQvbWR0ZXN0IC0tcmFpZC1kZXZpY2VzPTMgLS1hZGQgL2Rldi9sb29wMg0KPiBtZGFkbTog
+bGV2ZWwgb2YgL2Rldi9tZC9tZHRlc3QgY2hhbmdlZCB0byByYWlkNA0KPiBtZGFkbTogL2Rldi9s
+b29wMiBub3QgbGFyZ2UgZW5vdWdoIHRvIGpvaW4gYXJyYXkNCj4gbWRhZG06IE5lZWQgdG8gYmFj
+a3VwIDMwNzJLIG9mIGNyaXRpY2FsIHNlY3Rpb24uLg0KPiBtZGFkbTogL2Rldi9tZC9tZHRlc3Q6
+IENhbm5vdCBncm93IC0gbmVlZCBhIHNwYXJlIG9yIGJhY2t1cC1maWxlIHRvIGJhY2t1cCBjcml0
+aWNhbCBzZWN0aW9uDQo+IG1kYWRtOiBhYm9ydGluZyBsZXZlbCBjaGFuZ2UNCj4gDQoNCkkgdHJp
+ZWQgZXhhY3RseSB0aGF0IGFuZCBpdCB3b3JrZWQgcGVyZmVjdGx5Lg0KTWF5YmUgdGhlIGJ1ZyBo
+YXMgYmVlbiBmaXhlZC4NClBsZWFzZSByZW1pbmQgbWUgZXhhY3RseSB3aGljaCB2ZXJzaW9ucyBv
+ZiBtZGFkbSBhbmQgbGludXggeW91IGFyZSB1c2luZy4NCg0KVGhhbmtzLA0KTmVpbEJyb3duDQoN
+Cg0KLS0tLS1CRUdJTiBQR1AgU0lHTkFUVVJFLS0tLS0NClZlcnNpb246IEdudVBHIHYyLjAuMTgg
+KEdOVS9MaW51eCkNCg0KaVFJVkF3VUJUenlvZVRuc250MVdZb0c1QVFJSFJBLy9mNXBvZjdreElF
+cU9VMzJYMEcwbmd6V3JhSG9WREZyWQ0Ka1ZZcHRxdlhzaVFpMmdVemtPb1NJdmQzanAvb0ZEbmw0
+VkVJQVhpcTFNbXhWSHc0VVJaV0ZVbWt1RmxOZXptbQ0KTlZ3ZlcxOTRDam4wbGZCVldnNSt0cDZ6
+TWp0WktoZ3B2MkI4ZUxsemNkMC9FUSt0QlhUZU1NUy9hTHVmV0lsLw0Kb1pJNjB0NlRoaGdraSta
+VmlXb1UrUjMvWDJxcXZsZlM0KzFOdGJITE9mMFloUWRIMTZ3M00yRjVWNXRJd2JnSQ0KM1lLdHQv
+NWdVbDY1MlRCZDVKdDZ0VndGOFBybjJERnJSYlRkQmZOT1NMVWQ5dkFMZXpmM1Rzd0N0S25qc0wx
+VA0KdVRTN3Y2QU5oVmxpdGRMZzVqYmt0NjlxWklIeEkra0NrYWZOa1RTbWVaVmkzQmllUEhJd2Zu
+RjVSVmc2dG1sMw0KVzhqRjErUzV5encyOGh0UzFucjlrS3Q5YVNoYVpqN0EvdGtFL0JqcFhSS3lT
+S2RGazZqSTFqWXAwRStoc2pVYg0KMzlENzJ3RVhBVnNqT3ZsZUFmaXA5N0NLa3RGSDRjcXRtNXhX
+c25IV2pnZ3dWdmpEdzRwYllhcmRxKzh6bnd1bg0KTUNPQVB4dVFEQW1JNUhWbDNaWG9FdWU2dzZV
+WkRCcHZ0OXMwOVZ1aDZ4K2pXSzh4Z1pPV0llK2Fmb3ZiU3ZQNQ0KM3lMNnRGT0NyYjZWUk93Q0VP
+dEQyTVRUZDUyS1dHQ3dySDhsYk1EN3EzQzFjNG91NjFFT1VrUkxwZTY4K2hqRg0KcFNRYjB5dGk4
+aXFqUjZMSFdzUnBldU9uWHAydURRNXowYjZzajdIbFdueUNIVkJkUDRIcjRzbUF4WHFMNnVwcw0K
+SUhRSjBRcWpacVE9DQo9TUFlYQ0KLS0tLS1FTkQgUEdQIFNJR05BVFVSRS0tLS0tDQo=
