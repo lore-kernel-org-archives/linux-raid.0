@@ -1,56 +1,47 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: add another disk to existing raid 0, ie grow raid 0 possible?
-Date: Thu, 16 Feb 2012 17:55:53 +1100
-Message-ID: <20120216175553.654595b4@notabene.brown>
-References: <4F212A59.1070008@oldum.net>
-	<CADNH=7GXJ0DW7K5DqSgoYYsa2eSWzE9P46R=Qrehu1pFXqnpyQ@mail.gmail.com>
-	<20120126215713.0c24db62@notabene.brown>
-	<4F21396D.7030308@oldum.net>
-	<20120209145054.4443a48b@notabene.brown>
-	<4F352541.2050207@oldum.net>
-	<20120213090727.1d06291f@notabene.brown>
-	<4F3A2CC2.4090101@oldum.net>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH] Use posix_memalign() for memory used to write bitmaps
+Date: Thu, 16 Feb 2012 09:01:15 +0100
+Message-ID: <4F3CB7CB.5020505@redhat.com>
+References: <1329216733-7081-1-git-send-email-Jes.Sorensen@redhat.com> <20120216141735.4065bf8a@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F3A2CC2.4090101@oldum.net>
+In-Reply-To: <20120216141735.4065bf8a@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nikolay Kichukov <hijacker@oldum.net>
-Cc: Mathias =?UTF-8?B?QnVyw6lu?= <mathias.buren@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: alexandermurashkin@msn.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBUdWUs
-IDE0IEZlYiAyMDEyIDExOjQzOjMwICswMjAwIE5pa29sYXkgS2ljaHVrb3YgPGhpamFja2VyQG9s
-ZHVtLm5ldD4NCndyb3RlOg0KDQo+IC0tLS0tQkVHSU4gUEdQIFNJR05FRCBNRVNTQUdFLS0tLS0N
-Cj4gSGFzaDogU0hBMQ0KPiANCj4gSGVsbG8gTmVpbCwNCj4gSGVyZSBpcyB0aGUgcmVzdWx0LCBJ
-IHRoaW5rIEkgbWFuYWdlZCB0byByZXByb2R1Y2UgaXQgYXMgaXQgaGFzIGNvbnZlcnRlZCB0aGUg
-cmFpZDAgdG8gcmFpZDQuDQo+IA0KPiANCj4gc28gY29tbWFuZHMgaW4gc2VxdWVuY2U6DQo+IA0K
-PiBtZGFkbSAtLXZlcmJvc2UgLS1jcmVhdGUgL2Rldi9tZC9tZHRlc3QgLS1sZXZlbD0wIC0tcmFp
-ZC1kZXZpY2VzPTIgLS1tZXRhZGF0YT0xLjIgL2Rldi9sb29wMCAvZGV2L2xvb3AxDQo+IG1kYWRt
-OiBjaHVuayBzaXplIGRlZmF1bHRzIHRvIDUxMksNCj4gbWRhZG06IGFycmF5IC9kZXYvbWQvbWR0
-ZXN0IHN0YXJ0ZWQuDQo+IA0KPiBzdHJhY2UgLW8gL3RtcC9mb28gLWYgbWRhZG0gLS1ncm93IC9k
-ZXYvbWQvbWR0ZXN0IC0tcmFpZC1kZXZpY2VzPTMgLS1hZGQgL2Rldi9sb29wMg0KPiBtZGFkbTog
-bGV2ZWwgb2YgL2Rldi9tZC9tZHRlc3QgY2hhbmdlZCB0byByYWlkNA0KPiBtZGFkbTogL2Rldi9s
-b29wMiBub3QgbGFyZ2UgZW5vdWdoIHRvIGpvaW4gYXJyYXkNCj4gbWRhZG06IE5lZWQgdG8gYmFj
-a3VwIDMwNzJLIG9mIGNyaXRpY2FsIHNlY3Rpb24uLg0KPiBtZGFkbTogL2Rldi9tZC9tZHRlc3Q6
-IENhbm5vdCBncm93IC0gbmVlZCBhIHNwYXJlIG9yIGJhY2t1cC1maWxlIHRvIGJhY2t1cCBjcml0
-aWNhbCBzZWN0aW9uDQo+IG1kYWRtOiBhYm9ydGluZyBsZXZlbCBjaGFuZ2UNCj4gDQoNCkkgdHJp
-ZWQgZXhhY3RseSB0aGF0IGFuZCBpdCB3b3JrZWQgcGVyZmVjdGx5Lg0KTWF5YmUgdGhlIGJ1ZyBo
-YXMgYmVlbiBmaXhlZC4NClBsZWFzZSByZW1pbmQgbWUgZXhhY3RseSB3aGljaCB2ZXJzaW9ucyBv
-ZiBtZGFkbSBhbmQgbGludXggeW91IGFyZSB1c2luZy4NCg0KVGhhbmtzLA0KTmVpbEJyb3duDQoN
-Cg0KLS0tLS1CRUdJTiBQR1AgU0lHTkFUVVJFLS0tLS0NClZlcnNpb246IEdudVBHIHYyLjAuMTgg
-KEdOVS9MaW51eCkNCg0KaVFJVkF3VUJUenlvZVRuc250MVdZb0c1QVFJSFJBLy9mNXBvZjdreElF
-cU9VMzJYMEcwbmd6V3JhSG9WREZyWQ0Ka1ZZcHRxdlhzaVFpMmdVemtPb1NJdmQzanAvb0ZEbmw0
-VkVJQVhpcTFNbXhWSHc0VVJaV0ZVbWt1RmxOZXptbQ0KTlZ3ZlcxOTRDam4wbGZCVldnNSt0cDZ6
-TWp0WktoZ3B2MkI4ZUxsemNkMC9FUSt0QlhUZU1NUy9hTHVmV0lsLw0Kb1pJNjB0NlRoaGdraSta
-VmlXb1UrUjMvWDJxcXZsZlM0KzFOdGJITE9mMFloUWRIMTZ3M00yRjVWNXRJd2JnSQ0KM1lLdHQv
-NWdVbDY1MlRCZDVKdDZ0VndGOFBybjJERnJSYlRkQmZOT1NMVWQ5dkFMZXpmM1Rzd0N0S25qc0wx
-VA0KdVRTN3Y2QU5oVmxpdGRMZzVqYmt0NjlxWklIeEkra0NrYWZOa1RTbWVaVmkzQmllUEhJd2Zu
-RjVSVmc2dG1sMw0KVzhqRjErUzV5encyOGh0UzFucjlrS3Q5YVNoYVpqN0EvdGtFL0JqcFhSS3lT
-S2RGazZqSTFqWXAwRStoc2pVYg0KMzlENzJ3RVhBVnNqT3ZsZUFmaXA5N0NLa3RGSDRjcXRtNXhX
-c25IV2pnZ3dWdmpEdzRwYllhcmRxKzh6bnd1bg0KTUNPQVB4dVFEQW1JNUhWbDNaWG9FdWU2dzZV
-WkRCcHZ0OXMwOVZ1aDZ4K2pXSzh4Z1pPV0llK2Fmb3ZiU3ZQNQ0KM3lMNnRGT0NyYjZWUk93Q0VP
-dEQyTVRUZDUyS1dHQ3dySDhsYk1EN3EzQzFjNG91NjFFT1VrUkxwZTY4K2hqRg0KcFNRYjB5dGk4
-aXFqUjZMSFdzUnBldU9uWHAydURRNXowYjZzajdIbFdueUNIVkJkUDRIcjRzbUF4WHFMNnVwcw0K
-SUhRSjBRcWpacVE9DQo9TUFlYQ0KLS0tLS1FTkQgUEdQIFNJR05BVFVSRS0tLS0tDQo=
+On 02/16/12 04:17, NeilBrown wrote:
+> On Tue, 14 Feb 2012 11:52:13 +0100 Jes.Sorensen@redhat.com wrote:
+> 
+>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>
+>> This makes super[01].c properly align buffers used for the bitmap
+>> using posix_memalign() to make sure the writes don't fail in case the
+>> bitmap is opened using O_DIRECT.
+>>
+>> This is based on https://bugzilla.redhat.com/show_bug.cgi?id=789898
+>> and an initial patch by Alexander Murashkin.
+> 
+> hi Jes,
+> 
+> I suspect that
+> 
+> http://neil.brown.name/git?p=mdadm;a=commitdiff;h=6ef89052d85b8137b8a7100f761d896ae6f61001
+> 
+> is the fix you want.  But I'll probably apply yours as well.
+> 
+> Thanks,
+> NeilBrown
+
+Hi Neil,
+
+Thanks, I haven't been able to reproduce the problem locally that
+Alexander was seeing, but I suspect you are right. That said, I'd still
+vote in favor of using posix_memalign() rather than doing the pointer
+juggling, less error prone.
+
+Cheers,
+Jes
