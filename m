@@ -1,7 +1,7 @@
-From: pg@lxra2.to.sabi.co.UK (Peter Grandi)
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
 Subject: Re: XFS on top RAID10 with odd drives count and 2 near copies
-Date: Fri, 17 Feb 2012 19:03:31 +0000
-Message-ID: <20286.42115.949782.471398@tree.ty.sabi.co.UK>
+Date: Fri, 17 Feb 2012 19:30:49 +0000
+Message-ID: <20286.43753.55416.715662@tree.ty.sabi.co.UK>
 References: <CAGqmV7o7AQFY1K-1JLDk02Cv6GpAUQFjiSdM2Wbdbu6Zh_t0Wg@mail.gmail.com>
 	<4F35E925.6000003@hardwarefreak.com>
 	<CAGqmV7rBa39U-RWkzH-cTci1pNrrY1sfS=DkyK1wHE80bMt6qA@mail.gmail.com>
@@ -15,49 +15,45 @@ References: <CAGqmV7o7AQFY1K-1JLDk02Cv6GpAUQFjiSdM2Wbdbu6Zh_t0Wg@mail.gmail.com>
 	<4F3BB385.4000608@hardwarefreak.com>
 	<4F3BD1F6.8080309@westcontrol.com>
 	<4F3E5325.3060001@hardwarefreak.com>
+	<4F3E6ADB.2040005@westcontrol.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F3E5325.3060001@hardwarefreak.com>
+In-Reply-To: <4F3E6ADB.2040005@westcontrol.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 [ ... ]
 
-> Back to the original issue.  Coolcold and I were trying to
-> figure out what the XFS write stripe alignment should be for a
-> 7 disk mdraid10 near layout array. After multiple posts from
-> David, Robin, and Keld attempting to 'educate' me WRT the
-> mdraid driver read tricks which yield an "effective RAID0
-> stripe", nobody has yet answered my question:
+> To my mind, stripe width applies to reads and writes.  For
+> reads, it is the number of spindles that are used in parallel
+> while reading larger blocks of data.  For writes, it is in
+> addition the width of a parity stripe for raid5 or raid6.
 
-> What is the  stripe spindle width of a 7 drive mdraid near array?
+In the XFS case that's completely wrong, and irrelevant: in the
+XFS case it is the number of sectors/blocks that IO has to be
+_aligned_ to avoid read-modify-write, if there is the risk for
+that.
 
-As I have repeated many many many times to you in past XFS
-discussions, and please take note, stripe alignment matters ONLY
-AND SOLELY IF READ-MODIFY-WRITE is involved, and RADI10 never
-requires read-modify-write.
+The stripe width per se matters less than aligned writes as to
+avoiding read-modify-write impact: if one does IO in stripe
+width units but they are not aligned, performance will be
+terrible as double read-modify-write will not be prevented.
 
-> Do note that stripe width is specific to writes.  It has
-> nothing to do with reads, from the filesystem perspective
-> anyway. For internal array operations it will.
+What is the stripe width does not matter to applications like a
+filesystem other than for read-modify-write avoidance because
+how many sectors/blocks are/can be read in parallel depends
+primarily on application access patterns, and secondarily on how
+good is the IO subsystem scheduling.
 
-Again, stripe alignment only matters for writes ONLY AND SOLELY
-IF READ-MODIFY-WRITE is involved. This never happens for RAID0,
-RAID1 or RAID10, because there is no parity to update; chunks
-within a stripe are wholly independent of each other.
+> [ ... ] Some filesystems care a /little/ about stripe width in
+> that they align certain structures to stripe boundaries to
+> make accesses more efficient.
 
-Not all parity RAID involves read-modify-write either, for
-example RAID2 and RAID3 (bit and byte parallel parity RAID under
-the SNIA taxonomy) never do read-modify-write either, so stripe
-alignment does not matter for those either. Note: this is
-because RAID setups where the physical sector (bit or byte) is
-smaller than the logical sector always do whole-stripe reads or
-writes, which is a special case.
-
-Disclaimer: using stripe alignment even when it is not required
-may help a bit with scheduling, it being slightly akin to a
-larger block size, but not quite, but that is a secondary
-effect.
+That in the case where read-modify-write cannot happen, if
+read-modify write can happen, unaligned or non-full-width writes
+are very costly, and not just for arrays; it happens in RAM too,
+and for 4KiB physical sector drives simulating 512B logical
+sectors.
