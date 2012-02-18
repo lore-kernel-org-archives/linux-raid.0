@@ -1,7 +1,7 @@
 From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
 Subject: Re: XFS on top RAID10 with odd drives count and 2 near copies
-Date: Sat, 18 Feb 2012 17:09:11 +0000
-Message-ID: <20287.56119.827444.504884@tree.ty.sabi.co.UK>
+Date: Sat, 18 Feb 2012 17:39:31 +0000
+Message-ID: <20287.57939.614122.5906@tree.ty.sabi.co.UK>
 References: <CAGqmV7o7AQFY1K-1JLDk02Cv6GpAUQFjiSdM2Wbdbu6Zh_t0Wg@mail.gmail.com>
 	<4F35E925.6000003@hardwarefreak.com>
 	<CAGqmV7rBa39U-RWkzH-cTci1pNrrY1sfS=DkyK1wHE80bMt6qA@mail.gmail.com>
@@ -11,67 +11,66 @@ References: <CAGqmV7o7AQFY1K-1JLDk02Cv6GpAUQFjiSdM2Wbdbu6Zh_t0Wg@mail.gmail.com>
 	<4F39D9B2.3050305@hardwarefreak.com>
 	<20120214113832.GA6157@www5.open-std.org>
 	<4F3AEDEF.2000608@hardwarefreak.com>
-	<20120215083058.GA8821@cthulhu.home.robinhill.me.uk>
-	<4F3BB385.4000608@hardwarefreak.com>
-	<4F3BD1F6.8080309@westcontrol.com>
-	<4F3E5325.3060001@hardwarefreak.com>
-	<20286.42115.949782.471398@tree.ty.sabi.co.UK>
+	<20286.40974.897300.844651@tree.ty.sabi.co.UK>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20286.42115.949782.471398@tree.ty.sabi.co.UK>
+In-Reply-To: <20286.40974.897300.844651@tree.ty.sabi.co.UK>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+>>> On Fri, 17 Feb 2012 18:44:30 +0000, pg@lxra2.sabi.co.UK
+>>> (Peter Grandi) said:
+
 [ ... ]
 
->> [ ... ] XFS write stripe alignment should be for a 7 disk
->> mdraid10 near layout array.
+> I have a few corrections and extensions for this message:
+>   * With 'f2' the main price to pay is that *peak* writing speed
 
-> [ ... ] stripe alignment matters ONLY AND SOLELY IF
-> READ-MODIFY-WRITE is involved, and RADI10 never requires
-> read-modify-write.
+And the average. The peak writing speed is impaired by writing
+two chunks to each drive, the average by the seeking.
 
->> Do note that stripe width is specific to writes.  It has
->> nothing to do with reads, from the filesystem perspective
->> anyway. For internal array operations it will.
+Another way of looking at 'far' layouts is that given the same
+number of disks as 'near', they have twice the width of the
+stripe on reads, but the same width stripe on write plus seeking.
 
-> Again, stripe alignment only matters for writes ONLY AND SOLELY
-> IF READ-MODIFY-WRITE is involved. This never happens for RAID0,
-> RAID1 or RAID10, because there is no parity to update; chunks
-> within a stripe are wholly independent of each other.
+[ ... ]
+>     - With 'f2' the first chunk gets written to the top of drive
+>       1, and bottom of drive 2. Then the next chunk is written
+>       to the top of drive 2, and the bottom of drive 3. Drive 2
+>       writes must be serialized and arm must move half a disk.
 
-There is a subtlety here... and at times I am excessively precise
-in my wording :-) but also because it matters.
+Also note what happens on a whole-strip write, which for
+RAID10,n2 on 6 disks would have been 3 chunks, the width of the
+RAID0 layer.
 
-XFS requires specifying stripe geometry as 'su'/'sunit' which is
-the MD chunk size, and as 'sw'/'swidth' which is the logical
-stripe size, and similarly for 'ext3' and 'ext4'.
+With RAID10,f2 the _apparent_ width of the RAID0 layer is 6
+chunks, but since we need to write each chunk twice, we end up
+writing two chunks per drive, and with a half-disk seek between
+them, which gives the same parallelism as RAID10,n2 plus the
+cost of the seeks. So lower performance than RAID10,n2 writes,
+and how much lower depending on the frequency of the seeks.
 
-The reason is that while the *stripe* alignment (and size) don't
-matter if there is no risk of RMW in the underlying storage
-system, with XFS like 'ext3' and 'ext4' the *chunk* alignment
-(and size) matters in all cases where there is parallelism in the
-underlying storage system; it matters for both reads and writes,
-and on all RAID layouts.
+[ ... ]
 
-Because then filesystem will try to allocate _metadata_ to be
-chunk aligned, so that reading/writing metadata can take
-advantage of the parallelism of the array. From 'man mke2fs':
+>   mdadm -C /dev/r10f2 -n raid10 -n 4 \
+>     /dev/sda1 /dev/sdb2 \
+>     /dev/sdb1 /dev/sda2
 
-  "stride=stride-size
-    Configure the filesystem for a RAID array with stride-size
-    filesystem blocks. This is the number of blocks read or
-    written to disk before moving to the next disk, which is
-    sometimes referred to as the chunk size.
-    This mostly affects placement of filesystem meta-data like
-    bitmaps at mke2fs time to avoid placing them on a single
-    disk, which can hurt performance. It may also be used by
-    the block allocator."
+Should be '-l raid10 -p n2'.
 
-But note that this is a different discussion from one about
-*stripes*, and IO from applications above the filesystem. This is
-the filesystem as an application itself optimizing its own data
-given a hint about device geometry.
+[ ... ]
+
+>   mdadm -C /dev/r10f2 -l raid0 -n 3 /dev/mirr1 /dev/mirr2 /dev/mirr3
+
+Should be '/dev/raid10f3'. The mostly equivalent RAID10,n3
+layout:
+
+   mdadm -C /dev/r10f3 -l raid10 -p n3 -n 6  \
+     /dev/sda1 /dev/sdb2 /dev/sdc3 \
+     /dev/sdb1 /dev/sda2 /dev/sda3 \
+     /dev/sdc1 /dev/sda2 /dev/sdb3
+
+(BTW I haven't tried any of these commands)
