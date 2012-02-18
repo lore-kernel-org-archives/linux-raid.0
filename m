@@ -1,76 +1,57 @@
-From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
-Subject: Re: XFS on top RAID10 with odd drives count and 2 near copies
-Date: Sat, 18 Feb 2012 17:39:31 +0000
-Message-ID: <20287.57939.614122.5906@tree.ty.sabi.co.UK>
-References: <CAGqmV7o7AQFY1K-1JLDk02Cv6GpAUQFjiSdM2Wbdbu6Zh_t0Wg@mail.gmail.com>
-	<4F35E925.6000003@hardwarefreak.com>
-	<CAGqmV7rBa39U-RWkzH-cTci1pNrrY1sfS=DkyK1wHE80bMt6qA@mail.gmail.com>
-	<4F38FD5D.1010201@hardwarefreak.com>
-	<CAGqmV7o6SNGV_A=iP2-uJXAJpPwh83GuqTZ-BzuY6vceMJJPVg@mail.gmail.com>
-	<20120213230228.GA5822@www5.open-std.org>
-	<4F39D9B2.3050305@hardwarefreak.com>
-	<20120214113832.GA6157@www5.open-std.org>
-	<4F3AEDEF.2000608@hardwarefreak.com>
-	<20286.40974.897300.844651@tree.ty.sabi.co.UK>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: zeroed superblock on raid6
+Date: Sat, 18 Feb 2012 14:26:41 -0500
+Message-ID: <4F3FFB71.9090007@turmel.org>
+References: <20120217153441.761b673b719bce80c9046cdc1b2220df.6d4c8e4316.mailapi@mailapi03.secureserver.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20286.40974.897300.844651@tree.ty.sabi.co.UK>
+In-Reply-To: <20120217153441.761b673b719bce80c9046cdc1b2220df.6d4c8e4316.mailapi@mailapi03.secureserver.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: dragos@mpigani.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>> On Fri, 17 Feb 2012 18:44:30 +0000, pg@lxra2.sabi.co.UK
->>> (Peter Grandi) said:
+Hi Dragos,
 
-[ ... ]
+On 02/17/2012 05:34 PM, dragos@mpigani.org wrote:
+> Hi, Following a reboot my 9 drive raid6 array refused to assemble.
+> Mdadm told me that some drives had a zero superblock.
 
-> I have a few corrections and extensions for this message:
->   * With 'f2' the main price to pay is that *peak* writing speed
+This sounds strange.  I don't think mdadm has an error message that
+says that.  It does have an error message saying that you might need
+to perform --zero-superblock in a certain (dangerous) case.
 
-And the average. The peak writing speed is impaired by writing
-two chunks to each drive, the average by the seeking.
+> I use the controller on the motherboard and $20 4-port add-on cards.
+> I tried to use some advice found on the net and zeroed all my drives
+> superblocks..... What can I do to recover my non-backed-up data?
 
-Another way of looking at 'far' layouts is that given the same
-number of disks as 'near', they have twice the width of the
-stripe on reads, but the same width stripe on write plus seeking.
+You got bad advice.  "--zero-superblock" discards the details of your
+array setup, making it very difficult to figure out the correct
+recovery details.  It may still be possible, but you've dramatically
+reduced the odds of success.
 
-[ ... ]
->     - With 'f2' the first chunk gets written to the top of drive
->       1, and bottom of drive 2. Then the next chunk is written
->       to the top of drive 2, and the bottom of drive 3. Drive 2
->       writes must be serialized and arm must move half a disk.
+> I will send you all the logs you need, if any. Just let me know which
+> please.
 
-Also note what happens on a whole-strip write, which for
-RAID10,n2 on 6 disks would have been 3 chunks, the width of the
-RAID0 layer.
+In order of importance / usefulness:
 
-With RAID10,f2 the _apparent_ width of the RAID0 layer is 6
-chunks, but since we need to write each chunk twice, we end up
-writing two chunks per drive, and with a half-disk seek between
-them, which gives the same parallelism as RAID10,n2 plus the
-cost of the seeks. So lower performance than RAID10,n2 writes,
-and how much lower depending on the frequency of the seeks.
+1) any copies of "mdadm --detail /dev/mdX" and "mdadm --examine /dev/sdX"
+you might have kept from *before* the crisis.
 
-[ ... ]
+2) contents of boot-up "dmesg" or corresponding syslog from *before* the
+crisis.
 
->   mdadm -C /dev/r10f2 -n raid10 -n 4 \
->     /dev/sda1 /dev/sdb2 \
->     /dev/sdb1 /dev/sda2
+3) Contents of first failed boot-up dmesg.
 
-Should be '-l raid10 -p n2'.
+4) Output of "lsdrv" script from http://github.com/pturmel/lsdrv
 
-[ ... ]
+5) Details of all of the commands you attempted after the failed bootup,
+in order.  Possibly from your shell history.
 
->   mdadm -C /dev/r10f2 -l raid0 -n 3 /dev/mirr1 /dev/mirr2 /dev/mirr3
+> Thank you very much for your help.
 
-Should be '/dev/raid10f3'. The mostly equivalent RAID10,n3
-layout:
+You're welcome.
 
-   mdadm -C /dev/r10f3 -l raid10 -p n3 -n 6  \
-     /dev/sda1 /dev/sdb2 /dev/sdc3 \
-     /dev/sdb1 /dev/sda2 /dev/sda3 \
-     /dev/sdc1 /dev/sda2 /dev/sdb3
-
-(BTW I haven't tried any of these commands)
+Phil
