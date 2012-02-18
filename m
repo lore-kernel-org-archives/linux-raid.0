@@ -1,71 +1,77 @@
-From: David Brown <david.brown@hesbynett.no>
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
 Subject: Re: XFS on top RAID10 with odd drives count and 2 near copies
-Date: Sat, 18 Feb 2012 14:59:35 +0100
-Message-ID: <4F3FAEC7.9000505@hesbynett.no>
-References: <CAGqmV7o7AQFY1K-1JLDk02Cv6GpAUQFjiSdM2Wbdbu6Zh_t0Wg@mail.gmail.com>	<4F35E925.6000003@hardwarefreak.com>	<CAGqmV7rBa39U-RWkzH-cTci1pNrrY1sfS=DkyK1wHE80bMt6qA@mail.gmail.com>	<4F38FD5D.1010201@hardwarefreak.com>	<CAGqmV7o6SNGV_A=iP2-uJXAJpPwh83GuqTZ-BzuY6vceMJJPVg@mail.gmail.com>	<20120213230228.GA5822@www5.open-std.org>	<4F39D9B2.3050305@hardwarefreak.com>	<20120214113832.GA6157@www5.open-std.org>	<4F3AEDEF.2000608@hardwarefreak.com>	<20120215083058.GA8821@cthulhu.home.robinhill.me.uk>	<4F3BB385.4000608@hardwarefreak.com>	<4F3BD1F6.8080309@westcontrol.com>	<4F3E5325.3060001@hardwarefreak.com>	<4F3E6ADB.2040005@westcontrol.com> <20286.43753.55416.715662@tree.ty.sabi.co.UK>
+Date: Sat, 18 Feb 2012 17:09:11 +0000
+Message-ID: <20287.56119.827444.504884@tree.ty.sabi.co.UK>
+References: <CAGqmV7o7AQFY1K-1JLDk02Cv6GpAUQFjiSdM2Wbdbu6Zh_t0Wg@mail.gmail.com>
+	<4F35E925.6000003@hardwarefreak.com>
+	<CAGqmV7rBa39U-RWkzH-cTci1pNrrY1sfS=DkyK1wHE80bMt6qA@mail.gmail.com>
+	<4F38FD5D.1010201@hardwarefreak.com>
+	<CAGqmV7o6SNGV_A=iP2-uJXAJpPwh83GuqTZ-BzuY6vceMJJPVg@mail.gmail.com>
+	<20120213230228.GA5822@www5.open-std.org>
+	<4F39D9B2.3050305@hardwarefreak.com>
+	<20120214113832.GA6157@www5.open-std.org>
+	<4F3AEDEF.2000608@hardwarefreak.com>
+	<20120215083058.GA8821@cthulhu.home.robinhill.me.uk>
+	<4F3BB385.4000608@hardwarefreak.com>
+	<4F3BD1F6.8080309@westcontrol.com>
+	<4F3E5325.3060001@hardwarefreak.com>
+	<20286.42115.949782.471398@tree.ty.sabi.co.UK>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20286.43753.55416.715662@tree.ty.sabi.co.UK>
+In-Reply-To: <20286.42115.949782.471398@tree.ty.sabi.co.UK>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg@lxra2.for.sabi.co.UK>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 17/02/12 20:30, Peter Grandi wrote:
-> [ ... ]
->
->> To my mind, stripe width applies to reads and writes.  For
->> reads, it is the number of spindles that are used in parallel
->> while reading larger blocks of data.  For writes, it is in
->> addition the width of a parity stripe for raid5 or raid6.
->
-> In the XFS case that's completely wrong, and irrelevant: in the
-> XFS case it is the number of sectors/blocks that IO has to be
-> _aligned_ to avoid read-modify-write, if there is the risk for
-> that.
->
-> The stripe width per se matters less than aligned writes as to
-> avoiding read-modify-write impact: if one does IO in stripe
-> width units but they are not aligned, performance will be
-> terrible as double read-modify-write will not be prevented.
->
-> What is the stripe width does not matter to applications like a
-> filesystem other than for read-modify-write avoidance because
-> how many sectors/blocks are/can be read in parallel depends
-> primarily on application access patterns, and secondarily on how
-> good is the IO subsystem scheduling.
->
->> [ ... ] Some filesystems care a /little/ about stripe width in
->> that they align certain structures to stripe boundaries to
->> make accesses more efficient.
->
-> That in the case where read-modify-write cannot happen, if
-> read-modify write can happen, unaligned or non-full-width writes
-> are very costly, and not just for arrays; it happens in RAM too,
-> and for 4KiB physical sector drives simulating 512B logical
-> sectors.
+[ ... ]
 
-I see your point here - when using a raid that requires 
-read-modify-write (such as raid5 or raid6), then having the filesystem 
-optimise writes by aligning them to RMW stripes is critical to avoiding 
-poor write performance.  I'll remember that for future cases with XFS 
-over raid5 or raid6.
+>> [ ... ] XFS write stripe alignment should be for a 7 disk
+>> mdraid10 near layout array.
 
-In this case (raid10), RMW is not relevant.  So the effect of stripes is 
-to allow single reads (or writes) to make use of as many spindles as 
-possible in parallel.  Since this is a read-heavy application, the speed 
-of reads is important - thus stripe widths /are/ important for performance.
+> [ ... ] stripe alignment matters ONLY AND SOLELY IF
+> READ-MODIFY-WRITE is involved, and RADI10 never requires
+> read-modify-write.
 
-As far as I understand you, XFS doesn't care about the stripe width for 
-reading, so it doesn't matter whether you give it the correct width when 
-creating the filesystem.  But that's a different matter from saying the 
-/actual/ stripe width is relevant or not for read performance - it is 
-just XFS's idea of the stripe width that is irrelevant for reading, 
-while the real-world underlying stripe width on the raid array /is/ 
-relevant.
+>> Do note that stripe width is specific to writes.  It has
+>> nothing to do with reads, from the filesystem perspective
+>> anyway. For internal array operations it will.
 
-mvh.,
+> Again, stripe alignment only matters for writes ONLY AND SOLELY
+> IF READ-MODIFY-WRITE is involved. This never happens for RAID0,
+> RAID1 or RAID10, because there is no parity to update; chunks
+> within a stripe are wholly independent of each other.
 
-David
+There is a subtlety here... and at times I am excessively precise
+in my wording :-) but also because it matters.
+
+XFS requires specifying stripe geometry as 'su'/'sunit' which is
+the MD chunk size, and as 'sw'/'swidth' which is the logical
+stripe size, and similarly for 'ext3' and 'ext4'.
+
+The reason is that while the *stripe* alignment (and size) don't
+matter if there is no risk of RMW in the underlying storage
+system, with XFS like 'ext3' and 'ext4' the *chunk* alignment
+(and size) matters in all cases where there is parallelism in the
+underlying storage system; it matters for both reads and writes,
+and on all RAID layouts.
+
+Because then filesystem will try to allocate _metadata_ to be
+chunk aligned, so that reading/writing metadata can take
+advantage of the parallelism of the array. From 'man mke2fs':
+
+  "stride=stride-size
+    Configure the filesystem for a RAID array with stride-size
+    filesystem blocks. This is the number of blocks read or
+    written to disk before moving to the next disk, which is
+    sometimes referred to as the chunk size.
+    This mostly affects placement of filesystem meta-data like
+    bitmaps at mke2fs time to avoid placing them on a single
+    disk, which can hurt performance. It may also be used by
+    the block allocator."
+
+But note that this is a different discussion from one about
+*stripes*, and IO from applications above the filesystem. This is
+the filesystem as an application itself optimizing its own data
+given a hint about device geometry.
