@@ -1,93 +1,117 @@
-From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
-Subject: Re: XFS on top RAID10 with odd drives count and 2 near copies
-Date: Sun, 19 Feb 2012 14:46:39 +0000
-Message-ID: <20289.2895.638940.48172@tree.ty.sabi.co.UK>
-References: <CAGqmV7o7AQFY1K-1JLDk02Cv6GpAUQFjiSdM2Wbdbu6Zh_t0Wg@mail.gmail.com>
-	<4F35E925.6000003@hardwarefreak.com>
-	<CAGqmV7rBa39U-RWkzH-cTci1pNrrY1sfS=DkyK1wHE80bMt6qA@mail.gmail.com>
-	<4F38FD5D.1010201@hardwarefreak.com>
-	<CAGqmV7o6SNGV_A=iP2-uJXAJpPwh83GuqTZ-BzuY6vceMJJPVg@mail.gmail.com>
-	<20120213230228.GA5822@www5.open-std.org>
-	<4F39D9B2.3050305@hardwarefreak.com>
-	<20120214113832.GA6157@www5.open-std.org>
-	<4F3AEDEF.2000608@hardwarefreak.com>
-	<20120215083058.GA8821@cthulhu.home.robinhill.me.uk>
-	<4F3BB385.4000608@hardwarefreak.com>
-	<4F3BD1F6.8080309@westcontrol.com>
-	<4F3E5325.3060001@hardwarefreak.com>
-	<4F3E6ADB.2040005@westcontrol.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] FIX: Changes in '0' case for reshape position
+ verification
+Date: Mon, 20 Feb 2012 14:14:00 +1100
+Message-ID: <20120220141400.4f8bbf7f@notabene.brown>
+References: <20120216131604.4985.58287.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/lEt8OoqTKPQgyERUw8CJWgD"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F3E6ADB.2040005@westcontrol.com>
+In-Reply-To: <20120216131604.4985.58287.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com, anna.czarnowska@intel.com
 List-Id: linux-raid.ids
 
-[ ... ]
+--Sig_/lEt8OoqTKPQgyERUw8CJWgD
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
->> What is the stripe spindle width of a 7 drive mdraid near array?
+On Thu, 16 Feb 2012 14:16:04 +0100 Adam Kwolek <adam.kwolek@intel.com> wrot=
+e:
 
-> With "near" layout, it is basically 3.5 spindles. [ ... ]
+> Reading sysfs entry that is '0' long should cause an error.
+> Reshape position cannot be empty.
+>=20
+> Absence of reshape position should be ignored. It is possible
+> that we are about raid0 reshape continuation and it is before takeover.
+> This means that according metadata (changed by mdmon) it should be reshap=
+ed
+> but md knows nothing about it at this moment. Reshape continuation
+> in reshape_array() will change it to raid4 and reshape position appears
+> in sysfs.
+>=20
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 
-[ ... ]
+Thanks.  Applied.
 
->> [ ... ] The n,r rotate the data and mirror data writes around
->> the 4 drives.  So it is possible, and I assume this is the
->> case, to write data and mirror data 4 times, making the
->> stripe width 4, even though this takes twice as many RAID IOs
->> compared to the standard RAID10 lyout. [ ... ]
+NeilBrown
 
-> I think you are probably right here - it doesn't make sense to
-> talk about a "3.5" spindle width.
 
-As per my previous argument, the XFS stripe width here does not
-matter, so the question here is really:
+> ---
+>=20
+>  Grow.c |   12 ++++++++++--
+>  1 files changed, 10 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/Grow.c b/Grow.c
+> index 53a7cad..239b50d 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -1876,9 +1876,12 @@ static int verify_reshape_position(struct mdinfo *=
+info, int level)
+>  {
+>  	int ret_val =3D 0;
+>  	char buf[40];
+> +	int rv;
+> =20
+>  	/* read sync_max, failure can mean raid0 array */
+> -	if (sysfs_get_str(info, NULL, "sync_max", buf, 40) > 0) {
+> +	rv =3D sysfs_get_str(info, NULL, "sync_max", buf, 40);
+> +
+> +	if (rv > 0) {
+>  		char *ep;
+>  		unsigned long long position =3D strtoull(buf, &ep, 0);
+> =20
+> @@ -1906,6 +1909,11 @@ static int verify_reshape_position(struct mdinfo *=
+info, int level)
+>  				ret_val =3D 1;
+>  			}
+>  		}
+> +	} else if (rv =3D=3D 0) {
+> +		/* for valid sysfs entry, 0-length content
+> +		 * should be indicated as error
+> +		 */
+> +		ret_val =3D -1;
+>  	}
+> =20
+>  	return ret_val;
+> @@ -3975,7 +3983,7 @@ int Grow_continue_command(char *devname, int fd,
+>  	 * correct position
+>  	 */
+>  	if (verify_reshape_position(content,
+> -				    map_name(pers, mdstat->level)) <=3D 0) {
+> +				    map_name(pers, mdstat->level)) < 0) {
+>  		ret_val =3D 1;
+>  		goto Grow_continue_command_exit;
+>  	}
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
- "What is the IO transaction size that gives best sustained
-  sequential single thread performance with 'O_DIRECT'?"
 
-Note that the "with 'O_DIRECT'" qualification matters a great
-deal because otherwise the page cache makes the application's IO
-size largely irrelevant, making relevant the rate at which it
-would issue read or write requests.
+--Sig_/lEt8OoqTKPQgyERUw8CJWgD
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-While I understand why a tempting answer is 3.5 *chunks*, the
-best answer is 7 chunks because:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-  * With a '2' layout the chunk pattern repeats every 14 chunks
-    (more generally over the GCF of '2' and the number of
-    devices in a stripe) so we need only consider two.
+iQIVAwUBT0G6eDnsnt1WYoG5AQJd+Q/9Fm+tPliDscIxtrHmzVEMeebM4dEJjGEq
+FVy2BIpV5xcIZnGAkuVbB2YBbBwdlbXgAlZ7Q3OcQPJu5aIXL91xNqItD4zg5JEp
+ScGtg/LNrDg22ZcQMTOH8yZy2EtZIAZfJAmIhJV+8wL3beeLKhJG3aLlb/pq+78k
+440LFrnzlP4+T4Jw2Okd0VWpegAzo6TFi1v8a7XkYDWw296GiDuzGfOGCTfdTexl
+tQUaXwx28yKP2G/Gs2dW/xkVyIAdHEzpa50IfSAobzqoZbMEF2YwJ3Z1K/RaXXFB
+2kKcVJFTB4D8BIZdWIRCEgiCLSHkZvfKf+cMjvBdzFlchut4AjPA+MhK/ZuiMvt0
+ZX9kFVQ0Myhlr7USSN//3Qbm2+MmxZX2wbPOKWAVLIwrKPctq+rD9Dg4yZa/m1Or
+MHaQ99HX3QVIVBgX7PQBIijfesjnYOB3wi1zm2YG0JWOp8MghWu3TWnEAy2JSGGp
+KpI+XZ4rwYCvoF81hE2nUmSSDOT5XetlOs8ovtuFKNOGImIOTi+uKyVS18Ra/NuD
++xKvf0IDGlEovrEMJIv66wP/46zte4WAI2mWRVunZU2k2CyTvY0UFdm6AVsD1doR
+HJIFYvCQgCpHf3VirI3Fco+U8SMlT+20U/cc1LJ/hfmhpYA41NDVw+x34h31Rm6l
+QxwPSMJvJ7Y=
+=M6Og
+-----END PGP SIGNATURE-----
 
-  * In the first stripe there are 3 pairs and at end one half
-    pair, and in the second stripe there is one half pair and 3
-    pairs.
-
-  * It is pointless for *single threaded* access to read both
-    chunks in a mirror pair. Without loss of generality, let's
-    assume that we read just the first.
-
-  * Then in the first stripe we can read 4 chunks in parallel,
-    and in the second stripe 3, as the first chunk of that stripe
-    is a copy of one we already read in the first row.
-
-  * We don't need to choose between 3, 4 or 3.5 chunks; because
-    if we read 7 chunks at a time we end up reading two full
-    stripes, in the shortest time possible for two stripes.
-
-  * The same argument applies to both reads and writes, even if
-    writes have to write both members of each pair.
-
-  * Stripe boundaries don't matter, but chunk boundaries matter
-    to maximize the transfer per disk, if transfers have
-    noticeable fixed costs that matters.
-
-Thus in some way it is 3.5 chunks per stripe "on average".
-
-> If you call it 7, then it should work well even though each
-> write takes two operations.
-
-The number is right, but per the argument above this applies to
-both reads and writes (with the given qualifications), and the
-"two operations" probably means "over two stripes".
+--Sig_/lEt8OoqTKPQgyERUw8CJWgD--
