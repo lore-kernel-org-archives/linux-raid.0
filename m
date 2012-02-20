@@ -1,117 +1,144 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] FIX: Changes in '0' case for reshape position
- verification
-Date: Mon, 20 Feb 2012 14:14:00 +1100
-Message-ID: <20120220141400.4f8bbf7f@notabene.brown>
-References: <20120216131604.4985.58287.stgit@gklab-128-013.igk.intel.com>
+From: "RANSOM, Tony" <tony.ransom@baesystems.com>
+Subject: Problem rebuild raid 1 replacement disk
+Date: Mon, 20 Feb 2012 14:41:04 +1030
+Message-ID: <807765805CA0DF48898D4C016E982BFC065A67CE25@MWLSVEXM002.au.baesystems.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/lEt8OoqTKPQgyERUw8CJWgD"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120216131604.4985.58287.stgit@gklab-128-013.igk.intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com, anna.czarnowska@intel.com
+To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/lEt8OoqTKPQgyERUw8CJWgD
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Thu, 16 Feb 2012 14:16:04 +0100 Adam Kwolek <adam.kwolek@intel.com> wrot=
-e:
+I'm having problems getting a replacement drive to rebuild after a disk failure. 
 
-> Reading sysfs entry that is '0' long should cause an error.
-> Reshape position cannot be empty.
->=20
-> Absence of reshape position should be ignored. It is possible
-> that we are about raid0 reshape continuation and it is before takeover.
-> This means that according metadata (changed by mdmon) it should be reshap=
-ed
-> but md knows nothing about it at this moment. Reshape continuation
-> in reshape_array() will change it to raid4 and reshape position appears
-> in sysfs.
->=20
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+I'm running a 10.04 server using two 2TB WD caviar drives in a linux s/w raid 1 configuration.
 
-Thanks.  Applied.
+The two drives were set up during Ubuntu install.
 
-NeilBrown
+They contain three partitions, as follows:
+
+------------------------------
+
+Quote:
+root@server2:~# gdisk /dev/sda
+GPT fdisk (gdisk) version 0.8.2
+
+Partition table scan:
+MBR: protective
+BSD: not present
+APM: not present
+GPT: present
+
+Found valid GPT with protective MBR; using GPT.
+
+Command (? for help): p
+Disk /dev/sda: 3907029168 sectors, 1.8 TiB
+Logical sector size: 512 bytes
+Disk identifier (GUID): 87B365C3-1217-47F4-9122-F8DD1F386153
+Partition table holds up to 128 entries
+First usable sector is 34, last usable sector is 3907029134
+Partitions will be aligned on 2048-sector boundaries
+Total free space is 387181 sectors (189.1 MiB)
+
+Number Start (sector) End (sector) Size Code Name
+1 2048 4095 1024.0 KiB EF02 bios
+2 4096 589823 286.0 MiB FD00 boot
+3 589824 906643967 1.8 TiB FD00 root
+
+-----------------------
+
+The disk shown above is the replacement drive. I have set it up identically to the original drive.
+
+Below shows the array rebuilding after the disk is replaced. As you'd expect.
+
+-----------------------
+
+Quote:
+root@server2:~# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+md1 : active raid1 sdb3[2] sda3[1]
+1953027008 blocks [2/1] [_U]
+[>....................] recovery = 0.0% (225792/1953027008) finish=864.8min speed=37632K/sec
+
+md0 : active raid1 sdb2[0] sda2[1]
+292800 blocks [2/2] [UU]
+
+---------------------------
+
+The arrays rebuild correctly and seem to be working as they should.
+
+The problem happens when the box is rebooted.
+
+The array goes into degraded mode. It starts to incorrectly rebuild the array as shown below. It ignores md0, and tries to rebuild the md1 array to sdb, not sdb3.
+
+----------------------------------
+
+Quote:
+root@server2:~# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+md1 : active raid1 sdb[2] sda3[1]
+1953027008 blocks [2/1] [_U]
+[=>...................] recovery = 9.0% (177317632/1953027008) finish=453.9min speed=65198K/sec
+
+md0 : active raid1 sda2[1]
+292800 blocks [2/1] [_U]
+
+-------------------------------
+
+When I check the sdb disk partition table, it is corrupted ....
+
+Quote:
+root@server2:~# gdisk /dev/sdb
+GPT fdisk (gdisk) version 0.8.2
+
+Caution: invalid main GPT header, but valid backup; regenerating main header
+from backup!
+
+Caution! After loading partitions, the CRC doesn't check out!
+Warning! Main partition table CRC mismatch! Loaded backup partition table
+instead of main partition table!
+
+Warning! One or more CRCs don't match. You should repair the disk!
+
+Partition table scan:
+MBR: not present
+BSD: not present
+APM: not present
+GPT: damaged
+
+Found invalid MBR and corrupt GPT. What do you want to do? (Using the
+GPT MAY permit recovery of GPT data.)
+1 - Use current GPT
+2 - Create blank GPT
+
+--------------------------------
+
+I've checked the new disk with WD's diagnostic software. It passes the extended test.
+
+I'm presently trying for the third time to get this to work. I'm not confident as I'm not really doing anything differently from the first two efforts.
+
+Note: I've also posted this on the Ubuntu server forum, to date without success. http://ubuntuforums.org/showthread.php?t=1927909 
+
+Hopefully, the people who are familiar with the workings of the software will know what the problem might be.
+
+Any assistance is greatly appreciated.
+
+Thanks,
+Tony
+"Warning:
+The information contained in this email and any attached files is
+confidential to BAE Systems Australia. If you are not the intended
+recipient, any use, disclosure or copying of this email or any
+attachments is expressly prohibited.  If you have received this email
+in error, please notify us immediately. VIRUS: Every care has been
+taken to ensure this email and its attachments are virus free,
+however, any loss or damage incurred in using this email is not the
+sender's responsibility.  It is your responsibility to ensure virus
+checks are completed before installing any data sent in this email to
+your computer."
 
 
-> ---
->=20
->  Grow.c |   12 ++++++++++--
->  1 files changed, 10 insertions(+), 2 deletions(-)
->=20
-> diff --git a/Grow.c b/Grow.c
-> index 53a7cad..239b50d 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -1876,9 +1876,12 @@ static int verify_reshape_position(struct mdinfo *=
-info, int level)
->  {
->  	int ret_val =3D 0;
->  	char buf[40];
-> +	int rv;
-> =20
->  	/* read sync_max, failure can mean raid0 array */
-> -	if (sysfs_get_str(info, NULL, "sync_max", buf, 40) > 0) {
-> +	rv =3D sysfs_get_str(info, NULL, "sync_max", buf, 40);
-> +
-> +	if (rv > 0) {
->  		char *ep;
->  		unsigned long long position =3D strtoull(buf, &ep, 0);
-> =20
-> @@ -1906,6 +1909,11 @@ static int verify_reshape_position(struct mdinfo *=
-info, int level)
->  				ret_val =3D 1;
->  			}
->  		}
-> +	} else if (rv =3D=3D 0) {
-> +		/* for valid sysfs entry, 0-length content
-> +		 * should be indicated as error
-> +		 */
-> +		ret_val =3D -1;
->  	}
-> =20
->  	return ret_val;
-> @@ -3975,7 +3983,7 @@ int Grow_continue_command(char *devname, int fd,
->  	 * correct position
->  	 */
->  	if (verify_reshape_position(content,
-> -				    map_name(pers, mdstat->level)) <=3D 0) {
-> +				    map_name(pers, mdstat->level)) < 0) {
->  		ret_val =3D 1;
->  		goto Grow_continue_command_exit;
->  	}
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/lEt8OoqTKPQgyERUw8CJWgD
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT0G6eDnsnt1WYoG5AQJd+Q/9Fm+tPliDscIxtrHmzVEMeebM4dEJjGEq
-FVy2BIpV5xcIZnGAkuVbB2YBbBwdlbXgAlZ7Q3OcQPJu5aIXL91xNqItD4zg5JEp
-ScGtg/LNrDg22ZcQMTOH8yZy2EtZIAZfJAmIhJV+8wL3beeLKhJG3aLlb/pq+78k
-440LFrnzlP4+T4Jw2Okd0VWpegAzo6TFi1v8a7XkYDWw296GiDuzGfOGCTfdTexl
-tQUaXwx28yKP2G/Gs2dW/xkVyIAdHEzpa50IfSAobzqoZbMEF2YwJ3Z1K/RaXXFB
-2kKcVJFTB4D8BIZdWIRCEgiCLSHkZvfKf+cMjvBdzFlchut4AjPA+MhK/ZuiMvt0
-ZX9kFVQ0Myhlr7USSN//3Qbm2+MmxZX2wbPOKWAVLIwrKPctq+rD9Dg4yZa/m1Or
-MHaQ99HX3QVIVBgX7PQBIijfesjnYOB3wi1zm2YG0JWOp8MghWu3TWnEAy2JSGGp
-KpI+XZ4rwYCvoF81hE2nUmSSDOT5XetlOs8ovtuFKNOGImIOTi+uKyVS18Ra/NuD
-+xKvf0IDGlEovrEMJIv66wP/46zte4WAI2mWRVunZU2k2CyTvY0UFdm6AVsD1doR
-HJIFYvCQgCpHf3VirI3Fco+U8SMlT+20U/cc1LJ/hfmhpYA41NDVw+x34h31Rm6l
-QxwPSMJvJ7Y=
-=M6Og
------END PGP SIGNATURE-----
-
---Sig_/lEt8OoqTKPQgyERUw8CJWgD--
