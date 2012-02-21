@@ -1,88 +1,89 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Print correct md device name if write_init_super fails
-Date: Wed, 22 Feb 2012 06:53:35 +1100
-Message-ID: <20120222065335.268c8aae@notabene.brown>
-References: <1329827402-12124-1-git-send-email-Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH] avoid double-free upon "old buggy kernel" sysfs_read
+ failure
+Date: Wed, 22 Feb 2012 07:14:57 +1100
+Message-ID: <20120222071457.72ec0456@notabene.brown>
+References: <87sji42zab.fsf@rho.meyering.net>
+	<87fwe42vc1.fsf@rho.meyering.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/GbGHyYhTIHSyfid07NXaYa+"; protocol="application/pgp-signature"
+ boundary="Sig_/l.7plXiGRoOjHSr/awOZR.j"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1329827402-12124-1-git-send-email-Jes.Sorensen@redhat.com>
+In-Reply-To: <87fwe42vc1.fsf@rho.meyering.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: meyering@redhat.com, linux-raid@vger.kernel.org
+To: Jim Meyering <jim@meyering.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/GbGHyYhTIHSyfid07NXaYa+
+--Sig_/l.7plXiGRoOjHSr/awOZR.j
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 21 Feb 2012 13:30:02 +0100 Jes.Sorensen@redhat.com wrote:
+On Tue, 21 Feb 2012 14:02:22 +0100 Jim Meyering <jim@meyering.net> wrote:
 
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> Jim Meyering wrote:
+> > * Incremental.c (Incremental): On sysfs_read failure, don't call
+> > sysfs_free(sra) just before "goto out_unlock", since that very
+> > same "sra" is freed the same way by the clean-up code below.
 >=20
-> This avoids a segfault in case one tries to create a raid from a non
-> existing device (like a loop device).
+> Here it is again, but with the Signed-off-by line:
 >=20
-> Reported by Jim Meyering in
-> https://bugzilla.redhat.com/show_bug.cgi?id=3D795461
+> >From 981af2b292448a9daa56af86b4c514ad9339665a Mon Sep 17 00:00:00 2001
+> From: Jim Meyering <meyering@redhat.com>
+> Date: Tue, 21 Feb 2012 11:08:25 +0100
+> Subject: [PATCH] avoid double-free upon "old buggy kernel" sysfs_read fai=
+lure
 >=20
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> * Incremental.c (Incremental): On sysfs_read failure, don't call
+> sysfs_free(sra) just before "goto out_unlock", since that very
+> same "sra" is freed the same way by the clean-up code below.
+>=20
+> Signed-off-by: Jim Meyering <meyering@redhat.com>
 > ---
->  Create.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+>  Incremental.c |    1 -
+>  1 file changed, 1 deletion(-)
 >=20
-> diff --git a/Create.c b/Create.c
-> index 90ff3ed..702ac34 100644
-> --- a/Create.c
-> +++ b/Create.c
-> @@ -926,7 +926,7 @@ int Create(struct supertype *st, char *mddev,
->  			if (st->ss->write_init_super(st)) {
->  				fprintf(stderr,
->  					Name ": Failed to write metadata to %s\n",
-> -					dv->devname);
-> +					mddev);
->  				st->ss->free_super(st);
->  				goto abort_locked;
->  			}
+> diff --git a/Incremental.c b/Incremental.c
+> index b457bf3..836a6f1 100644
+> --- a/Incremental.c
+> +++ b/Incremental.c
+> @@ -325,7 +325,6 @@ int Incremental(char *devname, int verbose, int runst=
+op,
+>  			fprintf(stderr, Name
+>  		      ": You have an old buggy kernel which cannot support\n"
+>  				"      --incremental reliably.  Aborting.\n");
+> -			sysfs_free(sra);
+>  			rv =3D 2;
+>  			goto out_unlock;
+>  		}
+> --
+> 1.7.9.1.266.g24ee9
+> --
 
-Hi Jes,
- this doesn't seem right.  You message would print e.g.
+Applied, thanks.
 
-    mdadm: Failed to write metadata to /dev/md1
-
-but one doesn't write metadata to an array, one writes it to the member
-devices.
-Each ->write_init_super function should print out a message if a write
-fails.  So I think we just remove the error message here, and make sure
-each ->write_init_super does print an error in each case (there might be a
-couple of holes).
-
-Could you try that approach instead?
-
-Thanks,
 NeilBrown
 
---Sig_/GbGHyYhTIHSyfid07NXaYa+
+--Sig_/l.7plXiGRoOjHSr/awOZR.j
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT0P2Pznsnt1WYoG5AQLRBhAAwIx22ZtlqKHnfqtoEc7tkPQEb+2Ybr6m
-TZJRWajnkt7u9/PqLQxUmhX0uMbiLXA8otyXjfMYM6zR04r0nYbH8UU2p0vl9wbc
-ebcQsJa0f+oYcIsF8ojnygm0wK3WDIzbfSrc8k0bdP+uIZzUIlRQ85iukvky/gJI
-Lvgl0Mj0XiHDdMKnCRFLTLxFxTuv/R9l7Kpq7gd9NICBC/7GRRNrKHZZ+ut5TTMJ
-zyaZ63K/JN4vXO5SESD7GatgMsxnhYTiHjn1mAqLu7GZfLEIDFVCgeWAUaaMuKJF
-+gY0gneDUJRftFalmbLydJFIvD9gIF19vsdDr24PV5SCivuYXeMTdCgZRYsa/ria
-flmq65X30aOG6tX0VeM+KUmR4Sxoq9hpVw7yHQz2a/pUMWgLt7O3QKgzFEeNpr7L
-pNc1nXphubtF0wAQMe3zC/qKp/xRu9wmlxkOopB1YXLcNSgoUq+DBCGZh+BEm7fB
-Ky49E+rnH0UlZZSNiE8SZrjX+NOdJVK0wLXABbnKYjmDAPsYVa1u/03bBrMYYv4A
-BGVlxGm+WVGUIKNo/+LSeogfwQ/ChPzQMbB+jLEgAPwI6cpY/+GuIzr1EPHqjvDb
-uWAEzBwHqwAZ2MgQQVQl5+k7RPdSOxKwrnNoU+BAWDnvYcaH/pZ2nQaYHCuVzvHa
-gVYx3+Bojpg=
-=vfMG
+iQIVAwUBT0P7Qjnsnt1WYoG5AQJpqA/7BhcjrrxnB19h1DmjCJTTwv91NmXX2zVN
+rGF3PSq6acsH8/2G3MQ8Qlffv0dKvuVztwvw0AhoWuPuoI8C+YQmmn8FQmIbuBpQ
+hmjnQ8RZ8G5dzldrt8xtLMsOnBjZk/VYAwWJrh+PAWPaoDgrEg2UB5/BHzDhmlzU
+lrHZu8Xhi2+NjouZTjV/bEX44Q0LRYA7X8shwifWT4JfW7FR/9nxMCogzf/6p3Fc
+DyN5LcT4speJqbp0/GaD16NO9zxABjkuIXY23dFGLZ2Bv/Yy568aIgfBwSRjM6tJ
+VSYKU2asDlSxb/0A/jJmki41UJYqDhAoNskk1+VYyAD/boiBtIl4q6d3PIZjxU66
+AYigRRLNGO53+wiITSzrz1qSyGV3Hbn5o82iR5g2gHtsK8azqD20iWZNFINxCQJE
+mHxK+HiYJFU+6YCD4Af2S96Uhw8yhp+A4mOGfHafjGaWwhqCpGPVE+c4wkWRGQC4
+LpjipDa124Qtdif7aQS2t32iyTocCHUWXTRG+KWw07XCrKr6j3IzisngIIR54UjF
+MwGHWmJlF7OrQjzZcYUVspM7t823NJpFuXlzNE7t8fzKUOtn4yGqbLJzwFUdOByi
+pNfRoBrbR6SZKz3TYlSBh84rKcohvShXv5oGV1i6tjrnhJuu2idttbB1gkbo/ep4
+PY3BHXrTBA8=
+=m3xV
 -----END PGP SIGNATURE-----
 
---Sig_/GbGHyYhTIHSyfid07NXaYa+--
+--Sig_/l.7plXiGRoOjHSr/awOZR.j--
