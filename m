@@ -1,71 +1,88 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Question regarding RAID10
-Date: Wed, 22 Feb 2012 06:46:11 +1100
-Message-ID: <20120222064611.7d6fc20a@notabene.brown>
-References: <CB691B4C.DD17%benjamin.goodrich@eXperticity.com>
+Subject: Re: [PATCH] Print correct md device name if write_init_super fails
+Date: Wed, 22 Feb 2012 06:53:35 +1100
+Message-ID: <20120222065335.268c8aae@notabene.brown>
+References: <1329827402-12124-1-git-send-email-Jes.Sorensen@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/d8q5b79d2VE1i5bNhwYBM_L"; protocol="application/pgp-signature"
+ boundary="Sig_/GbGHyYhTIHSyfid07NXaYa+"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CB691B4C.DD17%benjamin.goodrich@eXperticity.com>
+In-Reply-To: <1329827402-12124-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Benjamin Goodrich <Benjamin.Goodrich@experticity.com>, linux-raid@vger.kernel.org
+To: Jes.Sorensen@redhat.com
+Cc: meyering@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/d8q5b79d2VE1i5bNhwYBM_L
+--Sig_/GbGHyYhTIHSyfid07NXaYa+
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 21 Feb 2012 09:58:36 -0700 Benjamin Goodrich
-<Benjamin.Goodrich@experticity.com> wrote:
+On Tue, 21 Feb 2012 13:30:02 +0100 Jes.Sorensen@redhat.com wrote:
 
-> Neil,
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
 >=20
-> I was hoping you could clear up a question I had. The software implementa=
-tion of RAID 10 on Linux does not seem to have a way to print the layout of=
- which disk is mirroring data for another disk. Is there a way to determine=
- which drives can be safely removed from the RAID 10 set?
+> This avoids a segfault in case one tries to create a raid from a non
+> existing device (like a loop device).
 >=20
-> Thanks,
+> Reported by Jim Meyering in
+> https://bugzilla.redhat.com/show_bug.cgi?id=3D795461
 >=20
-> Benjamin
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> ---
+>  Create.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/Create.c b/Create.c
+> index 90ff3ed..702ac34 100644
+> --- a/Create.c
+> +++ b/Create.c
+> @@ -926,7 +926,7 @@ int Create(struct supertype *st, char *mddev,
+>  			if (st->ss->write_init_super(st)) {
+>  				fprintf(stderr,
+>  					Name ": Failed to write metadata to %s\n",
+> -					dv->devname);
+> +					mddev);
+>  				st->ss->free_super(st);
+>  				goto abort_locked;
+>  			}
 
+Hi Jes,
+ this doesn't seem right.  You message would print e.g.
 
-Please send all questions about linux RAID to
-   linux-raid@vger.kernel.org
+    mdadm: Failed to write metadata to /dev/md1
 
-I've copied this reply there.
+but one doesn't write metadata to an array, one writes it to the member
+devices.
+Each ->write_init_super function should print out a message if a write
+fails.  So I think we just remove the error message here, and make sure
+each ->write_init_super does print an error in each case (there might be a
+couple of holes).
 
-In general, if you don't remove adjacent devices you should be safe.
-(The last device is adjacent to the first).
+Could you try that approach instead?
 
-There are other combination that can be removed in specific case.
-
-Yes, it might be useful for mdadm to display something which clearly depicts
-the layout.  Concrete suggestions welcome.  Patches even more welcome.
-
+Thanks,
 NeilBrown
 
---Sig_/d8q5b79d2VE1i5bNhwYBM_L
+--Sig_/GbGHyYhTIHSyfid07NXaYa+
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT0P0gznsnt1WYoG5AQJHUw//Y9XQY5jXWVMwOtX3G1G2F1mYzsKIDbkT
-Gmp1YU/ngUR0Evf9ngMq0rT6KthzYyW+mGFPRxp22TUEkQ0wJzJHmF5xqCbETQSu
-3Qphbw83KJRQUnjzbvU3uV52oVP/tQ4NMw+8xv9ML0Uk8V25nA1Rc1qKEKRYUpsF
-od0AZdTW6k0Es0q+/O98a6zWmLcXNXLO4/SpZBjWp+XAxnXAdSh66KYmvbIepg6T
-VxEuF7NKx4Gaf8nf04M9SSZLVaEz9AMTZRl0+3ww9avY8zv/1GNlrgpoQiyZgy9x
-ilOgmhZ5Hwfgn4PKpKyWFuyDAhcZFsfyDnECW9kJvkCsc6/Zxi/6HAQB4LA4iEE7
-/tGLpKvcAlkrDAqMfbQRzBFIBDxzxGK7c+P+PmISB5k4w+dhT4TcGHDXvSwDrHy1
-pxs5QxUReNU55vPiypEog1WR9gp1wGAXz+VojSxPqOzk21FwgJZbhXRfIzYz/yzk
-RLqWcAJQur+jbOlU01SFdtOsJA8W/KSb/0/wUopUHbfTHdj3PD4vyx6c/H3Aax7o
-WQ4j/it8Bk7HBCxtc7AfwoBOYwggec4hNaJG+N+XoM7cqLHPVA7UX5I7N4415Dj5
-shCaXXz3/+RmWvrVAeuWuud5K1a6Ouss23vGiTSPsGpJ2pmjeql7+fK3CLcgCznT
-6up47HQKUcU=
-=tRV3
+iQIVAwUBT0P2Pznsnt1WYoG5AQLRBhAAwIx22ZtlqKHnfqtoEc7tkPQEb+2Ybr6m
+TZJRWajnkt7u9/PqLQxUmhX0uMbiLXA8otyXjfMYM6zR04r0nYbH8UU2p0vl9wbc
+ebcQsJa0f+oYcIsF8ojnygm0wK3WDIzbfSrc8k0bdP+uIZzUIlRQ85iukvky/gJI
+Lvgl0Mj0XiHDdMKnCRFLTLxFxTuv/R9l7Kpq7gd9NICBC/7GRRNrKHZZ+ut5TTMJ
+zyaZ63K/JN4vXO5SESD7GatgMsxnhYTiHjn1mAqLu7GZfLEIDFVCgeWAUaaMuKJF
++gY0gneDUJRftFalmbLydJFIvD9gIF19vsdDr24PV5SCivuYXeMTdCgZRYsa/ria
+flmq65X30aOG6tX0VeM+KUmR4Sxoq9hpVw7yHQz2a/pUMWgLt7O3QKgzFEeNpr7L
+pNc1nXphubtF0wAQMe3zC/qKp/xRu9wmlxkOopB1YXLcNSgoUq+DBCGZh+BEm7fB
+Ky49E+rnH0UlZZSNiE8SZrjX+NOdJVK0wLXABbnKYjmDAPsYVa1u/03bBrMYYv4A
+BGVlxGm+WVGUIKNo/+LSeogfwQ/ChPzQMbB+jLEgAPwI6cpY/+GuIzr1EPHqjvDb
+uWAEzBwHqwAZ2MgQQVQl5+k7RPdSOxKwrnNoU+BAWDnvYcaH/pZ2nQaYHCuVzvHa
+gVYx3+Bojpg=
+=vfMG
 -----END PGP SIGNATURE-----
 
---Sig_/d8q5b79d2VE1i5bNhwYBM_L--
+--Sig_/GbGHyYhTIHSyfid07NXaYa+--
