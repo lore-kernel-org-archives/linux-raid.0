@@ -1,89 +1,61 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] avoid double-free upon "old buggy kernel" sysfs_read
- failure
-Date: Wed, 22 Feb 2012 07:14:57 +1100
-Message-ID: <20120222071457.72ec0456@notabene.brown>
-References: <87sji42zab.fsf@rho.meyering.net>
-	<87fwe42vc1.fsf@rho.meyering.net>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: RAID1 content under Windows OS
+Date: Tue, 21 Feb 2012 22:20:09 +0100
+Message-ID: <4F440A89.6000606@hesbynett.no>
+References: <FCC44AC27019AF49B444F7E7F684FABD01DE8B605CA4@GMVMAIL4.gmv.es>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/l.7plXiGRoOjHSr/awOZR.j"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87fwe42vc1.fsf@rho.meyering.net>
+In-Reply-To: <FCC44AC27019AF49B444F7E7F684FABD01DE8B605CA4@GMVMAIL4.gmv.es>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jim Meyering <jim@meyering.net>
-Cc: linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?=C1lvaro_L=F3pez_L=F3pez?= <allopez@gmv.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/l.7plXiGRoOjHSr/awOZR.j
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 21/02/12 19:50, =C1lvaro L=F3pez L=F3pez wrote:
+> I have been able to create a RAID 1 device in a Linux 2.6.36 system
+> using mdadm command.
+>
+> Both disks had been formatted using mkdosfs in order to be mounted
+> with type vfat. I also changed its label using cfdisk from "Linux" to
+> the "W95 FAT32".
+>
+> After mounting the RAID1 device MD0 in the filesystem, I copy some
+> files inside the folder associated to the RAID1. I can see the
+> contents when MD0 is mounted inside Linux, not if disks are mounted
+> separately.
+>
+> Then, when I connect both disks to a Windows XP or 7 OS I cannot see
+> any content inside them.
+>
+> Is it possible to see the content? What can I do?
+>
+> Thanks in advance,
+>
+> Alvaro
+>
 
-On Tue, 21 Feb 2012 14:02:22 +0100 Jim Meyering <jim@meyering.net> wrote:
+I think it will be the metadata format that is the problem - by default=
+,=20
+mdadm creates arrays with format 1.2 that is 4K from the start of the=20
+partition.  But this will confuse windows (or anything else that tries=20
+to read the partition directly).  If you create the array with format=20
+1.0, the metadata is placed at the end of the partition and windows wil=
+l=20
+not notice it, and will therefore it will be able to see the filesystem=
+=20
+properly.
 
-> Jim Meyering wrote:
-> > * Incremental.c (Incremental): On sysfs_read failure, don't call
-> > sysfs_free(sra) just before "goto out_unlock", since that very
-> > same "sra" is freed the same way by the clean-up code below.
->=20
-> Here it is again, but with the Signed-off-by line:
->=20
-> >From 981af2b292448a9daa56af86b4c514ad9339665a Mon Sep 17 00:00:00 2001
-> From: Jim Meyering <meyering@redhat.com>
-> Date: Tue, 21 Feb 2012 11:08:25 +0100
-> Subject: [PATCH] avoid double-free upon "old buggy kernel" sysfs_read fai=
-lure
->=20
-> * Incremental.c (Incremental): On sysfs_read failure, don't call
-> sysfs_free(sra) just before "goto out_unlock", since that very
-> same "sra" is freed the same way by the clean-up code below.
->=20
-> Signed-off-by: Jim Meyering <meyering@redhat.com>
-> ---
->  Incremental.c |    1 -
->  1 file changed, 1 deletion(-)
->=20
-> diff --git a/Incremental.c b/Incremental.c
-> index b457bf3..836a6f1 100644
-> --- a/Incremental.c
-> +++ b/Incremental.c
-> @@ -325,7 +325,6 @@ int Incremental(char *devname, int verbose, int runst=
-op,
->  			fprintf(stderr, Name
->  		      ": You have an old buggy kernel which cannot support\n"
->  				"      --incremental reliably.  Aborting.\n");
-> -			sysfs_free(sra);
->  			rv =3D 2;
->  			goto out_unlock;
->  		}
-> --
-> 1.7.9.1.266.g24ee9
-> --
+Of course, if you /change/ anything on the filesystem from within=20
+windows, you will completely screw the array.
 
-Applied, thanks.
+mvh.,
 
-NeilBrown
-
---Sig_/l.7plXiGRoOjHSr/awOZR.j
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT0P7Qjnsnt1WYoG5AQJpqA/7BhcjrrxnB19h1DmjCJTTwv91NmXX2zVN
-rGF3PSq6acsH8/2G3MQ8Qlffv0dKvuVztwvw0AhoWuPuoI8C+YQmmn8FQmIbuBpQ
-hmjnQ8RZ8G5dzldrt8xtLMsOnBjZk/VYAwWJrh+PAWPaoDgrEg2UB5/BHzDhmlzU
-lrHZu8Xhi2+NjouZTjV/bEX44Q0LRYA7X8shwifWT4JfW7FR/9nxMCogzf/6p3Fc
-DyN5LcT4speJqbp0/GaD16NO9zxABjkuIXY23dFGLZ2Bv/Yy568aIgfBwSRjM6tJ
-VSYKU2asDlSxb/0A/jJmki41UJYqDhAoNskk1+VYyAD/boiBtIl4q6d3PIZjxU66
-AYigRRLNGO53+wiITSzrz1qSyGV3Hbn5o82iR5g2gHtsK8azqD20iWZNFINxCQJE
-mHxK+HiYJFU+6YCD4Af2S96Uhw8yhp+A4mOGfHafjGaWwhqCpGPVE+c4wkWRGQC4
-LpjipDa124Qtdif7aQS2t32iyTocCHUWXTRG+KWw07XCrKr6j3IzisngIIR54UjF
-MwGHWmJlF7OrQjzZcYUVspM7t823NJpFuXlzNE7t8fzKUOtn4yGqbLJzwFUdOByi
-pNfRoBrbR6SZKz3TYlSBh84rKcohvShXv5oGV1i6tjrnhJuu2idttbB1gkbo/ep4
-PY3BHXrTBA8=
-=m3xV
------END PGP SIGNATURE-----
-
---Sig_/l.7plXiGRoOjHSr/awOZR.j--
+David
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
