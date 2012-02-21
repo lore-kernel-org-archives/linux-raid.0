@@ -1,41 +1,75 @@
-From: Anshuman Aggarwal <anshuman@brillgene.com>
-Subject: RAID10: How to mark spare as active, assume-clean documentation
-Date: Tue, 21 Feb 2012 00:05:45 +0530
-Message-ID: <CANKTW-X7BUMGoAiuLLJoXJrP5+in9E8NDxG_jRy2DvfZty1w1w@mail.gmail.com>
+From: "RANSOM, Tony" <tony.ransom@baesystems.com>
+Subject: RE: Problem rebuild raid 1 replacement disk
+Date: Tue, 21 Feb 2012 20:39:00 +1030
+Message-ID: <807765805CA0DF48898D4C016E982BFC065A6D9BF9@MWLSVEXM002.au.baesystems.com>
+References: <807765805CA0DF48898D4C016E982BFC065A67CE25@MWLSVEXM002.au.baesystems.com>
+	<20120220162915.43b4f451@notabene.brown>
+	<807765805CA0DF48898D4C016E982BFC065A6D9BF5@MWLSVEXM002.au.baesystems.com>
+	<20120220201159.6cd1633d@notabene.brown>
+	<807765805CA0DF48898D4C016E982BFC065A6D9BF6@MWLSVEXM002.au.baesystems.com>,<20120220215147.7684efda@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120220215147.7684efda@notabene.brown>
+Content-Language: en-AU
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all,
- I made a simple boo boo which I hope the pros here can quickly guide
-me about. I have a near 2, 6 disk Raid 10 MD device (mdadm 3.1.4,
-Ubuntu ocelot 3.0.0.12) in which I marked two consecutive devices as
-failed and removed them (without bothering with that RAID10 can take
-failure only of non consecutive devices in near 2 configuration). When
-I re-added them they're showing as spares and the array is obviously
-not assembling.....
+Neil,
 
-I know the data is there and the disks are working reliably( I marked
-them as failed coz I wanted these two drives reconstructed ...bad idea
-...and there are other ways of resyncing that I now know about)
+Worked fine. Thanks again for your assistance.
 
-My questions:
-1. I am guessing that I need to create the array with --assume-clean
-the knowledge of the order of the drives (4 are known, only the order
-of 2 spares is in question which I am also pretty confident about)??
-2. Documentation of assume-clean is quite sparse. Does it not write
-the superblock at all and only keep the details in memory? If so, how
-would I write the superblocks after verifying (read-only) that the
-array got recreated correctly? If it does write the superblock,
-..wouldn't that destroy existing superblock in case I get the
-order/some other parameter wrong on the first go?
+Regards,
+Tony
+________________________________________
+From: NeilBrown [neilb@suse.de]
+Sent: Monday, 20 February 2012 9:51 PM
+To: RANSOM, Tony
+Cc: 'linux-raid@vger.kernel.org'
+Subject: Re: Problem rebuild raid 1 replacement disk
 
-I looked around on the list but couldn't get clear directions on the
-correct use of assume-clean for such a situation. I'm hoping that a
-thorough reply here could serve others looking for the same.
+On Mon, 20 Feb 2012 19:45:24 +1030 "RANSOM, Tony"
+<tony.ransom@baesystems.com> wrote:
 
-Thanks and regards,
-Anshu
+> Neil,
+>
+> >Yes.
+> >Somehow both sdb and sdb3 have a superblock for the same array.  Must have
+> >been a typo somewhere I suspect.
+> >You should remove the one you don't want:
+>
+> >  mdadm --zero-superblock /dev/sdb
+>
+> >then it should all work nicely again.
+>
+>
+> Unfortunately, the above command gave the following error :
+>
+> root@server2:~# mdadm --zero-superblock /dev/sdb
+> mdadm: Couldn't open /dev/sdb for write - not zeroing
+>
+> Do you know how to work around?
+
+Presumably this is because sdb3 is active in the array.  This keeps sdb busy.
+If this is the current situation then adding --force to the command should
+make it work.
+
+Otherwise you might need to remove sdb from the array first.
+
+NeilBrown
+"Warning:
+The information contained in this email and any attached files is
+confidential to BAE Systems Australia. If you are not the intended
+recipient, any use, disclosure or copying of this email or any
+attachments is expressly prohibited.  If you have received this email
+in error, please notify us immediately. VIRUS: Every care has been
+taken to ensure this email and its attachments are virus free,
+however, any loss or damage incurred in using this email is not the
+sender's responsibility.  It is your responsibility to ensure virus
+checks are completed before installing any data sent in this email to
+your computer."
+
+
