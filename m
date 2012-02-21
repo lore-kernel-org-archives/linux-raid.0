@@ -1,49 +1,51 @@
-From: Jim Meyering <jim@meyering.net>
-Subject: Re: [PATCH] avoid double-free upon "old buggy kernel" sysfs_read failure
-Date: Tue, 21 Feb 2012 14:02:22 +0100
-Message-ID: <87fwe42vc1.fsf@rho.meyering.net>
-References: <87sji42zab.fsf@rho.meyering.net>
+From: =?iso-8859-1?Q?=C1lvaro_L=F3pez_L=F3pez?= <allopez@gmv.com>
+Subject: RAID1 content under Windows OS
+Date: Tue, 21 Feb 2012 19:50:59 +0100
+Message-ID: <FCC44AC27019AF49B444F7E7F684FABD01DE8B605CA4@GMVMAIL4.gmv.es>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87sji42zab.fsf@rho.meyering.net> (Jim Meyering's message of
-	"Tue, 21 Feb 2012 12:37:00 +0100")
+Content-Language: es-ES
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Jim Meyering wrote:
-> * Incremental.c (Incremental): On sysfs_read failure, don't call
-> sysfs_free(sra) just before "goto out_unlock", since that very
-> same "sra" is freed the same way by the clean-up code below.
+I have been able to create a RAID 1 device in a Linux 2.6.36 system using mdadm command. 
 
-Here it is again, but with the Signed-off-by line:
+Both disks had been formatted using mkdosfs in order to be mounted with type vfat. I also changed its label using cfdisk from "Linux" to the "W95 FAT32".
 
-From 981af2b292448a9daa56af86b4c514ad9339665a Mon Sep 17 00:00:00 2001
-From: Jim Meyering <meyering@redhat.com>
-Date: Tue, 21 Feb 2012 11:08:25 +0100
-Subject: [PATCH] avoid double-free upon "old buggy kernel" sysfs_read failure
+After mounting the RAID1 device MD0 in the filesystem, I copy some files inside the folder associated to the RAID1. I can see the contents when MD0 is mounted
+inside Linux, not if disks are mounted separately.
 
-* Incremental.c (Incremental): On sysfs_read failure, don't call
-sysfs_free(sra) just before "goto out_unlock", since that very
-same "sra" is freed the same way by the clean-up code below.
+Then, when I connect both disks to a Windows XP or 7 OS I cannot see any content inside them.
 
-Signed-off-by: Jim Meyering <meyering@redhat.com>
----
- Incremental.c |    1 -
- 1 file changed, 1 deletion(-)
+Is it possible to see the content? What can I do?
 
-diff --git a/Incremental.c b/Incremental.c
-index b457bf3..836a6f1 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -325,7 +325,6 @@ int Incremental(char *devname, int verbose, int runstop,
- 			fprintf(stderr, Name
- 		      ": You have an old buggy kernel which cannot support\n"
- 				"      --incremental reliably.  Aborting.\n");
--			sysfs_free(sra);
- 			rv = 2;
- 			goto out_unlock;
- 		}
---
-1.7.9.1.266.g24ee9
+Thanks in advance,
+
+Alvaro
+
+
+
+______________________
+This message including any attachments may contain confidential 
+information, according to our Information Security Management System,
+ and intended solely for a specific individual to whom they are addressed.
+ Any unauthorised copy, disclosure or distribution of this message
+ is strictly forbidden. If you have received this transmission in error,
+ please notify the sender immediately and delete it.
+
+______________________
+Este mensaje, y en su caso, cualquier fichero anexo al mismo,
+ puede contener informacion clasificada por su emisor como confidencial
+ en el marco de su Sistema de Gestion de Seguridad de la 
+Informacion siendo para uso exclusivo del destinatario, quedando 
+prohibida su divulgacion copia o distribucion a terceros sin la 
+autorizacion expresa del remitente. Si Vd. ha recibido este mensaje 
+ erroneamente, se ruega lo notifique al remitente y proceda a su borrado. 
+Gracias por su colaboracion.
+
+______________________
+
