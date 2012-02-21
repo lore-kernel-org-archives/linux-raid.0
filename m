@@ -1,75 +1,35 @@
-From: "RANSOM, Tony" <tony.ransom@baesystems.com>
-Subject: RE: Problem rebuild raid 1 replacement disk
-Date: Tue, 21 Feb 2012 20:39:00 +1030
-Message-ID: <807765805CA0DF48898D4C016E982BFC065A6D9BF9@MWLSVEXM002.au.baesystems.com>
-References: <807765805CA0DF48898D4C016E982BFC065A67CE25@MWLSVEXM002.au.baesystems.com>
-	<20120220162915.43b4f451@notabene.brown>
-	<807765805CA0DF48898D4C016E982BFC065A6D9BF5@MWLSVEXM002.au.baesystems.com>
-	<20120220201159.6cd1633d@notabene.brown>
-	<807765805CA0DF48898D4C016E982BFC065A6D9BF6@MWLSVEXM002.au.baesystems.com>,<20120220215147.7684efda@notabene.brown>
+From: Jim Meyering <jim@meyering.net>
+Subject: [PATCH] avoid double-free upon "old buggy kernel" sysfs_read failure
+Date: Tue, 21 Feb 2012 12:37:00 +0100
+Message-ID: <87sji42zab.fsf@rho.meyering.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120220215147.7684efda@notabene.brown>
-Content-Language: en-AU
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil,
 
-Worked fine. Thanks again for your assistance.
+* Incremental.c (Incremental): On sysfs_read failure, don't call
+sysfs_free(sra) just before "goto out_unlock", since that very
+same "sra" is freed the same way by the clean-up code below.
+---
+FYI, coverity spotted the double free.
 
-Regards,
-Tony
-________________________________________
-From: NeilBrown [neilb@suse.de]
-Sent: Monday, 20 February 2012 9:51 PM
-To: RANSOM, Tony
-Cc: 'linux-raid@vger.kernel.org'
-Subject: Re: Problem rebuild raid 1 replacement disk
+ Incremental.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-On Mon, 20 Feb 2012 19:45:24 +1030 "RANSOM, Tony"
-<tony.ransom@baesystems.com> wrote:
-
-> Neil,
->
-> >Yes.
-> >Somehow both sdb and sdb3 have a superblock for the same array.  Must have
-> >been a typo somewhere I suspect.
-> >You should remove the one you don't want:
->
-> >  mdadm --zero-superblock /dev/sdb
->
-> >then it should all work nicely again.
->
->
-> Unfortunately, the above command gave the following error :
->
-> root@server2:~# mdadm --zero-superblock /dev/sdb
-> mdadm: Couldn't open /dev/sdb for write - not zeroing
->
-> Do you know how to work around?
-
-Presumably this is because sdb3 is active in the array.  This keeps sdb busy.
-If this is the current situation then adding --force to the command should
-make it work.
-
-Otherwise you might need to remove sdb from the array first.
-
-NeilBrown
-"Warning:
-The information contained in this email and any attached files is
-confidential to BAE Systems Australia. If you are not the intended
-recipient, any use, disclosure or copying of this email or any
-attachments is expressly prohibited.  If you have received this email
-in error, please notify us immediately. VIRUS: Every care has been
-taken to ensure this email and its attachments are virus free,
-however, any loss or damage incurred in using this email is not the
-sender's responsibility.  It is your responsibility to ensure virus
-checks are completed before installing any data sent in this email to
-your computer."
-
-
+diff --git a/Incremental.c b/Incremental.c
+index 78c9712..4ab9747 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -326,7 +326,6 @@ int Incremental(char *devname, int verbose, int runstop,
+ 			fprintf(stderr, Name
+ 		      ": You have an old buggy kernel which cannot support\n"
+ 				"      --incremental reliably.  Aborting.\n");
+-			sysfs_free(sra);
+ 			rv = 2;
+ 			goto out_unlock;
+ 		}
+--
+1.7.9.1.266.g24ee9
