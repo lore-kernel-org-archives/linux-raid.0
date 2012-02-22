@@ -1,91 +1,100 @@
-From: Jes.Sorensen@redhat.com
-Subject: [PATCH] Print error message if failing to write super for 1.x metadata
-Date: Wed, 22 Feb 2012 12:01:56 +0100
-Message-ID: <1329908516-17822-1-git-send-email-Jes.Sorensen@redhat.com>
+From: Manuel Arostegui <manuel@tuenti.com>
+Subject: Lenny to squeeze mdadm problem + e2label problem
+Date: Wed, 22 Feb 2012 12:44:26 +0100
+Message-ID: <CAA8xrZdnBD+GTgk759aQigey0qVBQk-FsMj27_3ik8bjnTP_jw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: meyering@redhat.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Hey all,
 
-In addition remove attempt to print an error message if
-write_init_super() fails, as this is handled in the various
-write_init_super() functions. This avoids a segfault on error.
+Whilst trying to upgrade one box from Debian Lenny to Debian Squeeze I
+have run into some problems with mdadm and the RAID labeling.
 
-Reported by Jim Meyering in
-https://bugzilla.redhat.com/show_bug.cgi?id=795461
+Kernel: 2.6.32-41
+mdadm version: v3.1.4
+Disks: 4
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- Create.c |    3 ---
- super1.c |   20 ++++++++++++++++----
- 2 files changed, 16 insertions(+), 7 deletions(-)
+RAID devices:
+/dev/md0 - boot - RAID1 - ext3
+/dev/md1 swap
+/dev/md2 - "/" - RAID1 - ext3
+/dev/md3 - "/var/lib/mysql" - RAID10 - xfs
 
-diff --git a/Create.c b/Create.c
-index 90ff3ed..e5c6b05 100644
---- a/Create.c
-+++ b/Create.c
-@@ -924,9 +924,6 @@ int Create(struct supertype *st, char *mddev,
- 			}
- 
- 			if (st->ss->write_init_super(st)) {
--				fprintf(stderr,
--					Name ": Failed to write metadata to %s\n",
--					dv->devname);
- 				st->ss->free_super(st);
- 				goto abort_locked;
- 			}
-diff --git a/super1.c b/super1.c
-index a18952a..1db4de6 100644
---- a/super1.c
-+++ b/super1.c
-@@ -1106,13 +1106,16 @@ static int write_init_super1(struct supertype *st)
- 		}
- 		free(refst);
- 
--		if (!get_dev_size(di->fd, NULL, &dsize))
--			return 1;
-+		if (!get_dev_size(di->fd, NULL, &dsize)) {
-+			rv = 1;
-+			goto error_out;
-+		}
- 		dsize >>= 9;
- 
- 		if (dsize < 24) {
- 			close(di->fd);
--			return 2;
-+			rv = 2;
-+			goto error_out;
- 		}
- 
- 
-@@ -1176,7 +1179,11 @@ static int write_init_super1(struct supertype *st)
- 			sb->data_size = __cpu_to_le64(dsize - reserved);
- 			break;
- 		default:
--			return -EINVAL;
-+			fprintf(stderr,	Name ": Failed to write invalid "
-+				"metadata format 1.%i to %s\n",
-+				st->minor_version, di->devname);
-+			rv = -EINVAL;
-+			goto out;
- 		}
- 
- 
-@@ -1192,6 +1199,11 @@ static int write_init_super1(struct supertype *st)
- 		close(di->fd);
- 		di->fd = -1;
- 	}
-+error_out:
-+	if (rv)
-+		fprintf(stderr,	Name ": Failed to write metadata to %s\n",
-+			di->devname);
-+out:
- 	return rv;
- }
- #endif
--- 
-1.7.7.6
+When doing the dist-upgrade and replacing the kernel + udev the system
+changes the RAID devices to md124, md125, md126 etc.
+As far as I have read, this makes sense - as mdadm is changing
+superblock and has to recalculate the whole RAID. This is big problem,
+if you have devices into /etc/fstab, like we do.
 
+As this is kinda from the past, we have tried to label the RAID
+devices in order to boot up using labels. As in the future migrations,
+no one knows if this can arise again and using labels would prevent us
+from having these kind of problems.
+
+We used e2label for the ext3 partitions and xfs_admin for the XFS one.
+
+Everything was fine when checking with blkid. We could see the labels
+fine in /dev/mdX.
+When rebooting, the machine won't boot up:
+
+ALERT! /dev/disk/by-uuid/c018-etc-etc... does not exist
+
+
+If we re-check the labels we can see all the devices got the same
+label (the one assigned to md0, md1 etc), so probably grub is trying
+to boot from single devices, and not from the md0 which is /boot
+This is blkid's output:
+
+/dev/sdb1: LABEL=3D"boot" UUID=3D"6d15111c-d2d9-4636-b2a5-7954ddcbcae2"
+SEC_TYPE=3D"ext2" TYPE=3D"ext3"
+/dev/sdb2: LABEL=3D"swap" UUID=3D"af027073-b59e-4886-9e5a-e3bad38ae466"=
+ TYPE=3D"swap"
+/dev/sdb3: LABEL=3D"/" UUID=3D"c8e78ff4-b165-45d4-9382-ed669e5650dc"
+SEC_TYPE=3D"ext2" TYPE=3D"ext3"
+/dev/sdc1: LABEL=3D"boot" UUID=3D"6d15111c-d2d9-4636-b2a5-7954ddcbcae2"
+SEC_TYPE=3D"ext2" TYPE=3D"ext3"
+/dev/sdc2: LABEL=3D"swap" UUID=3D"af027073-b59e-4886-9e5a-e3bad38ae466"=
+ TYPE=3D"swap"
+/dev/sdc3: LABEL=3D"/" UUID=3D"c8e78ff4-b165-45d4-9382-ed669e5650dc"
+SEC_TYPE=3D"ext2" TYPE=3D"ext3"
+/dev/sdd1: LABEL=3D"boot" UUID=3D"6d15111c-d2d9-4636-b2a5-7954ddcbcae2"
+SEC_TYPE=3D"ext2" TYPE=3D"ext3"
+/dev/sdd2: LABEL=3D"swap" UUID=3D"af027073-b59e-4886-9e5a-e3bad38ae466"=
+ TYPE=3D"swap"
+/dev/sdd3: LABEL=3D"/" UUID=3D"c8e78ff4-b165-45d4-9382-ed669e5650dc"
+SEC_TYPE=3D"ext2" TYPE=3D"ext3"
+
+<snip>
+
+/dev/md0: LABEL=3D"boot" UUID=3D"6d15111c-d2d9-4636-b2a5-7954ddcbcae2"
+SEC_TYPE=3D"ext2" TYPE=3D"ext3"
+/dev/md1: LABEL=3D"swap" UUID=3D"af027073-b59e-4886-9e5a-e3bad38ae466" =
+TYPE=3D"swap"
+/dev/md2: LABEL=3D"/" UUID=3D"c8e78ff4-b165-45d4-9382-ed669e5650dc"
+SEC_TYPE=3D"ext2" TYPE=3D"ext3"
+/dev/md3: LABEL=3D"mysql" UUID=3D"e627f664-f929-4be8-815e-9e3cf559e512"=
+ TYPE=3D"xfs"
+
+
+As we have to migrate loads of machines, using labels is the fastest
+and cleanest way to do it. Just create the labels and change
+/etc/fstab across all the machines and voil=E1. But we cannot get it
+running. Is there any workaround to work with labels and avoid all the
+disks in the raid to get them as well?.
+Using UUID doesn't seem like a good idea, as they may change with
+future dist-upgrades, mdadm upgrades etc.
+
+Has someone had same/similar problem with mdadm?
+
+Thanks a lot
+Manuel
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
