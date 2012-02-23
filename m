@@ -1,46 +1,86 @@
-From: "J. Ali Harlow" <ali@juiblex.co.uk>
-Subject: Re: [PATCH 0/1] Make failure message on re-add more explcit
-Date: Thu, 23 Feb 2012 08:47:27 +0000
-Message-ID: <1329986847.32304.140661040222909@webmail.messagingengine.com>
-References: <1329930000-20679-1-git-send-email-Jes.Sorensen@redhat.com>
- <20120223090412.2b14fb7f@notabene.brown> <4F457758.8060807@redhat.com>
- <4F459D05.5060104@anonymous.org.uk> <4F45FA1A.2020706@redhat.com>
+From: CoolCold <coolthecold@gmail.com>
+Subject: Re: [PATCH] Use MDMON_DIR for pid files created in Monitor.c
+Date: Fri, 24 Feb 2012 00:39:37 +0400
+Message-ID: <CAGqmV7o1G86SPn4vM-LuXtKr9-gi=boVMNJzBP93komSLsHEWA@mail.gmail.com>
+References: <1328183102-9377-1-git-send-email-Jes.Sorensen@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F45FA1A.2020706@redhat.com>
+In-Reply-To: <1328183102-9377-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>, John Robinson <john.robinson@anonymous.org.uk>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Jes.Sorensen@redhat.com
+Cc: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Feb 23, 2012, at 09:34 AM, Jes Sorensen wrote:
-> On 02/23/12 02:57, John Robinson wrote:
-> > On 22/02/2012 23:16, Jes Sorensen wrote:
-> > [...]
-> >> The goal was to try and reduce the number of bug reports over this by
-> >> making it more obvious/explicit, so if you have a suggestion for how to
-> >> do so in a better way, I am all game.
-> > 
-> > How about:
-> > 
-> > mdadm /dev/md0 --add %s
-> > : %s was already a member of /dev/md0, attempting re-add
-> > : Re-add failed because <reason>
-> > : Not performing add as that would zero the superblock on %s and make it
-> > a spare
-> > : mdadm --add used to do that automatically but it was potentially
-> > dangerous
-> > : If that is what you really want to do, use mdadm --zero-superblock %s
-> > first.
-> > 
-> 
-> This would get my vote, way better than my messy attempt.
+On Thu, Feb 2, 2012 at 3:45 PM, =A0<Jes.Sorensen@redhat.com> wrote:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>
+> Other parts of mdadm/mdmon place .pid/.sock files in MDMON_DIR. This
+> makes Monitor.c consistent with the rest.
+>
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> ---
+> =A0Monitor.c | =A0 =A08 +++++---
+> =A01 files changed, 5 insertions(+), 3 deletions(-)
+>
+> diff --git a/Monitor.c b/Monitor.c
+> index 77f22aa..7ed5282 100644
+> --- a/Monitor.c
+> +++ b/Monitor.c
+> @@ -294,8 +294,10 @@ static int check_one_sharer(int scan)
+> =A0 =A0 =A0 =A0int pid, rv;
+> =A0 =A0 =A0 =A0FILE *fp;
+> =A0 =A0 =A0 =A0char dir[20];
+> + =A0 =A0 =A0 char path[100];
+Just wondering why not something like PATH_MAX or similar constant? I
+guess there should be one, though 100 should be enough
+> =A0 =A0 =A0 =A0struct stat buf;
+> - =A0 =A0 =A0 fp =3D fopen("/var/run/mdadm/autorebuild.pid", "r");
+> + =A0 =A0 =A0 sprintf(path, "%s/autorebuild.pid", MDMON_DIR);
+> + =A0 =A0 =A0 fp =3D fopen(path, "r");
+> =A0 =A0 =A0 =A0if (fp) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (fscanf(fp, "%d", &pid) !=3D 1)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pid =3D -1;
+> @@ -317,12 +319,12 @@ static int check_one_sharer(int scan)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0fclose(fp);
+> =A0 =A0 =A0 =A0}
+> =A0 =A0 =A0 =A0if (scan) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (mkdir("/var/run/mdadm", S_IRWXU) < =
+0 &&
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (mkdir(MDMON_DIR, S_IRWXU) < 0 &&
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0errno !=3D EEXIST) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0fprintf(stderr, Name "=
+: Can't create "
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"autor=
+ebuild.pid file\n");
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0} else {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 fp =3D fopen("/var/run/=
+mdadm/autorebuild.pid", "w");
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 fp =3D fopen(path, "w")=
+;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (!fp)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0fprint=
+f(stderr, Name ": Cannot create"
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0" autorebuild.pid"
+> --
+> 1.7.4.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 
-Would
-: If %s doesn't hold any useful data, use "mdadm --zero-superblock %s"
-before adding.
-be a further refinement?
+This is 2nd copy, first was sent from phone and discarded as contained =
+HTML.
 
-Ali.
+--
+Best regards,
+[COOLCOLD-RIPN]
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
