@@ -1,44 +1,48 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] Use MDMON_DIR for pid files created in Monitor.c
-Date: Thu, 23 Feb 2012 21:47:32 +0100
-Message-ID: <4F46A5E4.3030900@redhat.com>
-References: <1328183102-9377-1-git-send-email-Jes.Sorensen@redhat.com> <CAGqmV7o1G86SPn4vM-LuXtKr9-gi=boVMNJzBP93komSLsHEWA@mail.gmail.com>
+From: "kedacomkernel" <kedacomkernel@gmail.com>
+Subject: md: Use existed macro instead of number
+Date: Fri, 24 Feb 2012 15:00:21 +0800
+Message-ID: <201202241500185468624@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGqmV7o1G86SPn4vM-LuXtKr9-gi=boVMNJzBP93komSLsHEWA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 02/23/12 21:39, CoolCold wrote:
-> On Thu, Feb 2, 2012 at 3:45 PM,  <Jes.Sorensen@redhat.com> wrote:
->> > From: Jes Sorensen <Jes.Sorensen@redhat.com>
->> >
->> > Other parts of mdadm/mdmon place .pid/.sock files in MDMON_DIR. This
->> > makes Monitor.c consistent with the rest.
->> >
->> > Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
->> > ---
->> >  Monitor.c |    8 +++++---
->> >  1 files changed, 5 insertions(+), 3 deletions(-)
->> >
->> > diff --git a/Monitor.c b/Monitor.c
->> > index 77f22aa..7ed5282 100644
->> > --- a/Monitor.c
->> > +++ b/Monitor.c
->> > @@ -294,8 +294,10 @@ static int check_one_sharer(int scan)
->> >        int pid, rv;
->> >        FILE *fp;
->> >        char dir[20];
->> > +       char path[100];
-> Just wondering why not something like PATH_MAX or similar constant? I
-> guess there should be one, though 100 should be enough
+From d5905ed3c5355a13e954057856733f8ad64a86ac Mon Sep 17 00:00:00 2001
+From: majianpeng <majianpeng@gmail.com>
+Date: Fri, 24 Feb 2012 22:49:45 +0800
+Subject: [PATCH] md: Use existed macro instead of number
 
-I used 100 here because it was consistent with how it is handled
-elsewhere in the code. Having a constant would be fine with me, as long
-as it is applied consistently.
 
-Jes
+Signed-off-by: majianpeng <majianpeng@gmail.com>
+---
+ include/linux/raid/md_p.h |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/raid/md_p.h b/include/linux/raid/md_p.h
+index 6f6df86..7c3577c 100644
+--- a/include/linux/raid/md_p.h
++++ b/include/linux/raid/md_p.h
+@@ -281,6 +281,8 @@ struct mdp_superblock_1 {
+ 					    * active device with same 'role'.
+ 					    * 'recovery_offset' is also set.
+ 					    */
+-#define	MD_FEATURE_ALL			(1|2|4|8|16)
+-
++#define	MD_FEATURE_ALL			(MD_FEATURE_BITMAP_OFFSET | MD_FEATURE_RECOVERY_OFFSET | \
++					MD_FEATURE_RESHAPE_ACTIVE | MD_FEATURE_BAD_BLOCKS | \
++					MD_FEATURE_REPLACEMENT)
++
+ #endif 
+-- 
+1.7.5.4
+
+ 				
+--------------
+kedacomkernel
+2012-02-24
+
