@@ -1,48 +1,35 @@
-From: "kedacomkernel" <kedacomkernel@gmail.com>
-Subject: md: Use existed macro instead of number
-Date: Fri, 24 Feb 2012 15:00:21 +0800
-Message-ID: <201202241500185468624@gmail.com>
+From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
+Subject: migrating from metadata 0.9 to 1.0 before growing?
+Date: Fri, 24 Feb 2012 11:38:21 +0100
+Message-ID: <20120224113821.c2b14f48bcf7e6809b2cd3a6@bbaw.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From d5905ed3c5355a13e954057856733f8ad64a86ac Mon Sep 17 00:00:00 2001
-From: majianpeng <majianpeng@gmail.com>
-Date: Fri, 24 Feb 2012 22:49:45 +0800
-Subject: [PATCH] md: Use existed macro instead of number
+Hi there.
 
+I have a RAID6 using disks in an external SATA enclosure.
+Now I started to exchange the disks with others twice as big as the ones the
+RAID was originally created with.
+The RAID uses metadata version 0.9.
 
-Signed-off-by: majianpeng <majianpeng@gmail.com>
----
- include/linux/raid/md_p.h |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+Now I'm thinking about switching to format 1.0 this way:
 
-diff --git a/include/linux/raid/md_p.h b/include/linux/raid/md_p.h
-index 6f6df86..7c3577c 100644
---- a/include/linux/raid/md_p.h
-+++ b/include/linux/raid/md_p.h
-@@ -281,6 +281,8 @@ struct mdp_superblock_1 {
- 					    * active device with same 'role'.
- 					    * 'recovery_offset' is also set.
- 					    */
--#define	MD_FEATURE_ALL			(1|2|4|8|16)
--
-+#define	MD_FEATURE_ALL			(MD_FEATURE_BITMAP_OFFSET | MD_FEATURE_RECOVERY_OFFSET | \
-+					MD_FEATURE_RESHAPE_ACTIVE | MD_FEATURE_BAD_BLOCKS | \
-+					MD_FEATURE_REPLACEMENT)
-+
- #endif 
--- 
-1.7.5.4
+* exchange all disks with the bigger ones piece by piece
+  (-f old -r old -a new)
+* wait for rebuild of last disk
+* recreate RAID with --assume-clean and --metadata 1.0 and the same disks in
+  the correct order
 
- 				
---------------
-kedacomkernel
-2012-02-24
+The --grow shouldn't be necessary this way.
+Then I grow the filesystem.
 
+Is this precedure possible without data loss?
+Or is there a way a metadata version migration could be done more easily?
+
+Thanks
+Lars
