@@ -1,71 +1,75 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: MD and rotational attribute
-Date: Mon, 27 Feb 2012 11:40:40 +1100
-Message-ID: <20120227114040.5b0235de@notabene.brown>
-References: <20120220122022.GA7466@x2.net.home>
-	<20120227104230.125cb9e2@notabene.brown>
-	<yq18vjpuo1n.fsf@sermon.lab.mkp.net>
+From: "majianpeng" <majianpeng@gmail.com>
+Subject: Re: Re: md:When opened /proc/mdstat, increase the refcount of
+Date: Mon, 27 Feb 2012 09:21:50 +0800
+Message-ID: <201202270921472184397@gmail.com>
+References: <201202261255005786849@gmail.com>,
+ <201202261633221401738@gmail.com>,
+ <20120226220120.3dbe3a3b@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/D3BfURFPGzSV50TuY_ORj/V"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq18vjpuo1n.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Karel Zak <kzak@redhat.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/D3BfURFPGzSV50TuY_ORj/V
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+bXkgcGF0Y2ggaXM6DQotLS0NCiBmcy9wcm9jL2lub2RlLmMgfCAgIDEzICsrKysrKysrKysrLS0N
+CiAxIGZpbGVzIGNoYW5nZWQsIDExIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQoNCmRp
+ZmYgLS1naXQgYS9mcy9wcm9jL2lub2RlLmMgYi9mcy9wcm9jL2lub2RlLmMNCmluZGV4IDg0ZmQz
+MjMuLjc4ZGJiMDMgMTAwNjQ0DQotLS0gYS9mcy9wcm9jL2lub2RlLmMNCisrKyBiL2ZzL3Byb2Mv
+aW5vZGUuYw0KQEAgLTMxNyw2ICszMTcsNyBAQCBzdGF0aWMgaW50IHByb2NfcmVnX29wZW4oc3Ry
+dWN0IGlub2RlICppbm9kZSwgc3RydWN0IGZpbGUgKmZpbGUpDQogCWludCAoKm9wZW4pKHN0cnVj
+dCBpbm9kZSAqLCBzdHJ1Y3QgZmlsZSAqKTsNCiAJaW50ICgqcmVsZWFzZSkoc3RydWN0IGlub2Rl
+ICosIHN0cnVjdCBmaWxlICopOw0KIAlzdHJ1Y3QgcGRlX29wZW5lciAqcGRlbzsNCisJY29uc3Qg
+c3RydWN0IGZpbGVfb3BlcmF0aW9ucyAqZm9wczsNCiANCiAJLyoNCiAJICogV2hhdCBmb3IsIHlv
+dSBhc2s/IFdlbGwsIHdlIGNhbiBoYXZlIG9wZW4sIHJtbW9kLCByZW1vdmVfcHJvY19lbnRyeQ0K
+QEAgLTMzOSw3ICszNDAsMTIgQEAgc3RhdGljIGludCBwcm9jX3JlZ19vcGVuKHN0cnVjdCBpbm9k
+ZSAqaW5vZGUsIHN0cnVjdCBmaWxlICpmaWxlKQ0KIAkJcmV0dXJuIC1FTk9FTlQ7DQogCX0NCiAJ
+cGRlLT5wZGVfdXNlcnMrKzsNCi0Jb3BlbiA9IHBkZS0+cHJvY19mb3BzLT5vcGVuOw0KKwkvKg0K
+KwkgKklmIHByb2NfZm9wcyBkZWZpbmVkIGluIG1vZHVsZSBhbmQgdXNlZCAub3duZXIgPSBUSElT
+X01PRFVMRSxzbyBvcGVuIG11c3QNCisJICpnZXQgYSByZWZlcmVuY2Ugb2YgbW9kdWxlLg0KKwkg
+Ki8NCisJZm9wcyA9IGZvcHNfZ2V0KHBkZS0+cHJvY19mb3BzKTsNCisJb3BlbiA9IGZvcHMtPm9w
+ZW47DQogCXJlbGVhc2UgPSBwZGUtPnByb2NfZm9wcy0+cmVsZWFzZTsNCiAJc3Bpbl91bmxvY2so
+JnBkZS0+cGRlX3VubG9hZF9sb2NrKTsNCiANCkBAIC0zNTQsOCArMzYwLDEwIEBAIHN0YXRpYyBp
+bnQgcHJvY19yZWdfb3BlbihzdHJ1Y3QgaW5vZGUgKmlub2RlLCBzdHJ1Y3QgZmlsZSAqZmlsZSkN
+CiAJCS8qIFN0cmljdGx5IGZvciAidG9vIGxhdGUiIC0+cmVsZWFzZSBpbiBwcm9jX3JlZ19yZWxl
+YXNlKCkuICovDQogCQlwZGVvLT5yZWxlYXNlID0gcmVsZWFzZTsNCiAJCWxpc3RfYWRkKCZwZGVv
+LT5saCwgJnBkZS0+cGRlX29wZW5lcnMpOw0KLQl9IGVsc2UNCisJfSBlbHNlCXsNCisJCWZvcHNf
+cHV0KHBkZS0+cHJvY19mb3BzKTsNCiAJCWtmcmVlKHBkZW8pOw0KKwl9DQogCV9fcGRlX3VzZXJz
+X2RlYyhwZGUpOw0KIAlzcGluX3VubG9jaygmcGRlLT5wZGVfdW5sb2FkX2xvY2spOw0KIAlyZXR1
+cm4gcnY7DQpAQCAtNDAyLDYgKzQxMCw3IEBAIHN0YXRpYyBpbnQgcHJvY19yZWdfcmVsZWFzZShz
+dHJ1Y3QgaW5vZGUgKmlub2RlLCBzdHJ1Y3QgZmlsZSAqZmlsZSkNCiAJfQ0KIAlwZGUtPnBkZV91
+c2VycysrOw0KIAlyZWxlYXNlID0gcGRlLT5wcm9jX2ZvcHMtPnJlbGVhc2U7DQorCWZvcHNfcHV0
+KHBkZS0+cHJvY19mb3BzKTsNCiAJaWYgKHBkZW8pIHsNCiAJCWxpc3RfZGVsKCZwZGVvLT5saCk7
+DQogCQlrZnJlZShwZGVvKTsNCg0KSSB0ZXN0ZWQgb2ssYnV0IEFsIFZpcm8gc2FpZCBkZWFkbG9j
+aywgSSBkaWQgbm90IHRlc3RlZC4NCg0KLS0tLS0tLS0tLS0tLS0tLS0tCQkJCSANCm1hamlhbnBl
+bmcNCjIwMTItMDItMjcNCg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0Kt6K8/sjLo7pOZWlsQnJvd24NCreiy83I1cbao7oyMDEy
+LTAyLTI2IDE5OjAxOjMyDQrK1bz+yMujum1hamlhbnBlbmcNCrOty82jumxpbnV4LXJhaWQNCtb3
+zOKjulJlOiBtZDpXaGVuIG9wZW5lZCAvcHJvYy9tZHN0YXQsIGluY3JlYXNlIHRoZSByZWZjb3Vu
+dCBvZg0KDQpPbiBTdW4sIDI2IEZlYiAyMDEyIDE2OjMzOjI1ICswODAwICJtYWppYW5wZW5nIiA8
+bWFqaWFucGVuZ0BnbWFpbC5jb20+IHdyb3RlOg0KDQo+IEkgd3JvdGUgYSBsZXR0ZXIgdG8gbWFp
+bnRhaW5lciBvZiBwcm9jZnMuIEhlJ3MgYW5zd2VyIGlzIGZvbGxvdzoNCj4gPk5vLiAgUmVhZCBy
+ZW1vdmVfcHJvY19lbnRyeSgpLCBlc3BlY2lhbGx5IHRoZSBwYXJ0IHVuZGVyIC0+cGRlX3VubG9h
+ZF9sb2NrLg0KPiA+VGhlIHdob2xlIGRhbW4gcG9pbnQgb2YgdGhhdCBzdHVmZiBpcyB0aGF0IG9w
+ZW5lZCBmaWxlIG9uIHByb2NmcyBkb2VzICpub3QqDQo+ID5waW4gdGhlIG1vZHVsZSBkb3duOyBJ
+TyBpbiBwcm9ncmVzcyBkb2VzLCBidXQgdGhhdCdzIGl0Lg0KPiA+WW91IGNhbid0IGRlYWRsb2Nr
+IHJtbW9kIGZvb2JhciA8L3Byb2MvY3JhcC9mb29iYXI7IHdpdGggeW91ciBwYXRjaCB3ZSdsbA0K
+PiA+YmUgYmFjayB0byBhIHBpbGUgb2YgZGVhZGxvY2tzIGluIHRoZXJlLg0KPiA+SU9XLCBOQUsu
+DQoNCkhtbW0uLi4gdGhhdCBzb3VuZHMgbGlrZSBBbCBWaXJvLg0KDQpJIHNlZSB0aGUgcG9pbnQg
+b2YgdGhhdCBjb2RlIG5vdy4gIEFuZCB5b3VyIHBhdGNoIHdvdWxkIGJlIG9wZW4gdG8gdGhlIHNh
+bWUNCnByb2JsZW0gd291bGRuJ3QgaXQuIGkuZS4NCiAgICBybW1vZCBtZF9tb2QgPCAvcHJvYy9t
+ZHN0YXQNCg0Kd291bGQgZGVhZGxvY2s/Pw0KDQpTbyB3ZSBzdGlsbCBuZWVkIHRvIGZpbmQgYSBm
+aXggdGhhdCBhY3R1YWxseSB3b3JrcyBjb3JyZWN0bHkuDQoNClRoYXQgcHJvYmFibHkgbWVhbnMg
+bW92aW5nIHRoZSBjYWxsIHRvICdwb2xsX3dhaXQnIGludG8gcHJvY2ZzIGNvZGUsIGFuZCB1c2lu
+Zw0KYSB3YWl0X3F1ZXVlX2hlYWQgd2hpY2ggaXMgbWFuYWdlZCBieSBwcm9jZnMuDQoNClNvIG1h
+eWJlOg0KIC0gcHV0IGEgd2FpdF9xdWV1ZV9oZWFkIGluICdzdHJ1Y3QgcHJvY19kaXJfZW50cnkn
+DQogLSBoYXZlIHByb2NfcmVnX3BvbGwgY2FsbCBwb2xsX3dhaXQgcGFzc2luZyB0aGF0IHdhaXRf
+cXVldWVfaGVhZA0KIC0gd3JpdGUgYSBmdW5jdGlvbiBlLmcuIHByb2NfcG9sbF93YWtlIHdoaWNo
+IGNhbGxzIHdha2VfdXAgb24gdGhhdA0KICAgd2FpdF9xdWV1ZV9oZWFkDQogLSBoYXZlIG1kLmMg
+c2F2ZSB0aGUgcmV0dXJuIHZhbHVlIGZyb20gcHJvY19jcmVhdGUsIGFuZCBjYWxsIHRoZSBhYm92
+ZQ0KICAgZnVuY3Rpb24gaW5zdGVhZCBvZiBjYWxsaW5nICJ3YWtlX3VwKCZtZF9ldmVudF93YWl0
+ZXJzKSINCg0KVGhhdCBzaG91bGQgd29yay4NCg0KTmVpbEJyb3duDQo=
 
-On Sun, 26 Feb 2012 19:18:12 -0500 "Martin K. Petersen"
-<martin.petersen@oracle.com> wrote:
-
-> >>>>> "Neil" =3D=3D NeilBrown  <neilb@suse.de> writes:
->=20
-> Neil,
->=20
-> Neil> (I would say that the name 'rotational' is a bug - the issues here
-> Neil> is really whether seek is fast or slow is it not??... but no
-> Neil> matter).
->=20
-> Both the ATA and SCSI specs use the term 'rotational' which I guess is
-> how we ended up with that name.
->=20
->=20
-> Neil> What do you think Martin?  Should QUEUE_FLAG_NONROT move to
-> Neil> queue_limits much like QUEUE_FLAG_CLUSTER did?
->=20
-> Absolutely. I posted some patches converting both the nonrot and
-> discard/secure discard queue flags a while back but they didn't go
-> in. I'll freshen up the kit and resend...
->=20
-
-Thanks!
-
-NeilBrown
-
---Sig_/D3BfURFPGzSV50TuY_ORj/V
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT0rRCDnsnt1WYoG5AQKpIRAAo/a3BqRfH1FqRYgrBksIozU0hEIlk3c2
-GTUpxRXvC/3D6IzgpvwWDP1YcTsGSTn9G0c3jKXw6BEhyjS1qtUnOFfVB21y2aOt
-YzUycgv/GlVw/rVxOdoV1ktHyAJvE01kYhV24R60j/ZkEd7woEwxC5UAuH+n9XeP
-3P76WzY82wFp36t3QhVWKGBLJsWLnqFlSCnPvWBPFZC7I7/kzlsoNlHg0BRqUQU3
-hsb4EPs0Z3FA2JAWi5h2XFNXo9j9cA+XBsZbee2sMLq+/Mrte9Puk78+KclznWZ/
-/dd/WylC4h6V1wwD4qx2ES4IUAltAywjSbPI3hVBvfQ7yvnnf0dJAKhc/nL1rmky
-NkqmLeU6VkS2dP77l9YZpCrstkQqx4FcotOFeLB5hVIrn1475DvTuX68BP7ZZUUn
-tepJT6JAGhNFFNooO87fhfRVE5TClkrfkAfveDg/UOR+QaTlyWHcNDrKUPb/VR7S
-D+m/mk09QE9gQf8W4XZivPFJ7QQrwG9kjVcXLGmubxMPaAuPScaed9OrX5WLJwEp
-d3cvyMDPpUI+v0HxHng7qA77gGg1pCH2ilYmF/fFn4prKOdZtJIG9KtzGKpdCBiO
-eM0BSAhsbHTmJDAbAIt68/sFQRVQqt3BWqOBL0BCrYr4vp5cYIHOeoYn3Q3OD5os
-oo1LQEigOfE=
-=wOjI
------END PGP SIGNATURE-----
-
---Sig_/D3BfURFPGzSV50TuY_ORj/V--
