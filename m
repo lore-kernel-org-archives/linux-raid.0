@@ -1,104 +1,96 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: md: Use existed macro instead of number
-Date: Mon, 27 Feb 2012 09:57:55 +1100
-Message-ID: <20120227095755.033c450a@notabene.brown>
-References: <201202241500185468624@gmail.com>
+Subject: Re: [PATCH 0/1] Make failure message on re-add more explcit
+Date: Mon, 27 Feb 2012 11:01:14 +1100
+Message-ID: <20120227110114.478c0485@notabene.brown>
+References: <1329930000-20679-1-git-send-email-Jes.Sorensen@redhat.com>
+	<20120223090412.2b14fb7f@notabene.brown>
+	<4F457758.8060807@redhat.com>
+	<4F459D05.5060104@anonymous.org.uk>
+	<4F45FA1A.2020706@redhat.com>
+	<1329986847.32304.140661040222909@webmail.messagingengine.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/mlyZ3TK.WB5HPg=_XhtCoT4"; protocol="application/pgp-signature"
+ boundary="Sig_/Dp+5wuWFS6+9DAw87=//xCQ"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201202241500185468624@gmail.com>
+In-Reply-To: <1329986847.32304.140661040222909@webmail.messagingengine.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: kedacomkernel <kedacomkernel@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: "J. Ali Harlow" <ali@juiblex.co.uk>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>, John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/mlyZ3TK.WB5HPg=_XhtCoT4
+--Sig_/Dp+5wuWFS6+9DAw87=//xCQ
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 24 Feb 2012 15:00:21 +0800 "kedacomkernel" <kedacomkernel@gmail.com>
-wrote:
+On Thu, 23 Feb 2012 08:47:27 +0000 "J. Ali Harlow" <ali@juiblex.co.uk> wrot=
+e:
 
-> >From d5905ed3c5355a13e954057856733f8ad64a86ac Mon Sep 17 00:00:00 2001
-> From: majianpeng <majianpeng@gmail.com>
-> Date: Fri, 24 Feb 2012 22:49:45 +0800
-> Subject: [PATCH] md: Use existed macro instead of number
+> On Thu, Feb 23, 2012, at 09:34 AM, Jes Sorensen wrote:
+> > On 02/23/12 02:57, John Robinson wrote:
+> > > On 22/02/2012 23:16, Jes Sorensen wrote:
+> > > [...]
+> > >> The goal was to try and reduce the number of bug reports over this by
+> > >> making it more obvious/explicit, so if you have a suggestion for how=
+ to
+> > >> do so in a better way, I am all game.
+> > >=20
+> > > How about:
+> > >=20
+> > > mdadm /dev/md0 --add %s
+> > > : %s was already a member of /dev/md0, attempting re-add
+> > > : Re-add failed because <reason>
+> > > : Not performing add as that would zero the superblock on %s and make=
+ it
+> > > a spare
+> > > : mdadm --add used to do that automatically but it was potentially
+> > > dangerous
+> > > : If that is what you really want to do, use mdadm --zero-superblock =
+%s
+> > > first.
+> > >=20
+> >=20
+> > This would get my vote, way better than my messy attempt.
 >=20
->=20
-> Signed-off-by: majianpeng <majianpeng@gmail.com>
-> ---
->  include/linux/raid/md_p.h |    6 ++++--
->  1 files changed, 4 insertions(+), 2 deletions(-)
->=20
-> diff --git a/include/linux/raid/md_p.h b/include/linux/raid/md_p.h
-> index 6f6df86..7c3577c 100644
-> --- a/include/linux/raid/md_p.h
-> +++ b/include/linux/raid/md_p.h
-> @@ -281,6 +281,8 @@ struct mdp_superblock_1 {
->  					    * active device with same 'role'.
->  					    * 'recovery_offset' is also set.
->  					    */
-> -#define	MD_FEATURE_ALL			(1|2|4|8|16)
-> -
-> +#define	MD_FEATURE_ALL			(MD_FEATURE_BITMAP_OFFSET | MD_FEATURE_RECOVERY=
-_OFFSET | \
-> +					MD_FEATURE_RESHAPE_ACTIVE | MD_FEATURE_BAD_BLOCKS | \
-> +					MD_FEATURE_REPLACEMENT)
-> +
->  #endif=20
+> Would
+> : If %s doesn't hold any useful data, use "mdadm --zero-superblock %s"
+> before adding.
+> be a further refinement?
 
-Applied, thanks.
-Though I reformatted it a bit.
+Maybe .. though "useful" seems a bit of a .... soft(?) word.  What exactly
+does it mean in this context?
+I would probably prefer something like "If you are happy to discard the data
+on .....".
+
+And in the earlier suggestion with have "<reason>" which would certainly be
+good to have, but filling in the details is not straight forward
+unfortunately.
+
+I'm happy to take patches .... they don't have to be perfect, just an
+improvement on what we currently have is enough.
 
 NeilBrown
 
-commit 473a5bfef64c6c328bc110f28ba6c32fe4d4508a
-Author: majianpeng <majianpeng@gmail.com>
-Date:   Mon Feb 27 09:56:59 2012 +1100
 
-    md: Use existed macros instead of numbers
-   =20
-    Signed-off-by: majianpeng <majianpeng@gmail.com>
-    Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/include/linux/raid/md_p.h b/include/linux/raid/md_p.h
-index 6f6df86..8c0a3ad 100644
---- a/include/linux/raid/md_p.h
-+++ b/include/linux/raid/md_p.h
-@@ -281,6 +281,10 @@ struct mdp_superblock_1 {
- 					    * active device with same 'role'.
- 					    * 'recovery_offset' is also set.
- 					    */
--#define	MD_FEATURE_ALL			(1|2|4|8|16)
-+#define	MD_FEATURE_ALL			(MD_FEATURE_BITMAP_OFFSET	\
-+					|MD_FEATURE_RECOVERY_OFFSET	\
-+					|MD_FEATURE_RESHAPE_ACTIVE	\
-+					|MD_FEATURE_BAD_BLOCKS		\
-+					|MD_FEATURE_REPLACEMENT)
-=20
- #endif=20
-
---Sig_/mlyZ3TK.WB5HPg=_XhtCoT4
+--Sig_/Dp+5wuWFS6+9DAw87=//xCQ
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT0q48znsnt1WYoG5AQKUNg//UEQKizs9WxOStuzKC3/Tq5bhXM3kELxS
-XZ2UXYus43Dz9YoIHQT6f3FAoZ4KzaSG4JJhpWFpNQ/5th3uO3hYAXiTc1CwEdE+
-qy3HiLfxWVfz8H1cP6sOSF7eRUpDAR4HYhETgUGgc1z5ysyVkn/4QngX3dfpfSD2
-D39X4iSdKr8gpOfV9JaBA0Zc8hm6AxiHDDh51OAAhBtO0y7xHBsjTnOrCl1utbeu
-IAUCuXPxhN7FZissejeKS0g2Py6YIng2FM/CaSQVBtZcSuVPK+rCtxed6294sL2W
-DxCkcRa5O9aHSQzymtK+dQqRy8Zq9rtlEpNKRCdIjKQ3OIWnyJg4P7pBVWJ5Gj8j
-e0k4YP1b4hkd6NnCKLV0xrmvR/AhdlQvPp4BMKrpSDQ18fI8znpPo73LszfnGoGD
-lrLdVeN+BEcI0E0lB9P/iYQPPdQEq5x0RSBXCvfx5kuEKYGUseYy0r2YMC+oCAv3
-ac+VfkWkSR79zS/iFNhi/mCFzn+MtGOgYX5OybG0HorUMlEaaBu6Vtsf5aefoWps
-YobQBZfQwg6OjhNqgnm80EVcSpNSyHYPiD+8nMkRBvkCr4a4J1KkitszdUGWZE1q
-sjx+ICQNUkh/4Vvc6Cd16XUHy89U6vJLTowYsDSmXRpm4xZggbkGWZiJIqrILx+Q
-PW7GcC8vyGA=
-=1Vs9
+iQIVAwUBT0rHyjnsnt1WYoG5AQJpiA//eufFrEtgtWVRGeX69DfnasZ8Vv2jhxkd
+4b1PG/t3qa6+wGz02BZje2sK6TWzbryk5HW8qlc8TDkSiqcIH17SQd5UugyIncwE
+u6ULBVt/opteqG9UwVe9iWhop+UeG4kPZxk2KfYESvigr52bxaMT2jXTipYX6Vfh
+ffcppQgvpiv6of8ivXJMBrSqgLX9/+9JEKpl/DqM09sNTldfQvooeYHpdvEyTII5
+KaufOFR/yAQRcW6hXo5gZBAVUVNmnGgV/8o9+pVJOKk4/VjBacd2/LNN42zhlR2H
+jz6Rzk40xBIDQiQStlRdbDCtGn+ecQ85lXPgI+pan6Ar2W1DL+BCDlEMeyP4Bbxg
+6DuLXUBVC7sOga5wnpHCt2NOtRIO7ecSmuQhVLX/RRD251XkYzrpD1Ox3D1bCJzH
+N7p1jlGci8mReKYWArNgb4ItUvyHSwD+tN6Reop6UQaodNtpi8gzFtWsxreNkUrW
+2gqQu/SNQC3ycHt7Ojtu49j2PvCjoMRY5oqxNYarpjdPJOw84biz7UYpZSRWQ/hK
+2LBxpJJbXvfj8kru4x07zK3GhXIdZLxVb+N5MsWCMK2Ikj3xAVN9mpnUP35RZhUj
+6i2oGuEoDM3VfoTdTDIxkSapu7wt3JHm9mCIowEE2oCRW8hmqebCJAZEM+95n0ZK
+IqyJQWNk2XA=
+=mPCw
 -----END PGP SIGNATURE-----
 
---Sig_/mlyZ3TK.WB5HPg=_XhtCoT4--
+--Sig_/Dp+5wuWFS6+9DAw87=//xCQ--
