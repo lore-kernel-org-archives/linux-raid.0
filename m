@@ -1,49 +1,18 @@
-From: Jon Hardcastle <Jon@ehardcastle.com>
-Subject: 3 Drives down, Help!
-Date: Tue, 28 Feb 2012 16:34:18 +0000
-Message-ID: <CAOqmSEnYKkRT6O2NyVUXZDhurxOGUOZ+0GLx6OjuxmZd1di6Ag@mail.gmail.com>
-References: <CAOqmSEkenu54inSwVerefb_pcZ3bmSHrjDa2YX7ynuDWi-jRuw@mail.gmail.com>
+From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
+Subject: Re: migrating from metadata 0.9 to 1.0 before growing?
+Date: Tue, 28 Feb 2012 17:36:13 +0100
+Message-ID: <20120228173613.53aa1160353777cf236d80fa@bbaw.de>
+References: <20120224113821.c2b14f48bcf7e6809b2cd3a6@bbaw.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOqmSEkenu54inSwVerefb_pcZ3bmSHrjDa2YX7ynuDWi-jRuw@mail.gmail.com>
+In-Reply-To: <20120224113821.c2b14f48bcf7e6809b2cd3a6@bbaw.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi guys,
+Is this precedure possible without data loss?
 
-I have been battling with=A0intermittent=A0drive drop outs that I have
-been steadily pointing the finger of blame at the power supply; it is
-old and is 450w powering 9 hard drives.
-
-Unfortunately now I have been hit by a perfect storm of 3 of the 7
-drives (raid 6) have been booted..
-
-I am wonder what the best way to proceed is.. I want to
-
-i) stop the array from auto assembling just in case one of the other
-drive randomly 'fails' due to PSU or cabling issue.
-ii) install a new power supply and check all cabling.
-iii) Thrash the drives individually
-iv) Assemble the array (read only?) so that any kickouts I can
-confidence force the assemble
-v) Adding the failed drives back in 1 of a time, presumably this is
-better than adding multiple drives at the same time?
-
-Any tips and pointers would be fantastic.
-
-Thanks.
-
---
-----------
-N: Jon Hardcastle
-E: Jon@eHardcastle.com
-Q: The avalanche has already started. It is too late for the pebbles to=
- vote.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks
+Lars
