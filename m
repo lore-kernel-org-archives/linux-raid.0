@@ -1,27 +1,49 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: Add barrier support to dm-raid
-Date: Tue, 28 Feb 2012 09:00:18 -0500
-Message-ID: <20120228140018.GB18849@redhat.com>
-References: <1330437449.9910.2.camel@f14.redhat.com>
+From: Jon Hardcastle <Jon@ehardcastle.com>
+Subject: 3 Drives down, Help!
+Date: Tue, 28 Feb 2012 16:34:18 +0000
+Message-ID: <CAOqmSEnYKkRT6O2NyVUXZDhurxOGUOZ+0GLx6OjuxmZd1di6Ag@mail.gmail.com>
+References: <CAOqmSEkenu54inSwVerefb_pcZ3bmSHrjDa2YX7ynuDWi-jRuw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1330437449.9910.2.camel@f14.redhat.com>
+In-Reply-To: <CAOqmSEkenu54inSwVerefb_pcZ3bmSHrjDa2YX7ynuDWi-jRuw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jonathan Brassow <jbrassow@redhat.com>
-Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, agk@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Feb 28 2012 at  8:57am -0500,
-Jonathan Brassow <jbrassow@redhat.com> wrote:
+Hi guys,
 
-> Add barrier support to dm-raid.
-> 
-> MD has support for barriers.  DM core has support for barriers.  Set the
-> variable necessary to indicate to DM core that it is ok to pass down
-> barrier requests - which dm-raid will simply pass along to MD.
-> 
-> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+I have been battling with=A0intermittent=A0drive drop outs that I have
+been steadily pointing the finger of blame at the power supply; it is
+old and is 450w powering 9 hard drives.
 
-Acked-by: Mike Snitzer <snitzer@redhat.com>
+Unfortunately now I have been hit by a perfect storm of 3 of the 7
+drives (raid 6) have been booted..
+
+I am wonder what the best way to proceed is.. I want to
+
+i) stop the array from auto assembling just in case one of the other
+drive randomly 'fails' due to PSU or cabling issue.
+ii) install a new power supply and check all cabling.
+iii) Thrash the drives individually
+iv) Assemble the array (read only?) so that any kickouts I can
+confidence force the assemble
+v) Adding the failed drives back in 1 of a time, presumably this is
+better than adding multiple drives at the same time?
+
+Any tips and pointers would be fantastic.
+
+Thanks.
+
+--
+----------
+N: Jon Hardcastle
+E: Jon@eHardcastle.com
+Q: The avalanche has already started. It is too late for the pebbles to=
+ vote.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
