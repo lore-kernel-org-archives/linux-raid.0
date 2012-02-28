@@ -1,144 +1,135 @@
-From: linbloke <linbloke@fastmail.fm>
-Subject: Re: What are these reads in what should be simply a full-stripe write?
-Date: Wed, 29 Feb 2012 10:14:49 +1100
-Message-ID: <4F4D5FE9.7090301@fastmail.fm>
-References: <FC0D60DF-6357-495C-B10A-1C727AAFCBE3@avid.com>
+From: Victor Balakine <victor.balakine@ubc.ca>
+Subject: Adding a disk to RAID0
+Date: Tue, 28 Feb 2012 15:34:43 -0800
+Message-ID: <4F4D6493.3030300@ubc.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <FC0D60DF-6357-495C-B10A-1C727AAFCBE3@avid.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Adams <john.adams@avid.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I am trying to add another disk to RAID0 and this functionality appears 
+to be broken.
+First I create a RAID0 array:
+#mdadm --create /dev/md0 --level=0 --raid-devices=1 --force /dev/xvda2
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md0 started.
 
-On 29/02/12 5:47 AM, John Adams wrote:
-> For some years I've been working on some niche filesystems which serve
-> workflows involving lots of video.  Lately, I have had occasion to
-> investigate the behavior of md as a possible raid solution (2.6.32
-> kernel).
->
-> As part of that, we looked at some fio based loads in the buffered and
-> O_DIRECT cases and noticed some reading that we didn't understand when
-> using O_DIRECT.  We were led to this comparision by incorrect
-> information from a vendor. (We were trying to repro some reported
-> performance and were initially told that O_DIRECT had been used).
->
-> We are aware of the problems discussed concerning O_DIRECT.  As fs
-> guys, we're accustomed to worrying about copies and such, so it wasn't
-> immediately obvious to us that O_DIRECT would be a mistake in our
-> case.  This is essentially an embedded system with a single process
-> owning a group of disks with no filesystem.  There is no possibility
-> of a race with another process.
->
-> Anyway, I am curious about this reading behavior and I would grateful for any
-> comments.
->
-> I tried writing single stripes under both scenarios.  To give the
-> barest possible summary. I used a dd command like this with
-> oflag=direct omitted or not.  This was driven from a script that
-> sets up some blktrace and ftrace things, waits an appropriate time in
-> the buffered case etc.
->
-> dd oflag=direct if=/dev/zero of=/dev/md0 seek=0 bs=1M count=1
->
-> 8+2 128k strip
->
-> [physical disk completions via blkparse]
->
-> Buffered:
->
->   Reads Completed:        2,        5KiB  Writes Completed:        4,      258KiB
->   Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
->   Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
->   Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
->   Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
->   Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
->   Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
->   Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
->   Reads Completed:        2,        8KiB  Writes Completed:        3,      130KiB
->   Reads Completed:        6,       24KiB  Writes Completed:        4,      258KiB
->
-> Direct Example 1:
->
->   Reads Completed:        2,        5KiB  Writes Completed:       20,      258KiB
->   Reads Completed:        9,       36KiB  Writes Completed:       14,      130KiB
->   Reads Completed:       32,      128KiB  Writes Completed:       14,      130KiB
->   Reads Completed:        1,        4KiB  Writes Completed:       16,      130KiB
->   Reads Completed:       32,      128KiB  Writes Completed:       12,      130KiB
->   Reads Completed:        0,        0KiB  Writes Completed:        8,      130KiB
->   Reads Completed:        0,        0KiB  Writes Completed:        8,      130KiB
->   Reads Completed:        0,        0KiB  Writes Completed:        8,      130KiB
->   Reads Completed:        2,        8KiB  Writes Completed:        8,      130KiB
->   Reads Completed:        6,       24KiB  Writes Completed:       19,      258KiB
->
-> Direct Example 2:
->
->   Reads Completed:        4,      133KiB  Writes Completed:        3,      130KiB
->   Reads Completed:       11,      164KiB  Writes Completed:        3,      130KiB
->   Reads Completed:       34,      256KiB  Writes Completed:        3,      130KiB
->   Reads Completed:        2,      132KiB  Writes Completed:        3,      130KiB
->   Reads Completed:       33,      256KiB  Writes Completed:        3,      130KiB
->   Reads Completed:        3,      136KiB  Writes Completed:        3,      130KiB
->   Reads Completed:        7,      152KiB  Writes Completed:        3,      130KiB
->
->
-> I was able to gain a little bit of insight through blktrace and
-> ftrace.  Our initial assumption was that maybe things were being
-> broken up differently such that md thought it needed to do a rmv.
->
-> But as I dug into the blktrace output, that did not seem to be the
-> case (reads are coming after what is obviously the strip write).  I
-> used ftrace to show me the path down to md_make_request in the
-> O_DIRECT and buffered cases.  This showed me some calls refering to
-> read_ahead in the direct case.
->
->             <...>-14859 [001] 510340.525310: md_make_request
->             <...>-14859 [001] 510340.525311:<stack trace>
->   =>  generic_make_request
->   =>  submit_bio
->   =>  submit_bh
->   =>  block_read_full_page
->   =>  blkdev_readpage
->   =>  __do_page_cache_readahead
->   =>  force_page_cache_readahead
->   =>  page_cache_sync_readahead
->
-> So is this read ahead I'm observing?  Why does it occur only in the
-> direct case?
->
-> I noticed that blktrace sometime identifies what I assume to be the
-> instigator of the io.  So I can sometimes see dd or md_raid6 there.
-> As in [dd] or [md0_raid6]:
->
->   8,16   1      115     0.042000000  2910  D   W 2256 + 48 [md0_raid6]
->
-> These unexplained reads either mention blkid or [0] or [(null)].
->
-> It isn't clear to me whether the unexpected read behavior is due to a
-> tuning problem in the O_DIRECT case or simply the way things work.
->
-> Thank you for any comments.--
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So far everything works fine. Then I add another disk to it:
+#mdadm --grow /dev/md0 --raid-devices=2 --add /dev/xvda3 
+--backup-file=/backup-md0
+mdadm: level of /dev/md0 changed to raid4
+mdadm: added /dev/xvda3
+mdadm: Need to backup 1024K of critical section..
 
-G'day John,
+This is what I see in /var/log/messages
+Feb 28 15:03:30 storage kernel: [ 1420.174022] md: bind<xvda2>
+Feb 28 15:03:30 storage kernel: [ 1420.209167] md: raid0 personality 
+registered for level 0
+Feb 28 15:03:30 storage kernel: [ 1420.209818] bio: create slab <bio-1> at 1
+Feb 28 15:03:30 storage kernel: [ 1420.209832] md/raid0:md0: looking at 
+xvda2
+Feb 28 15:03:30 storage kernel: [ 1420.209837] md/raid0:md0:   comparing 
+xvda2(8386560) with xvda2(8386560)
+Feb 28 15:03:30 storage kernel: [ 1420.209844] md/raid0:md0:   END
+Feb 28 15:03:30 storage kernel: [ 1420.209851] md/raid0:md0:   ==> UNIQUE
+Feb 28 15:03:30 storage kernel: [ 1420.209856] md/raid0:md0: 1 zones
+Feb 28 15:03:30 storage kernel: [ 1420.209859] md/raid0:md0: FINAL 1 zones
+Feb 28 15:03:30 storage kernel: [ 1420.209866] md/raid0:md0: done.
+Feb 28 15:03:30 storage kernel: [ 1420.209870] md/raid0:md0: md_size is 
+8386560 sectors.
+Feb 28 15:03:30 storage kernel: [ 1420.209875] ******* md0 configuration 
+*********
+Feb 28 15:03:30 storage kernel: [ 1420.209879] zone0=[xvda2/]
+Feb 28 15:03:30 storage kernel: [ 1420.209885]         zone offset=0kb 
+device offset=0kb size=4193280kb
+Feb 28 15:03:30 storage kernel: [ 1420.209902] 
+**********************************
+Feb 28 15:03:30 storage kernel: [ 1420.209903]
+Feb 28 15:03:30 storage kernel: [ 1420.209919] md0: detected capacity 
+change from 0 to 4293918720
+Feb 28 15:03:30 storage kernel: [ 1420.223968]  md0: p1
+...
+Feb 28 15:04:01 storage kernel: [ 1450.783016] async_tx: api initialized 
+(async)
+Feb 28 15:04:01 storage kernel: [ 1450.796912] xor: automatically using 
+best checksumming function: generic_sse
+Feb 28 15:04:01 storage kernel: [ 1450.816012]    generic_sse:  9509.000 
+MB/sec
+Feb 28 15:04:01 storage kernel: [ 1450.816021] xor: using function: 
+generic_sse (9509.000 MB/sec)
+Feb 28 15:04:01 storage kernel: [ 1450.912021] raid6: int64x1   1888 MB/s
+Feb 28 15:04:01 storage kernel: [ 1450.980013] raid6: int64x2   2707 MB/s
+Feb 28 15:04:01 storage kernel: [ 1451.048025] raid6: int64x4   2073 MB/s
+Feb 28 15:04:01 storage kernel: [ 1451.116039] raid6: int64x8   2010 MB/s
+Feb 28 15:04:01 storage kernel: [ 1451.184017] raid6: sse2x1    4764 MB/s
+Feb 28 15:04:01 storage kernel: [ 1451.252018] raid6: sse2x2    5170 MB/s
+Feb 28 15:04:01 storage kernel: [ 1451.320016] raid6: sse2x4    7548 MB/s
+Feb 28 15:04:01 storage kernel: [ 1451.320025] raid6: using algorithm 
+sse2x4 (7548 MB/s)
+Feb 28 15:04:01 storage kernel: [ 1451.330136] md: raid6 personality 
+registered for level 6
+Feb 28 15:04:01 storage kernel: [ 1451.330145] md: raid5 personality 
+registered for level 5
+Feb 28 15:04:01 storage kernel: [ 1451.330149] md: raid4 personality 
+registered for level 4
+Feb 28 15:04:01 storage kernel: [ 1451.330662] md/raid:md0: device xvda2 
+operational as raid disk 0
+Feb 28 15:04:01 storage kernel: [ 1451.330820] md/raid:md0: allocated 2176kB
+Feb 28 15:04:01 storage kernel: [ 1451.330869] md/raid:md0: raid level 4 
+active with 1 out of 2 devices, algorithm 5
+Feb 28 15:04:01 storage kernel: [ 1451.330874] RAID conf printout:
+Feb 28 15:04:01 storage kernel: [ 1451.330876]  --- level:4 rd:2 wd:1
+Feb 28 15:04:01 storage kernel: [ 1451.330878]  disk 0, o:1, dev:xvda2
+Feb 28 15:04:01 storage kernel: [ 1451.417995] md: bind<xvda3>
+Feb 28 15:04:01 storage kernel: [ 1451.616399] RAID conf printout:
+Feb 28 15:04:01 storage kernel: [ 1451.616404]  --- level:4 rd:3 wd:2
+Feb 28 15:04:01 storage kernel: [ 1451.616408]  disk 0, o:1, dev:xvda2
+Feb 28 15:04:01 storage kernel: [ 1451.616411]  disk 1, o:1, dev:xvda3
+Feb 28 15:04:01 storage kernel: [ 1451.619054] md: reshape of RAID array md0
+Feb 28 15:04:01 storage kernel: [ 1451.619066] md: minimum _guaranteed_  
+speed: 1000 KB/sec/disk.
+Feb 28 15:04:01 storage kernel: [ 1451.619069] md: using maximum 
+available idle IO bandwidth (but not more than 200000 KB/sec) for reshape.
+Feb 28 15:04:01 storage kernel: [ 1451.619075] md: using 128k window, 
+over a total of 4193280k.
+Feb 28 15:05:02 storage udevd[280]: timeout '/sbin/blkid -o udev -p 
+/dev/md0'
+Feb 28 15:05:03 storage udevd[280]: timeout: killing '/sbin/blkid -o 
+udev -p /dev/md0' [1829]
+Feb 28 15:05:04 storage udevd[280]: timeout: killing '/sbin/blkid -o 
+udev -p /dev/md0' [1829]
+Feb 28 15:05:05 storage udevd[280]: timeout: killing '/sbin/blkid -o 
+udev -p /dev/md0' [1829]
 
-You need to give us more detail about your md raid setup. Beside a 
-reference to md_raid6, there is no other details about your array.
-How about sending:
+And then it just goes on forever. md0_raid0 process stays at 100% CPU load.
+# ps -ef | grep md0
+root      7268     2 99 09:34 ?        05:53:00 [md0_raid0]
+root      7270     2  0 09:34 ?        00:00:00 [md0_reshape]
+root      7271     1  0 09:34 pts/0    00:00:00 mdadm --grow /dev/md0 
+--raid-devices=2 --add /dev/sdc1 --backup-file=/backup-md0
 
-mdadm -V
-uname -a
-mdadm -Dvv /dev/mdarray
-mdadm -Evv /dev/arraycomponentdevices - for all of them
+# cat /proc/mdstat
+Personalities : [raid0] [raid6] [raid5] [raid4]
+md0 : active raid4 xvda3[2] xvda2[0]
+       4193280 blocks super 1.2 level 4, 512k chunk, algorithm 5 [3/1] [U__]
+         resync=DELAYED
 
+unused devices: <none>
 
-Good luck in the hunt,
-J
+# mdadm --version
+mdadm - v3.2.2 - 17th June 2011
+# uname -a
+Linux storage 3.1.9-1.4-xen #1 SMP Fri Jan 27 08:55:10 UTC 2012 
+(efb5ff4) x86_64 x86_64 x86_64 GNU/Linux
 
+It's OpenSUSE 12.1 with all the latest updates running in XEN that I 
+created to reproduce the problem. The actual server is running the same 
+version of OpenSUSE (Linux san1 3.1.9-1.4-desktop #1 SMP PREEMPT Fri Jan 
+27 08:55:10 UTC 2012 (efb5ff4) x86_64 x86_64 x86_64 GNU/Linux) on a 
+hardware server. If you need any more information I can easily get it 
+since it's a VM and the problem is easily reproducible.
 
-
+Victor
