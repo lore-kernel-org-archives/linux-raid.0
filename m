@@ -1,120 +1,114 @@
-From: John Adams <john.adams@avid.com>
-Subject: What are these reads in what should be simply a full-stripe write?
-Date: Tue, 28 Feb 2012 18:47:56 +0000
-Message-ID: <FC0D60DF-6357-495C-B10A-1C727AAFCBE3@avid.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Raid5 device hangs in active state
+Date: Wed, 29 Feb 2012 06:52:06 +1100
+Message-ID: <20120229065206.60d1e2ea@notabene.brown>
+References: <4F0A129E.5020706@nuclearwinter.com>
+	<20120109112644.489e4a48@notabene.brown>
+	<4F4D1B33.3010308@nuclearwinter.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/2ModtQvoYiAwu6osxLEur6R"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
-Content-ID: <2E307D62BB48984CB52AF8C17B115238@avid.com>
+In-Reply-To: <4F4D1B33.3010308@nuclearwinter.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Larkin Lowrey <llowrey@nuclearwinter.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-For some years I've been working on some niche filesystems which serve
-workflows involving lots of video.  Lately, I have had occasion to
-investigate the behavior of md as a possible raid solution (2.6.32
-kernel).
+--Sig_/2ModtQvoYiAwu6osxLEur6R
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-As part of that, we looked at some fio based loads in the buffered and
-O_DIRECT cases and noticed some reading that we didn't understand when
-using O_DIRECT.  We were led to this comparision by incorrect
-information from a vendor. (We were trying to repro some reported
-performance and were initially told that O_DIRECT had been used).
+On Tue, 28 Feb 2012 12:21:39 -0600 Larkin Lowrey <llowrey@nuclearwinter.com>
+wrote:
 
-We are aware of the problems discussed concerning O_DIRECT.  As fs
-guys, we're accustomed to worrying about copies and such, so it wasn't
-immediately obvious to us that O_DIRECT would be a mistake in our
-case.  This is essentially an embedded system with a single process
-owning a group of disks with no filesystem.  There is no possibility
-of a race with another process.
+> I did another sysrq dump and have attached the output.
 
-Anyway, I am curious about this reading behavior and I would grateful for any
-comments.
+Thanks.  Unfortunately it contains  nothing of value - too much has been
+lost.  It seems that 'Show State' contains a lot more noise than it used to.
 
-I tried writing single stripes under both scenarios.  To give the
-barest possible summary. I used a dd command like this with
-oflag=direct omitted or not.  This was driven from a script that
-sets up some blktrace and ftrace things, waits an appropriate time in
-the buffered case etc.
+You will need to boot with=20
+    log_buf_len=3D4M
 
-dd oflag=direct if=/dev/zero of=/dev/md0 seek=0 bs=1M count=1
+or something like that.
 
-8+2 128k strip
+>=20
+> Again, 'iostat -dx 1' showed 100% utilization on the LVM which uses
+> /dev/md0 as a pv and /sys/block/md0/md/stripe_cache_active was 29 and
+> that value did not change. There were no error messages in
+> /var/log/messages or 'dmesg'.
 
-[physical disk completions via blkparse]
+The '29' could simply mean that md/raid5 has sent 29 requests down to lower
+levels which have not yet completed.
+>=20
+> My suspicions lie with md0 since the stripe_cache_active value remains
+> at a fixed non-zero value even though all disks are (or appear to be)
+> idle. Should I be looking elsewhere? This hardware did not exhibit this
+> problem before "upgrading" from Fedora 15 to Fedora 16.
 
-Buffered:
+My guess is a problem with one of the drive controllers.  Your monthly 'syn=
+c'
+puts a much heavier load on them than normal IO does.  It is consistently
+sending a bunch of requests to all devices at exactly the same time.  This
+could trigger race conditions that normal IO does not.
 
- Reads Completed:        2,        5KiB  Writes Completed:        4,      258KiB
- Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
- Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
- Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
- Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
- Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
- Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
- Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
- Reads Completed:        2,        8KiB  Writes Completed:        3,      130KiB
- Reads Completed:        6,       24KiB  Writes Completed:        4,      258KiB
+But that is just a guess.  Unfortunately it is very hard to track exactly
+what is going wrong in this sort of case.
 
-Direct Example 1:
+I'd suggest shuffling devices so they are on different controllers, or maybe
+replace a controller.  See if you can get the problem to move, and then see
+which controller it stayed with.
 
- Reads Completed:        2,        5KiB  Writes Completed:       20,      258KiB
- Reads Completed:        9,       36KiB  Writes Completed:       14,      130KiB
- Reads Completed:       32,      128KiB  Writes Completed:       14,      130KiB
- Reads Completed:        1,        4KiB  Writes Completed:       16,      130KiB
- Reads Completed:       32,      128KiB  Writes Completed:       12,      130KiB
- Reads Completed:        0,        0KiB  Writes Completed:        8,      130KiB
- Reads Completed:        0,        0KiB  Writes Completed:        8,      130KiB
- Reads Completed:        0,        0KiB  Writes Completed:        8,      130KiB
- Reads Completed:        2,        8KiB  Writes Completed:        8,      130KiB
- Reads Completed:        6,       24KiB  Writes Completed:       19,      258KiB
-
-Direct Example 2:
-
- Reads Completed:        4,      133KiB  Writes Completed:        3,      130KiB
- Reads Completed:       11,      164KiB  Writes Completed:        3,      130KiB
- Reads Completed:       34,      256KiB  Writes Completed:        3,      130KiB
- Reads Completed:        2,      132KiB  Writes Completed:        3,      130KiB
- Reads Completed:       33,      256KiB  Writes Completed:        3,      130KiB
- Reads Completed:        3,      136KiB  Writes Completed:        3,      130KiB
- Reads Completed:        7,      152KiB  Writes Completed:        3,      130KiB
+NeilBrown
 
 
-I was able to gain a little bit of insight through blktrace and
-ftrace.  Our initial assumption was that maybe things were being
-broken up differently such that md thought it needed to do a rmv.
+>=20
+> Thank you,
+>=20
+> --Larkin
+>=20
+> On 1/8/2012 6:26 PM, NeilBrown wrote:
+> > On Sun, 08 Jan 2012 16:03:10 -0600 Larkin Lowrey
+> <llowrey@nuclearwinter.com>
+> > wrote:
+> >
+> >> Suggestions?
+> >
+> > # echo t > /proc/sysrq-trigger
+> >
+> > and capture that messages that go to 'dmesg'. Post them.
+> >
+> > Hopefully your message ring buffer is big enough to collect the entire
+> > output. If it isn't you might need to boot with
+> > log_buf_len=3D1M
+> > or similar.
+> >
+> > That should show what process is blocking on what.
+> >
+> > NeilBrown
+>=20
 
-But as I dug into the blktrace output, that did not seem to be the
-case (reads are coming after what is obviously the strip write).  I
-used ftrace to show me the path down to md_make_request in the
-O_DIRECT and buffered cases.  This showed me some calls refering to
-read_ahead in the direct case.
 
-           <...>-14859 [001] 510340.525310: md_make_request
-           <...>-14859 [001] 510340.525311: <stack trace>
- => generic_make_request
- => submit_bio
- => submit_bh
- => block_read_full_page
- => blkdev_readpage
- => __do_page_cache_readahead
- => force_page_cache_readahead
- => page_cache_sync_readahead
+--Sig_/2ModtQvoYiAwu6osxLEur6R
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-So is this read ahead I'm observing?  Why does it occur only in the
-direct case?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-I noticed that blktrace sometime identifies what I assume to be the
-instigator of the io.  So I can sometimes see dd or md_raid6 there.
-As in [dd] or [md0_raid6]:
+iQIVAwUBT00wZjnsnt1WYoG5AQJOWhAAmNcMeiCdQhgvRjmhevWeDAvwGYPAwZpN
+SkwgWrbj5dLUrcEZHR4f0yqtTo/h/fRnegny+XAHiMurdEKhsUA28xIAhQd7VW/x
+U3LVpXuxZyFyUKweG8YO/jx8g3CG1R7SOJp4QGirMJlNqy54aFytcYvus6PHgqv+
+jbDPvg9sb+eewC5AnzB501QofxWHfsiGcv9JRiG/eQh0JhiHNB/F9fh2oh5amHRC
+kjvurhbXj26dg7/exGSJkBQdyQeB47Vvl/yBFd3Tv1HyIV9Vk13SVZ9sffuTI4SF
+28k4DHl41RkDy2z2r8wVYH0zItLomhWHt8/Vki23g+JHrq2ioE21pIJeMZSlUS6Q
+eB+MxVmm1Q6dqGc9YAJqdxhj7Doymfs8WfDvDDzDNWLeBJ+pR50poIBBqhFHyUqn
+HpSaOCvzZwt4MdNB7MAEfp80L5X5dwjKEtByel+VHBYPwbn3p7UZz32/vdqM+DWZ
+hcnBnY5EENKo+22u2NWHvEXb6uEwHnEU6mUksmWrtV7UgOE6LrHiUiV/d8WGPau9
+7A5erBbgwijWvhZhoIFv7EQu3BuUdTDSSJKaQU3HDxGWfquUrNLT9ANOro7USIFx
+gWNB4R7CLdJcfL5gZfizKfSy0AE/SWLbobl0CMQc+Fkw+gCcuJkLggL7ilV1DHIY
+fPxKV+uiFyw=
+=zgWI
+-----END PGP SIGNATURE-----
 
- 8,16   1      115     0.042000000  2910  D   W 2256 + 48 [md0_raid6]
-
-These unexplained reads either mention blkid or [0] or [(null)].
-
-It isn't clear to me whether the unexpected read behavior is due to a
-tuning problem in the O_DIRECT case or simply the way things work.
-
-Thank you for any comments.
+--Sig_/2ModtQvoYiAwu6osxLEur6R--
