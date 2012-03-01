@@ -1,134 +1,76 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: debugging md2_resync hang at raise_barrier
-Date: Thu, 1 Mar 2012 12:34:18 +1100
-Message-ID: <20120301123418.1254f763@notabene.brown>
-References: <20120229184413.13db7143@bettercgi.com>
+Subject: Re: md raid5 fsync deadlock
+Date: Thu, 1 Mar 2012 12:53:25 +1100
+Message-ID: <20120301125325.2b17e5f8@notabene.brown>
+References: <4F4EB53C.6060901@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/j/E2H/.bBihGt5/faO+_2Lb"; protocol="application/pgp-signature"
+ boundary="Sig_/2SqlMth+_MA3zEkg3r90y7N"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120229184413.13db7143@bettercgi.com>
+In-Reply-To: <4F4EB53C.6060901@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ray Morris <support@bettercgi.com>
+To: Milan Broz <mbroz@redhat.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/j/E2H/.bBihGt5/faO+_2Lb
+--Sig_/2SqlMth+_MA3zEkg3r90y7N
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 29 Feb 2012 18:44:13 -0600 Ray Morris <support@bettercgi.com> wrote:
+On Thu, 01 Mar 2012 00:31:08 +0100 Milan Broz <mbroz@redhat.com> wrote:
 
-> I am attempting to debug a hang in raid1 and possibly one raid5.
-> I have experienced the same problem with many kernel versions
-> over a couple of years, and with disparate hardware.
+> Hi Neil,
 >=20
-> My current plan, if noone more experienced suggests I do otherwise, is
-> to compile a kernel with some printk() in strategic locations and try to=
-=20
-> narrow down the problem. I know very little about kernel work, so I am=20
-> seeking suggestions from those who know better than I.
+> I am repeatedly getting deadlock with MD raid5 & running fio check.
 >=20
-> In the case logged below, it appears to hang at raise_barrier in md2_resy=
-nc
-> at raise_barrier, then further access to the device hangs. I'm just a Per=
-l=20
-> programmer who dabbles in C, but my intuition said I check that if perhap=
-s=20
-> lower_barrier had been called with conf->barrier already at zero, so that=
-'s
-> the one printk I've added so far. It may take a week or more before it=20
-> crashes again, so is there any more debugging I should add before waiting=
-=20
-> for it to hang?
+> array created just this way
+> # mdadm -C -l 5 -n 4 -c 64 --assume-clean /dev/md0 /dev/sd[bcde]
 >=20
-> Also below is some older logging from similar symptoms with raid5,=20
-> hanging at raid5_quiesce. I got rid of the raid5 in hopes of getting=20
-> rid of the problem, but if anyone has suggestions on how to further=20
-> debug that I maybe be able to add a raid5 array.
+> and running this test (on quadcore CPU)
 >=20
-> The load when I've noticed it is rsync to LVM volumes with snapshots.
-> After some discussion, lvm-devel suggested linux-raid would be the next=20
-> logical step. Tested kernels include 2.6.32-220.4.1.el6.x86_64=20
-> 2.6.32.26-175.fc12.x86_64, vmlinuz-2.6.32.9-70.fc12.x86_64, and others.
-> Since I already have updated the kernel several times in the last couple=
-=20
-> of years, I figured I'd try some debugging with the current EL 6 kernel.
+> # fio --name=3Dglobal --rw=3Drandwrite --size=3D1G --bsrange=3D1k-128k --=
+filename=3D/dev/md0 --name=3Djob1 --name=3Djob2 --name=3Djob3 --name=3Djob4=
+ --end_fsync=3D1
 >=20
-> Anyway, any thoughts on how to debug, where to stick some printk, other=20
-> debugging functions?=20
+> deadlocks in final fsync()
+>=20
+> I can reproduce it on Fedora 3.2.7 kernel (and also 3.3.0-rc5),
+> below is part of the sysrq trace (full sysrq in attached gz archive)
+>=20
+> I was able to simulate it even when resync is running, it stopped
+> resync process as well.
+>=20
+> Please let me know if you need more information.
+>=20
 
-I might know what is happening.
+Are you certain it is a deadlock?  No forward progress at all?
 
-It is kind-a complicated and involved the magic code in
-block/blk-core.c:generic_make_request which turns recursive calls into tail
-recursion.
-
-The fs sends a request to dm.
-dm split it in 2 for some reason and sends them both to md.
-This involves them getting queued in generic_make_request.
-The first gets actioned by md/raid1 and converted into a request to the
-underlying device (it must be a read request for this to happen - so just o=
-ne
-device).  This gets added to the queue and is counted in nr_pending.
-
-At this point sync_request is called by another thread and it tries to
-raise_battier.  It gets past the first hurdle, increments ->barrier, and
-waits for nr_pending to hit zero.
-
-Now the second request from dm to md is passed to raid1.c:make_request where
-it tries to wait_barrier.  This blocks because ->barrier is up, and we have=
- a
-deadlock - the request to the underlying device will not progress until this
-md request progresses, and it is stuck.
-
-This patch might fix it.  Maybe.  If it compiles.
+What is in md/stripe_cache_size?  Does it change?
+What happens if you double the number in stripe_cache_size?  What if you
+double it again?
 
 NeilBrown
 
-Index: linux-2.6.32-SLE11-SP1/drivers/md/raid1.c
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- linux-2.6.32-SLE11-SP1.orig/drivers/md/raid1.c	2012-03-01 12:28:05.0000=
-00000 +1100
-+++ linux-2.6.32-SLE11-SP1/drivers/md/raid1.c	2012-03-01 12:28:22.427992913=
- +1100
-@@ -695,7 +695,11 @@ static void wait_barrier(conf_t *conf)
- 	spin_lock_irq(&conf->resync_lock);
- 	if (conf->barrier) {
- 		conf->nr_waiting++;
--		wait_event_lock_irq(conf->wait_barrier, !conf->barrier,
-+		wait_event_lock_irq(conf->wait_barrier,
-+				    !conf->barrier ||
-+				    (current->bio_tail &&
-+				     current->bio_list &&
-+				     conf->nr_pending),
- 				    conf->resync_lock,
- 				    raid1_unplug(conf->mddev->queue));
- 		conf->nr_waiting--;
-
-
---Sig_/j/E2H/.bBihGt5/faO+_2Lb
+--Sig_/2SqlMth+_MA3zEkg3r90y7N
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT07SGjnsnt1WYoG5AQIUBg/+N5XvqOoWmNAcGQp4gKpRZMceWof47eqV
-TmI/Bsf6Na2wEzlpZmiqvMib+Z5A91rQ9haKG8mxnKFUxKbN0lNMO/gzQLO9hIOd
-tJ+Ab9d1dmMFzKdrQDYZZtyYxgCndXfhQsHh18Vs3kiPA937C6qX+XGyfy5TgvnE
-swc3sVGWjB+RzABGr7UBn097jlJLovfwVlP5s5+wesjud3rSdoF9moj3Vtywn6y0
-hCJj+qXQ+wg3K0PVUleZuwHynQIc5KCCAzjLlKcW3yMdg3MJ9qlDUTqzOLVDsP39
-ZsgatXAOiRWDuy2K/zwXtE38OinP5SYpYKPeB7DNfVljDYDYIAFxDvubtpCcEJmO
-qcRcYpfqUtkFfXKdMU8HgtFieIoK2CsVm7C4ne4Q+WUMePHJVzmjlrb4X5Pjuey4
-L8FH2hcA+kJRKOTRgTGgsjf6HhJhU6gU/08QC/jsJzqMvcR2vD6zabBjJ9R8o+By
-0s7yaWvrw7PaUER/MwFnMu0CtB7hlfi/zZEPnoBbroa7fffr0CVTMzr11ICKsmvq
-9OdUGwh1CndXpezGV0ACTXjyruVIENuV+pzqCxYVlD9RDgQTbnuzdaMQXaxXFXCD
-rlVdvwTJjIJ3YCXNEwsMS4a5yHSTzBj27cerqnhVKdgApXo9z2x+wBc2CgdViox8
-fTiuP7ysJpo=
-=kh2p
+iQIVAwUBT07WlTnsnt1WYoG5AQLS8A/+M9uekq7+hKjf1e8CEfkqAgyB0V+C6hbl
+FXvhi10k1sm2TTFXAR2PS6NP+OpMBKLmDkabY/CviW3dtg/Kz5+CzFEuwCwAb1Ce
+aRZIgxMRqjvCfKQh9oqWZZqWQpc4L7jFuvt84ZHV+7cySoB5gRtyg6cbjqre/y2e
+FvU08xLt6+wtA0fDSj1i7bwH6jSwUjUDYOP+sLqHZCZyK3wI/RbcWXn2PATZPh1e
+Begmg2bZthWg5Q1gfgDFVBHHVJ13K/0H4PSh0eYw4lZJyter5X+QUYHagIdsfThO
+EMKEk/egcuyna2iLGEEnpWWsL62eRjNKfRSj11Z6okuUTKtpRJKmDyKfZcRIndAs
+rN6fC6fTqr6TCQCIEBxNX3EZ3jvzuzFnESKTRl2ihb1GhTcket5ZGf5JGuT9dVF7
+HWdn2td20ifTarmS426aobroFhkmH3amLnJAj0ELX29UEx5ZNAuaiemkkBtfM9Gj
+BSSYNPCfkohNl2W1syADXKstgs3cUZf/ODL2nZItUpSijh8PF18iCUyeta2TZtF4
+4vpjzBeUt/d1sUKkqaJEC4DXnymprABOcHk0XsGONtkcm8sz64vzgiQAHgkHt/8Z
+sENAzvd9SVFspZlhIUpaNiwqaEAL27mkoLhmWeRyf90RGC5VfSsMWEb8RwOocZB0
+j+hE9Uals74=
+=IZeU
 -----END PGP SIGNATURE-----
 
---Sig_/j/E2H/.bBihGt5/faO+_2Lb--
+--Sig_/2SqlMth+_MA3zEkg3r90y7N--
