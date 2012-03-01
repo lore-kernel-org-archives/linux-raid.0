@@ -1,42 +1,89 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: grub2/grub-pc install not possible on mdadm
-Date: Thu, 01 Mar 2012 11:38:22 +0100
-Message-ID: <4F4F519E.7040206@redhat.com>
-References: <4F4C9A11.9060302@profihost.ag> <4F4F4B1D.4050000@redhat.com> <4F4F4EB3.6030909@profihost.ag>
+From: "majianpeng" <majianpeng@gmail.com>
+Subject: md:Badsector must in valid range of component device.
+Date: Thu, 1 Mar 2012 19:11:16 +0800
+Message-ID: <201203011906162346140@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F4F4EB3.6030909@profihost.ag>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 03/01/12 11:25, Stefan Priebe - Profihost AG wrote:
->> > I am not sure whether this is the reason, but you have disks with gpt
->> > partition tables, while it looks like you are still using grub1? I
->> > didn't think grub1 was able to handle gpt.
-> ~# grub-setup -V
-> grub-setup (GRUB) 1.99-14
+From 98de4803f7ae4ad49b680db4889bbcd1534c5303 Mon Sep 17 00:00:00 2001
+From: majianpeng <majianpeng@gmail.com>
+Date: Thu, 1 Mar 2012 15:49:56 +0800
+Subject: [PATCH] md:Badsector must in valid range of component device.
 
-Not grub1 then .....
 
-Looking at your original mail again - you are running a raid with
-metadata 1.2, which means your BIOS will not know how to read the disks
-as a raid device.
+Signed-off-by: majianpeng <majianpeng@gmail.com>
+---
+ drivers/md/md.c |   13 +++++++++----
+ 1 files changed, 9 insertions(+), 4 deletions(-)
 
-You should be able to install grub into the MBR of /dev/sda or /dev/sdb.
-I believe that is possible with 1.2 metadata. 1.1 was totally broken for
-this if I remember correctly.
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index ce88755..9e7090c 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2969,7 +2969,7 @@ __ATTR(recovery_start, S_IRUGO|S_IWUSR, recovery_start_show, recovery_start_stor
+ static ssize_t
+ badblocks_show(struct badblocks *bb, char *page, int unack);
+ static ssize_t
+-badblocks_store(struct badblocks *bb, const char *page, size_t len, int unack);
++badblocks_store(struct md_rdev *rdev, const char *page, size_t len, int unack);
+ 
+ static ssize_t bb_show(struct md_rdev *rdev, char *page)
+ {
+@@ -2977,7 +2977,7 @@ static ssize_t bb_show(struct md_rdev *rdev, char *page)
+ }
+ static ssize_t bb_store(struct md_rdev *rdev, const char *page, size_t len)
+ {
+-	int rv = badblocks_store(&rdev->badblocks, page, len, 0);
++	int rv = badblocks_store(rdev, page, len, 0);
+ 	/* Maybe that ack was all we needed */
+ 	if (test_and_clear_bit(BlockedBadBlocks, &rdev->flags))
+ 		wake_up(&rdev->blocked_wait);
+@@ -2993,7 +2993,7 @@ static ssize_t ubb_show(struct md_rdev *rdev, char *page)
+ }
+ static ssize_t ubb_store(struct md_rdev *rdev, const char *page, size_t len)
+ {
+-	return badblocks_store(&rdev->badblocks, page, len, 1);
++	return badblocks_store(rdev, page, len, 1);
+ }
+ static struct rdev_sysfs_entry rdev_unack_bad_blocks =
+ __ATTR(unacknowledged_bad_blocks, S_IRUGO|S_IWUSR, ubb_show, ubb_store);
+@@ -8110,11 +8110,12 @@ retry:
+ #define DO_DEBUG 1
+ 
+ static ssize_t
+-badblocks_store(struct badblocks *bb, const char *page, size_t len, int unack)
++badblocks_store(struct md_rdev *rdev, const char *page, size_t len, int unack)
+ {
+ 	unsigned long long sector;
+ 	int length;
+ 	char newline;
++	struct badblocks *bb = &rdev->badblocks;
+ #ifdef DO_DEBUG
+ 	/* Allow clearing via sysfs *only* for testing/debugging.
+ 	 * Normally only a successful write may clear a badblock
+@@ -8138,6 +8139,10 @@ badblocks_store(struct badblocks *bb, const char *page, size_t len, int unack)
+ 		return -EINVAL;
+ 	}
+ 
++	if (sector < rdev->data_offset)
++		return -EINVAL;
++	if (sector + length > rdev->sectors + rdev->data_offset)
++		return -EINVAL;
+ #ifdef DO_DEBUG
+ 	if (clear) {
+ 		md_clear_badblocks(bb, sector, length);
+-- 
+1.7.5.4
 
-That said, if your system is EFI based, I suspect you will need to have
-the bios_grub partition on the physical drives so the BIOS can read it.
-It's not going to do much good having it on the raid partition if the
-BIOS isn't able to read those.
+ 				
+--------------
+majianpeng
+2012-03-01
 
-BIOS and partition tables isn't exactly my area of expertise, so I could
-be wrong on some of this.
-
-Cheers,
-Jes
