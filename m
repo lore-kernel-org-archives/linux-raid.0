@@ -1,37 +1,36 @@
-From: Bryan Mesich <bryan.mesich@ndsu.edu>
-Subject: Re: Hints on reducing kickouts
-Date: Thu, 1 Mar 2012 12:22:18 -0600
-Message-ID: <20120301182218.GB9106@atlantis.cc.ndsu.nodak.edu>
-References: <CAOscVd+CWwJoRknhGOvexC7w64o_5H-Q+USheTYZULJbJ8EOYA@mail.gmail.com>
-Reply-To: Bryan Mesich <bryan.mesich@ndsu.edu>
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Subject: Re: grub2/grub-pc install not possible on mdadm
+Date: Fri, 02 Mar 2012 09:44:20 +0100
+Message-ID: <4F508864.4050600@profihost.ag>
+References: <4F4C9A11.9060302@profihost.ag> <4F4F4B1D.4050000@redhat.com> <4F4F4EB3.6030909@profihost.ag> <4F4F519E.7040206@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAOscVd+CWwJoRknhGOvexC7w64o_5H-Q+USheTYZULJbJ8EOYA@mail.gmail.com>
+In-Reply-To: <4F4F519E.7040206@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Obaterspok <john.obaterspok@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Mar 01, 2012 at 07:14:38PM +0100, John Obaterspok wrote:
-> Hello,
-> 
-> Occasionally my system don't shutdown cleanly and almost all time
-> mdadm kicks one of the disks on the RAID5 array.
-> Is there anything I can do to help prevent this?
-> 
-> I'm using sw raid 5 with 3 x 3TB Hitachi Deskstar (7K3000 HDS723030ALA640 64MB).
-> 
-> --------
 
-[snip...]
+> Looking at your original mail again - you are running a raid with
+> metadata 1.2, which means your BIOS will not know how to read the disks
+> as a raid device.
+> You should be able to install grub into the MBR of /dev/sda or /dev/sdb.
+> I believe that is possible with 1.2 metadata. 1.1 was totally broken for
+> this if I remember correctly.
 
-I'm guessing you're trying to avoid re-syncing a 6TB array in the
-event that your host goes down in an un-clean state.  In that
-case, I would suggest using a write-intent bitmap on the array.
-If you're concerned about loss of performance when using a
-bitmap, use an external bitmap that is located on another
-spindle(s).
+Correct that's why i've also tried to install it on sda / sdb but then
+grub complains about not finding any partition table.
 
-Bryan
+> That said, if your system is EFI based, I suspect you will need to have
+> the bios_grub partition on the physical drives so the BIOS can read it.
+> It's not going to do much good having it on the raid partition if the
+> BIOS isn't able to read those.
+The bios is not the problem - grub simply does not want to install it
+boot sector to sda / sdb.
+
+It does it fine when using metadata 0.9.
+
+Stefan
