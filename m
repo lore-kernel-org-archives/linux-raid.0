@@ -1,37 +1,112 @@
-From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
-Subject: Re: grub2/grub-pc install not possible on mdadm
-Date: Fri, 2 Mar 2012 16:32:36 +0100
-Message-ID: <20120302163236.3555fec1296cbe30d8d37972@bbaw.de>
-References: <4F4C9A11.9060302@profihost.ag>
-	<4F4F4B1D.4050000@redhat.com>
-	<4F4F4EB3.6030909@profihost.ag>
-	<4F4F519E.7040206@redhat.com>
-	<4F508864.4050600@profihost.ag>
-	<20120302100648.fe4e725f2e98880c839357b0@bbaw.de>
-	<4F508EB6.2030101@profihost.ag>
-	<4F5091BF.1000102@anonymous.org.uk>
-	<4F509402.8070503@profihost.ag>
-	<4F50ABA3.1070603@anonymous.org.uk>
-	<4F50C7DC.3000700@profihost.ag>
+From: Larkin Lowrey <llowrey@nuclearwinter.com>
+Subject: Can't add device to raid 1 array - no error message
+Date: Sat, 03 Mar 2012 12:55:44 -0600
+Message-ID: <4F526930.1080509@nuclearwinter.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F50C7DC.3000700@profihost.ag>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Stefan,
+I am trying to replace the two small drives in my raid1 mirror with two
+larger drives. I failed and removed the first drive and am now trying to
+add a new larger drive to take its place. The add command completes
+without any obvious error but the new dive is not added to the array.
+What am I missing?
 
-the metadata versions 1.0 and 1.1 and 1.2 are the same but for the position of
-the metadata on disk. Simply use metadata version 1.0 and everything works as
-with 0.9.
+A superblock is written on the new array partition but its role is
+'spare' and it does not show up in /proc/mdstat.
 
-Grub does to read partition tables inside raid devices.
-Because a raid1 with metadata 1.0 or 0.9 looks like a plain disk to grub it
-can read a partition table like there was no raid array.
+Kernel 3.2.7-1.fc16.x86_64
+mdadm - v3.2.3 - 23rd December 2011
 
-Simply give it a try.
+It appears that mdadm does detect an error but doesn't say anything
+about it:
 
-Lars
+# mdadm --manage /dev/md0 --add /dev/sdz2 ; echo $?
+1
+
+I do see the following in the logs:
+
+[ 2913.075120] scsi_verify_blk_ioctl: 74 callbacks suppressed
+[ 2913.080708] mdadm: sending ioctl 1261 to a partition!
+...
+[ 2913.137556] mdadm: sending ioctl 1261 to a partition!
+
+# mdadm -D /dev/md0
+/dev/md0:
+        Version : 1.2
+  Creation Time : Tue Jan 10 20:28:20 2006
+     Raid Level : raid1
+     Array Size : 15634360 (14.91 GiB 16.01 GB)
+  Used Dev Size : 15634360 (14.91 GiB 16.01 GB)
+   Raid Devices : 2
+  Total Devices : 1
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Sat Mar  3 12:43:41 2012
+          State : active, degraded
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 0
+  Spare Devices : 0
+
+           Name : ***.*****.***:0  (local to host ***.*****.***)
+           UUID : b5d9fcd0:5baaaff8:492c3e4b:22636aac
+         Events : 499
+
+    Number   Major   Minor   RaidDevice State
+       0       0        0        0      removed
+       1       8      130        1      active sync   /dev/sdi2
+
+# mdadm -E /dev/sdz2
+/dev/sdz2:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : b5d9fcd0:5baaaff8:492c3e4b:22636aac
+           Name : ***.*****.***:0  (local to host ***.*****.***)
+  Creation Time : Tue Jan 10 20:28:20 2006
+     Raid Level : raid1
+   Raid Devices : 2
+
+ Avail Dev Size : 83884032 (40.00 GiB 42.95 GB)
+     Array Size : 31268720 (14.91 GiB 16.01 GB)
+  Used Dev Size : 31268720 (14.91 GiB 16.01 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 50670e17:d3e5fe82:e572e701:7460bcc4
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Sat Mar  3 12:41:18 2012
+       Checksum : 4bb687db - correct
+         Events : 0
+
+
+   Device Role : spare
+   Array State : .A ('A' == active, '.' == missing)
+
+]# cat /proc/mdstat
+Personalities : [raid1] [raid6] [raid5] [raid4]
+md2 : active raid5 sdv2[9] sdo2[1] sdx2[4] sdl2[5] sdw2[10] sdp2[2]
+sdk2[6] sdm2[8] sdq2[3] sdn2[7] sdr2[0]
+      6641912320 blocks level 5, 128k chunk, algorithm 2 [11/11]
+[UUUUUUUUUUU]
+
+md1 : active raid5 sdx1[6] sdb1[9] sdp1[7] sdl1[11] sdr1[4] sdg1[3]
+sdk1[10] sdq1[8] sdh1[0] sdv1[13] sdm1[14] sdw1[12] sdn1[2] sdf1[1] sdo1[5]
+      4375960064 blocks level 5, 64k chunk, algorithm 2 [15/15]
+[UUUUUUUUUUUUUUU]
+
+md0 : active raid1 sdi2[1]
+      15634360 blocks super 1.2 [2/1] [_U]
+      bitmap: 1/1 pages [4KB], 65536KB chunk
+
+unused devices: <none>
+
+--Larkin
