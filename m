@@ -1,112 +1,166 @@
-From: Larkin Lowrey <llowrey@nuclearwinter.com>
-Subject: Can't add device to raid 1 array - no error message
-Date: Sat, 03 Mar 2012 12:55:44 -0600
-Message-ID: <4F526930.1080509@nuclearwinter.com>
+From: Steven Haigh <netwiz@crc.id.au>
+Subject: Speeding up chunk size change?
+Date: Sun, 04 Mar 2012 06:36:41 +1100
+Message-ID: <4F5272C9.3010906@crc.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms020102050609090506060300"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I am trying to replace the two small drives in my raid1 mirror with two
-larger drives. I failed and removed the first drive and am now trying to
-add a new larger drive to take its place. The add command completes
-without any obvious error but the new dive is not added to the array.
-What am I missing?
+This is a cryptographically signed message in MIME format.
 
-A superblock is written on the new array partition but its role is
-'spare' and it does not show up in /proc/mdstat.
+--------------ms020102050609090506060300
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-Kernel 3.2.7-1.fc16.x86_64
-mdadm - v3.2.3 - 23rd December 2011
+Hi all,
 
-It appears that mdadm does detect an error but doesn't say anything
-about it:
+I just wanted to run this past a few folk here as I want to make sure=20
+I'm doing it the Right Way(tm).
 
-# mdadm --manage /dev/md0 --add /dev/sdz2 ; echo $?
-1
+I've decided to experiment with using a 128Kb chunk size on my RAID6=20
+instead of a 64kb chunk. To prepare for this, I removed the internal=20
+bitmap, then started the reshape via:
 
-I do see the following in the logs:
+# mdadm --grow /dev/md2 --chunk=3D128K --backup-file=3D/md2-backup-file
 
-[ 2913.075120] scsi_verify_blk_ioctl: 74 callbacks suppressed
-[ 2913.080708] mdadm: sending ioctl 1261 to a partition!
-...
-[ 2913.137556] mdadm: sending ioctl 1261 to a partition!
+This is slowly going on, however it will take much longer than I expected=
+:
 
-# mdadm -D /dev/md0
-/dev/md0:
-        Version : 1.2
-  Creation Time : Tue Jan 10 20:28:20 2006
-     Raid Level : raid1
-     Array Size : 15634360 (14.91 GiB 16.01 GB)
-  Used Dev Size : 15634360 (14.91 GiB 16.01 GB)
-   Raid Devices : 2
-  Total Devices : 1
-    Persistence : Superblock is persistent
+md2 : active raid6 sdf[6] sde[5] sdb[4] sda[3]
+       1953520896 blocks super 1.2 level 6, 64k chunk, algorithm 2 [4/4] =
 
-  Intent Bitmap : Internal
+[UUUU]
+       [>....................]  reshape =3D  0.6% (6649600/976760448)=20
+finish=3D2576.1min speed=3D6275K/sec
 
-    Update Time : Sat Mar  3 12:43:41 2012
-          State : active, degraded
- Active Devices : 1
-Working Devices : 1
- Failed Devices : 0
-  Spare Devices : 0
+I set a few 'optimisations' that I believe should help:
+## Tweak the RAIDs
+blockdev --setra 8192 /dev/sd[abcdefg]
+blockdev --setra 8192 /dev/md0
+blockdev --setra 8192 /dev/md1
+blockdev --setra 16384 /dev/md2
+echo 16384 > /sys/block/md2/md/stripe_cache_size
 
-           Name : ***.*****.***:0  (local to host ***.*****.***)
-           UUID : b5d9fcd0:5baaaff8:492c3e4b:22636aac
-         Events : 499
+for i in sda sdb sdc sdd sde sdf; do
+         echo "Setting options for $i"
+         echo 256 > /sys/block/$i/queue/nr_requests
+         echo 4096 > /sys/block/$i/queue/read_ahead_kb
+         echo 1 > /sys/block/$i/device/queue_depth
+         echo deadline > /sys/block/$i/queue/scheduler
+done
 
-    Number   Major   Minor   RaidDevice State
-       0       0        0        0      removed
-       1       8      130        1      active sync   /dev/sdi2
+Just wondering if anyone knows of any possible way to speed up the=20
+reshape a little, or if (like I suspect) it will take ~2 days to=20
+complete the reshape.
 
-# mdadm -E /dev/sdz2
-/dev/sdz2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : b5d9fcd0:5baaaff8:492c3e4b:22636aac
-           Name : ***.*****.***:0  (local to host ***.*****.***)
-  Creation Time : Tue Jan 10 20:28:20 2006
-     Raid Level : raid1
-   Raid Devices : 2
+--=20
+Steven Haigh
 
- Avail Dev Size : 83884032 (40.00 GiB 42.95 GB)
-     Array Size : 31268720 (14.91 GiB 16.01 GB)
-  Used Dev Size : 31268720 (14.91 GiB 16.01 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 50670e17:d3e5fe82:e572e701:7460bcc4
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Sat Mar  3 12:41:18 2012
-       Checksum : 4bb687db - correct
-         Events : 0
+Email: netwiz@crc.id.au
+Web: http://www.crc.id.au
+Phone: (03) 9001 6090 - 0412 935 897
+Fax: (03) 8338 0299
 
 
-   Device Role : spare
-   Array State : .A ('A' == active, '.' == missing)
+--------------ms020102050609090506060300
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-]# cat /proc/mdstat
-Personalities : [raid1] [raid6] [raid5] [raid4]
-md2 : active raid5 sdv2[9] sdo2[1] sdx2[4] sdl2[5] sdw2[10] sdp2[2]
-sdk2[6] sdm2[8] sdq2[3] sdn2[7] sdr2[0]
-      6641912320 blocks level 5, 128k chunk, algorithm 2 [11/11]
-[UUUUUUUUUUU]
-
-md1 : active raid5 sdx1[6] sdb1[9] sdp1[7] sdl1[11] sdr1[4] sdg1[3]
-sdk1[10] sdq1[8] sdh1[0] sdv1[13] sdm1[14] sdw1[12] sdn1[2] sdf1[1] sdo1[5]
-      4375960064 blocks level 5, 64k chunk, algorithm 2 [15/15]
-[UUUUUUUUUUUUUUU]
-
-md0 : active raid1 sdi2[1]
-      15634360 blocks super 1.2 [2/1] [_U]
-      bitmap: 1/1 pages [4KB], 65536KB chunk
-
-unused devices: <none>
-
---Larkin
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIOSjCC
+BjQwggQcoAMCAQICAR4wDQYJKoZIhvcNAQEFBQAwfTELMAkGA1UEBhMCSUwxFjAUBgNVBAoT
+DVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNp
+Z25pbmcxKTAnBgNVBAMTIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4XDTA3
+MTAyNDIxMDE1NVoXDTE3MTAyNDIxMDE1NVowgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1T
+dGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWdu
+aW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENs
+aWVudCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMcJg8zOLdgasSmkLhOr
+lr6KMoOMpohBllVHrdRvEg/q6r8jR+EK75xCGhR8ToREoqe7zM9/UnC6TS2y9UKTpT1v7RSM
+zR0t6ndl0TWBuUr/UXBhPk+Kmy7bI4yW4urC+y7P3/1/X7U8ocb8VpH/Clt+4iq7nirMcNh6
+qJR+xjOhV+VHzQMALuGYn5KZmc1NbJQYclsGkDxDz2UbFqE2+6vIZoL+jb9x4Pa5gNf1TwSD
+kOkikZB1xtB4ZqtXThaABSONdfmv/Z1pua3FYxnCFmdr/+N2JLKutIxMYqQOJebr/f/h5t95
+m4JgrM3Y/w7YX9d7YAL9jvN4SydHsU6n65cCAwEAAaOCAa0wggGpMA8GA1UdEwEB/wQFMAMB
+Af8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBRTcu2SnODaywFcfH6WNU7y1LhRgjAfBgNV
+HSMEGDAWgBROC+8apEBbpRdphzDKNGhD0EGu8jBmBggrBgEFBQcBAQRaMFgwJwYIKwYBBQUH
+MAGGG2h0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9jYTAtBggrBgEFBQcwAoYhaHR0cDovL3d3
+dy5zdGFydHNzbC5jb20vc2ZzY2EuY3J0MFsGA1UdHwRUMFIwJ6AloCOGIWh0dHA6Ly93d3cu
+c3RhcnRzc2wuY29tL3Nmc2NhLmNybDAnoCWgI4YhaHR0cDovL2NybC5zdGFydHNzbC5jb20v
+c2ZzY2EuY3JsMIGABgNVHSAEeTB3MHUGCysGAQQBgbU3AQIBMGYwLgYIKwYBBQUHAgEWImh0
+dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93
+d3cuc3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwDQYJKoZIhvcNAQEFBQADggIBAAqD
+CH14qywGXLhjjF6uHLkjd02hcdh9hrw+VUsv+q1eeQWB21jWj3kJ96AUlPCoEGZ/ynJNScWy
+6QMVQjbbMXltUfO4n4bGGdKo3awPWp61tjAFgraLJgDk+DsSvUD6EowjMTNx25GQgyYJ5RPI
+zKKR9tQW8gGK+2+RHxkUCTbYFnL6kl8Ch507rUdPPipJ9CgJFws3kDS3gOS5WFMxcjO5DwKf
+KSETEPrHh7p5shuuNktvsv6hxHTLhiMKX893gxdT3XLS9OKmCv87vkINQcNEcIIoFWbP9HOR
+z9v3vQwR4e3ksLc2JZOAFK+ssS5XMEoznzpihEP0PLc4dCBYjbvSD7kxgDwZ+Aj8Q9PkbvE9
+sIPP7ON0fz095HdThKjiVJe6vofq+n6b1NBc8XdrQvBmunwxD5nvtTW4vtN6VY7mUCmxsCie
+uoBJ9OlqmsVWQvifIYf40dJPZkk9YgGTzWLpXDSfLSplbY2LL9C9U0ptvjcDjefLTvqSFc7t
+w1sEhF0n/qpA2r0GpvkLRDmcSwVyPvmjFBGqUp/pNy8ZuPGQmHwFi2/14+xeSUDG2bwnsYJQ
+G2EdJCB6luQ57GEnTA/yKZSTKI8dDQa8Sd3zfXb19mOgSF0bBdXbuKhEpuP9wirslFe6fQ1t
+5j5R0xi72MZ8ikMu1RQZKCyDbMwazlHiMIIIDjCCBvagAwIBAgIDA7ikMA0GCSqGSIb3DQEB
+BQUAMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMi
+U2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMvU3RhcnRDb20g
+Q2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0EwHhcNMTIwMjEzMTMzODE0
+WhcNMTMwMjEzMTc1NjUzWjBXMRkwFwYDVQQNExB3bjVlU1RNM2RWOUIwMEk5MRkwFwYDVQQD
+DBBuZXR3aXpAY3JjLmlkLmF1MR8wHQYJKoZIhvcNAQkBFhBuZXR3aXpAY3JjLmlkLmF1MIIC
+IjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAzTaLiL78pm4Hqp7Pou4C60jt2wdvDiPt
+Sq6hspKk6oaST7BFeDOfoed3mvzytkjNr3C1gds3zsHulAMzRjuX2M1zPkfaj5QFkmlqQcxr
++tnaf8QFpn9PrUcjpbYDYPxdcGR+SeClKzmjdxicHuYDrD8YXnbk+k8dWDaCuv5sKRQHJmIR
+maqUIGoVML+/kUR+sqkMpnbhOsL+E84Hg4fxLzpV3Tjf9bZbKgaspvg+BeJJCYKThBxMnZJI
+cQ9JzDGL4rO2BEuTXI9Ofl0+AAttBEpZeqc2rePCfA9NivKTCZ0qaFKmvM5SN7TiZUqv80rD
+ewTp+OLXNZEd5aa5jEDPNlznkcX0WfuKCmtyIEzT7PgHl1tOWTx7nw6FVWcB8qjC6xlyaL6W
+1oS7Om3b2ka+9vSiz7DrPZzUDZuS91Fr2zIIMrrRzhN8q/JdQf8lGTydpmoRUB0z+BAcH8V/
+nOcMMDogqV6/dCfywi7zFQK4AsiPSpyBAZyO53J4uPgoIzSpFj54f83KRIobHCWDU1BaU2+6
+CfEoAD3iMId1tcFWTXikEThL+3oHQullq9EbPR4f3ToAU7aTZYWG4KNKrmG93KAfyCUFb+bf
+mt3hf1BprKIUJnpOxdZHi0KwLXVwURiB4XQKZpEWL8mRbHRdxVATKrrJAHOFTl3/s37VLprP
+J9kCAwEAAaOCA6swggOnMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgSwMB0GA1UdJQQWMBQGCCsG
+AQUFBwMCBggrBgEFBQcDBDAdBgNVHQ4EFgQUS9is0NdoOI3DZ/36Zlq78IrSedgwHwYDVR0j
+BBgwFoAUU3Ltkpzg2ssBXHx+ljVO8tS4UYIwGwYDVR0RBBQwEoEQbmV0d2l6QGNyYy5pZC5h
+dTCCAiEGA1UdIASCAhgwggIUMIICEAYLKwYBBAGBtTcBAgIwggH/MC4GCCsGAQUFBwIBFiJo
+dHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS9wb2xpY3kucGRmMDQGCCsGAQUFBwIBFihodHRwOi8v
+d3d3LnN0YXJ0c3NsLmNvbS9pbnRlcm1lZGlhdGUucGRmMIH3BggrBgEFBQcCAjCB6jAnFiBT
+dGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTADAgEBGoG+VGhpcyBjZXJ0aWZpY2F0
+ZSB3YXMgaXNzdWVkIGFjY29yZGluZyB0byB0aGUgQ2xhc3MgMSBWYWxpZGF0aW9uIHJlcXVp
+cmVtZW50cyBvZiB0aGUgU3RhcnRDb20gQ0EgcG9saWN5LCByZWxpYW5jZSBvbmx5IGZvciB0
+aGUgaW50ZW5kZWQgcHVycG9zZSBpbiBjb21wbGlhbmNlIG9mIHRoZSByZWx5aW5nIHBhcnR5
+IG9ibGlnYXRpb25zLjCBnAYIKwYBBQUHAgIwgY8wJxYgU3RhcnRDb20gQ2VydGlmaWNhdGlv
+biBBdXRob3JpdHkwAwIBAhpkTGlhYmlsaXR5IGFuZCB3YXJyYW50aWVzIGFyZSBsaW1pdGVk
+ISBTZWUgc2VjdGlvbiAiTGVnYWwgYW5kIExpbWl0YXRpb25zIiBvZiB0aGUgU3RhcnRDb20g
+Q0EgcG9saWN5LjA2BgNVHR8ELzAtMCugKaAnhiVodHRwOi8vY3JsLnN0YXJ0c3NsLmNvbS9j
+cnR1MS1jcmwuY3JsMIGOBggrBgEFBQcBAQSBgTB/MDkGCCsGAQUFBzABhi1odHRwOi8vb2Nz
+cC5zdGFydHNzbC5jb20vc3ViL2NsYXNzMS9jbGllbnQvY2EwQgYIKwYBBQUHMAKGNmh0dHA6
+Ly9haWEuc3RhcnRzc2wuY29tL2NlcnRzL3N1Yi5jbGFzczEuY2xpZW50LmNhLmNydDAjBgNV
+HRIEHDAahhhodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS8wDQYJKoZIhvcNAQEFBQADggEBABL6
+TyHlAHW0kkHb0ZLcd/pn7Ue0B5mIWBhmta4dK8qd0hXw+/lhpWaJWR/RltCSPabxSd+Lm9Iw
+NWm7WP73GHAGby0TC+siwDJSk7CwDBqnVM1T3XQ5TgjfVX7h9qjVixsSWzAD++dXFmpf/344
+Uf3zcG/hKJSeRtOvM/88nn4eJtrn7QFnIm4AJpHEgrqwU/0pmQBLwmEYS1G5cr04Oact2v6W
+L3JHOlEP8lPBAO9GtZD8UZGmBoDTNG0Rf4TnVTBGdw1sLZqpXnkcVI+rDUaFk/jb7AtCB30N
+8tbm2I5ALevgjv+vNMZIQD/0AgOaylGrQwbP852lgOvMo2AdpGExggTQMIIEzAIBATCBlDCB
+jDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3Vy
+ZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNz
+IDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMDuKQwCQYFKw4DAhoFAKCCAhAw
+GAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTIwMzAzMTkzNjQx
+WjAjBgkqhkiG9w0BCQQxFgQURCDl6/2P6IJfs0ugjz7Ybr8nhGswXwYJKoZIhvcNAQkPMVIw
+UDALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMC
+AgFAMAcGBSsOAwIHMA0GCCqGSIb3DQMCAgEoMIGlBgkrBgEEAYI3EAQxgZcwgZQwgYwxCzAJ
+BgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGln
+aXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAxIFBy
+aW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQQIDA7ikMIGnBgsqhkiG9w0BCRACCzGBl6CB
+lDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNl
+Y3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENs
+YXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMDuKQwDQYJKoZIhvcNAQEB
+BQAEggIAn8tVB4HEwWX+z0USaxq0U8zakVjiH5n4hxd2YBkVbzj9l2SNnZYWkWZfE4NUQrHV
+VGlkh5ox0b4jQ6ZR+PpBHqKHPTjXfc4MF7rS2dny1Uixj0Evt02P2ZjY3kG6MS0zunVIMTOR
+c6yBJYlJ6C2OP+O0kNhro7V6VnIP7MPyFYf93AeiKc1JcOs5RrjX4R9aCYv9tuHlSlnYZfzc
+jUAWg0ptKKagJ3s6wBAI+a8wDHW9zpDymutVwBVnUF4FcnxY5oKHjbp60Ig2wn6n8oImDQYQ
+NLPR9rlXDpGZ3l16SCcmxY1se6oLYGAlGXm02Ek2OOApoMWhGsfsorwZmbkSGIPviXBPTuX1
+LCTceNILetJDNH63f6Yrlyr8rF8CTkyGHf4lw3STdWOdh7I1h9+7DhcSZIk7s7uuJ8Sr6vFz
+JKOi77dkMR6q1moBkN8fM8T6+EOwXrdyvzN+UnJdC2gcytsqe4es4IhISqj+MkMtY+Mdbszw
+fg5Xk+nbfVXmlvAOKChNu1Ltl1lFroax82RJp8/pQMUw4GXti/Dw0qygmdZI/3Lqcei4GjjD
+6uU1/c9ft04DZoLUEwxUMiI0sD9pZacfyITy+KpavZr6SnxsrIuHRvODmPBO+bsldrqOCzS/
+Epe0i2EWg8XdF+HB0mDELR3WKFkvVn4AkGOhdbPeiHUAAAAAAAA=
+--------------ms020102050609090506060300--
