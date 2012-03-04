@@ -1,56 +1,85 @@
-From: Bernd Schubert <bernd.schubert@fastmail.fm>
-Subject: Re: Speeding up chunk size change?
-Date: Sun, 04 Mar 2012 03:37:25 +0100
-Message-ID: <4F52D565.7040604@fastmail.fm>
-References: <4F5272C9.3010906@crc.id.au> <4F52904E.10203@hardwarefreak.com> <4F52BDC7.5070805@crc.id.au> <4F52D259.4050907@hardwarefreak.com> <4F52D320.4080206@crc.id.au>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: md raid5 fsync deadlock
+Date: Sun, 4 Mar 2012 20:20:13 +1100
+Message-ID: <20120304202013.78a2f65c@notabene.brown>
+References: <4F4EB53C.6060901@redhat.com>
+	<20120301125325.2b17e5f8@notabene.brown>
+	<4F4F3753.80505@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Mz68EeOHjYr7iSCw2UcJvXS"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F52D320.4080206@crc.id.au>
+In-Reply-To: <4F4F3753.80505@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steven Haigh <netwiz@crc.id.au>
-Cc: stan@hardwarefreak.com, linux-raid@vger.kernel.org
+To: Milan Broz <mbroz@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/04/2012 03:27 AM, Steven Haigh wrote:
-> On 4/03/2012 1:24 PM, Stan Hoeppner wrote:
->> On 3/3/2012 6:56 PM, Steven Haigh wrote:
->>> On 4/03/2012 8:42 AM, Stan Hoeppner wrote:
->> [snip]
->>>>> blockdev --setra 8192 /dev/sd[abcdefg]
->>>>
->>>> Read-ahead is per file descriptor, and occurs at the filesystem level.
->>>> The read-ahead value used is that of the device immediately underlying
->>>> the filessytem. So don't bother setting these above.
->>>
->>> Interesting - I didn't think that was the case for whole disk arrays -
->>> but there you go... Learnt something else :)
->> [snip]
->>>>> echo 4096> /sys/block/$i/queue/read_ahead_kb
->>>> Eliminate this line ^^^^
->>>
->>> Any insight into why? I would have thought that this would help -
->>> however I'm not quite sure as to the values - as this is much less than
->>> one chunk... That also being said, wouldn't it be a good idea to have
->>> *some* readahead?
->>
->> You read the answer up above, and commented on it. Maybe you didn't
->> fully understand? Or maybe it's because you don't know that these two
->> are functionally equivalent?
->>
->> blockdev --setra X
->> echo X> /sys/block/$i/queue/read_ahead_kb
->
-> Ahhh - you're spot on... I didn't think they had the same functionality!
->
+--Sig_/Mz68EeOHjYr7iSCw2UcJvXS
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Btw, /sys/block/$i/queue/read_ahead_kb is deprecated, as its not a 
-kernel-internal queue setting, but rather bdi (backing device) related.
-So /sys/block/$i/bdi/read_ahead_kb is recommended to be used (I guess 
-queue/read_ahead_kb will go away sometime in the future). In 
-/sys/class/bdi you can even control read-head of non-block device file 
-systems.
+On Thu, 01 Mar 2012 09:46:11 +0100 Milan Broz <mbroz@redhat.com> wrote:
 
-Cheers,
-Bernd
+> On 03/01/2012 02:53 AM, NeilBrown wrote:
+> > On Thu, 01 Mar 2012 00:31:08 +0100 Milan Broz<mbroz@redhat.com>  wrote:
+>=20
+> > Are you certain it is a deadlock?  No forward progress at all?
+>=20
+> Seems so, it was for several hours in this state without progress.
+>=20
+> > What is in md/stripe_cache_size?  Does it change?
+>=20
+> > What happens if you double the number in stripe_cache_size?  What if you
+> > double it again?
+>=20
+> stripe_cache_size was 256, I doubled it to 512, now
+>    stripe_cache_active is 390
+>    stripe_cache size is 512
+> and no progress.
+>=20
+> With stripe_cache size 1024 it survived few iterations of fio run, now it=
+ is
+> locked up again:
+>    stripe_cache_active is 921
+>    stripe_cache size is 1024
+>=20
+
+That definitely looks like something getting stuck inside RAID5.  There are
+390 (or 921) stripes that should be being processed but they are blocked
+waiting for something.
+
+I would suggest modifying the 'status' function in raid5.c to print out some
+details about the stripes in the stripe cache.
+You would need to spinlock device_lock, then walk through each chain from
+stripe_hashtbl and print out the 'state' and 'count' for each stripe-head a=
+nd
+flags and various bio pointers from each dev.
+
+That might be helpful.
+
+NeilBrown
+
+--Sig_/Mz68EeOHjYr7iSCw2UcJvXS
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT1MzzTnsnt1WYoG5AQJYRw//eUf7VpP+yL+fUA1O291/YoQqx+yZB2US
+5d+5B76bTG6yM/cubAPr3fSv0wpXvwYB0sUKNVw/ncMD1VHry+XcTVZEF3nra0VI
+yNIC3HDfwOvRGtRrWrzcKBbTDBiRtvJrt5uhtZrzcLoxt/ka1Y/4W/IA23Ao/Dyi
+09gw6VQQQdkQwRcyuSOY8TNFxyGTKoS6+asj9IaagXODuYFEkLD7Z1XvsyXjpjsg
+5c2+Qq4bNriozPZGBrTafkZ3QTRM0scUAKMxgiV3cYlqweeXUjhQHI5LylQQpHFj
+T3rxpm1/fPPSN31ugsVI+O5Kn0e/eIPbsAFoRZBiaeb665XJ1nqe+bOwSb0nxXWw
+MZ3UEPk5agwL6n5iiH6L9TgwJRMXYHbrW7tJkE2E4JKhw+ynEqd5paPD8L9u7gzI
+FnvRVAp/g8VUSExavV0AVcnbEKA8VyBxlemrUtjvF+b47O1hjq95NYGk2++NT4Tx
+BRC6h3MUmjyW0/ikKEpqhtztDh1+K5wAv4EkDiThXRxzwEnZam+wfhTsO5ddvPoo
+K3eAUEENiQX75wMTVVcITYZdGyGuPVRMkwkQn6x2BeOJOJlvksXB3LRHDTSzWWcW
+GgBtizZ7f3bZnw5RxyFAi+Jw79y980SINdgaTbssfk3CbOD9DvIZorXKHSNut7/U
+UOGII0okrks=
+=fO2V
+-----END PGP SIGNATURE-----
+
+--Sig_/Mz68EeOHjYr7iSCw2UcJvXS--
