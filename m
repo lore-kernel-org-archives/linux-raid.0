@@ -1,85 +1,57 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: md raid5 fsync deadlock
-Date: Sun, 4 Mar 2012 20:20:13 +1100
-Message-ID: <20120304202013.78a2f65c@notabene.brown>
-References: <4F4EB53C.6060901@redhat.com>
-	<20120301125325.2b17e5f8@notabene.brown>
-	<4F4F3753.80505@redhat.com>
+Subject: Re: md:Badsector must in valid range of component device.
+Date: Sun, 4 Mar 2012 20:32:41 +1100
+Message-ID: <20120304203241.40a407e3@notabene.brown>
+References: <201203011906162346140@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Mz68EeOHjYr7iSCw2UcJvXS"; protocol="application/pgp-signature"
+ boundary="Sig_/p/oqJ4V8uIsb5bZnSSR/LAf"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F4F3753.80505@redhat.com>
+In-Reply-To: <201203011906162346140@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Milan Broz <mbroz@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: majianpeng <majianpeng@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/Mz68EeOHjYr7iSCw2UcJvXS
+--Sig_/p/oqJ4V8uIsb5bZnSSR/LAf
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 01 Mar 2012 09:46:11 +0100 Milan Broz <mbroz@redhat.com> wrote:
+On Thu, 1 Mar 2012 19:11:16 +0800 "majianpeng" <majianpeng@gmail.com> wrote:
 
-> On 03/01/2012 02:53 AM, NeilBrown wrote:
-> > On Thu, 01 Mar 2012 00:31:08 +0100 Milan Broz<mbroz@redhat.com>  wrote:
->=20
-> > Are you certain it is a deadlock?  No forward progress at all?
->=20
-> Seems so, it was for several hours in this state without progress.
->=20
-> > What is in md/stripe_cache_size?  Does it change?
->=20
-> > What happens if you double the number in stripe_cache_size?  What if you
-> > double it again?
->=20
-> stripe_cache_size was 256, I doubled it to 512, now
->    stripe_cache_active is 390
->    stripe_cache size is 512
-> and no progress.
->=20
-> With stripe_cache size 1024 it survived few iterations of fio run, now it=
- is
-> locked up again:
->    stripe_cache_active is 921
->    stripe_cache size is 1024
->=20
+> >From 98de4803f7ae4ad49b680db4889bbcd1534c5303 Mon Sep 17 00:00:00 2001
+> From: majianpeng <majianpeng@gmail.com>
+> Date: Thu, 1 Mar 2012 15:49:56 +0800
+> Subject: [PATCH] md:Badsector must in valid range of component device.
 
-That definitely looks like something getting stuck inside RAID5.  There are
-390 (or 921) stripes that should be being processed but they are blocked
-waiting for something.
+Why must bad sector be in the valid range?
 
-I would suggest modifying the 'status' function in raid5.c to print out some
-details about the stripes in the stripe cache.
-You would need to spinlock device_lock, then walk through each chain from
-stripe_hashtbl and print out the 'state' and 'count' for each stripe-head a=
-nd
-flags and various bio pointers from each dev.
+i.e. I don't think this patch is necessary.
 
-That might be helpful.
-
+Thanks,
 NeilBrown
 
---Sig_/Mz68EeOHjYr7iSCw2UcJvXS
+
+--Sig_/p/oqJ4V8uIsb5bZnSSR/LAf
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT1MzzTnsnt1WYoG5AQJYRw//eUf7VpP+yL+fUA1O291/YoQqx+yZB2US
-5d+5B76bTG6yM/cubAPr3fSv0wpXvwYB0sUKNVw/ncMD1VHry+XcTVZEF3nra0VI
-yNIC3HDfwOvRGtRrWrzcKBbTDBiRtvJrt5uhtZrzcLoxt/ka1Y/4W/IA23Ao/Dyi
-09gw6VQQQdkQwRcyuSOY8TNFxyGTKoS6+asj9IaagXODuYFEkLD7Z1XvsyXjpjsg
-5c2+Qq4bNriozPZGBrTafkZ3QTRM0scUAKMxgiV3cYlqweeXUjhQHI5LylQQpHFj
-T3rxpm1/fPPSN31ugsVI+O5Kn0e/eIPbsAFoRZBiaeb665XJ1nqe+bOwSb0nxXWw
-MZ3UEPk5agwL6n5iiH6L9TgwJRMXYHbrW7tJkE2E4JKhw+ynEqd5paPD8L9u7gzI
-FnvRVAp/g8VUSExavV0AVcnbEKA8VyBxlemrUtjvF+b47O1hjq95NYGk2++NT4Tx
-BRC6h3MUmjyW0/ikKEpqhtztDh1+K5wAv4EkDiThXRxzwEnZam+wfhTsO5ddvPoo
-K3eAUEENiQX75wMTVVcITYZdGyGuPVRMkwkQn6x2BeOJOJlvksXB3LRHDTSzWWcW
-GgBtizZ7f3bZnw5RxyFAi+Jw79y980SINdgaTbssfk3CbOD9DvIZorXKHSNut7/U
-UOGII0okrks=
-=fO2V
+iQIVAwUBT1M2uTnsnt1WYoG5AQLu2g//XdgicBsV3MyQZJUA48WzBsIR7K20zsYC
+iohUCzkUId1KJQYKBa6B1UoYthED1o/D4ovrWEO6YEpEKq+ojh+QylTd3Ub3AtWC
+ZBuQ6b0Vzyn9BlyDhSITnfmGxXhPwWp0ECSIWP61vCuRsdJWJAOARHgTtoPjxjgh
+P7eMAWJL6UsWcV7lDBVq06WIRMDy5T4thuUaVdaaF+F5SBPgi0XI35HjMUWIvx/s
+5bqSJEpA2p2rWY5i1hnWmLPpg4sWT+d6q5L7C6+5xr5GIcNbMXnwRy1C0avalLQA
+tGH4evpM5iwz/LWbqVXOhoLHpUPGG5/N2xDM128iBsJHaZmqmIaLGHsScLSW9EeZ
+DJRO/wbWSHrmsETZdaeL39bihz8s8qoMnmHu86J8dqg6m8xj03+owHhpwg3H+0MA
+5SvAe/69FZ8ELhcBz7KOB/3DQxQbyx49XUWLSeRiVbllhVPnc/tZ7C1sqs5HnhXH
+T8yj+HHVZVzqBD70S/6SjsLQBA3Zw9hroajZISBpfCq4tWztASWNSCEB98fCYF05
+bDfeAiL1EL7dsaibYbcQItMgWZfebLXEtY0ZYvFqXWy+t6Ob1ye7CqogneGTCCbq
+Yn1s4onegXdmw0XD4GBwwtEEqbSpEEe+Wmn9zBBAqi8qb8WyfIPTX25HxMHfhFqQ
+rjMIkr2Vs4M=
+=ESJa
 -----END PGP SIGNATURE-----
 
---Sig_/Mz68EeOHjYr7iSCw2UcJvXS--
+--Sig_/p/oqJ4V8uIsb5bZnSSR/LAf--
