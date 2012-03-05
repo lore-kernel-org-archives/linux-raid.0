@@ -1,462 +1,153 @@
-From: John Adams <john.adams@avid.com>
-Subject: Re: What are these reads in what should be simply a full-stripe
- write?
-Date: Mon, 5 Mar 2012 16:29:03 +0000
-Message-ID: <042AD485-2698-4FBF-BF1C-00546C94EE20@avid.com>
-References: <FC0D60DF-6357-495C-B10A-1C727AAFCBE3@avid.com>
- <4F4D5FE9.7090301@fastmail.fm>
+From: Steven Haigh <netwiz@crc.id.au>
+Subject: Re: mdadm: sending ioctl 1261 to a partition!
+Date: Tue, 06 Mar 2012 05:53:28 +1100
+Message-ID: <4F550BA8.3010306@crc.id.au>
+References: <4F54B997.3060207@crc.id.au> <4F54D314.9060504@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms010502070907070004010605"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F4D5FE9.7090301@fastmail.fm>
-Content-Language: en-US
-Content-ID: <1AE112639BBE7D4799FA300392C28070@avid.com>
+In-Reply-To: <4F54D314.9060504@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linbloke <linbloke@fastmail.fm>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thank you for commenting.  Here is the info you requested.
+This is a cryptographically signed message in MIME format.
 
-mdadm - v3.2.2 - 17th June 2011
-Linux jadams-sbb 2.6.32-131.12.1.hulk.avidnl.1.x86_64.debug #2 SMP Thu Feb 16 11:32:09 EST 2012 x86_64 x86_64 x86_64 GNU/Linux
-/dev/md0:
-        Version : 1.2
-  Creation Time : Fri Feb 17 19:39:25 2012
-     Raid Level : raid6
-     Array Size : 838860800 (800.00 GiB 858.99 GB)
-  Used Dev Size : 104857600 (100.00 GiB 107.37 GB)
-   Raid Devices : 10
-  Total Devices : 10
-    Persistence : Superblock is persistent
+--------------ms010502070907070004010605
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-    Update Time : Mon Mar  5 12:35:11 2012
-          State : clean 
- Active Devices : 10
-Working Devices : 10
- Failed Devices : 0
-  Spare Devices : 0
+On 6/03/2012 1:52 AM, John Robinson wrote:
+> On 05/03/2012 13:03, Steven Haigh wrote:
+>> I've noticed that recently I've managed to get a ton of messages like
+>> this at boot:
+>>
+>> mdadm: sending ioctl 1261 to a partition!
+>> mdadm: sending ioctl 800c0910 to a partition!
+>
+> It's probably harmless.
+>
+> http://lists.debian.org/debian-kernel/2012/01/msg01105.html says "This
+> warning was introduced as part of the fix for CVE-2011-4127"
+>
+> https://bugzilla.redhat.com/show_bug.cgi?id=3D783955#c4 says "Actually,=
 
-         Layout : left-symmetric
-     Chunk Size : 128K
+> the warning seems a false positive to me"
 
-           Name : jadams-sbb:0  (local to host jadams-sbb)
-           UUID : 3ac47570:b9b222e0:8e09eb62:4071de0a
-         Events : 62
-
-    Number   Major   Minor   RaidDevice State
-       0       8       16        0      active sync   /dev/sdb
-       1       8       32        1      active sync   /dev/sdc
-       2       8       48        2      active sync   /dev/sdd
-       3       8       64        3      active sync   /dev/sde
-       4       8       80        4      active sync   /dev/sdf
-       5       8       96        5      active sync   /dev/sdg
-       6       8      112        6      active sync   /dev/sdh
-       7       8      128        7      active sync   /dev/sdi
-       8       8      144        8      active sync   /dev/sdj
-       9       8      160        9      active sync   /dev/sdk
-/dev/sdb:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 3ac47570:b9b222e0:8e09eb62:4071de0a
-           Name : jadams-sbb:0  (local to host jadams-sbb)
-  Creation Time : Fri Feb 17 19:39:25 2012
-     Raid Level : raid6
-   Raid Devices : 10
-
- Avail Dev Size : 1953523120 (931.51 GiB 1000.20 GB)
-     Array Size : 1677721600 (800.00 GiB 858.99 GB)
-  Used Dev Size : 209715200 (100.00 GiB 107.37 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 26854371:b12034ac:d4119d00:5d1b8f1a
-
-    Update Time : Mon Mar  5 12:35:42 2012
-       Checksum : c3dfa790 - correct
-         Events : 62
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : Active device 0
-   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
-/dev/sdc:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 3ac47570:b9b222e0:8e09eb62:4071de0a
-           Name : jadams-sbb:0  (local to host jadams-sbb)
-  Creation Time : Fri Feb 17 19:39:25 2012
-     Raid Level : raid6
-   Raid Devices : 10
-
- Avail Dev Size : 1953523120 (931.51 GiB 1000.20 GB)
-     Array Size : 1677721600 (800.00 GiB 858.99 GB)
-  Used Dev Size : 209715200 (100.00 GiB 107.37 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 04d4a4aa:dd376906:c3e479a0:cfbae1bb
-
-    Update Time : Mon Mar  5 12:35:42 2012
-       Checksum : 98a57ffd - correct
-         Events : 62
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : Active device 1
-   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
-/dev/sdd:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 3ac47570:b9b222e0:8e09eb62:4071de0a
-           Name : jadams-sbb:0  (local to host jadams-sbb)
-  Creation Time : Fri Feb 17 19:39:25 2012
-     Raid Level : raid6
-   Raid Devices : 10
-
- Avail Dev Size : 1953523120 (931.51 GiB 1000.20 GB)
-     Array Size : 1677721600 (800.00 GiB 858.99 GB)
-  Used Dev Size : 209715200 (100.00 GiB 107.37 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 67d2b514:3fd5f360:73222322:97888b7b
-
-    Update Time : Mon Mar  5 12:35:42 2012
-       Checksum : 9e94273a - correct
-         Events : 62
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : Active device 2
-   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
-/dev/sde:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 3ac47570:b9b222e0:8e09eb62:4071de0a
-           Name : jadams-sbb:0  (local to host jadams-sbb)
-  Creation Time : Fri Feb 17 19:39:25 2012
-     Raid Level : raid6
-   Raid Devices : 10
-
- Avail Dev Size : 1953523120 (931.51 GiB 1000.20 GB)
-     Array Size : 1677721600 (800.00 GiB 858.99 GB)
-  Used Dev Size : 209715200 (100.00 GiB 107.37 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 81c96b5b:2a944dd0:fb069b36:b1fb4660
-
-    Update Time : Mon Mar  5 12:35:42 2012
-       Checksum : 4dd734e3 - correct
-         Events : 62
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : Active device 3
-   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
-/dev/sdf:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 3ac47570:b9b222e0:8e09eb62:4071de0a
-           Name : jadams-sbb:0  (local to host jadams-sbb)
-  Creation Time : Fri Feb 17 19:39:25 2012
-     Raid Level : raid6
-   Raid Devices : 10
-
- Avail Dev Size : 1953523120 (931.51 GiB 1000.20 GB)
-     Array Size : 1677721600 (800.00 GiB 858.99 GB)
-  Used Dev Size : 209715200 (100.00 GiB 107.37 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 4741b8b0:2e0e0c73:bc4ff323:5f653d70
-
-    Update Time : Mon Mar  5 12:35:42 2012
-       Checksum : 4330d91d - correct
-         Events : 62
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : Active device 4
-   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
-/dev/sdg:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 3ac47570:b9b222e0:8e09eb62:4071de0a
-           Name : jadams-sbb:0  (local to host jadams-sbb)
-  Creation Time : Fri Feb 17 19:39:25 2012
-     Raid Level : raid6
-   Raid Devices : 10
-
- Avail Dev Size : 1953523120 (931.51 GiB 1000.20 GB)
-     Array Size : 1677721600 (800.00 GiB 858.99 GB)
-  Used Dev Size : 209715200 (100.00 GiB 107.37 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 4ff9f259:2781af76:b427d4c4:af50651a
-
-    Update Time : Mon Mar  5 12:35:42 2012
-       Checksum : 3b17c767 - correct
-         Events : 62
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : Active device 5
-   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
-/dev/sdh:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 3ac47570:b9b222e0:8e09eb62:4071de0a
-           Name : jadams-sbb:0  (local to host jadams-sbb)
-  Creation Time : Fri Feb 17 19:39:25 2012
-     Raid Level : raid6
-   Raid Devices : 10
-
- Avail Dev Size : 1953523120 (931.51 GiB 1000.20 GB)
-     Array Size : 1677721600 (800.00 GiB 858.99 GB)
-  Used Dev Size : 209715200 (100.00 GiB 107.37 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 3c04b3f7:df628911:b47e2dec:a9eabecd
-
-    Update Time : Mon Mar  5 12:35:42 2012
-       Checksum : 4e64a508 - correct
-         Events : 62
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : Active device 6
-   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
-/dev/sdi:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 3ac47570:b9b222e0:8e09eb62:4071de0a
-           Name : jadams-sbb:0  (local to host jadams-sbb)
-  Creation Time : Fri Feb 17 19:39:25 2012
-     Raid Level : raid6
-   Raid Devices : 10
-
- Avail Dev Size : 1953523120 (931.51 GiB 1000.20 GB)
-     Array Size : 1677721600 (800.00 GiB 858.99 GB)
-  Used Dev Size : 209715200 (100.00 GiB 107.37 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 13c8ac51:5fd71796:7b385c45:8c31990e
-
-    Update Time : Mon Mar  5 12:35:42 2012
-       Checksum : c6f5de08 - correct
-         Events : 62
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : Active device 7
-   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
-/dev/sdj:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 3ac47570:b9b222e0:8e09eb62:4071de0a
-           Name : jadams-sbb:0  (local to host jadams-sbb)
-  Creation Time : Fri Feb 17 19:39:25 2012
-     Raid Level : raid6
-   Raid Devices : 10
-
- Avail Dev Size : 1953523120 (931.51 GiB 1000.20 GB)
-     Array Size : 1677721600 (800.00 GiB 858.99 GB)
-  Used Dev Size : 209715200 (100.00 GiB 107.37 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 9be300f7:97329a54:3c86ec36:9dedd667
-
-    Update Time : Mon Mar  5 12:35:42 2012
-       Checksum : 759a5e9c - correct
-         Events : 62
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : Active device 8
-   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
-/dev/sdk:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 3ac47570:b9b222e0:8e09eb62:4071de0a
-           Name : jadams-sbb:0  (local to host jadams-sbb)
-  Creation Time : Fri Feb 17 19:39:25 2012
-     Raid Level : raid6
-   Raid Devices : 10
-
- Avail Dev Size : 1953523120 (931.51 GiB 1000.20 GB)
-     Array Size : 1677721600 (800.00 GiB 858.99 GB)
-  Used Dev Size : 209715200 (100.00 GiB 107.37 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : ada0d14e:ad9c3d6b:4ba27221:fe6ea679
-
-    Update Time : Mon Mar  5 12:35:42 2012
-       Checksum : e0642334 - correct
-         Events : 62
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : Active device 9
-   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
+I did see these - and I probably should have mentioned it in the=20
+original post. Naughty me for posting at times I should really be asleep.=
 
 
+The general jist of it seemed to be "it always failed before, now we=20
+just know about it". What makes me wonder is that if it always failed=20
+before, why do we do it in the first place?
 
-On Feb 28, 2012, at 6:14 PM, linbloke wrote:
+--=20
+Steven Haigh
 
-> 
-> On 29/02/12 5:47 AM, John Adams wrote:
->> For some years I've been working on some niche filesystems which serve
->> workflows involving lots of video.  Lately, I have had occasion to
->> investigate the behavior of md as a possible raid solution (2.6.32
->> kernel).
->> 
->> As part of that, we looked at some fio based loads in the buffered and
->> O_DIRECT cases and noticed some reading that we didn't understand when
->> using O_DIRECT.  We were led to this comparision by incorrect
->> information from a vendor. (We were trying to repro some reported
->> performance and were initially told that O_DIRECT had been used).
->> 
->> We are aware of the problems discussed concerning O_DIRECT.  As fs
->> guys, we're accustomed to worrying about copies and such, so it wasn't
->> immediately obvious to us that O_DIRECT would be a mistake in our
->> case.  This is essentially an embedded system with a single process
->> owning a group of disks with no filesystem.  There is no possibility
->> of a race with another process.
->> 
->> Anyway, I am curious about this reading behavior and I would grateful for any
->> comments.
->> 
->> I tried writing single stripes under both scenarios.  To give the
->> barest possible summary. I used a dd command like this with
->> oflag=direct omitted or not.  This was driven from a script that
->> sets up some blktrace and ftrace things, waits an appropriate time in
->> the buffered case etc.
->> 
->> dd oflag=direct if=/dev/zero of=/dev/md0 seek=0 bs=1M count=1
->> 
->> 8+2 128k strip
->> 
->> [physical disk completions via blkparse]
->> 
->> Buffered:
->> 
->>  Reads Completed:        2,        5KiB  Writes Completed:        4,      258KiB
->>  Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
->>  Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
->>  Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
->>  Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
->>  Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
->>  Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
->>  Reads Completed:        0,        0KiB  Writes Completed:        3,      130KiB
->>  Reads Completed:        2,        8KiB  Writes Completed:        3,      130KiB
->>  Reads Completed:        6,       24KiB  Writes Completed:        4,      258KiB
->> 
->> Direct Example 1:
->> 
->>  Reads Completed:        2,        5KiB  Writes Completed:       20,      258KiB
->>  Reads Completed:        9,       36KiB  Writes Completed:       14,      130KiB
->>  Reads Completed:       32,      128KiB  Writes Completed:       14,      130KiB
->>  Reads Completed:        1,        4KiB  Writes Completed:       16,      130KiB
->>  Reads Completed:       32,      128KiB  Writes Completed:       12,      130KiB
->>  Reads Completed:        0,        0KiB  Writes Completed:        8,      130KiB
->>  Reads Completed:        0,        0KiB  Writes Completed:        8,      130KiB
->>  Reads Completed:        0,        0KiB  Writes Completed:        8,      130KiB
->>  Reads Completed:        2,        8KiB  Writes Completed:        8,      130KiB
->>  Reads Completed:        6,       24KiB  Writes Completed:       19,      258KiB
->> 
->> Direct Example 2:
->> 
->>  Reads Completed:        4,      133KiB  Writes Completed:        3,      130KiB
->>  Reads Completed:       11,      164KiB  Writes Completed:        3,      130KiB
->>  Reads Completed:       34,      256KiB  Writes Completed:        3,      130KiB
->>  Reads Completed:        2,      132KiB  Writes Completed:        3,      130KiB
->>  Reads Completed:       33,      256KiB  Writes Completed:        3,      130KiB
->>  Reads Completed:        3,      136KiB  Writes Completed:        3,      130KiB
->>  Reads Completed:        7,      152KiB  Writes Completed:        3,      130KiB
->> 
->> 
->> I was able to gain a little bit of insight through blktrace and
->> ftrace.  Our initial assumption was that maybe things were being
->> broken up differently such that md thought it needed to do a rmv.
->> 
->> But as I dug into the blktrace output, that did not seem to be the
->> case (reads are coming after what is obviously the strip write).  I
->> used ftrace to show me the path down to md_make_request in the
->> O_DIRECT and buffered cases.  This showed me some calls refering to
->> read_ahead in the direct case.
->> 
->>            <...>-14859 [001] 510340.525310: md_make_request
->>            <...>-14859 [001] 510340.525311:<stack trace>
->>  =>  generic_make_request
->>  =>  submit_bio
->>  =>  submit_bh
->>  =>  block_read_full_page
->>  =>  blkdev_readpage
->>  =>  __do_page_cache_readahead
->>  =>  force_page_cache_readahead
->>  =>  page_cache_sync_readahead
->> 
->> So is this read ahead I'm observing?  Why does it occur only in the
->> direct case?
->> 
->> I noticed that blktrace sometime identifies what I assume to be the
->> instigator of the io.  So I can sometimes see dd or md_raid6 there.
->> As in [dd] or [md0_raid6]:
->> 
->>  8,16   1      115     0.042000000  2910  D   W 2256 + 48 [md0_raid6]
->> 
->> These unexplained reads either mention blkid or [0] or [(null)].
->> 
->> It isn't clear to me whether the unexpected read behavior is due to a
->> tuning problem in the O_DIRECT case or simply the way things work.
->> 
->> Thank you for any comments.--
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> G'day John,
-> 
-> You need to give us more detail about your md raid setup. Beside a reference to md_raid6, there is no other details about your array.
-> How about sending:
-> 
-> mdadm -V
-> uname -a
-> mdadm -Dvv /dev/mdarray
-> mdadm -Evv /dev/arraycomponentdevices - for all of them
-> 
-> 
-> Good luck in the hunt,
-> J
-> 
-> 
-> 
+Email: netwiz@crc.id.au
+Web: http://www.crc.id.au
+Phone: (03) 9001 6090 - 0412 935 897
+Fax: (03) 8338 0299
 
+
+--------------ms010502070907070004010605
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIOSjCC
+BjQwggQcoAMCAQICAR4wDQYJKoZIhvcNAQEFBQAwfTELMAkGA1UEBhMCSUwxFjAUBgNVBAoT
+DVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNp
+Z25pbmcxKTAnBgNVBAMTIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4XDTA3
+MTAyNDIxMDE1NVoXDTE3MTAyNDIxMDE1NVowgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1T
+dGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWdu
+aW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENs
+aWVudCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMcJg8zOLdgasSmkLhOr
+lr6KMoOMpohBllVHrdRvEg/q6r8jR+EK75xCGhR8ToREoqe7zM9/UnC6TS2y9UKTpT1v7RSM
+zR0t6ndl0TWBuUr/UXBhPk+Kmy7bI4yW4urC+y7P3/1/X7U8ocb8VpH/Clt+4iq7nirMcNh6
+qJR+xjOhV+VHzQMALuGYn5KZmc1NbJQYclsGkDxDz2UbFqE2+6vIZoL+jb9x4Pa5gNf1TwSD
+kOkikZB1xtB4ZqtXThaABSONdfmv/Z1pua3FYxnCFmdr/+N2JLKutIxMYqQOJebr/f/h5t95
+m4JgrM3Y/w7YX9d7YAL9jvN4SydHsU6n65cCAwEAAaOCAa0wggGpMA8GA1UdEwEB/wQFMAMB
+Af8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBRTcu2SnODaywFcfH6WNU7y1LhRgjAfBgNV
+HSMEGDAWgBROC+8apEBbpRdphzDKNGhD0EGu8jBmBggrBgEFBQcBAQRaMFgwJwYIKwYBBQUH
+MAGGG2h0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9jYTAtBggrBgEFBQcwAoYhaHR0cDovL3d3
+dy5zdGFydHNzbC5jb20vc2ZzY2EuY3J0MFsGA1UdHwRUMFIwJ6AloCOGIWh0dHA6Ly93d3cu
+c3RhcnRzc2wuY29tL3Nmc2NhLmNybDAnoCWgI4YhaHR0cDovL2NybC5zdGFydHNzbC5jb20v
+c2ZzY2EuY3JsMIGABgNVHSAEeTB3MHUGCysGAQQBgbU3AQIBMGYwLgYIKwYBBQUHAgEWImh0
+dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93
+d3cuc3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwDQYJKoZIhvcNAQEFBQADggIBAAqD
+CH14qywGXLhjjF6uHLkjd02hcdh9hrw+VUsv+q1eeQWB21jWj3kJ96AUlPCoEGZ/ynJNScWy
+6QMVQjbbMXltUfO4n4bGGdKo3awPWp61tjAFgraLJgDk+DsSvUD6EowjMTNx25GQgyYJ5RPI
+zKKR9tQW8gGK+2+RHxkUCTbYFnL6kl8Ch507rUdPPipJ9CgJFws3kDS3gOS5WFMxcjO5DwKf
+KSETEPrHh7p5shuuNktvsv6hxHTLhiMKX893gxdT3XLS9OKmCv87vkINQcNEcIIoFWbP9HOR
+z9v3vQwR4e3ksLc2JZOAFK+ssS5XMEoznzpihEP0PLc4dCBYjbvSD7kxgDwZ+Aj8Q9PkbvE9
+sIPP7ON0fz095HdThKjiVJe6vofq+n6b1NBc8XdrQvBmunwxD5nvtTW4vtN6VY7mUCmxsCie
+uoBJ9OlqmsVWQvifIYf40dJPZkk9YgGTzWLpXDSfLSplbY2LL9C9U0ptvjcDjefLTvqSFc7t
+w1sEhF0n/qpA2r0GpvkLRDmcSwVyPvmjFBGqUp/pNy8ZuPGQmHwFi2/14+xeSUDG2bwnsYJQ
+G2EdJCB6luQ57GEnTA/yKZSTKI8dDQa8Sd3zfXb19mOgSF0bBdXbuKhEpuP9wirslFe6fQ1t
+5j5R0xi72MZ8ikMu1RQZKCyDbMwazlHiMIIIDjCCBvagAwIBAgIDA7ikMA0GCSqGSIb3DQEB
+BQUAMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMi
+U2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMvU3RhcnRDb20g
+Q2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0EwHhcNMTIwMjEzMTMzODE0
+WhcNMTMwMjEzMTc1NjUzWjBXMRkwFwYDVQQNExB3bjVlU1RNM2RWOUIwMEk5MRkwFwYDVQQD
+DBBuZXR3aXpAY3JjLmlkLmF1MR8wHQYJKoZIhvcNAQkBFhBuZXR3aXpAY3JjLmlkLmF1MIIC
+IjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAzTaLiL78pm4Hqp7Pou4C60jt2wdvDiPt
+Sq6hspKk6oaST7BFeDOfoed3mvzytkjNr3C1gds3zsHulAMzRjuX2M1zPkfaj5QFkmlqQcxr
++tnaf8QFpn9PrUcjpbYDYPxdcGR+SeClKzmjdxicHuYDrD8YXnbk+k8dWDaCuv5sKRQHJmIR
+maqUIGoVML+/kUR+sqkMpnbhOsL+E84Hg4fxLzpV3Tjf9bZbKgaspvg+BeJJCYKThBxMnZJI
+cQ9JzDGL4rO2BEuTXI9Ofl0+AAttBEpZeqc2rePCfA9NivKTCZ0qaFKmvM5SN7TiZUqv80rD
+ewTp+OLXNZEd5aa5jEDPNlznkcX0WfuKCmtyIEzT7PgHl1tOWTx7nw6FVWcB8qjC6xlyaL6W
+1oS7Om3b2ka+9vSiz7DrPZzUDZuS91Fr2zIIMrrRzhN8q/JdQf8lGTydpmoRUB0z+BAcH8V/
+nOcMMDogqV6/dCfywi7zFQK4AsiPSpyBAZyO53J4uPgoIzSpFj54f83KRIobHCWDU1BaU2+6
+CfEoAD3iMId1tcFWTXikEThL+3oHQullq9EbPR4f3ToAU7aTZYWG4KNKrmG93KAfyCUFb+bf
+mt3hf1BprKIUJnpOxdZHi0KwLXVwURiB4XQKZpEWL8mRbHRdxVATKrrJAHOFTl3/s37VLprP
+J9kCAwEAAaOCA6swggOnMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgSwMB0GA1UdJQQWMBQGCCsG
+AQUFBwMCBggrBgEFBQcDBDAdBgNVHQ4EFgQUS9is0NdoOI3DZ/36Zlq78IrSedgwHwYDVR0j
+BBgwFoAUU3Ltkpzg2ssBXHx+ljVO8tS4UYIwGwYDVR0RBBQwEoEQbmV0d2l6QGNyYy5pZC5h
+dTCCAiEGA1UdIASCAhgwggIUMIICEAYLKwYBBAGBtTcBAgIwggH/MC4GCCsGAQUFBwIBFiJo
+dHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS9wb2xpY3kucGRmMDQGCCsGAQUFBwIBFihodHRwOi8v
+d3d3LnN0YXJ0c3NsLmNvbS9pbnRlcm1lZGlhdGUucGRmMIH3BggrBgEFBQcCAjCB6jAnFiBT
+dGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTADAgEBGoG+VGhpcyBjZXJ0aWZpY2F0
+ZSB3YXMgaXNzdWVkIGFjY29yZGluZyB0byB0aGUgQ2xhc3MgMSBWYWxpZGF0aW9uIHJlcXVp
+cmVtZW50cyBvZiB0aGUgU3RhcnRDb20gQ0EgcG9saWN5LCByZWxpYW5jZSBvbmx5IGZvciB0
+aGUgaW50ZW5kZWQgcHVycG9zZSBpbiBjb21wbGlhbmNlIG9mIHRoZSByZWx5aW5nIHBhcnR5
+IG9ibGlnYXRpb25zLjCBnAYIKwYBBQUHAgIwgY8wJxYgU3RhcnRDb20gQ2VydGlmaWNhdGlv
+biBBdXRob3JpdHkwAwIBAhpkTGlhYmlsaXR5IGFuZCB3YXJyYW50aWVzIGFyZSBsaW1pdGVk
+ISBTZWUgc2VjdGlvbiAiTGVnYWwgYW5kIExpbWl0YXRpb25zIiBvZiB0aGUgU3RhcnRDb20g
+Q0EgcG9saWN5LjA2BgNVHR8ELzAtMCugKaAnhiVodHRwOi8vY3JsLnN0YXJ0c3NsLmNvbS9j
+cnR1MS1jcmwuY3JsMIGOBggrBgEFBQcBAQSBgTB/MDkGCCsGAQUFBzABhi1odHRwOi8vb2Nz
+cC5zdGFydHNzbC5jb20vc3ViL2NsYXNzMS9jbGllbnQvY2EwQgYIKwYBBQUHMAKGNmh0dHA6
+Ly9haWEuc3RhcnRzc2wuY29tL2NlcnRzL3N1Yi5jbGFzczEuY2xpZW50LmNhLmNydDAjBgNV
+HRIEHDAahhhodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS8wDQYJKoZIhvcNAQEFBQADggEBABL6
+TyHlAHW0kkHb0ZLcd/pn7Ue0B5mIWBhmta4dK8qd0hXw+/lhpWaJWR/RltCSPabxSd+Lm9Iw
+NWm7WP73GHAGby0TC+siwDJSk7CwDBqnVM1T3XQ5TgjfVX7h9qjVixsSWzAD++dXFmpf/344
+Uf3zcG/hKJSeRtOvM/88nn4eJtrn7QFnIm4AJpHEgrqwU/0pmQBLwmEYS1G5cr04Oact2v6W
+L3JHOlEP8lPBAO9GtZD8UZGmBoDTNG0Rf4TnVTBGdw1sLZqpXnkcVI+rDUaFk/jb7AtCB30N
+8tbm2I5ALevgjv+vNMZIQD/0AgOaylGrQwbP852lgOvMo2AdpGExggTQMIIEzAIBATCBlDCB
+jDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3Vy
+ZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNz
+IDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMDuKQwCQYFKw4DAhoFAKCCAhAw
+GAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTIwMzA1MTg1MzI4
+WjAjBgkqhkiG9w0BCQQxFgQU6cLKjkgLwyaguuYvMwao4FhNT8YwXwYJKoZIhvcNAQkPMVIw
+UDALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMC
+AgFAMAcGBSsOAwIHMA0GCCqGSIb3DQMCAgEoMIGlBgkrBgEEAYI3EAQxgZcwgZQwgYwxCzAJ
+BgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGln
+aXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAxIFBy
+aW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQQIDA7ikMIGnBgsqhkiG9w0BCRACCzGBl6CB
+lDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNl
+Y3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENs
+YXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMDuKQwDQYJKoZIhvcNAQEB
+BQAEggIAo5RLKSfdnzQiO3uri0Kx3P0EUwwlc8aPNHaFIBSN83TmIm86XEvPHDb8FyQ+UQBz
+GsK32iPRymiKgzBxfJxIgORMmyXeAZppFwU9z50ZG/AF8FCi9UBccCdYQN9tQ51WZueln9jf
+xYIilRq2XGpZGCiC4XDT2r+p9/6vaC0mz828py5vDgNLwnEgOoYGcpm7xnE0RIXf6MEtzMTS
+1/8TBeFbOYw8RXeIaUW3JH+FLScocxJffsFwx5CXUWh6cRASi3phsqciVTrv2ySuSWXXCV6d
+bzIMfAz7llzZgGQN1OaL6vB4Rht5Ix2yB+NrFjR+s0M0r7+GXluUvUgTVyB3qqFS1vQLL9rS
+OTlm6nceOlQkolLoRFE++JSbVsN6D1r+gWZBl6cs4Fk82k6zAmuJ/ON70UavBbUHfDqjNUAI
+iJe9rlDLxVb7WiaP7XbjjpnLsLkdtgrIwZCGSbVASBw7giUk66sqj3oGQcUlFeEapKrQl+06
+ibXba/GR6LtMrficP0940+l1BdoO154ZOpkmjajJIeGIty1ynynZ1pngqSkgISiNB46bIA9g
+eIm5xbqOBnqcOJjm8iexQ24XJUp0YjRGRwahSdHSq4sEsMpUCOWi9YVybs4tRkgwtWIep1/g
+lfIr6b3Tw7lTX+Jyt7HOCCWZDzP//sfhdQMAY83ouO0AAAAAAAA=
+--------------ms010502070907070004010605--
