@@ -1,76 +1,80 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm: sending ioctl 1261 to a partition!
-Date: Tue, 6 Mar 2012 07:01:43 +1100
-Message-ID: <20120306070143.4f8abc0e@notabene.brown>
-References: <4F54B997.3060207@crc.id.au>
-	<4F54D314.9060504@anonymous.org.uk>
-	<4F550BA8.3010306@crc.id.au>
+Subject: [PULL-REQUEST] 3 fixes for md in 3.3
+Date: Tue, 6 Mar 2012 10:17:32 +1100
+Message-ID: <20120306101732.0be74651@notabene.brown>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/hfFVK071UPMgnYpb3dfgcHf"; protocol="application/pgp-signature"
+ boundary="Sig_/w28foDHfOXMFuHkxtsrWGdb"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F550BA8.3010306@crc.id.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steven Haigh <netwiz@crc.id.au>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/hfFVK071UPMgnYpb3dfgcHf
+--Sig_/w28foDHfOXMFuHkxtsrWGdb
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 06 Mar 2012 05:53:28 +1100 Steven Haigh <netwiz@crc.id.au> wrote:
 
-> On 6/03/2012 1:52 AM, John Robinson wrote:
-> > On 05/03/2012 13:03, Steven Haigh wrote:
-> >> I've noticed that recently I've managed to get a ton of messages like
-> >> this at boot:
-> >>
-> >> mdadm: sending ioctl 1261 to a partition!
-> >> mdadm: sending ioctl 800c0910 to a partition!
-> >
-> > It's probably harmless.
-> >
-> > http://lists.debian.org/debian-kernel/2012/01/msg01105.html says "This
-> > warning was introduced as part of the fix for CVE-2011-4127"
-> >
-> > https://bugzilla.redhat.com/show_bug.cgi?id=3D783955#c4 says "Actually,
-> > the warning seems a false positive to me"
->=20
-> I did see these - and I probably should have mentioned it in the=20
-> original post. Naughty me for posting at times I should really be asleep.
->=20
-> The general jist of it seemed to be "it always failed before, now we=20
-> just know about it". What makes me wonder is that if it always failed=20
-> before, why do we do it in the first place?
->=20
+Hi Linus,
+ hopefully these are in time for 3.3.
 
-800c0910 is 'are you an md device'.  So failure is a valid response.
+thanks,NeilBrown
 
-1261 is flush-bufs.  I hope that does still work on partitions....
 
-NeilBrown
+The following changes since commit 192cfd58774b4d17b2fe8bdc77d89c2ef4e0591d:
 
---Sig_/hfFVK071UPMgnYpb3dfgcHf
+  Linux 3.3-rc6 (2012-03-03 17:08:09 -0800)
+
+are available in the git repository at:
+
+  git://neil.brown.name/md/ md-3.3-fixes
+
+for you to fetch changes up to 7a90484825680e7831856105f5fef654e6c02701:
+
+  md/raid10: fix assembling of arrays with replacement devices. (2012-03-06=
+ 10:12:45 +1100)
+
+----------------------------------------------------------------
+(from the branch description for md-scratch local branch)
+
+for-linus
+3 fixes for md in 3.3-rc
+
+2 relate to the recently added drive replacement.
+
+One causes read error in RAID10 to sometimes be retried indefinitely.
+
+----------------------------------------------------------------
+NeilBrown (3):
+      md/raid1: fix buglet in md_raid1_contested.
+      md/raid10: fix handling of error on last working device in array.
+      md/raid10: fix assembling of arrays with replacement devices.
+
+ drivers/md/raid1.c  |    2 +-
+ drivers/md/raid10.c |   38 +++++++++++++++++++++++++++-----------
+ 2 files changed, 28 insertions(+), 12 deletions(-)
+
+--Sig_/w28foDHfOXMFuHkxtsrWGdb
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT1Ubpznsnt1WYoG5AQJUHBAAvndKROYsFFrkUbqESOhd4ErUmYgrJz4T
-jZp9m0pztNwE4BY2qOhE5zUkLPvtFmY7urrZSKaauc7braumnOkYRz0vCMRH8AdM
-A1rRS3c5kWESwly/UfxvugwU/Uq3P7DXQZzrhfwJL7v0Fs5L6zoN0FDxdsKyOZIM
-fBsQ9lQPMi/hCVQRw0XWaZmydkHvwWdMr/n0gMAk2N7ZOT4A0/cNBZjcaFM73icC
-msGP+17CYPgiGKyA9HoTu1uKoqO0Zf4LyUFJ3XyFdH9em0ueIvtiJH9bQq8sAI2X
-d2hA19FeOh/+uyy7R5JnQwk6iTyk8blV0+tl5av9cxctSvo+D8DlWCtCa575giDU
-GgKEmygkvBoSjQ2bxXmV+CRtqwV3Z3BMBg8UlR8DBwI0HvNU7pJnIm2Qt8g+iO5D
-pJzlcXS67MbMl6Id+WbtYJORp2N2zOK3BtpPkxY+mP1ggWqbp7qRkH37xU1ERnmw
-EBWaSUCQ8vluNhONLhYfXixpFzzePSe+bSaxKWJ7NUDhZhifN6M/O7Dh8m4jrLLn
-DS8aaPw4MHx41sZlJUxHOUzFGCxtiMvQVaH/8yfusmty1TWgNrdNdjf+J+elUmBM
-yM7aJvisDYsJ0yVq9icAyD/hxVoxM7j+bnA/A2DvdTzoZozBVrYOkXdAPaYUJicD
-g/7KaP7Qk5Y=
-=8GOH
+iQIVAwUBT1VJjDnsnt1WYoG5AQL73xAAs2+2cXm8BaPEkLemnSfYL+Z3PRZp6fFT
+fUvq8AcFQf/1cZLpzb1OUwkSWST4vfSiDOwG0efeVYXKN1ZRVgEa0STAHOFg+C6Z
+lUfjPtdrcLT5PUSv+PrWkjFKRtcLttGd2a8F2+JEJyey6lL68zdGufSUypq85F0m
+hhUUW4EatQD8dYCdahEtkgm4e7YIi6RDKdbOUxrwq3JAmLIuFka5wx/ob/ZJQnx3
+yMS0FwG0tZr4EvSbRyhiAtHEU1SkSWyhFW1K/15/R/sNiMLuxJB8FyU3oUl0K3G9
+DqGe99p1jwwTh3grqGwnWQUqobCVJobAMb+fobSclBCouTpeh7/clJt2DquFL6ty
+CEPtMXfpD/7MOJdjVaBZrWSpGwIP97tmYNOAtD4igFOGRgpk8wF84khaZWS5CQ3o
+JN9pCgPHiyhrRS7E/Q4cm+P64daBAeb+xnI8xSNXSnJyZFnybx4wMKoz4phQ4+0W
+Gx6LuI/E7ya9Flp/rT5iks/2vhFckpUtnCPGRBwC/ZoMtmYcPDozg6u0yci3oJpT
+x/XAQ2FXFa2Lf+JWkX8ZKdIerI1/7FhdE7Y27BfVT0F8AskTgvxJbGPGeOtnxW1/
+Sqmzv3JLqLy4Px80oOlp4di8NN0pXRmm2gAJdlHz2wRkytvLFj/nDX7BUJRS/aVA
+yKrS01X0F0I=
+=IX38
 -----END PGP SIGNATURE-----
 
---Sig_/hfFVK071UPMgnYpb3dfgcHf--
+--Sig_/w28foDHfOXMFuHkxtsrWGdb--
