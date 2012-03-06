@@ -1,205 +1,172 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Adding a disk to RAID0
-Date: Tue, 6 Mar 2012 12:21:09 +1100
-Message-ID: <20120306122109.73cd065e@notabene.brown>
-References: <4F4D6493.3030300@ubc.ca>
-	<4F554DB3.8080203@ubc.ca>
+From: Steven Haigh <netwiz@crc.id.au>
+Subject: Re: mdadm: sending ioctl 1261 to a partition!
+Date: Tue, 06 Mar 2012 13:00:01 +1100
+Message-ID: <4F556FA1.5020006@crc.id.au>
+References: <4F54B997.3060207@crc.id.au> <4F54D314.9060504@anonymous.org.uk> <4F550BA8.3010306@crc.id.au> <20120306070143.4f8abc0e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/54IMHNEeUZPslfW7tvawo4N"; protocol="application/pgp-signature"
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms060002050000050000060003"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F554DB3.8080203@ubc.ca>
+In-Reply-To: <20120306070143.4f8abc0e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Victor Balakine <victor.balakine@ubc.ca>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/54IMHNEeUZPslfW7tvawo4N
-Content-Type: text/plain; charset=US-ASCII
+This is a cryptographically signed message in MIME format.
+
+--------------ms060002050000050000060003
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 05 Mar 2012 15:35:15 -0800 Victor Balakine <victor.balakine@ubc.ca>
-wrote:
+On 6/03/2012 7:01 AM, NeilBrown wrote:
+> On Tue, 06 Mar 2012 05:53:28 +1100 Steven Haigh<netwiz@crc.id.au>  wrot=
+e:
+>
+>> On 6/03/2012 1:52 AM, John Robinson wrote:
+>>> On 05/03/2012 13:03, Steven Haigh wrote:
+>>>> I've noticed that recently I've managed to get a ton of messages lik=
+e
+>>>> this at boot:
+>>>>
+>>>> mdadm: sending ioctl 1261 to a partition!
+>>>> mdadm: sending ioctl 800c0910 to a partition!
+>>>
+>>> It's probably harmless.
+>>>
+>>> http://lists.debian.org/debian-kernel/2012/01/msg01105.html says "Thi=
+s
+>>> warning was introduced as part of the fix for CVE-2011-4127"
+>>>
+>>> https://bugzilla.redhat.com/show_bug.cgi?id=3D783955#c4 says "Actuall=
+y,
+>>> the warning seems a false positive to me"
+>>
+>> I did see these - and I probably should have mentioned it in the
+>> original post. Naughty me for posting at times I should really be asle=
+ep.
+>>
+>> The general jist of it seemed to be "it always failed before, now we
+>> just know about it". What makes me wonder is that if it always failed
+>> before, why do we do it in the first place?
+>>
+>
+> 800c0910 is 'are you an md device'.  So failure is a valid response.
+>
+> 1261 is flush-bufs.  I hope that does still work on partitions....
 
-> Am I the only one having problem adding disks to RAID0? Has anybody=20
-> tried that on 3.* kernel?
+Thanks Neil, Any ideas how I can test this to check if flush-bufs is=20
+working? While I'm not a code junkie these days - I'm great at picking=20
+holes in thing ;)
 
-Strange.  It works for me.
+I picked it up as it only seemed to be visible in 2.6.32.56. I don't=20
+recall seeing it in any previous 2.6.32.x kernel.
 
-We need to find out what the md0_raid0 process is doing.
-Can you
-   cat /proc/PROCESSID/stack
+--=20
+Steven Haigh
 
-and see what that shows?
-
-NeilBrown
-
-
->=20
-> Victor
->=20
-> On 2012-02-28 15:34, Victor Balakine wrote:
-> > I am trying to add another disk to RAID0 and this functionality appears
-> > to be broken.
-> > First I create a RAID0 array:
-> > #mdadm --create /dev/md0 --level=3D0 --raid-devices=3D1 --force /dev/xv=
-da2
-> > mdadm: Defaulting to version 1.2 metadata
-> > mdadm: array /dev/md0 started.
-> >
-> > So far everything works fine. Then I add another disk to it:
-> > #mdadm --grow /dev/md0 --raid-devices=3D2 --add /dev/xvda3
-> > --backup-file=3D/backup-md0
-> > mdadm: level of /dev/md0 changed to raid4
-> > mdadm: added /dev/xvda3
-> > mdadm: Need to backup 1024K of critical section..
-> >
-> > This is what I see in /var/log/messages
-> > Feb 28 15:03:30 storage kernel: [ 1420.174022] md: bind<xvda2>
-> > Feb 28 15:03:30 storage kernel: [ 1420.209167] md: raid0 personality
-> > registered for level 0
-> > Feb 28 15:03:30 storage kernel: [ 1420.209818] bio: create slab <bio-1>
-> > at 1
-> > Feb 28 15:03:30 storage kernel: [ 1420.209832] md/raid0:md0: looking at
-> > xvda2
-> > Feb 28 15:03:30 storage kernel: [ 1420.209837] md/raid0:md0: comparing
-> > xvda2(8386560) with xvda2(8386560)
-> > Feb 28 15:03:30 storage kernel: [ 1420.209844] md/raid0:md0: END
-> > Feb 28 15:03:30 storage kernel: [ 1420.209851] md/raid0:md0: =3D=3D> UN=
-IQUE
-> > Feb 28 15:03:30 storage kernel: [ 1420.209856] md/raid0:md0: 1 zones
-> > Feb 28 15:03:30 storage kernel: [ 1420.209859] md/raid0:md0: FINAL 1 zo=
-nes
-> > Feb 28 15:03:30 storage kernel: [ 1420.209866] md/raid0:md0: done.
-> > Feb 28 15:03:30 storage kernel: [ 1420.209870] md/raid0:md0: md_size is
-> > 8386560 sectors.
-> > Feb 28 15:03:30 storage kernel: [ 1420.209875] ******* md0 configuration
-> > *********
-> > Feb 28 15:03:30 storage kernel: [ 1420.209879] zone0=3D[xvda2/]
-> > Feb 28 15:03:30 storage kernel: [ 1420.209885] zone offset=3D0kb device
-> > offset=3D0kb size=3D4193280kb
-> > Feb 28 15:03:30 storage kernel: [ 1420.209902]
-> > **********************************
-> > Feb 28 15:03:30 storage kernel: [ 1420.209903]
-> > Feb 28 15:03:30 storage kernel: [ 1420.209919] md0: detected capacity
-> > change from 0 to 4293918720
-> > Feb 28 15:03:30 storage kernel: [ 1420.223968] md0: p1
-> > ...
-> > Feb 28 15:04:01 storage kernel: [ 1450.783016] async_tx: api initialized
-> > (async)
-> > Feb 28 15:04:01 storage kernel: [ 1450.796912] xor: automatically using
-> > best checksumming function: generic_sse
-> > Feb 28 15:04:01 storage kernel: [ 1450.816012] generic_sse: 9509.000 MB=
-/sec
-> > Feb 28 15:04:01 storage kernel: [ 1450.816021] xor: using function:
-> > generic_sse (9509.000 MB/sec)
-> > Feb 28 15:04:01 storage kernel: [ 1450.912021] raid6: int64x1 1888 MB/s
-> > Feb 28 15:04:01 storage kernel: [ 1450.980013] raid6: int64x2 2707 MB/s
-> > Feb 28 15:04:01 storage kernel: [ 1451.048025] raid6: int64x4 2073 MB/s
-> > Feb 28 15:04:01 storage kernel: [ 1451.116039] raid6: int64x8 2010 MB/s
-> > Feb 28 15:04:01 storage kernel: [ 1451.184017] raid6: sse2x1 4764 MB/s
-> > Feb 28 15:04:01 storage kernel: [ 1451.252018] raid6: sse2x2 5170 MB/s
-> > Feb 28 15:04:01 storage kernel: [ 1451.320016] raid6: sse2x4 7548 MB/s
-> > Feb 28 15:04:01 storage kernel: [ 1451.320025] raid6: using algorithm
-> > sse2x4 (7548 MB/s)
-> > Feb 28 15:04:01 storage kernel: [ 1451.330136] md: raid6 personality
-> > registered for level 6
-> > Feb 28 15:04:01 storage kernel: [ 1451.330145] md: raid5 personality
-> > registered for level 5
-> > Feb 28 15:04:01 storage kernel: [ 1451.330149] md: raid4 personality
-> > registered for level 4
-> > Feb 28 15:04:01 storage kernel: [ 1451.330662] md/raid:md0: device xvda2
-> > operational as raid disk 0
-> > Feb 28 15:04:01 storage kernel: [ 1451.330820] md/raid:md0: allocated
-> > 2176kB
-> > Feb 28 15:04:01 storage kernel: [ 1451.330869] md/raid:md0: raid level 4
-> > active with 1 out of 2 devices, algorithm 5
-> > Feb 28 15:04:01 storage kernel: [ 1451.330874] RAID conf printout:
-> > Feb 28 15:04:01 storage kernel: [ 1451.330876] --- level:4 rd:2 wd:1
-> > Feb 28 15:04:01 storage kernel: [ 1451.330878] disk 0, o:1, dev:xvda2
-> > Feb 28 15:04:01 storage kernel: [ 1451.417995] md: bind<xvda3>
-> > Feb 28 15:04:01 storage kernel: [ 1451.616399] RAID conf printout:
-> > Feb 28 15:04:01 storage kernel: [ 1451.616404] --- level:4 rd:3 wd:2
-> > Feb 28 15:04:01 storage kernel: [ 1451.616408] disk 0, o:1, dev:xvda2
-> > Feb 28 15:04:01 storage kernel: [ 1451.616411] disk 1, o:1, dev:xvda3
-> > Feb 28 15:04:01 storage kernel: [ 1451.619054] md: reshape of RAID array
-> > md0
-> > Feb 28 15:04:01 storage kernel: [ 1451.619066] md: minimum _guaranteed_
-> > speed: 1000 KB/sec/disk.
-> > Feb 28 15:04:01 storage kernel: [ 1451.619069] md: using maximum
-> > available idle IO bandwidth (but not more than 200000 KB/sec) for resha=
-pe.
-> > Feb 28 15:04:01 storage kernel: [ 1451.619075] md: using 128k window,
-> > over a total of 4193280k.
-> > Feb 28 15:05:02 storage udevd[280]: timeout '/sbin/blkid -o udev -p
-> > /dev/md0'
-> > Feb 28 15:05:03 storage udevd[280]: timeout: killing '/sbin/blkid -o
-> > udev -p /dev/md0' [1829]
-> > Feb 28 15:05:04 storage udevd[280]: timeout: killing '/sbin/blkid -o
-> > udev -p /dev/md0' [1829]
-> > Feb 28 15:05:05 storage udevd[280]: timeout: killing '/sbin/blkid -o
-> > udev -p /dev/md0' [1829]
-> >
-> > And then it just goes on forever. md0_raid0 process stays at 100% CPU l=
-oad.
-> > # ps -ef | grep md0
-> > root 7268 2 99 09:34 ? 05:53:00 [md0_raid0]
-> > root 7270 2 0 09:34 ? 00:00:00 [md0_reshape]
-> > root 7271 1 0 09:34 pts/0 00:00:00 mdadm --grow /dev/md0
-> > --raid-devices=3D2 --add /dev/sdc1 --backup-file=3D/backup-md0
-> >
-> > # cat /proc/mdstat
-> > Personalities : [raid0] [raid6] [raid5] [raid4]
-> > md0 : active raid4 xvda3[2] xvda2[0]
-> > 4193280 blocks super 1.2 level 4, 512k chunk, algorithm 5 [3/1] [U__]
-> > resync=3DDELAYED
-> >
-> > unused devices: <none>
-> >
-> > # mdadm --version
-> > mdadm - v3.2.2 - 17th June 2011
-> > # uname -a
-> > Linux storage 3.1.9-1.4-xen #1 SMP Fri Jan 27 08:55:10 UTC 2012
-> > (efb5ff4) x86_64 x86_64 x86_64 GNU/Linux
-> >
-> > It's OpenSUSE 12.1 with all the latest updates running in XEN that I
-> > created to reproduce the problem. The actual server is running the same
-> > version of OpenSUSE (Linux san1 3.1.9-1.4-desktop #1 SMP PREEMPT Fri Jan
-> > 27 08:55:10 UTC 2012 (efb5ff4) x86_64 x86_64 x86_64 GNU/Linux) on a
-> > hardware server. If you need any more information I can easily get it
-> > since it's a VM and the problem is easily reproducible.
-> >
-> > Victor
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Email: netwiz@crc.id.au
+Web: http://www.crc.id.au
+Phone: (03) 9001 6090 - 0412 935 897
+Fax: (03) 8338 0299
 
 
---Sig_/54IMHNEeUZPslfW7tvawo4N
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+--------------ms060002050000050000060003
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-iQIVAwUBT1VmhTnsnt1WYoG5AQKrlA/9GDGULr9tJhkESnVOcZCzmf93fYfk398g
-vefmGrV7ryF9wwyFNPUGbSm1U1GxzG/Yg5REhsRVK6x3UAvc4dl0ZLUgPtckx+p6
-I3leMGKR8XtB1nzz9D8pntoH8Sdhadb+ZFo1i4/p9h7tCQOgHggDEZmDhxr61Vaz
-xqxSVscsFx0dodDx1ppYl55qKCkxgjPMWJhc0LX27DynH/XdABTqLkoyJe6uavzD
-kuYOHvMMWW/DYcGyDfJyisssEd+a7o5W/Z1TVE38RZ5BAjkpoZgA+x2jyLAg9oUO
-TE6qpjGbIf3C6KZDmYwA1ukMU2XxCtxfQFDuJKIII8DXdg8wGZxCm50O/O5iYOOe
-Ld0yzUMc+J1E4Y0r6k8w4/EmsEncBcxMlnXkucJl437KFQRKGoF2aUY4elspRoek
-0T70n61pGGu3xbvNTw4ttZo9+qyIpOaQa19xsbtp+DUl29NccOLO57v+mf5LA4X9
-S0g/aq7hctvnlHUCAiUdz8ELU+Rk9jiwtwLqamfry+tPjb1CQt/NlmLqoduTOPHV
-9EXGOoCh1BjQCR6C08epx3KE2GiET3+SI39Hf43CpJpPWzrGuMEohlXio1FQ5Rnr
-aFcvYtL8vMcMOuR9dHcRGKkOP4IyV4QynSkKvORoVqYuYmmNETkQ/S7e+fvgKsOj
-UVLTXrtcsQ8=
-=H29W
------END PGP SIGNATURE-----
-
---Sig_/54IMHNEeUZPslfW7tvawo4N--
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIOSjCC
+BjQwggQcoAMCAQICAR4wDQYJKoZIhvcNAQEFBQAwfTELMAkGA1UEBhMCSUwxFjAUBgNVBAoT
+DVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNp
+Z25pbmcxKTAnBgNVBAMTIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4XDTA3
+MTAyNDIxMDE1NVoXDTE3MTAyNDIxMDE1NVowgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1T
+dGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWdu
+aW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENs
+aWVudCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMcJg8zOLdgasSmkLhOr
+lr6KMoOMpohBllVHrdRvEg/q6r8jR+EK75xCGhR8ToREoqe7zM9/UnC6TS2y9UKTpT1v7RSM
+zR0t6ndl0TWBuUr/UXBhPk+Kmy7bI4yW4urC+y7P3/1/X7U8ocb8VpH/Clt+4iq7nirMcNh6
+qJR+xjOhV+VHzQMALuGYn5KZmc1NbJQYclsGkDxDz2UbFqE2+6vIZoL+jb9x4Pa5gNf1TwSD
+kOkikZB1xtB4ZqtXThaABSONdfmv/Z1pua3FYxnCFmdr/+N2JLKutIxMYqQOJebr/f/h5t95
+m4JgrM3Y/w7YX9d7YAL9jvN4SydHsU6n65cCAwEAAaOCAa0wggGpMA8GA1UdEwEB/wQFMAMB
+Af8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBRTcu2SnODaywFcfH6WNU7y1LhRgjAfBgNV
+HSMEGDAWgBROC+8apEBbpRdphzDKNGhD0EGu8jBmBggrBgEFBQcBAQRaMFgwJwYIKwYBBQUH
+MAGGG2h0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9jYTAtBggrBgEFBQcwAoYhaHR0cDovL3d3
+dy5zdGFydHNzbC5jb20vc2ZzY2EuY3J0MFsGA1UdHwRUMFIwJ6AloCOGIWh0dHA6Ly93d3cu
+c3RhcnRzc2wuY29tL3Nmc2NhLmNybDAnoCWgI4YhaHR0cDovL2NybC5zdGFydHNzbC5jb20v
+c2ZzY2EuY3JsMIGABgNVHSAEeTB3MHUGCysGAQQBgbU3AQIBMGYwLgYIKwYBBQUHAgEWImh0
+dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93
+d3cuc3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwDQYJKoZIhvcNAQEFBQADggIBAAqD
+CH14qywGXLhjjF6uHLkjd02hcdh9hrw+VUsv+q1eeQWB21jWj3kJ96AUlPCoEGZ/ynJNScWy
+6QMVQjbbMXltUfO4n4bGGdKo3awPWp61tjAFgraLJgDk+DsSvUD6EowjMTNx25GQgyYJ5RPI
+zKKR9tQW8gGK+2+RHxkUCTbYFnL6kl8Ch507rUdPPipJ9CgJFws3kDS3gOS5WFMxcjO5DwKf
+KSETEPrHh7p5shuuNktvsv6hxHTLhiMKX893gxdT3XLS9OKmCv87vkINQcNEcIIoFWbP9HOR
+z9v3vQwR4e3ksLc2JZOAFK+ssS5XMEoznzpihEP0PLc4dCBYjbvSD7kxgDwZ+Aj8Q9PkbvE9
+sIPP7ON0fz095HdThKjiVJe6vofq+n6b1NBc8XdrQvBmunwxD5nvtTW4vtN6VY7mUCmxsCie
+uoBJ9OlqmsVWQvifIYf40dJPZkk9YgGTzWLpXDSfLSplbY2LL9C9U0ptvjcDjefLTvqSFc7t
+w1sEhF0n/qpA2r0GpvkLRDmcSwVyPvmjFBGqUp/pNy8ZuPGQmHwFi2/14+xeSUDG2bwnsYJQ
+G2EdJCB6luQ57GEnTA/yKZSTKI8dDQa8Sd3zfXb19mOgSF0bBdXbuKhEpuP9wirslFe6fQ1t
+5j5R0xi72MZ8ikMu1RQZKCyDbMwazlHiMIIIDjCCBvagAwIBAgIDA7ikMA0GCSqGSIb3DQEB
+BQUAMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMi
+U2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMvU3RhcnRDb20g
+Q2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0EwHhcNMTIwMjEzMTMzODE0
+WhcNMTMwMjEzMTc1NjUzWjBXMRkwFwYDVQQNExB3bjVlU1RNM2RWOUIwMEk5MRkwFwYDVQQD
+DBBuZXR3aXpAY3JjLmlkLmF1MR8wHQYJKoZIhvcNAQkBFhBuZXR3aXpAY3JjLmlkLmF1MIIC
+IjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAzTaLiL78pm4Hqp7Pou4C60jt2wdvDiPt
+Sq6hspKk6oaST7BFeDOfoed3mvzytkjNr3C1gds3zsHulAMzRjuX2M1zPkfaj5QFkmlqQcxr
++tnaf8QFpn9PrUcjpbYDYPxdcGR+SeClKzmjdxicHuYDrD8YXnbk+k8dWDaCuv5sKRQHJmIR
+maqUIGoVML+/kUR+sqkMpnbhOsL+E84Hg4fxLzpV3Tjf9bZbKgaspvg+BeJJCYKThBxMnZJI
+cQ9JzDGL4rO2BEuTXI9Ofl0+AAttBEpZeqc2rePCfA9NivKTCZ0qaFKmvM5SN7TiZUqv80rD
+ewTp+OLXNZEd5aa5jEDPNlznkcX0WfuKCmtyIEzT7PgHl1tOWTx7nw6FVWcB8qjC6xlyaL6W
+1oS7Om3b2ka+9vSiz7DrPZzUDZuS91Fr2zIIMrrRzhN8q/JdQf8lGTydpmoRUB0z+BAcH8V/
+nOcMMDogqV6/dCfywi7zFQK4AsiPSpyBAZyO53J4uPgoIzSpFj54f83KRIobHCWDU1BaU2+6
+CfEoAD3iMId1tcFWTXikEThL+3oHQullq9EbPR4f3ToAU7aTZYWG4KNKrmG93KAfyCUFb+bf
+mt3hf1BprKIUJnpOxdZHi0KwLXVwURiB4XQKZpEWL8mRbHRdxVATKrrJAHOFTl3/s37VLprP
+J9kCAwEAAaOCA6swggOnMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgSwMB0GA1UdJQQWMBQGCCsG
+AQUFBwMCBggrBgEFBQcDBDAdBgNVHQ4EFgQUS9is0NdoOI3DZ/36Zlq78IrSedgwHwYDVR0j
+BBgwFoAUU3Ltkpzg2ssBXHx+ljVO8tS4UYIwGwYDVR0RBBQwEoEQbmV0d2l6QGNyYy5pZC5h
+dTCCAiEGA1UdIASCAhgwggIUMIICEAYLKwYBBAGBtTcBAgIwggH/MC4GCCsGAQUFBwIBFiJo
+dHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS9wb2xpY3kucGRmMDQGCCsGAQUFBwIBFihodHRwOi8v
+d3d3LnN0YXJ0c3NsLmNvbS9pbnRlcm1lZGlhdGUucGRmMIH3BggrBgEFBQcCAjCB6jAnFiBT
+dGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTADAgEBGoG+VGhpcyBjZXJ0aWZpY2F0
+ZSB3YXMgaXNzdWVkIGFjY29yZGluZyB0byB0aGUgQ2xhc3MgMSBWYWxpZGF0aW9uIHJlcXVp
+cmVtZW50cyBvZiB0aGUgU3RhcnRDb20gQ0EgcG9saWN5LCByZWxpYW5jZSBvbmx5IGZvciB0
+aGUgaW50ZW5kZWQgcHVycG9zZSBpbiBjb21wbGlhbmNlIG9mIHRoZSByZWx5aW5nIHBhcnR5
+IG9ibGlnYXRpb25zLjCBnAYIKwYBBQUHAgIwgY8wJxYgU3RhcnRDb20gQ2VydGlmaWNhdGlv
+biBBdXRob3JpdHkwAwIBAhpkTGlhYmlsaXR5IGFuZCB3YXJyYW50aWVzIGFyZSBsaW1pdGVk
+ISBTZWUgc2VjdGlvbiAiTGVnYWwgYW5kIExpbWl0YXRpb25zIiBvZiB0aGUgU3RhcnRDb20g
+Q0EgcG9saWN5LjA2BgNVHR8ELzAtMCugKaAnhiVodHRwOi8vY3JsLnN0YXJ0c3NsLmNvbS9j
+cnR1MS1jcmwuY3JsMIGOBggrBgEFBQcBAQSBgTB/MDkGCCsGAQUFBzABhi1odHRwOi8vb2Nz
+cC5zdGFydHNzbC5jb20vc3ViL2NsYXNzMS9jbGllbnQvY2EwQgYIKwYBBQUHMAKGNmh0dHA6
+Ly9haWEuc3RhcnRzc2wuY29tL2NlcnRzL3N1Yi5jbGFzczEuY2xpZW50LmNhLmNydDAjBgNV
+HRIEHDAahhhodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS8wDQYJKoZIhvcNAQEFBQADggEBABL6
+TyHlAHW0kkHb0ZLcd/pn7Ue0B5mIWBhmta4dK8qd0hXw+/lhpWaJWR/RltCSPabxSd+Lm9Iw
+NWm7WP73GHAGby0TC+siwDJSk7CwDBqnVM1T3XQ5TgjfVX7h9qjVixsSWzAD++dXFmpf/344
+Uf3zcG/hKJSeRtOvM/88nn4eJtrn7QFnIm4AJpHEgrqwU/0pmQBLwmEYS1G5cr04Oact2v6W
+L3JHOlEP8lPBAO9GtZD8UZGmBoDTNG0Rf4TnVTBGdw1sLZqpXnkcVI+rDUaFk/jb7AtCB30N
+8tbm2I5ALevgjv+vNMZIQD/0AgOaylGrQwbP852lgOvMo2AdpGExggTQMIIEzAIBATCBlDCB
+jDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3Vy
+ZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNz
+IDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMDuKQwCQYFKw4DAhoFAKCCAhAw
+GAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTIwMzA2MDIwMDAx
+WjAjBgkqhkiG9w0BCQQxFgQU77FrFTowu9Uwy4qG74FDdFX9S44wXwYJKoZIhvcNAQkPMVIw
+UDALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMC
+AgFAMAcGBSsOAwIHMA0GCCqGSIb3DQMCAgEoMIGlBgkrBgEEAYI3EAQxgZcwgZQwgYwxCzAJ
+BgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGln
+aXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAxIFBy
+aW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQQIDA7ikMIGnBgsqhkiG9w0BCRACCzGBl6CB
+lDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNl
+Y3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENs
+YXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMDuKQwDQYJKoZIhvcNAQEB
+BQAEggIAjEc5v9d0mjDT1ViAO0VuN/zATgaATGb4p3XDwUdzmtnoudQDx6O7MuaPMvg2HZS3
+rJXxRORq8+DDeV7ILF4XHpl4CZVpj5EyMVlJM3G9Ans9Gx6wVsJ8M7A6xEPWb7ZszXn8rc/N
+WePKpwwZEvHWbc33GzYO5sEimwN9LnkzXtCT7RzcSiTO+gwmS0DLWhJk3lxugLgqOEgzAndw
+brDxFFTi5/N+NiCU8xGslOfy+gdyVmwo1OxZmabc3xoBrAquyGKegaKpvAuiPxOG40/YKBN1
+behdUCspFARrerrW4a/H9LT2CBLqTuPQY4KtgsMMqk0tzVEOcTnjoKJcSW+n9sQMZ2Dk2LRp
+n0sO3HdC34EsdjiX+0tp7mqaBe+ex0bXxB1v7L4EUK1l/5QwZCyBR547wfdoHQY0QYIc3HFm
+0GINsR+0W3THWfAqJekgDrgs4Dj1FtYhxYMrJOxePk8bhaiw7TkB0Z/K4gm1n06BWY/JR19f
+UtfPNipfGLOYSXvfjyiPfegvR5+zEhFy9X4b182K256CeBBe3fPYvxNOvhnfC++/LRD9tqKt
+6qRct21RmkO62IL9eTF6+7PzVlwv9Gpf65FbrF48JxjHaG0vuHMdxMCW3sduyANI99PvmWsr
+HR8uAe5VzG/szZ/E1qXIjqAjD0eEVmDV0p6M8/7xd3IAAAAAAAA=
+--------------ms060002050000050000060003--
