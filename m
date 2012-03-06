@@ -1,172 +1,124 @@
-From: Steven Haigh <netwiz@crc.id.au>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: mdadm: sending ioctl 1261 to a partition!
-Date: Tue, 06 Mar 2012 13:00:01 +1100
-Message-ID: <4F556FA1.5020006@crc.id.au>
-References: <4F54B997.3060207@crc.id.au> <4F54D314.9060504@anonymous.org.uk> <4F550BA8.3010306@crc.id.au> <20120306070143.4f8abc0e@notabene.brown>
+Date: Tue, 6 Mar 2012 13:27:01 +1100
+Message-ID: <20120306132701.1b9600f4@notabene.brown>
+References: <4F54B997.3060207@crc.id.au>
+	<4F54D314.9060504@anonymous.org.uk>
+	<4F550BA8.3010306@crc.id.au>
+	<20120306070143.4f8abc0e@notabene.brown>
+	<4F556FA1.5020006@crc.id.au>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms060002050000050000060003"
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/aSCkcSBOKyPPjOd=DP_mBQA"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120306070143.4f8abc0e@notabene.brown>
+In-Reply-To: <4F556FA1.5020006@crc.id.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Steven Haigh <netwiz@crc.id.au>
 Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a cryptographically signed message in MIME format.
-
---------------ms060002050000050000060003
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+--Sig_/aSCkcSBOKyPPjOd=DP_mBQA
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On 6/03/2012 7:01 AM, NeilBrown wrote:
-> On Tue, 06 Mar 2012 05:53:28 +1100 Steven Haigh<netwiz@crc.id.au>  wrot=
+On Tue, 06 Mar 2012 13:00:01 +1100 Steven Haigh <netwiz@crc.id.au> wrote:
+
+> On 6/03/2012 7:01 AM, NeilBrown wrote:
+> > On Tue, 06 Mar 2012 05:53:28 +1100 Steven Haigh<netwiz@crc.id.au>  wrot=
 e:
->
->> On 6/03/2012 1:52 AM, John Robinson wrote:
->>> On 05/03/2012 13:03, Steven Haigh wrote:
->>>> I've noticed that recently I've managed to get a ton of messages lik=
-e
->>>> this at boot:
->>>>
->>>> mdadm: sending ioctl 1261 to a partition!
->>>> mdadm: sending ioctl 800c0910 to a partition!
->>>
->>> It's probably harmless.
->>>
->>> http://lists.debian.org/debian-kernel/2012/01/msg01105.html says "Thi=
-s
->>> warning was introduced as part of the fix for CVE-2011-4127"
->>>
->>> https://bugzilla.redhat.com/show_bug.cgi?id=3D783955#c4 says "Actuall=
+> >
+> >> On 6/03/2012 1:52 AM, John Robinson wrote:
+> >>> On 05/03/2012 13:03, Steven Haigh wrote:
+> >>>> I've noticed that recently I've managed to get a ton of messages like
+> >>>> this at boot:
+> >>>>
+> >>>> mdadm: sending ioctl 1261 to a partition!
+> >>>> mdadm: sending ioctl 800c0910 to a partition!
+> >>>
+> >>> It's probably harmless.
+> >>>
+> >>> http://lists.debian.org/debian-kernel/2012/01/msg01105.html says "This
+> >>> warning was introduced as part of the fix for CVE-2011-4127"
+> >>>
+> >>> https://bugzilla.redhat.com/show_bug.cgi?id=3D783955#c4 says "Actuall=
 y,
->>> the warning seems a false positive to me"
->>
->> I did see these - and I probably should have mentioned it in the
->> original post. Naughty me for posting at times I should really be asle=
+> >>> the warning seems a false positive to me"
+> >>
+> >> I did see these - and I probably should have mentioned it in the
+> >> original post. Naughty me for posting at times I should really be asle=
 ep.
->>
->> The general jist of it seemed to be "it always failed before, now we
->> just know about it". What makes me wonder is that if it always failed
->> before, why do we do it in the first place?
->>
->
-> 800c0910 is 'are you an md device'.  So failure is a valid response.
->
-> 1261 is flush-bufs.  I hope that does still work on partitions....
+> >>
+> >> The general jist of it seemed to be "it always failed before, now we
+> >> just know about it". What makes me wonder is that if it always failed
+> >> before, why do we do it in the first place?
+> >>
+> >
+> > 800c0910 is 'are you an md device'.  So failure is a valid response.
+> >
+> > 1261 is flush-bufs.  I hope that does still work on partitions....
+>=20
+> Thanks Neil, Any ideas how I can test this to check if flush-bufs is=20
+> working? While I'm not a code junkie these days - I'm great at picking=20
+> holes in thing ;)
 
-Thanks Neil, Any ideas how I can test this to check if flush-bufs is=20
-working? While I'm not a code junkie these days - I'm great at picking=20
-holes in thing ;)
+Read the code....
 
-I picked it up as it only seemed to be visible in 2.6.32.56. I don't=20
-recall seeing it in any previous 2.6.32.x kernel.
+In block/ioctl.c
+	case BLKFLSBUF:
+		if (!capable(CAP_SYS_ADMIN))
+			return -EACCES;
 
---=20
-Steven Haigh
+		ret =3D __blkdev_driver_ioctl(bdev, mode, cmd, arg);
+		/* -EINVAL to handle old uncorrected drivers */
+		if (ret !=3D -EINVAL && ret !=3D -ENOTTY)
+			return ret;
 
-Email: netwiz@crc.id.au
-Web: http://www.crc.id.au
-Phone: (03) 9001 6090 - 0412 935 897
-Fax: (03) 8338 0299
+		lock_kernel();
+		fsync_bdev(bdev);
+		invalidate_bdev(bdev);
+		unlock_kernel();
+		return 0;
+
+
+So it is still called fsync_bdev and invalidate_bdev as long as the ioctl
+function for the underlying disk returns -EINVAL or -ENOTTY.
+
+The function that shows that warning is scsi_verify_blk_ioctl in
+block/scsi_ioctl.c
+The worst it can do is return -ENOTTY, and that is safe.
+
+So the warning is bogus, the code still works.
+
+NeilBrown
 
 
 
---------------ms060002050000050000060003
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
+>=20
+> I picked it up as it only seemed to be visible in 2.6.32.56. I don't=20
+> recall seeing it in any previous 2.6.32.x kernel.
+>=20
 
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIOSjCC
-BjQwggQcoAMCAQICAR4wDQYJKoZIhvcNAQEFBQAwfTELMAkGA1UEBhMCSUwxFjAUBgNVBAoT
-DVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNp
-Z25pbmcxKTAnBgNVBAMTIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4XDTA3
-MTAyNDIxMDE1NVoXDTE3MTAyNDIxMDE1NVowgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1T
-dGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWdu
-aW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENs
-aWVudCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMcJg8zOLdgasSmkLhOr
-lr6KMoOMpohBllVHrdRvEg/q6r8jR+EK75xCGhR8ToREoqe7zM9/UnC6TS2y9UKTpT1v7RSM
-zR0t6ndl0TWBuUr/UXBhPk+Kmy7bI4yW4urC+y7P3/1/X7U8ocb8VpH/Clt+4iq7nirMcNh6
-qJR+xjOhV+VHzQMALuGYn5KZmc1NbJQYclsGkDxDz2UbFqE2+6vIZoL+jb9x4Pa5gNf1TwSD
-kOkikZB1xtB4ZqtXThaABSONdfmv/Z1pua3FYxnCFmdr/+N2JLKutIxMYqQOJebr/f/h5t95
-m4JgrM3Y/w7YX9d7YAL9jvN4SydHsU6n65cCAwEAAaOCAa0wggGpMA8GA1UdEwEB/wQFMAMB
-Af8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBRTcu2SnODaywFcfH6WNU7y1LhRgjAfBgNV
-HSMEGDAWgBROC+8apEBbpRdphzDKNGhD0EGu8jBmBggrBgEFBQcBAQRaMFgwJwYIKwYBBQUH
-MAGGG2h0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9jYTAtBggrBgEFBQcwAoYhaHR0cDovL3d3
-dy5zdGFydHNzbC5jb20vc2ZzY2EuY3J0MFsGA1UdHwRUMFIwJ6AloCOGIWh0dHA6Ly93d3cu
-c3RhcnRzc2wuY29tL3Nmc2NhLmNybDAnoCWgI4YhaHR0cDovL2NybC5zdGFydHNzbC5jb20v
-c2ZzY2EuY3JsMIGABgNVHSAEeTB3MHUGCysGAQQBgbU3AQIBMGYwLgYIKwYBBQUHAgEWImh0
-dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93
-d3cuc3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwDQYJKoZIhvcNAQEFBQADggIBAAqD
-CH14qywGXLhjjF6uHLkjd02hcdh9hrw+VUsv+q1eeQWB21jWj3kJ96AUlPCoEGZ/ynJNScWy
-6QMVQjbbMXltUfO4n4bGGdKo3awPWp61tjAFgraLJgDk+DsSvUD6EowjMTNx25GQgyYJ5RPI
-zKKR9tQW8gGK+2+RHxkUCTbYFnL6kl8Ch507rUdPPipJ9CgJFws3kDS3gOS5WFMxcjO5DwKf
-KSETEPrHh7p5shuuNktvsv6hxHTLhiMKX893gxdT3XLS9OKmCv87vkINQcNEcIIoFWbP9HOR
-z9v3vQwR4e3ksLc2JZOAFK+ssS5XMEoznzpihEP0PLc4dCBYjbvSD7kxgDwZ+Aj8Q9PkbvE9
-sIPP7ON0fz095HdThKjiVJe6vofq+n6b1NBc8XdrQvBmunwxD5nvtTW4vtN6VY7mUCmxsCie
-uoBJ9OlqmsVWQvifIYf40dJPZkk9YgGTzWLpXDSfLSplbY2LL9C9U0ptvjcDjefLTvqSFc7t
-w1sEhF0n/qpA2r0GpvkLRDmcSwVyPvmjFBGqUp/pNy8ZuPGQmHwFi2/14+xeSUDG2bwnsYJQ
-G2EdJCB6luQ57GEnTA/yKZSTKI8dDQa8Sd3zfXb19mOgSF0bBdXbuKhEpuP9wirslFe6fQ1t
-5j5R0xi72MZ8ikMu1RQZKCyDbMwazlHiMIIIDjCCBvagAwIBAgIDA7ikMA0GCSqGSIb3DQEB
-BQUAMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMi
-U2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMvU3RhcnRDb20g
-Q2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0EwHhcNMTIwMjEzMTMzODE0
-WhcNMTMwMjEzMTc1NjUzWjBXMRkwFwYDVQQNExB3bjVlU1RNM2RWOUIwMEk5MRkwFwYDVQQD
-DBBuZXR3aXpAY3JjLmlkLmF1MR8wHQYJKoZIhvcNAQkBFhBuZXR3aXpAY3JjLmlkLmF1MIIC
-IjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAzTaLiL78pm4Hqp7Pou4C60jt2wdvDiPt
-Sq6hspKk6oaST7BFeDOfoed3mvzytkjNr3C1gds3zsHulAMzRjuX2M1zPkfaj5QFkmlqQcxr
-+tnaf8QFpn9PrUcjpbYDYPxdcGR+SeClKzmjdxicHuYDrD8YXnbk+k8dWDaCuv5sKRQHJmIR
-maqUIGoVML+/kUR+sqkMpnbhOsL+E84Hg4fxLzpV3Tjf9bZbKgaspvg+BeJJCYKThBxMnZJI
-cQ9JzDGL4rO2BEuTXI9Ofl0+AAttBEpZeqc2rePCfA9NivKTCZ0qaFKmvM5SN7TiZUqv80rD
-ewTp+OLXNZEd5aa5jEDPNlznkcX0WfuKCmtyIEzT7PgHl1tOWTx7nw6FVWcB8qjC6xlyaL6W
-1oS7Om3b2ka+9vSiz7DrPZzUDZuS91Fr2zIIMrrRzhN8q/JdQf8lGTydpmoRUB0z+BAcH8V/
-nOcMMDogqV6/dCfywi7zFQK4AsiPSpyBAZyO53J4uPgoIzSpFj54f83KRIobHCWDU1BaU2+6
-CfEoAD3iMId1tcFWTXikEThL+3oHQullq9EbPR4f3ToAU7aTZYWG4KNKrmG93KAfyCUFb+bf
-mt3hf1BprKIUJnpOxdZHi0KwLXVwURiB4XQKZpEWL8mRbHRdxVATKrrJAHOFTl3/s37VLprP
-J9kCAwEAAaOCA6swggOnMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgSwMB0GA1UdJQQWMBQGCCsG
-AQUFBwMCBggrBgEFBQcDBDAdBgNVHQ4EFgQUS9is0NdoOI3DZ/36Zlq78IrSedgwHwYDVR0j
-BBgwFoAUU3Ltkpzg2ssBXHx+ljVO8tS4UYIwGwYDVR0RBBQwEoEQbmV0d2l6QGNyYy5pZC5h
-dTCCAiEGA1UdIASCAhgwggIUMIICEAYLKwYBBAGBtTcBAgIwggH/MC4GCCsGAQUFBwIBFiJo
-dHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS9wb2xpY3kucGRmMDQGCCsGAQUFBwIBFihodHRwOi8v
-d3d3LnN0YXJ0c3NsLmNvbS9pbnRlcm1lZGlhdGUucGRmMIH3BggrBgEFBQcCAjCB6jAnFiBT
-dGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTADAgEBGoG+VGhpcyBjZXJ0aWZpY2F0
-ZSB3YXMgaXNzdWVkIGFjY29yZGluZyB0byB0aGUgQ2xhc3MgMSBWYWxpZGF0aW9uIHJlcXVp
-cmVtZW50cyBvZiB0aGUgU3RhcnRDb20gQ0EgcG9saWN5LCByZWxpYW5jZSBvbmx5IGZvciB0
-aGUgaW50ZW5kZWQgcHVycG9zZSBpbiBjb21wbGlhbmNlIG9mIHRoZSByZWx5aW5nIHBhcnR5
-IG9ibGlnYXRpb25zLjCBnAYIKwYBBQUHAgIwgY8wJxYgU3RhcnRDb20gQ2VydGlmaWNhdGlv
-biBBdXRob3JpdHkwAwIBAhpkTGlhYmlsaXR5IGFuZCB3YXJyYW50aWVzIGFyZSBsaW1pdGVk
-ISBTZWUgc2VjdGlvbiAiTGVnYWwgYW5kIExpbWl0YXRpb25zIiBvZiB0aGUgU3RhcnRDb20g
-Q0EgcG9saWN5LjA2BgNVHR8ELzAtMCugKaAnhiVodHRwOi8vY3JsLnN0YXJ0c3NsLmNvbS9j
-cnR1MS1jcmwuY3JsMIGOBggrBgEFBQcBAQSBgTB/MDkGCCsGAQUFBzABhi1odHRwOi8vb2Nz
-cC5zdGFydHNzbC5jb20vc3ViL2NsYXNzMS9jbGllbnQvY2EwQgYIKwYBBQUHMAKGNmh0dHA6
-Ly9haWEuc3RhcnRzc2wuY29tL2NlcnRzL3N1Yi5jbGFzczEuY2xpZW50LmNhLmNydDAjBgNV
-HRIEHDAahhhodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS8wDQYJKoZIhvcNAQEFBQADggEBABL6
-TyHlAHW0kkHb0ZLcd/pn7Ue0B5mIWBhmta4dK8qd0hXw+/lhpWaJWR/RltCSPabxSd+Lm9Iw
-NWm7WP73GHAGby0TC+siwDJSk7CwDBqnVM1T3XQ5TgjfVX7h9qjVixsSWzAD++dXFmpf/344
-Uf3zcG/hKJSeRtOvM/88nn4eJtrn7QFnIm4AJpHEgrqwU/0pmQBLwmEYS1G5cr04Oact2v6W
-L3JHOlEP8lPBAO9GtZD8UZGmBoDTNG0Rf4TnVTBGdw1sLZqpXnkcVI+rDUaFk/jb7AtCB30N
-8tbm2I5ALevgjv+vNMZIQD/0AgOaylGrQwbP852lgOvMo2AdpGExggTQMIIEzAIBATCBlDCB
-jDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3Vy
-ZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNz
-IDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMDuKQwCQYFKw4DAhoFAKCCAhAw
-GAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTIwMzA2MDIwMDAx
-WjAjBgkqhkiG9w0BCQQxFgQU77FrFTowu9Uwy4qG74FDdFX9S44wXwYJKoZIhvcNAQkPMVIw
-UDALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMC
-AgFAMAcGBSsOAwIHMA0GCCqGSIb3DQMCAgEoMIGlBgkrBgEEAYI3EAQxgZcwgZQwgYwxCzAJ
-BgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGln
-aXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAxIFBy
-aW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQQIDA7ikMIGnBgsqhkiG9w0BCRACCzGBl6CB
-lDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNl
-Y3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENs
-YXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMDuKQwDQYJKoZIhvcNAQEB
-BQAEggIAjEc5v9d0mjDT1ViAO0VuN/zATgaATGb4p3XDwUdzmtnoudQDx6O7MuaPMvg2HZS3
-rJXxRORq8+DDeV7ILF4XHpl4CZVpj5EyMVlJM3G9Ans9Gx6wVsJ8M7A6xEPWb7ZszXn8rc/N
-WePKpwwZEvHWbc33GzYO5sEimwN9LnkzXtCT7RzcSiTO+gwmS0DLWhJk3lxugLgqOEgzAndw
-brDxFFTi5/N+NiCU8xGslOfy+gdyVmwo1OxZmabc3xoBrAquyGKegaKpvAuiPxOG40/YKBN1
-behdUCspFARrerrW4a/H9LT2CBLqTuPQY4KtgsMMqk0tzVEOcTnjoKJcSW+n9sQMZ2Dk2LRp
-n0sO3HdC34EsdjiX+0tp7mqaBe+ex0bXxB1v7L4EUK1l/5QwZCyBR547wfdoHQY0QYIc3HFm
-0GINsR+0W3THWfAqJekgDrgs4Dj1FtYhxYMrJOxePk8bhaiw7TkB0Z/K4gm1n06BWY/JR19f
-UtfPNipfGLOYSXvfjyiPfegvR5+zEhFy9X4b182K256CeBBe3fPYvxNOvhnfC++/LRD9tqKt
-6qRct21RmkO62IL9eTF6+7PzVlwv9Gpf65FbrF48JxjHaG0vuHMdxMCW3sduyANI99PvmWsr
-HR8uAe5VzG/szZ/E1qXIjqAjD0eEVmDV0p6M8/7xd3IAAAAAAAA=
---------------ms060002050000050000060003--
+
+--Sig_/aSCkcSBOKyPPjOd=DP_mBQA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT1V19jnsnt1WYoG5AQJoAQ/9F7PdQGMU6+xWUV6FzZcNr5/jKkTXnWD0
+njfhCBj9k3L+HHP2lTYKBlJrZReZWNYHhNCpQaHAg1Fvms4QobcygpMGBe7d6Fmx
+0VDLT5rhyGnBQucJ9AkRGsylcpmbg8nD+9VAw4ubcrGLCUx5r/ZoIJXqrTUWf8VZ
+gKQ5PAvCBVs5S0WLsYU8A+DYVJK9AtUvDLIMzhlmjDp2Ku9I7aFuo6yMTvtYvbzf
+JjunQ/jdV7U4mmn20BFSFJvGK9cB8o9chyJBNYOqNh4MBhcStLVnx6MMAa0aqHmO
+HV7VxpH7ZK7cl02tfQiX0g45dPcZfiy8ZyYJn+C7YzwXOibhckiZMaNh7yeJUIvI
+V1wN3Tf4N0xevF6NNNo8Bzg/RO6YFEnd9jGeP9oca9LZgkHo926ukGsyVG4YqS5w
+5pAhSOHsHoaXRd0NJC0VTO+Tkg2h7S97atGBO0GV1qAEI2QqzKk4Fp3ZMsh+AHXE
+i0I7NAWTaTEh0+VMr4kmoJhvxj2p1oABSAff72os+ofBbdHZqvBFT29MC5qucYju
+KYgYWWzQ6/3Bz39YnIyr0oge+refZ4xiQjwKH58EpSoXDAw+VGXSN8c/DPuLrRUX
+AbrOMbm4Wx+ymoGk9+BBPsXb3/b4HPHuKJkslHFvWAwOuPSJ0RjISaxSmQxHbsSx
+oMFwEShOiY8=
+=D6tD
+-----END PGP SIGNATURE-----
+
+--Sig_/aSCkcSBOKyPPjOd=DP_mBQA--
