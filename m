@@ -1,149 +1,205 @@
-From: Victor Balakine <victor.balakine@ubc.ca>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: Adding a disk to RAID0
-Date: Mon, 05 Mar 2012 15:35:15 -0800
-Message-ID: <4F554DB3.8080203@ubc.ca>
+Date: Tue, 6 Mar 2012 12:21:09 +1100
+Message-ID: <20120306122109.73cd065e@notabene.brown>
 References: <4F4D6493.3030300@ubc.ca>
+	<4F554DB3.8080203@ubc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/54IMHNEeUZPslfW7tvawo4N"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F4D6493.3030300@ubc.ca>
+In-Reply-To: <4F554DB3.8080203@ubc.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Victor Balakine <victor.balakine@ubc.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Am I the only one having problem adding disks to RAID0? Has anybody 
-tried that on 3.* kernel?
+--Sig_/54IMHNEeUZPslfW7tvawo4N
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Victor
+On Mon, 05 Mar 2012 15:35:15 -0800 Victor Balakine <victor.balakine@ubc.ca>
+wrote:
 
-On 2012-02-28 15:34, Victor Balakine wrote:
-> I am trying to add another disk to RAID0 and this functionality appears
-> to be broken.
-> First I create a RAID0 array:
-> #mdadm --create /dev/md0 --level=0 --raid-devices=1 --force /dev/xvda2
-> mdadm: Defaulting to version 1.2 metadata
-> mdadm: array /dev/md0 started.
->
-> So far everything works fine. Then I add another disk to it:
-> #mdadm --grow /dev/md0 --raid-devices=2 --add /dev/xvda3
-> --backup-file=/backup-md0
-> mdadm: level of /dev/md0 changed to raid4
-> mdadm: added /dev/xvda3
-> mdadm: Need to backup 1024K of critical section..
->
-> This is what I see in /var/log/messages
-> Feb 28 15:03:30 storage kernel: [ 1420.174022] md: bind<xvda2>
-> Feb 28 15:03:30 storage kernel: [ 1420.209167] md: raid0 personality
-> registered for level 0
-> Feb 28 15:03:30 storage kernel: [ 1420.209818] bio: create slab <bio-1>
-> at 1
-> Feb 28 15:03:30 storage kernel: [ 1420.209832] md/raid0:md0: looking at
-> xvda2
-> Feb 28 15:03:30 storage kernel: [ 1420.209837] md/raid0:md0: comparing
-> xvda2(8386560) with xvda2(8386560)
-> Feb 28 15:03:30 storage kernel: [ 1420.209844] md/raid0:md0: END
-> Feb 28 15:03:30 storage kernel: [ 1420.209851] md/raid0:md0: ==> UNIQUE
-> Feb 28 15:03:30 storage kernel: [ 1420.209856] md/raid0:md0: 1 zones
-> Feb 28 15:03:30 storage kernel: [ 1420.209859] md/raid0:md0: FINAL 1 zones
-> Feb 28 15:03:30 storage kernel: [ 1420.209866] md/raid0:md0: done.
-> Feb 28 15:03:30 storage kernel: [ 1420.209870] md/raid0:md0: md_size is
-> 8386560 sectors.
-> Feb 28 15:03:30 storage kernel: [ 1420.209875] ******* md0 configuration
-> *********
-> Feb 28 15:03:30 storage kernel: [ 1420.209879] zone0=[xvda2/]
-> Feb 28 15:03:30 storage kernel: [ 1420.209885] zone offset=0kb device
-> offset=0kb size=4193280kb
-> Feb 28 15:03:30 storage kernel: [ 1420.209902]
-> **********************************
-> Feb 28 15:03:30 storage kernel: [ 1420.209903]
-> Feb 28 15:03:30 storage kernel: [ 1420.209919] md0: detected capacity
-> change from 0 to 4293918720
-> Feb 28 15:03:30 storage kernel: [ 1420.223968] md0: p1
-> ...
-> Feb 28 15:04:01 storage kernel: [ 1450.783016] async_tx: api initialized
-> (async)
-> Feb 28 15:04:01 storage kernel: [ 1450.796912] xor: automatically using
-> best checksumming function: generic_sse
-> Feb 28 15:04:01 storage kernel: [ 1450.816012] generic_sse: 9509.000 MB/sec
-> Feb 28 15:04:01 storage kernel: [ 1450.816021] xor: using function:
-> generic_sse (9509.000 MB/sec)
-> Feb 28 15:04:01 storage kernel: [ 1450.912021] raid6: int64x1 1888 MB/s
-> Feb 28 15:04:01 storage kernel: [ 1450.980013] raid6: int64x2 2707 MB/s
-> Feb 28 15:04:01 storage kernel: [ 1451.048025] raid6: int64x4 2073 MB/s
-> Feb 28 15:04:01 storage kernel: [ 1451.116039] raid6: int64x8 2010 MB/s
-> Feb 28 15:04:01 storage kernel: [ 1451.184017] raid6: sse2x1 4764 MB/s
-> Feb 28 15:04:01 storage kernel: [ 1451.252018] raid6: sse2x2 5170 MB/s
-> Feb 28 15:04:01 storage kernel: [ 1451.320016] raid6: sse2x4 7548 MB/s
-> Feb 28 15:04:01 storage kernel: [ 1451.320025] raid6: using algorithm
-> sse2x4 (7548 MB/s)
-> Feb 28 15:04:01 storage kernel: [ 1451.330136] md: raid6 personality
-> registered for level 6
-> Feb 28 15:04:01 storage kernel: [ 1451.330145] md: raid5 personality
-> registered for level 5
-> Feb 28 15:04:01 storage kernel: [ 1451.330149] md: raid4 personality
-> registered for level 4
-> Feb 28 15:04:01 storage kernel: [ 1451.330662] md/raid:md0: device xvda2
-> operational as raid disk 0
-> Feb 28 15:04:01 storage kernel: [ 1451.330820] md/raid:md0: allocated
-> 2176kB
-> Feb 28 15:04:01 storage kernel: [ 1451.330869] md/raid:md0: raid level 4
-> active with 1 out of 2 devices, algorithm 5
-> Feb 28 15:04:01 storage kernel: [ 1451.330874] RAID conf printout:
-> Feb 28 15:04:01 storage kernel: [ 1451.330876] --- level:4 rd:2 wd:1
-> Feb 28 15:04:01 storage kernel: [ 1451.330878] disk 0, o:1, dev:xvda2
-> Feb 28 15:04:01 storage kernel: [ 1451.417995] md: bind<xvda3>
-> Feb 28 15:04:01 storage kernel: [ 1451.616399] RAID conf printout:
-> Feb 28 15:04:01 storage kernel: [ 1451.616404] --- level:4 rd:3 wd:2
-> Feb 28 15:04:01 storage kernel: [ 1451.616408] disk 0, o:1, dev:xvda2
-> Feb 28 15:04:01 storage kernel: [ 1451.616411] disk 1, o:1, dev:xvda3
-> Feb 28 15:04:01 storage kernel: [ 1451.619054] md: reshape of RAID array
-> md0
-> Feb 28 15:04:01 storage kernel: [ 1451.619066] md: minimum _guaranteed_
-> speed: 1000 KB/sec/disk.
-> Feb 28 15:04:01 storage kernel: [ 1451.619069] md: using maximum
-> available idle IO bandwidth (but not more than 200000 KB/sec) for reshape.
-> Feb 28 15:04:01 storage kernel: [ 1451.619075] md: using 128k window,
-> over a total of 4193280k.
-> Feb 28 15:05:02 storage udevd[280]: timeout '/sbin/blkid -o udev -p
-> /dev/md0'
-> Feb 28 15:05:03 storage udevd[280]: timeout: killing '/sbin/blkid -o
-> udev -p /dev/md0' [1829]
-> Feb 28 15:05:04 storage udevd[280]: timeout: killing '/sbin/blkid -o
-> udev -p /dev/md0' [1829]
-> Feb 28 15:05:05 storage udevd[280]: timeout: killing '/sbin/blkid -o
-> udev -p /dev/md0' [1829]
->
-> And then it just goes on forever. md0_raid0 process stays at 100% CPU load.
-> # ps -ef | grep md0
-> root 7268 2 99 09:34 ? 05:53:00 [md0_raid0]
-> root 7270 2 0 09:34 ? 00:00:00 [md0_reshape]
-> root 7271 1 0 09:34 pts/0 00:00:00 mdadm --grow /dev/md0
-> --raid-devices=2 --add /dev/sdc1 --backup-file=/backup-md0
->
-> # cat /proc/mdstat
-> Personalities : [raid0] [raid6] [raid5] [raid4]
-> md0 : active raid4 xvda3[2] xvda2[0]
-> 4193280 blocks super 1.2 level 4, 512k chunk, algorithm 5 [3/1] [U__]
-> resync=DELAYED
->
-> unused devices: <none>
->
-> # mdadm --version
-> mdadm - v3.2.2 - 17th June 2011
-> # uname -a
-> Linux storage 3.1.9-1.4-xen #1 SMP Fri Jan 27 08:55:10 UTC 2012
-> (efb5ff4) x86_64 x86_64 x86_64 GNU/Linux
->
-> It's OpenSUSE 12.1 with all the latest updates running in XEN that I
-> created to reproduce the problem. The actual server is running the same
-> version of OpenSUSE (Linux san1 3.1.9-1.4-desktop #1 SMP PREEMPT Fri Jan
-> 27 08:55:10 UTC 2012 (efb5ff4) x86_64 x86_64 x86_64 GNU/Linux) on a
-> hardware server. If you need any more information I can easily get it
-> since it's a VM and the problem is easily reproducible.
->
+> Am I the only one having problem adding disks to RAID0? Has anybody=20
+> tried that on 3.* kernel?
+
+Strange.  It works for me.
+
+We need to find out what the md0_raid0 process is doing.
+Can you
+   cat /proc/PROCESSID/stack
+
+and see what that shows?
+
+NeilBrown
+
+
+>=20
 > Victor
+>=20
+> On 2012-02-28 15:34, Victor Balakine wrote:
+> > I am trying to add another disk to RAID0 and this functionality appears
+> > to be broken.
+> > First I create a RAID0 array:
+> > #mdadm --create /dev/md0 --level=3D0 --raid-devices=3D1 --force /dev/xv=
+da2
+> > mdadm: Defaulting to version 1.2 metadata
+> > mdadm: array /dev/md0 started.
+> >
+> > So far everything works fine. Then I add another disk to it:
+> > #mdadm --grow /dev/md0 --raid-devices=3D2 --add /dev/xvda3
+> > --backup-file=3D/backup-md0
+> > mdadm: level of /dev/md0 changed to raid4
+> > mdadm: added /dev/xvda3
+> > mdadm: Need to backup 1024K of critical section..
+> >
+> > This is what I see in /var/log/messages
+> > Feb 28 15:03:30 storage kernel: [ 1420.174022] md: bind<xvda2>
+> > Feb 28 15:03:30 storage kernel: [ 1420.209167] md: raid0 personality
+> > registered for level 0
+> > Feb 28 15:03:30 storage kernel: [ 1420.209818] bio: create slab <bio-1>
+> > at 1
+> > Feb 28 15:03:30 storage kernel: [ 1420.209832] md/raid0:md0: looking at
+> > xvda2
+> > Feb 28 15:03:30 storage kernel: [ 1420.209837] md/raid0:md0: comparing
+> > xvda2(8386560) with xvda2(8386560)
+> > Feb 28 15:03:30 storage kernel: [ 1420.209844] md/raid0:md0: END
+> > Feb 28 15:03:30 storage kernel: [ 1420.209851] md/raid0:md0: =3D=3D> UN=
+IQUE
+> > Feb 28 15:03:30 storage kernel: [ 1420.209856] md/raid0:md0: 1 zones
+> > Feb 28 15:03:30 storage kernel: [ 1420.209859] md/raid0:md0: FINAL 1 zo=
+nes
+> > Feb 28 15:03:30 storage kernel: [ 1420.209866] md/raid0:md0: done.
+> > Feb 28 15:03:30 storage kernel: [ 1420.209870] md/raid0:md0: md_size is
+> > 8386560 sectors.
+> > Feb 28 15:03:30 storage kernel: [ 1420.209875] ******* md0 configuration
+> > *********
+> > Feb 28 15:03:30 storage kernel: [ 1420.209879] zone0=3D[xvda2/]
+> > Feb 28 15:03:30 storage kernel: [ 1420.209885] zone offset=3D0kb device
+> > offset=3D0kb size=3D4193280kb
+> > Feb 28 15:03:30 storage kernel: [ 1420.209902]
+> > **********************************
+> > Feb 28 15:03:30 storage kernel: [ 1420.209903]
+> > Feb 28 15:03:30 storage kernel: [ 1420.209919] md0: detected capacity
+> > change from 0 to 4293918720
+> > Feb 28 15:03:30 storage kernel: [ 1420.223968] md0: p1
+> > ...
+> > Feb 28 15:04:01 storage kernel: [ 1450.783016] async_tx: api initialized
+> > (async)
+> > Feb 28 15:04:01 storage kernel: [ 1450.796912] xor: automatically using
+> > best checksumming function: generic_sse
+> > Feb 28 15:04:01 storage kernel: [ 1450.816012] generic_sse: 9509.000 MB=
+/sec
+> > Feb 28 15:04:01 storage kernel: [ 1450.816021] xor: using function:
+> > generic_sse (9509.000 MB/sec)
+> > Feb 28 15:04:01 storage kernel: [ 1450.912021] raid6: int64x1 1888 MB/s
+> > Feb 28 15:04:01 storage kernel: [ 1450.980013] raid6: int64x2 2707 MB/s
+> > Feb 28 15:04:01 storage kernel: [ 1451.048025] raid6: int64x4 2073 MB/s
+> > Feb 28 15:04:01 storage kernel: [ 1451.116039] raid6: int64x8 2010 MB/s
+> > Feb 28 15:04:01 storage kernel: [ 1451.184017] raid6: sse2x1 4764 MB/s
+> > Feb 28 15:04:01 storage kernel: [ 1451.252018] raid6: sse2x2 5170 MB/s
+> > Feb 28 15:04:01 storage kernel: [ 1451.320016] raid6: sse2x4 7548 MB/s
+> > Feb 28 15:04:01 storage kernel: [ 1451.320025] raid6: using algorithm
+> > sse2x4 (7548 MB/s)
+> > Feb 28 15:04:01 storage kernel: [ 1451.330136] md: raid6 personality
+> > registered for level 6
+> > Feb 28 15:04:01 storage kernel: [ 1451.330145] md: raid5 personality
+> > registered for level 5
+> > Feb 28 15:04:01 storage kernel: [ 1451.330149] md: raid4 personality
+> > registered for level 4
+> > Feb 28 15:04:01 storage kernel: [ 1451.330662] md/raid:md0: device xvda2
+> > operational as raid disk 0
+> > Feb 28 15:04:01 storage kernel: [ 1451.330820] md/raid:md0: allocated
+> > 2176kB
+> > Feb 28 15:04:01 storage kernel: [ 1451.330869] md/raid:md0: raid level 4
+> > active with 1 out of 2 devices, algorithm 5
+> > Feb 28 15:04:01 storage kernel: [ 1451.330874] RAID conf printout:
+> > Feb 28 15:04:01 storage kernel: [ 1451.330876] --- level:4 rd:2 wd:1
+> > Feb 28 15:04:01 storage kernel: [ 1451.330878] disk 0, o:1, dev:xvda2
+> > Feb 28 15:04:01 storage kernel: [ 1451.417995] md: bind<xvda3>
+> > Feb 28 15:04:01 storage kernel: [ 1451.616399] RAID conf printout:
+> > Feb 28 15:04:01 storage kernel: [ 1451.616404] --- level:4 rd:3 wd:2
+> > Feb 28 15:04:01 storage kernel: [ 1451.616408] disk 0, o:1, dev:xvda2
+> > Feb 28 15:04:01 storage kernel: [ 1451.616411] disk 1, o:1, dev:xvda3
+> > Feb 28 15:04:01 storage kernel: [ 1451.619054] md: reshape of RAID array
+> > md0
+> > Feb 28 15:04:01 storage kernel: [ 1451.619066] md: minimum _guaranteed_
+> > speed: 1000 KB/sec/disk.
+> > Feb 28 15:04:01 storage kernel: [ 1451.619069] md: using maximum
+> > available idle IO bandwidth (but not more than 200000 KB/sec) for resha=
+pe.
+> > Feb 28 15:04:01 storage kernel: [ 1451.619075] md: using 128k window,
+> > over a total of 4193280k.
+> > Feb 28 15:05:02 storage udevd[280]: timeout '/sbin/blkid -o udev -p
+> > /dev/md0'
+> > Feb 28 15:05:03 storage udevd[280]: timeout: killing '/sbin/blkid -o
+> > udev -p /dev/md0' [1829]
+> > Feb 28 15:05:04 storage udevd[280]: timeout: killing '/sbin/blkid -o
+> > udev -p /dev/md0' [1829]
+> > Feb 28 15:05:05 storage udevd[280]: timeout: killing '/sbin/blkid -o
+> > udev -p /dev/md0' [1829]
+> >
+> > And then it just goes on forever. md0_raid0 process stays at 100% CPU l=
+oad.
+> > # ps -ef | grep md0
+> > root 7268 2 99 09:34 ? 05:53:00 [md0_raid0]
+> > root 7270 2 0 09:34 ? 00:00:00 [md0_reshape]
+> > root 7271 1 0 09:34 pts/0 00:00:00 mdadm --grow /dev/md0
+> > --raid-devices=3D2 --add /dev/sdc1 --backup-file=3D/backup-md0
+> >
+> > # cat /proc/mdstat
+> > Personalities : [raid0] [raid6] [raid5] [raid4]
+> > md0 : active raid4 xvda3[2] xvda2[0]
+> > 4193280 blocks super 1.2 level 4, 512k chunk, algorithm 5 [3/1] [U__]
+> > resync=3DDELAYED
+> >
+> > unused devices: <none>
+> >
+> > # mdadm --version
+> > mdadm - v3.2.2 - 17th June 2011
+> > # uname -a
+> > Linux storage 3.1.9-1.4-xen #1 SMP Fri Jan 27 08:55:10 UTC 2012
+> > (efb5ff4) x86_64 x86_64 x86_64 GNU/Linux
+> >
+> > It's OpenSUSE 12.1 with all the latest updates running in XEN that I
+> > created to reproduce the problem. The actual server is running the same
+> > version of OpenSUSE (Linux san1 3.1.9-1.4-desktop #1 SMP PREEMPT Fri Jan
+> > 27 08:55:10 UTC 2012 (efb5ff4) x86_64 x86_64 x86_64 GNU/Linux) on a
+> > hardware server. If you need any more information I can easily get it
+> > since it's a VM and the problem is easily reproducible.
+> >
+> > Victor
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/54IMHNEeUZPslfW7tvawo4N
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT1VmhTnsnt1WYoG5AQKrlA/9GDGULr9tJhkESnVOcZCzmf93fYfk398g
+vefmGrV7ryF9wwyFNPUGbSm1U1GxzG/Yg5REhsRVK6x3UAvc4dl0ZLUgPtckx+p6
+I3leMGKR8XtB1nzz9D8pntoH8Sdhadb+ZFo1i4/p9h7tCQOgHggDEZmDhxr61Vaz
+xqxSVscsFx0dodDx1ppYl55qKCkxgjPMWJhc0LX27DynH/XdABTqLkoyJe6uavzD
+kuYOHvMMWW/DYcGyDfJyisssEd+a7o5W/Z1TVE38RZ5BAjkpoZgA+x2jyLAg9oUO
+TE6qpjGbIf3C6KZDmYwA1ukMU2XxCtxfQFDuJKIII8DXdg8wGZxCm50O/O5iYOOe
+Ld0yzUMc+J1E4Y0r6k8w4/EmsEncBcxMlnXkucJl437KFQRKGoF2aUY4elspRoek
+0T70n61pGGu3xbvNTw4ttZo9+qyIpOaQa19xsbtp+DUl29NccOLO57v+mf5LA4X9
+S0g/aq7hctvnlHUCAiUdz8ELU+Rk9jiwtwLqamfry+tPjb1CQt/NlmLqoduTOPHV
+9EXGOoCh1BjQCR6C08epx3KE2GiET3+SI39Hf43CpJpPWzrGuMEohlXio1FQ5Rnr
+aFcvYtL8vMcMOuR9dHcRGKkOP4IyV4QynSkKvORoVqYuYmmNETkQ/S7e+fvgKsOj
+UVLTXrtcsQ8=
+=H29W
+-----END PGP SIGNATURE-----
+
+--Sig_/54IMHNEeUZPslfW7tvawo4N--
