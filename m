@@ -1,99 +1,75 @@
-From: Danilo Godec <danilo.godec@agenda.si>
-Subject: Re: Raid failure - drives or controller?
-Date: Wed, 07 Mar 2012 22:15:29 +0100
-Message-ID: <4F57CFF1.8040005@agenda.si>
-References: <4F57A05E.6000204@agenda.si> <CADNH=7Hme2BOCjBC9gw4YiTXkTGg6tw5EmH6bhuEx0_+05Wupg@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] Reset bad flag on map update
+Date: Thu, 8 Mar 2012 09:26:30 +1100
+Message-ID: <20120308092630.6c992e26@notabene.brown>
+References: <3F8F31A3BFD1664EAB894D1BD6AF32B915714B17@IRSMSX102.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/jpSlNSmCjgTB5r1eXQw+y/q"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADNH=7Hme2BOCjBC9gw4YiTXkTGg6tw5EmH6bhuEx0_+05Wupg@mail.gmail.com>
+In-Reply-To: <3F8F31A3BFD1664EAB894D1BD6AF32B915714B17@IRSMSX102.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Grabowski, Grzegorz" <grzegorz.grabowski@intel.com>
 List-Id: linux-raid.ids
 
-On 7.3.2012 22:11, Mathias Bur=C3=A9n wrote:
->
-> Can you please post the smartctl -a (from smartmontools) output for b=
-oth drives?
->
-> Mathias
-> --
+--Sig_/jpSlNSmCjgTB5r1eXQw+y/q
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-# smartctl -a /dev/sde
+On Wed, 7 Mar 2012 12:51:30 +0000 "Czarnowska, Anna"
+<anna.czarnowska@intel.com> wrote:
 
-> smartctl 5.39.1 2010-01-28 r3054 [x86_64-unknown-linux-gnu] (openSUSE=
- RPM)
-> Copyright (C) 2002-10 by Bruce Allen, http://smartmontools.sourceforg=
-e.net
->
-> Device: WDC      WD1002FBYS-02A6B Version: 0C06
-> Serial number:      WD-WMATV6536667
-> Device type: disk
-> scsiModePageOffset: response length too short, resp_len=3D12 offset=3D=
-12
-> bd_len=3D8
-> Local Time is: Wed Mar  7 22:13:35 2012 CET
-> Device does not support SMART
->
-> Current Drive Temperature:     <not available>
->
-> Error Counter logging not supported
->
-> [GLTSD (Global Logging Target Save Disable) set. Enable Save with '-S=
- on']
->
-> SMART Self-test log
-> Num  Test              Status                 segment  LifeTime=20
-> LBA_first_err [SK ASC ASQ]
->      Description                              number   (hours)
-> #256  Default           Completed                   - =20
-> 12946                 - [-   -    -]
-> #512  Default           Completed                   - =20
-> 12946                 - [-   -    -]
-> #768  Default           Completed                   -   =20
-> 554                 - [-   -    -]
+> Map file may miss an entry if bad flag is not cleared on update.
+>=20
+> This happens for example when an old entry exists in map that
+> has no mdstat counterpart and we create a new array with the same devnum.
+> Newly created array will not appear in map if update doesnt clear bad fla=
+g.
+>=20
+> Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+> ---
+>  mapfile.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/mapfile.c b/mapfile.c
+> index 0bfecd0..9e2c893 100644
+> --- a/mapfile.c
+> +++ b/mapfile.c
+> @@ -246,6 +246,7 @@ int map_update(struct map_ent **mpp, int devnum, char=
+ *metadata,
+>  			memcpy(mp->uuid, uuid, 16);
+>  			free(mp->path);
+>  			mp->path =3D path ? strdup(path) : NULL;
+> +			mp->bad =3D 0;
+>  			break;
+>  		}
+>  	if (!mp)
 
-# smartctl -a /dev/sdg
-> smartctl 5.39.1 2010-01-28 r3054 [x86_64-unknown-linux-gnu] (openSUSE=
- RPM)
-> Copyright (C) 2002-10 by Bruce Allen, http://smartmontools.sourceforg=
-e.net
->
-> Device: WDC      WD1002FBYS-02A6B Version: 0C06
-> Serial number:      WD-WMATV6535018
-> Device type: disk
-> scsiModePageOffset: response length too short, resp_len=3D12 offset=3D=
-12
-> bd_len=3D8
-> Local Time is: Wed Mar  7 22:13:40 2012 CET
-> Device does not support SMART
->
-> Current Drive Temperature:     <not available>
->
-> Error Counter logging not supported
->
-> [GLTSD (Global Logging Target Save Disable) set. Enable Save with '-S=
- on']
->
-> SMART Self-test log
-> Num  Test              Status                 segment  LifeTime=20
-> LBA_first_err [SK ASC ASQ]
->      Description                              number   (hours)
-> #256  Default           Completed                   -  =20
-> 1359                 - [-   -    -]
-> #512  Default           Completed                   -  =20
-> 1040                 - [-   -    -]
-> #768  Default           Completed                   -   =20
-> 581                 - [-   -    -]
+applied, thanks.
 
+NeilBrown
 
+--Sig_/jpSlNSmCjgTB5r1eXQw+y/q
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-   Thanks, Danilo
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+iQIVAwUBT1fgljnsnt1WYoG5AQI2Ig//Rv3IWm5gob8QZdEqpgrhctHsKsc2zEXg
+RV4pe9IvaaNwvahEDWsal3VdBEUzQ74VmT9E7G7ez5afxDcH/v4uYCG6zaJgwlZj
+7+G4e6ddOfH9iPdEOC6YWs89IZU42coZ/djI6mGmqWyUd5jMqZI7EZqFdW/8jss4
+sHgSQvY219vBw0KnpOz8Kr/sj7xl/i3hdBGA6z4VacG5W2OXzbatN1zb9grDQ1Kj
+WmuR6YhU23RfMkUwdgbMUXcy44nADYpdw0uIZL6rnEIxaWUKTtLOFbxBTv2IGSD+
+RwV2YLlim94AGSekhwSDnZOISpsmeWAhOfk7nC0mTa2BPRf8x7wvJjZyJEckR8jx
+oH3QvCsZzp/LrUA+86F6DepW/9dpjiOwjwGotnLxuYsEpmZjxJsjdx5GABtp1RVZ
+ENbpUelzW93WrQ591N3dJxGx0A/kv2atBzawYqP3v03+vYFAxtIn878UJ/03wOJ+
+eZ3HtcYSGSjlMNhKhVJZp5PtIQiReWx3c+ndE9ONGq4SzJXbU02DW7mPEvAlsJxp
++ojXxBLFUU35OVgiPN9ndD/Jwl2y1syXdqr0aJARLf0caOqP/NiB5Qzgcc1qSdj7
+9BzyI8aF4MkdE0lvLfV1hudWFAUg2vvFQH8SXverDCJZfVtN11k+iekO8kX4qPva
+tD/l2lbKVYo=
+=/FOU
+-----END PGP SIGNATURE-----
+
+--Sig_/jpSlNSmCjgTB5r1eXQw+y/q--
