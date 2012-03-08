@@ -1,86 +1,94 @@
-From: Miroslav Rovis <m.rovis@inet.hr>
-Subject: raid6 recovered, but what went wrong?
-Date: Thu, 08 Mar 2012 15:57:25 +0100
-Message-ID: <4F58C8D5.8070907@inet.hr>
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <a.miskiewicz@gmail.com>
+Subject: invalid bitmap file superblock: bad magic
+Date: Thu, 8 Mar 2012 17:11:17 +0100
+Message-ID: <201203081711.17836.a.miskiewicz@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: Text/Plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello.
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+I'm trying to create internal bitmap on freshly created
+raid1 array on 3.2.6 kernel.
 
-Hi, everyone!
-I have had about seven (7) days of profound musing about my data on LVM
-on rai6 recovery.
-It turned out to have been, rather likely, an issue with bad hardware
-induced broken software raid. Linux software Raid 6.
-I'm only making my conclusions due to overwhelming likelihood. I am no
-expert. Just a user.
-As a side interest, very much I would like to know whether my claims (on
-hardware induced breakage), and there's even a video linked for that
-purpose, are as probable as they seem to me.
-But I wouldn't bother this list solely for that, no, pls. bear with me!
-Further down as I went in my investigating of my system (there was more,
-a few days earlier, but it's  related to hardware known to use, and
-hardware to be checked by installing it on the known good (which is the
-main reason for my claim that the  broken software raid is hardware
-induced), and there is no need to delve into that in case that part of
-my query would be rejected by the list, or ther would be no interest.
-I am writing to this list predominantly related to my wish to understand
-how and what exactly went wrong with the software raid, and that I
-believe is clearly of interest to this list!
-So, anyone who would like to give me, and possibly other readers, a tip
-or two how to avoid hardware induced raid breakage, pls. have a look
-from the start of this long three days worth of little sleep and doing
-nothing else but recovery saga:
+What's going on and how to fix this problem?
 
-http://forum.cgsecurity.org/phpBB3/lvm2-on-raid6-partition-recovery-t80.html
+[root@setebos ~]# mdadm /dev/md3 --grow --bitmap=3Dinternal            =
+                                                                       =
+               =20
+mdadm: failed to set internal bitmap.
+[root@setebos ~]# dmesg|tail -n 16                                     =
+                                                                       =
+             =20
+[10455.564598] mdadm: sending ioctl 1261 to a partition!
+[10455.564601] mdadm: sending ioctl 1261 to a partition!
+[10455.566566] mdadm: sending ioctl 1261 to a partition!
+[10455.566570] mdadm: sending ioctl 1261 to a partition!
+[10455.568480] md3: invalid bitmap file superblock: bad magic
+[10455.568483] md3: bitmap file superblock:
+[10455.568485]          magic: 00000000
+[10455.568487]        version: 0
+[10455.568489]           uuid: 00000000.00000000.00000000.00000000
+[10455.568491]         events: 0
+[10455.568492] events cleared: 0
+[10455.568494]          state: 00000000
+[10455.568495]      chunksize: 0 B
+[10455.568497]   daemon sleep: 0s
+[10455.568498]      sync size: 0 KB
+[10455.568499] max write behind: 0
+[root@setebos ~]# mdadm --detail /dev/md3
+/dev/md3:
+        Version : 1.2
+  Creation Time : Thu Mar  8 13:54:16 2012
+     Raid Level : raid1
+     Array Size : 931760807 (888.60 GiB 954.12 GB)
+  Used Dev Size : 931760807 (888.60 GiB 954.12 GB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
 
-And, the more appropriate question for the list:
-what exactly went wrong with my raid6.
-I almost lost nearly one quarter of my computing space, and I am oldish
-and keep dozens and even hundreds of Gigabytes scattered around
-belonging to different projects before I am done with them and archive them.
+    Update Time : Thu Mar  8 18:46:11 2012
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
 
-I managed to recover my data but I still find it hard believing that the
-data is not gone.
-I am greatly relieved now, and I only kept calm until now, mostly
-because I didn't allow myself to contemplate on all the projects that
-would be permanently lost for me if the system wasn't recovered.
+           Name : rescue:3
+           UUID : 390e347b:c63b1a0e:1ff4f4a5:bc51f5c6
+         Events : 24
 
-I am, as well, so tired with it, that I couldn't muster my questions
-more precisely at this time.
-It's still been, with all the calmness, little sleep, much worry, and
-hard concentrated caution, and that is a little unnerving experience.
+    Number   Major   Minor   RaidDevice State
+       0       8        4        0      active sync   /dev/sda4
+       1       8       20        1      active sync   /dev/sdb4
+[root@setebos ~]# cat /proc/mdstat
+Personalities : [raid1]
+md3 : active raid1 sda4[0] sdb4[1]
+      931760807 blocks super 1.2 [2/2] [UU]
 
-I hope, for broaching of the matter, this could be sufficient, given
-these circustances.
-I could give a better query to the list in a few hours time, when I
-recover myself a little better. It is a mild PTSP what would develop if
-I ended up
-losing months' worth of my data.
+md1 : active raid1 sda2[0] sdb2[1]
+      995904 blocks [2/2] [UU]
 
-I also hope this could be of interest for the list, inasmuch as my
-recovery possibly could have some points generally useful to take a look
-at, for a software raid user.
-Possibly.
+md0 : active raid1 sda1[0] sdb1[1]
+      3999117 blocks super 1.2 [2/2] [UU]
 
-Thank you most sincerely!
-I truly hope to reach some lending ears over there!
+md2 : active raid1 sda3[0] sdb3[1]
+      40000754 blocks super 1.2 [2/2] [UU]
+      bitmap: 1/1 pages [4KB], 65536KB chunk
 
-Miroslav Rovis
-Croati
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+unused devices: <none>
+[root@setebos ~]#
 
-iEYEARECAAYFAk9YyNMACgkQ5NaGZVDan0pVEACfXOQvoA7j09ew0xcDGm2k8Iy4
-aaUAmgIhS3CH8ze/n1Ef4Z7z/Ahbh34l
-=1iS7
------END PGP SIGNATURE-----
 
+--=20
+Arkadiusz Mi=C5=9Bkiewicz        PLD/Linux Team
+arekm / maven.pl            http://ftp.pld-linux.org/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
