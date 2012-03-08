@@ -1,84 +1,86 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: mdadm: sending ioctl 1261 to a partition!
-Date: Thu, 8 Mar 2012 11:54:41 +0100
-Message-ID: <20120308105441.GB6681@quack.suse.cz>
-References: <4F54B997.3060207@crc.id.au>
- <4F54D314.9060504@anonymous.org.uk>
- <4F550BA8.3010306@crc.id.au>
- <20120306070143.4f8abc0e@notabene.brown>
- <4F556FA1.5020006@crc.id.au>
- <20120306132701.1b9600f4@notabene.brown>
- <4F55A0D7.4040908@zytor.com>
- <20120308110421.45d337b9@notabene.brown>
+From: Miroslav Rovis <m.rovis@inet.hr>
+Subject: raid6 recovered, but what went wrong?
+Date: Thu, 08 Mar 2012 15:57:25 +0100
+Message-ID: <4F58C8D5.8070907@inet.hr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120308110421.45d337b9@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, Steven Haigh <netwiz@crc.id.au>, John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org, Jan Kara <jack@suse.cz>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu 08-03-12 11:04:21, NeilBrown wrote:
-> On Mon, 05 Mar 2012 21:29:59 -0800 "H. Peter Anvin" <hpa@zytor.com> wrote:
-> 
-> > On 03/05/2012 06:27 PM, NeilBrown wrote:
-> > > 
-> > > So it is still called fsync_bdev and invalidate_bdev as long as the
-> > > ioctl function for the underlying disk returns -EINVAL or -ENOTTY.
-> > > 
-> > > The function that shows that warning is scsi_verify_blk_ioctl in 
-> > > block/scsi_ioctl.c The worst it can do is return -ENOTTY, and that
-> > > is safe.
-> > > 
-> > > So the warning is bogus, the code still works.
-> > > 
-> > 
-> > We should whitelist ioctls if they are legitimately used and harmless.
-> >  Do we have a specific list?
-> > 
-> > 	-hpa
-> > 
-> > 
-> 
-> We had the following in our SLES kernel for a while, though it seems it
-> disappeared when we pulled in 3.0.18.
-> Jan: should we put this stuff back?
-  Yeah, we should. I think it was removed by accident - partly because the
-patch doing the change was tagged as in mainline but it actually differed
-from mainline slightly.
 
-								Honza
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-> @@ -78,11 +83,19 @@ Index: linux-3.0-SLE11-SP2/block/scsi_ioctl.c
->  +      case SG_GET_RESERVED_SIZE:
->  +      case SG_SET_RESERVED_SIZE:
->  +      case SG_EMULATED_HOST:
-> ++      case BLKFLSBUF:
-> ++      case BLKROSET:
->  +              return 0;
->  +      case CDROM_GET_CAPABILITY:
-> -+              /* Keep this until we remove the printk below.  udev sends it
-> -+               * and we do not want to spam dmesg about it.   CD-ROMs do
-> -+               * not have partitions, so we get here only for disks.
-> ++      case CDROM_DRIVE_STATUS:
-> ++      case FDGETPRM:
-> ++      case RAID_VERSION:
-> ++      case MTIOCGET:
-> ++#ifdef CONFIG_COMPAT
-> ++      case 0x801c6d02:        /* MTIOCGET32 */
-> ++#endif
-> ++              /* Keep this until we remove the printk below. udev/dd sends
-> ++               * these and we do not want to spam dmesg about it. CD-ROMs
-> ++               * & tapes do not have partitions, so we get here only for
-> ++               * disks.
->  +               */
->  +              return -ENOTTY;
->  +      default:
-> 
+Hi, everyone!
+I have had about seven (7) days of profound musing about my data on LVM
+on rai6 recovery.
+It turned out to have been, rather likely, an issue with bad hardware
+induced broken software raid. Linux software Raid 6.
+I'm only making my conclusions due to overwhelming likelihood. I am no
+expert. Just a user.
+As a side interest, very much I would like to know whether my claims (on
+hardware induced breakage), and there's even a video linked for that
+purpose, are as probable as they seem to me.
+But I wouldn't bother this list solely for that, no, pls. bear with me!
+Further down as I went in my investigating of my system (there was more,
+a few days earlier, but it's  related to hardware known to use, and
+hardware to be checked by installing it on the known good (which is the
+main reason for my claim that the  broken software raid is hardware
+induced), and there is no need to delve into that in case that part of
+my query would be rejected by the list, or ther would be no interest.
+I am writing to this list predominantly related to my wish to understand
+how and what exactly went wrong with the software raid, and that I
+believe is clearly of interest to this list!
+So, anyone who would like to give me, and possibly other readers, a tip
+or two how to avoid hardware induced raid breakage, pls. have a look
+from the start of this long three days worth of little sleep and doing
+nothing else but recovery saga:
 
+http://forum.cgsecurity.org/phpBB3/lvm2-on-raid6-partition-recovery-t80.html
 
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+And, the more appropriate question for the list:
+what exactly went wrong with my raid6.
+I almost lost nearly one quarter of my computing space, and I am oldish
+and keep dozens and even hundreds of Gigabytes scattered around
+belonging to different projects before I am done with them and archive them.
+
+I managed to recover my data but I still find it hard believing that the
+data is not gone.
+I am greatly relieved now, and I only kept calm until now, mostly
+because I didn't allow myself to contemplate on all the projects that
+would be permanently lost for me if the system wasn't recovered.
+
+I am, as well, so tired with it, that I couldn't muster my questions
+more precisely at this time.
+It's still been, with all the calmness, little sleep, much worry, and
+hard concentrated caution, and that is a little unnerving experience.
+
+I hope, for broaching of the matter, this could be sufficient, given
+these circustances.
+I could give a better query to the list in a few hours time, when I
+recover myself a little better. It is a mild PTSP what would develop if
+I ended up
+losing months' worth of my data.
+
+I also hope this could be of interest for the list, inasmuch as my
+recovery possibly could have some points generally useful to take a look
+at, for a software raid user.
+Possibly.
+
+Thank you most sincerely!
+I truly hope to reach some lending ears over there!
+
+Miroslav Rovis
+Croati
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iEYEARECAAYFAk9YyNMACgkQ5NaGZVDan0pVEACfXOQvoA7j09ew0xcDGm2k8Iy4
+aaUAmgIhS3CH8ze/n1Ef4Z7z/Ahbh34l
+=1iS7
+-----END PGP SIGNATURE-----
+
