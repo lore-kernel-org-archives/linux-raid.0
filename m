@@ -1,52 +1,73 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: re-adding a disk to a raid1 array with bitmap
-Date: Fri, 09 Mar 2012 17:07:42 +0100
-Message-ID: <4F5A2ACE.4090003@redhat.com>
+From: John Obaterspok <john.obaterspok@gmail.com>
+Subject: Re: Hints on reducing kickouts
+Date: Sun, 11 Mar 2012 19:55:10 +0100
+Message-ID: <CAOscVdL_gTLVVHvFAQzv0XocDVH6t8oBSrqMQUHL5nH3vLQxgA@mail.gmail.com>
+References: <CAOscVd+CWwJoRknhGOvexC7w64o_5H-Q+USheTYZULJbJ8EOYA@mail.gmail.com>
+	<20120301182218.GB9106@atlantis.cc.ndsu.nodak.edu>
+	<CAOscVdKo6aU+H6xGfpMTdN_XCAVnF3V2XXuqN4V5rYBux3e3_Q@mail.gmail.com>
+	<20120303222424.GA29339@atlantis.cc.ndsu.nodak.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120303222424.GA29339@atlantis.cc.ndsu.nodak.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Brown, Neil" <neilb@suse.de>
-Cc: Doug Ledford <dledford@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Bryan Mesich <bryan.mesich@ndsu.edu>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil,
+Hello,
 
-I have been spinning my head over this for a bit trying to figure out
-what is the right solution to this problem.
+mdadm --grow /dev/md2 --bitmap=3Dinternal
+mdadm: failed to set internal bitmap.
 
-In bedd86b7773fd97f0d708cc0c371c8963ba7ba9a you added a test to reject
-re-adding a drive to an array in some cases.
+I then tried it on md1 and this crashed my machine. (bitmap_endwrite
+<- handle_stripe)
+hmm.
 
-The problem I have been looking at is if one has a raid1 with a bitmap.
-Basically in the situation where we have one of the drives pulled from
-the array, then if I try to add it back, it fails like this:
+I don't know what to do.
 
-[root@monkeybay ~]#  mdadm -I --run /dev/sdf5
-mdadm: failed to add /dev/sdf5 to /dev/md32: Invalid argument.
+-- John
 
-However this works:
-
-[root@monkeybay ~]# mdadm -a /dev/md32 /dev/sdf5
-mdadm: re-added /dev/sdf5
-
-I dug through the kernel and it shows up that the failure is due to this
-test in the above mentioned commit:
-
-+                    rdev->raid_disk != info->raid_disk)) {
-
-So basically when doing -I it seems the disk itself expects to be
-raid_disk = 0, whereas the kernel expects it should be raid_disk = 1.
-
-I agree with the previous discussion that it makes sense to reject a
-drive in the normal case without a bitmap. However it seems illogical to
-me that -a works but -I should fail in this case.
-
-What would be the right fix here? Relaxing the test in the kernel to not
-require the raid_disk numbers match up for a bitmap raid, or should
-mdadm be taught to examine the raids and set the expected disk number
-before submitting the add_new_disk ioctl?
-
-Cheers,
-Jes
+2012/3/3 Bryan Mesich <bryan.mesich@ndsu.edu>:
+> On Sat, Mar 03, 2012 at 10:28:20PM +0100, John Obaterspok wrote:
+>> Please see below for errors I get when trying to add internal bitmap=
+=2E
+>
+> [snip...]
+>
+>> okay, I'm trying to add an interal bitmap to see how much it slows d=
+own things:
+>>
+>> [root@Emperor ~]# mdadm --version
+>> mdadm - v3.2.3 - 23rd December 2011
+>>
+>>
+>> [root@Emperor ~]# mdadm --grow --bitmap=3Dinternal /dev/md2
+>> mdadm: failed to set internal bitmap.
+>
+> I think you are using the wrong cmd line syntax. =A0Try the
+> following for adding an internal bitmap to /dev/md2
+>
+> mdadm --grow /dev/md2 --bitmap=3Dinternal
+>
+> If you want to use an external bitmap, use --bitmap=3D"path to
+> file".
+>
+>> [root@Emperor ~]# mdadm --examine-bitmap /dev/md2
+>> =A0 =A0 =A0 =A0 Filename : /dev/md2
+>> =A0 =A0 =A0 =A0 =A0 =A0Magic : 00000000
+>> mdadm: invalid bitmap magic 0x0, the bitmap file appears to be corru=
+pted
+>> =A0 =A0 =A0 =A0 =A0Version : 0
+>> mdadm: unknown bitmap version 0, either the bitmap file is corrupted
+>> or you need to upgrade your tools
+>>
+>
+> [snip...]
+>
+> Bryan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
