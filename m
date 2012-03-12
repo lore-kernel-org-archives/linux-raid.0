@@ -1,68 +1,63 @@
 From: Shaohua Li <shli@fusionio.com>
-Subject: [patch 2/7] md: linear supports TRIM
-Date: Mon, 12 Mar 2012 11:04:14 +0800
-Message-ID: <20120312031305.556706935@fusionio.com>
+Subject: [patch 1/7] block: makes bio_split support bio without data
+Date: Mon, 12 Mar 2012 11:04:13 +0800
+Message-ID: <20120312031305.472465262@fusionio.com>
 References: <20120312030412.375458948@fusionio.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline; filename=md-linear-discard-support.patch
+Content-Disposition: inline; filename=bio_split-fix.patch
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 Cc: neilb@suse.de, axboe@kernel.dk, Shaohua Li <shli@fusionio.com>
 List-Id: linux-raid.ids
 
-This makes md linear support TRIM.
+discard bio hasn't data attached. We hit a BUG_ON with such bio. This makes
+bio_split works for such bio.
 
 Signed-off-by: Shaohua Li <shli@fusionio.com>
 ---
- drivers/md/linear.c |   16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ fs/bio.c |   22 ++++++++++++----------
+ 1 file changed, 12 insertions(+), 10 deletions(-)
 
-Index: linux/drivers/md/linear.c
+Index: linux/fs/bio.c
 ===================================================================
---- linux.orig/drivers/md/linear.c	2012-03-09 16:56:41.173790011 +0800
-+++ linux/drivers/md/linear.c	2012-03-12 10:15:44.916611071 +0800
-@@ -129,6 +129,7 @@ static struct linear_conf *linear_conf(s
- 	struct linear_conf *conf;
- 	struct md_rdev *rdev;
- 	int i, cnt;
-+	bool discard_supported = false;
+--- linux.orig/fs/bio.c	2012-03-09 16:56:41.203790008 +0800
++++ linux/fs/bio.c	2012-03-12 10:10:40.696612399 +0800
+@@ -1492,7 +1492,7 @@ struct bio_pair *bio_split(struct bio *b
+ 	trace_block_split(bdev_get_queue(bi->bi_bdev), bi,
+ 				bi->bi_sector + first_sectors);
  
- 	conf = kzalloc (sizeof (*conf) + raid_disks*sizeof(struct dev_info),
- 			GFP_KERNEL);
-@@ -171,6 +172,8 @@ static struct linear_conf *linear_conf(s
- 		conf->array_sectors += rdev->sectors;
- 		cnt++;
+-	BUG_ON(bi->bi_vcnt != 1);
++	BUG_ON(bi->bi_vcnt != 1 && bi->bi_vcnt != 0);
+ 	BUG_ON(bi->bi_idx != 0);
+ 	atomic_set(&bp->cnt, 3);
+ 	bp->error = 0;
+@@ -1502,17 +1502,19 @@ struct bio_pair *bio_split(struct bio *b
+ 	bp->bio2.bi_size -= first_sectors << 9;
+ 	bp->bio1.bi_size = first_sectors << 9;
  
-+		if (blk_queue_discard(bdev_get_queue(rdev->bdev)))
-+			discard_supported = true;
- 	}
- 	if (cnt != raid_disks) {
- 		printk(KERN_ERR "md/linear:%s: not enough drives present. Aborting!\n",
-@@ -178,6 +181,11 @@ static struct linear_conf *linear_conf(s
- 		goto out;
- 	}
+-	bp->bv1 = bi->bi_io_vec[0];
+-	bp->bv2 = bi->bi_io_vec[0];
+-	bp->bv2.bv_offset += first_sectors << 9;
+-	bp->bv2.bv_len -= first_sectors << 9;
+-	bp->bv1.bv_len = first_sectors << 9;
++	if (bi->bi_vcnt != 0) {
++		bp->bv1 = bi->bi_io_vec[0];
++		bp->bv2 = bi->bi_io_vec[0];
++		bp->bv2.bv_offset += first_sectors << 9;
++		bp->bv2.bv_len -= first_sectors << 9;
++		bp->bv1.bv_len = first_sectors << 9;
  
-+	if (!discard_supported)
-+		queue_flag_clear_unlocked(QUEUE_FLAG_DISCARD, mddev->queue);
-+	else
-+		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, mddev->queue);
-+
- 	/*
- 	 * Here we calculate the device offsets.
- 	 */
-@@ -319,6 +327,14 @@ static void linear_make_request(struct m
- 	bio->bi_sector = bio->bi_sector - start_sector
- 		+ tmp_dev->rdev->data_offset;
- 	rcu_read_unlock();
-+
-+	if (unlikely((bio->bi_rw & REQ_DISCARD) &&
-+		!blk_queue_discard(bdev_get_queue(bio->bi_bdev)))) {
-+		/* Just ignore it */
-+		bio_endio(bio, 0);
-+		return;
+-	bp->bio1.bi_io_vec = &bp->bv1;
+-	bp->bio2.bi_io_vec = &bp->bv2;
++		bp->bio1.bi_io_vec = &bp->bv1;
++		bp->bio2.bi_io_vec = &bp->bv2;
+ 
+-	bp->bio1.bi_max_vecs = 1;
+-	bp->bio2.bi_max_vecs = 1;
++		bp->bio1.bi_max_vecs = 1;
++		bp->bio2.bi_max_vecs = 1;
 +	}
-+
- 	generic_make_request(bio);
- }
  
+ 	bp->bio1.bi_end_io = bio_pair_end_1;
+ 	bp->bio2.bi_end_io = bio_pair_end_2;
 
