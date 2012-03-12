@@ -1,36 +1,48 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Striping does not increase performance.
-Date: Mon, 12 Mar 2012 16:23:21 +0000
-Message-ID: <4F5E22F9.1040208@anonymous.org.uk>
-References: <CAKFseUN8-Rb1x5j-JM+q3CLEXnFO0ieAmBG_5tVcxu4NAz0ojA@mail.gmail.com> <20120312125720.GL4558@voyageur.mas.nom.fr> <CAKFseUO5CVHBLhcY19DWzqhf-Ebrn7c-=iwxANuRcqwTV0PyBg@mail.gmail.com> <20120312135847.GM4558@voyageur.mas.nom.fr> <4F5E0963.6080708@cesnet.cz>
+From: Wiliam Colls <william.colls@rogers.com>
+Subject: Re: Can't Boot from /dev/md0 - Solved
+Date: Mon, 12 Mar 2012 12:44:12 -0400
+Message-ID: <4F5E27DC.4010306@rogers.com>
+References: <4F5D38FD.4080803@rogers.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F5E0963.6080708@cesnet.cz>
+In-Reply-To: <4F5D38FD.4080803@rogers.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jiri Horky <jiri.horky@cesnet.cz>
-Cc: Erwan MAS <erwan@mas.nom.fr>, Caspar Smit <c.smit@truebit.nl>, linux-raid@vger.kernel.org, fio@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/03/2012 14:34, Jiri Horky wrote:
-> Hi,
+On 03/11/2012 07:45 PM, Wiliam Colls wrote:
 >
-> as for alignment, please also check md metadata format version (-e
-> switch of mdadm). The version that ensures alignment is 1.0, which
-> places the metadata information to the back of the drive.
+> Ubuntu 10.04 server, patched to date.
+>
+> This machine is configured to boot from a Raid1 array. The partitions
+> are located on /dev/sdb1 and /dev/sdc1, the boot partition is located on
+> /dev/sda1. This configuation has worked well for some time, but after a
+> recent shutdown for maintenance, which did not involve any of the
+> partitions, the machine refuses to boot. The sequence hangs very shortly
+> after startup, and eventually errors out with the message /dev/md0 not
+> available. and drops into the Busybox shell.
+>
+> After booting from a live rescue CD, and examining the partitions, they
+> are all intact, and clean. They rescue CD was able to assemble the array.
+>
+> Not sure where to go from here. Any Suggestions will be greatfully
+> received.
+>
+> William.
+>
+> PS. I am sure that I read some recent discussion on a very similar
+> problem, but I can't find that material now. If anyone has a link, it
+> also be greatfully received.
+>
 
-As far as I can tell from looking at the source, ever since the 1.x 
-metadata types were introduced (with mdadm 2.0, in August 2005):
+At least for now. After further investigation, I realised that the mdadm 
+module was availalbe in the kernal, and I was able to assemble the array 
+from the busybox prompt, and the boot will then continue normally. Still 
+trying to determine what caused the problem and find a permanent fix.
 
-* the data offset on 1.1 and 1.2 arrays has always been 4K-aligned,
-* the superblock offset for 1.0 arrays has always been 4K-aligned,
-* the bitmap offset for all 1.x arrays has always been 4K-aligned.
 
-As of mdadm 3.1.2 (March 2010), the data offset for new 1.1 and 1.2 
-arrays is always 1MB (2048 sectors), so they're also 1M-aligned.
-
-Cheers,
-
-John.
-
+-- 
+I know that you believe that you understand what you think I said, but I 
+am not sure that you realise that what you heard was not what I meant.
