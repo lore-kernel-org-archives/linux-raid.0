@@ -1,16 +1,16 @@
 From: Shaohua Li <shli@fusionio.com>
-Subject: [patch 4/7] md: raid 1 supports TRIM
-Date: Mon, 12 Mar 2012 11:04:16 +0800
-Message-ID: <20120312031305.730924428@fusionio.com>
+Subject: [patch 5/7] md: raid 10 supports TRIM
+Date: Mon, 12 Mar 2012 11:04:17 +0800
+Message-ID: <20120312031305.854321433@fusionio.com>
 References: <20120312030412.375458948@fusionio.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline; filename=md-raid1-discard-support.patch
+Content-Disposition: inline; filename=md-raid10-discard-support.patch
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 Cc: neilb@suse.de, axboe@kernel.dk, Shaohua Li <shli@fusionio.com>
 List-Id: linux-raid.ids
 
-This makes md raid 1 support TRIM.
+This makes md raid 10 support TRIM.
 If one disk supports discard and another not, or one has discard_zero_data and
 another not, there could be inconsistent between data from such disks. But this
 should not matter, discarded data is useless. This will add extra copy in rebuild
@@ -18,14 +18,14 @@ though.
 
 Signed-off-by: Shaohua Li <shli@fusionio.com>
 ---
- drivers/md/raid1.c |   21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
+ drivers/md/raid10.c |   26 +++++++++++++++++++++++---
+ 1 file changed, 23 insertions(+), 3 deletions(-)
 
-Index: linux/drivers/md/raid1.c
+Index: linux/drivers/md/raid10.c
 ===================================================================
---- linux.orig/drivers/md/raid1.c	2012-03-12 10:09:42.426612652 +0800
-+++ linux/drivers/md/raid1.c	2012-03-12 10:16:50.276610783 +0800
-@@ -673,7 +673,12 @@ static void flush_pending_writes(struct
+--- linux.orig/drivers/md/raid10.c	2012-03-12 10:09:42.426612652 +0800
++++ linux/drivers/md/raid10.c	2012-03-12 10:19:05.046610195 +0800
+@@ -800,7 +800,12 @@ static void flush_pending_writes(struct
  		while (bio) { /* submit pending writes */
  			struct bio *next = bio->bi_next;
  			bio->bi_next = NULL;
@@ -39,55 +39,73 @@ Index: linux/drivers/md/raid1.c
  			bio = next;
  		}
  	} else
-@@ -835,6 +840,7 @@ static void make_request(struct mddev *m
+@@ -926,6 +931,7 @@ static void make_request(struct mddev *m
  	const int rw = bio_data_dir(bio);
  	const unsigned long do_sync = (bio->bi_rw & REQ_SYNC);
- 	const unsigned long do_flush_fua = (bio->bi_rw & (REQ_FLUSH | REQ_FUA));
+ 	const unsigned long do_fua = (bio->bi_rw & REQ_FUA);
 +	const unsigned long do_discard = (bio->bi_rw & (REQ_DISCARD | REQ_SECURE));
+ 	unsigned long flags;
  	struct md_rdev *blocked_rdev;
  	int plugged;
- 	int first_clone;
-@@ -1135,7 +1141,7 @@ read_again:
- 				   conf->mirrors[i].rdev->data_offset);
- 		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
- 		mbio->bi_end_io	= raid1_end_write_request;
--		mbio->bi_rw = WRITE | do_flush_fua | do_sync;
-+		mbio->bi_rw = WRITE | do_flush_fua | do_sync | do_discard;
- 		mbio->bi_private = r1_bio;
+@@ -1241,7 +1247,7 @@ retry_write:
+ 				   conf->mirrors[d].rdev->data_offset);
+ 		mbio->bi_bdev = conf->mirrors[d].rdev->bdev;
+ 		mbio->bi_end_io	= raid10_end_write_request;
+-		mbio->bi_rw = WRITE | do_sync | do_fua;
++		mbio->bi_rw = WRITE | do_sync | do_fua | do_discard;
+ 		mbio->bi_private = r10_bio;
  
- 		atomic_inc(&r1_bio->remaining);
-@@ -1371,6 +1377,8 @@ static int raid1_add_disk(struct mddev *
- 		}
+ 		atomic_inc(&r10_bio->remaining);
+@@ -1266,7 +1272,7 @@ retry_write:
+ 				   conf->mirrors[d].replacement->data_offset);
+ 		mbio->bi_bdev = conf->mirrors[d].replacement->bdev;
+ 		mbio->bi_end_io	= raid10_end_write_request;
+-		mbio->bi_rw = WRITE | do_sync | do_fua;
++		mbio->bi_rw = WRITE | do_sync | do_fua | do_discard;
+ 		mbio->bi_private = r10_bio;
+ 
+ 		atomic_inc(&r10_bio->remaining);
+@@ -1543,6 +1549,9 @@ static int raid10_add_disk(struct mddev
  	}
+ 
  	md_integrity_add_rdev(rdev, mddev);
 +	if (blk_queue_discard(bdev_get_queue(rdev->bdev)))
 +		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, mddev->queue);
++
  	print_conf(conf);
  	return err;
  }
-@@ -2585,6 +2593,7 @@ static int run(struct mddev *mddev)
- 	struct r1conf *conf;
- 	int i;
+@@ -3214,6 +3223,7 @@ static int run(struct mddev *mddev)
+ 	struct mirror_info *disk;
  	struct md_rdev *rdev;
+ 	sector_t size;
 +	bool discard_supported = false;
  
- 	if (mddev->level != 1) {
- 		printk(KERN_ERR "md/raid1:%s: raid level not set to mirroring (%d)\n",
-@@ -2623,8 +2632,16 @@ static int run(struct mddev *mddev)
- 			blk_queue_segment_boundary(mddev->queue,
- 						   PAGE_CACHE_SIZE - 1);
+ 	/*
+ 	 * copy the already verified devices into our private RAID10
+@@ -3234,6 +3244,7 @@ static int run(struct mddev *mddev)
+ 	mddev->thread = conf->thread;
+ 	conf->thread = NULL;
+ 
++	blk_queue_max_discard_sectors(mddev->queue, mddev->chunk_sectors);
+ 	chunk_size = mddev->chunk_sectors << 9;
+ 	blk_queue_io_min(mddev->queue, chunk_size);
+ 	if (conf->raid_disks % conf->near_copies)
+@@ -3273,7 +3284,16 @@ static int run(struct mddev *mddev)
  		}
+ 
+ 		disk->head_position = 0;
 +
 +		if (blk_queue_discard(bdev_get_queue(rdev->bdev)))
 +			discard_supported = true;
  	}
- 
++
 +	if (discard_supported)
 +		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, mddev->queue);
 +	else
 +		queue_flag_clear_unlocked(QUEUE_FLAG_DISCARD, mddev->queue);
 +
- 	mddev->degraded = 0;
- 	for (i=0; i < conf->raid_disks; i++)
- 		if (conf->mirrors[i].rdev == NULL ||
+ 	/* need to check that every block has at least one working mirror */
+ 	if (!enough(conf, -1)) {
+ 		printk(KERN_ERR "md/raid10:%s: not enough operational mirrors.\n",
 
