@@ -1,145 +1,136 @@
-From: Carl Engstrom <engstrom@cox.net>
-Subject: mdadm raid can't set proper devices in super-block
-Date: Mon, 12 Mar 2012 17:38:16 +0000 (UTC)
-Message-ID: <loom.20120312T183628-941@post.gmane.org>
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: Re: [patch 0/7] Add TRIM support for raid linear/0/1/10
+Date: Mon, 12 Mar 2012 18:22:59 +0000 (GMT)
+Message-ID: <alpine.LRH.2.02.1203121806120.23719@diagnostix.dwd.de>
+References: <20120312030412.375458948@fusionio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120312030412.375458948@fusionio.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@fusionio.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de, axboe@kernel.dk
 List-Id: linux-raid.ids
 
-resetting mdadm superblock 
+Hello,
 
---------------------------------------------------------------------------------
- 
-Hey folks,
- 
-I'm having some issues with my md array after upgrading to 11.04.
- 
-In my case I have an RAID0 array created from 2 devices (See below)
- 
-Boot drives: /dev/sda1
- raid 0 dev 1: /dev/sdb1
- raid 0 dev 2: /dev/sdc1
- 
-RAID device is: /dev/md0
- 
-The issue is that the super blocks for /dev/sdb1 and /dev/sdc1 look like this.
- 
-----------------
- root@uNAS:~# mdadm -E /dev/sdb1
- /dev/sdb1:
- Magic : a92b4efc
- Version : 00.90.00
- UUID : 3424db31:eeb216cb:4c0d2395:9c0bfdf6 (local to host uNAS)
- Creation Time : Mon Nov 9 20:31:42 2009
- Raid Level : raid0
- Used Dev Size : 0
- Raid Devices : 2
- Total Devices : 2
- Preferred Minor : 0
- 
-Update Time : Sun Feb 13 11:03:20 2011
- State : active
- Active Devices : 2
- Working Devices : 2
- Failed Devices : 0
- Spare Devices : 0
- Checksum : 4c6d7ae7 - correct
- Events : 13
- 
-Chunk Size : 64K
- 
-Number Major Minor RaidDevice State
- this 0 8 1 0 active sync /dev/sda1
- 
-0 0 8 1 0 active sync /dev/sda1
- 1 1 8 17 1 active sync /dev/sdb1
- ---------------
- root@uNAS:~# mdadm -E /dev/sdc1
- /dev/sdc1:
- Magic : a92b4efc
- Version : 00.90.00
- UUID : 3424db31:eeb216cb:4c0d2395:9c0bfdf6 (local to host uNAS)
- Creation Time : Mon Nov 9 20:31:42 2009
- Raid Level : raid0
- Used Dev Size : 0
- Raid Devices : 2
- Total Devices : 2
- Preferred Minor : 0
- 
-Update Time : Sun Feb 13 11:03:20 2011
- State : active
- Active Devices : 2
- Working Devices : 2
- Failed Devices : 0
- Spare Devices : 0
- Checksum : 4c6d7af9 - correct
- Events : 13
- 
-Chunk Size : 64K
- 
-Number Major Minor RaidDevice State
- this 1 8 17 1 active sync /dev/sdb1
- 
-0 0 8 1 0 active sync /dev/sda1
- 1 1 8 17 1 active sync /dev/sdb1
- --------
- 
-the array will start with:
- mdadm -A --update=super-minor /dev/md0 /dev/sdb1 /dev/sdc1
- 
-and the array looks like this:
- root@uNAS:~# mdadm -Q --detail /dev/md0
- /dev/md0:
- Version : 00.90
- Creation Time : Mon Nov 9 20:31:42 2009
- Raid Level : raid0
- Array Size : 3904887168 (3723.99 GiB 3998.60 GB)
- Raid Devices : 2
- Total Devices : 2
- Preferred Minor : 0
- Persistence : Superblock is persistent
- 
-Update Time : Sun Feb 13 11:03:20 2011
- State : clean
- Active Devices : 2
- Working Devices : 2
- Failed Devices : 0
- Spare Devices : 0
- 
-Chunk Size : 64K
- 
-UUID : 3424db31:eeb216cb:4c0d2395:9c0bfdf6 (local to host uNAS)
- Events : 0.13
- 
-Number Major Minor RaidDevice State
- 0 8 17 0 active sync /dev/sdb1
- 1 8 33 1 active sync /dev/sdc1
- --------------
- 
-but for some reason the super block isn't being updated...so the array won't 
-autostart. My understanding is that the update=super-minor tells the system to 
-start each drive and update the minor field...which I thought would fix this.
- 
-here is the ooutput from the start up:
- 
----------------
- root@uNAS:~# mdadm -Av --update=super-minor /dev/md0 /dev/sdb1 /dev/sdc1
- mdadm: looking for devices for /dev/md0
- mdadm: updating superblock of /dev/sdb1 with minor number 0
- mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 0.
- mdadm: updating superblock of /dev/sdc1 with minor number 0
- mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 1.
- mdadm: added /dev/sdc1 to /dev/md0 as 1
- mdadm: added /dev/sdb1 to /dev/md0 as 0
- mdadm: /dev/md0 has been started with 2 drives.
- 
--------------------
- 
-Anyone know what's going on?
- 
-thanks. 
+On Mon, 12 Mar 2012, Shaohua Li wrote:
 
+> The patches add TRIM support for raid linear/0/1/10. I'll add TRIM support for
+> raid 4/5/6 later. The implementation is pretty straightforward and
+> self-explained.
+>
+First, thanks for this patch!
+
+I have applied those patches against 3.3.0-rc7 and during boot the kernel
+reports a lot of the following:
+
+    Mar 12 18:56:00 c3po kernel: [    7.611045] md/raid0:md3: make_request bug: can't convert block across chunks or bigger than 512k 18861064 512
+    Mar 12 18:56:00 c3po kernel: [    7.611047] md/raid0:md3: make_request bug: can't convert block across chunks or bigger than 512k 18862088 512
+    Mar 12 18:56:00 c3po kernel: [    7.611049] md/raid0:md3: make_request bug: can't convert block across chunks or bigger than 512k 18863112 512
+    Mar 12 18:56:00 c3po kernel: [    7.611052] md/raid0:md3: make_request bug: can't convert block across chunks or bigger than 512k 18864136 512
+    Mar 12 18:56:00 c3po kernel: [    7.611054] md/raid0:md3: make_request bug: can't convert block across chunks or bigger than 512k 18865160 512
+    Mar 12 18:56:00 c3po kernel: [    7.611056] md/raid0:md3: make_request bug: can't convert block across chunks or bigger than 512k 18866184 512
+
+The raid looks as follows:
+
+   cat /proc/mdstat
+   Personalities : [raid0] [raid1]
+   md2 : active raid0 sdc3[2] sdb3[1] sda3[0]
+         50328576 blocks super 1.1 512k chunks
+
+   md0 : active raid1 sdc1[1] sdb1[2]
+         245748 blocks super 1.0 [2/2] [UU]
+
+   md3 : active raid0 sdc5[2] sda5[0] sdb5[1]
+         9434112 blocks super 1.1 512k chunks
+
+   md1 : active raid0 sdc2[2] sda2[0] sdb2[1]
+         22017024 blocks super 1.1 512k chunks
+
+   unused devices: <none>
+
+/dev/md3 is the swap partition.
+
+I also get these reports from /dev/md2 which is my /home partition:
+
+    Mar 12 19:06:42 c3po kernel: [  658.419035] md/raid0:md2: make_request bug: can't convert block across chunks or bigger than 512k 152088 512
+    Mar 12 19:06:42 c3po kernel: [  658.419042] md/raid0:md2: make_request bug: can't convert block across chunks or bigger than 512k 153112 512
+    Mar 12 19:06:42 c3po kernel: [  658.451489] md/raid0:md2: make_request bug: can't convert block across chunks or bigger than 512k 3206944 512
+    Mar 12 19:06:42 c3po kernel: [  658.451494] md/raid0:md2: make_request bug: can't convert block across chunks or bigger than 512k 3207968 512
+    Mar 12 19:06:42 c3po kernel: [  658.451499] md/raid0:md2: make_request bug: can't convert block across chunks or bigger than 512k 3208992 164
+
+I then did a 'make clean' in my kernel tree which is on /dev/md1. After a
+sync, which took very long the following errors appear:
+
+    Mar 12 19:12:34 c3po kernel: [ 1010.609388] md/raid0:md1: make_request bug: can't convert block across chunks or bigger than 512k 9986936 512
+    Mar 12 19:12:34 c3po kernel: [ 1010.609393] md/raid0:md1: make_request bug: can't convert block across chunks or bigger than 512k 9987960 512
+    Mar 12 19:12:34 c3po kernel: [ 1010.609396] md/raid0:md1: make_request bug: can't convert block across chunks or bigger than 512k 9988984 512
+    Mar 12 19:12:34 c3po kernel: [ 1010.670542] md/raid0:md1: make_request bug: can't convert block across chunks or bigger than 512k 11535480 512
+    Mar 12 19:12:34 c3po kernel: [ 1010.787087] md/raid0:md1: make_request bug: can't convert block across chunks or bigger than 512k 8998632 160
+    Mar 12 19:12:34 c3po kernel: [ 1010.799357] md/raid0:md1: make_request bug: can't convert block across chunks or bigger than 512k 9037136 476
+    Mar 12 19:12:34 c3po kernel: [ 1010.807195] md/raid0:md1: make_request bug: can't convert block across chunks or bigger than 512k 8999792 512
+    Mar 12 19:12:34 c3po kernel: [ 1010.807201] md/raid0:md1: make_request bug: can't convert block across chunks or bigger than 512k 9000816 108
+    Mar 12 19:12:34 c3po kernel: [ 1010.899348] md/raid0:md1: make_request bug: can't convert block across chunks or bigger than 512k 8996824 28
+    Mar 12 19:12:34 c3po kernel: [ 1010.905625] md/raid0:md1: make_request bug: can't convert block across chunks or bigger than 512k 9977808 512
+    Mar 12 19:12:34 c3po kernel: [ 1010.905631] md/raid0:md1: make_request bug: can't convert block across chunks or bigger than 512k 9978832 512
+    Mar 12 19:12:34 c3po kernel: [ 1010.905636] md/raid0:md1: make_request bug: can't convert block across chunks or bigger than 512k 9979856 512
+    Mar 12 19:12:34 c3po kernel: [ 1010.905641] md/raid0:md1: make_request bug: can't convert block across chunks or bigger than 512k 9980880 44
+    Mar 12 19:12:34 c3po kernel: [ 1011.145590] md/raid0:md1: make_request bug: can't convert block across chunks or bigger than 512k 8940504 72
+       .
+       .
+       .
+    Mar 12 19:12:37 c3po kernel: [ 1013.781899] md/raid0:md1: make_request bug: can't convert block across chunks or bigger than 512k 9036704 208
+    Mar 12 19:12:37 c3po kernel: [ 1013.781910] md/raid0:md1: make_request bug: can't convert block across chunks or bigger than 512k 9040824 76
+    Mar 12 19:12:37 c3po kernel: [ 1013.901750] md/raid0:md1: make_request bug: can't convert block across chunks or bigger than 512k 8841152 64
+    Mar 12 19:12:37 c3po kernel: [ 1014.015810] request botched: dev sda: type=1, flags=9164081
+    Mar 12 19:12:37 c3po kernel: [ 1014.015814]   sector 2615297, nr/cnr 0/1024
+    Mar 12 19:12:37 c3po kernel: [ 1014.015818]   bio ffff880193fd4140, biotail ffff880193fd45c0, buffer           (null), len 0
+    Mar 12 19:12:37 c3po kernel: [ 1014.017423] request botched: dev sdc: type=1, flags=9164081
+    Mar 12 19:12:37 c3po kernel: [ 1014.017426]   sector 2614273, nr/cnr 0/1024
+    Mar 12 19:12:37 c3po kernel: [ 1014.017430]   bio ffff880193fd4080, biotail ffff880193fd4500, buffer           (null), len 0
+    Mar 12 19:12:37 c3po kernel: [ 1014.019569] request botched: dev sdb: type=1, flags=9164081
+    Mar 12 19:12:37 c3po kernel: [ 1014.019572]   sector 2614273, nr/cnr 0/1024
+    Mar 12 19:12:37 c3po kernel: [ 1014.019576]   bio ffff88016e1fb2c0, biotail ffff880193fd4680, buffer           (null), len 0
+    Mar 12 19:12:37 c3po kernel: [ 1014.025916] request botched: dev sda: type=1, flags=916c081
+    Mar 12 19:12:37 c3po kernel: [ 1014.025920]   sector 2615298, nr/cnr 0/1024
+    Mar 12 19:12:37 c3po kernel: [ 1014.025923]   bio ffff880193fd4380, biotail ffff880193fd45c0, buffer           (null), len 0
+    Mar 12 19:12:37 c3po kernel: [ 1014.027496] request botched: dev sdc: type=1, flags=916c081
+    Mar 12 19:12:37 c3po kernel: [ 1014.027499]   sector 2614274, nr/cnr 0/1024
+    Mar 12 19:12:37 c3po kernel: [ 1014.027503]   bio ffff880193fd42c0, biotail ffff880193fd4500, buffer           (null), len 0
+    Mar 12 19:12:37 c3po kernel: [ 1014.034183] request botched: dev sdb: type=1, flags=916c081
+    Mar 12 19:12:37 c3po kernel: [ 1014.034187]   sector 2614274, nr/cnr 0/1024
+    Mar 12 19:12:37 c3po kernel: [ 1014.034190]   bio ffff880193fd4200, biotail ffff880193fd4680, buffer           (null), len 0
+    Mar 12 19:12:37 c3po kernel: [ 1014.037478] request botched: dev sdc: type=1, flags=916c081
+    Mar 12 19:12:37 c3po kernel: [ 1014.037482]   sector 2614275, nr/cnr 0/1024
+    Mar 12 19:12:37 c3po kernel: [ 1014.037485]   bio ffff880193fd4500, biotail ffff880193fd4500, buffer           (null), len 0
+    Mar 12 19:12:37 c3po kernel: [ 1014.039616] request botched: dev sdb: type=1, flags=916c081
+    Mar 12 19:12:37 c3po kernel: [ 1014.039620]   sector 2614275, nr/cnr 0/1024
+    Mar 12 19:12:37 c3po kernel: [ 1014.039623]   bio ffff880193fd4440, biotail ffff880193fd4680, buffer           (null), len 0
+    Mar 12 19:12:37 c3po kernel: [ 1014.040477] request botched: dev sda: type=1, flags=916c081
+    Mar 12 19:12:37 c3po kernel: [ 1014.040481]   sector 2615299, nr/cnr 0/1024
+       .
+       .
+       .
+
+The list goes on for very long. Here the mount options:
+
+    /dev/md1 / ext4 rw,noatime,user_xattr,commit=600,barrier=1,journal_async_commit,stripe=384,data=ordered,discard 0 0
+    /dev/md0 /boot ext4 rw,noatime,user_xattr,commit=2400,barrier=1,journal_async_commit,data=ordered,discard 0 0
+    /dev/md2 /home ext4 rw,noatime,user_xattr,acl,commit=600,barrier=1,journal_async_commit,stripe=384,data=ordered,discard 0 0
+
+The disk in use are the following:
+
+    Mar 12 09:03:57 c3po kernel: [    1.206716] ata2.00: ATA-8: OCZ-VERTEX2, 1.35, max UDMA/133
+    Mar 12 09:03:57 c3po kernel: [    1.208374] ata2.00: 234441648 sectors, multi 16: LBA48 NCQ (depth 31/32), AA
+    Mar 12 09:03:57 c3po kernel: [    1.209939] ata1.00: ATA-8: OCZ-VERTEX2, 1.35, max UDMA/133
+    Mar 12 09:03:57 c3po kernel: [    1.211507] ata1.00: 234441648 sectors, multi 16: LBA48 NCQ (depth 31/32), AA
+    Mar 12 09:03:57 c3po kernel: [    1.216427] ata3.00: ATA-8: OCZ-VERTEX2, 1.35, max UDMA/133
+    Mar 12 09:03:57 c3po kernel: [    1.218064] ata3.00: 234441648 sectors, multi 16: LBA48 NCQ (depth 31/32), AA
+
+
+Any idea what is wrong? Please let me know if I can do any further tests
+or supply more information.
+
+Regards,
+Holger
