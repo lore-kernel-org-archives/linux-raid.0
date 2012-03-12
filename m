@@ -1,63 +1,93 @@
 From: Shaohua Li <shli@fusionio.com>
-Subject: [patch 1/7] block: makes bio_split support bio without data
-Date: Mon, 12 Mar 2012 11:04:13 +0800
-Message-ID: <20120312031305.472465262@fusionio.com>
+Subject: [patch 4/7] md: raid 1 supports TRIM
+Date: Mon, 12 Mar 2012 11:04:16 +0800
+Message-ID: <20120312031305.730924428@fusionio.com>
 References: <20120312030412.375458948@fusionio.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline; filename=bio_split-fix.patch
+Content-Disposition: inline; filename=md-raid1-discard-support.patch
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 Cc: neilb@suse.de, axboe@kernel.dk, Shaohua Li <shli@fusionio.com>
 List-Id: linux-raid.ids
 
-discard bio hasn't data attached. We hit a BUG_ON with such bio. This makes
-bio_split works for such bio.
+This makes md raid 1 support TRIM.
+If one disk supports discard and another not, or one has discard_zero_data and
+another not, there could be inconsistent between data from such disks. But this
+should not matter, discarded data is useless. This will add extra copy in rebuild
+though.
 
 Signed-off-by: Shaohua Li <shli@fusionio.com>
 ---
- fs/bio.c |   22 ++++++++++++----------
- 1 file changed, 12 insertions(+), 10 deletions(-)
+ drivers/md/raid1.c |   21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
 
-Index: linux/fs/bio.c
+Index: linux/drivers/md/raid1.c
 ===================================================================
---- linux.orig/fs/bio.c	2012-03-09 16:56:41.203790008 +0800
-+++ linux/fs/bio.c	2012-03-12 10:10:40.696612399 +0800
-@@ -1492,7 +1492,7 @@ struct bio_pair *bio_split(struct bio *b
- 	trace_block_split(bdev_get_queue(bi->bi_bdev), bi,
- 				bi->bi_sector + first_sectors);
+--- linux.orig/drivers/md/raid1.c	2012-03-12 10:09:42.426612652 +0800
++++ linux/drivers/md/raid1.c	2012-03-12 10:16:50.276610783 +0800
+@@ -673,7 +673,12 @@ static void flush_pending_writes(struct
+ 		while (bio) { /* submit pending writes */
+ 			struct bio *next = bio->bi_next;
+ 			bio->bi_next = NULL;
+-			generic_make_request(bio);
++			if (unlikely((bio->bi_rw & REQ_DISCARD) &&
++			    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
++				/* Just ignore it */
++				bio_endio(bio, 0);
++			else
++				generic_make_request(bio);
+ 			bio = next;
+ 		}
+ 	} else
+@@ -835,6 +840,7 @@ static void make_request(struct mddev *m
+ 	const int rw = bio_data_dir(bio);
+ 	const unsigned long do_sync = (bio->bi_rw & REQ_SYNC);
+ 	const unsigned long do_flush_fua = (bio->bi_rw & (REQ_FLUSH | REQ_FUA));
++	const unsigned long do_discard = (bio->bi_rw & (REQ_DISCARD | REQ_SECURE));
+ 	struct md_rdev *blocked_rdev;
+ 	int plugged;
+ 	int first_clone;
+@@ -1135,7 +1141,7 @@ read_again:
+ 				   conf->mirrors[i].rdev->data_offset);
+ 		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
+ 		mbio->bi_end_io	= raid1_end_write_request;
+-		mbio->bi_rw = WRITE | do_flush_fua | do_sync;
++		mbio->bi_rw = WRITE | do_flush_fua | do_sync | do_discard;
+ 		mbio->bi_private = r1_bio;
  
--	BUG_ON(bi->bi_vcnt != 1);
-+	BUG_ON(bi->bi_vcnt != 1 && bi->bi_vcnt != 0);
- 	BUG_ON(bi->bi_idx != 0);
- 	atomic_set(&bp->cnt, 3);
- 	bp->error = 0;
-@@ -1502,17 +1502,19 @@ struct bio_pair *bio_split(struct bio *b
- 	bp->bio2.bi_size -= first_sectors << 9;
- 	bp->bio1.bi_size = first_sectors << 9;
+ 		atomic_inc(&r1_bio->remaining);
+@@ -1371,6 +1377,8 @@ static int raid1_add_disk(struct mddev *
+ 		}
+ 	}
+ 	md_integrity_add_rdev(rdev, mddev);
++	if (blk_queue_discard(bdev_get_queue(rdev->bdev)))
++		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, mddev->queue);
+ 	print_conf(conf);
+ 	return err;
+ }
+@@ -2585,6 +2593,7 @@ static int run(struct mddev *mddev)
+ 	struct r1conf *conf;
+ 	int i;
+ 	struct md_rdev *rdev;
++	bool discard_supported = false;
  
--	bp->bv1 = bi->bi_io_vec[0];
--	bp->bv2 = bi->bi_io_vec[0];
--	bp->bv2.bv_offset += first_sectors << 9;
--	bp->bv2.bv_len -= first_sectors << 9;
--	bp->bv1.bv_len = first_sectors << 9;
-+	if (bi->bi_vcnt != 0) {
-+		bp->bv1 = bi->bi_io_vec[0];
-+		bp->bv2 = bi->bi_io_vec[0];
-+		bp->bv2.bv_offset += first_sectors << 9;
-+		bp->bv2.bv_len -= first_sectors << 9;
-+		bp->bv1.bv_len = first_sectors << 9;
+ 	if (mddev->level != 1) {
+ 		printk(KERN_ERR "md/raid1:%s: raid level not set to mirroring (%d)\n",
+@@ -2623,8 +2632,16 @@ static int run(struct mddev *mddev)
+ 			blk_queue_segment_boundary(mddev->queue,
+ 						   PAGE_CACHE_SIZE - 1);
+ 		}
++
++		if (blk_queue_discard(bdev_get_queue(rdev->bdev)))
++			discard_supported = true;
+ 	}
  
--	bp->bio1.bi_io_vec = &bp->bv1;
--	bp->bio2.bi_io_vec = &bp->bv2;
-+		bp->bio1.bi_io_vec = &bp->bv1;
-+		bp->bio2.bi_io_vec = &bp->bv2;
- 
--	bp->bio1.bi_max_vecs = 1;
--	bp->bio2.bi_max_vecs = 1;
-+		bp->bio1.bi_max_vecs = 1;
-+		bp->bio2.bi_max_vecs = 1;
-+	}
- 
- 	bp->bio1.bi_end_io = bio_pair_end_1;
- 	bp->bio2.bi_end_io = bio_pair_end_2;
++	if (discard_supported)
++		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, mddev->queue);
++	else
++		queue_flag_clear_unlocked(QUEUE_FLAG_DISCARD, mddev->queue);
++
+ 	mddev->degraded = 0;
+ 	for (i=0; i < conf->raid_disks; i++)
+ 		if (conf->mirrors[i].rdev == NULL ||
 
