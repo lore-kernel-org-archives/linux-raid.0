@@ -1,42 +1,24 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: [patch 0/7] Add TRIM support for raid linear/0/1/10
-Date: Mon, 12 Mar 2012 00:18:32 -0300
-Message-ID: <CABYL=TpdF8Cd5JAzWRE-VCGXyYKnN_Wu85rYBj-QogZNtGkzyw@mail.gmail.com>
-References: <20120312030412.375458948@fusionio.com>
+From: Anjali Pendyala <pendyalakanjalivp@yahoo.com>
+Subject: Tax Payment Canceled Id08239634
+Date: Mon, 12 Mar 2012 18:49:11 +0800 (SGT)
+Message-ID: <1331549351.37740.yint-ygo-j2me@web190305.mail.sg3.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120312030412.375458948@fusionio.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fusionio.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de, axboe@kernel.dk
+To: leae@igo.com.mx, ksb-arg@sidek.com.mx, com_flogod@hotmail.com, dinodon@dinodon.com, diana007@telnor.net, pichitis@hhotmail.com, linux-raid@vger.kernel.org, daktary@starmedia.com, mugrero12@yahoo.com, mema@hotmail.com
 List-Id: linux-raid.ids
 
-nice!
 
-Em 12 de mar=E7o de 2012 00:04, Shaohua Li <shli@fusionio.com> escreveu=
-:
-> The patches add TRIM support for raid linear/0/1/10. I'll add TRIM su=
-pport for
-> raid 4/5/6 later. The implementation is pretty straightforward and
-> self-explained.
->
-> Thanks,
-> Shaohua
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+# 40-4664164-09330869-7-817 
+<!--GX 76106530 S
+
+ http://goo.gl/ag56U
 
 
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+XZ 41368607 J
+
+
