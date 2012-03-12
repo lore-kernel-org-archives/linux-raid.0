@@ -1,37 +1,46 @@
-From: Wiliam Colls <william.colls@rogers.com>
-Subject: Can't Boot from /dev/md0
-Date: Sun, 11 Mar 2012 19:45:01 -0400
-Message-ID: <4F5D38FD.4080803@rogers.com>
+From: Larkin Lowrey <llowrey@nuclearwinter.com>
+Subject: Re: Raid5 device hangs in active state
+Date: Sun, 11 Mar 2012 19:18:36 -0500
+Message-ID: <4F5D40DC.9080304@nuclearwinter.com>
+References: <4F0A129E.5020706@nuclearwinter.com> <4F5D3562.6060507@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4F5D3562.6060507@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Asdo <asdo@shiftmail.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Observation:
 
-Ubuntu 10.04 server, patched to date.
+Setting vm/dirty_background_bytes to 1MB increased my reshape speed by
+50% and reduced the resize2fs write interval from once per 5-6 seconds
+to once per 3-4 seconds. Changing vm/dirty_bytes didn't have any
+noticeable affect until it got below 50MB at which point performance
+dropped dramatically.
 
-This machine is configured to boot from a Raid1 array. The partitions 
-are located on /dev/sdb1 and /dev/sdc1, the boot partition is located on 
-/dev/sda1. This configuation has worked well for some time, but after a 
-recent shutdown for maintenance, which did not involve any of the 
-partitions, the machine refuses to boot. The sequence hangs very shortly 
-after startup, and eventually errors out with the message /dev/md0 not 
-available. and drops into the Busybox shell.
+Prior to dialing the knobs, dirty_ratio was 20% and
+dirty_background_ratio was 10%. The system has 8GB installed.
 
-After booting from a live rescue CD, and examining the partitions, they 
-are all intact, and clean. They rescue CD was able to assemble the array.
+On 3/11/2012 6:29 PM, Asdo wrote:
+> On 01/08/12 23:03, Larkin Lowrey wrote:
+>> ...
+>> Interestingly, to me, when in this state, 'iostat -dx 1' shows the root
+>> ...
+>
+> Do you have any  "avgqu-sz"  stuck at nonzero value in iostat -dx 1?
 
-Not sure where to go from here. Any Suggestions will be greatfully received.
+Yes, avgqu-sz is 1.00.
 
-William.
+>
+>
+> BTW this bug could be related to the recent post by Milan Broz,
+> subject: "md raid5 fsync deadlock" .
+> Because also in your case fsyncs are not likely to complete... correct?
 
-PS. I am sure that I read some recent discussion on a very similar 
-problem, but I can't find that material now. If anyone has a link, it 
-also be greatfully received.
+I do get writes, now about one 4k block every 3-4 seconds. It is quite
+possible that our two issues are related.
 
--- 
-I know that you believe that you understand what you think I said, but I 
-am not sure that you realise that what you heard was not what I meant.
+--Larkin
