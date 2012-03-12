@@ -1,22 +1,19 @@
-From: "kedacomkernel" <kedacomkernel@gmail.com>
-Subject: If
-Date: Tue, 13 Mar 2012 13:33:37 +0800
-Message-ID: <201203131333334683559@gmail.com>
+From: "MR.JAMES BROWN FIRMS" <info@yahoo.com>
+Subject: LOAN OFFER!!
+Date: Mon, 12 Mar 2012 16:27:23 -0300 (BRT)
+Message-ID: <49290.115.242.61.228.1331580443.squirrel__41303.2143646435$1331623074$gmane$org@mail.alegrete.rs.gov.br>
+Reply-To: mr.jamesbrownfirms@xd.ae
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
- Hi,all:
-	I met a question. 
-	When Raid5 is recoverying and other component disk had badblocks,the resync thead always stop and restart.
-	I think resync thread may stop and not need to restart.
- 				
---------------
-kedacomkernel
-2012-03-13
+
+DO YOU NEED A LOAN IF YES,CONTACT US WITH:LOAN AMOUNT,LOAN
+DURATION,COUNTRY,MOBILE NO.CONTACT MR.JAMES BROWN FIRMS
+EMAIL:mr.jamesbrownfirms@xd.ae
+
+
 
