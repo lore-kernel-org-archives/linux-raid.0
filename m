@@ -1,48 +1,145 @@
-From: Wiliam Colls <william.colls@rogers.com>
-Subject: Re: Can't Boot from /dev/md0 - Solved
-Date: Mon, 12 Mar 2012 12:44:12 -0400
-Message-ID: <4F5E27DC.4010306@rogers.com>
-References: <4F5D38FD.4080803@rogers.com>
+From: Carl Engstrom <engstrom@cox.net>
+Subject: mdadm raid can't set proper devices in super-block
+Date: Mon, 12 Mar 2012 17:38:16 +0000 (UTC)
+Message-ID: <loom.20120312T183628-941@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F5D38FD.4080803@rogers.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/11/2012 07:45 PM, Wiliam Colls wrote:
->
-> Ubuntu 10.04 server, patched to date.
->
-> This machine is configured to boot from a Raid1 array. The partitions
-> are located on /dev/sdb1 and /dev/sdc1, the boot partition is located on
-> /dev/sda1. This configuation has worked well for some time, but after a
-> recent shutdown for maintenance, which did not involve any of the
-> partitions, the machine refuses to boot. The sequence hangs very shortly
-> after startup, and eventually errors out with the message /dev/md0 not
-> available. and drops into the Busybox shell.
->
-> After booting from a live rescue CD, and examining the partitions, they
-> are all intact, and clean. They rescue CD was able to assemble the array.
->
-> Not sure where to go from here. Any Suggestions will be greatfully
-> received.
->
-> William.
->
-> PS. I am sure that I read some recent discussion on a very similar
-> problem, but I can't find that material now. If anyone has a link, it
-> also be greatfully received.
->
+resetting mdadm superblock 
 
-At least for now. After further investigation, I realised that the mdadm 
-module was availalbe in the kernal, and I was able to assemble the array 
-from the busybox prompt, and the boot will then continue normally. Still 
-trying to determine what caused the problem and find a permanent fix.
+--------------------------------------------------------------------------------
+ 
+Hey folks,
+ 
+I'm having some issues with my md array after upgrading to 11.04.
+ 
+In my case I have an RAID0 array created from 2 devices (See below)
+ 
+Boot drives: /dev/sda1
+ raid 0 dev 1: /dev/sdb1
+ raid 0 dev 2: /dev/sdc1
+ 
+RAID device is: /dev/md0
+ 
+The issue is that the super blocks for /dev/sdb1 and /dev/sdc1 look like this.
+ 
+----------------
+ root@uNAS:~# mdadm -E /dev/sdb1
+ /dev/sdb1:
+ Magic : a92b4efc
+ Version : 00.90.00
+ UUID : 3424db31:eeb216cb:4c0d2395:9c0bfdf6 (local to host uNAS)
+ Creation Time : Mon Nov 9 20:31:42 2009
+ Raid Level : raid0
+ Used Dev Size : 0
+ Raid Devices : 2
+ Total Devices : 2
+ Preferred Minor : 0
+ 
+Update Time : Sun Feb 13 11:03:20 2011
+ State : active
+ Active Devices : 2
+ Working Devices : 2
+ Failed Devices : 0
+ Spare Devices : 0
+ Checksum : 4c6d7ae7 - correct
+ Events : 13
+ 
+Chunk Size : 64K
+ 
+Number Major Minor RaidDevice State
+ this 0 8 1 0 active sync /dev/sda1
+ 
+0 0 8 1 0 active sync /dev/sda1
+ 1 1 8 17 1 active sync /dev/sdb1
+ ---------------
+ root@uNAS:~# mdadm -E /dev/sdc1
+ /dev/sdc1:
+ Magic : a92b4efc
+ Version : 00.90.00
+ UUID : 3424db31:eeb216cb:4c0d2395:9c0bfdf6 (local to host uNAS)
+ Creation Time : Mon Nov 9 20:31:42 2009
+ Raid Level : raid0
+ Used Dev Size : 0
+ Raid Devices : 2
+ Total Devices : 2
+ Preferred Minor : 0
+ 
+Update Time : Sun Feb 13 11:03:20 2011
+ State : active
+ Active Devices : 2
+ Working Devices : 2
+ Failed Devices : 0
+ Spare Devices : 0
+ Checksum : 4c6d7af9 - correct
+ Events : 13
+ 
+Chunk Size : 64K
+ 
+Number Major Minor RaidDevice State
+ this 1 8 17 1 active sync /dev/sdb1
+ 
+0 0 8 1 0 active sync /dev/sda1
+ 1 1 8 17 1 active sync /dev/sdb1
+ --------
+ 
+the array will start with:
+ mdadm -A --update=super-minor /dev/md0 /dev/sdb1 /dev/sdc1
+ 
+and the array looks like this:
+ root@uNAS:~# mdadm -Q --detail /dev/md0
+ /dev/md0:
+ Version : 00.90
+ Creation Time : Mon Nov 9 20:31:42 2009
+ Raid Level : raid0
+ Array Size : 3904887168 (3723.99 GiB 3998.60 GB)
+ Raid Devices : 2
+ Total Devices : 2
+ Preferred Minor : 0
+ Persistence : Superblock is persistent
+ 
+Update Time : Sun Feb 13 11:03:20 2011
+ State : clean
+ Active Devices : 2
+ Working Devices : 2
+ Failed Devices : 0
+ Spare Devices : 0
+ 
+Chunk Size : 64K
+ 
+UUID : 3424db31:eeb216cb:4c0d2395:9c0bfdf6 (local to host uNAS)
+ Events : 0.13
+ 
+Number Major Minor RaidDevice State
+ 0 8 17 0 active sync /dev/sdb1
+ 1 8 33 1 active sync /dev/sdc1
+ --------------
+ 
+but for some reason the super block isn't being updated...so the array won't 
+autostart. My understanding is that the update=super-minor tells the system to 
+start each drive and update the minor field...which I thought would fix this.
+ 
+here is the ooutput from the start up:
+ 
+---------------
+ root@uNAS:~# mdadm -Av --update=super-minor /dev/md0 /dev/sdb1 /dev/sdc1
+ mdadm: looking for devices for /dev/md0
+ mdadm: updating superblock of /dev/sdb1 with minor number 0
+ mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 0.
+ mdadm: updating superblock of /dev/sdc1 with minor number 0
+ mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 1.
+ mdadm: added /dev/sdc1 to /dev/md0 as 1
+ mdadm: added /dev/sdb1 to /dev/md0 as 0
+ mdadm: /dev/md0 has been started with 2 drives.
+ 
+-------------------
+ 
+Anyone know what's going on?
+ 
+thanks. 
 
-
--- 
-I know that you believe that you understand what you think I said, but I 
-am not sure that you realise that what you heard was not what I meant.
