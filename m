@@ -1,146 +1,84 @@
-From: Ray Morris <support@bettercgi.com>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: debugging md2_resync hang at raise_barrier
-Date: Mon, 12 Mar 2012 13:46:03 -0500
-Message-ID: <20120312134603.703352b8@bettercgi.com>
+Date: Tue, 13 Mar 2012 11:16:33 +1100
+Message-ID: <20120313111633.538c2cd2@notabene.brown>
 References: <20120229184413.13db7143@bettercgi.com>
 	<20120301123418.1254f763@notabene.brown>
+	<20120312134603.703352b8@bettercgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/AlP8ztSy_UjXmMlQLIxplaO"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120301123418.1254f763@notabene.brown>
+In-Reply-To: <20120312134603.703352b8@bettercgi.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Ray Morris <support@bettercgi.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> On Wed, 29 Feb 2012 18:44:13 -0600 Ray Morris <support@bettercgi.com>
-> wrote:
-> 
-> > I am attempting to debug a hang in raid1 and possibly one raid5.
+--Sig_/AlP8ztSy_UjXmMlQLIxplaO
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, 12 Mar 2012 13:46:03 -0500 Ray Morris <support@bettercgi.com> wrote:
 
-On Thu, 1 Mar 2012 12:34:18 +1100
-NeilBrown <neilb@suse.de> wrote:
+> > On Wed, 29 Feb 2012 18:44:13 -0600 Ray Morris <support@bettercgi.com>
+> > wrote:
+> >=20
+> > > I am attempting to debug a hang in raid1 and possibly one raid5.
+>=20
+>=20
+> On Thu, 1 Mar 2012 12:34:18 +1100
+> NeilBrown <neilb@suse.de> wrote:
+>=20
+> > I might know what is happening.
+> >=20
+> > It is kind-a complicated and involved the magic code in
+> > block/blk-core.c:generic_make_request which turns recursive calls
+> > into tail recursion.
+> ...
+> > This patch might fix it.  Maybe.  If it compiles.
+>=20
+> That appears to have solved it. Thanks so much. The delay in my
+> response is because I wanted to give it some time to recur, as it
+> didn't always manifest right away. Is there anything I should do
+> regarding this path in future versions? Is this patch already in or
+> planned to be in future versions, or should users possibly keep the
+> patch on hand in case it's still needed later? Is there any testing
+> or anything that I need to do to get included in future versions?
+>=20
+>=20
 
-> I might know what is happening.
-> 
-> It is kind-a complicated and involved the magic code in
-> block/blk-core.c:generic_make_request which turns recursive calls
-> into tail recursion.
-...
-> This patch might fix it.  Maybe.  If it compiles.
+Thanks a lot.
 
-That appears to have solved it. Thanks so much. The delay in my
-response is because I wanted to give it some time to recur, as it
-didn't always manifest right away. Is there anything I should do
-regarding this path in future versions? Is this patch already in or
-planned to be in future versions, or should users possibly keep the
-patch on hand in case it's still needed later? Is there any testing
-or anything that I need to do to get included in future versions?
+I will probably submit this fix to Linus shortly after 3.3 is out, with a
+request for it to be included in other -stable releases.
 
+You seem to be using kernels from Redhat.  If you want them to include the
+patch you should probably raise it as an issue with them.
 
--- 
-Ray Morris
-support@bettercgi.com
+Thanks,
+NeilBrown
 
-Strongbox - The next generation in site security:
-http://www.bettercgi.com/strongbox/
+--Sig_/AlP8ztSy_UjXmMlQLIxplaO
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Throttlebox - Intelligent Bandwidth Control
-http://www.bettercgi.com/throttlebox/
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-Strongbox / Throttlebox affiliate program:
-http://www.bettercgi.com/affiliates/user/register.php
+iQIVAwUBT16R4Tnsnt1WYoG5AQJLvg//aEh0YoAPqgCsblhT913rnmZZaOaKE9ox
+EuWTWq1TxDFiqicVdK7fGSFZcN/2kixUmp1SgrkmkbHyYfbEAmKr/KVcAsTT5DNw
+AuborE4Qq/4jardOAQ5R/O6jUuAep54hzrabCaRMWYoPjQCwYbeR63yzq4BDr+65
+wl0G+Z1Q/kVpbzQpnxCKAa8I4LSfFAjWUGNx4Xn7ICI7A35LVLw+i6mAeXj5yHih
+GyPjbMazdNcYkzhZkTYIVUcd405GC/DMC8K59nRhAFlw2UrqJinSR8hLHwNZ2Ja+
+AOe/tyPJpPjnVZmFJxem0Fjrm57p0+5qUbl2nZ2cfVzObJ0ecQHIUR9nxNZetYlX
+DD6xnKAHYQxHoN2O1XTSXaY61KrYiJBNqNENVIyqZsXU9keRs1HeejZrKUtOJc36
+JqJ6onTnh1T/33mUjzV3SkJqRZk2hph+eGOUYyycdzPvXUsU2auAEkf6ZtjTZZto
+MADLOIY3tUL5i66F9wD28hexT72ej/0TDhHxwTREkXMj7Fs7I1/aNhYf84T0qMZj
+Ou/kqcErKCPfWWLNHOMqmFQkljJjxbbVqjlozEzLFYdHltRyKaKBD8S44/Yr2f6/
+/H/tnj/9Hkgxq5jZn8+d1JOp2DHDBYrVh4OCGe/zp4q2ItKFjd91bI/zuLdp1ecz
+y0wHfakpOqc=
+=oOpE
+-----END PGP SIGNATURE-----
 
-
-
-
-On Thu, 1 Mar 2012 12:34:18 +1100
-NeilBrown <neilb@suse.de> wrote:
-
-> On Wed, 29 Feb 2012 18:44:13 -0600 Ray Morris <support@bettercgi.com>
-> wrote:
-> 
-> > I am attempting to debug a hang in raid1 and possibly one raid5.
-> > I have experienced the same problem with many kernel versions
-> > over a couple of years, and with disparate hardware.
-> > 
-> > My current plan, if noone more experienced suggests I do otherwise,
-> > is to compile a kernel with some printk() in strategic locations
-> > and try to narrow down the problem. I know very little about kernel
-> > work, so I am seeking suggestions from those who know better than I.
-> > 
-> > In the case logged below, it appears to hang at raise_barrier in
-> > md2_resync at raise_barrier, then further access to the device
-> > hangs. I'm just a Perl programmer who dabbles in C, but my
-> > intuition said I check that if perhaps lower_barrier had been
-> > called with conf->barrier already at zero, so that's the one printk
-> > I've added so far. It may take a week or more before it crashes
-> > again, so is there any more debugging I should add before waiting
-> > for it to hang?
-> > 
-> > Also below is some older logging from similar symptoms with raid5, 
-> > hanging at raid5_quiesce. I got rid of the raid5 in hopes of
-> > getting rid of the problem, but if anyone has suggestions on how to
-> > further debug that I maybe be able to add a raid5 array.
-> > 
-> > The load when I've noticed it is rsync to LVM volumes with
-> > snapshots. After some discussion, lvm-devel suggested linux-raid
-> > would be the next logical step. Tested kernels include
-> > 2.6.32-220.4.1.el6.x86_64 2.6.32.26-175.fc12.x86_64,
-> > vmlinuz-2.6.32.9-70.fc12.x86_64, and others. Since I already have
-> > updated the kernel several times in the last couple of years, I
-> > figured I'd try some debugging with the current EL 6 kernel.
-> > 
-> > Anyway, any thoughts on how to debug, where to stick some printk,
-> > other debugging functions? 
-> 
-> I might know what is happening.
-> 
-> It is kind-a complicated and involved the magic code in
-> block/blk-core.c:generic_make_request which turns recursive calls
-> into tail recursion.
-> 
-> The fs sends a request to dm.
-> dm split it in 2 for some reason and sends them both to md.
-> This involves them getting queued in generic_make_request.
-> The first gets actioned by md/raid1 and converted into a request to
-> the underlying device (it must be a read request for this to happen -
-> so just one device).  This gets added to the queue and is counted in
-> nr_pending.
-> 
-> At this point sync_request is called by another thread and it tries to
-> raise_battier.  It gets past the first hurdle, increments ->barrier,
-> and waits for nr_pending to hit zero.
-> 
-> Now the second request from dm to md is passed to
-> raid1.c:make_request where it tries to wait_barrier.  This blocks
-> because ->barrier is up, and we have a deadlock - the request to the
-> underlying device will not progress until this md request progresses,
-> and it is stuck.
-> 
-> This patch might fix it.  Maybe.  If it compiles.
-> 
-> NeilBrown
-> 
-> Index: linux-2.6.32-SLE11-SP1/drivers/md/raid1.c
-> ===================================================================
-> --- linux-2.6.32-SLE11-SP1.orig/drivers/md/raid1.c	2012-03-01
-> 12:28:05.000000000 +1100 +++
-> linux-2.6.32-SLE11-SP1/drivers/md/raid1.c	2012-03-01
-> 12:28:22.427992913 +1100 @@ -695,7 +695,11 @@ static void
-> wait_barrier(conf_t *conf) spin_lock_irq(&conf->resync_lock); if
-> (conf->barrier) { conf->nr_waiting++;
-> -
-> wait_event_lock_irq(conf->wait_barrier, !conf->barrier,
-> +		wait_event_lock_irq(conf->wait_barrier,
-> +				    !conf->barrier ||
-> +				    (current->bio_tail &&
-> +				     current->bio_list &&
-> +				     conf->nr_pending),
->  				    conf->resync_lock,
->  				    raid1_unplug(conf->mddev->queue));
->  		conf->nr_waiting--;
-> 
-
+--Sig_/AlP8ztSy_UjXmMlQLIxplaO--
