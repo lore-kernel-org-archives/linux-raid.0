@@ -1,239 +1,356 @@
-From: Roberto Spadim <roberto@spadim.com.br>
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
 Subject: Re: [patch 0/7] Add TRIM support for raid linear/0/1/10
-Date: Tue, 13 Mar 2012 11:58:19 -0300
-Message-ID: <CABYL=To_A_n7K1SbUESSLi-vqb9TwPxaCQzxbneL+8bJ=kEcsA@mail.gmail.com>
-References: <20120312030412.375458948@fusionio.com>
-	<alpine.LRH.2.02.1203121806120.23719@diagnostix.dwd.de>
-	<4F5EFEB6.4060402@kernel.org>
-	<alpine.LRH.2.02.1203131213480.15848@diagnostix.dwd.de>
-	<CANejiEWYCxY_hLwgyN08_cXC64c82irkNPytTjOpYyER7pTGow@mail.gmail.com>
+Date: Tue, 13 Mar 2012 15:44:27 +0000 (GMT)
+Message-ID: <alpine.LRH.2.02.1203131521190.29286@diagnostix.dwd.de>
+References: <20120312030412.375458948@fusionio.com> <alpine.LRH.2.02.1203121806120.23719@diagnostix.dwd.de> <4F5EFEB6.4060402@kernel.org> <alpine.LRH.2.02.1203131213480.15848@diagnostix.dwd.de>
+ <CANejiEWYCxY_hLwgyN08_cXC64c82irkNPytTjOpYyER7pTGow@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CANejiEWYCxY_hLwgyN08_cXC64c82irkNPytTjOpYyER7pTGow@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
-Cc: Holger Kiehl <Holger.Kiehl@dwd.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>, "axboe@kernel.dk" <axboe@kernel.dk>
 List-Id: linux-raid.ids
 
-could you send informations about yours devices? maybe a devices with
-a diferent block sizes? are you running a virtual machine? a real one?
+On Tue, 13 Mar 2012, Shaohua Li wrote:
 
-Em 13 de mar=E7o de 2012 11:15, Shaohua Li <shli@kernel.org> escreveu:
-> 2012/3/13 Holger Kiehl <Holger.Kiehl@dwd.de>:
->> On Tue, 13 Mar 2012, Shaohua Li wrote:
->>
->>> On 3/13/12 2:22 AM, Holger Kiehl wrote:
->>> > Hello,
->>> >
->>> > On Mon, 12 Mar 2012, Shaohua Li wrote:
->>> >
->>> >> The patches add TRIM support for raid linear/0/1/10. I'll add TR=
-IM
->>> support for
->>> >> raid 4/5/6 later. The implementation is pretty straightforward a=
-nd
->>> >> self-explained.
->>> >>
->>> > First, thanks for this patch!
->>> >
->>> > I have applied those patches against 3.3.0-rc7 and during boot th=
-e
->>> > kernel
->>> > reports a lot of the following:
->>> >
->>> > Mar 12 18:56:00 c3po kernel: [ 7.611045] md/raid0:md3: make_reque=
-st bug:
->>> can't convert block across chunks or bigger than 512k 18861064 512
->>> > Mar 12 18:56:00 c3po kernel: [ 7.611047] md/raid0:md3: make_reque=
-st bug:
->>> can't convert block across chunks or bigger than 512k 18862088 512
->>> > Mar 12 18:56:00 c3po kernel: [ 7.611049] md/raid0:md3: make_reque=
-st bug:
->>> can't convert block across chunks or bigger than 512k 18863112 512
->>> > Mar 12 18:56:00 c3po kernel: [ 7.611052] md/raid0:md3: make_reque=
-st bug:
->>> can't convert block across chunks or bigger than 512k 18864136 512
->>> > Mar 12 18:56:00 c3po kernel: [ 7.611054] md/raid0:md3: make_reque=
-st bug:
->>> can't convert block across chunks or bigger than 512k 18865160 512
->>> > Mar 12 18:56:00 c3po kernel: [ 7.611056] md/raid0:md3: make_reque=
-st bug:
->>> can't convert block across chunks or bigger than 512k 18866184 512
->>> Looks our SMTP server does something stupid. Sorry if you get two c=
-opies
->>> of the mail.
->>>
->>> Thanks for testing. Looks I fixed a sanity check in bio.c but there=
- are
->>> similar check in raid0/10 which I forgot to fix. Below patch should=
- fix
->>> it.
->>> please try.
->>>
->> Now I get following messages during boot (and it takes a very long t=
-ime):
->>
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.355041] =A0 bio ffff88019e=
-0abc70,
->> biotail ffff88019e0ddc00, buffer =A0 =A0 =A0 =A0 =A0 (null), len 0
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.355052] request botched: d=
-ev sdb:
->> type=3D1, flags=3D916c081
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.355054] =A0 sector 5292935=
-3, nr/cnr 0/8
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.355055] =A0 bio ffff88019e=
-0aba70,
->> biotail ffff88019e0dda00, buffer =A0 =A0 =A0 =A0 =A0 (null), len 0
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.355068] request botched: d=
-ev sdc:
->> type=3D1, flags=3D916c081
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.355069] =A0 sector 5292934=
-6, nr/cnr
->> 0/1016
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.355071] =A0 bio ffff88019e=
-0aae00,
->> biotail ffff88019e0db380, buffer =A0 =A0 =A0 =A0 =A0 (null), len 0
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.373583] request botched: d=
-ev sda:
->> type=3D1, flags=3D916c081
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.373585] =A0 sector 5292935=
-4, nr/cnr
->> 0/1016
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.373587] =A0 bio ffff88019e=
-0aba00,
->> biotail ffff88019e0ddc00, buffer =A0 =A0 =A0 =A0 =A0 (null), len 0
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.373597] request botched: d=
-ev sdb:
->> type=3D1, flags=3D916c081
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.373599] =A0 sector 5292935=
-4, nr/cnr
->> 0/1016
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.373600] =A0 bio ffff88019e=
-0ab800,
->> biotail ffff88019e0dda00, buffer =A0 =A0 =A0 =A0 =A0 (null), len 0
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.373612] request botched: d=
-ev sdc:
->> type=3D1, flags=3D916c081
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.373614] =A0 sector 5292934=
-7, nr/cnr 0/8
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.373616] =A0 bio ffff88019e=
-0aaa70,
->> biotail ffff88019e0db380, buffer =A0 =A0 =A0 =A0 =A0 (null), len 0
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.392135] request botched: d=
-ev sda:
->> type=3D1, flags=3D916c081
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.392137] =A0 sector 5292935=
-5, nr/cnr 0/8
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.392139] =A0 bio ffff88019e=
-0ab670,
->> biotail ffff88019e0ddc00, buffer =A0 =A0 =A0 =A0 =A0 (null), len 0
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.392150] request botched: d=
-ev sdb:
->> type=3D1, flags=3D916c081
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.392152] =A0 sector 5292935=
-5, nr/cnr 0/8
->> =A0 Mar 13 10:23:25 c3po kernel: [ =A0251.392153] =A0 bio ffff88019e=
-0ab470,
->> biotail ffff88019e0dda00, buffer =A0 =A0 =A0 =A0 =A0 (null), len 0
->>
->> After boot the system runs fine, but as soon as I do something (make=
- clean
->> of
->> kernel tree with a sync) I get the same messages as above and it tak=
-es a
->> long time to sync:
->>
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.740528] request botched: dev=
- sda:
->> type=3D1, flags=3D9164081
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.740533] =A0 sector 12580617,=
- nr/cnr
->> 0/776
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.740537] =A0 bio ffff8801a362=
-b670,
->> biotail ffff8801a30f3d80, buffer =A0 =A0 =A0 =A0 =A0 (null), len 0
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.747141] request botched: dev=
- sdb:
->> type=3D1, flags=3D9164081
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.747144] =A0 sector 12579841,=
- nr/cnr
->> 0/248
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.747148] =A0 bio ffff88019e0d=
-d200,
->> biotail ffff88019e0dd200, buffer =A0 =A0 =A0 =A0 =A0 (null), len 0
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.749429] request botched: dev=
- sdc:
->> type=3D1, flags=3D9164081
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.749432] =A0 sector 12579841,=
- nr/cnr
->> 0/248
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.749436] =A0 bio ffff8801a362=
-b600,
->> biotail ffff8801a362b600, buffer =A0 =A0 =A0 =A0 =A0 (null), len 0
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.755332] request botched: dev=
- sda:
->> type=3D1, flags=3D916c081
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.755335] =A0 sector 12580618,=
- nr/cnr
->> 0/248
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.755339] =A0 bio ffff8801a30f=
-3d80,
->> biotail ffff8801a30f3d80, buffer =A0 =A0 =A0 =A0 =A0 (null), len 0
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.806832] request botched: dev=
- sdb:
->> type=3D1, flags=3D9164081
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.806836] =A0 sector 12266497,=
- nr/cnr
->> 0/1000
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.806840] =A0 bio ffff8801a4dc=
-a800,
->> biotail ffff88019e0c9000, buffer =A0 =A0 =A0 =A0 =A0 (null), len 0
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.811972] request botched: dev=
- sda:
->> type=3D1, flags=3D9164081
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.811976] =A0 sector 12266497,=
- nr/cnr
->> 0/1000
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.811979] =A0 bio ffff88019e0d=
-d200,
->> biotail ffff8801a3794000, buffer =A0 =A0 =A0 =A0 =A0 (null), len 0
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.814081] request botched: dev=
- sdc:
->> type=3D1, flags=3D9164081
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.814084] =A0 sector 12265497,=
- nr/cnr 0/24
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.814087] =A0 bio ffff8801a4dc=
-a870,
->> biotail ffff8801a37f4080, buffer =A0 =A0 =A0 =A0 =A0 (null), len 0
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.819150] request botched: dev=
- sdc:
->> type=3D1, flags=3D916c081
->> =A0 Mar 13 10:44:59 c3po kernel: [ 1550.819153] =A0 sector 12265498,=
- nr/cnr
->> 0/1000
->>
->> Please give me any hints what I can try next.
 > Thanks for testing. This is very wield, the req->__data_len is wrong.
 > Is this a clean build?
-> didn't success to reproduce it, will check tomorrow again.
 >
-> Thanks,
-> Shaohua
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+I just downloaded linux-3.3-rc7.tar.bz2 from kernel.org and applied
+your patches again. The result is the same.
+
+Am I the only one experiencing these problems?
+
+This is on a fedora 16 system and it is NOT a virtual machine. It only has
+3 SSD's and 6 GiB of ram. Below I have added some more information of the
+system in case it helps.
+
+Regards,
+Holger
 
 
+lscpu
+=====
+    Architecture:          x86_64
+    CPU op-mode(s):        32-bit, 64-bit
+    Byte Order:            Little Endian
+    CPU(s):                4
+    On-line CPU(s) list:   0-3
+    Thread(s) per core:    1
+    Core(s) per socket:    4
+    Socket(s):             1
+    NUMA node(s):          1
+    Vendor ID:             GenuineIntel
+    CPU family:            6
+    Model:                 15
+    Stepping:              11
+    CPU MHz:               1596.000
+    BogoMIPS:              5333.50
+    Virtualization:        VT-x
+    L1d cache:             32K
+    L1i cache:             32K
+    L2 cache:              4096K
+    NUMA node0 CPU(s):     0-3
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+lspci
+=====
+    00:00.0 Host bridge: Intel Corporation 82975X Memory Controller Hub
+    00:01.0 PCI bridge: Intel Corporation 82975X PCI Express Root Port
+    00:1b.0 Audio device: Intel Corporation N10/ICH 7 Family High Definition Audio Controller (rev 01)
+    00:1c.0 PCI bridge: Intel Corporation N10/ICH 7 Family PCI Express Port 1 (rev 01)
+    00:1c.5 PCI bridge: Intel Corporation 82801GR/GH/GHM (ICH7 Family) PCI Express Port 6 (rev 01)
+    00:1d.0 USB Controller: Intel Corporation N10/ICH 7 Family USB UHCI Controller #1 (rev 01)
+    00:1d.1 USB Controller: Intel Corporation N10/ICH 7 Family USB UHCI Controller #2 (rev 01)
+    00:1d.2 USB Controller: Intel Corporation N10/ICH 7 Family USB UHCI Controller #3 (rev 01)
+    00:1d.3 USB Controller: Intel Corporation N10/ICH 7 Family USB UHCI Controller #4 (rev 01)
+    00:1d.7 USB Controller: Intel Corporation N10/ICH 7 Family USB2 EHCI Controller (rev 01)
+    00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev e1)
+    00:1f.0 ISA bridge: Intel Corporation 82801GH (ICH7DH) LPC Interface Bridge (rev 01)
+    00:1f.1 IDE interface: Intel Corporation 82801G (ICH7 Family) IDE Controller (rev 01)
+    00:1f.2 SATA controller: Intel Corporation N10/ICH7 Family SATA AHCI Controller (rev 01)
+    00:1f.3 SMBus: Intel Corporation N10/ICH 7 Family SMBus Controller (rev 01)
+    01:00.0 VGA compatible controller: ATI Technologies Inc RV730XT [Radeon HD 4670]
+    01:00.1 Audio device: ATI Technologies Inc RV710/730
+    02:00.0 PCI bridge: PLX Technology, Inc. PEX 8114 PCI Express-to-PCI/PCI-X Bridge (rev bc)
+    03:04.0 SCSI storage controller: Adaptec ASC-29320ALP U320 (rev 10)
+    04:00.0 Ethernet controller: Intel Corporation 82573L Gigabit Ethernet Controller
+    05:04.0 FireWire (IEEE 1394): Texas Instruments TSB43AB23 IEEE-1394a-2000 Controller (PHY/Link
+
+
+hdparm -I /dev/sda
+==================
+    /dev/sda:
+
+    ATA device, with non-removable media
+            Model Number:       OCZ-VERTEX2
+            Serial Number:      OCZ-5036916D0T14323M
+            Firmware Revision:  1.35
+            Transport:          Serial
+    Standards:
+            Used: unknown (minor revision code 0x0028)
+            Supported: 8 7 6 5
+            Likely used: 8
+    Configuration:
+            Logical         max     current
+            cylinders       16383   16383
+            heads           16      16
+            sectors/track   63      63
+            --
+            CHS current addressable sectors:   16514064
+            LBA    user addressable sectors:  234441648
+            LBA48  user addressable sectors:  234441648
+            Logical  Sector size:                   512 bytes
+            Physical Sector size:                   512 bytes
+            Logical Sector-0 offset:                  0 bytes
+            device size with M = 1024*1024:      114473 MBytes
+            device size with M = 1000*1000:      120034 MBytes (120 GB)
+            cache/buffer size  = unknown
+            Nominal Media Rotation Rate: Solid State Device
+    Capabilities:
+            LBA, IORDY(can be disabled)
+            Queue depth: 32
+            Standby timer values: spec'd by Standard, no device specific minimum
+            R/W multiple sector transfer: Max = 16  Current = 16
+            DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udma6
+                 Cycle time: min=120ns recommended=120ns
+            PIO: pio0 pio1 pio2 pio3 pio4
+                 Cycle time: no flow control=120ns  IORDY flow control=120ns
+    Commands/features:
+            Enabled Supported:
+               *    SMART feature set
+                    Security Mode feature set
+               *    Power Management feature set
+               *    Write cache
+               *    Look-ahead
+                    Host Protected Area feature set
+               *    WRITE_BUFFER command
+               *    READ_BUFFER command
+               *    NOP cmd
+               *    DOWNLOAD_MICROCODE
+                    SET_MAX security extension
+               *    48-bit Address feature set
+               *    Mandatory FLUSH_CACHE
+               *    FLUSH_CACHE_EXT
+               *    SMART error logging
+               *    SMART self-test
+               *    General Purpose Logging feature set
+               *    WRITE_{DMA|MULTIPLE}_FUA_EXT
+               *    64-bit World wide name
+               *    IDLE_IMMEDIATE with UNLOAD
+               *    WRITE_UNCORRECTABLE_EXT command
+               *    Segmented DOWNLOAD_MICROCODE
+               *    Gen1 signaling speed (1.5Gb/s)
+               *    Gen2 signaling speed (3.0Gb/s)
+               *    Native Command Queueing (NCQ)
+               *    Host-initiated interface power management
+               *    Phy event counters
+               *    DMA Setup Auto-Activate optimization
+                    Device-initiated interface power management
+               *    Software settings preservation
+               *    SMART Command Transport (SCT) feature set
+               *    SCT LBA Segment Access (AC2)
+               *    SCT Error Recovery Control (AC3)
+               *    SCT Features Control (AC4)
+               *    SCT Data Tables (AC5)
+               *    Data Set Management TRIM supported (limit 1 block)
+               *    Deterministic read data after TRIM
+    Security:
+                    supported
+            not     enabled
+            not     locked
+                    frozen
+            not     expired: security count
+                    supported: enhanced erase
+            400min for SECURITY ERASE UNIT. 400min for ENHANCED SECURITY ERASE UNIT.
+    Logical Unit WWN Device Identifier: 5e83a97fe7238b7d
+            NAA             : 5
+            IEEE OUI        : e83a97
+            Unique ID       : fe7238b7d
+    Checksum: correct
+
+
+hdparm -I /dev/sdb
+==================
+    /dev/sdb:
+
+    ATA device, with non-removable media
+            Model Number:       OCZ-VERTEX2
+            Serial Number:      OCZ-JT00YSO1J56PNBG5
+            Firmware Revision:  1.35
+            Transport:          Serial
+    Standards:
+            Used: unknown (minor revision code 0x0028)
+            Supported: 8 7 6 5
+            Likely used: 8
+    Configuration:
+            Logical         max     current
+            cylinders       16383   16383
+            heads           16      16
+            sectors/track   63      63
+            --
+            CHS current addressable sectors:   16514064
+            LBA    user addressable sectors:  234441648
+            LBA48  user addressable sectors:  234441648
+            Logical  Sector size:                   512 bytes
+            Physical Sector size:                   512 bytes
+            Logical Sector-0 offset:                  0 bytes
+            device size with M = 1024*1024:      114473 MBytes
+            device size with M = 1000*1000:      120034 MBytes (120 GB)
+            cache/buffer size  = unknown
+            Nominal Media Rotation Rate: Solid State Device
+    Capabilities:
+            LBA, IORDY(can be disabled)
+            Queue depth: 32
+            Standby timer values: spec'd by Standard, no device specific minimum
+            R/W multiple sector transfer: Max = 16  Current = 16
+            DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udma6
+                 Cycle time: min=120ns recommended=120ns
+            PIO: pio0 pio1 pio2 pio3 pio4
+                 Cycle time: no flow control=120ns  IORDY flow control=120ns
+    Commands/features:
+            Enabled Supported:
+               *    SMART feature set
+                    Security Mode feature set
+               *    Power Management feature set
+               *    Write cache
+               *    Look-ahead
+                    Host Protected Area feature set
+               *    WRITE_BUFFER command
+               *    READ_BUFFER command
+               *    NOP cmd
+               *    DOWNLOAD_MICROCODE
+                    SET_MAX security extension
+               *    48-bit Address feature set
+               *    Mandatory FLUSH_CACHE
+               *    FLUSH_CACHE_EXT
+               *    SMART error logging
+               *    SMART self-test
+               *    General Purpose Logging feature set
+               *    WRITE_{DMA|MULTIPLE}_FUA_EXT
+               *    64-bit World wide name
+               *    IDLE_IMMEDIATE with UNLOAD
+               *    WRITE_UNCORRECTABLE_EXT command
+               *    Segmented DOWNLOAD_MICROCODE
+               *    Gen1 signaling speed (1.5Gb/s)
+               *    Gen2 signaling speed (3.0Gb/s)
+               *    Native Command Queueing (NCQ)
+               *    Host-initiated interface power management
+               *    Phy event counters
+               *    DMA Setup Auto-Activate optimization
+                    Device-initiated interface power management
+               *    Software settings preservation
+               *    SMART Command Transport (SCT) feature set
+               *    SCT LBA Segment Access (AC2)
+               *    SCT Error Recovery Control (AC3)
+               *    SCT Features Control (AC4)
+               *    SCT Data Tables (AC5)
+               *    Data Set Management TRIM supported (limit 1 block)
+               *    Deterministic read data after TRIM
+    Security:
+                    supported
+            not     enabled
+            not     locked
+                    frozen
+            not     expired: security count
+                    supported: enhanced erase
+            400min for SECURITY ERASE UNIT. 400min for ENHANCED SECURITY ERASE UNIT.
+    Logical Unit WWN Device Identifier: 5e83a97f98e23f26
+            NAA             : 5
+            IEEE OUI        : e83a97
+            Unique ID       : f98e23f26
+    Checksum: correct
+
+
+hdparm -I /dev/sdc
+==================
+    /dev/sdc:
+
+    ATA device, with non-removable media
+            Model Number:       OCZ-VERTEX2
+            Serial Number:      OCZ-1YJ3PX48285QOE4P
+            Firmware Revision:  1.35
+            Transport:          Serial
+    Standards:
+            Used: unknown (minor revision code 0x0028)
+            Supported: 8 7 6 5
+            Likely used: 8
+    Configuration:
+            Logical         max     current
+            cylinders       16383   16383
+            heads           16      16
+            sectors/track   63      63
+            --
+            CHS current addressable sectors:   16514064
+            LBA    user addressable sectors:  234441648
+            LBA48  user addressable sectors:  234441648
+            Logical  Sector size:                   512 bytes
+            Physical Sector size:                   512 bytes
+            Logical Sector-0 offset:                  0 bytes
+            device size with M = 1024*1024:      114473 MBytes
+            device size with M = 1000*1000:      120034 MBytes (120 GB)
+            cache/buffer size  = unknown
+            Nominal Media Rotation Rate: Solid State Device
+    Capabilities:
+            LBA, IORDY(can be disabled)
+            Queue depth: 32
+            Standby timer values: spec'd by Standard, no device specific minimum
+            R/W multiple sector transfer: Max = 16  Current = 16
+            DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udma6
+                 Cycle time: min=120ns recommended=120ns
+            PIO: pio0 pio1 pio2 pio3 pio4
+                 Cycle time: no flow control=120ns  IORDY flow control=120ns
+    Commands/features:
+            Enabled Supported:
+               *    SMART feature set
+                    Security Mode feature set
+               *    Power Management feature set
+               *    Write cache
+               *    Look-ahead
+                    Host Protected Area feature set
+               *    WRITE_BUFFER command
+               *    READ_BUFFER command
+               *    NOP cmd
+               *    DOWNLOAD_MICROCODE
+                    SET_MAX security extension
+               *    48-bit Address feature set
+               *    Mandatory FLUSH_CACHE
+               *    FLUSH_CACHE_EXT
+               *    SMART error logging
+               *    SMART self-test
+               *    General Purpose Logging feature set
+               *    WRITE_{DMA|MULTIPLE}_FUA_EXT
+               *    64-bit World wide name
+               *    IDLE_IMMEDIATE with UNLOAD
+               *    WRITE_UNCORRECTABLE_EXT command
+               *    Segmented DOWNLOAD_MICROCODE
+               *    Gen1 signaling speed (1.5Gb/s)
+               *    Gen2 signaling speed (3.0Gb/s)
+               *    Native Command Queueing (NCQ)
+               *    Host-initiated interface power management
+               *    Phy event counters
+               *    DMA Setup Auto-Activate optimization
+                    Device-initiated interface power management
+               *    Software settings preservation
+               *    SMART Command Transport (SCT) feature set
+               *    SCT LBA Segment Access (AC2)
+               *    SCT Error Recovery Control (AC3)
+               *    SCT Features Control (AC4)
+               *    SCT Data Tables (AC5)
+               *    Data Set Management TRIM supported (limit 1 block)
+               *    Deterministic read data after TRIM
+    Security:
+                    supported
+            not     enabled
+            not     locked
+                    frozen
+            not     expired: security count
+                    supported: enhanced erase
+            400min for SECURITY ERASE UNIT. 400min for ENHANCED SECURITY ERASE UNIT.
+    Logical Unit WWN Device Identifier: 5e83a97f87718aff
+            NAA             : 5
+            IEEE OUI        : e83a97
+            Unique ID       : f87718aff
+    Checksum: correct
