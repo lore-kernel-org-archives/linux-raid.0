@@ -1,102 +1,107 @@
-From: Caspar Smit <c.smit@truebit.nl>
-Subject: Re: Striping does not increase performance.
-Date: Tue, 13 Mar 2012 12:55:49 +0100
-Message-ID: <CAKFseUMvepXdGumQVoei_TE3Ms-jK9U4BoKOVjaiz9PdOAU8pg@mail.gmail.com>
-References: <CAKFseUN8-Rb1x5j-JM+q3CLEXnFO0ieAmBG_5tVcxu4NAz0ojA@mail.gmail.com>
-	<jjl15t$iqb$1@dough.gmane.org>
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: Re: [patch 0/7] Add TRIM support for raid linear/0/1/10
+Date: Tue, 13 Mar 2012 12:22:30 +0000 (GMT)
+Message-ID: <alpine.LRH.2.02.1203131213480.15848@diagnostix.dwd.de>
+References: <20120312030412.375458948@fusionio.com> <alpine.LRH.2.02.1203121806120.23719@diagnostix.dwd.de> <4F5EFEB6.4060402@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <jjl15t$iqb$1@dough.gmane.org>
+In-Reply-To: <4F5EFEB6.4060402@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: Holger Kiehl <Holger.Kiehl@dwd.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>, "axboe@kernel.dk" <axboe@kernel.dk>
 List-Id: linux-raid.ids
 
-Op 12 maart 2012 15:20 heeft David Brown <david@westcontrol.com> het
-volgende geschreven:
-> On 12/03/2012 13:34, Caspar Smit wrote:
->>
->> Hi all,
->>
->> I don't know exactly which mailinglists to use for this one so I hop=
-e
->> i used the right ones.
->>
->> I did some performance testing on a new system and found out some
->> things I couldn't explain or didn't expect.
->> At the end are some questions I hope to get answered to explain the
->> tings i'm seeing in the test.
->>
->>
->> For the next test I wanted to see if i could double the performance =
-by
->> striping an LV over 2 md's (so instead of using 10 disks/spindles, u=
-se
->> 20 disks/spindles)
->>
->> So i added md1 to the VG as PV.
->>
->> Created a fresh LV striped across the two PV's using a 64KB stripe
->> size and ran the test again.
->>
->>
->> Now the total IO's in 10 seconds are 16x larger than before. 190464 =
-/
->> 10 =3D 19046,4 / 16 =3D 1190,4 /16 =3D the reported 75 IOPS above.
->> So the 64KB blocks seem to be split into 4KB blocks (64 / 16 =3D 4)
->> which results in a way larger total IO's.
->> The IO's per disk seem to be in 64KB blocks still only now with a
->> large MERGE figure besides it. (Now 4KB blocks are merged into 64KB
->> blocks?)
->>
->
-> LVM will stripe the data between the two md's with a default stripe s=
-ize of
-> 4K - thus the first 4K will go to md0, the second to md1, etc. =A0Thi=
-s is
-> obviously terribly inefficient. =A0For 8+2 raid6 with 64KB chunks, yo=
-u want a
-> stripe size of 8x64K =3D 512KB when you create the logical volume.
+On Tue, 13 Mar 2012, Shaohua Li wrote:
 
-Ok, that makes sense.
-But if I for instance had created a 10 disk RAID5 md with a 64KB chunk
-size it would have been a stripe size of 9x64KB=3D576KB which is not
-possible. So I have to make sure I always create a raid5/6 md where
-the stripe size is a power of 2 when i want to use raid0 and/or LVM
-striping, correct?
+> On 3/13/12 2:22 AM, Holger Kiehl wrote:
+> > Hello,
+> >
+> > On Mon, 12 Mar 2012, Shaohua Li wrote:
+> >
+> >> The patches add TRIM support for raid linear/0/1/10. I'll add TRIM
+> support for
+> >> raid 4/5/6 later. The implementation is pretty straightforward and
+> >> self-explained.
+> >>
+> > First, thanks for this patch!
+> >
+> > I have applied those patches against 3.3.0-rc7 and during boot the kernel
+> > reports a lot of the following:
+> >
+> > Mar 12 18:56:00 c3po kernel: [ 7.611045] md/raid0:md3: make_request bug:
+> can't convert block across chunks or bigger than 512k 18861064 512
+> > Mar 12 18:56:00 c3po kernel: [ 7.611047] md/raid0:md3: make_request bug:
+> can't convert block across chunks or bigger than 512k 18862088 512
+> > Mar 12 18:56:00 c3po kernel: [ 7.611049] md/raid0:md3: make_request bug:
+> can't convert block across chunks or bigger than 512k 18863112 512
+> > Mar 12 18:56:00 c3po kernel: [ 7.611052] md/raid0:md3: make_request bug:
+> can't convert block across chunks or bigger than 512k 18864136 512
+> > Mar 12 18:56:00 c3po kernel: [ 7.611054] md/raid0:md3: make_request bug:
+> can't convert block across chunks or bigger than 512k 18865160 512
+> > Mar 12 18:56:00 c3po kernel: [ 7.611056] md/raid0:md3: make_request bug:
+> can't convert block across chunks or bigger than 512k 18866184 512
+> Looks our SMTP server does something stupid. Sorry if you get two copies
+> of the mail.
+> 
+> Thanks for testing. Looks I fixed a sanity check in bio.c but there are
+> similar check in raid0/10 which I forgot to fix. Below patch should fix it.
+> please try.
+> 
+Now I get following messages during boot (and it takes a very long time):
 
-Caspar
->
->
->> The performance does not double but stays the same as with 1 MD set
->> only the total IO's are spread among the MD's. Each disk now does
->> around 60 IOPS!
->>
->> I still wanted to see if I could double the performance and thought =
-it
->> might have something to do with LVM striping so i ditched LVM and
->> created a RAID0 (md6) over md0 and md1 with a chunk size of 64KB
->> again.
->>
->
-> Similarly here, you want your chunk sizes to fit a stripe on the raid
-> devices, not to fit the underlying devices. =A0So try with a chunk si=
-ze of
-> 512KB (or higher).
->
-> mvh.,
->
-> David
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+    Mar 13 10:23:25 c3po kernel: [  251.355041]   bio ffff88019e0abc70, biotail ffff88019e0ddc00, buffer           (null), len 0
+    Mar 13 10:23:25 c3po kernel: [  251.355052] request botched: dev sdb: type=1, flags=916c081
+    Mar 13 10:23:25 c3po kernel: [  251.355054]   sector 52929353, nr/cnr 0/8
+    Mar 13 10:23:25 c3po kernel: [  251.355055]   bio ffff88019e0aba70, biotail ffff88019e0dda00, buffer           (null), len 0
+    Mar 13 10:23:25 c3po kernel: [  251.355068] request botched: dev sdc: type=1, flags=916c081
+    Mar 13 10:23:25 c3po kernel: [  251.355069]   sector 52929346, nr/cnr 0/1016
+    Mar 13 10:23:25 c3po kernel: [  251.355071]   bio ffff88019e0aae00, biotail ffff88019e0db380, buffer           (null), len 0
+    Mar 13 10:23:25 c3po kernel: [  251.373583] request botched: dev sda: type=1, flags=916c081
+    Mar 13 10:23:25 c3po kernel: [  251.373585]   sector 52929354, nr/cnr 0/1016
+    Mar 13 10:23:25 c3po kernel: [  251.373587]   bio ffff88019e0aba00, biotail ffff88019e0ddc00, buffer           (null), len 0
+    Mar 13 10:23:25 c3po kernel: [  251.373597] request botched: dev sdb: type=1, flags=916c081
+    Mar 13 10:23:25 c3po kernel: [  251.373599]   sector 52929354, nr/cnr 0/1016
+    Mar 13 10:23:25 c3po kernel: [  251.373600]   bio ffff88019e0ab800, biotail ffff88019e0dda00, buffer           (null), len 0
+    Mar 13 10:23:25 c3po kernel: [  251.373612] request botched: dev sdc: type=1, flags=916c081
+    Mar 13 10:23:25 c3po kernel: [  251.373614]   sector 52929347, nr/cnr 0/8
+    Mar 13 10:23:25 c3po kernel: [  251.373616]   bio ffff88019e0aaa70, biotail ffff88019e0db380, buffer           (null), len 0
+    Mar 13 10:23:25 c3po kernel: [  251.392135] request botched: dev sda: type=1, flags=916c081
+    Mar 13 10:23:25 c3po kernel: [  251.392137]   sector 52929355, nr/cnr 0/8
+    Mar 13 10:23:25 c3po kernel: [  251.392139]   bio ffff88019e0ab670, biotail ffff88019e0ddc00, buffer           (null), len 0
+    Mar 13 10:23:25 c3po kernel: [  251.392150] request botched: dev sdb: type=1, flags=916c081
+    Mar 13 10:23:25 c3po kernel: [  251.392152]   sector 52929355, nr/cnr 0/8
+    Mar 13 10:23:25 c3po kernel: [  251.392153]   bio ffff88019e0ab470, biotail ffff88019e0dda00, buffer           (null), len 0
+
+After boot the system runs fine, but as soon as I do something (make clean of
+kernel tree with a sync) I get the same messages as above and it takes a
+long time to sync:
+
+    Mar 13 10:44:59 c3po kernel: [ 1550.740528] request botched: dev sda: type=1, flags=9164081
+    Mar 13 10:44:59 c3po kernel: [ 1550.740533]   sector 12580617, nr/cnr 0/776
+    Mar 13 10:44:59 c3po kernel: [ 1550.740537]   bio ffff8801a362b670, biotail ffff8801a30f3d80, buffer           (null), len 0
+    Mar 13 10:44:59 c3po kernel: [ 1550.747141] request botched: dev sdb: type=1, flags=9164081
+    Mar 13 10:44:59 c3po kernel: [ 1550.747144]   sector 12579841, nr/cnr 0/248
+    Mar 13 10:44:59 c3po kernel: [ 1550.747148]   bio ffff88019e0dd200, biotail ffff88019e0dd200, buffer           (null), len 0
+    Mar 13 10:44:59 c3po kernel: [ 1550.749429] request botched: dev sdc: type=1, flags=9164081
+    Mar 13 10:44:59 c3po kernel: [ 1550.749432]   sector 12579841, nr/cnr 0/248
+    Mar 13 10:44:59 c3po kernel: [ 1550.749436]   bio ffff8801a362b600, biotail ffff8801a362b600, buffer           (null), len 0
+    Mar 13 10:44:59 c3po kernel: [ 1550.755332] request botched: dev sda: type=1, flags=916c081
+    Mar 13 10:44:59 c3po kernel: [ 1550.755335]   sector 12580618, nr/cnr 0/248
+    Mar 13 10:44:59 c3po kernel: [ 1550.755339]   bio ffff8801a30f3d80, biotail ffff8801a30f3d80, buffer           (null), len 0
+    Mar 13 10:44:59 c3po kernel: [ 1550.806832] request botched: dev sdb: type=1, flags=9164081
+    Mar 13 10:44:59 c3po kernel: [ 1550.806836]   sector 12266497, nr/cnr 0/1000
+    Mar 13 10:44:59 c3po kernel: [ 1550.806840]   bio ffff8801a4dca800, biotail ffff88019e0c9000, buffer           (null), len 0
+    Mar 13 10:44:59 c3po kernel: [ 1550.811972] request botched: dev sda: type=1, flags=9164081
+    Mar 13 10:44:59 c3po kernel: [ 1550.811976]   sector 12266497, nr/cnr 0/1000
+    Mar 13 10:44:59 c3po kernel: [ 1550.811979]   bio ffff88019e0dd200, biotail ffff8801a3794000, buffer           (null), len 0
+    Mar 13 10:44:59 c3po kernel: [ 1550.814081] request botched: dev sdc: type=1, flags=9164081
+    Mar 13 10:44:59 c3po kernel: [ 1550.814084]   sector 12265497, nr/cnr 0/24
+    Mar 13 10:44:59 c3po kernel: [ 1550.814087]   bio ffff8801a4dca870, biotail ffff8801a37f4080, buffer           (null), len 0
+    Mar 13 10:44:59 c3po kernel: [ 1550.819150] request botched: dev sdc: type=1, flags=916c081
+    Mar 13 10:44:59 c3po kernel: [ 1550.819153]   sector 12265498, nr/cnr 0/1000
+
+Please give me any hints what I can try next.
+
+Regards,
+Holger
