@@ -1,22 +1,46 @@
-From: Larkin Lowrey <llowrey@nuclearwinter.com>
-Subject: Re: Recovering raid6 with 3 of 12 disks
-Date: Wed, 14 Mar 2012 15:42:38 -0500
-Message-ID: <4F6102BE.3080401@nuclearwinter.com>
-References: <4F60E371.20609@nuclearwinter.com> <20120315062611.0ff6bcc0@notabene.brown>
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: Re: [patch 0/7] Add TRIM support for raid linear/0/1/10
+Date: Wed, 14 Mar 2012 21:01:20 +0000 (GMT)
+Message-ID: <alpine.LRH.2.02.1203142042330.6232@diagnostix.dwd.de>
+References: <20120312030412.375458948@fusionio.com> <alpine.LRH.2.02.1203121806120.23719@diagnostix.dwd.de> <4F5EFEB6.4060402@kernel.org> <alpine.LRH.2.02.1203131213480.15848@diagnostix.dwd.de> <CANejiEWYCxY_hLwgyN08_cXC64c82irkNPytTjOpYyER7pTGow@mail.gmail.com>
+ <alpine.LRH.2.02.1203131521190.29286@diagnostix.dwd.de> <CANejiEW=a1piMYvSYM5GmtxKsWYpZj+kjnmNsNUDmW9ydDBjBw@mail.gmail.com> <alpine.LRH.2.02.1203140839590.28358@diagnostix.dwd.de> <CANejiEXP9ORKTfE4O9khaHSp-Y8yOQU1LLUD5Q5pBJOGR+A-aA@mail.gmail.com>
+ <CANejiEXnYpKx741LDs9SzrQKKpfmguO2WFkzWemtiMPtZH0ODA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120315062611.0ff6bcc0@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CANejiEXnYpKx741LDs9SzrQKKpfmguO2WFkzWemtiMPtZH0ODA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>, "axboe@kernel.dk" <axboe@kernel.dk>
 List-Id: linux-raid.ids
 
-On 3/14/2012 2:26 PM, NeilBrown wrote:
-> You should be able to assemble the array if you add '--force'.
+On Wed, 14 Mar 2012, Shaohua Li wrote:
 
-That worked perfectly. Thank you!
+> Is it possible if you can directly build a fs in such ssd (that is not
+> using raid), and check
+> the performance of discard? I'd like to make sure it's not the problem
+> of the ssd itself.
+>
+Yes, I just did the test on a partition without raid on the same SSD.
+Then there is hardly any difference if using discard or not. So it is not
+the problem of the SSD.
 
---Larkin
+It must be hanging somewhere in kernel. I once had an strace running
+on a rm command that was deleting thousand of small files and even the
+output of the strace command was stuck:
 
+   18:31:19.776588 unlinkat(7, "2K-3-4-16--207", 0) = 0
+   18:31:19.776699 unlinkat(7, "2K-3-4-16--44", 0) = 0
+   18:31:19.776808 unlinkat(7, "2K-3-4-16--1476", 0) = 0
+   18:31:19.776919 unlinkat(7, "2K-3-4-16--1277", 0
+
+And when it continued after several minutes being frozen, the time
+given by strace was still 18:31:19.xxxx as if it did not hang.
+
+These hang occur when deleting lots of small files. But they not only
+effect the process doing the deleting, other process are also effected.
+When I tried to open a file on a tmpfs disk in another shell it too
+was stuck for several minutes.
+
+Regards,
+Holger
