@@ -1,111 +1,44 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch 0/7] Add TRIM support for raid linear/0/1/10
-Date: Wed, 14 Mar 2012 13:25:22 +1100
-Message-ID: <20120314132522.4e1107a4@notabene.brown>
-References: <20120312030412.375458948@fusionio.com>
-	<alpine.LRH.2.02.1203121806120.23719@diagnostix.dwd.de>
-	<4F5EA8E9.5010502@fusionio.com>
+From: "kedacomkernel" <kedacomkernel@gmail.com>
+Subject: Re: Re: md:Add break if find.
+Date: Wed, 14 Mar 2012 10:30:30 +0800
+Message-ID: <201203141030247651355@gmail.com>
+References: <201203131328071710700@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/P/JjT4W4/q5v0Cz/=eWOBX9"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4F5EA8E9.5010502@fusionio.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaohua Li <shli@fusionio.com>
-Cc: Holger Kiehl <Holger.Kiehl@dwd.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, axboe@kernel.dk
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/P/JjT4W4/q5v0Cz/=eWOBX9
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+VGhhbnNrLEkga25vdy4NCg0KLS0tLS0tLS0tLS0tLS0tLS0tCQkJCSANCmtlZGFjb21rZXJuZWwN
+CjIwMTItMDMtMTQNCg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLQ0Kt6K8/sjLo7pOZWlsQnJvd24NCreiy83I1cbao7oyMDEyLTAz
+LTE0IDEwOjA2OjM1DQrK1bz+yMujum1hamlhbnBlbmcNCrOty82jumxpbnV4LXJhaWQNCtb3zOKj
+ulJlOiBtZDpBZGQgYnJlYWsgaWYgZmluZC4NCg0KT24gVHVlLCAxMyBNYXIgMjAxMiAxMzoyODox
+MiArMDgwMCAibWFqaWFucGVuZyIgPG1hamlhbnBlbmdAZ21haWwuY29tPiB3cm90ZToNCg0KPiA+
+RnJvbSA2ZTA0YzIzNzRkYjdmYzM0Y2NiZjlmMzdmODVlNzM1YTM0OWM4MTZjIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQ0KPiBGcm9tOiBtYWppYW5wZW5nIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4N
+Cj4gRGF0ZTogVHVlLCAxMyBNYXIgMjAxMiAxMzoyNjoyNSArMDgwMA0KPiBTdWJqZWN0OiBbUEFU
+Q0hdIG1kOkFkZCBicmVhayBpZiBmaW5kLg0KPiANCj4gDQo+IFNpZ25lZC1vZmYtYnk6IG1hamlh
+bnBlbmcgPG1hamlhbnBlbmdAZ21haWwuY29tPg0KPiAtLS0NCj4gIGRyaXZlcnMvbWQvcmFpZDUu
+YyB8ICAgIDQgKysrLQ0KPiAgMSBmaWxlcyBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDEgZGVs
+ZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5jIGIvZHJpdmVy
+cy9tZC9yYWlkNS5jDQo+IGluZGV4IDM2MGYyYjkuLmUwNWQ5ZTUgMTAwNjQ0DQo+IC0tLSBhL2Ry
+aXZlcnMvbWQvcmFpZDUuYw0KPiArKysgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCj4gQEAgLTQzNjks
+OCArNDM2OSwxMCBAQCBzdGF0aWMgaW5saW5lIHNlY3Rvcl90IHN5bmNfcmVxdWVzdChzdHJ1Y3Qg
+bWRkZXYgKm1kZGV2LCBzZWN0b3JfdCBzZWN0b3JfbnIsIGludA0KPiAgCSAqIHJlY292ZXJ5IGFi
+b3J0cy4NCj4gIAkgKi8NCj4gIAlmb3IgKGkgPSAwOyBpIDwgY29uZi0+cmFpZF9kaXNrczsgaSsr
+KQ0KPiAtCQlpZiAoY29uZi0+ZGlza3NbaV0ucmRldiA9PSBOVUxMKQ0KPiArCQlpZiAoY29uZi0+
+ZGlza3NbaV0ucmRldiA9PSBOVUxMKSB7DQo+ICAJCQlzdGlsbF9kZWdyYWRlZCA9IDE7DQo+ICsJ
+CQlicmVhazsNCj4gKwkJfQ0KPiAgDQo+ICAJYml0bWFwX3N0YXJ0X3N5bmMobWRkZXYtPmJpdG1h
+cCwgc2VjdG9yX25yLCAmc3luY19ibG9ja3MsIHN0aWxsX2RlZ3JhZGVkKTsNCj4gIA0KDQpUaGFu
+a3MgLSBob3dldmVyIEkgZG9uJ3QgdGhpbmsgSSdsbCBhcHBseSB0aGlzIG9uZS4NCg0KSXQgaXMg
+YSBtaWNybyBvcHRpbWlzYXRpb24gd2hpY2ggb25seSBpbXByb3ZlIGFuIHVuY29tbW9uIGNhc2Ug
+YSBsaXR0bGUsDQpidXQgaXQgbWFrZXMgdGhlIHNvdXJjZSBjb2RlIGxvbmcgYW5kIHRoZSBnZW5l
+cmF0ZWQgbWFjaGluZSBjb2RlIGxvbmdlciAoYnkNCjMyIGJ5dGVzIG9uIHg4Nl82NCkuDQpTbyBJ
+IGRvbid0IHJlYWxseSB0aGluayBpdCBpcyBhIHdpbi4NCg0KVGhhbmtzLA0KTmVpbEJyb3duDQoN
+Cg==
 
-On Tue, 13 Mar 2012 09:54:49 +0800 Shaohua Li <shli@fusionio.com> wrote:
-
-> On 3/13/12 2:22 AM, Holger Kiehl wrote:
-> >  Hello,
-> >
-> >  On Mon, 12 Mar 2012, Shaohua Li wrote:
-> >
-> > > The patches add TRIM support for raid linear/0/1/10. I'll add TRIM=20
-> support for
-> > > raid 4/5/6 later. The implementation is pretty straightforward and
-> > > self-explained.
-> > >
-> >  First, thanks for this patch!
-> >
-> >  I have applied those patches against 3.3.0-rc7 and during boot the ker=
-nel
-> >  reports a lot of the following:
-> >
-> >  Mar 12 18:56:00 c3po kernel: [ 7.611045] md/raid0:md3: make_request=20
-> bug: can't convert block across chunks or bigger than 512k 18861064 512
-> >  Mar 12 18:56:00 c3po kernel: [ 7.611047] md/raid0:md3: make_request=20
-> bug: can't convert block across chunks or bigger than 512k 18862088 512
-> >  Mar 12 18:56:00 c3po kernel: [ 7.611049] md/raid0:md3: make_request=20
-> bug: can't convert block across chunks or bigger than 512k 18863112 512
-> >  Mar 12 18:56:00 c3po kernel: [ 7.611052] md/raid0:md3: make_request=20
-> bug: can't convert block across chunks or bigger than 512k 18864136 512
-> >  Mar 12 18:56:00 c3po kernel: [ 7.611054] md/raid0:md3: make_request=20
-> bug: can't convert block across chunks or bigger than 512k 18865160 512
-> >  Mar 12 18:56:00 c3po kernel: [ 7.611056] md/raid0:md3: make_request=20
-> bug: can't convert block across chunks or bigger than 512k 18866184 512
-> Thanks for testing. Looks I fixed a sanity check in bio.c but there are
-> similar check in raid0/10 which I forgot to fix. Below patch should fix i=
-t.
-> please try.
->=20
->=20
-> Subject: md: fix sanity check
->=20
-> discard bio hasn't data attached and such bio can be split, don't consider
-> this is illegial.
->=20
-> Signed-off-by: Shaohua Li <shli@fusionio.com>
-> ---
->   drivers/md/raid0.c  |    2 +-
->   drivers/md/raid10.c |    2 +-
->   2 files changed, 2 insertions(+), 2 deletions(-)
->=20
-> Index: linux/drivers/md/raid0.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux.orig/drivers/md/raid0.c    2012-03-13 09:37:58.759976786 +0800
-> +++ linux/drivers/md/raid0.c    2012-03-13 09:42:35.389975584 +0800
-> @@ -496,7 +496,7 @@ static void raid0_make_request(struct md
->           sector_t sector =3D bio->bi_sector;
->           struct bio_pair *bp;
->           /* Sanity check -- queue functions should prevent this=20
-> happening */
-> -        if (bio->bi_vcnt !=3D 1 ||
-> +        if ((bio->bi_vcnt !=3D 1 && bio->bi_vcnt !=3D0) ||
-
-oh .. and there is the fix I mentioned that you would need :-)
-Thanks,
-NeilBrown
-
-
-
---Sig_/P/JjT4W4/q5v0Cz/=eWOBX9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT2ABkjnsnt1WYoG5AQI0vA//dQbXACHnY6d2k9ErY5c93UFZQXOmZVIk
-C7Op+GjHn/hIfQQsNYfcqcVGSgiws+/mdSmxchw0laf7rRDQt7UEWbZ3CGjJBBcS
-Y3QXi188UNpJkdptaySfl+0cptqDZ7SrUKNSi1sZqowVXoMPFJlWDzrzwh4KaMTw
-4cJHS+qnGfg/N9Kdt4zPwBpMzHLRTy1gMc1rvkbfwm/UO0hRIDCXWILiDs05GaEC
-73bfGaLCL83f6mKRUg82n02H5B+Q67eTuYRiVdbIXYngV7gIWCfvLQugOK+UF1Ja
-3ogEqokL73vNT69on1E15XBMuh30P5J6NA9MhqjR9ZmS4dc1+MwsZmqjt4emjhKD
-lNGqIUMPDnJU8q20S3CPLkTVXtUsaMabsmVAkWdMYZbF97mzHK1pAkbE4ZxL14Ky
-8hyCWmcuGpCrTLZiyPEru5Or0Qb+b6UpcY8+60BasBds0oxClOV0esTME66GhjvW
-u4NqHuvKp6y8+3iuQVGlKtIAbp/O6fMiRlbmYL+fOnQwY/TavCkGLoJCpY2Q/dsM
-v61ccIGrDqDCUzIUBCwOCzFtKL9X4qfNlfaPJoilUenQ0/zONds52V7BLjPhl2oD
-csvXQecsKjO9aZkwNvJoQUTGznM6NG18vTPMLPatQnNE66RriIcAu4HQmh3UhbWt
-6Gedp7h08fI=
-=fBFx
------END PGP SIGNATURE-----
-
---Sig_/P/JjT4W4/q5v0Cz/=eWOBX9--
