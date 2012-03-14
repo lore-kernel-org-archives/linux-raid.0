@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 15/23] md/raid10 - support resizing some RAID10 arrays.
+Subject: [md PATCH 16/23] md/bitmap: remove some unused noise from bitmap.h
 Date: Wed, 14 Mar 2012 15:40:41 +1100
-Message-ID: <20120314044040.7978.69754.stgit@notabene.brown>
+Message-ID: <20120314044041.7978.17045.stgit@notabene.brown>
 References: <20120314043555.7978.75486.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -12,78 +12,59 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-'resizing' an array in this context means making use of extra
-space that has become available in component devices, not adding new
-devices.
-It also includes shrinking the array to take up less space of
-component devices.
-
-This is not supported for array with a 'far' layout.  However
-for 'near' and 'offset' layout arrays, adding and removing space at
-the end of the devices is easy to support, and this patch provides
-that support.
-
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid10.c |   38 ++++++++++++++++++++++++++++++++++++++
- 1 files changed, 38 insertions(+), 0 deletions(-)
+ drivers/md/bitmap.h |   18 ------------------
+ 1 files changed, 0 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 7b3346a..2f7665c 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -3437,6 +3437,43 @@ static void raid10_quiesce(struct mddev *mddev, int state)
- 	}
- }
+diff --git a/drivers/md/bitmap.h b/drivers/md/bitmap.h
+index a15436d..557e3e8 100644
+--- a/drivers/md/bitmap.h
++++ b/drivers/md/bitmap.h
+@@ -13,8 +13,6 @@
+ #define BITMAP_MAJOR_HI 4
+ #define	BITMAP_MAJOR_HOSTENDIAN 3
  
-+static int raid10_resize(struct mddev *mddev, sector_t sectors)
-+{
-+	/* Resize of 'far' arrays is not supported.
-+	 * For 'near' and 'offset' arrays we can set the
-+	 * number of sectors used to be an appropriate multiple
-+	 * of the chunk size.
-+	 * For 'offset', this is far_copies*chunksize.
-+	 * For 'near' the multiplier is the LCM of
-+	 * near_copies and raid_disks.
-+	 * So if far_copies > 1 && !far_offset, fail.
-+	 * Else find LCM(raid_disks, near_copy)*far_copies and
-+	 * multiply by chunk_size.  Then round to this number.
-+	 * This is mostly done by raid10_size()
-+	 */
-+	struct r10conf *conf = mddev->private;
-+	sector_t oldsize, size;
-+
-+	if (conf->far_copies > 1 && !conf->far_offset)
-+		return -EINVAL;
-+
-+	oldsize = raid10_size(mddev, 0, 0);
-+	size = raid10_size(mddev, sectors, 0);
-+	md_set_array_sectors(mddev, size);
-+	if (mddev->array_sectors > size)
-+		return -EINVAL;
-+	set_capacity(mddev->gendisk, mddev->array_sectors);
-+	revalidate_disk(mddev->gendisk);
-+	if (sectors > mddev->dev_sectors &&
-+	    mddev->recovery_cp > oldsize) {
-+		mddev->recovery_cp = oldsize;
-+		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-+	}
-+	mddev->dev_sectors = sectors;
-+	mddev->resync_max_sectors = size;
-+	return 0;
-+}
-+
- static void *raid10_takeover_raid0(struct mddev *mddev)
- {
- 	struct md_rdev *rdev;
-@@ -3506,6 +3543,7 @@ static struct md_personality raid10_personality =
- 	.sync_request	= sync_request,
- 	.quiesce	= raid10_quiesce,
- 	.size		= raid10_size,
-+	.resize		= raid10_resize,
- 	.takeover	= raid10_takeover,
+-#define BITMAP_MINOR 39
+-
+ /*
+  * in-memory bitmap:
+  *
+@@ -101,21 +99,11 @@ typedef __u16 bitmap_counter_t;
+ /* same, except a mask value for more efficient bitops */
+ #define PAGE_COUNTER_MASK  (PAGE_COUNTER_RATIO - 1)
+ 
+-#define BITMAP_BLOCK_SIZE 512
+ #define BITMAP_BLOCK_SHIFT 9
+ 
+ /* how many blocks per chunk? (this is variable) */
+ #define CHUNK_BLOCK_RATIO(bitmap) ((bitmap)->mddev->bitmap_info.chunksize >> BITMAP_BLOCK_SHIFT)
+ #define CHUNK_BLOCK_SHIFT(bitmap) ((bitmap)->chunkshift - BITMAP_BLOCK_SHIFT)
+-#define CHUNK_BLOCK_MASK(bitmap) (CHUNK_BLOCK_RATIO(bitmap) - 1)
+-
+-/* when hijacked, the counters and bits represent even larger "chunks" */
+-/* there will be 1024 chunks represented by each counter in the page pointers */
+-#define PAGEPTR_BLOCK_RATIO(bitmap) \
+-			(CHUNK_BLOCK_RATIO(bitmap) << PAGE_COUNTER_SHIFT >> 1)
+-#define PAGEPTR_BLOCK_SHIFT(bitmap) \
+-			(CHUNK_BLOCK_SHIFT(bitmap) + PAGE_COUNTER_SHIFT - 1)
+-#define PAGEPTR_BLOCK_MASK(bitmap) (PAGEPTR_BLOCK_RATIO(bitmap) - 1)
+ 
+ #endif
+ 
+@@ -181,12 +169,6 @@ struct bitmap_page {
+ 	unsigned int  count:31;
  };
  
+-/* keep track of bitmap file pages that have pending writes on them */
+-struct page_list {
+-	struct list_head list;
+-	struct page *page;
+-};
+-
+ /* the main bitmap structure - one per mddev */
+ struct bitmap {
+ 	struct bitmap_page *bp;
 
 
