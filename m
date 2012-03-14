@@ -1,106 +1,67 @@
-From: keld@keldix.com
-Subject: Re: [md PATCH 15/23] md/raid10 - support resizing some RAID10 arrays.
-Date: Wed, 14 Mar 2012 07:17:46 +0100
-Message-ID: <20120314061746.GA28196@www5.open-std.org>
-References: <20120314043555.7978.75486.stgit@notabene.brown> <20120314044040.7978.69754.stgit@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [md PATCH 15/23] md/raid10 - support resizing some RAID10
+ arrays.
+Date: Wed, 14 Mar 2012 17:27:12 +1100
+Message-ID: <20120314172712.3aa9310a@notabene.brown>
+References: <20120314043555.7978.75486.stgit@notabene.brown>
+	<20120314044040.7978.69754.stgit@notabene.brown>
+	<20120314061746.GA28196@www5.open-std.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/vg3WQePJdTw+7cWllBiU/XM"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120314044040.7978.69754.stgit@notabene.brown>
+In-Reply-To: <20120314061746.GA28196@www5.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: keld@keldix.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil
+--Sig_/vg3WQePJdTw+7cWllBiU/XM
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-What is the problem with adding space to the 'far' layout?
+On Wed, 14 Mar 2012 07:17:46 +0100 keld@keldix.com wrote:
 
-I would think you could just create the new array part 1 from the old array part 2, and
-then sync the new array part 2 with the new array part 1. (in the case of a far=2 array,
-for n>2 similar constructs would apply).
+> Hi Neil
+>=20
+> What is the problem with adding space to the 'far' layout?
+>=20
+> I would think you could just create the new array part 1 from the old arr=
+ay part 2, and
+> then sync the new array part 2 with the new array part 1. (in the case of=
+ a far=3D2 array,
+> for n>2 similar constructs would apply).
 
-best regards
-Keld
+If I understand your proposal correctly, you would lose redundancy during t=
+he
+process, which is not acceptable.
 
-On Wed, Mar 14, 2012 at 03:40:41PM +1100, NeilBrown wrote:
-> 'resizing' an array in this context means making use of extra
-> space that has become available in component devices, not adding new
-> devices.
-> It also includes shrinking the array to take up less space of
-> component devices.
-> 
-> This is not supported for array with a 'far' layout.  However
-> for 'near' and 'offset' layout arrays, adding and removing space at
-> the end of the devices is easy to support, and this patch provides
-> that support.
-> 
-> Signed-off-by: NeilBrown <neilb@suse.de>
-> ---
-> 
->  drivers/md/raid10.c |   38 ++++++++++++++++++++++++++++++++++++++
->  1 files changed, 38 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 7b3346a..2f7665c 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -3437,6 +3437,43 @@ static void raid10_quiesce(struct mddev *mddev, int state)
->  	}
->  }
->  
-> +static int raid10_resize(struct mddev *mddev, sector_t sectors)
-> +{
-> +	/* Resize of 'far' arrays is not supported.
-> +	 * For 'near' and 'offset' arrays we can set the
-> +	 * number of sectors used to be an appropriate multiple
-> +	 * of the chunk size.
-> +	 * For 'offset', this is far_copies*chunksize.
-> +	 * For 'near' the multiplier is the LCM of
-> +	 * near_copies and raid_disks.
-> +	 * So if far_copies > 1 && !far_offset, fail.
-> +	 * Else find LCM(raid_disks, near_copy)*far_copies and
-> +	 * multiply by chunk_size.  Then round to this number.
-> +	 * This is mostly done by raid10_size()
-> +	 */
-> +	struct r10conf *conf = mddev->private;
-> +	sector_t oldsize, size;
-> +
-> +	if (conf->far_copies > 1 && !conf->far_offset)
-> +		return -EINVAL;
-> +
-> +	oldsize = raid10_size(mddev, 0, 0);
-> +	size = raid10_size(mddev, sectors, 0);
-> +	md_set_array_sectors(mddev, size);
-> +	if (mddev->array_sectors > size)
-> +		return -EINVAL;
-> +	set_capacity(mddev->gendisk, mddev->array_sectors);
-> +	revalidate_disk(mddev->gendisk);
-> +	if (sectors > mddev->dev_sectors &&
-> +	    mddev->recovery_cp > oldsize) {
-> +		mddev->recovery_cp = oldsize;
-> +		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> +	}
-> +	mddev->dev_sectors = sectors;
-> +	mddev->resync_max_sectors = size;
-> +	return 0;
-> +}
-> +
->  static void *raid10_takeover_raid0(struct mddev *mddev)
->  {
->  	struct md_rdev *rdev;
-> @@ -3506,6 +3543,7 @@ static struct md_personality raid10_personality =
->  	.sync_request	= sync_request,
->  	.quiesce	= raid10_quiesce,
->  	.size		= raid10_size,
-> +	.resize		= raid10_resize,
->  	.takeover	= raid10_takeover,
->  };
->  
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+If I don't understand properly - please explain in a bit more detail.
+
+Thanks,
+NeilBrown
+
+
+--Sig_/vg3WQePJdTw+7cWllBiU/XM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT2A6QDnsnt1WYoG5AQKmqQ/9H/68lCrMxZuWzPVRjM/CL+zim5jFMYe6
+nRxaacQbx/nGZpsU0llcsMxtG5jHv7I0bQwiMsnVLY/BURghfCC11Q0HAEWZrZY9
+pTPwdtXwrHX6EDc4/UWRiOyuROUH9EtcxYhMdQG58n3kI26On/l3ZbVm4LEAjT9A
+2BUWCnubh4YjgrlxEIAJpV5GIQgXw61IuyLXaRZ2Os9HZ80V83Wo8j22vrh30KI+
+I4LaeCr3OhXhcC+1/6CQgA5Y+FK/KMJMlhxwx0LVPflCwnJlLBG5FKaG5NKkuI87
+XOEVgIIkYnVyWYaJPgltekEQQBVbC+XEI49yu2WTAeO6gOC1DIJJXcOftqWsvyXY
+kLT1m6APooE5ielPo1WvtoGvhA6KMFga3fAyMH6AV8i2dyfThBeM4zFZ6pcBmwST
+HeX50Yi1GLOlJMmJ+fzjjYcV3Bs2bbm/s/8vjwxzGLssBW2rBO9FsI0LL9tShCoH
+GIzXitRS0g+oji8nly6FbFFDYeGH8SIq0AiL8LGKuo7HoxgiDKetuVUEvT9iojo3
+yN1A8GcOrNHAUvT6B4wlWQe9gQcohKy4bNqMSASsQ92XCnYVoxvY19pf0e5r9vHS
+RrJitQqZSUPCQageuiygatUoyha1b8B3ivDR0gFDTlyX+zaNOQHfr/GTz2w36+wV
+/ElP+4GLCe0=
+=mhNL
+-----END PGP SIGNATURE-----
+
+--Sig_/vg3WQePJdTw+7cWllBiU/XM--
