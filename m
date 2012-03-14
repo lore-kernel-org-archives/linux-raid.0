@@ -1,7 +1,7 @@
 From: "majianpeng" <majianpeng@gmail.com>
-Subject: md/raid5:Fix recover/replace stop if handle stipe failed
-Date: Wed, 14 Mar 2012 15:07:55 +0800
-Message-ID: <201203141507458909278@gmail.com>
+Subject: Question about handle_failed_sync()
+Date: Wed, 14 Mar 2012 15:16:45 +0800
+Message-ID: <201203141516404211761@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
@@ -12,59 +12,23 @@ To: Neil Brown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From 849df9f6422972452b99a2c2d08d005437a52d72 Mon Sep 17 00:00:00 2001
-From: majianpeng <majianpeng@gmail.com>
-Date: Wed, 14 Mar 2012 14:41:07 +0800
-Subject: [PATCH] md/raid5:Fix recover/replace stop if handle stipe failed. 
- If handled stipe failed when recover/replace,should not first
- call md_done_sync(conf->mddev, STRIPE_SECTORS, 0).Beacause
- this set MD_RECOVERY_INTR and will terminate the
- recover/replace. And the sync_thread will repeatly start
- and stop.
+ In function handle_failed_sync():
+>>/* During recovery devices cannot be removed, so locking and
+>>	 * refcounting of rdevs is not needed
+>>	 */
+>>	for (i = 0; i < conf->raid_disks; i++) {
+>>		struct md_rdev *rdev = conf->disks[i].rdev;
+>>		if (rdev
+>>		    && !test_bit(Faulty, &rdev->flags)
+>>		    && !test_bit(In_sync, &rdev->flags)
+>>		    && !rdev_set_badblocks(rdev, sh->sector,
+>>					   STRIPE_SECTORS, 0))
+>>			abort = 1;
 
-
-Signed-off-by: majianpeng <majianpeng@gmail.com>
----
- drivers/md/raid5.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 360f2b9..55193ef 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2472,7 +2472,6 @@ handle_failed_sync(struct r5conf *conf, struct stripe_head *sh,
- 	int abort = 0;
- 	int i;
- 
--	md_done_sync(conf->mddev, STRIPE_SECTORS, 0);
- 	clear_bit(STRIPE_SYNCING, &sh->state);
- 	s->syncing = 0;
- 	s->replacing = 0;
-@@ -2480,8 +2479,12 @@ handle_failed_sync(struct r5conf *conf, struct stripe_head *sh,
- 	 * For recover/replace we need to record a bad block on all
- 	 * non-sync devices, or abort the recovery
- 	 */
--	if (!test_bit(MD_RECOVERY_RECOVER, &conf->mddev->recovery))
-+	if (!test_bit(MD_RECOVERY_RECOVER, &conf->mddev->recovery)) {
-+		md_done_sync(conf->mddev, STRIPE_SECTORS, 0);
- 		return;
-+	} else
-+		md_done_sync(conf->mddev, STRIPE_SECTORS, 1);
-+
- 	/* During recovery devices cannot be removed, so locking and
- 	 * refcounting of rdevs is not needed
- 	 */
-@@ -2504,6 +2507,7 @@ handle_failed_sync(struct r5conf *conf, struct stripe_head *sh,
- 	if (abort) {
- 		conf->recovery_disabled = conf->mddev->recovery_disabled;
- 		set_bit(MD_RECOVERY_INTR, &conf->mddev->recovery);
-+		md_wakeup_thread(conf->mddev->thread);
- 	}
- }
- 
--- 
-1.7.5.4
-
+I have two questions:
+1:if raid have two or more spare disks, it wil set bad block on all spare disk. Is it worth it?
+2:If raid have two or more spare disks,I can remove spare disks which not working for recovery.Then you shold add locking 
+   and refconting.
  				
 --------------
 majianpeng
