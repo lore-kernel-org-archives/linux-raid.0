@@ -1,83 +1,75 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [PATCH]: md: Initialize ctl_name field of table raid_root_table/raid_dir_table to avoid dump_trace info in debug kernel
-Date: Tue, 13 Mar 2012 19:14:05 -0700
-Message-ID: <m14ntsc4k2.fsf@fess.ebiederm.org>
-References: <4F5D747D.9060508@oracle.com>
-	<20120314125720.1bb87546@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [patch 0/7] Add TRIM support for raid linear/0/1/10
+Date: Wed, 14 Mar 2012 13:24:22 +1100
+Message-ID: <20120314132422.3aeb6d49@notabene.brown>
+References: <20120312030412.375458948@fusionio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/tu/q2Z4LK.W.Sq1CIinhKF8"; protocol="application/pgp-signature"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120314125720.1bb87546@notabene.brown> (NeilBrown's message of
-	"Wed, 14 Mar 2012 12:57:20 +1100")
+In-Reply-To: <20120312030412.375458948@fusionio.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: qing gu <qing.gu@oracle.com>, neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@kernel.org
+To: Shaohua Li <shli@fusionio.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, axboe@kernel.dk
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> writes:
+--Sig_/tu/q2Z4LK.W.Sq1CIinhKF8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> On Mon, 12 Mar 2012 11:58:53 +0800 qing gu <qing.gu@oracle.com> wrote:
->
->> This patch is used to dispense trace info when system boots with debug 
->> kernel. I have verified it on RHEL6.2 & SLES11.2. Both work fine.
->> In the failure case, system logs that:
->> 
->>     /Feb 21 19:33:55 nsgbj-216-137 kernel: sysctl_check_dir: failed: /dev  ref: /dev .7
->>     Feb 21 19:33:55 nsgbj-216-137 kernel: sysctl table check failed: /dev  Inconsistent directory names
->>     Feb 21 19:33:55 nsgbj-216-137 kernel: Pid: 1, comm: swapper Not tainted 2.6.32-220.el6.x86_64.debug #1
->>     Feb 21 19:33:55 nsgbj-216-137 kernel: Call Trace:
->>     Feb 21 19:33:55 nsgbj-216-137 kernel: [<ffffffff810a2029>] ? set_fail+0x59/0x60
->>     Feb 21 19:33:55 nsgbj-216-137 kernel: [<ffffffff810a23d4>] ? sysctl_check_table+0x3a4/0x680
->>     ...
->>     /
->> 
->> As you can see, system failed with mismatch
->> /sysctl_check_dir: failed: /dev ref: /dev .7/
->> 
->> Signed-off-by: Neil Gu <qing.gu@oracle.com>
->> 
->> -----------------------------------------------------------
->
-> (please put patches inline in your email - it makes them easier to reply to)
->
->
->  scripts/kconfig/Makefile |   16 ++++++++++++++++
->   1 file changed, 16 insertions(+)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index ce88755..9630ad3 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -129,6 +129,7 @@ static ctl_table raid_table[] = {
->  
->  static ctl_table raid_dir_table[] = {
->  	{
-> +		.ctl_name	= DEV_RAID,
->  		.procname	= "raid",
->  		.maxlen		= 0,
->  		.mode		= S_IRUGO|S_IXUGO,
-> @@ -139,6 +140,7 @@ static ctl_table raid_dir_table[] = {
->  
->  static ctl_table raid_root_table[] = {
->  	{
-> +		.ctl_name	= CTL_DEV,
->  		.procname	= "dev",
->  		.maxlen		= 0,
->  		.mode		= 0555,
->
-> These lines were removed in November 2009 by Eric Biederman in
-> commit 894d2491153a9f8270dbed21175d06fde4eba6c7
->
-> So I'm not keen on adding them back without understanding the history.
->
-> Eric:  Do we need these after all?
+On Mon, 12 Mar 2012 11:04:12 +0800 Shaohua Li <shli@fusionio.com> wrote:
 
-For the main trunk no.  The .ctl_name field no longer exists.
+> The patches add TRIM support for raid linear/0/1/10. I'll add TRIM suppor=
+t for
+> raid 4/5/6 later. The implementation is pretty straightforward and
+> self-explained.
+>=20
+> Thanks,
+> Shaohua
 
-kernel/binary_sysctl.c is used to provide backwards compatibility with
-the old binary names.
+Thanks.
+They look mostly OK.
 
-There might be a point for doing something in -stable or someone's
-enterprise kernel if some messed up set of backports were merged.
+In raid0.c, I think you'll need to change
 
-Eric
+		/* Sanity check -- queue functions should prevent this happening */
+		if (bio->bi_vcnt !=3D 1 ||
+		    bio->bi_idx !=3D 0)
+			goto bad_map;
+
+to also allow for 'bi_vcnt =3D=3D 0' like you did in bio_split.
+
+Also I wonder about handling failure in RAID1.
+I think the code will currently treat it like a write error, and
+maybe record a bad block (then fail the device is writing the badblock
+record fails). Is that what were want?
+
+And of course resync/recovery will mess up the discarded sector information,
+so this isn't a complete solution for RAID1.  But  it is a reasonable start.
+
+Thanks,
+NeilBrown
+
+--Sig_/tu/q2Z4LK.W.Sq1CIinhKF8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT2ABVjnsnt1WYoG5AQIoqg//YD2vcO/hSxuXV/iklDCPwJB9h5WsPPVH
+ELBbD3OUP/zyXXHtekAfWHN1VTzOggTMWb+mMyPq/KQf/xyPBmOLMN89M6OuLlh4
+DfLpGji0IuD7uKxVBTyjCCoj4N8AAbYS+1zy8C80xGn5abMc1JrXqKQARUMl4bhi
+D+poaoav2K5DYuX9+7pbsSZ57mZYJb9T9pmSah+BRfzF8mVIiCs8C+1Y3GryqPgY
++TxXxn13A0RdazcjA1hergvBmAaGajPIq0RADEFqY6b4TU1iBu4g/NfFJY2V6iBM
+ylL4FvAO2WBniqie4Zlp/0XmJNTzdnjQUoH/4h8HWl3NH9zD59C7jZrlvV8KYfT1
++EmjGczp4KETOZCab7W+u2mZhoFU0HudDA0FtxNoRnZydN/fpGRlE55YHNGf7iKy
+705aVdB/3+/34zs0j6Pwu1Q8vkHGhOFyER/bBkkJvASEGWyaHRgYIY4DCxrM19X5
+8bTGqlYotZgNx0Eqj1wd3cnjF8i6ePB2mCvlLEAiVjtlXxmizsflFZp5zHuSYLav
+v2JLOKXOHclQJQtnoZDc0YXde4YzNZv3UPZX2BwAEB5sjMhmCHO+7or/0EBu6xxV
+vcvJ7+X6Y0mRrg9IJvYFmYeahsTv6cogCKNBdRnFHlvqFLHjJFXEATU+uvT1DXqg
+GSMgGhuEVu8=
+=hZUN
+-----END PGP SIGNATURE-----
+
+--Sig_/tu/q2Z4LK.W.Sq1CIinhKF8--
