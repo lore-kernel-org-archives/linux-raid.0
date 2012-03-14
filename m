@@ -1,92 +1,86 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: md:Add judgement bb->unacked_exist in function
-Date: Wed, 14 Mar 2012 12:53:58 +1100
-Message-ID: <20120314125358.7c5e8f66@notabene.brown>
-References: <201203081737420934967@gmail.com>
+Subject: Re: md:Add break if find.
+Date: Wed, 14 Mar 2012 13:06:15 +1100
+Message-ID: <20120314130615.7e5dbd42@notabene.brown>
+References: <201203131328071710700@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/kjL4HO3k3+Z3E+grZcdL6LW"; protocol="application/pgp-signature"
+ boundary="Sig_/tFS6pWk/rMfn3h95lsJ.uKc"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201203081737420934967@gmail.com>
+In-Reply-To: <201203131328071710700@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: kedacomkernel <kedacomkernel@gmail.com>
+To: majianpeng <majianpeng@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/kjL4HO3k3+Z3E+grZcdL6LW
+--Sig_/tFS6pWk/rMfn3h95lsJ.uKc
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 8 Mar 2012 17:37:45 +0800 "kedacomkernel" <kedacomkernel@gmail.com>
-wrote:
+On Tue, 13 Mar 2012 13:28:12 +0800 "majianpeng" <majianpeng@gmail.com> wrot=
+e:
 
-> >From 7054a9dcd23a721e3c3dd2ceb8f1243187ea5cc4 Mon Sep 17 00:00:00 2001
+> >From 6e04c2374db7fc34ccbf9f37f85e735a349c816c Mon Sep 17 00:00:00 2001
 > From: majianpeng <majianpeng@gmail.com>
-> Date: Thu, 8 Mar 2012 17:31:32 +0800
-> Subject: [PATCH] md:Add judgement bb->unacked_exist in function
->  md_ack_all_badblocks().
+> Date: Tue, 13 Mar 2012 13:26:25 +0800
+> Subject: [PATCH] md:Add break if find.
 >=20
 >=20
 > Signed-off-by: majianpeng <majianpeng@gmail.com>
 > ---
->  drivers/md/md.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+>  drivers/md/raid5.c |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
 >=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index ce88755..7c57d0f 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -8040,7 +8040,7 @@ void md_ack_all_badblocks(struct badblocks *bb)
->  		return;
->  	write_seqlock_irq(&bb->lock);
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 360f2b9..e05d9e5 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -4369,8 +4369,10 @@ static inline sector_t sync_request(struct mddev *=
+mddev, sector_t sector_nr, int
+>  	 * recovery aborts.
+>  	 */
+>  	for (i =3D 0; i < conf->raid_disks; i++)
+> -		if (conf->disks[i].rdev =3D=3D NULL)
+> +		if (conf->disks[i].rdev =3D=3D NULL) {
+>  			still_degraded =3D 1;
+> +			break;
+> +		}
 > =20
-> -	if (bb->changed =3D=3D 0) {
-> +	if (bb->changed =3D=3D 0 && bb->unacked_exist) {
->  		u64 *p =3D bb->page;
->  		int i;
->  		for (i =3D 0; i < bb->count ; i++) {
+>  	bitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks, still_degrade=
+d);
+> =20
 
-Thanks.
-This is fairly minor optimisation as 'unacked_exists' it almost always true
-when ->change is set, but I doesn't hurt so I've included it.
+Thanks - however I don't think I'll apply this one.
 
-In general I prefer a slightly more details commit comment.  It doesn't have
-to be long, but it should make it obvious why the change is needed and what
-it does.
-I have made it:
-
-    md: Add judgement bb->unacked_exist in function md_ack_all_badblocks().
-   =20
-    If there are no unacked bad blocks, then there is no point searching
-    for them to acknowledge them.
-   =20
-   =20
-    Signed-off-by: majianpeng <majianpeng@gmail.com>
-    Signed-off-by: NeilBrown <neilb@suse.de>
+It is a micro optimisation which only improve an uncommon case a little,
+but it makes the source code long and the generated machine code longer (by
+32 bytes on x86_64).
+So I don't really think it is a win.
 
 Thanks,
 NeilBrown
 
---Sig_/kjL4HO3k3+Z3E+grZcdL6LW
+
+--Sig_/tFS6pWk/rMfn3h95lsJ.uKc
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT1/6Njnsnt1WYoG5AQKifBAAn7048i5/C9vkeB2SFYNtBR+vN0G1S3Qi
-hW0W3XiJOHOTioXuMi0X1JYGhKGAOYZfYnbgwknSbaBSXuwd1woqYjabLlj0DFTY
-mj+FX4E0BsRrdhmg+GPja0/55i+Z+flO94Pwaqnx6nLbMw7IcBESNtt8FtCnpI5F
-6rOcG+AD2wzNbrkm2Kyt+N1duhPE4VHO+JaFibQZmVL6vq8hItG9XzHyWG2Mv+AI
-EHHjNz9hgpOQrkGNysLtegy+CDAWee6S7kV6hN3iE989ERVOt1rugYRqYxoecIdA
-gXv/Q/ZuCq8EKGcahrA3SJx3bQM/TnHaDGWN0fCo8L5GyJK6yr10FxayBHnjI6Ex
-qfrLZIgMBySWu0qs8hYO0oylZgK+RuKpiWTHXMCkdLLy40r80WM5/QwLYzw7ccof
-l3A9AaSUb0jF+8QY4M09SZxe9DKgjnHZ+K5msOFYNEg57ZBia65CqNFcoB6N/xqj
-ygJmSjYR6W1MI3a656q4HA+1h2vU4EtBneTZ+awuDAQxVrDSxOdlma368hP9idk+
-FETiZyn5GJ95bZa1THXw94LW+33Opl1S3lHn/1q36JSl4d0fvqwsJuqIjkNsNEFA
-sr2sP0pcTJNZ2UlqH0D2RqPcjrFb5pHmNIXBFUgM5jE0kxlBp6XBUv1keqW93s5e
-48KaSmtp+48=
-=hkX0
+iQIVAwUBT1/9Fznsnt1WYoG5AQInDQ//adFAxCbEFcu4W6fmKVgPrs6qkZsRALMG
+IoAEhRcz7f2J/S93w8FuzrdnoNfR0OeFb/+0vLAyGg9cEzJWkp5DwNZADZayaZ9+
+kdlB5q05adrZxyht2EkDVXHZ3C8dxIxoTmi6SzHcCa95aZgY1FYVIliSApGMUKsr
+AipAND2DdEmBOB/xJq3iYSHBkofPXwGKCz9qllghoYD4u3mRsUmfVzasSDpQ1zg6
+bXxg7Iu9khrcGnGLGBIu/x8qZiIeBK0uY4iSFg6R73x1vrIucKMhs6Dl1QOsGnt0
+lLQI87SwSzp1uk9QgqOpxYddyRpiSI8ffQtcCTK1XXL17xCEBa4OP1ZOxrsrAISr
+vdOnNxm3k3Uvgdc9cDkPnLcwOKQdRW5ALoOT7aMBws5uTiAPX9n1nW4YFGVWoYp7
+UOwG/ukjIDeUePjZv/qxcyt8N8mlyJL8SYzAxYhAGwswK3WrKTET0jj4Ml9cngoW
+izJcJ/NUkV/1JMhZyWnmVP9esCU1j9tYJJ+KySyIuqpGSTgWnNDefiWF+VrbKOEy
+X2vSzD05gQHbg4TjzXx/yqQM6P7Bs4BLlY257Rd6mTlGAF1Max6O9Gm7tJoDKfYk
+Rg8bycpHt544+oBXUV3wXrYjWhBWXxhkN8Fk1Cnmm/OWuddm2VN/jMz7+oZ0z2vz
+sFo1VqT1qHQ=
+=CBaE
 -----END PGP SIGNATURE-----
 
---Sig_/kjL4HO3k3+Z3E+grZcdL6LW--
+--Sig_/tFS6pWk/rMfn3h95lsJ.uKc--
