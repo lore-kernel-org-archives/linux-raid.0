@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 03/23] md/raid5: removed unused 'added_devices' variable.
+Subject: [md PATCH 04/23] md: Use existed macros instead of numbers
 Date: Wed, 14 Mar 2012 15:40:39 +1100
-Message-ID: <20120314044039.7978.32964.stgit@notabene.brown>
+Message-ID: <20120314044039.7978.71742.stgit@notabene.brown>
 References: <20120314043555.7978.75486.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -12,45 +12,30 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-commit 908f4fbd265733 removed the last user of this variable,
-so we should discard it completely.
+From: majianpeng <majianpeng@gmail.com>
 
+Signed-off-by: majianpeng <majianpeng@gmail.com>
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid5.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+ include/linux/raid/md_p.h |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 8b3eb41..3f55145 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5547,16 +5547,14 @@ static int raid5_start_reshape(struct mddev *mddev)
- 	 * such devices during the reshape and confusion could result.
- 	 */
- 	if (mddev->delta_disks >= 0) {
--		int added_devices = 0;
- 		list_for_each_entry(rdev, &mddev->disks, same_set)
- 			if (rdev->raid_disk < 0 &&
- 			    !test_bit(Faulty, &rdev->flags)) {
- 				if (raid5_add_disk(mddev, rdev) == 0) {
- 					if (rdev->raid_disk
--					    >= conf->previous_raid_disks) {
-+					    >= conf->previous_raid_disks)
- 						set_bit(In_sync, &rdev->flags);
--						added_devices++;
--					} else
-+					else
- 						rdev->recovery_offset = 0;
+diff --git a/include/linux/raid/md_p.h b/include/linux/raid/md_p.h
+index 6f6df86..8c0a3ad 100644
+--- a/include/linux/raid/md_p.h
++++ b/include/linux/raid/md_p.h
+@@ -281,6 +281,10 @@ struct mdp_superblock_1 {
+ 					    * active device with same 'role'.
+ 					    * 'recovery_offset' is also set.
+ 					    */
+-#define	MD_FEATURE_ALL			(1|2|4|8|16)
++#define	MD_FEATURE_ALL			(MD_FEATURE_BITMAP_OFFSET	\
++					|MD_FEATURE_RECOVERY_OFFSET	\
++					|MD_FEATURE_RESHAPE_ACTIVE	\
++					|MD_FEATURE_BAD_BLOCKS		\
++					|MD_FEATURE_REPLACEMENT)
  
- 					if (sysfs_link_rdev(mddev, rdev))
-@@ -5566,7 +5564,6 @@ static int raid5_start_reshape(struct mddev *mddev)
- 				   && !test_bit(Faulty, &rdev->flags)) {
- 				/* This is a spare that was manually added */
- 				set_bit(In_sync, &rdev->flags);
--				added_devices++;
- 			}
- 
- 		/* When a reshape changes the number of devices,
+ #endif 
 
 
