@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 19/23] md/bitmap: remove some pointless locking.
+Subject: [md PATCH 20/23] md/bitmap: remove unnecessary indirection when
+ allocating.
 Date: Wed, 14 Mar 2012 15:40:41 +1100
-Message-ID: <20120314044041.7978.90036.stgit@notabene.brown>
+Message-ID: <20120314044041.7978.86998.stgit@notabene.brown>
 References: <20120314043555.7978.75486.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -12,58 +13,78 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-There is nothing gained by holding a lock while we check if a pointer
-is NULL or not.  If there could be a race, then it could become NULL
-immediately after the unlock - but there is no race here.
-
-So just remove the locking.
+These funcitons don't add anything useful except possibly the trace
+points, and I don't think they are worth the extra indirection.
+So remove them.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/bitmap.c |   14 ++------------
- 1 files changed, 2 insertions(+), 12 deletions(-)
+ drivers/md/bitmap.c |   31 +++----------------------------
+ 1 files changed, 3 insertions(+), 28 deletions(-)
 
 diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index fcf3c94..e12b515 100644
+index e12b515..534e007 100644
 --- a/drivers/md/bitmap.c
 +++ b/drivers/md/bitmap.c
-@@ -446,18 +446,13 @@ out:
- void bitmap_update_sb(struct bitmap *bitmap)
- {
- 	bitmap_super_t *sb;
--	unsigned long flags;
+@@ -36,31 +36,6 @@ static inline char *bmname(struct bitmap *bitmap)
+ }
  
- 	if (!bitmap || !bitmap->mddev) /* no bitmap for this array */
- 		return;
- 	if (bitmap->mddev->bitmap_info.external)
- 		return;
--	spin_lock_irqsave(&bitmap->lock, flags);
--	if (!bitmap->sb_page) { /* no superblock */
--		spin_unlock_irqrestore(&bitmap->lock, flags);
-+	if (!bitmap->sb_page) /* no superblock */
- 		return;
--	}
--	spin_unlock_irqrestore(&bitmap->lock, flags);
- 	sb = kmap_atomic(bitmap->sb_page, KM_USER0);
- 	sb->events = cpu_to_le64(bitmap->mddev->events);
- 	if (bitmap->mddev->events < bitmap->events_cleared)
-@@ -683,15 +678,10 @@ static int bitmap_mask_state(struct bitmap *bitmap, enum bitmap_state bits,
- 			     enum bitmap_mask_op op)
- {
- 	bitmap_super_t *sb;
--	unsigned long flags;
- 	int old;
+ /*
+- * just a placeholder - calls kmalloc for bitmap pages
+- */
+-static unsigned char *bitmap_alloc_page(struct bitmap *bitmap)
+-{
+-	unsigned char *page;
+-
+-	page = kzalloc(PAGE_SIZE, GFP_NOIO);
+-	if (!page)
+-		printk("%s: bitmap_alloc_page FAILED\n", bmname(bitmap));
+-	else
+-		pr_debug("%s: bitmap_alloc_page: allocated page at %p\n",
+-			 bmname(bitmap), page);
+-	return page;
+-}
+-
+-/*
+- * for now just a placeholder -- just calls kfree for bitmap pages
+- */
+-static void bitmap_free_page(struct bitmap *bitmap, unsigned char *page)
+-{
+-	pr_debug("%s: bitmap_free_page: free page %p\n", bmname(bitmap), page);
+-	kfree(page);
+-}
+-
+-/*
+  * check a page and, if necessary, allocate it (or hijack it if the alloc fails)
+  *
+  * 1) check to see if this page is allocated, if it's not then try to alloc
+@@ -97,7 +72,7 @@ __acquires(bitmap->lock)
+ 	/* this page has not been allocated yet */
  
--	spin_lock_irqsave(&bitmap->lock, flags);
--	if (!bitmap->sb_page) { /* can't set the state */
--		spin_unlock_irqrestore(&bitmap->lock, flags);
-+	if (!bitmap->sb_page) /* can't set the state */
+ 	spin_unlock_irq(&bitmap->lock);
+-	mappage = bitmap_alloc_page(bitmap);
++	mappage = kzalloc(PAGE_SIZE, GFP_NOIO);
+ 	spin_lock_irq(&bitmap->lock);
+ 
+ 	if (mappage == NULL) {
+@@ -110,7 +85,7 @@ __acquires(bitmap->lock)
+ 	} else if (bitmap->bp[page].map ||
+ 		   bitmap->bp[page].hijacked) {
+ 		/* somebody beat us to getting the page */
+-		bitmap_free_page(bitmap, mappage);
++		kfree(mappage);
  		return 0;
--	}
--	spin_unlock_irqrestore(&bitmap->lock, flags);
- 	sb = kmap_atomic(bitmap->sb_page, KM_USER0);
- 	old = le32_to_cpu(sb->state) & bits;
- 	switch (op) {
+ 	} else {
+ 
+@@ -142,7 +117,7 @@ static void bitmap_checkfree(struct bitmap *bitmap, unsigned long page)
+ 		ptr = bitmap->bp[page].map;
+ 		bitmap->bp[page].map = NULL;
+ 		bitmap->missing_pages++;
+-		bitmap_free_page(bitmap, ptr);
++		kfree(ptr);
+ 	}
+ }
+ 
 
 
