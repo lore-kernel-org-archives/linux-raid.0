@@ -1,62 +1,81 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [patch 0/7] Add TRIM support for raid linear/0/1/10
-Date: Wed, 14 Mar 2012 09:30:19 +0800
-Message-ID: <CANejiEW=a1piMYvSYM5GmtxKsWYpZj+kjnmNsNUDmW9ydDBjBw@mail.gmail.com>
-References: <20120312030412.375458948@fusionio.com>
-	<alpine.LRH.2.02.1203121806120.23719@diagnostix.dwd.de>
-	<4F5EFEB6.4060402@kernel.org>
-	<alpine.LRH.2.02.1203131213480.15848@diagnostix.dwd.de>
-	<CANejiEWYCxY_hLwgyN08_cXC64c82irkNPytTjOpYyER7pTGow@mail.gmail.com>
-	<alpine.LRH.2.02.1203131521190.29286@diagnostix.dwd.de>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: md:Fix a bug in function badblocks_show().
+Date: Wed, 14 Mar 2012 12:32:45 +1100
+Message-ID: <20120314123245.74feeab8@notabene.brown>
+References: <201203081446488121330@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=20cf3005ddca1e1b8404bb29eb95
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/3W7QBTiPS5JyZYnYcat9WrU"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.02.1203131521190.29286@diagnostix.dwd.de>
+In-Reply-To: <201203081446488121330@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Holger Kiehl <Holger.Kiehl@dwd.de>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>, "axboe@kernel.dk" <axboe@kernel.dk>
+To: majianpeng <majianpeng@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---20cf3005ddca1e1b8404bb29eb95
-Content-Type: text/plain; charset=ISO-8859-1
+--Sig_/3W7QBTiPS5JyZYnYcat9WrU
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-2012/3/13 Holger Kiehl <Holger.Kiehl@dwd.de>:
-> On Tue, 13 Mar 2012, Shaohua Li wrote:
->
->> Thanks for testing. This is very wield, the req->__data_len is wrong.
->> Is this a clean build?
->>
-> I just downloaded linux-3.3-rc7.tar.bz2 from kernel.org and applied
-> your patches again. The result is the same.
->
-> Am I the only one experiencing these problems?
-Martin Petersen pointed out scsi layer doesn't support discard merge, which
-might be the reason you see the error message (my drive isn't a scsi device).
-can you please try attached patch?
+On Thu, 8 Mar 2012 14:46:52 +0800 "majianpeng" <majianpeng@gmail.com> wrote:
+
+> >From 58d2ba381eee4b732fca99a7311b1dcf589f57c3 Mon Sep 17 00:00:00 2001
+> From: majianpeng <majianpeng@gmail.com>
+> Date: Thu, 8 Mar 2012 14:37:00 +0800
+> Subject: [PATCH] md:Fix a bug in function badblocks_show().
+>=20
+> If unack=3D=3D0, it will show all bad blocks include unacknowledged-bad-b=
+locks.
+
+Correct.  It is meant to.
+The "bad_blocks" file shows all bad blocks.
+The "unacknowledged_bad_blocks" file show all unacknowledged bad blocks.
 
 Thanks,
-Shaohua
+NeilBrown
 
---20cf3005ddca1e1b8404bb29eb95
-Content-Type: application/octet-stream; name="blk-discard-nomerge.patch"
-Content-Disposition: attachment; filename="blk-discard-nomerge.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gzroxhje0
 
-RGlkbid0IGFsbG93IGRpc2NhcmQgcmVxdWVzdCBtZXJnZSB0ZW1wb3JhcmlseSwgYXMgU0NTSSBs
-YXllciBpc24ndCByZWFkeQpmb3IgZGlzY2FyZCBtZXJnZSBhcyBNYXJ0aW4gUGV0ZXJzZW4gcG9p
-bnRlZCBvdXQuCgpTaWduZWQtb2ZmLWJ5OiBTaGFvaHVhIExpIDxzaGxpQGZ1c2lvbmlvLmNvbT4K
-LS0tCiBpbmNsdWRlL2xpbnV4L2Jsa2Rldi5oIHwgICAgMiArLQogMSBmaWxlIGNoYW5nZWQsIDEg
-aW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pCgpJbmRleDogbGludXgvaW5jbHVkZS9saW51eC9i
-bGtkZXYuaAo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC5vcmlnL2luY2x1ZGUvbGludXgvYmxrZGV2LmgJ
-MjAxMi0wMy0xNCAwOToyMDowNi43ODcyNjExODggKzA4MDAKKysrIGxpbnV4L2luY2x1ZGUvbGlu
-dXgvYmxrZGV2LmgJMjAxMi0wMy0xNCAwOToyMDo0Ny43OTcyNjEyNDggKzA4MDAKQEAgLTU3NSw3
-ICs1NzUsNyBAQCBzdGF0aWMgaW5saW5lIHZvaWQgYmxrX2NsZWFyX3F1ZXVlX2Z1bGwoCiAgKiBp
-dCBhbHJlYWR5IGJlIHN0YXJ0ZWQgYnkgZHJpdmVyLgogICovCiAjZGVmaW5lIFJRX05PTUVSR0Vf
-RkxBR1MJXAotCShSRVFfTk9NRVJHRSB8IFJFUV9TVEFSVEVEIHwgUkVRX1NPRlRCQVJSSUVSIHwg
-UkVRX0ZMVVNIIHwgUkVRX0ZVQSkKKwkoUkVRX05PTUVSR0UgfCBSRVFfU1RBUlRFRCB8IFJFUV9T
-T0ZUQkFSUklFUiB8IFJFUV9GTFVTSCB8IFJFUV9GVUEgfCBSRVFfRElTQ0FSRCkKICNkZWZpbmUg
-cnFfbWVyZ2VhYmxlKHJxKQlcCiAJKCEoKHJxKS0+Y21kX2ZsYWdzICYgUlFfTk9NRVJHRV9GTEFH
-UykgJiYgXAogCSAoKChycSktPmNtZF9mbGFncyAmIFJFUV9ESVNDQVJEKSB8fCBcCg==
---20cf3005ddca1e1b8404bb29eb95--
+>=20
+> Signed-off-by: majianpeng <majianpeng@gmail.com>
+> ---
+>  drivers/md/md.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index ce88755..3f1b6e5 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -8091,7 +8091,7 @@ retry:
+>  		int ack =3D BB_ACK(p[i]);
+>  		i++;
+> =20
+> -		if (unack && ack)
+> +		if ((unack ^ ack) =3D=3D 0)
+>  			continue;
+> =20
+>  		len +=3D snprintf(page+len, PAGE_SIZE-len, "%llu %u\n",
+
+
+--Sig_/3W7QBTiPS5JyZYnYcat9WrU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT1/1PTnsnt1WYoG5AQKdshAAuJPw7AGNmBSuztrPLZt9NqOocs+NoHp9
+pCM/BUsHSUY4KvST2WVyaHqLEZGJuYTOc22QpC5EOP+9xbpJOzrSEu1VZIyEvPIp
+k9kenpnMOtLJz5Wi4FdZHs0ENDdWPxIrdKIgwZ/kQ7R/+MO7Pr3MgyzZ+y+i2RAF
+/5tQ9WDWtPMT9hqtg7dbtyrhsxarqEoCFGtGffIwSVuvVavmQWlGZ6/yDoSa7INJ
+/QDlGY0jgeNGAAwmzu3g/UAKzIlVoudkB/aAkJnN6kuefErVXdLMFSxcgVaG1oDa
+uESRgLKFvrnLQC9V6rgUz6JxBHCDASTDmidFfzXSt4RotKFPCVzXLRcyPaNNmeC3
+R6mHoYTadMnwowt8FGoxYzYr+9uB6HUf+moD6vrvdOnKpA95SNTY5jPbW+ApUZpN
+rb4veauXNVYvjSMAWA0n4mKY6QYSu0PEMLOP/ce7enCYr+CBPl6r35KQn/9cJ1bN
+Lgr147W2lxkgOk79zJ1zxY67gWXObGksCoKxG9BPB1TiPc6WnP5eBylT8n9/Xzsw
+ZbRTaSRy/oHx/70ih/WoB+/RVhApCe1ftxTtVuKJNR8vEAYLGuNNZBik20xaq7Dz
+34dd6Mu9wAAbTqW9janl73CD+5Fh9rejwXfBy5ri8e2/a8SWvb1aO30KT36/9h00
+52+IGLvZXDY=
+=lHyN
+-----END PGP SIGNATURE-----
+
+--Sig_/3W7QBTiPS5JyZYnYcat9WrU--
