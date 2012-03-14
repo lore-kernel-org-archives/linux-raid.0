@@ -1,169 +1,510 @@
-From: "Carl Engstrom" <engstrom@cox.net>
-Subject: RE: mdadm raid can't set proper devices in super-block
-Date: Wed, 14 Mar 2012 10:04:34 -0700
-Message-ID: <003901cd0204$87ea81f0$97bf85d0$@cox.net>
-References: <loom.20120312T183628-941@post.gmane.org> <4F5E416B.9020003@anonymous.org.uk>
+From: Larkin Lowrey <llowrey@nuclearwinter.com>
+Subject: Recovering raid6 with 3 of 12 disks
+Date: Wed, 14 Mar 2012 13:29:05 -0500
+Message-ID: <4F60E371.20609@nuclearwinter.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F5E416B.9020003@anonymous.org.uk>
-Content-Language: en-us
 Sender: linux-raid-owner@vger.kernel.org
-To: 'John Robinson' <john.robinson@anonymous.org.uk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-...
-> 0 0 8 1 0 active sync /dev/sda1
->   1 1 8 17 1 active sync /dev/sdb1
->   --------
->
-> the array will start with:
->   mdadm -A --update=super-minor /dev/md0 /dev/sdb1 /dev/sdc1
+Thanks to mvsas not hanlding drives in standby (spun down) well, 9 of my
+drives got kicked out of the array. Fortunately, the logical volume on
+that array was not mounted so the data on the array should be fine.
 
-Q:  So it starts just fine if you specify the devices...
+Needless to say, I can't assemble the array with only 3 disks. My best
+understanding is that I need to re-create the array with --assume-clean
+and that I need to specify the drives in their original order (and not
+use any shell globbing like /dev/sd[k-r]).
 
-A:  Yes  the array starts fine when I put the parameters in.  There is also
-an issue where the expected /dev/md0 shows up as md_d0, but I can live with
-that.
+Q1: The original metadata was 0.90. I've read that it would be safe to
+re-create the array with 1.0 metadata because the superblocks are stored
+at the same location and are smaller than 0.90 superblocks. Please confirm.
 
-> Anyone know what's going on?
+Q2: Given the output of mdadm -E the tail of this e-mail, would the
+command below be correct?
 
---update=super-minor is working fine; both devices have a preferred minor
-device number of zero, as they should for the array to be /dev/md0.
+    mdadm --assemble /dev/md2 --assume-clean --level=6 --chunk=128
+--raid-devices=12 --metadata=1.0 /dev/sdn2 /dev/sdk2 /dev/sdl2 /dev/sdm2
+/dev/sdy1 /dev/sdp2 /dev/sdo2 /dev/sdr2 /dev/sdq2 /dev/sdw1 /dev/sdx1
+/dev/sdz1
 
-Q: What happens if you
-   mdadm --stop /dev/md0
-   mdadm --assemble --scan --verbose /dev/md0 ?
+Q3: To verify that I have the drives in order I should be able to run a
+'check' and watch the missmatch count. If the count is substantially
+non-zero then I have the drives in the wrong order. Would it be safe to
+'try again' until I get the right combo?
 
-A: The device isn't identified in the config file.  I generally don't put
-anything in the config file and it's always seemed to work.
+Thank you for your attention and any assistance you can offer.
 
-Q: Where do you want to mount /dev/md0?
-A: /backup
+--Larkin
 
-What messages do you get during boot-up (dmesg) about why md0 isn't being
-assembled?
+/dev/sdw1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 08b30a7c:151f719c:e2349310:51678405
+  Creation Time : Fri May  7 21:44:25 2010
+     Raid Level : raid6
+  Used Dev Size : 664191232 (633.42 GiB 680.13 GB)
+     Array Size : 6641912320 (6334.22 GiB 6801.32 GB)
+   Raid Devices : 12
+  Total Devices : 11
+Preferred Minor : 2
 
-============
-[    0.481723] ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0x30a0 irq
-14
-[    0.481730] ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0x30a8 irq
-15
-[    0.806077] md: linear personality registered for level -1
-[    0.824006] md: multipath personality registered for level -4
-[    0.965715] md: raid0 personality registered for level 0
-[    0.993103] md: raid1 personality registered for level 1
-[    1.518611] mdadm: sending ioctl 1261 to a partition!
-[    1.518618] mdadm: sending ioctl 1261 to a partition!
-[    1.518830] mdadm: sending ioctl 1261 to a partition!
-[    1.518835] mdadm: sending ioctl 1261 to a partition!
-[    1.519733] mdadm: sending ioctl 1261 to a partition!
-[    1.519738] mdadm: sending ioctl 1261 to a partition!
-[    1.522247] mdadm: sending ioctl 1261 to a partition!
-[    1.522254] mdadm: sending ioctl 1261 to a partition!
-[    1.523580] mdadm: sending ioctl 1261 to a partition!
-[    1.523587] mdadm: sending ioctl 1261 to a partition!
-[    1.524944] mdadm: sending ioctl 1261 to a partition!
-[    1.524949] mdadm: sending ioctl 1261 to a partition!
-[    1.525971] mdadm: sending ioctl 1261 to a partition!
-[    1.525978] mdadm: sending ioctl 1261 to a partition!
-[    2.080886] md: raid6 personality registered for level 6
-[    2.080892] md: raid5 personality registered for level 5
-[    2.080897] md: raid4 personality registered for level 4
-[    2.092484] md: raid10 personality registered for level 10
-[   16.430546] mdadm: sending ioctl 1261 to a partition!
-[   16.430551] mdadm: sending ioctl 1261 to a partition!
-[   16.440763] mdadm: sending ioctl 1261 to a partition!
-[   16.440769] mdadm: sending ioctl 1261 to a partition!
-[   16.441262] mdadm: sending ioctl 1261 to a partition!
-[   16.441267] mdadm: sending ioctl 1261 to a partition!
-[   16.442125] mdadm: sending ioctl 1261 to a partition!
-[   16.442130] mdadm: sending ioctl 1261 to a partition!
-[   16.442710] mdadm: sending ioctl 1261 to a partition!
-[   16.442715] mdadm: sending ioctl 1261 to a partition!
-[   16.442915] mdadm: sending ioctl 1261 to a partition!
-[   16.442919] mdadm: sending ioctl 1261 to a partition!
-[   16.443693] mdadm: sending ioctl 1261 to a partition!
-[   16.443709] mdadm: sending ioctl 1261 to a partition!
-[   16.458427] md: bind<sdc1>
-[   16.458843] mdadm: sending ioctl 1261 to a partition!
-[   16.458848] mdadm: sending ioctl 1261 to a partition!
-[   16.465101] mdadm: sending ioctl 1261 to a partition!
-[   16.465107] mdadm: sending ioctl 1261 to a partition!
-[   16.465621] mdadm: sending ioctl 1261 to a partition!
-[   16.465627] mdadm: sending ioctl 1261 to a partition!
-[   16.466434] mdadm: sending ioctl 1261 to a partition!
-[   16.466439] mdadm: sending ioctl 1261 to a partition!
-[   16.467033] mdadm: sending ioctl 1261 to a partition!
-[   16.467037] mdadm: sending ioctl 1261 to a partition!
-[   16.468037] mdadm: sending ioctl 1261 to a partition!
-[   16.468043] mdadm: sending ioctl 1261 to a partition!
-[   16.468447] mdadm: sending ioctl 1261 to a partition!
-[   16.468463] mdadm: sending ioctl 1261 to a partition!
-[   16.474276] mdadm: sending ioctl 1261 to a partition!
-[   16.474282] mdadm: sending ioctl 1261 to a partition!
-[   16.475038] mdadm: sending ioctl 1261 to a partition!
-[   16.475043] mdadm: sending ioctl 1261 to a partition!
-[   16.476065] mdadm: sending ioctl 1261 to a partition!
-[   16.476070] mdadm: sending ioctl 1261 to a partition!
-[   16.476843] mdadm: sending ioctl 1261 to a partition!
-[   16.476848] mdadm: sending ioctl 1261 to a partition!
-[   16.478447] mdadm: sending ioctl 1261 to a partition!
-[   16.478453] mdadm: sending ioctl 1261 to a partition!
-[   16.478865] mdadm: sending ioctl 1261 to a partition!
-[   16.478869] mdadm: sending ioctl 1261 to a partition!
-[ 3885.067642] mdadm: sending ioctl 1261 to a partition!
-[ 3885.067648] mdadm: sending ioctl 1261 to a partition!
-[ 3885.068683] mdadm: sending ioctl 1261 to a partition!
-[ 3885.068687] mdadm: sending ioctl 1261 to a partition!
-[ 3885.088444] mdadm: sending ioctl 1261 to a partition!
-[ 3885.088450] mdadm: sending ioctl 1261 to a partition!
-[ 3886.446271] mdadm: sending ioctl 1261 to a partition!
-[ 3886.446277] mdadm: sending ioctl 1261 to a partition!
-[ 3886.470887] mdadm: sending ioctl 1261 to a partition!
-[ 3886.470893] mdadm: sending ioctl 1261 to a partition!
-[ 3886.473206] mdadm: sending ioctl 1261 to a partition!
-========================
-Q: What's in your /etc/mdadm.conf?
-==============
+    Update Time : Wed Mar 14 03:16:48 2012
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 8
+  Spare Devices : 0
+       Checksum : bdaa1605 - correct
+         Events : 1647040
 
-# mdadm.conf
-#
-# Please refer to mdadm.conf(5) for information about this file.
-#
+         Layout : left-symmetric
+     Chunk Size : 128K
 
-# by default, scan all partitions (/proc/partitions) for MD superblocks.
-# alternatively, specify devices to scan, using wildcards if desired.
-DEVICE partitions
+      Number   Major   Minor   RaidDevice State
+this     9      65      113        9      active sync   /dev/sdx1
 
-# auto-create devices with Debian standard permissions
-CREATE owner=root group=disk mode=0660 auto=yes
+   0     0       0        0        0      removed
+   1     1       0        0        1      faulty removed
+   2     2       0        0        2      faulty removed
+   3     3       0        0        3      faulty removed
+   4     4       0        0        4      faulty removed
+   5     5       0        0        5      faulty removed
+   6     6       0        0        6      faulty removed
+   7     7       0        0        7      faulty removed
+   8     8       0        0        8      faulty removed
+   9     9      65      113        9      active sync   /dev/sdx1
+  10    10      65      129       10      active sync   /dev/sdy1
+  11    11      65       97       11      active sync   /dev/sdw1
+/dev/sdx1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 08b30a7c:151f719c:e2349310:51678405
+  Creation Time : Fri May  7 21:44:25 2010
+     Raid Level : raid6
+  Used Dev Size : 664191232 (633.42 GiB 680.13 GB)
+     Array Size : 6641912320 (6334.22 GiB 6801.32 GB)
+   Raid Devices : 12
+  Total Devices : 11
+Preferred Minor : 2
 
-# automatically tag new arrays as belonging to the local system
-HOMEHOST <system>
+    Update Time : Wed Mar 14 03:16:48 2012
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 8
+  Spare Devices : 0
+       Checksum : bdaa1617 - correct
+         Events : 1647040
 
-# instruct the monitoring daemon where to send mail alerts
-MAILADDR root
+         Layout : left-symmetric
+     Chunk Size : 128K
 
-# definitions of existing MD arrays
+      Number   Major   Minor   RaidDevice State
+this    10      65      129       10      active sync   /dev/sdy1
 
-# This file was auto-generated on Fri, 03 Oct 2008 07:40:26 -0700
-# by mkconf $Id$
-==================
+   0     0       0        0        0      removed
+   1     1       0        0        1      faulty removed
+   2     2       0        0        2      faulty removed
+   3     3       0        0        3      faulty removed
+   4     4       0        0        4      faulty removed
+   5     5       0        0        5      faulty removed
+   6     6       0        0        6      faulty removed
+   7     7       0        0        7      faulty removed
+   8     8       0        0        8      faulty removed
+   9     9      65      113        9      active sync   /dev/sdx1
+  10    10      65      129       10      active sync   /dev/sdy1
+  11    11      65       97       11      active sync   /dev/sdw1
+/dev/sdy1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 08b30a7c:151f719c:e2349310:51678405
+  Creation Time : Fri May  7 21:44:25 2010
+     Raid Level : raid6
+  Used Dev Size : 664191232 (633.42 GiB 680.13 GB)
+     Array Size : 6641912320 (6334.22 GiB 6801.32 GB)
+   Raid Devices : 12
+  Total Devices : 12
+Preferred Minor : 2
 
-If /etc/mdadm.conf says sda1 and sdb1, fix it and do whatever you need to do
-on Ubuntu to rebuild your initrd/initramfs (so that your edited mdadm.conf
-goes into it), then reboot.
+    Update Time : Tue Mar 13 21:46:30 2012
+          State : clean
+ Active Devices : 12
+Working Devices : 12
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : bda9c7df - correct
+         Events : 1647037
 
-I'll look up mdadm.conf and figure out how to add the lines that aren't
-there.
+         Layout : left-symmetric
+     Chunk Size : 128K
 
-Hope something somewhere in amongst this lot helps...
+      Number   Major   Minor   RaidDevice State
+this     4      65      145        4      active sync   /dev/sdz1
 
-Cheers,
+   0     0      65       18        0      active sync   /dev/sdr2
+   1     1       8      226        1      active sync   /dev/sdo2
+   2     2       8      242        2      active sync   /dev/sdp2
+   3     3      65        2        3      active sync   /dev/sdq2
+   4     4      65      145        4      active sync   /dev/sdz1
+   5     5       8      178        5      active sync   /dev/sdl2
+   6     6       8      162        6      active sync   /dev/sdk2
+   7     7       8      210        7      active sync   /dev/sdn2
+   8     8       8      194        8      active sync   /dev/sdm2
+   9     9      65      113        9      active sync   /dev/sdx1
+  10    10      65      129       10      active sync   /dev/sdy1
+  11    11      65       97       11      active sync   /dev/sdw1
+/dev/sdz1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 08b30a7c:151f719c:e2349310:51678405
+  Creation Time : Fri May  7 21:44:25 2010
+     Raid Level : raid6
+  Used Dev Size : 664191232 (633.42 GiB 680.13 GB)
+     Array Size : 6641912320 (6334.22 GiB 6801.32 GB)
+   Raid Devices : 12
+  Total Devices : 11
+Preferred Minor : 2
 
-John.
+    Update Time : Wed Mar 14 03:16:48 2012
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 8
+  Spare Devices : 0
+       Checksum : bdaa15f9 - correct
+         Events : 1647040
 
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this    11      65       97       11      active sync   /dev/sdw1
+
+   0     0       0        0        0      removed
+   1     1       0        0        1      faulty removed
+   2     2       0        0        2      faulty removed
+   3     3       0        0        3      faulty removed
+   4     4       0        0        4      faulty removed
+   5     5       0        0        5      faulty removed
+   6     6       0        0        6      faulty removed
+   7     7       0        0        7      faulty removed
+   8     8       0        0        8      faulty removed
+   9     9      65      113        9      active sync   /dev/sdx1
+  10    10      65      129       10      active sync   /dev/sdy1
+  11    11      65       97       11      active sync   /dev/sdw1
+/dev/sdk2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 08b30a7c:151f719c:e2349310:51678405
+  Creation Time : Fri May  7 21:44:25 2010
+     Raid Level : raid6
+  Used Dev Size : 664191232 (633.42 GiB 680.13 GB)
+     Array Size : 6641912320 (6334.22 GiB 6801.32 GB)
+   Raid Devices : 12
+  Total Devices : 12
+Preferred Minor : 2
+
+    Update Time : Tue Mar 13 21:46:30 2012
+          State : clean
+ Active Devices : 12
+Working Devices : 12
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : bda9c7f1 - correct
+         Events : 1647037
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     1       8      226        1      active sync   /dev/sdo2
+
+   0     0      65       18        0      active sync   /dev/sdr2
+   1     1       8      226        1      active sync   /dev/sdo2
+   2     2       8      242        2      active sync   /dev/sdp2
+   3     3      65        2        3      active sync   /dev/sdq2
+   4     4      65      145        4      active sync   /dev/sdz1
+   5     5       8      178        5      active sync   /dev/sdl2
+   6     6       8      162        6      active sync   /dev/sdk2
+   7     7       8      210        7      active sync   /dev/sdn2
+   8     8       8      194        8      active sync   /dev/sdm2
+   9     9      65      113        9      active sync   /dev/sdx1
+  10    10      65      129       10      active sync   /dev/sdy1
+  11    11      65       97       11      active sync   /dev/sdw1
+/dev/sdl2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 08b30a7c:151f719c:e2349310:51678405
+  Creation Time : Fri May  7 21:44:25 2010
+     Raid Level : raid6
+  Used Dev Size : 664191232 (633.42 GiB 680.13 GB)
+     Array Size : 6641912320 (6334.22 GiB 6801.32 GB)
+   Raid Devices : 12
+  Total Devices : 12
+Preferred Minor : 2
+
+    Update Time : Tue Mar 13 21:46:30 2012
+          State : clean
+ Active Devices : 12
+Working Devices : 12
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : bda9c803 - correct
+         Events : 1647037
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     2       8      242        2      active sync   /dev/sdp2
+
+   0     0      65       18        0      active sync   /dev/sdr2
+   1     1       8      226        1      active sync   /dev/sdo2
+   2     2       8      242        2      active sync   /dev/sdp2
+   3     3      65        2        3      active sync   /dev/sdq2
+   4     4      65      145        4      active sync   /dev/sdz1
+   5     5       8      178        5      active sync   /dev/sdl2
+   6     6       8      162        6      active sync   /dev/sdk2
+   7     7       8      210        7      active sync   /dev/sdn2
+   8     8       8      194        8      active sync   /dev/sdm2
+   9     9      65      113        9      active sync   /dev/sdx1
+  10    10      65      129       10      active sync   /dev/sdy1
+  11    11      65       97       11      active sync   /dev/sdw1
+/dev/sdm2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 08b30a7c:151f719c:e2349310:51678405
+  Creation Time : Fri May  7 21:44:25 2010
+     Raid Level : raid6
+  Used Dev Size : 664191232 (633.42 GiB 680.13 GB)
+     Array Size : 6641912320 (6334.22 GiB 6801.32 GB)
+   Raid Devices : 12
+  Total Devices : 12
+Preferred Minor : 2
+
+    Update Time : Tue Mar 13 21:46:30 2012
+          State : clean
+ Active Devices : 12
+Working Devices : 12
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : bda9c74e - correct
+         Events : 1647037
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     3      65        2        3      active sync   /dev/sdq2
+
+   0     0      65       18        0      active sync   /dev/sdr2
+   1     1       8      226        1      active sync   /dev/sdo2
+   2     2       8      242        2      active sync   /dev/sdp2
+   3     3      65        2        3      active sync   /dev/sdq2
+   4     4      65      145        4      active sync   /dev/sdz1
+   5     5       8      178        5      active sync   /dev/sdl2
+   6     6       8      162        6      active sync   /dev/sdk2
+   7     7       8      210        7      active sync   /dev/sdn2
+   8     8       8      194        8      active sync   /dev/sdm2
+   9     9      65      113        9      active sync   /dev/sdx1
+  10    10      65      129       10      active sync   /dev/sdy1
+  11    11      65       97       11      active sync   /dev/sdw1
+/dev/sdn2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 08b30a7c:151f719c:e2349310:51678405
+  Creation Time : Fri May  7 21:44:25 2010
+     Raid Level : raid6
+  Used Dev Size : 664191232 (633.42 GiB 680.13 GB)
+     Array Size : 6641912320 (6334.22 GiB 6801.32 GB)
+   Raid Devices : 12
+  Total Devices : 12
+Preferred Minor : 2
+
+    Update Time : Tue Mar 13 21:46:30 2012
+          State : clean
+ Active Devices : 12
+Working Devices : 12
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : bda9c758 - correct
+         Events : 1647037
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     0      65       18        0      active sync   /dev/sdr2
+
+   0     0      65       18        0      active sync   /dev/sdr2
+   1     1       8      226        1      active sync   /dev/sdo2
+   2     2       8      242        2      active sync   /dev/sdp2
+   3     3      65        2        3      active sync   /dev/sdq2
+   4     4      65      145        4      active sync   /dev/sdz1
+   5     5       8      178        5      active sync   /dev/sdl2
+   6     6       8      162        6      active sync   /dev/sdk2
+   7     7       8      210        7      active sync   /dev/sdn2
+   8     8       8      194        8      active sync   /dev/sdm2
+   9     9      65      113        9      active sync   /dev/sdx1
+  10    10      65      129       10      active sync   /dev/sdy1
+  11    11      65       97       11      active sync   /dev/sdw1
+/dev/sdo2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 08b30a7c:151f719c:e2349310:51678405
+  Creation Time : Fri May  7 21:44:25 2010
+     Raid Level : raid6
+  Used Dev Size : 664191232 (633.42 GiB 680.13 GB)
+     Array Size : 6641912320 (6334.22 GiB 6801.32 GB)
+   Raid Devices : 12
+  Total Devices : 12
+Preferred Minor : 2
+
+    Update Time : Tue Mar 13 21:46:30 2012
+          State : clean
+ Active Devices : 12
+Working Devices : 12
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : bda9c7bb - correct
+         Events : 1647037
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     6       8      162        6      active sync   /dev/sdk2
+
+   0     0      65       18        0      active sync   /dev/sdr2
+   1     1       8      226        1      active sync   /dev/sdo2
+   2     2       8      242        2      active sync   /dev/sdp2
+   3     3      65        2        3      active sync   /dev/sdq2
+   4     4      65      145        4      active sync   /dev/sdz1
+   5     5       8      178        5      active sync   /dev/sdl2
+   6     6       8      162        6      active sync   /dev/sdk2
+   7     7       8      210        7      active sync   /dev/sdn2
+   8     8       8      194        8      active sync   /dev/sdm2
+   9     9      65      113        9      active sync   /dev/sdx1
+  10    10      65      129       10      active sync   /dev/sdy1
+  11    11      65       97       11      active sync   /dev/sdw1
+/dev/sdp2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 08b30a7c:151f719c:e2349310:51678405
+  Creation Time : Fri May  7 21:44:25 2010
+     Raid Level : raid6
+  Used Dev Size : 664191232 (633.42 GiB 680.13 GB)
+     Array Size : 6641912320 (6334.22 GiB 6801.32 GB)
+   Raid Devices : 12
+  Total Devices : 12
+Preferred Minor : 2
+
+    Update Time : Tue Mar 13 21:46:30 2012
+          State : clean
+ Active Devices : 12
+Working Devices : 12
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : bda9c7c9 - correct
+         Events : 1647037
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     5       8      178        5      active sync   /dev/sdl2
+
+   0     0      65       18        0      active sync   /dev/sdr2
+   1     1       8      226        1      active sync   /dev/sdo2
+   2     2       8      242        2      active sync   /dev/sdp2
+   3     3      65        2        3      active sync   /dev/sdq2
+   4     4      65      145        4      active sync   /dev/sdz1
+   5     5       8      178        5      active sync   /dev/sdl2
+   6     6       8      162        6      active sync   /dev/sdk2
+   7     7       8      210        7      active sync   /dev/sdn2
+   8     8       8      194        8      active sync   /dev/sdm2
+   9     9      65      113        9      active sync   /dev/sdx1
+  10    10      65      129       10      active sync   /dev/sdy1
+  11    11      65       97       11      active sync   /dev/sdw1
+/dev/sdq2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 08b30a7c:151f719c:e2349310:51678405
+  Creation Time : Fri May  7 21:44:25 2010
+     Raid Level : raid6
+  Used Dev Size : 664191232 (633.42 GiB 680.13 GB)
+     Array Size : 6641912320 (6334.22 GiB 6801.32 GB)
+   Raid Devices : 12
+  Total Devices : 12
+Preferred Minor : 2
+
+    Update Time : Tue Mar 13 21:46:30 2012
+          State : clean
+ Active Devices : 12
+Working Devices : 12
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : bda9c7df - correct
+         Events : 1647037
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     8       8      194        8      active sync   /dev/sdm2
+
+   0     0      65       18        0      active sync   /dev/sdr2
+   1     1       8      226        1      active sync   /dev/sdo2
+   2     2       8      242        2      active sync   /dev/sdp2
+   3     3      65        2        3      active sync   /dev/sdq2
+   4     4      65      145        4      active sync   /dev/sdz1
+   5     5       8      178        5      active sync   /dev/sdl2
+   6     6       8      162        6      active sync   /dev/sdk2
+   7     7       8      210        7      active sync   /dev/sdn2
+   8     8       8      194        8      active sync   /dev/sdm2
+   9     9      65      113        9      active sync   /dev/sdx1
+  10    10      65      129       10      active sync   /dev/sdy1
+  11    11      65       97       11      active sync   /dev/sdw1
+/dev/sdr2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 08b30a7c:151f719c:e2349310:51678405
+  Creation Time : Fri May  7 21:44:25 2010
+     Raid Level : raid6
+  Used Dev Size : 664191232 (633.42 GiB 680.13 GB)
+     Array Size : 6641912320 (6334.22 GiB 6801.32 GB)
+   Raid Devices : 12
+  Total Devices : 12
+Preferred Minor : 2
+
+    Update Time : Tue Mar 13 21:46:30 2012
+          State : clean
+ Active Devices : 12
+Working Devices : 12
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : bda9c7ed - correct
+         Events : 1647037
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     7       8      210        7      active sync   /dev/sdn2
+
+   0     0      65       18        0      active sync   /dev/sdr2
+   1     1       8      226        1      active sync   /dev/sdo2
+   2     2       8      242        2      active sync   /dev/sdp2
+   3     3      65        2        3      active sync   /dev/sdq2
+   4     4      65      145        4      active sync   /dev/sdz1
+   5     5       8      178        5      active sync   /dev/sdl2
+   6     6       8      162        6      active sync   /dev/sdk2
+   7     7       8      210        7      active sync   /dev/sdn2
+   8     8       8      194        8      active sync   /dev/sdm2
+   9     9      65      113        9      active sync   /dev/sdx1
+  10    10      65      129       10      active sync   /dev/sdy1
+  11    11      65       97       11      active sync   /dev/sdw1
