@@ -1,189 +1,234 @@
-From: Jessie Evangelista <jessie.evangelista@gmail.com>
+From: pg@lxra2.to.sabi.co.UK (Peter Grandi)
 Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier
-Date: Thu, 15 Mar 2012 20:06:53 +0800
-Message-ID: <CAA8mOyCzs36YD_QUMq25HQf8zuq1=tmSTPjYdoFJwy2Oq9sLmw@mail.gmail.com>
+Date: Thu, 15 Mar 2012 14:07:25 +0000
+Message-ID: <20321.63389.586851.689070@tree.ty.sabi.co.UK>
 References: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com>
 	<4F61803A.60009@hardwarefreak.com>
+	<CAA8mOyCzs36YD_QUMq25HQf8zuq1=tmSTPjYdoFJwy2Oq9sLmw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F61803A.60009@hardwarefreak.com>
+In-Reply-To: <CAA8mOyCzs36YD_QUMq25HQf8zuq1=tmSTPjYdoFJwy2Oq9sLmw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>, Linux fs XFS <xfs@OSS.SGI.com>
 List-Id: linux-raid.ids
 
-On Thu, Mar 15, 2012 at 1:38 PM, Stan Hoeppner <stan@hardwarefreak.com>=
- wrote:
-> On 3/14/2012 7:30 PM, Jessie Evangelista wrote:
->> I want to create a raid10,n2 using 3 1TB SATA drives.
->> I want to create an xfs filesystem on top of it.
->> The filesystem will be used as NFS/Samba storage.
->>
->> mdadm --zero /dev/sdb1 /dev/sdc1 /dev/sdd1
->> mdadm -v --create /dev/md0 --metadata=3D1.2 --assume-clean
->> --level=3Draid10 --chunk 256 --raid-devices=3D3 /dev/sdb1 /dev/sdc1
->> /dev/sdd1
->
-> Why 256KB for chunk size?
->
-=46or reference, the machine has 16GB memory
+>>> I want to create a raid10,n2 using 3 1TB SATA drives.
+>>> I want to create an xfs filesystem on top of it. The
+>>> filesystem will be used as NFS/Samba storage.
 
-I've run some benchmarks with dd trying the different chunks and 256k
-seems like the sweetspot.
-dd if=3D/dev/zero of=3D/dev/md0 bs=3D64k count=3D655360 oflag=3Ddirect
+Consider also an 'o2' layout (it is probably the same thing for a
+3 drive RAID10) or even a RAID5, as 3 drives and this usage seems
+one of the few cases where RAID5 may be plausible.
 
->
-> Looks like you've been reading a very outdated/inaccurate "XFS guide"=
- on
-> the web...
->
-> What kernel version? =A0This can make a significant difference in XFS
-> metadata performance. =A0You should use 2.6.39+ if possible. =A0What
-> xfsprogs version?
->
+> [ ... ] I've run some benchmarks with dd trying the different
+> chunks and 256k seems like the sweetspot.  dd if=3D/dev/zero
+> of=3D/dev/md0 bs=3D64k count=3D655360 oflag=3Ddirect
 
-testing was done with ubuntu 10.04LTS with kernel at 2.6.32-33-server
-xfsprogs at 3.1.0ubuntu1
+That's for bulk sequential transfers. Random-ish, as in a
+fileserver perhaps with many smaller files, may not be the same,
+but probably larger chunks are good.
 
->> mkfs -t xfs -l lazy-count=3D1,size=3D128m -f /dev/md0
->
-> lazy-count=3D1 is currently the default with recent xfsprogs so no ne=
-ed to
-> specify it. =A0Why are you manually specifying the size of the intern=
-al
-> journal log file? =A0This is unnecessary. =A0In fact, unless you have
-> profiled your workload and testing shows that alternate XFS settings
-> perform better, it is always best to stick with the defaults. =A0They
-> exist for a reason, and are well considered.
+>> [ ... ] What kernel version? =A0This can make a significant
+>> difference in XFS metadata performance.
 
-I'll probably forgo setting the journal log file size. It seemed like
-a safe optimization from what I've read.
+As an aside, that's a myth that has been propagandaized by DaveC
+in his entertaining presentation not long ago.
 
->> mount -t xfs -o barrier=3D1,logbsize=3D256k,logbufs=3D8,noatime /dev=
-/md0
->> /mnt/raid10xfs
->
-> Barrier has no value, it's either on or off. =A0XFS mounts with barri=
-ers
-> enabled by default so remove 'barrier=3D1'. =A0You do not have a RAID=
- card
-> with persistent write cache (BBWC), so you should leave barriers
-> enabled. =A0Barriers mitigate journal log corruption due to power fai=
-lure
-> and crashes, which seem seem to be of concern to you.
->
-> logbsize=3D256k and logbufs=3D8 are the defaults in recent kernels so=
- no
-> need to specify them. =A0Your NFS/Samba workload on 3 slow disks isn'=
-t
-> sufficient to need that much in memory journal buffer space anyway. =A0=
-XFS
-> uses relatime which is equivalent to noatime WRT IO reduction
-> performance, so don't specify 'noatime'.
+There have been decent but no major improvements in XFS metadata
+*performance*, but weaker implicit *semantics* have been made an
+option, and these have a different safety/performance tradeoff
+(less implicit safety, somewhat more performance), not "just"
+better performance.
 
-I just wanted to be explicit about it so that I know what is set just
-in case the defaults change
+http://lwn.net/Articles/476267/
+ =ABIn other words, instead of there only being a maximum of 2MB of
+  transaction changes not written to the log at any point in time,
+  there may be a much greater amount being accumulated in memory.
 
->
-> In fact, it appears you don't need to specify anything in mkfs.xfs or
-> fstab, but just use the defaults. =A0Fancy that. =A0And the one thing=
- that
-> might actually increase your performance a little bit you didn't
-> specify--sunit/swidth. =A0However, since you're using mdraid, mkfs.xf=
-s
-> will calculate these for you (which is nice as mdraid10 with odd disk
-> count can be a tricky calculation). =A0Again, defaults work for a rea=
-son.
->
-The reason I did not set sunit/swidth is because I read somewhere that
-mkfs.xfs will calculate based on mdraid.
+  Hence the potential for loss of metadata on a crash is much
+  greater than for the existing logging mechanism.
 
->> Will my files be safe even on sudden power loss?
->
-> Are you unwilling to purchase a UPS and implement shutdown scripts? =A0=
-If
-> so you have no business running a server, frankly. =A0Any system will=
- lose
-> data due to power loss, it's just a matter of how much based on the
-> quantity of inflight writes at the time the juice dies. =A0This probl=
-em is
-> mostly filesytem independent. =A0Application write behavior does play=
- a
-> role. =A0UPS with shutdown scripts, and persistent write cache preven=
-t
-> this problem. =A0A cheap UPS suitable for this purpose is less money =
-than
-> a 1TB 7.2k drive, currently.
->
+  It should be noted that this does not change the guarantee that
+  log recovery will result in a consistent filesystem.
 
-The server is for a non-profit org that I am helping out.
-I think a APC Smart-UPS SC 420VA 230V may fit their shoe string budget.
+  What it does mean is that as far as the recovered filesystem is
+  concerned, there may be many thousands of transactions that
+  simply did not occur as a result of the crash.
 
-> You say this is an NFS/Samba server. =A0That would imply that multipl=
-e
-> people or other systems directly rely on it. =A0Implement a good UPS
-> solution and eliminate this potential problem.
->
->> Is barrier=3D1 enough?
->> Do i need to disable the write cache?
->> with: hdparm -W0 /dev/sdb /dev/sdc /dev/sdd
->
-> Disabling drive write caches does decrease the likelihood of data los=
-s.
->
->> I tried it but performance is horrendous.
->
-> And this is why you should leave them enabled and use barriers. =A0Be=
-tter
-> yet, use a RAID card with BBWC and disable the drive caches.
+  This makes it even more important that applications that care
+  about their data use fsync() where they need to ensure
+  application level data integrity is maintained.=BB
 
-Budget does not allow for RAID card with BBWC
->
->> Am I better of with ext4? Data safety/integrity is the priority and
->> optimization affecting it is not acceptable.
->
-> You're better off using a UPS. =A0Filesystem makes little difference =
-WRT
-> data safety/integrity. =A0All will suffer some damage if you throw a
-> grenade at them. =A0So don't throw grenades. =A0Speaking of which, wh=
-at is
-> your backup/restore procedure/hardware for this array?
+>> =A0Your NFS/Samba workload on 3 slow disks isn't sufficient to
+>> need that much in memory journal buffer space anyway.
 
-nightly backups will be stored on an external USB disk
-is xfs going to be prone to more data loss in case the non-redundant
-power supply goes out?
+That's probably true, but does no harm.
 
->
->> Thanks and any advice/guidance would be appreciated
->
-> I'll appreciate your response stating "Yes, I have a UPS and
-> tested/working shutdown scripts" or "I'll be implementing a UPS very
-> soon." :)
+>> =A0XFS uses relatime which is equivalent to noatime WRT IO
+>> reduction performance, so don't specify 'noatime'.
 
-I don't have shutdown scripts yet but will look into it.
-Meatware would have to do for now as the server will probably be ON
-only when there's people at the office. And yes I will be asking them
-to not go into production without a UPS
+Uhm, not so sure, and 'noatime' does not hurt either.
 
->
-> --
-> Stan
->
+> I just wanted to be explicit about it so that I know what is
+> set just in case the defaults change
 
-Thanks for you input Stan.
+That's what I do as well, because relying on remembering exactly
+what the defaults are can cause sometimes confusion. But it is a
+matter of taste to a large degree, like 'noatime'.
 
-I just updated the kernel to 3.0.0-16.
-Did they take out barrier support in mdraid? or was the implementation
-replaced with FUA?
-Is there a definitive test to determine if the off the shelf consumer
-sata drives honor barrier or cache flush requests?
+>> In fact, it appears you don't need to specify anything in
+>> mkfs.xfs or fstab, but just use the defaults. =A0Fancy that.
 
-I think I'd like to go with device cache turned ON and barrier enabled.
+=46or NFS/Samba, especially with ACLs (SMB protocol), and
+especially if one expects largish directories, and in general I
+would recommend a larger inode size, at least 1024B, if not even
+2048B.
 
-Am still torn between ext4 and xfs i.e. which will be safer in this
-particular setup.
+Also, as a rule I want to make sure that the sector size is set
+to 4096B, for future proofing (and recent drives not only have
+4096B sectors but usually lie).
+
+>> =A0And the one thing that might actually increase your
+>> performance a little bit you didn't specify--sunit/swidth.
+
+Especially 'sunit', as XFS ideally would align metadata on chunk
+boundaries.
+
+>> =A0However, since you're using mdraid, mkfs.xfs will calculate
+>> these for you (which is nice as mdraid10 with odd disk count
+>> can be a tricky calculation).
+
+Ambiguous more than tricky, and not very useful, except the chunk
+size.
+
+>>> Will my files be safe even on sudden power loss?
+
+The answer is NO, if you mean "absolutely safe". But see the
+discussion at the end.
+
+>> [ ... ] =A0Application write behavior does play a role.
+
+Indeed, see the discussion at the end and ways to mitigate.
+
+>> =A0UPS with shutdown scripts, and persistent write cache prevent
+>> this problem. [ ... ]
+
+There is always the problem of system crashes that don't depend
+on power....
+
+>>> Is barrier=3D1 enough?  Do i need to disable the write cache?
+>>> with: hdparm -W0 /dev/sdb /dev/sdc /dev/sdd
+
+>> Disabling drive write caches does decrease the likelihood of
+>> data loss.
+
+>>> I tried it but performance is horrendous.
+
+>> And this is why you should leave them enabled and use
+>> barriers. =A0Better yet, use a RAID card with BBWC and disable
+>> the drive caches.
+
+> Budget does not allow for RAID card with BBWC
+
+You'd be surprised by how cheap you can get one. But many HW host
+adapters with builtin cache have bad performance or horrid bugs,
+so you'd have to be careful.
+
+In any case that's not the major problem you have.
+
+>>> Am I better of with ext4? Data safety/integrity is the
+>>> priority and optimization affecting it is not acceptable.
+
+XFS is the filesystem of the future ;-). I would choose it over
+'ext4' in every plausible case.
+
+> nightly backups will be stored on an external USB disk
+
+USB is an unreliable, buggy transport, and slow, eSATA is
+enormously better and faster.
+
+> is xfs going to be prone to more data loss in case the
+> non-redundant power supply goes out?
+
+That's the wrong question entirely. Data loss can happen for many
+other reasons, and XFS is probably one of the safest designs, if
+properly used and configured. The problems are elsewhere.
+
+> I just updated the kernel to 3.0.0-16.  Did they take out
+> barrier support in mdraid? or was the implementation replaced
+> with FUA?  Is there a definitive test to determine if the off
+> the shelf consumer sata drives honor barrier or cache flush
+> requests?
+
+Usually they do, but that's the least of your worries. Anyhow a
+test that occurs to me is to write a know pattern to a file,
+let's say 1GiB, then 'fsync', and as soon as 'fsync' completes,
+power off. Then check whether the whole 1GiB is the known pattern.
+
+> I think I'd like to go with device cache turned ON and barrier
+> enabled.
+
+That's how it is supposed to work.
+
+As to general safety issues, there seem to be some misunderstanding,=20
+and I'll try to be more explicit than "lob the grenade" notion.
+
+It matters a great deal what "safety" means in your mind and that
+of your users. As a previous comment pointed out, that usually
+involves backups, that is data that has already been stored.
+
+But your insistence on power off and disk caches etc. seems to
+indicate that "safety" in your mind means "when I click the
+'Save' button it is really saved and not partially".
+
+As to that there quite a lot of qualifiers:
+
+  * Most users don't understand that even in the best scenario a
+    file is really saved not when they *click* the 'Save' button,
+    but when they get the "Saved!" message. In between anything
+    can happen. Also, work in progress (not yet saved explicitly)
+    is fair game.
+
+  * "Really saved" is an *application* concern first and foremost.
+    The application *must* say (via 'fsync') that it wants the
+    data really saved. Unfortunately most applications don't do
+    that because "really saved" is a very expensive operation, and
+    usually sytems don't crash, so the application writer looks
+    like a genius if he has an "optimistic" attitude. If you do a
+    web search look for various O_PONIES discussions. Some intros:
+
+      http://lwn.net/Articles/351422/
+      http://lwn.net/Articles/322823/
+
+  * XFS (and to a point 'ext4') is designed for applications that
+    work correctly and issue 'fsync' appropriately, and if they do
+    it is very safe, because it tries hard to ensure that either
+    'fsync' means "really saved" or you know that it does not. XFS
+    takes advantage of the assumption that applications do the
+    right thing to do various latency-based optimizations between
+    calls to 'fsync'.
+
+  * Unfortunately most GUI applications don't do the right thing,
+    but fortunately you can compensate for that. The key here is
+    to make sure that the flusher's parameter are set for rather
+    more frequent flushing than the default, which is equivalent
+    to issuing 'fsync' systemwide fairly frequently. Ideally set
+    'vm/dirty_bytes' to something like 1-3 seconds of IO transfer
+    rate (and in reversal on some of my previous advice leave
+    'vm/dirty_background_bytes' to something quite large unless
+    you *really* want safety), and to shorten significantly
+    'vm/dirty_expire_centisecs', 'vm/dirty_writeback_centisecs'.
+    This defeats some XFS optimizations, but that's inevitable.
+
+  * In any case you are using NFS/Samba, and that opens a much
+    bigger set of issues, because caching happens on the clients
+    too: http://www.sabi.co.uk/0707jul.html#070701b
+
+Then Von Neuman help you if your users or you decide to store lots
+of messages in MH/Maildir style mailstores, or VM images on
+"growable" virtual disks.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
