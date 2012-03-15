@@ -1,35 +1,33 @@
-From: Holger Kiehl <Holger.Kiehl@dwd.de>
-Subject: Re: [patch 0/7] Add TRIM support for raid linear/0/1/10
-Date: Wed, 14 Mar 2012 21:13:02 +0000 (GMT)
-Message-ID: <alpine.LRH.2.02.1203142101290.6232@diagnostix.dwd.de>
-References: <20120312030412.375458948@fusionio.com> <alpine.LRH.2.02.1203121806120.23719@diagnostix.dwd.de> <4F5EFEB6.4060402@kernel.org> <alpine.LRH.2.02.1203131213480.15848@diagnostix.dwd.de> <CANejiEWYCxY_hLwgyN08_cXC64c82irkNPytTjOpYyER7pTGow@mail.gmail.com>
- <alpine.LRH.2.02.1203131521190.29286@diagnostix.dwd.de> <CANejiEW=a1piMYvSYM5GmtxKsWYpZj+kjnmNsNUDmW9ydDBjBw@mail.gmail.com> <alpine.LRH.2.02.1203140839590.28358@diagnostix.dwd.de> <CANejiEXP9ORKTfE4O9khaHSp-Y8yOQU1LLUD5Q5pBJOGR+A-aA@mail.gmail.com>
+From: Jessie Evangelista <jessie.evangelista@gmail.com>
+Subject: raid10n2/xfs setup guidance on write-cache/barrier
+Date: Thu, 15 Mar 2012 08:30:55 +0800
+Message-ID: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CANejiEXP9ORKTfE4O9khaHSp-Y8yOQU1LLUD5Q5pBJOGR+A-aA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>, "axboe@kernel.dk" <axboe@kernel.dk>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 14 Mar 2012, Shaohua Li wrote:
+I want to create a raid10,n2 using 3 1TB SATA drives.
+I want to create an xfs filesystem on top of it.
+The filesystem will be used as NFS/Samba storage.
 
-> Maybe the discard runs slow with small size request in the disk.
-> please drop patch "blk: add plug for blkdev_issue_discard" and try again. Since
-> we can't do merge, the plug just introduces latency.
->
-Tried again without the patch applied, but there is only a very small
-performance increase (520->600 agains 4000 fps without discard).
+mdadm --zero /dev/sdb1 /dev/sdc1 /dev/sdd1
+mdadm -v --create /dev/md0 --metadata=1.2 --assume-clean
+--level=raid10 --chunk 256 --raid-devices=3 /dev/sdb1 /dev/sdc1
+/dev/sdd1
+mkfs -t xfs -l lazy-count=1,size=128m -f /dev/md0
+mount -t xfs -o barrier=1,logbsize=256k,logbufs=8,noatime /dev/md0
+/mnt/raid10xfs
 
-The benchmark creates lots of small files (2 KiB) and deletes them again.
+Will my files be safe even on sudden power loss? Is barrier=1 enough?
+Do i need to disable the write cache?
+with: hdparm -W0 /dev/sdb /dev/sdc /dev/sdd
 
-> if it doesn't help, please capture a blktrace when you do the benchmark and
-> send it to me.
->
-Ok, I will do this tomorrow. Need some sleep :-)
+I tried it but performance is horrendous.
 
-Thanks for your work on supporting discard in MD!
+Am I better of with ext4? Data safety/integrity is the priority and
+optimization affecting it is not acceptable.
 
-Regards,
-Holger
+Thanks and any advice/guidance would be appreciated
