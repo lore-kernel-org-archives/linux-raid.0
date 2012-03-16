@@ -1,157 +1,140 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [patch 0/7] Add TRIM support for raid linear/0/1/10
-Date: Fri, 16 Mar 2012 10:19:07 +0800
-Message-ID: <CANejiEVaub35zcvkTeiJCFQaPx8kAfSLZO06x_qXyrRoOuTUiA@mail.gmail.com>
-References: <20120312030412.375458948@fusionio.com>
-	<alpine.LRH.2.02.1203121806120.23719@diagnostix.dwd.de>
-	<4F5EFEB6.4060402@kernel.org>
-	<alpine.LRH.2.02.1203131213480.15848@diagnostix.dwd.de>
-	<CANejiEWYCxY_hLwgyN08_cXC64c82irkNPytTjOpYyER7pTGow@mail.gmail.com>
-	<alpine.LRH.2.02.1203131521190.29286@diagnostix.dwd.de>
-	<CANejiEW=a1piMYvSYM5GmtxKsWYpZj+kjnmNsNUDmW9ydDBjBw@mail.gmail.com>
-	<alpine.LRH.2.02.1203140839590.28358@diagnostix.dwd.de>
-	<CANejiEXP9ORKTfE4O9khaHSp-Y8yOQU1LLUD5Q5pBJOGR+A-aA@mail.gmail.com>
-	<alpine.LRH.2.02.1203142101290.6232@diagnostix.dwd.de>
-	<CANejiEX=-y6Kgtmfg1efqn_Ufdnn=Ls-4Nne3RYAWdt07+4o2A@mail.gmail.com>
-	<alpine.LRH.2.02.1203150857190.4562@diagnostix.dwd.de>
+From: Jessie Evangelista <jessie.evangelista@gmail.com>
+Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier
+Date: Fri, 16 Mar 2012 11:36:07 +0800
+Message-ID: <CAA8mOyC-xCcNxQFz-M1_TfnxcGBmpUdQ57_vYNVF11jhWK3SSA@mail.gmail.com>
+References: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com>
+	<4F61803A.60009@hardwarefreak.com>
+	<CAA8mOyCzs36YD_QUMq25HQf8zuq1=tmSTPjYdoFJwy2Oq9sLmw@mail.gmail.com>
+	<20321.63389.586851.689070@tree.ty.sabi.co.UK>
+	<CAA8mOyCUCyzGCuNtn4txFuBtbk22M6LRpShNVH_Szb5=_F1PBw@mail.gmail.com>
+	<20322.29849.917554.794740@tree.ty.sabi.co.UK>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.02.1203150857190.4562@diagnostix.dwd.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Holger Kiehl <Holger.Kiehl@dwd.de>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>, "axboe@kernel.dk" <axboe@kernel.dk>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20322.29849.917554.794740@tree.ty.sabi.co.UK>
+Sender: linux-raid-owner@vger.kernel.org
+To: Peter Grandi <pg@lxra2.for.sabi.co.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, Linux fs XFS <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
-2012/3/15 Holger Kiehl <Holger.Kiehl@dwd.de>:
-> On Thu, 15 Mar 2012, Shaohua Li wrote:
->
->> 2012/3/15 Holger Kiehl <Holger.Kiehl@dwd.de>:
->>>
->>> On Wed, 14 Mar 2012, Shaohua Li wrote:
->>>
->>>> Maybe the discard runs slow with small size request in the disk.
->>>> please drop patch "blk: add plug for blkdev_issue_discard" and try
->>>> again.
->>>> Since
->>>> we can't do merge, the plug just introduces latency.
->>>>
->>> Tried again without the patch applied, but there is only a very sma=
-ll
->>> performance increase (520->600 agains 4000 fps without discard).
->>>
->>> The benchmark creates lots of small files (2 KiB) and deletes them =
-again.
->>>
->>>
->>>> if it doesn't help, please capture a blktrace when you do the benc=
-hmark
->>>> and
->>>> send it to me.
->>>>
->>> Ok, I will do this tomorrow. Need some sleep :-)
->>>
->>> Thanks for your work on supporting discard in MD!
->>
->> I tried your benchmark, create 2000k 2k files and delete them and
->> follows a sync.
->> the discard runs pretty fast for both raid 0/1. So can't reproduce t=
-he
->> issue. I'm using
->> a fusionio card though. I'm afraid nothing I can do till get you blk=
-trace.
->>
-> The blktrace is a bit large so I have uploaded it to:
->
-> =A0 ftp://ftp.dwd.de/pub/afd/test/trim/trace
->
-> This is while the benchmark was running. Just a reminder, md2 is
-> /home under which the benchmark was running. And md2 is a raid0 of
-> sda3, sdb3 and sdc3. While md1 is / and also raid0 of ada2, sdb2 and
-> sdc2.
->
-> There is also another blktarce when all files are deleted and note
-> this is only part of it (10 min), it takes about 30 minutes to delete
-> all. You can find this here:
->
-> =A0 ftp://ftp.dwd.de/pub/afd/test/trim/trace2
->
-> Please tell me if you need more information or what else I can do to
-> help find the problem.
-Looks at the blktrace:
-8,0    1    47871   116.769583185   870  A   D 46042912 + 96 <- (8,3) 3=
-0869280
-  8,3    1    47872   116.769583560   870  Q   D 46042912 + 96 [jbd2/md=
-2-8]
-  8,3    1    47873   116.769584613   870  G   D 46042912 + 96 [jbd2/md=
-2-8]
-  8,3    1    47874   116.769585255   870  I   D 46042912 + 96 [jbd2/md=
-2-8]
-  8,3    1    47875   116.769585693   870  D   D 46042912 + 96 [jbd2/md=
-2-8]
-  8,3    1    47876   116.771985862     0  C   D 46042912 + 1 [0]
-  8,0    1    47877   116.799571098   870  A   D 46040696 + 32 <- (8,3)=
- 30867064
-  8,3    1    47878   116.799571462   870  Q   D 46040696 + 32 [jbd2/md=
-2-8]
-  8,3    1    47879   116.799572459   870  G   D 46040696 + 32 [jbd2/md=
-2-8]
-  8,3    1    47880   116.799573176   870  I   D 46040696 + 32 [jbd2/md=
-2-8]
-  8,3    1    47881   116.799573637   870  D   D 46040696 + 32 [jbd2/md=
-2-8]
-  8,3    1    47882   116.801970911     0  C   D 46040696 + 1 [0]
-  8,0    1    47883   116.801980623   870  A   D 46046568 + 88 <- (8,3)=
- 30872936
-  8,3    1    47884   116.801980957   870  Q   D 46046568 + 88 [jbd2/md=
-2-8]
-  8,3    1    47885   116.801981894   870  G   D 46046568 + 88 [jbd2/md=
-2-8]
-  8,3    1    47886   116.801982539   870  I   D 46046568 + 88 [jbd2/md=
-2-8]
-  8,3    1    47887   116.801982974   870  D   D 46046568 + 88 [jbd2/md=
-2-8]
-  8,3    1    47888   116.811997203     0  C   D 46046568 + 1 [0]
-  8,0    1    47889   116.829566908   870  A   D 46040032 + 32 <- (8,3)=
- 30866400
-  8,3    1    47890   116.829567261   870  Q   D 46040032 + 32 [jbd2/md=
-2-8]
-  8,3    1    47891   116.829569154   870  G   D 46040032 + 32 [jbd2/md=
-2-8]
-  8,3    1    47892   116.829569901   870  I   D 46040032 + 32 [jbd2/md=
-2-8]
-  8,3    1    47893   116.829570366   870  D   D 46040032 + 32 [jbd2/md=
-2-8]
-  8,3    1    47894   116.831972370     0  C   D 46040032 + 1 [0]
-  8,0    1    47895   116.846461610   870  A   D 46039728 + 8 <- (8,3) =
-30866096
-  8,3    1    47896   116.846462008   870  Q   D 46039728 + 8 [jbd2/md2=
--8]
-  8,3    1    47897   116.846462911   870  G   D 46039728 + 8 [jbd2/md2=
--8]
-  8,3    1    47898   116.846463530   870  I   D 46039728 + 8 [jbd2/md2=
--8]
-  8,3    1    47899   116.846463984   870  D   D 46039728 + 8 [jbd2/md2=
--8]
-  8,3    1    47900   116.851970109     0  C   D 46039728 + 1 [0]
+> But usually you can still set the XFS idea of sector size to 4096,
+> which is probably a good idea in general.
 
-there are 5 discard requests, the discard request uses 2ms, 2ms, 10ms, =
-2ms, 5ms
-(from dispatch to finish). this isn't fast definitely. And since
-discard runs in jbd, slow
-discard will impact other file operations, for example, when journal is=
- full.
+I'm now running kernel 3.0.0-16-server Ubuntu 10.04LTS
+cat /sys/block/sd[b-d]/queue/physical_block_size shows 512
+cat /sys/block/sd[b-d]/device/model shows ST31000524AS
+looking up the model at seagate, the specs page does not mention 512
+byte sectors
+but it did mention guaranteed sectors of 1,953,525,168
+multiplying by 512bytes we do get 1000204886016(1TBish)
 
-So looks like this isn't the fault of my patch. curious is why discard
-is fast without md
-in your test. Maybe the reason is the files in a new formatted
-filesystem haven't
-fragmentation, so discard size is big and discard request number is
-small, so total
-discard time is small too. while your md filesystem might have fragment=
-ation, so
-discard size is small and request number is big.
+Anyway, I'll have a look at setting the sector size for xfs
 
-Thanks,
-Shaohua
+> I did that in the following bits of the reply. You must be in a
+> real hurry if you cannot trim down the quoting or write your
+> comments after reading through once...
+
+I did read thru your comments several times and I really appreciate the=
+m.
+Will look into setting vm/dirty_bytes, vm/dirty_background_bytes,
+vm/dirty_expire_centisecs, vm/dirty_writeback_centisecs.
+
+I'm still scouring the internet for a best practice recipe for
+implementing xfs/mdraid.
+I am open to writing one and including the inputs everyone is contribut=
+ing here.
+In my search, I also saw some references of alignment issues for partit=
+ions.
+this is what I used to setup the partitions for the md device
+
+sfdisk /dev/sdb <<EOF
+unit: sectors
+
+63,104872257,fd
+0,0,0
+0,0,0
+0,0,0
+EOF
+
+I've read a recommendation to start the partition on the 1MB mark.
+Does this make sense?
+
+>> let me define safety as needed by the usecase: fileA is a 2MB
+>> open office document file already existing on the file system.
+>> userA opens fileA locally, modifies a lot of lines and attempts
+>> to save it. as the saving operation is proceeding, the PSU goes
+>> haywire and power is cut abruptly.
+>
+> To worry you, if the PSU goes haywire, the disk data may become
+> subtly corrupted:
+>
+> https://blogs.oracle.com/elowe/entry/zfs_saves_the_day_ta
+> =A0=ABAnother user, also running a Tyan 2885 dual-Opteron workstation
+> =A0like mine, had experienced data corruption with SATA disks. The
+> =A0root cause? A faulty power supply.=BB
+>
+> Even if that is not an argument for filesystem provided checksums,
+> as the ZFS (and other) people say, but for end-to-end (application
+> level) ones.
+
+Mmmm, Ive also been reading up on ZFS but haven't put it thru its paces=
+=2E
+
+>> I expect fileA should be as it was before the save operation and
+>> should not be corrupted in anyway. =A0Am I asking/expecting too much=
+?
+>
+> That is too much to expect of the filesystem and at the same time
+> too little.
+>
+> It is too much because it is strictly the responsibility of the
+> application, and it is very expensive, because it can only happen
+> by simulating copy-on-write (app makes a copy of the document,
+> updates the copy, and then atomically renames it, and then makes
+> another copy). Some applications like OOo/LibreO/VIM instead use a
+> log file to record updates, and then merge those on save (copy,
+> merge, rename), which is better. Some filesystems like NILFS2 or
+> BTRFS or Next3/Next4 use COW to provide builtin versioning, but
+> that's expensive too. The original UNIX insight to provide a very
+> simple file abstraction layer should not be lightly discarded (but
+> I like NILFS2 in particular).
+>
+> It is too little because of what happens if you have dozens to
+> thousands of modified but not yet fully persisted files, sych as
+> newly created mail folders, 'tar' unpacks , source tree checkins,
+> ...
+>
+> As I tried to show in my previous reply, and in the NFS blog entry
+> mentioned in it too, on a creduly practical level relying on
+> applications doing the right thing is optimistic, and it may be
+> regrettably expedient to complement barriers with frequent system
+> driven flushing, which partially simulates (at a price) O_PONIES.
+
+I'd like to read about the NFS blog entry but the link you included
+results in a 404.
+I forgot to mention in my last reply.
+
+Based on what I understood from your thoughts above, if an
+applications issues a flush/fsync
+and it does not complete due to some catastrophic crash,
+xfs on its own can not roll back to the prev version of the file in
+case of unfinished write operation.
+disabling the device caches wouldn't help either right?
+only filesystems that do COW can do this at the expense of
+performance? (btrfs and zfs, please hurry and grow up!)
+
+> As to to LVM2 it is very rarely needed. The only really valuable
+> feature it has is snapshot LVs, and those are very expensive. XFS,
+> which can allocate routinely 2GiB (or bigger) files as a single
+> extents, can be used as a volume manager too.
+
+If you were in my place with the resource constraints, you'd go with:
+xfs with barriers on top of mdraid10 with device cache ON and setting
+vm/dirty_bytes, vm/dirty_background_bytes, vm/dirty_expire_centisecs,
+vm/dirty_writeback_centisecs to safe values
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
