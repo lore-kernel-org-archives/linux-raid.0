@@ -1,38 +1,75 @@
-From: Shaohua Li <shli@fusionio.com>
-Subject: [patch v2 2/6] blk: dont allow discard request merge temporarily
-Date: Fri, 16 Mar 2012 15:32:15 +0800
-Message-ID: <20120316073512.485027511@fusionio.com>
-References: <20120316073213.656519005@fusionio.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=blk-discard-nomerge.patch
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: neilb@suse.de, axboe@kernel.dk, vgoyal@redhat.com, martin.petersen@oracle.com, Shaohua Li <shli@fusionio.com>
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier
+Date: Fri, 16 Mar 2012 12:06:54 +0100
+Message-ID: <3633779.GerkmFcqtU@saturn>
+References: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com> <20322.29849.917554.794740@tree.ty.sabi.co.UK> <CAA8mOyC-xCcNxQFz-M1_TfnxcGBmpUdQ57_vYNVF11jhWK3SSA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart2250665.9ql0y8N4me"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAA8mOyC-xCcNxQFz-M1_TfnxcGBmpUdQ57_vYNVF11jhWK3SSA@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: xfs@oss.sgi.com
+Cc: Jessie Evangelista <jessie.evangelista@gmail.com>, Peter Grandi <pg@lxra2.for.sabi.co.uk>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Didn't allow discard request merge temporarily, as SCSI layer isn't ready
-for discard merge as Martin Petersen pointed out. This isn't fair for
-non-scsi device, but looks this is the only way I can do currently.
 
-We should have the same issue before, but maybe because discard merge is
-very rare case. But now raid0/10 makes the merge quite possible, so we need
-disable it explicitly.
+--nextPart2250665.9ql0y8N4me
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 
-Signed-off-by: Shaohua Li <shli@fusionio.com>
----
- include/linux/blkdev.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Am Freitag, 16. M=C3=A4rz 2012, 11:36:07 schrieb Jessie Evangelista:
+> If you were in my place with the resource constraints, you'd go with:=
 
-Index: linux/include/linux/blkdev.h
-===================================================================
---- linux.orig/include/linux/blkdev.h	2012-03-14 09:20:06.787261188 +0800
-+++ linux/include/linux/blkdev.h	2012-03-14 09:20:47.797261248 +0800
-@@ -575,7 +575,7 @@ static inline void blk_clear_queue_full(
-  * it already be started by driver.
-  */
- #define RQ_NOMERGE_FLAGS	\
--	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA)
-+	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA | REQ_DISCARD)
- #define rq_mergeable(rq)	\
- 	(!((rq)->cmd_flags & RQ_NOMERGE_FLAGS) && \
- 	 (((rq)->cmd_flags & REQ_DISCARD) || \
+> xfs with barriers on top of mdraid10 with device cache ON and setting=
+
+> vm/dirty_bytes, vm/dirty_background_bytes, vm/dirty_expire_centisecs,=
+
+> vm/dirty_writeback_centisecs to safe values
+
+If you ever experienced a crash where lots of sensible and important=20=
+
+data were lost, you would not even think about "device cache ON".
+
+> could you please suggest a hardware raid card with BBU that's cheap?
+
+"Cheap" is a varying definition. How much is your data worth? How much=20=
+
+does one day of blackout cost?=20
+
+I've been very happy with Areca Controllers, like the 12x0 and 1680=20
+series, and now there's the newer 1882 series like=20
+http://geizhals.at/eu/721745
+plus a BBU for about 100=E2=82=AC.
+
+You can even mix RAID levels on the same disks, example of 8x1TB define=
+=20
+a RAID0 of 500G and the rest a RAID6. Online expansion possible,=20
+scheduled background verify, e-mail notification on everything, logging=
+,=20
+ntp times, oob-mgmnt via it's own network interface, ...
+Very reliable, I never had a problem. And they have a good support team=
+.
+
+--=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=C3=A9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+
+--nextPart2250665.9ql0y8N4me
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iEYEABECAAYFAk9jHtMACgkQzhSR9xwSCbRr5gCdFsTbgI5PSGoK/QZs18dY3Z5g
++YIAoJTOux9xS23y4jSC0sWAz++hYSvw
+=hmCD
+-----END PGP SIGNATURE-----
+
+--nextPart2250665.9ql0y8N4me--
+
