@@ -1,76 +1,42 @@
-From: pg@lxra2.for.to.sabi.co.UK (Peter Grandi)
-Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier (GiB alignment)
-Date: Sun, 18 Mar 2012 00:08:13 +0000
-Message-ID: <20325.10093.799412.765971@tree.ty.sabi.co.UK>
-References: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com>
-	<4F61803A.60009@hardwarefreak.com>
-	<CAA8mOyCzs36YD_QUMq25HQf8zuq1=tmSTPjYdoFJwy2Oq9sLmw@mail.gmail.com>
-	<20321.63389.586851.689070@tree.ty.sabi.co.UK>
-	<CAA8mOyCUCyzGCuNtn4txFuBtbk22M6LRpShNVH_Szb5=_F1PBw@mail.gmail.com>
-	<20322.29849.917554.794740@tree.ty.sabi.co.UK>
-	<CAA8mOyC-xCcNxQFz-M1_TfnxcGBmpUdQ57_vYNVF11jhWK3SSA@mail.gmail.com>
-	<20324.44842.473837.511238@tree.ty.sabi.co.UK>
-	<4F650493.7080709@gmail.com>
+From: "Mr.Saeed Ahmed." <seal@on.net>
+Subject: Will You Be Trusted?
+Date: Sat, 17 Mar 2012 15:46:40 -0400
+Message-ID: <20120317154640.9kny76e8g88w80co__42992.566273506$1332056342$gmane$org@webmail.educacao.niteroi.rj.gov.br>
+Reply-To: saeeahmedo5@linuxmail.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F650493.7080709@gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>, Linux fs XFS <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
->> I often recommend aligning partitions to 1GiB, also because I
->> like to have 1GiB or so of empty space at the very beginning
->> and end of a drive.
 
-> I'm really curious why do you use such alignment? I can think
-> about few reasons, but most practical I think you like to
-> slice in gigabyte sizes.
 
-Indeed, and to summarize:
+Dear Friend,
 
-* As mentioned before, I usually leave a chunk of unused space
-  at the very start and end of a drive. This also because:
-  - Many head landing accidents happen at the start or end of a
-    drive.
-  - Free space at the start: sometimes it is useful to have a
-    few seconds of grace at the start when duplicating a drive
-    to realize one has mistyped the name, and many partitioning
-    or booting schemes can use a bit of free space at the start.
-    Consider XFS and its use of sector 0.
-  - Free space at the end: many drives have slightly different
-    sizes, and this can cause problems when for example
-    rebuilding arrays, or doing backups, and leaving some bit
-    unused can avoid a lot of trouble.
+As you read this, I don't want you to feel sorry for me,because, I
+believe everyone will die someday,and am contacting you because
+I really do need your help and I want you to help me with all your
+effort and time for just seven to fourteen workings days of your time.I
+want you to be honest and truthful with me that you will help me
+with my last wish as a dying man.
 
-* Having even sizes for partitions means that it may be easier
-  to image copy them from one drive to another. I often to do
-  that. Indeed I usually create partitions of a few "standard"
-  sizes, usually tailored to fit drives that tend also to come
-  in fairly standard increments, because drive manufacturers in
-  each new platter generation usually aim at a fairly standard
-  factor of improvement. Standard drive sizes tend to be, in
-  gigabytes: 80 160 250 500 1000 1500 2000 3000. Since 80 and
-  160 are somewhat old and no longer used, I currently tend to
-  do partitions in sizes like 230GiB, 460GiB, 920GiB etc. SSDs
-  have somewhat complicated this.
+Please i need a reliable person who will usethe Money($18 milliondollars)to
+build orphanage home or charityorganization.
 
-* On a contemporary drive 1GiB is a rather small fraction of the
-  capacity of a drive, so why not just align everything to 1GiB,
-  even if it seems pretty large in absolute terms? And if you
-  align the first partition to start at 1GiB, and leave free
-  space at the end, it is farily natural to align everything in
-  between on 1GiB boundaries.
+Please kindly reply to my most confidential email if you are really
+interested in helping me please: saeeahmedo5@linuxmail.org
 
-In this as in many other cases I like to buy myself some extra
-degrees of freedom if they are cheap.
 
-Another example I have written about previously is specifying
-advisedly chosen 'sunit' and 'swidth' even on non-RAID volumes,
-or non-parity RAID setups, not because they really improve
-things, but because the cost is minimal and it might come useful
-later.
+God be with you.
 
-  Note: I *really* like to be able to do partition image copies,
-    because they are so awesomely faster than treewise ones.
+Mr.Saeed Ahmed.
+
+----------------------------------------------------------------
+FME Webmail
+www.educacao.niteroi.rj.gov.br
+
