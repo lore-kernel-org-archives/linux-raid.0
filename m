@@ -1,29 +1,24 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [patch 0/7] Add TRIM support for raid linear/0/1/10
-Date: Sat, 17 Mar 2012 14:14:43 -0400
-Message-ID: <4F64D493.9010404@teksavvy.com>
-References: <20120312030412.375458948@fusionio.com> <20120314132422.3aeb6d49@notabene.brown> <4F6006C3.4010204@kernel.org>
+From: Zdenek Kaspar <zkaspar82@gmail.com>
+Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier (GiB alignment)
+Date: Sat, 17 Mar 2012 22:39:31 +0100
+Message-ID: <4F650493.7080709@gmail.com>
+References: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com> <4F61803A.60009@hardwarefreak.com> <CAA8mOyCzs36YD_QUMq25HQf8zuq1=tmSTPjYdoFJwy2Oq9sLmw@mail.gmail.com> <20321.63389.586851.689070@tree.ty.sabi.co.UK> <CAA8mOyCUCyzGCuNtn4txFuBtbk22M6LRpShNVH_Szb5=_F1PBw@mail.gmail.com> <20322.29849.917554.794740@tree.ty.sabi.co.UK> <CAA8mOyC-xCcNxQFz-M1_TfnxcGBmpUdQ57_vYNVF11jhWK3SSA@mail.gmail.com> <20324.44842.473837.511238@tree.ty.sabi.co.UK>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F6006C3.4010204@kernel.org>
+In-Reply-To: <20324.44842.473837.511238@tree.ty.sabi.co.UK>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: NeilBrown <neilb@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>
+To: Peter Grandi <pg@lxra2.for.sabi.co.UK>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, Linux fs XFS <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
-On 12-03-13 10:47 PM, Shaohua Li wrote:
-> On 3/14/12 10:24 AM, NeilBrown wrote:
->>  On Mon, 12 Mar 2012 11:04:12 +0800 Shaohua Li <shli@fusionio.com> wrote:
-..
->>  Also I wonder about handling failure in RAID1.
->>  I think the code will currently treat it like a write error, and
->>  maybe record a bad block (then fail the device is writing the badblock
->>  record fails). Is that what were want?
-> Mainly to simplify the code. And I thought a normal discard should not fail.
-> If it fails, something is wrong, marked it as badblock maybe not bad.
+Dne 17.3.2012 16:35, Peter Grandi napsal(a):
+> I often recommend aligning partitions to 1GiB, also because I
+> like to have 1GiB or so of empty space at the very beginning and
+> end of a drive.
 
-That sounds like a VERY bad idea.
-Failures happen for lots of reasons,
-but generic comm errors are not an excuse to suddenly mark sectors as bad.
+I'm really curious why do you use such alignment? I can think about few
+reasons, but most practical I think you like to slice in gigabyte sizes.
+
+Z.
