@@ -1,168 +1,101 @@
-From: "Carl Engstrom" <engstrom@cox.net>
-Subject: FW: mdadm raid can't set proper devices in super-block
-Date: Fri, 16 Mar 2012 16:37:02 -0700
-Message-ID: <004501cd03cd$b6f4d4d0$24de7e70$@cox.net>
-References: <loom.20120312T183628-941@post.gmane.org> <4F5E416B.9020003@anonymous.org.uk> <003901cd0204$87ea81f0$97bf85d0$@cox.net>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier
+Date: Fri, 16 Mar 2012 19:02:22 -0500
+Message-ID: <4F63D48E.9080109@hardwarefreak.com>
+References: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com> <4F61803A.60009@hardwarefreak.com> <CAA8mOyCzs36YD_QUMq25HQf8zuq1=tmSTPjYdoFJwy2Oq9sLmw@mail.gmail.com> <4F633121.10800@hardwarefreak.com> <CAKuK5J3GHgWcnYLqwRV8s_wMjO2nBVf7h=yONtn90kPn9A_3Gg@mail.gmail.com> <CAKuK5J11JTdwZSBWj7DH7c+hE--MVNQVVrcKXaV2AO-wEpWBog@mail.gmail.com> <20323.37976.162802.876821@tree.ty.sabi.co.UK>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <003901cd0204$87ea81f0$97bf85d0$@cox.net>
-Content-Language: en-us
+In-Reply-To: <20323.37976.162802.876821@tree.ty.sabi.co.UK>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Peter Grandi <pg@lxra2.to.sabi.co.UK>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, Linux fs XFS <xfs@OSS.SGI.com>
 List-Id: linux-raid.ids
 
+On 3/16/2012 2:28 PM, Peter Grandi wrote:
+> [ ... ]
+> 
+>>>> write barriers will ensure journal and thus filesystem
+>>>> integrity in a crash/power fail event.  They do NOT guarantee
+>>>> file data integrity as file data isn't journaled.
+> 
+> Not well expressed, 
 
-...
-> 0 0 8 1 0 active sync /dev/sda1
->   1 1 8 17 1 active sync /dev/sdb1
->   --------
->
-> the array will start with:
->   mdadm -A --update=super-minor /dev/md0 /dev/sdb1 /dev/sdc1
+Given the audience, the OP, I was simply avoiding getting too deep in
+the weeds Peter.  This thread is on the linux-raid list, not xfs@oss.
+You know I have a tendency to get too deep in the weeds.  I think I did
+nice job of balance here. ;)
 
-Q:  So it starts just fine if you specify the devices...
+> as XFS barriers do ensure file data integrity,
+> *if the applications uses them* (and uses them in exactly the
+> right way).
 
-A:  Yes  the array starts fine when I put the parameters in.  There is also
-an issue where the expected /dev/md0 shows up as md_d0, but I can live with
-that.
+How will the OP know which, if any, of his users' desktop applications
+do fsyncs, properly?  He won't.  Which is why I made the general
+statement, which is correct, if not elaborate, nor down in the weeds.
 
-> Anyone know what's going on?
+> The difference between metadata and data with XFS is that XFS
+> itself will use barriers on metadata at the right times, because
+> that's data to XFS, but it won't use barriers on data[1], leaving
+> that entirely to the application.
 
---update=super-minor is working fine; both devices have a preferred minor
-device number of zero, as they should for the array to be /dev/md0.
+[1]File data, just to be clear
 
-Q: What happens if you
-   mdadm --stop /dev/md0
-   mdadm --assemble --scan --verbose /dev/md0 ?
+>>>>  No filesystem (Linux anyway) journals data, only metadata.
+> 
+>>> That's not true, is it? ext3 and ext4 support journal=data.
+> 
+> They do, because they journal blocks, which is not generally a
+> great choice, but gives the option to journal data blocks too more
+> easily than other choices. But it is a very special case that few
+> people use.
 
-A: The device isn't identified in the config file.  I generally don't put
-anything in the config file and it's always seemed to work.
+Few use it because the performance is absolutely horrible.  data=journal
+disables delayed allocation (which serious contributes to any modern
+filesystem's performance--EXT devs stole/borrowed delayed allocation
+from XFS BTW) and it disables O_DIRECT.  It also doubles the number of
+data writes to media, once to the journal, once to the filesystem, for
+every block of every file written.
 
-Q: Where do you want to mount /dev/md0?
-A: /backup
+> On a more general note, journaling and barriers are sort of
+> distinct issues.
+> 
+> The real purpose of barriers is to ensure that updates are
+> actually on the recording medium, whether in the journal or
+> directly on final destination.
+> That is barriers are used to ensure that data or metadata on the
+> persistent layer is current.
 
-What messages do you get during boot-up (dmesg) about why md0 isn't being
-assembled?
+Correct.  Again, trying to stay out of the weeds.  I'd established that
+XFS uses barriers on journal writes for metadata consistency, which
+prevents filesystem corruption after a crash, but not necessarily file
+corruption.  Making the statement that XFS doesn't journal data gets the
+point across more quickly, while staying out of the weeds.
 
-============
-[    0.481723] ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0x30a0 irq
-14
-[    0.481730] ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0x30a8 irq
-15
-[    0.806077] md: linear personality registered for level -1
-[    0.824006] md: multipath personality registered for level -4
-[    0.965715] md: raid0 personality registered for level 0
-[    0.993103] md: raid1 personality registered for level 1
-[    1.518611] mdadm: sending ioctl 1261 to a partition!
-[    1.518618] mdadm: sending ioctl 1261 to a partition!
-[    1.518830] mdadm: sending ioctl 1261 to a partition!
-[    1.518835] mdadm: sending ioctl 1261 to a partition!
-[    1.519733] mdadm: sending ioctl 1261 to a partition!
-[    1.519738] mdadm: sending ioctl 1261 to a partition!
-[    1.522247] mdadm: sending ioctl 1261 to a partition!
-[    1.522254] mdadm: sending ioctl 1261 to a partition!
-[    1.523580] mdadm: sending ioctl 1261 to a partition!
-[    1.523587] mdadm: sending ioctl 1261 to a partition!
-[    1.524944] mdadm: sending ioctl 1261 to a partition!
-[    1.524949] mdadm: sending ioctl 1261 to a partition!
-[    1.525971] mdadm: sending ioctl 1261 to a partition!
-[    1.525978] mdadm: sending ioctl 1261 to a partition!
-[    2.080886] md: raid6 personality registered for level 6
-[    2.080892] md: raid5 personality registered for level 5
-[    2.080897] md: raid4 personality registered for level 4
-[    2.092484] md: raid10 personality registered for level 10
-[   16.430546] mdadm: sending ioctl 1261 to a partition!
-[   16.430551] mdadm: sending ioctl 1261 to a partition!
-[   16.440763] mdadm: sending ioctl 1261 to a partition!
-[   16.440769] mdadm: sending ioctl 1261 to a partition!
-[   16.441262] mdadm: sending ioctl 1261 to a partition!
-[   16.441267] mdadm: sending ioctl 1261 to a partition!
-[   16.442125] mdadm: sending ioctl 1261 to a partition!
-[   16.442130] mdadm: sending ioctl 1261 to a partition!
-[   16.442710] mdadm: sending ioctl 1261 to a partition!
-[   16.442715] mdadm: sending ioctl 1261 to a partition!
-[   16.442915] mdadm: sending ioctl 1261 to a partition!
-[   16.442919] mdadm: sending ioctl 1261 to a partition!
-[   16.443693] mdadm: sending ioctl 1261 to a partition!
-[   16.443709] mdadm: sending ioctl 1261 to a partition!
-[   16.458427] md: bind<sdc1>
-[   16.458843] mdadm: sending ioctl 1261 to a partition!
-[   16.458848] mdadm: sending ioctl 1261 to a partition!
-[   16.465101] mdadm: sending ioctl 1261 to a partition!
-[   16.465107] mdadm: sending ioctl 1261 to a partition!
-[   16.465621] mdadm: sending ioctl 1261 to a partition!
-[   16.465627] mdadm: sending ioctl 1261 to a partition!
-[   16.466434] mdadm: sending ioctl 1261 to a partition!
-[   16.466439] mdadm: sending ioctl 1261 to a partition!
-[   16.467033] mdadm: sending ioctl 1261 to a partition!
-[   16.467037] mdadm: sending ioctl 1261 to a partition!
-[   16.468037] mdadm: sending ioctl 1261 to a partition!
-[   16.468043] mdadm: sending ioctl 1261 to a partition!
-[   16.468447] mdadm: sending ioctl 1261 to a partition!
-[   16.468463] mdadm: sending ioctl 1261 to a partition!
-[   16.474276] mdadm: sending ioctl 1261 to a partition!
-[   16.474282] mdadm: sending ioctl 1261 to a partition!
-[   16.475038] mdadm: sending ioctl 1261 to a partition!
-[   16.475043] mdadm: sending ioctl 1261 to a partition!
-[   16.476065] mdadm: sending ioctl 1261 to a partition!
-[   16.476070] mdadm: sending ioctl 1261 to a partition!
-[   16.476843] mdadm: sending ioctl 1261 to a partition!
-[   16.476848] mdadm: sending ioctl 1261 to a partition!
-[   16.478447] mdadm: sending ioctl 1261 to a partition!
-[   16.478453] mdadm: sending ioctl 1261 to a partition!
-[   16.478865] mdadm: sending ioctl 1261 to a partition!
-[   16.478869] mdadm: sending ioctl 1261 to a partition!
-[ 3885.067642] mdadm: sending ioctl 1261 to a partition!
-[ 3885.067648] mdadm: sending ioctl 1261 to a partition!
-[ 3885.068683] mdadm: sending ioctl 1261 to a partition!
-[ 3885.068687] mdadm: sending ioctl 1261 to a partition!
-[ 3885.088444] mdadm: sending ioctl 1261 to a partition!
-[ 3885.088450] mdadm: sending ioctl 1261 to a partition!
-[ 3886.446271] mdadm: sending ioctl 1261 to a partition!
-[ 3886.446277] mdadm: sending ioctl 1261 to a partition!
-[ 3886.470887] mdadm: sending ioctl 1261 to a partition!
-[ 3886.470893] mdadm: sending ioctl 1261 to a partition!
-[ 3886.473206] mdadm: sending ioctl 1261 to a partition!
-========================
-Q: What's in your /etc/mdadm.conf?
-==============
+[...]
 
-# mdadm.conf
-#
-# Please refer to mdadm.conf(5) for information about this file.
-#
+> The 'freeze' features of XFS does not rely on snapshotting, it
+> relies on suspending all processes that are writing to the
+> filetree, so updates are avoided for the duration.
 
-# by default, scan all partitions (/proc/partitions) for MD superblocks.
-# alternatively, specify devices to scan, using wildcards if desired.
-DEVICE partitions
+xfs_freeze was moved into the VFS in 2.6.29 and is called automatically
+when doing an LVM snapshot of any Linux FS supporting such.  Thus,
+snapshotting relies on xfs_freeze, not the other way round.  And
+xfs_freeze doesn't suspend all processes that are writing to the
+filesystem.  All write system calls to the filesystem are simply halted,
+and the process blocks on IO until the filesystem is unfrozen.
 
-# auto-create devices with Debian standard permissions CREATE owner=root
-group=disk mode=0660 auto=yes
+> As the XFS team have been adding or planning to add various "new"
+> features like checksums, maybe one day they will add COW to XFS
+> too (not such an easy task when considering how large XFS extents
+> can be, but the hole punching code can help there).
 
-# automatically tag new arrays as belonging to the local system HOMEHOST
-<system>
+Not at all an easy rewrite of XFS.  And that's what COW would be, a
+massive rewrite.  Copy on write definitely has some advantages for some
+usage scenarios, but it's not yet been proven the holy grail of
+filesystem design.
 
-# instruct the monitoring daemon where to send mail alerts MAILADDR root
-
-# definitions of existing MD arrays
-
-# This file was auto-generated on Fri, 03 Oct 2008 07:40:26 -0700 # by
-mkconf $Id$ ==================
-
-If /etc/mdadm.conf says sda1 and sdb1, fix it and do whatever you need to do
-on Ubuntu to rebuild your initrd/initramfs (so that your edited mdadm.conf
-goes into it), then reboot.
-
-I'll look up mdadm.conf and figure out how to add the lines that aren't
-there.
-
-Hope something somewhere in amongst this lot helps...
-
-Cheers,
-
-John.
-
-
+-- 
+Stan
