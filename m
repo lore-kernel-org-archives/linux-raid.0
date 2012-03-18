@@ -1,27 +1,41 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [PATCH 2/3] lib/raid6: update test program recovery functions
-Date: Sat, 17 Mar 2012 18:05:39 -0700
-Message-ID: <4F6534E3.5000200@zytor.com>
-References: <1331939167-10787-1-git-send-email-james.t.kukunas@linux.intel.com> <1331939167-10787-3-git-send-email-james.t.kukunas@linux.intel.com> <1331974344.3602.4.camel@mattotaupa> <20120318002941.GA12405@jtkukuna_gentoo_sb.jf.intel.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [patch 0/7] Add TRIM support for raid linear/0/1/10
+Date: Sun, 18 Mar 2012 10:03:31 +0800
+Message-ID: <CANejiEU5t+Gq-4c=imR9CUNbs32jdLjBZrBw4PWy_UCRGp0==g@mail.gmail.com>
+References: <20120312030412.375458948@fusionio.com>
+	<20120314132422.3aeb6d49@notabene.brown>
+	<4F6006C3.4010204@kernel.org>
+	<4F64D493.9010404@teksavvy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120318002941.GA12405@jtkukuna_gentoo_sb.jf.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jim Kukunas <james.t.kukunas@linux.intel.com>
-Cc: Paul Menzel <pm.debian@googlemail.com>, linux-raid@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4F64D493.9010404@teksavvy.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark Lord <kernel@teksavvy.com>
+Cc: NeilBrown <neilb@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>
 List-Id: linux-raid.ids
 
-On 03/17/2012 05:29 PM, Jim Kukunas wrote:
-> 
-> The reason for this change is that <linux/module.h> drags in headers which
-> are not visible to userspace, thus breaking the build for the test program.
-> 
-> You are correct, it should be mentioned in the commit message.
-> 
-
-Sounds like it should be a separate commit, at the head of the series.
-
-	-hpa
-
+2012/3/18 Mark Lord <kernel@teksavvy.com>:
+> On 12-03-13 10:47 PM, Shaohua Li wrote:
+>> On 3/14/12 10:24 AM, NeilBrown wrote:
+>>> =A0On Mon, 12 Mar 2012 11:04:12 +0800 Shaohua Li <shli@fusionio.com=
+> wrote:
+> ..
+>>> =A0Also I wonder about handling failure in RAID1.
+>>> =A0I think the code will currently treat it like a write error, and
+>>> =A0maybe record a bad block (then fail the device is writing the ba=
+dblock
+>>> =A0record fails). Is that what were want?
+>> Mainly to simplify the code. And I thought a normal discard should n=
+ot fail.
+>> If it fails, something is wrong, marked it as badblock maybe not bad=
+=2E
+>
+> That sounds like a VERY bad idea.
+> Failures happen for lots of reasons,
+> but generic comm errors are not an excuse to suddenly mark sectors as=
+ bad.
+Not sure if I got it, but we treat discard similar like write. Did you
+mean discard
+request error is common?
