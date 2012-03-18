@@ -1,56 +1,66 @@
-From: Zdenek Kaspar <zkaspar82@gmail.com>
-Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier
-Date: Sat, 17 Mar 2012 23:10:43 +0100
-Message-ID: <4F650BE3.5010305@gmail.com>
-References: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com>
+From: Jim Kukunas <james.t.kukunas@linux.intel.com>
+Subject: Re: [PATCH 2/3] lib/raid6: update test program recovery functions
+Date: Sat, 17 Mar 2012 17:29:41 -0700
+Message-ID: <20120318002941.GA12405@jtkukuna_gentoo_sb.jf.intel.com>
+References: <1331939167-10787-1-git-send-email-james.t.kukunas@linux.intel.com>
+ <1331939167-10787-3-git-send-email-james.t.kukunas@linux.intel.com>
+ <1331974344.3602.4.camel@mattotaupa>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1331974344.3602.4.camel@mattotaupa>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jessie Evangelista <jessie.evangelista@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Paul Menzel <pm.debian@googlemail.com>
+Cc: linux-raid@vger.kernel.org, hpa@zytor.com
 List-Id: linux-raid.ids
 
-Dne 15.3.2012 1:30, Jessie Evangelista napsal(a):
-> I want to create a raid10,n2 using 3 1TB SATA drives.
-> I want to create an xfs filesystem on top of it.
-> The filesystem will be used as NFS/Samba storage.
-> 
-> mdadm --zero /dev/sdb1 /dev/sdc1 /dev/sdd1
-> mdadm -v --create /dev/md0 --metadata=1.2 --assume-clean
-> --level=raid10 --chunk 256 --raid-devices=3 /dev/sdb1 /dev/sdc1
-> /dev/sdd1
-> mkfs -t xfs -l lazy-count=1,size=128m -f /dev/md0
-> mount -t xfs -o barrier=1,logbsize=256k,logbufs=8,noatime /dev/md0
-> /mnt/raid10xfs
-> 
-> Will my files be safe even on sudden power loss? Is barrier=1 enough?
-> Do i need to disable the write cache?
-> with: hdparm -W0 /dev/sdb /dev/sdc /dev/sdd
-> 
-> I tried it but performance is horrendous.
-> 
-> Am I better of with ext4? Data safety/integrity is the priority and
-> optimization affecting it is not acceptable.
-> 
-> Thanks and any advice/guidance would be appreciated
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sat, Mar 17, 2012 at 09:52:24AM +0100, Paul Menzel wrote:
+> Dear Jim,
 
-I think today you're most safe with old ext3. Maybe data=journal is not
-best idea, because it has small user-base. The more aggressive caching
-and features leading to awesome performance will bite you harder by
-power loss or software bugs.
+Hi Paul, 
 
-Limit power loss with UPS unit. You need to cleanly shutdown the system
-when UPS reaches it's low level capacity. That's mandatory IMO and still
-inexpensive. Next you can think about multiple PSU/UPS units...
+> 
+> 
+> Am Freitag, den 16.03.2012, 16:06 -0700 schrieb Jim Kukunas:
+> > Test each combination of recovery and syndrome generation
+> > functions.
+> > 
+> > Signed-off-by: Jim Kukunas <james.t.kukunas@linux.intel.com>
+> > ---
+> >  lib/raid6/algos.c     |    2 +-
+> >  lib/raid6/test/test.c |   32 +++++++++++++++++++++-----------
+> >  lib/raid6/x86.h       |   13 ++++++++-----
+> >  3 files changed, 30 insertions(+), 17 deletions(-)
+> > 
+> > diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
+> > index a3ac58a..82cdd01 100644
+> > --- a/lib/raid6/algos.c
+> > +++ b/lib/raid6/algos.c
+> > @@ -17,12 +17,12 @@
+> >   */
+> >  
+> >  #include <linux/raid/pq.h>
+> > -#include <linux/module.h>
+> >  #include "x86.h"
+> >  #ifndef __KERNEL__
+> >  #include <sys/mman.h>
+> >  #include <stdio.h>
+> >  #else
+> > +#include <linux/module.h>
+> 
+> that change is not mentioned in the commit message as far as I can see.
+> 
 
-But just think in a way that you will never make it 100% safe, so use
-damn good backups!
+The reason for this change is that <linux/module.h> drags in headers which
+are not visible to userspace, thus breaking the build for the test program.
 
-HTH, Z.
+You are correct, it should be mentioned in the commit message.
+
+Thanks, 
+
+<snip>
+
+-- 
+Jim Kukunas
+Intel Open Source Technology Center
