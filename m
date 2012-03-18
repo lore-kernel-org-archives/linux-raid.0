@@ -1,86 +1,76 @@
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
-Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier
-Date: Sun, 18 Mar 2012 02:09:47 +0000
-Message-ID: <20325.17387.216150.45013@tree.ty.sabi.co.UK>
+From: pg@lxra2.for.to.sabi.co.UK (Peter Grandi)
+Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier (GiB alignment)
+Date: Sun, 18 Mar 2012 00:08:13 +0000
+Message-ID: <20325.10093.799412.765971@tree.ty.sabi.co.UK>
 References: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com>
 	<4F61803A.60009@hardwarefreak.com>
 	<CAA8mOyCzs36YD_QUMq25HQf8zuq1=tmSTPjYdoFJwy2Oq9sLmw@mail.gmail.com>
 	<20321.63389.586851.689070@tree.ty.sabi.co.UK>
-	<4F64115D.50208@hardwarefreak.com>
-	<20120317223454.GQ5091@dastard>
+	<CAA8mOyCUCyzGCuNtn4txFuBtbk22M6LRpShNVH_Szb5=_F1PBw@mail.gmail.com>
+	<20322.29849.917554.794740@tree.ty.sabi.co.UK>
+	<CAA8mOyC-xCcNxQFz-M1_TfnxcGBmpUdQ57_vYNVF11jhWK3SSA@mail.gmail.com>
+	<20324.44842.473837.511238@tree.ty.sabi.co.UK>
+	<4F650493.7080709@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120317223454.GQ5091@dastard>
+In-Reply-To: <4F650493.7080709@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux fs XFS <xfs@OSS.SGI.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>, Linux fs XFS <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
-[ ... ]
+>> I often recommend aligning partitions to 1GiB, also because I
+>> like to have 1GiB or so of empty space at the very beginning
+>> and end of a drive.
 
-> Just ignore the troll, Stan.
+> I'm really curious why do you use such alignment? I can think
+> about few reasons, but most practical I think you like to
+> slice in gigabyte sizes.
 
-It is noticeable that Stan and you have chosen to write offtopic
-"contributions" that contain purely personal attacks in reply to a
-technical point about =ABguidance on write-cache/barrier=BB, but I'll
-try to keep ontopic:
+Indeed, and to summarize:
 
-> [ ... ] irrelevant semantic arguments about the definition of
-> "performance optimisation" [ ... ]
+* As mentioned before, I usually leave a chunk of unused space
+  at the very start and end of a drive. This also because:
+  - Many head landing accidents happen at the start or end of a
+    drive.
+  - Free space at the start: sometimes it is useful to have a
+    few seconds of grace at the start when duplicating a drive
+    to realize one has mistyped the name, and many partitioning
+    or booting schemes can use a bit of free space at the start.
+    Consider XFS and its use of sector 0.
+  - Free space at the end: many drives have slightly different
+    sizes, and this can cause problems when for example
+    rebuilding arrays, or doing backups, and leaving some bit
+    unused can avoid a lot of trouble.
 
-Oops, here is instead a (handwaving) technical argument, I
-partially retract the above.
+* Having even sizes for partitions means that it may be easier
+  to image copy them from one drive to another. I often to do
+  that. Indeed I usually create partitions of a few "standard"
+  sizes, usually tailored to fit drives that tend also to come
+  in fairly standard increments, because drive manufacturers in
+  each new platter generation usually aim at a fairly standard
+  factor of improvement. Standard drive sizes tend to be, in
+  gigabytes: 80 160 250 500 1000 1500 2000 3000. Since 80 and
+  160 are somewhat old and no longer used, I currently tend to
+  do partitions in sizes like 230GiB, 460GiB, 920GiB etc. SSDs
+  have somewhat complicated this.
 
-  Note: I have 'grep'ed for =AB"performance optimisation"=BB and it
-    seems to me a made-up quote for this thread, and no argument
-    has been made by me about the =ABdefinition of "performance
-    optimisation"=BB, and the above point seem to me a strong
-    misrepresentation.
+* On a contemporary drive 1GiB is a rather small fraction of the
+  capacity of a drive, so why not just align everything to 1GiB,
+  even if it seems pretty large in absolute terms? And if you
+  align the first partition to start at 1GiB, and leave free
+  space at the end, it is farily natural to align everything in
+  between on 1GiB boundaries.
 
-The (handwaving) technical argument above seems to me a laughable
-attempt to attribute respectability to the disregard for how
-important is the difference between improving speed at the same
-(implicit) safety level vs. doing so at a lower one, even more so
-as (implicit) safety is an important theme in this thread, and my
-argument (quite different from the above misrepresentation) was in
-essence:
+In this as in many other cases I like to buy myself some extra
+degrees of freedom if they are cheap.
 
- =ABThere have been decent but no major improvements in XFS metadata
-  *performance*, but weaker implicit *semantics* have been made an
-  option, and these have a different safety/performance tradeoff
-  (less implicit safety, somewhat more performance), not "just"
-  better performance.=BB
+Another example I have written about previously is specifying
+advisedly chosen 'sunit' and 'swidth' even on non-RAID volumes,
+or non-parity RAID setups, not because they really improve
+things, but because the cost is minimal and it might come useful
+later.
 
-The relevance of pointing out that there is a big tradeoff is is
-demonstrated by the honest mention in 'delaylog.txt' that =ABthe
-potential for loss of metadata on a crash is much greater than for
-the existing logging mechanism=BB, which seems far from merely
-=ABsemantic arguments=BB as the potential for =ABmany thousands of
-transactions that simply did not occur as a result of the crash=BB is
-not purely a matter of =ABsemantic arguments=BB, and indeed mattered a
-lot to the topic of the thread, where the 'Subject:' is:
-
-  =ABraid10n2/xfs setup guidance on write-cache/barrier=BB
-                      =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-It seems to me that http://packages.debian.org/sid/eatmydata could
-also be described boldly and barely as making a =ABsignificant
-difference in [XFS] metadata performance=BB because its description
-says =ABThis has two side-effects: making software that writes data
-safely to disk a lot quicker=BB even if continues =ABand making this
-software no longer crash safe.=BB
-
-If considering both the speed and safety aspect is irrelevant
-semantics, then it seems to me that:
-
-  http://sandeen.net/wordpress/computers/fsync-sigh/
-
-would be about =ABirrelevant semantic arguments=BB too, instead od
-being a sensible discussion of tradeoffs between speed and safety.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Note: I *really* like to be able to do partition image copies,
+    because they are so awesomely faster than treewise ones.
