@@ -1,40 +1,66 @@
-From: Jim Kukunas <james.t.kukunas@linux.intel.com>
-Subject: [PATCH 1/4] lib/raid6: fix test program build
-Date: Mon, 19 Mar 2012 11:10:46 -0700
-Message-ID: <1332180649-9709-2-git-send-email-james.t.kukunas@linux.intel.com>
-References: <1332180649-9709-1-git-send-email-james.t.kukunas@linux.intel.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1332180649-9709-1-git-send-email-james.t.kukunas@linux.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: hpa@zytor.com
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: Re: [patch v2 0/6] Add TRIM support for raid linear/0/1/10
+Date: Mon, 19 Mar 2012 19:38:04 +0000 (GMT)
+Message-ID: <alpine.LRH.2.02.1203181824590.24824@diagnostix.dwd.de>
+References: <20120316073213.656519005@fusionio.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120316073213.656519005@fusionio.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@fusionio.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de, axboe@kernel.dk, vgoyal@redhat.com, martin.petersen@oracle.com
 List-Id: linux-raid.ids
 
-<linux/module.h> drags in headers which are not visible to userspace,
-thus breaking the build for the test program.
+Hello,
 
-Signed-off-by: Jim Kukunas <james.t.kukunas@linux.intel.com>
----
- lib/raid6/algos.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Fri, 16 Mar 2012, Shaohua Li wrote:
 
-diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
-index 8b02f60..f6a0f78 100644
---- a/lib/raid6/algos.c
-+++ b/lib/raid6/algos.c
-@@ -17,11 +17,11 @@
-  */
- 
- #include <linux/raid/pq.h>
--#include <linux/module.h>
- #ifndef __KERNEL__
- #include <sys/mman.h>
- #include <stdio.h>
- #else
-+#include <linux/module.h>
- #include <linux/gfp.h>
- #if !RAID6_USE_EMPTY_ZERO_PAGE
- /* In .bss so it's zeroed */
--- 
-1.7.3.4
+> The patches add TRIM support for raid linear/0/1/10. I'll add TRIM support for
+> raid 4/5/6 later. The implementation is pretty straightforward and
+> self-explained.
+>
+> v1->v2:
+> 1. fixed a checking issue
+> 2. dropped discard request plug and replace it with no discard merege, because
+> current SCSI layer can't handle discard request merge.
+>
+Have tested TRIM patches on three different systems with the following
+hardware/ setup:
 
+    1) root mounted on a raid1 over two SAS SSD's (200GB) and /home partition
+       on a raid0 over a fusionio ioDrive Duo. Is very new and seen very
+       little usage.
+
+    2) root and /home mounted on a raid0 over two Intel X25 Postville
+       (160GB) connected to a Intel P55 Express chipset. Has seen very
+       heavy usage for approx. 2 years.
+
+    3) root and /home mounted on a raid0 over three OCZ-VERTEX2 (120GB)
+       connected via ICH7 south bridge. Has seen mild usage for approx.
+       1.5 years.
+
+Made the following observations when running my own benchmark which
+copies around a lot of small files and deletes them. The benchmark on
+all systems was always run only on the /home partition ie. on a raid0.
+
+For system 1) there is hardly any measurable differnce whether discard
+is enabled or not (~29000 files per second).
+
+On system 2) the performance drops from 6500->3700 files per second,
+but under normal usage one does not notice any difference.
+
+System 3) has problems during boot, it is so slow that some operations
+receive a timeout during boot:
+
+   udevd[474]: timeout '/sbin/blkid -o udev -p /dev/md0'
+   udevd[474]: timeout: killing '/sbin/blkid -o udev -p /dev/md0' [866]
+   systemd[1]: dev-md3.swap activation timed out. Stopping.
+
+Even removing discard does not help and the above errors happen during
+boot and booting takes a long time.
+
+The performance in the benchmark drops from 4000->600 files per second.
+
+Regards,
+Holger
