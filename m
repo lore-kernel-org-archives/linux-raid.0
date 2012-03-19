@@ -1,71 +1,73 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: raid10 regression: unrecoverable raids
-Date: Mon, 19 Mar 2012 12:15:07 +0100
-Message-ID: <4F67153B.8090900@redhat.com>
-References: <4F6711AB.7010906@redhat.com> <20120319220801.23671fc5@notabene.brown>
+From: Larkin Lowrey <llowrey@nuclearwinter.com>
+Subject: Kernel oops adding bitmap
+Date: Mon, 19 Mar 2012 11:44:45 -0500
+Message-ID: <4F67627D.8050205@nuclearwinter.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120319220801.23671fc5@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 03/19/12 12:08, NeilBrown wrote:
-> On Mon, 19 Mar 2012 11:59:55 +0100 Jes Sorensen <Jes.Sorensen@redhat.com>
-> wrote:
-> 
->> Hi,
->>
->> commit 2bb77736ae5dca0a189829fbb7379d43364a9dac
->> Author: NeilBrown <neilb@suse.de>
->> Date:   Wed Jul 27 11:00:36 2011 +1000
->>
->>     md/raid10: Make use of new recovery_disabled handling
->>
->> Caused a serious regression making it impossible to recover certain o2
->> layout raid10 arrays if they get enter a double degraded state.
->>
->> If I create an array like this:
->>
->> root@monkeybay ~]# mdadm --create /dev/md25 --raid-devices=4 --chunk=512
->> --level=raid10 --layout=o2  --assume-clean  /dev/sda4 missing missing
->> /dev/sdd4
-> 
-> o2 places data thus:
-> 
->   A  B  C  D
->   D  A  B  C
-> 
-> where columns are devices.
-> 
-> You've created an array with no place to store B.
-> mdadm or really shouldn't let you do that.  That is the bug.
+The following command oopsed.
 
-Here I was thinking it would rely on alien storage that would get
-swapped in magically when something was missing ;)
+mdadm -G --bitmap=internal /dev/md0
 
-Actually I thought raid10 here as operating more as two raid1's
-concatenated.
+The array is a two disk raid1 and hosts the root filesystem.
 
->> mdadm: Defaulting to version 1.2 metadata
->> mdadm: array /dev/md25 started.
->>
->> Then adding a spare like this:
->> [root@monkeybay ~]# mdadm -a /dev/md25 /dev/sdb4
->> mdadm: added /dev/sdb4
->>
->> The spare ends up being added into slot 4 rather than into the empty
->> slot 1 and the array never rebuilds.
-> 
-> How could it rebuild?  There is nowhere to get B from.
-> 
-> I'm surprised this every "worked"... but maybe I'm missing something.
+Is it not possible/allowed to add a bitmap to an active/mounted array?
 
-Well it seems to be more -ENOCLUE from my side here :) Should we do
-something in mdadm to prevent creating an array this way?
+[  339.521575] scsi_verify_blk_ioctl: 662 callbacks suppressed
+[  339.531128] mdadm: sending ioctl 1261 to a partition!
+[  339.539999] mdadm: sending ioctl 1261 to a partition!
+[  339.549504] mdadm: sending ioctl 1261 to a partition!
+[  339.558273] mdadm: sending ioctl 1261 to a partition!
+[  339.570764] md0: bitmap file is out of date (0 < 47) -- forcing full
+recovery
+[  339.574628] mdadm: sending ioctl 800c0910 to a partition!
+[  339.574635] mdadm: sending ioctl 800c0910 to a partition!
+[  339.574646] mdadm: sending ioctl 1261 to a partition!
+[  339.574650] mdadm: sending ioctl 1261 to a partition!
+[  339.580825] mdadm: sending ioctl 800c0910 to a partition!
+[  339.580832] mdadm: sending ioctl 800c0910 to a partition!
+[  339.634433] created bitmap (1 pages) for device md0
+[  341.719752] BUG: unable to handle kernel NULL pointer dereference at
+0000000000000010
+[  341.720673] IP: [<ffffffff81473cc0>] bitmap_endwrite+0x130/0x250
+[  341.720673] PGD 0
+[  341.720673] Oops: 0000 [#1] SMP
+[  341.720673] CPU 1
+[  341.720673] Modules linked in: lockd it87 hwmon_vid ip6t_REJECT
+nf_conntrack_ipv6 nf_defrag_ipv6 ip6table_filter nf_conntrack_ipv4
+nf_defrag_ipv4 xt_state ip6_tables nf_conntrack keyspan
+snd_hda_codec_hdmi snd_hda_intel snd_hda_codec snd_hwdep snd_seq
+snd_seq_device microcode edac_core sp5100_tco snd_pcm edac_mce_amd
+i2c_piix4 r8169 k10temp mii serio_raw snd_timer snd soundcore
+snd_page_alloc shpchp uinput sunrpc raid456 async_raid6_recov async_pq
+raid6_pq async_xor xor async_memcpy async_tx pata_acpi ata_generic raid0
+raid1 firewire_ohci firewire_core crc_itu_t pata_atiixp mvsas libsas
+scsi_transport_sas wmi radeon ttm drm_kms_helper drm i2c_algo_bit
+i2c_core [last unloaded: scsi_wait_scan]
+[  341.720673]
+[  341.720673] Pid: 0, comm: swapper/1 Not tainted 3.2.9-1.fc16.x86_64
+#1 Gigabyte Technology Co., Ltd. GA-MA790GPT-UD3H/GA-MA790GPT-UD3H
+[  341.720673] RIP: 0010:[<ffffffff81473cc0>]  [<ffffffff81473cc0>]
+bitmap_endwrite+0x130/0x250
+[  341.867091] RSP: 0018:ffff880227c43b90  EFLAGS: 00010046
+[  341.867091] RAX: 0000000000000000 RBX: ffff8802110edd00 RCX:
+0000000000000000
+[  341.867091] RDX: 00000000000000a4 RSI: 00000000000008a4 RDI:
+0000000000000000
+[  341.867091] RBP: ffff880227c43bf0 R08: 0000000000000000 R09:
+000000000000000b
+[  341.867091] R10: 0000000000000000 R11: 0000000000000001 R12:
+0000000001485d40
+[  341.867091] R13: ffff8802110edd3c R14: 0000000000000202 R15:
+0000000000000008
+[  341.867091] FS:  00007fa3e76bd7c0(0000) GS:ffff880227c40000(0000)
+knlGS:0000000000000000
 
-Cheers,
-Jes
+This is all I got over the serial console.
+
+--Larkin
