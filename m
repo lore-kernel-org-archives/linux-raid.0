@@ -1,53 +1,57 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: lib/raid6: SSSE3 optimized recovery functions v1
-Date: Mon, 19 Mar 2012 23:00:19 +0000
-Message-ID: <CADNH=7HV2UrkEb9J7dppMrwmy1264wmXgApmE+xKb6S=hdeq3A@mail.gmail.com>
-References: <1332180649-9709-1-git-send-email-james.t.kukunas@linux.intel.com>
-	<4F67B6BC.4070006@zytor.com>
+From: Chris Francy <zoredache@gmail.com>
+Subject: Array Size differences between mdadm --detail and --examine
+Date: Mon, 19 Mar 2012 16:04:34 -0700
+Message-ID: <CAM8ZctUH--UJmKi56UJNmDss67uzQycLyx1tP0qeyB9GCFBc0g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F67B6BC.4070006@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Jim Kukunas <james.t.kukunas@linux.intel.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 19 March 2012 22:44, H. Peter Anvin <hpa@zytor.com> wrote:
-> On 03/19/2012 11:10 AM, Jim Kukunas wrote:
->> Hi Folks,
->>
->> The following patchset adds SSSE3 optimized recovery
->> functions to RAID6.
->>
->> This version differs from version 0, in that the build fix for the
->> test program was split into a separate patch.
->>
->> A technical description of the algorithm can be found
->> at http://www.kernel.org/pub/linux/kernel/people/hpa/raid6.pdf
->>
->
-> Reviewed-by: H. Peter Anvin <hpa@zytor.com>
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0-hpa
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
+I am seeing a different array size with mdadm --detail and --examine,
+and I don't understand why.
 
-Hi,
+I have seen this on a production systems, but I created an array in a
+VM for testing purposes, and I am seeing the same results.
 
-Interesting! I read the PDF but could not find any numbers. Have you
-performed any benchmarks on RAID6 recovery on SSSE3 hardware with and
-without your patch?
+I have a 5 device RAID10 with created like so.  It has 5 members 8GB
+each.  Which I believe should result in an array size of ~20GB.
 
-Best regards,
-Mathias
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+    mdadm -v --create  /dev/md0 --assume-clean \
+       --level=raid10 --layout=o2 --raid-devices=5 \
+       --chunk=64 \
+       /dev/sdb2 /dev/sdc2 /dev/sdd2 /dev/sde2 /dev/sdf2
+
+mdadm --detail reports an array size of ~20GiB
+
+  root@debian:~# mdadm --detail /dev/md0
+  /dev/md0:
+    Creation Time : Fri Mar 16 16:06:09 2012
+       Raid Level : raid10
+       Array Size : 20960960 (19.99 GiB 21.46 GB)
+    Used Dev Size : 8384384 (8.00 GiB 8.59 GB)
+
+mdadm --examine reports an array size of ~16GiB
+
+  root@debian:~# mdadm --examine /dev/sdb2  /dev/sdd2 /dev/sde2 /dev/sdf2
+  /dev/sdb2:
+   Avail Dev Size : 16769024 (8.00 GiB 8.59 GB)
+       Array Size : 33537536 (15.99 GiB 17.17 GB)
+    Used Dev Size : 16768768 (8.00 GiB 8.59 GB)
+
+Most of my testing was done on a Debian squeeze system, but I manually
+compiled and installed mdadm 3.2.3 and I also saw the same confusing
+output from a Gentoo based livecd with a recent kernel.
+
+The full output of the mdadm output is pasted available here.
+http://paste.debian.net/160057/
+
+The array in the VM seems to work fine, I was able to create a
+filesystem and store data on it.  But the output from the --examine is
+confusing.
+
+The same is true with the use Dev size  `8384384 (8.00 GiB 8.59 GB)`
+versus `16768768 (8.00 GiB 8.59 GB)`.
+
+Chris Francy
