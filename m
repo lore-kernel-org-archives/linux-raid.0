@@ -1,66 +1,105 @@
-From: Holger Kiehl <Holger.Kiehl@dwd.de>
-Subject: Re: [patch v2 0/6] Add TRIM support for raid linear/0/1/10
-Date: Mon, 19 Mar 2012 19:38:04 +0000 (GMT)
-Message-ID: <alpine.LRH.2.02.1203181824590.24824@diagnostix.dwd.de>
-References: <20120316073213.656519005@fusionio.com>
+From: Pavel Hofman <pavel.hofman@ivitera.com>
+Subject: Re: How to update homehost of an existing raid component
+Date: Mon, 19 Mar 2012 21:21:01 +0100
+Message-ID: <4F67952D.80304@ivitera.com>
+References: <4F670361.6090902@ivitera.com> <4F6762D6.7040602@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120316073213.656519005@fusionio.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaohua Li <shli@fusionio.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de, axboe@kernel.dk, vgoyal@redhat.com, martin.petersen@oracle.com
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4F6762D6.7040602@anonymous.org.uk>
+Sender: linux-raid-owner@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+Dne 19.3.2012 17:46, John Robinson napsal(a):
+> On 19/03/2012 09:58, Pavel Hofman wrote:
+>> Hi,
+>>
+>> Please is there a way to update a homehost value for a specific raid
+>> component?
+> 
+> I don't think you need to.
+> 
+> [...]
+>> mdadm --verbose -A /dev/md7 --update=homehost --scan
+>>
+>> with no difference. Unfortunately I was not able to find how to change
+>> the homehost of md6 to be local to orfeus. I do not want to force adding
+>> md6 to the array and go through the whole rebuild since the data
+>> themselves are OK.
+> 
+> 
 
-On Fri, 16 Mar 2012, Shaohua Li wrote:
+Hi John,
 
-> The patches add TRIM support for raid linear/0/1/10. I'll add TRIM support for
-> raid 4/5/6 later. The implementation is pretty straightforward and
-> self-explained.
->
-> v1->v2:
-> 1. fixed a checking issue
-> 2. dropped discard request plug and replace it with no discard merege, because
-> current SCSI layer can't handle discard request merge.
->
-Have tested TRIM patches on three different systems with the following
-hardware/ setup:
+Thanks a lot for your answer. Unfortunately both commands keep returning
+the same result:
 
-    1) root mounted on a raid1 over two SAS SSD's (200GB) and /home partition
-       on a raid0 over a fusionio ioDrive Duo. Is very new and seen very
-       little usage.
+orfeus:~# mdadm --verbose --assemble /dev/md7 --update=homehost /dev/md5
+/dev/md6
+mdadm: looking for devices for /dev/md7
+mdadm: /dev/md6 misses out due to wrong homehost
+mdadm: /dev/md5 is identified as a member of /dev/md7, slot 1.
+mdadm: no uptodate device for slot 0 of /dev/md7
+mdadm: added /dev/md5 to /dev/md7 as 1
+mdadm: /dev/md7 assembled from 1 drive - need all 2 to start it (use
+--run to insist).
 
-    2) root and /home mounted on a raid0 over two Intel X25 Postville
-       (160GB) connected to a Intel P55 Express chipset. Has seen very
-       heavy usage for approx. 2 years.
 
-    3) root and /home mounted on a raid0 over three OCZ-VERTEX2 (120GB)
-       connected via ICH7 south bridge. Has seen mild usage for approx.
-       1.5 years.
+> 
+> And if that doesn't do the business, specify --homehost=orfeus
 
-Made the following observations when running my own benchmark which
-copies around a lot of small files and deletes them. The benchmark on
-all systems was always run only on the /home partition ie. on a raid0.
+orfeus:~# mdadm --verbose --assemble /dev/md7 --update=homehost
+--homehost=orfeus /dev/md5 /dev/md6
+mdadm: looking for devices for /dev/md7
+mdadm: /dev/md6 misses out due to wrong homehost
+mdadm: /dev/md5 is identified as a member of /dev/md7, slot 1.
+mdadm: no uptodate device for slot 0 of /dev/md7
+mdadm: added /dev/md5 to /dev/md7 as 1
+mdadm: /dev/md7 assembled from 1 drive - need all 2 to start it (use
+--run to insist).
 
-For system 1) there is hardly any measurable differnce whether discard
-is enabled or not (~29000 files per second).
+orfeus:~# mdadm --version
+mdadm - v3.1.4 - 31st August 2010
 
-On system 2) the performance drops from 6500->3700 files per second,
-but under normal usage one does not notice any difference.
+orfeus:~# uname -a
+Linux orfeus 2.6.26-bpo.1-amd64 #1 SMP Sat Sep 20 10:26:59 UTC 2008
+x86_64 GNU/Linux
 
-System 3) has problems during boot, it is so slow that some operations
-receive a timeout during boot:
 
-   udevd[474]: timeout '/sbin/blkid -o udev -p /dev/md0'
-   udevd[474]: timeout: killing '/sbin/blkid -o udev -p /dev/md0' [866]
-   systemd[1]: dev-md3.swap activation timed out. Stopping.
+Since I need the server working (it is a company central backup server),
+I forced starting md7 in degraded mode by including the --run parameter
+and re-added md6 afterwards. Since both components carry the
+write-intent bitmap and the degraded array was not accessed in the
+meantime, md6 was re-added without any synchronization.
 
-Even removing discard does not help and the above errors happen during
-boot and booting takes a long time.
+Still, md6 is not local to orfeus:
 
-The performance in the benchmark drops from 4000->600 files per second.
+orfeus:~# mdadm --examine /dev/md6
+/dev/md6:
+....
+           Name : 'orfeus':7
+...
+
+While md5 is:
+
+orfeus:~# mdadm --examine /dev/md5
+/dev/md5:
+....
+           Name : orfeus:7  (local to host orfeus)
+....
+
+
+Next time the problem will arise again. No idea how to force md6 to
+become local. It looks as if md6 was created in some preliminary stage
+of homehost support and its current homehost format is not supported by
+the mdadm utils. Just my guess though.
+
+John, once more thank you for your invaluable help.
 
 Regards,
-Holger
+
+
+Pavel.
