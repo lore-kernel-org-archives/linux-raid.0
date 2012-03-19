@@ -1,109 +1,71 @@
-From: Pavel Hofman <pavel.hofman@ivitera.com>
-Subject: How to update homehost of an existing raid component
-Date: Mon, 19 Mar 2012 10:58:57 +0100
-Message-ID: <4F670361.6090902@ivitera.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: raid10 regression: unrecoverable raids
+Date: Mon, 19 Mar 2012 12:15:07 +0100
+Message-ID: <4F67153B.8090900@redhat.com>
+References: <4F6711AB.7010906@redhat.com> <20120319220801.23671fc5@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120319220801.23671fc5@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On 03/19/12 12:08, NeilBrown wrote:
+> On Mon, 19 Mar 2012 11:59:55 +0100 Jes Sorensen <Jes.Sorensen@redhat.com>
+> wrote:
+> 
+>> Hi,
+>>
+>> commit 2bb77736ae5dca0a189829fbb7379d43364a9dac
+>> Author: NeilBrown <neilb@suse.de>
+>> Date:   Wed Jul 27 11:00:36 2011 +1000
+>>
+>>     md/raid10: Make use of new recovery_disabled handling
+>>
+>> Caused a serious regression making it impossible to recover certain o2
+>> layout raid10 arrays if they get enter a double degraded state.
+>>
+>> If I create an array like this:
+>>
+>> root@monkeybay ~]# mdadm --create /dev/md25 --raid-devices=4 --chunk=512
+>> --level=raid10 --layout=o2  --assume-clean  /dev/sda4 missing missing
+>> /dev/sdd4
+> 
+> o2 places data thus:
+> 
+>   A  B  C  D
+>   D  A  B  C
+> 
+> where columns are devices.
+> 
+> You've created an array with no place to store B.
+> mdadm or really shouldn't let you do that.  That is the bug.
 
-Please is there a way to update a homehost value for a specific raid
-component?
+Here I was thinking it would rely on alien storage that would get
+swapped in magically when something was missing ;)
 
-md7 is raid1 composed of md5 and md6. UUID of md7 is listed in mdadm.conf:
+Actually I thought raid10 here as operating more as two raid1's
+concatenated.
 
-ARRAY /dev/md7 level=raid1 num-devices=2 metadata=01.00
-UUID=dde16cd5:2e17c743:fcc7926c:fcf5081e
+>> mdadm: Defaulting to version 1.2 metadata
+>> mdadm: array /dev/md25 started.
+>>
+>> Then adding a spare like this:
+>> [root@monkeybay ~]# mdadm -a /dev/md25 /dev/sdb4
+>> mdadm: added /dev/sdb4
+>>
+>> The spare ends up being added into slot 4 rather than into the empty
+>> slot 1 and the array never rebuilds.
+> 
+> How could it rebuild?  There is nowhere to get B from.
+> 
+> I'm surprised this every "worked"... but maybe I'm missing something.
 
+Well it seems to be more -ENOCLUE from my side here :) Should we do
+something in mdadm to prevent creating an array this way?
 
-Every time I reboot, md7 is auto assembled only from md5. When running
-manually, I get
-
-mdadm  --verbose -A /dev/md7  --scan
-...
-mdadm: /dev/md6 misses out due to wrong homehost
-...
-
-
-Indeed, all the raid components (there are many more belonging to
-different raids on my machine) list the "local to host orfeus" homehost,
-such as:
-
-orfeus:~# mdadm --examine /dev/md5
-/dev/md5:
-          Magic : a92b4efc
-        Version : 1.0
-    Feature Map : 0x0
-     Array UUID : dde16cd5:2e17c743:fcc7926c:fcf5081e
-           Name : orfeus:7  (local to host orfeus)
-  Creation Time : Wed Jan 19 21:36:19 2011
-     Raid Level : raid1
-   Raid Devices : 2
-
- Avail Dev Size : 4356361184 (2077.27 GiB 2230.46 GB)
-     Array Size : 4356361184 (2077.27 GiB 2230.46 GB)
-   Super Offset : 4356361440 sectors
-          State : clean
-    Device UUID : a4973bb6:2cd83805:ba441193:56321f9b
-
-    Update Time : Mon Mar 19 02:36:33 2012
-       Checksum : 7b8eeffd - correct
-         Events : 11853346
-
-
-   Device Role : Active device 1
-   Array State : AA ('A' == active, '.' == missing)
-
-
-While the md6 has the homehost different:
-orfeus:~# mdadm --examine /dev/md6
-/dev/md6:
-          Magic : a92b4efc
-        Version : 1.0
-    Feature Map : 0x0
-     Array UUID : dde16cd5:2e17c743:fcc7926c:fcf5081e
-           Name : 'orfeus':7
-  Creation Time : Thu Jun 17 22:51:47 2010
-     Raid Level : raid1
-   Raid Devices : 2
-
- Avail Dev Size : 4356361184 (2077.27 GiB 2230.46 GB)
-     Array Size : 4356361184 (2077.27 GiB 2230.46 GB)
-   Super Offset : 4356361440 sectors
-          State : clean
-    Device UUID : 9144c9ad:8ee3ed37:69b53956:03bebdd6
-
-    Update Time : Mon Mar 19 02:36:33 2012
-       Checksum : 94c11ff3 - correct
-         Events : 11853346
-
-
-   Device Role : Active device 0
-   Array State : AA ('A' == active, '.' == missing)
-
-
-There is no "local to host orfeus" in homehost of md6. Otherwise, the
-array UUID fits that of md7. It was added after last reboot when the
-array failed to assemble automatically.
-
-Following the man page, I tried running
-
-mdadm --verbose -A /dev/md7 --update=homehost --scan
-
-with no difference. Unfortunately I was not able to find how to change
-the homehost of md6 to be local to orfeus. I do not want to force adding
-md6 to the array and go through the whole rebuild since the data
-themselves are OK.
-
-
-Thanks a lot for any hints and help.
-
-Best regards,
-
-
-Pavel.
+Cheers,
+Jes
