@@ -1,44 +1,31 @@
-From: Larkin Lowrey <llowrey@nuclearwinter.com>
-Subject: Re: Kernel oops adding bitmap
-Date: Mon, 19 Mar 2012 16:40:23 -0500
-Message-ID: <4F67A7C7.1050803@nuclearwinter.com>
-References: <4F67627D.8050205@nuclearwinter.com> <20120320083210.4a272426@notabene.brown>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: lib/raid6: SSSE3 optimized recovery functions v1
+Date: Mon, 19 Mar 2012 15:44:12 -0700
+Message-ID: <4F67B6BC.4070006@zytor.com>
+References: <1332180649-9709-1-git-send-email-james.t.kukunas@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120320083210.4a272426@notabene.brown>
+In-Reply-To: <1332180649-9709-1-git-send-email-james.t.kukunas@linux.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Jim Kukunas <james.t.kukunas@linux.intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 3/19/2012 4:32 PM, NeilBrown wrote:
-> On Mon, 19 Mar 2012 11:44:45 -0500 Larkin Lowrey
-<llowrey@nuclearwinter.com>
-> wrote:
->
->> The following command oopsed.
->>
->> mdadm -G --bitmap=internal /dev/md0
->>
->> The array is a two disk raid1 and hosts the root filesystem.
->>
->> Is it not possible/allowed to add a bitmap to an active/mounted array?
->
-> It is. But it is busted.
->
-> Either use an older mdadm (3.2.2 or earlier), or apply this patch
->
-> http://neil.brown.name/git?p=md;a=commitdiff;h=4474ca42e2577563a919fd3ed782e2ec55bf11a2
->
-> which has been sent to Linus already and should appear in -stable
-kernels in
-> a couple of weeks.
->
-> NeilBrown
+On 03/19/2012 11:10 AM, Jim Kukunas wrote:
+> Hi Folks,
+> 
+> The following patchset adds SSSE3 optimized recovery
+> functions to RAID6.
+> 
+> This version differs from version 0, in that the build fix for the
+> test program was split into a separate patch.
+> 
+> A technical description of the algorithm can be found
+> at http://www.kernel.org/pub/linux/kernel/people/hpa/raid6.pdf
+> 
 
-Thank you for the explanation.
+Reviewed-by: H. Peter Anvin <hpa@zytor.com>
 
---Larkin
-
+	-hpa
