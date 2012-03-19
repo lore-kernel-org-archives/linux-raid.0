@@ -1,31 +1,59 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier
-Date: Mon, 19 Mar 2012 04:07:25 -0500
-Message-ID: <4F66F74D.3030909@hardwarefreak.com>
-References: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com> <4F61803A.60009@hardwarefreak.com> <CAA8mOyCzs36YD_QUMq25HQf8zuq1=tmSTPjYdoFJwy2Oq9sLmw@mail.gmail.com> <20321.63389.586851.689070@tree.ty.sabi.co.UK> <4F64115D.50208@hardwarefreak.com> <20120317223454.GQ5091@dastard> <20325.17387.216150.45013@tree.ty.sabi.co.UK> <20325.50714.237894.328039@tree.ty.sabi.co.UK> <20120318140051.GA2594@infradead.org> <20326.13500.799169.828158@tree.ty.sabi.co.UK>
-Reply-To: stan@hardwarefreak.com
+From: "kedacomkernel" <kedacomkernel@gmail.com>
+Subject: md/raid5:Fix recover/replace stop and start repreatedly if handle stipe failed,because one disk had bad blocks.
+Date: Mon, 19 Mar 2012 18:43:01 +0800
+Message-ID: <201203191842582969959@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20326.13500.799169.828158@tree.ty.sabi.co.UK>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg@lxra2.to.sabi.co.UK>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, Linux fs XFS <xfs@oss.sgi.com>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 3/18/2012 2:17 PM, Peter Grandi wrote:
+From 759a61519343c64066a5a14bb97447878aa1297e Mon Sep 17 00:00:00 2001
+From: majianpeng <majianpeng@gmail.com>
+Date: Mon, 19 Mar 2012 15:59:04 +0800
+Subject: [PATCH] md/raid5:Fix recover/replace stop and start repreatedly if
+ handle stipe failed,because one disk had bad blocks.
 
-> It is noticeable that 90% of your post is pure malicious
-> offtopic personal attack, and the rest is "from on high",
-> and the whole is entirely devoid of technical content.
+When raid5 recovering,then failed because one disk had bad blocks.
+The sync_request() return value which larger than 0 and set
+MD_RECOVERY_INTR.Because the statement if (test_bit(MD_RECOVERY_INTR,
+&mddev->recovery)) first call,so the mddev->curr_resync did not change.
+After the sync done,the mddev->curr_resync did not change.So the
+resync_thread will stop and start repeatedly.
 
-It is noticeable that 100% of my post was technical content, directly
-asked questions of you, yet you chose to respond to Christoph's
-"personal attacks" while avoiding answering my purely technical questions.
+Signed-off-by: majianpeng <majianpeng@gmail.com>
+---
+ drivers/md/md.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-I guess we can assume your silence, your unwillingness to answer my
-questions, is a sign of capitulation.
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index ce88755..370c9d9 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7261,11 +7261,12 @@ void md_do_sync(struct mddev *mddev)
+ 			atomic_add(sectors, &mddev->recovery_active);
+ 		}
+ 
+-		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
+-			break;
+ 
+ 		j += sectors;
+ 		if (j>1) mddev->curr_resync = j;
++
++		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
++			break;
+ 		mddev->curr_mark_cnt = io_sectors;
+ 		if (last_check == 0)
+ 			/* this is the earliest that rebuild will be
 -- 
-Stan
+1.7.5.4
+
+ 				
+--------------
+kedacomkernel
+2012-03-19
+
