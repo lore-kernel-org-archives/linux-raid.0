@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 05/11] Use 4K buffer alignment for superblock allocations
-Date: Tue, 20 Mar 2012 17:54:10 +0100
-Message-ID: <1332262456-5109-6-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 07/11] match_metadata_desc0(): Use calloc instead of malloc+memset
+Date: Tue, 20 Mar 2012 17:54:12 +0100
+Message-ID: <1332262456-5109-8-git-send-email-Jes.Sorensen@redhat.com>
 References: <1332262456-5109-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1332262456-5109-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -12,45 +12,29 @@ List-Id: linux-raid.ids
 
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-To better accommodate 4K sector drives, use 4K buffer alignment for
-superblock buffers.
-
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- super1.c |    6 +++---
+ super0.c |    6 +++---
  1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/super1.c b/super1.c
-index ca9e4e4..513f406 100644
---- a/super1.c
-+++ b/super1.c
-@@ -837,7 +837,7 @@ static int init_super1(struct supertype *st, mdu_array_info_t *info,
- 	int rfd;
- 	char defname[10];
+diff --git a/super0.c b/super0.c
+index d53f025..eca40d2 100644
+--- a/super0.c
++++ b/super0.c
+@@ -942,10 +942,10 @@ static int load_super0(struct supertype *st, int fd, char *devname)
  
--	if (posix_memalign((void**)&sb, 512, SUPER1_SIZE) != 0) {
-+	if (posix_memalign((void**)&sb, 4096, SUPER1_SIZE) != 0) {
- 		fprintf(stderr, Name
- 			": %s could not allocate superblock\n", __func__);
- 		return 0;
-@@ -1220,7 +1220,7 @@ static int compare_super1(struct supertype *st, struct supertype *tst)
- 		return 1;
+ static struct supertype *match_metadata_desc0(char *arg)
+ {
+-	struct supertype *st = malloc(sizeof(*st));
+-	if (!st) return st;
++	struct supertype *st = calloc(1, sizeof(*st));
++	if (!st)
++		return st;
  
- 	if (!first) {
--		if (posix_memalign((void**)&first, 512, SUPER1_SIZE) != 0) {
-+		if (posix_memalign((void**)&first, 4096, SUPER1_SIZE) != 0) {
- 			fprintf(stderr, Name
- 				": %s could not allocate superblock\n", __func__);
- 			return 1;
-@@ -1332,7 +1332,7 @@ static int load_super1(struct supertype *st, int fd, char *devname)
- 		return 1;
- 	}
- 
--	if (posix_memalign((void**)&super, 512, SUPER1_SIZE) != 0) {
-+	if (posix_memalign((void**)&super, 4096, SUPER1_SIZE) != 0) {
- 		fprintf(stderr, Name ": %s could not allocate superblock\n",
- 			__func__);
- 		return 1;
+-	memset(st, 0, sizeof(*st));
+ 	st->container_dev = NoMdDev;
+ 	st->ss = &super0;
+ 	st->info = NULL;
 -- 
 1.7.7.6
 
