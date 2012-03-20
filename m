@@ -1,44 +1,59 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: lib/raid6: SSSE3 optimized recovery functions v1
-Date: Tue, 20 Mar 2012 00:03:15 +0000
-Message-ID: <CADNH=7E2QRVxW875dbe+kMiL1cZJWR2BTEnXig1+72K+X+5WRA@mail.gmail.com>
-References: <1332180649-9709-1-git-send-email-james.t.kukunas@linux.intel.com>
-	<4F67B6BC.4070006@zytor.com>
-	<CADNH=7HV2UrkEb9J7dppMrwmy1264wmXgApmE+xKb6S=hdeq3A@mail.gmail.com>
-	<4F67BFD4.1070104@zytor.com>
+From: "majianpeng" <majianpeng@gmail.com>
+Subject: md/raid5:Fix recover/replace stop and start repreatedly if handle stipe failed,because one disk had bad blocks.
+Date: Tue, 20 Mar 2012 09:20:35 +0800
+Message-ID: <201203200920297652730@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F67BFD4.1070104@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Jim Kukunas <james.t.kukunas@linux.intel.com>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 19 March 2012 23:23, H. Peter Anvin <hpa@zytor.com> wrote:
-> On 03/19/2012 04:00 PM, Mathias Bur=C3=A9n wrote:
->>
->> Hi,
->>
->> Interesting! I read the PDF but could not find any numbers. Have you
->> performed any benchmarks on RAID6 recovery on SSSE3 hardware with an=
-d
->> without your patch?
->>
->
-> I ran some tests on the core algorithm and found it to be about 3x fa=
-ster.
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0-hpa
->
+From 759a61519343c64066a5a14bb97447878aa1297e Mon Sep 17 00:00:00 2001
+From: majianpeng <majianpeng@gmail.com>
+Date: Mon, 19 Mar 2012 15:59:04 +0800
+Subject: [PATCH] md/raid5:Fix recover/replace stop and start repreatedly if
+ handle stipe failed,because one disk had bad blocks.
 
-Great. I can't wait to try it on my Intel Atom (I just found out it
-supports SSSE3).
+When raid5 recovering,then failed because one disk had bad blocks.
+The sync_request() return value which larger than 0 and set
+MD_RECOVERY_INTR.Because the statement if (test_bit(MD_RECOVERY_INTR,
+&mddev->recovery)) first call,so the mddev->curr_resync did not change.
+After the sync done,the mddev->curr_resync did not change.So the
+resync_thread will stop and start repeatedly.
 
-Mathias
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: majianpeng <majianpeng@gmail.com>
+---
+ drivers/md/md.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index ce88755..370c9d9 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7261,11 +7261,12 @@ void md_do_sync(struct mddev *mddev)
+ 			atomic_add(sectors, &mddev->recovery_active);
+ 		}
+ 
+-		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
+-			break;
+ 
+ 		j += sectors;
+ 		if (j>1) mddev->curr_resync = j;
++
++		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
++			break;
+ 		mddev->curr_mark_cnt = io_sectors;
+ 		if (last_check == 0)
+ 			/* this is the earliest that rebuild will be
+-- 
+1.7.5.4
+
+ 				
+--------------
+majianpeng
+2012-03-20
+
