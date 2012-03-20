@@ -1,61 +1,56 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [patch v2 2/6] blk: dont allow discard request merge temporarily
-Date: Tue, 20 Mar 2012 12:21:57 -0400
-Message-ID: <20120320162157.GE17071@redhat.com>
-References: <20120316073213.656519005@fusionio.com>
- <20120316073512.485027511@fusionio.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120316073512.485027511@fusionio.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaohua Li <shli@fusionio.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de, axboe@kernel.dk, martin.petersen@oracle.com
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH 00/11] Various cleanups and minor fixes
+Date: Tue, 20 Mar 2012 17:54:05 +0100
+Message-ID: <1332262456-5109-1-git-send-email-Jes.Sorensen@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Mar 16, 2012 at 03:32:15PM +0800, Shaohua Li wrote:
-> Didn't allow discard request merge temporarily, as SCSI layer isn't ready
-> for discard merge as Martin Petersen pointed out. This isn't fair for
-> non-scsi device, but looks this is the only way I can do currently.
-> 
-> We should have the same issue before, but maybe because discard merge is
-> very rare case. But now raid0/10 makes the merge quite possible, so we need
-> disable it explicitly.
-> 
-> Signed-off-by: Shaohua Li <shli@fusionio.com>
-> ---
->  include/linux/blkdev.h |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Index: linux/include/linux/blkdev.h
-> ===================================================================
-> --- linux.orig/include/linux/blkdev.h	2012-03-14 09:20:06.787261188 +0800
-> +++ linux/include/linux/blkdev.h	2012-03-14 09:20:47.797261248 +0800
-> @@ -575,7 +575,7 @@ static inline void blk_clear_queue_full(
->   * it already be started by driver.
->   */
->  #define RQ_NOMERGE_FLAGS	\
-> -	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA)
-> +	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA | REQ_DISCARD)
->  #define rq_mergeable(rq)	\
->  	(!((rq)->cmd_flags & RQ_NOMERGE_FLAGS) && \
->  	 (((rq)->cmd_flags & REQ_DISCARD) || \
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-I think you will need to do little more cleanup to make discard
-unmergeable.
+Hi,
 
-- Change rq_mergeable(rq)
-- Change attempt_merge() and get rid of special conditions of allowing
-  discard merge.
+This patch set implements a number of smaller cleanups, as well as
+fixing a couple of cases where we don't zero out the full buffer we
+just obtained via malloc.
 
-Martin had a bigger patch where he wanted to cleanup many discard specific
-condition checks.
+The most controversial is probably patch 06 which caches the device
+block size for aligned read/writes in super1.c to avoid calling the
+ioctl() on each write.
 
-As you are just focusing on disabling merging for discard requests, you
-might as well just pick the relevant pieces from the patch.
+I also introduced some generalized ROUND_UP macros to avoid the manual
+pointer and size manipulation in various places.
 
-http://www.spinics.net/lists/linux-scsi/msg57779.html
+The ddf code I am unable to test as I don't have any raids with ddf
+layout, but it does compile.
 
-Thanks
-Vivek
+Cheers,
+Jes
+
+
+Jes Sorensen (11):
+  super1.c don't keep recalculating bitmap pointer
+  Define and use SUPER1_SIZE for allocations
+  init_super1() memset full buffer allocated for superblock
+  match_metadata_desc1(): Use calloc instead of malloc+memset
+  Use 4K buffer alignment for superblock allocations
+  Use struct align_fd to cache fd's block size for aligned reads/writes
+  match_metadata_desc0(): Use calloc instead of malloc+memset
+  Generalize ROUND_UP() macro and introduce matching ROUND_UP_PTR()
+  super1.c: use ROUND_UP/ROUND_UP_PTR
+  super-intel.c: Use ROUND_UP() instead of manually coding it
+  __write_init_super_ddf(): Use posix_memalign() instead of static
+    aligned buffer
+
+ mdadm.h       |    8 ++--
+ super-ddf.c   |   19 ++++++----
+ super-intel.c |    2 +-
+ super0.c      |    6 ++--
+ super1.c      |  111 +++++++++++++++++++++++++++++++++++----------------------
+ 5 files changed, 87 insertions(+), 59 deletions(-)
+
+-- 
+1.7.7.6
+
