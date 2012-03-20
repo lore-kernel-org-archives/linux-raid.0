@@ -1,108 +1,96 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Array Size differences between mdadm --detail and --examine
-Date: Tue, 20 Mar 2012 12:52:11 +1100
-Message-ID: <20120320125211.27ad32b9@notabene.brown>
-References: <CAM8ZctUH--UJmKi56UJNmDss67uzQycLyx1tP0qeyB9GCFBc0g@mail.gmail.com>
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: Re: [patch v2 0/6] Add TRIM support for raid linear/0/1/10
+Date: Tue, 20 Mar 2012 09:50:08 +0000 (GMT)
+Message-ID: <alpine.LRH.2.02.1203200839120.29880@diagnostix.dwd.de>
+References: <20120316073213.656519005@fusionio.com> <alpine.LRH.2.02.1203181824590.24824@diagnostix.dwd.de> <CANejiEWeaF44Rbgt5jhf_bnafF4yoTTZAYsqoD2+greJ07c-_A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/CmLKRtajlFpioq6LuV+VbXZ"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAM8ZctUH--UJmKi56UJNmDss67uzQycLyx1tP0qeyB9GCFBc0g@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Chris Francy <zoredache@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-823004345-1332237008=:29880"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CANejiEWeaF44Rbgt5jhf_bnafF4yoTTZAYsqoD2+greJ07c-_A@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, neilb@suse.de, axboe@kernel.dk, vgoyal@redhat.com, martin.petersen@oracle.com
 List-Id: linux-raid.ids
 
---Sig_/CmLKRtajlFpioq6LuV+VbXZ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-On Mon, 19 Mar 2012 16:04:34 -0700 Chris Francy <zoredache@gmail.com> wrote:
+--8323328-823004345-1332237008=:29880
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 8BIT
 
-> I am seeing a different array size with mdadm --detail and --examine,
-> and I don't understand why.
->=20
-> I have seen this on a production systems, but I created an array in a
-> VM for testing purposes, and I am seeing the same results.
->=20
-> I have a 5 device RAID10 with created like so.  It has 5 members 8GB
-> each.  Which I believe should result in an array size of ~20GB.
->=20
->     mdadm -v --create  /dev/md0 --assume-clean \
->        --level=3Draid10 --layout=3Do2 --raid-devices=3D5 \
->        --chunk=3D64 \
->        /dev/sdb2 /dev/sdc2 /dev/sdd2 /dev/sde2 /dev/sdf2
->=20
-> mdadm --detail reports an array size of ~20GiB
->=20
->   root@debian:~# mdadm --detail /dev/md0
->   /dev/md0:
->     Creation Time : Fri Mar 16 16:06:09 2012
->        Raid Level : raid10
->        Array Size : 20960960 (19.99 GiB 21.46 GB)
->     Used Dev Size : 8384384 (8.00 GiB 8.59 GB)
->=20
-> mdadm --examine reports an array size of ~16GiB
->=20
->   root@debian:~# mdadm --examine /dev/sdb2  /dev/sdd2 /dev/sde2 /dev/sdf2
->   /dev/sdb2:
->    Avail Dev Size : 16769024 (8.00 GiB 8.59 GB)
->        Array Size : 33537536 (15.99 GiB 17.17 GB)
->     Used Dev Size : 16768768 (8.00 GiB 8.59 GB)
+Hello,
 
-Thanks for the report.
+On Tue, 20 Mar 2012, Shaohua Li wrote:
 
-There seems to be a rounding error in mdadm when calculating the size to
-report for --examine.  The value for --detail is of course correct.
+> 2012/3/20 Holger Kiehl <Holger.Kiehl@dwd.de>:
+>> Hello,
+>>
+>>
+>> On Fri, 16 Mar 2012, Shaohua Li wrote:
+>>
+>>> The patches add TRIM support for raid linear/0/1/10. I'll add TRIM support
+>>> for
+>>> raid 4/5/6 later. The implementation is pretty straightforward and
+>>> self-explained.
+>>>
+>>> v1->v2:
+>>> 1. fixed a checking issue
+>>> 2. dropped discard request plug and replace it with no discard merege,
+>>> because
+>>> current SCSI layer can't handle discard request merge.
+>>>
+>> Have tested TRIM patches on three different systems with the following
+>> hardware/ setup:
+>>
+>>   1) root mounted on a raid1 over two SAS SSD's (200GB) and /home partition
+>>      on a raid0 over a fusionio ioDrive Duo. Is very new and seen very
+>>      little usage.
+>>
+>>   2) root and /home mounted on a raid0 over two Intel X25 Postville
+>>      (160GB) connected to a Intel P55 Express chipset. Has seen very
+>>      heavy usage for approx. 2 years.
+>>
+>>   3) root and /home mounted on a raid0 over three OCZ-VERTEX2 (120GB)
+>>      connected via ICH7 south bridge. Has seen mild usage for approx.
+>>      1.5 years.
+>>
+>> Made the following observations when running my own benchmark which
+>> copies around a lot of small files and deletes them. The benchmark on
+>> all systems was always run only on the /home partition ie. on a raid0.
+>>
+>> For system 1) there is hardly any measurable differnce whether discard
+>> is enabled or not (~29000 files per second).
+>>
+>> On system 2) the performance drops from 6500->3700 files per second,
+>> but under normal usage one does not notice any difference.
+> do you have the blktrace data when the benchmark is running, especially
+> when doing file deletion. I'd like to check the latency of discard in this case.
+>
+It is uploaded on ftp://ftp.dwd.de/pub/afd/test/trim
 
-I'll try to get it fixed in the next release.
+>> System 3) has problems during boot, it is so slow that some operations
+>> receive a timeout during boot:
+>>
+>>  udevd[474]: timeout '/sbin/blkid -o udev -p /dev/md0'
+>>  udevd[474]: timeout: killing '/sbin/blkid -o udev -p /dev/md0' [866]
+>>  systemd[1]: dev-md3.swap activation timed out. Stopping.
+> In this one, discard request is slow. And per SATA standard, discard request
+> can't be parallel, so only one request one time, which further slows it down.
+>
+Ok, so having three disc in a raid 0 is even worth.
 
-Thanks,
-NeilBrown
+>> Even removing discard does not help and the above errors happen during
+>> boot and booting takes a long time.
+> this doesn't make sense. If you don't mount with discard option, no
+> discard request
+> is issued.
+>
+I read some where that swap uses discard by default and if I remember
+correctly it initializes the whole swap area at boot. So doing that
+over three disks might explain why I get those timeout error messages
+and after boot these commands work without delay.
 
-
->=20
-> Most of my testing was done on a Debian squeeze system, but I manually
-> compiled and installed mdadm 3.2.3 and I also saw the same confusing
-> output from a Gentoo based livecd with a recent kernel.
->=20
-> The full output of the mdadm output is pasted available here.
-> http://paste.debian.net/160057/
->=20
-> The array in the VM seems to work fine, I was able to create a
-> filesystem and store data on it.  But the output from the --examine is
-> confusing.
->=20
-> The same is true with the use Dev size  `8384384 (8.00 GiB 8.59 GB)`
-> versus `16768768 (8.00 GiB 8.59 GB)`.
->=20
-> Chris Francy
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/CmLKRtajlFpioq6LuV+VbXZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT2fiyznsnt1WYoG5AQKWDQ//dQ5ASn7RMfXjATzvOdFyV3pIUb16JjIn
-3UFs8HEl6hWRX6Ivycbq7bKEXVf5kJv3Gbi2+QTDDUW+FQpSmn8kTM+C/ocpI0z1
-4hICETiFbK/BS8XCbY9IysIbfnBPcsZhSdxdAf9XMMN45BR2N+HlkAjgfdahwRrO
-weXPtQEPq88yNMXg8HhAziVoQWcDDd+jwczJP27O1cs7WBILhgnkT71dUYlN8Sqi
-77UrcSQ6KYCbdY1GD6PxwBj3Yk58CiT6VnPTjuuWy3ZVUInxOI05aCGLfrKft038
-NEOSYQiVyawPxThYqKlj0NaaDxQ8cjK9iCJf94ldjNmawiOJOCvacKvmVp1IAQM5
-t5WqbUk6HrW9QGzNytP4io1on4vQRUJhKmg7iQJMKfKSBpKJkkdnVaCDSK4ffTGY
-WXAXba3IYmgqzdFcUn37pn8C1Qrbn2wRqoIXr5X7T1VECDC1QIMu1vbCHc1HhDpY
-6Y4gaA8CaPYiHA1ApzKxOTPrAbSmEjES4tJwQ4JA660hdFDzGtKLvQ2OyL6vftdC
-GgSfbhihhh3qgTKSaZICRYdX6cIyrLQI6BbUx3LuaaI66Qq70IkfiVFkqBf5qFO8
-9D8oYSDnFV9m2Eli/sZp3qgYs9O/8dBirxglV5K16M+y8cP9F1VPXfXz+Qj/L3J6
-Qy/XmN6tbVo=
-=bxG5
------END PGP SIGNATURE-----
-
---Sig_/CmLKRtajlFpioq6LuV+VbXZ--
+Regards,
+Holger
+--8323328-823004345-1332237008=:29880--
