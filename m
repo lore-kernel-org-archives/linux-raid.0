@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 02/11] Define and use SUPER1_SIZE for allocations
-Date: Tue, 20 Mar 2012 17:54:07 +0100
-Message-ID: <1332262456-5109-3-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 03/11] init_super1() memset full buffer allocated for superblock
+Date: Tue, 20 Mar 2012 17:54:08 +0100
+Message-ID: <1332262456-5109-4-git-send-email-Jes.Sorensen@redhat.com>
 References: <1332262456-5109-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1332262456-5109-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -12,66 +12,44 @@ List-Id: linux-raid.ids
 
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Use a #define rather than calculate the size of the superblock buffer
-on every allocation.
+Avoid possibly using stale data in bitmap and misc area of superblock.
+In addition, remove superfluous memsets already covered by memset of
+full superblock.
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- super1.c |   16 ++++++----------
- 1 files changed, 6 insertions(+), 10 deletions(-)
+ super1.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
 diff --git a/super1.c b/super1.c
-index 4e3bf7b..4c75f21 100644
+index 4c75f21..1f0c8bc 100644
 --- a/super1.c
 +++ b/super1.c
-@@ -102,6 +102,8 @@ struct misc_dev_info {
- 
- #define	MD_FEATURE_ALL			(1|2|4)
- 
-+#define SUPER1_SIZE	(1024 + 512 + sizeof(struct misc_dev_info))
-+
- #ifndef offsetof
- #define offsetof(t,f) ((size_t)&(((t*)0)->f))
- #endif
-@@ -835,8 +837,7 @@ static int init_super1(struct supertype *st, mdu_array_info_t *info,
- 	int rfd;
- 	char defname[10];
- 
--	if (posix_memalign((void**)&sb, 512, (1024 + 512 + 
--			   sizeof(struct misc_dev_info))) != 0) {
-+	if (posix_memalign((void**)&sb, 512, SUPER1_SIZE) != 0) {
- 		fprintf(stderr, Name
+@@ -842,7 +842,7 @@ static int init_super1(struct supertype *st, mdu_array_info_t *info,
  			": %s could not allocate superblock\n", __func__);
  		return 0;
-@@ -1221,15 +1222,12 @@ static int compare_super1(struct supertype *st, struct supertype *tst)
- 		return 1;
- 
- 	if (!first) {
--		if (posix_memalign((void**)&first, 512,
--			       1024 + 512 +
--			       sizeof(struct misc_dev_info)) != 0) {
-+		if (posix_memalign((void**)&first, 512, SUPER1_SIZE) != 0) {
- 			fprintf(stderr, Name
- 				": %s could not allocate superblock\n", __func__);
- 			return 1;
- 		}
--		memcpy(first, second, 1024 + 512 + 
--		       sizeof(struct misc_dev_info));
-+		memcpy(first, second, SUPER1_SIZE);
- 		st->sb = first;
- 		return 0;
  	}
-@@ -1336,9 +1334,7 @@ static int load_super1(struct supertype *st, int fd, char *devname)
- 		return 1;
- 	}
+-	memset(sb, 0, 1024);
++	memset(sb, 0, SUPER1_SIZE);
  
--	if (posix_memalign((void**)&super, 512,
--		       1024 + 512 +
--		       sizeof(struct misc_dev_info)) != 0) {
-+	if (posix_memalign((void**)&super, 512, SUPER1_SIZE) != 0) {
- 		fprintf(stderr, Name ": %s could not allocate superblock\n",
- 			__func__);
- 		return 1;
+ 	st->sb = sb;
+ 	if (info == NULL) {
+@@ -877,7 +877,6 @@ static int init_super1(struct supertype *st, mdu_array_info_t *info,
+ 		sprintf(defname, "%d", info->md_minor);
+ 		name = defname;
+ 	}
+-	memset(sb->set_name, 0, 32);
+ 	if (homehost &&
+ 	    strchr(name, ':')== NULL &&
+ 	    strlen(homehost)+1+strlen(name) < 32) {
+@@ -907,7 +906,6 @@ static int init_super1(struct supertype *st, mdu_array_info_t *info,
+ 		sb->resync_offset = 0;
+ 	sb->max_dev = __cpu_to_le32((1024- sizeof(struct mdp_superblock_1))/
+ 				    sizeof(sb->dev_roles[0]));
+-	memset(sb->pad3, 0, sizeof(sb->pad3));
+ 
+ 	memset(sb->dev_roles, 0xff, 1024 - sizeof(struct mdp_superblock_1));
+ 
 -- 
 1.7.7.6
 
