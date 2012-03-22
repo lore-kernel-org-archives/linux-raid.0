@@ -1,199 +1,72 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [patch v2 2/6] blk: dont allow discard request merge temporarily
-Date: Wed, 21 Mar 2012 22:18:54 -0400
-Message-ID: <yq1d385wf75.fsf@sermon.lab.mkp.net>
-References: <20120316073213.656519005@fusionio.com>
-	<20120316073512.485027511@fusionio.com>
-	<20120320162157.GE17071@redhat.com>
-	<CANejiEWecb58G--=mwez+A4Ra6nJ0qOHGMcJA-nOGH=jmGA3qQ@mail.gmail.com>
+From: jlcenter@comcast.net
+Subject: Fwd: grub-probe seems to be having problems
+Date: Thu, 22 Mar 2012 02:27:17 +0000 (UTC)
+Message-ID: <529358656.324923.1332383237382.JavaMail.root@sz0019a.westchester.pa.mail.comcast.net>
+References: <4F685BC2.1030008@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CANejiEWecb58G--=mwez+A4Ra6nJ0qOHGMcJA-nOGH=jmGA3qQ@mail.gmail.com>
-	(Shaohua Li's message of "Wed, 21 Mar 2012 09:22:46 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Vivek Goyal <vgoyal@redhat.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de, axboe@kernel.dk, martin.petersen@oracle.com
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4F685BC2.1030008@gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Shaohua" == Shaohua Li <shli@kernel.org> writes:
+Any takers?  -John
 
-Shaohua> Enabling discard merge is required for device with slow discard
-Shaohua> (and very helpful for raid),
+----- Forwarded Message -----
+=46rom: "Vladimir '=CF=86-coder/phcoder' Serbinenko" <phcoder@gmail.com=
+>
+To: "Lennart Sorensen" <lsorense@csclub.uwaterloo.ca>
+Cc: "The development of GRUB 2" <grub-devel@gnu.org>, "Marco d'Itri" <m=
+d@Linux.IT>
+Sent: Tuesday, March 20, 2012 6:28:18 AM
+Subject: Re: grub-probe seems to be having problems
 
-Before RAID support there really wasn't much point. That's one of the
-reasons the current discard merge code has survived despite being
-completely broken.
+On 19.03.2012 22:28, Lennart Sorensen wrote:
+> On Fri, Mar 09, 2012 at 03:37:57PM -0500, Lennart Sorensen wrote:
+>> Interestingly after poking at reading all the disks and poking mdadm
+>> --examine and --detail, now grub-prob likes md1, but still dislikes =
+md0.
+>>
+>> root@rceng03new:/tmp# /usr/sbin/grub-probe --device-map=3D --target=3D=
+abstraction --device /dev/md1
+>> diskfilter mdraid1x raid5rec
+>> root@rceng03new:/tmp# /usr/sbin/grub-probe --device-map=3D --target=3D=
+abstraction --device /dev/md0
+>> /usr/sbin/grub-probe: error: Couldn't find physical volume `(null)'.=
+ Check your device.map.
+>>
+>> md1 was failing before with the same grub code.
+>>
+>> I don't get it.  I wonder if there is any known issues in 2.6.32 ker=
+nel
+>> and/or mdadm - v3.1.4 - 31st August 2010
+> Any suggestion for how to try and debug this myself, like which
+> file/function to start debuging at?  I would like to put this machine
+> in to production use soon, but I would also like to take this chance =
+to
+> fix the bug in grub first.
 
-As for how I'd like to handle contiguous discard merges going forward
-here's a proof of concept. It's on top of my write same tree so you may
-have to noodle a bit.
+There is no need to debug. I know exactly why GRUB is confused: because=
+=20
+as far as my understanding goes the superblock makes no sense (details=20
+in previous mail). What we need is that someone familiar with md tells=20
+me how this sector should be interpreted.
 
-It is crucially important that we never merge a command that can't be
-processed by the device. So I'd like to do something like this:
 
 
-block: Consolidate command flag and queue limit checks for merges
+--=20
+Regards
+Vladimir '=CF=86-coder/phcoder' Serbinenko
 
- - blk_check_merge_flags() verifies that cmd_flags / bi_rw are
-   compatible. This function is called for both req-req and req-bio
-   merging.
 
- - blk_rq_get_max_sectors() and blk_queue_get_max_sectors() can be used
-   to query the maximum sector count for a given request or queue. The
-   calls will return the right value from the queue limits given the
-   type of command (RW, discard, write same, etc.)
-
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 1cd55be..6619a6d 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1757,8 +1757,7 @@ int blk_rq_check_limits(struct request_queue *q, struct request *rq)
- 	if (!rq_mergeable(rq))
- 		return 0;
- 
--	if (blk_rq_sectors(rq) > queue_max_sectors(q) ||
--	    blk_rq_bytes(rq) > queue_max_hw_sectors(q) << 9) {
-+	if (blk_rq_sectors(rq) > blk_queue_get_max_sectors(q, rq->cmd_flags)) {
- 		printk(KERN_ERR "%s: over max size limit.\n", __func__);
- 		return -EIO;
- 	}
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 9172606..8bd91d2 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -228,14 +228,8 @@ no_merge:
- int ll_back_merge_fn(struct request_queue *q, struct request *req,
- 		     struct bio *bio)
- {
--	unsigned short max_sectors;
--
--	if (unlikely(req->cmd_type == REQ_TYPE_BLOCK_PC))
--		max_sectors = queue_max_hw_sectors(q);
--	else
--		max_sectors = queue_max_sectors(q);
--
--	if (blk_rq_sectors(req) + bio_sectors(bio) > max_sectors) {
-+	if (blk_rq_sectors(req) + bio_sectors(bio) >
-+	    blk_rq_get_max_sectors(req)) {
- 		req->cmd_flags |= REQ_NOMERGE;
- 		if (req == q->last_merge)
- 			q->last_merge = NULL;
-@@ -252,15 +246,8 @@ int ll_back_merge_fn(struct request_queue *q, struct request *req,
- int ll_front_merge_fn(struct request_queue *q, struct request *req,
- 		      struct bio *bio)
- {
--	unsigned short max_sectors;
--
--	if (unlikely(req->cmd_type == REQ_TYPE_BLOCK_PC))
--		max_sectors = queue_max_hw_sectors(q);
--	else
--		max_sectors = queue_max_sectors(q);
--
--
--	if (blk_rq_sectors(req) + bio_sectors(bio) > max_sectors) {
-+	if (blk_rq_sectors(req) + bio_sectors(bio) >
-+	    blk_rq_get_max_sectors(req)) {
- 		req->cmd_flags |= REQ_NOMERGE;
- 		if (req == q->last_merge)
- 			q->last_merge = NULL;
-@@ -291,7 +278,8 @@ static int ll_merge_requests_fn(struct request_queue *q, struct request *req,
- 	/*
- 	 * Will it become too large?
- 	 */
--	if ((blk_rq_sectors(req) + blk_rq_sectors(next)) > queue_max_sectors(q))
-+	if ((blk_rq_sectors(req) + blk_rq_sectors(next)) >
-+	    blk_rq_get_max_sectors(req))
- 		return 0;
- 
- 	total_phys_segments = req->nr_phys_segments + next->nr_phys_segments;
-@@ -370,6 +358,9 @@ static int attempt_merge(struct request_queue *q, struct request *req,
- 	if (!rq_mergeable(req) || !rq_mergeable(next))
- 		return 0;
- 
-+	if (!blk_check_merge_flags(req->cmd_flags, next->cmd_flags))
-+		return 0;
-+
- 	/*
- 	 * not contiguous
- 	 */
-@@ -465,6 +456,9 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
- 	if (!rq_mergeable(rq) || !bio_mergeable(bio))
- 		return false;
- 
-+	if (!blk_check_merge_flags(rq->cmd_flags, bio->bi_rw))
-+		return false;
-+
- 	/* different data direction or already started, don't merge */
- 	if (bio_data_dir(bio) != rq_data_dir(rq))
- 		return false;
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 7718e69..b7994eb 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -175,8 +175,7 @@ enum rq_flag_bits {
- 
- /* This mask is used for both bio and request merge checking */
- #define REQ_NOMERGE_FLAGS \
--	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA | \
--	 REQ_DISCARD | REQ_WRITE_SAME)
-+	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA)
- 
- #define REQ_RAHEAD		(1 << __REQ_RAHEAD)
- #define REQ_THROTTLED		(1 << __REQ_THROTTLED)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 92956b7..cf11980 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -580,6 +580,20 @@ static inline bool rq_mergeable(struct request *rq)
- 	return true;
- }
- 
-+static inline bool blk_check_merge_flags(unsigned int flags1,
-+					 unsigned int flags2)
-+{
-+	if ((flags1 & REQ_DISCARD) != (flags2 & REQ_DISCARD))
-+		return false;
-+
-+	if ((flags1 & REQ_SECURE) != (flags2 & REQ_SECURE))
-+		return false;
-+
-+	if ((flags1 & REQ_WRITE_SAME) != (flags2 & REQ_WRITE_SAME))
-+		return false;
-+
-+	return true;
-+}
- 
- /*
-  * q->prep_rq_fn return values
-@@ -776,6 +790,28 @@ static inline unsigned int blk_rq_cur_sectors(const struct request *rq)
- 	return blk_rq_cur_bytes(rq) >> 9;
- }
- 
-+static inline unsigned int blk_queue_get_max_sectors(struct request_queue *q,
-+						     unsigned int cmd_flags)
-+{
-+	if (unlikely(cmd_flags & REQ_DISCARD))
-+		return q->limits.max_discard_sectors;
-+
-+	if (unlikely(cmd_flags & REQ_WRITE_SAME))
-+		return q->limits.max_write_same_sectors;
-+
-+	return q->limits.max_sectors;
-+}
-+
-+static inline unsigned int blk_rq_get_max_sectors(struct request *rq)
-+{
-+	struct request_queue *q = rq->q;
-+
-+	if (unlikely(rq->cmd_type == REQ_TYPE_BLOCK_PC))
-+		return q->limits.max_hw_sectors;
-+
-+	return blk_queue_get_max_sectors(q, rq->cmd_flags);
-+}
-+
- /*
-  * Request issue related functions.
-  */
+_______________________________________________
+Grub-devel mailing list
+Grub-devel@gnu.org
+https://lists.gnu.org/mailman/listinfo/grub-devel
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
