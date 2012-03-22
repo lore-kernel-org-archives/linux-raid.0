@@ -1,35 +1,31 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch v2 2/6] blk: dont allow discard request merge temporarily
-Date: Thu, 22 Mar 2012 02:28:51 -0400
-Message-ID: <20120322062850.GA25288@infradead.org>
-References: <20120316073213.656519005@fusionio.com>
- <20120316073512.485027511@fusionio.com>
- <20120320162157.GE17071@redhat.com>
- <CANejiEWecb58G--=mwez+A4Ra6nJ0qOHGMcJA-nOGH=jmGA3qQ@mail.gmail.com>
- <yq1d385wf75.fsf@sermon.lab.mkp.net>
+From: "Barr.Kamal Lee" <barr.kamall@yahoo.com>
+Subject: My late client
+Date: Thu, 22 Mar 2012 00:21:36 +00
+Message-ID: <8GhgucTJ.1332375696.7509020.act-cia__2315.67209489203$1332398703$gmane$org@canl.nc>
+Reply-To: "Barr.Kamal Lee" <leekamal8@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yq1d385wf75.fsf@sermon.lab.mkp.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Shaohua Li <shli@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de, axboe@kernel.dk
+To: barr.kamall@yahoo.com
 List-Id: linux-raid.ids
 
-On Wed, Mar 21, 2012 at 10:18:54PM -0400, Martin K. Petersen wrote:
-> >>>>> "Shaohua" == Shaohua Li <shli@kernel.org> writes:
-> 
-> Shaohua> Enabling discard merge is required for device with slow discard
-> Shaohua> (and very helpful for raid),
-> 
-> Before RAID support there really wasn't much point. That's one of the
-> reasons the current discard merge code has survived despite being
-> completely broken.
+Hello,
 
-I've actually send repeated bug reports about it beeing broken when
-I enabled async discard in XFS which led to merges, and debugged it down
-to beeing a problem with merges.  But Jens didn't like my patch to mark
-them nomerged, so we still couldn't commit the async discard support for
-XFS which would have helped quite a bit with discard performance.
+I am Kamal Lee,an attorney at law. A deceased client of mine,that bears
+the same last name as yours, died as the result of a heart-related
+condition on March 12th 2007. His heart condition was due to the death
+of all the members of his family in the tsunami disaster on the 26th
+December 2004 in Sumatra Indonesia.
 
+http://en.wikipedia.org/wiki/2004_Indian_Ocean_earthquake
+
+I contacted you to assist in distributing the money left behind by my
+client.
+
+Get back to me for more details.
+(leekamal8@gmail.com)
+
+Best regards,
+Barr.Kamal Lee.
