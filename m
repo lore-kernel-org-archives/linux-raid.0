@@ -1,104 +1,199 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Kernel oops adding bitmap
-Date: Thu, 22 Mar 2012 07:03:08 +1100
-Message-ID: <20120322070308.2233d1dd@notabene.brown>
-References: <4F67627D.8050205@nuclearwinter.com>
-	<20120320083210.4a272426@notabene.brown>
-	<4F67A7C7.1050803@nuclearwinter.com>
-	<CAGqmV7qgQUxndmFzAU=cx3stQryOYRSRGPb_1HX9Nw9Ludot-A@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [patch v2 2/6] blk: dont allow discard request merge temporarily
+Date: Wed, 21 Mar 2012 22:18:54 -0400
+Message-ID: <yq1d385wf75.fsf@sermon.lab.mkp.net>
+References: <20120316073213.656519005@fusionio.com>
+	<20120316073512.485027511@fusionio.com>
+	<20120320162157.GE17071@redhat.com>
+	<CANejiEWecb58G--=mwez+A4Ra6nJ0qOHGMcJA-nOGH=jmGA3qQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/S6+Z3WetV+3sRJaJ3QCl399"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGqmV7qgQUxndmFzAU=cx3stQryOYRSRGPb_1HX9Nw9Ludot-A@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: Larkin Lowrey <llowrey@nuclearwinter.com>, linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CANejiEWecb58G--=mwez+A4Ra6nJ0qOHGMcJA-nOGH=jmGA3qQ@mail.gmail.com>
+	(Shaohua Li's message of "Wed, 21 Mar 2012 09:22:46 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: Vivek Goyal <vgoyal@redhat.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de, axboe@kernel.dk, martin.petersen@oracle.com
 List-Id: linux-raid.ids
 
---Sig_/S6+Z3WetV+3sRJaJ3QCl399
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+>>>>> "Shaohua" == Shaohua Li <shli@kernel.org> writes:
 
-On Wed, 21 Mar 2012 17:21:55 +0400 CoolCold <coolthecold@gmail.com> wrote:
+Shaohua> Enabling discard merge is required for device with slow discard
+Shaohua> (and very helpful for raid),
 
-> Btw, was interested in, where bitmap will be placed when adding it on
-> live array? I.e. as it requires some diskspace, we should provide some
-> free space, but where it can be taken from if array is already created
-> and used by, say filesystem?
+Before RAID support there really wasn't much point. That's one of the
+reasons the current discard merge code has survived despite being
+completely broken.
 
-For 0.90 metadata there is 60K of unused space after the superblock.  The
-bitmap is stored there.
+As for how I'd like to handle contiguous discard merges going forward
+here's a proof of concept. It's on top of my write same tree so you may
+have to noodle a bit.
 
-For 1.x, the metadata stores a data_offset and data_size.  All array data is
-in that range.  Anything out side there is available for mdadm to use.
-When mdadm creates an array it reserves enough space for bitmap and possible
-other uses.
-
-NeilBrown
-
->=20
-> On Tue, Mar 20, 2012 at 1:40 AM, Larkin Lowrey
-> <llowrey@nuclearwinter.com> wrote:
-> > On 3/19/2012 4:32 PM, NeilBrown wrote:
-> >> On Mon, 19 Mar 2012 11:44:45 -0500 Larkin Lowrey
-> > <llowrey@nuclearwinter.com>
-> >> wrote:
-> >>
-> >>> The following command oopsed.
-> >>>
-> >>> mdadm -G --bitmap=3Dinternal /dev/md0
-> >>>
-> >>> The array is a two disk raid1 and hosts the root filesystem.
-> >>>
-> >>> Is it not possible/allowed to add a bitmap to an active/mounted array?
-> >>
-> >> It is. But it is busted.
-> >>
-> >> Either use an older mdadm (3.2.2 or earlier), or apply this patch
-> >>
-> >> http://neil.brown.name/git?p=3Dmd;a=3Dcommitdiff;h=3D4474ca42e2577563a=
-919fd3ed782e2ec55bf11a2
-> >>
-> >> which has been sent to Linus already and should appear in -stable
-> > kernels in
-> >> a couple of weeks.
-> >>
-> >> NeilBrown
-> >
-> > Thank you for the explanation.
-> >
-> > --Larkin
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->=20
->=20
->=20
+It is crucially important that we never merge a command that can't be
+processed by the device. So I'd like to do something like this:
 
 
---Sig_/S6+Z3WetV+3sRJaJ3QCl399
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+block: Consolidate command flag and queue limit checks for merges
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+ - blk_check_merge_flags() verifies that cmd_flags / bi_rw are
+   compatible. This function is called for both req-req and req-bio
+   merging.
 
-iQIVAwUBT2o0Hjnsnt1WYoG5AQLHcw/+JMzydfP9XKRZhllKEpaYZKYuqAgJn+uM
-y99MdMfP30N1w9U1TQ8FlZECavAlIEBGU2LOUAZB4fPvnwD3PyyTLIdt7LLarGe8
-1S/1jlt4Q3QAFTsTx11xIs5OZKTMUxZ9xpu/mz0RlcozD1AWHl5BrgR2lzhyafSH
-11hjq6bw1HCQv7yvXBldHRy30oOWUVc4SHVqZV9abrNEp5pb5ISkANR1uNGfX700
-CA89S5svfX/F+3vn/Kmk/HksbG9IG/KWbBhOm85ZrjVgRWiWLOy9PWW8EXdtLd9u
-a7QUJtmNKzdXizS/jVqGnUuqlIZx5cwJ8Auu8tIumjz8oIEazT1Mvfz13SuL7brY
-nCJFw0lOMrjgA7nAlAdZEtkI8eUdrz4bD7PeG/yCw8FocdjwVJsOLzFDrLRKwWwe
-TTuKrkJBY/ilnlTIHN2LJq2FnQMQKLnT/V/Cc6yNfBMKrSjTD2se8op8BHIv1CSr
-ILp+L5Rf/iCfMKSb7yTG62R6vZzNflQOcJBPC1YMEiY+WVBdi7JXfiOhPHOFkSrZ
-Kh6vO3BxZCpnrkO+PGkQ7DlglrNxXGErX4BVeS1ZJy71aj+crGgElAB+bd9ItrYz
-EI2DUirSkZ5G9VJ7frkUH2+DOUTwxjYjWFGwNupef94j1Uw0i726m0XEX2E5T3D0
-MWMnPLk6Slk=
-=9EmI
------END PGP SIGNATURE-----
+ - blk_rq_get_max_sectors() and blk_queue_get_max_sectors() can be used
+   to query the maximum sector count for a given request or queue. The
+   calls will return the right value from the queue limits given the
+   type of command (RW, discard, write same, etc.)
 
---Sig_/S6+Z3WetV+3sRJaJ3QCl399--
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 1cd55be..6619a6d 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1757,8 +1757,7 @@ int blk_rq_check_limits(struct request_queue *q, struct request *rq)
+ 	if (!rq_mergeable(rq))
+ 		return 0;
+ 
+-	if (blk_rq_sectors(rq) > queue_max_sectors(q) ||
+-	    blk_rq_bytes(rq) > queue_max_hw_sectors(q) << 9) {
++	if (blk_rq_sectors(rq) > blk_queue_get_max_sectors(q, rq->cmd_flags)) {
+ 		printk(KERN_ERR "%s: over max size limit.\n", __func__);
+ 		return -EIO;
+ 	}
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 9172606..8bd91d2 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -228,14 +228,8 @@ no_merge:
+ int ll_back_merge_fn(struct request_queue *q, struct request *req,
+ 		     struct bio *bio)
+ {
+-	unsigned short max_sectors;
+-
+-	if (unlikely(req->cmd_type == REQ_TYPE_BLOCK_PC))
+-		max_sectors = queue_max_hw_sectors(q);
+-	else
+-		max_sectors = queue_max_sectors(q);
+-
+-	if (blk_rq_sectors(req) + bio_sectors(bio) > max_sectors) {
++	if (blk_rq_sectors(req) + bio_sectors(bio) >
++	    blk_rq_get_max_sectors(req)) {
+ 		req->cmd_flags |= REQ_NOMERGE;
+ 		if (req == q->last_merge)
+ 			q->last_merge = NULL;
+@@ -252,15 +246,8 @@ int ll_back_merge_fn(struct request_queue *q, struct request *req,
+ int ll_front_merge_fn(struct request_queue *q, struct request *req,
+ 		      struct bio *bio)
+ {
+-	unsigned short max_sectors;
+-
+-	if (unlikely(req->cmd_type == REQ_TYPE_BLOCK_PC))
+-		max_sectors = queue_max_hw_sectors(q);
+-	else
+-		max_sectors = queue_max_sectors(q);
+-
+-
+-	if (blk_rq_sectors(req) + bio_sectors(bio) > max_sectors) {
++	if (blk_rq_sectors(req) + bio_sectors(bio) >
++	    blk_rq_get_max_sectors(req)) {
+ 		req->cmd_flags |= REQ_NOMERGE;
+ 		if (req == q->last_merge)
+ 			q->last_merge = NULL;
+@@ -291,7 +278,8 @@ static int ll_merge_requests_fn(struct request_queue *q, struct request *req,
+ 	/*
+ 	 * Will it become too large?
+ 	 */
+-	if ((blk_rq_sectors(req) + blk_rq_sectors(next)) > queue_max_sectors(q))
++	if ((blk_rq_sectors(req) + blk_rq_sectors(next)) >
++	    blk_rq_get_max_sectors(req))
+ 		return 0;
+ 
+ 	total_phys_segments = req->nr_phys_segments + next->nr_phys_segments;
+@@ -370,6 +358,9 @@ static int attempt_merge(struct request_queue *q, struct request *req,
+ 	if (!rq_mergeable(req) || !rq_mergeable(next))
+ 		return 0;
+ 
++	if (!blk_check_merge_flags(req->cmd_flags, next->cmd_flags))
++		return 0;
++
+ 	/*
+ 	 * not contiguous
+ 	 */
+@@ -465,6 +456,9 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
+ 	if (!rq_mergeable(rq) || !bio_mergeable(bio))
+ 		return false;
+ 
++	if (!blk_check_merge_flags(rq->cmd_flags, bio->bi_rw))
++		return false;
++
+ 	/* different data direction or already started, don't merge */
+ 	if (bio_data_dir(bio) != rq_data_dir(rq))
+ 		return false;
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 7718e69..b7994eb 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -175,8 +175,7 @@ enum rq_flag_bits {
+ 
+ /* This mask is used for both bio and request merge checking */
+ #define REQ_NOMERGE_FLAGS \
+-	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA | \
+-	 REQ_DISCARD | REQ_WRITE_SAME)
++	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA)
+ 
+ #define REQ_RAHEAD		(1 << __REQ_RAHEAD)
+ #define REQ_THROTTLED		(1 << __REQ_THROTTLED)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 92956b7..cf11980 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -580,6 +580,20 @@ static inline bool rq_mergeable(struct request *rq)
+ 	return true;
+ }
+ 
++static inline bool blk_check_merge_flags(unsigned int flags1,
++					 unsigned int flags2)
++{
++	if ((flags1 & REQ_DISCARD) != (flags2 & REQ_DISCARD))
++		return false;
++
++	if ((flags1 & REQ_SECURE) != (flags2 & REQ_SECURE))
++		return false;
++
++	if ((flags1 & REQ_WRITE_SAME) != (flags2 & REQ_WRITE_SAME))
++		return false;
++
++	return true;
++}
+ 
+ /*
+  * q->prep_rq_fn return values
+@@ -776,6 +790,28 @@ static inline unsigned int blk_rq_cur_sectors(const struct request *rq)
+ 	return blk_rq_cur_bytes(rq) >> 9;
+ }
+ 
++static inline unsigned int blk_queue_get_max_sectors(struct request_queue *q,
++						     unsigned int cmd_flags)
++{
++	if (unlikely(cmd_flags & REQ_DISCARD))
++		return q->limits.max_discard_sectors;
++
++	if (unlikely(cmd_flags & REQ_WRITE_SAME))
++		return q->limits.max_write_same_sectors;
++
++	return q->limits.max_sectors;
++}
++
++static inline unsigned int blk_rq_get_max_sectors(struct request *rq)
++{
++	struct request_queue *q = rq->q;
++
++	if (unlikely(rq->cmd_type == REQ_TYPE_BLOCK_PC))
++		return q->limits.max_hw_sectors;
++
++	return blk_queue_get_max_sectors(q, rq->cmd_flags);
++}
++
+ /*
+  * Request issue related functions.
+  */
