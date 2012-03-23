@@ -1,7 +1,7 @@
 From: "majianpeng" <majianpeng@gmail.com>
-Subject: md/linear: If md_integrity_register() failed,linear_run() must  free the mem.
-Date: Fri, 23 Mar 2012 10:29:19 +0800
-Message-ID: <201203231029159680193@gmail.com>
+Subject: md/raid0: If md_integrity_register() failed,raid0_run() must free the mem.
+Date: Fri, 23 Mar 2012 10:30:09 +0800
+Message-ID: <201203231030029373801@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
@@ -12,45 +12,39 @@ To: Neil Brown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From df3b2e15fb325def8f5eaa076b328084dd86c421 Mon Sep 17 00:00:00 2001
+From 3d07b1d34ee2dcb1abd599a90855f1a5c30c3de6 Mon Sep 17 00:00:00 2001
 From: majianpeng <majianpeng@gmail.com>
-Date: Fri, 23 Mar 2012 10:09:18 +0800
-Subject: [PATCH] md/linear: If md_integrity_register() failed,linear_run()
- must  free the mem.
+Date: Fri, 23 Mar 2012 10:04:57 +0800
+Subject: [PATCH] md/raid0: If md_integrity_register() failed,raid0_run() must
+  free the mem.
 
 
 Signed-off-by: majianpeng <majianpeng@gmail.com>
 ---
- drivers/md/linear.c |    9 ++++++++-
- 1 files changed, 8 insertions(+), 1 deletions(-)
+ drivers/md/raid0.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/md/linear.c b/drivers/md/linear.c
-index b0fcc7d..fa211d8 100644
---- a/drivers/md/linear.c
-+++ b/drivers/md/linear.c
-@@ -198,6 +198,7 @@ out:
- static int linear_run (struct mddev *mddev)
- {
- 	struct linear_conf *conf;
-+	int ret;
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index 6f31f55..5a99cde 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -454,7 +454,15 @@ static int raid0_run(struct mddev *mddev)
  
- 	if (md_check_no_bitmap(mddev))
- 		return -EINVAL;
-@@ -211,7 +212,13 @@ static int linear_run (struct mddev *mddev)
- 	blk_queue_merge_bvec(mddev->queue, linear_mergeable_bvec);
- 	mddev->queue->backing_dev_info.congested_fn = linear_congested;
- 	mddev->queue->backing_dev_info.congested_data = mddev;
+ 	blk_queue_merge_bvec(mddev->queue, raid0_mergeable_bvec);
+ 	dump_zones(mddev);
 -	return md_integrity_register(mddev);
 +
-+	ret =  md_integrity_register(mddev);
++	ret = md_integrity_register(mddev);
 +	if (ret) {
++		kfree(conf->strip_zone);
++		kfree(conf->devlist);
 +		kfree(conf);
 +		mddev->private = NULL;
 +	}
 +	return ret;
  }
  
- static int linear_add(struct mddev *mddev, struct md_rdev *rdev)
+ static int raid0_stop(struct mddev *mddev)
 -- 
 1.7.5.4
 
