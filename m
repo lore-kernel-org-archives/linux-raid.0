@@ -1,66 +1,42 @@
-From: "majianpeng" <majianpeng@gmail.com>
-Subject: md/raid1: If md_integrity_register() failed,run() must  free the mem
-Date: Fri, 23 Mar 2012 10:30:59 +0800
-Message-ID: <201203231030548909882@gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier
+Date: Fri, 23 Mar 2012 00:10:25 -0500
+Message-ID: <4F6C05C1.4020204@hardwarefreak.com>
+References: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com> <4F61803A.60009@hardwarefreak.com> <CAA8mOyCzs36YD_QUMq25HQf8zuq1=tmSTPjYdoFJwy2Oq9sLmw@mail.gmail.com> <20321.63389.586851.689070@tree.ty.sabi.co.UK> <4F64115D.50208@hardwarefreak.com> <20120317223454.GQ5091@dastard> <20325.17387.216150.45013@tree.ty.sabi.co.UK> <20325.50714.237894.328039@tree.ty.sabi.co.UK> <4F6624A3.5010206@hardwarefreak.com> <20331.39194.377610.888636@tree.ty.sabi.co.UK>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20331.39194.377610.888636@tree.ty.sabi.co.UK>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Peter Grandi <pg@lxra2.to.sabi.co.UK>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, Linux fs XFS <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
-From 8a7f9d02f3e7151ecfd05ca9b1734d6e62414c03 Mon Sep 17 00:00:00 2001
-From: majianpeng <majianpeng@gmail.com>
-Date: Fri, 23 Mar 2012 10:25:41 +0800
-Subject: [PATCH] md/raid1: If md_integrity_register() failed,run() must  free
- the mem.
+On 3/22/2012 4:26 PM, Peter Grandi wrote:
 
+[snipped 2-3 pages of redundant nonsense, linked docs, and filesystem
+concepts everyone is already familiar with]
 
-Signed-off-by: majianpeng <majianpeng@gmail.com>
----
- drivers/md/raid1.c |   14 +++++++++++++-
- 1 files changed, 13 insertions(+), 1 deletions(-)
+> Overselling 'delaylog' with cheeky propaganda glossing over the
+> heavy tradeoffs involved is understandable, but quite wrong.
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 4a40a20..f71d8a0 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -2641,6 +2641,7 @@ static int run(struct mddev *mddev)
- 	struct r1conf *conf;
- 	int i;
- 	struct md_rdev *rdev;
-+	int ret;
- 
- 	if (mddev->level != 1) {
- 		printk(KERN_ERR "md/raid1:%s: raid level not set to mirroring (%d)\n",
-@@ -2705,7 +2706,18 @@ static int run(struct mddev *mddev)
- 		mddev->queue->backing_dev_info.congested_data = mddev;
- 		blk_queue_merge_bvec(mddev->queue, raid1_mergeable_bvec);
- 	}
--	return md_integrity_register(mddev);
-+
-+	ret =  md_integrity_register(mddev);
-+	if (ret) {
-+		md_unregister_thread(&mddev->thread);
-+		if (conf->r1bio_pool)
-+			mempool_destroy(conf->r1bio_pool);
-+		kfree(conf->mirrors);
-+		kfree(conf->poolinfo);
-+		kfree(conf);
-+		mddev->private = NULL;
-+	}
-+	return ret;
- }
- 
- static int stop(struct mddev *mddev)
+And now we come full circle to what started this mess of a discussion:
+Peter's dislike of Dave's presentation of delaylog, and XFS in general,
+at linux.conf.au.
+
+Peter, if *you* had been giving Dave's presentation at linux.conf.au,
+how would *you* have presented delayed logging differently?  How much
+time would you have spent warning of the dangers of potential data loss
+upon a crash and how would you have presented it?  Note I'm not asking
+you to re-critique Dave's presentation.  I'm asking you to write your
+own short presentation of the delayed logging feature, so we can all see
+it done the right way, without "cheeky propaganda" and without "glossing
+over the heavy tradeoffs".
+
+We're all on the edge of our seats, eagerly awaiting your expert XFS
+presentation Peter.
+
 -- 
-1.7.5.4
-
- 				
---------------
-majianpeng
-2012-03-23
-
+Stan
