@@ -1,80 +1,40 @@
-From: Markus Hochholdinger <Markus@hochholdinger.net>
-Subject: Re: [PATCH 018 of 29] md: Support changing rdev size on running arrays.
-Date: Sat, 24 Mar 2012 21:47:15 +0100
-Message-ID: <201203242147.23273.Markus@hochholdinger.net>
-References: <20080627164503.9671.patches@notabene> <200806271809.29768.Markus@hochholdinger.net> <18533.31375.280387.666514@notabene.brown>
+From: Ruth Ivimey-Cook <ruth@ivimey.org>
+Subject: Rescue md/6 array: advice please
+Date: Sat, 24 Mar 2012 21:36:16 +0000
+Message-ID: <4F6E3E50.3010000@ivimey.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3397132.AVTIXisazL";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18533.31375.280387.666514@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Chris Webb <chris@arachsys.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---nextPart3397132.AVTIXisazL
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Folks,
 
-Hello,
+Just wanted some reassurance: my raid6 array died today when a 
+controller died and took 3 of 5 disks out of the array. I think/hope the 
+disks (1TB enterprise Seagate) are ok, but obviously the event counts 
+are now different. Right now I don't have enough ports to plug in all 
+disks at once so have just verified one of the missing disks does still 
+work: am getting new board next week which should sort that lack. The 
+event count of the missing disk was about 20 events lower than the 
+latest disk's count. I do have a backup, but would prefer not to have to 
+rely on it: if there is an error in restoring from the backup I don't 
+have a third line of defence!
 
-it's been a long time, but today I tried again and had success!
+I believe the correct way forward is to force an mdadm assemble, with 
+the failed-disk and readonly options, to build a minimal (3 of 5?) 
+array, then assuming it works do an fsck to see if it checks out, then 
+rotate for the best combination, then rebuild without readonly, then add 
+in the rest of the failed disks.
 
-Am 28.06.2008 um 01:41 Uhr schrieb Neil Brown <neilb@suse.de>:
-> On Friday June 27, Markus@hochholdinger.net wrote:
-> > Am Freitag, 27. Juni 2008 08:51 schrieb NeilBrown:
-> > > From: Chris Webb <chris@arachsys.com>
-[..]
-> You don't want to "mdadm --grow" until everything has been resized.
-> First lvresize one disk, then write '0' to the .../size file.
-> Then do the same for the other disk.
-> Then "mdadm --grow /dev/mdX --size max".
+Thanks in advance,
+Ruth
 
-it works for me, if I do:
-  echo 0 > /sys/block/md2/md/rd0/size
-  mdadm --grow /dev/md2 --size=3Dmax
-  # till here, nothing happens
-  echo 0 > /sys/block/md2/md/rd1/size
-  mdadm --grow /dev/md2 --size=3Dmax
-  # rebuild of the added space begins
+-- 
+Software Manager&  Engineer
+Tel: 01223 414180
+Blog: http://www.ivimey.org/blog
+LinkedIn: http://uk.linkedin.com/in/ruthivimeycook/
 
-If I do only:
-  echo 0 > /sys/block/md2/md/rd0/size
-  echo 0 > /sys/block/md2/md/rd1/size
-  mdadm --grow /dev/md2 --size=3Dmax
-nothing will change.
-
-As I understand, with "echo 0" md sees the new size and only with --grow th=
-e=20
-superblock will be moved.
-
-I'm doing this with 2.6.32-5-xen-686 within Debian (squeeze) 6.0.
-
-Many thanks to you and all the other linux-raid developers for this feature!
-
-I'm very happy about this :-)
-
-
-=2D-=20
-greetings
-
-eMHa
-
---nextPart3397132.AVTIXisazL
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEABECAAYFAk9uMtQACgkQXT3LE+AjWCsVmgCfeEk5ZiChxmcFUyEH3g0dKqch
-GUMAmwcNbUD35gx2Hx5mFQ6molU1gZPN
-=vEZ8
------END PGP SIGNATURE-----
-
---nextPart3397132.AVTIXisazL--
