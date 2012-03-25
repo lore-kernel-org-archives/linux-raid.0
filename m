@@ -1,110 +1,111 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 018 of 29] md: Support changing rdev size on running
- arrays.
-Date: Mon, 26 Mar 2012 09:15:18 +1100
-Message-ID: <20120326091518.6d56d1c6@notabene.brown>
-References: <20080627164503.9671.patches@notabene>
-	<200806271809.29768.Markus@hochholdinger.net>
-	<18533.31375.280387.666514@notabene.brown>
-	<201203242147.23273.Markus@hochholdinger.net>
+Subject: Re: [PATCH 1/1] Avoid OOPS when reshaping raid1 to raid0
+Date: Mon, 26 Mar 2012 09:29:05 +1100
+Message-ID: <20120326092905.27147102@notabene.brown>
+References: <1332432953-30091-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1332432953-30091-2-git-send-email-Jes.Sorensen@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/q1_kx7vWoAaOh5Yxi7TgO+m"; protocol="application/pgp-signature"
+ boundary="Sig_/QYSh8z_M_THJzvFpRmBxoZX"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201203242147.23273.Markus@hochholdinger.net>
+In-Reply-To: <1332432953-30091-2-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Markus Hochholdinger <Markus@hochholdinger.net>
-Cc: linux-raid@vger.kernel.org, Chris Webb <chris@arachsys.com>
+To: Jes.Sorensen@redhat.com
+Cc: dledford@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/q1_kx7vWoAaOh5Yxi7TgO+m
+--Sig_/QYSh8z_M_THJzvFpRmBxoZX
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 24 Mar 2012 21:47:15 +0100 Markus Hochholdinger
-<Markus@hochholdinger.net> wrote:
+On Thu, 22 Mar 2012 17:15:53 +0100 Jes.Sorensen@redhat.com wrote:
 
-> Hello,
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
 >=20
-> it's been a long time, but today I tried again and had success!
->=20
-> Am 28.06.2008 um 01:41 Uhr schrieb Neil Brown <neilb@suse.de>:
-> > On Friday June 27, Markus@hochholdinger.net wrote:
-> > > Am Freitag, 27. Juni 2008 08:51 schrieb NeilBrown:
-> > > > From: Chris Webb <chris@arachsys.com>
-> [..]
-> > You don't want to "mdadm --grow" until everything has been resized.
-> > First lvresize one disk, then write '0' to the .../size file.
-> > Then do the same for the other disk.
-> > Then "mdadm --grow /dev/mdX --size max".
->=20
-> it works for me, if I do:
->   echo 0 > /sys/block/md2/md/rd0/size
->   mdadm --grow /dev/md2 --size=3Dmax
->   # till here, nothing happens
->   echo 0 > /sys/block/md2/md/rd1/size
->   mdadm --grow /dev/md2 --size=3Dmax
->   # rebuild of the added space begins
->=20
-> If I do only:
->   echo 0 > /sys/block/md2/md/rd0/size
->   echo 0 > /sys/block/md2/md/rd1/size
->   mdadm --grow /dev/md2 --size=3Dmax
-> nothing will change.
+> raid1 arrays do not have the notion of chunk size. Set the existing
+> chunk size of the new raid0 to the same as the proposed new chunk size
+> to avoid a divide by zero OOPS when aligning the size of the new array
+> to that of the chunk size.
 
-That is odd.. it certainly should.
+This oops happens in create_strip_zones at
 
-And the current 'mdadm' will do the "echo 0 > size" for you so you just need
-to "mdadm --grow  --size=3Dmax" command.
+		sector_div(sectors, mddev->chunk_sectors);
+
+correct?
 
 >=20
-> As I understand, with "echo 0" md sees the new size and only with --grow =
-the=20
-> superblock will be moved.
-
-No, the superblock is moved with the "echo 0", but the space isn't used unt=
-il
-the "--grow".
-
-
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> ---
+>  drivers/md/raid0.c |    8 ++++++++
+>  1 files changed, 8 insertions(+), 0 deletions(-)
 >=20
-> I'm doing this with 2.6.32-5-xen-686 within Debian (squeeze) 6.0.
->=20
-> Many thanks to you and all the other linux-raid developers for this featu=
-re!
->=20
-> I'm very happy about this :-)
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index 6f31f55..dff8d6b 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -639,6 +639,14 @@ static void *raid0_takeover_raid1(struct mddev *mdde=
+v)
+>  	mddev->new_level =3D 0;
+>  	mddev->new_layout =3D 0;
+>  	mddev->new_chunk_sectors =3D 128; /* by default set chunk size to 64k */
+> +	mddev->chunk_sectors =3D 128;	/*
+> +					 * a raid1 one doesn't have the
+> +					 * notion of chunk size, so set
+> +					 * existing chunk_sector to match the
+> +					 * new size to avoid divide by zero
+> +					 * when aligning the size of the new
+> +					 * raid0 to the existing chunk size.
+> +					 */
 
-Excellent!
+But what if the RAID1 is not a multiple of 64K ?  Then you will lose
+data.
+
+We probably want the same thing we have in RAID5:
+
+
+
+	chunksect =3D 64*2; /* 64K by default */
+
+	/* The array must be an exact multiple of chunksize */
+	while (chunksect && (mddev->array_sectors & (chunksect-1)))
+		chunksect >>=3D 1;
+
+	if ((chunksect<<9) < STRIPE_SIZE)
+		/* array size does not allow a suitable chunk size */
+		return ERR_PTR(-EINVAL);
+
+
+??
+
+Do you want to make a patch, or shall I?
+
+Ofcouse, RAID0 have have non-power-of-2 chunk sizes, so we could just hunt
+for a small factor... probably not worth it though.
+
 
 Thanks,
 NeilBrown
 
-
->=20
->=20
-
-
---Sig_/q1_kx7vWoAaOh5Yxi7TgO+m
+--Sig_/QYSh8z_M_THJzvFpRmBxoZX
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT2+Y9jnsnt1WYoG5AQJMnQ//XDmlSK6cBH1bp3vrpjItv2djC2S5f+fp
-tqcll2mxUUrNwaEtkktj4uPvWQSVrXCvjp4+qrhahW+AUxER6riRxR3arzLY3CuJ
-Y+VSWSab6y8m7TcoUW5mZfEIBY67kZ/2buo+BuvRknzyqyhpX6RYNCF9b5IpnDNl
-UBXdD/vXQFcTOXlHA4caeAnreJWNJjKB8J3CNX5KU+smh75U8zmnVbwrAbHoZ6aE
-tdvk4MD9cZntA+ywXlyVUUJ3uWFuI6eu6kuNiaJHVAr5s+qXMA5h9OA/+IX6NaYv
-Pp3b/RJN+8GagM/B9Xva1vM+iqoj17W4YYQv49lIjUAIfjSGe5j2iYmzn4JM8in5
-FQng/7kt+RUQxC3GG5Cagss1/Wfe6Fhuuz/1vIKCkQrMvPloa2/hFpeXDWHJejaZ
-YA3I55FFKGArcCGJcd/Vlkv/XL9CKVY2ab9sNs79Bd/q82oklPtvav1GlW8g+w5c
-ky14WAvDEcj9tkIiP/fxqhx4adVj5qHUwa4mUJ/tDMQPsA3a5GCo8U2f36n61Gin
-+c5IcA4hP78qkZyePeFZyfYUqCMmZjV9rKc4PXnuIbO7wSUf47pgbf3wilOi9egO
-pYqgRRplCGA+eWOCZCG5xPiI4HYLo4YN4YbB2g5y6F7i7y7AExwtYNE414nt4Rx7
-Dlu2XV1HKoQ=
-=9fxM
+iQIVAwUBT2+cMTnsnt1WYoG5AQKOPA//Vl9gjHaZ1iy5hLL+y7QGKLDwBVPWQ24Z
+6uhPgnqVdjFzNFviuj/kjWYb11Ofp9DSbOEGbxQv+/jtKhF/k7vp8EdhSV5VotdA
+bg9YTT16T45vtEbG9xZW4/M3lt7chYGMv6xoyFIRam1BpjiCDPq2eV6BqNZkVhkx
+7WPpszw0Z5jqv8vDfTdjdKLMF/ers+lKpE1IPUNQrI3Q+7hWbDQcz0sn7yQOQqf+
+KO/ss5yl494Tq+rYk5pBPfWQIPK0ABEtrJLer3SRGChhdugrMyKwQAmBP4uAHJdu
+AOpd7lxd6G3bMuoJiZ9YMoQEYNy1sOTWTYwCA0CX6ZQULo2RWpi1/xoU6AA7O8JN
+cB2l21fWLYzcY6g7pQYcrL/7jcmFbI8RhU/qMgowg2l9PR+U0mYvGMDGCi8UVRAk
+bV/YGyPMLWEzY8YDOj+wcV5fclQs9wfnOeHzGILDN3by5EPeaaaRcLjFeGUxZW+N
+kOi6R3CTp9pe4m0tuwpnxiZbS0q6izpfMDPRcyJ4XuWxpCr9F2xOzB4tcc3UYKHs
+zMLy0q9dTLF7xVhtiHQeIZYtabmlqg/qw0b2Dv23GbfJbNGot5lvqSsg9fsfOUzz
+q8nCEcYTC2SFq9nLm6r2+6pqGPT4v2ZI9f9jEu3Cd6fkxDsf/iU9kfjYngXiC5yi
+4haaOvp4/sQ=
+=I6Gx
 -----END PGP SIGNATURE-----
 
---Sig_/q1_kx7vWoAaOh5Yxi7TgO+m--
+--Sig_/QYSh8z_M_THJzvFpRmBxoZX--
