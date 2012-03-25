@@ -1,60 +1,100 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: RAID-10 explicitly defined drive pairs?
-Date: Sun, 25 Mar 2012 11:30:04 +0200
-Message-ID: <CAGRgLy7N7m4zFY-EKe8ApUGSR3ZCUpOTZcRvLVLd5WAN2f+k9g@mail.gmail.com>
-References: <20111212115459.GC20730@fi.muni.cz>
-	<4EE61EAE.20101@anonymous.org.uk>
-	<20120106150823.GX25976@fi.muni.cz>
-	<20120107075526.59ed433c@notabene.brown>
-	<CAGRgLy4Q5FhHMAeU3egqEfFKR_h1HneReg0sD_+hCmsF3WDzQw@mail.gmail.com>
-	<20120322213114.61fd4e44@notabene.brown>
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
+Subject: Re: Rescue md/6 array: advice please
+Date: Sun, 25 Mar 2012 14:02:05 +0100
+Message-ID: <20335.5965.847038.272149@tree.ty.sabi.co.UK>
+References: <4F6E3E50.3010000@ivimey.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120322213114.61fd4e44@notabene.brown>
+In-Reply-To: <4F6E3E50.3010000@ivimey.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Jan Kasprzak <kas@fi.muni.cz>, linux-raid <linux-raid@vger.kernel.org>, John Robinson <john.robinson@anonymous.org.uk>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thanks, Neil!
-I will merge this in and test.
+> [ ... ] my raid6 array died today when a controller died and
+> took 3 of 5 disks out of the array. I think/hope the disks
+> (1TB enterprise Seagate) are ok,
 
+The details of =ABdied and took 3 of 5 disks out of the array=BB
+matter, and what was running at the time.
 
-On Thu, Mar 22, 2012 at 12:31 PM, NeilBrown <neilb@suse.de> wrote:
-> On Thu, 22 Mar 2012 12:01:48 +0200 Alexander Lyakas <alex.bolshoy@gma=
-il.com>
-> wrote:
->
->> Neil,
->>
->> > =A0echo frozen > /sys/block/mdN/md/sync_action
->> > =A0mdadm --add /dev/mdN /dev......
->> > =A0echo recover > /sys/block/mdN/md/sync_action
->> >
->> > it should do them all at once.
->> >
->> > I should teach mdadm about this..
->>
->> What is required to do that from mdadm? I don't see any other place
->> where MD_RECOVERY_FROZEN is set, except via sysfs. So do you suggest
->> that mdadm use sysfs for that?
->
-> Yes.
->
-> http://neil.brown.name/git?p=3Dmdadm;a=3Dcommitdiff;h=3D9f58469128c99=
-c0d7f434d28657f86789334f253
->
->> Also, what should be done if mdadm succeeds to "freeze" the array, b=
-ut
->> fails to "unfreeze" it for some reason?
->
-> What could possibly cause that?
-> I guess if someone kills mdadm while it was running..
->
->
-> NeilBrown
+One guess then is that you were using two host adapter chips,
+perhaps one onboard and one in a PCI/PCIe slot, and IO continued
+on the disks attached to one while the other was not working,
+but none od the disks were faulty, 3 just went offline because
+the host adapter chip stopped working.
+
+In the ideal case the host adapter that died just died, in the
+worst it did random writes at random places on the 3 drives
+connected to it before stopping, so even if the 3 drives may be
+physically fine, their contents may be damaged.
+
+> but obviously the event counts are now different. [ ... ] The
+> event count of the missing disk was about 20 events lower than
+> the latest disk's count.
+
+I guess that you know that then some stripes will likely be
+"wrong".
+
+While it is a bit worrying that MD continues to do IO to members
+of a RAID set when some have gone offline below the level at
+which the set is viable, it is not easy to see what MD could do
+about it, as those writes could be just in the queues, and the IO
+subsystem would not know that they are related.
+
+> I do have a backup, but would prefer not to have to rely on
+> it: if there is an error in restoring from the backup I don't
+> have a third line of defence!
+
+A bit improvident (I buy drives in fours, one active drive and 3
+backups, 1 online and 2 offline duplicated over eSATA), but you
+need to use the backup to at least verify as far as possible the
+contents of the RAID set you are about to recover, if only to
+check whether the host adapter that died didn't do really bad
+random things.
+
+> I believe the correct way forward is to force an mdadm
+> assemble, with the failed-disk and readonly options, to build
+> a minimal (3 of 5?)  array,
+
+That sounds both sensible and cheating, but good cheating in your
+case as it will get MD to not notice that some stripes are
+inconsistent.
+
+If you have time to spare you may want to put in all 5 drives (or
+4) with '--assume-clean' and RO first and run scrubbing check
+('man 4 md' has a specific section) to see the reported count of
+innconsistencies. It may be a good time to verify against the
+backup too.
+
+> then assuming it works do an fsck to see if it checks out,
+
+And I'll insist about the verify from backup for a double check
+of the data contents, not just the metadata.
+
+> then rotate for the best combination,
+
+As a guess ideally the 3 disks with the smallest difference in
+event counts among them, not necessarily those with the highest
+counts.
+
+As you report that 2 disks were attached to the host adapter
+that didn't die, so they are "current", so your choices are:
+
+  * Those 2 disks plus the most recent one from the 3 that went
+    offline because of host adapter death.
+
+  * If the host adapter died quickly and peacefully, the 3 drives
+    connected to it will be (nearly or completely) consistent at
+    least as MD goes, even if not current, as some in-page-cache
+    data will not have made it to them.
+
+> then rebuild without readonly, then add in the rest of the
+> failed disks.
+
+After zeroing the MD labels of the remaining two disks, because
+they are going to be overwritten anyhow.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
