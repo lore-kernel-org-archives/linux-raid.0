@@ -1,39 +1,16 @@
-From: "majianpeng" <majianpeng@gmail.com>
-Subject: Re: Re: md/raid5:Fix recover/replace stop if handle stipe failed
-Date: Wed, 28 Mar 2012 10:25:03 +0800
-Message-ID: <201203281025006564184@gmail.com>
-References: <201203141507458909278@gmail.com>,
- <201203141727412189832@gmail.com>,
- <20120327142642.3e40547d@notabene.brown>,
- <201203271533149067900@gmail.com>,
- <201203280945342813684@gmail.com>,
- <20120328131449.2ad9896f@notabene.brown>
+From: laurarey111@hotmail.com
+Subject: Hello
+Date: Tue, 27 Mar 2012 13:30:20 GMT
+Message-ID: <4f71c0ec.15c.1230.17328__19544.1845375628$1332902096$gmane$org@econetmobile.co.zw>
+Reply-To: laurarey111@hotmail.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-SSBzZWUuVGhhbmtzDQoNCi0tLS0tLS0tLS0tLS0tLS0tLQkJCQkgDQptYWppYW5wZW5nDQoyMDEy
-LTAzLTI4DQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0NCreivP7Iy6O6TmVpbEJyb3duDQq3osvNyNXG2qO6MjAxMi0wMy0yOCAx
-MDoxNTowMA0KytW8/sjLo7ptYWppYW5wZW5nDQqzrcvNo7psaW51eC1yYWlkDQrW98zio7pSZTog
-bWQvcmFpZDU6Rml4IHJlY292ZXIvcmVwbGFjZSBzdG9wIGlmIGhhbmRsZSBzdGlwZSBmYWlsZWQN
-Cg0KT24gV2VkLCAyOCBNYXIgMjAxMiAwOTo0NTo0MCArMDgwMCAibWFqaWFucGVuZyIgPG1hamlh
-bnBlbmdAZ21haWwuY29tPiB3cm90ZToNCg0KPiA+Pkhvd2V2ZXIgSSBkb24ndCBhZ3JlZSB0aGF0
-IHdlIG5lZWQgdG8gc2V0ICdhYm9ydCA9IDEnIGluIHRoZSBub24tUkVDT1ZFUlkNCj4gPj5jYXNl
-Lg0KPiBCdXQgdGhlIG9yaWdpYWwgY29kZSBpczoNCj4gbWRfZG9uZV9zeW5jKGNvbmYtPm1kZGV2
-LCBTVFJJUEVfU0VDVE9SUywgMCkNCj4gVGhpcyBtZWFuIHlvdSB3aWxsIGludGVycnVudCB0aGUg
-cmVzeW5jLg0KDQpDb3JyZWN0LiAgQnV0IEkgbm93IHRoaW5rIHRoZSBvcmlnaW5hbCBjb2RlIHdh
-cyB3cm9uZyAtIG9yIGF0IGxlYXN0DQp1bm5lY2Vzc2FyeSBhbmQgYWRkaXRpb24gb2Yga25vd24t
-YmFkLWJsb2NrcyBoYXMgbWFkZSBpdCB3cm9uZy4NCg0KVGhhbmtzLA0KTmVpbEJyb3duDQoNCg0K
-PiANCj4gLS0tLS0tLS0tLS0tLS0tLS0tCQkJCSANCj4gbWFqaWFucGVuZw0KPiAyMDEyLTAzLTI4
-DQo+IA0KPiANCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhl
-IGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXJhaWQiIGluDQo+IHRoZSBib2R5IG9mIGEgbWVzc2Fn
-ZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQg
-IGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KDQo=
-
+Hello xxxxx,
+ How are you doing over there? My name is Laura, Please let
+me know if i got the right address so we can open
+communication, here is my email address I am waiting for
+your confirmation with care Laura...
