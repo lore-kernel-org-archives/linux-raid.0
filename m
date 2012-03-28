@@ -1,101 +1,112 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm raid6 recovery status
-Date: Thu, 29 Mar 2012 10:27:04 +1100
-Message-ID: <20120329102704.14b08f2a@notabene.brown>
-References: <B2B36B3006DB4C47A56D6BA19443F5D12DCEB542@IU-MSSG-MBX110.ads.iu.edu>
-	<20120328151148.035bd737@notabene.brown>
-	<B2B36B3006DB4C47A56D6BA19443F5D12DCEB63D@IU-MSSG-MBX110.ads.iu.edu>
+Subject: Re: [PULL REQUEST] two md updates for 3.3
+Date: Thu, 29 Mar 2012 10:31:42 +1100
+Message-ID: <20120329103142.7d76adb7@notabene.brown>
+References: <20120209121613.3392fb87@notabene.brown>
+	<CAGRgLy7Dq9g8Bj2_vWu5iYk9gboZ42nyswQNX4g6ziWMDou1Eg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/y3YteD4HgWCNEH.zqgpdUas"; protocol="application/pgp-signature"
+ boundary="Sig_/X=zVErtIvcDPjaJ0e03/3Bs"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <B2B36B3006DB4C47A56D6BA19443F5D12DCEB63D@IU-MSSG-MBX110.ads.iu.edu>
+In-Reply-To: <CAGRgLy7Dq9g8Bj2_vWu5iYk9gboZ42nyswQNX4g6ziWMDou1Eg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Paramasivam, Meenakshisundaram" <mparamas@iupui.edu>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux RAID <linux-raid@vger.kernel.org>, Jonathan Brassow <jbrassow@redhat.com>
 List-Id: linux-raid.ids
 
---Sig_/y3YteD4HgWCNEH.zqgpdUas
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/X=zVErtIvcDPjaJ0e03/3Bs
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 28 Mar 2012 12:49:18 +0000 "Paramasivam, Meenakshisundaram"
-<mparamas@iupui.edu> wrote:
+On Wed, 28 Mar 2012 15:33:51 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
 
-> [root@in-rady-neuro9 ~]# df -kl /myarray
-> Filesystem           1K-blocks      Used Available Use% Mounted on
-> /dev/md2             11537161976    162432 10950945196   1% /myarray
-> Should be 7TB of used space.
+> Hi Neil,
+> aren't those resync fixes the ones we had a long discussion about?
 
-This is bad.  Something has happened to your filesystem.
-It is almost as though someone ran "mkfs" on the array.
-I don't know much about recovery after such an action, but I doubt you
-will get much back.
+I don't remember... they came up more recently, but maybe they relate to an
+earlier discussion.
 
->=20
-> [root@in-rady-neuro9 ~]# cat /proc/partitions
-> major minor  #blocks  name
->=20
->    8        0  438960128 sda
->    8        1     512000 sda1
->    8        2   51200000 sda2
->    8        3  387247104 sda3
->    8       16 1953514584 sdb
->    8       32 1953514584 sdc
->    8       48 1953514584 sdd
->    8       64 1953514584 sde
->    8       80 1953514584 sdf
->    8       96 1953514584 sdg
->    8      112 1953514584 sdh
->    8      128 1953514584 sdi
->  253        0  346226688 dm-0
->  253        1   40992768 dm-1
+> Do you think those could be backported to 3.2 (which is picked by
+> Ubuntu Precise)?
 
-No md2 ???
-
->=20
-> sd[b-i] are raid devices
->=20
-> [root@in-rady-neuro9 ~]# mdadm --detail /dev/md2
-> /dev/md2:
->         Version : 0.90
->   Creation Time : Fri Dec 16 17:56:14 2011
->      Raid Level : raid6
->      Array Size : 11721086976 (11178.10 GiB 12002.39 GB)
->   Used Dev Size : 1953514496 (1863.02 GiB 2000.40 GB)  <<<=3D=3D=3D=3D=3D=
-=3D Wrong! Should be 7TB of used array space.
-
-"Used Dev Size" isn't "how much of the array is used by the filesystem" -
-mdadm doesn't know anything about filesystems.
-It is "How much of each individual device is used by the array", which is
-usually a little less than the size of the smallest device.
-So 2TB is correct here.
-
+I don't object - feel free to forward them to stable@vger.kernel.org
 
 NeilBrown
 
+>=20
+> Thanks,
+>   Alex.
+>=20
+>=20
+> On Thu, Feb 9, 2012 at 3:16 AM, NeilBrown <neilb@suse.de> wrote:
+> >
+> > Hi Linus,
+> >
+> > The following changes since commit 307729c8bc5b5a41361af8af95906eee7552=
+acb1:
+> >
+> > =A0md/raid1: perform bad-block tests for WriteMostly devices too. (2012=
+-01-11 08:35:17 +1100)
+> >
+> > are available in the git repository at:
+> >
+> > =A0git://neil.brown.name/md/ md-3.3-fixes
+> >
+> > for you to fetch changes up to db91ff55bdf06736b849afc1b1fce5763bbb8d5d:
+> >
+> > =A0md: two small fixes to handling interrupt resync. (2012-02-07 12:01:=
+51 +1100)
+> >
+> > ----------------------------------------------------------------
+> > (from the branch description for md-scratch local branch)
+> >
+> > for-linus
+> > Some simple md-related fixes.
+> >
+> > 1/ two small fixes to ensure we handle an interrupted resync properly.
+> > 2/ avoid loading the bitmap multiple times in dm-raid
+> >
+> > ----------------------------------------------------------------
+> > Jonathan Brassow (1):
+> > =A0 =A0 =A0Prevent DM RAID from loading bitmap twice.
+> >
+> > NeilBrown (1):
+> > =A0 =A0 =A0md: two small fixes to handling interrupt resync.
+> >
+> > =A0drivers/md/dm-raid.c | =A0 12 +++++++++---
+> > =A0drivers/md/md.c =A0 =A0 =A0| =A0 =A05 +++--
+> > =A02 files changed, 12 insertions(+), 5 deletions(-)
+> >
+> >
+> > Thanks,
+> > NeilBrown
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
---Sig_/y3YteD4HgWCNEH.zqgpdUas
+--Sig_/X=zVErtIvcDPjaJ0e03/3Bs
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT3OeSDnsnt1WYoG5AQLwQg/+P270Ji+w8wAfDOTMU67qO39jsZgkSVjN
-zuukAYObQfRCCVFd/RlIzx/OKaQwBdaLwwNH1x8yT+QG11ImBa7ZGfiJ/NtspyHW
-8kKLbq6DBn7IoPC8jtU+pR3DhMkNQcnpEIil8gOnMyYud/a+U0OFqk1K07hVm4Bb
-cSm4HYwuBkWP+eRbnDlXnB2zyVfxp0Z3rff78xdMpuVEBhApKbj0ydp2wO4VdBFV
-O1T3IytUy/i9hfeTAzyrodEUWClxoei/tAz8tGXqGApyuGI+XmxTCUaXLYt2bDC7
-BbR7SmOfX8gmoAYXOtSHluCMjYzcNmbqRcR/+awi9y278HUcpf/EJYtshJwMdD2/
-Ew7lQcU7mY6DMGoKusHPXujobZK3L7ETBcau1fKWAevJPPot86G2+039wGUcATCM
-TLBiNd3upaFRAtO4FSbMlHTPR4lClqqg7JUK8TX1SQK0FxsoLi76DWaRQCbW3RqS
-bFI5wHQ/SmQELohPqP8KQ0WvX6Wn3TE33bZFoxx0WdJ1QuGJn/wGcOY6VPP5FaIt
-Ch09/qG7hDELVkiWdlVu+2cDfM2O42PmHXzG/fvzfEi4i/FralLLRti+noM/ce23
-mNUlDyIHRzDgYPr/aKM5gbZmJoseqMCpDoa6R3E2tUw3dK2KGSMcdruhnOkMvqBA
-fEgBe0NI2qM=
-=3+oQ
+iQIVAwUBT3OfXjnsnt1WYoG5AQLrow/6AtUNW+zBcB5i4L7J7Csx2OlqlpIkYECD
++KC/VuIZqly+wLZDG2UvrsmN47yUAe3gHimPQIMTKA/6cRarQqCsXTls3Xe6d5ex
+9H76iFQDs2Gyjh4/HD25uyPGG5Frv3PxZePtpbBQ5Ss+blyV6c1uC9LwAIebIwlj
+7w1aMXP/vC/GkdkoqpzMERUWpSCi1qAZm7ZtldpSCEYbL47dYIICelqUr9QA7jvD
+vPid2vXmxMOwIFtJ1HOdWC75Degz7n7BLT98qYepkk1i/IQWKknNDi6pMFjOv0fX
+7SrIm/41dAsSGWKFdIvHtZ4+ectWBV5m8mQSJpS6qGua0Fl8DkWcbyaQMs2wQ0c8
+c/Nmj6Lb/FT7tgON40ZPo5mCL3mbhH5VayWWLprOfE1UHQvVbOf6jZ6SDZLeBWAX
+w9QnGMtq08vQB8nd4WLigYvLFuu0w1w+U6xNspurS+Dk09U7bSO5Bi7xmI/IH9Kt
+wBOssSW3VY9eoJUy//6ZsiPkaq5qfQd00Q/UAO8gxNX2EhoYLs9zBnu5wVPvk1mg
+VJ229XOkFEGnz/3IGMFLyLNGOhlL5iImFsqFFEks6pxYYfg9GBCj/i+dcBfN+S65
+Ip7nTyCOxA9mRVRH6u+ME+TR3er2OBIDpvD8nkc5o5hrnEslQWbAKxjnTtHLmNk9
+WpmtXxUr8ck=
+=q6GI
 -----END PGP SIGNATURE-----
 
---Sig_/y3YteD4HgWCNEH.zqgpdUas--
+--Sig_/X=zVErtIvcDPjaJ0e03/3Bs--
