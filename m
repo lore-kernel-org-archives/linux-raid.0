@@ -1,7 +1,7 @@
 From: "majianpeng" <majianpeng@gmail.com>
-Subject: md:Add the judgement about the size of suspend_lo and  suspend_hi.
-Date: Wed, 28 Mar 2012 19:49:38 +0800
-Message-ID: <201203281949331251132@gmail.com>
+Subject: md/raid1:remove unnecessary  set_bit(MD_RECOVERY_INTR,&mddev->recovery).
+Date: Wed, 28 Mar 2012 20:04:46 +0800
+Message-ID: <201203282004424064858@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
@@ -12,40 +12,37 @@ To: Neil Brown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From 7b8db5f9559feef49859056407a7cee656bcfc45 Mon Sep 17 00:00:00 2001
+From 641d71c2c1acc15536c621e2aa9806fe42b9cb8a Mon Sep 17 00:00:00 2001
 From: majianpeng <majianpeng@gmail.com>
-Date: Wed, 28 Mar 2012 19:43:58 +0800
-Subject: [PATCH] md:Add the judgement about the size of suspend_lo and
- suspend_hi.
+Date: Wed, 28 Mar 2012 20:02:05 +0800
+Subject: [PATCH] md/raid1:remove unnecessary  set_bit(MD_RECOVERY_INTR,&mddev->recovery).
 
 
 Signed-off-by: majianpeng <majianpeng@gmail.com>
 ---
- drivers/md/md.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ drivers/md/raid1.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index b572e1e..7180ac3 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4364,6 +4364,8 @@ suspend_lo_store(struct mddev *mddev, const char *buf, size_t len)
- 		return -EINVAL;
- 	if (buf == e || (*e && *e != '\n'))
- 		return -EINVAL;
-+	if (new > mddev->suspend_hi)
-+		return -EINVAL;
- 
- 	mddev->suspend_lo = new;
- 	if (new >= old)
-@@ -4398,6 +4400,8 @@ suspend_hi_store(struct mddev *mddev, const char *buf, size_t len)
- 		return -EINVAL;
- 	if (buf == e || (*e && *e != '\n'))
- 		return -EINVAL;
-+	if (new < mddev->suspend_lo)
-+		return -EINVAL;
- 
- 	mddev->suspend_hi = new;
- 	if (new <= old)
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 4a40a20..81083f2 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1649,7 +1649,6 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
+ 			if (abort) {
+ 				conf->recovery_disabled =
+ 					mddev->recovery_disabled;
+-				set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 				md_done_sync(mddev, r1_bio->sectors, 0);
+ 				put_buf(r1_bio);
+ 				return 0;
+@@ -2403,7 +2402,6 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr, int *skipp
+ 			 * fail the really bad ones ???
+ 			 */
+ 			conf->recovery_disabled = mddev->recovery_disabled;
+-			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 			return 0;
+ 		} else
+ 			return min_bad;
 -- 
 1.7.5.4
 
