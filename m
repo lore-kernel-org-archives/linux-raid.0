@@ -1,118 +1,47 @@
-From: Bryan Bush <bbushvt@gmail.com>
-Subject: Re: RAID6 grow failed
-Date: Wed, 28 Mar 2012 06:35:33 -0400
-Message-ID: <CAJ72viPX1SDL2pPSkGQnujNcaoNmRposJXxaLhDkZDgFxv=-qA@mail.gmail.com>
-References: <CAJ72viP2MLb2tL84P-aK6Rs9eAH4x9Wwd=kVNbmPA=2LAfNLjg@mail.gmail.com>
-	<20120328151828.6988d3db@notabene.brown>
-	<CAJ72viMxgfjhQiqJYVnjBQGfCq7jtegfvUY0nRdj46XDedeSjg@mail.gmail.com>
-	<20120328192601.3db82133@notabene.brown>
+From: "majianpeng" <majianpeng@gmail.com>
+Subject: md/raid1:!conf->r1buf_pool is unlikely in function   sync_request.
+Date: Wed, 28 Mar 2012 19:24:29 +0800
+Message-ID: <201203281924252189178@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120328192601.3db82133@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Changing the number of devices to 12 worked!
-Thanks!
--Bryan
+From 7f9446682f64e28106dd52cd12bdf74a19fb4015 Mon Sep 17 00:00:00 2001
+From: majianpeng <majianpeng@gmail.com>
+Date: Wed, 28 Mar 2012 19:20:07 +0800
+Subject: [PATCH] md/raid1:!conf->r1buf_pool is unlikely in function
+ sync_request.
 
-On Wed, Mar 28, 2012 at 4:26 AM, NeilBrown <neilb@suse.de> wrote:
-> On Wed, 28 Mar 2012 03:54:45 -0400 Bryan Bush <bbushvt@gmail.com> wro=
-te:
->
->> On Wed, Mar 28, 2012 at 12:18 AM, NeilBrown <neilb@suse.de> wrote:
->> > On Tue, 27 Mar 2012 22:44:18 -0400 Bryan Bush <bbushvt@gmail.com> =
-wrote:
->> >
->> >> I hope this is the right place to ask this question. =A0I have at=
- 8
->> >> drive RAID 6 array that I wanted to grow to 13 drives (adding 5 m=
-ore).
->> >> =A0I issued the mdadm command and checked /proc/mdstat and all lo=
-oked
->> >> well. =A0However at some point in time a disk failed and that hun=
-g my
->> >> system. =A0Upon reboot the array is inactive and I can't get it t=
-o
->> >> reassemble.
->>
->> > Hmmm... what do you have in /etc/mdadm.conf??
->>
->> root@diamond:~# cat /etc/mdadm/mdadm.conf
->> # mdadm.conf
->> #
->> # Please refer to mdadm.conf(5) for information about this file.
->> #
->>
->> # by default, scan all partitions (/proc/partitions) for MD superblo=
-cks.
->> # alternatively, specify devices to scan, using wildcards if desired=
-=2E
->> DEVICE partitions
->>
->> # auto-create devices with Debian standard permissions
->> CREATE owner=3Droot group=3Ddisk mode=3D0660 auto=3Dyes
->>
->> # automatically tag new arrays as belonging to the local system
->> HOMEHOST <system>
->>
->> # instruct the monitoring daemon where to send mail alerts
->> MAILADDR root
->>
->> # definitions of existing MD arrays
->>
->> # This file was auto-generated on Fri, 14 Jan 2011 22:22:14 -0500
->> # by mkconf $Id$
->>
->> ARRAY /dev/md1 level=3Draid6 num-devices=3D8 metadata=3D01.02 name=3D=
-1
->> UUID=3Dfa32e2c5:e7bda20b:32af7c90:c7ee61eb
->
-> I think this array now has 13 devices, not 8. =A0You might want to fi=
-x that.
-> If you do, it might all magically start working.
->
-> (also get rid of the metadata=3D or make it metadata=3D1.2)
->
-> Or just get rid of the num-devices=3D bit.
->
->> ARRAY /dev/md0 level=3Draid5 num-devices=3D4 metadata=3D00.90
->> UUID=3D989c3b8b:bd60d243:683690d9:73a11dfa
->>
->> root@diamond:~#
->>
->> >
->> > Though if the names have changed at all it would be safer to do
->> >
->> > =A0mdadm -Asf /dev/md1 -u fa32e2c5:e7bda20b:32af7c90:c7ee61eb
->> >
->>
->> root@diamond:~# mdadm -Asf /dev/md1 -u fa32e2c5:e7bda20b:32af7c90:c7=
-ee61eb
->> mdadm: metadata format 01.02 unknown, ignored.
->> mdadm: metadata format 00.90 unknown, ignored.
->> mdadm: no devices found for /dev/md1
->
-> Odd. =A0I the above change to mdadm.conf doesn't help, try rerunning =
-this
-> command with --verbose and report the result.
->
-> NeilBrown
->
->
->> root@diamond:~#
->>
->> Didn't seem to help.
->> Any other ideas?
->> Thanks
->> -Bryan
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Signed-off-by: majianpeng <majianpeng@gmail.com>
+---
+ drivers/md/raid1.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 4a40a20..943b3b3 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2246,7 +2246,7 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr, int *skipp
+ 	int good_sectors = RESYNC_SECTORS;
+ 	int min_bad = 0; /* number of sectors that are bad in all devices */
+ 
+-	if (!conf->r1buf_pool)
++	if (unlikely(!conf->r1buf_pool))
+ 		if (init_resync(conf))
+ 			return 0;
+ 
+-- 
+1.7.5.4
+
+ 				
+--------------
+majianpeng
+2012-03-28
+
