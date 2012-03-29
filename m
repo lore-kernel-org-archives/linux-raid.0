@@ -1,112 +1,65 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PULL REQUEST] two md updates for 3.3
-Date: Thu, 29 Mar 2012 10:31:42 +1100
-Message-ID: <20120329103142.7d76adb7@notabene.brown>
-References: <20120209121613.3392fb87@notabene.brown>
-	<CAGRgLy7Dq9g8Bj2_vWu5iYk9gboZ42nyswQNX4g6ziWMDou1Eg@mail.gmail.com>
+From: "majianpeng" <majianpeng@gmail.com>
+Subject: md/raid5:Fix a bug about judging the operation is syncing or  replaing in analyse_stripe().
+Date: Thu, 29 Mar 2012 11:22:52 +0800
+Message-ID: <201203291122488286296@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/X=zVErtIvcDPjaJ0e03/3Bs"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy7Dq9g8Bj2_vWu5iYk9gboZ42nyswQNX4g6ziWMDou1Eg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux RAID <linux-raid@vger.kernel.org>, Jonathan Brassow <jbrassow@redhat.com>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/X=zVErtIvcDPjaJ0e03/3Bs
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+From 4d79586ebffac308ba11b363d81525882fdf6abe Mon Sep 17 00:00:00 2001
+From: majianpeng <majianpeng@gmail.com>
+Date: Thu, 29 Mar 2012 11:12:59 +0800
+Subject: [PATCH] md/raid5:Fix a bug about judging the operation is syncing or
+ replaing in analyse_stripe().
 
-On Wed, 28 Mar 2012 15:33:51 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
-wrote:
+When create a raid5 using assume-clean and echo check or repair to
+sync_action.Then component disks did not operated IO but the raid
+check/resync faster than normal.
+Because the judgement in function analyse_stripe():
+		if (do_recovery ||
+		    sh->sector >= conf->mddev->recovery_cp)
+			s->syncing = 1;
+		else
+			s->replacing = 1;
+When check or repair,the recovery_cp == MaxSectore,so syncing equal zero
+not one.
 
-> Hi Neil,
-> aren't those resync fixes the ones we had a long discussion about?
+Signed-off-by: majianpeng <majianpeng@gmail.com>
+---
+ drivers/md/raid5.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-I don't remember... they came up more recently, but maybe they relate to an
-earlier discussion.
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 23ac880..4d43ad3 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3276,12 +3276,14 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
+ 		/* If there is a failed device being replaced,
+ 		 *     we must be recovering.
+ 		 * else if we are after recovery_cp, we must be syncing
++		 * else if MD_RECOVERY_REQUESTED is set,we all in syning.
+ 		 * else we can only be replacing
+ 		 * sync and recovery both need to read all devices, and so
+ 		 * use the same flag.
+ 		 */
+ 		if (do_recovery ||
+-		    sh->sector >= conf->mddev->recovery_cp)
++		    sh->sector >= conf->mddev->recovery_cp ||
++		    test_bit(MD_RECOVERY_REQUESTED, &(conf->mddev->recovery)))
+ 			s->syncing = 1;
+ 		else
+ 			s->replacing = 1;
+-- 
+1.7.5.4
 
-> Do you think those could be backported to 3.2 (which is picked by
-> Ubuntu Precise)?
+ 				
+--------------
+majianpeng
+2012-03-29
 
-I don't object - feel free to forward them to stable@vger.kernel.org
-
-NeilBrown
-
->=20
-> Thanks,
->   Alex.
->=20
->=20
-> On Thu, Feb 9, 2012 at 3:16 AM, NeilBrown <neilb@suse.de> wrote:
-> >
-> > Hi Linus,
-> >
-> > The following changes since commit 307729c8bc5b5a41361af8af95906eee7552=
-acb1:
-> >
-> > =A0md/raid1: perform bad-block tests for WriteMostly devices too. (2012=
--01-11 08:35:17 +1100)
-> >
-> > are available in the git repository at:
-> >
-> > =A0git://neil.brown.name/md/ md-3.3-fixes
-> >
-> > for you to fetch changes up to db91ff55bdf06736b849afc1b1fce5763bbb8d5d:
-> >
-> > =A0md: two small fixes to handling interrupt resync. (2012-02-07 12:01:=
-51 +1100)
-> >
-> > ----------------------------------------------------------------
-> > (from the branch description for md-scratch local branch)
-> >
-> > for-linus
-> > Some simple md-related fixes.
-> >
-> > 1/ two small fixes to ensure we handle an interrupted resync properly.
-> > 2/ avoid loading the bitmap multiple times in dm-raid
-> >
-> > ----------------------------------------------------------------
-> > Jonathan Brassow (1):
-> > =A0 =A0 =A0Prevent DM RAID from loading bitmap twice.
-> >
-> > NeilBrown (1):
-> > =A0 =A0 =A0md: two small fixes to handling interrupt resync.
-> >
-> > =A0drivers/md/dm-raid.c | =A0 12 +++++++++---
-> > =A0drivers/md/md.c =A0 =A0 =A0| =A0 =A05 +++--
-> > =A02 files changed, 12 insertions(+), 5 deletions(-)
-> >
-> >
-> > Thanks,
-> > NeilBrown
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/X=zVErtIvcDPjaJ0e03/3Bs
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT3OfXjnsnt1WYoG5AQLrow/6AtUNW+zBcB5i4L7J7Csx2OlqlpIkYECD
-+KC/VuIZqly+wLZDG2UvrsmN47yUAe3gHimPQIMTKA/6cRarQqCsXTls3Xe6d5ex
-9H76iFQDs2Gyjh4/HD25uyPGG5Frv3PxZePtpbBQ5Ss+blyV6c1uC9LwAIebIwlj
-7w1aMXP/vC/GkdkoqpzMERUWpSCi1qAZm7ZtldpSCEYbL47dYIICelqUr9QA7jvD
-vPid2vXmxMOwIFtJ1HOdWC75Degz7n7BLT98qYepkk1i/IQWKknNDi6pMFjOv0fX
-7SrIm/41dAsSGWKFdIvHtZ4+ectWBV5m8mQSJpS6qGua0Fl8DkWcbyaQMs2wQ0c8
-c/Nmj6Lb/FT7tgON40ZPo5mCL3mbhH5VayWWLprOfE1UHQvVbOf6jZ6SDZLeBWAX
-w9QnGMtq08vQB8nd4WLigYvLFuu0w1w+U6xNspurS+Dk09U7bSO5Bi7xmI/IH9Kt
-wBOssSW3VY9eoJUy//6ZsiPkaq5qfQd00Q/UAO8gxNX2EhoYLs9zBnu5wVPvk1mg
-VJ229XOkFEGnz/3IGMFLyLNGOhlL5iImFsqFFEks6pxYYfg9GBCj/i+dcBfN+S65
-Ip7nTyCOxA9mRVRH6u+ME+TR3er2OBIDpvD8nkc5o5hrnEslQWbAKxjnTtHLmNk9
-WpmtXxUr8ck=
-=q6GI
------END PGP SIGNATURE-----
-
---Sig_/X=zVErtIvcDPjaJ0e03/3Bs--
