@@ -1,15 +1,15 @@
 From: "Paramasivam, Meenakshisundaram" <mparamas@iupui.edu>
 Subject: RE: mdadm raid6 recovery status
-Date: Thu, 29 Mar 2012 17:33:01 +0000
-Message-ID: <B2B36B3006DB4C47A56D6BA19443F5D12DCEBA2E@IU-MSSG-MBX110.ads.iu.edu>
+Date: Thu, 29 Mar 2012 18:47:14 +0000
+Message-ID: <B2B36B3006DB4C47A56D6BA19443F5D12DCEBAA4@IU-MSSG-MBX110.ads.iu.edu>
 References: <B2B36B3006DB4C47A56D6BA19443F5D12DCEB542@IU-MSSG-MBX110.ads.iu.edu>
 	<20120328151148.035bd737@notabene.brown>
-	<B2B36B3006DB4C47A56D6BA19443F5D12DCEB63D@IU-MSSG-MBX110.ads.iu.edu>,<20120329102704.14b08f2a@notabene.brown>
+	<B2B36B3006DB4C47A56D6BA19443F5D12DCEB63D@IU-MSSG-MBX110.ads.iu.edu>,<20120329102704.14b08f2a@notabene.brown>,<B2B36B3006DB4C47A56D6BA19443F5D12DCEBA2E@IU-MSSG-MBX110.ads.iu.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120329102704.14b08f2a@notabene.brown>
+In-Reply-To: <B2B36B3006DB4C47A56D6BA19443F5D12DCEBA2E@IU-MSSG-MBX110.ads.iu.edu>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
@@ -17,7 +17,18 @@ Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
-Good news: Got ALL of our data back. [Actually it was 4.96TB not 7TB]. 
+Clarification:
+>>should I do new array creation 
+I meant running newfs on assembled 12 TB array, and restore data from backup, to resolve "df" reporting problem.
+
+________________________________________
+From: Paramasivam, Meenakshisundaram
+Sent: Thursday, March 29, 2012 1:33 PM
+To: NeilBrown
+Cc: linux-raid@vger.kernel.org
+Subject: RE: mdadm raid6 recovery status
+
+Good news: Got ALL of our data back. [Actually it was 4.96TB not 7TB].
                      mdadm is a good one.
 
 Bad news: "df" is reporting wrong, while "du" is showing full size.
@@ -30,7 +41,7 @@ Filesystem           1K-blocks      Used Available Use% Mounted on
 
 I never looked into du or looked in depth of the files & folders and simply got mislead by reported "df" usage; data was there all along. We definitely want "df" for the array's filesystem (ext3) to report right.
 
-Now that we are backing up all of the data (at 400 Mbps) over network, I want to know if "df" reporting can be fixed easily or should I do new array creation and restore data from backup. 
+Now that we are backing up all of the data (at 400 Mbps) over network, I want to know if "df" reporting can be fixed easily or should I do new array creation and restore data from backup.
 
 We are ordering a new RAID card, just to be on safer side.
 
