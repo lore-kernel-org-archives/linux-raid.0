@@ -1,116 +1,148 @@
-From: "majianpeng" <majianpeng@gmail.com>
-Subject: When allocating resync pages,judge the queue limit of mddev.
-Date: Fri, 30 Mar 2012 13:53:05 +0800
-Message-ID: <201203301352578438837@gmail.com>
+From: "Paramasivam, Meenakshisundaram" <mparamas@iupui.edu>
+Subject: RE: mdadm raid6 recovery status
+Date: Fri, 30 Mar 2012 21:22:34 +0000
+Message-ID: <B2B36B3006DB4C47A56D6BA19443F5D12DCEBDDD@IU-MSSG-MBX110.ads.iu.edu>
+References: <B2B36B3006DB4C47A56D6BA19443F5D12DCEB542@IU-MSSG-MBX110.ads.iu.edu>
+	<20120328151148.035bd737@notabene.brown>
+	<B2B36B3006DB4C47A56D6BA19443F5D12DCEB63D@IU-MSSG-MBX110.ads.iu.edu>
+	<20120329102704.14b08f2a@notabene.brown>
+	<B2B36B3006DB4C47A56D6BA19443F5D12DCEBA2E@IU-MSSG-MBX110.ads.iu.edu>
+	<B2B36B3006DB4C47A56D6BA19443F5D12DCEBAA4@IU-MSSG-MBX110.ads.iu.edu>,<20120330064145.6747fff0@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120330064145.6747fff0@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From d5c0ad3ac03c805747f71338d30282f9f8d8d953 Mon Sep 17 00:00:00 2001
-From: majianpeng <majianpeng@gmail.com>
-Date: Fri, 30 Mar 2012 13:37:42 +0800
-Subject: [PATCH] md/raid1:When allocating resync pages,judge the queue limit  of mddev.
- When max_sectors of mddev is smaller than
- RESYNC_PAGES(at present 64k),then: 1:alloc enough resync
- pags. 2:when do bio_add_page can goto bio_fill.
+
+Thanks. Is it safe to fsck -n (and then fsck -y) on /dev/md2 when sdg is just added to md2 and is in "spare rebulding" status and recovery is only at 4% completed? BTW, we got all of the data backed up.
+
+Background:
+When we assembled md2 we forced rest of the drives and did not include this drive. After 24 hrs, when I tried to assemble all of the drives into md2, I got "md: kicking non-fresh sdg from array!" message through dmesg, and was removed from md2 (through mdadm --detail). I just did:
+# mdadm /dev/md2 --add /dev/sdg
+mdadm: re-added /dev/sdg
+
+Sundar
+
+________________________________________
+From: NeilBrown [neilb@suse.de]
+Sent: Thursday, March 29, 2012 3:41 PM
+To: Paramasivam, Meenakshisundaram
+Cc: linux-raid@vger.kernel.org
+Subject: Re: mdadm raid6 recovery status
+
+On Thu, 29 Mar 2012 18:47:14 +0000 "Paramasivam, Meenakshisundaram"
+<mparamas@iupui.edu> wrote:
+
+>
+> Clarification:
+> >>should I do new array creation
+> I meant running newfs on assembled 12 TB array, and restore data from backup, to resolve "df" reporting problem.
+
+I would suggest asking on
+    linux-ext4@vger.kernel.org
+
+be sure to give lots of details - kernel version etc.
+It would be worth running
+   fsck -n /dev/md2
+first and see if it reports anything strange.
+Maybe  just a fsck will fix it.
+
+NeilBrown
 
 
-Signed-off-by: majianpeng <majianpeng@gmail.com>
----
- drivers/md/raid1.c |   18 +++++++++++-------
- 1 files changed, 11 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 4a40a20..cd100e6 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -82,16 +82,19 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
- 	struct r1bio *r1_bio;
- 	struct bio *bio;
- 	int i, j;
-+	int sync_pages;
- 
- 	r1_bio = r1bio_pool_alloc(gfp_flags, pi);
- 	if (!r1_bio)
- 		return NULL;
- 
-+	sync_pages = queue_max_sectors(pi->mddev->gendisk->queue) << 9;
-+	sync_pages = min(RESYNC_PAGES, (sync_pages + PAGE_SIZE - 1) / PAGE_SIZE);
- 	/*
- 	 * Allocate bios : 1 for reading, n-1 for writing
- 	 */
- 	for (j = pi->raid_disks ; j-- ; ) {
--		bio = bio_kmalloc(gfp_flags, RESYNC_PAGES);
-+		bio = bio_kmalloc(gfp_flags, sync_pages);
- 		if (!bio)
- 			goto out_free_bio;
- 		r1_bio->bios[j] = bio;
-@@ -108,7 +111,7 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
- 		j = 1;
- 	while(j--) {
- 		bio = r1_bio->bios[j];
--		for (i = 0; i < RESYNC_PAGES; i++) {
-+		for (i = 0; i < sync_pages; i++) {
- 			page = alloc_page(gfp_flags);
- 			if (unlikely(!page))
- 				goto out_free_pages;
-@@ -119,8 +122,8 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
- 	}
- 	/* If not user-requests, copy the page pointers to all bios */
- 	if (!test_bit(MD_RECOVERY_REQUESTED, &pi->mddev->recovery)) {
--		for (i=0; i<RESYNC_PAGES ; i++)
--			for (j=1; j<pi->raid_disks; j++)
-+		for (i = 0; i < sync_pages ; i++)
-+			for (j = 1; j < pi->raid_disks; j++)
- 				r1_bio->bios[j]->bi_io_vec[i].bv_page =
- 					r1_bio->bios[0]->bi_io_vec[i].bv_page;
- 	}
-@@ -147,7 +150,7 @@ static void r1buf_pool_free(void *__r1_bio, void *data)
- 	int i,j;
- 	struct r1bio *r1bio = __r1_bio;
- 
--	for (i = 0; i < RESYNC_PAGES; i++)
-+	for (i = 0; i < r1bio->bios[0]->bi_max_vecs; i++)
- 		for (j = pi->raid_disks; j-- ;) {
- 			if (j == 0 ||
- 			    r1bio->bios[j]->bi_io_vec[i].bv_page !=
-@@ -2243,7 +2246,7 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr, int *skipp
- 	int write_targets = 0, read_targets = 0;
- 	sector_t sync_blocks;
- 	int still_degraded = 0;
--	int good_sectors = RESYNC_SECTORS;
-+	int good_sectors;
- 	int min_bad = 0; /* number of sectors that are bad in all devices */
- 
- 	if (!conf->r1buf_pool)
-@@ -2296,6 +2299,7 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr, int *skipp
- 	r1_bio = mempool_alloc(conf->r1buf_pool, GFP_NOIO);
- 	raise_barrier(conf);
- 
-+	good_sectors = r1_bio->bios[0]->bi_max_vecs << 9;
- 	conf->next_resync = sector_nr;
- 
- 	rcu_read_lock();
-@@ -2477,7 +2481,7 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr, int *skipp
- 		nr_sectors += len>>9;
- 		sector_nr += len>>9;
- 		sync_blocks -= (len>>9);
--	} while (r1_bio->bios[disk]->bi_vcnt < RESYNC_PAGES);
-+	} while (r1_bio->bios[disk]->bi_vcnt < r1_bio->bios[0]->bi_max_vecs);
-  bio_full:
- 	r1_bio->sectors = nr_sectors;
- 
--- 
-1.7.5.4
-
- 				
---------------
-majianpeng
-2012-03-30
+>
+> ________________________________________
+> From: Paramasivam, Meenakshisundaram
+> Sent: Thursday, March 29, 2012 1:33 PM
+> To: NeilBrown
+> Cc: linux-raid@vger.kernel.org
+> Subject: RE: mdadm raid6 recovery status
+>
+> Good news: Got ALL of our data back. [Actually it was 4.96TB not 7TB].
+>                      mdadm is a good one.
+>
+> Bad news: "df" is reporting wrong, while "du" is showing full size.
+> # df -kl /myarray
+> Filesystem           1K-blocks      Used Available Use% Mounted on
+> /dev/md2             11537161976    162432 10950945196   1% /myarray
+> # du -sk /myarray
+> 5326133556      /myarray
+> #
+>
+> I never looked into du or looked in depth of the files & folders and simply got mislead by reported "df" usage; data was there all along. We definitely want "df" for the array's filesystem (ext3) to report right.
+>
+> Now that we are backing up all of the data (at 400 Mbps) over network, I want to know if "df" reporting can be fixed easily or should I do new array creation and restore data from backup.
+>
+> We are ordering a new RAID card, just to be on safer side.
+>
+> Sundar
+>
+> ________________________________________
+> From: NeilBrown [neilb@suse.de]
+> Sent: Wednesday, March 28, 2012 7:27 PM
+> To: Paramasivam, Meenakshisundaram
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: mdadm raid6 recovery status
+>
+> On Wed, 28 Mar 2012 12:49:18 +0000 "Paramasivam, Meenakshisundaram"
+> <mparamas@iupui.edu> wrote:
+>
+> > [root@in-rady-neuro9 ~]# df -kl /myarray
+> > Filesystem           1K-blocks      Used Available Use% Mounted on
+> > /dev/md2             11537161976    162432 10950945196   1% /myarray
+> > Should be 7TB of used space.
+>
+> This is bad.  Something has happened to your filesystem.
+> It is almost as though someone ran "mkfs" on the array.
+> I don't know much about recovery after such an action, but I doubt you
+> will get much back.
+>
+> >
+> > [root@in-rady-neuro9 ~]# cat /proc/partitions
+> > major minor  #blocks  name
+> >
+> >    8        0  438960128 sda
+> >    8        1     512000 sda1
+> >    8        2   51200000 sda2
+> >    8        3  387247104 sda3
+> >    8       16 1953514584 sdb
+> >    8       32 1953514584 sdc
+> >    8       48 1953514584 sdd
+> >    8       64 1953514584 sde
+> >    8       80 1953514584 sdf
+> >    8       96 1953514584 sdg
+> >    8      112 1953514584 sdh
+> >    8      128 1953514584 sdi
+> >  253        0  346226688 dm-0
+> >  253        1   40992768 dm-1
+>
+> No md2 ???
+>
+> >
+> > sd[b-i] are raid devices
+> >
+> > [root@in-rady-neuro9 ~]# mdadm --detail /dev/md2
+> > /dev/md2:
+> >         Version : 0.90
+> >   Creation Time : Fri Dec 16 17:56:14 2011
+> >      Raid Level : raid6
+> >      Array Size : 11721086976 (11178.10 GiB 12002.39 GB)
+> >   Used Dev Size : 1953514496 (1863.02 GiB 2000.40 GB)  <<<====== Wrong! Should be 7TB of used array space.
+>
+> "Used Dev Size" isn't "how much of the array is used by the filesystem" -
+> mdadm doesn't know anything about filesystems.
+> It is "How much of each individual device is used by the array", which is
+> usually a little less than the size of the smallest device.
+> So 2TB is correct here.
+>
+>
+> NeilBrown
+>
+>
 
