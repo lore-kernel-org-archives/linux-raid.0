@@ -1,120 +1,84 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: RAID5 created by 8 disks works with xfs
-Date: Sat, 31 Mar 2012 15:09:54 -0500
-Message-ID: <4F776492.4070600@hardwarefreak.com>
-References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com> <CADNH=7H_rgiY4fkB0SHo0yPhSBib7Gq-E_fu18yuJx=enn-eGg@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: NeilBrown <neilb@suse.de>
+Subject: Re: RAID6 grow failed
+Date: Sun, 1 Apr 2012 08:00:36 +1000
+Message-ID: <20120401080036.355a8a23@notabene.brown>
+References: <CAJ72viP2MLb2tL84P-aK6Rs9eAH4x9Wwd=kVNbmPA=2LAfNLjg@mail.gmail.com>
+	<20120328151828.6988d3db@notabene.brown>
+	<CAJ72viMxgfjhQiqJYVnjBQGfCq7jtegfvUY0nRdj46XDedeSjg@mail.gmail.com>
+	<20120328192601.3db82133@notabene.brown>
+	<CAJ72viPX1SDL2pPSkGQnujNcaoNmRposJXxaLhDkZDgFxv=-qA@mail.gmail.com>
+	<CAJ72viPH9AykY-tafTChcS0ZbP0gGaiKRybafs4C4Yk-8D=g3A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/awSgCYtNzvsdto7Gu8DRc7U"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADNH=7H_rgiY4fkB0SHo0yPhSBib7Gq-E_fu18yuJx=enn-eGg@mail.gmail.com>
+In-Reply-To: <CAJ72viPH9AykY-tafTChcS0ZbP0gGaiKRybafs4C4Yk-8D=g3A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>
-Cc: daobang wang <wangdb1981@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: Bryan Bush <bbushvt@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 3/31/2012 2:59 AM, Mathias Bur=E9n wrote:
-> On 31 March 2012 02:22, daobang wang <wangdb1981@gmail.com> wrote:
->> Hi ALL,
->>
->>    How to adjust the xfs and raid parameters to improve the total
->> performance when RAID5 created by 8 disks works with xfs, and i writ=
-ed
->> a test program, which started 100 threads to write big files, 500MB
->> per file, and delete it after writing finish. Thank you very much.
->>
->> Best Wishes,
->> Daobang Wang.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/awSgCYtNzvsdto7Gu8DRc7U
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Sat, 31 Mar 2012 15:38:23 -0400 Bryan Bush <bbushvt@gmail.com> wrote:
+
+> I've had another md issue.  Not sure exactly what caused it but my
+> array is offline again.  The reshape completed and I was about to
+> insert a new drive to replace the one that failed on the initial
+> reshape.
+> /proc/mdstat contains
+> md1 : inactive sdk1[13](S) sdh1[9](S) sdi1[10](S) sdc1[8](S)
+> sdj1[11](S) sdb1[4](S) sdd1[6](S) sde1[7](S) sdl1[0](S) sdn1[2](S)
+> sdo1[3](S)
+>       21488647746 blocks super 1.2
 >=20
-> Hi,
->=20
-> See http://xfs.org/index.php/XFS_FAQ#Q:_I_want_to_tune_my_XFS_filesys=
-tems_for_.3Csomething.3E
-> . Also see http://hep.kbfi.ee/index.php/IT/KernelTuning . For example=
-,
-> RAID5 with 8 harddrives and 64K stripe size:
->=20
-> mkfs.xfs -d su=3D64k,sw=3D7 -l version=3D2,su=3D64k /dev/md0
+> "mdadm -As --verbose /dev/md1 -u fa32e2c5:e7bda20b:32af7c90:c7ee61eb" ret=
+urns
+> mdadm: looking for devices for /dev/md1
+> <cut>
+> mdadm: /dev/sdo1 is identified as a member of /dev/md1, slot 3.
+> mdadm: /dev/sdn1 is identified as a member of /dev/md1, slot 2.
+> mdadm: /dev/sdj1 is identified as a member of /dev/md1, slot 10.
+> mdadm: /dev/sdl1 is identified as a member of /dev/md1, slot 0.
+> mdadm: /dev/sdk1 is identified as a member of /dev/md1, slot 8.
+> mdadm: /dev/sdi1 is identified as a member of /dev/md1, slot 11.
+> mdadm: /dev/sdh1 is identified as a member of /dev/md1, slot 12.
+> mdadm: /dev/sde1 is identified as a member of /dev/md1, slot 7.
+> mdadm: /dev/sdd1 is identified as a member of /dev/md1, slot 6.
+> mdadm: /dev/sdc1 is identified as a member of /dev/md1, slot 5.
+> mdadm: /dev/sdb1 is identified as a member of /dev/md1, slot 4.
+> mdadm: Cannot open /dev/sdl1: Device or resource busy
 
-This is unnecessary.  mkfs.xfs creates w/stripe alignment automatically
-when the target device is an md device.
+Stop the array first. - it is half-started which confused mdadm.
+i.e
+   mdadm -S /dev/md1
+   mdadm -As .......
 
-> Consider mounting the filesystem with logbufs=3D8,logbsize=3D256k
-
-This is unnecessary for two reasons:
-
-1.  These are the default values in recent kernels
-2.  His workload is the opposite of "metadata heavy"
-    logbufs and logbsize exist for metadata operations
-    to the journal, they are in memory journal write buffers
-
-The OP's stated workload is 100 streaming writes of 500MB files.  This
-is not anything close to a sane, real world workload.  Writing 100 x
-500MB files in parallel to 7 spindles is an exercise in stupidity, and
-especially to a RAID5 array with only 7 spindles.  The OP is pushing
-those drives to their seek limit of about 150 head seeks/sec without
-actually writing much data, and *that* is what is ruining his
-performance.  What *should* be a streaming write workload of large file=
-s
-has been turned into a massively random IO pattern due mostly to the
-unrealistic write thread count, and partly to disk striping and the way
-XFS allocation groups are created on a striped array.
-
-Assuming these are 2TB drives, to get much closer to ideal write
-performance, and make this more of a streaming workload, what the OP
-should be doing is writing no more than 8 files in parallel to at least
-8 different directories with XFS sitting on an md linear array of 4 md
-RAID1 devices, assuming he needs protection from drive failure *and*
-parallel write performance:
-
-$ mdadm -C /dev/md0 -l 1 -n 2 /dev/sd[ab]
-$ mdadm -C /dev/md1 -l 1 -n 2 /dev/sd[cd]
-$ mdadm -C /dev/md2 -l 1 -n 2 /dev/sd[ef]
-$ mdadm -C /dev/md3 -l 1 -n 2 /dev/sd[gh]
-$ mdadm -C /dev/md4 -l linear -n 4 /dev/md[0-3]
-$ mkfs.xfs -d agcount=3D8 /dev/md4
-
-and mount with the inode64 option in fstab so we get the inode64
-allocator, which spreads the metadata across all of the AGs instead of
-stuffing in all in the first AG and yields other benefits.
-
-This setup eliminates striping, tons of head seeks, and gets much close=
-r
-to pure streaming write performance.  Writing 8 files in parallel to 8
-directories will cause XFS to put each file in a different allocation
-group.  Since we created 8 AGs, this means we'll have 2 files being
-written to each disk in parallel.  This reduces time wasted in head see=
-k
-latency by an order of magnitude and will dramatically increase disk
-throughput in MB/s compared to the 100 files in parallel workload, whic=
-h
-again is simply stupid to do on this limited disk hardware.
-
-This 100 file parallel write workload needs about 6 times as many
-spindles to be realistic, configured as a linear array of 24 RAID1
-devices and formatted with 48 AGs.  This would give you ~4 write stream=
-s
-per drive, 2 per AG, or somewhere around 50% to 66% of the per drive
-performance compared to the 8 drive 8 thread scenario I recommended abo=
-ve.
-
-=46inal note:  It is simply not possible to optimize XFS nor mdraid to =
-get
-you any better performance when writing 100 x 500MB files in parallel.
-The lack of sufficient spindles is the problem.
-
---=20
-Stan
+NeilBrown
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/awSgCYtNzvsdto7Gu8DRc7U
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT3d+hDnsnt1WYoG5AQKqvQ//QvW/ckxL/Dxvc4d+wtIx4FHPEMxluaQf
+NVvrxvo3wI9ZkmS9zarmMbOTDE6Pk7ByQKz17KeJPy/yOdMqTuaQn9eILaLqPSYq
+WqS+MAmFhs5TcJq5ZG1YjwIEfOgBCceY85EmPk3cXHLIusyrRJnM9eLEQZORiTgt
+Dks/8TN6kH0ckWxoktzhAp8fFY0RrL6nCimzLdg+oLXrvCk+tgzszEHRZTszndAV
+7rjvUvpgxnCwkdbzRxAmJiwWfxBVfHdrXl6W34bBwlmMaA13kpCpMSkwEWF5kqt6
+9hnZSHyZW0/Wm40MoLvCnrMkSledOTUjl34ZDNVXtz2fnsHjHSbm3hcSvvLw1/5Y
+uonSnPsi2o9mj2iRPMw48zfppIjoCNmsXIwwiyruIfxZeIRUhg7NUiQ08rvD7pea
+q77bIIk/1/RFdC9rgK7GzJdxjEHno1ygmu1Vvo7vQYKYwuchWscur3m8NiZ6H8pI
+axcLIMla/XIsjf1Vd+gZv2koxsEVS8ZokMfRphPvQYtcf8LFAchBFj+5Np8tUP/j
+cwTqe4dHnOiCeJHmFkqSQTUdZZmsjJ0f+djPYadGZrXxvZ/gOzfJCb4SRbDw+3WT
+cztsb5Q4fcDEUkXs+WcRIyJLSLXh+vd7KUcnuaWxebdW7Ov1YvNFss+4LNEQ3FpE
+msh1KHaofHU=
+=2BUP
+-----END PGP SIGNATURE-----
+
+--Sig_/awSgCYtNzvsdto7Gu8DRc7U--
