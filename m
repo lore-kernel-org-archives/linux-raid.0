@@ -1,84 +1,53 @@
-From: "majianpeng" <majianpeng@gmail.com>
-Subject: md/raid1:If r1bio->sectors % 8 != 0,then the memcmp and  later memcpy will omit the last bio_vec.
-Date: Sat, 31 Mar 2012 15:44:14 +0800
-Message-ID: <201203311544085318429@gmail.com>
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+Subject: Re: RAID5 created by 8 disks works with xfs
+Date: Sat, 31 Mar 2012 08:59:54 +0100
+Message-ID: <CADNH=7H_rgiY4fkB0SHo0yPhSBib7Gq-E_fu18yuJx=enn-eGg@mail.gmail.com>
+References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: daobang wang <wangdb1981@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From 72e5ad9da511689f7efe330ce5093a3df2c92738 Mon Sep 17 00:00:00 2001
-From: majianpeng <majianpeng@gmail.com>
-Date: Sat, 31 Mar 2012 15:36:01 +0800
-Subject: [PATCH] md/raid1:If r1bio->sectors % 8 != 0,then the memcmp and
- later memcpy will omit the last bio_vec.
+On 31 March 2012 02:22, daobang wang <wangdb1981@gmail.com> wrote:
+> Hi ALL,
+>
+> =C2=A0 =C2=A0How to adjust the xfs and raid parameters to improve the=
+ total
+> performance when RAID5 created by 8 disks works with xfs, and i write=
+d
+> a test program, which started 100 threads to write big files, 500MB
+> per file, and delete it after writing finish. Thank you very much.
+>
+> Best Wishes,
+> Daobang Wang.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
 
+Hi,
 
-Signed-off-by: majianpeng <majianpeng@gmail.com>
----
- drivers/md/raid1.c |   14 ++++++++++----
- 1 files changed, 10 insertions(+), 4 deletions(-)
+See http://xfs.org/index.php/XFS_FAQ#Q:_I_want_to_tune_my_XFS_filesyste=
+ms_for_.3Csomething.3E
+=2E Also see http://hep.kbfi.ee/index.php/IT/KernelTuning . For example=
+,
+RAID5 with 8 harddrives and 64K stripe size:
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 4a40a20..11a28ca 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1711,7 +1711,7 @@ static int process_checks(struct r1bio *r1_bio)
- 	struct mddev *mddev = r1_bio->mddev;
- 	struct r1conf *conf = mddev->private;
- 	int primary;
--	int i;
-+	int i, vcnt;
- 
- 	for (primary = 0; primary < conf->raid_disks * 2; primary++)
- 		if (r1_bio->bios[primary]->bi_end_io == end_sync_read &&
-@@ -1721,9 +1721,9 @@ static int process_checks(struct r1bio *r1_bio)
- 			break;
- 		}
- 	r1_bio->read_disk = primary;
-+	vcnt = (r1_bio->sectors + PAGE_SIZE / 512 - 1) >> (PAGE_SHIFT - 9);
- 	for (i = 0; i < conf->raid_disks * 2; i++) {
- 		int j;
--		int vcnt = r1_bio->sectors >> (PAGE_SHIFT- 9);
- 		struct bio *pbio = r1_bio->bios[primary];
- 		struct bio *sbio = r1_bio->bios[i];
- 		int size;
-@@ -1736,9 +1736,16 @@ static int process_checks(struct r1bio *r1_bio)
- 				struct page *p, *s;
- 				p = pbio->bi_io_vec[j].bv_page;
- 				s = sbio->bi_io_vec[j].bv_page;
-+				if ((j == vcnt - 1) &&
-+					(r1_bio->sectors &
-+					 (PAGE_SIZE / 512 - 1)))
-+					size = (r1_bio->sectors << 9)
-+						- (PAGE_SIZE * j);
-+				else
-+					size = PAGE_SIZE;
- 				if (memcmp(page_address(p),
- 					   page_address(s),
--					   PAGE_SIZE))
-+					   size))
- 					break;
- 			}
- 		} else
-@@ -2480,7 +2487,6 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr, int *skipp
- 	} while (r1_bio->bios[disk]->bi_vcnt < RESYNC_PAGES);
-  bio_full:
- 	r1_bio->sectors = nr_sectors;
--
- 	/* For a user-requested sync, we read all readable devices and do a
- 	 * compare
- 	 */
--- 
-1.7.5.4
+mkfs.xfs -d su=3D64k,sw=3D7 -l version=3D2,su=3D64k /dev/md0
 
- 				
---------------
-majianpeng
-2012-03-31
+Consider mounting the filesystem with logbufs=3D8,logbsize=3D256k
 
+Kind regards,
+Mathias
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
