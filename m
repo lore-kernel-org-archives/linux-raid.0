@@ -1,7 +1,7 @@
-From: "majianpeng" <majianpeng@gmail.com>
-Subject: md/raid1:Remove unnecessary judgement.
-Date: Sat, 31 Mar 2012 10:05:23 +0800
-Message-ID: <201203311005202344147@gmail.com>
+From: "kedacomkernel" <kedacomkernel@gmail.com>
+Subject: md/raid1:Fix a logic bug in fix_sync_read_error().
+Date: Sat, 31 Mar 2012 10:38:01 +0800
+Message-ID: <201203311037586565381@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
@@ -12,36 +12,37 @@ To: Neil Brown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From 033a0330eb210750ec09202ed95696b54d9afeba Mon Sep 17 00:00:00 2001
+From 0fe15c8e1bd5e46234d37573f3322312d8da325d Mon Sep 17 00:00:00 2001
 From: majianpeng <majianpeng@gmail.com>
-Date: Sat, 31 Mar 2012 09:57:42 +0800
-Subject: [PATCH] md/raid1:Remove unnecessary judgement. 
-If success == 1 then  break the do{}while,so did not judge !success.
+Date: Sat, 31 Mar 2012 10:27:33 +0800
+Subject: [PATCH] md/raid1:Fix a logic bug in fix_sync_read_error(). 
+If  d==read_disk && success == 1 and then break, so d =
+ read_disk. When exec this judgement: >>start = d; >>/*
+ write it back and re-read */ >>while (d !=
+ r1_bio->read_disk) { Because d == read_disk,so write and
+ re-add did not exec.
 
 
 Signed-off-by: majianpeng <majianpeng@gmail.com>
 ---
- drivers/md/raid1.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/md/raid1.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 4a40a20..649941b 100644
+index 4a40a20..3a133ff 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -1624,7 +1624,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
+@@ -1618,7 +1618,6 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
+ 						 bio->bi_io_vec[idx].bv_page,
+ 						 READ, false)) {
+ 					success = 1;
+-					break;
+ 				}
+ 			}
  			d++;
- 			if (d == conf->raid_disks * 2)
- 				d = 0;
--		} while (!success && d != r1_bio->read_disk);
-+		} while (d != r1_bio->read_disk);
- 
- 		if (!success) {
- 			char b[BDEVNAME_SIZE];
 -- 
 1.7.5.4
 
- 				
---------------
-majianpeng
+kedacomkernel
 2012-03-31
 
