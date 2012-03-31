@@ -1,47 +1,47 @@
-From: "majianpeng" <majianpeng@gmail.com>
-Subject: [PATCH] md/raid1:use bi->bv_len instead of PAGE_SIZE.
-Date: Sat, 31 Mar 2012 16:05:35 +0800
-Message-ID: <201203311605306405927@gmail.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: RAID5 XOR speed vs RAID6 Q speed (was Re: AVX RAID5 xor checksumming)
+Date: Sat, 31 Mar 2012 12:38:56 +0100
+Message-ID: <4F76ECD0.1060608@anonymous.org.uk>
+References: <1333057458-2986-1-git-send-email-james.t.kukunas@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1333057458-2986-1-git-send-email-james.t.kukunas@linux.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From 3d3a7eafc73f9de3eb6386ba4f30717412b6b255 Mon Sep 17 00:00:00 2001
-From: majianpeng <majianpeng@gmail.com>
-Date: Sat, 31 Mar 2012 16:01:58 +0800
-Subject: [PATCH] md/raid1:use bi->bv_len instead of PAGE_SIZE. 
-If bv_len is  less PAGE_SIZE,then memcpy will waste time.
+On 29/03/2012 22:44, Jim Kukunas wrote:
+> Based on xor_speed, the AVX implementation appears to be ~32% faster than the
+> SSE implementation on my i7 2600:
+>
+> 	generic_sse: 15088.000 MB/sec
+> 	avx: 19936.000 MB/sec
 
+I just noticed in my logs the other day (recent el5 kernel on a Core 2):
 
-Signed-off-by: majianpeng <majianpeng@gmail.com>
----
- drivers/md/raid1.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+raid5: automatically using best checksumming function: generic_sse
+    generic_sse:  7805.000 MB/sec
+raid5: using function: generic_sse (7805.000 MB/sec)
+raid6: int64x1   2635 MB/s
+raid6: int64x2   3208 MB/s
+raid6: int64x4   3020 MB/s
+raid6: int64x8   2519 MB/s
+raid6: sse2x1    5099 MB/s
+raid6: sse2x2    5742 MB/s
+raid6: sse2x4    8237 MB/s
+raid6: using algorithm sse2x4 (8237 MB/s)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 4a40a20..a623f70 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1775,7 +1775,7 @@ static int process_checks(struct r1bio *r1_bio)
- 			size -= PAGE_SIZE;
- 			memcpy(page_address(bi->bv_page),
- 			       page_address(pbio->bi_io_vec[j].bv_page),
--			       PAGE_SIZE);
-+			       bi->bv_len);
- 		}
- 	}
- 	return 0;
--- 
-1.7.5.4
+I was just wondering how it's possible to do the RAID6 Q calculation 
+faster than the RAID5 XOR calculation - or am I reading this log excerpt 
+wrongly?
 
- 				
---------------
-majianpeng
-2012-03-31
+It's probably academic, since the machine this is running on only has a 
+maximum of about 4500 MB/s of memory throughput, and a lot of that would 
+be consumed sending data to disc in amongst the calculations being done.
+
+Cheers,
+
+John.
 
