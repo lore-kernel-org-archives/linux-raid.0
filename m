@@ -1,43 +1,42 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
+From: David Brown <david.brown@hesbynett.no>
 Subject: Re: RAID5 created by 8 disks works with xfs
-Date: Sun, 01 Apr 2012 09:06:39 +0100
-Message-ID: <4F780C8F.8060105@anonymous.org.uk>
-References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com> <CADNH=7H_rgiY4fkB0SHo0yPhSBib7Gq-E_fu18yuJx=enn-eGg@mail.gmail.com> <4F776492.4070600@hardwarefreak.com> <CACwgYDOSrEYUps2VLpFSZ-irH7Mn_-BWrOYYDgXS=ULrmVuEPw@mail.gmail.com> <4F77DF1F.6080103@hardwarefreak.com>
+Date: Sun, 01 Apr 2012 12:33:18 +0200
+Message-ID: <jl9ate$2me$1@dough.gmane.org>
+References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com> <CADNH=7H_rgiY4fkB0SHo0yPhSBib7Gq-E_fu18yuJx=enn-eGg@mail.gmail.com> <4F776492.4070600@hardwarefreak.com> <CACwgYDOSrEYUps2VLpFSZ-irH7Mn_-BWrOYYDgXS=ULrmVuEPw@mail.gmail.com> <4F77D0B2.8000809@hardwarefreak.com> <CACwgYDMx6nQF-OwYj-BA+sZivUK=kmv2tPukgf5JGwA1vMTGrA@mail.gmail.com> <4F77EA55.6090004@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F77DF1F.6080103@hardwarefreak.com>
+In-Reply-To: <4F77EA55.6090004@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: daobang wang <wangdb1981@gmail.com>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/04/2012 05:52, Stan Hoeppner wrote:
-[...]
->> 5. The real application is 200 D1(2Mb/s) video streams write 500MB
->> files on the XFS.
+On 01/04/12 07:40, Stan Hoeppner wrote:
+> On 4/1/2012 12:12 AM, daobang wang wrote:
+>> Thank you very much!
+>> I got it, so we can remove the Volume Group and Logical Volume to save resource.
+>> And i will try RAID5 with 16 disks to write 96 total streams again.
 >
-> This is a 50 MB/s raw stream rate with 200 writers to 200 target files.
->   It is very likely that neither 8 nor 16 disks in RAID5 will be able to
-> sync this rate due to excessive head seeking, as I previously mentioned.
+> Why do you keep insisting on RAID5?!?!  It is not suitable for your
+> workload.  It sucks Monday through Saturday and twice on Sunday for this
+> workload.
+>
 
-Handwaving slightly here, but I wonder whether using a lot of write 
-cache will help aggregate writes here, since it's not actually random 
-writes. If I were to model it as 250MB written every 5 seconds from 200 
-writers, that might be able to be persuaded into 40 writes per second, 
-which shouldn't cause excessive head seeking. It would be helpful if 
-there were also enough additional cache that the reads for any RAID5 
-read-modify-write cycles mostly came from cache and didn't need seeks. 
-It should be possible to set this up such that, in the event of a crash 
-or hardware failure, the filesystem and files are consistent, though 
-obviously the last 5 seconds of each file is likely to be lost.
+My thoughts on this setup are that RAID5 (or RAID6) is a poor choice - 
+it can quickly cause a mess for streaming writes.  Even if the streams 
+themselves can mostly end up as full stripe writes, odd writes such as 
+the end of a file, metadata writes, log data writes, etc., will mean 
+read-modify-write operations that will cripple the write performance for 
+the rest of the operations.
 
-Having said that, even if it can be persuaded to work, I agree that it's 
-still the wrong way to go; RAID10 or indeed RAID1+linear look like much 
-better solutions.
+And if a disk fails so that you are running degraded, it will be hopeless.
 
-Cheers,
+Either drop the redundancy requirement entirely (maybe by making sure 
+other backups are in order), or double the spindles and use RAID1 / RAID10.
 
-John.
+
+For an application like this, it would probably make sense to put the 
+xfs log (and the mdraid bitmap file, if you are using one) on a separate 
+disk - perhaps a small SSD.
 
