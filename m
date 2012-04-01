@@ -1,53 +1,56 @@
 From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: RAID5 created by 8 disks works with xfs
-Date: Sun, 01 Apr 2012 00:13:20 -0500
-Message-ID: <4F77E3F0.2030802@hardwarefreak.com>
-References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com> <CADNH=7H_rgiY4fkB0SHo0yPhSBib7Gq-E_fu18yuJx=enn-eGg@mail.gmail.com> <4F776492.4070600@hardwarefreak.com> <CACwgYDOSrEYUps2VLpFSZ-irH7Mn_-BWrOYYDgXS=ULrmVuEPw@mail.gmail.com> <CACwgYDNitxymtLT3SMw6m0_utqAzXPsOT5Y1CpwrjW1fN+xuqA@mail.gmail.com>
+Date: Sun, 01 Apr 2012 00:40:37 -0500
+Message-ID: <4F77EA55.6090004@hardwarefreak.com>
+References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com> <CADNH=7H_rgiY4fkB0SHo0yPhSBib7Gq-E_fu18yuJx=enn-eGg@mail.gmail.com> <4F776492.4070600@hardwarefreak.com> <CACwgYDOSrEYUps2VLpFSZ-irH7Mn_-BWrOYYDgXS=ULrmVuEPw@mail.gmail.com> <4F77D0B2.8000809@hardwarefreak.com> <CACwgYDMx6nQF-OwYj-BA+sZivUK=kmv2tPukgf5JGwA1vMTGrA@mail.gmail.com>
 Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACwgYDNitxymtLT3SMw6m0_utqAzXPsOT5Y1CpwrjW1fN+xuqA@mail.gmail.com>
+In-Reply-To: <CACwgYDMx6nQF-OwYj-BA+sZivUK=kmv2tPukgf5JGwA1vMTGrA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: daobang wang <wangdb1981@gmail.com>
 Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 3/31/2012 9:05 PM, daobang wang wrote:
-> There is another problem occurred, it seems that the file system was
-> damaged when the pressure is very high, 
+On 4/1/2012 12:12 AM, daobang wang wrote:
+> Thank you very much!
+> I got it, so we can remove the Volume Group and Logical Volume to save resource.
+> And i will try RAID5 with 16 disks to write 96 total streams again.
 
-What kernel version are you using?  Did you get an oops?  What's in dmesg?
+Why do you keep insisting on RAID5?!?!  It is not suitable for your
+workload.  It sucks Monday through Saturday and twice on Sunday for this
+workload.
 
-> it reported input/output error
+Test your 16 drive RAID5 array head to head with the linear array + XFS
+architecture I gave you instructions to create, and report back your
+results.
 
-Actual errors would be very helpful.
+> I used the Linux kernel 2.6.26.4.
 
-> when i typed ls or other command, and I tried to repair it with
-> xfs_repair /dev/vg00/lv0000, the xfs_repir alloc memory failed, we
+Which distro?
 
-Did XFS automatically unmount the filesystem?  If not, the error
-reported may not indicate a problem with the filesystem.  XFS shuts
-filesystems down when it encounters serious problems.
+2.6.26 is *ancient* and has storage layer bugs.  It does NOT have
+delaylog, which was introduced in 2.6.35, and wasn't fully performant
+until 2.6.38+.
 
-> have 4GB memory on the machine, and the logical volume was a little
-> more than 15TB, Could it be repair successfully if we have enough
-> memory?
+You're building and testing a new platform with a terribly obsolete
+distribution.  You need a much newer kernel and distro.  3.0.x would be
+best.  Debian 6.0.4 with a backport 3.0.x kernel would be a good start.
 
-Hard to say.  Depends on what happened and the extent of the damage, if
-any.  You've presented no log or debug information.  I would think 4GB
-should be plenty to run xfs_repair.  Try
+> And we do not have BBWC
 
-$ xfs_repair -n -vv -m 1 /dev/vg00/lv0000
+Then you must re-enable barriers or perennially suffer more filesystem
+problems.  I simply cannot emphasize enough how critical write barriers
+are to filesystem consistency.
 
-dmem = in the output tells you how much RAM is needed for xfs_repair.
-If it's more than 2GB and you're using a PAE kernel, switch to a 64 bit
-kernel and 64 bit userland.  If dmem is over 4GB then you need more
-DIMMs in the machine.  Or maybe simply dropping caches before running
-xfs_repair might help:
+> The application has 16kb cache per stream, Is it possible to optimize
+> it if we use 32kb or 64kb cache?
 
-$ echo 3 > /proc/sys/vm/drop_caches
+No.  Read the app's documentation.  This caching is to prevent dropped
+frames in the recorded file.  Increasing this value won't affect disk
+performance.
 
 -- 
 Stan
