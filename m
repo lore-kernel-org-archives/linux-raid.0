@@ -1,7 +1,7 @@
 From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: RAID5 created by 8 disks works with xfs
-Date: Sat, 31 Mar 2012 22:51:14 -0500
-Message-ID: <4F77D0B2.8000809@hardwarefreak.com>
+Date: Sat, 31 Mar 2012 23:52:47 -0500
+Message-ID: <4F77DF1F.6080103@hardwarefreak.com>
 References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com> <CADNH=7H_rgiY4fkB0SHo0yPhSBib7Gq-E_fu18yuJx=enn-eGg@mail.gmail.com> <4F776492.4070600@hardwarefreak.com> <CACwgYDOSrEYUps2VLpFSZ-irH7Mn_-BWrOYYDgXS=ULrmVuEPw@mail.gmail.com>
 Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
@@ -13,6 +13,8 @@ Sender: linux-raid-owner@vger.kernel.org
 To: daobang wang <wangdb1981@gmail.com>
 Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
+
+Flaky mouse button cause a premature send.  Sorry for the duplicate.
 
 On 3/31/2012 8:16 PM, daobang wang wrote:
 > Thanks to Mathias and stan, Here is the detail of the configuration.
@@ -71,11 +73,23 @@ The fact that you're disabling barriers likely in lieu of BBWC seems to
 indicate you're not terribly worried about losing all your data in the
 event of a drive failure.  If this is the case, 16 x 7.2k spindles with
 6 parallel writers per spindle at .25 MB/s each might work.  Simply
-create an md linear array with 16 disks, no LVM, and format it with
+create an md linear array with 16 disks, no LVM, format it with
 
 $ mkfs.xfs -d agcount=48 /dev/md0
 
-and configure you application to write each video stream file to a
-different directory.  This will allow for 96 total streams, 6 being
-written to each drive concurrently, for 6*.25 MB/s = 1.5MB/s per drive.
+and configure your application to write each video stream file to a
+different directory.  Writing to multiple directories is what drives XFS
+parallelism.  This will allow for 96 parallel write streams, 6 to each
+drive concurrently, for 6*.25 MB/s = 1.5MB/s per drive, 24 MB/s
+aggregate.  This might keep seeks low enough to achieve the parallel
+throughput you need.
 
+I'm guessing since you didn't comment on my previous recommendation that
+you don't yet understand the benefits of linear concatenation, and using
+XFS allocation groups to drive parallelism, instead of blindly assuming
+striping will do the job--it often cannot.  XFS on linear array can
+decrease the seek rate on each drive substantially vs striped RAID.
+Keeping the seek rate low increases throughput of parallel writers.
+
+-- 
+Stan
