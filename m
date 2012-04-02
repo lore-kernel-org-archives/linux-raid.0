@@ -1,51 +1,65 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
+From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: RAID5 created by 8 disks works with xfs
-Date: Mon, 02 Apr 2012 11:28:22 +0100
-Message-ID: <4F797F46.10600@anonymous.org.uk>
-References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com> <CADNH=7H_rgiY4fkB0SHo0yPhSBib7Gq-E_fu18yuJx=enn-eGg@mail.gmail.com> <4F776492.4070600@hardwarefreak.com> <CACwgYDOSrEYUps2VLpFSZ-irH7Mn_-BWrOYYDgXS=ULrmVuEPw@mail.gmail.com> <4F77D0B2.8000809@hardwarefreak.com> <CACwgYDMx6nQF-OwYj-BA+sZivUK=kmv2tPukgf5JGwA1vMTGrA@mail.gmail.com> <4F77EA55.6090004@hardwarefreak.com> <jl9ate$2me$1@dough.gmane.org> <4F784A06.1@anonymous.org.uk> <CA+res+QkLi7sxZrD-XOcbR47CeJ5gADf7P6pa1w1oMf8CKSB4g@mail.gmail.com> <4F795CE2.9050106@anonymous.org.uk> <CA+res+SSJ49cPubOdmXi6Z3jnE+4wzsh1MJehs78U82e3iDhaA@mail.gmail.com>
+Date: Mon, 02 Apr 2012 15:21:51 -0500
+Message-ID: <4F7A0A5F.8030107@hardwarefreak.com>
+References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com> <CADNH=7H_rgiY4fkB0SHo0yPhSBib7Gq-E_fu18yuJx=enn-eGg@mail.gmail.com> <4F776492.4070600@hardwarefreak.com> <CACwgYDOSrEYUps2VLpFSZ-irH7Mn_-BWrOYYDgXS=ULrmVuEPw@mail.gmail.com> <4F77D0B2.8000809@hardwarefreak.com> <CACwgYDMx6nQF-OwYj-BA+sZivUK=kmv2tPukgf5JGwA1vMTGrA@mail.gmail.com> <4F77EA55.6090004@hardwarefreak.com> <jl9ate$2me$1@dough.gmane.org> <4F793C6E.1080000@hardwarefreak.com> <4F794F6A.1010808@westcontrol.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+res+SSJ49cPubOdmXi6Z3jnE+4wzsh1MJehs78U82e3iDhaA@mail.gmail.com>
+In-Reply-To: <4F794F6A.1010808@westcontrol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jack Wang <jack.wang.usish@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: David Brown <david@westcontrol.com>
+Cc: David Brown <david.brown@hesbynett.no>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/04/2012 11:01, Jack Wang wrote:
-> 2012/4/2 John Robinson<john.robinson@anonymous.org.uk>
->> On 02/04/2012 04:15, Jack Wang wrote:
->>> 2012/4/1 John Robinson<john.robinson@anonymous.org.uk
->>> <mailto:john.robinson@anonymous.org.uk>>
->> [...]
->>>     This might also be a good application for bcache, FlashCache or
->>>     whatever.
->>>
->>> Using bcache/flashcache is what I'm considering, does above
->>> configuration option still needed?
-[...]
-> Thanks for reply , I mean using SSD as cache device, and raid5
-> 16*7200rpm disks, is this works for streaming workload above?
->
-> I know bcache is try to turn rand write to seqencial write, but most
-> ssd is not good at RAND write as I know.
+On 4/2/2012 2:04 AM, David Brown wrote:
+> On 02/04/2012 07:43, Stan Hoeppner wrote:
+>> On 4/1/2012 5:33 AM, David Brown wrote:
+>>
+>>> For an application like this, it would probably make sense to put the
+>>> xfs log (and the mdraid bitmap file, if you are using one) on a separate
+>>> disk - perhaps a small SSD.
+>>
+>> XFS only journals metadata changes.  Thus an external journal is not
+>> needed here as there is no metadata in the workload.
+>>
+> 
+> Won't there still be metadata changes as each file is closed and a new
+> one started, 
 
-I don't know where you got that from; SSDs are absolutely brilliant at 
-small random writes and reads, hundreds of times better than spinning 
-hard discs. bcache and flashcache were written specifically to take 
-advantage of SSDs' high I/Os per second for small (random) reads and writes.
+Yes, creating one file requires one journal operation consisting of a
+few dozen to a few hundred bytes of journal data.  With delaylog this
+will very likely be consolidated into a single IO to the journal, or a
+handful of IOs.  With the workload in question the number of journal IOs
+is trivial.
 
-I wouldn't touch RAID5 for anything other than 3 drives; I'd use RAID6 
-or RAID60 for 4-plus where I didn't need the better small/random write 
-performance of RAID10. I haven't actually used bcache or flashcache, 
-which is why I introduced them with "might".
+> or as more space is allocated to the files being written (I
 
-My fantasy configuration in your 16-drive chassis would be 2 6-drive 
-RAID6s, striped together in RAID0, with an SSD cache over the top built 
-from two SSDs in RAID10 (or if I was feeling really paranoid, 3 SSDs in 
-RAID10,n3), with the remaining slot containing a hot spare for the RAID6s.
+Allocation occurs once when the file is created.
 
-Cheers,
+> know xfs has delayed allocation and other tricks to minimise this, but
+> it can't be eliminated entirely).  Each time the metadata or log needs
+> written, you'll get a big discontinuity in the writing as the disks
+> heads need to jump around (especially for RAID5!).
 
-John.
+The ratio of file IOs to metadata IOs in this workload is well north of
+millions to one.  Again, the metadata IOPS in this workload are trivial.
+ RAID level has no bearing on metadata IOPS here.  Though it does for
+the actual workload, as I already discussed in detail.
+
+> It would make sense to have a separate disk (again, SSD is logical) for
+> the OS and other files anyway, keeping the big array for the data.
+> Putting the xfs log there too would surely be a small but helpful step?
+
+No it doesn't make sense.  See above.  Additionally, an external journal
+can only be used if the journal device is behind battery backed RAID
+cache.  Due to a design issue, XFS cannot perform barrier operations on
+an external journal device, only to an internal journal.  Without
+barriers or BBWC you have the opportunity for constant filesystem
+corruption.  The OP doesn't have a BBWC RAID controller, nor any RAID
+controller at all.  So an external journal isn't an option here anyway.
+
+-- 
+Stan
