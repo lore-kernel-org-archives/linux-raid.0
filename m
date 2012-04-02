@@ -1,86 +1,58 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID6 grow failed
-Date: Mon, 2 Apr 2012 09:54:25 +1000
-Message-ID: <20120402095425.168e5d94@notabene.brown>
-References: <CAJ72viP2MLb2tL84P-aK6Rs9eAH4x9Wwd=kVNbmPA=2LAfNLjg@mail.gmail.com>
-	<20120328151828.6988d3db@notabene.brown>
-	<CAJ72viMxgfjhQiqJYVnjBQGfCq7jtegfvUY0nRdj46XDedeSjg@mail.gmail.com>
-	<20120328192601.3db82133@notabene.brown>
-	<CAJ72viPX1SDL2pPSkGQnujNcaoNmRposJXxaLhDkZDgFxv=-qA@mail.gmail.com>
-	<CAJ72viPH9AykY-tafTChcS0ZbP0gGaiKRybafs4C4Yk-8D=g3A@mail.gmail.com>
-	<20120401080036.355a8a23@notabene.brown>
-	<CAJ72viOGCYrMqvX2=3BzWQZpfDUeNwHEVHbXyaKbrwvrBP6wPQ@mail.gmail.com>
-	<CAJ72viPw=QrETGPU5OwBgL-GXfCUfqfbWCSAvp2_yzzxuJeT1w@mail.gmail.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: RAID5 XOR speed vs RAID6 Q speed (was Re: AVX RAID5 xor checksumming)
+Date: Sun, 01 Apr 2012 17:01:05 -0700
+Message-ID: <4F78EC41.6040108@zytor.com>
+References: <1333057458-2986-1-git-send-email-james.t.kukunas@linux.intel.com> <4F76ECD0.1060608@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/8JdBfr6+9woQ0TPfGtJ_OIV"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJ72viPw=QrETGPU5OwBgL-GXfCUfqfbWCSAvp2_yzzxuJeT1w@mail.gmail.com>
+In-Reply-To: <4F76ECD0.1060608@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bryan Bush <bbushvt@gmail.com>
+To: John Robinson <john.robinson@anonymous.org.uk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/8JdBfr6+9woQ0TPfGtJ_OIV
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 03/31/2012 04:38 AM, John Robinson wrote:
+> On 29/03/2012 22:44, Jim Kukunas wrote:
+>> Based on xor_speed, the AVX implementation appears to be ~32% faster
+>> than the
+>> SSE implementation on my i7 2600:
+>>
+>>     generic_sse: 15088.000 MB/sec
+>>     avx: 19936.000 MB/sec
+> 
+> I just noticed in my logs the other day (recent el5 kernel on a Core 2):
+> 
+> raid5: automatically using best checksumming function: generic_sse
+>    generic_sse:  7805.000 MB/sec
+> raid5: using function: generic_sse (7805.000 MB/sec)
+> raid6: int64x1   2635 MB/s
+> raid6: int64x2   3208 MB/s
+> raid6: int64x4   3020 MB/s
+> raid6: int64x8   2519 MB/s
+> raid6: sse2x1    5099 MB/s
+> raid6: sse2x2    5742 MB/s
+> raid6: sse2x4    8237 MB/s
+> raid6: using algorithm sse2x4 (8237 MB/s)
+> 
+> I was just wondering how it's possible to do the RAID6 Q calculation
+> faster than the RAID5 XOR calculation - or am I reading this log excerpt
+> wrongly?
+> 
+> It's probably academic, since the machine this is running on only has a
+> maximum of about 4500 MB/s of memory throughput, and a lot of that would
+> be consumed sending data to disc in amongst the calculations being done.
+> 
 
-On Sun, 1 Apr 2012 03:05:29 -0400 Bryan Bush <bbushvt@gmail.com> wrote:
+It *might* be a result of how these different algorithms are
+benchmarked, but yes, that really looks a bit odd, especially since the
+RAID6 code *also* computes the XOR checksum (it does P and Q in parallel
+since it has to read the data anyway).
 
-> Additional info that might be useful.  When I specify which disks to
-> use in the array, I get this
-> root@diamond:/# mdadm -A --verbose /dev/md1 /dev/sd[onjlkuhedcb]1
-> mdadm: looking for devices for /dev/md1
-> mdadm: /dev/sdb1 is identified as a member of /dev/md1, slot 4.
-> mdadm: /dev/sdc1 is identified as a member of /dev/md1, slot 5.
-> mdadm: /dev/sdd1 is identified as a member of /dev/md1, slot 6.
-> mdadm: /dev/sde1 is identified as a member of /dev/md1, slot 7.
-> mdadm: /dev/sdh1 is identified as a member of /dev/md1, slot 12.
-> mdadm: /dev/sdj1 is identified as a member of /dev/md1, slot 10.
-> mdadm: /dev/sdk1 is identified as a member of /dev/md1, slot 8.
-> mdadm: /dev/sdl1 is identified as a member of /dev/md1, slot 0.
-> mdadm: /dev/sdn1 is identified as a member of /dev/md1, slot 2.
-> mdadm: /dev/sdo1 is identified as a member of /dev/md1, slot 3.
-> mdadm: device 8 in /dev/md1 has wrong state in superblock, but
-> /dev/sdk1 seems ok
-> mdadm: device 10 in /dev/md1 has wrong state in superblock, but
-> /dev/sdj1 seems ok
-> mdadm: device 12 in /dev/md1 has wrong state in superblock, but
-> /dev/sdh1 seems ok
-> mdadm: SET_ARRAY_INFO failed for /dev/md1: Device or resource busy
-> root@diamond:/#
+	-hpa
 
-1/ Are you absolutely certain you did
-     mdadm -S /dev/md1
- first?  Because it really looks like you didn't.
+-- 
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
 
-2/ Any kernel log messages?
-    dmesg | tail -n 50
-  immediately after the failed "mdadm -A" command.
-
-NeilBrown
-
-
---Sig_/8JdBfr6+9woQ0TPfGtJ_OIV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT3jqsjnsnt1WYoG5AQIAMQ//fevRgIo8GLhVb+j945+HA+JJu+MG6joC
-H4Fdxvw3BHtf5lM0vt1pgb94G+R1UAzU1L9uTSyUzsFHZ4pX8vOwaq8pjWCTBeO1
-FKsS+PibXmjgbAMR2f7MjaAE+zfjWWvy6zEzm039zd50Qq2N/JlSVq13XLdmDHPZ
-u7Mf1onVuMbR7ghKeopiMiug515QOfz6mLTyadQLze19/iMMYkPQDUFpCKnJzrmo
-JFUb7LmCycs/q6+ZpF+wGxALLa1HVVY947OSMhAAjILwFSwazNqV+p1LRITI4dk2
-IW/sST0aowKkihyCSG8dPBuwEfE3pq7JDlkfqSMJL63fJh9LTimBIx3bz1a8yrCP
-0nLhDNCVcGWYEEk65TO+KRQ//cNoYtQADpEZuqvuufiARGia6FW0xGwjWSlSWHuY
-I8L2JeMNXZ6ncfAgfs5uccOTv2FvkY7nLKKRmppznBJB6aQ5D6kbVN+SMeFx4dVA
-bDWvrtA8sYtMTKsifxCcmTe7twBr09Y/qPVGzOgSkItZyQ9U5DOG1tow6vNB1oDx
-vEPTsjh8G7sARpxEsMv9s8OQg/BvbmDRmWbbZA3gXVElyKQsipN6nRBrBiASsIoM
-+cgVhekp38rHh9iHnbGmlCZsslERzsjrOdVXQHpIwMz+4MyldwG23TWHvXgaNdiZ
-nHCsDKmtn74=
-=072h
------END PGP SIGNATURE-----
-
---Sig_/8JdBfr6+9woQ0TPfGtJ_OIV--
