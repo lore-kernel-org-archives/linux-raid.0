@@ -1,81 +1,87 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md/raid1:Using 1 instead of update.
-Date: Mon, 2 Apr 2012 12:01:38 +1000
-Message-ID: <20120402120138.1475c54a@notabene.brown>
-References: <201204011036292188169@gmail.com>
+Subject: Re: md/raid1:Fix a logic bug in fix_sync_read_error().
+Date: Mon, 2 Apr 2012 12:05:24 +1000
+Message-ID: <20120402120524.45156163@notabene.brown>
+References: <201203311037586565381@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/LIC82=vSphNwQXXZM6Z797J"; protocol="application/pgp-signature"
+ boundary="Sig_/WmNTZVPiK2LK1z=WfqW8fi+"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201204011036292188169@gmail.com>
+In-Reply-To: <201203311037586565381@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
+To: kedacomkernel <kedacomkernel@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/LIC82=vSphNwQXXZM6Z797J
+--Sig_/WmNTZVPiK2LK1z=WfqW8fi+
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 1 Apr 2012 10:36:32 +0800 "majianpeng" <majianpeng@gmail.com> wrote:
+On Sat, 31 Mar 2012 10:38:01 +0800 "kedacomkernel" <kedacomkernel@gmail.com>
+wrote:
 
-> >From 6991dc532e4d655fb509ba1dbe7a9869b0cd33d9 Mon Sep 17 00:00:00 2001
+> >From 0fe15c8e1bd5e46234d37573f3322312d8da325d Mon Sep 17 00:00:00 2001
 > From: majianpeng <majianpeng@gmail.com>
-> Date: Sun, 1 Apr 2012 10:31:52 +0800
-> Subject: [PATCH] md/raid1:Using 1 instead of update.=20
-> If update =3D=3D 0 and then  set R1BIO_WriteError,so did not exec md_do_s=
-ync().
->=20
->=20
-> Signed-off-by: majianpeng <majianpeng@gmail.com>
-> ---
->  drivers/md/raid1.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 4a40a20..def1ed1 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1554,7 +1554,7 @@ static void end_sync_write(struct bio *bio, int err=
-or)
->  			reschedule_retry(r1_bio);
->  		else {
->  			put_buf(r1_bio);
-> -			md_done_sync(mddev, s, uptodate);
-> +			md_done_sync(mddev, s, 1);
->  		}
->  	}
->  }
+> Date: Sat, 31 Mar 2012 10:27:33 +0800
+> Subject: [PATCH] md/raid1:Fix a logic bug in fix_sync_read_error().=20
+> If  d=3D=3Dread_disk && success =3D=3D 1 and then break, so d =3D
+>  read_disk. When exec this judgement: >>start =3D d; >>/*
+>  write it back and re-read */ >>while (d !=3D
+>  r1_bio->read_disk) { Because d =3D=3D read_disk,so write and
+>  re-add did not exec.
 
-Again, I think this hurts readability - it is less obvious that it is corre=
-ct.
+That is correct, and that is how it should be.
 
-So I'll leave it as it is.
+If we get a read error, then try again and get a successful read, then there
+is nothing more that we need to do.  No need to write or anything.
+
+So: current code is correct.
 
 Thanks,
 NeilBrown
 
 
---Sig_/LIC82=vSphNwQXXZM6Z797J
+>=20
+>=20
+> Signed-off-by: majianpeng <majianpeng@gmail.com>
+> ---
+>  drivers/md/raid1.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 4a40a20..3a133ff 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1618,7 +1618,6 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
+>  						 bio->bi_io_vec[idx].bv_page,
+>  						 READ, false)) {
+>  					success =3D 1;
+> -					break;
+>  				}
+>  			}
+>  			d++;
+
+
+--Sig_/WmNTZVPiK2LK1z=WfqW8fi+
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT3kIgjnsnt1WYoG5AQIfNA//dnowzDf+ziVNl6J/59+n0D90fwhtydWs
-WhE4XUb0wvgYfeU1Es6ZxPqFijHgS33ftgBmUbEpgWIbA3wMU8XhfncDTgkO7XTo
-2+/c5BgKse50WE2swGLFrNQvYMbBDoclTJLxilhR8O4nGpXwpkHGPd8mutXNAweE
-OUY8HQjuMymk8Q3YdD4+K9nG0rOAIvL3PKYfDMpYOWF4soePB1A64EPKFKWCQAVe
-WrIl0c6kahxdsXZodLlf+qGKWmuu+1LUd2PJ4JPhlmDKdpi+k/eGy1a7FAOFZXBA
-DWjTPZGeaeOsJMtg6AqqKxQy3/y7dSxhFgYb8IButGHG0UIAWmHLQft0uYcy0XLy
-5w1iCqHnnJs7zEV1Hr2MI0voIJ3+1mb7MhtzrVuy/DPBnkOOV4sCnSowBtRpYA90
-entyvvkgaX0UXRJMJ/wiPDx+cXaXcDA753fIAwQ99U01Aw6IlXJ0a3Bm7Bzcy2fW
-XOvSAs+Ch0g9JRt/Svj8xFL1F25YS1rqDTg/mNGG5rjTlpytk5EtXZiRA5jGAHaX
-t7wjvgUzfjZzhN3IucNAhGvNP/dSfV9FUBsaUEN9rcq8T5CEVUhsxgpuXikZuIBK
-b8bu400BLIA+45NcEpSZkgSnDu9Uq8GKUPnEV7dKoWgjA6sWccJ53FGiufGlF7Py
-93TTQVxZOPk=
-=0I8+
+iQIVAwUBT3kJZDnsnt1WYoG5AQIPwhAAi+ue3ew0qAOSCUsSBd5X7ihFhqXUQ8A5
+swqy2vq3CzMePEENr1eQ3m6h/X25ZRosCyX+CEyszcOKD9OSAB11C5r97GiNg7pe
+UJ85pVoZ0wVijv9vU5clLZWcvHX2eSC8tFXg+H2YchrXnCVNK2HynycMzsKg1eAs
++IEsYsKFcfwCNN3C7wGKAQDiFspF0PdUGAb/tmaprE/u+18YVo0jGwKXnihZQv5F
+UY29zGHPViMgh/42oSPYhXTxH+umC928h/Fx4WljdMT+K/wM79wb9d8vHMmy27eP
+wTq0gKTfkO0K6c7SzI8RVLSXkxoi1NxEl+76BlxEfjzLHHVZdTVEjL1bYx8pR7xf
+9nAvXF3hw7HAS4C+3F1ZueWwA9/7J7QOpJTtZTYXJCeRiXvhXBWcWTggkf/CAI2X
+rULHYQXAIHnVlQHzDWzYXQZMxHP0pwU2UIo0QgpcgCv9QJ6e2tOx07G2YMXaNDBg
+NQAZvLy65dlC08nCQOEeJNoTpfgbQtInVDsiXntAZlFJEnJYRtEm4vWfur0vNlko
+zL1nj1iUtTun8BxHE5vEr335iXxXeFirlqFuBPraDd6TFslNCd5697OSA2hgvURI
+OzKNcS2hPCkc0VXoVeSdnQOB5c+SZxY3PgIWQ98vzBgUa49EvRKtqJX/b/VjdUa1
+/9n7UUNMVAY=
+=NmcW
 -----END PGP SIGNATURE-----
 
---Sig_/LIC82=vSphNwQXXZM6Z797J--
+--Sig_/WmNTZVPiK2LK1z=WfqW8fi+--
