@@ -1,95 +1,119 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: RAID-10 explicitly defined drive pairs?
-Date: Wed, 4 Apr 2012 19:56:41 +0300
-Message-ID: <CAGRgLy7BaVTjacaqMVD1JNYgtTn6MAk9bN-GzDC8B0CypJWJmw@mail.gmail.com>
-References: <20111212115459.GC20730@fi.muni.cz>
-	<4EE61EAE.20101@anonymous.org.uk>
-	<20120106150823.GX25976@fi.muni.cz>
-	<20120107075526.59ed433c@notabene.brown>
-	<CAGRgLy4Q5FhHMAeU3egqEfFKR_h1HneReg0sD_+hCmsF3WDzQw@mail.gmail.com>
-	<20120322213114.61fd4e44@notabene.brown>
-	<CAGRgLy7N7m4zFY-EKe8ApUGSR3ZCUpOTZcRvLVLd5WAN2f+k9g@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: RAID5 check does not read disk media
+Date: Thu, 5 Apr 2012 09:45:55 +1000
+Message-ID: <20120405094555.7779a2a6@notabene.brown>
+References: <4F7C4B46.2090209@urbanec.net>
+	<CADNH=7HbC4M0obMV=nGNVWcH3vJT+nug725om+K7ocvk8=bPxw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/U9cX7tGvkV2O0AY2ENKCerw"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy7N7m4zFY-EKe8ApUGSR3ZCUpOTZcRvLVLd5WAN2f+k9g@mail.gmail.com>
+In-Reply-To: <CADNH=7HbC4M0obMV=nGNVWcH3vJT+nug725om+K7ocvk8=bPxw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>
+Cc: Peter Urbanec <linux-raid@urbanec.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+--Sig_/U9cX7tGvkV2O0AY2ENKCerw
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-I fetched this commit, and also the "fixed sysfs_freeze_array array to
-work properly with Manage_subdevs" commit
-fd324b08dbfa8404558534dd0a2321213ffb7257, which looks relevant.
-I experimented with this, and I have some questions:
+On Wed, 4 Apr 2012 14:51:52 +0100 Mathias Bur=C3=A9n <mathias.buren@gmail.c=
+om>
+wrote:
 
-Is there any special purpose for calling
-sysfs_attribute_available("sync_action")? If this call fails, the code
-returns 1, which will make the caller to attempt to un-freeze. Without
-this call, however, sysfs_get_str("sync_action") will fail and return
-0, which will prevent the caller from unfreezing, which looks better.
+> On 4 April 2012 14:23, Peter Urbanec <linux-raid@urbanec.net> wrote:
+> > I'm running Gentoo kernel 3.3.0 with raid5 on four ICH7 AHCI connected
+> > Seagate 2TB 7200RPM disks. I also have two WD 1TB Green disks in raid1 =
+on a
+> > Sil3114 with a JBOD (non-RAID) BIOS.
+> >
+> > When I attempt to do a scrub/check on the raid5, the check seems to pro=
+ceed
+> > without actually reading any data from the disks - the disk activity li=
+ghts
+> > do not even flicker.
+> >
+> > Looking at the speed at which the check completes confirms this:
+> >
+> > # cat /proc/sys/dev/raid/speed_limit_min
+> > 10000
+> > # cat /proc/sys/dev/raid/speed_limit_max
+> > 4000000
+> > # echo check > devices/virtual/block/md0/md/sync_action
+> > # echo check > devices/virtual/block/md127/md/sync_action
+> > ...
+> > # cat /proc/mdstat
+> > Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid=
+4]
+> > md127 : active raid1 sdf1[1] sde1[0]
+> > =C2=A0 =C2=A0 =C2=A0976760384 blocks [2/2] [UU]
+> > =C2=A0 =C2=A0 =C2=A0[>....................] =C2=A0check =3D =C2=A01.7% =
+(17387072/976760384)
+> > finish=3D380.7min speed=3D41994K/sec
+> >
+> > md0 : active raid5 sdb[1] sda[0] sdd[4] sdc[2]
+> > =C2=A0 =C2=A0 =C2=A05860535808 blocks super 1.2 level 5, 512k chunk, al=
+gorithm 2 [4/4]
+> > [UUUU]
+> > =C2=A0 =C2=A0 =C2=A0[=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D>..] =C2=A0check =3D 93.9% (1835359616/1953511936)
+> > finish=3D0.8min speed=3D2332893K/sec
+> >
+> >
+> > raid1 runs at about 42MB/s as expected with two WD 1TB Green drives.
+> > raid5 runs at well over 2GB/s - not really possible with four Seagate 2=
+TB
+> > 7200RPM drives.
+> >
+> > Any ideas on what may be going on there and how to fix it. Let me know
+> > what/if more information may be needed.
+> >
+> > Thanks
+> >
+> > =C2=A0 =C2=A0Peter Urbanec
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.html
+>=20
+> FWIW I'm seeing this as well, kernel 3.3.1, but on RAID6. There's a
+> message just a few days about this, but no link to a patch.
 
-Why do you refuse to freeze the array if it's not "idle"? What will
-happen is that current recover/resync will abort, drives will be
-added, and on unfreezing, array will resume (restart?) recovery with
-all drives. If array was resyncing, however, it will start recovering
-the newly added drives, because kernel prefers recovery over resync
-(as we discussed earlier).
+http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux.git;a=3Dcommitdi=
+ff;h=3Dc6d2e084c7411f61f2b446d94989e5aaf9879b0f
 
-Any other caveats of this freezing/unfreezing you can think of?
+NeilBrown
 
-Thanks,
-  Alex.
-
-
+>=20
+> Mathias
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
+--Sig_/U9cX7tGvkV2O0AY2ENKCerw
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-On Sun, Mar 25, 2012 at 12:30 PM, Alexander Lyakas
-<alex.bolshoy@gmail.com> wrote:
-> Thanks, Neil!
-> I will merge this in and test.
->
->
-> On Thu, Mar 22, 2012 at 12:31 PM, NeilBrown <neilb@suse.de> wrote:
->> On Thu, 22 Mar 2012 12:01:48 +0200 Alexander Lyakas <alex.bolshoy@gm=
-ail.com>
->> wrote:
->>
->>> Neil,
->>>
->>> > =A0echo frozen > /sys/block/mdN/md/sync_action
->>> > =A0mdadm --add /dev/mdN /dev......
->>> > =A0echo recover > /sys/block/mdN/md/sync_action
->>> >
->>> > it should do them all at once.
->>> >
->>> > I should teach mdadm about this..
->>>
->>> What is required to do that from mdadm? I don't see any other place
->>> where MD_RECOVERY_FROZEN is set, except via sysfs. So do you sugges=
-t
->>> that mdadm use sysfs for that?
->>
->> Yes.
->>
->> http://neil.brown.name/git?p=3Dmdadm;a=3Dcommitdiff;h=3D9f58469128c9=
-9c0d7f434d28657f86789334f253
->>
->>> Also, what should be done if mdadm succeeds to "freeze" the array, =
-but
->>> fails to "unfreeze" it for some reason?
->>
->> What could possibly cause that?
->> I guess if someone kills mdadm while it was running..
->>
->>
->> NeilBrown
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT3zdMznsnt1WYoG5AQL8ow//XVVLo9ohQo/RF0JqRC/wqRDhIAmcT/rw
+8vzs83su5aNrzPW11RxpvekGsQmr58rqYkaNhh9D4gVqOG2lqFQYOEVlDlujixLr
+xP3O7kcQmF0k0AUi1pI7KcaZ6vaoxI1F0HXCtEZIERlyo5npYa3JJ2+K364dadfV
+aHUDXQqHQckkD5Yo6L9MmohLCQZbneW6A38Zd46u3wl9udl9WpbffamKdO3WE9xt
+aN21JPF4n3TOlq6cKciGp8qalhhjOByYIS8JaIa6U7FxKecm6B2sZ2b+7uQpUIdR
+qrFgXAWsPKXOJsXGWxnVvEs4IZp4a80nunm7G3tA030/ZKOJORKR6LxPe5AfYvj4
+MkVy9xwneLG9L5mmMGbXsUo2p/XYe6oe9g1q6Gy61u0727uV7m0EKo1PR3Z5n9vY
+KPDOtmDotZYRGgPyhmFR1fv5Gp9Zepsbz3cGCzSyJzx3+Bo6bpmjkmyHgiiMMjtl
+G0s0M/ouG2Fv1isUTacuz148WGdU6NFcz4OeE8JdaXOvglSExX4AnFwegQP3qKRU
+O1LFJ5MBtWaxrR3avvt6JSUlUnFv95wvNVPzpj+v3OHnrwOxI5ZtC89znHlVbFQp
+f8MjJ1yl3KvwTCqTeyM3ffLAKVjx6TJ9Vou97XJniU0KaT9oKGRw0843vMoyQGRl
+roAJbMegdNI=
+=4Vqn
+-----END PGP SIGNATURE-----
+
+--Sig_/U9cX7tGvkV2O0AY2ENKCerw--
