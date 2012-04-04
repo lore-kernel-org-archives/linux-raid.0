@@ -1,155 +1,112 @@
-From: "Andrew G. Morgan" <morgan@kernel.org>
-Subject: Re: [PATCH] userns: Replace netlink uses of cap_raised with capable.
-Date: Tue, 3 Apr 2012 21:24:20 -0700
-Message-ID: <CALQRfL50EL7k_G3oDwEzeJDRmCEPztkPx3aVHo6c-c6QbDjjzA@mail.gmail.com>
-References: <m1mx6sz2f2.fsf@fess.ebiederm.org>
-	<20120404022652.GA18730@mail.hallyn.com>
-	<m1sjgkxlic.fsf@fess.ebiederm.org>
+From: Salatiel Filho <salatiel.filho@gmail.com>
+Subject: Help to assemble raid5 - no superblock!
+Date: Wed, 4 Apr 2012 08:15:57 -0300
+Message-ID: <CAGmni9oPLr6xg07gn0kVpKM2ysOzM5x+Dx-kBTz2ZDdqV0-VOg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-security-module-owner@vger.kernel.org>
-In-Reply-To: <m1sjgkxlic.fsf@fess.ebiederm.org>
-Sender: linux-security-module-owner@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: "Serge E. Hallyn" <serge@hallyn.com>, Andrew Morton <akpm@linux-foundation.org>, Philipp Reisner <philipp.reisner@linbit.com>, Patrick McHardy <kaber@trash.net>, Vasiliy Kulikov <segoon@openwall.com>, David Howells <dhowells@redhat.com>, Neil Brown <neilb@suse.de>, Michal Januszewski <spock@gentoo.org>, linux-kernel@vger.kernel.org, linux-security-module@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-raid@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Acked-by: Andrew G. Morgan <morgan@kernel.org>
+I am having a big problem trying to assemble my raid.
+I can assemble just fine in the old machine (LINUX ARM) where i built
+the raid in the first place, but i am just unable to do in other
+machine (Linux mips). I have no mdadm.conf in both machines.
+I got the following error:
 
-Cheers
+# mdadm  -A /dev/md0 /dev/sda2 /dev/sdb2 /dev/sdc2
+mdadm: no recogniseable superblock on /dev/sda2
+mdadm: /dev/sda2 has no superblock - assembly aborted
 
-Andrew
+# cat /var/log/messages | tail
 
-On Tue, Apr 3, 2012 at 7:45 PM, Eric W. Biederman <ebiederm@xmission.co=
-m> wrote:
-> "Serge E. Hallyn" <serge@hallyn.com> writes:
->
->> Quoting Eric W. Biederman (ebiederm@xmission.com):
->>>
->>> In 2009 Philip Reiser notied that a few users of netlink connector
->>> interface needed a capability check and added the idiom
->>> cap_raised(nsp->eff_cap, CAP_SYS_ADMIN) to a few of them, on the pr=
-emise
->>> that netlink was asynchronous.
->>>
->>> In 2011 Patrick McHardy noticed we were being silly because netlink=
- is
->>> synchronous and removed eff_cap from the netlink_skb_params and cha=
-nged
->>> the idiom to cap_raised(current_cap(), CAP_SYS_ADMIN).
->>>
->>> Looking at those spots with a fresh eye we should be calling
->>> capable(CAP_SYS_ADMIN). =A0The only reason I can see for not callin=
-g
->>> capable is that it once appeared we were not in the same task as th=
-e
->>> caller which would have made calling capable() impossible.
->>
->> And (just to make sure) that is now absolutely not the case?
->
-> Absolutely. =A0Netlink is synchronous.
->
-> I reread netlink_unicast_kernel() in net/netlink/af_netlink.c while
-> researching this patch.
->
-> Netlink has been synchronous since 2007. =A0In a world of perfect
-> knowledge transmission these calls could have been calls to capable
-> from the very beginning.
->
->>> In the initial user_namespace the only difference between =A0betwee=
-n
->>> cap_raised(current_cap(), CAP_SYS_ADMIN) and capable(CAP_SYS_ADMIN)
->>> are a few sanity checks and the fact that capable(CAP_SYS_ADMIN)
->>> sets PF_SUPERPRIV if we use the capability.
->>>
->>> Since we are going to be using root privilege setting PF_SUPERPRIV
->>> seems the right thing to do.
->>>
->>> The motivation for this that patch is that in a child user namespac=
-e
->>> cap_raised(current_cap(),...) tests your capabilities with respect =
-to
->>> that child user namespace not capabilities in the initial user name=
-space
->>> and thus will allow processes that should be unprivielged to use th=
-e
->>> kernel services that are only protected with
->>> cap_raised(current_cap(),..).
->>>
->>> To fix possible user_namespace issues and to just clean up the code
->>> replace cap_raised(current_cap(), CAP_SYS_ADMIN) with
->>> capable(CAP_SYS_ADMIN).
->>>
->>> Cc: Patrick McHardy <kaber@trash.net>
->>> Cc: Philipp Reisner <philipp.reisner@linbit.com>
->>> Cc: Serge E. Hallyn <serge.hallyn@canonical.com>
->>
->> Acked-by: Serge E. Hallyn <serge.hallyn@canonical.com>
->>
->> thanks,
->> -serge
->>
->>> Cc: Andrew Morgan <morgan@kernel.org>
->>> Cc: Vasiliy Kulikov <segoon@openwall.com>
->>> Cc: David Howells <dhowells@redhat.com>
->>> Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
->>> ---
->>> =A0drivers/block/drbd/drbd_nl.c =A0 =A0 =A0 =A0 =A0 | =A0 =A02 +-
->>> =A0drivers/md/dm-log-userspace-transfer.c | =A0 =A02 +-
->>> =A0drivers/video/uvesafb.c =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0| =A0 =A0=
-2 +-
->>> =A03 files changed, 3 insertions(+), 3 deletions(-)
->>>
->>> diff --git a/drivers/block/drbd/drbd_nl.c b/drivers/block/drbd/drbd=
-_nl.c
->>> index abfaaca..946166e 100644
->>> --- a/drivers/block/drbd/drbd_nl.c
->>> +++ b/drivers/block/drbd/drbd_nl.c
->>> @@ -2297,7 +2297,7 @@ static void drbd_connector_callback(struct cn=
-_msg *req, struct netlink_skb_parms
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0return;
->>> =A0 =A0 =A0}
->>>
->>> - =A0 =A0if (!cap_raised(current_cap(), CAP_SYS_ADMIN)) {
->>> + =A0 =A0if (!capable(CAP_SYS_ADMIN)) {
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0retcode =3D ERR_PERM;
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0goto fail;
->>> =A0 =A0 =A0}
->>> diff --git a/drivers/md/dm-log-userspace-transfer.c b/drivers/md/dm=
--log-userspace-transfer.c
->>> index 1f23e04..08d9a20 100644
->>> --- a/drivers/md/dm-log-userspace-transfer.c
->>> +++ b/drivers/md/dm-log-userspace-transfer.c
->>> @@ -134,7 +134,7 @@ static void cn_ulog_callback(struct cn_msg *msg=
-, struct netlink_skb_parms *nsp)
->>> =A0{
->>> =A0 =A0 =A0struct dm_ulog_request *tfr =3D (struct dm_ulog_request =
-*)(msg + 1);
->>>
->>> - =A0 =A0if (!cap_raised(current_cap(), CAP_SYS_ADMIN))
->>> + =A0 =A0if (!capable(CAP_SYS_ADMIN))
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0return;
->>>
->>> =A0 =A0 =A0spin_lock(&receiving_list_lock);
->>> diff --git a/drivers/video/uvesafb.c b/drivers/video/uvesafb.c
->>> index 260cca7..9f7d27a 100644
->>> --- a/drivers/video/uvesafb.c
->>> +++ b/drivers/video/uvesafb.c
->>> @@ -73,7 +73,7 @@ static void uvesafb_cn_callback(struct cn_msg *ms=
-g, struct netlink_skb_parms *ns
->>> =A0 =A0 =A0struct uvesafb_task *utask;
->>> =A0 =A0 =A0struct uvesafb_ktask *task;
->>>
->>> - =A0 =A0if (!cap_raised(current_cap(), CAP_SYS_ADMIN))
->>> + =A0 =A0if (!capable(CAP_SYS_ADMIN))
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0return;
->>>
->>> =A0 =A0 =A0if (msg->seq >=3D UVESAFB_TASKS_MAX)
->>> --
->>> 1.7.2.5
---
-To unsubscribe from this list: send the line "unsubscribe linux-securit=
-y-module" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Apr  4 08:08:32 (none) kernel: [ 8577.010000] scsi_verify_blk_ioctl: 4
+callbacks suppressed
+Apr  4 08:08:32 (none) kernel: [ 8577.020000] mdadm: sending ioctl
+400c0910 to a partition!
+Apr  4 08:08:32 (none) kernel: [ 8577.020000] mdadm: sending ioctl
+400c0910 to a partition!
+Apr  4 08:08:32 (none) kernel: [ 8577.030000] mdadm: sending ioctl
+20001261 to a partition!
+Apr  4 08:08:32 (none) kernel: [ 8577.040000] mdadm: sending ioctl
+20001261 to a partition!
+Apr  4 08:08:32 (none) kernel: [ 8577.050000] mdadm: sending ioctl
+20001261 to a partition!
+Apr  4 08:08:32 (none) kernel: [ 8577.050000] mdadm: sending ioctl
+20001261 to a partition!
+Apr  4 08:08:32 (none) kernel: [ 8577.270000] mdadm: sending ioctl
+20001261 to a partition!
+Apr  4 08:08:32 (none) kernel: [ 8577.280000] mdadm: sending ioctl
+20001261 to a partition!
+Apr  4 08:08:33 (none) kernel: [ 8577.290000] mdadm: sending ioctl
+20001261 to a partition!
+Apr  4 08:08:33 (none) kernel: [ 8577.290000] mdadm: sending ioctl
+20001261 to a partition!
+
+# fdisk -l  /dev/sda
+
+Disk /dev/sda: 1500.3 GB, 1500301910016 bytes
+255 heads, 63 sectors/track, 182401 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks  Id System
+/dev/sda1               1       13055   104857600  83 Linux
+/dev/sda2           13055      182402  1360279960  fd Linux raid autodetect
+
+
+# fdisk -l  /dev/sdb
+
+Disk /dev/sdb: 1500.3 GB, 1500301910016 bytes
+255 heads, 63 sectors/track, 182401 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks  Id System
+/dev/sdb1               1       13055   104857600  83 Linux
+Partition 1 does not end on cylinder boundary
+/dev/sdb2           13055      182402  1360279960  fd Linux raid autodetect
+Partition 2 does not end on cylinder boundary
+
+# fdisk -l /dev/sdc
+
+Disk /dev/sdc: 1500.3 GB, 1500301910016 bytes
+255 heads, 63 sectors/track, 182401 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks  Id System
+/dev/sdc1               1       13055   104857600  83 Linux
+/dev/sdc2           13055      182402  1360279960  fd Linux raid autodetect
+
+
+# cat /proc/mdstat
+Personalities : [raid1] [raid6] [raid5] [raid4]
+unused devices: <none>
+
+
+
+# lsmod | grep -i 'md\|raid'
+raid456                47584  0
+async_raid6_recov        896  1 raid456
+async_pq                1536  1 raid456
+raid6_pq               74752  2 async_raid6_recov,async_pq
+async_xor                976  2 raid456,async_pq
+async_memcpy             560  1 raid456
+async_tx                 832  5
+raid456,async_raid6_recov,async_pq,async_xor,async_memcpy
+raid1                  24304  0
+md_mod                 88816  2 raid456,raid1
+md5                     1424  0
+crypto_hash             7888  3 dm_crypt,sha1_generic,md5
+
+
+
+# uname -a
+
+Linux router 3.2.9 #16 Sun Mar 25 16:31:49 BRT 2012 mips GNU/Linux
+
+
+Any help ?
+
+
+[]'s
+Salatiel
