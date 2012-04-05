@@ -1,9 +1,9 @@
 From: Przemyslaw Czarnowski
 	<przemyslaw.hawrylewicz.czarnowski@intel.com>
-Subject: [PATCH 2/4] imsm: clean up missing disks if there are any left after
- migration
-Date: Thu, 05 Apr 2012 17:30:21 +0200
-Message-ID: <20120405153021.19851.74528.stgit@linux.site>
+Subject: [PATCH 3/4] imsm: avoid double change of serial number of missing
+ device
+Date: Thu, 05 Apr 2012 17:30:54 +0200
+Message-ID: <20120405153054.19851.39398.stgit@linux.site>
 References: <20120405152553.19851.48052.stgit@linux.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,45 +15,41 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-It is for compatibility with OROM way to set "recovery" state.
+If degraded state is set in OROM, it do not set 'failed' flag for missing,
+device, just changes serial number, sets scsiId to 0xffff and sets highest
+bit in ord table in map. When mdadm replaces missing disk, the one left
+there is marked as failed and missing again (changing already marked serial
+number).
 
 Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
 ---
- super-intel.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+ super-intel.c |   15 +++++++++------
+ 1 files changed, 9 insertions(+), 6 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index e1cd9b8..f843997 100644
+index f843997..b361b72 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -7211,6 +7211,8 @@ skip_mark_checkpoint:
- 	return consistent;
- }
+@@ -6908,12 +6908,15 @@ static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
+ 	if (is_failed(disk) && (ord & IMSM_ORD_REBUILD))
+ 		return 0;
  
-+static void imsm_delete(struct intel_super *super, struct dl **dlp, unsigned index);
-+
- static void imsm_set_disk(struct active_array *a, int n, int state)
- {
- 	int inst = a->info.container_member;
-@@ -7260,6 +7262,11 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
- 			dprintf("while rebuilding");
- 			end_migration(dev, super, map_state);
- 			map = get_imsm_map(dev, MAP_0);
-+			/* sweep list of missing disks, OROM might leave
-+			 * some residuals from old members */
-+			while (super->missing) {
-+				imsm_delete(super, &super->missing, super->missing->index);
-+			}
- 			map->failed_disk_num = ~0;
- 			super->updates_pending++;
- 			a->last_checkpoint = 0;
-@@ -7792,8 +7799,6 @@ static int remove_disk_super(struct intel_super *super, int major, int minor)
- 	return 0;
- }
+-	memcpy(buf, disk->serial, MAX_RAID_SERIAL_LEN);
+-	buf[MAX_RAID_SERIAL_LEN] = '\000';
+-	strcat(buf, ":0");
+-	if ((len = strlen(buf)) >= MAX_RAID_SERIAL_LEN)
+-		shift = len - MAX_RAID_SERIAL_LEN + 1;
+-	strncpy((char *)disk->serial, &buf[shift], MAX_RAID_SERIAL_LEN);
++	/* do not add ":0", OROM has already done it */
++	if (!(ord & IMSM_ORD_REBUILD)) {
++		memcpy(buf, disk->serial, MAX_RAID_SERIAL_LEN);
++		buf[MAX_RAID_SERIAL_LEN] = '\000';
++		strcat(buf, ":0");
++		if ((len = strlen(buf)) >= MAX_RAID_SERIAL_LEN)
++			shift = len - MAX_RAID_SERIAL_LEN + 1;
++		strncpy((char *)disk->serial, &buf[shift], MAX_RAID_SERIAL_LEN);
++	}
  
--static void imsm_delete(struct intel_super *super, struct dl **dlp, unsigned index);
--
- static int add_remove_disk_update(struct intel_super *super)
- {
- 	int check_degraded = 0;
+ 	disk->status |= FAILED_DISK;
+ 	set_imsm_ord_tbl_ent(map, slot, idx | IMSM_ORD_REBUILD);
 
