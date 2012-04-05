@@ -1,64 +1,61 @@
-From: Anuj Goel <talk2anuj@gmail.com>
-Subject: Re: doubt in chunk_aligned_read()
-Date: Wed, 4 Apr 2012 21:56:26 -0400
-Message-ID: <CANSbrrrcL4jpder74Dhpx3sxKFOjD=ywCc8=Gcf24Tb7tOUfNg@mail.gmail.com>
-References: <CANSbrrp_LByxog3q265ruHxJxxJRhE2SfvPgzx8EK4FyL-7KOg@mail.gmail.com>
- <20120405113800.4a1da21e@notabene.brown>
+From: "kedacomkernel" <kedacomkernel@gmail.com>
+Subject: Re: Re: md/raid1:Fix a logic bug in fix_sync_read_error().
+Date: Thu, 5 Apr 2012 10:23:47 +0800
+Message-ID: <201204051023442812453@gmail.com>
+References: <201203311037586565381@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120405113800.4a1da21e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-cool :)
-Thanks !!
+Pj5UaGF0IGlzIGNvcnJlY3QsIGFuZCB0aGF0IGlzIGhvdyBpdCBzaG91bGQgYmUuDQoNCj4+SWYg
+d2UgZ2V0IGEgcmVhZCBlcnJvciwgdGhlbiB0cnkgYWdhaW4gYW5kIGdldCBhIHN1Y2Nlc3NmdWwg
+cmVhZCwgdGhlbiB0aGVyZQ0KPj5pcyBub3RoaW5nIG1vcmUgdGhhdCB3ZSBuZWVkIHRvIGRvLiAg
+Tm8gbmVlZCB0byB3cml0ZSBvciBhbnl0aGluZy4NCg0KPj5TbzogY3VycmVudCBjb2RlIGlzIGNv
+cnJlY3QuDQoNCj4+VGhhbmtzLA0KPj5OZWlsQnJvd24NClNvcnJ5IE5laWwsSSBkb24ndCB1bmRl
+cnN0YW5kIHdoYXQncyB5b3VyIG1lYW4/DQpJIHRoaW5rIHRoaXMgZnVuY3Rpb24gaXMgd2FudCB0
+byBkbyBzb21ldGhpbmcgbGlrZSBmb2xsb3cgd2hlbiBhbGwgc3luY19yZWFkIGZhaWxlZC4NCjE6
+d2FudCB0byByZWFkIHBhcnRseSBieSBQQUdFX1NJWkUgZnJvbSBhbGwgcmVhZCBkZXZpY2VzLg0K
+MjppZiByZWFkIHN1Y2Nlc3MgYW5kIHdyaXRlIHdyaXRlIHRvIG90aGVyIGFuZCByZWFkIGJhY2ss
+IGluIG9yZGVyIHRvIHJlcGFpciB0aG9zZSBkaXNrcy4NCg0KZm9yIGV4YW1wbGUgOg0KZGlzayBB
+LEIgLHJlYWQgNjRrIGZyb20gMCB0byAxMjggc2VjdG9yLg0Kc3VwcG9zZWQ6IGRpc2sgQSByZWFk
+IGZhaWxlZCBiZWNhdXNlIHNlY3RvciAwLTcgd2FzIGJhZCBzZWN0b3IuDQoJCQkgICBkaXNrIEIg
+IHJlYWQgZmFpbGVkIGJlY2F1c2Ugc2VjdG9yIDgtMTUgd2FzIGJhZCBzZWN0b3IuDQpieSB0aGlz
+IGZ1bmN0aW9uLHdlIGNhbiBmaXggc2VjdG9yIDAtNyBvZiBBIGFuZCBzZWN0b3IgOC0xNSBvZiBC
+Lg0KSXMgb2s/DQoNCklmIEIgaXMgcmVhZF9kaXNrLHNvIHJlYWQgMC03IGlzIG9rIGFuZCB3YW50
+IHRvIHdyaXRlIGl0IHRvIEEuQnV0IGJlY2FzdWUgdGhlIGNvZGUgLGRvIG5vdCB3cml0ZSB0byBk
+aXNrIEEuDQoNCi0tLS0tLS0tLS0tLS0tLS0tLQkJCQkgDQprZWRhY29ta2VybmVsDQoyMDEyLTA0
+LTA1DQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0NCreivP7Iy6O6TmVpbEJyb3duDQq3osvNyNXG2qO6MjAxMi0wNC0wMiAxMDow
+NTozNA0KytW8/sjLo7prZWRhY29ta2VybmVsDQqzrcvNo7psaW51eC1yYWlkDQrW98zio7pSZTog
+bWQvcmFpZDE6Rml4IGEgbG9naWMgYnVnIGluIGZpeF9zeW5jX3JlYWRfZXJyb3IoKS4NCg0KT24g
+U2F0LCAzMSBNYXIgMjAxMiAxMDozODowMSArMDgwMCAia2VkYWNvbWtlcm5lbCIgPGtlZGFjb21r
+ZXJuZWxAZ21haWwuY29tPg0Kd3JvdGU6DQoNCj4gPkZyb20gMGZlMTVjOGUxYmQ1ZTQ2MjM0ZDM3
+NTczZjMzMjIzMTJkOGRhMzI1ZCBNb24gU2VwIDE3IDAwOjAwOjAwIDIwMDENCj4gRnJvbTogbWFq
+aWFucGVuZyA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQo+IERhdGU6IFNhdCwgMzEgTWFyIDIwMTIg
+MTA6Mjc6MzMgKzA4MDANCj4gU3ViamVjdDogW1BBVENIXSBtZC9yYWlkMTpGaXggYSBsb2dpYyBi
+dWcgaW4gZml4X3N5bmNfcmVhZF9lcnJvcigpLiANCj4gSWYgIGQ9PXJlYWRfZGlzayAmJiBzdWNj
+ZXNzID09IDEgYW5kIHRoZW4gYnJlYWssIHNvIGQgPQ0KPiAgcmVhZF9kaXNrLiBXaGVuIGV4ZWMg
+dGhpcyBqdWRnZW1lbnQ6ID4+c3RhcnQgPSBkOyA+Pi8qDQo+ICB3cml0ZSBpdCBiYWNrIGFuZCBy
+ZS1yZWFkICovID4+d2hpbGUgKGQgIT0NCj4gIHIxX2Jpby0+cmVhZF9kaXNrKSB7IEJlY2F1c2Ug
+ZCA9PSByZWFkX2Rpc2ssc28gd3JpdGUgYW5kDQo+ICByZS1hZGQgZGlkIG5vdCBleGVjLg0KDQpU
+aGF0IGlzIGNvcnJlY3QsIGFuZCB0aGF0IGlzIGhvdyBpdCBzaG91bGQgYmUuDQoNCklmIHdlIGdl
+dCBhIHJlYWQgZXJyb3IsIHRoZW4gdHJ5IGFnYWluIGFuZCBnZXQgYSBzdWNjZXNzZnVsIHJlYWQs
+IHRoZW4gdGhlcmUNCmlzIG5vdGhpbmcgbW9yZSB0aGF0IHdlIG5lZWQgdG8gZG8uICBObyBuZWVk
+IHRvIHdyaXRlIG9yIGFueXRoaW5nLg0KDQpTbzogY3VycmVudCBjb2RlIGlzIGNvcnJlY3QuDQoN
+ClRoYW5rcywNCk5laWxCcm93bg0KDQoNCj4gDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBtYWppYW5w
+ZW5nIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL21kL3JhaWQxLmMg
+fCAgICAxIC0NCj4gIDEgZmlsZXMgY2hhbmdlZCwgMCBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9u
+cygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDEuYyBiL2RyaXZlcnMvbWQv
+cmFpZDEuYw0KPiBpbmRleCA0YTQwYTIwLi4zYTEzM2ZmIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJz
+L21kL3JhaWQxLmMNCj4gKysrIGIvZHJpdmVycy9tZC9yYWlkMS5jDQo+IEBAIC0xNjE4LDcgKzE2
+MTgsNiBAQCBzdGF0aWMgaW50IGZpeF9zeW5jX3JlYWRfZXJyb3Ioc3RydWN0IHIxYmlvICpyMV9i
+aW8pDQo+ICAJCQkJCQkgYmlvLT5iaV9pb192ZWNbaWR4XS5idl9wYWdlLA0KPiAgCQkJCQkJIFJF
+QUQsIGZhbHNlKSkgew0KPiAgCQkJCQlzdWNjZXNzID0gMTsNCj4gLQkJCQkJYnJlYWs7DQo+ICAJ
+CQkJfQ0KPiAgCQkJfQ0KPiAgCQkJZCsrOw0KDQo=
 
-On Wed, Apr 4, 2012 at 9:38 PM, NeilBrown <neilb@suse.de> wrote:
-> On Wed, 4 Apr 2012 21:25:53 -0400 Anuj Goel <talk2anuj@gmail.com> wro=
-te:
->
->> HI Guys,
->>
->> Why is the below call needed in the function =A0chunk_aligned_read()
->>
->> =A0 =A0 =A0 align_bi =3D bio_clone_mddev(raid_bio, GFP_NOIO, mddev);
->>
->> Why do we need to create a clone of the bio passed to
->> chunk_aligned_read(mddev_t *mddev, struct bio * raid_bio) ??
->
-> Think about what happens if the read fails.
->
-> NeilBrown
->
->
->>
->> --
->> Best Regards,
->> Anuj Goel
->> Experimental Computer Science Lab
->> Stony Brook University.
->> Cell: +1-801-209-5873
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
-
-
-
---=20
-Best Regards,
-Anuj Goel
-Experimental Computer Science Lab
-Stony Brook University.
-Cell: +1-801-209-5873
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
