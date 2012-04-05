@@ -1,104 +1,90 @@
-From: "kedacomkernel" <kedacomkernel@gmail.com>
-Subject: Re: Re: md/raid1:If r1bio->sectors % 8 != 0,then the memcmp and  latermemcpy will omit the last bio_vec.
-Date: Thu, 5 Apr 2012 14:12:25 +0800
-Message-ID: <201204051412225155656@gmail.com>
-References: <201203311544085318429@gmail.com>
+From: "majianpeng" <majianpeng@gmail.com>
+Subject: [PATCH] md/raid1,raid10:If r1bio->sectors % 8 != 0,then the memcmp  and latermemcpy will omit the last bio_vec.
+Date: Thu, 5 Apr 2012 14:48:39 +0800
+Message-ID: <201204051448360781921@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, majianpeng <majianpeng@gmail.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-SSByZWFkZWQgeW91ciBwYXRjaCBhbmQgZm91bmQgaXQgd3JvbmcuTXkgcGF0Y2ggaGFkIHR3byBw
-b2ludA0KMTptZW1jbXAgcHJvYmVtLllvdSBwYXRjaCBjYW4gY29ycmVjdCBpdC4NCjI6b21pdCB0
-aGUgbGFzdCBiaW9fdmVjLllvdSBwYXRjaCBkaWQgbm90IGNvcnJlY3QgaXQuDQpJZiByMWJpby0+
-c2VjdG9ycyAlOCAhPSAwLHN1cHBvc2VkIHNlY3RvcnMgPSAxOCx0aGVuIGJpbyBjb3ZlciB0aHJl
-ZSBwYWdlcy4gDQpCdXQ6DQoJPj5pbnQgdmNudCA9IHIxX2Jpby0+c2VjdG9ycyA+PiAoUEFHRV9T
-SElGVC0gOSk7IHZjbnQ9Mg0KdGhlbg0KICAgID4+Zm9yIChqID0gdmNudDsgai0tIDsgKSAgDQog
-ICAgICBqID0gMSwgMA0KDQoNCi0tLS0tLS0tLS0tLS0tLS0tLQkJCQkgDQprZWRhY29ta2VybmVs
-DQoyMDEyLTA0LTA1DQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0NCreivP7Iy6O6TmVpbEJyb3duDQq3osvNyNXG2qO6MjAxMi0w
-NC0wMiAwOTo0MToyOQ0KytW8/sjLo7ptYWppYW5wZW5nDQqzrcvNo7psaW51eC1yYWlkDQrW98zi
-o7pSZTogbWQvcmFpZDE6SWYgcjFiaW8tPnNlY3RvcnMgJSA4ICE9IDAsdGhlbiB0aGUgbWVtY21w
-IGFuZCAgbGF0ZXJtZW1jcHkgd2lsbCBvbWl0IHRoZSBsYXN0IGJpb192ZWMuDQoNCk9uIFNhdCwg
-MzEgTWFyIDIwMTIgMTU6NDQ6MTQgKzA4MDAgIm1hamlhbnBlbmciIDxtYWppYW5wZW5nQGdtYWls
-LmNvbT4gd3JvdGU6DQoNCj4gPkZyb20gNzJlNWFkOWRhNTExNjg5ZjdlZmUzMzBjZTUwOTNhM2Rm
-MmM5MjczOCBNb24gU2VwIDE3IDAwOjAwOjAwIDIwMDENCj4gRnJvbTogbWFqaWFucGVuZyA8bWFq
-aWFucGVuZ0BnbWFpbC5jb20+DQo+IERhdGU6IFNhdCwgMzEgTWFyIDIwMTIgMTU6MzY6MDEgKzA4
-MDANCj4gU3ViamVjdDogW1BBVENIXSBtZC9yYWlkMTpJZiByMWJpby0+c2VjdG9ycyAlIDggIT0g
-MCx0aGVuIHRoZSBtZW1jbXAgYW5kDQo+ICBsYXRlciBtZW1jcHkgd2lsbCBvbWl0IHRoZSBsYXN0
-IGJpb192ZWMuDQoNClRoYW5rcyBmb3IgdGhpcy4NCg0KVGhlcmUgaXMgYSBidWcgaGVyZS4gSG93
-ZXZlciBJIHRoaW5rIHlvdXIgZml4IGlzIG92ZXJseSBjb21wbGV4Lg0KDQpBbHNvIHRoZSAnbWVt
-Y3B5JyBkb2Vzbid0IG5lZWQgdG8gYmUgY2hhbmdlZCAtIGl0IGRvZXNuJ3QgaHVydCBpZiBpdCBj
-b3BpZXMNCm1vcmUgYnl0ZXMgdGhhbiBuZWNlc3NhcnkuDQpIb3dldmVyIGl0IGNvdWxkIGh1cnQg
-aWYgd2UgY29tcGFyZSBtb3JlIGJ5dGVzIHRoYW4gbmVjZXNzYXJ5Lg0KDQpJJ3ZlIGFwcGxpZWQg
-YSB2ZXJ5IGRpZmZlcmVudCBwYXRjaCBhcyBiZWxvdy4NCg0KVGhhbmtzLA0KTmVpbEJyb3duDQoN
-Cg0KRnJvbSA5ZDQ5ZDI0ZDY2NTE0NmQxMjFkM2FlMzQ5YWRjOTJlODM0NjBkNzVkIE1vbiBTZXAg
-MTcgMDA6MDA6MDAgMjAwMQ0KRnJvbTogTmVpbEJyb3duIDxuZWlsYkBzdXNlLmRlPg0KRGF0ZTog
-TW9uLCAyIEFwciAyMDEyIDExOjM5OjA1ICsxMDAwDQpTdWJqZWN0OiBbUEFUQ0hdIG1kL3JhaWQx
-LHJhaWQxMDogZG9uJ3QgY29tcGFyZSBleGNlc3MgYnl0ZSBkdXJpbmcNCiBjb25zaXN0ZW5jeSBj
-aGVjay4NCg0KV2hlbiBjb21wYXJpbmcgdHdvIHBhZ2VzIHJlYWQgZnJvbSBkaWZmZXJlbnQgbGVn
-cyBvZiBhIG1pcnJvciwgb25seQ0KY29tcGFyZSB0aGUgYnl0ZXMgdGhhdCB3ZXJlIHJlYWQsIG5v
-dCB0aGUgd2hvbGUgcGFnZS4NCg0KSSBtb3N0IGNhc2VzIHdlcmUgcmVhZCBhIHdob2xlIHBhZ2Us
-IGJ1dCBpbiBzb21lIGNhc2VzIHdpdGgNCmJhZCBibG9ja3Mgb3Igb2RkIHNpemVzIGRldmljZXMg
-d2UgbWlnaHQgcmVhZCBmZXdlciB0aGFuIHRoYXQuDQoNClRoaXMgYnVnIGhhcyBiZWVuIHByZXNl
-bnQgImZvcmV2ZXIiIGJ1dCBhdCB3b3JzdCBpdCBtaWdodCBjYXVzZQ0KYSByZXBvcnQgb2YgdHdv
-IG1hbnkgbWlzbWF0Y2hlcyBhbmQgZ2VuZXJhdGUgYSBsaXR0bGUgYml0DQpleHRyYSByZXN5bmMg
-SU8sIHNvIHRoZXJlIGlzIG5vIG5lZWQgdG8gYmFjay1wb3J0IHRvIC1zdGFibGUNCmtlcm5lbHMu
-DQoNClJlcG9ydGVkLWJ5OiBtYWppYW5wZW5nIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4NClNpZ25l
-ZC1vZmYtYnk6IE5laWxCcm93biA8bmVpbGJAc3VzZS5kZT4NCg0KZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvbWQvcmFpZDEuYyBiL2RyaXZlcnMvbWQvcmFpZDEuYw0KaW5kZXggOGM0MjBmMS4uZDM1ZTRj
-OSAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbWQvcmFpZDEuYw0KKysrIGIvZHJpdmVycy9tZC9yYWlk
-MS5jDQpAQCAtMTczOCw3ICsxNzM4LDcgQEAgc3RhdGljIGludCBwcm9jZXNzX2NoZWNrcyhzdHJ1
-Y3QgcjFiaW8gKnIxX2JpbykNCiAJCQkJcyA9IHNiaW8tPmJpX2lvX3ZlY1tqXS5idl9wYWdlOw0K
-IAkJCQlpZiAobWVtY21wKHBhZ2VfYWRkcmVzcyhwKSwNCiAJCQkJCSAgIHBhZ2VfYWRkcmVzcyhz
-KSwNCi0JCQkJCSAgIFBBR0VfU0laRSkpDQorCQkJCQkgICBzYmlvLT5iaV9pb192ZWNbal0uYnZf
-bGVuKSkNCiAJCQkJCWJyZWFrOw0KIAkJCX0NCiAJCX0gZWxzZQ0KZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvbWQvcmFpZDEwLmMgYi9kcml2ZXJzL21kL3JhaWQxMC5jDQppbmRleCAzNTQwMzE2Li5mZmY3
-ODIxIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9tZC9yYWlkMTAuYw0KKysrIGIvZHJpdmVycy9tZC9y
-YWlkMTAuYw0KQEAgLTE4MjEsNyArMTgyMSw3IEBAIHN0YXRpYyB2b2lkIHN5bmNfcmVxdWVzdF93
-cml0ZShzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBzdHJ1Y3QgcjEwYmlvICpyMTBfYmlvKQ0KIAkJCWZv
-ciAoaiA9IDA7IGogPCB2Y250OyBqKyspDQogCQkJCWlmIChtZW1jbXAocGFnZV9hZGRyZXNzKGZi
-aW8tPmJpX2lvX3ZlY1tqXS5idl9wYWdlKSwNCiAJCQkJCSAgIHBhZ2VfYWRkcmVzcyh0YmlvLT5i
-aV9pb192ZWNbal0uYnZfcGFnZSksDQotCQkJCQkgICBQQUdFX1NJWkUpKQ0KKwkJCQkJICAgZmJp
-by0+YmlfaW9fdmVjW2pdLmJ2X2xlbikpDQogCQkJCQlicmVhazsNCiAJCQlpZiAoaiA9PSB2Y250
-KQ0KIAkJCQljb250aW51ZTsNCg0KDQoNCj4gDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBtYWppYW5w
-ZW5nIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL21kL3JhaWQxLmMg
-fCAgIDE0ICsrKysrKysrKystLS0tDQo+ICAxIGZpbGVzIGNoYW5nZWQsIDEwIGluc2VydGlvbnMo
-KyksIDQgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkMS5j
-IGIvZHJpdmVycy9tZC9yYWlkMS5jDQo+IGluZGV4IDRhNDBhMjAuLjExYTI4Y2EgMTAwNjQ0DQo+
-IC0tLSBhL2RyaXZlcnMvbWQvcmFpZDEuYw0KPiArKysgYi9kcml2ZXJzL21kL3JhaWQxLmMNCj4g
-QEAgLTE3MTEsNyArMTcxMSw3IEBAIHN0YXRpYyBpbnQgcHJvY2Vzc19jaGVja3Moc3RydWN0IHIx
-YmlvICpyMV9iaW8pDQo+ICAJc3RydWN0IG1kZGV2ICptZGRldiA9IHIxX2Jpby0+bWRkZXY7DQo+
-ICAJc3RydWN0IHIxY29uZiAqY29uZiA9IG1kZGV2LT5wcml2YXRlOw0KPiAgCWludCBwcmltYXJ5
-Ow0KPiAtCWludCBpOw0KPiArCWludCBpLCB2Y250Ow0KPiAgDQo+ICAJZm9yIChwcmltYXJ5ID0g
-MDsgcHJpbWFyeSA8IGNvbmYtPnJhaWRfZGlza3MgKiAyOyBwcmltYXJ5KyspDQo+ICAJCWlmIChy
-MV9iaW8tPmJpb3NbcHJpbWFyeV0tPmJpX2VuZF9pbyA9PSBlbmRfc3luY19yZWFkICYmDQo+IEBA
-IC0xNzIxLDkgKzE3MjEsOSBAQCBzdGF0aWMgaW50IHByb2Nlc3NfY2hlY2tzKHN0cnVjdCByMWJp
-byAqcjFfYmlvKQ0KPiAgCQkJYnJlYWs7DQo+ICAJCX0NCj4gIAlyMV9iaW8tPnJlYWRfZGlzayA9
-IHByaW1hcnk7DQo+ICsJdmNudCA9IChyMV9iaW8tPnNlY3RvcnMgKyBQQUdFX1NJWkUgLyA1MTIg
-LSAxKSA+PiAoUEFHRV9TSElGVCAtIDkpOw0KPiAgCWZvciAoaSA9IDA7IGkgPCBjb25mLT5yYWlk
-X2Rpc2tzICogMjsgaSsrKSB7DQo+ICAJCWludCBqOw0KPiAtCQlpbnQgdmNudCA9IHIxX2Jpby0+
-c2VjdG9ycyA+PiAoUEFHRV9TSElGVC0gOSk7DQo+ICAJCXN0cnVjdCBiaW8gKnBiaW8gPSByMV9i
-aW8tPmJpb3NbcHJpbWFyeV07DQo+ICAJCXN0cnVjdCBiaW8gKnNiaW8gPSByMV9iaW8tPmJpb3Nb
-aV07DQo+ICAJCWludCBzaXplOw0KPiBAQCAtMTczNiw5ICsxNzM2LDE2IEBAIHN0YXRpYyBpbnQg
-cHJvY2Vzc19jaGVja3Moc3RydWN0IHIxYmlvICpyMV9iaW8pDQo+ICAJCQkJc3RydWN0IHBhZ2Ug
-KnAsICpzOw0KPiAgCQkJCXAgPSBwYmlvLT5iaV9pb192ZWNbal0uYnZfcGFnZTsNCj4gIAkJCQlz
-ID0gc2Jpby0+YmlfaW9fdmVjW2pdLmJ2X3BhZ2U7DQo+ICsJCQkJaWYgKChqID09IHZjbnQgLSAx
-KSAmJg0KPiArCQkJCQkocjFfYmlvLT5zZWN0b3JzICYNCj4gKwkJCQkJIChQQUdFX1NJWkUgLyA1
-MTIgLSAxKSkpDQo+ICsJCQkJCXNpemUgPSAocjFfYmlvLT5zZWN0b3JzIDw8IDkpDQo+ICsJCQkJ
-CQktIChQQUdFX1NJWkUgKiBqKTsNCj4gKwkJCQllbHNlDQo+ICsJCQkJCXNpemUgPSBQQUdFX1NJ
-WkU7DQo+ICAJCQkJaWYgKG1lbWNtcChwYWdlX2FkZHJlc3MocCksDQo+ICAJCQkJCSAgIHBhZ2Vf
-YWRkcmVzcyhzKSwNCj4gLQkJCQkJICAgUEFHRV9TSVpFKSkNCj4gKwkJCQkJICAgc2l6ZSkpDQo+
-ICAJCQkJCWJyZWFrOw0KPiAgCQkJfQ0KPiAgCQl9IGVsc2UNCj4gQEAgLTI0ODAsNyArMjQ4Nyw2
-IEBAIHN0YXRpYyBzZWN0b3JfdCBzeW5jX3JlcXVlc3Qoc3RydWN0IG1kZGV2ICptZGRldiwgc2Vj
-dG9yX3Qgc2VjdG9yX25yLCBpbnQgKnNraXBwDQo+ICAJfSB3aGlsZSAocjFfYmlvLT5iaW9zW2Rp
-c2tdLT5iaV92Y250IDwgUkVTWU5DX1BBR0VTKTsNCj4gICBiaW9fZnVsbDoNCj4gIAlyMV9iaW8t
-PnNlY3RvcnMgPSBucl9zZWN0b3JzOw0KPiAtDQo+ICAJLyogRm9yIGEgdXNlci1yZXF1ZXN0ZWQg
-c3luYywgd2UgcmVhZCBhbGwgcmVhZGFibGUgZGV2aWNlcyBhbmQgZG8gYQ0KPiAgCSAqIGNvbXBh
-cmUNCj4gIAkgKi8NCg0K
+From a4e76f125fd277ed5a72bf0e2fffde8b210a9603 Mon Sep 17 00:00:00 2001
+From: majianpeng <majianpeng@gmail.com>
+Date: Thu, 5 Apr 2012 14:42:12 +0800
+Subject: [PATCH] md/raid1,raid10:If r1bio->sectors % 8 != 0,then the memcmp
+ and latermemcpy will omit the last bio_vec.
+
+
+Signed-off-by: majianpeng <majianpeng@gmail.com>
+---
+ drivers/md/raid1.c  |    3 ++-
+ drivers/md/raid10.c |    4 ++--
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index d35e4c9..15dd59b 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1712,6 +1712,7 @@ static int process_checks(struct r1bio *r1_bio)
+ 	struct r1conf *conf = mddev->private;
+ 	int primary;
+ 	int i;
++	int vcnt;
+ 
+ 	for (primary = 0; primary < conf->raid_disks * 2; primary++)
+ 		if (r1_bio->bios[primary]->bi_end_io == end_sync_read &&
+@@ -1721,9 +1722,9 @@ static int process_checks(struct r1bio *r1_bio)
+ 			break;
+ 		}
+ 	r1_bio->read_disk = primary;
++	vcnt = (r1_bio->sectors + PAGE_SIZE / 512 - 1) >> (PAGE_SHIFT - 9);
+ 	for (i = 0; i < conf->raid_disks * 2; i++) {
+ 		int j;
+-		int vcnt = r1_bio->sectors >> (PAGE_SHIFT- 9);
+ 		struct bio *pbio = r1_bio->bios[primary];
+ 		struct bio *sbio = r1_bio->bios[i];
+ 		int size;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index fff7821..c8dbb84 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1788,6 +1788,7 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 	struct r10conf *conf = mddev->private;
+ 	int i, first;
+ 	struct bio *tbio, *fbio;
++	int vcnt;
+ 
+ 	atomic_set(&r10_bio->remaining, 1);
+ 
+@@ -1802,10 +1803,10 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 	first = i;
+ 	fbio = r10_bio->devs[i].bio;
+ 
++	vcnt = (r10_bio->sectors + (PAGE_SIZE >> 9) - 1) >> (PAGE_SHIFT - 9);
+ 	/* now find blocks with errors */
+ 	for (i=0 ; i < conf->copies ; i++) {
+ 		int  j, d;
+-		int vcnt = r10_bio->sectors >> (PAGE_SHIFT-9);
+ 
+ 		tbio = r10_bio->devs[i].bio;
+ 
+@@ -1871,7 +1872,6 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 	 */
+ 	for (i = 0; i < conf->copies; i++) {
+ 		int j, d;
+-		int vcnt = r10_bio->sectors >> (PAGE_SHIFT-9);
+ 
+ 		tbio = r10_bio->devs[i].repl_bio;
+ 		if (!tbio || !tbio->bi_end_io)
+-- 
+1.7.5.4
+
+ 				
+--------------
+majianpeng
+2012-04-05
 
