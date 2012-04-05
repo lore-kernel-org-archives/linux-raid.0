@@ -1,90 +1,92 @@
-From: "majianpeng" <majianpeng@gmail.com>
-Subject: [PATCH] md/raid1,raid10:If r1bio->sectors % 8 != 0,then the memcmp  and latermemcpy will omit the last bio_vec.
-Date: Thu, 5 Apr 2012 14:48:39 +0800
-Message-ID: <201204051448360781921@gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: md/raid1:If r1bio->sectors % 8 != 0,then the memcmp and
+ latermemcpy will omit the last bio_vec.
+Date: Thu, 5 Apr 2012 16:53:46 +1000
+Message-ID: <20120405165346.2b21bdf8@notabene.brown>
+References: <201203311544085318429@gmail.com>
+	<201204051412225155656@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/zwdN2febyFokB=FFXzxhbes"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201204051412225155656@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: kedacomkernel <kedacomkernel@gmail.com>
+Cc: majianpeng <majianpeng@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From a4e76f125fd277ed5a72bf0e2fffde8b210a9603 Mon Sep 17 00:00:00 2001
-From: majianpeng <majianpeng@gmail.com>
-Date: Thu, 5 Apr 2012 14:42:12 +0800
-Subject: [PATCH] md/raid1,raid10:If r1bio->sectors % 8 != 0,then the memcmp
- and latermemcpy will omit the last bio_vec.
+--Sig_/zwdN2febyFokB=FFXzxhbes
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, 5 Apr 2012 14:12:25 +0800 "kedacomkernel" <kedacomkernel@gmail.com>
+wrote:
+
+> I readed your patch and found it wrong.My patch had two point
+> 1:memcmp probem.You patch can correct it.
+> 2:omit the last bio_vec.You patch did not correct it.
+> If r1bio->sectors %8 !=3D 0,supposed sectors =3D 18,then bio cover three =
+pages.=20
+> But:
+> 	>>int vcnt =3D r1_bio->sectors >> (PAGE_SHIFT- 9); vcnt=3D2
+> then
+>     >>for (j =3D vcnt; j-- ; ) =20
+>       j =3D 1, 0
+>=20
+
+Ahhh, yes of course.
+Thanks.
+
+> > @@ -1711,7 +1711,7 @@ static int process_checks(struct r1bio *r1_bio)
+> >  	struct mddev *mddev =3D r1_bio->mddev;
+> >  	struct r1conf *conf =3D mddev->private;
+> >  	int primary;
+> > -	int i;
+> > +	int i, vcnt;
+> > =20
+> >  	for (primary =3D 0; primary < conf->raid_disks * 2; primary++)
+> >  		if (r1_bio->bios[primary]->bi_end_io =3D=3D end_sync_read &&
+> > @@ -1721,9 +1721,9 @@ static int process_checks(struct r1bio *r1_bio)
+> >  			break;
+> >  		}
+> >  	r1_bio->read_disk =3D primary;
+> > +	vcnt =3D (r1_bio->sectors + PAGE_SIZE / 512 - 1) >> (PAGE_SHIFT - 9);
+> >  	for (i =3D 0; i < conf->raid_disks * 2; i++) {
+> >  		int j;
+> > -		int vcnt =3D r1_bio->sectors >> (PAGE_SHIFT- 9);
+> >  		struct bio *pbio =3D r1_bio->bios[primary];
+> >  		struct bio *sbio =3D r1_bio->bios[i];
+> >  		int size;
+
+This bit.
+
+I'll make sure that gets applied.
+
+Thanks,
+NeilBrown
 
 
-Signed-off-by: majianpeng <majianpeng@gmail.com>
----
- drivers/md/raid1.c  |    3 ++-
- drivers/md/raid10.c |    4 ++--
- 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index d35e4c9..15dd59b 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1712,6 +1712,7 @@ static int process_checks(struct r1bio *r1_bio)
- 	struct r1conf *conf = mddev->private;
- 	int primary;
- 	int i;
-+	int vcnt;
- 
- 	for (primary = 0; primary < conf->raid_disks * 2; primary++)
- 		if (r1_bio->bios[primary]->bi_end_io == end_sync_read &&
-@@ -1721,9 +1722,9 @@ static int process_checks(struct r1bio *r1_bio)
- 			break;
- 		}
- 	r1_bio->read_disk = primary;
-+	vcnt = (r1_bio->sectors + PAGE_SIZE / 512 - 1) >> (PAGE_SHIFT - 9);
- 	for (i = 0; i < conf->raid_disks * 2; i++) {
- 		int j;
--		int vcnt = r1_bio->sectors >> (PAGE_SHIFT- 9);
- 		struct bio *pbio = r1_bio->bios[primary];
- 		struct bio *sbio = r1_bio->bios[i];
- 		int size;
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index fff7821..c8dbb84 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1788,6 +1788,7 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
- 	struct r10conf *conf = mddev->private;
- 	int i, first;
- 	struct bio *tbio, *fbio;
-+	int vcnt;
- 
- 	atomic_set(&r10_bio->remaining, 1);
- 
-@@ -1802,10 +1803,10 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
- 	first = i;
- 	fbio = r10_bio->devs[i].bio;
- 
-+	vcnt = (r10_bio->sectors + (PAGE_SIZE >> 9) - 1) >> (PAGE_SHIFT - 9);
- 	/* now find blocks with errors */
- 	for (i=0 ; i < conf->copies ; i++) {
- 		int  j, d;
--		int vcnt = r10_bio->sectors >> (PAGE_SHIFT-9);
- 
- 		tbio = r10_bio->devs[i].bio;
- 
-@@ -1871,7 +1872,6 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
- 	 */
- 	for (i = 0; i < conf->copies; i++) {
- 		int j, d;
--		int vcnt = r10_bio->sectors >> (PAGE_SHIFT-9);
- 
- 		tbio = r10_bio->devs[i].repl_bio;
- 		if (!tbio || !tbio->bi_end_io)
--- 
-1.7.5.4
+--Sig_/zwdN2febyFokB=FFXzxhbes
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
- 				
---------------
-majianpeng
-2012-04-05
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
+iQIVAwUBT31Bejnsnt1WYoG5AQJRjxAAk7jln8+eNV6ePv8xFZP8JRRk78lENKdg
+L8MbiMoA3ZRIb0UmzxXOAK8IYUF/qrFZIykLE6XTaILA+MU5LVa8+n6TC4qAQxr9
+Hxz3Cx090iKmCotTF2JiokZXqvRrOcmNT3OOKui1h6fr1sZ57HLYeZSOaLdk46c2
+h0qWR0seyT5idLrIzfgWL4tduysgKEqpWE5io3vr2t02Opec/4xfCNO/VjhIaQFh
+IVp/MWJ01YRHuJcUnwM2Cil7xMGJxkCkEzqgM3F2My15TT8YG4UVwvnyfB7mqXrW
+Y2QhL+bnkHz+pd6SNgNmrrQ+E6bHtxn905TGNMHsWD6PgTFiUZF7N/IgbROi4dfI
+x9YWLmvjQERibWij188XFY+h08gxJaOidKj8duHWqXJPYey3zq98iMCt7UIL8vKf
+ZDJzVE8Fm7iZs05zIpGrWQBczc7jNMqZnTQ919tQKd788u+Io4T1GdduUur6VqQ/
+4P1GIZOMPHhES4NOf8ElWDfTUb9iCUbwDfrlTFzp+RkpxjnjDbhDmi2wBvW7zlRp
+3/GLR4TksfiErTZ+RrWP9Gf0KVZDQygvVjQtVsT6ILhEjoJRiXgcIR346urnOYyL
+sHje2l9eZTfer2l9RJUcHjXDdiIABkPz6mPIAtZQIjtwDe5JTyCgkWKOjd6smWah
+sxQAaDdJGX4=
+=+leh
+-----END PGP SIGNATURE-----
+
+--Sig_/zwdN2febyFokB=FFXzxhbes--
