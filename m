@@ -1,44 +1,73 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: RAID5 created by 8 disks works with xfs
-Date: Thu, 05 Apr 2012 16:01:54 -0500
-Message-ID: <4F7E0842.6090004@hardwarefreak.com>
-References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com> <CADNH=7H_rgiY4fkB0SHo0yPhSBib7Gq-E_fu18yuJx=enn-eGg@mail.gmail.com> <4F776492.4070600@hardwarefreak.com> <CACwgYDOSrEYUps2VLpFSZ-irH7Mn_-BWrOYYDgXS=ULrmVuEPw@mail.gmail.com> <4F77D0B2.8000809@hardwarefreak.com> <CACwgYDMx6nQF-OwYj-BA+sZivUK=kmv2tPukgf5JGwA1vMTGrA@mail.gmail.com> <4F77EA55.6090004@hardwarefreak.com> <CACwgYDMVHT5DFjJztX9JvsVQJ+uOjPrfcs4+0aGXotDvf6tymQ@mail.gmail.com> <CACwgYDMXF9WEgzW9vL_0=GdRc_t+67WAkRTKNoKOMEMCvjujVw@mail.gmail.com> <CALFpzo5aKM2y_stDR14PNYMHEcq5CEptuFiXrvcCpXTzSQmAxw@mail.gmail.com> <4F792154.5020006@hardwarefreak.com> <CACwgYDPsZSEhuqNP8YgAksEq9BB6YOS1Q8jGx2J7DCrrOh_JQw@mail.gmail.com> <CACwgYDOtCoVF-p+KKqPYxHhA4vWF78Ueecx9hcVWLoyxFWzV9Q@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Intel fakeraid working?
+Date: Fri, 6 Apr 2012 09:24:28 +1000
+Message-ID: <20120406092428.1090e10b@notabene.brown>
+References: <4F7CEDD0.9080904@ubuntu.com>
+	<20120405111317.2a5227b1@notabene.brown>
+	<4F7DE314.9040306@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/SaHsYSLESmFY6dYcUrV/Qs0"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACwgYDOtCoVF-p+KKqPYxHhA4vWF78Ueecx9hcVWLoyxFWzV9Q@mail.gmail.com>
+In-Reply-To: <4F7DE314.9040306@ubuntu.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: daobang wang <wangdb1981@gmail.com>
-Cc: Marcus Sorensen <shadowsor@gmail.com>, =?ISO-8859-1?Q?Mathias_Bur=E9?= =?ISO-8859-1?Q?n?= <mathias.buren@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 4/5/2012 1:48 AM, daobang wang wrote:
-> Hi stan,
-> 
->      I duplicated the input/output error issue, about the detail
-> operations and logs, please see the attachments, Is there any way to
-> fix this? thanks!
-> 
-> Best Regards,
-> Daobang Wang.
+--Sig_/SaHsYSLESmFY6dYcUrV/Qs0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Thu, 05 Apr 2012 14:23:16 -0400 Phillip Susi <psusi@ubuntu.com> wrote:
 
-These fiilesystem issues have nothing to do with linux-raid.  I'm
-copying the XFS mailing list which is where this discussion should be
-taking place from this point forward.  Please reply-to-all, and paste
-the output you previously attached, but inline this time.
+> On 4/4/2012 9:13 PM, NeilBrown wrote:
+> >
+> > That bug is fixed by
+> >
+> > http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux.git;a=3Dcomm=
+itdiff;h=3Dc744a65c1e2d59acc54333ce80a5b0702a98010b
+> >
+> > and is not specific to Intel IMSM RAID.
+>=20
+> That commit appears to have to do with shutdown, but this did not happen=
+=20
+> during shutdown.  I suppose it happened as a result of the array being=20
+> stuck in read only mode due to the missing mdmon.
+>=20
 
-Also, since the XFS folks are unfamiliar with what you're doing up to
-this point, please provide a basic description of your hardware/storage
-setup, kernel version, mdraid configuration, xfs_info output as well as
-your fstab XFS mount options, and a description of your workload.
+Yes, you are right - I read too hastily.
 
-My best guess at this point as to the du and ls errors is that your
-application is not behaving properly, or you're still running with XFS
-barriers disabled, which, I say _loudly_ for the 2nd time, you should
-NOT do in the absence of BBWC, which you stated you do not have.
+Something wrote to the md device despite it being marked 'read-only'.
+Some filesystems do that to replay their journal.  totally inexcusable
+behaviour, but what can we do....
 
--- 
-Stan
+I'm surprised that would happen during installation though.
+But certainly the array is marked read-only, and certainly something is
+writing to it, and that is the real bug.
+
+NeilBrown
+
+--Sig_/SaHsYSLESmFY6dYcUrV/Qs0
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT34prDnsnt1WYoG5AQI4/A//TqAEZq4F42yUzu/PkERtO2omC6iqIIdt
+/OHMyyQdFGNC8qXTpYP4UvpO2DxXHN1Zi29mmZNvPfgIUAkQcTZN6YEPHsxVXUbu
+n8oBU7VXtOejPlpX3DMOVRC6tcG93EgB/3tYUFQmxDoPeAKKK43pjHaAxtezaVpY
+2/+7EVyGO+Moa5iqyTRPgm2YfKrnT9uWY0H+G6Q6rox1XCSvj7p3EWQknw/bO8xv
+ej5kK3vsUcpD6qZXrkb26G+bXUR7raDzP9hLxe3lZ+JIUZ/SEdye8xLzAyXMKTq8
+z5flvrPUhrUdsehMT+332sIUikMSxbqObJbLYyxnM37ARPxA+36vTn0Wh6y+qRBp
+OYWHyj5rvAjBh7e+AkPtT54llKggSXHYqKaTp3a6LSIisHxzmBHNLg9/DVUjpnvV
++O+tZVPRcZYvr9Lsf1/9ZPw6Mphq2D4tXmterHXWYjuh93m4AQCAWzwTtViBSwQZ
+yyZ+0099b8rqgr3yfkYaX/UFn+qBX2V0htxpLDW1FQaTf1Bj55iErlkZGYyPfMEB
+VnoCpgNRyZKAihKrZeccrvNl/JI3gfDpl9JtyjRtYsHi8Y3UuATCVc8mYieXXvus
+DFYroSQaw86A0ocFzcuLbJCABPZolqmAgfRU9BiSF9mR/628qFHMGw5IVIfk5uh+
+Ji5nUe9L9Bg=
+=nrHc
+-----END PGP SIGNATURE-----
+
+--Sig_/SaHsYSLESmFY6dYcUrV/Qs0--
