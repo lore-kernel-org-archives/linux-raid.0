@@ -1,57 +1,118 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: [PATCH] mdadm: do not read the 'clean' flag from potentially
- non-up-to-date drive
-Date: Fri, 6 Apr 2012 15:24:22 +0300
-Message-ID: <CAGRgLy5=xP3ZJz71j2qYiCFLFFD6uCH0O92p3Ev2s2GnonRc8A@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: RAID5 XOR speed vs RAID6 Q speed (was Re: AVX RAID5 xor checksumming)
+Date: Fri, 6 Apr 2012 13:43:11 -0700
+Message-ID: <CAA9_cmcE5BfZX2RwOpo=qng2_2wnvhm5dB-dBfjFGOUWiSy3fw@mail.gmail.com>
+References: <4F7ACF94.5080505@anonymous.org.uk>
+	<1333497379-2640-1-git-send-email-james.t.kukunas@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1333497379-2640-1-git-send-email-james.t.kukunas@linux.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
+To: Jim Kukunas <james.t.kukunas@linux.intel.com>
+Cc: linux-raid@vger.kernel.org, linux-crypto@vger.kernel.org, bharrosh@panasas.com
 List-Id: linux-raid.ids
 
-Hi Neil,
+[adding Boaz since he also made an attempt at fixing this]
 
-I noticed that mdadm may decide that array is dirty, based on the
-non-freshest drive. This happens, e.g., when there is a drive failure
-during initial resync, and then array is stopped and re-assembled. The
-failed drive still has a valid sb->resync_offset, so if this drive is
-visible during assembly, array will be considered dirty, even though
-the rest of the drives have sb->resync_offset==MaxSector.
+http://marc.info/?l=3Dlinux-crypto-vger&m=3D131829241111450&w=3D2
 
-Do you think array should be considered as dirty in this case? Because
-if the failed drive was not visible during assembly, array would have
-been considered clean.
-
-The below patch is only to demonstrate the possible fix. The idea is
-that we decide that array is dirty only according to up-to-date
-drives. Currently the "clean" flag is initialized from the first
-superblock, which might not be the freshest one.
-
-I haven't tested it at all. If you think the direction is reasonable,
-I will test.
-
-Thanks,
-  Alex.
+=2E..I had meant to follow up on this, but was buried in 'isci' issues.
 
 
-diff --git a/Assemble.c b/Assemble.c
-index 23695e7..42cbbd5 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -929,7 +929,6 @@ int Assemble(struct supertype *st, char *mddev,
-                st->minor_version = 90;
-
-        st->ss->getinfo_super(st, content, NULL);
--       clean = content->array.state & 1;
-
-        /* now we have some devices that might be suitable.
-         * I wonder how many
-@@ -1122,6 +1121,7 @@ int Assemble(struct supertype *st, char *mddev,
- #ifndef MDASSEMBLE
-        sysfs_init(content, mdfd, 0);
- #endif
-+       clean = 1; /* Assume that array is clean, until we see otherwise */
-        for (i=0; i<bestcnt; i++) {
-                int j = best[i];
-                unsigned int desired_state;
+On Tue, Apr 3, 2012 at 4:56 PM, Jim Kukunas
+<james.t.kukunas@linux.intel.com> wrote:
+> On Tue, Apr 03, 2012 at 11:23:16AM +0100, John Robinson wrote:
+>> On 02/04/2012 23:48, Jim Kukunas wrote:
+>> > On Sat, Mar 31, 2012 at 12:38:56PM +0100, John Robinson wrote:
+>> [...]
+>> >> I just noticed in my logs the other day (recent el5 kernel on a C=
+ore 2):
+>> >>
+>> >> raid5: automatically using best checksumming function: generic_ss=
+e
+>> >> =A0 =A0 =A0generic_sse: =A07805.000 MB/sec
+>> >> raid5: using function: generic_sse (7805.000 MB/sec)
+>> [...]
+>> >> raid6: using algorithm sse2x4 (8237 MB/s)
+>> >>
+>> >> I was just wondering how it's possible to do the RAID6 Q calculat=
+ion
+>> >> faster than the RAID5 XOR calculation - or am I reading this log =
+excerpt
+>> >> wrongly?
+>> >
+>> > Out of curiosity, are you running with CONFIG_PREEMPT=3Dy?
+>>
+>> No. Here's an excerpt from my .config:
+>>
+>> # CONFIG_PREEMPT_NONE is not set
+>> CONFIG_PREEMPT_VOLUNTARY=3Dy
+>> # CONFIG_PREEMPT is not set
+>> CONFIG_PREEMPT_BKL=3Dy
+>> CONFIG_PREEMPT_NOTIFIERS=3Dy
+>>
+>> But this is a Xen dom0 kernel, 2.6.18-308.1.1.el5.centos.plusxen. No=
+w, a
+>> non-Xen kernel (2.6.18-308.1.1.el5) says:
+>> raid5: automatically using best checksumming function: generic_sse
+>> =A0 =A0 generic_sse: 11892.000 MB/sec
+>> raid5: using function: generic_sse (11892.000 MB/sec)
+>> raid6: int64x1 =A0 2644 MB/s
+>> raid6: int64x2 =A0 3238 MB/s
+>> raid6: int64x4 =A0 3011 MB/s
+>> raid6: int64x8 =A0 2503 MB/s
+>> raid6: sse2x1 =A0 =A05375 MB/s
+>> raid6: sse2x2 =A0 =A05851 MB/s
+>> raid6: sse2x4 =A0 =A09136 MB/s
+>> raid6: using algorithm sse2x4 (9136 MB/s)
+>>
+>> Looks like it loses a chunk of performance running as a Xen dom0.
+>>
+>> Even still, 11892 MB/s for XOR vs 9136 MB/s for XOR+Q - it still see=
+ms
+>> remarkable that the XOR can't be done several times faster than the =
+Q.
+>
+> Taking a look at do_xor_speed, I see two issues which might be the ca=
+use
+> of the disparity you reported.
+>
+> 0) In the RAID5 xor benchmark, we get the current jiffy, then run do_=
+2() until
+> the jiffy increments. This means we could potentially be testing for =
+less
+> than a full jiffy. The RAID6 benchmark handles this by obtaining the =
+current
+> jiffy, then calling cpu_relax() until the jiffy increments, and then =
+running
+> the test. This is addressed by my first patch.
+>
+> 1) The only way I could reproduce your findings of a higher throughpu=
+t for
+> RAID6 than for RAID5 xor checksumming was with CONFIG_PREEMPT=3Dy. It=
+ seems
+> that you encountered this while running as XEN dom0. Currently, we di=
+sable
+> preemption during the RAID6 benchmark, but don't in the RAID5 benchma=
+rk.
+> This is addressed by my second patch.
+>
+> I've added linux-crypto to the discussion as both of these patches af=
+fect
+> code in crypto/
+>
+> Thanks.
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
