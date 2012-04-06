@@ -1,69 +1,65 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Intel fakeraid working?
-Date: Fri, 6 Apr 2012 09:25:40 +1000
-Message-ID: <20120406092540.502c1948@notabene.brown>
-References: <4F7CEDD0.9080904@ubuntu.com>
-	<20120405111317.2a5227b1@notabene.brown>
-	<4F7DE285.90503@ubuntu.com>
+From: daobang wang <wangdb1981@gmail.com>
+Subject: Re: RAID5 created by 8 disks works with xfs
+Date: Fri, 6 Apr 2012 08:25:27 +0800
+Message-ID: <CACwgYDMEpFqJhtUGeRg4hvux3GigNRnA--V18DwdyUvJpY434w@mail.gmail.com>
+References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com>
+	<CADNH=7H_rgiY4fkB0SHo0yPhSBib7Gq-E_fu18yuJx=enn-eGg@mail.gmail.com>
+	<4F776492.4070600@hardwarefreak.com>
+	<CACwgYDOSrEYUps2VLpFSZ-irH7Mn_-BWrOYYDgXS=ULrmVuEPw@mail.gmail.com>
+	<4F77D0B2.8000809@hardwarefreak.com>
+	<CACwgYDMx6nQF-OwYj-BA+sZivUK=kmv2tPukgf5JGwA1vMTGrA@mail.gmail.com>
+	<4F77EA55.6090004@hardwarefreak.com>
+	<CACwgYDMVHT5DFjJztX9JvsVQJ+uOjPrfcs4+0aGXotDvf6tymQ@mail.gmail.com>
+	<CACwgYDMXF9WEgzW9vL_0=GdRc_t+67WAkRTKNoKOMEMCvjujVw@mail.gmail.com>
+	<CALFpzo5aKM2y_stDR14PNYMHEcq5CEptuFiXrvcCpXTzSQmAxw@mail.gmail.com>
+	<4F792154.5020006@hardwarefreak.com>
+	<CACwgYDPsZSEhuqNP8YgAksEq9BB6YOS1Q8jGx2J7DCrrOh_JQw@mail.gmail.com>
+	<CACwgYDOtCoVF-p+KKqPYxHhA4vWF78Ueecx9hcVWLoyxFWzV9Q@mail.gmail.com>
+	<4F7E0842.6090004@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/bnr6r214vsH52jXpnt4gunn"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F7DE285.90503@ubuntu.com>
+In-Reply-To: <4F7E0842.6090004@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: stan@hardwarefreak.com
+Cc: Marcus Sorensen <shadowsor@gmail.com>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
---Sig_/bnr6r214vsH52jXpnt4gunn
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi All,
 
-On Thu, 05 Apr 2012 14:20:53 -0400 Phillip Susi <psusi@ubuntu.com> wrote:
+    I have found the solution, i updated the xfsprogs from 2.10.1 to
+3.1.5, and could repair it, Thanks.
 
-> On 4/4/2012 9:13 PM, NeilBrown wrote:
-> > If the array was activated read-only, that suggests that 'mdmon' didn't=
- run.
-> > mdmon is a daemon which monitors the array and updates the metadata as
-> > needed.  until it is running it is not safe for the array to be writabl=
-e.
-> > However it should be started automatically by mdadm.
->=20
-> That explains it... mdmon does not appear to have been added to the=20
-> Ubuntu package.
+Best Wishes,
+Daobang Wang.
 
-oops...  :-(
-
->=20
-> > How are you attempting to start the array?
->=20
-> mdadm --activate --scan
->=20
-
-I suspect you mean "mdadm --assemble --scan", but yes: that should work.
-
-NeilBrown
-
---Sig_/bnr6r214vsH52jXpnt4gunn
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT34p9Dnsnt1WYoG5AQI02xAAizDWiLuIm1t6oBOHh90h3YmUO0LF2mDv
-eJgSNDyANbPVvccX0XUtq66UwHx+Jkof6tiW7JzzrGgDxbLJSXKtrWmnIOPMdoVQ
-nwcSo+x6GgzVhBj9RhWFch5I3NCjOeDVDfnl3Ul3ERxzN472284pLu/IrAiN9E0A
-wTMZMmv/1XT8T01Vct5g6lHzBEsk/QL/CaRanBmHkbyektSiZyoUu8KSgfYeW14w
-Gf5iInRgXHduQsA436T+LgbTOh1o1WyFarESGYKRoADUwp3jYEKgEZJk1JRXkqiU
-OwlE+neQL00FCCjxeA4rozR7CxO0B/qb790mzlsb1z3sNJTUuhS6Wpd5pHLKG8I9
-vOHd1MLMCp/wWyusN509Yal5q3GNOuLvE/xKc/+wSeyRqLg38X6/UhsnI1HAewzJ
-WSMPPPBy0NHLN8u38PyTRHlMv1QLp/N/qn6Cu+k+f9ESor9TnvQ10GbRbTNlXikM
-PYZOuWyFpekzbiK6T5mqJNm6mIpMBlGqHMFxtYJXMHXJJeo+ZsCFkloXUBwvfg/9
-sD3yOmL4gxl5iRnFFf9sawY+Ok0kyOPZc591uDQsCpd/2GuRdlSebP4sURNOiw5g
-mDyTN2AR70cV6sm4SJYYMG9MtBfhwm6qzcSiBH66wvxyUiJaoAVV9er5aAAEHN/U
-djv8oTGqsAE=
-=71S+
------END PGP SIGNATURE-----
-
---Sig_/bnr6r214vsH52jXpnt4gunn--
+On 4/6/12, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> On 4/5/2012 1:48 AM, daobang wang wrote:
+>> Hi stan,
+>>
+>>      I duplicated the input/output error issue, about the detail
+>> operations and logs, please see the attachments, Is there any way to
+>> fix this? thanks!
+>>
+>> Best Regards,
+>> Daobang Wang.
+>
+>
+> These fiilesystem issues have nothing to do with linux-raid.  I'm
+> copying the XFS mailing list which is where this discussion should be
+> taking place from this point forward.  Please reply-to-all, and paste
+> the output you previously attached, but inline this time.
+>
+> Also, since the XFS folks are unfamiliar with what you're doing up to
+> this point, please provide a basic description of your hardware/storage
+> setup, kernel version, mdraid configuration, xfs_info output as well as
+> your fstab XFS mount options, and a description of your workload.
+>
+> My best guess at this point as to the du and ls errors is that your
+> application is not behaving properly, or you're still running with XFS
+> barriers disabled, which, I say _loudly_ for the 2nd time, you should
+> NOT do in the absence of BBWC, which you stated you do not have.
+>
+> --
+> Stan
+>
