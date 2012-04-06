@@ -1,28 +1,40 @@
-From: Jan Ceuleers <jan.ceuleers@computer.org>
-Subject: Re: Intel fakeraid working?
-Date: Fri, 06 Apr 2012 12:36:56 +0200
-Message-ID: <4F7EC748.1020408@computer.org>
-References: <4F7CEDD0.9080904@ubuntu.com> <20120405111317.2a5227b1@notabene.brown> <4F7DE285.90503@ubuntu.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: RAID5 created by 8 disks works with xfs
+Date: Fri, 06 Apr 2012 06:12:23 -0500
+Message-ID: <4F7ECF97.6020601@hardwarefreak.com>
+References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com> <4F77EA55.6090004@hardwarefreak.com> <CACwgYDMVHT5DFjJztX9JvsVQJ+uOjPrfcs4+0aGXotDvf6tymQ@mail.gmail.com> <CACwgYDMXF9WEgzW9vL_0=GdRc_t+67WAkRTKNoKOMEMCvjujVw@mail.gmail.com> <CALFpzo5aKM2y_stDR14PNYMHEcq5CEptuFiXrvcCpXTzSQmAxw@mail.gmail.com> <4F792154.5020006@hardwarefreak.com> <CACwgYDPsZSEhuqNP8YgAksEq9BB6YOS1Q8jGx2J7DCrrOh_JQw@mail.gmail.com> <CACwgYDOtCoVF-p+KKqPYxHhA4vWF78Ueecx9hcVWLoyxFWzV9Q@mail.gmail.com> <4F7E0842.6090004@hardwarefreak.com> <CACwgYDMEpFqJhtUGeRg4hvux3GigNRnA--V18DwdyUvJpY434w@mail.gmail.com> <CACwgYDPur_8sO-BhhP-ggEmPCGa5ddsCcmSDfCuhD9OgiwGRyw@mail.gmail.com> <CA+res+RR5iAZsEY8G21YkQn+p_8EYSFvu4+H1SK=HXshOcS-4g@mail.gmail.com> <CACwgYDN5ceD3ka-O9t1rGdj4tS=JpHVm_ZWetqZ7ZAOyEjqspA@mai
+ l.gmail.com> <CACwgYDOc2C=j1hrbtwTqOPr77wtfLvxow9xNeF+mGUakt1rHzQ@mail.gmail.com> <4F7EA6D4.804@hardwarefreak.com> <CACwgYDMXZ2O+7B163eg5h-D5sw9_0MRgu8BAahjgOr+td8cJtg@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F7DE285.90503@ubuntu.com>
+In-Reply-To: <CACwgYDMXZ2O+7B163eg5h-D5sw9_0MRgu8BAahjgOr+td8cJtg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>
-Cc: NeilBrown <neilb@suse.de>, Linux RAID <linux-raid@vger.kernel.org>
+To: daobang wang <wangdb1981@gmail.com>
+Cc: Marcus Sorensen <shadowsor@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Jack Wang <jack.wang.usish@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
-On 05/04/12 20:20, Phillip Susi wrote:
-> On 4/4/2012 9:13 PM, NeilBrown wrote:
->> If the array was activated read-only, that suggests that 'mdmon'
->> didn't run.
->> mdmon is a daemon which monitors the array and updates the metadata as
->> needed. until it is running it is not safe for the array to be writable.
->> However it should be started automatically by mdadm.
->
-> That explains it... mdmon does not appear to have been added to the
-> Ubuntu package.
+On 4/6/2012 3:45 AM, daobang wang wrote:
+> Hi stan,
+> 
+>     Thank you for your reply, the envrionment is the same that i
+> mentioned before,  [...]
 
-https://bugs.launchpad.net/ubuntu/+source/mdadm/+bug/957494
+There's seems to be some kind of communication failure here.  I'll make
+this really simple.  Please fill in the blanks.
+
+$ uname -a
+
+$ xfs_info [device]
+
+$ cat /etc/fstab|grep xfs
+
+$ mdadm --detail /dev/mdX
+
+
+Thanks.
+
+-- 
+Stan
 
