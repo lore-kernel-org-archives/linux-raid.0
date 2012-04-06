@@ -1,31 +1,78 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: RAID5 created by 8 disks works with xfs
-Date: Fri, 06 Apr 2012 03:18:28 -0500
-Message-ID: <4F7EA6D4.804@hardwarefreak.com>
-References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com> <4F77D0B2.8000809@hardwarefreak.com> <CACwgYDMx6nQF-OwYj-BA+sZivUK=kmv2tPukgf5JGwA1vMTGrA@mail.gmail.com> <4F77EA55.6090004@hardwarefreak.com> <CACwgYDMVHT5DFjJztX9JvsVQJ+uOjPrfcs4+0aGXotDvf6tymQ@mail.gmail.com> <CACwgYDMXF9WEgzW9vL_0=GdRc_t+67WAkRTKNoKOMEMCvjujVw@mail.gmail.com> <CALFpzo5aKM2y_stDR14PNYMHEcq5CEptuFiXrvcCpXTzSQmAxw@mail.gmail.com> <4F792154.5020006@hardwarefreak.com> <CACwgYDPsZSEhuqNP8YgAksEq9BB6YOS1Q8jGx2J7DCrrOh_JQw@mail.gmail.com> <CACwgYDOtCoVF-p+KKqPYxHhA4vWF78Ueecx9hcVWLoyxFWzV9Q@mail.gmail.com> <4F7E0842.6090004@hardwarefreak.com> <CACwgYDMEpFqJhtUGeRg4hvux3GigNRnA--V18DwdyUvJpY434w@mail.gmail.com> <CACwgYDPur_8sO-BhhP-ggEmPCGa5ddsCcmSDfCuhD9OgiwGRyw@mail.gmail.com> <CA+res+RR5iAZsEY8G
- 21YkQn+p_8EYSFvu4+H1SK=HXshOcS-4g@mail.gmail.com> <CACwgYDN5ceD3ka-O9t1rGdj4tS=JpHVm_ZWetqZ7ZAOyEjqspA@mail.gmail.com> <CACwgYDOc2C=j1hrbtwTqOPr77wtfLvxow9xNeF+mGUakt1rHzQ@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Raid 6 rebuild
+Date: Fri, 6 Apr 2012 18:28:20 +1000
+Message-ID: <20120406182820.6d734eb3@notabene.brown>
+References: <CAJ72viMGQ-MesqGcXkwxjLH4Bt-4rXU1KT=mAgux5JhjKd0VYg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/hS2_LORFYDDJkMjsdMJC+wp"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACwgYDOc2C=j1hrbtwTqOPr77wtfLvxow9xNeF+mGUakt1rHzQ@mail.gmail.com>
+In-Reply-To: <CAJ72viMGQ-MesqGcXkwxjLH4Bt-4rXU1KT=mAgux5JhjKd0VYg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: daobang wang <wangdb1981@gmail.com>
-Cc: Jack Wang <jack.wang.usish@gmail.com>, Marcus Sorensen <shadowsor@gmail.com>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Bryan Bush <bbushvt@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/6/2012 1:49 AM, daobang wang wrote:
-> I did more tests, and found the mkfs.xfs did not hang.
-> 
-> I tried to make the xfs on 7TB logical volume, both 2.10.1 and 3.1.5
-> mkfs.xfs -f dev will work well, less than one minute.
-> 
-> But when i tried to make xfs on 8TB logical volume, 2.10.1 works well,
-> less than 1 minute, but 3.1.5 needs 5 minutes.
+--Sig_/hS2_LORFYDDJkMjsdMJC+wp
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Once you provide the information I requested I'd be glad to help you
-further.  Without that information I'm wasting my time.
+On Fri, 6 Apr 2012 03:01:26 -0400 Bryan Bush <bbushvt@gmail.com> wrote:
 
--- 
-Stan
+> If you have 2 failed drives in a raid 6 array, will it rebuild them
+> both at the same time or in serial?
+
+Maybe.
+
+Probably not, but it can be coaxed to.
+
+The next release of mdadm will contain
+
+http://neil.brown.name/git?p=3Dmdadm;a=3Dcommitdiff;h=3D9f58469128c99c0d7f4=
+34d28657f86789334f253
+
+which will ensure that if you:
+
+  mdadm /dev/md0 --add /dev/foo /dev/bar
+
+then both will be added before the recovery starts, so both will be recover=
+ed
+at the same time.
+
+Alternately you could:
+
+ echo freeze > /sys/block/md0/md/sync_action
+ mdadm /dev/md0 --add /dev/foo /dev/bar
+ echo idle > /sys/blcok/md0/md/sync_action
+
+you might even be able to leave of the first step.
+The "add" will cause a recovery to start on just one device, but then when
+you write 'idle', it will abort  the recovery, automatically restart, but
+this time will use all available spares.
+
+NeilBrown
+
+
+--Sig_/hS2_LORFYDDJkMjsdMJC+wp
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT36pJDnsnt1WYoG5AQJCRg//T8J78h4K3uigMKNAWfh8YS+BceIqE8KK
+TbV5xybmpxyTN0CA6fHtBZxrfe/6K8LrmOSDijaH0r1pcTQMu+lECs0QrIkqgjGL
+K12UWIXfGQUH0BDiZParo5dlfmY4wZfUVdzvJUdJXZ75KCvddUSF0IgCDM9lLr8y
+xPtZrE9e3WMcvd7LdflxkZ36Mm0qX8bdw/WUZgzeQJGzPRrSGfIwkwwXzUFWfD9R
+V41YlddwK9EWAces3Py5+LRuVJWtNniN58Ixxxcev3BC1+uCyZYfLwlyqYbuvhgA
+7IceRYPCe0MPK75gEMFE+8lI2PUe/eD2lcqj++3NJj1QIA27QIKQ+vTHqKaYgHM6
++rsl3zjvEvtAAZwMLk+vK5VO3dBCJ7FQACxJVcg5ZA/BnfQNTCHZcfac2N5s7bPu
+MLZs4nD6H+Pi1RVCHltVCzuWA4aN2O03NkQVTgTfO+9j/j/MUv2JIMN8yJAzy/FH
+IUq78FOBPPd5kZi+U4MugM4SXsqQx+Y8dBuypNeBRfR/9a9b+db0zsT2dvFmD/Yb
+JaJ3+lks6h2MkHU3zsUuOPj4hC+tP2Vq+IYI1+avADSxPLmKOsM0ko1cqlmH80Z4
+1CwrMtEv+pVUS/cxhM9TpT2YlXvo/Trnh3a4CkSY4RPXXXJZNmci27G0HwNQCyR/
+ez3q5fgNb+A=
+=Jsvl
+-----END PGP SIGNATURE-----
+
+--Sig_/hS2_LORFYDDJkMjsdMJC+wp--
