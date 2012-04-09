@@ -1,64 +1,75 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: about:conf->recovery_disabled and  mddev->recovery_disabled
-Date: Mon, 9 Apr 2012 10:03:29 +1000
-Message-ID: <20120409100329.5eff419d@notabene.brown>
-References: <201204071713172658588@gmail.com>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: [PATCH] mdadm: do not read the 'clean' flag from potentially
+ non-up-to-date drive
+Date: Mon, 9 Apr 2012 12:07:30 +0300
+Message-ID: <CAGRgLy6Pzrc9=BbdffToiNsgiO8=dzNiGPOaHn1VGg=yg9+Zrw@mail.gmail.com>
+References: <CAGRgLy5=xP3ZJz71j2qYiCFLFFD6uCH0O92p3Ev2s2GnonRc8A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/qCRj=JB86E8hx=ghCHV1oFx"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201204071713172658588@gmail.com>
+In-Reply-To: <CAGRgLy5=xP3ZJz71j2qYiCFLFFD6uCH0O92p3Ev2s2GnonRc8A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
---Sig_/qCRj=JB86E8hx=ghCHV1oFx
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Neil,
+any comment on this?
 
-On Sat, 7 Apr 2012 17:13:22 +0800 "majianpeng" <majianpeng@gmail.com> wrote:
+Alex.
 
-> Hi all:
-> 	I confused the recovery_disabled.
-> 	what's the mean when conf->recovery_disabled =3D mddev->recovery_disable=
-d?
-> 	If equal,so not to add disk and not to recovery?
-
-Yes, exactly.
-
-in an attempt to recover a device fails we don't want to immediately retry =
-as
-that would cause a loop.
-So whenever a recovery fails, we set conf->recovery_disabled to match
-mddev->recovery_disable.  And whenever something changes which might make
-recovery possible, we increment mddev->recovery_disabled, so that it tries
-again.
-
-With raid10, the 'recovery_disabled' is per-disk, not per-array.
-
-NeilBrown
-
---Sig_/qCRj=JB86E8hx=ghCHV1oFx
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT4InUTnsnt1WYoG5AQLkcA/+PW5aLuOPzZ5XwH2nKdZqKrm9LpUD5JEm
-A30dzZBqEQYTEwBvuNW6dcxnNSv1KAM8ik1WaXjco51MiL88bBltLD0657g/5EAJ
-mp4EvDPskzM2+xZ1i8uvj0V6NKRO1ADN99w+4RdDtGN6NewCvbyGPnwSLn1W8c20
-5OsYhT3AUgwlcB10yH4w8Vm4ulZ2q2EPEtLqTLrECz2WkxZqTm8i1ICCmlYBCPci
-sNjN8eP+/sH/3wWAZvgjagLDo+S/DeE9AHCbGO2VocjBdD/HdIE6iGO2pAwc4fmp
-KcM75y81cxeHshNuAT0B2sdWPcPjHEFT9Prw640GZyNo5fYW3XWNcvXOpxAVfewY
-2XjYWdinUZFXXj6BzHYf+rfgjjXuvwjX6e2VP6SjOVo9pGx8ObInSolV9qyqa6JK
-3JR2QLz1/VmkXCRJg4a7tq7kPkmXE2h9cYYlsgpE0fMTMCAzGn0L0zEcFIt/e+zG
-Xps2rnXNak57ydnQkJKKzX6HxQH2deVVzrzzLH3Llxaeyohl1j2NCqOrc+voKXJX
-ctFnnxLQjK9OdpfCX8Jj7ICBYTPA+crzPFWs/0/NTX2El5smIquEGV+X16ZVF5/J
-3ALY0tGzLRNmQlPYI8+qdmlqyytm2zcqPu1L5mkCVilFS220kDbNNq4hH/mk3gw0
-CbpHx7YOuzY=
-=k1RR
------END PGP SIGNATURE-----
-
---Sig_/qCRj=JB86E8hx=ghCHV1oFx--
+On Fri, Apr 6, 2012 at 3:24 PM, Alexander Lyakas <alex.bolshoy@gmail.co=
+m> wrote:
+> Hi Neil,
+>
+> I noticed that mdadm may decide that array is dirty, based on the
+> non-freshest drive. This happens, e.g., when there is a drive failure
+> during initial resync, and then array is stopped and re-assembled. Th=
+e
+> failed drive still has a valid sb->resync_offset, so if this drive is
+> visible during assembly, array will be considered dirty, even though
+> the rest of the drives have sb->resync_offset=3D=3DMaxSector.
+>
+> Do you think array should be considered as dirty in this case? Becaus=
+e
+> if the failed drive was not visible during assembly, array would have
+> been considered clean.
+>
+> The below patch is only to demonstrate the possible fix. The idea is
+> that we decide that array is dirty only according to up-to-date
+> drives. Currently the "clean" flag is initialized from the first
+> superblock, which might not be the freshest one.
+>
+> I haven't tested it at all. If you think the direction is reasonable,
+> I will test.
+>
+> Thanks,
+> =A0Alex.
+>
+>
+> diff --git a/Assemble.c b/Assemble.c
+> index 23695e7..42cbbd5 100644
+> --- a/Assemble.c
+> +++ b/Assemble.c
+> @@ -929,7 +929,6 @@ int Assemble(struct supertype *st, char *mddev,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0st->minor_version =3D 90;
+>
+> =A0 =A0 =A0 =A0st->ss->getinfo_super(st, content, NULL);
+> - =A0 =A0 =A0 clean =3D content->array.state & 1;
+>
+> =A0 =A0 =A0 =A0/* now we have some devices that might be suitable.
+> =A0 =A0 =A0 =A0 * I wonder how many
+> @@ -1122,6 +1121,7 @@ int Assemble(struct supertype *st, char *mddev,
+> =A0#ifndef MDASSEMBLE
+> =A0 =A0 =A0 =A0sysfs_init(content, mdfd, 0);
+> =A0#endif
+> + =A0 =A0 =A0 clean =3D 1; /* Assume that array is clean, until we se=
+e otherwise */
+> =A0 =A0 =A0 =A0for (i=3D0; i<bestcnt; i++) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0int j =3D best[i];
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0unsigned int desired_state;
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
