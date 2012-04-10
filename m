@@ -1,51 +1,92 @@
-From: "majianpeng" <majianpeng@gmail.com>
-Subject: Re: Re: about:conf->recovery_disabled and  mddev->recovery_disabled
-Date: Tue, 10 Apr 2012 13:37:26 +0800
-Message-ID: <201204101337227186158@gmail.com>
-References: <201204071713172658588@gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] MD: Bitmap version cleanup.
+Date: Tue, 10 Apr 2012 16:14:55 +1000
+Message-ID: <20120410161455.49acaeea@notabene.brown>
+References: <1326614986-30166-1-git-send-email-andrey.warkentin@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/QBUc4wtiAEPxsfv_P1P++yY"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1326614986-30166-1-git-send-email-andrey.warkentin@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Andrei Warkentin <andrey.warkentin@gmail.com>
+Cc: linux-raid@vger.kernel.org, Jonathan Brassow <jbrassow@redhat.com>
 List-Id: linux-raid.ids
 
-SSByZWFkZWQgdGhlIHJhaWQxOmVycm9yKCksSSBjYW4ndCB1bmRlcnN0YW5kIHRoaXMgY29kZToN
-Ci8qDQoJICogSWYgaXQgaXMgbm90IG9wZXJhdGlvbmFsLCB0aGVuIHdlIGhhdmUgYWxyZWFkeSBt
-YXJrZWQgaXQgYXMgZGVhZA0KCSAqIGVsc2UgaWYgaXQgaXMgdGhlIGxhc3Qgd29ya2luZyBkaXNr
-cywgaWdub3JlIHRoZSBlcnJvciwgbGV0IHRoZQ0KCSAqIG5leHQgbGV2ZWwgdXAga25vdy4NCgkg
-KiBlbHNlIG1hcmsgdGhlIGRyaXZlIGFzIGZhaWxlZA0KCSAqLw0KCWlmICh0ZXN0X2JpdChJbl9z
-eW5jLCAmcmRldi0+ZmxhZ3MpDQoJICAgICYmIChjb25mLT5yYWlkX2Rpc2tzIC0gbWRkZXYtPmRl
-Z3JhZGVkKSA9PSAxKSB7DQoJCS8qDQoJCSAqIERvbid0IGZhaWwgdGhlIGRyaXZlLCBhY3QgYXMg
-dGhvdWdoIHdlIHdlcmUganVzdCBhDQoJCSAqIG5vcm1hbCBzaW5nbGUgZHJpdmUuDQoJCSAqIEhv
-d2V2ZXIgZG9uJ3QgdHJ5IGEgcmVjb3ZlcnkgZnJvbSB0aGlzIGRyaXZlIGFzDQoJCSAqIGl0IGlz
-IHZlcnkgbGlrZWx5IHRvIGZhaWwuDQoJCSAqLw0KCQljb25mLT5yZWNvdmVyeV9kaXNhYmxlZCA9
-IG1kZGV2LT5yZWNvdmVyeV9kaXNhYmxlZDsNCgkJcmV0dXJuOw0KCX0NCnF1ZXN0aW9uIDE6DQpJ
-ZiBlcnJvciBvY2N1ciBhbmQgdGhlIHJhaWQxIGlzIHJlY292ZXlpbmcsYnV0IHRoZSBlcnJvciBk
-aWQgbm90IG9jY3VyIGJlY2F1c2UgcmVjb3Zlcnkgb3BlcmF0aW9uLlRoZSByZWNvdmVyeSB3aWxs
-IGNvbnRpbnVlLg0KDQpxdWVzdGlvbiAyOg0KCQl3aGVuIGVycm9yIG9jY3VyLFRoZSBkaXNrIG1h
-eSBoYXZlIHRvIG1hbnkgZXJyb3Iuc28gdGhlIGNvZGUgaXMgOg0KCQljb25mLT5yZWNvdmVyeV9k
-aXNhYmxlZCA9IG1kZGV2LT5yZWNvdmVyeV9kaXNhYmxlZDsNCgkJQnV0IEkgY2FuIGFkZCBhIHNw
-YXJlIGRpc2sgYW5kIHJlY292ZXJ5Lg0KCQlJcyBpdCBjb3JyZWN0bHk/DQoJCQkJCQkJCQkJCQkJ
-CQkJCQkJCQkJCQkJCVRoYW5rcyENCg0KLS0tLS0tLS0tLS0tLS0tLS0tCQkJCSANCm1hamlhbnBl
-bmcNCjIwMTItMDQtMTANCg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0Kt6K8/sjLo7pOZWlsQnJvd24NCreiy83I1cbao7oyMDEy
-LTA0LTA5IDA4OjAzOjM4DQrK1bz+yMujum1hamlhbnBlbmcNCrOty82jumxpbnV4LXJhaWQNCtb3
-zOKjulJlOiBhYm91dDpjb25mLT5yZWNvdmVyeV9kaXNhYmxlZCBhbmQgIG1kZGV2LT5yZWNvdmVy
-eV9kaXNhYmxlZA0KDQpPbiBTYXQsIDcgQXByIDIwMTIgMTc6MTM6MjIgKzA4MDAgIm1hamlhbnBl
-bmciIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4gd3JvdGU6DQoNCj4gSGkgYWxsOg0KPiAJSSBjb25m
-dXNlZCB0aGUgcmVjb3ZlcnlfZGlzYWJsZWQuDQo+IAl3aGF0J3MgdGhlIG1lYW4gd2hlbiBjb25m
-LT5yZWNvdmVyeV9kaXNhYmxlZCA9IG1kZGV2LT5yZWNvdmVyeV9kaXNhYmxlZD8NCj4gCUlmIGVx
-dWFsLHNvIG5vdCB0byBhZGQgZGlzayBhbmQgbm90IHRvIHJlY292ZXJ5Pw0KDQpZZXMsIGV4YWN0
-bHkuDQoNCmluIGFuIGF0dGVtcHQgdG8gcmVjb3ZlciBhIGRldmljZSBmYWlscyB3ZSBkb24ndCB3
-YW50IHRvIGltbWVkaWF0ZWx5IHJldHJ5IGFzDQp0aGF0IHdvdWxkIGNhdXNlIGEgbG9vcC4NClNv
-IHdoZW5ldmVyIGEgcmVjb3ZlcnkgZmFpbHMsIHdlIHNldCBjb25mLT5yZWNvdmVyeV9kaXNhYmxl
-ZCB0byBtYXRjaA0KbWRkZXYtPnJlY292ZXJ5X2Rpc2FibGUuICBBbmQgd2hlbmV2ZXIgc29tZXRo
-aW5nIGNoYW5nZXMgd2hpY2ggbWlnaHQgbWFrZQ0KcmVjb3ZlcnkgcG9zc2libGUsIHdlIGluY3Jl
-bWVudCBtZGRldi0+cmVjb3ZlcnlfZGlzYWJsZWQsIHNvIHRoYXQgaXQgdHJpZXMNCmFnYWluLg0K
-DQpXaXRoIHJhaWQxMCwgdGhlICdyZWNvdmVyeV9kaXNhYmxlZCcgaXMgcGVyLWRpc2ssIG5vdCBw
-ZXItYXJyYXkuDQoNCk5laWxCcm93bg0K
+--Sig_/QBUc4wtiAEPxsfv_P1P++yY
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Sun, 15 Jan 2012 03:09:46 -0500 Andrei Warkentin
+<andrey.warkentin@gmail.com> wrote:
+
+> bitmap_new_disk_sb() would still create V3 bitmap superblock
+> with host-endian layout.
+>=20
+> Perhaps I'm confused, but shouldn't bitmap_new_disk_sb() be
+> creating a V4 bitmap superblock instead, that is portable,
+> as per comment in bitmap.h? BITMAP_MINOR was also unused.
+>=20
+> Signed-off-by: Andrei Warkentin <andrey.warkentin@gmail.com>
+> ---
+>  drivers/md/bitmap.c |    3 ---
+>  drivers/md/bitmap.h |    2 --
+>  2 files changed, 0 insertions(+), 5 deletions(-)
+>=20
+> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+> index 045e086..e786da6 100644
+> --- a/drivers/md/bitmap.c
+> +++ b/drivers/md/bitmap.c
+> @@ -568,9 +568,6 @@ static int bitmap_new_disk_sb(struct bitmap *bitmap)
+>  	bitmap->events_cleared =3D bitmap->mddev->events;
+>  	sb->events_cleared =3D cpu_to_le64(bitmap->mddev->events);
+> =20
+> -	bitmap->flags |=3D BITMAP_HOSTENDIAN;
+> -	sb->version =3D cpu_to_le32(BITMAP_MAJOR_HOSTENDIAN);
+> -
+>  	kunmap_atomic(sb);
+> =20
+>  	return 0;
+> diff --git a/drivers/md/bitmap.h b/drivers/md/bitmap.h
+> index a15436d..af588ac 100644
+> --- a/drivers/md/bitmap.h
+> +++ b/drivers/md/bitmap.h
+> @@ -13,8 +13,6 @@
+>  #define BITMAP_MAJOR_HI 4
+>  #define	BITMAP_MAJOR_HOSTENDIAN 3
+> =20
+> -#define BITMAP_MINOR 39
+> -
+>  /*
+>   * in-memory bitmap:
+>   *
+
+Yes, you are exactly correct.  I've applied that patch (and less than three
+months since you sent it - not bad [no, not bad: terrible!])
+
+Thanks,
+NeilBrown
+
+--Sig_/QBUc4wtiAEPxsfv_P1P++yY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT4PP3znsnt1WYoG5AQJmLw/+J/yz0XvcNep+llkD619dwjlmx5N7dxdg
+MpLDwnsIegh64bPKVTYUaY7dhgt/ADFg8YeUWmwzBV8EjjN/9ej9wVY4hBDr7BVR
+Dc8tj+HhKrdL/6qUWbfNBX1hzIwTtnaD1/wtDrafuqaS/VpGXCVR7c7kgx6Q+x5X
+MwKNGCX6WEQQ3OtPq+GDKXVXrDqWLiwCwYsCMjvrl80GsYVv1u1g05NH1rKDn/DY
+fYhCwxTc+jrNnZ/P/jxSEXz957eAbq0HCzyOv+glG4GCIVpThCJSL/I77c9i9gYN
+tmQNXZa5YC1OcVHKrlwaZTtJbIBc8OegjM1z4ZZ3NuHmwy2Ifaxs+9JVjCgbZ/5l
+mjYGMwmkgFprn9fs2gJt6EItItzDQve22wq5NB/W3Cec0sWANpYjIbq5jrlV6gPT
+tqWO80wNThCGWMAIZyax29tqqbdXrIfbXWgqdW17QFViphns+15ETd6AsJwNvVKA
+J0pIxKCQjRi8rZ5MW7vdVWlvV6a0tS4NCPLb2iUWKL1Nydqpx8KM4gwp6SshOgzH
+bOgduA3oxQ0XwJqfixypnZUzXNCcJ/B+ABm/vtbvI1sgtFBz19juX0fxStSkabC3
+FfG+yuKL2WGmCys5CgGSvOODKkpj7nQZGK2GOOAmVZbGzMS5cghYfq/lEeV62N57
+UgEelN+0+p8=
+=CA75
+-----END PGP SIGNATURE-----
+
+--Sig_/QBUc4wtiAEPxsfv_P1P++yY--
