@@ -1,72 +1,95 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm 3.2.3 and adding metadata 1.0 bitmaps
-Date: Wed, 11 Apr 2012 08:59:44 +1000
-Message-ID: <20120411085944.0c2e4b5b@notabene.brown>
-References: <loom.20120410T165425-854@post.gmane.org>
+Subject: Re: Failed Array Rebuild advice Please
+Date: Wed, 11 Apr 2012 09:02:19 +1000
+Message-ID: <20120411090219.78392784@notabene.brown>
+References: <1334097164.41181.YahooMailNeo@web125506.mail.ne1.yahoo.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/qKL=9RhlQ2UqxAsEULjhNpr"; protocol="application/pgp-signature"
+ boundary="Sig_/xzscPJrqEAe.P4J__/69uIz"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <loom.20120410T165425-854@post.gmane.org>
+In-Reply-To: <1334097164.41181.YahooMailNeo@web125506.mail.ne1.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Joe Lawrence <jdl1291@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: jahammonds prost <gmitch64@yahoo.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/qKL=9RhlQ2UqxAsEULjhNpr
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/xzscPJrqEAe.P4J__/69uIz
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 10 Apr 2012 15:40:59 +0000 (UTC) Joe Lawrence <jdl1291@gmail.com>
-wrote:
+On Tue, 10 Apr 2012 15:32:44 -0700 (PDT) jahammonds prost
+<gmitch64@yahoo.com> wrote:
 
-> Hi Neil,
->=20
-> I'm testing out RHEL 6.3 Alpha which is shipped with mdadm 3.2.3 and kern=
-el-
-> 2.6.32-257, which may not contain all the latest md bitmap fixes.  Before=
- I go=20
-> diving into the upstream vs. RHEL kernel changes, I thought I would try t=
-he list=20
-> first.
->=20
-> The problem I'm seeing is when I try to grow a RAID1 array, adding a writ=
-e=20
-> intent bitmap to a metadata 1.0 array:
 
-Hi Joe,
- I haven't had a proper look yet, but does:
+> Since I know I did nothing with the temp one drive array when the server =
+was booted (and I don't think that the md code did anything either??) would=
+ it be safe to=20
+> =A0
+> mdadm --assemble /dev/md0 /dev/sd[a-c]1 /dev/sd[e-h]1 /dev/sd[j-l]1 /dev/=
+sd[n-p]1 --force
+> =A0
+> to let the array come back up and get it running?
 
-http://neil.brown.name/git?p=3Dmdadm;a=3Dcommitdiff;h=3Dfbdef49811c9e2b54e2=
-064d9af68cfffa77c6e77
+Yes.   Though you don't need to exclude the oldest devices.  mdadm will
+figure out which ones to use and which ones to avoid.
 
-   Bitmap_offset is a signed number
 
-Make a difference?
+> =A0
+> What would then be the correct sequence to replace the 2 failed drives (s=
+dd1 and sdm1) and get the array running fully again?
 
-Thanks,
+If you trust that sdd and sdm really are working now, you can
+
+ mdadm /dev/md0 --add /dev/sdd1 /dev/sdm1
+
+This will probably start rebuilding just one of the devices. You can check
+with
+   mdadm -D /dev/md0
+which will report "spare building" against one or more devices.
+If it is only rebuilding one of them, then
+
+  echo idle > /sys/block/md0/md/sync_action
+
+will cause it to stop and restart the recovery.  It will then recovery both
+devices in parallel.
+
+(Next version of mdadm will do this automatically).
+
 NeilBrown
 
---Sig_/qKL=9RhlQ2UqxAsEULjhNpr
+
+> =A0
+> =A0
+> Thanks for your help.
+> =A0
+> =A0
+> YP.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/xzscPJrqEAe.P4J__/69uIz
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT4S7YDnsnt1WYoG5AQJDog//YX8x+Bp2Rm2XPFbtQIdOnc057ArN3TMP
-/7q2/iQSWnV8h/C9rhZZOSiAwH8eg8Yx0tn9Lutl2sNoUNSPnRFrJvxBWE+JFHhj
-hNvnbVleyInh48/0saqO5x7/TOUDPE8czZV/6AxMj4U4rUfOut23cCj0sEloK3ZK
-WhDXnsZMdiueJLfdCtW7R/7T9XPHMcLaLXHAlvuwQJiEInocgNzClzWqUEuxjuzL
-3GEWFmUgPCFQ9glQ5g77Pd3B/C+Ij4ARWDD90pQJvsD1qRznA58BJlguDVI1JB+u
-Pw6Q/wRraUTZoYgxzYWRCBSfph7nW4ex5ox/Ojc26fxiHo5XjqPypzIGLnf/6edL
-vlxCafA58VmOEPdK8ro7/RAv/lLJZ3ji6X3bs1PiVpqMuqcTcSvUizaQYKkR6IdS
-F7bUFIfEMTllv576PXhoh9UEJzDvSCr19bssmEjysljqmDVQqa0u0QOCVz/3xktF
-R6KFYyXrpdsBV6rjm21CYPZXXw1muMg3r68QJJ28tGX2G1yF1SeDLx5NypGXMDO1
-PBTkdWT+QvkCvgAONZa+CUUwTpCBdUcIqLY9Us0oQqsloSjkGC4yEmWJ1dsY4fFD
-Vv1LQCpjDeJ+JzRvESSJ1amKf7nZMVTiDD0Lte/2uQM5xq7F18ZP1suh5rUz1I98
-5YP50UA3QVg=
-=qto4
+iQIVAwUBT4S7+znsnt1WYoG5AQJ+3Q/7BZF9FG9gHgn/+hovKnMrcLSAY97LJnRT
+aI1AkoFEqQCnuxcViwGR/U5Inyx4cp7ihh2wJxOX7vTMJAS/MsJLd3GhT8hhh9f4
+gxOaIgcsHRWrSYDX9BM1Y7YZalgnwW5CfAOzZYHPVx9NAP5BXo3abel2OD4JJdBh
+f/qGiePMOZMd1c+B09ywIA5jjiBbhqQg2Tw1VLGiB806pmu3+tBEjN4PzDdyr7tH
+qhG5XHe9AWDiFil5b5sm6f85MD+TJifEqF+1y/3ze5gpz92TpCrt2fI5kcFQi7tV
+hSPLDL++Nd5zJ3FqCDBc/4N+Juvxe5gdaNo+h/hPN7cLvlMpsj1/tnEwmX4jwoqT
+ae2/gqGK9iodca4movZtogCgXAVjYY59YcuwM8ZhTq9Dn1CJDwoPY1a4jSJwYGfS
+4DsmD1skrnjmW51lzoonzJgt/pZpWgEGhLxrdlMAht6Afure7wUnirz0dmyWIuaA
+uM0rGYra1g3+KJUQFsnq+Ec9qX7uL6+eEhxn+9f0RroI/+Zk0MyMaLoCgoqm5VIP
+c+MIgkHj3Qj65BK52ELrkqfzEPB1MLNHzWG6hWQcR/p8jKHN6RW+KZknTR7W+T0R
+V4v3zvGvoBjWtzgTl3Cz5LhB9PLZTn4aroUnedNCqtkoZr8nUjiafgVEcuRHAdE+
+1M1obIPNnKk=
+=8UGm
 -----END PGP SIGNATURE-----
 
---Sig_/qKL=9RhlQ2UqxAsEULjhNpr--
+--Sig_/xzscPJrqEAe.P4J__/69uIz--
