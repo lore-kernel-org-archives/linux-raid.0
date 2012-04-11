@@ -1,53 +1,32 @@
-From: "majianpeng" <majianpeng@gmail.com>
-Subject: [PATCH] md/raid1:If raid1 only had one disk and readed error,should  call rdev_set_badblocks().
-Date: Wed, 11 Apr 2012 11:00:50 +0800
-Message-ID: <201204111100439842173@gmail.com>
+From: Joe Lawrence <jdl1291@gmail.com>
+Subject: Re: mdadm 3.2.3 and adding metadata 1.0 bitmaps
+Date: Wed, 11 Apr 2012 03:05:33 +0000 (UTC)
+Message-ID: <loom.20120411T043403-205@post.gmane.org>
+References: <loom.20120410T165425-854@post.gmane.org> <20120411085944.0c2e4b5b@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From 9d031da06c11d53a04c87ff8c497a99c0901d44b Mon Sep 17 00:00:00 2001
-From: majianpeng <majianpeng@gmail.com>
-Date: Wed, 11 Apr 2012 10:49:30 +0800
-Subject: [PATCH] md/raid1:If raid1 only had one disk and readed error,should
- call rdev_set_badblocks().
+NeilBrown <neilb <at> suse.de> writes:
 
-Do it can
-1:record bad sector
-2:If raid is recoverying and set badblocks fail,so stop the recovery.
+> Hi Joe,
+>  I haven't had a proper look yet, but does:
+> 
+>
+http://neil.brown.name/git?p=mdadm;a=commitdiff;h=fbdef49811c9e2b54e2064d9af68cfffa77c6e77
+> 
+>    Bitmap_offset is a signed number
+> 
+> Make a difference?
 
-Signed-off-by: majianpeng <majianpeng@gmail.com>
----
- drivers/md/raid1.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+Neil, I tried the latest git snapshot of mdadm
+(http://neil.brown.name/git?p=mdadm;a=commitdiff;h=508a7f16b242d6c3353e15aab46ac8ca8dc7cd08)
+with the same "attempt to access beyond end of device" message.
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index d35e4c9..a46ab4b 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -317,6 +317,11 @@ static void raid1_end_read_request(struct bio *bio, int error)
- 		     !test_bit(Faulty, &conf->mirrors[mirror].rdev->flags)))
- 			uptodate = 1;
- 		spin_unlock_irqrestore(&conf->device_lock, flags);
-+		if (uptodate && !rdev_set_badblocks(conf->mirrors[mirror].rdev,
-+				r1_bio->sector + conf->mirrors[mirror].rdev->data_offset,
-+				r1_bio->sectors, 0))
-+			md_error(conf->mddev, conf->mirrors[mirror].rdev);
-+
- 	}
- 
- 	if (uptodate)
--- 
-1.7.5.4
-
- 				
---------------
-majianpeng
-2012-04-11
+-- Joe Lawrence
+   Stratus Technologies
 
