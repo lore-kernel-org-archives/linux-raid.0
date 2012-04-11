@@ -1,109 +1,53 @@
-From: jahammonds prost <gmitch64@yahoo.com>
-Subject: Re: Failed Array Rebuild advice Please
-Date: Tue, 10 Apr 2012 16:46:32 -0700 (PDT)
-Message-ID: <1334101592.76706.YahooMailNeo@web125503.mail.ne1.yahoo.com>
-References: <1334097164.41181.YahooMailNeo@web125506.mail.ne1.yahoo.com> <20120411090219.78392784@notabene.brown>
-Reply-To: jahammonds prost <gmitch64@yahoo.com>
+From: "majianpeng" <majianpeng@gmail.com>
+Subject: [PATCH] md/raid1:If raid1 only had one disk and readed error,should  call rdev_set_badblocks().
+Date: Wed, 11 Apr 2012 11:00:50 +0800
+Message-ID: <201204111100439842173@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120411090219.78392784@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil,
-=A0=A0=A0=A0Thanks for the fast reply.
-=A0
->=A0=A0=A0=A0If you trust that sdd and sdm really are working now, you =
-can
->
->=A0=A0=A0=A0mdadm /dev/md0 --add /dev/sdd1 /dev/sdm1
+From 9d031da06c11d53a04c87ff8c497a99c0901d44b Mon Sep 17 00:00:00 2001
+From: majianpeng <majianpeng@gmail.com>
+Date: Wed, 11 Apr 2012 10:49:30 +0800
+Subject: [PATCH] md/raid1:If raid1 only had one disk and readed error,should
+ call rdev_set_badblocks().
 
-I am running a read only badblocks on them at the moment, but I don't r=
-eally trust them. Once the scan has finished, I am going to replace the=
-m with a couple of new drives, and once I've run a full destructive bad=
-blocks on those (so that's going to take overnight), I will add them in=
-to the array. Thanks for the tip on having the rebuild run in parallel,=
- that should speed up the rebuild process.=20
+Do it can
+1:record bad sector
+2:If raid is recoverying and set badblocks fail,so stop the recovery.
 
-Once all that is done, I will run a destructive badblocks on the origin=
-al failed drives, and if they still pass, I will add them as additional=
- drives into the array. This box is mainly a media server - how many dr=
-ives would you suggest is the max in a RAID6 setup?
+Signed-off-by: majianpeng <majianpeng@gmail.com>
+---
+ drivers/md/raid1.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index d35e4c9..a46ab4b 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -317,6 +317,11 @@ static void raid1_end_read_request(struct bio *bio, int error)
+ 		     !test_bit(Faulty, &conf->mirrors[mirror].rdev->flags)))
+ 			uptodate = 1;
+ 		spin_unlock_irqrestore(&conf->device_lock, flags);
++		if (uptodate && !rdev_set_badblocks(conf->mirrors[mirror].rdev,
++				r1_bio->sector + conf->mirrors[mirror].rdev->data_offset,
++				r1_bio->sectors, 0))
++			md_error(conf->mddev, conf->mirrors[mirror].rdev);
++
+ 	}
+ 
+ 	if (uptodate)
+-- 
+1.7.5.4
 
+ 				
+--------------
+majianpeng
+2012-04-11
 
-
-YP.
-
-=A0
------ Original Message -----
-=46rom: NeilBrown <neilb@suse.de>
-To: jahammonds prost <gmitch64@yahoo.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
-Sent: Tuesday, 10 April 2012, 19:02
-Subject: Re: Failed Array Rebuild advice Please
-
-On Tue, 10 Apr 2012 15:32:44 -0700 (PDT) jahammonds prost
-<gmitch64@yahoo.com> wrote:
-
-
-> Since I know I did nothing with the temp one drive array when the ser=
-ver was booted (and I don't think that the md code did anything either?=
-?) would it be safe to=20
-> =A0
-> mdadm --assemble /dev/md0 /dev/sd[a-c]1 /dev/sd[e-h]1 /dev/sd[j-l]1 /=
-dev/sd[n-p]1 --force
-> =A0
-> to let the array come back up and get it running?
-
-Yes.=A0  Though you don't need to exclude the oldest devices.=A0 mdadm =
-will
-figure out which ones to use and which ones to avoid.
-
-
-> =A0
-> What would then be the correct sequence to replace the 2 failed drive=
-s (sdd1 and sdm1) and get the array running fully again?
-
-If you trust that sdd and sdm really are working now, you can
-
-mdadm /dev/md0 --add /dev/sdd1 /dev/sdm1
-
-This will probably start rebuilding just one of the devices. You can ch=
-eck
-with
-=A0  mdadm -D /dev/md0
-which will report "spare building" against one or more devices.
-If it is only rebuilding one of them, then
-
-=A0 echo idle > /sys/block/md0/md/sync_action
-
-will cause it to stop and restart the recovery.=A0 It will then recover=
-y both
-devices in parallel.
-
-(Next version of mdadm will do this automatically).
-
-NeilBrown
-
-
-> =A0
-> =A0
-> Thanks for your help.
-> =A0
-> =A0
-> YP.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
