@@ -1,188 +1,106 @@
-From: Jim Kukunas <james.t.kukunas@linux.intel.com>
-Subject: [PATCH 4/4] lib/raid6: cleanup gen_syndrome function selection
-Date: Wed, 11 Apr 2012 12:40:31 -0700
-Message-ID: <1334173231-28595-5-git-send-email-james.t.kukunas@linux.intel.com>
-References: <1334173231-28595-1-git-send-email-james.t.kukunas@linux.intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1334173231-28595-1-git-send-email-james.t.kukunas@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, neilb@suse.de, hpa@zytor.com
+From: jahammonds prost <gmitch64@yahoo.com>
+Subject: Re: Failed Array Rebuild advice Please
+Date: Wed, 11 Apr 2012 19:10:47 -0700 (PDT)
+Message-ID: <1334196647.20850.YahooMailNeo@web125501.mail.ne1.yahoo.com>
+References: <1334097164.41181.YahooMailNeo@web125506.mail.ne1.yahoo.com> <20120411090219.78392784@notabene.brown> <1334117647.68845.YahooMailNeo@web125505.mail.ne1.yahoo.com> <20120411144302.35f13f3d@notabene.brown>
+Reply-To: jahammonds prost <gmitch64@yahoo.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120411144302.35f13f3d@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Reorders functions in raid6_algos as well as the preference check
-to reduce the number of functions tested on initialization.
+> I think it is best to recover, and then reshape later.
+=A0
+Which is what I did. The destructive badblocks ran fine overnight, with=
+ no errors on the drives that were failed out of the array. Interesting=
+ly one of the additional drives that I want to add took an additional 6=
+ hours to run badblocks, so I need to look into that a bit.
+=A0
+I am having a bit of an issue with the reshape tho... When I try and ad=
+d one of the 2 additional devices I want to add (I'm going to add them =
+one at a time), I get an error about the bitmap needing to be removed.
+=A0
+=A0=A0=A0=A0=A0=A0=A0=A0mdadm --grow /dev/md0 --raid-devices=3D16
+=A0=A0=A0=A0=A0=A0=A0=A0mdadm: Need to backup 93184K of critical sectio=
+n..
+=A0=A0=A0=A0=A0=A0=A0=A0mdadm: Cannot set device shape for /dev/md0: De=
+vice or resource busy
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0Bitmap must be removed bef=
+ore shape can be changed
 
-Also, creates symmetry between choosing the gen_syndrome functions
-and choosing the recovery functions.
+Now, the docs (and indeed several websites when I googled) suggest that=
+ you can have a bitmap present on a grow, and the help suggests that yo=
+u can even change it during a grow..
 
-Signed-off-by: Jim Kukunas <james.t.kukunas@linux.intel.com>
----
- lib/raid6/algos.c |  104 +++++++++++++++++++++++++++++------------------------
- 1 files changed, 57 insertions(+), 47 deletions(-)
 
-diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
-index 5a7f802..589f5f5 100644
---- a/lib/raid6/algos.c
-+++ b/lib/raid6/algos.c
-@@ -34,10 +34,6 @@ struct raid6_calls raid6_call;
- EXPORT_SYMBOL_GPL(raid6_call);
- 
- const struct raid6_calls * const raid6_algos[] = {
--	&raid6_intx1,
--	&raid6_intx2,
--	&raid6_intx4,
--	&raid6_intx8,
- #if defined(__ia64__)
- 	&raid6_intx16,
- 	&raid6_intx32,
-@@ -61,6 +57,10 @@ const struct raid6_calls * const raid6_algos[] = {
- 	&raid6_altivec4,
- 	&raid6_altivec8,
- #endif
-+	&raid6_intx1,
-+	&raid6_intx2,
-+	&raid6_intx4,
-+	&raid6_intx8,
- 	NULL
- };
- 
-@@ -86,7 +86,7 @@ const struct raid6_recov_calls *const raid6_recov_algos[] = {
- #define time_before(x, y) ((x) < (y))
- #endif
- 
--static inline void raid6_choose_recov(void)
-+static inline const struct raid6_recov_calls *raid6_choose_recov(void)
- {
- 	const struct raid6_recov_calls *const *algo;
- 	const struct raid6_recov_calls *best;
-@@ -103,62 +103,38 @@ static inline void raid6_choose_recov(void)
- 		printk("raid6: using %s recovery algorithm\n", best->name);
- 	} else
- 		printk("raid6: Yikes! No recovery algorithm found!\n");
--}
--
- 
--/* Try to pick the best algorithm */
--/* This code uses the gfmul table as convenient data set to abuse */
-+	return best;
-+}
- 
--int __init raid6_select_algo(void)
-+static inline const struct raid6_calls *raid6_choose_gen(
-+	void *(*const dptrs)[(65536/PAGE_SIZE)+2], const int disks)
- {
--	const struct raid6_calls * const * algo;
--	const struct raid6_calls * best;
--	char *syndromes;
--	void *dptrs[(65536/PAGE_SIZE)+2];
--	int i, disks;
--	unsigned long perf, bestperf;
--	int bestprefer;
--	unsigned long j0, j1;
--
--	disks = (65536/PAGE_SIZE)+2;
--	for ( i = 0 ; i < disks-2 ; i++ ) {
--		dptrs[i] = ((char *)raid6_gfmul) + PAGE_SIZE*i;
--	}
--
--	/* Normal code - use a 2-page allocation to avoid D$ conflict */
--	syndromes = (void *) __get_free_pages(GFP_KERNEL, 1);
--
--	if ( !syndromes ) {
--		printk("raid6: Yikes!  No memory available.\n");
--		return -ENOMEM;
--	}
--
--	dptrs[disks-2] = syndromes;
--	dptrs[disks-1] = syndromes + PAGE_SIZE;
-+	unsigned long perf, bestperf, j0, j1;
-+	const struct raid6_calls *const *algo;
-+	const struct raid6_calls *best;
- 
--	bestperf = 0;  bestprefer = 0;  best = NULL;
-+	for (bestperf = 0, best = NULL, algo = raid6_algos; *algo; algo++) {
-+		if (!best || (*algo)->prefer >= best->prefer) {
-+			if ((*algo)->valid && !(*algo)->valid())
-+				continue;
- 
--	for ( algo = raid6_algos ; *algo ; algo++ ) {
--		if ( !(*algo)->valid || (*algo)->valid() ) {
- 			perf = 0;
- 
- 			preempt_disable();
- 			j0 = jiffies;
--			while ( (j1 = jiffies) == j0 )
-+			while ((j1 = jiffies) == j0)
- 				cpu_relax();
- 			while (time_before(jiffies,
- 					    j1 + (1<<RAID6_TIME_JIFFIES_LG2))) {
--				(*algo)->gen_syndrome(disks, PAGE_SIZE, dptrs);
-+				(*algo)->gen_syndrome(disks, PAGE_SIZE, *dptrs);
- 				perf++;
- 			}
- 			preempt_enable();
- 
--			if ( (*algo)->prefer > bestprefer ||
--			     ((*algo)->prefer == bestprefer &&
--			      perf > bestperf) ) {
--				best = *algo;
--				bestprefer = best->prefer;
-+			if (perf > bestperf) {
- 				bestperf = perf;
-+				best = *algo;
- 			}
- 			printk("raid6: %-8s %5ld MB/s\n", (*algo)->name,
- 			       (perf*HZ) >> (20-16+RAID6_TIME_JIFFIES_LG2));
-@@ -173,12 +149,46 @@ int __init raid6_select_algo(void)
- 	} else
- 		printk("raid6: Yikes!  No algorithm found!\n");
- 
--	free_pages((unsigned long)syndromes, 1);
-+	return best;
-+}
-+
-+
-+/* Try to pick the best algorithm */
-+/* This code uses the gfmul table as convenient data set to abuse */
-+
-+int __init raid6_select_algo(void)
-+{
-+	const int disks = (65536/PAGE_SIZE)+2;
-+
-+	const struct raid6_calls *gen_best;
-+	const struct raid6_recov_calls *rec_best;
-+	char *syndromes;
-+	void *dptrs[(65536/PAGE_SIZE)+2];
-+	int i;
-+
-+	for (i = 0; i < disks-2; i++)
-+		dptrs[i] = ((char *)raid6_gfmul) + PAGE_SIZE*i;
-+
-+	/* Normal code - use a 2-page allocation to avoid D$ conflict */
-+	syndromes = (void *) __get_free_pages(GFP_KERNEL, 1);
-+
-+	if (!syndromes) {
-+		printk("raid6: Yikes!  No memory available.\n");
-+		return -ENOMEM;
-+	}
-+
-+	dptrs[disks-2] = syndromes;
-+	dptrs[disks-1] = syndromes + PAGE_SIZE;
-+
-+	/* select raid gen_syndrome function */
-+	gen_best = raid6_choose_gen(&dptrs, disks);
- 
- 	/* select raid recover functions */
--	raid6_choose_recov();
-+	rec_best = raid6_choose_recov();
-+
-+	free_pages((unsigned long)syndromes, 1);
- 
--	return best ? 0 : -EINVAL;
-+	return gen_best && rec_best ? 0 : -EINVAL;
- }
- 
- static void raid6_exit(void)
--- 
-1.7.8.5
+=A0=A0=A0=A0=A0=A0=A0=A0=A0If the word internal is given, then the bitm=
+ap is stored with the metadata on the array, and so is replicated on al=
+l devices.=A0 If the word none is given with --grow mode, then any bitm=
+ap that is present is removed.
+
+
+Is there an issue with the array, or just in my understanding and googl=
+e foo?
+
+I am running on Centos 6 (2.6.32-220.7.1.el6.x86_64) with madam (mdadm =
+- v3.2.2 - 17th June 2011)
+
+
+Thanks again.
+
+
+
+=A0
+----- Original Message -----
+=46rom: NeilBrown <neilb@suse.de>
+To: jahammonds prost <gmitch64@yahoo.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
+Sent: Wednesday, 11 April 2012, 0:43
+Subject: Re: Failed Array Rebuild advice Please
+
+On Tue, 10 Apr 2012 21:14:07 -0700 (PDT) jahammonds prost
+<gmitch64@yahoo.com> wrote:
+
+> One other question as the badblocks progresses.
+> =A0
+> >=A0 It will then recovery both devices in parallel.
+>=20
+> How many additional devices can be done at the same time? I presume t=
+hat I am going to have to=A0replace the 2 failed devices before I try a=
+nd grow the array by adding 3 additional drives? I so, how many=A0addit=
+ional drives can be rebuilt concurrently with a grow? Could I add 5 dev=
+ices and not see too much of a performance hit? Or would it be more sen=
+sible to add them one at a time?
+>=20
+
+I think it is best to recover, and then reshape later.=A0 I cannot prom=
+ise that
+doing them both at once will work .... it might but I have a feeling th=
+at
+there might be problems.
+
+Adding three additional drives at once should work well enough in terms=
+ of
+performance.
+However I would only do it if I were very very confident of the drives.
+If you hit bad blocks you start losing drives, and if you have 3 drives=
+ that
+you haven't used before, the chance of losing them all during the resha=
+pe -
+while still small - becomes a little too high for comfort.
+
+But if you have run heavy bad-blocks tests on them all and they appear =
+to
+work, then adding 3 drives at once should be fine.
+
+NeilBrown
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
