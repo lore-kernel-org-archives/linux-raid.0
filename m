@@ -1,103 +1,42 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 14/14] FIX: Assembled second array is in read only state during reshape
-Date: Fri, 13 Apr 2012 16:52:08 +0200
-Message-ID: <1334328728-12544-15-git-send-email-adam.kwolek@intel.com>
-References: <1334328728-12544-1-git-send-email-adam.kwolek@intel.com>
- <1334328728-12544-2-git-send-email-adam.kwolek@intel.com>
- <1334328728-12544-3-git-send-email-adam.kwolek@intel.com>
- <1334328728-12544-4-git-send-email-adam.kwolek@intel.com>
- <1334328728-12544-5-git-send-email-adam.kwolek@intel.com>
- <1334328728-12544-6-git-send-email-adam.kwolek@intel.com>
- <1334328728-12544-7-git-send-email-adam.kwolek@intel.com>
- <1334328728-12544-8-git-send-email-adam.kwolek@intel.com>
- <1334328728-12544-9-git-send-email-adam.kwolek@intel.com>
- <1334328728-12544-10-git-send-email-adam.kwolek@intel.com>
- <1334328728-12544-11-git-send-email-adam.kwolek@intel.com>
- <1334328728-12544-12-git-send-email-adam.kwolek@intel.com>
- <1334328728-12544-13-git-send-email-adam.kwolek@intel.com>
- <1334328728-12544-14-git-send-email-adam.kwolek@intel.com>
+From: Ingo Molnar <mingo@kernel.org>
+Subject: Re: arch/86: AVX RAID5 xor checksumming
+Date: Sat, 14 Apr 2012 14:02:08 +0200
+Message-ID: <20120414120208.GI24688@gmail.com>
+References: <1334078551-6859-1-git-send-email-james.t.kukunas@linux.intel.com>
+ <4F846FBC.9060503@zytor.com>
+ <20120411061442.2f839c77@notabene.brown>
+ <4F84A40E.8040907@zytor.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1334328728-12544-14-git-send-email-adam.kwolek@intel.com>
+Content-Disposition: inline
+In-Reply-To: <4F84A40E.8040907@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, grzegorz.grabowski@intel.com, maciej.patelczyk@intel.com, anna.czarnowska@intel.com, Adam Kwolek <adam.kwolek@intel.com>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: NeilBrown <neilb@suse.de>, Jim Kukunas <james.t.kukunas@linux.intel.com>, x86@kernel.org, linux-kernel@vger.kernel.org, mingo@redhat.com, tglx@linutronix.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When arrays using external metadata are assembled, and one of array
-in container is under reshape, second array will remain in read only
-state (not auto read only). It is caused by array fact that array
-is frozen and mdmon doesn't has opportunity to switch array in r/w mode.
 
-Freezing not reshaped array just after it is being assembled allows mdmon
-to enable it for writing.
+* H. Peter Anvin <hpa@zytor.com> wrote:
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
- Assemble.c |   29 +++++++++++++++++++++--------
- 1 files changed, 21 insertions(+), 8 deletions(-)
+> On 04/10/2012 01:14 PM, NeilBrown wrote:
+> >>
+> >> I think this (and the SSSE3 patches for RAID-6) should go in via the
+> >> RAID tree.  Neil, do you agree?
+> > 
+> > I'm happy to take the SSSE3 RAID-6 patches as they only affect lib/raid6, but
+> > I felt that this one - being purely in arch/x86 - should probably go via the
+> > x86 tree.
+> > However I'm flexible and if you (collectively) are happy with these patches
+> > going in through my tree, I'll do that.
+> > 
+> 
+> Go ahead and take them with my Acked-by: -- I think that's easier.
 
-diff --git a/Assemble.c b/Assemble.c
-index 23695e7..080993d 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -1558,6 +1558,7 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 	int expansion = 0;
- 	struct map_ent *map = NULL;
- 	int old_raid_disks;
-+	int start_reshape;
- 
- 	sysfs_init(content, mdfd, 0);
- 
-@@ -1569,7 +1570,17 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 			return 1;
- 		}
- 
--	if (st->ss->external && content->recovery_blocked)
-+	/* There are two types of reshape: container wide or sub-array specific
-+	 * Check if metadata requests blocking container wide reshapes
-+	 */
-+	start_reshape = (content->reshape_active &&
-+		!((content->reshape_active == CONTAINER_RESHAPE) &&
-+		(content->array.state & (1<<MD_SB_BLOCK_CONTAINER_RESHAPE))));
-+
-+	/* Block subarray here if it is under reshape now
-+	 * Do not allow for any changes in this array
-+	 */
-+	if (st->ss->external && content->recovery_blocked && start_reshape)
- 		block_subarray(content);
- 
- 	if (sra)
-@@ -1595,14 +1606,7 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 		 (working + preexist + expansion) >=
- 			content->array.working_disks) {
- 		int err;
--		int start_reshape;
- 
--		/* There are two types of reshape: container wide or sub-array specific
--		 * Check if metadata requests blocking container wide reshapes
--		 */
--		start_reshape = (content->reshape_active &&
--				 !((content->reshape_active == CONTAINER_RESHAPE) &&
--				   (content->array.state & (1<<MD_SB_BLOCK_CONTAINER_RESHAPE))));
- 		if (start_reshape) {
- 			int spare = content->array.raid_disks + expansion;
- 			if (restore_backup(st, content,
-@@ -1646,6 +1650,15 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 		}
- 		if (!err)
- 			sysfs_set_safemode(content, content->safe_mode_delay);
-+
-+		/* Block subarray here if it is not reshaped now
-+		 * It has be blocked a little later to allow mdmon to switch in
-+		 * in to R/W state
-+		 */
-+		if (st->ss->external && content->recovery_blocked &&
-+		    !start_reshape)
-+			block_subarray(content);
-+
- 		if (verbose >= 0) {
- 			if (err)
- 				fprintf(stderr, Name
--- 
-1.6.4.2
+Yeah - and x86/include/asm/xor*.h should probably be renamed 
+raid_xor*.h or so, to make this really obvious to do in the 
+future.
 
+Thanks,
+
+	Ingo
