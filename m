@@ -1,44 +1,72 @@
-From: "kedacomkernel" <kedacomkernel@gmail.com>
-Subject: Re: Re: question about raid10 near copy info in man mdadm.
-Date: Mon, 16 Apr 2012 13:46:46 +0800
-Message-ID: <201204161346407034012@gmail.com>
-References: <201204161328097657740@gmail.com>,
- <20120416154126.2fb059da@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: question about raid10 near copy info in man mdadm.
+Date: Mon, 16 Apr 2012 16:01:10 +1000
+Message-ID: <20120416160110.4bde6ee1@notabene.brown>
+References: <201204161328097657740@gmail.com>
+	<20120416154126.2fb059da@notabene.brown>
+	<201204161346407034012@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/C3l9_ZNdUKGdBZWwuRYyw.i"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201204161346407034012@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: kedacomkernel <kedacomkernel@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-VGhpcyBpcyB0aGUgbWFuIG1kIGFib3V0Og0KCQlXaGVuICduZWFyJyByZXBsaWNhcyBhcmUgY2hv
-c2VuLCB0aGUgbXVsdGlwbGUgY29waWVzIG9mIGEgZ2l2ZW4gY2h1bmsgYXJlIGxhaWQgb3V0IGNv
-bnNlY3V0aXZlbHkgIGFjcm9zcw0KICAgICAgIHRoZSAgc3RyaXBlcyAgb2YgIHRoZSAgYXJyYXks
-ICBzbyB0aGUgdHdvIGNvcGllcyBvZiBhIGRhdGFibG9jayB3aWxsIGxpa2VseSBiZSBhdCB0aGUg
-c2FtZSBvZmZzZXQgb24gdHdvDQogICAgICAgYWRqYWNlbnQgZGV2aWNlcy4NCg0KSSB0aGluayB0
-aGUgd29yZCAic2ltaWxhciIgaXMgdGhlIHNhbWUuIA0KDQotLS0tLS0tLS0tLS0tLS0tLS0JCQkJ
-IA0Ka2VkYWNvbWtlcm5lbA0KMjAxMi0wNC0xNg0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQq3orz+yMujuk5laWxCcm93bg0K
-t6LLzcjVxtqjujIwMTItMDQtMTYgMTM6NDE6MzMNCsrVvP7Iy6O6a2VkYWNvbWtlcm5lbA0Ks63L
-zaO6bGludXgtcmFpZA0K1vfM4qO6UmU6IHF1ZXN0aW9uIGFib3V0IHJhaWQxMCBuZWFyIGNvcHkg
-aW5mbyBpbiBtYW4gbWRhZG0uDQoNCk9uIE1vbiwgMTYgQXByIDIwMTIgMTM6Mjg6MTQgKzA4MDAg
-ImtlZGFjb21rZXJuZWwiIDxrZWRhY29ta2VybmVsQGdtYWlsLmNvbT4NCndyb3RlOg0KDQo+IEhp
-Og0KPiAJSSByZWFkZWQgdGhlIGluZm9ybWF0aW9uIGFib3V0IHJhaWQxMCBuZWFyIGNvcHkgaW4g
-bWFuIG1kYWRtLg0KPiAJSXQgaXM6DQo+IAknbicgc2lnbmFscyAnbmVhcicgY29waWVzLiAgTXVs
-dGlwbGUgY29waWVzIG9mIG9uZSBkYXRhIGJsb2NrIGFyZSBhdCBzaW1pbGFyIG9mZnNldHMgaW4g
-ZGlmZmVyZW50DQo+ICAgICAgICAgICAgICAgZGV2aWNlcy4NCj4gCUJ1dCBJIHRoaW5rIHRoaXMg
-d3JvbmcuDQo+IAlJZiByYWlkMTAgaGFkIGZpdmUgZGlza3MgYW5kIG5lYXIgY29weSBpcyBlcXVh
-bCB0aHJlZS4NCj4gCVRoZSBsYXlvdXQgbGlrZToNCj4gCQkJNSBkaXNrcw0KPiAtLS0tLS0tLS0t
-LS0tLS0tLS0tLQ0KPiBBMSBBMSBBMSBBMiBBMg0KPiBBMiBBMyBBMyBBMyBBNA0KPiANCj4gQnV0
-IHRoZSBjb3BpZXMgb2YgZGF0YWJsb2NrIEEyIGFyZSBub3QgYXQgc2ltaWxhciBvZmZzZXQgaW4g
-ZGlmZmVyZW50IGRldmljZS4NCj4gDQoNClRoZXkgYXJlIGNlcnRhaW5seSBvbiBkaWZmZXJlbnQg
-ZGV2aWNlcyBzbyBJIGd1ZXNzIHlvdSBhcmUgcXVlc3Rpb25pbmcgdGhlDQp1c2Ugb2YgdGhlIHdv
-cmQgInNpbWlsYXIiLg0KDQpXaGF0IGRvIHlvdSB1bmRlcnN0YW5kICJzaW1pbGFyIiB0byBtZWFu
-Pw0KDQpIb3cgd291bGQgeW91IGRlc2NyaWJlIG9mZnNldHMgd2hpY2ggbWlnaHQgYmUgdGhlIHNh
-bWUsIG9yIG1pZ2h0IGRpZmZlciBieQ0Kb25lIGNodW5rLXNpemU/DQoNCkknbSBoYXBweSB0byBj
-aGFuZ2UgdGhlIHRleHQgaWYgaXQgaXMgY29uZnVzaW5nLCBidXQgb25seSBpZiB0aGUgcmVzdWx0
-IGlzDQp1bmRvdWJ0ZWRseSBsZXNzIGNvbmZ1c2luZy4NCg0KTmVpbEJyb3duDQo=
+--Sig_/C3l9_ZNdUKGdBZWwuRYyw.i
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, 16 Apr 2012 13:46:46 +0800 "kedacomkernel" <kedacomkernel@gmail.com>
+wrote:
+
+> This is the man md about:
+> 		When 'near' replicas are chosen, the multiple copies of a given chunk a=
+re laid out consecutively  across
+>        the  stripes  of  the  array,  so the two copies of a datablock wi=
+ll likely be at the same offset on two
+>        adjacent devices.
+
+"likely" is different from "certainly".  In most cases they are the same
+offset.  In some cases they are different offsets.  I think "likely"
+describes that well enough.
+
+>=20
+> I think the word "similar" is the same.=20
+
+"similar" is not the same as "same", though it is similar .....
+
+"same" means there is no difference.
+"similar" means there might be a difference, but it is not a big difference.
+
+Does that clear it up?
+
+NeilBrown
+
+
+
+--Sig_/C3l9_ZNdUKGdBZWwuRYyw.i
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT4u1pznsnt1WYoG5AQKWnA/9GaLj1fCaQraTbpwNN3tDeeYelxv0PcJE
+NvmSP6Sttu+ZKvxFbeYej4U9tJOE87KvupTCSprkPEzph4/DwUxvEkqh00pRVWUd
+nvDZJBoxl8ddBOEXNp7WOIFX46QuISZt+1gRuqq9PTFS2PvRbYhvS09Lazh3JxYU
+lb4vECKgPxYPhWJtpCOAc+2ohtOzX/sScOzmqjCSXVpzRW2SFP7crEesjyvoqZEv
+k//jNoQ00590vqS+7s+DMfuF4G0+5gmVPsCvzPTaiipbjV1OuBucrc0RlDtcFB9v
+ZrNgcx1YBUk6DXaHxGZkT09Om3JXtu5kdjzRIyqueLoBzoigulrIxLpHZivAROWX
+qKAKFxpWIm7X4Rudd4SH0SFCi6C6w325JDRuamNZ2mpUHpEHQY+eSwMXn8A4wi92
+0G2OFy57jVnEVDLj/Bgjn0NJugmHAKGc0vT3yu3/hPDPlUtXeHPVLhm92OjPRtCd
+HBpfBZVpVrODlEnd299Ik7ImfypbV81ndaEGhAfFe7l0S/DHTJUG/Rh9SvWYSRrQ
+0a/q0H6XKnHf4lj58Ed0ldgCjoVJx+sToTZbM2HJWQ7R2wcxEptLx5comFKZBEhp
+26HSiRrTWJ8e0b0tHkP5N/n7snSHwB15cpCO2JzhWikUrVTlxrKISnUiO2eEodjx
+Z0jdU9bpN8k=
+=WGiA
+-----END PGP SIGNATURE-----
+
+--Sig_/C3l9_ZNdUKGdBZWwuRYyw.i--
