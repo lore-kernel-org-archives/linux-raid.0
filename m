@@ -1,53 +1,44 @@
-From: "majianpeng" <majianpeng@gmail.com>
-Subject: [PATCH] md/raid10:Memleak fix if allocate rep1_bio failed in  function want_replacement().
-Date: Mon, 16 Apr 2012 19:24:13 +0800
-Message-ID: <201204161924086710486@gmail.com>
+From: Lukasz Dorau <lukasz.dorau@intel.com>
+Subject: [PATCH] FIX: resolve make everything compilation error
+Date: Mon, 16 Apr 2012 16:12:55 +0200
+Message-ID: <20120416141254.23627.54905.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-From cb391c87d24a32b211d9f0a9df942987bf8e0ac4 Mon Sep 17 00:00:00 2001
-From: majianpeng <majianpeng@gmail.com>
-Date: Mon, 16 Apr 2012 19:19:53 +0800
-Subject: [PATCH] md/raid10:Memleak fix if allocate rep1_bio failed in
- function want_replacement().
- Reported by kmemleak.
+When mdadm is compiled using e.g. 'everything' option, mdassemble
+compilation is broken.
 
-Signed-off-by: majianpeng <majianpeng@gmail.com>
+Change code to enable mdassemble compilation.
+
+Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
 ---
- drivers/md/raid10.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+ super-intel.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index c8dbb84..19e9af1 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -165,10 +165,11 @@ out_free_pages:
- 	while (j--)
- 		for (i = 0; i < RESYNC_PAGES ; i++)
- 			safe_put_page(r10_bio->devs[j].bio->bi_io_vec[i].bv_page);
--	j = -1;
-+	j = 0;
- out_free_bio:
--	while (++j < nalloc) {
--		bio_put(r10_bio->devs[j].bio);
-+	for ( ; j < nalloc; j++) {
-+		if (r10_bio->devs[j].bio)
-+			bio_put(r10_bio->devs[j].bio);
- 		if (r10_bio->devs[j].repl_bio)
- 			bio_put(r10_bio->devs[j].repl_bio);
- 	}
--- 
-1.7.5.4
-
- 				
---------------
-majianpeng
-2012-04-16
+diff --git a/super-intel.c b/super-intel.c
+index ed7792d..3bfeda6 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -910,6 +910,7 @@ static unsigned long long blocks_per_member(struct imsm_map *map)
+ 	return join_u32(map->blocks_per_member_lo, map->blocks_per_member_hi);
+ }
+ 
++#ifndef MDASSEMBLE
+ static unsigned long long num_data_stripes(struct imsm_map *map)
+ {
+ 	if (map == NULL)
+@@ -921,6 +922,7 @@ static void set_total_blocks(struct imsm_disk *disk, unsigned long long n)
+ {
+ 	split_ull(n, &disk->total_blocks_lo, &disk->total_blocks_hi);
+ }
++#endif
+ 
+ static void set_pba_of_lba0(struct imsm_map *map, unsigned long long n)
+ {
 
