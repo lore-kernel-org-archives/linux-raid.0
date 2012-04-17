@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 01/24] md/bitmap: disentangle two different 'pending' flags.
+Subject: [md PATCH 02/24] md/bitmap: add new 'space' attribute for bitmaps.
 Date: Tue, 17 Apr 2012 18:43:39 +1000
-Message-ID: <20120417084339.6433.2903.stgit@notabene.brown>
+Message-ID: <20120417084339.6433.49111.stgit@notabene.brown>
 References: <20120417084324.6433.68345.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -12,349 +12,189 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-There are two different 'pending' concepts in the handling of the
-write intent bitmap.
+If we are to allow bitmaps to be resized when the array is resized,
+we need to know how much space there is.
 
-Firstly, a 'page' from the bitmap (which container PAGE_SIZE*8 bits)
-may have changes (bits cleared) that should be written in due course.
-There is no hurry for these and the page will transition from
-PENDING to NEEDWRITE and will then be written, though if it ever
-becomes DIRTY it will be written much sooner and PENDING will be
-cleared.
+So create an attribute to store this information and set appropriate
+defaults.
 
-Secondly, a page of counters - which contains PAGE_SIZE/2 counters, one
-for each bit, can usefully have a 'pending' flag which indicates if
-any of the counters are low (2 or 1) and ready to be processed by
-bitmap_daemon_work().  If this flag is clear we can skip the whole
-page.
-
-These two concepts are currently combined in the bitmap-file flag.
-This causes a tighter connection between the counters and the bitmap
-file than I would like - as I want to add some flexibility to the
-bitmap file.
-
-So introduce a new flag with the page-of-counters, and rewrite
-bitmap_daemon_work() so that it handles the two different 'pending'
-concepts separately.
-
-This also allows us to clear BITMAP_PAGE_PENDING when we write out
-a dirty page, which may occasionally reduce the number of times we
-write a page.
+It can be set more precisely via sysfs, or future metadata extensions
+may allow it to be recorded.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/bitmap.c |  213 +++++++++++++++++++++++++++------------------------
- drivers/md/bitmap.h |    7 +-
- 2 files changed, 118 insertions(+), 102 deletions(-)
+ drivers/md/bitmap.c |   39 +++++++++++++++++++++++++++++++++++++++
+ drivers/md/md.c     |   33 +++++++++++++++++++++++++++++++--
+ drivers/md/md.h     |    3 +++
+ 3 files changed, 73 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 97e73e5..a515e5b 100644
+index a515e5b..c894aa4 100644
 --- a/drivers/md/bitmap.c
 +++ b/drivers/md/bitmap.c
-@@ -883,6 +883,8 @@ void bitmap_unplug(struct bitmap *bitmap)
- 		need_write = test_page_attr(bitmap, page, BITMAP_PAGE_NEEDWRITE);
- 		clear_page_attr(bitmap, page, BITMAP_PAGE_DIRTY);
- 		clear_page_attr(bitmap, page, BITMAP_PAGE_NEEDWRITE);
-+		if (dirty || need_write)
-+			clear_page_attr(bitmap, page, BITMAP_PAGE_PENDING);
- 		if (dirty)
- 			wait = 1;
- 		spin_unlock_irqrestore(&bitmap->lock, flags);
-@@ -1086,6 +1088,17 @@ static void bitmap_count_page(struct bitmap *bitmap, sector_t offset, int inc)
- 	bitmap->bp[page].count += inc;
- 	bitmap_checkfree(bitmap, page);
- }
-+
-+static void bitmap_set_pending(struct bitmap *bitmap, sector_t offset)
+@@ -1935,6 +1935,44 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
+ static struct md_sysfs_entry bitmap_location =
+ __ATTR(location, S_IRUGO|S_IWUSR, location_show, location_store);
+ 
++/* 'bitmap/space' is the space available at 'location' for the
++ * bitmap.  This allows the kernel to know when it is safe to
++ * resize the bitmap to match a resized array.
++ */
++static ssize_t
++space_show(struct mddev *mddev, char *page)
 +{
-+	sector_t chunk = offset >> bitmap->chunkshift;
-+	unsigned long page = chunk >> PAGE_COUNTER_SHIFT;
-+	struct bitmap_page *bp = &bitmap->bp[page];
-+
-+	if (!bp->pending)
-+		bp->pending = 1;
++	return sprintf(page, "%lu\n", mddev->bitmap_info.space);
 +}
 +
- static bitmap_counter_t *bitmap_get_counter(struct bitmap *bitmap,
- 					    sector_t offset, sector_t *blocks,
- 					    int create);
-@@ -1099,8 +1112,8 @@ void bitmap_daemon_work(struct mddev *mddev)
++static ssize_t
++space_store(struct mddev *mddev, const char *buf, size_t len)
++{
++	unsigned long sectors;
++	int rv;
++
++	rv = kstrtoul(buf, 10, &sectors);
++	if (rv)
++		return rv;
++
++	if (sectors == 0)
++		return -EINVAL;
++
++	if (mddev->bitmap &&
++	    sectors  < ((mddev->bitmap->file_pages - 1) * PAGE_SIZE
++			+ mddev->bitmap->last_page_size + 511) >> 9)
++		return -EFBIG; /* Bitmap is too big for this small space */
++
++	/* could make sure it isn't too big, but that isn't really
++	 * needed - user-space should be careful.
++	 */
++	mddev->bitmap_info.space = sectors;
++	return len;
++}
++
++static struct md_sysfs_entry bitmap_space =
++__ATTR(space, S_IRUGO|S_IWUSR, space_show, space_store);
++
+ static ssize_t
+ timeout_show(struct mddev *mddev, char *page)
  {
- 	struct bitmap *bitmap;
- 	unsigned long j;
-+	unsigned long nextpage;
- 	unsigned long flags;
--	struct page *page = NULL, *lastpage = NULL;
- 	sector_t blocks;
- 	void *paddr;
+@@ -2110,6 +2148,7 @@ __ATTR(max_backlog_used, S_IRUGO | S_IWUSR,
  
-@@ -1124,114 +1137,120 @@ void bitmap_daemon_work(struct mddev *mddev)
- 	}
- 	bitmap->allclean = 1;
+ static struct attribute *md_bitmap_attrs[] = {
+ 	&bitmap_location.attr,
++	&bitmap_space.attr,
+ 	&bitmap_timeout.attr,
+ 	&bitmap_backlog.attr,
+ 	&bitmap_chunksize.attr,
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index e763fc1..64b86c7 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1197,7 +1197,10 @@ static int super_90_validate(struct mddev *mddev, struct md_rdev *rdev)
+ 		mddev->dev_sectors = ((sector_t)sb->size) * 2;
+ 		mddev->events = ev1;
+ 		mddev->bitmap_info.offset = 0;
++		mddev->bitmap_info.space = 0;
++		/* bitmap can use 60 K after the 4K superblocks */
+ 		mddev->bitmap_info.default_offset = MD_SB_BYTES >> 9;
++		mddev->bitmap_info.default_space = 64*2 - (MD_SB_BYTES >> 9);
+ 		mddev->reshape_backwards = 0;
  
-+	/* Any file-page which is PENDING now needs to be written.
-+	 * So set NEEDWRITE now, then after we make any last-minute changes
-+	 * we will write it.
-+	 */
- 	spin_lock_irqsave(&bitmap->lock, flags);
-+	if (!bitmap->filemap)
-+		/* error or shutdown */
-+		goto out;
-+
-+	for (j = 0; j < bitmap->file_pages; j++)
-+		if (test_page_attr(bitmap, bitmap->filemap[j],
-+				   BITMAP_PAGE_PENDING)) {
-+			set_page_attr(bitmap, bitmap->filemap[j],
-+				      BITMAP_PAGE_NEEDWRITE);
-+			clear_page_attr(bitmap, bitmap->filemap[j],
-+					BITMAP_PAGE_PENDING);
+ 		if (mddev->minor_version >= 91) {
+@@ -1234,9 +1237,12 @@ static int super_90_validate(struct mddev *mddev, struct md_rdev *rdev)
+ 		mddev->max_disks = MD_SB_DISKS;
+ 
+ 		if (sb->state & (1<<MD_SB_BITMAP_PRESENT) &&
+-		    mddev->bitmap_info.file == NULL)
++		    mddev->bitmap_info.file == NULL) {
+ 			mddev->bitmap_info.offset =
+ 				mddev->bitmap_info.default_offset;
++			mddev->bitmap_info.space =
++				mddev->bitmap_info.space;
 +		}
-+
-+	if (bitmap->need_sync &&
-+	    mddev->bitmap_info.external == 0) {
-+		/* Arrange for superblock update as well as
-+		 * other changes */
-+		bitmap_super_t *sb;
-+		bitmap->need_sync = 0;
-+		sb = kmap_atomic(bitmap->sb_page);
-+		sb->events_cleared =
-+			cpu_to_le64(bitmap->events_cleared);
-+		kunmap_atomic(sb);
-+		set_page_attr(bitmap, bitmap->sb_page, BITMAP_PAGE_NEEDWRITE);
-+	}
-+	/* Now look at the bitmap counters and if any are '2' or '1',
-+	 * decrement and handle accordingly.
-+	 */
-+	nextpage = 0;
- 	for (j = 0; j < bitmap->chunks; j++) {
- 		bitmap_counter_t *bmc;
--		if (!bitmap->filemap)
--			/* error or shutdown */
--			break;
  
--		page = filemap_get_page(bitmap, j);
--
--		if (page != lastpage) {
--			/* skip this page unless it's marked as needing cleaning */
--			if (!test_page_attr(bitmap, page, BITMAP_PAGE_PENDING)) {
--				int need_write = test_page_attr(bitmap, page,
--								BITMAP_PAGE_NEEDWRITE);
--				if (need_write)
--					clear_page_attr(bitmap, page, BITMAP_PAGE_NEEDWRITE);
--
--				spin_unlock_irqrestore(&bitmap->lock, flags);
--				if (need_write)
--					write_page(bitmap, page, 0);
--				spin_lock_irqsave(&bitmap->lock, flags);
--				j |= (PAGE_BITS - 1);
-+		if (j == nextpage) {
-+			nextpage += PAGE_COUNTER_RATIO;
-+			if (!bitmap->bp[j >> PAGE_COUNTER_SHIFT].pending) {
-+				j |= PAGE_COUNTER_MASK;
- 				continue;
- 			}
--
--			/* grab the new page, sync and release the old */
--			if (lastpage != NULL) {
--				if (test_page_attr(bitmap, lastpage,
--						   BITMAP_PAGE_NEEDWRITE)) {
--					clear_page_attr(bitmap, lastpage,
--							BITMAP_PAGE_NEEDWRITE);
--					spin_unlock_irqrestore(&bitmap->lock, flags);
--					write_page(bitmap, lastpage, 0);
--				} else {
--					set_page_attr(bitmap, lastpage,
--						      BITMAP_PAGE_NEEDWRITE);
--					bitmap->allclean = 0;
--					spin_unlock_irqrestore(&bitmap->lock, flags);
--				}
--			} else
--				spin_unlock_irqrestore(&bitmap->lock, flags);
--			lastpage = page;
--
--			/* We are possibly going to clear some bits, so make
--			 * sure that events_cleared is up-to-date.
--			 */
--			if (bitmap->need_sync &&
--			    mddev->bitmap_info.external == 0) {
--				bitmap_super_t *sb;
--				bitmap->need_sync = 0;
--				sb = kmap_atomic(bitmap->sb_page);
--				sb->events_cleared =
--					cpu_to_le64(bitmap->events_cleared);
--				kunmap_atomic(sb);
--				write_page(bitmap, bitmap->sb_page, 1);
--			}
--			spin_lock_irqsave(&bitmap->lock, flags);
--			if (!bitmap->need_sync)
--				clear_page_attr(bitmap, page, BITMAP_PAGE_PENDING);
--			else
--				bitmap->allclean = 0;
-+			bitmap->bp[j >> PAGE_COUNTER_SHIFT].pending = 0;
- 		}
- 		bmc = bitmap_get_counter(bitmap,
- 					 (sector_t)j << bitmap->chunkshift,
- 					 &blocks, 0);
--		if (!bmc)
-+
-+		if (!bmc) {
- 			j |= PAGE_COUNTER_MASK;
--		else if (*bmc) {
--			if (*bmc == 1 && !bitmap->need_sync) {
--				/* we can clear the bit */
--				*bmc = 0;
--				bitmap_count_page(bitmap,
--						  (sector_t)j << bitmap->chunkshift,
--						  -1);
--
--				/* clear the bit */
--				paddr = kmap_atomic(page);
--				if (bitmap->flags & BITMAP_HOSTENDIAN)
--					clear_bit(file_page_offset(bitmap, j),
--						  paddr);
--				else
--					__clear_bit_le(
--						file_page_offset(bitmap,
--								 j),
--						paddr);
--				kunmap_atomic(paddr);
--			} else if (*bmc <= 2) {
--				*bmc = 1; /* maybe clear the bit next time */
--				set_page_attr(bitmap, page, BITMAP_PAGE_PENDING);
-+			continue;
-+		}
-+		if (*bmc == 1 && !bitmap->need_sync) {
-+			/* We can clear the bit */
-+			struct page *page;
-+			*bmc = 0;
-+			bitmap_count_page(
-+				bitmap,
-+				(sector_t)j << bitmap->chunkshift,
-+				-1);
-+
-+			page = filemap_get_page(bitmap, j);
-+			paddr = kmap_atomic(page);
-+			if (bitmap->flags & BITMAP_HOSTENDIAN)
-+				clear_bit(file_page_offset(bitmap, j),
-+					  paddr);
+ 	} else if (mddev->pers == NULL) {
+ 		/* Insist on good event counter while assembling, except
+@@ -1677,7 +1683,12 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
+ 		mddev->dev_sectors = le64_to_cpu(sb->size);
+ 		mddev->events = ev1;
+ 		mddev->bitmap_info.offset = 0;
++		mddev->bitmap_info.space = 0;
++		/* Default location for bitmap is 1K after superblock
++		 * using 3K - total of 4K
++		 */
+ 		mddev->bitmap_info.default_offset = 1024 >> 9;
++		mddev->bitmap_info.default_space = (4096-1024) >> 9;
+ 		mddev->reshape_backwards = 0;
+ 
+ 		mddev->recovery_cp = le64_to_cpu(sb->resync_offset);
+@@ -1686,9 +1697,23 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
+ 		mddev->max_disks =  (4096-256)/2;
+ 
+ 		if ((le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET) &&
+-		    mddev->bitmap_info.file == NULL )
++		    mddev->bitmap_info.file == NULL) {
+ 			mddev->bitmap_info.offset =
+ 				(__s32)le32_to_cpu(sb->bitmap_offset);
++			/* Metadata doesn't record how much space is available.
++			 * For 1.0, we assume we can use up to the superblock
++			 * if before, else to 4K beyond superblock.
++			 * For others, assume no change is possible.
++			 */
++			if (mddev->minor_version > 0)
++				mddev->bitmap_info.space = 0;
++			else if (mddev->bitmap_info.offset > 0)
++				mddev->bitmap_info.space =
++					8 - mddev->bitmap_info.offset;
 +			else
-+				__clear_bit_le(file_page_offset(bitmap, j),
-+					       paddr);
-+			kunmap_atomic(paddr);
-+			if (!test_page_attr(bitmap, page,
-+					    BITMAP_PAGE_NEEDWRITE)) {
-+				set_page_attr(bitmap, page,
-+					      BITMAP_PAGE_PENDING);
- 				bitmap->allclean = 0;
- 			}
-+		} else if (*bmc && *bmc <= 2) {
-+			*bmc = 1;
-+			bitmap_set_pending(
-+				bitmap,
-+				(sector_t)j << bitmap->chunkshift);
-+			bitmap->allclean = 0;
- 		}
- 	}
--	spin_unlock_irqrestore(&bitmap->lock, flags);
++				mddev->bitmap_info.space =
++					-mddev->bitmap_info.offset;
++		}
  
--	/* now sync the final page */
--	if (lastpage != NULL) {
--		spin_lock_irqsave(&bitmap->lock, flags);
--		if (test_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE)) {
--			clear_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
--			spin_unlock_irqrestore(&bitmap->lock, flags);
--			write_page(bitmap, lastpage, 0);
--		} else {
--			set_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
--			bitmap->allclean = 0;
-+	/* Now start writeout on any page in NEEDWRITE that isn't DIRTY.
-+	 * DIRTY pages need to be written by bitmap_unplug so it can wait
-+	 * for them.
-+	 * If we find any DIRTY page we stop there and let bitmap_unplug
-+	 * handle all the rest.  This is important in the case where
-+	 * the first blocking holds the superblock and it has been updated.
-+	 * We mustn't write any other blocks before the superblock.
-+	 */
-+	for (j = 0; j < bitmap->file_pages; j++) {
-+		struct page *page = bitmap->filemap[j];
-+
-+		if (test_page_attr(bitmap, page,
-+				    BITMAP_PAGE_DIRTY))
-+			/* bitmap_unplug will handle the rest */
-+			break;
-+		if (test_page_attr(bitmap, page,
-+				   BITMAP_PAGE_NEEDWRITE)) {
-+			clear_page_attr(bitmap, page,
-+					BITMAP_PAGE_NEEDWRITE);
- 			spin_unlock_irqrestore(&bitmap->lock, flags);
-+			write_page(bitmap, page, 0);
-+			spin_lock_irqsave(&bitmap->lock, flags);
-+			if (!bitmap->filemap)
-+				break;
- 		}
- 	}
-+out:
-+	spin_unlock_irqrestore(&bitmap->lock, flags);
+ 		if ((le32_to_cpu(sb->feature_map) & MD_FEATURE_RESHAPE_ACTIVE)) {
+ 			mddev->reshape_position = le64_to_cpu(sb->reshape_position);
+@@ -5280,6 +5305,7 @@ static void md_clean(struct mddev *mddev)
+ 	mddev->merge_check_needed = 0;
+ 	mddev->bitmap_info.offset = 0;
+ 	mddev->bitmap_info.default_offset = 0;
++	mddev->bitmap_info.default_space = 0;
+ 	mddev->bitmap_info.chunksize = 0;
+ 	mddev->bitmap_info.daemon_sleep = 0;
+ 	mddev->bitmap_info.max_write_behind = 0;
+@@ -6076,6 +6102,7 @@ static int set_array_info(struct mddev * mddev, mdu_array_info_t *info)
+ 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
  
-  done:
- 	if (bitmap->allclean == 0)
-@@ -1386,11 +1405,7 @@ void bitmap_endwrite(struct bitmap *bitmap, sector_t offset, unsigned long secto
+ 	mddev->bitmap_info.default_offset = MD_SB_BYTES >> 9;
++	mddev->bitmap_info.default_space = 64*2 - (MD_SB_BYTES >> 9);
+ 	mddev->bitmap_info.offset = 0;
  
- 		(*bmc)--;
- 		if (*bmc <= 2) {
--			set_page_attr(bitmap,
--				      filemap_get_page(
--					      bitmap,
--					      offset >> bitmap->chunkshift),
--				      BITMAP_PAGE_PENDING);
-+			bitmap_set_pending(bitmap, offset);
- 			bitmap->allclean = 0;
- 		}
- 		spin_unlock_irqrestore(&bitmap->lock, flags);
-@@ -1476,9 +1491,7 @@ void bitmap_end_sync(struct bitmap *bitmap, sector_t offset, sector_t *blocks, i
- 			*bmc |= NEEDED_MASK;
- 		else {
- 			if (*bmc <= 2) {
--				set_page_attr(bitmap,
--					      filemap_get_page(bitmap, offset >> bitmap->chunkshift),
--					      BITMAP_PAGE_PENDING);
-+				bitmap_set_pending(bitmap, offset);
- 				bitmap->allclean = 0;
- 			}
- 		}
-@@ -1551,11 +1564,9 @@ static void bitmap_set_memory_bits(struct bitmap *bitmap, sector_t offset, int n
- 		return;
- 	}
- 	if (!*bmc) {
--		struct page *page;
- 		*bmc = 2 | (needed ? NEEDED_MASK : 0);
- 		bitmap_count_page(bitmap, offset, 1);
--		page = filemap_get_page(bitmap, offset >> bitmap->chunkshift);
--		set_page_attr(bitmap, page, BITMAP_PAGE_PENDING);
-+		bitmap_set_pending(bitmap, offset);
- 		bitmap->allclean = 0;
- 	}
- 	spin_unlock_irq(&bitmap->lock);
-diff --git a/drivers/md/bitmap.h b/drivers/md/bitmap.h
-index 55ca5ae..5563043 100644
---- a/drivers/md/bitmap.h
-+++ b/drivers/md/bitmap.h
-@@ -163,9 +163,14 @@ struct bitmap_page {
- 	 */
- 	unsigned int hijacked:1;
- 	/*
-+	 * If any counter in this page is '1' or '2' - and so could be
-+	 * cleared then that page is marked as 'pending'
-+	 */
-+	unsigned int pending:1;
-+	/*
- 	 * count of dirty bits on the page
- 	 */
--	unsigned int  count:31;
-+	unsigned int  count:30;
- };
- 
- /* the main bitmap structure - one per mddev */
+ 	mddev->reshape_position = MaxSector;
+@@ -6258,6 +6285,8 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 				return -EINVAL;
+ 			mddev->bitmap_info.offset =
+ 				mddev->bitmap_info.default_offset;
++			mddev->bitmap_info.space =
++				mddev->bitmap_info.default_space;
+ 			mddev->pers->quiesce(mddev, 1);
+ 			rv = bitmap_create(mddev);
+ 			if (!rv)
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 3609373..7b4a3c3 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -393,10 +393,13 @@ struct mddev {
+ 						 * For external metadata, offset
+ 						 * from start of device. 
+ 						 */
++		unsigned long		space; /* space available at this offset */
+ 		loff_t			default_offset; /* this is the offset to use when
+ 							 * hot-adding a bitmap.  It should
+ 							 * eventually be settable by sysfs.
+ 							 */
++		unsigned long		default_space; /* space available at
++							* default offset */
+ 		struct mutex		mutex;
+ 		unsigned long		chunksize;
+ 		unsigned long		daemon_sleep; /* how many jiffies between updates? */
 
 
