@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 07/24] md/bitmap: store bytes in file rather than just in
- last page.
+Subject: [md PATCH 08/24] md/bitmap: separate bitmap file allocation to its
+ own function.
 Date: Tue, 17 Apr 2012 18:43:40 +1000
-Message-ID: <20120417084340.6433.82130.stgit@notabene.brown>
+Message-ID: <20120417084340.6433.93849.stgit@notabene.brown>
 References: <20120417084324.6433.68345.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,75 +13,176 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This number is more generally useful, and bytes-in-last-page is
-easily extracted from it.
+This will allow allocation before swapping in a new bitmap.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/bitmap.c |   14 +++++++-------
- drivers/md/bitmap.h |    2 +-
- 2 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/md/bitmap.c |  113 ++++++++++++++++++++++++++++++---------------------
+ 1 file changed, 67 insertions(+), 46 deletions(-)
 
 diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 614062a..9221f97 100644
+index 9221f97..0819ec2 100644
 --- a/drivers/md/bitmap.c
 +++ b/drivers/md/bitmap.c
-@@ -203,9 +203,11 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
+@@ -714,6 +714,58 @@ static inline struct page *filemap_get_page(struct bitmap_storage *store,
+ 			      - file_page_index(store, 0)];
+ }
  
- 		bdev = (rdev->meta_bdev) ? rdev->meta_bdev : rdev->bdev;
- 
--		if (page->index == store->file_pages-1)
--			size = roundup(store->last_page_size,
-+		if (page->index == store->file_pages-1) {
-+			int last_page_size = store->bytes & (PAGE_SIZE-1);
-+			size = roundup(last_page_size,
- 				       bdev_logical_block_size(bdev));
++static int bitmap_storage_alloc(struct bitmap_storage *store,
++				unsigned long chunks, int with_super)
++{
++	int pnum;
++	unsigned long num_pages;
++	unsigned long bytes;
++
++	bytes = DIV_ROUND_UP(chunks, 8);
++	if (with_super)
++		bytes += sizeof(bitmap_super_t);
++
++	num_pages = DIV_ROUND_UP(bytes, PAGE_SIZE);
++
++	store->filemap = kmalloc(sizeof(struct page *)
++				 * num_pages, GFP_KERNEL);
++	if (!store->filemap)
++		return -ENOMEM;
++
++	if (with_super && !store->sb_page) {
++		store->sb_page = alloc_page(GFP_KERNEL);
++		if (store->sb_page == NULL)
++			return -ENOMEM;
++		store->sb_page->index = 0;
++	}
++	pnum = 0;
++	if (store->sb_page) {
++		store->filemap[0] = store->sb_page;
++		pnum = 1;
++	}
++	for ( ; pnum < num_pages; pnum++) {
++		store->filemap[pnum] = alloc_page(GFP_KERNEL);
++		if (!store->filemap[pnum]) {
++			store->file_pages = pnum;
++			return -ENOMEM;
 +		}
- 		/* Just make sure we aren't corrupting data or
- 		 * metadata
- 		 */
-@@ -973,6 +975,8 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
- 	if (!bitmap->mddev->bitmap_info.external)
- 		bytes += sizeof(bitmap_super_t);
- 
++		store->filemap[pnum]->index = pnum;
++	}
++	store->file_pages = pnum;
++
++	/* We need 4 bits per page, rounded up to a multiple
++	 * of sizeof(unsigned long) */
++	store->filemap_attr = kzalloc(
++		roundup(DIV_ROUND_UP(num_pages*4, 8), sizeof(unsigned long)),
++		GFP_KERNEL);
++	if (!store->filemap_attr)
++		return -ENOMEM;
++
 +	store->bytes = bytes;
 +
- 	num_pages = DIV_ROUND_UP(bytes, PAGE_SIZE);
++	return 0;
++}
++
+ static void bitmap_file_unmap(struct bitmap *bitmap)
+ {
+ 	struct page **map, *sb_page;
+@@ -938,11 +990,10 @@ static void bitmap_set_memory_bits(struct bitmap *bitmap, sector_t offset, int n
+ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
+ {
+ 	unsigned long i, chunks, index, oldindex, bit;
+-	int pnum;
+ 	struct page *page = NULL;
+-	unsigned long num_pages, bit_cnt = 0;
++	unsigned long bit_cnt = 0;
+ 	struct file *file;
+-	unsigned long bytes, offset;
++	unsigned long offset;
+ 	int outofdate;
+ 	int ret = -ENOSPC;
+ 	void *paddr;
+@@ -971,53 +1022,23 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
+ 		printk(KERN_INFO "%s: bitmap file is out of date, doing full "
+ 			"recovery\n", bmname(bitmap));
  
- 	if (file && i_size_read(file->f_mapping->host) < bytes) {
-@@ -1042,8 +1046,6 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
- 
- 			oldindex = index;
- 
--			store->last_page_size = count;
+-	bytes = DIV_ROUND_UP(bitmap->chunks, 8);
+-	if (!bitmap->mddev->bitmap_info.external)
+-		bytes += sizeof(bitmap_super_t);
 -
- 			if (outofdate) {
- 				/*
- 				 * if bitmap is out of date, dirty the
-@@ -1966,9 +1968,7 @@ space_store(struct mddev *mddev, const char *buf, size_t len)
- 		return -EINVAL;
+-	store->bytes = bytes;
+-
+-	num_pages = DIV_ROUND_UP(bytes, PAGE_SIZE);
+-
+-	if (file && i_size_read(file->f_mapping->host) < bytes) {
++	if (file && i_size_read(file->f_mapping->host) < store->bytes) {
+ 		printk(KERN_INFO "%s: bitmap file too short %lu < %lu\n",
+-			bmname(bitmap),
+-			(unsigned long) i_size_read(file->f_mapping->host),
+-			bytes);
++		       bmname(bitmap),
++		       (unsigned long) i_size_read(file->f_mapping->host),
++		       store->bytes);
+ 		goto err;
+ 	}
  
- 	if (mddev->bitmap &&
--	    sectors  < ((mddev->bitmap->storage.file_pages - 1)
--			      * PAGE_SIZE
--			+ mddev->bitmap->storage.last_page_size + 511) >> 9)
-+	    sectors < (mddev->bitmap->storage.bytes + 511) >> 9)
- 		return -EFBIG; /* Bitmap is too big for this small space */
+-	ret = -ENOMEM;
+-
+-	store->filemap = kmalloc(sizeof(struct page *)
+-					  * num_pages, GFP_KERNEL);
+-	if (!store->filemap)
++	ret = bitmap_storage_alloc(&bitmap->storage, bitmap->chunks,
++				   !bitmap->mddev->bitmap_info.external);
++	if (ret)
+ 		goto err;
  
- 	/* could make sure it isn't too big, but that isn't really
-diff --git a/drivers/md/bitmap.h b/drivers/md/bitmap.h
-index 3cdea44..987ad3c 100644
---- a/drivers/md/bitmap.h
-+++ b/drivers/md/bitmap.h
-@@ -200,7 +200,7 @@ struct bitmap {
- 		unsigned long *filemap_attr;	/* attributes associated
- 						 * w/ filemap pages */
- 		unsigned long file_pages;	/* number of pages in the file*/
--		int last_page_size;		/* bytes in the last page */
-+		unsigned long bytes;		/* total bytes in the bitmap */
- 	} storage;
+-	pnum = 0;
++	oldindex = ~0L;
+ 	offset = 0;
+-	if (store->sb_page) {
+-		store->filemap[0] = store->sb_page;
+-		pnum = 1;
++	if (!bitmap->mddev->bitmap_info.external)
+ 		offset = sizeof(bitmap_super_t);
+-	}
+-	for ( ; pnum < num_pages; pnum++) {
+-		store->filemap[pnum] = alloc_page(GFP_KERNEL);
+-		if (!store->filemap[pnum]) {
+-			store->file_pages = pnum;
+-			goto err;
+-		}
+-	}
+-	store->file_pages = pnum;
+-
+-	/* We need 4 bits per page, rounded up to a multiple of sizeof(unsigned long) */
+-	store->filemap_attr = kzalloc(
+-		roundup(DIV_ROUND_UP(num_pages*4, 8), sizeof(unsigned long)),
+-		GFP_KERNEL);
+-	if (!store->filemap_attr)
+-		goto err;
+-
+-	oldindex = ~0L;
  
- 	unsigned long flags;
+ 	for (i = 0; i < chunks; i++) {
+ 		int b;
+@@ -1026,8 +1047,8 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
+ 		if (index != oldindex) { /* this is a new page, read it in */
+ 			int count;
+ 			/* unmap the old page, we're done with it */
+-			if (index == num_pages-1)
+-				count = bytes - index * PAGE_SIZE;
++			if (index == store->file_pages-1)
++				count = store->bytes - index * PAGE_SIZE;
+ 			else
+ 				count = PAGE_SIZE;
+ 			page = store->filemap[index];
+@@ -1081,9 +1102,9 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
+ 	}
+ 
+ 	printk(KERN_INFO "%s: bitmap initialized from disk: "
+-	       "read %lu/%lu pages, set %lu of %lu bits\n",
++	       "read %lu pages, set %lu of %lu bits\n",
+ 	       bmname(bitmap), store->file_pages,
+-	       num_pages, bit_cnt, chunks);
++	       bit_cnt, chunks);
+ 
+ 	return 0;
+ 
 
 
