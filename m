@@ -1,42 +1,54 @@
-From: "kedacomkernel" <kedacomkernel@gmail.com>
-Subject: Re: Re: [PATCH] md/raid1:Fix bug about fixing read errors.
-Date: Tue, 17 Apr 2012 13:00:42 +0800
-Message-ID: <201204171300362653566@gmail.com>
-References: <201204112008265318561@gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: [patch]raid5: remove unused variables
+Date: Tue, 17 Apr 2012 13:09:26 +0800
+Message-ID: <4F8CFB06.4090908@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, majianpeng <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: "neilb@suse.de" <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Hi:
 
->>  However it seems to address multiple issues, and so should be multiple
->>patches.
+The two variables are useless.
 
->>Firstly, it allows fix_read_error to read from a disk that is being recovered.
->>It seems unlikely that this will ever be necessary, but it is theoretically
->>possible so I am happy with the patch.
->>I have applied a patch making just this change.
- This idea from the read_balance. 
+Signed-off-by: Shaohua Li <shli@fusionio.com>
+---
+  drivers/md/raid5.c |    4 ----
+  1 file changed, 4 deletions(-)
 
->>Secondly it records a bad block on every device if it cannot read from
->>anywhere.
->>I don't think this is necessary.  fix_read_error should only be addressing
->>the one read error.  It either fixes it or marks it as bad.
->>If there are other bad blocks on other disks they will be found and handled
->>eventually and adding extra code in here  just makes it more complex with
->>little gain.
-In this situation
-1:no channce to recover
-2: performance,why judge more read?
-3:like the action  in function fix_sync_read_error().
+Index: linux/drivers/md/raid5.c
+===================================================================
+--- linux.orig/drivers/md/raid5.c	2012-04-17 11:56:16.606009690 +0800
++++ linux/drivers/md/raid5.c	2012-04-17 11:57:47.026009295 +0800
+@@ -3953,12 +3953,10 @@ static void make_request(struct mddev *m
+  	plugged = mddev_check_plugged(mddev);
+  	for (;logical_sector < last_sector; logical_sector += STRIPE_SECTORS) {
+  		DEFINE_WAIT(w);
+-		int disks, data_disks;
+  		int previous;
 
->>So unless you can convince me that it is actually behaving wrongly, I won't
->>be applying the rest of the patch.
+  	retry:
+  		previous = 0;
+-		disks = conf->raid_disks;
+  		prepare_to_wait(&conf->wait_for_overlap, &w, TASK_UNINTERRUPTIBLE);
+  		if (unlikely(conf->reshape_progress != MaxSector)) {
+  			/* spinlock is needed as reshape_progress may be
+@@ -3973,7 +3971,6 @@ static void make_request(struct mddev *m
+  			if (mddev->delta_disks < 0
+  			    ? logical_sector < conf->reshape_progress
+  			    : logical_sector >= conf->reshape_progress) {
+-				disks = conf->previous_raid_disks;
+  				previous = 1;
+  			} else {
+  				if (mddev->delta_disks < 0
+@@ -3986,7 +3983,6 @@ static void make_request(struct mddev *m
+  			}
+  			spin_unlock_irq(&conf->device_lock);
+  		}
+-		data_disks = disks - conf->max_degraded;
 
-
+  		new_sector = raid5_compute_sector(conf, logical_sector,
+  						  previous,
