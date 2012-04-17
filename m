@@ -1,76 +1,75 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [RFC 1/2] MD: raid5 trim support
-Date: Wed, 18 Apr 2012 06:26:41 +1000
-Message-ID: <20120418062641.000e881c@notabene.brown>
-References: <20120417083552.483324288@kernel.org>
-	<20120417084632.306032602@kernel.org>
-	<CABE8wwswKWQ=LDbx0ysTaZf2Hz0jD_q45FNF0jw96ZwZdJiHPw@mail.gmail.com>
+From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?=
+	<kristleifur@videntifier.com>
+Subject: A RAID Story
+Date: Tue, 17 Apr 2012 20:44:24 +0000
+Message-ID: <CAP_afxf+VXf3XCZi6mTS+2Yv3j2=_OwrYpFV_uTzZU0G7fjE0g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/db0vnk5igLLl9JHSrWYlq21"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CABE8wwswKWQ=LDbx0ysTaZf2Hz0jD_q45FNF0jw96ZwZdJiHPw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, axboe@kernel.dk, Shaohua Li <shli@fusionio.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/db0vnk5igLLl9JHSrWYlq21
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Tue, 17 Apr 2012 07:46:03 -0700 Dan Williams <dan.j.williams@intel.com>
-wrote:
+I want to put some information out there. Forgive me for the long
+email. At my company, we have very successfully been using mdadm for a
+few largish arrays, using RAID0 on top of RAID6 sets. One of these
+arrays-of-arrays is inventively named /dev/md/tank and has been
+running happily since 2009-2010 or so. This a volume of 20 consumer
+drives, each 1.5TB, total ~21.5TB. It consists of two RAID6 arrays,
+each with 10 drives. These are striped together to create the final
+volume. Speed is good, CPU load is low, all is well. We have done two
+successful drive swaps. Routine stuff. Works swimmingly.
 
-> On Tue, Apr 17, 2012 at 1:35 AM, Shaohua Li <shli@kernel.org> wrote:
-> > Discard for raid4/5/6 has limitation. If discard request size is small,=
- we do
-> > discard for one disk, but we need calculate parity and write parity dis=
-k. =A0To
-> > correctly calculate parity, zero_after_discard must be guaranteed.
->=20
-> I'm wondering if we could use the new bad blocks facility to mark
-> discarded ranges so we don't necessarily need determinate data after
-> discard.
->=20
-> ...but I have not looked into it beyond that.
->=20
-> --
-> Dan
+Then we were doing the third drive swap the other day. We figured out
+which drive was the bad one, pulled it, put a new one in and went to
+add it to the array. We were using Palimpsest (a.k.a.
+gnome-disk-utility) to check SMART status etc. Palimpsest is great.
+Therefore we decided to use Palimpsest to add the replacement drive to
+the RAID6 subarray - /dev/md/d1_tank ("device 1" in the large stripe
+set). Palimpsest has a nice button to do this and a convenient list of
+available devices. We take a deep breath and move to click the button.
+And ...
 
-No.
+For some weird spastic reason, when working in the device selection
+window, we somehow manage to select *the d1_tank array itself* as the
+device to be added to d1_tank. I don't even know how it happened. I
+believe we simply failed to take the correct precautions of being
+perfectly rested and calm during the operation. So what happened is
+that Palimpsest happily added d1_tank as a member of d1_tank.
 
-The bad blocks framework can only store a limited number of bad ranges - 512
-in the current implementation.
-That would not be an acceptable restriction for discarded ranges.
+Didn't think that could happen.
 
-You would need a bitmap of some sort if you wanted to record discarded
-regions.
+For some mysterious and fortunate reason, the device-added-to-itself
+didn't become an active device in itself, only a spare. In theory we
+had written nothing to it except the new metadata. We proceeded to
+take a week to think, wake up in terror at night, pace anxiously
+around, and learn the mdadm manpage by heart. We had a good look at
+the intact metadata from device 0 of the stripe set, found the chunk
+size, metadata type etc., and and built a new mdadm --create command
+to create an array that would be exactly the same size and shape as
+the old stripe set, and included --assume-clean for good measure. In
+theory this would just put some new metadata in place on the RAID6
+arrays and get an identical array going with the JFS filesystem data
+intact. We ran the create command. Deep breath. Read-only fsck on
+device ...
 
-http://neil.brown.name/blog/20110216044002#5
+"The superblock does not describe a correct jfs file system."
 
-NeilBrown
+Despair!
 
---Sig_/db0vnk5igLLl9JHSrWYlq21
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+We checked the new mdadm --examine output against the old - and the
+data offset was 2048 sectors in the new stripe set, but had been 8
+sectors in the old stripe set. Couldn't find any option to change the
+data offset manually. After searching through pretty much the entire
+Internet, we saw that as of mdadm 3.1.2 released March 10 2010, the
+data offset is calculated such that data starts on 1MB boundaries.
+Looking at the old metadata readout, we see that the stripe set was
+originally created in January 2010, and therefore with an older
+version. OK! We downloaded and compiled mdadm-3.1.1, ran the same
+--create command using that binary ... fsck again ... Filesystem OK!
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+Close call, huh?
 
-iQIVAwUBT43SATnsnt1WYoG5AQIjPQ//bb3eZM8iz1a8pXJs3v5TJ4BHnJP7vlKo
-B38XKmfJ9FebKhSnM4cjU0utovOXsF4M6G8oMyYTTLUiK/FZreSkZc6S/MaL9vwA
-SF+RIVcO+l0snUDrxbnE3wUcWPLnWZ5ED16YmGNKx6YmEhDXkOM9nx5GvLK/v5uG
-CcxdPa2Hrxc8n+mKz2LmI2+7u7Vvl5vRP+i4gdhAV9/lSGjRySodgclcnWEDSu+a
-CSuG2BjtaqF1ptPf51Jg1k1gholbdHWAO0JQR2VRQB1biuXCbdaP3fHOwjcJPMDj
-ocfFSIFsvhflkqFqgG+tvxHSfKVxM8gYCun3ZcGbU45MSJB6YJTWnpszGv/ML6lC
-WrFBcXeiJHxdDUAJR6WG8ckClyajefk+sAEUK8/vkaUzJPYEhV3XtyH15WLXc+6T
-AM2LbD14XSQYt4h8tTvGpu/UR7hCgo8bknZrqy1Js+e+BdhENylfHEBGnWRk1uxX
-lWUWbRrGOOcJNGlhyO8SFgXDXkhrmGAnN9o5la+s3uRGW5NmsjL8xPm6DA4T/vit
-squk453xLsHIKxBTfZa6pJOEncBxzO5z46lOfRAdx7jN4ak8nPa5iL7CMZfVhjl+
-OXRmAQRtJimQAXehdjL9FpTTsstaUm54QhDVxAhAx2s0YCSUtcuAEJfXDNnck6wi
-vcHAZgtMInw=
-=Oxt2
------END PGP SIGNATURE-----
-
---Sig_/db0vnk5igLLl9JHSrWYlq21--
+Thank you for mdadm.
