@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 10/24] md/bitmap: remove bitmap_mask_state
+Subject: [md PATCH 11/24] md/bitmap: remove single-bit manipulation on
+ sb->state
 Date: Tue, 17 Apr 2012 18:43:41 +1000
-Message-ID: <20120417084340.6433.26662.stgit@notabene.brown>
+Message-ID: <20120417084341.6433.2399.stgit@notabene.brown>
 References: <20120417084324.6433.68345.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -12,80 +13,45 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This function isn't really needed.  It sets or clears a flag in both
-bitmap->flags and sb->state.
-However both times it is called, bitmap_update_sb is called soon
-afterwards which copies bitmap->flags to sb->state.
-So just make changes to bitmap->flags, and open-code those rather than
-hiding in a function.
+Just do single-bit manipulations on bitmap->flags and copy whole
+value between that and sb->state.
+
+This will allow next patch which changes how bit manipulations are
+performed on bitmap->flags.
+
+This does result in BITMAP_STALE not being set in sb by
+bitmap_read_sb, however as the setting is determined by other
+information in the 'sb' we do not lose information this way.
+Normally, bitmap_load will be called shortly which will clear
+BITMAP_STALE anyway.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/bitmap.c |   37 +++----------------------------------
- 1 file changed, 3 insertions(+), 34 deletions(-)
+ drivers/md/bitmap.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 79dafff..f5f0ec5 100644
+index f5f0ec5..1fd07c5 100644
 --- a/drivers/md/bitmap.c
 +++ b/drivers/md/bitmap.c
-@@ -638,38 +638,6 @@ out_no_sb:
- 	return err;
- }
+@@ -520,7 +520,7 @@ static int bitmap_new_disk_sb(struct bitmap *bitmap)
+ 	memcpy(sb->uuid, bitmap->mddev->uuid, 16);
  
--enum bitmap_mask_op {
--	MASK_SET,
--	MASK_UNSET
--};
--
--/* record the state of the bitmap in the superblock.  Return the old value */
--static int bitmap_mask_state(struct bitmap *bitmap, enum bitmap_state bits,
--			     enum bitmap_mask_op op)
--{
--	bitmap_super_t *sb;
--	int old;
--
--	if (!bitmap->storage.sb_page) /* can't set the state */
--		return 0;
--	sb = kmap_atomic(bitmap->storage.sb_page);
--	old = le32_to_cpu(sb->state) & bits;
--	switch (op) {
--	case MASK_SET:
--		sb->state |= cpu_to_le32(bits);
--		bitmap->flags |= bits;
--		break;
--	case MASK_UNSET:
--		sb->state &= cpu_to_le32(~bits);
--		bitmap->flags &= ~bits;
--		break;
--	default:
--		BUG();
--	}
--	kunmap_atomic(sb);
--	return old;
--}
--
- /*
-  * general bitmap file operations
-  */
-@@ -826,7 +794,8 @@ static void bitmap_file_kick(struct bitmap *bitmap)
- {
- 	char *path, *ptr = NULL;
+ 	bitmap->flags |= BITMAP_STALE;
+-	sb->state |= cpu_to_le32(BITMAP_STALE);
++	sb->state = cpu_to_le32(bitmap->flags);
+ 	bitmap->events_cleared = bitmap->mddev->events;
+ 	sb->events_cleared = cpu_to_le64(bitmap->mddev->events);
  
--	if (bitmap_mask_state(bitmap, BITMAP_STALE, MASK_SET) == 0) {
-+	if (!(bitmap->flags & BITMAP_STALE)) {
-+		bitmap->flags |= BITMAP_STALE;
- 		bitmap_update_sb(bitmap);
+@@ -615,7 +615,7 @@ static int bitmap_read_sb(struct bitmap *bitmap)
+ 			       "-- forcing full recovery\n",
+ 			       bmname(bitmap), events,
+ 			       (unsigned long long) bitmap->mddev->events);
+-			sb->state |= cpu_to_le32(BITMAP_STALE);
++			bitmap->flags |= BITMAP_STALE;
+ 		}
+ 	}
  
- 		if (bitmap->storage.file) {
-@@ -1829,7 +1798,7 @@ int bitmap_load(struct mddev *mddev)
- 
- 	if (err)
- 		goto out;
--	bitmap_mask_state(bitmap, BITMAP_STALE, MASK_UNSET);
-+	bitmap->flags &= ~BITMAP_STALE;
- 
- 	/* Kick recovery in case any bits were set */
- 	set_bit(MD_RECOVERY_NEEDED, &bitmap->mddev->recovery);
 
 
