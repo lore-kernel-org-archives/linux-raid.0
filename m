@@ -1,41 +1,31 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: Is this enough for us to have triple-parity RAID?
-Date: Tue, 17 Apr 2012 19:16:09 +0200
-Message-ID: <20120417171609.GA2859@lazy.lzy>
-References: <CAMqP1GVnOErhxj8RV=KFtzHHEJqtguEd1L_vmsS=AAi_rAPoVg@mail.gmail.com>
- <4F8D228D.8060005@westcontrol.com>
+From: Emmanuel Noobadmin <centos.admin@gmail.com>
+Subject: Re: software raid and ERC
+Date: Wed, 18 Apr 2012 01:47:31 +0800
+Message-ID: <CAAYorBLTdqLTsftKgHjATFdz01vvGRP-QF5oHQEo0bCh_Ajmiw@mail.gmail.com>
+References: <CAAevFRRuGc6x4hJax-kM8ncW9=873aRnjN-WWkoheYD7r6jimA@mail.gmail.com>
+	<CAAevFRQw97xTgpct9ML_SWAyw-Zc=9fuioigVBpg7HpZ89kQxg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4F8D228D.8060005@westcontrol.com>
+In-Reply-To: <CAAevFRQw97xTgpct9ML_SWAyw-Zc=9fuioigVBpg7HpZ89kQxg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david@westcontrol.com>
+To: "." <desire@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi David,
+On 4/17/12, . <desire@gmail.com> wrote:
 
-> My current state is that I've got theory worked out and written up -
-> not just for triple parity, but for more parities as well.  For some
-> of it, I've got Python code to test and verify the maths.  It turns
-> out that triple parity can work well - but for quad parity the limit
-> is 21 data disks (using generators 2, 4, and 8), or up to 33 (using
-> for example 0x07, 0x35 and 0x8b as generators).  Realistically, I
-> think triple parity is the limit for practical implementations.
+> P.S. I would buy ERC if I could, but the right hard disk models do not
+> seem to be available locally.  My preference is for the Hitachi 7k3000
+> series, but it seems to be out of stock with possibly months of delay.
+>  So what's left are the consumer 2TB models with ERC feature -
+> possibly just the Hitachi 2TB or Samsung Spinpoint F4 2TB.  I'd
+> appreciate any other suggestions too.
 
-Why is that? An RS code (255,251) should be possible, like
-it is a (255,223). What's the limitation?
-I'm sure there is even a "RAID-96", which is (96,64).
-
-My wild guess would be that the generators must be chosen
-in some way.
-
-Have you had a look at the "par2" code? That seems to be
-capable of doing a parametric RS, even if in 16bit words.
-
-bye,
-
--- 
-
-piergiorgio
+Mine is just anecdotal info from a dozen or so machines. So far I
+haven't had any mdraid 1 issues running on consumer grade HDDs.
+Basically budget issues since only of my customer had been willing to
+fork out premiums for the RE drives. I'll strongly recommend you mix
+drive models (or at least the batch) though to avoid a batch/model
+issue, such as the Seagate 1TB firmware problem, from killing all the
+drives at almost the same time.
