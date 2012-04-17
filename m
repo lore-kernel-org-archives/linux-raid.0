@@ -1,83 +1,102 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] FIX: resolve make everything compilation error
-Date: Tue, 17 Apr 2012 12:58:18 +1000
-Message-ID: <20120417125818.7c12b208@notabene.brown>
-References: <20120416141254.23627.54905.stgit@gklab-128-085.igk.intel.com>
+Subject: Re: [PATCH] md/raid10:Memleak fix if allocate rep1_bio failed in
+ function want_replacement().
+Date: Tue, 17 Apr 2012 13:09:38 +1000
+Message-ID: <20120417130938.248d885a@notabene.brown>
+References: <201204161924086710486@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/E3hnlhXPPWvp2oO31u3ed_4"; protocol="application/pgp-signature"
+ boundary="Sig_/etbjINL.vfDcjzyU=r3fgmG"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120416141254.23627.54905.stgit@gklab-128-085.igk.intel.com>
+In-Reply-To: <201204161924086710486@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: majianpeng <majianpeng@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/E3hnlhXPPWvp2oO31u3ed_4
+--Sig_/etbjINL.vfDcjzyU=r3fgmG
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 16 Apr 2012 16:12:55 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
-wrote:
+On Mon, 16 Apr 2012 19:24:13 +0800 "majianpeng" <majianpeng@gmail.com> wrot=
+e:
 
-> When mdadm is compiled using e.g. 'everything' option, mdassemble
-> compilation is broken.
->=20
-> Change code to enable mdassemble compilation.
->=20
-> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
-> ---
->  super-intel.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
->=20
-> diff --git a/super-intel.c b/super-intel.c
-> index ed7792d..3bfeda6 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -910,6 +910,7 @@ static unsigned long long blocks_per_member(struct im=
-sm_map *map)
->  	return join_u32(map->blocks_per_member_lo, map->blocks_per_member_hi);
->  }
-> =20
-> +#ifndef MDASSEMBLE
->  static unsigned long long num_data_stripes(struct imsm_map *map)
->  {
->  	if (map =3D=3D NULL)
-> @@ -921,6 +922,7 @@ static void set_total_blocks(struct imsm_disk *disk, =
-unsigned long long n)
->  {
->  	split_ull(n, &disk->total_blocks_lo, &disk->total_blocks_hi);
->  }
-> +#endif
-> =20
->  static void set_pba_of_lba0(struct imsm_map *map, unsigned long long n)
->  {
+> >From cb391c87d24a32b211d9f0a9df942987bf8e0ac4 Mon Sep 17 00:00:00 2001
+> From: majianpeng <majianpeng@gmail.com>
+> Date: Mon, 16 Apr 2012 19:19:53 +0800
+> Subject: [PATCH] md/raid10:Memleak fix if allocate rep1_bio failed in
+>  function want_replacement().
+>  Reported by kmemleak.
 
+Please try to make the description a bit easier to read.
+The first line should be a brief summary of the problem or fix.
 
-applied, thanks.
+Details come afterwards.
 
+I have change it to the following and applied.
+
+Thanks,
 NeilBrown
 
---Sig_/E3hnlhXPPWvp2oO31u3ed_4
+    md/raid10: Fix memleak in r10buf_pool_alloc
+   =20
+    If the allocation of rep1_bio fails, we currently don't free the 'bio'
+    of the same dev.
+   =20
+    Reported by kmemleak.
+   =20
+    Signed-off-by: majianpeng <majianpeng@gmail.com>
+    Signed-off-by: NeilBrown <neilb@suse.de>
+
+
+
+>=20
+> Signed-off-by: majianpeng <majianpeng@gmail.com>
+> ---
+>  drivers/md/raid10.c |    7 ++++---
+>  1 files changed, 4 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index c8dbb84..19e9af1 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -165,10 +165,11 @@ out_free_pages:
+>  	while (j--)
+>  		for (i =3D 0; i < RESYNC_PAGES ; i++)
+>  			safe_put_page(r10_bio->devs[j].bio->bi_io_vec[i].bv_page);
+> -	j =3D -1;
+> +	j =3D 0;
+>  out_free_bio:
+> -	while (++j < nalloc) {
+> -		bio_put(r10_bio->devs[j].bio);
+> +	for ( ; j < nalloc; j++) {
+> +		if (r10_bio->devs[j].bio)
+> +			bio_put(r10_bio->devs[j].bio);
+>  		if (r10_bio->devs[j].repl_bio)
+>  			bio_put(r10_bio->devs[j].repl_bio);
+>  	}
+
+
+--Sig_/etbjINL.vfDcjzyU=r3fgmG
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT4zcSjnsnt1WYoG5AQKiPg/9HDzXPUSQ/GhIZuw9bTudniB/RWVQWqyt
-trOctFG9/j4uwDZHLtCCcN2FkJN+AkIQsAl8BsHPtuXYJSaWv7HHa5U7g16XEBEq
-m7IgTKZWSyf/0MgSoW0sXYLG1U9S2PhU4+Dj8mWyD5TZTQmu8yO1K2jGKlluRYp1
-baSXQe5r0GIexWTyiGtQIZ2H/rswMbQSqliJHCAcPuMNiLdc+oNMjxP/vFSFIKf2
-NumyBPD5pM3RcwJ1mg6n0xcm4VUeRZ+Ca+WOl6UUsIXJHHkA4Good/YiQQFbpvwC
-bp+5fOqG7yXnhWAEPpm16Ok2+jIv/P5HtHQtid9Utj3onwqOI+Czt3Zz6JmGaSjP
-Gyvs/PFsG8A/VxxOh7VSRCCZwrXMa6JGXzKTylzXQsGp/FDOoXodDgNiwu2xILeI
-iExbNtlhbhZZzC/6TSKJAQTJP36KiKPtnAfqPutbZeNj6vg509c+WmzciGwwuLro
-rOy3DUnU/cry6t55wWTRai5fLf6XLeAscTzlDP+lZ7jxZ0Retwp3xqSYbK2nO7Jc
-uEk6DKEcvk86TcJiwWsFfel+DDfedvyatv+FMZ9IzSEy8ldfvRHlkUHZoUZLncGf
-FCyKxMsbsVp90nJlnA+GR59tkxP+AVKWGYtuLtgVYQ8Y83Y37gUkAGwCky35Zcq+
-liBS3Q+vuoc=
-=8V+w
+iQIVAwUBT4ze8jnsnt1WYoG5AQL6Qw/+MbQ5UrSDtuD1klhw+/taL10mtTQdBD80
+U3cquHXnae4EbxWnnAj+nV4WkzO9wJ6ppjNM1J4pWW9/400RdesHOdk/TLew2NEI
+jgSLYuypQHYoYgbD55DdRyWPuTuDvXcBhXpwHYUoWkQQugOAm0gtrSX7C/X7la47
+3ZrOkUTrjsnOOy76r/vQop2pJPPt8TNf2uBMFbnOUg0B6AChXkH4guys5x3CRyfy
+U7NcNC0+8yGr6O5OaNCF5KM/pqZMj0BXvydgAnCZM3D8IuBqEldbPd/WA5lOmuAc
+Whw7PrGDulSK9foeqUozHstLLj+4JIBs8CC46DPmhl8hHbaEUrJhMLtFYPk1Kizq
+F2ByanC9fEVp7Z3DiJTO6Zx9uLIZpHcPB5Www1EFOgCxP+iSNM5JBERPXBKkkAKu
+fKX358yUjIBUVdHO9iXlw69IG8OLw0ib2aqt/YGVmpE/zybl10GKlLbzG5dxz7dK
+I2bnTjyG3iZhrIjwZbmGRBlTvfSUE/4c4DURSxfb4r/sMKPd7LkvyWyVJpWIQYPE
+YWBmPeLMIs40WW9YZyxVSn+rG/kWB74IpCjhntXNrA3fQ9ZAxMuHtrHgTRgA0UL/
+o+ak9kLwOzDAMYWeqWhcGt379Wp9xuZaMYNqc7OxMDS30ib6ahyx7bIOkYp6IEmY
+9/9kR88jrTo=
+=UZPr
 -----END PGP SIGNATURE-----
 
---Sig_/E3hnlhXPPWvp2oO31u3ed_4--
+--Sig_/etbjINL.vfDcjzyU=r3fgmG--
