@@ -1,102 +1,119 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md/raid10:Memleak fix if allocate rep1_bio failed in
- function want_replacement().
-Date: Tue, 17 Apr 2012 13:09:38 +1000
-Message-ID: <20120417130938.248d885a@notabene.brown>
-References: <201204161924086710486@gmail.com>
+Subject: Re: [PATCH 0 of 2] dm-raid: Bug fixes
+Date: Tue, 17 Apr 2012 14:26:58 +1000
+Message-ID: <20120417142658.265a0a40@notabene.brown>
+References: <1334619917.16017.25.camel@f14.redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/etbjINL.vfDcjzyU=r3fgmG"; protocol="application/pgp-signature"
+ boundary="Sig_/3WgWzV4.c_NORja2jaOAjj."; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201204161924086710486@gmail.com>
+In-Reply-To: <1334619917.16017.25.camel@f14.redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Jonathan Brassow <jbrassow@redhat.com>
+Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, agk@redhat.com
 List-Id: linux-raid.ids
 
---Sig_/etbjINL.vfDcjzyU=r3fgmG
+--Sig_/3WgWzV4.c_NORja2jaOAjj.
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 16 Apr 2012 19:24:13 +0800 "majianpeng" <majianpeng@gmail.com> wrot=
-e:
+On Mon, 16 Apr 2012 18:45:17 -0500 Jonathan Brassow <jbrassow@redhat.com>
+wrote:
 
-> >From cb391c87d24a32b211d9f0a9df942987bf8e0ac4 Mon Sep 17 00:00:00 2001
-> From: majianpeng <majianpeng@gmail.com>
-> Date: Mon, 16 Apr 2012 19:19:53 +0800
-> Subject: [PATCH] md/raid10:Memleak fix if allocate rep1_bio failed in
->  function want_replacement().
->  Reported by kmemleak.
+> Neil,
+>=20
+> I have 3 bugs that I've been working on.  Two I have fixed and one I
+> have not, but have a question.
+>=20
+> The first patch (dm-raid-set-recovery-flags-on-resume) addresses the
+> fact that some recovery flags are altered during suspend, but not
+> corrected upon resume.  I'm wondering if you think these flags would be
+> better pushed into 'mddev_resume' rather that being altered in
+> dm-raid.c?
 
-Please try to make the description a bit easier to read.
-The first line should be a brief summary of the problem or fix.
+I think setting MD_RECOVERY_NEEDED in mddev_resume makes perfect sense.
+It is quite safe to set it at any time, and the one place where md.c calls
+mddev_resume() it sets the flag immediately afterwards.  So moving that
+setting into mddev_resume() makes sense.
 
-Details come afterwards.
+MD_RECOVERY_FROZEN I'm less sure about.  If we clear it in mddev_resume(),
+then as soon as you convert a RAID5 to a RAID6 it would start recovery of t=
+he
+extra device, even if you had set sync_action to 'frozen' first.  That would
+be wrong.
 
-I have change it to the following and applied.
+I guess we are over-loading 'MD_RECOVERY_FROZEN' it bit.  It means both
+"user-space requested a freeze" and  "resync temporarily disabled".
 
-Thanks,
+I wonder if md_stop_writes() only needs to set it temporarily, and to make
+sure MD_RECOVERY_NEEDED isn't set when it completes.  That might be enough??
+
+However maybe it is easiest to just clear it in raid_resume() like you did.
+
+
+>=20
+> The second patch (dm-raid-record-and-handle-missing-devices) adds code
+> to address the case where the user specifies particular array positions
+> as missing.  I don't have any significant questions about this patch.
+
+I do :-)
+
+md already does all the proper accounting for ->degraded, dm-raid shouldn't
+need to.
+
+Incrementing md.degraded in dev_parms shouldn't be needed as md_run is
+subsequently called, and it sets md.degraded correctly.
+
+incrementing it in read_disk_sb() and setting the Faulty flag is wrong.  I
+think it should just call md_error().
+
+The other changes in that patch look OK.
+
+
+>=20
+> The 3rd issue I am seeing concerns how 'suspend' happens.  Suspend
+> should flush all outstanding I/O and quiesce.  When I look at the code,
+> I feel it should be doing this.  ('md_stop_writes' is called and
+> followed-up by a call to 'mddev_suspend', which quiesces the
+> personality.)  However, if I create a RAID1 device, suspend it, and then
+> detach one of the legs, it does not show the changes written immediately
+> before the suspend.  If I issue a 'sync', then the changes do show-up.
+> I confused as to why the suspend process doesn't seem to be pushing out
+> the writes that have been issued.  Any ideas?
+
+That sounds like it is behaving exactly as I would expect.
+You have written to the filesystem (and so to the pagecache) but the
+filesystem hasn't written to the device yet.  That happens after a time, or
+on a 'sync' or 'fsync'.
+
+You might be able to get the block device to ask the filesystem to flush
+things out using freeze_bdev(), but I'm not sure of the details there.
+It might not flush things, it might just ensure metadata is consistent - or
+something.
+
+
 NeilBrown
 
-    md/raid10: Fix memleak in r10buf_pool_alloc
-   =20
-    If the allocation of rep1_bio fails, we currently don't free the 'bio'
-    of the same dev.
-   =20
-    Reported by kmemleak.
-   =20
-    Signed-off-by: majianpeng <majianpeng@gmail.com>
-    Signed-off-by: NeilBrown <neilb@suse.de>
-
-
-
->=20
-> Signed-off-by: majianpeng <majianpeng@gmail.com>
-> ---
->  drivers/md/raid10.c |    7 ++++---
->  1 files changed, 4 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index c8dbb84..19e9af1 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -165,10 +165,11 @@ out_free_pages:
->  	while (j--)
->  		for (i =3D 0; i < RESYNC_PAGES ; i++)
->  			safe_put_page(r10_bio->devs[j].bio->bi_io_vec[i].bv_page);
-> -	j =3D -1;
-> +	j =3D 0;
->  out_free_bio:
-> -	while (++j < nalloc) {
-> -		bio_put(r10_bio->devs[j].bio);
-> +	for ( ; j < nalloc; j++) {
-> +		if (r10_bio->devs[j].bio)
-> +			bio_put(r10_bio->devs[j].bio);
->  		if (r10_bio->devs[j].repl_bio)
->  			bio_put(r10_bio->devs[j].repl_bio);
->  	}
-
-
---Sig_/etbjINL.vfDcjzyU=r3fgmG
+--Sig_/3WgWzV4.c_NORja2jaOAjj.
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT4ze8jnsnt1WYoG5AQL6Qw/+MbQ5UrSDtuD1klhw+/taL10mtTQdBD80
-U3cquHXnae4EbxWnnAj+nV4WkzO9wJ6ppjNM1J4pWW9/400RdesHOdk/TLew2NEI
-jgSLYuypQHYoYgbD55DdRyWPuTuDvXcBhXpwHYUoWkQQugOAm0gtrSX7C/X7la47
-3ZrOkUTrjsnOOy76r/vQop2pJPPt8TNf2uBMFbnOUg0B6AChXkH4guys5x3CRyfy
-U7NcNC0+8yGr6O5OaNCF5KM/pqZMj0BXvydgAnCZM3D8IuBqEldbPd/WA5lOmuAc
-Whw7PrGDulSK9foeqUozHstLLj+4JIBs8CC46DPmhl8hHbaEUrJhMLtFYPk1Kizq
-F2ByanC9fEVp7Z3DiJTO6Zx9uLIZpHcPB5Www1EFOgCxP+iSNM5JBERPXBKkkAKu
-fKX358yUjIBUVdHO9iXlw69IG8OLw0ib2aqt/YGVmpE/zybl10GKlLbzG5dxz7dK
-I2bnTjyG3iZhrIjwZbmGRBlTvfSUE/4c4DURSxfb4r/sMKPd7LkvyWyVJpWIQYPE
-YWBmPeLMIs40WW9YZyxVSn+rG/kWB74IpCjhntXNrA3fQ9ZAxMuHtrHgTRgA0UL/
-o+ak9kLwOzDAMYWeqWhcGt379Wp9xuZaMYNqc7OxMDS30ib6ahyx7bIOkYp6IEmY
-9/9kR88jrTo=
-=UZPr
+iQIVAwUBT4zxEjnsnt1WYoG5AQIVuQ/+LbZ0heJY2KRit5qom6pN48CxzbUiDjDs
+Bn8AvmKuQrQbNxW+/a94FZh/EjdI6zXU6cHd9HKli0R+s4uBkvkel4uh/EDUWdIc
+cw/pVwW4gUDL+SX/oQ8oo1Uqw5A4XPk3yHTPv53C6fBnSjHjPelO7KMWrVguFLvR
+W217L7ui4qzVONfolTe9TExR+6JdzaMGqnIVB6IZONLKKojXF90N0FHe9uKce2jC
+x/+8A7zTD8q7h2smwxNBRYQNMQk9NvaovvQB8ARWrEpKJiSmqa5Jj67L4nDowedr
+uhjTOy7w71w9VLfWPOlM12ke/OlLwVG2mlSsM/BYvRW+2BbeOvjYrPKMK7d5UW07
+eQIjBvW1lzrHr9tfpNJSXz3wtLYj3U7HJjYBG+ppf4Qh10jNIoaKmnESTlkNg3fR
+igiZOFtKM1KgIDu/9bMZA9IcdIA4BmCWRaF8UP/yC0h7Qv29cmDx+2opsuH/ox0+
+JxeiIKvLrMAJxK70gadTa2Ryjte0Tapm0rvy4nYIYWjFu8+W+vPzPjEUXoWmC4/k
+SIPFTD+DTYTqn59N68J9TAgOh0iBWzePOkGijyxrGlR/ubAejBz0CXYPbXFXAr62
+Alfvw9epyOacFDyDgt9GuWCMcKV5koANB3BSAL7uxljyc/iIZbnUvjIQuQkMNtvI
+TFZ6E8wlufI=
+=L30+
 -----END PGP SIGNATURE-----
 
---Sig_/etbjINL.vfDcjzyU=r3fgmG--
+--Sig_/3WgWzV4.c_NORja2jaOAjj.--
