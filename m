@@ -1,72 +1,118 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [RFC 1/2] MD: raid5 trim support
-Date: Tue, 17 Apr 2012 11:16:12 -0700
-Message-ID: <CABE8wwvu239b2CqmpKccvzDc3_LayVj4qHTEAYxcrpsx9RR5kQ@mail.gmail.com>
-References: <20120417083552.483324288@kernel.org>
-	<20120417084632.306032602@kernel.org>
-	<CABE8wwswKWQ=LDbx0ysTaZf2Hz0jD_q45FNF0jw96ZwZdJiHPw@mail.gmail.com>
-	<4F8D871E.2050403@kernel.org>
+From: David Brown <david@westcontrol.com>
+Subject: Re: Is this enough for us to have triple-parity RAID?
+Date: Tue, 17 Apr 2012 22:18:55 +0200
+Message-ID: <4F8DD02F.1060504@westcontrol.com>
+References: <CAMqP1GVnOErhxj8RV=KFtzHHEJqtguEd1L_vmsS=AAi_rAPoVg@mail.gmail.com> <4F8D228D.8060005@westcontrol.com> <20120417171609.GA2859@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F8D871E.2050403@kernel.org>
+In-Reply-To: <20120417171609.GA2859@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, neilb@suse.de, axboe@kernel.dk, Shaohua Li <shli@fusionio.com>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Apr 17, 2012 at 8:07 AM, Shaohua Li <shli@kernel.org> wrote:
-> Hi Dan,
+On 17/04/12 19:16, Piergiorgio Sartor wrote:
+> Hi David,
 >
-> On 4/17/12 10:46 PM, Dan Williams wrote:
->>
->> On Tue, Apr 17, 2012 at 1:35 AM, Shaohua Li<shli@kernel.org> =A0wrot=
-e:
->>>
->>> Discard for raid4/5/6 has limitation. If discard request size is sm=
-all,
->>> we do
->>> discard for one disk, but we need calculate parity and write parity=
- disk.
->>> =A0To
->>> correctly calculate parity, zero_after_discard must be guaranteed.
->>
->>
->> I'm wondering if we could use the new bad blocks facility to mark
->> discarded ranges so we don't necessarily need determinate data after
->> discard.
+>> My current state is that I've got theory worked out and written up -
+>> not just for triple parity, but for more parities as well.  For some
+>> of it, I've got Python code to test and verify the maths.  It turns
+>> out that triple parity can work well - but for quad parity the limit
+>> is 21 data disks (using generators 2, 4, and 8), or up to 33 (using
+>> for example 0x07, 0x35 and 0x8b as generators).  Realistically, I
+>> think triple parity is the limit for practical implementations.
 >
+> Why is that? An RS code (255,251) should be possible, like
+> it is a (255,223). What's the limitation?
+> I'm sure there is even a "RAID-96", which is (96,64).
 >
-> It would be great the limitation can be avoided and the code can be
-> simplified. I didn't follow linux-raid maillist, can you point me the=
- url
-> of the new bad blocks facility please?
+> My wild guess would be that the generators must be chosen
+> in some way.
+>
+> Have you had a look at the "par2" code? That seems to be
+> capable of doing a parametric RS, even if in 16bit words.
+>
+> bye,
+>
 
-It came in at 3.1 starting with:
+It is certainly possible to make raid systems using as many disks as yo=
+u=20
+want, and as many parities as you want.  The trick is to do so in an=20
+efficient manner.
 
-commit 2230dfe4ccc3add340dc6d437965b2de1d269fde
-Author: NeilBrown <neilb@suse.de>
-Date:   Thu Jul 28 11:31:46 2011 +1000
+The way raid6 is implemented is using simple polynomials over the Galoi=
+s=20
+field G(2=E2=81=B8):
 
-    md: beginnings of bad block management.
+Py =3D g_y^0 . D0 + g_y^1 . D1 + g_y^2 . D2 + ... + g_y^n . Dn
 
-    This the first step in allowing md to track bad-blocks per-device s=
-o
-    that we can fail individual blocks rather than the whole device.
+=46or raid5, you have one parity generators, and g0 is 1 (i.e., a simpl=
+e=20
+xor).  For raid6, you have two parity - 1 and 2.  For triple parity, we=
+=20
+would use g0 =3D 1, g1 =3D 2 and g2 =3D 4.  The whole thing is therefor=
+e=20
+simple (or relatively simple!) to implement, and should run fast -=20
+calculating the third parity will only be slightly slower than=20
+calculating the second parity in raid6 is today, and recovery will be a=
+s=20
+fast as raid6 unless you need to recover from 3 data disk failures.
 
-    This patch just adds a data structure for recording bad blocks, wit=
-h
-    routines to add, remove, search the list.
+=46or quad parity, we can try g3 =3D 8 as the obvious next choice in th=
+e=20
+pattern.  Unfortunately, we start hitting conflicts.  To recover missin=
+g=20
+data, we have to solve multiple simultaneous equations over G(2=E2=81=B8=
+), whose=20
+coefficients depend on the index numbers of the missing disks.  With=20
+parity generators (1, 2, 4, 8), some of these combinations of missing=20
+disk indexes lead to insoluble equations when you have more that 21 dis=
+ks.
 
-    Signed-off-by: NeilBrown <neilb@suse.de>
-    Reviewed-by: Namhyung Kim <namhyung@gmail.com>
+I didn't find any neat way to prove this, or prove that all combination=
+s=20
+of missing disks for parity generators (1, 2, 4) work out okay.  I wrot=
+e=20
+some brute-force checking code, and let my computer do the hard work.
 
-Here is a link to the patch set:
-http://marc.info/?l=3Dlinux-raid&m=3D131121721902900&w=3D2
+There are other ways to make a raid system with quad parity or more.=20
+The parities don't have to be calculated in such a neat form as above -=
+=20
+perhaps even something as simple as re-ordering the powers of the parit=
+y=20
+generators would help.  We could use a different operation rather than=20
+the "G(2=E2=81=B8) multiply".  We could use different sized Galois fiel=
+ds.  Or=20
+we could try something completely different, such as RS codes.=20
+Somewhere there we would get quad parity and more - for as many disks a=
+s=20
+we like.
 
---
-Dan
+However, I would be surprised if there were another method that had the=
+=20
+practicality of implementation that we get with this system.  There are=
+=20
+/huge/ benefits in having the triple-parity raid being the same as raid=
+6=20
+but with an extra parity, and being able to generate it in the same way=
+=2E=20
+  If quad parity is something that appeals to anyone, then it could be=20
+implemented at the same time - and 21 data disks (25 disks total) would=
+=20
+be the limit.  Even though the same equations with different generators=
+=20
+can give up to 33 data disks, I expect that compatibility with raid6 an=
+d=20
+triple-parity would outweigh the benefits of supporting more disks.=20
+After all, a 25 disk array is already pretty big for a single array.
+
+mvh.,
+
+David
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
