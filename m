@@ -1,96 +1,77 @@
-From: Brassow Jonathan <jbrassow@redhat.com>
-Subject: Re: [PATCH 0 of 4] dm-raid: various bug fixes
-Date: Wed, 18 Apr 2012 16:32:00 -0500
-Message-ID: <A71FAACD-D1A7-4452-BDD3-5156DB9E5497@redhat.com>
-References: <1334716219.23908.14.camel@f14.redhat.com>
-	<20120418134843.1376cc7e@notabene.brown>
-	<3F107DB9-0ED6-47C5-9F5A-DF485017EA92@redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: multipart/mixed; boundary="===============5679787356347500322=="
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <3F107DB9-0ED6-47C5-9F5A-DF485017EA92@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: linux-raid@vger.kernel.org, agk@redhat.com
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [md PATCH 08/23] md: don't set md arrays to readonly on
+ shutdown.
+Date: Thu, 19 Apr 2012 08:48:33 +1000
+Message-ID: <20120419084833.39379a6f@notabene.brown>
+References: <20120314043555.7978.75486.stgit@notabene.brown>
+	<20120314044040.7978.64156.stgit@notabene.brown>
+	<CAGRgLy5UYf27335hQmEQQ8V2GSatQ-1aev9DdTia0j-Hv4wsEg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/yLBZ7szx3Uykn8uZjTJ3m5P"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAGRgLy5UYf27335hQmEQQ8V2GSatQ-1aev9DdTia0j-Hv4wsEg@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
---===============5679787356347500322==
-Content-Type: multipart/alternative; boundary=Apple-Mail-1--4764693
-
-
---Apple-Mail-1--4764693
+--Sig_/yLBZ7szx3Uykn8uZjTJ3m5P
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
 
+On Wed, 18 Apr 2012 18:37:56 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
 
-On Apr 18, 2012, at 9:05 AM, Brassow Jonathan wrote:
-
+> Hi Neil,
 >=20
-> 5-of-5: changing the check to 'saved_raid_disk >=3D 0' would be fine, =
-but I think I should initialize 'saved_raid_disk' to -1 in dm-raid.c =
-then normally.  Right now, an nominal initial value is not set - meaning =
-it is '0'.  (When a device comes back from a failure, 'saved_raid_disk' =
-is assigned its old position.)
+> > This could result in the shutdown happening when array is marked
+> > dirty, thus forcing a resync on reboot. =A0However if you reboot
+> > without performing a "sync" first, you get to keep both halves.
+> Can you pls clarify the last statement?
 
-... that's not quite right.  I do call 'md_rdev_init' which sets =
-'saved_raid_disk' to -1.  Then, if the device has returned after a =
-disappearance, I set 'saved_raid_disk' to it's old position.  Therefore, =
-'saved_raid_disk >=3D 0' would be fine and wouldn't require me to set -1 =
-in dm-raid.c.
+"If you break it, you get to keep both halves" is a colloquial phrase meani=
+ng
+that that the person saying it takes no responsibility for any damage that
+the person being spoken to causes.
+When applied to software issues it is ironic (because when a thing 'breaks'=
+ it
+doesn't result in two pieces like, for example, when a plate breaks) and so
+funny (I hope).
+(when applied to a RAID mirror, it is doubly ironic :-)
 
- brassow
+If you force a fast shutdown without allowing a sync to happen=20
+(e.g. reboot -f -n) there could be data on the way out to the array when the
+system actually reboots, so the array will be dirty, so a resync will be
+required when the system restarts.
+This might be undesirable, but that isn't my problem and is not the problem
+of md/raid.  Rather the cause of the problem is the "reboot -f -n".  i.e.
+"your" problem.   "You" broke it, you get to keep both halves.
 
+Does that help?
 
---Apple-Mail-1--4764693
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/html;
-	charset=us-ascii
+NeilBrown
 
-<html><head></head><body style=3D"word-wrap: break-word; =
--webkit-nbsp-mode: space; -webkit-line-break: after-white-space; =
-"><br><div><div>On Apr 18, 2012, at 9:05 AM, Brassow Jonathan =
-wrote:</div><br class=3D"Apple-interchange-newline"><blockquote =
-type=3D"cite"><span class=3D"Apple-style-span" style=3D"border-collapse: =
-separate; font-family: Helvetica; font-style: normal; font-variant: =
-normal; font-weight: normal; letter-spacing: normal; line-height: =
-normal; orphans: 2; text-align: -webkit-auto; text-indent: 0px; =
-text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; =
--webkit-border-horizontal-spacing: 0px; -webkit-border-vertical-spacing: =
-0px; -webkit-text-decorations-in-effect: none; -webkit-text-size-adjust: =
-auto; -webkit-text-stroke-width: 0px; font-size: medium; "><br>5-of-5: =
-changing the check to 'saved_raid_disk &gt;=3D 0' would be fine, but I =
-think I should initialize 'saved_raid_disk' to -1 in dm-raid.c then =
-normally. &nbsp;Right now, an nominal initial value is not set - meaning =
-it is '0'. &nbsp;(When a device comes back from a failure, =
-'saved_raid_disk' is assigned its old =
-position.)<br></span></blockquote></div><br><div>... that's not quite =
-right. &nbsp;I do call 'md_rdev_init' which sets 'saved_raid_disk' to =
--1. &nbsp;Then, if the device has returned after a disappearance, I set =
-'saved_raid_disk' to it's old position. &nbsp;Therefore, =
-'saved_raid_disk &gt;=3D 0' would be fine and wouldn't require me to set =
--1 in =
-dm-raid.c.</div><div><br></div><div>&nbsp;brassow</div><div><br></div></bo=
-dy></html>=
+--Sig_/yLBZ7szx3Uykn8uZjTJ3m5P
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
---Apple-Mail-1--4764693--
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
+iQIVAwUBT49EwTnsnt1WYoG5AQI9Kw//dTfv8RzaamK3tKqwxEnffB33bviIzkqv
+rCPlUsHIhdoonGQlKjVOhFnf10ZDgbwOFtWNGzg1zE0gSERmEYbF5cDWJoE3Ugij
+3TPulnu8ZgzIlmo+O8o8yQwNJLAmrSo9aREvp6lWYCV2BHtCj3Hp2gBm0OuaQ2te
+i7DQ6jwWR8OHPEG5Ss1wDuFln1Qd061pFqNRObYmhw5+etUEposcd9KTsDb8i3Oo
+uDozaIb8UTGyILzVq8OdNq0937JuZpYUZI/gtzcKhDPjCnAKw+iayTAACagRtqFQ
+rHokLSkNak5op2O87uTluLGv6sxL7sQwNjdYBJzQjqXUyegodTN58kzMTbQd8iSX
+hzp3cG9jXz0CA3NcNFKi1P5FmQ8JLZ62fhobTADJB/ppvEudTUr96XXD0tSEje2e
+FMeGDf9q5elDHq5hmjhG99XHYXaIj2YXCZiipiTn05Km+EmiPB2tkwiO+yLcNSYl
+cmQpLQuSrlLXL83njLqjiSxEkHZl/nx09sFVxQM7YMQZULs495ztqeUBqZu4xLqA
+U8jVU7tkuRnnTYBAJnISfwuY5/Ui709a58svxXA4mGrL+EqAO7EzlNOX7jdmowf3
+1f39iVS5A7yO0HLFF3hQOdrJWpfKTEuS5ajXFnOmopHmAdC8XtwwL9ykMXLLHbro
+ep34F9yirDo=
+=YjqN
+-----END PGP SIGNATURE-----
 
---===============5679787356347500322==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-
---===============5679787356347500322==--
+--Sig_/yLBZ7szx3Uykn8uZjTJ3m5P--
