@@ -1,106 +1,116 @@
-From: Brassow Jonathan <jbrassow@redhat.com>
-Subject: Re: [PATCH 0 of 2] dm-raid: Bug fixes
-Date: Tue, 17 Apr 2012 20:09:26 -0500
-Message-ID: <AE025552-8180-470B-A2A5-86207AA62E73@redhat.com>
-References: <1334619917.16017.25.camel@f14.redhat.com> <20120417142658.265a0a40@notabene.brown>
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Jack Wang <jack.wang.usish@gmail.com>
+Subject: Re: [md PATCH 00/24] Allow bitmaps to be resized.
+Date: Wed, 18 Apr 2012 10:07:37 +0800
+Message-ID: <CA+res+S-pvi11i_JH=O2dDGMc3n2wErwpMaWoW3KKFsAHVMN3Q@mail.gmail.com>
+References: <20120417084324.6433.68345.stgit@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120417142658.265a0a40@notabene.brown>
+In-Reply-To: <20120417084324.6433.68345.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, agk@redhat.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks Neil,
+Dear Neil,
 
-1st patch:
-I'll move 'MD_RECOVERY_NEEDED' into mddev_resume and keep FROZEN in raid_resume.
+Thanks for your good works.
+One query about current grow supporting  status:
 
-2nd patch:
-I pulled out the 'degraded' accounting.  I'll switch from setting Faulty in 'read_sb_page' to calling 'md_error' in a separate patch.
+as the raid wiki show : the RAID level 1/4/5/6 array can be grown . In
+my test I can grow raid 1 add disk or remove disk through mdadm grow,
+but change level from 1 to 4 or 5 will fail. the simaliar command work
+for change level between 4/5/6, change 1 to 10 fail too.
 
-Apologies for the the flush question.  I had confused device-mapper's use of "flush" and "lockfs", thinking that a 'flush' would perform the 'lock_fs'.  It does not, so we should expect the file system to be caching some bits.  (Snapshots use the 'lock_fs' feature to quiesce the file system before the snapshot is finalized.  I think it would make sense to do this when a mirror image is split-off also, but that's now a userspace issue.)
+My kernel version is 3.2.15. mdadm version 3.2.3.
 
-I have a few other patches I pass along as well,
- brassow
 
-On Apr 16, 2012, at 11:26 PM, NeilBrown wrote:
+Jack
 
-> On Mon, 16 Apr 2012 18:45:17 -0500 Jonathan Brassow <jbrassow@redhat.com>
-> wrote:
-> 
->> Neil,
->> 
->> I have 3 bugs that I've been working on.  Two I have fixed and one I
->> have not, but have a question.
->> 
->> The first patch (dm-raid-set-recovery-flags-on-resume) addresses the
->> fact that some recovery flags are altered during suspend, but not
->> corrected upon resume.  I'm wondering if you think these flags would be
->> better pushed into 'mddev_resume' rather that being altered in
->> dm-raid.c?
-> 
-> I think setting MD_RECOVERY_NEEDED in mddev_resume makes perfect sense.
-> It is quite safe to set it at any time, and the one place where md.c calls
-> mddev_resume() it sets the flag immediately afterwards.  So moving that
-> setting into mddev_resume() makes sense.
-> 
-> MD_RECOVERY_FROZEN I'm less sure about.  If we clear it in mddev_resume(),
-> then as soon as you convert a RAID5 to a RAID6 it would start recovery of the
-> extra device, even if you had set sync_action to 'frozen' first.  That would
-> be wrong.
-> 
-> I guess we are over-loading 'MD_RECOVERY_FROZEN' it bit.  It means both
-> "user-space requested a freeze" and  "resync temporarily disabled".
-> 
-> I wonder if md_stop_writes() only needs to set it temporarily, and to make
-> sure MD_RECOVERY_NEEDED isn't set when it completes.  That might be enough??
-> 
-> However maybe it is easiest to just clear it in raid_resume() like you did.
-> 
-> 
->> 
->> The second patch (dm-raid-record-and-handle-missing-devices) adds code
->> to address the case where the user specifies particular array positions
->> as missing.  I don't have any significant questions about this patch.
-> 
-> I do :-)
-> 
-> md already does all the proper accounting for ->degraded, dm-raid shouldn't
-> need to.
-> 
-> Incrementing md.degraded in dev_parms shouldn't be needed as md_run is
-> subsequently called, and it sets md.degraded correctly.
-> 
-> incrementing it in read_disk_sb() and setting the Faulty flag is wrong.  I
-> think it should just call md_error().
-> 
-> The other changes in that patch look OK.
-> 
-> 
->> 
->> The 3rd issue I am seeing concerns how 'suspend' happens.  Suspend
->> should flush all outstanding I/O and quiesce.  When I look at the code,
->> I feel it should be doing this.  ('md_stop_writes' is called and
->> followed-up by a call to 'mddev_suspend', which quiesces the
->> personality.)  However, if I create a RAID1 device, suspend it, and then
->> detach one of the legs, it does not show the changes written immediately
->> before the suspend.  If I issue a 'sync', then the changes do show-up.
->> I confused as to why the suspend process doesn't seem to be pushing out
->> the writes that have been issued.  Any ideas?
-> 
-> That sounds like it is behaving exactly as I would expect.
-> You have written to the filesystem (and so to the pagecache) but the
-> filesystem hasn't written to the device yet.  That happens after a time, or
-> on a 'sync' or 'fsync'.
-> 
-> You might be able to get the block device to ask the filesystem to flush
-> things out using freeze_bdev(), but I'm not sure of the details there.
-> It might not flush things, it might just ensure metadata is consistent - or
-> something.
-> 
-> 
+2012/4/17 NeilBrown <neilb@suse.de>:
+>
+> The following series has just been added to my for-next queue
+> and so should be in 3.5.
+> =C2=A0git://neil.brown.name/md for-next
+> =C2=A0git://github.com/neilbrown/linux.git md/for-next
+>
+> It allows md to resize a bitmap on an active array. =C2=A0This
+> means that arrays can now be reshaped without first removing the
+> bitmap. =C2=A0The bitmap is resized in-place.
+>
+> As always: review and testing would be greatly appreciated.
+>
 > NeilBrown
-
+>
+> ---
+>
+> NeilBrown (24):
+> =C2=A0 =C2=A0 =C2=A0md/raid5: Allow reshape while a bitmap is present=
+=2E
+> =C2=A0 =C2=A0 =C2=A0md/raid10: resize bitmap when required during res=
+hape.
+> =C2=A0 =C2=A0 =C2=A0md: allow array to be resized while bitmap is pre=
+sent.
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: make sure reshape request are reflecte=
+d in superblock.
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: add bitmap_resize function to allow bi=
+tmap resizing.
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: use DIV_ROUND_UP instead of open-code
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: create a 'struct bitmap_counts' substr=
+ucture of 'struct bitmap'
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: make bitmap bitops atomic.
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: make _page_attr bitops atomic.
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: merge bitmap_file_unmap and bitmap_fil=
+e_put.
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: remove async freeing of bitmap file.
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: convert some spin_lock_irqsave to spin=
+_lock_irq
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: use set_bit, test_bit, etc for operati=
+on on bitmap->flags.
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: remove single-bit manipulation on sb->=
+state
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: remove bitmap_mask_state
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: move storage allocation from bitmap_lo=
+ad to bitmap_create.
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: separate bitmap file allocation to its=
+ own function.
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: store bytes in file rather than just i=
+n last page.
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: move some fields of 'struct bitmap' in=
+to a 'storage' substruct.
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: change *_page_attr() to take a page nu=
+mber, not a page.
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: centralise allocation of bitmap file p=
+ages.
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: allow a bitmap with no backing storage=
+=2E
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: add new 'space' attribute for bitmaps.
+> =C2=A0 =C2=A0 =C2=A0md/bitmap: disentangle two different 'pending' fl=
+ags.
+>
+>
+> =C2=A0drivers/md/bitmap.c | 1089 +++++++++++++++++++++++++++++-------=
+---------------
+> =C2=A0drivers/md/bitmap.h | =C2=A0 58 ++-
+> =C2=A0drivers/md/md.c =C2=A0 =C2=A0 | =C2=A0 53 ++
+> =C2=A0drivers/md/md.h =C2=A0 =C2=A0 | =C2=A0 =C2=A03
+> =C2=A0drivers/md/raid1.c =C2=A0| =C2=A0 11 -
+> =C2=A0drivers/md/raid10.c | =C2=A0 47 +-
+> =C2=A0drivers/md/raid5.c =C2=A0| =C2=A0 20 +
+> =C2=A07 files changed, 754 insertions(+), 527 deletions(-)
+>
+> --
+> Signature
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
