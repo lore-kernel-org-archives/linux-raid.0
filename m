@@ -1,105 +1,89 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [RFC 1/2] MD: raid5 trim support
-Date: Wed, 18 Apr 2012 14:48:41 +1000
-Message-ID: <20120418144841.04ce1a10@notabene.brown>
-References: <20120417083552.483324288@kernel.org>
-	<20120417084632.306032602@kernel.org>
-	<CABE8wwswKWQ=LDbx0ysTaZf2Hz0jD_q45FNF0jw96ZwZdJiHPw@mail.gmail.com>
-	<20120418062641.000e881c@notabene.brown>
-	<4F8E11A6.7090305@kernel.org>
+Subject: Re: RAID6 syncing at 24 MB/s?
+Date: Wed, 18 Apr 2012 15:05:02 +1000
+Message-ID: <20120418150502.41d6305d@notabene.brown>
+References: <20120418043540.19923.qmail@science.horizon.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/6DJZJjsg7IG=qBW9HRVIC/Z"; protocol="application/pgp-signature"
+ boundary="Sig_/Al/IpvUSf75=nZcf/KXZric"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F8E11A6.7090305@kernel.org>
+In-Reply-To: <20120418043540.19923.qmail@science.horizon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, axboe@kernel.dk, Shaohua Li <shli@fusionio.com>
+To: George Spelvin <linux@horizon.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/6DJZJjsg7IG=qBW9HRVIC/Z
+--Sig_/Al/IpvUSf75=nZcf/KXZric
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 18 Apr 2012 08:58:14 +0800 Shaohua Li <shli@kernel.org> wrote:
+On 18 Apr 2012 00:35:40 -0400 "George Spelvin" <linux@horizon.com> wrote:
 
-> On 4/18/12 4:26 AM, NeilBrown wrote:
-> > On Tue, 17 Apr 2012 07:46:03 -0700 Dan Williams<dan.j.williams@intel.co=
-m>
-> > wrote:
-> >
-> >> On Tue, Apr 17, 2012 at 1:35 AM, Shaohua Li<shli@kernel.org>  wrote:
-> >>> Discard for raid4/5/6 has limitation. If discard request size is smal=
-l, we do
-> >>> discard for one disk, but we need calculate parity and write parity d=
-isk.  To
-> >>> correctly calculate parity, zero_after_discard must be guaranteed.
-> >>
-> >> I'm wondering if we could use the new bad blocks facility to mark
-> >> discarded ranges so we don't necessarily need determinate data after
-> >> discard.
-> >>
-> >> ...but I have not looked into it beyond that.
-> >>
-> >> --
-> >> Dan
-> >
-> > No.
-> >
-> > The bad blocks framework can only store a limited number of bad ranges =
-- 512
-> > in the current implementation.
-> > That would not be an acceptable restriction for discarded ranges.
-> >
-> > You would need a bitmap of some sort if you wanted to record discarded
-> > regions.
-> >
-> > http://neil.brown.name/blog/20110216044002#5
->=20
-> This appears to remove the unnecessary resync for discarded range after=20
-> a crash
-> or discard error, eg an enhancement. From my understanding, it can't=20
-> remove the
-> limitation I mentioned in the patch. For raid5, we still need discard a=20
-> whole
-> stripe (discarding one disk but writing parity disk isn't good).
+> I'm putting together a 7x2TB RAID6 for a home media server, and after
+> encountering a fun kernel bug building the array (old kernel, a new one
+> fixed it), I fot things working, but now notice that each disk is syncing
+> at 23.8 MB/s.  hdparm -t reports they can do well over 100 MB/s each,
+> and the processor, while only an i3, is spending about 20% of one core
+> in the raid6 task.
 
-It is certainly not ideal, but it is worse than not discarding at all?
-And would updating some sort of bitmap be just as bad as updating the parity
-block?
+Can you try an experiment for me (if you don't have anything useful on the
+array yet)?
 
-How about treating a DISCARD request as a request to write a block full of
-zeros, then at the lower level treat any request to write a block full of
-zeros as a DISCARD request.  So when the parity becomes zero, it gets
-discarded.
-
-Certainly it is best if the filesystem would discard whole stripes at a tim=
-e,
-and we should be sure to optimise that.  But maybe there is still room to do
-something useful with small discards?
+Stop the array.  Recreate it exactly the same way as before, and see if it
+goes faster.  I think it might - at least until it got up to where it was up
+to.
 
 NeilBrown
 
---Sig_/6DJZJjsg7IG=qBW9HRVIC/Z
+
+>=20
+> Basicall, it was created with:
+> mdadm -C -l 6 -n 7 -c 128 -b internal /dev/md0 /dev/sd[b-h]
+> (The kernel bug was in 2.6.35, and was triggered by forgetting the
+> "/dev/md0"; one of the RAID ioctls it tries confused up the /dev/sd
+> driver quite thoroughly)
+>=20
+> It's an Intel chipset motherboard with a jmicros 2xSATA+PATA chip,
+> and one port on a SiI3132 plug-in card.  And mostly cheap Caviar green
+> EARS drives (yes, I know about the lack of TLER).  Note that I didn't
+> partition the drives, so there's no risk of a 4K-unaligned partition.
+>=20
+> A friend with his own Linux media server said he saw the exact same speed
+> building his RAID6 array.
+>=20
+> The speed_limit_max is set to the default, the system is idle, and the
+> resultant md drive is not mounted.
+>=20
+> Is there a web page somewhere with speed tuning suggestions?
+>=20
+>=20
+> Thank you!
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/Al/IpvUSf75=nZcf/KXZric
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT45HqTnsnt1WYoG5AQImNw/+IBpYgMxypRbpeTEzKEpxB+7WLEAB0+q7
-yacZsD32vUMC0zJE8Mpeu7IAqXdBUwQwNgck/8kJKf6AXm/mMaGcxk1v1l6Emwfs
-bsKbkKPKc7eWtbvczzN1RSn4BVVNkhZvswSBoJ06fdW9mOImF8HJramiIm70t1nm
-EGQMkdPVm02boaKuGLGeo1tZyPWJHGt+2OU+IOZVqy1kBk8gTXPENog9BJw1q9NY
-PeYYYXtj/b1jCyk2h7zXkDVfSX81PT++p/BGfYuCBPMG2d9z1AhpL2lqgKBA3U2c
-esVU/ZIm2CjtzQsgRt3dr0YQf9pqgFAnTZJTjlTejPL61ZLoaQm0uijZ0hLGL5/P
-acr1aqVSXAi3FhSS/HveGdjCM8UWSsTsxbqw6VgpmUHJv2kw2dY6ZmJJ2bPGvtYq
-7BZwHFWFA6WW3UADy2GG0XTCOzoS4Yi8NUN1LTz1SRS3y8Y2ZRUam1HfNNErd0Yc
-4s8cK3ks8aecSCfiFHHVLg+YcF3LUytv6LhDmMDb8e6PjWiZ8bpb824JZAGh8esl
-5Gcziz2AZZUSv6m8agwwRa7FHxoxa11R4BIncw84NWsuaDfBUUJS2jklj8cczplM
-RN0dPhoYL3msY8qOs8u1gtsz0rdJMRxID/lAjxDVbrS2E7B3iYnIw0f2jjywm0q4
-3QNUJub2hwM=
-=o5Cu
+iQIVAwUBT45Lfjnsnt1WYoG5AQKHyQ/8Dwjeoldga3WMVs/GT806BjWP7YrAFgSJ
+QIbusQ7NUWiRld3166YeOm3KVkK0jXjfPnj86drq2Grkb8fK18CirOFiXWSHu9Qh
+15LMO5vKomQy6hTDxkNXwwBvyhuUIPsK0EeR4JXgMJBapvW4+SZmrk/VDrjdChE7
+10j3ZJHEPkeNhJ+GFi2YXnNFtimW9B4JY/CTafkbQRhIqyguorcTu9r1LF5PG9X8
+1VYwv1OJ0VLx0rBQXZGVdNpUZ7jR7YJHg7l8SzOyPJ82Pr1niPUtWHGJGaYYf3+/
+0JsKsQFhOMzaXAFlbf7ttdv/yRpeaE4Uhku3l19yBzPBcILHcRq3eWVE0zvNNTWw
+wnw8Am2W6yq/auL8Ny0MyNtcfEePz9FAoy1xF7MocyfOHa6isFn6KxKkgQ7Koa8j
+XjSuTDHQJ/5F/oq36UpZ93lXnvOhuD1NsKGdNHOUtmKPPgX2Yqf+hK0gqiN2DIEQ
+CWFS1uFP6ArSIus2Vc/+0SGoXe2NpWX+OTlwcipZVgcZX+5a1O6Uz+juSh97pJMY
+td/CCLWsS67cvRqpPSCS/6Lxw7lNLMhMc2c8xMI6iWlf4UdJq5u4tLpNkzRkN2JH
+Pu2JTtczXDvW1kGiSalpITFkGnVSEA+95bxgwVZtOCuqdJPD6cbYchz3oNXiYBsI
+Wp9YGWuwYjk=
+=7Iy4
 -----END PGP SIGNATURE-----
 
---Sig_/6DJZJjsg7IG=qBW9HRVIC/Z--
+--Sig_/Al/IpvUSf75=nZcf/KXZric--
