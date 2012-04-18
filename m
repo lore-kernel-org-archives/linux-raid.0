@@ -1,30 +1,22 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: [md PATCH 08/23] md: don't set md arrays to readonly on shutdown.
-Date: Wed, 18 Apr 2012 18:37:56 +0300
-Message-ID: <CAGRgLy5UYf27335hQmEQQ8V2GSatQ-1aev9DdTia0j-Hv4wsEg@mail.gmail.com>
-References: <20120314043555.7978.75486.stgit@notabene.brown>
-	<20120314044040.7978.64156.stgit@notabene.brown>
+From: Tom Rini <tom.rini@gmail.com>
+Subject: Fixing broken metadata?
+Date: Wed, 18 Apr 2012 10:22:09 -0700
+Message-ID: <CA+M6bXkCQNXJ58mL0uNqu9oBgLhYq+sPWMiyqc+T9o5sVYgFmQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120314044040.7978.64156.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+Hey all,
 
-> This could result in the shutdown happening when array is marked
-> dirty, thus forcing a resync on reboot. =A0However if you reboot
-> without performing a "sync" first, you get to keep both halves.
-Can you pls clarify the last statement?
+As part of tracking down a bug in mvsas in 3.4-rc3, my raid0 array got
+trashed a bit.  Currently mdadm --misc /dev/.. -E gives results like
+this: http://pastebin.com/X2kWmF1A is there a backup copy of the
+metadata somewhere or some other way to force re-creating the array
+and let e2fsck decide if there's anything salvageable?  If not I can
+live with re-creating it.  Thanks!
 
-Thanks,
-  Alex.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Tom
