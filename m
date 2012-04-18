@@ -1,61 +1,81 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: mdadm: sending ioctl 800c0910 to a partition!
-Date: Tue, 17 Apr 2012 20:48:06 -0700
-Message-ID: <CAK2H+efFUYqX98KBSdJAu-wH5c+Aec2+1K40uQVostDgyh8PYQ@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 0 of 4] dm-raid: various bug fixes
+Date: Wed, 18 Apr 2012 13:48:43 +1000
+Message-ID: <20120418134843.1376cc7e@notabene.brown>
+References: <1334716219.23908.14.camel@f14.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/amtOfTWH3R0LWkopUUNHGCM"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1334716219.23908.14.camel@f14.redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: Jonathan Brassow <jbrassow@redhat.com>
+Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, agk@redhat.com
 List-Id: linux-raid.ids
 
-Wondering if I should be concerned about these new messages?
+--Sig_/amtOfTWH3R0LWkopUUNHGCM
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Everything seems to be working fine. Found a bug report at RedHat
-suggesting it's not an mdadm problem but thought maybe I should report
-it anyway.
+On Tue, 17 Apr 2012 21:30:19 -0500 Jonathan Brassow <jbrassow@redhat.com>
+wrote:
+
+> Neil,
+>=20
+> I've cleaned up the first two patches I sent earlier:
+> 	[1 of 5] dm-raid-set-recovery-flags-on-resume.patch
+> 	[2 of 5] dm-raid-record-and-handle-missing-devices.patch
+> and added a couple more:
+> 	[3 of 5] dm-raid-need-safe-version-of-rdev_for_each.patch
+> 	[4 of 5] dm-raid-use-md_error-in-place-of-faulty-bit.patch
+> 	[5 of 5] md-raid1-further-conditionalize-fullsync.patch
+>=20
+> Patch [5 of 5] I think needs some work.  It fixes the problem I'm seeing
+> and seems to go along with similar logic used for RAID5 in commit
+> d6b212f4b19da5301e6b6eca562e5c7a2a6e8c8d.  It also seems like a workable
+> solution based on the code surrounding commit
+> d30519fc59c5cc2f7772fa67b16b1a2426d36c95.  Can you let me know if I'm
+> stretching the usage of 'saved_raid_disk' too far?
+>=20
+> Thanks,
+>  brassow
+
+Thanks.
+
+3-of-5 should go in 3.4 presumably.  The rest wait for 3.5?  Or do you think
+they should be in 3.4?
+
+5-of-5:  Maybe it would make sense just to check if saved_raid_disk >=3D 0 =
+??
+
+This is only relevant for dm-raid isn't it?  I'd need to think through how
+all that fits together again.
+
+The rest are all fine and are in my for-next
 
 Thanks,
-Mark
+NeilBrown
 
-k2 ~ # uname -a
-Linux k2 3.2.12-gentoo #1 SMP PREEMPT Thu Apr 12 16:26:36 PDT 2012
-x86_64 Intel(R) Core(TM) i7 CPU 920 @ 2.67GHz GenuineIntel GNU/Linux
-k2 ~ #
+--Sig_/amtOfTWH3R0LWkopUUNHGCM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-[    9.354769] scsi_verify_blk_ioctl: 368 callbacks suppressed
-[    9.354773] mdadm: sending ioctl 1261 to a partition!
-[    9.354776] mdadm: sending ioctl 1261 to a partition!
-[    9.354918] mdadm: sending ioctl 800c0910 to a partition!
-[    9.354921] mdadm: sending ioctl 800c0910 to a partition!
-[    9.354939] mdadm: sending ioctl 800c0910 to a partition!
-[    9.354942] mdadm: sending ioctl 800c0910 to a partition!
-[    9.354988] mdadm: sending ioctl 800c0910 to a partition!
-[    9.354991] mdadm: sending ioctl 800c0910 to a partition!
-[    9.355004] mdadm: sending ioctl 800c0910 to a partition!
-[    9.355007] mdadm: sending ioctl 800c0910 to a partition!
-[    9.913580] EXT3-fs (md3): using internal journal
-[   10.067489] kjournald starting.  Commit interval 5 seconds
-[   10.092612] EXT3-fs (md127): using internal journal
-[   10.092619] EXT3-fs (md127): mounted filesystem with writeback data mode
-[   11.724865] Adding 4200992k swap on /dev/sda2.  Priority:-1
-extents:1 across:4200992k
-[   11.731532] Adding 4200992k swap on /dev/sdb2.  Priority:-2
-extents:1 across:4200992k
-[   11.743473] Adding 4200992k swap on /dev/sdc2.  Priority:-3
-extents:1 across:4200992k
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
+iQIVAwUBT445mznsnt1WYoG5AQLmag/9ErW0+difqCGQdh5o+sGSMOcBhfaTDhN1
+YLHF/DJBJbe/68ADCWdt8F3I8d/zKyUCfbs8wO7bUvhDZ4GOdh/yt0kwvqCa/3Xw
+c++5vwWBS8DmmuK+4X2EtD4FKN0X9IOjLT14CcVeRXvp/IS+AvwlLOUS1Bui5K4Y
+O4exNrZFCN+3m5BSf7n348NOP05dkRfqzDBVuqjRj46rOgEge6bDBtVLb0x2sLw8
+R+iEi73ZghEweXiYwIGCiGhbR52gNUE1mv5swQbKcO/hXK8SY3TquCu0UvtLCcTR
+Lz0r7qk7vr2ni9ts0aoZ+BSUBYFu5KiC39Y6NfORBAsjBKQY7K+d0qIwdkeOn7iY
+Ref47IczrOg8ACZqKAPonZmokMvpsI4lq3bBS6SNQ9MmrOLNyA8dE/b/fY1qbJPF
+dKbk1OP7YMdhaAy4B/leNY5xQojytvzlOd934F6jr4yOkPyKitAMSIionynC97Ls
+my9q9Yb4Ip4Q3wrSWQXW2cqlZNI4Kkif5KkTN2HiQ8MgKwQQyfYC5y10zag7ggED
+VdfF9jcjberDeVh8OTlr7IrYEyIAyZf/wuD5OvP9Hb6NlUT86GDAk4z78OYRNh77
+eouFkPB6Joihd+XyJEbWlvvboilEq8vB2WTPViiFMIE9/FJsuIOmaST8cNxJwXN2
+fN/5JJgT7wk=
+=fIaS
+-----END PGP SIGNATURE-----
 
-mark@k2 ~ $ cat /proc/mdstat
-Personalities : [raid0] [raid1]
-md127 : active raid1 sdc6[1] sdb6[0]
-      327740905 blocks super 1.2 [2/2] [UU]
-
-md126 : active raid1 sdb5[0] sdc5[1]
-      31463203 blocks super 1.1 [2/2] [UU]
-
-md3 : active raid1 sdc3[1] sdb3[0]
-      41953664 blocks [2/2] [UU]
-
-unused devices: <none>
-mark@k2 ~ $
+--Sig_/amtOfTWH3R0LWkopUUNHGCM--
