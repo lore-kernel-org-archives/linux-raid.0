@@ -1,67 +1,61 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [md PATCH 00/24] Allow bitmaps to be resized.
-Date: Wed, 18 Apr 2012 13:35:05 +1000
-Message-ID: <20120418133505.7350f98a@notabene.brown>
-References: <20120417084324.6433.68345.stgit@notabene.brown>
-	<CA+res+S-pvi11i_JH=O2dDGMc3n2wErwpMaWoW3KKFsAHVMN3Q@mail.gmail.com>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: mdadm: sending ioctl 800c0910 to a partition!
+Date: Tue, 17 Apr 2012 20:48:06 -0700
+Message-ID: <CAK2H+efFUYqX98KBSdJAu-wH5c+Aec2+1K40uQVostDgyh8PYQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/kPA0ujxWaw05UocsuR/jsiw"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+res+S-pvi11i_JH=O2dDGMc3n2wErwpMaWoW3KKFsAHVMN3Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jack Wang <jack.wang.usish@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/kPA0ujxWaw05UocsuR/jsiw
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Wondering if I should be concerned about these new messages?
 
-On Wed, 18 Apr 2012 10:07:37 +0800 Jack Wang <jack.wang.usish@gmail.com>
-wrote:
+Everything seems to be working fine. Found a bug report at RedHat
+suggesting it's not an mdadm problem but thought maybe I should report
+it anyway.
 
-> Dear Neil,
->=20
-> Thanks for your good works.
-> One query about current grow supporting  status:
->=20
-> as the raid wiki show : the RAID level 1/4/5/6 array can be grown . In
-> my test I can grow raid 1 add disk or remove disk through mdadm grow,
-> but change level from 1 to 4 or 5 will fail. the simaliar command work
-> for change level between 4/5/6, change 1 to 10 fail too.
->=20
-> My kernel version is 3.2.15. mdadm version 3.2.3.
+Thanks,
+Mark
 
-You can definitely change from RAID1 to RAID5 and I think to RAID4.
-But you are right that you cannot change RAID1 to RAID10 yet.  That should =
-be
-easy enough to add, and now that RAID10 can be reshaped, it would make sens=
-e.
+k2 ~ # uname -a
+Linux k2 3.2.12-gentoo #1 SMP PREEMPT Thu Apr 12 16:26:36 PDT 2012
+x86_64 Intel(R) Core(TM) i7 CPU 920 @ 2.67GHz GenuineIntel GNU/Linux
+k2 ~ #
 
-NeilBrown
+[    9.354769] scsi_verify_blk_ioctl: 368 callbacks suppressed
+[    9.354773] mdadm: sending ioctl 1261 to a partition!
+[    9.354776] mdadm: sending ioctl 1261 to a partition!
+[    9.354918] mdadm: sending ioctl 800c0910 to a partition!
+[    9.354921] mdadm: sending ioctl 800c0910 to a partition!
+[    9.354939] mdadm: sending ioctl 800c0910 to a partition!
+[    9.354942] mdadm: sending ioctl 800c0910 to a partition!
+[    9.354988] mdadm: sending ioctl 800c0910 to a partition!
+[    9.354991] mdadm: sending ioctl 800c0910 to a partition!
+[    9.355004] mdadm: sending ioctl 800c0910 to a partition!
+[    9.355007] mdadm: sending ioctl 800c0910 to a partition!
+[    9.913580] EXT3-fs (md3): using internal journal
+[   10.067489] kjournald starting.  Commit interval 5 seconds
+[   10.092612] EXT3-fs (md127): using internal journal
+[   10.092619] EXT3-fs (md127): mounted filesystem with writeback data mode
+[   11.724865] Adding 4200992k swap on /dev/sda2.  Priority:-1
+extents:1 across:4200992k
+[   11.731532] Adding 4200992k swap on /dev/sdb2.  Priority:-2
+extents:1 across:4200992k
+[   11.743473] Adding 4200992k swap on /dev/sdc2.  Priority:-3
+extents:1 across:4200992k
 
 
---Sig_/kPA0ujxWaw05UocsuR/jsiw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+mark@k2 ~ $ cat /proc/mdstat
+Personalities : [raid0] [raid1]
+md127 : active raid1 sdc6[1] sdb6[0]
+      327740905 blocks super 1.2 [2/2] [UU]
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+md126 : active raid1 sdb5[0] sdc5[1]
+      31463203 blocks super 1.1 [2/2] [UU]
 
-iQIVAwUBT442aTnsnt1WYoG5AQLF/w//eRXy44ANo4Shxsk9YtbFk5iNKxZUGfiJ
-Kzs8a2DdLINoF6UT5iRFgBKxKJPYEqCojyY9aNElpnCxDDkbLzGf2GiKkBK2faTu
-y7CONzBeLdGdi2fPiKEj+lUNmN1ens1JCQ+gCxGuWLl8navrdSeOg2lR+Gav9sGv
-XFNxakpUcDlmqm3l8hU7FOTd6R0nmHMxshKppQxoMz3QXq1EmoqhmcqRaqz6SBvk
-KS1ocuuZnEmLqvvZFo/RmSTNBCTjAS6efW7yTpoM2oQQ0ixc6jxj69dxC/oiFaiY
-POKFBK71kdv2pBkHLDMKOD5grJaZrZqNx57Xt8/R2YZ05j6iKEDi7yWLYDKPMQoW
-JpZu12y8R7fgociPhFOzoHBROy+NvGl4d68OkSrjcsvTSoRkt+/+r3mR84YcWCpE
-/y4kMx2fiWExcGf3+YK1rplxON2kZTrwon1em9rtySf3FTcrMtMhZKbFOQiB/R+U
-8RjhBDJ0qIa0wC3iDUvgSTLAw5FZbLfg4HM/O9IJcPWuyL1oRD1b0FYHSthjIbmu
-4sbF7EogYtanaKIl5UmgsP44TwMmRs1SE6a0js7s4niUyjVQxeoMLhS7jzh+UFYf
-4xL+ICj79oWnkEpPIRF7BuH+10dIjno9J016Ik+afec1NqZxNK4H6PLPZHM2doPI
-BARpeTmw57o=
-=w/PG
------END PGP SIGNATURE-----
+md3 : active raid1 sdc3[1] sdb3[0]
+      41953664 blocks [2/2] [UU]
 
---Sig_/kPA0ujxWaw05UocsuR/jsiw--
+unused devices: <none>
+mark@k2 ~ $
