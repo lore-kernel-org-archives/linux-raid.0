@@ -1,148 +1,96 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 0/1] Make failure message on re-add more explcit
-Date: Wed, 18 Apr 2012 14:25:23 +1000
-Message-ID: <20120418142523.25ca6a09@notabene.brown>
-References: <1329930000-20679-1-git-send-email-Jes.Sorensen@redhat.com>
-	<20120223090412.2b14fb7f@notabene.brown>
-	<4F7DEB91.4060306@redhat.com>
-	<20120410094130.283195dc@notabene.brown>
-	<4F84C5DA.2040501@redhat.com>
+From: Jack Wang <jack.wang.usish@gmail.com>
+Subject: Re: mdadm: sending ioctl 800c0910 to a partition!
+Date: Wed, 18 Apr 2012 12:34:59 +0800
+Message-ID: <CA+res+TSnkTOjNcBhyA2e3h1mzePAsHaRqCWbKH_u3N3udzt5Q@mail.gmail.com>
+References: <CAK2H+efFUYqX98KBSdJAu-wH5c+Aec2+1K40uQVostDgyh8PYQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_//qyXC60XP_JCgxpcSHYVkKM"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F84C5DA.2040501@redhat.com>
+In-Reply-To: <CAK2H+efFUYqX98KBSdJAu-wH5c+Aec2+1K40uQVostDgyh8PYQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Jes.Sorensen@redhat.com, linux-raid@vger.kernel.org
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_//qyXC60XP_JCgxpcSHYVkKM
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+I think you shouldn't concern this, just a annoy waining.
 
+Jack
 
-Hi Doug.
-
-Thanks for your long reply.
-
-I would like to propose the following patch.
-
-It addresses the issues that I am concerned about, and I don't think it
-interferes with the usage patterns that you are concerned about.
-
-Does it seems reasonable to you?
-
-My apologies for the frustration this has cause you and your customers.
-
-NeilBrown
-
-commit 0a999759b54f94fd63ac0ee298a549acef6f7d6f
-Author: NeilBrown <neilb@suse.de>
-Date:   Wed Apr 18 14:19:49 2012 +1000
-
-    Relax restrictions on when --add is permitted.
-   =20
-    The restriction that --add was not allowed on a device which
-    looked like a recent member of an array was overly harsh.
-   =20
-    The real requirement was to avoid using --add when the array had
-    failed, and the device being added might contain necessary
-    information which can only be incorporated by stopping and
-    re-assembling with --force.
-   =20
-    So change the test to reflect the need.
-   =20
-    Reported-by: Doug Ledford <dledford@redhat.com>
-    Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/Manage.c b/Manage.c
-index 3767f01..95aa270 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -448,7 +448,7 @@ int Manage_subdevs(char *devname, int fd,
- 		char *dnprintable =3D dv->devname;
- 		char *add_dev =3D dv->devname;
- 		int err;
--		int re_add_failed =3D 0;
-+		int array_failed;
-=20
- 		next =3D dv->next;
- 		jnext =3D 0;
-@@ -851,9 +851,8 @@ int Manage_subdevs(char *devname, int fd,
- 								continue;
- 							goto abort;
- 						}
--					skip_re_add:
--						re_add_failed =3D 1;
- 					}
-+				skip_re_add:
- 					st->ss->free_super(st);
- 				}
- 				if (add_dev !=3D dv->devname) {
-@@ -875,12 +874,30 @@ int Manage_subdevs(char *devname, int fd,
- 						dv->devname, devname);
- 					goto abort;
- 				}
--				if (re_add_failed) {
--					fprintf(stderr, Name ": %s reports being an active member for %s, but=
- a --re-add fails.\n",
--						dv->devname, devname);
--					fprintf(stderr, Name ": not performing --add as that would convert %s=
- in to a spare.\n",
--						dv->devname);
--					fprintf(stderr, Name ": To make this a spare, use \"mdadm --zero-supe=
-rblock %s\" first.\n",=09
-+				if (array.active_disks < array.raid_disks) {
-+					char *avail =3D calloc(array.raid_disks, 1);
-+					int d;
-+					int found =3D 0;
-+
-+					for (d =3D 0; d < MAX_DISKS && found < array.active_disks; d++) {
-+						disc.number =3D d;
-+						if (ioctl(fd, GET_DISK_INFO, &disc))
-+							continue;
-+						if (disc.major =3D=3D 0 && disc.minor =3D=3D 0)
-+							continue;
-+						if (!(disc.state & (1<<MD_DISK_SYNC)))
-+							continue;
-+						avail[disc.raid_disk] =3D 1;
-+						found++;
-+					}
-+					array_failed =3D !enough(array.level, array.raid_disks,=20
-+							       array.layout, 1, avail);
-+				} else
-+					array_failed =3D 0;
-+				if (array_failed) {
-+					fprintf(stderr, Name ": %s has failed so using --add cannot work and =
-might destroy\n",
-+						devname);
-+					fprintf(stderr, Name ": data on %s.  You should stop the array and re=
--assemble it.\n",
- 						dv->devname);
- 					if (tfd >=3D 0)
- 						close(tfd);
-
---Sig_//qyXC60XP_JCgxpcSHYVkKM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT45CMznsnt1WYoG5AQI0ZRAAoML5DipxI4DOkMyoQ6sHAu0UxtgarXZ2
-DRHh5yH8iMwcrvmfAKCAXPY091zPlxXHj3nHXREkHE3FqUmCkVWisL+s/W3Bqpnn
-hMETTLBj92Hb85+EwdYeYB1LPDDJmlY6v1FmhtOjh47EUJjEUwYWVIbBS9RHM64S
-o7JX7g5GRFZcK6QmDVtaEyzX/b2r3DFtayjkANWqbZYjGlL3zXREZ6rCHAJ9bjsC
-sNUtIyx4T7el4XytmH/9IWm4QQJYeQResfurr9mXg3sSQ/N6S6vXmc4ams/s4NzH
-ayhKKLSkUXVCY8XwTrIQyWgs3PO6EJ5HbKY342QoTO70dxya6YvnjbncUhCZW4mp
-XO8sGvCGioH63+MEyVRxz3EddGQFLIJCpSwRKIDib7s1AprY7VbTgo1eMwH7qpQ2
-Rs8MhPXVkVk/YqXAI7ljAuVgYUo17ZJvyOmLQBx0CJad5msVhfxvz5TX61uciR8P
-o67PV0TZDbJbIaNWxyr4Sb1pFPqaT7F4nED6S67gRWj1zZnXlFgQ+k1P+wJrG+r3
-Xr6Pe2fr+Bauqti/T8tCsy/5HEf/4YeAXfCBuz5uUNjkAYgeEQ3vSuCDz3HkCfDP
-oiIK/8OtlZUH+ODO9BBCUmywv2gfLi8xbMu3R3rr0/uBCLWgaEQ0HWEPHOSN82oq
-oJJVW+Ieu+A=
-=tXVK
------END PGP SIGNATURE-----
-
---Sig_//qyXC60XP_JCgxpcSHYVkKM--
+2012/4/18 Mark Knecht <markknecht@gmail.com>:
+> Wondering if I should be concerned about these new messages?
+>
+> Everything seems to be working fine. Found a bug report at RedHat
+> suggesting it's not an mdadm problem but thought maybe I should repor=
+t
+> it anyway.
+>
+> Thanks,
+> Mark
+>
+> k2 ~ # uname -a
+> Linux k2 3.2.12-gentoo #1 SMP PREEMPT Thu Apr 12 16:26:36 PDT 2012
+> x86_64 Intel(R) Core(TM) i7 CPU 920 @ 2.67GHz GenuineIntel GNU/Linux
+> k2 ~ #
+>
+> [ =C2=A0 =C2=A09.354769] scsi_verify_blk_ioctl: 368 callbacks suppres=
+sed
+> [ =C2=A0 =C2=A09.354773] mdadm: sending ioctl 1261 to a partition!
+> [ =C2=A0 =C2=A09.354776] mdadm: sending ioctl 1261 to a partition!
+> [ =C2=A0 =C2=A09.354918] mdadm: sending ioctl 800c0910 to a partition=
+!
+> [ =C2=A0 =C2=A09.354921] mdadm: sending ioctl 800c0910 to a partition=
+!
+> [ =C2=A0 =C2=A09.354939] mdadm: sending ioctl 800c0910 to a partition=
+!
+> [ =C2=A0 =C2=A09.354942] mdadm: sending ioctl 800c0910 to a partition=
+!
+> [ =C2=A0 =C2=A09.354988] mdadm: sending ioctl 800c0910 to a partition=
+!
+> [ =C2=A0 =C2=A09.354991] mdadm: sending ioctl 800c0910 to a partition=
+!
+> [ =C2=A0 =C2=A09.355004] mdadm: sending ioctl 800c0910 to a partition=
+!
+> [ =C2=A0 =C2=A09.355007] mdadm: sending ioctl 800c0910 to a partition=
+!
+> [ =C2=A0 =C2=A09.913580] EXT3-fs (md3): using internal journal
+> [ =C2=A0 10.067489] kjournald starting. =C2=A0Commit interval 5 secon=
+ds
+> [ =C2=A0 10.092612] EXT3-fs (md127): using internal journal
+> [ =C2=A0 10.092619] EXT3-fs (md127): mounted filesystem with writebac=
+k data mode
+> [ =C2=A0 11.724865] Adding 4200992k swap on /dev/sda2. =C2=A0Priority=
+:-1
+> extents:1 across:4200992k
+> [ =C2=A0 11.731532] Adding 4200992k swap on /dev/sdb2. =C2=A0Priority=
+:-2
+> extents:1 across:4200992k
+> [ =C2=A0 11.743473] Adding 4200992k swap on /dev/sdc2. =C2=A0Priority=
+:-3
+> extents:1 across:4200992k
+>
+>
+> mark@k2 ~ $ cat /proc/mdstat
+> Personalities : [raid0] [raid1]
+> md127 : active raid1 sdc6[1] sdb6[0]
+> =C2=A0 =C2=A0 =C2=A0327740905 blocks super 1.2 [2/2] [UU]
+>
+> md126 : active raid1 sdb5[0] sdc5[1]
+> =C2=A0 =C2=A0 =C2=A031463203 blocks super 1.1 [2/2] [UU]
+>
+> md3 : active raid1 sdc3[1] sdb3[0]
+> =C2=A0 =C2=A0 =C2=A041953664 blocks [2/2] [UU]
+>
+> unused devices: <none>
+> mark@k2 ~ $
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
