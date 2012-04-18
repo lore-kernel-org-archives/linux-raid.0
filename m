@@ -1,42 +1,36 @@
-From: =?UTF-8?Q?Pawe=C5=82_Brodacki?= <pawel.brodacki@googlemail.com>
-Subject: Re: [md PATCH 08/23] md: don't set md arrays to readonly on shutdown.
-Date: Wed, 18 Apr 2012 19:44:11 +0200
-Message-ID: <CACVpCE6ZDaGbdfxvfYxe9SHMUrDb5PFuDgNVRLSwWmkRQgmO8Q@mail.gmail.com>
-References: <20120314043555.7978.75486.stgit@notabene.brown>
-	<20120314044040.7978.64156.stgit@notabene.brown>
-	<CAGRgLy5UYf27335hQmEQQ8V2GSatQ-1aev9DdTia0j-Hv4wsEg@mail.gmail.com>
+From: Tom Rini <tom.rini@gmail.com>
+Subject: Re: Fixing broken metadata?
+Date: Wed, 18 Apr 2012 10:51:34 -0700
+Message-ID: <CA+M6bXmLZm4nPoDSO5=KczNuszbaqiWrsHqm+qGz6atdjBNhZg@mail.gmail.com>
+References: <CA+M6bXkCQNXJ58mL0uNqu9oBgLhYq+sPWMiyqc+T9o5sVYgFmQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy5UYf27335hQmEQQ8V2GSatQ-1aev9DdTia0j-Hv4wsEg@mail.gmail.com>
+In-Reply-To: <CA+M6bXkCQNXJ58mL0uNqu9oBgLhYq+sPWMiyqc+T9o5sVYgFmQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2012/4/18 Alexander Lyakas <alex.bolshoy@gmail.com>:
-> Hi Neil,
+On Wed, Apr 18, 2012 at 10:22 AM, Tom Rini <tom.rini@gmail.com> wrote:
+> Hey all,
 >
->> This could result in the shutdown happening when array is marked
->> dirty, thus forcing a resync on reboot. =C2=A0However if you reboot
->> without performing a "sync" first, you get to keep both halves.
-> Can you pls clarify the last statement?
->
-> Thanks,
-> =C2=A0Alex.
+> As part of tracking down a bug in mvsas in 3.4-rc3, my raid0 array go=
+t
+> trashed a bit. =A0Currently mdadm --misc /dev/.. -E gives results lik=
+e
+> this: http://pastebin.com/X2kWmF1A is there a backup copy of the
+> metadata somewhere or some other way to force re-creating the array
+> and let e2fsck decide if there's anything salvageable? =A0If not I ca=
+n
+> live with re-creating it. =A0Thanks!
 
-The RAID array breaks (does not work, because disks are out of sync),
-and you can keep the pieces as a keepsake, I guess :)
+Please disregard.  I had tried backing up the disks, passing to a VM
+and re-creating the raid there, with no luck.  On the real HW (after
+backing up again to be safe), this did seem to work.
 
-By the way. Does it mean, that performing a clean shutdown/boot
-sequence can result in an array requiring a resync? If this is the
-case, could you point me to arguments supporting this change of
-behaviour of shutdown process? I see no obvious reason and crave
-understanding.
-
-Regards,
-Pawe=C5=82
+--=20
+Tom
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
