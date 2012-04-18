@@ -1,71 +1,90 @@
-From: Johannes Truschnigg <johannes@truschnigg.info>
-Subject: Re: mdadm: sending ioctl 800c0910 to a partition!
-Date: Wed, 18 Apr 2012 10:21:21 +0200
-Message-ID: <20120418082121.GA6690@vault.local>
-References: <CAK2H+efFUYqX98KBSdJAu-wH5c+Aec2+1K40uQVostDgyh8PYQ@mail.gmail.com>
+From: John Crisp <john@reetspetit.net>
+Subject: Re: RAID 1 partition with hot spare shows [UUU] ?
+Date: Wed, 18 Apr 2012 10:42:27 +0200
+Message-ID: <4F8E7E73.5070909@reetspetit.net>
+References: <4F8DF1EE.70402@reetspetit.net> <20120418091233.23d77dfc@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="LZvS9be/3tNcYl/X"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAK2H+efFUYqX98KBSdJAu-wH5c+Aec2+1K40uQVostDgyh8PYQ@mail.gmail.com>
+In-Reply-To: <20120418091233.23d77dfc@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Knecht <markknecht@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
---LZvS9be/3tNcYl/X
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 18/04/12 01:12, NeilBrown wrote:
+> On Wed, 18 Apr 2012 00:42:54 +0200 John Crisp wrote:
+>> 
+>> I don't understand how md1 shows [UUU] ??
+> 
+> You have a RAID1 with 3 devices.  What it difficult to comprehend
+> about that.
 
-On Tue, Apr 17, 2012 at 08:48:06PM -0700, Mark Knecht wrote:
-> Wondering if I should be concerned about these new messages?
->=20
-> [...]
+Probably a misunderstanding of the terminology - in Hicksville where I
+live mirrored usually just means a pair ;-)
 
-Not a reason for concern; this was introduced into the kernel to detect (and
-then hopefully fix) misbehaving userspace, afaik. Having these messages in =
-the
-debug ringbuffer is annyoing for sure, but seeing it make its way into your
-syslog is what really drove me a bit mad (esp. as Proxmox seems to poll blo=
-ck
-devices in a weird way, which generated such messages at a rate of several
-dozen entries per minute...).
+> Each block is written to all three devices.
 
-I made rsyslog (on Debian Squeeze) discard the kind of message by introduci=
-ng
-a regex filter to its chain of rules by creating a file
-"/etc/rsyslog.d/zz-local.conf" with the following lines as its content:
+I didn't realise that a RAID 1 could have more than two devices. Most
+documentation around always illustrates a RAID 1 with a pair of drives
+and hence the confusion.
 
-:msg, regex, ".*sending ioctl [0-9][0-9]* to a partition.*" ~
-:msg, regex, ".*scsi_verify_blk_ioctl: [0-9][0-9]* callbacks suppressed.*" ~
+> 
+> You don't want that?  Change it.
+> 
+> mdadm --grow /dev/md1 --raid-disks=4
+> 
+> now it has 4 devices - though one will be missing.
+> 
 
-Maybe that's helpful for someone who doesn't like getting their logs spammed
-with pretty meaningless noise, too.
+Logical if you know it (RAID 1) can have more devices.
 
---=20
-with best regards:
-- Johannes Truschnigg ( johannes@truschnigg.info )
+> mdadm --grow /dev/md1 --raid-disks=2
 
-www:   http://johannes.truschnigg.info/
-phone: +43 650 2 133337
-xmpp:  johannes@truschnigg.info
+Illogical naming if what you actually want to do is shrink the
+array............ like many things in life, once you know, you know.
 
-Please do not bother me with HTML-email or attachments. Thank you.
+> 
+> now it has 2 devices.  Actually that won't work until you mark one
+> of the devices as failed, so
+> 
+> mdadm /dev/md1 --fail /dev/sdc1 mdadm --grow /dev/md1
+> --raid-disks=2
+> 
 
---LZvS9be/3tNcYl/X
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
 
+And there lies the answer to my problem. For that I can't thank you
+enough !
+
+> 
+> But maybe you really wanted a 3-disk RAID1 before - it is a
+> configuration that certainly has a place.
+> 
+
+No I didn't, but I now understand.
+
+> Next you'll be telling me that a RAID5 cannot be made with just 2
+> devices! :-)
+
+Me ? I know jack ...... though I know one more thing than I did
+yesterday, and that is good enough for me !
+
+Many thanks for the assistance.
+
+B. Rgds
+John
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-iEYEARECAAYFAk+OeYAACgkQnnUApj8OcoKSAACgjNI4eXUkUo0gWawJZpG1entK
-WvwAmgIKjitVr4tyMUjILXqVfqKw0CEX
-=t5Qj
+iQEcBAEBAgAGBQJPjn5zAAoJEPGW9QpGvPXME0sH/0p9dpJkZvWDDxP2sMjjDlE5
+0xO8v3BY8frdHT803EYaQUkxOStgtkgMd8+MaZIK3M5Z8DM2BpbDuGyz39FvZ7Ai
+r+TWygB2lESxgnFI1PbSeZq+qZholIpS+TD8cJ25gDImXjD9mtkN8sx/cMmcVP7k
+CHzPY5cPOGCHNPC1V1BOYAU82+fjGZP8asQJT/TjUTQ/DlWuGVkDSENYGkWNY84T
+a7MuF40StY6/RG1X3ETiTlk/iq2+1j7V6I+tQlTIqWyREb9T82O2YJ2HzTeN5uN7
+YXc/asVRjELmIQHode/Xq9WXkGZpQskdHqLAPyP1lKc1aNyKARsyaGHKvYZj/94=
+=a+Ob
 -----END PGP SIGNATURE-----
-
---LZvS9be/3tNcYl/X--
