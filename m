@@ -1,38 +1,57 @@
-From: Tom Rini <tom.rini@gmail.com>
-Subject: Re: Fixing broken metadata?
-Date: Wed, 18 Apr 2012 10:51:34 -0700
-Message-ID: <CA+M6bXmLZm4nPoDSO5=KczNuszbaqiWrsHqm+qGz6atdjBNhZg@mail.gmail.com>
-References: <CA+M6bXkCQNXJ58mL0uNqu9oBgLhYq+sPWMiyqc+T9o5sVYgFmQ@mail.gmail.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: Is this enough for us to have triple-parity RAID?
+Date: Wed, 18 Apr 2012 20:22:01 +0200
+Message-ID: <20120418182201.GA2733@lazy.lzy>
+References: <CAMqP1GVnOErhxj8RV=KFtzHHEJqtguEd1L_vmsS=AAi_rAPoVg@mail.gmail.com>
+ <4F8D228D.8060005@westcontrol.com>
+ <20120417171609.GA2859@lazy.lzy>
+ <4F8DD02F.1060504@westcontrol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+M6bXkCQNXJ58mL0uNqu9oBgLhYq+sPWMiyqc+T9o5sVYgFmQ@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <4F8DD02F.1060504@westcontrol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Brown <david@westcontrol.com>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Apr 18, 2012 at 10:22 AM, Tom Rini <tom.rini@gmail.com> wrote:
-> Hey all,
->
-> As part of tracking down a bug in mvsas in 3.4-rc3, my raid0 array go=
-t
-> trashed a bit. =A0Currently mdadm --misc /dev/.. -E gives results lik=
-e
-> this: http://pastebin.com/X2kWmF1A is there a backup copy of the
-> metadata somewhere or some other way to force re-creating the array
-> and let e2fsck decide if there's anything salvageable? =A0If not I ca=
-n
-> live with re-creating it. =A0Thanks!
+Hi David,
 
-Please disregard.  I had tried backing up the disks, passing to a VM
-and re-creating the raid there, with no luck.  On the real HW (after
-backing up again to be safe), this did seem to work.
+On Tue, Apr 17, 2012 at 10:18:55PM +0200, David Brown wrote:
+[...]
 
---=20
-Tom
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> For quad parity, we can try g3 = 8 as the obvious next choice in the
+> pattern.  Unfortunately, we start hitting conflicts.  To recover
+
+you should not use 8, because this is not a generator
+of GF(256) with polynomial 285, the standard for the
+RAID-5/6 setup.
+
+This means than 8^k does not cover the complete field
+for k in [0 254], thus having cycles and, consequently,
+creating conflicts.
+
+Some generators could be:
+
+2, 4, 6, 9 13, 14, 16...
+
+but not 32 nor 64.
+
+I know that powers of two are nice, but if you want to
+have generic RAID, you must use other values.
+
+The log/exp tables, are, of course, always valid.
+
+BTW, the GF(256) with polynomial 285 has exactly 128
+generators, so it would be possible to have up to 129
+parity disk (1 is not a generator), for, I guess, a
+max of 256 disks (or maybe 255?).
+
+Hope this helps,
+
+bye,
+
+-- 
+
+piergiorgio
