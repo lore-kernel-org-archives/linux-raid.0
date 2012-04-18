@@ -1,29 +1,30 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Is this enough for us to have triple-parity RAID?
-Date: Wed, 18 Apr 2012 16:11:33 +0200
-Message-ID: <4F8ECB95.5050105@hesbynett.no>
-References: <CAMqP1GVnOErhxj8RV=KFtzHHEJqtguEd1L_vmsS=AAi_rAPoVg@mail.gmail.com> <4F8D228D.8060005@westcontrol.com> <4F8D9C2D.5090704@stud.tu-ilmenau.de> <CAMqP1GXsUTawRzDZMO+3qDUwy6oiR9GEc=onnA14btuOmBqzKA@mail.gmail.com>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: [md PATCH 08/23] md: don't set md arrays to readonly on shutdown.
+Date: Wed, 18 Apr 2012 18:37:56 +0300
+Message-ID: <CAGRgLy5UYf27335hQmEQQ8V2GSatQ-1aev9DdTia0j-Hv4wsEg@mail.gmail.com>
+References: <20120314043555.7978.75486.stgit@notabene.brown>
+	<20120314044040.7978.64156.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAMqP1GXsUTawRzDZMO+3qDUwy6oiR9GEc=onnA14btuOmBqzKA@mail.gmail.com>
+In-Reply-To: <20120314044040.7978.64156.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alex <creamyfish@gmail.com>
-Cc: stefan.huebner@stud.tu-ilmenau.de, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 18/04/2012 16:15, Alex wrote:
-> Hi Stefan,
-> This is just a test of using the list. But still, thanks to your encouragement.
->
+Hi Neil,
 
-Well, your test worked - it woke me up and made me publish my work so 
-far.  It is also, AFAIK, the best list for discussing these issues.  The 
-md raid developers all follow the list, as do many users.
+> This could result in the shutdown happening when array is marked
+> dirty, thus forcing a resync on reboot. =A0However if you reboot
+> without performing a "sync" first, you get to keep both halves.
+Can you pls clarify the last statement?
 
-mvh.,
-
-David
-
-
+Thanks,
+  Alex.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
