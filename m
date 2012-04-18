@@ -1,27 +1,71 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: RAID 1 partition with hot spare shows [UUU] ?
-Date: Wed, 18 Apr 2012 09:42:03 +0200
-Message-ID: <4F8E704B.70006@hesbynett.no>
-References: <4F8DF1EE.70402@reetspetit.net> <20120418091233.23d77dfc@notabene.brown>
+From: Johannes Truschnigg <johannes@truschnigg.info>
+Subject: Re: mdadm: sending ioctl 800c0910 to a partition!
+Date: Wed, 18 Apr 2012 10:21:21 +0200
+Message-ID: <20120418082121.GA6690@vault.local>
+References: <CAK2H+efFUYqX98KBSdJAu-wH5c+Aec2+1K40uQVostDgyh8PYQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="LZvS9be/3tNcYl/X"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120418091233.23d77dfc@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <CAK2H+efFUYqX98KBSdJAu-wH5c+Aec2+1K40uQVostDgyh8PYQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: John Crisp <john@reetspetit.net>, linux-raid@vger.kernel.org
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 18/04/2012 01:12, NeilBrown wrote:
 
-> Next you'll be telling me that a RAID5 cannot be made with just 2 devices!
-> :-)
->
+--LZvS9be/3tNcYl/X
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Can't you make it with just one device, if you make a two-device raid5 
-with one drive missing?
+On Tue, Apr 17, 2012 at 08:48:06PM -0700, Mark Knecht wrote:
+> Wondering if I should be concerned about these new messages?
+>=20
+> [...]
 
-mvh.,
+Not a reason for concern; this was introduced into the kernel to detect (and
+then hopefully fix) misbehaving userspace, afaik. Having these messages in =
+the
+debug ringbuffer is annyoing for sure, but seeing it make its way into your
+syslog is what really drove me a bit mad (esp. as Proxmox seems to poll blo=
+ck
+devices in a weird way, which generated such messages at a rate of several
+dozen entries per minute...).
 
-David
+I made rsyslog (on Debian Squeeze) discard the kind of message by introduci=
+ng
+a regex filter to its chain of rules by creating a file
+"/etc/rsyslog.d/zz-local.conf" with the following lines as its content:
+
+:msg, regex, ".*sending ioctl [0-9][0-9]* to a partition.*" ~
+:msg, regex, ".*scsi_verify_blk_ioctl: [0-9][0-9]* callbacks suppressed.*" ~
+
+Maybe that's helpful for someone who doesn't like getting their logs spammed
+with pretty meaningless noise, too.
+
+--=20
+with best regards:
+- Johannes Truschnigg ( johannes@truschnigg.info )
+
+www:   http://johannes.truschnigg.info/
+phone: +43 650 2 133337
+xmpp:  johannes@truschnigg.info
+
+Please do not bother me with HTML-email or attachments. Thank you.
+
+--LZvS9be/3tNcYl/X
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk+OeYAACgkQnnUApj8OcoKSAACgjNI4eXUkUo0gWawJZpG1entK
+WvwAmgIKjitVr4tyMUjILXqVfqKw0CEX
+=t5Qj
+-----END PGP SIGNATURE-----
+
+--LZvS9be/3tNcYl/X--
