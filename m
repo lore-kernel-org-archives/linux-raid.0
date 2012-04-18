@@ -1,116 +1,115 @@
-From: Jack Wang <jack.wang.usish@gmail.com>
-Subject: Re: [md PATCH 00/24] Allow bitmaps to be resized.
-Date: Wed, 18 Apr 2012 10:07:37 +0800
-Message-ID: <CA+res+S-pvi11i_JH=O2dDGMc3n2wErwpMaWoW3KKFsAHVMN3Q@mail.gmail.com>
-References: <20120417084324.6433.68345.stgit@notabene.brown>
+From: daobang wang <wangdb1981@gmail.com>
+Subject: Re: RAID5 created by 8 disks works with xfs
+Date: Wed, 18 Apr 2012 10:23:10 +0800
+Message-ID: <CACwgYDORRvCT3zBfeKL99ebO2zWt0RJAVQyXu0Zawoz_r+8bHw@mail.gmail.com>
+References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com>
+	<4F77EA55.6090004@hardwarefreak.com>
+	<CACwgYDMVHT5DFjJztX9JvsVQJ+uOjPrfcs4+0aGXotDvf6tymQ@mail.gmail.com>
+	<CACwgYDMXF9WEgzW9vL_0=GdRc_t+67WAkRTKNoKOMEMCvjujVw@mail.gmail.com>
+	<CALFpzo5aKM2y_stDR14PNYMHEcq5CEptuFiXrvcCpXTzSQmAxw@mail.gmail.com>
+	<4F792154.5020006@hardwarefreak.com>
+	<CACwgYDPsZSEhuqNP8YgAksEq9BB6YOS1Q8jGx2J7DCrrOh_JQw@mail.gmail.com>
+	<CACwgYDOtCoVF-p+KKqPYxHhA4vWF78Ueecx9hcVWLoyxFWzV9Q@mail.gmail.com>
+	<4F7E0842.6090004@hardwarefreak.com>
+	<CACwgYDMEpFqJhtUGeRg4hvux3GigNRnA--V18DwdyUvJpY434w@mail.gmail.com>
+	<CACwgYDPur_8sO-BhhP-ggEmPCGa5ddsCcmSDfCuhD9OgiwGRyw@mail.gmail.com>
+	<CA+res+RR5iAZsEY8G21YkQn+p_8EYSFvu4+H1SK=HXshOcS-4g@mail.gmail.com>
+	<CACwgYDN5ceD3ka-O9t1rGdj4tS=JpHVm_ZWetqZ7ZAOyEjqspA@mail.gmail.com>
+	<CACwgYDOc2C=j1hrbtwTqOPr77wtfLvxow9xNeF+mGUakt1rHzQ@mail.gmail.com>
+	<4F7EA6D4.804@hardwarefreak.com>
+	<CACwgYDMXZ2O+7B163eg5h-D5sw9_0MRgu8BAahjgOr+td8cJtg@mail.gmail.com>
+	<4F7ECF97.6020601@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120417084324.6433.68345.stgit@notabene.brown>
+In-Reply-To: <4F7ECF97.6020601@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: stan@hardwarefreak.com
+Cc: Marcus Sorensen <shadowsor@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Jack Wang <jack.wang.usish@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
-Dear Neil,
+Hi stan,
 
-Thanks for your good works.
-One query about current grow supporting  status:
+    So sorry to reply this so late, the original envrionment is not
+exist now, i build a same one, please see the detail output.
 
-as the raid wiki show : the RAID level 1/4/5/6 array can be grown . In
-my test I can grow raid 1 add disk or remove disk through mdadm grow,
-but change level from 1 to 4 or 5 will fail. the simaliar command work
-for change level between 4/5/6, change 1 to 10 fail too.
+1. uname -a
+Linux nsspioneer 2.6.36.4-v64 #1 SMP Fri Apr 13 10:16:12 CST 2012
+x86_64 x86_64 x86_64 GNU/Linux
 
-My kernel version is 3.2.15. mdadm version 3.2.3.
+2.xfs_info /dev/vg+vg00+20120418101725/lv+nxx+lv0000
+meta-data=/dev/vg+vg00+20120418101725/lv+nxx+lv0000 isize=256
+agcount=13, agsize=268435440 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=3418374144, imaxpct=5
+         =                       sunit=16     swidth=128 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=4096   blocks=32768, version=2
+         =                       sectsz=512   sunit=16 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
+3. the command "cat /etc/fstab | grep xfs" has no output, we did not
+save it in fstab
 
-Jack
+4. mdadm -D /dev/md127
+/dev/md127:
+        Version : 1.2
+  Creation Time : Wed Apr 18 10:02:26 2012
+     Raid Level : raid5
+     Array Size : 13673525376 (13040.09 GiB 14001.69 GB)
+  Used Dev Size : 1953360768 (1862.87 GiB 2000.24 GB)
+   Raid Devices : 8
+  Total Devices : 8
+    Persistence : Superblock is persistent
 
-2012/4/17 NeilBrown <neilb@suse.de>:
+  Intent Bitmap : Internal
+
+    Update Time : Wed Apr 18 10:12:22 2012
+          State : online
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           Name : md+LD00+120418100226
+           UUID : bbddf00e:779ca156:bb4f7d10:285e4fcf
+         Events : 195
+
+    Number   Major   Minor   RaidDevice State
+       0       8       16        0      active sync   /dev/sdb
+       1       8       32        1      active sync   /dev/sdc
+       2       8       48        2      active sync   /dev/sdd
+       3       8       64        3      active sync   /dev/sde
+       4       8       80        4      active sync   /dev/sdf
+       5       8       96        5      active sync   /dev/sdg
+       6       8      112        6      active sync   /dev/sdh
+       8       8      128        7      active sync   /dev/sdi
+
+On 4/6/12, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> On 4/6/2012 3:45 AM, daobang wang wrote:
+>> Hi stan,
+>>
+>>     Thank you for your reply, the envrionment is the same that i
+>> mentioned before,  [...]
 >
-> The following series has just been added to my for-next queue
-> and so should be in 3.5.
-> =C2=A0git://neil.brown.name/md for-next
-> =C2=A0git://github.com/neilbrown/linux.git md/for-next
+> There's seems to be some kind of communication failure here.  I'll make
+> this really simple.  Please fill in the blanks.
 >
-> It allows md to resize a bitmap on an active array. =C2=A0This
-> means that arrays can now be reshaped without first removing the
-> bitmap. =C2=A0The bitmap is resized in-place.
+> $ uname -a
 >
-> As always: review and testing would be greatly appreciated.
+> $ xfs_info [device]
 >
-> NeilBrown
+> $ cat /etc/fstab|grep xfs
 >
-> ---
->
-> NeilBrown (24):
-> =C2=A0 =C2=A0 =C2=A0md/raid5: Allow reshape while a bitmap is present=
-=2E
-> =C2=A0 =C2=A0 =C2=A0md/raid10: resize bitmap when required during res=
-hape.
-> =C2=A0 =C2=A0 =C2=A0md: allow array to be resized while bitmap is pre=
-sent.
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: make sure reshape request are reflecte=
-d in superblock.
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: add bitmap_resize function to allow bi=
-tmap resizing.
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: use DIV_ROUND_UP instead of open-code
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: create a 'struct bitmap_counts' substr=
-ucture of 'struct bitmap'
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: make bitmap bitops atomic.
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: make _page_attr bitops atomic.
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: merge bitmap_file_unmap and bitmap_fil=
-e_put.
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: remove async freeing of bitmap file.
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: convert some spin_lock_irqsave to spin=
-_lock_irq
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: use set_bit, test_bit, etc for operati=
-on on bitmap->flags.
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: remove single-bit manipulation on sb->=
-state
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: remove bitmap_mask_state
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: move storage allocation from bitmap_lo=
-ad to bitmap_create.
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: separate bitmap file allocation to its=
- own function.
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: store bytes in file rather than just i=
-n last page.
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: move some fields of 'struct bitmap' in=
-to a 'storage' substruct.
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: change *_page_attr() to take a page nu=
-mber, not a page.
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: centralise allocation of bitmap file p=
-ages.
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: allow a bitmap with no backing storage=
-=2E
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: add new 'space' attribute for bitmaps.
-> =C2=A0 =C2=A0 =C2=A0md/bitmap: disentangle two different 'pending' fl=
-ags.
+> $ mdadm --detail /dev/mdX
 >
 >
-> =C2=A0drivers/md/bitmap.c | 1089 +++++++++++++++++++++++++++++-------=
----------------
-> =C2=A0drivers/md/bitmap.h | =C2=A0 58 ++-
-> =C2=A0drivers/md/md.c =C2=A0 =C2=A0 | =C2=A0 53 ++
-> =C2=A0drivers/md/md.h =C2=A0 =C2=A0 | =C2=A0 =C2=A03
-> =C2=A0drivers/md/raid1.c =C2=A0| =C2=A0 11 -
-> =C2=A0drivers/md/raid10.c | =C2=A0 47 +-
-> =C2=A0drivers/md/raid5.c =C2=A0| =C2=A0 20 +
-> =C2=A07 files changed, 754 insertions(+), 527 deletions(-)
+> Thanks.
 >
 > --
-> Signature
+> Stan
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
