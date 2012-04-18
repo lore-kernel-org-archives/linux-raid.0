@@ -1,67 +1,105 @@
-From: Jack Wang <jack.wang.usish@gmail.com>
-Subject: Re: RAID6 syncing at 24 MB/s?
-Date: Wed, 18 Apr 2012 12:47:32 +0800
-Message-ID: <CA+res+RKvCPa+8uPa+amO1LNos7EoPdh2ThnMJqSBa9hRvgYNg@mail.gmail.com>
-References: <20120418043540.19923.qmail@science.horizon.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [RFC 1/2] MD: raid5 trim support
+Date: Wed, 18 Apr 2012 14:48:41 +1000
+Message-ID: <20120418144841.04ce1a10@notabene.brown>
+References: <20120417083552.483324288@kernel.org>
+	<20120417084632.306032602@kernel.org>
+	<CABE8wwswKWQ=LDbx0ysTaZf2Hz0jD_q45FNF0jw96ZwZdJiHPw@mail.gmail.com>
+	<20120418062641.000e881c@notabene.brown>
+	<4F8E11A6.7090305@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/6DJZJjsg7IG=qBW9HRVIC/Z"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120418043540.19923.qmail@science.horizon.com>
+In-Reply-To: <4F8E11A6.7090305@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: George Spelvin <linux@horizon.com>
-Cc: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, axboe@kernel.dk, Shaohua Li <shli@fusionio.com>
 List-Id: linux-raid.ids
 
-change  speed_limit_max to a bigger value will help.
+--Sig_/6DJZJjsg7IG=qBW9HRVIC/Z
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Jack
+On Wed, 18 Apr 2012 08:58:14 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-2012/4/18 George Spelvin <linux@horizon.com>:
-> I'm putting together a 7x2TB RAID6 for a home media server, and after
-> encountering a fun kernel bug building the array (old kernel, a new o=
-ne
-> fixed it), I fot things working, but now notice that each disk is syn=
-cing
-> at 23.8 MB/s. =C2=A0hdparm -t reports they can do well over 100 MB/s =
-each,
-> and the processor, while only an i3, is spending about 20% of one cor=
-e
-> in the raid6 task.
->
-> Basicall, it was created with:
-> mdadm -C -l 6 -n 7 -c 128 -b internal /dev/md0 /dev/sd[b-h]
-> (The kernel bug was in 2.6.35, and was triggered by forgetting the
-> "/dev/md0"; one of the RAID ioctls it tries confused up the /dev/sd
-> driver quite thoroughly)
->
-> It's an Intel chipset motherboard with a jmicros 2xSATA+PATA chip,
-> and one port on a SiI3132 plug-in card. =C2=A0And mostly cheap Caviar=
- green
-> EARS drives (yes, I know about the lack of TLER). =C2=A0Note that I d=
-idn't
-> partition the drives, so there's no risk of a 4K-unaligned partition.
->
-> A friend with his own Linux media server said he saw the exact same s=
-peed
-> building his RAID6 array.
->
-> The speed_limit_max is set to the default, the system is idle, and th=
-e
-> resultant md drive is not mounted.
->
-> Is there a web page somewhere with speed tuning suggestions?
->
->
-> Thank you!
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> On 4/18/12 4:26 AM, NeilBrown wrote:
+> > On Tue, 17 Apr 2012 07:46:03 -0700 Dan Williams<dan.j.williams@intel.co=
+m>
+> > wrote:
+> >
+> >> On Tue, Apr 17, 2012 at 1:35 AM, Shaohua Li<shli@kernel.org>  wrote:
+> >>> Discard for raid4/5/6 has limitation. If discard request size is smal=
+l, we do
+> >>> discard for one disk, but we need calculate parity and write parity d=
+isk.  To
+> >>> correctly calculate parity, zero_after_discard must be guaranteed.
+> >>
+> >> I'm wondering if we could use the new bad blocks facility to mark
+> >> discarded ranges so we don't necessarily need determinate data after
+> >> discard.
+> >>
+> >> ...but I have not looked into it beyond that.
+> >>
+> >> --
+> >> Dan
+> >
+> > No.
+> >
+> > The bad blocks framework can only store a limited number of bad ranges =
+- 512
+> > in the current implementation.
+> > That would not be an acceptable restriction for discarded ranges.
+> >
+> > You would need a bitmap of some sort if you wanted to record discarded
+> > regions.
+> >
+> > http://neil.brown.name/blog/20110216044002#5
+>=20
+> This appears to remove the unnecessary resync for discarded range after=20
+> a crash
+> or discard error, eg an enhancement. From my understanding, it can't=20
+> remove the
+> limitation I mentioned in the patch. For raid5, we still need discard a=20
+> whole
+> stripe (discarding one disk but writing parity disk isn't good).
+
+It is certainly not ideal, but it is worse than not discarding at all?
+And would updating some sort of bitmap be just as bad as updating the parity
+block?
+
+How about treating a DISCARD request as a request to write a block full of
+zeros, then at the lower level treat any request to write a block full of
+zeros as a DISCARD request.  So when the parity becomes zero, it gets
+discarded.
+
+Certainly it is best if the filesystem would discard whole stripes at a tim=
+e,
+and we should be sure to optimise that.  But maybe there is still room to do
+something useful with small discards?
+
+NeilBrown
+
+--Sig_/6DJZJjsg7IG=qBW9HRVIC/Z
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT45HqTnsnt1WYoG5AQImNw/+IBpYgMxypRbpeTEzKEpxB+7WLEAB0+q7
+yacZsD32vUMC0zJE8Mpeu7IAqXdBUwQwNgck/8kJKf6AXm/mMaGcxk1v1l6Emwfs
+bsKbkKPKc7eWtbvczzN1RSn4BVVNkhZvswSBoJ06fdW9mOImF8HJramiIm70t1nm
+EGQMkdPVm02boaKuGLGeo1tZyPWJHGt+2OU+IOZVqy1kBk8gTXPENog9BJw1q9NY
+PeYYYXtj/b1jCyk2h7zXkDVfSX81PT++p/BGfYuCBPMG2d9z1AhpL2lqgKBA3U2c
+esVU/ZIm2CjtzQsgRt3dr0YQf9pqgFAnTZJTjlTejPL61ZLoaQm0uijZ0hLGL5/P
+acr1aqVSXAi3FhSS/HveGdjCM8UWSsTsxbqw6VgpmUHJv2kw2dY6ZmJJ2bPGvtYq
+7BZwHFWFA6WW3UADy2GG0XTCOzoS4Yi8NUN1LTz1SRS3y8Y2ZRUam1HfNNErd0Yc
+4s8cK3ks8aecSCfiFHHVLg+YcF3LUytv6LhDmMDb8e6PjWiZ8bpb824JZAGh8esl
+5Gcziz2AZZUSv6m8agwwRa7FHxoxa11R4BIncw84NWsuaDfBUUJS2jklj8cczplM
+RN0dPhoYL3msY8qOs8u1gtsz0rdJMRxID/lAjxDVbrS2E7B3iYnIw0f2jjywm0q4
+3QNUJub2hwM=
+=o5Cu
+-----END PGP SIGNATURE-----
+
+--Sig_/6DJZJjsg7IG=qBW9HRVIC/Z--
