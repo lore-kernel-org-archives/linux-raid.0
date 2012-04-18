@@ -1,115 +1,70 @@
-From: daobang wang <wangdb1981@gmail.com>
-Subject: Re: RAID5 created by 8 disks works with xfs
-Date: Wed, 18 Apr 2012 10:23:10 +0800
-Message-ID: <CACwgYDORRvCT3zBfeKL99ebO2zWt0RJAVQyXu0Zawoz_r+8bHw@mail.gmail.com>
-References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com>
-	<4F77EA55.6090004@hardwarefreak.com>
-	<CACwgYDMVHT5DFjJztX9JvsVQJ+uOjPrfcs4+0aGXotDvf6tymQ@mail.gmail.com>
-	<CACwgYDMXF9WEgzW9vL_0=GdRc_t+67WAkRTKNoKOMEMCvjujVw@mail.gmail.com>
-	<CALFpzo5aKM2y_stDR14PNYMHEcq5CEptuFiXrvcCpXTzSQmAxw@mail.gmail.com>
-	<4F792154.5020006@hardwarefreak.com>
-	<CACwgYDPsZSEhuqNP8YgAksEq9BB6YOS1Q8jGx2J7DCrrOh_JQw@mail.gmail.com>
-	<CACwgYDOtCoVF-p+KKqPYxHhA4vWF78Ueecx9hcVWLoyxFWzV9Q@mail.gmail.com>
-	<4F7E0842.6090004@hardwarefreak.com>
-	<CACwgYDMEpFqJhtUGeRg4hvux3GigNRnA--V18DwdyUvJpY434w@mail.gmail.com>
-	<CACwgYDPur_8sO-BhhP-ggEmPCGa5ddsCcmSDfCuhD9OgiwGRyw@mail.gmail.com>
-	<CA+res+RR5iAZsEY8G21YkQn+p_8EYSFvu4+H1SK=HXshOcS-4g@mail.gmail.com>
-	<CACwgYDN5ceD3ka-O9t1rGdj4tS=JpHVm_ZWetqZ7ZAOyEjqspA@mail.gmail.com>
-	<CACwgYDOc2C=j1hrbtwTqOPr77wtfLvxow9xNeF+mGUakt1rHzQ@mail.gmail.com>
-	<4F7EA6D4.804@hardwarefreak.com>
-	<CACwgYDMXZ2O+7B163eg5h-D5sw9_0MRgu8BAahjgOr+td8cJtg@mail.gmail.com>
-	<4F7ECF97.6020601@hardwarefreak.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: software raid and ERC
+Date: Tue, 17 Apr 2012 22:08:33 -0400
+Message-ID: <4F8E2221.8090604@turmel.org>
+References: <CAAevFRRuGc6x4hJax-kM8ncW9=873aRnjN-WWkoheYD7r6jimA@mail.gmail.com> <CAAevFRQw97xTgpct9ML_SWAyw-Zc=9fuioigVBpg7HpZ89kQxg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F7ECF97.6020601@hardwarefreak.com>
+In-Reply-To: <CAAevFRQw97xTgpct9ML_SWAyw-Zc=9fuioigVBpg7HpZ89kQxg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: Marcus Sorensen <shadowsor@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Jack Wang <jack.wang.usish@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: "." <desire@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi stan,
+On 04/17/2012 10:05 AM, . wrote:
+> I'm trying to decide what disks to use for a software raid array that
+> will host mirrors of open source stuff.  So this array will run 24/7
+> and resiliency to disk failures is needed, but service levels can be
+> similar to a home file server.  ie, it's ok if one of the disks goes
+> into a deep recovery cycle for a few minutes once a month and I can't
+> host the stuff - people will just retry the download.  Backups aren't
+> really important either, as I can just mirror all the content again
+> (even if it takes weeks to do so).
+> 
+> Due to budget reasons, "enterprise" disks are out. What I've read
+> strongly recommends the ERC / TLER / CCTL feature for raid
+> applications - even including software raid.  But is ERC really
+> required in my scenario?
+> 
+> The Wikipedia article at
+> http://en.wikipedia.org/wiki/Error_recovery_control#Software_Raid on
+> ERC seems to suggest that mdadm will not error out the drive no matter
+> how long the recovery takes.  Instead, the SCSI disk layer is the
+> limiting factor, as a lengthy recovery cycle could lead to a scsi
+> command timeout, ignoring the drive reset command, and leading to the
+> disk being marked offline.  If this is indeed the case, I am tempted
+> to just set the scsi timeout value to 5 minutes (or whatever the
+> maximum period that deep recovery can take).  Are there other similar
+> timeouts or gotchas in other layers?  Eg, in LVM, FS code, etc?
 
-    So sorry to reply this so late, the original envrionment is not
-exist now, i build a same one, please see the detail output.
+I've been burned by this very phenomenon on a set of Seagate drives
+that I thought had SCTERC, but didn't (their predecessors did).
 
-1. uname -a
-Linux nsspioneer 2.6.36.4-v64 #1 SMP Fri Apr 13 10:16:12 CST 2012
-x86_64 x86_64 x86_64 GNU/Linux
+I wasn't aware that the driver timeouts were configurable.  Pointers?
 
-2.xfs_info /dev/vg+vg00+20120418101725/lv+nxx+lv0000
-meta-data=/dev/vg+vg00+20120418101725/lv+nxx+lv0000 isize=256
-agcount=13, agsize=268435440 blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=3418374144, imaxpct=5
-         =                       sunit=16     swidth=128 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal               bsize=4096   blocks=32768, version=2
-         =                       sectsz=512   sunit=16 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+> In another post
+> (http://marc.info/?l=linux-raid&m=130964222812107&w=2), Drew said:
+>> TLER just shortens the firmware's error recovery from something like
+>> 60 seconds down to 4 seconds. It's mainly useful in hardware RAID but
+>> I can see it being useful with mdraid in the enterprise where you
+>> can't afford to wait for the drive to do it's own recovery attempts.
+> 
+> In my use case, I really don't mind if the server freezes for a while.
+> 
+> Please advise if there are other considerations for ERC, use of
+> consumer-grade disks, or "enterprise" disks.  Thanks!
 
-3. the command "cat /etc/fstab | grep xfs" has no output, we did not
-save it in fstab
+Be aware that SCTERC must be set on any drive power cycle--it's not a
+persistent setting on desktop drives.
 
-4. mdadm -D /dev/md127
-/dev/md127:
-        Version : 1.2
-  Creation Time : Wed Apr 18 10:02:26 2012
-     Raid Level : raid5
-     Array Size : 13673525376 (13040.09 GiB 14001.69 GB)
-  Used Dev Size : 1953360768 (1862.87 GiB 2000.24 GB)
-   Raid Devices : 8
-  Total Devices : 8
-    Persistence : Superblock is persistent
+> P.S. I would buy ERC if I could, but the right hard disk models do not
+> seem to be available locally.  My preference is for the Hitachi 7k3000
+> series, but it seems to be out of stock with possibly months of delay.
+>  So what's left are the consumer 2TB models with ERC feature -
+> possibly just the Hitachi 2TB or Samsung Spinpoint F4 2TB.  I'd
+> appreciate any other suggestions too.
 
-  Intent Bitmap : Internal
-
-    Update Time : Wed Apr 18 10:12:22 2012
-          State : online
- Active Devices : 8
-Working Devices : 8
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-           Name : md+LD00+120418100226
-           UUID : bbddf00e:779ca156:bb4f7d10:285e4fcf
-         Events : 195
-
-    Number   Major   Minor   RaidDevice State
-       0       8       16        0      active sync   /dev/sdb
-       1       8       32        1      active sync   /dev/sdc
-       2       8       48        2      active sync   /dev/sdd
-       3       8       64        3      active sync   /dev/sde
-       4       8       80        4      active sync   /dev/sdf
-       5       8       96        5      active sync   /dev/sdg
-       6       8      112        6      active sync   /dev/sdh
-       8       8      128        7      active sync   /dev/sdi
-
-On 4/6/12, Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> On 4/6/2012 3:45 AM, daobang wang wrote:
->> Hi stan,
->>
->>     Thank you for your reply, the envrionment is the same that i
->> mentioned before,  [...]
->
-> There's seems to be some kind of communication failure here.  I'll make
-> this really simple.  Please fill in the blanks.
->
-> $ uname -a
->
-> $ xfs_info [device]
->
-> $ cat /etc/fstab|grep xfs
->
-> $ mdadm --detail /dev/mdX
->
->
-> Thanks.
->
-> --
-> Stan
->
->
+The 7k3000 family is my preference at the moment.  Fortunately I don't
+have an immediate need.
