@@ -1,60 +1,45 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: RAID 1 partition with hot spare shows [UUU] ?
-Date: Wed, 18 Apr 2012 11:09:53 +0200
-Message-ID: <4F8E84E1.1040407@hesbynett.no>
-References: <4F8DF1EE.70402@reetspetit.net> <20120418091233.23d77dfc@notabene.brown> <4F8E7E73.5070909@reetspetit.net>
+From: Benjamin ESTRABAUD <be@mpstor.com>
+Subject: Disk link failure impact on Disks and RAID superblock in MD.
+Date: Wed, 18 Apr 2012 12:52:58 +0100
+Message-ID: <4F8EAB1A.6000800@mpstor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F8E7E73.5070909@reetspetit.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Crisp <john@reetspetit.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 18/04/2012 10:42, John Crisp wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
->
-> On 18/04/12 01:12, NeilBrown wrote:
->> On Wed, 18 Apr 2012 00:42:54 +0200 John Crisp wrote:
->>>
->>> I don't understand how md1 shows [UUU] ??
->>
->> You have a RAID1 with 3 devices.  What it difficult to comprehend
->> about that.
->
-> Probably a misunderstanding of the terminology - in Hicksville where I
-> live mirrored usually just means a pair ;-)
->
->> Each block is written to all three devices.
->
-> I didn't realise that a RAID 1 could have more than two devices. Most
-> documentation around always illustrates a RAID 1 with a pair of drives
-> and hence the confusion.
->
+Hi,
 
-A lot of hardware raid systems (and software systems, such as Window's 
-"dynamic disks") are limited to 2 devices in a raid1 set.  The world of 
-Linux md raid is very different - here flexibility is the key.  Amongst 
-other things, you can have raid1 sets with any number of devices - 
-you've seen it with 3 devices, but you can also make them with just one 
-device.  And you can also use all sorts of different disks in the set, 
-not just identical ones.
+I was wondering about the following:
 
-You might well ask what use a 1-disk raid1 "mirror" is.  The answer is 
-not much use on its own - but very useful in that you can add and remove 
-disks whenever you want.  Suppose, for example, you have a single disk 
-in the machine, and you want to exchange it for a new, bigger disk.  If 
-the disk is a 1-disk raid1 mirror, you can do it quickly and safely 
-without going off-line (except if you need to power-off to do the actual 
-disk swapping).  Attach your new, bigger disk.  Add it to the raid1 
-array.  Wait for the sync to complete (using the disk normally all this 
-time).  Fail and remove the original disk.  Your new disk is now a 
-1-disk "mirror" with the same data.  Grow the raid to fill the new disk, 
-then grow your filesystems (or physical volumes for LVM) to use the new 
-space.
+Superblocks, and all RAID metadata, are stored on disks (to assemble the 
+RAID), and also on the RAID (while assembled), and are necessary to run 
+a RAID correctly, so long as at least <parity reached> of superblocks on 
+disks are available, as <parity reached> number of disks are required 
+for a specific RAID level to run (this excludes RAID 0 obviously).
 
-There are lots of cool things you can do when you are not limited to 
-hardware raid mindsets!
+This means that so long as less than 1 disk fails in RAID5, no more than 
+one superblock will be lost and therefore the RAID can still assemble, 
+and the metadata be read.
+
+However, in modern RAID systems, the disks are all connected through a 
+single path, being a SAS cable connected to a JBOD or a single SATA 
+controller that can fail/crash.
+
+Also, the RAID is not protected against power failure, which in my head 
+are a bit equivalent to a complete disk link failure (SAS cable pulled).
+
+In these cases where all the disks are lost at once, what is the 
+probability of superblock corruption (both on the RAID superblock and 
+the individual disks)?
+
+If the superblock was being written during the failure, would it be 
+incompletely written and therefore corrupted?
+
+How reliably is it to keep a RAID alive (being able to re-assemble it) 
+after continuously pulling and pushing the SAS cable?
+
+Regards,
+Ben.
