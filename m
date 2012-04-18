@@ -1,77 +1,67 @@
-From: "." <desire@gmail.com>
-Subject: Re: software raid and ERC
-Date: Wed, 18 Apr 2012 11:12:57 +0800
-Message-ID: <CAAevFRRh2YiQOe1cbEFc+wY8UnBCEMAvrLdBsQLzfWt-6URpXA@mail.gmail.com>
-References: <CAAevFRRuGc6x4hJax-kM8ncW9=873aRnjN-WWkoheYD7r6jimA@mail.gmail.com>
- <CAAevFRQw97xTgpct9ML_SWAyw-Zc=9fuioigVBpg7HpZ89kQxg@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [md PATCH 00/24] Allow bitmaps to be resized.
+Date: Wed, 18 Apr 2012 13:35:05 +1000
+Message-ID: <20120418133505.7350f98a@notabene.brown>
+References: <20120417084324.6433.68345.stgit@notabene.brown>
+	<CA+res+S-pvi11i_JH=O2dDGMc3n2wErwpMaWoW3KKFsAHVMN3Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/kPA0ujxWaw05UocsuR/jsiw"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAevFRQw97xTgpct9ML_SWAyw-Zc=9fuioigVBpg7HpZ89kQxg@mail.gmail.com>
+In-Reply-To: <CA+res+S-pvi11i_JH=O2dDGMc3n2wErwpMaWoW3KKFsAHVMN3Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jack Wang <jack.wang.usish@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks to the couple of folks who have replied on/off-list, but it
-didn't precisely answer what causes drives performing deep recovery to
-be kicked out (and I haven't found suitable answers in the list
-archives either):
+--Sig_/kPA0ujxWaw05UocsuR/jsiw
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-The ERC wiki [1] and Red Hat Storage Administration Guide [2] clearly
-describe this behavior of the SCSI layer : a drive performing deep
-recovery would miss a scsi command timeout, which would cause the SCSI
-layer to attempt to abort the command and reset the device/bus/host.
-If these error handlers fail, the drive is set offline (which I
-presume is what kicks the drive out).
+On Wed, 18 Apr 2012 10:07:37 +0800 Jack Wang <jack.wang.usish@gmail.com>
+wrote:
 
-The SCSI command timeout can be tuned at
-/sys/block/.../device/timeout, and defaults to 30 seconds.  Perhaps
-raising this timeout to a large value would also prevent deep recovery
-cycles from causing the _SCSI layer_ to set the drive offline.  True
-or False?
+> Dear Neil,
+>=20
+> Thanks for your good works.
+> One query about current grow supporting  status:
+>=20
+> as the raid wiki show : the RAID level 1/4/5/6 array can be grown . In
+> my test I can grow raid 1 add disk or remove disk through mdadm grow,
+> but change level from 1 to 4 or 5 will fail. the simaliar command work
+> for change level between 4/5/6, change 1 to 10 fail too.
+>=20
+> My kernel version is 3.2.15. mdadm version 3.2.3.
 
-Apart from the behaviour of the SCSI layer, does the linux software
-raid layer have any concept of timeouts that would cause a drive to be
-kicked when performing a deep recovery cycle?  A storagereview forum
-thread [3] claims that the linux software raid layer does not have a
-concept of timeouts and does not care about ERC.  In a web article [4]
-the major NAS manufacturers that use software raid seem to agree with
-this stance.
+You can definitely change from RAID1 to RAID5 and I think to RAID4.
+But you are right that you cannot change RAID1 to RAID10 yet.  That should =
+be
+easy enough to add, and now that RAID10 can be reshaped, it would make sens=
+e.
 
-On the other hand, how I interpret a previous post from Stefan [5] is
-that the linux raid layer does have its own timeout mechanism that
-will kick a non-responding drive.
+NeilBrown
 
-> Without ERC-timeout, the drive tries to correct the error on
-> its own (not reacting on any requests), mdraid assumes an error after a
-> while and tries to rewrite the "missing" sector (assembled from the
-> other disks).  But the drive will still not react to the write request
-> as it is still doing its internal recovery procedure.  Now mdraid
-> assumes the disk to be bad and kicks it.
 
-Since I can't read code, I'm hoping that this list where software raid
-development takes place would be able to clear up whether
+--Sig_/kPA0ujxWaw05UocsuR/jsiw
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-a.  Do delays caused by deep recovery cycles actually have any direct
-impact on the linux software raid layer, or does it simply issue a
-command to the underlying storage/scsi subsystem and block until there
-is a response?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-b.  If there is no direct impact to the software raid layer, and the
-impact is indirectly caused by the drive being set offline when a SCSI
-command timeout and error handling routine fails...  would increasing
-the scsi command timeout help to mitigate ERC delays?
+iQIVAwUBT442aTnsnt1WYoG5AQLF/w//eRXy44ANo4Shxsk9YtbFk5iNKxZUGfiJ
+Kzs8a2DdLINoF6UT5iRFgBKxKJPYEqCojyY9aNElpnCxDDkbLzGf2GiKkBK2faTu
+y7CONzBeLdGdi2fPiKEj+lUNmN1ens1JCQ+gCxGuWLl8navrdSeOg2lR+Gav9sGv
+XFNxakpUcDlmqm3l8hU7FOTd6R0nmHMxshKppQxoMz3QXq1EmoqhmcqRaqz6SBvk
+KS1ocuuZnEmLqvvZFo/RmSTNBCTjAS6efW7yTpoM2oQQ0ixc6jxj69dxC/oiFaiY
+POKFBK71kdv2pBkHLDMKOD5grJaZrZqNx57Xt8/R2YZ05j6iKEDi7yWLYDKPMQoW
+JpZu12y8R7fgociPhFOzoHBROy+NvGl4d68OkSrjcsvTSoRkt+/+r3mR84YcWCpE
+/y4kMx2fiWExcGf3+YK1rplxON2kZTrwon1em9rtySf3FTcrMtMhZKbFOQiB/R+U
+8RjhBDJ0qIa0wC3iDUvgSTLAw5FZbLfg4HM/O9IJcPWuyL1oRD1b0FYHSthjIbmu
+4sbF7EogYtanaKIl5UmgsP44TwMmRs1SE6a0js7s4niUyjVQxeoMLhS7jzh+UFYf
+4xL+ICj79oWnkEpPIRF7BuH+10dIjno9J016Ik+afec1NqZxNK4H6PLPZHM2doPI
+BARpeTmw57o=
+=w/PG
+-----END PGP SIGNATURE-----
 
-Your comments and insights are much appreciated.
-
-[1] http://en.wikipedia.org/wiki/Time-Limited_Error_Recovery#Software_Raid
-
-[2] http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html-single/Storage_Administration_Guide/index.html#task_controlling-scsi-command-timer-onlining-devices
-
-[3] http://forums.storagereview.com/index.php/topic/29208-how-to-use-desktop-drives-in-raid-without-tlererccctl/page__view__findpost__p__266337
-
-[4] http://www.smallnetbuilder.com/nas/nas-features/31202-should-you-use-tler-drives-in-your-raid-nas
-
-[5] http://marc.info/?l=linux-raid&m=128640221813394&w=2
-
-[snipped the previous lengthy email]
+--Sig_/kPA0ujxWaw05UocsuR/jsiw--
