@@ -1,80 +1,96 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [RFC 1/2] MD: raid5 trim support
-Date: Wed, 18 Apr 2012 13:30:45 +0800
-Message-ID: <4F8E5185.8050809@kernel.org>
-References: <20120417083552.483324288@kernel.org> <20120417084632.306032602@kernel.org> <CABE8wwswKWQ=LDbx0ysTaZf2Hz0jD_q45FNF0jw96ZwZdJiHPw@mail.gmail.com> <20120418062641.000e881c@notabene.brown> <4F8E11A6.7090305@kernel.org> <20120418144841.04ce1a10@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: RAID6 syncing at 24 MB/s?
+Date: Wed, 18 Apr 2012 15:37:48 +1000
+Message-ID: <20120418153748.2cbaef35@notabene.brown>
+References: <20120418150502.41d6305d@notabene.brown>
+	<20120418052235.27608.qmail@science.horizon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/289TgZtPWvvcNyTyqX+delD"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120418144841.04ce1a10@notabene.brown>
+In-Reply-To: <20120418052235.27608.qmail@science.horizon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, axboe@kernel.dk, Shaohua Li <shli@fusionio.com>
+To: George Spelvin <linux@horizon.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/18/12 12:48 PM, NeilBrown wrote:
-> On Wed, 18 Apr 2012 08:58:14 +0800 Shaohua Li<shli@kernel.org>  wrote:
->
->> On 4/18/12 4:26 AM, NeilBrown wrote:
->>> On Tue, 17 Apr 2012 07:46:03 -0700 Dan Williams<dan.j.williams@intel.com>
->>> wrote:
->>>
->>>> On Tue, Apr 17, 2012 at 1:35 AM, Shaohua Li<shli@kernel.org>   wrote:
->>>>> Discard for raid4/5/6 has limitation. If discard request size is small, we do
->>>>> discard for one disk, but we need calculate parity and write parity disk.  To
->>>>> correctly calculate parity, zero_after_discard must be guaranteed.
->>>>
->>>> I'm wondering if we could use the new bad blocks facility to mark
->>>> discarded ranges so we don't necessarily need determinate data after
->>>> discard.
->>>>
->>>> ...but I have not looked into it beyond that.
->>>>
->>>> --
->>>> Dan
->>>
->>> No.
->>>
->>> The bad blocks framework can only store a limited number of bad ranges - 512
->>> in the current implementation.
->>> That would not be an acceptable restriction for discarded ranges.
->>>
->>> You would need a bitmap of some sort if you wanted to record discarded
->>> regions.
->>>
->>> http://neil.brown.name/blog/20110216044002#5
->>
->> This appears to remove the unnecessary resync for discarded range after
->> a crash
->> or discard error, eg an enhancement. From my understanding, it can't
->> remove the
->> limitation I mentioned in the patch. For raid5, we still need discard a
->> whole
->> stripe (discarding one disk but writing parity disk isn't good).
->
-> It is certainly not ideal, but it is worse than not discarding at all?
-> And would updating some sort of bitmap be just as bad as updating the parity
-> block?
->
-> How about treating a DISCARD request as a request to write a block full of
-> zeros, then at the lower level treat any request to write a block full of
-> zeros as a DISCARD request.  So when the parity becomes zero, it gets
-> discarded.
->
-> Certainly it is best if the filesystem would discard whole stripes at a time,
-> and we should be sure to optimise that.  But maybe there is still room to do
-> something useful with small discards?
+--Sig_/289TgZtPWvvcNyTyqX+delD
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Sure, it would be great we can do small discards. But I didn't get how to do
-it with the bitmap approach. Let's give an example, data disk1, data disk2,
-parity disk3. Say discard some sectors of disk1. The suggested approach is
-to mark the range bad. Then how to deal with parity disk3? As I said, 
-writing
-parity disk3 isn't good. So mark the corresponding range of parity disk3
-bad too? If we did this, if disk2 is broken, how can we restore it?
+On 18 Apr 2012 01:22:35 -0400 "George Spelvin" <linux@horizon.com> wrote:
 
-Am I missed something or are you talking about different issues?
+> > Can you try an experiment for me (if you don't have anything useful on =
+the
+> > array yet)?
+> >=20
+> > Stop the array.  Recreate it exactly the same way as before, and see if=
+ it
+> > goes faster.  I think it might - at least until it got up to where it w=
+as up
+> > to.
+>=20
+> Um, unfortunately, I do (I didn't actually make the posting until after
+> the sync finished), but it should actually be non-destructive to do that
+> to an existing array, right?
+>=20
+> It's just like deleting and re-creating a partition; as long as you're
+> *damn* sure you kept the parameters the same, it's a no-op.  Right?
 
-Thanks,
-Shaohua
+Should be - yes.  But some times it is best not to play with fire.
+Up to you....
+
+Alternately, look at /proc/diskstats for the member devices.
+
+The first 4 numbers relate to reads (iOs, Merges, Sectors, ticks) and the n=
+ext
+4 to writes.
+
+You will probably see about  3 times as many reads as writes.
+
+RAID6 resync reads the whole stripe, checks the parity blocks, and if they
+are wrong it writes them out.
+
+If most of them are good - you should see streaming writes at the full speed
+of the disk/bus/slowest-part.
+
+If lots are not correct (which can be expected on a new array), you get lot
+of=20
+    read - seek-backwards - write
+
+sequences, which slow things down a lot.
+
+NeilBrown
+
+
+>=20
+> I still have the data on the backup drives, so it's "only" a day's
+> lost work if I fry it (I did some reorganization as well as simple bulk
+> copying), so it's not *deadly* dangerous...
+>=20
+> Thank you for the response!
+
+
+--Sig_/289TgZtPWvvcNyTyqX+delD
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT45TLDnsnt1WYoG5AQL/ExAAhdbcNldqQ6710wtid+9stNk1iu04EFzE
+fCdDZP90klwQ1FNvPS7lKgeJ4SCFwGYVM0hJ0RdnjaTXPkgjxWtY5AJQIA8F/QhU
+QKhKzoTINRJQBcY/DNJJ+vU/6BJUtHloVKxAHKlB0aBpTkjf9c0Sqcl7ci1aR/S2
+n1TQCjyuqj/Ro5QtcmQjWhLmyPc0s5ynbhDgbm2vkMalffV37vUhwMEYv8UtnVth
+FKaGorrdz2E1/Y+79kKj9Ch78nMW1LyGfCvobfcUL59peAx8vkpx0csOgbrzXejv
+QWjtqEEYfTOAJDJJfi/FPerojA3OE8D+VSGa77RXqwJL9tf93CR5/u2QiKF0nRUH
+D19yeVI2qpDL6na719dvypfKRdbDu09F4HuoHjYjUXBD77bK+WDpUP6GKHOT+Kq7
+YcyDbiRYWlQTNZ7II4hywYpBWOvrFWEBRfFD/x7kz3fX5nR4SICv1RENMAEDtsSG
+ZO1W2GTKpiCT3PMG1by3gz9bq8ImKDUUdL5iHn7KjadL2KjpRXjaf0jT2Rq6YOzQ
+UX26BZW+Q3/8oYbGcRCa0zo7S2h5H4Hd0sY2Gz8PWlJAylS9ou8LP4SykhXFY8Rx
+zDoYOxWFGO0EmDZ4laJ8ZAj1QOIFpNu0tlaob5YRQaQUd0XmbtGNDR6ZoN7spEYN
+cwKAVTboaSM=
+=FLgR
+-----END PGP SIGNATURE-----
+
+--Sig_/289TgZtPWvvcNyTyqX+delD--
