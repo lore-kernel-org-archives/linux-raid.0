@@ -1,88 +1,39 @@
-From: "Gen. Peter Olu" <Bkersner@aol.com>
-Subject: DIPLOMATIC PAYMENT OPEN ATTACHED FOR MORE INFO
-Date: Thu, 19 Apr 2012 16:09:48 +0100
-Message-ID: <201204191513.q3JFDIlN014318__25482.4580894367$1334848503$gmane$org@ims-d13.mx.aol.com>
-Reply-To: <peterolu204gh@yahoo.it>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: Is this enough for us to have triple-parity RAID?
+Date: Thu, 19 Apr 2012 11:16:48 -0700
+Message-ID: <4F905690.3060301@zytor.com>
+References: <CAMqP1GVnOErhxj8RV=KFtzHHEJqtguEd1L_vmsS=AAi_rAPoVg@mail.gmail.com> <4F8D228D.8060005@westcontrol.com> <20120417171609.GA2859@lazy.lzy> <4F8DD02F.1060504@westcontrol.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_003E_01C2A9A6.4A86A688"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4F8DD02F.1060504@westcontrol.com>
 Sender: linux-raid-owner@vger.kernel.org
+To: David Brown <david@westcontrol.com>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
+On 04/17/2012 01:18 PM, David Brown wrote:
+>=20
+> For quad parity, we can try g3 =3D 8 as the obvious next choice in th=
+e
+> pattern.  Unfortunately, we start hitting conflicts.  To recover miss=
+ing
+> data, we have to solve multiple simultaneous equations over G(2=E2=81=
+=B8), whose
+> coefficients depend on the index numbers of the missing disks.  With
+> parity generators (1, 2, 4, 8), some of these combinations of missing
+> disk indexes lead to insoluble equations when you have more that 21 d=
+isks.
+>=20
 
-------=_NextPart_000_003E_01C2A9A6.4A86A688
-Content-Type: text/plain;
-	charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+That is because 255 =3D 3*5*17... this means {02}^3 =3D {08} is not a g=
+enerator.
 
+	-hpa
 
-------=_NextPart_000_003E_01C2A9A6.4A86A688
-Content-Type: application/octet-stream;
-	name="Letter From Gen. Peter Olu.txt"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="Letter From Gen. Peter Olu.txt"
-
-T0ZGSUNFIE9GIFRIRSBOQVRJT05BTCBTRUNVUklUWSBBRFZJU0VSIA0KVE8g
-VEhFIFBSRVNJREVOVCBGRURFUkFMIFJFUFVCTElDIE9GIE5JR0VSSUEgDQpH
-RVQgQkFDSyBUTyBNRSBBVCBZT1VSIEVBUkxJRVNUIENPTlZJTklFTkNFIA0K
-DQpBdHRlbnRpb24sIA0KDQpJIGFtIEx0LiBHZW4uIFBldGVyIE9sdSwgTmF0
-aW9uYWwgU2VjdXJpdHkgQWR2aXNlciB0byB0aGUgTmV3IFByZXNpZGVudCBE
-ciBHb29kbHVjayBFLiBKb25hdGhhbiBGZWRlcmFsIFJlcHVibGljIG9mIE5p
-Z2VyaWEuIEkgZGVjaWRlZCB0byBjb250YWN0IHlvdSBiZWNhdXNlIG9mIHRo
-ZSBwcmV2YWlsaW5nIHNlY3VyaXR5IHJlcG9ydCByZWFjaGluZyBteSBvZmZp
-Y2UgYW5kIHRoZSBpbnRlbnNlIG5hdHVyZSBvZiBwb2xpY3kgaW4gTmlnZXJp
-YS4gVGhpcyBpcyB0byBpbmZvcm0geW91IGFib3V0IG91ciBwbGFuIHRvIHNl
-bmQgeW91ciBmdW5kIHRvIHlvdSB2aWEgY2FzaCBkZWxpdmVyeS4gVGhpcyBz
-eXN0ZW0gd2lsbCBiZSBlYXNpZXIgZm9yIHlvdSBhbmQgZm9yIHVzLiBXZSBh
-cmUgZ29pbmcgdG8gc2VuZCB5b3VyIGNvbnRyYWN0IHBhcnQgcGF5bWVudCBv
-ZiBVUzEwLjEgTWlsbGlvbiB0byB5b3UgdmlhIGRpcGxvbWF0aWMgY291cmll
-ciBzZXJ2aWNlLiANCg0KTm90ZTogVGhlIG1vbmV5IGlzIGNvbWluZyBvbiB0
-d28gc2VjdXJpdHkgcHJvb2YgYm94ZXMuIFRoZSBib3hlcyBhcmUgc2VhbGVk
-IHdpdGggc3ludGhldGljIG55bG9uIHNlYWwgYW5kIHBhZGRlZCB3aXRoIG1h
-Y2hpbmUuIFRoaXMgZnVuZCB3YXMgYnJvdWdodCB0byB1cyBmcm9tIEFtZXJp
-Y2E7IGl0IHdhcyBtZWFudCBmb3Igb3VyIExvY2FsIEFGRU0gbWFya2V0LiBC
-dXQgc2luY2UgdGhlIG1vbmV5IHdhcyBub3QgdXNlZCwgSSB3aWxsIHVzZSBt
-eSBwb3NpdGlvbiBhcyB0aGUgTmF0aW9uYWwgU2VjdXJpdHkgQWR2aXNlciB0
-byB0aGUgUHJlc2lkZW50IHRvIHNlbmQgdGhpcyBmdW5kIHRvIHlvdS4gDQoN
-ClRoZSBib3hlcyBhcmUgY29taW5nIHdpdGggYSBEaXBsb21hdGljIGFnZW50
-IHdobyB3aWxsIGFjY29tcGFueSB0aGUgYm94ZXMgdG8geW91ciBob3VzZSBh
-ZGRyZXNzLiBBbGwgeW91IG5lZWQgdG8gZG8gbm93IGlzIHRvIHNlbmQgdG8g
-bWUgDQoNCllvdXIgZnVsbCBuYW1lIA0KWW91ciBob3VzZSBhZGRyZXNzIA0K
-WW91ciBhZ2UgDQpZb3VyIG1hcml0YWwgc3RhdHVlIA0KWW91ciBpZGVudGl0
-eSBzdWNoIGFzLCBpbnRlcm5hdGlvbmFsIHBhc3Nwb3J0IG9yIGRyaXZlciBs
-aWNlbnNlIA0KWW91ciBjb250YWN0IHBob25lIGFuZCBmYXggbnVtYmVycywg
-DQoNClRoZSBEaXBsb21hdGljIGF0dGFjaGVkIHdpbGwgdHJhdmVsIHdpdGgg
-aXQuIEhlIHdpbGwgY2FsbCB5b3UgaW1tZWRpYXRlbHkgaGUgYXJyaXZlcyB5
-b3VyIGFpcnBvcnQuIEkgaG9wZSB5b3UgdW5kZXJzdGFuZCBtZS4gDQpJIHdp
-bGwgbGV0IHlvdSBrbm93IGJ5IHRoZSBzcGVjaWFsIGdyYWNlIG9mIEdvZCB3
-aGVuIHRoZSBib3hlcyBhcmUgYWlybGlmdGVkLiANCg0KTm90ZTogVGhlIGRp
-cGxvbWF0aWMgZG9lcyBub3Qga25vdyB0aGUgb3JpZ2luYWwgY29udGVudHMg
-b2YgdGhlIGJveGVzLiBXaGF0IGwgZGVjbGFyZWQgdG8gdGhlbSBhcyB0aGUg
-Y29udGVudHMgaXMgU2Vuc2l0aXZlIFBob3RvZ3JhcGhpYyBGaWxtIE1hdGVy
-aWFsLiBJIGRpZCBub3QgZGVjbGFyZSBtb25leSB0byB0aGVtIHBsZWFzZS4g
-SWYgdGhleSBjYWxsIHlvdSBhbmQgYXNrIHlvdSB0aGUgY29udGVudHMgcGxl
-YXNlIHRlbGwgdGhlbSB0aGUgc2FtZSB0aGluZyBPaywgSSB3aWxsIGxldCB5
-b3Uga25vdyBob3cgZmFyIEkgaGF2ZSBnb25lIHdpdGggdGhlIGFycmFuZ2Vt
-ZW50LiBJIHdpbGwgc2VjdXJlIHRoZSBEaXBsb21hdGljIGltbXVuaXR5IGNs
-ZWFyYW5jZSBjZXJ0aWZpY2F0ZSB0aGF0IHdpbGwgYmUgdGFnZ2VkIG9uIHRo
-ZSBib3hlcyB0byBtYWtlIGl0IHN0YW5kIGFzIGEgZGlwbG9tYXRpYyBjb25z
-aWdubWVudC4gDQoNClRoaXMgY2xlYXJhbmNlIHdpbGwgbWFrZSBpdCBwYXNz
-IGV2ZXJ5IGN1c3RvbSBjaGVja3BvaW50IGFsbCBvdmVyIHRoZSB3b3JsZCB3
-aXRob3V0IGhpdGNoLiBDb25maXJtIHRoZSByZWNlaXB0IG9mIHRoaXMgbWVz
-c2FnZSBhbmQgc2VuZCB0aGUgcmVxdWlyZW1lbnRzIHRvIG1lIGltbWVkaWF0
-ZWx5IHlvdSByZWNlaXZlIHRoaXMgbWVzc2FnZS4gSWYgeW91IG5lZWQgbW9y
-ZSBpbmZvcm1hdGlvbiBhYm91dCB0aGlzLCBJIHdpbGwgZ2l2ZSB5b3UgdGhl
-IGRldGFpbHMgaG93IHRvIGNvbnRhY3QgdGhlIGRpcGxvbWF0IGZvciBtb3Jl
-IGluZm9ybWF0aW9uIG9uIGhvdyB0byBjYXJyeSBvdXQgdGhlIHBsYW4uIA0K
-DQpJIG5lZWQgeW91IHJlc3BvbnNlIGJlY2F1c2UgdGhlIGJveGVzIGFyZSBz
-Y2hlZHVsZSB0byBsZWF2ZSBhcyBzb29uIGFzIHdlIGhlYXIgZnJvbSB5b3Uu
-IFJlcGx5IG1lIGltbWVkaWF0ZWx5IHlvdSByZWNlaXZlIHRoaXMgbWVzc2Fn
-ZSB2aWEgRW1haWwgKHBldGVyb2x1bzE5NjBAeWFob28uY28uanAgKSBDYWxs
-IG1lIG9uIG15IGRpcmVjdCBQSC9GQVg6ICgyMzQtNzA5MjYxMjkyMSkgDQoN
-CkJlc3QgUmVnYXJkcywgDQpMdC4gR2VuLiBQZXRlciBPbHUNCkRJUExPTUFU
-SUMgUEFZTUVOVCBPUEVOIEFUVEFDSEVEIEZPUiBNT1JFIElORk8NCg0K
-
-------=_NextPart_000_003E_01C2A9A6.4A86A688--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
