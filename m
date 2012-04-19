@@ -1,99 +1,127 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: migrating from metadata 0.9 to 1.0 before growing?
-Date: Fri, 20 Apr 2012 07:25:33 +1000
-Message-ID: <20120420072533.3d86d288@notabene.brown>
-References: <20120224113821.c2b14f48bcf7e6809b2cd3a6@bbaw.de>
-	<20120229122906.76d08488@notabene.brown>
-	<20120419162043.84e7d3f4ae3ba003bd42e430@bbaw.de>
+Subject: Re: Should mdraid implement timeouts?
+Date: Fri, 20 Apr 2012 07:46:47 +1000
+Message-ID: <20120420074647.2846295d@notabene.brown>
+References: <4F900F10.1040405@pierre-beck.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/.i213ZT=RrOOlxmzv78tHsK"; protocol="application/pgp-signature"
+ boundary="Sig_/dAfFitnm+Wa5tCjd=s4+r7."; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120419162043.84e7d3f4ae3ba003bd42e430@bbaw.de>
+In-Reply-To: <4F900F10.1040405@pierre-beck.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lars =?ISO-8859-1?Q?T=E4uber?= <taeuber@bbaw.de>
+To: Pierre Beck <mail@pierre-beck.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/.i213ZT=RrOOlxmzv78tHsK
-Content-Type: text/plain; charset=UTF-8
+--Sig_/dAfFitnm+Wa5tCjd=s4+r7.
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 19 Apr 2012 16:20:43 +0200 Lars T=C3=A4uber <taeuber@bbaw.de> wrote:
+On Thu, 19 Apr 2012 15:11:45 +0200 Pierre Beck <mail@pierre-beck.de> wrote:
 
-> Hi Neil,
+> Hello,
 >=20
-> Am Wed, 29 Feb 2012 12:29:06 +1100
-> NeilBrown <neilb@suse.de> schrieb:
-> > On Fri, 24 Feb 2012 11:38:21 +0100 Lars T=C3=83=E2=82=ACuber <taeuber@b=
-baw.de> wrote:
-> >=20
-> > > Hi there.
-> > >=20
-> > > I have a RAID6 using disks in an external SATA enclosure.
-> > > Now I started to exchange the disks with others twice as big as the o=
-nes
-> > > the RAID was originally created with.
-> > > The RAID uses metadata version 0.9.
-> > >=20
-> > > Now I'm thinking about switching to format 1.0 this way:
-> > >=20
-> > > * exchange all disks with the bigger ones piece by piece
-> > >   (-f old -r old -a new)
-> > > * wait for rebuild of last disk
-> > > * recreate RAID with --assume-clean and --metadata 1.0 and the same d=
-isks
-> > > in the correct order
-> > >=20
-> > > The --grow shouldn't be necessary this way.
-> > > Then I grow the filesystem.
-> > >=20
-> > > Is this precedure possible without data loss?
-> > > Or is there a way a metadata version migration could be done more eas=
-ily?
-> >=20
-> > Yes, this should work.  There is no better way.
+> currently, mdraid will simply block and wait for the underlying layers=20
+> to execute commands and does not handle timeouts on its own.
 >=20
-> is it possible to change the chunk size while recreating the array to the=
- new
-> default or do I have to stay with the 64kiB chunk size?
+> In a perfect world, disks will respond within a limited timeframe when=20
+> for example a bad sector is encountered. Unfortunately, I see even disks=
+=20
+> with set TLER that don't. Then, with a configurable timeout, Linux=20
+> Kernel will reset the device in question, then the bus, then the=20
+> controller. This process takes time (and I think the bus / controller=20
+> reset is really adding to that time and should be optional in the first=20
+> place) during which data is unavailable, though there is redundancy and=20
+> another device is ready to respond.
+>=20
+> For a read operations, things are simple: mdraid can re-issue the read=20
+> on the redundant device(s) and deliver data. For write operations, I see=
+=20
+> no other option than kicking the disk from the array. With write-intent=20
+> bitmaps in place, the disk can be re-added and resync fast once it is=20
+> available again.
+>=20
+> If possible, commands sent to the bad disk should be aborted, so Kernel=20
+> doesn't reset the bus.
 
-You can only change the chunk size by rearranging all the data on the devic=
-es.
-So you canno simply change if when re-creating.
+mdraid should definitely not - no questions, no ifs or buts or maybes -
+implement timeouts.  Ever.  Just don't even consider it.
+And you have identified here one of the reasons.  The command would have to
+aborted and that is not possible.  But even if it were possible it would be
+the wrong thing to do.
 
->=20
-> Because changing the chunk size afterwards might not be possible due to t=
-he
-> new chunk size not fitting in the used device size.
->=20
+Timeouts must be handled by the lower levels - the SATA driver or the SCSI
+layer or something.
+We own the whole stack - we do things at the right layer.  We don't put hac=
+ks
+in one layer to make up for deficiencies in another.
 
-You might have to reduce the size of the array (and the filesystem on the
-array) first, but you should then be able to change the chunksize.
+So if you want more control of timeouts - which I suspect is a good thing to
+want - take it to the people who can actually do something about it.  Maybe
+the block layer maintainer, maybe the scsi maintainer.
+
+What mdraid *could* possibly do is submit requests with a "FAILFAST" flag
+set, though there are 3 of them and there isn't much documentation
+explaining how they should be used so it isn't really clear which should be
+used or maybe all.
+Then errors from a FAILFAST request could be handled differently to normal
+errors.
+This would allow us to plug-in to different timeout handling in the lower
+levels which might be a useful thing.
+
+One of the reasons I haven't explored this in much detail though is - as I
+said - there isn't much documentation and there are very few usage examples
+to work from and when I tried once the SCSI layer behaved really strangely
+and I couldn't tell if it was wrong or if I was wrong as there was no doco =
+to
+arbitrate between us.
+
+Hope  that helps.
 
 NeilBrown
 
 
---Sig_/.i213ZT=RrOOlxmzv78tHsK
+>=20
+> To add response time management, the timeout could work with several=20
+> values and sum up like this:
+>=20
+> max_response_time_ms =3D 20
+> timeout_ms =3D 10000
+>=20
+> Every request would measure response time. If response time -=20
+> max_response_time_ms > 0, decrease timeout_ms temporarily by that value.=
+=20
+> So slow disks would be kicked by the same timeout mechanism.
+>=20
+> Greetings,
+>=20
+> Pierre Beck
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/dAfFitnm+Wa5tCjd=s4+r7.
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT5CCzTnsnt1WYoG5AQIkLg//X7y1q66/RU3YEvf9Ri1fZ9JOAt/suzcV
-+L2RsHiL28MKxs8dJHxN2iT5llE+9j646Ie64/2eRmsB7+jjqzfxSE2CSwqo0Mvm
-PRpTArE9kVTZu5D1GPAj27I4x9+EBvqa40leydQH5GfqAZ/413cDhhLxMpPrunjG
-FG48V16co2S6vXT/kuakNfDkgvl0PDmFBaszFvNkN2YgOxlJwVNWne5eUdGRjYCb
-/C2Fw1h6DUVTdRT07BvxkvJfkqkWQKcQ2uu8VpxSooylLrAcKkvUjVdPyN9XCOJS
-MsTXgJHCosuztBVInQGLKRRdeX3xcBWSHWFcjE0Q8bWrvKiubMdoF/rZ5NQCEo9K
-bPMuYwIk5HoWEf9EVBlTAFSKsGxez9ZCJJTgLzu0FTSEjSKKiwz4mVUscBSIzODm
-B77LfAYMXoS72Dc33XFSUrB2/uFA7CVpVCqjXra23DTkjJHUchteWHfFvnO8k3TV
-2bdQf6ZxdOCr+8xlAjPlkut18DSlhZIGe0eBUCthdkR+8GDc8iv8ZzgTUL+yj3E3
-EHlSocwnu82XvUZlZpmS/fbBbYpt8pi79yA4tAvQdETxkZX8PQZZUUgPS6DYPVog
-+i9uN/hTipUXysvdpGbOSGCtqxW/pIrpAUkZ5yUjQrh7SOlAMlgmQg35LfsMotZj
-dNfx4s3pL/M=
-=snL7
+iQIVAwUBT5CHxznsnt1WYoG5AQKd1Q/9GYak1cJPJtdKVebGzRIkZTEQQNFPJDXl
+jBrIXInzFw8+K3IwkJFmwBliMZ5I8S+g7tHha2WxHdxIQr80+kgLFgDiYFbkEW9r
+V5j75fZ/vs+8f9u5srzaHW1/ZemNHWzsn62fyOHRvikHHHuGksHizhRPwz6TVgog
+C/gchmt2Si6TVNwg+NoahnaEmyrftXcF1sXHlAXm7DWNgtHOJ+hM7MC6O3CpnLMG
+v3Dwt/mXf/4XsNHPbjBHhGjoZ51T6e6sVbARC79cX036erKn5k1tb0M1H0e9GL1g
+zNyh08nMk1jWKYgJbonCrq5oI9dlo17rbwxVynYGv0sIqtH60pvxOdk4HIjzIVO7
+LcXEJBN0DRF5HFRmtp5NSOiHPy6QwaXys1+S6aV1wRCI1ysmVfD09es4IrBNXpZ8
+lV1HmLODHj9elV2lgkOpeTLXymb2j9E70o+xNjdN8/DHE8B+5QTscHGkTGHC04y5
+9XNke1atXb0AhTZV7BCubMCIphHVOHpYc1S0EI60QvQwQnrTHGvTeNMXeyskKp6E
+yL7QlcRY7FnnxOqIaOGav8aLuGJXy5iWxBU06yDa+4i2o3KjXMuZiL+AJVjZzDtS
+RzEUpCexsMBnvM7fgU4MnAEL84ATC3FEpBDpr5vjpw6jlJkqVOTQrG6lDr6qIxcA
+fE36mdwm5iI=
+=ivgw
 -----END PGP SIGNATURE-----
 
---Sig_/.i213ZT=RrOOlxmzv78tHsK--
+--Sig_/dAfFitnm+Wa5tCjd=s4+r7.--
