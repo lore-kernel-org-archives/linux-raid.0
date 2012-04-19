@@ -1,127 +1,93 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Should mdraid implement timeouts?
-Date: Fri, 20 Apr 2012 07:46:47 +1000
-Message-ID: <20120420074647.2846295d@notabene.brown>
-References: <4F900F10.1040405@pierre-beck.de>
+Subject: Re: Removing a failing drive from multiple arrays
+Date: Fri, 20 Apr 2012 07:52:12 +1000
+Message-ID: <20120420075212.4574111a@notabene.brown>
+References: <4F905F66.6070803@tmr.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/dAfFitnm+Wa5tCjd=s4+r7."; protocol="application/pgp-signature"
+ boundary="Sig_/F6jr/z9ToA8KhqMgckPb4hD"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F900F10.1040405@pierre-beck.de>
+In-Reply-To: <4F905F66.6070803@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pierre Beck <mail@pierre-beck.de>
-Cc: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/dAfFitnm+Wa5tCjd=s4+r7.
+--Sig_/F6jr/z9ToA8KhqMgckPb4hD
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 19 Apr 2012 15:11:45 +0200 Pierre Beck <mail@pierre-beck.de> wrote:
+On Thu, 19 Apr 2012 14:54:30 -0400 Bill Davidsen <davidsen@tmr.com> wrote:
 
-> Hello,
->=20
-> currently, mdraid will simply block and wait for the underlying layers=20
-> to execute commands and does not handle timeouts on its own.
->=20
-> In a perfect world, disks will respond within a limited timeframe when=20
-> for example a bad sector is encountered. Unfortunately, I see even disks=
+> I have a failing drive, and partitions are in multiple arrays. I'm=20
+> looking for the least painful and most reliable way to replace it. It's=20
+> internal, I have a twin in an external box, and can create all the parts=
 =20
-> with set TLER that don't. Then, with a configurable timeout, Linux=20
-> Kernel will reset the device in question, then the bus, then the=20
-> controller. This process takes time (and I think the bus / controller=20
-> reset is really adding to that time and should be optional in the first=20
-> place) during which data is unavailable, though there is redundancy and=20
-> another device is ready to respond.
+> now and then swap the drive physically. The layout is complex, here's=20
+> what blkdevtra tells me about this device, the full trace is attached.
 >=20
-> For a read operations, things are simple: mdraid can re-issue the read=20
-> on the redundant device(s) and deliver data. For write operations, I see=
-=20
-> no other option than kicking the disk from the array. With write-intent=20
-> bitmaps in place, the disk can be re-added and resync fast once it is=20
-> available again.
+> Block device sdd, logical device 8:48
+> Model Family:     Seagate Barracuda 7200.10
+> Device Model:     ST3750640AS
+> Serial Number:    5QD330ZW
+>      Device size   732.575 GB
+>             sdd1     0.201 GB
+>             sdd2     3.912 GB
+>             sdd3    24.419 GB
+>             sdd4     0.000 GB
+>             sdd5    48.838 GB [md123] /mnt/workspace
+>             sdd6     0.498 GB
+>             sdd7    19.543 GB [md125]
+>             sdd8    29.303 GB [md126]
+>             sdd9   605.859 GB [md127] /exports/common
+>    Unpartitioned     0.003 GB
 >=20
-> If possible, commands sent to the bad disk should be aborted, so Kernel=20
-> doesn't reset the bus.
+> I think what I want to do is to partition the new drive, then one array=20
+> at a time fail and remove the partition on the bad drive, and add a=20
+> partition on the new good drive. Then repeat for each array until all=20
+> are complete and on a new drive. Then I should be able to power off,=20
+> remove the failed drive, put the good drive in the case, and the arrays=20
+> should reassemble by UUID.
+>=20
+> Does that sound right? Is there an easier way?
+>=20
 
-mdraid should definitely not - no questions, no ifs or buts or maybes -
-implement timeouts.  Ever.  Just don't even consider it.
-And you have identified here one of the reasons.  The command would have to
-aborted and that is not possible.  But even if it were possible it would be
-the wrong thing to do.
+I would add the new partition before failing the old but that isn't a big
+issues.
 
-Timeouts must be handled by the lower levels - the SATA driver or the SCSI
-layer or something.
-We own the whole stack - we do things at the right layer.  We don't put hac=
-ks
-in one layer to make up for deficiencies in another.
-
-So if you want more control of timeouts - which I suspect is a good thing to
-want - take it to the people who can actually do something about it.  Maybe
-the block layer maintainer, maybe the scsi maintainer.
-
-What mdraid *could* possibly do is submit requests with a "FAILFAST" flag
-set, though there are 3 of them and there isn't much documentation
-explaining how they should be used so it isn't really clear which should be
-used or maybe all.
-Then errors from a FAILFAST request could be handled differently to normal
-errors.
-This would allow us to plug-in to different timeout handling in the lower
-levels which might be a useful thing.
-
-One of the reasons I haven't explored this in much detail though is - as I
-said - there isn't much documentation and there are very few usage examples
-to work from and when I tried once the SCSI layer behaved really strangely
-and I couldn't tell if it was wrong or if I was wrong as there was no doco =
+If you were running a really new kernel, used 1.x metadata, and were happy =
 to
-arbitrate between us.
+try out code that that hasn't had a lot of real-life testing you could (aft=
+er
+adding the new partition) do
+   echo want_replacement > /sys/block/md123/md/dev-sdd5/state
+(for example).
 
-Hope  that helps.
+Then it would build the spare before failing the original.
+You need linux 3.3 for this to have any chance of working.
 
 NeilBrown
 
-
->=20
-> To add response time management, the timeout could work with several=20
-> values and sum up like this:
->=20
-> max_response_time_ms =3D 20
-> timeout_ms =3D 10000
->=20
-> Every request would measure response time. If response time -=20
-> max_response_time_ms > 0, decrease timeout_ms temporarily by that value.=
-=20
-> So slow disks would be kicked by the same timeout mechanism.
->=20
-> Greetings,
->=20
-> Pierre Beck
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/dAfFitnm+Wa5tCjd=s4+r7.
+--Sig_/F6jr/z9ToA8KhqMgckPb4hD
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT5CHxznsnt1WYoG5AQKd1Q/9GYak1cJPJtdKVebGzRIkZTEQQNFPJDXl
-jBrIXInzFw8+K3IwkJFmwBliMZ5I8S+g7tHha2WxHdxIQr80+kgLFgDiYFbkEW9r
-V5j75fZ/vs+8f9u5srzaHW1/ZemNHWzsn62fyOHRvikHHHuGksHizhRPwz6TVgog
-C/gchmt2Si6TVNwg+NoahnaEmyrftXcF1sXHlAXm7DWNgtHOJ+hM7MC6O3CpnLMG
-v3Dwt/mXf/4XsNHPbjBHhGjoZ51T6e6sVbARC79cX036erKn5k1tb0M1H0e9GL1g
-zNyh08nMk1jWKYgJbonCrq5oI9dlo17rbwxVynYGv0sIqtH60pvxOdk4HIjzIVO7
-LcXEJBN0DRF5HFRmtp5NSOiHPy6QwaXys1+S6aV1wRCI1ysmVfD09es4IrBNXpZ8
-lV1HmLODHj9elV2lgkOpeTLXymb2j9E70o+xNjdN8/DHE8B+5QTscHGkTGHC04y5
-9XNke1atXb0AhTZV7BCubMCIphHVOHpYc1S0EI60QvQwQnrTHGvTeNMXeyskKp6E
-yL7QlcRY7FnnxOqIaOGav8aLuGJXy5iWxBU06yDa+4i2o3KjXMuZiL+AJVjZzDtS
-RzEUpCexsMBnvM7fgU4MnAEL84ATC3FEpBDpr5vjpw6jlJkqVOTQrG6lDr6qIxcA
-fE36mdwm5iI=
-=ivgw
+iQIVAwUBT5CJDDnsnt1WYoG5AQKUFw//SQX7bQ6rtPH/YlHAjehx4PgwGLB5IBzu
+Piah0j9HckgTWI7nlt5yC1ab7KE0ciSET7MgOzWlBXMp+mteZxFsSPWtXPndB7Re
+nbp+HZKeX0nCZOM8GJQAZAyTHmTVM/p2CNIoUPulA+ab/vHW0SA+ZQWsYD25UK5w
+oKz4Wmcw1nRsyZpxK6iZJMLIJuhlsugmExS5IG39U9nnZDc/03KGQF34y/HdUbkv
+s+FD+4ok0rvsd0OlkCJVP/sk5kUSnTs6gIfT8JhLcMhg9qbtgdQqqsFaGASBNTzz
+Ddvuqgt0MnPUjOODbkTQ3PNysHAm4Ue9Qd1XsfjWPhDWpNcx5KASucM1Wp6270bs
+2S5m6Q0TxCuqoxq0nP/IP/vP6NzGiel1NAQlnyn2l+NYWiqnoXqIMCHtDVf0Oibw
+xrYh0nFDObxibrdlaFH1y6kJfqv2PAIA4Ux/iH10FXWtrUOH6Cv9aWfKUWVix7kJ
+6vAHiyuH8OYkQausRJedZtO1dDFxqD7eFOqVacBHcNvvEWbQU22tWuePBt/6klfa
+VRR7CfOlxx7gouP8Xo3AuyTOEVdyH6CFBNsUl2PeTOxyVfie7fUd/kkCmveGTyUq
+Ia5/zjQxzsrlcSUHKm+83hXEYcbLCzqyqs3cw+0eMNZiJosT9xjo5M3k/CKY2jzT
+o3i40XBgTyo=
+=yin3
 -----END PGP SIGNATURE-----
 
---Sig_/dAfFitnm+Wa5tCjd=s4+r7.--
+--Sig_/F6jr/z9ToA8KhqMgckPb4hD--
