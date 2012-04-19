@@ -1,131 +1,88 @@
-From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Subject: RE: [PATCH 07/14] FIX: Extend size of raid0 array
-Date: Thu, 19 Apr 2012 15:09:45 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB185DF96A@IRSMSX101.ger.corp.intel.com>
-References: <1334328728-12544-1-git-send-email-adam.kwolek@intel.com>
-	<1334328728-12544-2-git-send-email-adam.kwolek@intel.com>
-	<1334328728-12544-3-git-send-email-adam.kwolek@intel.com>
-	<1334328728-12544-4-git-send-email-adam.kwolek@intel.com>
-	<1334328728-12544-5-git-send-email-adam.kwolek@intel.com>
-	<1334328728-12544-6-git-send-email-adam.kwolek@intel.com>
-	<1334328728-12544-7-git-send-email-adam.kwolek@intel.com>
-	<1334328728-12544-8-git-send-email-adam.kwolek@intel.com>
- <20120417125236.5debe352@notabene.brown>
+From: "Gen. Peter Olu" <Bkersner@aol.com>
+Subject: DIPLOMATIC PAYMENT OPEN ATTACHED FOR MORE INFO
+Date: Thu, 19 Apr 2012 16:09:48 +0100
+Message-ID: <201204191513.q3JFDIlN014318__25482.4580894367$1334848503$gmane$org@ims-d13.mx.aol.com>
+Reply-To: <peterolu204gh@yahoo.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_003E_01C2A9A6.4A86A688"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120417125236.5debe352@notabene.brown>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>, "Danecki, Jacek" <jacek.danecki@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>
 List-Id: linux-raid.ids
 
-On Tuesday, April 17, 2012 4:53 AM NeilBrown wrote:
-> 
-> On Fri, 13 Apr 2012 16:52:01 +0200 Adam Kwolek <adam.kwolek@intel.com>
-> wrote:
-> 
-> > For raid0, takeover operation is required for size change.
-> > Add takeover to degraded raid4 before size change and back to raid0 after.
-> > Array information has to be read again from md after takeover.
-> >
-> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> > ---
-> >  Grow.c |   35 +++++++++++++++++++++++++++++++++++
-> >  1 files changed, 35 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/Grow.c b/Grow.c
-> > index 8c7bafc..e8f6554 100644
-> > --- a/Grow.c
-> > +++ b/Grow.c
-> > @@ -1626,6 +1626,7 @@ int Grow_reshape(char *devname, int fd, int
-> quiet, char *backup_file,
-> >  		long long orig_size = get_component_size(fd)/2;
-> >  		long long min_csize;
-> >  		struct mdinfo *mdi;
-> > +		int raid0_takeover = 0;
-> >
-> >  		if (orig_size == 0)
-> >  			orig_size = array.size;
-> > @@ -1674,6 +1675,28 @@ int Grow_reshape(char *devname, int fd, int
-> quiet, char *backup_file,
-> >  				"2TB per device\n");
-> >  			size = min_csize;
-> >  		}
-> > +		if (st->ss->external) {
-> > +			if (sra->array.level == 0) {
-> > +				rv = sysfs_set_str(sra, NULL, "level",
-> > +						   "raid5");
-> > +				if (!rv) {
-> > +					raid0_takeover = 1;
-> > +					/* get array parametes after takeover
-> > +					 * to chane one parameter at time
-> only
-> > +					 */
-> > +					rv = ioctl(fd, GET_ARRAY_INFO,
-> &array);
-> > +				}
-> > +			}
-> > +			/* make sure mdmon is
-> > +			 * aware of the new level */
-> > +			if (!mdmon_running(st->container_dev))
-> > +				start_mdmon(st->container_dev);
-> > +			ping_monitor(container);
-> > +			if (mdmon_running(st->container_dev) &&
-> > +					st->update_tail == NULL)
-> > +				st->update_tail = &st->updates;
-> > +		}
-> > +
-> >  		array.size = size;
-> >  		if (array.size != size) {
-> >  			/* got truncated to 32bit, write to
-> > @@ -1686,12 +1709,24 @@ int Grow_reshape(char *devname, int fd, int
-> quiet, char *backup_file,
-> >  				rv = -1;
-> >  		} else {
-> >  			rv = ioctl(fd, SET_ARRAY_INFO, &array);
-> > +
-> >  			/* manage array size when it is managed externally
-> >  			 */
-> >  			if ((rv == 0) && st->ss->external)
-> >  				rv = set_array_size(st, sra, sra->text_version);
-> >  		}
-> >
-> > +		if (raid0_takeover) {
-> > +			/* do not recync non-existing parity,
-> > +			 * we will drop it anyway
-> > +			 */
-> > +			sysfs_set_str(sra, NULL, "sync_action", "idle");
-> 
-> This is probably ineffective.  If the array thinks it needs to resync, then
-> just setting it to 'idle' will only stop in temporarily.  It will immediately
-> start syncing again.
-> 
-> However given that it is a RAID5 array which is degraded, it shouldn't try to
-> resync at all.
-> 
-> So:  does it still work if you remove this line?  If so, could you send a
-> patch to remove it?
-> If not - we should work out why.
-> 
+This is a multi-part message in MIME format.
 
-It doesn't work without this line.
-The N-disks raid0 changes to degraded (N+1)-disks raid5 (N of N+1 disks) 
-in /proc/mdstat after size extension, however the metadata on all disks is correct.
+------=_NextPart_000_003E_01C2A9A6.4A86A688
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
 
-Regards,
-Lukasz
- 
-> 
-> > +			/* go back to raid0, drop parity disk
-> > +			 */
-> > +			sysfs_set_str(sra, NULL, "level", "raid0");
-> > +			ioctl(fd, GET_ARRAY_INFO, &array);
-> > +		}
-> > +
-> >  		if (rv != 0) {
-> >  			int err = errno;
-> >
 
+------=_NextPart_000_003E_01C2A9A6.4A86A688
+Content-Type: application/octet-stream;
+	name="Letter From Gen. Peter Olu.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+	filename="Letter From Gen. Peter Olu.txt"
+
+T0ZGSUNFIE9GIFRIRSBOQVRJT05BTCBTRUNVUklUWSBBRFZJU0VSIA0KVE8g
+VEhFIFBSRVNJREVOVCBGRURFUkFMIFJFUFVCTElDIE9GIE5JR0VSSUEgDQpH
+RVQgQkFDSyBUTyBNRSBBVCBZT1VSIEVBUkxJRVNUIENPTlZJTklFTkNFIA0K
+DQpBdHRlbnRpb24sIA0KDQpJIGFtIEx0LiBHZW4uIFBldGVyIE9sdSwgTmF0
+aW9uYWwgU2VjdXJpdHkgQWR2aXNlciB0byB0aGUgTmV3IFByZXNpZGVudCBE
+ciBHb29kbHVjayBFLiBKb25hdGhhbiBGZWRlcmFsIFJlcHVibGljIG9mIE5p
+Z2VyaWEuIEkgZGVjaWRlZCB0byBjb250YWN0IHlvdSBiZWNhdXNlIG9mIHRo
+ZSBwcmV2YWlsaW5nIHNlY3VyaXR5IHJlcG9ydCByZWFjaGluZyBteSBvZmZp
+Y2UgYW5kIHRoZSBpbnRlbnNlIG5hdHVyZSBvZiBwb2xpY3kgaW4gTmlnZXJp
+YS4gVGhpcyBpcyB0byBpbmZvcm0geW91IGFib3V0IG91ciBwbGFuIHRvIHNl
+bmQgeW91ciBmdW5kIHRvIHlvdSB2aWEgY2FzaCBkZWxpdmVyeS4gVGhpcyBz
+eXN0ZW0gd2lsbCBiZSBlYXNpZXIgZm9yIHlvdSBhbmQgZm9yIHVzLiBXZSBh
+cmUgZ29pbmcgdG8gc2VuZCB5b3VyIGNvbnRyYWN0IHBhcnQgcGF5bWVudCBv
+ZiBVUzEwLjEgTWlsbGlvbiB0byB5b3UgdmlhIGRpcGxvbWF0aWMgY291cmll
+ciBzZXJ2aWNlLiANCg0KTm90ZTogVGhlIG1vbmV5IGlzIGNvbWluZyBvbiB0
+d28gc2VjdXJpdHkgcHJvb2YgYm94ZXMuIFRoZSBib3hlcyBhcmUgc2VhbGVk
+IHdpdGggc3ludGhldGljIG55bG9uIHNlYWwgYW5kIHBhZGRlZCB3aXRoIG1h
+Y2hpbmUuIFRoaXMgZnVuZCB3YXMgYnJvdWdodCB0byB1cyBmcm9tIEFtZXJp
+Y2E7IGl0IHdhcyBtZWFudCBmb3Igb3VyIExvY2FsIEFGRU0gbWFya2V0LiBC
+dXQgc2luY2UgdGhlIG1vbmV5IHdhcyBub3QgdXNlZCwgSSB3aWxsIHVzZSBt
+eSBwb3NpdGlvbiBhcyB0aGUgTmF0aW9uYWwgU2VjdXJpdHkgQWR2aXNlciB0
+byB0aGUgUHJlc2lkZW50IHRvIHNlbmQgdGhpcyBmdW5kIHRvIHlvdS4gDQoN
+ClRoZSBib3hlcyBhcmUgY29taW5nIHdpdGggYSBEaXBsb21hdGljIGFnZW50
+IHdobyB3aWxsIGFjY29tcGFueSB0aGUgYm94ZXMgdG8geW91ciBob3VzZSBh
+ZGRyZXNzLiBBbGwgeW91IG5lZWQgdG8gZG8gbm93IGlzIHRvIHNlbmQgdG8g
+bWUgDQoNCllvdXIgZnVsbCBuYW1lIA0KWW91ciBob3VzZSBhZGRyZXNzIA0K
+WW91ciBhZ2UgDQpZb3VyIG1hcml0YWwgc3RhdHVlIA0KWW91ciBpZGVudGl0
+eSBzdWNoIGFzLCBpbnRlcm5hdGlvbmFsIHBhc3Nwb3J0IG9yIGRyaXZlciBs
+aWNlbnNlIA0KWW91ciBjb250YWN0IHBob25lIGFuZCBmYXggbnVtYmVycywg
+DQoNClRoZSBEaXBsb21hdGljIGF0dGFjaGVkIHdpbGwgdHJhdmVsIHdpdGgg
+aXQuIEhlIHdpbGwgY2FsbCB5b3UgaW1tZWRpYXRlbHkgaGUgYXJyaXZlcyB5
+b3VyIGFpcnBvcnQuIEkgaG9wZSB5b3UgdW5kZXJzdGFuZCBtZS4gDQpJIHdp
+bGwgbGV0IHlvdSBrbm93IGJ5IHRoZSBzcGVjaWFsIGdyYWNlIG9mIEdvZCB3
+aGVuIHRoZSBib3hlcyBhcmUgYWlybGlmdGVkLiANCg0KTm90ZTogVGhlIGRp
+cGxvbWF0aWMgZG9lcyBub3Qga25vdyB0aGUgb3JpZ2luYWwgY29udGVudHMg
+b2YgdGhlIGJveGVzLiBXaGF0IGwgZGVjbGFyZWQgdG8gdGhlbSBhcyB0aGUg
+Y29udGVudHMgaXMgU2Vuc2l0aXZlIFBob3RvZ3JhcGhpYyBGaWxtIE1hdGVy
+aWFsLiBJIGRpZCBub3QgZGVjbGFyZSBtb25leSB0byB0aGVtIHBsZWFzZS4g
+SWYgdGhleSBjYWxsIHlvdSBhbmQgYXNrIHlvdSB0aGUgY29udGVudHMgcGxl
+YXNlIHRlbGwgdGhlbSB0aGUgc2FtZSB0aGluZyBPaywgSSB3aWxsIGxldCB5
+b3Uga25vdyBob3cgZmFyIEkgaGF2ZSBnb25lIHdpdGggdGhlIGFycmFuZ2Vt
+ZW50LiBJIHdpbGwgc2VjdXJlIHRoZSBEaXBsb21hdGljIGltbXVuaXR5IGNs
+ZWFyYW5jZSBjZXJ0aWZpY2F0ZSB0aGF0IHdpbGwgYmUgdGFnZ2VkIG9uIHRo
+ZSBib3hlcyB0byBtYWtlIGl0IHN0YW5kIGFzIGEgZGlwbG9tYXRpYyBjb25z
+aWdubWVudC4gDQoNClRoaXMgY2xlYXJhbmNlIHdpbGwgbWFrZSBpdCBwYXNz
+IGV2ZXJ5IGN1c3RvbSBjaGVja3BvaW50IGFsbCBvdmVyIHRoZSB3b3JsZCB3
+aXRob3V0IGhpdGNoLiBDb25maXJtIHRoZSByZWNlaXB0IG9mIHRoaXMgbWVz
+c2FnZSBhbmQgc2VuZCB0aGUgcmVxdWlyZW1lbnRzIHRvIG1lIGltbWVkaWF0
+ZWx5IHlvdSByZWNlaXZlIHRoaXMgbWVzc2FnZS4gSWYgeW91IG5lZWQgbW9y
+ZSBpbmZvcm1hdGlvbiBhYm91dCB0aGlzLCBJIHdpbGwgZ2l2ZSB5b3UgdGhl
+IGRldGFpbHMgaG93IHRvIGNvbnRhY3QgdGhlIGRpcGxvbWF0IGZvciBtb3Jl
+IGluZm9ybWF0aW9uIG9uIGhvdyB0byBjYXJyeSBvdXQgdGhlIHBsYW4uIA0K
+DQpJIG5lZWQgeW91IHJlc3BvbnNlIGJlY2F1c2UgdGhlIGJveGVzIGFyZSBz
+Y2hlZHVsZSB0byBsZWF2ZSBhcyBzb29uIGFzIHdlIGhlYXIgZnJvbSB5b3Uu
+IFJlcGx5IG1lIGltbWVkaWF0ZWx5IHlvdSByZWNlaXZlIHRoaXMgbWVzc2Fn
+ZSB2aWEgRW1haWwgKHBldGVyb2x1bzE5NjBAeWFob28uY28uanAgKSBDYWxs
+IG1lIG9uIG15IGRpcmVjdCBQSC9GQVg6ICgyMzQtNzA5MjYxMjkyMSkgDQoN
+CkJlc3QgUmVnYXJkcywgDQpMdC4gR2VuLiBQZXRlciBPbHUNCkRJUExPTUFU
+SUMgUEFZTUVOVCBPUEVOIEFUVEFDSEVEIEZPUiBNT1JFIElORk8NCg0K
+
+------=_NextPart_000_003E_01C2A9A6.4A86A688--
