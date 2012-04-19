@@ -1,48 +1,63 @@
-From: Pierre Beck <mail@pierre-beck.de>
-Subject: Should mdraid implement timeouts?
-Date: Thu, 19 Apr 2012 15:11:45 +0200
-Message-ID: <4F900F10.1040405@pierre-beck.de>
+From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
+Subject: Re: migrating from metadata 0.9 to 1.0 before growing?
+Date: Thu, 19 Apr 2012 16:20:43 +0200
+Message-ID: <20120419162043.84e7d3f4ae3ba003bd42e430@bbaw.de>
+References: <20120224113821.c2b14f48bcf7e6809b2cd3a6@bbaw.de>
+	<20120229122906.76d08488@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120229122906.76d08488@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Hi Neil,
 
-currently, mdraid will simply block and wait for the underlying layers 
-to execute commands and does not handle timeouts on its own.
+Am Wed, 29 Feb 2012 12:29:06 +1100
+NeilBrown <neilb@suse.de> schrieb:
+> On Fri, 24 Feb 2012 11:38:21 +0100 Lars T=C3=83=E2=82=ACuber <taeuber=
+@bbaw.de> wrote:
+>=20
+> > Hi there.
+> >=20
+> > I have a RAID6 using disks in an external SATA enclosure.
+> > Now I started to exchange the disks with others twice as big as the=
+ ones
+> > the RAID was originally created with.
+> > The RAID uses metadata version 0.9.
+> >=20
+> > Now I'm thinking about switching to format 1.0 this way:
+> >=20
+> > * exchange all disks with the bigger ones piece by piece
+> >   (-f old -r old -a new)
+> > * wait for rebuild of last disk
+> > * recreate RAID with --assume-clean and --metadata 1.0 and the same=
+ disks
+> > in the correct order
+> >=20
+> > The --grow shouldn't be necessary this way.
+> > Then I grow the filesystem.
+> >=20
+> > Is this precedure possible without data loss?
+> > Or is there a way a metadata version migration could be done more e=
+asily?
+>=20
+> Yes, this should work.  There is no better way.
 
-In a perfect world, disks will respond within a limited timeframe when 
-for example a bad sector is encountered. Unfortunately, I see even disks 
-with set TLER that don't. Then, with a configurable timeout, Linux 
-Kernel will reset the device in question, then the bus, then the 
-controller. This process takes time (and I think the bus / controller 
-reset is really adding to that time and should be optional in the first 
-place) during which data is unavailable, though there is redundancy and 
-another device is ready to respond.
+is it possible to change the chunk size while recreating the array to t=
+he new
+default or do I have to stay with the 64kiB chunk size?
 
-For a read operations, things are simple: mdraid can re-issue the read 
-on the redundant device(s) and deliver data. For write operations, I see 
-no other option than kicking the disk from the array. With write-intent 
-bitmaps in place, the disk can be re-added and resync fast once it is 
-available again.
+Because changing the chunk size afterwards might not be possible due to=
+ the
+new chunk size not fitting in the used device size.
 
-If possible, commands sent to the bad disk should be aborted, so Kernel 
-doesn't reset the bus.
-
-To add response time management, the timeout could work with several 
-values and sum up like this:
-
-max_response_time_ms = 20
-timeout_ms = 10000
-
-Every request would measure response time. If response time - 
-max_response_time_ms > 0, decrease timeout_ms temporarily by that value. 
-So slow disks would be kicked by the same timeout mechanism.
-
-Greetings,
-
-Pierre Beck
+Thanks
+Lars
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
