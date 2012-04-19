@@ -1,70 +1,73 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: arch/86: AVX RAID5 xor checksumming v1
-Date: Thu, 19 Apr 2012 10:02:28 +1000
-Message-ID: <20120419100228.05112e58@notabene.brown>
-References: <1334789928-7238-1-git-send-email-james.t.kukunas@linux.intel.com>
+From: Ken Gunderson <kgunders@teamcool.net>
+Subject: Re: non fs-data and gpt partitioned md
+Date: Wed, 18 Apr 2012 18:18:33 -0600
+Message-ID: <20120418181833.0581d8ba.kgunders@teamcool.net>
+References: <1334695210.6026.31.camel@hermes>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/5GfBOCnFApxfNP.q=xmOMiN"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1334789928-7238-1-git-send-email-james.t.kukunas@linux.intel.com>
+In-Reply-To: <1334695210.6026.31.camel@hermes>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jim Kukunas <james.t.kukunas@linux.intel.com>
-Cc: hpa@zytor.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/5GfBOCnFApxfNP.q=xmOMiN
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, 17 Apr 2012 14:40:10 -0600
+Ken Gunderson <kgunders@teamcool.net> wrote:
 
-On Wed, 18 Apr 2012 15:58:47 -0700 Jim Kukunas
-<james.t.kukunas@linux.intel.com> wrote:
+Apologies for following my own post but I guess should elaborate...
 
-> Hi Folks,
+> Hello:
 >=20
-> The following patch adds an AVX implementation of the RAID5 xor checksumm=
-ing
-> functions.
+> I'm wanting to set up a new md root lvm based configuration and after
+> reading various docs am confused about how I should be going about
+> this. My intent is to have mirrored /boot and swap partitions and a
+> raid10 / partition with LVM.
 >=20
-> This version differs from version 0, in that it:
-> 	0) checks whether assembler supports AVX
-> 	1) replaces __attribute__(aligned(32)) with __aligned(32)
-> 	2) adds do/while(0); to macro blocks
+> Issue #1: gpt is recommended over mbr based partitioning for new
+> installs, even on BIOS based systems (presuming these BIOS will boot
+> gpt, wh/mine do). Auto-assemble is not recommended for new
+> installations (my understanding is that it is not necessary with
+> initramfs) so I presume I should be specifying partition type DA.
+> However, while gdisk et.al. allow for selecting type FD, they do not
+> offer DA as an option.
+
+Per <http://www.rodsbooks.com/linux-fs-code.html>, Linux ignores
+partition type codes.  Yet per man mdadm:
+
+"When creating a partition based array,  using  mdadm  with
+version-1.x metadata, the partition type should be set to 0xDA (non
+fs-data).  This type selection allows for greater precision since using
+any other [RAID auto-detect (0xFD) or a GNU/Linux partition (0x83)],
+might create prob=E2=80=90 lems in the event of array recovery through =
+a live
+cdrom."
+
+So which is it?  Does partition type code matter to md/mdadm or not?
+=20
+> Issue #2: Is there any reason to prefer 1.0 vs. 1.2 metadata? I can
+> use either grub2 or Syslinux boot loaders.  My understanding is that
+> Syslinux supports the former while Grub2 supports 1.2. All other
+> things being equal, I'd prefer to use Syslinux.  Unless there is some
+> technical reason to favor 1.2 metadata and/or Grub2.
 >=20
-> Based on xor_speed, the AVX implementation appears to be ~32% faster than=
- the
-> SSE implementation on my i7 2600:
->=20
->         generic_sse: 15088.000 MB/sec
-> 	avx: 19936.000 MB/sec
->=20
+> So what would be best practices recommended way to proceed here?
 
-Applied, thanks.
-(though I remove the blank line at the end of the new file - the voices made
-me do it, I had no choice)
+The reason I ask is that I bring such a configuration online on
+Archlinux by following these instructions:
 
-NeilBrown
+<https://wiki.archlinux.org/index.php/Software_RAID_and_LVM>
 
---Sig_/5GfBOCnFApxfNP.q=xmOMiN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+But I'll be damned if I can recover from failed drive simulations - at
+least reliably, as sometimes it works while others not - so I'm just
+trying to rule out potential variables here.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+Thanks-- Ken
 
-iQIVAwUBT49WFDnsnt1WYoG5AQJkYg/9HxGzSukJhYeZHX2LRUdk0+J5X0AkwmtT
-btBs6cBitEEebc2p4HF6AzZFuoIDg+X9WTEZWpX4/wWy0mFPTQ0M0WR6V4B1SrXz
-iqfyx66wdWN84xW1hUfn220nsvaThO0MJsBxmExF3+hUwVqy/tKlpgUkgKBJz4mc
-ZwjHHT89qIwypOquPc3nF+zGqfopgitbVBw4UR+1uMYHQ4aarbWsRnwGVwG8EnwS
-gdxt2hV07v4GbHQA9r3uvj7JzGjKoWULPMWK/+CTwE/0KQH+idoK3DQtgOEAet3B
-L5v73pzVbQwdWH0dPrSPXANQoQtDYaXGfgluazNyAWVXseKQdCc4itBj9B46gkId
-P7AvjWXvamuTV/gifxrSGHX1rZfbR6QH0BP/emGJg3APGHehzaKJIGfs6VNOoa6u
-dJ0SY6hXTCcuIZB9934a3RwgkUsvZL9kJP2E6rIDHDu4r1c7tJCBVZYtjapSqicd
-+11GHBpYZq96YIpWNUJUTPIPNcXPCwRdTKKNm1FhIG5QOd9/hxHCL8KbMR3nGi2s
-ubTHdKydtCazAX6iRHf7Pzt2T3EUN5hLRCIhGbIUuUgRoNDc5kJe6R5f4WROzFJf
-5JRTw4qbWcYV21TPKSI0HWp5QXFrn83o0lRYEHcpJq2ng8UgRfZst3OTPNXJL5dy
-3/ypCnGb8w0=
-=g4ce
------END PGP SIGNATURE-----
-
---Sig_/5GfBOCnFApxfNP.q=xmOMiN--
+--=20
+Ken Gunderson <kgunders@teamcool.net>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
