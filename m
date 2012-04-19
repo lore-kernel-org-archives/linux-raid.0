@@ -1,73 +1,61 @@
-From: Ken Gunderson <kgunders@teamcool.net>
-Subject: Re: non fs-data and gpt partitioned md
-Date: Wed, 18 Apr 2012 18:18:33 -0600
-Message-ID: <20120418181833.0581d8ba.kgunders@teamcool.net>
-References: <1334695210.6026.31.camel@hermes>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 1/4] lib/raid6: fix test program build
+Date: Thu, 19 Apr 2012 10:33:21 +1000
+Message-ID: <20120419103321.4f261da3@notabene.brown>
+References: <20120412161805.133c4ad0@notabene.brown>
+	<1334261073-14781-1-git-send-email-james.t.kukunas@linux.intel.com>
+	<1334261073-14781-2-git-send-email-james.t.kukunas@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1334695210.6026.31.camel@hermes>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/3k_3o14y=wPcp5nF9yJo5eE"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1334261073-14781-2-git-send-email-james.t.kukunas@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jim Kukunas <james.t.kukunas@linux.intel.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, hpa@zytor.com
 List-Id: linux-raid.ids
 
-On Tue, 17 Apr 2012 14:40:10 -0600
-Ken Gunderson <kgunders@teamcool.net> wrote:
+--Sig_/3k_3o14y=wPcp5nF9yJo5eE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Apologies for following my own post but I guess should elaborate...
+On Thu, 12 Apr 2012 13:04:30 -0700 Jim Kukunas
+<james.t.kukunas@linux.intel.com> wrote:
 
-> Hello:
+> <linux/module.h> drags in headers which are not visible to userspace,
+> thus breaking the build for the test program.
 >=20
-> I'm wanting to set up a new md root lvm based configuration and after
-> reading various docs am confused about how I should be going about
-> this. My intent is to have mirrored /boot and swap partitions and a
-> raid10 / partition with LVM.
->=20
-> Issue #1: gpt is recommended over mbr based partitioning for new
-> installs, even on BIOS based systems (presuming these BIOS will boot
-> gpt, wh/mine do). Auto-assemble is not recommended for new
-> installations (my understanding is that it is not necessary with
-> initramfs) so I presume I should be specifying partition type DA.
-> However, while gdisk et.al. allow for selecting type FD, they do not
-> offer DA as an option.
+> Signed-off-by: Jim Kukunas <james.t.kukunas@linux.intel.com>
 
-Per <http://www.rodsbooks.com/linux-fs-code.html>, Linux ignores
-partition type codes.  Yet per man mdadm:
+I've applied this and the following three.
+They should be visible in
+   git://neil.brown.name/md/ for-next
+   git://github.com/neilbrown/linux md/for-next
+(a fair way down the list from HEAD).
 
-"When creating a partition based array,  using  mdadm  with
-version-1.x metadata, the partition type should be set to 0xDA (non
-fs-data).  This type selection allows for greater precision since using
-any other [RAID auto-detect (0xFD) or a GNU/Linux partition (0x83)],
-might create prob=E2=80=90 lems in the event of array recovery through =
-a live
-cdrom."
+Thanks,
+NeilBrown
 
-So which is it?  Does partition type code matter to md/mdadm or not?
-=20
-> Issue #2: Is there any reason to prefer 1.0 vs. 1.2 metadata? I can
-> use either grub2 or Syslinux boot loaders.  My understanding is that
-> Syslinux supports the former while Grub2 supports 1.2. All other
-> things being equal, I'd prefer to use Syslinux.  Unless there is some
-> technical reason to favor 1.2 metadata and/or Grub2.
->=20
-> So what would be best practices recommended way to proceed here?
+--Sig_/3k_3o14y=wPcp5nF9yJo5eE
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-The reason I ask is that I bring such a configuration online on
-Archlinux by following these instructions:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-<https://wiki.archlinux.org/index.php/Software_RAID_and_LVM>
+iQIVAwUBT49dUTnsnt1WYoG5AQJeehAAjkq4AQnj182XPs5taL7h60bpsXcQUaU1
+rgTKcQuBGq4CQC2/giVPYpHF0Q5x+UBko82z+oPi58sYnHHXy5l+2Vz0PmAqR4T4
+GYDBWwSm5mkl5wudFV+BrsxrUguQ5YbIlYXCT1EeH3H1fo1N76pDedQnYrxtMNMh
+df2F+r4cbS5T1ik+F5ZGUw6qQHXIskfJiNueuNwwUyIVX7mSu3A0LwqYBaFsyXg7
+QZR3SgjKXON9CXq3h0yQMKWzmQ1Z6gvx0tSiphz0/J5EmP1402fIrO06N5WsXXdI
+FnJuf+aiJX9sOIo/1GSeIao0a8mySlySWGQMhS+hBz+iRmObfiWKTexrOpYA/1o1
+RpoObPaQDTlrVfS0KOp5AYTOOQf9cpUv2CrvTFAWI6+6WnNJ9NJ4oF4JaURHrMYh
+5+sCLCk8RP+/Viv9y/bw5qyIdG95VuQzd18sXGnEQxk3KgbIuU3GYJGK76iMpLez
+uz1NlFDV7YKFu+Y++58O31Gy8Og+Ls0GVXVYEY9Y01UBnmdRWBO7E/xw5CP9/RKb
+Sxs1CX643nnSMwK2daK8xdMVX5nnSYIc3mUmaHHpqLowbDvYn/OmI1iU9IxN/6B+
+4gETtolwsRTyS/alvPeV6a3aD9b7TM1eVDpLrN6Ah8B+9T8DQwwoHlZ/zVasyrl/
+IgNnGMBChro=
+=4Cis
+-----END PGP SIGNATURE-----
 
-But I'll be damned if I can recover from failed drive simulations - at
-least reliably, as sometimes it works while others not - so I'm just
-trying to rule out potential variables here.
-
-Thanks-- Ken
-
---=20
-Ken Gunderson <kgunders@teamcool.net>
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/3k_3o14y=wPcp5nF9yJo5eE--
