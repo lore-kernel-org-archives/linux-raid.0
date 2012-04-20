@@ -1,88 +1,145 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Is this enough for us to have triple-parity RAID?
-Date: Fri, 20 Apr 2012 02:45:48 -0500
-Message-ID: <4F91142C.80305@hardwarefreak.com>
-References: <CAMqP1GVnOErhxj8RV=KFtzHHEJqtguEd1L_vmsS=AAi_rAPoVg@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: RE: [PATCH 07/14] FIX: Extend size of raid0 array
+Date: Fri, 20 Apr 2012 08:48:31 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB185DFC4F@IRSMSX101.ger.corp.intel.com>
+References: <1334328728-12544-1-git-send-email-adam.kwolek@intel.com>
+	<1334328728-12544-2-git-send-email-adam.kwolek@intel.com>
+	<1334328728-12544-3-git-send-email-adam.kwolek@intel.com>
+	<1334328728-12544-4-git-send-email-adam.kwolek@intel.com>
+	<1334328728-12544-5-git-send-email-adam.kwolek@intel.com>
+	<1334328728-12544-6-git-send-email-adam.kwolek@intel.com>
+	<1334328728-12544-7-git-send-email-adam.kwolek@intel.com>
+	<1334328728-12544-8-git-send-email-adam.kwolek@intel.com>
+	<20120417125236.5debe352@notabene.brown>
+	<D9FFE20C522965449E182ACE73889AEB185DF96A@IRSMSX101.ger.corp.intel.com>
+ <20120420072349.7636d58f@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAMqP1GVnOErhxj8RV=KFtzHHEJqtguEd1L_vmsS=AAi_rAPoVg@mail.gmail.com>
+In-Reply-To: <20120420072349.7636d58f@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Alex <creamyfish@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>, "Danecki, Jacek" <jacek.danecki@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>
 List-Id: linux-raid.ids
 
-On 4/17/2012 1:11 AM, Alex wrote:
-> Thanks to Billy Crook who pointed out this is the right place for my =
-post.
->=20
-> Adam Leventhal integrated triple-parity RAID into ZFS in 2009. The
-> necessity of triple-parity RAID is described in detail in Adam
-> Leventhal's article(http://cacm.acm.org/magazines/2010/1/55741-triple=
--parity-raid-and-beyond/fulltext).
+On Thursday, April 19, 2012 11:24 PM NeilBrown <neilb@suse.de> wrote:
+> 
+> On Thu, 19 Apr 2012 15:09:45 +0000 "Dorau, Lukasz"
+> <lukasz.dorau@intel.com>
+> wrote:
+> 
+> > On Tuesday, April 17, 2012 4:53 AM NeilBrown wrote:
+> > >
+> > > On Fri, 13 Apr 2012 16:52:01 +0200 Adam Kwolek
+> <adam.kwolek@intel.com>
+> > > wrote:
+> > >
+> > > > For raid0, takeover operation is required for size change.
+> > > > Add takeover to degraded raid4 before size change and back to raid0
+> after.
+> > > > Array information has to be read again from md after takeover.
+> > > >
+> > > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> > > > ---
+> > > >  Grow.c |   35 +++++++++++++++++++++++++++++++++++
+> > > >  1 files changed, 35 insertions(+), 0 deletions(-)
+> > > >
+> > > > diff --git a/Grow.c b/Grow.c
+> > > > index 8c7bafc..e8f6554 100644
+> > > > --- a/Grow.c
+> > > > +++ b/Grow.c
+> > > > @@ -1626,6 +1626,7 @@ int Grow_reshape(char *devname, int fd, int
+> > > quiet, char *backup_file,
+> > > >  		long long orig_size = get_component_size(fd)/2;
+> > > >  		long long min_csize;
+> > > >  		struct mdinfo *mdi;
+> > > > +		int raid0_takeover = 0;
+> > > >
+> > > >  		if (orig_size == 0)
+> > > >  			orig_size = array.size;
+> > > > @@ -1674,6 +1675,28 @@ int Grow_reshape(char *devname, int fd, int
+> > > quiet, char *backup_file,
+> > > >  				"2TB per device\n");
+> > > >  			size = min_csize;
+> > > >  		}
+> > > > +		if (st->ss->external) {
+> > > > +			if (sra->array.level == 0) {
+> > > > +				rv = sysfs_set_str(sra, NULL, "level",
+> > > > +						   "raid5");
+> > > > +				if (!rv) {
+> > > > +					raid0_takeover = 1;
+> > > > +					/* get array parametes after takeover
+> > > > +					 * to chane one parameter at time
+> > > only
+> > > > +					 */
+> > > > +					rv = ioctl(fd, GET_ARRAY_INFO,
+> > > &array);
+> > > > +				}
+> > > > +			}
+> > > > +			/* make sure mdmon is
+> > > > +			 * aware of the new level */
+> > > > +			if (!mdmon_running(st->container_dev))
+> > > > +				start_mdmon(st->container_dev);
+> > > > +			ping_monitor(container);
+> > > > +			if (mdmon_running(st->container_dev) &&
+> > > > +					st->update_tail == NULL)
+> > > > +				st->update_tail = &st->updates;
+> > > > +		}
+> > > > +
+> > > >  		array.size = size;
+> > > >  		if (array.size != size) {
+> > > >  			/* got truncated to 32bit, write to
+> > > > @@ -1686,12 +1709,24 @@ int Grow_reshape(char *devname, int fd,
+> int
+> > > quiet, char *backup_file,
+> > > >  				rv = -1;
+> > > >  		} else {
+> > > >  			rv = ioctl(fd, SET_ARRAY_INFO, &array);
+> > > > +
+> > > >  			/* manage array size when it is managed externally
+> > > >  			 */
+> > > >  			if ((rv == 0) && st->ss->external)
+> > > >  				rv = set_array_size(st, sra, sra->text_version);
+> > > >  		}
+> > > >
+> > > > +		if (raid0_takeover) {
+> > > > +			/* do not recync non-existing parity,
+> > > > +			 * we will drop it anyway
+> > > > +			 */
+> > > > +			sysfs_set_str(sra, NULL, "sync_action", "idle");
+> > >
+> > > This is probably ineffective.  If the array thinks it needs to resync, then
+> > > just setting it to 'idle' will only stop in temporarily.  It will immediately
+> > > start syncing again.
+> > >
+> > > However given that it is a RAID5 array which is degraded, it shouldn't try
+> to
+> > > resync at all.
+> > >
+> > > So:  does it still work if you remove this line?  If so, could you send a
+> > > patch to remove it?
+> > > If not - we should work out why.
+> > >
+> >
+> > It doesn't work without this line.
+> > The N-disks raid0 changes to degraded (N+1)-disks raid5 (N of N+1 disks)
+> > in /proc/mdstat after size extension, however the metadata on all disks is
+> correct.
+> >
+> 
+> In that case I suspect that fact that it works with the line is racy and it
+> could sometimes fail.  Setting "sync_action" to "frozen" would be safer.
+> Can you confirm that also works?  I'd feel more comfortable about that.
+> 
 
-No mention of SSD.
+You're right. I've checked it on another machine and it sometimes fails.
+I've also checked that with "sync_action" set to "frozen" it works.
+I'll send the patch soon.
 
-> al.(http://www.nature.com/ncomms/journal/v3/n2/full/ncomms1666.html)
+Regards,
+Lukasz
 
-Pay wall.  No matter, as I'd already read of this research.
 
-> established a revolutionary way of writing magnetic substrate using a
-> heat pulse instead of a traditional magnetic field, which may increas=
-e
-> data throughput on a hard disk by 1000 times in the future.
 
-Your statement is massively misleading.  The laser heating technology
-doesn't independently increase throughput 1000x.  It will allow for
-increased throughput only via enabling greater aerial density.  Thus th=
-e
-ratio of throughput to capacity stays the same.  Thus drive rebuild
-times will still increase dramatically.
-
-> facilitate another triple-parity RAID algorithm
-
-CPU performance is increasing at a faster rate than any computer
-technology.  Thus, if you're going to even bother with introducing
-another parity RAID level, and the binary will run on host CPU cores,
-skip triple parity and go straight to quad parity, RAID-P4=99.  Most sa=
-vvy
-folks doing RAID6 are using a 6+2 or 8+2 configuration as wide stripe
-parity arrays tend to be problematic.  They then stripe them to create =
-a
-RAID60, or concatenate them if they're even more savvy and use XFS.
-
-The most common JBOD chassis on the market today seems to be the 24x
-2.5" drive layout.  This allows three 6+2 RAID6 arrays, losing 6 drives
-to parity leaving 18 drives of capacity.  With RAID-P4=99  a wider stri=
-pe
-array becomes more attractive for some applications.  Thus our 24 drive
-JBOD could yield a 20+4 RAID-P4=99 with two drives more capacity than t=
-he
-6+2 RAID6 configuration.  If one wished to stick with narrower stripes,
-we'd get two 8+4 RAID-P4=99 arrays and 16 drives total capacity, 2 less
-than the triple RAID6 setup, and still 4 drives more capacity than RAID=
-10.
-
-The really attractive option here for people who like parity RAID is th=
-e
-20+4 possibility.  With a RAID-P4=99 array that can withstand up to 4
-drive failures, people will no longer be afraid of using wide stripes
-for applications that typically benefit, where RAID50/60 would have bee=
-n
-employed previously.  They also no longer have to worry about secondary
-and/or tertiary drive failures during a rebuild.
-
-Yeah, definitely go straight to RAID-P4=99 and skip triple parity RAID
-altogether.  You'll have to do it in 6-10 years anyway so may as well
-prevent the extra work.  And people could definitely benefit from
-RAID-P4=99 today.
-
---=20
-Stan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
