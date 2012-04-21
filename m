@@ -1,47 +1,62 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: Is this enough for us to have triple-parity RAID?
-Date: Sat, 21 Apr 2012 13:18:48 +0200
-Message-ID: <20120421111848.GA28576@lazy.lzy>
-References: <4F8DD02F.1060504@westcontrol.com>
- <4F905690.3060301@zytor.com>
- <CAMqP1GVjqBMTiM9Yb+PxQLULWDnG8x3uvzuLFKya3NXsTPt_hg@mail.gmail.com>
- <067e21e2-6f21-48a7-93a8-bb2249534155@email.android.com>
- <CAMqP1GXaqtxrSviV1ZhBXopt82ZprjzPFppXvLK36yLkptmXQw@mail.gmail.com>
- <4F91B1C4.5080205@hesbynett.no>
- <20120420210106.GA2432@lazy.lzy>
- <20369.54567.60804.896644@tree.ty.sabi.co.UK>
- <20120420223138.GA11308@lazy.lzy>
- <20370.33554.998900.245328@tree.ty.sabi.co.UK>
+From: Jan Ceuleers <jan.ceuleers@computer.org>
+Subject: dmesg deluge: RAID1 conf printout
+Date: Sat, 21 Apr 2012 15:55:15 +0200
+Message-ID: <4F92BC43.3010603@computer.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20370.33554.998900.245328@tree.ty.sabi.co.UK>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pglxra2.for.sabi.co.UK@vger.kernel.org>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Peter,
+Hi
 
-> Perhaps it was not clear that "use self repairing coding
-> similarly to Parchive" does not mean the same as "use Parchive".
+Ever since I installed a 3.2 kernel on my Ubuntu  11.04 system, dmesg 
+began being flooed with messages such as the following:
 
-sorry, I understood you meant storing somewhere
-files with parities.
+[15746.465106]  disk 1, wo:0, o:1, dev:sdb2
+[15748.100302] RAID1 conf printout:
+[15748.100306]  --- wd:2 rd:2
+[15748.100310]  disk 0, wo:0, o:1, dev:sdd2
+[15748.100313]  disk 1, wo:0, o:1, dev:sdb2
+[15748.438638] RAID1 conf printout:
+[15748.438642]  --- wd:2 rd:2
+[15748.438646]  disk 0, wo:0, o:1, dev:sdd2
+[15748.438649]  disk 1, wo:0, o:1, dev:sdb2
+[15751.181020] RAID1 conf printout:
+[15751.181026]  --- wd:2 rd:2
+[15751.181030]  disk 0, wo:0, o:1, dev:sdd2
+[15751.181034]  disk 1, wo:0, o:1, dev:sdb2
+[15751.630244] RAID1 conf printout:
+[15751.630250]  --- wd:2 rd:2
+[15751.630255]  disk 0, wo:0, o:1, dev:sdd2
+[15751.630259]  disk 1, wo:0, o:1, dev:sdb2
+[15754.004658] RAID1 conf printout:
+[15754.004662]  --- wd:2 rd:2
+[15754.004666]  disk 0, wo:0, o:1, dev:sdd2
+[15754.004670]  disk 1, wo:0, o:1, dev:sdb2
+[15754.312749] RAID1 conf printout:
+[15754.312754]  --- wd:2 rd:2
+[15754.312758]  disk 0, wo:0, o:1, dev:sdd2
+[15754.312762]  disk 1, wo:0, o:1, dev:sdb2
+[15759.231107] RAID1 conf printout:
+[15759.231112]  --- wd:2 rd:2
+[15759.231115]  disk 0, wo:0, o:1, dev:sdd2
+[15759.231118]  disk 1, wo:0, o:1, dev:sdb2
 
-> Applying self repairing coding to RAID might be easier to
-> imagine considering of a RAID volume as a directory of
-> stripe-sized files.
+(etc, ad infinitum)
 
-Exactly, but as far as I know this is the same as
-any N parities RAID.
+I'm now running a 3.3 kernel and it's still happening. My RAID sets are 
+working just fine; it's just this nuisance log spamming that's annoying.
 
-I mean, the mathematics and algorithm behind should
-be exactly the same...
+Anything I can do about that?
 
-bye,
+root@zotac:~# uname -a
+Linux zotac 3.3.2-030302-generic #201204131335 SMP Fri Apr 13 17:36:17 
+UTC 2012 x86_64 x86_64 x86_64 GNU/Linux
+root@zotac:~# mdadm -V
+mdadm - v3.1.4 - 31st August 2010
 
--- 
 
-piergiorgio
+Thanks, Jan
