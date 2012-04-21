@@ -1,77 +1,136 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: Is this enough for us to have triple-parity RAID?
-Date: Sat, 21 Apr 2012 00:31:38 +0200
-Message-ID: <20120420223138.GA11308@lazy.lzy>
-References: <4F8D228D.8060005@westcontrol.com>
- <20120417171609.GA2859@lazy.lzy>
- <4F8DD02F.1060504@westcontrol.com>
- <4F905690.3060301@zytor.com>
- <CAMqP1GVjqBMTiM9Yb+PxQLULWDnG8x3uvzuLFKya3NXsTPt_hg@mail.gmail.com>
- <067e21e2-6f21-48a7-93a8-bb2249534155@email.android.com>
- <CAMqP1GXaqtxrSviV1ZhBXopt82ZprjzPFppXvLK36yLkptmXQw@mail.gmail.com>
- <4F91B1C4.5080205@hesbynett.no>
- <20120420210106.GA2432@lazy.lzy>
- <20369.54567.60804.896644@tree.ty.sabi.co.UK>
+From: Ken Gunderson <kgunders@teamcool.net>
+Subject: md raid recovery - perplexed
+Date: Fri, 20 Apr 2012 18:48:56 -0600
+Message-ID: <1334969336.14947.23.camel@hermes>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20369.54567.60804.896644@tree.ty.sabi.co.UK>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg@lxra2.for.sabi.co.UK>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Peter,
+Hello List:
 
-On Fri, Apr 20, 2012 at 10:29:11PM +0100, Peter Grandi wrote:
-> [ ... ]
->=20
-> >> 255 data disks is the theoretical limit for GF(2=E2=81=B8).  But i=
-t
-> >> is a theoretical limit of the algorithms - I don't know
-> >> whether Linux md raid actually supports that many disks.  I
-> >> certainly doubt if it is useful.
->=20
-> > The reason to use many disks is in case of geo-redundant RAID,
-> > for example with iscsi.  In this situation you want to have a
-> > lot of redundance, in parities, not mirror.
->=20
-> is that something that makes sense? If one has the extreme
-> requirements implied by that why not use self repairing coding
-> similarly to Parchive style storage formats, for example Typhoon
-> or the Azure filesystem or others inspired by Parchive.
+I've created some arrays.  For example, md2 is RAID1 created with gpt
+based partitions  /dev/sd[ab]1
 
-it depends on other requirements, for example if
-you want to control your file or let the control
-to the "cloud".
-In case of RAID, the cloud sees only raw bytes
-and the local host sees the files too.
+# mdadm --misc --detail /dev/md2
 
-In case of par2, the cloud must see the files.
+/dev/md2:
+        Version : 1.0
+  Creation Time : Thu Apr 19 15:56:18 2012
+     Raid Level : raid1
+     Array Size : 262132 (256.03 MiB 268.42 MB)
+  Used Dev Size : 262132 (256.03 MiB 268.42 MB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
 
-BTW, this is not my original idea, there is
-someone doing, already mentioned, a RAID-96
-with RS(96,64) over networked virtual drives.
+    Update Time : Fri Apr 20 09:08:11 2012
+          State : clean 
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
 
-> Out of interest I just did a small web search and it turned up a
-> recent survey/lecture by Fr=C3=A9d=C3=A9rique Oggier on the maths of =
-these
-> coding systems:
->=20
->   http://phdopen.mimuw.edu.pl/lato12/LectPoland.pdf
->   http://sands.sce.ntu.edu.sg/CodingForNetworkedStorage/
+           Name : archiso:2
+           UUID : e3a5c30e:3fb61039:397992ff:6cc70600
+         Events : 17
 
-Interesting, I'll have a look.
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       8       17        1      active sync   /dev/sdb1
 
-bye,
 
---=20
+Okay, great, that works.  However, I am not able to recover from
+simulated failure.
 
-piergiorgio
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+# mdadm /dev/md2 --fail /dev/sdb1
+
+# mdadm /dev/md2 --misc --detail
+
+/dev/md2:
+        Version : 1.0
+  Creation Time : Thu Apr 19 15:56:18 2012
+     Raid Level : raid1
+     Array Size : 262132 (256.03 MiB 268.42 MB)
+  Used Dev Size : 262132 (256.03 MiB 268.42 MB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Apr 20 15:40:10 2012
+          State : clean, degraded 
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 1
+  Spare Devices : 0
+
+           Name : archiso:2
+           UUID : e3a5c30e:3fb61039:397992ff:6cc70600
+         Events : 20
+
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       0        0        1      removed
+
+       1       8       17        -      faulty spare   /dev/sdb1
+
+
+
+Followed by
+
+# mdadm /dev/md2 --remove /dev/sdb1
+
+/dev/md2:
+        Version : 1.0
+  Creation Time : Thu Apr 19 15:56:18 2012
+     Raid Level : raid1
+     Array Size : 262132 (256.03 MiB 268.42 MB)
+  Used Dev Size : 262132 (256.03 MiB 268.42 MB)
+   Raid Devices : 2
+  Total Devices : 1
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Apr 20 15:59:52 2012
+          State : clean, degraded 
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 0
+  Spare Devices : 0
+
+           Name : archiso:2
+           UUID : e3a5c30e:3fb61039:397992ff:6cc70600
+         Events : 31
+
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       0        0        1      removed
+
+
+I should then be able to re-add sdb1, no?
+
+# mdadm /dev/md2 --re-add /dev/sdb1
+
+mdadm: --re-add for /dev/sdb1 to /dev/md2 is not possible
+
+Since man mdadm explicitly provides following as example:
+
+"mdadm /dev/md0 -f /dev/hda1 -r /dev/hda1 -a /dev/hda1"
+
+Let's try just adding it instead of re-adding
+
+# mdadm /dev/md2 -a /dev/sdb1
+mdadm: /dev/sdb1 reports being an active member for /dev/md2, but a --re-add fails.
+mdadm: not performing --add as that would convert /dev/sdb1 in to a spare.
+mdadm: To make this a spare, use "mdadm --zero-superblock /dev/sdb1" first.
+
+I am perplexed as to why might this be?  I must be missing something
+pretty basic here, else I can provide additional detail as require.
+
+Thanks for your help-- Ken
+
+-- 
+Ken Gunderson <kgunders@teamcool.net>
+
