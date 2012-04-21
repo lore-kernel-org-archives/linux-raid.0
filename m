@@ -1,80 +1,182 @@
-From: =?UTF-8?Q?Pawe=C5=82_Brodacki?= <pawel.brodacki@googlemail.com>
-Subject: Re: [md PATCH 08/23] md: don't set md arrays to readonly on shutdown.
-Date: Sat, 21 Apr 2012 17:18:58 +0200
-Message-ID: <CACVpCE6UZvBia2VwRMaFhJJuB2quvKKQc1byLFRP4YPTE8LHSQ@mail.gmail.com>
-References: <20120314043555.7978.75486.stgit@notabene.brown>
-	<20120314044040.7978.64156.stgit@notabene.brown>
-	<CAGRgLy5UYf27335hQmEQQ8V2GSatQ-1aev9DdTia0j-Hv4wsEg@mail.gmail.com>
-	<20120419084833.39379a6f@notabene.brown>
-	<CAGRgLy6LXB34JtmfZYQEdAK4GLCV-hn-V8cT1zCwo_=ERyK90A@mail.gmail.com>
-	<20120419195740.6e35ea02@notabene.brown>
-	<CACVpCE5mpJcY5u=8Kqp7TkCHN63aMfncDwbnP77NOFjubhqoPA@mail.gmail.com>
-	<20120420220151.623df648@notabene.brown>
+From: Ken Gunderson <kgunders@teamcool.net>
+Subject: Re: md raid recovery - perplexed
+Date: Sat, 21 Apr 2012 11:29:53 -0600
+Message-ID: <1335029393.29951.4.camel@hermes>
+References: <1334969336.14947.23.camel@hermes>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120420220151.623df648@notabene.brown>
+In-Reply-To: <1334969336.14947.23.camel@hermes>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Alexander Lyakas <alex.bolshoy@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-W dniu 20 kwietnia 2012 14:01 u=C5=BCytkownik NeilBrown <neilb@suse.de>=
- napisa=C5=82:
-> On Fri, 20 Apr 2012 13:30:39 +0200 Pawe=C5=82 Brodacki
-> <pawel.brodacki@googlemail.com> wrote:
->>
->> The way I read the message agrees with Alexander's perception. My
->> impression from reading the commit message is, that normal shutdown
->> may result in unclean array, which I would perceive as a regression.
->
-> I don't think you'll find the word "normal" in the original message :=
--)
->
-Neil, I respect you and admire your work and all, but I think you are
-having good time with us and this commit message, aren't you? :)
 
->>
->> I would really appreciate clear statement, whether this behaviour
->> (writeback during shutdown, with possibility of poweroff/reboot whil=
-e
->> array is dirty) can or cannot occur during normal shutdown process.
->
-> Define "normal".
-> If you kill any processes that could generate write-out, and then do =
-a
-> 'sync', then everything should be fine.
->
-I think "normal shutdown" can be defined for the purpose of this
-discussion as whatever /sbin/shutdown does.
+On Fri, 2012-04-20 at 18:48 -0600, Ken Gunderson wrote:
+> Hello List:
+> 
+> I've created some arrays.  For example, md2 is RAID1 created with gpt
+> based partitions  /dev/sd[ab]1
+> 
+> # mdadm --misc --detail /dev/md2
+> 
+> /dev/md2:
+>         Version : 1.0
+>   Creation Time : Thu Apr 19 15:56:18 2012
+>      Raid Level : raid1
+>      Array Size : 262132 (256.03 MiB 268.42 MB)
+>   Used Dev Size : 262132 (256.03 MiB 268.42 MB)
+>    Raid Devices : 2
+>   Total Devices : 2
+>     Persistence : Superblock is persistent
+> 
+>     Update Time : Fri Apr 20 09:08:11 2012
+>           State : clean 
+>  Active Devices : 2
+> Working Devices : 2
+>  Failed Devices : 0
+>   Spare Devices : 0
+> 
+>            Name : archiso:2
+>            UUID : e3a5c30e:3fb61039:397992ff:6cc70600
+>          Events : 17
+> 
+>     Number   Major   Minor   RaidDevice State
+>        0       8        1        0      active sync   /dev/sda1
+>        1       8       17        1      active sync   /dev/sdb1
+> 
+> 
+> Okay, great, that works.  However, I am not able to recover from
+> simulated failure.
+> 
+> # mdadm /dev/md2 --fail /dev/sdb1
+> 
+> # mdadm /dev/md2 --misc --detail
+> 
+> /dev/md2:
+>         Version : 1.0
+>   Creation Time : Thu Apr 19 15:56:18 2012
+>      Raid Level : raid1
+>      Array Size : 262132 (256.03 MiB 268.42 MB)
+>   Used Dev Size : 262132 (256.03 MiB 268.42 MB)
+>    Raid Devices : 2
+>   Total Devices : 2
+>     Persistence : Superblock is persistent
+> 
+>     Update Time : Fri Apr 20 15:40:10 2012
+>           State : clean, degraded 
+>  Active Devices : 1
+> Working Devices : 1
+>  Failed Devices : 1
+>   Spare Devices : 0
+> 
+>            Name : archiso:2
+>            UUID : e3a5c30e:3fb61039:397992ff:6cc70600
+>          Events : 20
+> 
+>     Number   Major   Minor   RaidDevice State
+>        0       8        1        0      active sync   /dev/sda1
+>        1       0        0        1      removed
+> 
+>        1       8       17        -      faulty spare   /dev/sdb1
+> 
+> 
+> 
+> Followed by
+> 
+> # mdadm /dev/md2 --remove /dev/sdb1
+> 
+> /dev/md2:
+>         Version : 1.0
+>   Creation Time : Thu Apr 19 15:56:18 2012
+>      Raid Level : raid1
+>      Array Size : 262132 (256.03 MiB 268.42 MB)
+>   Used Dev Size : 262132 (256.03 MiB 268.42 MB)
+>    Raid Devices : 2
+>   Total Devices : 1
+>     Persistence : Superblock is persistent
+> 
+>     Update Time : Fri Apr 20 15:59:52 2012
+>           State : clean, degraded 
+>  Active Devices : 1
+> Working Devices : 1
+>  Failed Devices : 0
+>   Spare Devices : 0
+> 
+>            Name : archiso:2
+>            UUID : e3a5c30e:3fb61039:397992ff:6cc70600
+>          Events : 31
+> 
+>     Number   Major   Minor   RaidDevice State
+>        0       8        1        0      active sync   /dev/sda1
+>        1       0        0        1      removed
+> 
+> 
+> I should then be able to re-add sdb1, no?
+> 
+> # mdadm /dev/md2 --re-add /dev/sdb1
+> 
+> mdadm: --re-add for /dev/sdb1 to /dev/md2 is not possible
+> 
+> Since man mdadm explicitly provides following as example:
+> 
+> "mdadm /dev/md0 -f /dev/hda1 -r /dev/hda1 -a /dev/hda1"
+> 
+> Let's try just adding it instead of re-adding
+> 
+> # mdadm /dev/md2 -a /dev/sdb1
+> mdadm: /dev/sdb1 reports being an active member for /dev/md2, but a --re-add fails.
+> mdadm: not performing --add as that would convert /dev/sdb1 in to a spare.
+> mdadm: To make this a spare, use "mdadm --zero-superblock /dev/sdb1" first.
+> 
+> I am perplexed as to why might this be?  I must be missing something
+> pretty basic here, else I can provide additional detail as require.
+> 
+> Thanks for your help-- Ken
+> 
 
-If I run /sbin/shutdown -h now, it is a normal shutdown. If I do fancy
-stuff echoing cute strings and integers into various parts of /proc
-and /sys, push magic buttons and/or pull cables at random, it' is not
-a normal shutdown.
+btw - I  do get it that /dev/sdb1 still thinks it's an active member
+of /dev/md2:
 
-> I suspend a "normal" shutdown sequence does this.
->
-> NeilBrown
->
+# mdadm -E /dev/sdb1
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : e3a5c30e:3fb61039:397992ff:6cc70600
+           Name : archiso:2
+  Creation Time : Thu Apr 19 15:56:18 2012
+     Raid Level : raid1
+   Raid Devices : 2
 
-I smell a hint here.
+ Avail Dev Size : 524264 (256.03 MiB 268.42 MB)
+     Array Size : 524264 (256.03 MiB 268.42 MB)
+   Super Offset : 524272 sectors
+          State : clean
+    Device UUID : 68d2dc69:03f902eb:9c8ca454:27bd3854
 
-man shutdown:
-"shutdown arranges for the system to be brought down in a safe way."
-Define safe...
+    Update Time : Fri Apr 20 09:46:57 2012
+       Checksum : 2fa4f67c - correct
+         Events : 17
 
-Neil, could you point us to a bug report which inspired you to write
-this patch? My google fu failed me and I was able to find just one bug
-entry from before 2 yerars, and even that hit is of dubious relevance.
 
-Pretty please with sugar on top?
+   Device Role : Active device 1
+   Array State : AA ('A' == active, '.' == missing)
 
-Best regards,
-Pawe=C5=82 Brodacki
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+And that I could --zero-superblock and then add the partition back into
+the array.
+
+And also that from searching the web that others encountering this seem
+to solve the issue by utilizing an write bitmap. 
+
+But from my reading of the documentation I should not have to, no?
+
+Thanks in advance for helping me understand what's actually going on
+here.
+
+
+-- 
+Ken Gunderson <kgunders@teamcool.net>
+
