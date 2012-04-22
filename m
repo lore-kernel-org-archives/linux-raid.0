@@ -1,140 +1,109 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: dmesg deluge: RAID1 conf printout
-Date: Mon, 23 Apr 2012 09:48:53 +1000
-Message-ID: <20120423094853.15683cd6@notabene.brown>
-References: <4F92BC43.3010603@computer.org>
-	<20120422070041.7e4b95e7@notabene.brown>
-	<4F943E07.8040206@computer.org>
+Subject: Re: [PATCH] imsm: fix: rebuild does not continue after reboot
+Date: Mon, 23 Apr 2012 09:52:05 +1000
+Message-ID: <20120423095205.40cdacde@notabene.brown>
+References: <20120420114502.2484.68027.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/CLm5i85Oo0qCqnrY0XWHG2W"; protocol="application/pgp-signature"
+ boundary="Sig_/1li+zgVRWLEg5+=W8V0UYTD"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F943E07.8040206@computer.org>
+In-Reply-To: <20120420114502.2484.68027.stgit@gklab-128-085.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jan Ceuleers <jan.ceuleers@computer.org>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
---Sig_/CLm5i85Oo0qCqnrY0XWHG2W
+--Sig_/1li+zgVRWLEg5+=W8V0UYTD
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 22 Apr 2012 19:21:11 +0200 Jan Ceuleers <jan.ceuleers@computer.org>
+On Fri, 20 Apr 2012 13:45:02 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
 wrote:
 
-> NeilBrown wrote:
-> > Looks like:
-> >
-> >     commit 7bfec5f35c68121e7b1849f3f4166dd96c8da5b3
-> >
-> > is at fault.  It causes md to attempt to add spares into the array more=
- often.
-> > Would I be right in guessing that you have one spare in this array?
-> > If you remove the spare, the messages should stop.
+> If system is rebooted during rebuild, md driver changes sync_action
+> from 'recover' to 'idle' (during stopping all md devices).
+> If mdmon is still running then, it detects the change of sync_action stat=
+e,
+> finishes rebuild and writes metadata to disks. After computer's restart
+> the RAID volume is in Normal state in OROM and rebuild seems to be finish=
+ed.
+> After system's start-up RAID volume is in auto-read-only state
+> and metadata is in Dirty state. Rebuild seems to be finished but it is no=
+t.
+> Data is inconsistent (out-of-sync).
 >=20
-> Hmmm. The commit message is as follows:
+> When mdmon detects the change of sync_action from 'recover' to 'idle',
+> it has to check if rebuild is really finished. Appropriate test was added.
+> Now mdmon examines each volume's member if it is being rebuilt.
 >=20
-> commit 7bfec5f35c68121e7b1849f3f4166dd96c8da5b3
-> Author: NeilBrown <neilb@suse.de>
-> Date:   Fri Dec 23 10:17:53 2011 +1100
+> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+> ---
+>  super-intel.c |   17 +++++++++++++++++
+>  1 files changed, 17 insertions(+), 0 deletions(-)
 >=20
->      md/raid5: If there is a spare and a want_replacement device, start=20
-> replaceme
->=20
->      When attempting to add a spare to a RAID[456] array, also consider
->      adding it as a replacement for a want_replacement device.
->=20
->      This requires that common md code attempt hot_add even when the array
->      is not formally degraded.
->=20
->      Reviewed-by: Dan Williams <dan.j.williams@intel.com>
->      Signed-off-by: NeilBrown <neilb@suse.de>
->=20
->=20
-> Does this also apply to RAID1 (which is all I've got on this machine: no=
-=20
-> RAID456)?
+> diff --git a/super-intel.c b/super-intel.c
+> index e405d97..1ad5e47 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -7273,6 +7273,8 @@ static void imsm_set_disk(struct active_array *a, i=
+nt n, int state)
+>  	struct imsm_dev *dev =3D get_imsm_dev(super, inst);
+>  	struct imsm_map *map =3D get_imsm_map(dev, MAP_0);
+>  	struct imsm_disk *disk;
+> +	struct mdinfo *mdi;
+> +	int recovery_not_finished =3D 0;
+>  	int failed;
+>  	__u32 ord;
+>  	__u8 map_state;
+> @@ -7313,6 +7315,21 @@ static void imsm_set_disk(struct active_array *a, =
+int n, int state)
+>  		dprintf("normal: ");
+>  		if (is_rebuilding(dev)) {
+>  			dprintf("while rebuilding");
+> +			/* check if recovery is really finished */
+> +			for (mdi =3D a->info.devs; mdi ; mdi =3D mdi->next)
+> +				if (mdi->recovery_start !=3D MaxSector) {
+> +					recovery_not_finished =3D 1;
+> +					break;
+> +				}
+> +			if (recovery_not_finished) {
+> +				dprintf("\nimsm: Rebuild has not finished yet, "
+> +						"state not changed");
+> +				if (a->last_checkpoint < mdi->recovery_start) {
+> +					a->last_checkpoint =3D mdi->recovery_start;
+> +					super->updates_pending++;
+> +				}
+> +				break;
+> +			}
+>  			end_migration(dev, super, map_state);
+>  			map =3D get_imsm_map(dev, MAP_0);
+>  			map->failed_disk_num =3D ~0;
 
-Yes it does apply to RAID1.  Part of the patch was RAID5-specific but part =
-of
-it was to common code that would affect other levels.  That part was not
-meant to be a big change, but it turned out to be a little bigger than I
-expected.
 
-The following should fix it.
+Applied, thanks.
 
-Thanks again for the report,
 NeilBrown
 
-
-=46rom 321f820a905993f694f7ba4347492e9273831813 Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Mon, 23 Apr 2012 09:46:28 +1000
-Subject: [PATCH] md: don't call ->add_disk unless there is good reason.
-
-Commit 7bfec5f35c68121e7b18
-
-   md/raid5: If there is a spare and a want_replacement device, start repla=
-cement.
-
-cause md_check_recovery to call ->add_disk much more often.
-Instead of only when the array is degraded, it is now called whenever
-md_check_recovery finds anything useful to do, which includes
-updating the metadata for clean<->dirty transition.
-This causes unnecessary work, and causes info messages from ->add_disk
-to be reported much too often.
-
-So refine md_check_recovery to only do any actual recovery checking
-(including ->add_disk) if MD_RECOVERY_NEEDED is set.
-
-This fix is suitable for 3.3.y:
-
-Cc: stable@vger.kernel.org
-Reported-by: Jan Ceuleers <jan.ceuleers@computer.org>
-Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 9524192..47f1fdb6 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -7813,14 +7813,14 @@ void md_check_recovery(struct mddev *mddev)
- 		 * any transients in the value of "sync_action".
- 		 */
- 		set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
--		clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 		/* Clear some bits that don't mean anything, but
- 		 * might be left set
- 		 */
- 		clear_bit(MD_RECOVERY_INTR, &mddev->recovery);
- 		clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
-=20
--		if (test_bit(MD_RECOVERY_FROZEN, &mddev->recovery))
-+		if (!test_and_clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
-+		    test_bit(MD_RECOVERY_FROZEN, &mddev->recovery))
- 			goto unlock;
- 		/* no recovery is running.
- 		 * remove any failed drives, then
-
---Sig_/CLm5i85Oo0qCqnrY0XWHG2W
+--Sig_/1li+zgVRWLEg5+=W8V0UYTD
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT5SY5Tnsnt1WYoG5AQKPJxAAvLFFakYn0rtRxOrl1jECT1QXPnxl1/PT
-oXd2yIJYqa8yPTzlIcQznKZxBDqFojXz3yHZw9z4XU2cqtMEsn7I6Syppw9BRm1z
-JQ8VaepfOMav6C+ISNMZHMDynyXttxEH3iwxsPFblI/ws8xzoo77I9KHa8AA1nUV
-46u1vIOCbuk8/1zIFe5X8Nj6yyFk+n3IKDoaNG2euDwSLO+9S65e6mdBrMDZtxKW
-1PRR/Stc5TGBk4RrH1GrVfdQXqf4B7AFNdJlmKEzTS2S8SNIX/3RaRF4JcJVtjdb
-C6GCFLAWpDVPFuCdHIC63ltokD+0F+bS9T/GXhqVOnqTZfPwa+WGL65DnnqN1RZN
-olCGCDW/IRkYPJma5W+g4XDzIhxY1iaarvBeK5I2vvHWwHILNvIJPoQKynSSxpo4
-G6y1Ekd7a0BFGL+xT6uuwXIVka0ObXTJSyKJvwxyfEXUA/Rg2wfB17+OtW+gtP1j
-NWWA895R1Mg6VeEG+bfmWyYOpmUL4tmxkC4fuKXMXYuQDzgtGelMQ/yafiaSOSZQ
-Pv1Azc0VQmdhpwHR1x/sTX/yMBoBGcEZDk5mb/7CtsXH+i1H78jpq9PmfZv9MaDS
-bBETfWCXos+OA6WzwRb3jc51KhsllNlAqs5zx9nvVj7+vrzRvthzBMD0hmNw0r82
-SJ6K66XSm54=
-=MQjR
+iQIVAwUBT5SZpTnsnt1WYoG5AQLR8xAAjqPLsNg+mW+/yXlNMidufWXSATXoaAPD
+b3Z/L3TOyzO9bpwdd/T1vKVstW72YcJndR/SSLsYO3821UG4k042417eDIt53VaZ
+333okqIPg/8SOw67uoTj3MmXzcs++sv48NoLRm1/WOC2Fzn4A9veAlKbiTpMZ4H1
+Si4tPb2EpKt9F4i9ZmBuPPczHQzPQV+sOdTpPFrI32te/Lqg1NEytgWLausrGJQj
+T0zGibDAVkbWxYZBqYpTaRaBtDry62Pn2bO28nWm5lIXSfLr937WknaPaJiHJ+MI
+xjjSddl/kbnBRk9mqu6GJRhyjR7vAJ9xwAjCeUeTHOmDGSZVgRBVi5XsXHrabwhF
+IwJQ0va5fnEyX2amOfpeLgpprtFVgTGEPx3KtBfxZmdYbWHrxyw83aWCOYNh4IAw
+RTrHY4O/Tmps/lYT58oGI4IPrKfp+KneJTea/cObaBENLZ4JDYU98Tw9CmcElB0U
+DsdNGxvsy6hwk7Y1Z3IkQ0InCAmUW9VqH9PCFFuj+Ksv9tQRn4HQH1/6q9vvTlty
+X+5zJcspG+HGsv+wiAmniGVIuhZlrOzvXX0TcVKVpNADfahVrsC+jvHsTMDSCF0H
+dU1hSI9QhRKlQXRV04yYwHL7pjHOBvFRe6Quh3fyPT3H76AzZd+xb4erFXnP/Cwn
+6DodEfv6RBk=
+=+ku6
 -----END PGP SIGNATURE-----
 
---Sig_/CLm5i85Oo0qCqnrY0XWHG2W--
+--Sig_/1li+zgVRWLEg5+=W8V0UYTD--
