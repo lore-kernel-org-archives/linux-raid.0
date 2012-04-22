@@ -1,125 +1,81 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm -E won't examine loop back device, works ok on source
- disk
-Date: Mon, 23 Apr 2012 07:58:16 +1000
-Message-ID: <20120423075816.6d21afe8@notabene.brown>
-References: <CANb3qHeDF10CoRiteo_wwUSvGtpjcNWPh95xdatkFoY+GyAZJQ@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Removing a failing drive from multiple arrays
+Date: Sun, 22 Apr 2012 18:33:36 -0400
+Message-ID: <4F948740.8000605@tmr.com>
+References: <4F905F66.6070803@tmr.com> <20120420075212.4574111a@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/JX5Wa7MOVWd90tGPORIfwsE"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CANb3qHeDF10CoRiteo_wwUSvGtpjcNWPh95xdatkFoY+GyAZJQ@mail.gmail.com>
+In-Reply-To: <20120420075212.4574111a@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Veedar Hokstadt <veedar@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/JX5Wa7MOVWd90tGPORIfwsE
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Sun, 22 Apr 2012 17:00:04 -0400 Veedar Hokstadt <veedar@gmail.com> wrote:
-
-> Consider a SATA drive /dev/sdb which is a member of an imsm RAID0 array...
->=20
-> % sum /dev/sdb
-> 25645 156290904
->=20
-> The drive was imaged to a file without error and mounted as a loopback de=
-vice...
->=20
-> % sum /dev/loop2
-> 25645 156290904
->=20
-> The checksums match as expected. But I can not examine the loopback I get=
-....
->=20
-> % mdadm  -E -v /dev/loop2
-> mdadm: No md superblock detected on /dev/loop2.
->=20
-> But I can examine the physical source drive /dev/sdb...
->=20
-> % mdadm  -E -v /dev/sdb
-> /dev/sdb:
->           Magic : Intel Raid ISM Cfg Sig.
->         Version : 1.0.00
->     Orig Family : e92a11d9
->          Family : e92a11d9
->      Generation : 00001608
->            UUID : 25137636:2ff64e75:10ae5444:4e8f609b
->        Checksum : e1237b20 correct
->     MPB Sectors : 1
->           Disks : 2
->    RAID Devices : 1
->=20
->   Disk01 Serial : 8068C3QVT
->           State : active
->              Id : 00010000
->     Usable Size : 312577294 (149.05 GiB 160.04 GB)
->=20
-> [Volume0]:
->            UUID : 72acd5fa:35c5a901:995af79b:83a29de1
->      RAID Level : 0
->         Members : 2
->       This Slot : 1
->      Array Size : 625154048 (298.10 GiB 320.08 GB)
->    Per Dev Size : 312577283 (149.05 GiB 160.04 GB)
->   Sector Offset : 0
->     Num Stripes : 1221004
->      Chunk Size : 128 KiB
->        Reserved : 0
->   Migrate State : idle
->       Map State : normal
->     Dirty State : clean
->=20
->   Disk00 Serial : 809BC541T
->           State : active failed
->              Id : 00000000
->     Usable Size : 312577294 (149.05 GiB 160.04 GB)
->=20
-> I'm trying to recover data from a failed RAID0.
-> I can successfully reassemble the RAID0 from the image files using
-> other proprietary recovery software.
-> But I would like to get it working with mdadm if at all possible.
-> Any ideas?
+NeilBrown wrote:
+> On Thu, 19 Apr 2012 14:54:30 -0400 Bill Davidsen<davidsen@tmr.com>  wrote:
 >
+>> I have a failing drive, and partitions are in multiple arrays. I'm
+>> looking for the least painful and most reliable way to replace it. It's
+>> internal, I have a twin in an external box, and can create all the parts
+>> now and then swap the drive physically. The layout is complex, here's
+>> what blkdevtra tells me about this device, the full trace is attached.
+>>
+>> Block device sdd, logical device 8:48
+>> Model Family:     Seagate Barracuda 7200.10
+>> Device Model:     ST3750640AS
+>> Serial Number:    5QD330ZW
+>>       Device size   732.575 GB
+>>              sdd1     0.201 GB
+>>              sdd2     3.912 GB
+>>              sdd3    24.419 GB
+>>              sdd4     0.000 GB
+>>              sdd5    48.838 GB [md123] /mnt/workspace
+>>              sdd6     0.498 GB
+>>              sdd7    19.543 GB [md125]
+>>              sdd8    29.303 GB [md126]
+>>              sdd9   605.859 GB [md127] /exports/common
+>>     Unpartitioned     0.003 GB
+>>
+>> I think what I want to do is to partition the new drive, then one array
+>> at a time fail and remove the partition on the bad drive, and add a
+>> partition on the new good drive. Then repeat for each array until all
+>> are complete and on a new drive. Then I should be able to power off,
+>> remove the failed drive, put the good drive in the case, and the arrays
+>> should reassemble by UUID.
+>>
+>> Does that sound right? Is there an easier way?
+>>
+> I would add the new partition before failing the old but that isn't a big
+> issues.
+>
+> If you were running a really new kernel, used 1.x metadata, and were happy to
+> try out code that that hasn't had a lot of real-life testing you could (after
+> adding the new partition) do
+>     echo want_replacement>  /sys/block/md123/md/dev-sdd5/state
+> (for example).
+>
+> Then it would build the spare before failing the original.
+> You need linux 3.3 for this to have any chance of working.
+>
+> NeilBrown
 
-Try setting  IMSM_NO_PLATFORM in the environment:
+I expect to try this in a real world case tomorrow. Am I so lucky that when 
+rebuilding the failing drive will be copies in a way which uses a recovered 
+value for the chunk if there's a bad block? And only if there's a bad block, so 
+that possible evil on the other drives would not be a problem unless they were 
+at the same chunk?
 
-  IMSM_NO_PLATFORM=3D1 mdadm -E -v /dev/loop2
-
-or
-
-  export IMSM_NO_PLATFORM=3D1
-  mdadm -E -v /dev/loop2
-
-I think this is fixed in more recent mdadm.  You still need IMSM_NO_PLATFORM
-to create or assemble an array, but not just to look at it.
-
-NeilBrown
+As soon as the pack of replacements arrives I'll let you know how well this 
+worked, if at all.
 
 
+-- 
+Bill Davidsen<davidsen@tmr.com>
+   We are not out of the woods yet, but we know the direction and have
+taken the first step. The steps are many, but finite in number, and if
+we persevere we will reach our destination.  -me, 2010
 
---Sig_/JX5Wa7MOVWd90tGPORIfwsE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT5R++Dnsnt1WYoG5AQK9rhAAofy1KnCN/UdVykGnZoUQG1l4FOT9A4mO
-AnjqxRmYj+xzvYFd6rPJqyGEEMFWUnYcmWBmGM1ElxpAuKqa+gzVwnUqrjjunR6u
-FUJH5G1Vm7+5kDwg5qg5wQBwgNtRk8/Y7JenklZmGl7aLQFQB7535n8MlCGgcqnn
-+IZ2Czf19pffqR02aX3lSZCcSHjEneb0Jk9M0gMgj361DrHvya58VH/c3S/3Z1Hw
-hTvK8M50yWtDAPbvu3f+8IEjcDIyLXZ+LMnCyPaDqff1r9HKfkSbX5CKtmRkdc+Z
-dt554522H1xdG1/q03zTs6smb9/B2IBVhOxRSdtXG5Tt/Gaz+N6dPvT6FNcb+cO0
-nPKYEsZlMxl93fDmyiClTR5K2byg5fWKovxKu9KHcpqMB3aQzcDZDtiVIZNzWnLz
-se1wblNq4nBLNvJv0BNblXmv1Uowyv56Op6afsM3Q7p9duBLdNDE8e6ciGVh69d5
-oTOnI/X0LO9mofCX+xafr9r1QqtBcJvq3o5V4Jb3FuT5CAK2i48GfAJuYEdCti9u
-kXIGm+7aN6CayiWUorACmNejDBB1FyV6wIbzQ5/rhmHdMG+PRV2yZCrQAZw/9u6M
-8Js6t/CpXqfqhRRVhbYNccMoxHSdFHFFUKqOfqkNyIK1kUDvb2wfwHpLZdjZn58F
-UIt7uLzJi34=
-=DZDp
------END PGP SIGNATURE-----
-
---Sig_/JX5Wa7MOVWd90tGPORIfwsE--
