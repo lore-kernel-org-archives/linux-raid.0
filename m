@@ -1,125 +1,73 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: md/bitmap: move some fields of 'struct bitmap' into a 'storage'
- substruct.
-Date: Mon, 23 Apr 2012 10:10:49 +1000
-Message-ID: <20120423101049.633d9be7@notabene.brown>
-References: <20120420131336.GA26339@elgon.mountain>
+Subject: Re: [PATCH] fix: correct extending size of raid0 array
+Date: Mon, 23 Apr 2012 10:12:52 +1000
+Message-ID: <20120423101252.3f337002@notabene.brown>
+References: <20120420090025.32107.93930.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ue2f5X2Ilj=V06724yeX80j"; protocol="application/pgp-signature"
+ boundary="Sig_/GipagxmAJ+hk9GRXOWYVKJe"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120420131336.GA26339@elgon.mountain>
+In-Reply-To: <20120420090025.32107.93930.stgit@gklab-128-085.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@ORACLE.COM>
-Cc: linux-raid@vger.kernel.org
+To: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
---Sig_/ue2f5X2Ilj=V06724yeX80j
+--Sig_/GipagxmAJ+hk9GRXOWYVKJe
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 20 Apr 2012 16:13:36 +0300 Dan Carpenter <dan.carpenter@ORACLE.COM>
+On Fri, 20 Apr 2012 11:00:25 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
 wrote:
 
-> Hello NeilBrown,
+> Setting "sync_action" to "idle" while extending size of raid0 array
+> is racy and sometimes fails.
+> "sync_action" should be set to "frozen" instead.
 >=20
-> This is a semi-automatic email about new static checker warnings.
+> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+> ---
+>  Grow.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 >=20
-> The patch 9159d8a35d0a: "md/bitmap: move some fields of 'struct
-> bitmap' into a 'storage' substruct." from Apr 19, 2012, leads to the
-> following Smatch complaint:
->=20
-> drivers/md/bitmap.c:1212 bitmap_daemon_work()
-> 	error: we previously assumed 'bitmap->storage.filemap' could be
-> 	       null (see line 1145)
->=20
-> drivers/md/bitmap.c
->   1144			bitmap->need_sync =3D 0;
->   1145			if (bitmap->storage.filemap) {
->                             ^^^^^^^^^^^^^^^^^^^^^^^
-> Renamed check.
->=20
->   1146				sb =3D kmap_atomic(bitmap->storage.sb_page);
->   1147				sb->events_cleared =3D
->   1148					cpu_to_le64(bitmap->events_cleared);
->   1149				kunmap_atomic(sb);
->   1150				set_page_attr(bitmap, 0,
->   1151					      BITMAP_PAGE_NEEDWRITE);
->   1152			}
->   1153		}
->=20
-> [snip]
->=20
->   1210			if (test_and_clear_page_attr(bitmap, j,
->   1211						     BITMAP_PAGE_NEEDWRITE)) {
->   1212				write_page(bitmap, bitmap->storage.filemap[j], 0);
->                                                    ^^^^^^^^^^^^^^^^^^^^^^=
-^^^^
-> Renamed dereference.
+> diff --git a/Grow.c b/Grow.c
+> index 389992e..b4b9ff2 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -1749,7 +1749,7 @@ int Grow_reshape(char *devname, int fd, int quiet, =
+char *backup_file,
+>  			/* do not recync non-existing parity,
+>  			 * we will drop it anyway
+>  			 */
+> -			sysfs_set_str(sra, NULL, "sync_action", "idle");
+> +			sysfs_set_str(sra, NULL, "sync_action", "frozen");
+>  			/* go back to raid0, drop parity disk
+>  			 */
+>  			sysfs_set_str(sra, NULL, "level", "raid0");
 
-There is a relationship between storage.filemap and storage.file_pages.
-If the later is 0, the former must be non-NULL.
-
-This dereference only happens if file_pages > 0...  Maybe I should check
-file_pages up above so as not to confuse smatch??
-
->=20
->   1213				if (!bitmap->storage.filemap)
->                                      ^^^^^^^^^^^^^^^^^^^^^^^
-> Another check.
-
-Yes, that does look odd.  The check isn't needed any more and I have just
-removed it.
-Previously if write_page() got an error it would free the filemap.  At that
-time there was locking here.
-   spin_unlock
-   write_page()
-   spin_lock
-   if (!bitmap->storage.filemap) ....
-
-so it was more obvious that filemap could well change between the write_page
-and the test.
-When I change write_page to not free the filemap any more, I could remove t=
-he
-locking.  But I didn't notice that I could remove the test as well.
-
-New code will be in my for-next shortly.
-
-Thanks,
+applied,
+thanks,
 NeilBrown
 
-
->=20
->   1214					break;
->=20
-> Really, this isn't a new warning, it's just shows up as a new warning
-> because of the rename.  Still, I was curious about the check after the
-> dereference.
->=20
-> regards,
-> dan carpenter
-
-
---Sig_/ue2f5X2Ilj=V06724yeX80j
+--Sig_/GipagxmAJ+hk9GRXOWYVKJe
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT5SeCTnsnt1WYoG5AQIbwQ/8DgN4wYtGQlSimrcq+uBIB1I0OLOzEjyK
-1tCoEwcHa893X2t2cGRLIMsbXtEEKuI1/mpla+swur5yGpakY61+FMnpPBfdF/uQ
-cMBON5DtqL3Y6YTR0P9EajKbSsMuJkQy0zTQUW+3NimvrCJd/7+7AvV5dErMuyw3
-PmTINakuiH3BIhuiTOJZapQ97FsEHWxZBTF4cRpUKjQDyeVbHU3Sc8+yOZUbvg6W
-NT8LgjPb8liQo73odJeY9wGeu8eUjCUH11qg1+BJavhiY1yUJgL46eKNOuqnVXt8
-ZakwANyKvoeeDh1FKp4zbUF7zcKPBJ2LNYQwwgLvGPGWFv210su7tRu4gQuIQqLZ
-SpfAZqmWZ9sYxPXTYl4q5v9G+TphPRIF3JD2FvHxQnuQykkYcpmoyOYkUOTM0VML
-5TFtuHhs86ssDKC6mc60PBLeeYOHlnAsXNB1gXmjUXKjLdsoGIX0+5o/9ymSj5ot
-w1cLKYJATgKhFt+UnYe62V/7AfkEmGb+ZkFZtNEbTtjtV8UNNXovNav5ED2ZE+2A
-z+1UNdGfW8JWUmzfhBfEkJOaOaQi/RfNkWv+KRysVafP4+sOd9eXYlepd4kmYteK
-fT43zFlGJhlZHTYu/DygX03UIr73Mwu2YoqILOU5j5ZypTxp6EXizeHRwxQ31XPS
-SmLOWEHB++4=
-=PVkd
+iQIVAwUBT5SehDnsnt1WYoG5AQIR+A//XAP7lF4uwDX91spvC6wUDCqqlf6LA0Xf
+2M9eGQvDyxy31OglmljKNTRdu9SJoE7YpzrzFzcBzrcgzPg0Va+ToMe6QDKF5UgJ
+iLlJakeP62fJJAZEDB2uDWJAzSxW2oVozQqzRLeynyjICGIjCjqW/EcDIMM/pGE5
+hkniNwkISR8+Em9I/xwOqL9N2B45LvglmaV9wCq4oercrTSvfrgiooThVcdkzXls
+z4++oILxIQiVIkHNQrSxTF7qXcJ2xk8sV431XUH4Jy2MAk2CCkbhw70V/IGk2Uws
+PLJKyFA2/I4QtuLV03ke4g88nSirBPxLFOH/ceB9NuBvtcy5OO+lFQpGKPS22ev2
+OyrDxIg42ZIitcyaWjDB737uI0ok9W0NEscLcHqdQ/+Nv36/dgMPZRQBcuO8HkTS
+QqE0U/rjkfuG8lok5C/8GR0ETdMITvjP9xZ+cRQ3U4a6CXUkBaoOVRy68e7Tt+Mk
+pgaM0ZAs6dlBAqt2qAR4oGl0b6BEl0s04qdlopRQvGIc+Y4fDDL7GdGJmN1oKM9K
+rB/EkYZ2s2Ry+tM4cnFqdkAH7pRjF7ikxyJG28/7VUzm+h2iDIZTjDwtpacL7uWQ
+YE2cMHbSo4lq8QOagz12GgM+gEuDV0qZijwcr0AKzE7CmHYPJOd49tX4ijt7TYCC
+P05mDyAuNCI=
+=XDIV
 -----END PGP SIGNATURE-----
 
---Sig_/ue2f5X2Ilj=V06724yeX80j--
+--Sig_/GipagxmAJ+hk9GRXOWYVKJe--
