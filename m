@@ -1,40 +1,40 @@
-From: "Hotmail \(John Fleuren\)" <john_fleuren@hotmail.com>
-Subject: Re: mdadm on an MvixBox running OpenWRT
-Date: Mon, 23 Apr 2012 19:29:38 +1000
-Message-ID: <SNT108-DS260BEF178BFDB105EAB8EF0210@phx.gbl>
-References: <SNT108-DS14C5F6BAE0EFE3A61BEB4BF0200@phx.gbl> <20120423072845.03d854f1@notabene.brown>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: md/bitmap: move some fields of 'struct bitmap' into a 'storage'
+ substruct.
+Date: Mon, 23 Apr 2012 13:17:04 +0300
+Message-ID: <20120423101704.GA20058@mwanda>
+References: <20120420131336.GA26339@elgon.mountain>
+ <20120423101049.633d9be7@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120423072845.03d854f1@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <20120423101049.633d9be7@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+On Mon, Apr 23, 2012 at 10:10:49AM +1000, NeilBrown wrote:
+> On Fri, 20 Apr 2012 16:13:36 +0300 Dan Carpenter <dan.carpenter@ORACLE.COM>
+> >   1210			if (test_and_clear_page_attr(bitmap, j,
+> >   1211						     BITMAP_PAGE_NEEDWRITE)) {
+> >   1212				write_page(bitmap, bitmap->storage.filemap[j], 0);
+> >                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+> > Renamed dereference.
+> 
+> There is a relationship between storage.filemap and storage.file_pages.
+> If the later is 0, the former must be non-NULL.
+> 
+> This dereference only happens if file_pages > 0...  Maybe I should check
+> file_pages up above so as not to confuse smatch??
+> 
 
-Thanks for the reply re mdadm running on the 3.04 kernel.
-I will try out your program now I know that it is compatible with this 
-kernel.
+False positives are not really a problem.  I only look at new
+warnings.  My dream is that someday Smatch will be able to figure
+out the code flow as it is.
 
-For what its worth: The email address "linux-raid@vger.kernel.org" generated 
-a Delivery Status Notification.
+regards,
+dan carpenter
 
-Cheerio,
-
-John Fleuren
-(also living in the sunny country!)
---------------------------------------------------
-From: "NeilBrown" <neilb@suse.de>
-Sent: Monday, April 23, 2012 7:28 AM
-To: "Hotmail (John Fleuren)" <john_fleuren@hotmail.com>
-Cc: <linux-raid@vger.kernel.org>
-Subject: Re: mdadm on an MvixBox running OpenWRT
-
- 
 
