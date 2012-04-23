@@ -1,42 +1,134 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: Intel fakeraid working?
-Date: Mon, 23 Apr 2012 00:06:33 -0400
-Message-ID: <4F94D549.4050308@ubuntu.com>
-References: <4F7CEDD0.9080904@ubuntu.com> <20120405111317.2a5227b1@notabene.brown> <4F7DE314.9040306@ubuntu.com> <20120406092428.1090e10b@notabene.brown> <4F7E426F.5000604@ubuntu.com> <20120410094330.00fb2477@notabene.brown> <4F843252.5090109@ubuntu.com> <20120423122520.289cad2f@notabene.brown>
+From: Veedar Hokstadt <veedar@gmail.com>
+Subject: Re: mdadm -E won't examine loop back device, works ok on source disk
+Date: Mon, 23 Apr 2012 00:46:16 -0400
+Message-ID: <CANb3qHdLoaqp_N1awphoexuxpVgtnLSBewsGdGnP5NvUp=7BhQ@mail.gmail.com>
+References: <CANb3qHeDF10CoRiteo_wwUSvGtpjcNWPh95xdatkFoY+GyAZJQ@mail.gmail.com>
+	<20120423075816.6d21afe8@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120423122520.289cad2f@notabene.brown>
+In-Reply-To: <20120423075816.6d21afe8@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Thanks for your reply but setting IMSM_NO_PLATFORM seems to have no eff=
+ect...
 
-On 04/22/2012 10:25 PM, NeilBrown wrote:
-> md does set the same flag that "blockdev --setro" sets.  If some filesystem
-> writes anyway, then it is definitely a bug and should be fixed.
+% export IMSM_NO_PLATFORM=3D1
+% echo $IMSM_NO_PLATFORM
+1
 
-It sounds like that's what happened in this case.
+% mdadm -V
+mdadm - v3.2.3 - 23rd December 2011
 
-> So it looks like everybody is doing the "right" thing (allowing for
-> occasional bugs here and there), and your real problem is just that Ubuntu
-> didn't package mdmon.
+% mdadm -E -v /dev/loop2
+mdadm: No md superblock detected on /dev/loop2.
 
-The lack of mdmon certainly is a problem, but triggering that BUG_ON when it is missing seems to point to a bug somewhere in the kernel.
+% export IMSM_NO_PLATFORM=3D""
+% echo $IMSM_NO_PLATFORM
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+% mdadm -E -v /dev/loop2
+mdadm: No md superblock detected on /dev/loop2.
 
-iQEcBAEBAgAGBQJPlNVJAAoJEJrBOlT6nu75VmQIAKTl4VPgadyeV1xpzJzFmPKP
-YX9MZf8cZgcrmy1qRZrJLGa9Yfd6A8L0sp9Y4kzUM7pvPsmxG6uDr+iBsxx6MkJZ
-cBbpIxuIiB1zwOIR6YcvyCG2htZxqS11ZFzZL+fIFTI9OXMgdBbHJoMRm1S6XdE4
-erKhYhrAD31tKcHV1RIOFSAf8GMUsn5iUzdO6YpBefVjmCodJMMeaUyxIoMLrIC1
-jWzS8Iu30L0fn2kyOWLaLvkupVTe1TG4hThWrdHkb/sUCEmcuSp2YJ7uMgL7Jwn+
-A4hr+yOXnKZmTnYlJcL4fg4xvavcaKqirZYYmcdv5OmIHwcfYORdkHAP2m5G4pQ=
-=w81A
------END PGP SIGNATURE-----
+And trying to assemble fails...
+export IMSM_NO_PLATFORM=3D1
+% mdadm --assemble /dev/md0 /dev/loop1 /dev/loop2
+mdadm: Cannot assemble mbr metadata on /dev/loop1
+mdadm: /dev/loop1 has no superblock - assembly aborted
+
+Regards,
+V
+
+On Sun, Apr 22, 2012 at 5:58 PM, NeilBrown <neilb@suse.de> wrote:
+> On Sun, 22 Apr 2012 17:00:04 -0400 Veedar Hokstadt <veedar@gmail.com>=
+ wrote:
+>
+>> Consider a SATA drive /dev/sdb which is a member of an imsm RAID0 ar=
+ray...
+>>
+>> % sum /dev/sdb
+>> 25645 156290904
+>>
+>> The drive was imaged to a file without error and mounted as a loopba=
+ck device...
+>>
+>> % sum /dev/loop2
+>> 25645 156290904
+>>
+>> The checksums match as expected. But I can not examine the loopback =
+I get....
+>>
+>> % mdadm =A0-E -v /dev/loop2
+>> mdadm: No md superblock detected on /dev/loop2.
+>>
+>> But I can examine the physical source drive /dev/sdb...
+>>
+>> % mdadm =A0-E -v /dev/sdb
+>> /dev/sdb:
+>> =A0 =A0 =A0 =A0 =A0 Magic : Intel Raid ISM Cfg Sig.
+>> =A0 =A0 =A0 =A0 Version : 1.0.00
+>> =A0 =A0 Orig Family : e92a11d9
+>> =A0 =A0 =A0 =A0 =A0Family : e92a11d9
+>> =A0 =A0 =A0Generation : 00001608
+>> =A0 =A0 =A0 =A0 =A0 =A0UUID : 25137636:2ff64e75:10ae5444:4e8f609b
+>> =A0 =A0 =A0 =A0Checksum : e1237b20 correct
+>> =A0 =A0 MPB Sectors : 1
+>> =A0 =A0 =A0 =A0 =A0 Disks : 2
+>> =A0 =A0RAID Devices : 1
+>>
+>> =A0 Disk01 Serial : 8068C3QVT
+>> =A0 =A0 =A0 =A0 =A0 State : active
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0Id : 00010000
+>> =A0 =A0 Usable Size : 312577294 (149.05 GiB 160.04 GB)
+>>
+>> [Volume0]:
+>> =A0 =A0 =A0 =A0 =A0 =A0UUID : 72acd5fa:35c5a901:995af79b:83a29de1
+>> =A0 =A0 =A0RAID Level : 0
+>> =A0 =A0 =A0 =A0 Members : 2
+>> =A0 =A0 =A0 This Slot : 1
+>> =A0 =A0 =A0Array Size : 625154048 (298.10 GiB 320.08 GB)
+>> =A0 =A0Per Dev Size : 312577283 (149.05 GiB 160.04 GB)
+>> =A0 Sector Offset : 0
+>> =A0 =A0 Num Stripes : 1221004
+>> =A0 =A0 =A0Chunk Size : 128 KiB
+>> =A0 =A0 =A0 =A0Reserved : 0
+>> =A0 Migrate State : idle
+>> =A0 =A0 =A0 Map State : normal
+>> =A0 =A0 Dirty State : clean
+>>
+>> =A0 Disk00 Serial : 809BC541T
+>> =A0 =A0 =A0 =A0 =A0 State : active failed
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0Id : 00000000
+>> =A0 =A0 Usable Size : 312577294 (149.05 GiB 160.04 GB)
+>>
+>> I'm trying to recover data from a failed RAID0.
+>> I can successfully reassemble the RAID0 from the image files using
+>> other proprietary recovery software.
+>> But I would like to get it working with mdadm if at all possible.
+>> Any ideas?
+>>
+>
+> Try setting =A0IMSM_NO_PLATFORM in the environment:
+>
+> =A0IMSM_NO_PLATFORM=3D1 mdadm -E -v /dev/loop2
+>
+> or
+>
+> =A0export IMSM_NO_PLATFORM=3D1
+> =A0mdadm -E -v /dev/loop2
+>
+> I think this is fixed in more recent mdadm. =A0You still need IMSM_NO=
+_PLATFORM
+> to create or assemble an array, but not just to look at it.
+>
+> NeilBrown
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
