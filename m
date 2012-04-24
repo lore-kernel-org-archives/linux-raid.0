@@ -1,117 +1,82 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Raid5 crashed, need comments on possible repair solution
-Date: Tue, 24 Apr 2012 09:01:22 +1000
-Message-ID: <20120424090122.3d90b4a6@notabene.brown>
-References: <4F955F80.80903@evilazrael.de>
-	<20120424070044.707745b8@notabene.brown>
-	<4F95CDE0.4070200@evilazrael.de>
+Subject: [PULL REQUEST] md: a couple of minor bug fixes, and one serious bug
+ fixed.
+Date: Tue, 24 Apr 2012 10:57:42 +1000
+Message-ID: <20120424105742.57cefab7@notabene.brown>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/GFpTXznzWeJyoYzV.9Tt1q="; protocol="application/pgp-signature"
+ boundary="Sig_/MEs0.IG=s5g09WjSg7TfG/N"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F95CDE0.4070200@evilazrael.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Nelles <evilazrael@evilazrael.de>
-Cc: linux-raid@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/GFpTXznzWeJyoYzV.9Tt1q=
+--Sig_/MEs0.IG=s5g09WjSg7TfG/N
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 23 Apr 2012 23:47:12 +0200 Christoph Nelles
-<evilazrael@evilazrael.de> wrote:
 
-> Hello Neil,
->=20
->=20
-> first thanks for the answer. I will happily provide any data or logs if
-> it helps you to investigate this problem.
->=20
->=20
-> Am 23.04.2012 23:00, schrieb NeilBrown:
-> > This is really worrying.  It's about the 3rd or 4th report recently whi=
-ch
-> > contains:
-> >=20
-> >>      Raid Level : -unknown-
-> >>    Raid Devices : 0
-> >=20
-> > and that should not be possible.  There must be some recent bug that ca=
-uses
-> > the array to be "cleared" *before* writing out the metadata - and that =
-should
-> > be impossible.
-> > What kernel are you running?
->=20
-> I switched kernel versions during that server rebuild. Last running
-> system was with 3.2.5, then rebuild and switch to 3.3.1 ant with that it
-> crashed. Kernel is vanilla selfcompiled, x86_64.
-> mdadm is 3.1.5, selfcompiled, too.
+Hi Linus,
+ please pull the following for the next -rc.
 
-Thanks.
-This is suggestive that it is a very recently introduced bug, and your
-earlier observation that the "update time" correlated with the machine being
-rebooted was very helpful.
-I believe I have found the problem and have reproduced the symptom
-The sequence I used to reproduce it was a bit forced and probably isn't
-exactly what happened in your case.  Maybe there is a race condition that c=
-an
-trigger it as well.
-
-In any case, the following patch should fix the issue, and is strongly
-recommended for any kernel to which it applies.
-
-I'll send this upstream shortly.
-
-Of course this doesn't help you with your current problem though at least it
-suggests that it won't happen again.
-
-I recall that you said you would be re-creating the array with a chunk size
-of 64k.  The default has been 512K since mdadm-3.1 in late 2009.
-Did you explicitly create with "-c 64" when you created the array? If not,
-maybe you need to use "-c 512".
-
+Thanks,
 NeilBrown
 
 
+The following changes since commit afbaa90b80b1ec66e5137cc3824746bfdf559b18:
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 333190f..4a7002d 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8402,7 +8402,8 @@ static int md_notify_reboot(struct notifier_block *th=
-is,
-=20
- 	for_each_mddev(mddev, tmp) {
- 		if (mddev_trylock(mddev)) {
--			__md_stop_writes(mddev);
-+			if (mddev->pers)
-+				__md_stop_writes(mddev);
- 			mddev->safemode =3D 2;
- 			mddev_unlock(mddev);
- 		}
+  md/bitmap: prevent bitmap_daemon_work running while initialising bitmap (=
+2012-04-12 16:05:06 +1000)
 
---Sig_/GFpTXznzWeJyoYzV.9Tt1q=
+are available in the git repository at:
+
+  git://neil.brown.name/md tags/md-3.4-fixes
+
+for you to fetch changes up to 30b8aa9172dfeaac6d77897c67ee9f9fc574cdbb:
+
+  md: fix possible corruption of array metadata on shutdown. (2012-04-24 10=
+:23:16 +1000)
+
+----------------------------------------------------------------
+md: a few more bug fixes for 3.4
+
+2 are tagged for -stable, one being for a fairly serious bug
+that can corrupt metadata and make it hard to recovery an array.
+The other is for a more recent regression since 3.3
+
+----------------------------------------------------------------
+Jonathan Brassow (1):
+      DM RAID: Use safe version of rdev_for_each
+
+NeilBrown (2):
+      md: don't call ->add_disk unless there is good reason.
+      md: fix possible corruption of array metadata on shutdown.
+
+ drivers/md/dm-raid.c |    4 ++--
+ drivers/md/md.c      |    7 ++++---
+ 2 files changed, 6 insertions(+), 5 deletions(-)
+
+--Sig_/MEs0.IG=s5g09WjSg7TfG/N
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT5XfQjnsnt1WYoG5AQJumQ//QGrwNWAFqhBQ15sPUNDuNlX0p4TqBJKK
-IUs8tMdckcv3z1H67Yc2SUGP/IN2TU7xPuo5bU8xMrQJmwbOJq47JB+1Co8GA4XT
-jPPV8zIAnQYd0ILOb7AAGnvy2E/9gW0AoNmUG/xRqbmt/KKQcvdiPHtL/M38PCG2
-CKGd4pjMM5GcSI/skCRqvcO3/6BNm1XrLlxLUKnxoHZCveEIBmWDlBsOKBRfy87v
-kfS6MRJsSf/KqI9bcj204wEemo0eNwlTGZLoQeMUbZgore7F2SzvsdCkJgLfvmuE
-S4nnCxhCX9WiAIe7uKl/GRK7s9NHrDFFkBsL4vcKIu5OtYP7cSb3akR3YUqR6J37
-vRCa65HNiVcUUQJhaXaq0ddOayxZS2d169iU3lGvP74toeauNlOfjv1AdUk9YNFC
-mDYyPixaSTQ1ZfJqt/GMYcg/TqXm5AT2JLLZJ7eNP9qpfcfN9uG9bxXagObB8en5
-1jBFidP1LLb0doig0+m+tTt3TQ+vmcqr73VwL73SLkb7DrUd6SqFEAI7aQDjvrHv
-AZ1i3aI2GkG8VLNovU69VpRpZ6xYW9gtdm2eIAltOTtHBZhsNsZSWJOzvhBUpES8
-855w8oBWJGtXHwG4lW1wD86urpWfMVMatR0tv4jAywgKa0dy8jhxGRvBj5LN+dZD
-JttDFW7fwp8=
-=Oayb
+iQIVAwUBT5X6hjnsnt1WYoG5AQJwABAAtfI8P5VJNJrrlHKEHa7J8xv1KB3KPGJr
+016rtH0AeJOLdY95ojCENHCV+cW9IicfeMzuhnbc+6ilFfFLSsRSy/s0g/DodD/O
+Quvv/lECEzIw4uS49EU07XSZ2x6XCjzO5Quo+tv64EZEVP/DjBJpRKqDEcO03yNr
+duGQTZPWdNYNzTRircuQP9GKEZMDHYoN6VSdXenb3l46E5jQi2fpTVulANwnT1U8
+MRZOHp48n8qabEiyltGL8OhHSEzSk9L4j5dpfW2XKMQmqddGfLWQq2PmW3nL56rG
+NoG9OBJysp1kqzoUCd/wgE+VgtBVrDlbnLjwcnZA1UikA9pdLHUNhMwEkXgtrwyt
+Vo6sEB+0brvon0FTFh6G4T0VU3zFWD2oewd1srUKAE4tm5B536tt5WoC72mJiEs/
+28SEzWRqcguJ9ggpp3Q4WvlgMKaijKLyqLS9ikO0FQ1/gZKLmhysTPcpmiKxPmgi
+6BFclECjY54skePqdYxC9GUR6DUnpVigZZaDk87rAq/QvyzB1QFDqV8Nl3RskQy9
+C0OCHw0zuDHn7W6xksBZZj2Ee70ArAeFPrtebk8LySoEjWSqcp4Q19+Fxtfxrh4m
+2aF1XkX6dEHATOaglIlJ6ZrDOOYJpRCMjC+JYvI8nvybmsjLHBzKRaXv05bDLrsx
+vIvQSkKM6lQ=
+=ZJvx
 -----END PGP SIGNATURE-----
 
---Sig_/GFpTXznzWeJyoYzV.9Tt1q=--
+--Sig_/MEs0.IG=s5g09WjSg7TfG/N--
