@@ -1,81 +1,108 @@
-From: Alex <creamyfish@gmail.com>
-Subject: Re: Is this enough for us to have triple-parity RAID?
-Date: Wed, 25 Apr 2012 10:45:49 +0800
-Message-ID: <CAMqP1GV_gZ7J4u1qt21yHwKoxwxy41f0kYg1YLPN8TfPCiaNtQ@mail.gmail.com>
-References: <CAMqP1GVnOErhxj8RV=KFtzHHEJqtguEd1L_vmsS=AAi_rAPoVg@mail.gmail.com>
-	<4F91142C.80305@hardwarefreak.com>
-	<CAMqP1GWR2-_a=+FTJOsjK9W48zCUVd3smsF63x=+-PimBPzAXQ@mail.gmail.com>
-	<4F97515D.8000406@hardwarefreak.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [RFC 1/2] MD: raid5 trim support
+Date: Wed, 25 Apr 2012 11:43:07 +0800
+Message-ID: <20120425034307.GA454@kernel.org>
+References: <20120417083552.483324288@kernel.org>
+ <20120417084632.306032602@kernel.org>
+ <CABE8wwswKWQ=LDbx0ysTaZf2Hz0jD_q45FNF0jw96ZwZdJiHPw@mail.gmail.com>
+ <20120418062641.000e881c@notabene.brown>
+ <4F8E11A6.7090305@kernel.org>
+ <20120418144841.04ce1a10@notabene.brown>
+ <4F8E5185.8050809@kernel.org>
+ <20120418155749.4afae9cb@notabene.brown>
+ <4F8E605C.9090803@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F97515D.8000406@hardwarefreak.com>
+Content-Disposition: inline
+In-Reply-To: <4F8E605C.9090803@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, axboe@kernel.dk, Shaohua Li <shli@fusionio.com>
 List-Id: linux-raid.ids
 
-I can see that you are trying very hard to fit a new picture into an ol=
-d
-frame. But with new technology there is always new possibilities. For
-example, what I am thinking is: with the new laser write head, it doesn=
-'t
-necessarily require the head to stay very close  to the platter since l=
-aser
-doesn't fade away with longer distance, which may enable a design that
-the head turns(the platter doesn't have to be round) instead of spinnin=
-g
- the platter; hence the "Data rate is a product of [density * RPM]"
-statement falls apart. What is more, if the cost is justified, one may
-even design a disk with multiple write heads to increase the bandwidth
-since now we are free from the fluid mechanic interaction between the
-head and the platter. Both of these may lead to independent increase
-of data rate. I am having these thoughts because it's been an endless
-effort trying to remove the mechanical parts from a HDD(SSD was an
-attempt). With Ostler's new technology, this once again becomes
-possible. It is wise to think outside the box at this time.
+On Wed, Apr 18, 2012 at 02:34:04PM +0800, Shaohua Li wrote:
+> On 4/18/12 1:57 PM, NeilBrown wrote:
+> >On Wed, 18 Apr 2012 13:30:45 +0800 Shaohua Li<shli@kernel.org>  wrote:
+> >
+> >>On 4/18/12 12:48 PM, NeilBrown wrote:
+> >>>On Wed, 18 Apr 2012 08:58:14 +0800 Shaohua Li<shli@kernel.org>   wrote:
+> >>>
+> >>>>On 4/18/12 4:26 AM, NeilBrown wrote:
+> >>>>>On Tue, 17 Apr 2012 07:46:03 -0700 Dan Williams<dan.j.williams@intel.com>
+> >>>>>wrote:
+> >>>>>
+> >>>>>>On Tue, Apr 17, 2012 at 1:35 AM, Shaohua Li<shli@kernel.org>    wrote:
+> >>>>>>>Discard for raid4/5/6 has limitation. If discard request size is small, we do
+> >>>>>>>discard for one disk, but we need calculate parity and write parity disk.  To
+> >>>>>>>correctly calculate parity, zero_after_discard must be guaranteed.
+> >>>>>>
+> >>>>>>I'm wondering if we could use the new bad blocks facility to mark
+> >>>>>>discarded ranges so we don't necessarily need determinate data after
+> >>>>>>discard.
+> >>>>>>
+> >>>>>>...but I have not looked into it beyond that.
+> >>>>>>
+> >>>>>>--
+> >>>>>>Dan
+> >>>>>
+> >>>>>No.
+> >>>>>
+> >>>>>The bad blocks framework can only store a limited number of bad ranges - 512
+> >>>>>in the current implementation.
+> >>>>>That would not be an acceptable restriction for discarded ranges.
+> >>>>>
+> >>>>>You would need a bitmap of some sort if you wanted to record discarded
+> >>>>>regions.
+> >>>>>
+> >>>>>http://neil.brown.name/blog/20110216044002#5
+> >>>>
+> >>>>This appears to remove the unnecessary resync for discarded range after
+> >>>>a crash
+> >>>>or discard error, eg an enhancement. From my understanding, it can't
+> >>>>remove the
+> >>>>limitation I mentioned in the patch. For raid5, we still need discard a
+> >>>>whole
+> >>>>stripe (discarding one disk but writing parity disk isn't good).
+> >>>
+> >>>It is certainly not ideal, but it is worse than not discarding at all?
+> >>>And would updating some sort of bitmap be just as bad as updating the parity
+> >>>block?
+> >>>
+> >>>How about treating a DISCARD request as a request to write a block full of
+> >>>zeros, then at the lower level treat any request to write a block full of
+> >>>zeros as a DISCARD request.  So when the parity becomes zero, it gets
+> >>>discarded.
+> >>>
+> >>>Certainly it is best if the filesystem would discard whole stripes at a time,
+> >>>and we should be sure to optimise that.  But maybe there is still room to do
+> >>>something useful with small discards?
+> >>
+> >>Sure, it would be great we can do small discards. But I didn't get how to do
+> >>it with the bitmap approach. Let's give an example, data disk1, data disk2,
+> >>parity disk3. Say discard some sectors of disk1. The suggested approach is
+> >>to mark the range bad. Then how to deal with parity disk3? As I said,
+> >>writing
+> >>parity disk3 isn't good. So mark the corresponding range of parity disk3
+> >>bad too? If we did this, if disk2 is broken, how can we restore it?
+> >
+> >Why, exactly, is writing the parity disk not good?
+> >Not discarding blocks that we possibly could discard is also not good.
+> >Which is worst?
+> 
+> Writing the parity disk is worse. Discard is to improve the garbage
+> collection
+> of SSD firmware, so improve later write performance. While write is bad for
+> SSD, because SSD can be wear leveling out with extra write and also write
+> increases garbage collection overhead. So the result of small
+> discard is data
+> disk garbage collection is improved but parity disk gets worse and
+> parity disk
+> gets fast to end of its life, which doesn't make sense. This is even
+> worse when
+> the parity is distributed.
+Neil,
+Any comments about the patches?
 
-Cheers,
-Alex
-
-On Wed, Apr 25, 2012 at 9:20 AM, Stan Hoeppner <stan@hardwarefreak.com>=
- wrote:
-> On 4/23/2012 10:26 AM, Alex wrote:
->
->> It looks like to me Ostler's team's work does independently lead to =
-an
->> increase in areal density and writing speed, and
->> there is not fixed relation between these two.
->
-> That's because you've not taken 60 seconds to actually think about th=
-is
-> logically.
->
-> Data rate is a product of [density * RPM]. =A0To increase data rate w=
-e
-> must increase one of these two. =A0Making the R/W head simply punch h=
-oles
-> faster won't increase data rate. =A0It will allow simply allow us to
-> increase the other two without the R/W head becoming a bottleneck.
->
-> Designing the R/W head to punch bits 1000x faster cannot independentl=
-y
-> increase throughput. =A0The platter must either have more bits per in=
-ch or
-> they must spin faster. =A0Period.
->
-> Thus, the only way this laser R/W head will increase throughput is if=
- it
-> simultaneously writes more bits per inch, which increases density,
-> allowing. =A0So again, unless it increases density, the faster punchi=
-ng
-> speed doesn't increase throughput.
->
-> --
-> Stan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Shaohua
