@@ -1,49 +1,45 @@
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: Monitoring for failed drives
-Date: Wed, 25 Apr 2012 17:54:55 +0100
-Message-ID: <20120425165455.GB11238@nsrc.org>
-References: <20120425123951.GB10172@nsrc.org> <4F9823BD.8040300@computer.org>
+From: Emmanuel Noobadmin <centos.admin@gmail.com>
+Subject: Re: Is this enough for us to have triple-parity RAID?
+Date: Thu, 26 Apr 2012 00:59:32 +0800
+Message-ID: <CAAYorBK4NYA3Gky1oh9yftRRbxWad6SE+D+Lr2SJ+5kfKZ-A2w@mail.gmail.com>
+References: <CAMqP1GVnOErhxj8RV=KFtzHHEJqtguEd1L_vmsS=AAi_rAPoVg@mail.gmail.com>
+	<4F91142C.80305@hardwarefreak.com>
+	<CAMqP1GWR2-_a=+FTJOsjK9W48zCUVd3smsF63x=+-PimBPzAXQ@mail.gmail.com>
+	<4F97515D.8000406@hardwarefreak.com>
+	<CAMqP1GV_gZ7J4u1qt21yHwKoxwxy41f0kYg1YLPN8TfPCiaNtQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4F9823BD.8040300@computer.org>
+In-Reply-To: <CAMqP1GV_gZ7J4u1qt21yHwKoxwxy41f0kYg1YLPN8TfPCiaNtQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jan Ceuleers <jan.ceuleers@computer.org>
-Cc: linux-raid@vger.kernel.org
+To: Alex <creamyfish@gmail.com>
+Cc: stan@hardwarefreak.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Apr 25, 2012 at 06:18:05PM +0200, Jan Ceuleers wrote:
-> Brian Candler wrote:
-> >The problem is, how to detect and report this? At the md RAID level,
-> >`cat /proc/mdstat` and `mdadm --detail` show nothing amiss.
-> >
-> >     # cat /proc/mdstat
-> >     Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
-> >     md127 : active raid0 sdk[8] sdf[4] sdb[0] sdj[9] sdc[1] sde[2] sdd[3] sdi[6] sdg[5] sdh[7] sdv[20] sdw[21] sdl[11] sdu[19] sdt[18] sdn[13] sds[17] sdq[14] sdm[10] sdx[22] sdr[16] sdo[12] sdp[15] sdy[23]
-> >           70326362112 blocks super 1.2 512k chunks
-> 
-> Brian,
-> 
-> I know that you know this, but this is a RAID0 which does not have
-> any redundancy. What would you expect md to do?
+On 4/25/12, Alex <creamyfish@gmail.com> wrote:
+> I can see that you are trying very hard to fit a new picture into an old
+> frame. But with new technology there is always new possibilities. For
+> example, what I am thinking is: with the new laser write head, it doesn't
+> necessarily require the head to stay very close  to the platter since laser
+> doesn't fade away with longer distance, which may enable a design that
 
-In an ideal world, maybe it would mark the drive as "failing" or "erroring"
-but still keep it in service.
+The strength of the laser will fall as the distance to the media
+increases, wouldn't it?
 
-There is some data on the failing disk which is still accessible, so as you
-say there is value in keeping the array online, but if you try to access
-data in the bad area of that disk you get I/O errors.  This is a serious
-problem and I want to know about it somehow.
+> the head turns(the platter doesn't have to be round) instead of spinning
+>  the platter; hence the "Data rate is a product of [density * RPM]"
+> statement falls apart. What is more, if the cost is justified, one may
+> even design a disk with multiple write heads to increase the bandwidth
+> since now we are free from the fluid mechanic interaction between the
+> head and the platter. Both of these may lead to independent increase
+> of data rate. I am having these thoughts because it's been an endless
 
-I'm not saying that md is necessarily the right layer to give me this
-information. I'm not sure that SMART is necessarily the right place either,
-although it may suffice.
+But Ostler's technique only increases the write speed and admits in a
+Wired.com article there is still no faster/other way to read the data.
+So we would still be stuck with the rotating disk and the magnetic
+reading heads until some other breakthrough happens.
 
-If there are some drive error counters I can read, preferably exposed via
-SNMP, that would be great.  Otherwise, I seek your advice on the best place
-to look for this information...
-
-Thanks,
-
-Brian.
+Going back into the context of parity RAID rebuild, we would still be
+bottlenecked on the write side wouldn't we since bits on the
+replacement drive can only be calculated after reading the rest of the
+drives.
