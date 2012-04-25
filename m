@@ -1,108 +1,58 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [RFC 1/2] MD: raid5 trim support
-Date: Wed, 25 Apr 2012 11:43:07 +0800
-Message-ID: <20120425034307.GA454@kernel.org>
-References: <20120417083552.483324288@kernel.org>
- <20120417084632.306032602@kernel.org>
- <CABE8wwswKWQ=LDbx0ysTaZf2Hz0jD_q45FNF0jw96ZwZdJiHPw@mail.gmail.com>
- <20120418062641.000e881c@notabene.brown>
- <4F8E11A6.7090305@kernel.org>
- <20120418144841.04ce1a10@notabene.brown>
- <4F8E5185.8050809@kernel.org>
- <20120418155749.4afae9cb@notabene.brown>
- <4F8E605C.9090803@kernel.org>
+From: Kay Diederichs <kay.diederichs@uni-konstanz.de>
+Subject: Re: Raid1: sdb has a lot mor work then sda
+Date: Wed, 25 Apr 2012 09:47:52 +0200
+Message-ID: <4F97AC28.7060609@uni-konstanz.de>
+References: <4F96BCC9.9080003@marco.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4F8E605C.9090803@kernel.org>
+In-Reply-To: <4F96BCC9.9080003@marco.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, axboe@kernel.dk, Shaohua Li <shli@fusionio.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Apr 18, 2012 at 02:34:04PM +0800, Shaohua Li wrote:
-> On 4/18/12 1:57 PM, NeilBrown wrote:
-> >On Wed, 18 Apr 2012 13:30:45 +0800 Shaohua Li<shli@kernel.org>  wrote:
-> >
-> >>On 4/18/12 12:48 PM, NeilBrown wrote:
-> >>>On Wed, 18 Apr 2012 08:58:14 +0800 Shaohua Li<shli@kernel.org>   wrote:
-> >>>
-> >>>>On 4/18/12 4:26 AM, NeilBrown wrote:
-> >>>>>On Tue, 17 Apr 2012 07:46:03 -0700 Dan Williams<dan.j.williams@intel.com>
-> >>>>>wrote:
-> >>>>>
-> >>>>>>On Tue, Apr 17, 2012 at 1:35 AM, Shaohua Li<shli@kernel.org>    wrote:
-> >>>>>>>Discard for raid4/5/6 has limitation. If discard request size is small, we do
-> >>>>>>>discard for one disk, but we need calculate parity and write parity disk.  To
-> >>>>>>>correctly calculate parity, zero_after_discard must be guaranteed.
-> >>>>>>
-> >>>>>>I'm wondering if we could use the new bad blocks facility to mark
-> >>>>>>discarded ranges so we don't necessarily need determinate data after
-> >>>>>>discard.
-> >>>>>>
-> >>>>>>...but I have not looked into it beyond that.
-> >>>>>>
-> >>>>>>--
-> >>>>>>Dan
-> >>>>>
-> >>>>>No.
-> >>>>>
-> >>>>>The bad blocks framework can only store a limited number of bad ranges - 512
-> >>>>>in the current implementation.
-> >>>>>That would not be an acceptable restriction for discarded ranges.
-> >>>>>
-> >>>>>You would need a bitmap of some sort if you wanted to record discarded
-> >>>>>regions.
-> >>>>>
-> >>>>>http://neil.brown.name/blog/20110216044002#5
-> >>>>
-> >>>>This appears to remove the unnecessary resync for discarded range after
-> >>>>a crash
-> >>>>or discard error, eg an enhancement. From my understanding, it can't
-> >>>>remove the
-> >>>>limitation I mentioned in the patch. For raid5, we still need discard a
-> >>>>whole
-> >>>>stripe (discarding one disk but writing parity disk isn't good).
-> >>>
-> >>>It is certainly not ideal, but it is worse than not discarding at all?
-> >>>And would updating some sort of bitmap be just as bad as updating the parity
-> >>>block?
-> >>>
-> >>>How about treating a DISCARD request as a request to write a block full of
-> >>>zeros, then at the lower level treat any request to write a block full of
-> >>>zeros as a DISCARD request.  So when the parity becomes zero, it gets
-> >>>discarded.
-> >>>
-> >>>Certainly it is best if the filesystem would discard whole stripes at a time,
-> >>>and we should be sure to optimise that.  But maybe there is still room to do
-> >>>something useful with small discards?
-> >>
-> >>Sure, it would be great we can do small discards. But I didn't get how to do
-> >>it with the bitmap approach. Let's give an example, data disk1, data disk2,
-> >>parity disk3. Say discard some sectors of disk1. The suggested approach is
-> >>to mark the range bad. Then how to deal with parity disk3? As I said,
-> >>writing
-> >>parity disk3 isn't good. So mark the corresponding range of parity disk3
-> >>bad too? If we did this, if disk2 is broken, how can we restore it?
-> >
-> >Why, exactly, is writing the parity disk not good?
-> >Not discarding blocks that we possibly could discard is also not good.
-> >Which is worst?
-> 
-> Writing the parity disk is worse. Discard is to improve the garbage
-> collection
-> of SSD firmware, so improve later write performance. While write is bad for
-> SSD, because SSD can be wear leveling out with extra write and also write
-> increases garbage collection overhead. So the result of small
-> discard is data
-> disk garbage collection is improved but parity disk gets worse and
-> parity disk
-> gets fast to end of its life, which doesn't make sense. This is even
-> worse when
-> the parity is distributed.
-Neil,
-Any comments about the patches?
+On 04/24/2012 04:46 PM, Daniel Spannbauer wrote:
+> Hello,
+>
+> at the moment I'm trying to find a bottleneck on my lamp-server with
+> opensuse 11.4 (Kernel 2.6.37.6)
+>
+> Sometimes the system has a very poor performance because of a high io-wait.
+> If I watch the systems disk-access with "atop -dD" I can see that sda is
+> the most of the time at a load of 10%, sdb sometimes is at 100% or
+> higher at the same time.
+>
+> In my opinion in a Raid1-System both disk should have nearly the same load.
+>
+> Or may I wrong whis this?
+>
+> Both harddisks where changed 3 Weeks ago, /proc/mdstat shows that the
+> rebuild was successfull and the array is functional. Today I've changed
+> th SATA-Cable and the Port on the Maindboard of sdb, but the behaviour
+> is still the same. Both disks passed the extended smart-self-test.
+>
+> Any ideas about that?
+>
+> Regards
+>
+> Daniel
 
-Thanks,
-Shaohua
+Are the disks more or less the same in all SMART attributes (from 
+smartctl -a)?
+
+I have seen such a behaviour in the case of one disk being marginal, 
+and/or having a couple of bad spots which need several trials to be 
+read. This always also resulted in longer "smartctl -t long" times than 
+usual, but did not always show up clearly in the SMART output (or I 
+looked at the wrong attributes).
+
+I'd try to exchange the disk.
+
+HTH,
+
+Kay
+
+
+
+
