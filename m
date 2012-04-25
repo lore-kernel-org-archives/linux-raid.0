@@ -1,32 +1,47 @@
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: Removing a failing drive from multiple arrays
-Date: Thu, 26 Apr 2012 08:36:07 +0100
-Message-ID: <20120426073607.GA11590@nsrc.org>
-References: <4F905F66.6070803@tmr.com>
- <20369.29756.761374.308057@quad.stoffel.home>
- <4F918F5C.2000607@anonymous.org.uk>
- <CAK2H+efwgznsS4==Rrtm6UE=uOb25-Q0Qm84i8yAJEJJ2JLdgg@mail.gmail.com>
- <4F9450D1.40305@anonymous.org.uk> <4F98B4FE.5010101@tmr.com>
+From: Customer Care <beamman@cyberia.jo>
+Subject: siste varsel.
+Date: Wed, 25 Apr 2012 15:27:38 -0700
+Message-ID: <20120425222738.NOWD19203.moon@moon>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4F98B4FE.5010101@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: info@customercare.net
 List-Id: linux-raid.ids
 
-On Wed, Apr 25, 2012 at 10:37:50PM -0400, Bill Davidsen wrote:
-> I have put MBR and boot partition on a USB thumb drive because the
-> failure rate of a R/O flash is lower than rotating devices (in my
-> experience). Use ext2 for boot, no journal so the drive works really
-> read-only. Hopefully grub2 mounts the boot noatime.
+Kj=C3=A6re konto Bruker,
 
-Another option, although I've not done this for a long time, is PXE boot. 
-You need a DHCP server giving out the correct parameters and a TFTP server
-for the kernel (and ramdisk?)
 
-Regards,
+Vi er n=C3=A5 oppgraderer v=C3=A5r database og e-post servere for =C3=A5=
+ redusere
+spam og useri=C3=B8s e-post, er vi derfor sletter alle ubrukte kontoen =
+til
+skape rom for nye kontoer.
 
-Brian.
+
+=46or =C3=A5 forhindre lukking av konto, m=C3=A5 du bekrefte e
+hensyn ber klikk p=C3=A5 linken nedenfor.
+
+
+https://docs.google.com/spreadsheet/viewform?formkey=3DdHR6UWlxN0FfeXVs=
+Sl9EbHg3SURCSmc6MQ
+
+Advarsel! All Web mail. Konto eiere som nekter =C3=A5 oppdatere hans el=
+ler
+hennes konto innen to dager fra du mottar denne e-posten vil miste hans=
+ eller
+hennes konto permanent.
+
+
+Takk for valg Webmail!
+
+hilsen
+Webmail-teamet
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
