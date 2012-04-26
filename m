@@ -1,47 +1,249 @@
-From: Customer Care <beamman@cyberia.jo>
-Subject: siste varsel.
-Date: Wed, 25 Apr 2012 15:27:38 -0700
-Message-ID: <20120425222738.NOWD19203.moon@moon>
+From: "Tomczak, Marcin" <marcin.tomczak@intel.com>
+Subject: Verify an error from ioctl STOP_ARRAY is missing
+Date: Thu, 26 Apr 2012 11:16:16 +0000
+Message-ID: <8565BDA60DEA9E4C91B1047AD1958FBE1D4DC642@IRSMSX101.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed; boundary="===============0568873286=="
 Return-path: <linux-raid-owner@vger.kernel.org>
+MIME-Version: 1.0
 Sender: linux-raid-owner@vger.kernel.org
-To: info@customercare.net
+To: "neilb@suse.de" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Kj=C3=A6re konto Bruker,
+--===============0568873286==
+MIME-Version: 1.0
+Content-Language: en-US
+Content-Type: multipart/signed; protocol="application/x-pkcs7-signature";
+	micalg=SHA1; boundary="----=_NextPart_000_028B_01CD23AE.C27BFE40"
+
+------=_NextPart_000_028B_01CD23AE.C27BFE40
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+
+Neil,
+
+In a file mdadm/Create.c, line 882, we have a code:
 
 
-Vi er n=C3=A5 oppgraderer v=C3=A5r database og e-post servere for =C3=A5=
- redusere
-spam og useri=C3=B8s e-post, er vi derfor sletter alle ubrukte kontoen =
-til
-skape rom for nye kontoer.
+if (fd >= 0)
+	remove_partitions(fd);
+if (st->ss->add_to_super(st, &inf->disk,
+			 fd, dv->devname)) {
+	ioctl(mdfd, STOP_ARRAY, NULL);
+	goto abort;
+}
+st->ss->getinfo_super(st, inf, NULL);
+safe_mode_delay = inf->safe_mode_delay;
 
 
-=46or =C3=A5 forhindre lukking av konto, m=C3=A5 du bekrefte e
-hensyn ber klikk p=C3=A5 linken nedenfor.
+We don't verify a error code from "ioctl", in my tests I get sometimes
+"errno: 16, Device or resource busy" from ioctl. If it happens, mdadm
+finishes the job and md device (for example "/dev/md126") is still active,
+and it shouldn't.
 
+I think a correct path should be:
+- create md device
+- error from function "add_to_super"
+- remove md device (by using ioctl STOP_ARRAY)
+- finish program
 
-https://docs.google.com/spreadsheet/viewform?formkey=3DdHR6UWlxN0FfeXVs=
-Sl9EbHg3SURCSmc6MQ
+What do you think about this? What kind of patch do we need to fix this
+problem, if any? I think we could retry to call ioctl until it will be
+successful, and add some limit of attempts or timeout (but then problem can
+still appear).
 
-Advarsel! All Web mail. Konto eiere som nekter =C3=A5 oppdatere hans el=
-ler
-hennes konto innen to dager fra du mottar denne e-posten vil miste hans=
- eller
-hennes konto permanent.
+In mdadm there is more unverified error codes from ioctl, which they can
+cause unwanted problems. Shouldn't we check all of these error codes?
 
+Regards
+Marcin Tomczak
 
-Takk for valg Webmail!
+------=_NextPart_000_028B_01CD23AE.C27BFE40
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
 
-hilsen
-Webmail-teamet
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIId9jCCAyAw
+ggKJoAMCAQICBDXe9M8wDQYJKoZIhvcNAQEFBQAwTjELMAkGA1UEBhMCVVMxEDAOBgNVBAoTB0Vx
+dWlmYXgxLTArBgNVBAsTJEVxdWlmYXggU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eTAeFw05
+ODA4MjIxNjQxNTFaFw0xODA4MjIxNjQxNTFaME4xCzAJBgNVBAYTAlVTMRAwDgYDVQQKEwdFcXVp
+ZmF4MS0wKwYDVQQLEyRFcXVpZmF4IFNlY3VyZSBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkwgZ8wDQYJ
+KoZIhvcNAQEBBQADgY0AMIGJAoGBAMFdsVhnCGLuoJotHwhtkRRomAoe/toEbxOEYiHD0XzOnwXg
+uAHwTjTs4oqVBGSs8WtTXwWzy2eAv0ICjv7dAQns4QAUT/z78AzdQ7pbK+EfgHCZFVeTFvEPl2q3
+wmgjHMxNWTCsUR47ryvW7mNFe8XZX1DS41APOojnvxT94Me5AgMBAAGjggEJMIIBBTBwBgNVHR8E
+aTBnMGWgY6BhpF8wXTELMAkGA1UEBhMCVVMxEDAOBgNVBAoTB0VxdWlmYXgxLTArBgNVBAsTJEVx
+dWlmYXggU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eTENMAsGA1UEAxMEQ1JMMTAaBgNVHRAE
+EzARgQ8yMDE4MDgyMjE2NDE1MVowCwYDVR0PBAQDAgEGMB8GA1UdIwQYMBaAFEjmaPkr0rKV10fY
+IyAQTzOYkJ/UMB0GA1UdDgQWBBRI5mj5K9KylddH2CMgEE8zmJCf1DAMBgNVHRMEBTADAQH/MBoG
+CSqGSIb2fQdBAAQNMAsbBVYzLjBjAwIGwDANBgkqhkiG9w0BAQUFAAOBgQBYzinq/Pfetc4CuRe1
+hdG54+CVzCUxDQCmkm5/tpJjnlCV0Zpv5BHeY4VumO6o/1rI01WyZnFX3sAh6z0qpyNJAQSGQnv8
+7n+iFlK1Z2fTQNs7JliyKHc9rhR3Ydb6KmYnoA36p3Nc6nDxlCFlRF/6/O8paKmih3nvee9PrAd3
+ODCCAz0wggKmoAMCAQICAwWw/zANBgkqhkiG9w0BAQUFADBOMQswCQYDVQQGEwJVUzEQMA4GA1UE
+ChMHRXF1aWZheDEtMCsGA1UECxMkRXF1aWZheCBTZWN1cmUgQ2VydGlmaWNhdGUgQXV0aG9yaXR5
+MB4XDTA2MDIxNjE4MDEzMFoXDTE2MDIxOTE4MDEzMFowUjELMAkGA1UEBhMCVVMxGjAYBgNVBAoT
+EUludGVsIENvcnBvcmF0aW9uMScwJQYDVQQDEx5JbnRlbCBFeHRlcm5hbCBCYXNpYyBQb2xpY3kg
+Q0EwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDBpd/XOb9QVqEZ8mQ1042TdOIq3ATD
+IsV2xDyt30yLyMR5Wjtus0bn3B+he89BiNO/LP6+rFzEwlD55PlX+HLGIKeNNG97dqyc30FElEUj
+ZzTZFq2N4e3kVJ/XAEEgANzV8v9qp7qWwxugPgfc3z9BkYot+CifozexHLb/hEZj+yISCU61kRZv
+uSQ0E11yYL4dRgcglJeaHo3oX57rvIckaLsYV5/1Aj+R8DM1Ppk965XQAKsHfnyT7C4S50T4lVn4
+lz36wOdNZn/zegG1zp41lnoTFfT4KuKVJH5x7YD1p6KbgJCKLovnujGuohquBNfdXKpZkvz6pGv+
+iC1HawJdAgMBAAGjgaAwgZ0wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBQaxgxKxEdvqNutK/D0
+Vgaj7TdUDDA6BgNVHR8EMzAxMC+gLaArhilodHRwOi8vY3JsLmdlb3RydXN0LmNvbS9jcmxzL3Nl
+Y3VyZWNhLmNybDAfBgNVHSMEGDAWgBRI5mj5K9KylddH2CMgEE8zmJCf1DAPBgNVHRMBAf8EBTAD
+AQH/MA0GCSqGSIb3DQEBBQUAA4GBABMQOK2kVKVIlUWwLTdywJ+e2O+PC/uQltK2F3lRyrPfBn69
+tOkIP4SgDJOfsxyobIrPLe75kBLw+Dom13OBDp/EMZJZ1CglQfVV8co9mT3aZMjSGGQiMgkJLR3j
+Mfr900fXZKj5XeqCJ+JP0mEhJGEdVCY+FFlksJjV86fDrq1QMIIFijCCBHKgAwIBAgIKYR6AtwAA
+AAAABzANBgkqhkiG9w0BAQUFADBSMQswCQYDVQQGEwJVUzEaMBgGA1UEChMRSW50ZWwgQ29ycG9y
+YXRpb24xJzAlBgNVBAMTHkludGVsIEV4dGVybmFsIEJhc2ljIFBvbGljeSBDQTAeFw0wOTA1MTUx
+OTI1MTNaFw0xNTA1MTUxOTM1MTNaMFYxCzAJBgNVBAYTAlVTMRowGAYDVQQKExFJbnRlbCBDb3Jw
+b3JhdGlvbjErMCkGA1UEAxMiSW50ZWwgRXh0ZXJuYWwgQmFzaWMgSXNzdWluZyBDQSAzQTCCASIw
+DQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMGPgGLnOO5IOzlHRfr1XfCVb97V4BR2QVpPZ7Cr
+cIQ+FGa2KHD/6dPjwxOIrtFTdfW4BYikdFmxUZVBWRWZ5Vye2cCdGzFWqIEOE1e17nNx1jM8Z6GZ
+EqbDUS+vBuPlBFHKQoVm5BaNIHpyn2XZxqwjV9j5/crIfPrCGstk+2ztUhVS8OHEgzO784PgD9pO
+gBnnAbZHmEM1FYYmQ6ibS+gVCHzobDYG+YReRiHpFKWBxpUuP+X0WYFw/Ja1JW7N8pELAFDw0UFB
+WFgiv1QIusdLvSy8mcsLJ5wy050OVcxShqoUxhw/wvyuuoQxvmEPjhRa1C2oSCmGN0003GMhQWMC
+AwEAAaOCAlwwggJYMA8GA1UdEwEB/wQFMAMBAf8wHQYDVR0OBBYEFKoWZq+3PVZTYK4Nwu3z7gfL
+UWB+MAsGA1UdDwQEAwIBhjASBgkrBgEEAYI3FQEEBQIDAQABMCMGCSsGAQQBgjcVAgQWBBTCKwhT
+x+hdMsKCgOmWwLgjQsAV+TAZBgkrBgEEAYI3FAIEDB4KAFMAdQBiAEMAQTAfBgNVHSMEGDAWgBQa
+xgxKxEdvqNutK/D0Vgaj7TdUDDCBvQYDVR0fBIG1MIGyMIGvoIGsoIGphk5odHRwOi8vd3d3Lmlu
+dGVsLmNvbS9yZXBvc2l0b3J5L0NSTC9JbnRlbCUyMEV4dGVybmFsJTIwQmFzaWMlMjBQb2xpY3kl
+MjBDQS5jcmyGV2h0dHA6Ly9jZXJ0aWZpY2F0ZXMuaW50ZWwuY29tL3JlcG9zaXRvcnkvQ1JML0lu
+dGVsJTIwRXh0ZXJuYWwlMjBCYXNpYyUyMFBvbGljeSUyMENBLmNybDCB4wYIKwYBBQUHAQEEgdYw
+gdMwYwYIKwYBBQUHMAKGV2h0dHA6Ly93d3cuaW50ZWwuY29tL3JlcG9zaXRvcnkvY2VydGlmaWNh
+dGVzL0ludGVsJTIwRXh0ZXJuYWwlMjBCYXNpYyUyMFBvbGljeSUyMENBLmNydDBsBggrBgEFBQcw
+AoZgaHR0cDovL2NlcnRpZmljYXRlcy5pbnRlbC5jb20vcmVwb3NpdG9yeS9jZXJ0aWZpY2F0ZXMv
+SW50ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIwUG9saWN5JTIwQ0EuY3J0MA0GCSqGSIb3DQEBBQUA
+A4IBAQCUY/1d0MS6VPTlIcOho1XWh193PD5kJDJSPdphLHQdM1oKA+whMdIBoY1VzTDDK+C+Ey4J
+cyna7fpC8uVmn/Rz/i9MZtyc7qezPtZTn9UyORvJmddH+Ox/RycGwe3ags8jUdspECorYOkJyZks
+nDIlTVUvbR7wyY+gGJYqxWXqrcVFEiMsWu8/OIlf7F2gAYMBw1kZ55dn4lWBIM0WqvReWpPvhYeN
+7Y+3MKEdSMkQ7TZiNbfdZ5D/8KfWNMTJ4VHltOgCL1lA5tx/F4R1920skpL5eu3Sj650RUe3rOXs
+aV5NyJzBwB31+1zsmleVdFD0k/Fw9HxXbAQE35ucN/7CMIIFijCCBHKgAwIBAgIKYSCKYgAAAAAA
+CDANBgkqhkiG9w0BAQUFADBSMQswCQYDVQQGEwJVUzEaMBgGA1UEChMRSW50ZWwgQ29ycG9yYXRp
+b24xJzAlBgNVBAMTHkludGVsIEV4dGVybmFsIEJhc2ljIFBvbGljeSBDQTAeFw0wOTA1MTUxOTI3
+MjZaFw0xNTA1MTUxOTM3MjZaMFYxCzAJBgNVBAYTAlVTMRowGAYDVQQKExFJbnRlbCBDb3Jwb3Jh
+dGlvbjErMCkGA1UEAxMiSW50ZWwgRXh0ZXJuYWwgQmFzaWMgSXNzdWluZyBDQSAzQjCCASIwDQYJ
+KoZIhvcNAQEBBQADggEPADCCAQoCggEBAKQEM1Wn9TU9vc9C+/Tc7KB+eiYElmrcEWE32WUdHvWG
++IcQHVQsikTmMyKKojNLw2B5s6Iekc8ivDo/wCfjZzX9JyftMnc+AArc0la87Olybzm8K9jXEfTB
+vTnUSFSiI9ZYefITdiUgqlAFuljFZEHYKYtLuhrRacpmQfP4mV63NKdc2bT804HRf6YptZFa4k6Y
+N94zlrGNrBuQQ74WFzz/jLBusbUpEkro6Mu/ZYFOFWQrV9lBhF9Ruk8yN+3N6n9fUo/qBigiF2kE
+n9xVh1ykl7SCGL2jBUkXx4qgV27a6Si8lRRdgrHGtN/HWnSWlLXTH5l575H4Lq++77OFv38CAwEA
+AaOCAlwwggJYMA8GA1UdEwEB/wQFMAMBAf8wHQYDVR0OBBYEFA7GKvdZsggQkCVvw939imYxMCvF
+MAsGA1UdDwQEAwIBhjASBgkrBgEEAYI3FQEEBQIDAQABMCMGCSsGAQQBgjcVAgQWBBQ5oFY2ekKQ
+/5Ktim+VdMeSWb4QWTAZBgkrBgEEAYI3FAIEDB4KAFMAdQBiAEMAQTAfBgNVHSMEGDAWgBQaxgxK
+xEdvqNutK/D0Vgaj7TdUDDCBvQYDVR0fBIG1MIGyMIGvoIGsoIGphk5odHRwOi8vd3d3LmludGVs
+LmNvbS9yZXBvc2l0b3J5L0NSTC9JbnRlbCUyMEV4dGVybmFsJTIwQmFzaWMlMjBQb2xpY3klMjBD
+QS5jcmyGV2h0dHA6Ly9jZXJ0aWZpY2F0ZXMuaW50ZWwuY29tL3JlcG9zaXRvcnkvQ1JML0ludGVs
+JTIwRXh0ZXJuYWwlMjBCYXNpYyUyMFBvbGljeSUyMENBLmNybDCB4wYIKwYBBQUHAQEEgdYwgdMw
+YwYIKwYBBQUHMAKGV2h0dHA6Ly93d3cuaW50ZWwuY29tL3JlcG9zaXRvcnkvY2VydGlmaWNhdGVz
+L0ludGVsJTIwRXh0ZXJuYWwlMjBCYXNpYyUyMFBvbGljeSUyMENBLmNydDBsBggrBgEFBQcwAoZg
+aHR0cDovL2NlcnRpZmljYXRlcy5pbnRlbC5jb20vcmVwb3NpdG9yeS9jZXJ0aWZpY2F0ZXMvSW50
+ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIwUG9saWN5JTIwQ0EuY3J0MA0GCSqGSIb3DQEBBQUAA4IB
+AQCxtQEHchVQhXyjEqtMVUMe6gkmPsIczHxSeqNbo9dsD+6xbT65JT+oYgpIAtfEsYXeUJu1cChq
+pb22U5bMAz7eaQcW5bzefufWvA6lg2048B8oczBj/q+5P5NpYrUO8jOmN4jTjfJq3ElZ7yFWpy7r
+B3Vm/aN6ATYqWfMbS/xfh+JCxmH3droUmMJI0/aZJHsLtjbjFnNsHDNrJZX1vxlM78Lb1hjskTEN
+PmhbVbfTj5i/ZGnhv4tmI8QZPCNtcegXJrfhRl2D9bWpdTOPrWiLDUqzy1Z6KL7TcOS/PCl8RHCJ
+XkPau/thTQCpIoDa2+c+3XA++gRTfAQ4svTO260NMIIGEzCCBPugAwIBAgIKSYaKtgABAAB02DAN
+BgkqhkiG9w0BAQUFADBWMQswCQYDVQQGEwJVUzEaMBgGA1UEChMRSW50ZWwgQ29ycG9yYXRpb24x
+KzApBgNVBAMTIkludGVsIEV4dGVybmFsIEJhc2ljIElzc3VpbmcgQ0EgM0IwHhcNMTEwODAzMTAy
+MTIxWhcNMTQwNzE4MTAyMTIxWjBDMRgwFgYDVQQDEw9Ub21jemFrLCBNYXJjaW4xJzAlBgkqhkiG
+9w0BCQEWGG1hcmNpbi50b21jemFrQGludGVsLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
+AQoCggEBALtA4IW1I0PzXKj/YRqWOHzT8cqxfkNR2GyUMpbpl0sMaOAxDi8hJ4UgK1VLuZL8mlTa
+NfH0vTEw1WCkvSQ6bGMEdaC5fgyVUN+aPctLlrGJd39kYZriUl6gJ1/m7XGxo3HZBxVgQlVGBJZo
+td0YjTv93G2cGB3BQPHsNAgOpymnLEkccN7TAjeMy2rBnn1UW+WQ0HlfJYXQRUVBY+3Oi/+bCAz5
+GLgm6W30+/RuSgw1Z2mgW4BFndB4uvYGarqMged4pxmiWjKXAkhqprreGG3ijd73aSsoON+Cwk+L
+4FO4eT2489MK18wrPXb2CXP7z8V7IN4T+Wm51/aTZStRBysCAwEAAaOCAvQwggLwMAsGA1UdDwQE
+AwIHgDA8BgkrBgEEAYI3FQcELzAtBiUrBgEEAYI3FQiGw4x1hJnlUYP9gSiFjp9TgpHACWeB3r05
+lfBDAgFkAgEIMB0GA1UdDgQWBBR4qXR8EOR+jakqChDtPUnBF+DDpTAfBgNVHSMEGDAWgBQOxir3
+WbIIEJAlb8Pd/YpmMTArxTCBzwYDVR0fBIHHMIHEMIHBoIG+oIG7hldodHRwOi8vd3d3LmludGVs
+LmNvbS9yZXBvc2l0b3J5L0NSTC9JbnRlbCUyMEV4dGVybmFsJTIwQmFzaWMlMjBJc3N1aW5nJTIw
+Q0ElMjAzQigxKS5jcmyGYGh0dHA6Ly9jZXJ0aWZpY2F0ZXMuaW50ZWwuY29tL3JlcG9zaXRvcnkv
+Q1JML0ludGVsJTIwRXh0ZXJuYWwlMjBCYXNpYyUyMElzc3VpbmclMjBDQSUyMDNCKDEpLmNybDCB
+9QYIKwYBBQUHAQEEgegwgeUwbAYIKwYBBQUHMAKGYGh0dHA6Ly93d3cuaW50ZWwuY29tL3JlcG9z
+aXRvcnkvY2VydGlmaWNhdGVzL0ludGVsJTIwRXh0ZXJuYWwlMjBCYXNpYyUyMElzc3VpbmclMjBD
+QSUyMDNCKDEpLmNydDB1BggrBgEFBQcwAoZpaHR0cDovL2NlcnRpZmljYXRlcy5pbnRlbC5jb20v
+cmVwb3NpdG9yeS9jZXJ0aWZpY2F0ZXMvSW50ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIwSXNzdWlu
+ZyUyMENBJTIwM0IoMSkuY3J0MB8GA1UdJQQYMBYGCCsGAQUFBwMEBgorBgEEAYI3CgMMMCkGCSsG
+AQQBgjcVCgQcMBowCgYIKwYBBQUHAwQwDAYKKwYBBAGCNwoDDDBNBgNVHREERjBEoCgGCisGAQQB
+gjcUAgOgGgwYbWFyY2luLnRvbWN6YWtAaW50ZWwuY29tgRhtYXJjaW4udG9tY3pha0BpbnRlbC5j
+b20wDQYJKoZIhvcNAQEFBQADggEBABXLosFeZuiSm7wOT3N22FdHn1svoMe+T0NnKtbCIEZxZLfo
+CgI8q4mZoexyzkUdqFLjZCBkN9l3t8g+zKWdiHk1N7wydxGmzX8vc4H2NN82Q9ziFtjpFiwNFB6A
+UokD4VSLcWYX5ubG06GikXZKcrXeFCvsoAvbScs2scD0HQBATZ8A0SrRMf6nYoh20Q3v4DYsqn9H
+1/PhVgnsln9TcgycXI7YRm2/fdXO1slKJxsz/6TtjVMnUPYCcm/a5Iiv9+lbMBAVj2ARObMCvNVL
+wFoyDmDqjqlqpafysYK28byOqE+h00+Uv+K8TyT07LHuctOtbqKXPHeUXwUkUEBNuDYwggZaMIIF
+QqADAgECAgpcTg8qAAEAAGnoMA0GCSqGSIb3DQEBBQUAMFYxCzAJBgNVBAYTAlVTMRowGAYDVQQK
+ExFJbnRlbCBDb3Jwb3JhdGlvbjErMCkGA1UEAxMiSW50ZWwgRXh0ZXJuYWwgQmFzaWMgSXNzdWlu
+ZyBDQSAzQTAeFw0xMTA4MDMxMDE3MzhaFw0xNDA3MTgxMDE3MzhaMEMxGDAWBgNVBAMTD1RvbWN6
+YWssIE1hcmNpbjEnMCUGCSqGSIb3DQEJARYYbWFyY2luLnRvbWN6YWtAaW50ZWwuY29tMIIBIjAN
+BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzg9Th3kKRHUq0ltji21yZddNADe6QT0e0LStmx9M
+BvVdarEkTHVkmBB2xED1qJkxP+bWXACnsiU9bsrLbt0vCbuR0IIMaGH+k3yWmNF50SmSKNR3ZpFW
+ljBcfsfRJBrN8RRzsV52OccJJ93nymHrv2yG0aEI45VU3+W5HVqAOyKTDgTztxa3myoXk+y01My/
+69iPHiyArOWbkXebqiByDsRgWWfYzZ8TokneAoPgUad0ig7d+wtqA1d0epVLN+rbLwKBRD6oWwxI
+7kK7GvrNQhITxG2QkSsiTZIuQjbuplIPxaagtBEBv20nydrNTPsTMx68TVS3CXRck2MAbhTN5QID
+AQABo4IDOzCCAzcwCwYDVR0PBAQDAgQwMD0GCSsGAQQBgjcVBwQwMC4GJisGAQQBgjcVCIbDjHWE
+meVRg/2BKIWOn1OCkcAJZ4S52UGHhP9OAgFkAgEMMEQGCSqGSIb3DQEJDwQ3MDUwDgYIKoZIhvcN
+AwICAgCAMA4GCCqGSIb3DQMEAgIAgDAHBgUrDgMCBzAKBggqhkiG9w0DBzAdBgNVHQ4EFgQUrXF/
+b0+0jM2+QgVY8BphO+L22bAwHwYDVR0jBBgwFoAUqhZmr7c9VlNgrg3C7fPuB8tRYH4wgc8GA1Ud
+HwSBxzCBxDCBwaCBvqCBu4ZXaHR0cDovL3d3dy5pbnRlbC5jb20vcmVwb3NpdG9yeS9DUkwvSW50
+ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIwSXNzdWluZyUyMENBJTIwM0EoMSkuY3JshmBodHRwOi8v
+Y2VydGlmaWNhdGVzLmludGVsLmNvbS9yZXBvc2l0b3J5L0NSTC9JbnRlbCUyMEV4dGVybmFsJTIw
+QmFzaWMlMjBJc3N1aW5nJTIwQ0ElMjAzQSgxKS5jcmwwgfUGCCsGAQUFBwEBBIHoMIHlMGwGCCsG
+AQUFBzAChmBodHRwOi8vd3d3LmludGVsLmNvbS9yZXBvc2l0b3J5L2NlcnRpZmljYXRlcy9JbnRl
+bCUyMEV4dGVybmFsJTIwQmFzaWMlMjBJc3N1aW5nJTIwQ0ElMjAzQSgxKS5jcnQwdQYIKwYBBQUH
+MAKGaWh0dHA6Ly9jZXJ0aWZpY2F0ZXMuaW50ZWwuY29tL3JlcG9zaXRvcnkvY2VydGlmaWNhdGVz
+L0ludGVsJTIwRXh0ZXJuYWwlMjBCYXNpYyUyMElzc3VpbmclMjBDQSUyMDNBKDEpLmNydDAfBgNV
+HSUEGDAWBggrBgEFBQcDBAYKKwYBBAGCNwoDBDApBgkrBgEEAYI3FQoEHDAaMAoGCCsGAQUFBwME
+MAwGCisGAQQBgjcKAwQwTQYDVR0RBEYwRKAoBgorBgEEAYI3FAIDoBoMGG1hcmNpbi50b21jemFr
+QGludGVsLmNvbYEYbWFyY2luLnRvbWN6YWtAaW50ZWwuY29tMA0GCSqGSIb3DQEBBQUAA4IBAQBr
+1aZ+06cBqgaxFzJ0j6Iky6xgWIkzMAyLX1kCo7xRaIrWURaPzHMwtr1rbLAeRuMCfCaYhv/X1au7
+KY/EEoM497gDkHAKdC1EAF0GicSLCTPypFPCdgxIqMr4nJDddpIjEm7fDN2QVEXdwAPHHnUmz+yc
+IskDTpkiDmPtgj8JjGrtmypelplD7OHh+dfcRCeu5FyzHLIUxN+3lqi6Repjh42nKIIVucVSU+4g
+mfm2J7w5zdfmaaFYRpenFMKM56ICm1QDN90SWa4MbwVMZ98b4cdBXLt7bK6Gm+mI/QLubViE9z/6
+eCjsrDf4fKgneYbAqutYih5ro2yow03Xq56PMYIDkjCCA44CAQEwZDBWMQswCQYDVQQGEwJVUzEa
+MBgGA1UEChMRSW50ZWwgQ29ycG9yYXRpb24xKzApBgNVBAMTIkludGVsIEV4dGVybmFsIEJhc2lj
+IElzc3VpbmcgQ0EgM0ICCkmGirYAAQAAdNgwCQYFKw4DAhoFAKCCAgMwGAYJKoZIhvcNAQkDMQsG
+CSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTIwNDI2MTExNjE1WjAjBgkqhkiG9w0BCQQxFgQU
+dedhoN1/T12Cg5wuCVxOlb8pw+AwcwYJKwYBBAGCNxAEMWYwZDBWMQswCQYDVQQGEwJVUzEaMBgG
+A1UEChMRSW50ZWwgQ29ycG9yYXRpb24xKzApBgNVBAMTIkludGVsIEV4dGVybmFsIEJhc2ljIElz
+c3VpbmcgQ0EgM0ECClxODyoAAQAAaegwdQYLKoZIhvcNAQkQAgsxZqBkMFYxCzAJBgNVBAYTAlVT
+MRowGAYDVQQKExFJbnRlbCBDb3Jwb3JhdGlvbjErMCkGA1UEAxMiSW50ZWwgRXh0ZXJuYWwgQmFz
+aWMgSXNzdWluZyBDQSAzQQIKXE4PKgABAABp6DCBtwYJKoZIhvcNAQkPMYGpMIGmMAoGCCqGSIb3
+DQMHMAsGCWCGSAFlAwQBKjALBglghkgBZQMEARYwCwYJYIZIAWUDBAECMA4GCCqGSIb3DQMCAgIA
+gDAHBgUrDgMCBzANBggqhkiG9w0DAgIBQDANBggqhkiG9w0DAgIBKDAHBgUrDgMCGjALBglghkgB
+ZQMEAgMwCwYJYIZIAWUDBAICMAsGCWCGSAFlAwQCATAKBggqhkiG9w0CBTANBgkqhkiG9w0BAQEF
+AASCAQCpnWjdCHNTyKLi8BlH8f9gfZAG0N00MRrMSS4GjN3cscq7q0EhSTuz+xCY0H6qRkN9aBLj
+Nrm9Vir0DGOwTplz9XwVCH5dXARe4EchgAbzrdKgp755k7vNyYsIpWCRSlXx1trR4FXpHIAQqk5y
+HqhUyMxWXYkoMrcGX0LCVL0gWOSOOvp7mpzRPAOpegewRLcjNNj8N8am48D+L0GLl929k16AlMsR
+d+HjKVpVKLqqTFvNKaX70TnvXHU5c3JEyDWro7JSu0Gjx5GFNKYJiYdcDFQYf83ARsv22AGZvZh8
+oEh4PctZBpWhCyVzYSTbKrkl8Px1KxlFO3IdunkeoyzTAAAAAAAA
 
+------=_NextPart_000_028B_01CD23AE.C27BFE40--
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--===============0568873286==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+
+---------------------------------------------------------------------
+Intel Technology Poland sp. z o.o.
+z siedziba w Gdansku
+ul. Slowackiego 173
+80-298 Gdansk
+
+Sad Rejonowy Gdansk Polnoc w Gdansku, =
+
+VII Wydzial Gospodarczy Krajowego Rejestru Sadowego, =
+
+numer KRS 101882
+
+NIP 957-07-52-316
+Kapital zakladowy 200.000 zl
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
+--===============0568873286==--
