@@ -1,46 +1,49 @@
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: Removing a failing drive from multiple arrays
-Date: Thu, 26 Apr 2012 14:23:36 +0100
-Message-ID: <20120426132336.GA12692@nsrc.org>
-References: <4F905F66.6070803@tmr.com>
- <20369.29756.761374.308057@quad.stoffel.home>
- <4F918F5C.2000607@anonymous.org.uk>
- <CAK2H+efwgznsS4==Rrtm6UE=uOb25-Q0Qm84i8yAJEJJ2JLdgg@mail.gmail.com>
- <4F9450D1.40305@anonymous.org.uk> <4F98B4FE.5010101@tmr.com>
- <20120426073607.GA11590@nsrc.org> <4F994695.9010509@tmr.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH 1/2] Fix sign extension of bitmap_offset in super1.c
+Date: Thu, 26 Apr 2012 17:12:56 +0200
+Message-ID: <1335453177-8515-2-git-send-email-Jes.Sorensen@redhat.com>
+References: <1335453177-8515-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4F994695.9010509@tmr.com>
+In-Reply-To: <1335453177-8515-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: dledford@redhat.com, joe.lawrence@stratus.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Apr 26, 2012 at 08:59:01AM -0400, Bill Davidsen wrote:
-> >Another option, although I've not done this for a long time, is PXE boot.
-> >You need a DHCP server giving out the correct parameters and a TFTP server
-> >for the kernel (and ramdisk?)
-> >
-> 
-> I think that's addressing one point of failure while adding more.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Alternate point of view: you need reliable DNS anyway, and it's no harder to
-make reliable DHCP than reliable DNS (you just have two of them).
-Furthermore, this only needs to be available at the time a server boots up.
+fbdef49811c9e2b54e2064d9af68cfffa77c6e77 incorrectly tried to fix sign
+extension of the bitmap offset. However mdinfo->bitmap_offset is a u32
+and needs to be converted to a 32 bit signed integer before the sign
+extension.
 
-I worked in one place where they made all the servers (which were VMs) pick
-up their IPs via DHCP.  This allowed them to dump the images across to the
-disaster recovery site, boot them up there, and bring them all up on new IPs
-without touching any configs.  It worked well.  They ran DHCP service on the
-Cisco L3 switches that the VM hosts were plugged into, on the basis that
-this was the most reliable kit that they had.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ super1.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Like you say, it's a balancing act of cost, complexity, and reliability, and
-is also coloured by experience.  I've had not-so-good experiences with USB
-thumb drives.
+diff --git a/super1.c b/super1.c
+index 36369d8..be77c33 100644
+--- a/super1.c
++++ b/super1.c
+@@ -620,7 +620,7 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
+ 	info->data_offset = __le64_to_cpu(sb->data_offset);
+ 	info->component_size = __le64_to_cpu(sb->size);
+ 	if (sb->feature_map & __le32_to_cpu(MD_FEATURE_BITMAP_OFFSET))
+-		info->bitmap_offset = (long)__le32_to_cpu(sb->bitmap_offset);
++		info->bitmap_offset = (int32_t)__le32_to_cpu(sb->bitmap_offset);
+ 
+ 	info->disk.major = 0;
+ 	info->disk.minor = 0;
+@@ -1651,7 +1651,7 @@ add_internal_bitmap1(struct supertype *st,
+ 		offset = -room;
+ 	}
+ 
+-	sb->bitmap_offset = (long)__cpu_to_le32(offset);
++	sb->bitmap_offset = (int32_t)__cpu_to_le32(offset);
+ 
+ 	sb->feature_map = __cpu_to_le32(__le32_to_cpu(sb->feature_map)
+ 					| MD_FEATURE_BITMAP_OFFSET);
+-- 
+1.7.7.6
 
-Regards,
-
-Brian.
