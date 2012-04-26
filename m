@@ -1,37 +1,73 @@
-From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Subject: Re: RAID6 fails to assemble after unclean shutdown
-Date: Wed, 25 Apr 2012 20:50:06 -0700
-Message-ID: <e8tm69x5k8.ln2@goaway.wombat.san-francisco.ca.us>
-References: <20120425103536.GA9978@nsrc.org>
- <20120425210145.73b1e51b@notabene.brown> <20120425111606.GA10101@nsrc.org>
- <4F98B9EF.40207@tmr.com>
+From: Alex <creamyfish@gmail.com>
+Subject: Re: Is this enough for us to have triple-parity RAID?
+Date: Thu, 26 Apr 2012 12:24:26 +0800
+Message-ID: <CAMqP1GUj07A8Rgf+Km5k7ZbgyS6Ucr0ipG+DvMruEzcP3EuA-w@mail.gmail.com>
+References: <CAMqP1GVnOErhxj8RV=KFtzHHEJqtguEd1L_vmsS=AAi_rAPoVg@mail.gmail.com>
+	<4F91142C.80305@hardwarefreak.com>
+	<CAMqP1GWR2-_a=+FTJOsjK9W48zCUVd3smsF63x=+-PimBPzAXQ@mail.gmail.com>
+	<4F97515D.8000406@hardwarefreak.com>
+	<CAMqP1GV_gZ7J4u1qt21yHwKoxwxy41f0kYg1YLPN8TfPCiaNtQ@mail.gmail.com>
+	<CAAYorBK4NYA3Gky1oh9yftRRbxWad6SE+D+Lr2SJ+5kfKZ-A2w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAAYorBK4NYA3Gky1oh9yftRRbxWad6SE+D+Lr2SJ+5kfKZ-A2w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Emmanuel Noobadmin <centos.admin@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2012-04-26, Bill Davidsen <davidsen@tmr.com> wrote:
+On Thu, Apr 26, 2012 at 12:59 AM, Emmanuel Noobadmin
+<centos.admin@gmail.com> wrote:
+> On 4/25/12, Alex <creamyfish@gmail.com> wrote:
+>> I can see that you are trying very hard to fit a new picture into an=
+ old
+>> frame. But with new technology there is always new possibilities. Fo=
+r
+>> example, what I am thinking is: with the new laser write head, it do=
+esn't
+>> necessarily require the head to stay very close =A0to the platter si=
+nce laser
+>> doesn't fade away with longer distance, which may enable a design th=
+at
 >
-> Without a bitmap you can spend days getting back up instead of minutes. Brian 
-> has the true truth here, unless there is a reason to avoid it, a bitmap is a 
-> ticket to a sane rebuild.
+> The strength of the laser will fall as the distance to the media
+> increases, wouldn't it?
+>
+>> the head turns(the platter doesn't have to be round) instead of spin=
+ning
+>> =A0the platter; hence the "Data rate is a product of [density * RPM]=
+"
+>> statement falls apart. What is more, if the cost is justified, one m=
+ay
+>> even design a disk with multiple write heads to increase the bandwid=
+th
+>> since now we are free from the fluid mechanic interaction between th=
+e
+>> head and the platter. Both of these may lead to independent increase
+>> of data rate. I am having these thoughts because it's been an endles=
+s
+>
+> But Ostler's technique only increases the write speed and admits in a
+> Wired.com article there is still no faster/other way to read the data=
+=2E
+> So we would still be stuck with the rotating disk and the magnetic
+> reading heads until some other breakthrough happens.
+>
+> Going back into the context of parity RAID rebuild, we would still be
+> bottlenecked on the write side wouldn't we since bits on the
+> replacement drive can only be calculated after reading the rest of th=
+e
+> drives.
 
-My impression was that a bitmap only helped on an unclean shutdown or on
-re-adding a disk that was previously removed, and not on failing a drive
-and adding a new one.  Is that accurate?  (Of course it would help the
-OP if he has another unclean shutdown.)
+I also want to add that sluggishness of read operations can always be
+alleviated by prefetching and masked by the speed of a cache.
 
-As Neil posted last month, you can't use mdadm 3.2.3 to create the
-bitmap; use 3.2.2 or check out from git.  (I just ran into the bug in
-3.2.3 and found the message in the archive.)
-
---keith
-
-
--- 
-kkeller@wombat.san-francisco.ca.us
-
-
+Cheers,
+Alex
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
