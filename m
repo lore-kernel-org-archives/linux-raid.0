@@ -1,78 +1,69 @@
-From: Alex <creamyfish@gmail.com>
-Subject: Re: Is this enough for us to have triple-parity RAID?
-Date: Thu, 26 Apr 2012 10:30:37 +0800
-Message-ID: <CAMqP1GUxt27OE2vqeABE26o5-erM6Z-BtPzC7J0NDeP59_57NQ@mail.gmail.com>
-References: <CAMqP1GVnOErhxj8RV=KFtzHHEJqtguEd1L_vmsS=AAi_rAPoVg@mail.gmail.com>
-	<4F91142C.80305@hardwarefreak.com>
-	<CAMqP1GWR2-_a=+FTJOsjK9W48zCUVd3smsF63x=+-PimBPzAXQ@mail.gmail.com>
-	<4F97515D.8000406@hardwarefreak.com>
-	<CAMqP1GV_gZ7J4u1qt21yHwKoxwxy41f0kYg1YLPN8TfPCiaNtQ@mail.gmail.com>
-	<CAAYorBK4NYA3Gky1oh9yftRRbxWad6SE+D+Lr2SJ+5kfKZ-A2w@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Removing a failing drive from multiple arrays
+Date: Wed, 25 Apr 2012 22:37:50 -0400
+Message-ID: <4F98B4FE.5010101@tmr.com>
+References: <4F905F66.6070803@tmr.com> <20369.29756.761374.308057@quad.stoffel.home> <4F918F5C.2000607@anonymous.org.uk> <CAK2H+efwgznsS4==Rrtm6UE=uOb25-Q0Qm84i8yAJEJJ2JLdgg@mail.gmail.com> <4F9450D1.40305@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAYorBK4NYA3Gky1oh9yftRRbxWad6SE+D+Lr2SJ+5kfKZ-A2w@mail.gmail.com>
+In-Reply-To: <4F9450D1.40305@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Emmanuel Noobadmin <centos.admin@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Apr 26, 2012 at 12:59 AM, Emmanuel Noobadmin
-<centos.admin@gmail.com> wrote:
-> On 4/25/12, Alex <creamyfish@gmail.com> wrote:
->> I can see that you are trying very hard to fit a new picture into an=
- old
->> frame. But with new technology there is always new possibilities. Fo=
-r
->> example, what I am thinking is: with the new laser write head, it do=
-esn't
->> necessarily require the head to stay very close =A0to the platter si=
-nce laser
->> doesn't fade away with longer distance, which may enable a design th=
-at
+John Robinson wrote:
+> On 20/04/2012 17:50, Mark Knecht wrote:
+>> On Fri, Apr 20, 2012 at 9:31 AM, John Robinson
+>> <john.robinson@anonymous.org.uk> wrote:
+> [...]
+>>> On small machines (3-6 drives) I will regularly have a RAID-1 /boot, RAID-10
+>>> swap and RAID-5 or 6 everything else, done with partitions. I do use LVM too
+>>> though - that "everything else" will be LVM over the big RAID.
+>>
+>> Thanks for the info John. Can you tell me what are the requirements
+>> for the RAID-1 /boot? grub2? initrd? BIOS-based RAID? Something else?
+>> I'm still just mirroring my boot drives - booting from sda1 but
+>> copying everything to /sdb1, sdc1, etc. I think I'd like to go full
+>> RAID on /boot if the requirements are too high.
 >
+> Pretty much any modern distro's installer will do the right thing with whatever
+> boot loader it uses. Also, there are so many boot methods - BIOS/MBR, GPT, UEFI
+> - that in one short email it's tricky to give advice in one short email. It's
+> all out there via Google.
+>
+> But no, you can do a RAID-1 /boot with LILO or grub, and without BIOS RAID. The
+> BIOS will boot off the first available hard drive and doesn't understand md
+> RAID. grub doesn't understand md RAID either. You have to make your md RAID-1
+> /boot with metadata 1.0 (or 0.90) because they have the data at the beginning so
+> when you create a filesystem on the array, each individual component (partition)
+> looks like it has a filesystem on it. You install grub (or LILO) onto the MBR
+> (or GPT boot partition, which isn't the same as your /boot partition), pointing
+> to the partition (not the md array).
+>
+> grub2 does understand md RAID, but has to be loaded by the BIOS, so there are
+> still restrictions.
+>
+> Without either hardware or BIOS RAID, you can still end up being unable to boot,
+> e.g. the BIOS will try to boot from the first hard drive present, but if it has
+> bad sectors in the MBR or /boot partition, booting may fail even though there's
+> a perfectly good mirror on the second drive, because the BIOS doesn't understand
+> RAID. This has happened to me :-(
+>
+Doesn't need to understand RAID, just be willing to try the next item in the 
+boot list on failure. My experience has been that almost every BIOS will try the 
+2nd item if the 1st fails totally (ie. drive isn't there). A _good_ BIOS will 
+try the next item on sector error in the MBR. After that the BIOS needs to 
+understand a lot more to do anything smart after the MBR runs.
 
-> The strength of the laser will fall as the distance to the media
-> increases, wouldn't it?
-Thanks for David answering this for me.
->
->> the head turns(the platter doesn't have to be round) instead of spin=
-ning
->> =A0the platter; hence the "Data rate is a product of [density * RPM]=
-"
->> statement falls apart. What is more, if the cost is justified, one m=
-ay
->> even design a disk with multiple write heads to increase the bandwid=
-th
->> since now we are free from the fluid mechanic interaction between th=
-e
->> head and the platter. Both of these may lead to independent increase
->> of data rate. I am having these thoughts because it's been an endles=
-s
->
-> But Ostler's technique only increases the write speed and admits in a
-> Wired.com article there is still no faster/other way to read the data=
-=2E
-> So we would still be stuck with the rotating disk and the magnetic
-> reading heads until some other breakthrough happens.
-Ostler admits that in his response to my e-mails too.
->
-> Going back into the context of parity RAID rebuild, we would still be
-> bottlenecked on the write side wouldn't we since bits on the
-> replacement drive can only be calculated after reading the rest of th=
-e
-> drives.
-Yes if we can't make reading as fast as writing. But in general having =
-a
-disk with write speed faster than read speed might still be an interest=
-ing
-choice for applications with a lot of disk write.
+I have put MBR and boot partition on a USB thumb drive because the failure rate 
+of a R/O flash is lower than rotating devices (in my experience). Use ext2 for 
+boot, no journal so the drive works really read-only. Hopefully grub2 mounts the 
+boot noatime.
 
-Cheers,
-Alex
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+   "We have more to fear from the bungling of the incompetent than from
+the machinations of the wicked."  - from Slashdot
