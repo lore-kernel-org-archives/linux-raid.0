@@ -1,66 +1,191 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Removing a failing drive from multiple arrays
-Date: Wed, 25 Apr 2012 22:37:50 -0400
-Message-ID: <4F98B4FE.5010101@tmr.com>
-References: <4F905F66.6070803@tmr.com> <20369.29756.761374.308057@quad.stoffel.home> <4F918F5C.2000607@anonymous.org.uk> <CAK2H+efwgznsS4==Rrtm6UE=uOb25-Q0Qm84i8yAJEJJ2JLdgg@mail.gmail.com> <4F9450D1.40305@anonymous.org.uk>
+Subject: Re: md raid recovery - perplexed
+Date: Wed, 25 Apr 2012 22:50:31 -0400
+Message-ID: <4F98B7F7.8040205@tmr.com>
+References: <1334969336.14947.23.camel@hermes> <1335029393.29951.4.camel@hermes>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F9450D1.40305@anonymous.org.uk>
+In-Reply-To: <1335029393.29951.4.camel@hermes>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-John Robinson wrote:
-> On 20/04/2012 17:50, Mark Knecht wrote:
->> On Fri, Apr 20, 2012 at 9:31 AM, John Robinson
->> <john.robinson@anonymous.org.uk> wrote:
-> [...]
->>> On small machines (3-6 drives) I will regularly have a RAID-1 /boot, RAID-10
->>> swap and RAID-5 or 6 everything else, done with partitions. I do use LVM too
->>> though - that "everything else" will be LVM over the big RAID.
+Ken Gunderson wrote:
+>
+> On Fri, 2012-04-20 at 18:48 -0600, Ken Gunderson wrote:
+>> Hello List:
 >>
->> Thanks for the info John. Can you tell me what are the requirements
->> for the RAID-1 /boot? grub2? initrd? BIOS-based RAID? Something else?
->> I'm still just mirroring my boot drives - booting from sda1 but
->> copying everything to /sdb1, sdc1, etc. I think I'd like to go full
->> RAID on /boot if the requirements are too high.
+>> I've created some arrays.  For example, md2 is RAID1 created with gpt
+>> based partitions  /dev/sd[ab]1
+>>
+>> # mdadm --misc --detail /dev/md2
+>>
+>> /dev/md2:
+>>          Version : 1.0
+>>    Creation Time : Thu Apr 19 15:56:18 2012
+>>       Raid Level : raid1
+>>       Array Size : 262132 (256.03 MiB 268.42 MB)
+>>    Used Dev Size : 262132 (256.03 MiB 268.42 MB)
+>>     Raid Devices : 2
+>>    Total Devices : 2
+>>      Persistence : Superblock is persistent
+>>
+>>      Update Time : Fri Apr 20 09:08:11 2012
+>>            State : clean
+>>   Active Devices : 2
+>> Working Devices : 2
+>>   Failed Devices : 0
+>>    Spare Devices : 0
+>>
+>>             Name : archiso:2
+>>             UUID : e3a5c30e:3fb61039:397992ff:6cc70600
+>>           Events : 17
+>>
+>>      Number   Major   Minor   RaidDevice State
+>>         0       8        1        0      active sync   /dev/sda1
+>>         1       8       17        1      active sync   /dev/sdb1
+>>
+>>
+>> Okay, great, that works.  However, I am not able to recover from
+>> simulated failure.
+>>
+>> # mdadm /dev/md2 --fail /dev/sdb1
+>>
+>> # mdadm /dev/md2 --misc --detail
+>>
+>> /dev/md2:
+>>          Version : 1.0
+>>    Creation Time : Thu Apr 19 15:56:18 2012
+>>       Raid Level : raid1
+>>       Array Size : 262132 (256.03 MiB 268.42 MB)
+>>    Used Dev Size : 262132 (256.03 MiB 268.42 MB)
+>>     Raid Devices : 2
+>>    Total Devices : 2
+>>      Persistence : Superblock is persistent
+>>
+>>      Update Time : Fri Apr 20 15:40:10 2012
+>>            State : clean, degraded
+>>   Active Devices : 1
+>> Working Devices : 1
+>>   Failed Devices : 1
+>>    Spare Devices : 0
+>>
+>>             Name : archiso:2
+>>             UUID : e3a5c30e:3fb61039:397992ff:6cc70600
+>>           Events : 20
+>>
+>>      Number   Major   Minor   RaidDevice State
+>>         0       8        1        0      active sync   /dev/sda1
+>>         1       0        0        1      removed
+>>
+>>         1       8       17        -      faulty spare   /dev/sdb1
+>>
+>>
+>>
+>> Followed by
+>>
+>> # mdadm /dev/md2 --remove /dev/sdb1
+>>
+>> /dev/md2:
+>>          Version : 1.0
+>>    Creation Time : Thu Apr 19 15:56:18 2012
+>>       Raid Level : raid1
+>>       Array Size : 262132 (256.03 MiB 268.42 MB)
+>>    Used Dev Size : 262132 (256.03 MiB 268.42 MB)
+>>     Raid Devices : 2
+>>    Total Devices : 1
+>>      Persistence : Superblock is persistent
+>>
+>>      Update Time : Fri Apr 20 15:59:52 2012
+>>            State : clean, degraded
+>>   Active Devices : 1
+>> Working Devices : 1
+>>   Failed Devices : 0
+>>    Spare Devices : 0
+>>
+>>             Name : archiso:2
+>>             UUID : e3a5c30e:3fb61039:397992ff:6cc70600
+>>           Events : 31
+>>
+>>      Number   Major   Minor   RaidDevice State
+>>         0       8        1        0      active sync   /dev/sda1
+>>         1       0        0        1      removed
+>>
+>>
+>> I should then be able to re-add sdb1, no?
+>>
+>> # mdadm /dev/md2 --re-add /dev/sdb1
+>>
+>> mdadm: --re-add for /dev/sdb1 to /dev/md2 is not possible
+>>
+>> Since man mdadm explicitly provides following as example:
+>>
+>> "mdadm /dev/md0 -f /dev/hda1 -r /dev/hda1 -a /dev/hda1"
+>>
+>> Let's try just adding it instead of re-adding
+>>
+>> # mdadm /dev/md2 -a /dev/sdb1
+>> mdadm: /dev/sdb1 reports being an active member for /dev/md2, but a --re-add fails.
+>> mdadm: not performing --add as that would convert /dev/sdb1 in to a spare.
+>> mdadm: To make this a spare, use "mdadm --zero-superblock /dev/sdb1" first.
+>>
+>> I am perplexed as to why might this be?  I must be missing something
+>> pretty basic here, else I can provide additional detail as require.
+>>
+>> Thanks for your help-- Ken
+>>
 >
-> Pretty much any modern distro's installer will do the right thing with whatever
-> boot loader it uses. Also, there are so many boot methods - BIOS/MBR, GPT, UEFI
-> - that in one short email it's tricky to give advice in one short email. It's
-> all out there via Google.
+> btw - I  do get it that /dev/sdb1 still thinks it's an active member
+> of /dev/md2:
 >
-> But no, you can do a RAID-1 /boot with LILO or grub, and without BIOS RAID. The
-> BIOS will boot off the first available hard drive and doesn't understand md
-> RAID. grub doesn't understand md RAID either. You have to make your md RAID-1
-> /boot with metadata 1.0 (or 0.90) because they have the data at the beginning so
-> when you create a filesystem on the array, each individual component (partition)
-> looks like it has a filesystem on it. You install grub (or LILO) onto the MBR
-> (or GPT boot partition, which isn't the same as your /boot partition), pointing
-> to the partition (not the md array).
+> # mdadm -E /dev/sdb1
+> /dev/sdb1:
+>            Magic : a92b4efc
+>          Version : 1.0
+>      Feature Map : 0x0
+>       Array UUID : e3a5c30e:3fb61039:397992ff:6cc70600
+>             Name : archiso:2
+>    Creation Time : Thu Apr 19 15:56:18 2012
+>       Raid Level : raid1
+>     Raid Devices : 2
 >
-> grub2 does understand md RAID, but has to be loaded by the BIOS, so there are
-> still restrictions.
+>   Avail Dev Size : 524264 (256.03 MiB 268.42 MB)
+>       Array Size : 524264 (256.03 MiB 268.42 MB)
+>     Super Offset : 524272 sectors
+>            State : clean
+>      Device UUID : 68d2dc69:03f902eb:9c8ca454:27bd3854
 >
-> Without either hardware or BIOS RAID, you can still end up being unable to boot,
-> e.g. the BIOS will try to boot from the first hard drive present, but if it has
-> bad sectors in the MBR or /boot partition, booting may fail even though there's
-> a perfectly good mirror on the second drive, because the BIOS doesn't understand
-> RAID. This has happened to me :-(
+>      Update Time : Fri Apr 20 09:46:57 2012
+>         Checksum : 2fa4f67c - correct
+>           Events : 17
 >
-Doesn't need to understand RAID, just be willing to try the next item in the 
-boot list on failure. My experience has been that almost every BIOS will try the 
-2nd item if the 1st fails totally (ie. drive isn't there). A _good_ BIOS will 
-try the next item on sector error in the MBR. After that the BIOS needs to 
-understand a lot more to do anything smart after the MBR runs.
+>
+>     Device Role : Active device 1
+>     Array State : AA ('A' == active, '.' == missing)
+>
+>
+> And that I could --zero-superblock and then add the partition back into
+> the array.
+>
+> And also that from searching the web that others encountering this seem
+> to solve the issue by utilizing an write bitmap.
+>
+> But from my reading of the documentation I should not have to, no?
+>
+I think the problem is in the documentation, it should tell you these things 
+perhaps. I confess I learned about this the easy way, since I have always used a 
+bitmap and not encountered this until I was testing a similar post years ago.
 
-I have put MBR and boot partition on a USB thumb drive because the failure rate 
-of a R/O flash is lower than rotating devices (in my experience). Use ext2 for 
-boot, no journal so the drive works really read-only. Hopefully grub2 mounts the 
-boot noatime.
+You might be able to --force it, but I'd rather zero the superblock myself, I 
+don't like using the big hammer unless there's no "right" way. I think you do 
+understand it, at least as well as I do.
 
+> Thanks in advance for helping me understand what's actually going on
+> here.
+>
+>
 
 
 -- 
