@@ -1,40 +1,37 @@
-From: Bill Davidsen <davidsen@tmr.com>
+From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
 Subject: Re: RAID6 fails to assemble after unclean shutdown
-Date: Wed, 25 Apr 2012 22:58:55 -0400
-Message-ID: <4F98B9EF.40207@tmr.com>
-References: <20120425103536.GA9978@nsrc.org> <20120425210145.73b1e51b@notabene.brown> <20120425111606.GA10101@nsrc.org>
+Date: Wed, 25 Apr 2012 20:50:06 -0700
+Message-ID: <e8tm69x5k8.ln2@goaway.wombat.san-francisco.ca.us>
+References: <20120425103536.GA9978@nsrc.org>
+ <20120425210145.73b1e51b@notabene.brown> <20120425111606.GA10101@nsrc.org>
+ <4F98B9EF.40207@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120425111606.GA10101@nsrc.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Brian Candler wrote:
-> On Wed, Apr 25, 2012 at 09:01:45PM +1000, NeilBrown wrote:
->> Presumably something when wrong during shutdown.  However without more
->> details (--examine) I cannot guess.
+On 2012-04-26, Bill Davidsen <davidsen@tmr.com> wrote:
 >
-> OK, thank you.
->
-> I've also found
-> https://raid.wiki.kernel.org/articles/r/a/i/RAID_Recovery_d376.html
-> which shows the --examine option too.
->
-> When building the array, would you suggest I also specify --bitmap=internal,
-> so that there is less data to resync after an error?
+> Without a bitmap you can spend days getting back up instead of minutes. Brian 
+> has the true truth here, unless there is a reason to avoid it, a bitmap is a 
+> ticket to a sane rebuild.
 
-You are being very understated here ;-)
-Without a bitmap you can spend days getting back up instead of minutes. Brian 
-has the true truth here, unless there is a reason to avoid it, a bitmap is a 
-ticket to a sane rebuild.
+My impression was that a bitmap only helped on an unclean shutdown or on
+re-adding a disk that was previously removed, and not on failing a drive
+and adding a new one.  Is that accurate?  (Of course it would help the
+OP if he has another unclean shutdown.)
 
-And if you have a big array, consider putting the bitmap on SSD, faster is better.
+As Neil posted last month, you can't use mdadm 3.2.3 to create the
+bitmap; use 3.2.2 or check out from git.  (I just ran into the bug in
+3.2.3 and found the message in the archive.)
+
+--keith
 
 
 -- 
-Bill Davidsen <davidsen@tmr.com>
-   "We have more to fear from the bungling of the incompetent than from
-the machinations of the wicked."  - from Slashdot
+kkeller@wombat.san-francisco.ca.us
+
+
