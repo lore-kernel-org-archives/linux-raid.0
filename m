@@ -1,56 +1,88 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Removing a failing drive from multiple arrays
-Date: Thu, 26 Apr 2012 17:17:58 -0400
-Message-ID: <4F99BB86.6000104@tmr.com>
-References: <4F905F66.6070803@tmr.com> <20369.29756.761374.308057@quad.stoffel.home> <4F918F5C.2000607@anonymous.org.uk> <CAK2H+efwgznsS4==Rrtm6UE=uOb25-Q0Qm84i8yAJEJJ2JLdgg@mail.gmail.com> <4F9450D1.40305@anonymous.org.uk> <4F98B4FE.5010101@tmr.com> <20120426073607.GA11590@nsrc.org> <4F994695.9010509@tmr.com> <20120426132336.GA12692@nsrc.org>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: dmesg deluge: RAID1 conf printout
+Date: Fri, 27 Apr 2012 11:30:51 +1000
+Message-ID: <20120427113051.06aa7db7@notabene.brown>
+References: <4F92BC43.3010603@computer.org>
+	<20120422070041.7e4b95e7@notabene.brown>
+	<4F943E07.8040206@computer.org>
+	<20120423094853.15683cd6@notabene.brown>
+	<4F94FE59.20307@computer.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/vYgpldnoz7EFYbb5aCrYdOt"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120426132336.GA12692@nsrc.org>
+In-Reply-To: <4F94FE59.20307@computer.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brian Candler <B.Candler@pobox.com>
+To: Jan Ceuleers <jan.ceuleers@computer.org>
 Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Brian Candler wrote:
-> On Thu, Apr 26, 2012 at 08:59:01AM -0400, Bill Davidsen wrote:
->>> Another option, although I've not done this for a long time, is PXE boot.
->>> You need a DHCP server giving out the correct parameters and a TFTP server
->>> for the kernel (and ramdisk?)
->>>
->> I think that's addressing one point of failure while adding more.
-> Alternate point of view: you need reliable DNS anyway, and it's no harder to
-> make reliable DHCP than reliable DNS (you just have two of them).
-> Furthermore, this only needs to be available at the time a server boots up.
->
-> I worked in one place where they made all the servers (which were VMs) pick
-> up their IPs via DHCP.  This allowed them to dump the images across to the
-> disaster recovery site, boot them up there, and bring them all up on new IPs
-> without touching any configs.  It worked well.  They ran DHCP service on the
-> Cisco L3 switches that the VM hosts were plugged into, on the basis that
-> this was the most reliable kit that they had.
-That is why my DNS/DHCP server is so vital :-(
-I have been doing my IP assign that way for some years, and using the ability of 
-KVM to set the MAC of the VM so I can take a fairly standard image and change 
-the name of the machine and IP at boot time. I have had less luck getting IPv6 
-working "right" and at the moment the IPv6 enabled servers get their IP from DNS 
-look-up on their name, and their name from DHCP in IPv4. It's ugly but solid, 
-I'm in not rush to find out why my IPv6 DHCP is unreliably.
-> Like you say, it's a balancing act of cost, complexity, and reliability, and
-> is also coloured by experience.  I've had not-so-good experiences with USB
-> thumb drives.
->
-I've had failures on the old ones due to write cycle fatigue. Once written it 
-should be stable as a read-only device. That's my thinking, if SSD is reliable, 
-then thumb drives should be slow but reliable, too. I'm saying that, feel free 
-to provide your opinion or contradictory facts. I take little on faith myself.
+--Sig_/vYgpldnoz7EFYbb5aCrYdOt
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Bill Davidsen<davidsen@tmr.com>
-   We are not out of the woods yet, but we know the direction and have
-taken the first step. The steps are many, but finite in number, and if
-we persevere we will reach our destination.  -me, 2010
+On Mon, 23 Apr 2012 09:01:45 +0200 Jan Ceuleers <jan.ceuleers@computer.org>
+wrote:
+
+> NeilBrown wrote:
+> > The following should fix it.
+>=20
+> Neil,
+>=20
+> Since I had not been running a self-compiled kernel when I reported=20
+> this, I first reproduced the issue on vanilla 3.3.0: git clone, git=20
+> checkout, build (using the Ubuntu config file for 3.3.0), install, boot.
+>=20
+> The spares were not being added to either RAID 1 set, and the logs were=20
+> not being flooded. The behaviour however began immediately when I added=20
+> the spares manually.
+>=20
+> I then built a kernel with your patch on top, and upon booting the=20
+> spares were being added automatically, and the logs are not being=20
+> spammed. The problem therefore indeed appears to be solved.
+
+Thanks for confirming.
+
+>=20
+> Tested-by: Jan Ceuleers <jan.ceuleers@computer.org>
+
+I had meant to add this when I submitted the patch, but other things pushed
+it from my mind.
+It is appreciated though.
+
+Thanks,
+NeilBrown
 
 
 
+>=20
+> Thanks, Jan
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/vYgpldnoz7EFYbb5aCrYdOt
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT5n2yznsnt1WYoG5AQIFRg/9HB8BReFiykSM9GMg45i6W5lAzJhdc91F
+JusamtuemMXqAaNa+ruJYVaZUhB5fmM8VcAwRHK6nX8Aup5bNJdPvhTMMdyEcisB
+uc2DpzTZcTngdXqGyaas4fMOxM4DfbZpBya1g1JAZ5yyXqgh04vrfarreNgApoT0
+ADY5XdqG6ZlhqDpL5BIUGkVjQRs1B/8gicyVRGH7zKAxREFj74ichY4VJHcKeO5G
+HLLlqnI3hIIuzQ7LXTqCPcr6lHe3EVuTU2NAnin7yG+i4f9frl3k3Vw5vQktc+Dg
+hQY5/ky4o++Rcf2LuRAHMR+P708C7aRlIgf1K4I0/LZVG6CO2Ftpes5G159ScRsr
+kaoHVbz/i3f4UAjc8qF0/v6+aHwRHMqjNLS8TRhx/8d8bf9NpEjY5e5em2GdwnPy
+brbjCCDI6za0hO6Fp5HiTK1ZWmPJlwvxMBEwM/33E80bjYkNbP5aiIdKzm6KhcZM
+6ogNWMnW33/90BpM+o3to2gGsSybcuAufkkdoUX+YwVDR7X5A79JCFtiQFfxk096
+SutCwUadhu64FLBdnQ56qKi4W6tIegX5XWxRl6DoX2KItHOu5aGxu2Reze/huIbV
+KKrxUMgnnM345hkCBV9ygrhjdfPNQabpVGkCDvN2Hxt7Jnj3qemDbRRHK7r8EclU
+7Jgb4iBfqEY=
+=eVh7
+-----END PGP SIGNATURE-----
+
+--Sig_/vYgpldnoz7EFYbb5aCrYdOt--
