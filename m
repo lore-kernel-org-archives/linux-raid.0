@@ -1,71 +1,111 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm: ioctl(GET_DISK_INFO) question
-Date: Sat, 28 Apr 2012 08:09:11 +1000
-Message-ID: <20120428080911.10fe2f47@notabene.brown>
-References: <CAGRgLy4p0aiZD92dJsV3tdcZyPaJ=8Nc6CKWVcQU20QtMb6MBQ@mail.gmail.com>
+Subject: Re: [Doubt] how is a disk marked faulty in RAID5
+Date: Sat, 28 Apr 2012 08:20:54 +1000
+Message-ID: <20120428082054.3ecd8398@notabene.brown>
+References: <CANSbrrpBAPdKgJYJGtpRs0DcwTs_1BEOEaxf3y4fVcO6M+0H1w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/SnOsaQWsfKrRjhYc.OH+c6="; protocol="application/pgp-signature"
+ boundary="Sig_/XhE00Y0qK5R4Zv=1qHn1MZV"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy4p0aiZD92dJsV3tdcZyPaJ=8Nc6CKWVcQU20QtMb6MBQ@mail.gmail.com>
+In-Reply-To: <CANSbrrpBAPdKgJYJGtpRs0DcwTs_1BEOEaxf3y4fVcO6M+0H1w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Anuj Goel <agoel@cs.stonybrook.edu>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/SnOsaQWsfKrRjhYc.OH+c6=
+--Sig_/XhE00Y0qK5R4Zv=1qHn1MZV
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 27 Apr 2012 17:14:28 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-wrote:
+On Tue, 24 Apr 2012 19:36:48 -0400 Anuj Goel <agoel@cs.stonybrook.edu> wrot=
+e:
 
-> Hello,
+> Hi,
 >=20
-> what is the reason that in some places (like Detail()), the code tests
-> for all desc_nrs possible (value read from superblock or MaxDisks
-> macro):
-> for (d =3D 0; d < max_disks; d++) {
->     disc.number =3D d;
->     ioctl(fd, GET_DISK_INFO, &disk)
+> I have been looking into the RAID5 code, but unable to find how a disk
+> is marked faulty in a RAID5 array.
+
+A call to md_error() calls back into error() and marks it fault.
+
+> I consider the case when we try to read, say 2 sectors within a chunk
+> and the read fails. My understanding so far is as below:
 >=20
-> and in other places (like Monitor()), the loop goes only up to :
-> array.raid_disks + array.nr_disks.
+> The status of the read operation is returned in the call back function
+> "raid5_align_endio" registered in chunk-aligned_read().
+> If there was an error in the read, it LIFO adds the original bio to
+> the retry list and wakes up the raid5d thread.
+> This thread will remove the bio from the retry list and send it to
+> retry_aligned_read().
+>=20
+> In retry_aligned_read(), we first compute the disk number and sector
+> offset within the disk using raid5_compute_sector().
+>=20
+> 1. Then we do some stripe operations, but I cannot see where the
+> actual read from the disk is scheduled.
 
-Bug.
+retry_alignd_read calls handle_stripe()
+handle_stripe() calls handle_stripe_fill()
+handle_stripe_fill() calls fetch_block which sets R5_Wantread on the target
+'dev', or on every other dev (later it will set R5_Wantcompute on the target
+dev).
+handle_stripe() calls ops_run_io which notices R5_Wantread an schedules the
+read.
+
+> 2. Also, if the sector on the disk is found unreadable, according to
+> the RAID5 design, it should be recomputed using parity and the disk
+> marked FAULTY. Can you please point me to the code/functions I should
+> look into to understand how this is being done.
+
+fetch_block is probably the important bit to read and understand
+Note how it sets STRIPE_OP_COMPUTE_BLOCK and subsequently __raid_run_ops()
+notices that and runs ops_run_compute5() which sets up the xor process.
+
+
+> 3. After one disk failure, if another disk fails, I think the RAID5
+> array cannot be used anymore. How is the second disk failure reported
+> ?
+
+What exactly to you mean by "reported".
+The second disk is marked as faulty
+Subsequent writes and some reads will fail.
+See the
+	if (s.failed > conf->max_degraded) {
+branch in handle_stripe()
+
 
 >=20
-> After all, disk.number (which is rdev->desc_nr in kernel) is merely a
-> position of the disk entry in the dev_roles[] array in the superblock,
-> and has no relation to the raid slot of the disk. Shouldn't the code
-> always check max_disks possible?
+> This is my first tryst with Linux code, (specifically software RAID),
+> so I am not sure how to debug and understand the code flow.
+> Is code reading the only way to understand the flow, or is there some
+> documentation giving a high level overview of the implementation of
+> software RAID ?
+>=20
+> Any suggestions will be highly appreciated !!
+>=20
 
-Yes.
-
-Thanks,
 NeilBrown
 
 
---Sig_/SnOsaQWsfKrRjhYc.OH+c6=
+--Sig_/XhE00Y0qK5R4Zv=1qHn1MZV
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT5sZBznsnt1WYoG5AQJbTRAAtJ+DaxV3H2z9Tvqw6sLnYSjquxB1O6Aw
-pJ/jQjcPCoJSnz7sfXtiqmhcgGUqpdHIBi+a80xNf0ifWcuIfLBrDOkH4qROkW1d
-YoeIoajFCKBkgh0DViEI0S4lf+5O+WB2oa2QGrRuvlVRmKTvT7rJuQ+0OBw7ZhW3
-liKllrmM+pnCdoUf6L2lp9aahVBTGHe1WaJaxeLYrLVzBiUIICnYqKhdfMyMR80+
-xuwSBm3bbHkqK61yDOQbsMgHbI3UkVq0sWBHYzNMGmjixzN946yGph7wNfa4GLQi
-iAwY+6jL0KdOSZ66uJlqAJQ2ysrn4L+KXnzUX/3YuLw3rs4jrs8BkjEeK+Rl8KoT
-E+LViAmMDdD4HUVO3hIJZPx9vC0Hgr5687UVK8qs0twbBPFadd+Moqpw2b6UeEDC
-cMRSZzw89mik310k1HQNC8Oc9sXGCkjrPfsyikCezZYNw6SmB2C9Dy36m9XEtmrb
-hr2/uW71uAg7ebzNhLByDt/8Yj0ll5w4v/nFebR3CIRCJ0aEjOrykJkX80+/rw9l
-DvI37YV/xZc0H19GpXlqo4pUJ8fo0SHe9L3+/smLPlhr7mpCaiL3MRQU89TOXWVa
-iQOK9xYlKw4yussHgXWNDzBfRig12/I32Mcfz7tEAdJvSspCznl4Uwqi3OdGjJX7
-U9CxDOb+4bQ=
-=r1mK
+iQIVAwUBT5sbxjnsnt1WYoG5AQL7rQ//WkM+JpLeYtOqu3ATrC7tH3sobLnsBT8A
+HGa/hRDz8X80Zr918bK+uzltCCKVLw7rIWsL0o8zTaYihXdW6v+v1no/Dt4S5kth
+Q+wpLpW9JUUUzGqXLhWSeby5wQrGdbY+93mUdGsvwRV5RuqLkDinGaFcif9mOx0N
+53QFyKRam5o6vZ9JoTc+lQAASlrxlPhV7EgkQLGqEfrDbYefhVKVLKw5Lq8NO/II
+vAVW8DdZbadeIg1HTvurfZu6ppJy/smJZST5MM5/uerkO9TX7WFR/jRkMysS7AUx
+ZeTuH4uP7a4+8Zjg/hXDcRoY3cOanudwIZpq/aJ4a4vUtlAmTYx9mPGTM1eYCLil
+K3LAeOrZQfldqMnBvbBKD8yESNwM+k0/67UZssTVmLttyEOj5yr5Bg2k4D872mCL
+X9vjUTeV0Z+6fDoP2qCzcc87SRBQiHfKAOxQm+69ujrDOuy/8uD/iUvIo/DsQ/JS
+B9xbyMcDgKksBRYgbz/1mSaoPvo15G+AtcOQPYhs+lD+seKl27OsDeTDvF902PYT
++J/Xe6saVG58ZM9jJR9ZYG5DQkjp6RCLfqfzLv6D6bPYcYHggovZMQiMl8pkYqFn
+560YNsszpYWlYuoYLQR0xuaxdmg664dhJHEwBSXzvDrTQ6YdTr+jALiQRR0B8PoI
+OAaTeJ7bzvM=
+=Cyry
 -----END PGP SIGNATURE-----
 
---Sig_/SnOsaQWsfKrRjhYc.OH+c6=--
+--Sig_/XhE00Y0qK5R4Zv=1qHn1MZV--
