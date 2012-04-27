@@ -1,77 +1,71 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Help to assemble raid5 - no superblock!
-Date: Sat, 28 Apr 2012 08:08:30 +1000
-Message-ID: <20120428080830.6a3d0ab1@notabene.brown>
-References: <CAGmni9oPLr6xg07gn0kVpKM2ysOzM5x+Dx-kBTz2ZDdqV0-VOg@mail.gmail.com>
-	<20120404214749.0988c792@notabene.brown>
-	<CAGmni9pRk4qO88VvUMQ2VpnmzokhxCbfwsA9LpnD1Jsa0KMKgg@mail.gmail.com>
-	<CAGmni9ogttmRiWqFkXz=wC=fqy7QFwDtuBYGL1kBenusQtB42g@mail.gmail.com>
+Subject: Re: mdadm: ioctl(GET_DISK_INFO) question
+Date: Sat, 28 Apr 2012 08:09:11 +1000
+Message-ID: <20120428080911.10fe2f47@notabene.brown>
+References: <CAGRgLy4p0aiZD92dJsV3tdcZyPaJ=8Nc6CKWVcQU20QtMb6MBQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/SzEIX5CyYLOJxXj8Nf+7V.D"; protocol="application/pgp-signature"
+ boundary="Sig_/SnOsaQWsfKrRjhYc.OH+c6="; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGmni9ogttmRiWqFkXz=wC=fqy7QFwDtuBYGL1kBenusQtB42g@mail.gmail.com>
+In-Reply-To: <CAGRgLy4p0aiZD92dJsV3tdcZyPaJ=8Nc6CKWVcQU20QtMb6MBQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Salatiel Filho <salatiel.filho@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/SzEIX5CyYLOJxXj8Nf+7V.D
-Content-Type: text/plain; charset=ISO-8859-1
+--Sig_/SnOsaQWsfKrRjhYc.OH+c6=
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 27 Apr 2012 07:24:01 -0300 Salatiel Filho <salatiel.filho@gmail.com>
+On Fri, 27 Apr 2012 17:14:28 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
 wrote:
 
-> A little help again. After being able to successfully mount in the
-> mips machine now that i am trying to mount in a x86 machine it is not
-> working.
+> Hello,
 >=20
-> # =A0root@eeepc:~# mdadm -A =A0--update=3Dbyteorder /dev/md1 /dev/sdc2
-> /dev/sdd2 /dev/sde2
-> mdadm: failed to add /dev/sdd2 to /dev/md1: Invalid argument
-> mdadm: failed to add /dev/sde2 to /dev/md1: Invalid argument
-> mdadm: failed to add /dev/sdc2 to /dev/md1: Invalid argument
-> mdadm: /dev/md1 assembled from 0 drives - not enough to start the array.
+> what is the reason that in some places (like Detail()), the code tests
+> for all desc_nrs possible (value read from superblock or MaxDisks
+> macro):
+> for (d =3D 0; d < max_disks; d++) {
+>     disc.number =3D d;
+>     ioctl(fd, GET_DISK_INFO, &disk)
 >=20
->=20
+> and in other places (like Monitor()), the loop goes only up to :
+> array.raid_disks + array.nr_disks.
+
+Bug.
 
 >=20
->=20
-> Apparently i am getting checksum error.
->=20
+> After all, disk.number (which is rdev->desc_nr in kernel) is merely a
+> position of the disk entry in the dev_roles[] array in the superblock,
+> and has no relation to the raid slot of the disk. Shouldn't the code
+> always check max_disks possible?
 
->=20
->=20
-> any ideas how to fix this ?
->=20
+Yes.
 
-Try to assembled with --update=3Dsummaries.  That should fix the checksum.
-The byte-order has already been fixed, so it doesn't need fixing again.
-
+Thanks,
 NeilBrown
 
 
---Sig_/SzEIX5CyYLOJxXj8Nf+7V.D
+--Sig_/SnOsaQWsfKrRjhYc.OH+c6=
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT5sY3jnsnt1WYoG5AQLMog//V+lsKXuylV5BQwd40UxMti5VoEEu3IWj
-VIw2/oQByh4NEN6f0CBLabYmlMeK3CXDGc9WSudaSIZTXuQSrB0+nA7jxuFVZtGM
-ZRKQdQkQE2YWXJLY2hR5pPwVE01AUbnHYmSat0k5IG0Nx1HJOa7htfU4VbnMOmlG
-/rVUAViE2dKBmPZ9O+OU7gaJSjMOEYl7J7NL7RZlCx4tJ+E3LMB4ebJrIJe0fwCP
-WLr5Q+UVX5vIJ92lSCxlvW3cQlBUym62WLY8xy68VDrmmEFbY9vQvzxzDMh8fKST
-UEr10VFfG3O10IxGuW8dXnxTjGotH5ThPKnvH5ds46q/1ftQkTh3fMeKxaZgkkRc
-SPxAlhwdSTD9RRLrDjVIlNxoCq7m4I0KM2MRWfZHcvGB9urB/fKWoYXQ7N2QAD50
-XkxEVUbU2/yYmGW7R5k5Xbc78fQenUdsvBGUr4iuUDBTUAPvseh3zASdIWCcV3Or
-3x3MUXKTNJ2hq/Dt2n79u911YLrrMK4X4gZFpZBw3hE6XlCcu+Zfi24zsfobFh0D
-78zkKwevVGdnH2zh0UNeYukf/U0Wk8ggDvJwuWdCnoe9ItcpHdz9qAT5bnddoP+5
-5r9ejl7hRlFYXE7DRUzU8g1NeMauTXiiCklyBBHqVMHtZTThW65CTYVLnxCan9V4
-EQirGz4wg9E=
-=cALJ
+iQIVAwUBT5sZBznsnt1WYoG5AQJbTRAAtJ+DaxV3H2z9Tvqw6sLnYSjquxB1O6Aw
+pJ/jQjcPCoJSnz7sfXtiqmhcgGUqpdHIBi+a80xNf0ifWcuIfLBrDOkH4qROkW1d
+YoeIoajFCKBkgh0DViEI0S4lf+5O+WB2oa2QGrRuvlVRmKTvT7rJuQ+0OBw7ZhW3
+liKllrmM+pnCdoUf6L2lp9aahVBTGHe1WaJaxeLYrLVzBiUIICnYqKhdfMyMR80+
+xuwSBm3bbHkqK61yDOQbsMgHbI3UkVq0sWBHYzNMGmjixzN946yGph7wNfa4GLQi
+iAwY+6jL0KdOSZ66uJlqAJQ2ysrn4L+KXnzUX/3YuLw3rs4jrs8BkjEeK+Rl8KoT
+E+LViAmMDdD4HUVO3hIJZPx9vC0Hgr5687UVK8qs0twbBPFadd+Moqpw2b6UeEDC
+cMRSZzw89mik310k1HQNC8Oc9sXGCkjrPfsyikCezZYNw6SmB2C9Dy36m9XEtmrb
+hr2/uW71uAg7ebzNhLByDt/8Yj0ll5w4v/nFebR3CIRCJ0aEjOrykJkX80+/rw9l
+DvI37YV/xZc0H19GpXlqo4pUJ8fo0SHe9L3+/smLPlhr7mpCaiL3MRQU89TOXWVa
+iQOK9xYlKw4yussHgXWNDzBfRig12/I32Mcfz7tEAdJvSspCznl4Uwqi3OdGjJX7
+U9CxDOb+4bQ=
+=r1mK
 -----END PGP SIGNATURE-----
 
---Sig_/SzEIX5CyYLOJxXj8Nf+7V.D--
+--Sig_/SnOsaQWsfKrRjhYc.OH+c6=--
