@@ -1,27 +1,58 @@
-From: likewhoa <likewhoa@weboperative.com>
-Subject: Re: raid10 issues after reorder of boot drives.
-Date: Sun, 29 Apr 2012 10:23:26 -0400
-Message-ID: <4F9D4EDE.50504@weboperative.com>
-References: <4F9AFBC6.7070803@weboperative.com> <4F9B14FA.1090001@weboperative.com> <20120428080522.637bc564@notabene.brown> <4F9B2BE1.5080207@weboperative.com> <4F9B3B48.8020900@weboperative.com> <4F9B57E9.2060409@weboperative.com> <20120428125506.6a2388eb@notabene.brown> <4F9B5D24.1050708@weboperative.com> <20120428132331.01396da6@notabene.brown> <4F9B695D.8030105@weboperative.com> <4F9C0B66.90102@weboperative.com> <20120429072844.5e0001b0@notabene.brown>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: mdadm: ioctl(GET_DISK_INFO) question
+Date: Sun, 29 Apr 2012 23:21:26 +0300
+Message-ID: <CAGRgLy7cLqE=VMveUh4DiFTvB35FvkyOKm-8eKGWZQGhSoroXg@mail.gmail.com>
+References: <CAGRgLy4p0aiZD92dJsV3tdcZyPaJ=8Nc6CKWVcQU20QtMb6MBQ@mail.gmail.com>
+	<20120428080911.10fe2f47@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120429072844.5e0001b0@notabene.brown>
+In-Reply-To: <20120428080911.10fe2f47@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 04/28/2012 05:28 PM, NeilBrown wrote:
-> I would just list the UUID for each array:
->    ARRAY /dev/md0 uuid=.......
-> and leave it at that.
-I used the output of 'mdadm -Esv' then removed everything but UUID=...
-but after doing 'mdadm -A /dev/md1' I get "mdadm: failed to add 8:131 to
-/dev/md1: Invalid argument
-mdadm: /dev/md1 assembled from 0 drives - not enough to start the
-array." mdadm.conf has "ARRAY /dev/md/1
-UUID=158918a9:52356b95:f4926a78:a55d4509" so not sure what could be the
-problem since it should just work.
+Thanks for the clarification, Neil. I will really try to provide (at
+least a partial) patch, together with the other patch I promised to
+test...
 
+On Sat, Apr 28, 2012 at 1:09 AM, NeilBrown <neilb@suse.de> wrote:
+> On Fri, 27 Apr 2012 17:14:28 +0300 Alexander Lyakas <alex.bolshoy@gma=
+il.com>
+> wrote:
+>
+>> Hello,
+>>
+>> what is the reason that in some places (like Detail()), the code tes=
+ts
+>> for all desc_nrs possible (value read from superblock or MaxDisks
+>> macro):
+>> for (d =3D 0; d < max_disks; d++) {
+>> =A0 =A0 disc.number =3D d;
+>> =A0 =A0 ioctl(fd, GET_DISK_INFO, &disk)
+>>
+>> and in other places (like Monitor()), the loop goes only up to :
+>> array.raid_disks + array.nr_disks.
+>
+> Bug.
+>
+>>
+>> After all, disk.number (which is rdev->desc_nr in kernel) is merely =
+a
+>> position of the disk entry in the dev_roles[] array in the superbloc=
+k,
+>> and has no relation to the raid slot of the disk. Shouldn't the code
+>> always check max_disks possible?
+>
+> Yes.
+>
+> Thanks,
+> NeilBrown
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
