@@ -1,13 +1,13 @@
 From: NeilBrown <neilb@suse.de>
 Subject: Re: recovering from raid5 corruption
-Date: Mon, 30 Apr 2012 09:44:10 +1000
-Message-ID: <20120430094410.6d49a8e9@notabene.brown>
+Date: Mon, 30 Apr 2012 09:45:46 +1000
+Message-ID: <20120430094546.4702be0a@notabene.brown>
 References: <4F9DC2E5.1090509@gmail.com>
 	<20120430085257.65d19c20@notabene.brown>
 	<4F9DCEC6.1050109@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/MxH/faOplSFyEcdblZcfOQH"; protocol="application/pgp-signature"
+ boundary="Sig_/7HQXOT9sn7uFfu=8JYTiMRu"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <4F9DCEC6.1050109@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
@@ -15,7 +15,7 @@ To: Shaya Potter <spotter@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/MxH/faOplSFyEcdblZcfOQH
+--Sig_/7HQXOT9sn7uFfu=8JYTiMRu
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
@@ -38,6 +38,17 @@ ou
 >=20
 > I have it setup correctly now (obvious due to the fact that I can read=20
 > the lvm configuration without any gibberish when ordered correctly).
+
+I should add that this only proves that you have the first device correct,
+the rest may be wrong.
+You need to activate the LVM, then look at the filesystem and see if it is
+consistent before you can be sure that all devices are in the correct
+position.
+
+NeilBrown
+
+
+
 >=20
 > however, now I need to figure out how to recreate the lvm appropriately.=
 =20
@@ -50,13 +61,6 @@ ou
 > any continued advice would be appreciated, googling doesn't seem to come=
 =20
 > up with much if one doesn't have a backup of the lvm data.
-
-I don't use LVM myself so I don't know all the details, but doesn't 'pvscan'
-find them?  I don't know what you do after that.
-
-NeilBrown
-
-
 >=20
 > raid5 {
 > id =3D "8r27WQ-HvIw-0RQV-aksr-LJGN-DLVD-1WBg8h"
@@ -130,26 +134,26 @@ NeilBrown
 > creation_time =3D 1250739410      # Wed Aug 19 23:36:50 2009
 
 
---Sig_/MxH/faOplSFyEcdblZcfOQH
+--Sig_/7HQXOT9sn7uFfu=8JYTiMRu
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT53SSjnsnt1WYoG5AQJYJA//ahC/71mXHG5zpQqiWBP5ORKx5+IbUtcA
-ioReGC+4OZebHEBF1WK3fjtBaIBdSZJaPxLQUlrPcuU5fLxDf4xNJW0BHq2/V5s3
-gPuWhvov9vy2OvxlMF9Cp793Qb4SfGKwmmlEBMj3LhUheVG+TFv66H6Iq1PxgzzP
-+ejeklsGK2cq916HO7PMVaC9lryQlTEqucHTECdCd9V42D196ZJ4ugSoeDLaXx2z
-lFf4OrVq3tjxebG0DspKv13IO5cPGR9VRIP8b2Eo/k6/71baAS6fC1f3yjwB5Edk
-sDLlQ6pMvUc4sf59X6sfgTDQrhka1aWv5I9OPB+OcHkTGkhD9fNX4yy4mRRXLdB/
-072UOeF6sutP+GHGmAon851jaanTAbSOJ6oKLvS479Ww2HUXYhBXoyKw3y77wwy5
-//SopQj+d3IsQwr+zCgfW4kiaraiI14Ogbe5NCEjwtjdtHbbKmoFsoy1XYOw8lxV
-1xlAO4glKYbuFkTGjavrdiHosiLY4jGyPs0vAffckINShucdJ+gGqKOI6Dq5/LP7
-hbKaaGFFDm6S6ck6w9XmLC4FPRicHpNcuXOK88Po4Ruzkn50+tqwqU4xhs8Qistu
-joWHIhzoBMCJ0AzzcWna+WA8BejYiGU5Da5vxpCBEGMdSllLz9OMOIxzfeOWZqPZ
-IPH/mNcVuzU=
-=0hPe
+iQIVAwUBT53Sqjnsnt1WYoG5AQKsHhAArykOjB4xJb6S/LnKSA6Z69wgdLCLOIDF
+yQQCjNg+2xL2vIeaFg4GTy9Nmp87mVv9diYAJL+V1HFOk9X5jKREWw1lT/62N+y0
+U6r0Kux491bOM50j0bWiMhvJOjcaTfwdpPpT0L2KQfJ24D4b3vNafQJXjyFDDsrn
+nQqUZFzi9mTYeDVf4B/7x7vq2/zOtJfXu6OFFT57HjnvwRIy3KHl/zu2Ss52jlU6
+3kvusCuyOpxBugcJvUBdH61g77QU0TLEu7XCqj3g3pyaHTbse6uVLm+R+yD2CDl2
+E5GzPqLr6riix0F7byJ0BfQQaPo0+lLHzsAXLcr76Bk2zucKsxEQYbohct0TDvKt
+Vxr0evwUJGrwkaugqD+sZQd35kRPvxEIOsI4t+zZcrPKSghtHnR0MY8aMlnZ3+nP
+dGnQc1NRm9/EIWx/Jd1PMsUHSR79zCsyBweAXnVpVvQEXk2czp52ARmb/QKhlwNp
+WL58uzUQ7Qk5q2NTHrb+tZQniLPVw5oJlS1ArKQjF8koI0q5sn0K/DQ61biwDyVf
+jEY2kpD7vw6kWY37aLKpAsDfZ0ag2H/2ZmTUg+HyqON0sENF495J0aP/wBd1l8cS
+JKf9NgW4c98+GXuhvv2jKlawqPIr5PkTJJFSPbvLGGALQbkh2QU662FOGY40Rigj
+UbCXVNNJjZE=
+=phZH
 -----END PGP SIGNATURE-----
 
---Sig_/MxH/faOplSFyEcdblZcfOQH--
+--Sig_/7HQXOT9sn7uFfu=8JYTiMRu--
