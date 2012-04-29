@@ -1,58 +1,48 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: mdadm: ioctl(GET_DISK_INFO) question
-Date: Sun, 29 Apr 2012 23:21:26 +0300
-Message-ID: <CAGRgLy7cLqE=VMveUh4DiFTvB35FvkyOKm-8eKGWZQGhSoroXg@mail.gmail.com>
-References: <CAGRgLy4p0aiZD92dJsV3tdcZyPaJ=8Nc6CKWVcQU20QtMb6MBQ@mail.gmail.com>
-	<20120428080911.10fe2f47@notabene.brown>
+From: Shaya Potter <spotter@gmail.com>
+Subject: recovering from raid5 corruption
+Date: Sun, 29 Apr 2012 18:38:29 -0400
+Message-ID: <4F9DC2E5.1090509@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120428080911.10fe2f47@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks for the clarification, Neil. I will really try to provide (at
-least a partial) patch, together with the other patch I promised to
-test...
+somehow my raid5 got corrupted in the contexts of a main disk failure 
+(which wasn't raid related).
 
-On Sat, Apr 28, 2012 at 1:09 AM, NeilBrown <neilb@suse.de> wrote:
-> On Fri, 27 Apr 2012 17:14:28 +0300 Alexander Lyakas <alex.bolshoy@gma=
-il.com>
-> wrote:
->
->> Hello,
->>
->> what is the reason that in some places (like Detail()), the code tes=
-ts
->> for all desc_nrs possible (value read from superblock or MaxDisks
->> macro):
->> for (d =3D 0; d < max_disks; d++) {
->> =A0 =A0 disc.number =3D d;
->> =A0 =A0 ioctl(fd, GET_DISK_INFO, &disk)
->>
->> and in other places (like Monitor()), the loop goes only up to :
->> array.raid_disks + array.nr_disks.
->
-> Bug.
->
->>
->> After all, disk.number (which is rdev->desc_nr in kernel) is merely =
-a
->> position of the disk entry in the dev_roles[] array in the superbloc=
-k,
->> and has no relation to the raid slot of the disk. Shouldn't the code
->> always check max_disks possible?
->
-> Yes.
->
-> Thanks,
-> NeilBrown
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+compounding this issue was that I had already had one disk in the raid5 
+go bad and was in the process of getting it replaced.
+
+this raid array was 5 disks.
+
+What I mean by corrupted is that the superblock of 3 of the remaining 4 
+devices seemed to have been wiped out (i.e. had a UUID of all 0s, though 
+still enough that it knew it was part of an md device)
+
+now, the one whose superblock seems fine, places it at position disk 3 
+(of 0-4) and the missing disk at disk 2.
+
+this would imply that there are only 6 permutations possible for the 
+other 3 disks.   (even if that assumptions is wrong, there are only 120 
+permutations possible, which I should easily be able to iterate over).
+
+further compounding this, is that there were 2 LVM logical disks on the 
+physical raid device.
+
+I've tried being cute and trying all 6 permutations to force recreate 
+the array, but lvm isn't picking up anything. (pvscan/lvscan/lvmdiskscan)
+
+The original raid had a version of 0.90.00 (created in 2008), while the 
+new one has a version 1.20.
+
+have I ruined any chances of recovery by shooting in the dark with my 
+cute attempts, am I SOL or is there a better/proper way I can try to 
+recover this data?
+
+Luckily for me, I've been on a backup binge of late, but there still 
+about 500-1TB of stuff that wasn't backed up.
+
+thanks, any help would be appreciated.
