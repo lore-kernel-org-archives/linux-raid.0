@@ -1,96 +1,110 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/2] Fix sign extension of bitmap_offset in super1.c
-Date: Mon, 30 Apr 2012 09:55:31 +1000
-Message-ID: <20120430095531.4c10bc02@notabene.brown>
-References: <1335453177-8515-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1335453177-8515-2-git-send-email-Jes.Sorensen@redhat.com>
-	<4F99674B.7070900@redhat.com>
-	<4F996800.2050603@redhat.com>
+Subject: Re: [PATCH] imsm: fix: thunderdome may drop 2tb attribute
+Date: Mon, 30 Apr 2012 09:58:13 +1000
+Message-ID: <20120430095813.084aeca6@notabene.brown>
+References: <3F8F31A3BFD1664EAB894D1BD6AF32B918A212E6@IRSMSX102.ger.corp.intel.com>
+	<3F8F31A3BFD1664EAB894D1BD6AF32B918A390A8@IRSMSX102.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/d+xmraw7wkorU/s6dyeRSx8"; protocol="application/pgp-signature"
+ boundary="Sig_/vrkV1hnMFdvsXyDmBerkPgE"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F996800.2050603@redhat.com>
+In-Reply-To: <3F8F31A3BFD1664EAB894D1BD6AF32B918A390A8@IRSMSX102.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Doug Ledford <dledford@redhat.com>, joe.lawrence@stratus.com, linux-raid@vger.kernel.org, Richard Henderson <rth@twiddle.net>
+To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/d+xmraw7wkorU/s6dyeRSx8
+--Sig_/vrkV1hnMFdvsXyDmBerkPgE
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 26 Apr 2012 17:21:36 +0200 Jes Sorensen <Jes.Sorensen@redhat.com>
-wrote:
+On Fri, 27 Apr 2012 08:58:14 +0000 "Czarnowska, Anna"
+<anna.czarnowska@intel.com> wrote:
 
-> On 04/26/12 17:18, Doug Ledford wrote:
-> > On 04/26/2012 11:12 AM, Jes.Sorensen@redhat.com wrote:
-> >> > From: Jes Sorensen <Jes.Sorensen@redhat.com>
-> >> >=20
-> >> > fbdef49811c9e2b54e2064d9af68cfffa77c6e77 incorrectly tried to fix si=
-gn
-> >> > extension of the bitmap offset. However mdinfo->bitmap_offset is a u=
-32
-> >> > and needs to be converted to a 32 bit signed integer before the sign
-> >> > extension.
-> >> >=20
-> >> > Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-> > I was scratching my head over this patch, saying to myself "But won't
-> > that cause us to truncate large values of bitmap_offset?"  And it will,
-> > but I see your point now, that's *exactly* the problem if we don't do
-> > the sign conversion before the extension, the actual bitmap_offset
-> > should really be signed in order to support negative offsets, but since
-> > it isn't, when we save a negative offset into bitmap_offset it appears
-> > as a really large positive offset, and then when we sign extend to long,
-> > it keeps the large size positive offset instead of picking up the
-> > negative offset.  Gotcha.  So, I see why this works, but do you think it
-> > should be fixed this way, or by converting bitmap_offset to type int32
-> > instead of uint32?
->=20
-> Heh, I have to admit I cheated too and asked Richard Henderson for help
-> as I couldn't figure out why the sign conversion failed. Otherwise I
-> would probably still have been scratching my head over it :)
->=20
-> I noticed other parts of the code already handled it this way, so my fix
-> is consistent with that, but we could do both. Neil?
+> Hi Neil,
+> this patch is quite important. It seems to have been overlooked
 
-The reason that "bitmap_offset" in 'mdp_superblock_1' is '__u32' is simply
-that there is no '__s32'.
-I wouldn't be against changing it, but I think you've concluded that it kee=
-ps
-the byte swapping simpler if we don't.
+Yes I had over-looked it.  Thanks for the reminder.  It is applied now.
 
-But then I read recently that Rob Pike thinks byte swapping is always wrong
-
-http://commandcenter.blogspot.com/2012/04/byte-order-fallacy.html
-
-so maybe we shouldn't be todo that....
-
-I'll just take your patches as they are I think - they look good.
-
-Thanks,
 NeilBrown
 
---Sig_/d+xmraw7wkorU/s6dyeRSx8
+
+
+> Regards
+> Anna
+>=20
+> > -----Original Message-----
+> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> > owner@vger.kernel.org] On Behalf Of Czarnowska, Anna
+> > Sent: Monday, April 02, 2012 10:59 PM
+> > To: NeilBrown
+> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> > Grabowski, Grzegorz
+> > Subject: [PATCH] imsm: fix: thunderdome may drop 2tb attribute
+> >=20
+> > Spare superblock doesn't depend on other spares in container.
+> > When loading container metadata thunderdome
+> > may pick a small disk for the champion. This will result in incorrect
+> > interpretation of sizes of other disks in container when joint
+> > superblock
+> > is returned. If any disk in container has the 2TB attribute set, the
+> > result
+> > must have it set too.
+> >=20
+> > Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+> > ---
+> >  super-intel.c |    2 ++
+> >  1 files changed, 2 insertions(+), 0 deletions(-)
+> >=20
+> > diff --git a/super-intel.c b/super-intel.c
+> > index ed13542..869a39c 100644
+> > --- a/super-intel.c
+> > +++ b/super-intel.c
+> > @@ -4079,6 +4079,8 @@ imsm_thunderdome(struct intel_super **super_list,
+> > int len)
+> >  		if (s =3D=3D champion)
+> >  			continue;
+> >=20
+> > +		mpb->attributes |=3D s->anchor->attributes &
+> > MPB_ATTRIB_2TB_DISK;
+> > +
+> >  		for (i =3D 0; i < mpb->num_disks; i++) {
+> >  			struct imsm_disk *disk;
+> >=20
+> > --
+> > 1.6.4.2
+> >=20
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> > in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/vrkV1hnMFdvsXyDmBerkPgE
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT53U8znsnt1WYoG5AQI3jg/+KFR1k6w95MB+Z5x1Dup3Favw/lBTqTnI
-pROeeJmlpxDZal7r47EQb2oLMb9RERf+0rKewrf3vZhOlUSxlCP58qeOw1hyQfhP
-pKlDvuBKYDLso19RRr0W8qJpXiN/A6wZgFa6PJwspidLjLTTDMHdPq20xuunOUQP
-MEpiJTz79l9VM4Vnnj9iww9mfCX/r1tpcZ9ge4FYYKP3JSLcyjkxL7nnTDg4xcIC
-dGoIJm6ApeBAMMlJ2vGKllPAkyoWgGVm5uGI0MgR4aO8w17GlBaEfDY5GaP17K4t
-9XDKZYTk7WUOvfwDQnfAGQwG9Kkl+J6Zl14aGSD/W0wVxzJ4He6bVXUmVMAp6acq
-v2W5Dcrs+Wv0FtuNe5mPVEbMKPhjxUhZSr6XBWNkki3RjBSWAvdK5kunZaPSfvVR
-ddv1mdDCFiKnxTRo4eGdNbLLHj2/S4a6NoZZxYU1tmg0szmZMEIk5qypNCSXDqqR
-tqU6zy/FMqnwvDjGj/NUFxf32M/Xasr7wlhWD3mM05JhD3eWcORXeFcUKwT73sJm
-KPbbTF/3e3PG48HBUhibXgMGCLfp8qZ8xx19yRlkoDImh9ZVz3Yp7uUZMh5z6Gll
-ctfxsJ2/nWvYWhpfjmnxS7CAqstS4TzeVLBzIu2bhRIaZXqy4tQw/+nRCfYDsxsA
-iL9tE21cOMM=
-=7QD2
+iQIVAwUBT53VlTnsnt1WYoG5AQI78Q/9GY7N4KxudgxiGWAMMTypOtn1HstRj8yC
+6aWLmeVh5jklqgvnnAwKy6nQ95pXTuuHv++GAug7sIw0qxpuZOR11O3uX3oEBxV5
+ip02SdX4I5GewwGIqt4e8Dc0B+znmy4uarsQVEcCWUwJmjzIQOYmtzSB8XBUOGIR
+hrR0WIai4xLXUGjofl7BKGMxsrQ8a7yBcz14Sfk8lW1cXrIg3CqW3Wc7mvoEec5c
+oLBfGpRlLdMddajLMJnK5Oz1P9zPZrWz/dU+Dfi2L6KZQQ5lwpki4rbFhlZ5BAkX
+TpdKDoepuIvAZBC9rzuG7WOqlW2baHR31wQn3CGQMVkm296kdU6qkHAcg9hCkp5o
+f9ooVRDcBG0gZM8BFFPWAkyh8uqDc7+KGogNWAG96zvmb3ohDBKey29HDbndEj1p
+TaScRZMg2vnfk/d9C+ZsGqmDNRQHVZfDCTAKwH64vbFdf63xftFtv1Q0oAftORLF
+8JTQzaNu0/fiBuRG0uJUSmYTCbFaqZYOEY3758yUY6D10o5sPf/i9ABNyFm6bZ9i
+TUPP9k9gaiSt3DNTU1rSaz1EZPyMQLo9UhFXlVJNYIDzt/sciNzF8bzoGrtIGodv
+Ghvwh3wKIRt212l0X35B5dDdVD/EEEWUTvoHEcC4UsUCeqkaUdJoFhThmROrAvrZ
+NeUb6bt+8j8=
+=nCZf
 -----END PGP SIGNATURE-----
 
---Sig_/d+xmraw7wkorU/s6dyeRSx8--
+--Sig_/vrkV1hnMFdvsXyDmBerkPgE--
