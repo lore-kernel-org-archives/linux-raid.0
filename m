@@ -1,96 +1,262 @@
-From: =?UTF-8?Q?Pawe=C5=82_Brodacki?= <pawel.brodacki@googlemail.com>
-Subject: Re: [md PATCH 08/23] md: don't set md arrays to readonly on shutdown.
-Date: Mon, 30 Apr 2012 12:32:03 +0200
-Message-ID: <CACVpCE7jjsJ2enWP6mFmLs7=RCpMCJ7G802cNVn7pG2GDf2NXg@mail.gmail.com>
-References: <20120314043555.7978.75486.stgit@notabene.brown>
-	<20120314044040.7978.64156.stgit@notabene.brown>
-	<CAGRgLy5UYf27335hQmEQQ8V2GSatQ-1aev9DdTia0j-Hv4wsEg@mail.gmail.com>
-	<20120419084833.39379a6f@notabene.brown>
-	<CAGRgLy6LXB34JtmfZYQEdAK4GLCV-hn-V8cT1zCwo_=ERyK90A@mail.gmail.com>
-	<20120419195740.6e35ea02@notabene.brown>
-	<CACVpCE5mpJcY5u=8Kqp7TkCHN63aMfncDwbnP77NOFjubhqoPA@mail.gmail.com>
-	<20120420220151.623df648@notabene.brown>
-	<CACVpCE6UZvBia2VwRMaFhJJuB2quvKKQc1byLFRP4YPTE8LHSQ@mail.gmail.com>
-	<20120422064203.65eee938@notabene.brown>
+From: =?ISO-8859-1?Q?H=E1kon_G=EDslason?= <hakon.gislason@gmail.com>
+Subject: Failed drive while converting raid5 to raid6, then a hard reboot
+Date: Mon, 30 Apr 2012 13:59:56 +0000
+Message-ID: <CAFTzWnrQARaemDkMNe48zT8tipPmsVbt0ZFgfDTyrtUc9KjuZQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120422064203.65eee938@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Alexander Lyakas <alex.bolshoy@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-2012/4/21 NeilBrown <neilb@suse.de>:
-> On Sat, 21 Apr 2012 17:18:58 +0200 Pawe=C5=82 Brodacki
-> <pawel.brodacki@googlemail.com> wrote:
->
-> "For what, we ask, is life - without a touch of poetry in it".
->
-> Maybe not an entirely relevant quote, but it is the first that came t=
-o mind.
->
-> "What's life without whimsy?"
->
-> Would be a slightly more modern quote.
->
-> Can you place them without google's help?
+Hello,
+I've been having frequent drive "failures", as in, they are reported
+failed/bad and mdadm sends me an email telling me things went wrong,
+etc... but after a reboot or two, they are perfectly fine again. I'm
+not sure what it is, but this server is quite new and I think there
+might be more behind it, bad memory or the motherboard (I've been
+having other issues as well). I've had 4 drive "failures" in this
+month, all different drives except for one, which "failed" twice, and
+all have been fixed with a reboot or rebuild (all drives reported bad
+by mdadm passed an extensive SMART test).
+Due to this, I decided to convert my raid5 array to a raid6 array
+while I find the root cause of the problem.
 
-I pledge ignorance in both cases. After employing Google I can say, tha=
-t
-1) Arthur Sullivan and W. S. Gilbert. kinda ring the bell, but no, I
-wouldn't guess.
-2) I was dimly aware of existence of character of dr S. Cooper, but at
-no point did I memorise his words.
->> Neil, could you point us to a bug report which inspired you to write
->> this patch? My google fu failed me and I was able to find just one b=
-ug
->> entry from before 2 yerars, and even that hit is of dubious relevanc=
-e.
->>
->> Pretty please with sugar on top?
->>
->
-> https://bugzilla.novell.com/show_bug.cgi?id=3D713148
->
-> But that is against our "enterprise" product so is not globally visib=
-le :-(
->
-> But it gave me some search-term hints so:
->
-> http://lists.debian.org/debian-kernel/2011/05/msg00264.html
->
-> http://www.issociate.de/board/post/491554/Kernel_BUG.html
->
-> http://www.gossamer-threads.com/lists/xen/devel/174884?do=3Dpost_view=
-_threaded
->
-> https://lkml.org/lkml/2008/11/24/414
-> http://comments.gmane.org/gmane.linux.raid/20710
->
-> The important elements are:
-> =C2=A01/ you see "md: stopping all devices". =C2=A0This means that "r=
-eboot" has
-> =C2=A0 really started. =C2=A0This is printed by mds reboot notifier.
->
-> =C2=A02/ A stack trace showing something submitting IO.
-> =C2=A0 In the first link it is bdi_writeback_task
-> =C2=A0 In the second it is kjournald
->
-Amazingly enough, this is about what I found via google. Our
-perception of "recent kernel" differs, though. Serves me well for
-reading too much of linux-btrfs ;).
+I started the conversion right after a drive failure & rebuild, but as
+it had converted/reshaped aprox. 4%(if I remember correctly, and it
+was going really slowly, ~7500 minutes to completion), it reported
+another drive bad, and the conversion to raid6 stopped (it said
+"rebuilding", but the speed was 0K/sec and the time left was a few
+million minutes.
+After that happened, I tried to stop the array and reboot the server,
+as I had done previously to get the reportedly "bad" drive working
+again, but It=A0wouldn't=A0stop the array or reboot, neither could I
+unmount it, it just hung whenever I tried to do something with
+/dev/md0. After trying to reboot a few times, I just killed the power
+and re-started it.=A0Admittedly=A0this was probably not the best thing =
+I
+could have done at that point.
 
-> This pattern can only happen on an unclean shutdown.
->
-> NeilBrown
->
+I have backup of ca. 80% of the data on there, it's been a month since
+the last complete backup (because I ran out of backup disk space).
 
-Thanks a lot for a clear, definitive and catharsis-bringing reply.
+So, the big question, can the array be activated, and can it complete
+the conversion to raid6? And will I get my data back?
+I hope the data can be rescued, and any help I can get would be much
+appreciated!
 
-Kind regards,
-Pawe Brodacki
+I'm fairly new to raid in general, and have been using mdadm for about
+a month now.
+Here's some data:
+
+root@axiom:~# mdadm --examine --scan
+ARRAY /dev/md/0 metadata=3D1.2 UUID=3Dcfedbfc1:feaee982:4e92ccf4:45e08e=
+d1
+name=3Daxiom.is:0
+
+
+root@axiom:~# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : inactive sdc[6] sde[7] sdb[5] sda[4]
+=A0 =A0 =A0 7814054240 blocks super 1.2
+
+root@axiom:~# mdadm --assemble --scan --force --run /dev/md0
+mdadm: /dev/md0 is already in use.
+
+root@axiom:~# mdadm --stop /dev/md0
+mdadm: stopped /dev/md0
+
+root@axiom:~# mdadm --assemble --scan --force --run /dev/md0
+mdadm: Failed to restore critical section for reshape, sorry.
+=A0 =A0 =A0 Possibly you needed to specify the --backup-file
+
+root@axiom:~# mdadm --assemble --scan --force --run /dev/md0
+--backup-file=3D/root/mdadm-backup-file
+mdadm: Failed to restore critical section for reshape, sorry.
+
+root@axiom:~# fdisk -l | grep 2000
+Disk /dev/sda doesn't contain a valid partition table
+Disk /dev/sda: 2000.4 GB, 2000398934016 bytes
+Disk /dev/sdb: 2000.4 GB, 2000398934016 bytes
+Disk /dev/sdc: 2000.4 GB, 2000398934016 bytes
+Disk /dev/sde: 2000.4 GB, 2000398934016 bytes
+Disk /dev/sdf: 2000.4 GB, 2000398934016 bytes
+
+root@axiom:~# mdadm --examine /dev/sd{a,b,c,e,f}
+/dev/sda:
+=A0 =A0 =A0 =A0 =A0 Magic : a92b4efc
+=A0 =A0 =A0 =A0 Version : 1.2
+=A0 =A0 Feature Map : 0x4
+=A0 =A0 =A0Array UUID : cfedbfc1:feaee982:4e92ccf4:45e08ed1
+=A0 =A0 =A0 =A0 =A0 =A0Name :=A0axiom.is:0
+
+=A0=A0(local to host=A0axiom.is
+
+)
+=A0 Creation Time : Mon Apr =A09 01:05:20 2012
+=A0 =A0 =A0Raid Level : raid6
+=A0 =A0Raid Devices : 5
+
+=A0Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
+=A0 =A0 =A0Array Size : 11721080448 (5589.05 GiB 6001.19 GB)
+=A0 Used Dev Size : 3907026816 (1863.02 GiB 2000.40 GB)
+=A0 =A0 Data Offset : 2048 sectors
+=A0 =A0Super Offset : 8 sectors
+=A0 =A0 =A0 =A0 =A0 State : active
+=A0 =A0 Device UUID : b11a7424:fc470ea7:51ba6ea0:158c0ce6
+
+=A0 Reshape pos'n : 242343936 (231.12 GiB 248.16 GB)
+=A0 =A0 =A0New Layout : left-symmetric
+
+=A0 =A0 Update Time : Sun Oct 14 15:20:06 2012
+=A0 =A0 =A0 =A0Checksum : 76ecd244 - correct
+=A0 =A0 =A0 =A0 =A0Events : 138274
+
+=A0 =A0 =A0 =A0 =A0Layout : left-symmetric-6
+=A0 =A0 =A0Chunk Size : 32K
+
+=A0 =A0Device Role : Active device 3
+=A0 =A0Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing)
+/dev/sdb:
+=A0 =A0 =A0 =A0 =A0 Magic : a92b4efc
+=A0 =A0 =A0 =A0 Version : 1.2
+=A0 =A0 Feature Map : 0x6
+=A0 =A0 =A0Array UUID : cfedbfc1:feaee982:4e92ccf4:45e08ed1
+=A0 =A0 =A0 =A0 =A0 =A0Name :=A0axiom.is:0
+
+=A0=A0(local to host=A0axiom.is
+
+)
+=A0 Creation Time : Mon Apr =A09 01:05:20 2012
+=A0 =A0 =A0Raid Level : raid6
+=A0 =A0Raid Devices : 5
+
+=A0Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
+=A0 =A0 =A0Array Size : 11721080448 (5589.05 GiB 6001.19 GB)
+=A0 Used Dev Size : 3907026816 (1863.02 GiB 2000.40 GB)
+=A0 =A0 Data Offset : 2048 sectors
+=A0 =A0Super Offset : 8 sectors
+Recovery Offset : 161546240 sectors
+=A0 =A0 =A0 =A0 =A0 State : active
+=A0 =A0 Device UUID : 8389f39f:cc7fa027:f10cf717:1d41d40b
+
+=A0 Reshape pos'n : 242343936 (231.12 GiB 248.16 GB)
+=A0 =A0 =A0New Layout : left-symmetric
+
+=A0 =A0 Update Time : Sun Oct 14 15:20:06 2012
+=A0 =A0 =A0 =A0Checksum : 19ef8090 - correct
+=A0 =A0 =A0 =A0 =A0Events : 138274
+
+=A0 =A0 =A0 =A0 =A0Layout : left-symmetric-6
+=A0 =A0 =A0Chunk Size : 32K
+
+=A0 =A0Device Role : Active device 4
+=A0 =A0Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing)
+/dev/sdc:
+=A0 =A0 =A0 =A0 =A0 Magic : a92b4efc
+=A0 =A0 =A0 =A0 Version : 1.2
+=A0 =A0 Feature Map : 0x4
+=A0 =A0 =A0Array UUID : cfedbfc1:feaee982:4e92ccf4:45e08ed1
+=A0 =A0 =A0 =A0 =A0 =A0Name :=A0axiom.is:0
+
+=A0=A0(local to host=A0axiom.is
+
+)
+=A0 Creation Time : Mon Apr =A09 01:05:20 2012
+=A0 =A0 =A0Raid Level : raid6
+=A0 =A0Raid Devices : 5
+
+=A0Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
+=A0 =A0 =A0Array Size : 11721080448 (5589.05 GiB 6001.19 GB)
+=A0 Used Dev Size : 3907026816 (1863.02 GiB 2000.40 GB)
+=A0 =A0 Data Offset : 2048 sectors
+=A0 =A0Super Offset : 8 sectors
+=A0 =A0 =A0 =A0 =A0 State : clean
+=A0 =A0 Device UUID : b2cec17f:e526b42e:9e69e46b:23be5163
+
+=A0 Reshape pos'n : 242343936 (231.12 GiB 248.16 GB)
+=A0 =A0 =A0New Layout : left-symmetric
+
+=A0 =A0 Update Time : Sun Oct 14 15:20:06 2012
+=A0 =A0 =A0 =A0Checksum : a29b468a - correct
+=A0 =A0 =A0 =A0 =A0Events : 138274
+
+=A0 =A0 =A0 =A0 =A0Layout : left-symmetric-6
+=A0 =A0 =A0Chunk Size : 32K
+
+=A0 =A0Device Role : Active device 1
+=A0 =A0Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing)
+/dev/sde:
+=A0 =A0 =A0 =A0 =A0 Magic : a92b4efc
+=A0 =A0 =A0 =A0 Version : 1.2
+=A0 =A0 Feature Map : 0x4
+=A0 =A0 =A0Array UUID : cfedbfc1:feaee982:4e92ccf4:45e08ed1
+=A0 =A0 =A0 =A0 =A0 =A0Name :=A0axiom.is:0
+
+=A0=A0(local to host=A0axiom.is
+
+)
+=A0 Creation Time : Mon Apr =A09 01:05:20 2012
+=A0 =A0 =A0Raid Level : raid6
+=A0 =A0Raid Devices : 5
+
+=A0Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
+=A0 =A0 =A0Array Size : 11721080448 (5589.05 GiB 6001.19 GB)
+=A0 Used Dev Size : 3907026816 (1863.02 GiB 2000.40 GB)
+=A0 =A0 Data Offset : 2048 sectors
+=A0 =A0Super Offset : 8 sectors
+=A0 =A0 =A0 =A0 =A0 State : active
+=A0 =A0 Device UUID : 21c799cd:58be3156:6830865b:fa984134
+
+=A0 Reshape pos'n : 242343936 (231.12 GiB 248.16 GB)
+=A0 =A0 =A0New Layout : left-symmetric
+
+=A0 =A0 Update Time : Sun Oct 14 15:20:06 2012
+=A0 =A0 =A0 =A0Checksum : d882780e - correct
+=A0 =A0 =A0 =A0 =A0Events : 138274
+
+=A0 =A0 =A0 =A0 =A0Layout : left-symmetric-6
+=A0 =A0 =A0Chunk Size : 32K
+
+=A0 =A0Device Role : Active device 2
+=A0 =A0Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing)
+/dev/sdf:
+=A0 =A0 =A0 =A0 =A0 Magic : a92b4efc
+=A0 =A0 =A0 =A0 Version : 1.2
+=A0 =A0 Feature Map : 0x4
+=A0 =A0 =A0Array UUID : cfedbfc1:feaee982:4e92ccf4:45e08ed1
+=A0 =A0 =A0 =A0 =A0 =A0Name :=A0axiom.is:0
+
+=A0=A0(local to host=A0axiom.is
+
+)
+=A0 Creation Time : Mon Apr =A09 01:05:20 2012
+=A0 =A0 =A0Raid Level : raid6
+=A0 =A0Raid Devices : 5
+
+=A0Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
+=A0 =A0 =A0Array Size : 11721080448 (5589.05 GiB 6001.19 GB)
+=A0 Used Dev Size : 3907026816 (1863.02 GiB 2000.40 GB)
+=A0 =A0 Data Offset : 2048 sectors
+=A0 =A0Super Offset : 8 sectors
+=A0 =A0 =A0 =A0 =A0 State : active
+=A0 =A0 Device UUID : 8b043488:8379f327:5f00e0fe:6a1e0bee
+
+=A0 Reshape pos'n : 242343936 (231.12 GiB 248.16 GB)
+=A0 =A0 =A0New Layout : left-symmetric
+
+=A0 =A0 Update Time : Sat Apr 28 22:57:36 2012
+=A0 =A0 =A0 =A0Checksum : c122639f - correct
+=A0 =A0 =A0 =A0 =A0Events : 138241
+
+=A0 =A0 =A0 =A0 =A0Layout : left-symmetric-6
+=A0 =A0 =A0Chunk Size : 32K
+
+=A0 =A0Device Role : Active device 0
+=A0 =A0Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
+--
+H=E1kon G.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
