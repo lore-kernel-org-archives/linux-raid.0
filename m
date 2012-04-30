@@ -1,43 +1,59 @@
-From: Shaya Potter <spotter@gmail.com>
-Subject: Re: recovering from raid5 corruption
-Date: Mon, 30 Apr 2012 11:33:25 -0400
-Message-ID: <4F9EB0C5.8050207@gmail.com>
-References: <4F9DC2E5.1090509@gmail.com> <20120430085257.65d19c20@notabene.brown> <4F9DCEC6.1050109@gmail.com> <20120430094546.4702be0a@notabene.brown> <4F9DE0EC.6080401@gmail.com> <20120430110959.561b1a4f@notabene.brown> <4F9DE732.30009@gmail.com> <4F9E3150.6070001@computer.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: async_tx and RAID HW xor engine
+Date: Mon, 30 Apr 2012 13:31:41 -0700
+Message-ID: <CAA9_cmc0eEW-vjAuoj-ZnbX3vOrpswjVXU-NDw_rSSxqwvpU_w@mail.gmail.com>
+References: <CAGA5_H55asVEekOd1ae2OjkK07W5Okf1iTCg10oRSX4+M7FLEA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F9E3150.6070001@computer.org>
+In-Reply-To: <CAGA5_H55asVEekOd1ae2OjkK07W5Okf1iTCg10oRSX4+M7FLEA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jan Ceuleers <jan.ceuleers@computer.org>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Rajasekhar Pulluru <pullururajasekhar@gmail.com>
+Cc: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>, Russell King <rmk@arm.linux.org.uk>
 List-Id: linux-raid.ids
 
-On 04/30/2012 02:29 AM, Jan Ceuleers wrote:
-> On 30/04/12 03:13, Shaya Potter wrote:
->> On 04/29/2012 09:09 PM, NeilBrown wrote:
->>> If you were using 3.3.1, 3.3.2, or 3.3.3 when this happened, then I
->>> know what
->>> caused it and suggest upgrading to 3.3.4.
->>
->> dont think so. main disk died, so plugged a new main disk in and
->> installed ubuntu 12.04 server on it, but it wasn't playing nice, so
->> turned around and installed debian squeeze and thats when I noticed the
->> issue. debian is running 2.6.32. Ubuntu is running some 3.something, but
->> unsure which one.
->
-> Ubuntu 12.04 includes a 3.2.0-based kernel.
->
-> The issue was introduced in commit c744a65c1e2d59acc54333ce8 (included
-> in 3.3-rc7) and fixed by commit 30b8aa9172dfeaac6d77897c67ee9f9fc574cdbb
-> (included in 3.4-rc1). The trouble is that the faulty commit was
-> submitted to stable, with the request to backport it as far as
-> practicable ("This is suitable for any stable kernel (though there might
-> be some conflicts with obvious fixes in earlier kernels)").
->
-> I haven't checked, but I'm fairly sure that the Ubuntu 12.04 kernel does
-> indeed include the faulty commit and does not yet have the fix (as the
-> fix wasn't upstreamed until last week).
+[ adding Russell and Neil for comment about the proposed change to async_tx ]
 
-confirmed with #ubuntu-kernel guys that they have the bad commit in 
-their kernel, so they now know about it and seem on top of it.
+On Mon, Apr 30, 2012 at 3:05 AM, Rajasekhar Pulluru
+<pullururajasekhar@gmail.com> wrote:
+> Hi,
+>
+> I am trying to understand how are hardware xor engine's utilized by
+> async_tx module. I don't get the exact link that connects async_tx and
+> hardware xor engine.
+> Could someone help me understand it.
+>
+> Registration of a RAID HW XOR engine happens in
+> drivers/dma/<soc-xor.c> using dma_async_device_register(). Does this
+> registration function connect the async_tx api's
+> to use the HW XOR engine?
+
+Yes, the channel registers its capabilities with dmaengine, and then
+async_tx asks dmaengine (via dma_find_channel) for a resource to carry
+out the operation(s).
+
+> Or is there anything we need to support to
+> make async_tx api's to take advantage of the hardware XOR engine?
+
+Registration with dma engine should be all that is needed, but a word
+of caution that the channel switching mechanism has been found to be
+incompatible with the dma mapping api.  So, unless your dma channel
+supports all the operations needed for raid, do not rely on async_tx's
+channel switching capabilities.
+
+An architecture where this is known to be a problem is ARM, but I
+wonder if we should take the following global step until this is fixed
+properly?
+
+diff --git a/drivers/dma/Kconfig b/drivers/dma/Kconfig
+index cf9da36..b812b6b 100644
+--- a/drivers/dma/Kconfig
++++ b/drivers/dma/Kconfig
+@@ -280,6 +280,7 @@ config NET_DMA
+ config ASYNC_TX_DMA
+        bool "Async_tx: Offload support for the async_tx api"
+        depends on DMA_ENGINE
++       depends on !ASYNC_TX_ENABLE_CHANNEL_SWITCH
+        help
+          This allows the async_tx api to take advantage of offload engines for
+          memcpy, memset, xor, and raid6 p+q operations.  If your platform has
