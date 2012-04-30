@@ -1,74 +1,41 @@
-From: Shaya Potter <spotter@gmail.com>
+From: Jan Ceuleers <jan.ceuleers@computer.org>
 Subject: Re: recovering from raid5 corruption
-Date: Sun, 29 Apr 2012 21:13:22 -0400
-Message-ID: <4F9DE732.30009@gmail.com>
-References: <4F9DC2E5.1090509@gmail.com> <20120430085257.65d19c20@notabene.brown> <4F9DCEC6.1050109@gmail.com> <20120430094546.4702be0a@notabene.brown> <4F9DE0EC.6080401@gmail.com> <20120430110959.561b1a4f@notabene.brown>
+Date: Mon, 30 Apr 2012 08:29:36 +0200
+Message-ID: <4F9E3150.6070001@computer.org>
+References: <4F9DC2E5.1090509@gmail.com> <20120430085257.65d19c20@notabene.brown> <4F9DCEC6.1050109@gmail.com> <20120430094546.4702be0a@notabene.brown> <4F9DE0EC.6080401@gmail.com> <20120430110959.561b1a4f@notabene.brown> <4F9DE732.30009@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120430110959.561b1a4f@notabene.brown>
+In-Reply-To: <4F9DE732.30009@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Shaya Potter <spotter@gmail.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 04/29/2012 09:09 PM, NeilBrown wrote:
-> On Sun, 29 Apr 2012 20:46:36 -0400 Shaya Potter<spotter@gmail.com>  wrote:
+On 30/04/12 03:13, Shaya Potter wrote:
+> On 04/29/2012 09:09 PM, NeilBrown wrote:
+>> If you were using 3.3.1, 3.3.2, or 3.3.3 when this happened, then I
+>> know what
+>> caused it and suggest upgrading to 3.3.4.
 >
->> On 04/29/2012 07:45 PM, NeilBrown wrote:
->>> On Sun, 29 Apr 2012 19:29:10 -0400 Shaya Potter<spotter@gmail.com>   wrote:
->>>
->>>> On 04/29/2012 06:52 PM, NeilBrown wrote:
->>>>>
->>>>> You've written a new superblock 4K in to each device, where previously here
->>>>> was something.   So you have probably corrupted something though we cannot
->>>>> easily tell what.
->>>>>
->>>>> Retry your experiment with --metadata=0.90.  Hopefully one of those
->>>>> combinations will work better.  If it does, make a backup of the data you
->>>>> want to keep, then I would suggest rebuilding the array from scratch.
->>>>
->>>> ok, thanks, that was a huge help.
->>>>
->>>> I have it setup correctly now (obvious due to the fact that I can read
->>>> the lvm configuration without any gibberish when ordered correctly).
->>>
->>> I should add that this only proves that you have the first device correct,
->>> the rest may be wrong.
->>> You need to activate the LVM, then look at the filesystem and see if it is
->>> consistent before you can be sure that all devices are in the correct
->>> position.
->>
->> this cheat sheet came in handy
->>
->> http://www.datadisk.co.uk/html_docs/redhat/rh_lvm.htm
->>
->> did the method at the bottom "corrupt LVM metadata but replacing the
->> faulty disk"
->>
->> copy/paste config file out of beginning of fs.
->>
->> pvcreate --uuid<uuid for pv0, from config file>  /dev/md0
->> vgcfgrestore -f<config file>  <pv name>
->> vgchange -a y<pv name>
->>
->> some cursory testing of large contigious files that have checksumming
->> built in seems to indicate that they are all ok.  probably have other
->> corruption due to the md 0,90 to 1.20 metadata booboo, but if that's
->> only 16k-20k (4k * 4 or 5 disks) spread out over 3tb of data, I'm very
->> happy :)  and it's mostly family photo data, so not the biggest deal if
->> the large majority is ok.
->>
->> <shew>  relieved.
->
-> Excellent.  Thanks for keeping us informed.
->
-> If you were using 3.3.1, 3.3.2, or 3.3.3 when this happened, then I know what
-> caused it and suggest upgrading to 3.3.4.
+> dont think so. main disk died, so plugged a new main disk in and
+> installed ubuntu 12.04 server on it, but it wasn't playing nice, so
+> turned around and installed debian squeeze and thats when I noticed the
+> issue. debian is running 2.6.32. Ubuntu is running some 3.something, but
+> unsure which one.
 
-dont think so.  main disk died, so plugged a new main disk in and 
-installed ubuntu 12.04 server on it, but it wasn't playing nice, so 
-turned around and installed debian squeeze and thats when I noticed the 
-issue.  debian is running 2.6.32.  Ubuntu is running some 3.something, 
-but unsure which one.
+Ubuntu 12.04 includes a 3.2.0-based kernel.
+
+The issue was introduced in commit c744a65c1e2d59acc54333ce8 (included 
+in 3.3-rc7) and fixed by commit 30b8aa9172dfeaac6d77897c67ee9f9fc574cdbb 
+(included in 3.4-rc1). The trouble is that the faulty commit was 
+submitted to stable, with the request to backport it as far as 
+practicable ("This is suitable for any stable kernel (though there might 
+be some conflicts with obvious fixes in earlier kernels)").
+
+I haven't checked, but I'm fairly sure that the Ubuntu 12.04 kernel does 
+indeed include the faulty commit and does not yet have the fix (as the 
+fix wasn't upstreamed until last week).
+
+HTH, Jan
