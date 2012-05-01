@@ -1,408 +1,114 @@
-From: Jim Kukunas <james.t.kukunas@linux.intel.com>
-Subject: [PATCH] arch/x86: use kernel_fpu_[begin|end] for RAID5 checksumming
-Date: Mon, 30 Apr 2012 16:51:15 -0700
-Message-ID: <1335829875-18481-1-git-send-email-james.t.kukunas@linux.intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, hpa@zytor.com, linux-kernel@vger.kernel.org
+From: NeilBrown <neilb@suse.de>
+Subject: Re: async_tx and RAID HW xor engine
+Date: Tue, 1 May 2012 10:49:14 +1000
+Message-ID: <20120501104914.4066a38c@notabene.brown>
+References: <CAGA5_H55asVEekOd1ae2OjkK07W5Okf1iTCg10oRSX4+M7FLEA@mail.gmail.com>
+	<CAA9_cmc0eEW-vjAuoj-ZnbX3vOrpswjVXU-NDw_rSSxqwvpU_w@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/endU5IhPkGR94pXBVRnWybh"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAA9_cmc0eEW-vjAuoj-ZnbX3vOrpswjVXU-NDw_rSSxqwvpU_w@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Rajasekhar Pulluru <pullururajasekhar@gmail.com>, linux-raid@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>
 List-Id: linux-raid.ids
 
-Currently, the SSE and AVX xor functions manually save and restore the
-[X|Y]MM registers. Instead, we should use kernel_fpu_[begin|end].
+--Sig_/endU5IhPkGR94pXBVRnWybh
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-This patch sacrifices some throughput,~5-10% for AVX and ~2% for SSE, in
-exchange for safety against future FPU corruption bugs.
+On Mon, 30 Apr 2012 13:31:41 -0700 Dan Williams <dan.j.williams@intel.com>
+wrote:
 
-Patch applies to md/for-next.
+> [ adding Russell and Neil for comment about the proposed change to async_=
+tx ]
 
-Signed-off-by: Jim Kukunas <james.t.kukunas@linux.intel.com>
----
- arch/x86/include/asm/xor_32.h  |   56 +++++-------------------------------
- arch/x86/include/asm/xor_64.h  |   61 ++++++---------------------------------
- arch/x86/include/asm/xor_avx.h |   55 ++++++++----------------------------
- 3 files changed, 30 insertions(+), 142 deletions(-)
+I've managed to avoid learning much about the internal details of async_tx
+and adma but I thought I'd have a quick look.
 
-diff --git a/arch/x86/include/asm/xor_32.h b/arch/x86/include/asm/xor_32.h
-index 4545708..aabd585 100644
---- a/arch/x86/include/asm/xor_32.h
-+++ b/arch/x86/include/asm/xor_32.h
-@@ -534,38 +534,6 @@ static struct xor_block_template xor_block_p5_mmx = {
-  * Copyright (C) 1999 Zach Brown (with obvious credit due Ingo)
-  */
- 
--#define XMMS_SAVE				\
--do {						\
--	preempt_disable();			\
--	cr0 = read_cr0();			\
--	clts();					\
--	asm volatile(				\
--		"movups %%xmm0,(%0)	;\n\t"	\
--		"movups %%xmm1,0x10(%0)	;\n\t"	\
--		"movups %%xmm2,0x20(%0)	;\n\t"	\
--		"movups %%xmm3,0x30(%0)	;\n\t"	\
--		:				\
--		: "r" (xmm_save) 		\
--		: "memory");			\
--} while (0)
--
--#define XMMS_RESTORE				\
--do {						\
--	asm volatile(				\
--		"sfence			;\n\t"	\
--		"movups (%0),%%xmm0	;\n\t"	\
--		"movups 0x10(%0),%%xmm1	;\n\t"	\
--		"movups 0x20(%0),%%xmm2	;\n\t"	\
--		"movups 0x30(%0),%%xmm3	;\n\t"	\
--		:				\
--		: "r" (xmm_save)		\
--		: "memory");			\
--	write_cr0(cr0);				\
--	preempt_enable();			\
--} while (0)
--
--#define ALIGN16 __attribute__((aligned(16)))
--
- #define OFFS(x)		"16*("#x")"
- #define PF_OFFS(x)	"256+16*("#x")"
- #define	PF0(x)		"	prefetchnta "PF_OFFS(x)"(%1)		;\n"
-@@ -587,10 +555,8 @@ static void
- xor_sse_2(unsigned long bytes, unsigned long *p1, unsigned long *p2)
- {
- 	unsigned long lines = bytes >> 8;
--	char xmm_save[16*4] ALIGN16;
--	int cr0;
- 
--	XMMS_SAVE;
-+	kernel_fpu_begin();
- 
- 	asm volatile(
- #undef BLOCK
-@@ -633,7 +599,7 @@ xor_sse_2(unsigned long bytes, unsigned long *p1, unsigned long *p2)
- 	:
- 	: "memory");
- 
--	XMMS_RESTORE;
-+	kernel_fpu_end();
- }
- 
- static void
-@@ -641,10 +607,8 @@ xor_sse_3(unsigned long bytes, unsigned long *p1, unsigned long *p2,
- 	  unsigned long *p3)
- {
- 	unsigned long lines = bytes >> 8;
--	char xmm_save[16*4] ALIGN16;
--	int cr0;
- 
--	XMMS_SAVE;
-+	kernel_fpu_begin();
- 
- 	asm volatile(
- #undef BLOCK
-@@ -694,7 +658,7 @@ xor_sse_3(unsigned long bytes, unsigned long *p1, unsigned long *p2,
- 	:
- 	: "memory" );
- 
--	XMMS_RESTORE;
-+	kernel_fpu_end();
- }
- 
- static void
-@@ -702,10 +666,8 @@ xor_sse_4(unsigned long bytes, unsigned long *p1, unsigned long *p2,
- 	  unsigned long *p3, unsigned long *p4)
- {
- 	unsigned long lines = bytes >> 8;
--	char xmm_save[16*4] ALIGN16;
--	int cr0;
- 
--	XMMS_SAVE;
-+	kernel_fpu_begin();
- 
- 	asm volatile(
- #undef BLOCK
-@@ -762,7 +724,7 @@ xor_sse_4(unsigned long bytes, unsigned long *p1, unsigned long *p2,
- 	:
- 	: "memory" );
- 
--	XMMS_RESTORE;
-+	kernel_fpu_end();
- }
- 
- static void
-@@ -770,10 +732,8 @@ xor_sse_5(unsigned long bytes, unsigned long *p1, unsigned long *p2,
- 	  unsigned long *p3, unsigned long *p4, unsigned long *p5)
- {
- 	unsigned long lines = bytes >> 8;
--	char xmm_save[16*4] ALIGN16;
--	int cr0;
- 
--	XMMS_SAVE;
-+	kernel_fpu_begin();
- 
- 	/* Make sure GCC forgets anything it knows about p4 or p5,
- 	   such that it won't pass to the asm volatile below a
-@@ -850,7 +810,7 @@ xor_sse_5(unsigned long bytes, unsigned long *p1, unsigned long *p2,
- 	   like assuming they have some legal value.  */
- 	asm("" : "=r" (p4), "=r" (p5));
- 
--	XMMS_RESTORE;
-+	kernel_fpu_end();
- }
- 
- static struct xor_block_template xor_block_pIII_sse = {
-diff --git a/arch/x86/include/asm/xor_64.h b/arch/x86/include/asm/xor_64.h
-index b9b2323..715f904 100644
---- a/arch/x86/include/asm/xor_64.h
-+++ b/arch/x86/include/asm/xor_64.h
-@@ -34,41 +34,7 @@
-  * no advantages to be gotten from x86-64 here anyways.
-  */
- 
--typedef struct {
--	unsigned long a, b;
--} __attribute__((aligned(16))) xmm_store_t;
--
--/* Doesn't use gcc to save the XMM registers, because there is no easy way to
--   tell it to do a clts before the register saving. */
--#define XMMS_SAVE				\
--do {						\
--	preempt_disable();			\
--	asm volatile(				\
--		"movq %%cr0,%0		;\n\t"	\
--		"clts			;\n\t"	\
--		"movups %%xmm0,(%1)	;\n\t"	\
--		"movups %%xmm1,0x10(%1)	;\n\t"	\
--		"movups %%xmm2,0x20(%1)	;\n\t"	\
--		"movups %%xmm3,0x30(%1)	;\n\t"	\
--		: "=&r" (cr0)			\
--		: "r" (xmm_save) 		\
--		: "memory");			\
--} while (0)
--
--#define XMMS_RESTORE				\
--do {						\
--	asm volatile(				\
--		"sfence			;\n\t"	\
--		"movups (%1),%%xmm0	;\n\t"	\
--		"movups 0x10(%1),%%xmm1	;\n\t"	\
--		"movups 0x20(%1),%%xmm2	;\n\t"	\
--		"movups 0x30(%1),%%xmm3	;\n\t"	\
--		"movq 	%0,%%cr0	;\n\t"	\
--		:				\
--		: "r" (cr0), "r" (xmm_save)	\
--		: "memory");			\
--	preempt_enable();			\
--} while (0)
-+#include <asm/i387.h>
- 
- #define OFFS(x)		"16*("#x")"
- #define PF_OFFS(x)	"256+16*("#x")"
-@@ -91,10 +57,8 @@ static void
- xor_sse_2(unsigned long bytes, unsigned long *p1, unsigned long *p2)
- {
- 	unsigned int lines = bytes >> 8;
--	unsigned long cr0;
--	xmm_store_t xmm_save[4];
- 
--	XMMS_SAVE;
-+	kernel_fpu_begin();
- 
- 	asm volatile(
- #undef BLOCK
-@@ -135,7 +99,7 @@ xor_sse_2(unsigned long bytes, unsigned long *p1, unsigned long *p2)
- 	: [inc] "r" (256UL)
- 	: "memory");
- 
--	XMMS_RESTORE;
-+	kernel_fpu_end();
- }
- 
- static void
-@@ -143,10 +107,8 @@ xor_sse_3(unsigned long bytes, unsigned long *p1, unsigned long *p2,
- 	  unsigned long *p3)
- {
- 	unsigned int lines = bytes >> 8;
--	xmm_store_t xmm_save[4];
--	unsigned long cr0;
- 
--	XMMS_SAVE;
-+	kernel_fpu_begin();
- 
- 	asm volatile(
- #undef BLOCK
-@@ -194,7 +156,8 @@ xor_sse_3(unsigned long bytes, unsigned long *p1, unsigned long *p2,
- 	  [p1] "+r" (p1), [p2] "+r" (p2), [p3] "+r" (p3)
- 	: [inc] "r" (256UL)
- 	: "memory");
--	XMMS_RESTORE;
-+
-+	kernel_fpu_end();
- }
- 
- static void
-@@ -202,10 +165,8 @@ xor_sse_4(unsigned long bytes, unsigned long *p1, unsigned long *p2,
- 	  unsigned long *p3, unsigned long *p4)
- {
- 	unsigned int lines = bytes >> 8;
--	xmm_store_t xmm_save[4];
--	unsigned long cr0;
- 
--	XMMS_SAVE;
-+	kernel_fpu_begin();
- 
- 	asm volatile(
- #undef BLOCK
-@@ -261,7 +222,7 @@ xor_sse_4(unsigned long bytes, unsigned long *p1, unsigned long *p2,
- 	: [inc] "r" (256UL)
- 	: "memory" );
- 
--	XMMS_RESTORE;
-+	kernel_fpu_end();
- }
- 
- static void
-@@ -269,10 +230,8 @@ xor_sse_5(unsigned long bytes, unsigned long *p1, unsigned long *p2,
- 	  unsigned long *p3, unsigned long *p4, unsigned long *p5)
- {
- 	unsigned int lines = bytes >> 8;
--	xmm_store_t xmm_save[4];
--	unsigned long cr0;
- 
--	XMMS_SAVE;
-+	kernel_fpu_begin();
- 
- 	asm volatile(
- #undef BLOCK
-@@ -336,7 +295,7 @@ xor_sse_5(unsigned long bytes, unsigned long *p1, unsigned long *p2,
- 	: [inc] "r" (256UL)
- 	: "memory");
- 
--	XMMS_RESTORE;
-+	kernel_fpu_end();
- }
- 
- static struct xor_block_template xor_block_sse = {
-diff --git a/arch/x86/include/asm/xor_avx.h b/arch/x86/include/asm/xor_avx.h
-index 2510d35..8d2795a 100644
---- a/arch/x86/include/asm/xor_avx.h
-+++ b/arch/x86/include/asm/xor_avx.h
-@@ -17,35 +17,8 @@
- 
- #ifdef CONFIG_AS_AVX
- 
--#include <linux/compiler.h>
- #include <asm/i387.h>
- 
--#define ALIGN32 __aligned(32)
--
--#define YMM_SAVED_REGS 4
--
--#define YMMS_SAVE \
--do { \
--	preempt_disable(); \
--	cr0 = read_cr0(); \
--	clts(); \
--	asm volatile("vmovaps %%ymm0, %0" : "=m" (ymm_save[0]) : : "memory"); \
--	asm volatile("vmovaps %%ymm1, %0" : "=m" (ymm_save[32]) : : "memory"); \
--	asm volatile("vmovaps %%ymm2, %0" : "=m" (ymm_save[64]) : : "memory"); \
--	asm volatile("vmovaps %%ymm3, %0" : "=m" (ymm_save[96]) : : "memory"); \
--} while (0);
--
--#define YMMS_RESTORE \
--do { \
--	asm volatile("sfence" : : : "memory"); \
--	asm volatile("vmovaps %0, %%ymm3" : : "m" (ymm_save[96])); \
--	asm volatile("vmovaps %0, %%ymm2" : : "m" (ymm_save[64])); \
--	asm volatile("vmovaps %0, %%ymm1" : : "m" (ymm_save[32])); \
--	asm volatile("vmovaps %0, %%ymm0" : : "m" (ymm_save[0])); \
--	write_cr0(cr0); \
--	preempt_enable(); \
--} while (0);
--
- #define BLOCK4(i) \
- 		BLOCK(32 * i, 0) \
- 		BLOCK(32 * (i + 1), 1) \
-@@ -60,10 +33,9 @@ do { \
- 
- static void xor_avx_2(unsigned long bytes, unsigned long *p0, unsigned long *p1)
- {
--	unsigned long cr0, lines = bytes >> 9;
--	char ymm_save[32 * YMM_SAVED_REGS] ALIGN32;
-+	unsigned long lines = bytes >> 9;
- 
--	YMMS_SAVE
-+	kernel_fpu_begin();
- 
- 	while (lines--) {
- #undef BLOCK
-@@ -82,16 +54,15 @@ do { \
- 		p1 = (unsigned long *)((uintptr_t)p1 + 512);
- 	}
- 
--	YMMS_RESTORE
-+	kernel_fpu_end();
- }
- 
- static void xor_avx_3(unsigned long bytes, unsigned long *p0, unsigned long *p1,
- 	unsigned long *p2)
- {
--	unsigned long cr0, lines = bytes >> 9;
--	char ymm_save[32 * YMM_SAVED_REGS] ALIGN32;
-+	unsigned long lines = bytes >> 9;
- 
--	YMMS_SAVE
-+	kernel_fpu_begin();
- 
- 	while (lines--) {
- #undef BLOCK
-@@ -113,16 +84,15 @@ do { \
- 		p2 = (unsigned long *)((uintptr_t)p2 + 512);
- 	}
- 
--	YMMS_RESTORE
-+	kernel_fpu_end();
- }
- 
- static void xor_avx_4(unsigned long bytes, unsigned long *p0, unsigned long *p1,
- 	unsigned long *p2, unsigned long *p3)
- {
--	unsigned long cr0, lines = bytes >> 9;
--	char ymm_save[32 * YMM_SAVED_REGS] ALIGN32;
-+	unsigned long lines = bytes >> 9;
- 
--	YMMS_SAVE
-+	kernel_fpu_begin();
- 
- 	while (lines--) {
- #undef BLOCK
-@@ -147,16 +117,15 @@ do { \
- 		p3 = (unsigned long *)((uintptr_t)p3 + 512);
- 	}
- 
--	YMMS_RESTORE
-+	kernel_fpu_end();
- }
- 
- static void xor_avx_5(unsigned long bytes, unsigned long *p0, unsigned long *p1,
- 	unsigned long *p2, unsigned long *p3, unsigned long *p4)
- {
--	unsigned long cr0, lines = bytes >> 9;
--	char ymm_save[32 * YMM_SAVED_REGS] ALIGN32;
-+	unsigned long lines = bytes >> 9;
- 
--	YMMS_SAVE
-+	kernel_fpu_begin();
- 
- 	while (lines--) {
- #undef BLOCK
-@@ -184,7 +153,7 @@ do { \
- 		p4 = (unsigned long *)((uintptr_t)p4 + 512);
- 	}
- 
--	YMMS_RESTORE
-+	kernel_fpu_end();
- }
- 
- static struct xor_block_template xor_block_avx = {
--- 
-1.7.8.6
+Doesn't this Kconfig change simply disable ASYNC_TX_DMA on any device that
+selects ASNC_TX_ENABLE_CHANNEL_SWITCH.  i.e.
+  INTEL_IOP_ADMA
+  FSL_DMA
+  MX_XOR
+  AMCC_PPC440_SPA_ADMA
+Is that what you want to do?  Disable all of those?
+I guess if they don't work then that is the right thing to do....
+
+NeilBrown
+
+
+
+
+>=20
+> On Mon, Apr 30, 2012 at 3:05 AM, Rajasekhar Pulluru
+> <pullururajasekhar@gmail.com> wrote:
+> > Hi,
+> >
+> > I am trying to understand how are hardware xor engine's utilized by
+> > async_tx module. I don't get the exact link that connects async_tx and
+> > hardware xor engine.
+> > Could someone help me understand it.
+> >
+> > Registration of a RAID HW XOR engine happens in
+> > drivers/dma/<soc-xor.c> using dma_async_device_register(). Does this
+> > registration function connect the async_tx api's
+> > to use the HW XOR engine?
+>=20
+> Yes, the channel registers its capabilities with dmaengine, and then
+> async_tx asks dmaengine (via dma_find_channel) for a resource to carry
+> out the operation(s).
+>=20
+> > Or is there anything we need to support to
+> > make async_tx api's to take advantage of the hardware XOR engine?
+>=20
+> Registration with dma engine should be all that is needed, but a word
+> of caution that the channel switching mechanism has been found to be
+> incompatible with the dma mapping api.  So, unless your dma channel
+> supports all the operations needed for raid, do not rely on async_tx's
+> channel switching capabilities.
+>=20
+> An architecture where this is known to be a problem is ARM, but I
+> wonder if we should take the following global step until this is fixed
+> properly?
+>=20
+> diff --git a/drivers/dma/Kconfig b/drivers/dma/Kconfig
+> index cf9da36..b812b6b 100644
+> --- a/drivers/dma/Kconfig
+> +++ b/drivers/dma/Kconfig
+> @@ -280,6 +280,7 @@ config NET_DMA
+>  config ASYNC_TX_DMA
+>         bool "Async_tx: Offload support for the async_tx api"
+>         depends on DMA_ENGINE
+> +       depends on !ASYNC_TX_ENABLE_CHANNEL_SWITCH
+>         help
+>           This allows the async_tx api to take advantage of offload engin=
+es for
+>           memcpy, memset, xor, and raid6 p+q operations.  If your platfor=
+m has
+
+
+--Sig_/endU5IhPkGR94pXBVRnWybh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT58zCjnsnt1WYoG5AQKSgw//Tb3vsmkoXTDRDCA6kLIR7DfDL/3HzhU+
+vJujTJUt+OAJ07P8j8SxsmXMmrem/U4z6o1RZaEX6Xd0IIWN5vLOvVbr+68Mrxe4
+1Qfr8oCL71QYDfTuOwk92a9H+vXRMINfoYQZ9oRwet/A73dj6Ozuk4wgqBcD/cf1
+6NoOEeXOy0AT4CpZ4SDCUIfpVd9QKluHrVZWnO1+Mk5Tuo1DQ40UYcvXoxFc7YFL
+PRjoSxVVY77crLHattZ2xV4O8HPRqNgQDPgJKiL/ZEPCzC7co+ic8/qv4fvl0KQR
+XjT1d6mYr0MW4QSWqeyXpjmjLrCBEkt0NkypAMuTMkcuYLROEPGWdS5dxyCW+Y1m
+ES3qZxK7SnT5+Tnb4fUaxwEFBXaADMOR5cdYDr0ehNiGx1rcEwq3SGYZzIayQrob
+f1DWOcDII1s+kZ2xb43+0cLw64HvI19FMZEFLMxXQWOQ5a4wXN0qBaOMJ//HUhKD
+g48Mf2ymaeyObF2clHGKXF0sKUWyzWUlE9dlX930nHtnjrpedssPZ3yYotcWOkFi
+NMbURhVLpqzGekptR3Go1xM0weubKA3d9f405b5bsVbYFGgoOI3hJtwlVOl+TMce
+1ki5+0qokTs9/vI4ivQZBX+QjQf6eaoIYtiPZ6cu4Is9KIKqtzIszaHTMH1A5uXP
+wtwjP8eT/A4=
+=VnS7
+-----END PGP SIGNATURE-----
+
+--Sig_/endU5IhPkGR94pXBVRnWybh--
