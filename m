@@ -1,48 +1,67 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: Last call for input to mdadm-3.2.4
-Date: Thu, 03 May 2012 11:18:03 +0200
-Message-ID: <4FA24D4B.2080409@redhat.com>
-References: <20120503142201.649766de@notabene.brown>
+From: "=?iso-8859-9?B?Qvz+cmEgQUxUQd4=?=" <busra@alternatifmedya.org>
+Subject: Haber Paketi Reklam Teklifi...
+Date: Wed, 2 May 2012 16:28:47 +0300
+Message-ID: <09e2573ef631cc58574ec8ba2f24e759@alternatifmedya.org>
+Reply-To: busra.alternatifmedya@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-9
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120503142201.649766de@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux RAID <linux-raid@vger.kernel.org>, Doug Ledford <dledford@redhat.com>, Michael Tokarev <mjt@tls.msk.ru>, Dan Williams <dan.j.williams@intel.com>, "Dorau, Lukasz" <lukasz.dorau@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>, Clint Byrum <clint@ubuntu.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 05/03/12 06:22, NeilBrown wrote:
-> Hi all,
->  I hope to release mdadm-3.2.4 next week.
-> 
-> This is mostly a bugfix release though there are a few small features
-> like "--prefer=" which guides the selection of the device names reported by
-> --detail and --monitor.
-> It also now defaults /run/mdadm for runtime files rather than /dev/.mdadm or
-> /var/run/mdadm.
-> 
-> I hope it will be just what I currently have in the 'master' branch of my git
-> tree, plus changes to the version numbers.  However if anyone has anything
-> that they really want to go in *now* I'm open to contributions if they are
-> important.
-> 
-> I'll then try to focus more on preparing for 3.3 which will include:
->  - badblock log support
->  - hot-replace support
->  - raid10 reshape
-> 
-> and maybe other stuff.
+Say=FDn Yetkili;
 
-Neil,
+G=FCn=FCm=FCzde reklam t=FCm sekt=F6rler i=E7in vazge=E7ilmez bir unsur=
+ olmu=FEtur.
+=46irmalar=FDn markala=FEma ve rakip firmalarla rekabet avantaj=FD sa=F0=
+lamas=FDnda =F6zellikle televizyon reklamlar=FDn=FDn faydalar=FD tart=FD=
+=FE=FDlmaz.
+Uygun fiyat avantaj=FDm=FDz=FD firman=FDzla payla=FEarak size, b=FCt=E7=
+enize uygun reklam ve tan=FDt=FDm se=E7enekleri sunuyorum.
 
-I just looked through my bug queue and I don't see anything that I am
-desperate to have resolved before 3.2.4, so I am happy to see 3.2.4 fly.
-Just did a giant bugfix backport for Fedora the last couple of days
-which I would have skipped if I knew 3.2.4 which this close :)
+1.HABERT=DCRK OPT(g=FCnd=FCz) 5 ADET 8SN.L=DDK KU=DEAK REKLAM(40sn.)
+2.SAMANYOLU HABER PT(ak=FEam) 5 ADET 8SN.L=DDK KU=DEAK REKLAM(40sn.)
+3.CNNTURK OPT(g=FCnd=FCz) 5 ADET 8SN.L=DDK KU=DEAK REKLAM(40sn.)
+4.SKYTURK PT(ak=FEam) 5 ADET 8SN.L=DDK KU=DEAK REKLAM(40sn.)
+5.NTV SPOR OPT(g=FCnd=FCz) 5 ADET 8SN.L=DDK KU=DEAK REKLAM(40sn.)
+6.TGRT HABER PT(ak=FEam) 5 ADET 8SN.L=DDK KU=DEAK REKLAM(40sn.)
+7.KANAL24 OPT(g=FCnd=FCz) 5 ADET 8SN.L=DDK KU=DEAK REKLAM(40sn.)
+8.TRT HABER PT(ak=FEam) 5 ADET 8SN.L=DDK KU=DEAK REKLAM(40sn.)
 
-Thanks for the heads up!
+Toplam Spot: 40 adet ku=FEak reklam.
+Toplam S=FCre: 320sn.
+Toplam B=FCt=E7e : 3.650 TL+KDV
 
-Jes
+Prod=FCksiyon ve seslendirme firmam=FDz taraf=FDndan =FCcretsiz haz=FDr=
+lanmaktad=FDr.
+=DDstedi=F0iniz kanal ve b=FCt=E7eye g=F6re de size =F6zel planlamalar =
+olu=FEturabilirim.
 
+De=F0erlendirmelerinizi bekler, =DDyi =E7al=FD=FEmalar dilerim.
+
+Sayg=FDlar=FDmla...
+
+ALTERNAT=DDF MEDYA
+B=FC=FEra ALTA=DE
+Reklam Sat=FD=FE M=FCd=FCr=FC
+T:0216 459 0 444
+=46:0216 459 0 555
+busra@alternatifmedya.tv & busra.alternatifmedya@gmail.com
+
+Not: Mail almak istemiyorsan=FDz bu maili 'listenizden =E7=FDkmak istiy=
+orum' diye cevaplaman=FDz yeterlidir.
+
+
+
+
+
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
