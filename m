@@ -1,76 +1,105 @@
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: Monitoring for failed drives
-Date: Thu, 3 May 2012 10:06:18 +0100
-Message-ID: <20120503090618.GB3262@nsrc.org>
-References: <20120425123951.GB10172@nsrc.org>
+From: Nikolay Kichukov <hijacker@oldum.net>
+Subject: create raid10 md raid which hangs on auto-read-only with resync=PENDING
+Date: Thu, 03 May 2012 12:04:49 +0300
+Message-ID: <4FA24A31.3020703@oldum.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120425123951.GB10172@nsrc.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Apr 25, 2012 at 01:39:51PM +0100, Brian Candler wrote:
-> OK, so that's fairly obviously a failed drive.
-> 
-> The problem is, how to detect and report this?
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-More specifically, is there a kernel counter I can look at, perhaps
-something under /sys, which counts the number of I/O errors when accessing a
-block device?  (Recovered and non-recovered?)
+Hi all,
+I have recently included one more drive in my system and has switched from raid0 to raid10 on 3 devices/partitions.
 
-Or is the only way to find this sort of error through parsing syslog
-messages?
+I have created the raid as follows:
 
-I did find this:
+mdadm --create /dev/md3 --verbose --raid-devices=3 --level=raid10 --name=cryptdata  --layout=o2 --chunk=2M /dev/sda3
+/dev/sdb3 /dev/sdf3
+mdadm: size set to 319434752K
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md3 started.
 
-    $ cat /sys/block/sda/stat
-      134257    51671 11141686  1337160 60502372 124014063 1476148888 1325166568 0 137287732 1326384944
 
-However there don't seem to be error counters in there. According to
-http://www.kernel.org/doc/Documentation/block/stat.txt
+Information about the array:
 
-    Name            units         description
-    ----            -----         -----------
-    read I/Os       requests      number of read I/Os processed
-    read merges     requests      number of read I/Os merged with in-queue I/O
-    read sectors    sectors       number of sectors read
-    read ticks      milliseconds  total wait time for read requests
-    write I/Os      requests      number of write I/Os processed
-    write merges    requests      number of write I/Os merged with in-queue I/O
-    write sectors   sectors       number of sectors written
-    write ticks     milliseconds  total wait time for write requests
-    in_flight       requests      number of I/Os currently in flight
-    io_ticks        milliseconds  total time this block device has been active
-    time_in_queue   milliseconds  total wait time for all requests
+mdadm --detail /dev/md3
+/dev/md3:
+        Version : 1.2
+  Creation Time : Thu May  3 11:42:57 2012
+     Raid Level : raid10
+     Array Size : 479152128 (456.96 GiB 490.65 GB)
+  Used Dev Size : 319434752 (304.64 GiB 327.10 GB)
+   Raid Devices : 3
+  Total Devices : 3
+    Persistence : Superblock is persistent
 
-I also found UCD-DISKIO-MIB in net-snmp, but it doesn't have error counters
-either:
+    Update Time : Thu May  3 11:42:57 2012
+          State : clean, resyncing (PENDING)
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 0
 
-    diskIOEntry OBJECT-TYPE
-        SYNTAX      DiskIOEntry
-        MAX-ACCESS  not-accessible
-        STATUS      current
-        DESCRIPTION
-            "An entry containing a device and its statistics."
-        INDEX       { diskIOIndex }
-        ::= { diskIOTable 1 }
+         Layout : offset=2
+     Chunk Size : 2048K
 
-    DiskIOEntry ::= SEQUENCE {
-        diskIOIndex         Integer32,
-        diskIODevice        DisplayString,
-        diskIONRead         Counter32,
-        diskIONWritten      Counter32,
-        diskIOReads         Counter32,
-        diskIOWrites        Counter32,
-        diskIONReadX        Counter64,
-        diskIONWrittenX     Counter64
-    }
+           Name : hanna64:cryptdata  (local to host hanna64)
+           UUID : a7cc8eb7:8555b1bd:2856b686:829861be
+         Events : 0
 
-Is there anywhere else I should look for this?
+    Number   Major   Minor   RaidDevice State
+       0       8        3        0      active sync   /dev/sda3
+       1       8       19        1      active sync   /dev/sdb3
+       2       8       83        2      active sync   /dev/sdf3
 
-Thanks,
 
-Brian.
+And under /proc/mdstat:
+
+cat /proc/mdstat
+Personalities : [raid0] [raid1] [raid10]
+md3 : active (auto-read-only) raid10 sdf3[2] sdb3[1] sda3[0]
+      479152128 blocks super 1.2 2048K chunks 2 offset-copies [3/3] [UUU]
+      	resync=PENDING
+
+
+The resync was not started due to the array being in auto-read-only mode.
+
+I googled the issue and found out that to be able to start the resync one should issue:
+
+mdadm --readwrite /dev/mdx
+(ref.: http://wiki.xtronics.com/index.php/Raid )
+
+I have done it and it started resyncing:
+cat /proc/mdstat
+Personalities : [raid0] [raid1] [raid10]
+md3 : active raid10 sdf3[2] sdb3[1] sda3[0]
+      479152128 blocks super 1.2 2048K chunks 2 offset-copies [3/3] [UUU]
+      [=>...................]  resync =  6.2% (29748096/479152128) finish=120.3min speed=62220K/sec
+
+
+
+Is this intended feature for 1.2 metadata?
+
+Kernel: 3.1.0-1-amd64
+mdadm: 3.2.3-2
+Distro: Debian testing
+
+Cheers,
+- -Nik
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iQEcBAEBAgAGBQJPokoxAAoJEDFLYVOGGjgXb3cH/2cnkl+Q0q+vA+8z32XQwD28
+dnpohM0nlQe99in2D1fjkI0Bsnt3tYz0bjZALHxOPybEWH+U3X1WOztTx/UdfKmL
+fXTv8hFLscIsdvOK/JThkRdob99EEPbkZlnzCuTrIQDPJSj1v/kY7AG/9HxLCnT+
+8KDZpkEyd9usSQZC/sUie2B/cG5VDir74sFc/ggr3UsZCFtBGPJuILCjlWAu6XcH
+SCV2FTvJt/Ahay3/IuzBvNRBys7OcOFKck/oGGgW2Ki5FUeehWGWbWVbYEiQ4pZR
+TPbPwrY84v6OS2Baqm8kZIr8j6UPFzPuErxGqhxq7e+btGx8aKklzbJn3dQCQck=
+=IVpx
+-----END PGP SIGNATURE-----
