@@ -1,73 +1,65 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: async_tx and RAID HW xor engine
-Date: Wed, 2 May 2012 12:11:50 -0700
-Message-ID: <CAA9_cmfTh=Tx_Q009CdBKiqO-TOBOjrfua759FMwfqChW6mJhw@mail.gmail.com>
-References: <CAGA5_H55asVEekOd1ae2OjkK07W5Okf1iTCg10oRSX4+M7FLEA@mail.gmail.com>
-	<CAA9_cmc0eEW-vjAuoj-ZnbX3vOrpswjVXU-NDw_rSSxqwvpU_w@mail.gmail.com>
-	<20120501104914.4066a38c@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Last call for input to mdadm-3.2.4
+Date: Thu, 3 May 2012 14:22:01 +1000
+Message-ID: <20120503142201.649766de@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/9btdBHCeIledLV27zmBwHhj"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120501104914.4066a38c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Rajasekhar Pulluru <pullururajasekhar@gmail.com>, linux-raid@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>
+To: linux RAID <linux-raid@vger.kernel.org>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>, Doug Ledford <dledford@redhat.com>, Michael Tokarev <mjt@tls.msk.ru>, Dan Williams <dan.j.williams@intel.com>, "Dorau, Lukasz" <lukasz.dorau@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>, Clint Byrum <clint@ubuntu.com>
 List-Id: linux-raid.ids
 
-On Mon, Apr 30, 2012 at 5:49 PM, NeilBrown <neilb@suse.de> wrote:
-> On Mon, 30 Apr 2012 13:31:41 -0700 Dan Williams <dan.j.williams@intel=
-=2Ecom>
-> wrote:
->
->> [ adding Russell and Neil for comment about the proposed change to a=
-sync_tx ]
->
-> I've managed to avoid learning much about the internal details of asy=
-nc_tx
-> and adma but I thought I'd have a quick look.
->
-> Doesn't this Kconfig change simply disable ASYNC_TX_DMA on any device=
- that
-> selects ASNC_TX_ENABLE_CHANNEL_SWITCH. =A0i.e.
-> =A0INTEL_IOP_ADMA
-> =A0FSL_DMA
-> =A0MX_XOR
-> =A0AMCC_PPC440_SPA_ADMA
-> Is that what you want to do? =A0Disable all of those?
-> I guess if they don't work then that is the right thing to do....
+--Sig_/9btdBHCeIledLV27zmBwHhj
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Now that I refresh my memory on the full scope of the problem, this
-change would help, but would not be sufficient.  The undefined
-behavior that the code currently relies on is overlapping dma-mappings
-to the same buffer (happens to work on x86, known to be broken on ARM
-v6).  So md/raid456 and async_tx actually need to conscious of up to
-three dma mapping cases:
+Hi all,
+ I hope to release mdadm-3.2.4 next week.
 
-1/ pure software raid
-2/ offload to a dma domain that can handle a copy+xor/pq+validate
-chain (dma map the stripe once)
-    2a/ single domain single channel
-    2b/ single domain multiple channels - channel switch but reuse the
-initial dma mapping for all operations
-3/ offload to collection of dma domains with differing capabilities
-(channel switch + remap the stripe every time we cross a domain
-boundary)
+This is mostly a bugfix release though there are a few small features
+like "--prefer=3D" which guides the selection of the device names reported =
+by
+--detail and --monitor.
+It also now defaults /run/mdadm for runtime files rather than /dev/.mdadm or
+/var/run/mdadm.
 
-The biggest difference between 2 and 3 is that the entire chain of
-operations can be prepped and submitted to hardware up front in 2, but
-needs to wait for the completion of the previous operation before
-re-mapping in 3.
+I hope it will be just what I currently have in the 'master' branch of my g=
+it
+tree, plus changes to the version numbers.  However if anyone has anything
+that they really want to go in *now* I'm open to contributions if they are
+important.
 
-An ulterior motive of adding "depends on
-!ASYNC_TX_ENABLE_CHANNEL_SWITCH" is to elicit some help with this
-rework from other driver maintainers since I'm not even sure 3 is a
-configuration the current engines will present.
+I'll then try to focus more on preparing for 3.3 which will include:
+ - badblock log support
+ - hot-replace support
+ - raid10 reshape
 
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+and maybe other stuff.
+
+NeilBrown
+
+--Sig_/9btdBHCeIledLV27zmBwHhj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT6IH6Tnsnt1WYoG5AQIj0Q/+LEALugAqVuelyNBiGceScc3ZHvl3vBmm
+9mRsPtJtym+gkXuZTxU8E8QbnmP+BGPQ1AaQAzLLO/qW2TS4Dcb+hpFhzXtYkqbG
+Okx1Z50lZfH3bd3I530VBN7q7MU+6DnIaOKfYANTOSLp+ZHofrtOQY5UW0ozVAQd
+AtWDFy019wrfep8wZXYsHP9DkjMAC9MNDUbC6mrpnSSofRhunKTRZGpgpjUE0erI
+ALKKKag8K7FLLpmCdiX1esIdT7juVffPn5SeL149eGlv70DaDY0CuNN1lxGL5QAu
+JPsvfj01ymzsKFZXb1oopckCqiG5YRW7pAUh4WE+9OuD7A0gGp/gu/26Npk77tiI
+Dsy59vN6Vi1C89SDOiGXCXGS+mx7V/vGxETg2rGXICFTSJD5XRHmWNfNY/tpjhVJ
+kXjFfO6ttl8Zunt1bddR+YE9vwlWV0zUKsKNr7ig2O7KOvJNMxr7FKGK072rogDI
+orplpBHLGU7PgiFDSW5JyAZLuKCY+3y8//v6HpMKZNbltNaVNJ2fpNFEVc2ZKDVy
+TKUrwQeOCaHFLCnSqQWi8/Ej0E4Do1YZsxWTsehIH90dZsCr+1c2IDKz7M+zoPNM
+QIYoZM/rzdPsAHLIcP0WsJw8LIPwQzOfz1TKwvSR1C9PQXx5dASgw4K/jbGc3g4d
+UylC8jPG0iY=
+=ox3L
+-----END PGP SIGNATURE-----
+
+--Sig_/9btdBHCeIledLV27zmBwHhj--
