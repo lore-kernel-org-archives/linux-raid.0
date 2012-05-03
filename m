@@ -1,68 +1,87 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [PATCH] arch/x86: use kernel_fpu_[begin|end] for RAID5 checksumming
-Date: Wed, 02 May 2012 23:43:33 -0700
-Message-ID: <4FA22915.6050400@zytor.com>
-References: <1335829875-18481-1-git-send-email-james.t.kukunas@linux.intel.com> <20120503145744.4e425dd5@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [BISECT] Kernel panic, RIP bitmap_create
+Date: Thu, 3 May 2012 16:50:30 +1000
+Message-ID: <20120503165030.7e45c25b@notabene.brown>
+References: <CAOOwNtJhFa67EFTs5AdgSHzFseBr9xJGTsaEOyYnaYYNCeUMAQ@mail.gmail.com>
+	<CAOOwNt+wjMU9+Dzrr3+d3dwML2_Q_CgT4X5OgiKvPA_bBoTYcg@mail.gmail.com>
+	<20120503155850.2900067d@notabene.brown>
+	<CAOOwNtK0xKg9E=gS46GR8uDVvjPqqL7+FbufY2d7iuW7yZgVwQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/kQ0s4aes2Ef3_2W5uN6Ina9"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120503145744.4e425dd5@notabene.brown>
+In-Reply-To: <CAOOwNtK0xKg9E=gS46GR8uDVvjPqqL7+FbufY2d7iuW7yZgVwQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Jim Kukunas <james.t.kukunas@linux.intel.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Karl Newman <siliconfiend@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+--Sig_/kQ0s4aes2Ef3_2W5uN6Ina9
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On 05/02/2012 09:57 PM, NeilBrown wrote:
-> On Mon, 30 Apr 2012 16:51:15 -0700 Jim Kukunas 
-> <james.t.kukunas@linux.intel.com> wrote:
-> 
->> Currently, the SSE and AVX xor functions manually save and 
->> restore the [X|Y]MM registers. Instead, we should use 
->> kernel_fpu_[begin|end].
->> 
->> This patch sacrifices some throughput,~5-10% for AVX and ~2% for 
->> SSE, in exchange for safety against future FPU corruption bugs.
->> 
->> Patch applies to md/for-next.
->> 
->> Signed-off-by: Jim Kukunas <james.t.kukunas@linux.intel.com>
-> 
-> Hi Jim, I'm really not able to assess the validity of this patch.
-> I don't doubt it exactly, but I'd value a second opinion just to
-> be confident. Peter: can you review and comment?
-> 
-> Thanks, NeilBrown
-> 
 
-Are these functions ever called with unaligned arguments?
+I've managed to find a bug, but it is fairly minor and I cannot see how
+it would cause a crash.
 
-Other than that, the patch is correct, and is the preferred way to do
-this, but I'm unhappy about the cost.  I have suggested to Jim a few
-ways by which we might be able to mitigate the cost or even improve
-performance, but the implementation depends very much on the above
-question (unlike the RAID-6 code, which assumes aligned buffers at all
-times.)
+The calculation of bitmap->chunks is wrong and will usually be 1 too small.
 
-	-hpa
+Does it make a difference for you?  I tend to doubt it.
+
+Thanks,
+NeilBrown
+
+
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index 97e73e5..17e2b47 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -1727,8 +1727,7 @@ int bitmap_create(struct mddev *mddev)
+ 	bitmap->chunkshift =3D (ffz(~mddev->bitmap_info.chunksize)
+ 			      - BITMAP_BLOCK_SHIFT);
+=20
+-	/* now that chunksize and chunkshift are set, we can use these macros */
+-	chunks =3D (blocks + bitmap->chunkshift - 1) >>
++	chunks =3D (blocks + (1 << bitmap->chunkshift) - 1) >>
+ 			bitmap->chunkshift;
+ 	pages =3D (chunks + PAGE_COUNTER_RATIO - 1) / PAGE_COUNTER_RATIO;
+=20
+diff --git a/drivers/md/bitmap.h b/drivers/md/bitmap.h
+index 55ca5ae..b44b0aba 100644
+--- a/drivers/md/bitmap.h
++++ b/drivers/md/bitmap.h
+@@ -101,9 +101,6 @@ typedef __u16 bitmap_counter_t;
+=20
+ #define BITMAP_BLOCK_SHIFT 9
+=20
+-/* how many blocks per chunk? (this is variable) */
+-#define CHUNK_BLOCK_RATIO(bitmap) ((bitmap)->mddev->bitmap_info.chunksize =
+>> BITMAP_BLOCK_SHIFT)
+-
+ #endif
+=20
+ /*
+
+--Sig_/kQ0s4aes2Ef3_2W5uN6Ina9
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIcBAEBAgAGBQJPoikHAAoJEL2gYIVJO6zk9Q8P/AqcdBC2fal6Wy9RSWnky4vf
-BLycwd7JAK6CU6Tl/dK747gpEdzXwFOPPrGV3pbyycft8rKPvUoliBhE9esM8GN6
-5wZfn9dBBXa3Gmacxdu5mj87W54LpQOCc8rGj3CSx8kfoORjBCxC0zueX3Wmno/I
-KdL6JtWiSEgJ93WLRr4mYfo1V8rulJ5kAxTthntyAmuIiJi4nc4ERyMLRXEH+3p2
-iam8f4v4JDhm2qVxnkSX2toPjzEVLPXSa5DDhHJq8OC9o8jl6gL8nIByG7/0hYMG
-Z3mI4pG4GB7jdX8YxSI8sGo0rB1bXtnLEI61FAZo4vOJRs1xJr98m3nwiE4X81NV
-OU+xucUPpd+Y5x6oC7tZyDkoKqnkNH1nNHhhyKawe4pMWWom9m8V5skkYrXufr8G
-K1unlM0zfUUAH2vFbEuRqbGIMfhH2qFCWp/oywRK0M+R/HjLISVjjIIYCB87Y30K
-dZ+y8z6bEYRm0WyFSw/SkEulSyAu/VfHcOAmYorvu721MG2HfPkdWiviwgbf6CD2
-33bZ3IUkaian619eQC+wBliGIjvR6PexxTzilIbfV4D20t9QhvBVSkkbT9cIaFeF
-38gC8LxDBvrSYyutn4v6e6NUAUQlbtQnPZJQfb8uDbtOe74Er8qsZJGsCyt1bgv1
-EjeLFnHOn4F9pE/g7GNh
-=wGxV
+iQIVAwUBT6Iqtjnsnt1WYoG5AQJASA//SiDTCXRmAXp6Q4eEpXaloHjWRw+7HN98
+htcN4FJ4qhPJrthE5JlK2D02ZzgBcJsTc1EwcbmIvGtVIr/PdJqnO8d9aDglCUNV
+vcv0l4GlpM44Fsg1ywxMwAHBe5UQ+bu1Mk48pJqYwIq9N/4x6rRoGuoZNXpvVlhh
+5zhqkBxaXl4c/IpxQQhMGTVXUbTeWlFQIm6/5pEEO1CYI/hjfkiUhEPhFunISJzE
+9dvDIof/8k6xzjtI9/XFpxL3kOpIaw88uoCtruJbIZrek9YiKTgcBhOflATb2MqH
+OhXNNPd7DhUVIBWb00t6xen00OY/aHDxQwvN0C4NlSDjHHClpwJ2ZeZI28IQX/Q/
+M1yB3WgKHS5h138LBjraiylAf4pz+oWEhOPOz46NpV+PvlyeUH2j7WLSlXielBwT
+5mRsZhNDS9l0tmWjxnp2SM/vFb61YIAdOSmFg58vwCVNzJJoccGbHOZRGEyR+gdZ
+r8qutK2nLRwq8Q3qq9IO34oaUjxm7hYyYUkLmIIOILdq4v6Cl90CSOc6/kbHipsG
++3qfHStK20HadLOKBOFc8vNHcGewm+eNs9NXPzLz6IEjeZ3R7BeSDb7zA91rtLOQ
+e+fOFj9EsficmYV6PEtdhFoba4+DFdMIPmj/Nz4NPPIjk33L8bf3FvHdas8nf34B
+YgzFLPEWS/Y=
+=nOwg
 -----END PGP SIGNATURE-----
+
+--Sig_/kQ0s4aes2Ef3_2W5uN6Ina9--
