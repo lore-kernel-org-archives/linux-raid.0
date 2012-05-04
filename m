@@ -1,59 +1,86 @@
-From: wilsonjonathan <piercing_male@hotmail.com>
-Subject: Moving drives from different PC's advice please.
-Date: Fri, 4 May 2012 02:02:22 +0100
-Message-ID: <BLU0-SMTP170BC0E264A4F4CFB014791982C0@phx.gbl>
+From: Karl Newman <siliconfiend@gmail.com>
+Subject: Re: [BISECT] Kernel panic, RIP bitmap_create
+Date: Thu, 3 May 2012 23:37:38 -0700
+Message-ID: <CAOOwNtKko_db_wtqYOiGScq0ZOMbMK1L9DhDnm1geWhsQmLWNQ@mail.gmail.com>
+References: <CAOOwNtJhFa67EFTs5AdgSHzFseBr9xJGTsaEOyYnaYYNCeUMAQ@mail.gmail.com>
+	<CAOOwNt+wjMU9+Dzrr3+d3dwML2_Q_CgT4X5OgiKvPA_bBoTYcg@mail.gmail.com>
+	<20120503155850.2900067d@notabene.brown>
+	<CAOOwNtK0xKg9E=gS46GR8uDVvjPqqL7+FbufY2d7iuW7yZgVwQ@mail.gmail.com>
+	<20120503165030.7e45c25b@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120503165030.7e45c25b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-My current set-up is 1 PC that has 6 drives (1TB each) set up as a
-server (BigData). The partitions are gpt, and all the drives are
-partitioned as...
+On Wed, May 2, 2012 at 11:50 PM, NeilBrown <neilb@suse.de> wrote:
+>
+> I've managed to find a bug, but it is fairly minor and I cannot see h=
+ow
+> it would cause a crash.
+>
+> The calculation of bitmap->chunks is wrong and will usually be 1 too =
+small.
+>
+> Does it make a difference for you? =A0I tend to doubt it.
+>
+> Thanks,
+> NeilBrown
+>
+>
+> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+> index 97e73e5..17e2b47 100644
+> --- a/drivers/md/bitmap.c
+> +++ b/drivers/md/bitmap.c
+> @@ -1727,8 +1727,7 @@ int bitmap_create(struct mddev *mddev)
+> =A0 =A0 =A0 =A0bitmap->chunkshift =3D (ffz(~mddev->bitmap_info.chunks=
+ize)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0- BITMAP_B=
+LOCK_SHIFT);
+>
+> - =A0 =A0 =A0 /* now that chunksize and chunkshift are set, we can us=
+e these macros */
+> - =A0 =A0 =A0 chunks =3D (blocks + bitmap->chunkshift - 1) >>
+> + =A0 =A0 =A0 chunks =3D (blocks + (1 << bitmap->chunkshift) - 1) >>
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0bitmap->chunkshift;
+> =A0 =A0 =A0 =A0pages =3D (chunks + PAGE_COUNTER_RATIO - 1) / PAGE_COU=
+NTER_RATIO;
+>
+> diff --git a/drivers/md/bitmap.h b/drivers/md/bitmap.h
+> index 55ca5ae..b44b0aba 100644
+> --- a/drivers/md/bitmap.h
+> +++ b/drivers/md/bitmap.h
+> @@ -101,9 +101,6 @@ typedef __u16 bitmap_counter_t;
+>
+> =A0#define BITMAP_BLOCK_SHIFT 9
+>
+> -/* how many blocks per chunk? (this is variable) */
+> -#define CHUNK_BLOCK_RATIO(bitmap) ((bitmap)->mddev->bitmap_info.chun=
+ksize >> BITMAP_BLOCK_SHIFT)
+> -
+> =A0#endif
+>
+> =A0/*
 
-BiosBoot (1Mg-mirror) root (8Meg-mirror) swap (16Gb) download
-(50Gb-raid10) data (raid6)
+Somehow gmail marked this email as read, too, so I missed it. Anyway,
+that did it! With this patch applied I can successfully boot! I tested
+the offending commit by itself first with the all-zeros uuid patch
+applied and confirmed the bug was still present, then applied this
+patch and the bug was gone. I also applied this patch to 3.4-rc5 and
+confirmed that it was still good.
 
-the setup is that the 50Gb is seen as 100Gb, and the data is seen as the
-rest.
+Thank you for your help on this issue, and thank you for your work as
+a kernel developer and supporting this crucial component.
 
-Each drive is partitioned exactly the same... on disk 3-6 the space is
-partitioned exactly the same, but unused in the case of "boot, root,
-swap, download"
+Sincerely,
 
-I also have a PC that has 2 drives (BorgCube), that are non-specific
-(I'm moving things around) but will eventually have BiosBoot, root,
-swap, download, and home... set up as mirror, mirror, mirror, raid10,
-and mirror.
-
-The BorgCube, once re-set up, will have its drives on a PCI Sata card
-and assuming it works I will then need to move the hard drives from
-BigData to its (borgCube) on board sata connections.
-
-My questions are... 
-
-1. what is the best logical steps to do this, things like sequence of
-events (get pc working on sata card, attach all additional drives, run
-mdadm -scan, etc.)
-
-2. Once all running (assuming it works) how do I then remove the
-partitions that were originally on the BigData that are no longer
-required such as BigDrive-BiosBoot, BigDrive-root, BigDrive-swap.
-BigDrive-dowload.
-
-3. After removing the partitions (that are lower in the order, data is
-the 6th partition) how do I then recover that space into a disk
-partition and then recover that space as and ext4 partition... as I
-believe that you first have to do something with the physical disk
-partitions then do something with the mdadm raid partitions, then
-something with the file system on top of the raid partition.
-
-So removing disk and raid partitions 1-5 (boot, root, etc.) and finally
-having a mdadm raid of 6 disks, with just one partition... set up as
-disk (1-6) partitions, mdadm on 6 disks, ext4 on mdadm raid set up.
-
-
-
+Karl Newman
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
