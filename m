@@ -1,28 +1,24 @@
-From: Krzysztof Adamski <k@adamski.org>
-Subject: Script for offsite storeage of RAID info needed for recovery
-Date: Fri, 04 May 2012 10:21:57 -0400
-Message-ID: <1336141317.28212.125.camel@oxygen.netxsys.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 1/2] super-intel.c: Don't try to close negative fd
+Date: Fri, 4 May 2012 11:00:15 -0700
+Message-ID: <CAA9_cmcnWHeu-x9L5os9gZzmhtMxvAWVnLf3uSfey+aVktaKoA@mail.gmail.com>
+References: <1336138882-31869-1-git-send-email-Jes.Sorensen@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1336138882-31869-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jes.Sorensen@redhat.com
+Cc: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Reading about the heroic achievements of Neil to recover broken raids
-for people it is obvious that before a RAID has problems good info needs
-to be provided. Since usually that information is required after the
-fact, I'm looking for a script that I could run periodically on my
-computers that would collect all this info and send it someplace safe
-off-site.
+On Fri, May 4, 2012 at 6:41 AM,  <Jes.Sorensen@redhat.com> wrote:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>
+> This should be harmless, but lets be consistent and not try to close a
+> negative file descripter.
+>
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> ---
 
-Is there a script that I could run from cron that would collect all the
-needed info for a recovery of a broken raid and mail it off-site?
-
-If there is nothing like that, then I can try writing it as long as I
-could get the list of commands that would give me all the needed info.
-
-Thanks,
-K
-
+Patch 1 and 2, Acked-by: Dan Williams <dan.j.williams@intel.com>
