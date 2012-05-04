@@ -1,20 +1,36 @@
-From: "Microsoft  Notification" <Atrida.Hadianti@ait.ac.th>
-Subject: Urgent Letter
-Date: Fri, 04 May 2012 19:08:13 +0800
-Message-ID: <201205041108.q44B2dU4013367__20975.1172028065$1336131284$gmane$org@mail.ucla.edu>
-Reply-To: claims_dept25@kimo.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH 2/2] super-intel.c: Fix resource leak from opendir()
+Date: Fri,  4 May 2012 15:41:22 +0200
+Message-ID: <1336138882-31869-2-git-send-email-Jes.Sorensen@redhat.com>
+References: <1336138882-31869-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Description: Mail message body
+In-Reply-To: <1336138882-31869-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Recipients <Atrida.Hadianti@ait.ac.th>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We wish to inform you that you have won (One Million British Pound Sterlings) in the Microsoft Online Monthly Lottery held this month of April with Ticket Number (EKT/LTUK/3410) and the Lucky Numbers (BTUK5890BD) (01) For claim of Prize,please forward to us 1.Name: 2.Address 3.Age: 4.Sex: 5.Phone: 6.Country:7:Ticket Number and Lucky Number Contact: Mrs.Rita Hall. claims_dept25@kimo.com
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Congratulations once again.
-Yours faithfully,
-Mrs.Rita Hall.
-On-line Coordinator
+Use closedir() on dirp from opendir() to avoid resource leaking.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ super-intel.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/super-intel.c b/super-intel.c
+index ca15703..e2ed95a 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5686,6 +5686,7 @@ get_devices(const char *hba_path)
+ 			free(dv);
+ 		}
+ 	}
++	closedir(dir);
+ 	return devlist;
+ }
+ 
+-- 
+1.7.7.6
+
