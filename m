@@ -1,73 +1,115 @@
-From: Ivan Fedorets <ivan.fedorets@gmail.com>
-Subject: Re: logging the last state of the disk subsystem
-Date: Sun, 6 May 2012 02:32:46 -0400
-Message-ID: <CAMt+eY3faj3YszfEPMCbqHHespYK-582M5K6qFGssWpE9Mxxpw@mail.gmail.com>
-References: <CAMt+eY0VtyxmqGoJy1+-=0Ho_etfiyF8Rbr1Dz8+4zJA7KGSzg@mail.gmail.com>
+From: Philipp Wendler <ml@philippwendler.de>
+Subject: Re: Yet another corrupt raid5
+Date: Sun, 06 May 2012 11:21:15 +0200
+Message-ID: <4FA6428B.802@philippwendler.de>
+References: <4FA52031.2040608@philippwendler.de> <20120506160044.5b3a50c2@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAMt+eY0VtyxmqGoJy1+-=0Ho_etfiyF8Rbr1Dz8+4zJA7KGSzg@mail.gmail.com>
+In-Reply-To: <20120506160044.5b3a50c2@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Neil,
+Hi Neil,
 
-There are some situations when metadata is changed or wiped out in the
-attempts to recover a broken raid, or the order of partitions is lost.
+Am 06.05.2012 08:00, schrieb NeilBrown:
+> On Sat, 05 May 2012 14:42:25 +0200 Philipp Wendler <ml@philippwendler.de>
+> wrote:
 
-I'm thinking:
- it might be handy to have an extra file
-/var/log/mdadm_last_assembled_state.log serving two purposes:
-1. mdadm can use it in attempts to reassemble if array broke
-(non-hardware failure)
-2. administrators in despair can post them here when they stuck with a
-broken raid: this way it will be easier to help them without asking to
-provide more details
+>> I did not write on the disks, and did not execute any other commands
+>> than --assemble, so from the other threads I guess that I can recreate
+>> my raid with the data?
+> 
+> Yes, you should be able to.  Patience is important though, don't rush things.
 
-The idea is to have txt or xml format file. We need a specific format
-to allow mdadm to use the information from the file for self-healing.
-The file should contain historical data: previous successful states,
-that's why I suggest to treat is as a log file. However, every chunk
-of data should be clearly separate, thus mdadm can use the latest one
-for self-healing.
+Yes, that's why I didn't try anything myself and came to this list to ask.
 
-in case of successful assemble of raid(s), mdadm write something like:
+>> Is the following command right:
+>> mdadm -C -e 1.2 -5 -n 3 --assume-clean \
+>>   -b /boot/md0_write_intent_map \
+>>   /dev/sdb1 /dev/sdc1 /dev/sdd1
+> 
+> If you had an external write-intent bitmap and 3 drives is a RAID5 which
+> were, in order , sdb1, sdc1, sdd1, then it is close.
+> You want "-l 5" rather than "-5"
+> You also want "/dev/md0" after the "-C".
 
-<start stage# XX date= .....>
-..
-..
-everything that needs to recover raid: disk order, chunk data,
-versions on metadata, type of the raid..
-using this command for example:
-..
-output of the /proc/mdstat
-output of /proc/partitions
-output of fdisk -l
-output of df -h
-..
-..
-..
+Right, I just forgot that.
 
-/etc/mdadm.conf is well known location, anaconda is writing into it,
-sometimes it's not populated correctly..
-So that new log file would serve as a secret stash in case of soft
-disaster when data is still there, but raid failed to assemble.
-Historical data written in chunks - stages with the number (Stage# XX)
-will allow someone to try to assemble defferent previous stages in
-case the last one somehow wrong..
-Also metadata can be backed up there and restored from there..
+>> Do I need to specify the chunk-size?
+>> If so, how can I find it out?
+> 
+> You cannot directly.  If you don't know it then you might need to try
+> different chunk sizes until you get an array the presents your data correctly.
+> I would try the chunksize that you think is probably correct, then "fsck -n"
+> the filesystem (Assuming you are using extX).  If that works, mount read-only
+> and have a look at some files.
+> If it doesn't work, stop the array and try with a different chunk size.
+> 
+>> I think I might have used a custom chunk size back then.
+>> -X on my bitmap says Chunksize is 2MB, is this the right chunk size?
+> 
+> No.  The bitmap chunk size (should be called a 'region size' I now think) is
+> quite different from the RAID5 chunk size.
+> 
+> However the bitmap will record the total size of the array.  The chunksize
+> must divide that evenly.  As you have 2 data disks, 2*chunksize must divide
+> the total size evenly.  That will put an upper bound on the chunk size.
+> 
+> The "mdadm -E" claims the array to be 3907024896 sectors which is 1953512448K.
+> That is 2^10K * 3 * 635909
+> So that chunk size is at most 2^9K - 512K, which is currently the default.
+> It might be less.
 
-I understand that it's easy to give an advise than to write code,
-however it can save some of your time as well :)
+Ah, if the maximum size is equal to the default, then I am sure I used
+this. I just was not sure if I made it bigger.
 
-PS I'm impressed with your level of support!
+>> -X says there are 1375 dirty chunks.
+>> Will mdadm be able to use this information, or are the dirty chunks just
+>> lost?
+> 
+> No mdadm cannot use this information, but that is unlikely to be a problem.
+> "dirty" doesn't mean that the parity is inconsistent with the data, it means
+> that the parity might be inconsistent with the data.  It most cases it isn't.
+> And as your array is not degraded, it doesn't matter anyway.
+> 
+> Once you have you array back together again you should
+>    echo repair > /sys/block/md0/md/sync_action
+> to check all the parity blocks and repair any that are found to be wrong.
 
---
-With Kind Regards,
+Ok, I already thought that might be good.
 
-Ivan Fedorets
-ITIL v3F, MCSE, MCSA
-cell phone: 613 513 6594
-e-mail: ivan.fedorets@gmail.com
-linkedin profile: http://ca.linkedin.com/in/ivanfedorets
+>> Is the order of the devices on the --create command line important?
+>> I am not 100% sure about the original order.
+> 
+> Yes, it is very import.
+> Every time md starts the array it will print a "RAID conf printout" which
+> lists the devices in order.  If you can find a recent one of those in kernel
+> logs it will confirm the correct order.  Unfortunately it doesn't list the
+> chunk size.
+
+Good idea, I found it in the log. Was actually sdc1 sdb1 sdd1.
+
+So I did it, and it worked out fine on the first try.
+Luks could successfully decrypt it, fsck did not complain, mounting
+worked and data is also fine. So hurrayy and big thanks ;-)
+Now I am running the resync.
+
+>> Thank you very much in advance for your help.
+> 
+> Good luck, and please accept my apologies for the bug that resulted in this
+> unfortunate situation.
+
+Hey, you don't need to apologize. I am a software developer as well, and
+I know that such things might happen. And it didn't crash my data, so
+everything is fine.
+
+On the contrary, I want to thank all the developers here that you do all
+this work I can use for free (in both senses) and now when there was a
+problem, I could ask on this list and get such a extensive and helpful
+answer, although I am this "yet another guy" that asks something for the
+x-th time.
+
+Greetings, Philipp
