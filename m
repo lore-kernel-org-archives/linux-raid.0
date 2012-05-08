@@ -1,63 +1,82 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [RFC 1/2] MD: raid5 trim support
-Date: Wed, 9 May 2012 06:17:23 +1000
-Message-ID: <20120509061723.416e9e3b@notabene.brown>
-References: <20120417083552.483324288@kernel.org>
-	<20120417084632.306032602@kernel.org>
-	<CABE8wwswKWQ=LDbx0ysTaZf2Hz0jD_q45FNF0jw96ZwZdJiHPw@mail.gmail.com>
-	<20120418062641.000e881c@notabene.brown>
-	<4F8E11A6.7090305@kernel.org>
-	<20120418144841.04ce1a10@notabene.brown>
-	<4F8E5185.8050809@kernel.org>
-	<20120418155749.4afae9cb@notabene.brown>
-	<4F8E605C.9090803@kernel.org>
-	<20120425034307.GA454@kernel.org>
-	<20120508101653.GA9757@kernel.org>
+Subject: Re: Yet another corrupt raid5
+Date: Wed, 9 May 2012 06:40:01 +1000
+Message-ID: <20120509064001.5c937942@notabene.brown>
+References: <4FA52031.2040608@philippwendler.de>
+	<20120506160044.5b3a50c2@notabene.brown>
+	<4FA6428B.802@philippwendler.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/nRvrtFsmm_kUrzPjgEsho/H"; protocol="application/pgp-signature"
+ boundary="Sig_/nYDJqi7l1MrP.outVk4SiYZ"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120508101653.GA9757@kernel.org>
+In-Reply-To: <4FA6428B.802@philippwendler.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, axboe@kernel.dk, Shaohua Li <shli@fusionio.com>
+To: Philipp Wendler <ml@philippwendler.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/nRvrtFsmm_kUrzPjgEsho/H
+--Sig_/nYDJqi7l1MrP.outVk4SiYZ
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 8 May 2012 18:16:53 +0800 Shaohua Li <shli@kernel.org> wrote:
-> > Neil,
-> > Any comments about the patches?
-> ping!
+On Sun, 06 May 2012 11:21:15 +0200 Philipp Wendler <ml@philippwendler.de>
+wrote:
 
-Sorry for not responding earlier.
-I'll try to make time next week to look at these and the RAID1 patches you
-just sent.
+> So I did it, and it worked out fine on the first try.
+> Luks could successfully decrypt it, fsck did not complain, mounting
+> worked and data is also fine. So hurrayy and big thanks ;-)
+> Now I am running the resync.
 
+Good news!  thanks for letting us know.
+
+>=20
+> >> Thank you very much in advance for your help.
+> >=20
+> > Good luck, and please accept my apologies for the bug that resulted in =
+this
+> > unfortunate situation.
+>=20
+> Hey, you don't need to apologize. I am a software developer as well, and
+> I know that such things might happen. And it didn't crash my data, so
+> everything is fine.
+>=20
+> On the contrary, I want to thank all the developers here that you do all
+> this work I can use for free (in both senses) and now when there was a
+> problem, I could ask on this list and get such a extensive and helpful
+> answer, although I am this "yet another guy" that asks something for the
+> x-th time.
+
+I find "Do unto other what you would have others do to you" to be a very go=
+od
+idea.
+
+And the more I can encourage people to test my development code and report
+bugs, the more bugs I can fix before they get to paying customers - and that
+is certainly a good thing :-)
+
+Thanks,
 NeilBrown
 
---Sig_/nRvrtFsmm_kUrzPjgEsho/H
+--Sig_/nYDJqi7l1MrP.outVk4SiYZ
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT6l/Uznsnt1WYoG5AQKaTBAAwU/VqLfP4OSUgQWpVyd1Zze0/r8zsmsK
-4Nisp39Rs55BF57IiUzMO3XFSAZnX/pZB1sh9lq2cYvqqDPGG+Wt17fmlI1Khk56
-WDxU/OAsvXrIPoYXOMNX7GN9SQdKsk4xbC5V6LRtJ4K3yVfuRt5iDLYz0T4H44e5
-qGhPZMvyxbM0X0gxbfKV/5jXTVFrlB+WZnzm+zeT++prf9I/XQuP/QA65skfPxES
-lsy6HSc7mkRK6w/Hr9wPUogrQRbH2oYpkPWp2nZkLSBybIOunh2QB5ZJJdEStDgH
-Iz7SeLXyUvBpoTFrOJl5xo1WAIzdviam7ccLtWzQAdXTT0yQ5mMXDVo/5bLl4hz+
-rIuTAk/C/KzrR8ReGxes7ZEmfMnTQVxoxTGApYNXVzahl7qkrUozQiUWrw7qwYRT
-+G6iGEjr48uzQiLXyQe5jbz5uEihamyuLleDFxoC0jLo2LYjxVb8TWVGIrxLYNb9
-xyPoa5zLnpBJiRhnaj2Q4laXIt5DzCZIuMgxu98bCAKCbtUWQXKKKemSZLQ1H6+E
-Js3Je5zP1N+keN4ooGyYBThoEk4TVhiEqLTxdE6aTDHyGpsEh+UIMV6c619HLJmJ
-sqYtfc/XASvIoLisel4wVfOCrPxFQ7GlTXJ7nzdcdJe4oY3lxkFh9qhSD8uQbM0G
-FpY3kP2a3do=
-=gwSG
+iQIVAwUBT6mEoTnsnt1WYoG5AQIquhAAmrWpfKp/r4oMKGPp45iQYT6AjGxtNH3+
+25nA/DURAjnT527U5r25mUNFkVjXxE6YKv3adL+D4kMnYrIt/GObfIFB/Fo0jUGp
+ldNJPZc+awr75tijVpg5np0wNrmMZN4/xULSH2fzHYTAKy2G+kjJHMOm2hSkxhM3
+u3lXSXt808U/HyftHOSr49Chs2uciYCNWNOeIx3OovUmVh4V0J8SiBDOOQp3fpkJ
+qYumJN7WmdCJGfqgUkdmGh2hcYiKU+9w8OThopT2se7fnjMUu+g7m0Xv7KXJ2tkd
+DYzDCW5Er9uNOI49Xos4QuF/TaVGTWv4Po5lEZrPzpr5bKHcyNsRSYOs0rSHxdl1
+UN9m3w0x0Pvvjv6TBNP+veWSmFoe7qjAOF8pbRRPeMqJzXHo0UNgW44geOWMyVrw
+3ROdHw4yC6Ae+d0YeKQvd8o2+YeOTs41HsQJH1UJibiGDxlkZnVkzxiKSW9FUbYj
+P4+qkTponbIQky6ww5U7OXD2rQbB73n73Lgxm/cYftSbsREyfAGpMgMxVlgt/v/i
+Igybcfu80tq12/OYCSogWWnE5+7Ce/8CXrn/gud/ridLOGOTTegnU23BRoTbb3RA
+i/u0lf9VXBtfJSJ6gjEss91GOqgsv1XkXqLc1WQvtGhBU/NAVr14TxSXkYCXDFVO
+/l/SYCODGaA=
+=cfdY
 -----END PGP SIGNATURE-----
 
---Sig_/nRvrtFsmm_kUrzPjgEsho/H--
+--Sig_/nYDJqi7l1MrP.outVk4SiYZ--
