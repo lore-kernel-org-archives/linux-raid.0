@@ -1,18 +1,30 @@
 From: "Johnson Yan" <johnson_yan@usish.com>
 Subject: RE: mdadm v3.1.3 spare group does not work
-Date: Tue, 8 May 2012 11:05:04 +0800
-Message-ID: <007301cd2cc7$5db3c930$191b5b90$@com>
+Date: Tue, 8 May 2012 11:42:54 +0800
+Message-ID: <009501cd2ccc$a6f384a0$f4da8de0$@com>
 References: <002b01cd2cbd$fd6ea3a0$f84beae0$@com> <20120508122029.62488da5@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120508122029.62488da5@notabene.brown>
+In-Reply-To: 
 Content-Language: zh-cn
 Sender: linux-raid-owner@vger.kernel.org
 To: 'NeilBrown' <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I tried mdadm 2.6.5, it can works well.
+
+Regards,
+Johnson Yan
+
+-----Original Message-----
+=46rom: Johnson Yan [mailto:johnson_yan@usish.com]=20
+Sent: Tuesday, May 08, 2012 11:05 AM
+To: 'NeilBrown'
+Cc: 'linux-raid@vger.kernel.org'
+Subject: RE: mdadm v3.1.3 spare group does not work
 
 Hi Neil,
 Thank you for your advice, I tried 3.2.3, it still failed.
@@ -21,7 +33,7 @@ Regards,
 Johnson Yan
 
 -----Original Message-----
-=46rom: NeilBrown [mailto:neilb@suse.de]=20
+=46rom: NeilBrown [mailto:neilb@suse.de]
 Sent: Tuesday, May 08, 2012 10:20 AM
 To: Johnson Yan
 Cc: linux-raid@vger.kernel.org
@@ -49,13 +61,13 @@ NeilBrown
 >=20
 >=20
 > Here is some info from /etc/mdadm.conf =E2=80=A6 ARRAY /dev/md0 level=
-=3Draid1=20
+=3Draid1
 > spare-group=3Dtest11 ARRAY /dev/md1 level=3Draid1 spare-group=3Dtest1=
 1 =E2=80=A6
 >=20
 >=20
 > And mdmonitor service is in running status:
-> [root@localhost tmp]# ps aux |grep mdadm root      1794  0.0  0.0  =20
+> [root@localhost tmp]# ps aux |grep mdadm root      1794  0.0  0.0
 > 6852   760 ?        Ss   16:52   0:00 mdadm -F -y -f -s -i=20
 > /var/run/mdadm/mdadm.pid --delay=3D10
 >=20
