@@ -1,159 +1,187 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: [patch 3/4] raid1: read balance chooses idlest disk
-Date: Tue, 08 May 2012 18:08:56 +0800
-Message-ID: <20120508101031.463750137@kernel.org>
+Subject: [patch 4/4] raid1: split large request for SSD
+Date: Tue, 08 May 2012 18:08:57 +0800
+Message-ID: <20120508101040.772777389@kernel.org>
 References: <20120508100853.412193855@kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline; filename=raid1-ssd-read-balance.patch
+Content-Disposition: inline; filename=raid1-ssd-split-large-read.patch
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: neilb@suse.de, axboe@kernel.dk
 List-Id: linux-raid.ids
 
-SSD hasn't spindle, distance between requests means nothing. And the original
-distance based algorithm sometimes can cause severe performance issue for SSD
-raid.
+For SSD, if request size exceeds specific value (optimal io size), request size
+isn't important for bandwidth. In such condition, if making request size bigger
+will cause some disks idle, the total throughput will actually drop. A good
+example is doing a readahead in a two-disk raid1 setup.
 
-Considering two thread groups, one accesses file A, the other access file B.
-The first group will access one disk and the second will access the other disk,
-because requests are near from one group and far between groups. In this case,
-read balance might keep one disk very busy but the other relative idle.  For
-SSD, we should try best to distribute requests to as more disks as possible.
-There isn't spindle move penality anyway.
+So when we should split big request? We absolutly don't want to split big
+request to very small requests. Even in SSD, big request transfer is more
+efficient. Below patch only consider request with size above optimal io size.
 
-With below patch, I can see more than 50% throughput improvement sometimes
-depending on workloads.
+If all disks are busy, is it worthy to do split? Say optimal io size is 16k,
+two requests 32k and two disks. We can let each disk run one 32k request, or
+split the requests to 4 16k requests and each disk runs two. It's hard to say
+which case is better, depending on hardware.
 
-The only exception is small requests can be merged to a big request which
-typically can drive higher throughput for SSD too. Such small requests are
-sequential reads. Unlike hard disk, sequential read which can't be merged (for
-example direct IO, or read without readahead) can be ignored for SSD. Again
-there is no spindle move penality. readahead dispatches small requests and such
-requests can be merged.
+So only consider case where there are idle disks. For readahead, split is
+always better in this case. And in my test, below patch can improve > 30%
+thoughput. Hmm, not 100%, because disk isn't 100% busy.
 
-Last patch can help detect sequential read well, at least if concurrent read
-number isn't greater than raid disk number. In that case, distance based
-algorithm doesn't work well too.
+Such case can happen not just in readahead, for example, in directio. But I
+suppose directio usually will have bigger IO depth and make all disks busy, so
+I ignored it.
 
 Signed-off-by: Shaohua Li <shli@fusionio.com>
 ---
- drivers/md/raid1.c |   55 ++++++++++++++++++++++++++++++++++++++++++++++++++---
- drivers/md/raid1.h |    2 +
- 2 files changed, 54 insertions(+), 3 deletions(-)
+ drivers/md/raid1.c |   44 +++++++++++++++++++++++++++++++++++++-------
+ drivers/md/raid1.h |    2 ++
+ 2 files changed, 39 insertions(+), 7 deletions(-)
 
 Index: linux/drivers/md/raid1.c
 ===================================================================
---- linux.orig/drivers/md/raid1.c	2012-05-08 16:36:31.559994400 +0800
-+++ linux/drivers/md/raid1.c	2012-05-08 16:36:35.255946817 +0800
-@@ -463,6 +463,43 @@ static void raid1_end_write_request(stru
- 		bio_put(to_put);
+--- linux.orig/drivers/md/raid1.c	2012-05-08 16:36:35.255946817 +0800
++++ linux/drivers/md/raid1.c	2012-05-08 16:36:37.471920320 +0800
+@@ -464,31 +464,49 @@ static void raid1_end_write_request(stru
  }
  
-+static int read_balance_measure_ssd(struct r1conf *conf, struct r1bio *r1_bio,
-+	int disk, int *best_disk, unsigned int *min_pending)
-+{
-+	const sector_t this_sector = r1_bio->sector;
-+	struct md_rdev *rdev;
-+	unsigned int pending;
-+
-+	rdev = rcu_dereference(conf->mirrors[disk].rdev);
-+	pending = atomic_read(&rdev->nr_pending);
-+
-+	/* big request IO helps SSD too, allow sequential IO merge */
-+	if (conf->mirrors[disk].next_seq_sect == this_sector) {
-+		sector_t dist;
-+		dist = abs(this_sector - conf->mirrors[disk].head_position);
-+		/*
-+		 * head_position is for finished request, such reqeust can't be
-+		 * merged with current request, so it means nothing for SSD
-+		 */
-+		if (dist != 0)
-+			goto done;
-+	}
-+
-+	/* If device is idle, use it */
-+	if (pending == 0)
-+		goto done;
-+
-+	/* find device with less requests pending */
-+	if (*min_pending > pending) {
-+		*min_pending = pending;
-+		*best_disk = disk;
-+	}
-+	return 1;
-+done:
-+	*best_disk = disk;
-+	return 0;
-+}
-+
- static int read_balance_measure_distance(struct r1conf *conf,
- 	struct r1bio *r1_bio, int disk, int *best_disk, sector_t *best_dist)
+ static int read_balance_measure_ssd(struct r1conf *conf, struct r1bio *r1_bio,
+-	int disk, int *best_disk, unsigned int *min_pending)
++	int disk, int *best_disk, unsigned int *min_pending, int *choose_idle)
  {
-@@ -511,6 +548,7 @@ static int read_balance(struct r1conf *c
- 	int best_disk;
- 	int i;
- 	sector_t best_dist;
-+	unsigned int min_pending;
+ 	const sector_t this_sector = r1_bio->sector;
  	struct md_rdev *rdev;
- 	int choose_first;
+ 	unsigned int pending;
++	struct mirror_info *mirror = &conf->mirrors[disk];
++	int ret = 0;
  
-@@ -524,6 +562,7 @@ static int read_balance(struct r1conf *c
- 	sectors = r1_bio->sectors;
- 	best_disk = -1;
- 	best_dist = MaxSector;
-+	min_pending = -1;
- 	best_good_sectors = 0;
+-	rdev = rcu_dereference(conf->mirrors[disk].rdev);
++	rdev = rcu_dereference(mirror->rdev);
+ 	pending = atomic_read(&rdev->nr_pending);
  
- 	if (conf->mddev->recovery_cp < MaxSector &&
-@@ -602,9 +641,15 @@ static int read_balance(struct r1conf *c
- 			break;
- 		}
- 
--		if (!read_balance_measure_distance(conf, r1_bio, disk,
--		    &best_disk, &best_dist))
--			break;
-+		if (!conf->nonrotational) {
-+			if (!read_balance_measure_distance(conf, r1_bio, disk,
-+			    &best_disk, &best_dist))
-+				break;
-+		} else {
-+			if (!read_balance_measure_ssd(conf, r1_bio, disk,
-+			    &best_disk, &min_pending))
-+				break;
+ 	/* big request IO helps SSD too, allow sequential IO merge */
+-	if (conf->mirrors[disk].next_seq_sect == this_sector) {
++	if (mirror->next_seq_sect == this_sector && *choose_idle == 0) {
+ 		sector_t dist;
+-		dist = abs(this_sector - conf->mirrors[disk].head_position);
++		dist = abs(this_sector - mirror->head_position);
+ 		/*
+ 		 * head_position is for finished request, such reqeust can't be
+ 		 * merged with current request, so it means nothing for SSD
+ 		 */
+-		if (dist != 0)
++		if (dist != 0) {
++			/*
++			 * If buffered sequential IO size exceeds optimal
++			 * iosize and there is idle disk, choose idle disk
++			 */
++			if (mirror->seq_start != MaxSector
++			    && conf->opt_iosize > 0
++			    && mirror->next_seq_sect > conf->opt_iosize
++			    && mirror->next_seq_sect - conf->opt_iosize >=
++			       mirror->seq_start) {
++				*choose_idle = 1;
++				ret = 1;
++			}
+ 			goto done;
 +		}
  	}
  
- 	if (best_disk >= 0) {
-@@ -2531,6 +2576,7 @@ static struct r1conf *setup_conf(struct
- 	struct mirror_info *disk;
+ 	/* If device is idle, use it */
+ 	if (pending == 0)
+ 		goto done;
+ 
++	if (*choose_idle == 1)
++		return 1;
++
+ 	/* find device with less requests pending */
+ 	if (*min_pending > pending) {
+ 		*min_pending = pending;
+@@ -497,7 +515,7 @@ static int read_balance_measure_ssd(stru
+ 	return 1;
+ done:
+ 	*best_disk = disk;
+-	return 0;
++	return ret;
+ }
+ 
+ static int read_balance_measure_distance(struct r1conf *conf,
+@@ -551,6 +569,7 @@ static int read_balance(struct r1conf *c
+ 	unsigned int min_pending;
+ 	struct md_rdev *rdev;
+ 	int choose_first;
++	int choose_idle;
+ 
+ 	rcu_read_lock();
+ 	/*
+@@ -564,6 +583,7 @@ static int read_balance(struct r1conf *c
+ 	best_dist = MaxSector;
+ 	min_pending = -1;
+ 	best_good_sectors = 0;
++	choose_idle = 0;
+ 
+ 	if (conf->mddev->recovery_cp < MaxSector &&
+ 	    (this_sector + sectors >= conf->next_resync))
+@@ -647,7 +667,7 @@ static int read_balance(struct r1conf *c
+ 				break;
+ 		} else {
+ 			if (!read_balance_measure_ssd(conf, r1_bio, disk,
+-			    &best_disk, &min_pending))
++			    &best_disk, &min_pending, &choose_idle))
+ 				break;
+ 		}
+ 	}
+@@ -665,6 +685,10 @@ static int read_balance(struct r1conf *c
+ 			goto retry;
+ 		}
+ 		sectors = best_good_sectors;
++
++		if (conf->mirrors[best_disk].next_seq_sect != this_sector)
++			conf->mirrors[best_disk].seq_start = this_sector;
++
+ 		conf->mirrors[best_disk].next_seq_sect = this_sector + sectors;
+ 	}
+ 	rcu_read_unlock();
+@@ -2577,6 +2601,7 @@ static struct r1conf *setup_conf(struct
  	struct md_rdev *rdev;
  	int err = -ENOMEM;
-+	bool nonrotational = true;
+ 	bool nonrotational = true;
++	int opt_iosize = 0;
  
  	conf = kzalloc(sizeof(struct r1conf), GFP_KERNEL);
  	if (!conf)
-@@ -2575,7 +2621,10 @@ static struct r1conf *setup_conf(struct
- 		disk->rdev = rdev;
- 
+@@ -2623,8 +2648,13 @@ static struct r1conf *setup_conf(struct
  		disk->head_position = 0;
-+		if (!blk_queue_nonrot(bdev_get_queue(rdev->bdev)))
-+			nonrotational = false;
+ 		if (!blk_queue_nonrot(bdev_get_queue(rdev->bdev)))
+ 			nonrotational = false;
++		else
++			opt_iosize = max(opt_iosize, bdev_io_opt(rdev->bdev));
++		disk->seq_start = MaxSector;
  	}
-+	conf->nonrotational = nonrotational;
+ 	conf->nonrotational = nonrotational;
++	if (nonrotational)
++		conf->opt_iosize = opt_iosize >> 9;
  	conf->raid_disks = mddev->raid_disks;
  	conf->mddev = mddev;
  	INIT_LIST_HEAD(&conf->retry_list);
 Index: linux/drivers/md/raid1.h
 ===================================================================
---- linux.orig/drivers/md/raid1.h	2012-05-08 16:36:31.559994400 +0800
-+++ linux/drivers/md/raid1.h	2012-05-08 16:36:35.255946817 +0800
-@@ -65,6 +65,8 @@ struct r1conf {
- 	int			nr_queued;
+--- linux.orig/drivers/md/raid1.h	2012-05-08 16:36:35.255946817 +0800
++++ linux/drivers/md/raid1.h	2012-05-08 16:36:37.471920320 +0800
+@@ -9,6 +9,7 @@ struct mirror_info {
+ 	 * we try to keep sequential reads one the same device
+ 	 */
+ 	sector_t	next_seq_sect;
++	sector_t	seq_start;
+ };
+ 
+ /*
+@@ -66,6 +67,7 @@ struct r1conf {
  	int			barrier;
  
-+	int			nonrotational;
-+
+ 	int			nonrotational;
++	sector_t		opt_iosize;
+ 
  	/* Set to 1 if a full sync is needed, (fresh device added).
  	 * Cleared when a sync completes.
- 	 */
 
