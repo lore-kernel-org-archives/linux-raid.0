@@ -1,109 +1,42 @@
-From: "Johnson Yan" <johnson_yan@usish.com>
-Subject: RE: mdadm v3.1.3 spare group does not work
-Date: Tue, 8 May 2012 17:53:08 +0800
-Message-ID: <015b01cd2d00$5f575020$1e05f060$@com>
-References: <002b01cd2cbd$fd6ea3a0$f84beae0$@com> <20120508122029.62488da5@notabene.brown>
+From: "Patelczyk, Maciej" <maciej.patelczyk@intel.com>
+Subject: RE: [patch v2 0/6] Add TRIM support for raid linear/0/1/10
+Date: Tue, 8 May 2012 09:59:58 +0000
+Message-ID: <679865E03F4C71419D9847EA3AACB163157D4CE6@IRSMSX102.ger.corp.intel.com>
+References: <20120316073213.656519005@fusionio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: 
-Content-Language: zh-cn
-Sender: linux-raid-owner@vger.kernel.org
-To: 'NeilBrown' <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120316073213.656519005@fusionio.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@fusionio.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: "neilb@suse.de" <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Hi Neil & All,
-I tried mdadm 3.2.3 again with mdmonitor service restart, the spare gro=
-up function is OK now. Mdadm v3.1.3 still can't work.
-Sorry for the inconvenience.
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Shaohua Li
+> Sent: Friday, March 16, 2012 8:32 AM
+> To: linux-kernel@vger.kernel.org; linux-raid@vger.kernel.org
+> Cc: neilb@suse.de; axboe@kernel.dk; vgoyal@redhat.com;
+> martin.petersen@oracle.com
+> Subject: [patch v2 0/6] Add TRIM support for raid linear/0/1/10
+> 
+> The patches add TRIM support for raid linear/0/1/10. I'll add TRIM
+> support for raid 4/5/6 later. The implementation is pretty
+> straightforward and self-explained.
+> 
+> v1->v2:
+> 1. fixed a checking issue
+> 2. dropped discard request plug and replace it with no discard merege,
+> because current SCSI layer can't handle discard request merge.
+> 
+> Thanks,
+> Shaohua
 
-Regards,
-Johnson Yan
-
-
------Original Message-----
-=46rom: Johnson Yan [mailto:johnson_yan@usish.com]=20
-Sent: Tuesday, May 08, 2012 11:43 AM
-To: 'NeilBrown'
-Cc: 'linux-raid@vger.kernel.org'
-Subject: RE: mdadm v3.1.3 spare group does not work
-
-I tried mdadm 2.6.5, it can works well.
-
-Regards,
-Johnson Yan
-
------Original Message-----
-=46rom: Johnson Yan [mailto:johnson_yan@usish.com]
-Sent: Tuesday, May 08, 2012 11:05 AM
-To: 'NeilBrown'
-Cc: 'linux-raid@vger.kernel.org'
-Subject: RE: mdadm v3.1.3 spare group does not work
-
-Hi Neil,
-Thank you for your advice, I tried 3.2.3, it still failed.
-
-Regards,
-Johnson Yan
-
------Original Message-----
-=46rom: NeilBrown [mailto:neilb@suse.de]
-Sent: Tuesday, May 08, 2012 10:20 AM
-To: Johnson Yan
-Cc: linux-raid@vger.kernel.org
-Subject: Re: mdadm v3.1.3 spare group does not work
-
-On Tue, 8 May 2012 09:57:57 +0800 "Johnson Yan" <johnson_yan@usish.com>=
- wrote:
-
-> Hi,
-> When I use mdadm v3.1.3, seems the spare group function can=E2=80=99t=
- work. As=20
-> I remember, this function in mdadm 2.6.5 works well.
-
-Can you try mdadm 3.2.3 please (or is that what you meant?).
-Better still, try the current git version:
-
-  git clone git://github.com/neilbrown/mdadm
-  cd mdadm
-  make
-  make install
-
-Thanks,
-NeilBrown
-
->=20
->=20
-> Here is some info from /etc/mdadm.conf =E2=80=A6 ARRAY /dev/md0 level=
-=3Draid1
-> spare-group=3Dtest11 ARRAY /dev/md1 level=3Draid1 spare-group=3Dtest1=
-1 =E2=80=A6
->=20
->=20
-> And mdmonitor service is in running status:
-> [root@localhost tmp]# ps aux |grep mdadm root      1794  0.0  0.0
-> 6852   760 ?        Ss   16:52   0:00 mdadm -F -y -f -s -i=20
-> /var/run/mdadm/mdadm.pid --delay=3D10
->=20
-> There is one spare disk in md0, and no spare in md1, if I fail the=20
-> member disk in md1, the spare in md0 won=E2=80=99t migrate into md1.
->=20
-> Thank you very much.
->=20
-> Regards,
-> Johnson Yan
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
-=20
-> in the body of a message to majordomo@vger.kernel.org More majordomo=20
-> info at  http://vger.kernel.org/majordomo-info.html
+Hi,
+Can't see anywhere patch 2/6 from this series.
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+maciej
