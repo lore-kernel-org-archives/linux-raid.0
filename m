@@ -1,57 +1,29 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm v3.1.3 spare group does not work
-Date: Tue, 8 May 2012 20:05:52 +1000
-Message-ID: <20120508200552.34af96fc@notabene.brown>
-References: <002b01cd2cbd$fd6ea3a0$f84beae0$@com>
-	<20120508122029.62488da5@notabene.brown>
-	<015b01cd2d00$5f575020$1e05f060$@com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/1e8lmKP4EAfLU1PtJarm5fE"; protocol="application/pgp-signature"
+From: Shaohua Li <shli@kernel.org>
+Subject: [patch 0/4] Optimize raid1 read balance for SSD
+Date: Tue, 08 May 2012 18:08:53 +0800
+Message-ID: <20120508100853.412193855@kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <015b01cd2d00$5f575020$1e05f060$@com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Johnson Yan <johnson_yan@usish.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de, axboe@kernel.dk
 List-Id: linux-raid.ids
 
---Sig_/1e8lmKP4EAfLU1PtJarm5fE
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+raid1 read balance is an important algorithm to make read performance optimal.
+It's a distance based algorithm, eg, for each request dispatch, choose disk
+whose last finished request is close the request. This is great for hard disk.
+But SSD has some special characteristics:
 
-On Tue, 8 May 2012 17:53:08 +0800 "Johnson Yan" <johnson_yan@usish.com> wro=
-te:
+1. nonrotational. Distance means nothing for SSD, though merging small rquests
+to big request is still optimal for SSD. If no merge, distributing rquests to
+raid disks as more as possible is more optimal.
 
-> Hi Neil & All,
-> I tried mdadm 3.2.3 again with mdmonitor service restart, the spare group=
- function is OK now. Mdadm v3.1.3 still can't work.
-> Sorry for the inconvenience.
+2. Getting too big request isn't always optimal. For hard disk, compared to
+spindle move, data transfer overhead is trival, so we always prefer bigger
+request. In SSD, request size exceeds specific value, performance isn't always
+increased with request size increased.  An example is readahead. If readahead
+merges too big request and causes some disks idle, the performance is less
+optimal than that when all disks are busy and running small requests.
 
-So it is fixed in 3.2.3 - good.
-Thanks for letting me know.
-
-NeilBrown
-
---Sig_/1e8lmKP4EAfLU1PtJarm5fE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT6jwADnsnt1WYoG5AQLPyw//WToPaHdpAGYJg+N9w9wQAnMTm3mxXbmT
-soul394qzb9fbdxAffFa8teI7aOGHpIrVA8XwELK/2T2Nmrlv7mbmCL79k++alf3
-HfWAC4FpCkknpUaEgkYGx7jq7doEaO4cn1ZFXZYkYJ8OYcvsS2Qvl+Lmp0Q9jmS1
-pC/DqrV4g72A2k+d96tGxJ49ayGcBpU5qBl3JQr74ukBcm2FHTLZvG7mJyie1/rz
-MgMgvkXX9yvGnI7U0+bz+E95xkOu0gMJ+AIiKPFz7Gem9bHakcnJr/Y8FQ+zB2l8
-xNb4FesgL3KaUL/whCKiEULNdEbSKyL9v6K1DMqA1KrZTs47chJcasWCmjMBN83A
-BzMStGpJKMydcdctYVFPtgdssM607rsnx00LvKmToCDMV+edSbkgVbPMEpl5XOdC
-q6qcyS42KUM65j4lS8hExfN8NRYQvJcrtbz09n/Hz3qqP6864n9VGCPO/2b3uWPC
-jeAwZiALpTJCvaWZXijaRLNKrDmmkrmuARlj7FDiFdTTp8s7K9SeyJxXXlKOKJzR
-NMtp19gk4TI74H5hdjLO7ncK+DwDKnCM8S01RxVwC+e61wDTij2qhs59jndTpa+9
-5V276G3fI3rJjiZckuQrYFgt/BGVoF52bHdEf6048hzAfPHT0TbrPf4EBJhvR8eU
-3XA/eFYFboQ=
-=BM8F
------END PGP SIGNATURE-----
-
---Sig_/1e8lmKP4EAfLU1PtJarm5fE--
+The patches try to address the issues. The first two patches are clean up. The
+third patch addresses the first item above. The forth addresses the second item
+above. The idea can be applied to raid10 too, which is in my todo list.
