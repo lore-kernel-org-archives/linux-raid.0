@@ -1,187 +1,111 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: [patch 4/4] raid1: split large request for SSD
-Date: Tue, 08 May 2012 18:08:57 +0800
-Message-ID: <20120508101040.772777389@kernel.org>
-References: <20120508100853.412193855@kernel.org>
+Subject: Re: [RFC 1/2] MD: raid5 trim support
+Date: Tue, 8 May 2012 18:16:53 +0800
+Message-ID: <20120508101653.GA9757@kernel.org>
+References: <20120417083552.483324288@kernel.org>
+ <20120417084632.306032602@kernel.org>
+ <CABE8wwswKWQ=LDbx0ysTaZf2Hz0jD_q45FNF0jw96ZwZdJiHPw@mail.gmail.com>
+ <20120418062641.000e881c@notabene.brown>
+ <4F8E11A6.7090305@kernel.org>
+ <20120418144841.04ce1a10@notabene.brown>
+ <4F8E5185.8050809@kernel.org>
+ <20120418155749.4afae9cb@notabene.brown>
+ <4F8E605C.9090803@kernel.org>
+ <20120425034307.GA454@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline; filename=raid1-ssd-split-large-read.patch
+Content-Disposition: inline
+In-Reply-To: <20120425034307.GA454@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de, axboe@kernel.dk
+To: NeilBrown <neilb@suse.de>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, axboe@kernel.dk, Shaohua Li <shli@fusionio.com>
 List-Id: linux-raid.ids
 
-For SSD, if request size exceeds specific value (optimal io size), request size
-isn't important for bandwidth. In such condition, if making request size bigger
-will cause some disks idle, the total throughput will actually drop. A good
-example is doing a readahead in a two-disk raid1 setup.
+On Wed, Apr 25, 2012 at 11:43:07AM +0800, Shaohua Li wrote:
+> On Wed, Apr 18, 2012 at 02:34:04PM +0800, Shaohua Li wrote:
+> > On 4/18/12 1:57 PM, NeilBrown wrote:
+> > >On Wed, 18 Apr 2012 13:30:45 +0800 Shaohua Li<shli@kernel.org>  wrote:
+> > >
+> > >>On 4/18/12 12:48 PM, NeilBrown wrote:
+> > >>>On Wed, 18 Apr 2012 08:58:14 +0800 Shaohua Li<shli@kernel.org>   wrote:
+> > >>>
+> > >>>>On 4/18/12 4:26 AM, NeilBrown wrote:
+> > >>>>>On Tue, 17 Apr 2012 07:46:03 -0700 Dan Williams<dan.j.williams@intel.com>
+> > >>>>>wrote:
+> > >>>>>
+> > >>>>>>On Tue, Apr 17, 2012 at 1:35 AM, Shaohua Li<shli@kernel.org>    wrote:
+> > >>>>>>>Discard for raid4/5/6 has limitation. If discard request size is small, we do
+> > >>>>>>>discard for one disk, but we need calculate parity and write parity disk.  To
+> > >>>>>>>correctly calculate parity, zero_after_discard must be guaranteed.
+> > >>>>>>
+> > >>>>>>I'm wondering if we could use the new bad blocks facility to mark
+> > >>>>>>discarded ranges so we don't necessarily need determinate data after
+> > >>>>>>discard.
+> > >>>>>>
+> > >>>>>>...but I have not looked into it beyond that.
+> > >>>>>>
+> > >>>>>>--
+> > >>>>>>Dan
+> > >>>>>
+> > >>>>>No.
+> > >>>>>
+> > >>>>>The bad blocks framework can only store a limited number of bad ranges - 512
+> > >>>>>in the current implementation.
+> > >>>>>That would not be an acceptable restriction for discarded ranges.
+> > >>>>>
+> > >>>>>You would need a bitmap of some sort if you wanted to record discarded
+> > >>>>>regions.
+> > >>>>>
+> > >>>>>http://neil.brown.name/blog/20110216044002#5
+> > >>>>
+> > >>>>This appears to remove the unnecessary resync for discarded range after
+> > >>>>a crash
+> > >>>>or discard error, eg an enhancement. From my understanding, it can't
+> > >>>>remove the
+> > >>>>limitation I mentioned in the patch. For raid5, we still need discard a
+> > >>>>whole
+> > >>>>stripe (discarding one disk but writing parity disk isn't good).
+> > >>>
+> > >>>It is certainly not ideal, but it is worse than not discarding at all?
+> > >>>And would updating some sort of bitmap be just as bad as updating the parity
+> > >>>block?
+> > >>>
+> > >>>How about treating a DISCARD request as a request to write a block full of
+> > >>>zeros, then at the lower level treat any request to write a block full of
+> > >>>zeros as a DISCARD request.  So when the parity becomes zero, it gets
+> > >>>discarded.
+> > >>>
+> > >>>Certainly it is best if the filesystem would discard whole stripes at a time,
+> > >>>and we should be sure to optimise that.  But maybe there is still room to do
+> > >>>something useful with small discards?
+> > >>
+> > >>Sure, it would be great we can do small discards. But I didn't get how to do
+> > >>it with the bitmap approach. Let's give an example, data disk1, data disk2,
+> > >>parity disk3. Say discard some sectors of disk1. The suggested approach is
+> > >>to mark the range bad. Then how to deal with parity disk3? As I said,
+> > >>writing
+> > >>parity disk3 isn't good. So mark the corresponding range of parity disk3
+> > >>bad too? If we did this, if disk2 is broken, how can we restore it?
+> > >
+> > >Why, exactly, is writing the parity disk not good?
+> > >Not discarding blocks that we possibly could discard is also not good.
+> > >Which is worst?
+> > 
+> > Writing the parity disk is worse. Discard is to improve the garbage
+> > collection
+> > of SSD firmware, so improve later write performance. While write is bad for
+> > SSD, because SSD can be wear leveling out with extra write and also write
+> > increases garbage collection overhead. So the result of small
+> > discard is data
+> > disk garbage collection is improved but parity disk gets worse and
+> > parity disk
+> > gets fast to end of its life, which doesn't make sense. This is even
+> > worse when
+> > the parity is distributed.
+> Neil,
+> Any comments about the patches?
+ping!
 
-So when we should split big request? We absolutly don't want to split big
-request to very small requests. Even in SSD, big request transfer is more
-efficient. Below patch only consider request with size above optimal io size.
-
-If all disks are busy, is it worthy to do split? Say optimal io size is 16k,
-two requests 32k and two disks. We can let each disk run one 32k request, or
-split the requests to 4 16k requests and each disk runs two. It's hard to say
-which case is better, depending on hardware.
-
-So only consider case where there are idle disks. For readahead, split is
-always better in this case. And in my test, below patch can improve > 30%
-thoughput. Hmm, not 100%, because disk isn't 100% busy.
-
-Such case can happen not just in readahead, for example, in directio. But I
-suppose directio usually will have bigger IO depth and make all disks busy, so
-I ignored it.
-
-Signed-off-by: Shaohua Li <shli@fusionio.com>
----
- drivers/md/raid1.c |   44 +++++++++++++++++++++++++++++++++++++-------
- drivers/md/raid1.h |    2 ++
- 2 files changed, 39 insertions(+), 7 deletions(-)
-
-Index: linux/drivers/md/raid1.c
-===================================================================
---- linux.orig/drivers/md/raid1.c	2012-05-08 16:36:35.255946817 +0800
-+++ linux/drivers/md/raid1.c	2012-05-08 16:36:37.471920320 +0800
-@@ -464,31 +464,49 @@ static void raid1_end_write_request(stru
- }
- 
- static int read_balance_measure_ssd(struct r1conf *conf, struct r1bio *r1_bio,
--	int disk, int *best_disk, unsigned int *min_pending)
-+	int disk, int *best_disk, unsigned int *min_pending, int *choose_idle)
- {
- 	const sector_t this_sector = r1_bio->sector;
- 	struct md_rdev *rdev;
- 	unsigned int pending;
-+	struct mirror_info *mirror = &conf->mirrors[disk];
-+	int ret = 0;
- 
--	rdev = rcu_dereference(conf->mirrors[disk].rdev);
-+	rdev = rcu_dereference(mirror->rdev);
- 	pending = atomic_read(&rdev->nr_pending);
- 
- 	/* big request IO helps SSD too, allow sequential IO merge */
--	if (conf->mirrors[disk].next_seq_sect == this_sector) {
-+	if (mirror->next_seq_sect == this_sector && *choose_idle == 0) {
- 		sector_t dist;
--		dist = abs(this_sector - conf->mirrors[disk].head_position);
-+		dist = abs(this_sector - mirror->head_position);
- 		/*
- 		 * head_position is for finished request, such reqeust can't be
- 		 * merged with current request, so it means nothing for SSD
- 		 */
--		if (dist != 0)
-+		if (dist != 0) {
-+			/*
-+			 * If buffered sequential IO size exceeds optimal
-+			 * iosize and there is idle disk, choose idle disk
-+			 */
-+			if (mirror->seq_start != MaxSector
-+			    && conf->opt_iosize > 0
-+			    && mirror->next_seq_sect > conf->opt_iosize
-+			    && mirror->next_seq_sect - conf->opt_iosize >=
-+			       mirror->seq_start) {
-+				*choose_idle = 1;
-+				ret = 1;
-+			}
- 			goto done;
-+		}
- 	}
- 
- 	/* If device is idle, use it */
- 	if (pending == 0)
- 		goto done;
- 
-+	if (*choose_idle == 1)
-+		return 1;
-+
- 	/* find device with less requests pending */
- 	if (*min_pending > pending) {
- 		*min_pending = pending;
-@@ -497,7 +515,7 @@ static int read_balance_measure_ssd(stru
- 	return 1;
- done:
- 	*best_disk = disk;
--	return 0;
-+	return ret;
- }
- 
- static int read_balance_measure_distance(struct r1conf *conf,
-@@ -551,6 +569,7 @@ static int read_balance(struct r1conf *c
- 	unsigned int min_pending;
- 	struct md_rdev *rdev;
- 	int choose_first;
-+	int choose_idle;
- 
- 	rcu_read_lock();
- 	/*
-@@ -564,6 +583,7 @@ static int read_balance(struct r1conf *c
- 	best_dist = MaxSector;
- 	min_pending = -1;
- 	best_good_sectors = 0;
-+	choose_idle = 0;
- 
- 	if (conf->mddev->recovery_cp < MaxSector &&
- 	    (this_sector + sectors >= conf->next_resync))
-@@ -647,7 +667,7 @@ static int read_balance(struct r1conf *c
- 				break;
- 		} else {
- 			if (!read_balance_measure_ssd(conf, r1_bio, disk,
--			    &best_disk, &min_pending))
-+			    &best_disk, &min_pending, &choose_idle))
- 				break;
- 		}
- 	}
-@@ -665,6 +685,10 @@ static int read_balance(struct r1conf *c
- 			goto retry;
- 		}
- 		sectors = best_good_sectors;
-+
-+		if (conf->mirrors[best_disk].next_seq_sect != this_sector)
-+			conf->mirrors[best_disk].seq_start = this_sector;
-+
- 		conf->mirrors[best_disk].next_seq_sect = this_sector + sectors;
- 	}
- 	rcu_read_unlock();
-@@ -2577,6 +2601,7 @@ static struct r1conf *setup_conf(struct
- 	struct md_rdev *rdev;
- 	int err = -ENOMEM;
- 	bool nonrotational = true;
-+	int opt_iosize = 0;
- 
- 	conf = kzalloc(sizeof(struct r1conf), GFP_KERNEL);
- 	if (!conf)
-@@ -2623,8 +2648,13 @@ static struct r1conf *setup_conf(struct
- 		disk->head_position = 0;
- 		if (!blk_queue_nonrot(bdev_get_queue(rdev->bdev)))
- 			nonrotational = false;
-+		else
-+			opt_iosize = max(opt_iosize, bdev_io_opt(rdev->bdev));
-+		disk->seq_start = MaxSector;
- 	}
- 	conf->nonrotational = nonrotational;
-+	if (nonrotational)
-+		conf->opt_iosize = opt_iosize >> 9;
- 	conf->raid_disks = mddev->raid_disks;
- 	conf->mddev = mddev;
- 	INIT_LIST_HEAD(&conf->retry_list);
-Index: linux/drivers/md/raid1.h
-===================================================================
---- linux.orig/drivers/md/raid1.h	2012-05-08 16:36:35.255946817 +0800
-+++ linux/drivers/md/raid1.h	2012-05-08 16:36:37.471920320 +0800
-@@ -9,6 +9,7 @@ struct mirror_info {
- 	 * we try to keep sequential reads one the same device
- 	 */
- 	sector_t	next_seq_sect;
-+	sector_t	seq_start;
- };
- 
- /*
-@@ -66,6 +67,7 @@ struct r1conf {
- 	int			barrier;
- 
- 	int			nonrotational;
-+	sector_t		opt_iosize;
- 
- 	/* Set to 1 if a full sync is needed, (fresh device added).
- 	 * Cleared when a sync completes.
-
+Thanks,
+Shaohua
