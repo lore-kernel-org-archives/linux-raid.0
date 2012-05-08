@@ -1,111 +1,41 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [RFC 1/2] MD: raid5 trim support
-Date: Tue, 8 May 2012 18:16:53 +0800
-Message-ID: <20120508101653.GA9757@kernel.org>
-References: <20120417083552.483324288@kernel.org>
- <20120417084632.306032602@kernel.org>
- <CABE8wwswKWQ=LDbx0ysTaZf2Hz0jD_q45FNF0jw96ZwZdJiHPw@mail.gmail.com>
- <20120418062641.000e881c@notabene.brown>
- <4F8E11A6.7090305@kernel.org>
- <20120418144841.04ce1a10@notabene.brown>
- <4F8E5185.8050809@kernel.org>
- <20120418155749.4afae9cb@notabene.brown>
- <4F8E605C.9090803@kernel.org>
- <20120425034307.GA454@kernel.org>
+Subject: Re: [RFC]md: using GFP_NOIO to allocate bio for flush request
+Date: Tue, 8 May 2012 18:18:00 +0800
+Message-ID: <20120508101800.GB9757@kernel.org>
+References: <4F8BAED6.9090105@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20120425034307.GA454@kernel.org>
+In-Reply-To: <4F8BAED6.9090105@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, axboe@kernel.dk, Shaohua Li <shli@fusionio.com>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Wed, Apr 25, 2012 at 11:43:07AM +0800, Shaohua Li wrote:
-> On Wed, Apr 18, 2012 at 02:34:04PM +0800, Shaohua Li wrote:
-> > On 4/18/12 1:57 PM, NeilBrown wrote:
-> > >On Wed, 18 Apr 2012 13:30:45 +0800 Shaohua Li<shli@kernel.org>  wrote:
-> > >
-> > >>On 4/18/12 12:48 PM, NeilBrown wrote:
-> > >>>On Wed, 18 Apr 2012 08:58:14 +0800 Shaohua Li<shli@kernel.org>   wrote:
-> > >>>
-> > >>>>On 4/18/12 4:26 AM, NeilBrown wrote:
-> > >>>>>On Tue, 17 Apr 2012 07:46:03 -0700 Dan Williams<dan.j.williams@intel.com>
-> > >>>>>wrote:
-> > >>>>>
-> > >>>>>>On Tue, Apr 17, 2012 at 1:35 AM, Shaohua Li<shli@kernel.org>    wrote:
-> > >>>>>>>Discard for raid4/5/6 has limitation. If discard request size is small, we do
-> > >>>>>>>discard for one disk, but we need calculate parity and write parity disk.  To
-> > >>>>>>>correctly calculate parity, zero_after_discard must be guaranteed.
-> > >>>>>>
-> > >>>>>>I'm wondering if we could use the new bad blocks facility to mark
-> > >>>>>>discarded ranges so we don't necessarily need determinate data after
-> > >>>>>>discard.
-> > >>>>>>
-> > >>>>>>...but I have not looked into it beyond that.
-> > >>>>>>
-> > >>>>>>--
-> > >>>>>>Dan
-> > >>>>>
-> > >>>>>No.
-> > >>>>>
-> > >>>>>The bad blocks framework can only store a limited number of bad ranges - 512
-> > >>>>>in the current implementation.
-> > >>>>>That would not be an acceptable restriction for discarded ranges.
-> > >>>>>
-> > >>>>>You would need a bitmap of some sort if you wanted to record discarded
-> > >>>>>regions.
-> > >>>>>
-> > >>>>>http://neil.brown.name/blog/20110216044002#5
-> > >>>>
-> > >>>>This appears to remove the unnecessary resync for discarded range after
-> > >>>>a crash
-> > >>>>or discard error, eg an enhancement. From my understanding, it can't
-> > >>>>remove the
-> > >>>>limitation I mentioned in the patch. For raid5, we still need discard a
-> > >>>>whole
-> > >>>>stripe (discarding one disk but writing parity disk isn't good).
-> > >>>
-> > >>>It is certainly not ideal, but it is worse than not discarding at all?
-> > >>>And would updating some sort of bitmap be just as bad as updating the parity
-> > >>>block?
-> > >>>
-> > >>>How about treating a DISCARD request as a request to write a block full of
-> > >>>zeros, then at the lower level treat any request to write a block full of
-> > >>>zeros as a DISCARD request.  So when the parity becomes zero, it gets
-> > >>>discarded.
-> > >>>
-> > >>>Certainly it is best if the filesystem would discard whole stripes at a time,
-> > >>>and we should be sure to optimise that.  But maybe there is still room to do
-> > >>>something useful with small discards?
-> > >>
-> > >>Sure, it would be great we can do small discards. But I didn't get how to do
-> > >>it with the bitmap approach. Let's give an example, data disk1, data disk2,
-> > >>parity disk3. Say discard some sectors of disk1. The suggested approach is
-> > >>to mark the range bad. Then how to deal with parity disk3? As I said,
-> > >>writing
-> > >>parity disk3 isn't good. So mark the corresponding range of parity disk3
-> > >>bad too? If we did this, if disk2 is broken, how can we restore it?
-> > >
-> > >Why, exactly, is writing the parity disk not good?
-> > >Not discarding blocks that we possibly could discard is also not good.
-> > >Which is worst?
-> > 
-> > Writing the parity disk is worse. Discard is to improve the garbage
-> > collection
-> > of SSD firmware, so improve later write performance. While write is bad for
-> > SSD, because SSD can be wear leveling out with extra write and also write
-> > increases garbage collection overhead. So the result of small
-> > discard is data
-> > disk garbage collection is improved but parity disk gets worse and
-> > parity disk
-> > gets fast to end of its life, which doesn't make sense. This is even
-> > worse when
-> > the parity is distributed.
-> Neil,
-> Any comments about the patches?
+On Mon, Apr 16, 2012 at 01:32:06PM +0800, Shaohua Li wrote:
+> 
+> flush request is issued in transaction commit code path usually, so
+> looks using
+> GFP_KERNEL to allocate memory for flush request bio falls into the classic
+> deadlock issue. dm already gets it right.
 ping!
 
-Thanks,
-Shaohua
+
+> Signed-off-by: Shaohua Li <shli@fusionio.com>
+> ---
+>  drivers/md/md.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> Index: linux/drivers/md/md.c
+> ===================================================================
+> --- linux.orig/drivers/md/md.c	2012-04-13 10:03:58.395497650 +0800
+> +++ linux/drivers/md/md.c	2012-04-13 10:04:37.445497882 +0800
+> @@ -450,7 +450,7 @@ static void submit_flushes(struct work_s
+>  			atomic_inc(&rdev->nr_pending);
+>  			atomic_inc(&rdev->nr_pending);
+>  			rcu_read_unlock();
+> -			bi = bio_alloc_mddev(GFP_KERNEL, 0, mddev);
+> +			bi = bio_alloc_mddev(GFP_NOIO, 0, mddev);
+>  			bi->bi_end_io = md_end_flush;
+>  			bi->bi_private = rdev;
+>  			bi->bi_bdev = rdev->bdev;
