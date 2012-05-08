@@ -1,82 +1,128 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Yet another corrupt raid5
-Date: Wed, 9 May 2012 06:40:01 +1000
-Message-ID: <20120509064001.5c937942@notabene.brown>
-References: <4FA52031.2040608@philippwendler.de>
-	<20120506160044.5b3a50c2@notabene.brown>
-	<4FA6428B.802@philippwendler.de>
+Subject: Re: Failed drive while converting raid5 to raid6, then a hard
+ reboot
+Date: Wed, 9 May 2012 06:48:58 +1000
+Message-ID: <20120509064858.4e39c389@notabene.brown>
+References: <CAFTzWnrQARaemDkMNe48zT8tipPmsVbt0ZFgfDTyrtUc9KjuZQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/nYDJqi7l1MrP.outVk4SiYZ"; protocol="application/pgp-signature"
+ boundary="Sig_/BZPJmgFdV6G3IuxXiE=_yb9"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FA6428B.802@philippwendler.de>
+In-Reply-To: <CAFTzWnrQARaemDkMNe48zT8tipPmsVbt0ZFgfDTyrtUc9KjuZQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Philipp Wendler <ml@philippwendler.de>
-Cc: linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?H=E1kon_G=EDslason?= <hakon.gislason@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/nYDJqi7l1MrP.outVk4SiYZ
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/BZPJmgFdV6G3IuxXiE=_yb9
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 06 May 2012 11:21:15 +0200 Philipp Wendler <ml@philippwendler.de>
+On Mon, 30 Apr 2012 13:59:56 +0000 H=E1kon G=EDslason <hakon.gislason@gmail=
+.com>
 wrote:
 
-> So I did it, and it worked out fine on the first try.
-> Luks could successfully decrypt it, fsck did not complain, mounting
-> worked and data is also fine. So hurrayy and big thanks ;-)
-> Now I am running the resync.
-
-Good news!  thanks for letting us know.
-
+> Hello,
+> I've been having frequent drive "failures", as in, they are reported
+> failed/bad and mdadm sends me an email telling me things went wrong,
+> etc... but after a reboot or two, they are perfectly fine again. I'm
+> not sure what it is, but this server is quite new and I think there
+> might be more behind it, bad memory or the motherboard (I've been
+> having other issues as well). I've had 4 drive "failures" in this
+> month, all different drives except for one, which "failed" twice, and
+> all have been fixed with a reboot or rebuild (all drives reported bad
+> by mdadm passed an extensive SMART test).
+> Due to this, I decided to convert my raid5 array to a raid6 array
+> while I find the root cause of the problem.
 >=20
-> >> Thank you very much in advance for your help.
-> >=20
-> > Good luck, and please accept my apologies for the bug that resulted in =
-this
-> > unfortunate situation.
+> I started the conversion right after a drive failure & rebuild, but as
+> it had converted/reshaped aprox. 4%(if I remember correctly, and it
+> was going really slowly, ~7500 minutes to completion), it reported
+> another drive bad, and the conversion to raid6 stopped (it said
+> "rebuilding", but the speed was 0K/sec and the time left was a few
+> million minutes.
+> After that happened, I tried to stop the array and reboot the server,
+> as I had done previously to get the reportedly "bad" drive working
+> again, but It=A0wouldn't=A0stop the array or reboot, neither could I
+> unmount it, it just hung whenever I tried to do something with
+> /dev/md0. After trying to reboot a few times, I just killed the power
+> and re-started it.=A0Admittedly=A0this was probably not the best thing I
+> could have done at that point.
 >=20
-> Hey, you don't need to apologize. I am a software developer as well, and
-> I know that such things might happen. And it didn't crash my data, so
-> everything is fine.
+> I have backup of ca. 80% of the data on there, it's been a month since
+> the last complete backup (because I ran out of backup disk space).
 >=20
-> On the contrary, I want to thank all the developers here that you do all
-> this work I can use for free (in both senses) and now when there was a
-> problem, I could ask on this list and get such a extensive and helpful
-> answer, although I am this "yet another guy" that asks something for the
-> x-th time.
+> So, the big question, can the array be activated, and can it complete
+> the conversion to raid6? And will I get my data back?
+> I hope the data can be rescued, and any help I can get would be much
+> appreciated!
+>=20
+> I'm fairly new to raid in general, and have been using mdadm for about
+> a month now.
+> Here's some data:
+>=20
+> root@axiom:~# mdadm --examine --scan
+> ARRAY /dev/md/0 metadata=3D1.2 UUID=3Dcfedbfc1:feaee982:4e92ccf4:45e08ed1
+> name=3Daxiom.is:0
+>=20
+>=20
+> root@axiom:~# cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> md0 : inactive sdc[6] sde[7] sdb[5] sda[4]
+> =A0 =A0 =A0 7814054240 blocks super 1.2
+>=20
+> root@axiom:~# mdadm --assemble --scan --force --run /dev/md0
+> mdadm: /dev/md0 is already in use.
+>=20
+> root@axiom:~# mdadm --stop /dev/md0
+> mdadm: stopped /dev/md0
+>=20
+> root@axiom:~# mdadm --assemble --scan --force --run /dev/md0
+> mdadm: Failed to restore critical section for reshape, sorry.
+> =A0 =A0 =A0 Possibly you needed to specify the --backup-file
+>=20
+> root@axiom:~# mdadm --assemble --scan --force --run /dev/md0
+> --backup-file=3D/root/mdadm-backup-file
+> mdadm: Failed to restore critical section for reshape, sorry.
 
-I find "Do unto other what you would have others do to you" to be a very go=
-od
-idea.
+What version of mdadm are you using?
 
-And the more I can encourage people to test my development code and report
-bugs, the more bugs I can fix before they get to paying customers - and that
-is certainly a good thing :-)
+I suggest getting a newer one (I'm about to release 3.2.4, but 3.2.3 should
+be fine) and if just that doesn't help, add the "--invalid-backup" option.
 
-Thanks,
+However I very strongly suggest you try to resolve the problem which is
+causing your drives to fail.  Until you resolve that it will keep happening
+and having it happen repeatly during the (slow) reshape process would not be
+good.
+
+Maybe plug the drives into another computer, or another controller, while t=
+he
+reshape runs?
+
 NeilBrown
 
---Sig_/nYDJqi7l1MrP.outVk4SiYZ
+
+
+--Sig_/BZPJmgFdV6G3IuxXiE=_yb9
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT6mEoTnsnt1WYoG5AQIquhAAmrWpfKp/r4oMKGPp45iQYT6AjGxtNH3+
-25nA/DURAjnT527U5r25mUNFkVjXxE6YKv3adL+D4kMnYrIt/GObfIFB/Fo0jUGp
-ldNJPZc+awr75tijVpg5np0wNrmMZN4/xULSH2fzHYTAKy2G+kjJHMOm2hSkxhM3
-u3lXSXt808U/HyftHOSr49Chs2uciYCNWNOeIx3OovUmVh4V0J8SiBDOOQp3fpkJ
-qYumJN7WmdCJGfqgUkdmGh2hcYiKU+9w8OThopT2se7fnjMUu+g7m0Xv7KXJ2tkd
-DYzDCW5Er9uNOI49Xos4QuF/TaVGTWv4Po5lEZrPzpr5bKHcyNsRSYOs0rSHxdl1
-UN9m3w0x0Pvvjv6TBNP+veWSmFoe7qjAOF8pbRRPeMqJzXHo0UNgW44geOWMyVrw
-3ROdHw4yC6Ae+d0YeKQvd8o2+YeOTs41HsQJH1UJibiGDxlkZnVkzxiKSW9FUbYj
-P4+qkTponbIQky6ww5U7OXD2rQbB73n73Lgxm/cYftSbsREyfAGpMgMxVlgt/v/i
-Igybcfu80tq12/OYCSogWWnE5+7Ce/8CXrn/gud/ridLOGOTTegnU23BRoTbb3RA
-i/u0lf9VXBtfJSJ6gjEss91GOqgsv1XkXqLc1WQvtGhBU/NAVr14TxSXkYCXDFVO
-/l/SYCODGaA=
-=cfdY
+iQIUAwUBT6mGujnsnt1WYoG5AQKiwQ/2M8t51VHWD2TCt7hW2AfNYyU6EeDx/90n
+/9GBDo9zpN+9GyuvtJ0frBNbqRbpPgaIzQM9gRIFJMM0d3smkFQxIsN4kaQG4QQy
+72iTAQa/f1vl+8fBA/c/0MeAUP+g3Dv0llwKECUeYvmC9OJcYRnDZDSALAGfKw3a
+NvD/Rf4I+ofy+gqY41NTzW1A3c/55X2suwWqAwj33c+JQDhLwNYMwuFc7e4bAgXh
+vxw9hzH7LfIBF054UsnnK+yseE4mIPgkNgDzGCd5b4SVwMXxjRgJmCOukiaMCk0O
+XlUHLQeeeFRCOslP02ZnI8sONTq49I1e6EZO/8c4RTHXqfQy7q/mNQAhRVwytR0f
+uz+StVjpwzZ+UZgqthbHCtG/8sf0Ox2WliE7zH+wCiBeJAccJIdZowiWe/a/ZWZ2
+kMCjwaGo/lEWO1RpEdmX1aJwyjNya2gC3RyRUvQjIh4OHDzmnPkxMAusBI+DlJ7H
+MHl/r+VRf1okatgjhcGgKX6K0SMVB8qu8la6dIveWCkXfHGoXQCPgTPcctglwGaO
+4Ai+E8M5zB41TrmsL5T4x/+kugnaeIkcF6IflvrdoWxD9OHaIA7L3+3lGPZPMn0W
+OrnPuxcXui84H+zJGUc6li/JmZf5t7SJEbFlnYxm40wIToUvbDAB0Vphg12OSHl8
+6FA5/SZylA==
+=m28Z
 -----END PGP SIGNATURE-----
 
---Sig_/nYDJqi7l1MrP.outVk4SiYZ--
+--Sig_/BZPJmgFdV6G3IuxXiE=_yb9--
