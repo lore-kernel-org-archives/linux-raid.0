@@ -1,60 +1,46 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: Feature request for mdadm 3.3
-Date: Mon, 7 May 2012 16:19:38 -0800 (AKDT)
-Message-ID: <alpine.LNX.2.01.1205071616050.28839@filesrv1.baby-dragons.com>
-References: <CAAOsTSn_mcy-W65zty727b=PCwp31qBgSANmGLzQv3DB2oBxiw@mail.gmail.com>
+From: "Johnson Yan" <johnson_yan@usish.com>
+Subject: mdadm v3.1.3 spare group does not work
+Date: Tue, 8 May 2012 09:57:57 +0800
+Message-ID: <002b01cd2cbd$fd6ea3a0$f84beae0$@com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="566704117-1759907984-1336436380=:28839"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAOsTSn_mcy-W65zty727b=PCwp31qBgSANmGLzQv3DB2oBxiw@mail.gmail.com>
+Content-Language: zh-cn
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-15?Q?Patrik_Horn=EDk?= <patrik@dsl.sk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Hi,
+When I use mdadm v3.1.3, seems the spare group function can=92t work. A=
+s I
+remember, this function in mdadm 2.6.5 works well.
 
---566704117-1759907984-1336436380=:28839
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8BIT
 
- 	Hello Patrik and Neil ,
+Here is some info from /etc/mdadm.conf
+=85
+ARRAY /dev/md0 level=3Draid1 spare-group=3Dtest11
+ARRAY /dev/md1 level=3Draid1 spare-group=3Dtest11
+=85
 
-On Tue, 8 May 2012, Patrik Horník wrote:
-> Hello,
->
-> I have one feature request for mdadm 3.3, support for upgrade of
-> metadata 0.9 to metadata 1.0.
->
-> I guess there is a lot of old raid arrays with metadata 0.9 out there,
-> because raid / lvm  are often used for its expansibility and longevity
-> and thus I guess many of them evolved from old 0.9 raid arrays. At
-> least I have a few of them.
->
-> Upgrade to 1.0 is now of course very needed because of two new very
-> important features in latest kernel versions requiring 1.x,
-> hot-replace and badblock log.
->
-> Manual upgrade by recreating array is pretty risky on important data,
-> so support for this feature in mdadm would be very appreciated. What
-> do you think guys, will it be useful feature?
->
-> Thanks.
->
-> Patrik Horník
 
- 	One further suggestion ,  iirc 1.0 metadata is not compliant with auto 
-assembled (Via Kernel, fd partition type) ,  That if mdadm notices an array 
-created to be a 0.9 with partition type fd that it  BOLDLY announces at 
-migration time that this MAY(Will ?) make the array nolonger auto assemble and 
-to prepare for this eventuallity .
+And mdmonitor service is in running status:
+[root@localhost tmp]# ps aux |grep mdadm
+root=A0=A0=A0=A0=A0 1794=A0 0.0=A0 0.0=A0=A0 6852=A0=A0 760 ?=A0=A0=A0=A0=
+=A0=A0=A0 Ss=A0=A0 16:52=A0=A0 0:00 mdadm -F -y
+-f -s -i /var/run/mdadm/mdadm.pid --delay=3D10
 
- 		Hth ,  JimL
--- 
-+------------------------------------------------------------------+
-| James   W.   Laferriere | System    Techniques | Give me VMS     |
-| Network&System Engineer | 3237     Holden Road |  Give me Linux  |
-| babydr@baby-dragons.com | Fairbanks, AK. 99709 |   only  on  AXP |
-+------------------------------------------------------------------+
---566704117-1759907984-1336436380=:28839--
+There is one spare disk in md0, and no spare in md1, if I fail the memb=
+er
+disk in md1, the spare in md0 won=92t migrate into md1.
+
+Thank you very much.
+
+Regards,
+Johnson Yan
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
