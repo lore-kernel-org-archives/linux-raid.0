@@ -1,107 +1,97 @@
-From: Marcus Sorensen <shadowsor@gmail.com>
-Subject: Re: md RAID with enterprise-class SATA or SAS drives
-Date: Wed, 9 May 2012 16:33:57 -0600
-Message-ID: <CALFpzo5ObdwFATdT4e20znnxzU5hX9SVSfqJcdqOXM1FEYJQuw@mail.gmail.com>
-References: <4FAAE8F1.8000600@pocock.com.au>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Another RAID-5 problem
+Date: Thu, 10 May 2012 08:58:32 +1000
+Message-ID: <20120510085832.1bb1acfa@notabene.brown>
+References: <1931403540.986928.1336565853409.JavaMail.ngmail@webmail08.arcor-online.net>
+	<20120509193119.GA10724@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/zuOxLYuN+8O6YQC21zv/Otx"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FAAE8F1.8000600@pocock.com.au>
+In-Reply-To: <20120509193119.GA10724@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Daniel Pocock <daniel@pocock.com.au>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I can't speak to all of these, but...
+--Sig_/zuOxLYuN+8O6YQC21zv/Otx
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, May 9, 2012 at 4:00 PM, Daniel Pocock <daniel@pocock.com.au> wr=
-ote:
->
->
-> There is various information about
-> - enterprise-class drives (either SAS or just enterprise SATA)
-> - the SCSI/SAS protocols themselves vs SATA
-> having more advanced features (e.g. for dealing with error conditions=
-)
-> than the average block device
->
-> For example, Adaptec recommends that such drives will work better wit=
-h
-> their hardware RAID cards:
->
-> http://ask.adaptec.com/cgi-bin/adaptec_tic.cfg/php/enduser/std_adp.ph=
-p?p_faqid=3D14596
-> "Desktop class disk drives have an error recovery feature that will
-> result in a continuous retry of the drive (read or write) when an err=
-or
-> is encountered, such as a bad sector. In a RAID array this can cause =
-the
-> RAID controller to time-out while waiting for the drive to respond."
->
-> and this blog:
-> http://www.adaptec.com/blog/?p=3D901
-> "major advantages to enterprise drives (TLER for one) ... opt for the
-> enterprise drives in a RAID environment no matter what the cost of th=
-e
-> drive over the desktop drive"
->
-> My question..
->
-> - does Linux md RAID actively use the more advanced features of these
-> drives, e.g. to work around errors?
+On Wed, 9 May 2012 21:31:19 +0200 Piergiorgio Sartor
+<piergiorgio.sartor@nexgo.de> wrote:
 
-TLER and its ilk simply give up quickly on errors. This may be good
-for a RAID card that otherwise would reset itself if it doesn't get a
-timely response from a drive, but it can be bad for md RAID. It
-essentially increases the chance that you won't be able to rebuild,
-you lose drive A of a 2 x 3TB RAID 1, and then during rebuild drive B
-has an error and the disk gives up after 7 seconds, rather than doing
-all of its fancy off-sector reads and whatever else it would normally
-do to save your last good copy.
 
->
-> - if a non-RAID SAS card is used, does it matter which card is chosen=
-?
-> Does md work equally well with all of them?
+> Actually, we solved this issue in a "creative" way.
+>=20
+> Looking at:
+>=20
+> https://raid.wiki.kernel.org/index.php/RAID_superblock_formats
+>=20
+> we identify the proper address and look-up way for the
+> component order and, using "od -Ax -tx4 /dev/sdXi | less"
+> we were able to understand the device order.
+> For the fresh men, please note that address 0xA0 has
+> the device number and this is a pointer added to 0x100,
+> where the device role is stored.
+> While at 0xA0 are stored 4 bytes int, at 0x100 are
+> stored 2 bytes int (short int), so the "-tx4" of "od"
+> swaps (due to CPU endianess) each pair of short int,
+> so the order will be 1 0 3 2 5 4 ...
+> If "-tx2" is used, than the 0x100 will be correct,
+> but 0xA0 will have bytes swapped pair wise.
 
-Yes, I believe md raid would work equally well on all SAS HBAs,
-however the cards themselves vary in performance. Some cards that have
-simple RAID built-in can be flashed to a dumb card in order to reclaim
-more card memory (LSI "IR mode" cards), but the performance gain is
-generally minimal
+Well done!!
 
->
-> - ignoring the better MTBF and seek times of these drives, do any of =
-the
-> other features passively contribute to a better RAID experience when
-> using md?
+>=20
+> Fortunately, the superblock seemed OK for the data.
+> Other information, like raid level, was completely
+> wiped out...
+>=20
+> The only itch left is the data offset.
+> We plan to try to use mdadm 2.6.7.1 (which originally
+> created the array) using Ubuntu 10.10 desktop (live).
+>=20
+> Still, I would like to know about backing up the
+> first few MB of each component with "dd" and about
+> switching to read only, in order to avoid damage
+> by LVM/mount.
 
-Not that I know of, but I'd be interested in hearing what others think.
+Takes a backup of the first few MB certainly wouldn't hurt, and might help =
+if
+something goes terribly wrong. (Just as long as you don't restore a backup =
+to
+the wrong device :-)
 
->
-> - for someone using SAS or enterprise SATA drives with Linux, is ther=
-e
-> any particular benefit to using md RAID, dmraid or filesystem (e.g.
-> btrfs) RAID (apart from the btrfs having checksums)?
+Yes, starting in --readonly mode, or switching to --readonly mode after you
+have started the array, is probably a good idea.
+Some filesystems sometimes try to write even if the device is marked as
+read-only (e.g. they try to replay the journal).  If that happen md will BUG
+and machine will crash, which might be better than corrupting data.
 
-As opposed to hardware RAID? The main thing I think of is freedom from
-vendor lock-in. If you lose your card you don't have to run around
-finding another that is compatible with the hardware RAID's on-disk
-metadata format that was deprecated last year. Last I checked,
-performance was pretty great with md, and you can get fancy and spread
-your array across multiple controllers and things like that. Finally,
-md RAID tends to have a better feature set than the hardware, for
-example N-disk mirrors. I like running a 3 way mirror over 2 way +
-hotspare.
+NeilBrown
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--Sig_/zuOxLYuN+8O6YQC21zv/Otx
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT6r2mDnsnt1WYoG5AQJ1YxAApO4CPV5DckKGmDAdzmZxdtDTkj/Oxn/k
+tszFqhMnvK0yYmMsHwmX/TxKhCFj6cVeghTUZfQS3MJUpnMIkvZspPwi7JzbcXM1
+rr3+D03kF+3lCv2JSYWXPSuK8unc4NrwZCmkjKMl/SgCoJSqQCHtOeh8drphG285
+wSD/n4QI9hesQu7FYKqgsWy9Vgk4QhAeIezmu0mTCZrsOg9EDYcossg6zOXhbc2P
+OPruWolo0ghCasQnBgyoZpYC56RaAix3/VJyOA6AMzs9mq2tLfvt6vLa17yFMke9
+E3HthK8t4A7LcD/4NGDTEBEZJJ76ZaEbTcROKqaq26MxD57ItcLpb9+dOHhgXPEh
+0fhSlV/OD40VKhc1QTMYJ5pgJbK6p2xnohS/klxU15nguqcWxFSI/tQcIEaxXy7b
+/m5GzVzfehRiifiZsnhFzQUNI2/WQne59Ueyp7ha1veHwuIA8d8wmyIQLQLarg8C
+qLq7eP4nwg2hBkjNi7fksng0V3pCJbFFi1wVVzYQshQqKHmPmacYDG6W0f10O5bW
+AUDXuKE6BpW1Ne3WF1ee8ZTGs8VZoZAsgnCEQnwCiW7ju09hPKDqG7IVXpCAAieu
+NviGej+C4R6euCMZuyy5h2vZ3zo4xQSsITdrD+5L8aI4nSOOkhvuXl91hY2jO5/1
+dQ41dT7g/lc=
+=kY5s
+-----END PGP SIGNATURE-----
+
+--Sig_/zuOxLYuN+8O6YQC21zv/Otx--
