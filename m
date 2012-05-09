@@ -1,61 +1,42 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [RFC 1/2] MD: raid5 trim support
-Date: Wed, 9 May 2012 11:12:32 +0800
-Message-ID: <20120509031232.GA507@kernel.org>
-References: <CABE8wwswKWQ=LDbx0ysTaZf2Hz0jD_q45FNF0jw96ZwZdJiHPw@mail.gmail.com>
- <20120418062641.000e881c@notabene.brown>
- <4F8E11A6.7090305@kernel.org>
- <20120418144841.04ce1a10@notabene.brown>
- <4F8E5185.8050809@kernel.org>
- <20120418155749.4afae9cb@notabene.brown>
- <4F8E605C.9090803@kernel.org>
- <20120425034307.GA454@kernel.org>
- <20120508101653.GA9757@kernel.org>
- <CABE8wwtZKrerxq4OFGnjUOgjvRb-6FNWdgUkiVwUVuV-uycv6Q@mail.gmail.com>
+From: piergiorgio.sartor@nexgo.de
+Subject: Another RAID-5 problem
+Date: Wed, 9 May 2012 11:10:58 +0200 (CEST)
+Message-ID: <2002541871.570559.1336554658940.JavaMail.ngmail@webmail06.arcor-online.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CABE8wwtZKrerxq4OFGnjUOgjvRb-6FNWdgUkiVwUVuV-uycv6Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, axboe@kernel.dk, Shaohua Li <shli@fusionio.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, May 08, 2012 at 08:52:07AM -0700, Dan Williams wrote:
-> On Tue, May 8, 2012 at 3:16 AM, Shaohua Li <shli@kernel.org> wrote:
-> >> > Writing the parity disk is worse. Discard is to improve the garbage
-> >> > collection
-> >> > of SSD firmware, so improve later write performance. While write is bad for
-> >> > SSD, because SSD can be wear leveling out with extra write and also write
-> >> > increases garbage collection overhead. So the result of small
-> >> > discard is data
-> >> > disk garbage collection is improved but parity disk gets worse and
-> >> > parity disk
-> >> > gets fast to end of its life, which doesn't make sense. This is even
-> >> > worse when
-> >> > the parity is distributed.
-> >> Neil,
-> >> Any comments about the patches?
-> > ping!
-> >
-> 
-> So, are we still in the position of needing to degrade individual
-> stripes to support trim?  Is there any benefit to making this a
-> temporary condition?  I.e. trim large ranges, including the parity
-> disk, and then once all the trim sequences have coalesced resync the
-> stripes that remain only partially trimmed?
+Hi all,
 
-Yes, we need trim a whole stripe one time. This is the best I can do now.
-resync involves write and I don't want to do any unnecessary write, because
-trim is to improve ssd firmware garbage collection while write goes to the
-oppositive and makes flash wear out faster.
+we're hit by a RAID-5 issue, it seems Ubuntu 12.04 is shipping
+some bugged kernel/mdadm combination.
 
-Or your suggestion is if a trim is small (for example, only covers one disk),
-we don't do trim immediately but just record it in bitmap. Later if the small
-trim can be coalesced to one strip, trim the strip. This is optimal but
-involves disk format change. And to make it efficient, we need track 4kB range.
-From Neil's blog, there isn't such space left.
+Following the other thread about a similar issue, I understood
+it is possible to fix the array without losing data.
 
-Thanks,
-Shaohua
+Problems are:
+
+1) We do not know the HDD order and it is a 5 disks RAID-5
+2) 4 of 5 disks have a data offset of 264 sectors, while the
+fourth one, added later, has 1048 sectors.
+3) There is a LVM setup on the array, not a plain filesystem.
+
+Any idea on how can we get the array back without losing any
+data?
+
+At the moment, it seems quite difficult to provide dump of
+"mdadm -E" or similar, since the PC does not boot at all.
+In any case, if necessary we could try to take a picture of
+the screen and send it here or directly per email, if appropriate.
+
+Thanks a lot in advance,
+
+bye,
+
+-- 
+
+piergiorgio
