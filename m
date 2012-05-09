@@ -1,108 +1,51 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: Interesting feature request for linux raid, waking up drives
-Date: Wed, 9 May 2012 23:38:16 +0200
-Message-ID: <20120509213816.GA11037@lazy.lzy>
+Date: Thu, 10 May 2012 08:05:53 +1000
+Message-ID: <20120510080553.0160ca67@notabene.brown>
 References: <CAAOsTSkxo2Lxb2FCO6A19CrWVbDm1VsrtsYwVEykcs7X=-1sTQ@mail.gmail.com>
- <4FAACE5F.2010004@nuclearwinter.com>
- <CAAOsTSnd_hLTdRZeSDs0ThfQspAq7DVAnsVMeXgMEosugoesag@mail.gmail.com>
+	<4FAACE5F.2010004@nuclearwinter.com>
+	<CAAOsTSnd_hLTdRZeSDs0ThfQspAq7DVAnsVMeXgMEosugoesag@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/DN8_fVHoNadF/z+K7_Ky_uE"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 In-Reply-To: <CAAOsTSnd_hLTdRZeSDs0ThfQspAq7DVAnsVMeXgMEosugoesag@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Patrik =?iso-8859-1?Q?Horn=EDk?= <patrik@dsl.sk>
+To: patrik@dsl.sk
 Cc: Larkin Lowrey <llowrey@nuclearwinter.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Patrik,
+--Sig_/DN8_fVHoNadF/z+K7_Ky_uE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, May 09, 2012 at 11:16:33PM +0200, Patrik Horn=EDk wrote:
+On Wed, 9 May 2012 23:16:33 +0200 Patrik Horn=EDk <patrik@dsl.sk> wrote:
+
 > On Wed, May 9, 2012 at 10:06 PM, Larkin Lowrey
 > <llowrey@nuclearwinter.com> wrote:
 > > I second this suggestion but I don't think it's the job of the raid
-> > layer to keep track of whether the member drives are spinning or no=
-t.
+> > layer to keep track of whether the member drives are spinning or not.
 >=20
 > I also dont think it should be directly in the raid level, but it is
 > problem of linux raid and so the solution should be sought here.
 >=20
-> > I have implemented a similar setup to this but am suffering from th=
-e
-> > sequential spin-up problem you described. It would be nice to have =
-a
+> > I have implemented a similar setup to this but am suffering from the
+> > sequential spin-up problem you described. It would be nice to have a
 > > solution.
 >=20
 > My script is not perfect but it eliminates sequential spin-up problem
-> perfectly. If you want, use it. The sequential spin-up problem was th=
-e
+> perfectly. If you want, use it. The sequential spin-up problem was the
 > reason I wrote it and its main function is to detect woken drives and
 > immediately wake other drives from RAID.
-
-you mentioned "aggressive power saving", but, on the other
-hand, if I get it correctly, you want to spin-up the HDDs
-alltogether.
-
-How do you manage the current peak (power peak) you create
-at spin up? Expecially in comparison with PSU efficiency.
-
-I mean, a running HDD can consume 2W~5W, while at spin-up
-it consumes 20W~30W.
-If you have, let's say, 20 HDDs NAS, at spin-up the PSU
-should provide 20*30W=3D600W, while in normal operation it
-will have to provide only 20*2W=3D40W (extreme cases, of
-course, YMMV).
-In stand-by it will be less, probably 10W for the HDDs.
-
-Now, PSU efficiency usually is tuned at a certain power
-need, typically 80% of max PSU power rating.
-Above and below is less, obviously much less at, let's
-say, 10% of max PSU power.
-Golden or similar consumer PSU, marked 80+, can keep
-high efficiency (80%~90%) up to low power.
-The specification goes down to 20% of max power.
-
-In the above NAS example, the PSU will have to provide,
-at spin-up, more than 600W, I would say 700~800W,
-while in stand-by it will go down to 30~50W (or less).
-Keeping some safety margin, will require 1000W PSU,
-which will be used only 3~5% in stand-by.
-At this level efficiency will be a disaster (usually),
-resulting in an effective power usage (from mains)
-probably above 100W, defeating the wanted power saving.
-
-How do you deal with this issue?
-Have you any real world data about min/max power
-consumption?
-Do know PSUs (consumer class, ATX) capable of
-handling wide power range with high efficiency?
-
-Going back to the spin-up, my idea was exactly the
-opposite, i.e. to activate the HDDs with 4~5 secs.
-delay one from the other, in order to reduce the
-peak power, thus using a lower power rating PSU,
-thus havig high efficiency at low power.
-
-Thanks a lot in advance,
-
-bye,
-
-pg
-=20
-> > A userspace daemon could probably do the job. I found that relying =
-on
+>=20
+> > A userspace daemon could probably do the job. I found that relying on
 > > the drive's internal power management for spinning them down was
-> > unreliable (especially for WDC "green" drives) so I implemented a s=
-cript
-> > that watches /sys/block/sdX/stat for activity and spins down the dr=
-ive
+> > unreliable (especially for WDC "green" drives) so I implemented a script
+> > that watches /sys/block/sdX/stat for activity and spins down the drive
 > > directly (via hdparm) when no activity has been posted for a
-> > configurable period of time. A daemon process that was responsible =
-for
+> > configurable period of time. A daemon process that was responsible for
 > > spinning down the constituent drives could also be responsible for
-> > spinning them up by watching /sys/block/mdX/stat for pending transf=
-ers.
+> > spinning them up by watching /sys/block/mdX/stat for pending transfers.
 > > Perhaps you and I could work on such a project.
 >=20
 > I added support for spinning down drives only as addition after I
@@ -116,17 +59,50 @@ ers.
 > setups - if at least one drive from raid array is awake, wake up all
 > of them.
 >=20
-> > One thing mdadm could do which would help greatly is to enumerate t=
-he
-> > member disk block devices (not just partitions or member raid devic=
-es)
+> > One thing mdadm could do which would help greatly is to enumerate the
+> > member disk block devices (not just partitions or member raid devices)
 > > for a given array. This information is known since concurrent sync
-> > operations are serialized so no two sync operations occur at the sa=
-me
+> > operations are serialized so no two sync operations occur at the same
 > > time on the same physical devices.
 >=20
 > Maybe Neil can give us his thoughts what is the best place / form for
 > such functionality.
+
+Maybe he could if he had any clear opinions.
+
+I'm not strongly against including something like this in md.
+We already have code which writes to every device on the first write after a
+delay (to change the metadata from 'clean' to 'dirty').  Reading all the
+metadata on the first read after a delay is at least a little by symmetric
+with this.  But I would need a separate buffer to read in to to avoid
+confusion.
+But that feels a little bit forced, so I'm not sure.
+
+But then I don't like the idea of some script polling the devices either -
+polling is bad.  If we could arrange for some uevent to be generated by a
+device when it wakes-from-sleep, then have a script to run then, that might
+be good.
+
+Of course just reading the superblock isn't really enough (as has been
+suggested).  If there are multiple levels of stack devices then you really
+want to find all the child devices and  wake them, and that is really best
+done in user-space.
+To find all child devices I would write a little script that searchs the=20
+  /sys/block/mdX/slaves
+directory.  Everything in there should either be a block device, or a
+partition.  If the latter it will contain a file 'partition' and the device
+is found by adding '..' to the path.  If that directory contains 'slaves' y=
+ou
+get to search deeper.
+
+So on balance I think it is best if most of the work is done in user-space,
+but there could well be a case for arranging an alert of some sort getting
+sent to user-space on the first-read-after-a-delay.
+
+NeilBrown
+
+
+
 >=20
 > Patrik
 >=20
@@ -136,75 +112,72 @@ me
 > > On 5/9/2012 12:37 PM, Patrik Horn=EDk wrote:
 > >> Hello Neil,
 > >>
-> >> I want to propose some functionality for linux raid subsystem that=
- I
+> >> I want to propose some functionality for linux raid subsystem that I
 > >> think will be very practical for many users, automatic waking of
 > >> drives. I am using my own user land script written years ago to do
-> >> that and I dont know if there is some standard solution now. If th=
-ere
+> >> that and I dont know if there is some standard solution now. If there
 > >> is some, please point me to it.
 > >>
-> >> I am using couple of big RAID5 arrays in servers working like NASe=
-s in
-> >> small office and home, which are in use only small part of the day=
-=2E I
-> >> am using low power server and aggressive power saving settings on =
-HDDs
-> >> to make power consumption substantially lower, for example drives =
-are
-> >> going to sleep after 15 min of inactivity. Normally problem with s=
-uch
+> >> I am using couple of big RAID5 arrays in servers working like NASes in
+> >> small office and home, which are in use only small part of the day. I
+> >> am using low power server and aggressive power saving settings on HDDs
+> >> to make power consumption substantially lower, for example drives are
+> >> going to sleep after 15 min of inactivity. Normally problem with such
 > >> settings is extremely long waking time when array is accessed.
 > >> Software accessing data often first requests only chunk of data on
 > >> first drive in array and waiting cca 20-30 sec for them, after
-> >> processing them accessing data on another drive and waiting anothe=
-r
+> >> processing them accessing data on another drive and waiting another
 > >> 20-30 sec and so on.
 > >>
-> >> I solved it with my own script in PHP, which monitors drives' stat=
-us
-> >> periodically. When it detects that drive from RAID array woke up, =
-it
+> >> I solved it with my own script in PHP, which monitors drives' status
+> >> periodically. When it detects that drive from RAID array woke up, it
 > >> immediately wakes other drives. So total waking time is equal to
 > >> waking of one drive plus couple of seconds. It works perfectly and
 > >> smoothly for years for me.
 > >>
-> >> I attached the script from one of my servers, it is little cruel a=
-nd
-> >> using hwparm and smartctl to monitor and manipulating drives. It i=
-s
-> >> little customized and specific for its server, for example one dri=
-ve
-> >> detected by model is not used to wake up other drives and two driv=
-es
+> >> I attached the script from one of my servers, it is little cruel and
+> >> using hwparm and smartctl to monitor and manipulating drives. It is
+> >> little customized and specific for its server, for example one drive
+> >> detected by model is not used to wake up other drives and two drives
 > >> are also putting one another into sleep, because I found out the
-> >> standby timeout setting was not working reliable on one drive. But=
- you
+> >> standby timeout setting was not working reliable on one drive. But you
 > >> will get the idea.
 > >>
-> >> I think it could be useful for some users if there is possibility =
-to
-> >> use such feature. Do you think it would be useful? Do you think th=
-ere
+> >> I think it could be useful for some users if there is possibility to
+> >> use such feature. Do you think it would be useful? Do you think there
 > >> is some place in linux raid infrastructure where it can be somehow
-> >> implemented? (Possibly as some user land tool using some kernel AP=
-Is,
+> >> implemented? (Possibly as some user land tool using some kernel APIs,
 > >> I dont know.)
 > >>
 > >> Best regards,
 > >>
 > >> Patrik Horn=EDk
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
---=20
 
-piergiorgio
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/DN8_fVHoNadF/z+K7_Ky_uE
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT6rqQTnsnt1WYoG5AQLVRhAAwyFVut/ib+xRtg0ZZqjMxoUxKSeKWiPI
+P9a1MYrFHh2cA1sKBF6LkpWIuAwhLEl7Jlpj9TDlIz0j5RXsOUSVQbeIZzH+V1Ko
+ra3ntw9nmcpbfZq5RfJmcZ2q0TpegVBMcM/SEaJIrBgw30WybnKKn+weXr858x83
+dZgme4oJ7F2+i9LPnDou3kWwG9FJs0wpeQf/5QX9fqyBmrqwuma2DIDiMo5Yl6oY
+Hw9viEPCIjPVIoKzWZzBJP+2/OEvdec09hWrGpHbOAGf0LUTDbwwwtCf638iD7Kt
+r9y6MQEJUc1XC+vO0fOb8MQb4ldGOQZtzPaVh3U9Hn4+oStdJBQsukm3Eei16cZN
+CWpjhbagRDK5HLSYMlb+t/NiCvXgrxKJX/wcLzhERz/iic64TSdrGvSMzD+hspm7
+CaETrIVId3LwAEFdn7H4/93Qk3I0DzeQOJwS8xOd+iZESytkTJyGtk2lVVW0vlKm
+8lLrRednLoBFb5BR7+yupW3mShNn4pdZ1yMjTjkdKSUYXYFgL2W1xsMuoluXUZMa
+qDrZ/KDtirJUkjZ8ESuDnEtoNwpWqc+M7h9ARBqz0sEfbtkc93qElnDEdS3y4Zz5
+wVZm49ykj4ErZFnAPONybN9huAFXpZNpAkeIs4hLt6Tw6CoaDLtgmWM48ucHpJUJ
+ez3duhSpAJY=
+=arGf
+-----END PGP SIGNATURE-----
+
+--Sig_/DN8_fVHoNadF/z+K7_Ky_uE--
