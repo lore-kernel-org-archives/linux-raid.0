@@ -1,215 +1,196 @@
-From: piergiorgio.sartor@nexgo.de
-Subject: Re: Another RAID-5 problem
-Date: Wed, 9 May 2012 14:17:33 +0200 (CEST)
-Message-ID: <1931403540.986928.1336565853409.JavaMail.ngmail@webmail08.arcor-online.net>
+From: =?ISO-8859-1?Q?Patrik_Horn=EDk?= <patrik@dsl.sk>
+Subject: Interesting feature request for linux raid, waking up drives
+Date: Wed, 9 May 2012 19:37:10 +0200
+Message-ID: <CAAOsTSkxo2Lxb2FCO6A19CrWVbDm1VsrtsYwVEykcs7X=-1sTQ@mail.gmail.com>
+Reply-To: patrik@dsl.sk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary=20cf3079bcb6f8d73c04bf9df3e7
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, piergiorgio.sartor@nexgo.de
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+--20cf3079bcb6f8d73c04bf9df3e7
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-thanks a lot for the quick answer, please see the
-text embedded below for further details.
+Hello Neil,
 
------ Original Nachricht ----
-Von:     NeilBrown <neilb@suse.de>
-An:      piergiorgio.sartor@nexgo.de
-Datum:   09.05.2012 13:03
-Betreff: Re: Another RAID-5 problem
+I want to propose some functionality for linux raid subsystem that I
+think will be very practical for many users, automatic waking of
+drives. I am using my own user land script written years ago to do
+that and I dont know if there is some standard solution now. If there
+is some, please point me to it.
 
-> On Wed, 9 May 2012 11:10:58 +0200 (CEST) piergiorgio.sartor@nexgo.de wrote:
-> 
-> > Hi all,
-> > 
-> > we're hit by a RAID-5 issue, it seems Ubuntu 12.04 is shipping
-> > some bugged kernel/mdadm combination.
-> 
-> Buggy kernel.  My fault.  I think they know and an update should follow.
-> 
-> However I suspect that Ubuntu must be doing something else to cause the
-> problem to trigger so often.  The circumstance that makes it happen should
-> be
-> extremely rare.  It is as though the md array is half-stopped just before
-> shutdown.  If it were completely stopped or not stopped at all, this
-> wouldn't
-> happen.
-> 
-> > 
-> > Following the other thread about a similar issue, I understood
-> > it is possible to fix the array without losing data.
-> 
-> Correct.
-> 
-> > 
-> > Problems are:
-> > 
-> > 1) We do not know the HDD order and it is a 5 disks RAID-5
-> 
-> If you have kernel logs from the last successful boot they would contain
-> a "RAID conf printout" which would give you the order, but maybe that it on
-> the RAID-5 array?
+I am using couple of big RAID5 arrays in servers working like NASes in
+small office and home, which are in use only small part of the day. I
+am using low power server and aggressive power saving settings on HDDs
+to make power consumption substantially lower, for example drives are
+going to sleep after 15 min of inactivity. Normally problem with such
+settings is extremely long waking time when array is accessed.
+Software accessing data often first requests only chunk of data on
+first drive in array and waiting cca 20-30 sec for them, after
+processing them accessing data on another drive and waiting another
+20-30 sec and so on.
 
-Unfortunately, the kernel logs are on the PC itself, so
-we cannot get them.
+I solved it with my own script in PHP, which monitors drives' status
+periodically. When it detects that drive from RAID array woke up, it
+immediately wakes other drives. So total waking time is equal to
+waking of one drive plus couple of seconds. It works perfectly and
+smoothly for years for me.
 
-> If it is you will have to try different permutations until you find one
-> that
-> works.
+I attached the script from one of my servers, it is little cruel and
+using hwparm and smartctl to monitor and manipulating drives. It is
+little customized and specific for its server, for example one drive
+detected by model is not used to wake up other drives and two drives
+are also putting one another into sleep, because I found out the
+standby timeout setting was not working reliable on one drive. But you
+will get the idea.
 
-I've some questions about this topic.
+I think it could be useful for some users if there is possibility to
+use such feature. Do you think it would be useful? Do you think there
+is some place in linux raid infrastructure where it can be somehow
+implemented? (Possibly as some user land tool using some kernel APIs,
+I dont know.)
 
-We have other, identical, PCs, which were built more or less
-same time as this one.
-One of this have a similar history, this means 4 drives RAID-5,
-later extended to 5 (BTW, Ubuntu 10.10 delivered mdadm 2.6.7.1,
-we extended the array later, with some 3.1 or 3.2, that can explain
-the data offset difference).
+Best regards,
 
-This identical PC shows the following (mdadm -D /dev/md1):
+Patrik Horn=EDk
 
-...
-    Number   Major   Minor   RaidDevice State
-       0       8       34        0      active sync   /dev/sdc2
-       1       8       18        1      active sync   /dev/sdb2
-       2       8        2        2      active sync   /dev/sda2
-       5       8       50        3      active sync   /dev/sdd2
-       4       8       66        4      active sync   /dev/sde2
+--20cf3079bcb6f8d73c04bf9df3e7
+Content-Type: application/x-httpd-php; name="monitor_drives.php"
+Content-Disposition: attachment; filename="monitor_drives.php"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h20mis2d0
 
-In this case I assume the "RaidDevice" indicates the order.
-Is this correct? We could try with this one, at first.
-What about "Number"? Why 3 is missing?
-BTW, the broken RAID has /dev/sdd2 still valid, and "mdadm -E"
-shows:
-
-...
-  Device Role : Active device 3
-...
-
-Which seem consistent with the working one.
-
-Nevertheless, there is something fishy.
-If I try the "dd" command, you suggested below, the drive
-which seems to show some consistent LVM data is /dev/sde2,
-not /dev/sdc2.
-
-Specifically (dd with proper skip, i.e. 1048 for /dev/sde2):
-
-VolGroup {
-id = "eK5Sde-ENzo-0iBO-dJIB-buBt-BnoX-NEmZ1v"
-seqno = 1759
-status = ["RESIZEABLE", "READ", "WRITE"]
-...
-
-The others (with skip 264) either have zeros or some
-LVM text, but not something looking properly aligned.
-
-Question would be if the growth changed, somehow, the
-order, in which case how will "Create" behave? Considering
-that one drive will be missing.
-
-> > 2) 4 of 5 disks have a data offset of 264 sectors, while the
-> > fourth one, added later, has 1048 sectors.
-> 
-> Ouch.
-> It would be easiest to just make a degraded array with the 4 devices with
-> the
-> same data offset, then add the 5th later.
-> To get the correct data offset you could  either use the same mdadm that
-> the
-> array was originally built with, or you could get the 'r10-reshape'
-> branch from git://neil.brown.name/mdadm/ and build that.
-> Then create the array with --data-offset=132K as well as all the other
-> flags.
-> However that hasn't been tested extensively so it would be best to test it
-> elsewhere first.  Check that it created the array with correct data-offset
-> and correct size.
-> 
-> > 3) There is a LVM setup on the array, not a plain filesystem.
-> 
-> That does make it a little more complex but not much.
-> You would need to activate the LVM, then "fsck -n" the filesystems to check
-> if
-> you have the devices in the right order.
-> However this could help you identify the first device quickly.
-> If you
->   dd if=/dev/sdXX skip=264 count=1 
-> then for the first device in the array it will show you the textual
-> description of the LVM setup.  For the other devices it will probably be
-> binary or something unrelated.
-> 
-> > 
-> > Any idea on how can we get the array back without losing any
-> > data?
-> 
-> Do you know what the chunk size was?  Probably 64K if it was an old array.
-> Maybe 512K though.
-
-Chunk size we know. As mentioned above, we have other PCs,
-all the same, chunk is 512K.
-Metadata is 1.1.
-
-Bitmap was activated, but this, I understand, is not problem.
-Furthermore "mdadm -X" on each HDD shows 0 dirty bits,
-which looks good to me.
-
-> I would:
->  1/ look at old logs if possible to find out the device order
->  2/ try to remember what the chunk size could be.  If you have the exact
->     used-device size (mdadm -E should give that) you can get an upper limit
->     for the chunk size by finding the larger power-of-2 which divides it.
->  3/ Try to identify the first device by looking for LVM metadata.
->  4/ Make a list of the possible arrangements of devices and possible chunk
->     sizes based on the info you collected.
->  5/ Check that you can create an array with a data-offset for 264 sectors
->     using one of the approaches listed above.
->  6/ write a script which iterated though the possibilities and re-created
-> the
->     array then tries to turn on LVM and the fsck.  Or maybe iterate by
-> hand.
->     The command to create an array would be something like
->       mdadm -C /dev/md0 -l5 -n5 --assume-clean --chunk=64 \
->       --data-offset=132K   /dev/sdX missing /dev/sdY /dev/sdZ /dev/sdW
->  7/ Find out which arrangement produces least fsck errors, and use that.
-
-I do have another question.
-
-How about starting the RAID in read-only mode?
-This will avoid LVM or mount to write something, risking
-damages to the different superblocks.
-What would be the best way to do this?
-After "Create", just "mdadm --read-only /dev/md1"?
-
-One more, how about dumping, with "dd", the firsts
-few MB of each drive as backup? Make sense?
-
-Thanks again for the support,
-
-bye,
-
-pg
-
-> > 
-> > At the moment, it seems quite difficult to provide dump of
-> > "mdadm -E" or similar, since the PC does not boot at all.
-> > In any case, if necessary we could try to take a picture of
-> > the screen and send it here or directly per email, if appropriate.
-> 
-> You probably need to boot from a DVD-ROM or similar.
-> Certainly feel free to post the data you collect and the conclusions you
-> draw
-> and even the script you write if you would like them reviewed and
-> confirmed.
-> 
-> NeilBrown
-> 
-> 
-> 
-
--- 
-
-piergiorgio
+PD8KICAkUEFTU0lWRSA9IGZhbHNlOwogIAogICRTTEVFUF9USU1FT1VUID0gMTgwOwoKICBzZXRf
+dGltZV9saW1pdCgzNjAwMDApOwoKICAkbW9uaXRvcmVkX2RyaXZlcyA9IGFycmF5KCJhIiwiYiIs
+ImMiLCJkIiwiZSIsImYiLCJnIik7CiAgCiAgJHdha2VfZHJpdmVzX3NyYyA9ICRtb25pdG9yZWRf
+ZHJpdmVzOwogICR3YWtlX2RyaXZlc19kc3QgPSAkd2FrZV9kcml2ZXNfc3JjOwogIAogICRzbGVl
+cF9kcml2ZXNfc3JjID0gYXJyYXkoKTsKICAkc2xlZXBfZHJpdmVzX2RzdCA9IGFycmF5KCk7IAog
+IAogCiAgJHJ1bm5pbmdfcHJvY2Vzc2VzID0gYXJyYXkoKTsKCiAgJENNRF9TTUFSVENUTCA9ICIv
+dXNyL3NiaW4vc21hcnRjdGwiOwogICRDTURfSERQQVJNID0gIi9zYmluL2hkcGFybSI7CgogICRE
+RUJVRyA9IGZhbHNlOwoKCiAgZnVuY3Rpb24gZ2V0X2RyaXZlX3N0YXR1c19zdGFydCgkZCkKICB7
+CiAgICBnbG9iYWwgJENNRF9IRFBBUk07CiAgICAKICAgICRjbWQgPSAiJENNRF9IRFBBUk0gLUMg
+L2Rldi9zZCIgLiAkZDsKICAgIHJldHVybiBydW5fYmFja2dyb3VuZCgkY21kKTsKICB9CgogIGZ1
+bmN0aW9uIHJlYWRfc3RyZWFtKCRzKQogIHsKICAgICRjb250ZW50ID0gJyc7CiAgICB3aGlsZSAo
+IWZlb2YoJHMpKSAKICAgICAgJGNvbnRlbnQgLj0gZnJlYWQoJHMsODE5Mik7CgogICAgcmV0dXJu
+ICRjb250ZW50OwogIH0KCiAgZnVuY3Rpb24gZ2V0X2RyaXZlX3N0YXR1cygkcCwkcGlwZXMpCiAg
+ewogICAgJHN0YXR1cyA9IHByb2NfZ2V0X3N0YXR1cygkcCk7CiAgICBpZiAoJHN0YXR1c1sicnVu
+bmluZyJdKQogICAgICByZXR1cm4gZmFsc2U7CgogICAgJHJlc3VsdCA9IHJlYWRfc3RyZWFtKCRw
+aXBlc1sxXSk7CgogICAgaWYgKHN0cnBvcygkcmVzdWx0LCJhY3RpdmUiKSAhPT0gZmFsc2UpCiAg
+ICAgIHJldHVybiAiYWN0aXZlIjsKICAgIGVsc2UgaWYgKHN0cnBvcygkcmVzdWx0LCJzdGFuZGJ5
+IikgIT09IGZhbHNlKQogICAgICByZXR1cm4gInN0YW5kYnkiOwogICAgZWxzZSBpZiAoc3RycG9z
+KCRyZXN1bHQsInNsZWVwaW5nIikgIT09IGZhbHNlKQogICAgICByZXR1cm4gInNsZWVwIjsKICAg
+IGVsc2UKICAgICAgcmV0dXJuICJ1bmtub3duIjsKICB9CgogIAogIGZ1bmN0aW9uIHJ1bl9iYWNr
+Z3JvdW5kKCRjbWQpCiAgewogICAgZ2xvYmFsICRydW5uaW5nX3Byb2Nlc3NlczsKIAogICAgJHAg
+PSBwcm9jX29wZW4oJGNtZCxhcnJheSgwID0+IGFycmF5KCJwaXBlIiwiciIpLDEgPT4gYXJyYXko
+InBpcGUiLCJ3IiksMiA9PiBhcnJheSgicGlwZSIsInciKSksJHBpcGVzKTsKICAgICRydW5uaW5n
+X3Byb2Nlc3Nlc1tdID0gYXJyYXkoJHAsJHBpcGVzKTsKCiAgICByZXR1cm4gYXJyYXkoJHAsJHBp
+cGVzKTsKICB9CgogIGZ1bmN0aW9uIHRlcm1pbmF0ZV9wcm9jZXNzZXMoKQogIHsKICAgIGdsb2Jh
+bCAkcnVubmluZ19wcm9jZXNzZXM7CiAgICBnbG9iYWwgJERFQlVHOwoKICAgIGlmIChjb3VudCgk
+cnVubmluZ19wcm9jZXNzZXMpID4gMCkKICAgIHsKICAgICAgJHRpbWUgPSBkYXRlKCJZL20vZCBI
+Omk6cyIpOwogICAgICBpZiAoJERFQlVHKQogICAgICAgIGVjaG8gIlskdGltZV0gYmFja2dyb3Vu
+ZCBwcm9jZXNzZXM6ICI7CiAgICAgICRuZXdfcnVubmluZ19wcm9jZXNzZXMgPSBhcnJheSgpOwoK
+ICAgICAgJGluZGV4ZXMgPSBhcnJheV9rZXlzKCRydW5uaW5nX3Byb2Nlc3Nlcyk7CiAgICAgIGZv
+cmVhY2ggKCRpbmRleGVzIGFzICRpKQogICAgICB7CiAgICAgICAgJHZhbHVlID0gJHJ1bm5pbmdf
+cHJvY2Vzc2VzWyRpXTsKICAgICAgICAkcCA9ICR2YWx1ZVswXTsgJHBpcGVzID0gJHZhbHVlWzFd
+OwoKICAgICAgICAkc3RhdHVzID0gcHJvY19nZXRfc3RhdHVzKCRwKTsKICAgICAgICBpZiAoJERF
+QlVHKQogICAgICAgIHsKICAgICAgICAgIGlmICgkaSA+IDApCiAgICAgICAgICAgIGVjaG8gIiwg
+IjsKICAgICAgICAgIGVjaG8gInBpZCAiIC4gJHN0YXR1c1sicGlkIl0gLiAiICIgLiAoJHN0YXR1
+c1sicnVubmluZyJdPyJydW5uaW5nIjoiZmluaXNoZWQiKTsKICAgICAgICB9CiAgICAgICAgaWYg
+KCEkc3RhdHVzWyJydW5uaW5nIl0pCiAgICAgICAgewogICAgICAgICAgZmNsb3NlKCRwaXBlc1sw
+XSk7IGZjbG9zZSgkcGlwZXNbMV0pOyBmY2xvc2UoJHBpcGVzWzJdKTsKICAgICAgICAgIHByb2Nf
+Y2xvc2UoJHApOwogICAgICAgIH0KICAgICAgICBlbHNlCiAgICAgICAgICAkbmV3X3J1bm5pbmdf
+cHJvY2Vzc2VzW10gPSBhcnJheSgkcCwkcGlwZXMpOwogICAgICB9CiAgICAgICRydW5uaW5nX3By
+b2Nlc3NlcyA9ICRuZXdfcnVubmluZ19wcm9jZXNzZXM7CiAgICAgIGlmICgkREVCVUcpCiAgICAg
+ICAgZWNobyAiXG4iOwogICAgfQogIH0KCiAgZnVuY3Rpb24gZ2V0X21vZGVsKCRkKQogIHsKICAg
+IGdsb2JhbCAkQ01EX1NNQVJUQ1RMOwogICAgCiAgICAkY21kID0gJENNRF9TTUFSVENUTCAuICIg
+LWkgL2Rldi9zZCIgLiAkZDsKICAgICRvdXQgPSBhcnJheSgpOwogICAgZXhlYygkY21kLCRvdXQp
+OwogICAgCiAgICAkbmFtZSA9ICJEZXZpY2UgTW9kZWw6IjsKICAgIAogICAgJHQgPSBpbXBsb2Rl
+KCJcbiIsJG91dCk7CiAgICAkb2kgPSBzdHJwb3MoJHQsJG5hbWUpOwogICAgJG9lID0gc3RycG9z
+KCR0LCJcbiIsJG9pKTsKICAgICRtb2RlbCA9IHRyaW0oc3Vic3RyKCR0LCRvaSArIHN0cmxlbigk
+bmFtZSksJG9lIC0gc3RybGVuKCRuYW1lKSAtICRvaSArIDEpKTsKICAgIAogICAgcmV0dXJuICRt
+b2RlbDsKICB9CgogIGZ1bmN0aW9uIGluX3NsZWVwX2dyb3VwKCRtb2RlbCkKICB7CiAgICBpZiAo
+JG1vZGVsID09ICJTVDMxNTAwMzQxQVMiIHx8IHN0cnBvcygkbW9kZWwsIldEQyBXRDE1RUFSUyIp
+ID09PSAwKQogICAgICByZXR1cm4gdHJ1ZTsKICAgIGVsc2UKICAgICAgcmV0dXJuIGZhbHNlOwog
+IH0KICAKICBmdW5jdGlvbiBzdXBwb3J0X2FwbSgkbW9kZWwpCiAgewogICAgaWYgKCRtb2RlbCA9
+PSAiU0FNU1VORyBIRDE1NFVJIikKICAgICAgcmV0dXJuIHRydWU7CiAgICBlbHNlCiAgICAgIHJl
+dHVybiBmYWxzZTsKICB9CiAgCiAgZnVuY3Rpb24gaXNfc2luZ2xlKCRtb2RlbCkKICB7CiAgICBp
+ZiAoc3RycG9zKCRtb2RlbCwiU1QyMDAwREwwMDMiKSA9PT0gMCkKICAgICAgcmV0dXJuIHRydWU7
+CiAgICBlbHNlCiAgICAgIHJldHVybiBmYWxzZTsKICB9CgogIGZ1bmN0aW9uIGdldF9hcnJheSgk
+YSkKICB7CiAgICAkZmlyc3QgPSB0cnVlOwogICAgJHMgPSAieyI7CiAgICBmb3JlYWNoICgkYSBh
+cyAkZSkKICAgIHsKICAgICAgaWYgKCEkZmlyc3QpCiAgICAgICAgJHMgLj0gJywnOwogICAgICAk
+cyAuPSAkZTsKICAgICAgJGZpcnN0ID0gZmFsc2U7CiAgICB9CiAgICAkcyAuPSAifSI7CiAgICAK
+ICAgIHJldHVybiAkczsKICB9CgogIGZ1bmN0aW9uIGluaXRfZHJpdmVzKCkKICB7CiAgICBnbG9i
+YWwgJG1vbml0b3JlZF9kcml2ZXM7CiAgICBnbG9iYWwgJHdha2VfZHJpdmVzX3NyYywkd2FrZV9k
+cml2ZXNfZHN0OwogICAgZ2xvYmFsICRzbGVlcF9kcml2ZXNfc3JjLCRzbGVlcF9kcml2ZXNfZHN0
+OwogICAgCiAgICBnbG9iYWwgJENNRF9IRFBBUk0sJFNMRUVQX1RJTUVPVVQ7ICAKICAgIAogICAg
+Zm9yZWFjaCAoJG1vbml0b3JlZF9kcml2ZXMgYXMgJGQpCiAgICB7CiAgICAgICRtb2RlbCA9IGdl
+dF9tb2RlbCgkZCk7CiAgICAgIAogICAgICBlY2hvICJkcml2ZSAvZGV2L3NkIiAuICRkIC4gIiAk
+bW9kZWwiOwogICAgICBpZiAoaW5fc2xlZXBfZ3JvdXAoJG1vZGVsKSkKICAgICAgewogICAgICAg
+ICRzbGVlcF9kcml2ZXNfc3JjW10gPSAkZDsKICAgICAgICAkc2xlZXBfZHJpdmVzX2RzdFtdID0g
+JGQ7CiAgICAgICAgZWNobyAiIHNsZWVwIjsKICAgICAgfQogICAgICBpZiAoc3VwcG9ydF9hcG0o
+JG1vZGVsKSkKICAgICAgewogICAgICAgIGV4ZWMoJENNRF9IRFBBUk0gLiAiIC1CIDI1NSAvZGV2
+L3NkIiAuICRkKTsKICAgICAgICBlY2hvICIgYXBtIjsKICAgICAgfSAgIAogICAgICBpZiAoaXNf
+c2luZ2xlKCRtb2RlbCkpCiAgICAgIHsKICAgICAgICAkd2FrZV9kcml2ZXNfc3JjID0gYXJyYXlf
+ZGlmZigkd2FrZV9kcml2ZXNfc3JjLGFycmF5KCRkKSk7CiAgICAgICAgZWNobyAiIHNpbmdsZSI7
+CiAgICAgIH0KICAgICAgICAgIAogICAgICBleGVjKCRDTURfSERQQVJNIC4gIiAtTSAyNTQgL2Rl
+di9zZCIgLiAkZCk7CiAgICAgIGV4ZWMoJENNRF9IRFBBUk0gLiAiIC1TICRTTEVFUF9USU1FT1VU
+ICAvZGV2L3NkIiAuICRkKTsKICAgICAgZWNobyAiIGRvbmVcbiI7CiAgICB9CiAgICAgICAgICAg
+ICAgCiAgICBlY2hvICJcbiI7CiAgICBlY2hvICJ3YWtlX2RyaXZlc19zcmMgPSAiIC4gZ2V0X2Fy
+cmF5KCR3YWtlX2RyaXZlc19zcmMpIC4gIiwgd2FrZV9kcml2ZXNfZHN0ID0gIiAuIGdldF9hcnJh
+eSgkd2FrZV9kcml2ZXNfZHN0KSAuICIuIHNsZWVwX2RyaXZlc19zcmMgPSAiIC4gZ2V0X2FycmF5
+KCRzbGVlcF9kcml2ZXNfc3JjKSAuICIsIHNsZWVwX2RyaXZlc19kc3QgPSAiIC4gZ2V0X2FycmF5
+KCRzbGVlcF9kcml2ZXNfZHN0KSAuICJcbiI7CiAgICBlY2hvICJcbiI7CiAgfQoKCiAgJGxhc3Rf
+c3RhdHVzID0gYXJyYXkoKTsKICAkbGFzdF90aW1lID0gYXJyYXkoKTsKCiAgaW5pdF9kcml2ZXMo
+KTsKCiAgZm9yZWFjaCAoJG1vbml0b3JlZF9kcml2ZXMgYXMgJGQpCiAgewogICAgJGxhc3Rfc3Rh
+dHVzWyRkXSA9ICJubyI7CiAgICAkbGFzdF90aW1lWyRkXSA9IDA7CiAgfQoKICB3aGlsZSAodHJ1
+ZSkKICB7CiAgICB0ZXJtaW5hdGVfcHJvY2Vzc2VzKCk7CgogICAgJHdha2VfZXZlbnQgPSBmYWxz
+ZTsKICAgICRzbGVlcF9ldmVudF9zcmMgPSBhcnJheSgpOwogICAgCiAgICAkd2FrZV9zbGVlcGlu
+Z19kcml2ZXMgPSBhcnJheSgpOwogICAgCiAgICAkdGVzdGVkX2RyaXZlcyA9IGFycmF5KCk7CiAg
+ICAkc3RhdHVzID0gYXJyYXkoKTsKICAgIAogICAgZm9yZWFjaCAoJG1vbml0b3JlZF9kcml2ZXMg
+YXMgJGQpCiAgICB7CiAgICAgICRhID0gZ2V0X2RyaXZlX3N0YXR1c19zdGFydCgkZCk7CiAgICAg
+ICR0ZXN0ZWRfZHJpdmVzWyRkXSA9ICRhOwogICAgfQoKICAgICRjb3VudGVyID0gMDsgJGNvdW50
+ID0gMDsKICAgIHdoaWxlICgkY291bnRlcisrIDwgMTUwICYmICRjb3VudCA8IGNvdW50KCRtb25p
+dG9yZWRfZHJpdmVzKSkKICAgIHsKICAgICAgZm9yZWFjaCAoJG1vbml0b3JlZF9kcml2ZXMgYXMg
+JGQpCiAgICAgIHsKICAgICAgICAkYSA9ICR0ZXN0ZWRfZHJpdmVzWyRkXTsKICAgICAgICBpZiAo
+IWFycmF5X2tleV9leGlzdHMoJGQsJHN0YXR1cykpCiAgICAgICAgewogICAgICAgICAgJHMgPSBw
+cm9jX2dldF9zdGF0dXMoJGFbMF0pOwogICAgICAgICAgaWYgKCEkc1sicnVubmluZyJdKQogICAg
+ICAgICAgewogICAgICAgICAgICAkZHMgPSBnZXRfZHJpdmVfc3RhdHVzKCRhWzBdLCRhWzFdKTsK
+ICAgICAgICAgICAgaWYgKCRkcyAhPT0gZmFsc2UpCiAgICAgICAgICAgIHsKICAgICAgICAgICAg
+ICAkc3RhdHVzWyRkXSA9ICRkczsKICAgICAgICAgICAgICAkY291bnQrKzsKICAgICAgICAgICAg
+fQogICAgICAgICAgfQogICAgICAgIH0KICAgICAgfQogICAgICBpZiAoJGNvdW50IDwgY291bnQo
+JG1vbml0b3JlZF9kcml2ZXMpKQogICAgICAgIHVzbGVlcCgxMDAwMCk7CiAgICB9CgoKICAgIGZv
+cmVhY2ggKCRtb25pdG9yZWRfZHJpdmVzIGFzICRkKQogICAgewogICAgICBpZiAoIWFycmF5X2tl
+eV9leGlzdHMoJGQsJHN0YXR1cykpCiAgICAgICAgJHMgPSAiYWN0aXZlIjsKICAgICAgZWxzZQog
+ICAgICAgICRzID0gJHN0YXR1c1skZF07CgogICAgICAkbHMgPSAkbGFzdF9zdGF0dXNbJGRdOwog
+ICAgICAkdCA9IHRpbWUoKTsKICAgICAgJGx0ID0gJGxhc3RfdGltZVskZF07CgogICAgICBpZiAo
+JHMgIT09ICRscykKICAgICAgewogICAgICAgICR0aW1lID0gZGF0ZSgiWS9tL2QgSDppOnMiKTsK
+ICAgICAgICBlY2hvICJbJHRpbWVdIC9kZXYvc2QkZCAtICRzICI7CgogICAgICAgIGlmICgkbHMg
+IT0gIm5vIikKICAgICAgICB7CiAgICAgICAgICAkZGlmZiA9ICR0IC0gJGx0OwogICAgICAgICAg
+ZWNobyAiWyIgLiAkbHMgLiAiICIgLiBmbG9vcigkZGlmZiAvIDYwKSAuICJtICIgLiAoJGRpZmYg
+JSA2MCkgLiAicyIgLiAiXVxuIjsKICAgICAgICB9CiAgICAgICAgZWxzZQogICAgICAgICAgZWNo
+byAiXG4iOwoKICAgICAgICBpZiAoJHMgPT0gImFjdGl2ZSIgJiYgJGxzICE9ICJubyIgJiYgaW5f
+YXJyYXkoJGQsJHdha2VfZHJpdmVzX3NyYykpCiAgICAgICAgICAkd2FrZV9ldmVudCA9IHRydWU7
+CiAgICAgICAgZWxzZSBpZiAoJHMgPT0gInN0YW5kYnkiICYmIGluX2FycmF5KCRkLCRzbGVlcF9k
+cml2ZXNfc3JjKSkgICAgICAgIAogICAgICAgICAgJHNsZWVwX2V2ZW50X3NyY1tdID0gJGQ7ICAg
+ICAgICAgICAgICAgICAgCgogICAgICAgICRsYXN0X3N0YXR1c1skZF0gPSAkczsKICAgICAgICAk
+bGFzdF90aW1lWyRkXSA9ICR0OwogICAgICB9CgogICAgICBpZiAoJHMgPT0gInN0YW5kYnkiICYm
+IGluX2FycmF5KCRkLCR3YWtlX2RyaXZlc19kc3QpKQogICAgICAgICR3YWtlX3NsZWVwaW5nX2Ry
+aXZlc1tdID0gJGQ7CiAgICB9CgogICAgaWYgKCR3YWtlX2V2ZW50ICYmIGNvdW50KCR3YWtlX3Ns
+ZWVwaW5nX2RyaXZlcykgPiAwICYmICEkUEFTU0lWRSkKICAgIHsKICAgICAgJHRpbWUgPSBkYXRl
+KCJZL20vZCBIOmk6cyIpOwogICAgICBlY2hvICJbJHRpbWVdIHdha2luZyB1cC4uLiI7CiAgICAg
+IGZvcmVhY2ggKCR3YWtlX3NsZWVwaW5nX2RyaXZlcyBhcyAkZCkKICAgICAgewogICAgICAgIHJ1
+bl9iYWNrZ3JvdW5kKCIkQ01EX0hEUEFSTSAtUyAkU0xFRVBfVElNRU9VVCAvZGV2L3NkIiAuICRk
+KTsKICAgICAgICBlY2hvICIgL2Rldi9zZCRkIjsKICAgICAgICAKICAgICAgICAkc2xlZXBfZXZl
+bnRfc3JjID0gYXJyYXlfZGlmZigkc2xlZXBfZXZlbnRfc3JjLGFycmF5KCRkKSk7CiAgICAgIH0K
+ICAgICAgZWNobyAiXG4iOwogICAgfQogICAgCiAgICBpZiAoY291bnQoJHNsZWVwX2V2ZW50X3Ny
+YykgPiAwICYmICEkUEFTU0lWRSkKICAgIHsKICAgICAgZm9yZWFjaCAoJHNsZWVwX2RyaXZlc19k
+c3QgYXMgJGQpCiAgICAgIHsgICAgICAKICAgICAgICBpZiAoJHN0YXR1c1skZF0gIT0gInN0YW5k
+YnkiKQogICAgICAgIHsKICAgICAgICAgICR0aW1lID0gZGF0ZSgiWS9tL2QgSDppOnMiKTsKICAg
+ICAgICAgIGVjaG8gIlskdGltZV0gc2xlZXBpbmcuLi4iOwogICAgICAgICAgZWNobyAiIC9kZXYv
+c2QiIC4gJGQ7CiAgICAgICAgICBydW5fYmFja2dyb3VuZCgiJENNRF9IRFBBUk0gLXkgL2Rldi9z
+ZCIgLiAkZCk7CiAgICAgICAgICBlY2hvICJcbiI7CiAgICAgICAgfQogICAgICB9CiAgICB9Cgog
+ICAgc2xlZXAoMyk7CiAgfQo/Pgo=
+--20cf3079bcb6f8d73c04bf9df3e7--
