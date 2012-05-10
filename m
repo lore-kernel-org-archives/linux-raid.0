@@ -1,128 +1,200 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: md RAID with enterprise-class SATA or SAS drives
-Date: Thu, 10 May 2012 12:04:52 -0400
-Message-ID: <4FABE724.40103@turmel.org>
-References: <4FAAE8F1.8000600@pocock.com.au> <CALFpzo5ObdwFATdT4e20znnxzU5hX9SVSfqJcdqOXM1FEYJQuw@mail.gmail.com> <4FABC7C6.4030107@turmel.org> <CALFpzo6BECrv2eTbSRKwUzpTopx_0EmD+UipqUf-XE=vzz2OnQ@mail.gmail.com>
+From: =?ISO-8859-1?Q?Patrik_Horn=EDk?= <patrik@dsl.sk>
+Subject: Re: Hot-replace for RAID5
+Date: Thu, 10 May 2012 19:16:59 +0200
+Message-ID: <CAAOsTSm9RH1c6OzFdAGf8hSag35YBD5Y1SuH4Tq-4GXnWgJpAw@mail.gmail.com>
+References: <CAAOsTS=4+eqRJXVrw2OaYibgNTEaGxJx4x1PPN4iU49tUO9zOg@mail.gmail.com>
+	<4FAB6758.5050109@hesbynett.no>
+Reply-To: patrik@dsl.sk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CALFpzo6BECrv2eTbSRKwUzpTopx_0EmD+UipqUf-XE=vzz2OnQ@mail.gmail.com>
+In-Reply-To: <4FAB6758.5050109@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marcus Sorensen <shadowsor@gmail.com>
-Cc: Daniel Pocock <daniel@pocock.com.au>, linux-raid@vger.kernel.org
+To: David Brown <david.brown@hesbynett.no>
+Cc: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On 05/10/2012 11:26 AM, Marcus Sorensen wrote:
-> On Thu, May 10, 2012 at 7:51 AM, Phil Turmel <philip@turmel.org> wrote:
+Neil, can you please comment if separate operations mentioned in this
+process are behaving and are stable enough as we expect? Thanks.
 
-[trim /]
-
->> Here is where Marcus and I part ways.  A very common report I see on
->> this mailing list is people who have lost arrays where the drives all
->> appear to be healthy.  Given the large size of today's hard drives,
->> even healthy drives will occasionally have an unrecoverable read error.
+On Thu, May 10, 2012 at 8:59 AM, David Brown <david.brown@hesbynett.no>=
+ wrote:
+> (I accidentally sent my first reply directly to the OP, and forgot th=
+e
+> mailing list - I'm adding it back now, because I don't want the OP to=
+ follow
+> my advice until others have confirmed or corrected it!)
+>
+>
+> On 09/05/2012 21:53, Patrik Horn=EDk wrote:
+>> Great suggestion, thanks.
 >>
->> When this happens in a raid array with a desktop drive without SCTERC,
->> the driver times out and reports an error to MD.  MD proceeds to
->> reconstruct the missing data and tries to write it back to the bad
->> sector.  However, that drive is still trying to read the bad sector and
->> ignores the controller.  The write is immediately rejected.  BOOM!  The
->> *write* error ejects that member from the array.  And you are now
->> degraded.
+>> So I guess steps with exact parameters should be:
+>> 1, add spare S to RAID5 array
+>> 2, mdadm --grow /dev/mdX --level 6 --raid-devices N+1 --layout=3Dpre=
+serve
+>> 3, remove faulty drive and add replacement, let it synchronize
+>> 4, possibly remove added spare S
+>> 5, mdadm --grow /dev/mdX --level 5 --raid-devices N
+>
+>
+> Yes, that's what I was thinking. =A0You are missing "2b - let it sync=
+hronise".
+
+Sure :)
+
+> Of course, another possibility is that if you have the space in the s=
+ystem
+> for another drive, you may want to convert to a full raid6 for the fu=
+ture.
+> =A0That way you have the extra safety built-in in advance. But that w=
+ill
+> definitely lead to a re-shape.
+
+Actually I dont have free physical space, array already has 7 drives.
+=46or the process I need place the additional drive on table near the P=
+C
+and cool it with fan standing by itself on table... :)
+
 >>
->> If you don't notice the degraded array right away, you probably won't
->> notice until a URE on another drive pops up.  Once that happens, you
->> can't complete a resync to revive the array.
+>> My questions:
+>> - Are you sure steps 3, 4 and 5 would not cause reshaping?
+>
+> I /believe/ it will avoid a reshape, but I can't say I'm sure. =A0Thi=
+s is
+> stuff that I only know about in theory, and have not tried in practic=
+e.
+>
+>
 >>
->> Running a "check" or "repair" on an array without TLER will have the
->> opposite of the intended effect: any URE will kick a drive out instead
->> of fixing it.
+>> - My array has now left-symmetric layout, so after migration to RAID=
+6
+>> it should be left-symmetric-6. Is RAID6 working without problem in
+>> degraded mode with this layout, no matter which one or two drives ar=
+e
+>> missing?
 >>
->> In the same scenario with an enterprise drive, or a drive with SCTERC
->> turned on, the drive read times out before the controller driver, the
->> controller never resets the link to the drive, and the followup write
->> succeeds.  (The sector is either successfully corrected in place, or
->> it is relocated by the drive.)  No BOOM.
+>
+> The layout will not affect the redundancy or the features of the raid=
+ - it
+> will only (slightly) affect the speed of some operations.
+
+I know it should work, but it is probably configuration that is not
+used much by users, so maybe it is not tested as much as standard
+layouts. So the question was aiming more at practical experience and
+stability...
+
+>> - What happens in step 5 and how long does it take? (If it is withou=
+t
+>> reshaping, it should only upgrade superblocks and thats it.)
+>
+> That is my understanding.
+>
+>
 >>
-> 
-> Agreed. In the past there has been some debate about this. I think it
-> comes down to your use case, the data involved and what you expect.
-> TLER/ERC can generally make your array more durable to minor hiccups,
-> and is likely preferred if you can stomach the cost, at the potential
-> risk that I described.  If the failure is a simple one-off read
-> failure, then Phil's scenario is very likely. If the drive is really
-> going bad (say hitting max_read_errors), then the disk won't try very
-> hard to recover your data, at which point you have to hope the other
-> drive doesn't have even a minor read error when rebuilding, because it
-> also will not try very hard. In the end it's up to you what behavior
-> you want.
-
-Well, I approach this from the assumption that the normal condition
-of a production RAID array is *non-degraded*.  You don't want isolated
-read errors to hold up your application when the data can be quickly
-reconstructed from the redundancy.  And you certainly don't want
-transient errors to kick drives out of the array.
-
-Coordinating the drive and the controller timeouts is the *only* way
-to avoid the URE kickout scenario.
-
-Changing TLER/ERC when an array becomes degraded for a real hardware
-failure is a useful idea. I think I'll look at scripting that.
-
-> Here are a few odd things to consider, if you're worried about this topic:
-> 
-> * Using smartctl to increase the ERC timeout on enterprise SATA
-> drives, say to 25 seconds, for use with md. I have no idea if this
-> will cause the drive to actually try different methods of recovery,
-> but it could be a good middle ground.
-
-For a healthy array, I think this is counter-productive, as you are
-holding up your applications.  Any sector that is marginal and needs
-that much time to recover really ought to be re-written anyways.
-
-> * increasing max_read_errors in an attempt to keep a TLER/ERC disk in
-> the loop longer. The only reason to do this would be if you were
-> proactive in monitoring said errors and could add in more redundancy
-> before pulling the failing drive, thus increasing your chances that
-> the rebuild succeeds, having more *mostly* good copies.
-> 
-> * Increasing the SCSI timeout on your desktop drives to 60 seconds or
-> more, giving the drive a chance to succeed in deep recovery. This may
-> cause IO to block for awhile, so again it depends on your usage
-> scenario.
-
-I can understand using all available means to resync/rebuild a
-degraded array, but I can't see leaving those settings on a healthy
-array.
-
-> * frequent array checks - perhaps in combination with the above, can
-> increase the likelihood that you find errors in a timely manner and
-> increase the chances that the rebuild will succeed if you've only got
-> one good copy left.
-
-Frequent array checks are not optional, if you want flush out any UREs
-in the making, and maximize your odds of successfully rebuilding after
-a drive replacement.  If you are running RAID6 or a triple mirror, with
-frequent checks, you are very safe.
-
-[...]
-
->> Neither Seagate nor Western Digital offer any desktop drive with any
->> form of time-limited error recovery.  Seagate and WD were my "go to"
->> brands for RAID.  I am now buying Hitachi, as they haven't (yet)
->> followed their peers.  The "I" in RAID stands for "inexpensive",
->> after all.
-> 
-> I keep hearing that, and I was always under the impression that the
-> "I" stood for "Independent", as you can do RAID with any independent
-> disk, cheap or expensive. Seems it was changed mid-90's. I suppose
-> both are accepted, but perhaps the one we use says something about our
-> level of seniority :-)
-
-Hmmm.  I hadn't noticed the change to "independent".  Can't allow any
-premium technology to be inexpensive, can we?
-
-And yes, there's grey in my beard.
-
-Phil
+>> - What happens if I dont remove spare S before migration back to
+>> RAID5? Will the array be reshaped and which drive will it make into
+>> spare? (If step 5 is instantaneous, there is no reason for that. But
+>> if it takes time, it is probably safer.)
+>>
+>
+> I /think/ that the extra disk will turn into a hot spare. =A0But I am=
+ getting
+> out of my depth here - it all depends on how the disks get numbered a=
+nd how
+> that affects the layout, and I don't know the details here.
+>
+>
+>> So all and alll, what guys do you think is more reliable now, new
+>> hot-replace or these steps?
+>
+>
+> I too am very curious to hear opinions. =A0Hot-replace will certainly=
+ be much
+> simpler and faster than these sorts of re-shaping - it's exactly the =
+sort of
+> situation the feature was designed for. =A0But I don't know if it is
+> considered stable and well-tested, or "bleeding edge".
+>
+> mvh.,
+>
+> David
+>
+>
+>
+>>
+>> Thanks.
+>>
+>> Patrik
+>>
+>> On Wed, May 9, 2012 at 8:09 AM, David Brown<david.brown@hesbynett.no=
+>
+>> =A0wrote:
+>>> On 08/05/12 11:10, Patrik Horn=EDk wrote:
+>>>>
+>>>> Hello guys,
+>>>>
+>>>> I need to replace drive in big production RAID5 array and I am
+>>>> thinking about using new hot-replace feature added in kernel 3.3.
+>>>>
+>>>> Does someone have experience with it on big RAID5 arrays? Mine is =
+7 *
+>>>> 1.5 TB. What do you think about its status / stability / reliabili=
+ty?
+>>>> Do you recommend it on production data?
+>>>>
+>>>> Thanks.
+>>>>
+>>>
+>>> If you don't want to play with the "bleeding edge" features, you co=
+uld
+>>> add
+>>> the disk and extend the array to RAID6, then remove the old drive. =
+I
+>>> think
+>>> if you want to do it all without doing any re-shapes, however, then=
+ you'd
+>>> need a third drive (the extra drive could easily be an external USB=
+ disk
+>>> if
+>>> needed - it will only be used for writing, and not for reading unle=
+ss
+>>> there's another disk failure). =A0Start by adding the extra drive a=
+s a hot
+>>> spare, then re-shape your raid5 to raid6 in raid5+extra parity layo=
+ut.
+>>> =A0Then
+>>> fail and remove the old drive. =A0Put the new drive into the box an=
+d add it
+>>> as
+>>> a hot spare. =A0It should automatically take its place in the raid5=
+,
+>>> replacing
+>>> the old one. =A0Once it has been rebuilt, you can fail and remove t=
+he extra
+>>> drive, then re-shape back to raid5.
+>>>
+>>> If things go horribly wrong, the external drive gives you your pari=
+ty
+>>> protection.
+>>>
+>>> Of course, don't follow this plan until others here have commented =
+on it,
+>>> and either corrected or approved it.
+>>>
+>>> And make sure you have a good backup no matter what you decide to d=
+o.
+>>>
+>>> mvh.,
+>>>
+>>> David
+>>>
+>>
+>>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
