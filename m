@@ -1,148 +1,167 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: md/raid10 deadlock at 'Failing raid device'
-Date: Thu, 10 May 2012 13:03:04 +1000
-Message-ID: <20120510130304.6e2f325f@notabene.brown>
-References: <4FAB2C3F.3070105@gmail.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: Hot-replace for RAID5
+Date: Thu, 10 May 2012 08:59:36 +0200
+Message-ID: <4FAB6758.5050109@hesbynett.no>
+References: <CAAOsTS=4+eqRJXVrw2OaYibgNTEaGxJx4x1PPN4iU49tUO9zOg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/zfRDh_OCdKOSxkvyw126gAj"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FAB2C3F.3070105@gmail.com>
+In-Reply-To: <CAAOsTS=4+eqRJXVrw2OaYibgNTEaGxJx4x1PPN4iU49tUO9zOg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: George Shuklin <george.shuklin@gmail.com>
-Cc: linux-raid@vger.kernel.org, Jonathan Nieder <jrnieder@gmail.com>
+To: patrik@dsl.sk
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/zfRDh_OCdKOSxkvyw126gAj
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+(I accidentally sent my first reply directly to the OP, and forgot the=20
+mailing list - I'm adding it back now, because I don't want the OP to=20
+follow my advice until others have confirmed or corrected it!)
 
-On Thu, 10 May 2012 06:47:27 +0400 George Shuklin <george.shuklin@gmail.com>
-wrote:
+On 09/05/2012 21:53, Patrik Horn=EDk wrote:
+ > Great suggestion, thanks.
+ >
+ > So I guess steps with exact parameters should be:
+ > 1, add spare S to RAID5 array
+ > 2, mdadm --grow /dev/mdX --level 6 --raid-devices N+1 --layout=3Dpre=
+serve
+ > 3, remove faulty drive and add replacement, let it synchronize
+ > 4, possibly remove added spare S
+ > 5, mdadm --grow /dev/mdX --level 5 --raid-devices N
 
-> As Jonathan Nieder proposed, writing here about new deadlock bug I met=20
-> recently with raid10.
->=20
-> Summary: under some condition multiple simultaneously failing devices=20
-> cause with some chance deadlock on operations with failed array.
->=20
-> Conditions:
-> 3 Adadptec raid controllers (Adaptec Device 028, aacraid). Every one do=20
-> have 8 directly attached SATA disks   (without extenders or expanders).=20
-> Those disks are configured as 'JBOD' and passed to linux almost 'as is'.=
+
+Yes, that's what I was thinking.  You are missing "2b - let it synchron=
+ise".
+
+Of course, another possibility is that if you have the space in the=20
+system for another drive, you may want to convert to a full raid6 for=20
+the future.  That way you have the extra safety built-in in advance.=20
+But that will definitely lead to a re-shape.
+
+ >
+ > My questions:
+ > - Are you sure steps 3, 4 and 5 would not cause reshaping?
+
+I /believe/ it will avoid a reshape, but I can't say I'm sure.  This is=
 =20
-> Those disks joined in three raid10 arrays (by using linux raid). Those=20
-> three arrays joined in raid0.
->=20
-> Configuration looks like this:
->=20
->    3 x RAID10
-> md101 [UUUUUUUU] --\
-> md102 [UUUUUUUU] ------ md100 [UUU]  (raid0)
-> md103 [UUUUUUUU] --/
->=20
-> After that all disks are deconfigured from adaptec utility. They=20
-> dissappear from /dev/, but /proc/mdadm shows arrays fine.  After that=20
-> some io performed on raid0. That, of cause, causing failure on all raid=20
-> arrays and return IO error to calling software (in my case it was 'fio'=20
-> disk performance test utility).
->=20
-> Two arrays fails gracefully, but one did not. It stuck with one disk=20
-> (which one was not in system) and did not return anything to calling=20
-> software, like it was in raid10 deadlock, which was fixed in commit d9b42=
-d.
->=20
-> Content /proc/mdstat after failure:
->=20
-> md100 : active raid0 md103[2] md102[1] md101[0]
->   11714540544 blocks super 1.2 256k chunks
->=20
-> md101 : active raid10 sdv[7](W)(F) sdu[6](W)(F) sdo[5](W)(F) sdn[4](W)(F)=
- sdm[3](W)(F) sdg[2](W)(F) sdf[1](W)(F) sde[0](W)(F)
->   3904847872 blocks super 1.2 256K chunks 2 near-copies [8/0] [________]
->   bitmap: 0/466 pages [0KB], 4096KB chunk, file: /var/mdadm/md101
->=20
-> md103 : active raid10 sdr[0](W)(F) sdab[7](W)(F) sdt[6](W)(F) sdl[5](W)(F=
-) sdaa[4](W) sds[3](W)(F) sdk[2](W)(F) sdz[1](W)(F)
->   3904847872 blocks super 1.2 256K chunks 2 near-copies [8/1] [____U___]
->   bitmap: 1/466 pages [4KB], 4096KB chunk, file: /var/mdadm/md103
->=20
-> md102 : active raid10 sdw[0](W)(F) sdj[7](W)(F) sdy[6](W)(F) sdq[5](W)(F)=
- sdi[4](W)(F) sdx[3](W)(F) sdp[2](W)(F) sdh[1](W)(F)
->   3904847872 blocks super 1.2 256K chunks 2 near-copies [8/0] [________]
->=20
-> I recheck - /dev/sdaa was no longer in system, but raid10 has think it wa=
-s.
->=20
-> In dmesg those messages repeat very fast:
->=20
-> [4474.074462] md/raid10:md103: sdaa: Failing raid device
->=20
-> It was so fast so I got race between logging to ring buffer and syslog ac=
-tivity and got this in /var/log/messages:
-> May 5 21:20:04 server kernel: [ 4507.578517] md/raid10:md103: sdaa: Faid =
-device
-> May 5 21:20:04 server kernel: [ 4507.578525] md/raid10:md103: sdaa: Faaid=
- device
-> May 5 21:20:04 server kernel: [ 4507.578533] md/raid10:md103: sdaa: aid d=
-evice
-> May 5 21:20:04 server kernel: [ 4507.578541] md/raid10:md103: sdaa: Faid =
-devic
-> May 5 21:20:04 server kernel: [ 4507.578549] md/raid10:md103: sdaa: Faid =
-device
-> May 5 21:20:04 server kernel: [ 4507.578557] md/raid10:md103: sdaa: Faid =
-device
-> May 5 21:20:04 server kernel: [ 4507.578566] md/raid10:md103: sdaa: Faila=
-id device
->=20
->=20
-> It was with linux 3.2.0-2-amd64
+stuff that I only know about in theory, and have not tried in practice.
 
-Fixed by commit fae8cc5ed0714953b1ad7cf86 I believe.
+ >
+ > - My array has now left-symmetric layout, so after migration to RAID=
+6
+ > it should be left-symmetric-6. Is RAID6 working without problem in
+ > degraded mode with this layout, no matter which one or two drives ar=
+e
+ > missing?
+ >
 
-http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux.git;a=3Dcommitdi=
-ff;h=3Dfae8cc5ed
+The layout will not affect the redundancy or the features of the raid -=
+=20
+it will only (slightly) affect the speed of some operations.
 
-  From: NeilBrown <neilb@suse.de>
-  Date: Tue, 14 Feb 2012 00:10:10 +0000 (+1100)
-  Subject: md/raid10: fix handling of error on last working device in array.
+ > - What happens in step 5 and how long does it take? (If it is withou=
+t
+ > reshaping, it should only upgrade superblocks and thats it.)
 
-  md/raid10: fix handling of error on last working device in array.
+That is my understanding.
 
-  If we get a read error on the last working device in a RAID10 which
-  contains the target block, then we don't fail the device (which is
-  good) but we don't abort retries, which is wrong.
-  We end up in an infinite loop retrying the read on the one device.
+ >
+ > - What happens if I dont remove spare S before migration back to
+ > RAID5? Will the array be reshaped and which drive will it make into
+ > spare? (If step 5 is instantaneous, there is no reason for that. But
+ > if it takes time, it is probably safer.)
+ >
 
-NeilBrown
+I /think/ that the extra disk will turn into a hot spare.  But I am=20
+getting out of my depth here - it all depends on how the disks get=20
+numbered and how that affects the layout, and I don't know the details =
+here.
+
+ > So all and alll, what guys do you think is more reliable now, new
+ > hot-replace or these steps?
 
 
+I too am very curious to hear opinions.  Hot-replace will certainly be=20
+much simpler and faster than these sorts of re-shaping - it's exactly=20
+the sort of situation the feature was designed for.  But I don't know i=
+f=20
+it is considered stable and well-tested, or "bleeding edge".
+
+mvh.,
+
+David
+
+
+ >
+ > Thanks.
+ >
+ > Patrik
+ >
+ > On Wed, May 9, 2012 at 8:09 AM, David Brown<david.brown@hesbynett.no=
 >=20
->=20
-> ---
-> wBR, George Shuklin
+  wrote:
+ >> On 08/05/12 11:10, Patrik Horn=EDk wrote:
+ >>>
+ >>> Hello guys,
+ >>>
+ >>> I need to replace drive in big production RAID5 array and I am
+ >>> thinking about using new hot-replace feature added in kernel 3.3.
+ >>>
+ >>> Does someone have experience with it on big RAID5 arrays? Mine is =
+7 *
+ >>> 1.5 TB. What do you think about its status / stability / reliabili=
+ty?
+ >>> Do you recommend it on production data?
+ >>>
+ >>> Thanks.
+ >>>
+ >>
+ >> If you don't want to play with the "bleeding edge" features, you=20
+could add
+ >> the disk and extend the array to RAID6, then remove the old drive. =
+I=20
+think
+ >> if you want to do it all without doing any re-shapes, however, then=
+=20
+you'd
+ >> need a third drive (the extra drive could easily be an external USB=
+=20
+disk if
+ >> needed - it will only be used for writing, and not for reading unle=
+ss
+ >> there's another disk failure).  Start by adding the extra drive as =
+a hot
+ >> spare, then re-shape your raid5 to raid6 in raid5+extra parity=20
+layout.  Then
+ >> fail and remove the old drive.  Put the new drive into the box and=20
+add it as
+ >> a hot spare.  It should automatically take its place in the raid5,=20
+replacing
+ >> the old one.  Once it has been rebuilt, you can fail and remove the=
+=20
+extra
+ >> drive, then re-shape back to raid5.
+ >>
+ >> If things go horribly wrong, the external drive gives you your pari=
+ty
+ >> protection.
+ >>
+ >> Of course, don't follow this plan until others here have commented=20
+on it,
+ >> and either corrected or approved it.
+ >>
+ >> And make sure you have a good backup no matter what you decide to d=
+o.
+ >>
+ >> mvh.,
+ >>
+ >> David
+ >>
+ >
+ >
 
-
---Sig_/zfRDh_OCdKOSxkvyw126gAj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT6sv6Dnsnt1WYoG5AQKacw/+LIqj/bli5KEQ5u6/o0J2WsQoISKFfXEf
-yzic91C8BFCujPi5ljdGm+GIItotVMofF0jUZd91GKNZNERu2Ja4lByzaC/CnGoO
-+33gyfnIUdMLsgMkxrIfh+MKg7Jz+5H7cxJWxGuzNZ+MC1RsSHfYtnPPvf+SA7t3
-dNuuP1P4u7TJrvQgkWA7BZaYYR88TuAoSsqJr9Uf+Lgvmbvy8hew6M2qA9tqvExo
-7O/5Heu/jtfb3MkNRDd0NGQ+gCSrHDMJOnc2R05RL09g0PbojTOrUlhGnE5WxrDF
-A8ua1VLmJCPyhjSj3XSJ46ti4Ijib9LXrqyiXD3eMQfvJWChb6JB5i98zhKnip+h
-v5QFzpWM4Nw20A5bShkB7X2VDxHU/f5MHG5jIlgJ8IuQRyvr6UsZ4Y4wMXdAjUGN
-vTUxOhcN5yq+ZVR867v/GYW65x51gQ8yOshJ0m85MZdyG/OAY4YXFUO0ZO8LR18f
-YRm4UEHs2FR62JQSc6srjqdHDgY3dUkwaIThvnwNry/VJFP3wRrZZwMTt4mKblN7
-rUcnJ0GGECCRU0UkNtX//VVHaV/hpGXF89zXLLAv6A/Fmg1oJQLV2CYZq3E6R9hL
-3SKZq1Naf0Yoa4p/s2dK2beo7hOYAIHbPIAF9g7HJ5d4/PMINEHqNzng9x+SllO3
-FFqO93gGpuQ=
-=bSV6
------END PGP SIGNATURE-----
-
---Sig_/zfRDh_OCdKOSxkvyw126gAj--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
