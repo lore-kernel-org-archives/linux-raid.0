@@ -1,162 +1,188 @@
-From: Lars Schimmer <l.schimmer@cgv.tugraz.at>
-Subject: and again: broken RAID5
-Date: Thu, 10 May 2012 10:07:21 +0200
-Message-ID: <4FAB7739.9000907@cgv.tugraz.at>
+From: =?ISO-8859-1?Q?Patrik_Horn=EDk?= <patrik@dsl.sk>
+Subject: Re: Hot-replace for RAID5
+Date: Thu, 10 May 2012 10:50:53 +0200
+Message-ID: <CAAOsTSmo+Ja0V+_0J-145Vaeg4YfPHJgrtKPB5SLhGDAkH9+Sw@mail.gmail.com>
+References: <CAAOsTS=4+eqRJXVrw2OaYibgNTEaGxJx4x1PPN4iU49tUO9zOg@mail.gmail.com>
+	<4FAB6758.5050109@hesbynett.no>
+Reply-To: patrik@dsl.sk
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4FAB6758.5050109@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Brown <david.brown@hesbynett.no>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Thu, May 10, 2012 at 8:59 AM, David Brown <david.brown@hesbynett.no>=
+ wrote:
+> (I accidentally sent my first reply directly to the OP, and forgot th=
+e
+> mailing list - I'm adding it back now, because I don't want the OP to=
+ follow
+> my advice until others have confirmed or corrected it!)
+>
 
-Hi!
+Thanks. I just hit reply all and did not notice that...
 
-
-
-I just want some tips on howto get two broken raid5 running again.
-
-It contains of 4 drives, one was thrown out on saturday evening, and
-the second drive threw read/write errors before I could replace the
-first one.
-
-Now I got all four drives running again, looks like some
-controller/cable problem. Changed them.
-
-But mdadm tells me, only 2 of 4 are available and could not start raid:
-
-md2 : inactive sdh2[0](S) sdi2[4](S) sdf2[6](S) sdj2[5](S)
-4251770144 blocks super 1.2
-
-md1 : inactive sdh1[0](S) sdi1[4](S) sdf1[6](S) sdj1[5](S)
-2097147904 blocks super 1.2
-
-mdadm -E tells me e.g. for md1:
-
-/dev/sdh1:
-Magic : a92b4efc
-Version : 1.2
-=46eature Map : 0x0
-Array UUID : a503cea9:eb613db1:c8909233:fd5415ce
-Name : debian:1  (local to host debian)
-Creation Time : Sat Feb 11 13:39:46 2012
-Raid Level : raid5    Raid Devices : 4
-Avail Dev Size : 1048573952 (500.00 GiB 536.87 GB)
-Array Size : 3145720320 (1500.00 GiB 1610.61 GB)
-Used Dev Size : 1048573440 (500.00 GiB 536.87 GB)
-Data Offset : 2048 sectors
-Super Offset : 8 sectors
-State : clean
-Device UUID : 710a2926:640bc675:7b5fe308:861d1883
-Update Time : Sun May  6 13:57:22 2012
-Checksum : e387e748 - correct
-Events : 206286
-Layout : left-symmetric
-Chunk Size : 128K
-Device Role : Active device 0
-Array State : AA.. ('A' =3D=3D active, '.' =3D=3D missing)
-
-/dev/sdf1:
-Magic : a92b4efc
-Version : 1.2
-=46eature Map : 0x0
-Array UUID : a503cea9:eb613db1:c8909233:fd5415ce
-Name : debian:1  (local to host debian)
-Creation Time : Sat Feb 11 13:39:46 2012
-Raid Level : raid5
-Raid Devices : 4
-Avail Dev Size : 1048573952 (500.00 GiB 536.87 GB)
-Array Size : 3145720320 (1500.00 GiB 1610.61 GB)
-Used Dev Size : 1048573440 (500.00 GiB 536.87 GB)
-Data Offset : 2048 sectors
-Super Offset : 8 sectors
-State : clean
-Device UUID : f53b097c:9762f2a4:f2af9011:3fa7ced7
-Update Time : Sun May  6 13:38:26 2012
-Checksum : c5f745bd - correct
-Events : 206273
-Layout : left-symmetric
-Chunk Size : 128K
-Device Role : Active device 2
-Array State : AAA. ('A' =3D=3D active, '.' =3D=3D missing)
-
-/dev/sdi1:
-Magic : a92b4efc
-Version : 1.2
-=46eature Map : 0x0
-Array UUID : a503cea9:eb613db1:c8909233:fd5415ce
-Name : debian:1  (local to host debian)
-Creation Time : Sat Feb 11 13:39:46 2012
-Raid Level : raid5
-Raid Devices : 4
-Avail Dev Size : 1048573952 (500.00 GiB 536.87 GB)
-Array Size : 3145720320 (1500.00 GiB 1610.61 GB)
-Used Dev Size : 1048573440 (500.00 GiB 536.87 GB)
-Data Offset : 2048 sectors
-Super Offset : 8 sectors
-State : clean
-Device UUID : 79eb5c0c:db73e2f8:21d9b7f8:97936da4
-Update Time : Sun May  6 01:32:35 2012
-Checksum : 5dff4e2a - correct
-Events : 197114
-Layout : left-symmetric
-Chunk Size : 128K
-Device Role : Active device 3
-Array State : AAAA ('A' =3D=3D active, '.' =3D=3D missing)
-
-/dev/sdj1:
-Magic : a92b4efc
-Version : 1.2
-=46eature Map : 0x0
-Array UUID : a503cea9:eb613db1:c8909233:fd5415ce
-Name : debian:1  (local to host debian)
-Creation Time : Sat Feb 11 13:39:46 2012
-Raid Level : raid5
-Raid Devices : 4
-Avail Dev Size : 1048573952 (500.00 GiB 536.87 GB)
-Array Size : 3145720320 (1500.00 GiB 1610.61 GB)
-Used Dev Size : 1048573440 (500.00 GiB 536.87 GB)
-Data Offset : 2048 sectors
-Super Offset : 8 sectors
-State : clean
-Device UUID : e8055bca:0f3c9b54:421bc2c2:4a72359b
-Update Time : Sun May  6 13:57:22 2012
-Checksum : 388b23fc - correct
-Events : 206286
-Layout : left-symmetric
-Chunk Size : 128K
-Device Role : Active device 1
-Array State : AA.. ('A' =3D=3D active, '.' =3D=3D missing)
-
-
-So all 4 disks see some diff state. Any chance on getting raid5
-running again and read some data from it?
-
-Does the mdadm -C --assume-clean option help me in that case anyhow?
-
-
-Thank you!
-
-MfG,
-Lars Schimmer
-- --=20
-- -------------------------------------------------------------
-TU Graz, Institut f=FCr ComputerGraphik & WissensVisualisierung
-Tel: +43 316 873-5405       E-Mail: l.schimmer@cgv.tugraz.at
-=46ax: +43 316 873-5402       PGP-Key-ID: 0x4A9B1723
-
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iEYEARECAAYFAk+rdzgACgkQmWhuE0qbFyMvtgCfaoUiyHj2qFEvaCgo+azZoo3S
-guUAnR+s0jZvyc2XL5HItCbT+81pLjwe
-=3DkT0C
------END PGP SIGNATURE-----
+>
+> On 09/05/2012 21:53, Patrik Horn=EDk wrote:
+>> Great suggestion, thanks.
+>>
+>> So I guess steps with exact parameters should be:
+>> 1, add spare S to RAID5 array
+>> 2, mdadm --grow /dev/mdX --level 6 --raid-devices N+1 --layout=3Dpre=
+serve
+>> 3, remove faulty drive and add replacement, let it synchronize
+>> 4, possibly remove added spare S
+>> 5, mdadm --grow /dev/mdX --level 5 --raid-devices N
+>
+>
+> Yes, that's what I was thinking. =A0You are missing "2b - let it sync=
+hronise".
+>
+> Of course, another possibility is that if you have the space in the s=
+ystem
+> for another drive, you may want to convert to a full raid6 for the fu=
+ture.
+> =A0That way you have the extra safety built-in in advance. But that w=
+ill
+> definitely lead to a re-shape.
+>
+>
+>>
+>> My questions:
+>> - Are you sure steps 3, 4 and 5 would not cause reshaping?
+>
+> I /believe/ it will avoid a reshape, but I can't say I'm sure. =A0Thi=
+s is
+> stuff that I only know about in theory, and have not tried in practic=
+e.
+>
+>
+>>
+>> - My array has now left-symmetric layout, so after migration to RAID=
+6
+>> it should be left-symmetric-6. Is RAID6 working without problem in
+>> degraded mode with this layout, no matter which one or two drives ar=
+e
+>> missing?
+>>
+>
+> The layout will not affect the redundancy or the features of the raid=
+ - it
+> will only (slightly) affect the speed of some operations.
+>
+>
+>> - What happens in step 5 and how long does it take? (If it is withou=
+t
+>> reshaping, it should only upgrade superblocks and thats it.)
+>
+> That is my understanding.
+>
+>
+>>
+>> - What happens if I dont remove spare S before migration back to
+>> RAID5? Will the array be reshaped and which drive will it make into
+>> spare? (If step 5 is instantaneous, there is no reason for that. But
+>> if it takes time, it is probably safer.)
+>>
+>
+> I /think/ that the extra disk will turn into a hot spare. =A0But I am=
+ getting
+> out of my depth here - it all depends on how the disks get numbered a=
+nd how
+> that affects the layout, and I don't know the details here.
+>
+>
+>> So all and alll, what guys do you think is more reliable now, new
+>> hot-replace or these steps?
+>
+>
+> I too am very curious to hear opinions. =A0Hot-replace will certainly=
+ be much
+> simpler and faster than these sorts of re-shaping - it's exactly the =
+sort of
+> situation the feature was designed for. =A0But I don't know if it is
+> considered stable and well-tested, or "bleeding edge".
+>
+> mvh.,
+>
+> David
+>
+>
+>
+>>
+>> Thanks.
+>>
+>> Patrik
+>>
+>> On Wed, May 9, 2012 at 8:09 AM, David Brown<david.brown@hesbynett.no=
+>
+>> =A0wrote:
+>>> On 08/05/12 11:10, Patrik Horn=EDk wrote:
+>>>>
+>>>> Hello guys,
+>>>>
+>>>> I need to replace drive in big production RAID5 array and I am
+>>>> thinking about using new hot-replace feature added in kernel 3.3.
+>>>>
+>>>> Does someone have experience with it on big RAID5 arrays? Mine is =
+7 *
+>>>> 1.5 TB. What do you think about its status / stability / reliabili=
+ty?
+>>>> Do you recommend it on production data?
+>>>>
+>>>> Thanks.
+>>>>
+>>>
+>>> If you don't want to play with the "bleeding edge" features, you co=
+uld
+>>> add
+>>> the disk and extend the array to RAID6, then remove the old drive. =
+I
+>>> think
+>>> if you want to do it all without doing any re-shapes, however, then=
+ you'd
+>>> need a third drive (the extra drive could easily be an external USB=
+ disk
+>>> if
+>>> needed - it will only be used for writing, and not for reading unle=
+ss
+>>> there's another disk failure). =A0Start by adding the extra drive a=
+s a hot
+>>> spare, then re-shape your raid5 to raid6 in raid5+extra parity layo=
+ut.
+>>> =A0Then
+>>> fail and remove the old drive. =A0Put the new drive into the box an=
+d add it
+>>> as
+>>> a hot spare. =A0It should automatically take its place in the raid5=
+,
+>>> replacing
+>>> the old one. =A0Once it has been rebuilt, you can fail and remove t=
+he extra
+>>> drive, then re-shape back to raid5.
+>>>
+>>> If things go horribly wrong, the external drive gives you your pari=
+ty
+>>> protection.
+>>>
+>>> Of course, don't follow this plan until others here have commented =
+on it,
+>>> and either corrected or approved it.
+>>>
+>>> And make sure you have a good backup no matter what you decide to d=
+o.
+>>>
+>>> mvh.,
+>>>
+>>> David
+>>>
+>>
+>>
+>
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
