@@ -1,54 +1,88 @@
-From: Daniel Pocock <daniel@pocock.com.au>
-Subject: Re: md RAID with enterprise-class SATA or SAS drives
-Date: Thu, 10 May 2012 22:37:52 +0000
-Message-ID: <4FAC4340.1060003@pocock.com.au>
-References: <4FAAE8F1.8000600@pocock.com.au> <CALFpzo5ObdwFATdT4e20znnxzU5hX9SVSfqJcdqOXM1FEYJQuw@mail.gmail.com> <4FABC7C6.4030107@turmel.org> <4FAC2FF2.5060305@hardwarefreak.com> <4FAC40BC.1060300@hesbynett.no>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Superblock backup
+Date: Fri, 11 May 2012 08:50:57 +1000
+Message-ID: <20120511085057.27790c1a@notabene.brown>
+References: <20120510174431.GA3019@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/kLWb2EMdFnvEJmFDzSLPJf="; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FAC40BC.1060300@hesbynett.no>
+In-Reply-To: <20120510174431.GA3019@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: stan@hardwarefreak.com, Phil Turmel <philip@turmel.org>, Marcus Sorensen <shadowsor@gmail.com>, linux-raid@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+--Sig_/kLWb2EMdFnvEJmFDzSLPJf=
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, 10 May 2012 19:44:31 +0200 Piergiorgio Sartor
+<piergiorgio.sartor@nexgo.de> wrote:
+
+> Hi,
+>=20
+> again, following the RAID-5 story, I was wondering
+> if could make sense to have a new superblock type,
+> let's say 2.x, having backup copies (of persistent
+> or quasi persistent data) in different areas of the
+> drive components.
+> This would be similar to filesystem or gpt.
+>=20
+> Is there anything planned for this?
+
+This is one of the idea that has floated around in my head for a while,
+possibly a v1.3 metadata.
+
+However my thought there was always to protect against a bad block on the
+device.  Protecting against data corruption due to bugs or sys-admin mistak=
+es
+is always best handled by backups.
+e.g. take a 'dump' (either binary or textual) of the metadata every day, or
+every reboot or something. (And store it on a different host).
+
+Both are probably useful, but for the recently problem, a regular backup
+would be the most useful.
+
+>=20
+> In any case, it would be still interesting to have
+> a "backup" capability at hand, like a "dd" of the
+> superblock to some secure file.
+
+"mdadm -E" would probably be enough - just write a cron job :-)
+
+NeilBrown
 
 
-On 10/05/12 22:27, David Brown wrote:
-> On 10/05/12 23:15, Stan Hoeppner wrote:
->> On 5/10/2012 8:51 AM, Phil Turmel wrote:
->>
->>> Hardware RAID cards usually offer battery-backed write cache, which is
->>> very valuable in some applications.  I don't have a need for that kind
->>> of performance, so I can't speak to the details.  (Is Stan H.
->>> listening?)
->>
->> Yes, I'm here to drop the hammer, and start a flame war. ;)  I've been
->> lurking and trying to stay out of the fray, but you "keep dragging me
->> back in!" --Michael Corleone
->>
->> I find the mere existence of this thread a bit comical, as with all
->> others that have preceded it.  I made the comment on this list quite
->> some time ago that md raid is mostly used by hobbyists, and took a lot
->> of heat for that.  The existence of this thread adds ammunition to that
->> argument.
->>
-> 
-> I think you've got that a bit backwards.  Most hobbyists (or low-budget
-> users) who use raid other than motherboard fakeraid will choose Linux md
-> raid.  It may well be that most users of md raid /are/ hobby or
-> low-budget users.  But your implication - that professionals don't use
-> md raid - is completely wrong.
-> 
-> It's more likely that it is hobby users that discuss these sorts of
-> things - professionals just pay the money that the server manufacturer
-> asks for its supported disks, since paying that is cheaper than spending
-> time discussing things.  I know I mostly follow lists like this in my
-> free time (as a hobbiest) rather than in work time (as a professional).
-> 
+>=20
+> Any idea or suggestions?
+>=20
+> Thanks,
+>=20
+> bye,
+>=20
 
-The more scary thing is that many professionals are afraid to look at
-(or ask questions on) a list like this because they don't want to look
-like they didn't know something
 
+--Sig_/kLWb2EMdFnvEJmFDzSLPJf=
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT6xGUTnsnt1WYoG5AQIScA//dTbkAugvU+KFlvUIZXNI+JqyOlV5n/Q9
+AyXx7TWU8vOcB5V+jTV828/iun8KXfWTeMYU7Px5QNmAhIpobQqRh47JdwJDajxr
+XXDMScIcI6OFTB1oUa9ycqV7P2mXNyIzAO3966oTTs/08qVQIYrpBAzjM5vX7M0O
+U85O30iR1k34dk63OXak7rIPpc/HJevOD4bwEiIQxYi5R5hrVDR3AsdgevuZ2coj
+9sChIoiHlJ9gSC81FYizqI4hc1nP8BGOofyyzBhvNSFTzQCIeKQEFXXCf5rL8O0T
+jcKie+7JS/N28ZlFXH+Hrb5RW9gNGOfA4qKc6NfIoC7yvB9Fa3BHeTaPvnJZ3pIc
+jp5hNDDv5XT+XHQno3VqH0s//Y6PLPieoVtd841+dGBoryU1VGwoKuM0CHMiGNcB
+M18a0Ls7wLtX6rgSUlsKz93ptQW+mO7xQDkBaJWWK85VGucxW9NftopOByuJwKlH
+447uaqVt3FMO0yUxYFn647JTy1hdN+StsvgHRbhCCWWWz0J5ptz9ZfT9j9iiiPfE
+gR70N5qXSK168BgAmFtJxqjeen02OadnWm791BFQFNhXiEJGCKCh44eZox3r/Y77
+E/4UDidShPUh7vVJltHoNTQMNKcHppPOxTLR2PzghPC8bR7rEzceKLVtQbL5hNrd
+cbIFF/SZsy8=
+=9LDd
+-----END PGP SIGNATURE-----
+
+--Sig_/kLWb2EMdFnvEJmFDzSLPJf=--
