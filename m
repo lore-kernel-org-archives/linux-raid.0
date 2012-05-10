@@ -1,190 +1,104 @@
-From: =?ISO-8859-1?Q?Patrik_Horn=EDk?= <patrik@dsl.sk>
-Subject: Re: Hot-replace for RAID5
-Date: Thu, 10 May 2012 10:50:53 +0200
-Message-ID: <CAAOsTSmo+Ja0V+_0J-145Vaeg4YfPHJgrtKPB5SLhGDAkH9+Sw@mail.gmail.com>
-References: <CAAOsTS=4+eqRJXVrw2OaYibgNTEaGxJx4x1PPN4iU49tUO9zOg@mail.gmail.com>
-	<4FAB6758.5050109@hesbynett.no>
-Reply-To: patrik@dsl.sk
+From: NeilBrown <neilb@suse.de>
+Subject: Re: and again: broken RAID5
+Date: Thu, 10 May 2012 19:20:16 +1000
+Message-ID: <20120510192016.49cb9003@notabene.brown>
+References: <4FAB7739.9000907@cgv.tugraz.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FAB6758.5050109@hesbynett.no>
+In-Reply-To: <4FAB7739.9000907@cgv.tugraz.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
+To: Lars Schimmer <l.schimmer@cgv.tugraz.at>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, May 10, 2012 at 8:59 AM, David Brown <david.brown@hesbynett.no>=
- wrote:
-> (I accidentally sent my first reply directly to the OP, and forgot th=
-e
-> mailing list - I'm adding it back now, because I don't want the OP to=
- follow
-> my advice until others have confirmed or corrected it!)
->
-
-Thanks. I just hit reply all and did not notice that...
-
->
-> On 09/05/2012 21:53, Patrik Horn=EDk wrote:
->> Great suggestion, thanks.
->>
->> So I guess steps with exact parameters should be:
->> 1, add spare S to RAID5 array
->> 2, mdadm --grow /dev/mdX --level 6 --raid-devices N+1 --layout=3Dpre=
-serve
->> 3, remove faulty drive and add replacement, let it synchronize
->> 4, possibly remove added spare S
->> 5, mdadm --grow /dev/mdX --level 5 --raid-devices N
->
->
-> Yes, that's what I was thinking. =A0You are missing "2b - let it sync=
-hronise".
->
-> Of course, another possibility is that if you have the space in the s=
-ystem
-> for another drive, you may want to convert to a full raid6 for the fu=
-ture.
-> =A0That way you have the extra safety built-in in advance. But that w=
-ill
-> definitely lead to a re-shape.
->
->
->>
->> My questions:
->> - Are you sure steps 3, 4 and 5 would not cause reshaping?
->
-> I /believe/ it will avoid a reshape, but I can't say I'm sure. =A0Thi=
-s is
-> stuff that I only know about in theory, and have not tried in practic=
-e.
->
->
->>
->> - My array has now left-symmetric layout, so after migration to RAID=
-6
->> it should be left-symmetric-6. Is RAID6 working without problem in
->> degraded mode with this layout, no matter which one or two drives ar=
-e
->> missing?
->>
->
-> The layout will not affect the redundancy or the features of the raid=
- - it
-> will only (slightly) affect the speed of some operations.
->
->
->> - What happens in step 5 and how long does it take? (If it is withou=
-t
->> reshaping, it should only upgrade superblocks and thats it.)
->
-> That is my understanding.
->
->
->>
->> - What happens if I dont remove spare S before migration back to
->> RAID5? Will the array be reshaped and which drive will it make into
->> spare? (If step 5 is instantaneous, there is no reason for that. But
->> if it takes time, it is probably safer.)
->>
->
-> I /think/ that the extra disk will turn into a hot spare. =A0But I am=
- getting
-> out of my depth here - it all depends on how the disks get numbered a=
-nd how
-> that affects the layout, and I don't know the details here.
->
->
->> So all and alll, what guys do you think is more reliable now, new
->> hot-replace or these steps?
->
->
-> I too am very curious to hear opinions. =A0Hot-replace will certainly=
- be much
-> simpler and faster than these sorts of re-shaping - it's exactly the =
-sort of
-> situation the feature was designed for. =A0But I don't know if it is
-> considered stable and well-tested, or "bleeding edge".
->
-> mvh.,
->
-> David
->
->
->
->>
->> Thanks.
->>
->> Patrik
->>
->> On Wed, May 9, 2012 at 8:09 AM, David Brown<david.brown@hesbynett.no=
->
->> =A0wrote:
->>> On 08/05/12 11:10, Patrik Horn=EDk wrote:
->>>>
->>>> Hello guys,
->>>>
->>>> I need to replace drive in big production RAID5 array and I am
->>>> thinking about using new hot-replace feature added in kernel 3.3.
->>>>
->>>> Does someone have experience with it on big RAID5 arrays? Mine is =
-7 *
->>>> 1.5 TB. What do you think about its status / stability / reliabili=
-ty?
->>>> Do you recommend it on production data?
->>>>
->>>> Thanks.
->>>>
->>>
->>> If you don't want to play with the "bleeding edge" features, you co=
-uld
->>> add
->>> the disk and extend the array to RAID6, then remove the old drive. =
-I
->>> think
->>> if you want to do it all without doing any re-shapes, however, then=
- you'd
->>> need a third drive (the extra drive could easily be an external USB=
- disk
->>> if
->>> needed - it will only be used for writing, and not for reading unle=
-ss
->>> there's another disk failure). =A0Start by adding the extra drive a=
-s a hot
->>> spare, then re-shape your raid5 to raid6 in raid5+extra parity layo=
-ut.
->>> =A0Then
->>> fail and remove the old drive. =A0Put the new drive into the box an=
-d add it
->>> as
->>> a hot spare. =A0It should automatically take its place in the raid5=
-,
->>> replacing
->>> the old one. =A0Once it has been rebuilt, you can fail and remove t=
-he extra
->>> drive, then re-shape back to raid5.
->>>
->>> If things go horribly wrong, the external drive gives you your pari=
-ty
->>> protection.
->>>
->>> Of course, don't follow this plan until others here have commented =
-on it,
->>> and either corrected or approved it.
->>>
->>> And make sure you have a good backup no matter what you decide to d=
-o.
->>>
->>> mvh.,
->>>
->>> David
->>>
->>
->>
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBUaHUs
+IDEwIE1heSAyMDEyIDEwOjA3OjIxICswMjAwIExhcnMgU2NoaW1tZXIgPGwuc2NoaW1tZXJAY2d2
+LnR1Z3Jhei5hdD4NCndyb3RlOg0KDQo+IC0tLS0tQkVHSU4gUEdQIFNJR05FRCBNRVNTQUdFLS0t
+LS0NCj4gSGFzaDogU0hBMQ0KPiANCj4gSGkhDQo+IA0KPiANCj4gDQo+IEkganVzdCB3YW50IHNv
+bWUgdGlwcyBvbiBob3d0byBnZXQgdHdvIGJyb2tlbiByYWlkNSBydW5uaW5nIGFnYWluLg0KPiAN
+Cj4gSXQgY29udGFpbnMgb2YgNCBkcml2ZXMsIG9uZSB3YXMgdGhyb3duIG91dCBvbiBzYXR1cmRh
+eSBldmVuaW5nLCBhbmQNCj4gdGhlIHNlY29uZCBkcml2ZSB0aHJldyByZWFkL3dyaXRlIGVycm9y
+cyBiZWZvcmUgSSBjb3VsZCByZXBsYWNlIHRoZQ0KPiBmaXJzdCBvbmUuDQo+IA0KPiBOb3cgSSBn
+b3QgYWxsIGZvdXIgZHJpdmVzIHJ1bm5pbmcgYWdhaW4sIGxvb2tzIGxpa2Ugc29tZQ0KPiBjb250
+cm9sbGVyL2NhYmxlIHByb2JsZW0uIENoYW5nZWQgdGhlbS4NCj4gDQo+IEJ1dCBtZGFkbSB0ZWxs
+cyBtZSwgb25seSAyIG9mIDQgYXJlIGF2YWlsYWJsZSBhbmQgY291bGQgbm90IHN0YXJ0IHJhaWQ6
+DQo+IA0KPiBtZDIgOiBpbmFjdGl2ZSBzZGgyWzBdKFMpIHNkaTJbNF0oUykgc2RmMls2XShTKSBz
+ZGoyWzVdKFMpDQo+IDQyNTE3NzAxNDQgYmxvY2tzIHN1cGVyIDEuMg0KPiANCj4gbWQxIDogaW5h
+Y3RpdmUgc2RoMVswXShTKSBzZGkxWzRdKFMpIHNkZjFbNl0oUykgc2RqMVs1XShTKQ0KPiAyMDk3
+MTQ3OTA0IGJsb2NrcyBzdXBlciAxLjINCj4gDQo+IG1kYWRtIC1FIHRlbGxzIG1lIGUuZy4gZm9y
+IG1kMToNCj4gDQo+IC9kZXYvc2RoMToNCj4gTWFnaWMgOiBhOTJiNGVmYw0KPiBWZXJzaW9uIDog
+MS4yDQo+IEZlYXR1cmUgTWFwIDogMHgwDQo+IEFycmF5IFVVSUQgOiBhNTAzY2VhOTplYjYxM2Ri
+MTpjODkwOTIzMzpmZDU0MTVjZQ0KPiBOYW1lIDogZGViaWFuOjEgIChsb2NhbCB0byBob3N0IGRl
+YmlhbikNCj4gQ3JlYXRpb24gVGltZSA6IFNhdCBGZWIgMTEgMTM6Mzk6NDYgMjAxMg0KPiBSYWlk
+IExldmVsIDogcmFpZDUgICAgUmFpZCBEZXZpY2VzIDogNA0KPiBBdmFpbCBEZXYgU2l6ZSA6IDEw
+NDg1NzM5NTIgKDUwMC4wMCBHaUIgNTM2Ljg3IEdCKQ0KPiBBcnJheSBTaXplIDogMzE0NTcyMDMy
+MCAoMTUwMC4wMCBHaUIgMTYxMC42MSBHQikNCj4gVXNlZCBEZXYgU2l6ZSA6IDEwNDg1NzM0NDAg
+KDUwMC4wMCBHaUIgNTM2Ljg3IEdCKQ0KPiBEYXRhIE9mZnNldCA6IDIwNDggc2VjdG9ycw0KPiBT
+dXBlciBPZmZzZXQgOiA4IHNlY3RvcnMNCj4gU3RhdGUgOiBjbGVhbg0KPiBEZXZpY2UgVVVJRCA6
+IDcxMGEyOTI2OjY0MGJjNjc1OjdiNWZlMzA4Ojg2MWQxODgzDQo+IFVwZGF0ZSBUaW1lIDogU3Vu
+IE1heSAgNiAxMzo1NzoyMiAyMDEyDQo+IENoZWNrc3VtIDogZTM4N2U3NDggLSBjb3JyZWN0DQo+
+IEV2ZW50cyA6IDIwNjI4Ng0KPiBMYXlvdXQgOiBsZWZ0LXN5bW1ldHJpYw0KPiBDaHVuayBTaXpl
+IDogMTI4Sw0KPiBEZXZpY2UgUm9sZSA6IEFjdGl2ZSBkZXZpY2UgMA0KPiBBcnJheSBTdGF0ZSA6
+IEFBLi4gKCdBJyA9PSBhY3RpdmUsICcuJyA9PSBtaXNzaW5nKQ0KPiANCj4gL2Rldi9zZGYxOg0K
+PiBNYWdpYyA6IGE5MmI0ZWZjDQo+IFZlcnNpb24gOiAxLjINCj4gRmVhdHVyZSBNYXAgOiAweDAN
+Cj4gQXJyYXkgVVVJRCA6IGE1MDNjZWE5OmViNjEzZGIxOmM4OTA5MjMzOmZkNTQxNWNlDQo+IE5h
+bWUgOiBkZWJpYW46MSAgKGxvY2FsIHRvIGhvc3QgZGViaWFuKQ0KPiBDcmVhdGlvbiBUaW1lIDog
+U2F0IEZlYiAxMSAxMzozOTo0NiAyMDEyDQo+IFJhaWQgTGV2ZWwgOiByYWlkNQ0KPiBSYWlkIERl
+dmljZXMgOiA0DQo+IEF2YWlsIERldiBTaXplIDogMTA0ODU3Mzk1MiAoNTAwLjAwIEdpQiA1MzYu
+ODcgR0IpDQo+IEFycmF5IFNpemUgOiAzMTQ1NzIwMzIwICgxNTAwLjAwIEdpQiAxNjEwLjYxIEdC
+KQ0KPiBVc2VkIERldiBTaXplIDogMTA0ODU3MzQ0MCAoNTAwLjAwIEdpQiA1MzYuODcgR0IpDQo+
+IERhdGEgT2Zmc2V0IDogMjA0OCBzZWN0b3JzDQo+IFN1cGVyIE9mZnNldCA6IDggc2VjdG9ycw0K
+PiBTdGF0ZSA6IGNsZWFuDQo+IERldmljZSBVVUlEIDogZjUzYjA5N2M6OTc2MmYyYTQ6ZjJhZjkw
+MTE6M2ZhN2NlZDcNCj4gVXBkYXRlIFRpbWUgOiBTdW4gTWF5ICA2IDEzOjM4OjI2IDIwMTINCj4g
+Q2hlY2tzdW0gOiBjNWY3NDViZCAtIGNvcnJlY3QNCj4gRXZlbnRzIDogMjA2MjczDQo+IExheW91
+dCA6IGxlZnQtc3ltbWV0cmljDQo+IENodW5rIFNpemUgOiAxMjhLDQo+IERldmljZSBSb2xlIDog
+QWN0aXZlIGRldmljZSAyDQo+IEFycmF5IFN0YXRlIDogQUFBLiAoJ0EnID09IGFjdGl2ZSwgJy4n
+ID09IG1pc3NpbmcpDQo+IA0KPiAvZGV2L3NkaTE6DQo+IE1hZ2ljIDogYTkyYjRlZmMNCj4gVmVy
+c2lvbiA6IDEuMg0KPiBGZWF0dXJlIE1hcCA6IDB4MA0KPiBBcnJheSBVVUlEIDogYTUwM2NlYTk6
+ZWI2MTNkYjE6Yzg5MDkyMzM6ZmQ1NDE1Y2UNCj4gTmFtZSA6IGRlYmlhbjoxICAobG9jYWwgdG8g
+aG9zdCBkZWJpYW4pDQo+IENyZWF0aW9uIFRpbWUgOiBTYXQgRmViIDExIDEzOjM5OjQ2IDIwMTIN
+Cj4gUmFpZCBMZXZlbCA6IHJhaWQ1DQo+IFJhaWQgRGV2aWNlcyA6IDQNCj4gQXZhaWwgRGV2IFNp
+emUgOiAxMDQ4NTczOTUyICg1MDAuMDAgR2lCIDUzNi44NyBHQikNCj4gQXJyYXkgU2l6ZSA6IDMx
+NDU3MjAzMjAgKDE1MDAuMDAgR2lCIDE2MTAuNjEgR0IpDQo+IFVzZWQgRGV2IFNpemUgOiAxMDQ4
+NTczNDQwICg1MDAuMDAgR2lCIDUzNi44NyBHQikNCj4gRGF0YSBPZmZzZXQgOiAyMDQ4IHNlY3Rv
+cnMNCj4gU3VwZXIgT2Zmc2V0IDogOCBzZWN0b3JzDQo+IFN0YXRlIDogY2xlYW4NCj4gRGV2aWNl
+IFVVSUQgOiA3OWViNWMwYzpkYjczZTJmODoyMWQ5YjdmODo5NzkzNmRhNA0KPiBVcGRhdGUgVGlt
+ZSA6IFN1biBNYXkgIDYgMDE6MzI6MzUgMjAxMg0KPiBDaGVja3N1bSA6IDVkZmY0ZTJhIC0gY29y
+cmVjdA0KPiBFdmVudHMgOiAxOTcxMTQNCj4gTGF5b3V0IDogbGVmdC1zeW1tZXRyaWMNCj4gQ2h1
+bmsgU2l6ZSA6IDEyOEsNCj4gRGV2aWNlIFJvbGUgOiBBY3RpdmUgZGV2aWNlIDMNCj4gQXJyYXkg
+U3RhdGUgOiBBQUFBICgnQScgPT0gYWN0aXZlLCAnLicgPT0gbWlzc2luZykNCj4gDQo+IC9kZXYv
+c2RqMToNCj4gTWFnaWMgOiBhOTJiNGVmYw0KPiBWZXJzaW9uIDogMS4yDQo+IEZlYXR1cmUgTWFw
+IDogMHgwDQo+IEFycmF5IFVVSUQgOiBhNTAzY2VhOTplYjYxM2RiMTpjODkwOTIzMzpmZDU0MTVj
+ZQ0KPiBOYW1lIDogZGViaWFuOjEgIChsb2NhbCB0byBob3N0IGRlYmlhbikNCj4gQ3JlYXRpb24g
+VGltZSA6IFNhdCBGZWIgMTEgMTM6Mzk6NDYgMjAxMg0KPiBSYWlkIExldmVsIDogcmFpZDUNCj4g
+UmFpZCBEZXZpY2VzIDogNA0KPiBBdmFpbCBEZXYgU2l6ZSA6IDEwNDg1NzM5NTIgKDUwMC4wMCBH
+aUIgNTM2Ljg3IEdCKQ0KPiBBcnJheSBTaXplIDogMzE0NTcyMDMyMCAoMTUwMC4wMCBHaUIgMTYx
+MC42MSBHQikNCj4gVXNlZCBEZXYgU2l6ZSA6IDEwNDg1NzM0NDAgKDUwMC4wMCBHaUIgNTM2Ljg3
+IEdCKQ0KPiBEYXRhIE9mZnNldCA6IDIwNDggc2VjdG9ycw0KPiBTdXBlciBPZmZzZXQgOiA4IHNl
+Y3RvcnMNCj4gU3RhdGUgOiBjbGVhbg0KPiBEZXZpY2UgVVVJRCA6IGU4MDU1YmNhOjBmM2M5YjU0
+OjQyMWJjMmMyOjRhNzIzNTliDQo+IFVwZGF0ZSBUaW1lIDogU3VuIE1heSAgNiAxMzo1NzoyMiAy
+MDEyDQo+IENoZWNrc3VtIDogMzg4YjIzZmMgLSBjb3JyZWN0DQo+IEV2ZW50cyA6IDIwNjI4Ng0K
+PiBMYXlvdXQgOiBsZWZ0LXN5bW1ldHJpYw0KPiBDaHVuayBTaXplIDogMTI4Sw0KPiBEZXZpY2Ug
+Um9sZSA6IEFjdGl2ZSBkZXZpY2UgMQ0KPiBBcnJheSBTdGF0ZSA6IEFBLi4gKCdBJyA9PSBhY3Rp
+dmUsICcuJyA9PSBtaXNzaW5nKQ0KPiANCj4gDQo+IFNvIGFsbCA0IGRpc2tzIHNlZSBzb21lIGRp
+ZmYgc3RhdGUuIEFueSBjaGFuY2Ugb24gZ2V0dGluZyByYWlkNQ0KPiBydW5uaW5nIGFnYWluIGFu
+ZCByZWFkIHNvbWUgZGF0YSBmcm9tIGl0Pw0KPiANCj4gRG9lcyB0aGUgbWRhZG0gLUMgLS1hc3N1
+bWUtY2xlYW4gb3B0aW9uIGhlbHAgbWUgaW4gdGhhdCBjYXNlIGFueWhvdz8NCg0KSnVzdCBhZGQg
+LS1mb3JjZSB0aGUgdG8gLS1hc3NlbWJsZSBjb21tYW5kLg0KDQpOZWlsQnJvd24NCg0KLS0tLS1C
+RUdJTiBQR1AgU0lHTkFUVVJFLS0tLS0NClZlcnNpb246IEdudVBHIHYyLjAuMTggKEdOVS9MaW51
+eCkNCg0KaVFJVkF3VUJUNnVJVURuc250MVdZb0c1QVFMWXh4QUF2RVBFdUhYbkM0ZkI1QlFKbnpW
+RkZyRnd3STZLNnJlMg0KWG1qS3IzWG5Oamx1VUNidFhnR0FpNjFxdGk4MnJZbjVaREtyYllITzQ3
+Y1NKNTFFM1JRck9PdjB2N3UzUEJ4Kw0KdjZnQWtEVUFlcjY4T1pXbTZTeHhiLy8vM1Yxam9hbmlk
+RW1WZHBQbnRjYjNrTno0cEx1b2xHVHlLVnptZVd3ZQ0KdTBnZ09MOXlxSU9nQ0hOQXI1MFJpWVAx
+dnNNNlFPaFhMNGY2OTYyWmVuUTN2ZEFxS1ppQWhaNzNmcXVlZUhZaQ0KVXFTMkIxdEhhdW8wQ1hD
+RlFyUTJPTHc5Z3RURHAxUjQ2d2svYnhaSUpNT0Mvcm45djV1OC9HZmtKRDVuWWdObQ0KckttRHEw
+QWUrT1lwRHNWZnM5dU9WOGw5WHdxN0V6ZzNOdlZJSzVEdWI1ckZoTVNhTlR4K2hIc0dLdkI0RGtS
+Lw0KSVg3L0hKd0hsQlFlcHRQQ1hiSnZkUXNieDFZRmp5ckZJUjRIRUVQYlBuZGJncjR3TmVzZzJ4
+YjZwYkRvZzJZeg0KczJHYW52MjI5WktMMHFPVE5kRkprWmU4dVQwVlR5UUZiK1JGVXhSekZCM2ZT
+ZGM4dkpvQnFDd2RSWXRzWW05MA0KYjk2clI3aE1Mc3cvNVkwamdqN0FHUDBYZXowN000S3FmV3pp
+NGJXR1dYU0JaYXJRZmZnbit6dEJVSFNmcGVIbg0KcXVWb05KL3dwSEhPeFZIcGthS3VCREh3c0cy
+cERGcmpIYmVyTkYyeDJsSFplREswZDA3aWoxS3RiVkw5NTY0Yw0KSG9oNlR6clA4OXZMUVlTcWxW
+U2ZGR0lFMXc4YzhaQ1ZmU3Y2VDY3NGczNERaemxVOFBMY05VSUFQZk0xWUFLYg0KcGc4dkxwcDJa
+VkE9DQo9VEZHSg0KLS0tLS1FTkQgUEdQIFNJR05BVFVSRS0tLS0tDQo=
