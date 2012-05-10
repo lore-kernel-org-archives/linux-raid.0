@@ -1,36 +1,34 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Superblock backup
-Date: Thu, 10 May 2012 19:44:31 +0200
-Message-ID: <20120510174431.GA3019@lazy.lzy>
+From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Subject: Re: md RAID with enterprise-class SATA or SAS drives
+Date: Thu, 10 May 2012 10:53:28 -0700
+Message-ID: <otbt79xn1j.ln2@goaway.wombat.san-francisco.ca.us>
+References: <4FAAE8F1.8000600@pocock.com.au>
+ <CALFpzo5ObdwFATdT4e20znnxzU5hX9SVSfqJcdqOXM1FEYJQuw@mail.gmail.com>
+ <4FABC7C6.4030107@turmel.org>
+ <CALFpzo6BECrv2eTbSRKwUzpTopx_0EmD+UipqUf-XE=vzz2OnQ@mail.gmail.com>
+ <4FABE724.40103@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On 2012-05-10, Phil Turmel <philip@turmel.org> wrote:
+>
+> Frequent array checks are not optional, if you want flush out any UREs
+> in the making, and maximize your odds of successfully rebuilding after
+> a drive replacement.  If you are running RAID6 or a triple mirror, with
+> frequent checks, you are very safe.
 
-again, following the RAID-5 story, I was wondering
-if could make sense to have a new superblock type,
-let's say 2.x, having backup copies (of persistent
-or quasi persistent data) in different areas of the
-drive components.
-This would be similar to filesystem or gpt.
+How frequent do people define as "frequent"?  I typically do monthly
+checks, but perhaps I should be doing them weekly.
 
-Is there anything planned for this?
+--keith
 
-In any case, it would be still interesting to have
-a "backup" capability at hand, like a "dd" of the
-superblock to some secure file.
-
-Any idea or suggestions?
-
-Thanks,
-
-bye,
 
 -- 
+kkeller@wombat.san-francisco.ca.us
 
-piergiorgio
+
