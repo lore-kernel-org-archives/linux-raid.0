@@ -1,48 +1,49 @@
 From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Raid5 Array stopped suddenly, no apparent error messages.
-Date: Thu, 10 May 2012 11:09:58 +0100
-Message-ID: <4FAB93F6.2030700@anonymous.org.uk>
-References: <4FAAB2B8.6090403@soulspark.org>
+Subject: Re: and again: broken RAID5
+Date: Thu, 10 May 2012 11:19:30 +0100
+Message-ID: <4FAB9632.5010206@anonymous.org.uk>
+References: <4FAB7739.9000907@cgv.tugraz.at> <20120510192016.49cb9003@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FAAB2B8.6090403@soulspark.org>
+In-Reply-To: <20120510192016.49cb9003@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brian McKee <brian@soulspark.org>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Lars Schimmer <l.schimmer@cgv.tugraz.at>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/05/2012 19:08, Brian McKee wrote:
-> If this is not a good place to ask for help, please point me to where I
-> can ask. Sorry if I offend.
->
-> TL;DR: My question is this: is it safe to run mdadm --create
-> --assume-clean on an existing array? And by safe I mean: is it
-> guaranteed that the existing ext4 partition's data will not be lost when
-> I run the command?
-
-Any --create --assume-clean will only rewrite the metadata. You would 
-need to get the command exactly right, specifying the chunk size, 
-metadata type and member partitions in the right order in order to be 
-able to see your filesystem. However...
-
+On 10/05/2012 10:20, NeilBrown wrote:
+> On Thu, 10 May 2012 10:07:21 +0200 Lars Schimmer<l.schimmer@cgv.tugraz.at>
+> wrote:
 [...]
-> For more details you can read this gentoo thread:
-> http://forums.gentoo.org/viewtopic-p-7033578.html
+>> mdadm -E tells me e.g. for md1:
+>>
+>> /dev/sdh1:
+>> Events : 206286
+>>
+>> /dev/sdf1:
+>> Events : 206273
+>>
+>> /dev/sdi1:
+>> Events : 197114
+>>
+>> /dev/sdj1:
+>> Events : 206286
+[...]
+>>
+>>
+>> So all 4 disks see some diff state. Any chance on getting raid5
+>> running again and read some data from it?
+>>
+>> Does the mdadm -C --assume-clean option help me in that case anyhow?
 >
-> Summary: The three drives won't assemble because they are not fresh.
+> Just add --force the to --assemble command.
 
-I don't think you are seeing the recent kernel bug; you can see all the 
-correct metadata on all your drives.
-
-The problem you have is that your member partitions have different event 
-counts. You can force the assembly, ignoring the different event counts, 
-with --assemble --force. You should then run a fsck as there may already 
-be some corruption which occurred when the event counts got out of sync.
-
-You should also try to track down what caused the issue in the first 
-place. Check your logs for ata errors.
+I think I'd assemble from only 3 drives, sdh, sdf and sdj, because sdi's 
+event count is so much lower it must be the one that was knocked out 
+first and you probably want to resync onto it (or a fresh drive if it's 
+actually faulty).
 
 Cheers,
 
