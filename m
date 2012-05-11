@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [RFC PATCH 1/7] bcache: compile fix
-Date: Fri, 11 May 2012 12:46:16 -0700
-Message-ID: <20120511194616.25770.93946.stgit@dwillia2-linux.jf.intel.com>
+Subject: [RFC PATCH 2/7] bcache: disable lockdep, enable CONFIG_BCACHE=m
+Date: Fri, 11 May 2012 12:46:21 -0700
+Message-ID: <20120511194621.25770.42902.stgit@dwillia2-linux.jf.intel.com>
 References: <20120511194327.25770.79292.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,38 +13,94 @@ To: neilb-l3A5Bk7waGM@public.gmane.org, koverstreet-hpIqsD4AKlfQT0dZR+AlfA@publi
 Cc: linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
-dynamic_fault bits have been removed.
+Of course checkpatch rightly complains:
 
-Signed-off-by: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+  ERROR: lockdep_no_validate class is reserved for device->mutex.
+
+...so this is only hack for debugging.
+
+Without this compiling as a module is not possible because the calls to
+__up_write() cause:
+
+  ERROR: "call_rwsem_wake" [drivers/block/bcache/bcache.ko] undefined!
+
+...because __up_write is an internal rwsem detail.
+
+lockdep_no_validate at least makes it explicit that lockdep support is a
+work-in-progress.
+
+Not-signed-off-by... need a better workaround
 ---
- drivers/block/bcache/util.c |    2 --
- drivers/block/bcache/util.h |    3 ---
- 2 files changed, 5 deletions(-)
+ drivers/block/bcache/btree.c |   18 ++++--------------
+ kernel/lockdep.c             |    1 +
+ 2 files changed, 5 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/block/bcache/util.c b/drivers/block/bcache/util.c
-index 200c523..6da7058 100644
---- a/drivers/block/bcache/util.c
-+++ b/drivers/block/bcache/util.c
-@@ -6,8 +6,6 @@
- #include <linux/seq_file.h>
- #include <linux/types.h>
+diff --git a/drivers/block/bcache/btree.c b/drivers/block/bcache/btree.c
+index 7e9975f..e2fc357 100644
+--- a/drivers/block/bcache/btree.c
++++ b/drivers/block/bcache/btree.c
+@@ -538,6 +538,7 @@ static struct btree *mca_bucket_alloc(struct cache_set *c,
+ 		return NULL;
  
--#include <linux/dynamic_fault.h>
+ 	init_rwsem(&b->lock);
++	lockdep_set_novalidate_class(&b->lock);
+ 	INIT_LIST_HEAD(&b->list);
+ 	INIT_DELAYED_WORK(&b->work, btree_write_work);
+ 	b->c = c;
+@@ -1116,9 +1117,7 @@ static struct btree *btree_gc_alloc(struct btree *b, struct bkey *k,
+ 		b->prio_blocked++;
+ 
+ 		btree_free(n, op);
+-		__up_write(&n->lock);
 -
- #include "util.h"
+-		rwsem_release(&b->lock.dep_map, 1, _THIS_IP_);
++		up_write(&n->lock);
+ 	}
  
- #define simple_strtoint(c, end, base)	simple_strtol(c, end, base)
-diff --git a/drivers/block/bcache/util.h b/drivers/block/bcache/util.h
-index 0c14cd7..6bd5327 100644
---- a/drivers/block/bcache/util.h
-+++ b/drivers/block/bcache/util.h
-@@ -597,9 +597,6 @@ unsigned __bio_max_sectors(struct bio *bio, struct block_device *bdev,
+ 	return b;
+@@ -1218,7 +1217,7 @@ static void btree_gc_coalesce(struct btree *b, struct btree_op *op,
+ 	}
  
- int bio_alloc_pages(struct bio *bio, gfp_t gfp);
+ 	btree_free(r->b, op);
+-	__up_write(&r->b->lock);
++	up_write(&r->b->lock);
  
--#define bio_alloc_pages(...)						\
--	(dynamic_fault() ? -ENOMEM	: bio_alloc_pages(__VA_ARGS__))
+ 	pr_debug("coalesced %u nodes", nodes);
+ 
+@@ -1244,7 +1243,7 @@ static int btree_gc_recurse(struct btree *b, struct btree_op *op,
+ 			btree_write(r, true, NULL);
+ 		}
+ 
+-		__up_write(&r->lock);
++		up_write(&r->lock);
+ 	}
+ 
+ 	int ret = 0, stale;
+@@ -1260,15 +1259,6 @@ static int btree_gc_recurse(struct btree *b, struct btree_op *op,
+ 			break;
+ 		}
+ 
+-		/*
+-		 * Fake out lockdep, because I'm a terrible person: it's just
+-		 * not possible to express our lock ordering to lockdep, because
+-		 * lockdep works at most in terms of a small fixed number of
+-		 * subclasses, and we're just iterating through all of them in a
+-		 * fixed order.
+-		 */
+-		rwsem_release(&r->b->lock.dep_map, 1, _THIS_IP_);
 -
- static inline unsigned bio_max_sectors(struct bio *bio)
- {
- 	return __bio_max_sectors(bio, bio->bi_bdev, bio->bi_sector);
+ 		r->keys	= 0;
+ 		stale = btree_gc_mark(r->b, &r->keys, gc);
+ 
+diff --git a/kernel/lockdep.c b/kernel/lockdep.c
+index 8889f7d..d203b16 100644
+--- a/kernel/lockdep.c
++++ b/kernel/lockdep.c
+@@ -2997,6 +2997,7 @@ void lockdep_init_map(struct lockdep_map *lock, const char *name,
+ EXPORT_SYMBOL_GPL(lockdep_init_map);
+ 
+ struct lock_class_key __lockdep_no_validate__;
++EXPORT_SYMBOL_GPL(__lockdep_no_validate__);
+ 
+ /*
+  * This gets called for every mutex_lock*()/spin_lock*() operation.
