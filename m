@@ -1,34 +1,46 @@
-From: Daniel Pocock <daniel@pocock.com.au>
-Subject: read-ahead for md/lvm combination
-Date: Fri, 11 May 2012 14:55:34 +0000
-Message-ID: <4FAD2866.8070209@pocock.com.au>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: Superblock backup
+Date: Fri, 11 May 2012 20:15:34 +0200
+Message-ID: <20120511181534.GA2953@lazy.lzy>
+References: <20120510174431.GA3019@lazy.lzy>
+ <20120511085057.27790c1a@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120511085057.27790c1a@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+iHi Neil,
 
+> > In any case, it would be still interesting to have
+> > a "backup" capability at hand, like a "dd" of the
+> > superblock to some secure file.
+> 
+> "mdadm -E" would probably be enough - just write a cron job :-)
 
-While I was adding the SCTERC settings to my rc.local, I had a look over
-/sbin/blockdev --setra ... settings
+actually, I was thinking "dd" because a restore
+operation could be another "dd" (from file to device).
 
-I do things like this, for example:
+Does this make sense? Or old superblocks should
+never replace newer ones?
 
-/sbin/blockdev --setra 8192 /dev/mapper/myvg-large_media_files
+I mean, let's say each day the first few MB of
+each component device is stored somewhere.
+As soon as some irreparable damage happens, the
+files can be restored in the proper devices.
+Practically rolling back to the previous day
+the superblock status.
 
-What about
-- the devices /dev/sd[ab]2
-- the md device, /dev/md2  (which is the PV for LVM) ?
+Would this work?
 
-Would it be correct to leave /dev/sd[ab]2 and /dev/md2 at defaults, and
-only specify larger sizes for LVs that need it?  Or should I even make
-/dev/sd[ab]2 and /dev/md2 smaller than the default value (256)?
+Thanks,
 
+bye,
 
-Those disks are SATA - but I'm also planning to add in some SSDs and
-RAID1 them with md - they will hold things like source code and home
-directories (to make compiling and NFS home directories faster).  Can
-anyone comment on the read ahead config or any other aspect of such a plan?
+-- 
+
+piergiorgio
