@@ -1,75 +1,115 @@
 From: Daniel Pocock <daniel@pocock.com.au>
 Subject: Re: md RAID with enterprise-class SATA or SAS drives
-Date: Fri, 11 May 2012 08:16:08 +0000
-Message-ID: <4FACCAC8.4020206@pocock.com.au>
-References: <4FAAE8F1.8000600@pocock.com.au> <CALFpzo5ObdwFATdT4e20znnxzU5hX9SVSfqJcdqOXM1FEYJQuw@mail.gmail.com> <4FABC7C6.4030107@turmel.org> <4FAC2FF2.5060305@hardwarefreak.com> <4FAC40BC.1060300@hesbynett.no> <CABYL=ToORULrdhBVQk0K8zQqFYkOomY-wgG7PpnJnzP9u7iBnA@mail.gmail.com> <4FACBB68.2080304@hesbynett.no>
+Date: Fri, 11 May 2012 08:31:13 +0000
+Message-ID: <4FACCE51.7050809@pocock.com.au>
+References: <4FAAE8F1.8000600@pocock.com.au> <CALFpzo5ObdwFATdT4e20znnxzU5hX9SVSfqJcdqOXM1FEYJQuw@mail.gmail.com> <4FABC7C6.4030107@turmel.org> <4FAC2FF2.5060305@hardwarefreak.com> <4FAC33CC.6040203@pocock.com.au> <4FAC710F.7030705@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FACBB68.2080304@hesbynett.no>
+In-Reply-To: <4FAC710F.7030705@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: Roberto Spadim <roberto@spadim.com.br>, stan@hardwarefreak.com, Phil Turmel <philip@turmel.org>, Marcus Sorensen <shadowsor@gmail.com>, linux-raid@vger.kernel.org
+To: stan@hardwarefreak.com
+Cc: Phil Turmel <philip@turmel.org>, Marcus Sorensen <shadowsor@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-On 11/05/12 07:10, David Brown wrote:
-> On 11/05/2012 00:49, Roberto Spadim wrote:
->> i have dell servers and  i use raid1 in every servers just raid10 or
->> raid0 are in hardware because hotswap with hardware is easier to
->> implement, but if mdraid could do the job, i don=B4t see why use har=
-dware
->> raid devices (just if they have batery)
+On 11/05/12 01:53, Stan Hoeppner wrote:
+> On 5/10/2012 4:31 PM, Daniel Pocock wrote:
+> 
+>> Actually, the TLER term is mentioned elsewhere, for example the Adaptec
+>> blog I came across
+> 
+> The term "Time-Limited Error Recovery" (TLER) was introduced to the
+> world by Western Digital on August 3, 2004, almost 8 years ago.  They
+> introduced the term in their press release announcing their (then) new
+> RAID Edition (RE) serial ATA drives.
+> 
+> http://www.wdc.com/en/company/pressroom/releases.aspx?release=3f62e91b-288b-4852-8f6c-5abe507ec8dd
+> 
+> This term is exclusive to Western Digital Corporation.  It does not
+> apply to any other vendors' hard drives, nor any other product of any
+> kind.  It is not a general term for a function.  The general term for
+> this function is called Error Recovery Control (ERC).  If anyone applies
+> this term to any drive other than a WDC model, using it as a general
+> term, then s/he is uninformed and using the term incorrectly.
+> 
+> I do not currently, nor have I ever, worked for WDC.  I simply hate
+> marketing buzzwords, and hate even more people's misuse of such
+> marketing buzzwords.
+
+I agree, so I'll stop using that term for now
+
+>> Economists often talk about price selectivity, e.g. the coffee shops
+>> that charge an extra pound/euro/dollar for `organic' coffee.  Does it
+>> really cost an extra pound to produce one teaspoon of coffee in an
+>> organic way?  Of course not, it's just a gimmick to extract an extra
+>> pound from people who won't lose any sleep over spending an extra pound.
+> 
+> Price gouging for gourmet coffee isn't an apt analogue of the disk drive
+> business.
+
+Actually, it is relevant
+
+I realise many vendors are well-intentioned and really do give you the
+extra things you pay for - but it should never be taken for granted.
+
+That's why I ask questions about the drive hardware.
+
+> 
+>> I'm going the opposite direction, trying to move away from
+>> cheap drives - but I don't want to invest heavily in something that is
 >>
->=20
-> I think for simple situations, such as just wanting a straight mirror=
- of
-> two disks, then hardware raid provided by the supplier is often a goo=
-d
-> choice.  As you say, it can make hotswap easier - you get things like
-> little red and green lights on the disk drives.  And the vendor suppo=
-rts
-> it and knows how it works.  Also if you've got a more serious hardwar=
-e
-> with BBWC or similar features, then these features may be the decidin=
-g
-> points.
+>> a) just a marketing gimmick
+> 
+> Enterprise drives aren't a marketing gimmick.  Some of the merketing
+> language surrounding them is, but that's always the case with marketing.
 
-My understanding of BBWC:
+There is also an `ambush' concept in marketing: if everyone is looking
+for `enterprise' drives, then someone comes along and puts `enterprise'
+stickers on a desktop drive for making a quick buck.  There are plenty
+of examples of this in other domains.  So 9 out of 10 enterprise
+products might really be what I want, but there may be 1 out of 10 that
+is just a gimmick?
 
-- for things like an NFS server, where the OS and disk hardware can't
-cache write data very aggressively (due to the contract between NFS
-client and server), the BBWC allows you to enable more aggressive
-behavior (e.g. setting barrier=3D0 on the filesystem level) and gain a
-speed boost
+>>> Either that, or md raid is only used by hobbyists. ;)
+>>>
+>> Better a hobbyist running Linux than a professional running Windows with
+>> fakeraid
+> 
+> Heheh, no doubt.
+> 
+> For those who don't grasp the tongue-in-cheek nature of it, my stating
+> "md raid is only used by hobbyists" is obviously not a literal face
+> value statement.  There are dozens of enterprise NAS products on the
+> market that ship using md raid, and there are plenty of enterprise
+> size/caliber IT shops that use mdraid, though probably not exclusively.
+>  There are many more than use md raid striping or concatenation to
+> stitch together multiple hardware RAID logical drives and/or SAN LUNs.
 
-- on the other hand, is BBWC universally effective?  E.g. does it just
-write to disk in a crash scenario, or only in the event of an outright
-power failure?  Does it depend on any hints from the OS or drivers to
-know about system state?
+There is a whole world between enterprise and hobbyist
 
-> One thing that may be an advantage either way is ease of configuratio=
-n,
-> monitoring, maintenance, and transfer of disks between systems.  With=
- md
-> raid, you have a consistent system that is independent of the hardwar=
-e
-> and setup, while every hardware raid system has its own proprietary
-> tools, setup, hardware, monitoring software, etc.  So this is often a
-> win for md raid - but if you support several hardware raid arrays, an=
-d
-> use the same vendor for them all, then you have a consistent system
-> there too.
+Think about:
+- home users who want to make an extra effort to protect their digital
+photo/video collection (RAID is no substitute for backup of course)
+- small businesses - 30% of employment is in small business.  For
+businesses with less than 10 staff, they really do look at IT costs
+closely.  When I was a student I spent a lot of time selling Linux
+solutions to such businesses, now I work with larger enterprises.  I had
+one client who was offline for half a day having their server disk
+replaced, when I offered them a hot swap solution they said it wasn't
+worth the money, they could survive without email and catch up on some
+paperwork for 2-3 hours as long as it didn't happen every other month.
+- other budget-critical users: research, education, health care, etc.
+They often work within fixed budgets, and if they can get an acceptable
+IT facility for less money, the cash they save goes elsewhere (or buys
+more drive space for example)
 
-This is my main point - the fact that md RAID is hardware independent,
-e.g. I can swap from HP to IBM servers and use the same disks.
-
-If I wanted more than RAID1 (e.g. RAID6) maybe I would re-evaluate the
-issue, but for RAID1, a software solution seems fine.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The statement is also meant to poke the ribs of the pure hobbyist users
+> in an attempt to get them more into an enterprise way of approaching
+> RAID implementation and management.
+> 
+There are many things in Linux that are not exactly the way things are
+expected to be in an enterprise product: but the same can be said for
+Windows.
