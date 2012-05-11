@@ -1,83 +1,57 @@
 From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: md RAID with enterprise-class SATA or SAS drives
-Date: Fri, 11 May 2012 17:17:13 -0500
-Message-ID: <4FAD8FE9.4090704@hardwarefreak.com>
-References: <4FAAE8F1.8000600@pocock.com.au> <CALFpzo5ObdwFATdT4e20znnxzU5hX9SVSfqJcdqOXM1FEYJQuw@mail.gmail.com> <4FABC7C6.4030107@turmel.org> <4FAC2FF2.5060305@hardwarefreak.com> <4FAC40BC.1060300@hesbynett.no> <CABYL=ToORULrdhBVQk0K8zQqFYkOomY-wgG7PpnJnzP9u7iBnA@mail.gmail.com> <4FACBB68.2080304@hesbynett.no>
+Date: Fri, 11 May 2012 17:28:19 -0500
+Message-ID: <4FAD9283.7020809@hardwarefreak.com>
+References: <4FAAE8F1.8000600@pocock.com.au> <CALFpzo5ObdwFATdT4e20znnxzU5hX9SVSfqJcdqOXM1FEYJQuw@mail.gmail.com> <4FABC7C6.4030107@turmel.org> <4FAC2FF2.5060305@hardwarefreak.com> <4FAC40BC.1060300@hesbynett.no> <CABYL=ToORULrdhBVQk0K8zQqFYkOomY-wgG7PpnJnzP9u7iBnA@mail.gmail.com> <4FACBB68.2080304@hesbynett.no> <4FACCAC8.4020206@pocock.com.au>
 Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FACBB68.2080304@hesbynett.no>
+In-Reply-To: <4FACCAC8.4020206@pocock.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: Roberto Spadim <roberto@spadim.com.br>, Phil Turmel <philip@turmel.org>, Marcus Sorensen <shadowsor@gmail.com>, Daniel Pocock <daniel@pocock.com.au>, linux-raid@vger.kernel.org
+To: Daniel Pocock <daniel@pocock.com.au>
+Cc: David Brown <david.brown@hesbynett.no>, Roberto Spadim <roberto@spadim.com.br>, Phil Turmel <philip@turmel.org>, Marcus Sorensen <shadowsor@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 5/11/2012 2:10 AM, David Brown wrote:
+On 5/11/2012 3:16 AM, Daniel Pocock wrote:
 
-> Also if you've got a more serious hardware
-> with BBWC or similar features, then these features may be the deciding
-> points.
+> My understanding of BBWC:
+> 
+> - for things like an NFS server, where the OS and disk hardware can't
+> cache write data very aggressively (due to the contract between NFS
+> client and server), the BBWC allows you to enable more aggressive
+> behavior (e.g. setting barrier=0 on the filesystem level) and gain a
+> speed boost
 
-md RAID is used with BBWC raid controllers, both PCIe and SAN heads,
-fairly widely.  I've discussed the benefits of such setups on this list
-many times.  It's not an either/or decision.
+RAID cache works just like CPU L2 cache. In this case it's a buffer
+between the system block layer and the physical storage.  It can speed
+up reads and writes.  In the case of writes, it can be configured to
+return success to the block layer before it actually writes the data to
+disk, speeding up random write IO tremendously in many cases.
 
-> But there is no doubt that md raid is a lot more flexible than any other
-> raid system, 
+> - on the other hand, is BBWC universally effective?  E.g. does it just
+> write to disk in a crash scenario, or only in the event of an outright
+> power failure?  Does it depend on any hints from the OS or drivers to
+> know about system state?
 
-This is simply not true, not in the wholesale fashion you state.  For
-many things md raid is more flexible.  For others definitely not.
-Bootable arrays being one very important one.  The md raid/grub solution
-is far too complicated, cumbersome, and unreliable.  A relatively low
-performance and cheap 2/4 port real SATA raid card or real mobo based
-raid such as an LSI SAS2008 is a far superior mirrored boot disk
-solution, with a straight SAS/SATA multiport HBA with md managing the
-data array.
+You're concentrating here specifically on the "B" aspect, which is the
+battery.  It protects you from power failure and system crashes that
+cause a reset of the motherboard.  When the card is back up, it's
+firmware being executed, it checks that the drives are all up, then
+writes the data in the cache to the target sectors of the drives.  It's
+worked this way for over a decade.
 
-> it is often faster (especially for smaller setups -
-> raid10,far being a prime example), 
+> This is my main point - the fact that md RAID is hardware independent,
+> e.g. I can swap from HP to IBM servers and use the same disks.
+> 
+> If I wanted more than RAID1 (e.g. RAID6) maybe I would re-evaluate the
+> issue, but for RAID1, a software solution seems fine.
 
-You need a lot of qualifiers embedded in that statement.  A decent raid
-card w/ small drive count array will runs circles around md raid w/ a
-random write or streaming workload.  It may be slightly slower in a
-streaming read workload compared to the 'optimzed' md raid "10" layouts.
- Where hardware raid usually starts trailing md raid is with parity
-arrays on large drive counts, starting at around 8-16 drives and up.
-
-> and the money you save on raid cards
-> can be spent on extra disks, UPS, etc.
-
-Relatively speaking, in overall system cost terms, RAID HBAs aren't that
-much more expensive than standard HBAs.  In the case of LSI, $240 vs
-$480 for 8 port cards.  The cost is double, the but total cost of the 8
-drives we'll connect is $3200-$5000.  That extra $250 is negligible in
-the overall picture.
-
-> One thing that may be an advantage either way is ease of configuration,
-> monitoring, maintenance, and transfer of disks between systems.  With md
-> raid, you have a consistent system that is independent of the hardware
-> and setup, while every hardware raid system has its own proprietary
-> tools, setup, hardware, monitoring software, etc.  So this is often a
-> win for md raid - but if you support several hardware raid arrays, and
-> use the same vendor for them all, then you have a consistent system
-> there too.
-
-Corporations have used SNMP for a consistent monitoring interface across
-heterogeneous platforms for over a decade, including servers, switches,
-routers, PBXes, APs, security cameras, electronics entry access, etc.
-Every decent hardware RAID card is designed for corporate use, and
-includes SNMP support and a MIB file.  So from a monitoring standpoint,
-I disagree with your statement above.  And who transfers drives between
-running systems?
-
-Regarding proprietary tools, most corporate setups will have mobo RAID
-(Dell, HP, IBM) for the boot drives, and will have an FC/iSCSI HBA for
-connecting to one or more SAN controllers.  Most corporate setups don't
-involve local RAID based data storage.  The single overriding reason for
-this is the pervasiveness of SAN based snapshot backups and remote site
-mirroring from SAN to SAN.  md raid has no comparable capability.
+That's the one scenario where I abhor using md raid, as I mentioned.  At
+least, a boot raid 1 pair.  Using layered md raid 1 + 0, or 1 + linear
+is a great solution for many workloads.  Ask me why I say raid 1 + 0
+instead of raid 10.
 
 -- 
 Stan
