@@ -1,68 +1,111 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Another RAID-5 problem
-Date: Fri, 11 May 2012 10:51:01 +1000
-Message-ID: <20120511105101.2d61c7ae@notabene.brown>
-References: <1931403540.986928.1336565853409.JavaMail.ngmail@webmail08.arcor-online.net>
-	<20120509193119.GA10724@lazy.lzy>
-	<20120510085832.1bb1acfa@notabene.brown>
-	<20120510172956.GA2527@lazy.lzy>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: md RAID with enterprise-class SATA or SAS drives
+Date: Thu, 10 May 2012 20:53:19 -0500
+Message-ID: <4FAC710F.7030705@hardwarefreak.com>
+References: <4FAAE8F1.8000600@pocock.com.au> <CALFpzo5ObdwFATdT4e20znnxzU5hX9SVSfqJcdqOXM1FEYJQuw@mail.gmail.com> <4FABC7C6.4030107@turmel.org> <4FAC2FF2.5060305@hardwarefreak.com> <4FAC33CC.6040203@pocock.com.au>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/OgZzzvgkB8wlEoLBKQUrvOI"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120510172956.GA2527@lazy.lzy>
+In-Reply-To: <4FAC33CC.6040203@pocock.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: Daniel Pocock <daniel@pocock.com.au>
+Cc: Phil Turmel <philip@turmel.org>, Marcus Sorensen <shadowsor@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/OgZzzvgkB8wlEoLBKQUrvOI
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 5/10/2012 4:31 PM, Daniel Pocock wrote:
 
-On Thu, 10 May 2012 19:29:56 +0200 Piergiorgio Sartor
-<piergiorgio.sartor@nexgo.de> wrote:
+> Actually, the TLER term is mentioned elsewhere, for example the Adaptec
+> blog I came across
 
-> Hi,
->=20
-> we manage to recover the RAID-5 without
-> any data loss!
+The term "Time-Limited Error Recovery" (TLER) was introduced to the
+world by Western Digital on August 3, 2004, almost 8 years ago.  They
+introduced the term in their press release announcing their (then) new
+RAID Edition (RE) serial ATA drives.
 
-Music to my ears!
+http://www.wdc.com/en/company/pressroom/releases.aspx?release=3f62e91b-288b-4852-8f6c-5abe507ec8dd
 
-Thanks for the update,
-NeilBrown
+This term is exclusive to Western Digital Corporation.  It does not
+apply to any other vendors' hard drives, nor any other product of any
+kind.  It is not a general term for a function.  The general term for
+this function is called Error Recovery Control (ERC).  If anyone applies
+this term to any drive other than a WDC model, using it as a general
+term, then s/he is uninformed and using the term incorrectly.
 
+I do not currently, nor have I ever, worked for WDC.  I simply hate
+marketing buzzwords, and hate even more people's misuse of such
+marketing buzzwords.
 
->=20
-> I would like to thank Neil again for the
-> quick response and effective support.
-> Thanks!
->=20
-> bye,
->=20
+> Economists often talk about price selectivity, e.g. the coffee shops
+> that charge an extra pound/euro/dollar for `organic' coffee.  Does it
+> really cost an extra pound to produce one teaspoon of coffee in an
+> organic way?  Of course not, it's just a gimmick to extract an extra
+> pound from people who won't lose any sleep over spending an extra pound.
 
+Price gouging for gourmet coffee isn't an apt analogue of the disk drive
+business.
 
---Sig_/OgZzzvgkB8wlEoLBKQUrvOI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Manufacturers do make more profit per enterprise SATA drive than they do
+desktop SATA drives.  But the overall cost difference has nothing to do
+with price gouging, nor this additional profit.  The cost difference is
+due to the following factors:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+1.  Vastly lower numbers produced, on the order of 1000:1
+    We're all familiar with economy of scale yes?
 
-iQIVAwUBT6xidTnsnt1WYoG5AQKL3g/+Oj8nqjaiN7WiM/p/YWZ7D/eFMW5fQ11a
-6kC/LicE7Mu4jinbtuhLmDFqt4Ug2ay1UJ6BmfHmHhMNkOIB1dU/40Kz44XHy0e6
-imaYcYdF4ae6Cdil0QiKtVZsb24/SqRSUopnD7YF21MgSDGR5tAU5SC/wntYb+hQ
-3B3jwGuDLoBGwG1YBy8rzHo2lcUUN+9FmZinaXx6Od+KTW0TKl10LICe9aoYDoF9
-ayWxl0C9bprFpz/xEt1fWuyMjFSciDrWA3jrizmFmYCZzYsrjdTND08QJfDBHiGp
-fhH9Jf+k6VtPY+4efYqEto8wCpRhbkeZFj5XvsI14ujznqPfy2Hm+hC4FAXm+jAb
-rzbOJsqGXCGOVROdvrYoApM0wC3LqT26bZ7x+Hgzes71H9/gox4PHkCC8I7ws+6j
-D1fpFxrMm6KYwLrCyQPu/gC/Y7OSU+STpoCDoJeo1QByGnLdjsSbBATzWS6F5rZg
-Qun4WHEe6THjB0IHzep/NkTty+l+Bzm4atI0LWU1XCAhzbevNbHsf/JrpBffvHSh
-ld42CRF//Bl/WbjLQJ+p0Du25IMXcFGo75pWzEKwL+8tBV0gxNUV38PrZEZ9+ow1
-z6DoC06pBQQzcyu6POKtpXkvt4ciPkjgNGReHElP/Gx+MTsCeviPLLgD1Knr3a3Z
-tb6pvJalarw=
-=il8L
------END PGP SIGNATURE-----
+2.  Firmware features that are developed for a handful of drive
+    models.  The R&D dollars expended for this are spread over far
+    fewer units sold, yet require an order of magnitude more
+    verification work
 
---Sig_/OgZzzvgkB8wlEoLBKQUrvOI--
+3.  Compatibility testing and verification with hundreds of PCIe RAID
+    controllers and HBAs, standalone RAID enclosures w/onboard
+    controllers, JBOD chassis with and without SAS expanders, iSCSI and
+    Fiber Channel arrays, etc, etc, etc.
+
+4.  A greatly enhanced and more time consuming QC process for the drive
+    hardware and firmware
+
+#3 and #4 account for the majority of the cost premium of an enterprise
+SATA drive vs a desktop SATA drive.  Labor is typically the most costly
+aspect of manufacturing for electronics products.  3/4 are extremely
+labor/time intensive.
+
+> I'm going the opposite direction, trying to move away from
+> cheap drives - but I don't want to invest heavily in something that is
+> 
+> a) just a marketing gimmick
+
+Enterprise drives aren't a marketing gimmick.  Some of the merketing
+language surrounding them is, but that's always the case with marketing.
+
+> b) not going to do me any good if md doesn't exercise the special
+> features of the hardware
+
+If you will not be using a server nor JBOD chassis with an SAS expander
+backplane for which your hard drives are certified, then there is little
+benefit for you WRT enterprise SATA drives and md raid, other than
+overall increased quality and a longer warranty.
+
+>> Either that, or md raid is only used by hobbyists. ;)
+>>
+> Better a hobbyist running Linux than a professional running Windows with
+> fakeraid
+
+Heheh, no doubt.
+
+For those who don't grasp the tongue-in-cheek nature of it, my stating
+"md raid is only used by hobbyists" is obviously not a literal face
+value statement.  There are dozens of enterprise NAS products on the
+market that ship using md raid, and there are plenty of enterprise
+size/caliber IT shops that use mdraid, though probably not exclusively.
+ There are many more than use md raid striping or concatenation to
+stitch together multiple hardware RAID logical drives and/or SAN LUNs.
+
+The statement is also meant to poke the ribs of the pure hobbyist users
+in an attempt to get them more into an enterprise way of approaching
+RAID implementation and management.
+
+-- 
+Stan
