@@ -1,125 +1,268 @@
 From: David Brown <david.brown@hesbynett.no>
-Subject: Re: md RAID with enterprise-class SATA or SAS drives
-Date: Fri, 11 May 2012 09:10:32 +0200
-Message-ID: <4FACBB68.2080304@hesbynett.no>
-References: <4FAAE8F1.8000600@pocock.com.au> <CALFpzo5ObdwFATdT4e20znnxzU5hX9SVSfqJcdqOXM1FEYJQuw@mail.gmail.com> <4FABC7C6.4030107@turmel.org> <4FAC2FF2.5060305@hardwarefreak.com> <4FAC40BC.1060300@hesbynett.no> <CABYL=ToORULrdhBVQk0K8zQqFYkOomY-wgG7PpnJnzP9u7iBnA@mail.gmail.com>
+Subject: Re: Hot-replace for RAID5
+Date: Fri, 11 May 2012 09:16:28 +0200
+Message-ID: <4FACBCCC.4060802@hesbynett.no>
+References: <CAAOsTS=4+eqRJXVrw2OaYibgNTEaGxJx4x1PPN4iU49tUO9zOg@mail.gmail.com> <4FAB6758.5050109@hesbynett.no> <CAAOsTSm9RH1c6OzFdAGf8hSag35YBD5Y1SuH4Tq-4GXnWgJpAw@mail.gmail.com> <20120511105027.34e95833@notabene.brown> <CAAOsTSmi17VF2B5-4PJ9GNfxD-EQaY7LbL_8hwr1FvBoBj1VvA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CABYL=ToORULrdhBVQk0K8zQqFYkOomY-wgG7PpnJnzP9u7iBnA@mail.gmail.com>
+In-Reply-To: <CAAOsTSmi17VF2B5-4PJ9GNfxD-EQaY7LbL_8hwr1FvBoBj1VvA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
-Cc: stan@hardwarefreak.com, Phil Turmel <philip@turmel.org>, Marcus Sorensen <shadowsor@gmail.com>, Daniel Pocock <daniel@pocock.com.au>, linux-raid@vger.kernel.org
+To: patrik@dsl.sk
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/05/2012 00:49, Roberto Spadim wrote:
-> i have dell servers and  i use raid1 in every servers just raid10 or
-> raid0 are in hardware because hotswap with hardware is easier to
-> implement, but if mdraid could do the job, i don=B4t see why use hard=
-ware
-> raid devices (just if they have batery)
->
+Just in case you missed it earlier...
 
-I think for simple situations, such as just wanting a straight mirror o=
-f=20
-two disks, then hardware raid provided by the supplier is often a good=20
-choice.  As you say, it can make hotswap easier - you get things like=20
-little red and green lights on the disk drives.  And the vendor support=
-s=20
-it and knows how it works.  Also if you've got a more serious hardware=20
-with BBWC or similar features, then these features may be the deciding=20
-points.
+Remember to take a backup before you start this!
 
-But there is no doubt that md raid is a lot more flexible than any othe=
+Also make notes of things like the "mdadm --detail", version numbers,=20
+the exact commands executed, etc. (and store this information on anothe=
 r=20
-raid system, it is often faster (especially for smaller setups -=20
-raid10,far being a prime example), and the money you save on raid cards=
-=20
-can be spent on extra disks, UPS, etc.
+computer!)  If something does go wrong, then that information can make=20
+it much easier for Neil or others to advise you.
 
-One thing that may be an advantage either way is ease of configuration,=
-=20
-monitoring, maintenance, and transfer of disks between systems.  With m=
-d=20
-raid, you have a consistent system that is independent of the hardware=20
-and setup, while every hardware raid system has its own proprietary=20
-tools, setup, hardware, monitoring software, etc.  So this is often a=20
-win for md raid - but if you support several hardware raid arrays, and=20
-use the same vendor for them all, then you have a consistent system=20
-there too.
+mvh.,
+
+David
 
 
-
-> 2012/5/10 David Brown <david.brown@hesbynett.no
-> <mailto:david.brown@hesbynett.no>>
+On 11/05/2012 04:44, Patrik Horn=EDk wrote:
+> On Fri, May 11, 2012 at 2:50 AM, NeilBrown<neilb@suse.de>  wrote:
+>> On Thu, 10 May 2012 19:16:59 +0200 Patrik Horn=EDk<patrik@dsl.sk>  w=
+rote:
+>>
+>>> Neil, can you please comment if separate operations mentioned in th=
+is
+>>> process are behaving and are stable enough as we expect? Thanks.
+>>
+>> The conversion to and from RAID6 as described should work as expecte=
+d, though
+>> it requires having an extra device and requires to 'recovery' cycles=
+=2E
+>> Specifying the number of --raid-devices is not necessary.  When you =
+convert
+>> RAID5 to RAID6, mdadm assumes you are increasing number of devices b=
+y 1
+>> unless you say otherwise.  Similarly with RAID6->RAID5 the assumptio=
+n is a
+>> decrease by 1.
+>>
+>> Doing an in-place reshape with the new 3.3 code should work, though =
+with a
+>> softer "should" than above.  We will only know that it is "stable" w=
+hen enough
+>> people (such as yourself) try it and report success.  If anything do=
+es go
+>> wrong I would of course help you to put the array back together but =
+I can
+>> never guarantee no data loss.  You wouldn't be the first to test the=
+ code on
+>> live data, but you would be the second that I have heard of.
 >
->     On 10/05/12 23:15, Stan Hoeppner wrote:
+> Thanks Neil, this answers my questions. I dont like being second, so
+> RAID5 - RAID6 - RAID5 it is... :)
 >
->         On 5/10/2012 8:51 AM, Phil Turmel wrote:
+> In addition my array has 0.9 metadata so hot-replace would also
+> require conversion of metadata, so all together it seems much riskier=
+=2E
 >
->             Hardware RAID cards usually offer battery-backed write
->             cache, which is
->             very valuable in some applications.  I don't have a need =
-for
->             that kind
->             of performance, so I can't speak to the details.  (Is Sta=
-n H.
->             listening?)
->
->
->         Yes, I'm here to drop the hammer, and start a flame war. ;)
->           I've been
->         lurking and trying to stay out of the fray, but you "keep
->         dragging me
->         back in!" --Michael Corleone
->
->         I find the mere existence of this thread a bit comical, as wi=
-th all
->         others that have preceded it.  I made the comment on this lis=
-t quite
->         some time ago that md raid is mostly used by hobbyists, and t=
-ook
->         a lot
->         of heat for that.  The existence of this thread adds ammuniti=
-on
->         to that
->         argument.
->
->
->     I think you've got that a bit backwards.  Most hobbyists (or
->     low-budget users) who use raid other than motherboard fakeraid wi=
-ll
->     choose Linux md raid.  It may well be that most users of md raid
->     /are/ hobby or low-budget users.  But your implication - that
->     professionals don't use md raid - is completely wrong.
->
->     It's more likely that it is hobby users that discuss these sorts =
-of
->     things - professionals just pay the money that the server
->     manufacturer asks for its supported disks, since paying that is
->     cheaper than spending time discussing things.  I know I mostly
->     follow lists like this in my free time (as a hobbiest) rather tha=
+>> The in-place reshape is not yet supported by mdadm but it is very ea=
+sy to
+>> manage directly.  Just
+>>    echo replaceable>  /sys/block/mdXXX/md/dev-YYY/state
+>> and as soon as a spare is available the replacement will happen.
+>>
+>> NeilBrown
+>>
+>>
+>>>
+>>> On Thu, May 10, 2012 at 8:59 AM, David Brown<david.brown@hesbynett.=
+no>  wrote:
+>>>> (I accidentally sent my first reply directly to the OP, and forgot=
+ the
+>>>> mailing list - I'm adding it back now, because I don't want the OP=
+ to follow
+>>>> my advice until others have confirmed or corrected it!)
+>>>>
+>>>>
+>>>> On 09/05/2012 21:53, Patrik Horn=EDk wrote:
+>>>>> Great suggestion, thanks.
+>>>>>
+>>>>> So I guess steps with exact parameters should be:
+>>>>> 1, add spare S to RAID5 array
+>>>>> 2, mdadm --grow /dev/mdX --level 6 --raid-devices N+1 --layout=3D=
+preserve
+>>>>> 3, remove faulty drive and add replacement, let it synchronize
+>>>>> 4, possibly remove added spare S
+>>>>> 5, mdadm --grow /dev/mdX --level 5 --raid-devices N
+>>>>
+>>>>
+>>>> Yes, that's what I was thinking.  You are missing "2b - let it syn=
+chronise".
+>>>
+>>> Sure :)
+>>>
+>>>> Of course, another possibility is that if you have the space in th=
+e system
+>>>> for another drive, you may want to convert to a full raid6 for the=
+ future.
+>>>>   That way you have the extra safety built-in in advance. But that=
+ will
+>>>> definitely lead to a re-shape.
+>>>
+>>> Actually I dont have free physical space, array already has 7 drive=
+s.
+>>> For the process I need place the additional drive on table near the=
+ PC
+>>> and cool it with fan standing by itself on table... :)
+>>>
+>>>>>
+>>>>> My questions:
+>>>>> - Are you sure steps 3, 4 and 5 would not cause reshaping?
+>>>>
+>>>> I /believe/ it will avoid a reshape, but I can't say I'm sure.  Th=
+is is
+>>>> stuff that I only know about in theory, and have not tried in prac=
+tice.
+>>>>
+>>>>
+>>>>>
+>>>>> - My array has now left-symmetric layout, so after migration to R=
+AID6
+>>>>> it should be left-symmetric-6. Is RAID6 working without problem i=
 n
->     in work time (as a professional).
+>>>>> degraded mode with this layout, no matter which one or two drives=
+ are
+>>>>> missing?
+>>>>>
+>>>>
+>>>> The layout will not affect the redundancy or the features of the r=
+aid - it
+>>>> will only (slightly) affect the speed of some operations.
+>>>
+>>> I know it should work, but it is probably configuration that is not
+>>> used much by users, so maybe it is not tested as much as standard
+>>> layouts. So the question was aiming more at practical experience an=
+d
+>>> stability...
+>>>
+>>>>> - What happens in step 5 and how long does it take? (If it is wit=
+hout
+>>>>> reshaping, it should only upgrade superblocks and thats it.)
+>>>>
+>>>> That is my understanding.
+>>>>
+>>>>
+>>>>>
+>>>>> - What happens if I dont remove spare S before migration back to
+>>>>> RAID5? Will the array be reshaped and which drive will it make in=
+to
+>>>>> spare? (If step 5 is instantaneous, there is no reason for that. =
+But
+>>>>> if it takes time, it is probably safer.)
+>>>>>
+>>>>
+>>>> I /think/ that the extra disk will turn into a hot spare.  But I a=
+m getting
+>>>> out of my depth here - it all depends on how the disks get numbere=
+d and how
+>>>> that affects the layout, and I don't know the details here.
+>>>>
+>>>>
+>>>>> So all and alll, what guys do you think is more reliable now, new
+>>>>> hot-replace or these steps?
+>>>>
+>>>>
+>>>> I too am very curious to hear opinions.  Hot-replace will certainl=
+y be much
+>>>> simpler and faster than these sorts of re-shaping - it's exactly t=
+he sort of
+>>>> situation the feature was designed for.  But I don't know if it is
+>>>> considered stable and well-tested, or "bleeding edge".
+>>>>
+>>>> mvh.,
+>>>>
+>>>> David
+>>>>
+>>>>
+>>>>
+>>>>>
+>>>>> Thanks.
+>>>>>
+>>>>> Patrik
+>>>>>
+>>>>> On Wed, May 9, 2012 at 8:09 AM, David Brown<david.brown@hesbynett=
+=2Eno>
+>>>>>   wrote:
+>>>>>> On 08/05/12 11:10, Patrik Horn=EDk wrote:
+>>>>>>>
+>>>>>>> Hello guys,
+>>>>>>>
+>>>>>>> I need to replace drive in big production RAID5 array and I am
+>>>>>>> thinking about using new hot-replace feature added in kernel 3.=
+3.
+>>>>>>>
+>>>>>>> Does someone have experience with it on big RAID5 arrays? Mine =
+is 7 *
+>>>>>>> 1.5 TB. What do you think about its status / stability / reliab=
+ility?
+>>>>>>> Do you recommend it on production data?
+>>>>>>>
+>>>>>>> Thanks.
+>>>>>>>
+>>>>>>
+>>>>>> If you don't want to play with the "bleeding edge" features, you=
+ could
+>>>>>> add
+>>>>>> the disk and extend the array to RAID6, then remove the old driv=
+e. I
+>>>>>> think
+>>>>>> if you want to do it all without doing any re-shapes, however, t=
+hen you'd
+>>>>>> need a third drive (the extra drive could easily be an external =
+USB disk
+>>>>>> if
+>>>>>> needed - it will only be used for writing, and not for reading u=
+nless
+>>>>>> there's another disk failure).  Start by adding the extra drive =
+as a hot
+>>>>>> spare, then re-shape your raid5 to raid6 in raid5+extra parity l=
+ayout.
+>>>>>>   Then
+>>>>>> fail and remove the old drive.  Put the new drive into the box a=
+nd add it
+>>>>>> as
+>>>>>> a hot spare.  It should automatically take its place in the raid=
+5,
+>>>>>> replacing
+>>>>>> the old one.  Once it has been rebuilt, you can fail and remove =
+the extra
+>>>>>> drive, then re-shape back to raid5.
+>>>>>>
+>>>>>> If things go horribly wrong, the external drive gives you your p=
+arity
+>>>>>> protection.
+>>>>>>
+>>>>>> Of course, don't follow this plan until others here have comment=
+ed on it,
+>>>>>> and either corrected or approved it.
+>>>>>>
+>>>>>> And make sure you have a good backup no matter what you decide t=
+o do.
+>>>>>>
+>>>>>> mvh.,
+>>>>>>
+>>>>>> David
+>>>>>>
+>>>>>
+>>>>>
+>>>>
+>>
 >
 >
->     --
->     To unsubscribe from this list: send the line "unsubscribe linux-r=
-aid" in
->     the body of a message to majordomo@vger.kernel.org
->     <mailto:majordomo@vger.kernel.org>
->     More majordomo info at http://vger.kernel.org/__majordomo-info.ht=
-ml
->     <http://vger.kernel.org/majordomo-info.html>
->
->
->
->
-> --
-> Roberto Spadim
-> Spadim Technology / SPAEmpresarial
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
