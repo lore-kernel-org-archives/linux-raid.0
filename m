@@ -1,94 +1,84 @@
-From: Pierre Beck <mail@pierre-beck.de>
-Subject: Re: Raid5 crashed, need comments on possible repair solution
-Date: Sat, 12 May 2012 19:19:32 +0200
-Message-ID: <4FAE9BA3.4000407@pierre-beck.de>
-References: <4F955F80.80903@evilazrael.de> <20120424070044.707745b8@notabene.brown> <4F95CDE0.4070200@evilazrael.de> <20120424090122.3d90b4a6@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: read-ahead for md/lvm combination
+Date: Sun, 13 May 2012 07:32:40 +1000
+Message-ID: <20120513073240.2d292ec4@notabene.brown>
+References: <4FAD2866.8070209@pocock.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/SvxDonyfJtpSNwc2xFe7WMg"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120424090122.3d90b4a6@notabene.brown>
+In-Reply-To: <4FAD2866.8070209@pocock.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Daniel Pocock <daniel@pocock.com.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+--Sig_/SvxDonyfJtpSNwc2xFe7WMg
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-got an all-spares auto-assembly on IRC with "Raid level: -unknown-". We 
-recovered by re-creating the array. Since more data is always good, I 
-add this to the thread and hope it helps confirm the bug is fixed by the 
-patch.
+On Fri, 11 May 2012 14:55:34 +0000 Daniel Pocock <daniel@pocock.com.au> wro=
+te:
 
-RAID-5, 3 members with 1 missing on creation and ever since.
+>=20
+>=20
+> While I was adding the SCTERC settings to my rc.local, I had a look over
+> /sbin/blockdev --setra ... settings
+>=20
+> I do things like this, for example:
+>=20
+> /sbin/blockdev --setra 8192 /dev/mapper/myvg-large_media_files
+>=20
+> What about
+> - the devices /dev/sd[ab]2
+> - the md device, /dev/md2  (which is the PV for LVM) ?
+>=20
+> Would it be correct to leave /dev/sd[ab]2 and /dev/md2 at defaults, and
+> only specify larger sizes for LVs that need it?  Or should I even make
+> /dev/sd[ab]2 and /dev/md2 smaller than the default value (256)?
 
-Members on partitions with partition type set for auto-assembly.
+The read-ahead setting is interpreted by the pagecache.
+So it only makes sense to set in on a device which is directly mounted or
+accessed via /dev/XXX.
 
-Array was transported to a new machine.
+On other devices - such as the media device beneath and md array - you can
+set the read-ahead to anything or nothing and it will have no effect at all.
 
-Drive order got mixed up on transport: AB_ BA_
-(figured that out on recovery)
+NeilBrown
 
-On target machine boot-up (array not yet configured in mdadm.conf) 
-Archlinux auto-assembled array with both drives as spares:
-
-/dev/sda1:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x0
-      Array UUID : c051172d:52ed3e47:e8dc6dc8:8798f4c9
-            Name : OncleGeorges:0
-   Creation Time : Fri Aug  5 18:00:19 2011
-      Raid Level : -unknown-
-    Raid Devices : 0
-
-  Avail Dev Size : 1953515969 (931.51 GiB 1000.20 GB)
-     Data Offset : 2048 sectors
-    Super Offset : 8 sectors
-           State : active
-     Device UUID : a8b44e10:ff04d973:c5f92933:3c9e124f
-
-     Update Time : Sat Apr 21 19:14:34 2012
-        Checksum : 8b57fb27 - correct
-          Events : 1
-
-
-    Device Role : spare
-    Array State :  ('A' == active, '.' == missing)
-
-/dev/sdb1:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x0
-      Array UUID : c051172d:52ed3e47:e8dc6dc8:8798f4c9
-            Name : OncleGeorges:0
-   Creation Time : Fri Aug  5 18:00:19 2011
-      Raid Level : -unknown-
-    Raid Devices : 0
-
-  Avail Dev Size : 2046769231 (975.98 GiB 1047.95 GB)
-   Used Dev Size : 1953515969 (931.51 GiB 1000.20 GB)
-     Data Offset : 2048 sectors
-    Super Offset : 8 sectors
-           State : active
-     Device UUID : d2594375:c8adc5a0:53938a24:9bd5c6be
-
-     Update Time : Sat Apr 21 19:14:34 2012
-        Checksum : 83dd0895 - correct
-          Events : 1
+>=20
+>=20
+> Those disks are SATA - but I'm also planning to add in some SSDs and
+> RAID1 them with md - they will hold things like source code and home
+> directories (to make compiling and NFS home directories faster).  Can
+> anyone comment on the read ahead config or any other aspect of such a pla=
+n?
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
-    Device Role : spare
-    Array State :  ('A' == active, '.' == missing)
+--Sig_/SvxDonyfJtpSNwc2xFe7WMg
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-Versions:
+iQIVAwUBT67W+Dnsnt1WYoG5AQJxSg//cFPhbmSBP6ZX12z1+qVHFSzujHdTgXD3
+xKBvz8MwtbynU55ofMtDa254g/qq2EdzvfqUmPB3QRQf6XnJ54Bh+eZ3pKywMTgZ
+gSOL2osZRP40E4bxVYkFNlACzzoLveNxzDqJpnkbCJl6S4crs1ilXEu/ZcF6JsEW
+vXHUpGTtBRa15WaK7v85AD2wQflRLbl6gDwY1sJzOLwe1r4yhdqsevZ+b7p5baUJ
+mzykBMBsT1xcWSWnFzCxe0Tsc4s80vUOoegmPtXEXXiVHPd1YIQijepmcmR5vm+9
+Vdjdr87pPuqIyTe0tDDqbqT0P8lF9/yeNUnE9Yb0ySv8dlbp9tSJqsp43OKrPuHS
+4i5QslE4+g4hAyY6jVOzSthFf8vPYP3JzrQ6R6PzDgnbeiBocBIavXIHrcDvISYB
+g9dIDvW+7NA3oo0L1gStbUD92ffKd5vIdsM+PUTxKHxX7BHAuS9Agjesn3OkwTlf
+4wfpR8n0jT2f6RObw+wPWpPVAHhrM9IHrSg/HIqda1Kgyle6cG+O4rUyLlB2hHFN
+cWRuLhGqkgrzbXpgnrsjo/b0a22trvSJJuAzfLJo+662XReMig8pqavTrHu5fpvI
+Olk/mty/PSvm3PKeshaYp+InF+1dODGfXeU1bbo+UiFvw99vTKC79Qweh6lXtdJ8
+68hK4ULTuQk=
+=p+fz
+-----END PGP SIGNATURE-----
 
-Linux HostName 3.3.4-2-ARCH #1 SMP PREEMPT Wed May 2 15:39:58 UTC 2012 
-i686 AMD Athlon(tm) 64 X2 Dual Core Processor 3800+ AuthenticAMD GNU/Linux
-
-mdadm - v3.2.3 - 23rd December 2011
-
-Greetings,
-
-Pierre Beck
+--Sig_/SvxDonyfJtpSNwc2xFe7WMg--
