@@ -1,18 +1,20 @@
-From: =?utf-8?B?UGF3ZcWC?= Sikora <pluto@agmk.net>
-Subject: Re: ANNOUNCE: mdadm 3.2.4 - A tool for managing Soft RAID under Linux
-Date: Sat, 12 May 2012 08:36:43 +0200
-Message-ID: <2598499.YYnUQlf0Se@localhost>
+From: =?utf-8?B?6L2m55OQ6LaS?= <pifanlin@21cn.com>
+Subject: =?utf-8?B?5ZC05Y6/5ZWG5Yqh2YDvu5nvu5nvu5nvuq/ZgO+7oe+7jQ==?=
+Date: Sat, 12 May 2012 15:12:27 +0800
+Message-ID: <8B8414C2C3BF9238473797E2E6921D95@cbtxpbeqog>
+Reply-To: xtay131415@163.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: linuxs@live.com, linux-raid@vger.kernel.org, linux-programming@linux.or.id, linuxboard@163.net
 List-Id: linux-raid.ids
 
-fyi, this release contains a hidden strict-aliasing-violation bug [1].
-please fix this correctly or build mdadm with -fno-strict-aliasing option.
-
-[1] http://www.spinics.net/lists/raid/msg37298.html
+ICBqY2tydnhhDQogICAgICAgDQoNCg0KICAgIDU5MDQ5ICAg5oiR5YWs5Y+45LiTLeS4mi3ku6Mt
+55CGLeWFqC3lm70t5ZCELeecgS3luIJ75pmuLemAmi3nqI4t5ZiMfQ0KDQogICzpqozor4Hml6Dp
+l67popjlkI7ku5jmrL4uDQogDQogIOW8oOWFiOeUnyXikojikoriko/ikonikovikoriko7ikoji
+korikovikpANCiBRUTo5LjkuMy0zLjcuNS0wLjUuOQ0KDQoNCiAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgIA0KIMK35YWz5rOo546v5aKD5rS75YqoDQo=
 
