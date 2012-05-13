@@ -1,124 +1,162 @@
-From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
-Subject: Failed, but "md: cannot remove active disk..."
-Date: Sun, 13 May 2012 20:21:48 +0200
-Message-ID: <1336933308.2831.4.camel@localhost>
+From: =?ISO-8859-1?Q?Patrik_Horn=EDk?= <patrik@dsl.sk>
+Subject: Re: Hot-replace for RAID5
+Date: Sun, 13 May 2012 23:41:35 +0200
+Message-ID: <CAAOsTSkVwCkY3YAKPTDFo2uZoG6S6Et0DYtDzk+QNfy+N3kMag@mail.gmail.com>
+References: <CAAOsTS=4+eqRJXVrw2OaYibgNTEaGxJx4x1PPN4iU49tUO9zOg@mail.gmail.com>
+	<4FAB6758.5050109@hesbynett.no>
+	<CAAOsTSm9RH1c6OzFdAGf8hSag35YBD5Y1SuH4Tq-4GXnWgJpAw@mail.gmail.com>
+	<20120511105027.34e95833@notabene.brown>
+	<CAAOsTSmi17VF2B5-4PJ9GNfxD-EQaY7LbL_8hwr1FvBoBj1VvA@mail.gmail.com>
+	<4FACBCCC.4060802@hesbynett.no>
+	<CAAOsTSmwcXPhHqQ3QyS0_8ijXaC3E4bGtWJn1wrwRFeUpxu8tQ@mail.gmail.com>
+	<CAAOsTSmS6uFFe1e1y+39fxHOEFWZEsM7thcPwoeV6FTNiPkM_Q@mail.gmail.com>
+	<20120513091901.5265507f@notabene.brown>
+	<CAAOsTSk7dDcMGGJgAJ6GSDU2WpsJPTS3Vb80WKy6CObwtemfgQ@mail.gmail.com>
+Reply-To: patrik@dsl.sk
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-73aDwLFNm4OpK9ewdPsk"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAAOsTSk7dDcMGGJgAJ6GSDU2WpsJPTS3Vb80WKy6CObwtemfgQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: David Brown <david.brown@hesbynett.no>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi Neil,
 
---=-73aDwLFNm4OpK9ewdPsk
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I decided to move backup file on other device. I stopped the array,
+mdadm stopped it but wrote "mdadm: failed to unfreeze array". What
+does it exactly mean? I dont want to proceed until I am sure it does
+not signalize error.
 
-Hey,
+I quickly checked sources and it seems to be related to some sysfs
+resources, but I am not sure. But the array disappeared from
+/sys/block/.
 
-I've a weird issue with a RAID6 setup, /proc/mdstat says:
+Thanks.
 
-> md126 : active raid6 sda1[3] sdh1[6] sdg1[0](F) sdf1[5] sdi1[1] sdc[8] sd=
-b[7]
->       9767559680 blocks super 1.2 level 6, 512k chunk, algorithm 2 [7/6] =
-[_UUUUUU]
+Patrik
 
-So sdg1 is (F)ailed, yet `mdadm --remove` yields:
-
-> md: cannot remove active disk sdg1 from md126 ...
-
-in dmesg...
-
-`mdadm --examine` shows:
-
-> /dev/sdg1:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : ff9e032c:446ed0bd:fc9473f3:f8e090ed
->            Name : media:store  (local to host media)
->   Creation Time : Tue Sep 13 21:36:43 2011
->      Raid Level : raid6
->    Raid Devices : 7
->=20
-> Avail Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)
->      Array Size : 19535119360 (9315.07 GiB 10001.98 GB)
->   Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : 4bcee8e2:709419b6:fbeb3a8e:5c9bb68a
->=20
->     Update Time : Sat May 12 21:57:27 2012
->        Checksum : ffb03189 - correct
->          Events : 304564
->=20
->          Layout : left-symmetric
->      Chunk Size : 512K
->=20
->    Device Role : Active device 0
->    Array State : AAAAAAA ('A' =3D=3D active, '.' =3D=3D missing)
-
-So that superblock thinks it's active, but that's normal, right? It
-wasn't updated due to fail? Others correctly show:
-
-> dev/sdc:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : ff9e032c:446ed0bd:fc9473f3:f8e090ed
->            Name : media:store  (local to host media)
->   Creation Time : Tue Sep 13 21:36:43 2011
->      Raid Level : raid6
->    Raid Devices : 7
->=20
->  Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
->      Array Size : 19535119360 (9315.07 GiB 10001.98 GB)
->   Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : b713fd2b:eef145b0:ce91de0a:9077554b
->=20
->     Update Time : Sat May 12 21:57:57 2012
->        Checksum : 80345876 - correct
->          Events : 304581
->=20
->          Layout : left-symmetric
->      Chunk Size : 512K
->=20
->    Device Role : Active device 2
->    Array State : .AAAAAA ('A' =3D=3D active, '.' =3D=3D missing)
-
-Any ideas?
-
-Cheers,
---=20
-Micha=C5=82 Sawicz <michal@sawicz.net>
-
---=-73aDwLFNm4OpK9ewdPsk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAABAgAGBQJPr/u8AAoJEGnv7NPGHSZFSeYQAMxZcZkJw4ttSK+Ten/3cGt1
-LUc1Qu01s4XFB7CSZwRNZkM8BmYuZRCVBte9JndMOBzXUkiflUkz5/Brs600L3qB
-wH1+7WQCjIC9NepqE8SkEGigYEDSzgpf6SVIf15s2wtsrb3gnsMT6mRU6Z1F1uSZ
-x5bjZH5ADvU6pvOQDtKRVObO60aR5/TRXH9PP/7ViFU1uLJ3oj6XaO5NrP3uhPkn
-S8VSw4x9HYHxJZPaSTkbJjr3CbFR0nF0CdaGqLA2h7hz5eDJTyk/Kq9vPnbKSidL
-/ThqswuSHiRziXMIeF6pNwAQXzd9gfTnWvPrPbp3yKFNPIC50U0sIJqEANlrXkJn
-b7vwcqxGg4blzLqliHHcABNr2fR9BUC7OX5CAoWW5fBm/c9KvDxSh4t1MtNjMt8U
-RMnKdNkQ1WFnossoKFVWPtcPSASiEJiZKey2np1mmKGEviX0c36Ble4oKvp3F7r2
-I70Z9wFxH1iBOOk0V41nfOmqgwZQPR+LM53bPInwO4amFJPX3FJgp1FSOGOly/3h
-ayQzMUABiAvt4LPPeKzJbqxKoGk/EfLDNCmLNp0Z+Dp+grmih+AbcUcsRo19Lc1H
-J7fEhyaYI+uEE78efjWwZ81YmYFg53pKZqf2hJfYItTCxaHSONtnQqXrHnOAl4QK
-rE0fkoxhqee0i1xo4fjF
-=MzKb
------END PGP SIGNATURE-----
-
---=-73aDwLFNm4OpK9ewdPsk--
-
+On Sun, May 13, 2012 at 9:43 AM, Patrik Horn=EDk <patrik@dsl.sk> wrote:
+> Hi Neil,
+>
+> On Sun, May 13, 2012 at 1:19 AM, NeilBrown <neilb@suse.de> wrote:
+>> On Sat, 12 May 2012 17:56:04 +0200 Patrik Horn=EDk <patrik@dsl.sk> w=
+rote:
+>>
+>>> Neil,
+>>
+>> Hi Patrik,
+>> =A0sorry about the "--layout=3Dpreserve" confusion. =A0I was a bit h=
+asty.
+>> =A0-layout=3Dleft-symmetric-6" would probably have done what was wan=
+ted, but it
+>> =A0is a bit later for that :-(
+>
+> --layout=3Dpreserve is mentioned also in the md or mdadm
+> documentation... So is it not the right one?
+>
+>>>
+>>> so I further analyzed the behaviour and I found following:
+>>>
+>>> - The bottleneck cca 1.7 MB/s is probably caused by backup file on =
+one
+>>> of the drives, that drive is utilized almost 80% according to iosta=
+t
+>>> -x and its avg queue length is almost 4 while having await under 50
+>>> ms.
+>>>
+>>> - The variable speed and low speeds down to 100 KB are caused by
+>>> problems on drive I suspected as problematic. Its service time is
+>>> sometimes going above 1 sec.. Total avg speed is about 0.8 MB/s. (I
+>>> tested the read speed on it by running check of array and it worked
+>>> with 30 MB/s. And because preserve should only read from it I did n=
+ot
+>>> specifically test its write speed )
+>>>
+>>> So my questions are:
+>>>
+>>> - Is there a way I can move backup_file to other drive 100% safely?=
+ To
+>>> add another non-network drive I need to restart the server. I can b=
+oot
+>>> it then to some live distribution for example to 100% prevent
+>>> automatic assembly. I think speed should be couple of times higher.
+>>
+>> Yes.
+>> If you stop the array, then copy the backup file, then re-assemble t=
+he
+>> array giving it the backup file in the new location, all should be w=
+ell.
+>> A reboot while the array is stopped is not a problem.
+>
+> Should or will? :) I have 0.90, now 0.91, metadata, is everything
+> needed stored there? Should mdadm 3.2.2-1~bpo60+2 from
+> squeeze-backports work well? Or should I compile mdadm 3.2.4?
+>
+> In case there is some risk involved I will need to choose between
+> waiting and risking power outage happening sometimes in the following
+> week (we have something like storm season here) and risking this...
+>
+> Do you recommend some live linux distro installable on USB which is
+> good for this? (One that has newest versions and dont try assemble
+> arrays.)
+>
+> Or will automatic assemble fail and it will cause no problem at all
+> for sure? (According to md or mdadm doc this should be the case.) In
+> that case can I use distribution on the server, Debian stable plus
+> some packages from squeeze, for that? Possibly with added
+> raid=3Dnoautodetect? I have LVM on top of raid arrays and I dont want=
+ to
+> cause mess. OS is not on LVM or raid.
+>
+>>>
+>>> - Is it safe to fail and remove problematic drive? The array will b=
+e
+>>> down to 6 from 8 drives in part where it is not reshaped. It should
+>>> double the speed.
+>>
+>> As safe as it ever is to fail a device in a non-degraded array.
+>> i.e. it would not cause a problem directly but of course if you get =
+an error
+>> on another device, that would be awkward.
+>
+> I actually "check"-ed this raid array couple of times few days ago an=
+d
+> data on other drives were OK. Problematic drive reported couple of
+> reading errors, always corrected with data from other drives and by
+> rewriting.
+>
+> About that, shoud this reshaping work OK if it encounter possible
+> reading errors on problematic drive? Will it use data from other
+> drives to correct that also in this reshaping mode?
+>
+> Thanks.
+>
+> Patrik
+>
+>>>
+>>> - Why mdadm did ignore layout=3Dpreserve? I have other arrays in th=
+at
+>>> server in which I need replace the drive.
+>>
+>> I'm not 100% sure - what version of mdadm are you using?
+>> If it is 3.2.4, then maybe commit 0073a6e189c41c broke something.
+>> I'll add test for this to the test suit to make sure it doesn't brea=
+k again.
+>> But you are using 3.2.2 .... Not sure. I'd have to look more closely=
+=2E
+>>
+>> Using --layout=3Dleft-symmetric-6 should work, though testing on som=
+e
+>> /dev/loop devices first is always a good idea.
+>>
+>> NeilBrown
+>>
+>>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
