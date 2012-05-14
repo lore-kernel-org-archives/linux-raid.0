@@ -1,113 +1,57 @@
-From: =?UTF-8?B?U2VyZ2l1c3ogQnJ6ZXppxYRza2k=?=
-	<Sergiusz.Brzezinski@supersystem.pl>
-Subject: mdadm doesn't wont to grow - help please
-Date: Mon, 14 May 2012 15:49:53 +0200
-Message-ID: <4FB10D81.7070803@supersystem.pl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH] Check for multipath module before running multipath tests
+Date: Mon, 14 May 2012 19:03:21 +0200
+Message-ID: <1337015001-14516-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: dledford@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-I would like to grow the RAID1.
+Some systems do not ship the md multipath module. If not available
+simply skip any multipath tests.
 
-- Raid1 size has about 50GB
-- two HD partition (sda2, sdb2) have about 80GB+ (each)
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ test              |    6 ++++++
+ tests/00multipath |    5 +++++
+ 2 files changed, 11 insertions(+), 0 deletions(-)
 
-I do:
+diff --git a/test b/test
+index 2964b3b..67f05e5 100755
+--- a/test
++++ b/test
+@@ -19,6 +19,12 @@ then
+    echo >&2 "test: $mdadm isn't usable."
+ fi
+ 
++# Check whether to run multipath tests
++modprobe multipath 2> /dev/null
++if grep -s 'Personalities : .*(multipath)' > /dev/null /proc/mdstat ; then
++	MULTIPATH=yes
++fi
++
+ # assume md0, md1, md2 exist in /dev
+ md0=/dev/md0 md1=/dev/md1 md2=/dev/md2
+ mdp0=/dev/md_d0
+diff --git a/tests/00multipath b/tests/00multipath
+index bc0429f..1a80419 100644
+--- a/tests/00multipath
++++ b/tests/00multipath
+@@ -2,6 +2,11 @@
+ #
+ # create a multipath, and fail and stuff
+ 
++if [ "MULTIPATH" != "yes" ]; then
++  echo -ne 'skipping... '
++  exit 0
++fi
++
+ mdadm -CR $md1 -l multipath -n2 $path0 $path1
+ 
+ testdev $md1 1 $mdsize12 1
+-- 
+1.7.1
 
-# mdadm --grow /dev/md0 --size=3Dmax
-
-and I get the info, that the new size is 50GB. And I wonder: why not 80=
-GB? The=20
-size doesn't change! If I try to force size (--size=3Dxxxxx), I get the=
- message=20
-that there is no space.
-
-What did I wrong?
-
-Bellow some facts about my configuration.
-
-Please help.
-
-Thank You in advance
-
-Sergiusz Brzezi=C5=84ski
------------------------------------------------
-
-# mdadm --detail /dev/md0
-
-/dev/md0:
-         Version : 1.2
-   Creation Time : Wed Mar 30 07:25:47 2011
-      Raid Level : raid1
-      Array Size : 52427776 (50.00 GiB 53.69 GB)
-   Used Dev Size : 52427776 (50.00 GiB 53.69 GB)
-    Raid Devices : 2
-   Total Devices : 2
-     Persistence : Superblock is persistent
-
-     Update Time : Mon May 14 09:16:16 2012
-           State : clean
-  Active Devices : 2
-Working Devices : 2
-  Failed Devices : 0
-   Spare Devices : 0
-
-            Name : linux-uo1f.site:1
-            UUID : 603ab02b:f8e9c2b9:863ce780:7f8dfca7
-          Events : 5472151
-
-     Number   Major   Minor   RaidDevice State
-        2       8        2        0      active sync   /dev/sda2
-        4       8       18        1      active sync   /dev/sdb2
-
-
-
-# cat /proc/mdstat
-
-Personalities : [raid1]
-md0 : active raid1 sda2[2] sdb2[4]
-       52427776 blocks super 1.2 [2/2] [UU]
-
-unused devices: <none>
-
-
-# fdisk /dev/sdb
-
-Disk /dev/sdb: 320.1 GB, 320072933376 bytes
-255 heads, 63 sectors/track, 38913 cylinders, total 625142448 sectors
-Units =3D sectors of 1 * 512 =3D 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk identifier: 0x0008f6dc
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sdb1   *        2048      208895      103424   83  Linux
-/dev/sdb2          208896   625142447   312466776   fd  Linux raid auto=
-detect
-
-
-# fdisk /dev/sda
-
-Disk /dev/sda: 90.0 GB, 90028302336 bytes
-255 heads, 63 sectors/track, 10945 cylinders, total 175836528 sectors
-Units =3D sectors of 1 * 512 =3D 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk identifier: 0x08e607c5
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sda1            2048      208895      103424   83  Linux
-/dev/sda2          208896   175836527    87813816   fd  Linux raid auto=
-detect
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
