@@ -1,107 +1,113 @@
-From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
-Subject: Re: Failed, but "md: cannot remove active disk..."
-Date: Mon, 14 May 2012 13:44:25 +0200
-Message-ID: <1336995865.6722.22.camel@localhost>
-References: <1336933308.2831.4.camel@localhost>
-	 <20120514202220.5a164eb0@notabene.brown>
-	 <1336992780.6722.18.camel@localhost>
-	 <20120514213623.3bc1bfa5@notabene.brown>
+From: =?UTF-8?B?U2VyZ2l1c3ogQnJ6ZXppxYRza2k=?=
+	<Sergiusz.Brzezinski@supersystem.pl>
+Subject: mdadm doesn't wont to grow - help please
+Date: Mon, 14 May 2012 15:49:53 +0200
+Message-ID: <4FB10D81.7070803@supersystem.pl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-RD2R6AbeGiqaLIv0BH0o"
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120514213623.3bc1bfa5@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
---=-RD2R6AbeGiqaLIv0BH0o
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I would like to grow the RAID1.
 
-Dnia 2012-05-14, pon o godzinie 21:36 +1000, NeilBrown pisze:
-> Is the array still functioning?
-> Are there any interesting messages appearing in the kernel logs?
+- Raid1 size has about 50GB
+- two HD partition (sda2, sdb2) have about 80GB+ (each)
 
-Yes and no, the array is fine, working, nothing interesting in any logs
-I can see.
+I do:
 
-> What does
->   grep . /sys/block/md126/md/dev*/*
-> show?
+# mdadm --grow /dev/md0 --size=3Dmax
 
-# grep . /sys/block/md126/md/dev*/*
-/sys/block/md126/md/dev-sda1/errors:0
-/sys/block/md126/md/dev-sda1/offset:2048
-/sys/block/md126/md/dev-sda1/recovery_start:none
-/sys/block/md126/md/dev-sda1/size:1953512448
-/sys/block/md126/md/dev-sda1/slot:3
-/sys/block/md126/md/dev-sda1/state:in_sync
-/sys/block/md126/md/dev-sdb/errors:0
-/sys/block/md126/md/dev-sdb/offset:2048
-/sys/block/md126/md/dev-sdb/recovery_start:none
-/sys/block/md126/md/dev-sdb/size:1953513560
-/sys/block/md126/md/dev-sdb/slot:5
-/sys/block/md126/md/dev-sdb/state:in_sync
-/sys/block/md126/md/dev-sdc/errors:0
-/sys/block/md126/md/dev-sdc/offset:2048
-/sys/block/md126/md/dev-sdc/recovery_start:none
-/sys/block/md126/md/dev-sdc/size:1953513560
-/sys/block/md126/md/dev-sdc/slot:2
-/sys/block/md126/md/dev-sdc/state:in_sync
-/sys/block/md126/md/dev-sdf1/errors:0
-/sys/block/md126/md/dev-sdf1/offset:2048
-/sys/block/md126/md/dev-sdf1/recovery_start:none
-/sys/block/md126/md/dev-sdf1/size:1953512448
-/sys/block/md126/md/dev-sdf1/slot:4
-/sys/block/md126/md/dev-sdf1/state:in_sync
-/sys/block/md126/md/dev-sdg1/errors:2776
-/sys/block/md126/md/dev-sdg1/offset:2048
-/sys/block/md126/md/dev-sdg1/recovery_start:none
-/sys/block/md126/md/dev-sdg1/size:1953512448
-/sys/block/md126/md/dev-sdg1/slot:0
-/sys/block/md126/md/dev-sdg1/state:faulty
-/sys/block/md126/md/dev-sdh1/errors:0
-/sys/block/md126/md/dev-sdh1/offset:2048
-/sys/block/md126/md/dev-sdh1/recovery_start:none
-/sys/block/md126/md/dev-sdh1/size:1953512448
-/sys/block/md126/md/dev-sdh1/slot:6
-/sys/block/md126/md/dev-sdh1/state:in_sync
-/sys/block/md126/md/dev-sdi1/errors:0
-/sys/block/md126/md/dev-sdi1/offset:2048
-/sys/block/md126/md/dev-sdi1/recovery_start:none
-/sys/block/md126/md/dev-sdi1/size:1953512448
-/sys/block/md126/md/dev-sdi1/slot:1
-/sys/block/md126/md/dev-sdi1/state:in_sync
+and I get the info, that the new size is 50GB. And I wonder: why not 80=
+GB? The=20
+size doesn't change! If I try to force size (--size=3Dxxxxx), I get the=
+ message=20
+that there is no space.
 
-Thanks,
---=20
-Micha=C5=82 Sawicz <michal@sawicz.net>
+What did I wrong?
 
---=-RD2R6AbeGiqaLIv0BH0o
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
+Bellow some facts about my configuration.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+Please help.
 
-iQIcBAABAgAGBQJPsPAZAAoJEGnv7NPGHSZF7D0QAKWESxxo3N+1kuFBBbHH2Oj4
-eNBNMIRzsW/4jo9Gs6IfmaTPPuV8K0JtS6+BH0ZTPoT2h6ntOQMbTJ5I1yXROKVQ
-3G6znn0DzNFQfXvbcM7TdzIuZ8gI7gt3pb9duWSnrzhWn3Q6cgEHApCr7fThrIVq
-mgmXQM8LuXCmz+eXEwZmYTdJg8LtPVNbovGPNNtvCaOMZwhn0Ha8cKBNb+KeWdZb
-LPkCEPtpeNhfloIwYOcqI9zIpetHesALUOMPZPMQtidKlaDhnYSAPxNC+TOLxXXO
-ntzAB3Ea819oO0vHmiBTnPjvN2aEC+FPIPuxioJvns8Q3D6XbeXZENxC7EW8cBfd
-L8d5AjQo6HSLAfLTasT2BfuBd65DMOhMRO2hc9KwfEa2IJhul2H40iPuL/V3a62V
-F0jJLRxJ+F82hPwDeZm5QhPZ+sENwHeZzFTWHfDv2pNzDMyB8gAlgtPYl8jwiY0B
-6IKxqk+ZofHtEA+aBOa6Aav/d+TufkwMXRi45gFZsz19rfibx54gW8KCoRlIUW62
-ZuMlW/33JWxNB6iEsqVrpRT5ULlv1YmXhZMGXzy6+KFAMalpS3GBCImhvhtofhV2
-XIAjtB2F5AlHfAgGhFA0MLdQEgRw34sHk6l74X7uqc35AM/OX3E59sh+jOpEibP2
-5XafKi70UpvuHIgGf/Ek
-=cUT+
------END PGP SIGNATURE-----
+Thank You in advance
 
---=-RD2R6AbeGiqaLIv0BH0o--
+Sergiusz Brzezi=C5=84ski
+-----------------------------------------------
 
+# mdadm --detail /dev/md0
+
+/dev/md0:
+         Version : 1.2
+   Creation Time : Wed Mar 30 07:25:47 2011
+      Raid Level : raid1
+      Array Size : 52427776 (50.00 GiB 53.69 GB)
+   Used Dev Size : 52427776 (50.00 GiB 53.69 GB)
+    Raid Devices : 2
+   Total Devices : 2
+     Persistence : Superblock is persistent
+
+     Update Time : Mon May 14 09:16:16 2012
+           State : clean
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+
+            Name : linux-uo1f.site:1
+            UUID : 603ab02b:f8e9c2b9:863ce780:7f8dfca7
+          Events : 5472151
+
+     Number   Major   Minor   RaidDevice State
+        2       8        2        0      active sync   /dev/sda2
+        4       8       18        1      active sync   /dev/sdb2
+
+
+
+# cat /proc/mdstat
+
+Personalities : [raid1]
+md0 : active raid1 sda2[2] sdb2[4]
+       52427776 blocks super 1.2 [2/2] [UU]
+
+unused devices: <none>
+
+
+# fdisk /dev/sdb
+
+Disk /dev/sdb: 320.1 GB, 320072933376 bytes
+255 heads, 63 sectors/track, 38913 cylinders, total 625142448 sectors
+Units =3D sectors of 1 * 512 =3D 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x0008f6dc
+
+    Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1   *        2048      208895      103424   83  Linux
+/dev/sdb2          208896   625142447   312466776   fd  Linux raid auto=
+detect
+
+
+# fdisk /dev/sda
+
+Disk /dev/sda: 90.0 GB, 90028302336 bytes
+255 heads, 63 sectors/track, 10945 cylinders, total 175836528 sectors
+Units =3D sectors of 1 * 512 =3D 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x08e607c5
+
+    Device Boot      Start         End      Blocks   Id  System
+/dev/sda1            2048      208895      103424   83  Linux
+/dev/sda2          208896   175836527    87813816   fd  Linux raid auto=
+detect
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
