@@ -1,40 +1,48 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: ANNOUNCE: mdadm 3.2.4 - A tool for managing Soft RAID under Linux
-Date: Tue, 15 May 2012 09:03:21 +0200
-Message-ID: <4FB1FFB9.5090300@redhat.com>
-References: <2598499.YYnUQlf0Se@localhost> <4FB16B68.3000201@redhat.com> <1714869.L4aqWfddyq@localhost> <4FB17212.3000308@redhat.com> <20120515073219.1275b10a@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120515073219.1275b10a@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: =?UTF-8?B?UGF3ZcWCIFNpa29yYQ==?= <pluto@agmk.net>, linux-raid@vger.kernel.org
+From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+Subject: [PATCH] md: remove redudent code
+Date: Tue, 15 May 2012 16:00:25 +0800
+Message-ID: <1337068825-11995-1-git-send-email-yuanhan.liu@linux.intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: neilb@suse.de, linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Yuanhan Liu <yuanhan.liu@linux.intel.com>
 List-Id: linux-raid.ids
 
-On 05/14/12 23:32, NeilBrown wrote:
-> On Mon, 14 May 2012 22:58:58 +0200 Jes Sorensen <Jes.Sorensen@redhat.com>
->> If you post a patch without including a proper commit message and
->> signed-off-by lines, which is standard practice, then that is equivalent
->> to you not having posted a patch in the first place.
->>
->> Don't blame others for not doing the basic work everybody else does when
->> posting patches. It really isn't hard to comply with the standard patch
->> posting rules!
-> 
-> I decided a better approach is just to refresh from upstream:
-> 
->       http://gcc.gnu.org/svn/gcc/branches/cilkplus/include/sha1.h
->       http://gcc.gnu.org/svn/gcc/branches/cilkplus/libiberty/sha1.c
-> 
-> have been copied into mdadm with just a tiny change to not include config.h
-> 
-> Seems to work, and probably has the *right* fix.
+The code does nothing but repating assigning sb->sb_csum with original
+value.
 
-I would tend to agree with you, if not we can hollor at the gcc guys :)
+Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+---
+ drivers/md/md.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-Cheers,
-Jes
-
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 0bd44e3..f2d799a 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1439,15 +1439,12 @@ super_90_rdev_size_change(struct md_rdev *rdev, sector_t num_sectors)
+ 
+ static __le32 calc_sb_1_csum(struct mdp_superblock_1 * sb)
+ {
+-	__le32 disk_csum;
+ 	u32 csum;
+ 	unsigned long long newcsum;
+ 	int size = 256 + le32_to_cpu(sb->max_dev)*2;
+ 	__le32 *isuper = (__le32*)sb;
+ 	int i;
+ 
+-	disk_csum = sb->sb_csum;
+-	sb->sb_csum = 0;
+ 	newcsum = 0;
+ 	for (i=0; size>=4; size -= 4 )
+ 		newcsum += le32_to_cpu(*isuper++);
+@@ -1456,7 +1453,6 @@ static __le32 calc_sb_1_csum(struct mdp_superblock_1 * sb)
+ 		newcsum += le16_to_cpu(*(__le16*) isuper);
+ 
+ 	csum = (newcsum & 0xffffffff) + (newcsum >> 32);
+-	sb->sb_csum = disk_csum;
+ 	return cpu_to_le32(csum);
+ }
+ 
+-- 
+1.7.7.6
