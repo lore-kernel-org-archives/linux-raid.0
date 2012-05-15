@@ -1,89 +1,92 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Failed, but "md: cannot remove active disk..."
-Date: Tue, 15 May 2012 13:38:56 +1000
-Message-ID: <20120515133856.6e04d77b@notabene.brown>
-References: <1336933308.2831.4.camel@localhost>
-	<20120514202220.5a164eb0@notabene.brown>
-	<1336992780.6722.18.camel@localhost>
-	<20120514213623.3bc1bfa5@notabene.brown>
-	<1336995865.6722.22.camel@localhost>
+Subject: Re: mdadm: [PATCH] Don't consider disks with a valid recovery
+ offset as candidates for bumping up event count
+Date: Tue, 15 May 2012 14:21:04 +1000
+Message-ID: <20120515142104.41a80d73@notabene.brown>
+References: <CAGRgLy5tEups--dzoV6+bq+CzZzwYMy7tv0FFJqah-Q5ZJc6kA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/9WaFM3.8RNhQ1rldR2vFp=Q"; protocol="application/pgp-signature"
+ boundary="Sig_/R+Bs.zQfDi28zujcNxO1om0"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1336995865.6722.22.camel@localhost>
+In-Reply-To: <CAGRgLy5tEups--dzoV6+bq+CzZzwYMy7tv0FFJqah-Q5ZJc6kA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/9WaFM3.8RNhQ1rldR2vFp=Q
-Content-Type: text/plain; charset=UTF-8
+--Sig_/R+Bs.zQfDi28zujcNxO1om0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 14 May 2012 13:44:25 +0200 Micha=C5=82 Sawicz <michal@sawicz.net> w=
-rote:
+On Sun, 13 May 2012 13:10:43 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
 
-> Dnia 2012-05-14, pon o godzinie 21:36 +1000, NeilBrown pisze:
-> > Is the array still functioning?
-> > Are there any interesting messages appearing in the kernel logs?
->=20
-> Yes and no, the array is fine, working, nothing interesting in any logs
-> I can see.
->=20
-> > What does
-> >   grep . /sys/block/md126/md/dev*/*
-> > show?
->
-//snip//
+> Hi Neil,
+> do you think the below patch sounds reasonable?
 
+Yes, looks good.  Applied.
 
-Thanks. No hints there - all normal.
-
-If you can write to the array, then md_check_recovery must be getting run,
-and the array is not read-only. So...
-
-Is there a 'sync' thread still running?  It would be called
-    md126_resync
-
-That would stop things from progressing.
-If there is, what does
-    cat /proc/$PID/stack
-show for the relevant PID ??
-
-What about
-    cat /sys/block/md126/md/sync_action
-??
-If that were 'frozen', that might explain it.
-
-    cat /sys/block/md126/md/reshape_position
-
-shows "none" I suspect?
-
-I cannot think of anything else that could be getting in the way.
-
+Thanks,
 NeilBrown
 
---Sig_/9WaFM3.8RNhQ1rldR2vFp=Q
+
+
+>=20
+> Thanks,
+> Alex.
+>=20
+>=20
+> >From 98adc21bba9cf5d77214d665f2218fd7de2623b9 Mon Sep 17 00:00:00 2001
+> From: Alex Lyakas <alex@zadarastorage.com>
+> Date: Sun, 13 May 2012 13:04:24 +0300
+> Subject: [PATCH] Don't consider disks with a valid recovery offset as
+>  candidates for bumping up event count.
+>=20
+> When we are looking for a candidate disk to bump up the event count,
+> we consider only disks that have recovery_start=3D=3DMaxSector.
+> However, after we find one such disk, we agree to accept more disks
+> having same event count, regardless of their recovery_start.
+> Be consistent and don't accept disks with a valid recovery_start at all.
+>=20
+> diff --git a/Assemble.c b/Assemble.c
+> index 080993d..227d66f 100644
+> --- a/Assemble.c
+> +++ b/Assemble.c
+> @@ -1069,6 +1069,7 @@ int Assemble(struct supertype *st, char *mddev,
+>                         int j =3D best[i];
+>                         if (j >=3D 0 &&
+>                             !devices[j].uptodate &&
+> +                           devices[j].i.recovery_start =3D=3D MaxSector =
+&&
+>                             devices[j].i.events =3D=3D current_events) {
+>                                 chosen_drive =3D j;
+>                                 goto add_another;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/R+Bs.zQfDi28zujcNxO1om0
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT7HP0Dnsnt1WYoG5AQKH4RAAn/kAuBiFSqmYmPIr/NMxqEe9OV8acQZV
-nw67FlMRaFMMqEKw/KDa/PqFyozTkOnJY8k5uQoAov8P2gqXNvQEq3q8wxQQs55Z
-3OamXGFEvn0YxPr9zaXN++TO+NsJ1S98QINrX+H8SklB3+t+cNTrO0g0/HT7oC5W
-FMlx5eOzjYh3Vk0xcD5UQF8wxsoBQ+cxeYBN/eAPD1CaYSDwqJw85ANI2smkA2qF
-P19ffQwzBoljbUq/IjrBrRQTkYXDpRE+9apCAr8spW2UHqQCnVpuNA039r+PmhZg
-7itx4C51TpiQ0Ur3P0IMnJZXnQUdEQgXBnvq8jB6q/Y1dEGWwDH7qja/JfYvc1ou
-uqleQ1U8IyQKlf6hszC8ronq6swbfMoxij3q0lIXxmJGhBzJrEzqyshqB221Muy9
-4OiM+XCKfo99YlVofESw90thAMN/fuIZOYYHc9onN3+Bh0JwxpomYMNhpwnArYp9
-4ec4f2Hz+UuaJN3JxLdZzGyyBOBMFssBw+IFt0ddIsBpM6nYYQBmJnh+9JlWfTra
-RULthOrw63t6/IZeGi+0mJyGm2xEyiAmUYaWxzNUacfutDpx7VgWsHSmfcipRjx7
-dsmgO9XZYH0NzWoXfXpLgKouCRWqacsqsAis/6E4VtVkRuejKWEEmV5STgznS4Dv
-vpZSg4AN24Q=
-=1Oth
+iQIVAwUBT7HZsDnsnt1WYoG5AQItjhAAhIT5GKzQBCT0GCcmWvTqWoWXkFGYXx8Z
+xb+RWBdwZiMMk2uruf+r3QupSN9/oIsqFGbQK14vlW4vMH3hE4qHktds2YHzTKIX
+Mi7xzE5FG6gvMZZQZVbdpk/1Brvj+ozsf66S8NGKXSX3bG3FOPhmBBuW75dCZ3Jn
+WuvWx+Im+yJTdsHBAY3x26cYXHBTX0cNnIJen+iO0goq8wm5TRrXnP9SbHOIZJl4
+j/6LQMi5ZghLMUNIXfeYmx/2S8Pr0BJA5rri/azZz6BSaEegrbHMof+0ov6wJRCr
+q7Ed/VofYIv2bXe8S/GLQKUmgcx29ydGfZlEVmjI7vMxljyRE0NqwXBdmP8t1b4Q
+bVcN4wO/2nO5oQSdUCUyjmzpq7ICUS03Uhrdu7D6bM2DfRerKY05SG7wowNp2+X7
+55U98FYra5xopOPFH4XyLvwectbnLloENd9TbNxqMaCgbLEbCudCFp0/Vwsua2UJ
+sHfZbRJKQSkKWSNrHDwa9k0GIYyKC+mJ8TX8akT31YiQ3AEIpaBMJ6CEw/c6QuL8
+Re/h0Zf77qplE+636bt+12OpWUl2H1eNKihwD+0dcVzkEDW/Wcj0WL0X21q4YQtc
+qEaDFbc8lThoGKX9FTMQnMVpISJehVbbkSj/iRftZ7WAXDa7MVyEbvXydCn25z7u
+rkSzXCWNTIU=
+=s/VE
 -----END PGP SIGNATURE-----
 
---Sig_/9WaFM3.8RNhQ1rldR2vFp=Q--
+--Sig_/R+Bs.zQfDi28zujcNxO1om0--
