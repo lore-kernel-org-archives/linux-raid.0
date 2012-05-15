@@ -1,84 +1,40 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md: check the return of mddev_find()
-Date: Tue, 15 May 2012 16:33:53 +1000
-Message-ID: <20120515163353.5ab9c084@notabene.brown>
-References: <1337063200-11174-1-git-send-email-yuanhan.liu@linux.intel.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: ANNOUNCE: mdadm 3.2.4 - A tool for managing Soft RAID under Linux
+Date: Tue, 15 May 2012 09:03:21 +0200
+Message-ID: <4FB1FFB9.5090300@redhat.com>
+References: <2598499.YYnUQlf0Se@localhost> <4FB16B68.3000201@redhat.com> <1714869.L4aqWfddyq@localhost> <4FB17212.3000308@redhat.com> <20120515073219.1275b10a@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/tXQnAUdX5K=2djbFlaL=OS7"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1337063200-11174-1-git-send-email-yuanhan.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120515073219.1275b10a@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: =?UTF-8?B?UGF3ZcWCIFNpa29yYQ==?= <pluto@agmk.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/tXQnAUdX5K=2djbFlaL=OS7
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 05/14/12 23:32, NeilBrown wrote:
+> On Mon, 14 May 2012 22:58:58 +0200 Jes Sorensen <Jes.Sorensen@redhat.com>
+>> If you post a patch without including a proper commit message and
+>> signed-off-by lines, which is standard practice, then that is equivalent
+>> to you not having posted a patch in the first place.
+>>
+>> Don't blame others for not doing the basic work everybody else does when
+>> posting patches. It really isn't hard to comply with the standard patch
+>> posting rules!
+> 
+> I decided a better approach is just to refresh from upstream:
+> 
+>       http://gcc.gnu.org/svn/gcc/branches/cilkplus/include/sha1.h
+>       http://gcc.gnu.org/svn/gcc/branches/cilkplus/libiberty/sha1.c
+> 
+> have been copied into mdadm with just a tiny change to not include config.h
+> 
+> Seems to work, and probably has the *right* fix.
 
-On Tue, 15 May 2012 14:26:40 +0800 Yuanhan Liu <yuanhan.liu@linux.intel.com>
-wrote:
+I would tend to agree with you, if not we can hollor at the gcc guys :)
 
-> Check the return of mddev_find(), since it may fail due to out of
-> memeory or out of usable minor number.
->=20
-> The reason I chose -ENODEV instead of -ENOMEM or something else is
-> md_alloc() function chose that ;)
->=20
-> Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-> ---
->  drivers/md/md.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
->=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 477eb2e..0bd44e3 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6371,6 +6371,9 @@ static int md_open(struct block_device *bdev, fmode=
-_t mode)
->  	struct mddev *mddev =3D mddev_find(bdev->bd_dev);
->  	int err;
-> =20
-> +	if (!mddev)
-> +		return -ENODEV;
-> +
->  	if (mddev->gendisk !=3D bdev->bd_disk) {
->  		/* we are racing with mddev_put which is discarding this
->  		 * bd_disk.
+Cheers,
+Jes
 
-Hi,
- thanks for the patch.
 
- I'm fairly sure that we won't actually get to md_open unless md_probe has
- succeeded and called add_disk, in which case there *must* be a matching
- mddev.
-
- However it doesn't hurt and looks safer so I have applied it.
-
-Thanks,
-NeilBrown
-
---Sig_/tXQnAUdX5K=2djbFlaL=OS7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT7H40Tnsnt1WYoG5AQLiRBAAoyyAVK0C1d88AvPK2krm8AnJAfWMdAf5
-cUJwKo6pd0bLemOWTrx3NPsrEqzWKkfzKrcWJtVNKfUGcmcMjsacD3Dy0JXr3fwH
-FWs+XaMoi3GUCdQDI/MAS44VmdDY8VCPNMCKBq/clggGnDqtC+9h+rO7gbfs5Z6A
-YIqnw2ai0VJ70hwP10escu685ig/GWuI06At6Ak4BigHf/uqiD/2CSi7NtYDYDay
-908EIR4W6X6utWY01YJkSrYZK5PJ8O62wR6Ll3QAhThwKCMSO9uGXd5DsW36x0vd
-vAaMZb1rW0gUsproPyfRWpaaR0jfqOK8BUFJO0dLw9EjsBo7gROt5JAKK/HxQcBS
-OLKBbeFhlpl0lnPhUyhdw5abwGE6gNvYo60iDn3Glyi7LcgWP9TAYjRs4ypIhzci
-xkmoDdNyZLFv/57KFEsKmSng1/lXT6VTIGmU33/Bus4r7RmQxf1kNwTscCauolX9
-HyWd+tF/GLoleI7nto7Kgf7CwvS3OiwIXz4rN/H7RE5g2WYIZNN4uz+0RV4vaZH7
-nNkAIep4x8NVT+ADzvDrKgvCtsVLC+V6mwA8cxj9Yg2uKpumKWvD/+Ibg8iDP70p
-7ELkCgp8QvpvQ777cZIj51HbOxtKV/Rm2OpNtMILNIerv3h/dnzCf22Xw6OZSRfk
-5UK/mSxFQvA=
-=6wkl
------END PGP SIGNATURE-----
-
---Sig_/tXQnAUdX5K=2djbFlaL=OS7--
