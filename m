@@ -1,75 +1,45 @@
-From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-Subject: Re: [PATCH] md: remove redudent code
-Date: Tue, 15 May 2012 16:12:49 +0800
-Message-ID: <20120515081249.GG10252@yliu-dev.sh.intel.com>
-References: <1337068825-11995-1-git-send-email-yuanhan.liu@linux.intel.com>
- <20120515180349.0f0d275e@notabene.brown>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: Removing physical disk from RAID & LVM
+Date: Tue, 15 May 2012 10:58:01 +0200
+Message-ID: <4FB21A99.1050405@hesbynett.no>
+References: <4FB1E89F.5080407@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120515180349.0f0d275e@notabene.brown>
-Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4FB1E89F.5080407@gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: =?ISO-8859-1?Q?Tero_M=E4ntyvaara?= <termant@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, May 15, 2012 at 06:03:49PM +1000, NeilBrown wrote:
-> On Tue, 15 May 2012 16:00:25 +0800 Yuanhan Liu <yuanhan.liu@linux.intel.com>
-> wrote:
-> 
-> > The code does nothing but repating assigning sb->sb_csum with original
-> > value.
-> 
-> This code sets the sb_csum to 0 while the csum is calculated.
-> 
-> Without this, calculating the csum, setting it, then calculating again would
-> produce a different result.
-> 
-> So the code is correct as is.
+On 15/05/2012 07:24, Tero M=E4ntyvaara wrote:
+> Hi,
+>
+> I have filesystem build up with 5 x 320 GB disks with identical
+> partitions. Disks have 2 partitions and the first one is dedicated fo=
+r
+> RAID-1 (/dev/md0) and second one is dedicated for RAID-5 (/dev/md1). =
+The
+> disk /dev/md0 is mounted as /boot and the /dev/md1 is prepared for LV=
+M.
+> PE size is 32 MiB and there is 38035 PEs.
+>
+> I am going to remove one 320 GB disk and have already reduced the siz=
+es
+> of existing LV:s. 1) What is the sufficient free PE number before I c=
+an
+> imagine shrinking of RAID-5 device? 2) How should I procede after hav=
+ing
+> enough free PE:s?
+>
 
-Aha, got it. And sorry for the wrong patch.
+Are you removing the disk permanently, or do you plan to replace it?
 
-Thanks,
-Yuanhan Liu
 
-> 
-> Thanks,
-> NeilBrown
-> 
-> 
-> > 
-> > Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-> > ---
-> >  drivers/md/md.c |    4 ----
-> >  1 files changed, 0 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index 0bd44e3..f2d799a 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -1439,15 +1439,12 @@ super_90_rdev_size_change(struct md_rdev *rdev, sector_t num_sectors)
-> >  
-> >  static __le32 calc_sb_1_csum(struct mdp_superblock_1 * sb)
-> >  {
-> > -	__le32 disk_csum;
-> >  	u32 csum;
-> >  	unsigned long long newcsum;
-> >  	int size = 256 + le32_to_cpu(sb->max_dev)*2;
-> >  	__le32 *isuper = (__le32*)sb;
-> >  	int i;
-> >  
-> > -	disk_csum = sb->sb_csum;
-> > -	sb->sb_csum = 0;
-> >  	newcsum = 0;
-> >  	for (i=0; size>=4; size -= 4 )
-> >  		newcsum += le32_to_cpu(*isuper++);
-> > @@ -1456,7 +1453,6 @@ static __le32 calc_sb_1_csum(struct mdp_superblock_1 * sb)
-> >  		newcsum += le16_to_cpu(*(__le16*) isuper);
-> >  
-> >  	csum = (newcsum & 0xffffffff) + (newcsum >> 32);
-> > -	sb->sb_csum = disk_csum;
-> >  	return cpu_to_le32(csum);
-> >  }
-> >  
-> 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
