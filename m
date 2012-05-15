@@ -1,43 +1,60 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: help: re-add needed after each reboot
-Date: Tue, 15 May 2012 09:27:41 -0400
-Message-ID: <4FB259CD.5070802@tmr.com>
-References: <5d1b39dd26f138ed494e779218d21346.squirrel@anguish.kchang.net>
+From: Maciej Naruszewicz <maciej.naruszewicz@intel.com>
+Subject: Re: mdadm-3.2.5 coming soon :-(
+Date: Tue, 15 May 2012 17:22:27 +0200
+Message-ID: <4FB274B3.8040907@intel.com>
+References: <20120503142201.649766de@notabene.brown> <20120515215020.76fd9c6f@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5d1b39dd26f138ed494e779218d21346.squirrel@anguish.kchang.net>
+In-Reply-To: <20120515215020.76fd9c6f@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux RAID <linux-raid@vger.kernel.org>, Jes Sorensen <Jes.Sorensen@redhat.com>, Doug Ledford <dledford@redhat.com>, Michael Tokarev <mjt@tls.msk.ru>, Dan Williams <dan.j.williams@intel.com>, "Dorau, Lukasz" <lukasz.dorau@intel.com>, Clint Byrum <clint@ubuntu.com>, "Danecki, Jacek" <jacek.danecki@intel.com>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>, "Tomczak, Marcin" <marcin.tomczak@intel.com>
 List-Id: linux-raid.ids
 
-D. Lin wrote:
-> Hi,
+> If anyone knows of any other issues that have cropped up wit 3.2.4, please
+> let me know.
 >
-> I am running 3.2.0 (ubuntu 12.04). My raid5 has 3 disks (sd[cbd]1) and no
-> spares. The system boots off a non-raid device and auto discovers and
-> mounts the raid device.
->
-> For some reason, sdc1 is not automatically detected and is always missed
-> on each boot. I have to re-add it back. What could be causing this?
->
-> This did not happen while I was running 2.6.38.
->
-Unless you can get back to that kernel and the problem goes away, that's likely 
-to be irrelevant.
+> Thanks,
+> NeilBrown
 
-If this only happens on power cycle I would suspect a slow spin-up on one drive, 
-otherwise that's not it. Be any chance is that drive, and only that drive, set 
-to spin down when not in use?
+Since mdadm-3.2.4 creating volumes using IMSM containers is impossible 
+(segfaults), unless the kernel is 3.1.x or higher (for instance 
+everything SEEMS to work in RHEL 7.0 Alpha and openSUSE 12.1). Full 
+story from SLES 11 SP2 (kernel-3.0.13-0.27-default) with mdadm-3.2.4 :
 
-Check partition types. That shouldn't be an issue, but check anyway.
+$ mdadm --zero-superblock /dev/sd[cd]
+$ mdadm -C /dev/md/imsm0 -a md -e imsm -n 2 /dev/sd[cd] -R
 
-Have you run SMART on the drives? Ignore this idea if you don't see the problem 
-when booting off the old kernel. Just because you changed software and the 
-problem occurred, don't completely rule out hardware, or a subtle config problem.
+     [...]
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-   "We have more to fear from the bungling of the incompetent than from
-the machinations of the wicked."  - from Slashdot
+$ tail /var/log/messages
+
+     May 15 17:16:10 gklab-128-174 kernel: [  317.653470] md: bind<sdc>
+     May 15 17:16:10 gklab-128-174 kernel: [  317.653519] md: bind<sdd>
+     May 15 17:16:11 gklab-128-174 udevd-work[5249]: '/sbin/mdadm 
+--detail --export /dev/md127' unexpected exit with status 0x000b
+     May 15 17:16:11 gklab-128-174 kernel: [  317.701434] mdadm[5250]: 
+segfault at 78 ip 0000000000450c4f sp 00007fff6c99ada0 error 4 in 
+mdadm[400000+69000]
+
+$ mdadm -C /dev/md/raid1_2disks -a md -l 1  --size 1500000 -n 2 
+/dev/sd[cd] -R -f
+
+     mdadm: cannot open device: 11:0
+     [...]
+     mdadm: cannot open device: 11:0
+     [...]
+     Segmentation fault
+
+$ tail /var/log/messages
+
+     May 15 17:18:36 gklab-128-174 kernel: [  463.291235] mdadm[5298]: 
+segfault at 78 ip 0000000000450c4f sp 00007fff8ad887e0 error 4 in 
+mdadm[400000+69000]
+
+Similiar story in RHEL 6.3 Beta, those errors don't happen with kernel 
+ >= 3.1.x though (or mdadm-3.2.3 :)).
+
+Maciek N
