@@ -1,176 +1,120 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Hot-replace for RAID5
-Date: Wed, 16 May 2012 08:47:30 +1000
-Message-ID: <20120516084730.0b30fe31@notabene.brown>
-References: <CAAOsTS=4+eqRJXVrw2OaYibgNTEaGxJx4x1PPN4iU49tUO9zOg@mail.gmail.com>
-	<4FACBCCC.4060802@hesbynett.no>
-	<CAAOsTSmwcXPhHqQ3QyS0_8ijXaC3E4bGtWJn1wrwRFeUpxu8tQ@mail.gmail.com>
-	<CAAOsTSmS6uFFe1e1y+39fxHOEFWZEsM7thcPwoeV6FTNiPkM_Q@mail.gmail.com>
-	<20120513091901.5265507f@notabene.brown>
-	<CAAOsTSk7dDcMGGJgAJ6GSDU2WpsJPTS3Vb80WKy6CObwtemfgQ@mail.gmail.com>
-	<CAAOsTSkVwCkY3YAKPTDFo2uZoG6S6Et0DYtDzk+QNfy+N3kMag@mail.gmail.com>
-	<20120514081523.2f38dbb8@notabene.brown>
-	<CAAOsTSm3aQFydumTfAVr2DQZoxcENvzpfyS8zbNdxUcnFsDkpQ@mail.gmail.com>
-	<CAAOsTSkTXy0zP0OBBOPg7+=nc0Acshz2jrsB8fTF55VNeUEHxg@mail.gmail.com>
-	<20120515204322.4ee77ea4@notabene.brown>
-	<CAAOsTSmMrs2bHDbFrND4-iaxwrTA0WySd_AVaK+KXZ-XZsysag@mail.gmail.com>
-	<20120515212820.14db2fd2@notabene.brown>
-	<CAAOsTSm3XFRbRpfatRi5tVdO1Jz_pHqb3RS6b7UyVNdDSnk8Fw@mail.gmail.com>
-	<20120515221313.7610372d@notabene.brown>
-	<CAAOsTSn1+jtViRE-9f7YpMduZ9avBfWMC72vHF_NFC0kjF-hRg@mail.gmail.com>
+Subject: Re: Re-assembling faulty array
+Date: Wed, 16 May 2012 08:59:45 +1000
+Message-ID: <20120516085945.303c30f8@notabene.brown>
+References: <1336765276.10557.30.camel@foxtrot.cjac.ntr.f5net.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/YHXw42+.+akGBz7EOveR/5R"; protocol="application/pgp-signature"
+ boundary="Sig_/lYEPGeEtey3XvHGQe.EsjdW"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAOsTSn1+jtViRE-9f7YpMduZ9avBfWMC72vHF_NFC0kjF-hRg@mail.gmail.com>
+In-Reply-To: <1336765276.10557.30.camel@foxtrot.cjac.ntr.f5net.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: patrik@dsl.sk
-Cc: David Brown <david.brown@hesbynett.no>, linux-raid@vger.kernel.org
+To: "C.J. Adams-Collier KF7BMP" <cjac@colliertech.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/YHXw42+.+akGBz7EOveR/5R
-Content-Type: text/plain; charset=ISO-8859-1
+--Sig_/lYEPGeEtey3XvHGQe.EsjdW
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 15 May 2012 21:39:10 +0200 Patrik Horn=EDk <patrik@dsl.sk> wrote:
+On Fri, 11 May 2012 12:41:16 -0700 "C.J. Adams-Collier KF7BMP"
+<cjac@colliertech.org> wrote:
 
-> BTW thank you very much for the fix for layout=3Dpreserve. As soon as
-> current reshape finishes, I am going to other arrays.
+> Hey all,
 >=20
-> Are regressions in 2.3.4 serious and so to which version I should
-> apply the patch? Or when you looked at the code, should
-> layout=3Dleft-symmetric-6 work in 2.3.2?
+> I've got an array that seems to have failed while I was re-synchronizing
+> one of the disks.  sde fell out when I moved six disks from one chassis
+> to another.  I re-added it and it was 98.8% done with 300 minutes left
+> in the process when I went to sleep last night.  When I woke up, the
+> array was in a FAILED state, sdg was marked failed and sde was marked
+> spare.  I removed sdg from the array and re-booted and now the array
+> won't start.
+>=20
+> Is there a way to re-add sdg back in to slot 5 rather than having it
+> added as a spare?  AFAICT, no writes have been made to sdg or md0 since
+> I removed it from the array, so it should be pretty close to its active
+> state.  sde must be nearly ready to be added in as an active participant
+> in the array, too.
+>=20
+> Is there anything I can do to re-build the array at this point?
+>=20
+> Cheers,
+>=20
+> C.J.
+>=20
 
-Regression isn't dangerous, just inconvenient (--add often doesn't work).
---layout=3Dleft-symmetric-6 will work on 2.3.2, providing the current layout
-of the array is "left symmetric" which I think is the default, but you shou=
-ld
-check.
+ From the "mdadm -E" you sent me separately :
+
+        Version : 0.90.00
+     Raid Level : raid5
+  Used Dev Size : 972848128 (927.78 GiB 996.20 GB)
+     Array Size : 4864240640 (4638.90 GiB 4980.98 GB)
+   Raid Devices : 6
+
+and "grep this" show:
+
+this     3       8       18        3      active sync   /dev/sdb2
+this     4       8       34        4      active sync   /dev/sdc2
+this     2       8       50        2      active sync   /dev/sdd2
+this     6       8       66        6      spare   /dev/sde2
+this     1       8       82        1      active sync   /dev/sdf2
+this     6       8       98        6      spare   /dev/sdg2
+
+"grep Events" shows:
+
+         Events : 34795
+         Events : 34795
+         Events : 34795
+         Events : 34795
+         Events : 34795
+         Events : 34794
+
+So you are missing device '0' and '5'.
+
+So presumably sdg reported an error before sde finished recovery, so
+sde remains a spare.  I cannot see why "sdg"  is marked as a spare though.
+It should still be marked as a member of the array.  Maybe you tried to add
+it after removing it?
+
+What you need to do is decide which of 'e' and 'g' you trust most (probably
+g, but I don't know the full history) and which slot it should be in (0 or =
+5,
+you might be able to tell from a recent "RAID conf printout" in kernel logs=
+).
+Then
+ mdadm -S /dev/md0
+ mdadm -C /dev/md0 -l5 -n6 -e 0.90 -c 64 /dev/sdg2 /dev/sdf2 /dev/sdd2 \
+        /dev/sdb2 /dev/sdc2 missing
+
+The order of devices is important.  This puts 'g2' in slot 0 and 'missing'
+in slot 5.
+
+Then 'fsck -n /dev/md0' or whatever is appropriate given what sort of data
+you have on md0.  If that is happy, add the other device (g2 or e2) and let
+it recovery.
 
 NeilBrown
 
->=20
-> In regard reshaping speed, estimation when doing things a lot more
-> sequentially gives much higher speeds. Lets say 48 MB backup, 6 drives
-> with 80 MB/s sequential speed. If you do reshaping like this:
-> - Read 8 MB sequential from each drive in parallel, 0.1 s
-> - Then write it to backup, 48/80 =3D 0.6 s
-> - Calculate Q for something like 48 MB (guessing 0.05 s) and writing
-> it back to diff drives in parallel in 0.1 s. Because it is in the
-> cache and you are only writing  in this phase (?), there is not back
-> and forth seeking and rotational latency applies only couple of times
-> altogether, lets say 0.02.
-> - Update superblock and move header back, two worst seeks, 0.03 s (I
-> dont know how often do you update superblocks?)
->=20
-> you process 8 MB in cca 0.9 s, so speed in this scenario should be cca 9 =
-MB/s.
->=20
-> I guess the main real difference when you logically doing it in
-> stripes can be that when you waiting for completion of writing chunks
-> (are you waiting for real completion of writes?), the difference
-> between first and last drive is often long enough to need wait one or
-> more rotations for writing another stripe. If that is the case, you
-> need add cca 128 * lets say 1.5 * 0.005 s =3D 0.64 s and so we are down
-> to cca 4.3 MB/s theoretically.
->=20
-> Patrik
->=20
-> On Tue, May 15, 2012 at 2:13 PM, NeilBrown <neilb@suse.de> wrote:
-> > On Tue, 15 May 2012 13:56:58 +0200 Patrik Horn=EDk <patrik@dsl.sk> wrot=
-e:
-> >
-> >> Anyway increasing it to 5K did not help and drives don't seem to be
-> >> fully utilized.
-> >>
-> >> Does the reshape work something like this:
-> >> - Read about X =3D (50M / N - 1 / stripe size) stripes from drives and
-> >> write them to the backup-file
-> >> - Reshape X stripes one by another sequentially
-> >> - Reshaping stripe by reading chunks from all drives, calculate Q,
-> >> writing all chunks back and doing I/O for next stripe only after
-> >> finishing previous one?
-> >>
-> >> So after increasing stripe_cache_size the cache should hold stripes
-> >> after backing them and so reshaping should not need to read them from
-> >> drives again?
-> >>
-> >> Cant the slow speed be caused by some synchronization issues? How are
-> >> the stripes read for writing them to backup-file? Is it done one by
-> >> one, so I/Os for next stripe are issued only after having read the
-> >> previous stripe completely? Are they issued in maximum parallel way
-> >> possible?
-> >
-> > There is as much parallelism as I could manage.
-> > The backup file is divided into 2 sections.
-> > Write to one, =A0then the other, then invalidate the first and write to=
- it etc.
-> > So while one half is being written, the data in the other half is being
-> > reshaped in the array.
-> > Also the stripe reads are scheduled asynchronously and as soon as a str=
-ipe is
-> > fully available, the Q is calculated and they are scheduled for write.
-> >
-> > The slowness is due to continually having to seek back a little way to =
-over
-> > write what has just be read, and also having to update the metadata eac=
-h time
-> > to record where we are up to.
-> >
-> > NeilBrown
-> >
-> >
-> >>
-> >> Patrik
-> >>
-> >>
-> >> On Tue, May 15, 2012 at 1:28 PM, NeilBrown <neilb@suse.de> wrote:
-> >> > On Tue, 15 May 2012 13:16:42 +0200 Patrik Horn=EDk <patrik@dsl.sk> w=
-rote:
-> >> >
-> >> >> Can I increase it during reshape by echo N >
-> >> >> /sys/block/mdX/md/stripe_cache_size?
-> >> >
-> >> > Yes.
-> >> >
-> >> >
-> >> >>
-> >> >> How is the size determined? I have only 1027 while having 8 GB syst=
-em memory...
-> >> >
-> >> > Not very well.
-> >> >
-> >> > It is set to 256, or the minimum size needed to allow the reshape to=
- proceed
-> >> > (which means about 4 chunks worth). =A0I should probably add some au=
-to-sizing
-> >> > but that sort of stuff is hard :-(
-> >> >
-> >> > NeilBrown
-> >> >
-> >
-
-
---Sig_/YHXw42+.+akGBz7EOveR/5R
+--Sig_/lYEPGeEtey3XvHGQe.EsjdW
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT7LdAznsnt1WYoG5AQIsyg/9Foshlk+SjjeK2VLuRgT3oC6bxer9S8Nv
-r7RpT4urUsqBTZn9UzW5WVdUAuQfpMs1/H7fBo4K0R0iZmcBCMtlYTuXNcBuHXB1
-KuoULBosyypOoEqGB2auE7+7LJne6NLC760f/+eFQH6gvx93g0x2+5wKX7o1jY2E
-7xh7tSaYnew4uJJjhNe7hEdXdZQZ/jrOYj/1A6xCmUwx5jpONhBPjAR1XbkdylqR
-Bty7vBnssR1HiCA6npMf/JvnrYcu0mZbiaN0AX7OJX3WV281GxXVWzd9GQjpYc4/
-JFHU+tUBXylf9OmaoTn4PZ2R+mL+tl1+/+GJzWSklCUIZ5JGHNeDqesrwxb9hgji
-m2VyNW++G6IqgbcgWrVThcrjOvbvGuSfsQ9S/S/CFDxpTWYHUeU6kzEaTCUG1uMT
-ckr38C8bOhISpOzqZC5cZMHzUHpf6Y4kgj4UTKC4KT2ffp0MfEjUV095g/AKlU//
-WncdZpAEaGZ0hWoYxNpLcG0JXQ9mDQUcsraU0KHb6+jA9YJF1pHUTpEjO9AzM2Sv
-ZBFUkca3ZWNNnrmJxC3IR9yD+fubjNv/2wIyopRy8WM4wynDIRJMpvm+eYTwWWOq
-6vhCuSPkfLKSURl4l7GS4WRgVqTLYero45BlIA38CaoxfSw7DcApw0ti6pc06U+x
-3mnreQkqZ1E=
-=39me
+iQIVAwUBT7Lf4Tnsnt1WYoG5AQJlPw//fXU5bP1Gfl2fKrQRDOFYQ/woh8x0j3nc
+YbKvzTVCVczjs1qIB+43se5IlrhmQKUwuFdkmk0iRpE+/JYhxAKE4+YEPBY/5RP7
+SdI8dm47gqUnILL8Z4Xq80frL38c6ZHMg03rOH9GZ92DCL5wtF8JzKQ84Ph8AeC+
+CM+ZD0YDf8STwIhhaJWqRFAm6BCGA+UzqMZJZlhXUp2KFp7XgRv2JQiCkTkhyBWe
+ThOKqk/6ESCBp7+V2C5IwgUQdMKOQsYmB6M6e7tJv3d9kZVhKrb9akt5mtEpxRnK
+deShuOuRhVLwxL3SY3V/JJ0fJaMYa5KIMOW8rRkWbzrrYYIATDBDETMliD4n+zJw
+ASHsPk9eHGcftT3M4Bx0d8YOLJp8llfoJWhwO5/dh0MEHwgc1v+FIzVpcuQLc0iD
+Dp+nK/X+PacPkQW6X5aIdgE7DHmL3kB7XfrWt8QixNFHV1KCJED/SgdIIVONyi45
+/7lFQJp0hlf1bOxikzQUzsYHkU/OWA3b04j9+ZpeJxT16RGYQKVhxy2GPhrDU6vw
+9rnVXFM63ypCbWkUICl9Fcr+gxrCAWf1arXB8gO5JVAqRFydMrm/SLDk+jQQXVAZ
+/AjZ5xLOFn6+RQj/C4QrMBDWF/1LbRVtkN2C/a5HeYXqCkl5ZIyw351jDcjmNeW7
+REz+2c3eTWQ=
+=/SEq
 -----END PGP SIGNATURE-----
 
---Sig_/YHXw42+.+akGBz7EOveR/5R--
+--Sig_/lYEPGeEtey3XvHGQe.EsjdW--
