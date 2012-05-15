@@ -1,74 +1,89 @@
-From: Mark Hills <mark-UrrBsZIrrsb10XsdtD+oqA@public.gmane.org>
-Subject: Re: [mdadm PATCH] bcache: add bcache superblock
-Date: Tue, 15 May 2012 01:04:57 +0100 (BST)
-Message-ID: <alpine.LNX.2.01.1205150042200.12473@stax.localdomain>
-References: <20120511203835.26301.1937.stgit@dwillia2-linux.jf.intel.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Failed, but "md: cannot remove active disk..."
+Date: Tue, 15 May 2012 13:38:56 +1000
+Message-ID: <20120515133856.6e04d77b@notabene.brown>
+References: <1336933308.2831.4.camel@localhost>
+	<20120514202220.5a164eb0@notabene.brown>
+	<1336992780.6722.18.camel@localhost>
+	<20120514213623.3bc1bfa5@notabene.brown>
+	<1336995865.6722.22.camel@localhost>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-bcache-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20120511203835.26301.1937.stgit-p8uTFz9XbKgaePuBGzJMJzMJUdESFZ8XQQ4Iyu8u01E@public.gmane.org>
-Sender: linux-bcache-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: neilb-l3A5Bk7waGM@public.gmane.org, koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/9WaFM3.8RNhQ1rldR2vFp=Q"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1336995865.6722.22.camel@localhost>
+Sender: linux-raid-owner@vger.kernel.org
+To: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, 11 May 2012, Dan Williams wrote:
+--Sig_/9WaFM3.8RNhQ1rldR2vFp=Q
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-> This is a hybrid proposal for supporting bcache as a md device.
-> Somewhat similar to the v1.x metadata format, where array assembly is
-> handled in userspace, but managed in the kernel.  In the bcache case it
-> is an "external" metadata format, but then the expectation is that the
-> kernel "bcache" personality takes over runtime maintenance of the
-> metadata.
+On Mon, 14 May 2012 13:44:25 +0200 Micha=C5=82 Sawicz <michal@sawicz.net> w=
+rote:
 
-I am having some trouble with this, can you clarify (perhaps by example) 
-how to create a pairing of a cache and backing device?
+> Dnia 2012-05-14, pon o godzinie 21:36 +1000, NeilBrown pisze:
+> > Is the array still functioning?
+> > Are there any interesting messages appearing in the kernel logs?
+>=20
+> Yes and no, the array is fine, working, nothing interesting in any logs
+> I can see.
+>=20
+> > What does
+> >   grep . /sys/block/md126/md/dev*/*
+> > show?
+>
+//snip//
 
-I tried creating directly:
 
-  # mdadm --create /dev/md0 --level=11 --raid-devices=2 /dev/sdb /dev/sdc 
-  mdadm: unknown level 11
+Thanks. No hints there - all normal.
 
-But as the code in Assemble.c is patched (and not Create.c), I had a hunch 
-to format the devices as before then assemble the array:
+If you can write to the array, then md_check_recovery must be getting run,
+and the array is not read-only. So...
 
-  # make-bcache -C /dev/sdb
-  # make-bcache -B /dev/sdc
-  # mdadm -A /dev/md0 /dev/sdb /dev/sdc 
-  mdadm: Cannot assemble mbr metadata on /dev/sdb
-  mdadm: /dev/sdb has no superblock - assembly aborted
+Is there a 'sync' thread still running?  It would be called
+    md126_resync
 
-For a hack, I changed Create.c to accept case 11 and leave the chosen 
-chunk size. It got further, but then failed with:
+That would stop things from progressing.
+If there is, what does
+    cat /proc/$PID/stack
+show for the relevant PID ??
 
-  # mdadm --create /dev/md/bcache --level=11 --raid-devices=2 /dev/sdb /dev/sdc 
-  mdadm: /dev/sdb appears to be part of a raid array:
-      level=raid0 devices=0 ctime=Thu Jan  1 01:00:00 1970
-  mdadm: partition table exists on /dev/sdb but will be lost or
-         meaningless after creating array
-  mdadm: /dev/sdc appears to be part of a raid array:
-      level=raid0 devices=0 ctime=Thu Jan  1 01:00:00 1970
-  mdadm: partition table exists on /dev/sdc but will be lost or
-         meaningless after creating array
-  mdadm: largest drive (/dev/sdc) exceeds size (117155216K) by more than 1%
-  Continue creating array? y
-  mdadm: Defaulting to version 1.2 metadata
-  mdadm: RUN_ARRAY failed: Cannot allocate memory
+What about
+    cat /sys/block/md126/md/sync_action
+??
+If that were 'frozen', that might explain it.
 
-Maybe I missed something basic here, but I'm afraid can't see what? If 
-not, hopefully this information is useful.
+    cat /sys/block/md126/md/reshape_position
 
-I use bcache v13 patches and the MD conversion, and this patch to mdadm.
+shows "none" I suspect?
 
-  $ lsmod | grep bcache
-  md_bcache               3202  0 
-  bcache                138187  1 md_bcache
-  md_mod                 88671  5 md_bcache,raid456,raid1
+I cannot think of anything else that could be getting in the way.
 
-  $ uname -a
-  Linux stax 3.4.0-rc7-mh+ #190 SMP PREEMPT Sun May 13 22:36:17 BST 2012 i686 Intel(R) Pentium(R) D CPU 2.80GHz GenuineIntel GNU/Linux
+NeilBrown
 
-Thanks
+--Sig_/9WaFM3.8RNhQ1rldR2vFp=Q
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
--- 
-Mark
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT7HP0Dnsnt1WYoG5AQKH4RAAn/kAuBiFSqmYmPIr/NMxqEe9OV8acQZV
+nw67FlMRaFMMqEKw/KDa/PqFyozTkOnJY8k5uQoAov8P2gqXNvQEq3q8wxQQs55Z
+3OamXGFEvn0YxPr9zaXN++TO+NsJ1S98QINrX+H8SklB3+t+cNTrO0g0/HT7oC5W
+FMlx5eOzjYh3Vk0xcD5UQF8wxsoBQ+cxeYBN/eAPD1CaYSDwqJw85ANI2smkA2qF
+P19ffQwzBoljbUq/IjrBrRQTkYXDpRE+9apCAr8spW2UHqQCnVpuNA039r+PmhZg
+7itx4C51TpiQ0Ur3P0IMnJZXnQUdEQgXBnvq8jB6q/Y1dEGWwDH7qja/JfYvc1ou
+uqleQ1U8IyQKlf6hszC8ronq6swbfMoxij3q0lIXxmJGhBzJrEzqyshqB221Muy9
+4OiM+XCKfo99YlVofESw90thAMN/fuIZOYYHc9onN3+Bh0JwxpomYMNhpwnArYp9
+4ec4f2Hz+UuaJN3JxLdZzGyyBOBMFssBw+IFt0ddIsBpM6nYYQBmJnh+9JlWfTra
+RULthOrw63t6/IZeGi+0mJyGm2xEyiAmUYaWxzNUacfutDpx7VgWsHSmfcipRjx7
+dsmgO9XZYH0NzWoXfXpLgKouCRWqacsqsAis/6E4VtVkRuejKWEEmV5STgznS4Dv
+vpZSg4AN24Q=
+=1Oth
+-----END PGP SIGNATURE-----
+
+--Sig_/9WaFM3.8RNhQ1rldR2vFp=Q--
