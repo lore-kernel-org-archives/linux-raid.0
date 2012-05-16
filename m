@@ -1,81 +1,101 @@
-From: Jonathan Brassow <jbrassow@redhat.com>
-Subject: [PATCH] MD: Add del_timer_sync to mddev_suspend (fix nasty panic)
-Date: Tue, 15 May 2012 23:06:14 -0500
-Message-ID: <1337141174.4337.8.camel@f14.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: "C.J. Adams-Collier" <cjac@colliertech.org>
+Subject: Re: Re-assembling faulty array
+Date: Tue, 15 May 2012 22:16:12 -0700
+Message-ID: <6FFB2F71-0D83-4B8A-B9C0-1C886CB21624@colliertech.org>
+References: <1336765276.10557.30.camel@foxtrot.cjac.ntr.f5net.com> <20120516085945.303c30f8@notabene.brown>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+	charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120516085945.303c30f8@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: dm-devel@redhat.com, linux-raid@vger.kernel.org
-Cc: neilb@suse.de, agk@redhat.com, jbrassow@redhat.com
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil,
-
-I've been seeing some really bad panics take place on dm-raid.c.  I've
-found that it is because the mddev->safemode_timer is firing after the
-mddev structure has been freed.  I've attached a patch to fix the
-problem below, but I have some questions (outlined in the patch header).
-I also have a debugging patch that prints something during each of the
-suspend stages and when md_write_end resets the timer so that you can
-see the problem in action - let me know if you want that patch also.
-
- brassow
-
-Use del_timer_sync to remove timer before mddev_suspend finishes.
-
-We don't want a timer going off after an mddev_suspend is called.  This is
-especially true with device-mapper, since it can call the destructor function
-immediately following a suspend.  This results in the removal (kfree) of the
-structures upon which the timer depends - resulting in a very ugly panic.
-Therefore, we add a del_timer_sync to mddev_suspend to prevent this.
-
-<RFC>
-While this approach works, it seems that 'md_stop_writes' should handle this
-properly.  It calls del_timer_sync already, but then allows writes to /finish/
-after it is called.  Finishing writes call md_write_end, which resets the timer.
-Why call del_timer_sync at all there?
-
-Device-mapper often makes use of the fact that mapping tables can be swapped
-for a particular device.  In these scenarios, it is not uncommon to have I/O
-flowing to a device when the following sequence of device-mapper primitives
-are issued:
-	- presuspend
-	- postsuspend
-	- dtr
-Although I can't seem to find documentation on it, it is my impression that
-once the presuspend is complete, no nominal I/O must be allowed through or
-pending.  IOW, all I/O must be finished processing or queued.  This does not
-include driver issued I/O, like the updating of bitmaps - that I/O must be
-completed by the time postsuspend is complete.  (These are unwritten rules,
-I think, and the main suspend rule is the important one: No I/O must be allowed
-to flow or be pending once a suspend returns.)
-
-dm-raid.c calls 'md_stop_writes' for the purpose of stopping nominal I/O.
-It is clear that some writes are still allowed to finish-up after this call
-is made.  Is this correct behavior?
-
-dm-raid.c calls 'mddev_suspend' to ensure no I/O (nominal or driver-issued)
-is flowing.  This seems to be working as expected.  However, adding the
-del_timer_sync here allows us to clean up after any finished writes that
-occurred after 'md_stop_writes' - preventing a kernel panic from a possible
-'dtr' call that may follow.
-</RFC>
-
-RFC-by: Jonathan Brassow <jbrassow@redhat.com>
-Index: linux-upstream/drivers/md/md.c
-===================================================================
---- linux-upstream.orig/drivers/md/md.c
-+++ linux-upstream/drivers/md/md.c
-@@ -391,6 +391,8 @@ void mddev_suspend(struct mddev *mddev)
- 	synchronize_rcu();
- 	wait_event(mddev->sb_wait, atomic_read(&mddev->active_io) == 0);
- 	mddev->pers->quiesce(mddev, 1);
-+
-+	del_timer_sync(&mddev->safemode_timer);
- }
- EXPORT_SYMBOL_GPL(mddev_suspend);
- 
 
 
+
+
+On May 15, 2012, at 3:59 PM, NeilBrown <neilb@suse.de> wrote:
+
+> On Fri, 11 May 2012 12:41:16 -0700 "C.J. Adams-Collier KF7BMP"
+> <cjac@colliertech.org> wrote:
+> 
+>> Hey all,
+>> 
+>> I've got an array that seems to have failed while I was re-synchronizing
+>> one of the disks.  sde fell out when I moved six disks from one chassis
+>> to another.  I re-added it and it was 98.8% done with 300 minutes left
+>> in the process when I went to sleep last night.  When I woke up, the
+>> array was in a FAILED state, sdg was marked failed and sde was marked
+>> spare.  I removed sdg from the array and re-booted and now the array
+>> won't start.
+>> 
+>> Is there a way to re-add sdg back in to slot 5 rather than having it
+>> added as a spare?  AFAICT, no writes have been made to sdg or md0 since
+>> I removed it from the array, so it should be pretty close to its active
+>> state.  sde must be nearly ready to be added in as an active participant
+>> in the array, too.
+>> 
+>> Is there anything I can do to re-build the array at this point?
+>> 
+>> Cheers,
+>> 
+>> C.J.
+>> 
+> 
+> From the "mdadm -E" you sent me separately :
+> 
+>        Version : 0.90.00
+>     Raid Level : raid5
+>  Used Dev Size : 972848128 (927.78 GiB 996.20 GB)
+>     Array Size : 4864240640 (4638.90 GiB 4980.98 GB)
+>   Raid Devices : 6
+> 
+> and "grep this" show:
+> 
+> this     3       8       18        3      active sync   /dev/sdb2
+> this     4       8       34        4      active sync   /dev/sdc2
+> this     2       8       50        2      active sync   /dev/sdd2
+> this     6       8       66        6      spare   /dev/sde2
+> this     1       8       82        1      active sync   /dev/sdf2
+> this     6       8       98        6      spare   /dev/sdg2
+> 
+> "grep Events" shows:
+> 
+>         Events : 34795
+>         Events : 34795
+>         Events : 34795
+>         Events : 34795
+>         Events : 34795
+>         Events : 34794
+> 
+> So you are missing device '0' and '5'.
+> 
+> So presumably sdg reported an error before sde finished recovery, so
+> sde remains a spare.  I cannot see why "sdg"  is marked as a spare though.
+> It should still be marked as a member of the array.  Maybe you tried to add
+> it after removing it?
+> 
+> What you need to do is decide which of 'e' and 'g' you trust most (probably
+> g, but I don't know the full history) and which slot it should be in (0 or 5,
+> you might be able to tell from a recent "RAID conf printout" in kernel logs).
+> Then
+> mdadm -S /dev/md0
+> mdadm -C /dev/md0 -l5 -n6 -e 0.90 -c 64 /dev/sdg2 /dev/sdf2 /dev/sdd2 \
+>        /dev/sdb2 /dev/sdc2 missing
+> 
+> The order of devices is important.  This puts 'g2' in slot 0 and 'missing'
+> in slot 5.
+> 
+> Then 'fsck -n /dev/md0' or whatever is appropriate given what sort of data
+> you have on md0.  If that is happy, add the other device (g2 or e2) and let
+> it recovery.
+> 
+> NeilBrown
+
+Thanks a million.  I really appreciate your help.
+
+Sent from my PDP-11
