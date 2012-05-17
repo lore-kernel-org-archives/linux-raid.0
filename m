@@ -1,29 +1,47 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] md/raid10: unlock on error path in raid10_start_reshape()
-Date: Thu, 17 May 2012 09:49:11 +0300
-Message-ID: <20120517064911.GB14660@elgon.mountain>
+From: Anuj Goel <agoel@cs.stonybrook.edu>
+Subject: [RAID0] Possible bug in raid0_make_request() function
+Date: Thu, 17 May 2012 02:50:28 -0400
+Message-ID: <CANSbrrqyj6wL=VBHdgDP7mpjRc+tjZnCQ6rP3_4vHYtPQPqcEA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-We need to unlock and enable IRQs before returning here.
+Hi Guys,
+I was going through the RAID0 code and found that there could be a
+possible bug in the=A0raid0_make_request() function.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Consider the below snippet of this function.
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index e8ed1d8..ba7290f 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -3918,6 +3918,7 @@ static int raid10_start_reshape(struct mddev *mddev)
- 	if (mddev->reshape_backwards) {
- 		sector_t size = raid10_size(mddev, 0, 0);
- 		if (size < mddev->array_sectors) {
-+			spin_unlock_irq(&conf->device_lock);
- 			printk(KERN_ERR "md/raid10:%s: array size must be reduce before number of disks\n",
- 			       mdname(mddev));
- 			return -EINVAL;
+/* This is a one page bio that upper layers
+* refuse to split for us, so we need to split it.
+*/
+if (likely(is_power_of_2(chunk_sects)))
+bp =3D bio_split(bio, chunk_sects - (sector &
+=A0 (chunk_sects-1)));
+else
+bp =3D bio_split(bio, chunk_sects -
+=A0 =A0 =A0 sector_div(sector, chunk_sects));
+raid0_make_request(mddev, &bp->bio1);
+raid0_make_request(mddev, &bp->bio2);
+bio_pair_release(bp);
+return;
+
+In function bio_split(..), if mempool_alloc() fails, we return NULL int=
+o bp.
+Now the call raid0_make_request(mddev, &bp->bio1) does not check for
+bp to be not NULL before de-referencing it.
+
+Could this be a problem ?
+
+--
+Best Regards,
+Anuj Goel
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
