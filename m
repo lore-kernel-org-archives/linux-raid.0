@@ -1,40 +1,70 @@
-From: Marcus Sorensen <shadowsor@gmail.com>
-Subject: sync speed strangeness and other advice
-Date: Thu, 17 May 2012 09:37:50 -0600
-Message-ID: <CALFpzo6EgYjNKDjq41ZFj1_NL6AYy7OLDF18Zeis5iWd21taRA@mail.gmail.com>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: doubt about resync - raid1
+Date: Thu, 17 May 2012 12:50:19 -0300
+Message-ID: <CABYL=ToxbORuD-rM1oh9MUWeF5v5gu8LyMVbXAFeoVbfc=_pow@mail.gmail.com>
+References: <CABYL=TpcfGubJAnCJ=Z5T3Lh4PVKQSWPwSXAx+-=ke3pp_+aOg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CABYL=TpcfGubJAnCJ=Z5T3Lh4PVKQSWPwSXAx+-=ke3pp_+aOg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-First off, I'm using the stock RHEL 6.2 kernel, so obviously not the
-latest, but I want to get some input on a strange issue I'm seeing.
-Maybe it rings a bell and someone knows a fix or a specific kernel to
-try.
+hi guys, i was running a resync in a non-normal hardware instalation
 
-I have a few RAID 1 arrays that while resyncing refuse to use the
-bandwidth allowed to them. I'm using an internal bitmap. My impression
-was that the various sync speed settings are supposed to use all
-available bandwidth, backing off if there is other system activity.
-The disks are capable of syncing at 400MB/s, and my sync_speed_min is
-set to 10000, sync_speed_max is set to 500000, yet they sync at
-~80MB/s and iostat shows the disks as being mostly idle.  If I
-increase sync_speed_min to 200000, the array happily complies and
-resyncs at 200MB/s, no problem.
+it's a server with 4 disks, they are in a raid hardware controller (perci
+from dell)
+disk 1-2 are raid1 and linux know it about /dev/sda
+disk 3-4 are raid1 and linux know it about /dev/sdb
 
-Also, I seem to have run into an issue similar to the following
-thread, where failing a disk, then restarting the array and re-adding
-the disk results in a full resync. I'll see if I can replicate via the
-included instructions.
+well i add more 4 disks
+disk 5-6 raid1 with /dev/sdc
+disk 7-8 raid1 with /dev/sdd
 
-http://www.mail-archive.com/linux-raid@vger.kernel.org/msg08745.html
+nice...
+well /dev/sda and /dev/sdb have same partitions (/dev/sda1, 2 3 4) and have
+some md devices in this partitions..
+/dev/md0 = /dev/sda1 /dev/sdb1
+/dev/md1 = /dev/sda2 /dev/sdb2
+/dev/md2 = /dev/sda3 /dev/sdb3
+all raid 1 too
 
-Last, I've been reading bits about a bad block bitmap, and if I'm
-going to a newer kernel I want to make sure I'm not using one. My
-understanding was that I have to use a new version of the mdadm
-userspace utility to even create an array with a bad block bitmap, and
-even then it's not on by default, correct?
+i create same partitions on /dev/sdc, /dev/sdd
+and add they to md raid1
+/dev/md0 = /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1
+/dev/md1 = /dev/sda2 /dev/sdb2 /dev/sdc2 /dev/sdd2
+/dev/md2 = /dev/sda3 /dev/sdb3 /dev/sdc3 /dev/sdd3
 
-Thanks
+
+nice..
+mdadm start resync...
+the point is...
+/dev/sda1 start copies to /dev/sdc1 and /dev/sdd1, i checked this with
+iostat -d 1 -k, and server is idle, only mdadm and raid is running,
+/dev/sda1 have reads and /dev/sdc1 and /dev/sdd1 have writes
+nice..
+
+the problem is...
+/dev/sdc2 and /dev/sdd2 didn't start sync while /dev/md0 is running, since
+they share the same devices (/dev/md0 => /dev/sda1, /dev/md1 => /dev/sda2)
+
+could i force a sync in /dev/md1??
+since /dev/sda is a raid1 hardware, it can handle two disks without
+performace problems...
+it have 2 heads, in others words the mdadm disk balance isn't perfect here
+to this solution, but works... the problem is sync not running, if i could
+force it every things could be allright
+
+i must check kernel version, it's about 2.6.3x, 1 year old +-
+
+well that's it, any ideas?
+
+
+***
+sorry if i send two emails, the email was configured to HTML/RICH TEXT text
+
+
+--
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
