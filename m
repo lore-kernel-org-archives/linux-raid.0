@@ -1,68 +1,65 @@
-From: wilsonjonathan <piercing_male@hotmail.com>
-Subject: resizing array to use spare space on disks.
-Date: Fri, 18 May 2012 18:39:19 +0100
-Message-ID: <BLU0-SMTP324B803A06987797A4C86FD981E0@phx.gbl>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [RFC PATCH 7/7] md: add bcache personality
+Date: Fri, 18 May 2012 12:52:27 -0400
+Message-ID: <4FB67E4B.6000204@redhat.com>
+References: <20120511194327.25770.79292.stgit@dwillia2-linux.jf.intel.com> <20120511194647.25770.88687.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig7E15D72CCDBB6D154FBF0A8A"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120511194647.25770.88687.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: neilb@suse.de, koverstreet@google.com, linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have recently finished upgrading my workstation to include an existing
-file server systems disks, 6 sata drives-1TB each, in addition to two
-new disks on a sata card, 500GB each.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig7E15D72CCDBB6D154FBF0A8A
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-I have managed to get the raid6 partition, approx 3.8GB working size,
-from the file server to be recognised and mounted ok.
+On 5/11/2012 3:46 PM, Dan Williams wrote:
+> "Backing
+> device" vs "cache device" is determined by slot number whereby the
+> backing device slot is the highest number index.
 
-I have also deleted the original raid setup partitions from the file
-server that held the boot, root, *swap, home, and tempdata, so I now
-have approx 100GB free at the beginning of each hard disk, so 400GB
-workable storage if its added into the last remaining raid 6.
+That needs fixing.  We used to do things by slot number long ago, and it
+turned out to create lots of races on reconfiguring slot indexes and
+moving devices around on rebuilds and stuff like that.  I would have to
+see us undo that fix when it comes to bcache.
 
-I have superblock/metadata 1.2 and the drives are all GPT partitioned.
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: 0E572FDD
+	      http://people.redhat.com/dledford
 
-Now my questions are...
-
-1, Is it better/preferable to unmount the file system on the RAID?
-
-2, Am I right in thinking that the the RAID must be running while I do
-work on it, I cant just tear down the array, delete and recreate the
-partition table entry to include the unused space on the 6 disks and
-then restart the array?
-
-3, Assuming 2 is "it must be running" then is the following the best way
-to resize the array?
-
-3a, mdadm /dev/md6 --fail /dev/sdX6 --remove /dev/sdX6
-
-3b, delete and recreate the partition on /dev/sdX to use all the space
-
-3c, mdadm --add /dev/md6 /dev/sdX 
-
-3d, let it resync then repeat for the other 5 drives.
-
-3e, mdadm --grow /dev/md6 --size=max
-
-3f, e2fsck -f /dev/md6
-
-3g, resize2fs /dev/md6
-
-3h, e2fsck -f /dev/md6
-
-And hopefully the jobs done!
-
-4, Are there any other things I should specify or do such as using an
-internal bitmap, or stopping it; or using a backupfile for 3e?
-
-5, As the data on the partition does not get changed, only the partition
-start sector, is there a way to tell mdadm not to resync as in theory
-there has been no change to the contents of the drive after it was
-removed and added back, especially as the file system was unmounted at
-the time?
-
-Thanks in advance.
+Infiniband specific RPMs available at
+	      http://people.redhat.com/dledford/Infiniband
 
 
+--------------enig7E15D72CCDBB6D154FBF0A8A
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iQIcBAEBAgAGBQJPtn5MAAoJELgmozMOVy/dxjkQALl3s5c6M7Ik7TlItnU1yaxh
+ai6UaFin012GMoDv86qtaGWNEMsR7+I7hEAdzxNFPuDsIEuAxgCSUe6V+FSe7hvs
+Mso+POhohsNRYyZ0TVNz/bvw6WJz2uWdpRDntLP+yhejMuhcsZKWB5SPWAwAD7pa
+GaKNeibbml1OO0XjLnLtxSLsZqmCbMz23jMGmFsPb86FeBMU/gOnNk+yuAywVIyA
+p1/Lc7gvKERP9amHuqhNsWpRzajpfqv7Kjy7nlnFEAC9Y5jQnuoyhff/cEsLcTJm
+ltFj8l4MYj/mLTHKbu5ZwNlU0/0G0RQuQW0s+ILrSjxtG0WmlvW3IWX7LKPvxRni
+uj53ALhtNed1mO4Czr7C5PAlL/CVSmB+wNY/ZEiGXTAN23YbYSyOddj3YNZTNlEt
+b+7pD/W8Atwxv0O5GVk0A2VaDbYzT1+7IorepfwpIhDkq52SQUMxMmeZt/DmAg3w
+MBpA8mb/jqIZkHywUEM6iZOL9dNjPXWJMeyjc/iRR2M0sZsT/QlnG7OY1xdpEf9b
+0WWlmKz5teqsd3dREhWaCb+2JLIE2t+uoAFNk2x1K6iycHW9lTZV8jRyDpQSJEHv
+BGN/3IUB5OjE5ajqcukzXPoOi26Hof3ygn2wxgc6B4y3prcCv+Pd6geNT4jIVtyk
+GbeIYtEMFF1OznL/CIM6
+=tWrm
+-----END PGP SIGNATURE-----
+
+--------------enig7E15D72CCDBB6D154FBF0A8A--
