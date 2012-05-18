@@ -1,69 +1,77 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: ioctl message
-Date: Sat, 19 May 2012 08:05:16 +1000
-Message-ID: <20120519080516.3f8f4e19@notabene.brown>
-References: <4FB69FE7.2010807@rogers.com>
+Subject: [PULL REQUEST]  one more md patch for 3.4
+Date: Sat, 19 May 2012 09:06:50 +1000
+Message-ID: <20120519090650.74b80e93@notabene.brown>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/_r8bXAwNW=fwOOaNg2W7w/b"; protocol="application/pgp-signature"
+ boundary="Sig_/s7C_EGRprXcgnZq5Hp6XPnF"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FB69FE7.2010807@rogers.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wiliam Colls <william.colls@rogers.com>
-Cc: linux-raid@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux RAID <linux-raid@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-raid.ids
 
---Sig_/_r8bXAwNW=fwOOaNg2W7w/b
+--Sig_/s7C_EGRprXcgnZq5Hp6XPnF
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 18 May 2012 15:15:51 -0400 Wiliam Colls <william.colls@rogers.com>
-wrote:
 
->=20
-> In our system log, we recently saw the following message:
->=20
-> May 17 14:20:54 gabriel kernel: [423762.117502] mdadm: sending ioctl=20
-> 1261 to a partition!
->=20
-> repeated 10 times, all with the same time stamp. Has not re-occured=20
-> since, and I don't recall seeing anything like it before.
->=20
-> What is mdadm trying to tell me,=20
 
-That someone should remove that silly message from the kernel.
+That last fix for raid10 contained a nasty typo.  I've double-checked
+and I'm pretty sure there aren't any more :-(
+(With thanks to Hannes Reinecke for all his testing!)
 
-> and what do I need to do about it?
-
-Nothing.
-
+Thanks,
 NeilBrown
 
->=20
-> Thanks for your time.
->=20
 
 
---Sig_/_r8bXAwNW=fwOOaNg2W7w/b
+The following changes since commit 0d9f4f135eb6dea06bdcb7065b1e4ff78274a5e9:
+
+  MD: Add del_timer_sync to mddev_suspend (fix nasty panic) (2012-05-17 10:=
+38:24 +1000)
+
+are available in the git repository at:
+
+  git://neil.brown.name/md/ tags/md-3.4-fixes
+
+for you to fetch changes up to b0d634d5683f0b186b242ce6a4f3b041edb8b956:
+
+  md/raid10: fix transcription error in calc_sectors conversion. (2012-05-1=
+9 09:01:13 +1000)
+
+----------------------------------------------------------------
+Fix bug in recent fix to RAID10.
+
+Without this patch, recovery will crash
+
+----------------------------------------------------------------
+NeilBrown (1):
+      md/raid10: fix transcription error in calc_sectors conversion.
+
+ drivers/md/raid10.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--Sig_/s7C_EGRprXcgnZq5Hp6XPnF
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT7bHnDnsnt1WYoG5AQKPFA/7BaGeaXijcvy8lZC6SYoqfZ9n47QcG02C
-RfPC1Bidb1bi+HHzoE7miERLXiTsTLQ36DHUDrK/c3ZkPDSBGkJp2zBxWg89ISRg
-0ET6LWgHBb6P+O9w8YZ+K4gAqxIitKnvVBCUtToqJUgTiBLjGnWqt5kzePJ30z6o
-Nj6eI2rTO9be27dvdwZF4IQ9sRj31D9+RAm8MeKBhod+KdkmzlY/Ybo36T772O4B
-DLB3ZyHgmmoZs255VUO24XE1uwKxGHKgPLaeOD4vCH4zR3fGdsAVTa4nzUxCv3I9
-ZUV/8IbUx0vfqKBcicw0cSEnamhSTWEH0L7k+nZYdHiXBerkwED+yQVX9nkHpR6n
-L2bDquhTn0wJa2Vx7Ww0nHgHIhiOnwKpFuPNZyyw6lmcFg7RMWm6SOogwpsU6e02
-1tX3owIpO0QDdVCRTiluaQe+GANL9yq1faSCvMYV0FMRN9Z8z3/DpIqTBFH2aok+
-3Bww+YPwMFew3vl3YpL6J8a3SZEFcRdliejUmkPldcmfPw3gkE5Zwkhz//9dojlp
-ceUBhkrjHxkfsV/uhoTS5y0GALEeniixcvtTvKrP4fLW7CKVs8t8CD9WzXzPQbxg
-XRkSGAZWwdP8qS1s6u8BCX5Yh43KBCQcEfJxtXfCBgh27ayhrva4IL3LzKAC9dc1
-aN+2LT/0DHs=
-=OYDi
+iQIVAwUBT7bWCjnsnt1WYoG5AQJ9gw/8CVHZH2cOzc7VaAZsQz3OqH6JWAcHGO/p
+68F5+VQYxhWGDXsglt60Evg9KkHrI3BAzM4/e1EpAlzK2/UiLn1iO/JcYqQPJ+To
+q8+ecRAatFYdwE7ak8pDULzd3Zhjc6eAgU5tZtBIHJ37Cm97TFaRuTkJJ/ezfXyf
+xzyCJ60HboEdU4zoaGyv9SGLO2+Fatm6AER5XUqw5j6wLP0PEMhyHD7/ORNwqsBd
+ceua5xugF1zQirbbibyhxfB8PK7Ev644N9Fm30B5K5j+3etNRYNRU3N+nCvR8z37
+O3Vs9ijIo8FRnPGpLjRNSTsBGCaktMWKdigIiX8ujHxpka2Gvd8o0oP021XyMCk5
+8Ig5YrNLPoQw7YAKLj/nruE3YqOgy/qS+m+FRIp3KESBE+dfvy0AtXNePLrRCb7H
+YEnFFiluYP7h/9kVLaEiS+jl6MMsrN2MJGL8kkg36p3Xmr8MUiK3hYROZCaQ3yoW
+9VwAYI6guZYKePb7uiag7FsIZvz6eXzAY8X7BqB/KyloT7eU/c5/5Sdpc3J24Kti
+dW84dMDR30tAvBVar8EA+oLfZDZ9nHyhEqGQckep2iY2U03wo4msS0eTMwLqg8Hf
+Sya5/byJh/rwi3OvixYW0h5/vHTTjp1t54yVXLIxZm5NJTkzdovAbeGGgkmsDZIt
+4L9R4WlBmaI=
+=xCtZ
 -----END PGP SIGNATURE-----
 
---Sig_/_r8bXAwNW=fwOOaNg2W7w/b--
+--Sig_/s7C_EGRprXcgnZq5Hp6XPnF--
