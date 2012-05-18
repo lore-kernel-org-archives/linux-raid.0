@@ -1,39 +1,40 @@
-From: "=?utf-8?B?bWFqaWFucGVuZw==?=" <majianpeng@gmail.com>
-Subject: =?utf-8?B?UmU6IFJlOiBBZGQgc2V0IGJhZCBsYmEgZnVuY3Rpb24gaW4gbWQtZmF1bHR5IG1vZHVsZS4=?=
-Date: Fri, 18 May 2012 16:41:04 +0800
-Message-ID: <201205181641012658677@gmail.com>
-References: <201205151949130004425@gmail.com>
+From: "majianpeng" <majianpeng@gmail.com>
+Subject: [PATCH] md/bitmap:If bmap() failed,free buffers must check bitmap->pending_writes == 0.
+Date: Fri, 18 May 2012 19:38:34 +0800
+Message-ID: <201205181938310931047@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?utf-8?B?R2VvcmdlIFNodWtsaW4=?= <george.shuklin@gmail.com>
-Cc: =?utf-8?B?bGludXgtcmFpZA==?= <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-VGhhbmtzLiBJbiBmYWN0LCB1c2luZyBtZC1mYXVsdHkgYWxzbyBkbyB0aGF0LGJ1dCBtdXN0IGRv
-IG1vcmUgc3RlcHMuIFNvIEkgdGhpbmsgYWRkIGl0IGluIG1kLWZhdWx0eS4NCg0KLS0tLS0tLS0t
-LS0tLS0tLS0tCQkJCSANCm1hamlhbnBlbmcNCjIwMTItMDUtMTgNCg0KLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0K5Y+R5Lu25Lq6
-77yaR2VvcmdlIFNodWtsaW4NCuWPkemAgeaXpeacn++8mjIwMTItMDUtMTcgMTk6NDk6MjYNCuaU
-tuS7tuS6uu+8mm1hamlhbnBlbmcNCuaKhOmAge+8mmxpbnV4LXJhaWQNCuS4u+mimO+8mlJlOiBB
-ZGQgc2V0IGJhZCBsYmEgZnVuY3Rpb24gaW4gbWQtZmF1bHR5IG1vZHVsZS4NCg0KDQoNCk9uIDE1
-LjA1LjIwMTIgMTU6NDksIG1hamlhbnBlbmcgd3JvdGU6DQo+IEhpIGFsbDoNCj4gCUluIG9yZGVy
-IHRvIHRlc3QgbWQgY29kZSwgc29tZXRpbWUgd2UgbmVlZCAgc2ltdWxhdGUgcmVhZC93cml0ZSBo
-YXJkZGlzayBlcnJvci4NCj4gCVVzaW5nIGhkcGFybSAtLW1ha2UtYmFkLXNlY3RvciB0byAgc2lt
-dWxhdGUgIHJlYWQgZXJyb3IuQnV0IEkgZGlkIG5vdCBmaW5kIHdheSBvZiAgc2ltdWxhdGluZyB3
-cml0ZS1lcnJvci4NCj4gCUkgdGVzdGVkIG1kLWZhdWx0eSBtb2R1bGUsIGl0IGNhbiBkbyB0aGlz
-LkJ1dCBpdCBpcyBub3QgcHJvdmlkZSB0aGUgZnVuY3Rpb24gbGluayBoZHBhcm0gLS1tYWtlLWJh
-ZC1zZWN0b3Isd2hpY2ggZGlkIG5vdCBzZXQgbGJhLg0KPiAJVXNpbmcgaGRwYW1yIC0tbWFrZS1i
-YWQtc2VjdG9yIHRvICBzaW11bGF0ZSByZWFkIGVycm9yIGNhbiBjYXVzZSBzb21lIHByb2JsZW0u
-DQo+IAlJdCB3aWxsIGNhdXNlIGF0YSBjb21tbmQgcmVzZXQsZGlzayByZXNldCBhbmQgc28gb24u
-SXQgdGFrZSB0b28gbG9nIHRpbWUuDQo+IAlTbyBJIHRoaW5rIGFkZCBhIGZ1bmN0aW9uIGluIG1k
-LWZhdWx0eSB3aGljaCBjYW4gc2V0IHJlYWQvd3JpdGUgbGJhLg0KPiAJSG93IGFib3V0ID8NCj4g
-CQkJCQkJCQkJCQkNCj4gICAJCQkJDQpIb3cgYWJvdXQgdXNpbmcgYW4gaXNjc2kgYXQgbG9jYWxo
-b3N0PyBFeHBvcnQgZGlzayB2aWEgSVNDU0kgdGFyZ2V0LCANCmNvbm5lY3QgdG8gaXQgd2l0aCBp
-bml0aWF0b3IuIFdpdGggaXB0YWJsZXMgYW5kIG9wZW4taXNjc2kgc2V0dGluZ3MgeW91IA0KY2Fu
-IHByZWNpc2VseSBjb250cm9sIGVycm9yIGJlaGF2aW9yIGFuZCBpbWl0YXRlIGFsbCBraW5kcyBv
-ZiBlcnJvcnMgDQooaW5jbHVkaW5nIHRpbWVvdXRzKS4NCg==
+Signed-off-by: majianpeng <majianpeng@gmail.com>
+---
+ drivers/md/bitmap.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index 17e2b47..74540d7 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -376,6 +376,8 @@ static struct page *read_page(struct file *file, unsigned long index,
+ 			bh->b_blocknr = bmap(inode, block);
+ 			if (bh->b_blocknr == 0) {
+ 				/* Cannot use this file! */
++				wait_event(bitmap->write_wait,
++					atomic_read(&bitmap->pending_writes) == 0);
+ 				free_buffers(page);
+ 				page = ERR_PTR(-EINVAL);
+ 				goto out;
+-- 
+1.7.5.4
+
+ 				
+--------------
+majianpeng
+2012-05-18
 
