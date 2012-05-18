@@ -1,61 +1,85 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm-3.2.5 coming soon :-(
-Date: Fri, 18 May 2012 13:44:20 +1000
-Message-ID: <20120518134420.4da16442@notabene.brown>
-References: <20120503142201.649766de@notabene.brown>
-	<20120515215020.76fd9c6f@notabene.brown>
-	<4FB274B3.8040907@intel.com>
-	<20120517154449.2eeb0512@notabene.brown>
-	<679865E03F4C71419D9847EA3AACB163157E2858@IRSMSX102.ger.corp.intel.com>
-	<679865E03F4C71419D9847EA3AACB163157E29EF@IRSMSX102.ger.corp.intel.com>
+Subject: Re: Hot-replace for RAID5
+Date: Fri, 18 May 2012 13:45:55 +1000
+Message-ID: <20120518134555.3a9ce08b@notabene.brown>
+References: <CAAOsTS=4+eqRJXVrw2OaYibgNTEaGxJx4x1PPN4iU49tUO9zOg@mail.gmail.com>
+	<4FAB6758.5050109@hesbynett.no>
+	<CAAOsTSm9RH1c6OzFdAGf8hSag35YBD5Y1SuH4Tq-4GXnWgJpAw@mail.gmail.com>
+	<20120511105027.34e95833@notabene.brown>
+	<4FB43977.8020607@volatilevoid.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/iXYVOkcblSNarpuxjcYM+Nf"; protocol="application/pgp-signature"
+ boundary="Sig_/j0q2A4Kp6S8+j5cc8c.z2N3"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <679865E03F4C71419D9847EA3AACB163157E29EF@IRSMSX102.ger.corp.intel.com>
+In-Reply-To: <4FB43977.8020607@volatilevoid.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Patelczyk, Maciej" <maciej.patelczyk@intel.com>
-Cc: "Naruszewicz, Maciej" <maciej.naruszewicz@intel.com>, linux RAID <linux-raid@vger.kernel.org>, Jes Sorensen <Jes.Sorensen@redhat.com>, Doug Ledford <dledford@redhat.com>, Michael Tokarev <mjt@tls.msk.ru>, "Williams, Dan J" <dan.j.williams@intel.com>, "Dorau, Lukasz" <lukasz.dorau@intel.com>, Clint Byrum <clint@ubuntu.com>, "Danecki, Jacek" <jacek.danecki@intel.com>, "Tomczak, Marcin" <marcin.tomczak@intel.com>
+To: Oliver Martin <oliver@volatilevoid.net>
+Cc: patrik@dsl.sk, David Brown <david.brown@hesbynett.no>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/iXYVOkcblSNarpuxjcYM+Nf
+--Sig_/j0q2A4Kp6S8+j5cc8c.z2N3
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 17 May 2012 11:52:43 +0000 "Patelczyk, Maciej"
-<maciej.patelczyk@intel.com> wrote:
+On Thu, 17 May 2012 01:34:15 +0200 Oliver Martin <oliver@volatilevoid.net>
+wrote:
 
+> Hi Neil,
+>=20
+> Am 11.05.2012 02:50, schrieb NeilBrown:
+> > Doing an in-place reshape with the new 3.3 code should work, though wit=
+h a
+> > softer "should" than above.  We will only know that it is "stable" when=
+ enough
+> > people (such as yourself) try it and report success.  If anything does =
+go
+> > wrong I would of course help you to put the array back together but I c=
+an
+> > never guarantee no data loss.  You wouldn't be the first to test the co=
+de on
+> > live data, but you would be the second that I have heard of.
+>=20
+> I guess I'll be taking 2nd place then. I just used it on three live=20
+> raid6 arrays, and it worked perfectly.
 
-> 'mkdir /run' solves it even without fix above.
+3 arrays - so you are 2nd, 3rd, and 4th :-)
 
-Great.
-So if you compile with -DMAP_DIR=3D/var/run or as appropriate for the distr=
-o,
-then it should work.
+Thanks.  I often get failure reports and only more rarely get success
+reports, so I value them all the more.
 
-Thanks,
 NeilBrown
 
---Sig_/iXYVOkcblSNarpuxjcYM+Nf
+
+>=20
+> Thanks for your all your awesome work!
+>=20
+> Oliver
+>=20
+> PS: I wasn't subscribed to the list before, so I'm trying to reply to=20
+> this via gmane. No idea if this preserves all the list headers - if I=20
+> break the thread, that's probably the cause.
+
+
+--Sig_/j0q2A4Kp6S8+j5cc8c.z2N3
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT7XFlDnsnt1WYoG5AQI27g/9GnbTDTIimF00UMVtctruOn7UHO03LTJn
-cafMoLQTtqUhMyTP3L3MpmZLgY6GfDuEn5eXfL1UStVGSp6pxDXEmTJtK8z+7mi8
-isJa8fqZBt8zEtrQGM0Wex95n7pLnpxMHvneh43WfEUQj/WPeOM32ZVnXuHmlC4o
-jdULthxgGBa4XhFNpqPpskDvbD2PXqjYvzHCoooh4aO4aqXR1GYa3No/4nn4UvMl
-L11dXEpkFHQ1b/urOQxbVeG4kPZdCTOSOYXRagA3NHm0eSISFb3zoh3vAs8ECxm2
-xfWgNSx0ccYcFh/ubvAyHMJnudrYRtP0rej34TlNv0HdaH80AWKy6224WkKVe6OO
-fGS8XyS3KH9KTrIjbhMiKfYeYjmr5eRS2zmFRDsLiRSGboNWRW9dXN/p32eauUA8
-PAQkfowk/JBKYOTapzPn5EGVVL703e5WIn3hBoHauv12A7hB2p4P1EUnKIDBHJT3
-XqQKs23aXPV5jpV5GucnBVCfxYvVVcgOZRxgA8Wi5txUejMwDB48cUcc3NNValHP
-TBYTzS/UIoDMNxmIcL/0Gtkuf01rpvTx0kby45BOnr5ZtHv642Wqt0w/JlJ20H+j
-yHmp0f70oyjhhPsKr5HzD+Jjimx+HYycR/kgwsoS2JzIKxjOicWoU/EuTYEsDkYa
-arKi09v+WWo=
-=AlpR
+iQIVAwUBT7XF8znsnt1WYoG5AQI0zxAApdYWtlU2lo/900C8WetPF97Av0RXvi4E
+1tNetwEeJXogSqjtoJ9gzPzRfk5lG6QiGf3o+XOOFBaz4XbG2br/KA3o+fzUi99V
+jaEwc+EJ9Jf0hgn6MvpojqDqtJTkAYe6MFmL244/te0zyebBY/mf4X8y8Z/P4uyp
+EBL2Ao8T1NRxZIhUNev0Y02dl/JIooPqG7l7JEcmvMjz7mi2MMRmPQXnpVGxGGm+
+s9jSGcIHMzhsLVk4aSQFK3gvVfnEYk+MIOjGuNTbjtWYlLvUbcbkPpvUzK9bHz5O
+xrLlFSvNdELzllsQep19UWG0P4jx6XEPc4QeD8kZjajUVaE3cVYtNa6L7yrKW6Zb
+suI3v1fC1aJ2nJXfkhHauF54wrhzB2+CK2SFWJ2aSouTUEdDq1DuPjWNELmEm+Qu
+g7q6OuzRE8vZl6m+Hf6qeawV1hdzv3QODriJFOi7IqCOaVAzYcz4suERMR7b7IRS
+eByzzK9VnTP3q4W924XoTF6vynrg63nNtnxQJKWYhd20Jry/rCQFhUGXMYp8c7uY
++dyJurqyJT3w2oLEZmuJ/eJBGHouldvolp64fFCxSLzh6ObFlM6jNvtI56sLbrQU
+9EGSMEkC4U6WoXMyxCbt9ydEHIFey7vT4qjW3lvyZu+xiGmPMO5pfLkso1bLsFnZ
+d/zlE3nQUg4=
+=IH3b
 -----END PGP SIGNATURE-----
 
---Sig_/iXYVOkcblSNarpuxjcYM+Nf--
+--Sig_/j0q2A4Kp6S8+j5cc8c.z2N3--
