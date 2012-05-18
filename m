@@ -1,87 +1,39 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Creating a 3-disk RAID6 array
-Date: Fri, 18 May 2012 17:57:00 +1000
-Message-ID: <20120518175700.61337765@notabene.brown>
-References: <4FB4534A.5070608@volatilevoid.net>
-	<20120517113817.7faf9c1e@notabene.brown>
-	<4FB4FAA9.7000100@hesbynett.no>
-	<4FB50573.6020604@anonymous.org.uk>
-	<4FB5FAA7.4090401@zytor.com>
+From: "=?utf-8?B?bWFqaWFucGVuZw==?=" <majianpeng@gmail.com>
+Subject: =?utf-8?B?UmU6IFJlOiBBZGQgc2V0IGJhZCBsYmEgZnVuY3Rpb24gaW4gbWQtZmF1bHR5IG1vZHVsZS4=?=
+Date: Fri, 18 May 2012 16:41:04 +0800
+Message-ID: <201205181641012658677@gmail.com>
+References: <201205151949130004425@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/N6KUhbJhPuuQmNg_TZQy.Lc"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FB5FAA7.4090401@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, David Brown <david.brown@hesbynett.no>, Oliver Martin <oliver@volatilevoid.net>, linux-raid@vger.kernel.org
+To: =?utf-8?B?R2VvcmdlIFNodWtsaW4=?= <george.shuklin@gmail.com>
+Cc: =?utf-8?B?bGludXgtcmFpZA==?= <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/N6KUhbJhPuuQmNg_TZQy.Lc
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+VGhhbmtzLiBJbiBmYWN0LCB1c2luZyBtZC1mYXVsdHkgYWxzbyBkbyB0aGF0LGJ1dCBtdXN0IGRv
+IG1vcmUgc3RlcHMuIFNvIEkgdGhpbmsgYWRkIGl0IGluIG1kLWZhdWx0eS4NCg0KLS0tLS0tLS0t
+LS0tLS0tLS0tCQkJCSANCm1hamlhbnBlbmcNCjIwMTItMDUtMTgNCg0KLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0K5Y+R5Lu25Lq6
+77yaR2VvcmdlIFNodWtsaW4NCuWPkemAgeaXpeacn++8mjIwMTItMDUtMTcgMTk6NDk6MjYNCuaU
+tuS7tuS6uu+8mm1hamlhbnBlbmcNCuaKhOmAge+8mmxpbnV4LXJhaWQNCuS4u+mimO+8mlJlOiBB
+ZGQgc2V0IGJhZCBsYmEgZnVuY3Rpb24gaW4gbWQtZmF1bHR5IG1vZHVsZS4NCg0KDQoNCk9uIDE1
+LjA1LjIwMTIgMTU6NDksIG1hamlhbnBlbmcgd3JvdGU6DQo+IEhpIGFsbDoNCj4gCUluIG9yZGVy
+IHRvIHRlc3QgbWQgY29kZSwgc29tZXRpbWUgd2UgbmVlZCAgc2ltdWxhdGUgcmVhZC93cml0ZSBo
+YXJkZGlzayBlcnJvci4NCj4gCVVzaW5nIGhkcGFybSAtLW1ha2UtYmFkLXNlY3RvciB0byAgc2lt
+dWxhdGUgIHJlYWQgZXJyb3IuQnV0IEkgZGlkIG5vdCBmaW5kIHdheSBvZiAgc2ltdWxhdGluZyB3
+cml0ZS1lcnJvci4NCj4gCUkgdGVzdGVkIG1kLWZhdWx0eSBtb2R1bGUsIGl0IGNhbiBkbyB0aGlz
+LkJ1dCBpdCBpcyBub3QgcHJvdmlkZSB0aGUgZnVuY3Rpb24gbGluayBoZHBhcm0gLS1tYWtlLWJh
+ZC1zZWN0b3Isd2hpY2ggZGlkIG5vdCBzZXQgbGJhLg0KPiAJVXNpbmcgaGRwYW1yIC0tbWFrZS1i
+YWQtc2VjdG9yIHRvICBzaW11bGF0ZSByZWFkIGVycm9yIGNhbiBjYXVzZSBzb21lIHByb2JsZW0u
+DQo+IAlJdCB3aWxsIGNhdXNlIGF0YSBjb21tbmQgcmVzZXQsZGlzayByZXNldCBhbmQgc28gb24u
+SXQgdGFrZSB0b28gbG9nIHRpbWUuDQo+IAlTbyBJIHRoaW5rIGFkZCBhIGZ1bmN0aW9uIGluIG1k
+LWZhdWx0eSB3aGljaCBjYW4gc2V0IHJlYWQvd3JpdGUgbGJhLg0KPiAJSG93IGFib3V0ID8NCj4g
+CQkJCQkJCQkJCQkNCj4gICAJCQkJDQpIb3cgYWJvdXQgdXNpbmcgYW4gaXNjc2kgYXQgbG9jYWxo
+b3N0PyBFeHBvcnQgZGlzayB2aWEgSVNDU0kgdGFyZ2V0LCANCmNvbm5lY3QgdG8gaXQgd2l0aCBp
+bml0aWF0b3IuIFdpdGggaXB0YWJsZXMgYW5kIG9wZW4taXNjc2kgc2V0dGluZ3MgeW91IA0KY2Fu
+IHByZWNpc2VseSBjb250cm9sIGVycm9yIGJlaGF2aW9yIGFuZCBpbWl0YXRlIGFsbCBraW5kcyBv
+ZiBlcnJvcnMgDQooaW5jbHVkaW5nIHRpbWVvdXRzKS4NCg==
 
-On Fri, 18 May 2012 00:30:47 -0700 "H. Peter Anvin" <hpa@zytor.com> wrote:
-
-> On 05/17/2012 07:04 AM, John Robinson wrote:
-> > On 17/05/2012 14:18, David Brown wrote:
-> > [...]
-> >> Theoretically, a 3-disk RAID6 is like a 2-disk RAID5 or a 1-disk RAID1=
- -
-> > [...]
-> >> I can't think of any good reason for it /not/ to support 3-disk
-> >> RAID6, as there is nothing in the algorithms to hinder it.
-> >=20
-> > I've a vague recollection of Peter Anvin saying the implementation is
-> > optimised in such a way that it won't work.
-> >=20
->=20
-> Yes, it would have required introducing some odd special cases.  A
-> 3-disk RAID-6 is bitwise identical to a 3-disk RAID-1, so if Neil wants
-> to he could add "instant reshaping" support in mdadm (add a disk to a
-> 3-disk RAID-1 turning it into a 4-disk RAID-6; and similar for 2-disk
-> RAID-1 into 3-disk RAID-5.)
->=20
-> 	-hpa
->=20
-
-Converting a 2-disk RAID-1 to a 3-disk RAID-5 is not instant.
-You first convert a 2-disk RAID-1 to a 2-disk RAID-5.  Then you re-stripe t=
-he
-RAID-5 to have 3-disks.  During this restripe, part of the array looks like=
- a
-2-disk RAID-5, and part looks like a 3-disk RAID-4.
-
-To convert some sort of RAID1 to RAID6 we would need to be able to support a
-3-disk RAID-6, if only for a relatively short time.
-
-Possibly we could special case the parity-generation code to just copy the
-data block when data-disks=3D=3D1.  That sound easy enough...
-But the raid456 module needs to understand this
-3-way-RAID1-pretending-to-be-RAID6, we cannot use the raid1 module to do it.
-
-NeilBrown
-
---Sig_/N6KUhbJhPuuQmNg_TZQy.Lc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT7YAzDnsnt1WYoG5AQJNJhAArSslZ+4T9UJLJC5jrCZqps1AETdPzocw
-/yH9CbQqAacb4Ilfhq4Ia86izR1UyvLJeq2r+Ku6sFuXYuJnv7slVqJqvI9JOyDX
-zcdeZsd9JuH+gol6yK7qNVB3KvyyIbdLYXk70mN+WyVmJKWVvBMMGu1lok9fuo4F
-DiLMmYpF2rhqU0xUDan5g9UY5WA5Rkt/bpUy84FhvYXcJrKWdKGwBa580+h8qtgX
-eBk1MpjPEApQsBS6eCTONcLEVGxVXnwE8CZXM6+qxDYMKYVlJto5CIC00lXMntVc
-sCgD8nsAz+XLbuWdxXlwQ0oX9qwPhtti3A2mkJSezC7xgK/+oCHSIP/u8ixYGRa2
-6WAFnY4dGATUvuNqrqKPT1H3AflHhxGJhZl6OwpeUCa7pcV95z+9ISD0v2JuSxkQ
-on1whTlLj5ezbspuuBP+dllCf7SlqLHnfKzMlAJmnGZMdWOqOLieOPyOZ3mfNq/W
-hIW4z0Yu9rPJu2WMdx3KsTiUZpIKDYhOpfBtvZnnJtUuc7GF02gOl8zlqbXQpq49
-VBZY0Loe+s91VPDcqu8tkl+vmkWOc1wSbunmxiqw++0asblnfMBFP6G7+XCV4HzS
-WqcWH9MEdXTJA3OLvpmOfnO+aQ5PXmb3GxLEwnnxIU4X/Jkzx/A7vM8/0CK9uT/m
-s2Erg37SjOY=
-=tj+k
------END PGP SIGNATURE-----
-
---Sig_/N6KUhbJhPuuQmNg_TZQy.Lc--
