@@ -1,92 +1,49 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Compiler mdadm-3.2.5 error
-Date: Mon, 21 May 2012 12:09:04 +1000
-Message-ID: <20120521120904.2cc23e55@notabene.brown>
-References: <201205210951075780388@gmail.com>
+From: "majianpeng" <majianpeng@gmail.com>
+Subject: Re: Re: Compiler mdadm-3.2.5 error
+Date: Mon, 21 May 2012 10:33:53 +0800
+Message-ID: <201205211033497964405@gmail.com>
+References: <201205210951075780388@gmail.com>,
+ <20120521120904.2cc23e55@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Vbm9hzq._xniZM+vphYE.k6"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201205210951075780388@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/Vbm9hzq._xniZM+vphYE.k6
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+VGhhbmtzLCBJIGRvIGl0IGFzIHlvdSBzYWlkLiBDb21waWxlIHN1Y2Nlc3MuDQoNCi0tLS0tLS0t
+LS0tLS0tLS0tLQkJCQkgDQptYWppYW5wZW5nDQoyMDEyLTA1LTIxDQoNCi0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCreivP7Iy6O6
+TmVpbEJyb3duDQq3osvNyNXG2qO6MjAxMi0wNS0yMSAxMDowOToxNw0KytW8/sjLo7ptYWppYW5w
+ZW5nDQqzrcvNo7psaW51eC1yYWlkDQrW98zio7pSZTogQ29tcGlsZXIgbWRhZG0tMy4yLjUgZXJy
+b3INCg0KT24gTW9uLCAyMSBNYXkgMjAxMiAwOTo1MToxOSArMDgwMCAibWFqaWFucGVuZyIgPG1h
+amlhbnBlbmdAZ21haWwuY29tPiB3cm90ZToNCg0KPiBIaSBuZWlsOg0KPiAJSSBnaXQtcHVsbCBt
+ZGFkbSBhbmQgY29tcGlsZWQgYnV0IG1ldCBlcnJvciBsaWtlIHRoaXM6DQo+IA0KPiBJbiBmaWxl
+IGluY2x1ZGVkIGZyb20gc3VwZXIwLmM6Mjc6DQo+IHNoYTEuaDoyOToyMjogZXJyb3I6IGFuc2lk
+ZWNsLmg6IE5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnkNCj4gbWFrZTogKioqIFtzdXBlcjAub10g
+RXJyb3IgMQ0KDQpZb3UgbmVlZCB0byBpbnN0YWxsIGJpbnV0aWxzLWRldi4gIEl0IHByb3ZpZGVz
+IGFuc2lkZWNsLmgNCg0KVGhvdWdoIG1heWJlIEkgY291bGQgcmVtb3ZlIHRoZSAjaW5jbHVkZSwg
+YXMgeW91IHNheSBpdCBkb2Vzbid0IHNlZW0gdG8gYmUNCm5lZWRlZC4NCg0KTmVpbEJyb3duDQoN
+Cj4gIAkJCQkNCj4gdW5hbWUgLWENCj4gTGludXggbmZzLXNlcnZlci5leGFtcGxlLmNvbSAyLjYu
+MTgtMTk0LmVsNSAjMSBTTVAgRnJpIEFwciAyIDE0OjU4OjE0IEVEVCAyMDEwIHg4Nl82NCB4ODZf
+NjQgeDg2XzY0IEdOVS9MaW51eA0KPiANCj4gZ2NjIC12DQo+IFVzaW5nIGJ1aWx0LWluIHNwZWNz
+Lg0KPiBUYXJnZXQ6IHg4Nl82NC1yZWRoYXQtbGludXgNCj4gQ29uZmlndXJlZCB3aXRoOiAuLi9j
+b25maWd1cmUgLS1wcmVmaXg9L3VzciAtLW1hbmRpcj0vdXNyL3NoYXJlL21hbiAtLWluZm9kaXI9
+L3Vzci9zaGFyZS9pbmZvIC0tZW5hYmxlLXNoYXJlZCAtLWVuYWJsZS10aHJlYWRzPXBvc2l4IC0t
+ZW5hYmxlLWNoZWNraW5nPXJlbGVhc2UgLS13aXRoLXN5c3RlbS16bGliIC0tZW5hYmxlLV9fY3hh
+X2F0ZXhpdCAtLWRpc2FibGUtbGlidW53aW5kLWV4Y2VwdGlvbnMgLS1lbmFibGUtbGliZ2NqLW11
+bHRpZmlsZSAtLWVuYWJsZS1sYW5ndWFnZXM9YyxjKyssb2JqYyxvYmotYysrLGphdmEsZm9ydHJh
+bixhZGEgLS1lbmFibGUtamF2YS1hd3Q9Z3RrIC0tZGlzYWJsZS1kc3NpIC0tZW5hYmxlLXBsdWdp
+biAtLXdpdGgtamF2YS1ob21lPS91c3IvbGliL2p2bS9qYXZhLTEuNC4yLWdjai0xLjQuMi4wL2py
+ZSAtLXdpdGgtY3B1PWdlbmVyaWMgLS1ob3N0PXg4Nl82NC1yZWRoYXQtbGludXgNCj4gVGhyZWFk
+IG1vZGVsOiBwb3NpeA0KPiBnY2MgdmVyc2lvbiA0LjEuMiAyMDA4MDcwNCAoUmVkIEhhdCA0LjEu
+Mi00OCkNCj4gDQo+IA0KPiBJIHJlbW92ZSB0aGUgYW5zaWRlY2wuaCBpbiBzaGFsLmguVGhlbiBj
+b21waWxlIHN1Y2Nlc3MuDQo+IEluIHNoYWwuaDoNCj4gI2luY2x1ZGUgImFuc2lkZWNsLmgiDQo+
+IFNvIHRoZSBhbnNpZGVjbC5oIG1heSBpbiBtZGFkbSwgbm90IGEgc3lzdGVtIGhlYWQtZmlsZS4N
+Cj4gQnV0IEkgcmV3cml0ZSBpdDoNCj4gICNpbmNsdWRlIDxhbnNpZGVjbC5oPg0KPiBCdXQgY29t
+cGlsZWQgZXJyb3IgdG9vLg0KPiANCj4gDQo+IC0tLS0tLS0tLS0tLS0tDQo+IG1hamlhbnBlbmcN
+Cj4gMjAxMi0wNS0yMQ0KDQo=
 
-On Mon, 21 May 2012 09:51:19 +0800 "majianpeng" <majianpeng@gmail.com> wrot=
-e:
-
-> Hi neil:
-> 	I git-pull mdadm and compiled but met error like this:
->=20
-> In file included from super0.c:27:
-> sha1.h:29:22: error: ansidecl.h: No such file or directory
-> make: *** [super0.o] Error 1
-
-You need to install binutils-dev.  It provides ansidecl.h
-
-Though maybe I could remove the #include, as you say it doesn't seem to be
-needed.
-
-NeilBrown
-
->  			=09
-> uname -a
-> Linux nfs-server.example.com 2.6.18-194.el5 #1 SMP Fri Apr 2 14:58:14 EDT=
- 2010 x86_64 x86_64 x86_64 GNU/Linux
->=20
-> gcc -v
-> Using built-in specs.
-> Target: x86_64-redhat-linux
-> Configured with: ../configure --prefix=3D/usr --mandir=3D/usr/share/man -=
--infodir=3D/usr/share/info --enable-shared --enable-threads=3Dposix --enabl=
-e-checking=3Drelease --with-system-zlib --enable-__cxa_atexit --disable-lib=
-unwind-exceptions --enable-libgcj-multifile --enable-languages=3Dc,c++,objc=
-,obj-c++,java,fortran,ada --enable-java-awt=3Dgtk --disable-dssi --enable-p=
-lugin --with-java-home=3D/usr/lib/jvm/java-1.4.2-gcj-1.4.2.0/jre --with-cpu=
-=3Dgeneric --host=3Dx86_64-redhat-linux
-> Thread model: posix
-> gcc version 4.1.2 20080704 (Red Hat 4.1.2-48)
->=20
->=20
-> I remove the ansidecl.h in shal.h.Then compile success.
-> In shal.h:
-> #include "ansidecl.h"
-> So the ansidecl.h may in mdadm, not a system head-file.
-> But I rewrite it:
->  #include <ansidecl.h>
-> But compiled error too.
->=20
->=20
-> --------------
-> majianpeng
-> 2012-05-21
-
-
---Sig_/Vbm9hzq._xniZM+vphYE.k6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT7mjwTnsnt1WYoG5AQK00g/9HLfm6a2ukU058zO804a/e6zTVqTKoWCx
-QCyrZKZlDxREEkm/A30VBRcGZypzONyFalwebQUvJ4NQRdiiNQBtj4HGjATn0m1E
-oYBOKvRVPNN5T+ObXjVwt/uYHpQZmWnlL/awzwmR0unYeEeZPkZAGO+2AK7CWgYz
-p/fkx0+w13a3YOrOBwWysMsAZRrU/z+zr0PaLQUsgMTWRJwS5flQZQ+p45NmNnC1
-5Xfhw+hdGFi2j4ErtV0p85g7U1fRLUVsXgKZLBQqPXOFPVhrVFnJKLQJSosNgqGz
-4WSv0TDQa2SfFwAjA0Be7GdrA0TMAUffl3AiDn9dTtUIfIGHOEzlvq2i5XhCO0oA
-H68IwRFbj50usYWVogd+8LtJ0fqH8DmOa1tWABYM8OuVjpT+gw4E2YH6hBAsAnLq
-AN5o+R3xEpR78FQhk+xPkGPdUFz07f4ZDNvqDiHSHh2p9+inl77fE2x71MhNRwiV
-f6m25hUhXBEqXULzXrm8DKjpVGAc57KXDbtLeoQIwxJRyEniR+akyVPK+jmPqgU9
-8qGrNXklOlQ/212+t+i5BMaatIhjFR4NW5s06g9Awn03Gum+MwWqRIqplYrB5/I8
-H37QoiE3O6PkKQLhhikaVDiO8LrWepzK/UdkXvwZ7pOHe9q9TPr11kvfvgtB2Ulj
-ThcQQIRq6wo=
-=ni6o
------END PGP SIGNATURE-----
-
---Sig_/Vbm9hzq._xniZM+vphYE.k6--
