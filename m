@@ -1,79 +1,45 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md/bitmap:If bmap() failed,free buffers must check
- bitmap->pending_writes == 0.
-Date: Mon, 21 May 2012 10:06:33 +1000
-Message-ID: <20120521100633.538592ab@notabene.brown>
-References: <201205181938310931047@gmail.com>
+From: "majianpeng" <majianpeng@gmail.com>
+Subject: Compiler mdadm-3.2.5 error
+Date: Mon, 21 May 2012 09:51:19 +0800
+Message-ID: <201205210951075780388@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/LvurlEXK32Va.okSPLwudRo"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201205181938310931047@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/LvurlEXK32Va.okSPLwudRo
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi neil:
+	I git-pull mdadm and compiled but met error like this:
 
-On Fri, 18 May 2012 19:38:34 +0800 "majianpeng" <majianpeng@gmail.com> wrot=
-e:
+In file included from super0.c:27:
+sha1.h:29:22: error: ansidecl.h: No such file or directory
+make: *** [super0.o] Error 1
+ 				
+uname -a
+Linux nfs-server.example.com 2.6.18-194.el5 #1 SMP Fri Apr 2 14:58:14 EDT 2010 x86_64 x86_64 x86_64 GNU/Linux
 
-> Signed-off-by: majianpeng <majianpeng@gmail.com>
-> ---
->  drivers/md/bitmap.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
->=20
-> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-> index 17e2b47..74540d7 100644
-> --- a/drivers/md/bitmap.c
-> +++ b/drivers/md/bitmap.c
-> @@ -376,6 +376,8 @@ static struct page *read_page(struct file *file, unsi=
-gned long index,
->  			bh->b_blocknr =3D bmap(inode, block);
->  			if (bh->b_blocknr =3D=3D 0) {
->  				/* Cannot use this file! */
-> +				wait_event(bitmap->write_wait,
-> +					atomic_read(&bitmap->pending_writes) =3D=3D 0);
->  				free_buffers(page);
->  				page =3D ERR_PTR(-EINVAL);
->  				goto out;
-
-Hi,
- thanks for the patch.
-
-However it doesn't apply against the current code in linux-next.
-Some changes have been made which might make this fix unnecessary as the pa=
-ge
-is not freed until later.
-Could you check the latest code and see if the problem still exists?
-
-Thanks,
-NeilBrown
+gcc -v
+Using built-in specs.
+Target: x86_64-redhat-linux
+Configured with: ../configure --prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --enable-shared --enable-threads=posix --enable-checking=release --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-libgcj-multifile --enable-languages=c,c++,objc,obj-c++,java,fortran,ada --enable-java-awt=gtk --disable-dssi --enable-plugin --with-java-home=/usr/lib/jvm/java-1.4.2-gcj-1.4.2.0/jre --with-cpu=generic --host=x86_64-redhat-linux
+Thread model: posix
+gcc version 4.1.2 20080704 (Red Hat 4.1.2-48)
 
 
---Sig_/LvurlEXK32Va.okSPLwudRo
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+I remove the ansidecl.h in shal.h.Then compile success.
+In shal.h:
+#include "ansidecl.h"
+So the ansidecl.h may in mdadm, not a system head-file.
+But I rewrite it:
+ #include <ansidecl.h>
+But compiled error too.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT7mHCjnsnt1WYoG5AQJk2BAAs/PEmenSghJHAVm2nbwDCirM4Cz68zy9
-NZPl7dPdskaubiZJUu/RkNs/Q569wTz+KiLOvYAes2D4SEsoJ4yyAATEMZUmV/di
-GT95h1uL/oLxCtMfUvBrIJ4PGiX4ruqnU0yse5MAkKxo/MsTVvVLg7fykLR8hC1y
-3G3y6LjWWXk7fULUYrOBQAuoBu94FSAIQEDoEjSiuCPdfNPrOAZM9DJOOOPZfOvN
-XOc4DgkWPubqZoFVNM0bu13uQZy07kdIh4WlznSy4ZVNzFMcShGgsyGVkS8nFTIN
-ultqSDO+Uj6AnceC/IOSp9Ddr2FGqMSkGa9wuSEjx46CS2dFx+hE0Eze/N1rR4/2
-kccnx094f0mp3z+uoRh9tq3meIuqHJapg1nTrLkqytn1Ln39uXHiV2WjDd/Skx0I
-YESJQq5frOzoVU9wo7Owm3D2PfuV5fvDK1Llxo07Y55FVjih5yiIC3ZpNzsjk17k
-U15uajgM/wlg09IGNW9YJeHn1AD8sBRySud1lhkSvmdH6VDxbjjrVzi+jdsAkBpN
-VJNVpwn2CCh29Jp6Sb1DKMaclZt5ce2M43pDSAhckG9wVByYE159b2uyhV0oVgHy
-+FfzZ9Qp/4ewyKa8KJ9zkvCZcyiS0XB4wdWdSrUUofQWrgqvfcqYaZS36xpoAuhV
-j33AL3k7jgs=
-=Z31x
------END PGP SIGNATURE-----
+--------------
+majianpeng
+2012-05-21
 
---Sig_/LvurlEXK32Va.okSPLwudRo--
