@@ -1,56 +1,42 @@
-From: CoolCold <coolthecold@gmail.com>
-Subject: Re: md RAID with enterprise-class SATA or SAS drives
-Date: Mon, 21 May 2012 19:20:53 +0400
-Message-ID: <CAGqmV7oJg8vwKPJEYJhPANzaN-xxVW6Lw2gLTEKmMfG=pqCHuA@mail.gmail.com>
-References: <4FAAE8F1.8000600@pocock.com.au>
-	<CALFpzo5ObdwFATdT4e20znnxzU5hX9SVSfqJcdqOXM1FEYJQuw@mail.gmail.com>
-	<4FABC7C6.4030107@turmel.org>
-	<4FAC2FF2.5060305@hardwarefreak.com>
-	<4FAC40BC.1060300@hesbynett.no>
-	<CABYL=ToORULrdhBVQk0K8zQqFYkOomY-wgG7PpnJnzP9u7iBnA@mail.gmail.com>
-	<4FACBB68.2080304@hesbynett.no>
-	<4FACCAC8.4020206@pocock.com.au>
-	<4FAD9283.7020809@hardwarefreak.com>
+From: <janderson@yahoo.com>
+Subject: Hi Friend Your $997 Website Is Ready. Recommends Advanced Sports to you
+Date: Mon, 21 May 2012 14:18:21 -0400
+Message-ID: <964516934C0C47C2A469009B968385DF@g19.win.smewh.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FAD9283.7020809@hardwarefreak.com>
+Content-Class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: Daniel Pocock <daniel@pocock.com.au>, David Brown <david.brown@hesbynett.no>, Roberto Spadim <roberto@spadim.com.br>, Phil Turmel <philip@turmel.org>, Marcus Sorensen <shadowsor@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, May 12, 2012 at 2:28 AM, Stan Hoeppner <stan@hardwarefreak.com>=
- wrote:
-> On 5/11/2012 3:16 AM, Daniel Pocock wrote:
->
-[snip]
-> That's the one scenario where I abhor using md raid, as I mentioned. =
-=A0At
-> least, a boot raid 1 pair. =A0Using layered md raid 1 + 0, or 1 + lin=
-ear
-> is a great solution for many workloads. =A0Ask me why I say raid 1 + =
-0
-> instead of raid 10.
-So, I'm asking - why?
+From         :Hi Friend Your $997 Website Is Ready.
+Email        :janderson@yahoo.com
+Friend Name  :Friend
+Friend Email :linux-raid@vger.kernel.org
+comment      :
 
->
-> --
-> Stan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+Hi Friend,
 
 
+Your $997 website is waiting for you!
 
---=20
-Best regards,
-[COOLCOLD-RIPN]
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+----> http://bit.ly/KWaw4z
+
+Your website is paid for...
+
+Your hosting is paid for...
+
+It's ready to take orders!
+
+All you need to do is go here to get it!
+
+----> http://bit.ly/KWaw4z
+
+Talk soon
+
+John Anderson
+
+
+
