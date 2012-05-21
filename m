@@ -1,82 +1,79 @@
-From: =?ISO-8859-1?Q?Patrik_Horn=EDk?= <patrik@dsl.sk>
-Subject: Re: Hot-replace for RAID5
-Date: Sat, 19 May 2012 12:40:17 +0200
-Message-ID: <CAAOsTS=pF2HUNUOBv1T50m8gP=6fF_tAt0o-oAQzQr_VTOt+-A@mail.gmail.com>
-References: <CAAOsTS=4+eqRJXVrw2OaYibgNTEaGxJx4x1PPN4iU49tUO9zOg@mail.gmail.com>
-	<4FAB6758.5050109@hesbynett.no>
-	<CAAOsTSm9RH1c6OzFdAGf8hSag35YBD5Y1SuH4Tq-4GXnWgJpAw@mail.gmail.com>
-	<20120511105027.34e95833@notabene.brown>
-	<4FB43977.8020607@volatilevoid.net>
-	<20120518134555.3a9ce08b@notabene.brown>
-Reply-To: patrik@dsl.sk
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] md/bitmap:If bmap() failed,free buffers must check
+ bitmap->pending_writes == 0.
+Date: Mon, 21 May 2012 10:06:33 +1000
+Message-ID: <20120521100633.538592ab@notabene.brown>
+References: <201205181938310931047@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/LvurlEXK32Va.okSPLwudRo"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120518134555.3a9ce08b@notabene.brown>
+In-Reply-To: <201205181938310931047@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Oliver Martin <oliver@volatilevoid.net>, David Brown <david.brown@hesbynett.no>, linux-raid@vger.kernel.org
+To: majianpeng <majianpeng@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil, thanks for your assistance.
+--Sig_/LvurlEXK32Va.okSPLwudRo
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I successfully converted 2nd and 3rd array to raid6 with ls-6 layout,
---layout=3Dleft-symmetric-6 worked as advertised.
+On Fri, 18 May 2012 19:38:34 +0800 "majianpeng" <majianpeng@gmail.com> wrot=
+e:
 
-Reshaping of 1st array finished OK too, even when it did not avoid
-power outage at last and was hit by one couple of hours before
-finishing. But it restarted without problem, the array was consistent
-according check and I also compared important data with backup and
-they are OK.
+> Signed-off-by: majianpeng <majianpeng@gmail.com>
+> ---
+>  drivers/md/bitmap.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+> index 17e2b47..74540d7 100644
+> --- a/drivers/md/bitmap.c
+> +++ b/drivers/md/bitmap.c
+> @@ -376,6 +376,8 @@ static struct page *read_page(struct file *file, unsi=
+gned long index,
+>  			bh->b_blocknr =3D bmap(inode, block);
+>  			if (bh->b_blocknr =3D=3D 0) {
+>  				/* Cannot use this file! */
+> +				wait_event(bitmap->write_wait,
+> +					atomic_read(&bitmap->pending_writes) =3D=3D 0);
+>  				free_buffers(page);
+>  				page =3D ERR_PTR(-EINVAL);
+>  				goto out;
 
-Patrik
+Hi,
+ thanks for the patch.
 
-On Fri, May 18, 2012 at 5:45 AM, NeilBrown <neilb@suse.de> wrote:
-> On Thu, 17 May 2012 01:34:15 +0200 Oliver Martin <oliver@volatilevoid=
-=2Enet>
-> wrote:
->
->> Hi Neil,
->>
->> Am 11.05.2012 02:50, schrieb NeilBrown:
->> > Doing an in-place reshape with the new 3.3 code should work, thoug=
-h with a
->> > softer "should" than above. =A0We will only know that it is "stabl=
-e" when enough
->> > people (such as yourself) try it and report success. =A0If anythin=
-g does go
->> > wrong I would of course help you to put the array back together bu=
-t I can
->> > never guarantee no data loss. =A0You wouldn't be the first to test=
- the code on
->> > live data, but you would be the second that I have heard of.
->>
->> I guess I'll be taking 2nd place then. I just used it on three live
->> raid6 arrays, and it worked perfectly.
->
-> 3 arrays - so you are 2nd, 3rd, and 4th :-)
->
-> Thanks. =A0I often get failure reports and only more rarely get succe=
-ss
-> reports, so I value them all the more.
->
-> NeilBrown
->
->
->>
->> Thanks for your all your awesome work!
->>
->> Oliver
->>
->> PS: I wasn't subscribed to the list before, so I'm trying to reply t=
-o
->> this via gmane. No idea if this preserves all the list headers - if =
-I
->> break the thread, that's probably the cause.
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+However it doesn't apply against the current code in linux-next.
+Some changes have been made which might make this fix unnecessary as the pa=
+ge
+is not freed until later.
+Could you check the latest code and see if the problem still exists?
+
+Thanks,
+NeilBrown
+
+
+--Sig_/LvurlEXK32Va.okSPLwudRo
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT7mHCjnsnt1WYoG5AQJk2BAAs/PEmenSghJHAVm2nbwDCirM4Cz68zy9
+NZPl7dPdskaubiZJUu/RkNs/Q569wTz+KiLOvYAes2D4SEsoJ4yyAATEMZUmV/di
+GT95h1uL/oLxCtMfUvBrIJ4PGiX4ruqnU0yse5MAkKxo/MsTVvVLg7fykLR8hC1y
+3G3y6LjWWXk7fULUYrOBQAuoBu94FSAIQEDoEjSiuCPdfNPrOAZM9DJOOOPZfOvN
+XOc4DgkWPubqZoFVNM0bu13uQZy07kdIh4WlznSy4ZVNzFMcShGgsyGVkS8nFTIN
+ultqSDO+Uj6AnceC/IOSp9Ddr2FGqMSkGa9wuSEjx46CS2dFx+hE0Eze/N1rR4/2
+kccnx094f0mp3z+uoRh9tq3meIuqHJapg1nTrLkqytn1Ln39uXHiV2WjDd/Skx0I
+YESJQq5frOzoVU9wo7Owm3D2PfuV5fvDK1Llxo07Y55FVjih5yiIC3ZpNzsjk17k
+U15uajgM/wlg09IGNW9YJeHn1AD8sBRySud1lhkSvmdH6VDxbjjrVzi+jdsAkBpN
+VJNVpwn2CCh29Jp6Sb1DKMaclZt5ce2M43pDSAhckG9wVByYE159b2uyhV0oVgHy
++FfzZ9Qp/4ewyKa8KJ9zkvCZcyiS0XB4wdWdSrUUofQWrgqvfcqYaZS36xpoAuhV
+j33AL3k7jgs=
+=Z31x
+-----END PGP SIGNATURE-----
+
+--Sig_/LvurlEXK32Va.okSPLwudRo--
