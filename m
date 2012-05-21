@@ -1,49 +1,72 @@
-From: "majianpeng" <majianpeng@gmail.com>
-Subject: Re: Re: Compiler mdadm-3.2.5 error
-Date: Mon, 21 May 2012 10:33:53 +0800
-Message-ID: <201205211033497964405@gmail.com>
-References: <201205210951075780388@gmail.com>,
- <20120521120904.2cc23e55@notabene.brown>
+From: <ronrajan@yahoo.com>
+Subject: =?iso-8859-1?Q?SHOCKING_SYSTEM.=28and_one_weird_rule=29_Recommends_Advanc?=
+	=?iso-8859-1?Q?ed_Sports_to_you?=
+Date: Mon, 21 May 2012 03:11:35 -0400
+Message-ID: <D89D53F61667410CB968BF202D1C2CDB@g19.win.smewh.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-VGhhbmtzLCBJIGRvIGl0IGFzIHlvdSBzYWlkLiBDb21waWxlIHN1Y2Nlc3MuDQoNCi0tLS0tLS0t
-LS0tLS0tLS0tLQkJCQkgDQptYWppYW5wZW5nDQoyMDEyLTA1LTIxDQoNCi0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCreivP7Iy6O6
-TmVpbEJyb3duDQq3osvNyNXG2qO6MjAxMi0wNS0yMSAxMDowOToxNw0KytW8/sjLo7ptYWppYW5w
-ZW5nDQqzrcvNo7psaW51eC1yYWlkDQrW98zio7pSZTogQ29tcGlsZXIgbWRhZG0tMy4yLjUgZXJy
-b3INCg0KT24gTW9uLCAyMSBNYXkgMjAxMiAwOTo1MToxOSArMDgwMCAibWFqaWFucGVuZyIgPG1h
-amlhbnBlbmdAZ21haWwuY29tPiB3cm90ZToNCg0KPiBIaSBuZWlsOg0KPiAJSSBnaXQtcHVsbCBt
-ZGFkbSBhbmQgY29tcGlsZWQgYnV0IG1ldCBlcnJvciBsaWtlIHRoaXM6DQo+IA0KPiBJbiBmaWxl
-IGluY2x1ZGVkIGZyb20gc3VwZXIwLmM6Mjc6DQo+IHNoYTEuaDoyOToyMjogZXJyb3I6IGFuc2lk
-ZWNsLmg6IE5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnkNCj4gbWFrZTogKioqIFtzdXBlcjAub10g
-RXJyb3IgMQ0KDQpZb3UgbmVlZCB0byBpbnN0YWxsIGJpbnV0aWxzLWRldi4gIEl0IHByb3ZpZGVz
-IGFuc2lkZWNsLmgNCg0KVGhvdWdoIG1heWJlIEkgY291bGQgcmVtb3ZlIHRoZSAjaW5jbHVkZSwg
-YXMgeW91IHNheSBpdCBkb2Vzbid0IHNlZW0gdG8gYmUNCm5lZWRlZC4NCg0KTmVpbEJyb3duDQoN
-Cj4gIAkJCQkNCj4gdW5hbWUgLWENCj4gTGludXggbmZzLXNlcnZlci5leGFtcGxlLmNvbSAyLjYu
-MTgtMTk0LmVsNSAjMSBTTVAgRnJpIEFwciAyIDE0OjU4OjE0IEVEVCAyMDEwIHg4Nl82NCB4ODZf
-NjQgeDg2XzY0IEdOVS9MaW51eA0KPiANCj4gZ2NjIC12DQo+IFVzaW5nIGJ1aWx0LWluIHNwZWNz
-Lg0KPiBUYXJnZXQ6IHg4Nl82NC1yZWRoYXQtbGludXgNCj4gQ29uZmlndXJlZCB3aXRoOiAuLi9j
-b25maWd1cmUgLS1wcmVmaXg9L3VzciAtLW1hbmRpcj0vdXNyL3NoYXJlL21hbiAtLWluZm9kaXI9
-L3Vzci9zaGFyZS9pbmZvIC0tZW5hYmxlLXNoYXJlZCAtLWVuYWJsZS10aHJlYWRzPXBvc2l4IC0t
-ZW5hYmxlLWNoZWNraW5nPXJlbGVhc2UgLS13aXRoLXN5c3RlbS16bGliIC0tZW5hYmxlLV9fY3hh
-X2F0ZXhpdCAtLWRpc2FibGUtbGlidW53aW5kLWV4Y2VwdGlvbnMgLS1lbmFibGUtbGliZ2NqLW11
-bHRpZmlsZSAtLWVuYWJsZS1sYW5ndWFnZXM9YyxjKyssb2JqYyxvYmotYysrLGphdmEsZm9ydHJh
-bixhZGEgLS1lbmFibGUtamF2YS1hd3Q9Z3RrIC0tZGlzYWJsZS1kc3NpIC0tZW5hYmxlLXBsdWdp
-biAtLXdpdGgtamF2YS1ob21lPS91c3IvbGliL2p2bS9qYXZhLTEuNC4yLWdjai0xLjQuMi4wL2py
-ZSAtLXdpdGgtY3B1PWdlbmVyaWMgLS1ob3N0PXg4Nl82NC1yZWRoYXQtbGludXgNCj4gVGhyZWFk
-IG1vZGVsOiBwb3NpeA0KPiBnY2MgdmVyc2lvbiA0LjEuMiAyMDA4MDcwNCAoUmVkIEhhdCA0LjEu
-Mi00OCkNCj4gDQo+IA0KPiBJIHJlbW92ZSB0aGUgYW5zaWRlY2wuaCBpbiBzaGFsLmguVGhlbiBj
-b21waWxlIHN1Y2Nlc3MuDQo+IEluIHNoYWwuaDoNCj4gI2luY2x1ZGUgImFuc2lkZWNsLmgiDQo+
-IFNvIHRoZSBhbnNpZGVjbC5oIG1heSBpbiBtZGFkbSwgbm90IGEgc3lzdGVtIGhlYWQtZmlsZS4N
-Cj4gQnV0IEkgcmV3cml0ZSBpdDoNCj4gICNpbmNsdWRlIDxhbnNpZGVjbC5oPg0KPiBCdXQgY29t
-cGlsZWQgZXJyb3IgdG9vLg0KPiANCj4gDQo+IC0tLS0tLS0tLS0tLS0tDQo+IG1hamlhbnBlbmcN
-Cj4gMjAxMi0wNS0yMQ0KDQo=
+From         :SHOCKING SYSTEM.(and one weird rule)
+Email        :ronrajan@yahoo.com
+Friend Name  :Friend
+Friend Email :linux-raid@vger.kernel.org
+comment      :
+
+
+Hi Friend,
+
+Here's a controversial new system revealing
+
+affiliate marketing's number one rule...
+
+=======>  http://bit.ly/LarThw
+
+During this revealing presentation, this crazy
+underground affiliate reveals the BRUTAL TRUTH why
+most beginner marketers DON'T make even one cent
+online.
+
+Ya, you might say it's a bit controversial...
+
+.BUT if you want to discover the truth about
+driving insane amounts of traffic the way the top
+super affiliates do it, and find out the number
+one rule that's been kept from you all along, then
+you need to check out what this guy has to say:
+
+=======>  http://bit.ly/LarThw
+
+This WON'T be available forever so my best advice
+is to go check it out right now.
+
+Ron Rajan
+
+P.S. If you've been looking for a STEP BY STEP
+system for getting crazy amounts of laser targeted
+traffic, then you'll certainly want to check this
+out.
+
+Just make sure you pay close attention to the
+weird rule he outlines... it's different than most
+have been suggesting, but it works like crazy:
+
+=======>  http://bit.ly/LarThw
+
+
+
+
+
+
+
+
+
+
+
+
 
