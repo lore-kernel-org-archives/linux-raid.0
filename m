@@ -1,72 +1,32 @@
-From: <ronrajan@yahoo.com>
-Subject: =?iso-8859-1?Q?SHOCKING_SYSTEM.=28and_one_weird_rule=29_Recommends_Advanc?=
-	=?iso-8859-1?Q?ed_Sports_to_you?=
-Date: Mon, 21 May 2012 03:11:35 -0400
-Message-ID: <D89D53F61667410CB968BF202D1C2CDB@g19.win.smewh.net>
+From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Subject: Reason for md raid 01 blksize limited to 4 KiB?
+Date: Mon, 21 May 2012 10:43:51 +0200
+Message-ID: <4FBA0047.5050208@profitbricks.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From         :SHOCKING SYSTEM.(and one weird rule)
-Email        :ronrajan@yahoo.com
-Friend Name  :Friend
-Friend Email :linux-raid@vger.kernel.org
-comment      :
+Hi list,
 
+I'm wondering why stacking raid1 above raid0 limits the block sizes in
+the blkio queue to 4 KiB both read and write.
 
-Hi Friend,
+The max_sectors_kb is at 512. So it's not a matter of limits.
 
-Here's a controversial new system revealing
+Could someone explain, please? Or could someone pinpoint me to the
+related location in the source code?
 
-affiliate marketing's number one rule...
+We've thought of using this for replication via InfiniBand/SRP. 4 KiB
+chunks are completely inefficient with SRP. We wanted to do this with
+DRBD first, but this is also extremely inefficient, because of chunk
+sizes in the blkio queue.
 
-=======>  http://bit.ly/LarThw
+I can reproduce the small 4 KiB chunks also in a file copy benchmark
+with raid 01 on ram disks.
 
-During this revealing presentation, this crazy
-underground affiliate reveals the BRUTAL TRUTH why
-most beginner marketers DON'T make even one cent
-online.
-
-Ya, you might say it's a bit controversial...
-
-.BUT if you want to discover the truth about
-driving insane amounts of traffic the way the top
-super affiliates do it, and find out the number
-one rule that's been kept from you all along, then
-you need to check out what this guy has to say:
-
-=======>  http://bit.ly/LarThw
-
-This WON'T be available forever so my best advice
-is to go check it out right now.
-
-Ron Rajan
-
-P.S. If you've been looking for a STEP BY STEP
-system for getting crazy amounts of laser targeted
-traffic, then you'll certainly want to check this
-out.
-
-Just make sure you pay close attention to the
-weird rule he outlines... it's different than most
-have been suggesting, but it works like crazy:
-
-=======>  http://bit.ly/LarThw
-
-
-
-
-
-
-
-
-
-
-
-
-
+Cheers,
+Sebastian
