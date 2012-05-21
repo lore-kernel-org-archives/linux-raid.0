@@ -1,45 +1,70 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: md RAID with enterprise-class SATA or SAS drives
-Date: Mon, 21 May 2012 10:29:31 -0400
-Message-ID: <4FBA514B.50106@turmel.org>
-References: <4FAAE8F1.8000600@pocock.com.au> <CALFpzo5ObdwFATdT4e20znnxzU5hX9SVSfqJcdqOXM1FEYJQuw@mail.gmail.com> <4FABC7C6.4030107@turmel.org> <CALFpzo6BECrv2eTbSRKwUzpTopx_0EmD+UipqUf-XE=vzz2OnQ@mail.gmail.com> <4FABE724.40103@turmel.org> <4FAC0C05.1090007@pocock.com.au> <20120521141925.GA9011@nsrc.org>
+From: Asdo <asdo@shiftmail.org>
+Subject: Re: Hot-replace for RAID5
+Date: Mon, 21 May 2012 11:54:43 +0200
+Message-ID: <4FBA10E3.7080202@shiftmail.org>
+References: <CAAOsTS=4+eqRJXVrw2OaYibgNTEaGxJx4x1PPN4iU49tUO9zOg@mail.gmail.com>
+ <4FAB6758.5050109@hesbynett.no>
+ <CAAOsTSm9RH1c6OzFdAGf8hSag35YBD5Y1SuH4Tq-4GXnWgJpAw@mail.gmail.com>
+ <20120511105027.34e95833@notabene.brown> <4FB43977.8020607@volatilevoid.net>
+ <20120518134555.3a9ce08b@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; format=flowed; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120521141925.GA9011@nsrc.org>
+In-reply-to: <20120518134555.3a9ce08b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brian Candler <B.Candler@pobox.com>
-Cc: Daniel Pocock <daniel@pocock.com.au>, Marcus Sorensen <shadowsor@gmail.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Oliver Martin <oliver@volatilevoid.net>, patrik@dsl.sk, David Brown <david.brown@hesbynett.no>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 05/21/2012 10:19 AM, Brian Candler wrote:
+On 05/18/12 05:45, NeilBrown wrote:
+> On Thu, 17 May 2012 01:34:15 +0200 Oliver Martin<oliver@volatilevoid.net>
+> wrote:
+>
+>> Hi Neil,
+>>
+>> Am 11.05.2012 02:50, schrieb NeilBrown:
+>>> Doing an in-place reshape with the new 3.3 code should work, though with a
+>>> softer "should" than above.  We will only know that it is "stable" when enough
+>>> people (such as yourself) try it and report success.  If anything does go
+>>> wrong I would of course help you to put the array back together but I can
+>>> never guarantee no data loss.  You wouldn't be the first to test the code on
+>>> live data, but you would be the second that I have heard of.
+>> I guess I'll be taking 2nd place then. I just used it on three live
+>> raid6 arrays, and it worked perfectly.
+> 3 arrays - so you are 2nd, 3rd, and 4th :-)
 
-[trim /]
+Good to know that when all is good, hot-replace works.
 
-> But FYI, the new Seagate Barracuda 3TB ST3000DM001 drives I have here do
-> *not* support this feature.  Has Seagate started crippling its
-> consumer-grade drives?
+I wonder if all "error paths" were considered and implemented (and maybe 
+even tested, but we users could help with testing if we understand the 
+intended behaviour), i.e.
 
-*YES*
+what happens when the disk being hot-replaced shows read errors in 
+locations previously unknown to the bad-block list: does it
+- immediately fall back to fail+rebuild or
+- first tries a recompute + rewrite of the sector, then if rewrite fails 
+it falls back to fail+rebuild
+- first tries a recompute + rewrite of the sector, then if rewrite fails 
+it adds the block to bad block list, then if the list is out-of-space it 
+falls back to fail+rebuild
+?
 
-They started sometime before June of last year, when I purchased some
-Barracuda Greens to upgrade from the Barracuda 7200.12 models I had been
-using.
+What happens if the destination of the hot-replace has *one* write 
+error? And *lots* of write errors?
 
-[trim /]
+What happens if one hot-replace hits a sector for which both the disk 
+being replaced and another one have an entry in the bad block list, and 
+so there is not enough parity information to recompute? Does it proceed 
+anyway marking the corresponding sector in the bad-block-list for the 
+destination device (=nonvalid strip), or it fails the hot-replace, or what?
 
-> The Hitachi Deskstar HDS5C3030ALA630 *does* support scterc.
+(this is actually more about bad block lists)
+What happens if a *different* disk shows back sectors due to concomitant 
+reads (simultaneous but not caused by hot-replace):
+- first recomputes and rewrites, then if rewrite fails it is added to 
+bad block list, then if list is full it gets failed? Or can another 
+hot-replace get started when already one is running?
 
-If you look up-thread to my first reply on May 10th, I reported exactly
-this phenomenon, and that Hitachi is the only remaining player still
-supporting it in consumer-grade drives.  (That I've found.  I'd love to
-discover that other players are changing their minds.)
+Thank you
 
-> Regards,
-> 
-> Brian.
-
-Regards, and my condolences on your purchase of the ST3000DM001 drives.
-
-Phil.
