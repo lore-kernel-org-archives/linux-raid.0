@@ -1,133 +1,71 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: md RAID with enterprise-class SATA or SAS drives
-Date: Mon, 21 May 2012 16:38:50 -0300
-Message-ID: <CABYL=Tr3Y=zpAs=hXf3QfXW6v4sEN4SWDqPuiCfgtz7bAoaPFA@mail.gmail.com>
-References: <4FAAE8F1.8000600@pocock.com.au>
-	<CALFpzo5ObdwFATdT4e20znnxzU5hX9SVSfqJcdqOXM1FEYJQuw@mail.gmail.com>
-	<4FABC7C6.4030107@turmel.org>
-	<4FAC2FF2.5060305@hardwarefreak.com>
-	<4FAC40BC.1060300@hesbynett.no>
-	<CABYL=ToORULrdhBVQk0K8zQqFYkOomY-wgG7PpnJnzP9u7iBnA@mail.gmail.com>
-	<4FACBB68.2080304@hesbynett.no>
-	<4FACCAC8.4020206@pocock.com.au>
-	<4FAD9283.7020809@hardwarefreak.com>
-	<CAGqmV7oJg8vwKPJEYJhPANzaN-xxVW6Lw2gLTEKmMfG=pqCHuA@mail.gmail.com>
-	<4FBA8EA9.40203@hardwarefreak.com>
-	<CABYL=TqBeC+D_FHBGNO5WmdhP5zArQsNVY4v1xwHy9Zz0w4M1w@mail.gmail.com>
-	<4FBA91DD.7010307@hardwarefreak.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: About raid5 read error handle when raid5 was degraded.
+Date: Tue, 22 May 2012 08:36:51 +1000
+Message-ID: <20120522083651.194472c1@notabene.brown>
+References: <201205211847549688311@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/wS6KQrunGYi8qm6BlRoq=v+"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FBA91DD.7010307@hardwarefreak.com>
+In-Reply-To: <201205211847549688311@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: CoolCold <coolthecold@gmail.com>, Daniel Pocock <daniel@pocock.com.au>, David Brown <david.brown@hesbynett.no>, Phil Turmel <philip@turmel.org>, Marcus Sorensen <shadowsor@gmail.com>, linux-raid@vger.kernel.org
+To: majianpeng <majianpeng@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-hum nice
-raid10 and raid0 are single thread too?
+--Sig_/wS6KQrunGYi8qm6BlRoq=v+
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-2012/5/21 Stan Hoeppner <stan@hardwarefreak.com>:
-> On 5/21/2012 1:54 PM, Roberto Spadim wrote:
->> hum, does anyone could explain what a 'multi thread' version of raid=
-1
->> could be implemented?
->> for example, how to scale it? and why this new implementation could
->> scale it better
->
-> I just did below. =A0You layer a stripe over many RAID 1 pairs. =A0A =
-single
-> md RAID 1 pair isn't enough to saturate a single core so there is no
-> gain to be had by trying to thread the RAID 1 code.
->
-> --
-> Stan
->
->
->> 2012/5/21 Stan Hoeppner <stan@hardwarefreak.com>:
->>> On 5/21/2012 10:20 AM, CoolCold wrote:
->>>> On Sat, May 12, 2012 at 2:28 AM, Stan Hoeppner <stan@hardwarefreak=
-=2Ecom> wrote:
->>>>> On 5/11/2012 3:16 AM, Daniel Pocock wrote:
->>>>>
->>>> [snip]
->>>>> That's the one scenario where I abhor using md raid, as I mention=
-ed. =A0At
->>>>> least, a boot raid 1 pair. =A0Using layered md raid 1 + 0, or 1 +=
- linear
->>>>> is a great solution for many workloads. =A0Ask me why I say raid =
-1 + 0
->>>>> instead of raid 10.
->>>> So, I'm asking - why?
->>>
->>> Neil pointed out quite some time ago that the md RAID 1/5/6/10 code=
- runs
->>> as a single kernel thread. =A0Thus when running heavy IO workloads =
-across
->>> many rust disks or a few SSDs, the md thread becomes CPU bound, as =
-it
->>> can only execute on a single core, just as with any other single th=
-read.
->>>
->>> This issue is becoming more relevant as folks move to the latest
->>> generation of server CPUs that trade clock speed for higher core co=
-unt.
->>> =A0Imagine the surprise of the op who buys a dual socket box with 2=
-x 16
->>> core AMD Interlagos 2.0GHz CPUs, 256GB RAM, and 32 SSDs in md RAID =
-10,
->>> only to find he can only get a tiny fraction of the SSD throughput.
->>> Upon investigation he finds a single md thread peaking one core whi=
-le
->>> the rest are relatively idle but for the application itself.
->>>
->>> As I understand Neil's explanation, the md RAID 0 and linear code d=
-on't
->>> run as separate kernel threads, but merely pass offsets to the bloc=
-k
->>> layer, which is fully threaded. =A0Thus, by layering md RAID 0 over=
- md
->>> RAID 1 pairs, the striping load is spread over all cores. =A0Same w=
-ith
->>> linear, avoiding the single thread bottleneck.
->>>
->>> This layering can be done with any md RAID level, creating RAID50s =
-and
->>> RAID60s, or concatenations of RAID5/6, as well as of RAID 10.
->>>
->>> And it shouldn't take anywhere near 32 modern SSDs to saturate a si=
-ngle
->>> 2GHz core with md RAID 10. =A0It's likely less than 8 SSDs, which y=
-ield
->>> ~400K IOPS, but I haven't done verufication testing myself at this =
-point.
->>>
->>> --
->>> Stan
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
-l
->>
->>
->>
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+On Mon, 21 May 2012 18:47:58 +0800 "majianpeng" <majianpeng@gmail.com> wrot=
+e:
+
+>  Hi all:
+> 	I readed the latest code in function :
+>=20
+> raid5_end_read_request():
+> >>	else if (conf->mddev->degraded >=3D conf->max_degraded)
+> >>			printk_ratelimited(
+> >>				KERN_WARNING
+> >>				"md/raid:%s: read error not correctable "
+> >>				"(sector %llu on %s).\n",
+> >>				mdname(conf->mddev),
+> >>				(unsigned long long)(sh->sector
+> >>						     + rdev->data_offset),
+> >>				bdn);
+>=20
+> If this occur,then exec md_error().In md_error(), remove this disk.
+> The raid5 will fail and lost all data.
+> Why do call rdev_set_badsector() for this situation?
+>=20
+
+You are probably right - rdev_set_badblocks should probably be called there.
+I've added it to my list of issues to look at when I get a chance.
+
+Thanks,
+NeilBrown
 
 
+--Sig_/wS6KQrunGYi8qm6BlRoq=v+
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT7rDgznsnt1WYoG5AQL1yxAAm3EcnnckryUWeI7+lWubpa9wyN4keJ/t
+Jzyw8ztHWL0Wp01I/9qDvHpqk2lGHNTm2OjKpVPhKy319rTLqy0xa+ND1GqqgJOy
+kYFrVqtyC2s+NgcpGptnMhNW2O4ouxMx9WnDSq9MnKhnpFxBjGxYuwuuM/d92gYo
+e8GYxa8l9mEKd2gYg/AgFsUNRjfsfY2ocbauZC6siiMv0XAKNUeQxCKd92WTNG4e
+Fk/6MNMRRkUQvmeTxe8qhkEoTOsJtbrlD0NYWOWswyGBVUMc5NCcuJBRJq8m657a
+dMHa63bzhbp+R9PvnphUvv415/0sh0UFH3ZYx1P1xCRGxKUW2OSSHkY1doAprzIO
+mJuChp0qP9XdCwL8XlG2rCYIPpDS/4zgpJHNnWYAh0qSHRK6QnE3mvH/hqt2DcX3
+82JAMJ4TCSIRFqpvEOfCDdq5uvSE/Q5lVnd2+RbecL20oyzhbH/ubQS3HCt4W1A0
+RtbxWeNVXCO1R2jvYNmasnfMCb8lO+qGuDU/WK7clKzA0XNlGtD/dLFzIfYFEqk9
+sU+Vz8KdQZCZAcLwmaMehD2KENU/LRWLQ3pWPH3t3D2zTmYRQ8ZsuqaJPsfUYDO0
+Dif2rL3aot7fXN0bPTAbjZLvFddiezKIBf/VdkmSw8h8gxrEjkZjdIBElxK18PJh
+b0uW3u5/tAk=
+=EGoM
+-----END PGP SIGNATURE-----
+
+--Sig_/wS6KQrunGYi8qm6BlRoq=v+--
