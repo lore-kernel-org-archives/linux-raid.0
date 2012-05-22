@@ -1,36 +1,28 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: SSSE6 / RAID6
-Date: Tue, 22 May 2012 15:18:20 -0700
-Message-ID: <4FBC10AC.3000803@zytor.com>
-References: <CADNH=7HByQyQy=Bbn5AjO=nz8437QOCjGbkVhiUAKwp61_is0A@mail.gmail.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: raid 10f2 vs 1 on 2 drives
+Date: Wed, 23 May 2012 00:36:12 +0200
+Message-ID: <4FBC14DC.8070007@hesbynett.no>
+References: <20120522193340.GM27769@electro-mechanical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADNH=7HByQyQy=Bbn5AjO=nz8437QOCjGbkVhiUAKwp61_is0A@mail.gmail.com>
+In-Reply-To: <20120522193340.GM27769@electro-mechanical.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: William Thompson <wt@electro-mechanical.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 05/22/2012 02:27 PM, Mathias Bur=C3=A9n wrote:
-> Hi list,
->=20
-> I just compiled 3.4 for my little Atom box. Is there any way I can
-> confirm if the RAID6 check is using SSSE6 instructions?
->=20
+On 22/05/12 21:33, William Thompson wrote:
+> I understand that raid 10 f2 is slower on writes due to the location of the
+> 2nd copy.  My question is, if lots of writes are performed, could this
+> layout wearout the drives quicker than raid 1?
 
-It should be printed in the boot log (/var/log/dmesg or similar.)
+No, wear is not going to be significantly different.
 
-	-hpa
+You didn't say whether you are talking about hard disks (where location 
+makes a difference, but "wear" on the drive motor is insignificant to 
+the disk's expected lifetime), or flash disks (where people often worry 
+about "wear", though location is irrelevant and wear is also irrelevant 
+for most uses of all but the most cheapo disks).
 
-
---=20
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
