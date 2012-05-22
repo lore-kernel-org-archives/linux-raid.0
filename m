@@ -1,74 +1,37 @@
-From: "majianpeng" <majianpeng@gmail.com>
-Subject: [PATCH] md/raid456:When degraded raid read error, not remove disk but set badsector
-Date: Tue, 22 May 2012 16:38:55 +0800
-Message-ID: <201205221638484847156@gmail.com>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Question about commit 02e7c5b75cd4ad5176441add156389c71dab6e3a -
+ avoid including wayward devices
+Date: Tue, 22 May 2012 15:59:50 +0300
+Message-ID: <CAGRgLy6RFRQqB0VtV-=C2v+TCu4yKJEOR3i=zF_5yxTtVCHWZw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
- In function raid5_end_read_request(),when degraded raid read failed,it
-will call md_error in order to remove this disk. If so,the degraded raid
-will become failed raid and lost all data.
-Then using badsector function to avoid.
+Hi Neil,
+can you pls give some details on that commit.
 
-Signed-off-by: majianpeng <majianpeng@gmail.com>
----
- drivers/md/raid5.c |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+As far as I understand, this change attempts to protect from
+split-brain, most typical to RAID1 (but also, e.g., to 4-drive RAID6)
+, where part of a mirrored set was assembled independently. The code
+first selects "most_recent" based on event count (as usual). Then it
+applies the map check to all those devices that are not "most_recent",
+and might kick them out, if it detects split-brain.
+However, when there is such split-brain, and parts of mirrored sets
+are assembled independently, the highest event count does not really
+tell us which part of the mirrored set is "more up-to-date". This is
+because event count is not tied to any hard clock or something like
+that. So there is really no way to tell what part of the mirrored set
+will be picked up here (WRT to user activity on the separate mirrored
+sets).
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index f351422..337eb03 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1695,6 +1695,7 @@ static void raid5_end_read_request(struct bio * bi, int error)
- 	} else {
- 		const char *bdn = bdevname(rdev->bdev, b);
- 		int retry = 0;
-+		int set_bad = 0;
- 
- 		clear_bit(R5_UPTODATE, &sh->dev[i].flags);
- 		atomic_inc(&rdev->read_errors);
-@@ -1707,7 +1708,9 @@ static void raid5_end_read_request(struct bio * bi, int error)
- 				(unsigned long long)(sh->sector
- 						     + rdev->data_offset),
- 				bdn);
--		else if (conf->mddev->degraded >= conf->max_degraded)
-+		else if (conf->mddev->degraded >= conf->max_degraded) {
-+			/*Not remove disk,instead of set badblocks */
-+			set_bad = 1;
- 			printk_ratelimited(
- 				KERN_WARNING
- 				"md/raid:%s: read error not correctable "
-@@ -1716,6 +1719,7 @@ static void raid5_end_read_request(struct bio * bi, int error)
- 				(unsigned long long)(sh->sector
- 						     + rdev->data_offset),
- 				bdn);
-+		}
- 		else if (test_bit(R5_ReWrite, &sh->dev[i].flags))
- 			/* Oh, no!!! */
- 			printk_ratelimited(
-@@ -1738,7 +1742,9 @@ static void raid5_end_read_request(struct bio * bi, int error)
- 		else {
- 			clear_bit(R5_ReadError, &sh->dev[i].flags);
- 			clear_bit(R5_ReWrite, &sh->dev[i].flags);
--			md_error(conf->mddev, rdev);
-+			if (!(set_bad && rdev_set_badblocks(rdev, sh->sector,
-+					STRIPE_SECTORS, 0)))
-+				md_error(conf->mddev, rdev);
- 		}
- 	}
- 	rdev_dec_pending(rdev, conf->mddev);
--- 
-1.7.5.4
+What I am trying to say, I guess: don't you think that in such case,
+it would be better to warn the user and abort, and not pick (more or
+less) arbitrary part of the set? Or, in other words:) might you
+reconsider looking at some ideas for split-brain protection I pitched
+some time ago?:))
 
- 				
---------------
-majianpeng
-2012-05-22
-
+Thanks!
+Alex.
