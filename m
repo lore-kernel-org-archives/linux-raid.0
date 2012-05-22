@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 1/2] Check for multipath module before running multipath tests
-Date: Tue, 22 May 2012 18:55:29 +0200
-Message-ID: <1337705730-7335-2-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 2/2] Add command line argument parsing to 'test' sript
+Date: Tue, 22 May 2012 18:55:30 +0200
+Message-ID: <1337705730-7335-3-git-send-email-Jes.Sorensen@redhat.com>
 References: <1337705730-7335-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1337705730-7335-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -12,48 +12,130 @@ List-Id: linux-raid.ids
 
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Some systems do not ship the md multipath module. If not available
-simply skip any multipath tests.
+This adds more generic command line argument parsing to the test
+script. It also introduces a couple of new options, while preserving
+the old '<prefix>' and 'setup' arguments. The new options are
+--disable-multipath and --tests=<test1>,<test2>,...
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- test              |    6 ++++++
- tests/00multipath |    5 +++++
- 2 files changed, 11 insertions(+), 0 deletions(-)
+ test |   88 ++++++++++++++++++++++++++++++++++++++++++++++++-----------------
+ 1 files changed, 65 insertions(+), 23 deletions(-)
 
 diff --git a/test b/test
-index 4f0979e..0679983 100755
+index 0679983..9428b20 100755
 --- a/test
 +++ b/test
-@@ -19,6 +19,12 @@ then
-    echo >&2 "test: $mdadm isn't usable."
+@@ -8,9 +8,6 @@ then echo >&2 "test: testing can only be done as 'root'."
  fi
  
-+# Check whether to run multipath tests
-+modprobe multipath 2> /dev/null
-+if grep -s 'Personalities : .*multipath' > /dev/null /proc/mdstat ; then
-+    MULTIPATH="yes"
-+fi
-+
- # assume md0, md1, md2 exist in /dev
- md0=/dev/md0 md1=/dev/md1 md2=/dev/md2
- mdp0=/dev/md_d0
-diff --git a/tests/00multipath b/tests/00multipath
-index bc0429f..84e4d69 100644
---- a/tests/00multipath
-+++ b/tests/00multipath
-@@ -2,6 +2,11 @@
- #
- # create a multipath, and fail and stuff
+ prefix='[0-9][0-9]'
+-if [ -n "$1" ]
+-then prefix=$1
+-fi
  
-+if [ "$MULTIPATH" != "yes" ]; then
-+  echo -ne 'skipping... '
-+  exit 0
-+fi
-+
- mdadm -CR $md1 -l multipath -n2 $path0 $path1
+ dir=`pwd`
+ mdadm=$dir/mdadm
+@@ -94,10 +91,6 @@ ulimit -c unlimited
+ echo 2000 > /proc/sys/dev/raid/speed_limit_max
+ echo 0 > /sys/module/md_mod/parameters/start_ro
  
- testdev $md1 1 $mdsize12 1
+-if [ " $1" = " setup" ]
+-then trap 0 ; exit 0
+-fi
+-
+ # mdadm always adds --quiet, and we want to see any unexpected messages
+ mdadm() {
+     rm -f $targetdir/stderr
+@@ -209,23 +202,72 @@ rotest() {
+   fsck -fn $dev >&2
+ }
+ 
+-for script in tests/$prefix tests/$prefix*[^~]
+-do
+-  if [ -f "$script" ]
++do_test() {
++  _script=$1
++  if [ -f "$_script" ]
+   then
+-   rm -f $targetdir/stderr
+-   # stop all arrays, just incase some script left an array active.
+-   $mdadm -Ssq 2> /dev/null
+-   mdadm --zero $devlist 2> /dev/null
+-   mdadm --zero $devlist 2> /dev/null
+-   # source script in a subshell, so it has access to our
+-   # namespace, but cannot change it.
+-   echo -ne "$script... "
+-   if ( set -ex ; . $script )  2> $targetdir/log
+-   then echo "succeeded"
+-   else echo "FAILED - see $targetdir/log for details"
+-       exit 1
+-   fi
++    rm -f $targetdir/stderr
++    # stop all arrays, just incase some script left an array active.
++    $mdadm -Ssq 2> /dev/null
++    mdadm --zero $devlist 2> /dev/null
++    mdadm --zero $devlist 2> /dev/null
++    # source script in a subshell, so it has access to our
++    # namespace, but cannot change it.
++    echo -ne "$_script... "
++    if ( set -ex ; . $_script )  2> $targetdir/log
++    then echo "succeeded"
++    else echo "FAILED - see $targetdir/log for details"
++      exit 1
++    fi
+   fi
++}
++
++do_help() {
++  echo "Usage: "
++  echo " $0 [--tests=<test1,test2,..>] [--disable-multipath] [setup] [prefix]"
++}
++
++parse_args() {
++  for i in $*
++  do
++    case $i in
++    [0-9][0-9])
++      prefix=$i
++      ;;      
++    setup)
++      echo "mdadm test environment setup"
++      trap 0; exit 0
++      ;;
++    --tests=*)
++      TESTLIST=`expr "x$i" : 'x[^=]*=\(.*\)' | sed -e 's/,/ /g'`
++      ;;
++    --disable-multipath)
++      unset MULTIPATH
++      ;;
++    --help)
++      do_help
++      exit 0;
++      ;;
++    -*)
++      echo " $0: Unknown argument: $i"
++      do_help
++      exit 0;
++      ;;
++    esac
+ done
++}
++
++parse_args $@
++
++if [ "x$TESTLIST" != "x" ]; then
++  for script in $TESTLIST
++  do
++    do_test tests/$script
++  done
++else
++  for script in tests/$prefix tests/$prefix*[^~]
++  do
++    do_test $script
++  done
++fi
+ exit 0
 -- 
 1.7.7.6
 
