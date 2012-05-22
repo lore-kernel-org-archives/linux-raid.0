@@ -1,46 +1,35 @@
-From: <christine@yahoo.com>
-Subject: You have been chosen: (Potential Income) Recommends Advanced Sports to you
-Date: Tue, 22 May 2012 10:08:51 -0400
-Message-ID: <8216512B78AE494A9A6AA5BF27D788F2@g19.win.smewh.net>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH 0/2] Test suite enhancements
+Date: Tue, 22 May 2012 18:55:28 +0200
+Message-ID: <1337705730-7335-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From         :You have been chosen: (Potential Income)
-Email        :christine@yahoo.com
-Friend Name  :Friend
-Friend Email :linux-raid@vger.kernel.org
-comment      :
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-You have been picked to be an exclusive online profits case study.
+Hi,
 
-You will be taught personally from a $2,192,289 online marketer.
+Two fixes for the testsuite. The first is just to allow it to run on
+systems which do not include the multipath module. The second adds
+command line arguments to 'test'. In particular it makes it possible
+to specify explicit tests to run. I believe I managed to preserve the
+behavior for old style arguments.
 
-This is the same EXACT system.
-
->> http://www.new-imwithjamie.com/?code=4fbb5a42f3c15 <<
-
-Never before has this been done.
-
->>> You get a 1 on 1 session with a $2,192,289 marketer!
-
-If you want to be one of the lucky 30 students 
-
-of master Jamie.. be one of 30 lucky actual case studies 
-
-right now by signing up here: 
->> http://www.new-imwithjamie.com/?code=4fbb5a42f3c15 <<
+Cheers,
+Jes
 
 
-Christine Sarrosa
+Jes Sorensen (2):
+  Check for multipath module before running multipath tests
+  Add command line argument parsing to 'test' sript
 
-The sender of this email receives compensation
-when products are purchased. Results will widely vary.
-This is an advertisement.
+ test              |   94 ++++++++++++++++++++++++++++++++++++++++-------------
+ tests/00multipath |    5 +++
+ 2 files changed, 76 insertions(+), 23 deletions(-)
 
+-- 
+1.7.7.6
 
