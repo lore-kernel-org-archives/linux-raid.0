@@ -1,46 +1,37 @@
-From: <christine@yahoo.com>
-Subject: You have been chosen: (Potential Income) Recommends Advanced Sports to you
-Date: Wed, 23 May 2012 04:22:25 -0400
-Message-ID: <A312E9333A4F453692E4F20DC7F0A8F0@g19.win.smewh.net>
+From: William Thompson <wt@electro-mechanical.com>
+Subject: Re: raid 10f2 vs 1 on 2 drives
+Date: Wed, 23 May 2012 07:25:46 -0400
+Message-ID: <20120523112545.GN27769@electro-mechanical.com>
+References: <20120522193340.GM27769@electro-mechanical.com>
+ <4FBC14DC.8070007@hesbynett.no>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Class: urn:content-classes:message
+Content-Disposition: inline
+In-Reply-To: <4FBC14DC.8070007@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Brown <david.brown@hesbynett.no>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From         :You have been chosen: (Potential Income)
-Email        :christine@yahoo.com
-Friend Name  :Friend
-Friend Email :linux-raid@vger.kernel.org
-comment      :
+On Wed, May 23, 2012 at 12:36:12AM +0200, David Brown wrote:
+> On 22/05/12 21:33, William Thompson wrote:
+> >I understand that raid 10 f2 is slower on writes due to the location of the
+> >2nd copy.  My question is, if lots of writes are performed, could this
+> >layout wearout the drives quicker than raid 1?
+> 
+> No, wear is not going to be significantly different.
+> 
+> You didn't say whether you are talking about hard disks (where
 
-You have been picked to be an exclusive online profits case study.
+Sorry about that (Chief).  Yes, I was refering to hard drives.
 
-You will be taught personally from a $2,192,289 online marketer.
+> location makes a difference, but "wear" on the drive motor is
+> insignificant to the disk's expected lifetime), or flash disks
 
-This is the same EXACT system.
+I was thinking about how much more head movement there would be to write the
+2nd copy of the data.
 
->> http://www.new-imwithjamie.com/?code=4fbb5a42f3c15 <<
-
-Never before has this been done.
-
->>> You get a 1 on 1 session with a $2,192,289 marketer!
-
-If you want to be one of the lucky 30 students 
-
-of master Jamie.. be one of 30 lucky actual case studies 
-
-right now by signing up here: 
->> http://www.new-imwithjamie.com/?code=4fbb5a42f3c15 <<
-
-
-Christine Sarrosa
-
-The sender of this email receives compensation
-when products are purchased. Results will widely vary.
-This is an advertisement.
-
-
+> (where people often worry about "wear", though location is
+> irrelevant and wear is also irrelevant for most uses of all but the
+> most cheapo disks).
