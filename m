@@ -1,99 +1,120 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [patch 1/4] raid1: directly dispatch write request if no bitmap
-Date: Thu, 24 May 2012 11:31:26 +0800
-Message-ID: <20120524033126.GA1172@kernel.org>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [patch 2/4] raid1: percpu dispatch for write request if bitmap
+ supported
+Date: Thu, 24 May 2012 13:34:02 +1000
+Message-ID: <20120524133402.0f217e71@notabene.brown>
 References: <20120523072619.670179001@kernel.org>
- <20120523072829.967587288@kernel.org>
- <20120524122112.05b4d6e3@notabene.brown>
- <20120524025425.GA1190@kernel.org>
- <20120524130912.4076ea1a@notabene.brown>
+	<20120523072838.580242059@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/fKqstIenbucSfaP8qcK4npl"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120524130912.4076ea1a@notabene.brown>
+In-Reply-To: <20120523072838.580242059@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, shli@fusionio.com
 List-Id: linux-raid.ids
 
-On Thu, May 24, 2012 at 01:09:12PM +1000, NeilBrown wrote:
-> On Thu, 24 May 2012 10:54:25 +0800 Shaohua Li <shli@kernel.org> wrote:
-> 
-> > On Thu, May 24, 2012 at 12:21:12PM +1000, NeilBrown wrote:
-> > > On Wed, 23 May 2012 15:26:20 +0800 Shaohua Li <shli@kernel.org> wrote:
-> > > 
-> > > > In raid1, all write requests are dispatched in raid1d thread. In fast storage,
-> > > > the raid1d thread is a bottleneck, because it dispatches request too slow. Also
-> > > > raid1d thread migrates freely, which makes request completion cpu not match
-> > > > with submission cpu even driver/block layer has such capability. This will
-> > > > cause bad cache issue.
-> > > > 
-> > > > If no bitmap, there is no point to queue bio to a thread and dispatch it in the
-> > > > thread. Directly dispatching bio doesn't impact correctness and removes above
-> > > > bottleneck.
-> > > > 
-> > > > Multiple threads dispatch requests could potentially reduce request merge and
-> > > > increase lock contention. For slow stroage, we just worry about request merge.
-> > > > Caller of .make_request should already have correct block plug set, which will
-> > > > take care of request merge and locking just like accessing raw device, so we
-> > > > don't need worry about this too much.
-> > > > 
-> > > > In a 4k randwrite test with a 2 disks setup, below patch can provide 20% ~ 50%
-> > > > performance improvements depending on numa binding.
-> > > > 
-> > > > Signed-off-by: Shaohua Li <shli@fusionio.com>
-> > > > ---
-> > > >  drivers/md/raid1.c |   11 +++++++----
-> > > >  1 file changed, 7 insertions(+), 4 deletions(-)
-> > > > 
-> > > > Index: linux/drivers/md/raid1.c
-> > > > ===================================================================
-> > > > --- linux.orig/drivers/md/raid1.c	2012-05-22 13:50:26.989820654 +0800
-> > > > +++ linux/drivers/md/raid1.c	2012-05-22 13:56:46.117054559 +0800
-> > > > @@ -1187,10 +1187,13 @@ read_again:
-> > > >  		mbio->bi_private = r1_bio;
-> > > >  
-> > > >  		atomic_inc(&r1_bio->remaining);
-> > > > -		spin_lock_irqsave(&conf->device_lock, flags);
-> > > > -		bio_list_add(&conf->pending_bio_list, mbio);
-> > > > -		conf->pending_count++;
-> > > > -		spin_unlock_irqrestore(&conf->device_lock, flags);
-> > > > +		if (bitmap) {
-> > > > +			spin_lock_irqsave(&conf->device_lock, flags);
-> > > > +			bio_list_add(&conf->pending_bio_list, mbio);
-> > > > +			conf->pending_count++;
-> > > > +			spin_unlock_irqrestore(&conf->device_lock, flags);
-> > > > +		} else
-> > > > +			generic_make_request(mbio);
-> > > >  	}
-> > > >  	/* Mustn't call r1_bio_write_done before this next test,
-> > > >  	 * as it could result in the bio being freed.
-> > > 
-> > > This looks like it should be 'obviously correct' but unfortunately it isn't.
-> > > 
-> > > If this raid1 is beneath a dm device (e.g. LVM), then generic_make_request
-> > > will queue the request internally and not actually start it.
-> > > In particular this means that the cloned bio has no chance of being released
-> > > before the next clone_bio call which is made on the next time around the loop.
-> > > 
-> > > This can lead to a deadlock as the clone_bio() might be waiting for that
-> > > first cloned bio to be released (if memory is really tight).
-> > > 
-> > > i.e. when allocating multiple bios from a mempool, we need to arrange for
-> > > them to be submitted by a separate thread.
-> > 
-> > If there isn't block plug, generic_make_request will dispatch the request
-> > directly.
-> 
-> Not necessarily.  It might queue it:
-> 	if (current->bio_list) {
-> 		bio_list_add(current->bio_list, bio);
-> 		return;
-> 	}
+--Sig_/fKqstIenbucSfaP8qcK4npl
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Ah, yes. Looks we can workaround it to increase bioset entry number to
-raid_disks*2. There isn't too much memory wasted with it.
+On Wed, 23 May 2012 15:26:21 +0800 Shaohua Li <shli@kernel.org> wrote:
+
+> In raid1, all write requests are dispatched in raid1d thread. In fast sto=
+rage,
+> the raid1d thread is a bottleneck, because it dispatches request too slow=
+. Also
+> raid1d thread migrates freely, which makes request completion cpu not mat=
+ch
+> with submission cpu even driver/block layer has such capability. This will
+> cause bad cache issue.
+>=20
+> If bitmap support is enabled, write requests can only be dispatched after=
+ dirty
+> bitmap is flushed out. After bitmap is flushed, how write requests are
+> dispatched doesn't impact correctness. A natural idea is to distribute re=
+quest
+> dispatch to several threads. With this patch, requests are added to a per=
+cpu
+> list first. After bitmap is flushed, then the percpu list requests will
+> dispatched in a workqueue. In this way, above bottleneck is removed.
+>=20
+> In a 4k randwrite test with a 2 disks setup, below patch can provide 10% =
+~ 50%
+> performance improvements depending on numa binding.
+
+Those numbers are quite impressive so there is certainly room for improveme=
+nt
+here.  I'm not sure that I'm entirely comfortable with the approach though.
+
+Passing the request to a per-cpu thread does make sense, but a generic
+per-cpu thread feels dangerous as we don't know what else might be queued to
+that thread and because of the potential for deadlocks between memory
+allocation and generic_make_request (as mentioned in previous email) I find
+it hard to convince myself that this approach is entirely safe.
+
+I wonder if we might take a very different approach and try to do everything
+in the one process.  i.e. don't hand tasks off to other threads at all - at
+least in the common case.
+
+So we could change plugger_unplug (in md.c) so that:
+
+ - if current->bio_list is NULL, (meaning all requests have been submitted
+   and there is no risk of deadlock) we call bitmap_unplug and then submit
+   all the queued writes.
+ - if current->bio_list is not NULL, then we just wakeup the md thread to
+   do the work.
+
+In the common case bio_list should be NULL (I think) and everything is done
+in the one process.  It is only when memory is tight and we reschedule while
+waiting for memory that the md thread will be called on and hopefully slower
+performance then won't be so noticeable.
+
+We probably want separate queues of pending writes for each CPU (or each
+thread) so that each "plugger_unplug" only submits the writes that were
+queued by that process - so that if multiple threads are submitting writes =
+at
+the same time, they don't end up handling each other's requests.
+
+This might end up flushing the bitmap slightly more often - the current code
+allocates one "md_plug_cb" for each different thread that is concurrently
+writing to a given md device, and don't trigger the flush until all of them
+unplug.  My proposal above would trigger it when any thread triggers the
+final unplug.  I wonder if that makes any difference in practice.
+
+Anyway, could you explore the possibility of submitting the requests in
+plugger_unplug when current->bio_list is NULL?
+Possibly you could:
+  get mddev_check_plugged to return the md_plug_cb
+  link all the md_plug_cb's for one mddev together
+  store the list of queued write requests in that md_plug_cb
+
+Make sense?
 
 Thanks,
-Shaohua
+NeilBrown
+
+--Sig_/fKqstIenbucSfaP8qcK4npl
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT72sKjnsnt1WYoG5AQIUhRAAs06PUuFBs/P5uo49YS364Rbk6lZMy3e7
+Pzh+VGpWT7Z0xQpEgRjKAIvvaLEEm9gRiA13xGlSBpiSFeZzTKN8LwOJBe9BQN70
+yhgI6QpsWBw/FPXkwpMmD7/C5GeI+um20B7bz+l5qkFK8g9vo0NBx86QFseZuQx7
+QmaY2JYZdo8564TfhTmzMc3sAbSTisQ3OUKY5aK5fH0YxCkToLwS0n5rNSG+rm5u
+qIEaUlEqf+oHar5qLl/Z2+O6erwuqh+GuymLNdRj8JDuuEklHcCtxR52GpUuk6Yi
+SCHyawMilNE0pfqr8m59CZ4m4HcfBMeBDehMI7X/0FOZaJVlZLOCSzduOCotdl4z
+bylJ6Z6GkyAkM0SqGvLFBh6jzIecXQbWQyWvps/OKqh1i78vNx3mvYQ4heButVzH
+HmF6+yiwR+GfF7oRlhWgV6l7DX/nL1sVL360kOeAxGufbEw2+lMkz3KufAgL1dyD
+5oXjtzrE86K2BwhtUkZhjswEeTQVC0rhvK/CeBK/pVrzpniIf87IZhIdak4mdC3h
+x6DkbV6afomf92qOzn55VD+UbUeeJPjeGgtHFq3bvH+eeLBnID7DbFaSn9KpSSbv
+omx3N6wxDmVrMV9PQc7zydadVmP+jqQJEjRkCvngVVBRmeolkvAGOVeeqBp2aBU+
+5pfxx5DxC3I=
+=yoYL
+-----END PGP SIGNATURE-----
+
+--Sig_/fKqstIenbucSfaP8qcK4npl--
