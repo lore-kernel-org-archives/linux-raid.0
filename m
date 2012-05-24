@@ -1,53 +1,43 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: md RAID with enterprise-class SATA or SAS drives
-Date: Thu, 24 May 2012 01:16:52 -0500
-Message-ID: <4FBDD254.8070505@hardwarefreak.com>
-References: <4FAAE8F1.8000600@pocock.com.au> <CALFpzo5ObdwFATdT4e20znnxzU5hX9SVSfqJcdqOXM1FEYJQuw@mail.gmail.com> <4FABC7C6.4030107@turmel.org> <4FAC2FF2.5060305@hardwarefreak.com> <4FAC40BC.1060300@hesbynett.no> <CABYL=ToORULrdhBVQk0K8zQqFYkOomY-wgG7PpnJnzP9u7iBnA@mail.gmail.com> <4FACBB68.2080304@hesbynett.no> <4FACCAC8.4020206@pocock.com.au> <4FAD9283.7020809@hardwarefreak.com> <CAGqmV7oJg8vwKPJEYJhPANzaN-xxVW6Lw2gLTEKmMfG=pqCHuA@mail.gmail.com> <4FBA8EA9.40203@hardwarefreak.com> <20120522093404.3ffaae42@notabene.brown> <4FBB33D6.4010101@hardwarefreak.com> <4FBB406B.7040904@hesbynett.no> <4FBCE2C2.6030909@hardwarefreak.com> <4FBD3F49.5060005@hesbynett.no> <4FBD76F1.80400@hardwarefreak.com> <4FBD8C4E.5090507@hardwarefreak.com> <20120524120819.08ffa3b0@notabene.brown>
-Reply-To: stan@hardwarefreak.com
+From: <kimtan@gmail.com>
+Subject: Activate your free commission shop now Recommends Advanced Sports to you
+Date: Thu, 24 May 2012 08:00:05 -0400
+Message-ID: <5E63313B0F204ED59E2C6DE5936DB645@g19.win.smewh.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120524120819.08ffa3b0@notabene.brown>
+Content-Class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: David Brown <david.brown@hesbynett.no>, CoolCold <coolthecold@gmail.com>, Daniel Pocock <daniel@pocock.com.au>, Roberto Spadim <roberto@spadim.com.br>, Phil Turmel <philip@turmel.org>, Marcus Sorensen <shadowsor@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 5/23/2012 9:08 PM, NeilBrown wrote:
-> On Wed, 23 May 2012 20:18:06 -0500 Stan Hoeppner <stan@hardwarefreak.com>
-> wrote:
-> 
->> On 5/23/2012 6:46 PM, Stan Hoeppner wrote:
->>> On 5/23/2012 2:49 PM, David Brown wrote:
->>>
->>>> It looks like Shaohua Li has done some testing, found that there is a
->>>> slow-down even with just 2 or 4 disks, and has written patches to fix it
->>>> (for raid1 and raid10 so far), which is very nice.
->>>
->>> Ahh, thanks David.  I wasn't aware of Shaohua Li's
->>> work on this.  Got a link to his documentation and patches, or article,
->>> by chance?
->>
->> My Google searches only turn up Shaohua Li's TRIM patches.  I don't
->> believe the issue we're discussing has anything to do with TRIM, though
->> I can't be 100% sure as Mark didn't provide much detail of his thread
->> ceiling problem, and I don't have a suitable system to do proper testing.
->>
->> Again it would be nice to have a link to Shaohua Li's work to which you
->> refer to determine if it's applicable to this issue.
->>
-> 
-> It's probably in your INBOX.
-> 
-> http://www.spinics.net/lists/raid/msg38899.html
-> 
-> NeilBrown
+From         :Activate your free commission shop now
+Email        :kimtan@gmail.com
+Friend Name  :Friend
+Friend Email :linux-raid@vger.kernel.org
+comment      :
 
-Indeed they are.  Well, in a sort folder actually.  I still shouldn't
-have missed them.  Please feel free to plant virtual palms to my
-forehead if you like. :)
+Hey,
 
--- 
-Stan
+Your commission shop is ready.
+Activate your free commission shop now:
+
+==> http://bit.ly/KUXNMS
+
+In a few minutes, your commission shop will be ready, 
+attracting buyers from all around the world.
+
+And each shop is designed to suck commissions and sales 
+for you automatically. 
+
+This is the first time this revolutionary technique is applied.
+
+So don't delay. Activate your commission shop now:
+
+==> http://bit.ly/KUXNMS
+
+Sincerely,
+Kim Tan
+
+
 
