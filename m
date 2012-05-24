@@ -1,126 +1,70 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] lib/raid6: fix sparse warnings in recovery functions
-Date: Thu, 24 May 2012 15:15:26 +1000
-Message-ID: <20120524151526.1f9b5f85@notabene.brown>
-References: <1337835258-26903-1-git-send-email-james.t.kukunas@linux.intel.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [patch 2/4] raid1: percpu dispatch for write request if bitmap
+ supported
+Date: Thu, 24 May 2012 13:17:09 +0800
+Message-ID: <20120524051709.GA1191@kernel.org>
+References: <20120523072619.670179001@kernel.org>
+ <20120523072838.580242059@kernel.org>
+ <20120524133402.0f217e71@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/YP0sC4ensVKxUShOhiubISZ"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1337835258-26903-1-git-send-email-james.t.kukunas@linux.intel.com>
+Content-Disposition: inline
+In-Reply-To: <20120524133402.0f217e71@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jim Kukunas <james.t.kukunas@linux.intel.com>
-Cc: linux-raid@vger.kernel.org, fengguang.wu@intel.com
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, shli@fusionio.com
 List-Id: linux-raid.ids
 
---Sig_/YP0sC4ensVKxUShOhiubISZ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Thu, May 24, 2012 at 01:34:02PM +1000, NeilBrown wrote:
+> On Wed, 23 May 2012 15:26:21 +0800 Shaohua Li <shli@kernel.org> wrote:
+> 
+> > In raid1, all write requests are dispatched in raid1d thread. In fast storage,
+> > the raid1d thread is a bottleneck, because it dispatches request too slow. Also
+> > raid1d thread migrates freely, which makes request completion cpu not match
+> > with submission cpu even driver/block layer has such capability. This will
+> > cause bad cache issue.
+> > 
+> > If bitmap support is enabled, write requests can only be dispatched after dirty
+> > bitmap is flushed out. After bitmap is flushed, how write requests are
+> > dispatched doesn't impact correctness. A natural idea is to distribute request
+> > dispatch to several threads. With this patch, requests are added to a percpu
+> > list first. After bitmap is flushed, then the percpu list requests will
+> > dispatched in a workqueue. In this way, above bottleneck is removed.
+> > 
+> > In a 4k randwrite test with a 2 disks setup, below patch can provide 10% ~ 50%
+> > performance improvements depending on numa binding.
+> 
+> Those numbers are quite impressive so there is certainly room for improvement
+> here.  I'm not sure that I'm entirely comfortable with the approach though.
+> 
+> Passing the request to a per-cpu thread does make sense, but a generic
+> per-cpu thread feels dangerous as we don't know what else might be queued to
+> that thread and because of the potential for deadlocks between memory
+> allocation and generic_make_request (as mentioned in previous email) I find
+> it hard to convince myself that this approach is entirely safe.
 
-On Wed, 23 May 2012 21:54:18 -0700 Jim Kukunas
-<james.t.kukunas@linux.intel.com> wrote:
+No problem, we can use a separate workqueue.
 
-> Make the recovery functions static to fix the following sparse warnings:
->=20
-> lib/raid6/recov.c:25:6: warning: symbol 'raid6_2data_recov_intx1' was
-> not declared. Should it be static?
-> lib/raid6/recov.c:69:6: warning: symbol 'raid6_datap_recov_intx1' was
-> not declared. Should it be static?
-> lib/raid6/recov_ssse3.c:22:6: warning: symbol 'raid6_2data_recov_ssse3'
-> was not declared. Should it be static?
-> lib/raid6/recov_ssse3.c:197:6: warning: symbol 'raid6_datap_recov_ssse3'
-> was not declared. Should it be static?
->=20
-> Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-> Signed-off-by: Jim Kukunas <james.t.kukunas@linux.intel.com>
-> ---
->  lib/raid6/recov.c       |    7 ++++---
->  lib/raid6/recov_ssse3.c |    7 ++++---
->  2 files changed, 8 insertions(+), 6 deletions(-)
->=20
-> diff --git a/lib/raid6/recov.c b/lib/raid6/recov.c
-> index 1805a5c..a95bccb 100644
-> --- a/lib/raid6/recov.c
-> +++ b/lib/raid6/recov.c
-> @@ -22,8 +22,8 @@
->  #include <linux/raid/pq.h>
-> =20
->  /* Recover two failed data blocks. */
-> -void raid6_2data_recov_intx1(int disks, size_t bytes, int faila, int fai=
-lb,
-> -		       void **ptrs)
-> +static void raid6_2data_recov_intx1(int disks, size_t bytes, int faila,
-> +		int failb, void **ptrs)
->  {
->  	u8 *p, *q, *dp, *dq;
->  	u8 px, qx, db;
-> @@ -66,7 +66,8 @@ void raid6_2data_recov_intx1(int disks, size_t bytes, i=
-nt faila, int failb,
->  }
-> =20
->  /* Recover failure of one data block plus the P block */
-> -void raid6_datap_recov_intx1(int disks, size_t bytes, int faila, void **=
-ptrs)
-> +static void raid6_datap_recov_intx1(int disks, size_t bytes, int faila,
-> +		void **ptrs)
->  {
->  	u8 *p, *q, *dq;
->  	const u8 *qmul;		/* Q multiplier table */
-> diff --git a/lib/raid6/recov_ssse3.c b/lib/raid6/recov_ssse3.c
-> index b77266f..ecb0289 100644
-> --- a/lib/raid6/recov_ssse3.c
-> +++ b/lib/raid6/recov_ssse3.c
-> @@ -19,8 +19,8 @@ static int raid6_has_ssse3(void)
->  		boot_cpu_has(X86_FEATURE_SSSE3);
->  }
-> =20
-> -void raid6_2data_recov_ssse3(int disks, size_t bytes, int faila, int fai=
-lb,
-> -		       void **ptrs)
-> +static void raid6_2data_recov_ssse3(int disks, size_t bytes, int faila,
-> +		int failb, void **ptrs)
->  {
->  	u8 *p, *q, *dp, *dq;
->  	const u8 *pbmul;	/* P multiplier table for B data */
-> @@ -194,7 +194,8 @@ void raid6_2data_recov_ssse3(int disks, size_t bytes,=
- int faila, int failb,
->  }
-> =20
-> =20
-> -void raid6_datap_recov_ssse3(int disks, size_t bytes, int faila, void **=
-ptrs)
-> +static void raid6_datap_recov_ssse3(int disks, size_t bytes, int faila,
-> +		void **ptrs)
->  {
->  	u8 *p, *q, *dq;
->  	const u8 *qmul;		/* Q multiplier table */
+> I wonder if we might take a very different approach and try to do everything
+> in the one process.  i.e. don't hand tasks off to other threads at all - at
+> least in the common case. 
+> So we could change plugger_unplug (in md.c) so that:
+> 
+>  - if current->bio_list is NULL, (meaning all requests have been submitted
+>    and there is no risk of deadlock) we call bitmap_unplug and then submit
+>    all the queued writes.
+>  - if current->bio_list is not NULL, then we just wakeup the md thread to
+>    do the work.
 
+The current->bio_list check does make sense. I'm going to do the check for the
+1 and 3 patches.
 
-Applied, thanks.
+But I believe we can't call generic_make_request in unplug. For example,
+schedule()->unplug->generic_make_request->get_request_wait()->schedule(). At
+least this will cause some request not dispatch. And last time I did similar
+experiment for raid0 (request is added to a per-disk plug_cb list, not directly
+dispatch) to reduce lock contention, I found nasty oops.
 
-NeilBrown
-
-
---Sig_/YP0sC4ensVKxUShOhiubISZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT73D7jnsnt1WYoG5AQJkNA/9HPoLi6se6L4sAAjcS00RXAQ5jPa7dG8N
-a/bm94wVMeaH037U5ExbzXFsN1WbVu/i5i31vE4J4bB8cCCCMXStNAdWiXDHHZi8
-prZvEhIUyijFCfP+B8u+D8XDBRep4JKjfOlWvz+VwjwTWadlXJT7Bev1YmRCrH+i
-34ELA4zMSLXvPoJdr/AsPlxtMt0+Zqb1ln049QtV+/KzBunmhQ/Zmdd6Mum3HFEq
-8LrE+GsOSpq/OveEiuUZ8fq/twIT6lyO0zkwlXJiwfUTeipRkCeIncGcW9pUExm/
-i3P/TOyQu2IsB47Mf2GGjsmlflvvL8uOIOhk2q6Z7DL2gB+pAputbFeqS5EaBfGM
-1PtojXJVtrPuPzO3wN7jioPo0eexqkWFSTSwBSlTNjm+HbbHbT5AMOg2KePEUcQd
-EJqjOLx7hlmXEicjnteWqnEDxNWPS0uV+SsiNX9FNpzg9Ewqh157+o6+HuqCn/My
-C4NdyzM1EZoBe0IMvcwHUv+wNXPcATW8re3FN/u7r4oSuVNevlkzyLPdVOwXHh36
-ppPR0Id3nnsCyhMAciF+pbGBkv3i+IxIZn6lEtNnMijWULSJ1+AbTGF/XrVkV502
-XYLK40RrVDjqdx35p3zSmj0jGjsCGJzNvBozmUjOouaOxSNhIykTfVR4Obq8+WKz
-KsNyBfYDjTU=
-=95Zp
------END PGP SIGNATURE-----
-
---Sig_/YP0sC4ensVKxUShOhiubISZ--
+Thanks,
+Shaohua
