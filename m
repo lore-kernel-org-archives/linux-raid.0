@@ -1,139 +1,121 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: md RAID with enterprise-class SATA or SAS drives
-Date: Thu, 24 May 2012 12:10:20 +1000
-Message-ID: <20120524121020.3349c402@notabene.brown>
-References: <4FAAE8F1.8000600@pocock.com.au>
-	<CALFpzo5ObdwFATdT4e20znnxzU5hX9SVSfqJcdqOXM1FEYJQuw@mail.gmail.com>
-	<4FABC7C6.4030107@turmel.org>
-	<4FAC2FF2.5060305@hardwarefreak.com>
-	<4FAC40BC.1060300@hesbynett.no>
-	<CABYL=ToORULrdhBVQk0K8zQqFYkOomY-wgG7PpnJnzP9u7iBnA@mail.gmail.com>
-	<4FACBB68.2080304@hesbynett.no>
-	<4FACCAC8.4020206@pocock.com.au>
-	<4FAD9283.7020809@hardwarefreak.com>
-	<CAGqmV7oJg8vwKPJEYJhPANzaN-xxVW6Lw2gLTEKmMfG=pqCHuA@mail.gmail.com>
-	<4FBA8EA9.40203@hardwarefreak.com>
-	<20120522093404.3ffaae42@notabene.brown>
-	<4FBB33D6.4010101@hardwarefreak.com>
+Subject: Re: [patch 1/4] raid1: directly dispatch write request if no bitmap
+Date: Thu, 24 May 2012 12:21:12 +1000
+Message-ID: <20120524122112.05b4d6e3@notabene.brown>
+References: <20120523072619.670179001@kernel.org>
+	<20120523072829.967587288@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ibdj0OiYejnOOwnfuWxAugs"; protocol="application/pgp-signature"
+ boundary="Sig_/Su4hAPa/alD=fS60uNC2E./"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FBB33D6.4010101@hardwarefreak.com>
+In-Reply-To: <20120523072829.967587288@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: CoolCold <coolthecold@gmail.com>, Daniel Pocock <daniel@pocock.com.au>, David Brown <david.brown@hesbynett.no>, Roberto Spadim <roberto@spadim.com.br>, Phil Turmel <philip@turmel.org>, Marcus Sorensen <shadowsor@gmail.com>, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, shli@fusionio.com
 List-Id: linux-raid.ids
 
---Sig_/ibdj0OiYejnOOwnfuWxAugs
+--Sig_/Su4hAPa/alD=fS60uNC2E./
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 22 May 2012 01:36:06 -0500 Stan Hoeppner <stan@hardwarefreak.com>
-wrote:
+On Wed, 23 May 2012 15:26:20 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-> On 5/21/2012 6:34 PM, NeilBrown wrote:
-> > On Mon, 21 May 2012 13:51:21 -0500 Stan Hoeppner <stan@hardwarefreak.co=
-m>
-> > wrote:
-> >=20
-> >> On 5/21/2012 10:20 AM, CoolCold wrote:
-> >>> On Sat, May 12, 2012 at 2:28 AM, Stan Hoeppner <stan@hardwarefreak.co=
-m> wrote:
-> >>>> On 5/11/2012 3:16 AM, Daniel Pocock wrote:
-> >>>>
-> >>> [snip]
-> >>>> That's the one scenario where I abhor using md raid, as I mentioned.=
-  At
-> >>>> least, a boot raid 1 pair.  Using layered md raid 1 + 0, or 1 + line=
-ar
-> >>>> is a great solution for many workloads.  Ask me why I say raid 1 + 0
-> >>>> instead of raid 10.
-> >>> So, I'm asking - why?
-> >>
-> >> Neil pointed out quite some time ago that the md RAID 1/5/6/10 code ru=
-ns
-> >> as a single kernel thread.  Thus when running heavy IO workloads across
-> >> many rust disks or a few SSDs, the md thread becomes CPU bound, as it
-> >> can only execute on a single core, just as with any other single threa=
-d.
-> >=20
-> > This is not the complete truth.
+> In raid1, all write requests are dispatched in raid1d thread. In fast sto=
+rage,
+> the raid1d thread is a bottleneck, because it dispatches request too slow=
+. Also
+> raid1d thread migrates freely, which makes request completion cpu not mat=
+ch
+> with submission cpu even driver/block layer has such capability. This will
+> cause bad cache issue.
 >=20
-> Yes, I should have stipulated only writes are limited to a single thread.
+> If no bitmap, there is no point to queue bio to a thread and dispatch it =
+in the
+> thread. Directly dispatching bio doesn't impact correctness and removes a=
+bove
+> bottleneck.
 >=20
-> > For RAID1 and RAID10, successful IO requests do not involved the kernel
-> > thread, so the fact that there is only one should be irrelevant.
-> > Failed requests are retried using the thread and it is also involved it
-> > resync/recovery so those processes may be limited by the single thread.
-> >=20
-> > RAID5/6 does not use the thread for read requests on a non-degraded arr=
-ay.
-> > However all write requests go through the single thread so there could =
-be
-> > issues there.
+> Multiple threads dispatch requests could potentially reduce request merge=
+ and
+> increase lock contention. For slow stroage, we just worry about request m=
+erge.
+> Caller of .make_request should already have correct block plug set, which=
+ will
+> take care of request merge and locking just like accessing raw device, so=
+ we
+> don't need worry about this too much.
 >=20
-> Thanks for clarifying this.  In your previous response to this issue
-> (quoted and linked below) you included RAID 1/10 with RAID 5/6 WRT
-> writes going through a single thread.
+> In a 4k randwrite test with a 2 disks setup, below patch can provide 20% =
+~ 50%
+> performance improvements depending on numa binding.
 >=20
-> > Have you  actually measured md/raid10 being slower than raid0 over raid=
-1?
+> Signed-off-by: Shaohua Li <shli@fusionio.com>
+> ---
+>  drivers/md/raid1.c |   11 +++++++----
+>  1 file changed, 7 insertions(+), 4 deletions(-)
 >=20
-> I personally have not, as I don't have access to the storage hardware
-> necessary to sink a sufficiently large write stream to peak a core with
-> the md thread.
->=20
-> > I have a vague memory from when this came up before that there was some=
- extra
-> > issue that I was missing, but I cannot recall it just now....
->=20
-> We're recalling the same thread, which was many months ago.  Here's your
-> post:  http://marc.info/?l=3Dlinux-raid&m=3D132616899005148&w=3D2
->=20
-> And here's the relevant section upon which I was basing my recent
-> statements:
->=20
-> "I think you must be misremembering.  Neither RAID0 or Linear have any
-> threads involved.  They just redirect the request to the appropriate
-> devices.  Multiple threads can submit multiple requests down through
-> RAID0 and Linear concurrently.
->=20
-> RAID1, RAID10, and RAID5/6 are different.  For reads they normally are
-> have no contention with other requests, but for writes things do get
-> single-threaded at some point."
->=20
+> Index: linux/drivers/md/raid1.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux.orig/drivers/md/raid1.c	2012-05-22 13:50:26.989820654 +0800
+> +++ linux/drivers/md/raid1.c	2012-05-22 13:56:46.117054559 +0800
+> @@ -1187,10 +1187,13 @@ read_again:
+>  		mbio->bi_private =3D r1_bio;
+> =20
+>  		atomic_inc(&r1_bio->remaining);
+> -		spin_lock_irqsave(&conf->device_lock, flags);
+> -		bio_list_add(&conf->pending_bio_list, mbio);
+> -		conf->pending_count++;
+> -		spin_unlock_irqrestore(&conf->device_lock, flags);
+> +		if (bitmap) {
+> +			spin_lock_irqsave(&conf->device_lock, flags);
+> +			bio_list_add(&conf->pending_bio_list, mbio);
+> +			conf->pending_count++;
+> +			spin_unlock_irqrestore(&conf->device_lock, flags);
+> +		} else
+> +			generic_make_request(mbio);
+>  	}
+>  	/* Mustn't call r1_bio_write_done before this next test,
+>  	 * as it could result in the bio being freed.
 
-That's right - I keep forgetting about the single-threading caused by needi=
-ng
-to sync with bitmap updates.
+This looks like it should be 'obviously correct' but unfortunately it isn't.
 
-So reads a fully parallel.  Writes are - for now - serialised to a single
-processor for handling.
+If this raid1 is beneath a dm device (e.g. LVM), then generic_make_request
+will queue the request internally and not actually start it.
+In particular this means that the cloned bio has no chance of being released
+before the next clone_bio call which is made on the next time around the lo=
+op.
+
+This can lead to a deadlock as the clone_bio() might be waiting for that
+first cloned bio to be released (if memory is really tight).
+
+i.e. when allocating multiple bios from a mempool, we need to arrange for
+them to be submitted by a separate thread.
 
 Thanks,
 NeilBrown
 
---Sig_/ibdj0OiYejnOOwnfuWxAugs
+--Sig_/Su4hAPa/alD=fS60uNC2E./
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT72YjDnsnt1WYoG5AQJcxw//Te6RhH1bbu3emKz7SnMEbJdGCyjk1jtW
-TVgjfyQaNVK0QRIYK3+v+FhV0STtdKbw8O7VE6a0oZnB1HVgttueHlVibHB/r2AS
-vDckcr3FV7eX/W/t1OCAxsJZ+osdG6alCG+MwxvgH2VhmeW+10+nBGuzuP4HSBrD
-Gz4PIunqVEsX9O7KFY9VQLtoWylusaaTfuimmW4Sl8I8075dFKZYk0+5KgVD+1tF
-ezd98CsQtcM7cmKHrrOxTK3WLjgrxq9ZTyK2w/7IB+kRNP2l5DgrFz8k4wNe4+bf
-0u1BLDeAn+w5k5OT4j7WvBJHBRfA20Lg2HajbRIWRRVnXMInVJNMXX3q8vekvppE
-8S1/edyTU8gvte5Wvu2RDlFSdNyKS/QqoIDZH4BpdblfBFbE9u+GuRxsYzxaZcQ5
-6rqXF6Y8dVR5mfrConRSCj0nl36TTvFI6iDxw8iApRwF31CD8LJAaT1TbyUcp3CA
-wHMI/kZvAtfLxwx/ZfvSMzYi31oeWpNBlZVjOC0TiTkFI6+0kDg12PHkWqppvscp
-EFbXOPkuOEh/fddiJybPidltvOSXc2AuUnzT5jbz2xe+kviJUTwK/URRfwPcHkio
-ZOS8snj3WND6xlBCZFBOCrGjScFLDsDjiqk8cqHOTB6i90Zn/KYvbqtIkvjEYd24
-CYV+gQXy2qM=
-=M9dK
+iQIVAwUBT72bGDnsnt1WYoG5AQJ7ixAAlxcMbDxsy7Gh3zITFU7Tq4Gr8I27SNgS
+ZV3et/a3/+nHZ7Pa9wUZtmCngo/WtUFzpGQWLIOrTSPQ/9XhzjFNcLvYD7eH46UF
+wxlXspnoru7z4hRvmzF+R6XGODaiT58F+eBFsEBss3+sVlo0Wyta4Pn6a7ssrHuF
+wmUQyoZuwZfCoiK8GNqk48zjHaOpA+6hl0N9wjGDzMzKMBctnYZfSvyGEKTga5+5
+iKiF9A5XgZq9tdbPPM4Qca01SfsIi5culSits1fVUsYc8KgWOAuhS/asFzXc1Bwa
+sM98JLLsS81sSQMe6dD3AO0hYz0+AxiVbHCXmxocaal2Mw/KNorkYp5T+7EBMUkp
+Y9mX9nOIslKSWx2az8PyMQ3xdOsviNIFu47UNA7z7Glvod3KUnawrQwu6R0COAte
+weIgCVA/L6TpRHLq8aZu7lYra3uoguz24mOTk+2SXzNHIGYqHDNlOKtY1oHe3daV
+gC1sd3GRzDSo89dR0rwF+nRXdOci6L614kbsdgj8V/ZuXVBiYdqgRZ+zoRK0wc8F
+YuNhl665858Ed+5xZkodeDNIketh5zILYQiZp+uiHHXq9afKyZAuIgOBKRKxqL9D
+u0BkXxZ7igJBxflzmQ9ClriksKqkcy4p1uBlzn/plCydF4EUVZK0dqR1J3q5ll9i
+BJensSzk7is=
+=cshU
 -----END PGP SIGNATURE-----
 
---Sig_/ibdj0OiYejnOOwnfuWxAugs--
+--Sig_/Su4hAPa/alD=fS60uNC2E./--
