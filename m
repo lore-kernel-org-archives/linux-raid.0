@@ -1,70 +1,100 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [patch 2/4] raid1: percpu dispatch for write request if bitmap
- supported
-Date: Thu, 24 May 2012 13:17:09 +0800
-Message-ID: <20120524051709.GA1191@kernel.org>
-References: <20120523072619.670179001@kernel.org>
- <20120523072838.580242059@kernel.org>
- <20120524133402.0f217e71@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Data Offset
+Date: Thu, 24 May 2012 15:20:38 +1000
+Message-ID: <20120524152038.1d01b866@notabene.brown>
+References: <20120510174210.GA2991@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/WWEOhC65I8lXj0qDqpeEAO="; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120524133402.0f217e71@notabene.brown>
+In-Reply-To: <20120510174210.GA2991@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, shli@fusionio.com
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, May 24, 2012 at 01:34:02PM +1000, NeilBrown wrote:
-> On Wed, 23 May 2012 15:26:21 +0800 Shaohua Li <shli@kernel.org> wrote:
-> 
-> > In raid1, all write requests are dispatched in raid1d thread. In fast storage,
-> > the raid1d thread is a bottleneck, because it dispatches request too slow. Also
-> > raid1d thread migrates freely, which makes request completion cpu not match
-> > with submission cpu even driver/block layer has such capability. This will
-> > cause bad cache issue.
-> > 
-> > If bitmap support is enabled, write requests can only be dispatched after dirty
-> > bitmap is flushed out. After bitmap is flushed, how write requests are
-> > dispatched doesn't impact correctness. A natural idea is to distribute request
-> > dispatch to several threads. With this patch, requests are added to a percpu
-> > list first. After bitmap is flushed, then the percpu list requests will
-> > dispatched in a workqueue. In this way, above bottleneck is removed.
-> > 
-> > In a 4k randwrite test with a 2 disks setup, below patch can provide 10% ~ 50%
-> > performance improvements depending on numa binding.
-> 
-> Those numbers are quite impressive so there is certainly room for improvement
-> here.  I'm not sure that I'm entirely comfortable with the approach though.
-> 
-> Passing the request to a per-cpu thread does make sense, but a generic
-> per-cpu thread feels dangerous as we don't know what else might be queued to
-> that thread and because of the potential for deadlocks between memory
-> allocation and generic_make_request (as mentioned in previous email) I find
-> it hard to convince myself that this approach is entirely safe.
+--Sig_/WWEOhC65I8lXj0qDqpeEAO=
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-No problem, we can use a separate workqueue.
+On Thu, 10 May 2012 19:42:10 +0200 Piergiorgio Sartor
+<piergiorgio.sartor@nexgo.de> wrote:
 
-> I wonder if we might take a very different approach and try to do everything
-> in the one process.  i.e. don't hand tasks off to other threads at all - at
-> least in the common case. 
-> So we could change plugger_unplug (in md.c) so that:
-> 
->  - if current->bio_list is NULL, (meaning all requests have been submitted
->    and there is no risk of deadlock) we call bitmap_unplug and then submit
->    all the queued writes.
->  - if current->bio_list is not NULL, then we just wakeup the md thread to
->    do the work.
+> Hi,
+>=20
+> after the RAID-5 problem, I just realized that
+> other RAIDs I have, including a multi RAID-6,
+> have different data offset for each component.
+>=20
+> This seems to be quite of a problem, in case
+> "Create" is used to recover an array.
+>=20
+> Obviouly, if a 4 disks RAID-5 has 2 disks with
+> one offset and 2 with another, it will not be
+> possible to re-create it (saving the data).
 
-The current->bio_list check does make sense. I'm going to do the check for the
-1 and 3 patches.
+I certainly won't be easy.  Though if someone did find themselves in that
+situation it might motivate me to enhance mdadm in some way to make it easi=
+ly
+fixable.
 
-But I believe we can't call generic_make_request in unplug. For example,
-schedule()->unplug->generic_make_request->get_request_wait()->schedule(). At
-least this will cause some request not dispatch. And last time I did similar
-experiment for raid0 (request is added to a per-disk plug_cb list, not directly
-dispatch) to reduce lock contention, I found nasty oops.
+>=20
+> Is there any way to fix/prevent such issue?
+> Shouldn't "mdadm" make sure all offset are
+> the same? Or try, at least...
 
-Thanks,
-Shaohua
+I'm not sure.  Maybe...
+
+With linux-3.5 and mdadm-3.3 (both unreleased) you will probably be able to
+  mdadm --grow --data-offset=3D5M
+and that will happen.  At least for RAID10.  Other levels might follow late=
+r.
+
+Should mdadm keep them always the same?  The reason that it doesn't is that=
+ I
+thought that you could change the data offset by removing each device and
+adding it back as a spare with a new data_offset.  Maybe that isn't such a
+good idea.
+
+I suspect that I got a chorus of people all saying "please keep data_offset
+consistent" - and particular if I received a patch which did that - then I
+would probably change mdadm accordingly.
+
+NeilBrown
+
+
+>=20
+> What I noticed is that, adding a disk later,
+> might cause different offsets.
+>=20
+> Any idea?
+>=20
+> Thanks,
+>=20
+> bye,
+>=20
+
+
+--Sig_/WWEOhC65I8lXj0qDqpeEAO=
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT73FJznsnt1WYoG5AQJv7A/8DsZTSdD2+gMzg7aRAVIW0/XRS247DAsa
+xgd+wdG7bf+wxM1LqTx4x880V9TDy6ZvvA5/E6pnCYyyfT74ycXb8I5EMT7pbCba
+INsIckKx5KRdJWWxMVq6APHLDe2FWc3EKLsu4zqVEDFP7xBXut+6H40C9qBJNZes
+Sln1lb/J3MWE2jONYiXYGXgENPxrRUN/hIZTSkCF2d01v8rtR3BN0idbGgfCeN8r
+rUmAJO0QQfDf5ddKTCjsFEdORo26OuMccFQm51myC27S9dIZkrM/3BoMDO1pWqwM
+wo0IXdPUmCsNwdveZ5YTg7tfT1+R9LqrVqEstO7WsL9+DeYtRag7i31isdUEO9PQ
+XJ+dY588NHwtAklAGCwO1p92+nlumL+7Br033fFFUJxxjlFuquD8hP1UwqT/Eo0J
+vZRjb8uiqUn4uXAPfAT7pEJy+L/xHb73BVzQizwLGS8RFiEXK2EJ5SOZeDrfR9MU
+oWNlwqwYN5l/q1cOAP9KJmI6UiAfRLUvj3i6rH5388I4fGkShp9JTpuZmcN1NfB+
+RvP5dsAQPX+SPOfPC5Z0PxixubFegdJ8T+HnrKBzjFOPhZ9OhWVJJtaDqO2HE0yD
+uBkTG+EAamZ0VvmTqZzdI+iHTfnYKscOoqiidlI2hh3MMo9ERNwxSqaDihQBy3dj
+wSlGRcexJzI=
+=MQAr
+-----END PGP SIGNATURE-----
+
+--Sig_/WWEOhC65I8lXj0qDqpeEAO=--
