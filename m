@@ -1,96 +1,87 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Increase minimum chunk size in testsuite to 64kB
-Date: Thu, 24 May 2012 15:38:14 +1000
-Message-ID: <20120524153814.05cf7d70@notabene.brown>
-References: <20120524151047.7a011be9@kryten>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [patch 2/4] raid1: percpu dispatch for write request if bitmap
+ supported
+Date: Thu, 24 May 2012 13:50:15 +0800
+Message-ID: <20120524055015.GA5579@kernel.org>
+References: <20120523072619.670179001@kernel.org>
+ <20120523072838.580242059@kernel.org>
+ <20120524133402.0f217e71@notabene.brown>
+ <20120524051709.GA1191@kernel.org>
+ <20120524153412.106d5a0c@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/X/C7VBYQzMnUo/JikQzm3+i"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120524151047.7a011be9@kryten>
+Content-Disposition: inline
+In-Reply-To: <20120524153412.106d5a0c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Anton Blanchard <anton@samba.org>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, shli@fusionio.com
 List-Id: linux-raid.ids
 
---Sig_/X/C7VBYQzMnUo/JikQzm3+i
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Thu, May 24, 2012 at 03:34:12PM +1000, NeilBrown wrote:
+> On Thu, 24 May 2012 13:17:09 +0800 Shaohua Li <shli@kernel.org> wrote:
+> 
+> > On Thu, May 24, 2012 at 01:34:02PM +1000, NeilBrown wrote:
+> > > On Wed, 23 May 2012 15:26:21 +0800 Shaohua Li <shli@kernel.org> wrote:
+> > > 
+> > > > In raid1, all write requests are dispatched in raid1d thread. In fast storage,
+> > > > the raid1d thread is a bottleneck, because it dispatches request too slow. Also
+> > > > raid1d thread migrates freely, which makes request completion cpu not match
+> > > > with submission cpu even driver/block layer has such capability. This will
+> > > > cause bad cache issue.
+> > > > 
+> > > > If bitmap support is enabled, write requests can only be dispatched after dirty
+> > > > bitmap is flushed out. After bitmap is flushed, how write requests are
+> > > > dispatched doesn't impact correctness. A natural idea is to distribute request
+> > > > dispatch to several threads. With this patch, requests are added to a percpu
+> > > > list first. After bitmap is flushed, then the percpu list requests will
+> > > > dispatched in a workqueue. In this way, above bottleneck is removed.
+> > > > 
+> > > > In a 4k randwrite test with a 2 disks setup, below patch can provide 10% ~ 50%
+> > > > performance improvements depending on numa binding.
+> > > 
+> > > Those numbers are quite impressive so there is certainly room for improvement
+> > > here.  I'm not sure that I'm entirely comfortable with the approach though.
+> > > 
+> > > Passing the request to a per-cpu thread does make sense, but a generic
+> > > per-cpu thread feels dangerous as we don't know what else might be queued to
+> > > that thread and because of the potential for deadlocks between memory
+> > > allocation and generic_make_request (as mentioned in previous email) I find
+> > > it hard to convince myself that this approach is entirely safe.
+> > 
+> > No problem, we can use a separate workqueue.
+> 
+> A separate set of per-cpu workqueues for each md array doesn't sound like a
+> good idea to me - if we can possibly avoid it.
 
-On Thu, 24 May 2012 15:10:47 +1000 Anton Blanchard <anton@samba.org> wrote:
+Can be a separate workqueue sharing for all md arrays.
+  
+> > > I wonder if we might take a very different approach and try to do everything
+> > > in the one process.  i.e. don't hand tasks off to other threads at all - at
+> > > least in the common case. 
+> > > So we could change plugger_unplug (in md.c) so that:
+> > > 
+> > >  - if current->bio_list is NULL, (meaning all requests have been submitted
+> > >    and there is no risk of deadlock) we call bitmap_unplug and then submit
+> > >    all the queued writes.
+> > >  - if current->bio_list is not NULL, then we just wakeup the md thread to
+> > >    do the work.
+> > 
+> > The current->bio_list check does make sense. I'm going to do the check for the
+> > 1 and 3 patches.
+> > 
+> > But I believe we can't call generic_make_request in unplug. For example,
+> > schedule()->unplug->generic_make_request->get_request_wait()->schedule(). At
+> 
+> My ideas was to only submit the queued writes from a normal call to
+> blk_finish_plug.  Calls that come from schedule would use the current
+> approach of signalling the md thread to take over.  There must be a way to
+> tell the difference - maybe just a new flag to the unplug callback.
 
->=20
-> When running the mdadm testsuite on ppc64 with a 64kB page size I
-> see a couple of failures because the chunk size is smaller than a
-> page.
->=20
-> Bump the chunksize to 64kB to fix these failures.
->=20
-> Signed-off-by: Anton Blanchard <anton@samba.org>
-> ---
->=20
-> diff --git a/tests/02r5grow b/tests/02r5grow
-> index f9fd571..b91ffcd 100644
-> --- a/tests/02r5grow
-> +++ b/tests/02r5grow
-> @@ -2,7 +2,7 @@
-> =20
->  # create a small raid5 array, make it larger.  Then make it smaller
-> =20
-> -mdadm -CR $md0 -e0.90 --level raid5 --chunk=3D32 --raid-disks 3 --size $=
-[size/2] $dev1 $dev2 $dev3=20
-> +mdadm -CR $md0 -e0.90 --level raid5 --chunk=3D64 --raid-disks 3 --size $=
-[size/2] $dev1 $dev2 $dev3=20
->  check wait
->  check state UUU
->  testdev $md0 2 $[size/2] 32
-> diff --git a/tests/02r6grow b/tests/02r6grow
-> index 3f53904..38c7781 100644
-> --- a/tests/02r6grow
-> +++ b/tests/02r6grow
-> @@ -2,7 +2,7 @@
-> =20
->  # create a small raid6 array, make it larger.  Then make it smaller
-> =20
-> -mdadm -CR $md0 -e 0.90 --level raid6 --chunk=3D32 --raid-disks 4 --size =
-$[size/2] $dev1 $dev2 $dev3 $dev4=20
-> +mdadm -CR $md0 -e 0.90 --level raid6 --chunk=3D64 --raid-disks 4 --size =
-$[size/2] $dev1 $dev2 $dev3 $dev4=20
->  check wait
->  check state UUUU
->  testdev $md0 2 $[size/2] 32
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Should be the same I think. For exmaple, blk_finish_plug unplug, plug_cb should
+generate several bios, but for the first bio, get_request_wait sleeps and flush
+plug list again. later bio hasn't a chance to be queued actually till next time
+the task runs. Then unplug loses its meaning.
 
-
-Applied, thanks.
-
-And thanks for testing :-)
-
-NeilBrown
-
---Sig_/X/C7VBYQzMnUo/JikQzm3+i
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT73JRjnsnt1WYoG5AQLvwQ/+Pd5VwAMLg0I7bLp+Gcygry9YjDs+YAed
-3qIlE1sOvdWFSHhBxGIB6SV7hmsUgeysjEZmxh57holZjRdzpfr9iePdCnB/rM/G
-/NZAOFb5Xxf+qGbpBOtM03n9bAoEQ4/a0bjZrBR1+uWQeh2sgcT5JY3fWZzgSnNM
-8CkwWDQELjiaeOgaO2bLUm1nPZNFN8p0Ik5/dIzQ5QjE/nZ9wOY4tWiv7KQXIOIc
-YvbDVpRAx0d20hCyeFUR/5r1HS1XO5UmSPWPJlbhl0sO8ZHvObJVhEsMKZc0+9jH
-SaQovzqYGhem+eLWXFsjhP1Lc3tYKnus6S3y2D4bPDkiOkYld5L5PY+xT/8T9SOX
-C/2NVhdSk5llO3sQ5KPt9Qi/XVQac5sy+RhQWHSuYo4+sPmi04p5gp9wO1Gpzw2o
-wmQT6/14j5vOrtUrpfF+p+N1scdc4VauekhSYFieUfXtnm6/Vm141vOiegJTzCHR
-CVsl6YePJbY6VRQxnu58di2IfneB/U0ZQBIEUS6aDtiwGwqpRfdSzBssperjIkWn
-eddGkJn0Ylw4v788t3Xlc6T3Tojn40fr8lykRjdF5xxo0nsBFICyeIiMWdCYTaen
-l71+OQhI21DsT8ngf5R3nG6Oct9+t/1PCa6w+ZFa4ZgUM7Rmq6zzb0YSwIIIqREH
-CIsnFmwfJ00=
-=9reb
------END PGP SIGNATURE-----
-
---Sig_/X/C7VBYQzMnUo/JikQzm3+i--
+Thanks,
+Shaohua
