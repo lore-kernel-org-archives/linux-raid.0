@@ -1,76 +1,44 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: very slow file deletion on an SSD
-Date: Fri, 25 May 2012 11:48:01 -0300
-Message-ID: <CABYL=Toi+Mbm1nJ=5HhBnjYiK9ZEL-SYmwe3aLtm5CzTdR8zcg@mail.gmail.com>
-References: <4FBF60D1.80104@gmail.com>
-	<4FBF62D2.20702@fastmail.fm>
-	<4FBF63B0.6020209@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH 3/4] Improve --help message from test
+Date: Fri, 25 May 2012 17:24:07 +0200
+Message-ID: <1337959448-5299-4-git-send-email-Jes.Sorensen@redhat.com>
+References: <1337959448-5299-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FBF63B0.6020209@gmail.com>
+In-Reply-To: <1337959448-5299-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Joe Landman <joe.landman@gmail.com>
-Cc: Bernd Schubert <bernd.schubert@fastmail.fm>, xfs@oss.sgi.com, linux-raid <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: dledford@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-noop scheduler could be better for ssd?
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-2012/5/25 Joe Landman <joe.landman@gmail.com>:
-> On 05/25/2012 06:45 AM, Bernd Schubert wrote:
->>
->> Hello Joe,
->>
->> On 05/25/2012 12:37 PM, Joe Landman wrote:
->>>
->>> Hi folks:
->>>
->>> Just ran into this (see posted output at bottom). 3.2.14 kernel, MD=
- RAID
->>> 5, xfs file system. Not sure (precisely) where the problem is, henc=
-e
->>> posting to both lists.
->>
->>
->> do you have anything enabled, that would make your files to have xat=
-trs?
->
->
-> Not to my knowledge. =A0I'll go back and re-create some files and see=
-=2E
->
->> http://oss.sgi.com/archives/xfs/2011-08/msg00233.html
->
->
-> Hmmm
->
->
->
-> --
-> Joseph Landman, Ph.D
-> Founder and CEO
-> Scalable Informatics Inc.
-> email: landman@scalableinformatics.com
-> web =A0: http://scalableinformatics.com
-> =A0 =A0 =A0 http://scalableinformatics.com/sicluster
-> phone: +1 734 786 8423 x121
-> fax =A0: +1 866 888 3112
-> cell : +1 734 612 4615
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ test |   11 +++++++++--
+ 1 files changed, 9 insertions(+), 2 deletions(-)
 
+diff --git a/test b/test
+index a0561ab..8e06ae2 100755
+--- a/test
++++ b/test
+@@ -238,8 +238,15 @@ do_test() {
+ }
+ 
+ do_help() {
+-  echo "Usage: "
+-  echo " $0 [--tests=<test1,test2,..>] [--disable-multipath] [--logdir] [--save-logs] [--no-error] [setup] [prefix]"
++  echo "Usage: $0 [options]"
++  echo " Options:"
++  echo "    --tests=<test1,test2,..>    Comma separated list of tests to run"
++  echo "    --disable-multipath         Disable any tests involving multipath"
++  echo "    --logdir=<directory>        Directory to save logfiles in"
++  echo "    --save-logs                 Save all logs in <logdir>"
++  echo "    --no-error                  Don't stop on error, ie. run all tests"
++  echo "    setup                       Setup test environment and exit"
++  echo "    <prefix>                    Run tests with <prefix>"
+ }
+ 
+ parse_args() {
+-- 
+1.7.1
 
-
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
