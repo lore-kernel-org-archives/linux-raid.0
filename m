@@ -1,65 +1,57 @@
-From: Jes.Sorensen@redhat.com
-Subject: [PATCH 2/4] Add --no-error argument to 'test'
-Date: Fri, 25 May 2012 17:24:06 +0200
-Message-ID: <1337959448-5299-3-git-send-email-Jes.Sorensen@redhat.com>
-References: <1337959448-5299-1-git-send-email-Jes.Sorensen@redhat.com>
+From: <danniel@gmail.com>
+Subject: Friend,Could you "build-up" your own energy? Recommends Advanced Sports to you
+Date: Fri, 25 May 2012 11:37:45 -0400
+Message-ID: <9ABBDB841F144B70AF5364660789E81B@g19.win.smewh.net>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1337959448-5299-1-git-send-email-Jes.Sorensen@redhat.com>
+Content-Class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: dledford@redhat.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From         :Friend,Could you "build-up" your own energy?
+Email        :danniel@gmail.com
+Friend Name  :Friend
+Friend Email :linux-raid@vger.kernel.org
+comment      :
 
-This allows the test suite to run to completion even if one test
-fails.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- test |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+Hi Friend,
 
-diff --git a/test b/test
-index c7eb069..a0561ab 100755
---- a/test
-+++ b/test
-@@ -19,6 +19,7 @@ fi
- testdir="tests"
- logdir="$testdir/logs"
- logsave=0
-+exitonerror=1
- 
- # Check whether to run multipath tests
- modprobe multipath 2> /dev/null
-@@ -230,7 +231,7 @@ do_test() {
-     if [ "$savelogs" == "1" ]; then
-       cp $targetdir/log $logdir/$_basename.log
-     fi
--    if [ "$_fail" == "1" ]; then
-+    if [ "$_fail" == "1" -a $"exitonerror" == "1" ]; then
-       exit 1
-     fi
-   fi
-@@ -238,7 +239,7 @@ do_test() {
- 
- do_help() {
-   echo "Usage: "
--  echo " $0 [--tests=<test1,test2,..>] [--disable-multipath] [--logdir] [--save-logs] [setup] [prefix]"
-+  echo " $0 [--tests=<test1,test2,..>] [--disable-multipath] [--logdir] [--save-logs] [--no-error] [setup] [prefix]"
- }
- 
- parse_args() {
-@@ -267,6 +268,9 @@ parse_args() {
- 	fi
-       fi
-       ;;
-+    --no-error)
-+      exit_on_error=0
-+      ;;
-     --disable-multipath)
-       unset MULTIPATH
-       ;;
--- 
-1.7.1
+I'm sure you already found out the rumours that some
+people make their own energy.
+Some of them slash the energy bill by half.
+Some of them cut the bill completely.
+Some even make the electric company pay them(!).
+That's why I was ecstatic when I found this website:
+
+http://www.greenhomemade.com/?code=4fbd5d3bbfcd4 
+
+I read every single word, and boy... this stuff really
+got me all curious. It seems it's actually very easy 
+and cheap to build and use a renewable energy system.
+
+Anyway, I went ahead and bought their package.
+I couldn't resisted... It sounds too good to be true,
+yet if this turns out to be "real", then this is BIG.
+
+I'm so enthusiasted about this, that I thought to just
+send you a link so you get to see it for yourself:
+
+http://www.greenhomemade.com/?code=4fbd5d3bbfcd4 
+
+To a better life,
+
+Danniel Guedotte
+
+PS: Friend, they give a 60-day guarantee. 
+You risk nothing. 
+But if you snooze, you lose...
+
+http://www.greenhomemade.com/?code=4fbd5d3bbfcd4 
+
+
+
 
