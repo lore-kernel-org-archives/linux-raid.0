@@ -1,57 +1,48 @@
-From: <danniel@gmail.com>
-Subject: Friend,Could you "build-up" your own energy? Recommends Advanced Sports to you
-Date: Fri, 25 May 2012 14:57:35 -0400
-Message-ID: <79FFCB34AAAC4AADB9A5B503BEE89A8D@g19.win.smewh.net>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: raid 10f2 vs 1 on 2 drives
+Date: Fri, 25 May 2012 15:03:41 -0400
+Message-ID: <4FBFD78D.1010503@tmr.com>
+References: <20120522193340.GM27769@electro-mechanical.com> <4FBC14DC.8070007@hesbynett.no> <20120523112545.GN27769@electro-mechanical.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Class: urn:content-classes:message
+In-Reply-To: <20120523112545.GN27769@electro-mechanical.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
+Cc: William Thompson <wt@electro-mechanical.com>
 List-Id: linux-raid.ids
 
-From         :Friend,Could you "build-up" your own energy?
-Email        :danniel@gmail.com
-Friend Name  :Friend
-Friend Email :linux-raid@vger.kernel.org
-comment      :
+William Thompson wrote:
+> On Wed, May 23, 2012 at 12:36:12AM +0200, David Brown wrote:
+>> On 22/05/12 21:33, William Thompson wrote:
+>>> I understand that raid 10 f2 is slower on writes due to the location of the
+>>> 2nd copy.  My question is, if lots of writes are performed, could this
+>>> layout wearout the drives quicker than raid 1?
+>>
+>> No, wear is not going to be significantly different.
+>>
+>> You didn't say whether you are talking about hard disks (where
+>
+> Sorry about that (Chief).  Yes, I was refering to hard drives.
+>
+>> location makes a difference, but "wear" on the drive motor is
+>> insignificant to the disk's expected lifetime), or flash disks
+>
+> I was thinking about how much more head movement there would be to write the
+> 2nd copy of the data.
+>
+There _is_ no extra head motion. The location of consecutive blocks is different 
+on each drive, but as I read the mapping function the distance between blocks on 
+the same drive will be about the same, so amount of head motion (both number and 
+distance) is the same on each drive, but the location of that motion is not the 
+same.
+
+One drive may be seeking at the outer edge of the platter while another seeks 
+near the spindle, but there's the same amount of seeking on each.
 
 
-Hi Friend,
-
-I'm sure you already found out the rumours that some
-people make their own energy.
-Some of them slash the energy bill by half.
-Some of them cut the bill completely.
-Some even make the electric company pay them(!).
-That's why I was ecstatic when I found this website:
-
-http://www.greenhomemade.com/?code=4fbd5d3bbfcd4 
-
-I read every single word, and boy... this stuff really
-got me all curious. It seems it's actually very easy 
-and cheap to build and use a renewable energy system.
-
-Anyway, I went ahead and bought their package.
-I couldn't resisted... It sounds too good to be true,
-yet if this turns out to be "real", then this is BIG.
-
-I'm so enthusiasted about this, that I thought to just
-send you a link so you get to see it for yourself:
-
-http://www.greenhomemade.com/?code=4fbd5d3bbfcd4 
-
-To a better life,
-
-Danniel Guedotte
-
-PS: Friend, they give a 60-day guarantee. 
-You risk nothing. 
-But if you snooze, you lose...
-
-http://www.greenhomemade.com/?code=4fbd5d3bbfcd4 
-
-
-
-
+-- 
+Bill Davidsen <davidsen@tmr.com>
+   "We have more to fear from the bungling of the incompetent than from
+the machinations of the wicked."  - from Slashdot
