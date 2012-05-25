@@ -1,22 +1,57 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: very slow file deletion on an SSD
-Date: Fri, 25 May 2012 12:59:38 -0400
-Message-ID: <20120525165938.GA13555@infradead.org>
-References: <4FBF60D1.80104@gmail.com>
- <20120525165719.GV16099@sgi.com>
+From: <danniel@gmail.com>
+Subject: Friend,Could you "build-up" your own energy? Recommends Advanced Sports to you
+Date: Fri, 25 May 2012 14:57:35 -0400
+Message-ID: <79FFCB34AAAC4AADB9A5B503BEE89A8D@g19.win.smewh.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120525165719.GV16099@sgi.com>
+Content-Class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: Ben Myers <bpm@sgi.com>
-Cc: Joe Landman <joe.landman@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 25, 2012 at 11:57:19AM -0500, Ben Myers wrote:
-> There are a couple recent fixes related to discard that are probably
-> appropriate for 3.2-stable.
+From         :Friend,Could you "build-up" your own energy?
+Email        :danniel@gmail.com
+Friend Name  :Friend
+Friend Email :linux-raid@vger.kernel.org
+comment      :
 
-Discard is not enabled by default.
+
+Hi Friend,
+
+I'm sure you already found out the rumours that some
+people make their own energy.
+Some of them slash the energy bill by half.
+Some of them cut the bill completely.
+Some even make the electric company pay them(!).
+That's why I was ecstatic when I found this website:
+
+http://www.greenhomemade.com/?code=4fbd5d3bbfcd4 
+
+I read every single word, and boy... this stuff really
+got me all curious. It seems it's actually very easy 
+and cheap to build and use a renewable energy system.
+
+Anyway, I went ahead and bought their package.
+I couldn't resisted... It sounds too good to be true,
+yet if this turns out to be "real", then this is BIG.
+
+I'm so enthusiasted about this, that I thought to just
+send you a link so you get to see it for yourself:
+
+http://www.greenhomemade.com/?code=4fbd5d3bbfcd4 
+
+To a better life,
+
+Danniel Guedotte
+
+PS: Friend, they give a 60-day guarantee. 
+You risk nothing. 
+But if you snooze, you lose...
+
+http://www.greenhomemade.com/?code=4fbd5d3bbfcd4 
+
+
+
 
