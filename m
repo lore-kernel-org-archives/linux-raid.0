@@ -1,60 +1,51 @@
-From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Subject: Re: Reason for md raid 01 blksize limited to 4 KiB?
-Date: Fri, 25 May 2012 14:35:57 +0200
-Message-ID: <4FBF7CAD.7000307@profitbricks.com>
-References: <4FBA0047.5050208@profitbricks.com> <20120522092817.1b5946b8@notabene.brown>
+From: Lukasz Dorau <lukasz.dorau@intel.com>
+Subject: [PATCH] imsm: fix: correct checking volume's degradation
+Date: Fri, 25 May 2012 15:06:41 +0200
+Message-ID: <20120525130641.31750.43414.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120522092817.1b5946b8@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Hi Neil,
+We do not check the return value of sysfs_get_ll() now. It is wrong.
+If reading of the sysfs "degraded" key does not succeed,
+the "new_degraded" variable will not be initiated
+and accidentally it can have the value of "degraded" variable.
+In that case the change of degradation will not be checked.
 
-On 22/05/12 01:28, NeilBrown wrote:
-> 
-> This should be fixed in linux 3.4 with commit 6b740b8d79252f13bcb7e5d3c1d
-> 
+It happens if mdadm is compiled with gcc's "-fstack-protector" option
+when one tries to stop a volume under reshape (e.g. OLCE).
+Reshape seems to be finished then (metadata is in normal/clean state)
+but it is not finished, it is broken and data are corrupted.
 
-I've tested the RAID 01 with kernel 3.4 and it isn't fixed. It is even
-worse, because direct IO doesn't work any more on the raid1 device (with
-kernel 3.2 it worked).
+Now we always check the return value of sysfs_get_ll().
+Even if reading of the sysfs "degraded" key does not succeed
+(rv == -1) the change of degradation will be checked.
 
-There are still 4k chunks which aren't merged in the raid0 devices below
-(blkparse -i md100 -i md200 -i md300 | less).
-Could you also check this on your setup, please?
+Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+---
+ super-intel.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-Cheers,
-Sebastian
+diff --git a/super-intel.c b/super-intel.c
+index 6c87e20..07ab9ae 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -10370,8 +10370,10 @@ int check_degradation_change(struct mdinfo *info,
+ 			     int degraded)
+ {
+ 	unsigned long long new_degraded;
+-	sysfs_get_ll(info, NULL, "degraded", &new_degraded);
+-	if (new_degraded != (unsigned long long)degraded) {
++	int rv;
++
++	rv = sysfs_get_ll(info, NULL, "degraded", &new_degraded);
++	if ((rv == -1) || (new_degraded != (unsigned long long)degraded)) {
+ 		/* check each device to ensure it is still working */
+ 		struct mdinfo *sd;
+ 		new_degraded = 0;
 
-
-Btw. this is my test script:
-
-#!/bin/bash
-if [ "`lsmod | grep brd`" == "" ]; then
-        modprobe brd rd_nr=4 rd_size=524288
-fi
-mdadm -C /dev/md100 --force --assume-clean -n 2 -l raid0 /dev/ram0 /dev/ram1
-mdadm -C /dev/md200 --force --assume-clean -n 2 -l raid0 /dev/ram2 /dev/ram3
-blktrace /dev/md100 &
-pid=$!
-dd if=/dev/zero of=/dev/md100 bs=1M oflag=direct
-kill -2 $pid
-blktrace /dev/md200 &
-pid=$!
-dd if=/dev/zero of=/dev/md200 bs=1M oflag=direct
-kill -2 $pid
-mv md100* r0_only/
-mv md200* r0_only/
-
-mdadm -C /dev/md300 --force --assume-clean -n 2 -l raid1 /dev/md100
-/dev/md200
-blktrace -d /dev/md100 -d /dev/md200 -d /dev/md300 -b 4096 &
-pid=$!
-# Kernel 3.4 doesn't support direct IO on the md300 device
-dd if=/dev/zero of=/dev/md300 bs=1M
-kill -2 $pid
