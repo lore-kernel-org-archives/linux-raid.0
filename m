@@ -1,57 +1,43 @@
-From: <sniperxsystem@support.com>
-Subject: The $1,549 per day ZERO traffic system (UPDATE) Recommends Advanced Sports to you
-Date: Thu, 24 May 2012 21:33:02 -0400
-Message-ID: <57234924E4C94FB7B8597DC1C68B88C8@g19.win.smewh.net>
+From: Igor Podlesny <for.poige+linux@gmail.com>
+Subject: Re: Hi! Is "container" more efficient in terms of I/O op. numbers ...
+Date: Fri, 25 May 2012 09:52:52 +0800
+Message-ID: <CA+sTkh68eo6by40uPYm7r+xVLLFRKvwSZYJji8x75cqW7JjJ9w@mail.gmail.com>
+References: <CA+sTkh55N8YKL5R-a70U9jYrj17hAdLbSoKPy-Xuz2-2S5_P0g@mail.gmail.com>
+ <20120525101424.3cb40eb2@notabene.brown>
+Reply-To: for.poige+linux@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Class: urn:content-classes:message
+In-Reply-To: <20120525101424.3cb40eb2@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From         :The $1,549 per day ZERO traffic system (UPDATE)
-Email        :sniperxsystem@support.com
-Friend Name  :Friend
-Friend Email :linux-raid@vger.kernel.org
-comment      :
+On 25 May 2012 08:14, NeilBrown <neilb@suse.de> wrote:
+> On Thu, 24 May 2012 23:30:54 +0800 Igor Podlesny <for.poige+linux@gma=
+il.com>
+> wrote:
+>
+>> =C2=A0 =C2=A0... then several "stand-alone" RAIDs on the same HDDs? =
+-- Say, when
+>> using write intent bitmaps.
+>>
+>
+> I'm not sure you question exactly makes sense, but the answer would b=
+e "no"
+> if it did :-)
 
-Listen to this... pretty crazy...
+   Well, due to disks seeks are expensive, hot data locality is
+preferable and valuable thing, isn't it?
+   And it makes sense not only for WIB, but other frequent metadata
+updates, doesn't it?
 
-So many people rushed to download this 
-$530k/year system yesterday...
-
-That they crashed the ENTIRE server!
-
-=>>http://www.sniperxsystem.com/?code=4fbea9cb964f6<<=
-
-(The site was down ALL day) Pretty crazy. 
-
-... The "ghetto" video alone has sent shockwaves 
-through the Clickbank community.
-
-Can you believe THIS guy's one of Clickbanks
-biggest super affiliates?
-
-=>>http://www.sniperxsystem.com/?code=4fbea9cb964f6<<=
-
-Talk soon
-
-P.S. This is **BRAND NEW**...
-
-It works and it's made $1,549.87 a DAY for 
-the past 739 days in a ROW!
-
-No PPC, no PPV, no CPA, no so-called 'push
-button softwares' scams, no 'loopholes'...
-
-Something TOTALLY different.
-
-Check it out (fast, while it's still open):
-
-=>>http://www.sniperxsystem.com/?code=4fbea9cb964f6<<=
-
-
-
-
+--=20
+End of message. Next message?
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
