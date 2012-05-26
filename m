@@ -1,83 +1,147 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: raid 10f2 vs 1 on 2 drives
-Date: Sat, 26 May 2012 19:41:55 -0400
-Message-ID: <4FC16A43.1020507@tmr.com>
-References: <20120522193340.GM27769@electro-mechanical.com> <4FBC14DC.8070007@hesbynett.no> <20120523112545.GN27769@electro-mechanical.com> <4FBFD78D.1010503@tmr.com> <4FC0FFAA.1020009@hesbynett.no>
+From: Joe Landman <joe.landman@gmail.com>
+Subject: Re: very slow file deletion on an SSD
+Date: Sat, 26 May 2012 19:55:17 -0400
+Message-ID: <4FC16D65.8000008@gmail.com>
+References: <4FBF60D1.80104@gmail.com> <20120526231838.GR25351@dastard>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FC0FFAA.1020009@hesbynett.no>
+In-Reply-To: <20120526231838.GR25351@dastard>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, William Thompson <wt@electro-mechanical.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-David Brown wrote:
-> On 25/05/12 21:03, Bill Davidsen wrote:
->> William Thompson wrote:
->>> On Wed, May 23, 2012 at 12:36:12AM +0200, David Brown wrote:
->>>> On 22/05/12 21:33, William Thompson wrote:
->>>>> I understand that raid 10 f2 is slower on writes due to the location
->>>>> of the
->>>>> 2nd copy. My question is, if lots of writes are performed, could this
->>>>> layout wearout the drives quicker than raid 1?
->>>>
->>>> No, wear is not going to be significantly different.
->>>>
->>>> You didn't say whether you are talking about hard disks (where
->>>
->>> Sorry about that (Chief). Yes, I was refering to hard drives.
->>>
->>>> location makes a difference, but "wear" on the drive motor is
->>>> insignificant to the disk's expected lifetime), or flash disks
->>>
->>> I was thinking about how much more head movement there would be to
->>> write the
->>> 2nd copy of the data.
->>>
->> There _is_ no extra head motion. The location of consecutive blocks is
->> different on each drive, but as I read the mapping function the distance
->> between blocks on the same drive will be about the same, so amount of
->> head motion (both number and distance) is the same on each drive, but
->> the location of that motion is not the same.
->>
->> One drive may be seeking at the outer edge of the platter while another
->> seeks near the spindle, but there's the same amount of seeking on each.
->>
->>
->
-> That's not the case for "far" layout.  When you write a block, it there will 
-> be two copies - one in the first half of one disk (say, disk 1), and the other 
-> in the second half of the other disk (disk 2).  The next sequential block will 
-> be written to the first half of disk 2, and the second half of disk 1 - 
-> exactly half a disk away from the first block. And no matter where the disk 
-> head ends up after the write, raid10,far will always read from the outer half 
-> of the disk since it is significantly faster.  (For SSDs it doesn't matter, 
-> but then neither does head positioning.)
->
-He was talking about head motion on write, or I was at any write. Although the 
-writes go to different parts of the platter, they are platters on different 
-drives. So for any large sequential write, the head motion is the same (in 
-distance), but occurs at the outside of one platter and the inside of the other. 
-We're saying the same thing. A the read will not always happen at the outer edge 
-unless both drives are idle, otherwise if one is busy the other will be used. To 
-do otherwise would limit the performance when many reads to adjacent sectors 
-take place.
+On 05/26/2012 07:18 PM, Dave Chinner wrote:
 
-> Write merging, combining, re-ordering, etc., will minimise this effect, as 
-> will write caches.  But there is no doubt that raid10,far sacrifices write 
-> speed a little in order to get the fastest possible read speeds. For most 
-> use-cases, with more reading than writing, this results in the best overall 
-> speed.
->
+> Sounds like you might be hitting the synchronous xattr removal
+> problem that was recently fixed (as has been mentioned already), but
+> even so 2 IOs don't take 1-2s to do, unless the MD RAID5 barrier
+> implementation is really that bad. If you mount -o nobarrier, what
+> happens?
+
+Pure vanilla mkfs
+
+
+[root@siFlash ~]# mkfs.xfs -f /dev/md20
+meta-data=/dev/md20              isize=256    agcount=32, 
+agsize=12820384 blks
+          =                       sectsz=512   attr=2, projid32bit=0
+data     =                       bsize=4096   blocks=410252288, imaxpct=5
+          =                       sunit=4      swidth=28 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal log           bsize=4096   blocks=200320, version=2
+          =                       sectsz=512   sunit=4 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+[root@siFlash ~]# mkfs.xfs -f /dev/md21
+meta-data=/dev/md21              isize=256    agcount=32, 
+agsize=12820384 blks
+          =                       sectsz=512   attr=2, projid32bit=0
+data     =                       bsize=4096   blocks=410252288, imaxpct=5
+          =                       sunit=4      swidth=28 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal log           bsize=4096   blocks=200320, version=2
+          =                       sectsz=512   sunit=4 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+^[[A[root@siFlash ~]# mkfs.xfs -f /dev/md22
+meta-data=/dev/md22              isize=256    agcount=32, 
+agsize=12820384 blks
+          =                       sectsz=512   attr=2, projid32bit=0
+data     =                       bsize=4096   blocks=410252288, imaxpct=5
+          =                       sunit=4      swidth=28 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal log           bsize=4096   blocks=200320, version=2
+          =                       sectsz=512   sunit=4 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+
+and mount
+
+[root@siFlash ~]# mount /dev/md20 /data/1
+[root@siFlash ~]# mount /dev/md21 /data/2
+[root@siFlash ~]# mount /dev/md22 /data/3
+
+
+Still an issue:
+
+[root@siFlash test]# ls -l | wc -l
+48
+[root@siFlash test]# /usr/bin/time rm -f *
+^C0.00user 5.02system 0:05.33elapsed 94%CPU (0avgtext+0avgdata 
+2368maxresident)k
+24inputs+0outputs (0major+179minor)pagefaults 0swaps
+[root@siFlash test]# ls -l | wc -l
+46
+[root@siFlash test]#
+
+
+though now its 3.5 seconds per file delete
+
+1338075592.450387 ioctl(0, SNDCTL_TMR_TIMEBASE or TCGETS, {B38400 opost 
+isig icanon echo ...}) = 0 <0.000020>
+1338075592.450541 newfstatat(AT_FDCWD, "1.r.12.0", 
+{st_mode=S_IFREG|0600, st_size=1073741824, ...}, AT_SYMLINK_NOFOLLOW) = 
+0 <0.000020>
+1338075592.450679 unlinkat(AT_FDCWD, "1.r.12.0", 0) = 0 <3.226394>
+1338075595.677274 newfstatat(AT_FDCWD, "1.r.13.0", 
+{st_mode=S_IFREG|0600, st_size=1073741824, ...}, AT_SYMLINK_NOFOLLOW) = 
+0 <0.000088>
+1338075595.677515 unlinkat(AT_FDCWD, "1.r.13.0", 0) = 0 <3.564176>
+
+
+Remounting with nobarrier
+
+[root@siFlash test]# mount -o remount,nobarrier /data/1
+[root@siFlash test]# mount -o remount,nobarrier /data/2
+[root@siFlash test]# mount -o remount,nobarrier /data/3
+[root@siFlash test]# mount | grep data
+/dev/md20 on /data/1 type xfs (rw,nobarrier)
+/dev/md21 on /data/2 type xfs (rw,nobarrier)
+/dev/md22 on /data/3 type xfs (rw,nobarrier)
+
+
+doesn't look like this helped
+
+1338075724.110941 newfstatat(AT_FDCWD, "1.r.15.0", 
+{st_mode=S_IFREG|0600, st_size=1073741824, ...}, AT_SYMLINK_NOFOLLOW) = 
+0 <0.000035>
+1338075724.111108 unlinkat(AT_FDCWD, "1.r.15.0", 0) = 0 <3.727094>
+1338075727.838380 newfstatat(AT_FDCWD, "1.r.16.0", 
+{st_mode=S_IFREG|0600, st_size=1073741824, ...}, AT_SYMLINK_NOFOLLOW) = 
+0 <0.000061>
+1338075727.838600 unlinkat(AT_FDCWD, "1.r.16.0", 0) = 0 <2.611156>
+1338075730.449949 newfstatat(AT_FDCWD, "1.r.17.0", 
+{st_mode=S_IFREG|0600, st_size=1073741824, ...}, AT_SYMLINK_NOFOLLOW) = 
+0 <0.000104>
+1338075730.450165 unlinkat(AT_FDCWD, "1.r.17.0", 0) = 0 <2.869917>
+
+
+2.6-3.7 seconds per unlink.
+
+FWIW:  umount (which does flushes) seems to take a while (~15-20 seconds)
+
+Raw (uncached) read/write speed to a single array is pretty good, so I 
+don't think the array is a problem.
+
+Run status group 0 (all jobs):
+    READ: io=81424MB, aggrb=2606.7MB/s, minb=2606.7MB/s, 
+maxb=2606.7MB/s, mint=31244msec, maxt=31244msec
+
+
+Run status group 0 (all jobs):
+   WRITE: io=55025MB, aggrb=939053KB/s, minb=939053KB/s, 
+maxb=939053KB/s, mint=60002msec, maxt=60002msec
 
 
 -- 
-Bill Davidsen<davidsen@tmr.com>
-   We are not out of the woods yet, but we know the direction and have
-taken the first step. The steps are many, but finite in number, and if
-we persevere we will reach our destination.  -me, 2010
-
-
+Joseph Landman, Ph.D
+Founder and CEO
+Scalable Informatics Inc.
+email: landman@scalableinformatics.com
+web  : http://scalableinformatics.com
+        http://scalableinformatics.com/sicluster
+phone: +1 734 786 8423 x121
+fax  : +1 866 888 3112
+cell : +1 734 612 4615
 
