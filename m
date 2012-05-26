@@ -1,94 +1,57 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: raid 10f2 vs 1 on 2 drives
-Date: Fri, 25 May 2012 16:40:07 -0300
-Message-ID: <CABYL=TrnYX2jShNA-8Lb5HbY3xVst00=W=_W2mfuXMoJ_+ouUA@mail.gmail.com>
-References: <20120522193340.GM27769@electro-mechanical.com>
-	<4FBC14DC.8070007@hesbynett.no>
-	<20120523112545.GN27769@electro-mechanical.com>
-	<4FBFD78D.1010503@tmr.com>
+From: <sniperxsystem@support.com>
+Subject: The $1,549 per day ZERO traffic system (UPDATE) Recommends Advanced Sports to you
+Date: Fri, 25 May 2012 21:51:45 -0400
+Message-ID: <0EA8512A236C45FCB10DD55C7D2C68F7@g19.win.smewh.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FBFD78D.1010503@tmr.com>
+Content-Class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, William Thompson <wt@electro-mechanical.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-in my tests with a mysql and similar database scenarios where write /
-read are near 50% / 50% (many updates/inserts and many selects) the
-best raid is 1
-where scenario is 10%write / 90% read
-raid 10far is better (if not degraded or out of sync)
+From         :The $1,549 per day ZERO traffic system (UPDATE)
+Email        :sniperxsystem@support.com
+Friend Name  :Friend
+Friend Email :linux-raid@vger.kernel.org
+comment      :
 
+Listen to this... pretty crazy...
 
-just two scenarios to help 'what's better'  question
+So many people rushed to download this 
+$530k/year system yesterday...
 
-2012/5/25 Bill Davidsen <davidsen@tmr.com>:
-> William Thompson wrote:
->>
->> On Wed, May 23, 2012 at 12:36:12AM +0200, David Brown wrote:
->>>
->>> On 22/05/12 21:33, William Thompson wrote:
->>>>
->>>> I understand that raid 10 f2 is slower on writes due to the locati=
-on of
->>>> the
->>>> 2nd copy. =A0My question is, if lots of writes are performed, coul=
-d this
->>>> layout wearout the drives quicker than raid 1?
->>>
->>>
->>> No, wear is not going to be significantly different.
->>>
->>> You didn't say whether you are talking about hard disks (where
->>
->>
->> Sorry about that (Chief). =A0Yes, I was refering to hard drives.
->>
->>> location makes a difference, but "wear" on the drive motor is
->>> insignificant to the disk's expected lifetime), or flash disks
->>
->>
->> I was thinking about how much more head movement there would be to w=
-rite
->> the
->> 2nd copy of the data.
->>
-> There _is_ no extra head motion. The location of consecutive blocks i=
-s
-> different on each drive, but as I read the mapping function the dista=
-nce
-> between blocks on the same drive will be about the same, so amount of=
- head
-> motion (both number and distance) is the same on each drive, but the
-> location of that motion is not the same.
->
-> One drive may be seeking at the outer edge of the platter while anoth=
-er
-> seeks near the spindle, but there's the same amount of seeking on eac=
-h.
->
->
-> --
-> Bill Davidsen <davidsen@tmr.com>
-> =A0"We have more to fear from the bungling of the incompetent than fr=
-om
-> the machinations of the wicked." =A0- from Slashdot
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+That they crashed the ENTIRE server!
+
+=>>http://www.sniperxsystem.com/?code=4fbea9cb964f6<<=
+
+(The site was down ALL day) Pretty crazy. 
+
+... The "ghetto" video alone has sent shockwaves 
+through the Clickbank community.
+
+Can you believe THIS guy's one of Clickbanks
+biggest super affiliates?
+
+=>>http://www.sniperxsystem.com/?code=4fbea9cb964f6<<=
+
+Talk soon
+
+P.S. This is **BRAND NEW**...
+
+It works and it's made $1,549.87 a DAY for 
+the past 739 days in a ROW!
+
+No PPC, no PPV, no CPA, no so-called 'push
+button softwares' scams, no 'loopholes'...
+
+Something TOTALLY different.
+
+Check it out (fast, while it's still open):
+
+=>>http://www.sniperxsystem.com/?code=4fbea9cb964f6<<=
 
 
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
