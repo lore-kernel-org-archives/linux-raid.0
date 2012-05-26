@@ -1,53 +1,96 @@
-From: Stefan *St0fF* Huebner <st0ff@gmx.net>
-Subject: Re: md RAID with enterprise-class SATA or SAS drives
-Date: Sat, 26 May 2012 23:58:09 +0200
-Message-ID: <4FC151F1.3060000@gmx.net>
-References: <4FAAE8F1.8000600@pocock.com.au> <CALFpzo5ObdwFATdT4e20znnxzU5hX9SVSfqJcdqOXM1FEYJQuw@mail.gmail.com> <4FABC7C6.4030107@turmel.org> <CALFpzo6BECrv2eTbSRKwUzpTopx_0EmD+UipqUf-XE=vzz2OnQ@mail.gmail.com> <4FABE724.40103@turmel.org> <4FAC0C05.1090007@pocock.com.au> <20120521141925.GA9011@nsrc.org> <4FBA514B.50106@turmel.org>
-Reply-To: st0ff@npl.de
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: very slow file deletion on an SSD
+Date: Sun, 27 May 2012 09:18:38 +1000
+Message-ID: <20120526231838.GR25351@dastard>
+References: <4FBF60D1.80104@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FBA514B.50106@turmel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Brian Candler <B.Candler@pobox.com>, Daniel Pocock <daniel@pocock.com.au>, Marcus Sorensen <shadowsor@gmail.com>, linux-raid@vger.kernel.org
+Return-path: <xfs-bounces@oss.sgi.com>
+Content-Disposition: inline
+In-Reply-To: <4FBF60D1.80104@gmail.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Sender: xfs-bounces@oss.sgi.com
+Errors-To: xfs-bounces@oss.sgi.com
+To: Joe Landman <joe.landman@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-On 21.05.2012 16:29, Phil Turmel wrote:
-> On 05/21/2012 10:19 AM, Brian Candler wrote:
->
-> [trim /]
->
->> But FYI, the new Seagate Barracuda 3TB ST3000DM001 drives I have here do
->> *not* support this feature.  Has Seagate started crippling its
->> consumer-grade drives?
-> *YES*
->
-> They started sometime before June of last year, when I purchased some
-> Barracuda Greens to upgrade from the Barracuda 7200.12 models I had been
-> using.
->
-> [trim /]
-Even worse is WD: they started to remove SCT ERC around November 2009 - 
-that was the time we went to Hitachi...
->
->> The Hitachi Deskstar HDS5C3030ALA630 *does* support scterc.
-> If you look up-thread to my first reply on May 10th, I reported exactly
-> this phenomenon, and that Hitachi is the only remaining player still
-> supporting it in consumer-grade drives.  (That I've found.  I'd love to
-> discover that other players are changing their minds.)
->
->> Regards,
->>
->> Brian.
-> Regards, and my condolences on your purchase of the ST3000DM001 drives.
-Mine too,
-Stefan
->
-> Phil.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Fri, May 25, 2012 at 06:37:05AM -0400, Joe Landman wrote:
+> Hi folks:
+> 
+>   Just ran into this (see posted output at bottom).  3.2.14 kernel,
+> MD RAID 5, xfs file system.  Not sure (precisely) where the problem
+> is, hence posting to both lists.
+> 
+>  [root@siFlash ~]# cat /proc/mdstat
+> Personalities : [raid1] [raid6] [raid5] [raid4]
+> md22 : active raid5 sdl[0] sds[7] sdx[6] sdu[5] sdk[4] sdz[3] sdw[2] sdr[1]
+>       1641009216 blocks super 1.2 level 5, 32k chunk, algorithm 2
+> [8/8] [UUUUUUUU]
+> 
+> md20 : active raid5 sdh[0] sdf[7] sdm[6] sdd[5] sdc[4] sde[3] sdi[2] sdg[1]
+>       1641009216 blocks super 1.2 level 5, 32k chunk, algorithm 2
+> [8/8] [UUUUUUUU]
+> 
+> md21 : active raid5 sdy[0] sdq[7] sdp[6] sdo[5] sdn[4] sdj[3] sdv[2] sdt[1]
+>       1641009216 blocks super 1.2 level 5, 32k chunk, algorithm 2
+> [8/8] [UUUUUUUU]
+> 
+> md0 : active raid1 sdb1[1] sda1[0]
+>       93775800 blocks super 1.0 [2/2] [UU]
+>       bitmap: 1/1 pages [4KB], 65536KB chunk
+> 
+> 
+> md2* are SSD RAID5 arrays we are experimenting with.  Xfs file
+> systems atop them:
+> 
+> [root@siFlash ~]# mount | grep md2
+> /dev/md20 on /data/1 type xfs (rw)
+> /dev/md21 on /data/2 type xfs (rw)
+> /dev/md22 on /data/3 type xfs (rw)
+> 
+> vanilla mount options (following Dave Chinner's long standing advice)
+> 
+> meta-data=/dev/md20              isize=2048   agcount=32,
+> agsize=12820392 blks
+>          =                       sectsz=512   attr=2
+> data     =                       bsize=4096   blocks=410252304, imaxpct=5
+>          =                       sunit=8      swidth=56 blks
+> naming   =version 2              bsize=65536  ascii-ci=0
+> log      =internal               bsize=4096   blocks=30720, version=2
+>          =                       sectsz=512   sunit=8 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
 
+But you haven't followed my advice when it comes to using default
+mkfs options, have you? You're running 2k inodes and 64k directory
+block size, which is not exactly a common config
+
+The question is, why do you have these options configured, and are
+they responsible for things being slow?
+
+> All this said, deletes from this unit are taking 1-2 seconds per file ...
+
+Sounds like you might be hitting the synchronous xattr removal
+problem that was recently fixed (as has been mentioned already), but
+even so 2 IOs don't take 1-2s to do, unless the MD RAID5 barrier
+implementation is really that bad. If you mount -o nobarrier, what
+happens?
+
+CHeers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
