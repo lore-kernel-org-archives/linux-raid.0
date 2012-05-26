@@ -1,127 +1,83 @@
-From: Joe Landman <joe.landman@gmail.com>
-Subject: Re: very slow file deletion on an SSD
-Date: Sat, 26 May 2012 19:25:55 -0400
-Message-ID: <4FC16683.9060800@gmail.com>
-References: <4FBF60D1.80104@gmail.com> <20120526231838.GR25351@dastard>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: raid 10f2 vs 1 on 2 drives
+Date: Sat, 26 May 2012 19:41:55 -0400
+Message-ID: <4FC16A43.1020507@tmr.com>
+References: <20120522193340.GM27769@electro-mechanical.com> <4FBC14DC.8070007@hesbynett.no> <20120523112545.GN27769@electro-mechanical.com> <4FBFD78D.1010503@tmr.com> <4FC0FFAA.1020009@hesbynett.no>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120526231838.GR25351@dastard>
+In-Reply-To: <4FC0FFAA.1020009@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com, linux-raid <linux-raid@vger.kernel.org>
+To: David Brown <david.brown@hesbynett.no>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, William Thompson <wt@electro-mechanical.com>
 List-Id: linux-raid.ids
 
-On 05/26/2012 07:18 PM, Dave Chinner wrote:
-> On Fri, May 25, 2012 at 06:37:05AM -0400, Joe Landman wrote:
->> Hi folks:
+David Brown wrote:
+> On 25/05/12 21:03, Bill Davidsen wrote:
+>> William Thompson wrote:
+>>> On Wed, May 23, 2012 at 12:36:12AM +0200, David Brown wrote:
+>>>> On 22/05/12 21:33, William Thompson wrote:
+>>>>> I understand that raid 10 f2 is slower on writes due to the location
+>>>>> of the
+>>>>> 2nd copy. My question is, if lots of writes are performed, could this
+>>>>> layout wearout the drives quicker than raid 1?
+>>>>
+>>>> No, wear is not going to be significantly different.
+>>>>
+>>>> You didn't say whether you are talking about hard disks (where
+>>>
+>>> Sorry about that (Chief). Yes, I was refering to hard drives.
+>>>
+>>>> location makes a difference, but "wear" on the drive motor is
+>>>> insignificant to the disk's expected lifetime), or flash disks
+>>>
+>>> I was thinking about how much more head movement there would be to
+>>> write the
+>>> 2nd copy of the data.
+>>>
+>> There _is_ no extra head motion. The location of consecutive blocks is
+>> different on each drive, but as I read the mapping function the distance
+>> between blocks on the same drive will be about the same, so amount of
+>> head motion (both number and distance) is the same on each drive, but
+>> the location of that motion is not the same.
 >>
->>    Just ran into this (see posted output at bottom).  3.2.14 kernel,
->> MD RAID 5, xfs file system.  Not sure (precisely) where the problem
->> is, hence posting to both lists.
->>
->>   [root@siFlash ~]# cat /proc/mdstat
->> Personalities : [raid1] [raid6] [raid5] [raid4]
->> md22 : active raid5 sdl[0] sds[7] sdx[6] sdu[5] sdk[4] sdz[3] sdw[2] sdr[1]
->>        1641009216 blocks super 1.2 level 5, 32k chunk, algorithm 2
->> [8/8] [UUUUUUUU]
->>
->> md20 : active raid5 sdh[0] sdf[7] sdm[6] sdd[5] sdc[4] sde[3] sdi[2] sdg[1]
->>        1641009216 blocks super 1.2 level 5, 32k chunk, algorithm 2
->> [8/8] [UUUUUUUU]
->>
->> md21 : active raid5 sdy[0] sdq[7] sdp[6] sdo[5] sdn[4] sdj[3] sdv[2] sdt[1]
->>        1641009216 blocks super 1.2 level 5, 32k chunk, algorithm 2
->> [8/8] [UUUUUUUU]
->>
->> md0 : active raid1 sdb1[1] sda1[0]
->>        93775800 blocks super 1.0 [2/2] [UU]
->>        bitmap: 1/1 pages [4KB], 65536KB chunk
+>> One drive may be seeking at the outer edge of the platter while another
+>> seeks near the spindle, but there's the same amount of seeking on each.
 >>
 >>
->> md2* are SSD RAID5 arrays we are experimenting with.  Xfs file
->> systems atop them:
->>
->> [root@siFlash ~]# mount | grep md2
->> /dev/md20 on /data/1 type xfs (rw)
->> /dev/md21 on /data/2 type xfs (rw)
->> /dev/md22 on /data/3 type xfs (rw)
->>
->> vanilla mount options (following Dave Chinner's long standing advice)
->>
->> meta-data=/dev/md20              isize=2048   agcount=32,
->> agsize=12820392 blks
->>           =                       sectsz=512   attr=2
->> data     =                       bsize=4096   blocks=410252304, imaxpct=5
->>           =                       sunit=8      swidth=56 blks
->> naming   =version 2              bsize=65536  ascii-ci=0
->> log      =internal               bsize=4096   blocks=30720, version=2
->>           =                       sectsz=512   sunit=8 blks, lazy-count=1
->> realtime =none                   extsz=4096   blocks=0, rtextents=0
 >
-> But you haven't followed my advice when it comes to using default
-> mkfs options, have you? You're running 2k inodes and 64k directory
-> block size, which is not exactly a common config
-
-We were experimenting.  Easy to set it back and demonstrate the problem 
-again.
-
+> That's not the case for "far" layout.  When you write a block, it there will 
+> be two copies - one in the first half of one disk (say, disk 1), and the other 
+> in the second half of the other disk (disk 2).  The next sequential block will 
+> be written to the first half of disk 2, and the second half of disk 1 - 
+> exactly half a disk away from the first block. And no matter where the disk 
+> head ends up after the write, raid10,far will always read from the outer half 
+> of the disk since it is significantly faster.  (For SSDs it doesn't matter, 
+> but then neither does head positioning.)
 >
-> The question is, why do you have these options configured, and are
-> they responsible for things being slow?
+He was talking about head motion on write, or I was at any write. Although the 
+writes go to different parts of the platter, they are platters on different 
+drives. So for any large sequential write, the head motion is the same (in 
+distance), but occurs at the outside of one platter and the inside of the other. 
+We're saying the same thing. A the read will not always happen at the outer edge 
+unless both drives are idle, otherwise if one is busy the other will be used. To 
+do otherwise would limit the performance when many reads to adjacent sectors 
+take place.
+
+> Write merging, combining, re-ordering, etc., will minimise this effect, as 
+> will write caches.  But there is no doubt that raid10,far sacrifices write 
+> speed a little in order to get the fastest possible read speeds. For most 
+> use-cases, with more reading than writing, this results in the best overall 
+> speed.
 >
 
-We saw it before we experimented with some mkfs options.  Will rebuild 
-FS and demo it again.
-
-
->> All this said, deletes from this unit are taking 1-2 seconds per file ...
->
-> Sounds like you might be hitting the synchronous xattr removal
-> problem that was recently fixed (as has been mentioned already), but
-> even so 2 IOs don't take 1-2s to do, unless the MD RAID5 barrier
-> implementation is really that bad. If you mount -o nobarrier, what
-> happens?
-
-[root@siFlash test]# ls -alF  | wc -l
-59
-[root@siFlash test]# /usr/bin/time rm -f *
-^C0.00user 8.46system 0:09.55elapsed 88%CPU (0avgtext+0avgdata 
-2384maxresident)k
-25352inputs+0outputs (0major+179minor)pagefaults 0swaps
-[root@siFlash test]# ls -alF  | wc -l
-48
-
-Nope, still an issue:
-
-1338074901.531554 ioctl(0, SNDCTL_TMR_TIMEBASE or TCGETS, {B38400 opost 
-isig icanon echo ...}) = 0 <0.000021>
-1338074901.531701 newfstatat(AT_FDCWD, "1.r.12.0", 
-{st_mode=S_IFREG|0600, st_size=1073741824, ...}, AT_SYMLINK_NOFOLLOW) = 
-0 <0.000022>
-1338074901.531840 unlinkat(AT_FDCWD, "1.r.12.0", 0) = 0 <2.586999>
-1338074904.119032 newfstatat(AT_FDCWD, "1.r.13.0", 
-{st_mode=S_IFREG|0600, st_size=1073741824, ...}, AT_SYMLINK_NOFOLLOW) = 
-0 <0.000033>
-
-2.6 seconds for an unlink.
-
-Rebuilding absolutely vanilla file system now, and will rerun checks.
-
->
-> CHeers,
->
-> Dave.
 
 -- 
-Joseph Landman, Ph.D
-Founder and CEO
-Scalable Informatics Inc.
-email: landman@scalableinformatics.com
-web  : http://scalableinformatics.com
-        http://scalableinformatics.com/sicluster
-phone: +1 734 786 8423 x121
-fax  : +1 866 888 3112
-cell : +1 734 612 4615
+Bill Davidsen<davidsen@tmr.com>
+   We are not out of the woods yet, but we know the direction and have
+taken the first step. The steps are many, but finite in number, and if
+we persevere we will reach our destination.  -me, 2010
+
+
 
