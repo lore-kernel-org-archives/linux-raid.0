@@ -1,30 +1,74 @@
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: very slow file deletion on an SSD
-Date: Sun, 27 May 2012 11:07:02 -0500
-Message-ID: <4FC25126.7070002@sandeen.net>
-References: <4FBF60D1.80104@gmail.com> <20120526231838.GR25351@dastard> <4FC16683.9060800@gmail.com> <20120527000701.GS25351@dastard> <4FC18845.6030301@gmail.com> <4FC19408.5020502@sandeen.net> <CAAxjCEzX4dmm6YuR__1_a6mw+D=vizV0VrCLqCC-d5GSgkbE6g@mail.gmail.com> <1338124504.28212.255.camel@oxygen.netxsys.com> <5856C5F0-C13E-415D-907B-491C1BBCC0C2@gmail.com>
+From: Igor M Podlesny <for.poige+lsr@gmail.com>
+Subject: Re: Hi! Strange issue with LSR -- bitmaps hadn't been used during 2
+ of 3 RAIDs resync
+Date: Mon, 28 May 2012 00:10:33 +0800
+Message-ID: <CA+sTkh67PwRkuYyXMRHUFmJUmC==9KFJNnpK+SsAhCTB-48UOg@mail.gmail.com>
+References: <CA+sTkh74rDvV05pjhVAD5wa4fxXsZE5MLN4y4fMd=Js7_BoTDQ@mail.gmail.com>
+ <20120527220007.64fb230b@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5856C5F0-C13E-415D-907B-491C1BBCC0C2@gmail.com>
+In-Reply-To: <20120527220007.64fb230b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: joe.landman@gmail.com
-Cc: Krzysztof Adamski <k@adamski.org>, Stefan Ring <stefanrin@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 5/27/12 9:59 AM, joe.landman@gmail.com wrote:
-> This is going to be a very fragmented file.  I am guessing that this
-> is the reason for the long duration delete.   I'll do some more
-> measurements before going to 3.4.x as per Eric's note.
+On 27 May 2012 20:00, NeilBrown <neilb@suse.de> wrote:
+> On Sun, 27 May 2012 19:32:40 +0800 Igor M Podlesny <for.poige+lsr@gma=
+il.com>
+> wrote:
+>> =C2=A0 =C2=A0A power outage has happened to system (which was in "su=
+spend"
+>> state) with RAID-10, RAID-5 and RAID-6. Later on boot, RAID-10 was
+>> fast re-synced using bitmap, but both RAID-5 and RAID-6 were in
+>> auto-readonly mode with resync=3DDELAYED. When they flipped to
+>> Read-Write, LSR started re-syncing not using bitmaps seemingly. A bu=
+g?
+>
+> Maybe. =C2=A0But with so little detail it is hard to say.
+> What made you think the bitmaps weren't being used?
 
-filefrag -v should also tell you how many fragments, and because it
-uses fiemap it probably won't run into the same problems.
+   Well, it is reasonable to assume that host being put in suspend
+mode wouldn't have much not synced data at all. RAID-10 had been
+progressing its resync quite fast, it was obvious that it had been
+using bitmaps for that. Moreover =E2=80=94 RAID-10 was the most I/O act=
+ive
+comparing to others, AFAIR.
 
-But it sounds like we can just assume very high fragmentation.
+> Did that arrays still have their bitmaps?
 
-It's not addressing the exact issue, but why are the files so fragmented?
-Are they very hole-y or is it just an issue with how they are written?
-Perhaps preallocation would help you here?
+   I still have that RAID-6, yep:
 
--Eric
+md127 : active raid6 sdg5[2] sdf5[6] sde5[7] sda5[0] sdd5[3] sdc5[1]
+      1071984640 blocks super 1.0 level 6, 1024k chunk, algorithm 2
+[6/6] [UUUUUU]
+      bitmap: 0/1 pages [0KB], 131072KB chunk
+
+> Where they degraded?
+
+   No way.
+
+> How many bits were set in the bitmaps (probably too late to check now=
+)?
+
+   Please see above. And the RAID-5 one was recently dismissed, alas.
+
+> Is it reproducable ? =C2=A0... OK, I don't really expect you to try t=
+o reproduce
+> it, but if you could that would be awesome!
+
+   Well, might be VirtualBox would allow for such kind of experiment, d=
+unno. )
+
+   P. s. Oh, and BTW, I see 2.6.18 supplied by RedHat still has the
+bug causing kernel panic when using WIB -- couldn't you please point
+out is it due to they're missing some important bugfix you made later?
+
+--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
