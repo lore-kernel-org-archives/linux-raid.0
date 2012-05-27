@@ -1,42 +1,60 @@
-From: Stefan Ring <stefanrin@gmail.com>
-Subject: Re: very slow file deletion on an SSD
-Date: Sun, 27 May 2012 09:34:46 +0200
-Message-ID: <CAAxjCEzX4dmm6YuR__1_a6mw+D=vizV0VrCLqCC-d5GSgkbE6g@mail.gmail.com>
-References: <4FBF60D1.80104@gmail.com> <20120526231838.GR25351@dastard>
-	<4FC16683.9060800@gmail.com> <20120527000701.GS25351@dastard>
-	<4FC18845.6030301@gmail.com> <4FC19408.5020502@sandeen.net>
+From: <bongo@gmail.com>
+Subject: The truth about " autopilot income "... Recommends Advanced Sports to you
+Date: Sun, 27 May 2012 07:05:17 -0400
+Message-ID: <788A15DF2808409CB1D3BE89B0432DBB@g19.win.smewh.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-In-Reply-To: <4FC19408.5020502@sandeen.net>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Sender: xfs-bounces@oss.sgi.com
-Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com, Joe Landman <joe.landman@gmail.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Class: urn:content-classes:message
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->> [root@siFlash test]# xfs_bmap -vp 2.r.96.0
->> xfs_bmap: xfsctl(XFS_IOC_GETBMAPX) iflags=0x4 ["2.r.96.0"]: Cannot allocate memory
->
-> Try filefrag -v maybe, if your e2fsprogs is new enough.
->
-> Trying to remember, ENOMEM in bmap rings a bell... but this is possibly indicative of an extremely fragmented file.
+From         :The truth about " autopilot income "...
+Email        :bongo@gmail.com
+Friend Name  :Friend
+Friend Email :linux-raid@vger.kernel.org
+comment      :
 
-True, I've had it happen with extremely fragmented files.
+Hi Friend,
 
-I've started playing around with discard myself only recently, but so
-far I like the approach of using fstrim a lot better than the discard
-option: http://xfs.org/index.php/FITRIM/discard
+"DISCOVER HOW YOU CAN EASILY MAKE OVER $4000/WEEK ONLINE WITHOUT SELLING, 
+ADVERTISING, REFERRING OR OWNING A WEBSITE"
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+http://www.marketsforexsignals.com/?code=4fb2f0c23f2e9 
+
+* No selling products - in any way shape or form
+
+* No advertising
+
+* No data entry
+
+* No Adsense
+
+* No mailing lists
+
+* No rebate processing
+
+* No recruiting new members - this is not MLM
+
+* No uplines or downlines
+
+* No gambling
+
+* No chain letters
+
+* No surveys or "paid to read" programs 
+
+Feel FREE To Check This Out Here:)
+
+http://www.marketsforexsignals.com/?code=4fb2f0c23f2e9 
+
+God Bless Us,
+
+Christian Bongo
+
+
+
+
+
