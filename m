@@ -1,230 +1,129 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [patch 3/3 v2] raid10: percpu dispatch for write request if bitmap supported
-Date: Mon, 28 May 2012 09:13:25 +0800
-Message-ID: <20120528011556.003022691@kernel.org>
-References: <20120528011322.058698078@kernel.org>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Sequential writing to degraded RAID6 causing a lot of reading
+Date: Mon, 28 May 2012 11:31:45 +1000
+Message-ID: <20120528113145.1b8ac4ab@notabene.brown>
+References: <CAAOsTSmnbtejYvjoMpdOzrGFM0+PW45uuf-uBNkR4HUkgyaWDg@mail.gmail.com>
+	<20120524144822.747b446b@notabene.brown>
+	<CAAOsTSm47hy6YF-5fodB+2G6n1E=+Ces_PWsSo7F6GKEF_R1iA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/TscLpAqKetOtv2mR5BeFuk4"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline; filename=raid10-write-percpulist.patch
+In-Reply-To: <CAAOsTSm47hy6YF-5fodB+2G6n1E=+Ces_PWsSo7F6GKEF_R1iA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de, axboe@kernel.dk, shli@fusionio.com
+To: patrik@dsl.sk
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In raid10, all write requests are dispatched in raid10d thread. In fast
-storage, the raid10d thread is a bottleneck, because it dispatches request too
-slow. Also raid10d thread migrates freely, which makes request completion cpu
-not match with submission cpu even driver/block layer has such capability. This
-will cause bad cache issue.
+--Sig_/TscLpAqKetOtv2mR5BeFuk4
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-If bitmap support is enabled, write requests can only be dispatched after dirty
-bitmap is flushed out. After bitmap is flushed, how write requests are
-dispatched doesn't impact correctness. A natural idea is to distribute request
-dispatch to several threads. With this patch, requests are added to a percpu
-list first. After bitmap is flushed, then the percpu list requests will
-dispatched in a workqueue. In this way, above bottleneck is removed.
+On Thu, 24 May 2012 14:37:28 +0200 Patrik Horn=EDk <patrik@dsl.sk> wrote:
 
-In a 4k randwrite test with a 4 disks setup, below patch can provide about 95%
-performance improvements depending on numa binding.
+> On Thu, May 24, 2012 at 6:48 AM, NeilBrown <neilb@suse.de> wrote:
 
-Signed-off-by: Shaohua Li <shli@fusionio.com>
----
- drivers/md/raid10.c |   98 ++++++++++++++++++++++++++++++++++++++++++----------
- drivers/md/raid10.h |   10 ++++-
- 2 files changed, 89 insertions(+), 19 deletions(-)
+> > Firstly, degraded RAID6 with a left-symmetric layout is quite different=
+ from
+> > an optimal RAID5 because there are Q blocks sprinkled around and some D
+> > blocks missing. =A0So there will always be more work to do.
+> >
+> > Degraded left-symmetric-6 is quite similar to optimal RAID5 as the same=
+ data
+> > is stored in the same place - so reading should be exactly the same.
+> > However writing is generally different and the code doesn't make any at=
+tempt
+> > to notice and optimise cases that happen to be similar to RAID5.
+>=20
+> Actually I have left-symmetric-6 without one of the "regular" drives
+> not the one with only Qs on it, so it should be similar to degraded
+> RAID6 with a left-symmetric in this regard.
 
-Index: linux/drivers/md/raid10.h
-===================================================================
---- linux.orig/drivers/md/raid10.h	2012-05-24 15:56:50.053778924 +0800
-+++ linux/drivers/md/raid10.h	2012-05-24 16:01:10.094489173 +0800
-@@ -11,6 +11,14 @@ struct mirror_info {
- 						 */
- };
- 
-+struct write_list {
-+	struct bio_list	pending_bio_list;
-+	struct bio_list	running_bio_list;
-+	struct bio_list	tmp_bio_list;
-+	struct work_struct work;
-+	struct r10conf *conf;
-+};
-+
- struct r10conf {
- 	struct mddev		*mddev;
- 	struct mirror_info	*mirrors;
-@@ -49,7 +57,7 @@ struct r10conf {
- 
- 	struct list_head	retry_list;
- 	/* queue pending writes and submit them on unplug */
--	struct bio_list		pending_bio_list;
-+	struct write_list __percpu *write_list;
- 	int			pending_count;
- 
- 	spinlock_t		resync_lock;
-Index: linux/drivers/md/raid10.c
-===================================================================
---- linux.orig/drivers/md/raid10.c	2012-05-24 15:56:50.065778328 +0800
-+++ linux/drivers/md/raid10.c	2012-05-24 16:02:01.237859524 +0800
-@@ -867,22 +867,21 @@ static int raid10_congested(void *data,
- 	return ret;
- }
- 
--static void flush_pending_writes(struct r10conf *conf)
-+static void raid10_write_work(struct work_struct *work)
- {
--	/* Any writes that have been queued but are awaiting
--	 * bitmap updates get flushed here.
--	 */
--	spin_lock_irq(&conf->device_lock);
-+	struct write_list *list = container_of(work, struct write_list, work);
-+	struct bio *bio;
-+	struct blk_plug plug;
-+	bool try_again = true;
- 
--	if (conf->pending_bio_list.head) {
--		struct bio *bio;
--		bio = bio_list_get(&conf->pending_bio_list);
--		conf->pending_count = 0;
--		spin_unlock_irq(&conf->device_lock);
--		/* flush any pending bitmap writes to disk
--		 * before proceeding w/ I/O */
--		bitmap_unplug(conf->mddev->bitmap);
--		wake_up(&conf->wait_barrier);
-+	blk_start_plug(&plug);
-+
-+	while (try_again) {
-+		spin_lock_irq(&list->conf->device_lock);
-+		bio = bio_list_get(&list->running_bio_list);
-+		spin_unlock_irq(&list->conf->device_lock);
-+
-+		try_again = (bio != NULL);
- 
- 		while (bio) { /* submit pending writes */
- 			struct bio *next = bio->bi_next;
-@@ -890,8 +889,53 @@ static void flush_pending_writes(struct
- 			generic_make_request(bio);
- 			bio = next;
- 		}
--	} else
--		spin_unlock_irq(&conf->device_lock);
-+	}
-+	blk_finish_plug(&plug);
-+}
-+
-+static void flush_pending_writes(struct r10conf *conf)
-+{
-+	int c;
-+	struct write_list *list;
-+
-+	/* Any writes that have been queued but are awaiting
-+	 * bitmap updates get flushed here.
-+	 */
-+	spin_lock_irq(&conf->device_lock);
-+
-+	for_each_present_cpu(c) {
-+		list = per_cpu_ptr(conf->write_list, c);
-+		if (!bio_list_empty(&list->pending_bio_list)) {
-+			bio_list_merge(&list->tmp_bio_list,
-+				      &list->pending_bio_list);
-+			bio_list_init(&list->pending_bio_list);
-+		}
-+	}
-+
-+	conf->pending_count = 0;
-+	spin_unlock_irq(&conf->device_lock);
-+
-+	/* flush any pending bitmap writes to disk before proceeding w/ I/O */
-+	bitmap_unplug(conf->mddev->bitmap);
-+	wake_up(&conf->wait_barrier);
-+
-+	spin_lock_irq(&conf->device_lock);
-+	for_each_present_cpu(c) {
-+		list = per_cpu_ptr(conf->write_list, c);
-+		if (!bio_list_empty(&list->tmp_bio_list)) {
-+			bio_list_merge(&list->running_bio_list,
-+				       &list->tmp_bio_list);
-+			bio_list_init(&list->tmp_bio_list);
-+			if (likely(cpu_online(c)))
-+				md_schedule_work_on(c, &list->work);
-+			else {
-+				int cpu = cpumask_any(cpu_online_mask);
-+				md_schedule_work_on(cpu, &list->work);
-+			}
-+		}
-+	}
-+
-+	spin_unlock_irq(&conf->device_lock);
- }
- 
- /* Barriers....
-@@ -1374,6 +1418,7 @@ retry_write:
- 
- 	for (i = 0; i < conf->copies; i++) {
- 		struct bio *mbio;
-+		struct write_list *list;
- 		int d = r10_bio->devs[i].devnum;
- 		if (!r10_bio->devs[i].bio)
- 			continue;
-@@ -1393,7 +1438,8 @@ retry_write:
- 
- 		atomic_inc(&r10_bio->remaining);
- 		spin_lock_irqsave(&conf->device_lock, flags);
--		bio_list_add(&conf->pending_bio_list, mbio);
-+		list = this_cpu_ptr(conf->write_list);
-+		bio_list_add(&list->pending_bio_list, mbio);
- 		conf->pending_count++;
- 		spin_unlock_irqrestore(&conf->device_lock, flags);
- 
-@@ -1420,7 +1466,8 @@ retry_write:
- 
- 		atomic_inc(&r10_bio->remaining);
- 		spin_lock_irqsave(&conf->device_lock, flags);
--		bio_list_add(&conf->pending_bio_list, mbio);
-+		list = this_cpu_ptr(conf->write_list);
-+		bio_list_add(&list->pending_bio_list, mbio);
- 		conf->pending_count++;
- 		spin_unlock_irqrestore(&conf->device_lock, flags);
- 	}
-@@ -3360,6 +3407,7 @@ static struct r10conf *setup_conf(struct
- 	int err = -EINVAL;
- 	struct geom geo;
- 	int copies;
-+	int cpu;
- 
- 	copies = setup_geo(&geo, mddev, geo_new);
- 
-@@ -3421,6 +3469,18 @@ static struct r10conf *setup_conf(struct
- 	spin_lock_init(&conf->resync_lock);
- 	init_waitqueue_head(&conf->wait_barrier);
- 
-+	conf->write_list = alloc_percpu(struct write_list);
-+	if (!conf->write_list)
-+		goto out;
-+	for_each_present_cpu(cpu) {
-+		struct write_list *list = per_cpu_ptr(conf->write_list, cpu);
-+		bio_list_init(&list->pending_bio_list);
-+		bio_list_init(&list->running_bio_list);
-+		bio_list_init(&list->tmp_bio_list);
-+		INIT_WORK(&list->work, raid10_write_work);
-+		list->conf = conf;
-+	}
-+
- 	conf->thread = md_register_thread(raid10d, mddev, NULL);
- 	if (!conf->thread)
- 		goto out;
-@@ -3433,6 +3493,7 @@ static struct r10conf *setup_conf(struct
- 		printk(KERN_ERR "md/raid10:%s: couldn't allocate memory.\n",
- 		       mdname(mddev));
- 	if (conf) {
-+		free_percpu(conf->write_list);
- 		if (conf->r10bio_pool)
- 			mempool_destroy(conf->r10bio_pool);
- 		kfree(conf->mirrors);
-@@ -3632,6 +3693,7 @@ static int stop(struct mddev *mddev)
- 
- 	md_unregister_thread(&mddev->thread);
- 	blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
-+	free_percpu(conf->write_list);
- 	if (conf->r10bio_pool)
- 		mempool_destroy(conf->r10bio_pool);
- 	kfree(conf->mirrors);
+Yes, it should - I had assumed wrongly ;-)
 
+>=20
+> > A particular issue is that while RAID5 does read-modify-write when upda=
+ting a
+> > single block in an array with 5 or more devices (i.e. it reads the old =
+data
+> > block and the parity block, subtracts the old from parity and adds the =
+new,
+> > then writes both back), RAID6 does not. It always does a reconstruct-wr=
+ite,
+> > so on a 6-device RAID6 it will read the other 4 data blocks, compute P =
+and Q,
+> > and write them out with the new data.
+> > If it did read-modify-write it might be able to get away with reading j=
+ust P,
+> > Q, and the old data block - 3 reads instead of 4. =A0However subtractin=
+g from
+> > the Q block is more complicated that subtracting from the P block and h=
+as not
+> > been implemented.
+>=20
+> OK, I did not know that. In my case I have 8 drives RAID6 degraded to
+> 7 drives, so it would be plus to have it implemented the RAID5 way.
+> But anyway I was thinking the whole-stripe detection should work in
+> this case.
+>=20
+> > But that might not be the issue you are hitting - it simply shows that =
+RAID6
+> > is different from RAID5 in important but non-obvious ways.
+> >
+> > Yes, RAID5 and RAID6 do try to detect whole-stripe write and write them=
+ out
+> > without reading. =A0This is not always possible though.
+> > Maybe if you told us how many devices were in your arrays (which may be
+> > import to understand exactly what is happening), what the chunk size is=
+, and
+> > exactly what command you use to write "lots of data". =A0That might help
+> > understand what is happening.
+>=20
+> The RAID5 is 5 drives, the RAID6 arrays are 7 of 8 drives, chunk size
+> is 64K. I am using command dd if=3D/dev/zero of=3Dfile bs=3DX count=3DY, =
+it
+> behaves the same for bs between 64K to 1 MB. Actually internal read
+> speed from every drive is slightly higher that write speed, about cca
+> 10%. The ratio between write speed to the array and write speed to
+> individual drive is cca 5.5 - 5.7.
+
+I cannot really picture how the read speed can be higher than the write
+speed.  The spindle doesn't speed up for reads and slow down for writes does
+it?  But that's not really relevant.
+
+A 'dd' with large block size should be a good test.  I just did a simple
+experiment.  With a 4-drive non-degraded RAID6 I get about a 1:100 ratio for
+reads to writes for an extended write to the filesystem.
+If I fail one device it becomes 1:1.  Something certainly seems wrong there.
+
+RAID5 behaves more as you would expect - many more writes than reads.
+
+I've made a note to look into this when I get a chance.
+
+Thanks for the report.
+
+NeilBrown
+
+--Sig_/TscLpAqKetOtv2mR5BeFuk4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT8LVgTnsnt1WYoG5AQKd2hAAtfr6bYUxct3BrNcLvvI0hVQnB9wyPDB0
+OQjG9HekHiORovVVSqm1fGJKn2i3K5aDD78iAAHHDzhhJ1ja+SKON2NVLq+hycf1
+CPk9xsw/HXg2lbq2F0M30Jhn9538KitLHeznL5jjgk5CWJ/n+7DC2tdEdGa0Yv/9
+Dol1VGiJUc4fChZrCnx8OClLT9UBqoN5xxwhnbMCr1bIS/JE/Frh3RdQ3TgzzRyN
+idF9+5PPKNUAnaZaNvKwocENH/Se0NSx/d1TXhb+2sIn1xCpsBqry3eLJ3HJqWzK
+tLDFZrbop5jMIJjhOMxj9dhx+xAQ7DKalVwLajeOsqZtYwUs5PaXW+peZfD/JDfK
+46Hsq/zG3sLEh755qCe9dZdNgeOQRdv26xTbqDRg3MJ82D1Drp5H195NdoQbnt2+
+c+/u512WQEr5dOwbf/eK5G+tzQusk9sqqlaMndzOiiWE1CI3Ojfpcc9uFahSCD5U
+ejXeKyHZUHRt66Q87PL5et8sGD4rvzgBVo1UYhw0R7q3a7RDHHBj889vXrHN3/NF
+LLovSOEH57/tpU+RnsaGOjTO+v4l9hGWFuL6XzROaJpK5EbTr4vZzJghzMR6hbo6
+xppYWWslYTWvK6Xtzr9ibRwp4EuuSNK/xIfS2kmfouU/gvDX2EQY5KiZPK8HV71u
+/bqmd5y+RkI=
+=uaT8
+-----END PGP SIGNATURE-----
+
+--Sig_/TscLpAqKetOtv2mR5BeFuk4--
