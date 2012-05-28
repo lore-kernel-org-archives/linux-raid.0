@@ -1,81 +1,90 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] mdadm: Fix Segmentation fault.
-Date: Tue, 29 May 2012 09:23:30 +1000
-Message-ID: <20120529092330.1b7c611f@notabene.brown>
-References: <201205251949358900592@gmail.com>
+Subject: Re: [PATCH] imsm: fix: correct checking volume's degradation
+Date: Tue, 29 May 2012 09:35:58 +1000
+Message-ID: <20120529093558.571e8d95@notabene.brown>
+References: <20120525130641.31750.43414.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ZpoBY1UOg5VRxH+t.k9E47X"; protocol="application/pgp-signature"
+ boundary="Sig_/NXgFyMKYKB_+gaeGPI0Na6L"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201205251949358900592@gmail.com>
+In-Reply-To: <20120525130641.31750.43414.stgit@gklab-128-085.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
---Sig_/ZpoBY1UOg5VRxH+t.k9E47X
+--Sig_/NXgFyMKYKB_+gaeGPI0Na6L
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 25 May 2012 19:49:40 +0800 "majianpeng" <majianpeng@gmail.com> wrot=
-e:
+On Fri, 25 May 2012 15:06:41 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
+wrote:
 
-> In function write_init_super1():
-> If "rv =3D store_super1(st, di->fd)" return error and the di is the last.
-> Then the di =3D NULL && rv > 0, so exec:
-> if (rv)
->     fprintf(stderr, Name ": Failed to write metadata to%s\n",
->      	 di->devname);
-> will be segmentation fault.
+> We do not check the return value of sysfs_get_ll() now. It is wrong.
+> If reading of the sysfs "degraded" key does not succeed,
+> the "new_degraded" variable will not be initiated
+> and accidentally it can have the value of "degraded" variable.
+> In that case the change of degradation will not be checked.
 >=20
-> Signed-off-by: majianpeng <majianpeng@gmail.com>
+> It happens if mdadm is compiled with gcc's "-fstack-protector" option
+> when one tries to stop a volume under reshape (e.g. OLCE).
+> Reshape seems to be finished then (metadata is in normal/clean state)
+> but it is not finished, it is broken and data are corrupted.
+>=20
+> Now we always check the return value of sysfs_get_ll().
+> Even if reading of the sysfs "degraded" key does not succeed
+> (rv =3D=3D -1) the change of degradation will be checked.
+>=20
+> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
 > ---
->  super1.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
+>  super-intel.c |    6 ++++--
+>  1 files changed, 4 insertions(+), 2 deletions(-)
 >=20
-> diff --git a/super1.c b/super1.c
-> index 4f20cc3..37b7a90 100644
-> --- a/super1.c
-> +++ b/super1.c
-> @@ -1242,6 +1242,8 @@ static int write_init_super1(struct supertype *st)
->  			rv =3D st->ss->write_bitmap(st, di->fd);
->  		close(di->fd);
->  		di->fd =3D -1;
-> +		if (rv)
-> +			goto error_out;
->  	}
->  error_out:
->  	if (rv)
+> diff --git a/super-intel.c b/super-intel.c
+> index 6c87e20..07ab9ae 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -10370,8 +10370,10 @@ int check_degradation_change(struct mdinfo *info,
+>  			     int degraded)
+>  {
+>  	unsigned long long new_degraded;
+> -	sysfs_get_ll(info, NULL, "degraded", &new_degraded);
+> -	if (new_degraded !=3D (unsigned long long)degraded) {
+> +	int rv;
+> +
+> +	rv =3D sysfs_get_ll(info, NULL, "degraded", &new_degraded);
+> +	if ((rv =3D=3D -1) || (new_degraded !=3D (unsigned long long)degraded))=
+ {
+>  		/* check each device to ensure it is still working */
+>  		struct mdinfo *sd;
+>  		new_degraded =3D 0;
 
-Thanks.
-This doesn't only go wrong when di is the last.  If di is not the last it
-will not crash, but it will report an error for the wrong device.
 
-So thanks for finding this - I've applied you patch and also remove the
-'&& ! rv' test from the 'for' loop as it is now pointless.
+applied, thanks.
 
 NeilBrown
 
---Sig_/ZpoBY1UOg5VRxH+t.k9E47X
+
+--Sig_/NXgFyMKYKB_+gaeGPI0Na6L
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT8QI8jnsnt1WYoG5AQJOCQ/8DIsggw3hSyPuJU3mvnz6mDwkH6JQXfd/
-qH5wed78hSDwDhjAfbvUj0NOZybdWaBbGhkD+urRzVPaXI/jIo9ji/mrd9D7nJL2
-DvAMt+FHD0H6FF972B1rBW35Qgma8dCs+JmkGkHbJ/yxk8q9pib3wz2CQ4zg7mBW
-2IuLj4qaj7FNjNsdh4uvv9ingrFf3HZ/mVUXur1CygaF2x0QXH1HJJx2DM1M8VSf
-d+ATSwUT7DbGOLt9Q9K/mLMZnXX7HGDlmd97353Cx/HlltC8VtXIBilaC+hagdi4
-r2+9gRPWOYnGirQ2amqyDsejZSjKLd3tbKHB1yFBUkvDAfZcIIQMsHIGVOLkkgpf
-gFNS+7dOBqDs2nNGLs3y2mb4xFxeqLZwWs/yU//BReeYLdtK8K7A9zpadf6DrZ6G
-l3zWo0X4EUAQ0fWRD/Var14vOaVAWb61WSsJ/rHFX/9xYEzenGq1ykaseU8uFEPU
-pHp9ayAmPmXgqHDD7Ha6wT0c1Jz8GzjdFIwsPkghRjoWzDGBof5g/rhdoZZA/x6U
-HRa1YNGIzDCzQAhNG6WXtlSbIYMhMuPlIVnx3tEo3MPrkkDddKPgsxa2R+Tvay9T
-ffV6crVIfltuLJgYLiA0JLco5q1NQjGGW9vRMZz+kd40LzbO52JH/yH751hNxMdw
-mn1VB3pZHEg=
-=NOMd
+iQIVAwUBT8QL3jnsnt1WYoG5AQL7gQ//Y7Ic26KY+pQ70vKd53GaZdhzUI4FkMk6
+MG38gbBWZSQDcmHBe5/BfEZX4piy3tzTCEoaZbN12O9RDSl3j8W5E2LjlScyd9Wx
+N5mAzxsiXKonu/O39HNQd4TlWZxwnykSnj+RS15bMNz9WV1Uu7RdaLdZ9mtcL5An
+mb1vrPavsTBhyhyk/b4lUF+syHf1a0iHuKE6im1kR00A3msI4Vq9jL6/fkEy+VTx
+sfXyC2gOawMA7Ar9PzZOSdNwEEJI4G+QPW5E60E9gzVj9VDvpM+IsqVRxLTY/s8n
+Pzgvw10F34/Ddc8fvjR13SsG2vz4d70jnCYtgL0nR8Za+5HednGmp/sNLDEXF/3h
+E1ZxQXmYvqUGOFd7qmq3gHA4dM9i2lwSQ7hhr/tZaW/ajjyh1ntbiqI4hMIby5/h
+XkkkedwetotzSjfBcjEL33KoyA5vOLbFClSHVun+vXK8y1SwAsdQUPW34/WE5f/F
+YEjb2LU/jFSHPteO2odT6/kAS/1d9Of9VlYq6H3MlwQ9WHRxpYIwDOcVwjk+XYmI
+zm8xK+wmu8zN7eVHVhKjIE4saPZznx827/LVKc6xUgLQqzhN2bDuP9rDrphWx2LE
+BKC2Ld+caKYLIEMhgKOuPuDw5fLVIoa8q91NVy+XauPGWOdiJmqrdeXutxZM8LVN
+nMJpf2OCQzo=
+=WoPw
 -----END PGP SIGNATURE-----
 
---Sig_/ZpoBY1UOg5VRxH+t.k9E47X--
+--Sig_/NXgFyMKYKB_+gaeGPI0Na6L--
