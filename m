@@ -1,97 +1,112 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Bug#658701: mdadm: should send email if mismatches are reported
- by a check
-Date: Mon, 28 May 2012 11:41:30 +1000
-Message-ID: <20120528114130.31b6c1db@notabene.brown>
-References: <20120205123450.21371.88843.reportbug@xev>
-	<4F2E90AD.3020405@msgid.tls.msk.ru>
-	<4F872CED.7050809@msgid.tls.msk.ru>
-	<4FC0EB0C.1080800@msgid.tls.msk.ru>
+Subject: Re: Hi! Strange issue with LSR -- bitmaps hadn't been used during 2
+ of 3 RAIDs resync
+Date: Mon, 28 May 2012 11:45:50 +1000
+Message-ID: <20120528114550.417ae379@notabene.brown>
+References: <CA+sTkh74rDvV05pjhVAD5wa4fxXsZE5MLN4y4fMd=Js7_BoTDQ@mail.gmail.com>
+	<20120527220007.64fb230b@notabene.brown>
+	<CA+sTkh67PwRkuYyXMRHUFmJUmC==9KFJNnpK+SsAhCTB-48UOg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/X8rPIF4kHihl3x8=3LHPRF7"; protocol="application/pgp-signature"
+ boundary="Sig_/2+w6vQqSaINdOYgk6v8hHNS"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FC0EB0C.1080800@msgid.tls.msk.ru>
+In-Reply-To: <CA+sTkh67PwRkuYyXMRHUFmJUmC==9KFJNnpK+SsAhCTB-48UOg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: 658701@bugs.debian.org, linux-raid <linux-raid@vger.kernel.org>
+To: Igor M Podlesny <for.poige+lsr@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/X8rPIF4kHihl3x8=3LHPRF7
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/2+w6vQqSaINdOYgk6v8hHNS
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 26 May 2012 18:39:08 +0400 Michael Tokarev <mjt@tls.msk.ru> wrote:
+On Mon, 28 May 2012 00:10:33 +0800 Igor M Podlesny <for.poige+lsr@gmail.com>
+wrote:
 
-> Neil, can you comment on the change to Monitor offered
-> in the mentioned bugreport please?
+> On 27 May 2012 20:00, NeilBrown <neilb@suse.de> wrote:
+> > On Sun, 27 May 2012 19:32:40 +0800 Igor M Podlesny <for.poige+lsr@gmail=
+.com>
+> > wrote:
+> >> =C2=A0 =C2=A0A power outage has happened to system (which was in "susp=
+end"
+> >> state) with RAID-10, RAID-5 and RAID-6. Later on boot, RAID-10 was
+> >> fast re-synced using bitmap, but both RAID-5 and RAID-6 were in
+> >> auto-readonly mode with resync=3DDELAYED. When they flipped to
+> >> Read-Write, LSR started re-syncing not using bitmaps seemingly. A bug?
+> >
+> > Maybe. =C2=A0But with so little detail it is hard to say.
+> > What made you think the bitmaps weren't being used?
 >=20
-> On 12.04.2012 23:28, Michael Tokarev wrote:
-> > Neil, re http://bugs.debian.org/658701 , how do you think,
-> > is it okay if mdadm --monitor will send email in case check
-> > found mismatches, the same way it sends email about other
-> > more critical errors?
-> >=20
-> > I think Russell has a good point here, but there's one more
-> > source of mismatches we have in kernel - some "sporadic"
-> > mismatches in raid1 and raid10, especially when these are
-> > used as swap space...
-> >=20
-> > In Debian we've several bugreports already requesting more
-> > attention to mismatch_cnt, see:
-> >=20
-> >  http://bugs.debian.org/658701 (this one)
-> >  http://bugs.debian.org/599821
-> >  http://bugs.debian.org/588516
-> >=20
-> > Thank you!
-> >=20
-> > /mjt
+>    Well, it is reasonable to assume that host being put in suspend
+> mode wouldn't have much not synced data at all. RAID-10 had been
+> progressing its resync quite fast, it was obvious that it had been
+> using bitmaps for that. Moreover =E2=80=94 RAID-10 was the most I/O active
+> comparing to others, AFAIR.
 
-Sorry for not replying the first time :-(
+Unfortunately vague statements about "it was obvious" or "AFAIR" don't real=
+ly
+help in analysing a situation to find any bugs.
+I can only really work with concrete facts.  Without them I cannot help.
 
-I do not agree with the suggested change to mdadm.
-A non-zero mismatch count may not be a problem.
-It could be due to swap writing to a RAID1/RAID10.
-It could also be due to a RAID1/RAID10/RAID6 having been
-created with --assume-clean.  This is perfectly safe thing
-to do but results in a non-zero mismatch_cnt.
+>=20
+> > Did that arrays still have their bitmaps?
+>=20
+>    I still have that RAID-6, yep:
+>=20
+> md127 : active raid6 sdg5[2] sdf5[6] sde5[7] sda5[0] sdd5[3] sdc5[1]
+>       1071984640 blocks super 1.0 level 6, 1024k chunk, algorithm 2
+> [6/6] [UUUUUU]
+>       bitmap: 0/1 pages [0KB], 131072KB chunk
+>=20
+> > Where they degraded?
+>=20
+>    No way.
+>=20
+> > How many bits were set in the bitmaps (probably too late to check now)?
+>=20
+>    Please see above. And the RAID-5 one was recently dismissed, alas.
+>=20
+> > Is it reproducable ? =C2=A0... OK, I don't really expect you to try to =
+reproduce
+> > it, but if you could that would be awesome!
+>=20
+>    Well, might be VirtualBox would allow for such kind of experiment, dun=
+no. )
+>=20
+>    P. s. Oh, and BTW, I see 2.6.18 supplied by RedHat still has the
+> bug causing kernel panic when using WIB -- couldn't you please point
+> out is it due to they're missing some important bugfix you made later?
 
-mdadm --monitor will run a program on every event.  If someone
-wants more events reported than currently are reported, they are
-free to write a script to do whatever they like.
-
-If md finds unreadable blocks and fixes them, then that certainly
-might be interesting.  However that is interesting much more broadly than
-just for md, and I believe 'smart' makes that information available.  So
-having it reported from SMART would be more sensible.
-
-In brief: mismatch_cnt maybe useful to someone who understands what is means
-and is investigating some issues, but it is not something that should be
-automatically reported to a casual sysadmin.
+I have no time or interest for submiting bug reports to distros that I don't
+use.  If the presence of the bug concerns you, I suggest you report it.
 
 NeilBrown
 
---Sig_/X8rPIF4kHihl3x8=3LHPRF7
+
+>=20
+> --
+
+
+--Sig_/2+w6vQqSaINdOYgk6v8hHNS
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT8LXyjnsnt1WYoG5AQIk/g/9FudU93wRxPgam/UUg4VTSMWjttUADDXs
-4eEasVmcBemsvL7UIohGcFeiWQUC2HC3i+rteP1Eh46zUP9+Fvec830gg/wxRRxR
-znwpNsoO0ZqmLP4OTNLPPVEPTONQsOXCMtETfXOVz8WZIYF4Xtj5g6wHyBt4CKWl
-B93Ch9WtknhvA6oyDwCxdTWzUXrkzgJnIKDv4jgQZdliQzcdRR9Fv889N7QjIzzz
-MUiYQhU4qwIPlZeDuAiz+Mt06je4GSja/IHhJqD4J2mJjJsPEmqR7qsnbUM21Pum
-YEznTvZaYU7WGTdmavvOj3WLvYwMTWbY8bmQecvYeSUpwPbWN/lP21oGTG7MDY+5
-5AZ3p8kbtz0R/WqU5VHNKNCo1AbJUrTSqmHoACcHw/vZOzK1Xg7QJ5By3/a4AgPF
-xktNSSe6vyfFxzr6I+Ey/5Hc5RGUMLlOTp6Cdf99ewDjX1sXSGFc7NNhZFXMKn3K
-vIChFIS1VeomrnXLIuiLkZ2n33HS6z7UjbovHgd3NmyKQ4Zl+AIFL/GE0hpjwram
-wQ1h0Cqqi5WroxHoHvoAzn74psTG9hVWPUm68wwF8JlNF8JqnVNm1qXJwtbEOBKR
-cnvf+WF1+gPfKATY1f/PkonO+QMFrhjMlDxzOtyX6Yc2AVajs+uzBvZOw2uotmlu
-gP9KzKHOOGA=
-=noKb
+iQIVAwUBT8LYzjnsnt1WYoG5AQI0ORAAulLQdsV4FmQIYFE+GMQDuQfrH7c3k8b1
+20lAmS7OyWutWAvHUYey16C29SUlTYEy+5MzAJlm7awAXxKawdUYAcT4RppgueKD
+H93h823f/XaeY3Wk+h4acg1LbCBeCaCPJbTFtdyDWGe8Mytdww7mfQszb43yDAtw
+BufxIM4WR2ysXUEwRTtuEFi0nzHKgQPlEoaIl2kdEP4F262Tuliy607Or7VTgx8J
+CsQdr3Fhy0Y1qcEH0ICBspMmZpysHM9wl27T5bepPm8oG9P8dFbnYOOMwyi8VM4C
+HSfBQDKUUcVnJztPQeWd6LJuZUIEHMQnHIPNRSCXouzg4T56Nx/fNjFJHgrg2vRI
+5M1TedUQYjKLlr6U7L842vd7O32+TeTzJKJgmA5mT7eRpHMgSUx72UOy37zOcaPz
+//gepQt+KTkMISMVPo6jJ8rlVbvhJnWkRlhtnocq5WhRJ2ukhJPJXGCuqq/g43oj
+oCz5zEGTmbC334D7Rml57scBHPljkgRb84dK4Ibdvo9sidxTNf11S4jSct67mALz
+uflt2y0zIsmJ7gfZRZXcFD2l8oYKLstef5DF3UdRhxJ62Z2qkqs8C7RJakgHRYot
+gMtQhkz7y0jTzQNv5bGsmG8RtfUrBbP7sNDxzzuAT+hvD9n5TAQYBO0ujNiZbDFM
+3k0UulxSnII=
+=qd4I
 -----END PGP SIGNATURE-----
 
---Sig_/X8rPIF4kHihl3x8=3LHPRF7--
+--Sig_/2+w6vQqSaINdOYgk6v8hHNS--
