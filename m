@@ -1,88 +1,45 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: raid5 to raid6 - reshape very slow
-Date: Tue, 29 May 2012 10:56:19 +1000
-Message-ID: <20120529105619.4dd15511@notabene.brown>
-References: <4FC41970.5080009@infinitedepth.com.au>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH 4/4] Move setup code to a function and introduce matching
+ cleanup argument
+Date: Tue, 29 May 2012 08:02:16 +0200
+Message-ID: <4FC46668.9070306@redhat.com>
+References: <1337959448-5299-1-git-send-email-Jes.Sorensen@redhat.com> <1337959448-5299-5-git-send-email-Jes.Sorensen@redhat.com> <20120528105641.7dd20b5f@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/R95JdjpxOIB/rnvnBG7NT1r"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FC41970.5080009@infinitedepth.com.au>
+In-Reply-To: <20120528105641.7dd20b5f@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jonathan Molyneux <jonathan@infinitedepth.com.au>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: dledford@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/R95JdjpxOIB/rnvnBG7NT1r
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 05/28/12 02:56, NeilBrown wrote:
+> On Fri, 25 May 2012 17:24:08 +0200 Jes.Sorensen@redhat.com wrote:
+> 
+>> @@ -231,7 +233,7 @@ do_test() {
+>>      if [ "$savelogs" == "1" ]; then
+>>        cp $targetdir/log $logdir/$_basename.log
+>>      fi
+>> -    if [ "$_fail" == "1" -a $"exitonerror" == "1" ]; then
+>> +    if [ "$_fail" == "1" -a "$exitonerror" == "1" ]; then
+>>        exit 1
+>>      fi
+>>    fi
+> 
+> I merged this fix back into the previous patch that introduced the bug :-)
+> 
+> Otherwise - all applied,
+> Thanks.
 
-On Tue, 29 May 2012 10:33:52 +1000 Jonathan Molyneux
-<jonathan@infinitedepth.com.au> wrote:
+Sounds good!
 
-> Hi Everyone,
->=20
-> I'm currently reshaping my raid5 array into a raid6 array (by adding a=20
-> spare and growing).
->=20
-> Unfortunately I didn't research the nuances before doing so and missed=20
-> the opportunity to --layout=3Dpreserve.
->=20
-> As a result the array is rebuilding by use of a backup-file, at a rather=
-=20
-> slow pace.
->=20
-> md1 : active raid6 sde1[0] sdb1[6] sdh1[5] sdc1[4] sdg1[3] sdd1[2] sdf1[1]
->        7325679680 blocks super 0.91 level 6, 64k chunk, algorithm 18=20
-> [7/6] [UUUUUU_]
->        [=3D=3D=3D=3D=3D=3D=3D=3D=3D>...........]  reshape =3D 47.0% (6894=
-13888/1465135936)=20
-> finish=3D4126.9min speed=3D3132K/sec
->=20
-> I have tried the following so far:
->=20
-> * read ahead tweaking
-> * stripe_cache_size tweaking (not a limiting factor - mdadm seems to=20
-> tune this appropriately)
-> * running the backup file from dev/shm (only for testing purposes)
->=20
-> The reshape does not seem to be IO or CPU bound, it just seems to be=20
-> limited by the sync's and meta data updates to each disk.
->=20
-> Is it possible to increase the buffer/stripes that mdadm process in a=20
-> batch to speed up the process (~41m/2 -> 1G) ?
->=20
-> Any thoughts would be appreciated (even to confirm there is nothing to=20
-> be done).
+> I'll definitely be using the --no-error option!
 
-The only thing to do is to wait.  This is very much a seek-bound operation
-and there is little room for making it go faster.
+Excellent, glad it's turning out to be useful. I am trying to get to a
+point where I can have the test suite run automatically, though I am
+still hitting test errors on both Fedora and RHEL at this point which I
+need to figure out first.
 
-In a few months we might see the need for the backup file disappear, which
-will improve things somewhat, but it will still be slowish.
-
-NeilBrown
-
---Sig_/R95JdjpxOIB/rnvnBG7NT1r
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT8Qesznsnt1WYoG5AQLOVhAAjoF8XFROpz+/IA+w0ja/NfddBdPEUwCz
-TMTrOfRXSZBK0vQ99TRnzvRD2fFhg4TTPlpidoz3575FVo6YUhH0dkqOKTGEHSZC
-sy/ZuMUCBdU9Wb5k67PedD6PcObtXgW6EyqZaS6LOBh62AoyupXx+ohheVU6BLVR
-bg5YS+9NSqS8TloFzosqy/4k3WNdxDKl0QsTebjU5zmpIb7GrmUo2hNIy6jywOEX
-RB5HUfuwEomT5RkKovW5DMojVld8c1CWtLNb/778on2Ss0gBQcXD8/kJszWF3AqN
-150swoMtdvKxeyxCKi8gxyZq2rN62NPIDLHBVHxA1IgpfnkXRO/MNXENel0iWkMR
-Zq7LWrWgOLyyUcnfdVgH1ZyEkbIXLdyv25FJHuGfkm+K+8A92s/UXZVRwWSmwQ1e
-zgvCvYpkY+juxKDSQfLy+VyA0XRAxH+ROHyrvPwMn3HqcFFoIc3DTnINLcNHaUxa
-7zSX495LXbjg+1jMhLfEvEyE55crJ+bYd64sIOFUAGUvjcDinEPsTbYXPLSlBqCw
-z6U03b3m24y41sUaNXbGWmgd1AN4NRsIA/T36Eo7UKmk7y2GZkowuHr6lV0//9+l
-ztASTr2YIifNmA1Ah8LY3Ous6eCwKK3gO4EbkXXMSjkBrnIFK8JDGXnTzfuNWi+o
-drkCiQ21boI=
-=YH8i
------END PGP SIGNATURE-----
-
---Sig_/R95JdjpxOIB/rnvnBG7NT1r--
+Cheers,
+Jes
