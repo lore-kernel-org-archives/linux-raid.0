@@ -1,38 +1,42 @@
-From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Subject: Re: Reason for md raid 01 blksize limited to 4 KiB?
-Date: Tue, 29 May 2012 11:30:27 +0200
-Message-ID: <4FC49733.9050905@profitbricks.com>
-References: <4FBA0047.5050208@profitbricks.com>	<20120522092817.1b5946b8@notabene.brown>	<4FBF7CAD.7000307@profitbricks.com> <20120528140505.6eb49b26@notabene.brown>
+From: "jonathan@infinitedepth.com.au" <jonathan@infinitedepth.com.au>
+Subject: Re: raid5 to raid6 - reshape very slow
+Date: Tue, 29 May 2012 19:59:37 +1000
+Message-ID: <4FC49E09.3090302@infinitedepth.com.au>
+References: <4FC41970.5080009@infinitedepth.com.au> <20120529105619.4dd15511@notabene.brown> <4FC478FA.2020100@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120528140505.6eb49b26@notabene.brown>
+In-Reply-To: <4FC478FA.2020100@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: stan@hardwarefreak.com, NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 28/05/12 06:05, NeilBrown wrote:
-> What do you mean by "doesn't work"?  Returns errors? crashes? hangs? kills
-> you cat?
-> 
+I suspected the only move was to wait it out.
 
-dd with oflag=direct returned an IO error.
+Thanks for the feedback Stan & Neil.
 
-> It works for me.
-> 
-> When I use 32K direct writes to a RAID1, both underlying RAID0 arrays see
-> 64-sector writes.
-> 
-> (when I do normal buffered writes I see 8-sector writes which seems odd,
->  but clearly md/RAID1 is allowing large writes through)
-> 
-
-Now, I've updated mdadm to version 3.2.5 and it works like you've
-described it. Thanks for your help! But the buffered IO is what matters.
-4k isn't enough there. Please inform me about changes which increase the
-size in buffered IO. I'll have a look at this, too.
-
-Cheers,
-Sebastian
+On 29/05/2012 5:21 PM, Stan Hoeppner wrote:
+> On 5/28/2012 7:56 PM, NeilBrown wrote:
+>> On Tue, 29 May 2012 10:33:52 +1000 Jonathan Molyneux
+>> <jonathan@infinitedepth.com.au>  wrote:
+>>> md1 : active raid6 sde1[0] sdb1[6] sdh1[5] sdc1[4] sdg1[3] sdd1[2] sdf1[1]
+>>>         7325679680 blocks super 0.91 level 6, 64k chunk, algorithm 18
+>>> [7/6] [UUUUUU_]
+>>>         [=========>...........]  reshape = 47.0% (689413888/1465135936)
+>>> finish=4126.9min speed=3132K/sec
+>> The only thing to do is to wait.  This is very much a seek-bound operation
+>> and there is little room for making it go faster.
+> With SSDs you'd see the throughput of this operation increase by 2
+> orders of magnitude (100x) or more, as SSDs have application level seek
+> latency of ~50-80 microseconds, over 100x lower than rotational drives
+> which are in the 10-30 millisecond range depending on spindle speed.
+>
+> Of course, cost/GB for the same total storage is 2 to 10 times higher
+> with SSD.  Though interestingly the price of SSDs continues to fall,
+> whereas the rotational drive manufacturers are currently keeping drive
+> prices artificially high, between 50-100% higher than last year
+> depending on drive model, in an effort to recoup apparent financial
+> losses caused by the flooding in Thailand.
+>
