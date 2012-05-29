@@ -1,90 +1,45 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] imsm: fix: correct checking volume's degradation
-Date: Tue, 29 May 2012 09:35:58 +1000
-Message-ID: <20120529093558.571e8d95@notabene.brown>
-References: <20120525130641.31750.43414.stgit@gklab-128-085.igk.intel.com>
+From: Jonathan Molyneux <jonathan@infinitedepth.com.au>
+Subject: raid5 to raid6 - reshape very slow
+Date: Tue, 29 May 2012 10:33:52 +1000
+Message-ID: <4FC41970.5080009@infinitedepth.com.au>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/NXgFyMKYKB_+gaeGPI0Na6L"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120525130641.31750.43414.stgit@gklab-128-085.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/NXgFyMKYKB_+gaeGPI0Na6L
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Everyone,
 
-On Fri, 25 May 2012 15:06:41 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
-wrote:
+I'm currently reshaping my raid5 array into a raid6 array (by adding a 
+spare and growing).
 
-> We do not check the return value of sysfs_get_ll() now. It is wrong.
-> If reading of the sysfs "degraded" key does not succeed,
-> the "new_degraded" variable will not be initiated
-> and accidentally it can have the value of "degraded" variable.
-> In that case the change of degradation will not be checked.
->=20
-> It happens if mdadm is compiled with gcc's "-fstack-protector" option
-> when one tries to stop a volume under reshape (e.g. OLCE).
-> Reshape seems to be finished then (metadata is in normal/clean state)
-> but it is not finished, it is broken and data are corrupted.
->=20
-> Now we always check the return value of sysfs_get_ll().
-> Even if reading of the sysfs "degraded" key does not succeed
-> (rv =3D=3D -1) the change of degradation will be checked.
->=20
-> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
-> ---
->  super-intel.c |    6 ++++--
->  1 files changed, 4 insertions(+), 2 deletions(-)
->=20
-> diff --git a/super-intel.c b/super-intel.c
-> index 6c87e20..07ab9ae 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -10370,8 +10370,10 @@ int check_degradation_change(struct mdinfo *info,
->  			     int degraded)
->  {
->  	unsigned long long new_degraded;
-> -	sysfs_get_ll(info, NULL, "degraded", &new_degraded);
-> -	if (new_degraded !=3D (unsigned long long)degraded) {
-> +	int rv;
-> +
-> +	rv =3D sysfs_get_ll(info, NULL, "degraded", &new_degraded);
-> +	if ((rv =3D=3D -1) || (new_degraded !=3D (unsigned long long)degraded))=
- {
->  		/* check each device to ensure it is still working */
->  		struct mdinfo *sd;
->  		new_degraded =3D 0;
+Unfortunately I didn't research the nuances before doing so and missed 
+the opportunity to --layout=preserve.
 
+As a result the array is rebuilding by use of a backup-file, at a rather 
+slow pace.
 
-applied, thanks.
+md1 : active raid6 sde1[0] sdb1[6] sdh1[5] sdc1[4] sdg1[3] sdd1[2] sdf1[1]
+       7325679680 blocks super 0.91 level 6, 64k chunk, algorithm 18 
+[7/6] [UUUUUU_]
+       [=========>...........]  reshape = 47.0% (689413888/1465135936) 
+finish=4126.9min speed=3132K/sec
 
-NeilBrown
+I have tried the following so far:
 
+* read ahead tweaking
+* stripe_cache_size tweaking (not a limiting factor - mdadm seems to 
+tune this appropriately)
+* running the backup file from dev/shm (only for testing purposes)
 
---Sig_/NXgFyMKYKB_+gaeGPI0Na6L
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+The reshape does not seem to be IO or CPU bound, it just seems to be 
+limited by the sync's and meta data updates to each disk.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+Is it possible to increase the buffer/stripes that mdadm process in a 
+batch to speed up the process (~41m/2 -> 1G) ?
 
-iQIVAwUBT8QL3jnsnt1WYoG5AQL7gQ//Y7Ic26KY+pQ70vKd53GaZdhzUI4FkMk6
-MG38gbBWZSQDcmHBe5/BfEZX4piy3tzTCEoaZbN12O9RDSl3j8W5E2LjlScyd9Wx
-N5mAzxsiXKonu/O39HNQd4TlWZxwnykSnj+RS15bMNz9WV1Uu7RdaLdZ9mtcL5An
-mb1vrPavsTBhyhyk/b4lUF+syHf1a0iHuKE6im1kR00A3msI4Vq9jL6/fkEy+VTx
-sfXyC2gOawMA7Ar9PzZOSdNwEEJI4G+QPW5E60E9gzVj9VDvpM+IsqVRxLTY/s8n
-Pzgvw10F34/Ddc8fvjR13SsG2vz4d70jnCYtgL0nR8Za+5HednGmp/sNLDEXF/3h
-E1ZxQXmYvqUGOFd7qmq3gHA4dM9i2lwSQ7hhr/tZaW/ajjyh1ntbiqI4hMIby5/h
-XkkkedwetotzSjfBcjEL33KoyA5vOLbFClSHVun+vXK8y1SwAsdQUPW34/WE5f/F
-YEjb2LU/jFSHPteO2odT6/kAS/1d9Of9VlYq6H3MlwQ9WHRxpYIwDOcVwjk+XYmI
-zm8xK+wmu8zN7eVHVhKjIE4saPZznx827/LVKc6xUgLQqzhN2bDuP9rDrphWx2LE
-BKC2Ld+caKYLIEMhgKOuPuDw5fLVIoa8q91NVy+XauPGWOdiJmqrdeXutxZM8LVN
-nMJpf2OCQzo=
-=WoPw
------END PGP SIGNATURE-----
+Any thoughts would be appreciated (even to confirm there is nothing to 
+be done).
 
---Sig_/NXgFyMKYKB_+gaeGPI0Na6L--
