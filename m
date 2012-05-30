@@ -1,30 +1,61 @@
-From: Sven Hartrumpf <hartrumpf@gmx.net>
-Subject: Using a newer mdadm version just for re-adding a device
-Date: Wed, 30 May 2012 19:38:15 +0200 (CEST)
-Message-ID: <20120530.193815.809240125288589880.hartrumpf@gmx.net>
+From: <christian@ymail.com>
+Subject: You have an unanswered message Recommends Advanced Sports to you
+Date: Wed, 30 May 2012 15:06:29 -0400
+Message-ID: <2B68AC17375D4E7EA4EC963CED65F272@g19.win.smewh.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello.
+From         :You have an unanswered message
+Email        :christian@ymail.com
+Friend Name  :Friend
+Friend Email :linux-raid@vger.kernel.org
+comment      :
 
-Is it safe to mix mdadm versions in the following scenario?
 
-openSUSE 12.1 comes with mdadm 3.2.2 (and kernel 3.1), which works fine
-except that I am hit by the re-add bug:
-I removed a partition (after "mdadm --manage --set-faulty ...") from a perfectly
-working /dev/md1, but re-adding with "mdadm /dev/md1 -a ..." fails.
-Reading the mailing list and the Changelog, I understand that
-this is fixed in mdadm 3.2.5.
-Hence, I compiled mdadm 3.2.5 from source.
+Hi Friend,
 
-Now my question is:
-Can I safely use the resulting binary (renamed to mdadm325 to avoid confusion)
-to re-add the device and then continue to use the 3.2.2 package from openSUSE?
+Mike IS still waiting for an
+answer...
 
-Thanks for reading
-Sven
+It's very rare that some will actually
+take you by the hand and flat-out
+give you their personal ClickBank 
+software
+
+Downloads are currently available
+at the time of writing this to you.
+
+What are you waiting for? The site
+to be closed down?
+
+Watch a live demo and see verified 
+proof of ClickBank income here... 
+
+==>http://www.mymillionaire-society.com/?code=4fc2ae6b6f40c 
+
+Christian
+
+
+
+
+PS: Before you close the site wait
+    you have special $10 Discount!
+
+
+==>http://www.mymillionaire-society.com/?code=4fc2ae6b6f40c 
+
+
+
+
+
+
+
+
+
+
