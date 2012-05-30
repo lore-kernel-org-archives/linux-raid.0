@@ -1,95 +1,104 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 0/2] Tests for add/remove of internal bitmaps
-Date: Wed, 30 May 2012 10:47:42 +1000
-Message-ID: <20120530104742.750db09b@notabene.brown>
-References: <1338304199-6047-1-git-send-email-Jes.Sorensen@redhat.com>
+Subject: Re: raid10 devices all marked as spares?!
+Date: Wed, 30 May 2012 11:14:05 +1000
+Message-ID: <20120530111405.53f7e68c@notabene.brown>
+References: <4FC3E4FB.4010003@schinagl.nl>
+	<20120529080736.03c62ae1@notabene.brown>
+	<4FC3FFE7.6020606@schinagl.nl>
+	<20120529090938.5af8a7ed@notabene.brown>
+	<4FC518FB.4000408@schinagl.nl>
+	<4FC51A0A.6070700@schinagl.nl>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/d/TyG=TRJYFVFn+ywU6e.Nn"; protocol="application/pgp-signature"
+ boundary="Sig_/6iafJzHcD3L6fAcS2nSbz5n"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1338304199-6047-1-git-send-email-Jes.Sorensen@redhat.com>
+In-Reply-To: <4FC51A0A.6070700@schinagl.nl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: dledford@redhat.com, linux-raid@vger.kernel.org
+To: Oliver Schinagl <oliverlist@schinagl.nl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/d/TyG=TRJYFVFn+ywU6e.Nn
+--Sig_/6iafJzHcD3L6fAcS2nSbz5n
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 29 May 2012 17:09:57 +0200 Jes.Sorensen@redhat.com wrote:
+On Tue, 29 May 2012 20:48:42 +0200 Oliver Schinagl <oliverlist@schinagl.nl>
+wrote:
 
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> On 29-05-12 20:44, Oliver Schinagl wrote:
+> > <snip>
+> >>>> You can recover your data by re-creating the array.
+> >>>>
+> >>>>     mdadm -C /dev/md2 -l10 -n2 --layout o2 --assume-clean \
+> >>>>     -e 1.2  /dev/sda6 /dev/sdb6
+> >>>>
+> >>>> Check that I have that right - don't just assume :-)
+> >>> That looks very similar to what I used to create the array with, exce=
+pt
+> >>> the assume-clean part. I wonder however, would it not wiser to create
+> >>> the array using /dev/sda6 missing thus creating a degraded array?
+> >>> Atleast I'll still have the sdb6 which MAY contain the data also (sin=
+ce
+> >>> only sda6 'apparently' has wrong state?
+> >> That would be a suitable approach - arguably safer.  If you feel more
+> >> comfortable with it, then that is a strong reason to follow that cours=
+e.
+> >
+> > I have tried that on sda6 but it cannot file a filesystem when trying=20
+> > to mount md2. This of course is quite scary. I am now slightly=20
+> > doubting if my chunksize is the same as before, 128k.
+> >
+> > I've used the following command.
+> > mdadm -C /dev/md2 -c 128 -l 10 -p o2 --assume-clean -e 1.2 -n 2=20
+> > --name=3Dopt /dev/sda6 missing
+> >
+> > Now I could try the same on sdb6 and hope that does work, but slightly=
+=20
+> > scared of loosing everything on that partition, it could be possible=20
+> > of course that sdb6 is the partition that has everything in the=20
+> > 'proper' order? I will try to losetup sdb6 with an offset and see if=20
+> > that is mountable.
+> Also, I forgot to mention, the thing that is really strange, is that the=
+=20
+> data offset is somewhere extremely strange.
 >=20
-> Hi,
->=20
-> Sometime ago Neil fixed a bug where the kernel would OOPS when adding
-> a bitmap to an existing array and using it immediately. We hit this
-> more recently in RHEL so I figured I better write a proper testcase
-> for it.
->=20
-> The second patch is checking that removing bitmaps also works, though
-> I didn't have a specific case triggered by that. I just added them for
-> completeness.
->=20
-> I added the patches to the 05 prefix as that is where the other bitmap
-> related test cases were. Feel free to reassign them if you like.
->=20
-> Cheers,
-> Jes
+> Data Offset : 262144 sectors
 
-Thanks!  Applied (With a couple of trailing spaces removed :-)
+128MB.
 
-(and the --no-error fix applied too)
+>=20
+> where sda4 and sdb5 (md0 and 1) both have 2048, which sounds common and=20
+> sensible.
+
+You'll need to use an older mdadm which uses the 2048 (1MB) offset.
+The next mdadm (3.3) will have a --data-offset option to make this easier to
+control.  For now you need 3.2.3 or earlier.
+That should make your filesystem accessible.  If it doesn't try a different
+chunk size. Maybe 64, maybe 512.
 
 NeilBrown
 
-> =20
->=20
-> Jes Sorensen (2):
->   New tests testing the addition of bitmaps
->   New tests testing removal of internal bitmaps
->=20
->  tests/05r1-add-internalbitmap        |   20 ++++++++++++++++++++
->  tests/05r1-add-internalbitmap-v1a    |   20 ++++++++++++++++++++
->  tests/05r1-add-internalbitmap-v1b    |   20 ++++++++++++++++++++
->  tests/05r1-add-internalbitmap-v1c    |   20 ++++++++++++++++++++
->  tests/05r1-remove-internalbitmap     |   18 ++++++++++++++++++
->  tests/05r1-remove-internalbitmap-v1a |   18 ++++++++++++++++++
->  tests/05r1-remove-internalbitmap-v1b |   18 ++++++++++++++++++
->  tests/05r1-remove-internalbitmap-v1c |   18 ++++++++++++++++++
->  8 files changed, 152 insertions(+)
->  create mode 100644 tests/05r1-add-internalbitmap
->  create mode 100644 tests/05r1-add-internalbitmap-v1a
->  create mode 100644 tests/05r1-add-internalbitmap-v1b
->  create mode 100644 tests/05r1-add-internalbitmap-v1c
->  create mode 100644 tests/05r1-remove-internalbitmap
->  create mode 100644 tests/05r1-remove-internalbitmap-v1a
->  create mode 100644 tests/05r1-remove-internalbitmap-v1b
->  create mode 100644 tests/05r1-remove-internalbitmap-v1c
->=20
 
-
---Sig_/d/TyG=TRJYFVFn+ywU6e.Nn
+--Sig_/6iafJzHcD3L6fAcS2nSbz5n
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT8VuLjnsnt1WYoG5AQKCvA//Yg+dVGm8Al8B7GPFEiQKlFls2qu6qVO2
-PG0ZBL8+IIgtXv9rtG2j4D8u/bT9GiIj8k4eWMmHlKMTFnug5dYwxoRwCA3Wk29X
-wC8P8eJI9W3ReOzyuoveDr+J1fmEJA0WFdL6Je2mT+o3ChIE5S3wL2Gsul4/kwDd
-GSTMqkcStUZEp0XH3cTMq9NG/uqNAzhBcher2ONr5qRK7oROXDVqRhElOGhmGBYs
-mKHOro0XiHHj3xafrKiA5U8OWkf4ClR3ZZPVxc5kT8gcZpiKXiiGGR1VcYCkrWDZ
-ciwO7nurTu6v3bPMgrWq9vkIR+DSNlqG2v8EleyokQWGfXc4NQGhqgbyAJLsgfDQ
-0zRAqyFHwhr66Y3XDTFXDPO7fXVnwFdy3Vbzvf9T9twJ9p/wywUF3+A8xtJTUgpH
-52eeRPxOzdgM4tvLoOx8OPv/lz8LWn2zXpxekQBKneVHMQUQGcDD3ExdixmgBIru
-Z/F+TamApkTftMGrgDacFJGSsLEJNfB0LHaOith0zvNObY+UPWw/qEf56XI3gKru
-UPyUPJFrG/+G1UbVwVINFq0GUZZ7YjvrnrDWFkWNmpgfaRLbvdb+9Id+kxLgPmek
-v3bx/l/FDXCnDspczkmlVkV3TQrps0ZdcKRKkdlPlGixXAJwjL0z086FUZpyupai
-CYjPQHDYvS8=
-=c1kt
+iQIVAwUBT8V0XTnsnt1WYoG5AQLyoA//ch6WE7StGaxjmibS8zeRJ5ugNsGJBMcV
+g2ycbmg3MUmrZGWnLZ7HNLk/rpfYgoIkR9QGT6CnpEHb8eUBAkbnzkdYbjoUauTl
+NmhoYIgQqZMKtNQb78jC/osUfQNqmqMWayHeK3GoQdzyrUM0JWKvXx+lErowO/HC
+x2YeTQFSP3XgpxhLwImxki97lkKE48eimMwk/pNqL/NpNIqwFxt5obWw3JpHXzkm
++LO1ELBDwdvHRE1Eh0Kby7aEIbjlyuLvwMpaYXjgyF/1wq+fECKXruXZbrJ5i7qO
+C2XJ9Bk5UaLDsmOg2bWt45gRMyd5gvF8/51ryxT6inSraqHaA60SxqyWPT+aHyHd
+yjxEOKWlYKSLF1OtS21pJIyH/YKxPPYM/Zi1DKwfCEjs//QwFB6n4qfu4oOladtw
+bTLlrMc9vLaurE1cjcp13Ed1xtLfHua+RrF3Tgf0bOdiRXs2xCEyKzrF8kH5C2+0
+6oFDjhLT+eUVfBEI13ZX7NKkTwSSbFKBJUnJkec1EqfZvhVCbBwjqMPafOOFQ/Eu
+W+YXrh7mMWAKuXTLL0PKpuGuSmlYCOz857brgsVNJtx1f15/zz8NBYNbnIrngRro
+Wozs9pk9Zol6YXlq5D1O+ibfXLGH932pesr1GSkfipWpYvm2Uk69SjaWv15Gu8FY
+CR0xJXAtosQ=
+=21ES
 -----END PGP SIGNATURE-----
 
---Sig_/d/TyG=TRJYFVFn+ywU6e.Nn--
+--Sig_/6iafJzHcD3L6fAcS2nSbz5n--
