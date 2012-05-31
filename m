@@ -1,126 +1,36 @@
-From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-Subject: [PATCH 4/4] md: put EXPORT_SYMBOL macro immediately after the corresponding function
-Date: Thu, 31 May 2012 18:18:48 +0800
-Message-ID: <1338459528-24490-4-git-send-email-yuanhan.liu@linux.intel.com>
-References: <1338459528-24490-1-git-send-email-yuanhan.liu@linux.intel.com>
+From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Subject: Re: Reason for md raid 01 blksize limited to 4 KiB?
+Date: Thu, 31 May 2012 12:26:50 +0200
+Message-ID: <4FC7476A.2020505@profitbricks.com>
+References: <4FBA0047.5050208@profitbricks.com>	<20120522092817.1b5946b8@notabene.brown>	<4FBF7CAD.7000307@profitbricks.com>	<20120528140505.6eb49b26@notabene.brown>	<4FC49733.9050905@profitbricks.com>	<20120529202559.6aa7fd49@notabene.brown>	<4FC61A94.3050605@profitbricks.com> <20120531154256.6eb567c7@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1338459528-24490-1-git-send-email-yuanhan.liu@linux.intel.com>
+In-Reply-To: <20120531154256.6eb567c7@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, Yuanhan Liu <yuanhan.liu@linux.intel.com>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Just as Documentation/CodingStyle Chapter 6: Functions says:
+On 31/05/12 07:42, NeilBrown wrote:
+> Hmmm... that's bad.  Looks like I have a bug .... yes I do.  Patch below
+> fixes it.  If you could test and confirm I would appreciated it.
 
-   If the function is exported, the EXPORT* macro for it should
-   follow immediately after the closing function brace line.
+I've tested the patch and I can confirm that it works as expected, now.
+Thanks for fixing it that fast!
+I've tested at least raid 01.
+How could one test the raid10.c changes? Create raid 010 where raid0.c
+is below rai10.c in the stack?
 
-Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
----
- drivers/md/md.c |   20 ++++++++++----------
- 1 files changed, 10 insertions(+), 10 deletions(-)
+> As for the cached writes being always 4K - are you writing through a
+> filesystem or directly to /dev/md300??
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 87e5ce8..8a430e7 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6751,6 +6751,7 @@ void md_wakeup_thread(struct md_thread *thread)
- 		wake_up(&thread->wqueue);
- 	}
- }
-+EXPORT_SYMBOL(md_wakeup_thread);
- 
- struct md_thread *md_register_thread(void (*run) (struct mddev *), struct mddev *mddev,
- 				 const char *name)
-@@ -6776,6 +6777,7 @@ struct md_thread *md_register_thread(void (*run) (struct mddev *), struct mddev
- 	}
- 	return thread;
- }
-+EXPORT_SYMBOL(md_register_thread);
- 
- void md_unregister_thread(struct md_thread **threadp)
- {
-@@ -6793,6 +6795,7 @@ void md_unregister_thread(struct md_thread **threadp)
- 	kthread_stop(thread->tsk);
- 	kfree(thread);
- }
-+EXPORT_SYMBOL(md_unregister_thread);
- 
- void md_error(struct mddev *mddev, struct md_rdev *rdev)
- {
-@@ -6817,6 +6820,7 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
- 		queue_work(md_misc_wq, &mddev->event_work);
- 	md_new_event_inintr(mddev);
- }
-+EXPORT_SYMBOL(md_error);
- 
- /* seq_file implementation /proc/mdstat */
- 
-@@ -7144,6 +7148,7 @@ int register_md_personality(struct md_personality *p)
- 	spin_unlock(&pers_lock);
- 	return 0;
- }
-+EXPORT_SYMBOL(register_md_personality);
- 
- int unregister_md_personality(struct md_personality *p)
- {
-@@ -7153,6 +7158,7 @@ int unregister_md_personality(struct md_personality *p)
- 	spin_unlock(&pers_lock);
- 	return 0;
- }
-+EXPORT_SYMBOL(unregister_md_personality);
- 
- static int is_mddev_idle(struct mddev *mddev, int init)
- {
-@@ -7209,6 +7215,7 @@ void md_done_sync(struct mddev *mddev, int blocks, int ok)
- 		// stop recovery, signal do_sync ....
- 	}
- }
-+EXPORT_SYMBOL(md_done_sync);
- 
- 
- /* md_write_start(mddev, bi)
-@@ -7250,6 +7257,7 @@ void md_write_start(struct mddev *mddev, struct bio *bi)
- 	wait_event(mddev->sb_wait,
- 		   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
- }
-+EXPORT_SYMBOL(md_write_start);
- 
- void md_write_end(struct mddev *mddev)
- {
-@@ -7260,6 +7268,7 @@ void md_write_end(struct mddev *mddev)
- 			mod_timer(&mddev->safemode_timer, jiffies + mddev->safemode_delay);
- 	}
- }
-+EXPORT_SYMBOL(md_write_end);
- 
- /* md_allow_write(mddev)
-  * Calling this ensures that the array is marked 'active' so that writes
-@@ -7901,6 +7910,7 @@ void md_check_recovery(struct mddev *mddev)
- 		mddev_unlock(mddev);
- 	}
- }
-+EXPORT_SYMBOL(md_check_recovery);
- 
- void md_wait_for_blocked_rdev(struct md_rdev *rdev, struct mddev *mddev)
- {
-@@ -8616,16 +8626,6 @@ module_param(start_dirty_degraded, int, S_IRUGO|S_IWUSR);
- 
- module_param_call(new_array, add_named_array, NULL, NULL, S_IWUSR);
- 
--EXPORT_SYMBOL(register_md_personality);
--EXPORT_SYMBOL(unregister_md_personality);
--EXPORT_SYMBOL(md_error);
--EXPORT_SYMBOL(md_done_sync);
--EXPORT_SYMBOL(md_write_start);
--EXPORT_SYMBOL(md_write_end);
--EXPORT_SYMBOL(md_register_thread);
--EXPORT_SYMBOL(md_unregister_thread);
--EXPORT_SYMBOL(md_wakeup_thread);
--EXPORT_SYMBOL(md_check_recovery);
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("MD RAID framework");
- MODULE_ALIAS("md");
--- 
-1.7.7.6
+I've got a file copy test which creates a file with fio, random data and
+direct IO on ext4. Afterwards I copy the file which isn't in the cache
+and measure the time. So this reads first and then writes back. During
+the copy I run blktrace in order to have a closer look at the request
+sizes. The throughput is at a stable number after multiple cycles.
 
+Cheers,
+Sebastian
