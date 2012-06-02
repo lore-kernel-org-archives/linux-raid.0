@@ -1,37 +1,30 @@
-From: Igor M Podlesny <for.poige+lsr@gmail.com>
-Subject: Re: Can extremely high load cause disks to be kicked?
-Date: Sat, 2 Jun 2012 15:57:54 +0800
-Message-ID: <CA+sTkh7sY=UaYNOPLsN2oBCzhy6FA23MZ7qMi1Z03sDZREw4vg@mail.gmail.com>
-References: <20120531083158.GE3867@bitfolk.com> <4FC81B85.8090807@hardwarefreak.com>
- <CA+sTkh4+MKYaXwYe13F6Gy4VZbT0bXZpC79Bgcn1a3ZSzqwq8A@mail.gmail.com>
- <4FC8CDE1.4050807@hardwarefreak.com> <CA+sTkh6ScqXKcnDZemQBjNhJ1oQb7VSFP0_bjsU08ZJ5GY4j-A@mail.gmail.com>
- <4FC99A7A.5030603@hardwarefreak.com>
+From: majianpeng <majianpeng@gmail.com>
+Subject: [PATCH 1/2] md/raid5:Change the order of md_write_start() and chunk_aligned_read() in function make_request().
+Date: Sat, 2 Jun 2012 16:15:57 +0800
+Message-ID: <201206021615544687310@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FC99A7A.5030603@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2 June 2012 12:45, Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> On 6/1/2012 10:19 AM, Igor M Podlesny wrote:
-[=E2=80=A6]
-> simply made a minor error in this case. =C2=A0Can we be friends and m=
-ove on,
-> or at least not be enemies?
->
-   Surely we can!
+SWYgZXhlYyBjaHVua19hbGlnbmVkX3JlYWQoKSxpdCBkaWQgbm90IG5lY2Nlc3NhcnkgdG8gZXhl
+Yw0KbWRfd3JpdGVfc3RhcnQoKS4NCg0KU2lnbmVkLW9mZi1ieTogbWFqaWFucGVuZyA8bWFqaWFu
+cGVuZ0BnbWFpbC5jb20+DQotLS0NCiBkcml2ZXJzL21kL3JhaWQ1LmMgfCAgICA0ICsrLS0NCiAx
+IGZpbGVzIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkNCg0KZGlmZiAt
+LWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KaW5kZXggZDI2
+NzY3Mi4uNTY1MzEyNSAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbWQvcmFpZDUuYw0KKysrIGIvZHJp
+dmVycy9tZC9yYWlkNS5jDQpAQCAtMzk3OCwxMyArMzk3OCwxMyBAQCBzdGF0aWMgdm9pZCBtYWtl
+X3JlcXVlc3Qoc3RydWN0IG1kZGV2ICptZGRldiwgc3RydWN0IGJpbyAqIGJpKQ0KIAkJcmV0dXJu
+Ow0KIAl9DQogDQotCW1kX3dyaXRlX3N0YXJ0KG1kZGV2LCBiaSk7DQotDQogCWlmIChydyA9PSBS
+RUFEICYmDQogCSAgICAgbWRkZXYtPnJlc2hhcGVfcG9zaXRpb24gPT0gTWF4U2VjdG9yICYmDQog
+CSAgICAgY2h1bmtfYWxpZ25lZF9yZWFkKG1kZGV2LGJpKSkNCiAJCXJldHVybjsNCiANCisJbWRf
+d3JpdGVfc3RhcnQobWRkZXYsIGJpKTsNCisNCiAJbG9naWNhbF9zZWN0b3IgPSBiaS0+Ymlfc2Vj
+dG9yICYgfigoc2VjdG9yX3QpU1RSSVBFX1NFQ1RPUlMtMSk7DQogCWxhc3Rfc2VjdG9yID0gYmkt
+PmJpX3NlY3RvciArIChiaS0+Ymlfc2l6ZT4+OSk7DQogCWJpLT5iaV9uZXh0ID0gTlVMTDsNCi0t
+IA0KMS43LjUuNA0KDQoNCg0KLS0tLS0tLS0tLS0tLS0NCm1hamlhbnBlbmc=
 
-   I can only add though that had you answered OP's question not so
-harsh, it would be easier for me (and for others as well, I guess) to
-recognize good intentions beneath.
-
---
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
