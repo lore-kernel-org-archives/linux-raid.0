@@ -1,70 +1,45 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: [PATCH 2/2] md:Rewrite the md_write_start().
-Date: Sat, 2 Jun 2012 16:16:40 +0800
-Message-ID: <201206021616382814001@gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Can extremely high load cause disks to be kicked?
+Date: Sat, 02 Jun 2012 04:16:57 -0500
+Message-ID: <4FC9DA09.2010309@hardwarefreak.com>
+References: <20120531083158.GE3867@bitfolk.com> <4FC81B85.8090807@hardwarefreak.com> <CA+sTkh4+MKYaXwYe13F6Gy4VZbT0bXZpC79Bgcn1a3ZSzqwq8A@mail.gmail.com> <4FC8CDE1.4050807@hardwarefreak.com> <CA+sTkh6ScqXKcnDZemQBjNhJ1oQb7VSFP0_bjsU08ZJ5GY4j-A@mail.gmail.com> <4FC99A7A.5030603@hardwarefreak.com> <CA+sTkh7sY=UaYNOPLsN2oBCzhy6FA23MZ7qMi1Z03sDZREw4vg@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CA+sTkh7sY=UaYNOPLsN2oBCzhy6FA23MZ7qMi1Z03sDZREw4vg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Igor M Podlesny <for.poige+lsr@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-UmVtb3ZlIHRoZSBqdWRnZW1lbnQgImJpb19kYXRhX2RpcihiaSkgIT0gV1JJVEUiIGluIG1kX3dy
-aXRlX3N0YXJ0KCkuUHV0DQppdCBiZWZvcmUgY2FsbCBtZF93cml0ZV9zdGFydC4NCg0KU2lnbmVk
-LW9mZi1ieTogbWFqaWFucGVuZyA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQotLS0NCiBkcml2ZXJz
-L21kL21kLmMgICAgIHwgICAgNCArLS0tDQogZHJpdmVycy9tZC9tZC5oICAgICB8ICAgIDIgKy0N
-CiBkcml2ZXJzL21kL3JhaWQxLmMgIHwgICAgNCArKy0tDQogZHJpdmVycy9tZC9yYWlkMTAuYyB8
-ICAgIDMgKystDQogZHJpdmVycy9tZC9yYWlkNS5jICB8ICAgIDMgKystDQogNSBmaWxlcyBjaGFu
-Z2VkLCA4IGluc2VydGlvbnMoKyksIDggZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2
-ZXJzL21kL21kLmMgYi9kcml2ZXJzL21kL21kLmMNCmluZGV4IDFjMmY5MDQuLmUwMDlmMWQgMTAw
-NjQ0DQotLS0gYS9kcml2ZXJzL21kL21kLmMNCisrKyBiL2RyaXZlcnMvbWQvbWQuYw0KQEAgLTcx
-OTgsMTEgKzcxOTgsOSBAQCB2b2lkIG1kX2RvbmVfc3luYyhzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBp
-bnQgYmxvY2tzLCBpbnQgb2spDQogICogaW4gc3VwZXJibG9jaykgYmVmb3JlIHdyaXRpbmcsIHNj
-aGVkdWxlIGEgc3VwZXJibG9jayB1cGRhdGUNCiAgKiBhbmQgd2FpdCBmb3IgaXQgdG8gY29tcGxl
-dGUuDQogICovDQotdm9pZCBtZF93cml0ZV9zdGFydChzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBzdHJ1
-Y3QgYmlvICpiaSkNCit2b2lkIG1kX3dyaXRlX3N0YXJ0KHN0cnVjdCBtZGRldiAqbWRkZXYpDQog
-ew0KIAlpbnQgZGlkX2NoYW5nZSA9IDA7DQotCWlmIChiaW9fZGF0YV9kaXIoYmkpICE9IFdSSVRF
-KQ0KLQkJcmV0dXJuOw0KIA0KIAlCVUdfT04obWRkZXYtPnJvID09IDEpOw0KIAlpZiAobWRkZXYt
-PnJvID09IDIpIHsNCmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL21kLmggYi9kcml2ZXJzL21kL21k
-LmgNCmluZGV4IDdiNGEzYzMuLjkwNmUzZGIgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL21kL21kLmgN
-CisrKyBiL2RyaXZlcnMvbWQvbWQuaA0KQEAgLTU5Myw3ICs1OTMsNyBAQCBleHRlcm4gc3RydWN0
-IG1kX3RocmVhZCAqbWRfcmVnaXN0ZXJfdGhyZWFkKA0KIGV4dGVybiB2b2lkIG1kX3VucmVnaXN0
-ZXJfdGhyZWFkKHN0cnVjdCBtZF90aHJlYWQgKip0aHJlYWRwKTsNCiBleHRlcm4gdm9pZCBtZF93
-YWtldXBfdGhyZWFkKHN0cnVjdCBtZF90aHJlYWQgKnRocmVhZCk7DQogZXh0ZXJuIHZvaWQgbWRf
-Y2hlY2tfcmVjb3Zlcnkoc3RydWN0IG1kZGV2ICptZGRldik7DQotZXh0ZXJuIHZvaWQgbWRfd3Jp
-dGVfc3RhcnQoc3RydWN0IG1kZGV2ICptZGRldiwgc3RydWN0IGJpbyAqYmkpOw0KK2V4dGVybiB2
-b2lkIG1kX3dyaXRlX3N0YXJ0KHN0cnVjdCBtZGRldiAqbWRkZXYpOw0KIGV4dGVybiB2b2lkIG1k
-X3dyaXRlX2VuZChzdHJ1Y3QgbWRkZXYgKm1kZGV2KTsNCiBleHRlcm4gdm9pZCBtZF9kb25lX3N5
-bmMoc3RydWN0IG1kZGV2ICptZGRldiwgaW50IGJsb2NrcywgaW50IG9rKTsNCiBleHRlcm4gdm9p
-ZCBtZF9lcnJvcihzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBzdHJ1Y3QgbWRfcmRldiAqcmRldik7DQpk
-aWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkMS5jIGIvZHJpdmVycy9tZC9yYWlkMS5jDQppbmRl
-eCA4MzVkZTcxLi40YmZhNzdkIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9tZC9yYWlkMS5jDQorKysg
-Yi9kcml2ZXJzL21kL3JhaWQxLmMNCkBAIC04OTMsOCArODkzLDggQEAgc3RhdGljIHZvaWQgbWFr
-ZV9yZXF1ZXN0KHN0cnVjdCBtZGRldiAqbWRkZXYsIHN0cnVjdCBiaW8gKiBiaW8pDQogCSAqIHRo
-cmVhZCBoYXMgcHV0IHVwIGEgYmFyIGZvciBuZXcgcmVxdWVzdHMuDQogCSAqIENvbnRpbnVlIGlt
-bWVkaWF0ZWx5IGlmIG5vIHJlc3luYyBpcyBhY3RpdmUgY3VycmVudGx5Lg0KIAkgKi8NCi0NCi0J
-bWRfd3JpdGVfc3RhcnQobWRkZXYsIGJpbyk7IC8qIHdhaXQgb24gc3VwZXJibG9jayB1cGRhdGUg
-ZWFybHkgKi8NCisJaWYgKHJ3ID09IFdSSVRFKQ0KKwkJbWRfd3JpdGVfc3RhcnQobWRkZXYpOyAv
-KiB3YWl0IG9uIHN1cGVyYmxvY2sgdXBkYXRlIGVhcmx5ICovDQogDQogCWlmIChiaW9fZGF0YV9k
-aXIoYmlvKSA9PSBXUklURSAmJg0KIAkgICAgYmlvLT5iaV9zZWN0b3IgKyBiaW8tPmJpX3NpemUv
-NTEyID4gbWRkZXYtPnN1c3BlbmRfbG8gJiYNCmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQx
-MC5jIGIvZHJpdmVycy9tZC9yYWlkMTAuYw0KaW5kZXggOTg3ZGIzNy4uYjEwY2I5OSAxMDA2NDQN
-Ci0tLSBhL2RyaXZlcnMvbWQvcmFpZDEwLmMNCisrKyBiL2RyaXZlcnMvbWQvcmFpZDEwLmMNCkBA
-IC0xMDk4LDcgKzEwOTgsOCBAQCBzdGF0aWMgdm9pZCBtYWtlX3JlcXVlc3Qoc3RydWN0IG1kZGV2
-ICptZGRldiwgc3RydWN0IGJpbyAqIGJpbykNCiAJCXJldHVybjsNCiAJfQ0KIA0KLQltZF93cml0
-ZV9zdGFydChtZGRldiwgYmlvKTsNCisJaWYgKHJ3ID09IFdSSVRFKQ0KKwkJbWRfd3JpdGVfc3Rh
-cnQobWRkZXYpOw0KIA0KIAkvKg0KIAkgKiBSZWdpc3RlciB0aGUgbmV3IHJlcXVlc3QgYW5kIHdh
-aXQgaWYgdGhlIHJlY29uc3RydWN0aW9uDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5j
-IGIvZHJpdmVycy9tZC9yYWlkNS5jDQppbmRleCA1NjUzMTI1Li44ZTMzMGY4IDEwMDY0NA0KLS0t
-IGEvZHJpdmVycy9tZC9yYWlkNS5jDQorKysgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCkBAIC0zOTgz
-LDcgKzM5ODMsOCBAQCBzdGF0aWMgdm9pZCBtYWtlX3JlcXVlc3Qoc3RydWN0IG1kZGV2ICptZGRl
-diwgc3RydWN0IGJpbyAqIGJpKQ0KIAkgICAgIGNodW5rX2FsaWduZWRfcmVhZChtZGRldixiaSkp
-DQogCQlyZXR1cm47DQogDQotCW1kX3dyaXRlX3N0YXJ0KG1kZGV2LCBiaSk7DQorCWlmIChydyA9
-PSBXUklURSkNCisJCW1kX3dyaXRlX3N0YXJ0KG1kZGV2KTsNCiANCiAJbG9naWNhbF9zZWN0b3Ig
-PSBiaS0+Ymlfc2VjdG9yICYgfigoc2VjdG9yX3QpU1RSSVBFX1NFQ1RPUlMtMSk7DQogCWxhc3Rf
-c2VjdG9yID0gYmktPmJpX3NlY3RvciArIChiaS0+Ymlfc2l6ZT4+OSk7DQotLSANCjEuNy41LjQN
-Cg0KDQoNCi0tLS0tLS0tLS0tLS0tDQptYWppYW5wZW5n
+On 6/2/2012 2:57 AM, Igor M Podlesny wrote:
+> On 2 June 2012 12:45, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+>> On 6/1/2012 10:19 AM, Igor M Podlesny wrote:
+> [=85]
+>> simply made a minor error in this case.  Can we be friends and move =
+on,
+>> or at least not be enemies?
+>>
+>    Surely we can!
+>=20
+>    I can only add though that had you answered OP's question not so
+> harsh, it would be easier for me (and for others as well, I guess) to
+> recognize good intentions beneath.
 
+I tend to be very direct, very blunt.  That's just me.  I'll never be
+worth a damn as a politician, priest, or a funeral director, that's for
+sure. ;)
+
+And if I didn't have good intentions, I wouldn't be contributing on thi=
+s
+list and a half dozen others. ;)
+
+--=20
+Stan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
