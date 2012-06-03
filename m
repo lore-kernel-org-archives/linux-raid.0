@@ -1,45 +1,79 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Andy Smith <andy@strugglers.net>
 Subject: Re: Can extremely high load cause disks to be kicked?
-Date: Sat, 02 Jun 2012 04:16:57 -0500
-Message-ID: <4FC9DA09.2010309@hardwarefreak.com>
-References: <20120531083158.GE3867@bitfolk.com> <4FC81B85.8090807@hardwarefreak.com> <CA+sTkh4+MKYaXwYe13F6Gy4VZbT0bXZpC79Bgcn1a3ZSzqwq8A@mail.gmail.com> <4FC8CDE1.4050807@hardwarefreak.com> <CA+sTkh6ScqXKcnDZemQBjNhJ1oQb7VSFP0_bjsU08ZJ5GY4j-A@mail.gmail.com> <4FC99A7A.5030603@hardwarefreak.com> <CA+sTkh7sY=UaYNOPLsN2oBCzhy6FA23MZ7qMi1Z03sDZREw4vg@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+Date: Sun, 3 Jun 2012 03:30:42 +0000
+Message-ID: <20120603033042.GI3867@bitfolk.com>
+References: <20120531083158.GE3867@bitfolk.com>
+ <4FC81B85.8090807@hardwarefreak.com>
+ <20120601192524.GH3867@bitfolk.com>
+ <4FC9A8D4.9060803@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+sTkh7sY=UaYNOPLsN2oBCzhy6FA23MZ7qMi1Z03sDZREw4vg@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <4FC9A8D4.9060803@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Igor M Podlesny <for.poige+lsr@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 6/2/2012 2:57 AM, Igor M Podlesny wrote:
-> On 2 June 2012 12:45, Stan Hoeppner <stan@hardwarefreak.com> wrote:
->> On 6/1/2012 10:19 AM, Igor M Podlesny wrote:
-> [=85]
->> simply made a minor error in this case.  Can we be friends and move =
-on,
->> or at least not be enemies?
->>
->    Surely we can!
->=20
->    I can only add though that had you answered OP's question not so
-> harsh, it would be easier for me (and for others as well, I guess) to
-> recognize good intentions beneath.
+Hi Stan,
 
-I tend to be very direct, very blunt.  That's just me.  I'll never be
-worth a damn as a politician, priest, or a funeral director, that's for
-sure. ;)
+On Sat, Jun 02, 2012 at 12:47:00AM -0500, Stan Hoeppner wrote:
+> You could still use md RAID in your scenario.  But instead of having
+> multiple md arrays built of disk partitions and passing each array up to
+> a VM guest, the proper way to do this thin provisioning is to create one
+> md array and then create partitions on top.  Then pass a partition to a
+> guest.
 
-And if I didn't have good intentions, I wouldn't be contributing on thi=
-s
-list and a half dozen others. ;)
+I probably didn't give enough details. On this particular host there
+are four md arrays:
 
---=20
-Stan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+md0 is mounted as /boot
+md1 is used as swap
+md2 is mounted as /
+md3 is an LVM PV for "everything else"
+
+Some further filesystems on the hypervisor host come from LVs in md3
+(/usr, /var and so on).
+
+VM guests get their block devices from LVs in md3. But we can ignore
+the presence of VMs for now since my concern is only with the
+hypervisor host itself at this point.
+
+Even though it was a guest that was attacked, the hypervisor still
+had to route the traffic through its userspace and its CPU got
+overwhelmed by the high packets-per-second.
+
+You made a point that multiple mdadm arrays should not be used,
+though in this situation I can't see how that would have helped me;
+would I not just have got I/O errors on the single md device that
+everything was running from, causing instant crash?
+
+Although an instant crash might have been preferable from the point of
+view of enabling less corruption, I suppose.
+
+> The same situation can occur on a single OS bare metal host when the
+> storage system isn't designed to handle the IOPS load.
+
+Unfortunately my monitoring of IOPS for this host cut out during the
+attack and later problems so all I have for that period is a blank
+graph, but I don't think the IOPS requirement would actually have
+been that high. The CPU was certainly overwhelmed, but my main
+concern is that I am never going to be able to design a system that
+will cope with routing DDoS traffic in userspace.
+
+I am OK with the hypervisor machine being completely hammered and
+keeling over until the traffic is blocked upstream on real routers.
+Not so happy about the hypervisor machine kicking devices out of
+arrays and ending up with corrupted filesystems though. I haven't
+experienced that before.
+
+I don't think md is to blame as such because the logs show I/O
+errors on all devices so no wonder it kicked them out. I was just
+wondering if it was down to bad hardware, bad hardware _choice_, a
+bug in the driver, some bug in the kernel or what.
+
+Also still wondering if what I did to recover was the best way to go
+or if I could have made it easier on myself.
+
+Cheers,
+Andy
