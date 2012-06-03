@@ -1,144 +1,65 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Can extremely high load cause disks to be kicked?
-Date: Sun, 03 Jun 2012 01:49:23 -0500
-Message-ID: <4FCB08F3.1050703@hardwarefreak.com>
-References: <20120531083158.GE3867@bitfolk.com> <4FC81B85.8090807@hardwarefreak.com> <20120601192524.GH3867@bitfolk.com> <4FC9A8D4.9060803@hardwarefreak.com> <20120603033042.GI3867@bitfolk.com>
-Reply-To: stan@hardwarefreak.com
+From: Krzysztof Adamski <k@adamski.org>
+Subject: Failed drive in raid6 while doing data-check
+Date: Sun, 03 Jun 2012 13:31:14 -0400
+Message-ID: <1338744674.28212.293.camel@oxygen.netxsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120603033042.GI3867@bitfolk.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 6/2/2012 10:30 PM, Andy Smith wrote:
-> Hi Stan,
+The monthly data check found a bad drive in my raid6 array. This is what
+started to show up in the log:
+Jun  3 12:02:53 rogen kernel: [9908355.355940] sd 2:0:1:0: attempting task abort! scmd(ffff8801547c6a00)
+Jun  3 12:02:53 rogen kernel: [9908355.355953] sd 2:0:1:0: [sdb] CDB: Read(10): 28 00 e4 5c ed 38 00 00 08 00
+Jun  3 12:02:53 rogen kernel: [9908355.355983] scsi target2:0:1: handle(0x0009), sas_address(0x4433221100000000), phy(0)
+Jun  3 12:02:53 rogen kernel: [9908355.355992] scsi target2:0:1: enclosure_logical_id(0x500605b003f7aa10), slot(3)
+Jun  3 12:02:56 rogen kernel: [9908359.141194] sd 2:0:1:0: task abort: SUCCESS scmd(ffff8801547c6a00)
+Jun  3 12:02:56 rogen kernel: [9908359.141206] sd 2:0:1:0: attempting task abort! scmd(ffff8803aea45400)
+Jun  3 12:02:56 rogen kernel: [9908359.141216] sd 2:0:1:0: [sdb] CDB: Read(10): 28 00 e4 5c ed 40 00 00 08 00
 
-Hay Andy,
+But now it has changed to this:
+Jun  3 12:04:44 rogen kernel: [9908466.716281] sd 2:0:1:0: [sdb] Unhandled error code
+Jun  3 12:04:44 rogen kernel: [9908466.716287] sd 2:0:1:0: [sdb]  Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+Jun  3 12:04:44 rogen kernel: [9908466.716296] sd 2:0:1:0: [sdb] CDB: Read(10): 28 00 e4 5c ee 38 00 00 08 00
+Jun  3 12:04:44 rogen kernel: [9908466.716319] end_request: I/O error, dev sdb, sector 3831295544
+Jun  3 12:04:44 rogen kernel: [9908466.716616] sd 2:0:1:0: [sdb]  Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+Jun  3 12:04:44 rogen kernel: [9908466.717200] mpt2sas0: removing handle(0x0009), sas_addr(0x4433221100000000)
+Jun  3 12:04:44 rogen kernel: [9908466.917090] md/raid:md7: Disk failure on sdb2, disabling device.
+Jun  3 12:04:44 rogen kernel: [9908466.917091] md/raid:md7: Operation continuing on 11 devices.
+Jun  3 12:07:41 rogen kernel: [9908643.882541] INFO: task md7_resync:28497 blocked for more than 120 seconds.
+Jun  3 12:07:41 rogen kernel: [9908643.882552] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Jun  3 12:07:41 rogen kernel: [9908643.882556] md7_resync      D ffff8800b508aa20     0 28497      2 0x00000000
+Jun  3 12:07:41 rogen kernel: [9908643.882560]  ffff8802ab877b80 0000000000000046 ffff8803ffbfa340 0000000000000046
+Jun  3 12:07:41 rogen kernel: [9908643.882564]  ffff8802ab876010 ffff8800b508a6a0 00000000001d29c0 ffff8802ab877fd8
+Jun  3 12:07:41 rogen kernel: [9908643.882566]  ffff8802ab877fd8 00000000001d29c0 ffff880070448000 ffff8800b508a6a0
+Jun  3 12:07:41 rogen kernel: [9908643.882569] Call Trace:
+Jun  3 12:07:41 rogen kernel: [9908643.882577]  [<ffffffff81339704>] schedule+0x55/0x57
+Jun  3 12:07:41 rogen kernel: [9908643.882599]  [<ffffffffa01da26b>] bitmap_cond_end_sync+0xbc/0x152 [md_mod]
+Jun  3 12:07:41 rogen kernel: [9908643.882602]  [<ffffffff8106190d>] ? wake_up_bit+0x25/0x25
+Jun  3 12:07:41 rogen kernel: [9908643.882607]  [<ffffffffa022f7a7>] sync_request+0x22e/0x2ef [raid456]
+Jun  3 12:07:41 rogen kernel: [9908643.882613]  [<ffffffffa01d1ebc>] ? is_mddev_idle+0x106/0x118 [md_mod]
+Jun  3 12:07:41 rogen kernel: [9908643.882618]  [<ffffffffa01d2689>] md_do_sync+0x7bb/0xbce [md_mod]
+Jun  3 12:07:41 rogen kernel: [9908643.882624]  [<ffffffffa01d2cbe>] md_thread+0xff/0x11d [md_mod]
+Jun  3 12:07:41 rogen kernel: [9908643.882629]  [<ffffffffa01d2bbf>] ? md_rdev_init+0x8d/0x8d [md_mod]
+Jun  3 12:07:41 rogen kernel: [9908643.882631]  [<ffffffff81061499>] kthread+0x9b/0xa3
+Jun  3 12:07:41 rogen kernel: [9908643.882634]  [<ffffffff81342ca4>] kernel_thread_helper+0x4/0x10
+Jun  3 12:07:41 rogen kernel: [9908643.882637]  [<ffffffff810613fe>] ? __init_kthread_worker+0x56/0x56
+Jun  3 12:07:41 rogen kernel: [9908643.882639]  [<ffffffff81342ca0>] ? gs_change+0x13/0x13
+Jun  3 12:07:41 rogen kernel: [9908643.882641] INFO: lockdep is turned off.
 
-> On Sat, Jun 02, 2012 at 12:47:00AM -0500, Stan Hoeppner wrote:
->> You could still use md RAID in your scenario.  But instead of having
->> multiple md arrays built of disk partitions and passing each array up to
->> a VM guest, the proper way to do this thin provisioning is to create one
->> md array and then create partitions on top.  Then pass a partition to a
->> guest.
-> 
-> I probably didn't give enough details. On this particular host there
-> are four md arrays:
+The cat /proc/mdstat is:
+Personalities : [raid1] [raid6] [raid5] [raid4]
+md7 : active raid6 sdd2[0] sdab2[11] sdaa2[10] sdz2[9] sdy2[8] sde2[7] sdh2[6] sdf2[5] sdg2[4] sdb2[3](F) sdc2[2] sda2[1]
+      29283121600 blocks super 1.2 level 6, 32k chunk, algorithm 2 [12/11] [UUU_UUUUUUUU]
+      [=============>.......]  check = 65.3% (1913765076/2928312160) finish=44345.9min speed=381K/sec
+      bitmap: 1/22 pages [4KB], 65536KB chunk
 
-Yeah, I made some incorrect assumptions about how you were using your
-arrays.
+I don't really want to wait 30 days for this to finish, what is correct
+thing to do before I replace the failed drive?
 
-> md0 is mounted as /boot
-> md1 is used as swap
-> md2 is mounted as /
+Thanks in advance,
+K
 
-What's the RAID level of each of these and how many partitions in each?
-
-> md3 is an LVM PV for "everything else"
-
-This one is the RAID 10 correct?
-
-> Some further filesystems on the hypervisor host come from LVs in md3
-> (/usr, /var and so on).
-> 
-> VM guests get their block devices from LVs in md3. But we can ignore
-> the presence of VMs for now since my concern is only with the
-> hypervisor host itself at this point.
-> 
-> Even though it was a guest that was attacked, the hypervisor still
-> had to route the traffic through its userspace and its CPU got
-> overwhelmed by the high packets-per-second.
-
-How many cores in this machine and what frequency?
-
-> You made a point that multiple mdadm arrays should not be used,
-> though in this situation I can't see how that would have helped me;
-
-As I mentioned, the disks would have likely been seeking less, but I
-can't say for sure with the available data.  If the disks were seek
-saturated this could explain why md3 component partitions were kicked.
-
-> would I not just have got I/O errors on the single md device that
-> everything was running from, causing instant crash?
-
-Can you post the SCSI/ATA and md errors?
-
-> Although an instant crash might have been preferable from the point of
-> view of enabling less corruption, I suppose.
-> 
->> The same situation can occur on a single OS bare metal host when the
->> storage system isn't designed to handle the IOPS load.
-> 
-> Unfortunately my monitoring of IOPS for this host cut out during the
-> attack and later problems so all I have for that period is a blank
-> graph, but I don't think the IOPS requirement would actually have
-> been that high. 
-
-What was actually being written to md3 during this attack?  Just
-logging, or something else?  What was the exact nature of the DDOS
-attack?  What service was it targeting?  I assume this wasn't simply a
-ping flood.
-
-> The CPU was certainly overwhelmed, but my main
-> concern is that I am never going to be able to design a system that
-> will cope with routing DDoS traffic in userspace.
-
-Assuming the network data rate of the attack was less than 1000 Mb/s,
-most any machine with two or more 2GHz+ cores and sufficient RAM should
-easily be able to handle this type of thing without falling over.
-
-Can you provide system hardware details?
-
-> I am OK with the hypervisor machine being completely hammered and
-> keeling over until the traffic is blocked upstream on real routers.
-> Not so happy about the hypervisor machine kicking devices out of
-> arrays and ending up with corrupted filesystems though. I haven't
-> experienced that before.
-
-Well, you also hadn't experienced an attack like this before.  Correct?
-
-> I don't think md is to blame as such because the logs show I/O
-> errors on all devices so no wonder it kicked them out. I was just
-> wondering if it was down to bad hardware, bad hardware _choice_, a
-> bug in the driver, some bug in the kernel or what.
-
-This is impossible to determine with the information provided so far.
-md isn't to blame, but the way you're using it may have played a role in
-the partitions being kicked.
-
-Consider this.  If the hypervisor was writing heavily to logs, and if
-the hypervisor went into heavy swap during the attack, and the
-partitions in md3 that were kicked reside on disks where the swap array
-and/or / arrays exist, this would tend to bolster my theory regarding
-seek starvation causing the timeouts and kicks.
-
-If this isn't the case, and you simply had high load hammering md3 and
-the underlying disks, with little IO on the other arrays, then the
-problem likely lay elsewhere, possibly with the disks themselves, the
-HBA, or even the system board.
-
-Or, if this is truly a single CPU/core machine, the core was pegged, and
-the hypervisor kernel scheduler wasn't giving enough time to md threads,
-this may also explain the timeouts, though with any remotely recent
-kernel this 'shouldn't' happen under load.
-
-If the problem was indeed simply a hammered single core CPU, I'd suggest
-swapping it for a multi-core model.  This will eliminate the possibility
-of md threads starving for cycles, though I wouldn't think this alone
-would cause 30 second BIO timeouts, and thus devices being kicked.  It's
-far more likely the drives were seek saturated, which would explain the
-30 second BIO timeouts.
-
-> Also still wondering if what I did to recover was the best way to go
-> or if I could have made it easier on myself.
-
-I don't really have any input on this aspect, except to say that if you
-got all your data recovered that's the important part.  If you spent
-twice as long as you needed to I wouldn't sweat that at all.  I'd put
-all my concentration on the root cause analysis.
-
--- 
-Stan
