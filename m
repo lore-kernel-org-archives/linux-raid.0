@@ -1,80 +1,43 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: How to use replacement?
-Date: Mon, 4 Jun 2012 17:12:07 +1000
-Message-ID: <20120604171207.555e2f83@notabene.brown>
-References: <201206040953190009422@gmail.com>
-	<20120604121136.0edfd95e@notabene.brown>
-	<201206041434216404880@gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/f8dkgliEOJl1ak.4bpXgWHB"; protocol="application/pgp-signature"
+From: Shaohua Li <shli@kernel.org>
+Subject: [patch 0/8] raid5: improve write performance for fast storage
+Date: Mon, 04 Jun 2012 16:01:52 +0800
+Message-ID: <20120604080152.098975870@kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201206041434216404880@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de, axboe@kernel.dk, dan.j.williams@intel.com, shli@fusionio.com
 List-Id: linux-raid.ids
 
---Sig_/f8dkgliEOJl1ak.4bpXgWHB
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Mon, 4 Jun 2012 14:34:28 +0800 majianpeng <majianpeng@gmail.com> wrote:
+Like raid 1/10, raid5 uses one thread to handle stripe. In a fast storage, the
+thread becomes a bottleneck. raid5 can offload calculation like checksum to
+async threads. And if storge is fast, scheduling async work and running async
+work will introduce heavy lock contention of workqueue, which makes such
+optimization useless. And calculation isn't the only bottleneck. For example,
+in my test raid5 thread must handle > 450k requests per second. Just doing
+dispatch and completion will make raid5 thread incapable. The only chance to
+scale is using several threads to handle stripe.
 
-> >On Mon, 4 Jun 2012 09:53:21 +0800 majianpeng <majianpeng@gmail.com> wrot=
-e:
-> >
-> >> Hi:
-> >> 	At present, md is supporting replacement.
-> >> 	In function: state_store()
-> >> >   } else if (cmd_match(buf, "replacement")) {
-> >> >		/* Can only set a device as a replacement when array has not
-> >> >		 * yet been started.  Once running, replacement is automatic
-> >> >		 * from spares, or by assigning 'slot'.
-> >> >		 */
-> >> 		I can using spare disk.But how to use slot?
-> >
-> >If you want to ensure that a particular device becomes a replacement for=
- a
-> >particular other device, then
-> >  cd /sys/block/mdX/md
-> >  echo frozen > sync_action
-> >  echo NN:MM > new_dev  # where NN is major and MM is minor of new device
->=20
-> If the array had a persistent superblock, the operation returned error.
-> The message like:
-> [  262.934070] md: sde does not have a valid v1.2 superblock, not importi=
-ng!
-> How can do it ?
->=20
+Simpliy using several threads doesn't work. conf->device_lock is a global lock
+which is heavily contended. The first 7 patches in the set are trying to
+address this problem. With them, when several threads are handling stripe,
+device_lock is still contended but takes much less cpu time and not the heavist
+locking any more. Even the 8th patch isn't accepted, the first 7 patches look
+good to merge.
 
-You need to write a superblock out to the device first.
-mdadm already does this when adding a spare to an array, and it is
-a similar operation.
+With the locking issue solved (at least largely), switching stripe handling to
+multiple threads is trival.
 
-NeilBrown
+In a 3-disk raid5 setup, 2 extra threads can provide 130% throughput
+improvement (double stripe_cache_size) and the throughput is pretty close to
+theory value. With >=4 disks, the improvement is even bigger, for example, can
+improve 200% for 4-disk setup, but the throughput is far less than theory
+value, which is caused by several factors like request queue lock contention,
+cache issue, latency introduced by how a stripe is handled in different disks.
+Those factors need further investigations.
 
+Comments and suggestions are welcome!
 
---Sig_/f8dkgliEOJl1ak.4bpXgWHB
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT8xfxznsnt1WYoG5AQJIDw/+OIY5NQcjZNGrE/bwh7jP1X/eS61qqSQQ
-9xsdvCEdcWCJ6pEWHfMbQFZ5tW18ugiWSt/8yiQwgW5oSBNLEP2cd5nlwkkbS6nt
-vUrTjI+PLBVbn3T7xX8ahWBG/f8AJ6ZdlknRFY7jVnYFhxqbWFp+G6Y54C5HZGpa
-wh1AKGDwDoU2ZWSafbq5RTcnZe0R7yY9O0RYjjZbmeJ3VncvcZ8qFk6n2Prh215g
-v0QtJnWFFT4FK6i0eIwy4+kbKUFYin89nKtWv1cUp51RiRkzFYbOl+PWv9btYScv
-fgcXmdhlb/4d/PmNUbdb+OyRiaRqsAZA/Qele53x2Di581fimtnBvy4bLbZjJr2Y
-eE+sA+3DVBtJE3S+RbkHLuoPX5y7I1WdMOht1vOXe+u9kwq3hihIVGji7/Higfo0
-4T5xQiLiUQlc994SkUSH/3MkPhdEH6DPSR7UhVuuGDh1w8sBBGTMJSeh16wh1IXZ
-hsCeGGUwUEI638fdtIJZwxGtvO6L2j6RPJZMIElgxd917Hfmqyo8XoAjSQ4XOo6b
-yqj3S4DthLNvOyZTo7Q+PmqfvdVpZ59t6XBhj/RvlV8jKKvGpdb6HpWM3fybcbad
-GjPkb5alC6GHx3ewnvCT/7SGZwrwBFLi0k1mWhvXx1ZaGhPYS5i1tM8HGQjuI0XD
-tbPG/sHUjZU=
-=h+08
------END PGP SIGNATURE-----
-
---Sig_/f8dkgliEOJl1ak.4bpXgWHB--
+Thanks,
+Shaohua
