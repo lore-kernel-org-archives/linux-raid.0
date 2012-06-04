@@ -1,77 +1,78 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Can extremely high load cause disks to be kicked?
-Date: Sun, 03 Jun 2012 20:55:04 -0500
-Message-ID: <4FCC1578.50801@hardwarefreak.com>
-References: <20120531083158.GE3867@bitfolk.com> <4FC81B85.8090807@hardwarefreak.com> <20120601192524.GH3867@bitfolk.com> <4FC9A8D4.9060803@hardwarefreak.com> <20120603033042.GI3867@bitfolk.com> <CA+sTkh49kYa=sqzSNhnQtjMTs7OL=kmpsoP55k1zifFVByzENw@mail.gmail.com> <20120603220536.GN3867@bitfolk.com>
-Reply-To: stan@hardwarefreak.com
+From: NeilBrown <neilb@suse.de>
+Subject: Re: How to use replacement?
+Date: Mon, 4 Jun 2012 12:11:36 +1000
+Message-ID: <20120604121136.0edfd95e@notabene.brown>
+References: <201206040953190009422@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/pKjujv7eId7_HjXBaSuspir"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120603220536.GN3867@bitfolk.com>
+In-Reply-To: <201206040953190009422@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: majianpeng <majianpeng@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 6/3/2012 5:05 PM, Andy Smith wrote:
-> Hi Igor,
+--Sig_/pKjujv7eId7_HjXBaSuspir
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 4 Jun 2012 09:53:21 +0800 majianpeng <majianpeng@gmail.com> wrote:
+
+> Hi:
+> 	At present, md is supporting replacement.
+> 	In function: state_store()
+> >   } else if (cmd_match(buf, "replacement")) {
+> >		/* Can only set a device as a replacement when array has not
+> >		 * yet been started.  Once running, replacement is automatic
+> >		 * from spares, or by assigning 'slot'.
+> >		 */
+> 		I can using spare disk.But how to use slot?
+
+If you want to ensure that a particular device becomes a replacement for a
+particular other device, then
+  cd /sys/block/mdX/md
+  echo frozen > sync_action
+  echo NN:MM > new_dev  # where NN is major and MM is minor of new device
+  echo want_replacement > rdSS/state  # where SS is slot number of device to
+                          # replace
+  echo SS > dev-YYY/slot  # where YYY is the kernel name of the newly added
+                          # device
+  echo idle > sync_action
+
+should do it, but I haven't tested recently.
+
+NeilBrown
+
+
+> >		if (rdev->mddev->pers)
+> >			err =3D -EBUSY;
+> 	=09
 >=20
-> On Sun, Jun 03, 2012 at 12:05:31PM +0800, Igor M Podlesny wrote:
->> On 3 June 2012 11:30, Andy Smith <andy@strugglers.net> wrote:
->>> I probably didn't give enough details. On this particular host ther=
-e
->>> are four md arrays:
->>>
->>> md0 is mounted as /boot
->>> md1 is used as swap
->>> md2 is mounted as /
->>> md3 is an LVM PV for "everything else"
->> [=85]
->>
->>    Kinda off-topic question =97 why having separate MDs for swap and
->> root? I mean LVM's lv would be just fine for them.
 >=20
-> I know, but I'm kind of old-fashioned and have some (probably
-> unwarranted) distrust of having the really essential bits of the
-> system in LVM if they don't really need to be.
+> --------------
+> majianpeng
 
-I wouldn't say unwarranted.  I've seen instances on this and other list=
-s
-where an md array blew chunks, was repaired and everything reported
-good, only to have LVM devices corrupted beyond repair.  Or both md and
-LVM report good after repair, but the XFS superblock is hosed beyond
-repair.  The layers in the storage stack the better.  KISS principle,
-"Just because you can doesn't mean you should", etc, etc.
+--Sig_/pKjujv7eId7_HjXBaSuspir
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-> The system needs swap and I'm unlikely to want to change the size of
-> that swap, but if I do I can just add more swap from inside LVM. / is
-> also unlikely to need to be resized ever, so I keep that outside of
-> LVM too.
->=20
-> My position on this is probably going to have to change given the
-> current "get rid of /usr" plans that seem to be gaining traction in
-> the Linux community. A beefier / would probably justify being in
-> LVM to me.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-I guess I'm more old fashioned.  I'd never put the root filesystem on a=
-n
-LVM volume.  My preferences are directly on a single disk partition, or
-hardware RAID1 partition, depending on the server/application area.
+iQIVAwUBT8wZWTnsnt1WYoG5AQLlvQ/+JTxdi6qooKNIJv62u6VIb8edkxeb0pMQ
+U04Aqzrhnj7rHrrg8O5uRLqPTTTp0CiaOMXQbLFGC2XKh+UXkLZbdx6qo7ZenC63
+eZ+Pi8HTEkk6tFjaoplrOcG3hOHV1CmEDbU8wDpUGaaRB8OwU87Y0gOJmUfvU/Y9
+fMStrSeRFXp9hPm22OsRS8254xeumOEoG4R6vT7ye/wvK5nugz9WhraqjIE9Z1k5
+6RifaYswrOgtt2G5i3Thd0xqf7A09nvU7D3NgNUxMGCAqujkTEi20yTj1oJJ+LhR
+3iy87m/8HJCFY46Vvxbf6VF0196iF6OeNToTlbytWKNdzfnZMw5oFE7huYQzu583
+o86kC0P1VjTud5pqaNFQS20QnWG9vCKBQcl/ouiKr7Ks/IxWlbZjMwhDuLWK8O7Q
+43G8xT+IW/ecxPIDj965Sl31PvfQThvXEWopCntyxfvnAQfsebF9AsCxdeUbWBSz
+aYGueg7auDU3IfLrs60MQFVS9wNLhHAnLIQsJFRgd8/XumDB+RyQ1W9uE5QjyVcB
+KEhf31qxxsDbRmpMOJUuwWydjdvh6It4cNsA79ArvDN/qnltHZjkPtSJKPDV+na0
+nfYeJGy6+TOT/7g1jneE3bZ6wcTlHHLxrOrDkZek9wdnbDveKnHutYVyUgfjdjhq
+qbSxLN8XpQE=
+=YF7Q
+-----END PGP SIGNATURE-----
 
-> But really it is all just personal taste isn't it..
-
-To an extent yes.  Separating different portions of the UNIX filesystem
-tree on different partitions/devices has a long tradition and usually
-good reasoning behind it.  However, as I mentioned, spreading these
-across multiple md arrays that share the same physical disks is not a
-good idea.  A single md array with multiple partitions, with the
-filesystem tree, swap, and data directories spread over these
-partitions, is preferable.
-
---=20
-Stan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/pKjujv7eId7_HjXBaSuspir--
