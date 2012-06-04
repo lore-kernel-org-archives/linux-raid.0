@@ -1,58 +1,58 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: tracking parity mismatches to a failing disk
-Date: Mon, 4 Jun 2012 14:17:04 +1000
-Message-ID: <20120604141704.12dcbd3e@notabene.brown>
-References: <4FAAC278.6080303@duke.edu>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH] md:Fix name of raid thread when raid takeovered
+Date: Mon, 4 Jun 2012 13:36:11 +0800
+Message-ID: <201206041336070008742@gmail.com>
+References: <201205311541185787676@gmail.com>,
+	<20120604134856.00aecfa1@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/WQwYtvYU3rrevWYl2aJTOYq"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FAAC278.6080303@duke.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Peterson <Michael.Peterson@duke.edu>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>, majianpeng <majianpeng@gmail.com>
 List-Id: linux-raid.ids
 
---Sig_/WQwYtvYU3rrevWYl2aJTOYq
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+T24gU3VuLCAzIEp1biAyMDEyIDIwOjQ5OjA1IC0wNzAwLG5laWwgd3JvdGU6DQo+T24gVGh1LCAz
+MSBNYXkgMjAxMiAxNTo0MToyMiArMDgwMCAibWFqaWFucGVuZyIgPG1hamlhbnBlbmdAZ21haWwu
+Y29tPiB3cm90ZToNCj4NCj4+IFdoZW4gcmFpZCB0YWtlb3ZlcmVkLCBpdCB1c2VkIG9sZCBwZXJz
+b25hbGl0eSB0byBzZXQgdGFzay0+Y29tbS4NCj4+IA0KPj4gU2lnbmVkLW9mZi1ieTogbWFqaWFu
+cGVuZyA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQo+PiAtLS0NCj4+ICBkcml2ZXJzL21kL21kLmMg
+fCAgIDE1ICsrKysrKysrKysrKysrKw0KPj4gIDEgZmlsZXMgY2hhbmdlZCwgMTUgaW5zZXJ0aW9u
+cygrKSwgMCBkZWxldGlvbnMoLSkNCj4+IA0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvbWQu
+YyBiL2RyaXZlcnMvbWQvbWQuYw0KPj4gaW5kZXggMWMyZjkwNC4uOTNlMjBlYSAxMDA2NDQNCj4+
+IC0tLSBhL2RyaXZlcnMvbWQvbWQuYw0KPj4gKysrIGIvZHJpdmVycy9tZC9tZC5jDQo+PiBAQCAt
+MzIsNiArMzIsNyBAQA0KPj4gICAgIFNvZnR3YXJlIEZvdW5kYXRpb24sIEluYy4sIDY3NSBNYXNz
+IEF2ZSwgQ2FtYnJpZGdlLCBNQSAwMjEzOSwgVVNBLg0KPj4gICovDQo+PiAgDQo+PiArI2luY2x1
+ZGUgPGxpbnV4L3NjaGVkLmg+DQo+PiAgI2luY2x1ZGUgPGxpbnV4L2t0aHJlYWQuaD4NCj4+ICAj
+aW5jbHVkZSA8bGludXgvYmxrZGV2Lmg+DQo+PiAgI2luY2x1ZGUgPGxpbnV4L3N5c2N0bC5oPg0K
+Pj4gQEAgLTM1MTMsNiArMzUxNCw3IEBAIGxldmVsX3N0b3JlKHN0cnVjdCBtZGRldiAqbWRkZXYs
+IGNvbnN0IGNoYXIgKmJ1Ziwgc2l6ZV90IGxlbikNCj4+ICAJbG9uZyBsZXZlbDsNCj4+ICAJdm9p
+ZCAqcHJpdjsNCj4+ICAJc3RydWN0IG1kX3JkZXYgKnJkZXY7DQo+PiArCWNoYXIgKnRtcDsNCj4+
+ICANCj4+ICAJaWYgKG1kZGV2LT5wZXJzID09IE5VTEwpIHsNCj4+ICAJCWlmIChsZW4gPT0gMCkN
+Cj4+IEBAIC0zNjc0LDYgKzM2NzYsMTkgQEAgbGV2ZWxfc3RvcmUoc3RydWN0IG1kZGV2ICptZGRl
+diwgY29uc3QgY2hhciAqYnVmLCBzaXplX3QgbGVuKQ0KPj4gIAkJZGVsX3RpbWVyX3N5bmMoJm1k
+ZGV2LT5zYWZlbW9kZV90aW1lcik7DQo+PiAgCX0NCj4+ICAJcGVycy0+cnVuKG1kZGV2KTsNCj4+
+ICsJLyoNCj4+ICsJICogd2hlbiByYWlkIHRha2VvdmVyIHVzaW5nIG9sZCBwZXJzb25hbGl0eSxz
+byBtZGRldi0+dGhyZWFkLT50c2sNCj4+ICsJICogbmFtZSBpcyB3cm9uZy4NCj4+ICsJICogaWYg
+a3phbGxvYyBlcnJvciwgb25seSB1c2luZyB3cm9uZyBuYW1lLg0KPj4gKwkgKi8NCj4+ICsJbGVu
+ID0gc3RybGVuKG1kbmFtZShtZGRldikpICsgc3RybGVuKG1kZGV2LT5wZXJzLT5uYW1lKTsNCj4+
+ICsJdG1wID0ga3phbGxvYyhsZW4gKyAyLCBHRlBfS0VSTkVMKTsNCj4+ICsJaWYgKHRtcCkgew0K
+Pj4gKwkJc3ByaW50Zih0bXAsICIlc18lcyIsIG1kbmFtZShtZGRldiksIG1kZGV2LT5wZXJzLT5u
+YW1lKTsNCj4+ICsJCXNldF90YXNrX2NvbW0obWRkZXYtPnRocmVhZC0+dHNrLCB0bXApOw0KPj4g
+KwkJa2ZyZWUodG1wKTsNCj4+ICsJfQ0KPj4gKw0KPj4gIAlzZXRfYml0KE1EX0NIQU5HRV9ERVZT
+LCAmbWRkZXYtPmZsYWdzKTsNCj4+ICAJbWRkZXZfcmVzdW1lKG1kZGV2KTsNCj4+ICAJc3lzZnNf
+bm90aWZ5KCZtZGRldi0+a29iaiwgTlVMTCwgImxldmVsIik7DQo+DQo+VGhhbmtzLiAgSG93ZXZl
+cjoNCj4NCj4gMS8gYXMgYSB0YXNrIG5hbWUgaXMgbGltaXRlZCB0byBUQVNLX0NPTU1fTEVOLCB0
+aGVyZSBpcyBsaXR0bGUgcG9pbnQgdXNpbmcNCj4gICAga3phbGxvYy4gIEp1c3QgZGVjbGFyZSBh
+IGxvY2FsIHZhcmlhYmxlIG9mIHRoYXQgc2l6ZS4NCj4gMi8gTm8gYWxsIGxldmVscyBoYXZlIGEg
+dGhyZWFkLiAgWW91IHNob3VsZCBjaGVjayB0aGF0IG1kZGV2LT50aHJlYWQgaXMgbm90DQo+ICAg
+IE5VTEwuDQo+DQo+SWYgeW91IHJlc3VibWl0IHdpdGggdGhvc2UgZml4ZXMgSSdsbCBhcHBseSB0
+aGUgcGF0Y2guDQo+DQo+VGhhbmtzLA0KPk5laWxCcm93bg0KPg0KPg0KTmVpbCwgVGhlcmUgbWF5
+YmUgaGFkIGFudGhvciBpc3N1ZS4NCnNldF90YXNrX2NvbW0oKSBpcyBub3QgZXhwb3J0LlNvIHdo
+ZW4gY29tcGlsZSBtZCBpcyBtb2R1bGUsIGl0IHdpbGwgYmUgZXJyb3IuDQpTbyBJIHRoaW5rICBp
+dCB3aWxsIGJlIHJld3JpdGUuSXQgc2hvdWxkIHJlbmFtZSBpbiBmdW5jdGlvbiBjYWxsIG1kX3Jl
+Z2lzdGVyX3RocmVhZCgpLg0KSG93IGFib3V0IHRoaXMgd2F5Pw0KCQkJCQkJCQkJCQkJCQlUaGFu
+a3MhDQoNCi0tLS0tLS0tLS0tLS0tDQptYWppYW5wZW5n
 
-On Wed, 09 May 2012 15:16:08 -0400 Michael Peterson
-<Michael.Peterson@duke.edu> wrote:
-
-> I'm trying to identify the source of a non-zero mismatch_cnt on a
-> six-disk RAID6 md array.  I think I've identified it as /dev/sdf since
-> that is the only device with a non-zero value in
-> /sys/block/md0/md/dev-sd*/errors.  Is that the right way to track parity
-> mismatches back to a disk?
->=20
-> OS is CentOS 5.8 -> mdadm 2.6.9
-
-There is a program in the mdadm source distro called "raid6check" which can
-possibly help you.
-
-NeilBrown
-
---Sig_/WQwYtvYU3rrevWYl2aJTOYq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT8w2wDnsnt1WYoG5AQLRaRAAk7xWp7GumY5sCzmRMqsYUrjVEwGVG7Kq
-JG6OW28EFrXf5fkLC0aePbRjxUjRx0PqZipe2VAYnCVZGijgT/CPr0MgG2WpQr4C
-oLzcOu7/A0SoDMez2lXmo7lgpIDQu8JtLPzYgHw6X+tq8ooU/f9FVtgaHu3g7uHr
-I8FVid2XoAZBSbqgdjR+mT6lLd7AKtsSzTDnxarXdcLd0Wor2HgMsv1s/8mUsmJz
-29bnQpjttXS+mEERYQ7L6XcDfDvcIZ0LDPst26yMCtH3fa3yfX7T1p1q1Lxw5bYp
-Z5pC+MaZXn/w3+Ibbg9Y2QbzdwGYHtt/NG22eJOKUHm4GgVNp61uKEMQxsPnsN8W
-ivfOBJcbKTqES2t22uljt6pg6vdCKN6aOpMCcCWvjKOy5kZuU+wOs/k/P9QQ9hkx
-1camdbHjD+6HWouXx2p8zS7V1lze3Y14S1pRg7vf4lBFvo8NnfHRS8e2OWVyd6HZ
-gSdLYcp059G3XvuR5hTI8pUV+QiGodC/bjzW7tAK4KUrY0AQQPGQhSphBfxpwz7x
-1szTmljhc2nQPOLpWmnIRQ1ICPVs1MJP4sdesMml5mb+btH4yEtrpyuVFVu9YiaL
-zHn/vwGYoP1JLGps9VQk/ju6i1O71yPTZfymGgBG5zdadyI77bdm0RIvlJ+Sd3L+
-tuiEKtlO2Yc=
-=pwKp
------END PGP SIGNATURE-----
-
---Sig_/WQwYtvYU3rrevWYl2aJTOYq--
