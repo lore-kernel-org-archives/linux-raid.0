@@ -1,147 +1,48 @@
-From: Ole Tange <ole@tange.dk>
-Subject: Re: Software RAID checksum performance on 24 disks not even close to
- kernel reported
-Date: Tue, 5 Jun 2012 22:45:12 +0200
-Message-ID: <CA+4vN7wVM9tAx3HYOut68H7nvb0UkX07x4=ScCddZS8eQ4+TMw@mail.gmail.com>
-References: <CA+4vN7wPd0Av_sbtA0JD5y=fGcsuq20SOQVHWnE8BUFpDxOEXQ@mail.gmail.com>
- <CA+sTkh6rA_yoeM3Fw1s47sgEsJRWG7vbtXH9QaPWbwG6Mvt7fQ@mail.gmail.com>
- <CA+4vN7zTmKPuyseOO9QhSKO3vjeLpt8pQ76W-MwZg1-YCz+vLA@mail.gmail.com> <4FCE147E.9080900@hardwarefreak.com>
+From: "Joachim Otahal (privat)" <Jou@gmx.net>
+Subject: Re: RAID5 with two drive sizes question
+Date: Tue, 05 Jun 2012 22:48:13 +0200
+Message-ID: <4FCE708D.2080903@gmx.net>
+References: <4FCE4199.7030705@gmx.net> <20120605233953.2086cc4c@natsu> <4FCE60F3.4040606@gmx.net> <20120606015950.585d5454@natsu> <4FCE6DCD.7030207@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FCE147E.9080900@hardwarefreak.com>
+In-Reply-To: <4FCE6DCD.7030207@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: linux-raid@vger.kernel.org
+To: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Jun 5, 2012 at 4:15 PM, Stan Hoeppner <stan@hardwarefreak.com> =
-wrote:
-> On 6/5/2012 2:47 AM, Ole Tange wrote:
->
->> =A0 time parallel -j0 dd if=3D{} of=3D/dev/null bs=3D1000k count=3D1=
-k ::: /dev/sd?
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0^^^^^^^^
-> Block size, bs, should always be a multiple of the page size lest
-> throughput will suffer. =A0The Linux page size on x86 CPUs is 4096 by=
-tes.
-> =A0Using bs values that are not multiples of page size will usually g=
-ive
-> less than optimal results due to unaligned memory accesses.
-
-The above command was used to measure the raw read performance from
-all physical drives, i. e. the 2000 MB/s. If your hypothesis is
-correct then I should be able to push the 2000 MB/s even higher by
-using a smaller blocksize.
-
-To see if you were right (i.e. that the block size has any impact
-whatsoever) I tried:
-
-  time parallel -j0 dd if=3D{} of=3D/dev/null bs=3D4k count=3D250k ::: =
-/dev/sd?
-
-I tested 100 times of 4k block and 1000k block and found the min,
-median, and max:
-
-seq 100 | parallel -j1 -I ,, --arg-sep ,, -N0  'echo 3 >
-/proc/sys/vm/drop_caches;'/usr/bin/time -f%e  parallel -j0 dd if=3D{}
-of=3D/dev/null bs=3D4k count=3D250k ::: /dev/sd? 2>&1 |grep -v o > out-=
-4k
-
-seq 100 | parallel -j1 -I ,, --arg-sep ,, -N0  'echo 3 >
-/proc/sys/vm/drop_caches;'/usr/bin/time -f%e  parallel -j0 dd if=3D{}
-of=3D/dev/null bs=3D1000k count=3D1k ::: /dev/sd? 2>&1 |grep -v o >
-out-1000k
-
-$ echo "1000 * " `ls /dev/sd? | wc -l ` / `sort out-4k | tail -n 1` | b=
-c -l
-$ echo "1000 * " `ls /dev/sd? | wc -l ` / `sort out-4k | head -n 50 |
-tail -n 1` | bc -l
-$ echo "1000 * " `ls /dev/sd? | wc -l ` / `sort -r out-4k  | tail -n 1`=
- | bc -l
-
-System 1 (4 kb blocks): Min: 1416.61 MB/s Median: 1899.82 MB/s Max: 203=
-8.92 MB/s
-System 2 (4 kb blocks): Min: 1636.24 MB/s Median: 1850.53 MB/s Max: 203=
-9.21 MB/s
-System 3 (4 kb blocks): Min: 1123.43 MB/s Median: 1373.13 MB/s Max: 146=
-4.96 MB/s
-
-$ echo "1000 * " `ls /dev/sd? | wc -l ` / `sort out-1000k | tail -n 1` =
-| bc -l
-$ echo "1000 * " `ls /dev/sd? | wc -l ` / `sort out-1000k | head -n 50
-| tail -n 1` | bc -l
-$ echo "1000 * " `ls /dev/sd? | wc -l ` / `sort -r out-1000k  | tail
--n 1` | bc -l
-
-System 1 (1000 kb blocks): Min: 1389.76 MB/s Median: 1909.72 MB/s Max:
-2044.60 MB/s
-System 2 (1000 kb blocks): Min: 1593.13 MB/s Median: 1799.30 MB/s Max:
-1975.68 MB/s
-System 3 (1000 kb blocks): Min: 1072.26 MB/s Median: 1345.02 MB/s Max:
-1459.39 MB/s
-
-If you compare the numbers between the 2 block sizes you can see that
-the ranges and medians are almost identical. Is this the kind of
-suffering of throughput you expected by not using the same block size?
-Because I would find that this suffering is hardly worth mentioning -
-it could just as well be due to variation.
-
-> Additionally, you will typically see optimum throughput using bs valu=
-es
-> of between 4096 and 16384 bytes. =A0Below and above that throughput
-> typically falls. =A0Test each page size multiple from 4096 to 32768 t=
-o
-> confirm on your system.
-
-Are you aware that the 'dd' part of the script is for setting up the
-loop back devices? That part is not timed at all, so if that part took
-twice as long it would not change the validity of the test at all.
-
-> Also, using large block sizes causes dd to buffer large amounts of da=
-ta
-> into memory as each physical IO is only 4096 bytes. =A0Thus dd doesn'=
-t
-> actually start writing to disk until each block is buffered into RAM,=
- in
-> this case just under 1MB. =A0This reduces efficiency by quite a bit v=
-s the
-> 4096 byte block size which allows streaming directly from dd without =
-the
-> buffering.
-
-Are you aware that the test takes place in RAM, and not on magnetic med=
-ia?
-
->> The 900 MB/s was based on my old controller. I re-measured using my
->> new controller and get closer to 2000 MB/s in raw (non-RAID)
->> performance, which is close to the theoretical maximum for that
->> controller (2400 MB/s). This indicated that hardware is not a
->> bottleneck.
+Stan Hoeppner schrieb:
+> On 6/5/2012 2:59 PM, Roman Mamedov wrote:
+>> On Tue, 05 Jun 2012 21:41:39 +0200
+>> "Joachim Otahal (privat)"<Jou@gmx.net>  wrote:
 >>
->>>> When I set the disks up as a 24 disk software RAID6 I get 400 MB/s
->>>> write and 600 MB/s read. It seems to be due to checksuming, as I h=
-ave
->>>> a single process (md0_raid6) taking up 100% of one CPU.
+>>> Use only 750GB partitions, use the 3*250 GB loss at the end of each 1 TB
+>>> drive for the fourth 750 GB, and RAID6 those 8*750. Result is 4.5 TB
+>>> with a one-drive-loss tolerance and really bad performance.
+>>> I spare you the 500 GB partitions example which result in 4.5 TB with a
+>>> one-drive-loss tolerance and really bad performance.
+>> Except this would not make any sense even as a thought experiment. You don't
+>> want a configuration where two or more areas of the same physical disk need to
+>> be accessed in parallel for any read or write to the volume. And it's pretty
+>> easy to avoid that.
+> You make a good point but your backing argument is incorrect:  XFS by
+> design, by default, writes to 4 equal sized regions of a disk in parallel.
 >
-> The dd block size will likely be even more critical when dealing with
-> parity arrays, as non page size blocks will cause problems with strip=
-e
-> aligned writes.
+> The problem here is running multiple RAID arrays, especially of
+> different RAID levels, on the same physical disk.  Under high IO load
+> you end up thrashing the heads due to excessive seeking as the access
+> patterns are very different between the arrays.  In some situations it
+> may not cause problems.  In others it can.
+>
+> For a home type server with light IO load you probably won't have any
+> problems.  For anything with a high IO load, you don't want to do this
+> type of RAID setup.  Anyone with such an IO load already knows this,
+> which is why it's typically only hobbyists who would consider using such
+> a configuration.
+>
 
-Again: The dd is not done on the array. It is done on the separate
-devices to measure maximal hardware performance and to setup the loop
-back devices in RAM, respectively.
+Please stop. Next time I use <irony></irony> tags. RAID5 with 1 TB 
+packages and appending the remaining 2*500 GB as RAID1 (as suggested by 
+Roman Mamedov) is indeed the only sensible way, everything else is nonsense.
 
-Did you run the test script? What where your numbers? Did md0_raid6
-take up 100% CPU of 1 core during the copy?
-
-
-/Ole
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
