@@ -1,62 +1,41 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: [PATCH] md/raid5:Choose to replacing or recoverying when  raid degraded and had a want_replacement disk at the same time.
-Date: Tue, 5 Jun 2012 15:32:56 +0800
-Message-ID: <201206051532527348313@gmail.com>
+From: Ole Tange <ole@tange.dk>
+Subject: Re: Software RAID checksum performance on 24 disks not even close to
+ kernel reported
+Date: Tue, 5 Jun 2012 09:47:31 +0200
+Message-ID: <CA+4vN7xH10qS-=OSS_3z3B3EohKHjk8-GBVvVfPj01TH-0pe3w@mail.gmail.com>
+References: <CA+4vN7wPd0Av_sbtA0JD5y=fGcsuq20SOQVHWnE8BUFpDxOEXQ@mail.gmail.com>
+ <CA+sTkh4fd+oZqagpHkGv5Kw+nkDyhunXfJm0tu0rqvuxVZBOyQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CA+sTkh4fd+oZqagpHkGv5Kw+nkDyhunXfJm0tu0rqvuxVZBOyQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Igor M Podlesny <for.poige+lsr@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SW4gQ29tbWl0IDdiZmVjNWYzNWM2ODEyMWU3YjE4NDlmM2Y0MTY2ZGQ5NmM4ZGE1YjM6DQoiaWYg
-dGhlcmUgaXMgYSBzcGFyZSBhbmQgYSB3YW50X3JlcGxhY2VtZW50IGRldmljZSwgc3RhcnQgcmVw
-bGFjZW1lbnQuIg0KQnV0IGl0IGRpZCBub3QgY29uc2lkZXIgdGhlIHJhaWQgd2FzIGRlZ3JhZGVk
-IGF0IHRoZSBzYW1lIHRpbWUuDQpXaGVuIHdlIGFkZCBzcGFyZSBkaXNrIGluIG9yZGVyIHRvIHJl
-Y292ZXJ5LCB1bmxlc3MgcmFpZCB3YXMgb2sgYW5kIHRoZW4NCnN0YXJ0ZWQgcmVwbGFjZW1lbnQg
-b3IgdmljZSB2ZXJzYS4NCg0KU2lnbmVkLW9mZi1ieTogbWFqaWFucGVuZyA8bWFqaWFucGVuZ0Bn
-bWFpbC5jb20+DQotLS0NCiBkcml2ZXJzL21kL3JhaWQ1LmMgfCAgIDQ4ICsrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tLS0tLQ0KIDEgZmlsZXMgY2hhbmdlZCwgMjkg
-aW5zZXJ0aW9ucygrKSwgMTkgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL21k
-L3JhaWQ1LmMgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCmluZGV4IGQyNjc2NzIuLmY3NGM5YTUgMTAw
-NjQ0DQotLS0gYS9kcml2ZXJzL21kL3JhaWQ1LmMNCisrKyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0K
-QEAgLTU0NDcsNiArNTQ0Nyw4IEBAIHN0YXRpYyBpbnQgcmFpZDVfYWRkX2Rpc2soc3RydWN0IG1k
-ZGV2ICptZGRldiwgc3RydWN0IG1kX3JkZXYgKnJkZXYpDQogCXN0cnVjdCBkaXNrX2luZm8gKnA7
-DQogCWludCBmaXJzdCA9IDA7DQogCWludCBsYXN0ID0gY29uZi0+cmFpZF9kaXNrcyAtIDE7DQor
-CWludCBudWxsX2Rpc2sgPSAtMTsNCisJaW50IHdhbnRyZXBsYWNlX2Rpc2sgPSAtMTsNCiANCiAJ
-aWYgKG1kZGV2LT5yZWNvdmVyeV9kaXNhYmxlZCA9PSBjb25mLT5yZWNvdmVyeV9kaXNhYmxlZCkN
-CiAJCXJldHVybiAtRUJVU1k7DQpAQCAtNTQ2OCwyNyArNTQ3MCwzNSBAQCBzdGF0aWMgaW50IHJh
-aWQ1X2FkZF9kaXNrKHN0cnVjdCBtZGRldiAqbWRkZXYsIHN0cnVjdCBtZF9yZGV2ICpyZGV2KQ0K
-IAkJZGlzayA9IHJkZXYtPnNhdmVkX3JhaWRfZGlzazsNCiAJZWxzZQ0KIAkJZGlzayA9IGZpcnN0
-Ow0KLQlmb3IgKCA7IGRpc2sgPD0gbGFzdCA7IGRpc2srKykgew0KKwlmb3IgKCA7IGRpc2sgPD0g
-bGFzdDsgZGlzaysrKSB7DQogCQlwID0gY29uZi0+ZGlza3MgKyBkaXNrOw0KLQkJaWYgKHAtPnJk
-ZXYgPT0gTlVMTCkgew0KLQkJCWNsZWFyX2JpdChJbl9zeW5jLCAmcmRldi0+ZmxhZ3MpOw0KLQkJ
-CXJkZXYtPnJhaWRfZGlzayA9IGRpc2s7DQotCQkJZXJyID0gMDsNCi0JCQlpZiAocmRldi0+c2F2
-ZWRfcmFpZF9kaXNrICE9IGRpc2spDQotCQkJCWNvbmYtPmZ1bGxzeW5jID0gMTsNCi0JCQlyY3Vf
-YXNzaWduX3BvaW50ZXIocC0+cmRldiwgcmRldik7DQotCQkJYnJlYWs7DQotCQl9DQotCQlpZiAo
-dGVzdF9iaXQoV2FudFJlcGxhY2VtZW50LCAmcC0+cmRldi0+ZmxhZ3MpICYmDQotCQkgICAgcC0+
-cmVwbGFjZW1lbnQgPT0gTlVMTCkgew0KLQkJCWNsZWFyX2JpdChJbl9zeW5jLCAmcmRldi0+Zmxh
-Z3MpOw0KLQkJCXNldF9iaXQoUmVwbGFjZW1lbnQsICZyZGV2LT5mbGFncyk7DQotCQkJcmRldi0+
-cmFpZF9kaXNrID0gZGlzazsNCi0JCQllcnIgPSAwOw0KKwkJaWYgKHAtPnJkZXYgPT0gTlVMTCAm
-JiBudWxsX2Rpc2sgPT0gLTEpDQorCQkJbnVsbF9kaXNrID0gZGlzazsNCisJCWVsc2UgaWYgKHAt
-PnJkZXYgIT0gTlVMTCAmJg0KKwkJCXRlc3RfYml0KFdhbnRSZXBsYWNlbWVudCwgJnAtPnJkZXYt
-PmZsYWdzKSAmJg0KKwkJCXAtPnJlcGxhY2VtZW50ID09IE5VTEwgJiYNCisJCQl3YW50cmVwbGFj
-ZV9kaXNrID09IC0xKQ0KKwkJCXdhbnRyZXBsYWNlX2Rpc2sgPSBkaXNrOw0KKwl9DQorDQorCWlm
-IChudWxsX2Rpc2sgIT0gLTEgJiYgKHJkZXYtPnJhaWRfZGlzayA8IDAgfHwNCisJCQl3YW50cmVw
-bGFjZV9kaXNrID09IC0xKSkgew0KKwkJcCA9IGNvbmYtPmRpc2tzICsgbnVsbF9kaXNrOw0KKwkJ
-Y2xlYXJfYml0KEluX3N5bmMsICZyZGV2LT5mbGFncyk7DQorCQlyZGV2LT5yYWlkX2Rpc2sgPSBu
-dWxsX2Rpc2s7DQorCQllcnIgPSAwOw0KKwkJaWYgKHJkZXYtPnNhdmVkX3JhaWRfZGlzayAhPSBu
-dWxsX2Rpc2spDQogCQkJY29uZi0+ZnVsbHN5bmMgPSAxOw0KLQkJCXJjdV9hc3NpZ25fcG9pbnRl
-cihwLT5yZXBsYWNlbWVudCwgcmRldik7DQotCQkJYnJlYWs7DQotCQl9DQorCQlyY3VfYXNzaWdu
-X3BvaW50ZXIocC0+cmRldiwgcmRldik7DQorCX0gZWxzZSBpZiAod2FudHJlcGxhY2VfZGlzayAh
-PSAtMSAmJiAocmRldi0+cmFpZF9kaXNrID49IDAgfHwNCisJCQkJbnVsbF9kaXNrID09IC0xKSkg
-ew0KKwkJcCA9IGNvbmYtPmRpc2tzICsgd2FudHJlcGxhY2VfZGlzazsNCisJCWNsZWFyX2JpdChJ
-bl9zeW5jLCAmcmRldi0+ZmxhZ3MpOw0KKwkJc2V0X2JpdChSZXBsYWNlbWVudCwgJnJkZXYtPmZs
-YWdzKTsNCisJCXJkZXYtPnJhaWRfZGlzayA9IHdhbnRyZXBsYWNlX2Rpc2s7DQorCQllcnIgPSAw
-Ow0KKwkJY29uZi0+ZnVsbHN5bmMgPSAxOw0KKwkJcmN1X2Fzc2lnbl9wb2ludGVyKHAtPnJlcGxh
-Y2VtZW50LCByZGV2KTsNCiAJfQ0KIAlwcmludF9yYWlkNV9jb25mKGNvbmYpOw0KIAlyZXR1cm4g
-ZXJyOw0KLS0gDQoxLjcuNS40DQoNCg0KDQotLS0tLS0tLS0tLS0tLQ0KbWFqaWFucGVuZw==
+On Tue, Jun 5, 2012 at 5:39 AM, Igor M Podlesny <for.poige+lsr@gmail.co=
+m> wrote:
+> On 5 June 2012 07:14, Ole Tange <ole@tange.dk> wrote:
+> [=85]
+>> I tested this by creating 24 devices in RAM, used different chunk
+>> sizes, and then copied the linux kernel source. Test script can be
+>> found on http://oletange.blogspot.dk/2012/05/software-raid-performan=
+ce-on-24-disks.html
+>
+> =A0 I don't see there "--assume-clean" option, and it's (again) not
+> clear =97 are you playing with re-syncing RAID or what?
 
+Good call. But the resync is done before the mkfs.xfs is finished, so
+the time of the copying is not affected by resync.
+
+I re-tested with --assume-clean and as expected it has no impact.
+
+
+/Ole
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
