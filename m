@@ -1,93 +1,49 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH V1] md:Fix name of raid thread when raid takeovered.
-Date: Tue, 5 Jun 2012 15:48:51 +1000
-Message-ID: <20120605154851.0664f8fb@notabene.brown>
-References: <201206051337125784360@gmail.com>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH V1] md:Fix name of raid thread when raid takeovered.
+Date: Tue, 5 Jun 2012 14:06:06 +0800
+Message-ID: <201206051406033596882@gmail.com>
+References: <201206051337125784360@gmail.com>,
+	<20120605154851.0664f8fb@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/W.yWAdzGZ05/GF1u3KQybIN"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201206051337125784360@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/W.yWAdzGZ05/GF1u3KQybIN
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+T24gIE1vbiwgNCBKdW4gMjAxMiAyMjo0OTowMiAtMDcwMCwgbmVpbCB3cm90ZToNCj5PbiBUdWUs
+IDUgSnVuIDIwMTIgMTM6Mzc6MTUgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVuZ0BnbWFpbC5j
+b20+IHdyb3RlOg0KPg0KPj4gV2hlbiByYWlkIHRha2VvdmVyZWQsIGl0IHVzZWQgb2xkIHBlcnNv
+bmFsaXR5IHRvIHNldCB0YXNrLT5jb21tW10uDQo+PiBTbyB3ZSBhZGQganVkZ2VtZW50IGFuZCBz
+ZXQgY29ycmVjdGVkIHRhc2stPmNvbW1bXS4NCj4+IA0KPj4gU2lnbmVkLW9mZi1ieTogbWFqaWFu
+cGVuZyA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQo+PiAtLS0NCj4+ICBkcml2ZXJzL21kL21kLmMg
+fCAgIDE0ICsrKysrKysrKysrKysrDQo+PiAgMSBmaWxlcyBjaGFuZ2VkLCAxNCBpbnNlcnRpb25z
+KCspLCAwIGRlbGV0aW9ucygtKQ0KPj4gDQo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9tZC5j
+IGIvZHJpdmVycy9tZC9tZC5jDQo+PiBpbmRleCAxYzJmOTA0Li42YjNjZTZlIDEwMDY0NA0KPj4g
+LS0tIGEvZHJpdmVycy9tZC9tZC5jDQo+PiArKysgYi9kcml2ZXJzL21kL21kLmMNCj4+IEBAIC02
+NzM4LDExICs2NzM4LDI1IEBAIHN0cnVjdCBtZF90aHJlYWQgKm1kX3JlZ2lzdGVyX3RocmVhZCh2
+b2lkICgqcnVuKSAoc3RydWN0IG1kZGV2ICopLCBzdHJ1Y3QgbWRkZXYNCj4+ICAJCQkJIGNvbnN0
+IGNoYXIgKm5hbWUpDQo+PiAgew0KPj4gIAlzdHJ1Y3QgbWRfdGhyZWFkICp0aHJlYWQ7DQo+PiAr
+CXN0cnVjdCBtZF9wZXJzb25hbGl0eSAqcGVycyA9IE5VTEw7DQo+PiAgDQo+PiAgCXRocmVhZCA9
+IGt6YWxsb2Moc2l6ZW9mKHN0cnVjdCBtZF90aHJlYWQpLCBHRlBfS0VSTkVMKTsNCj4+ICAJaWYg
+KCF0aHJlYWQpDQo+PiAgCQlyZXR1cm4gTlVMTDsNCj4+ICANCj4+ICsJLyoNCj4+ICsJICpXaGVu
+IHJhaWQgdGFrZW92ZXJlZCx0aGUgbWRkZXYtPnBlcnMgd2FzIG9sZCxzbyB0aGUNCj4+ICsJICp0
+aHJlYWRfbmFtZSBpcyB3cm9uZy4NCj4+ICsJICovDQo+PiArCWlmIChuYW1lID09IE5VTEwgJiYg
+bWRkZXYtPmxldmVsICE9IG1kZGV2LT5uZXdfbGV2ZWwpIHsNCj4+ICsJCXNwaW5fbG9jaygmcGVy
+c19sb2NrKTsNCj4+ICsJCWxpc3RfZm9yX2VhY2hfZW50cnkocGVycywgJnBlcnNfbGlzdCwgbGlz
+dCkNCj4+ICsJCQlpZiAocGVycy0+bGV2ZWwgPT0gbWRkZXYtPm5ld19sZXZlbCkgew0KPj4gKwkJ
+CQluYW1lID0gcGVycy0+bmFtZTsNCj4+ICsJCQkJYnJlYWs7DQo+PiArCQkJfQ0KPj4gKwkJc3Bp
+bl91bmxvY2soJnBlcnNfbG9jayk7DQo+PiArCX0NCj4+ICAJaW5pdF93YWl0cXVldWVfaGVhZCgm
+dGhyZWFkLT53cXVldWUpOw0KPj4gIA0KPj4gIAl0aHJlYWQtPnJ1biA9IHJ1bjsNCj4NCj5Obywg
+SSByZWFsbHkgZG9uJ3QgbGlrZSB0aGF0LiAgSXQgaXMgdG8gZm9jdXNzZWQgb24gZml4aW5nIHRo
+ZSBwYXJ0aWN1bGFyDQo+c3ltcHRvbSByYXRoZXIgdGhhdCBtYWtpbmcgdGhlIGNvZGUgZ2VuZXJh
+bGx5IGNsZWFuZXIuDQo+DQoNCj5XYXMgdGhlcmUgYSByZWFzb24geW91IGRpZG4ndCBqdXN0IGNo
+YW5nZSB0aGUgbGFzdCBhcmcgb2YgbWRfcmVnaXN0ZXJfdGhyZWFkDQo+dG8gYmUgdGhlIGxldmVs
+IG5hbWUgaW5zdGVhZCBvZiBOVUxMPz8NCj4NCk5vLkkgZmlyc3Qgd2FudGVkIHRvIGNvcnJlY3Rl
+ZCBpbiB3aGljaCBjYWxsIG1kX3JlZ2lzdGVyX3RocmVhZC5CdXQgSSBmb3VuZCBpdCB3aWxsIHRh
+a2Ugc29tZSBjb2Rlcy4NClNvIGkgdGhpbmsgY29ycmVjdGVkIHRoaXMgZnVuY3Rpb24gbWF5IGJl
+dHRlci4NCj5OZWlsQnJvd24NCj4NCj4NCg0KDQotLS0tLS0tLS0tLS0tLQ0KbWFqaWFucGVuZw==
 
-On Tue, 5 Jun 2012 13:37:15 +0800 majianpeng <majianpeng@gmail.com> wrote:
-
-> When raid takeovered, it used old personality to set task->comm[].
-> So we add judgement and set corrected task->comm[].
->=20
-> Signed-off-by: majianpeng <majianpeng@gmail.com>
-> ---
->  drivers/md/md.c |   14 ++++++++++++++
->  1 files changed, 14 insertions(+), 0 deletions(-)
->=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 1c2f904..6b3ce6e 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6738,11 +6738,25 @@ struct md_thread *md_register_thread(void (*run) =
-(struct mddev *), struct mddev
->  				 const char *name)
->  {
->  	struct md_thread *thread;
-> +	struct md_personality *pers =3D NULL;
-> =20
->  	thread =3D kzalloc(sizeof(struct md_thread), GFP_KERNEL);
->  	if (!thread)
->  		return NULL;
-> =20
-> +	/*
-> +	 *When raid takeovered,the mddev->pers was old,so the
-> +	 *thread_name is wrong.
-> +	 */
-> +	if (name =3D=3D NULL && mddev->level !=3D mddev->new_level) {
-> +		spin_lock(&pers_lock);
-> +		list_for_each_entry(pers, &pers_list, list)
-> +			if (pers->level =3D=3D mddev->new_level) {
-> +				name =3D pers->name;
-> +				break;
-> +			}
-> +		spin_unlock(&pers_lock);
-> +	}
->  	init_waitqueue_head(&thread->wqueue);
-> =20
->  	thread->run =3D run;
-
-No, I really don't like that.  It is to focussed on fixing the particular
-symptom rather that making the code generally cleaner.
-
-Was there a reason you didn't just change the last arg of md_register_thread
-to be the level name instead of NULL??
-
-NeilBrown
-
-
---Sig_/W.yWAdzGZ05/GF1u3KQybIN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT82dwznsnt1WYoG5AQIi1w/7ByHKnjaPP/hiUsW+AZrGkbulFkmnET95
-5bbSh9mlXK5Su2vAKArNgSq0gtkV5/7AYhBv85oJCNY0TIJYNBOX/iEwO3pcrZ1d
-tArmKFdOsu6OST38vvw1L8b5ur6J/i4mT9XYqaBjmQLbraTI7GDtQ6slH9rXbyuu
-L1LL1dPsYHgKUVkaAfur41fW+GLGXeua8/3LF3bLNy8uvweoSaO9tOEtdxJonAy4
-IC0SrhxwxJ6vXVBQO3LNyJkuuBZe+1j4p7/zvO9ijM8PnRUHQFgNhc8DlaopVD3v
-END1YCgh+VkJ6TQ9+EtUq6fghHR46GLOQSsLhhsKMfUfDD3E+ap1Kfhr+HL4CMxe
-VXbWIZdc7ZSuDFU8J2HqISqL6UF4I11+5ZyGSQKViBugLm6rRiAFOcbdcoFBw7XR
-I22FNimw/kkHQJ0NptZb8EYwlV+PUhZN4POj0yN+HL9WvElhtDwkJBQ/IATt/20s
-eMzZ1t/xxLC4N2pJj9XYE33Tj4j9rhOtRid+h2wEEtaju8N7rTW7wWLJIuwRgpWI
-rbO8l057XzoLPeEmyZxOWN4KQNM+pT0FXxCNEzj0lkQcQF63yZn93QvVbb0vnd5n
-UPxtu66dopKi30UeBb7uK2KTrzYl4jKNY3HqCP8sUrmRMZPS6xEv8g29zMIWUp0x
-gZXD4rgPfHk=
-=LKim
------END PGP SIGNATURE-----
-
---Sig_/W.yWAdzGZ05/GF1u3KQybIN--
