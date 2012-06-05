@@ -1,69 +1,93 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Data Offset
-Date: Tue, 5 Jun 2012 15:44:27 +1000
-Message-ID: <20120605154427.192566af@notabene.brown>
-References: <CAFhY2CjOECFy4bWDL6zs9rtSkVGPR9Wv=1UX9vKgmdjwMsmBYg@mail.gmail.com>
-	<20120602095237.3822e2c2@notabene.brown>
-	<CAFhY2Cjwep5mZkYCfRn4UYmQpSyHU13dSCB8HF8F9wG8Rzx9Aw@mail.gmail.com>
-	<20120604133526.6da3bf10@notabene.brown>
-	<4FCCFDBB.201@pierre-beck.de>
-	<20120605085728.7e922359@notabene.brown>
-	<CAFhY2CjQAutSxzJ-7e+G-1Jw-U6JsFjBBHOmiqOxkhkZy6kd9g@mail.gmail.com>
+Subject: Re: [PATCH V1] md:Fix name of raid thread when raid takeovered.
+Date: Tue, 5 Jun 2012 15:48:51 +1000
+Message-ID: <20120605154851.0664f8fb@notabene.brown>
+References: <201206051337125784360@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/2tMPUpjpu/CZiKZB=Rrkyhh"; protocol="application/pgp-signature"
+ boundary="Sig_/W.yWAdzGZ05/GF1u3KQybIN"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFhY2CjQAutSxzJ-7e+G-1Jw-U6JsFjBBHOmiqOxkhkZy6kd9g@mail.gmail.com>
+In-Reply-To: <201206051337125784360@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: freeone3000 <freeone3000@gmail.com>
-Cc: Pierre Beck <mail@pierre-beck.de>, linux-raid@vger.kernel.org
+To: majianpeng <majianpeng@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/2tMPUpjpu/CZiKZB=Rrkyhh
+--Sig_/W.yWAdzGZ05/GF1u3KQybIN
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 5 Jun 2012 00:26:20 -0500 freeone3000 <freeone3000@gmail.com> wrote:
-> =3D=3D3206=3D=3D    at 0x43C9B7: write_init_super1 (super1.c:1327)
-> =3D=3D3206=3D=3D    by 0x41F1B9: Create (Create.c:951)
-> =3D=3D3206=3D=3D    by 0x407231: main (mdadm.c:1464)
-> =3D=3D3206=3D=3D  Address 0x8 is not stack'd, malloc'd or (recently) free=
-'d
+On Tue, 5 Jun 2012 13:37:15 +0800 majianpeng <majianpeng@gmail.com> wrote:
 
-Ahhh.. I know that bug.  If you "git pull; make" it should go away.
+> When raid takeovered, it used old personality to set task->comm[].
+> So we add judgement and set corrected task->comm[].
+>=20
+> Signed-off-by: majianpeng <majianpeng@gmail.com>
+> ---
+>  drivers/md/md.c |   14 ++++++++++++++
+>  1 files changed, 14 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 1c2f904..6b3ce6e 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -6738,11 +6738,25 @@ struct md_thread *md_register_thread(void (*run) =
+(struct mddev *), struct mddev
+>  				 const char *name)
+>  {
+>  	struct md_thread *thread;
+> +	struct md_personality *pers =3D NULL;
+> =20
+>  	thread =3D kzalloc(sizeof(struct md_thread), GFP_KERNEL);
+>  	if (!thread)
+>  		return NULL;
+> =20
+> +	/*
+> +	 *When raid takeovered,the mddev->pers was old,so the
+> +	 *thread_name is wrong.
+> +	 */
+> +	if (name =3D=3D NULL && mddev->level !=3D mddev->new_level) {
+> +		spin_lock(&pers_lock);
+> +		list_for_each_entry(pers, &pers_list, list)
+> +			if (pers->level =3D=3D mddev->new_level) {
+> +				name =3D pers->name;
+> +				break;
+> +			}
+> +		spin_unlock(&pers_lock);
+> +	}
+>  	init_waitqueue_head(&thread->wqueue);
+> =20
+>  	thread->run =3D run;
 
-However the bug happens when printing an error message, so it won't make
-things actually work.
+No, I really don't like that.  It is to focussed on fixing the particular
+symptom rather that making the code generally cleaner.
 
-It seems that it is failing to write a superblock to /dev/sde3.
-I wonder why.
-Maybe if you run it under strace:
-   strace -o /tmp/str ./mdadm -C .....
-
-then post the "/tmp/str" file.
+Was there a reason you didn't just change the last arg of md_register_thread
+to be the level name instead of NULL??
 
 NeilBrown
 
---Sig_/2tMPUpjpu/CZiKZB=Rrkyhh
+
+--Sig_/W.yWAdzGZ05/GF1u3KQybIN
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT82cuznsnt1WYoG5AQIEbRAApyteWbvVvs/EdsrV3rBhM3L6BTOKJnzV
-RKOkeY7yvFxAiL8bpnKb3EOUw+36a8ReJqVdjlj2DPS7gfo887I0QrykudIPGyo/
-ss5wjt0Qew1cPbJfpu111QJJc6/pipvuV2zfUIGPTDqnfb0GsSTIbBtS2SM65BI4
-HSnnLE7ujlZsHylZDXL1b8GYBiUxuBI5O1c9BwPyr5YtMixViDfue0lDThPpeKe7
-2TpDxEmokQ6LGmTbvLx6bCWft8liDQRAzt7badfm8jISkmmVEcEqacglgaoK54QA
-Dsu8SzC/wK93CKDEk4ideFKv+N67tsStSTmI0AN37TYVVpljMPHInG5DtjQKODBn
-kUZe7kJNBbDbvtUgoeFWT5N1g6RQZMfcW6q74aBvrRKsMmYieoDQee2nG7OToRjQ
-FE6F87DABUCSTFJIKfCBx5qY4CV5FWlHdNjQfjkumY6aH/pNf/5vmES+23AhuvlC
-/w2p2dmt09iPcgW17A7CcHLsDER6xIQYHH3ufYq3IItFY4DQsjTpkjWDfvjXz8oQ
-8may4N5W4j0viGRvR+DdsrlC84Bzi/T1k5EzzyrXyK0/I+z/JitJrQn/3omdIqPM
-SZ0ZLWcnMPk9bknnKpewUeE/vYDotCNxVKhCaKfxCROZer6kyOfYqSvkZtE2w4aP
-DAgkoz1zWU8=
-=Dl9q
+iQIVAwUBT82dwznsnt1WYoG5AQIi1w/7ByHKnjaPP/hiUsW+AZrGkbulFkmnET95
+5bbSh9mlXK5Su2vAKArNgSq0gtkV5/7AYhBv85oJCNY0TIJYNBOX/iEwO3pcrZ1d
+tArmKFdOsu6OST38vvw1L8b5ur6J/i4mT9XYqaBjmQLbraTI7GDtQ6slH9rXbyuu
+L1LL1dPsYHgKUVkaAfur41fW+GLGXeua8/3LF3bLNy8uvweoSaO9tOEtdxJonAy4
+IC0SrhxwxJ6vXVBQO3LNyJkuuBZe+1j4p7/zvO9ijM8PnRUHQFgNhc8DlaopVD3v
+END1YCgh+VkJ6TQ9+EtUq6fghHR46GLOQSsLhhsKMfUfDD3E+ap1Kfhr+HL4CMxe
+VXbWIZdc7ZSuDFU8J2HqISqL6UF4I11+5ZyGSQKViBugLm6rRiAFOcbdcoFBw7XR
+I22FNimw/kkHQJ0NptZb8EYwlV+PUhZN4POj0yN+HL9WvElhtDwkJBQ/IATt/20s
+eMzZ1t/xxLC4N2pJj9XYE33Tj4j9rhOtRid+h2wEEtaju8N7rTW7wWLJIuwRgpWI
+rbO8l057XzoLPeEmyZxOWN4KQNM+pT0FXxCNEzj0lkQcQF63yZn93QvVbb0vnd5n
+UPxtu66dopKi30UeBb7uK2KTrzYl4jKNY3HqCP8sUrmRMZPS6xEv8g29zMIWUp0x
+gZXD4rgPfHk=
+=LKim
 -----END PGP SIGNATURE-----
 
---Sig_/2tMPUpjpu/CZiKZB=Rrkyhh--
+--Sig_/W.yWAdzGZ05/GF1u3KQybIN--
