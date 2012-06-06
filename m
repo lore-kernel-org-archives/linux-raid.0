@@ -1,91 +1,90 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: Re: [PATCH] md/raid5:Choose to replacing or recoverying when  raid degraded and had a want_replacement disk at the same time.
-Date: Wed, 6 Jun 2012 11:24:34 +0800
-Message-ID: <201206061124295788941@gmail.com>
-References: <201206051532527348313@gmail.com>,
-	<20120606112803.359c62cc@notabene.brown>
+From: Marcus Sorensen <shadowsor@gmail.com>
+Subject: Re: Software RAID checksum performance on 24 disks not even close to
+ kernel reported
+Date: Tue, 5 Jun 2012 21:48:08 -0600
+Message-ID: <CALFpzo71dypQx93b22bXdh2xrBbjYX=bG5=zeZL3EGjMAx_Bxg@mail.gmail.com>
+References: <CA+4vN7wPd0Av_sbtA0JD5y=fGcsuq20SOQVHWnE8BUFpDxOEXQ@mail.gmail.com>
+	<CA+sTkh4fd+oZqagpHkGv5Kw+nkDyhunXfJm0tu0rqvuxVZBOyQ@mail.gmail.com>
+	<CA+4vN7xH10qS-=OSS_3z3B3EohKHjk8-GBVvVfPj01TH-0pe3w@mail.gmail.com>
+	<CA+sTkh7XeE49HmF+REyNTcOWJK6OS-tfi0qk7-SosFmAWenTqA@mail.gmail.com>
+	<CA+4vN7x0f3f3=htC4iaPmDPqdviv8+AqAqY3sxKbP1X+89gtuQ@mail.gmail.com>
+	<4FCEB515.5050209@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4FCEB515.5050209@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Brad Campbell <lists2009@fnarfbargle.com>
+Cc: Ole Tange <ole@tange.dk>, Igor M Podlesny <for.poige+lsr@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gIFR1ZSwgNSBKdW4gMjAxMiAxODoyODoxMyBuZWlsIHdyb3RlOg0KPk9uIFR1ZSwgNSBKdW4g
-MjAxMiAxNTozMjo1NiArMDgwMCBtYWppYW5wZW5nIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4gd3Jv
-dGU6DQo+DQo+PiBJbiBDb21taXQgN2JmZWM1ZjM1YzY4MTIxZTdiMTg0OWYzZjQxNjZkZDk2Yzhk
-YTViMzoNCj4+ICJpZiB0aGVyZSBpcyBhIHNwYXJlIGFuZCBhIHdhbnRfcmVwbGFjZW1lbnQgZGV2
-aWNlLCBzdGFydCByZXBsYWNlbWVudC4iDQo+PiBCdXQgaXQgZGlkIG5vdCBjb25zaWRlciB0aGUg
-cmFpZCB3YXMgZGVncmFkZWQgYXQgdGhlIHNhbWUgdGltZS4NCj4+IFdoZW4gd2UgYWRkIHNwYXJl
-IGRpc2sgaW4gb3JkZXIgdG8gcmVjb3ZlcnksIHVubGVzcyByYWlkIHdhcyBvayBhbmQgdGhlbg0K
-Pj4gc3RhcnRlZCByZXBsYWNlbWVudCBvciB2aWNlIHZlcnNhLg0KPj4gDQo+PiBTaWduZWQtb2Zm
-LWJ5OiBtYWppYW5wZW5nIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4NCj4+IC0tLQ0KPj4gIGRyaXZl
-cnMvbWQvcmFpZDUuYyB8ICAgNDggKysrKysrKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0t
-LS0tLS0tLS0tLS0tDQo+PiAgMSBmaWxlcyBjaGFuZ2VkLCAyOSBpbnNlcnRpb25zKCspLCAxOSBk
-ZWxldGlvbnMoLSkNCj4+IA0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2Ry
-aXZlcnMvbWQvcmFpZDUuYw0KPj4gaW5kZXggZDI2NzY3Mi4uZjc0YzlhNSAxMDA2NDQNCj4+IC0t
-LSBhL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gKysrIGIvZHJpdmVycy9tZC9yYWlkNS5jDQo+DQo+
-R29vZCBwb2ludCwgYnV0IHRoZSBjb2RlIGZlZWxzIGEgbGl0dGxlIC4uLiBjbHVtc3kuDQo+DQo+
-SG93IGFib3V0IHRoaXM/DQo+DQo+TmVpbEJyb3duDQo+DQo+DQo+ZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvbWQvcmFpZDUuYyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KPmluZGV4IGQyNjc2NzIuLjRmMDg2
-MWUgMTAwNjQ0DQo+LS0tIGEvZHJpdmVycy9tZC9yYWlkNS5jDQo+KysrIGIvZHJpdmVycy9tZC9y
-YWlkNS5jDQo+QEAgLTU0NjUsMTAgKzU0NjUsOSBAQCBzdGF0aWMgaW50IHJhaWQ1X2FkZF9kaXNr
-KHN0cnVjdCBtZGRldiAqbWRkZXYsIHN0cnVjdCBtZF9yZGV2ICpyZGV2KQ0KPiAJaWYgKHJkZXYt
-PnNhdmVkX3JhaWRfZGlzayA+PSAwICYmDQo+IAkgICAgcmRldi0+c2F2ZWRfcmFpZF9kaXNrID49
-IGZpcnN0ICYmDQo+IAkgICAgY29uZi0+ZGlza3NbcmRldi0+c2F2ZWRfcmFpZF9kaXNrXS5yZGV2
-ID09IE5VTEwpDQo+LQkJZGlzayA9IHJkZXYtPnNhdmVkX3JhaWRfZGlzazsNCj4tCWVsc2UNCj4t
-CQlkaXNrID0gZmlyc3Q7DQo+LQlmb3IgKCA7IGRpc2sgPD0gbGFzdCA7IGRpc2srKykgew0KPisJ
-CWZpcnN0ID0gcmRldi0+c2F2ZWRfcmFpZF9kaXNrOw0KPisNCj4rCWZvciAoZGlzayA9IGZpcnN0
-OyBkaXNrIDw9IGxhc3Q7IGRpc2srKykgew0KPiAJCXAgPSBjb25mLT5kaXNrcyArIGRpc2s7DQo+
-IAkJaWYgKHAtPnJkZXYgPT0gTlVMTCkgew0KPiAJCQljbGVhcl9iaXQoSW5fc3luYywgJnJkZXYt
-PmZsYWdzKTsNCj5AQCAtNTQ3Nyw4ICs1NDc2LDEwIEBAIHN0YXRpYyBpbnQgcmFpZDVfYWRkX2Rp
-c2soc3RydWN0IG1kZGV2ICptZGRldiwgc3RydWN0IG1kX3JkZXYgKnJkZXYpDQo+IAkJCWlmIChy
-ZGV2LT5zYXZlZF9yYWlkX2Rpc2sgIT0gZGlzaykNCj4gCQkJCWNvbmYtPmZ1bGxzeW5jID0gMTsN
-Cj4gCQkJcmN1X2Fzc2lnbl9wb2ludGVyKHAtPnJkZXYsIHJkZXYpOw0KPi0JCQlicmVhazsNCj4r
-CQkJZ290byBvdXQ7DQo+IAkJfQ0KPisJfQ0KPisJZm9yIChkaXNrID0gZmlyc3Q7IGRpc2sgPD0g
-bGFzdDsgZGlzaysrKSB7DQo+IAkJaWYgKHRlc3RfYml0KFdhbnRSZXBsYWNlbWVudCwgJnAtPnJk
-ZXYtPmZsYWdzKSAmJg0KPiAJCSAgICBwLT5yZXBsYWNlbWVudCA9PSBOVUxMKSB7DQo+IAkJCWNs
-ZWFyX2JpdChJbl9zeW5jLCAmcmRldi0+ZmxhZ3MpOw0KPkBAIC01NDkwLDYgKzU0OTEsNyBAQCBz
-dGF0aWMgaW50IHJhaWQ1X2FkZF9kaXNrKHN0cnVjdCBtZGRldiAqbWRkZXYsIHN0cnVjdCBtZF9y
-ZGV2ICpyZGV2KQ0KPiAJCQlicmVhazsNCj4gCQl9DQo+IAl9DQo+K291dDoNCj4gCXByaW50X3Jh
-aWQ1X2NvbmYoY29uZik7DQo+IAlyZXR1cm4gZXJyOw0KPiB9DQo+DQo+DQpJIHRlc3RlZCBhbmQg
-Zm91bmQgYSBidWcuSSBjb3JyZWN0ZWQgaXQgbGlrZSB0aGlzLg0KQnV0IEkgaGFkIGEgcXVlc3Rp
-b246d2h5ICBwLT5yZGV2IG5vdCBwcm90ZWN0IGJ5IHJjdV9yZWFkX2xvY2s/DQpJIHRoaW5rIGl0
-IHNob3VsZCBiZS4NCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2RyaXZlcnMv
-bWQvcmFpZDUuYw0KaW5kZXggZDI2NzY3Mi4uMjQxNjJjMSAxMDA2NDQNCi0tLSBhL2RyaXZlcnMv
-bWQvcmFpZDUuYw0KKysrIGIvZHJpdmVycy9tZC9yYWlkNS5jDQpAQCAtNTQ2NSwxMCArNTQ2NSw5
-IEBAIHN0YXRpYyBpbnQgcmFpZDVfYWRkX2Rpc2soc3RydWN0IG1kZGV2ICptZGRldiwgc3RydWN0
-IG1kX3JkZXYgKnJkZXYpDQogICAgICAgIGlmIChyZGV2LT5zYXZlZF9yYWlkX2Rpc2sgPj0gMCAm
-Jg0KICAgICAgICAgICAgcmRldi0+c2F2ZWRfcmFpZF9kaXNrID49IGZpcnN0ICYmDQogICAgICAg
-ICAgICBjb25mLT5kaXNrc1tyZGV2LT5zYXZlZF9yYWlkX2Rpc2tdLnJkZXYgPT0gTlVMTCkNCi0g
-ICAgICAgICAgICAgICBkaXNrID0gcmRldi0+c2F2ZWRfcmFpZF9kaXNrOw0KLSAgICAgICBlbHNl
-DQotICAgICAgICAgICAgICAgZGlzayA9IGZpcnN0Ow0KLSAgICAgICBmb3IgKCA7IGRpc2sgPD0g
-bGFzdCA7IGRpc2srKykgew0KKyAgICAgICAgICAgICAgIGZpcnN0ID0gcmRldi0+c2F2ZWRfcmFp
-ZF9kaXNrOw0KKw0KKyAgICAgICBmb3IgKGRpc2sgPSBmaXJzdDsgZGlzayA8PSBsYXN0OyBkaXNr
-KyspIHsNCiAgICAgICAgICAgICAgICBwID0gY29uZi0+ZGlza3MgKyBkaXNrOw0KICAgICAgICAg
-ICAgICAgIGlmIChwLT5yZGV2ID09IE5VTEwpIHsNCiAgICAgICAgICAgICAgICAgICAgICAgIGNs
-ZWFyX2JpdChJbl9zeW5jLCAmcmRldi0+ZmxhZ3MpOw0KQEAgLTU0NzcsMTAgKzU0NzYsMTUgQEAg
-c3RhdGljIGludCByYWlkNV9hZGRfZGlzayhzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBzdHJ1Y3QgbWRf
-cmRldiAqcmRldikNCiAgICAgICAgICAgICAgICAgICAgICAgIGlmIChyZGV2LT5zYXZlZF9yYWlk
-X2Rpc2sgIT0gZGlzaykNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY29uZi0+ZnVs
-bHN5bmMgPSAxOw0KICAgICAgICAgICAgICAgICAgICAgICAgcmN1X2Fzc2lnbl9wb2ludGVyKHAt
-PnJkZXYsIHJkZXYpOw0KLSAgICAgICAgICAgICAgICAgICAgICAgYnJlYWs7DQorICAgICAgICAg
-ICAgICAgICAgICAgICBnb3RvIG91dDsNCiAgICAgICAgICAgICAgICB9DQotICAgICAgICAgICAg
-ICAgaWYgKHRlc3RfYml0KFdhbnRSZXBsYWNlbWVudCwgJnAtPnJkZXYtPmZsYWdzKSAmJg0KLSAg
-ICAgICAgICAgICAgICAgICBwLT5yZXBsYWNlbWVudCA9PSBOVUxMKSB7DQorICAgICAgIH0NCisN
-CisgICAgICAgZm9yIChkaXNrID0gZmlyc3Q7IGRpc2sgPD0gbGFzdDsgZGlzaysrKSB7DQorICAg
-ICAgICAgICAgICAgcCA9IGNvbmYtPmRpc2tzICsgZGlzazsNCisgICAgICAgICAgICAgICBpZiAo
-cC0+cmRldiAhPSBOVUxMICYmDQorICAgICAgICAgICAgICAgICAgICAgICB0ZXN0X2JpdChXYW50
-UmVwbGFjZW1lbnQsICZwLT5yZGV2LT5mbGFncykgJiYNCisgICAgICAgICAgICAgICAgICAgICAg
-IHAtPnJlcGxhY2VtZW50ID09IE5VTEwpIHsNCiAgICAgICAgICAgICAgICAgICAgICAgIGNsZWFy
-X2JpdChJbl9zeW5jLCAmcmRldi0+ZmxhZ3MpOw0KICAgICAgICAgICAgICAgICAgICAgICAgc2V0
-X2JpdChSZXBsYWNlbWVudCwgJnJkZXYtPmZsYWdzKTsNCiAgICAgICAgICAgICAgICAgICAgICAg
-IHJkZXYtPnJhaWRfZGlzayA9IGRpc2s7DQpAQCAtNTQ5MCw2ICs1NDk0LDcgQEAgc3RhdGljIGlu
-dCByYWlkNV9hZGRfZGlzayhzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBzdHJ1Y3QgbWRfcmRldiAqcmRl
-dikNCiAgICAgICAgICAgICAgICAgICAgICAgIGJyZWFrOw0KICAgICAgICAgICAgICAgIH0NCiAg
-ICAgICAgfQ0KK291dDoNCiAgICAgICAgcHJpbnRfcmFpZDVfY29uZihjb25mKTsNCiAgICAgICAg
-cmV0dXJuIGVycjsNCiB9DQoNCg==
+That's my thought. The checksumming speed doesn't remain static
+regardless of what's being checksummed.  If I want to calculate double
+parity on a stripe that spans 30 disks I'd expect that to be more CPU
+intensive than calculating double parity on a 3 disk stripe.
 
+On Tue, Jun 5, 2012 at 7:40 PM, Brad Campbell <lists2009@fnarfbargle.co=
+m> wrote:
+> On 06/06/12 02:44, Ole Tange wrote:
+>>
+>> On Tue, Jun 5, 2012 at 1:29 PM, Igor M Podlesny<for.poige+lsr@gmail.=
+com>
+>> =A0wrote:
+>>>
+>>> On 5 June 2012 15:47, Ole Tange<ole@tange.dk> =A0wrote:
+>>>>
+>>>> On Tue, Jun 5, 2012 at 5:39 AM, Igor M Podlesny<for.poige+lsr@gmai=
+l.com>
+>>>> =A0wrote:
+>>>>>
+>>>>> On 5 June 2012 07:14, Ole Tange<ole@tange.dk> =A0wrote:
+>>>>> [=85]
+>>>>>>
+>>>>>> I tested this by creating 24 devices in RAM, used different chun=
+k
+>>>>>> sizes, and then copied the linux kernel source. Test script can =
+be
+>>>>>> found on
+>>>>>> http://oletange.blogspot.dk/2012/05/software-raid-performance-on=
+-24-disks.html
+>>
+>> :
+>>>
+>>> =A0 Wanna try CONFIG_MULTICORE_RAID456? :-)
+>>
+>>
+>> If the kernel can checksum 6196 MB/s why would I need
+>> CONFIG_MULTICORE_RAID456? Please elaborate on why you think that is
+>> needed.
+>
+>
+> I'd have thought there was a significant difference between the test
+> generating that figure (being a large, single block being checksummed=
+) and
+> shunting around blocks from 20 odd block devices, arranging them and
+> checksumming them.
+>
+> I'm not debating the validity of your tests at all, however I do ques=
+tion
+> your assertion than a single raid6 thread should even get close to th=
+at
+> theoretical figure when actually doing real work.
+>
+> Why not do as the man suggested and enable CONFIG_MULTICORE_RAID456 a=
+nd see
+> what happens?
+>
+> Regards,
+> Brad
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
