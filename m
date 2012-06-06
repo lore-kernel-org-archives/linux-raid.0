@@ -1,52 +1,107 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: Software RAID checksum performance on 24 disks not even close to
- kernel reported
-Date: Wed, 6 Jun 2012 09:09:12 -0700
-Message-ID: <CAA9_cmcANJjd8gfagWw5vENABh+n13xFnk7OF-ZzxecfxU719w@mail.gmail.com>
-References: <CA+4vN7wPd0Av_sbtA0JD5y=fGcsuq20SOQVHWnE8BUFpDxOEXQ@mail.gmail.com>
-	<CA+4vN7xQgecd95FO6gYVLMuPDKXbfZfzuXS1dzHd+e-otrPxwg@mail.gmail.com>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Problem with patch: "reject a re-add request that cannot be honoured"
+ (commit bedd86b7773fd97f0d708cc0c371c8963ba7ba9a)
+Date: Wed, 6 Jun 2012 19:09:25 +0300
+Message-ID: <CAGRgLy6We49bW2gA7S-EOmA8sbaXgQeGuTR5Aqrt4y_KyvOrdw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+4vN7xQgecd95FO6gYVLMuPDKXbfZfzuXS1dzHd+e-otrPxwg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ole Tange <ole@tange.dk>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Jun 6, 2012 at 7:11 AM, Ole Tange <ole@tange.dk> wrote:
-> On Tue, Jun 5, 2012 at 1:14 AM, Ole Tange <ole@tange.dk> wrote:
->
->> But I cannot explain why even the best performance (4600 MB/11s = 420
->> MB/s) is not even close to the checksum performance reported by the
->> kernel at boot (6196 MB/s):
->
-> From the friendly people on the mailing list the answer can be summarized as:
->
-> Checksumming is only a minor part of what md0_raid6 has to do. A lot
-> of the work is shuffling data around. The reason why checksumming is
-> in the kernel log is because the checksumming algorithm is one part
-> that can be optimized where as the other parts stay the same no matter
-> chosen the checksumming algorithm.
+Hi Neil,
+it looks like we are hitting an issue with this patch.
+Kernel is stock ubuntu-precise (3.2.0-23 36), mdadm is v3.2.3. (We are
+aware that this version of mdadm has an issue of unaligned writes, so
+we backported the fix to it into this version).
 
-The checksum algorithm benchmark is the value for 16-data disks, so a
-24 disk array will be a little bit slower.
+We are testing the following simple scenario:
+# 2-way raid1 with a missing drive
+# a fresh drive (no superblock) is added (not re-added) to the raid,
+and the raid happily starts rebuilding it
+# at some point in time, this drive fails, so rebuild aborts, drive is
+kicked out.
+# later the drive recovers and "mdadm remove & re-add" is attempted
+# re-add fails
 
-> So when parity computing is mentioned under performance on
-> http://blog.zorinaq.com/?e=10 is is only a small part of the picture:
-> The parity computing may only take 1.5% CPU time, but the shuffling
-> data around can take several magnitudes longer - thus software RAID
-> may not be able to outperform hardware RAID in that aspect.
+Some debugging suggests the following:
 
-Hardware raid ultimately does the same shuffling, outside of nvram an
-advantage it has is that parity data does not traverse the bus, its
-potential disadvantage is an embedded cpu / memory vs host cpu /
-memory.
+- The superblock of the drive to be re-added looks like this:
 
-> In other words: What you see is normal, and it is not out of the
-> ordinary to see md0_raid6 use 100% CPU time on a single core when
-> using a 24 disk RAID6. Work is underway to spread the load to multiple
-> cores using the experimental kernel parameter
-> CONFIG_MULTICORE_RAID456.
+ Avail Dev Size : 10483712 (5.00 GiB 5.37 GB)
+     Array Size : 10483688 (5.00 GiB 5.37 GB)
+  Used Dev Size : 10483688 (5.00 GiB 5.37 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+Recovery Offset : 100096 sectors
+          State : clean
+  Resync Offset : N/A sectors
+    Device UUID : d9114d02:76153894:87aaf09d:c55da9be
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Wed Jun  6 18:36:55 2012
+       Checksum : 94468c9d - correct
+         Events : 192
+   Device Role : Active device 1
+   Array State : AA ('A' == active, '.' == missing)
 
-Don't use CONFIG_MULTICORE_RAID456, we need a different approach.
+
+So the drive has a valid recovery offset (MD_FEATURE_RECOVERY_OFFSET
+set) and a valid role.
+
+- The "re-add" path of mdadm performs calls getinfo_super1(), which performs:
+role = __le16_to_cpu(sb->dev_roles[__le32_to_cpu(sb->dev_number)]);
+...
+info->disk.state = 6; /* active and in sync */
+info->disk.raid_disk = role;
+
+So at this point, MD_DISK_ACTIVE and MD_DISK_SYNC are set.
+
+- mdadm issues ADD_NEW_DISK, which arrives to add_new_disk() in the kernel
+- the kernel performs:
+if (!mddev->persistent) {
+... // not relevant to our case
+} else
+	super_types[mddev->major_version].
+		validate_super(mddev, rdev);
+
+- validate_super() performs:
+	if ((le32_to_cpu(sb->feature_map) &
+	     MD_FEATURE_RECOVERY_OFFSET))
+		rdev->recovery_offset = le64_to_cpu(sb->recovery_offset);
+	else
+		set_bit(In_sync, &rdev->flags);
+	rdev->raid_disk = role;
+
+So In_sync flag is not set, because we have a recovery offset.
+
+- Then the code introduced by the patch does:
+	if ((info->state & (1<<MD_DISK_SYNC)) &&
+	    (!test_bit(In_sync, &rdev->flags) ||
+	     rdev->raid_disk != info->raid_disk)) {
+		/* This was a hot-add request, but events doesn't
+		 * match, so reject it.
+		 */
+		export_rdev(rdev);
+		return -EINVAL;
+	}
+
+So the first part of "OR" succeeds and we abort.
+
+An observation: this problem only happens with a fresh drive
+apparently. If drive that was already In_sync fails and then is
+re-added, kernel does not update its superblock until recovery
+completes. So its superblock has no valid recovery_offset, and this
+problem doesn't happen. The code that skips updating the superblock
+was added as part of this email thread:
+http://www.spinics.net/lists/raid/msg36275.html. However, I did not
+dig deeper why the superblock gets updated in my case. But the
+scenario above repros easily.
+
+Q1: Can you confirm that my analysis is correct?
+Q2: Is this an expected behavior? I would assume that no, because the
+same case for a failed drive (not a fresh drive) works fine
+Q3: How would you recommend to handle this?
+
+Thanks!
+Alex.
