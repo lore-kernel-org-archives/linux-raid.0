@@ -1,114 +1,94 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: Re: [PATCH] md/raid5:Choose to replacing or recoverying when  raid degraded and had a want_replacement disk at the same time.
-Date: Wed, 6 Jun 2012 13:06:53 +0800
-Message-ID: <201206061306494539772@gmail.com>
-References: <201206051532527348313@gmail.com> <20120606112803.359c62cc@notabene.brown> <201206061124295788941@gmail.com>,
-	<20120606135543.6b233ff9@notabene.brown>
+From: Ole Tange <ole@tange.dk>
+Subject: Re: Software RAID checksum performance on 24 disks not even close to
+ kernel reported
+Date: Wed, 6 Jun 2012 13:17:12 +0200
+Message-ID: <CA+4vN7y+W2y2bDWu4JH9KBLD+pP6DcCdRVf7mxQ_6us5EZ5yhw@mail.gmail.com>
+References: <CA+4vN7wPd0Av_sbtA0JD5y=fGcsuq20SOQVHWnE8BUFpDxOEXQ@mail.gmail.com>
+ <CA+sTkh4fd+oZqagpHkGv5Kw+nkDyhunXfJm0tu0rqvuxVZBOyQ@mail.gmail.com>
+ <CA+4vN7xH10qS-=OSS_3z3B3EohKHjk8-GBVvVfPj01TH-0pe3w@mail.gmail.com>
+ <CA+sTkh7XeE49HmF+REyNTcOWJK6OS-tfi0qk7-SosFmAWenTqA@mail.gmail.com>
+ <CA+4vN7x0f3f3=htC4iaPmDPqdviv8+AqAqY3sxKbP1X+89gtuQ@mail.gmail.com> <4FCEB515.5050209@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4FCEB515.5050209@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Brad Campbell <lists2009@fnarfbargle.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Pk9uIFdlZCwgNiBKdW4gMjAxMiAxMToyNDozNCArMDgwMCBtYWppYW5wZW5nIDxtYWppYW5wZW5n
-QGdtYWlsLmNvbT4gd3JvdGU6DQo+DQo+PiBPbiAgVHVlLCA1IEp1biAyMDEyIDE4OjI4OjEzIG5l
-aWwgd3JvdGU6DQo+PiA+T24gVHVlLCA1IEp1biAyMDEyIDE1OjMyOjU2ICswODAwIG1hamlhbnBl
-bmcgPG1hamlhbnBlbmdAZ21haWwuY29tPiB3cm90ZToNCj4+ID4NCj4+ID4+IEluIENvbW1pdCA3
-YmZlYzVmMzVjNjgxMjFlN2IxODQ5ZjNmNDE2NmRkOTZjOGRhNWIzOg0KPj4gPj4gImlmIHRoZXJl
-IGlzIGEgc3BhcmUgYW5kIGEgd2FudF9yZXBsYWNlbWVudCBkZXZpY2UsIHN0YXJ0IHJlcGxhY2Vt
-ZW50LiINCj4+ID4+IEJ1dCBpdCBkaWQgbm90IGNvbnNpZGVyIHRoZSByYWlkIHdhcyBkZWdyYWRl
-ZCBhdCB0aGUgc2FtZSB0aW1lLg0KPj4gPj4gV2hlbiB3ZSBhZGQgc3BhcmUgZGlzayBpbiBvcmRl
-ciB0byByZWNvdmVyeSwgdW5sZXNzIHJhaWQgd2FzIG9rIGFuZCB0aGVuDQo+PiA+PiBzdGFydGVk
-IHJlcGxhY2VtZW50IG9yIHZpY2UgdmVyc2EuDQo+PiA+PiANCj4+ID4+IFNpZ25lZC1vZmYtYnk6
-IG1hamlhbnBlbmcgPG1hamlhbnBlbmdAZ21haWwuY29tPg0KPj4gPj4gLS0tDQo+PiA+PiAgZHJp
-dmVycy9tZC9yYWlkNS5jIHwgICA0OCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0t
-LS0tLS0tLS0tLS0tLS0NCj4+ID4+ICAxIGZpbGVzIGNoYW5nZWQsIDI5IGluc2VydGlvbnMoKyks
-IDE5IGRlbGV0aW9ucygtKQ0KPj4gPj4gDQo+PiA+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9y
-YWlkNS5jIGIvZHJpdmVycy9tZC9yYWlkNS5jDQo+PiA+PiBpbmRleCBkMjY3NjcyLi5mNzRjOWE1
-IDEwMDY0NA0KPj4gPj4gLS0tIGEvZHJpdmVycy9tZC9yYWlkNS5jDQo+PiA+PiArKysgYi9kcml2
-ZXJzL21kL3JhaWQ1LmMNCj4+ID4NCj4+ID5Hb29kIHBvaW50LCBidXQgdGhlIGNvZGUgZmVlbHMg
-YSBsaXR0bGUgLi4uIGNsdW1zeS4NCj4+ID4NCj4+ID5Ib3cgYWJvdXQgdGhpcz8NCj4+ID4NCj4+
-ID5OZWlsQnJvd24NCj4+ID4NCj4+ID4NCj4+ID5kaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlk
-NS5jIGIvZHJpdmVycy9tZC9yYWlkNS5jDQo+PiA+aW5kZXggZDI2NzY3Mi4uNGYwODYxZSAxMDA2
-NDQNCj4+ID4tLS0gYS9kcml2ZXJzL21kL3JhaWQ1LmMNCj4+ID4rKysgYi9kcml2ZXJzL21kL3Jh
-aWQ1LmMNCj4+ID5AQCAtNTQ2NSwxMCArNTQ2NSw5IEBAIHN0YXRpYyBpbnQgcmFpZDVfYWRkX2Rp
-c2soc3RydWN0IG1kZGV2ICptZGRldiwgc3RydWN0IG1kX3JkZXYgKnJkZXYpDQo+PiA+IAlpZiAo
-cmRldi0+c2F2ZWRfcmFpZF9kaXNrID49IDAgJiYNCj4+ID4gCSAgICByZGV2LT5zYXZlZF9yYWlk
-X2Rpc2sgPj0gZmlyc3QgJiYNCj4+ID4gCSAgICBjb25mLT5kaXNrc1tyZGV2LT5zYXZlZF9yYWlk
-X2Rpc2tdLnJkZXYgPT0gTlVMTCkNCj4+ID4tCQlkaXNrID0gcmRldi0+c2F2ZWRfcmFpZF9kaXNr
-Ow0KPj4gPi0JZWxzZQ0KPj4gPi0JCWRpc2sgPSBmaXJzdDsNCj4+ID4tCWZvciAoIDsgZGlzayA8
-PSBsYXN0IDsgZGlzaysrKSB7DQo+PiA+KwkJZmlyc3QgPSByZGV2LT5zYXZlZF9yYWlkX2Rpc2s7
-DQo+PiA+Kw0KPj4gPisJZm9yIChkaXNrID0gZmlyc3Q7IGRpc2sgPD0gbGFzdDsgZGlzaysrKSB7
-DQo+PiA+IAkJcCA9IGNvbmYtPmRpc2tzICsgZGlzazsNCj4+ID4gCQlpZiAocC0+cmRldiA9PSBO
-VUxMKSB7DQo+PiA+IAkJCWNsZWFyX2JpdChJbl9zeW5jLCAmcmRldi0+ZmxhZ3MpOw0KPj4gPkBA
-IC01NDc3LDggKzU0NzYsMTAgQEAgc3RhdGljIGludCByYWlkNV9hZGRfZGlzayhzdHJ1Y3QgbWRk
-ZXYgKm1kZGV2LCBzdHJ1Y3QgbWRfcmRldiAqcmRldikNCj4+ID4gCQkJaWYgKHJkZXYtPnNhdmVk
-X3JhaWRfZGlzayAhPSBkaXNrKQ0KPj4gPiAJCQkJY29uZi0+ZnVsbHN5bmMgPSAxOw0KPj4gPiAJ
-CQlyY3VfYXNzaWduX3BvaW50ZXIocC0+cmRldiwgcmRldik7DQo+PiA+LQkJCWJyZWFrOw0KPj4g
-PisJCQlnb3RvIG91dDsNCj4+ID4gCQl9DQo+PiA+Kwl9DQo+PiA+Kwlmb3IgKGRpc2sgPSBmaXJz
-dDsgZGlzayA8PSBsYXN0OyBkaXNrKyspIHsNCj4+ID4gCQlpZiAodGVzdF9iaXQoV2FudFJlcGxh
-Y2VtZW50LCAmcC0+cmRldi0+ZmxhZ3MpICYmDQo+PiA+IAkJICAgIHAtPnJlcGxhY2VtZW50ID09
-IE5VTEwpIHsNCj4+ID4gCQkJY2xlYXJfYml0KEluX3N5bmMsICZyZGV2LT5mbGFncyk7DQo+PiA+
-QEAgLTU0OTAsNiArNTQ5MSw3IEBAIHN0YXRpYyBpbnQgcmFpZDVfYWRkX2Rpc2soc3RydWN0IG1k
-ZGV2ICptZGRldiwgc3RydWN0IG1kX3JkZXYgKnJkZXYpDQo+PiA+IAkJCWJyZWFrOw0KPj4gPiAJ
-CX0NCj4+ID4gCX0NCj4+ID4rb3V0Og0KPj4gPiAJcHJpbnRfcmFpZDVfY29uZihjb25mKTsNCj4+
-ID4gCXJldHVybiBlcnI7DQo+PiA+IH0NCj4+ID4NCj4+ID4NCj4+IEkgdGVzdGVkIGFuZCBmb3Vu
-ZCBhIGJ1Zy5JIGNvcnJlY3RlZCBpdCBsaWtlIHRoaXMuDQo+DQo+WW91J3ZlIGFkZGVkIGEgdGVz
-dCBmb3IgJ3AtPnJkZXYgIT0gTlVMTCcgLSBpcyB0aGF0IGFsbD8NCj4NCk5vLCBJIGFsc28gYWRk
-IA0KPj4gKyAgICAgICBmb3IgKGRpc2sgPSBmaXJzdDsgZGlzayA8PSBsYXN0OyBkaXNrKyspIHsN
-CiArICAgICAgICAgICAgICAgcCA9IGNvbmYtPmRpc2tzICsgZGlzazsNCj4+ICsgICAgICAgICAg
-ICAgICBpZiAocC0+cmRldiAhPSBOVUxMICYmDQo+PiArICAgICAgICAgICAgICAgICAgICAgICB0
-ZXN0X2JpdChXYW50UmVwbGFjZW1lbnQsICZwLT5yZGV2LT5mbGFncykgJiYNCj4+ICsgICAgICAg
-ICAgICAgICAgICAgICAgIHAtPnJlcGxhY2VtZW50ID09IE5VTEwpIHsNCllvdSBsb3N0IDoNCiBw
-ID0gY29uZi0+ZGlza3MgKyBkaXNrOw0KaW4gbmV4dCBsb29wLg0KCQkJCQkJCQkJCQkJCVRoYW5r
-cyENCj5UaGF0IGlzbid0IG5lY2Vzc2FyeS4gIElmIGFueSBwLT5yZGV2IHdlcmUgTlVMTCB0aGVu
-IHRoZSBmaXJzdCBsb29wIHdvdWxkDQo+ZmluZCBpdCBhbmQgdGhlIHNlY29uZCBsb29wIHdvdWxk
-IG5ldmVyIGJlIGVudGVyZWQuDQo+DQo+DQo+PiBCdXQgSSBoYWQgYSBxdWVzdGlvbjp3aHkgIHAt
-PnJkZXYgbm90IHByb3RlY3QgYnkgcmN1X3JlYWRfbG9jaz8NCj4+IEkgdGhpbmsgaXQgc2hvdWxk
-IGJlLg0KPg0KPnJjdSBpcyBub3QgbmVjZXNzYXJ5IGhlcmUuICBXZSBob2xkIG1kZGV2LT5tdXRl
-eCBhcyBkb2VzIHRoZSBjb2RlIHdoaWNoDQo+cmVtb3ZlcyBkZXZpY2VzLCBzbyB3ZSBjYW5ub3Qg
-cmFjZSB3aXRoIGl0LiAgV2Ugb25seSBuZWVkIHJjdSB3aGVuIG5vdA0KPmhvbGRpbmcgdGhlIG11
-dGV4LCBhbmQgd2hlbiBub3QgcGVyZm9ybWluZyByZXN5bmMvcmVjb3ZlcnkvZXRjIGFzIHRoYXQN
-Cj5wcmV2ZW50cyAtPnJkZXYgZnJvbSBiZWluZyByZW1vdmVkIHRvby4NCj4NCj5UaGFua3MsDQo+
-TmVpbEJyb3duDQo+DQo+DQo+DQo+PiANCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1
-LmMgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCj4+IGluZGV4IGQyNjc2NzIuLjI0MTYyYzEgMTAwNjQ0
-DQo+PiAtLS0gYS9kcml2ZXJzL21kL3JhaWQ1LmMNCj4+ICsrKyBiL2RyaXZlcnMvbWQvcmFpZDUu
-Yw0KPj4gQEAgLTU0NjUsMTAgKzU0NjUsOSBAQCBzdGF0aWMgaW50IHJhaWQ1X2FkZF9kaXNrKHN0
-cnVjdCBtZGRldiAqbWRkZXYsIHN0cnVjdCBtZF9yZGV2ICpyZGV2KQ0KPj4gICAgICAgICBpZiAo
-cmRldi0+c2F2ZWRfcmFpZF9kaXNrID49IDAgJiYNCj4+ICAgICAgICAgICAgIHJkZXYtPnNhdmVk
-X3JhaWRfZGlzayA+PSBmaXJzdCAmJg0KPj4gICAgICAgICAgICAgY29uZi0+ZGlza3NbcmRldi0+
-c2F2ZWRfcmFpZF9kaXNrXS5yZGV2ID09IE5VTEwpDQo+PiAtICAgICAgICAgICAgICAgZGlzayA9
-IHJkZXYtPnNhdmVkX3JhaWRfZGlzazsNCj4+IC0gICAgICAgZWxzZQ0KPj4gLSAgICAgICAgICAg
-ICAgIGRpc2sgPSBmaXJzdDsNCj4+IC0gICAgICAgZm9yICggOyBkaXNrIDw9IGxhc3QgOyBkaXNr
-KyspIHsNCj4+ICsgICAgICAgICAgICAgICBmaXJzdCA9IHJkZXYtPnNhdmVkX3JhaWRfZGlzazsN
-Cj4+ICsNCj4+ICsgICAgICAgZm9yIChkaXNrID0gZmlyc3Q7IGRpc2sgPD0gbGFzdDsgZGlzaysr
-KSB7DQo+PiAgICAgICAgICAgICAgICAgcCA9IGNvbmYtPmRpc2tzICsgZGlzazsNCj4+ICAgICAg
-ICAgICAgICAgICBpZiAocC0+cmRldiA9PSBOVUxMKSB7DQo+PiAgICAgICAgICAgICAgICAgICAg
-ICAgICBjbGVhcl9iaXQoSW5fc3luYywgJnJkZXYtPmZsYWdzKTsNCj4+IEBAIC01NDc3LDEwICs1
-NDc2LDE1IEBAIHN0YXRpYyBpbnQgcmFpZDVfYWRkX2Rpc2soc3RydWN0IG1kZGV2ICptZGRldiwg
-c3RydWN0IG1kX3JkZXYgKnJkZXYpDQo+PiAgICAgICAgICAgICAgICAgICAgICAgICBpZiAocmRl
-di0+c2F2ZWRfcmFpZF9kaXNrICE9IGRpc2spDQo+PiAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgIGNvbmYtPmZ1bGxzeW5jID0gMTsNCj4+ICAgICAgICAgICAgICAgICAgICAgICAgIHJj
-dV9hc3NpZ25fcG9pbnRlcihwLT5yZGV2LCByZGV2KTsNCj4+IC0gICAgICAgICAgICAgICAgICAg
-ICAgIGJyZWFrOw0KPj4gKyAgICAgICAgICAgICAgICAgICAgICAgZ290byBvdXQ7DQo+PiAgICAg
-ICAgICAgICAgICAgfQ0KPj4gLSAgICAgICAgICAgICAgIGlmICh0ZXN0X2JpdChXYW50UmVwbGFj
-ZW1lbnQsICZwLT5yZGV2LT5mbGFncykgJiYNCj4+IC0gICAgICAgICAgICAgICAgICAgcC0+cmVw
-bGFjZW1lbnQgPT0gTlVMTCkgew0KPj4gKyAgICAgICB9DQo+PiArDQo+PiArICAgICAgIGZvciAo
-ZGlzayA9IGZpcnN0OyBkaXNrIDw9IGxhc3Q7IGRpc2srKykgew0KPj4gKyAgICAgICAgICAgICAg
-IHAgPSBjb25mLT5kaXNrcyArIGRpc2s7DQo+PiArICAgICAgICAgICAgICAgaWYgKHAtPnJkZXYg
-IT0gTlVMTCAmJg0KPj4gKyAgICAgICAgICAgICAgICAgICAgICAgdGVzdF9iaXQoV2FudFJlcGxh
-Y2VtZW50LCAmcC0+cmRldi0+ZmxhZ3MpICYmDQo+PiArICAgICAgICAgICAgICAgICAgICAgICBw
-LT5yZXBsYWNlbWVudCA9PSBOVUxMKSB7DQo+PiAgICAgICAgICAgICAgICAgICAgICAgICBjbGVh
-cl9iaXQoSW5fc3luYywgJnJkZXYtPmZsYWdzKTsNCj4+ICAgICAgICAgICAgICAgICAgICAgICAg
-IHNldF9iaXQoUmVwbGFjZW1lbnQsICZyZGV2LT5mbGFncyk7DQo+PiAgICAgICAgICAgICAgICAg
-ICAgICAgICByZGV2LT5yYWlkX2Rpc2sgPSBkaXNrOw0KPj4gQEAgLTU0OTAsNiArNTQ5NCw3IEBA
-IHN0YXRpYyBpbnQgcmFpZDVfYWRkX2Rpc2soc3RydWN0IG1kZGV2ICptZGRldiwgc3RydWN0IG1k
-X3JkZXYgKnJkZXYpDQo+PiAgICAgICAgICAgICAgICAgICAgICAgICBicmVhazsNCj4+ICAgICAg
-ICAgICAgICAgICB9DQo+PiAgICAgICAgIH0NCj4+ICtvdXQ6DQo+PiAgICAgICAgIHByaW50X3Jh
-aWQ1X2NvbmYoY29uZik7DQo+PiAgICAgICAgIHJldHVybiBlcnI7DQo+PiAgfQ0KPj4gDQo+DQo+
-DQoNCg0KLS0tLS0tLS0tLS0tLS0NCm1hamlhbnBlbmcNCg==
+On Wed, Jun 6, 2012 at 3:40 AM, Brad Campbell <lists2009@fnarfbargle.co=
+m> wrote:
+> On 06/06/12 02:44, Ole Tange wrote:
+>> On Tue, Jun 5, 2012 at 1:29 PM, Igor M Podlesny<for.poige+lsr@gmail.=
+com>
+>> =A0wrote:
+:
+>>> =A0 Wanna try CONFIG_MULTICORE_RAID456? :-)
+>>
+>> If the kernel can checksum 6196 MB/s why would I need
+>> CONFIG_MULTICORE_RAID456? Please elaborate on why you think that is
+>> needed.
+>
+> I'd have thought there was a significant difference between the test
+> generating that figure (being a large, single block being checksummed=
+) and
+> shunting around blocks from 20 odd block devices, arranging them and
+> checksumming them.
 
+Is this based on gut feeling? Or do you have numbers to backup this cla=
+im?
+
+> I'm not debating the validity of your tests at all, however I do ques=
+tion
+> your assertion than a single raid6 thread should even get close to th=
+at
+> theoretical figure when actually doing real work.
+
+It would be good if we had someone who actually _knew_ (not just by
+gut feeling) what the kernel reported checksumming is based on, and
+how we can compute the expected performance for checksumming for a 24
+disk RAID6.
+
+=46rom the source it seems the checksumming is using 16+2 disks:
+
+    ./lib/raid6/algos.c:	const int disks =3D (65536/PAGE_SIZE)+2;
+
+That is fairly close to the 21+2 disks in my setup.
+
+The chunk size seems to be 4KB:
+
+                                (*algo)->gen_syndrome(disks, PAGE_SIZE,=
+ *dptrs);
+
+which is not close to my setup (ranging from 16KB to 4096KB).
+
+This might mean that the only RAID6 setup in which you can expect the
+checksumming performance reported by the kernel is 16+2 disks and a
+chunk size of 4KB.
+
+But if I try that setup on the test in RAM, md0_raid6 still takes up
+more CPU time than the checksumming would account for.
+
+> Why not do as the man suggested and enable CONFIG_MULTICORE_RAID456 a=
+nd see
+> what happens?
+
+It is a lot of work to put into testing something that is at best a gue=
+ss.
+
+In the best case it shows that it will work with multicore, but it
+would not be a solution to me (the module being experimental).
+
+But it would be great to hear from someone who has
+CONFIG_MULTICORE_RAID456 enabled already and see if they can reproduce
+the results.
+
+
+/Ole
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
