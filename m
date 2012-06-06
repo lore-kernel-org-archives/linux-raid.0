@@ -1,69 +1,67 @@
-From: pg@lxra2.to.sabi.co.UK (Peter Grandi)
-Subject: Re: Software RAID checksum performance on 24 disks not even close to
- kernel reported
-Date: Wed, 6 Jun 2012 23:53:59 +0100
-Message-ID: <20431.57247.76819.834529@tree.ty.sabi.co.UK>
-References: <CA+4vN7wPd0Av_sbtA0JD5y=fGcsuq20SOQVHWnE8BUFpDxOEXQ@mail.gmail.com>
-	<CA+4vN7xQgecd95FO6gYVLMuPDKXbfZfzuXS1dzHd+e-otrPxwg@mail.gmail.com>
-	<CA+sTkh5m9vumG=56n024jBFobaozOQQJjesh=Cc--C7J0FCnfg@mail.gmail.com>
-	<CA+4vN7xWST=vgMpd9s0Q0MGmPQq1Fe=FZkSc_qPEfX0vOQskoA@mail.gmail.com>
-	<CA+sTkh6xUbQGLXpNiUHmHZoqPaQUrGgoyyX1EssjpO8g8hVZNQ@mail.gmail.com>
+From: <christian@yahoo.com>
+Subject: HOW TO TURN $12 INTO $4000 IN 7 DAYS ONLINE! Recommends Advanced Sports to you
+Date: Wed, 6 Jun 2012 19:04:07 -0400
+Message-ID: <2646B03FF0484822BB62804C43BBC7F2@g19.win.smewh.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+sTkh6xUbQGLXpNiUHmHZoqPaQUrGgoyyX1EssjpO8g8hVZNQ@mail.gmail.com>
+Content-Class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[ ... ]
+From         :HOW TO TURN $12 INTO $4000 IN 7 DAYS ONLINE!
+Email        :christian@yahoo.com
+Friend Name  :Friend
+Friend Email :linux-raid@vger.kernel.org
+comment      :
 
-> The reasons are pretty well described in FreeBSD 4.11 vinum's
-> manual (which I had been using long before LSR):
+Dear Fellow Entrepreneur, 
 
-  =C2=AB=E2=80=A6 For optimum performance, stripes should be at least 1=
-28 kB
-  in size: anything smaller will result in a significant increase
-  in I/O activity due to mapping of individual requests over
-  multiple disks.=C2=BB
+OK, I'm going to keep this short and sweet - I'm not going to bore you with the usual "rags-to-riches" story because I'm pretty sure you don't want to hear it.
 
-That is a really gross generalization, because the aggregate
-latency due to lack of arm and platter synchronization among RAID
-members for example does not apply to flash SSDs, and has
-dramatically different impacts on read vs. write and streaming
-vs. randomish access patterns, and single vs. multiple threads
-workloads.
+What I will say though, is this...
 
-The above recommendation applies mostly to reading, streaming,
-access patterns by single threaded workloads.
+If you're tired of all the so-called "systems" and business opportunities that require you to sell affiliate products, run pay per click advertising campaigns, operate websites or recruit new members then I have excellent news for you.
 
-However in those cases the argument is even stronger than it was
-in the past: the 'man' page makes example about disks with 6
-(six) MB/s transfer rates and 8ms latencies, and current disks
-often exceed 100 (one hundred) MB/s, while access times haven't
-improved much.
+Keep reading because I guarantee that this will be the most important piece of information you will ever read about making money online... or in general for that matter.
 
-  =C2=ABA good guideline for stripe size is between 256 kB and 512
-  kB.=C2=BB
+I have discovered an amazingly simple income system that will allow you and anyone else to earn an incredible income from home, just by using your computer and the Internet.
 
-It is very important to note here that "stripe size" in Vinum
-means "chunk size" in MD. For many workloads that is too large a
-chunk size.
+This system is called "The Complete Cash System" and it does NOT involve any of the following:
 
-  =C2=ABAvoid powers of 2, however: they tend to cause all superblocks
-  to be placed on the first subdisk. =E2=80=A6=C2=BB =E2=80=94 http://g=
-oo.gl/sTHxY
+* No building websites
 
-> P. S. Alas, LSR doesn't support anything but powers of 2 for
-> chunk sizes, but according to Neil Brown, it can be relatively
-> easy changed.
+* No selling products - in any way shape or form
 
-Some important Linux filesystems try to align metadata to chunk
-boundaries instead, for example 'ext3' with 'stride=3D' and XFS
-with 'su=3D'.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+* No advertising
+
+* No data entry
+
+* No Adsense
+
+* No mailing lists
+
+* No rebate processing
+
+* No recruiting new members - this is not MLM
+
+* No uplines or downlines
+
+* No gambling
+
+* No chain letters
+
+* No surveys or "paid to read" programs
+
+If you want to make money online, 
+join to my system before it's too late.
+
+Feel FREE To Check This Out Here:) 
+===>> http://www.completecashsystem.com/?code=4fcd70cae2079   <<===
+
+
+
+
+
