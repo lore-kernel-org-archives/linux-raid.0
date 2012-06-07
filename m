@@ -1,40 +1,54 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [patch 1/8] raid5: add a per-stripe lock
-Date: Thu, 7 Jun 2012 14:29:39 +0800
-Message-ID: <20120607062939.GA779@kernel.org>
+Subject: Re: [patch 6/8] raid5: make_request use batch stripe release
+Date: Thu, 7 Jun 2012 14:33:58 +0800
+Message-ID: <20120607063358.GB779@kernel.org>
 References: <20120604080152.098975870@kernel.org>
- <20120604080300.519377228@kernel.org>
- <20120607105410.415d9fe6@notabene.brown>
+ <20120604080335.029329200@kernel.org>
+ <20120607112345.1429436b@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20120607105410.415d9fe6@notabene.brown>
+In-Reply-To: <20120607112345.1429436b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, dan.j.williams@intel.com, shli@fusionio.com
 List-Id: linux-raid.ids
 
-On Thu, Jun 07, 2012 at 10:54:10AM +1000, NeilBrown wrote:
-> On Mon, 04 Jun 2012 16:01:53 +0800 Shaohua Li <shli@kernel.org> wrote:
+On Thu, Jun 07, 2012 at 11:23:45AM +1000, NeilBrown wrote:
+> On Mon, 04 Jun 2012 16:01:58 +0800 Shaohua Li <shli@kernel.org> wrote:
 > 
-> > Add a per-stripe lock to protect stripe specific data, like dev->read,
-> > written, ... The purpose is to reduce lock contention of conf->device_lock.
+> > make_request() does stripe release for every stripe and the stripe usually has
+> > count 1, which makes previous release_stripe() optimization not work. In my
+> > test, this release_stripe() becomes the heaviest pleace to take
+> > conf->device_lock after previous patches applied.
+> > 
+> > Below patch makes stripe release batch. When maxium strips of a batch reach,
+> > the batch will be flushed out. Another way to do the flush is when unplug is
+> > called.
+> > 
+> > Signed-off-by: Shaohua Li <shli@fusionio.com>
 > 
-> I'm not convinced that you need to add a lock.
-> I am convinced that if you do add one you need to explain exactly what it is
-> protecting.
+> I like the idea of a batched release.
+> I don't like the per-cpu variables... and I don't think it is safe to only
+> allocate them for_each_present_cpu without support cpu-hot-plug.
 > 
-> The STRIPE_ACTIVE bit serves as a lock and ensures that only one process can
-> be in handle_stripe at a time.
-> So I don't think dev->read actually needs any protection (though I haven't
-> checked thoroughly).
+> I would much rather keep a list of stripes (linked on ->lru) in struct
+> md_plug_cb (or maybe in some structure which contains that) and release them
+> all on unplug - and only on unplug.
 > 
-> I think the only things that device_lock protects are things shared by
-> multiple stripes, so adding a per-stripe spinlock isn't going to help remove
-> device_lock.
+> Maybe pass a size to mddev_check_unplugged, and it allocates that much more
+> space.  Get mddev_check_unplugged to return the md_plug_cb structure.
+> If the new space is NULL, then list_head_init it, and change the cb.callback
+> to a raid5 specific function.
+> Then add any stripe to the md_plug_cb, and in the unplug function, release
+> them all.
+> 
+> Does that make sense?
+> 
+> Also I would rather the batched stripe release code were defined in the same
+> patch that used it.  It isn't big enough to justify a separate patch.
 
-This sounds not true to me. both the async callbacks and request completion
-access stripe data, like dev->read. Such things are not protected by
-STRIPE_ACTIVE bit. Thought we can delete STRIPE_ACTIVE bit with stripe lock
-introduced.
+The stripe->lru need protection of device_lock, so I can't use a list. An array
+is preferred. I really didn't like the idea to allocate memory especially when
+allocating an array. I'll fix the code for cpuhotplug.
