@@ -1,118 +1,107 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch 6/8] raid5: make_request use batch stripe release
-Date: Thu, 7 Jun 2012 17:33:10 +1000
-Message-ID: <20120607173310.2a3f147b@notabene.brown>
+Subject: Re: [patch 7/8] raid5: raid5d handle stripe in batch way
+Date: Thu, 7 Jun 2012 17:38:56 +1000
+Message-ID: <20120607173856.0f1ae6d2@notabene.brown>
 References: <20120604080152.098975870@kernel.org>
-	<20120604080335.029329200@kernel.org>
-	<20120607112345.1429436b@notabene.brown>
-	<20120607063358.GB779@kernel.org>
+	<20120604080344.262680737@kernel.org>
+	<20120607113239.6a64b64d@notabene.brown>
+	<20120607063547.GC779@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/nJPEA/dcLqL3.W+B6xbyAT4"; protocol="application/pgp-signature"
+ boundary="Sig_/s3v0Q_+99z3r//hYGwKStzB"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120607063358.GB779@kernel.org>
+In-Reply-To: <20120607063547.GC779@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, dan.j.williams@intel.com, shli@fusionio.com
 List-Id: linux-raid.ids
 
---Sig_/nJPEA/dcLqL3.W+B6xbyAT4
+--Sig_/s3v0Q_+99z3r//hYGwKStzB
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 7 Jun 2012 14:33:58 +0800 Shaohua Li <shli@kernel.org> wrote:
+On Thu, 7 Jun 2012 14:35:47 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-> On Thu, Jun 07, 2012 at 11:23:45AM +1000, NeilBrown wrote:
-> > On Mon, 04 Jun 2012 16:01:58 +0800 Shaohua Li <shli@kernel.org> wrote:
+> On Thu, Jun 07, 2012 at 11:32:39AM +1000, NeilBrown wrote:
+> > On Mon, 04 Jun 2012 16:01:59 +0800 Shaohua Li <shli@kernel.org> wrote:
 > >=20
-> > > make_request() does stripe release for every stripe and the stripe us=
-ually has
-> > > count 1, which makes previous release_stripe() optimization not work.=
- In my
-> > > test, this release_stripe() becomes the heaviest pleace to take
-> > > conf->device_lock after previous patches applied.
-> > >=20
-> > > Below patch makes stripe release batch. When maxium strips of a batch=
- reach,
-> > > the batch will be flushed out. Another way to do the flush is when un=
-plug is
-> > > called.
+> > > Let raid5d handle stripe in batch way to reduce conf->device_lock loc=
+king.
 > > >=20
 > > > Signed-off-by: Shaohua Li <shli@fusionio.com>
 > >=20
-> > I like the idea of a batched release.
-> > I don't like the per-cpu variables... and I don't think it is safe to o=
-nly
-> > allocate them for_each_present_cpu without support cpu-hot-plug.
+> > I like this.
+> > I don't think it justifies a separate function.
 > >=20
-> > I would much rather keep a list of stripes (linked on ->lru) in struct
-> > md_plug_cb (or maybe in some structure which contains that) and release=
- them
-> > all on unplug - and only on unplug.
+> > #define MAX_STRIPE_BATCH 8
+> > struct stripe_head *batch[MAX_STRIPE_BATCH]
+> > int batch_size =3D 0;
 > >=20
-> > Maybe pass a size to mddev_check_unplugged, and it allocates that much =
-more
-> > space.  Get mddev_check_unplugged to return the md_plug_cb structure.
-> > If the new space is NULL, then list_head_init it, and change the cb.cal=
-lback
-> > to a raid5 specific function.
-> > Then add any stripe to the md_plug_cb, and in the unplug function, rele=
-ase
-> > them all.
+> > ...
 > >=20
-> > Does that make sense?
+> > while (batch_size < MAX_STRPE_BATCH &&
+> >        (sh =3D __get_priority_stripe(conf)) !=3D NULL)
+> >      batch[batch_size++] =3D sh;
 > >=20
-> > Also I would rather the batched stripe release code were defined in the=
- same
-> > patch that used it.  It isn't big enough to justify a separate patch.
+> > spin_unlock(&conf->device_lock);
+> > if (batch_size =3D=3D 0)
+> >      break;
+> >=20
+> > handled +=3D batch_size;
+> >=20
+> > for (i =3D 0; i < batch_size; i++)
+> >      handle_stripe(batch[i]);
+> > cond_resched();
+> > if (....) md_check_recovery(mddev);
+> >=20
+> > spin_lock_irq(&conf->lock);
+> > for (i =3D 0; i < batch_size; i++)
+> >      __release_stripe(batch[i]);
+> >=20
+> >=20
+> > something like that?
 >=20
-> The stripe->lru need protection of device_lock, so I can't use a list. An=
- array
-> is preferred. I really didn't like the idea to allocate memory especially=
- when
-> allocating an array. I'll fix the code for cpuhotplug.
+> the 8th patch does the same thing, so I moved the code to a separate func=
+tion.
 
-You don't need device_lock to use ->lru.
-Currently the lru is not used when sh->count is not-zero unless
-STRIPE_EXPANDING is set - and we never attach IO requests if STRIPE_EXPANDI=
-NG
-is set.
-So when make_request wants to release a stripe_head, ->lru is currently
-unused.
-So we can use it to put the stripe on a per-thread list without locking.
+The 8th patch should instead move all of the above into a separate function,
+then call it both from raid5d and raid5auxd.
+Maybe keep the md_check_recovery bit separate, in raid5d it would look like
+  if (mddev->flags & ~(1<<MD_CHANGE_PENDING)) {
+      spin_unlock();
+      make_check_recovert();
+      spin_lock();
+  }
 
-We need another stripe_head flag to say "is on a per-thread unplug list" to
-avoid racing between processes, but we don't need a spinlock for that.
-ie.
-  if (!test_and_set(STRIPE_ON_UNPLUG_LIST, &sh->state))
-           list_add(&plug->list, &sh->lru);
-
-or similar.
-
-Please do waste time on cpuhotplug - it isn't the right solution.
+Having the=20
+   fill the batch
+   handle the batch
+   release the batch
+all open coded in the one place significantly aids readability.
 
 NeilBrown
 
---Sig_/nJPEA/dcLqL3.W+B6xbyAT4
+
+--Sig_/s3v0Q_+99z3r//hYGwKStzB
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT9BZNjnsnt1WYoG5AQJ6AhAAwLNXDCKKt+WM2RdwIlibUmbee3o12mfo
-iDrSXnx9tOtkBUr0DtGKCfXjSMtsrFK3jp00hh+ZRfLeGoTfwURORQn7RHe82392
-Givp0UZ475iDMAwzUVW9F08Kkkk/ROsu0EnlaO5Y7rxcE+4XxOgY8PHzw7EOy3zl
-18X6E/k6QXHJ2BUlA9YNYGF4dX+mPo/KCPynV7+VKZMdJCSYsciJGgVnalIY7Wu3
-3dXGwHKS3sL8eG/oXnwPd9gkUoLiWoWPAC/BxJs7/UzSr5JC0I4r8GzviP1dy3wd
-KQTmmoVC0g8+WilkpFwqmps8SZyqIQppep2fIY8aYWSkUC6lIZBiexZWJF4pekes
-lKmlwZl7qb77qs/IwASgzQm4kS6Olb2yf3pA2kliPQkjj/EgE9C57SXkR6F4wGVT
-6T1Au6ERBvON8vzfuzz7q2mObRomaaut+W7Z4crCYOsJwe1aq9KOIpTb/VUBLkbM
-HrGm+ILltIQ7IrxdOUWc0ZAHbskwOrm23FQuzoA1iZGYwV49eY72yq2r2R7vDRGp
-fxfGcemh3mbUM+yTaUdZ8sb9PoFaEo4iD3FeuMJMTo3jfrXJe/1E6LBDoiUas21Z
-x4D9lcOs0meo57yOznnK8wCva2BhOXpCJF7z5AkyjlKzhch1PmZ9Ww7Ukx7rtzTP
-EN8FtNYIf3A=
-=GOv3
+iQIVAwUBT9BakDnsnt1WYoG5AQLnuA//QO3NCNiq6cfse176F/SAcl4cWCHRTbOe
+UE5hDvRuhcbV9nUFg+xMeMEOu5gcLf3Da4hJaSCNcZa82SlHEY5ZApm6f4u/lX2f
+J+4r22HhuemMCdtSMaamzvzwQKidfd3pMc2uMC+TSY33XCCeWSqqNqurvfY7KIyQ
+v4S/NWj7nppgihJ1DFQm9o23DWoDQfPrthQySmH3u5SayulapJzSvyR8gNPh6H+e
+ZV1uHBYTpzeU78y6u1yDMz9u8lmf/qhCItSn9MVFDwVIFip0l8I5YLtoFKFrhiBF
+cCrYZ81t9cFoBq0iufD2STyHhTVPKxCNHJgecNQ4ys7y5A0bVicUSaz+hiJnnVkQ
+IydlfLuUR6/oErFaKvbAkwIsAs/jkomxM9Qper9Uf9SwYM+dgEuM5roZdUBkcXgj
+g3zDVLPzgTf1iDQ006gMdnS/1Jx5Kte6IVxk+ulV/a7u18CSUfXRmBFpoLYZjuKd
+5xH2V7DoS5mDT+Yq9p4+V2+1U/Q2WMRegEJXcp3Jjy09xGFb6SUG5DXQWiY0ozns
+b4EMky4mr+Zk/iF0Dtk1F7Vt8ozkO5UnEtt470HH0dYczxqxRHJkdcIR15p+QITM
+howmQFRkvYj8xhFuH2msvasXXkrE20U2ZFrE573LiIZPIfhXRds0Qrg/KwsKxOC7
+hTLbOyQIeoo=
+=mbD9
 -----END PGP SIGNATURE-----
 
---Sig_/nJPEA/dcLqL3.W+B6xbyAT4--
+--Sig_/s3v0Q_+99z3r//hYGwKStzB--
