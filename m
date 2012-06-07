@@ -1,52 +1,155 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [patch 1/8] raid5: add a per-stripe lock
-Date: Thu, 7 Jun 2012 14:52:24 +0800
-Message-ID: <20120607065224.GE779@kernel.org>
-References: <20120604080152.098975870@kernel.org>
- <20120604080300.519377228@kernel.org>
- <20120607105410.415d9fe6@notabene.brown>
- <20120607062939.GA779@kernel.org>
- <20120607163522.71c68e23@notabene.brown>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: Problem with patch: "reject a re-add request that cannot be
+ honoured" (commit bedd86b7773fd97f0d708cc0c371c8963ba7ba9a)
+Date: Thu, 7 Jun 2012 10:22:24 +0300
+Message-ID: <CAGRgLy5OkpZnfOpPS+16Tiep8eisOu9XnK7EcvZygwg22DVTqQ@mail.gmail.com>
+References: <CAGRgLy6We49bW2gA7S-EOmA8sbaXgQeGuTR5Aqrt4y_KyvOrdw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120607163522.71c68e23@notabene.brown>
+In-Reply-To: <CAGRgLy6We49bW2gA7S-EOmA8sbaXgQeGuTR5Aqrt4y_KyvOrdw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, dan.j.williams@intel.com, shli@fusionio.com
+To: NeilBrown <neilb@suse.de>, andrey.warkentin@gmail.com, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Jun 07, 2012 at 04:35:22PM +1000, NeilBrown wrote:
-> On Thu, 7 Jun 2012 14:29:39 +0800 Shaohua Li <shli@kernel.org> wrote:
-> 
-> > On Thu, Jun 07, 2012 at 10:54:10AM +1000, NeilBrown wrote:
-> > > On Mon, 04 Jun 2012 16:01:53 +0800 Shaohua Li <shli@kernel.org> wrote:
-> > > 
-> > > > Add a per-stripe lock to protect stripe specific data, like dev->read,
-> > > > written, ... The purpose is to reduce lock contention of conf->device_lock.
-> > > 
-> > > I'm not convinced that you need to add a lock.
-> > > I am convinced that if you do add one you need to explain exactly what it is
-> > > protecting.
-> > > 
-> > > The STRIPE_ACTIVE bit serves as a lock and ensures that only one process can
-> > > be in handle_stripe at a time.
-> > > So I don't think dev->read actually needs any protection (though I haven't
-> > > checked thoroughly).
-> > > 
-> > > I think the only things that device_lock protects are things shared by
-> > > multiple stripes, so adding a per-stripe spinlock isn't going to help remove
-> > > device_lock.
-> > 
-> > This sounds not true to me. both the async callbacks and request completion
-> > access stripe data, like dev->read. Such things are not protected by
-> > STRIPE_ACTIVE bit. Thought we can delete STRIPE_ACTIVE bit with stripe lock
-> > introduced.
-> 
-> Please give specifics.  What race do you see with access to dev->read that is
-> not protected by STRIPE_ACTIVE ?
+Hi again Neil, and Andrey,
 
-For example, ops_complete_biofill() will change dev->read which isn't protected
-by STRIPE_ACTIVE. add_stripe_bio() checks ->toread ->towrite, which isn't
-protected by the bit too. Am I missing anything?
+looking at this email thread:
+http://www.spinics.net/lists/raid/msg36236.html
+between you and Andrey, the conclusion was:
+"So the correct thing to do is to *not* update the metadata on the
+recovering device until recovery completes.  Then if it fails and is
+re-added, it will look just the same as when it was re-added the first
+time, and will do a bitmap-based recovery."
+
+I have two doubts about this decision:
+1) Since the event count on the recovering drive is not updated, this
+means that after reboot, when array is re-assembled, this drive will
+not be added to the array, and the user will have to manually re-add
+it. I agree this is a minor thing.
+2) There are places in mdadm, which check for recovery_offset on the
+drive and take decisions based upon that. Specifically, if there is
+*no* recovery offset, the data on this drive is considered to be
+consistent WRT to the failure time of the drive. So, for example, the
+drive can be a candidate for bumping up events during "force
+assembly". Now, when superblock on such drive is not updated during
+recovery (so there is *no* recovery offset), mdadm will think that the
+drive is consistent, while in fact, its data is totally unusable until
+after recovery completes. That's because we have updated parts of the
+drive, but did not complete bringing the whole drive in-sync.
+
+Can you pls comment on my doubts?
+
+Thanks,
+Alex.
+
+
+On Wed, Jun 6, 2012 at 7:09 PM, Alexander Lyakas <alex.bolshoy@gmail.co=
+m> wrote:
+> Hi Neil,
+> it looks like we are hitting an issue with this patch.
+> Kernel is stock ubuntu-precise (3.2.0-23 36), mdadm is v3.2.3. (We ar=
+e
+> aware that this version of mdadm has an issue of unaligned writes, so
+> we backported the fix to it into this version).
+>
+> We are testing the following simple scenario:
+> # 2-way raid1 with a missing drive
+> # a fresh drive (no superblock) is added (not re-added) to the raid,
+> and the raid happily starts rebuilding it
+> # at some point in time, this drive fails, so rebuild aborts, drive i=
+s
+> kicked out.
+> # later the drive recovers and "mdadm remove & re-add" is attempted
+> # re-add fails
+>
+> Some debugging suggests the following:
+>
+> - The superblock of the drive to be re-added looks like this:
+>
+> =A0Avail Dev Size : 10483712 (5.00 GiB 5.37 GB)
+> =A0 =A0 Array Size : 10483688 (5.00 GiB 5.37 GB)
+> =A0Used Dev Size : 10483688 (5.00 GiB 5.37 GB)
+> =A0 =A0Data Offset : 2048 sectors
+> =A0 Super Offset : 8 sectors
+> Recovery Offset : 100096 sectors
+> =A0 =A0 =A0 =A0 =A0State : clean
+> =A0Resync Offset : N/A sectors
+> =A0 =A0Device UUID : d9114d02:76153894:87aaf09d:c55da9be
+> Internal Bitmap : 8 sectors from superblock
+> =A0 =A0Update Time : Wed Jun =A06 18:36:55 2012
+> =A0 =A0 =A0 Checksum : 94468c9d - correct
+> =A0 =A0 =A0 =A0 Events : 192
+> =A0 Device Role : Active device 1
+> =A0 Array State : AA ('A' =3D=3D active, '.' =3D=3D missing)
+>
+>
+> So the drive has a valid recovery offset (MD_FEATURE_RECOVERY_OFFSET
+> set) and a valid role.
+>
+> - The "re-add" path of mdadm performs calls getinfo_super1(), which p=
+erforms:
+> role =3D __le16_to_cpu(sb->dev_roles[__le32_to_cpu(sb->dev_number)]);
+> ...
+> info->disk.state =3D 6; /* active and in sync */
+> info->disk.raid_disk =3D role;
+>
+> So at this point, MD_DISK_ACTIVE and MD_DISK_SYNC are set.
+>
+> - mdadm issues ADD_NEW_DISK, which arrives to add_new_disk() in the k=
+ernel
+> - the kernel performs:
+> if (!mddev->persistent) {
+> ... // not relevant to our case
+> } else
+> =A0 =A0 =A0 =A0super_types[mddev->major_version].
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0validate_super(mddev, rdev);
+>
+> - validate_super() performs:
+> =A0 =A0 =A0 =A0if ((le32_to_cpu(sb->feature_map) &
+> =A0 =A0 =A0 =A0 =A0 =A0 MD_FEATURE_RECOVERY_OFFSET))
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rdev->recovery_offset =3D le64_to_cpu(=
+sb->recovery_offset);
+> =A0 =A0 =A0 =A0else
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0set_bit(In_sync, &rdev->flags);
+> =A0 =A0 =A0 =A0rdev->raid_disk =3D role;
+>
+> So In_sync flag is not set, because we have a recovery offset.
+>
+> - Then the code introduced by the patch does:
+> =A0 =A0 =A0 =A0if ((info->state & (1<<MD_DISK_SYNC)) &&
+> =A0 =A0 =A0 =A0 =A0 =A0(!test_bit(In_sync, &rdev->flags) ||
+> =A0 =A0 =A0 =A0 =A0 =A0 rdev->raid_disk !=3D info->raid_disk)) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* This was a hot-add request, but eve=
+nts doesn't
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 * match, so reject it.
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 */
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0export_rdev(rdev);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EINVAL;
+> =A0 =A0 =A0 =A0}
+>
+> So the first part of "OR" succeeds and we abort.
+>
+> An observation: this problem only happens with a fresh drive
+> apparently. If drive that was already In_sync fails and then is
+> re-added, kernel does not update its superblock until recovery
+> completes. So its superblock has no valid recovery_offset, and this
+> problem doesn't happen. The code that skips updating the superblock
+> was added as part of this email thread:
+> http://www.spinics.net/lists/raid/msg36275.html. However, I did not
+> dig deeper why the superblock gets updated in my case. But the
+> scenario above repros easily.
+>
+> Q1: Can you confirm that my analysis is correct?
+> Q2: Is this an expected behavior? I would assume that no, because the
+> same case for a failed drive (not a fresh drive) works fine
+> Q3: How would you recommend to handle this?
+>
+> Thanks!
+> Alex.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
