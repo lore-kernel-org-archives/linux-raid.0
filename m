@@ -1,59 +1,59 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch 6/8] raid5: make_request use batch stripe release
-Date: Thu, 7 Jun 2012 11:23:45 +1000
-Message-ID: <20120607112345.1429436b@notabene.brown>
+Subject: Re: [patch 7/8] raid5: raid5d handle stripe in batch way
+Date: Thu, 7 Jun 2012 11:32:39 +1000
+Message-ID: <20120607113239.6a64b64d@notabene.brown>
 References: <20120604080152.098975870@kernel.org>
-	<20120604080335.029329200@kernel.org>
+	<20120604080344.262680737@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/6=2=g/rseywnnrwuHkVI9/3"; protocol="application/pgp-signature"
+ boundary="Sig_/OAfx0JnZS2O7NZslZrFRz.q"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120604080335.029329200@kernel.org>
+In-Reply-To: <20120604080344.262680737@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, dan.j.williams@intel.com, shli@fusionio.com
 List-Id: linux-raid.ids
 
---Sig_/6=2=g/rseywnnrwuHkVI9/3
+--Sig_/OAfx0JnZS2O7NZslZrFRz.q
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 04 Jun 2012 16:01:58 +0800 Shaohua Li <shli@kernel.org> wrote:
+On Mon, 04 Jun 2012 16:01:59 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-> make_request() does stripe release for every stripe and the stripe usuall=
-y has
-> count 1, which makes previous release_stripe() optimization not work. In =
-my
-> test, this release_stripe() becomes the heaviest pleace to take
-> conf->device_lock after previous patches applied.
->=20
-> Below patch makes stripe release batch. When maxium strips of a batch rea=
-ch,
-> the batch will be flushed out. Another way to do the flush is when unplug=
- is
-> called.
+> Let raid5d handle stripe in batch way to reduce conf->device_lock locking.
 >=20
 > Signed-off-by: Shaohua Li <shli@fusionio.com>
 
-I like the idea of a batched release.
-I don't like the per-cpu variables... and I don't think it is safe to only
-allocate them for_each_present_cpu without support cpu-hot-plug.
+I like this.
+I don't think it justifies a separate function.
 
-I would much rather keep a list of stripes (linked on ->lru) in struct
-md_plug_cb (or maybe in some structure which contains that) and release them
-all on unplug - and only on unplug.
+#define MAX_STRIPE_BATCH 8
+struct stripe_head *batch[MAX_STRIPE_BATCH]
+int batch_size =3D 0;
 
-Maybe pass a size to mddev_check_unplugged, and it allocates that much more
-space.  Get mddev_check_unplugged to return the md_plug_cb structure.
-If the new space is NULL, then list_head_init it, and change the cb.callback
-to a raid5 specific function.
-Then add any stripe to the md_plug_cb, and in the unplug function, release
-them all.
+...
 
-Does that make sense?
+while (batch_size < MAX_STRPE_BATCH &&
+       (sh =3D __get_priority_stripe(conf)) !=3D NULL)
+     batch[batch_size++] =3D sh;
 
-Also I would rather the batched stripe release code were defined in the same
-patch that used it.  It isn't big enough to justify a separate patch.
+spin_unlock(&conf->device_lock);
+if (batch_size =3D=3D 0)
+     break;
+
+handled +=3D batch_size;
+
+for (i =3D 0; i < batch_size; i++)
+     handle_stripe(batch[i]);
+cond_resched();
+if (....) md_check_recovery(mddev);
+
+spin_lock_irq(&conf->lock);
+for (i =3D 0; i < batch_size; i++)
+     __release_stripe(batch[i]);
+
+
+something like that?
 
 Thanks,
 NeilBrown
@@ -61,100 +61,97 @@ NeilBrown
 
 
 > ---
->  drivers/md/raid5.c |   42 +++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 41 insertions(+), 1 deletion(-)
+>  drivers/md/raid5.c |   35 ++++++++++++++++++++++++++---------
+>  1 file changed, 26 insertions(+), 9 deletions(-)
 >=20
 > Index: linux/drivers/md/raid5.c
 > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux.orig/drivers/md/raid5.c	2012-06-01 14:13:46.846909398 +0800
-> +++ linux/drivers/md/raid5.c	2012-06-01 14:22:07.944611949 +0800
-> @@ -4023,6 +4023,38 @@ static struct stripe_head *__get_priorit
->  	return sh;
+> --- linux.orig/drivers/md/raid5.c	2012-06-01 14:34:03.987606911 +0800
+> +++ linux/drivers/md/raid5.c	2012-06-01 14:49:26.388010973 +0800
+> @@ -4585,6 +4585,22 @@ static int  retry_aligned_read(struct r5
+>  	return handled;
 >  }
 > =20
-> +struct raid5_plug {
-> +	struct blk_plug_cb cb;
-> +	struct stripe_head_batch batch;
-> +};
-> +static DEFINE_PER_CPU(struct raid5_plug, raid5_plugs);
-> +
-> +static void raid5_do_plug(struct blk_plug_cb *cb)
+> +static int __get_stripe_batch(struct r5conf *conf,
+> +		struct stripe_head_batch *batch)
 > +{
-> +	struct raid5_plug *plug =3D container_of(cb, struct raid5_plug, cb);
+> +	struct stripe_head *sh;
 > +
-> +	release_stripe_flush_batch(&plug->batch);
-> +	INIT_LIST_HEAD(&plug->cb.list);
+> +	batch->count =3D 0;
+> +	do {
+> +		sh =3D __get_priority_stripe(conf);
+> +		if (sh) {
+> +			batch->stripes[batch->count] =3D sh;
+> +			batch->count++;
+> +		}
+> +	} while (sh && batch->count < MAX_STRIPE_BATCH);
+> +
+> +	return batch->count;
 > +}
-> +
-> +static void release_stripe_plug(struct stripe_head *sh)
-> +{
-> +	struct blk_plug *plug =3D current->plug;
-> +	struct raid5_plug *raid5_plug;
-> +
-> +	if (!plug) {
-> +		release_stripe(sh);
-> +		return;
-> +	}
-> +	preempt_disable();
-> +	raid5_plug =3D &__raw_get_cpu_var(raid5_plugs);
-> +	release_stripe_add_batch(&raid5_plug->batch, sh);
-> +
-> +	if (list_empty(&raid5_plug->cb.list))
-> +		list_add(&raid5_plug->cb.list, &plug->cb_list);
-> +	preempt_enable();
-> +}
-> +
->  static void make_request(struct mddev *mddev, struct bio * bi)
->  {
->  	struct r5conf *conf =3D mddev->private;
-> @@ -4153,7 +4185,7 @@ static void make_request(struct mddev *m
->  			if ((bi->bi_rw & REQ_SYNC) &&
->  			    !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
->  				atomic_inc(&conf->preread_active_stripes);
-> -			release_stripe(sh);
-> +			release_stripe_plug(sh);
->  		} else {
->  			/* cannot get stripe for read-ahead, just give-up */
->  			clear_bit(BIO_UPTODATE, &bi->bi_flags);
-> @@ -6170,6 +6202,14 @@ static struct md_personality raid4_perso
 > =20
->  static int __init raid5_init(void)
+>  /*
+>   * This is our raid5 kernel thread.
+> @@ -4595,10 +4611,10 @@ static int  retry_aligned_read(struct r5
+>   */
+>  static void raid5d(struct mddev *mddev)
 >  {
-> +	int i;
+> -	struct stripe_head *sh;
+>  	struct r5conf *conf =3D mddev->private;
+> -	int handled;
+> +	int handled, i;
+>  	struct blk_plug plug;
+> +	struct stripe_head_batch batch;
+> =20
+>  	pr_debug("+++ raid5d active\n");
+> =20
+> @@ -4633,15 +4649,16 @@ static void raid5d(struct mddev *mddev)
+>  			handled++;
+>  		}
+> =20
+> -		sh =3D __get_priority_stripe(conf);
+> -
+> -		if (!sh)
+> +		if (!__get_stripe_batch(conf, &batch))
+>  			break;
+>  		spin_unlock_irq(&conf->device_lock);
+> -	=09
+> -		handled++;
+> -		handle_stripe(sh);
+> -		release_stripe(sh);
 > +
-> +	for_each_present_cpu(i) {
-> +		struct raid5_plug *plug =3D &per_cpu(raid5_plugs, i);
-> +		plug->batch.count =3D 0;
-> +		INIT_LIST_HEAD(&plug->cb.list);
-> +		plug->cb.callback =3D raid5_do_plug;
-> +	}
->  	register_md_personality(&raid6_personality);
->  	register_md_personality(&raid5_personality);
->  	register_md_personality(&raid4_personality);
+> +		for (i =3D 0; i < batch.count; i++) {
+> +			handled++;
+> +			handle_stripe(batch.stripes[i]);
+> +		}
+> +
+> +		release_stripe_flush_batch(&batch);
+>  		cond_resched();
+> =20
+>  		if (mddev->flags & ~(1<<MD_CHANGE_PENDING))
 
 
---Sig_/6=2=g/rseywnnrwuHkVI9/3
+--Sig_/OAfx0JnZS2O7NZslZrFRz.q
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT9ACoTnsnt1WYoG5AQJ4+xAAgXcBB5VzG8bnQr/eyG3iq29Gc58iEBvZ
-D89fUhKeGkcxBNQpxhyzebq9ah5WOn3Ry9hIJaWuwKwIU5xrNL9Hd1P5OIj0kSF0
-Kx7Wd+jvTu5wux1RBMPb4tjegHnbzotoqlJFSdn6G83idXPKgRcDyBGTObYsLjhA
-67wroTs87zECvlWzGGo1Mklg7wr5uC6/+au0jnrxS2NwRiwAYmHxmhhtUrjZdt+o
-q92zc10sL6Nw/nSUcu3I1np0oklyTRZCVUjxSk6CONTCM6GYhzbpmfCb6gWWzzG2
-k4k7obxxJf2xQOc9EreSqnouMbT+rLzsaJ5mltdXLvfaAEpU6XU8vuG1uR0no1an
-nkTS+0mnI/EjE7hhLat4BBa2Rhja9CPb1d52uwkt3kl4JXD70dA7pA60EvgKvxNG
-QS24Gv3ZgYMsZhOIkLavNhHfOw0iPGAMydpAGjefQocEcGsFj86P8xbWhvN697nU
-ckvnYJvik1nkOXoFbeelyCFKOJwfMehzjjuLF3nCt43YTcTfm02EtTYXzniRbg6X
-R70Ag0mF3KqbGxrU6NIUcAFdERVgE+DeUnIxBltUIBzh17aDv6uhu4vCNJBgDSvp
-gZA/7xBbYG5RaEIh7duYXxitNtlsBxKfu4VPocJ4MmVLc3NhedstOjmwrjDO/QSi
-JjpPQQfAB8Y=
-=LSkE
+iQIVAwUBT9AEtznsnt1WYoG5AQIbyw//Q8Iph+pNwyi/6q/p/ICoZgd/OcTHSrhW
+WZdi8HptrQdvsGELg1Wucnh5tRQ25OFZOA8bxfQOLrsqUiXGM56txhQgbF83+SkX
+Mz57sexF1RAYwRxrXE3IOGkBPtI1ye+CM+ho4LB0s7zBXi3ahEUewOju2nXnerVT
+noIf8pdDHWSOKaDFiYJ9BRL6tFpwgEaMxWlbb0G35ahJeJdQFUDEuWdTsr+0Gpnv
+fLPOngDfagFqrbVXALe+LepxeO9wkJmsqv11QSZBAU12CIJo6bZ8NMG6Fme/SEGC
+YP2ocMpR01BUULiQr9oTWyeWRlBINYbXjgibI0P95AzCrEUoOSB60LTbtXM9lNfJ
++3OoRcKoUyqCb70GOAsYNxAxmX9rFTvtEEeYc47Cqg/zJKjKgiWuocs3AXpFZU5N
+EgU+K+dH4dXiQV/fMCDYHWz5wg8Cy+BInPfe1Y6BhuNYxJK7O1TovGsP8bINWRfA
+3cuHgsesb8ZTOWS2qjoULQ2uimpszHcp7OoYoL3yPYIW2Ot5LBeiuKVjZnkcnmG+
+Wsofy76WmMBF9fJh98CyXm49Li1wlgmXcRejWe/r70SmyBfHmSinkYh3CT0pDlI7
+KSPgqvXeyBZQkKyplm3kQwc+Jj+lUvqPTGVwtIMRDuaHTVpSjndX0/qoBNDnOteq
+pKwl+ALl9Fg=
+=pvl2
 -----END PGP SIGNATURE-----
 
---Sig_/6=2=g/rseywnnrwuHkVI9/3--
+--Sig_/OAfx0JnZS2O7NZslZrFRz.q--
