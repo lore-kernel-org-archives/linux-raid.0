@@ -1,171 +1,203 @@
 From: NeilBrown <neilb@suse.de>
 Subject: Re: Problem with patch: "reject a re-add request that cannot be
  honoured" (commit bedd86b7773fd97f0d708cc0c371c8963ba7ba9a)
-Date: Thu, 7 Jun 2012 20:26:28 +1000
-Message-ID: <20120607202628.40ee4062@notabene.brown>
+Date: Thu, 7 Jun 2012 21:24:34 +1000
+Message-ID: <20120607212434.4d6211d6@notabene.brown>
 References: <CAGRgLy6We49bW2gA7S-EOmA8sbaXgQeGuTR5Aqrt4y_KyvOrdw@mail.gmail.com>
+	<CAGRgLy5OkpZnfOpPS+16Tiep8eisOu9XnK7EcvZygwg22DVTqQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/iTVjsb2upsnijjmrB6sWd3F"; protocol="application/pgp-signature"
+ boundary="Sig_/1CGe_SOQ5_lJgRy6l/F9wu."; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy6We49bW2gA7S-EOmA8sbaXgQeGuTR5Aqrt4y_KyvOrdw@mail.gmail.com>
+In-Reply-To: <CAGRgLy5OkpZnfOpPS+16Tiep8eisOu9XnK7EcvZygwg22DVTqQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Cc: andrey.warkentin@gmail.com, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/iTVjsb2upsnijjmrB6sWd3F
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/1CGe_SOQ5_lJgRy6l/F9wu.
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 6 Jun 2012 19:09:25 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+On Thu, 7 Jun 2012 10:22:24 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
 wrote:
 
-> Hi Neil,
-> it looks like we are hitting an issue with this patch.
-> Kernel is stock ubuntu-precise (3.2.0-23 36), mdadm is v3.2.3. (We are
-> aware that this version of mdadm has an issue of unaligned writes, so
-> we backported the fix to it into this version).
+> Hi again Neil, and Andrey,
 >=20
-> We are testing the following simple scenario:
-> # 2-way raid1 with a missing drive
-> # a fresh drive (no superblock) is added (not re-added) to the raid,
-> and the raid happily starts rebuilding it
-> # at some point in time, this drive fails, so rebuild aborts, drive is
-> kicked out.
-> # later the drive recovers and "mdadm remove & re-add" is attempted
-> # re-add fails
+> looking at this email thread:
+> http://www.spinics.net/lists/raid/msg36236.html
+> between you and Andrey, the conclusion was:
+> "So the correct thing to do is to *not* update the metadata on the
+> recovering device until recovery completes.  Then if it fails and is
+> re-added, it will look just the same as when it was re-added the first
+> time, and will do a bitmap-based recovery."
+>=20
+> I have two doubts about this decision:
+> 1) Since the event count on the recovering drive is not updated, this
+> means that after reboot, when array is re-assembled, this drive will
+> not be added to the array, and the user will have to manually re-add
+> it. I agree this is a minor thing.
 
-Hmm.. I guess we should drop the "In_sync" test and just keep the "raid_dis=
-k"
-part of the test?
+Still, if it can be fixed it should be.
+
+> 2) There are places in mdadm, which check for recovery_offset on the
+> drive and take decisions based upon that. Specifically, if there is
+> *no* recovery offset, the data on this drive is considered to be
+> consistent WRT to the failure time of the drive. So, for example, the
+> drive can be a candidate for bumping up events during "force
+> assembly". Now, when superblock on such drive is not updated during
+> recovery (so there is *no* recovery offset), mdadm will think that the
+> drive is consistent, while in fact, its data is totally unusable until
+> after recovery completes. That's because we have updated parts of the
+> drive, but did not complete bringing the whole drive in-sync.
+
+If mdadm would consider updating the event count if not recovery had starte=
+d,
+then surely it is just as valid to do so once some recovery has started, ev=
+en
+if it hasn't completed.
 
 >=20
-> Some debugging suggests the following:
->=20
-> - The superblock of the drive to be re-added looks like this:
->=20
->  Avail Dev Size : 10483712 (5.00 GiB 5.37 GB)
->      Array Size : 10483688 (5.00 GiB 5.37 GB)
->   Used Dev Size : 10483688 (5.00 GiB 5.37 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
-> Recovery Offset : 100096 sectors
->           State : clean
->   Resync Offset : N/A sectors
->     Device UUID : d9114d02:76153894:87aaf09d:c55da9be
-> Internal Bitmap : 8 sectors from superblock
->     Update Time : Wed Jun  6 18:36:55 2012
->        Checksum : 94468c9d - correct
->          Events : 192
->    Device Role : Active device 1
->    Array State : AA ('A' =3D=3D active, '.' =3D=3D missing)
->=20
->=20
-> So the drive has a valid recovery offset (MD_FEATURE_RECOVERY_OFFSET
-> set) and a valid role.
->=20
-> - The "re-add" path of mdadm performs calls getinfo_super1(), which perfo=
-rms:
-> role =3D __le16_to_cpu(sb->dev_roles[__le32_to_cpu(sb->dev_number)]);
-> ...
-> info->disk.state =3D 6; /* active and in sync */
-> info->disk.raid_disk =3D role;
->=20
-> So at this point, MD_DISK_ACTIVE and MD_DISK_SYNC are set.
->=20
-> - mdadm issues ADD_NEW_DISK, which arrives to add_new_disk() in the kernel
-> - the kernel performs:
-> if (!mddev->persistent) {
-> ... // not relevant to our case
-> } else
-> 	super_types[mddev->major_version].
-> 		validate_super(mddev, rdev);
->=20
-> - validate_super() performs:
-> 	if ((le32_to_cpu(sb->feature_map) &
-> 	     MD_FEATURE_RECOVERY_OFFSET))
-> 		rdev->recovery_offset =3D le64_to_cpu(sb->recovery_offset);
-> 	else
-> 		set_bit(In_sync, &rdev->flags);
-> 	rdev->raid_disk =3D role;
->=20
-> So In_sync flag is not set, because we have a recovery offset.
->=20
-> - Then the code introduced by the patch does:
-> 	if ((info->state & (1<<MD_DISK_SYNC)) &&
-> 	    (!test_bit(In_sync, &rdev->flags) ||
-> 	     rdev->raid_disk !=3D info->raid_disk)) {
-> 		/* This was a hot-add request, but events doesn't
-> 		 * match, so reject it.
-> 		 */
-> 		export_rdev(rdev);
-> 		return -EINVAL;
-> 	}
->=20
-> So the first part of "OR" succeeds and we abort.
->=20
-> An observation: this problem only happens with a fresh drive
-> apparently. If drive that was already In_sync fails and then is
-> re-added, kernel does not update its superblock until recovery
-> completes. So its superblock has no valid recovery_offset, and this
-> problem doesn't happen. The code that skips updating the superblock
-> was added as part of this email thread:
-> http://www.spinics.net/lists/raid/msg36275.html. However, I did not
-> dig deeper why the superblock gets updated in my case. But the
-> scenario above repros easily.
->=20
-> Q1: Can you confirm that my analysis is correct?
+> Can you pls comment on my doubts?
 
-Looks about  right.
+I think there is probably room for improvement here but I don't think there
+are any serious problems.
 
-> Q2: Is this an expected behavior? I would assume that no, because the
-> same case for a failed drive (not a fresh drive) works fine
+However I'm about to go on leave for a couple of week so I'm unlikely to
+think about it for a while. I've made a note to look at it properly when I
+get back.
 
-It is a case that I hadn't really thought about (re-adding a drive that was
-partially recovered), so in a sense, no behaviour is expected :-)
-I agree it isn't desirable behaviour.
-
-> Q3: How would you recommend to handle this?
-
-1/ Change the coded added by the commit to remove the
-      !test_bit(In_sync, &rdev->flags) ||
-  section.
-2/ Possibly backport mdadm commit 0a999759b54f94fd63ac0
-  This will allow --add to work in more cases.  I'm not sure if you
-  are hitting this issue or not.
-
-Please let me know how '1' goes and I'll get that fix upstream.
-
-Thanks,
 NeilBrown
 
 
 >=20
-> Thanks!
+> Thanks,
 > Alex.
+>=20
+>=20
+> On Wed, Jun 6, 2012 at 7:09 PM, Alexander Lyakas <alex.bolshoy@gmail.com>=
+ wrote:
+> > Hi Neil,
+> > it looks like we are hitting an issue with this patch.
+> > Kernel is stock ubuntu-precise (3.2.0-23 36), mdadm is v3.2.3. (We are
+> > aware that this version of mdadm has an issue of unaligned writes, so
+> > we backported the fix to it into this version).
+> >
+> > We are testing the following simple scenario:
+> > # 2-way raid1 with a missing drive
+> > # a fresh drive (no superblock) is added (not re-added) to the raid,
+> > and the raid happily starts rebuilding it
+> > # at some point in time, this drive fails, so rebuild aborts, drive is
+> > kicked out.
+> > # later the drive recovers and "mdadm remove & re-add" is attempted
+> > # re-add fails
+> >
+> > Some debugging suggests the following:
+> >
+> > - The superblock of the drive to be re-added looks like this:
+> >
+> > =A0Avail Dev Size : 10483712 (5.00 GiB 5.37 GB)
+> > =A0 =A0 Array Size : 10483688 (5.00 GiB 5.37 GB)
+> > =A0Used Dev Size : 10483688 (5.00 GiB 5.37 GB)
+> > =A0 =A0Data Offset : 2048 sectors
+> > =A0 Super Offset : 8 sectors
+> > Recovery Offset : 100096 sectors
+> > =A0 =A0 =A0 =A0 =A0State : clean
+> > =A0Resync Offset : N/A sectors
+> > =A0 =A0Device UUID : d9114d02:76153894:87aaf09d:c55da9be
+> > Internal Bitmap : 8 sectors from superblock
+> > =A0 =A0Update Time : Wed Jun =A06 18:36:55 2012
+> > =A0 =A0 =A0 Checksum : 94468c9d - correct
+> > =A0 =A0 =A0 =A0 Events : 192
+> > =A0 Device Role : Active device 1
+> > =A0 Array State : AA ('A' =3D=3D active, '.' =3D=3D missing)
+> >
+> >
+> > So the drive has a valid recovery offset (MD_FEATURE_RECOVERY_OFFSET
+> > set) and a valid role.
+> >
+> > - The "re-add" path of mdadm performs calls getinfo_super1(), which per=
+forms:
+> > role =3D __le16_to_cpu(sb->dev_roles[__le32_to_cpu(sb->dev_number)]);
+> > ...
+> > info->disk.state =3D 6; /* active and in sync */
+> > info->disk.raid_disk =3D role;
+> >
+> > So at this point, MD_DISK_ACTIVE and MD_DISK_SYNC are set.
+> >
+> > - mdadm issues ADD_NEW_DISK, which arrives to add_new_disk() in the ker=
+nel
+> > - the kernel performs:
+> > if (!mddev->persistent) {
+> > ... // not relevant to our case
+> > } else
+> > =A0 =A0 =A0 =A0super_types[mddev->major_version].
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0validate_super(mddev, rdev);
+> >
+> > - validate_super() performs:
+> > =A0 =A0 =A0 =A0if ((le32_to_cpu(sb->feature_map) &
+> > =A0 =A0 =A0 =A0 =A0 =A0 MD_FEATURE_RECOVERY_OFFSET))
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rdev->recovery_offset =3D le64_to_cpu(sb=
+->recovery_offset);
+> > =A0 =A0 =A0 =A0else
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0set_bit(In_sync, &rdev->flags);
+> > =A0 =A0 =A0 =A0rdev->raid_disk =3D role;
+> >
+> > So In_sync flag is not set, because we have a recovery offset.
+> >
+> > - Then the code introduced by the patch does:
+> > =A0 =A0 =A0 =A0if ((info->state & (1<<MD_DISK_SYNC)) &&
+> > =A0 =A0 =A0 =A0 =A0 =A0(!test_bit(In_sync, &rdev->flags) ||
+> > =A0 =A0 =A0 =A0 =A0 =A0 rdev->raid_disk !=3D info->raid_disk)) {
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* This was a hot-add request, but event=
+s doesn't
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 * match, so reject it.
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 */
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0export_rdev(rdev);
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EINVAL;
+> > =A0 =A0 =A0 =A0}
+> >
+> > So the first part of "OR" succeeds and we abort.
+> >
+> > An observation: this problem only happens with a fresh drive
+> > apparently. If drive that was already In_sync fails and then is
+> > re-added, kernel does not update its superblock until recovery
+> > completes. So its superblock has no valid recovery_offset, and this
+> > problem doesn't happen. The code that skips updating the superblock
+> > was added as part of this email thread:
+> > http://www.spinics.net/lists/raid/msg36275.html. However, I did not
+> > dig deeper why the superblock gets updated in my case. But the
+> > scenario above repros easily.
+> >
+> > Q1: Can you confirm that my analysis is correct?
+> > Q2: Is this an expected behavior? I would assume that no, because the
+> > same case for a failed drive (not a fresh drive) works fine
+> > Q3: How would you recommend to handle this?
+> >
+> > Thanks!
+> > Alex.
 
 
---Sig_/iTVjsb2upsnijjmrB6sWd3F
+--Sig_/1CGe_SOQ5_lJgRy6l/F9wu.
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT9CB1Dnsnt1WYoG5AQJd4hAAkyDWe0QL7ub+01IlmslgO8nvIN8T2pvI
-XqMx8OhLZVzZ37s+9vRXFu7sZynIt/cFfJ6ntPm/Rha5K9z4NdkL9rXHVsOQt3sd
-e2ub4y5BgJRNH43UmwKPSghPnWUjAH7AucsxYx5+N3eRSpDwxYKcbnUpA2ZbrjmE
-qGwY19Vjb8Zfwh2KOyUjPehn2pcEudnWTWUCMgBiRbzEMjhDPYP1krd74V17Eqbb
-dBBVU+YCSjSXh8Bh5eIATZcKyK6YGp/seQ+4pc3/4iGW2QWOP4gztiX/CauuID9C
-Dj72gU32q5XK4V9LyIDDaKod/uA7adI1GkpYMh+CXYaZwjK2LAjZ+z3tHpKvfp/8
-DuiujDTrq9qOd4iA0GklKavZqAwODW+h80ehRF39M1UMYMtAgXYHE4+LtOJNv5PN
-ae17R4X3T+K5Pwvql5f7lUXSwWPs1iyrC1nNst5ntQW7q61w8VvkiFxG6mFVXrV1
-Z+si9aOTBnms2e/2hWwOyCYt9dkyFyCHLduK67+zRYkpaaITM7mGQmpEknoLKxzf
-k0+5lpIeVOMjm43PI83QLbhqCsC5y1hMeIdGmrJAjiyfJP3/SWBVkyZHtXGoIb56
-kZWhAqYiXX2tcq1ixIpUGX0CJtwfKEHCWw/mOHinPmd5wKByr8WQE6f+LtoveO3E
-FaJXT+U1uu8=
-=BReQ
+iQIVAwUBT9CPcjnsnt1WYoG5AQKGqBAAl/X7VFPy3ZDEhHqpPZaZq0hqabDa+So7
+DojBL1Im3AzGH6kThHM4AlpDtEUd/VzC8GCXCAbgcndmOrdGgpsNMgW9KuKVgRlN
+ZnTlAyyCeQ03IBxzp5/lkMSZRvcKqf9aBXd1t3Nvx3j5+6Q5uyyNWwfkFUI0F6Tk
+MdbH1dwu2DorFqLaKv4RYOFZXOj3PPd98NmYwfhWb7ZR1nMuj1ObMzUWPpkJ6ptK
+5HgSiyr2HhqgF9Y+TutlUAuT+49Ff047RYPR2u30hfXScyEXGfxYVKyjLxPJ0SVZ
+B66HN7cIBnhP5f+1OmHHqolDQAtddOpcmStYa/vo3f3/OQTrJtkXsLtnI0Cz0flq
+xFIritH9gI2d9ltkd7LwajCSVNeI/+f6532LrtrsPXr8Z04yh4l3DEDlgyns7PTE
+/gYtJzoUnxlvPuCaEG1IPMqJtedPiTQi7yoHpxaV9GY2LeSqHNh5+ligMookrOZn
++yA6vgdmz+9KDKXggjGDlemei7pvyQ8OkUsLBU0gCC2oWzmRUqlK0R0bWwKJoNqw
+fg4/2rJIWmNQYMlRVbCwkf40fqfCk5GdS+Waxji41v9YqEqGXMaKhOCG1cbcLAWt
+3/+UmSvW0jXeAg57gC+CosOWBp+AeOPFKXSR6NKcNaOpJIqhXcTHFgFIVrWb9vA3
+GFfFFQ8xugU=
+=XCxn
 -----END PGP SIGNATURE-----
 
---Sig_/iTVjsb2upsnijjmrB6sWd3F--
+--Sig_/1CGe_SOQ5_lJgRy6l/F9wu.--
