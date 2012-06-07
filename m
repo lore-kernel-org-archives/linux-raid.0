@@ -1,216 +1,154 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch 1/8] raid5: add a per-stripe lock
-Date: Thu, 7 Jun 2012 10:54:10 +1000
-Message-ID: <20120607105410.415d9fe6@notabene.brown>
+Subject: Re: [patch 2/8] raid5: lockless access raid5 overrided
+ bi_phys_segments
+Date: Thu, 7 Jun 2012 11:06:03 +1000
+Message-ID: <20120607110603.0d88c757@notabene.brown>
 References: <20120604080152.098975870@kernel.org>
-	<20120604080300.519377228@kernel.org>
+	<20120604080307.401236650@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/d6QZL2sANDQT_u/avVBSJTh"; protocol="application/pgp-signature"
+ boundary="Sig_/X4HVCcRckl8=rV3AyhZ0JWM"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120604080300.519377228@kernel.org>
+In-Reply-To: <20120604080307.401236650@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, dan.j.williams@intel.com, shli@fusionio.com
 List-Id: linux-raid.ids
 
---Sig_/d6QZL2sANDQT_u/avVBSJTh
+--Sig_/X4HVCcRckl8=rV3AyhZ0JWM
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 04 Jun 2012 16:01:53 +0800 Shaohua Li <shli@kernel.org> wrote:
+On Mon, 04 Jun 2012 16:01:54 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-> Add a per-stripe lock to protect stripe specific data, like dev->read,
-> written, ... The purpose is to reduce lock contention of conf->device_loc=
-k.
+> Raid5 overrides bio->bi_phys_segments, accessing it is with device_lock h=
+old,
+> which is unnecessary, We can make it lockless actually.
+>=20
+> Signed-off-by: Shaohua Li <shli@fusionio.com>
 
-I'm not convinced that you need to add a lock.
-I am convinced that if you do add one you need to explain exactly what it is
-protecting.
+I cannot say that I like this (casting fields in the bio structure), but I
+can see the value and it should work.  'atomic_t' is currently always the s=
+ame
+size as an 'int', and I doubt that will change.
 
-The STRIPE_ACTIVE bit serves as a lock and ensures that only one process can
-be in handle_stripe at a time.
-So I don't think dev->read actually needs any protection (though I haven't
-checked thoroughly).
+So maybe I'll get used to the idea.
 
-I think the only things that device_lock protects are things shared by
-multiple stripes, so adding a per-stripe spinlock isn't going to help remove
-device_lock.
+I think we should take the opportunity to change the names to refer to
+"active" and "processed" rather than "phys" and "hw".
 
 Thanks,
+
 NeilBrown
 
 
->=20
-> Signed-off-by: Shaohua Li <shli@fusionio.com>
 > ---
->  drivers/md/raid5.c |   17 +++++++++++++++++
->  drivers/md/raid5.h |    1 +
->  2 files changed, 18 insertions(+)
+>  drivers/md/raid5.c |   37 ++++++++++++++++++++++++-------------
+>  1 file changed, 24 insertions(+), 13 deletions(-)
 >=20
 > Index: linux/drivers/md/raid5.c
 > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux.orig/drivers/md/raid5.c	2012-06-01 13:38:54.705210229 +0800
-> +++ linux/drivers/md/raid5.c	2012-06-01 13:43:05.594056130 +0800
-> @@ -749,6 +749,7 @@ static void ops_complete_biofill(void *s
-> =20
->  	/* clear completed biofills */
->  	spin_lock_irq(&conf->device_lock);
-> +	spin_lock_irq(&sh->stripe_lock);
->  	for (i =3D sh->disks; i--; ) {
->  		struct r5dev *dev =3D &sh->dev[i];
-> =20
-> @@ -774,6 +775,7 @@ static void ops_complete_biofill(void *s
->  			}
->  		}
->  	}
-> +	spin_unlock_irq(&sh->stripe_lock);
->  	spin_unlock_irq(&conf->device_lock);
->  	clear_bit(STRIPE_BIOFILL_RUN, &sh->state);
-> =20
-> @@ -798,8 +800,10 @@ static void ops_run_biofill(struct strip
->  		if (test_bit(R5_Wantfill, &dev->flags)) {
->  			struct bio *rbi;
->  			spin_lock_irq(&conf->device_lock);
-> +			spin_lock_irq(&sh->stripe_lock);
->  			dev->read =3D rbi =3D dev->toread;
->  			dev->toread =3D NULL;
-> +			spin_unlock_irq(&sh->stripe_lock);
->  			spin_unlock_irq(&conf->device_lock);
->  			while (rbi && rbi->bi_sector <
->  				dev->sector + STRIPE_SECTORS) {
-> @@ -1137,10 +1141,12 @@ ops_run_biodrain(struct stripe_head *sh,
->  			struct bio *wbi;
-> =20
->  			spin_lock_irq(&sh->raid_conf->device_lock);
-> +			spin_lock_irq(&sh->stripe_lock);
->  			chosen =3D dev->towrite;
->  			dev->towrite =3D NULL;
->  			BUG_ON(dev->written);
->  			wbi =3D dev->written =3D chosen;
-> +			spin_unlock_irq(&sh->stripe_lock);
->  			spin_unlock_irq(&sh->raid_conf->device_lock);
-> =20
->  			while (wbi && wbi->bi_sector <
-> @@ -1446,6 +1452,8 @@ static int grow_one_stripe(struct r5conf
->  	init_waitqueue_head(&sh->ops.wait_for_ops);
->  	#endif
-> =20
-> +	spin_lock_init(&sh->stripe_lock);
-> +
->  	if (grow_buffers(sh)) {
->  		shrink_buffers(sh);
->  		kmem_cache_free(conf->slab_cache, sh);
-> @@ -2327,6 +2335,7 @@ static int add_stripe_bio(struct stripe_
-> =20
-> =20
->  	spin_lock_irq(&conf->device_lock);
-> +	spin_lock_irq(&sh->stripe_lock);
->  	if (forwrite) {
->  		bip =3D &sh->dev[dd_idx].towrite;
->  		if (*bip =3D=3D NULL && sh->dev[dd_idx].written =3D=3D NULL)
-> @@ -2360,6 +2369,7 @@ static int add_stripe_bio(struct stripe_
->  		if (sector >=3D sh->dev[dd_idx].sector + STRIPE_SECTORS)
->  			set_bit(R5_OVERWRITE, &sh->dev[dd_idx].flags);
->  	}
-> +	spin_unlock_irq(&sh->stripe_lock);
->  	spin_unlock_irq(&conf->device_lock);
-> =20
->  	pr_debug("added bi b#%llu to stripe s#%llu, disk %d.\n",
-> @@ -2376,6 +2386,7 @@ static int add_stripe_bio(struct stripe_
-> =20
->   overlap:
->  	set_bit(R5_Overlap, &sh->dev[dd_idx].flags);
-> +	spin_unlock_irq(&sh->stripe_lock);
->  	spin_unlock_irq(&conf->device_lock);
->  	return 0;
+> --- linux.orig/drivers/md/raid5.c	2012-06-01 13:43:05.594056130 +0800
+> +++ linux/drivers/md/raid5.c	2012-06-01 13:50:39.852349690 +0800
+> @@ -101,32 +101,43 @@ static inline struct bio *r5_next_bio(st
+>   */
+>  static inline int raid5_bi_phys_segments(struct bio *bio)
+>  {
+> -	return bio->bi_phys_segments & 0xffff;
+> +	atomic_t *segments =3D (atomic_t *)&bio->bi_phys_segments;
+> +	return atomic_read(segments) & 0xffff;
 >  }
-> @@ -2427,6 +2438,7 @@ handle_failed_stripe(struct r5conf *conf
->  			}
->  		}
->  		spin_lock_irq(&conf->device_lock);
-> +		spin_lock_irq(&sh->stripe_lock);
->  		/* fail all writes first */
->  		bi =3D sh->dev[i].towrite;
->  		sh->dev[i].towrite =3D NULL;
-> @@ -2488,6 +2500,7 @@ handle_failed_stripe(struct r5conf *conf
->  				bi =3D nextbi;
->  			}
->  		}
-> +		spin_unlock_irq(&sh->stripe_lock);
->  		spin_unlock_irq(&conf->device_lock);
->  		if (bitmap_end)
->  			bitmap_endwrite(conf->mddev->bitmap, sh->sector,
-> @@ -2695,6 +2708,7 @@ static void handle_stripe_clean_event(st
->  				int bitmap_end =3D 0;
->  				pr_debug("Return write for disc %d\n", i);
->  				spin_lock_irq(&conf->device_lock);
-> +				spin_lock_irq(&sh->stripe_lock);
->  				wbi =3D dev->written;
->  				dev->written =3D NULL;
->  				while (wbi && wbi->bi_sector <
-> @@ -2709,6 +2723,7 @@ static void handle_stripe_clean_event(st
->  				}
->  				if (dev->towrite =3D=3D NULL)
->  					bitmap_end =3D 1;
-> +				spin_unlock_irq(&sh->stripe_lock);
->  				spin_unlock_irq(&conf->device_lock);
->  				if (bitmap_end)
->  					bitmap_endwrite(conf->mddev->bitmap,
-> @@ -3168,6 +3183,7 @@ static void analyse_stripe(struct stripe
->  	/* Now to look around and see what can be done */
->  	rcu_read_lock();
->  	spin_lock_irq(&conf->device_lock);
-> +	spin_lock_irq(&sh->stripe_lock);
->  	for (i=3Ddisks; i--; ) {
->  		struct md_rdev *rdev;
->  		sector_t first_bad;
-> @@ -3313,6 +3329,7 @@ static void analyse_stripe(struct stripe
->  				do_recovery =3D 1;
->  		}
+> =20
+>  static inline int raid5_bi_hw_segments(struct bio *bio)
+>  {
+> -	return (bio->bi_phys_segments >> 16) & 0xffff;
+> +	atomic_t *segments =3D (atomic_t *)&bio->bi_phys_segments;
+> +	return (atomic_read(segments) >> 16) & 0xffff;
+>  }
+> =20
+>  static inline int raid5_dec_bi_phys_segments(struct bio *bio)
+>  {
+> -	--bio->bi_phys_segments;
+> -	return raid5_bi_phys_segments(bio);
+> +	atomic_t *segments =3D (atomic_t *)&bio->bi_phys_segments;
+> +	return atomic_sub_return(1, segments) & 0xffff;
+>  }
+> =20
+> -static inline int raid5_dec_bi_hw_segments(struct bio *bio)
+> +static inline void raid5_inc_bi_phys_segments(struct bio *bio)
+>  {
+> -	unsigned short val =3D raid5_bi_hw_segments(bio);
+> -
+> -	--val;
+> -	bio->bi_phys_segments =3D (val << 16) | raid5_bi_phys_segments(bio);
+> -	return val;
+> +	atomic_t *segments =3D (atomic_t *)&bio->bi_phys_segments;
+> +	atomic_inc(segments);
+>  }
+> =20
+>  static inline void raid5_set_bi_hw_segments(struct bio *bio, unsigned in=
+t cnt)
+>  {
+> -	bio->bi_phys_segments =3D raid5_bi_phys_segments(bio) | (cnt << 16);
+> +	atomic_t *segments =3D (atomic_t *)&bio->bi_phys_segments;
+> +	int old, new;
+> +
+> +	do {
+> +		old =3D atomic_read(segments);
+> +		new =3D (old & 0xffff) | (cnt << 16);
+> +	} while (atomic_cmpxchg(segments, old, new) !=3D old);
+> +}
+> +
+> +static inline void raid5_set_bi_segments(struct bio *bio, unsigned int c=
+nt)
+> +{
+> +	atomic_t *segments =3D (atomic_t *)&bio->bi_phys_segments;
+> +	atomic_set(segments, cnt);
+>  }
+> =20
+>  /* Find first data disk in a raid6 stripe */
+> @@ -2354,7 +2365,7 @@ static int add_stripe_bio(struct stripe_
+>  	if (*bip)
+>  		bi->bi_next =3D *bip;
+>  	*bip =3D bi;
+> -	bi->bi_phys_segments++;
+> +	raid5_inc_bi_phys_segments(bi);
+> =20
+>  	if (forwrite) {
+>  		/* check if page is covered */
+> @@ -3783,7 +3794,7 @@ static struct bio *remove_bio_from_retry
+>  		 * this sets the active strip count to 1 and the processed
+>  		 * strip count to zero (upper 8 bits)
+>  		 */
+> -		bi->bi_phys_segments =3D 1; /* biased count of active stripes */
+> +		raid5_set_bi_segments(bi, 1); /* biased count of active stripes */
 >  	}
-> +	spin_unlock_irq(&sh->stripe_lock);
->  	spin_unlock_irq(&conf->device_lock);
->  	if (test_bit(STRIPE_SYNCING, &sh->state)) {
->  		/* If there is a failed device being replaced,
-> Index: linux/drivers/md/raid5.h
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux.orig/drivers/md/raid5.h	2012-06-01 13:38:54.717210079 +0800
-> +++ linux/drivers/md/raid5.h	2012-06-01 13:44:19.229127709 +0800
-> @@ -210,6 +210,7 @@ struct stripe_head {
->  	int			disks;		/* disks in stripe */
->  	enum check_states	check_state;
->  	enum reconstruct_states reconstruct_state;
-> +	spinlock_t		stripe_lock;
->  	/**
->  	 * struct stripe_operations
->  	 * @target - STRIPE_OP_COMPUTE_BLK target
+> =20
+>  	return bi;
 
 
---Sig_/d6QZL2sANDQT_u/avVBSJTh
+--Sig_/X4HVCcRckl8=rV3AyhZ0JWM
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT8/7sjnsnt1WYoG5AQIGxhAAtgVU6JDZ3jd5GkOik98y/WFLaBYq+ohr
-eoLVUjKpQPzu8ISz2lPXbQUtHwX9wvxlr0KK798Y1jptf/cPUYfZW6F1OC/sgxU4
-Q0mpjVQyWHmaZjAP27qfmh2UceRUR2NtkA90glODzegef6z+pYXMH+qQVqcCZ+4D
-yKir4VSHuwasjLdlA+xVFtOChvKP20Q/Bh0WJNbs3yrSI0+aTTXmkB/qZYcMjwIm
-fPNWBi5+AXxg4RhCK4NwpFWpBFvmfmLUIGB3v41t5Qvub0NdkVz5WYKUS/znakj9
-CDx2DvGSAfJwFwSdniz34SCI7USrEnU35KqHTETdc+LovfoZ5c+NyZYPF3WvEjra
-q/Q0JDHXNDM8cNXnPERP6C+c03kL4YbLalaTTnSQqDZqJcvH+VpDwTwCInIGeQYz
-JczHWKsQ/Oqq/SD+VggcNNIsmbtKXCWmn5WImytzOJPM4uzZn1nI7dCO/ehzFAy8
-cMGZlUAoe/kcs0hS5d5xFmk5o2qJh7kvyMajDXpdyzMGhl5uddIuwyxeZ8hTtLPU
-Kx8zcyvJWUfTstw3+/16pIs8p77xgkWeUVeEPlV1zTrqQPcDaHDzb4NyfU75NmTG
-QD1ckHy9w47Lzhj5C1apcc616bltz9WrgtQh1ZopTCXRTUSd2oxI0z394SkQYqL7
-n+5CMTgDj1o=
-=IEqA
+iQIVAwUBT8/+eznsnt1WYoG5AQJe8A/+MqMjrycENi1Z/37EJugC8snzclXljxqD
+oRQb0eZ3TOTLBjV9R3hujEWPt/cQTcptMZnVnCiSAhUGo3T7GMPqbsOckndMGwRE
++bzp/zgtBKmSX0/Lz558+HVCAN+j/SUBMGsD2nw9f3HZcAMO+3DTnSHnnESdzQzR
+pPM6O9Y53y1hidMT8VUMv4M3ReiarRVtox07bQCNHY6xOI+583rfF5kdUb8V4KY/
+Qn3zDdhT8p0PCxm2nA8X0OFjZ+1kkfHeAp7bCc0V+sKWGd4e+AdFcT41ETJTbEFm
+q/HnIEsc/WAjPIkYW9UUh+umsYc2ep0fiekR+r+ZSGrLD3cjDV9xGzp1b3RdYbhk
+M2onVUnqeHqZLtEIHvCwl0xuc+Iq3x0rgOp+HFfAHccu6xhJuaPp0ALIiFg1sHkq
+8POsO0a7ftrOnnP2AkmC4/M6y0jaC+rFBcZmB9zOfdjuvEJiYWT4FlHA1nc5uGcm
+2caTXr830OIDeQxLwD7FJTfUIcxBdt6M2PHmUNsUoe+EoJW7R/uVMeJmciUJnptU
+2uVMjHrjZO4SKrdKT7gadKEwGDhh8aE6aMRfMvErz0kafNfRD91gj213wZFRx2Ya
+9pmsQc6mYG3Ah4vWgf6VTiOe5Twug+VSxorMNh8xr6pBkNvEVgOMtPtd8r0lTDW0
+Cy+mo0vlzP4=
+=dcyw
 -----END PGP SIGNATURE-----
 
---Sig_/d6QZL2sANDQT_u/avVBSJTh--
+--Sig_/X4HVCcRckl8=rV3AyhZ0JWM--
