@@ -1,154 +1,160 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch 2/8] raid5: lockless access raid5 overrided
- bi_phys_segments
-Date: Thu, 7 Jun 2012 11:06:03 +1000
-Message-ID: <20120607110603.0d88c757@notabene.brown>
+Subject: Re: [patch 6/8] raid5: make_request use batch stripe release
+Date: Thu, 7 Jun 2012 11:23:45 +1000
+Message-ID: <20120607112345.1429436b@notabene.brown>
 References: <20120604080152.098975870@kernel.org>
-	<20120604080307.401236650@kernel.org>
+	<20120604080335.029329200@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/X4HVCcRckl8=rV3AyhZ0JWM"; protocol="application/pgp-signature"
+ boundary="Sig_/6=2=g/rseywnnrwuHkVI9/3"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120604080307.401236650@kernel.org>
+In-Reply-To: <20120604080335.029329200@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, dan.j.williams@intel.com, shli@fusionio.com
 List-Id: linux-raid.ids
 
---Sig_/X4HVCcRckl8=rV3AyhZ0JWM
+--Sig_/6=2=g/rseywnnrwuHkVI9/3
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 04 Jun 2012 16:01:54 +0800 Shaohua Li <shli@kernel.org> wrote:
+On Mon, 04 Jun 2012 16:01:58 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-> Raid5 overrides bio->bi_phys_segments, accessing it is with device_lock h=
-old,
-> which is unnecessary, We can make it lockless actually.
+> make_request() does stripe release for every stripe and the stripe usuall=
+y has
+> count 1, which makes previous release_stripe() optimization not work. In =
+my
+> test, this release_stripe() becomes the heaviest pleace to take
+> conf->device_lock after previous patches applied.
+>=20
+> Below patch makes stripe release batch. When maxium strips of a batch rea=
+ch,
+> the batch will be flushed out. Another way to do the flush is when unplug=
+ is
+> called.
 >=20
 > Signed-off-by: Shaohua Li <shli@fusionio.com>
 
-I cannot say that I like this (casting fields in the bio structure), but I
-can see the value and it should work.  'atomic_t' is currently always the s=
-ame
-size as an 'int', and I doubt that will change.
+I like the idea of a batched release.
+I don't like the per-cpu variables... and I don't think it is safe to only
+allocate them for_each_present_cpu without support cpu-hot-plug.
 
-So maybe I'll get used to the idea.
+I would much rather keep a list of stripes (linked on ->lru) in struct
+md_plug_cb (or maybe in some structure which contains that) and release them
+all on unplug - and only on unplug.
 
-I think we should take the opportunity to change the names to refer to
-"active" and "processed" rather than "phys" and "hw".
+Maybe pass a size to mddev_check_unplugged, and it allocates that much more
+space.  Get mddev_check_unplugged to return the md_plug_cb structure.
+If the new space is NULL, then list_head_init it, and change the cb.callback
+to a raid5 specific function.
+Then add any stripe to the md_plug_cb, and in the unplug function, release
+them all.
+
+Does that make sense?
+
+Also I would rather the batched stripe release code were defined in the same
+patch that used it.  It isn't big enough to justify a separate patch.
 
 Thanks,
-
 NeilBrown
 
 
+
 > ---
->  drivers/md/raid5.c |   37 ++++++++++++++++++++++++-------------
->  1 file changed, 24 insertions(+), 13 deletions(-)
+>  drivers/md/raid5.c |   42 +++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 41 insertions(+), 1 deletion(-)
 >=20
 > Index: linux/drivers/md/raid5.c
 > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux.orig/drivers/md/raid5.c	2012-06-01 13:43:05.594056130 +0800
-> +++ linux/drivers/md/raid5.c	2012-06-01 13:50:39.852349690 +0800
-> @@ -101,32 +101,43 @@ static inline struct bio *r5_next_bio(st
->   */
->  static inline int raid5_bi_phys_segments(struct bio *bio)
->  {
-> -	return bio->bi_phys_segments & 0xffff;
-> +	atomic_t *segments =3D (atomic_t *)&bio->bi_phys_segments;
-> +	return atomic_read(segments) & 0xffff;
+> --- linux.orig/drivers/md/raid5.c	2012-06-01 14:13:46.846909398 +0800
+> +++ linux/drivers/md/raid5.c	2012-06-01 14:22:07.944611949 +0800
+> @@ -4023,6 +4023,38 @@ static struct stripe_head *__get_priorit
+>  	return sh;
 >  }
 > =20
->  static inline int raid5_bi_hw_segments(struct bio *bio)
->  {
-> -	return (bio->bi_phys_segments >> 16) & 0xffff;
-> +	atomic_t *segments =3D (atomic_t *)&bio->bi_phys_segments;
-> +	return (atomic_read(segments) >> 16) & 0xffff;
->  }
-> =20
->  static inline int raid5_dec_bi_phys_segments(struct bio *bio)
->  {
-> -	--bio->bi_phys_segments;
-> -	return raid5_bi_phys_segments(bio);
-> +	atomic_t *segments =3D (atomic_t *)&bio->bi_phys_segments;
-> +	return atomic_sub_return(1, segments) & 0xffff;
->  }
-> =20
-> -static inline int raid5_dec_bi_hw_segments(struct bio *bio)
-> +static inline void raid5_inc_bi_phys_segments(struct bio *bio)
->  {
-> -	unsigned short val =3D raid5_bi_hw_segments(bio);
-> -
-> -	--val;
-> -	bio->bi_phys_segments =3D (val << 16) | raid5_bi_phys_segments(bio);
-> -	return val;
-> +	atomic_t *segments =3D (atomic_t *)&bio->bi_phys_segments;
-> +	atomic_inc(segments);
->  }
-> =20
->  static inline void raid5_set_bi_hw_segments(struct bio *bio, unsigned in=
-t cnt)
->  {
-> -	bio->bi_phys_segments =3D raid5_bi_phys_segments(bio) | (cnt << 16);
-> +	atomic_t *segments =3D (atomic_t *)&bio->bi_phys_segments;
-> +	int old, new;
+> +struct raid5_plug {
+> +	struct blk_plug_cb cb;
+> +	struct stripe_head_batch batch;
+> +};
+> +static DEFINE_PER_CPU(struct raid5_plug, raid5_plugs);
 > +
-> +	do {
-> +		old =3D atomic_read(segments);
-> +		new =3D (old & 0xffff) | (cnt << 16);
-> +	} while (atomic_cmpxchg(segments, old, new) !=3D old);
+> +static void raid5_do_plug(struct blk_plug_cb *cb)
+> +{
+> +	struct raid5_plug *plug =3D container_of(cb, struct raid5_plug, cb);
+> +
+> +	release_stripe_flush_batch(&plug->batch);
+> +	INIT_LIST_HEAD(&plug->cb.list);
 > +}
 > +
-> +static inline void raid5_set_bi_segments(struct bio *bio, unsigned int c=
-nt)
+> +static void release_stripe_plug(struct stripe_head *sh)
 > +{
-> +	atomic_t *segments =3D (atomic_t *)&bio->bi_phys_segments;
-> +	atomic_set(segments, cnt);
->  }
+> +	struct blk_plug *plug =3D current->plug;
+> +	struct raid5_plug *raid5_plug;
+> +
+> +	if (!plug) {
+> +		release_stripe(sh);
+> +		return;
+> +	}
+> +	preempt_disable();
+> +	raid5_plug =3D &__raw_get_cpu_var(raid5_plugs);
+> +	release_stripe_add_batch(&raid5_plug->batch, sh);
+> +
+> +	if (list_empty(&raid5_plug->cb.list))
+> +		list_add(&raid5_plug->cb.list, &plug->cb_list);
+> +	preempt_enable();
+> +}
+> +
+>  static void make_request(struct mddev *mddev, struct bio * bi)
+>  {
+>  	struct r5conf *conf =3D mddev->private;
+> @@ -4153,7 +4185,7 @@ static void make_request(struct mddev *m
+>  			if ((bi->bi_rw & REQ_SYNC) &&
+>  			    !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
+>  				atomic_inc(&conf->preread_active_stripes);
+> -			release_stripe(sh);
+> +			release_stripe_plug(sh);
+>  		} else {
+>  			/* cannot get stripe for read-ahead, just give-up */
+>  			clear_bit(BIO_UPTODATE, &bi->bi_flags);
+> @@ -6170,6 +6202,14 @@ static struct md_personality raid4_perso
 > =20
->  /* Find first data disk in a raid6 stripe */
-> @@ -2354,7 +2365,7 @@ static int add_stripe_bio(struct stripe_
->  	if (*bip)
->  		bi->bi_next =3D *bip;
->  	*bip =3D bi;
-> -	bi->bi_phys_segments++;
-> +	raid5_inc_bi_phys_segments(bi);
-> =20
->  	if (forwrite) {
->  		/* check if page is covered */
-> @@ -3783,7 +3794,7 @@ static struct bio *remove_bio_from_retry
->  		 * this sets the active strip count to 1 and the processed
->  		 * strip count to zero (upper 8 bits)
->  		 */
-> -		bi->bi_phys_segments =3D 1; /* biased count of active stripes */
-> +		raid5_set_bi_segments(bi, 1); /* biased count of active stripes */
->  	}
-> =20
->  	return bi;
+>  static int __init raid5_init(void)
+>  {
+> +	int i;
+> +
+> +	for_each_present_cpu(i) {
+> +		struct raid5_plug *plug =3D &per_cpu(raid5_plugs, i);
+> +		plug->batch.count =3D 0;
+> +		INIT_LIST_HEAD(&plug->cb.list);
+> +		plug->cb.callback =3D raid5_do_plug;
+> +	}
+>  	register_md_personality(&raid6_personality);
+>  	register_md_personality(&raid5_personality);
+>  	register_md_personality(&raid4_personality);
 
 
---Sig_/X4HVCcRckl8=rV3AyhZ0JWM
+--Sig_/6=2=g/rseywnnrwuHkVI9/3
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT8/+eznsnt1WYoG5AQJe8A/+MqMjrycENi1Z/37EJugC8snzclXljxqD
-oRQb0eZ3TOTLBjV9R3hujEWPt/cQTcptMZnVnCiSAhUGo3T7GMPqbsOckndMGwRE
-+bzp/zgtBKmSX0/Lz558+HVCAN+j/SUBMGsD2nw9f3HZcAMO+3DTnSHnnESdzQzR
-pPM6O9Y53y1hidMT8VUMv4M3ReiarRVtox07bQCNHY6xOI+583rfF5kdUb8V4KY/
-Qn3zDdhT8p0PCxm2nA8X0OFjZ+1kkfHeAp7bCc0V+sKWGd4e+AdFcT41ETJTbEFm
-q/HnIEsc/WAjPIkYW9UUh+umsYc2ep0fiekR+r+ZSGrLD3cjDV9xGzp1b3RdYbhk
-M2onVUnqeHqZLtEIHvCwl0xuc+Iq3x0rgOp+HFfAHccu6xhJuaPp0ALIiFg1sHkq
-8POsO0a7ftrOnnP2AkmC4/M6y0jaC+rFBcZmB9zOfdjuvEJiYWT4FlHA1nc5uGcm
-2caTXr830OIDeQxLwD7FJTfUIcxBdt6M2PHmUNsUoe+EoJW7R/uVMeJmciUJnptU
-2uVMjHrjZO4SKrdKT7gadKEwGDhh8aE6aMRfMvErz0kafNfRD91gj213wZFRx2Ya
-9pmsQc6mYG3Ah4vWgf6VTiOe5Twug+VSxorMNh8xr6pBkNvEVgOMtPtd8r0lTDW0
-Cy+mo0vlzP4=
-=dcyw
+iQIVAwUBT9ACoTnsnt1WYoG5AQJ4+xAAgXcBB5VzG8bnQr/eyG3iq29Gc58iEBvZ
+D89fUhKeGkcxBNQpxhyzebq9ah5WOn3Ry9hIJaWuwKwIU5xrNL9Hd1P5OIj0kSF0
+Kx7Wd+jvTu5wux1RBMPb4tjegHnbzotoqlJFSdn6G83idXPKgRcDyBGTObYsLjhA
+67wroTs87zECvlWzGGo1Mklg7wr5uC6/+au0jnrxS2NwRiwAYmHxmhhtUrjZdt+o
+q92zc10sL6Nw/nSUcu3I1np0oklyTRZCVUjxSk6CONTCM6GYhzbpmfCb6gWWzzG2
+k4k7obxxJf2xQOc9EreSqnouMbT+rLzsaJ5mltdXLvfaAEpU6XU8vuG1uR0no1an
+nkTS+0mnI/EjE7hhLat4BBa2Rhja9CPb1d52uwkt3kl4JXD70dA7pA60EvgKvxNG
+QS24Gv3ZgYMsZhOIkLavNhHfOw0iPGAMydpAGjefQocEcGsFj86P8xbWhvN697nU
+ckvnYJvik1nkOXoFbeelyCFKOJwfMehzjjuLF3nCt43YTcTfm02EtTYXzniRbg6X
+R70Ag0mF3KqbGxrU6NIUcAFdERVgE+DeUnIxBltUIBzh17aDv6uhu4vCNJBgDSvp
+gZA/7xBbYG5RaEIh7duYXxitNtlsBxKfu4VPocJ4MmVLc3NhedstOjmwrjDO/QSi
+JjpPQQfAB8Y=
+=LSkE
 -----END PGP SIGNATURE-----
 
---Sig_/X4HVCcRckl8=rV3AyhZ0JWM--
+--Sig_/6=2=g/rseywnnrwuHkVI9/3--
