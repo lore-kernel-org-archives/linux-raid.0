@@ -1,363 +1,228 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: degraded raid 6 (1 bad drive) showing up inactive, only spares
-Date: Thu, 7 Jun 2012 22:29:33 +1000
-Message-ID: <20120607222933.14ec3cd5@notabene.brown>
-References: <B5902F16-9C82-4072-BD67-FC6D6488ADB7@googlemail.com>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: Problem with patch: "reject a re-add request that cannot be
+ honoured" (commit bedd86b7773fd97f0d708cc0c371c8963ba7ba9a)
+Date: Thu, 7 Jun 2012 15:47:46 +0300
+Message-ID: <CAGRgLy55si7a8bY_Xuokqb6=cdOJyk_Wq34_DwmmhbpuQSSQug@mail.gmail.com>
+References: <CAGRgLy6We49bW2gA7S-EOmA8sbaXgQeGuTR5Aqrt4y_KyvOrdw@mail.gmail.com>
+	<CAGRgLy5OkpZnfOpPS+16Tiep8eisOu9XnK7EcvZygwg22DVTqQ@mail.gmail.com>
+	<20120607212434.4d6211d6@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/LluiLMUXORbpoHBh4gRdYVV"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <B5902F16-9C82-4072-BD67-FC6D6488ADB7@googlemail.com>
+In-Reply-To: <20120607212434.4d6211d6@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Ziler <martin.ziler@googlemail.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: andrey.warkentin@gmail.com, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/LluiLMUXORbpoHBh4gRdYVV
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Thanks for commenting, Neil,
 
-On Thu, 7 Jun 2012 13:55:32 +0200 Martin Ziler <martin.ziler@googlemail.com>
-wrote:
+On Thu, Jun 7, 2012 at 2:24 PM, NeilBrown <neilb@suse.de> wrote:
+> On Thu, 7 Jun 2012 10:22:24 +0300 Alexander Lyakas <alex.bolshoy@gmai=
+l.com>
+> wrote:
+>
+>> Hi again Neil, and Andrey,
+>>
+>> looking at this email thread:
+>> http://www.spinics.net/lists/raid/msg36236.html
+>> between you and Andrey, the conclusion was:
+>> "So the correct thing to do is to *not* update the metadata on the
+>> recovering device until recovery completes. =A0Then if it fails and =
+is
+>> re-added, it will look just the same as when it was re-added the fir=
+st
+>> time, and will do a bitmap-based recovery."
+>>
+>> I have two doubts about this decision:
+>> 1) Since the event count on the recovering drive is not updated, thi=
+s
+>> means that after reboot, when array is re-assembled, this drive will
+>> not be added to the array, and the user will have to manually re-add
+>> it. I agree this is a minor thing.
+>
+> Still, if it can be fixed it should be.
+>
+>> 2) There are places in mdadm, which check for recovery_offset on the
+>> drive and take decisions based upon that. Specifically, if there is
+>> *no* recovery offset, the data on this drive is considered to be
+>> consistent WRT to the failure time of the drive. So, for example, th=
+e
+>> drive can be a candidate for bumping up events during "force
+>> assembly". Now, when superblock on such drive is not updated during
+>> recovery (so there is *no* recovery offset), mdadm will think that t=
+he
+>> drive is consistent, while in fact, its data is totally unusable unt=
+il
+>> after recovery completes. That's because we have updated parts of th=
+e
+>> drive, but did not complete bringing the whole drive in-sync.
+>
+> If mdadm would consider updating the event count if not recovery had =
+started,
+> then surely it is just as valid to do so once some recovery has start=
+ed, even
+> if it hasn't completed.
 
-> Hello everybody,
->=20
-> I am running a 9-disk raid6 without hot spares. I already had one drive g=
-o bad, which I could replace and continue using the array without any degra=
-ded raid messages. Recently I had another drive going bad by the smart-info=
-. As it wasn't quite dead I left the array as was without really using it a=
-ll that much waiting for a replacement drive I ordered. As I booted the mac=
-hine up in order to replace the drive I was greeted by an inactive array wi=
-th all devices showing up as spares.
->=20
-> md0 : inactive sdh2[0](S) sdi2[7](S) sde2[6](S) sdd2[5](S) sdf2[1](S) sdg=
-2[2](S) sdc1[9](S) sdb2[3](S)
->       15579088439 blocks super 1.2
->=20
-> mdadm --examine confirms that. I already searched the web quite a bit and=
- found this mailing list. Maybe someone in here can give me some input. Nor=
-mally a degraded raid should still be active. So I am quite surprised that =
-my array with only one drive missing goes inactive. I appended the info mda=
-dm --examine puts out for all the drives. However the first two should prob=
-ably suffice as only /dev/sdk differs from the rest. The faulty drive - sdk=
- - is still recognized as a raid6 member, wheres all the others show up as =
-spares. With lots of bad sectors sdk isn't accessible anymore.=20
+The patch you accepted from me ("Don't consider disks with a valid
+recovery offset as candidates for bumping up event count") actually
+attempts to protect from that:)
 
-You must be running 3.2.1 or 3.3 (I think).
+I don't understand why "it is just as valid to do so once some
+recovery has started". My understanding is that once recovery of a
+drive has started, its data is not consistent between different parts
+of the drive, until the recovery completes. This is because md does
+bitmap-based recovery, and not kind of journal/transaction-log based
+recovery.
 
-You've been bitten by a rather nasty bug.
+However, one could argue that for force-assembly case, when data
+anyways can come up as partially corrupted, this is less important.
 
-You can get your data back, but it will require a bit of care, so don't rush
-it.
+I would still think that there is value in recoding in a superblock
+that a drive is recovering.
 
-The metadata on almost all the devices have been seriously corrupted.  The
-only way to repair it is to recreate the array.
-Doing this just writes new metadata and assembles the array.  It doesn't to=
-uch
-the data so if we get the --create command right, all your data will be
-available again.
-If we get it wrong, you won't be able to see your data, but we can easily s=
-top
-the array and create again with different parameters until we get it right.
+>
+>>
+>> Can you pls comment on my doubts?
+>
+> I think there is probably room for improvement here but I don't think=
+ there
+> are any serious problems.
+>
+> However I'm about to go on leave for a couple of week so I'm unlikely=
+ to
+> think about it for a while. I've made a note to look at it properly w=
+hen I
+> get back.
+>
 
-First thing to do it to get a newer kernel.  I would recommend the latest in
-the 3.3.y series.
+Indeed, don't you think about this while you are resting!
 
-Then you need to:
- - make sure you have a version of mdadm which gets the data offset to 1M
-   (2048 sectors).  I think 3.2.3 or earlier does that - don't upgrade to
-   3.2.5.
- - find the chunk size - looks like it is 4M, as sdk2 isn't corrupt.
- - find the order of devices.  This should be in your kernel logs in=20
-    "RAID conf printout".  Hopefully device names haven't changed.
-
- Then (with new kernel running)
-
-  mdadm --create /dev/md0 -l6 -n9 -c 4M -e 1.2 /dev/sdb2 /dev/sdc2 /dev/sdd=
-2 \
-     /dev/sde2 /dev/sdf2 /dev/sdg2 /dev/sdh2 /dev/sdi2 missing \
-     --assume-clean
-
- Make double-sure you add that --assume-clean.
-
- Note the last device is 'missing'. That corresponds to sdk2 (which we=20
- know is device 8 - the last of 9 (0..8)).  It fails so it not part of the
- array any more.  The others I just guessed the order.  You should try to
- verify it before you proceed (see RAID conf printout in kernel logs).
-
- After the 'create' use "mdadm -E" to look at one device and make sure
- the Data Offset, Avail Dev Size and Array Size are the same as we saw
- on sdk2.
- If it is, try "fsck -n /dev/md0". That assumes ext3 or ext4.  If you had
- something else on the array some other command might be needed.
-
- If that looks bad, "mdadm -S /dev/md0" and try again with a different orde=
-r.
- If it looks good, "echo check > /sys/block/md0/md/sync_action" and watch
-  "mismatch_cnt" in the same directory.  If it says low (few hundred at mos=
-t)=20
- all is good.  If it goes up to thousands something is wrong - try another
- order.
-
- Once you have the array working again,
-    "echo repair > /sys/block/md0/md/sync_action"
- then add your new device to be rebuilt.
-
-Good luck.
-Please ask if you are unsure about anything.
-
-NeilBrown
-
->=20
->=20
-> /dev/sdk2:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
->            Name : server:0  (local to host server)
->   Creation Time : Mon Jul 25 23:40:50 2011
->      Raid Level : raid6
->    Raid Devices : 9
->=20
->  Avail Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
->      Array Size : 27172970496 (12957.08 GiB 13912.56 GB)
->   Used Dev Size : 3881852928 (1851.01 GiB 1987.51 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : 882eb11a:33b499a7:dd5856b7:165f916c
->=20
->     Update Time : Fri Jun  1 20:26:45 2012
->        Checksum : b8c58093 - correct
->          Events : 623119
->=20
->          Layout : left-symmetric
->      Chunk Size : 4096K
->=20
->    Device Role : Active device 8
->    Array State : AAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missing)
->=20
->=20
-> /dev/sdh2:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
->            Name : server:0  (local to host server)
->   Creation Time : Mon Jul 25 23:40:50 2011
->      Raid Level : -unknown-
->    Raid Devices : 0
->=20
->  Avail Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : active
->     Device UUID : 44008309:1dfb1408:cabfbd0a:64de3739
->=20
->     Update Time : Thu Jun  7 12:27:52 2012
->        Checksum : 27f93899 - correct
->          Events : 2
->=20
->    Device Role : spare
->    Array State :  ('A' =3D=3D active, '.' =3D=3D missing)
->=20
-> -------------------------------------------------------------------------=
---------------------------------------
->=20
-> /dev/sdi2:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
->            Name : server:0  (local to host server)
->   Creation Time : Mon Jul 25 23:40:50 2011
->      Raid Level : -unknown-
->    Raid Devices : 0
->=20
->  Avail Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : active
->     Device UUID : 135f196d:184f11a1:09207617:4022e1a5
->=20
->     Update Time : Thu Jun  7 12:27:52 2012
->        Checksum : 9ded8f86 - correct
->          Events : 2
->=20
->=20
->    Device Role : spare
->    Array State :  ('A' =3D=3D active, '.' =3D=3D missing)
->=20
-> /dev/sde2:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
->            Name : server:0  (local to host server)
->   Creation Time : Mon Jul 25 23:40:50 2011
->      Raid Level : -unknown-
->    Raid Devices : 0
->=20
->  Avail Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : active
->     Device UUID : 3517bcc4:2acb381f:f5006058:5bd5c831
->=20
->     Update Time : Thu Jun  7 12:27:52 2012
->        Checksum : 408957c0 - correct
->          Events : 2
->=20
->=20
->    Device Role : spare
->    Array State :  ('A' =3D=3D active, '.' =3D=3D missing)
->=20
-> /dev/sdd2:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
->            Name : server:0  (local to host server)
->   Creation Time : Mon Jul 25 23:40:50 2011
->      Raid Level : -unknown-
->    Raid Devices : 0
->=20
->  Avail Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : active
->     Device UUID : 9e8b2d2c:844a009a:fd6914a2:390f10ac
->=20
->     Update Time : Thu Jun  7 12:27:52 2012
->        Checksum : e6bdee68 - correct
->          Events : 2
->=20
->=20
->    Device Role : spare
->    Array State :  ('A' =3D=3D active, '.' =3D=3D missing)
->=20
-> /dev/sdf2:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
->            Name : server:0  (local to host server)
->   Creation Time : Mon Jul 25 23:40:50 2011
->      Raid Level : -unknown-
->    Raid Devices : 0
->=20
->  Avail Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : active
->     Device UUID : 87ad38ac:4ccbd831:ee5502cd:28dafaad
->=20
->     Update Time : Thu Jun  7 12:27:52 2012
->        Checksum : 2b7a47f6 - correct
->          Events : 2
->=20
->=20
->    Device Role : spare
->    Array State :  ('A' =3D=3D active, '.' =3D=3D missing)
->=20
-> /dev/sdg2:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
->            Name : server:0  (local to host server)
->   Creation Time : Mon Jul 25 23:40:50 2011
->      Raid Level : -unknown-
->    Raid Devices : 0
->=20
->  Avail Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : active
->     Device UUID : eef2f06f:28f881a5:da857a00:fb90e250
->=20
->     Update Time : Thu Jun  7 12:27:52 2012
->        Checksum : 393ba0f8 - correct
->          Events : 2
->=20
->=20
->    Device Role : spare
->    Array State :  ('A' =3D=3D active, '.' =3D=3D missing)
->=20
-> /dev/sdc1:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
->            Name : server:0  (local to host server)
->   Creation Time : Mon Jul 25 23:40:50 2011
->      Raid Level : -unknown-
->    Raid Devices : 0
->=20
->  Avail Dev Size : 3985162143 (1900.27 GiB 2040.40 GB)
->   Used Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : active
->     Device UUID : 4cf86fb0:6f334e2c:19e89c99:0532f557
->=20
->     Update Time : Thu Jun  7 12:27:52 2012
->        Checksum : a6e42bdc - correct
->          Events : 2
->=20
->=20
->    Device Role : spare
->    Array State :  ('A' =3D=3D active, '.' =3D=3D missing)
->=20
-> /dev/sdb2:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
->            Name : server:0  (local to host server)
->   Creation Time : Mon Jul 25 23:40:50 2011
->      Raid Level : -unknown-
->    Raid Devices : 0
->=20
->  Avail Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : active
->     Device UUID : 4852882a:b8a3989f:aad747c5:25f20d47
->=20
->     Update Time : Thu Jun  7 12:27:52 2012
->        Checksum : a8e25edd - correct
->          Events : 2
->=20
->=20
->    Device Role : spare
->    Array State :  ('A' =3D=3D active, '.' =3D=3D missing)--
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alex.
 
 
---Sig_/LluiLMUXORbpoHBh4gRdYVV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT9CerTnsnt1WYoG5AQKpfQ//X8MNSKLl0sRNavWPwtsWKG4fTWsJr6pc
-/bUMEjGf5l8IYPfA+oUjERKbcIicehxAlQ21SB3vacAxnJ9xx+9+OEYfvTIKwbqS
-0gWEAWyCdErPSkTLfM69JRwpNj8RXXxIIbP0GptOtQClZCPxdD9+wFp50yb+LqSH
-DUrhFIvH0yhlOVTA9BVXAEJ9lNhlZwsFs/qRtL3BlTX9/vvHoeYcab4bD2QRknYF
-Sqlo63sQFhdeFWEVWReB95tUeAv4NzpF4m7Uk1c2oa5mR40wTV1YD3wgZJjVxSRN
-LxshUYaGdquFexz4ik5Gs5rn7zlJrbTQITyyThVl+KJq+QR+gr0BcctXLyiVFDue
-iVqs4fxPm5J/HwAjGyWJC3EC/bsJvm7zpvYVDpHGINmw+c1wOoeXx18CJXI7MoN0
-hTnsNvV97n+x0k3PLZRacSr++9MeRx26aI5iZYKIpz4t4+SuvwwNeXoMFz3B/eSt
-fQG0+81TEQAojq6bje2+4OPY8+ZkGbfeTT6VZuwOvVA1/gUAMcKgqdY6ssJns46A
-USxuhGL8XMp2iNV6t8EOGDu2koq0FFJJCVVPtQOR8WtMLrmxsskrZNTKg517HjeV
-mCLNhOCe9TtLXkcudh3m2zTjhWzoI2FFFVARic++oCVChmUfSED6kr6ltxKTXXLs
-LQM1gfvRGYQ=
-=JiiB
------END PGP SIGNATURE-----
-
---Sig_/LluiLMUXORbpoHBh4gRdYVV--
+>
+>>
+>> Thanks,
+>> Alex.
+>>
+>>
+>> On Wed, Jun 6, 2012 at 7:09 PM, Alexander Lyakas <alex.bolshoy@gmail=
+=2Ecom> wrote:
+>> > Hi Neil,
+>> > it looks like we are hitting an issue with this patch.
+>> > Kernel is stock ubuntu-precise (3.2.0-23 36), mdadm is v3.2.3. (We=
+ are
+>> > aware that this version of mdadm has an issue of unaligned writes,=
+ so
+>> > we backported the fix to it into this version).
+>> >
+>> > We are testing the following simple scenario:
+>> > # 2-way raid1 with a missing drive
+>> > # a fresh drive (no superblock) is added (not re-added) to the rai=
+d,
+>> > and the raid happily starts rebuilding it
+>> > # at some point in time, this drive fails, so rebuild aborts, driv=
+e is
+>> > kicked out.
+>> > # later the drive recovers and "mdadm remove & re-add" is attempte=
+d
+>> > # re-add fails
+>> >
+>> > Some debugging suggests the following:
+>> >
+>> > - The superblock of the drive to be re-added looks like this:
+>> >
+>> > =A0Avail Dev Size : 10483712 (5.00 GiB 5.37 GB)
+>> > =A0 =A0 Array Size : 10483688 (5.00 GiB 5.37 GB)
+>> > =A0Used Dev Size : 10483688 (5.00 GiB 5.37 GB)
+>> > =A0 =A0Data Offset : 2048 sectors
+>> > =A0 Super Offset : 8 sectors
+>> > Recovery Offset : 100096 sectors
+>> > =A0 =A0 =A0 =A0 =A0State : clean
+>> > =A0Resync Offset : N/A sectors
+>> > =A0 =A0Device UUID : d9114d02:76153894:87aaf09d:c55da9be
+>> > Internal Bitmap : 8 sectors from superblock
+>> > =A0 =A0Update Time : Wed Jun =A06 18:36:55 2012
+>> > =A0 =A0 =A0 Checksum : 94468c9d - correct
+>> > =A0 =A0 =A0 =A0 Events : 192
+>> > =A0 Device Role : Active device 1
+>> > =A0 Array State : AA ('A' =3D=3D active, '.' =3D=3D missing)
+>> >
+>> >
+>> > So the drive has a valid recovery offset (MD_FEATURE_RECOVERY_OFFS=
+ET
+>> > set) and a valid role.
+>> >
+>> > - The "re-add" path of mdadm performs calls getinfo_super1(), whic=
+h performs:
+>> > role =3D __le16_to_cpu(sb->dev_roles[__le32_to_cpu(sb->dev_number)=
+]);
+>> > ...
+>> > info->disk.state =3D 6; /* active and in sync */
+>> > info->disk.raid_disk =3D role;
+>> >
+>> > So at this point, MD_DISK_ACTIVE and MD_DISK_SYNC are set.
+>> >
+>> > - mdadm issues ADD_NEW_DISK, which arrives to add_new_disk() in th=
+e kernel
+>> > - the kernel performs:
+>> > if (!mddev->persistent) {
+>> > ... // not relevant to our case
+>> > } else
+>> > =A0 =A0 =A0 =A0super_types[mddev->major_version].
+>> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0validate_super(mddev, rdev);
+>> >
+>> > - validate_super() performs:
+>> > =A0 =A0 =A0 =A0if ((le32_to_cpu(sb->feature_map) &
+>> > =A0 =A0 =A0 =A0 =A0 =A0 MD_FEATURE_RECOVERY_OFFSET))
+>> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rdev->recovery_offset =3D le64_to_c=
+pu(sb->recovery_offset);
+>> > =A0 =A0 =A0 =A0else
+>> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0set_bit(In_sync, &rdev->flags);
+>> > =A0 =A0 =A0 =A0rdev->raid_disk =3D role;
+>> >
+>> > So In_sync flag is not set, because we have a recovery offset.
+>> >
+>> > - Then the code introduced by the patch does:
+>> > =A0 =A0 =A0 =A0if ((info->state & (1<<MD_DISK_SYNC)) &&
+>> > =A0 =A0 =A0 =A0 =A0 =A0(!test_bit(In_sync, &rdev->flags) ||
+>> > =A0 =A0 =A0 =A0 =A0 =A0 rdev->raid_disk !=3D info->raid_disk)) {
+>> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* This was a hot-add request, but =
+events doesn't
+>> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 * match, so reject it.
+>> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 */
+>> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0export_rdev(rdev);
+>> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -EINVAL;
+>> > =A0 =A0 =A0 =A0}
+>> >
+>> > So the first part of "OR" succeeds and we abort.
+>> >
+>> > An observation: this problem only happens with a fresh drive
+>> > apparently. If drive that was already In_sync fails and then is
+>> > re-added, kernel does not update its superblock until recovery
+>> > completes. So its superblock has no valid recovery_offset, and thi=
+s
+>> > problem doesn't happen. The code that skips updating the superbloc=
+k
+>> > was added as part of this email thread:
+>> > http://www.spinics.net/lists/raid/msg36275.html. However, I did no=
+t
+>> > dig deeper why the superblock gets updated in my case. But the
+>> > scenario above repros easily.
+>> >
+>> > Q1: Can you confirm that my analysis is correct?
+>> > Q2: Is this an expected behavior? I would assume that no, because =
+the
+>> > same case for a failed drive (not a fresh drive) works fine
+>> > Q3: How would you recommend to handle this?
+>> >
+>> > Thanks!
+>> > Alex.
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
