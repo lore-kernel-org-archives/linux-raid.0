@@ -1,30 +1,47 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Thanks (was Re: Problem with patch...)
-Date: Fri, 08 Jun 2012 09:59:36 +0100
-Message-ID: <4FD1BEF8.6050506@anonymous.org.uk>
-References: <CAGRgLy6We49bW2gA7S-EOmA8sbaXgQeGuTR5Aqrt4y_KyvOrdw@mail.gmail.com> <CAGRgLy5OkpZnfOpPS+16Tiep8eisOu9XnK7EcvZygwg22DVTqQ@mail.gmail.com> <20120607212434.4d6211d6@notabene.brown>
+From: Asdo <asdo@shiftmail.org>
+Subject: Sync does not flush to disk!?
+Date: Fri, 08 Jun 2012 11:53:14 +0200
+Message-ID: <4FD1CB8A.9080805@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; format=flowed; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120607212434.4d6211d6@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Return-path: <linux-ext4-owner@vger.kernel.org>
+Sender: linux-ext4-owner@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>, linux-ext4@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/06/2012 12:24, NeilBrown wrote:
-[...]
-> I'm about to go on leave for a couple of week
-[...]
+Hello all
+I don't exactly know where to ask this question...
 
-I hope you have a good relaxing holiday. Thanks again for your excellent 
-work here.
+I have a situation of
 
-Dear Rest Of The World: don't do anything silly to your RAID arrays in 
-the next fortnight!
+sda1 + sdb1 --> MD raid1
+Above that is an ext4 filesystem. No LVM.
 
-Cheers,
+I am making changes to that filesystem (vi a file) and then i am doing
+sync
+sync
+(twice)
 
-John.
+then I am starting KVM in snapshot mode on the sda and sdb disks so to 
+virtualize the same system on which I am operating.
 
+kvm -m 1024 -hda /dev/sda -hdb /dev/sdb -snapshot
+
+The strange thing is that the virtual machine is NOT seeing the latest 
+changes to that file!
+
+Then I tried to do :
+
+for i in /dev/md? /dev/sda /dev/sdb ; do blockdev --flushbufs $i ; done
+
+and restart KVM,
+and NOW it is seeing the changes.
+
+In the past I had similar problems, and not knowing about blockdev 
+--flushbufs I ended up dismounting the filesystems and stopping the 
+RAIDs. That also appeared to actually commit stuff to disk.
+
+So sync is not enough? Would somebody explain to me better?
+
+Thank you
