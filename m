@@ -1,403 +1,129 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: degraded raid 6 (1 bad drive) showing up inactive, only spares
-Date: Fri, 8 Jun 2012 08:34:50 +1000
-Message-ID: <20120608083450.5dba2d2a@notabene.brown>
-References: <B5902F16-9C82-4072-BD67-FC6D6488ADB7@googlemail.com>
-	<20120607222933.14ec3cd5@notabene.brown>
-	<4FD11A32.90107@schinagl.nl>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Software RAID checksum performance on 24 disks not even close
+ to kernel reported
+Date: Thu, 07 Jun 2012 20:23:42 -0500
+Message-ID: <4FD1541E.3030705@hardwarefreak.com>
+References: <CA+4vN7wPd0Av_sbtA0JD5y=fGcsuq20SOQVHWnE8BUFpDxOEXQ@mail.gmail.com> <CA+4vN7xQgecd95FO6gYVLMuPDKXbfZfzuXS1dzHd+e-otrPxwg@mail.gmail.com> <CAA9_cmcANJjd8gfagWw5vENABh+n13xFnk7OF-ZzxecfxU719w@mail.gmail.com> <4FD028B2.1050306@hardwarefreak.com> <4FD0BD78.2050808@gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/wkZy0bjZhf7Rl4VOg/OUJhE"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FD11A32.90107@schinagl.nl>
+In-Reply-To: <4FD0BD78.2050808@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Oliver Schinagl <oliver+list@schinagl.nl>
-Cc: Martin Ziler <martin.ziler@googlemail.com>, linux-raid@vger.kernel.org
+To: Joe Landman <joe.landman@gmail.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/wkZy0bjZhf7Rl4VOg/OUJhE
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 6/7/2012 9:40 AM, Joe Landman wrote:
+> Not to interject too much here ...
+> 
+> On 06/07/2012 12:06 AM, Stan Hoeppner wrote:
+>> On 6/6/2012 11:09 AM, Dan Williams wrote:
+>>
+>>> Hardware raid ultimately does the same shuffling, outside of nvram an
+>>> advantage it has is that parity data does not traverse the bus...
+>>
+>> Are you referring to the host data bus(s)?  I.e. HT/QPI and PCIe?
+>>
+>> With a 24 disk array, a full stripe write is only 1/12th parity data,
+>> less than 10%.  And the buses (point to point actually) of 24 drive
+>> caliber systems will usually start at one way B/W of 4GB/s for PCIe 2.0
+>> x8 and with one way B/W from the PCIe controller to the CPU starting at
+> 
+> PCIe gen 2 is ~500MB/s per lane in each direction, but there's like a
+> 14% protocol overhead, so your "sustained" streaming performance is more
+> along the lines of 430 MB/s.  For a PCIe x8 gen 2 system, this nets you
+> about 3.4GB/s in each direction.
 
-On Thu, 07 Jun 2012 23:16:34 +0200 Oliver Schinagl <oliver+list@schinagl.nl>
-wrote:
+You're quite right Joe.  I was intentionally stating raw B/W numbers
+simply for easier comparison, same with my HT numbers below.
 
-> Since i'm still working on repairing my own array, and using a wrong=20
-> version of mdadm corrupted one of my raid10 array, I'm trying to hexedit=
-=20
-> the start of an image of the disk to recover the metadata.
->=20
-> A quick question, if I've edited/checked the first superblock,
-> (i'm using=20
-> https://raid.wiki.kernel.org/index.php/RAID_superblock_formats for=20
-> reference and looks quite accurate)
->=20
-> Would I need to check other area's on the disk for superblocks? Or will=20
-> the first superblock be enough?
+>> 10.4GB/s for AMD HT 3.0 systems.  PCIe x8 is plenty to handle a 24 drive
+>> md RAID 6, using 7.2K SATA drives anyway.
+> 
+> Each drive capable of streaming say 140 MB/s (modern drives).  24 x 140
+> = 3.4 GB/s
 
-Are we talking about filesystem superblocks or RAID superblocks?
+I was being conservative and assuming 100MB/s per drive, as streaming
+workloads over stripes don't seem to always generate typical single
+streaming behavior at the individual drive level.
 
-there is only one RAID superblock - normally 4K from the start (with 1.2
-metadta).  There may be lots of filesystem superblocks.  I think extX only
-uses the first if it is good, but I don't know for certain.
+> This assumes streaming, no seeks that aren't part of streaming.
+> 
+> This said, this is *not* a design pattern you'd want to follow for a
+> number of reasons.
+> 
+> But for seek heavy designs, you aren't going to hit anything close to
+> 140 MB/s.  We've just done a brief study for a customer on what they
+> should expect to see (by measuring it and reporting on the measurement).
+>  Assume close to an order of magnitude off for seekier loads.
 
-NeilBrown
+Yep.  Which is why I always recommend the fastest spindles one can
+afford if they have a random IOPS workload, or many parallel streaming
+workloads, or mix of these.  Both hammer the actuators, and even more so
+using XFS w/Inode64 on a striped array.
 
+And I'd never recommend a 23/24 drive RAID6 (or RAID5).  I was simply
+commenting based on the OP's preferred setup.  I did recommend multiple
+RAID5s as a better solution to the 23 drive RAID6 and the OP did not
+respond to those suggestions.  Seems he's set on a 23 drive RAID6 no
+matter what.
 
->=20
-> On 07-06-12 14:29, NeilBrown wrote:
-> > On Thu, 7 Jun 2012 13:55:32 +0200 Martin Ziler<martin.ziler@googlemail.=
-com>
-> > wrote:
-> >
-> >> Hello everybody,
-> >>
-> >> I am running a 9-disk raid6 without hot spares. I already had one driv=
-e go bad, which I could replace and continue using the array without any de=
-graded raid messages. Recently I had another drive going bad by the smart-i=
-nfo. As it wasn't quite dead I left the array as was without really using i=
-t all that much waiting for a replacement drive I ordered. As I booted the =
-machine up in order to replace the drive I was greeted by an inactive array=
- with all devices showing up as spares.
-> >>
-> >> md0 : inactive sdh2[0](S) sdi2[7](S) sde2[6](S) sdd2[5](S) sdf2[1](S) =
-sdg2[2](S) sdc1[9](S) sdb2[3](S)
-> >>        15579088439 blocks super 1.2
-> >>
-> >> mdadm --examine confirms that. I already searched the web quite a bit =
-and found this mailing list. Maybe someone in here can give me some input. =
-Normally a degraded raid should still be active. So I am quite surprised th=
-at my array with only one drive missing goes inactive. I appended the info =
-mdadm --examine puts out for all the drives. However the first two should p=
-robably suffice as only /dev/sdk differs from the rest. The faulty drive - =
-sdk - is still recognized as a raid6 member, wheres all the others show up =
-as spares. With lots of bad sectors sdk isn't accessible anymore.
-> > You must be running 3.2.1 or 3.3 (I think).
-> >
-> > You've been bitten by a rather nasty bug.
-> >
-> > You can get your data back, but it will require a bit of care, so don't=
- rush
-> > it.
-> >
-> > The metadata on almost all the devices have been seriously corrupted.  =
-The
-> > only way to repair it is to recreate the array.
-> > Doing this just writes new metadata and assembles the array.  It doesn'=
-t touch
-> > the data so if we get the --create command right, all your data will be
-> > available again.
-> > If we get it wrong, you won't be able to see your data, but we can easi=
-ly stop
-> > the array and create again with different parameters until we get it ri=
-ght.
-> >
-> > First thing to do it to get a newer kernel.  I would recommend the late=
-st in
-> > the 3.3.y series.
-> >
-> > Then you need to:
-> >   - make sure you have a version of mdadm which gets the data offset to=
- 1M
-> >     (2048 sectors).  I think 3.2.3 or earlier does that - don't upgrade=
- to
-> >     3.2.5.
-> >   - find the chunk size - looks like it is 4M, as sdk2 isn't corrupt.
-> >   - find the order of devices.  This should be in your kernel logs in
-> >      "RAID conf printout".  Hopefully device names haven't changed.
-> >
-> >   Then (with new kernel running)
-> >
-> >    mdadm --create /dev/md0 -l6 -n9 -c 4M -e 1.2 /dev/sdb2 /dev/sdc2 /de=
-v/sdd2 \
-> >       /dev/sde2 /dev/sdf2 /dev/sdg2 /dev/sdh2 /dev/sdi2 missing \
-> >       --assume-clean
-> >
-> >   Make double-sure you add that --assume-clean.
-> >
-> >   Note the last device is 'missing'. That corresponds to sdk2 (which we
-> >   know is device 8 - the last of 9 (0..8)).  It fails so it not part of=
- the
-> >   array any more.  The others I just guessed the order.  You should try=
- to
-> >   verify it before you proceed (see RAID conf printout in kernel logs).
-> >
-> >   After the 'create' use "mdadm -E" to look at one device and make sure
-> >   the Data Offset, Avail Dev Size and Array Size are the same as we saw
-> >   on sdk2.
-> >   If it is, try "fsck -n /dev/md0". That assumes ext3 or ext4.  If you =
-had
-> >   something else on the array some other command might be needed.
-> >
-> >   If that looks bad, "mdadm -S /dev/md0" and try again with a different=
- order.
-> >   If it looks good, "echo check>  /sys/block/md0/md/sync_action" and wa=
-tch
-> >    "mismatch_cnt" in the same directory.  If it says low (few hundred a=
-t most)
-> >   all is good.  If it goes up to thousands something is wrong - try ano=
-ther
-> >   order.
-> >
-> >   Once you have the array working again,
-> >      "echo repair>  /sys/block/md0/md/sync_action"
-> >   then add your new device to be rebuilt.
-> >
-> > Good luck.
-> > Please ask if you are unsure about anything.
-> >
-> > NeilBrown
-> >
-> >>
-> >> /dev/sdk2:
-> >>            Magic : a92b4efc
-> >>          Version : 1.2
-> >>      Feature Map : 0x0
-> >>       Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
-> >>             Name : server:0  (local to host server)
-> >>    Creation Time : Mon Jul 25 23:40:50 2011
-> >>       Raid Level : raid6
-> >>     Raid Devices : 9
-> >>
-> >>   Avail Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
-> >>       Array Size : 27172970496 (12957.08 GiB 13912.56 GB)
-> >>    Used Dev Size : 3881852928 (1851.01 GiB 1987.51 GB)
-> >>      Data Offset : 2048 sectors
-> >>     Super Offset : 8 sectors
-> >>            State : clean
-> >>      Device UUID : 882eb11a:33b499a7:dd5856b7:165f916c
-> >>
-> >>      Update Time : Fri Jun  1 20:26:45 2012
-> >>         Checksum : b8c58093 - correct
-> >>           Events : 623119
-> >>
-> >>           Layout : left-symmetric
-> >>       Chunk Size : 4096K
-> >>
-> >>     Device Role : Active device 8
-> >>     Array State : AAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missing)
-> >>
-> >>
-> >> /dev/sdh2:
-> >>            Magic : a92b4efc
-> >>          Version : 1.2
-> >>      Feature Map : 0x0
-> >>       Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
-> >>             Name : server:0  (local to host server)
-> >>    Creation Time : Mon Jul 25 23:40:50 2011
-> >>       Raid Level : -unknown-
-> >>     Raid Devices : 0
-> >>
-> >>   Avail Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
-> >>      Data Offset : 2048 sectors
-> >>     Super Offset : 8 sectors
-> >>            State : active
-> >>      Device UUID : 44008309:1dfb1408:cabfbd0a:64de3739
-> >>
-> >>      Update Time : Thu Jun  7 12:27:52 2012
-> >>         Checksum : 27f93899 - correct
-> >>           Events : 2
-> >>
-> >>     Device Role : spare
-> >>     Array State :  ('A' =3D=3D active, '.' =3D=3D missing)
-> >>
-> >> ----------------------------------------------------------------------=
------------------------------------------
-> >>
-> >> /dev/sdi2:
-> >>            Magic : a92b4efc
-> >>          Version : 1.2
-> >>      Feature Map : 0x0
-> >>       Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
-> >>             Name : server:0  (local to host server)
-> >>    Creation Time : Mon Jul 25 23:40:50 2011
-> >>       Raid Level : -unknown-
-> >>     Raid Devices : 0
-> >>
-> >>   Avail Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
-> >>      Data Offset : 2048 sectors
-> >>     Super Offset : 8 sectors
-> >>            State : active
-> >>      Device UUID : 135f196d:184f11a1:09207617:4022e1a5
-> >>
-> >>      Update Time : Thu Jun  7 12:27:52 2012
-> >>         Checksum : 9ded8f86 - correct
-> >>           Events : 2
-> >>
-> >>
-> >>     Device Role : spare
-> >>     Array State :  ('A' =3D=3D active, '.' =3D=3D missing)
-> >>
-> >> /dev/sde2:
-> >>            Magic : a92b4efc
-> >>          Version : 1.2
-> >>      Feature Map : 0x0
-> >>       Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
-> >>             Name : server:0  (local to host server)
-> >>    Creation Time : Mon Jul 25 23:40:50 2011
-> >>       Raid Level : -unknown-
-> >>     Raid Devices : 0
-> >>
-> >>   Avail Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
-> >>      Data Offset : 2048 sectors
-> >>     Super Offset : 8 sectors
-> >>            State : active
-> >>      Device UUID : 3517bcc4:2acb381f:f5006058:5bd5c831
-> >>
-> >>      Update Time : Thu Jun  7 12:27:52 2012
-> >>         Checksum : 408957c0 - correct
-> >>           Events : 2
-> >>
-> >>
-> >>     Device Role : spare
-> >>     Array State :  ('A' =3D=3D active, '.' =3D=3D missing)
-> >>
-> >> /dev/sdd2:
-> >>            Magic : a92b4efc
-> >>          Version : 1.2
-> >>      Feature Map : 0x0
-> >>       Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
-> >>             Name : server:0  (local to host server)
-> >>    Creation Time : Mon Jul 25 23:40:50 2011
-> >>       Raid Level : -unknown-
-> >>     Raid Devices : 0
-> >>
-> >>   Avail Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
-> >>      Data Offset : 2048 sectors
-> >>     Super Offset : 8 sectors
-> >>            State : active
-> >>      Device UUID : 9e8b2d2c:844a009a:fd6914a2:390f10ac
-> >>
-> >>      Update Time : Thu Jun  7 12:27:52 2012
-> >>         Checksum : e6bdee68 - correct
-> >>           Events : 2
-> >>
-> >>
-> >>     Device Role : spare
-> >>     Array State :  ('A' =3D=3D active, '.' =3D=3D missing)
-> >>
-> >> /dev/sdf2:
-> >>            Magic : a92b4efc
-> >>          Version : 1.2
-> >>      Feature Map : 0x0
-> >>       Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
-> >>             Name : server:0  (local to host server)
-> >>    Creation Time : Mon Jul 25 23:40:50 2011
-> >>       Raid Level : -unknown-
-> >>     Raid Devices : 0
-> >>
-> >>   Avail Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
-> >>      Data Offset : 2048 sectors
-> >>     Super Offset : 8 sectors
-> >>            State : active
-> >>      Device UUID : 87ad38ac:4ccbd831:ee5502cd:28dafaad
-> >>
-> >>      Update Time : Thu Jun  7 12:27:52 2012
-> >>         Checksum : 2b7a47f6 - correct
-> >>           Events : 2
-> >>
-> >>
-> >>     Device Role : spare
-> >>     Array State :  ('A' =3D=3D active, '.' =3D=3D missing)
-> >>
-> >> /dev/sdg2:
-> >>            Magic : a92b4efc
-> >>          Version : 1.2
-> >>      Feature Map : 0x0
-> >>       Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
-> >>             Name : server:0  (local to host server)
-> >>    Creation Time : Mon Jul 25 23:40:50 2011
-> >>       Raid Level : -unknown-
-> >>     Raid Devices : 0
-> >>
-> >>   Avail Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
-> >>      Data Offset : 2048 sectors
-> >>     Super Offset : 8 sectors
-> >>            State : active
-> >>      Device UUID : eef2f06f:28f881a5:da857a00:fb90e250
-> >>
-> >>      Update Time : Thu Jun  7 12:27:52 2012
-> >>         Checksum : 393ba0f8 - correct
-> >>           Events : 2
-> >>
-> >>
-> >>     Device Role : spare
-> >>     Array State :  ('A' =3D=3D active, '.' =3D=3D missing)
-> >>
-> >> /dev/sdc1:
-> >>            Magic : a92b4efc
-> >>          Version : 1.2
-> >>      Feature Map : 0x0
-> >>       Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
-> >>             Name : server:0  (local to host server)
-> >>    Creation Time : Mon Jul 25 23:40:50 2011
-> >>       Raid Level : -unknown-
-> >>     Raid Devices : 0
-> >>
-> >>   Avail Dev Size : 3985162143 (1900.27 GiB 2040.40 GB)
-> >>    Used Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
-> >>      Data Offset : 2048 sectors
-> >>     Super Offset : 8 sectors
-> >>            State : active
-> >>      Device UUID : 4cf86fb0:6f334e2c:19e89c99:0532f557
-> >>
-> >>      Update Time : Thu Jun  7 12:27:52 2012
-> >>         Checksum : a6e42bdc - correct
-> >>           Events : 2
-> >>
-> >>
-> >>     Device Role : spare
-> >>     Array State :  ('A' =3D=3D active, '.' =3D=3D missing)
-> >>
-> >> /dev/sdb2:
-> >>            Magic : a92b4efc
-> >>          Version : 1.2
-> >>      Feature Map : 0x0
-> >>       Array UUID : 25be3ab5:ef5f1166:d64b0e0e:4df143ed
-> >>             Name : server:0  (local to host server)
-> >>    Creation Time : Mon Jul 25 23:40:50 2011
-> >>       Raid Level : -unknown-
-> >>     Raid Devices : 0
-> >>
-> >>   Avail Dev Size : 3881859248 (1851.01 GiB 1987.51 GB)
-> >>      Data Offset : 2048 sectors
-> >>     Super Offset : 8 sectors
-> >>            State : active
-> >>      Device UUID : 4852882a:b8a3989f:aad747c5:25f20d47
-> >>
-> >>      Update Time : Thu Jun  7 12:27:52 2012
-> >>         Checksum : a8e25edd - correct
-> >>           Events : 2
-> >>
-> >>
-> >>     Device Role : spare
-> >>     Array State :  ('A' =3D=3D active, '.' =3D=3D missing)--
-> >> To unsubscribe from this list: send the line "unsubscribe linux-raid" =
-in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Also, please note that iozone, dd, bonnie++, ... aren't great load
+> generators, especially if things are in cache.  You tend to measure the
+> upper layers of the file system stack, and not the actual full stack
+> performance.  
 
+I've never quoted numbers from any of these benchmarks.  I don't use
+them.  I did comment on someone else's apparent misuse of dd.
 
---Sig_/wkZy0bjZhf7Rl4VOg/OUJhE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+> fio does a better job if you set the right options.  This
+> said, almost all of these codes suffer from a measurement at the front
+> end of the stack, if you want to know what the disks are really doing,
+> you have to start poking your head into the kernel proc/sys spaces.
+> Whats interesting is that of the tools mentioned, only fio appears to
+> eventually converge its reporting to what the backend hardware does. The
+> front end measurements seem to do a pretty bad job of deciding when an
+> IO begins and when it is complete.  Could be an fsync or similar problem
+> (discussed in the past), but its very annoying.  End users look at
+> bonnie++ and other results and don't understand why their use case is so
+> badly different in performance.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+When I do my own benchmarking it's at the application level.  I let
+others benchmark however they wish.  It's difficult and too time
+consuming to convince some users that their fav benchy has no relevance
+to their target workload.  That takes time and patience, and often
+political skills, which I don't tend to possess.  On occasion I will try
+to steer people clear of what should be seen as obviously bad design
+choices but are yet not.
 
-iQIVAwUBT9Esijnsnt1WYoG5AQI8GBAAmjTMaSlXlcCsWOQhcU1wqb3w9mA7Zafh
-HvaS5UkEteyLAKkgoxkvWveKPLNVcniHQzBU2OaEqhutnNKurTdmbPdRA3fmferF
-Nwccc5ffM1+ey2aYltKJRaFBxkcSQ8VqQm73k+Yo60PHCnOLMSxkQGfVvm7lZYgl
-j05LXwuGgy4pTrGVfh+HlSthFQE6CGqbW3cB1XuDq+JrkBiCOgrdW3tC8J2SI5LK
-h0/Ump/a1gsr898eUcDDLExjDPwm46yY7Cvpc6yDSprrlZrX1Y/Iphtag1sxlXPD
-u4r2A/RqrD/NHj94/DKk0/eu++1EBSkyAgNVyD5mVjb3WOBmhNTBic1VjeJUxnO4
-Y8XwKZ+i5KT3BNqFExHCzgq+rSVtmHJ0fzskor/4Euqi7CvpmreGpq+nB091qLn+
-4nQ91/c0fGQFaDnX73Qi+CgE51z8SLV7dQTBUl67P3WO5v0zKKCLxKmZf8f8hoY5
-qx4kbbR1CIijZL/J01j2NUlsZ7IiLj58WdXFtatGmJQWuuYETYqJEGguIS5PnjOO
-mdxy9wmEEstU4NIiHaU/geDSVYe2UGrYtvgpQSUm3LTi24IhZXxeWf9JkD+x6X0K
-rFh6ALvJZW9EK/w63hf+jjayE5DybKTsnPH2rcm9rr3UQ7GpKpOmh8QFr5hRsB3h
-RSXVAvmoNSk=
-=db5u
------END PGP SIGNATURE-----
+>> What is a bigger issue, and may actually be what you were referring to,
+>> is read-modify-write B/W, which will incur a full stripe read and write.
+>>   For RMW heavy workloads, this is significant.  HBA RAID does have a big
+>> advantage here, compared to one's md array possessing the aggregate
+>> performance to saturate the PCIe bus.
+> 
+> The big issues for most HBAs are the available bandwidth to the disks,
+> the quality/implementation of the controllers/drivers, etc.  Hanging 24
+> drives off a single controller is a low cost design, not a high
+> performance design.  You will get contention (especially with expandor
+> chips).  You will get sub-optimal performance.
 
---Sig_/wkZy0bjZhf7Rl4VOg/OUJhE--
+In general I'd agree.  But this depends heavily on the HBA, its ASIC,
+its QC, and the same for any expanders in question.  The LSI 2x36 6Gb/s
+SAS expander ASIC doesn't seem to slow things down any.  The Marvell SAS
+expanders, and Marvell and Silicon Image SATA PMPs are another story.
+
+Regarding HBAs, there are a few LSI boards that when used with LSI
+expanders can easily handle 24 drive md arrays.
+
+> Checksumming speed on the CPU will not be the bottleneck in most of
+> these cases.  Controller/driver performance and contention will be.
+
+Not threading?  Well, I guess if you have a cruddy HBA and/or driver you
+won't get far enough along to hit the md raid threading limitation, so
+this is a good point.
+
+-- 
+Stan
