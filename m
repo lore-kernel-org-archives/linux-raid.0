@@ -1,52 +1,61 @@
-From: Ted Ts'o <tytso@mit.edu>
-Subject: Re: Sync does not flush to disk!?
-Date: Fri, 8 Jun 2012 14:28:26 -0400
-Message-ID: <20120608182826.GA31636@thunk.org>
-References: <4FD1CB8A.9080805@shiftmail.org>
- <20120608223332.5fe49193@notabene.brown>
- <4FD202CD.7000309@turmel.org>
- <4FD204B0.3000204@shiftmail.org>
+From: <shane@gmail.com>
+Subject: How To Go From Zero to $863 a Day !... Recommends Advanced Sports to you
+Date: Fri, 8 Jun 2012 15:30:24 -0400
+Message-ID: <49840713F0B049A59330BA0EAF7BE19C@g19.win.smewh.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4FD204B0.3000204@shiftmail.org>
+Content-Class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: Phil Turmel <philip@turmel.org>, NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>, linux-ext4@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jun 08, 2012 at 03:57:04PM +0200, Asdo wrote:
-> 
-> I might say that it seems to me a bad design: never before I saw a
-> cache that is not updated by writes.
-> Here the cache content is *older* than the data on the real devices!?
-> if it was *newer*, there are known cases (writeback cache not
-> flushed yet), but *older*... never seen.
+From         :How To Go From Zero to $863 a Day !...
+Email        :shane@gmail.com
+Friend Name  :Friend
+Friend Email :linux-raid@vger.kernel.org
+comment      :
 
-It's not just a matter of keeping the caches in sync --- it's also a
-simple matter of locking.  If a file system is mounted on two systems
-at the same time, there's no way (without using a cluster lock
-manager, which is what a cluster file system like ocfs2 uses) to avoid
-both systems from trying to modify a particular of the file system (an
-inode or a directory, for example) at the same time.
+Hey Friend,
 
-As a result, there's no way for a local disk file system to know when
-a block has been modified out from under it, so that it can update its
-inode cache (where the in-memory inode data structure looks quite
-different from the on-disk inode table).
+I am writing to you privately. 
 
-There is overhead in using a cluster file system, since it has to do
-all of these extra checks to see if the block device has gotten
-magically modified out from under it.  So that's why most people won't
-use a cluster file system if it is only going to be mounted on one
-system at a time.
+Don't share this email with ANYONE without my permission - 
+that's a polite request, but I'm serious about it.
 
-But if you are going to have a file system mounted in both the guest
-and host file system at the same time, you *have* to use a cluster
-file system.  Alternately, you could have the guest access the file
-system as mounted on the host OS via NFS.
+I want to invite you to earn $863.34 a day. ..
+http://www.x-magic-submitter.com/?code=4fd12d880f3ba <== Click There
 
-Regards,
+You and a small, select group of individuals will undertake a short 
+training - about 12 minutes or so - after which you will get the chance
+to shoot for $863.34 a day, every day, every week, every month.
 
-						- Ted
+http://www.x-magic-submitter.com/?code=4fd12d880f3ba  <== Click There
+
+If you are NOT interested in that kind of money, please delete this message right now. 
+Do not forward it to your aunt or your kids or your third cousin's babysitter.
+This is meant for you, and you only.
+
+If you ARE looking to earn $863.34 every day, please click here RIGHT NOW 
+before training slots this week are closed.
+
+http://www.x-magic-submitter.com/?code=4fd12d880f3ba  <== Click There
+
+Thanks.
+Shane
+
+P.S. - When you click on the link, we should prepare you for a surprise. 
+There won't be some angry guy yelling at you about how you're 
+a jerk if you don't buy his product! 
+
+But we will show you exactly - really, exactly - how we have helped 
+our friends earn $863.34 every single day.
+
+P.P.S. - watch the video carefully
+
+http://www.x-magic-submitter.com/?code=4fd12d880f3ba 
+
+
+
+
