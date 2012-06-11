@@ -1,52 +1,33 @@
-From: plug bert <plugbert@yahoo.com>
-Subject: question about RAID10 near and far layouts
-Date: Mon, 11 Jun 2012 09:26:04 +0800 (SGT)
-Message-ID: <1339377964.38410.YahooMailClassic@web190004.mail.sg3.yahoo.com>
+From: majianpeng <majianpeng@gmail.com>
+Subject: [PATCH] md/raid5:When exec md_wait_for_blocked_rdev in ops_run_io,we must atomic_inc(&rdev->nr_pending).
+Date: Mon, 11 Jun 2012 11:23:56 +0800
+Message-ID: <201206111123534849890@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-hi peeps,
+SW4gb3BzX3J1bl9pbygpLCBpZiBjYWxsIG1kX3dhaXRfZm9yX2Jsb2NrZWRfcmRldiB3aGljaCBp
+dCBkZWMNCm5yX3BlbmRpbmcsIHRoZSByZGV2LT5ucl9wZW5kaW5nIHdpbGwgZGVjIGFnYWluIGlu
+IGVsc2Utc3RhdGVtZW50Lg0KU28gdGhlIG5yX3BlbmdpbmcgaXMgZXJyb3IgYW5kIHdlIGNhbid0
+IHJlbW92ZSB0aGlzIGRldmljZS4NCg0KU2lnbmVkLW9mZi1ieTogbWFqaWFucGVuZyA8bWFqaWFu
+cGVuZ0BnbWFpbC5jb20+DQotLS0NCiBkcml2ZXJzL21kL3JhaWQ1LmMgfCAgICA2ICsrKysrKw0K
+IDEgZmlsZXMgY2hhbmdlZCwgNiBpbnNlcnRpb25zKCspLCAwIGRlbGV0aW9ucygtKQ0KDQpkaWZm
+IC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5jIGIvZHJpdmVycy9tZC9yYWlkNS5jDQppbmRleCBk
+MjY3NjcyLi45OTViMmRlIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9tZC9yYWlkNS5jDQorKysgYi9k
+cml2ZXJzL21kL3JhaWQ1LmMNCkBAIC02MDcsNiArNjA3LDEyIEBAIHN0YXRpYyB2b2lkIG9wc19y
+dW5faW8oc3RydWN0IHN0cmlwZV9oZWFkICpzaCwgc3RydWN0IHN0cmlwZV9oZWFkX3N0YXRlICpz
+KQ0KIAkJCQkJbWRfY2hlY2tfcmVjb3ZlcnkoY29uZi0+bWRkZXYpOw0KIAkJCQl9DQogCQkJCW1k
+X3dhaXRfZm9yX2Jsb2NrZWRfcmRldihyZGV2LCBjb25mLT5tZGRldik7DQorCQkJCS8qDQorCQkJ
+CSAqIEJlY2F1c2UgbWRfd2FpdF9mb3JfYmxvY2tlZF9yZGV2IHdpbGwgZGVjDQorCQkJCSAqIG5y
+X3BlbmRpbmcsd2UgbXVzdCBhZGQuVGhlIHJlYWwgZGVjIGlzIGluDQorCQkJCSAqIGVsc2Ugc3Rh
+dGVtZW50Lg0KKwkJCQkgKi8NCisJCQkJYXRvbWljX2luYygmcmRldi0+bnJfcGVuZGluZyk7DQog
+CQkJfSBlbHNlIHsNCiAJCQkJLyogQWNrbm93bGVkZ2VkIGJhZCBibG9jayAtIHNraXAgdGhlIHdy
+aXRlICovDQogCQkJCXJkZXZfZGVjX3BlbmRpbmcocmRldiwgY29uZi0+bWRkZXYpOw0KLS0gDQox
+LjcuNS40DQoNCg0KDQotLS0tLS0tLS0tLS0tLQ0KbWFqaWFucGVuZw==
 
-i've been reading through
-
-http://en.wikipedia.org/wiki/Non-standard_RAID_levels
-
-and just wanted to verify if my understanding is correct.
-
-Is "near" safer than "far"?
-
-e.g. given 4 drives in RAID10 array, n2:
-
-4 drives
-
-1 2 3 4
---------------
-A1 A1 A2 A2
-A3 A3 A4 A4
-A5 A5 A6 A6
-A7 A7 A8 A8
-
-you'd lose the array if either 1&2 or 3&4 goes down at the same time.
-
-
-With 4 drives in RAID10 array, f2:
-
-4 drives
-1 2 3 4
---------------------
-A1 A2 A3 A4
-A5 A6 A7 A8
-A9 A10 A11 A12
-.. .. .. ..
-A4 A1 A2 A3
-A8 A5 A6 A7
-A12 A9 A10 A11
-
-...there seems to be a lot more combinations that can result in a trashed array(1&2, 2&3, 3&4).
-
-Is my analysis correct? Inputs are more than welcome, tia
