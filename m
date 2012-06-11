@@ -1,35 +1,73 @@
-From: Nagilum <nagilum@nagilum.org>
-Subject: Re: [PATCH] md:Add blk_plug in sync_thread.
-Date: Mon, 11 Jun 2012 12:30:14 +0200
-Message-ID: <4FD5C8B6.1050009@nagilum.org>
-References: <201206111716521256611@gmail.com>,  <4FD5BB39.4040406@nagilum.org> <201206111811008288882@gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: question about RAID10 near and far layouts
+Date: Mon, 11 Jun 2012 08:28:22 -0400
+Message-ID: <4FD5E466.4050409@turmel.org>
+References: <1339377964.38410.YahooMailClassic@web190004.mail.sg3.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201206111811008288882@gmail.com>
+In-Reply-To: <1339377964.38410.YahooMailClassic@web190004.mail.sg3.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: plug bert <plugbert@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 06/11/2012 12:11 PM, majianpeng wrote:
-> On Mon, 11 Jun 2012 02:32:57 najilum wrote:
->> On 06/11/2012 11:16 AM, majianpeng wrote:
->>> Add blk_plug in sync_thread will increase the performance of sync.
->>> Because sync_thread did not blk_plug,so when raid sync, the bio merge
->>> not well.
->>>
->>> Testing environment:
->>> SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA AHCI
->>> Controller.
->>> OS:Linux xxx 3.5.0-rc2+ #340 SMP Tue Jun 12 09:00:25 CST 2012
->>> x86_64 x86_64 x86_64 GNU/Linux.
->>> RAID5: four ST31000524NS disk.
->>>
->>> Without blk_plug:recovery speed about 63M/Sec;
->>> Add blk_plug:recovery speed about 120M/Sec.
->> Whahoo!! :)
-> What's mean ? 
-Almost doubled the performance with one simple change, that's great! :)
+On 06/10/2012 09:26 PM, plug bert wrote:
+> hi peeps,
+> 
+> i've been reading through
+> 
+> http://en.wikipedia.org/wiki/Non-standard_RAID_levels
+> 
+> and just wanted to verify if my understanding is correct.
+> 
+> Is "near" safer than "far"?
+> 
+> e.g. given 4 drives in RAID10 array, n2:
+> 
+> 4 drives
+> 
+> 1 2 3 4
+> --------------
+> A1 A1 A2 A2
+> A3 A3 A4 A4
+> A5 A5 A6 A6
+> A7 A7 A8 A8
+> 
+> you'd lose the array if either 1&2 or 3&4 goes down at the same time.
+> 
+> 
+> With 4 drives in RAID10 array, f2:
+> 
+> 4 drives
+> 1 2 3 4
+> --------------------
+> A1 A2 A3 A4
+> A5 A6 A7 A8
+> A9 A10 A11 A12
+> .. .. .. ..
+> A4 A1 A2 A3
+> A8 A5 A6 A7
+> A12 A9 A10 A11
+> 
+> ...there seems to be a lot more combinations that can result in a trashed array(1&2, 2&3, 3&4).
+> 
+> Is my analysis correct? Inputs are more than welcome, tia
 
+I think wikipedia might have this layout wrong.  I was under the
+impression that a four-disk far2 layout would be:
+
+> 1 2 3 4
+> --------------------
+> A1 A2 A3 A4
+> A5 A6 A7 A8
+> A9 A10 A11 A12
+> .. .. .. ..
+> A2 A1 A4 A3
+> A6 A5 A8 A7
+> A10 A9 A12 A11
+
+I haven't checked the code, though.
+
+Phil
