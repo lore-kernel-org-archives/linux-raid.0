@@ -1,39 +1,30 @@
-From: kedacomkernel <kedacomkernel@gmail.com>
-Subject: Re: Re: md:Fix a bug in function badblocks_show().
-Date: Tue, 12 Jun 2012 17:04:00 +0800
-Message-ID: <201206121703581252053@gmail.com>
-References: <201203081446488121330@gmail.com>,
-	<20120314123245.74feeab8@notabene.brown>
+From: Asdo <asdo@shiftmail.org>
+Subject: On mdadm 3.2 and bad-block-log
+Date: Tue, 12 Jun 2012 18:51:25 +0200
+Message-ID: <4FD7738D.3040403@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; format=flowed; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, majianpeng <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wMy0xNCAwOTozMiBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
-IFRodSwgOCBNYXIgMjAxMiAxNDo0Njo1MiArMDgwMCAibWFqaWFucGVuZyIgPG1hamlhbnBlbmdA
-Z21haWwuY29tPiB3cm90ZToNCj4NCj4+ID5Gcm9tIDU4ZDJiYTM4MWVlZTRiNzMyZmNhOTlhNzMx
-MWIxZGNmNTg5ZjU3YzMgTW9uIFNlcCAxNyAwMDowMDowMCAyMDAxDQo+PiBGcm9tOiBtYWppYW5w
-ZW5nIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4NCj4+IERhdGU6IFRodSwgOCBNYXIgMjAxMiAxNDoz
-NzowMCArMDgwMA0KPj4gU3ViamVjdDogW1BBVENIXSBtZDpGaXggYSBidWcgaW4gZnVuY3Rpb24g
-YmFkYmxvY2tzX3Nob3coKS4NCj4+IA0KPj4gSWYgdW5hY2s9PTAsIGl0IHdpbGwgc2hvdyBhbGwg
-YmFkIGJsb2NrcyBpbmNsdWRlIHVuYWNrbm93bGVkZ2VkLWJhZC1ibG9ja3MuDQo+DQo+Q29ycmVj
-dC4gIEl0IGlzIG1lYW50IHRvLg0KPlRoZSAiYmFkX2Jsb2NrcyIgZmlsZSBzaG93cyBhbGwgYmFk
-IGJsb2Nrcy4NCj5UaGUgInVuYWNrbm93bGVkZ2VkX2JhZF9ibG9ja3MiIGZpbGUgc2hvdyBhbGwg
-dW5hY2tub3dsZWRnZWQgYmFkIGJsb2Nrcy4NCj4NCj5UaGFua3MsDQo+TmVpbEJyb3duDQo+DQo+
-DQo+PiANCj4+IFNpZ25lZC1vZmYtYnk6IG1hamlhbnBlbmcgPG1hamlhbnBlbmdAZ21haWwuY29t
-Pg0KPj4gLS0tDQo+PiAgZHJpdmVycy9tZC9tZC5jIHwgICAgMiArLQ0KPj4gIDEgZmlsZXMgY2hh
-bmdlZCwgMSBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9ucygtKQ0KPj4gDQo+PiBkaWZmIC0tZ2l0
-IGEvZHJpdmVycy9tZC9tZC5jIGIvZHJpdmVycy9tZC9tZC5jDQo+PiBpbmRleCBjZTg4NzU1Li4z
-ZjFiNmU1IDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVycy9tZC9tZC5jDQo+PiArKysgYi9kcml2ZXJz
-L21kL21kLmMNCj4+IEBAIC04MDkxLDcgKzgwOTEsNyBAQCByZXRyeToNCj4+ICAJCWludCBhY2sg
-PSBCQl9BQ0socFtpXSk7DQo+PiAgCQlpKys7DQo+PiAgDQo+PiAtCQlpZiAodW5hY2sgJiYgYWNr
-KQ0KPj4gKwkJaWYgKCh1bmFjayBeIGFjaykgPT0gMCkNCj4+ICAJCQljb250aW51ZTsNCj4+ICAN
-Cj4+ICAJCWxlbiArPSBzbnByaW50ZihwYWdlK2xlbiwgUEFHRV9TSVpFLWxlbiwgIiVsbHUgJXVc
-biIsDQo+DQo+DQpIaSBOZWlsOg0KCUkgZm91bmQgdGhpcyBidWcgaW4ga2VybmVsLTMuNS1yYzIu
-SSBkZWVtIHlvdSBtYXkgbG9zdCB0byBhcHBseSB0aGlzIHBhdGNoLg0KDQpUaGFua3Mh
+Hello
+is it possible to keep mdadm 3.2 installed in the system (e.g. 3.2 as 
+the monitoring daemon) and have an array with bad-block functionality 
+(created with 3.3) running, or this will do a mess?
 
+Bad-block functionality is in mdadm-3.3 but this has not been released 
+yet. I was thinking about using it only once to create the array.
+
+However I am still missing the manual for mdadm-3.3, where is that? 
+without that I don't know how I should launch it to create an array with 
+bad blocks.
+
+Another question: are older kernels such as 3.0 capable to run an array 
+created with bad-block-log, obviously without using the bad-block-log 
+functionality? oh but that could be dangerous, couldn't it...
+
+Thank you
+A.
