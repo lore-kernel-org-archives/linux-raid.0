@@ -1,79 +1,57 @@
 From: Dan Williams <dan.j.williams@intel.com>
 Subject: Re: [patch 1/8] raid5: add a per-stripe lock
-Date: Tue, 12 Jun 2012 14:02:30 -0700
-Message-ID: <CAA9_cmet-h8NUNGHff6EV_JRo=jqGFb_Q+RQ2Ep4ZDH9eymVtQ@mail.gmail.com>
+Date: Tue, 12 Jun 2012 14:10:09 -0700
+Message-ID: <CAA9_cmdPyczf+ecOMVJs7+Mi3UPznc2QszAwFwHnjV8coFcFaw@mail.gmail.com>
 References: <20120604080152.098975870@kernel.org>
 	<20120604080300.519377228@kernel.org>
-	<20120607105410.415d9fe6@notabene.brown>
-	<20120607062939.GA779@kernel.org>
-	<20120607163522.71c68e23@notabene.brown>
-	<20120607065224.GE779@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120607065224.GE779@kernel.org>
+In-Reply-To: <20120604080300.519377228@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, axboe@kernel.dk, shli@fusionio.com
+Cc: linux-raid@vger.kernel.org, neilb@suse.de, axboe@kernel.dk, shli@fusionio.com
 List-Id: linux-raid.ids
 
-On Wed, Jun 6, 2012 at 11:52 PM, Shaohua Li <shli@kernel.org> wrote:
-> On Thu, Jun 07, 2012 at 04:35:22PM +1000, NeilBrown wrote:
->> On Thu, 7 Jun 2012 14:29:39 +0800 Shaohua Li <shli@kernel.org> wrote=
-:
->>
->> > On Thu, Jun 07, 2012 at 10:54:10AM +1000, NeilBrown wrote:
->> > > On Mon, 04 Jun 2012 16:01:53 +0800 Shaohua Li <shli@kernel.org> =
-wrote:
->> > >
->> > > > Add a per-stripe lock to protect stripe specific data, like de=
-v->read,
->> > > > written, ... The purpose is to reduce lock contention of conf-=
->device_lock.
->> > >
->> > > I'm not convinced that you need to add a lock.
->> > > I am convinced that if you do add one you need to explain exactl=
-y what it is
->> > > protecting.
->> > >
->> > > The STRIPE_ACTIVE bit serves as a lock and ensures that only one=
- process can
->> > > be in handle_stripe at a time.
->> > > So I don't think dev->read actually needs any protection (though=
- I haven't
->> > > checked thoroughly).
->> > >
->> > > I think the only things that device_lock protects are things sha=
-red by
->> > > multiple stripes, so adding a per-stripe spinlock isn't going to=
- help remove
->> > > device_lock.
->> >
->> > This sounds not true to me. both the async callbacks and request c=
-ompletion
->> > access stripe data, like dev->read. Such things are not protected =
-by
->> > STRIPE_ACTIVE bit. Thought we can delete STRIPE_ACTIVE bit with st=
-ripe lock
->> > introduced.
->>
->> Please give specifics. =A0What race do you see with access to dev->r=
-ead that is
->> not protected by STRIPE_ACTIVE ?
+On Mon, Jun 4, 2012 at 1:01 AM, Shaohua Li <shli@kernel.org> wrote:
+> Add a per-stripe lock to protect stripe specific data, like dev->read=
+,
+> written, ... The purpose is to reduce lock contention of conf->device=
+_lock.
 >
-> For example, ops_complete_biofill() will change dev->read which isn't=
- protected
-> by STRIPE_ACTIVE. add_stripe_bio() checks ->toread ->towrite, which i=
-sn't
-> protected by the bit too. Am I missing anything?
+> Signed-off-by: Shaohua Li <shli@fusionio.com>
+> ---
+> =A0drivers/md/raid5.c | =A0 17 +++++++++++++++++
+> =A0drivers/md/raid5.h | =A0 =A01 +
+> =A02 files changed, 18 insertions(+)
+>
+> Index: linux/drivers/md/raid5.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux.orig/drivers/md/raid5.c =A0 =A0 =A0 2012-06-01 13:38:54.705=
+210229 +0800
+> +++ linux/drivers/md/raid5.c =A0 =A02012-06-01 13:43:05.594056130 +08=
+00
+> @@ -749,6 +749,7 @@ static void ops_complete_biofill(void *s
+>
+> =A0 =A0 =A0 =A0/* clear completed biofills */
+> =A0 =A0 =A0 =A0spin_lock_irq(&conf->device_lock);
+> + =A0 =A0 =A0 spin_lock_irq(&sh->stripe_lock);
+> =A0 =A0 =A0 =A0for (i =3D sh->disks; i--; ) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0struct r5dev *dev =3D &sh->dev[i];
+>
+> @@ -774,6 +775,7 @@ static void ops_complete_biofill(void *s
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
+> =A0 =A0 =A0 =A0}
+> + =A0 =A0 =A0 spin_unlock_irq(&sh->stripe_lock);
+> =A0 =A0 =A0 =A0spin_unlock_irq(&conf->device_lock);
 
-STRIPE_ACTIVE is the replacement for the old per-stripe lock.  That
-lock never was meant/able to synchronize add_stripe_bio() vs ops_run_*
-(producer vs consumer).  That's always been device_lock's job because
-an individual bio may be added to several stripes.  If device_lock is
-gone we need a different scheme.  That's what tripped me up last time
-I looked at this.
+Btw... I know this is fixed up in a later patch with the deletion of
+device_lock, but bisection may land on this patch which enables irqs a
+bit too early.
 
 --
 Dan
