@@ -1,30 +1,46 @@
-From: Asdo <asdo@shiftmail.org>
-Subject: On mdadm 3.2 and bad-block-log
-Date: Tue, 12 Jun 2012 18:51:25 +0200
-Message-ID: <4FD7738D.3040403@shiftmail.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [patch 2/8] raid5: lockless access raid5 overrided bi_phys_segments
+Date: Tue, 12 Jun 2012 13:41:00 -0700
+Message-ID: <CAA9_cmcyOaqS=amzO+rovCfDsnkMvm_ZYORT5=ZjGUzaY1L3mQ@mail.gmail.com>
+References: <20120604080152.098975870@kernel.org>
+	<20120604080307.401236650@kernel.org>
+	<20120607110603.0d88c757@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120607110603.0d88c757@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, axboe@kernel.dk, shli@fusionio.com
 List-Id: linux-raid.ids
 
-Hello
-is it possible to keep mdadm 3.2 installed in the system (e.g. 3.2 as 
-the monitoring daemon) and have an array with bad-block functionality 
-(created with 3.3) running, or this will do a mess?
+On Wed, Jun 6, 2012 at 6:06 PM, NeilBrown <neilb@suse.de> wrote:
+> On Mon, 04 Jun 2012 16:01:54 +0800 Shaohua Li <shli@kernel.org> wrote=
+:
+>
+>> Raid5 overrides bio->bi_phys_segments, accessing it is with device_l=
+ock hold,
+>> which is unnecessary, We can make it lockless actually.
+>>
+>> Signed-off-by: Shaohua Li <shli@fusionio.com>
+>
+> I cannot say that I like this (casting fields in the bio structure), =
+but I
+> can see the value and it should work. =A0'atomic_t' is currently alwa=
+ys the same
+> size as an 'int', and I doubt that will change.
+>
+> So maybe I'll get used to the idea.
 
-Bad-block functionality is in mdadm-3.3 but this has not been released 
-yet. I was thinking about using it only once to create the array.
+I think we should just bite the bullet and acknowledge that this field
+has other meanings depending on the context and make it a union of int
+and atomic_t..
 
-However I am still missing the manual for mdadm-3.3, where is that? 
-without that I don't know how I should launch it to create an array with 
-bad blocks.
-
-Another question: are older kernels such as 3.0 capable to run an array 
-created with bad-block-log, obviously without using the bad-block-log 
-functionality? oh but that could be dangerous, couldn't it...
-
-Thank you
-A.
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
