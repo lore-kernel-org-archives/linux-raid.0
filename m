@@ -1,34 +1,32 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: metadata versions: 0.90 vs 1.2
-Date: Wed, 13 Jun 2012 07:46:45 +0200 (CEST)
-Message-ID: <alpine.DEB.2.00.1206130744440.25054@uplift.swm.pp.se>
-References: <1339563343.41566.YahooMailClassic@web190003.mail.sg3.yahoo.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+From: Shaohua Li <shli@kernel.org>
+Subject: [patch 0/4 v2] optimize raid1 read balance for SSD
+Date: Wed, 13 Jun 2012 17:09:22 +0800
+Message-ID: <20120613090922.971820942@kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1339563343.41566.YahooMailClassic@web190003.mail.sg3.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: plug bert <plugbert@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de, axboe@kernel.dk
 List-Id: linux-raid.ids
 
-On Wed, 13 Jun 2012, plug bert wrote:
+raid1 read balance is an important algorithm to make read performance optimal.
+It's a distance based algorithm, eg, for each request dispatch, choose disk
+whose last finished request is close the request. This is great for hard disk.
+But SSD has some special characteristics:
 
-> Is this expected behavior? Are there any potential problems if i stick 
-> with metadata=0.90(apart from the 28 device and 2Tb disk space limit)?
+1. nonrotational. Distance means nothing for SSD, though merging small rquests
+to big request is still optimal for SSD. If no merge, distributing rquests to
+raid disks as more as possible is more optimal.
 
-From "man mdadm":
+2. Getting too big request isn't always optimal. For hard disk, compared to
+spindle move, data transfer overhead is trival, so we always prefer bigger
+request. In SSD, request size exceeds specific value, performance isn't always
+increased with request size increased.  An example is readahead. If readahead
+merges too big request and causes some disks idle, the performance is less
+optimal than that when all disks are busy and running small requests.
 
-               1, 1.0, 1.1, 1.2 default
-                      Use  the  new  version-1  format superblock.  This has few restrictions.  The different sub-versions store the superblock at
-                      different locations on the device, either at the end (for 1.0), at the start (for 1.1) or 4K from the start (for 1.2).   "1"
-                      is equivalent to "1.0".  "default" is equivalent to "1.2".
+The patches try to address the issues. The first two patches are clean up. The
+third patch addresses the first item above. The forth addresses the second item
+above. The idea can be applied to raid10 too, which is in my todo list.
 
-If you want to be able to mount the individual RAID1 members but still use 
-the newer version superblock, you need to use version 1.0 (stored at the 
-end of the device/partition).
-
-I'd recommend to go with 1.0 instead of 0.90.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+V1->V2:
+rebase to latest kernel.
