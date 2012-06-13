@@ -1,74 +1,105 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [patch 8/8] raid5: create multiple threads to handle stripes
-Date: Tue, 12 Jun 2012 21:08:17 -0700
-Message-ID: <CAA9_cmc0C3V9SG49UpxW+GAhWo+O8+cnyac6OxROkiTeqcrRcA@mail.gmail.com>
+Subject: Re: [patch 1/8] raid5: add a per-stripe lock
+Date: Tue, 12 Jun 2012 21:08:47 -0700
+Message-ID: <CAA9_cmck7gNVGk4ZX-nG-L5u8Xvw8J_7ne-inggh-rcgHTCY_g@mail.gmail.com>
 References: <20120604080152.098975870@kernel.org>
-	<20120604080354.686050081@kernel.org>
-	<20120607113958.04b9d5b8@notabene.brown>
-	<20120607064551.GD779@kernel.org>
+	<20120604080300.519377228@kernel.org>
+	<20120607105410.415d9fe6@notabene.brown>
+	<20120607062939.GA779@kernel.org>
+	<20120607163522.71c68e23@notabene.brown>
+	<20120607065224.GE779@kernel.org>
+	<CAA9_cmet-h8NUNGHff6EV_JRo=jqGFb_Q+RQ2Ep4ZDH9eymVtQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120607064551.GD779@kernel.org>
+In-Reply-To: <CAA9_cmet-h8NUNGHff6EV_JRo=jqGFb_Q+RQ2Ep4ZDH9eymVtQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
 Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, axboe@kernel.dk, shli@fusionio.com
 List-Id: linux-raid.ids
 
-On Wed, Jun 6, 2012 at 11:45 PM, Shaohua Li <shli@kernel.org> wrote:
-> On Thu, Jun 07, 2012 at 11:39:58AM +1000, NeilBrown wrote:
->> On Mon, 04 Jun 2012 16:02:00 +0800 Shaohua Li <shli@kernel.org> wrote:
+On Tue, Jun 12, 2012 at 2:02 PM, Dan Williams <dan.j.williams@intel.com=
+> wrote:
+> On Wed, Jun 6, 2012 at 11:52 PM, Shaohua Li <shli@kernel.org> wrote:
+>> On Thu, Jun 07, 2012 at 04:35:22PM +1000, NeilBrown wrote:
+>>> On Thu, 7 Jun 2012 14:29:39 +0800 Shaohua Li <shli@kernel.org> wrot=
+e:
+>>>
+>>> > On Thu, Jun 07, 2012 at 10:54:10AM +1000, NeilBrown wrote:
+>>> > > On Mon, 04 Jun 2012 16:01:53 +0800 Shaohua Li <shli@kernel.org>=
+ wrote:
+>>> > >
+>>> > > > Add a per-stripe lock to protect stripe specific data, like d=
+ev->read,
+>>> > > > written, ... The purpose is to reduce lock contention of conf=
+->device_lock.
+>>> > >
+>>> > > I'm not convinced that you need to add a lock.
+>>> > > I am convinced that if you do add one you need to explain exact=
+ly what it is
+>>> > > protecting.
+>>> > >
+>>> > > The STRIPE_ACTIVE bit serves as a lock and ensures that only on=
+e process can
+>>> > > be in handle_stripe at a time.
+>>> > > So I don't think dev->read actually needs any protection (thoug=
+h I haven't
+>>> > > checked thoroughly).
+>>> > >
+>>> > > I think the only things that device_lock protects are things sh=
+ared by
+>>> > > multiple stripes, so adding a per-stripe spinlock isn't going t=
+o help remove
+>>> > > device_lock.
+>>> >
+>>> > This sounds not true to me. both the async callbacks and request =
+completion
+>>> > access stripe data, like dev->read. Such things are not protected=
+ by
+>>> > STRIPE_ACTIVE bit. Thought we can delete STRIPE_ACTIVE bit with s=
+tripe lock
+>>> > introduced.
+>>>
+>>> Please give specifics. =A0What race do you see with access to dev->=
+read that is
+>>> not protected by STRIPE_ACTIVE ?
 >>
->> > Like raid 1/10, raid5 uses one thread to handle stripe. In a fast storage, the
->> > thread becomes a bottleneck. raid5 can offload calculation like checksum to
->> > async threads. And if storge is fast, scheduling async work and running async
->> > work will introduce heavy lock contention of workqueue, which makes such
->> > optimization useless. And calculation isn't the only bottleneck. For example,
->> > in my test raid5 thread must handle > 450k requests per second. Just doing
->> > dispatch and completion will make raid5 thread incapable. The only chance to
->> > scale is using several threads to handle stripe.
->> >
->> > With this patch, user can create several extra threads to handle stripe. How
->> > many threads are better depending on disk number, so the thread number can be
->> > changed in userspace. By default, the thread number is 0, which means no extra
->> > thread.
->> >
->> > In a 3-disk raid5 setup, 2 extra threads can provide 130% throughput
->> > improvement (double stripe_cache_size) and the throughput is pretty close to
->> > theory value. With >=4 disks, the improvement is even bigger, for example, can
->> > improve 200% for 4-disk setup, but the throughput is far less than theory
->> > value, which is caused by several factors like request queue lock contention,
->> > cache issue, latency introduced by how a stripe is handled in different disks.
->> > Those factors need further investigations.
->> >
->> > Signed-off-by: Shaohua Li <shli@fusionio.com>
->>
->> I think it is great that you have got RAID5 to the point where multiple
->> threads improve performance.
->> I really don't like the idea of having to configure that number of threads.
->>
->> It would be great if it would auto-configure.
->> Maybe the main thread could fork aux threads when it notices a high load.
->> e.g. if it has been servicing requests for more than 100ms without a break,
->> and the number of threads is less than the number of CPUs, then it forks a new
->> helper and resets the timer.
->>
->> If a thread has been idle for more than 30 minutes, it exits.
->>
->> Might that be reasonable?
+>> For example, ops_complete_biofill() will change dev->read which isn'=
+t protected
+>> by STRIPE_ACTIVE. add_stripe_bio() checks ->toread ->towrite, which =
+isn't
+>> protected by the bit too. Am I missing anything?
 >
-> Yep, I bet this patch needs more discussion. auto-configure is preferred. Your
-> idea is worthy doing. However, the concern is if doing auto fork/kill thread,
-> user can't do numa binding, which is important for high speed storage. Maybe
-> have a reasonable default thread number, like one thread one disk? Need more
-> investigations, I'm open to any suggestion in this side.
+> STRIPE_ACTIVE is the replacement for the old per-stripe lock. =A0That
+> lock never was meant/able to synchronize add_stripe_bio() vs ops_run_=
+*
+> (producer vs consumer). =A0That's always been device_lock's job becau=
+se
+> an individual bio may be added to several stripes. =A0If device_lock =
+is
+> gone we need a different scheme. =A0That's what tripped me up last ti=
+me
+> I looked at this.
 
-The last time I looked at this the btrfs thread pool looked like a
-good candidate:
+Actually now that I look at add_stripe_bio again, I think it could be
+made to work if:
 
-  http://marc.info/?l=linux-raid&m=126944260704907&w=2
+1/ bi_phys_segments is incremented prior to publishing the bio on
+to{read|write} otherwise we potentially race with a consumer without a
+reference
 
-...have not looked if Tejun has made this available as a generic workqueue mode.
+2/ making sure the overlap checking does not walk off into invalid
+bios as it may do once we no longer have a global lock
+
+Outside of that we need a lock for making sure bi->next fields are
+updated properly and two threads only collide there on the same
+stripe.  But I need to think more about the other usages.
 
 --
 Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
