@@ -1,71 +1,74 @@
-From: Iordan Iordanov <iordan@cdf.toronto.edu>
-Subject: very strange behavior with RAID1 arrays on Ubuntu 12.04 (kernel 3.2)
-Date: Tue, 12 Jun 2012 17:08:20 -0400
-Message-ID: <4FD7AFC4.1020707@cdf.toronto.edu>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [patch 8/8] raid5: create multiple threads to handle stripes
+Date: Tue, 12 Jun 2012 21:08:17 -0700
+Message-ID: <CAA9_cmc0C3V9SG49UpxW+GAhWo+O8+cnyac6OxROkiTeqcrRcA@mail.gmail.com>
+References: <20120604080152.098975870@kernel.org>
+	<20120604080354.686050081@kernel.org>
+	<20120607113958.04b9d5b8@notabene.brown>
+	<20120607064551.GD779@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120607064551.GD779@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Shaohua Li <shli@kernel.org>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, axboe@kernel.dk, shli@fusionio.com
 List-Id: linux-raid.ids
 
-Hello,
+On Wed, Jun 6, 2012 at 11:45 PM, Shaohua Li <shli@kernel.org> wrote:
+> On Thu, Jun 07, 2012 at 11:39:58AM +1000, NeilBrown wrote:
+>> On Mon, 04 Jun 2012 16:02:00 +0800 Shaohua Li <shli@kernel.org> wrote:
+>>
+>> > Like raid 1/10, raid5 uses one thread to handle stripe. In a fast storage, the
+>> > thread becomes a bottleneck. raid5 can offload calculation like checksum to
+>> > async threads. And if storge is fast, scheduling async work and running async
+>> > work will introduce heavy lock contention of workqueue, which makes such
+>> > optimization useless. And calculation isn't the only bottleneck. For example,
+>> > in my test raid5 thread must handle > 450k requests per second. Just doing
+>> > dispatch and completion will make raid5 thread incapable. The only chance to
+>> > scale is using several threads to handle stripe.
+>> >
+>> > With this patch, user can create several extra threads to handle stripe. How
+>> > many threads are better depending on disk number, so the thread number can be
+>> > changed in userspace. By default, the thread number is 0, which means no extra
+>> > thread.
+>> >
+>> > In a 3-disk raid5 setup, 2 extra threads can provide 130% throughput
+>> > improvement (double stripe_cache_size) and the throughput is pretty close to
+>> > theory value. With >=4 disks, the improvement is even bigger, for example, can
+>> > improve 200% for 4-disk setup, but the throughput is far less than theory
+>> > value, which is caused by several factors like request queue lock contention,
+>> > cache issue, latency introduced by how a stripe is handled in different disks.
+>> > Those factors need further investigations.
+>> >
+>> > Signed-off-by: Shaohua Li <shli@fusionio.com>
+>>
+>> I think it is great that you have got RAID5 to the point where multiple
+>> threads improve performance.
+>> I really don't like the idea of having to configure that number of threads.
+>>
+>> It would be great if it would auto-configure.
+>> Maybe the main thread could fork aux threads when it notices a high load.
+>> e.g. if it has been servicing requests for more than 100ms without a break,
+>> and the number of threads is less than the number of CPUs, then it forks a new
+>> helper and resets the timer.
+>>
+>> If a thread has been idle for more than 30 minutes, it exits.
+>>
+>> Might that be reasonable?
+>
+> Yep, I bet this patch needs more discussion. auto-configure is preferred. Your
+> idea is worthy doing. However, the concern is if doing auto fork/kill thread,
+> user can't do numa binding, which is important for high speed storage. Maybe
+> have a reasonable default thread number, like one thread one disk? Need more
+> investigations, I'm open to any suggestion in this side.
 
-On Ubuntu 12.04 with a standard kernel (3.2) we've been seeing very 
-strange behavior with our RAID1 sets, both with superblock 1.2, and with 
-0.9. The system has been instructed to come up with a degraded array in 
-initrd, in case this is relevant. Here is an example of what is 
-happening. We have 5 RAID1 sets on a server. They live on partitions on 
-/dev/sda and /dev/sdb. The sever comes up with 2 out of 5 sets degraded, 
-and the others just fine.
+The last time I looked at this the btrfs thread pool looked like a
+good candidate:
 
-Trying to re-add or add the partitions into the arrays fails like this:
+  http://marc.info/?l=linux-raid&m=126944260704907&w=2
 
-# mdadm /dev/md2 --re-add /dev/sda6
-mdadm: --re-add for /dev/sda6 to /dev/md2 is not possible
+...have not looked if Tejun has made this available as a generic workqueue mode.
 
-# mdadm /dev/md2 --add /dev/sda6
-mdadm: /dev/sda6 reports being an active member for /dev/md2, but a 
---re-add fails.
-mdadm: not performing --add as that would convert /dev/sda6 in to a spare.
-mdadm: To make this a spare, use "mdadm --zero-superblock /dev/sda6" first.
-
-Here is some more information from /proc/mdstat, dmesg, and syslog.
-
-# cat /proc/mdstat
-md2 : active raid1 sdb6[1]
-       20479872 blocks [2/1] [_U]
-
-md3 : active raid1 sdb7[0]
-       10239872 blocks [2/1] [U_]
-
-# dmesg | grep md2
-[    4.087037] md/raid1:md2: active with 1 out of 2 mirrors
-[    4.087147] md2: detected capacity change from 0 to 20971388928
-[    4.119168]  md2: unknown partition table
-[   12.383035] EXT4-fs (md2): mounted filesystem with ordered data mode. 
-Opts: (null)
-
-# dmesg | grep md3
-[    4.083084] md/raid1:md3: active with 1 out of 2 mirrors
-[    4.083230] md3: detected capacity change from 0 to 10485628928
-[    4.180986]  md3: unknown partition table
-[    9.631814] EXT4-fs (md3): mounted filesystem with ordered data mode. 
-Opts: (null)
-
-# ls -l /dev/sda6
-brw-rw---- 1 root disk 8, 6 Jun 12 16:54 /dev/sda6
-# ls -l /dev/sda7
-brw-rw---- 1 root disk 8, 7 Jun 12 16:54 /dev/sda7
-
-# grep md2 /var/log/syslog
-Jun 12 16:54:32 ps2 kernel: [    4.087037] md/raid1:md2: active with 1 
-out of 2 mirrors
-Jun 12 16:54:32 ps2 kernel: [    4.087147] md2: detected capacity change 
-from 0 to 20971388928
-Jun 12 16:54:32 ps2 kernel: [    4.119168]  md2: unknown partition table
-Jun 12 16:54:32 ps2 kernel: [   12.383035] EXT4-fs (md2): mounted 
-filesystem with ordered data mode. Opts: (null)
-Jun 12 16:54:38 ps2 mdadm[1181]: DegradedArray event detected on md 
-device /dev/md2
+--
+Dan
