@@ -1,32 +1,91 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: [patch 0/4 v2] optimize raid1 read balance for SSD
-Date: Wed, 13 Jun 2012 17:09:22 +0800
-Message-ID: <20120613090922.971820942@kernel.org>
+Subject: [patch 1/4 v2] raid1: move distance based read balance to a separate function
+Date: Wed, 13 Jun 2012 17:09:23 +0800
+Message-ID: <20120613091021.730491348@kernel.org>
+References: <20120613090922.971820942@kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline; filename=raid1-consolidate-read-balance.patch
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: neilb@suse.de, axboe@kernel.dk
 List-Id: linux-raid.ids
 
-raid1 read balance is an important algorithm to make read performance optimal.
-It's a distance based algorithm, eg, for each request dispatch, choose disk
-whose last finished request is close the request. This is great for hard disk.
-But SSD has some special characteristics:
+Move distance based read balance algorithm to a separate function. No
+functional change.
 
-1. nonrotational. Distance means nothing for SSD, though merging small rquests
-to big request is still optimal for SSD. If no merge, distributing rquests to
-raid disks as more as possible is more optimal.
+Signed-off-by: Shaohua Li <shli@fusionio.com>
+---
+ drivers/md/raid1.c |   42 ++++++++++++++++++++++++++++++------------
+ 1 file changed, 30 insertions(+), 12 deletions(-)
 
-2. Getting too big request isn't always optimal. For hard disk, compared to
-spindle move, data transfer overhead is trival, so we always prefer bigger
-request. In SSD, request size exceeds specific value, performance isn't always
-increased with request size increased.  An example is readahead. If readahead
-merges too big request and causes some disks idle, the performance is less
-optimal than that when all disks are busy and running small requests.
+Index: linux/drivers/md/raid1.c
+===================================================================
+--- linux.orig/drivers/md/raid1.c	2012-05-08 16:36:12.624232473 +0800
++++ linux/drivers/md/raid1.c	2012-05-08 16:36:14.476209200 +0800
+@@ -463,6 +463,31 @@ static void raid1_end_write_request(stru
+ 		bio_put(to_put);
+ }
+ 
++static int read_balance_measure_distance(struct r1conf *conf,
++	struct r1bio *r1_bio, int disk, int *best_disk, sector_t *best_dist)
++{
++	const sector_t this_sector = r1_bio->sector;
++	struct md_rdev *rdev;
++	sector_t dist;
++
++	rdev = rcu_dereference(conf->mirrors[disk].rdev);
++
++	dist = abs(this_sector - conf->mirrors[disk].head_position);
++	/* Don't change to another disk for sequential reads */
++	if (conf->next_seq_sect == this_sector
++	    || dist == 0
++	    /* If device is idle, use it */
++	    || atomic_read(&rdev->nr_pending) == 0) {
++		*best_disk = disk;
++		return 0;
++	}
++
++	if (dist < *best_dist) {
++		*best_dist = dist;
++		*best_disk = disk;
++	}
++	return 1;
++}
+ 
+ /*
+  * This routine returns the disk from which the requested read should
+@@ -512,7 +537,6 @@ static int read_balance(struct r1conf *c
+ 	}
+ 
+ 	for (i = 0 ; i < conf->raid_disks * 2 ; i++) {
+-		sector_t dist;
+ 		sector_t first_bad;
+ 		int bad_sectors;
+ 
+@@ -577,20 +601,14 @@ static int read_balance(struct r1conf *c
+ 		} else
+ 			best_good_sectors = sectors;
+ 
+-		dist = abs(this_sector - conf->mirrors[disk].head_position);
+-		if (choose_first
+-		    /* Don't change to another disk for sequential reads */
+-		    || conf->next_seq_sect == this_sector
+-		    || dist == 0
+-		    /* If device is idle, use it */
+-		    || atomic_read(&rdev->nr_pending) == 0) {
++		if (choose_first) {
+ 			best_disk = disk;
+ 			break;
+ 		}
+-		if (dist < best_dist) {
+-			best_dist = dist;
+-			best_disk = disk;
+-		}
++
++		if (!read_balance_measure_distance(conf, r1_bio, disk,
++		    &best_disk, &best_dist))
++			break;
+ 	}
+ 
+ 	if (best_disk >= 0) {
 
-The patches try to address the issues. The first two patches are clean up. The
-third patch addresses the first item above. The forth addresses the second item
-above. The idea can be applied to raid10 too, which is in my todo list.
-
-V1->V2:
-rebase to latest kernel.
