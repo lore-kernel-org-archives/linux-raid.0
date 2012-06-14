@@ -1,309 +1,83 @@
-From: "Kurt Schmitt" <kurt_schmitt@gmx.de>
-Subject: Check after raid6 failure
-Date: Thu, 14 Jun 2012 13:29:55 +0200
-Message-ID: <20120614112955.286290@gmx.net>
+From: Fengguang Wu <wfg@linux.intel.com>
+Subject: Re: drivers/block/cpqarray.c:938:2: error: too many arguments to
+	function lk_rq_map_sg
+Date: Thu, 14 Jun 2012 19:31:42 +0800
+Message-ID: <20120614113142.GA13954@localhost>
+References: <4fd91c3f.KAwMcygw9fFGn9Cx%wfg@linux.intel.com>
+	<4FD984F3.3070502@kernel.dk> <20120614090151.GA12013@localhost>
+	<4FD9A95D.40903@kernel.dk> <20120614100205.GA13217@localhost>
+	<4FD9C0D2.20500@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <4FD9C0D2.20500@kernel.dk>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-raid@vger.kernel.org, "git@vger.kernel.org" <git@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, virtualization@lists.linux-foundation.org
 List-Id: linux-raid.ids
 
-Hello,
+On Thu, Jun 14, 2012 at 12:45:38PM +0200, Jens Axboe wrote:
+> On 06/14/2012 12:02 PM, Fengguang Wu wrote:
+> > On Thu, Jun 14, 2012 at 11:05:33AM +0200, Jens Axboe wrote:
+> >> On 06/14/2012 11:01 AM, Fengguang Wu wrote:
+> >>> Hi Jens,
+> >>>
+> >>> On Thu, Jun 14, 2012 at 08:30:11AM +0200, Jens Axboe wrote:
+> >>>> On 06/14/2012 01:03 AM, wfg@linux.intel.com wrote:
+> >>>>> FYI, kernel build failed on
+> >>>>>
+> >>>>> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git multiqueue
+> >>>>> head:   e9a6aa8a0b7b93195774a9fcf551632bf3abcd97
+> >>>>> commit: 67db7275fa4325d46853a4bfcb79acf32e48eca8 [1/3] multiqueue: a hodge podge of things
+> >>>>
+> >>>> The multiqueue branch is a private branch, it's known broken on many
+> >>>> configs at the moment.
+> >>>
+> >>> OK. Sorry my script just blindly build tests every new/updated branches
+> >>> in the tree. It does try to reduce noise level by remembering all warned
+> >>> error messages. However if it still presents a problem to the private
+> >>> branches, I can either explicitly blacklist "multiqueue", or let the
+> >>> script automatically skip commits whose "^Signed-off-by:" is still missing.
+> >>
+> >> It's not a problem that you're building various branches, as long as you
+> >> are expecting a bit of noise :-). In fact I applaud your effort on
+> >> expanding the scope of building others branches.
+> >>
+> >> But it does raise the question of how do we best signal intermediate
+> >> branches like this, so they can be avoided until they are ready. The
+> >> blacklist doesn't seem like a great choice, since then I have to
+> >> remember to remind you when it _is_ ok to build it.
+> >>
+> >> How about some arbitrary tag? Instead of checking a Signed-off-by, I
+> >> could just add a Dont-Auto-Build or something like that. What do you
+> >> think?
+> > 
+> > OK, I'll add a grep for "Dont-Auto-Build". If it's found in *any*
+> > commit of the branch, the build script will skip the whole branch.
+> > Does this make sense to you?
+> 
+> Yeah that'll work for me. A description or tag might be more elegant,
+> but this is easier...
 
-I am running a raid6 with 8 drives (no spares) and I am recovering after a controller failure that removed 3 of the drives (ATA Bus error). The state of the raid after this is obvious:
+Great, let's settle with the in-commit tag "Dont-Auto-Build" for now :)
 
-md7 : active raid6 sdg1[2] sdf1[8] sdd1[1] sdn1[7] sde1[0]
-      11721071616 blocks super 1.2 level 6, 512k chunk, algorithm 2 [8/5] [UUU___UU]
+"git branch --edit-description" could potentially be the most elegant
+solution, unfortunately for now there seems no way for me to retrieve
+the branch description edited by you..
 
-After exchanging the controller, I verified that the raid superblocks of the devices are still intact, but the superblock state was inconsistent. The removed drives were marked "active" and had a lower event count, whereas the other drives were "clean" with higher event count. I reassembled the array with this command:
-mdadm --assemble --force /dev/md7 /dev/sd[befghijk]1
+Another alternative, git tag, has the problem that it goes out of sync
+every time you do rebase, which will sure happen a lot for early RFC
+patches.
 
-This  removed the faulty flags and reset the event counts. I switched the raid to --readonly immediately, and ran a filesystem check (which found a few non-critical errors, such as unused inodes, block bitmap differences and wrong free block counts). The detail/examine of the current state is below [2].
-
-I have the following questions:
-1. From the perspective of raid data integrity (parity), is it safe to continue operating the raid now and fix the file system errors and verify the actual data in the files?
-In particular, I have read at [1] that when skipping the initial sync, parity data on the disks will stay wrong even after it is rewritten. Does the same apply when doing assemble --force ?
-
-2. I have been trying to run a "check" sync_action on the raid (in read-only mode), to find out if there are mismatches, but it does not start. The sync_action is "idle" immediately after the "echo checked > sync_action" and /proc/mdstat does not report any change. There is nothing in dmesg either.
-
-3. What other steps can / should I take before continuing raid usage (read-write), especially repair on the file system level?
-
-
-Thank you,
-
-Kurt
-
-[1] https://raid.wiki.kernel.org/index.php/Initial_Array_Creation#raid5
-
-[2] I am running a 3.2.2 kernel with mdadm 3.1.4.
-
-The current state of the raid is displayed below:
-md7 : active (read-only) raid6 sdf1[0] sdj1[7] sdg1[8] sdk1[6] sdb1[5] sdi1[4] sdh1[2] sde1[1]
-      11721071616 blocks super 1.2 level 6, 512k chunk, algorithm 2 [8/8] [UUUUUUUU]
-
-mdadm --detail /dev/md7 
-/dev/md7:
-        Version : 1.2
-  Creation Time : <redacted>
-     Raid Level : raid6
-     Array Size : 11721071616 (11178.09 GiB 12002.38 GB)
-  Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
-   Raid Devices : 8
-  Total Devices : 8
-    Persistence : Superblock is persistent
-
-    Update Time : Mon Jun 11 19:18:33 2012
-          State : clean
- Active Devices : 8
-Working Devices : 8
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-           Name : <redacted>
-           UUID : <redacted>
-         Events : 79713
-
-    Number   Major   Minor   RaidDevice State
-       0       8       81        0      active sync   /dev/sdf1
-       1       8       65        1      active sync   /dev/sde1
-       2       8      113        2      active sync   /dev/sdh1
-       4       8      129        3      active sync   /dev/sdi1
-       5       8       17        4      active sync   /dev/sdb1
-       6       8      161        5      active sync   /dev/sdk1
-       8       8       97        6      active sync   /dev/sdg1
-       7       8      145        7      active sync   /dev/sdj1
-
-
-
-/dev/sdb1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : <redacted>
-           Name : <redacted>
-  Creation Time : <redacted>
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
-     Array Size : 23442143232 (11178.09 GiB 12002.38 GB)
-  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : active
-    Device UUID : <redacted>
-
-    Update Time : Mon Jun 11 10:13:08 2012
-       Checksum : d207eb78 - correct
-         Events : 79712
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 4
-   Array State : AAAAAAAA ('A' == active, '.' == missing)
-
-/dev/sde1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : <redacted>
-           Name : <redacted>
-  Creation Time : <redacted>
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
-     Array Size : 23442143232 (11178.09 GiB 12002.38 GB)
-  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : <redacted>
-
-    Update Time : Mon Jun 11 19:18:33 2012
-       Checksum : cea4ea72 - correct
-         Events : 79713
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 1
-   Array State : AAA...AA ('A' == active, '.' == missing)
-
-/dev/sdf1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : <redacted>
-           Name : <redacted>
-  Creation Time : <redacted>
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
-     Array Size : 23442143232 (11178.09 GiB 12002.38 GB)
-  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : <redacted>
-
-    Update Time : Mon Jun 11 19:18:33 2012
-       Checksum : 73e3de3b - correct
-         Events : 79713
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 0
-   Array State : AAAAAAAA ('A' == active, '.' == missing)
-
-/dev/sdg1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : <redacted>
-           Name : <redacted>
-  Creation Time : <redacted>
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
-     Array Size : 23442143232 (11178.09 GiB 12002.38 GB)
-  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : <redacted>
-
-    Update Time : Mon Jun 11 19:18:33 2012
-       Checksum : b7ef499c - correct
-         Events : 79713
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 6
-   Array State : AAA...AA ('A' == active, '.' == missing)
-
-/dev/sdh1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : <redacted>
-           Name : <redacted>
-  Creation Time : <redacted>
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
-     Array Size : 23442143232 (11178.09 GiB 12002.38 GB)
-  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : <redacted>
-
-    Update Time : Mon Jun 11 19:18:33 2012
-       Checksum : c75d3da5 - correct
-         Events : 79713
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 2
-   Array State : AAA...AA ('A' == active, '.' == missing)
-
-/dev/sdi1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : <redacted>
-           Name : <redacted>
-  Creation Time : <redacted>
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
-     Array Size : 23442143232 (11178.09 GiB 12002.38 GB)
-  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : active
-    Device UUID : <redacted>
-
-    Update Time : Mon Jun 11 10:13:08 2012
-       Checksum : 1a292902 - correct
-         Events : 79712
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 3
-   Array State : AAAAAAAA ('A' == active, '.' == missing)
-
-/dev/sdj1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : <redacted>
-           Name : <redacted>
-  Creation Time : <redacted>
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
-     Array Size : 23442143232 (11178.09 GiB 12002.38 GB)
-  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : <redacted>
-
-    Update Time : Mon Jun 11 19:18:33 2012
-       Checksum : 6f7b11b7 - correct
-         Events : 79713
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 7
-   Array State : AAA...AA ('A' == active, '.' == missing)
-
-/dev/sdk1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : <redacted>
-           Name : <redacted>
-  Creation Time : <redacted>
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
-     Array Size : 23442143232 (11178.09 GiB 12002.38 GB)
-  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : active
-    Device UUID : <redacted>
-
-    Update Time : Mon Jun 11 10:13:08 2012
-       Checksum : a2773548 - correct
-         Events : 79712
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 5
-   Array State : AAAAAAAA ('A' == active, '.' == missing)
-
--- 
-NEU: FreePhone 3-fach-Flat mit kostenlosem Smartphone!                                  
-Jetzt informieren: http://mobile.1und1.de/?ac=OM.PW.PW003K20328T7073a
+Thanks,
+Fengguang
