@@ -1,89 +1,78 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: degraded raid 6 (1 bad drive) showing up inactive, only spares
-Date: Fri, 15 Jun 2012 22:37:40 +1000
-Message-ID: <20120615223740.22a76a9c@notabene.brown>
-References: <B5902F16-9C82-4072-BD67-FC6D6488ADB7@googlemail.com>
-	<20120607222933.14ec3cd5@notabene.brown>
-	<alpine.DEB.2.00.1206080743310.25054@uplift.swm.pp.se>
-	<20120615173719.6076714f@notabene.brown>
-	<4FDB1DF3.3080401@schinagl.nl>
+From: Roberto Leibman <roberto@leibman.net>
+Subject: How to activate a spare?
+Date: Fri, 15 Jun 2012 08:04:52 -0700
+Message-ID: <4FDB4F14.3030609@leibman.net>
+References: <S1756982Ab2FOO6f/20120615145835Z+98@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/KfdNuq39VXhy3K_AIbvh/4="; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FDB1DF3.3080401@schinagl.nl>
+In-Reply-To: <S1756982Ab2FOO6f/20120615145835Z+98@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Oliver Schinagl <oliver+list@schinagl.nl>
-Cc: linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/KfdNuq39VXhy3K_AIbvh/4=
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+I must be missing something completely obvious, but I've read the man 
+page, and went through the archive for this list.
 
-On Fri, 15 Jun 2012 13:35:15 +0200 Oliver Schinagl <oliver+list@schinagl.nl>
-wrote:
+One of the hard drives in my raid array failed... I have taken the hard 
+drive out, replaced it with a new one, copied the partition table (using 
+gdisk) and then added the drive to the raid array with:
 
-> Neil,
->=20
-> Good read! I don't know if it's important to have a list of all affected=
-=20
-> kernels, but as a Gentoo user, know that it affects at least the=20
-> unstable branch, but I would not be surprised if it even affects the=20
-> stable hardened kernel. I run those on my servers and may have noticed=20
-> that behavior on my arrays as well.
+mdadm --add /dev/md0 /dev/sdb3
 
-Thanks.
+I then monitor it with "mdadm --detail /dev/md0" or "cat /proc/mdstat" 
+until it synchronizes
+After an ungodly number of hours, the thing finishes synchronizing, but 
+the new drive only shows up as a spare. So the RAID is still degraded....
 
-It would be useful adding other kernels, but only where a vendor has
-backported the offending patch to an earlier release, and then I'd want
-actual release numbers from the vendor.
+I have not been able to get the new drive to become part of the array as 
+active, web searches have proved useless (people with the same problem 
+and no resolution). I've even failed/removed the active drive, at which 
+point the spare becomes active, but when I add the original drive it 
+still adds it as a spare)
 
-So if you could show me how to decode the gentoo kernel package information
-so I could see exactly what patches were in which release I could work out
-the release numbers from that ....
+So how do I make it active???
 
-Thanks,
-NeilBrown
+(it's in the middle of trying again, but here's what I have)
+--------------
+root@frogstar:~# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
+[raid4] [raid10]
+md0 : active raid1 sda3[2] sdb3[0]
+       1943454796 blocks super 1.2 [2/1] [U_]
+       [>....................]  recovery =  1.0% (20096128/1943454796) 
+finish=737.0min speed=43493K/sec
 
+unused devices: <none>
+--------------
+and
+root@frogstar:~# mdadm --detail /dev/md0
+/dev/md0:
+         Version : 1.2
+   Creation Time : Sat Apr 14 13:52:25 2012
+      Raid Level : raid1
+      Array Size : 1943454796 (1853.42 GiB 1990.10 GB)
+   Used Dev Size : 1943454796 (1853.42 GiB 1990.10 GB)
+    Raid Devices : 2
+   Total Devices : 2
+     Persistence : Superblock is persistent
 
->=20
-> Oliver
->=20
-> On 15-06-12 09:37, NeilBrown wrote:
-> > At the suggestion of Mikael Abrahamsson I have written
-> >
-> >    http://neil.brown.name/blog/20120615073245
-> >
-> > discussing this bug in detail.
-> >
-> > I'll probably post the whole thing to Linux RAID tomorrow, which a bett=
-er
-> > subject line.
-> >
-> > NeilBrown
+     Update Time : Thu Jun 14 13:13:54 2012
+           State : clean, degraded, recovering
+  Active Devices : 1
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 1
 
+  Rebuild Status : 1% complete
 
---Sig_/KfdNuq39VXhy3K_AIbvh/4=
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+            Name : frogstar:0  (local to host frogstar)
+            UUID : 88ed6cd4:de463005:31ed764c:2b23a266
+          Events : 47610
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+     Number   Major   Minor   RaidDevice State
+        0       8       19        0      active sync   /dev/sdb3
+        2       8        3        1      spare rebuilding   /dev/sda3
 
-iQIVAwUBT9sslDnsnt1WYoG5AQL0FQ//dpiplNF8M02RwtOEBS9BOVStYlb4/MaM
-EnPRTy8nxA0vOJc786psd58NLPjg2PoXy6k6JdNn4rlT5f6o60nBhzMHBLT1Z9X4
-oPYlZQ5b18H5+CC8h1rGI2YHhnexjczyLLsTnRPWaKe/PwMM4iewwc++BA8G+m4h
-mePzQnu6AassxpWczs3pnj6NRp7cPxf5r5oeEtPTP4YQKTlXNy0iJpOcpFAQNucr
-pWvG7RbIybw4lZp7x9G3BPPyRbQe7hcQ/ldWWeLw1XQ/IBt13HO9uxc+EyijY065
-R1e3vBkRQzxhjDni84Nz2gboMtX+No4o32C9xROKS+6eP5+AhaDSdFLCkvyAjjQo
-RMmAfGeVqrK6gcSvjFcjS+3YfNdhuKjI9kema0GG+69FA62AgtG93crTXHILPnlM
-VB+C2SDdGtQ40jgPxFKCpIcSSoLeKe5iPLfgLnF4Kh1cONmPsK2MlBFJEx4xxut4
-bbGiyf83JbrvBvgu7hTId3oE2uuFbn0XcA1hr7NqLX/Vu2JC3k3ou9np+6yRpOWe
-3CE1iqANl11h2Gzdd9aOlrnyczKGeGPZ9mocuhUujcUQ1CUNN4Hkb/LsSKW+AM62
-Huxq1Jzd/gjUcm3DdJNgZ0sqxyqm+nFQs4PC+CRxBbWaaeMkbm4uHvOqMNqHOFg6
-8OpA7Ycq++g=
-=UuXN
------END PGP SIGNATURE-----
-
---Sig_/KfdNuq39VXhy3K_AIbvh/4=--
+The version of mdadm I'm using is the stock on ubuntu 10.10 (v3.1.4)
