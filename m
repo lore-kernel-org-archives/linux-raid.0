@@ -1,78 +1,113 @@
-From: Roberto Leibman <roberto@leibman.net>
-Subject: How to activate a spare?
-Date: Fri, 15 Jun 2012 08:04:52 -0700
-Message-ID: <4FDB4F14.3030609@leibman.net>
-References: <S1756982Ab2FOO6f/20120615145835Z+98@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Tim Nufire <linux-raid_tim@ibink.com>
+Subject: Recalculating the --size parameter when recovering a failed array
+Date: Sat, 16 Jun 2012 06:09:47 -0700
+Message-ID: <F4D18266-EDAB-4D31-B3F1-A91894C7E455@ibink.com>
+Mime-Version: 1.0 (Apple Message framework v1278)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <S1756982Ab2FOO6f/20120615145835Z+98@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I must be missing something completely obvious, but I've read the man 
-page, and went through the archive for this list.
+Hello,
 
-One of the hard drives in my raid array failed... I have taken the hard 
-drive out, replaced it with a new one, copied the partition table (using 
-gdisk) and then added the drive to the raid array with:
+An array that I created using a custom --size parameter has failed and needs to be recovered. I am very comfortable recovering arrays using --assume-clean but due to a typo at creation time I don't know the device size that was originally used. I am hoping this value can be recalculate from data in the superblocks but this calculation is not obvious to me. 
 
-mdadm --add /dev/md0 /dev/sdb3
+Here's what I know... I'm using metadata version 1.0 with an internal bitmap on all my arrays. I ran some experiments in the lab with 3TB drives and found that when I specified a device size of 2929687500 when creating an array, 'mdadm -D' reported a 'Used Dev Size' of 5859374976. The value specified on the command line is in kilobytes so I was expecting 3,000,000,000,000 bytes to be used on each device. The value reported by mdadm is in sectors (512 bytes) so turning this into bytes I get 2,999,999,987,712 bytes. This is off by 12,288 bytes (12kb) which I assume is used by the v1.0 superblock and/or the internal bitmap. I also tried creating an array with 2TB drives (Requested Size: 1953125000, Used Dev Size: 3906249984) and got a difference of 8kb (2,000,000,000,000 vs 1,999,999,991,808 
+ bytes) so clearly the amount of extra space used depends on the size of the device in some way.
 
-I then monitor it with "mdadm --detail /dev/md0" or "cat /proc/mdstat" 
-until it synchronizes
-After an ungodly number of hours, the thing finishes synchronizing, but 
-the new drive only shows up as a spare. So the RAID is still degraded....
+The array that I'm trying to recover reports a 'Used Dev Size' of 5858574976. This is just 800,000 sectors less than I got when requesting an even 3 trillion bytes so I know the size to use on the command line is close to 2929687500. But I don't know how to calculate the exact size... Can someone help me? 
 
-I have not been able to get the new drive to become part of the array as 
-active, web searches have proved useless (people with the same problem 
-and no resolution). I've even failed/removed the active drive, at which 
-point the spare becomes active, but when I add the original drive it 
-still adds it as a spare)
+Once I know the size I will recreate the array using the following:
 
-So how do I make it active???
+size=???
+md11='/dev/sdc /dev/sdf /dev/sdi /dev/sdl /dev/sdo /dev/sdr /dev/sdu /dev/sdx missing missing /dev/sdag /dev/sdaj /dev/sdam /dev/sdap /dev/sdas'
+mdadm --create /dev/md11 --metadata=1.0 --size=$size --bitmap=internal --auto=yes -l 6 -n 15 --assume-clean $md11
 
-(it's in the middle of trying again, but here's what I have)
---------------
-root@frogstar:~# cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
-[raid4] [raid10]
-md0 : active raid1 sda3[2] sdb3[0]
-       1943454796 blocks super 1.2 [2/1] [U_]
-       [>....................]  recovery =  1.0% (20096128/1943454796) 
-finish=737.0min speed=43493K/sec
+Just incase it helps, here's the full output from mdadm -D for the array I'm trying to recover and mdadm -E for the first device in that array:
 
-unused devices: <none>
---------------
-and
-root@frogstar:~# mdadm --detail /dev/md0
-/dev/md0:
-         Version : 1.2
-   Creation Time : Sat Apr 14 13:52:25 2012
-      Raid Level : raid1
-      Array Size : 1943454796 (1853.42 GiB 1990.10 GB)
-   Used Dev Size : 1943454796 (1853.42 GiB 1990.10 GB)
-    Raid Devices : 2
-   Total Devices : 2
-     Persistence : Superblock is persistent
+mdadm -E /dev/sdc
+/dev/sdc:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : 560bd0d9:a8d4758c:9849143c:a2ef5b8e
+           Name : sm345:11  (local to host sm345)
+  Creation Time : Sat Dec 17 07:22:56 2011
+     Raid Level : raid6
+   Raid Devices : 15
 
-     Update Time : Thu Jun 14 13:13:54 2012
-           State : clean, degraded, recovering
-  Active Devices : 1
-Working Devices : 2
-  Failed Devices : 0
-   Spare Devices : 1
+ Avail Dev Size : 5860532896 (2794.52 GiB 3000.59 GB)
+     Array Size : 76161474688 (36316.62 GiB 38994.68 GB)
+  Used Dev Size : 5858574976 (2793.59 GiB 2999.59 GB)
+   Super Offset : 5860533152 sectors
+          State : clean
+    Device UUID : f3ad57be:c0835578:4f242111:fb465c0a
 
-  Rebuild Status : 1% complete
+Internal Bitmap : -176 sectors from superblock
+    Update Time : Sat Jun 16 05:45:17 2012
+       Checksum : 4936d9a7 - correct
+         Events : 187674
 
-            Name : frogstar:0  (local to host frogstar)
-            UUID : 88ed6cd4:de463005:31ed764c:2b23a266
-          Events : 47610
+     Chunk Size : 64K
 
-     Number   Major   Minor   RaidDevice State
-        0       8       19        0      active sync   /dev/sdb3
-        2       8        3        1      spare rebuilding   /dev/sda3
+    Array Slot : 0 (empty, 1, 2, 3, 4, 5, 6, 7, failed, failed, 10, 11, 12, 13, 14)
+   Array State : _uuuuuuu__uuuuu 2 failed
 
-The version of mdadm I'm using is the stock on ubuntu 10.10 (v3.1.4)
+mdadm -D /dev/md11
+/dev/md11:
+        Version : 01.00
+  Creation Time : Sat Dec 17 07:22:56 2011
+     Raid Level : raid6
+     Array Size : 38080737344 (36316.62 GiB 38994.68 GB)
+  Used Dev Size : 5858574976 (5587.17 GiB 5999.18 GB)
+   Raid Devices : 15
+  Total Devices : 15
+Preferred Minor : 11
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Sat Jun 16 05:45:17 2012
+          State : active, degraded
+ Active Devices : 12
+Working Devices : 15
+ Failed Devices : 0
+  Spare Devices : 3
+
+     Chunk Size : 64K
+
+           Name : sm345:11  (local to host sm345)
+           UUID : 560bd0d9:a8d4758c:9849143c:a2ef5b8e
+         Events : 187674
+
+    Number   Major   Minor   RaidDevice State
+       0       0        0        0      removed
+       1       8       80        1      active sync   /dev/sdf
+       2       8      128        2      active sync   /dev/sdi
+       3       8      176        3      active sync   /dev/sdl
+       4       8      224        4      active sync   /dev/sdo
+       5      65       16        5      active sync   /dev/sdr
+       6      65       64        6      active sync   /dev/sdu
+       7      65      112        7      active sync   /dev/sdx
+       8       0        0        8      removed
+       9       0        0        9      removed
+      10      66        0       10      active sync   /dev/sdag
+      11      66       48       11      active sync   /dev/sdaj
+      12      66       96       12      active sync   /dev/sdam
+      13      66      144       13      active sync   /dev/sdap
+      14      66      192       14      active sync   /dev/sdas
+
+       0       8       32        -      spare   /dev/sdc
+      15      65      160        -      spare   /dev/sdaa
+      16      65      208        -      spare   /dev/sdad
+
+
+Thanks,
+Tim
+
+
+
+
+
