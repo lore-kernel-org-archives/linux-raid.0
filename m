@@ -1,31 +1,24 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Proposal for metadata version 2.x :)
-Date: Sun, 17 Jun 2012 09:37:02 -0400
-Message-ID: <4FDDDD7E.2040009@turmel.org>
-References: <CA+sTkh6ATWGjByZuKvRCkcwTW1cJw73mNNK92LW5WNfpi2eXKA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Martin Ziler <martin.ziler@googlemail.com>
+Subject: Re: degraded raid 6 (1 bad drive) showing up inactive, only spares
+Date: Sun, 17 Jun 2012 17:52:07 +0200
+Message-ID: <F137B54C-A982-4EBC-A04B-5C47CA07BE12@googlemail.com>
+Mime-Version: 1.0 (Apple Message framework v1278)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+sTkh6ATWGjByZuKvRCkcwTW1cJw73mNNK92LW5WNfpi2eXKA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Igor M Podlesny <for.poige+lsr@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/17/2012 06:12 AM, Igor M Podlesny wrote:
->    Hi! If I understand correctly, one cannot safely switch between 1.x
-> metdata layouts since data offsets would be different, right?
-> 
->    Why not to overcome this limitation by holding all three metadata
-> zones reserved to prevent RAID data allocation inside them? It doesn't
-> seem to be significant waste of disk space, but would be more flexible
-> indeed.
+Hello everybody,
 
-A very useful property of v1.0 metadata is that the contents start at
-the partition start, making Raid1 contents available to bootloaders when
-the array isn't running.  That behavior is incompatible with your
-suggestion, so your suggestion will be unacceptable to anyone using that
-behavior to their advantage.  (Like me.)
+long time no seen. As I was unable to find a permutation that would result in an fsck-output that looks ok I generated the 360.000 permutations using Neil's shell script. I then composed a little script that would try a permutation, do the fsck, stop the raid an go on with the new possibility and inserted the fsck-output into a text-file. The whole 360.000 permutations just recently finished - after some 6 days of building and fscking. I have not yet analyzed the output. I did however search for the term "clean" as a positive result would possibly contain that term.
 
-Phil
+I got 711 different drive-combinations that will result in this: /dev/md0: clean, 204968/849158144 files, 3394436623/3396621312 blocks.
+
+If there really is only one working drive order, I guess I am pretty much doomed. I do hope I'll be able to rule out a large portion of those results before going into some more detail. I did get it correct, though, that there is only one possible order resulting in a working array? I gotta figure out how to analyze the output file now. It's 125 MB. I guess I'll probably split it and load it into my spreadsheet. In one go I'd stumble across the 1.000.000 row-limit.
+
+regards,
+
+Martin
