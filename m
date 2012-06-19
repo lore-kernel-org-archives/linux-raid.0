@@ -1,187 +1,150 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: [patch 3/9 v2] raid5: lockless access raid5 overrided bi_phys_segments
-Date: Tue, 19 Jun 2012 09:59:44 +0800
-Message-ID: <20120619020108.288903467@kernel.org>
+Subject: [patch 7/9 v2] raid5: make_request use batch stripe release
+Date: Tue, 19 Jun 2012 09:59:48 +0800
+Message-ID: <20120619020141.857606268@kernel.org>
 References: <20120619015941.891400722@kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline; filename=raid5-atomic-segment-accounting.patch
+Content-Disposition: inline; filename=raid5-make_request-relase_stripe-batch.patch
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: neilb@suse.de, axboe@kernel.dk, dan.j.williams@intel.com, shli@fusionio.com
 List-Id: linux-raid.ids
 
-Raid5 overrides bio->bi_phys_segments, accessing it is with device_lock hold,
-which is unnecessary, We can make it lockless actually.
+make_request() does stripe release for every stripe and the stripe usually has
+count 1, which makes previous release_stripe() optimization not work. In my
+test, this release_stripe() becomes the heaviest pleace to take
+conf->device_lock after previous patches applied.
+
+Below patch makes stripe release batch. All the stripes will be released in
+unplug. The STRIPE_ON_UNPLUG_LIST bit is to protect concurrent access stripe
+lru.
 
 Signed-off-by: Shaohua Li <shli@fusionio.com>
 ---
- drivers/md/raid5.c |   58 +++++++++++++++++++++++++++++------------------------
- 1 file changed, 32 insertions(+), 26 deletions(-)
+ drivers/md/raid5.c |   64 ++++++++++++++++++++++++++++++++++++++++++++++++-----
+ drivers/md/raid5.h |    1 
+ 2 files changed, 60 insertions(+), 5 deletions(-)
 
 Index: linux/drivers/md/raid5.c
 ===================================================================
---- linux.orig/drivers/md/raid5.c	2012-06-08 11:48:25.652618012 +0800
-+++ linux/drivers/md/raid5.c	2012-06-08 13:15:31.458919391 +0800
-@@ -99,34 +99,40 @@ static inline struct bio *r5_next_bio(st
-  * We maintain a biased count of active stripes in the bottom 16 bits of
-  * bi_phys_segments, and a count of processed stripes in the upper 16 bits
-  */
--static inline int raid5_bi_phys_segments(struct bio *bio)
-+static inline int raid5_bi_processed_stripes(struct bio *bio)
- {
--	return bio->bi_phys_segments & 0xffff;
-+	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
-+	return (atomic_read(segments) >> 16) & 0xffff;
+--- linux.orig/drivers/md/raid5.c	2012-06-18 08:30:13.562730340 +0800
++++ linux/drivers/md/raid5.c	2012-06-18 08:34:54.735195847 +0800
+@@ -489,7 +489,8 @@ get_active_stripe(struct r5conf *conf, s
+ 		} else {
+ 			if (atomic_read(&sh->count)) {
+ 				BUG_ON(!list_empty(&sh->lru)
+-				    && !test_bit(STRIPE_EXPANDING, &sh->state));
++				    && !test_bit(STRIPE_EXPANDING, &sh->state)
++				    && !test_bit(STRIPE_ON_UNPLUG_LIST, &sh->state));
+ 			} else {
+ 				if (!test_bit(STRIPE_HANDLE, &sh->state))
+ 					atomic_inc(&conf->active_stripes);
+@@ -3979,6 +3980,51 @@ static struct stripe_head *__get_priorit
+ 	return sh;
  }
  
--static inline int raid5_bi_hw_segments(struct bio *bio)
-+static inline int raid5_dec_bi_active_stripes(struct bio *bio)
++#define raid5_unplug_list(mdcb) (struct list_head *)(mdcb + 1)
++static void raid5_unplug(struct md_plug_cb *mdcb)
++{
++	struct list_head *list = raid5_unplug_list(mdcb);
++	struct stripe_head *sh;
++	struct r5conf *conf = mdcb->mddev->private;
++
++	if (list->next == NULL || list_empty(list))
++		return;
++	spin_lock_irq(&conf->device_lock);
++	while (!list_empty(list)) {
++		sh = list_entry(list->next, struct stripe_head, lru);
++		list_del_init(&sh->lru);
++		/*
++		 * avoid race release_stripe_plug() sees STRIPE_ON_UNPLUG_LIST
++		 * clear but the stripe is still in our list
++		 */
++		smp_mb__before_clear_bit();
++		clear_bit(STRIPE_ON_UNPLUG_LIST, &sh->state);
++		__release_stripe(conf, sh);
++	}
++	spin_unlock_irq(&conf->device_lock);
++}
++
++static void release_stripe_plug(struct md_plug_cb *mdcb,
++				struct stripe_head *sh)
++{
++	struct list_head *list = raid5_unplug_list(mdcb);
++
++	if (!mdcb) {
++		release_stripe(sh);
++		return;
++	}
++
++	if (list->next == NULL) {
++		INIT_LIST_HEAD(list);
++		mdcb->unplug = raid5_unplug;
++	}
++
++	if (!test_and_set_bit(STRIPE_ON_UNPLUG_LIST, &sh->state))
++		list_add_tail(&sh->lru, list);
++	else
++		release_stripe(sh);
++}
++
+ static void make_request(struct mddev *mddev, struct bio * bi)
  {
--	return (bio->bi_phys_segments >> 16) & 0xffff;
-+	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
-+	return atomic_sub_return(1, segments) & 0xffff;
- }
+ 	struct r5conf *conf = mddev->private;
+@@ -3988,7 +4034,7 @@ static void make_request(struct mddev *m
+ 	struct stripe_head *sh;
+ 	const int rw = bio_data_dir(bi);
+ 	int remaining;
+-	int plugged;
++	struct md_plug_cb *mdcb;
  
--static inline int raid5_dec_bi_phys_segments(struct bio *bio)
-+static inline void raid5_inc_bi_active_stripes(struct bio *bio)
- {
--	--bio->bi_phys_segments;
--	return raid5_bi_phys_segments(bio);
-+	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
-+	atomic_inc(segments);
- }
+ 	if (unlikely(bi->bi_rw & REQ_FLUSH)) {
+ 		md_flush_request(mddev, bi);
+@@ -4007,7 +4053,8 @@ static void make_request(struct mddev *m
+ 	bi->bi_next = NULL;
+ 	bi->bi_phys_segments = 1;	/* over-loaded to count active stripes */
  
--static inline int raid5_dec_bi_hw_segments(struct bio *bio)
-+static inline void raid5_set_bi_processed_stripes(struct bio *bio,
-+	unsigned int cnt)
- {
--	unsigned short val = raid5_bi_hw_segments(bio);
-+	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
-+	int old, new;
- 
--	--val;
--	bio->bi_phys_segments = (val << 16) | raid5_bi_phys_segments(bio);
--	return val;
-+	do {
-+		old = atomic_read(segments);
-+		new = (old & 0xffff) | (cnt << 16);
-+	} while (atomic_cmpxchg(segments, old, new) != old);
- }
- 
--static inline void raid5_set_bi_hw_segments(struct bio *bio, unsigned int cnt)
-+static inline void raid5_set_bi_stripes(struct bio *bio, unsigned int cnt)
- {
--	bio->bi_phys_segments = raid5_bi_phys_segments(bio) | (cnt << 16);
-+	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
-+	atomic_set(segments, cnt);
- }
- 
- /* Find first data disk in a raid6 stripe */
-@@ -767,7 +773,7 @@ static void ops_complete_biofill(void *s
- 			while (rbi && rbi->bi_sector <
- 				dev->sector + STRIPE_SECTORS) {
- 				rbi2 = r5_next_bio(rbi, dev->sector);
--				if (!raid5_dec_bi_phys_segments(rbi)) {
-+				if (!raid5_dec_bi_active_stripes(rbi)) {
- 					rbi->bi_next = return_bi;
- 					return_bi = rbi;
- 				}
-@@ -2354,7 +2360,7 @@ static int add_stripe_bio(struct stripe_
- 	if (*bip)
- 		bi->bi_next = *bip;
- 	*bip = bi;
--	bi->bi_phys_segments++;
-+	raid5_inc_bi_active_stripes(bi);
- 
- 	if (forwrite) {
- 		/* check if page is covered */
-@@ -2454,7 +2460,7 @@ handle_failed_stripe(struct r5conf *conf
- 			sh->dev[i].sector + STRIPE_SECTORS) {
- 			struct bio *nextbi = r5_next_bio(bi, sh->dev[i].sector);
+-	plugged = !!mddev_check_plugged(mddev, NULL, 0);
++	mdcb = mddev_check_plugged(mddev, raid5_unplug,
++				   sizeof(struct list_head));
+ 	for (;logical_sector < last_sector; logical_sector += STRIPE_SECTORS) {
+ 		DEFINE_WAIT(w);
+ 		int previous;
+@@ -4109,7 +4156,14 @@ static void make_request(struct mddev *m
+ 			if ((bi->bi_rw & REQ_SYNC) &&
+ 			    !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
+ 				atomic_inc(&conf->preread_active_stripes);
+-			release_stripe(sh);
++			/*
++			 * We must recheck here. schedule() might be called
++			 * above which makes unplug invoked already, so the old
++			 * mdcb is invalid
++			 */
++			mdcb = mddev_check_plugged(mddev, raid5_unplug,
++						   sizeof(struct list_head));
++			release_stripe_plug(mdcb, sh);
+ 		} else {
+ 			/* cannot get stripe for read-ahead, just give-up */
  			clear_bit(BIO_UPTODATE, &bi->bi_flags);
--			if (!raid5_dec_bi_phys_segments(bi)) {
-+			if (!raid5_dec_bi_active_stripes(bi)) {
- 				md_write_end(conf->mddev);
- 				bi->bi_next = *return_bi;
- 				*return_bi = bi;
-@@ -2469,7 +2475,7 @@ handle_failed_stripe(struct r5conf *conf
- 		       sh->dev[i].sector + STRIPE_SECTORS) {
- 			struct bio *bi2 = r5_next_bio(bi, sh->dev[i].sector);
- 			clear_bit(BIO_UPTODATE, &bi->bi_flags);
--			if (!raid5_dec_bi_phys_segments(bi)) {
-+			if (!raid5_dec_bi_active_stripes(bi)) {
- 				md_write_end(conf->mddev);
- 				bi->bi_next = *return_bi;
- 				*return_bi = bi;
-@@ -2493,7 +2499,7 @@ handle_failed_stripe(struct r5conf *conf
- 				struct bio *nextbi =
- 					r5_next_bio(bi, sh->dev[i].sector);
- 				clear_bit(BIO_UPTODATE, &bi->bi_flags);
--				if (!raid5_dec_bi_phys_segments(bi)) {
-+				if (!raid5_dec_bi_active_stripes(bi)) {
- 					bi->bi_next = *return_bi;
- 					*return_bi = bi;
- 				}
-@@ -2714,7 +2720,7 @@ static void handle_stripe_clean_event(st
- 				while (wbi && wbi->bi_sector <
- 					dev->sector + STRIPE_SECTORS) {
- 					wbi2 = r5_next_bio(wbi, dev->sector);
--					if (!raid5_dec_bi_phys_segments(wbi)) {
-+					if (!raid5_dec_bi_active_stripes(wbi)) {
- 						md_write_end(conf->mddev);
- 						wbi->bi_next = *return_bi;
- 						*return_bi = wbi;
-@@ -3783,7 +3789,7 @@ static struct bio *remove_bio_from_retry
- 		 * this sets the active strip count to 1 and the processed
- 		 * strip count to zero (upper 8 bits)
- 		 */
--		bi->bi_phys_segments = 1; /* biased count of active stripes */
-+		raid5_set_bi_stripes(bi, 1); /* biased count of active stripes */
+@@ -4118,7 +4172,7 @@ static void make_request(struct mddev *m
+ 		}
+ 			
  	}
- 
- 	return bi;
-@@ -4122,7 +4128,7 @@ static void make_request(struct mddev *m
+-	if (!plugged)
++	if (!mdcb)
  		md_wakeup_thread(mddev->thread);
  
- 	spin_lock_irq(&conf->device_lock);
--	remaining = raid5_dec_bi_phys_segments(bi);
-+	remaining = raid5_dec_bi_active_stripes(bi);
- 	spin_unlock_irq(&conf->device_lock);
- 	if (remaining == 0) {
+ 	remaining = raid5_dec_bi_active_stripes(bi);
+Index: linux/drivers/md/raid5.h
+===================================================================
+--- linux.orig/drivers/md/raid5.h	2012-06-18 08:23:32.939767146 +0800
++++ linux/drivers/md/raid5.h	2012-06-18 08:32:40.572882491 +0800
+@@ -320,6 +320,7 @@ enum {
+ 	STRIPE_BIOFILL_RUN,
+ 	STRIPE_COMPUTE_RUN,
+ 	STRIPE_OPS_REQ_PENDING,
++	STRIPE_ON_UNPLUG_LIST,
+ };
  
-@@ -4479,7 +4485,7 @@ static int  retry_aligned_read(struct r5
- 		     sector += STRIPE_SECTORS,
- 		     scnt++) {
- 
--		if (scnt < raid5_bi_hw_segments(raid_bio))
-+		if (scnt < raid5_bi_processed_stripes(raid_bio))
- 			/* already done this stripe */
- 			continue;
- 
-@@ -4487,14 +4493,14 @@ static int  retry_aligned_read(struct r5
- 
- 		if (!sh) {
- 			/* failed to get a stripe - must wait */
--			raid5_set_bi_hw_segments(raid_bio, scnt);
-+			raid5_set_bi_processed_stripes(raid_bio, scnt);
- 			conf->retry_read_aligned = raid_bio;
- 			return handled;
- 		}
- 
- 		if (!add_stripe_bio(sh, raid_bio, dd_idx, 0)) {
- 			release_stripe(sh);
--			raid5_set_bi_hw_segments(raid_bio, scnt);
-+			raid5_set_bi_processed_stripes(raid_bio, scnt);
- 			conf->retry_read_aligned = raid_bio;
- 			return handled;
- 		}
-@@ -4504,7 +4510,7 @@ static int  retry_aligned_read(struct r5
- 		handled++;
- 	}
- 	spin_lock_irq(&conf->device_lock);
--	remaining = raid5_dec_bi_phys_segments(raid_bio);
-+	remaining = raid5_dec_bi_active_stripes(raid_bio);
- 	spin_unlock_irq(&conf->device_lock);
- 	if (remaining == 0)
- 		bio_endio(raid_bio, 0);
+ /*
 
