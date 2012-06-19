@@ -1,159 +1,119 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: [patch 2/9 v2] raid5: add a per-stripe lock
-Date: Tue, 19 Jun 2012 09:59:43 +0800
-Message-ID: <20120619020059.549708119@kernel.org>
+Subject: [patch 1/9 v2] raid5: use wake_up_all for overlap waking
+Date: Tue, 19 Jun 2012 09:59:42 +0800
+Message-ID: <20120619020049.628908926@kernel.org>
 References: <20120619015941.891400722@kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline; filename=raid5-add-perstripe-lock.patch
+Content-Disposition: inline; filename=raid5-wakeupall.patch
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: neilb@suse.de, axboe@kernel.dk, dan.j.williams@intel.com, shli@fusionio.com
 List-Id: linux-raid.ids
 
-Add a per-stripe lock to protect stripe specific data, like dev->read,
-written, ... The purpose is to reduce lock contention of conf->device_lock.
+It's possible several tasks are waiting for stripe overlap. We clear R5_Overlap
+bit and wake_up, but wake_up just wakes one task. So if there are several tasks
+in the wait queue, some tasks will not be woken up even its strip R5_Overlap
+clear. The end result is tasks hang in make_request.
+
+wake_up_all should not introduce performance issue here, since overlap case is
+rare.
 
 Signed-off-by: Shaohua Li <shli@fusionio.com>
 ---
- drivers/md/raid5.c |   17 +++++++++++++++++
- drivers/md/raid5.h |    1 +
- 2 files changed, 18 insertions(+)
+ drivers/md/raid5.c |   20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
 Index: linux/drivers/md/raid5.c
 ===================================================================
---- linux.orig/drivers/md/raid5.c	2012-06-06 09:35:56.338257401 +0800
-+++ linux/drivers/md/raid5.c	2012-06-13 08:37:43.005641057 +0800
-@@ -749,6 +749,7 @@ static void ops_complete_biofill(void *s
- 
- 	/* clear completed biofills */
- 	spin_lock_irq(&conf->device_lock);
-+	spin_lock(&sh->stripe_lock);
- 	for (i = sh->disks; i--; ) {
- 		struct r5dev *dev = &sh->dev[i];
- 
-@@ -774,6 +775,7 @@ static void ops_complete_biofill(void *s
- 			}
+--- linux.orig/drivers/md/raid5.c	2012-06-19 08:11:10.021688417 +0800
++++ linux/drivers/md/raid5.c	2012-06-19 08:11:29.833439339 +0800
+@@ -1399,7 +1399,7 @@ static void __raid_run_ops(struct stripe
+ 		for (i = disks; i--; ) {
+ 			struct r5dev *dev = &sh->dev[i];
+ 			if (test_and_clear_bit(R5_Overlap, &dev->flags))
+-				wake_up(&sh->raid_conf->wait_for_overlap);
++				wake_up_all(&sh->raid_conf->wait_for_overlap);
  		}
- 	}
-+	spin_unlock(&sh->stripe_lock);
- 	spin_unlock_irq(&conf->device_lock);
- 	clear_bit(STRIPE_BIOFILL_RUN, &sh->state);
- 
-@@ -798,8 +800,10 @@ static void ops_run_biofill(struct strip
- 		if (test_bit(R5_Wantfill, &dev->flags)) {
- 			struct bio *rbi;
- 			spin_lock_irq(&conf->device_lock);
-+			spin_lock(&sh->stripe_lock);
- 			dev->read = rbi = dev->toread;
- 			dev->toread = NULL;
-+			spin_unlock(&sh->stripe_lock);
- 			spin_unlock_irq(&conf->device_lock);
- 			while (rbi && rbi->bi_sector <
- 				dev->sector + STRIPE_SECTORS) {
-@@ -1137,10 +1141,12 @@ ops_run_biodrain(struct stripe_head *sh,
- 			struct bio *wbi;
- 
- 			spin_lock_irq(&sh->raid_conf->device_lock);
-+			spin_lock(&sh->stripe_lock);
- 			chosen = dev->towrite;
- 			dev->towrite = NULL;
- 			BUG_ON(dev->written);
- 			wbi = dev->written = chosen;
-+			spin_unlock(&sh->stripe_lock);
- 			spin_unlock_irq(&sh->raid_conf->device_lock);
- 
- 			while (wbi && wbi->bi_sector <
-@@ -1446,6 +1452,8 @@ static int grow_one_stripe(struct r5conf
- 	init_waitqueue_head(&sh->ops.wait_for_ops);
- 	#endif
- 
-+	spin_lock_init(&sh->stripe_lock);
-+
- 	if (grow_buffers(sh)) {
- 		shrink_buffers(sh);
- 		kmem_cache_free(conf->slab_cache, sh);
-@@ -2327,6 +2335,7 @@ static int add_stripe_bio(struct stripe_
- 
- 
- 	spin_lock_irq(&conf->device_lock);
-+	spin_lock(&sh->stripe_lock);
- 	if (forwrite) {
- 		bip = &sh->dev[dd_idx].towrite;
- 		if (*bip == NULL && sh->dev[dd_idx].written == NULL)
-@@ -2360,6 +2369,7 @@ static int add_stripe_bio(struct stripe_
- 		if (sector >= sh->dev[dd_idx].sector + STRIPE_SECTORS)
- 			set_bit(R5_OVERWRITE, &sh->dev[dd_idx].flags);
- 	}
-+	spin_unlock(&sh->stripe_lock);
- 	spin_unlock_irq(&conf->device_lock);
- 
- 	pr_debug("added bi b#%llu to stripe s#%llu, disk %d.\n",
-@@ -2376,6 +2386,7 @@ static int add_stripe_bio(struct stripe_
- 
-  overlap:
- 	set_bit(R5_Overlap, &sh->dev[dd_idx].flags);
-+	spin_unlock(&sh->stripe_lock);
- 	spin_unlock_irq(&conf->device_lock);
- 	return 0;
+ 	put_cpu();
  }
-@@ -2427,6 +2438,7 @@ handle_failed_stripe(struct r5conf *conf
- 			}
+@@ -2436,7 +2436,7 @@ handle_failed_stripe(struct r5conf *conf
  		}
- 		spin_lock_irq(&conf->device_lock);
-+		spin_lock(&sh->stripe_lock);
- 		/* fail all writes first */
- 		bi = sh->dev[i].towrite;
- 		sh->dev[i].towrite = NULL;
-@@ -2488,6 +2500,7 @@ handle_failed_stripe(struct r5conf *conf
- 				bi = nextbi;
- 			}
- 		}
-+		spin_unlock(&sh->stripe_lock);
- 		spin_unlock_irq(&conf->device_lock);
- 		if (bitmap_end)
- 			bitmap_endwrite(conf->mddev->bitmap, sh->sector,
-@@ -2695,6 +2708,7 @@ static void handle_stripe_clean_event(st
- 				int bitmap_end = 0;
- 				pr_debug("Return write for disc %d\n", i);
- 				spin_lock_irq(&conf->device_lock);
-+				spin_lock(&sh->stripe_lock);
- 				wbi = dev->written;
- 				dev->written = NULL;
- 				while (wbi && wbi->bi_sector <
-@@ -2709,6 +2723,7 @@ static void handle_stripe_clean_event(st
- 				}
- 				if (dev->towrite == NULL)
- 					bitmap_end = 1;
-+				spin_unlock(&sh->stripe_lock);
- 				spin_unlock_irq(&conf->device_lock);
- 				if (bitmap_end)
- 					bitmap_endwrite(conf->mddev->bitmap,
-@@ -3168,6 +3183,7 @@ static void analyse_stripe(struct stripe
- 	/* Now to look around and see what can be done */
- 	rcu_read_lock();
- 	spin_lock_irq(&conf->device_lock);
-+	spin_lock(&sh->stripe_lock);
- 	for (i=disks; i--; ) {
- 		struct md_rdev *rdev;
- 		sector_t first_bad;
-@@ -3313,6 +3329,7 @@ static void analyse_stripe(struct stripe
- 				do_recovery = 1;
- 		}
+ 
+ 		if (test_and_clear_bit(R5_Overlap, &sh->dev[i].flags))
+-			wake_up(&conf->wait_for_overlap);
++			wake_up_all(&conf->wait_for_overlap);
+ 
+ 		while (bi && bi->bi_sector <
+ 			sh->dev[i].sector + STRIPE_SECTORS) {
+@@ -2474,7 +2474,7 @@ handle_failed_stripe(struct r5conf *conf
+ 			bi = sh->dev[i].toread;
+ 			sh->dev[i].toread = NULL;
+ 			if (test_and_clear_bit(R5_Overlap, &sh->dev[i].flags))
+-				wake_up(&conf->wait_for_overlap);
++				wake_up_all(&conf->wait_for_overlap);
+ 			if (bi) s->to_read--;
+ 			while (bi && bi->bi_sector <
+ 			       sh->dev[i].sector + STRIPE_SECTORS) {
+@@ -3572,7 +3572,7 @@ static void handle_stripe(struct stripe_
+ 	} else if (s.expanded && !sh->reconstruct_state && s.locked == 0) {
+ 		clear_bit(STRIPE_EXPAND_READY, &sh->state);
+ 		atomic_dec(&conf->reshape_stripes);
+-		wake_up(&conf->wait_for_overlap);
++		wake_up_all(&conf->wait_for_overlap);
+ 		md_done_sync(conf->mddev, STRIPE_SECTORS, 1);
  	}
-+	spin_unlock(&sh->stripe_lock);
- 	spin_unlock_irq(&conf->device_lock);
- 	if (test_bit(STRIPE_SYNCING, &sh->state)) {
- 		/* If there is a failed device being replaced,
-Index: linux/drivers/md/raid5.h
-===================================================================
---- linux.orig/drivers/md/raid5.h	2012-06-06 09:35:56.350257250 +0800
-+++ linux/drivers/md/raid5.h	2012-06-13 08:34:13.660272415 +0800
-@@ -210,6 +210,7 @@ struct stripe_head {
- 	int			disks;		/* disks in stripe */
- 	enum check_states	check_state;
- 	enum reconstruct_states reconstruct_state;
-+	spinlock_t		stripe_lock;
- 	/**
- 	 * struct stripe_operations
- 	 * @target - STRIPE_OP_COMPUTE_BLK target
+ 
+@@ -4249,7 +4249,7 @@ static sector_t reshape_request(struct m
+ 		spin_lock_irq(&conf->device_lock);
+ 		conf->reshape_safe = mddev->reshape_position;
+ 		spin_unlock_irq(&conf->device_lock);
+-		wake_up(&conf->wait_for_overlap);
++		wake_up_all(&conf->wait_for_overlap);
+ 		sysfs_notify(&mddev->kobj, NULL, "sync_completed");
+ 	}
+ 
+@@ -4340,7 +4340,7 @@ static sector_t reshape_request(struct m
+ 		spin_lock_irq(&conf->device_lock);
+ 		conf->reshape_safe = mddev->reshape_position;
+ 		spin_unlock_irq(&conf->device_lock);
+-		wake_up(&conf->wait_for_overlap);
++		wake_up_all(&conf->wait_for_overlap);
+ 		sysfs_notify(&mddev->kobj, NULL, "sync_completed");
+ 	}
+ 	return reshape_sectors;
+@@ -5718,7 +5718,7 @@ static void end_reshape(struct r5conf *c
+ 		smp_wmb();
+ 		conf->reshape_progress = MaxSector;
+ 		spin_unlock_irq(&conf->device_lock);
+-		wake_up(&conf->wait_for_overlap);
++		wake_up_all(&conf->wait_for_overlap);
+ 
+ 		/* read-ahead size must cover two whole stripes, which is
+ 		 * 2 * (datadisks) * chunksize where 'n' is the number of raid devices
+@@ -5776,7 +5776,7 @@ static void raid5_quiesce(struct mddev *
+ 
+ 	switch(state) {
+ 	case 2: /* resume for a suspend */
+-		wake_up(&conf->wait_for_overlap);
++		wake_up_all(&conf->wait_for_overlap);
+ 		break;
+ 
+ 	case 1: /* stop all writes */
+@@ -5792,14 +5792,14 @@ static void raid5_quiesce(struct mddev *
+ 		conf->quiesce = 1;
+ 		spin_unlock_irq(&conf->device_lock);
+ 		/* allow reshape to continue */
+-		wake_up(&conf->wait_for_overlap);
++		wake_up_all(&conf->wait_for_overlap);
+ 		break;
+ 
+ 	case 0: /* re-enable writes */
+ 		spin_lock_irq(&conf->device_lock);
+ 		conf->quiesce = 0;
+ 		wake_up(&conf->wait_for_stripe);
+-		wake_up(&conf->wait_for_overlap);
++		wake_up_all(&conf->wait_for_overlap);
+ 		spin_unlock_irq(&conf->device_lock);
+ 		break;
+ 	}
 
