@@ -1,71 +1,58 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: Find mismatch in data blocks during raid6 repair
-Date: Thu, 21 Jun 2012 20:23:27 +0200
-Message-ID: <20120621182326.GA2144@lazy.lzy>
-References: <10900468.MPSjVn2C3J@peanut>
- <4FE315CE.9090201@anonymous.org.uk>
- <5100581.utCIcpy8f5@peanut>
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: Re: Script to save array info
+Date: Thu, 21 Jun 2012 17:37:00 -0400
+Message-ID: <20120621213700.GC10443@animx.eu.org>
+References: <20120620232149.GA7767@animx.eu.org>
+ <20120621142613.GA28130@calhariz.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <5100581.utCIcpy8f5@peanut>
+In-Reply-To: <20120621142613.GA28130@calhariz.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert Buchholz <robert.buchholz@goodpoint.de>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org
+To: Jose Manuel dos Santos Calhariz <jose.spam@netvisao.pt>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Robert,
-
-On Thu, Jun 21, 2012 at 04:58:33PM +0200, Robert Buchholz wrote:
-> Hello John,
-> 
-> On Thursday, June 21, 2012 01:38:38 PM John Robinson wrote:
-> > On 20/06/2012 18:41, Robert Buchholz wrote:
-> > [...]
+Jose Manuel dos Santos Calhariz wrote:
+> On Wed, Jun 20, 2012 at 07:21:49PM -0400, Wakko Warner wrote:
+> > After reading some of the stories about lost metadata, I was wondering if
+> > anyone had a script that would output the member info for each device with
+> > the device's physical serial number.
 > > 
-> > > When repairing a full raid6 with no missing drives
-> > > (raid-devices=n+2), a single inconsistent data block could be
-> > > detected
+> > For a crude one I did this while in /sys/block:
+> > for x in sd*;do
+> > 	echo /dev/$x
+> > 	/lib/udev/scsi_id --export --page=0x80 --whitelisted /dev/$x
+> > 	mdadm -E /dev/$x
+> > done
 > > 
-> > Yes, it could. See Neil Brown's blog post as to the many reasons why
-> > this isn't implemented: http://neil.brown.name/blog/20100211050355
+> > And saved the output.  It works for me because all but 3 of my raid members
+> > are full disks.
 > 
-> Thank you for the pointer, I did not find the article before.
-> I agree with Neil's premise, this should not be run on a mounted raid as 
-> changing data blocks can be a problem, and it should not be the default 
-> for resync. However, as both Neil and commenters point out, this is a 
-> valuable (offline) repair option.
-> 
-> Do you know whether the "smart" algorithm or the API necessary to 
-> construct a user space program are on the agenda?
+> I made a script for myself, that collects the information by
+> inspecting /sys instead of doing mdadm -E.  The script see all mdraid
+> devices and all devices that belong to a mdraid.  I would like to know
+> if the script works or not.  It works for me.
 
-a tool is already available, albeit not too much
-advertised (my fault, basically).
+I've looked into /sys/block/md*/md before.  I've noticed there is
+information not present in the output.
 
-It is "raid6check" and it is included in "mdadm", at
-least in the source repository.
+I just checked.  About the only thing important to me would be the "name"
+that mdadm -E lists.  I don't know how important UUIDs would be but it could
+be.
 
-It does *not* repair, but it will tell you which
-disk (if possible) and which stripe is incorrect
-from an non-degraded (of course) RAID-6.
+Looks like your script does essentially this one liner:
+find /sys/block/md*/md -type f | xargs grep .
 
-Any improvement to the code is very very welcome.
+I didn't run it though.  I think yours added the ls -l of the rdX/block/
+link.
+I looked through everything in the block for some of my devices and none had
+the serial number.  I had to use scsi_id from udev to get it.
 
-Unfortunately I did not have time to follow up the
-thing, but a "repair" option might be interesting.
-
-bye,
-
-pg
-
-> 
-> Cheers
-> 
-> Robert
-
-
+One thing you might want to do to yours is "exec >> ${FILEMD}" instead of all
+the >> ${FILEMD} that you had in your file.
 
 -- 
-
-piergiorgio
+ Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
+ million bugs.
