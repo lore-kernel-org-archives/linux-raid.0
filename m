@@ -1,128 +1,70 @@
-From: Jose Manuel dos Santos Calhariz <jose.spam@netvisao.pt>
-Subject: Re: Script to save array info
-Date: Thu, 21 Jun 2012 15:26:13 +0100
-Message-ID: <20120621142613.GA28130@calhariz.com>
-References: <20120620232149.GA7767@animx.eu.org>
-Reply-To: jose.spam@netvisao.pt
+From: Robert Buchholz <robert.buchholz@goodpoint.de>
+Subject: Re: Find mismatch in data blocks during raid6 repair
+Date: Thu, 21 Jun 2012 16:58:33 +0200
+Message-ID: <5100581.utCIcpy8f5@peanut>
+References: <10900468.MPSjVn2C3J@peanut> <4FE315CE.9090201@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="dDRMvlgZJXvWKvBx"
+Content-Type: multipart/signed; boundary="nextPart5219557.7jpx7dvSWE"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120620232149.GA7767@animx.eu.org>
+In-Reply-To: <4FE315CE.9090201@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---dDRMvlgZJXvWKvBx
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+--nextPart5219557.7jpx7dvSWE
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-On Wed, Jun 20, 2012 at 07:21:49PM -0400, Wakko Warner wrote:
-> After reading some of the stories about lost metadata, I was wondering if
-> anyone had a script that would output the member info for each device with
-> the device's physical serial number.
->=20
-> For a crude one I did this while in /sys/block:
-> for x in sd*;do
-> 	echo /dev/$x
-> 	/lib/udev/scsi_id --export --page=3D0x80 --whitelisted /dev/$x
-> 	mdadm -E /dev/$x
-> done
->=20
-> And saved the output.  It works for me because all but 3 of my raid membe=
-rs
-> are full disks.
->=20
+Hello John,
 
-I made a script for myself, that collects the information by
-inspecting /sys instead of doing mdadm -E.  The script see all mdraid
-devices and all devices that belong to a mdraid.  I would like to know
-if the script works or not.  It works for me.
+On Thursday, June 21, 2012 01:38:38 PM John Robinson wrote:
+> On 20/06/2012 18:41, Robert Buchholz wrote:
+> [...]
+> 
+> > When repairing a full raid6 with no missing drives
+> > (raid-devices=n+2), a single inconsistent data block could be
+> > detected
+> 
+> Yes, it could. See Neil Brown's blog post as to the many reasons why
+> this isn't implemented: http://neil.brown.name/blog/20100211050355
 
+Thank you for the pointer, I did not find the article before.
+I agree with Neil's premise, this should not be run on a mounted raid as 
+changing data blocks can be a problem, and it should not be the default 
+for resync. However, as both Neil and commenters point out, this is a 
+valuable (offline) repair option.
+
+Do you know whether the "smart" algorithm or the API necessary to 
+construct a user space program are on the agenda?
 
 
-#!/bin/bash
+Cheers
 
-# $1 - procfile
-# $2 - File to log
-function cat-file () {
-    echo $1 >> $2
-    if [ -e $1 ] ; then
-        ${CAT} $1 >> $2
-    else
-        echo "$1 don't exist" >> $2
-    fi
-    echo >> $2
-}
-
-
-FILEMD=3Dmd-list
-
-echo "Get slot positions of the devices in mdraid" >> ${FILEMD}
-for file in /sys/block/md* ; do
-    echo $file    >> ${FILEMD}
-    for dev in $file/md/rd* ; do
-        echo $dev    >> ${FILEMD}
-        ls -alF $dev >> ${FILEMD}
-    done
-    echo >> ${FILEMD}
-done
-
-echo "Get more info about devices in mdraid" >> ${FILEMD}
-# get info about all devices that are in a mdraid.
-# similar to mdadm --examine ?
-for file in /sys/block/md* ; do
-    echo $file    >> ${FILEMD}
-    for dev in $file/md/rd* ; do
-        echo $dev    >> ${FILEMD}
-        ls -alF $dev >> ${FILEMD}
-        for fi in $dev/* ; do
-            if test `basename $fi` =3D "block"; then
-                ls -alF $fi >> ${FILEMD}
-            else
-                cat-file $fi ${FILEMD}
-            fi
-        done
-        echo >> ${FILEMD}
-    done
-    echo >> ${FILEMD}
-done
-
-
-
---=20
---
-
-     Jose Calhariz
-
-A coisa mais dif=C3=ADcil de entender no mundo =C3=A9 o imposto de renda
-
---Albert Einstein
-
---dDRMvlgZJXvWKvBx
+Robert
+--nextPart5219557.7jpx7dvSWE
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+Version: GnuPG v2.0.17 (GNU/Linux)
 
-iQIcBAEBCAAGBQJP4y8FAAoJEDSKd41ohe+PHcYQAKAUZHy1qFRdynDf9Vw5NDXQ
-cGX5onb3vvXcud/pufeGoL0GCmMqU25Q+TYl3hr9s5mjFP+18BgRF/s9lMrvAPQi
-PBB9HkWnKdMfbrU8Cgj8najfJqpQp7Ku5/0BTcJAeHZys3HrWCIhvxiBEWcl5GE7
-RGtO8zokf/9aWe9zjp9I7jokibnHpTPo54H15u4WB+YQNck2I/0o4ajTRP8DkBsN
-OjxWvvDLTpd7giAWAv+3iAnCzRr/802+9QWho3E3b+QmHG/wi+xTewQaqCq34vL7
-duSbX8+o2YNVeqNYNTL6LG8jbk02h2j/S9/yKZ/XdnWm5ALmVg+3OwVC4giRhvla
-M1awVMW9538GETx1kr2NIRtQvxZYK04r+bAh4G+4yEM66OKpW57OoWXpdigGmIo3
-RcbarFN3ZT3ynYqO+l1wxDUzSIDGodxT/fB4dKSeRd05aZAhKesUizYhD5udm2Vt
-t45bzzWmyoTyj3sR+G1/0TX93t7pW8ir5AHt3KSxpM8cIkxZQa0xzh+kIwT7p/5G
-m2pggshxXDz/gWMWvSBonrb8Pr/ILlZ8Cqj0dExIXvmosCRxMTveYI7IcwvAWbAW
-iVJfDXsAbZ+ZEJ6g06qTD3EIVLEnCR63XJR3YQX7BRTpV8AYs/Um+3DD2hEmReNn
-l6iAEpR6UuUYblniZBcG
-=6wk6
+iQIcBAABCgAGBQJP4zaZAAoJECaaHo/OfoM5R3IP/0w0Rku6agGMsUbmfko71rer
+L7cFAWo9Cx1rE2MqN+6967bAKSLqs3MND0Lh9IgdGJVvluH2dmkfsBh2/3YEstwD
+gnkHmHRdGIgF9j5XCVVJtyC3W5OyEZaG30R2Axgfawrw64JcA7C/3BLA/+qjLEkJ
+oE0VKOaHS504uQBVdCz9BzcPgj/raRGNOlPHKPB0IRMnLyInmahM5IcSUyACwf3/
+9ovXB4VedftJgACLOC+p3tZlrL9CptyyQ3VPpRkt/BhUJW2cDb1v9sARoTXaNLKW
+NjMjpe4A/YS0sBlyoxluZHNcpb82xGaaSRYblrGjc313xxhHNz/YMZmO9zUeUh2q
+4If36whoOuys8fWR+uWrWXceXOgX3i92GSP8sAGnxXGgK4rvAeH9x4ltcqBYOAHE
+Id3ctB0ybFYHdSC1+9XFo8mNGAJH6ps5tI6cs6uP8Kk0jNMPJqQUm/2Lm6UdmZui
+5cpZUz/CuDYtgOLlXKNzUZazD0JQwqp8sGKcuOPf4utBRxqfGUhXVUza7lI/J4lq
+yP6xZMutWUJMzJgFdrNRNrEGkn4mE9qYaoVDtaZLOtegpEk7J8uHwQUjGfYQ39c6
+j66T9KGeyDWDTzl/0KTzlL5lvoFazXe7nnxA9mqjPoCT7heNYnULI8NScnxDX59J
++iziZe7LYE6TrXGTnHsx
+=C0WL
 -----END PGP SIGNATURE-----
 
---dDRMvlgZJXvWKvBx--
+--nextPart5219557.7jpx7dvSWE--
+
