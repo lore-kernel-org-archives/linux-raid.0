@@ -1,58 +1,87 @@
-From: Wakko Warner <wakko@animx.eu.org>
-Subject: Re: Script to save array info
-Date: Thu, 21 Jun 2012 17:37:00 -0400
-Message-ID: <20120621213700.GC10443@animx.eu.org>
-References: <20120620232149.GA7767@animx.eu.org>
- <20120621142613.GA28130@calhariz.com>
+From: Ramon Hofer <ramonhofer@bluewin.ch>
+Subject: Stacked array data recovery
+Date: Thu, 21 Jun 2012 22:44:10 +0000 (UTC)
+Message-ID: <js083q$kdu$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120621142613.GA28130@calhariz.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jose Manuel dos Santos Calhariz <jose.spam@netvisao.pt>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jose Manuel dos Santos Calhariz wrote:
-> On Wed, Jun 20, 2012 at 07:21:49PM -0400, Wakko Warner wrote:
-> > After reading some of the stories about lost metadata, I was wondering if
-> > anyone had a script that would output the member info for each device with
-> > the device's physical serial number.
-> > 
-> > For a crude one I did this while in /sys/block:
-> > for x in sd*;do
-> > 	echo /dev/$x
-> > 	/lib/udev/scsi_id --export --page=0x80 --whitelisted /dev/$x
-> > 	mdadm -E /dev/$x
-> > done
-> > 
-> > And saved the output.  It works for me because all but 3 of my raid members
-> > are full disks.
-> 
-> I made a script for myself, that collects the information by
-> inspecting /sys instead of doing mdadm -E.  The script see all mdraid
-> devices and all devices that belong to a mdraid.  I would like to know
-> if the script works or not.  It works for me.
+Hi all
 
-I've looked into /sys/block/md*/md before.  I've noticed there is
-information not present in the output.
+I had a media server at home with a raid5 array containing four disks 
+where I ran out of space. The solution with a separate NAS was nothing I 
+liked so I wanted to enlarge my server.
 
-I just checked.  About the only thing important to me would be the "name"
-that mdadm -E lists.  I don't know how important UUIDs would be but it could
-be.
+I bought a Norco case with 20 hot swap slots.
 
-Looks like your script does essentially this one liner:
-find /sys/block/md*/md -type f | xargs grep .
+With the kind help of Stan Hoeppner I was able to find good hardware to 
+connect the disks.
+Maybe it's not important but it's a LSI MegaRAID SAS 9240-4i, an Intel SAS 
+expander and the mainboard is a Asus P7P55D.
+I use Debian Squeeze with the backported 3.2.0-2-amd64 kernel.
+The mdadm package version is "v3.1.4 - 31st August 2010"
+(More information about the drives are below in the pastebins.)
 
-I didn't run it though.  I think yours added the ls -l of the rdX/block/
-link.
-I looked through everything in the block for some of my devices and none had
-the serial number.  I had to use scsi_id from udev to get it.
+The plan was to setup several RAID5 as members of a linear raid.
 
-One thing you might want to do to yours is "exec >> ${FILEMD}" instead of all
-the >> ${FILEMD} that you had in your file.
+Unfortunately I was too stupid to cool the disks so probably they are 
+damaged and I will have to replace them (hopefully still under warranty).
 
--- 
- Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
- million bugs.
+I set up md1 with four WD greens 2 TB (mdadm -C /dev/md1 -c 128 -n4 -l5 /
+dev/sd[abcd]) and added it as a single device to the linear array md0 
+(mdadm -C /dev/md0 --force -n1 -l linear /dev/md1).
+Then I copied the data from the old raid to it (btw the filesystem on md0 
+is xfs if this is relevant).
+During this process the disks weren't cooled.
+They are about 1-2 years old and mdadm marked some of them as faulty. I 
+thought this was because they were green drives and bought four new WD 
+black 2TB drives.
+
+I tried the same again and this time it worked well.
+Then I took the four Samsung 1.5 TB drives from the old server and added 
+them to the Norco case. With them I created the RAID5 array md2, grew the 
+linear array md0 and its filesystem.
+
+Until then I thought it would be wise to use the array already when it 
+still syncing the disks.
+During this process the disks of md1 made strange noises and were set 
+faulty as well as some disks of md2.
+
+Here are the mails I got from mdadm:
+http://pastebin.com/raw.php?i=ftpmfSpv
+
+Now I have solved the cooling problem and want to replace the disks. But 
+I'd like to try to rescue the data on md0.
+
+I did a smartctl readout of the disks. Here's a summary of the disks I 
+have:
+
+/dev/sd[abcd] WD blacks md1
+/dev/sd[efgh] Samsungs md2
+/dev/sd[jklm] WD green md3 (not yet created)
+
+This is the output of "smartctl -l error" for each of the disks:
+http://pastebin.com/raw.php?i=JtYkweNp
+
+and "smartctl -x":
+http://pastebin.com/raw.php?i=QFK6dyZs
+
+and "smartctl -H":
+http://pastebin.com/raw.php?i=hAEdyvCz
+
+When I start the system md2 gets started and is syncing the disks. But 
+md1 is stopped.
+
+Is it possible to start md1 again to be able to start the linear array 
+md0 so that I can accesss the data?
+
+Thanks in advance for any help.
+
+
+Best regards
+Ramon
+
