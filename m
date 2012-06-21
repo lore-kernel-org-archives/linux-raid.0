@@ -1,36 +1,43 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Script to save array info
-Date: Thu, 21 Jun 2012 09:20:47 +0200
-Message-ID: <4FE2CB4F.4080106@turmel.org>
-References: <20120620232149.GA7767@animx.eu.org>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Mounting MD raid1 array blocked by "Stale NFS file handle"
+Date: Thu, 21 Jun 2012 03:36:26 -0500
+Message-ID: <4FE2DD0A.8000501@hardwarefreak.com>
+References: <CAO7BsSmJiQb6PCmf+j6RnxVSFpDkK9w2wmimx86PqQxd+kY6Nw@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120620232149.GA7767@animx.eu.org>
+In-Reply-To: <CAO7BsSmJiQb6PCmf+j6RnxVSFpDkK9w2wmimx86PqQxd+kY6Nw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Skip Coombe <skipcoombe@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/21/2012 01:21 AM, Wakko Warner wrote:
-> After reading some of the stories about lost metadata, I was wondering if
-> anyone had a script that would output the member info for each device with
-> the device's physical serial number.
+Sorry bout the off-list only reply.  vger lists don't conform to standards.
+
+On 6/20/2012 7:12 AM, Skip Coombe wrote:
+
+> $ sudo mount -t ext2 -U dadb7d1c-daa2-4e56-8ef7-2816db397289 /mnt/back
+> mount: Stale NFS file handle
 > 
-> For a crude one I did this while in /sys/block:
-> for x in sd*;do
-> 	echo /dev/$x
-> 	/lib/udev/scsi_id --export --page=0x80 --whitelisted /dev/$x
-> 	mdadm -E /dev/$x
-> done
+> $ sudo mount -t ext2 /dev/md1 /mnt/back
+> mount: Stale NFS file handle
 > 
-> And saved the output.  It works for me because all but 3 of my raid members
-> are full disks.
+> I do not have NFS intalled, only ssh and smb.
+> 
+> Any help will be appreciated. Please point out any info I have missed.
 
-You might try "lsdrv"[1].  It reports the entire block storage tree
-starting from real devices with serial numbers.  I tuck away a copy any
-time I change a server's drive setup.
+What you have missed is that the mount command doesn't mount devices, it
+mounts filesystems, which reside on devices.  That means mount has
+nothing to do with, and no knowledge of, the md driver or devices.  The
+error is not indicative of the problem as you don't have NFS installed.
+ The error msg is a bug.  File a report against mount and/or ext2 with
+your distribution--looks like ubuntu.
 
-Phil
+Something is wrong with the filesystem nonetheless.  So the first thing
+to do is run an fsck.  If that doesn't fix it, ask for help in the
+various ubuntu fora.
 
-[1] http://github.com/pturmel/lsdrv
+-- 
+Stan
