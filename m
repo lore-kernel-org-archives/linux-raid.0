@@ -1,43 +1,85 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Mounting MD raid1 array blocked by "Stale NFS file handle"
-Date: Thu, 21 Jun 2012 03:36:26 -0500
-Message-ID: <4FE2DD0A.8000501@hardwarefreak.com>
-References: <CAO7BsSmJiQb6PCmf+j6RnxVSFpDkK9w2wmimx86PqQxd+kY6Nw@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [patch 8/8] raid5: create multiple threads to handle stripes
+Date: Thu, 21 Jun 2012 18:09:55 +0800
+Message-ID: <20120621100955.GA255@kernel.org>
+References: <20120604080152.098975870@kernel.org>
+ <20120604080354.686050081@kernel.org>
+ <20120607113958.04b9d5b8@notabene.brown>
+ <20120607064551.GD779@kernel.org>
+ <CAA9_cmc0C3V9SG49UpxW+GAhWo+O8+cnyac6OxROkiTeqcrRcA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAO7BsSmJiQb6PCmf+j6RnxVSFpDkK9w2wmimx86PqQxd+kY6Nw@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <CAA9_cmc0C3V9SG49UpxW+GAhWo+O8+cnyac6OxROkiTeqcrRcA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Skip Coombe <skipcoombe@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, axboe@kernel.dk, shli@fusionio.com
 List-Id: linux-raid.ids
 
-Sorry bout the off-list only reply.  vger lists don't conform to standards.
-
-On 6/20/2012 7:12 AM, Skip Coombe wrote:
-
-> $ sudo mount -t ext2 -U dadb7d1c-daa2-4e56-8ef7-2816db397289 /mnt/back
-> mount: Stale NFS file handle
+On Tue, Jun 12, 2012 at 09:08:17PM -0700, Dan Williams wrote:
+> On Wed, Jun 6, 2012 at 11:45 PM, Shaohua Li <shli@kernel.org> wrote:
+> > On Thu, Jun 07, 2012 at 11:39:58AM +1000, NeilBrown wrote:
+> >> On Mon, 04 Jun 2012 16:02:00 +0800 Shaohua Li <shli@kernel.org> wrote:
+> >>
+> >> > Like raid 1/10, raid5 uses one thread to handle stripe. In a fast storage, the
+> >> > thread becomes a bottleneck. raid5 can offload calculation like checksum to
+> >> > async threads. And if storge is fast, scheduling async work and running async
+> >> > work will introduce heavy lock contention of workqueue, which makes such
+> >> > optimization useless. And calculation isn't the only bottleneck. For example,
+> >> > in my test raid5 thread must handle > 450k requests per second. Just doing
+> >> > dispatch and completion will make raid5 thread incapable. The only chance to
+> >> > scale is using several threads to handle stripe.
+> >> >
+> >> > With this patch, user can create several extra threads to handle stripe. How
+> >> > many threads are better depending on disk number, so the thread number can be
+> >> > changed in userspace. By default, the thread number is 0, which means no extra
+> >> > thread.
+> >> >
+> >> > In a 3-disk raid5 setup, 2 extra threads can provide 130% throughput
+> >> > improvement (double stripe_cache_size) and the throughput is pretty close to
+> >> > theory value. With >=4 disks, the improvement is even bigger, for example, can
+> >> > improve 200% for 4-disk setup, but the throughput is far less than theory
+> >> > value, which is caused by several factors like request queue lock contention,
+> >> > cache issue, latency introduced by how a stripe is handled in different disks.
+> >> > Those factors need further investigations.
+> >> >
+> >> > Signed-off-by: Shaohua Li <shli@fusionio.com>
+> >>
+> >> I think it is great that you have got RAID5 to the point where multiple
+> >> threads improve performance.
+> >> I really don't like the idea of having to configure that number of threads.
+> >>
+> >> It would be great if it would auto-configure.
+> >> Maybe the main thread could fork aux threads when it notices a high load.
+> >> e.g. if it has been servicing requests for more than 100ms without a break,
+> >> and the number of threads is less than the number of CPUs, then it forks a new
+> >> helper and resets the timer.
+> >>
+> >> If a thread has been idle for more than 30 minutes, it exits.
+> >>
+> >> Might that be reasonable?
+> >
+> > Yep, I bet this patch needs more discussion. auto-configure is preferred. Your
+> > idea is worthy doing. However, the concern is if doing auto fork/kill thread,
+> > user can't do numa binding, which is important for high speed storage. Maybe
+> > have a reasonable default thread number, like one thread one disk? Need more
+> > investigations, I'm open to any suggestion in this side.
 > 
-> $ sudo mount -t ext2 /dev/md1 /mnt/back
-> mount: Stale NFS file handle
+> The last time I looked at this the btrfs thread pool looked like a
+> good candidate:
 > 
-> I do not have NFS intalled, only ssh and smb.
+>   http://marc.info/?l=linux-raid&m=126944260704907&w=2
 > 
-> Any help will be appreciated. Please point out any info I have missed.
+> ...have not looked if Tejun has made this available as a generic workqueue mode.
 
-What you have missed is that the mount command doesn't mount devices, it
-mounts filesystems, which reside on devices.  That means mount has
-nothing to do with, and no knowledge of, the md driver or devices.  The
-error is not indicative of the problem as you don't have NFS installed.
- The error msg is a bug.  File a report against mount and/or ext2 with
-your distribution--looks like ubuntu.
+I tried to create a UNBOUND workqueue and set max active to the cpu number, so
+each cpu will handle one work. In the work, the cpu will handle 8 stripes. The
+throughput is relative ok, but CPU utilization is very high compared to just
+create 3 or 4 threads like the patch does. There is heavy lock contention in
+block queue_lock, since every cpu now dispatches request. There are other
+issues like cache, raid5 device_lock has more contention too. It appears too
+many threads to handle stripe isn't as good as expected.
 
-Something is wrong with the filesystem nonetheless.  So the first thing
-to do is run an fsck.  If that doesn't fix it, ask for help in the
-various ubuntu fora.
-
--- 
-Stan
+Thanks,
+Shaohua
