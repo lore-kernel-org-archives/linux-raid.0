@@ -1,46 +1,47 @@
-From: Ramon Hofer <ramonhofer@bluewin.ch>
-Subject: Re: Stacked array data recovery
-Date: Fri, 22 Jun 2012 14:37:08 +0000 (UTC)
-Message-ID: <js1vuk$9k8$2@dough.gmane.org>
-References: <js083q$kdu$1@dough.gmane.org>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Can't expand linear RAID on top of 2 x RAID1
+Date: Fri, 22 Jun 2012 18:05:22 -0500
+Message-ID: <4FE4FA32.8010506@hardwarefreak.com>
+References: <4FE44BDD.302@websitemanagers.com.au>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4FE44BDD.302@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Adam Goryachev <adam@websitemanagers.com.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sorry, I hit the wrong button.On Thu, 21 Jun 2012 22:44:10 +0000, Ramon 
-Hofer wrote:
+On 6/22/2012 5:41 AM, Adam Goryachev wrote:
+> I have expanded my system over time, I started with 2 x 2TB drives in
+> RAID1 (md2)
+> 
+> I then added 2 x 750GB drives, configured as RAID1 (md1)
+> Then created a third raid (md3) as linear with the md2 + md1
+> 
+> Finally, I've upgraded the 2 x 750G to 2 x 1TB drives (one at a time).
+> 
+> I then did a mdadm --grow to expand the RAID1 from 750G to 1TB
+> 
+> The problem I am having is that I can't expand the linear (md3) array to
+> grow the extra 250G of space.
+> 
+> Could anyone suggest how I might be able to get the extra 250G of space
+> to become available?
 
-> Is it possible to start md1 again to be able to start the linear array
-> md0 so that I can accesss the data?
+If you think about this for a few minutes more, and re-read how md
+--linear works, and thus how growing a linear array works, you'll surely
+understand why you can't do what you're attempting to do.
 
-Stan will probably be angry with me but I did the following:
+As for seeing that extra 250GB, I don't have an answer.  Typically
+linear arrays are used in lieu of growing constituent member arrays.
+That's kinda the whole point of linear (concatenation).
 
-I found the recovery page in your wiki:
-https://raid.wiki.kernel.org/index.php/RAID_Recovery
+You could try deleting the linear array and simply creating a new one.
+But surely the changed offsets would wreak havoc on the filesystem
+currently spanning this mess.
 
-So I followed the process there.
-This is what I did:
-
-~$ mdadm --examine /dev/sd[abcd] > raid.status.md1
-
-~$ mdadm --create --assume-clean -c 128 --level=5 --raid-devices=4 /dev/
-md1 /dev/sda /dev/sdb /dev/sdc /dev/sdd
-
-It was up and clean.
-
-~$ mdadm --examine /dev/md[12] > raid.status.md0
-
-~$ mdadm -C --assume-clean -n2 -l linear /dev/md0 /dev/md[12]
-
-Now I could mount md0 and all my data is still there :-D
-
-Thanks for this great wiki page!
-
-
-Best regards
-Ramon
-
+-- 
+Stan
