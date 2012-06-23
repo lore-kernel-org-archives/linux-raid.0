@@ -1,51 +1,73 @@
 From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Stacked array data recovery
-Date: Sat, 23 Jun 2012 07:09:55 -0500
-Message-ID: <4FE5B213.5010503@hardwarefreak.com>
-References: <js083q$kdu$1@dough.gmane.org> <js1vuk$9k8$2@dough.gmane.org>
+Subject: Re: Can't expand linear RAID on top of 2 x RAID1
+Date: Sat, 23 Jun 2012 07:18:27 -0500
+Message-ID: <4FE5B413.4000300@hardwarefreak.com>
+References: <4FE44BDD.302@websitemanagers.com.au> <4FE4FA32.8010506@hardwarefreak.com> <32a64312-93cd-47d7-9154-2e28eda58003@email.android.com>
 Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <js1vuk$9k8$2@dough.gmane.org>
+In-Reply-To: <32a64312-93cd-47d7-9154-2e28eda58003@email.android.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ramon Hofer <ramonhofer@bluewin.ch>
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 6/22/2012 9:37 AM, Ramon Hofer wrote:
-> Sorry, I hit the wrong button.On Thu, 21 Jun 2012 22:44:10 +0000, Ramon 
-> Hofer wrote:
+On 6/22/2012 9:53 PM, Adam Goryachev wrote:
+> Stan Hoeppner <stan@hardwarefreak.com> wrote:
 > 
->> Is it possible to start md1 again to be able to start the linear array
->> md0 so that I can accesss the data?
+>> On 6/22/2012 5:41 AM, Adam Goryachev wrote:
+>>> I have expanded my system over time, I started with 2 x 2TB drives in
+>>> RAID1 (md2)
+>>>
+>>> I then added 2 x 750GB drives, configured as RAID1 (md1)
+>>> Then created a third raid (md3) as linear with the md2 + md1
+>>>
+>>> Finally, I've upgraded the 2 x 750G to 2 x 1TB drives (one at a
+>> time).
+>>>
+>>> I then did a mdadm --grow to expand the RAID1 from 750G to 1TB
+>>>
+>>> The problem I am having is that I can't expand the linear (md3) array
+>> to
+>>> grow the extra 250G of space.
+>>>
+>>> Could anyone suggest how I might be able to get the extra 250G of
+>> space
+>>> to become available?
+>>
+>> If you think about this for a few minutes more, and re-read how md
+>> --linear works, and thus how growing a linear array works, you'll
+>> surely
+>> understand why you can't do what you're attempting to do.
 > 
-> Stan will probably be angry with me but I did the following:
+> Actually, no I don't understand the problem... From my (probably limited) understanding, linear simply appends each drive to the array. I understand that you would not be able to increase the size of any constituent device which is not the last component of the array, but I don't see any reason why it is not possible to increase the size of the last component. (Which is what I am attempting to do)
 > 
-> I found the recovery page in your wiki:
-> https://raid.wiki.kernel.org/index.php/RAID_Recovery
+>> As for seeing that extra 250GB, I don't have an answer.  Typically
+>> linear arrays are used in lieu of growing constituent member arrays.
+>> That's kinda the whole point of linear (concatenation).
 > 
-> So I followed the process there.
-> This is what I did:
-> 
-> ~$ mdadm --examine /dev/sd[abcd] > raid.status.md1
-> 
-> ~$ mdadm --create --assume-clean -c 128 --level=5 --raid-devices=4 /dev/
-> md1 /dev/sda /dev/sdb /dev/sdc /dev/sdd
-> 
-> It was up and clean.
-> 
-> ~$ mdadm --examine /dev/md[12] > raid.status.md0
-> 
-> ~$ mdadm -C --assume-clean -n2 -l linear /dev/md0 /dev/md[12]
-> 
-> Now I could mount md0 and all my data is still there :-D
+> Well, the only other alternative I can think of is to reduce the size of the array back to 750G, reduce the size of the partitions for that array to 750G. Then create a new 250G partition on the two 1TB drives, create a fourth RAID1 array, and then add that 4th RAID1 array to the end of the existing linear array. This just didn't seem like a very good solution (ie, not clean).
 
-You should have run an "xfs_repair -n" before mounting.  "-n" means no
-modify, making it a check operation.  If it finds errors then rerun it
-without the "-n" so it can make necessary repairs.  Then remount.  Sorry
-I forgot to mention this, or remind you, whichever is the case. :)
+This is the only sure fire way I see ATM to do this.  But I agree, it's
+not very clean.  I'm a big proponent of only one array per physical
+disk, as I stated recently, and the reasons for it.  Given what I'm
+guessing your workload profile is, it wouldn't make a difference.
+
+>> You could try deleting the linear array and simply creating a new one.
+>> But surely the changed offsets would wreak havoc on the filesystem
+>> currently spanning this mess.
+> 
+> Perhaps this would work. If I delete the linear array and re-create, with assume-clean (or whatever the right flag is, I'll read the man page later when I'm doing it), then like I said, the first component device will be the same, the second component device is the same, but just happens to be bigger. Any comments on whether this should work?
+> 
+> What should I do to ensure that the component devices are ordered the way I think they are? Apparently the numbers in /proc/mdstat just tell me what order the devices were added, not what order they are in the array?
+> 
+> Thank you for your advice.
+
+The best advice I can give you is to wait for Neil Brown to weigh in
+before you make any such changes.
 
 -- 
 Stan
+
