@@ -1,88 +1,83 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: linux-image-2.6.32-5-686: kernel BUG at ...
- build/source_i386_none/drivers/md/raid5.c:2764!
-Date: Sun, 24 Jun 2012 18:21:46 +1000
-Message-ID: <20120624182146.7d63fbbb@notabene.brown>
-References: <20120622121953.GA25149@calhariz.com>
+From: Ramon Hofer <ramonhofer@bluewin.ch>
+Subject: Re: Stacked array data recovery
+Date: Sun, 24 Jun 2012 12:15:10 +0000 (UTC)
+Message-ID: <js70ce$fgv$1@dough.gmane.org>
+References: <js083q$kdu$1@dough.gmane.org> <js1vuk$9k8$2@dough.gmane.org>
+	<4FE5B213.5010503@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/YV4ylXbyJf_zIWj4bBT+duX"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120622121953.GA25149@calhariz.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: jose.spam@netvisao.pt
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/YV4ylXbyJf_zIWj4bBT+duX
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Sat, 23 Jun 2012 07:09:55 -0500, Stan Hoeppner wrote:
 
-On Fri, 22 Jun 2012 13:19:53 +0100 Jose Manuel dos Santos Calhariz
-<jose.spam@netvisao.pt> wrote:
+> On 6/22/2012 9:37 AM, Ramon Hofer wrote:
+>> Sorry, I hit the wrong button.On Thu, 21 Jun 2012 22:44:10 +0000, Ramon
+>> Hofer wrote:
+>> 
+>>> Is it possible to start md1 again to be able to start the linear array
+>>> md0 so that I can accesss the data?
+>> 
+>> Stan will probably be angry with me but I did the following:
+>> 
+>> I found the recovery page in your wiki:
+>> https://raid.wiki.kernel.org/index.php/RAID_Recovery
+>> 
+>> So I followed the process there.
+>> This is what I did:
+>> 
+>> ~$ mdadm --examine /dev/sd[abcd] > raid.status.md1
+>> 
+>> ~$ mdadm --create --assume-clean -c 128 --level=5 --raid-devices=4
+>> /dev/ md1 /dev/sda /dev/sdb /dev/sdc /dev/sdd
+>> 
+>> It was up and clean.
+>> 
+>> ~$ mdadm --examine /dev/md[12] > raid.status.md0
+>> 
+>> ~$ mdadm -C --assume-clean -n2 -l linear /dev/md0 /dev/md[12]
+>> 
+>> Now I could mount md0 and all my data is still there :-D
+> 
+> You should have run an "xfs_repair -n" before mounting.  "-n" means no
+> modify, making it a check operation.  If it finds errors then rerun it
+> without the "-n" so it can make necessary repairs.  Then remount.  Sorry
+> I forgot to mention this, or remind you, whichever is the case. :)
 
->=20
-> In another day during the periodic mdadm RAID check:=20
->  - the linux kernel gave a kernel BUG,=20
->  - tried to kick out a failed disk and=20
->  - stopped accepting I/O to the affected raid. =20
->=20
-> The affected programs were in state D.  The only way to recover was to
-> do a reboot.  After reboot the problematic disk was replaced.
->=20
-> I reported the bug to Debian and is there all the information about it:
->=20
-> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D675969
->=20
-> I was asked to report the BUG here in case someone knows what happened.
->=20
-> Here is a summary of the more relevant information:
->=20
-> This machine have 2 x RAID6 with 6 disks each, for a total of 12 disks.=20
->=20
-> I have 5 systems with a similar setup and only one failed, maybe
-> because of the failing disk.  I will use one of the systems to try to
-> reproduce the bug, before triyng a new kernel.
->=20
->=20
-> The proprietary module is the openafs filesystem v1.6.1 backported
-> from Debian testing.
->=20
-> The kernel bug is:
->=20
->=20
-> build/source_i386_none/drivers/md/raid5.c:2764!
+Thanks you!
 
-This bug was fixed in 2.6.32.49 and 3.2
+You have mentioned but I forgot to do it.
+I did it now and still everything looks good.
+At least with the WD blacks and the Samsung drives.
 
-http://git.kernel.org/?p=3Dlinux/kernel/git/stable/linux-stable.git;a=3Dcom=
-mitdiff;h=3D61d433c479a6ccfed6a7e73e6111ca8fa0348c63
+One WD green was again marked faulty when I tried to create an array with 
+them.
 
-http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux.git;a=3Dcommitdi=
-ff;h=3D9a3f530f39f4490eaa18b02719fb74ce5f4d2d86
+This is the output of dmesg:
+http://pastebin.com/raw.php?i=5aukYJa8
 
-NeilBrown
+This seems to be not good:
+[61142.466334] md/raid:md9: read error not correctable (sector 3758190680 
+on sdk).
+[61142.466338] md/raid:md9: Disk failure on sdk, disabling device.
 
---Sig_/YV4ylXbyJf_zIWj4bBT+duX
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+What could the reason of this issue be?
+Is it because the disk is broken or not suited for raid use?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+I'm now running smartctl -t long /dev/sdk.
+I have no clue if this helps in any way...
 
-iQIVAwUBT+bOGjnsnt1WYoG5AQIQkw/+N04H/QZvmdzqpiMYlCVbdAXAvVR9HN+K
-FH+CRom++y4AdfPmEYLHRiPSvL5vBqm38cVw8ApdtcBqZF3sGLd0Z4p5zPgphIqr
-H0T6+YSeYOBwoR73TX2PqCfClxf8orz9dxZJwzFuVClNfk60TDFXbmOZO+RMVnTY
-6RDpqKwhuRODo19TjrdVgwiLhbM0qoUEEvWT4dbO7jh0xK9Hzd3oO/SEY6egzzaW
-mUD8pvTzrgDNsSB3tymS8h49uMqHoF7NX0p/FRslkM3GDxvBCQ+9pbyZ2ZAn16LE
-kkrMTWxYhHr/b5jh3NUFbobj5nfblsr9xoSQ9jl6+7DCEEauriR4IjpztScVAjWO
-XtgIY1LNNX7VFq4N2pTcx/slrOBZhxn2kMZ654Ti8h5Fmy92uuBNINL2kp6/+fHn
-olmodeTOYckSl37Nf4H98bdQnoky4Pd0g8BlXR/O2q0eVfIRnaoNasVPnsaGLRJP
-IV9xkrrH/dc5aj0ShIvSCi3g0DIGyaAK7z0RLK+yW6tnoS3jKrxpQfiiajnTY+I3
-2ihG44/SI0/Bx5c+DyfsEAT7S1dVC2mA+HlhXz0JEjZBjjZy2Bl6FOyDxE2Bo401
-ZEo7aBoH+Wg5+l7qB6x9TP6FfvCMgMp5385lhMnOUd9c4Yc8aalAX59lg+oU+WCx
-S+BZmwM+xlE=
-=bThp
------END PGP SIGNATURE-----
+Here's the output of smartctl -a /dev/sdk:
+http://pastebin.com/raw.php?i=2ULrx6du
 
---Sig_/YV4ylXbyJf_zIWj4bBT+duX--
+
+Should I bring the disc to my dealer or is it an issue of using it with 
+mdadm?
+
+
+Best regards
+Ramon
+
