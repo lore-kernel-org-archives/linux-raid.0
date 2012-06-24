@@ -1,84 +1,111 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Can't expand linear RAID on top of 2 x RAID1
-Date: Sun, 24 Jun 2012 09:17:48 -0500
-Message-ID: <4FE7218C.6090706@hardwarefreak.com>
-References: <4FE44BDD.302@websitemanagers.com.au> <4FE4FA32.8010506@hardwarefreak.com> <32a64312-93cd-47d7-9154-2e28eda58003@email.android.com> <4FE5B413.4000300@hardwarefreak.com>
-Reply-To: stan@hardwarefreak.com
+From: Jose Manuel dos Santos Calhariz <jose.spam@netvisao.pt>
+Subject: Re: linux-image-2.6.32-5-686: kernel BUG at ...
+ build/source_i386_none/drivers/md/raid5.c:2764!
+Date: Sun, 24 Jun 2012 18:02:34 +0100
+Message-ID: <20120624170234.GA13154@calhariz.com>
+References: <20120622121953.GA25149@calhariz.com>
+ <20120624182146.7d63fbbb@notabene.brown>
+Reply-To: jose.spam@netvisao.pt
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="0F1p//8PRICkK4MW"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FE5B413.4000300@hardwarefreak.com>
+Content-Disposition: inline
+In-Reply-To: <20120624182146.7d63fbbb@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
+To: NeilBrown <neilb@suse.de>
+Cc: jose.spam@netvisao.pt, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hay Neil,
 
-Could you please take a look at this one?  I'm at the limits of my
-knowledge in this case, not exactly sure what the OP's next step should be.
+--0F1p//8PRICkK4MW
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks.
+On Sun, Jun 24, 2012 at 06:21:46PM +1000, NeilBrown wrote:
+> On Fri, 22 Jun 2012 13:19:53 +0100 Jose Manuel dos Santos Calhariz
+> <jose.spam@netvisao.pt> wrote:
+>=20
+> >=20
+> > In another day during the periodic mdadm RAID check:=20
+> >  - the linux kernel gave a kernel BUG,=20
+> >  - tried to kick out a failed disk and=20
+> >  - stopped accepting I/O to the affected raid. =20
+> >=20
+> > The affected programs were in state D.  The only way to recover was to
+> > do a reboot.  After reboot the problematic disk was replaced.
+> >=20
+> > I reported the bug to Debian and is there all the information about it:
+> >=20
+> > http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D675969
+> >=20
+> > I was asked to report the BUG here in case someone knows what happened.
+> >=20
+> > Here is a summary of the more relevant information:
+> >=20
+> > This machine have 2 x RAID6 with 6 disks each, for a total of 12 disks.=
+=20
+> >=20
+> > I have 5 systems with a similar setup and only one failed, maybe
+> > because of the failing disk.  I will use one of the systems to try to
+> > reproduce the bug, before triyng a new kernel.
+> >=20
+> >=20
+> > The proprietary module is the openafs filesystem v1.6.1 backported
+> > from Debian testing.
+> >=20
+> > The kernel bug is:
+> >=20
+> >=20
+> > build/source_i386_none/drivers/md/raid5.c:2764!
 
--- 
-Stan
+>=20
+> This bug was fixed in 2.6.32.49 and 3.2
+>=20
+> http://git.kernel.org/?p=3Dlinux/kernel/git/stable/linux-stable.git;a=3Dc=
+ommitdiff;h=3D61d433c479a6ccfed6a7e73e6111ca8fa0348c63
+>=20
+> http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux.git;a=3Dcommit=
+diff;h=3D9a3f530f39f4490eaa18b02719fb74ce5f4d2d86
+>=20
+> NeilBrown
 
+The failing kernel had that fix all ready.  The machine was running
+the kernel Debian 2.6.32-41squeeze2.  Looking into the change log,
+this kernel have all the fixes until 2.6.32.51 plus other fixes.
 
-On 6/23/2012 7:18 AM, Stan Hoeppner wrote:
-> On 6/22/2012 9:53 PM, Adam Goryachev wrote:
->> Stan Hoeppner <stan@hardwarefreak.com> wrote:
->>
->>> On 6/22/2012 5:41 AM, Adam Goryachev wrote:
->>>> I have expanded my system over time, I started with 2 x 2TB drives in
->>>> RAID1 (md2)
->>>>
->>>> I then added 2 x 750GB drives, configured as RAID1 (md1)
->>>> Then created a third raid (md3) as linear with the md2 + md1
->>>>
->>>> Finally, I've upgraded the 2 x 750G to 2 x 1TB drives (one at a
->>> time).
->>>>
->>>> I then did a mdadm --grow to expand the RAID1 from 750G to 1TB
->>>>
->>>> The problem I am having is that I can't expand the linear (md3) array
->>> to
->>>> grow the extra 250G of space.
->>>>
->>>> Could anyone suggest how I might be able to get the extra 250G of
->>> space
->>>> to become available?
->>>
->>> If you think about this for a few minutes more, and re-read how md
->>> --linear works, and thus how growing a linear array works, you'll
->>> surely
->>> understand why you can't do what you're attempting to do.
->>
->> Actually, no I don't understand the problem... From my (probably limited) understanding, linear simply appends each drive to the array. I understand that you would not be able to increase the size of any constituent device which is not the last component of the array, but I don't see any reason why it is not possible to increase the size of the last component. (Which is what I am attempting to do)
->>
->>> As for seeing that extra 250GB, I don't have an answer.  Typically
->>> linear arrays are used in lieu of growing constituent member arrays.
->>> That's kinda the whole point of linear (concatenation).
->>
->> Well, the only other alternative I can think of is to reduce the size of the array back to 750G, reduce the size of the partitions for that array to 750G. Then create a new 250G partition on the two 1TB drives, create a fourth RAID1 array, and then add that 4th RAID1 array to the end of the existing linear array. This just didn't seem like a very good solution (ie, not clean).
-> 
-> This is the only sure fire way I see ATM to do this.  But I agree, it's
-> not very clean.  I'm a big proponent of only one array per physical
-> disk, as I stated recently, and the reasons for it.  Given what I'm
-> guessing your workload profile is, it wouldn't make a difference.
-> 
->>> You could try deleting the linear array and simply creating a new one.
->>> But surely the changed offsets would wreak havoc on the filesystem
->>> currently spanning this mess.
->>
->> Perhaps this would work. If I delete the linear array and re-create, with assume-clean (or whatever the right flag is, I'll read the man page later when I'm doing it), then like I said, the first component device will be the same, the second component device is the same, but just happens to be bigger. Any comments on whether this should work?
->>
->> What should I do to ensure that the component devices are ordered the way I think they are? Apparently the numbers in /proc/mdstat just tell me what order the devices were added, not what order they are in the array?
->>
->> Thank you for your advice.
-> 
-> The best advice I can give you is to wait for Neil Brown to weigh in
-> before you make any such changes.
-> 
+     Jose Calhariz
 
+--=20
+--
 
+Ambi=E7=E3o: um supremo desejo de ser vilipendiado por seus inimigos enquan=
+to voc=EA est=E1 vivo e ser ridicularizado pelos amigos quando estiver morto
+
+--Ambrose Bierce
+
+--0F1p//8PRICkK4MW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBCAAGBQJP50gpAAoJEDSKd41ohe+PZ2gP/jH2+52UiJ77DtCSdOFsq+67
+EsibupV5lkfwQELS++r4m3ZfsvZxbrR12oMuu9NnKCZYSuBSbCnHJvJl/i3mEYrW
+vMak93FHDrfO2azK6xCuwTKr2oBcNk+px62T+xsoU/n6/nGreWySKy0txhd/1gHe
+gFlf1eHMN2p6dX4hcWX8CDaqCRl0VDTaANwiFQ8957UgeG97XZO0AK2fMonhG9Ia
+QC40Ft4vGbOnWP2iKfIZtB5mmjsq+Xhtu9+EDqddXPh7sYplBJ9HIwePO7wRfyUL
+RXQDishqMQI8GDNajR8oRVUXunNeSi7HA4s2NTgxb1Hpp7l8H40vKUK8RHWCIAt5
+w3acT0E1tXsG2ETYQZVyZk+LApu2iY5OIkQVNhWTL55tPhIp0xjTJr1q2c7WPLKB
+fzMTtMXxaEtmfouWHeZCgXc9PQFotiHWNrMt3IAO+Pi922tzK+I4QUSctV0Tca4U
+oWJoX4xeiHpJLv8WLvHTRb7Rt6NRw1PK0Xq9g7aGVcocx9EO1VtgEvcnt4ylNbRS
+nLb80TCjbqkaD86nK5Qff1IAmBm0pG0Z8aocIWQCXhWJNS2lDlDS3EATo/3ScYdc
+hBgPzbyxmoYExchBPE22HrNbsK7m9LRnnO2gN/Wj3Rocqt8YLMiQ2P974+MzxwQy
+19YQA0lUc6Z93AoHNmWD
+=O6M4
+-----END PGP SIGNATURE-----
+
+--0F1p//8PRICkK4MW--
