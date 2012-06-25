@@ -1,189 +1,232 @@
-From: Christian Balzer <chibi@gol.com>
-Subject: Re: MD Raid10 recovery results in "attempt to access beyond end of
- device"
-Date: Mon, 25 Jun 2012 15:06:51 +0900
-Message-ID: <20120625150651.26a457bb@batzmaru.gol.ad.jp>
-References: <20120622160632.7dfbbb9d@batzmaru.gol.ad.jp>
-	<20120622180748.5f78339c@notabene.brown>
-	<20120622174257.03a17e81@batzmaru.gol.ad.jp>
-	<20120625140754.44536553@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Recalculating the --size parameter when recovering a failed
+ array
+Date: Mon, 25 Jun 2012 16:15:54 +1000
+Message-ID: <20120625161554.1bef3fb9@notabene.brown>
+References: <F4D18266-EDAB-4D31-B3F1-A91894C7E455@ibink.com>
+	<20120617180341.39e2d384@notabene.brown>
+	<D7A190C6-B05F-4423-B569-D88D34FD076A@ibink.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/s63pt6jquCZysHNv98.Fg6x"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120625140754.44536553@notabene.brown>
+In-Reply-To: <D7A190C6-B05F-4423-B569-D88D34FD076A@ibink.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Tim Nufire <linux-raid_tim@ibink.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+--Sig_/s63pt6jquCZysHNv98.Fg6x
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Hello Neil,
+On Tue, 19 Jun 2012 13:33:37 -0700 Tim Nufire <linux-raid_tim@ibink.com>
+wrote:
 
-On Mon, 25 Jun 2012 14:07:54 +1000 NeilBrown wrote:
+> Neil,
+>=20
+> Thanks for your prompt response. I used the information below and was abl=
+e to recover the array easily :-)
 
-> On Fri, 22 Jun 2012 17:42:57 +0900 Christian Balzer <chibi@gol.com>
-> wrote:
-> 
-> > 
-> > Hello,
-> > 
-> > On Fri, 22 Jun 2012 18:07:48 +1000 NeilBrown wrote:
-> > 
-> > > On Fri, 22 Jun 2012 16:06:32 +0900 Christian Balzer <chibi@gol.com>
-> > > wrote:
-> > > 
-> > > > 
-> > > > Hello,
-> > > > 
-> > > > the basics first:
-> > > > Debian Squeeze, custom 3.2.18 kernel.
-> > > > 
-> > > > The Raid(s) in question are:
-> > > > ---
-> > > > Personalities : [raid1] [raid10] 
-> > > > md4 : active raid10 sdd1[0] sdb4[5](S) sdl1[4] sdk1[3] sdj1[2]
-> > > > sdi1[1] 3662836224 blocks super 1.2 512K chunks 2 near-copies [5/5]
-> > > > [UUUUU]
-> > > 
-> > > I'm stumped by this.  It shouldn't be possible.
-> > > 
-> > > The size of the array is impossible.
-> > > 
-> > > If there are N chunks per device, then there are 5*N chunks on the
-> > > whole array, and there are are two copies of each data chunk, so
-> > > 5*N/2 distinct data chunks, so that should be the size of the array.
-> > > 
-> > > So if we take the size of the array, divide by chunk size, multiply
-> > > by 2, divide by 5, we get N = the number of chunks per device.
-> > > i.e.
-> > >   N = (array_size / chunk_size)*2 / 5
-> > > 
-> > > If we plug in 3662836224 for the array size and 512 for the chunk
-> > > size, we get 2861590.8, which is not an integer.
-> > > i.e. impossible.
-> > > 
-> > Quite right, though I never bothered to check that number of course,
-> > pretty much assuming after using Linux MD since the last millennium
-> > that it would get things right. ^o^
-> > 
-> > > What does "mdadm --examine" of the various devices show?
-> > > 
-> > They looks all identical and sane to me:
-> > ---
-> > /dev/sdc1:
-> >           Magic : a92b4efc
-> >         Version : 1.2
-> >     Feature Map : 0x0
-> >      Array UUID : 2b46b20b:80c18c76:bcd534b5:4d1372e4
-> >            Name : borg03b:3  (local to host borg03b)
-> >   Creation Time : Sat May 19 01:07:34 2012
-> >      Raid Level : raid10
-> >    Raid Devices : 5
-> > 
-> >  Avail Dev Size : 2930269954 (1397.26 GiB 1500.30 GB)
-> >      Array Size : 5860538368 (2794.52 GiB 3000.60 GB)
-> >   Used Dev Size : 2930269184 (1397.26 GiB 1500.30 GB)
-> >     Data Offset : 2048 sectors
-> >    Super Offset : 8 sectors
-> >           State : clean
-> >     Device UUID : fe922c1c:35319892:cc1e32e9:948d932c
-> > 
-> >     Update Time : Fri Jun 22 17:12:05 2012
-> >        Checksum : 27a61d9a - correct
-> >          Events : 90893
-> > 
-> >          Layout : near=2
-> >      Chunk Size : 512K
-> > 
-> >    Device Role : Active device 0
-> >    Array State : AAAAA ('A' == active, '.' == missing)
-> 
-> Thanks.
-> With this extra info - and the clearer perspective that morning provides
-> - I see what is happening.
->
-Ah, thank goodness for that. ^.^
- 
-> The following kernel patch should make it work for you.  It was made and
-> tested against 3.4. but should apply to your 3.2 kernel.
-> 
-> The problem only occurs when recovering the last device in certain RAID10
-> arrays.  If you had > 2 copies (e.g. --layout=n3) it could be more than
-> just the last device.
-> 
-> RAID10 with an odd number of devices (5 in this case) lays out chunks
-> like this:
-> 
->  A A B B C
->  C D D E E
->  F F G G H
->  H I I J J
-> 
-> If you have an even number of stripes, everything is happy.
-> If you have an odd number of stripes - as is the case with your problem
-> array
-> - then the last stripe might look like:
-> 
->  F F G G H
-> 
-> The 'H' chunk only exists once.  There is no mirror for it.
-> md does not store any data in this chunk - the size of the array is
-> calculated to finish after 'G'.
-> However the recovery code isn't quite so careful.  It tries to recover
-> this chunk and loads it from beyond the end of the first device - which
-> is where it would be if the devices were all a bit bigger.
-> 
-That makes perfect sense, I'm just amazed to be the first one to encounter
-this. Granted, most people will have even numbered stripes based on
-typical controller and server backplanes (1U -> 4x 3.5 drives), but the
-ability to use odd numbers (and gain the additional speed another spindle
-adds) was always one of the nice points of the MD Raid10 implementation.
+Good news.
 
-> So there is no risk of data corruption here - just that md tries to
-> recover a block that isn't in the array, fails, and aborts the recovery.
->
-That's a relief!
- 
-> This patch gets it to complete the recovery earlier so that it doesn't
-> try (and fail) to do the impossible.
-> 
-> If you could test and confirm, I'd appreciate it.
-> 
-I've build a new kernel-package (taking the opportunity to go to 3.2.20)
-and the assorted drbd module and scheduled downtime for tomorrow.
+>=20
+> Has anyone written a tool/script to crunch all the metadata info and reco=
+mmend the right mdadm --create parameters and drive order? I understand tha=
+t figuring out which drives to mark as missing requires an understanding of=
+ the history of the array but it seems  the basic command would be easy to =
+generate.
 
-Should know if this fixes it by Wednesday.
+My idea it to have a variation of --create which extract information from t=
+he
+devices, fills in any details that weren't explicitly given on the command
+line, and verifying any details that were given.  If something - such as dr=
+ive
+order - were clearly wrong, mdadm would suggest what the value should be.
 
-Many thanks,
+But that is still on my to-do list, and not near the top :-(
 
-Christian
-
-> Thanks,
-> NeilBrown
-> 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 99ae606..bcf6ea8 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -2890,6 +2890,12 @@ static sector_t sync_request(struct mddev *mddev,
-> sector_t sector_nr, /* want to reconstruct this device */
->  			rb2 = r10_bio;
->  			sect = raid10_find_virt(conf, sector_nr, i);
-> +			if (sect >= mddev->resync_max_sectors) {
-> +				/* last stripe is not complete - don't
-> +				 * try to recover this sector.
-> +				 */
-> +				continue;
-> +			}
->  			/* Unless we are doing a full sync, or a
-> replacement
->  			 * we only need to recover the block if it is
-> set in
->  			 * the bitmap
+NeilBrown
 
 
--- 
-Christian Balzer        Network/Systems Engineer                
-chibi@gol.com   	Global OnLine Japan/Fusion Communications
-http://www.gol.com/
+
+>=20
+> Cheers,
+> Tim
+>=20
+> On Jun 17, 2012, at 1:03 AM, NeilBrown wrote:
+>=20
+> > On Sat, 16 Jun 2012 06:09:47 -0700 Tim Nufire <linux-raid_tim@ibink.com>
+> > wrote:
+> >=20
+> >> Hello,
+> >>=20
+> >> An array that I created using a custom --size parameter has failed and=
+ needs to be recovered. I am very comfortable recovering arrays using --ass=
+ume-clean but due to a typo at creation time I don't know the device size t=
+hat was originally used. I am hoping this value can be recalculate from dat=
+a in the superblocks but this calculation is not obvious to me.=20
+> >>=20
+> >> Here's what I know... I'm using metadata version 1.0 with an internal =
+bitmap on all my arrays. I ran some experiments in the lab with 3TB drives =
+and found that when I specified a device size of 2929687500 when creating a=
+n array, 'mdadm -D' reported a 'Used Dev Size' of 5859374976. The value spe=
+cified on the command line is in kilobytes so I was expecting 3,000,000,000=
+,000 bytes to be used on each device. The value reported by mdadm is in sec=
+tors (512 bytes) so turning this into bytes I get 2,999,999,987,712 bytes. =
+This is off by 12,288 bytes (12kb) which I assume is used by the v1.0 super=
+block and/or the internal bitmap. I also tried creating an array with 2TB d=
+rives (Requested Size: 1953125000, Used Dev Size: 3906249984) and got a dif=
+ference of 8kb (2,000,000,000,000 vs 1,999,999,991,808 bytes) so clearly th=
+e amount of extra space used depends on the size of the device in some way.
+> >>=20
+> >> The array that I'm trying to recover reports a 'Used Dev Size' of 5858=
+574976. This is just 800,000 sectors less than I got when requesting an eve=
+n 3 trillion bytes so I know the size to use on the command line is close t=
+o 2929687500. But I don't know how to calculate the exact size... Can someo=
+ne help me?=20
+> >=20
+> > The "Used Dev Size" of the array should be exactly the same as the valu=
+e you
+> > give to create with --size (metadata and bitmap are extra and not inclu=
+ded in
+> > these counts) *provided* that the number you give is a multiple of the =
+chunk
+> > size.  If it isn't the number is rounded down to a multiple of the chun=
+k size.
+> >=20
+> > So if you specify "-c 64 -z 2929287488", you should get the correct siz=
+ed
+> > array.
+> >=20
+> > NeilBrown
+> >=20
+> >=20
+> >>=20
+> >> Once I know the size I will recreate the array using the following:
+> >>=20
+> >> size=3D???
+> >> md11=3D'/dev/sdc /dev/sdf /dev/sdi /dev/sdl /dev/sdo /dev/sdr /dev/sdu=
+ /dev/sdx missing missing /dev/sdag /dev/sdaj /dev/sdam /dev/sdap /dev/sdas'
+> >> mdadm --create /dev/md11 --metadata=3D1.0 --size=3D$size --bitmap=3Din=
+ternal --auto=3Dyes -l 6 -n 15 --assume-clean $md11
+> >>=20
+> >> Just incase it helps, here's the full output from mdadm -D for the arr=
+ay I'm trying to recover and mdadm -E for the first device in that array:
+> >>=20
+> >> mdadm -E /dev/sdc
+> >> /dev/sdc:
+> >>          Magic : a92b4efc
+> >>        Version : 1.0
+> >>    Feature Map : 0x1
+> >>     Array UUID : 560bd0d9:a8d4758c:9849143c:a2ef5b8e
+> >>           Name : sm345:11  (local to host sm345)
+> >>  Creation Time : Sat Dec 17 07:22:56 2011
+> >>     Raid Level : raid6
+> >>   Raid Devices : 15
+> >>=20
+> >> Avail Dev Size : 5860532896 (2794.52 GiB 3000.59 GB)
+> >>     Array Size : 76161474688 (36316.62 GiB 38994.68 GB)
+> >>  Used Dev Size : 5858574976 (2793.59 GiB 2999.59 GB)
+> >>   Super Offset : 5860533152 sectors
+> >>          State : clean
+> >>    Device UUID : f3ad57be:c0835578:4f242111:fb465c0a
+> >>=20
+> >> Internal Bitmap : -176 sectors from superblock
+> >>    Update Time : Sat Jun 16 05:45:17 2012
+> >>       Checksum : 4936d9a7 - correct
+> >>         Events : 187674
+> >>=20
+> >>     Chunk Size : 64K
+> >>=20
+> >>    Array Slot : 0 (empty, 1, 2, 3, 4, 5, 6, 7, failed, failed, 10, 11,=
+ 12, 13, 14)
+> >>   Array State : _uuuuuuu__uuuuu 2 failed
+> >>=20
+> >> mdadm -D /dev/md11
+> >> /dev/md11:
+> >>        Version : 01.00
+> >>  Creation Time : Sat Dec 17 07:22:56 2011
+> >>     Raid Level : raid6
+> >>     Array Size : 38080737344 (36316.62 GiB 38994.68 GB)
+> >>  Used Dev Size : 5858574976 (5587.17 GiB 5999.18 GB)
+> >>   Raid Devices : 15
+> >>  Total Devices : 15
+> >> Preferred Minor : 11
+> >>    Persistence : Superblock is persistent
+> >>=20
+> >>  Intent Bitmap : Internal
+> >>=20
+> >>    Update Time : Sat Jun 16 05:45:17 2012
+> >>          State : active, degraded
+> >> Active Devices : 12
+> >> Working Devices : 15
+> >> Failed Devices : 0
+> >>  Spare Devices : 3
+> >>=20
+> >>     Chunk Size : 64K
+> >>=20
+> >>           Name : sm345:11  (local to host sm345)
+> >>           UUID : 560bd0d9:a8d4758c:9849143c:a2ef5b8e
+> >>         Events : 187674
+> >>=20
+> >>    Number   Major   Minor   RaidDevice State
+> >>       0       0        0        0      removed
+> >>       1       8       80        1      active sync   /dev/sdf
+> >>       2       8      128        2      active sync   /dev/sdi
+> >>       3       8      176        3      active sync   /dev/sdl
+> >>       4       8      224        4      active sync   /dev/sdo
+> >>       5      65       16        5      active sync   /dev/sdr
+> >>       6      65       64        6      active sync   /dev/sdu
+> >>       7      65      112        7      active sync   /dev/sdx
+> >>       8       0        0        8      removed
+> >>       9       0        0        9      removed
+> >>      10      66        0       10      active sync   /dev/sdag
+> >>      11      66       48       11      active sync   /dev/sdaj
+> >>      12      66       96       12      active sync   /dev/sdam
+> >>      13      66      144       13      active sync   /dev/sdap
+> >>      14      66      192       14      active sync   /dev/sdas
+> >>=20
+> >>       0       8       32        -      spare   /dev/sdc
+> >>      15      65      160        -      spare   /dev/sdaa
+> >>      16      65      208        -      spare   /dev/sdad
+> >>=20
+> >>=20
+> >> Thanks,
+> >> Tim
+> >>=20
+> >>=20
+> >>=20
+> >>=20
+> >>=20
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-raid" =
+in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >=20
+
+
+--Sig_/s63pt6jquCZysHNv98.Fg6x
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT+gCGznsnt1WYoG5AQKGiA//YYNW5gEb6/dVLmsJTb81Oy+Faiuql543
+Vtgg7byhN/K7KkKChDQyUT40uawP7fb5BGH4V9Su53//4IPweWD8Iyc/neQ3909u
+Ic1J2Uhb7NBRWV+yz7Vv005NuJes4loiaiZDkoVhBdnqf8qsuMqvGvIy5aRPhKE+
+o/XTA6fMNo8O99uJ/LUOA5RL5fexW28PpCesy4EShe9oLekqMpdzeS+c9lfdggc3
+e5U6pTSkia2fN6jg3eWDRvsiiNYk2to8DZRKGC6mnFDRgYd9uMpSRXwhxpoaqR2z
+tHjMXe+QrIF4mipwRPVHvMXE0O/R0j/EOacgCcLs6uy/aP/j71cg3hkooHuwNl1i
+jqHNsj4Yz/dd4gz0f4FnBlngVq+pQB+UY4ZEWi8M+KY0UnMdwdcFWQN2LzwXDbJd
+OyK+UmkwUQREVajXsIbPCxJCXea/8s1gghg6D9E8RrJ5fn/SAbKC5R+2wIYiOv8z
+5FYkm/TcVGxK+iHxmZ6nJdc12BXG7aV/AEF5+9elQpeznCsXmFkhmDlMoFtHX2Gr
+vcHzjo+dGxggqZxUDmxs9fDaTp34AmxE8p2H3m2HMYesSpanCBmo9ZoAhWCbFtF9
+NFA/4V0nY2RQdCgrjyVJkxTIOfDLuTy+Xa+oAYXmyf5+BiT760lwU+Vgh7tVoSoL
+up9uCtImbVU=
+=4u53
+-----END PGP SIGNATURE-----
+
+--Sig_/s63pt6jquCZysHNv98.Fg6x--
