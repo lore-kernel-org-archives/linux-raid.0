@@ -1,64 +1,147 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: "mdadm: Raid level 5 not permitted with --build" -- why is
- that?
-Date: Mon, 25 Jun 2012 16:52:42 +1000
-Message-ID: <20120625165242.117881e1@notabene.brown>
-References: <CA+sTkh70JopNMbh0VQXDCq2MY+GHq0hQEPyKT1e9mRXxfk_2xw@mail.gmail.com>
+From: Christian Balzer <chibi@gol.com>
+Subject: Re: linux-image-2.6.32-5-686: kernel BUG at ...
+ build/source_i386_none/drivers/md/raid5.c:2764!
+Date: Mon, 25 Jun 2012 15:55:14 +0900
+Message-ID: <20120625155514.7cf7ab72@batzmaru.gol.ad.jp>
+References: <20120622121953.GA25149@calhariz.com>
+	<20120624182146.7d63fbbb@notabene.brown>
+	<20120624170234.GA13154@calhariz.com>
+	<20120625123906.2c302212@notabene.brown>
+	<20120625115833.71190b7e@batzmaru.gol.ad.jp>
+	<20120625164230.2ba8f72c@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/aP=rAwIJD3Uu1v_/+/po1zj"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+sTkh70JopNMbh0VQXDCq2MY+GHq0hQEPyKT1e9mRXxfk_2xw@mail.gmail.com>
+In-Reply-To: <20120625164230.2ba8f72c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Igor M Podlesny <for.poige+lsr@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, Jose Manuel dos Santos Calhariz <jose.spam@netvisao.pt>
 List-Id: linux-raid.ids
 
---Sig_/aP=rAwIJD3Uu1v_/+/po1zj
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Mon, 25 Jun 2012 16:42:30 +1000 NeilBrown wrote:
 
-On Fri, 22 Jun 2012 11:07:33 +0800 Igor M Podlesny <for.poige+lsr@gmail.com>
-wrote:
+> On Mon, 25 Jun 2012 11:58:33 +0900 Christian Balzer <chibi@gol.com>
+> wrote:
+> 
+> > On Mon, 25 Jun 2012 12:39:06 +1000 NeilBrown wrote:
+> > 
+> > > On Sun, 24 Jun 2012 18:02:34 +0100 Jose Manuel dos Santos Calhariz
+> > > <jose.spam@netvisao.pt> wrote:
+> > > 
+> > > > On Sun, Jun 24, 2012 at 06:21:46PM +1000, NeilBrown wrote:
+> > > > > On Fri, 22 Jun 2012 13:19:53 +0100 Jose Manuel dos Santos
+> > > > > Calhariz <jose.spam@netvisao.pt> wrote:
+> > > > > 
+> > > > > > 
+> > > > > > In another day during the periodic mdadm RAID check: 
+> > > > > >  - the linux kernel gave a kernel BUG, 
+> > > > > >  - tried to kick out a failed disk and 
+> > > > > >  - stopped accepting I/O to the affected raid.  
+> > > > > > 
+> > > > > > The affected programs were in state D.  The only way to recover
+> > > > > > was to do a reboot.  After reboot the problematic disk was
+> > > > > > replaced.
+> > > > > > 
+> > > > > > I reported the bug to Debian and is there all the information
+> > > > > > about it:
+> > > > > > 
+> > > > > > http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=675969
+> > > > > > 
+> > > > > > I was asked to report the BUG here in case someone knows what
+> > > > > > happened.
+> > > > > > 
+> > > > > > Here is a summary of the more relevant information:
+> > > > > > 
+> > > > > > This machine have 2 x RAID6 with 6 disks each, for a total of
+> > > > > > 12 disks. 
+> > > > > > 
+> > > > > > I have 5 systems with a similar setup and only one failed,
+> > > > > > maybe because of the failing disk.  I will use one of the
+> > > > > > systems to try to reproduce the bug, before triyng a new
+> > > > > > kernel.
+> > > > > > 
+> > > > > > 
+> > > > > > The proprietary module is the openafs filesystem v1.6.1
+> > > > > > backported from Debian testing.
+> > > > > > 
+> > > > > > The kernel bug is:
+> > > > > > 
+> > > > > > 
+> > > > > > build/source_i386_none/drivers/md/raid5.c:2764!
+> > > > 
+> > > > > 
+> > > > > This bug was fixed in 2.6.32.49 and 3.2
+> > > > > 
+> > > > > http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=commitdiff;h=61d433c479a6ccfed6a7e73e6111ca8fa0348c63
+> > > > > 
+> > > > > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commitdiff;h=9a3f530f39f4490eaa18b02719fb74ce5f4d2d86
+> > > > > 
+> > > > > NeilBrown
+> > > > 
+> > > > The failing kernel had that fix all ready.  The machine was running
+> > > > the kernel Debian 2.6.32-41squeeze2.  Looking into the change log,
+> > > > this kernel have all the fixes until 2.6.32.51 plus other fixes.
+> > > > 
+> > > >      Jose Calhariz
+> > > > 
+> > > 
+> > > The oops report said:
+> > > 
+> > > (2.6.32-5-686 #1)
+> > > 
+> > > is "5" the same as "41squeeze2" ???  This is a genuine question - I
+> > > have little idea about Debian versioning so maybe these are the same
+> > > thing somehow.  But they look different.
+> > > 
+> > Yes, the "name' of the kernel and it's actual detail version are
+> > disjunct like that in Debian, the current kernel of that vintage is:
+> > ---
+> > Package: linux-image-2.6.32-5-amd64
+> > Source: linux-2.6
+> > Version: 2.6.32-44
+> > ---
+> 
+> Ok.
+> So the version number reported by "uname -a" doesn't change when you
+> upgrade a Debian kernel?  That's rather sad.
+It kinda does, the -5 part is the the version bit that will increase for
+each significant release, but it doesn't quite reflect the more
+detailed version info:
+---
+engtest01:~# uname -a
+Linux engtest01 2.6.32-5-686 #1 SMP Mon Oct 3 04:15:24 UTC 2011 i686 GNU/Linux
+engtest01:~# cat /proc/version 
+Linux version 2.6.32-5-686 (Debian 2.6.32-38) (ben@decadent.org.uk) (gcc version 4.3.5 (Debian 4.3.5-4) ) #1 SMP Mon Oct 3 04:15:24 UTC 2011
+---
 
->    subj. Hi :)
->=20
-> --
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So while I have 2.6.32-45 kernel installed on that machine above, it's not
+been rebooted for 220 days and still runs the -38 incarnation. 
+Of the -5 kernel according to uname and yes, that can be confusing.
 
-Please try to construct coherent email message.  If you want people to read
-what you write, make it easy for them.
+Regards,
 
-Because!
+Christian
 
-With nowhere to record device failure, you don't have any safety.
-Feel free to send a patch.
+> I means that one has to take the reporters work for which kernel was
+> running rather than looking in the oops message for where the kernels
+> tells me what version it was.
+> 
+> Given the report, it is entirely possible that an older kernel was
+> running while a newer kernel was installed.
+> 
+> Jose: how certain are you that the kernel that was running at the time
+> was exactly the kernel that was installed at the time.  i.e. you had not
+> performed a software update since the last reboot?
+> 
+> However even if you can confirm that a new kernel was running I doubt I
+> could find an answer.  There isn't really much info to go on.  So unless
+> you can reproduce the problem, I doubt I'll even start looking.
+> 
+> NeilBrown
 
-NeilBrown
 
---Sig_/aP=rAwIJD3Uu1v_/+/po1zj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT+gKuznsnt1WYoG5AQLv9Q/9HxOtOggqIMjHCByZ/ScacJCNujPgKGeU
-0LhjvjgRdLdcASbfwnCw1nu9EL8YIrxk9+eox1EwwFIHftoV7BcHqBhsRbfaHdUR
-sm5Ob6VV8rrTsPJLbyzYxQkEZXEDw0jOop+tdFaLzTqPvYxAI2w/X5MO0qVIIPS5
-JWOqzv8B+yNwWt0i2fABCicJBKi04S9pbW2iXQ7tLONoUZxdy/WHPShytMj6kiYY
-XEL+MgJfKDN/THDVMv6xtQsuqg3yJBxa+PEJ3ZdubTX7EFT9q8x3H1h69r8P64qP
-YQ2ljOBjt0f2GevkybYixyMVA5gqVnFnii/grnAru381Q5PZFqxgpCn82Ag9GPGE
-NbFbJyfDne9qYpBdj6lvTg6RqPTdCUW8v1Z6blYSA6m4YZXOTnPeKv/KYJFJymqE
-U5fNHeyIeiIhmSgelJ1/6gSvmEyM1zq5zEcXODdeg9P/XZW7PVqDt5FOdIohYsAO
-ZRsngsGHfa2hJ/2TJ8C80MrLdRpLDElWzCwQiW4nYtPwgwP970bB5E2DoFha85Y6
-dKowpkPUjbkcLqETO3iZXd0SkDHjQETgay0Pq1e4E9i4R9TvRlVKhloJPHh6HSMi
-0hW9l9SvOzhGyfQ/Kl7XD5+1UW4BDz99U7kLZcFmeo7H+nLUVXV6YRwIjod4mVUD
-0JDJJVnPkAA=
-=c9ol
------END PGP SIGNATURE-----
-
---Sig_/aP=rAwIJD3Uu1v_/+/po1zj--
+-- 
+Christian Balzer        Network/Systems Engineer                
+chibi@gol.com   	Global OnLine Japan/Fusion Communications
+http://www.gol.com/
