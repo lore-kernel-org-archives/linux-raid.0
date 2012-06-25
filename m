@@ -1,115 +1,148 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: linux-image-2.6.32-5-686: kernel BUG at ...
- build/source_i386_none/drivers/md/raid5.c:2764!
-Date: Mon, 25 Jun 2012 12:39:06 +1000
-Message-ID: <20120625123906.2c302212@notabene.brown>
-References: <20120622121953.GA25149@calhariz.com>
-	<20120624182146.7d63fbbb@notabene.brown>
-	<20120624170234.GA13154@calhariz.com>
+Subject: Re: Can't expand linear RAID on top of 2 x RAID1
+Date: Mon, 25 Jun 2012 12:52:24 +1000
+Message-ID: <20120625125224.6e33b342@notabene.brown>
+References: <4FE44BDD.302@websitemanagers.com.au>
+	<4FE4FA32.8010506@hardwarefreak.com>
+	<32a64312-93cd-47d7-9154-2e28eda58003@email.android.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/rRIxQ66nhh.zzm0soelyFT3"; protocol="application/pgp-signature"
+ boundary="Sig_/29OMYFj/nVXecft_MTk9nUf"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120624170234.GA13154@calhariz.com>
+In-Reply-To: <32a64312-93cd-47d7-9154-2e28eda58003@email.android.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: jose.spam@netvisao.pt
-Cc: linux-raid@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: stan@hardwarefreak.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/rRIxQ66nhh.zzm0soelyFT3
+--Sig_/29OMYFj/nVXecft_MTk9nUf
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 24 Jun 2012 18:02:34 +0100 Jose Manuel dos Santos Calhariz
-<jose.spam@netvisao.pt> wrote:
+On Sat, 23 Jun 2012 12:53:12 +1000 Adam Goryachev
+<mailinglists@websitemanagers.com.au> wrote:
 
-> On Sun, Jun 24, 2012 at 06:21:46PM +1000, NeilBrown wrote:
-> > On Fri, 22 Jun 2012 13:19:53 +0100 Jose Manuel dos Santos Calhariz
-> > <jose.spam@netvisao.pt> wrote:
-> >=20
-> > >=20
-> > > In another day during the periodic mdadm RAID check:=20
-> > >  - the linux kernel gave a kernel BUG,=20
-> > >  - tried to kick out a failed disk and=20
-> > >  - stopped accepting I/O to the affected raid. =20
-> > >=20
-> > > The affected programs were in state D.  The only way to recover was to
-> > > do a reboot.  After reboot the problematic disk was replaced.
-> > >=20
-> > > I reported the bug to Debian and is there all the information about i=
-t:
-> > >=20
-> > > http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D675969
-> > >=20
-> > > I was asked to report the BUG here in case someone knows what happene=
-d.
-> > >=20
-> > > Here is a summary of the more relevant information:
-> > >=20
-> > > This machine have 2 x RAID6 with 6 disks each, for a total of 12 disk=
-s.=20
-> > >=20
-> > > I have 5 systems with a similar setup and only one failed, maybe
-> > > because of the failing disk.  I will use one of the systems to try to
-> > > reproduce the bug, before triyng a new kernel.
-> > >=20
-> > >=20
-> > > The proprietary module is the openafs filesystem v1.6.1 backported
-> > > from Debian testing.
-> > >=20
-> > > The kernel bug is:
-> > >=20
-> > >=20
-> > > build/source_i386_none/drivers/md/raid5.c:2764!
+> Stan Hoeppner <stan@hardwarefreak.com> wrote:
 >=20
-> >=20
-> > This bug was fixed in 2.6.32.49 and 3.2
-> >=20
-> > http://git.kernel.org/?p=3Dlinux/kernel/git/stable/linux-stable.git;a=
-=3Dcommitdiff;h=3D61d433c479a6ccfed6a7e73e6111ca8fa0348c63
-> >=20
-> > http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux.git;a=3Dcomm=
-itdiff;h=3D9a3f530f39f4490eaa18b02719fb74ce5f4d2d86
-> >=20
-> > NeilBrown
+> >On 6/22/2012 5:41 AM, Adam Goryachev wrote:
+> >> I have expanded my system over time, I started with 2 x 2TB drives in
+> >> RAID1 (md2)
+> >>=20
+> >> I then added 2 x 750GB drives, configured as RAID1 (md1)
+> >> Then created a third raid (md3) as linear with the md2 + md1
+> >>=20
+> >> Finally, I've upgraded the 2 x 750G to 2 x 1TB drives (one at a
+> >time).
+> >>=20
+> >> I then did a mdadm --grow to expand the RAID1 from 750G to 1TB
+> >>=20
+> >> The problem I am having is that I can't expand the linear (md3) array
+> >to
+> >> grow the extra 250G of space.
+> >>=20
+> >> Could anyone suggest how I might be able to get the extra 250G of
+> >space
+> >> to become available?
+> >
+> >If you think about this for a few minutes more, and re-read how md
+> >--linear works, and thus how growing a linear array works, you'll
+> >surely
+> >understand why you can't do what you're attempting to do.
 >=20
-> The failing kernel had that fix all ready.  The machine was running
-> the kernel Debian 2.6.32-41squeeze2.  Looking into the change log,
-> this kernel have all the fixes until 2.6.32.51 plus other fixes.
+> Actually, no I don't understand the problem... From my (probably limited)=
+ understanding, linear simply appends each drive to the array. I understand=
+ that you would not be able to increase the size of any constituent device =
+which is not the last component of the array, but I don't see any reason wh=
+y it is not possible to increase the size of the last component. (Which is =
+what I am attempting to do)
 >=20
->      Jose Calhariz
+> >As for seeing that extra 250GB, I don't have an answer.  Typically
+> >linear arrays are used in lieu of growing constituent member arrays.
+> >That's kinda the whole point of linear (concatenation).
 >=20
+> Well, the only other alternative I can think of is to reduce the size of =
+the array back to 750G, reduce the size of the partitions for that array to=
+ 750G. Then create a new 250G partition on the two 1TB drives, create a fou=
+rth RAID1 array, and then add that 4th RAID1 array to the end of the existi=
+ng linear array. This just didn't seem like a very good solution (ie, not c=
+lean).
+>=20
+> >You could try deleting the linear array and simply creating a new one.
+> >But surely the changed offsets would wreak havoc on the filesystem
+> >currently spanning this mess.
+>=20
+> Perhaps this would work. If I delete the linear array and re-create, with=
+ assume-clean (or whatever the right flag is, I'll read the man page later =
+when I'm doing it), then like I said, the first component device will be th=
+e same, the second component device is the same, but just happens to be big=
+ger. Any comments on whether this should work?
 
-The oops report said:
+The is no '--assume-clean' for linear.  Linear arrays cannot be clean or
+dirty as md stores no redundant information.
 
-(2.6.32-5-686 #1)
+Just re-creating the array would probably work, but there is an easier way.
 
-is "5" the same as "41squeeze2" ???  This is a genuine question - I have
-little idea about Debian versioning so maybe these are the same thing
-somehow.  But they look different.
+md doesn't record the size of the array for Linear and RAID0.  It just adds
+together the sizes of the devices that it finds.
+
+With 1.x metadata, md does record the effective size of each devices, so ad=
+ds
+those together.
+You can update this effective size by assembling with=20
+   --update=3Ddevicesize
+
+I just checked this will loop devices and it works as expected (assuming you
+have 1.1 or 1.2 metadata).
+So:
+  mdadm -S /dev/md2
+  mdadm -A --update=3Ddevicesize /dev/md0 /dev/md1
+
+(order doesn't matter with assemble).
+
+>=20
+> What should I do to ensure that the component devices are ordered the way=
+ I think they are? Apparently the numbers in /proc/mdstat just tell me what=
+ order the devices were added, not what order they are in the array?
+
+mdadm --detail  or mdadm --examine would tell you what you want to know.
 
 NeilBrown
 
---Sig_/rRIxQ66nhh.zzm0soelyFT3
+
+>=20
+> Thank you for your advice.
+>=20
+> Regards,
+> Adam
+>=20
+>=20
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/29OMYFj/nVXecft_MTk9nUf
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT+fPSjnsnt1WYoG5AQLRxBAAtSbZF2VIVIEobsVmhvl+ybbYog3/n1zn
-LQBJRHEWWt6tm2DOvLCi1DObDg0cnyXfqB78aUQ2xyJpAxjKCkGSufxM1kmYzMz8
-H1C0XaFpXlz/jzc8nAf90Btuph0Ib+AxFlVRCGQHGk63zGhibkwQSdCaaJ/OmG7T
-ZWTQm2dFA79xS1ls7X/8rmCRv3YxwyLLB1qvf7U8e+nokpBFcD7gvDvniDasTzNz
-c85adHS1TMxexJqKExMIlVaG2yrELBW9DunSb4s/WM8k33Ok5SbpQcPQPFt8r+8r
-hNWw2+SWs7Ov8plRuA9MRsyBRUL1GsP9BX9oKkoGgxPEcjYHkA0ZhMCbR+WMvZT7
-miWmDWgSEofzttbd27yr4RExk4AzDQq6qU/hvx7kX56r8tO1FEDHP1kcRA97gDIB
-B3r79z9wTGWdlHQc8wvnw1umPvcHMgZPhdpqy1NrAAmz8mg4gR7gboLnLaaE3547
-qYZVw9rYWzxztG2bv8UNYB24YhjdT81mv6aG+Xm/klZLk3q4s3lgeUGNV4xSqf8a
-F+pDnLGMBkxXn8A1+Ul2UB/D6UqxAK4SbmRhTdY7IFEpraDc5sDDfOESEm0413/t
-HelDQ1jlT/21MYdXD/Ky4L1N8m4aNFWmvoR4DjjoYga4J3ddfUjE7ftD/v/9Qadl
-9GFcEkx65Po=
-=D7kD
+iQIVAwUBT+fSaDnsnt1WYoG5AQL6pBAAr9d4ETQaWoRhVVIwysHtIpOcpVfGcqwS
+ymRTclwh5RHLFuUaoeYKIPgmcZ2KKmQL82X6KSFfPUZz5J7sOMR1YE2FLPWF0Mfs
+JqBK9WddOkyMQarBRLGeavl4nnTtPJsN9aFk6fi4YfxAfKUrWZwooDIFj3veZ1Ee
+G6vqFjiJT2iUaBN5ivLuLYdHE74hIVJvtnPIEsGI6k3B1dgfH8yLZmphB0Wo81Xp
+5zbENuCKMle4Bn562Ky2GhOrQ6wlTnYZy5wpBGU1uLfH1mct5ieTo/LsHbk7lhgx
+9jqC+MzAs/k/lG/hxl1EnTWOc8z8EOOZp7REbzP232yjgcrAnT+R2iUkznUA8jGD
+yFnsiV7OuUoFMp2HjmsjH+/pfXzWvyf0CxA5h71pVODSrnnrF8o9XHiUgKWY/Fvn
+AbUNggGCot3kXbIgKCla1qj9P+So0S19qdAvxoE4EVW5PXZjgc8yivQYvsxiVNco
+gVqXvncC3bM2p38fgIwvWfLx4BT1QuESbiQn+trnmR5qP3gf0bZ8A6E74fU3Cw3Y
+scHmNKUEKahg/Hi4LULUifOHxsRKs8DRYV/DmvrYA+6WAU/+9FCIWUj+ch3pRaFY
+Goek7Lvmx0mC1I0B4DxuMlDMgLggE5n8q2cpGG6ZHCaNW+RRBeieGQhVjqPOl30s
+VP/LyGAWh/0=
+=gwqv
 -----END PGP SIGNATURE-----
 
---Sig_/rRIxQ66nhh.zzm0soelyFT3--
+--Sig_/29OMYFj/nVXecft_MTk9nUf--
