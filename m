@@ -1,65 +1,64 @@
-From: Anshuman Aggarwal <anshuman.aggarwal@gmail.com>
-Subject: Re: All spares in Raid 5, default chunk? version of mdadm significant?
-Date: Mon, 25 Jun 2012 12:20:06 +0530
-Message-ID: <B619C027-FD5C-450E-8CE6-EDEC1D1092D6@gmail.com>
-References: <CAK-d5dYwa69wcSGX-u97WmJbMceEX2D1wiXRea-mS+X+i9Dyyw@mail.gmail.com>
-Mime-Version: 1.0 (Apple Message framework v1278)
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: NeilBrown <neilb@suse.de>
+Subject: Re: "mdadm: Raid level 5 not permitted with --build" -- why is
+ that?
+Date: Mon, 25 Jun 2012 16:52:42 +1000
+Message-ID: <20120625165242.117881e1@notabene.brown>
+References: <CA+sTkh70JopNMbh0VQXDCq2MY+GHq0hQEPyKT1e9mRXxfk_2xw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/aP=rAwIJD3Uu1v_/+/po1zj"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAK-d5dYwa69wcSGX-u97WmJbMceEX2D1wiXRea-mS+X+i9Dyyw@mail.gmail.com>
+In-Reply-To: <CA+sTkh70JopNMbh0VQXDCq2MY+GHq0hQEPyKT1e9mRXxfk_2xw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Igor M Podlesny <for.poige+lsr@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
- Hate to bump a thread but have I missed any information that would help to get me help :)? 
+--Sig_/aP=rAwIJD3Uu1v_/+/po1zj
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Neil, 
- as far as the default chunk sizes and mdadm versions are concerned, I am guessing you may be amongst the few who would know that conclusively? Also could the data offset and super offset be significant?
+On Fri, 22 Jun 2012 11:07:33 +0800 Igor M Podlesny <for.poige+lsr@gmail.com>
+wrote:
 
-Thanks,
-Anshu
+>    subj. Hi :)
+>=20
+> --
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-On 22-Jun-2012, at 5:50 PM, Anshuman Aggarwal wrote:
+Please try to construct coherent email message.  If you want people to read
+what you write, make it easy for them.
 
-> Hi,
->  I have a 6 device raid 5 array which had 1 disk go bad and then due to a power outage, the machine shutdown and when it started all the disks were showing up as spares with the following mdadm -E output (sample for one given below and full for all devices attached).
-> 
-> This md device was part a Physical Volume for a LVM Volume Group. 
-> 
-> I am trying to recreate the array using mdadm --create --assume-clean using 1 device as missing. I am checking if the device is getting created correctly by checking the UUID of the created device which would match if the device gets created correctly.
-> 
-> I have tried a few combinations of the disk order that I believe is right however I think I'm getting tripped up by the fact that the mdadm I used to create this md device was some 2.x series and now we are on 3.x (and I may have taken some of the defaults originally which I don't' remember)
-> What all 'defaults' have changed over the versions so I can try those? Like chunk size? Can we manually configure the super/data offset? Are those significant when we do an mdadm --create --assume-clean?
-> 
-> Thanks,
-> Anshu
-> 
-> /dev/sda5:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : b480fe0c:c9e29256:0fcf1b0c:1f8c762c
->            Name : GATEWAY:RAID5_500G
->   Creation Time : Wed Apr 28 16:10:43 2010
->      Raid Level : -unknown-
->    Raid Devices : 0
-> 
->  Avail Dev Size : 976768002 (465.76 GiB 500.11 GB)
->   Used Dev Size : 976765954 (465.76 GiB 500.10 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : active
->     Device UUID : a8499a91:628ddde8:1cc8f4b9:749136f9
-> 
->     Update Time : Sat May 19 23:04:23 2012
->        Checksum : 9950883c - correct
->          Events : 1
-> 
-> 
->    Device Role : spare
->    Array State :  ('A' == active, '.' == missing)
-> 
-> <md5.txt>
+Because!
 
+With nowhere to record device failure, you don't have any safety.
+Feel free to send a patch.
+
+NeilBrown
+
+--Sig_/aP=rAwIJD3Uu1v_/+/po1zj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT+gKuznsnt1WYoG5AQLv9Q/9HxOtOggqIMjHCByZ/ScacJCNujPgKGeU
+0LhjvjgRdLdcASbfwnCw1nu9EL8YIrxk9+eox1EwwFIHftoV7BcHqBhsRbfaHdUR
+sm5Ob6VV8rrTsPJLbyzYxQkEZXEDw0jOop+tdFaLzTqPvYxAI2w/X5MO0qVIIPS5
+JWOqzv8B+yNwWt0i2fABCicJBKi04S9pbW2iXQ7tLONoUZxdy/WHPShytMj6kiYY
+XEL+MgJfKDN/THDVMv6xtQsuqg3yJBxa+PEJ3ZdubTX7EFT9q8x3H1h69r8P64qP
+YQ2ljOBjt0f2GevkybYixyMVA5gqVnFnii/grnAru381Q5PZFqxgpCn82Ag9GPGE
+NbFbJyfDne9qYpBdj6lvTg6RqPTdCUW8v1Z6blYSA6m4YZXOTnPeKv/KYJFJymqE
+U5fNHeyIeiIhmSgelJ1/6gSvmEyM1zq5zEcXODdeg9P/XZW7PVqDt5FOdIohYsAO
+ZRsngsGHfa2hJ/2TJ8C80MrLdRpLDElWzCwQiW4nYtPwgwP970bB5E2DoFha85Y6
+dKowpkPUjbkcLqETO3iZXd0SkDHjQETgay0Pq1e4E9i4R9TvRlVKhloJPHh6HSMi
+0hW9l9SvOzhGyfQ/Kl7XD5+1UW4BDz99U7kLZcFmeo7H+nLUVXV6YRwIjod4mVUD
+0JDJJVnPkAA=
+=c9ol
+-----END PGP SIGNATURE-----
+
+--Sig_/aP=rAwIJD3Uu1v_/+/po1zj--
