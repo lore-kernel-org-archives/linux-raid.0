@@ -1,147 +1,56 @@
-From: Christian Balzer <chibi@gol.com>
-Subject: Re: linux-image-2.6.32-5-686: kernel BUG at ...
- build/source_i386_none/drivers/md/raid5.c:2764!
-Date: Mon, 25 Jun 2012 15:55:14 +0900
-Message-ID: <20120625155514.7cf7ab72@batzmaru.gol.ad.jp>
-References: <20120622121953.GA25149@calhariz.com>
-	<20120624182146.7d63fbbb@notabene.brown>
-	<20120624170234.GA13154@calhariz.com>
-	<20120625123906.2c302212@notabene.brown>
-	<20120625115833.71190b7e@batzmaru.gol.ad.jp>
-	<20120625164230.2ba8f72c@notabene.brown>
-Mime-Version: 1.0
+From: Anshuman Aggarwal <anshuman.aggarwal@gmail.com>
+Subject: What was the default chunk size in previous versions of mdadm? Is there a way to set data/super offset? Trying to recreate a raid 5 md with all spares
+Date: Mon, 25 Jun 2012 12:31:56 +0530
+Message-ID: <F63FC815-DA16-45D1-A57E-463487C19C25@gmail.com>
+References: <B619C027-FD5C-450E-8CE6-EDEC1D1092D6@gmail.com>
+Mime-Version: 1.0 (Apple Message framework v1278)
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120625164230.2ba8f72c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Jose Manuel dos Santos Calhariz <jose.spam@netvisao.pt>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 25 Jun 2012 16:42:30 +1000 NeilBrown wrote:
+---I hope the subject is clearer now, in line with the mailing list expectations ----
 
-> On Mon, 25 Jun 2012 11:58:33 +0900 Christian Balzer <chibi@gol.com>
-> wrote:
-> 
-> > On Mon, 25 Jun 2012 12:39:06 +1000 NeilBrown wrote:
-> > 
-> > > On Sun, 24 Jun 2012 18:02:34 +0100 Jose Manuel dos Santos Calhariz
-> > > <jose.spam@netvisao.pt> wrote:
-> > > 
-> > > > On Sun, Jun 24, 2012 at 06:21:46PM +1000, NeilBrown wrote:
-> > > > > On Fri, 22 Jun 2012 13:19:53 +0100 Jose Manuel dos Santos
-> > > > > Calhariz <jose.spam@netvisao.pt> wrote:
-> > > > > 
-> > > > > > 
-> > > > > > In another day during the periodic mdadm RAID check: 
-> > > > > >  - the linux kernel gave a kernel BUG, 
-> > > > > >  - tried to kick out a failed disk and 
-> > > > > >  - stopped accepting I/O to the affected raid.  
-> > > > > > 
-> > > > > > The affected programs were in state D.  The only way to recover
-> > > > > > was to do a reboot.  After reboot the problematic disk was
-> > > > > > replaced.
-> > > > > > 
-> > > > > > I reported the bug to Debian and is there all the information
-> > > > > > about it:
-> > > > > > 
-> > > > > > http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=675969
-> > > > > > 
-> > > > > > I was asked to report the BUG here in case someone knows what
-> > > > > > happened.
-> > > > > > 
-> > > > > > Here is a summary of the more relevant information:
-> > > > > > 
-> > > > > > This machine have 2 x RAID6 with 6 disks each, for a total of
-> > > > > > 12 disks. 
-> > > > > > 
-> > > > > > I have 5 systems with a similar setup and only one failed,
-> > > > > > maybe because of the failing disk.  I will use one of the
-> > > > > > systems to try to reproduce the bug, before triyng a new
-> > > > > > kernel.
-> > > > > > 
-> > > > > > 
-> > > > > > The proprietary module is the openafs filesystem v1.6.1
-> > > > > > backported from Debian testing.
-> > > > > > 
-> > > > > > The kernel bug is:
-> > > > > > 
-> > > > > > 
-> > > > > > build/source_i386_none/drivers/md/raid5.c:2764!
-> > > > 
-> > > > > 
-> > > > > This bug was fixed in 2.6.32.49 and 3.2
-> > > > > 
-> > > > > http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=commitdiff;h=61d433c479a6ccfed6a7e73e6111ca8fa0348c63
-> > > > > 
-> > > > > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commitdiff;h=9a3f530f39f4490eaa18b02719fb74ce5f4d2d86
-> > > > > 
-> > > > > NeilBrown
-> > > > 
-> > > > The failing kernel had that fix all ready.  The machine was running
-> > > > the kernel Debian 2.6.32-41squeeze2.  Looking into the change log,
-> > > > this kernel have all the fixes until 2.6.32.51 plus other fixes.
-> > > > 
-> > > >      Jose Calhariz
-> > > > 
-> > > 
-> > > The oops report said:
-> > > 
-> > > (2.6.32-5-686 #1)
-> > > 
-> > > is "5" the same as "41squeeze2" ???  This is a genuine question - I
-> > > have little idea about Debian versioning so maybe these are the same
-> > > thing somehow.  But they look different.
-> > > 
-> > Yes, the "name' of the kernel and it's actual detail version are
-> > disjunct like that in Debian, the current kernel of that vintage is:
-> > ---
-> > Package: linux-image-2.6.32-5-amd64
-> > Source: linux-2.6
-> > Version: 2.6.32-44
-> > ---
-> 
-> Ok.
-> So the version number reported by "uname -a" doesn't change when you
-> upgrade a Debian kernel?  That's rather sad.
-It kinda does, the -5 part is the the version bit that will increase for
-each significant release, but it doesn't quite reflect the more
-detailed version info:
----
-engtest01:~# uname -a
-Linux engtest01 2.6.32-5-686 #1 SMP Mon Oct 3 04:15:24 UTC 2011 i686 GNU/Linux
-engtest01:~# cat /proc/version 
-Linux version 2.6.32-5-686 (Debian 2.6.32-38) (ben@decadent.org.uk) (gcc version 4.3.5 (Debian 4.3.5-4) ) #1 SMP Mon Oct 3 04:15:24 UTC 2011
----
+Hi,
+I have a 6 device raid 5 array which had 1 disk go bad and then due to a power outage, the machine shutdown and when it started all the disks were showing up as spares with the following mdadm -E output (sample for one given below and full for all devices attached).
 
-So while I have 2.6.32-45 kernel installed on that machine above, it's not
-been rebooted for 220 days and still runs the -38 incarnation. 
-Of the -5 kernel according to uname and yes, that can be confusing.
+This md device was part a Physical Volume for a LVM Volume Group. 
 
-Regards,
+I am trying to recreate the array using mdadm --create --assume-clean using 1 device as missing. I am checking if the device is getting created correctly by checking the UUID of the created device which would match if the device gets created correctly.
 
-Christian
+I have tried a few combinations of the disk order that I believe is right however I think I'm getting tripped up by the fact that the mdadm I used to create this md device was some 2.x series and now we are on 3.x (and I may have taken some of the defaults originally which I don't' remember)
+What all 'defaults' have changed over the versions so I can try those? Like chunk size? Can we manually configure the super/data offset? Are those significant when we do an mdadm --create --assume-clean?
 
-> I means that one has to take the reporters work for which kernel was
-> running rather than looking in the oops message for where the kernels
-> tells me what version it was.
-> 
-> Given the report, it is entirely possible that an older kernel was
-> running while a newer kernel was installed.
-> 
-> Jose: how certain are you that the kernel that was running at the time
-> was exactly the kernel that was installed at the time.  i.e. you had not
-> performed a software update since the last reboot?
-> 
-> However even if you can confirm that a new kernel was running I doubt I
-> could find an answer.  There isn't really much info to go on.  So unless
-> you can reproduce the problem, I doubt I'll even start looking.
-> 
-> NeilBrown
+Thanks,
+Anshu
+
+/dev/sda5:
+         Magic : a92b4efc
+       Version : 1.2
+   Feature Map : 0x0
+    Array UUID : b480fe0c:c9e29256:0fcf1b0c:1f8c762c
+          Name : GATEWAY:RAID5_500G
+ Creation Time : Wed Apr 28 16:10:43 2010
+    Raid Level : -unknown-
+  Raid Devices : 0
+
+Avail Dev Size : 976768002 (465.76 GiB 500.11 GB)
+ Used Dev Size : 976765954 (465.76 GiB 500.10 GB)
+   Data Offset : 2048 sectors
+  Super Offset : 8 sectors
+         State : active
+   Device UUID : a8499a91:628ddde8:1cc8f4b9:749136f9
+
+   Update Time : Sat May 19 23:04:23 2012
+      Checksum : 9950883c - correct
+        Events : 1
 
 
--- 
-Christian Balzer        Network/Systems Engineer                
-chibi@gol.com   	Global OnLine Japan/Fusion Communications
-http://www.gol.com/
+  Device Role : spare
+  Array State :  ('A' == active, '.' == missing)
+
+<md5.txt>
+
+
