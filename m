@@ -1,70 +1,93 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: resizing array devices not working?
-Date: Tue, 26 Jun 2012 11:31:29 +1000
-Message-ID: <20120626113129.09275333@notabene.brown>
-References: <4FE33B89.40007@ubuntu.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Stacked array data recovery
+Date: Mon, 25 Jun 2012 20:53:29 -0500
+Message-ID: <4FE91619.4020709@hardwarefreak.com>
+References: <js083q$kdu$1@dough.gmane.org> <js1vuk$9k8$2@dough.gmane.org> <4FE5B213.5010503@hardwarefreak.com> <js70ce$fgv$1@dough.gmane.org> <4FE72053.4040101@hardwarefreak.com> <4FE7E044.6040506@hardwarefreak.com> <js9emr$761$1@dough.gmane.org>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/7jg_zw7z05SCfV34r+t3nMQ"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FE33B89.40007@ubuntu.com>
+In-Reply-To: <js9emr$761$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>
+To: Ramon Hofer <ramonhofer@bluewin.ch>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/7jg_zw7z05SCfV34r+t3nMQ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 6/25/2012 5:31 AM, Ramon Hofer wrote:
+> On Sun, 24 Jun 2012 22:51:32 -0500, Stan Hoeppner wrote:
+> 
+>> On 6/24/2012 9:12 AM, Stan Hoeppner wrote:
+>>
+>>> That's premature.  If you don't have any irreplaceable data on md9 yet,
+>>> I'd recommend erasing all 4 EARS drives with the dd command so you have
+>>> a "fresh start".
+>>
+>> Sorry Ramon, I meant the Samsungs here, not EARS.  You probably
+>> understood.
+> 
+> No, sorry I'm a bit confused.
 
-On Thu, 21 Jun 2012 11:19:37 -0400 Phillip Susi <psusi@ubuntu.com> wrote:
+I'm confused as well.  The error you pasted was on md9, which I thought
+was the old Samsung array.
 
-> I was trying to do a little experiment with resizing devices.  I created=
-=20
-> two 1g logical volumes and built a raid1 array out of them, then=20
-> lvresized the volumes to 2g, then ran:
->=20
-> mdadm -G -z max /dev/md1
->=20
-> That SHOULD expand the array to use the extra space right?  It keeps=20
-> telling me that it set the size to just 1g.
+[61142.466334] md/raid:md9: read error not correctable (sector 3758190680
+on sdk).
+[61142.466338] md/raid:md9: Disk failure on sdk, disabling device.
 
-Maybe you need a newer mdadm - 3.2.2 or newer might be required.  but you
-didn't say which version you were using, or which kernel.
+Which disk is /dev/sdk?  WD20EARS or Samsung?
 
-Or maybe you have 0.90 metadata and a kernel earlier than 3.1 that imposed
-some limits, but I think that allows up-to 2GB, not upto 1, so that can't be
-the problem.
+> The Samsung drives worked fine so far. I already have used the linear 
+> array and don't know what is written to md2 through md0.
+> But I could remove one Samsung disk from md2, dd it, re add it and do 
+> this procedure for the other three Samsungs.
 
-Maybe you can just
- for i in /sys/block/md1/md/dev-*
- do echo 0 > $i/size
- done
+Ok, so md1 are the Blacks, md2 are the Samsungs.  You tried to create
+another array, md9, using the WD20EARS, and one, /dev/sdk, generated the
+error above.  Is this correct?
 
-and try again. '0' means 'max' in this context.
+> What about the WD green?
 
-NeilBrown
+Ok, so currently the WD20EARS drives are not part of an array, correct?
+ And you're following the procedure I posted to dd the four drives, correct?
 
---Sig_/7jg_zw7z05SCfV34r+t3nMQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+> I tried to dd them yesterday 
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+There is no "try" here.  Once you start the dd commands they run until
+complete.  You didn't kill the processes did you?
 
-iQIVAwUBT+kQ8Tnsnt1WYoG5AQJfjQ//fip1PmD9nRXxcCr7DBudeIDD9y7Bfki/
-NeiNsCVlfIvBxArtmsgm0ioUHZcvMimaBJBAEbmyK5H9oSwJcQUpj9I1zIGp+t4M
-t/M/IkuBmYsb+/XyfeUW1SsD88uxanujlMWP7Q/544WjvoSVPwXqpT/v0O9AsvGx
-ajQlBzRbSI57gLH3da34kiUqraxwrgmYk9eBdDWQV44SacigYh6bZpHPLJV8q/bE
-W2t2uiIpGsH6HM5NU3eq5ga7kwx4KKeCZWldyJWGODAv4ba7jbkqLopLfhdUzAQk
-Ca2n3iJhBgL2PwM0AgMM2E6mrs8ylkdMntDyjcP87fu6x87outtruVRx7bWmP+n+
-bkDmxgXCsytc1nzQaZ0LfUA90zYKuqcE9vzN499gob1xC1Wu44YVimtrwg9mN+4L
-lbCLwIfea4mfDZhF2dMdT7ScVbK/F5qzZm3hEIWBoBKNHN+CFSg03cdgLL3Cyc4Q
-xvNIxCAan2zLyT2hbTTTg/QGgdQbcQlL2vIL3uSjgoC2DmIyQArKN/kmB8VHLcUS
-PB27f930muk+sK/3C6Fi0iZOWCIzDK+iO+gLjsOLk1Exzc0gW/u1ipfg17Y5jMua
-xpfat2/ZGTN1bOHlpltf71aqXasdtoxuPXTSuJXBLNwvXa2QdEV1khCIgnE1Pyle
-SJS2lzRHDK8=
-=dbym
------END PGP SIGNATURE-----
+> but when I wanted to stream a movie from the 
+> server it stopped. 
 
---Sig_/7jg_zw7z05SCfV34r+t3nMQ--
+What do you mean "it stopped"?  What stopped?  The playback in the
+client app?
+
+> Sometimes I couldn't even ssh into the server and when 
+> I could the remote shell froze after a very short time.
+
+You had 4 dd processes writing zeros to 4 drives at full bandwidth,
+consuming something like 480MB/s at the beginning and around 200MB/s at
+the end as the platter diameter gets smaller.  The controller chip on
+the LSI HBA is seeing tens of thousands of write IOPS.  Not to mention
+the four dd processes are generating a good deal of CPU load.  And it
+you're not running irqbalance, which you're surely not, interrupts from
+the controller are only going to 1 CPU core.
+
+My point is, running these 4 dd's in parallel is going to be very taxing
+on your system.  I guess I should have added a caveat/warning in my 'dd'
+email that you should not do any other work on the system while it's
+dd'ing the 4 drives.  Sorry for failing to mention this.
+
+> Should I try to dd them again but one after the other so that I know 
+> which one makes problems?
+
+You first need to explain what you mean by "try again".  Unless you
+killed the processes, or rebooted or power cycled the machine, the dd
+processes would have run to completion.  I get the feeling you've
+omitted some important details.
+
+Oh, please reply-to-all Ramon so these hit my inbox.  List mail goes to
+separate folders, and I don't check them in a timely manner.
+
+-- 
+Stan
