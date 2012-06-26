@@ -1,78 +1,53 @@
-From: =?koi8-r?B?68/T1NnSxdcg4czFy9PBzsTSIOHMxcvTxcXXyd4=?=
-	<a.kostyrev@serverc.ru>
-Subject: recover linear mode raid howto
-Date: Tue, 26 Jun 2012 17:26:53 +1100
-Message-ID: <213B51F00051AE48A9F0E112880177178F7A55@Delta.sc.local>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: mkfs.xfs states log stripe unit is too large
+Date: Tue, 26 Jun 2012 04:02:17 -0400
+Message-ID: <20120626080217.GA30767@infradead.org>
+References: <D3F781FA-CEB0-4896-9441-772A9E533354@2012.bluespice.org>
+ <20120623234445.GZ19223@dastard>
+ <4FE67970.2030008@sandeen.net>
+ <4FE710B7.5010704@hardwarefreak.com>
+ <d71834a062ffd666ab53a4695eb643e9@muaddib.hro.localnet>
+ <20120626023059.GC19223@dastard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=koi8-r
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+Content-Disposition: inline
+In-Reply-To: <20120626023059.GC19223@dastard>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ingo J?rgensmann <ij@2012.bluespice.org>, xfs@oss.sgi.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello!
-I'm trying to figure out how one can recover from linear mode crash.
-I'm aware that from this type of mode I can recover only part of data, =
-there's no redundancy in linear mode and that's ok for me.
-I'm ok with part of it.
+On Tue, Jun 26, 2012 at 12:30:59PM +1000, Dave Chinner wrote:
+> You can't, simple as that. The maximum supported is 256k. As it is,
+> a default chunk size of 512k is probably harmful to most workloads -
+> large chunk sizes mean that just about every write will trigger a
+> RMW cycle in the RAID because it is pretty much impossible to issue
+> full stripe writes. Writeback doesn't do any alignment of IO (the
+> generic page cache writeback path is the problem here), so we will
+> lamost always be doing unaligned IO to the RAID, and there will be
+> little opportunity for sequential IOs to merge and form full stripe
+> writes (24 disks @ 512k each on RAID6 is a 11MB full stripe write).
+> 
+> IOWs, every time you do a small isolated write, the MD RAID volume
+> will do a RMW cycle, reading 11MB and writing 12MB of data to disk.
+> Given that most workloads are not doing lots and lots of large
+> sequential writes this is, IMO, a pretty bad default given typical
+> RAID5/6 volume configurations we see....
 
-so far I'm trying to get it work in VM for now.
+Not too long ago I benchmarked out mdraid stripe sizes, and at least
+for XFS 32kb was a clear winner, anything larger decreased performance.
 
+ext4 didn't get hit that badly with larger stripe sizes, probably
+because they still internally bump the writeback size like crazy, but
+they did not actually get faster with larger stripes either.
 
-I've added two 50M disks to my VM.
+This was streaming data heavy workloads, anything more metadata heavy
+probably will suffer from larger stripes even more.
 
-and partiotioned them like this:
-Device Boot      Start     End      Blocks  Id  System
-/dev/vdb1        2048      102399   50176   fd  Linux raid autodetect
-Device Boot      Start     End      Blocks  Id  System
-/dev/vdc1        2048      102399   50176   fd  Linux raid autodetect
+Ccing the linux-raid list if there actually is any reason for these
+defaults, something I wanted to ask for a long time but never really got
+back to.
 
-mdadm --create --verbose /dev/md0 --level linear --raid-disks 2 /dev/vd=
-b1 /dev/vdc1
-mdadm --detail --scan >> /etc/mdadm/mdadm.conf
-
-mkfs.xfs /dev/md0=20
-mount /dev/md0 /mnt/linear/
-
-mkdir /mnt/linear/etc
-mkdir /mnt/linear/etc2
-mkdir /mnt/linear/etc3
-
-filled with some data
-cp -r /etc/* /mnt/linear/etc/
-cp -r /etc/* /mnt/linear/etc2/
-cp -r /etc/* /mnt/linear/etc3/
-
-df -h /dev/md0
-=46ilesystem            Size  Used Avail Use% Mounted on
-/dev/md0               92M   69M   23M  76% /mnt/linear
-
-then I remove one disk from my VM
-
-umount /mnt/linear
-mdadm --stop /dev/md0
-
-I've added another clear disk image 50M.
-
-make partitions on new disk
-sfdisk -d /dev/vdb | sfdisk /dev/vdc
-
-how should I proceed ?
-
-thanks a lot!
-
---
-=F3 =D5=D7=C1=D6=C5=CE=C9=C5=CD,
-=EB=CF=D3=D4=D9=D2=C5=D7 =E1=CC=C5=CB=D3=C1=CE=C4=D2
-=D3=C9=D3=D4=C5=CD=CE=D9=CA =C1=C4=CD=C9=CE=C9=D3=D4=D2=C1=D4=CF=D2
-=FA=E1=EF "=F3=C5=D2=D7=C5=D2-=E3=C5=CE=D4=D2"
-=D4=C5=CC.: (423) 262-02-62 (=C4=CF=C2. 2037)
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Also I'm pretty sure back then the md default was 256kb writes, not 512
+so it seems the defaults further increased.
