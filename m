@@ -1,100 +1,215 @@
-From: "Stefan G. Weichinger" <lists@xunil.at>
-Subject: Re-adding disks to RAID6 in a Fujitsu NAS: old mdadm?
-Date: Tue, 26 Jun 2012 15:57:21 +0200
-Message-ID: <4FE9BFC1.5070607@xunil.at>
-Reply-To: lists@xunil.at
+From: Christian Balzer <chibi@gol.com>
+Subject: Re: MD Raid10 recovery results in "attempt to access beyond end of
+ device"
+Date: Tue, 26 Jun 2012 23:48:45 +0900
+Message-ID: <20120626234845.4d26bd8e@batzmaru.gol.ad.jp>
+References: <20120622160632.7dfbbb9d@batzmaru.gol.ad.jp>
+	<20120622180748.5f78339c@notabene.brown>
+	<20120622174257.03a17e81@batzmaru.gol.ad.jp>
+	<20120625140754.44536553@notabene.brown>
+	<20120625150651.26a457bb@batzmaru.gol.ad.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120625150651.26a457bb@batzmaru.gol.ad.jp>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
 
-Greets,
+Hello,
 
-I currently try to re-add 2 disks to a RAID6 array.
+On Mon, 25 Jun 2012 15:06:51 +0900 Christian Balzer wrote:
 
-There were 4 disks in a Fujitsu Q800 NAS, the RAID6 was done via WebGUI.
+> 
+> Hello Neil,
+> 
+> On Mon, 25 Jun 2012 14:07:54 +1000 NeilBrown wrote:
+> 
+> > On Fri, 22 Jun 2012 17:42:57 +0900 Christian Balzer <chibi@gol.com>
+> > wrote:
+> > 
+> > > 
+> > > Hello,
+> > > 
+> > > On Fri, 22 Jun 2012 18:07:48 +1000 NeilBrown wrote:
+> > > 
+> > > > On Fri, 22 Jun 2012 16:06:32 +0900 Christian Balzer <chibi@gol.com>
+> > > > wrote:
+> > > > 
+> > > > > 
+> > > > > Hello,
+> > > > > 
+> > > > > the basics first:
+> > > > > Debian Squeeze, custom 3.2.18 kernel.
+> > > > > 
+> > > > > The Raid(s) in question are:
+> > > > > ---
+> > > > > Personalities : [raid1] [raid10] 
+> > > > > md4 : active raid10 sdd1[0] sdb4[5](S) sdl1[4] sdk1[3] sdj1[2]
+> > > > > sdi1[1] 3662836224 blocks super 1.2 512K chunks 2 near-copies
+> > > > > [5/5] [UUUUU]
+> > > > 
+> > > > I'm stumped by this.  It shouldn't be possible.
+> > > > 
+> > > > The size of the array is impossible.
+> > > > 
+> > > > If there are N chunks per device, then there are 5*N chunks on the
+> > > > whole array, and there are are two copies of each data chunk, so
+> > > > 5*N/2 distinct data chunks, so that should be the size of the
+> > > > array.
+> > > > 
+> > > > So if we take the size of the array, divide by chunk size, multiply
+> > > > by 2, divide by 5, we get N = the number of chunks per device.
+> > > > i.e.
+> > > >   N = (array_size / chunk_size)*2 / 5
+> > > > 
+> > > > If we plug in 3662836224 for the array size and 512 for the chunk
+> > > > size, we get 2861590.8, which is not an integer.
+> > > > i.e. impossible.
+> > > > 
+> > > Quite right, though I never bothered to check that number of course,
+> > > pretty much assuming after using Linux MD since the last millennium
+> > > that it would get things right. ^o^
+> > > 
+> > > > What does "mdadm --examine" of the various devices show?
+> > > > 
+> > > They looks all identical and sane to me:
+> > > ---
+> > > /dev/sdc1:
+> > >           Magic : a92b4efc
+> > >         Version : 1.2
+> > >     Feature Map : 0x0
+> > >      Array UUID : 2b46b20b:80c18c76:bcd534b5:4d1372e4
+> > >            Name : borg03b:3  (local to host borg03b)
+> > >   Creation Time : Sat May 19 01:07:34 2012
+> > >      Raid Level : raid10
+> > >    Raid Devices : 5
+> > > 
+> > >  Avail Dev Size : 2930269954 (1397.26 GiB 1500.30 GB)
+> > >      Array Size : 5860538368 (2794.52 GiB 3000.60 GB)
+> > >   Used Dev Size : 2930269184 (1397.26 GiB 1500.30 GB)
+> > >     Data Offset : 2048 sectors
+> > >    Super Offset : 8 sectors
+> > >           State : clean
+> > >     Device UUID : fe922c1c:35319892:cc1e32e9:948d932c
+> > > 
+> > >     Update Time : Fri Jun 22 17:12:05 2012
+> > >        Checksum : 27a61d9a - correct
+> > >          Events : 90893
+> > > 
+> > >          Layout : near=2
+> > >      Chunk Size : 512K
+> > > 
+> > >    Device Role : Active device 0
+> > >    Array State : AAAAA ('A' == active, '.' == missing)
+> > 
+> > Thanks.
+> > With this extra info - and the clearer perspective that morning
+> > provides
+> > - I see what is happening.
+> >
+> Ah, thank goodness for that. ^.^
+>
 
-2 disks have been removed from the array and I am not able to re-add the
-old disks or add new disks via WebGUI.
-
-The support told me to "re-insert disks, if it doesn't work, rebuild
-array" ... cool. What do I need a RAID for then ??
-
-Anway.
-
-Entered hacking mode ;-) at least in my terms.
-
-sshed into box.
-
-To get it short:
-
-Currently the RAID6 array /dev/md0 is:
-
-md0 : active raid6 sdc3[2] sdd3[3]
-      3903891200 blocks level 6, 64k chunk, algorithm 2 [4/2] [__UU]
-
-So I would like to re-add sda3 and sdb3 ...
-
-I get:
-
-# mdadm /dev/md0 -a /dev/sda3
-mdadm: /dev/sda3 not large enough to join array
-
-oops!
-
-But the comparison shows:
-
-[~] # fdisk -l /dev/sda
-
-Disk /dev/sda: 2000.3 GB, 2000398934016 bytes
-255 heads, 63 sectors/track, 243201 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sda1               1          66      530125   83  Linux
-/dev/sda2              67         132      530142   83  Linux
-/dev/sda3             133      243138  1951945693   83  Linux
-/dev/sda4          243139      243200      498012   83  Linux
-
-[~] # fdisk -l /dev/sdc
-
-Disk /dev/sdc: 2000.3 GB, 2000398934016 bytes
-255 heads, 63 sectors/track, 243201 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdc1               1          66      530125   83  Linux
-/dev/sdc2              67         132      530142   83  Linux
-/dev/sdc3             133      243138  1951945693   83  Linux
-/dev/sdc4          243139      243200      498012   83  Linux
-
--> identical partitions
-
+The patch worked fine:
+---
+[  105.872117] md: recovery of RAID array md3
+[28981.157157] md: md3: recovery done.
 ---
 
-Could that relate to this issue:
+Thanks a bunch and I'd suggest to include this patch in any and all
+feasible backports and future kernels of course.
 
-http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=500309
+Regards,
 
-The NAS seems to run some ubuntu:
+Christian
 
-# cat /proc/version
-Linux version 2.6.33.2 (root@NasX86-5) (gcc version 4.1.3 20070929
-(prerelease) (Ubuntu 4.1.2-16ubuntu2)) #1 SMP Mon Sep 13 04:28:32 CST 2010
+> > The following kernel patch should make it work for you.  It was made
+> > and tested against 3.4. but should apply to your 3.2 kernel.
+> > 
+> > The problem only occurs when recovering the last device in certain
+> > RAID10 arrays.  If you had > 2 copies (e.g. --layout=n3) it could be
+> > more than just the last device.
+> > 
+> > RAID10 with an odd number of devices (5 in this case) lays out chunks
+> > like this:
+> > 
+> >  A A B B C
+> >  C D D E E
+> >  F F G G H
+> >  H I I J J
+> > 
+> > If you have an even number of stripes, everything is happy.
+> > If you have an odd number of stripes - as is the case with your problem
+> > array
+> > - then the last stripe might look like:
+> > 
+> >  F F G G H
+> > 
+> > The 'H' chunk only exists once.  There is no mirror for it.
+> > md does not store any data in this chunk - the size of the array is
+> > calculated to finish after 'G'.
+> > However the recovery code isn't quite so careful.  It tries to recover
+> > this chunk and loads it from beyond the end of the first device - which
+> > is where it would be if the devices were all a bit bigger.
+> > 
+> That makes perfect sense, I'm just amazed to be the first one to
+> encounter this. Granted, most people will have even numbered stripes
+> based on typical controller and server backplanes (1U -> 4x 3.5 drives),
+> but the ability to use odd numbers (and gain the additional speed
+> another spindle adds) was always one of the nice points of the MD Raid10
+> implementation.
+> 
+> > So there is no risk of data corruption here - just that md tries to
+> > recover a block that isn't in the array, fails, and aborts the
+> > recovery.
+> >
+> That's a relief!
+>  
+> > This patch gets it to complete the recovery earlier so that it doesn't
+> > try (and fail) to do the impossible.
+> > 
+> > If you could test and confirm, I'd appreciate it.
+> > 
+> I've build a new kernel-package (taking the opportunity to go to 3.2.20)
+> and the assorted drbd module and scheduled downtime for tomorrow.
+> 
+> Should know if this fixes it by Wednesday.
+> 
+> Many thanks,
+> 
+> Christian
+> 
+> > Thanks,
+> > NeilBrown
+> > 
+> > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> > index 99ae606..bcf6ea8 100644
+> > --- a/drivers/md/raid10.c
+> > +++ b/drivers/md/raid10.c
+> > @@ -2890,6 +2890,12 @@ static sector_t sync_request(struct mddev
+> > *mddev, sector_t sector_nr, /* want to reconstruct this device */
+> >  			rb2 = r10_bio;
+> >  			sect = raid10_find_virt(conf, sector_nr, i);
+> > +			if (sect >= mddev->resync_max_sectors) {
+> > +				/* last stripe is not complete - don't
+> > +				 * try to recover this sector.
+> > +				 */
+> > +				continue;
+> > +			}
+> >  			/* Unless we are doing a full sync, or a
+> > replacement
+> >  			 * we only need to recover the block if it is
+> > set in
+> >  			 * the bitmap
+> 
+> 
 
-and brings an older mdadm:
 
-# mdadm --version
-mdadm - v2.6.3 - 20th August 2007
-
-
-If that is the issue, is there a way to use some newer binary (magically
-transferred to me by mail or URL ;-) ) of mdadm to re-add disks?
-
-I would really really like to avoid to rebuild that array ...
-
-Thanks in advance, looking forward to your hints, Stefan!
+-- 
+Christian Balzer        Network/Systems Engineer                
+chibi@gol.com   	Global OnLine Japan/Fusion Communications
+http://www.gol.com/
