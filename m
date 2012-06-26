@@ -1,34 +1,28 @@
 From: Jonathan Brassow <jbrassow@redhat.com>
-Subject: [PATCH] MD RAID10:  Fix compiler warning.
-Date: Tue, 26 Jun 2012 03:40:13 -0500
-Message-ID: <1340700013.19015.7.camel@f16>
+Subject: [PATCH 0 of 5] MD:  prepare RAID10 for inclusion in dm-raid.c
+Date: Tue, 26 Jun 2012 03:44:19 -0500
+Message-ID: <1340700259.19015.10.camel@f16>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, dm-devel@redhat.com
+Cc: jbrassow@redhat.com, neilb@suse.de, agk@redhat.com
 List-Id: linux-raid.ids
 
-MD RAID10:  Fix compiler warning.
+Neil,
 
-Initialize variable to prevent compiler warning.
+Here's a couple patches that are necessary for MD before I can add
+RAID10 to the list of supported personalities through dm-raid.c:
+	1) md-raid10-rename-mirror_info.patch
+	2) md-raid1-rename-mirror_info.patch
+	3) md-move-IO_BLOCKED-to-md_h.patch
+	4) md-export-md_raid10_congested.patch
 
-Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+I'll send the patch that enables raid10 as a separate patch that depends
+on this patch set and a couple of DM patches.
 
-Index: linux-upstream/drivers/md/raid10.c
-===================================================================
---- linux-upstream.orig/drivers/md/raid10.c
-+++ linux-upstream/drivers/md/raid10.c
-@@ -717,7 +717,7 @@ static struct md_rdev *read_balance(stru
- 	int sectors = r10_bio->sectors;
- 	int best_good_sectors;
- 	sector_t new_distance, best_dist;
--	struct md_rdev *rdev, *best_rdev;
-+	struct md_rdev *best_rdev, *rdev = NULL;
- 	int do_balance;
- 	int best_slot;
- 	struct geom *geo = &conf->geo;
+ brassow
 
 
