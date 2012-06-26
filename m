@@ -1,52 +1,100 @@
-From: John Crisp <john@reetspetit.net>
-Subject: Re: "mdadm: Raid level 5 not permitted with --build" -- why is that?
-Date: Tue, 26 Jun 2012 13:55:13 +0200
-Message-ID: <4FE9A321.3070309@reetspetit.net>
-References: <CA+sTkh70JopNMbh0VQXDCq2MY+GHq0hQEPyKT1e9mRXxfk_2xw@mail.gmail.com> <20120625165242.117881e1@notabene.brown> <CA+sTkh7cYEmrujcRkvisFM1EksQBJ2kMKBfkd3RyDwr2-bvGpw@mail.gmail.com> <20120625175804.21b86b35@natsu> <CA+sTkh7Tv-F2fofWviF+X+Kp5-RLWmkTZveB6+jDHewLhhK50Q@mail.gmail.com> <4FE85C2F.5050007@hesbynett.no> <CA+sTkh53htrdUF5OUcKRa33HDmz9SHsz0=B9DvJ60uzeFST5XA@mail.gmail.com> <4FE8642E.7020701@grumpydevil.homelinux.org> <CA+sTkh5A769D8RBW0+4xJ0Hmx5PoZQwyw3BNvrRYQDhY2YCf1g@mail.gmail.com> <4FE8A716.1020607@reetspetit.net> <CA+sTkh4PJz5kyF8jTf7KJ5M5jpJOjy_p8N35ay-VYzaY9pNP7g@mail.gmail.com>
+From: "Stefan G. Weichinger" <lists@xunil.at>
+Subject: Re-adding disks to RAID6 in a Fujitsu NAS: old mdadm?
+Date: Tue, 26 Jun 2012 15:57:21 +0200
+Message-ID: <4FE9BFC1.5070607@xunil.at>
+Reply-To: lists@xunil.at
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+sTkh4PJz5kyF8jTf7KJ5M5jpJOjy_p8N35ay-VYzaY9pNP7g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Igor M Podlesny <for.poige+lsr@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 26/06/12 03:57, Igor M Podlesny wrote:
-> On 26 June 2012 01:59, John Crisp <john@reetspetit.net> wrote:
->> On 25/06/12 15:17, Igor M Podlesny wrote:
->>>>>> On 25/06/2012 14:12, Igor M Podlesny wrote:
-> [=E2=80=A6]
->> In English, the word 'Please' as used by Neil in his first reply is
->=20
->    The same word was used by me, when I asked what exactly to patch.
-> But you seem to be too fanatic (biased) to notice. Bad for you then,
-> please read carefully before you judge  (and write).
->=20
 
-No sir, I am neither biased nor fanatical, but am appreciative of the
-fantastic help that people freely give here.
+Greets,
 
-I also carefully read, and re-read, the entire thread before posting an=
-d
-as I am English I understand it perfectly.
+I currently try to re-add 2 disks to a RAID6 array.
 
-I suggest you re-read your own replies.
+There were 4 disks in a Fujitsu Q800 NAS, the RAID6 was done via WebGUI.
 
-> The same word was used by me
+2 disks have been removed from the array and I am not able to re-add the
+old disks or add new disks via WebGUI.
 
-Where precisely ? I do not see the word 'Please'. I see a sarcastic
-response with a pathetic attempt to redeem that with the word 'kindly'.
+The support told me to "re-insert disks, if it doesn't work, rebuild
+array" ... cool. What do I need a RAID for then ??
 
-Unfortunately, your English is as bad as your manners and your attitude=
-=2E
-You should rectify them all before giving others lessons. My original
-comments on your character therefore still stand.
+Anway.
 
-Add moronic and cretinous behaviour to the list.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Entered hacking mode ;-) at least in my terms.
+
+sshed into box.
+
+To get it short:
+
+Currently the RAID6 array /dev/md0 is:
+
+md0 : active raid6 sdc3[2] sdd3[3]
+      3903891200 blocks level 6, 64k chunk, algorithm 2 [4/2] [__UU]
+
+So I would like to re-add sda3 and sdb3 ...
+
+I get:
+
+# mdadm /dev/md0 -a /dev/sda3
+mdadm: /dev/sda3 not large enough to join array
+
+oops!
+
+But the comparison shows:
+
+[~] # fdisk -l /dev/sda
+
+Disk /dev/sda: 2000.3 GB, 2000398934016 bytes
+255 heads, 63 sectors/track, 243201 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1               1          66      530125   83  Linux
+/dev/sda2              67         132      530142   83  Linux
+/dev/sda3             133      243138  1951945693   83  Linux
+/dev/sda4          243139      243200      498012   83  Linux
+
+[~] # fdisk -l /dev/sdc
+
+Disk /dev/sdc: 2000.3 GB, 2000398934016 bytes
+255 heads, 63 sectors/track, 243201 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdc1               1          66      530125   83  Linux
+/dev/sdc2              67         132      530142   83  Linux
+/dev/sdc3             133      243138  1951945693   83  Linux
+/dev/sdc4          243139      243200      498012   83  Linux
+
+-> identical partitions
+
+---
+
+Could that relate to this issue:
+
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=500309
+
+The NAS seems to run some ubuntu:
+
+# cat /proc/version
+Linux version 2.6.33.2 (root@NasX86-5) (gcc version 4.1.3 20070929
+(prerelease) (Ubuntu 4.1.2-16ubuntu2)) #1 SMP Mon Sep 13 04:28:32 CST 2010
+
+and brings an older mdadm:
+
+# mdadm --version
+mdadm - v2.6.3 - 20th August 2007
+
+
+If that is the issue, is there a way to use some newer binary (magically
+transferred to me by mail or URL ;-) ) of mdadm to re-add disks?
+
+I would really really like to avoid to rebuild that array ...
+
+Thanks in advance, looking forward to your hints, Stefan!
