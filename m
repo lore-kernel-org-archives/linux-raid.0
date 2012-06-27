@@ -1,124 +1,94 @@
-From: Jose Manuel dos Santos Calhariz <jose.spam@netvisao.pt>
-Subject: Re: linux-image-2.6.32-5-686: kernel BUG at ...
- build/source_i386_none/drivers/md/raid5.c:2764!
-Date: Wed, 27 Jun 2012 15:12:31 +0100
-Message-ID: <20120627141231.GA10741@calhariz.com>
-References: <20120622121953.GA25149@calhariz.com>
- <20120624182146.7d63fbbb@notabene.brown>
- <20120624170234.GA13154@calhariz.com>
- <20120625123906.2c302212@notabene.brown>
- <20120625115833.71190b7e@batzmaru.gol.ad.jp>
- <20120625164230.2ba8f72c@notabene.brown>
- <20120625105903.GA6005@calhariz.com>
- <CAGqmV7rBk9R-q-LRVw1tzxmXoQMLTQbQY8f9C0SOuaMOf7AfoQ@mail.gmail.com>
-Reply-To: jose.spam@netvisao.pt
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: Problem with patch: "reject a re-add request that cannot be
+ honoured" (commit bedd86b7773fd97f0d708cc0c371c8963ba7ba9a)
+Date: Wed, 27 Jun 2012 19:40:52 +0300
+Message-ID: <CAGRgLy5U_Xzr=LDuQ6R7dEzx4EiNyWQb1fiSQhq_F+oTmyZw1Q@mail.gmail.com>
+References: <CAGRgLy6We49bW2gA7S-EOmA8sbaXgQeGuTR5Aqrt4y_KyvOrdw@mail.gmail.com>
+	<CAGRgLy5OkpZnfOpPS+16Tiep8eisOu9XnK7EcvZygwg22DVTqQ@mail.gmail.com>
+	<20120607212434.4d6211d6@notabene.brown>
+	<CAGRgLy55si7a8bY_Xuokqb6=cdOJyk_Wq34_DwmmhbpuQSSQug@mail.gmail.com>
+	<20120627172255.40ee3a19@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="u3/rZRmxL6MmkK24"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAGqmV7rBk9R-q-LRVw1tzxmXoQMLTQbQY8f9C0SOuaMOf7AfoQ@mail.gmail.com>
+In-Reply-To: <20120627172255.40ee3a19@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: jose.spam@netvisao.pt, NeilBrown <neilb@suse.de>, Christian Balzer <chibi@gol.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: andrey.warkentin@gmail.com, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi Neil,
 
---u3/rZRmxL6MmkK24
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+>>
+>> I would still think that there is value in recoding in a superblock
+>> that a drive is recovering.
+>
+> Probably. =A0It is a bit unfortunate that if you stop an array that i=
+s
+> recovering after a --re-add, you cannot simply 'assemble' it again an=
+d
+> get it back to the same state.
+> I'll think more on that.
 
-On Mon, Jun 25, 2012 at 07:27:25PM +0400, CoolCold wrote:
-> On Mon, Jun 25, 2012 at 2:59 PM, Jose Manuel dos Santos Calhariz <
-> jose.spam@netvisao.pt> wrote:
->=20
-> > On Mon, Jun 25, 2012 at 04:42:30PM +1000, NeilBrown wrote:
-> > > On Mon, 25 Jun 2012 11:58:33 +0900 Christian Balzer <chibi@gol.com>
-> > wrote:
-> > >
-> > > > On Mon, 25 Jun 2012 12:39:06 +1000 NeilBrown wrote:
-> > > >
-> > > > > On Sun, 24 Jun 2012 18:02:34 +0100 Jose Manuel dos Santos Calhariz
-> > > > > <jose.spam@netvisao.pt> wrote:
-> > > > >
-> > > > > > On Sun, Jun 24, 2012 at 06:21:46PM +1000, NeilBrown wrote:
-> > > > > > > On Fri, 22 Jun 2012 13:19:53 +0100 Jose Manuel dos Santos
-> > Calhariz
-> > > > > > > <jose.spam@netvisao.pt> wrote:
+As I mentioned, I see the additional re-add as a minor thing, but
+agree it's better to fix it. The fact that we don't know that the
+drive is being recovered, bothers me more. Because user might look at
+the superblock, and assume the data on the drive is consistent to some
+point in time (time of the drive failure). While the actual data,
+while doing bitmap-based recovery, is unusable until recovery
+successfully completes. So the user might think it's okay to try to
+run his app on this drive.
+Yes, please think about this.
 
-(...)
+>
+> Meanwhile, this patch might address your other problem. =A0It allows =
+--re-add
+> to work if a non-bitmap rebuild fails and is then re-added.
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index c601c4b..d31852e 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -5784,7 +5784,7 @@ static int add_new_disk(struct mddev * mddev, m=
+du_disk_info_t *info)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0super_types[mddev->maj=
+or_version].
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0valida=
+te_super(mddev, rdev);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if ((info->state & (1<<MD_DISK_SYNC)) =
+&&
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (!test_bit(In_sync, &rdev->flag=
+s) ||
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (test_bit(Faulty, &rdev->flags)=
+ ||
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 rdev->raid_disk !=3D info->ra=
+id_disk)) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* This was a hot-add =
+request, but events doesn't
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 * match, so reject it=
+=2E
+>
 
-> > >
-> > > Ok.
-> > > So the version number reported by "uname -a" doesn't change when you
-> > upgrade
-> > > a Debian kernel?  That's rather sad.
-> > > I means that one has to take the reporters work for which kernel was
-> > running
-> > > rather than looking in the oops message for where the kernels tells me
-> > > what version it was.
-> > >
-> > > Given the report, it is entirely possible that an older kernel was
-> > running
-> > > while a newer kernel was installed.
-> > >
-> > > Jose: how certain are you that the kernel that was running at the time
-> > was
-> > > exactly the kernel that was installed at the time.  i.e. you had not
-> > > performed a software update since the last reboot?
-> >
-> >
-> >
-> > Whenever I reboot a server I run a script to collect information about
-> > it: Kernel boot messages, kernel version, kernel modules, md raid
-> > information, etc.
-> >
-> Can you share this script ? (github will be perfect)
+I have tested a slightly different patch that you suggested earlier -
+just removing the !test_bit(In_sync, &rdev->flags) check. I confirm
+that it solves the problem.
 
-Yes I can,tThe URL is:=20
+The Faulty bit check seems redundant to me, because:
+- it can be set by only by validate_super() and only if that drive's
+role is 0xfffe in sb->roles[] array
+- Long time ago I asked you, how can it happen that a drive thinks
+about *itself* that it is Faulty (has 0xfffe for its role in its own
+superblock), and you said this should never happen.
 
-https://github.com/calhariz/sysinfoupdate.git
+Anyways, I tested also the patch you suggested, and it also works.
 
-Expect some rough edges and I hope the code is self-explanatory.  If
-not I am available for some explanation and patches are well come.
+Is there any chance to see this fix in ubuntu-precise?
 
-
-
->=20
->=20
-> >
-(...)
-
-    Jose Calhariz
-
---=20
+Thanks again for your support,
+Alex.
 --
-"Existem 3 poderes soberanos:
-Deus no c=E9u, o Papa no Vaticano e Dad=E1 Maravilha na grande =E1rea."
---Dad=E1 Maravilha
-
---u3/rZRmxL6MmkK24
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBCAAGBQJP6xTOAAoJEDSKd41ohe+PIKQQAKx0IXfc2ziQVHZFml6cFmyO
-EBfgfBUKWZSaYt88pdvaIGkE/Dm9zLpARR6QhDzykKdcPC8huobNssbInNPhm3oA
-GTXQ1VnjWdiXiIvoItJ5lVROZkoK4f9083dNf+jU1dicpGEOObHwXWUlSYniY2qC
-E6bU3tjKu28v/BTN3aHLB5GxwLVr6cNPVJiiLT+tZy7AoIallAJFq3qOJmjqJ1f4
-m2LLb4RucRsmI6fNkADPTbzaLIbn99lcVO34McK+GhJKN2/SAUBGTdYp85YnJH4N
-tvHnMJfpqMUl2cQciMjCdczLmBAEA5jRhK1QbjYhC170vglvSfSg83TA7IhkNQcm
-Wc1W6tJEDI/yv8k9GukDxVGSIj2dKMoHirVYThOmSGsC6gvdEhkQNTeNEe1LBZ4k
-tddcmnjukH0beuybAKS2CgDGXrJLSQoK5LixYx6/QNAciZrs2FYrcC0uOL4CLKEN
-c7/UPerVs5dfsUMuJmz0YStKGNGXSVYggpTD5Tbyv7Pjom50y3xUZ1kPoVpeeM0/
-Qwpny3WzwGyYOZAXmbzouzyzZD5qBRDwki3SRJbyg4R1HQiyv1fC2i9CyGA2/kiF
-ZxTVfnxDAnJ9+THKaffRF1GOBm5y/Lbze0cJLyK1HwvLhwl4lnjv13fczSihTQ2t
-E6qj+DWDj9sUXDolrZZe
-=iHdf
------END PGP SIGNATURE-----
-
---u3/rZRmxL6MmkK24--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
