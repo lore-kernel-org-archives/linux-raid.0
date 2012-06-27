@@ -1,83 +1,134 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md/raid5:When exec md_wait_for_blocked_rdev in
- ops_run_io,we must atomic_inc(&rdev->nr_pending).
-Date: Wed, 27 Jun 2012 12:21:29 +1000
-Message-ID: <20120627122129.720f6021@notabene.brown>
-References: <201206111123534849890@gmail.com>
+Subject: Re: [PATCH] md:Add blk_plug in sync_thread.
+Date: Wed, 27 Jun 2012 12:30:36 +1000
+Message-ID: <20120627123036.53871345@notabene.brown>
+References: <201206111716521256611@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/HplJJ8sZYb+I_.F1VgYTXc7"; protocol="application/pgp-signature"
+ boundary="Sig_/qnFxeCPTyv/pnp/U/3HbJtF"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201206111123534849890@gmail.com>
+In-Reply-To: <201206111716521256611@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: majianpeng <majianpeng@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/HplJJ8sZYb+I_.F1VgYTXc7
+--Sig_/qnFxeCPTyv/pnp/U/3HbJtF
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 11 Jun 2012 11:23:56 +0800 majianpeng <majianpeng@gmail.com> wrote:
+On Mon, 11 Jun 2012 17:16:55 +0800 majianpeng <majianpeng@gmail.com> wrote:
 
-> In ops_run_io(), if call md_wait_for_blocked_rdev which it dec
-> nr_pending, the rdev->nr_pending will dec again in else-statement.
-> So the nr_penging is error and we can't remove this device.
+> Add blk_plug in sync_thread will increase the performance of sync.
+> Because sync_thread did not blk_plug,so when raid sync, the bio merge
+> not well.
+>=20
+> Testing environment:
+> SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA AHCI
+> Controller.
+> OS:Linux xxx 3.5.0-rc2+ #340 SMP Tue Jun 12 09:00:25 CST 2012
+> x86_64 x86_64 x86_64 GNU/Linux.
+> RAID5: four ST31000524NS disk.
+>=20
+> Without blk_plug:recovery speed about 63M/Sec;
+> Add blk_plug:recovery speed about 120M/Sec.
+>=20
+> Using blktrace:
+> blktrace -d /dev/sdb -w 60  -o -|blkparse -i -
+>=20
+> without blk_plug:
+> Total (8,16):
+>  Reads Queued:      309811,     1239MiB	 Writes Queued:           0,     =
+   0KiB
+>  Read Dispatches:   283583,     1189MiB	 Write Dispatches:        0,     =
+   0KiB
+>  Reads Requeued:         0		 Writes Requeued:         0
+>  Reads Completed:   273351,     1149MiB	 Writes Completed:        0,     =
+   0KiB
+>  Read Merges:        23533,    94132KiB	 Write Merges:            0,     =
+   0KiB
+>  IO unplugs:             0        	 Timer unplugs:           0
+>=20
+> add blk_plug:
+> Total (8,16):
+>  Reads Queued:      428697,     1714MiB	 Writes Queued:           0,     =
+   0KiB
+>  Read Dispatches:     3954,     1714MiB	 Write Dispatches:        0,     =
+   0KiB
+>  Reads Requeued:         0		 Writes Requeued:         0
+>  Reads Completed:     3956,     1715MiB	 Writes Completed:        0,     =
+   0KiB
+>  Read Merges:       424743,     1698MiB	 Write Merges:            0,     =
+   0KiB
+>  IO unplugs:             0        	 Timer unplugs:        3384
+>=20
+> The ratio of merge will be markedly increased.
 >=20
 > Signed-off-by: majianpeng <majianpeng@gmail.com>
 > ---
->  drivers/md/raid5.c |    6 ++++++
->  1 files changed, 6 insertions(+), 0 deletions(-)
+>  drivers/md/md.c |    5 ++++-
+>  1 files changed, 4 insertions(+), 1 deletions(-)
 >=20
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index d267672..995b2de 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -607,6 +607,12 @@ static void ops_run_io(struct stripe_head *sh, struc=
-t stripe_head_state *s)
->  					md_check_recovery(conf->mddev);
->  				}
->  				md_wait_for_blocked_rdev(rdev, conf->mddev);
-> +				/*
-> +				 * Because md_wait_for_blocked_rdev will dec
-> +				 * nr_pending,we must add.The real dec is in
-> +				 * else statement.
-> +				 */
-> +				atomic_inc(&rdev->nr_pending);
->  			} else {
->  				/* Acknowledged bad block - skip the write */
->  				rdev_dec_pending(rdev, conf->mddev);
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 1c2f904..90bdc37 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -7298,6 +7298,7 @@ void md_do_sync(struct mddev *mddev)
+>  	int skipped =3D 0;
+>  	struct md_rdev *rdev;
+>  	char *desc;
+> +	struct blk_plug plug;
+> =20
+>  	/* just incase thread restarts... */
+>  	if (test_bit(MD_RECOVERY_DONE, &mddev->recovery))
+> @@ -7446,7 +7447,8 @@ void md_do_sync(struct mddev *mddev)
+>  		mddev->curr_resync =3D j;
+>  	}
+>  	mddev->curr_resync_completed =3D j;
+> -
+> +
+> +	blk_start_plug(&plug);
+>  	while (j < max_sectors) {
+>  		sector_t sectors;
+> =20
+> @@ -7586,6 +7588,7 @@ void md_do_sync(struct mddev *mddev)
+>  	}
+>   skip:
+>  	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+> +	blk_finish_plug(&plug);
+> =20
+>  	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
+>  		/* We completed so min/max setting can be forgotten if used. */
 
-Thanks for catching this.
+Thanks again.
 
-I have moved the 'atomic_inc' to before 'md_wait_for_blocked_rdev'
-to make sure that the nr_pending count never goes to zero, and I tidied
-up the comment a little.
+I've moved the call to "blk_finish_plug" up a bit to just after the
+  out:
+label, as it is possible to "goto skip" before calling blk_start_plug.
 
-Thanks,
+Thanks a lot,
 NeilBrown
 
-
---Sig_/HplJJ8sZYb+I_.F1VgYTXc7
+--Sig_/qnFxeCPTyv/pnp/U/3HbJtF
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT+puKTnsnt1WYoG5AQLGkQ/+PGhiY5mdEus4QrW1tKrBGikt5V7wPQQA
-jjnMYTp7+8uB+hUoeLV0VOPO9kAP5NThdGNlgmVJRkOXA1F4I+mFtfWU1qTbEWcn
-5INomKXVcrmD5inmWwunNAWcfLwTIxgMzd/dUuilNlocahopkWawUj/NIUfU0Chp
-dife9V7S14Km7jFXRTIBpBxWZyxWwqARLHLgxVJh1pVkIhjvzVgI/w16J1Z1fI2N
-yS2b8qwFQpHd2hQOb2Msi+Rd/Hnh3EeSrrOjxTOuyRcxfCSsJ6BLLl4RDJfTUwMZ
-Fx3K0gAScLaVS9My2UKN/JaSBWOUnVhRDG/qxVJjEFZleSjbo/x3N+nRvvnQaeKn
-lxODv8MLVm1gqNgODnIB1k13cXKe0Xy8/DhiIiq09NH9ym5bDB97BhKnWeU7L5TJ
-tE0FgNxOJ7+QEgCjVE3z9Sg504raC+DV8EMxdNdNBVJXpC4w1ZVbksXycVAAnHvp
-dlD7FjBEs6uVODCFvvWTLxvkIgowUHwFEhN1WMhoa0qMFs8i88GBqNq5igz5bfop
-UAAjWSTE2GO+sSfv/+Fz6vkmZA4iZYS6L2SBMUtJjHxcS1pP3ihrqXh+ZWSDT0mI
-JnPUkEm9GsnzKmpou4zjL3wSwuRolRtx1ANllm7eTSvVrX3OwRN+DSGtH+nkDU2K
-hA0aPZJ2dK0=
-=ro7r
+iQIVAwUBT+pwTDnsnt1WYoG5AQI/cQ/+OkFXKNJpml5fBg0Kw0epP28f8gRBa+LA
+8OkVlheDakkF6Z3O0qgQSQnEESCU5qXGGxWmfzPdu6/DAXvEcssNSwbJSwCKKhrQ
+gR1ZW2hKcnY7yYjGcs9X7vB1tSb+DU3BzyDVVkARnCCVDUKKwA0BVOZb/YIl5F+j
+7Dv1+hIW92g+aq4G6flQnloHwf6Xu5e37akyD3cCcKpJ4/HM+gbGVMZEYwXn7foc
+ysZqZ0OZeO4jrnPpcH/ELer+DNPX38I831w+fllMDhje0yPZssAy0Ddq1d3SK1cr
+uIE1y92ROACaPTehhz9HqXLNTVGjtbRjPlXJH8pH3rDQLQ75fnUkeO/xn6yPjnCP
+QU11DhqoE1ek5sECGEbsCUC1yUuMRayDbLi/NMZcFQdVak5NjZqUwPOvHDh+WZXB
+UeSTkNsyE4ZjEzedbteDqkmtV7npegWD4Zy+w2ngcfK/pok8xJsC9wF9D2sJmuqv
+R15MX2XiAQ449/bebdH51AQdiWCaL9Db/MX7qrRptWqEnlKobLi4fzLvfdk68kIp
+U0BUDNkbuz6OsLU117GxepfDodO3jyG6ZqfAcvpEYfpZdLASF7MmgVyHvOQp8/iU
+80MSzD2vZ1lCPNTWZS6isl476aKlI+SgCijXB7LM4W/+rjiI+iLCVP5Jun5FMFAC
+UXrTlWVV5ow=
+=w4oC
 -----END PGP SIGNATURE-----
 
---Sig_/HplJJ8sZYb+I_.F1VgYTXc7--
+--Sig_/qnFxeCPTyv/pnp/U/3HbJtF--
