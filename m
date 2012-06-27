@@ -1,147 +1,74 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md/raid5:Choose to replacing or recoverying when  raid
- degraded and had a want_replacement disk at the same time.
-Date: Wed, 27 Jun 2012 13:47:43 +1000
-Message-ID: <20120627134743.42651028@notabene.brown>
-References: <201206051532527348313@gmail.com>
-	<20120606112803.359c62cc@notabene.brown>
-	<201206061124295788941@gmail.com>
-	<20120606135543.6b233ff9@notabene.brown>
-	<201206061306494539772@gmail.com>
+Subject: Re: [PATCH] md/raid5:Add "BlockedBadBlocks" flag when waitting rdev
+ to be unlocked.
+Date: Wed, 27 Jun 2012 13:55:07 +1000
+Message-ID: <20120627135507.115e32f7@notabene.brown>
+References: <201206181113442039690@gmail.com>
+	<20120627134513.2a67fbb0@notabene.brown>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/LOuUfzvb=curDuvvAUFQkoX"; protocol="application/pgp-signature"
+ boundary="Sig_/nxh1dhYm04pwb+DD7/14n7f"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201206061306494539772@gmail.com>
+In-Reply-To: <20120627134513.2a67fbb0@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: majianpeng <majianpeng@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/LOuUfzvb=curDuvvAUFQkoX
+--Sig_/nxh1dhYm04pwb+DD7/14n7f
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 6 Jun 2012 13:06:53 +0800 majianpeng <majianpeng@gmail.com> wrote:
+On Wed, 27 Jun 2012 13:45:13 +1000 NeilBrown <neilb@suse.de> wrote:
 
-> >On Wed, 6 Jun 2012 11:24:34 +0800 majianpeng <majianpeng@gmail.com> wrot=
-e:
-> >
-> >> On  Tue, 5 Jun 2012 18:28:13 neil wrote:
-> >> >On Tue, 5 Jun 2012 15:32:56 +0800 majianpeng <majianpeng@gmail.com> w=
-rote:
-> >> >
-> >> >> In Commit 7bfec5f35c68121e7b1849f3f4166dd96c8da5b3:
-> >> >> "if there is a spare and a want_replacement device, start replaceme=
-nt."
-> >> >> But it did not consider the raid was degraded at the same time.
-> >> >> When we add spare disk in order to recovery, unless raid was ok and=
- then
-> >> >> started replacement or vice versa.
-> >> >>=20
-> >> >> Signed-off-by: majianpeng <majianpeng@gmail.com>
-> >> >> ---
-> >> >>  drivers/md/raid5.c |   48 +++++++++++++++++++++++++++++-----------=
---------
-> >> >>  1 files changed, 29 insertions(+), 19 deletions(-)
-> >> >>=20
-> >> >> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> >> >> index d267672..f74c9a5 100644
-> >> >> --- a/drivers/md/raid5.c
-> >> >> +++ b/drivers/md/raid5.c
-> >> >
-> >> >Good point, but the code feels a little ... clumsy.
-> >> >
-> >> >How about this?
-> >> >
-> >> >NeilBrown
-> >> >
-> >> >
-> >> >diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> >> >index d267672..4f0861e 100644
-> >> >--- a/drivers/md/raid5.c
-> >> >+++ b/drivers/md/raid5.c
-> >> >@@ -5465,10 +5465,9 @@ static int raid5_add_disk(struct mddev *mddev,=
- struct md_rdev *rdev)
-> >> > 	if (rdev->saved_raid_disk >=3D 0 &&
-> >> > 	    rdev->saved_raid_disk >=3D first &&
-> >> > 	    conf->disks[rdev->saved_raid_disk].rdev =3D=3D NULL)
-> >> >-		disk =3D rdev->saved_raid_disk;
-> >> >-	else
-> >> >-		disk =3D first;
-> >> >-	for ( ; disk <=3D last ; disk++) {
-> >> >+		first =3D rdev->saved_raid_disk;
-> >> >+
-> >> >+	for (disk =3D first; disk <=3D last; disk++) {
-> >> > 		p =3D conf->disks + disk;
-> >> > 		if (p->rdev =3D=3D NULL) {
-> >> > 			clear_bit(In_sync, &rdev->flags);
-> >> >@@ -5477,8 +5476,10 @@ static int raid5_add_disk(struct mddev *mddev,=
- struct md_rdev *rdev)
-> >> > 			if (rdev->saved_raid_disk !=3D disk)
-> >> > 				conf->fullsync =3D 1;
-> >> > 			rcu_assign_pointer(p->rdev, rdev);
-> >> >-			break;
-> >> >+			goto out;
-> >> > 		}
-> >> >+	}
-> >> >+	for (disk =3D first; disk <=3D last; disk++) {
-> >> > 		if (test_bit(WantReplacement, &p->rdev->flags) &&
-> >> > 		    p->replacement =3D=3D NULL) {
-> >> > 			clear_bit(In_sync, &rdev->flags);
-> >> >@@ -5490,6 +5491,7 @@ static int raid5_add_disk(struct mddev *mddev, =
-struct md_rdev *rdev)
-> >> > 			break;
-> >> > 		}
-> >> > 	}
-> >> >+out:
-> >> > 	print_raid5_conf(conf);
-> >> > 	return err;
-> >> > }
-> >> >
-> >> >
-> >> I tested and found a bug.I corrected it like this.
-> >
-> >You've added a test for 'p->rdev !=3D NULL' - is that all?
-> >
-> No, I also add=20
-> >> +       for (disk =3D first; disk <=3D last; disk++) {
->  +               p =3D conf->disks + disk;
-> >> +               if (p->rdev !=3D NULL &&
-> >> +                       test_bit(WantReplacement, &p->rdev->flags) &&
-> >> +                       p->replacement =3D=3D NULL) {
-> You lost :
->  p =3D conf->disks + disk;
-> in next loop.
-> 											=09
-Ahhh... yes, of course.
-I've added that to that patch.
 
-Thanks,
+> Thanks for finding this.  However I don't think your patch is quite corre=
+ct.
+> It would re-introduce a hang fixed by commit 43220aa0f22cd3ce5b3.
+>=20
+> I've applied the following instead.
+>=20
+....
+> +		else
+> +			/* Internal metadata will immediately
+> +			 * be written by raid5d, so we don't
+> +			 * need to wait here.
+> +			 */
+> +			rdev_dec_pending(rdev, mddev);
+> +	}
+
+... which is clearly wrong.  That last line is now
+
+                        rdev_dec_pending(s.blocked_rdev, conf->mddev);
+
 NeilBrown
 
 
+> =20
+>  	if (s.handle_bad_blocks)
+>  		for (i =3D disks; i--; ) {
 
---Sig_/LOuUfzvb=curDuvvAUFQkoX
+
+--Sig_/nxh1dhYm04pwb+DD7/14n7f
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT+qCXznsnt1WYoG5AQJgmw/+K/x3WeBq7q88j1qYSFIS6zla1FJgvY/M
-kh10LxIolTFtwVtxcVZSmajztbsep63YL8zOzcxqm9s13YRUY7MX79rxpeVx6pvu
-tgXp3ITB1PEJCAEyZpsRc4kBWoIdIOH1gBNyb3Sa6BtwgC76uqyvPZAjReSu7Cq9
-p+hghSwyuLAA3IyH7zCG39lwLWAMtJDMh1epj9GvIYOG3ywDGor3sO26MnnpQkv5
-xbteeLN6C2gDb2BH7VoM9rbNKBzcwwu9BEUMTHqZ4mwDVGKvkRS2liEy2Fkuf2qO
-g8qcVbX30CGP1tRcPbbuCyylEd0VIYpRxlYRjN5SQaFTOl8Lp3f6lBHohufKsf08
-S+pJ7B/RUQYLDdlFFf0agYfT0QswJrEDPj7cXDgZn5HwnKXEHYDgxiwtGA3Xu8No
-T5rS3j0ppD6hP4TITGEDp45ugBNcNYfpYrtmwF0oR9DkPCcGeiT8jJ0EVkPXfn+1
-DJoGukU8xAEkIG5WB9dbxcrg/O9xZK6gqj5rwMZcAfuucMiK+ky+a3EtwkrqsLZt
-IKrePmQseu0u8x7r1xhYCNE3n05NqY5j4HZWAap8wOcSWG6g0Y8ppWWdK3KqXURj
-2ddfN9nL92KmYY3Mm2M8kyWgV7KHSEqayfhj0cmU2jGgT4I3qjzoAJIyoHtnqm2k
-Uw9CqxCzNBQ=
-=4rkG
+iQIVAwUBT+qEGznsnt1WYoG5AQJJaA//XWUCSg1NqHvgYNcbGb13nhtVzMu6c9C9
+AJSNPxwQIRVC64lvQc1QNv5DcNBHRUGMKw2SwEr9FIJNsrGWw2NdNoJ6EcuGkmGe
+9n7MskbR0R5cPSx2BduXhaRyfW45W8uFo9fRtm9DZf7rQJS0r5SSBvOM3+p7PtCG
+BssROX3AT5uC6pDiSzOSAfVpYprLBxoJ24MvnaAhz1ObjwpbxvbTJbRPnP74Uu6D
+U28TFh5RgTOLe76P0bjDg+lONkJjFsLmCwx1K/9wXIxgolXQhuONgNDPRnKZn561
+TGt+CNOkedZj+6RHGOlDNRBiC0VHbgT7CLg9RR4G/llcdkwovJIXBT3HAy65vI+K
+g1sbYobrFQnNjiKlA/N0EHmKAiA0FY5Dj3+fsM1zqornhDRlPA21hzUR9k5hbcTt
+mgi/ItzEMpT384m4jytBIcJOV1pPySWGvgCkq0xrF/7ckGfSp2vtBnfDYMqf8JJE
+4aprNZ2Y+HRD8hegpnZEMiyQR8r7FHDeA9MspBJAId1EG3xh7WP7xc/pYsx7Wgi+
+xZHkY0pDdSAXMjgqsVaFubOtnuSjwfaDSTWOo7wMPI2CRGPUexTZlXIwWDbwEMac
+TxBwzl7d2/kQJ6y5sO44I/fm93Sma2pIWJBStvfv3QTfPtyGbVRyNIY2ivX/L7+A
+7/nOgESI8GI=
+=I9GZ
 -----END PGP SIGNATURE-----
 
---Sig_/LOuUfzvb=curDuvvAUFQkoX--
+--Sig_/nxh1dhYm04pwb+DD7/14n7f--
