@@ -1,113 +1,83 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: A disk failure during the initial resync after create, does not
- always suspend the resync to start the recovery
-Date: Wed, 27 Jun 2012 08:57:18 +1000
-Message-ID: <20120627085718.4d67b9b6@notabene.brown>
-References: <0B3484EB4B5B284199C5204D116920FC047E8D@WAL-MBS04.global.avidww.com>
+Subject: Re: [PATCH] md/raid5:When exec md_wait_for_blocked_rdev in
+ ops_run_io,we must atomic_inc(&rdev->nr_pending).
+Date: Wed, 27 Jun 2012 12:21:29 +1000
+Message-ID: <20120627122129.720f6021@notabene.brown>
+References: <201206111123534849890@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/CEz5Y1+g24_w4NKD8MHhk7E"; protocol="application/pgp-signature"
+ boundary="Sig_/HplJJ8sZYb+I_.F1VgYTXc7"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0B3484EB4B5B284199C5204D116920FC047E8D@WAL-MBS04.global.avidww.com>
+In-Reply-To: <201206111123534849890@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ralph Berrett <ralph.berrett@avid.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: majianpeng <majianpeng@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/CEz5Y1+g24_w4NKD8MHhk7E
-Content-Type: text/plain; charset=iso-8859-1
+--Sig_/HplJJ8sZYb+I_.F1VgYTXc7
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 26 Jun 2012 21:14:54 +0000 Ralph Berrett <ralph.berrett@avid.com>
-wrote:
+On Mon, 11 Jun 2012 11:23:56 +0800 majianpeng <majianpeng@gmail.com> wrote:
 
-> A disk failure during the initial resync after create, does not always su=
-spend the resync to start the recovery
-> =A0
-> Steps:
-> 1. Create multiple Raid6 arrays (in my case 8 arrays, this is a large sto=
-rage system)
-> 2. Create 2 spares (with one spare in md1 and other in md5)
-> 3. Set two different "spare-group" in /etc/mdamd/mdadm.conf so that md1-m=
-d4 and md5-md8 each share one of the two spare.
-> 4. While resync is still in progress, fail a disk in the arrays that do n=
-ot have the spare (physically pulled).
-> 5. The spare drive is moved from to the effected array via mdadm --monito=
-r daemon that is running. But the "recovery" does not always started. Most =
-of the time it waits for the "resync" to complete before starting the "reco=
-very", but not always.
-> =A0
-> Which is the expected behavior, should it stop the resync to do the recov=
-ery or not?  If not, since these are fairly large arrays, the "resync" coul=
-d take a while before it even starts the "recovery" leaving the system in d=
-egraded state.  From my experiments, the "resync" is not stopped more often=
- than it is stopped.
-> =A0
-> The only workaround I have found is to send "echo "ilde" > /sys/block/md2=
-/md/sync_action" which will suspend the resync and then the recovery will s=
-tart.  This is a intended as a embedded system so this is not an optimal wo=
-rkaround.
-> =A0
-> emDebain 6.0.4
-> Kernel:    2.6.32
-> mdadm:   v3.1.4 - 31st August 2010
-> =A0
+> In ops_run_io(), if call md_wait_for_blocked_rdev which it dec
+> nr_pending, the rdev->nr_pending will dec again in else-statement.
+> So the nr_penging is error and we can't remove this device.
+>=20
+> Signed-off-by: majianpeng <majianpeng@gmail.com>
+> ---
+>  drivers/md/raid5.c |    6 ++++++
+>  1 files changed, 6 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index d267672..995b2de 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -607,6 +607,12 @@ static void ops_run_io(struct stripe_head *sh, struc=
+t stripe_head_state *s)
+>  					md_check_recovery(conf->mddev);
+>  				}
+>  				md_wait_for_blocked_rdev(rdev, conf->mddev);
+> +				/*
+> +				 * Because md_wait_for_blocked_rdev will dec
+> +				 * nr_pending,we must add.The real dec is in
+> +				 * else statement.
+> +				 */
+> +				atomic_inc(&rdev->nr_pending);
+>  			} else {
+>  				/* Acknowledged bad block - skip the write */
+>  				rdev_dec_pending(rdev, conf->mddev);
 
-I've never given a lot of thought to this scenario so the way that it works
-is simply how the different bits fall together, not anything deliberate.
+Thanks for catching this.
 
-If a device failed in an array which did not currently have a spare attache=
-d,
-I would expect the resync to restart and when the spare gets moved over the
-resync would continue and when it completes a recovery would start.
+I have moved the 'atomic_inc' to before 'md_wait_for_blocked_rdev'
+to make sure that the nr_pending count never goes to zero, and I tidied
+up the comment a little.
 
-If a device failed in an array which already had a spare attached - I would
-have to check the code to see what would happen but I can certainly imagine
-that a recovery of that spare would start, and it may well resync the other
-parity block at the same time.=20
-
-It should  be deterministic though - I can't see much room for any random
-element.
-
-As the initial sync of RAID6 isn't really needed anyway, it is clear that it
-should be interrupted and the recovery preformed instead.
-However if a sync is happening after an unclean restart when a device fails,
-it isn't clear to me what the preferred option is.
-Allowing the sync to complete means your data will be protected from another
-failure sooner.
-Allowing the recovery to start immediately means that you will get all your
-bandwidth to the array back sooner, and you'll be protected from double
-failure sooner.
-
-Maybe if the sync is less than half way, interrupt it. If more than half wa=
-y,
-abort it?
-
-The way I would  'fix' this would be to modify mdadm to write 'idle' to
-'sync_action' at an appropriate time (after moving the spare over).
-
+Thanks,
 NeilBrown
 
---Sig_/CEz5Y1+g24_w4NKD8MHhk7E
+
+--Sig_/HplJJ8sZYb+I_.F1VgYTXc7
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT+o+Tjnsnt1WYoG5AQIsshAAqovdKgCycwicr12XlJajTN4d6CV4aORA
-ZDf0nTHX6O8BGGmr0/fQw1YfPtzY/HDbOMtjtoJWWJ+FUfQBJCXMQI5CDEZStwuV
-DcBLXb74BHLtDD4YlCSpmmdECrVgg4TR5J2w7riPDhN1KqzlG9+UGdI3GiXxZJBy
-Yjvx8XwC0tOKBE+1u8nK1hlQ6mNniXfvW3us3p/IdmaExQwIx87HeU60Ek7+gR+g
-16aUHdHk6YqQ3iL1PflNh497Co5Lx367iXQDyfeeMLs2ifGAPnEpC84aq89K+TtF
-zaINyvaAV8XkiVnX+B2WfDW3X5u0LDu0xkwp7NLa1afjVWfPRpoe1jODClDx4ViX
-Z6VvlLx62lgYNkj51ctH5HVMdO/puFVFAF7WPk1PSWF9BMaRWtSSaUTueAq/V1l4
-bHzYpzbf75c6QzLuqsHa4IuLYgckkoNzf+UNZ0mMu+71b9DZG3q/oka9DV1bQc7I
-GnEhkihbQREKwixeOy2crHGTRtDG2dyb0MJjE0bR0Radf3nrMKJWtRzo342kVckU
-KqkUw/sEH+BOgKbu/LPFPRw1KviFlxotIj9X7KCi8s/irPkEzhCz7ZrLTT2AqD3s
-KZGXxZo7VX4FmKMlEfqtLxlxTaBhmBjdewxopj8rtjjxA3WjtElel/IU76TgTS8P
-v+EiJP3pp4o=
-=O5nP
+iQIVAwUBT+puKTnsnt1WYoG5AQLGkQ/+PGhiY5mdEus4QrW1tKrBGikt5V7wPQQA
+jjnMYTp7+8uB+hUoeLV0VOPO9kAP5NThdGNlgmVJRkOXA1F4I+mFtfWU1qTbEWcn
+5INomKXVcrmD5inmWwunNAWcfLwTIxgMzd/dUuilNlocahopkWawUj/NIUfU0Chp
+dife9V7S14Km7jFXRTIBpBxWZyxWwqARLHLgxVJh1pVkIhjvzVgI/w16J1Z1fI2N
+yS2b8qwFQpHd2hQOb2Msi+Rd/Hnh3EeSrrOjxTOuyRcxfCSsJ6BLLl4RDJfTUwMZ
+Fx3K0gAScLaVS9My2UKN/JaSBWOUnVhRDG/qxVJjEFZleSjbo/x3N+nRvvnQaeKn
+lxODv8MLVm1gqNgODnIB1k13cXKe0Xy8/DhiIiq09NH9ym5bDB97BhKnWeU7L5TJ
+tE0FgNxOJ7+QEgCjVE3z9Sg504raC+DV8EMxdNdNBVJXpC4w1ZVbksXycVAAnHvp
+dlD7FjBEs6uVODCFvvWTLxvkIgowUHwFEhN1WMhoa0qMFs8i88GBqNq5igz5bfop
+UAAjWSTE2GO+sSfv/+Fz6vkmZA4iZYS6L2SBMUtJjHxcS1pP3ihrqXh+ZWSDT0mI
+JnPUkEm9GsnzKmpou4zjL3wSwuRolRtx1ANllm7eTSvVrX3OwRN+DSGtH+nkDU2K
+hA0aPZJ2dK0=
+=ro7r
 -----END PGP SIGNATURE-----
 
---Sig_/CEz5Y1+g24_w4NKD8MHhk7E--
+--Sig_/HplJJ8sZYb+I_.F1VgYTXc7--
