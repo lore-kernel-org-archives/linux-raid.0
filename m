@@ -1,90 +1,124 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Stacked array data recovery
-Date: Wed, 27 Jun 2012 07:34:13 -0500
-Message-ID: <4FEAFDC5.7030205@hardwarefreak.com>
-References: <js083q$kdu$1@dough.gmane.org> <js1vuk$9k8$2@dough.gmane.org>   <4FE5B213.5010503@hardwarefreak.com> <js70ce$fgv$1@dough.gmane.org>   <4FE72053.4040101@hardwarefreak.com> <4FE7E044.6040506@hardwarefreak.com>   <js9emr$761$1@dough.gmane.org> <4FE91619.4020709@hardwarefreak.com>  <1340699839.3241.29.camel@hoferr-desktop.hofer.rummelring>  <4FEA1A4F.9090605@hardwarefreak.com> <1340788044.3420.8.camel@hoferr-desktop.hofer.rummelring>
-Reply-To: stan@hardwarefreak.com
+From: Jose Manuel dos Santos Calhariz <jose.spam@netvisao.pt>
+Subject: Re: linux-image-2.6.32-5-686: kernel BUG at ...
+ build/source_i386_none/drivers/md/raid5.c:2764!
+Date: Wed, 27 Jun 2012 15:12:31 +0100
+Message-ID: <20120627141231.GA10741@calhariz.com>
+References: <20120622121953.GA25149@calhariz.com>
+ <20120624182146.7d63fbbb@notabene.brown>
+ <20120624170234.GA13154@calhariz.com>
+ <20120625123906.2c302212@notabene.brown>
+ <20120625115833.71190b7e@batzmaru.gol.ad.jp>
+ <20120625164230.2ba8f72c@notabene.brown>
+ <20120625105903.GA6005@calhariz.com>
+ <CAGqmV7rBk9R-q-LRVw1tzxmXoQMLTQbQY8f9C0SOuaMOf7AfoQ@mail.gmail.com>
+Reply-To: jose.spam@netvisao.pt
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="u3/rZRmxL6MmkK24"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1340788044.3420.8.camel@hoferr-desktop.hofer.rummelring>
+Content-Disposition: inline
+In-Reply-To: <CAGqmV7rBk9R-q-LRVw1tzxmXoQMLTQbQY8f9C0SOuaMOf7AfoQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ramon Hofer <ramonhofer@bluewin.ch>
-Cc: linux-raid@vger.kernel.org
+To: CoolCold <coolthecold@gmail.com>
+Cc: jose.spam@netvisao.pt, NeilBrown <neilb@suse.de>, Christian Balzer <chibi@gol.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 6/27/2012 4:07 AM, Ramon Hofer wrote:
-> On Die, 2012-06-26 at 15:23 -0500, Stan Hoeppner wrote:
->> On 6/26/2012 3:37 AM, Ramon Hofer wrote:
->>
->>> Btw I ran the four dd commands within a screen session if this is of any
->>> importance?
->>
->> Can you get to that screen session?  Recall I showed you the output you
->> should have seen when each dd command completed?  Did you see four such
->> sets of output in the screen session?
-> 
-> I was able to get into the screen session but the output wasn't shown.
-> It seemed as if all four commands were still running.
-> top showed the dd commands as well but I'm not sure if each four were
-> still running.
 
-Ok that's strange.  Looks like they hung somehow if they're still
-showing in top.  Go ahead and kill them.  After you kill em confirm they
-exited (no longer it top).
+--u3/rZRmxL6MmkK24
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->> Regardless, unless the dd commands hung in some way, they should not
->> show up in top right now.  So it's probably safe to assume they completed.
-> 
-> How long would it approximately take for the dd command to clear the
-> drive?
-> Can I assume a write rate of 100 MB/s?
+On Mon, Jun 25, 2012 at 07:27:25PM +0400, CoolCold wrote:
+> On Mon, Jun 25, 2012 at 2:59 PM, Jose Manuel dos Santos Calhariz <
+> jose.spam@netvisao.pt> wrote:
+>=20
+> > On Mon, Jun 25, 2012 at 04:42:30PM +1000, NeilBrown wrote:
+> > > On Mon, 25 Jun 2012 11:58:33 +0900 Christian Balzer <chibi@gol.com>
+> > wrote:
+> > >
+> > > > On Mon, 25 Jun 2012 12:39:06 +1000 NeilBrown wrote:
+> > > >
+> > > > > On Sun, 24 Jun 2012 18:02:34 +0100 Jose Manuel dos Santos Calhariz
+> > > > > <jose.spam@netvisao.pt> wrote:
+> > > > >
+> > > > > > On Sun, Jun 24, 2012 at 06:21:46PM +1000, NeilBrown wrote:
+> > > > > > > On Fri, 22 Jun 2012 13:19:53 +0100 Jose Manuel dos Santos
+> > Calhariz
+> > > > > > > <jose.spam@netvisao.pt> wrote:
 
-It'll be 100-120 at the beginning, and slow to 20-30 as dd is writing
-sectors on the inner platter tracks.
+(...)
 
-> With a disk size of 2 TB thid should take about 6 hours?
+> > >
+> > > Ok.
+> > > So the version number reported by "uname -a" doesn't change when you
+> > upgrade
+> > > a Debian kernel?  That's rather sad.
+> > > I means that one has to take the reporters work for which kernel was
+> > running
+> > > rather than looking in the oops message for where the kernels tells me
+> > > what version it was.
+> > >
+> > > Given the report, it is entirely possible that an older kernel was
+> > running
+> > > while a newer kernel was installed.
+> > >
+> > > Jose: how certain are you that the kernel that was running at the time
+> > was
+> > > exactly the kernel that was installed at the time.  i.e. you had not
+> > > performed a software update since the last reboot?
+> >
+> >
+> >
+> > Whenever I reboot a server I run a script to collect information about
+> > it: Kernel boot messages, kernel version, kernel modules, md raid
+> > information, etc.
+> >
+> Can you share this script ? (github will be perfect)
 
-Yeah, something like that.
+Yes I can,tThe URL is:=20
 
-> I think I'll let it run again this evening so that it can complete until
-> the next day.
+https://github.com/calhariz/sysinfoupdate.git
 
-Do them one at a time this time, starting with /dev/sdk.  Remember to
-issue sync.  E.g.
+Expect some rough edges and I hope the code is self-explanatory.  If
+not I am available for some explanation and patches are well come.
 
-~$ dd if=/dev/zero of=/dev/sdk bs=16384; sync
 
-Try a smaller block size this time, 16KB instead of 1M.
 
-Oh, Ramon, before you do any of this, change to the deadline elevator:
+>=20
+>=20
+> >
+(...)
 
-~$ echo deadline > /sys/block/sdk/queue/scheduler
+    Jose Calhariz
 
-Dangit, Ramon, I can't believe I forgot to tell you this when you
-installed the 9240.  Debian, like most distros, defaults to the CFQ
-elevator, which is good, I guess, for interactive desktop use.  But it
-sucks like a Hoover with most server workloads.  So add this to your
-kernel boot options in grub's menu.list, normally found in
-/boot/grub/menu.lst:
+--=20
+--
+"Existem 3 poderes soberanos:
+Deus no c=E9u, o Papa no Vaticano e Dad=E1 Maravilha na grande =E1rea."
+--Dad=E1 Maravilha
 
-elevator=deadline
+--u3/rZRmxL6MmkK24
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-That will enable deadline each time you boot.  So after you make the
-change go ahead and reboot the system.  Then proceed with your dd commands.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
->> So at this point you can try creating the RAID5 array again.  If the dd
->> command did what we wanted, /dev/sdk should have remapped the bad
->> sector, and you shouldn't get the error kicking that drive.  If you
->> still do, you may need to replace the drive.
-> 
-> I'm not sure if I didn't kille the dd command too early.
-> Maybe it's better to let it run again. Maybe even each disk at once?
-> Maybe this would already tell if a disk is faulty?
+iQIcBAEBCAAGBQJP6xTOAAoJEDSKd41ohe+PIKQQAKx0IXfc2ziQVHZFml6cFmyO
+EBfgfBUKWZSaYt88pdvaIGkE/Dm9zLpARR6QhDzykKdcPC8huobNssbInNPhm3oA
+GTXQ1VnjWdiXiIvoItJ5lVROZkoK4f9083dNf+jU1dicpGEOObHwXWUlSYniY2qC
+E6bU3tjKu28v/BTN3aHLB5GxwLVr6cNPVJiiLT+tZy7AoIallAJFq3qOJmjqJ1f4
+m2LLb4RucRsmI6fNkADPTbzaLIbn99lcVO34McK+GhJKN2/SAUBGTdYp85YnJH4N
+tvHnMJfpqMUl2cQciMjCdczLmBAEA5jRhK1QbjYhC170vglvSfSg83TA7IhkNQcm
+Wc1W6tJEDI/yv8k9GukDxVGSIj2dKMoHirVYThOmSGsC6gvdEhkQNTeNEe1LBZ4k
+tddcmnjukH0beuybAKS2CgDGXrJLSQoK5LixYx6/QNAciZrs2FYrcC0uOL4CLKEN
+c7/UPerVs5dfsUMuJmz0YStKGNGXSVYggpTD5Tbyv7Pjom50y3xUZ1kPoVpeeM0/
+Qwpny3WzwGyYOZAXmbzouzyzZD5qBRDwki3SRJbyg4R1HQiyv1fC2i9CyGA2/kiF
+ZxTVfnxDAnJ9+THKaffRF1GOBm5y/Lbze0cJLyK1HwvLhwl4lnjv13fczSihTQ2t
+E6qj+DWDj9sUXDolrZZe
+=iHdf
+-----END PGP SIGNATURE-----
 
-Yeah, do em one at a time this time.  It'll cause less load, and you
-should still be able to watch movies etc while it runs.
-
--- 
-Stan
+--u3/rZRmxL6MmkK24--
