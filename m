@@ -1,202 +1,89 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH V1] md:Fix name of raid thread when raid takeovered.
-Date: Wed, 27 Jun 2012 13:56:28 +1000
-Message-ID: <20120627135628.7752780e@notabene.brown>
-References: <201206051337125784360@gmail.com>
-	<20120605154851.0664f8fb@notabene.brown>
-	<201206051406033596882@gmail.com>
+Subject: Re: [PATCH 0/2] Modify read error handle for RAID-4,5,6.
+Date: Wed, 27 Jun 2012 14:32:28 +1000
+Message-ID: <20120627143228.21ee4baa@notabene.brown>
+References: <201205261052422815923@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_//L_.O+wpJsAzeC7_mVEQekI"; protocol="application/pgp-signature"
+ boundary="Sig_/j0a_i1aJG_jCqqbs=TUyfGj"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201206051406033596882@gmail.com>
+In-Reply-To: <201205261052422815923@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: majianpeng <majianpeng@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_//L_.O+wpJsAzeC7_mVEQekI
+--Sig_/j0a_i1aJG_jCqqbs=TUyfGj
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 5 Jun 2012 14:06:06 +0800 majianpeng <majianpeng@gmail.com> wrote:
-
-> On  Mon, 4 Jun 2012 22:49:02 -0700, neil wrote:
-> >On Tue, 5 Jun 2012 13:37:15 +0800 majianpeng <majianpeng@gmail.com> wrot=
+On Sat, 26 May 2012 10:52:50 +0800 "majianpeng" <majianpeng@gmail.com> wrot=
 e:
-> >
-> >> When raid takeovered, it used old personality to set task->comm[].
-> >> So we add judgement and set corrected task->comm[].
-> >>=20
-> >> Signed-off-by: majianpeng <majianpeng@gmail.com>
-> >> ---
-> >>  drivers/md/md.c |   14 ++++++++++++++
-> >>  1 files changed, 14 insertions(+), 0 deletions(-)
-> >>=20
-> >> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> >> index 1c2f904..6b3ce6e 100644
-> >> --- a/drivers/md/md.c
-> >> +++ b/drivers/md/md.c
-> >> @@ -6738,11 +6738,25 @@ struct md_thread *md_register_thread(void (*ru=
-n) (struct mddev *), struct mddev
-> >>  				 const char *name)
-> >>  {
-> >>  	struct md_thread *thread;
-> >> +	struct md_personality *pers =3D NULL;
-> >> =20
-> >>  	thread =3D kzalloc(sizeof(struct md_thread), GFP_KERNEL);
-> >>  	if (!thread)
-> >>  		return NULL;
-> >> =20
-> >> +	/*
-> >> +	 *When raid takeovered,the mddev->pers was old,so the
-> >> +	 *thread_name is wrong.
-> >> +	 */
-> >> +	if (name =3D=3D NULL && mddev->level !=3D mddev->new_level) {
-> >> +		spin_lock(&pers_lock);
-> >> +		list_for_each_entry(pers, &pers_list, list)
-> >> +			if (pers->level =3D=3D mddev->new_level) {
-> >> +				name =3D pers->name;
-> >> +				break;
-> >> +			}
-> >> +		spin_unlock(&pers_lock);
-> >> +	}
-> >>  	init_waitqueue_head(&thread->wqueue);
-> >> =20
-> >>  	thread->run =3D run;
-> >
-> >No, I really don't like that.  It is to focussed on fixing the particular
-> >symptom rather that making the code generally cleaner.
-> >
->=20
-> >Was there a reason you didn't just change the last arg of md_register_th=
-read
-> >to be the level name instead of NULL??
-> >
-> No.I first wanted to corrected in which call md_register_thread.But I fou=
-nd it will take some codes.
-> So i think corrected this function may better.
-> >NeilBrown
 
-I've applied this patch to fix the problem.
+> When RAID-4,5,6 degraded and met read-error, it will eject the rdev.And t=
+hen
+> the RAID will fail and lost data.Because the function of set-badsector,wh=
+en=20
+> this occur,it will set-badsector,not ejecting the rdev.
+> When RAID-4,5,6 met read-error, it will re-write if RAID was not degrade.=
+But if=20
+> re-write error,it will eject the rdev and RAID will degrade and it will t=
+ake too
+> long time for recoverying.So I add judgement for controling how may re-wr=
+ite-error
+> can eject the rdev.
+>=20
+> I do those for flexible controling the read-error for different situation.
+> =09
+
+Thanks.
+
+>=20
+> majianpeng (2):
+>   md/raid456: When readed error and raid was degraded,it try to
+>     set badsector, not ejecting the rdev.
+
+I've applied this one.  I also added 'set_bad =3D 1' in the case where
+the re-write failed.
+
+>   md/raid456:Add interface for contorling eject rdev when re-write
+>     failed.
+
+I haven't applied this.  I'm not entirely sure what the point of counting
+the errors was, but I don't think it is necessary.
 
 Thanks,
 NeilBrown
 
-=46rom 5fc056ff25485cecb8464a6fe09d3d486fd99d6a Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Wed, 27 Jun 2012 13:53:52 +1000
-Subject: [PATCH] md: make 'name' arg to md_register_thread non-optional.
 
-Having the 'name' arg optional and defaulting to the current
-personality name is no necessary and leads to errors, as when
-changing the level of an array we can end up using the
-name of the old level instead of the new one.
-
-So make it non-optional and always explicitly pass the name
-of the level that the array will be.
-
-Reported-by: majianpeng <majianpeng@gmail.com>
-Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 973aa84..c601c4b 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6751,7 +6751,7 @@ struct md_thread *md_register_thread(void (*run) (str=
-uct mddev *), struct mddev
- 	thread->tsk =3D kthread_run(md_thread, thread,
- 				  "%s_%s",
- 				  mdname(thread->mddev),
--				  name ?: mddev->pers->name);
-+				  name);
- 	if (IS_ERR(thread->tsk)) {
- 		kfree(thread);
- 		return NULL;
-diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
-index 9339e67..61a1833 100644
---- a/drivers/md/multipath.c
-+++ b/drivers/md/multipath.c
-@@ -474,7 +474,8 @@ static int multipath_run (struct mddev *mddev)
- 	}
-=20
- 	{
--		mddev->thread =3D md_register_thread(multipathd, mddev, NULL);
-+		mddev->thread =3D md_register_thread(multipathd, mddev,
-+						   "multipath");
- 		if (!mddev->thread) {
- 			printk(KERN_ERR "multipath: couldn't allocate thread"
- 				" for %s\n", mdname(mddev));
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index a9c7981..39b2a8a 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -2621,7 +2621,7 @@ static struct r1conf *setup_conf(struct mddev *mddev)
- 		goto abort;
- 	}
- 	err =3D -ENOMEM;
--	conf->thread =3D md_register_thread(raid1d, mddev, NULL);
-+	conf->thread =3D md_register_thread(raid1d, mddev, "raid1");
- 	if (!conf->thread) {
- 		printk(KERN_ERR
- 		       "md/raid1:%s: couldn't allocate thread\n",
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index bcf6ea8..0ee7602 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -3427,7 +3427,7 @@ static struct r10conf *setup_conf(struct mddev *mddev)
- 	spin_lock_init(&conf->resync_lock);
- 	init_waitqueue_head(&conf->wait_barrier);
-=20
--	conf->thread =3D md_register_thread(raid10d, mddev, NULL);
-+	conf->thread =3D md_register_thread(raid10d, mddev, "raid10");
- 	if (!conf->thread)
- 		goto out;
-=20
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 62b6b3a..a5135e5 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4840,6 +4840,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	int raid_disk, memory, max_disks;
- 	struct md_rdev *rdev;
- 	struct disk_info *disk;
-+	char pers_name[6];
-=20
- 	if (mddev->new_level !=3D 5
- 	    && mddev->new_level !=3D 4
-@@ -4963,7 +4964,8 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 		printk(KERN_INFO "md/raid:%s: allocated %dkB\n",
- 		       mdname(mddev), memory);
-=20
--	conf->thread =3D md_register_thread(raid5d, mddev, NULL);
-+	sprintf(pers_name, "raid%d", mddev->new_level);
-+	conf->thread =3D md_register_thread(raid5d, mddev, pers_name);
- 	if (!conf->thread) {
- 		printk(KERN_ERR
- 		       "md/raid:%s: couldn't allocate thread.\n",
+>=20
+>  drivers/md/md.c    |   35 +++++++++++++++++++++++++++++++++++
+>  drivers/md/md.h    |    2 ++
+>  drivers/md/raid5.c |   28 +++++++++++++++++++---------
+>  3 files changed, 56 insertions(+), 9 deletions(-)
+>=20
 
 
---Sig_//L_.O+wpJsAzeC7_mVEQekI
+--Sig_/j0a_i1aJG_jCqqbs=TUyfGj
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT+qEbDnsnt1WYoG5AQJZrxAAlVNDDEMrhCjnsGmjnpspbYU9hpK+O6Z7
-03lE3AV83PWuQnWTQsvKUm2Gg+DRA4C0Irdl3x99zJsJMGliFx0voijshV4vEbca
-wyJXpBJyvZrVkPUhMO3FXEL/23PDqFqGVqLEdzmy1SO35SgGR3i32VNfMO/xz+JX
-qBUz3ijTcEtQkjsbFEObuLF1xwQbEmJ2HbOy6LYsymwYQhU2A4nsy0aYaOqnzF+z
-vzlT6sps5vG3c+lvj5pB6BXZHm7GD5fonYzPttPYtCSWIwDBZjomUd/xNtQvd6rA
-9OQdRHxaBkuOwJ+//e903LWupaJuH99T8y1pnOHRJ0fJGiYgEasrqXTwfepg4+MA
-yNESRhLwf5chvXccAyoBr8E2Os0M/17OyHAd+opOZej0iLWLnokoAXElrzjopUO+
-zGHHSrmjmucri0ymgdMygQmJTWPcII72cKB/1mFDDeRWSRVZ0JYRWyW0oy25zwWC
-PhWBcc3sg/SiDXmQhOwEEa1mzUAixaUGfF3dFLFWPSDBRyvI5p27XoQKGZe9mqx3
-MGwxNvU+aN7szZHksInJtLLCYBljrAr/yofS93w2b6mZnm+X4j4lzIa6lB2KHPKc
-4QUS4Hpjx+97rmWiKX1qeiR3qvIrNjG1lV9PD0M9t9Qba4QmTGRM5gl2q4/X6aej
-Q7WFVERqiUs=
-=ZyCX
+iQIVAwUBT+qM3Dnsnt1WYoG5AQKffA/+JwQ0TAZZXZ4+mjXG7TSGCkqmLomhotCT
+z0gfi+8KHFaxvyAamIeeJlsRAl+9iT2sDyZ2Ja1FfZsXKnCEtATMbZJQPUvmm4Fy
+6QZ558gttw+oqQh9bvb4eBQbckBjDAd8KAM7CmW1zwefgO70eOWxObDzVapL3vsW
+q0WcG9i9OI0LyuHL9NOKj/VWSfd2ChVGBk7FArwlaQ4naHlVL0YjPWhfO0dNA1eN
+sJaT8tVk/FiDl3+VOK1/K4mHZuDsF4gORltr4mB80zTpi+zdeiXVTFsFD2OC1pL2
+Rgy/rVqD1d8Ljx5NCrl2ZXid+BvFzgcQp/0Jad6UKxnTzGYjovY7Kj9dEYNphhV2
+hzqX+va+Z3vrHeSxGAlmSorwjUYn25sPNpjCtN/c3iK7aSuwl5DbqMtMb0YklhKn
+it4e5JUf7cgmS/tzSgPbkYrDLaATRlxmL1g8XBlyFe/zC7iTNvyalKsqpgPq7KzH
+ktX/B5kuvHdN4CDdVKsB/z5ISWRXx6HAP0KfkxD0oMZ85RiFkjT60D0wQzGWRTg4
+8b2iU5uWLvtRVt60JQXB0lUYozk7odIrE/NL5HaalB5xNG8ETXwsOqQYeEKYQP7w
+japa4x84XTudMig2kvlObL5+TojAXSUwMQzBLd2TC+KEaEdWD+X4gqOrcSD4gfmS
+B0IKtt7qTYw=
+=HvlO
 -----END PGP SIGNATURE-----
 
---Sig_//L_.O+wpJsAzeC7_mVEQekI--
+--Sig_/j0a_i1aJG_jCqqbs=TUyfGj--
