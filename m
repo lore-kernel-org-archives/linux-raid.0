@@ -1,134 +1,99 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md:Add blk_plug in sync_thread.
-Date: Wed, 27 Jun 2012 12:30:36 +1000
-Message-ID: <20120627123036.53871345@notabene.brown>
-References: <201206111716521256611@gmail.com>
+Subject: Re: md:Fix a bug in function badblocks_show().
+Date: Wed, 27 Jun 2012 13:01:08 +1000
+Message-ID: <20120627130108.732db1ea@notabene.brown>
+References: <201203081446488121330@gmail.com>
+	<20120314123245.74feeab8@notabene.brown>
+	<201206121703581252053@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/qnFxeCPTyv/pnp/U/3HbJtF"; protocol="application/pgp-signature"
+ boundary="Sig_/3O=hNUyfvbmp_PqmXpvNtXA"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201206111716521256611@gmail.com>
+In-Reply-To: <201206121703581252053@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: kedacomkernel <kedacomkernel@gmail.com>
+Cc: majianpeng <majianpeng@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/qnFxeCPTyv/pnp/U/3HbJtF
+--Sig_/3O=hNUyfvbmp_PqmXpvNtXA
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 11 Jun 2012 17:16:55 +0800 majianpeng <majianpeng@gmail.com> wrote:
+On Tue, 12 Jun 2012 17:04:00 +0800 kedacomkernel <kedacomkernel@gmail.com>
+wrote:
 
-> Add blk_plug in sync_thread will increase the performance of sync.
-> Because sync_thread did not blk_plug,so when raid sync, the bio merge
-> not well.
->=20
-> Testing environment:
-> SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA AHCI
-> Controller.
-> OS:Linux xxx 3.5.0-rc2+ #340 SMP Tue Jun 12 09:00:25 CST 2012
-> x86_64 x86_64 x86_64 GNU/Linux.
-> RAID5: four ST31000524NS disk.
->=20
-> Without blk_plug:recovery speed about 63M/Sec;
-> Add blk_plug:recovery speed about 120M/Sec.
->=20
-> Using blktrace:
-> blktrace -d /dev/sdb -w 60  -o -|blkparse -i -
->=20
-> without blk_plug:
-> Total (8,16):
->  Reads Queued:      309811,     1239MiB	 Writes Queued:           0,     =
-   0KiB
->  Read Dispatches:   283583,     1189MiB	 Write Dispatches:        0,     =
-   0KiB
->  Reads Requeued:         0		 Writes Requeued:         0
->  Reads Completed:   273351,     1149MiB	 Writes Completed:        0,     =
-   0KiB
->  Read Merges:        23533,    94132KiB	 Write Merges:            0,     =
-   0KiB
->  IO unplugs:             0        	 Timer unplugs:           0
->=20
-> add blk_plug:
-> Total (8,16):
->  Reads Queued:      428697,     1714MiB	 Writes Queued:           0,     =
-   0KiB
->  Read Dispatches:     3954,     1714MiB	 Write Dispatches:        0,     =
-   0KiB
->  Reads Requeued:         0		 Writes Requeued:         0
->  Reads Completed:     3956,     1715MiB	 Writes Completed:        0,     =
-   0KiB
->  Read Merges:       424743,     1698MiB	 Write Merges:            0,     =
-   0KiB
->  IO unplugs:             0        	 Timer unplugs:        3384
->=20
-> The ratio of merge will be markedly increased.
->=20
-> Signed-off-by: majianpeng <majianpeng@gmail.com>
-> ---
->  drivers/md/md.c |    5 ++++-
->  1 files changed, 4 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 1c2f904..90bdc37 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -7298,6 +7298,7 @@ void md_do_sync(struct mddev *mddev)
->  	int skipped =3D 0;
->  	struct md_rdev *rdev;
->  	char *desc;
-> +	struct blk_plug plug;
-> =20
->  	/* just incase thread restarts... */
->  	if (test_bit(MD_RECOVERY_DONE, &mddev->recovery))
-> @@ -7446,7 +7447,8 @@ void md_do_sync(struct mddev *mddev)
->  		mddev->curr_resync =3D j;
->  	}
->  	mddev->curr_resync_completed =3D j;
-> -
-> +
-> +	blk_start_plug(&plug);
->  	while (j < max_sectors) {
->  		sector_t sectors;
-> =20
-> @@ -7586,6 +7588,7 @@ void md_do_sync(struct mddev *mddev)
->  	}
->   skip:
->  	set_bit(MD_CHANGE_DEVS, &mddev->flags);
-> +	blk_finish_plug(&plug);
-> =20
->  	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
->  		/* We completed so min/max setting can be forgotten if used. */
+> On 2012-03-14 09:32 NeilBrown <neilb@suse.de> Wrote:
+> >On Thu, 8 Mar 2012 14:46:52 +0800 "majianpeng" <majianpeng@gmail.com> wr=
+ote:
+> >
+> >> >From 58d2ba381eee4b732fca99a7311b1dcf589f57c3 Mon Sep 17 00:00:00 2001
+> >> From: majianpeng <majianpeng@gmail.com>
+> >> Date: Thu, 8 Mar 2012 14:37:00 +0800
+> >> Subject: [PATCH] md:Fix a bug in function badblocks_show().
+> >>=20
+> >> If unack=3D=3D0, it will show all bad blocks include unacknowledged-ba=
+d-blocks.
+> >
+> >Correct.  It is meant to.
+> >The "bad_blocks" file shows all bad blocks.
+> >The "unacknowledged_bad_blocks" file show all unacknowledged bad blocks.
+> >
+> >Thanks,
+> >NeilBrown
+> >
+> >
+> >>=20
+> >> Signed-off-by: majianpeng <majianpeng@gmail.com>
+> >> ---
+> >>  drivers/md/md.c |    2 +-
+> >>  1 files changed, 1 insertions(+), 1 deletions(-)
+> >>=20
+> >> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> >> index ce88755..3f1b6e5 100644
+> >> --- a/drivers/md/md.c
+> >> +++ b/drivers/md/md.c
+> >> @@ -8091,7 +8091,7 @@ retry:
+> >>  		int ack =3D BB_ACK(p[i]);
+> >>  		i++;
+> >> =20
+> >> -		if (unack && ack)
+> >> +		if ((unack ^ ack) =3D=3D 0)
+> >>  			continue;
+> >> =20
+> >>  		len +=3D snprintf(page+len, PAGE_SIZE-len, "%llu %u\n",
+> >
+> >
+> Hi Neil:
+> 	I found this bug in kernel-3.5-rc2.I deem you may lost to apply this pat=
+ch.
 
-Thanks again.
+No, I didn't lose it.  I deliberately chose not to apply it.
+As I said, the current behaviour is correct.  Please read the message that =
+you
+replied to.
 
-I've moved the call to "blk_finish_plug" up a bit to just after the
-  out:
-label, as it is possible to "goto skip" before calling blk_start_plug.
-
-Thanks a lot,
 NeilBrown
 
---Sig_/qnFxeCPTyv/pnp/U/3HbJtF
+--Sig_/3O=hNUyfvbmp_PqmXpvNtXA
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT+pwTDnsnt1WYoG5AQI/cQ/+OkFXKNJpml5fBg0Kw0epP28f8gRBa+LA
-8OkVlheDakkF6Z3O0qgQSQnEESCU5qXGGxWmfzPdu6/DAXvEcssNSwbJSwCKKhrQ
-gR1ZW2hKcnY7yYjGcs9X7vB1tSb+DU3BzyDVVkARnCCVDUKKwA0BVOZb/YIl5F+j
-7Dv1+hIW92g+aq4G6flQnloHwf6Xu5e37akyD3cCcKpJ4/HM+gbGVMZEYwXn7foc
-ysZqZ0OZeO4jrnPpcH/ELer+DNPX38I831w+fllMDhje0yPZssAy0Ddq1d3SK1cr
-uIE1y92ROACaPTehhz9HqXLNTVGjtbRjPlXJH8pH3rDQLQ75fnUkeO/xn6yPjnCP
-QU11DhqoE1ek5sECGEbsCUC1yUuMRayDbLi/NMZcFQdVak5NjZqUwPOvHDh+WZXB
-UeSTkNsyE4ZjEzedbteDqkmtV7npegWD4Zy+w2ngcfK/pok8xJsC9wF9D2sJmuqv
-R15MX2XiAQ449/bebdH51AQdiWCaL9Db/MX7qrRptWqEnlKobLi4fzLvfdk68kIp
-U0BUDNkbuz6OsLU117GxepfDodO3jyG6ZqfAcvpEYfpZdLASF7MmgVyHvOQp8/iU
-80MSzD2vZ1lCPNTWZS6isl476aKlI+SgCijXB7LM4W/+rjiI+iLCVP5Jun5FMFAC
-UXrTlWVV5ow=
-=w4oC
+iQIVAwUBT+p3dDnsnt1WYoG5AQIs1g//RKet55DnPXc9PTjm4Eg6cXeR3KXJt8yw
+CxXVIDC2br7fy5vb14fxGxIui3r6qz450k3+55WHpLcylOnIW1w30yHQj8jkQpNk
+EEFv9oCzaVl/clJ088XY3stqziFN5PsX7NfBteVmex2OowTFf6qwoDupeybB1kFi
+GsqOvL4Pq3Hmyw9vUx6gvNT09IuhUjrT94xJie8hppnnTvHkFouywLjgLEbtjYjS
+/IXTy+lNk+QqAxlozgnB2WbSfWPocZws4Ln/nrU3qLSlPpALrOXDgu7M3ThFJ3hF
+rBtiQeCsRJol0iXxvRcWRrN5jl7cNgVmu66wAvGB1+599ElbtZxR6jMhJmFyB8JI
+2I+TCE3DY/iI7SvHMA3K+IWxh4f+qVKLMcX3KNaUb8bdbtu8oFJl9PKe9rTFLnKR
+3Q2S8bV7Dxcro7JKmMfzPYjlzUEoiEgts40p/hgX4cmmLIuLqQXV96+awFgZrSdk
+daRMITbOfjWUUfh+gi2nhTDMnDszLsYbyyZ1aa50AbmBegB1woLSa9RsSykGDF38
+aYODp0xdjNcmJWANNiqkSyd53S28+pESDA5LE/tHjledkGwWBF4fqQw/01FlvNHz
+ITpqQXHIaOuAzYVu/keih+AkzCRH1fO9KHRpnmiKhlY1I0Ugcq1xdl4EZoPfZCWv
+Yq7GB5ADH2k=
+=Zfr3
 -----END PGP SIGNATURE-----
 
---Sig_/qnFxeCPTyv/pnp/U/3HbJtF--
+--Sig_/3O=hNUyfvbmp_PqmXpvNtXA--
