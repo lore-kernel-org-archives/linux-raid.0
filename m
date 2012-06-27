@@ -1,94 +1,101 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: Problem with patch: "reject a re-add request that cannot be
- honoured" (commit bedd86b7773fd97f0d708cc0c371c8963ba7ba9a)
-Date: Wed, 27 Jun 2012 19:40:52 +0300
-Message-ID: <CAGRgLy5U_Xzr=LDuQ6R7dEzx4EiNyWQb1fiSQhq_F+oTmyZw1Q@mail.gmail.com>
-References: <CAGRgLy6We49bW2gA7S-EOmA8sbaXgQeGuTR5Aqrt4y_KyvOrdw@mail.gmail.com>
-	<CAGRgLy5OkpZnfOpPS+16Tiep8eisOu9XnK7EcvZygwg22DVTqQ@mail.gmail.com>
-	<20120607212434.4d6211d6@notabene.brown>
-	<CAGRgLy55si7a8bY_Xuokqb6=cdOJyk_Wq34_DwmmhbpuQSSQug@mail.gmail.com>
-	<20120627172255.40ee3a19@notabene.brown>
+From: Ramon Hofer <ramonhofer@bluewin.ch>
+Subject: Re: Stacked array data recovery
+Date: Wed, 27 Jun 2012 21:19:31 +0200
+Message-ID: <20120627211931.466b83ca@hoferr-x61s.hofer.rummelring>
+References: <js083q$kdu$1@dough.gmane.org>
+	<js1vuk$9k8$2@dough.gmane.org>
+	<4FE5B213.5010503@hardwarefreak.com>
+	<js70ce$fgv$1@dough.gmane.org>
+	<4FE72053.4040101@hardwarefreak.com>
+	<4FE7E044.6040506@hardwarefreak.com>
+	<js9emr$761$1@dough.gmane.org>
+	<4FE91619.4020709@hardwarefreak.com>
+	<1340699839.3241.29.camel@hoferr-desktop.hofer.rummelring>
+	<4FEA1A4F.9090605@hardwarefreak.com>
+	<1340788044.3420.8.camel@hoferr-desktop.hofer.rummelring>
+	<4FEAFDC5.7030205@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120627172255.40ee3a19@notabene.brown>
+In-Reply-To: <4FEAFDC5.7030205@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: andrey.warkentin@gmail.com, linux-raid <linux-raid@vger.kernel.org>
+To: stan@hardwarefreak.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+On Wed, 27 Jun 2012 07:34:13 -0500
+Stan Hoeppner <stan@hardwarefreak.com> wrote:
 
->>
->> I would still think that there is value in recoding in a superblock
->> that a drive is recovering.
->
-> Probably. =A0It is a bit unfortunate that if you stop an array that i=
-s
-> recovering after a --re-add, you cannot simply 'assemble' it again an=
-d
-> get it back to the same state.
-> I'll think more on that.
+> > With a disk size of 2 TB thid should take about 6 hours?
+> 
+> Yeah, something like that.
+> 
+> > I think I'll let it run again this evening so that it can complete
+> > until the next day.
+> 
+> Do them one at a time this time, starting with /dev/sdk.  Remember to
+> issue sync.  E.g.
+> 
+> ~$ dd if=/dev/zero of=/dev/sdk bs=16384; sync
+> 
+> Try a smaller block size this time, 16KB instead of 1M.
 
-As I mentioned, I see the additional re-add as a minor thing, but
-agree it's better to fix it. The fact that we don't know that the
-drive is being recovered, bothers me more. Because user might look at
-the superblock, and assume the data on the drive is consistent to some
-point in time (time of the drive failure). While the actual data,
-while doing bitmap-based recovery, is unusable until recovery
-successfully completes. So the user might think it's okay to try to
-run his app on this drive.
-Yes, please think about this.
+Ok, thanks I will. And additionally I will write down what time I
+started each command so when one of them still hasn't finished after 12
+hours or so the disk will have to be replaced right?
 
->
-> Meanwhile, this patch might address your other problem. =A0It allows =
---re-add
-> to work if a non-bitmap rebuild fails and is then re-added.
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index c601c4b..d31852e 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -5784,7 +5784,7 @@ static int add_new_disk(struct mddev * mddev, m=
-du_disk_info_t *info)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0super_types[mddev->maj=
-or_version].
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0valida=
-te_super(mddev, rdev);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if ((info->state & (1<<MD_DISK_SYNC)) =
-&&
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (!test_bit(In_sync, &rdev->flag=
-s) ||
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (test_bit(Faulty, &rdev->flags)=
- ||
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 rdev->raid_disk !=3D info->ra=
-id_disk)) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* This was a hot-add =
-request, but events doesn't
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 * match, so reject it=
-=2E
->
 
-I have tested a slightly different patch that you suggested earlier -
-just removing the !test_bit(In_sync, &rdev->flags) check. I confirm
-that it solves the problem.
+> Oh, Ramon, before you do any of this, change to the deadline elevator:
+> 
+> ~$ echo deadline > /sys/block/sdk/queue/scheduler
+> 
+> Dangit, Ramon, I can't believe I forgot to tell you this when you
+> installed the 9240.  Debian, like most distros, defaults to the CFQ
+> elevator, which is good, I guess, for interactive desktop use.  But it
+> sucks like a Hoover with most server workloads.  So add this to your
+> kernel boot options in grub's menu.list, normally found in
+> /boot/grub/menu.lst:
+> 
+> elevator=deadline
+> 
+> That will enable deadline each time you boot.  So after you make the
+> change go ahead and reboot the system.  Then proceed with your dd
+> commands.
 
-The Faulty bit check seems redundant to me, because:
-- it can be set by only by validate_super() and only if that drive's
-role is 0xfffe in sb->roles[] array
-- Long time ago I asked you, how can it happen that a drive thinks
-about *itself* that it is Faulty (has 0xfffe for its role in its own
-superblock), and you said this should never happen.
+Very interesting!!!
+Thanks for that :-)
 
-Anyways, I tested also the patch you suggested, and it also works.
+Btw: I use grub2. The file I edited is /etc/default/grub. I changed
+this line:
 
-Is there any chance to see this fix in ubuntu-precise?
+GRUB_CMDLINE_LINUX_DEFAULT="quiet elevator=deadline"
 
-Thanks again for your support,
-Alex.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+and ran
+~# update-grub
+
+I checked if the right scheduler is running:
+
+~$ cat /sys/block/sdk/queue/scheduler
+noop [deadline] cfq 
+
+Is this correct what I did?
+
+
+> >> So at this point you can try creating the RAID5 array again.  If
+> >> the dd command did what we wanted, /dev/sdk should have remapped
+> >> the bad sector, and you shouldn't get the error kicking that
+> >> drive.  If you still do, you may need to replace the drive.
+> > 
+> > I'm not sure if I didn't kille the dd command too early.
+> > Maybe it's better to let it run again. Maybe even each disk at once?
+> > Maybe this would already tell if a disk is faulty?
+> 
+> Yeah, do em one at a time this time.  It'll cause less load, and you
+> should still be able to watch movies etc while it runs.
+
+And I can see if one of them behaves strangely :-)
+
+
+Cheers
+Ramon
