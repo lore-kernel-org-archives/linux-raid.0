@@ -1,49 +1,33 @@
-From: "Stefan G. Weichinger" <lists@xunil.at>
-Subject: Re: Re-adding disks to RAID6 in a Fujitsu NAS: old mdadm?
-Date: Fri, 29 Jun 2012 10:18:30 +0200
-Message-ID: <4FED64D6.9060305@xunil.at>
-References: <4FE9BFC1.5070607@xunil.at> <20120628163205.2c6a1122@notabene.brown> <4FEC1CE7.5010709@xunil.at> <4FEC2071.8010504@xunil.at> <20120628212257.5ca8fb05@notabene.brown> <4FEC7EB7.1000401@xunil.at> <4FECA1A8.7090608@xunil.at> <20120629073632.61f529a8@notabene.brown>
-Reply-To: lists@xunil.at
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Stacked array data recovery
+Date: Fri, 29 Jun 2012 11:15:58 +0100
+Message-ID: <4FED805E.2010904@anonymous.org.uk>
+References: <js083q$kdu$1@dough.gmane.org> <js1vuk$9k8$2@dough.gmane.org>  <4FE5B213.5010503@hardwarefreak.com> <js70ce$fgv$1@dough.gmane.org>  <4FE72053.4040101@hardwarefreak.com> <4FE7E044.6040506@hardwarefreak.com>  <js9emr$761$1@dough.gmane.org> <4FE91619.4020709@hardwarefreak.com>  <1340699839.3241.29.camel@hoferr-desktop.hofer.rummelring>  <4FEA1A4F.9090605@hardwarefreak.com>  <1340788044.3420.8.camel@hoferr-desktop.hofer.rummelring>  <1340909075.29964.35.camel@oxygen.netxsys.com> <1340955849.3461.0.camel@hoferr-desktop.hofer.rummelring>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120629073632.61f529a8@notabene.brown>
+In-Reply-To: <1340955849.3461.0.camel@hoferr-desktop.hofer.rummelring>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Ramon Hofer <ramonhofer@bluewin.ch>
+Cc: Krzysztof Adamski <k@adamski.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Am 28.06.2012 23:36, schrieb NeilBrown:
-> On Thu, 28 Jun 2012 20:25:44 +0200 "Stefan G. Weichinger" 
-> <lists@xunil.at> wrote:
->> What is the logic behind that?
-> 
-> As you have guessed, it first recovered one device, then recovered 
-> the second one. But it looks like there are no read errors on the
-> two good devices, so fear-not.
+On 29/06/2012 08:44, Ramon Hofer wrote:
+> On Don, 2012-06-28 at 14:44 -0400, Krzysztof Adamski wrote:
+>> You can send USR1 signal to the dd command and it will print how far it
+>> has gone, like this:
+>> # kill -USR1 <pid of dd>
+>
+> Great!
+> Thanks for that :-)
 
-Good to know.
+When running dd on whole discs, I usually run:
 
->> What does it do exactly when it re-adds the first disk, what in 
->> the second round?
->> 
->> Should I have added sd[ab]3 in one command?
-> 
-> Had you done that with a very new mdadm, it would have recovered
-> both at once. mdadm has to say: - disable recovery for now - here
-> is one new spare - here is another spare - ok, you can try recovery
-> now
-> 
-> otherwise as soon as it gets one spare it will start recovery.
+while p=`pidof dd` ; do kill -USR1 $p ; sleep 30 ; done
 
-Thanks for the explanation.
+so I have a continuous progress monitor.
 
->> To me it also seems that I now have good redundancy again
->> already, correct?
-> 
-> Correct.  You have single redundancy and in about 10 hours since
-> your email you'll have double redundancy.
+Cheers,
 
-It is still rebuilding, must have been slowed down by some processes
-using the filesystem at night. But still working.
+John.
