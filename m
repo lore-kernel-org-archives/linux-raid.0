@@ -1,72 +1,52 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: Can't expand linear RAID on top of 2 x RAID1
-Date: Fri, 29 Jun 2012 17:53:54 +1000
-Message-ID: <4FED5F12.2020100@websitemanagers.com.au>
-References: <4FE44BDD.302@websitemanagers.com.au> <4FE4FA32.8010506@hardwarefreak.com> <32a64312-93cd-47d7-9154-2e28eda58003@email.android.com> <20120625125224.6e33b342@notabene.brown>
+From: Ramon Hofer <ramonhofer@bluewin.ch>
+Subject: Re: Stacked array data recovery
+Date: Fri, 29 Jun 2012 09:58:59 +0200
+Message-ID: <1340956739.3461.8.camel@hoferr-desktop.hofer.rummelring>
+References: <js083q$kdu$1@dough.gmane.org> <js1vuk$9k8$2@dough.gmane.org>
+	 <4FE5B213.5010503@hardwarefreak.com> <js70ce$fgv$1@dough.gmane.org>
+	 <4FE72053.4040101@hardwarefreak.com> <4FE7E044.6040506@hardwarefreak.com>
+	 <js9emr$761$1@dough.gmane.org> <4FE91619.4020709@hardwarefreak.com>
+	 <1340699839.3241.29.camel@hoferr-desktop.hofer.rummelring>
+	 <4FEA1A4F.9090605@hardwarefreak.com>
+	 <1340788044.3420.8.camel@hoferr-desktop.hofer.rummelring>
+	 <4FEAFDC5.7030205@hardwarefreak.com>
+	 <20120627211931.466b83ca@hoferr-x61s.hofer.rummelring>
+	 <4FECB731.100@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120625125224.6e33b342@notabene.brown>
+In-Reply-To: <4FECB731.100@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: stan@hardwarefreak.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 25/06/12 12:52, NeilBrown wrote:
-> The is no '--assume-clean' for linear.  Linear arrays cannot be
-> clean or dirty as md stores no redundant information.
+On Don, 2012-06-28 at 14:57 -0500, Stan Hoeppner wrote:
+> On 6/27/2012 2:19 PM, Ramon Hofer wrote:
+> > 
+> > Ok, thanks I will. And additionally I will write down what time I
+> > started each command so when one of them still hasn't finished after 12
+> > hours or so the disk will have to be replaced right?
 > 
-> Just re-creating the array would probably work, but there is an
-> easier way.
+> That's unnecessary.  Linux retains the start time of each process:
 > 
-> md doesn't record the size of the array for Linear and RAID0.  It
-> just adds together the sizes of the devices that it finds.
+> ~$ ps -ef|grep dd
+> ...
+> root      4338  4307 95 14:49 pts/0    00:00:48 dd if=/dev/zero of=./test
+> ...
 > 
-> With 1.x metadata, md does record the effective size of each
-> devices, so adds those together. You can update this effective size
-> by assembling with --update=devicesize
-> 
-> I just checked this will loop devices and it works as expected
-> (assuming you have 1.1 or 1.2 metadata). So: mdadm -S /dev/md2 
-> mdadm -A --update=devicesize /dev/md0 /dev/md1
-> 
-> (order doesn't matter with assemble).
+> The 5th column shows the start time.  If the process has been running
+> more than 24 hours the start date will be shown instead of the start time.
 
-Hi,
+Thanks for that :-)
 
-Just a followup email on this to say Thank You very much for your
-expert assistance, it was greatly appreciated.
 
-> mdadm -S /dev/md2
+The first drive (sdj) has finished.
+I'm now dding the second (sdk). This one caused problems I think. I'll
+report how it went...
 
-I had some issues with this command, df showed that it was unmounted,
-lsof showed nothing looking at the device nor filesystem where it was
-mounted, etc... Eventually, I ran "mount" and realised I had bind
-mounted a sub-directory elsewhere... Once I umounted that I could stop
-the array... (Duh moment :)
 
-> mdadm -A --update=devicesize /dev/md0 /dev/md1
-I got an error that the device was in use, thankfully mdadm has the
-smarts to stop me from idly shooting myself in the foot when doing
-something as silly as copy & paste instructions from others without
-stopping and thinking first.
-
-I adjusted the command to the correct:
-mdadm -A --update=devicesize /dev/md2 /dev/md0 /dev/md1
-
-and got:
-Size was 3907019634
-Size is 3907019634
-Size was 1465142752
-Size is 1953515906
-
-I then checked the array, was told the filesystem was clean, and then
-resized that, and now I have the extra 250G space (just in time, I
-only had 6% free space there).
-
-So, again, thank you for your assistance, and thanks for all the work
-you put into the drivers etc.
-
-Regards,
-Adam
+Cheers
+Ramon
 
