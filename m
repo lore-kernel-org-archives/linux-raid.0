@@ -1,52 +1,49 @@
-From: Ramon Hofer <ramonhofer@bluewin.ch>
-Subject: Re: Stacked array data recovery
-Date: Fri, 29 Jun 2012 09:58:59 +0200
-Message-ID: <1340956739.3461.8.camel@hoferr-desktop.hofer.rummelring>
-References: <js083q$kdu$1@dough.gmane.org> <js1vuk$9k8$2@dough.gmane.org>
-	 <4FE5B213.5010503@hardwarefreak.com> <js70ce$fgv$1@dough.gmane.org>
-	 <4FE72053.4040101@hardwarefreak.com> <4FE7E044.6040506@hardwarefreak.com>
-	 <js9emr$761$1@dough.gmane.org> <4FE91619.4020709@hardwarefreak.com>
-	 <1340699839.3241.29.camel@hoferr-desktop.hofer.rummelring>
-	 <4FEA1A4F.9090605@hardwarefreak.com>
-	 <1340788044.3420.8.camel@hoferr-desktop.hofer.rummelring>
-	 <4FEAFDC5.7030205@hardwarefreak.com>
-	 <20120627211931.466b83ca@hoferr-x61s.hofer.rummelring>
-	 <4FECB731.100@hardwarefreak.com>
+From: "Stefan G. Weichinger" <lists@xunil.at>
+Subject: Re: Re-adding disks to RAID6 in a Fujitsu NAS: old mdadm?
+Date: Fri, 29 Jun 2012 10:18:30 +0200
+Message-ID: <4FED64D6.9060305@xunil.at>
+References: <4FE9BFC1.5070607@xunil.at> <20120628163205.2c6a1122@notabene.brown> <4FEC1CE7.5010709@xunil.at> <4FEC2071.8010504@xunil.at> <20120628212257.5ca8fb05@notabene.brown> <4FEC7EB7.1000401@xunil.at> <4FECA1A8.7090608@xunil.at> <20120629073632.61f529a8@notabene.brown>
+Reply-To: lists@xunil.at
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FECB731.100@hardwarefreak.com>
+In-Reply-To: <20120629073632.61f529a8@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Don, 2012-06-28 at 14:57 -0500, Stan Hoeppner wrote:
-> On 6/27/2012 2:19 PM, Ramon Hofer wrote:
-> > 
-> > Ok, thanks I will. And additionally I will write down what time I
-> > started each command so when one of them still hasn't finished after 12
-> > hours or so the disk will have to be replaced right?
+Am 28.06.2012 23:36, schrieb NeilBrown:
+> On Thu, 28 Jun 2012 20:25:44 +0200 "Stefan G. Weichinger" 
+> <lists@xunil.at> wrote:
+>> What is the logic behind that?
 > 
-> That's unnecessary.  Linux retains the start time of each process:
+> As you have guessed, it first recovered one device, then recovered 
+> the second one. But it looks like there are no read errors on the
+> two good devices, so fear-not.
+
+Good to know.
+
+>> What does it do exactly when it re-adds the first disk, what in 
+>> the second round?
+>> 
+>> Should I have added sd[ab]3 in one command?
 > 
-> ~$ ps -ef|grep dd
-> ...
-> root      4338  4307 95 14:49 pts/0    00:00:48 dd if=/dev/zero of=./test
-> ...
+> Had you done that with a very new mdadm, it would have recovered
+> both at once. mdadm has to say: - disable recovery for now - here
+> is one new spare - here is another spare - ok, you can try recovery
+> now
 > 
-> The 5th column shows the start time.  If the process has been running
-> more than 24 hours the start date will be shown instead of the start time.
+> otherwise as soon as it gets one spare it will start recovery.
 
-Thanks for that :-)
+Thanks for the explanation.
 
+>> To me it also seems that I now have good redundancy again
+>> already, correct?
+> 
+> Correct.  You have single redundancy and in about 10 hours since
+> your email you'll have double redundancy.
 
-The first drive (sdj) has finished.
-I'm now dding the second (sdk). This one caused problems I think. I'll
-report how it went...
-
-
-Cheers
-Ramon
-
+It is still rebuilding, must have been slowed down by some processes
+using the filesystem at night. But still working.
