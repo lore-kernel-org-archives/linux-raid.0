@@ -1,7 +1,7 @@
 From: "Western Union, Malaysia" <Messaing@wu.com>
-Subject: [UTEXAS: SUSPECTED SPAM] Your Funds Notification
-Date: Sun, 01 Jul 2012 19:00:21 +0800
-Message-ID: <308f92$5mctob@ironclad.mail.utexas.edu>
+Subject: Your Funds Notification
+Date: Sun, 01 Jul 2012 20:29:38 +0800
+Message-ID: <005db8$5nq12b@irongate.mail.utexas.edu>
 Reply-To: francalee.wupc@kimo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
