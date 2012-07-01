@@ -1,75 +1,85 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Question about raid5 disk recovery logic
-Date: Sun, 1 Jul 2012 18:00:53 +1000
-Message-ID: <20120701180053.504ba439@notabene.brown>
-References: <CAGRgLy7uJAzTwnuvgXgH=SnKdVBqgPF41eM0N-CYn8bS2BzW9A@mail.gmail.com>
+From: Jonathan Tripathy <jonnyt@abpni.co.uk>
+Subject: Resync Every Sunday
+Date: Sun, 01 Jul 2012 12:20:43 +0100
+Message-ID: <4FF0328B.5080103@abpni.co.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/4/E.CDqzSQvPJpnQxDgy_.3"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy7uJAzTwnuvgXgH=SnKdVBqgPF41eM0N-CYn8bS2BzW9A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/4/E.CDqzSQvPJpnQxDgy_.3
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Everyone,
 
-On Sun, 1 Jul 2012 10:08:40 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-wrote:
+We have a few servers that use md raid with mdadm. Each server has 4 
+arrays (md0,md1,md2,md3). md0,1,2 are small and md3 is very large. Every 
+Sunday at 4:22am, the servers will start to resync. Here is some text 
+from /var/log/messages for one of the servers:
 
-> Hi everybody,
-> I am trying to understand what happens when raid5 is recovering a
-> disk, and a write comes to a stripe that has not been recovered yet.
-> Does md first reconstruct the missing chunk and then applies the
-> write, or first the write is applied as if the array is still degraded
-> (and not recovering), and only later the missing chunk is
-> reconstructed (when the md_do_sync() loop gets to this area)?
-> I am looking at the stripe handling logic (kernel 2.6.38), can anybody
-> pls point me at the path that handle_stripe5() takes in that case?
->=20
->
+Jul  1 04:22:01 server1 kernel: md: syncing RAID array md0
+Jul  1 04:22:01 server1 kernel: md: minimum _guaranteed_ reconstruction 
+speed: 1000 KB/sec/disc.
+Jul  1 04:22:01 server1 kernel: md: using maximum available idle IO 
+bandwidth (but not more than 200000 KB/sec) for reconstruction.
+Jul  1 04:22:01 server1 kernel: md: using 128k window, over a total of 
+104320 blocks.
+Jul  1 04:22:01 server1 kernel: md: delaying resync of md2 until md0 has 
+finished resync (they share one or more physical units)
+Jul  1 04:22:01 server1 kernel: md: delaying resync of md3 until md0 has 
+finished resync (they share one or more physical units)
+Jul  1 04:22:05 server1 kernel: md: md0: sync done.
+Jul  1 04:22:05 server1 kernel: md: delaying resync of md3 until md2 has 
+finished resync (they share one or more physical units)
+Jul  1 04:22:05 server1 kernel: md: delaying resync of md2 until md3 has 
+finished resync (they share one or more physical units)
+Jul  1 04:22:05 server1 kernel: md: syncing RAID array md3
+Jul  1 04:22:05 server1 kernel: md: minimum _guaranteed_ reconstruction 
+speed: 1000 KB/sec/disc.
+Jul  1 04:22:05 server1 kernel: md: using maximum available idle IO 
+bandwidth (but not more than 200000 KB/sec) for reconstruction.
+Jul  1 04:22:05 server1 kernel: md: using 128k window, over a total of 
+1888295936 blocks.
 
-Hi Alex,
+/proc/mdstat shows a progress bar for the array that is currently 
+"re-syncing" (in the above case, md3). However, the disks in the servers 
+seem fine, and it always seems to happen in the early hours of Sunday 
+morning at 4:22am.
 
- The stripe is still degraded, so md/raid5 treats it like a write to a
- degraded array.
- Exactly what happens depends one which block is being written.
- If the block being written would be stored on the recovering devices, then
- md will perform a reconstruct-write.  It will read the other data blocks,
- calculate the parity, and write out the parity and the changed data.
- Similarly if the parity block is on the recovering device a
- reconstruct-write will be needed.
- If some other block is being written, md will do a read-modify-write to
- calculate the new parity and then write out the parity and data.  In this
- case the block on the recovering device will not be written.
+The issue gets further complicated as not all arrays are re-synced and I 
+can seem to find a pattern as to what's selected. All I know is that at 
+4:22, mdadm will "come alive" and attempt to do re-syncing of some (or 
+all) of the arrays. On each of the servers, 3 of the arrays are small 
+and one is large; this leads to the phenomenon that when we wake up on 
+Sunday morning, a "random" selection of the servers will still be 
+syncing (as mdadm has decided to "pick" the large md3 array to resync).
 
- I hope that clarifies the situation.
+Here is output from /var/log/messages on a server that has only decided 
+to re-sync 2 small arrays (md0 and md2):
 
-NeilBrown
+Jul  1 04:22:01 server3 kernel: md: syncing RAID array md0
+Jul  1 04:22:01 server3 kernel: md: minimum _guaranteed_ reconstruction 
+speed: 1000 KB/sec/disc.
+Jul  1 04:22:01 server3 kernel: md: using maximum available idle IO 
+bandwidth (but not more than 200000 KB/sec) for reconstruction.
+Jul  1 04:22:01 server3 kernel: md: using 128k window, over a total of 
+104320 blocks.
+Jul  1 04:22:01 server3 kernel: md: delaying resync of md2 until md0 has 
+finished resync (they share one or more physical units)
+Jul  1 04:22:02 server3 kernel: md: md0: sync done.
+Jul  1 04:22:02 server3 kernel: md: syncing RAID array md2
+Jul  1 04:22:02 server3 kernel: md: minimum _guaranteed_ reconstruction 
+speed: 1000 KB/sec/disc.
+Jul  1 04:22:02 server3 kernel: md: using maximum available idle IO 
+bandwidth (but not more than 200000 KB/sec) for reconstruction.
+Jul  1 04:22:02 server3 kernel: md: using 128k window, over a total of 
+1052160 blocks.
+Jul  1 04:22:15 server3 kernel: md: md2: sync done
 
---Sig_/4/E.CDqzSQvPJpnQxDgy_.3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+What's going on? Am I missing something here? Is data on the arrays at 
+risk? We're using CentOS 5 with mdadm v2.6.9. Kernel version is 
+2.6.18-274.18.1.el5
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+Any help is appreciated.
 
-iQIVAwUBT/ADtTnsnt1WYoG5AQJj7Q//QS2umc878T4CP0PbtojppNaZemSsnpnz
-19HrW14UORanJq/itIEkluph23VBkpVsGqx9zprZI8bpZySnsKQZAwPGBhyGxnb8
-PNCH8sXz7ltrk9DTz59nfIg4luYfcubT183tOtnrbIBnC5onK+Fci0lqZo40n6X6
-MxEHRAjQK23J2kA7NU2Q4dhObx24yZW/k4R2uAXffpyMQrLQ8SzsL39HN9Z2taRh
-nPOjlYSAwWYfd5KBms6XY1nXCMDZxFUd0/LcqqcCPp2JNnxon14MNGNtMAEhirt6
-wlF+ACjWu8CgdYgeFa9Q689MzPJ2KbP/JaYIXu4tgMqXrk0JNK0b6Mi7hkoX9Yb1
-mZWnqoh5Vb2AACO3bVtKXwW9sun9rqCS18Hmw7DE6p748JC3gqqHJjiIWZ/Sbesk
-xK9BbsGpuKjW7X4A1X4/9DA04ya5NJG6jjNJ9krREuzyF5CIVsrZ6SwE1sRek4z3
-MXUpzqGxDXOJr2KFuEL5pygcoQjPlS4J/S+VhW2Hm1NP6jXLemY7/GxGZQfJsXbY
-aFB9/KRgRpaZkkV9WApNpcsSxAt2niqBE7w0myY3hpqAyQZym1mD5X0/Fn4ioCLu
-mQSsLrMBlaV2fcLG577cYqe6ilvvnqCpvjQf8oALEPxM2tV4ELGLxP0MkBVOgOB2
-jsEcFg0RmsM=
-=TLS3
------END PGP SIGNATURE-----
-
---Sig_/4/E.CDqzSQvPJpnQxDgy_.3--
+Thanks
