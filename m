@@ -1,96 +1,140 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch 03/10 v3] raid5: add a per-stripe lock
-Date: Mon, 2 Jul 2012 17:39:53 +1000
-Message-ID: <20120702173953.7bee26cb@notabene.brown>
-References: <20120625072447.268095276@kernel.org>
-	<20120625072613.620625574@kernel.org>
-	<20120702105046.56cd47ec@notabene.brown>
-	<20120702031626.GE29770@kernel.org>
+Subject: Re: Problem with patch: "reject a re-add request that cannot be
+ honoured" (commit bedd86b7773fd97f0d708cc0c371c8963ba7ba9a)
+Date: Mon, 2 Jul 2012 17:57:15 +1000
+Message-ID: <20120702175715.30724b9d@notabene.brown>
+References: <CAGRgLy6We49bW2gA7S-EOmA8sbaXgQeGuTR5Aqrt4y_KyvOrdw@mail.gmail.com>
+	<CAGRgLy5OkpZnfOpPS+16Tiep8eisOu9XnK7EcvZygwg22DVTqQ@mail.gmail.com>
+	<20120607212434.4d6211d6@notabene.brown>
+	<CAGRgLy55si7a8bY_Xuokqb6=cdOJyk_Wq34_DwmmhbpuQSSQug@mail.gmail.com>
+	<20120627172255.40ee3a19@notabene.brown>
+	<CAGRgLy5U_Xzr=LDuQ6R7dEzx4EiNyWQb1fiSQhq_F+oTmyZw1Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/T7QcsnNFjTyojet9kFFl_H5"; protocol="application/pgp-signature"
+ boundary="Sig_/m6Y1lX/Y0eygHiZSo005uJa"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120702031626.GE29770@kernel.org>
+In-Reply-To: <CAGRgLy5U_Xzr=LDuQ6R7dEzx4EiNyWQb1fiSQhq_F+oTmyZw1Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, dan.j.williams@intel.com, shli@fusionio.com
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: andrey.warkentin@gmail.com, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/T7QcsnNFjTyojet9kFFl_H5
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/m6Y1lX/Y0eygHiZSo005uJa
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2 Jul 2012 11:16:26 +0800 Shaohua Li <shli@kernel.org> wrote:
+On Wed, 27 Jun 2012 19:40:52 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
 
-
-> > Then I could see what is being added and what is being removed all in t=
-he one
-> > patch and I can be sure that they balance.
+> Hi Neil,
 >=20
-> reworked the patch 3-5 to two patches as you suggested, and sent to you. =
-please check.
+> >>
+> >> I would still think that there is value in recoding in a superblock
+> >> that a drive is recovering.
+> >
+> > Probably. =A0It is a bit unfortunate that if you stop an array that is
+> > recovering after a --re-add, you cannot simply 'assemble' it again and
+> > get it back to the same state.
+> > I'll think more on that.
+>=20
+> As I mentioned, I see the additional re-add as a minor thing, but
+> agree it's better to fix it. The fact that we don't know that the
+> drive is being recovered, bothers me more. Because user might look at
+> the superblock, and assume the data on the drive is consistent to some
+> point in time (time of the drive failure). While the actual data,
+> while doing bitmap-based recovery, is unusable until recovery
+> successfully completes. So the user might think it's okay to try to
+> run his app on this drive.
+> Yes, please think about this.
+>=20
+> >
+> > Meanwhile, this patch might address your other problem. =A0It allows --=
+re-add
+> > to work if a non-bitmap rebuild fails and is then re-added.
+> >
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index c601c4b..d31852e 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -5784,7 +5784,7 @@ static int add_new_disk(struct mddev * mddev, mdu=
+_disk_info_t *info)
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0super_types[mddev->major=
+_version].
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0validate=
+_super(mddev, rdev);
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if ((info->state & (1<<MD_DISK_SYNC)) &&
+> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (!test_bit(In_sync, &rdev->flags)=
+ ||
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (test_bit(Faulty, &rdev->flags) ||
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 rdev->raid_disk !=3D info->raid=
+_disk)) {
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* This was a hot-add re=
+quest, but events doesn't
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 * match, so reject it.
+> >
+>=20
+> I have tested a slightly different patch that you suggested earlier -
+> just removing the !test_bit(In_sync, &rdev->flags) check. I confirm
+> that it solves the problem.
+>=20
+> The Faulty bit check seems redundant to me, because:
+> - it can be set by only by validate_super() and only if that drive's
+> role is 0xfffe in sb->roles[] array
+> - Long time ago I asked you, how can it happen that a drive thinks
+> about *itself* that it is Faulty (has 0xfffe for its role in its own
+> superblock), and you said this should never happen.
 
-Thanks.  That's looking really good.
+Yes, you are right.  I've remove the test on 'Faulty' - the test on the
+raid_disk number is sufficient.
 
-However I think we can do better.  I've been looking more closely at the co=
-de
-and I think that the only things that we need stripe_lock to protect are
-->toread and ->towrite, together with the following bios.  e.g.
-->toread->bi_next etc.
+>=20
+> Anyways, I tested also the patch you suggested, and it also works.
 
-->read and ->written don't need stripe_lock protection, as they are only
-manipulated by the handle_stripe state machine which uses STRIPE_ACTIVE=20
-and refcounts for exclusion.
+Thanks!
 
-So add_stripe_bio need to take the lock while adding a bio to the
-->toread and  ->towrite lists, and ops_run_biodrain() and ops_run_biofill
-need to take the lock while the move the list from ->to{read,write} to
-->{read,written}.  But we don't need it anywhere else.  e.g. analyse_stripe
-shouldn't need the lock at all.  Any change that could happen during the lo=
-op
-could equally happen after the lock was released so we don't lose by not
-having the lock.
+>=20
+> Is there any chance to see this fix in ubuntu-precise?
 
-There is another current user of the lock, but I think that should be
-discarded as a false optimisation.
-We currently try to optimise out extra calls to bitmap_startwrite and
-bitmap_endwrite when we see back-to-back writes to the one stripe.  However=
- I
-suspect that is extremely unlikely and it just imposes and pointless need f=
-or
-synchronisation in raid5.
+Not really up to me.  It doesn't fix a crash or corruption so I'm not sure =
+it
+is -stable material .... though maybe it is if it fixes a regression.
 
-We just simply call bitmap_startwrite whenever ->towrite changes from NULL =
-to
-non-NULL, and call bitmap_endwrite whenever we clear ->written, reguardless
-what value ->towrite now has.
-
-Would you like to experiment with that?  If I haven't described it well
-enough I can write a patch to show what I mean.
+I suggest you ask the Ubuntu kernel people after it appears in 3.5-rc
+(hopefully later this week).
 
 Thanks,
 NeilBrown
 
---Sig_/T7QcsnNFjTyojet9kFFl_H5
+
+>=20
+> Thanks again for your support,
+> Alex.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/m6Y1lX/Y0eygHiZSo005uJa
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT/FQSTnsnt1WYoG5AQJG8w//eaC5Tsgq3OcxfKJopNGxbTaFT1oRjQ/E
-xwYtrAi0C5a5lb5KM4zHGdXqvlYe/29Zey87j8Lp/h1pVdT2pDY+hYxph+IO1XdL
-5CQrRdaBdC5knq+FNP1GhVkqfqLosOIwodDw26q9ABhmm1pACpHMCgznnvVJFubi
-n9Kw/QgUfGXRoB1eWkLheuj9gVzMg9mDaoh9ovxNuhtSNzTXtUCEDVoiuBiggbzx
-L2FV2rcuVZT24hESv8evnA99Cc9wz8fXO0KrJSmCYW5OM+Mr8USBn33AOD7hCxtf
-fVqCvx8dll/dWff8QH3lr0e3HVvyRoXD79ZqqjwZuOFNkNwEkvZ2NTEoj4FbYFoG
-6AlnqQicb4lN/Y+T3rNC/LlptBbe8FKOaQeDQA2wmPOx337Zic/feQL8N+nyIBlY
-Tsf2QjPPv2RuZbnqynM+73jnzESlIxeqpw1KDsHX3d522jlTGjeM8QRVEqUaNSMQ
-8H9qbjHBeIlznjZWXMnjvrP2cBAMl3yA3euzsALh8fx6w1enBGrgFQHJIlFi7DsP
-NXCYParib5+6mkbEQXVYbMZc7yqI9a0oZ43/CJIjlNEhWQ8rdAiuW9jsVKc/ki4K
-K8X7etue5gLl2rSpThHa8Mhim6Nkla8iob9v/zy7DJW9i0ua1UnjZwROoo7WZfgP
-xgrTNdQW8sw=
-=yFgr
+iQIVAwUBT/FUWznsnt1WYoG5AQJmwRAAvrTKSI4TsmRy02wLLGClLf5+yS7MNnfa
+KWFKJvvE+SdXgSfzpaGiXt0iBqAXeYZmpHbdwMzMp55cAdRVIrUHIUIpVLhbjkhB
+Kic+lHBHv+CbJs+PY2mfbKtwoVIhIUW24V9US3D3OZd7z+QS01w7Uc3LSm8DdaRs
+TyF5BYhW1tjYaxOXGSgPf7SpE0QrQKATYtKCwvmb+/DKQVW09iV2ryaUOV8kyGxo
+Gcd69xOmW0Qv2KiogJQmhyqMt4HqJPiJJZrF5UfdQMeOqX0u/IWiwwuoQuuVGUQ5
+l+62UXQAcbZdmCQE2JxcG0Nvhb82tQZWzoYb0qnNLhCFgbPn+xcWuhQqJ0tNQ3VR
+bBQWhe126xoj/U/EeRB8tDUTNOY9HUeU6EMpOV3mJPBgtRO88dTsRXbtIEXhwCrA
+dZkDXnuyig7iok8gimmImtyKYpZ8k+C7M7nd6C+SQ//J+GJ3ibh80Jiqam1jFjD8
+ALkT9s1Equ2P0qKlwKWK1psxaG18YxNetHpkLeeqCO/9vR7VTQd2DxzQ4O/Bqfd7
+Th3ajWULiF3HEzmsttnBRoW/WBfLaOf7E2UCTI1B9KtQkZVf/bVMaqCDYbxguW9Z
+LeeSfaSBWgcl7xkIER3d2mPRaeMjEuQKgzJmZRNX8lx+cRtckqNboxac8hyY3UAm
+XLz6Hmjb6/8=
+=5jPF
 -----END PGP SIGNATURE-----
 
---Sig_/T7QcsnNFjTyojet9kFFl_H5--
+--Sig_/m6Y1lX/Y0eygHiZSo005uJa--
