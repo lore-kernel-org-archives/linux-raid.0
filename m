@@ -1,79 +1,54 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: Question about raid5 disk recovery logic
-Date: Mon, 2 Jul 2012 11:32:00 +0300
-Message-ID: <CAGRgLy4qyy+_6HG29PxO6gU+iHL7j-hZScHdkFKNs=-5BEJUmw@mail.gmail.com>
-References: <CAGRgLy7uJAzTwnuvgXgH=SnKdVBqgPF41eM0N-CYn8bS2BzW9A@mail.gmail.com>
-	<20120701180053.504ba439@notabene.brown>
-	<CAGRgLy4jdP-ZhiPYMB=-4NYAC7YJsM2nX6SyJcgmMKHpp-FXhQ@mail.gmail.com>
-	<20120702074446.3e191fe5@notabene.brown>
+From: Ramon Hofer <ramonhofer@bluewin.ch>
+Subject: Re: Stacked array data recovery
+Date: Mon, 02 Jul 2012 12:12:35 +0200
+Message-ID: <1341223955.3407.6.camel@hoferr-desktop.hofer.rummelring>
+References: <js083q$kdu$1@dough.gmane.org> <js1vuk$9k8$2@dough.gmane.org>
+	  <4FE5B213.5010503@hardwarefreak.com> <js70ce$fgv$1@dough.gmane.org>
+	  <4FE72053.4040101@hardwarefreak.com> <4FE7E044.6040506@hardwarefreak.com>
+	  <js9emr$761$1@dough.gmane.org> <4FE91619.4020709@hardwarefreak.com>
+	 <1340699839.3241.29.camel@hoferr-desktop.hofer.rummelring>
+	 <4FEA1A4F.9090605@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120702074446.3e191fe5@notabene.brown>
+In-Reply-To: <4FEA1A4F.9090605@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: stan@hardwarefreak.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks, Neil, for the clear explanation.
+On Die, 2012-06-26 at 15:23 -0500, Stan Hoeppner wrote:
 
-Alex.
+> Regardless, unless the dd commands hung in some way, they should not
+> show up in top right now.  So it's probably safe to assume they completed.
+> 
+> So at this point you can try creating the RAID5 array again.  If the dd
+> command did what we wanted, /dev/sdk should have remapped the bad
+> sector, and you shouldn't get the error kicking that drive.  If you
+> still do, you may need to replace the drive.
+
+I have successfully run dd for all the four drives.
+
+But because I couldn't create the raid I ran smartctl again for all of
+them. It seems that sdk has to be replaced. Here are the outputs:
+
+sdj:
+http://pastebin.com/raw.php?i=V60FJ4wC
+
+sdk:
+http://pastebin.com/raw.php?i=cgfq3202
+There are some pre-fail and one FAILING_NOW messages.
+
+sdl:
+http://pastebin.com/raw.php?i=tipjbpxu
+
+sdm:
+http://pastebin.com/raw.php?i=sZnrCJ5Q
+
+Is this the right moment to bring sdk back to my dealer?
 
 
-On Mon, Jul 2, 2012 at 12:44 AM, NeilBrown <neilb@suse.de> wrote:
-> On Sun, 1 Jul 2012 16:36:51 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-> wrote:
->
->> Thanks, Neil!
->> That clarifies.
->>
->> Does this also mean, that when md_do_sync() gets to such
->> already-reconstructed stripe, it might reconstruct it once again,
->> unless the stripe stays in the stripe cache?
->
-> Yes, it will reconstruct it, and that might be "again" if the reconstructed
-> block has already been written.  If the stripe is still in the cache, I think
-> it will still write that block out again, but won't need to reconstruct it.
->
-> NeilBrown
->
->
->>
->> Thanks for helping,
->> Alex.
->>
->>
->> On Sun, Jul 1, 2012 at 11:00 AM, NeilBrown <neilb@suse.de> wrote:
->> > On Sun, 1 Jul 2012 10:08:40 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
->> > wrote:
->> >
->> >> Hi everybody,
->> >> I am trying to understand what happens when raid5 is recovering a
->> >> disk, and a write comes to a stripe that has not been recovered yet.
->> >> Does md first reconstruct the missing chunk and then applies the
->> >> write, or first the write is applied as if the array is still degraded
->> >> (and not recovering), and only later the missing chunk is
->> >> reconstructed (when the md_do_sync() loop gets to this area)?
->> >> I am looking at the stripe handling logic (kernel 2.6.38), can anybody
->> >> pls point me at the path that handle_stripe5() takes in that case?
->> >>
->> >>
->> >
->> > Hi Alex,
->> >
->> >  The stripe is still degraded, so md/raid5 treats it like a write to a
->> >  degraded array.
->> >  Exactly what happens depends one which block is being written.
->> >  If the block being written would be stored on the recovering devices, then
->> >  md will perform a reconstruct-write.  It will read the other data blocks,
->> >  calculate the parity, and write out the parity and the changed data.
->> >  Similarly if the parity block is on the recovering device a
->> >  reconstruct-write will be needed.
->> >  If some other block is being written, md will do a read-modify-write to
->> >  calculate the new parity and then write out the parity and data.  In this
->> >  case the block on the recovering device will not be written.
->> >
->> >  I hope that clarifies the situation.
->> >
->> > NeilBrown
->
+Best regards
+Ramon
+
