@@ -1,142 +1,93 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch 09/10 v3] raid5: raid5d handle stripe in batch way
-Date: Mon, 2 Jul 2012 12:32:59 +1000
-Message-ID: <20120702123259.3487dbb8@notabene.brown>
-References: <20120625072447.268095276@kernel.org>
-	<20120625072712.004553385@kernel.org>
+From: Kerin Millar <kerframil@gmail.com>
+Subject: raid10 make_request failure during iozone benchmark upon btrfs
+Date: Mon, 02 Jul 2012 03:34:16 +0100
+Message-ID: <4FF108A8.6090606@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/vQOC/EEWmSjOGQfYH5X4mgp"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120625072712.004553385@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, dan.j.williams@intel.com, shli@fusionio.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/vQOC/EEWmSjOGQfYH5X4mgp
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hello,
 
-On Mon, 25 Jun 2012 15:24:56 +0800 Shaohua Li <shli@kernel.org> wrote:
+I'm running a 4-way RAID-10 array with the f2 layout scheme on a 3.5-rc5
+kernel:
 
-> Let raid5d handle stripe in batch way to reduce conf->device_lock locking.
->=20
-> Signed-off-by: Shaohua Li <shli@fusionio.com>
-> ---
->  drivers/md/raid5.c |   45 ++++++++++++++++++++++++++++++++-------------
->  1 file changed, 32 insertions(+), 13 deletions(-)
->=20
-> Index: linux/drivers/md/raid5.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux.orig/drivers/md/raid5.c	2012-06-25 14:38:37.378835415 +0800
-> +++ linux/drivers/md/raid5.c	2012-06-25 14:38:40.150800523 +0800
-> @@ -4568,6 +4568,30 @@ static int  retry_aligned_read(struct r5
->  	return handled;
->  }
-> =20
-> +#define MAX_STRIPE_BATCH 8
-> +static int handle_active_stripes(struct r5conf *conf)
-> +{
-> +	struct stripe_head *batch[MAX_STRIPE_BATCH], *sh;
-> +	int i, batch_size =3D 0;
-> +
-> +	while (batch_size < MAX_STRIPE_BATCH &&
-> +			(sh =3D __get_priority_stripe(conf)) !=3D NULL)
-> +		batch[batch_size++] =3D sh;
-> +
-> +	if (batch_size =3D=3D 0)
-> +		return batch_size;
-> +	spin_unlock_irq(&conf->device_lock);
-> +
-> +	for (i =3D 0; i < batch_size; i++)
-> +		handle_stripe(batch[i]);
-> +
-> +	cond_resched();
-> +
-> +	spin_lock_irq(&conf->device_lock);
-> +	for (i =3D 0; i < batch_size; i++)
-> +		__release_stripe(conf, batch[i]);
-> +	return batch_size;
-> +}
-> =20
->  /*
->   * This is our raid5 kernel thread.
-> @@ -4578,7 +4602,6 @@ static int  retry_aligned_read(struct r5
->   */
->  static void raid5d(struct mddev *mddev)
->  {
-> -	struct stripe_head *sh;
->  	struct r5conf *conf =3D mddev->private;
->  	int handled;
->  	struct blk_plug plug;
-> @@ -4592,6 +4615,7 @@ static void raid5d(struct mddev *mddev)
->  	spin_lock_irq(&conf->device_lock);
->  	while (1) {
->  		struct bio *bio;
-> +		int batch_size;
-> =20
->  		if (atomic_read(&mddev->plug_cnt) =3D=3D 0 &&
->  		    !list_empty(&conf->bitmap_list)) {
-> @@ -4616,21 +4640,16 @@ static void raid5d(struct mddev *mddev)
->  			handled++;
->  		}
-> =20
-> -		sh =3D __get_priority_stripe(conf);
-> -
-> -		if (!sh)
-> +		batch_size =3D handle_active_stripes(conf);
-> +		if (!batch_size)
->  			break;
-> -		spin_unlock_irq(&conf->device_lock);
-> -	=09
-> -		handled++;
-> -		handle_stripe(sh);
-> -		release_stripe(sh);
-> -		cond_resched();
-> +		handled +=3D batch_size;
-> =20
-> -		if (mddev->flags & ~(1<<MD_CHANGE_PENDING))
-> +		if (mddev->flags & ~(1<<MD_CHANGE_PENDING)) {
-> +			spin_unlock_irq(&conf->device_lock);
->  			md_check_recovery(mddev);
-> -
-> -		spin_lock_irq(&conf->device_lock);
-> +			spin_lock_irq(&conf->device_lock);
-> +		}
->  	}
->  	pr_debug("%d stripes handled\n", handled);
-> =20
->=20
+Personalities : [raid10] [raid6] [raid5] [raid4]
+md0 : active raid10 sdb2[4] sdd2[3] sdc2[2] sda2[1]
+       5860462592 blocks super 1.1 256K chunks 2 far-copies [4/4] [UUUU]
 
+I am also using LVM, with md0 serving as the sole PV in a volume group
+named vg0. The drives are brand new Hitachi Desktar 5K3000 drives and
+they are known to be in good health. XFS is my filesystem of choice but
+I recently created a volume so that I could benchmark btrfs with iozone
+(just out of curiosity). The volume arrangement is as follows:
 
-I've applied this patch, thanks.
+# lvs -o lv_name,lv_attr,lv_size,seg_pe_ranges
+   LV     Attr   LSize   PE Ranges
+   public -wi-ao   3.00t /dev/md0:25600-812031
+   rootfs -wi-ao 100.00g /dev/md0:0-25599
+   test   -wi-ao   2.00g /dev/md0:812032-812543
 
-NeilBrown
+The btrfs filesystem was created as follows:
 
+# mkfs.btrfs /dev/vg0/test
+...
+fs created label (null) on /dev/vg0/test
+         nodesize 4096 leafsize 4096 sectorsize 4096 size 2.00GB
+Btrfs Btrfs v0.19
 
---Sig_/vQOC/EEWmSjOGQfYH5X4mgp
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+I'm not sure whether this is a bug in the raid10 code but I am
+encountering a reproducible error while running iozone -a. It triggers
+during the tests that read and write 2MiB with a 4KiB record length.
+Here's the tail end of iozone's output:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+2048  4  530020  473540  1660915  1655474  1427182  388846  1405465  558811  1394966  462500  520324
 
-iQIVAwUBT/EIWznsnt1WYoG5AQJ6ug//ZHXVtxd6f8GRqG9UewfT+r/ZnqcTgTbR
-Pa1Gm6yJUBIaT/0vOdyNR1wfhrYTHrG+C7V4ToSfZiEJvWh3TL8SsoWCxRmBYgCm
-KZDbj8E2t5u7oG7I1OH1nryZ4pnTpsT0Rjo0HSLUDkEGgrApGQedHmYmU0YQBvit
-BmgEvrIlUKaPsr3JwLOh/Vet2ZJvBbExaKWIMyy/deHM2UKz4dOscYCYqM6ATyKp
-/6clg5Igw7sp48Acpi34kAfi3XJSDuLvsnVlJvYLThY0OjCJHHpF3+B5eVxUMrpV
-h4hUmG09QpxPNM+vArXxLmuUMF/ud8yEJvFYFdpNLomUZlgjdkR2LI+VNrUPD0Xs
-w09z6gp0Oo8mI3VaEWX5tlW5KQXIFDfj/HYU7vFNNmy4J6MiYgnJjR9SdOCG4pnj
-cy+Ng8zxRCt3OWieeMO/W/ACV25AMzUeiC5tYY2U7B2dQxAstH6M6IDcmyj+PJBk
-IYOjRHXQcWmlRcZQ1Cpe1hqLMsaG85Zw3IttIuJRwbdO/2w/ljnw47JuVljVbCbY
-4JBzQ+aa19PApZSm9pjOFJhyAIfK1eb217bmmmTrHYAS4funtxViBTdhuL6uNPff
-sVvfXlkMqDgSAAxtGNSgCrDQmfAqvse04mMqpuS47zdK7x96/6lRvYVxjJnXZJBO
-acW6pZ7XZYI=
-=Q5hv
------END PGP SIGNATURE-----
+Error in file: Found ?101010101010101? Expecting ?6d6d6d6d6d6d6d6d? addr 7ff7c8700000
+Error in file: Position 131072
+Record # 32 Record size 4 kb
+where 7ff7c8700000 loop 0
 
---Sig_/vQOC/EEWmSjOGQfYH5X4mgp--
+Note that the last two column's worth of figures are missing, implying
+that the failure occurs when iozone is running the fread/freread tests.
+
+Here are the error messages from the kernel ring buffer:
+
+[  919.893454] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653500160 256
+[  919.893465] btrfs: bdev /dev/mapper/vg0-test errs: wr 1, rd 0, flush 0, corrupt 0, gen 0
+[  919.894060] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653500672 256
+[  919.894070] btrfs: bdev /dev/mapper/vg0-test errs: wr 2, rd 0, flush 0, corrupt 0, gen 0
+[  919.894634] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653501184 256
+[  919.894643] btrfs: bdev /dev/mapper/vg0-test errs: wr 3, rd 0, flush 0, corrupt 0, gen 0
+[  919.895225] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653501696 256
+[  919.895234] btrfs: bdev /dev/mapper/vg0-test errs: wr 4, rd 0, flush 0, corrupt 0, gen 0
+[  919.895801] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653502208 256
+[  919.895811] btrfs: bdev /dev/mapper/vg0-test errs: wr 5, rd 0, flush 0, corrupt 0, gen 0
+[  919.896390] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653502720 256
+[  919.896399] btrfs: bdev /dev/mapper/vg0-test errs: wr 6, rd 0, flush 0, corrupt 0, gen 0
+[  919.896981] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653503232 256
+[  919.896990] btrfs: bdev /dev/mapper/vg0-test errs: wr 7, rd 0, flush 0, corrupt 0, gen 0
+[  920.029589] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653504256 256
+[  920.029603] btrfs: bdev /dev/mapper/vg0-test errs: wr 8, rd 0, flush 0, corrupt 0, gen 0
+[  920.030208] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653504768 256
+[  920.030222] btrfs: bdev /dev/mapper/vg0-test errs: wr 9, rd 0, flush 0, corrupt 0, gen 0
+[  920.030788] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653505280 256
+[  920.030802] btrfs: bdev /dev/mapper/vg0-test errs: wr 10, rd 0, flush 0, corrupt 0, gen 0
+[  920.031385] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653505792 256
+[  920.031957] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653506304 256
+[  920.032551] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653506816 256
+[  920.033135] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653507328 256
+[  920.161304] btrfs no csum found for inode 328 start 131072
+[  920.180249] btrfs csum failed ino 328 off 131072 csum 2259312665 private 0
+
+I have no intention of using btrfs for anything other than
+experimentation. Sill, my fear is that something could be amiss in
+the guts of the raid10 code. I'd welcome any insights as to what is
+happening here.
+
+Cheers,
+
+--Kerin
