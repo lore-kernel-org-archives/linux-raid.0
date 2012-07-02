@@ -1,125 +1,96 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [patch 0/3 v3] MD: improve raid1/10 write performance for fast
- storage
-Date: Mon, 2 Jul 2012 15:36:45 +0800
-Message-ID: <20120702073645.GA785@kernel.org>
-References: <20120613091143.508417333@kernel.org>
- <20120628190352.4dc1dd76@notabene.brown>
- <CANejiEWfR1S+F5GT7Bxhi2ig8ef7ZziAbVebM_DT3-_3hftYUw@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [patch 03/10 v3] raid5: add a per-stripe lock
+Date: Mon, 2 Jul 2012 17:39:53 +1000
+Message-ID: <20120702173953.7bee26cb@notabene.brown>
+References: <20120625072447.268095276@kernel.org>
+	<20120625072613.620625574@kernel.org>
+	<20120702105046.56cd47ec@notabene.brown>
+	<20120702031626.GE29770@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/T7QcsnNFjTyojet9kFFl_H5"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CANejiEWfR1S+F5GT7Bxhi2ig8ef7ZziAbVebM_DT3-_3hftYUw@mail.gmail.com>
+In-Reply-To: <20120702031626.GE29770@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, axboe@kernel.dk
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, dan.j.williams@intel.com, shli@fusionio.com
 List-Id: linux-raid.ids
 
-On Fri, Jun 29, 2012 at 02:10:30PM +0800, Shaohua Li wrote:
-> 2012/6/28 NeilBrown <neilb@suse.de>:
-> > On Wed, 13 Jun 2012 17:11:43 +0800 Shaohua Li <shli@kernel.org> wro=
-te:
-> >
-> >> In raid1/10, all write requests are dispatched in a single thread.=
- In fast
-> >> storage, the thread is a bottleneck, because it dispatches request=
- too slow.
-> >> Also the thread migrates freely, which makes request completion cp=
-u not match
-> >> with submission cpu even driver/block layer has such capability. T=
-his will
-> >> cause bad cache issue. Both these are not a big deal for slow stor=
-age.
-> >>
-> >> Switching the dispatching to percpu/perthread based dramatically i=
-ncreases
-> >> performance. =A0The more raid disk number is, the more performance=
- boosts. In a
-> >> 4-disk raid10 setup, this can double the throughput.
-> >>
-> >> percpu/perthread based dispatch doesn't harm slow storage. This is=
- the way how
-> >> raw device is accessed, and there is correct block plug set which =
-can help do
-> >> request merge and reduce lock contention.
-> >>
-> >> V2->V3:
-> >> rebase to latest tree and fix cpuhotplug issue
-> >>
-> >> V1->V2:
-> >> 1. droped direct dispatch patches. That has better performance imp=
-orvement, but
-> >> is hopelessly made correct.
-> >> 2. Add a MD specific workqueue to do percpu dispatch.
-> >
-> >
-> > Hi.
-> >
-> > I still don't like the per-cpu allocations and the extra work queue=
-s.
-> >
-> > The following patch demonstrates how I would like to address this i=
-ssue. =A0It
-> > should submit requests from the same thread that initially made the=
- request -
-> > at least in most cases.
-> >
-> > It leverages the plugging code and pushed everything out on the unp=
-lug,
-> > unless that comes from a scheduler call (which should be uncommon).=
- =A0In that
-> > case it falls back on passing all the requests to the md thread.
-> >
-> > Obviously if we proceed with this I'll split this up into neat revi=
-ewable
-> > patches. =A0However before that it would help to know if it really =
-helps as I
-> > think it should.
-> >
-> > So would you be able to test it on your SSD hardware and see how it=
- compares
-> > the current code, and to you code? =A0Thanks.
-> >
-> > I have only tested it lightly myself so there could still be bugs, =
-but
-> > hopefully not obvious ones.
-> >
-> > A simple "time mkfs" test on very modest hardware show as 25% reduc=
-tion in
-> > total time (168s -> 127s). =A0I guess that's a 33% increase in spee=
-d?
-> > However sequential writes with 'dd' seem a little slower (14MB/s ->=
- 13.6MB/s)
-> >
-> > There are some hacks in there that need to be cleaned up, but I thi=
-nk the
-> > general structure looks good.
+--Sig_/T7QcsnNFjTyojet9kFFl_H5
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2 Jul 2012 11:16:26 +0800 Shaohua Li <shli@kernel.org> wrote:
+
+
+> > Then I could see what is being added and what is being removed all in t=
+he one
+> > patch and I can be sure that they balance.
 >=20
-> Thought I consider this approach before, and schedule from the unplug
-> callback is an issue. Maybe I overlooked it at that time, the from_sc=
-hedule
-> check looks promising.
+> reworked the patch 3-5 to two patches as you suggested, and sent to you. =
+please check.
 
-I tried raid1/raid10 performance with this patch (with similar change f=
+Thanks.  That's looking really good.
+
+However I think we can do better.  I've been looking more closely at the co=
+de
+and I think that the only things that we need stripe_lock to protect are
+->toread and ->towrite, together with the following bios.  e.g.
+->toread->bi_next etc.
+
+->read and ->written don't need stripe_lock protection, as they are only
+manipulated by the handle_stripe state machine which uses STRIPE_ACTIVE=20
+and refcounts for exclusion.
+
+So add_stripe_bio need to take the lock while adding a bio to the
+->toread and  ->towrite lists, and ops_run_biodrain() and ops_run_biofill
+need to take the lock while the move the list from ->to{read,write} to
+->{read,written}.  But we don't need it anywhere else.  e.g. analyse_stripe
+shouldn't need the lock at all.  Any change that could happen during the lo=
+op
+could equally happen after the lock was released so we don't lose by not
+having the lock.
+
+There is another current user of the lock, but I think that should be
+discarded as a false optimisation.
+We currently try to optimise out extra calls to bitmap_startwrite and
+bitmap_endwrite when we see back-to-back writes to the one stripe.  However=
+ I
+suspect that is extremely unlikely and it just imposes and pointless need f=
 or
-raid10, and add plug in the raid1/10 unplug function for dispatching), =
-the
-result is ok. The from_schedule check does the trick, there isn't race =
-I
-mentioned before. And I double checked the rate unplug is called from s=
-chedule,
-which is very very low.
+synchronisation in raid5.
 
-Now the only problem is if extra bitmap flush could be an overhead. Our=
- card
-hasn't such overhead, so not sure.
+We just simply call bitmap_startwrite whenever ->towrite changes from NULL =
+to
+non-NULL, and call bitmap_endwrite whenever we clear ->written, reguardless
+what value ->towrite now has.
+
+Would you like to experiment with that?  If I haven't described it well
+enough I can write a patch to show what I mean.
 
 Thanks,
-Shaohua
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+NeilBrown
+
+--Sig_/T7QcsnNFjTyojet9kFFl_H5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT/FQSTnsnt1WYoG5AQJG8w//eaC5Tsgq3OcxfKJopNGxbTaFT1oRjQ/E
+xwYtrAi0C5a5lb5KM4zHGdXqvlYe/29Zey87j8Lp/h1pVdT2pDY+hYxph+IO1XdL
+5CQrRdaBdC5knq+FNP1GhVkqfqLosOIwodDw26q9ABhmm1pACpHMCgznnvVJFubi
+n9Kw/QgUfGXRoB1eWkLheuj9gVzMg9mDaoh9ovxNuhtSNzTXtUCEDVoiuBiggbzx
+L2FV2rcuVZT24hESv8evnA99Cc9wz8fXO0KrJSmCYW5OM+Mr8USBn33AOD7hCxtf
+fVqCvx8dll/dWff8QH3lr0e3HVvyRoXD79ZqqjwZuOFNkNwEkvZ2NTEoj4FbYFoG
+6AlnqQicb4lN/Y+T3rNC/LlptBbe8FKOaQeDQA2wmPOx337Zic/feQL8N+nyIBlY
+Tsf2QjPPv2RuZbnqynM+73jnzESlIxeqpw1KDsHX3d522jlTGjeM8QRVEqUaNSMQ
+8H9qbjHBeIlznjZWXMnjvrP2cBAMl3yA3euzsALh8fx6w1enBGrgFQHJIlFi7DsP
+NXCYParib5+6mkbEQXVYbMZc7yqI9a0oZ43/CJIjlNEhWQ8rdAiuW9jsVKc/ki4K
+K8X7etue5gLl2rSpThHa8Mhim6Nkla8iob9v/zy7DJW9i0ua1UnjZwROoo7WZfgP
+xgrTNdQW8sw=
+=yFgr
+-----END PGP SIGNATURE-----
+
+--Sig_/T7QcsnNFjTyojet9kFFl_H5--
