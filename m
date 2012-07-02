@@ -1,140 +1,123 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Problem with patch: "reject a re-add request that cannot be
- honoured" (commit bedd86b7773fd97f0d708cc0c371c8963ba7ba9a)
-Date: Mon, 2 Jul 2012 17:57:15 +1000
-Message-ID: <20120702175715.30724b9d@notabene.brown>
-References: <CAGRgLy6We49bW2gA7S-EOmA8sbaXgQeGuTR5Aqrt4y_KyvOrdw@mail.gmail.com>
-	<CAGRgLy5OkpZnfOpPS+16Tiep8eisOu9XnK7EcvZygwg22DVTqQ@mail.gmail.com>
-	<20120607212434.4d6211d6@notabene.brown>
-	<CAGRgLy55si7a8bY_Xuokqb6=cdOJyk_Wq34_DwmmhbpuQSSQug@mail.gmail.com>
-	<20120627172255.40ee3a19@notabene.brown>
-	<CAGRgLy5U_Xzr=LDuQ6R7dEzx4EiNyWQb1fiSQhq_F+oTmyZw1Q@mail.gmail.com>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: mkfs.xfs states log stripe unit is too large
+Date: Mon, 2 Jul 2012 18:08:02 +1000
+Message-ID: <20120702080802.GQ19223@dastard>
+References: <D3F781FA-CEB0-4896-9441-772A9E533354@2012.bluespice.org>
+ <20120623234445.GZ19223@dastard>
+ <4FE67970.2030008@sandeen.net>
+ <4FE710B7.5010704@hardwarefreak.com>
+ <d71834a062ffd666ab53a4695eb643e9@muaddib.hro.localnet>
+ <20120626023059.GC19223@dastard>
+ <20120626080217.GA30767@infradead.org>
+ <20120702061827.GB16671@infradead.org>
+ <20120702164113.109162be@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/m6Y1lX/Y0eygHiZSo005uJa"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy5U_Xzr=LDuQ6R7dEzx4EiNyWQb1fiSQhq_F+oTmyZw1Q@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20120702164113.109162be@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: andrey.warkentin@gmail.com, linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Ingo J?rgensmann <ij@2012.bluespice.org>, xfs@oss.sgi.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/m6Y1lX/Y0eygHiZSo005uJa
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Mon, Jul 02, 2012 at 04:41:13PM +1000, NeilBrown wrote:
+> On Mon, 2 Jul 2012 02:18:27 -0400 Christoph Hellwig <hch@infradead.org> wrote:
+> 
+> > Ping to Neil / the raid list.
+> 
+> Thanks for the reminder.
+> 
+> > 
+> > On Tue, Jun 26, 2012 at 04:02:17AM -0400, Christoph Hellwig wrote:
+> > > On Tue, Jun 26, 2012 at 12:30:59PM +1000, Dave Chinner wrote:
+> > > > You can't, simple as that. The maximum supported is 256k. As it is,
+> > > > a default chunk size of 512k is probably harmful to most workloads -
+> > > > large chunk sizes mean that just about every write will trigger a
+> > > > RMW cycle in the RAID because it is pretty much impossible to issue
+> > > > full stripe writes. Writeback doesn't do any alignment of IO (the
+> > > > generic page cache writeback path is the problem here), so we will
+> > > > lamost always be doing unaligned IO to the RAID, and there will be
+> > > > little opportunity for sequential IOs to merge and form full stripe
+> > > > writes (24 disks @ 512k each on RAID6 is a 11MB full stripe write).
+> > > > 
+> > > > IOWs, every time you do a small isolated write, the MD RAID volume
+> > > > will do a RMW cycle, reading 11MB and writing 12MB of data to disk.
+> > > > Given that most workloads are not doing lots and lots of large
+> > > > sequential writes this is, IMO, a pretty bad default given typical
+> > > > RAID5/6 volume configurations we see....
+> > > 
+> > > Not too long ago I benchmarked out mdraid stripe sizes, and at least
+> > > for XFS 32kb was a clear winner, anything larger decreased performance.
+> > > 
+> > > ext4 didn't get hit that badly with larger stripe sizes, probably
+> > > because they still internally bump the writeback size like crazy, but
+> > > they did not actually get faster with larger stripes either.
+> > > 
+> > > This was streaming data heavy workloads, anything more metadata heavy
+> > > probably will suffer from larger stripes even more.
+> > > 
+> > > Ccing the linux-raid list if there actually is any reason for these
+> > > defaults, something I wanted to ask for a long time but never really got
+> > > back to.
+> > > 
+> > > Also I'm pretty sure back then the md default was 256kb writes, not 512
+> > > so it seems the defaults further increased.
+> 
+> "originally" the default chunksize was 64K.
+> It was changed in late 2009 to 512K - this first appeared in mdadm 3.1.1
+> 
+> I don't recall the details of why it was changed but I'm fairly sure that
+> it was based on measurements that I had made and measurements that others had
+> made.  I suspect the tests were largely run on ext3.
+> 
+> I don't think there is anything close to a truly optimal chunk size.  What
+> works best really depends on your hardware, your filesystem, and your work
+> load. 
 
-On Wed, 27 Jun 2012 19:40:52 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-wrote:
+That's true, but the characterisitics of spinning disks have not
+changed in the past 20 years, nor has the typical file size
+distributions in filesystems, nor have the RAID5/6 algorithms. So
+it's not really clear to me why you;d woul deven consider changing
+the default the downsides of large chunk sizes on RAID5/6 volumes is
+well known. This may well explain the apparent increase in "XFS has
+hung but it's really just waiting for lots of really slow IO on MD"
+cases I've seen over the past couple of years.
 
-> Hi Neil,
->=20
-> >>
-> >> I would still think that there is value in recoding in a superblock
-> >> that a drive is recovering.
-> >
-> > Probably. =A0It is a bit unfortunate that if you stop an array that is
-> > recovering after a --re-add, you cannot simply 'assemble' it again and
-> > get it back to the same state.
-> > I'll think more on that.
->=20
-> As I mentioned, I see the additional re-add as a minor thing, but
-> agree it's better to fix it. The fact that we don't know that the
-> drive is being recovered, bothers me more. Because user might look at
-> the superblock, and assume the data on the drive is consistent to some
-> point in time (time of the drive failure). While the actual data,
-> while doing bitmap-based recovery, is unusable until recovery
-> successfully completes. So the user might think it's okay to try to
-> run his app on this drive.
-> Yes, please think about this.
->=20
-> >
-> > Meanwhile, this patch might address your other problem. =A0It allows --=
-re-add
-> > to work if a non-bitmap rebuild fails and is then re-added.
-> >
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index c601c4b..d31852e 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -5784,7 +5784,7 @@ static int add_new_disk(struct mddev * mddev, mdu=
-_disk_info_t *info)
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0super_types[mddev->major=
-_version].
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0validate=
-_super(mddev, rdev);
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if ((info->state & (1<<MD_DISK_SYNC)) &&
-> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (!test_bit(In_sync, &rdev->flags)=
- ||
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (test_bit(Faulty, &rdev->flags) ||
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 rdev->raid_disk !=3D info->raid=
-_disk)) {
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* This was a hot-add re=
-quest, but events doesn't
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 * match, so reject it.
-> >
->=20
-> I have tested a slightly different patch that you suggested earlier -
-> just removing the !test_bit(In_sync, &rdev->flags) check. I confirm
-> that it solves the problem.
->=20
-> The Faulty bit check seems redundant to me, because:
-> - it can be set by only by validate_super() and only if that drive's
-> role is 0xfffe in sb->roles[] array
-> - Long time ago I asked you, how can it happen that a drive thinks
-> about *itself* that it is Faulty (has 0xfffe for its role in its own
-> superblock), and you said this should never happen.
+The only time I'd ever consider stripe -widths- of more than 512k or
+1MB with RAID5/6 is if I knew my workload is almost exclusively
+using large files and sequential access with little metadata load,
+and there's relatively few workloads where that is the case.
+Typically those workloads measure throughput in GB/s and everyone
+uses hardware RAID for them because MD simply doesn't scale to this
+sort of usage.
 
-Yes, you are right.  I've remove the test on 'Faulty' - the test on the
-raid_disk number is sufficient.
+> If 512K is always suboptimal for XFS then that is unfortunate but I don't
 
->=20
-> Anyways, I tested also the patch you suggested, and it also works.
+I think 512k chunk sizes are suboptimal for most users, regardless
+of the filesystem or workload....
 
-Thanks!
+> think it is really possible to choose a default that everyone will be happy
+> with.  Maybe we just need more documentation and warning emitted by various
+> tools.  Maybe mkfs.xfs could augment the "stripe unit too large" message with
+> some text about choosing a smaller chunk size?
 
->=20
-> Is there any chance to see this fix in ubuntu-precise?
+We work to the mantra that XFS should always choose the defaults
+that give the best overall performance and aging characteristics so
+users don't need to be a storage expert to get the best the
+filesystem can offer. The XFS warning is there to indicate that the
+user might be doing something wrong. If that's being emitted with a
+default MD configuration, then that indicates that the MD defaults
+need to be revised....
 
-Not really up to me.  It doesn't fix a crash or corruption so I'm not sure =
-it
-is -stable material .... though maybe it is if it fixes a regression.
+If you know what a stripe unit or chunk size is, then you know how
+to deal with the problem. But for the majority of people, that's way
+more knowledge than they are prepared to learn about or should be
+forced to learn about.
 
-I suggest you ask the Ubuntu kernel people after it appears in 3.5-rc
-(hopefully later this week).
+Cheers,
 
-Thanks,
-NeilBrown
-
-
->=20
-> Thanks again for your support,
-> Alex.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/m6Y1lX/Y0eygHiZSo005uJa
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT/FUWznsnt1WYoG5AQJmwRAAvrTKSI4TsmRy02wLLGClLf5+yS7MNnfa
-KWFKJvvE+SdXgSfzpaGiXt0iBqAXeYZmpHbdwMzMp55cAdRVIrUHIUIpVLhbjkhB
-Kic+lHBHv+CbJs+PY2mfbKtwoVIhIUW24V9US3D3OZd7z+QS01w7Uc3LSm8DdaRs
-TyF5BYhW1tjYaxOXGSgPf7SpE0QrQKATYtKCwvmb+/DKQVW09iV2ryaUOV8kyGxo
-Gcd69xOmW0Qv2KiogJQmhyqMt4HqJPiJJZrF5UfdQMeOqX0u/IWiwwuoQuuVGUQ5
-l+62UXQAcbZdmCQE2JxcG0Nvhb82tQZWzoYb0qnNLhCFgbPn+xcWuhQqJ0tNQ3VR
-bBQWhe126xoj/U/EeRB8tDUTNOY9HUeU6EMpOV3mJPBgtRO88dTsRXbtIEXhwCrA
-dZkDXnuyig7iok8gimmImtyKYpZ8k+C7M7nd6C+SQ//J+GJ3ibh80Jiqam1jFjD8
-ALkT9s1Equ2P0qKlwKWK1psxaG18YxNetHpkLeeqCO/9vR7VTQd2DxzQ4O/Bqfd7
-Th3ajWULiF3HEzmsttnBRoW/WBfLaOf7E2UCTI1B9KtQkZVf/bVMaqCDYbxguW9Z
-LeeSfaSBWgcl7xkIER3d2mPRaeMjEuQKgzJmZRNX8lx+cRtckqNboxac8hyY3UAm
-XLz6Hmjb6/8=
-=5jPF
------END PGP SIGNATURE-----
-
---Sig_/m6Y1lX/Y0eygHiZSo005uJa--
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
