@@ -1,126 +1,125 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: mkfs.xfs states log stripe unit is too large
-Date: Mon, 2 Jul 2012 16:41:13 +1000
-Message-ID: <20120702164113.109162be@notabene.brown>
-References: <D3F781FA-CEB0-4896-9441-772A9E533354@2012.bluespice.org>
-	<20120623234445.GZ19223@dastard>
-	<4FE67970.2030008@sandeen.net>
-	<4FE710B7.5010704@hardwarefreak.com>
-	<d71834a062ffd666ab53a4695eb643e9@muaddib.hro.localnet>
-	<20120626023059.GC19223@dastard>
-	<20120626080217.GA30767@infradead.org>
-	<20120702061827.GB16671@infradead.org>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [patch 0/3 v3] MD: improve raid1/10 write performance for fast
+ storage
+Date: Mon, 2 Jul 2012 15:36:45 +0800
+Message-ID: <20120702073645.GA785@kernel.org>
+References: <20120613091143.508417333@kernel.org>
+ <20120628190352.4dc1dd76@notabene.brown>
+ <CANejiEWfR1S+F5GT7Bxhi2ig8ef7ZziAbVebM_DT3-_3hftYUw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/1.FH_uAeKVUqRVkMkg080sS"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120702061827.GB16671@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <CANejiEWfR1S+F5GT7Bxhi2ig8ef7ZziAbVebM_DT3-_3hftYUw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <david@fromorbit.com>, Ingo J?rgensmann <ij@2012.bluespice.org>, xfs@oss.sgi.com, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, axboe@kernel.dk
 List-Id: linux-raid.ids
 
---Sig_/1.FH_uAeKVUqRVkMkg080sS
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2 Jul 2012 02:18:27 -0400 Christoph Hellwig <hch@infradead.org> wro=
+On Fri, Jun 29, 2012 at 02:10:30PM +0800, Shaohua Li wrote:
+> 2012/6/28 NeilBrown <neilb@suse.de>:
+> > On Wed, 13 Jun 2012 17:11:43 +0800 Shaohua Li <shli@kernel.org> wro=
 te:
-
-> Ping to Neil / the raid list.
-
-Thanks for the reminder.
-
+> >
+> >> In raid1/10, all write requests are dispatched in a single thread.=
+ In fast
+> >> storage, the thread is a bottleneck, because it dispatches request=
+ too slow.
+> >> Also the thread migrates freely, which makes request completion cp=
+u not match
+> >> with submission cpu even driver/block layer has such capability. T=
+his will
+> >> cause bad cache issue. Both these are not a big deal for slow stor=
+age.
+> >>
+> >> Switching the dispatching to percpu/perthread based dramatically i=
+ncreases
+> >> performance. =A0The more raid disk number is, the more performance=
+ boosts. In a
+> >> 4-disk raid10 setup, this can double the throughput.
+> >>
+> >> percpu/perthread based dispatch doesn't harm slow storage. This is=
+ the way how
+> >> raw device is accessed, and there is correct block plug set which =
+can help do
+> >> request merge and reduce lock contention.
+> >>
+> >> V2->V3:
+> >> rebase to latest tree and fix cpuhotplug issue
+> >>
+> >> V1->V2:
+> >> 1. droped direct dispatch patches. That has better performance imp=
+orvement, but
+> >> is hopelessly made correct.
+> >> 2. Add a MD specific workqueue to do percpu dispatch.
+> >
+> >
+> > Hi.
+> >
+> > I still don't like the per-cpu allocations and the extra work queue=
+s.
+> >
+> > The following patch demonstrates how I would like to address this i=
+ssue. =A0It
+> > should submit requests from the same thread that initially made the=
+ request -
+> > at least in most cases.
+> >
+> > It leverages the plugging code and pushed everything out on the unp=
+lug,
+> > unless that comes from a scheduler call (which should be uncommon).=
+ =A0In that
+> > case it falls back on passing all the requests to the md thread.
+> >
+> > Obviously if we proceed with this I'll split this up into neat revi=
+ewable
+> > patches. =A0However before that it would help to know if it really =
+helps as I
+> > think it should.
+> >
+> > So would you be able to test it on your SSD hardware and see how it=
+ compares
+> > the current code, and to you code? =A0Thanks.
+> >
+> > I have only tested it lightly myself so there could still be bugs, =
+but
+> > hopefully not obvious ones.
+> >
+> > A simple "time mkfs" test on very modest hardware show as 25% reduc=
+tion in
+> > total time (168s -> 127s). =A0I guess that's a 33% increase in spee=
+d?
+> > However sequential writes with 'dd' seem a little slower (14MB/s ->=
+ 13.6MB/s)
+> >
+> > There are some hacks in there that need to be cleaned up, but I thi=
+nk the
+> > general structure looks good.
 >=20
-> On Tue, Jun 26, 2012 at 04:02:17AM -0400, Christoph Hellwig wrote:
-> > On Tue, Jun 26, 2012 at 12:30:59PM +1000, Dave Chinner wrote:
-> > > You can't, simple as that. The maximum supported is 256k. As it is,
-> > > a default chunk size of 512k is probably harmful to most workloads -
-> > > large chunk sizes mean that just about every write will trigger a
-> > > RMW cycle in the RAID because it is pretty much impossible to issue
-> > > full stripe writes. Writeback doesn't do any alignment of IO (the
-> > > generic page cache writeback path is the problem here), so we will
-> > > lamost always be doing unaligned IO to the RAID, and there will be
-> > > little opportunity for sequential IOs to merge and form full stripe
-> > > writes (24 disks @ 512k each on RAID6 is a 11MB full stripe write).
-> > >=20
-> > > IOWs, every time you do a small isolated write, the MD RAID volume
-> > > will do a RMW cycle, reading 11MB and writing 12MB of data to disk.
-> > > Given that most workloads are not doing lots and lots of large
-> > > sequential writes this is, IMO, a pretty bad default given typical
-> > > RAID5/6 volume configurations we see....
-> >=20
-> > Not too long ago I benchmarked out mdraid stripe sizes, and at least
-> > for XFS 32kb was a clear winner, anything larger decreased performance.
-> >=20
-> > ext4 didn't get hit that badly with larger stripe sizes, probably
-> > because they still internally bump the writeback size like crazy, but
-> > they did not actually get faster with larger stripes either.
-> >=20
-> > This was streaming data heavy workloads, anything more metadata heavy
-> > probably will suffer from larger stripes even more.
-> >=20
-> > Ccing the linux-raid list if there actually is any reason for these
-> > defaults, something I wanted to ask for a long time but never really got
-> > back to.
-> >=20
-> > Also I'm pretty sure back then the md default was 256kb writes, not 512
-> > so it seems the defaults further increased.
+> Thought I consider this approach before, and schedule from the unplug
+> callback is an issue. Maybe I overlooked it at that time, the from_sc=
+hedule
+> check looks promising.
 
-"originally" the default chunksize was 64K.
-It was changed in late 2009 to 512K - this first appeared in mdadm 3.1.1
+I tried raid1/raid10 performance with this patch (with similar change f=
+or
+raid10, and add plug in the raid1/10 unplug function for dispatching), =
+the
+result is ok. The from_schedule check does the trick, there isn't race =
+I
+mentioned before. And I double checked the rate unplug is called from s=
+chedule,
+which is very very low.
 
-I don't recall the details of why it was changed but I'm fairly sure that
-it was based on measurements that I had made and measurements that others h=
-ad
-made.  I suspect the tests were largely run on ext3.
+Now the only problem is if extra bitmap flush could be an overhead. Our=
+ card
+hasn't such overhead, so not sure.
 
-I don't think there is anything close to a truly optimal chunk size.  What
-works best really depends on your hardware, your filesystem, and your work
-load.=20
-
-If 512K is always suboptimal for XFS then that is unfortunate but I don't
-think it is really possible to choose a default that everyone will be happy
-with.  Maybe we just need more documentation and warning emitted by various
-tools.  Maybe mkfs.xfs could augment the "stripe unit too large" message wi=
-th
-some text about choosing a smaller chunk size?
-
-NeilBrown
-
-
-
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> ---end quoted text---
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/1.FH_uAeKVUqRVkMkg080sS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT/FCiTnsnt1WYoG5AQI5CBAAqXcfHN5XP+qDTD87cqLwNOtJiH9ABmQM
-7qurfkRmWhNeVSK23sERBOOOAtIFF98QMwXS5AkCDeLBYnzHRO5bCcRYBr8x1Hi6
-2XHHJeAtBPvxhyy6ALtvx1mdFg6MxuOoisd6cerxLvJz5kA1DO8XfXmcXXcCAtxX
-DTeCLAXy+qwzisEFwSotYcY+qtRVqQDQF4mHEkVx2TS89+p93LTXRWBFFXSHe/jc
-QUiXt4suGADktABJ4Xz6TnYP0F9ljcHjOyXuhV3qAX4ytlkFXbwMdTB1vUagQYM0
-qAM2StLmXRdwb4+0mlC5iqulJE0qyUO7Q7Ua7+LngU8He/5skeVsAJhM32RfVUiM
-306af3ScMFJmHXPDcLyu1t8LuBRO56brkLjUAMPKwckBZ2aehjwI9cq4WhV1S2s5
-GHLOA7cpdls+Vlv4MB0IZBEz0CR0zVbY8G4LkR0Uqz8kBpm9e2gV2s01iAdogNEL
-8BneIu0SHzTBP2CG/yG/WkDY/NIo5Jdu9zkljTyrcJiHcW6lYB4/eVVlAildmCDR
-f0u1DtR28vGvuQxJxxOGU+Q+U601VGOOO/cty8AL7b1CeWzESdoponJVE9RXC/An
-7gI4HUKXJaS9gPdzFOrVBUfQfD3Sb2Y++nu/V1dYzMLR4F/x5jdkZQsW2mu47nDT
-oDnRk9ivoFI=
-=3UvL
------END PGP SIGNATURE-----
-
---Sig_/1.FH_uAeKVUqRVkMkg080sS--
+Thanks,
+Shaohua
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
