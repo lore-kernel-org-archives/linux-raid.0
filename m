@@ -1,50 +1,99 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Stacked array data recovery
-Date: Mon, 02 Jul 2012 15:27:38 -0500
-Message-ID: <4FF2043A.4060505@hardwarefreak.com>
-References: <js083q$kdu$1@dough.gmane.org> <js1vuk$9k8$2@dough.gmane.org>   <4FE5B213.5010503@hardwarefreak.com> <js70ce$fgv$1@dough.gmane.org>   <4FE72053.4040101@hardwarefreak.com> <4FE7E044.6040506@hardwarefreak.com>   <js9emr$761$1@dough.gmane.org> <4FE91619.4020709@hardwarefreak.com>  <1340699839.3241.29.camel@hoferr-desktop.hofer.rummelring>  <4FEA1A4F.9090605@hardwarefreak.com> <1341223955.3407.6.camel@hoferr-desktop.hofer.rummelring>
-Reply-To: stan@hardwarefreak.com
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [patch 8/8] raid5: create multiple threads to handle stripes
+Date: Mon, 2 Jul 2012 13:43:06 -0700
+Message-ID: <CAA9_cmdQwMEBscrR-yPdEhHKN0o=qn3_twVFL2bwXtMXVAxnLg@mail.gmail.com>
+References: <20120604080152.098975870@kernel.org>
+	<20120604080354.686050081@kernel.org>
+	<20120607113958.04b9d5b8@notabene.brown>
+	<20120607064551.GD779@kernel.org>
+	<CAA9_cmc0C3V9SG49UpxW+GAhWo+O8+cnyac6OxROkiTeqcrRcA@mail.gmail.com>
+	<20120621100955.GA255@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1341223955.3407.6.camel@hoferr-desktop.hofer.rummelring>
+In-Reply-To: <20120621100955.GA255@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ramon Hofer <ramonhofer@bluewin.ch>
-Cc: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, axboe@kernel.dk, shli@fusionio.com
 List-Id: linux-raid.ids
 
-On 7/2/2012 5:12 AM, Ramon Hofer wrote:
-> On Die, 2012-06-26 at 15:23 -0500, Stan Hoeppner wrote:
-> 
->> Regardless, unless the dd commands hung in some way, they should not
->> show up in top right now.  So it's probably safe to assume they completed.
+On Thu, Jun 21, 2012 at 3:09 AM, Shaohua Li <shli@kernel.org> wrote:
+> On Tue, Jun 12, 2012 at 09:08:17PM -0700, Dan Williams wrote:
+>> On Wed, Jun 6, 2012 at 11:45 PM, Shaohua Li <shli@kernel.org> wrote:
+>> > On Thu, Jun 07, 2012 at 11:39:58AM +1000, NeilBrown wrote:
+>> >> On Mon, 04 Jun 2012 16:02:00 +0800 Shaohua Li <shli@kernel.org> wrote:
+>> >>
+>> >> > Like raid 1/10, raid5 uses one thread to handle stripe. In a fast storage, the
+>> >> > thread becomes a bottleneck. raid5 can offload calculation like checksum to
+>> >> > async threads. And if storge is fast, scheduling async work and running async
+>> >> > work will introduce heavy lock contention of workqueue, which makes such
+>> >> > optimization useless. And calculation isn't the only bottleneck. For example,
+>> >> > in my test raid5 thread must handle > 450k requests per second. Just doing
+>> >> > dispatch and completion will make raid5 thread incapable. The only chance to
+>> >> > scale is using several threads to handle stripe.
+>> >> >
+>> >> > With this patch, user can create several extra threads to handle stripe. How
+>> >> > many threads are better depending on disk number, so the thread number can be
+>> >> > changed in userspace. By default, the thread number is 0, which means no extra
+>> >> > thread.
+>> >> >
+>> >> > In a 3-disk raid5 setup, 2 extra threads can provide 130% throughput
+>> >> > improvement (double stripe_cache_size) and the throughput is pretty close to
+>> >> > theory value. With >=4 disks, the improvement is even bigger, for example, can
+>> >> > improve 200% for 4-disk setup, but the throughput is far less than theory
+>> >> > value, which is caused by several factors like request queue lock contention,
+>> >> > cache issue, latency introduced by how a stripe is handled in different disks.
+>> >> > Those factors need further investigations.
+>> >> >
+>> >> > Signed-off-by: Shaohua Li <shli@fusionio.com>
+>> >>
+>> >> I think it is great that you have got RAID5 to the point where multiple
+>> >> threads improve performance.
+>> >> I really don't like the idea of having to configure that number of threads.
+>> >>
+>> >> It would be great if it would auto-configure.
+>> >> Maybe the main thread could fork aux threads when it notices a high load.
+>> >> e.g. if it has been servicing requests for more than 100ms without a break,
+>> >> and the number of threads is less than the number of CPUs, then it forks a new
+>> >> helper and resets the timer.
+>> >>
+>> >> If a thread has been idle for more than 30 minutes, it exits.
+>> >>
+>> >> Might that be reasonable?
+>> >
+>> > Yep, I bet this patch needs more discussion. auto-configure is preferred. Your
+>> > idea is worthy doing. However, the concern is if doing auto fork/kill thread,
+>> > user can't do numa binding, which is important for high speed storage. Maybe
+>> > have a reasonable default thread number, like one thread one disk? Need more
+>> > investigations, I'm open to any suggestion in this side.
 >>
->> So at this point you can try creating the RAID5 array again.  If the dd
->> command did what we wanted, /dev/sdk should have remapped the bad
->> sector, and you shouldn't get the error kicking that drive.  If you
->> still do, you may need to replace the drive.
-> 
-> I have successfully run dd for all the four drives.
-> 
-> But because I couldn't create the raid I ran smartctl again for all of
-> them. It seems that sdk has to be replaced. Here are the outputs:
+>> The last time I looked at this the btrfs thread pool looked like a
+>> good candidate:
+>>
+>>   http://marc.info/?l=linux-raid&m=126944260704907&w=2
+>>
+>> ...have not looked if Tejun has made this available as a generic workqueue mode.
+>
+> I tried to create a UNBOUND workqueue and set max active to the cpu number, so
+> each cpu will handle one work. In the work, the cpu will handle 8 stripes. The
+> throughput is relative ok, but CPU utilization is very high compared to just
+> create 3 or 4 threads like the patch does. There is heavy lock contention in
+> block queue_lock, since every cpu now dispatches request. There are other
+> issues like cache, raid5 device_lock has more contention too. It appears too
+> many threads to handle stripe isn't as good as expected.
 
-> sdk:
-> http://pastebin.com/raw.php?i=cgfq3202
+Yes, the unbounded workqueue is too many threads because it will keep
+creating threads as long as there is work.  That's the behavior you
+want for async_schedule() but not raid.  This was the reasoning for
+exploring the btrfs thread pool because it had a threshold parameter
+to push back on thread creation.  This then goes back to my other
+question about the workload that triggers the cpu bottleneck?
 
-ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
-...
-  5 Reallocated_Sector_Ct   0x0033   133   133   140    Pre-fail  Always   FAILING_NOW 1265
-  7 Seek_Error_Rate         0x002e   103   103   000    Old_age   Always       -       15797
-196 Reallocated_Event_Count 0x0032   142   142   000    Old_age   Always       -       58
-197 Current_Pending_Sector  0x0032   200   200   000    Old_age   Always       -       14
-198 Offline_Uncorrectable   0x0030   200   200   000    Old_age   Offline      -       15
-200 Multi_Zone_Error_Rate   0x0008   200   200   000    Old_age   Offline      -       15
+The other side of the coin is what to do about the "too fast" stripe
+processing problem.  Currently get_priority_stripe() operates on the
+principle that stripe processing naturally backs up the submission
+queue allowing more full-stripe writes to coalesce.  The better we get
+a stripe processing the worse we may do at coalescing.
 
-Yes, the drive is toast.  Above are the indicators.  IIRC, your previous smartctl run showed only a count of 3 for Current_Pending_Sector, but no other errors.  Zero'ing the drive with dd has uncovered the true severity of the drive's problems, as another 1000+ bad sectors were identified by the drive and remapped.
-
-So yes, the drive needs to be replaced.
-
--- 
-Stan
+--
+Dan
