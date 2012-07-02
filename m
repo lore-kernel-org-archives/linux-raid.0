@@ -1,125 +1,62 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch 08/10 v3] raid5: make_request use batch stripe release
-Date: Mon, 2 Jul 2012 15:07:12 +1000
-Message-ID: <20120702150712.3a870e49@notabene.brown>
-References: <20120625072447.268095276@kernel.org>
-	<20120625072702.921605418@kernel.org>
-	<20120702123112.795e1db3@notabene.brown>
-	<20120702025950.GA29770@kernel.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: mkfs.xfs states log stripe unit is too large
+Date: Mon, 2 Jul 2012 02:18:27 -0400
+Message-ID: <20120702061827.GB16671@infradead.org>
+References: <D3F781FA-CEB0-4896-9441-772A9E533354@2012.bluespice.org>
+ <20120623234445.GZ19223@dastard>
+ <4FE67970.2030008@sandeen.net>
+ <4FE710B7.5010704@hardwarefreak.com>
+ <d71834a062ffd666ab53a4695eb643e9@muaddib.hro.localnet>
+ <20120626023059.GC19223@dastard>
+ <20120626080217.GA30767@infradead.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/sRrJxs3bhdT+EzIdgxgf3/f"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120702025950.GA29770@kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120626080217.GA30767@infradead.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, dan.j.williams@intel.com, shli@fusionio.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ingo J?rgensmann <ij@2012.bluespice.org>, xfs@oss.sgi.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/sRrJxs3bhdT+EzIdgxgf3/f
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Ping to Neil / the raid list.
 
-On Mon, 2 Jul 2012 10:59:50 +0800 Shaohua Li <shli@kernel.org> wrote:
-
-
-> > From 04b7dd7d0ad4a21622cad7c10821f914a8d9ccd3 Mon Sep 17 00:00:00 2001
-> > From: NeilBrown <neilb@suse.de>
-> > Date: Mon, 2 Jul 2012 12:14:49 +1000
-> > Subject: [PATCH] md/plug: disable preempt when reported a plug is prese=
-nt.
-> >=20
-> > As 'schedule' will unplug a queue, a plug added by
-> > mddev_check_plugged is only valid until the next schedule().
-> > So call preempt_disable before installing the plug, and require the
-> > called to call preempt_enable once the value has been used.
-> >=20
-> > Signed-off-by: NeilBrown  <neilb@suse.de>
-> >=20
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index 1369c9d..63ea6d6 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -512,6 +512,10 @@ static void plugger_unplug(struct blk_plug_cb *cb)
-> > =20
-> >  /* Check that an unplug wakeup will come shortly.
-> >   * If not, wakeup the md thread immediately
-> > + * Note that the structure returned is only value until
-> > + * the next schedule(), so preemption is disabled when it
-> > + * is not NULL, and must be re-enabled after the value
-> > + * has been used.
-> >   */
-> >  struct md_plug_cb *mddev_check_plugged(struct mddev *mddev,
-> >  				       md_unplug_func_t unplug, size_t size)
-> > @@ -522,6 +526,7 @@ struct md_plug_cb *mddev_check_plugged(struct mddev=
- *mddev,
-> >  	if (!plug)
-> >  		return NULL;
-> > =20
-> > +	preempt_disable();
-> >  	list_for_each_entry(mdcb, &plug->cb_list, cb.list) {
-> >  		if (mdcb->cb.callback =3D=3D plugger_unplug &&
-> >  		    mdcb->mddev =3D=3D mddev) {
-> > @@ -533,6 +538,7 @@ struct md_plug_cb *mddev_check_plugged(struct mddev=
- *mddev,
-> >  			return mdcb;
-> >  		}
-> >  	}
-> > +	preempt_enable();
->=20
-> preempt doesn't do unplug, only yield(schedule) does, so I don't like thi=
-s,
-> just redoing mddev_check_plugged before checking the return value is fine=
- to
-> me.
-
-<digs through code...>
-
-Ahh, I see.  preempt calls _schedule(), not schedule(), and schedule() does
-the unplug before calling _schedule().
-So you are right -  I'll remove that extra patch.
-Thanks.
-
-
-
-> > -	if (do_sync || !bitmap || !plugged)
-> > +	if (do_sync ||
-> > +	    !mddev_check_plugged(mddev, NULL, 0))
-> >  		md_wakeup_thread(mddev->thread);
->=20
-> Do we really bother to recheck here? just a wakeup.
->
-
-This isn't a re-check.  This is the one-and-only check.
-In the current code each request gets queued for raid1d and the all get
-processed next time the thread wakes up.  So we would prefer to create the
-plug and do the wakeup later.  But if creating the plug fails, we do the
-wakeup immediately.
-
-Once we are queueing the requests in the plug, this will change.
-
-NeilBrown
-
---Sig_/sRrJxs3bhdT+EzIdgxgf3/f
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT/EsgDnsnt1WYoG5AQJHQxAAnVeYY7ZTSF7tO4OoKVqdQ7VJLO4brUWP
-A5FRT4ySmyrXf7oQLDcc8tZD8R7ye57uTs9AEE9LZdHRqdFqGXAyiog2niXA9kTS
-bZBuK+u4JIMc6WuOcjat+szoHdqSOpDXAPU0uHe7YFxeKnx2j7Xx0bdhpQpexvhr
-imRMB4jbuGGWLXhBWo9YNjXpV/YJ9+5VIkn0q2seAheVpCgfveKGP7mvEVQwMIud
-LBojgzD5QOdwMUJtbGcfx9954pSpn5GLTmFqxGcf7fAFknOOUvuzb6zsN9QN5z4H
-3qqScmDxloO7pC6jwtn92X3Vf/3Agr4+X4zvKv6fIPOIDZL9sv3+Iscy0ZVj/oHp
-sp4yzvQgebhGXyGmi1LofUfNY80We89rZiLcmcWiED3sWxSt/eLeF9ErdXToIbUb
-Zfv4KWvK/UCiJUoSO4Elbo+xAiCMu7elANW2KDK2ky+JeS0gSb/v8wXbJLIDeNaR
-0BDha+qZTNobZdfGafttn/ujsOdNvZtit6NmzagRCbFwT2kNahHWcYh4QoSj0LEa
-WOqMHbq63xdsKaCCtlUKYG9FvGzkAg8qwGsjE9w0nwUQND9H87+GoSYPoVLY/fdr
-1SvteAIEMbAZjkpGKAZqBkiQ14m6aMTDE2lgpgccWoqOsDo9ZAFPuq9ntov6SgoI
-y1E/La8v5b8=
-=SoS8
------END PGP SIGNATURE-----
-
---Sig_/sRrJxs3bhdT+EzIdgxgf3/f--
+On Tue, Jun 26, 2012 at 04:02:17AM -0400, Christoph Hellwig wrote:
+> On Tue, Jun 26, 2012 at 12:30:59PM +1000, Dave Chinner wrote:
+> > You can't, simple as that. The maximum supported is 256k. As it is,
+> > a default chunk size of 512k is probably harmful to most workloads -
+> > large chunk sizes mean that just about every write will trigger a
+> > RMW cycle in the RAID because it is pretty much impossible to issue
+> > full stripe writes. Writeback doesn't do any alignment of IO (the
+> > generic page cache writeback path is the problem here), so we will
+> > lamost always be doing unaligned IO to the RAID, and there will be
+> > little opportunity for sequential IOs to merge and form full stripe
+> > writes (24 disks @ 512k each on RAID6 is a 11MB full stripe write).
+> > 
+> > IOWs, every time you do a small isolated write, the MD RAID volume
+> > will do a RMW cycle, reading 11MB and writing 12MB of data to disk.
+> > Given that most workloads are not doing lots and lots of large
+> > sequential writes this is, IMO, a pretty bad default given typical
+> > RAID5/6 volume configurations we see....
+> 
+> Not too long ago I benchmarked out mdraid stripe sizes, and at least
+> for XFS 32kb was a clear winner, anything larger decreased performance.
+> 
+> ext4 didn't get hit that badly with larger stripe sizes, probably
+> because they still internally bump the writeback size like crazy, but
+> they did not actually get faster with larger stripes either.
+> 
+> This was streaming data heavy workloads, anything more metadata heavy
+> probably will suffer from larger stripes even more.
+> 
+> Ccing the linux-raid list if there actually is any reason for these
+> defaults, something I wanted to ask for a long time but never really got
+> back to.
+> 
+> Also I'm pretty sure back then the md default was 256kb writes, not 512
+> so it seems the defaults further increased.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---end quoted text---
