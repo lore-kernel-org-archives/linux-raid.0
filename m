@@ -1,45 +1,149 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [patch 03/10 v3] raid5: add a per-stripe lock
-Date: Mon, 2 Jul 2012 11:16:26 +0800
-Message-ID: <20120702031626.GE29770@kernel.org>
-References: <20120625072447.268095276@kernel.org>
- <20120625072613.620625574@kernel.org>
- <20120702105046.56cd47ec@notabene.brown>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: [patch 2/3 v3] raid1: read balance chooses idlest disk for SSD
+Date: Mon, 2 Jul 2012 00:57:56 -0300
+Message-ID: <CABYL=TpnJpUUNouAE3QKrPj-kewZ9jE4g8PVw3jFjmTDP7hRDw@mail.gmail.com>
+References: <20120702010840.197370335@kernel.org>
+	<20120702011031.890864816@kernel.org>
+	<CABYL=TpD7D0ec40fz6uo4LCPAKuxtkx5rD3JXfWTtuEYp3NLYQ@mail.gmail.com>
+	<20120702030245.GB29770@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120702105046.56cd47ec@notabene.brown>
+In-Reply-To: <20120702030245.GB29770@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, dan.j.williams@intel.com, shli@fusionio.com
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de, axboe@kernel.dk
 List-Id: linux-raid.ids
 
-On Mon, Jul 02, 2012 at 10:50:46AM +1000, NeilBrown wrote:
-> On Mon, 25 Jun 2012 15:24:50 +0800 Shaohua Li <shli@kernel.org> wrote:
-> 
-> > Add a per-stripe lock to protect stripe specific data, like dev->read,
-> > written, ... The purpose is to reduce lock contention of conf->device_lock.
-> > 
-> > Signed-off-by: Shaohua Li <shli@fusionio.com>
-> 
-> I had hoped to avoid having a per-stripe lock again, but it does look like it
-> is needed.
-> However I don't like the way you have split up these three patches - it makes
-> them a little hard to review.
-> 
-> I would like to see one patch which converts the bi_phys_segments access to
-> be atomic and also removes all the spin_lock calls that were just for
-> protecting that.
-> 
-> Then another patch which adds the new stripe_lock, clearly documenting
-> exactly what is protects (not just "like dev->read" but an explicit list)
-> and also removes any spin_lock of device_lock that is no longer needed.
-> 
-> Then I could see what is being added and what is being removed all in the one
-> patch and I can be sure that they balance.
+hummm well that=B4s true... exist a queue inside disk hardware that we
+can=B4t measure... but... if you want i can make tests to you :)
+i used a configuration a bit diferent some time ago, instead of a SSD
+and a harddisk, i used a disk with 7200rpm and a disk with 15000 the
+"time based" algorithm runs nice in this case, maybe could give just a
+little more 'performace' (maybe none), like i told the mean performace
+that i got was 1% (i made tests with different disks speed and
+ssd+disks, i had a ocz vortex2, a sata 7200rpm (500gb) and a sas
+15000rpm (142gb), some other guy here in kernel list tested too, but
+they didn=B4t confirmed if the performace was a mean performace or just
+a 'error' in measure
 
-reworked the patch 3-5 to two patches as you suggested, and sent to you. please check.
+when i done this i got some 'empirical' values to 'tune' the
+algorithm, i don=B4t remember all 'theory' but i done something like
+this:
 
-Thanks,
-Shaohua
+
+1)  (distance * time/distance unit)
+time/distance unit,
+    i don=B4t remember distance unit, i think it=B4s 1 block =3D  512by=
+tes
+right? well, just check the idea...
+    for disks:
+        total disk capacity in distance units / 1 revolution time
+        1 revolution time =3D 1/rpm for disk, for example
+              7200 rpm =3D> 120 hz =3D> 8.333ms =3D 8333us (near 10ms l=
+ike
+told in disk spec of random acess time)
+              15000 rpm =3D> 250hz =3D> 4ms =3D 4000us (near 5ms like t=
+old
+in disk spec)
+    for ssd : 0 seconds
+	7200 =3D> 500gb (1024*1024*1024/512) / 8333 =3D   1048576000blocks /
+8333us =3D 0.000'007'946'968'078 block/us
+	15000 =3D> 142gb (1024*1024*1024/512) / 4000us =3D 297795584blocks /
+4000us =3D 0.000'013'432'032'625 block/us
+	ssd =3D> infinite blocks/us
+		0.000007946 for 7200rpm,
+		0.000013432 for 15000rpm,
+		0 for ssd
+
+
+
+2)(blocks to read/write * time to read/write 1 block)
+ this part i put dd to work...
+  dd if=3D/dev/sda of=3D/dev/null (there was some flags to remove cache
+too but don=B4t remember now...)
+   and used iostat -d 1 -k to get mean read performace
+ i don=B4t remember the rights numbers but they was something near this=
+:
+    ssd - 230mb/s  =3D 230Mb(1024*1024)/512bytes =3D> 471040 blocks /
+second =3D  0.000'002'122 =3D> 2.122us / block
+    hd 7200 - 120mb/s =3D> 245760 blocks/second =3D> 0.000'004'069 =3D>
+4.069us / block
+    hd 15000 - 170mb/s =3D> 348160 blocks/second =3D> 0.000'002'872 =3D=
+>
+2.872us / block
+
+3) (non sequencial penalty time)
+here i used two dd to do this (some seconds between first and second dd=
+)
+and got the new mb/s values
+ssd get a bit down but not much 230 -> 200
+hd 7200 120mb -> 90
+hd 15000 170 -> 150
+
+with this loses i done a 'penalty' value
+(230-200)/230 =3D 13.043%
+(120-90)/120 =3D 25%
+(170-150)/170 =3D 11.76%
+
+i don=B4t remember if i used the penalty with distance=3D0, or if i use=
+d
+it like in today implementation that select the previous disk when
+reading the full md device
+
+=3D=3D=3D=3D=3D=3D
+with this numbers.... some algorithms expected selects...
+sda=3Dssd, sdb=3D15000rpm, sdc=3D7200rpm
+
+sda|sdb|sdc
+disk positions: 0 | 0 | 0
+read 100 block at position 20000...
+sda=3D> distance =3D 20000, extimate time =3D 20000*0 + 2.122*100 + 13.=
+043%
+		in other words...
+			(        0 + 212.2) * 1.13043 =3D 239.877246
+sdb=3D> distance =3D 20000, extimate time =3D 20000*0.000013432 + 2.872=
+*100
++ 11.76% =3D
+			(0.26864 + 287.2) * 1.1176 =3D 321.274952064
+sdc=3D> distance =3D 20000, extimate time =3D 20000*0.000007946 + 4.069=
+*100 + 25% =3D
+			(0.15892 + 406.9) * 1.25 =3D 508.82365
+	HERE WE SELECT sda (239.877)
+=09
+disk positions: 200 | 0 | 0
+read 100 blocks at position 0...
+sda=3D> distance =3D 200, extimate time =3D 200*0 + 2.122*100 + 13.043%
+			(        0 + 212.2) * 1.13043 =3D 239.877246
+sdb=3D> distance =3D 0, extimate time =3D 0*0.000013432 + 2.872*100 + 0=
+% =3D
+	(no penalty here since we are at the right place)
+			(        0 + 287.2) * 1 =3D 287.2
+sdc=3D> distance =3D 0, extimate time =3D 0*0.000007946 + 4.069*100 + 0=
+% =3D
+			(        0 + 406.9) * 1 =3D 406.9
+	sda...
+	check that i will always select sda... since it=B4s fast for distance
+(0seconds) and have the highets transfer rate
+=09
+that=B4s here my algorithm didn=B4t worked fine... (i don=B4t know anyt=
+hing
+about past and queue just the current read)
+
+but now... with someone that know the kernel code... we have this
+information of pendings requests =3DD
+
+i think we can go inside queue and calculate the total estimate time =3D=
+), or not?
+	for each pending request we should calculate this times... and sum
+the total time to select the 'best' disk
+	here i didn=B4t coded since i don=B4t know how to get information from
+queue in kernel =3D( and my hobby ended =3D'(
+
+thanks to read....
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
