@@ -1,182 +1,77 @@
-From: Christian Balzer <chibi@gol.com>
-Subject: Re: Fatal crash/hang in scsi_lib after RAID disk failure
-Date: Tue, 3 Jul 2012 15:10:38 +0900
-Message-ID: <20120703151038.428af28f@batzmaru.gol.ad.jp>
-References: <20120629093552.1651d3c2@batzmaru.gol.ad.jp>
-	<20120703155045.570a2bee@notabene.brown>
+From: majianpeng <majianpeng@gmail.com>
+Subject: [RFC PATCH] raid5: Add R5_ReadNoMerge flag which prevent bio from merging at block layer
+Date: Tue, 3 Jul 2012 14:23:41 +0800
+Message-ID: <201207031423377650880@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120703155045.570a2bee@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>, axboe <axboe@kernel.dk>
 List-Id: linux-raid.ids
 
-On Tue, 3 Jul 2012 15:50:45 +1000 NeilBrown wrote:
+QmVjYXVzZSBiaW9zIHdpbGwgbWVyZ2UgYXQgYmxvY2stbGF5ZXIsc28gYmlvcy1lcnJvciBtYXkg
+Y2F1c2VkIGJ5IG90aGVyDQpiaW8gd2hpY2ggYmUgbWVyZ2VkIGludG8gdG8gdGhlIHNhbWUgcmVx
+dWVzdC4NClVzaW5nIHRoaXMgZmxhZyxpdCB3aWxsIGZpbmQgZXhhY3RseSBlcnJvci1zZWN0b3Ig
+YW5kIG5vdCBkbyByZWR1bmRhbnQNCm9wZXJhdGlvbiBsaWtlIHJlLXdyaXRlIGFuZCByZS1yZWFk
+Lg0KDQpTaWduZWQtb2ZmLWJ5OiBtYWppYW5wZW5nIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4NCi0t
+LQ0KIGJsb2NrL2Jsay1jb3JlLmMgICB8ICAgIDggKysrKysrKysNCiBkcml2ZXJzL21kL3JhaWQ1
+LmMgfCAgIDE2ICsrKysrKysrKysrKystLS0NCiBkcml2ZXJzL21kL3JhaWQ1LmggfCAgICAxICsN
+CiAzIGZpbGVzIGNoYW5nZWQsIDIyIGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pDQoNCmRp
+ZmYgLS1naXQgYS9ibG9jay9ibGstY29yZS5jIGIvYmxvY2svYmxrLWNvcmUuYw0KaW5kZXggM2M5
+MjNhNy4uZWUwNGJmYyAxMDA2NDQNCi0tLSBhL2Jsb2NrL2Jsay1jb3JlLmMNCisrKyBiL2Jsb2Nr
+L2Jsay1jb3JlLmMNCkBAIC0xNDAxLDYgKzE0MDEsOSBAQCB2b2lkIGluaXRfcmVxdWVzdF9mcm9t
+X2JpbyhzdHJ1Y3QgcmVxdWVzdCAqcmVxLCBzdHJ1Y3QgYmlvICpiaW8pDQogCWlmIChiaW8tPmJp
+X3J3ICYgUkVRX1JBSEVBRCkNCiAJCXJlcS0+Y21kX2ZsYWdzIHw9IFJFUV9GQUlMRkFTVF9NQVNL
+Ow0KIA0KKwlpZiAodW5saWtlbHkoYmlvLT5iaV9ydyAmIFJFUV9OT01FUkdFKSkNCisJCXJlcS0+
+Y21kX2ZsYWdzIHw9IFJFUV9OT01FUkdFOw0KKw0KIAlyZXEtPmVycm9ycyA9IDA7DQogCXJlcS0+
+X19zZWN0b3IgPSBiaW8tPmJpX3NlY3RvcjsNCiAJcmVxLT5pb3ByaW8gPSBiaW9fcHJpbyhiaW8p
+Ow0KQEAgLTE0MjgsNiArMTQzMSwxMSBAQCB2b2lkIGJsa19xdWV1ZV9iaW8oc3RydWN0IHJlcXVl
+c3RfcXVldWUgKnEsIHN0cnVjdCBiaW8gKmJpbykNCiAJCWdvdG8gZ2V0X3JxOw0KIAl9DQogDQor
+CWlmICh1bmxpa2VseShiaW8tPmJpX3J3ICYgUkVRX05PTUVSR0UpKSB7DQorCQlzcGluX2xvY2tf
+aXJxKHEtPnF1ZXVlX2xvY2spOw0KKwkJd2hlcmUgPSBFTEVWQVRPUl9JTlNFUlRfQkFDSzsNCisJ
+CWdvdG8gZ2V0X3JxOw0KKwl9DQogCS8qDQogCSAqIENoZWNrIGlmIHdlIGNhbiBtZXJnZSB3aXRo
+IHRoZSBwbHVnZ2VkIGxpc3QgYmVmb3JlIGdyYWJiaW5nDQogCSAqIGFueSBsb2Nrcy4NCmRpZmYg
+LS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LmMgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCmluZGV4IGQy
+Njc2NzIuLjA0Zjc4ZDIgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL21kL3JhaWQ1LmMNCisrKyBiL2Ry
+aXZlcnMvbWQvcmFpZDUuYw0KQEAgLTYzMiw2ICs2MzIsOSBAQCBzdGF0aWMgdm9pZCBvcHNfcnVu
+X2lvKHN0cnVjdCBzdHJpcGVfaGVhZCAqc2gsIHN0cnVjdCBzdHJpcGVfaGVhZF9zdGF0ZSAqcykN
+CiAJCQllbHNlDQogCQkJCWJpLT5iaV9zZWN0b3IgPSAoc2gtPnNlY3Rvcg0KIAkJCQkJCSArIHJk
+ZXYtPmRhdGFfb2Zmc2V0KTsNCisJCQlpZiAodGVzdF9iaXQoUjVfUmVhZE5vTWVyZ2UsICZzaC0+
+ZGV2W2ldLmZsYWdzKSkNCisJCQkJYmktPmJpX3J3IHw9IFJFUV9OT01FUkdFOw0KKw0KIAkJCWJp
+LT5iaV9mbGFncyA9IDEgPDwgQklPX1VQVE9EQVRFOw0KIAkJCWJpLT5iaV9pZHggPSAwOw0KIAkJ
+CWJpLT5iaV9pb192ZWNbMF0uYnZfbGVuID0gU1RSSVBFX1NJWkU7DQpAQCAtMTczMSw3ICsxNzM0
+LDkgQEAgc3RhdGljIHZvaWQgcmFpZDVfZW5kX3JlYWRfcmVxdWVzdChzdHJ1Y3QgYmlvICogYmks
+IGludCBlcnJvcikNCiAJCQlhdG9taWNfYWRkKFNUUklQRV9TRUNUT1JTLCAmcmRldi0+Y29ycmVj
+dGVkX2Vycm9ycyk7DQogCQkJY2xlYXJfYml0KFI1X1JlYWRFcnJvciwgJnNoLT5kZXZbaV0uZmxh
+Z3MpOw0KIAkJCWNsZWFyX2JpdChSNV9SZVdyaXRlLCAmc2gtPmRldltpXS5mbGFncyk7DQotCQl9
+DQorCQl9IGVsc2UgaWYgKHRlc3RfYml0KFI1X1JlYWROb01lcmdlLCAmc2gtPmRldltpXS5mbGFn
+cykpDQorCQkJY2xlYXJfYml0KFI1X1JlYWROb01lcmdlLCAmc2gtPmRldltpXS5mbGFncyk7DQor
+DQogCQlpZiAoYXRvbWljX3JlYWQoJnJkZXYtPnJlYWRfZXJyb3JzKSkNCiAJCQlhdG9taWNfc2V0
+KCZyZGV2LT5yZWFkX2Vycm9ycywgMCk7DQogCX0gZWxzZSB7DQpAQCAtMTc3Myw3ICsxNzc4LDEx
+IEBAIHN0YXRpYyB2b2lkIHJhaWQ1X2VuZF9yZWFkX3JlcXVlc3Qoc3RydWN0IGJpbyAqIGJpLCBp
+bnQgZXJyb3IpDQogCQllbHNlDQogCQkJcmV0cnkgPSAxOw0KIAkJaWYgKHJldHJ5KQ0KLQkJCXNl
+dF9iaXQoUjVfUmVhZEVycm9yLCAmc2gtPmRldltpXS5mbGFncyk7DQorCQkJaWYgKHRlc3RfYml0
+KFI1X1JlYWROb01lcmdlLCAmc2gtPmRldltpXS5mbGFncykpIHsNCisJCQkJc2V0X2JpdChSNV9S
+ZWFkRXJyb3IsICZzaC0+ZGV2W2ldLmZsYWdzKTsNCisJCQkJY2xlYXJfYml0KFI1X1JlYWROb01l
+cmdlLCAmc2gtPmRldltpXS5mbGFncyk7DQorCQkJfSBlbHNlDQorCQkJCXNldF9iaXQoUjVfUmVh
+ZE5vTWVyZ2UsICZzaC0+ZGV2W2ldLmZsYWdzKTsNCiAJCWVsc2Ugew0KIAkJCWNsZWFyX2JpdChS
+NV9SZWFkRXJyb3IsICZzaC0+ZGV2W2ldLmZsYWdzKTsNCiAJCQljbGVhcl9iaXQoUjVfUmVXcml0
+ZSwgJnNoLT5kZXZbaV0uZmxhZ3MpOw0KQEAgLTQ0ODEsNyArNDQ5MCw4IEBAIHN0YXRpYyBpbnQg
+IHJldHJ5X2FsaWduZWRfcmVhZChzdHJ1Y3QgcjVjb25mICpjb25mLCBzdHJ1Y3QgYmlvICpyYWlk
+X2JpbykNCiAJCQljb25mLT5yZXRyeV9yZWFkX2FsaWduZWQgPSByYWlkX2JpbzsNCiAJCQlyZXR1
+cm4gaGFuZGxlZDsNCiAJCX0NCi0NCisJCWlmIChsaWtlbHkocmFpZF9iaW8tPmJpX3NpemUgPj4g
+OSkgPiBTVFJJUEVfU0VDVE9SUykNCisJCQlzZXRfYml0KFI1X1JlYWROb01lcmdlLCAmc2gtPmRl
+dltkZF9pZHhdLmZsYWdzKTsNCiAJCWhhbmRsZV9zdHJpcGUoc2gpOw0KIAkJcmVsZWFzZV9zdHJp
+cGUoc2gpOw0KIAkJaGFuZGxlZCsrOw0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuaCBi
+L2RyaXZlcnMvbWQvcmFpZDUuaA0KaW5kZXggMjE2NDAyMS4uNjc2N2QwNyAxMDA2NDQNCi0tLSBh
+L2RyaXZlcnMvbWQvcmFpZDUuaA0KKysrIGIvZHJpdmVycy9tZC9yYWlkNS5oDQpAQCAtMjczLDYg
+KzI3Myw3IEBAIGVudW0gcjVkZXZfZmxhZ3Mgew0KIAlSNV9XYW50d3JpdGUsDQogCVI1X092ZXJs
+YXAsCS8qIFRoZXJlIGlzIGEgcGVuZGluZyBvdmVybGFwcGluZyByZXF1ZXN0DQogCQkJICogb24g
+dGhpcyBibG9jayAqLw0KKwlSNV9SZWFkTm9NZXJnZSwgLyogcHJldmVudCBiaW8gZnJvbSBtZXJn
+aW5nIGluIGJsb2NrLWxheWVyICovDQogCVI1X1JlYWRFcnJvciwJLyogc2VlbiBhIHJlYWQgZXJy
+b3IgaGVyZSByZWNlbnRseSAqLw0KIAlSNV9SZVdyaXRlLAkvKiBoYXZlIHRyaWVkIHRvIG92ZXIt
+d3JpdGUgdGhlIHJlYWRlcnJvciAqLw0KIA0KLS0gDQoxLjcuNS40DQo=
 
-> On Fri, 29 Jun 2012 09:35:52 +0900 Christian Balzer <chibi@gol.com>
-> wrote:
-> 
-> > 
-> > Hello (Neil),
-> > 
-> > This may or may not be related to the same main error I found a
-> > reference to on the ML archives from November 2011 
-> > (kernel BUG at drivers/scsi/scsi_lib.c:1153).
-> > 
-> > Again, this is a 3.2.20 kernel, now with the Raid10 recovery bug patch,
-> > but I don't see how this could be related.
-> > 
-> > The full initial dump, as far as it was logged is here:
-> > http://pastebin.com/wFX5yew2
-> > 
-> > But the juicy bits are these:
-> > ---
-> > Jun 29 05:06:42 borg03b kernel: [231632.877579] sd 8:0:5:0: [sdj]
-> > Unhandled sense code Jun 29 05:06:42 borg03b kernel: [231632.877583]
-> > sd 8:0:5:0: [sdj]  Result: hostbyte=invalid driverbyte=DRIVER_SENSE
-> > Jun 29 05:06:42 borg03b kernel: [231632.877586] sd 8:0:5:0: [sdj]
-> > Sense Key : Medium Error [current] Jun 29 05:06:42 borg03b kernel:
-> > [231632.877590] Info fld=0x904ff8b8 Jun 29 05:06:42 borg03b kernel:
-> > [231632.877591] sd 8:0:5:0: [sdj]  Add. Sense: Unrecovered read error
-> > Jun 29 05:06:42 borg03b kernel: [231632.877595] sd 8:0:5:0: [sdj] CDB:
-> > Read(10): 28 00 90 4f f8 3f 00 00 f8 00 Jun 29 05:06:42 borg03b
-> > kernel: [231632.877602] end_request: critical target error, dev sdj,
-> > sector 2421159999 Jun 29 05:06:42 borg03b kernel: [231632.881963]
-> > md/raid10:md4: sdj1: rescheduling sector 6052895744 Jun 29 05:06:46
-> > borg03b kernel: [231636.380147] sd 8:0:5:0: [sdj] Unhandled sense code
-> > Jun 29 05:06:46 borg03b kernel: [231636.380150] sd 8:0:5:0: [sdj]
-> > Result: hostbyte=invalid driverbyte=DRIVER_SENSE Jun 29 05:06:46
-> > borg03b kernel: [231636.380153] sd 8:0:5:0: [sdj]  Sense Key : Medium
-> > Error [current] Jun 29 05:06:46 borg03b kernel: [231636.380157] Info
-> > fld=0x904ff8b8 Jun 29 05:06:46 borg03b kernel: [231636.380159] sd
-> > 8:0:5:0: [sdj]  Add. Sense: Unrecovered read error Jun 29 05:06:46
-> > borg03b kernel: [231636.380162] sd 8:0:5:0: [sdj] CDB: Read(10): 28 00
-> > 90 4f f8 b7 00 00 08 00 Jun 29 05:06:46 borg03b kernel:
-> > [231636.380168] end_request: critical target error, dev sdj, sector
-> > 2421160119 Jun 29 05:06:46 borg03b kernel: [231636.401781]
-> > ------------[ cut here ]------------ Jun 29 05:06:46 borg03b kernel:
-> > [231636.405694] kernel BUG at drivers/scsi/scsi_lib.c:1153! Jun 29
-> > 05:06:46 borg03b kernel: [231636.405694] invalid opcode: 0000 [#1] SMP
-> > ---
-> > 
-> > So a drive died, which shouldn't be a big deal and the kernel decided
-> > to jump off the proverbial bridge.
-> > 
-> > And kept doing that upon reboots:
-> > ---
-> > Jun 29 06:44:38 borg03b kernel: [   52.052257] end_request: critical
-> > target error, dev sdj, sector 2421149759 Jun 29 06:44:38 borg03b
-> > kernel: [   52.054654] md/raid10:md4: sdj1: rescheduling sector
-> > 6052870144 Jun 29 06:44:38 borg03b kernel: [   52.057104]
-> > md/raid10:md4: sdj1: rescheduling sector 6052870392 Jun 29 06:44:38
-> > borg03b kernel: [   52.059521] md/raid10:md4: sdj1: rescheduling
-> > sector 6052870400 Jun 29 06:44:38 borg03b kernel: [   52.061878]
-> > md/raid10:md4: sdj1: rescheduling sector 6052870648 Jun 29 06:44:38
-> > borg03b kernel: [   52.064255] md/raid10:md4: sdj1: rescheduling
-> > sector 6052870656 Jun 29 06:44:38 borg03b kernel: [   52.066562]
-> > md/raid10:md4: sdj1: rescheduling sector 6052870904 Jun 29 06:44:38
-> > borg03b kernel: [   52.068872] md/raid10:md4: sdj1: rescheduling
-> > sector 6052870912 Jun 29 06:44:38 borg03b kernel: [   52.071141]
-> > md/raid10:md4: sdj1: rescheduling sector 6052871160 Jun 29 06:44:39
-> > borg03b kernel: [   52.250525] md/raid10:md4: sdj1: redirectingsector
-> > 6052865024 to another mirror Jun 29 06:44:39 borg03b kernel:
-> > [   52.276817] md/raid10:md4: sdj1: redirectingsector 6052865272 to
-> > another mirror Jun 29 06:44:42 borg03b kernel: [   55.325297] sd
-> > 8:0:5:0: [sdj] Unhandled sense code Jun 29 06:44:42 borg03b kernel:
-> > [   55.325301] sd 8:0:5:0: [sdj]  Result: hostbyte=invalid
-> > driverbyte=DRIVER_SENSE Jun 29 06:44:42 borg03b kernel: [   55.325304]
-> > sd 8:0:5:0: [sdj]  Sense Key : Medium Error [current] Jun 29 06:44:42
-> > borg03b kernel: [   55.325308] Info fld=0x904fc9b4 Jun 29 06:44:42
-> > borg03b kernel: [   55.325310] sd 8:0:5:0: [sdj]  Add. Sense:
-> > Unrecovered read error Jun 29 06:44:42 borg03b kernel: [   55.325313]
-> > sd 8:0:5:0: [sdj] CDB: Read(10): 28 00 90 4f c9 af 00 00 08 00 Jun 29
-> > 06:44:42 borg03b kernel: [   55.325320] end_request: critical target
-> > error, dev sdj, sector 2421148079 Jun 29 06:44:42 borg03b kernel:
-> > [   55.343766] ------------[ cut here ]------------ Jun 29 06:44:42
-> > borg03b kernel: [   55.346054] kernel BUG at
-> > drivers/scsi/scsi_lib.c:1153! --- Which resulted a bit later in: ---
-> > Jun 29 06:45:05 borg03b kernel: [   57.051653] ------------[ cut
-> > here ]------------ Jun 29 06:45:05 borg03b kernel: [   57.051653]
-> > WARNING: at kernel/watchdog.c:241
-> > watchdog_overflow_callback+0x96/0xa1() Jun 29 06:45:05 borg03b kernel:
-> > [   57.051653] Hardware name: H8DM3-2 Jun 29 06:45:05 borg03b kernel:
-> > [   57.051653] Watchdog detected hard LOCKUP on cpu 7 ---
-> > 
-> > Not sure if there is a real HW problem (aside from the failing drive)
-> > and kettle calling the pot black, but I managed to recover things by
-> > booting into single-user mode and removing that failing drive before
-> > letting the kernel proceed with booting.
-> > 
-> > This is pretty bad [TM], any ideas?
-> > If you need more information, just let me know.
-> 
-> That took *way* to long to find given how simple the fix is.
-
-Well, given how long it takes with some OSS projects, I'd say 4 days is
-pretty good. ^o^
-
-> I spent ages staring at the code, as about to reply and so "no idea"
-> when I thought I should test it myself.  Test failed immediately.
-
-Could you elaborate a bit? 
-As in, was this something introduced only very recently, since I had
-dozens of disks fail before w/o any such pyrotechnics. 
-Or were there some special circumstances that triggered it? 
-(But looking at the patch, I guess it should have been pretty universal)
-
-> Then I spent way too look adding tracing into the wrong places.  But I
-> have it now!
-> 
-> Thanks for the report.  Following fix will go upstream shortly.
-> (r10_sync_page_io takes sectors, not bytes).
-> 
-Great to know, I shall keep my eyes on the kernel ChangeLogs and update
-as soon as I can. Might just go and patch what I have right now, though...
-
-Thanks for your efforts!
-
-Christian
-
-> Thanks,
-> NeilBrown
-> 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index bcf6ea8..ae73e29 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -2310,7 +2310,7 @@ static void fix_read_error(struct r10conf *conf,
-> struct mddev *mddev, struct r10 if (r10_sync_page_io(rdev,
->  					     r10_bio->devs[sl].addr +
->  					     sect,
-> -					     s<<9, conf->tmppage, WRITE)
-> +					     s, conf->tmppage, WRITE)
->  			    == 0) {
->  				/* Well, this device is dead */
->  				printk(KERN_NOTICE
-> @@ -2349,7 +2349,7 @@ static void fix_read_error(struct r10conf *conf,
-> struct mddev *mddev, struct r10 switch (r10_sync_page_io(rdev,
->  					     r10_bio->devs[sl].addr +
->  					     sect,
-> -					     s<<9, conf->tmppage,
-> +					     s, conf->tmppage,
->  						 READ)) {
->  			case 0:
->  				/* Well, this device is dead */
-> @@ -2512,7 +2512,7 @@ read_more:
->  	slot = r10_bio->read_slot;
->  	printk_ratelimited(
->  		KERN_ERR
-> -		"md/raid10:%s: %s: redirecting"
-> +		"md/raid10:%s: %s: redirecting "
->  		"sector %llu to another mirror\n",
->  		mdname(mddev),
->  		bdevname(rdev->bdev, b),
-
-
--- 
-Christian Balzer        Network/Systems Engineer                
-chibi@gol.com   	Global OnLine Japan/Fusion Communications
-http://www.gol.com/
