@@ -1,86 +1,73 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: tests/03r5assemV1 issues
-Date: Tue, 3 Jul 2012 11:44:59 +1000
-Message-ID: <20120703114459.29c21b8f@notabene.brown>
-References: <wrfjtxxqcn38.fsf@redhat.com>
+Subject: Re: MD Raid10 recovery results in "attempt to access beyond end of
+ device"
+Date: Tue, 3 Jul 2012 11:46:38 +1000
+Message-ID: <20120703114638.4d8d0af2@notabene.brown>
+References: <20120622160632.7dfbbb9d@batzmaru.gol.ad.jp>
+	<20120622180748.5f78339c@notabene.brown>
+	<20120622174257.03a17e81@batzmaru.gol.ad.jp>
+	<20120625140754.44536553@notabene.brown>
+	<20120625150651.26a457bb@batzmaru.gol.ad.jp>
+	<20120626234845.4d26bd8e@batzmaru.gol.ad.jp>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/QsyFaZhqN4p7Pt.vhCWAcN2"; protocol="application/pgp-signature"
+ boundary="Sig_/szcqzQlYIjm+5EZ.6UYq1GU"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjtxxqcn38.fsf@redhat.com>
+In-Reply-To: <20120626234845.4d26bd8e@batzmaru.gol.ad.jp>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Christian Balzer <chibi@gol.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/QsyFaZhqN4p7Pt.vhCWAcN2
+--Sig_/szcqzQlYIjm+5EZ.6UYq1GU
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 02 Jul 2012 15:24:43 +0200 Jes Sorensen <Jes.Sorensen@redhat.com>
-wrote:
+On Tue, 26 Jun 2012 23:48:45 +0900 Christian Balzer <chibi@gol.com> wrote:
 
-> Hi Neil,
 >=20
-> I am trying to get the test suite stable on RHEL, but I see a lot of
-> failures in 03r5assemV1, in particular between these two cases:
->=20
-> mdadm -A $md1 -u $uuid $devlist
-> check state U_U
-> eval $tst
->=20
-> mdadm -A $md1 --name=3Done $devlist
-> check state U_U
-> check spares 1
-> eval $tst
->=20
-> I have tested it with the latest upstream kernel as well and see the
-> same problems. I suspect it is simply the box that is too fast, ending
-> up with the raid check completing inbetween the two test cases?
->=20
-> Are you seeing the same thing there? I tried playing with the max speed
-> variable but it doesn't really seem to make any difference.
->=20
-> Any ideas for what we can be done to make this case more resilient to
-> false positives? I guess one option would be to re-create the array
-> inbetween each test?
->=20
-> Cheers,
-> Jes
 
-Maybe it really is a bug?
-The test harness set the resync speed to be very slow.  A fast box will get
-through the test more quickly and be more likely to see the array still
-syncing.
+> The patch worked fine:
+> ---
+> [  105.872117] md: recovery of RAID array md3
+> [28981.157157] md: md3: recovery done.
+> ---
+>=20
+> Thanks a bunch and I'd suggest to include this patch in any and all
+> feasible backports and future kernels of course.
+>=20
+> Regards,
+>=20
+> Christian
+>=20
 
-I'll try to make time to look more closely.
-But I wouldn't discount the possibility that the second "mdadm -A" is
-short-circuiting the recovery somehow.
+Thanks for the confirmation.  I've added your "tested-by" and will forward =
+to
+Linus and -stable later today.
 
-thanks,
+Thanks,
 NeilBrown
 
-
---Sig_/QsyFaZhqN4p7Pt.vhCWAcN2
+--Sig_/szcqzQlYIjm+5EZ.6UYq1GU
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT/JOmznsnt1WYoG5AQJmAw//TLYH2dmKl5TiUEeqHkYYPfU5+xH508pZ
-EOLw9NXkKYUFw4zWhyaaDopPnsxqD/3XLfQMf4MsvVyrEBT0SJSIIZ1/uXNdz7v3
-LF+VZDsSHk80rh3bDTVQ2O6ZV8nY5yRYxoebkJKZZPMOISCYifOVZ827LeDW2OTh
-APjcA3kKfB8+1pa/Psmhk7ei/n0wNZ9B3XjEOPryK9SGzvBTuOpsa6z74Br5Wlxx
-fr1YXLsg9fBHgrHAxZh37FBcQWdDz9zUz4EATp1UoR0aPgEVA1qNVlGKlBHXaHld
-qUBH+MlyHWKvdQI4mAMPNNemfxCG/U7I5mZBkf7sBdCxGz391iZ0oav6xVIQeLGd
-WjyoCjnZSPQezW6fQ5dvrIniduNsPLqPN4/7q/zyrRgNFWJo6KV2vJeiYltl/CzK
-dyws4PrVWXhm/hE1ZbG21yvsAONraeSc3kCy4FUhwJ8kusGp6PLywLuKhBgHMwJG
-Gd7SlTF3Z62QXt9ibyRE7fDKSdIlm4RlC4CFV8i5+4TniK9Y1h4z/NZOVAKblLWX
-GzQIVlcvIV9S6JN7ZDjhmPjCAAYZpjxTEdWGri5O8e44gNMuuWRtzVwu36np2odO
-ieRiZ7XF1GLL2EzgTfk9TllvU0CDK9+QyWQn5/zRFrsFXqb/AChoc9O8itg91geG
-0TscfhWQq4c=
-=sPMq
+iQIVAwUBT/JO/jnsnt1WYoG5AQLARA//XP2OcdA5gEilqgqe8bnS24mACfL5wnIJ
+VQqa3eB8SM9SXLj5rSxYlMYEQOIMuepnrM0KVczLUUYLELXOgX4mi43/PRIUn/be
+U8hPJn1OH9Gm1PjwcYCnEdW4dQdI44MLFmne81G5KxkRSwZFfBWibs0Bwileg+Zm
+IeMblwSP9p9WBKp4ipyTwkSAlDpHbL/Ekjj1K0x8Tv6Z14tZ+rS8UA/MvXGBN2E9
+qEiVABdCwxeqNE9fhr+i6sSCKZdjN6E0421S1UVmuJZQW1wYUDy6CtK7Eg4BOmUP
+XFR2mXrBF03bDNhSucgMwjdSAobupSwxlXHqDw4V7DIC+2ehSp3rSW+t+QwX7fn9
+fNsBAKGPq1diVlPB5YPxViXIS6gmW8vceEwH+8st00HJQzFArEjNr/8q0aaKSZUi
+egdl2LHs9NRhcCZwsN5EtuzDCTFg2wY7bbILodWlPjbww1b7g/piSXiimenAKGDJ
+rirzR5Ki9LDNQ3CL4J2mZVWnCNsJq6JgTcS9YdSMtPb7neLjHnP+PE95BjtiTgOR
+He1RTH1JSX09+z36Q/s9J2qeJijAtDlCrBkFC9db4oBOTEZiqj2wf8IfNEOXIwob
+lPz8k/R6fIsQ3RRA+xAQxphOlcitw8fFW/crH96S+UC4j84WyzG6SdxG9L9uJ0/s
+xMRms3GVA7c=
+=14eJ
 -----END PGP SIGNATURE-----
 
---Sig_/QsyFaZhqN4p7Pt.vhCWAcN2--
+--Sig_/szcqzQlYIjm+5EZ.6UYq1GU--
