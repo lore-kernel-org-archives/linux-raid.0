@@ -1,56 +1,62 @@
-From: Chris Mason <chris.mason@fusionio.com>
-Subject: Re: raid10 make_request failure during iozone benchmark upon btrfs
-Date: Tue, 3 Jul 2012 11:08:41 -0400
-Message-ID: <20120703150841.GE14928@shiny>
-References: <4FF108A8.6090606@gmail.com>
- <20120702125227.179c4343@notabene.brown>
- <4FF10E71.2090501@gmail.com>
- <20120703113943.3e4c43ad@notabene.brown>
- <4FF2554D.2040300@gmail.com>
- <20120703124727.6e2232d1@notabene.brown>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: tests/03r5assemV1 issues
+Date: Tue, 03 Jul 2012 18:07:02 +0200
+Message-ID: <wrfjpq8c96c9.fsf@redhat.com>
+References: <wrfjtxxqcn38.fsf@redhat.com>
+	<20120703114459.29c21b8f@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120703124727.6e2232d1@notabene.brown>
+In-Reply-To: <20120703114459.29c21b8f@notabene.brown> (NeilBrown's message of
+	"Tue, 3 Jul 2012 11:44:59 +1000")
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Kerin Millar <kerframil@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jul 02, 2012 at 08:47:27PM -0600, NeilBrown wrote:
-> Thanks.  Looks like it is a btrfs bug - so a big "hello" to linux-btrfs :-)
-> 
-> The symptom is that iozone on btrfs on md/raid10 can result in
-> 
-> [  919.893454] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653500160 256
-> [  919.893465] btrfs: bdev /dev/mapper/vg0-test errs: wr 1, rd 0, flush 0, corrupt 0, gen 0
-> 
-> 
-> i.e. RAID10 has a 256K chunk size, but is getting 256K requests which overlap
-> two chunks - the last half of one chunk and the first half of the next.
-> That isn't allowed and raid10_mergeable_bvec, called by bio_add_page, should
-> prevent it.
-> 
-> However btrfs_map_bio() sets ->bi_sector to a new value without verifying
-> that the resulting bio is still acceptable - which it isn't.
-> 
-> The core problem is that you cannot build a bio for one location, then use it
-> freely at another location.
-> md/raid1 handles this by checking each addition to a bio against all the
-> possible location that it might read/write it.  Maybe btrfs could do the
-> same.
-> Alternately we could work with Kent Overstreet (of bcache fame) to remove the
-> restriction that the fs must make the bio compatible with the device -
-> instead requiring the device to split bios when needed, and making it easy to
-> do that (currently it is not easy).
-> And there are probably other alternative.
+NeilBrown <neilb@suse.de> writes:
+> On Mon, 02 Jul 2012 15:24:43 +0200 Jes Sorensen <Jes.Sorensen@redhat.com>
+> wrote:
+>
+>> Hi Neil,
+>> 
+>> I am trying to get the test suite stable on RHEL, but I see a lot of
+>> failures in 03r5assemV1, in particular between these two cases:
+>> 
+>> mdadm -A $md1 -u $uuid $devlist
+>> check state U_U
+>> eval $tst
+>> 
+>> mdadm -A $md1 --name=one $devlist
+>> check state U_U
+>> check spares 1
+>> eval $tst
+>> 
+>> I have tested it with the latest upstream kernel as well and see the
+>> same problems. I suspect it is simply the box that is too fast, ending
+>> up with the raid check completing inbetween the two test cases?
+>> 
+>> Are you seeing the same thing there? I tried playing with the max speed
+>> variable but it doesn't really seem to make any difference.
+>> 
+>> Any ideas for what we can be done to make this case more resilient to
+>> false positives? I guess one option would be to re-create the array
+>> inbetween each test?
+>
+> Maybe it really is a bug?
+> The test harness set the resync speed to be very slow.  A fast box will get
+> through the test more quickly and be more likely to see the array still
+> syncing.
+>
+> I'll try to make time to look more closely.
+> But I wouldn't discount the possibility that the second "mdadm -A" is
+> short-circuiting the recovery somehow.
 
-In this case btrfs should really break the bio down to smaller chunks
-and hand feed the lower layers.  There are corners where we think the
-device can go a certain size and then later on figure out we were just
-too optimistic.  So we should deal with it by breaking the bio up and
-then lowering our max.
+That could certainly explain what I am seeing. I noticed it doesn't
+happen every single time in the same place (from memory), but it is
+mostly in that spot in my case.
 
--chris
+Even if I trimmed the max speed down to 50 it still happens.
 
+Cheers,
+Jes
