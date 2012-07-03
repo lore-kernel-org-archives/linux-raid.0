@@ -1,156 +1,90 @@
-From: Jonathan Brassow <jbrassow@redhat.com>
-Subject: [PATCH 4 of 4] MD RAID10: Export md_raid10_congested
-Date: Tue, 26 Jun 2012 03:54:27 -0500
-Message-ID: <1340700867.19015.24.camel@f16>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [patch 03/10 v3] raid5: add a per-stripe lock
+Date: Wed, 4 Jul 2012 09:56:24 +1000
+Message-ID: <20120704095624.7307c6cd@notabene.brown>
+References: <20120625072447.268095276@kernel.org>
+	<20120625072613.620625574@kernel.org>
+	<20120702105046.56cd47ec@notabene.brown>
+	<20120702031626.GE29770@kernel.org>
+	<20120702173953.7bee26cb@notabene.brown>
+	<201207032016270001820@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Xq5C850n468Fyjr_nDUVe_H"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201207032016270001820@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, dm-devel@redhat.com
-Cc: jbrassow@redhat.com, agk@redhat.com, neilb@suse.de
+To: majianpeng <majianpeng@gmail.com>
+Cc: shli <shli@kernel.org>, linux-raid <linux-raid@vger.kernel.org>, axboe <axboe@kernel.dk>, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-md/raid10: Export is_congested test.
+--Sig_/Xq5C850n468Fyjr_nDUVe_H
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-In similar fashion to commits
-	11d8a6e3719519fbc0e2c9d61b6fa931b84bf813
-	1ed7242e591af7e233234d483f12d33818b189d9
-we export the RAID10 congestion checking function so that dm-raid.c can
-make use of it and make use of the personality.  The 'queue' and 'gendisk'
-structures will not be available to the MD code when device-mapper sets
-up the device, so we conditionalize access to these fields also.
+On Tue, 3 Jul 2012 20:16:31 +0800 majianpeng <majianpeng@gmail.com> wrote:
 
-Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+> On 2012-07-02 15:39 NeilBrown <neilb@suse.de> Wrote:
+> >On Mon, 2 Jul 2012 11:16:26 +0800 Shaohua Li <shli@kernel.org> wrote:
+> >
+> >
+> >> > Then I could see what is being added and what is being removed all i=
+n the one
+> >> > patch and I can be sure that they balance.
+> >>=20
+> >> reworked the patch 3-5 to two patches as you suggested, and sent to yo=
+u. please check.
+> >
+> >Thanks.  That's looking really good.
+> >
+> >However I think we can do better.  I've been looking more closely at the=
+ code
+> >and I think that the only things that we need stripe_lock to protect are
+> >->toread and ->towrite, together with the following bios.  e.g.
+> >->toread->bi_next etc.
+> >
+> >->read and ->written don't need stripe_lock protection, as they are only
+> >manipulated by the handle_stripe state machine which uses STRIPE_ACTIVE=
+=20
+> >and refcounts for exclusion.
+> >
+> >So add_stripe_bio need to take the lock while adding a bio to the
+> >->toread and  ->towrite lists, and ops_run_biodrain() and ops_run_biofill
+> >need to take the lock while the move the list from ->to{read,write} to
+> >->{read,written}. =20
 
-Index: linux-upstream/drivers/md/raid10.c
-===================================================================
---- linux-upstream.orig/drivers/md/raid10.c
-+++ linux-upstream/drivers/md/raid10.c
-@@ -853,9 +853,8 @@ retry:
- 	return rdev;
- }
- 
--static int raid10_congested(void *data, int bits)
-+int md_raid10_congested(struct mddev *mddev, int bits)
- {
--	struct mddev *mddev = data;
- 	struct r10conf *conf = mddev->private;
- 	int i, ret = 0;
- 
-@@ -863,8 +862,6 @@ static int raid10_congested(void *data,
- 	    conf->pending_count >= max_queued_requests)
- 		return 1;
- 
--	if (mddev_congested(mddev, bits))
--		return 1;
- 	rcu_read_lock();
- 	for (i = 0;
- 	     (i < conf->geo.raid_disks || i < conf->prev.raid_disks)
-@@ -880,6 +877,15 @@ static int raid10_congested(void *data,
- 	rcu_read_unlock();
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(md_raid10_congested);
-+
-+static int raid10_congested(void *data, int bits)
-+{
-+	struct mddev *mddev = data;
-+
-+	return mddev_congested(mddev, bits) ||
-+		md_raid10_congested(mddev, bits);
-+}
- 
- static void flush_pending_writes(struct r10conf *conf)
- {
-@@ -3480,12 +3486,14 @@ static int run(struct mddev *mddev)
- 	conf->thread = NULL;
- 
- 	chunk_size = mddev->chunk_sectors << 9;
--	blk_queue_io_min(mddev->queue, chunk_size);
--	if (conf->geo.raid_disks % conf->geo.near_copies)
--		blk_queue_io_opt(mddev->queue, chunk_size * conf->geo.raid_disks);
--	else
--		blk_queue_io_opt(mddev->queue, chunk_size *
--				 (conf->geo.raid_disks / conf->geo.near_copies));
-+	if (mddev->queue) {
-+		blk_queue_io_min(mddev->queue, chunk_size);
-+		if (conf->geo.raid_disks % conf->geo.near_copies)
-+			blk_queue_io_opt(mddev->queue, chunk_size * conf->geo.raid_disks);
-+		else
-+			blk_queue_io_opt(mddev->queue, chunk_size *
-+					 (conf->geo.raid_disks / conf->geo.near_copies));
-+	}
- 
- 	rdev_for_each(rdev, mddev) {
- 		long long diff;
-@@ -3519,8 +3527,9 @@ static int run(struct mddev *mddev)
- 		if (first || diff < min_offset_diff)
- 			min_offset_diff = diff;
- 
--		disk_stack_limits(mddev->gendisk, rdev->bdev,
--				  rdev->data_offset << 9);
-+		if (mddev->gendisk)
-+			disk_stack_limits(mddev->gendisk, rdev->bdev,
-+					  rdev->data_offset << 9);
- 
- 		disk->head_position = 0;
- 	}
-@@ -3583,22 +3592,22 @@ static int run(struct mddev *mddev)
- 	md_set_array_sectors(mddev, size);
- 	mddev->resync_max_sectors = size;
- 
--	mddev->queue->backing_dev_info.congested_fn = raid10_congested;
--	mddev->queue->backing_dev_info.congested_data = mddev;
--
--	/* Calculate max read-ahead size.
--	 * We need to readahead at least twice a whole stripe....
--	 * maybe...
--	 */
--	{
-+	if (mddev->queue) {
- 		int stripe = conf->geo.raid_disks *
- 			((mddev->chunk_sectors << 9) / PAGE_SIZE);
-+		mddev->queue->backing_dev_info.congested_fn = raid10_congested;
-+		mddev->queue->backing_dev_info.congested_data = mddev;
-+
-+		/* Calculate max read-ahead size.
-+		 * We need to readahead at least twice a whole stripe....
-+		 * maybe...
-+		 */
- 		stripe /= conf->geo.near_copies;
- 		if (mddev->queue->backing_dev_info.ra_pages < 2 * stripe)
- 			mddev->queue->backing_dev_info.ra_pages = 2 * stripe;
-+		blk_queue_merge_bvec(mddev->queue, raid10_mergeable_bvec);
- 	}
- 
--	blk_queue_merge_bvec(mddev->queue, raid10_mergeable_bvec);
- 
- 	if (md_integrity_register(mddev))
- 		goto out_free_conf;
-@@ -3649,7 +3658,10 @@ static int stop(struct mddev *mddev)
- 	lower_barrier(conf);
- 
- 	md_unregister_thread(&mddev->thread);
--	blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
-+	if (mddev->queue)
-+		/* the unplug fn references 'conf'*/
-+		blk_sync_queue(mddev->queue);
-+
- 	if (conf->r10bio_pool)
- 		mempool_destroy(conf->r10bio_pool);
- 	kfree(conf->mirrors);
-Index: linux-upstream/drivers/md/raid10.h
-===================================================================
---- linux-upstream.orig/drivers/md/raid10.h
-+++ linux-upstream/drivers/md/raid10.h
-@@ -145,4 +145,7 @@ enum r10bio_state {
-  */
- 	R10BIO_Previous,
- };
-+
-+extern int md_raid10_congested(struct mddev *mddev, int bits);
-+
- #endif
+> How about xchg()?
+
+(it would help a little if you made your comments stand out more, and maybe
+be a bit more verbose).
+
+bio_add_stripe() can insert a new bio into a list that starts are ->towrite
+or ->toread.
+You cannot do that with a simple xchg.  You really need a lock.
+
+NeilBrown
 
 
+--Sig_/Xq5C850n468Fyjr_nDUVe_H
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT/OGqDnsnt1WYoG5AQKDBQ//bYxmy26S3YUPt880/oMW+io8+ww1w2Gv
+Fm9yB1LVhyaFxE5PTWj2498bM7x0mTdwJ0dlMJ1b9js1rmiR4rhl1TFLZAJYbwf6
+m60En92VPGz/DaZl+hyDZqmKh7QlhwPjcIAiY3NMEcS3K5B9EQGGeU3M/BKrbPb8
+EOP4rKa2yKpFE8HsrqbcXbCE5bcrQL3QE1Ipu6r01WqqUnWQpbBrJb3lfHcX2Ax1
+QIR2X/lXts4w4/yN9QIGUr9Pw3WV/OCXIQ7TBkgosv5rncVZxy2sbjnSEsoMf2+O
+rxtdWdJ7Kf7/7ew9zbt95L6X+vRIa8Js25P1vTeb1fczfuD9zjmOHt1f0VH2Bxt8
+FIydSuGBEkalhrEaaGTbmWrgglxthQMBrpn82Fi0enhBx2Wwj1BBRacuuaBvWznr
+prXaWKqcNnKWjo7HEmEv88Jzb/J1edJ2lRbdbszEyfDVS9+raSso5NGt/FD9cMCk
+cqFYGbAUQIWiFr0eabeGiicO3OOa9RJvB1NGQCu8Djxe/LlNZN6vbSLXZW+C3k8f
+5U+jl9m15sXQBtPbnReT7DyARO9AU5xQL3Zo2apqABGbfjhJk9GCax9/Ed8EcrXU
+p2vXf7voYLD8IFT9LMKmXri9vLWdbXEoP96KxraajOJz7jqbanI4xiB2WKibVtpC
+cQaCY7OW0tU=
+=tBa7
+-----END PGP SIGNATURE-----
+
+--Sig_/Xq5C850n468Fyjr_nDUVe_H--
