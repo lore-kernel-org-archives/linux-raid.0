@@ -1,154 +1,191 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Fatal crash/hang in scsi_lib after RAID disk failure
-Date: Tue, 3 Jul 2012 17:31:45 +1000
-Message-ID: <20120703173145.3825674e@notabene.brown>
-References: <20120629093552.1651d3c2@batzmaru.gol.ad.jp>
-	<20120703155045.570a2bee@notabene.brown>
-	<20120703151038.428af28f@batzmaru.gol.ad.jp>
-	<20120703164528.5b9b4a7c@notabene.brown>
-	<20120703161200.2904740f@batzmaru.gol.ad.jp>
+From: Shaohua Li <shli@kernel.org>
+Subject: [patch 1/3]raid5: lockless access raid5 overrided bi_phys_segments
+Date: Tue, 3 Jul 2012 15:49:55 +0800
+Message-ID: <20120703074955.GA23488@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/lf/cLvepO7.kR8CJoM=yHnm"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120703161200.2904740f@batzmaru.gol.ad.jp>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian Balzer <chibi@gol.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de, axboe@kernel.dk, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
---Sig_/lf/cLvepO7.kR8CJoM=yHnm
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Raid5 overrides bio->bi_phys_segments, accessing it is with device_lock hold,
+which is unnecessary, We can make it lockless actually.
 
-On Tue, 3 Jul 2012 16:12:00 +0900 Christian Balzer <chibi@gol.com> wrote:
+Signed-off-by: Shaohua Li <shli@fusionio.com>
+---
+ drivers/md/raid5.c |   62 +++++++++++++++++++++++++++--------------------------
+ 1 file changed, 32 insertions(+), 30 deletions(-)
 
-> On Tue, 3 Jul 2012 16:45:28 +1000 NeilBrown wrote:
->=20
-> > On Tue, 3 Jul 2012 15:10:38 +0900 Christian Balzer <chibi@gol.com> wrot=
-e:
-> >=20
-> > > On Tue, 3 Jul 2012 15:50:45 +1000 NeilBrown wrote:
-> > >=20
-> [snip]
-> > > > That took *way* to long to find given how simple the fix is.
-> > >=20
-> > > Well, given how long it takes with some OSS projects, I'd say 4 days =
-is
-> > > pretty good. ^o^
-> >=20
-> > I meant the 4 hours of my time searching, not the 4 days of your time
-> > waiting :-)
-> >=20
-> Hehehe, if you put it that way... ^o^
->=20
-> >=20
-> > >=20
-> > > > I spent ages staring at the code, as about to reply and so "no idea"
-> > > > when I thought I should test it myself.  Test failed immediately.
-> > >=20
-> > > Could you elaborate a bit?=20
-> > > As in, was this something introduced only very recently, since I had
-> > > dozens of disks fail before w/o any such pyrotechnics.=20
-> > > Or were there some special circumstances that triggered it?=20
-> > > (But looking at the patch, I guess it should have been pretty
-> > > universal)
-> >=20
-> > Bug was introduced by commit 58c54fcca3bac5bf9 which first appeared in
-> > Linux 3.1.  Since then, any read error on RAID10 will trigger the bug.
-> >=20
-> Ouch, that's a pretty substantial number of machines I'd reckon.
-
-Could be.  But they all seem to have very reliably disks.  Except yours :-)
-
->=20
-> But now I'm even more intrigued, how do you (or the md code) define a read
-> error then?=20
-
-The obvious way I guess.
-
-> Remember this beauty here, which triggered the hunt and kill of the R10
-> recovery bug of uneven member sets?
-
-Looks like that was a write error.  They are handled quite differently.
-
-NeilBrown
-
-
-> ---
-> Jun 20 18:22:01 borg03b kernel: [1383357.792044] mptscsih: ioc0: attempti=
-ng task abort! (sc=3Dffff88023c3c5180)
-> Jun 20 18:22:01 borg03b kernel: [1383357.792049] sd 8:0:3:0: [sdh] CDB: S=
-ynchronize Cache(10): 35 00 00 00 00 00 00 00 00 00
-> Jun 20 18:22:06 borg03b kernel: [1383362.317346] mptbase: ioc0: LogInfo(0=
-x31140000): Originator=3D{PL}, Code=3D{IO Executed}, SubCode(0
-> x0000) cb_idx mptscsih_io_done
-> Jun 20 18:22:06 borg03b kernel: [1383362.317589] mptscsih: ioc0: task abo=
-rt: SUCCESS (rv=3D2002) (sc=3Dffff88023c3c5180)
-> Jun 20 18:22:06 borg03b kernel: [1383362.567292] mptbase: ioc0: LogInfo(0=
-x31170000): Originator=3D{PL}, Code=3D{IO Device Missing Delay
->  Retry}, SubCode(0x0000) cb_idx mptscsih_io_done
-> Jun 20 18:22:06 borg03b kernel: [1383362.567316] mptscsih: ioc0: attempti=
-ng target reset! (sc=3Dffff88023c3c5180)
-> Jun 20 18:22:06 borg03b kernel: [1383362.567321] sd 8:0:3:0: [sdh] CDB: S=
-ynchronize Cache(10): 35 00 00 00 00 00 00 00 00 00
-> Jun 20 18:22:06 borg03b kernel: [1383362.568040] mptscsih: ioc0: target r=
-eset: SUCCESS (sc=3Dffff88023c3c5180)
-> Jun 20 18:22:06 borg03b kernel: [1383362.568068] mptscsih: ioc0: attempti=
-ng host reset! (sc=3Dffff88023c3c5180)
-> Jun 20 18:22:06 borg03b kernel: [1383362.568074] mptbase: ioc0: Initiatin=
-g recovery
-> Jun 20 18:22:29 borg03b kernel: [1383385.440045] mptscsih: ioc0: host res=
-et: SUCCESS (sc=3Dffff88023c3c5180)
-> Jun 20 18:22:29 borg03b kernel: [1383385.484846] Device returned, unsetti=
-ng inDMD
-> Jun 20 18:22:39 borg03b kernel: [1383395.448043] sd 8:0:3:0: Device offli=
-ned - not ready after error recovery
-> Jun 20 18:22:39 borg03b kernel: [1383395.448135] sd 8:0:3:0: rejecting I/=
-O to offline device
-> Jun 20 18:22:39 borg03b kernel: [1383395.452063] end_request: I/O error, =
-dev sdh, sector 71
-> Jun 20 18:22:39 borg03b kernel: [1383395.452063] md: super_written gets e=
-rror=3D-5, uptodate=3D0
-> Jun 20 18:22:39 borg03b kernel: [1383395.452063] md/raid10:md3: Disk fail=
-ure on sdh1, disabling device.
-> Jun 20 18:22:39 borg03b kernel: [1383395.452063] md/raid10:md3: Operation=
- continuing on 4 devices.
-> ---
-> That was a 3.2.18 kernel, but it didn't die and neither did the other
-> cluster member with a very similar failure two weeks earlier.=20
->=20
-> So I guess the device getting kicked out by the libsata layer below is
-> fine, but it returning medium errors triggers the bug?
->=20
-> Anyways, time to patch stuff, thankfully this is the only production
-> cluster I have with a 3.2 kernel using RAID10. ^.^;
->=20
-> Regards,
->=20
-> Christian
-
-
---Sig_/lf/cLvepO7.kR8CJoM=yHnm
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT/Kf4Tnsnt1WYoG5AQJV+g/9Eht/eofks8hlaXf0Qm+uK/AU5XURtmQr
-tnUPaqasSn9V1R3pSyhcNcRP01nKf/DyusqW/5+uhpB+EFUZA0BwfbHLQfJh3gcz
-wGTm0JOXziutpGXsXzpO8UeNpAzN/bLgMrad3Bk46U8WOQHfgWr3MGhZJaQtrJ49
-w7DU14lcx+pzhYqmWzhk6Dm/qLtQ6TVS3imvu6X93Xi9T7zHXeDSE+FmvQkbaCb+
-uC2lGY9vpVdhc5I3G3Stu0UfcEu9G5wJb9fSqw6D/KSDcK4Zh4xV2/c515FK3fVL
-1sDfI0bkMCqBkgCiSfBeiikEvbYYa5WswSaXr6xYBsvx1Mdo6vN+ag8IwrgX+Ez/
-r8iE2jVrFSrpmMbNWenj3IkiIqU8KTaNxs4rctx9SEnlM3vWvJpOPvnj3ygJs8p8
-b1QKq9O4PUgyAx4OfRLWQicHC1DASiek0Qr+yhy9gdvwOfz9sg2Sd7D0SnbQMItT
-fOmjv52Jh3MIIzwse2RqJVwEjabIEkyDRJPNrnQxcxKPq41QxGoDT3h1J80ZB5ko
-uQkCfv/xhQlRwWjO34pJsy7wRqsO2si9b137yKdbYwT8+snwig/h21z+YUu7+V0U
-IHd4zPyn/IR/8EOwn08aNnQPlKuxt3N6JiZeELBsRuF1r3osak2nokYiGzGjG/YC
-BkvsIeYHWHI=
-=NeN1
------END PGP SIGNATURE-----
-
---Sig_/lf/cLvepO7.kR8CJoM=yHnm--
+Index: linux/drivers/md/raid5.c
+===================================================================
+--- linux.orig/drivers/md/raid5.c	2012-07-02 10:46:25.819205923 +0800
++++ linux/drivers/md/raid5.c	2012-07-02 10:54:20.609237005 +0800
+@@ -99,34 +99,40 @@ static inline struct bio *r5_next_bio(st
+  * We maintain a biased count of active stripes in the bottom 16 bits of
+  * bi_phys_segments, and a count of processed stripes in the upper 16 bits
+  */
+-static inline int raid5_bi_phys_segments(struct bio *bio)
++static inline int raid5_bi_processed_stripes(struct bio *bio)
+ {
+-	return bio->bi_phys_segments & 0xffff;
++	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
++	return (atomic_read(segments) >> 16) & 0xffff;
+ }
+ 
+-static inline int raid5_bi_hw_segments(struct bio *bio)
++static inline int raid5_dec_bi_active_stripes(struct bio *bio)
+ {
+-	return (bio->bi_phys_segments >> 16) & 0xffff;
++	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
++	return atomic_sub_return(1, segments) & 0xffff;
+ }
+ 
+-static inline int raid5_dec_bi_phys_segments(struct bio *bio)
++static inline void raid5_inc_bi_active_stripes(struct bio *bio)
+ {
+-	--bio->bi_phys_segments;
+-	return raid5_bi_phys_segments(bio);
++	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
++	atomic_inc(segments);
+ }
+ 
+-static inline int raid5_dec_bi_hw_segments(struct bio *bio)
++static inline void raid5_set_bi_processed_stripes(struct bio *bio,
++	unsigned int cnt)
+ {
+-	unsigned short val = raid5_bi_hw_segments(bio);
++	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
++	int old, new;
+ 
+-	--val;
+-	bio->bi_phys_segments = (val << 16) | raid5_bi_phys_segments(bio);
+-	return val;
++	do {
++		old = atomic_read(segments);
++		new = (old & 0xffff) | (cnt << 16);
++	} while (atomic_cmpxchg(segments, old, new) != old);
+ }
+ 
+-static inline void raid5_set_bi_hw_segments(struct bio *bio, unsigned int cnt)
++static inline void raid5_set_bi_stripes(struct bio *bio, unsigned int cnt)
+ {
+-	bio->bi_phys_segments = raid5_bi_phys_segments(bio) | (cnt << 16);
++	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
++	atomic_set(segments, cnt);
+ }
+ 
+ /* Find first data disk in a raid6 stripe */
+@@ -776,7 +782,7 @@ static void ops_complete_biofill(void *s
+ 			while (rbi && rbi->bi_sector <
+ 				dev->sector + STRIPE_SECTORS) {
+ 				rbi2 = r5_next_bio(rbi, dev->sector);
+-				if (!raid5_dec_bi_phys_segments(rbi)) {
++				if (!raid5_dec_bi_active_stripes(rbi)) {
+ 					rbi->bi_next = return_bi;
+ 					return_bi = rbi;
+ 				}
+@@ -2355,7 +2361,7 @@ static int add_stripe_bio(struct stripe_
+ 	if (*bip)
+ 		bi->bi_next = *bip;
+ 	*bip = bi;
+-	bi->bi_phys_segments++;
++	raid5_inc_bi_active_stripes(bi);
+ 
+ 	if (forwrite) {
+ 		/* check if page is covered */
+@@ -2452,7 +2458,7 @@ handle_failed_stripe(struct r5conf *conf
+ 			sh->dev[i].sector + STRIPE_SECTORS) {
+ 			struct bio *nextbi = r5_next_bio(bi, sh->dev[i].sector);
+ 			clear_bit(BIO_UPTODATE, &bi->bi_flags);
+-			if (!raid5_dec_bi_phys_segments(bi)) {
++			if (!raid5_dec_bi_active_stripes(bi)) {
+ 				md_write_end(conf->mddev);
+ 				bi->bi_next = *return_bi;
+ 				*return_bi = bi;
+@@ -2467,7 +2473,7 @@ handle_failed_stripe(struct r5conf *conf
+ 		       sh->dev[i].sector + STRIPE_SECTORS) {
+ 			struct bio *bi2 = r5_next_bio(bi, sh->dev[i].sector);
+ 			clear_bit(BIO_UPTODATE, &bi->bi_flags);
+-			if (!raid5_dec_bi_phys_segments(bi)) {
++			if (!raid5_dec_bi_active_stripes(bi)) {
+ 				md_write_end(conf->mddev);
+ 				bi->bi_next = *return_bi;
+ 				*return_bi = bi;
+@@ -2491,7 +2497,7 @@ handle_failed_stripe(struct r5conf *conf
+ 				struct bio *nextbi =
+ 					r5_next_bio(bi, sh->dev[i].sector);
+ 				clear_bit(BIO_UPTODATE, &bi->bi_flags);
+-				if (!raid5_dec_bi_phys_segments(bi)) {
++				if (!raid5_dec_bi_active_stripes(bi)) {
+ 					bi->bi_next = *return_bi;
+ 					*return_bi = bi;
+ 				}
+@@ -2710,7 +2716,7 @@ static void handle_stripe_clean_event(st
+ 				while (wbi && wbi->bi_sector <
+ 					dev->sector + STRIPE_SECTORS) {
+ 					wbi2 = r5_next_bio(wbi, dev->sector);
+-					if (!raid5_dec_bi_phys_segments(wbi)) {
++					if (!raid5_dec_bi_active_stripes(wbi)) {
+ 						md_write_end(conf->mddev);
+ 						wbi->bi_next = *return_bi;
+ 						*return_bi = wbi;
+@@ -3776,7 +3782,7 @@ static struct bio *remove_bio_from_retry
+ 		 * this sets the active strip count to 1 and the processed
+ 		 * strip count to zero (upper 8 bits)
+ 		 */
+-		bi->bi_phys_segments = 1; /* biased count of active stripes */
++		raid5_set_bi_stripes(bi, 1); /* biased count of active stripes */
+ 	}
+ 
+ 	return bi;
+@@ -4167,9 +4173,7 @@ static void make_request(struct mddev *m
+ 	if (!mdcb)
+ 		md_wakeup_thread(mddev->thread);
+ 
+-	spin_lock_irq(&conf->device_lock);
+-	remaining = raid5_dec_bi_phys_segments(bi);
+-	spin_unlock_irq(&conf->device_lock);
++	remaining = raid5_dec_bi_active_stripes(bi);
+ 	if (remaining == 0) {
+ 
+ 		if ( rw == WRITE )
+@@ -4525,7 +4529,7 @@ static int  retry_aligned_read(struct r5
+ 		     sector += STRIPE_SECTORS,
+ 		     scnt++) {
+ 
+-		if (scnt < raid5_bi_hw_segments(raid_bio))
++		if (scnt < raid5_bi_processed_stripes(raid_bio))
+ 			/* already done this stripe */
+ 			continue;
+ 
+@@ -4533,14 +4537,14 @@ static int  retry_aligned_read(struct r5
+ 
+ 		if (!sh) {
+ 			/* failed to get a stripe - must wait */
+-			raid5_set_bi_hw_segments(raid_bio, scnt);
++			raid5_set_bi_processed_stripes(raid_bio, scnt);
+ 			conf->retry_read_aligned = raid_bio;
+ 			return handled;
+ 		}
+ 
+ 		if (!add_stripe_bio(sh, raid_bio, dd_idx, 0)) {
+ 			release_stripe(sh);
+-			raid5_set_bi_hw_segments(raid_bio, scnt);
++			raid5_set_bi_processed_stripes(raid_bio, scnt);
+ 			conf->retry_read_aligned = raid_bio;
+ 			return handled;
+ 		}
+@@ -4549,9 +4553,7 @@ static int  retry_aligned_read(struct r5
+ 		release_stripe(sh);
+ 		handled++;
+ 	}
+-	spin_lock_irq(&conf->device_lock);
+-	remaining = raid5_dec_bi_phys_segments(raid_bio);
+-	spin_unlock_irq(&conf->device_lock);
++	remaining = raid5_dec_bi_active_stripes(raid_bio);
+ 	if (remaining == 0)
+ 		bio_endio(raid_bio, 0);
+ 	if (atomic_dec_and_test(&conf->active_aligned_reads))
