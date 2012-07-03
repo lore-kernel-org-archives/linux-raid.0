@@ -1,77 +1,164 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: [RFC PATCH] raid5: Add R5_ReadNoMerge flag which prevent bio from merging at block layer
-Date: Tue, 3 Jul 2012 14:23:41 +0800
-Message-ID: <201207031423377650880@gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [RFC PATCH] raid5: Add R5_ReadNoMerge flag which prevent bio
+ from merging at block layer
+Date: Tue, 3 Jul 2012 16:38:10 +1000
+Message-ID: <20120703163810.531a000c@notabene.brown>
+References: <201207031423377650880@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/0bGb9at4zO8lflMAOY1kowI"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201207031423377650880@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: majianpeng <majianpeng@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>, axboe <axboe@kernel.dk>
 List-Id: linux-raid.ids
 
-QmVjYXVzZSBiaW9zIHdpbGwgbWVyZ2UgYXQgYmxvY2stbGF5ZXIsc28gYmlvcy1lcnJvciBtYXkg
-Y2F1c2VkIGJ5IG90aGVyDQpiaW8gd2hpY2ggYmUgbWVyZ2VkIGludG8gdG8gdGhlIHNhbWUgcmVx
-dWVzdC4NClVzaW5nIHRoaXMgZmxhZyxpdCB3aWxsIGZpbmQgZXhhY3RseSBlcnJvci1zZWN0b3Ig
-YW5kIG5vdCBkbyByZWR1bmRhbnQNCm9wZXJhdGlvbiBsaWtlIHJlLXdyaXRlIGFuZCByZS1yZWFk
-Lg0KDQpTaWduZWQtb2ZmLWJ5OiBtYWppYW5wZW5nIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4NCi0t
-LQ0KIGJsb2NrL2Jsay1jb3JlLmMgICB8ICAgIDggKysrKysrKysNCiBkcml2ZXJzL21kL3JhaWQ1
-LmMgfCAgIDE2ICsrKysrKysrKysrKystLS0NCiBkcml2ZXJzL21kL3JhaWQ1LmggfCAgICAxICsN
-CiAzIGZpbGVzIGNoYW5nZWQsIDIyIGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pDQoNCmRp
-ZmYgLS1naXQgYS9ibG9jay9ibGstY29yZS5jIGIvYmxvY2svYmxrLWNvcmUuYw0KaW5kZXggM2M5
-MjNhNy4uZWUwNGJmYyAxMDA2NDQNCi0tLSBhL2Jsb2NrL2Jsay1jb3JlLmMNCisrKyBiL2Jsb2Nr
-L2Jsay1jb3JlLmMNCkBAIC0xNDAxLDYgKzE0MDEsOSBAQCB2b2lkIGluaXRfcmVxdWVzdF9mcm9t
-X2JpbyhzdHJ1Y3QgcmVxdWVzdCAqcmVxLCBzdHJ1Y3QgYmlvICpiaW8pDQogCWlmIChiaW8tPmJp
-X3J3ICYgUkVRX1JBSEVBRCkNCiAJCXJlcS0+Y21kX2ZsYWdzIHw9IFJFUV9GQUlMRkFTVF9NQVNL
-Ow0KIA0KKwlpZiAodW5saWtlbHkoYmlvLT5iaV9ydyAmIFJFUV9OT01FUkdFKSkNCisJCXJlcS0+
-Y21kX2ZsYWdzIHw9IFJFUV9OT01FUkdFOw0KKw0KIAlyZXEtPmVycm9ycyA9IDA7DQogCXJlcS0+
-X19zZWN0b3IgPSBiaW8tPmJpX3NlY3RvcjsNCiAJcmVxLT5pb3ByaW8gPSBiaW9fcHJpbyhiaW8p
-Ow0KQEAgLTE0MjgsNiArMTQzMSwxMSBAQCB2b2lkIGJsa19xdWV1ZV9iaW8oc3RydWN0IHJlcXVl
-c3RfcXVldWUgKnEsIHN0cnVjdCBiaW8gKmJpbykNCiAJCWdvdG8gZ2V0X3JxOw0KIAl9DQogDQor
-CWlmICh1bmxpa2VseShiaW8tPmJpX3J3ICYgUkVRX05PTUVSR0UpKSB7DQorCQlzcGluX2xvY2tf
-aXJxKHEtPnF1ZXVlX2xvY2spOw0KKwkJd2hlcmUgPSBFTEVWQVRPUl9JTlNFUlRfQkFDSzsNCisJ
-CWdvdG8gZ2V0X3JxOw0KKwl9DQogCS8qDQogCSAqIENoZWNrIGlmIHdlIGNhbiBtZXJnZSB3aXRo
-IHRoZSBwbHVnZ2VkIGxpc3QgYmVmb3JlIGdyYWJiaW5nDQogCSAqIGFueSBsb2Nrcy4NCmRpZmYg
-LS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LmMgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCmluZGV4IGQy
-Njc2NzIuLjA0Zjc4ZDIgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL21kL3JhaWQ1LmMNCisrKyBiL2Ry
-aXZlcnMvbWQvcmFpZDUuYw0KQEAgLTYzMiw2ICs2MzIsOSBAQCBzdGF0aWMgdm9pZCBvcHNfcnVu
-X2lvKHN0cnVjdCBzdHJpcGVfaGVhZCAqc2gsIHN0cnVjdCBzdHJpcGVfaGVhZF9zdGF0ZSAqcykN
-CiAJCQllbHNlDQogCQkJCWJpLT5iaV9zZWN0b3IgPSAoc2gtPnNlY3Rvcg0KIAkJCQkJCSArIHJk
-ZXYtPmRhdGFfb2Zmc2V0KTsNCisJCQlpZiAodGVzdF9iaXQoUjVfUmVhZE5vTWVyZ2UsICZzaC0+
-ZGV2W2ldLmZsYWdzKSkNCisJCQkJYmktPmJpX3J3IHw9IFJFUV9OT01FUkdFOw0KKw0KIAkJCWJp
-LT5iaV9mbGFncyA9IDEgPDwgQklPX1VQVE9EQVRFOw0KIAkJCWJpLT5iaV9pZHggPSAwOw0KIAkJ
-CWJpLT5iaV9pb192ZWNbMF0uYnZfbGVuID0gU1RSSVBFX1NJWkU7DQpAQCAtMTczMSw3ICsxNzM0
-LDkgQEAgc3RhdGljIHZvaWQgcmFpZDVfZW5kX3JlYWRfcmVxdWVzdChzdHJ1Y3QgYmlvICogYmks
-IGludCBlcnJvcikNCiAJCQlhdG9taWNfYWRkKFNUUklQRV9TRUNUT1JTLCAmcmRldi0+Y29ycmVj
-dGVkX2Vycm9ycyk7DQogCQkJY2xlYXJfYml0KFI1X1JlYWRFcnJvciwgJnNoLT5kZXZbaV0uZmxh
-Z3MpOw0KIAkJCWNsZWFyX2JpdChSNV9SZVdyaXRlLCAmc2gtPmRldltpXS5mbGFncyk7DQotCQl9
-DQorCQl9IGVsc2UgaWYgKHRlc3RfYml0KFI1X1JlYWROb01lcmdlLCAmc2gtPmRldltpXS5mbGFn
-cykpDQorCQkJY2xlYXJfYml0KFI1X1JlYWROb01lcmdlLCAmc2gtPmRldltpXS5mbGFncyk7DQor
-DQogCQlpZiAoYXRvbWljX3JlYWQoJnJkZXYtPnJlYWRfZXJyb3JzKSkNCiAJCQlhdG9taWNfc2V0
-KCZyZGV2LT5yZWFkX2Vycm9ycywgMCk7DQogCX0gZWxzZSB7DQpAQCAtMTc3Myw3ICsxNzc4LDEx
-IEBAIHN0YXRpYyB2b2lkIHJhaWQ1X2VuZF9yZWFkX3JlcXVlc3Qoc3RydWN0IGJpbyAqIGJpLCBp
-bnQgZXJyb3IpDQogCQllbHNlDQogCQkJcmV0cnkgPSAxOw0KIAkJaWYgKHJldHJ5KQ0KLQkJCXNl
-dF9iaXQoUjVfUmVhZEVycm9yLCAmc2gtPmRldltpXS5mbGFncyk7DQorCQkJaWYgKHRlc3RfYml0
-KFI1X1JlYWROb01lcmdlLCAmc2gtPmRldltpXS5mbGFncykpIHsNCisJCQkJc2V0X2JpdChSNV9S
-ZWFkRXJyb3IsICZzaC0+ZGV2W2ldLmZsYWdzKTsNCisJCQkJY2xlYXJfYml0KFI1X1JlYWROb01l
-cmdlLCAmc2gtPmRldltpXS5mbGFncyk7DQorCQkJfSBlbHNlDQorCQkJCXNldF9iaXQoUjVfUmVh
-ZE5vTWVyZ2UsICZzaC0+ZGV2W2ldLmZsYWdzKTsNCiAJCWVsc2Ugew0KIAkJCWNsZWFyX2JpdChS
-NV9SZWFkRXJyb3IsICZzaC0+ZGV2W2ldLmZsYWdzKTsNCiAJCQljbGVhcl9iaXQoUjVfUmVXcml0
-ZSwgJnNoLT5kZXZbaV0uZmxhZ3MpOw0KQEAgLTQ0ODEsNyArNDQ5MCw4IEBAIHN0YXRpYyBpbnQg
-IHJldHJ5X2FsaWduZWRfcmVhZChzdHJ1Y3QgcjVjb25mICpjb25mLCBzdHJ1Y3QgYmlvICpyYWlk
-X2JpbykNCiAJCQljb25mLT5yZXRyeV9yZWFkX2FsaWduZWQgPSByYWlkX2JpbzsNCiAJCQlyZXR1
-cm4gaGFuZGxlZDsNCiAJCX0NCi0NCisJCWlmIChsaWtlbHkocmFpZF9iaW8tPmJpX3NpemUgPj4g
-OSkgPiBTVFJJUEVfU0VDVE9SUykNCisJCQlzZXRfYml0KFI1X1JlYWROb01lcmdlLCAmc2gtPmRl
-dltkZF9pZHhdLmZsYWdzKTsNCiAJCWhhbmRsZV9zdHJpcGUoc2gpOw0KIAkJcmVsZWFzZV9zdHJp
-cGUoc2gpOw0KIAkJaGFuZGxlZCsrOw0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuaCBi
-L2RyaXZlcnMvbWQvcmFpZDUuaA0KaW5kZXggMjE2NDAyMS4uNjc2N2QwNyAxMDA2NDQNCi0tLSBh
-L2RyaXZlcnMvbWQvcmFpZDUuaA0KKysrIGIvZHJpdmVycy9tZC9yYWlkNS5oDQpAQCAtMjczLDYg
-KzI3Myw3IEBAIGVudW0gcjVkZXZfZmxhZ3Mgew0KIAlSNV9XYW50d3JpdGUsDQogCVI1X092ZXJs
-YXAsCS8qIFRoZXJlIGlzIGEgcGVuZGluZyBvdmVybGFwcGluZyByZXF1ZXN0DQogCQkJICogb24g
-dGhpcyBibG9jayAqLw0KKwlSNV9SZWFkTm9NZXJnZSwgLyogcHJldmVudCBiaW8gZnJvbSBtZXJn
-aW5nIGluIGJsb2NrLWxheWVyICovDQogCVI1X1JlYWRFcnJvciwJLyogc2VlbiBhIHJlYWQgZXJy
-b3IgaGVyZSByZWNlbnRseSAqLw0KIAlSNV9SZVdyaXRlLAkvKiBoYXZlIHRyaWVkIHRvIG92ZXIt
-d3JpdGUgdGhlIHJlYWRlcnJvciAqLw0KIA0KLS0gDQoxLjcuNS40DQo=
+--Sig_/0bGb9at4zO8lflMAOY1kowI
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, 3 Jul 2012 14:23:41 +0800 majianpeng <majianpeng@gmail.com> wrote:
+
+> Because bios will merge at block-layer,so bios-error may caused by other
+> bio which be merged into to the same request.
+> Using this flag,it will find exactly error-sector and not do redundant
+> operation like re-write and re-read.
+>=20
+> Signed-off-by: majianpeng <majianpeng@gmail.com>
+
+Hi,
+ I think this patch needs a more detailed explanation.
+
+What exactly is the situation that causes a problem, and what exactly is the
+problem that it causes?
+
+Pretend that I don't know anything about what happens below the md level..
+
+Thanks,
+NeilBrown
+
+
+> ---
+>  block/blk-core.c   |    8 ++++++++
+>  drivers/md/raid5.c |   16 +++++++++++++---
+>  drivers/md/raid5.h |    1 +
+>  3 files changed, 22 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index 3c923a7..ee04bfc 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -1401,6 +1401,9 @@ void init_request_from_bio(struct request *req, str=
+uct bio *bio)
+>  	if (bio->bi_rw & REQ_RAHEAD)
+>  		req->cmd_flags |=3D REQ_FAILFAST_MASK;
+> =20
+> +	if (unlikely(bio->bi_rw & REQ_NOMERGE))
+> +		req->cmd_flags |=3D REQ_NOMERGE;
+> +
+>  	req->errors =3D 0;
+>  	req->__sector =3D bio->bi_sector;
+>  	req->ioprio =3D bio_prio(bio);
+> @@ -1428,6 +1431,11 @@ void blk_queue_bio(struct request_queue *q, struct=
+ bio *bio)
+>  		goto get_rq;
+>  	}
+> =20
+> +	if (unlikely(bio->bi_rw & REQ_NOMERGE)) {
+> +		spin_lock_irq(q->queue_lock);
+> +		where =3D ELEVATOR_INSERT_BACK;
+> +		goto get_rq;
+> +	}
+>  	/*
+>  	 * Check if we can merge with the plugged list before grabbing
+>  	 * any locks.
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index d267672..04f78d2 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -632,6 +632,9 @@ static void ops_run_io(struct stripe_head *sh, struct=
+ stripe_head_state *s)
+>  			else
+>  				bi->bi_sector =3D (sh->sector
+>  						 + rdev->data_offset);
+> +			if (test_bit(R5_ReadNoMerge, &sh->dev[i].flags))
+> +				bi->bi_rw |=3D REQ_NOMERGE;
+> +
+>  			bi->bi_flags =3D 1 << BIO_UPTODATE;
+>  			bi->bi_idx =3D 0;
+>  			bi->bi_io_vec[0].bv_len =3D STRIPE_SIZE;
+> @@ -1731,7 +1734,9 @@ static void raid5_end_read_request(struct bio * bi,=
+ int error)
+>  			atomic_add(STRIPE_SECTORS, &rdev->corrected_errors);
+>  			clear_bit(R5_ReadError, &sh->dev[i].flags);
+>  			clear_bit(R5_ReWrite, &sh->dev[i].flags);
+> -		}
+> +		} else if (test_bit(R5_ReadNoMerge, &sh->dev[i].flags))
+> +			clear_bit(R5_ReadNoMerge, &sh->dev[i].flags);
+> +
+>  		if (atomic_read(&rdev->read_errors))
+>  			atomic_set(&rdev->read_errors, 0);
+>  	} else {
+> @@ -1773,7 +1778,11 @@ static void raid5_end_read_request(struct bio * bi=
+, int error)
+>  		else
+>  			retry =3D 1;
+>  		if (retry)
+> -			set_bit(R5_ReadError, &sh->dev[i].flags);
+> +			if (test_bit(R5_ReadNoMerge, &sh->dev[i].flags)) {
+> +				set_bit(R5_ReadError, &sh->dev[i].flags);
+> +				clear_bit(R5_ReadNoMerge, &sh->dev[i].flags);
+> +			} else
+> +				set_bit(R5_ReadNoMerge, &sh->dev[i].flags);
+>  		else {
+>  			clear_bit(R5_ReadError, &sh->dev[i].flags);
+>  			clear_bit(R5_ReWrite, &sh->dev[i].flags);
+> @@ -4481,7 +4490,8 @@ static int  retry_aligned_read(struct r5conf *conf,=
+ struct bio *raid_bio)
+>  			conf->retry_read_aligned =3D raid_bio;
+>  			return handled;
+>  		}
+> -
+> +		if (likely(raid_bio->bi_size >> 9) > STRIPE_SECTORS)
+> +			set_bit(R5_ReadNoMerge, &sh->dev[dd_idx].flags);
+>  		handle_stripe(sh);
+>  		release_stripe(sh);
+>  		handled++;
+> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+> index 2164021..6767d07 100644
+> --- a/drivers/md/raid5.h
+> +++ b/drivers/md/raid5.h
+> @@ -273,6 +273,7 @@ enum r5dev_flags {
+>  	R5_Wantwrite,
+>  	R5_Overlap,	/* There is a pending overlapping request
+>  			 * on this block */
+> +	R5_ReadNoMerge, /* prevent bio from merging in block-layer */
+>  	R5_ReadError,	/* seen a read error here recently */
+>  	R5_ReWrite,	/* have tried to over-write the readerror */
+> =20
+
+
+--Sig_/0bGb9at4zO8lflMAOY1kowI
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT/KTUjnsnt1WYoG5AQL/kw//TxdUYfx7W4VkAHcMDACDwiEwyBIlfAiw
+9AC0kmHqbim2PdvyYpSe5BG6A2CfN8EG2w6Q0VqgfP/rH4WPcnTggZdccmZ4kkTM
+NV/a7aePJmy0CMZg1z5YTaN1Ds/Q2pL6ukyA5QXPBTb4/wuU/+pGuIQD6+Q3A/iq
+hbK3g9Ym8/0GMmgacog3mAyOfXYBQnMi01m7iSItrsImgmgbNA3v0Z8LUg2noyR4
+SNrp0eZMBtD24ccPvq8dgqz7+11f3TVKfVGlbhuWhgqxAGPgg9SuyrLp6lhEaPfS
+gjh1B2ijOGcU9UtyTNwvZVWSRiGzy9HTG9OpWpoRirCetPc0443itYSkBdhzGR7Z
+GPW+5VeM2N0hn/wWLT2kO2Xyn8HRPQzxuMahPRIjS+317U4BdGFK8CrXMBw305K8
+5sxj3KeLQM5E2aCIHn9LIrR+U3BJokvi3sE/RY9knXRMP0XMjcEF3BmMnyRAZGpF
+Zx9XtBnu27SC8S8ra8mzVRVEVlNFw5qbnBOhvDYW4YMV9FLq8Vt8h7W+1KJ5SHvA
+punt2PLwodJmYkTXuP4UFednLokR5i1jj3P0cn9+uSKfxASyWAO8OsirPlsWZAU1
+U0fpo5/YK4g8wuI1N/1j5977gwZOayQhK/b3E/NSpaKfqQB3TjOv+e4qhuIZBbic
+mkiKoAv8ysQ=
+=oVpy
+-----END PGP SIGNATURE-----
+
+--Sig_/0bGb9at4zO8lflMAOY1kowI--
