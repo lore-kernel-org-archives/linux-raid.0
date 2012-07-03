@@ -1,98 +1,56 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PULL REQUEST] md fixes for 3.5-rc
-Date: Tue, 3 Jul 2012 17:53:47 +1000
-Message-ID: <20120703175347.4d11f8e0@notabene.brown>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [patch 10/10 v3] raid5: create multiple threads to handle stripes
+Date: Tue, 3 Jul 2012 16:04:49 +0800
+Message-ID: <20120703080449.GD23488@kernel.org>
+References: <20120625072447.268095276@kernel.org>
+ <20120625072726.364743203@kernel.org>
+ <CAA9_cmcGuxsYVv-NASWKwvUFryqu14znXfQw_kuYr8Ld=hCgCA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/IsUVnqj.gwyRDVpUDbh1hyE"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Shaohua Li <shli@fusionio.com>, Alexander Lyakas <alex.bolshoy@gmail.com>, majianpeng <majianpeng@gmail.com>, Christian Balzer <chibi@gol.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAA9_cmcGuxsYVv-NASWKwvUFryqu14znXfQw_kuYr8Ld=hCgCA@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de, axboe@kernel.dk, shli@fusionio.com
 List-Id: linux-raid.ids
 
---Sig_/IsUVnqj.gwyRDVpUDbh1hyE
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Mon, Jul 02, 2012 at 01:03:53PM -0700, Dan Williams wrote:
+> On Mon, Jun 25, 2012 at 12:24 AM, Shaohua Li <shli@kernel.org> wrote:
+> > Like raid 1/10, raid5 uses one thread to handle stripe. In a fast storage, the
+> > thread becomes a bottleneck. raid5 can offload calculation like checksum to
+> > async threads. And if storge is fast, scheduling async work and running async
+> > work will introduce heavy lock contention of workqueue, which makes such
+> > optimization useless. And calculation isn't the only bottleneck. For example,
+> > in my test raid5 thread must handle > 450k requests per second. Just doing
+> > dispatch and completion will make raid5 thread incapable. The only chance to
+> > scale is using several threads to handle stripe.
+> >
+> > With this patch, user can create several extra threads to handle stripe. How
+> > many threads are better depending on disk number, so the thread number can be
+> > changed in userspace. By default, the thread number is 0, which means no extra
+> > thread.
+> >
+> > In a 3-disk raid5 setup, 2 extra threads can provide 130% throughput
+> > improvement (double stripe_cache_size) and the throughput is pretty close to
+> > theory value. With >=4 disks, the improvement is even bigger, for example, can
+> > improve 200% for 4-disk setup, but the throughput is far less than theory
+> > value, which is caused by several factors like request queue lock contention,
+> > cache issue, latency introduced by how a stripe is handled in different disks.
+> > Those factors need further investigations.
+> >
+> > Signed-off-by: Shaohua Li <shli@fusionio.com>
+> 
+> Can you share a bit more about your test setup?  Is this
+> single-threaded throughput?  I'm wondering if we can take advantage of
+> keeping the work cpu local.
 
+I use a 4-thread DIO randwrite 4k test. I'm thinking about keep work cpu local
+too, that requires spearate the stripe lru list. Also async ops and request
+completion is better cpu local aware to make this work well.
 
-Hi Linus,
- please pull a pile of patches.
+When I try the unbound workqueue, I set the max active work to online_cpus, so
+there will be 24 worker threads. But even 24 threads are too many.
 
 Thanks,
-NeilBrown
-
-The following changes since commit 6b16351acbd415e66ba16bf7d473ece1574cf0bc:
-
-  Linux 3.5-rc4 (2012-06-24 12:53:04 -0700)
-
-are available in the git repository at:
-
-  git://neil.brown.name/md tags/md-3.5-fixes
-
-for you to fetch changes up to b357f04a67c2aeee828b240863cd3f21d6cb3179:
-
-  md: fix up plugging (again). (2012-07-03 17:45:31 +1000)
-
-----------------------------------------------------------------
-md: collection of bug fixes for 3.5
-
-You go away for 2 weeks vacation and what do you get when you come back?
-Piles of bugs :-)
-
-Some found by inspection, some by testing, some during use in the field,
-and some while developing for the next window...
-
-----------------------------------------------------------------
-NeilBrown (8):
-      md/raid10: Don't try to recovery unmatched (and unused) chunks.
-      md/raid5: prefer replacing failed devices over want-replacement devic=
-es.
-      md/raid5: fix refcount problem when blocked_rdev is set.
-      md/raid10: fix failure when trying to repair a read error.
-      md: make 'name' arg to md_register_thread non-optional.
-      md/raid1: fix bug in read_balance introduced by hot-replace
-      md: support re-add of recovering devices.
-      md: fix up plugging (again).
-
-Shaohua Li (1):
-      raid5: delayed stripe fix
-
-majianpeng (4):
-      md/raid5: Do not add data_offset before call to is_badblock
-      md/raid5: In ops_run_io, inc nr_pending before calling md_wait_for_bl=
-ocked_rdev
-      md:Add blk_plug in sync_thread.
-      md/raid456: When read error cannot be recovered, record bad block
-
- drivers/md/md.c        |    8 +++---
- drivers/md/multipath.c |    3 ++-
- drivers/md/raid1.c     |   13 ++++------
- drivers/md/raid10.c    |   26 +++++++++++--------
- drivers/md/raid5.c     |   67 +++++++++++++++++++++++++++++++++-----------=
-----
- 5 files changed, 75 insertions(+), 42 deletions(-)
-
---Sig_/IsUVnqj.gwyRDVpUDbh1hyE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT/KlCznsnt1WYoG5AQJozw//ZhFh5uFw6tmWoxzseGUtzSIt/E+aLWKg
-jS78wWBkAGJ86HSdB9S2BVJTOnRs7Y7tUnQbok6Y53duPelxS9EpTc5MU3fwrx2o
-wUpNHrdk6BHVaJHgiORCbW7H+GeP/FELQ8W4ULbalfBlxidTirqkbJcdrExleRQi
-3iNl0LqS6llVaU1KTcriSzv/RmCKHcLr7v/je+evQ5fe70uYtDid65scj5L5UeWi
-dHLyRRi2rrzctzmkDaD3FGBMGPyLWL8ywyTq23yqkTFn2yMcXXI7lKkWbfe0i75b
-hGlYpWMo53HAjDnE7n/m/Y09RK/eJHDf5rvRV/ikJfaxNVOlHcMbgANG1DDzyKNk
-/KZy3XG9Est8r/xLNmbZrdWCybCKPhEzZtgwq15s441r3e8IUpSEBG1X79nPyTOd
-q3xxhivxvy01yTlfBrywhGQhomcz5Sya9iMUizErAIKTtftIow7brHR7AAG7K6Nc
-MVpN948fi/lhLkf+YrmGijoorZ4qQrWJSMsA1hDJMHrrjIuz1tcTTcpiQpkQp57o
-nE2H/ZPyO81bY7ltn4wZrm4yAJdmTTn15clckmWhcWIDx4isDkwMot0Ns2G/PweJ
-xoe9G/UOFTuIkOJGqaf13526bQGUVXz1lnQT6O4tAGQgp0aRzSfBvzeLmv9HFJcR
-ScVWQROh8rk=
-=h/C2
------END PGP SIGNATURE-----
-
---Sig_/IsUVnqj.gwyRDVpUDbh1hyE--
+Shaohua
