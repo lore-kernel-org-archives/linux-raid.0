@@ -1,56 +1,107 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [patch 10/10 v3] raid5: create multiple threads to handle stripes
-Date: Tue, 3 Jul 2012 16:04:49 +0800
-Message-ID: <20120703080449.GD23488@kernel.org>
-References: <20120625072447.268095276@kernel.org>
- <20120625072726.364743203@kernel.org>
- <CAA9_cmcGuxsYVv-NASWKwvUFryqu14znXfQw_kuYr8Ld=hCgCA@mail.gmail.com>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [RFC PATCH] raid5: Add R5_ReadNoMerge flag which prevent bio from merging at block layer
+Date: Tue, 3 Jul 2012 16:52:49 +0800
+Message-ID: <201207031652444687381@gmail.com>
+References: <201207031423377650880@gmail.com>,
+	<20120703163810.531a000c@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAA9_cmcGuxsYVv-NASWKwvUFryqu14znXfQw_kuYr8Ld=hCgCA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.de, axboe@kernel.dk, shli@fusionio.com
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>, axboe <axboe@kernel.dk>
 List-Id: linux-raid.ids
 
-On Mon, Jul 02, 2012 at 01:03:53PM -0700, Dan Williams wrote:
-> On Mon, Jun 25, 2012 at 12:24 AM, Shaohua Li <shli@kernel.org> wrote:
-> > Like raid 1/10, raid5 uses one thread to handle stripe. In a fast storage, the
-> > thread becomes a bottleneck. raid5 can offload calculation like checksum to
-> > async threads. And if storge is fast, scheduling async work and running async
-> > work will introduce heavy lock contention of workqueue, which makes such
-> > optimization useless. And calculation isn't the only bottleneck. For example,
-> > in my test raid5 thread must handle > 450k requests per second. Just doing
-> > dispatch and completion will make raid5 thread incapable. The only chance to
-> > scale is using several threads to handle stripe.
-> >
-> > With this patch, user can create several extra threads to handle stripe. How
-> > many threads are better depending on disk number, so the thread number can be
-> > changed in userspace. By default, the thread number is 0, which means no extra
-> > thread.
-> >
-> > In a 3-disk raid5 setup, 2 extra threads can provide 130% throughput
-> > improvement (double stripe_cache_size) and the throughput is pretty close to
-> > theory value. With >=4 disks, the improvement is even bigger, for example, can
-> > improve 200% for 4-disk setup, but the throughput is far less than theory
-> > value, which is caused by several factors like request queue lock contention,
-> > cache issue, latency introduced by how a stripe is handled in different disks.
-> > Those factors need further investigations.
-> >
-> > Signed-off-by: Shaohua Li <shli@fusionio.com>
-> 
-> Can you share a bit more about your test setup?  Is this
-> single-threaded throughput?  I'm wondering if we can take advantage of
-> keeping the work cpu local.
+T24gMjAxMi0wNy0wMyAxNDozOCBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
+IFR1ZSwgMyBKdWwgMjAxMiAxNDoyMzo0MSArMDgwMCBtYWppYW5wZW5nIDxtYWppYW5wZW5nQGdt
+YWlsLmNvbT4gd3JvdGU6DQo+DQo+PiBCZWNhdXNlIGJpb3Mgd2lsbCBtZXJnZSBhdCBibG9jay1s
+YXllcixzbyBiaW9zLWVycm9yIG1heSBjYXVzZWQgYnkgb3RoZXINCj4+IGJpbyB3aGljaCBiZSBt
+ZXJnZWQgaW50byB0byB0aGUgc2FtZSByZXF1ZXN0Lg0KPj4gVXNpbmcgdGhpcyBmbGFnLGl0IHdp
+bGwgZmluZCBleGFjdGx5IGVycm9yLXNlY3RvciBhbmQgbm90IGRvIHJlZHVuZGFudA0KPj4gb3Bl
+cmF0aW9uIGxpa2UgcmUtd3JpdGUgYW5kIHJlLXJlYWQuDQo+PiANCj4+IFNpZ25lZC1vZmYtYnk6
+IG1hamlhbnBlbmcgPG1hamlhbnBlbmdAZ21haWwuY29tPg0KPg0KPkhpLA0KPiBJIHRoaW5rIHRo
+aXMgcGF0Y2ggbmVlZHMgYSBtb3JlIGRldGFpbGVkIGV4cGxhbmF0aW9uLg0KPg0KPldoYXQgZXhh
+Y3RseSBpcyB0aGUgc2l0dWF0aW9uIHRoYXQgY2F1c2VzIGEgcHJvYmxlbSwgYW5kIHdoYXQgZXhh
+Y3RseSBpcyB0aGUNCj5wcm9ibGVtIHRoYXQgaXQgY2F1c2VzPw0KPg0KPlByZXRlbmQgdGhhdCBJ
+IGRvbid0IGtub3cgYW55dGhpbmcgYWJvdXQgd2hhdCBoYXBwZW5zIGJlbG93IHRoZSBtZCBsZXZl
+bC4uDQo+DQo+VGhhbmtzLA0KPk5laWxCcm93bg0KPg0KPg0KPj4gLS0tDQo+PiAgYmxvY2svYmxr
+LWNvcmUuYyAgIHwgICAgOCArKysrKysrKw0KPj4gIGRyaXZlcnMvbWQvcmFpZDUuYyB8ICAgMTYg
+KysrKysrKysrKysrKy0tLQ0KPj4gIGRyaXZlcnMvbWQvcmFpZDUuaCB8ICAgIDEgKw0KPj4gIDMg
+ZmlsZXMgY2hhbmdlZCwgMjIgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkNCj4+IA0KPj4g
+ZGlmZiAtLWdpdCBhL2Jsb2NrL2Jsay1jb3JlLmMgYi9ibG9jay9ibGstY29yZS5jDQo+PiBpbmRl
+eCAzYzkyM2E3Li5lZTA0YmZjIDEwMDY0NA0KPj4gLS0tIGEvYmxvY2svYmxrLWNvcmUuYw0KPj4g
+KysrIGIvYmxvY2svYmxrLWNvcmUuYw0KPj4gQEAgLTE0MDEsNiArMTQwMSw5IEBAIHZvaWQgaW5p
+dF9yZXF1ZXN0X2Zyb21fYmlvKHN0cnVjdCByZXF1ZXN0ICpyZXEsIHN0cnVjdCBiaW8gKmJpbykN
+Cj4+ICAJaWYgKGJpby0+YmlfcncgJiBSRVFfUkFIRUFEKQ0KPj4gIAkJcmVxLT5jbWRfZmxhZ3Mg
+fD0gUkVRX0ZBSUxGQVNUX01BU0s7DQo+PiAgDQo+PiArCWlmICh1bmxpa2VseShiaW8tPmJpX3J3
+ICYgUkVRX05PTUVSR0UpKQ0KPj4gKwkJcmVxLT5jbWRfZmxhZ3MgfD0gUkVRX05PTUVSR0U7DQo+
+PiArDQo+PiAgCXJlcS0+ZXJyb3JzID0gMDsNCj4+ICAJcmVxLT5fX3NlY3RvciA9IGJpby0+Ymlf
+c2VjdG9yOw0KPj4gIAlyZXEtPmlvcHJpbyA9IGJpb19wcmlvKGJpbyk7DQo+PiBAQCAtMTQyOCw2
+ICsxNDMxLDExIEBAIHZvaWQgYmxrX3F1ZXVlX2JpbyhzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSwg
+c3RydWN0IGJpbyAqYmlvKQ0KPj4gIAkJZ290byBnZXRfcnE7DQo+PiAgCX0NCj4+ICANCj4+ICsJ
+aWYgKHVubGlrZWx5KGJpby0+YmlfcncgJiBSRVFfTk9NRVJHRSkpIHsNCj4+ICsJCXNwaW5fbG9j
+a19pcnEocS0+cXVldWVfbG9jayk7DQo+PiArCQl3aGVyZSA9IEVMRVZBVE9SX0lOU0VSVF9CQUNL
+Ow0KPj4gKwkJZ290byBnZXRfcnE7DQo+PiArCX0NCj4+ICAJLyoNCj4+ICAJICogQ2hlY2sgaWYg
+d2UgY2FuIG1lcmdlIHdpdGggdGhlIHBsdWdnZWQgbGlzdCBiZWZvcmUgZ3JhYmJpbmcNCj4+ICAJ
+ICogYW55IGxvY2tzLg0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2RyaXZl
+cnMvbWQvcmFpZDUuYw0KPj4gaW5kZXggZDI2NzY3Mi4uMDRmNzhkMiAxMDA2NDQNCj4+IC0tLSBh
+L2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gKysrIGIvZHJpdmVycy9tZC9yYWlkNS5jDQo+PiBAQCAt
+NjMyLDYgKzYzMiw5IEBAIHN0YXRpYyB2b2lkIG9wc19ydW5faW8oc3RydWN0IHN0cmlwZV9oZWFk
+ICpzaCwgc3RydWN0IHN0cmlwZV9oZWFkX3N0YXRlICpzKQ0KPj4gIAkJCWVsc2UNCj4+ICAJCQkJ
+YmktPmJpX3NlY3RvciA9IChzaC0+c2VjdG9yDQo+PiAgCQkJCQkJICsgcmRldi0+ZGF0YV9vZmZz
+ZXQpOw0KPj4gKwkJCWlmICh0ZXN0X2JpdChSNV9SZWFkTm9NZXJnZSwgJnNoLT5kZXZbaV0uZmxh
+Z3MpKQ0KPj4gKwkJCQliaS0+YmlfcncgfD0gUkVRX05PTUVSR0U7DQo+PiArDQo+PiAgCQkJYmkt
+PmJpX2ZsYWdzID0gMSA8PCBCSU9fVVBUT0RBVEU7DQo+PiAgCQkJYmktPmJpX2lkeCA9IDA7DQo+
+PiAgCQkJYmktPmJpX2lvX3ZlY1swXS5idl9sZW4gPSBTVFJJUEVfU0laRTsNCj4+IEBAIC0xNzMx
+LDcgKzE3MzQsOSBAQCBzdGF0aWMgdm9pZCByYWlkNV9lbmRfcmVhZF9yZXF1ZXN0KHN0cnVjdCBi
+aW8gKiBiaSwgaW50IGVycm9yKQ0KPj4gIAkJCWF0b21pY19hZGQoU1RSSVBFX1NFQ1RPUlMsICZy
+ZGV2LT5jb3JyZWN0ZWRfZXJyb3JzKTsNCj4+ICAJCQljbGVhcl9iaXQoUjVfUmVhZEVycm9yLCAm
+c2gtPmRldltpXS5mbGFncyk7DQo+PiAgCQkJY2xlYXJfYml0KFI1X1JlV3JpdGUsICZzaC0+ZGV2
+W2ldLmZsYWdzKTsNCj4+IC0JCX0NCj4+ICsJCX0gZWxzZSBpZiAodGVzdF9iaXQoUjVfUmVhZE5v
+TWVyZ2UsICZzaC0+ZGV2W2ldLmZsYWdzKSkNCj4+ICsJCQljbGVhcl9iaXQoUjVfUmVhZE5vTWVy
+Z2UsICZzaC0+ZGV2W2ldLmZsYWdzKTsNCj4+ICsNCj4+ICAJCWlmIChhdG9taWNfcmVhZCgmcmRl
+di0+cmVhZF9lcnJvcnMpKQ0KPj4gIAkJCWF0b21pY19zZXQoJnJkZXYtPnJlYWRfZXJyb3JzLCAw
+KTsNCj4+ICAJfSBlbHNlIHsNCj4+IEBAIC0xNzczLDcgKzE3NzgsMTEgQEAgc3RhdGljIHZvaWQg
+cmFpZDVfZW5kX3JlYWRfcmVxdWVzdChzdHJ1Y3QgYmlvICogYmksIGludCBlcnJvcikNCj4+ICAJ
+CWVsc2UNCj4+ICAJCQlyZXRyeSA9IDE7DQo+PiAgCQlpZiAocmV0cnkpDQo+PiAtCQkJc2V0X2Jp
+dChSNV9SZWFkRXJyb3IsICZzaC0+ZGV2W2ldLmZsYWdzKTsNCj4+ICsJCQlpZiAodGVzdF9iaXQo
+UjVfUmVhZE5vTWVyZ2UsICZzaC0+ZGV2W2ldLmZsYWdzKSkgew0KPj4gKwkJCQlzZXRfYml0KFI1
+X1JlYWRFcnJvciwgJnNoLT5kZXZbaV0uZmxhZ3MpOw0KPj4gKwkJCQljbGVhcl9iaXQoUjVfUmVh
+ZE5vTWVyZ2UsICZzaC0+ZGV2W2ldLmZsYWdzKTsNCj4+ICsJCQl9IGVsc2UNCj4+ICsJCQkJc2V0
+X2JpdChSNV9SZWFkTm9NZXJnZSwgJnNoLT5kZXZbaV0uZmxhZ3MpOw0KPj4gIAkJZWxzZSB7DQo+
+PiAgCQkJY2xlYXJfYml0KFI1X1JlYWRFcnJvciwgJnNoLT5kZXZbaV0uZmxhZ3MpOw0KPj4gIAkJ
+CWNsZWFyX2JpdChSNV9SZVdyaXRlLCAmc2gtPmRldltpXS5mbGFncyk7DQo+PiBAQCAtNDQ4MSw3
+ICs0NDkwLDggQEAgc3RhdGljIGludCAgcmV0cnlfYWxpZ25lZF9yZWFkKHN0cnVjdCByNWNvbmYg
+KmNvbmYsIHN0cnVjdCBiaW8gKnJhaWRfYmlvKQ0KPj4gIAkJCWNvbmYtPnJldHJ5X3JlYWRfYWxp
+Z25lZCA9IHJhaWRfYmlvOw0KPj4gIAkJCXJldHVybiBoYW5kbGVkOw0KPj4gIAkJfQ0KPj4gLQ0K
+Pj4gKwkJaWYgKGxpa2VseShyYWlkX2Jpby0+Ymlfc2l6ZSA+PiA5KSA+IFNUUklQRV9TRUNUT1JT
+KQ0KPj4gKwkJCXNldF9iaXQoUjVfUmVhZE5vTWVyZ2UsICZzaC0+ZGV2W2RkX2lkeF0uZmxhZ3Mp
+Ow0KPj4gIAkJaGFuZGxlX3N0cmlwZShzaCk7DQo+PiAgCQlyZWxlYXNlX3N0cmlwZShzaCk7DQo+
+PiAgCQloYW5kbGVkKys7DQo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5oIGIvZHJp
+dmVycy9tZC9yYWlkNS5oDQo+PiBpbmRleCAyMTY0MDIxLi42NzY3ZDA3IDEwMDY0NA0KPj4gLS0t
+IGEvZHJpdmVycy9tZC9yYWlkNS5oDQo+PiArKysgYi9kcml2ZXJzL21kL3JhaWQ1LmgNCj4+IEBA
+IC0yNzMsNiArMjczLDcgQEAgZW51bSByNWRldl9mbGFncyB7DQo+PiAgCVI1X1dhbnR3cml0ZSwN
+Cj4+ICAJUjVfT3ZlcmxhcCwJLyogVGhlcmUgaXMgYSBwZW5kaW5nIG92ZXJsYXBwaW5nIHJlcXVl
+c3QNCj4+ICAJCQkgKiBvbiB0aGlzIGJsb2NrICovDQo+PiArCVI1X1JlYWROb01lcmdlLCAvKiBw
+cmV2ZW50IGJpbyBmcm9tIG1lcmdpbmcgaW4gYmxvY2stbGF5ZXIgKi8NCj4+ICAJUjVfUmVhZEVy
+cm9yLAkvKiBzZWVuIGEgcmVhZCBlcnJvciBoZXJlIHJlY2VudGx5ICovDQo+PiAgCVI1X1JlV3Jp
+dGUsCS8qIGhhdmUgdHJpZWQgdG8gb3Zlci13cml0ZSB0aGUgcmVhZGVycm9yICovDQo+PiAgDQo+
+DQo+DQpIb3cgYWJvdXQgdGhlIGJlbG93IGV4cGxhbmF0aW9uOg0KDQpCZWNhdXNlIGJpbyB3aWxs
+IGJlIG1lcmdlZCBhdCBibG9jay1sYXllcixzbyBiaW9zLWVycm9yIG1heSBjYXVzZWQgYnkgb3Ro
+ZXINCmJpbyB3aGljaCBiZSBtZXJnZWQgaW50byB0byB0aGUgc2FtZSByZXF1ZXN0Lg0KRm9yIGV4
+YW1wbGU6IGlmIGNodW5rX2FsaWduZWRfcmVhZCBmYWlsZWQsIGl0IHdpbGwgYWRkIGJpbyB0byBz
+b21lIHN0aXBlLg0KQnV0IGJlY2F1c2UgdGhlIGJpby1tZXJnZSBmdW5jdGlvbix0aG9zZSBiaW9z
+IGF0IG1vc3QgYmUgbWVyZ2VkLkl0IHdpbGwgbGlrZQ0KdGhlIGNodW5rX2FsaWduZWRfcmVhZCBh
+bmQgcmV0dXJlbiBlcnJvci5UaGVuIGl0IHdpbGwgcmUtd3JpdGUgYW5kIHJlLXJlYWQuDQpTdXBw
+b3NlIFJBSUQ1IGNyZWF0ZWQgYnkgbiBkaXNrIGFuZCBjaHVuay1zaXplIGlzIDUxMksuDQpJZiBy
+ZWFkIDUxMmsgY2h1bmtfYWxpZ25lZCBhbmQgbWV0IGVycm9yKHNlY3RvciAwIGlzIG1lZGlhIGVy
+cm9yKSwgDQp0aGVuIGFkZCA1MTIvND0xMjggc3RpcGUuSWYgdGhvc2UgYmlvcyBtZXJnZWQgYW5k
+IG11c3QgYmUgZXJyb3IuVGhlIHJld3JpdGUgb3BlcmF0aW9uDQp3aWxsIHJlYWQgKG4tMSkgKiAx
+MjggYW5kIGNvbXB1dGVyIDEyOCBzdHJpcGUuQnV0IHVzaW5nIHRoaXMgZmxhZyx3ZSBvbmx5IGV4
+ZWMgb25lIHJld3JpdGUuDQpUaGlzIG9jY3VyIGluIHJlc3luYy9yZXBhaXIgc2l0dWF0aW9uIGFu
+ZCBjaHVuay1hbGlnbmVkLXJlYWQuDQoNCk1heSBiZSB1c2luZyB0aGlzIGZsYWcsd2UgY2FuIGZp
+bmQgZXhhY3QgYmFkLXNlY3Rvci5Ob3QgcmVjb3JkZWQgdGhlIHdob2xlIHJlcXVlc3QgYmlvcyAN
+CmFzIGJhZC1zZWN0b3Iu
 
-I use a 4-thread DIO randwrite 4k test. I'm thinking about keep work cpu local
-too, that requires spearate the stripe lru list. Also async ops and request
-completion is better cpu local aware to make this work well.
-
-When I try the unbound workqueue, I set the max active work to online_cpus, so
-there will be 24 worker threads. But even 24 threads are too many.
-
-Thanks,
-Shaohua
