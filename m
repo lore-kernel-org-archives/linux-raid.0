@@ -1,65 +1,121 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [patch 03/10 v3] raid5: add a per-stripe lock
-Date: Tue, 3 Jul 2012 09:27:45 +0800
-Message-ID: <20120703012745.GA1898@kernel.org>
-References: <20120625072447.268095276@kernel.org>
- <20120625072613.620625574@kernel.org>
- <20120702105046.56cd47ec@notabene.brown>
- <20120702031626.GE29770@kernel.org>
- <20120702173953.7bee26cb@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: raid10 make_request failure during iozone benchmark upon btrfs
+Date: Tue, 3 Jul 2012 11:39:43 +1000
+Message-ID: <20120703113943.3e4c43ad@notabene.brown>
+References: <4FF108A8.6090606@gmail.com>
+	<20120702125227.179c4343@notabene.brown>
+	<4FF10E71.2090501@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/96t85mSo+EDkHf/x6cNaAtl"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120702173953.7bee26cb@notabene.brown>
+In-Reply-To: <4FF10E71.2090501@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, dan.j.williams@intel.com, shli@fusionio.com
+To: Kerin Millar <kerframil@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jul 02, 2012 at 05:39:53PM +1000, NeilBrown wrote:
-> On Mon, 2 Jul 2012 11:16:26 +0800 Shaohua Li <shli@kernel.org> wrote:
-> 
-> 
-> > > Then I could see what is being added and what is being removed all in the one
-> > > patch and I can be sure that they balance.
-> > 
-> > reworked the patch 3-5 to two patches as you suggested, and sent to you. please check.
-> 
-> Thanks.  That's looking really good.
-> 
-> However I think we can do better.  I've been looking more closely at the code
-> and I think that the only things that we need stripe_lock to protect are
-> ->toread and ->towrite, together with the following bios.  e.g.
-> ->toread->bi_next etc.
-> 
-> ->read and ->written don't need stripe_lock protection, as they are only
-> manipulated by the handle_stripe state machine which uses STRIPE_ACTIVE 
-> and refcounts for exclusion.
-> 
-> So add_stripe_bio need to take the lock while adding a bio to the
-> ->toread and  ->towrite lists, and ops_run_biodrain() and ops_run_biofill
-> need to take the lock while the move the list from ->to{read,write} to
-> ->{read,written}.  But we don't need it anywhere else.  e.g. analyse_stripe
-> shouldn't need the lock at all.  Any change that could happen during the loop
-> could equally happen after the lock was released so we don't lose by not
-> having the lock.
+--Sig_/96t85mSo+EDkHf/x6cNaAtl
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Looks reasonable.
+On Mon, 02 Jul 2012 03:58:57 +0100 Kerin Millar <kerframil@gmail.com> wrote:
 
-> There is another current user of the lock, but I think that should be
-> discarded as a false optimisation.
-> We currently try to optimise out extra calls to bitmap_startwrite and
-> bitmap_endwrite when we see back-to-back writes to the one stripe.  However I
-> suspect that is extremely unlikely and it just imposes and pointless need for
-> synchronisation in raid5.
-> 
-> We just simply call bitmap_startwrite whenever ->towrite changes from NULL to
-> non-NULL, and call bitmap_endwrite whenever we clear ->written, reguardless
-> what value ->towrite now has.
+> Hi Neil,
+>=20
+> On 02/07/2012 03:52, NeilBrown wrote:
+> > On Mon, 02 Jul 2012 03:34:16 +0100 Kerin Millar<kerframil@gmail.com>  w=
+rote:
+> >
+> >> >  Hello,
+> >> >
+> >> >  I'm running a 4-way RAID-10 array with the f2 layout scheme on a 3.=
+5-rc5
+> > I thought I fixed this in 3.5-rc2.
+> > Maybe there is another bug....
+> >
+> > Could you please double check that you are running a kernel with
+> >
+> > commit aba336bd1d46d6b0404b06f6915ed76150739057
+> > Author: NeilBrown<neilb@suse.de>
+> > Date:   Thu May 31 15:39:11 2012 +1000
+> >
+> >      md: raid1/raid10: fix problem with merge_bvec_fn
+> >
+> > in it?
+>=20
+> I am indeed. I searched the list beforehand and noticed the patch in
+> question. Not sure which -rc it landed in but I checked my source tree
+> and it's definitely in there.
+>=20
+> Cheers,
+>=20
+> --Kerin
 
-Yep, the chance write to the same stripe should be very low.
-I'll try in my stress test, if no failure, I'll post the patches.
+Thanks.
+Looking at it again I see that it is definitely a different bug, that patch
+wouldn't affect it.
+
+But I cannot see what could possibly be causing the problem.
+You have a 256K chunk size, so requests should be limited to 512 sectors
+aligned at a 512-sector boundary.
+However all the requests that a causing errors are 512 sectors long, but
+aligned on a 256-sector boundary (which is not also 512-sector).  This is
+wrong.
+
+It could be that btrfs is submitting bad requests, but I think it always us=
+es
+bio_add_page, and bio_add_page appears to do the right thing.
+It could be that dm-linear is causing problem, but it seems to correctly af=
+ter
+the underlying device for alignment, and reports that alignment to
+bio_add_page.
+It could be that md/raid10 is the problem but I cannot find any fault in
+raid10_mergeable_bvec - performs much the same tests that the
+raid01 make_request function does.
+
+So it is a mystery.
+
+Is this failure repeatable?
+
+If so, could you please insert
+   WARN_ON_ONCE(1);
+in drivers/md/raid10.c where it prints out the message: just after the
+"bad_map:" label.
+
+Also, in raid10_mergeable_bvec, insert=20
+   WARN_ON_ONCE(max < 0);
+just before
+		if (max < 0)
+			/* bio_add cannot handle a negative return */
+			max =3D 0;
+
+and then see if either of those generate a warning, and post the full stack
+trace  if they do.
 
 Thanks,
-Shaohua
+NeilBrown
+
+--Sig_/96t85mSo+EDkHf/x6cNaAtl
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT/JNXznsnt1WYoG5AQLQOQ/+LSmmQrVeZFmQeQjqjTd9IY/jKmsjcU/T
+3RRdj12WBX1Ew6kCq7VopScHEpKTjU+dVCB/kHkhMZlt/v9Mnhkt/jvXkelwSg5R
+p2PbaQayp0Rg+AoHupHZDgQWStKIZ3wZFOhcA/x4vg9cRvGIhCRYh75cCXNNxtX6
+9UJIfpzXGKfe6j+cs5v/wwGz7bNAltr5clY+wY2kowVGcZAmrfpoQLUakBCK4bGO
+WyL/CzfYlmuzmXmYnZnkXqN+pz3ZaYviLk+IHPQtxDTsQnqralp4a7Lsss/BdN1d
+UlJ+bFh8TGnUaYcCKpFTg/0DVVS8wFDDI8HUKTlTUvZq+1woIoEtD9k0s1LVnCt9
+hnK9VZnYpNi2BRl3j6WKsKhqT3H3hAfVIeI2vlqAJ5gCrXh/gzjP7YY5tpOjoBS9
+GWe/izIhNHHEeDnPTSVfvB5fD6twPuIJxYXzaxaVjoftQAysYiDOrafcq30orYwP
+Agmxo5tFvP52+WfUNTxolMeeksByhKvDyTENQ5ujB3u9XH1LKciPcFqDP4nCS7gN
+tSChqpRqyYVmky7MIDjyXsaFHyMd8vwUMOMOVT6pJQlP7YL8tEXzwg0bc5iVaNze
+T4HLjir9JgwzXrh2ZO6mN1hEbvMlJQ7xRZlKVnGc17vsqDtv/Pk7gXiBrEcPY9T8
+ZMBTEuw1IsI=
+=KgOD
+-----END PGP SIGNATURE-----
+
+--Sig_/96t85mSo+EDkHf/x6cNaAtl--
