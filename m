@@ -1,133 +1,53 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [patch 0/3 v3] MD: improve raid1/10 write performance for fast
- storage
-Date: Tue, 3 Jul 2012 16:58:58 +0800
-Message-ID: <20120703085858.GA829@kernel.org>
-References: <20120613091143.508417333@kernel.org>
- <20120628190352.4dc1dd76@notabene.brown>
- <CANejiEWfR1S+F5GT7Bxhi2ig8ef7ZziAbVebM_DT3-_3hftYUw@mail.gmail.com>
- <20120702073645.GA785@kernel.org>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [patch 03/10 v3] raid5: add a per-stripe lock
+Date: Tue, 3 Jul 2012 20:16:31 +0800
+Message-ID: <201207032016270001820@gmail.com>
+References: <20120625072447.268095276@kernel.org> <20120625072613.620625574@kernel.org> <20120702105046.56cd47ec@notabene.brown> <20120702031626.GE29770@kernel.org>,
+	<20120702173953.7bee26cb@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120702073645.GA785@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, axboe@kernel.dk
+To: Neil Brown <neilb@suse.de>, shli <shli@kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>, axboe <axboe@kernel.dk>, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-On Mon, Jul 02, 2012 at 03:36:45PM +0800, Shaohua Li wrote:
-> On Fri, Jun 29, 2012 at 02:10:30PM +0800, Shaohua Li wrote:
-> > 2012/6/28 NeilBrown <neilb@suse.de>:
-> > > On Wed, 13 Jun 2012 17:11:43 +0800 Shaohua Li <shli@kernel.org> w=
-rote:
-> > >
-> > >> In raid1/10, all write requests are dispatched in a single threa=
-d. In fast
-> > >> storage, the thread is a bottleneck, because it dispatches reque=
-st too slow.
-> > >> Also the thread migrates freely, which makes request completion =
-cpu not match
-> > >> with submission cpu even driver/block layer has such capability.=
- This will
-> > >> cause bad cache issue. Both these are not a big deal for slow st=
-orage.
-> > >>
-> > >> Switching the dispatching to percpu/perthread based dramatically=
- increases
-> > >> performance. =A0The more raid disk number is, the more performan=
-ce boosts. In a
-> > >> 4-disk raid10 setup, this can double the throughput.
-> > >>
-> > >> percpu/perthread based dispatch doesn't harm slow storage. This =
-is the way how
-> > >> raw device is accessed, and there is correct block plug set whic=
-h can help do
-> > >> request merge and reduce lock contention.
-> > >>
-> > >> V2->V3:
-> > >> rebase to latest tree and fix cpuhotplug issue
-> > >>
-> > >> V1->V2:
-> > >> 1. droped direct dispatch patches. That has better performance i=
-mporvement, but
-> > >> is hopelessly made correct.
-> > >> 2. Add a MD specific workqueue to do percpu dispatch.
-> > >
-> > >
-> > > Hi.
-> > >
-> > > I still don't like the per-cpu allocations and the extra work que=
-ues.
-> > >
-> > > The following patch demonstrates how I would like to address this=
- issue. =A0It
-> > > should submit requests from the same thread that initially made t=
-he request -
-> > > at least in most cases.
-> > >
-> > > It leverages the plugging code and pushed everything out on the u=
-nplug,
-> > > unless that comes from a scheduler call (which should be uncommon=
-). =A0In that
-> > > case it falls back on passing all the requests to the md thread.
-> > >
-> > > Obviously if we proceed with this I'll split this up into neat re=
-viewable
-> > > patches. =A0However before that it would help to know if it reall=
-y helps as I
-> > > think it should.
-> > >
-> > > So would you be able to test it on your SSD hardware and see how =
-it compares
-> > > the current code, and to you code? =A0Thanks.
-> > >
-> > > I have only tested it lightly myself so there could still be bugs=
-, but
-> > > hopefully not obvious ones.
-> > >
-> > > A simple "time mkfs" test on very modest hardware show as 25% red=
-uction in
-> > > total time (168s -> 127s). =A0I guess that's a 33% increase in sp=
-eed?
-> > > However sequential writes with 'dd' seem a little slower (14MB/s =
--> 13.6MB/s)
-> > >
-> > > There are some hacks in there that need to be cleaned up, but I t=
-hink the
-> > > general structure looks good.
-> >=20
-> > Thought I consider this approach before, and schedule from the unpl=
-ug
-> > callback is an issue. Maybe I overlooked it at that time, the from_=
-schedule
-> > check looks promising.
->=20
-> I tried raid1/raid10 performance with this patch (with similar change=
- for
-> raid10, and add plug in the raid1/10 unplug function for dispatching)=
-, the
-> result is ok. The from_schedule check does the trick, there isn't rac=
-e I
-> mentioned before. And I double checked the rate unplug is called from=
- schedule,
-> which is very very low.
->=20
-> Now the only problem is if extra bitmap flush could be an overhead. O=
-ur card
-> hasn't such overhead, so not sure.
+T24gMjAxMi0wNy0wMiAxNTozOSBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
+IE1vbiwgMiBKdWwgMjAxMiAxMToxNjoyNiArMDgwMCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5v
+cmc+IHdyb3RlOg0KPg0KPg0KPj4gPiBUaGVuIEkgY291bGQgc2VlIHdoYXQgaXMgYmVpbmcgYWRk
+ZWQgYW5kIHdoYXQgaXMgYmVpbmcgcmVtb3ZlZCBhbGwgaW4gdGhlIG9uZQ0KPj4gPiBwYXRjaCBh
+bmQgSSBjYW4gYmUgc3VyZSB0aGF0IHRoZXkgYmFsYW5jZS4NCj4+IA0KPj4gcmV3b3JrZWQgdGhl
+IHBhdGNoIDMtNSB0byB0d28gcGF0Y2hlcyBhcyB5b3Ugc3VnZ2VzdGVkLCBhbmQgc2VudCB0byB5
+b3UuIHBsZWFzZSBjaGVjay4NCj4NCj5UaGFua3MuICBUaGF0J3MgbG9va2luZyByZWFsbHkgZ29v
+ZC4NCj4NCj5Ib3dldmVyIEkgdGhpbmsgd2UgY2FuIGRvIGJldHRlci4gIEkndmUgYmVlbiBsb29r
+aW5nIG1vcmUgY2xvc2VseSBhdCB0aGUgY29kZQ0KPmFuZCBJIHRoaW5rIHRoYXQgdGhlIG9ubHkg
+dGhpbmdzIHRoYXQgd2UgbmVlZCBzdHJpcGVfbG9jayB0byBwcm90ZWN0IGFyZQ0KPi0+dG9yZWFk
+IGFuZCAtPnRvd3JpdGUsIHRvZ2V0aGVyIHdpdGggdGhlIGZvbGxvd2luZyBiaW9zLiAgZS5nLg0K
+Pi0+dG9yZWFkLT5iaV9uZXh0IGV0Yy4NCj4NCj4tPnJlYWQgYW5kIC0+d3JpdHRlbiBkb24ndCBu
+ZWVkIHN0cmlwZV9sb2NrIHByb3RlY3Rpb24sIGFzIHRoZXkgYXJlIG9ubHkNCj5tYW5pcHVsYXRl
+ZCBieSB0aGUgaGFuZGxlX3N0cmlwZSBzdGF0ZSBtYWNoaW5lIHdoaWNoIHVzZXMgU1RSSVBFX0FD
+VElWRSANCj5hbmQgcmVmY291bnRzIGZvciBleGNsdXNpb24uDQo+DQo+U28gYWRkX3N0cmlwZV9i
+aW8gbmVlZCB0byB0YWtlIHRoZSBsb2NrIHdoaWxlIGFkZGluZyBhIGJpbyB0byB0aGUNCj4tPnRv
+cmVhZCBhbmQgIC0+dG93cml0ZSBsaXN0cywgYW5kIG9wc19ydW5fYmlvZHJhaW4oKSBhbmQgb3Bz
+X3J1bl9iaW9maWxsDQo+bmVlZCB0byB0YWtlIHRoZSBsb2NrIHdoaWxlIHRoZSBtb3ZlIHRoZSBs
+aXN0IGZyb20gLT50b3tyZWFkLHdyaXRlfSB0bw0KPi0+e3JlYWQsd3JpdHRlbn0uICANCkhvdyBh
+Ym91dCB4Y2hnKCk/DQo+QnV0IHdlIGRvbid0IG5lZWQgaXQgYW55d2hlcmUgZWxzZS4gIGUuZy4g
+YW5hbHlzZV9zdHJpcGUNCj5zaG91bGRuJ3QgbmVlZCB0aGUgbG9jayBhdCBhbGwuICBBbnkgY2hh
+bmdlIHRoYXQgY291bGQgaGFwcGVuIGR1cmluZyB0aGUgbG9vcA0KPmNvdWxkIGVxdWFsbHkgaGFw
+cGVuIGFmdGVyIHRoZSBsb2NrIHdhcyByZWxlYXNlZCBzbyB3ZSBkb24ndCBsb3NlIGJ5IG5vdA0K
+PmhhdmluZyB0aGUgbG9jay4NCj4NCj5UaGVyZSBpcyBhbm90aGVyIGN1cnJlbnQgdXNlciBvZiB0
+aGUgbG9jaywgYnV0IEkgdGhpbmsgdGhhdCBzaG91bGQgYmUNCj5kaXNjYXJkZWQgYXMgYSBmYWxz
+ZSBvcHRpbWlzYXRpb24uDQo+V2UgY3VycmVudGx5IHRyeSB0byBvcHRpbWlzZSBvdXQgZXh0cmEg
+Y2FsbHMgdG8gYml0bWFwX3N0YXJ0d3JpdGUgYW5kDQo+Yml0bWFwX2VuZHdyaXRlIHdoZW4gd2Ug
+c2VlIGJhY2stdG8tYmFjayB3cml0ZXMgdG8gdGhlIG9uZSBzdHJpcGUuICBIb3dldmVyIEkNCj5z
+dXNwZWN0IHRoYXQgaXMgZXh0cmVtZWx5IHVubGlrZWx5IGFuZCBpdCBqdXN0IGltcG9zZXMgYW5k
+IHBvaW50bGVzcyBuZWVkIGZvcg0KPnN5bmNocm9uaXNhdGlvbiBpbiByYWlkNS4NCj4NCj5XZSBq
+dXN0IHNpbXBseSBjYWxsIGJpdG1hcF9zdGFydHdyaXRlIHdoZW5ldmVyIC0+dG93cml0ZSBjaGFu
+Z2VzIGZyb20gTlVMTCB0bw0KPm5vbi1OVUxMLCBhbmQgY2FsbCBiaXRtYXBfZW5kd3JpdGUgd2hl
+bmV2ZXIgd2UgY2xlYXIgLT53cml0dGVuLCByZWd1YXJkbGVzcw0KPndoYXQgdmFsdWUgLT50b3dy
+aXRlIG5vdyBoYXMuDQo+DQo+V291bGQgeW91IGxpa2UgdG8gZXhwZXJpbWVudCB3aXRoIHRoYXQ/
+ICBJZiBJIGhhdmVuJ3QgZGVzY3JpYmVkIGl0IHdlbGwNCj5lbm91Z2ggSSBjYW4gd3JpdGUgYSBw
+YXRjaCB0byBzaG93IHdoYXQgSSBtZWFuLg0KPg0KPlRoYW5rcywNCj5OZWlsQnJvd24NCj4=
 
-Looks you merged the patch to your tree, great! The raid1_unplug() stil=
-l lacks
-blk_start_plug/blk_finish_plug. Will you add a similar patch for raid10=
-?
-
-Thanks,
-Shaohua
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
