@@ -1,7 +1,7 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: [patch 2/3] raid5: add a per-stripe lock
-Date: Tue, 3 Jul 2012 15:50:36 +0800
-Message-ID: <20120703075036.GB23488@kernel.org>
+Subject: [patch 3/3]raid5: remove unnecessary bitmap write optimization
+Date: Tue, 3 Jul 2012 15:51:11 +0800
+Message-ID: <20120703075111.GC23488@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -11,209 +11,98 @@ To: linux-raid@vger.kernel.org
 Cc: neilb@suse.de, axboe@kernel.dk, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-Add a per-stripe lock to protect stripe specific data. The purpose is to reduce
-lock contention of conf->device_lock.
-
-stripe ->toread, ->towrite are protected by per-stripe lock.  Accessing bio
-list of the stripe is always serialized by this lock, so adding bio to the
-lists (add_stripe_bio()) and removing bio from the lists (like
-ops_run_biofill()) not race.
-
-If bio in ->read, ->written ... list are not shared by multiple stripes, we
-don't need any lock to protect ->read, ->written, because STRIPE_ACTIVE will
-protect them. If the bio are shared,  there are two protections:
-1. bi_phys_segments acts as a reference count
-2. traverse the list uses r5_next_bio, which makes traverse never access bio
-not belonging to the stripe
-
-Let's have an example:
-|  stripe1 |  stripe2    |  stripe3  |
-...bio1......|bio2|bio3|....bio4.....
-
-stripe2 has 4 bios, when it's finished, it will decrement bi_phys_segments for
-all bios, but only end_bio for bio2 and bio3. bio1->bi_next still points to
-bio2, but this doesn't matter. When stripe1 is finished, it will not touch bio2
-because of r5_next_bio check. Next time stripe1 will end_bio for bio1 and
-stripe3 will end_bio bio4.
-
-before add_stripe_bio() addes a bio to a stripe, we already increament the bio
-bi_phys_segments, so don't worry other stripes release the bio.
+Neil pointed out the bitmap write optimization in handle_stripe_clean_event()
+is unnecessary, because the chance one stripe gets written twice in the mean
+time is rare. We can always do a bitmap_startwrite when a write request is
+added to a stripe and bitmap_endwrite after write request is done.  Delete the
+optimization. With it, we can delete some cases of stripe_lock.
 
 Signed-off-by: Shaohua Li <shli@fusionio.com>
 ---
- drivers/md/raid5.c |   39 +++++++++++++++++++++------------------
- drivers/md/raid5.h |    1 +
- 2 files changed, 22 insertions(+), 18 deletions(-)
+ drivers/md/raid5.c |   28 ++++++++--------------------
+ 1 file changed, 8 insertions(+), 20 deletions(-)
 
 Index: linux/drivers/md/raid5.c
 ===================================================================
---- linux.orig/drivers/md/raid5.c	2012-07-03 08:43:51.536241973 +0800
-+++ linux/drivers/md/raid5.c	2012-07-03 11:33:58.283926161 +0800
-@@ -757,14 +757,12 @@ static void ops_complete_biofill(void *s
- {
- 	struct stripe_head *sh = stripe_head_ref;
- 	struct bio *return_bi = NULL;
--	struct r5conf *conf = sh->raid_conf;
- 	int i;
- 
- 	pr_debug("%s: stripe %llu\n", __func__,
- 		(unsigned long long)sh->sector);
- 
- 	/* clear completed biofills */
--	spin_lock_irq(&conf->device_lock);
- 	for (i = sh->disks; i--; ) {
- 		struct r5dev *dev = &sh->dev[i];
- 
-@@ -790,7 +788,6 @@ static void ops_complete_biofill(void *s
- 			}
- 		}
- 	}
--	spin_unlock_irq(&conf->device_lock);
- 	clear_bit(STRIPE_BIOFILL_RUN, &sh->state);
- 
- 	return_io(return_bi);
-@@ -802,7 +799,6 @@ static void ops_complete_biofill(void *s
- static void ops_run_biofill(struct stripe_head *sh)
- {
- 	struct dma_async_tx_descriptor *tx = NULL;
--	struct r5conf *conf = sh->raid_conf;
- 	struct async_submit_ctl submit;
- 	int i;
- 
-@@ -813,10 +809,10 @@ static void ops_run_biofill(struct strip
- 		struct r5dev *dev = &sh->dev[i];
- 		if (test_bit(R5_Wantfill, &dev->flags)) {
- 			struct bio *rbi;
--			spin_lock_irq(&conf->device_lock);
-+			spin_lock_irq(&sh->stripe_lock);
- 			dev->read = rbi = dev->toread;
- 			dev->toread = NULL;
--			spin_unlock_irq(&conf->device_lock);
-+			spin_unlock_irq(&sh->stripe_lock);
- 			while (rbi && rbi->bi_sector <
- 				dev->sector + STRIPE_SECTORS) {
- 				tx = async_copy_data(0, rbi, dev->page,
-@@ -1152,12 +1148,12 @@ ops_run_biodrain(struct stripe_head *sh,
- 		if (test_and_clear_bit(R5_Wantdrain, &dev->flags)) {
- 			struct bio *wbi;
- 
--			spin_lock_irq(&sh->raid_conf->device_lock);
-+			spin_lock_irq(&sh->stripe_lock);
- 			chosen = dev->towrite;
- 			dev->towrite = NULL;
- 			BUG_ON(dev->written);
- 			wbi = dev->written = chosen;
--			spin_unlock_irq(&sh->raid_conf->device_lock);
-+			spin_unlock_irq(&sh->stripe_lock);
- 
- 			while (wbi && wbi->bi_sector <
- 				dev->sector + STRIPE_SECTORS) {
-@@ -1462,6 +1458,8 @@ static int grow_one_stripe(struct r5conf
- 	init_waitqueue_head(&sh->ops.wait_for_ops);
- 	#endif
- 
-+	spin_lock_init(&sh->stripe_lock);
-+
- 	if (grow_buffers(sh)) {
- 		shrink_buffers(sh);
- 		kmem_cache_free(conf->slab_cache, sh);
-@@ -2341,8 +2339,15 @@ static int add_stripe_bio(struct stripe_
- 		(unsigned long long)bi->bi_sector,
- 		(unsigned long long)sh->sector);
- 
--
--	spin_lock_irq(&conf->device_lock);
-+	/*
-+	 * If several bio share a stripe. The bio bi_phys_segments acts as a
-+	 * reference count to avoid race. The reference count should already be
-+	 * increased before this function is called (for example, in
-+	 * make_request()), so other bio sharing this stripe will not free the
-+	 * stripe. If a stripe is owned by one stripe, the stripe lock will
-+	 * protect it.
-+	 */
-+	spin_lock_irq(&sh->stripe_lock);
+--- linux.orig/drivers/md/raid5.c	2012-07-03 14:58:51.241382361 +0800
++++ linux/drivers/md/raid5.c	2012-07-03 15:04:48.568889733 +0800
+@@ -2350,7 +2350,7 @@ static int add_stripe_bio(struct stripe_
+ 	spin_lock_irq(&sh->stripe_lock);
  	if (forwrite) {
  		bip = &sh->dev[dd_idx].towrite;
- 		if (*bip == NULL && sh->dev[dd_idx].written == NULL)
-@@ -2376,7 +2381,7 @@ static int add_stripe_bio(struct stripe_
- 		if (sector >= sh->dev[dd_idx].sector + STRIPE_SECTORS)
- 			set_bit(R5_OVERWRITE, &sh->dev[dd_idx].flags);
- 	}
--	spin_unlock_irq(&conf->device_lock);
-+	spin_unlock_irq(&sh->stripe_lock);
+-		if (*bip == NULL && sh->dev[dd_idx].written == NULL)
++		if (*bip == NULL)
+ 			firstwrite = 1;
+ 	} else
+ 		bip = &sh->dev[dd_idx].toread;
+@@ -2427,7 +2427,6 @@ handle_failed_stripe(struct r5conf *conf
+ 	int i;
+ 	for (i = disks; i--; ) {
+ 		struct bio *bi;
+-		int bitmap_end = 0;
  
- 	pr_debug("added bi b#%llu to stripe s#%llu, disk %d.\n",
- 		(unsigned long long)(*bip)->bi_sector,
-@@ -2392,7 +2397,7 @@ static int add_stripe_bio(struct stripe_
- 
-  overlap:
- 	set_bit(R5_Overlap, &sh->dev[dd_idx].flags);
--	spin_unlock_irq(&conf->device_lock);
-+	spin_unlock_irq(&sh->stripe_lock);
- 	return 0;
- }
- 
-@@ -2442,7 +2447,7 @@ handle_failed_stripe(struct r5conf *conf
- 				rdev_dec_pending(rdev, conf->mddev);
- 			}
- 		}
--		spin_lock_irq(&conf->device_lock);
-+		spin_lock_irq(&sh->stripe_lock);
+ 		if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
+ 			struct md_rdev *rdev;
+@@ -2451,10 +2450,9 @@ handle_failed_stripe(struct r5conf *conf
  		/* fail all writes first */
  		bi = sh->dev[i].towrite;
  		sh->dev[i].towrite = NULL;
-@@ -2504,7 +2509,7 @@ handle_failed_stripe(struct r5conf *conf
+-		if (bi) {
++		if (bi)
+ 			s->to_write--;
+-			bitmap_end = 1;
+-		}
++		spin_unlock_irq(&sh->stripe_lock);
+ 
+ 		if (test_and_clear_bit(R5_Overlap, &sh->dev[i].flags))
+ 			wake_up(&conf->wait_for_overlap);
+@@ -2473,7 +2471,6 @@ handle_failed_stripe(struct r5conf *conf
+ 		/* and fail all 'written' */
+ 		bi = sh->dev[i].written;
+ 		sh->dev[i].written = NULL;
+-		if (bi) bitmap_end = 1;
+ 		while (bi && bi->bi_sector <
+ 		       sh->dev[i].sector + STRIPE_SECTORS) {
+ 			struct bio *bi2 = r5_next_bio(bi, sh->dev[i].sector);
+@@ -2509,10 +2506,8 @@ handle_failed_stripe(struct r5conf *conf
  				bi = nextbi;
  			}
  		}
--		spin_unlock_irq(&conf->device_lock);
-+		spin_unlock_irq(&sh->stripe_lock);
- 		if (bitmap_end)
- 			bitmap_endwrite(conf->mddev->bitmap, sh->sector,
- 					STRIPE_SECTORS, 0, 0);
-@@ -2710,7 +2715,7 @@ static void handle_stripe_clean_event(st
+-		spin_unlock_irq(&sh->stripe_lock);
+-		if (bitmap_end)
+-			bitmap_endwrite(conf->mddev->bitmap, sh->sector,
+-					STRIPE_SECTORS, 0, 0);
++		bitmap_endwrite(conf->mddev->bitmap, sh->sector,
++				STRIPE_SECTORS, 0, 0);
+ 		/* If we were in the middle of a write the parity block might
+ 		 * still be locked - so just clear all R5_LOCKED flags
+ 		 */
+@@ -2713,9 +2708,7 @@ static void handle_stripe_clean_event(st
+ 				test_bit(R5_UPTODATE, &dev->flags)) {
+ 				/* We can return any write requests */
  				struct bio *wbi, *wbi2;
- 				int bitmap_end = 0;
+-				int bitmap_end = 0;
  				pr_debug("Return write for disc %d\n", i);
--				spin_lock_irq(&conf->device_lock);
-+				spin_lock_irq(&sh->stripe_lock);
+-				spin_lock_irq(&sh->stripe_lock);
  				wbi = dev->written;
  				dev->written = NULL;
  				while (wbi && wbi->bi_sector <
-@@ -2725,7 +2730,7 @@ static void handle_stripe_clean_event(st
+@@ -2728,15 +2721,10 @@ static void handle_stripe_clean_event(st
+ 					}
+ 					wbi = wbi2;
  				}
- 				if (dev->towrite == NULL)
- 					bitmap_end = 1;
--				spin_unlock_irq(&conf->device_lock);
-+				spin_unlock_irq(&sh->stripe_lock);
- 				if (bitmap_end)
- 					bitmap_endwrite(conf->mddev->bitmap,
- 							sh->sector,
-@@ -3183,7 +3188,6 @@ static void analyse_stripe(struct stripe
- 
- 	/* Now to look around and see what can be done */
- 	rcu_read_lock();
--	spin_lock_irq(&conf->device_lock);
- 	for (i=disks; i--; ) {
- 		struct md_rdev *rdev;
- 		sector_t first_bad;
-@@ -3329,7 +3333,6 @@ static void analyse_stripe(struct stripe
- 				do_recovery = 1;
+-				if (dev->towrite == NULL)
+-					bitmap_end = 1;
+-				spin_unlock_irq(&sh->stripe_lock);
+-				if (bitmap_end)
+-					bitmap_endwrite(conf->mddev->bitmap,
+-							sh->sector,
+-							STRIPE_SECTORS,
++				bitmap_endwrite(conf->mddev->bitmap, sh->sector,
++						STRIPE_SECTORS,
+ 					 !test_bit(STRIPE_DEGRADED, &sh->state),
+-							0);
++						0);
+ 			}
  		}
- 	}
--	spin_unlock_irq(&conf->device_lock);
- 	if (test_bit(STRIPE_SYNCING, &sh->state)) {
- 		/* If there is a failed device being replaced,
- 		 *     we must be recovering.
-Index: linux/drivers/md/raid5.h
-===================================================================
---- linux.orig/drivers/md/raid5.h	2012-07-03 08:43:51.508242323 +0800
-+++ linux/drivers/md/raid5.h	2012-07-03 08:43:51.548241820 +0800
-@@ -210,6 +210,7 @@ struct stripe_head {
- 	int			disks;		/* disks in stripe */
- 	enum check_states	check_state;
- 	enum reconstruct_states reconstruct_state;
-+	spinlock_t		stripe_lock;
- 	/**
- 	 * struct stripe_operations
- 	 * @target - STRIPE_OP_COMPUTE_BLK target
+ 
