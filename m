@@ -1,53 +1,56 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: Re: [patch 03/10 v3] raid5: add a per-stripe lock
-Date: Tue, 3 Jul 2012 20:16:31 +0800
-Message-ID: <201207032016270001820@gmail.com>
-References: <20120625072447.268095276@kernel.org> <20120625072613.620625574@kernel.org> <20120702105046.56cd47ec@notabene.brown> <20120702031626.GE29770@kernel.org>,
-	<20120702173953.7bee26cb@notabene.brown>
+From: Chris Mason <chris.mason@fusionio.com>
+Subject: Re: raid10 make_request failure during iozone benchmark upon btrfs
+Date: Tue, 3 Jul 2012 11:08:41 -0400
+Message-ID: <20120703150841.GE14928@shiny>
+References: <4FF108A8.6090606@gmail.com>
+ <20120702125227.179c4343@notabene.brown>
+ <4FF10E71.2090501@gmail.com>
+ <20120703113943.3e4c43ad@notabene.brown>
+ <4FF2554D.2040300@gmail.com>
+ <20120703124727.6e2232d1@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120703124727.6e2232d1@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, shli <shli@kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>, axboe <axboe@kernel.dk>, Dan Williams <dan.j.williams@intel.com>
+To: NeilBrown <neilb@suse.de>
+Cc: Kerin Millar <kerframil@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wNy0wMiAxNTozOSBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
-IE1vbiwgMiBKdWwgMjAxMiAxMToxNjoyNiArMDgwMCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5v
-cmc+IHdyb3RlOg0KPg0KPg0KPj4gPiBUaGVuIEkgY291bGQgc2VlIHdoYXQgaXMgYmVpbmcgYWRk
-ZWQgYW5kIHdoYXQgaXMgYmVpbmcgcmVtb3ZlZCBhbGwgaW4gdGhlIG9uZQ0KPj4gPiBwYXRjaCBh
-bmQgSSBjYW4gYmUgc3VyZSB0aGF0IHRoZXkgYmFsYW5jZS4NCj4+IA0KPj4gcmV3b3JrZWQgdGhl
-IHBhdGNoIDMtNSB0byB0d28gcGF0Y2hlcyBhcyB5b3Ugc3VnZ2VzdGVkLCBhbmQgc2VudCB0byB5
-b3UuIHBsZWFzZSBjaGVjay4NCj4NCj5UaGFua3MuICBUaGF0J3MgbG9va2luZyByZWFsbHkgZ29v
-ZC4NCj4NCj5Ib3dldmVyIEkgdGhpbmsgd2UgY2FuIGRvIGJldHRlci4gIEkndmUgYmVlbiBsb29r
-aW5nIG1vcmUgY2xvc2VseSBhdCB0aGUgY29kZQ0KPmFuZCBJIHRoaW5rIHRoYXQgdGhlIG9ubHkg
-dGhpbmdzIHRoYXQgd2UgbmVlZCBzdHJpcGVfbG9jayB0byBwcm90ZWN0IGFyZQ0KPi0+dG9yZWFk
-IGFuZCAtPnRvd3JpdGUsIHRvZ2V0aGVyIHdpdGggdGhlIGZvbGxvd2luZyBiaW9zLiAgZS5nLg0K
-Pi0+dG9yZWFkLT5iaV9uZXh0IGV0Yy4NCj4NCj4tPnJlYWQgYW5kIC0+d3JpdHRlbiBkb24ndCBu
-ZWVkIHN0cmlwZV9sb2NrIHByb3RlY3Rpb24sIGFzIHRoZXkgYXJlIG9ubHkNCj5tYW5pcHVsYXRl
-ZCBieSB0aGUgaGFuZGxlX3N0cmlwZSBzdGF0ZSBtYWNoaW5lIHdoaWNoIHVzZXMgU1RSSVBFX0FD
-VElWRSANCj5hbmQgcmVmY291bnRzIGZvciBleGNsdXNpb24uDQo+DQo+U28gYWRkX3N0cmlwZV9i
-aW8gbmVlZCB0byB0YWtlIHRoZSBsb2NrIHdoaWxlIGFkZGluZyBhIGJpbyB0byB0aGUNCj4tPnRv
-cmVhZCBhbmQgIC0+dG93cml0ZSBsaXN0cywgYW5kIG9wc19ydW5fYmlvZHJhaW4oKSBhbmQgb3Bz
-X3J1bl9iaW9maWxsDQo+bmVlZCB0byB0YWtlIHRoZSBsb2NrIHdoaWxlIHRoZSBtb3ZlIHRoZSBs
-aXN0IGZyb20gLT50b3tyZWFkLHdyaXRlfSB0bw0KPi0+e3JlYWQsd3JpdHRlbn0uICANCkhvdyBh
-Ym91dCB4Y2hnKCk/DQo+QnV0IHdlIGRvbid0IG5lZWQgaXQgYW55d2hlcmUgZWxzZS4gIGUuZy4g
-YW5hbHlzZV9zdHJpcGUNCj5zaG91bGRuJ3QgbmVlZCB0aGUgbG9jayBhdCBhbGwuICBBbnkgY2hh
-bmdlIHRoYXQgY291bGQgaGFwcGVuIGR1cmluZyB0aGUgbG9vcA0KPmNvdWxkIGVxdWFsbHkgaGFw
-cGVuIGFmdGVyIHRoZSBsb2NrIHdhcyByZWxlYXNlZCBzbyB3ZSBkb24ndCBsb3NlIGJ5IG5vdA0K
-PmhhdmluZyB0aGUgbG9jay4NCj4NCj5UaGVyZSBpcyBhbm90aGVyIGN1cnJlbnQgdXNlciBvZiB0
-aGUgbG9jaywgYnV0IEkgdGhpbmsgdGhhdCBzaG91bGQgYmUNCj5kaXNjYXJkZWQgYXMgYSBmYWxz
-ZSBvcHRpbWlzYXRpb24uDQo+V2UgY3VycmVudGx5IHRyeSB0byBvcHRpbWlzZSBvdXQgZXh0cmEg
-Y2FsbHMgdG8gYml0bWFwX3N0YXJ0d3JpdGUgYW5kDQo+Yml0bWFwX2VuZHdyaXRlIHdoZW4gd2Ug
-c2VlIGJhY2stdG8tYmFjayB3cml0ZXMgdG8gdGhlIG9uZSBzdHJpcGUuICBIb3dldmVyIEkNCj5z
-dXNwZWN0IHRoYXQgaXMgZXh0cmVtZWx5IHVubGlrZWx5IGFuZCBpdCBqdXN0IGltcG9zZXMgYW5k
-IHBvaW50bGVzcyBuZWVkIGZvcg0KPnN5bmNocm9uaXNhdGlvbiBpbiByYWlkNS4NCj4NCj5XZSBq
-dXN0IHNpbXBseSBjYWxsIGJpdG1hcF9zdGFydHdyaXRlIHdoZW5ldmVyIC0+dG93cml0ZSBjaGFu
-Z2VzIGZyb20gTlVMTCB0bw0KPm5vbi1OVUxMLCBhbmQgY2FsbCBiaXRtYXBfZW5kd3JpdGUgd2hl
-bmV2ZXIgd2UgY2xlYXIgLT53cml0dGVuLCByZWd1YXJkbGVzcw0KPndoYXQgdmFsdWUgLT50b3dy
-aXRlIG5vdyBoYXMuDQo+DQo+V291bGQgeW91IGxpa2UgdG8gZXhwZXJpbWVudCB3aXRoIHRoYXQ/
-ICBJZiBJIGhhdmVuJ3QgZGVzY3JpYmVkIGl0IHdlbGwNCj5lbm91Z2ggSSBjYW4gd3JpdGUgYSBw
-YXRjaCB0byBzaG93IHdoYXQgSSBtZWFuLg0KPg0KPlRoYW5rcywNCj5OZWlsQnJvd24NCj4=
+On Mon, Jul 02, 2012 at 08:47:27PM -0600, NeilBrown wrote:
+> Thanks.  Looks like it is a btrfs bug - so a big "hello" to linux-btrfs :-)
+> 
+> The symptom is that iozone on btrfs on md/raid10 can result in
+> 
+> [  919.893454] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653500160 256
+> [  919.893465] btrfs: bdev /dev/mapper/vg0-test errs: wr 1, rd 0, flush 0, corrupt 0, gen 0
+> 
+> 
+> i.e. RAID10 has a 256K chunk size, but is getting 256K requests which overlap
+> two chunks - the last half of one chunk and the first half of the next.
+> That isn't allowed and raid10_mergeable_bvec, called by bio_add_page, should
+> prevent it.
+> 
+> However btrfs_map_bio() sets ->bi_sector to a new value without verifying
+> that the resulting bio is still acceptable - which it isn't.
+> 
+> The core problem is that you cannot build a bio for one location, then use it
+> freely at another location.
+> md/raid1 handles this by checking each addition to a bio against all the
+> possible location that it might read/write it.  Maybe btrfs could do the
+> same.
+> Alternately we could work with Kent Overstreet (of bcache fame) to remove the
+> restriction that the fs must make the bio compatible with the device -
+> instead requiring the device to split bios when needed, and making it easy to
+> do that (currently it is not easy).
+> And there are probably other alternative.
+
+In this case btrfs should really break the bio down to smaller chunks
+and hand feed the lower layers.  There are corners where we think the
+device can go a certain size and then later on figure out we were just
+too optimistic.  So we should deal with it by breaking the bio up and
+then lowering our max.
+
+-chris
 
