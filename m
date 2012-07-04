@@ -1,143 +1,130 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: [patch 3/3 v2]raid5: add a per-stripe lock
-Date: Wed, 4 Jul 2012 15:03:00 +0800
-Message-ID: <201207041502572180046@gmail.com>
-References: <20120704052207.GC9145@kernel.org>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [patch 3/3 v3] raid1: prevent merging too large request
+Date: Wed, 4 Jul 2012 16:01:16 +0800
+Message-ID: <CANejiEUN6_bUuZ+SqSRw-38A3rrn6fxrqAs=nk9G4wc6r7=CCQ@mail.gmail.com>
+References: <20120702010840.197370335@kernel.org>
+	<20120702011037.466764171@kernel.org>
+	<20120704155907.560607d4@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120704155907.560607d4@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli <shli@kernel.org>, linux-raid <linux-raid@vger.kernel.org>
-Cc: Neil Brown <neilb@suse.de>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, axboe@kernel.dk
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wNy0wNCAxMzoyMiBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
-PkFkZCBhIHBlci1zdHJpcGUgbG9jayB0byBwcm90ZWN0IHN0cmlwZSBzcGVjaWZpYyBkYXRhLiBU
-aGUgcHVycG9zZSBpcyB0byByZWR1Y2UNCj5sb2NrIGNvbnRlbnRpb24gb2YgY29uZi0+ZGV2aWNl
-X2xvY2suDQo+DQo+c3RyaXBlIC0+dG9yZWFkLCAtPnRvd3JpdGUgYXJlIHByb3RlY3RlZCBieSBw
-ZXItc3RyaXBlIGxvY2suICBBY2Nlc3NpbmcgYmlvDQo+bGlzdCBvZiB0aGUgc3RyaXBlIGlzIGFs
-d2F5cyBzZXJpYWxpemVkIGJ5IHRoaXMgbG9jaywgc28gYWRkaW5nIGJpbyB0byB0aGUNCj5saXN0
-cyAoYWRkX3N0cmlwZV9iaW8oKSkgYW5kIHJlbW92aW5nIGJpbyBmcm9tIHRoZSBsaXN0cyAobGlr
-ZQ0KPm9wc19ydW5fYmlvZmlsbCgpKSBub3QgcmFjZS4NCj4NCj5JZiBiaW8gaW4gLT5yZWFkLCAt
-PndyaXR0ZW4gLi4uIGxpc3QgYXJlIG5vdCBzaGFyZWQgYnkgbXVsdGlwbGUgc3RyaXBlcywgd2UN
-Cj5kb24ndCBuZWVkIGFueSBsb2NrIHRvIHByb3RlY3QgLT5yZWFkLCAtPndyaXR0ZW4sIGJlY2F1
-c2UgU1RSSVBFX0FDVElWRSB3aWxsDQo+cHJvdGVjdCB0aGVtLiBJZiB0aGUgYmlvIGFyZSBzaGFy
-ZWQsICB0aGVyZSBhcmUgdHdvIHByb3RlY3Rpb25zOg0KPjEuIGJpX3BoeXNfc2VnbWVudHMgYWN0
-cyBhcyBhIHJlZmVyZW5jZSBjb3VudA0KPjIuIHRyYXZlcnNlIHRoZSBsaXN0IHVzZXMgcjVfbmV4
-dF9iaW8sIHdoaWNoIG1ha2VzIHRyYXZlcnNlIG5ldmVyIGFjY2VzcyBiaW8NCj5ub3QgYmVsb25n
-aW5nIHRvIHRoZSBzdHJpcGUNCj4NCj5MZXQncyBoYXZlIGFuIGV4YW1wbGU6DQo+fCAgc3RyaXBl
-MSB8ICBzdHJpcGUyICAgIHwgIHN0cmlwZTMgIHwNCj4uLi5iaW8xLi4uLi4ufGJpbzJ8YmlvM3wu
-Li4uYmlvNC4uLi4uDQo+DQo+c3RyaXBlMiBoYXMgNCBiaW9zLCB3aGVuIGl0J3MgZmluaXNoZWQs
-IGl0IHdpbGwgZGVjcmVtZW50IGJpX3BoeXNfc2VnbWVudHMgZm9yDQo+YWxsIGJpb3MsIGJ1dCBv
-bmx5IGVuZF9iaW8gZm9yIGJpbzIgYW5kIGJpbzMuIGJpbzEtPmJpX25leHQgc3RpbGwgcG9pbnRz
-IHRvDQo+YmlvMiwgYnV0IHRoaXMgZG9lc24ndCBtYXR0ZXIuIFdoZW4gc3RyaXBlMSBpcyBmaW5p
-c2hlZCwgaXQgd2lsbCBub3QgdG91Y2ggYmlvMg0KPmJlY2F1c2Ugb2YgcjVfbmV4dF9iaW8gY2hl
-Y2suIE5leHQgdGltZSBzdHJpcGUxIHdpbGwgZW5kX2JpbyBmb3IgYmlvMSBhbmQNCj5zdHJpcGUz
-IHdpbGwgZW5kX2JpbyBiaW80Lg0KPg0KPmJlZm9yZSBhZGRfc3RyaXBlX2JpbygpIGFkZGVzIGEg
-YmlvIHRvIGEgc3RyaXBlLCB3ZSBhbHJlYWR5IGluY3JlYW1lbnQgdGhlIGJpbw0KPmJpX3BoeXNf
-c2VnbWVudHMsIHNvIGRvbid0IHdvcnJ5IG90aGVyIHN0cmlwZXMgcmVsZWFzZSB0aGUgYmlvLg0K
-Pg0KPlNpZ25lZC1vZmYtYnk6IFNoYW9odWEgTGkgPHNobGlAZnVzaW9uaW8uY29tPg0KPi0tLQ0K
-PiBkcml2ZXJzL21kL3JhaWQ1LmMgfCAgIDM1ICsrKysrKysrKysrKysrKysrKystLS0tLS0tLS0t
-LS0tLS0tDQo+IGRyaXZlcnMvbWQvcmFpZDUuaCB8ICAgIDEgKw0KPiAyIGZpbGVzIGNoYW5nZWQs
-IDIwIGluc2VydGlvbnMoKyksIDE2IGRlbGV0aW9ucygtKQ0KPg0KPkluZGV4OiBsaW51eC9kcml2
-ZXJzL21kL3JhaWQ1LmMNCj49PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09DQo+LS0tIGxpbnV4Lm9yaWcvZHJpdmVycy9tZC9y
-YWlkNS5jCTIwMTItMDctMDQgMTI6NTc6MzIuMDAwMDAwMDAwICswODAwDQo+KysrIGxpbnV4L2Ry
-aXZlcnMvbWQvcmFpZDUuYwkyMDEyLTA3LTA0IDEzOjAwOjIxLjU3OTQ2MjQ2OCArMDgwMA0KPkBA
-IC03NTUsMTQgKzc1NSwxMiBAQCBzdGF0aWMgdm9pZCBvcHNfY29tcGxldGVfYmlvZmlsbCh2b2lk
-ICpzDQo+IHsNCj4gCXN0cnVjdCBzdHJpcGVfaGVhZCAqc2ggPSBzdHJpcGVfaGVhZF9yZWY7DQo+
-IAlzdHJ1Y3QgYmlvICpyZXR1cm5fYmkgPSBOVUxMOw0KPi0Jc3RydWN0IHI1Y29uZiAqY29uZiA9
-IHNoLT5yYWlkX2NvbmY7DQo+IAlpbnQgaTsNCj4gDQo+IAlwcl9kZWJ1ZygiJXM6IHN0cmlwZSAl
-bGx1XG4iLCBfX2Z1bmNfXywNCj4gCQkodW5zaWduZWQgbG9uZyBsb25nKXNoLT5zZWN0b3IpOw0K
-PiANCj4gCS8qIGNsZWFyIGNvbXBsZXRlZCBiaW9maWxscyAqLw0KPi0Jc3Bpbl9sb2NrX2lycSgm
-Y29uZi0+ZGV2aWNlX2xvY2spOw0KPiAJZm9yIChpID0gc2gtPmRpc2tzOyBpLS07ICkgew0KPiAJ
-CXN0cnVjdCByNWRldiAqZGV2ID0gJnNoLT5kZXZbaV07DQo+IA0KPkBAIC03ODgsNyArNzg2LDYg
-QEAgc3RhdGljIHZvaWQgb3BzX2NvbXBsZXRlX2Jpb2ZpbGwodm9pZCAqcw0KPiAJCQl9DQo+IAkJ
-fQ0KPiAJfQ0KPi0Jc3Bpbl91bmxvY2tfaXJxKCZjb25mLT5kZXZpY2VfbG9jayk7DQo+IAljbGVh
-cl9iaXQoU1RSSVBFX0JJT0ZJTExfUlVOLCAmc2gtPnN0YXRlKTsNCj4gDQo+IAlyZXR1cm5faW8o
-cmV0dXJuX2JpKTsNCj5AQCAtODAwLDcgKzc5Nyw2IEBAIHN0YXRpYyB2b2lkIG9wc19jb21wbGV0
-ZV9iaW9maWxsKHZvaWQgKnMNCj4gc3RhdGljIHZvaWQgb3BzX3J1bl9iaW9maWxsKHN0cnVjdCBz
-dHJpcGVfaGVhZCAqc2gpDQo+IHsNCj4gCXN0cnVjdCBkbWFfYXN5bmNfdHhfZGVzY3JpcHRvciAq
-dHggPSBOVUxMOw0KPi0Jc3RydWN0IHI1Y29uZiAqY29uZiA9IHNoLT5yYWlkX2NvbmY7DQo+IAlz
-dHJ1Y3QgYXN5bmNfc3VibWl0X2N0bCBzdWJtaXQ7DQo+IAlpbnQgaTsNCj4gDQo+QEAgLTgxMSwx
-MCArODA3LDEwIEBAIHN0YXRpYyB2b2lkIG9wc19ydW5fYmlvZmlsbChzdHJ1Y3Qgc3RyaXANCj4g
-CQlzdHJ1Y3QgcjVkZXYgKmRldiA9ICZzaC0+ZGV2W2ldOw0KPiAJCWlmICh0ZXN0X2JpdChSNV9X
-YW50ZmlsbCwgJmRldi0+ZmxhZ3MpKSB7DQo+IAkJCXN0cnVjdCBiaW8gKnJiaTsNCj4tCQkJc3Bp
-bl9sb2NrX2lycSgmY29uZi0+ZGV2aWNlX2xvY2spOw0KPisJCQlzcGluX2xvY2tfaXJxKCZzaC0+
-c3RyaXBlX2xvY2spOw0KPiAJCQlkZXYtPnJlYWQgPSByYmkgPSBkZXYtPnRvcmVhZDsNCj4gCQkJ
-ZGV2LT50b3JlYWQgPSBOVUxMOw0KPi0JCQlzcGluX3VubG9ja19pcnEoJmNvbmYtPmRldmljZV9s
-b2NrKTsNCj4rCQkJc3Bpbl91bmxvY2tfaXJxKCZzaC0+c3RyaXBlX2xvY2spOw0KPiAJCQl3aGls
-ZSAocmJpICYmIHJiaS0+Ymlfc2VjdG9yIDwNCj4gCQkJCWRldi0+c2VjdG9yICsgU1RSSVBFX1NF
-Q1RPUlMpIHsNCj4gCQkJCXR4ID0gYXN5bmNfY29weV9kYXRhKDAsIHJiaSwgZGV2LT5wYWdlLA0K
-PkBAIC0xMTUwLDEyICsxMTQ2LDEyIEBAIG9wc19ydW5fYmlvZHJhaW4oc3RydWN0IHN0cmlwZV9o
-ZWFkICpzaCwNCj4gCQlpZiAodGVzdF9hbmRfY2xlYXJfYml0KFI1X1dhbnRkcmFpbiwgJmRldi0+
-ZmxhZ3MpKSB7DQo+IAkJCXN0cnVjdCBiaW8gKndiaTsNCj4gDQo+LQkJCXNwaW5fbG9ja19pcnEo
-JnNoLT5yYWlkX2NvbmYtPmRldmljZV9sb2NrKTsNCj4rCQkJc3Bpbl9sb2NrX2lycSgmc2gtPnN0
-cmlwZV9sb2NrKTsNCj4gCQkJY2hvc2VuID0gZGV2LT50b3dyaXRlOw0KPiAJCQlkZXYtPnRvd3Jp
-dGUgPSBOVUxMOw0KPiAJCQlCVUdfT04oZGV2LT53cml0dGVuKTsNCj4gCQkJd2JpID0gZGV2LT53
-cml0dGVuID0gY2hvc2VuOw0KPi0JCQlzcGluX3VubG9ja19pcnEoJnNoLT5yYWlkX2NvbmYtPmRl
-dmljZV9sb2NrKTsNCj4rCQkJc3Bpbl91bmxvY2tfaXJxKCZzaC0+c3RyaXBlX2xvY2spOw0KPiAN
-Cj4gCQkJd2hpbGUgKHdiaSAmJiB3YmktPmJpX3NlY3RvciA8DQo+IAkJCQlkZXYtPnNlY3RvciAr
-IFNUUklQRV9TRUNUT1JTKSB7DQo+QEAgLTE0NjAsNiArMTQ1Niw4IEBAIHN0YXRpYyBpbnQgZ3Jv
-d19vbmVfc3RyaXBlKHN0cnVjdCByNWNvbmYNCj4gCWluaXRfd2FpdHF1ZXVlX2hlYWQoJnNoLT5v
-cHMud2FpdF9mb3Jfb3BzKTsNCj4gCSNlbmRpZg0KPiANCj4rCXNwaW5fbG9ja19pbml0KCZzaC0+
-c3RyaXBlX2xvY2spOw0KPisNCj4gCWlmIChncm93X2J1ZmZlcnMoc2gpKSB7DQo+IAkJc2hyaW5r
-X2J1ZmZlcnMoc2gpOw0KPiAJCWttZW1fY2FjaGVfZnJlZShjb25mLT5zbGFiX2NhY2hlLCBzaCk7
-DQo+QEAgLTIzNDYsOCArMjM0NCwxNSBAQCBzdGF0aWMgaW50IGFkZF9zdHJpcGVfYmlvKHN0cnVj
-dCBzdHJpcGVfDQo+IAkJKHVuc2lnbmVkIGxvbmcgbG9uZyliaS0+Ymlfc2VjdG9yLA0KPiAJCSh1
-bnNpZ25lZCBsb25nIGxvbmcpc2gtPnNlY3Rvcik7DQo+IA0KPi0NCj4tCXNwaW5fbG9ja19pcnEo
-JmNvbmYtPmRldmljZV9sb2NrKTsNCj4rCS8qDQo+KwkgKiBJZiBzZXZlcmFsIGJpbyBzaGFyZSBh
-IHN0cmlwZS4gVGhlIGJpbyBiaV9waHlzX3NlZ21lbnRzIGFjdHMgYXMgYQ0KPisJICogcmVmZXJl
-bmNlIGNvdW50IHRvIGF2b2lkIHJhY2UuIFRoZSByZWZlcmVuY2UgY291bnQgc2hvdWxkIGFscmVh
-ZHkgYmUNCj4rCSAqIGluY3JlYXNlZCBiZWZvcmUgdGhpcyBmdW5jdGlvbiBpcyBjYWxsZWQgKGZv
-ciBleGFtcGxlLCBpbg0KPisJICogbWFrZV9yZXF1ZXN0KCkpLCBzbyBvdGhlciBiaW8gc2hhcmlu
-ZyB0aGlzIHN0cmlwZSB3aWxsIG5vdCBmcmVlIHRoZQ0KPisJICogc3RyaXBlLiBJZiBhIHN0cmlw
-ZSBpcyBvd25lZCBieSBvbmUgc3RyaXBlLCB0aGUgc3RyaXBlIGxvY2sgd2lsbA0KPisJICogcHJv
-dGVjdCBpdC4NCj4rCSAqLw0KPisJc3Bpbl9sb2NrX2lycSgmc2gtPnN0cmlwZV9sb2NrKTsNCj4g
-CWlmIChmb3J3cml0ZSkgew0KPiAJCWJpcCA9ICZzaC0+ZGV2W2RkX2lkeF0udG93cml0ZTsNCj4g
-CQlpZiAoKmJpcCA9PSBOVUxMKQ0KPkBAIC0yMzgxLDcgKzIzODYsNyBAQCBzdGF0aWMgaW50IGFk
-ZF9zdHJpcGVfYmlvKHN0cnVjdCBzdHJpcGVfDQo+IAkJaWYgKHNlY3RvciA+PSBzaC0+ZGV2W2Rk
-X2lkeF0uc2VjdG9yICsgU1RSSVBFX1NFQ1RPUlMpDQo+IAkJCXNldF9iaXQoUjVfT1ZFUldSSVRF
-LCAmc2gtPmRldltkZF9pZHhdLmZsYWdzKTsNCj4gCX0NCj4tCXNwaW5fdW5sb2NrX2lycSgmY29u
-Zi0+ZGV2aWNlX2xvY2spOw0KPisJc3Bpbl91bmxvY2tfaXJxKCZzaC0+c3RyaXBlX2xvY2spOw0K
-PiANCj4gCXByX2RlYnVnKCJhZGRlZCBiaSBiIyVsbHUgdG8gc3RyaXBlIHMjJWxsdSwgZGlzayAl
-ZC5cbiIsDQo+IAkJKHVuc2lnbmVkIGxvbmcgbG9uZykoKmJpcCktPmJpX3NlY3RvciwNCj5AQCAt
-MjM5Nyw3ICsyNDAyLDcgQEAgc3RhdGljIGludCBhZGRfc3RyaXBlX2JpbyhzdHJ1Y3Qgc3RyaXBl
-Xw0KPiANCj4gIG92ZXJsYXA6DQo+IAlzZXRfYml0KFI1X092ZXJsYXAsICZzaC0+ZGV2W2RkX2lk
-eF0uZmxhZ3MpOw0KPi0Jc3Bpbl91bmxvY2tfaXJxKCZjb25mLT5kZXZpY2VfbG9jayk7DQo+Kwlz
-cGluX3VubG9ja19pcnEoJnNoLT5zdHJpcGVfbG9jayk7DQo+IAlyZXR1cm4gMDsNCj4gfQ0KPiAN
-Cj5AQCAtMjQ0Nyw3ICsyNDUyLDcgQEAgaGFuZGxlX2ZhaWxlZF9zdHJpcGUoc3RydWN0IHI1Y29u
-ZiAqY29uZg0KPiAJCQkJcmRldl9kZWNfcGVuZGluZyhyZGV2LCBjb25mLT5tZGRldik7DQo+IAkJ
-CX0NCj4gCQl9DQo+LQkJc3Bpbl9sb2NrX2lycSgmY29uZi0+ZGV2aWNlX2xvY2spOw0KPisJCXNw
-aW5fbG9ja19pcnEoJnNoLT5zdHJpcGVfbG9jayk7DQo+IAkJLyogZmFpbCBhbGwgd3JpdGVzIGZp
-cnN0ICovDQo+IAkJYmkgPSBzaC0+ZGV2W2ldLnRvd3JpdGU7DQo+IAkJc2gtPmRldltpXS50b3dy
-aXRlID0gTlVMTDsNCj5AQCAtMjQ1NSw3ICsyNDYwLDcgQEAgaGFuZGxlX2ZhaWxlZF9zdHJpcGUo
-c3RydWN0IHI1Y29uZiAqY29uZg0KPiAJCQlzLT50b193cml0ZS0tOw0KPiAJCQliaXRtYXBfZW5k
-ID0gMTsNCj4gCQl9DQo+LQkJc3Bpbl91bmxvY2tfaXJxKCZjb25mLT5kZXZpY2VfbG9jayk7DQo+
-KwkJc3Bpbl91bmxvY2tfaXJxKCZzaC0+c3RyaXBlX2xvY2spOw0KPiANCj4gCQlpZiAodGVzdF9h
-bmRfY2xlYXJfYml0KFI1X092ZXJsYXAsICZzaC0+ZGV2W2ldLmZsYWdzKSkNCj4gCQkJd2FrZV91
-cCgmY29uZi0+d2FpdF9mb3Jfb3ZlcmxhcCk7DQo+QEAgLTMxODUsNyArMzE5MCw2IEBAIHN0YXRp
-YyB2b2lkIGFuYWx5c2Vfc3RyaXBlKHN0cnVjdCBzdHJpcGUNCj4gDQo+IAkvKiBOb3cgdG8gbG9v
-ayBhcm91bmQgYW5kIHNlZSB3aGF0IGNhbiBiZSBkb25lICovDQo+IAlyY3VfcmVhZF9sb2NrKCk7
-DQo+LQlzcGluX2xvY2tfaXJxKCZjb25mLT5kZXZpY2VfbG9jayk7DQo+IAlmb3IgKGk9ZGlza3M7
-IGktLTsgKSB7DQo+IAkJc3RydWN0IG1kX3JkZXYgKnJkZXY7DQo+IAkJc2VjdG9yX3QgZmlyc3Rf
-YmFkOw0KPkBAIC0zMzMxLDcgKzMzMzUsNiBAQCBzdGF0aWMgdm9pZCBhbmFseXNlX3N0cmlwZShz
-dHJ1Y3Qgc3RyaXBlDQo+IAkJCQlkb19yZWNvdmVyeSA9IDE7DQo+IAkJfQ0KPiAJfQ0KPi0Jc3Bp
-bl91bmxvY2tfaXJxKCZjb25mLT5kZXZpY2VfbG9jayk7DQo+IAlpZiAodGVzdF9iaXQoU1RSSVBF
-X1NZTkNJTkcsICZzaC0+c3RhdGUpKSB7DQo+IAkJLyogSWYgdGhlcmUgaXMgYSBmYWlsZWQgZGV2
-aWNlIGJlaW5nIHJlcGxhY2VkLA0KPiAJCSAqICAgICB3ZSBtdXN0IGJlIHJlY292ZXJpbmcuDQo+
-SW5kZXg6IGxpbnV4L2RyaXZlcnMvbWQvcmFpZDUuaA0KPj09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0NCj4tLS0gbGludXgu
-b3JpZy9kcml2ZXJzL21kL3JhaWQ1LmgJMjAxMi0wNy0wNCAxMjoxNTozOC4wMDAwMDAwMDAgKzA4
-MDANCj4rKysgbGludXgvZHJpdmVycy9tZC9yYWlkNS5oCTIwMTItMDctMDQgMTI6NTg6NDYuNDEy
-NjU5MDkwICswODAwDQo+QEAgLTIxMCw2ICsyMTAsNyBAQCBzdHJ1Y3Qgc3RyaXBlX2hlYWQgew0K
-PiAJaW50CQkJZGlza3M7CQkvKiBkaXNrcyBpbiBzdHJpcGUgKi8NCj4gCWVudW0gY2hlY2tfc3Rh
-dGVzCWNoZWNrX3N0YXRlOw0KPiAJZW51bSByZWNvbnN0cnVjdF9zdGF0ZXMgcmVjb25zdHJ1Y3Rf
-c3RhdGU7DQo+KwlzcGlubG9ja190CQlzdHJpcGVfbG9jazsNCj4gCS8qKg0KPiAJICogc3RydWN0
-IHN0cmlwZV9vcGVyYXRpb25zDQo+IAkgKiBAdGFyZ2V0IC0gU1RSSVBFX09QX0NPTVBVVEVfQkxL
-IHRhcmdldA0KPi0tDQpJZiBkZXYvc3RyaXBlIHdhcyBvdmVyd3JpdGUgb3Igb3ZlcnJlYWQsIGFk
-ZF9zdHJpcGVfYmlvIGFuZCBvcHNfcnVuX2Jpb2ZpbGwvYmlvZHJhaW4gd2lsbCBub3QgcmFjZS4N
-CklmIGl0IGlzLCBpdCBjYW4gYmUgIG9wdGltaXplZC4=
+2012/7/4 NeilBrown <neilb@suse.de>:
+> On Mon, 02 Jul 2012 09:08:43 +0800 Shaohua Li <shli@kernel.org> wrote:
+>
+>> For SSD, if request size exceeds specific value (optimal io size), request size
+>> isn't important for bandwidth. In such condition, if making request size bigger
+>> will cause some disks idle, the total throughput will actually drop. A good
+>> example is doing a readahead in a two-disk raid1 setup.
+>>
+>> So when we should split big request? We absolutly don't want to split big
+>> request to very small requests. Even in SSD, big request transfer is more
+>> efficient. Below patch only consider request with size above optimal io size.
+>>
+>> If all disks are busy, is it worthy to do split? Say optimal io size is 16k,
+>> two requests 32k and two disks. We can let each disk run one 32k request, or
+>> split the requests to 4 16k requests and each disk runs two. It's hard to say
+>> which case is better, depending on hardware.
+>>
+>> So only consider case where there are idle disks. For readahead, split is
+>> always better in this case. And in my test, below patch can improve > 30%
+>> thoughput. Hmm, not 100%, because disk isn't 100% busy.
+>>
+>> Such case can happen not just in readahead, for example, in directio. But I
+>> suppose directio usually will have bigger IO depth and make all disks busy, so
+>> I ignored it.
+>>
+>> Note: if the raid uses any hard disk, we don't prevent merging. That will make
+>> performace worse.
+>>
+>> Signed-off-by: Shaohua Li <shli@fusionio.com>
+>> ---
+>>  drivers/md/raid1.c |   46 ++++++++++++++++++++++++++++++++++++++--------
+>>  drivers/md/raid1.h |    1 +
+>>  2 files changed, 39 insertions(+), 8 deletions(-)
+>>
+>> Index: linux/drivers/md/raid1.c
+>> ===================================================================
+>> --- linux.orig/drivers/md/raid1.c     2012-06-29 15:17:09.160691540 +0800
+>> +++ linux/drivers/md/raid1.c  2012-06-29 15:57:54.993943576 +0800
+>> @@ -489,6 +489,7 @@ static int read_balance(struct r1conf *c
+>>       unsigned int min_pending;
+>>       struct md_rdev *rdev;
+>>       int choose_first;
+>> +     int choose_idle;
+>>
+>>       rcu_read_lock();
+>>       /*
+>> @@ -502,6 +503,7 @@ static int read_balance(struct r1conf *c
+>>       best_dist = MaxSector;
+>>       min_pending = -1;
+>>       best_good_sectors = 0;
+>> +     choose_idle = 0;
+>>
+>>       if (conf->mddev->recovery_cp < MaxSector &&
+>>           (this_sector + sectors >= conf->next_resync))
+>> @@ -580,16 +582,35 @@ static int read_balance(struct r1conf *c
+>>               nonrot = blk_queue_nonrot(bdev_get_queue(rdev->bdev));
+>>               pending = atomic_read(&rdev->nr_pending);
+>>               dist = abs(this_sector - conf->mirrors[disk].head_position);
+>> -             if (choose_first
+>> -                 /* Don't change to another disk for sequential reads */
+>> -                 || conf->mirrors[disk].next_seq_sect == this_sector
+>> -                 || dist == 0
+>> -                 /* If device is idle, use it */
+>> -                 || pending == 0) {
+>> -                     best_disk = disk;
+>> -                     break;
+>> +             if (choose_first)
+>> +                     goto done;
+>> +             /* Don't change to another disk for sequential reads */
+>> +             if (conf->mirrors[disk].next_seq_sect == this_sector
+>> +                 || dist == 0) {
+>> +                     int opt_iosize = bdev_io_opt(rdev->bdev) >> 9;
+>> +                     struct mirror_info *mirror = &conf->mirrors[disk];
+>> +
+>> +                     /*
+>> +                      * If buffered sequential IO size exceeds optimal
+>> +                      * iosize and there is idle disk, choose idle disk
+>> +                      */
+>> +                     if (nonrot && opt_iosize > 0 && choose_idle == 0 &&
+>> +                         mirror->seq_start != MaxSector &&
+>> +                         mirror->next_seq_sect > opt_iosize &&
+>> +                         mirror->next_seq_sect - opt_iosize >=
+>> +                         mirror->seq_start) {
+>> +                             choose_idle = 1;
+>> +                             best_disk = disk;
+>> +                             continue;
+>> +                     }
+>> +                     goto done;
+>>               }
+>> +             /* If device is idle, use it */
+>> +             if (pending == 0 && (!choose_idle || nonrot))
+>> +                     goto done;
+>
+> That doesn't make sense to me.
+> Ignoring the nonrot bit, it says:
+>    if (this device is idle, and we haven't decided to choose an idle device)
+>         then choose this device
 
+The variable maybe misleading. choose_idle means an seq read
+hit optimal request size in a disk and we check if other disks are idle.
+In this case, we only consider idle disks.
+
+> which is wrong.
+>
+> Also, what about the case where an idle device is found before we we find a
+> device that the sequentially-previous read was from.  Will that still do the
+> right thing?  It isn't clear.
+
+This doesn't matter. Then the first disk will run, the second disk will idle.
+When the first disk seq request exceeds optimal size, the second disk
+will run.
+
+Thanks,
+Shaohua
