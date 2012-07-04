@@ -1,101 +1,59 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: tests/03r5assemV1 issues
-Date: Wed, 4 Jul 2012 15:23:27 +1000
-Message-ID: <20120704152327.30dcf73e@notabene.brown>
-References: <wrfjtxxqcn38.fsf@redhat.com>
-	<20120703114459.29c21b8f@notabene.brown>
-	<wrfjpq8c96c9.fsf@redhat.com>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [RFC PATCH] raid5: Add R5_ReadNoMerge flag which prevent bio from merging at block layer
+Date: Wed, 4 Jul 2012 13:29:23 +0800
+Message-ID: <201207041329205003713@gmail.com>
+References: <201207031423377650880@gmail.com> <20120703163810.531a000c@notabene.brown> <201207031652444687381@gmail.com>,
+	<20120704123006.031f8b5d@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Bv0RKdpJKRVpJ/ZDx=GqG6t"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjpq8c96c9.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>, axboe <axboe@kernel.dk>
 List-Id: linux-raid.ids
 
---Sig_/Bv0RKdpJKRVpJ/ZDx=GqG6t
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+T24gMjAxMi0wNy0wNCAxMDozMCBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
+IFR1ZSwgMyBKdWwgMjAxMiAxNjo1Mjo0OSArMDgwMCBtYWppYW5wZW5nIDxtYWppYW5wZW5nQGdt
+YWlsLmNvbT4gd3JvdGU6DQo+DQo+PiBPbiAyMDEyLTA3LTAzIDE0OjM4IE5laWxCcm93biA8bmVp
+bGJAc3VzZS5kZT4gV3JvdGU6DQo+PiA+T24gVHVlLCAzIEp1bCAyMDEyIDE0OjIzOjQxICswODAw
+IG1hamlhbnBlbmcgPG1hamlhbnBlbmdAZ21haWwuY29tPiB3cm90ZToNCj4+ID4NCj4+ID4+IEJl
+Y2F1c2UgYmlvcyB3aWxsIG1lcmdlIGF0IGJsb2NrLWxheWVyLHNvIGJpb3MtZXJyb3IgbWF5IGNh
+dXNlZCBieSBvdGhlcg0KPj4gPj4gYmlvIHdoaWNoIGJlIG1lcmdlZCBpbnRvIHRvIHRoZSBzYW1l
+IHJlcXVlc3QuDQo+PiA+PiBVc2luZyB0aGlzIGZsYWcsaXQgd2lsbCBmaW5kIGV4YWN0bHkgZXJy
+b3Itc2VjdG9yIGFuZCBub3QgZG8gcmVkdW5kYW50DQo+PiA+PiBvcGVyYXRpb24gbGlrZSByZS13
+cml0ZSBhbmQgcmUtcmVhZC4NCj4+ID4+IA0KPj4gPj4gU2lnbmVkLW9mZi1ieTogbWFqaWFucGVu
+ZyA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQo+PiA+DQo+PiA+SGksDQo+PiA+IEkgdGhpbmsgdGhp
+cyBwYXRjaCBuZWVkcyBhIG1vcmUgZGV0YWlsZWQgZXhwbGFuYXRpb24uDQo+PiA+DQo+PiA+V2hh
+dCBleGFjdGx5IGlzIHRoZSBzaXR1YXRpb24gdGhhdCBjYXVzZXMgYSBwcm9ibGVtLCBhbmQgd2hh
+dCBleGFjdGx5IGlzIHRoZQ0KPj4gPnByb2JsZW0gdGhhdCBpdCBjYXVzZXM/DQo+PiA+DQo+PiA+
+UHJldGVuZCB0aGF0IEkgZG9uJ3Qga25vdyBhbnl0aGluZyBhYm91dCB3aGF0IGhhcHBlbnMgYmVs
+b3cgdGhlIG1kIGxldmVsLi4NCj4+ID4NCj4+ID5UaGFua3MsDQo+PiA+TmVpbEJyb3duDQo+PiA+
+DQo+PiA+DQouLi4uDQo+PiA+PiAgDQo+PiA+DQo+PiA+DQo+PiBIb3cgYWJvdXQgdGhlIGJlbG93
+IGV4cGxhbmF0aW9uOg0KPj4gDQo+PiBCZWNhdXNlIGJpbyB3aWxsIGJlIG1lcmdlZCBhdCBibG9j
+ay1sYXllcixzbyBiaW9zLWVycm9yIG1heSBjYXVzZWQgYnkgb3RoZXINCj4+IGJpbyB3aGljaCBi
+ZSBtZXJnZWQgaW50byB0byB0aGUgc2FtZSByZXF1ZXN0Lg0KPj4gRm9yIGV4YW1wbGU6IGlmIGNo
+dW5rX2FsaWduZWRfcmVhZCBmYWlsZWQsIGl0IHdpbGwgYWRkIGJpbyB0byBzb21lIHN0aXBlLg0K
+Pj4gQnV0IGJlY2F1c2UgdGhlIGJpby1tZXJnZSBmdW5jdGlvbix0aG9zZSBiaW9zIGF0IG1vc3Qg
+YmUgbWVyZ2VkLkl0IHdpbGwgbGlrZQ0KPj4gdGhlIGNodW5rX2FsaWduZWRfcmVhZCBhbmQgcmV0
+dXJlbiBlcnJvci5UaGVuIGl0IHdpbGwgcmUtd3JpdGUgYW5kIHJlLXJlYWQuDQo+PiBTdXBwb3Nl
+IFJBSUQ1IGNyZWF0ZWQgYnkgbiBkaXNrIGFuZCBjaHVuay1zaXplIGlzIDUxMksuDQo+PiBJZiBy
+ZWFkIDUxMmsgY2h1bmtfYWxpZ25lZCBhbmQgbWV0IGVycm9yKHNlY3RvciAwIGlzIG1lZGlhIGVy
+cm9yKSwgDQo+PiB0aGVuIGFkZCA1MTIvND0xMjggc3RpcGUuSWYgdGhvc2UgYmlvcyBtZXJnZWQg
+YW5kIG11c3QgYmUgZXJyb3IuVGhlIHJld3JpdGUgb3BlcmF0aW9uDQo+PiB3aWxsIHJlYWQgKG4t
+MSkgKiAxMjggYW5kIGNvbXB1dGVyIDEyOCBzdHJpcGUuQnV0IHVzaW5nIHRoaXMgZmxhZyx3ZSBv
+bmx5IGV4ZWMgb25lIHJld3JpdGUuDQo+PiBUaGlzIG9jY3VyIGluIHJlc3luYy9yZXBhaXIgc2l0
+dWF0aW9uIGFuZCBjaHVuay1hbGlnbmVkLXJlYWQuDQo+PiANCj4+IE1heSBiZSB1c2luZyB0aGlz
+IGZsYWcsd2UgY2FuIGZpbmQgZXhhY3QgYmFkLXNlY3Rvci5Ob3QgcmVjb3JkZWQgdGhlIHdob2xl
+IHJlcXVlc3QgYmlvcyANCj4+IGFzIGJhZC1zZWN0b3INCj4NCj5UaGFua3MuICBUaGF0IG1ha2Ug
+c29tZSBzZW5zZS4NCj4NCj5JIHdvbmRlciBpZiB3ZSBjYW4ganVzdCB1c2UgUkVRX0ZVQSB0byBz
+dG9wIHJlcXVlc3RzIGJlaW5nIG1lcmdlZCwgcmF0aGVyDQo+dGhhbiBjcmVhdGUgYSBuZXcgZmxh
+Zy4gIEluIGdlbmVyYWwgd2Ugc2hvdWxkIHByb2JhYmx5IGJlIHVzaW5nIFJFUV9GVUEgaW4NCj5h
+bGwgdGhlIGNhc2VzIHdoZXJlIHdlIGFyZSBjaGVja2luZyBmb3IsIGFuZCB0cnlpbmcgdG8gZml4
+LCByZWFkIGVycm9ycy4NCj4NCj5UaGFua3MsDQo+TmVpbEJyb3duDQo+DQo+DQpVc2luZyBSRVFf
+RlVBL1JFUV9GTFVTSCBjYW4gaGF2ZSBzYW1lIGVmZmVjdC4NCkJ1dCBpIHRoaW5rIFJFUV9GVUEv
+UkVRX0ZMVVNIIG9wZXJhdGlvbiBkbyBtb3JlIHdvcmsgZm9yIGV4YW1wbGUsIHByZV9mbHVzaC9w
+b3N0X3BmbHVzaCBhbmQgdGhlIGhhcmRkaXNrIHdpbGwgZG8gbW9yZQ0Kd29yay5CdXQgb3VyIHB1
+cnBvc2Ugb25seSBleGVjIGJpbyBzbG9uZWx5Lg==
 
-On Tue, 03 Jul 2012 18:07:02 +0200 Jes Sorensen <Jes.Sorensen@redhat.com>
-wrote:
-
-> NeilBrown <neilb@suse.de> writes:
-> > On Mon, 02 Jul 2012 15:24:43 +0200 Jes Sorensen <Jes.Sorensen@redhat.co=
-m>
-> > wrote:
-> >
-> >> Hi Neil,
-> >>=20
-> >> I am trying to get the test suite stable on RHEL, but I see a lot of
-> >> failures in 03r5assemV1, in particular between these two cases:
-> >>=20
-> >> mdadm -A $md1 -u $uuid $devlist
-> >> check state U_U
-> >> eval $tst
-> >>=20
-> >> mdadm -A $md1 --name=3Done $devlist
-> >> check state U_U
-> >> check spares 1
-> >> eval $tst
-> >>=20
-> >> I have tested it with the latest upstream kernel as well and see the
-> >> same problems. I suspect it is simply the box that is too fast, ending
-> >> up with the raid check completing inbetween the two test cases?
-> >>=20
-> >> Are you seeing the same thing there? I tried playing with the max speed
-> >> variable but it doesn't really seem to make any difference.
-> >>=20
-> >> Any ideas for what we can be done to make this case more resilient to
-> >> false positives? I guess one option would be to re-create the array
-> >> inbetween each test?
-> >
-> > Maybe it really is a bug?
-> > The test harness set the resync speed to be very slow.  A fast box will=
- get
-> > through the test more quickly and be more likely to see the array still
-> > syncing.
-> >
-> > I'll try to make time to look more closely.
-> > But I wouldn't discount the possibility that the second "mdadm -A" is
-> > short-circuiting the recovery somehow.
->=20
-> That could certainly explain what I am seeing. I noticed it doesn't
-> happen every single time in the same place (from memory), but it is
-> mostly in that spot in my case.
->=20
-> Even if I trimmed the max speed down to 50 it still happens.
-
-I cannot easily reproduce this.
-Exactly which kernel and which mdadm do you find it with - just to make sure
-I'm testing the same thing as you?
-
-Thanks,
-NeilBrown
-
-
---Sig_/Bv0RKdpJKRVpJ/ZDx=GqG6t
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBT/PTTznsnt1WYoG5AQJStxAAlwmerspuLu7O3y7TInCb3CHJblh4rBSE
-GxYbxjlKUuYGTWrs3Sn7CiS+aqdzHyB1ro4VoUbL19Yau4SAb+0MNpNda1SKOApG
-L8JBP+kUehVV2pNZwqt4uMDCepID/5WJpcOKoaOJZoIn6rxN2Ue51i6ozV7vSoBS
-rNyP+3HrfClzHJ/OvEAJtCcr/EQQReMCUz1bhvHHHnjEtKsISEDWKDTPY7MuSZYa
-rEIbXz3yPTRfMPYKrSA35Cymw0QteYgjgGNadZovYRkR6GnYjYpoqTZE+EROtHIA
-silAuRpmEWFylQuMfrQfyQiCfydwqvfvoV3ps+PQyDEKU/SMn5WiP1jCsceFUphD
-Hl/p7t1KI/KodHQLGPqaro6G0LrV8ik//0wnWbc0o0C4FY+Va7sHVlnquW2TKL2t
-RWwyZNUr5LewcFau0HsR9v6SogypfwB5uK5/Mv2WoWdGCGE6z67T5lPHWlPmb3S9
-wobEsuyqZqel7xELhW/7OBTKkahnGu2wzgpY6CR4A2iSc91R6gJIk7bcV/CZbVb7
-VBrY9GWyXS349mxIerg8JC0zWZjsP4y6bS/2VnJ20Ze14MiOCBBWM9jz9K9rCPZN
-zJ+hrJ8QIEuTDWy9+e/Xb2QzwhjaMl/BLYZIyQ47jD5VDn7Z6wnabhrsSJxufupR
-0ZoMzhpihbE=
-=z68t
------END PGP SIGNATURE-----
-
---Sig_/Bv0RKdpJKRVpJ/ZDx=GqG6t--
