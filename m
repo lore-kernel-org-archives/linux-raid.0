@@ -1,201 +1,101 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [patch 3/3 v2]raid5: add a per-stripe lock
-Date: Wed, 4 Jul 2012 13:22:07 +0800
-Message-ID: <20120704052207.GC9145@kernel.org>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: tests/03r5assemV1 issues
+Date: Wed, 4 Jul 2012 15:23:27 +1000
+Message-ID: <20120704152327.30dcf73e@notabene.brown>
+References: <wrfjtxxqcn38.fsf@redhat.com>
+	<20120703114459.29c21b8f@notabene.brown>
+	<wrfjpq8c96c9.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Bv0RKdpJKRVpJ/ZDx=GqG6t"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <wrfjpq8c96c9.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Add a per-stripe lock to protect stripe specific data. The purpose is to reduce
-lock contention of conf->device_lock.
+--Sig_/Bv0RKdpJKRVpJ/ZDx=GqG6t
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-stripe ->toread, ->towrite are protected by per-stripe lock.  Accessing bio
-list of the stripe is always serialized by this lock, so adding bio to the
-lists (add_stripe_bio()) and removing bio from the lists (like
-ops_run_biofill()) not race.
+On Tue, 03 Jul 2012 18:07:02 +0200 Jes Sorensen <Jes.Sorensen@redhat.com>
+wrote:
 
-If bio in ->read, ->written ... list are not shared by multiple stripes, we
-don't need any lock to protect ->read, ->written, because STRIPE_ACTIVE will
-protect them. If the bio are shared,  there are two protections:
-1. bi_phys_segments acts as a reference count
-2. traverse the list uses r5_next_bio, which makes traverse never access bio
-not belonging to the stripe
+> NeilBrown <neilb@suse.de> writes:
+> > On Mon, 02 Jul 2012 15:24:43 +0200 Jes Sorensen <Jes.Sorensen@redhat.co=
+m>
+> > wrote:
+> >
+> >> Hi Neil,
+> >>=20
+> >> I am trying to get the test suite stable on RHEL, but I see a lot of
+> >> failures in 03r5assemV1, in particular between these two cases:
+> >>=20
+> >> mdadm -A $md1 -u $uuid $devlist
+> >> check state U_U
+> >> eval $tst
+> >>=20
+> >> mdadm -A $md1 --name=3Done $devlist
+> >> check state U_U
+> >> check spares 1
+> >> eval $tst
+> >>=20
+> >> I have tested it with the latest upstream kernel as well and see the
+> >> same problems. I suspect it is simply the box that is too fast, ending
+> >> up with the raid check completing inbetween the two test cases?
+> >>=20
+> >> Are you seeing the same thing there? I tried playing with the max speed
+> >> variable but it doesn't really seem to make any difference.
+> >>=20
+> >> Any ideas for what we can be done to make this case more resilient to
+> >> false positives? I guess one option would be to re-create the array
+> >> inbetween each test?
+> >
+> > Maybe it really is a bug?
+> > The test harness set the resync speed to be very slow.  A fast box will=
+ get
+> > through the test more quickly and be more likely to see the array still
+> > syncing.
+> >
+> > I'll try to make time to look more closely.
+> > But I wouldn't discount the possibility that the second "mdadm -A" is
+> > short-circuiting the recovery somehow.
+>=20
+> That could certainly explain what I am seeing. I noticed it doesn't
+> happen every single time in the same place (from memory), but it is
+> mostly in that spot in my case.
+>=20
+> Even if I trimmed the max speed down to 50 it still happens.
 
-Let's have an example:
-|  stripe1 |  stripe2    |  stripe3  |
-...bio1......|bio2|bio3|....bio4.....
+I cannot easily reproduce this.
+Exactly which kernel and which mdadm do you find it with - just to make sure
+I'm testing the same thing as you?
 
-stripe2 has 4 bios, when it's finished, it will decrement bi_phys_segments for
-all bios, but only end_bio for bio2 and bio3. bio1->bi_next still points to
-bio2, but this doesn't matter. When stripe1 is finished, it will not touch bio2
-because of r5_next_bio check. Next time stripe1 will end_bio for bio1 and
-stripe3 will end_bio bio4.
+Thanks,
+NeilBrown
 
-before add_stripe_bio() addes a bio to a stripe, we already increament the bio
-bi_phys_segments, so don't worry other stripes release the bio.
 
-Signed-off-by: Shaohua Li <shli@fusionio.com>
----
- drivers/md/raid5.c |   35 +++++++++++++++++++----------------
- drivers/md/raid5.h |    1 +
- 2 files changed, 20 insertions(+), 16 deletions(-)
+--Sig_/Bv0RKdpJKRVpJ/ZDx=GqG6t
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Index: linux/drivers/md/raid5.c
-===================================================================
---- linux.orig/drivers/md/raid5.c	2012-07-04 12:57:32.000000000 +0800
-+++ linux/drivers/md/raid5.c	2012-07-04 13:00:21.579462468 +0800
-@@ -755,14 +755,12 @@ static void ops_complete_biofill(void *s
- {
- 	struct stripe_head *sh = stripe_head_ref;
- 	struct bio *return_bi = NULL;
--	struct r5conf *conf = sh->raid_conf;
- 	int i;
- 
- 	pr_debug("%s: stripe %llu\n", __func__,
- 		(unsigned long long)sh->sector);
- 
- 	/* clear completed biofills */
--	spin_lock_irq(&conf->device_lock);
- 	for (i = sh->disks; i--; ) {
- 		struct r5dev *dev = &sh->dev[i];
- 
-@@ -788,7 +786,6 @@ static void ops_complete_biofill(void *s
- 			}
- 		}
- 	}
--	spin_unlock_irq(&conf->device_lock);
- 	clear_bit(STRIPE_BIOFILL_RUN, &sh->state);
- 
- 	return_io(return_bi);
-@@ -800,7 +797,6 @@ static void ops_complete_biofill(void *s
- static void ops_run_biofill(struct stripe_head *sh)
- {
- 	struct dma_async_tx_descriptor *tx = NULL;
--	struct r5conf *conf = sh->raid_conf;
- 	struct async_submit_ctl submit;
- 	int i;
- 
-@@ -811,10 +807,10 @@ static void ops_run_biofill(struct strip
- 		struct r5dev *dev = &sh->dev[i];
- 		if (test_bit(R5_Wantfill, &dev->flags)) {
- 			struct bio *rbi;
--			spin_lock_irq(&conf->device_lock);
-+			spin_lock_irq(&sh->stripe_lock);
- 			dev->read = rbi = dev->toread;
- 			dev->toread = NULL;
--			spin_unlock_irq(&conf->device_lock);
-+			spin_unlock_irq(&sh->stripe_lock);
- 			while (rbi && rbi->bi_sector <
- 				dev->sector + STRIPE_SECTORS) {
- 				tx = async_copy_data(0, rbi, dev->page,
-@@ -1150,12 +1146,12 @@ ops_run_biodrain(struct stripe_head *sh,
- 		if (test_and_clear_bit(R5_Wantdrain, &dev->flags)) {
- 			struct bio *wbi;
- 
--			spin_lock_irq(&sh->raid_conf->device_lock);
-+			spin_lock_irq(&sh->stripe_lock);
- 			chosen = dev->towrite;
- 			dev->towrite = NULL;
- 			BUG_ON(dev->written);
- 			wbi = dev->written = chosen;
--			spin_unlock_irq(&sh->raid_conf->device_lock);
-+			spin_unlock_irq(&sh->stripe_lock);
- 
- 			while (wbi && wbi->bi_sector <
- 				dev->sector + STRIPE_SECTORS) {
-@@ -1460,6 +1456,8 @@ static int grow_one_stripe(struct r5conf
- 	init_waitqueue_head(&sh->ops.wait_for_ops);
- 	#endif
- 
-+	spin_lock_init(&sh->stripe_lock);
-+
- 	if (grow_buffers(sh)) {
- 		shrink_buffers(sh);
- 		kmem_cache_free(conf->slab_cache, sh);
-@@ -2346,8 +2344,15 @@ static int add_stripe_bio(struct stripe_
- 		(unsigned long long)bi->bi_sector,
- 		(unsigned long long)sh->sector);
- 
--
--	spin_lock_irq(&conf->device_lock);
-+	/*
-+	 * If several bio share a stripe. The bio bi_phys_segments acts as a
-+	 * reference count to avoid race. The reference count should already be
-+	 * increased before this function is called (for example, in
-+	 * make_request()), so other bio sharing this stripe will not free the
-+	 * stripe. If a stripe is owned by one stripe, the stripe lock will
-+	 * protect it.
-+	 */
-+	spin_lock_irq(&sh->stripe_lock);
- 	if (forwrite) {
- 		bip = &sh->dev[dd_idx].towrite;
- 		if (*bip == NULL)
-@@ -2381,7 +2386,7 @@ static int add_stripe_bio(struct stripe_
- 		if (sector >= sh->dev[dd_idx].sector + STRIPE_SECTORS)
- 			set_bit(R5_OVERWRITE, &sh->dev[dd_idx].flags);
- 	}
--	spin_unlock_irq(&conf->device_lock);
-+	spin_unlock_irq(&sh->stripe_lock);
- 
- 	pr_debug("added bi b#%llu to stripe s#%llu, disk %d.\n",
- 		(unsigned long long)(*bip)->bi_sector,
-@@ -2397,7 +2402,7 @@ static int add_stripe_bio(struct stripe_
- 
-  overlap:
- 	set_bit(R5_Overlap, &sh->dev[dd_idx].flags);
--	spin_unlock_irq(&conf->device_lock);
-+	spin_unlock_irq(&sh->stripe_lock);
- 	return 0;
- }
- 
-@@ -2447,7 +2452,7 @@ handle_failed_stripe(struct r5conf *conf
- 				rdev_dec_pending(rdev, conf->mddev);
- 			}
- 		}
--		spin_lock_irq(&conf->device_lock);
-+		spin_lock_irq(&sh->stripe_lock);
- 		/* fail all writes first */
- 		bi = sh->dev[i].towrite;
- 		sh->dev[i].towrite = NULL;
-@@ -2455,7 +2460,7 @@ handle_failed_stripe(struct r5conf *conf
- 			s->to_write--;
- 			bitmap_end = 1;
- 		}
--		spin_unlock_irq(&conf->device_lock);
-+		spin_unlock_irq(&sh->stripe_lock);
- 
- 		if (test_and_clear_bit(R5_Overlap, &sh->dev[i].flags))
- 			wake_up(&conf->wait_for_overlap);
-@@ -3185,7 +3190,6 @@ static void analyse_stripe(struct stripe
- 
- 	/* Now to look around and see what can be done */
- 	rcu_read_lock();
--	spin_lock_irq(&conf->device_lock);
- 	for (i=disks; i--; ) {
- 		struct md_rdev *rdev;
- 		sector_t first_bad;
-@@ -3331,7 +3335,6 @@ static void analyse_stripe(struct stripe
- 				do_recovery = 1;
- 		}
- 	}
--	spin_unlock_irq(&conf->device_lock);
- 	if (test_bit(STRIPE_SYNCING, &sh->state)) {
- 		/* If there is a failed device being replaced,
- 		 *     we must be recovering.
-Index: linux/drivers/md/raid5.h
-===================================================================
---- linux.orig/drivers/md/raid5.h	2012-07-04 12:15:38.000000000 +0800
-+++ linux/drivers/md/raid5.h	2012-07-04 12:58:46.412659090 +0800
-@@ -210,6 +210,7 @@ struct stripe_head {
- 	int			disks;		/* disks in stripe */
- 	enum check_states	check_state;
- 	enum reconstruct_states reconstruct_state;
-+	spinlock_t		stripe_lock;
- 	/**
- 	 * struct stripe_operations
- 	 * @target - STRIPE_OP_COMPUTE_BLK target
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT/PTTznsnt1WYoG5AQJStxAAlwmerspuLu7O3y7TInCb3CHJblh4rBSE
+GxYbxjlKUuYGTWrs3Sn7CiS+aqdzHyB1ro4VoUbL19Yau4SAb+0MNpNda1SKOApG
+L8JBP+kUehVV2pNZwqt4uMDCepID/5WJpcOKoaOJZoIn6rxN2Ue51i6ozV7vSoBS
+rNyP+3HrfClzHJ/OvEAJtCcr/EQQReMCUz1bhvHHHnjEtKsISEDWKDTPY7MuSZYa
+rEIbXz3yPTRfMPYKrSA35Cymw0QteYgjgGNadZovYRkR6GnYjYpoqTZE+EROtHIA
+silAuRpmEWFylQuMfrQfyQiCfydwqvfvoV3ps+PQyDEKU/SMn5WiP1jCsceFUphD
+Hl/p7t1KI/KodHQLGPqaro6G0LrV8ik//0wnWbc0o0C4FY+Va7sHVlnquW2TKL2t
+RWwyZNUr5LewcFau0HsR9v6SogypfwB5uK5/Mv2WoWdGCGE6z67T5lPHWlPmb3S9
+wobEsuyqZqel7xELhW/7OBTKkahnGu2wzgpY6CR4A2iSc91R6gJIk7bcV/CZbVb7
+VBrY9GWyXS349mxIerg8JC0zWZjsP4y6bS/2VnJ20Ze14MiOCBBWM9jz9K9rCPZN
+zJ+hrJ8QIEuTDWy9+e/Xb2QzwhjaMl/BLYZIyQ47jD5VDn7Z6wnabhrsSJxufupR
+0ZoMzhpihbE=
+=z68t
+-----END PGP SIGNATURE-----
+
+--Sig_/Bv0RKdpJKRVpJ/ZDx=GqG6t--
