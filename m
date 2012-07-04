@@ -1,59 +1,112 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: Re: [RFC PATCH] raid5: Add R5_ReadNoMerge flag which prevent bio from merging at block layer
-Date: Wed, 4 Jul 2012 13:29:23 +0800
-Message-ID: <201207041329205003713@gmail.com>
-References: <201207031423377650880@gmail.com> <20120703163810.531a000c@notabene.brown> <201207031652444687381@gmail.com>,
-	<20120704123006.031f8b5d@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [patch 1/3 v3] raid1: make sequential read detection per disk
+ based
+Date: Wed, 4 Jul 2012 15:38:45 +1000
+Message-ID: <20120704153845.509b5814@notabene.brown>
+References: <20120702010840.197370335@kernel.org>
+	<20120702011025.079670656@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/P9IJTpY8CWlXP+RPn7ubu6y"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120702011025.079670656@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, axboe <axboe@kernel.dk>
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, axboe@kernel.dk
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wNy0wNCAxMDozMCBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
-IFR1ZSwgMyBKdWwgMjAxMiAxNjo1Mjo0OSArMDgwMCBtYWppYW5wZW5nIDxtYWppYW5wZW5nQGdt
-YWlsLmNvbT4gd3JvdGU6DQo+DQo+PiBPbiAyMDEyLTA3LTAzIDE0OjM4IE5laWxCcm93biA8bmVp
-bGJAc3VzZS5kZT4gV3JvdGU6DQo+PiA+T24gVHVlLCAzIEp1bCAyMDEyIDE0OjIzOjQxICswODAw
-IG1hamlhbnBlbmcgPG1hamlhbnBlbmdAZ21haWwuY29tPiB3cm90ZToNCj4+ID4NCj4+ID4+IEJl
-Y2F1c2UgYmlvcyB3aWxsIG1lcmdlIGF0IGJsb2NrLWxheWVyLHNvIGJpb3MtZXJyb3IgbWF5IGNh
-dXNlZCBieSBvdGhlcg0KPj4gPj4gYmlvIHdoaWNoIGJlIG1lcmdlZCBpbnRvIHRvIHRoZSBzYW1l
-IHJlcXVlc3QuDQo+PiA+PiBVc2luZyB0aGlzIGZsYWcsaXQgd2lsbCBmaW5kIGV4YWN0bHkgZXJy
-b3Itc2VjdG9yIGFuZCBub3QgZG8gcmVkdW5kYW50DQo+PiA+PiBvcGVyYXRpb24gbGlrZSByZS13
-cml0ZSBhbmQgcmUtcmVhZC4NCj4+ID4+IA0KPj4gPj4gU2lnbmVkLW9mZi1ieTogbWFqaWFucGVu
-ZyA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQo+PiA+DQo+PiA+SGksDQo+PiA+IEkgdGhpbmsgdGhp
-cyBwYXRjaCBuZWVkcyBhIG1vcmUgZGV0YWlsZWQgZXhwbGFuYXRpb24uDQo+PiA+DQo+PiA+V2hh
-dCBleGFjdGx5IGlzIHRoZSBzaXR1YXRpb24gdGhhdCBjYXVzZXMgYSBwcm9ibGVtLCBhbmQgd2hh
-dCBleGFjdGx5IGlzIHRoZQ0KPj4gPnByb2JsZW0gdGhhdCBpdCBjYXVzZXM/DQo+PiA+DQo+PiA+
-UHJldGVuZCB0aGF0IEkgZG9uJ3Qga25vdyBhbnl0aGluZyBhYm91dCB3aGF0IGhhcHBlbnMgYmVs
-b3cgdGhlIG1kIGxldmVsLi4NCj4+ID4NCj4+ID5UaGFua3MsDQo+PiA+TmVpbEJyb3duDQo+PiA+
-DQo+PiA+DQouLi4uDQo+PiA+PiAgDQo+PiA+DQo+PiA+DQo+PiBIb3cgYWJvdXQgdGhlIGJlbG93
-IGV4cGxhbmF0aW9uOg0KPj4gDQo+PiBCZWNhdXNlIGJpbyB3aWxsIGJlIG1lcmdlZCBhdCBibG9j
-ay1sYXllcixzbyBiaW9zLWVycm9yIG1heSBjYXVzZWQgYnkgb3RoZXINCj4+IGJpbyB3aGljaCBi
-ZSBtZXJnZWQgaW50byB0byB0aGUgc2FtZSByZXF1ZXN0Lg0KPj4gRm9yIGV4YW1wbGU6IGlmIGNo
-dW5rX2FsaWduZWRfcmVhZCBmYWlsZWQsIGl0IHdpbGwgYWRkIGJpbyB0byBzb21lIHN0aXBlLg0K
-Pj4gQnV0IGJlY2F1c2UgdGhlIGJpby1tZXJnZSBmdW5jdGlvbix0aG9zZSBiaW9zIGF0IG1vc3Qg
-YmUgbWVyZ2VkLkl0IHdpbGwgbGlrZQ0KPj4gdGhlIGNodW5rX2FsaWduZWRfcmVhZCBhbmQgcmV0
-dXJlbiBlcnJvci5UaGVuIGl0IHdpbGwgcmUtd3JpdGUgYW5kIHJlLXJlYWQuDQo+PiBTdXBwb3Nl
-IFJBSUQ1IGNyZWF0ZWQgYnkgbiBkaXNrIGFuZCBjaHVuay1zaXplIGlzIDUxMksuDQo+PiBJZiBy
-ZWFkIDUxMmsgY2h1bmtfYWxpZ25lZCBhbmQgbWV0IGVycm9yKHNlY3RvciAwIGlzIG1lZGlhIGVy
-cm9yKSwgDQo+PiB0aGVuIGFkZCA1MTIvND0xMjggc3RpcGUuSWYgdGhvc2UgYmlvcyBtZXJnZWQg
-YW5kIG11c3QgYmUgZXJyb3IuVGhlIHJld3JpdGUgb3BlcmF0aW9uDQo+PiB3aWxsIHJlYWQgKG4t
-MSkgKiAxMjggYW5kIGNvbXB1dGVyIDEyOCBzdHJpcGUuQnV0IHVzaW5nIHRoaXMgZmxhZyx3ZSBv
-bmx5IGV4ZWMgb25lIHJld3JpdGUuDQo+PiBUaGlzIG9jY3VyIGluIHJlc3luYy9yZXBhaXIgc2l0
-dWF0aW9uIGFuZCBjaHVuay1hbGlnbmVkLXJlYWQuDQo+PiANCj4+IE1heSBiZSB1c2luZyB0aGlz
-IGZsYWcsd2UgY2FuIGZpbmQgZXhhY3QgYmFkLXNlY3Rvci5Ob3QgcmVjb3JkZWQgdGhlIHdob2xl
-IHJlcXVlc3QgYmlvcyANCj4+IGFzIGJhZC1zZWN0b3INCj4NCj5UaGFua3MuICBUaGF0IG1ha2Ug
-c29tZSBzZW5zZS4NCj4NCj5JIHdvbmRlciBpZiB3ZSBjYW4ganVzdCB1c2UgUkVRX0ZVQSB0byBz
-dG9wIHJlcXVlc3RzIGJlaW5nIG1lcmdlZCwgcmF0aGVyDQo+dGhhbiBjcmVhdGUgYSBuZXcgZmxh
-Zy4gIEluIGdlbmVyYWwgd2Ugc2hvdWxkIHByb2JhYmx5IGJlIHVzaW5nIFJFUV9GVUEgaW4NCj5h
-bGwgdGhlIGNhc2VzIHdoZXJlIHdlIGFyZSBjaGVja2luZyBmb3IsIGFuZCB0cnlpbmcgdG8gZml4
-LCByZWFkIGVycm9ycy4NCj4NCj5UaGFua3MsDQo+TmVpbEJyb3duDQo+DQo+DQpVc2luZyBSRVFf
-RlVBL1JFUV9GTFVTSCBjYW4gaGF2ZSBzYW1lIGVmZmVjdC4NCkJ1dCBpIHRoaW5rIFJFUV9GVUEv
-UkVRX0ZMVVNIIG9wZXJhdGlvbiBkbyBtb3JlIHdvcmsgZm9yIGV4YW1wbGUsIHByZV9mbHVzaC9w
-b3N0X3BmbHVzaCBhbmQgdGhlIGhhcmRkaXNrIHdpbGwgZG8gbW9yZQ0Kd29yay5CdXQgb3VyIHB1
-cnBvc2Ugb25seSBleGVjIGJpbyBzbG9uZWx5Lg==
+--Sig_/P9IJTpY8CWlXP+RPn7ubu6y
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, 02 Jul 2012 09:08:41 +0800 Shaohua Li <shli@kernel.org> wrote:
+
+> Currently the sequential read detection is global wide. It's natural to m=
+ake it
+> per disk based, which can improve the detection for concurrent multiple
+> sequential reads. And next patch will make SSD read balance not use dista=
+nce
+> based algorithm, where this change help detect truly sequential read for =
+SSD.
+>=20
+> Signed-off-by: Shaohua Li <shli@fusionio.com>
+> ---
+>  drivers/md/raid1.c |   29 ++++++-----------------------
+>  drivers/md/raid1.h |   11 +++++------
+>  2 files changed, 11 insertions(+), 29 deletions(-)
+>=20
+> Index: linux/drivers/md/raid1.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux.orig/drivers/md/raid1.c	2012-06-28 10:44:47.550666575 +0800
+> +++ linux/drivers/md/raid1.c	2012-06-28 12:01:03.513137377 +0800
+> @@ -483,7 +483,6 @@ static int read_balance(struct r1conf *c
+>  	const sector_t this_sector =3D r1_bio->sector;
+>  	int sectors;
+>  	int best_good_sectors;
+> -	int start_disk;
+>  	int best_disk;
+>  	int i;
+>  	sector_t best_dist;
+> @@ -503,20 +502,17 @@ static int read_balance(struct r1conf *c
+>  	best_good_sectors =3D 0;
+> =20
+>  	if (conf->mddev->recovery_cp < MaxSector &&
+> -	    (this_sector + sectors >=3D conf->next_resync)) {
+> +	    (this_sector + sectors >=3D conf->next_resync))
+>  		choose_first =3D 1;
+> -		start_disk =3D 0;
+> -	} else {
+> +	else
+>  		choose_first =3D 0;
+> -		start_disk =3D conf->last_used;
+> -	}
+> =20
+>  	for (i =3D 0 ; i < conf->raid_disks * 2 ; i++) {
+>  		sector_t dist;
+>  		sector_t first_bad;
+>  		int bad_sectors;
+> =20
+> -		int disk =3D start_disk + i;
+> +		int disk =3D i;
+>  		if (disk >=3D conf->raid_disks)
+>  			disk -=3D conf->raid_disks;
+
+One last little change please.  Could you make that loop:
+
+
+     for (disk =3D 0; disk < conf->raid_disks * 2; disk++)
+
+and remote the 'if' statement that wraps 'disk' back to zero
+when it gets too big (which is buggy and has been fixed in my for-next).
+
+With that change I'll take the patch.
+
+Thanks,
+NeilBrown
+
+
+--Sig_/P9IJTpY8CWlXP+RPn7ubu6y
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT/PW5Tnsnt1WYoG5AQImcxAAkD4M9EYlEWRnpT6guXlBtktJjcskNpjk
+vYSLnsQpOKLebX1XmhioQhAbvwY9bl2qak8aXnaR5kZDx4H9FnsOTtlo0NWb24u3
+QvriCJj113OUUHLM2Tx0XNyjEXvyX/VAk1G1ECKoed06HQbc8KG+06tBKxdmZXJu
+U2g3ljCHBZ80bjXbKkNDa8vWa0hO4pYUummqFrsPy3VqbLEgPZxexLJtTWUQ7pr4
+yq2irGCIsBck8idsmiGiU/E83S1xXXPkTqT4wdanBRsUpDa0yMJBh7PdvshpY7uU
+DfuXYKt9BvMiMa5bHNZGCxVdq6LIya9lUA3GEHVQp6CFSDrcObyixG8dYyABWudr
+OEgQGn8IshcAbtGuyClR5RvaOUJUPkXr7zmzafbAiqQt70vHf1mMvksoCpGyOea2
+Pu2gHoXmOaaK5hnHPx6UKqo5KKTd3Pva4+ul7cH9GuAi4tgqBOha0hSwkbSAFZtG
+IOmHuy8BYljDrcO+SVIIyQhnTaAyuZ20RUwKoedrLlhmvddhRi0K4Bb6KwhyK0u2
+Jf/NIGshH3wB/f4PInINfOCKF2fHUGXhGEvsGQdDQHKIUkTDBrcYfsgRYHiVQl4w
+qw4qX3r7FJ0STKddNgUg4tktk7lUcdkvzdfJTUkW2HHJbJq+UbNuAFoywla9BgzM
+giPEQzHSr+o=
+=lKcN
+-----END PGP SIGNATURE-----
+
+--Sig_/P9IJTpY8CWlXP+RPn7ubu6y--
