@@ -1,7 +1,7 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: [patch 1/3 v2]raid5: lockless access raid5 overrided bi_phys_segments
-Date: Wed, 4 Jul 2012 13:21:17 +0800
-Message-ID: <20120704052117.GA9145@kernel.org>
+Subject: [patch 2/3 v2]raid5: remove unnecessary bitmap write optimization
+Date: Wed, 4 Jul 2012 13:21:43 +0800
+Message-ID: <20120704052143.GB9145@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -11,181 +11,83 @@ To: linux-raid@vger.kernel.org
 Cc: neilb@suse.de
 List-Id: linux-raid.ids
 
-Raid5 overrides bio->bi_phys_segments, accessing it is with device_lock hold,
-which is unnecessary, We can make it lockless actually.
+Neil pointed out the bitmap write optimization in handle_stripe_clean_event()
+is unnecessary, because the chance one stripe gets written twice in the mean
+time is rare. We can always do a bitmap_startwrite when a write request is
+added to a stripe and bitmap_endwrite after write request is done.  Delete the
+optimization. With it, we can delete some cases of device_lock.
 
 Signed-off-by: Shaohua Li <shli@fusionio.com>
 ---
- drivers/md/raid5.c |   62 +++++++++++++++++++++++++++--------------------------
- 1 file changed, 32 insertions(+), 30 deletions(-)
+ drivers/md/raid5.c |   21 +++++++++------------
+ 1 file changed, 9 insertions(+), 12 deletions(-)
 
 Index: linux/drivers/md/raid5.c
 ===================================================================
---- linux.orig/drivers/md/raid5.c	2012-07-02 10:46:25.819205923 +0800
-+++ linux/drivers/md/raid5.c	2012-07-02 10:54:20.609237005 +0800
-@@ -99,34 +99,40 @@ static inline struct bio *r5_next_bio(st
-  * We maintain a biased count of active stripes in the bottom 16 bits of
-  * bi_phys_segments, and a count of processed stripes in the upper 16 bits
-  */
--static inline int raid5_bi_phys_segments(struct bio *bio)
-+static inline int raid5_bi_processed_stripes(struct bio *bio)
- {
--	return bio->bi_phys_segments & 0xffff;
-+	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
-+	return (atomic_read(segments) >> 16) & 0xffff;
- }
- 
--static inline int raid5_bi_hw_segments(struct bio *bio)
-+static inline int raid5_dec_bi_active_stripes(struct bio *bio)
- {
--	return (bio->bi_phys_segments >> 16) & 0xffff;
-+	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
-+	return atomic_sub_return(1, segments) & 0xffff;
- }
- 
--static inline int raid5_dec_bi_phys_segments(struct bio *bio)
-+static inline void raid5_inc_bi_active_stripes(struct bio *bio)
- {
--	--bio->bi_phys_segments;
--	return raid5_bi_phys_segments(bio);
-+	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
-+	atomic_inc(segments);
- }
- 
--static inline int raid5_dec_bi_hw_segments(struct bio *bio)
-+static inline void raid5_set_bi_processed_stripes(struct bio *bio,
-+	unsigned int cnt)
- {
--	unsigned short val = raid5_bi_hw_segments(bio);
-+	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
-+	int old, new;
- 
--	--val;
--	bio->bi_phys_segments = (val << 16) | raid5_bi_phys_segments(bio);
--	return val;
-+	do {
-+		old = atomic_read(segments);
-+		new = (old & 0xffff) | (cnt << 16);
-+	} while (atomic_cmpxchg(segments, old, new) != old);
- }
- 
--static inline void raid5_set_bi_hw_segments(struct bio *bio, unsigned int cnt)
-+static inline void raid5_set_bi_stripes(struct bio *bio, unsigned int cnt)
- {
--	bio->bi_phys_segments = raid5_bi_phys_segments(bio) | (cnt << 16);
-+	atomic_t *segments = (atomic_t *)&bio->bi_phys_segments;
-+	atomic_set(segments, cnt);
- }
- 
- /* Find first data disk in a raid6 stripe */
-@@ -776,7 +782,7 @@ static void ops_complete_biofill(void *s
- 			while (rbi && rbi->bi_sector <
- 				dev->sector + STRIPE_SECTORS) {
- 				rbi2 = r5_next_bio(rbi, dev->sector);
--				if (!raid5_dec_bi_phys_segments(rbi)) {
-+				if (!raid5_dec_bi_active_stripes(rbi)) {
- 					rbi->bi_next = return_bi;
- 					return_bi = rbi;
- 				}
-@@ -2355,7 +2361,7 @@ static int add_stripe_bio(struct stripe_
- 	if (*bip)
- 		bi->bi_next = *bip;
- 	*bip = bi;
--	bi->bi_phys_segments++;
-+	raid5_inc_bi_active_stripes(bi);
- 
+--- linux.orig/drivers/md/raid5.c	2012-07-04 12:15:38.000000000 +0800
++++ linux/drivers/md/raid5.c	2012-07-04 13:01:03.126943920 +0800
+@@ -2350,7 +2350,7 @@ static int add_stripe_bio(struct stripe_
+ 	spin_lock_irq(&conf->device_lock);
  	if (forwrite) {
- 		/* check if page is covered */
-@@ -2452,7 +2458,7 @@ handle_failed_stripe(struct r5conf *conf
- 			sh->dev[i].sector + STRIPE_SECTORS) {
- 			struct bio *nextbi = r5_next_bio(bi, sh->dev[i].sector);
- 			clear_bit(BIO_UPTODATE, &bi->bi_flags);
--			if (!raid5_dec_bi_phys_segments(bi)) {
-+			if (!raid5_dec_bi_active_stripes(bi)) {
- 				md_write_end(conf->mddev);
- 				bi->bi_next = *return_bi;
- 				*return_bi = bi;
-@@ -2467,7 +2473,7 @@ handle_failed_stripe(struct r5conf *conf
- 		       sh->dev[i].sector + STRIPE_SECTORS) {
- 			struct bio *bi2 = r5_next_bio(bi, sh->dev[i].sector);
- 			clear_bit(BIO_UPTODATE, &bi->bi_flags);
--			if (!raid5_dec_bi_phys_segments(bi)) {
-+			if (!raid5_dec_bi_active_stripes(bi)) {
- 				md_write_end(conf->mddev);
- 				bi->bi_next = *return_bi;
- 				*return_bi = bi;
-@@ -2491,7 +2497,7 @@ handle_failed_stripe(struct r5conf *conf
- 				struct bio *nextbi =
- 					r5_next_bio(bi, sh->dev[i].sector);
- 				clear_bit(BIO_UPTODATE, &bi->bi_flags);
--				if (!raid5_dec_bi_phys_segments(bi)) {
-+				if (!raid5_dec_bi_active_stripes(bi)) {
- 					bi->bi_next = *return_bi;
- 					*return_bi = bi;
- 				}
-@@ -2710,7 +2716,7 @@ static void handle_stripe_clean_event(st
+ 		bip = &sh->dev[dd_idx].towrite;
+-		if (*bip == NULL && sh->dev[dd_idx].written == NULL)
++		if (*bip == NULL)
+ 			firstwrite = 1;
+ 	} else
+ 		bip = &sh->dev[dd_idx].toread;
+@@ -2455,6 +2455,7 @@ handle_failed_stripe(struct r5conf *conf
+ 			s->to_write--;
+ 			bitmap_end = 1;
+ 		}
++		spin_unlock_irq(&conf->device_lock);
+ 
+ 		if (test_and_clear_bit(R5_Overlap, &sh->dev[i].flags))
+ 			wake_up(&conf->wait_for_overlap);
+@@ -2470,6 +2471,10 @@ handle_failed_stripe(struct r5conf *conf
+ 			}
+ 			bi = nextbi;
+ 		}
++		if (bitmap_end)
++			bitmap_endwrite(conf->mddev->bitmap, sh->sector,
++				STRIPE_SECTORS, 0, 0);
++		bitmap_end = 0;
+ 		/* and fail all 'written' */
+ 		bi = sh->dev[i].written;
+ 		sh->dev[i].written = NULL;
+@@ -2509,7 +2514,6 @@ handle_failed_stripe(struct r5conf *conf
+ 				bi = nextbi;
+ 			}
+ 		}
+-		spin_unlock_irq(&conf->device_lock);
+ 		if (bitmap_end)
+ 			bitmap_endwrite(conf->mddev->bitmap, sh->sector,
+ 					STRIPE_SECTORS, 0, 0);
+@@ -2713,9 +2717,7 @@ static void handle_stripe_clean_event(st
+ 				test_bit(R5_UPTODATE, &dev->flags)) {
+ 				/* We can return any write requests */
+ 				struct bio *wbi, *wbi2;
+-				int bitmap_end = 0;
+ 				pr_debug("Return write for disc %d\n", i);
+-				spin_lock_irq(&conf->device_lock);
+ 				wbi = dev->written;
+ 				dev->written = NULL;
  				while (wbi && wbi->bi_sector <
- 					dev->sector + STRIPE_SECTORS) {
- 					wbi2 = r5_next_bio(wbi, dev->sector);
--					if (!raid5_dec_bi_phys_segments(wbi)) {
-+					if (!raid5_dec_bi_active_stripes(wbi)) {
- 						md_write_end(conf->mddev);
- 						wbi->bi_next = *return_bi;
- 						*return_bi = wbi;
-@@ -3776,7 +3782,7 @@ static struct bio *remove_bio_from_retry
- 		 * this sets the active strip count to 1 and the processed
- 		 * strip count to zero (upper 8 bits)
- 		 */
--		bi->bi_phys_segments = 1; /* biased count of active stripes */
-+		raid5_set_bi_stripes(bi, 1); /* biased count of active stripes */
- 	}
- 
- 	return bi;
-@@ -4167,9 +4173,7 @@ static void make_request(struct mddev *m
- 	if (!mdcb)
- 		md_wakeup_thread(mddev->thread);
- 
--	spin_lock_irq(&conf->device_lock);
--	remaining = raid5_dec_bi_phys_segments(bi);
--	spin_unlock_irq(&conf->device_lock);
-+	remaining = raid5_dec_bi_active_stripes(bi);
- 	if (remaining == 0) {
- 
- 		if ( rw == WRITE )
-@@ -4525,7 +4529,7 @@ static int  retry_aligned_read(struct r5
- 		     sector += STRIPE_SECTORS,
- 		     scnt++) {
- 
--		if (scnt < raid5_bi_hw_segments(raid_bio))
-+		if (scnt < raid5_bi_processed_stripes(raid_bio))
- 			/* already done this stripe */
- 			continue;
- 
-@@ -4533,14 +4537,14 @@ static int  retry_aligned_read(struct r5
- 
- 		if (!sh) {
- 			/* failed to get a stripe - must wait */
--			raid5_set_bi_hw_segments(raid_bio, scnt);
-+			raid5_set_bi_processed_stripes(raid_bio, scnt);
- 			conf->retry_read_aligned = raid_bio;
- 			return handled;
+@@ -2728,15 +2730,10 @@ static void handle_stripe_clean_event(st
+ 					}
+ 					wbi = wbi2;
+ 				}
+-				if (dev->towrite == NULL)
+-					bitmap_end = 1;
+-				spin_unlock_irq(&conf->device_lock);
+-				if (bitmap_end)
+-					bitmap_endwrite(conf->mddev->bitmap,
+-							sh->sector,
+-							STRIPE_SECTORS,
++				bitmap_endwrite(conf->mddev->bitmap, sh->sector,
++						STRIPE_SECTORS,
+ 					 !test_bit(STRIPE_DEGRADED, &sh->state),
+-							0);
++						0);
+ 			}
  		}
  
- 		if (!add_stripe_bio(sh, raid_bio, dd_idx, 0)) {
- 			release_stripe(sh);
--			raid5_set_bi_hw_segments(raid_bio, scnt);
-+			raid5_set_bi_processed_stripes(raid_bio, scnt);
- 			conf->retry_read_aligned = raid_bio;
- 			return handled;
- 		}
-@@ -4549,9 +4553,7 @@ static int  retry_aligned_read(struct r5
- 		release_stripe(sh);
- 		handled++;
- 	}
--	spin_lock_irq(&conf->device_lock);
--	remaining = raid5_dec_bi_phys_segments(raid_bio);
--	spin_unlock_irq(&conf->device_lock);
-+	remaining = raid5_dec_bi_active_stripes(raid_bio);
- 	if (remaining == 0)
- 		bio_endio(raid_bio, 0);
- 	if (atomic_dec_and_test(&conf->active_aligned_reads))
