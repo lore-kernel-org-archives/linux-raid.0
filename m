@@ -1,151 +1,172 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch 2/3 v3] raid1: read balance chooses idlest disk for SSD
-Date: Wed, 4 Jul 2012 15:45:31 +1000
-Message-ID: <20120704154531.3eca9cb5@notabene.brown>
+Subject: Re: [patch 3/3 v3] raid1: prevent merging too large request
+Date: Wed, 4 Jul 2012 15:59:07 +1000
+Message-ID: <20120704155907.560607d4@notabene.brown>
 References: <20120702010840.197370335@kernel.org>
-	<20120702011031.890864816@kernel.org>
+	<20120702011037.466764171@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/KvZlFhkfQcC+.5TF32GjKN_"; protocol="application/pgp-signature"
+ boundary="Sig_/+F1+KqgjjFzgeu.eY.vHetX"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120702011031.890864816@kernel.org>
+In-Reply-To: <20120702011037.466764171@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org, axboe@kernel.dk
 List-Id: linux-raid.ids
 
---Sig_/KvZlFhkfQcC+.5TF32GjKN_
+--Sig_/+F1+KqgjjFzgeu.eY.vHetX
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 02 Jul 2012 09:08:42 +0800 Shaohua Li <shli@kernel.org> wrote:
+On Mon, 02 Jul 2012 09:08:43 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-> SSD hasn't spindle, distance between requests means nothing. And the orig=
-inal
-> distance based algorithm sometimes can cause severe performance issue for=
- SSD
-> raid.
+> For SSD, if request size exceeds specific value (optimal io size), reques=
+t size
+> isn't important for bandwidth. In such condition, if making request size =
+bigger
+> will cause some disks idle, the total throughput will actually drop. A go=
+od
+> example is doing a readahead in a two-disk raid1 setup.
 >=20
-> Considering two thread groups, one accesses file A, the other access file=
- B.
-> The first group will access one disk and the second will access the other=
- disk,
-> because requests are near from one group and far between groups. In this =
-case,
-> read balance might keep one disk very busy but the other relative idle.  =
-For
-> SSD, we should try best to distribute requests to as more disks as possib=
-le.
-> There isn't spindle move penality anyway.
+> So when we should split big request? We absolutly don't want to split big
+> request to very small requests. Even in SSD, big request transfer is more
+> efficient. Below patch only consider request with size above optimal io s=
+ize.
 >=20
-> With below patch, I can see more than 50% throughput improvement sometimes
-> depending on workloads.
+> If all disks are busy, is it worthy to do split? Say optimal io size is 1=
+6k,
+> two requests 32k and two disks. We can let each disk run one 32k request,=
+ or
+> split the requests to 4 16k requests and each disk runs two. It's hard to=
+ say
+> which case is better, depending on hardware.
 >=20
-> The only exception is small requests can be merged to a big request which
-> typically can drive higher throughput for SSD too. Such small requests are
-> sequential reads. Unlike hard disk, sequential read which can't be merged=
- (for
-> example direct IO, or read without readahead) can be ignored for SSD. Aga=
-in
-> there is no spindle move penality. readahead dispatches small requests an=
-d such
-> requests can be merged.
+> So only consider case where there are idle disks. For readahead, split is
+> always better in this case. And in my test, below patch can improve > 30%
+> thoughput. Hmm, not 100%, because disk isn't 100% busy.
 >=20
-> Last patch can help detect sequential read well, at least if concurrent r=
-ead
-> number isn't greater than raid disk number. In that case, distance based
-> algorithm doesn't work well too.
+> Such case can happen not just in readahead, for example, in directio. But=
+ I
+> suppose directio usually will have bigger IO depth and make all disks bus=
+y, so
+> I ignored it.
 >=20
-> V2: For hard disk and SSD mixed raid, doesn't use distance based algorith=
-m for
-> random IO too. This makes the algorithm generic for raid with SSD.
+> Note: if the raid uses any hard disk, we don't prevent merging. That will=
+ make
+> performace worse.
 >=20
 > Signed-off-by: Shaohua Li <shli@fusionio.com>
 > ---
->  drivers/md/raid1.c |   23 +++++++++++++++++++++--
->  1 file changed, 21 insertions(+), 2 deletions(-)
+>  drivers/md/raid1.c |   46 ++++++++++++++++++++++++++++++++++++++--------
+>  drivers/md/raid1.h |    1 +
+>  2 files changed, 39 insertions(+), 8 deletions(-)
 >=20
 > Index: linux/drivers/md/raid1.c
 > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux.orig/drivers/md/raid1.c	2012-06-28 16:56:20.846401902 +0800
-> +++ linux/drivers/md/raid1.c	2012-06-29 14:13:23.856781798 +0800
-> @@ -486,6 +486,7 @@ static int read_balance(struct r1conf *c
->  	int best_disk;
->  	int i;
->  	sector_t best_dist;
-> +	unsigned int min_pending;
+> --- linux.orig/drivers/md/raid1.c	2012-06-29 15:17:09.160691540 +0800
+> +++ linux/drivers/md/raid1.c	2012-06-29 15:57:54.993943576 +0800
+> @@ -489,6 +489,7 @@ static int read_balance(struct r1conf *c
+>  	unsigned int min_pending;
 >  	struct md_rdev *rdev;
 >  	int choose_first;
+> +	int choose_idle;
 > =20
-> @@ -499,6 +500,7 @@ static int read_balance(struct r1conf *c
->  	sectors =3D r1_bio->sectors;
->  	best_disk =3D -1;
+>  	rcu_read_lock();
+>  	/*
+> @@ -502,6 +503,7 @@ static int read_balance(struct r1conf *c
 >  	best_dist =3D MaxSector;
-> +	min_pending =3D -1;
+>  	min_pending =3D -1;
 >  	best_good_sectors =3D 0;
+> +	choose_idle =3D 0;
 > =20
 >  	if (conf->mddev->recovery_cp < MaxSector &&
-
-
-That's not good form - declaring a variable "unsigned int" then assigning
-"-1" to it.
-Maybe initialise it to "UINT_MAX".
-
-> -		if (dist < best_dist) {
+>  	    (this_sector + sectors >=3D conf->next_resync))
+> @@ -580,16 +582,35 @@ static int read_balance(struct r1conf *c
+>  		nonrot =3D blk_queue_nonrot(bdev_get_queue(rdev->bdev));
+>  		pending =3D atomic_read(&rdev->nr_pending);
+>  		dist =3D abs(this_sector - conf->mirrors[disk].head_position);
+> -		if (choose_first
+> -		    /* Don't change to another disk for sequential reads */
+> -		    || conf->mirrors[disk].next_seq_sect =3D=3D this_sector
+> -		    || dist =3D=3D 0
+> -		    /* If device is idle, use it */
+> -		    || pending =3D=3D 0) {
+> -			best_disk =3D disk;
+> -			break;
+> +		if (choose_first)
+> +			goto done;
+> +		/* Don't change to another disk for sequential reads */
+> +		if (conf->mirrors[disk].next_seq_sect =3D=3D this_sector
+> +		    || dist =3D=3D 0) {
+> +			int opt_iosize =3D bdev_io_opt(rdev->bdev) >> 9;
+> +			struct mirror_info *mirror =3D &conf->mirrors[disk];
 > +
-> +		/*
-> +		 * If all disks are rotational, choose the closest disk. If any
-> +		 * disk is non-rotational, choose the disk with less pending
-> +		 * request even the disk is rotational, which might/might not
-> +		 * be optimal for raids with mixed ratation/non-rotational
-> +		 * disks depending on workload.
-> +		 */
-> +		if (nonrot || min_pending !=3D -1) {
-> +			if (min_pending > pending) {
-> +				min_pending =3D pending;
+> +			/*
+> +			 * If buffered sequential IO size exceeds optimal
+> +			 * iosize and there is idle disk, choose idle disk
+> +			 */
+> +			if (nonrot && opt_iosize > 0 && choose_idle =3D=3D 0 &&
+> +			    mirror->seq_start !=3D MaxSector &&
+> +			    mirror->next_seq_sect > opt_iosize &&
+> +			    mirror->next_seq_sect - opt_iosize >=3D
+> +			    mirror->seq_start) {
+> +				choose_idle =3D 1;
 > +				best_disk =3D disk;
+> +				continue;
 > +			}
-> +		} else if (dist < best_dist) {
->  			best_dist =3D dist;
->  			best_disk =3D disk;
+> +			goto done;
 >  		}
+> +		/* If device is idle, use it */
+> +		if (pending =3D=3D 0 && (!choose_idle || nonrot))
+> +			goto done;
 
-It don't think it is clear that the code matches the comment in all cases.
-e.g. if you have 3 disks and the first 2 were rotational, then you wouldn't
-examine the 'pending' count of the 2nd disk at all.
-Also you never examine the distance for the first disk.
+That doesn't make sense to me.
+Ignoring the nonrot bit, it says:
+   if (this device is idle, and we haven't decided to choose an idle device)
+        then choose this device
 
-Maybe if you have a 'best_pending_disk' and a 'best_dist_disk' and after
-the loop, use best_pending_disk if any were non-rotation, and best_disk_disk
-if all were rotating.
+which is wrong.
+
+Also, what about the case where an idle device is found before we we find a
+device that the sequentially-previous read was from.  Will that still do the
+right thing?  It isn't clear.
+
+
+And I don't really like the "goto done".  Just have
+        best_disk =3D disk;
+        break;
+
+it isn't that much more code.
+
 
 Thanks,
 NeilBrown
 
 
+> =20
 
---Sig_/KvZlFhkfQcC+.5TF32GjKN_
+--Sig_/+F1+KqgjjFzgeu.eY.vHetX
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT/PYeznsnt1WYoG5AQLrhRAAq4o4Cu+UiINfEXe4TpN3+QXPXDim19US
-0dq8dqmsJQpGc3rSDv7aNGPy0G4LUsMfyODqNcG+A4/c4UBeftialvxSm3xqlp9B
-tFfVG97v668749x+srPXwdwHNLvWJCto9ov5nOskZlQR20USDeseVsRQzgAiZ0j2
-fHZ2gA/SO69qUeNlcXUCzXSQ6ahpvlJQWCLjPPX6HZiDqk1v5+6KYZYR77wRyNFw
-jDA80ki4naTDkCHZi28fh6RClZbFXorgV/C4CMk65onnCI+JeouQj1Zp0VPIfyTv
-YgpE92V5+XpX/++fhLOfbkdWalw+JE+rJ0oBSC2SYUqMoMPAO1BV3R9ebpLmZ7Iw
-0C1sD5qbrouN/A3tQHE3c+xfiBPFVrzC/daIzx6/ja83uOF0LfsH/l2xls1gZz/4
-6s2sFLEZ9osospxOyUNZeMEPr48wCUSQaAT4Hg8WAWGb50z8BCR+KPyDwI8Nvj1Y
-WA0rHxbzD3SlOLpC5yqyuc7HAEPVC6VFJ1sy7k7HEVvMPQKa5TdEfN37L9FeEpad
-4ccJXqZhxrfoYI7MhF9fYjEFisKcZdjQQwPYQSeYwwAHC3oewUgqRjTDhLMtjs0Z
-n7JoXsgfRakY+QfFZV3KIRgXNmAKyHmkLRXmbSvNT1foYT1ZN9B7PYIJ3QXtcD2X
-oMFaRONmaG4=
-=tXvr
+iQIVAwUBT/Pbqznsnt1WYoG5AQKIXxAAliWXozWmPqW+wNv2WHlrC5g6mOPsGoO/
+jOORgd0VfWtPtbmfE2ld36c0Ngo+8w9U3iY7HLcLLjLDAMgafKiENYA9SY4CGcX/
+wdavmEagtscr6eXQaHjXU5e4RJb+o35VoKL9MKg1mVRBQV5Niqh4Sm5+MAX0lp7L
+A7ABj99HVpM8kOUBc1x+4pEqkA34nqWT+6eGCLylNjBdNsqf1nxuqr3asiyIDR1H
+mmaQn83eZ+KMtvsdEq3DDy5Vrlnih/TQvnQ4Sq832Q640s0T8JCL+p87I/HLAiXe
+sINWsKOofjwAHtbmLbQgG36esaEepS7NWfFz+7alMzEqJzjll8D1GOrv+70LkRxZ
+JPDzEyji3R3jw+fXiu642doxJUz2pjn2oCABE6NPO+eYJ6NhXIBp8boTL6ASpG6k
+d95tUcl6sUwRuVKyNn8GKKduqFvFABe27bocfafnXj2ulL0939JjeBdWCQZv4FJq
+0Q+ReDX1B8rDTXEZlNWPTevCGfXxv+5gog72EhYV3daT9Hth0OeBFiNVU6KergfT
+dWUyn6IkJ2k3/pV8E8zlgbwX47Q34UiW088nDURJgW5ZrBJpFvV+V99pargpbKHL
+FxbepdvxwmzkAZd7X0+80fm1bzTLEH7keoABYf2F1Em8ZgRyBq1Uijk2m5YfpXOz
+Cyxg+90qDyg=
+=rf+n
 -----END PGP SIGNATURE-----
 
---Sig_/KvZlFhkfQcC+.5TF32GjKN_--
+--Sig_/+F1+KqgjjFzgeu.eY.vHetX--
