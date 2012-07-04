@@ -1,47 +1,74 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: Re: [patch 03/10 v3] raid5: add a per-stripe lock
-Date: Wed, 4 Jul 2012 09:09:52 +0800
-Message-ID: <201207040909485469881@gmail.com>
-References: <20120625072447.268095276@kernel.org> <20120625072613.620625574@kernel.org> <20120702105046.56cd47ec@notabene.brown> <20120702031626.GE29770@kernel.org> <20120702173953.7bee26cb@notabene.brown> <201207032016270001820@gmail.com>,
-	<20120704095624.7307c6cd@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] MD RAID10:  Fix compiler warning.
+Date: Wed, 4 Jul 2012 11:12:56 +1000
+Message-ID: <20120704111256.6c1cea87@notabene.brown>
+References: <1340700013.19015.7.camel@f16>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/3nIbx7uv/ZWDPp3FDEXbB98"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1340700013.19015.7.camel@f16>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: shli <shli@kernel.org>, linux-raid <linux-raid@vger.kernel.org>, axboe <axboe@kernel.dk>, Dan Williams <dan.j.williams@intel.com>
+To: Jonathan Brassow <jbrassow@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wNy0wNCAwNzo1NiBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
-IFR1ZSwgMyBKdWwgMjAxMiAyMDoxNjozMSArMDgwMCBtYWppYW5wZW5nIDxtYWppYW5wZW5nQGdt
-YWlsLmNvbT4gd3JvdGU6DQo+DQo+PiBPbiAyMDEyLTA3LTAyIDE1OjM5IE5laWxCcm93biA8bmVp
-bGJAc3VzZS5kZT4gV3JvdGU6DQo+PiA+T24gTW9uLCAyIEp1bCAyMDEyIDExOjE2OjI2ICswODAw
-IFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4gd3JvdGU6DQo+PiA+DQo+PiA+DQo+PiA+PiA+
-IFRoZW4gSSBjb3VsZCBzZWUgd2hhdCBpcyBiZWluZyBhZGRlZCBhbmQgd2hhdCBpcyBiZWluZyBy
-ZW1vdmVkIGFsbCBpbiB0aGUgb25lDQo+PiA+PiA+IHBhdGNoIGFuZCBJIGNhbiBiZSBzdXJlIHRo
-YXQgdGhleSBiYWxhbmNlLg0KPj4gPj4gDQo+PiA+PiByZXdvcmtlZCB0aGUgcGF0Y2ggMy01IHRv
-IHR3byBwYXRjaGVzIGFzIHlvdSBzdWdnZXN0ZWQsIGFuZCBzZW50IHRvIHlvdS4gcGxlYXNlIGNo
-ZWNrLg0KPj4gPg0KPj4gPlRoYW5rcy4gIFRoYXQncyBsb29raW5nIHJlYWxseSBnb29kLg0KPj4g
-Pg0KPj4gPkhvd2V2ZXIgSSB0aGluayB3ZSBjYW4gZG8gYmV0dGVyLiAgSSd2ZSBiZWVuIGxvb2tp
-bmcgbW9yZSBjbG9zZWx5IGF0IHRoZSBjb2RlDQo+PiA+YW5kIEkgdGhpbmsgdGhhdCB0aGUgb25s
-eSB0aGluZ3MgdGhhdCB3ZSBuZWVkIHN0cmlwZV9sb2NrIHRvIHByb3RlY3QgYXJlDQo+PiA+LT50
-b3JlYWQgYW5kIC0+dG93cml0ZSwgdG9nZXRoZXIgd2l0aCB0aGUgZm9sbG93aW5nIGJpb3MuICBl
-LmcuDQo+PiA+LT50b3JlYWQtPmJpX25leHQgZXRjLg0KPj4gPg0KPj4gPi0+cmVhZCBhbmQgLT53
-cml0dGVuIGRvbid0IG5lZWQgc3RyaXBlX2xvY2sgcHJvdGVjdGlvbiwgYXMgdGhleSBhcmUgb25s
-eQ0KPj4gPm1hbmlwdWxhdGVkIGJ5IHRoZSBoYW5kbGVfc3RyaXBlIHN0YXRlIG1hY2hpbmUgd2hp
-Y2ggdXNlcyBTVFJJUEVfQUNUSVZFIA0KPj4gPmFuZCByZWZjb3VudHMgZm9yIGV4Y2x1c2lvbi4N
-Cj4+ID4NCj4+ID5TbyBhZGRfc3RyaXBlX2JpbyBuZWVkIHRvIHRha2UgdGhlIGxvY2sgd2hpbGUg
-YWRkaW5nIGEgYmlvIHRvIHRoZQ0KPj4gPi0+dG9yZWFkIGFuZCAgLT50b3dyaXRlIGxpc3RzLCBh
-bmQgb3BzX3J1bl9iaW9kcmFpbigpIGFuZCBvcHNfcnVuX2Jpb2ZpbGwNCj4+ID5uZWVkIHRvIHRh
-a2UgdGhlIGxvY2sgd2hpbGUgdGhlIG1vdmUgdGhlIGxpc3QgZnJvbSAtPnRve3JlYWQsd3JpdGV9
-IHRvDQo+PiA+LT57cmVhZCx3cml0dGVufS4gIA0KPg0KPj4gSG93IGFib3V0IHhjaGcoKT8NCj4N
-Cj4oaXQgd291bGQgaGVscCBhIGxpdHRsZSBpZiB5b3UgbWFkZSB5b3VyIGNvbW1lbnRzIHN0YW5k
-IG91dCBtb3JlLCBhbmQgbWF5YmUNCj5iZSBhIGJpdCBtb3JlIHZlcmJvc2UpLg0KPg0KPmJpb19h
-ZGRfc3RyaXBlKCkgY2FuIGluc2VydCBhIG5ldyBiaW8gaW50byBhIGxpc3QgdGhhdCBzdGFydHMg
-YXJlIC0+dG93cml0ZQ0KPm9yIC0+dG9yZWFkLg0KPllvdSBjYW5ub3QgZG8gdGhhdCB3aXRoIGEg
-c2ltcGxlIHhjaGcuICBZb3UgcmVhbGx5IG5lZWQgYSBsb2NrLg0KPg0KPk5laWxCcm93bg0KPg0K
-Pg0Kc29ycnksaSBtaXNzZWQgeGNoZy4NCkJ1dCB3aGVuIGRldi9zdHJpcGUgaXMgc2V0IFI1X1dh
-bnRkcmFpbi9SNV9XYW50ZmlsbCwgY2FuIGFkZCBzdHJpcGUgdG8gZGV2L3N0cmlwZT8=
+--Sig_/3nIbx7uv/ZWDPp3FDEXbB98
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, 26 Jun 2012 03:40:13 -0500 Jonathan Brassow <jbrassow@redhat.com>
+wrote:
+
+> MD RAID10:  Fix compiler warning.
+>=20
+> Initialize variable to prevent compiler warning.
+>=20
+> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+>=20
+> Index: linux-upstream/drivers/md/raid10.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-upstream.orig/drivers/md/raid10.c
+> +++ linux-upstream/drivers/md/raid10.c
+> @@ -717,7 +717,7 @@ static struct md_rdev *read_balance(stru
+>  	int sectors =3D r10_bio->sectors;
+>  	int best_good_sectors;
+>  	sector_t new_distance, best_dist;
+> -	struct md_rdev *rdev, *best_rdev;
+> +	struct md_rdev *best_rdev, *rdev =3D NULL;
+>  	int do_balance;
+>  	int best_slot;
+>  	struct geom *geo =3D &conf->geo;
+>=20
+
+Applied, thanks.
+I'm fairly sure it is a bogus warning, but initializing to NULL won't hurt.
+
+Thanks,
+NeilBrown
+
+--Sig_/3nIbx7uv/ZWDPp3FDEXbB98
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBT/OYmDnsnt1WYoG5AQIMTg/8DhiLIdAbstl48yGrcAHP/iAGXZVWHBHq
+6qAHQb9hw44E3S15JxSZDDUcRO1NsTS/TZuYxNLZjJ+V9wgwuKrm7tkYOgJqs8fP
+30UOneio9nahPHIiWAdPyId9B6rY7sgzcBxhD+MeFuYKS1hvarRsMGt3MGmAlmfA
+fc52Er5C7zmhENJkNFkxKFrP6FK3QCwmANNw2Tg/KnKBIcz4IztI2EYNdWMpLq8G
+PxCj10dMJa7U9iPkAwdw+kdaNjT3cD8TmYdd6lptBtpFnjO3zDrHwfVV4Pr++sBp
++wEk4fh77hLeA466Q3SU1YldKYYPI3If/kycaNf19ry1VrGwSQ880ylm1pqB4BgD
+Xd7x617h/bmeDZdyZf//Su6b+Z3ZjCrfiMAfQPlxevrEdOLkqE23MUOvryoRdsVy
+vKBV6a317TyFv27XKxklRrjrAIXeUX+stEfDiwvlyaj0DAFeuujjvtGb0PA5z9+9
+5sPNWxUGeytb/6EypqA3diUJjEbSFyr9o4FWE7u33Nc55/lcoJSkUqsHW8ooe0Zf
+FQHgx5KSrCl4kimKCrySX43MoG5WiBfb4tyOq7wzByp8Pexkvsf/KZDTNeYBfdPX
+7nTElK5kBYplg0NhGHRhcpfMhfexM0a7S4G+wiG2pun+AbGJncf+plnEeGSvVciM
+9s31nX+l8lQ=
+=9GRy
+-----END PGP SIGNATURE-----
+
+--Sig_/3nIbx7uv/ZWDPp3FDEXbB98--
