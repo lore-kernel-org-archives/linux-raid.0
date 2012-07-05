@@ -1,163 +1,207 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [patch 3/3 v4]raid1: prevent merging too large request
-Date: Thu, 5 Jul 2012 17:21:24 +0800
-Message-ID: <20120705092124.GC27956@kernel.org>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: [patch 2/3 v4]raid1: read balance chooses idlest disk for SSD
+Date: Thu, 5 Jul 2012 10:04:48 -0300
+Message-ID: <CABYL=TqgOmuL4JLT1-pmUWgeVHH+veuNB4K5BSW5=zW0iL6C_Q@mail.gmail.com>
+References: <20120705092057.GB27956@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20120705092057.GB27956@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-For SSD, if request size exceeds specific value (optimal io size), request size
-isn't important for bandwidth. In such condition, if making request size bigger
-will cause some disks idle, the total throughput will actually drop. A good
-example is doing a readahead in a two-disk raid1 setup.
+nice, just another question...
+ since this use mixed raid disks (different types) could we improve
+the algorithm to diferent hard disk speed, for example a raid1 with
+7200 and 15000 rpm?
+the distance continue the same but it will include a 'speed' factor
+speed=3D1/rpm
+(distance*speed)
+or something to select fastest disk in the array
+i don=B4t want to use write-mostly since it can reduce my total number
+of read disks, but with this we could use the fastest disk with more
+frequency without lose array 'speed'
 
-So when we should split big request? We absolutly don't want to split big
-request to very small requests. Even in SSD, big request transfer is more
-efficient. Below patch only consider request with size above optimal io size.
 
-If all disks are busy, is it worthy to do split? Say optimal io size is 16k,
-two requests 32k and two disks. We can let each disk run one 32k request, or
-split the requests to 4 16k requests and each disk runs two. It's hard to say
-which case is better, depending on hardware.
 
-So only consider case where there are idle disks. For readahead, split is
-always better in this case. And in my test, below patch can improve > 30%
-thoughput. Hmm, not 100%, because disk isn't 100% busy.
 
-Such case can happen not just in readahead, for example, in directio. But I
-suppose directio usually will have bigger IO depth and make all disks busy, so
-I ignored it.
 
-Note: if the raid uses any hard disk, we don't prevent merging. That will make
-performace worse.
+2012/7/5 Shaohua Li <shli@kernel.org>
+>
+> SSD hasn't spindle, distance between requests means nothing. And the
+> original
+> distance based algorithm sometimes can cause severe performance issue=
+ for
+> SSD
+> raid.
+>
+> Considering two thread groups, one accesses file A, the other access =
+file
+> B.
+> The first group will access one disk and the second will access the o=
+ther
+> disk,
+> because requests are near from one group and far between groups. In t=
+his
+> case,
+> read balance might keep one disk very busy but the other relative idl=
+e.
+> For
+> SSD, we should try best to distribute requests to as more disks as
+> possible.
+> There isn't spindle move penality anyway.
+>
+> With below patch, I can see more than 50% throughput improvement some=
+times
+> depending on workloads.
+>
+> The only exception is small requests can be merged to a big request w=
+hich
+> typically can drive higher throughput for SSD too. Such small request=
+s are
+> sequential reads. Unlike hard disk, sequential read which can't be me=
+rged
+> (for
+> example direct IO, or read without readahead) can be ignored for SSD.
+> Again
+> there is no spindle move penality. readahead dispatches small request=
+s and
+> such
+> requests can be merged.
+>
+> Last patch can help detect sequential read well, at least if concurre=
+nt
+> read
+> number isn't greater than raid disk number. In that case, distance ba=
+sed
+> algorithm doesn't work well too.
+>
+> V2: For hard disk and SSD mixed raid, doesn't use distance based algo=
+rithm
+> for
+> random IO too. This makes the algorithm generic for raid with SSD.
+>
+> Signed-off-by: Shaohua Li <shli@fusionio.com>
+> ---
+>  drivers/md/raid1.c |   34 +++++++++++++++++++++++++++++++---
+>  1 file changed, 31 insertions(+), 3 deletions(-)
+>
+> Index: linux/drivers/md/raid1.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux.orig/drivers/md/raid1.c       2012-07-04 15:25:11.817869519
+> +0800
+> +++ linux/drivers/md/raid1.c    2012-07-04 15:42:30.280816275 +0800
+> @@ -483,9 +483,11 @@ static int read_balance(struct r1conf *c
+>         const sector_t this_sector =3D r1_bio->sector;
+>         int sectors;
+>         int best_good_sectors;
+> -       int best_disk;
+> +       int best_disk, best_dist_disk, best_pending_disk;
+> +       int has_nonrot_disk;
+>         int i;
+>         sector_t best_dist;
+> +       unsigned int min_pending;
+>         struct md_rdev *rdev;
+>         int choose_first;
+>
+> @@ -498,8 +500,12 @@ static int read_balance(struct r1conf *c
+>   retry:
+>         sectors =3D r1_bio->sectors;
+>         best_disk =3D -1;
+> +       best_dist_disk =3D -1;
+>         best_dist =3D MaxSector;
+> +       best_pending_disk =3D -1;
+> +       min_pending =3D UINT_MAX;
+>         best_good_sectors =3D 0;
+> +       has_nonrot_disk =3D 0;
+>
+>         if (conf->mddev->recovery_cp < MaxSector &&
+>             (this_sector + sectors >=3D conf->next_resync))
+> @@ -511,6 +517,7 @@ static int read_balance(struct r1conf *c
+>                 sector_t dist;
+>                 sector_t first_bad;
+>                 int bad_sectors;
+> +               unsigned int pending;
+>
+>                 int disk =3D i;
+>                 if (disk >=3D conf->raid_disks * 2)
+> @@ -573,22 +580,43 @@ static int read_balance(struct r1conf *c
+>                 } else
+>                         best_good_sectors =3D sectors;
+>
+> +               has_nonrot_disk |=3D
+> blk_queue_nonrot(bdev_get_queue(rdev->bdev));
+> +               pending =3D atomic_read(&rdev->nr_pending);
+>                 dist =3D abs(this_sector -
+> conf->mirrors[disk].head_position);
+>                 if (choose_first
+>                     /* Don't change to another disk for sequential re=
+ads
+> */
+>                     || conf->mirrors[disk].next_seq_sect =3D=3D this_=
+sector
+>                     || dist =3D=3D 0
+>                     /* If device is idle, use it */
+> -                   || atomic_read(&rdev->nr_pending) =3D=3D 0) {
+> +                   || pending =3D=3D 0) {
+>                         best_disk =3D disk;
+>                         break;
+>                 }
+> +
+> +               if (min_pending > pending) {
+> +                       min_pending =3D pending;
+> +                       best_pending_disk =3D disk;
+> +               }
+> +
+>                 if (dist < best_dist) {
+>                         best_dist =3D dist;
+> -                       best_disk =3D disk;
+> +                       best_dist_disk =3D disk;
+>                 }
+>         }
+>
+> +       /*
+> +        * If all disks are rotational, choose the closest disk. If a=
+ny
+> disk is
+> +        * non-rotational, choose the disk with less pending request =
+even
+> the
+> +        * disk is rotational, which might/might not be optimal for r=
+aids
+> with
+> +        * mixed ratation/non-rotational disks depending on workload.
+> +        */
+> +       if (best_disk =3D=3D -1) {
+> +               if (has_nonrot_disk)
+> +                       best_disk =3D best_pending_disk;
+> +               else
+> +                       best_disk =3D best_dist_disk;
+> +       }
+> +
+>         if (best_disk >=3D 0) {
+>                 rdev =3D rcu_dereference(conf->mirrors[best_disk].rde=
+v);
+>                 if (!rdev)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Signed-off-by: Shaohua Li <shli@fusionio.com>
----
- drivers/md/raid1.c |   56 ++++++++++++++++++++++++++++++++++++++++++++++-------
- drivers/md/raid1.h |    1 
- 2 files changed, 50 insertions(+), 7 deletions(-)
 
-Index: linux/drivers/md/raid1.c
-===================================================================
---- linux.orig/drivers/md/raid1.c	2012-07-05 16:12:13.954489517 +0800
-+++ linux/drivers/md/raid1.c	2012-07-05 17:15:38.750657755 +0800
-@@ -490,6 +490,7 @@ static int read_balance(struct r1conf *c
- 	unsigned int min_pending;
- 	struct md_rdev *rdev;
- 	int choose_first;
-+	int choose_next_idle;
- 
- 	rcu_read_lock();
- 	/*
-@@ -506,6 +507,7 @@ static int read_balance(struct r1conf *c
- 	min_pending = UINT_MAX;
- 	best_good_sectors = 0;
- 	has_nonrot_disk = 0;
-+	choose_next_idle = 0;
- 
- 	if (conf->mddev->recovery_cp < MaxSector &&
- 	    (this_sector + sectors >= conf->next_resync))
-@@ -518,6 +520,7 @@ static int read_balance(struct r1conf *c
- 		sector_t first_bad;
- 		int bad_sectors;
- 		unsigned int pending;
-+		bool nonrot;
- 
- 		int disk = i;
- 		if (disk >= conf->raid_disks * 2)
-@@ -580,18 +583,52 @@ static int read_balance(struct r1conf *c
- 		} else
- 			best_good_sectors = sectors;
- 
--		has_nonrot_disk |= blk_queue_nonrot(bdev_get_queue(rdev->bdev));
-+		nonrot = blk_queue_nonrot(bdev_get_queue(rdev->bdev));
-+		has_nonrot_disk |= nonrot;
- 		pending = atomic_read(&rdev->nr_pending);
- 		dist = abs(this_sector - conf->mirrors[disk].head_position);
--		if (choose_first
--		    /* Don't change to another disk for sequential reads */
--		    || conf->mirrors[disk].next_seq_sect == this_sector
--		    || dist == 0
--		    /* If device is idle, use it */
--		    || pending == 0) {
-+		if (choose_first) {
- 			best_disk = disk;
- 			break;
- 		}
-+		/* Don't change to another disk for sequential reads */
-+		if (conf->mirrors[disk].next_seq_sect == this_sector
-+		    || dist == 0) {
-+			int opt_iosize = bdev_io_opt(rdev->bdev) >> 9;
-+			struct mirror_info *mirror = &conf->mirrors[disk];
-+
-+			best_disk = disk;
-+			/*
-+			 * If buffered sequential IO size exceeds optimal
-+			 * iosize, check if there is idle disk. If yes, choose
-+			 * the idle disk. read_balance could already choose an
-+			 * idle disk before noticing it's a sequential IO in
-+			 * this disk. This doesn't matter because this disk
-+			 * will idle, next time it will be utilized after the
-+			 * first disk has IO size exceeds optimal iosize. In
-+			 * this way, iosize of the first disk will be optimal
-+			 * iosize at least. iosize of the second disk might be
-+			 * small, but not a big deal since when the second disk
-+			 * starts IO, the first disk is likely still busy.
-+			 */
-+			if (nonrot && opt_iosize > 0 &&
-+			    mirror->seq_start != MaxSector &&
-+			    mirror->next_seq_sect > opt_iosize &&
-+			    mirror->next_seq_sect - opt_iosize >=
-+			    mirror->seq_start) {
-+				choose_next_idle = 1;
-+				continue;
-+			}
-+			break;
-+		}
-+		/* If device is idle, use it */
-+		if (pending == 0) {
-+			best_disk = disk;
-+			break;
-+		}
-+
-+		if (choose_next_idle)
-+			continue;
- 
- 		if (min_pending > pending) {
- 			min_pending = pending;
-@@ -630,6 +667,10 @@ static int read_balance(struct r1conf *c
- 			goto retry;
- 		}
- 		sectors = best_good_sectors;
-+
-+		if (conf->mirrors[best_disk].next_seq_sect != this_sector)
-+			conf->mirrors[best_disk].seq_start = this_sector;
-+
- 		conf->mirrors[best_disk].next_seq_sect = this_sector + sectors;
- 	}
- 	rcu_read_unlock();
-@@ -2588,6 +2629,7 @@ static struct r1conf *setup_conf(struct
- 			mddev->merge_check_needed = 1;
- 
- 		disk->head_position = 0;
-+		disk->seq_start = MaxSector;
- 	}
- 	conf->raid_disks = mddev->raid_disks;
- 	conf->mddev = mddev;
-Index: linux/drivers/md/raid1.h
-===================================================================
---- linux.orig/drivers/md/raid1.h	2012-07-05 16:12:13.946489619 +0800
-+++ linux/drivers/md/raid1.h	2012-07-05 16:12:13.970489316 +0800
-@@ -9,6 +9,7 @@ struct mirror_info {
- 	 * we try to keep sequential reads one the same device
- 	 */
- 	sector_t	next_seq_sect;
-+	sector_t	seq_start;
- };
- 
- /*
+
+
+--
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
