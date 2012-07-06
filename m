@@ -1,39 +1,32 @@
-From: Alex <mysqlstudent@gmail.com>
-Subject: Re: Possible data corruption after rebuild
-Date: Fri, 6 Jul 2012 12:15:47 -0400
-Message-ID: <CAB1R3sj-oaotH1m1ojJKP+xm9OGiiPdEW91nfrs30MLB0XeR5g@mail.gmail.com>
-References: <CAB1R3sjHtWwE7=MOqTzS7omiE-ebxqBPNaMMh-+_AYw3WgLtxg@mail.gmail.com>
-	<CAB1R3sgwiM25ftpfZ3GkQNkGudwnk=R6Mu3orJJ3zYAc3g1C1w@mail.gmail.com>
+From: Dan Williams <dan.j.williams@gmail.com>
+Subject: Re: [PATCH] raid5:Only move IO_THRESHOLD stripes from delay_list to
+ hold_list in raid5_activate_delayed().
+Date: Fri, 6 Jul 2012 11:29:05 -0700
+Message-ID: <CAA9_cmdaYF=UjMsjFKMB6P+kdBdfZQmM-ws81K2HQJJn0NqLSw@mail.gmail.com>
+References: <201207062038188750110@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAB1R3sgwiM25ftpfZ3GkQNkGudwnk=R6Mu3orJJ3zYAc3g1C1w@mail.gmail.com>
+In-Reply-To: <201207062038188750110@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: majianpeng <majianpeng@gmail.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On Fri, Jul 6, 2012 at 5:38 AM, majianpeng <majianpeng@gmail.com> wrote:
+> To imporve write performance and as posssible as to achieve full-write,
+> it only fetch IO_THRESHOLD stripes from delay_list to hold_list.
+>
+> Signed-off-by: majianpeng <majianpeng@gmail.com>
 
-I'm sorry for spamming, but I was in the process of canceling the
-fsck, and it looks like it ran anyway:
+Yes, I do think we need something like this to further limit the
+maximum in-flight pre-read, especially for the async / multithread xor
+case where we process stripes faster.  However, this is the job of
+get_priority_stripe(), not raid5_activate_delayed(), to rate limit
+pre-reads versus full stripes.  One pre-read stripe at a time seems to
+over bias full stripe writes.  I wonder if you see the same
+performance effect by echo 0 >
+/sys/block/<mddev>/md/preread_bypass_threshold?
 
-#
-
-*** ext3 journal has been deleted - filesystem is now ext2 only ***
-
-^[[D^CTruncating orphaned inode 94375075 (uid=0, gid=504, mode=064, size=5339)
-
-/dev/md2: ***** FILE SYSTEM WAS MODIFIED *****
-
-When I tried to mount the filesystem now:
-
-# mount -o ro -t ext2 /dev/md2 /tmp/dave
-mount: wrong fs type, bad option, bad superblock on /dev/md2,
-       missing codepage or helper program, or other error
-       In some cases useful info is found in syslog - try
-       dmesg | tail  or so
-
-I really hope someone can help.
-
-Thanks,
-Alex
+--
+Dan
