@@ -1,85 +1,74 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: tests/03r5assemV1 issues
-Date: Fri, 06 Jul 2012 11:59:13 +0200
-Message-ID: <wrfjehop1a8e.fsf@redhat.com>
-References: <wrfjtxxqcn38.fsf@redhat.com>
-	<20120703114459.29c21b8f@notabene.brown> <wrfjpq8c96c9.fsf@redhat.com>
-	<20120704152327.30dcf73e@notabene.brown>
+From: Arnold Schulz <arnysch@gmx.net>
+Subject: Raid1 resync problem with leap seconds ?
+Date: Fri, 06 Jul 2012 14:33:47 +0200
+Message-ID: <4FF6DB2B.1090905@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120704152327.30dcf73e@notabene.brown> (NeilBrown's message of
-	"Wed, 4 Jul 2012 15:23:27 +1000")
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> writes:
-> On Tue, 03 Jul 2012 18:07:02 +0200 Jes Sorensen <Jes.Sorensen@redhat.com>
-> wrote:
->
->> NeilBrown <neilb@suse.de> writes:
->> > On Mon, 02 Jul 2012 15:24:43 +0200 Jes Sorensen <Jes.Sorensen@redhat.com>
->> > wrote:
->> >
->> >> Hi Neil,
->> >> 
->> >> I am trying to get the test suite stable on RHEL, but I see a lot of
->> >> failures in 03r5assemV1, in particular between these two cases:
->> >> 
->> >> mdadm -A $md1 -u $uuid $devlist
->> >> check state U_U
->> >> eval $tst
->> >> 
->> >> mdadm -A $md1 --name=one $devlist
->> >> check state U_U
->> >> check spares 1
->> >> eval $tst
->> >> 
->> >> I have tested it with the latest upstream kernel as well and see the
->> >> same problems. I suspect it is simply the box that is too fast, ending
->> >> up with the raid check completing inbetween the two test cases?
->> >> 
->> >> Are you seeing the same thing there? I tried playing with the max speed
->> >> variable but it doesn't really seem to make any difference.
->> >> 
->> >> Any ideas for what we can be done to make this case more resilient to
->> >> false positives? I guess one option would be to re-create the array
->> >> inbetween each test?
->> >
->> > Maybe it really is a bug?
->> > The test harness set the resync speed to be very slow.  A fast box will get
->> > through the test more quickly and be more likely to see the array still
->> > syncing.
->> >
->> > I'll try to make time to look more closely.
->> > But I wouldn't discount the possibility that the second "mdadm -A" is
->> > short-circuiting the recovery somehow.
->> 
->> That could certainly explain what I am seeing. I noticed it doesn't
->> happen every single time in the same place (from memory), but it is
->> mostly in that spot in my case.
->> 
->> Even if I trimmed the max speed down to 50 it still happens.
->
-> I cannot easily reproduce this.
-> Exactly which kernel and which mdadm do you find it with - just to make sure
-> I'm testing the same thing as you?
+Hi all,
 
-Hi Neil,
+about 8 seconds after inserting the leap second, a running raid1
+resync crashed.
 
-Odd - I see it with
-mdadm:  721b662b5b33830090c220bbb04bf1904d4b7eed
-kernel: ca24a145573124732152daff105ba68cc9a2b545
+Not being able to assess if it is the raid code or some kernel
+timer function to blame, I just present the log here.
 
-I've seen this happen for a while fwiw.
+Regards,
+Arnold
 
-Note the box has a number of external drives with a number of my scratch
-raid arrays on it. It shouldn't affect this, but just in case.
-
-The system installed mdadm is a 3.2.3 derivative, but I checked running
-with PATH=. as well.
-
-Cheers,
-Jes
+--------------------------------------------
+Jul  1 01:03:24 ip4-router kernel: md: data-check of RAID array md2
+Jul  1 01:03:24 ip4-router kernel: md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+Jul  1 01:03:24 ip4-router kernel: md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for data-check.
+Jul  1 01:03:24 ip4-router kernel: md: using 128k window, over a total of 1924209408k.
+Jul  1 01:59:59 ip4-router kernel: Clock: inserting leap second 23:59:60 UTC
+Jul  1 02:07:12 ip4-router kernel: BUG: unable to handle kernel NULL pointer dereference at 0000000000000050
+Jul  1 02:07:12 ip4-router kernel: IP: [<ffffffff81300e18>] sync_request+0x628/0x970
+Jul  1 02:07:12 ip4-router kernel: PGD 0
+Jul  1 02:07:12 ip4-router kernel: Oops: 0000 [#1] PREEMPT SMP
+Jul  1 02:07:12 ip4-router kernel: CPU 1
+Jul  1 02:07:12 ip4-router kernel: Modules linked in: parport_pc parport binfmt_misc deflate zlib_deflate zlib_inflate ctr 
+twofish_generic twofish_x86_64_3way twofish_x86_64 camellia_generic twofish_common camellia_x86_64 serpent_sse2_x86_64 
+serpent_generic cryptd lrw blowfish_generic blowfish_x86_64 blowfish_common cast5 des_generic xcbc rmd160 sha512_generic 
+sha256_generic sha1_generic crypto_null af_key fuse mt2060 dvb_usb_dib0700 dib3000mc dib8000 dvb_usb dib0070 dib7000m dib7000p 
+dibx000_common dib0090 dvb_core hfcpci mISDN_core
+Jul  1 02:07:12 ip4-router kernel:
+Jul  1 02:07:12 ip4-router kernel: Pid: 17823, comm: md2_resync Not tainted 3.4.4 #109 To Be Filled By O.E.M. To Be Filled By 
+O.E.M./N68PV-GS
+Jul  1 02:07:12 ip4-router kernel: RIP: 0010:[<ffffffff81300e18>]  [<ffffffff81300e18>] sync_request+0x628/0x970
+Jul  1 02:07:12 ip4-router kernel: RSP: 0018:ffff8800224e9c30  EFLAGS: 00010202
+Jul  1 02:07:12 ip4-router kernel: RAX: 0000000000000002 RBX: 0000000000000002 RCX: 0000000000000001
+Jul  1 02:07:12 ip4-router kernel: RDX: 0000000000000002 RSI: ffff88006d7c4d30 RDI: 0000000000000000
+Jul  1 02:07:12 ip4-router kernel: RBP: ffff8800224e9ce0 R08: ffff8800224e8000 R09: 0000000000000001
+Jul  1 02:07:12 ip4-router kernel: R10: 000000000000013e R11: 0000000000000000 R12: 0000000000000080
+Jul  1 02:07:12 ip4-router kernel: R13: ffff88006b403840 R14: ffff88006c711680 R15: ffffea0000ca7580
+Jul  1 02:07:12 ip4-router kernel: FS:  00007f441eafa700(0000) GS:ffff88006fd00000(0000) knlGS:0000000000000000
+Jul  1 02:07:12 ip4-router kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+Jul  1 02:07:12 ip4-router kernel: CR2: 0000000000000050 CR3: 000000005c53f000 CR4: 00000000000007e0
+Jul  1 02:07:12 ip4-router kernel: DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+Jul  1 02:07:12 ip4-router kernel: DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Jul  1 02:07:12 ip4-router kernel: Process md2_resync (pid: 17823, threadinfo ffff8800224e8000, task ffff88006d7c4d30)
+Jul  1 02:07:12 ip4-router kernel: Stack:
+Jul  1 02:07:12 ip4-router kernel: 00000000e5623600 ffff880000000000 0000000029ca6880 0000008029ca5f00
+Jul  1 02:07:12 ip4-router kernel: ffff8800224e9e2c 0000000000000000 0000000200000000 0000000029ca6900
+Jul  1 02:07:12 ip4-router kernel: 0000000029ca6900 0000000000000080 0000000000001000 ffff88006b68dc00
+Jul  1 02:07:12 ip4-router kernel: Call Trace:
+Jul  1 02:07:12 ip4-router kernel: [<ffffffff813163e3>] md_do_sync+0x7d3/0xc60
+Jul  1 02:07:12 ip4-router kernel: [<ffffffff8104ac90>] ? abort_exclusive_wait+0xb0/0xb0
+Jul  1 02:07:12 ip4-router kernel: [<ffffffff81312f7e>] md_thread+0x10e/0x140
+Jul  1 02:07:12 ip4-router kernel: [<ffffffff81312e70>] ? md_register_thread+0x110/0x110
+Jul  1 02:07:12 ip4-router kernel: [<ffffffff8104a4ee>] kthread+0x8e/0xa0
+Jul  1 02:07:12 ip4-router kernel: [<ffffffff8146b4f4>] kernel_thread_helper+0x4/0x10
+Jul  1 02:07:12 ip4-router kernel: [<ffffffff8104a460>] ? kthread_worker_fn+0x130/0x130
+Jul  1 02:07:12 ip4-router kernel: [<ffffffff8146b4f0>] ? gs_change+0xb/0xb
+Jul  1 02:07:12 ip4-router kernel: Code: 0f 84 35 02 00 00 8b 45 84 41 89 06 41 8b 55 10 48 8b 45 98 8d 0c 12 85 c9 0f 8e 85 fa 
+ff ff 31 db 66 90 48 63 c3 49 8b 7c c6 58 <48> 81 7f 50 10 f4 2f 81 0f 84 b2 01 00 00 8d 04 12 ff c3 39 d8
+Jul  1 02:07:12 ip4-router kernel: RIP  [<ffffffff81300e18>] sync_request+0x628/0x970
+Jul  1 02:07:12 ip4-router kernel: RSP <ffff8800224e9c30>
+Jul  1 02:07:12 ip4-router kernel: CR2: 0000000000000050
+Jul  1 02:07:12 ip4-router kernel: ---[ end trace 79aec5e8bd378abc ]---
