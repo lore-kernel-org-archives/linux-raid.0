@@ -1,115 +1,85 @@
-From: CoolCold <coolthecold@gmail.com>
-Subject: Re: [PATCH 0 of 5] MD: prepare RAID10 for inclusion in
-	dm-raid.c
-Date: Fri, 6 Jul 2012 12:40:51 +0400
-Message-ID: <CAGqmV7osZiY+Bv5vn0gtQ_1-j9KnS8dJxoZKm6WJHYaoDrtTBw@mail.gmail.com>
-References: <1340700259.19015.10.camel@f16>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: tests/03r5assemV1 issues
+Date: Fri, 06 Jul 2012 11:59:13 +0200
+Message-ID: <wrfjehop1a8e.fsf@redhat.com>
+References: <wrfjtxxqcn38.fsf@redhat.com>
+	<20120703114459.29c21b8f@notabene.brown> <wrfjpq8c96c9.fsf@redhat.com>
+	<20120704152327.30dcf73e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============0092073247416085092=="
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1340700259.19015.10.camel@f16>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Jonathan Brassow <jbrassow@redhat.com>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, agk@redhat.com
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120704152327.30dcf73e@notabene.brown> (NeilBrown's message of
+	"Wed, 4 Jul 2012 15:23:27 +1000")
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---===============0092073247416085092==
-Content-Type: multipart/alternative; boundary=bcaec54ee6eabf3d5c04c425387f
-
---bcaec54ee6eabf3d5c04c425387f
-Content-Type: text/plain; charset=ISO-8859-1
-
-On Tue, Jun 26, 2012 at 12:44 PM, Jonathan Brassow <jbrassow@redhat.com>wrote:
-
-> Neil,
+NeilBrown <neilb@suse.de> writes:
+> On Tue, 03 Jul 2012 18:07:02 +0200 Jes Sorensen <Jes.Sorensen@redhat.com>
+> wrote:
 >
-> Here's a couple patches that are necessary for MD before I can add
-> RAID10 to the list of supported personalities through dm-raid.c:
->         1) md-raid10-rename-mirror_info.patch
->         2) md-raid1-rename-mirror_info.patch
->         3) md-move-IO_BLOCKED-to-md_h.patch
->         4) md-export-md_raid10_congested.patch
+>> NeilBrown <neilb@suse.de> writes:
+>> > On Mon, 02 Jul 2012 15:24:43 +0200 Jes Sorensen <Jes.Sorensen@redhat.com>
+>> > wrote:
+>> >
+>> >> Hi Neil,
+>> >> 
+>> >> I am trying to get the test suite stable on RHEL, but I see a lot of
+>> >> failures in 03r5assemV1, in particular between these two cases:
+>> >> 
+>> >> mdadm -A $md1 -u $uuid $devlist
+>> >> check state U_U
+>> >> eval $tst
+>> >> 
+>> >> mdadm -A $md1 --name=one $devlist
+>> >> check state U_U
+>> >> check spares 1
+>> >> eval $tst
+>> >> 
+>> >> I have tested it with the latest upstream kernel as well and see the
+>> >> same problems. I suspect it is simply the box that is too fast, ending
+>> >> up with the raid check completing inbetween the two test cases?
+>> >> 
+>> >> Are you seeing the same thing there? I tried playing with the max speed
+>> >> variable but it doesn't really seem to make any difference.
+>> >> 
+>> >> Any ideas for what we can be done to make this case more resilient to
+>> >> false positives? I guess one option would be to re-create the array
+>> >> inbetween each test?
+>> >
+>> > Maybe it really is a bug?
+>> > The test harness set the resync speed to be very slow.  A fast box will get
+>> > through the test more quickly and be more likely to see the array still
+>> > syncing.
+>> >
+>> > I'll try to make time to look more closely.
+>> > But I wouldn't discount the possibility that the second "mdadm -A" is
+>> > short-circuiting the recovery somehow.
+>> 
+>> That could certainly explain what I am seeing. I noticed it doesn't
+>> happen every single time in the same place (from memory), but it is
+>> mostly in that spot in my case.
+>> 
+>> Even if I trimmed the max speed down to 50 it still happens.
 >
-> I'll send the patch that enables raid10 as a separate patch that depends
-> on this patch set and a couple of DM patches.
->
-> Can you explain a bit more detailed for me, what is this about? I.e. from
-my point of view dm-raid and md-raid and fully separated but looks like I'm
-wrong and missing something.
+> I cannot easily reproduce this.
+> Exactly which kernel and which mdadm do you find it with - just to make sure
+> I'm testing the same thing as you?
 
+Hi Neil,
 
->  brassow
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Odd - I see it with
+mdadm:  721b662b5b33830090c220bbb04bf1904d4b7eed
+kernel: ca24a145573124732152daff105ba68cc9a2b545
 
+I've seen this happen for a while fwiw.
 
+Note the box has a number of external drives with a number of my scratch
+raid arrays on it. It shouldn't affect this, but just in case.
 
--- 
-Best regards,
-[COOLCOLD-RIPN]
+The system installed mdadm is a 3.2.3 derivative, but I checked running
+with PATH=. as well.
 
---bcaec54ee6eabf3d5c04c425387f
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<br><br><div class=3D"gmail_quote">On Tue, Jun 26, 2012 at 12:44 PM, Jonath=
-an Brassow <span dir=3D"ltr">&lt;<a href=3D"mailto:jbrassow@redhat.com" tar=
-get=3D"_blank">jbrassow@redhat.com</a>&gt;</span> wrote:<br><blockquote cla=
-ss=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;pa=
-dding-left:1ex">
-Neil,<br>
-<br>
-Here&#39;s a couple patches that are necessary for MD before I can add<br>
-RAID10 to the list of supported personalities through dm-raid.c:<br>
-=A0 =A0 =A0 =A0 1) md-raid10-rename-mirror_info.patch<br>
-=A0 =A0 =A0 =A0 2) md-raid1-rename-mirror_info.patch<br>
-=A0 =A0 =A0 =A0 3) md-move-IO_BLOCKED-to-md_h.patch<br>
-=A0 =A0 =A0 =A0 4) md-export-md_raid10_congested.patch<br>
-<br>
-I&#39;ll send the patch that enables raid10 as a separate patch that depend=
-s<br>
-on this patch set and a couple of DM patches.<br>
-<br></blockquote><div>Can you explain a bit more detailed for me, what is t=
-his about? I.e. from my point of view dm-raid and md-raid and fully separat=
-ed but looks like I&#39;m wrong and missing something.<br>=A0</div><blockqu=
-ote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-left:1px=
- solid rgb(204,204,204);padding-left:1ex">
-
-=A0brassow<br>
-<br>
-<br>
---<br>
-To unsubscribe from this list: send the line &quot;unsubscribe linux-raid&q=
-uot; in<br>
-the body of a message to <a href=3D"mailto:majordomo@vger.kernel.org">major=
-domo@vger.kernel.org</a><br>
-More majordomo info at =A0<a href=3D"http://vger.kernel.org/majordomo-info.=
-html" target=3D"_blank">http://vger.kernel.org/majordomo-info.html</a><br>
-</blockquote></div><br><br clear=3D"all"><br>-- <br>Best regards,<br>[COOLC=
-OLD-RIPN] <br>
-
---bcaec54ee6eabf3d5c04c425387f--
-
-
---===============0092073247416085092==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-
---===============0092073247416085092==--
+Cheers,
+Jes
