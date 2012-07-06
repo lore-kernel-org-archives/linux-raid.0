@@ -1,106 +1,82 @@
-From: Jose Manuel dos Santos Calhariz <jose.calhariz@netvisao.pt>
-Subject: Re: md raid6 deadlock on write
-Date: Fri, 6 Jul 2012 14:55:24 +0100
-Message-ID: <20120706135524.GI15287@calhariz.com>
-References: <20120629194600.GA23859@calhariz.com>
- <20120702221508.GA24801@calhariz.com>
- <20120704113811.180be107@notabene.brown>
- <20120704102411.GG15287@calhariz.com>
-Reply-To: jose.spam@netvisao.pt
+From: Alex <mysqlstudent@gmail.com>
+Subject: Possible data corruption after rebuild
+Date: Fri, 6 Jul 2012 12:09:43 -0400
+Message-ID: <CAB1R3sjHtWwE7=MOqTzS7omiE-ebxqBPNaMMh-+_AYw3WgLtxg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="um2V5WpqCyd73IVb"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120704102411.GG15287@calhariz.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: jose.spam@netvisao.pt
-Cc: NeilBrown <neilb@suse.de>, jose.calhariz@netvisao.pt, linux-raid@vger.kernel.org, ns-list@dsi.ist.utl.pt
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
---um2V5WpqCyd73IVb
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I had a situation where after rebooting all three drives of a RAID5
+array were marked as spares. I rebuild the array using "mdadm -C
+/dev/md1 -e 1.1 --level 5 -n 3  --chunk 512 --assume-clean /dev/sda2
+/dev/sdb2 /dev/sdc2" and mdstat showed it was again assembled. The
+filesystem types on /dev/sdb were all "Linux" instead of "Linux raid
+autodetect", so I changed them back.
 
-On Wed, Jul 04, 2012 at 11:24:11AM +0100, Jose Manuel dos Santos Calhariz w=
-rote:
-> On Wed, Jul 04, 2012 at 11:38:11AM +1000, NeilBrown wrote:
-> > On Mon, 2 Jul 2012 23:15:08 +0100 Jose Manuel dos Santos Calhariz
-> > <jose.calhariz@netvisao.pt> wrote:
-> >=20
-> > >=20
-> > > We have a group of servers with a LVM over a RAID6 of 16 drives.
-> > > During normal work loads, sometimes, the md raid enter on deadlock for
-> > > writes and only a power off/power on allows to recover the machine.
-> >=20
-> > This might be fixed by the following commit which was recently included=
- in
-> > 3.5-rc. If could test with that I'd appreciate it.
->=20
-> We will do it, at first opportunity.
+/dev/md2 also has a problem, and I have no idea what to do there either.
 
-We have two machines that are running fio for 24 hours without
-problems.  So the bug seams to be fixed, thank you.
+When I tried to fsck it to be sure it was intact, it prompted me that
+there was a problem with the superblock, and I answered Yes to "Fix?".
 
-Any possibility of the fix being ported to kernel 3.2?
+After there being a number of further errors, I quit fsck, and am here for help.
 
->=20
-> >=20
-> > >=20
-> > >   - there is information from "SysRq : Show State", not attached
-> > >     because is too big,
-> >=20
-> > How big is too big?  It is very hard to see if there is anything useful=
- in
-> > there if I cannot see it....
->=20
-> Big enough to be blocked by the mailing list ;-)
->=20
-> I am attaching now, so you can see it.
->=20
-> >=20
-> > NeilBrown
-> >=20
->=20
->=20
->         Jose Calhariz
->=20
+Did I perhaps assemble the array in the wrong disk order? Is there
+another superblock that may be useful here and how would I find it?
 
-      Jose Calhariz
+I'm really concerned that I've lost the data and really hope someone
+has some ideas.
 
+# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md1 : active raid5 sda2[0] sdc2[2] sdb2[1]
+      51196928 blocks super 1.1 level 5, 512k chunk, algorithm 2 [3/3] [UUU]
 
+md2 : active raid5 sdc3[0] sdb3[2] sda3[1]
+      1890300928 blocks super 1.1 level 5, 512k chunk, algorithm 2 [3/3] [UUU]
 
+md0 : active raid1 sdc1[0] sdb1[1]
+      255988 blocks super 1.0 [3/2] [U_U]
 
+unused devices: <none>
 
---=20
---
-"Existem 3 poderes soberanos:
-Deus no c=E9u, o Papa no Vaticano e Dad=E1 Maravilha na grande =E1rea."
---Dad=E1 Maravilha
+# mdadm -E /dev/md1
+mdadm: No md superblock detected on /dev/md1.
 
---um2V5WpqCyd73IVb
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+# mdadm --detail /dev/md1
+/dev/md1:
+        Version : 1.1
+  Creation Time : Fri Jul  6 13:41:54 2012
+     Raid Level : raid5
+     Array Size : 51196928 (48.83 GiB 52.43 GB)
+  Used Dev Size : 25598464 (24.41 GiB 26.21 GB)
+   Raid Devices : 3
+  Total Devices : 3
+    Persistence : Superblock is persistent
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+    Update Time : Fri Jul  6 16:01:18 2012
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 0
 
-iQIcBAEBCAAGBQJP9u5LAAoJEDSKd41ohe+PxkcP/11cOkDXaWNjxfJ8i6TY1Pkf
-SLFgC/F55MNrnkaAzyO/4iKdfjHNiRdrP4mtlCsdL3oD9OGvCl1U4gpbpXMld0KR
-mH+UzcZiYuYdtifrD4X/QYa4Cwi9nqPns9sji3OA0hSXHTJ7+z2wb0A31y46hu6x
-ZLm5zPJx1wxSeZvu8CJzBucmuTM2BqZuLmCXOU4QG1+NcPKKvbk5IfO2Rnypy5gS
-itnkzc5WJQZnLeDDIsExEpbBOOEryVwyWdb9WoxMygiVUZ6h0a1hw+fMrzBczSLt
-VOpmmZ7VPgKmG9Blib3DeANfyywTo4qgkAklhuPRZRZE1HI+1AE372nO/t3saSiD
-gZVAmJhMIniRuA+hVNYY4hnWmlC9pFvLsFfcaG1BEHTqSFVnU8QCmHT/cI9opGiD
-YtS+2LEAegt36SZCfJ1dVMZXUDkU6HerjOmKxhfXzPD8x/ZhdcEzxqv/+oGurQrS
-3a4JPB4aFDE632KoKwBeSWIYD3RqhK/0aOuUUPO/dWni71z7iJcVKV1mzuLXGLgi
-r+bnNAIUY3b5i2FIPDShgV08/iW4hAaf3z9HJ8UD2pDE9sLS1/QW+gIDoXdZVnh6
-u2UqXkxv4CLcRcrbtiSY0VtZ/3pSVHDm62lDk0GH1ST8Eb5krXIE3VSv3yqMaAi/
-dOv4yTjN1PVdlcqss1c2
-=KgEN
------END PGP SIGNATURE-----
+         Layout : left-symmetric
+     Chunk Size : 512K
 
---um2V5WpqCyd73IVb--
+           Name : sysresccd:1  (local to host sysresccd)
+           UUID : 4ce6925e:b6cbd20e:7f3efbfc:668295fe
+         Events : 2
+
+    Number   Major   Minor   RaidDevice State
+       0       8        2        0      active sync   /dev/sda2
+       1       8       18        1      active sync   /dev/sdb2
+       2       8       34        2      active sync   /dev/sdc2
+
+Thanks for any ideas,
+Alex
