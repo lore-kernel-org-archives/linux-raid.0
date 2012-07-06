@@ -1,33 +1,17 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: [PATCH] raid5:Only move IO_THRESHOLD stripes from delay_list to hold_list in raid5_activate_delayed().
-Date: Fri, 6 Jul 2012 20:38:22 +0800
-Message-ID: <201207062038188750110@gmail.com>
+From: Modesta Candler <iesha7788sch@yahoo.com>
+Subject: There is something I wanna share with u.
+Date: Fri, 6 Jul 2012 13:58:50 +0100 (BST)
+Message-ID: <1341579530.21655.YahooMailNeo@web29304.mail.ird.yahoo.com>
+Reply-To: Modesta Candler <modesta.candler@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: "elise.legault@sympatico.ca" <elise.legault@sympatico.ca>
 List-Id: linux-raid.ids
 
-VG8gaW1wb3J2ZSB3cml0ZSBwZXJmb3JtYW5jZSBhbmQgYXMgcG9zc3NpYmxlIGFzIHRvIGFjaGll
-dmUgZnVsbC13cml0ZSwNCml0IG9ubHkgZmV0Y2ggSU9fVEhSRVNIT0xEIHN0cmlwZXMgZnJvbSBk
-ZWxheV9saXN0IHRvIGhvbGRfbGlzdC4NCg0KU2lnbmVkLW9mZi1ieTogbWFqaWFucGVuZyA8bWFq
-aWFucGVuZ0BnbWFpbC5jb20+DQotLS0NCiBkcml2ZXJzL21kL3JhaWQ1LmMgfCAgICAzICsrKw0K
-IDEgZmlsZXMgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCAwIGRlbGV0aW9ucygtKQ0KDQpkaWZm
-IC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5jIGIvZHJpdmVycy9tZC9yYWlkNS5jDQppbmRleCAw
-NDM0OGQ3Li40NTMwOGM1IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9tZC9yYWlkNS5jDQorKysgYi9k
-cml2ZXJzL21kL3JhaWQ1LmMNCkBAIC0zNjYyLDYgKzM2NjIsNyBAQCBmaW5pc2g6DQogDQogc3Rh
-dGljIHZvaWQgcmFpZDVfYWN0aXZhdGVfZGVsYXllZChzdHJ1Y3QgcjVjb25mICpjb25mKQ0KIHsN
-CisJaW50IGNvdW50ID0gMDsNCiAJaWYgKGF0b21pY19yZWFkKCZjb25mLT5wcmVyZWFkX2FjdGl2
-ZV9zdHJpcGVzKSA8IElPX1RIUkVTSE9MRCkgew0KIAkJd2hpbGUgKCFsaXN0X2VtcHR5KCZjb25m
-LT5kZWxheWVkX2xpc3QpKSB7DQogCQkJc3RydWN0IGxpc3RfaGVhZCAqbCA9IGNvbmYtPmRlbGF5
-ZWRfbGlzdC5uZXh0Ow0KQEAgLTM2NzIsNiArMzY3Myw4IEBAIHN0YXRpYyB2b2lkIHJhaWQ1X2Fj
-dGl2YXRlX2RlbGF5ZWQoc3RydWN0IHI1Y29uZiAqY29uZikNCiAJCQlpZiAoIXRlc3RfYW5kX3Nl
-dF9iaXQoU1RSSVBFX1BSRVJFQURfQUNUSVZFLCAmc2gtPnN0YXRlKSkNCiAJCQkJYXRvbWljX2lu
-YygmY29uZi0+cHJlcmVhZF9hY3RpdmVfc3RyaXBlcyk7DQogCQkJbGlzdF9hZGRfdGFpbCgmc2gt
-PmxydSwgJmNvbmYtPmhvbGRfbGlzdCk7DQorCQkJaWYgKGNvdW50KysgPj0gSU9fVEhSRVNIT0xE
-KQ0KKwkJCQlicmVhazsNCiAJCX0NCiAJfQ0KIH0NCi0tIA0KMS43LjUuNA0K
-
+How r you doing gorgeous! ;)
+I'm sure we'll be good friends. I am Modesta and no guess I like u
+I looked through your photos and I found u are quite magnetic.
+I'm so excited about ur answer ;)
