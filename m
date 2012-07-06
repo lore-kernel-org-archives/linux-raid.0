@@ -1,53 +1,40 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: md device is read only mode
-Date: Thu, 5 Jul 2012 19:27:48 +0200
-Message-ID: <20120705172748.GA6464@lazy.lzy>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [patch 2/3 v4]raid1: read balance chooses idlest disk for SSD
+Date: Fri, 6 Jul 2012 08:27:09 +0800
+Message-ID: <CANejiEUMg_WFh-G+EpSbkGHnDgBAVF605T+ttv4aj3EEXu3yWg@mail.gmail.com>
+References: <20120705092057.GB27956@kernel.org>
+	<CABYL=TqgOmuL4JLT1-pmUWgeVHH+veuNB4K5BSW5=zW0iL6C_Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <CABYL=TqgOmuL4JLT1-pmUWgeVHH+veuNB4K5BSW5=zW0iL6C_Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-Hi all,
+2012/7/5 Roberto Spadim <roberto@spadim.com.br>:
+> nice, just another question...
+>  since this use mixed raid disks (different types) could we improve
+> the algorithm to diferent hard disk speed, for example a raid1 with
+> 7200 and 15000 rpm?
+> the distance continue the same but it will include a 'speed' factor
+> speed=3D1/rpm
+> (distance*speed)
+> or something to select fastest disk in the array
+> i don=B4t want to use write-mostly since it can reduce my total numbe=
+r
+> of read disks, but with this we could use the fastest disk with more
+> frequency without lose array 'speed'
 
-following the comment of Neil about the fact that
-an md device, in r/o mode, will BUG() in case of
-write attempt, I would like to ask for some more
-information on the topic.
-
-The problem is the following, mounting a filesystem
-in r/o does not, correctly, prevent writes to the
-underlying device.
-
-Now, assuming a filesystem is mounted r/w over an
-md device, being r/w too, it is pretty clear that
-switching the md device to r/o will create problems.
-
-What if the md device is started in r/o mode and
-than, later, the filesystem is mounted *without*
-specifying r/o mode?
-
-The filesystem might try to write to the device,
-but it will not work, of course.
-Does this will cause a BUG() in md?
-
-Because using a r/o memory card, there are no
-problems, the mount recognize the device is r/o
-and it sets the filesystems r/o too.
-I do not know if it anyway tries to write to the
-r/o device, ignoring the errors reported.
-
-I would say that, if md BUG() in any case, it
-could be a bug... :-)
-
-Any comments?
+Legitimate optimization, however detecting hard disk speed is hard.
+Or maybe you want to add an option to tell kernel the disk speed?
 
 Thanks,
-
-bye,
-
--- 
-
-piergiorgio
+Shaohua
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
