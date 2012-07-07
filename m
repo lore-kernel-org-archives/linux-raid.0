@@ -1,42 +1,50 @@
-From: Brassow Jonathan <jbrassow@redhat.com>
-Subject: Re: [PATCH 0 of 5] MD: prepare RAID10 for inclusion in dm-raid.c
-Date: Fri, 6 Jul 2012 14:32:22 -0500
-Message-ID: <A1932867-ECAD-4720-A30D-DCF906AC25F0@redhat.com>
-References: <1340700259.19015.10.camel@f16> <CAGqmV7osZiY+Bv5vn0gtQ_1-j9KnS8dJxoZKm6WJHYaoDrtTBw@mail.gmail.com>
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH] raid5:Only move IO_THRESHOLD stripes from delay_list to hold_list in raid5_activate_delayed().
+Date: Sat, 7 Jul 2012 10:04:26 +0800
+Message-ID: <201207071004217185340@gmail.com>
+References: <201207062038188750110@gmail.com>,
+	<1341579403.5595.5.camel@mattotaupa>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGqmV7osZiY+Bv5vn0gtQ_1-j9KnS8dJxoZKm6WJHYaoDrtTBw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, neilb@suse.de, agk@redhat.com
+To: Paul Menzel <paulepanter@users.sourceforge.net>
+Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
-On Jul 6, 2012, at 3:40 AM, CoolCold wrote:
-
-> 
-> 
-> On Tue, Jun 26, 2012 at 12:44 PM, Jonathan Brassow <jbrassow@redhat.com> wrote:
-> Neil,
-> 
-> Here's a couple patches that are necessary for MD before I can add
-> RAID10 to the list of supported personalities through dm-raid.c:
->         1) md-raid10-rename-mirror_info.patch
->         2) md-raid1-rename-mirror_info.patch
->         3) md-move-IO_BLOCKED-to-md_h.patch
->         4) md-export-md_raid10_congested.patch
-> 
-> I'll send the patch that enables raid10 as a separate patch that depends
-> on this patch set and a couple of DM patches.
-> 
-> Can you explain a bit more detailed for me, what is this about? I.e. from my point of view dm-raid and md-raid and fully separated but looks like I'm wrong and missing something.
-
-drivers/md/dm-raid.c is a device-mapper target that provides access to the MD personalities.  So far, MD's RAID 1/4/5/6 have been made available to the device-mapper interface through this module.  We are laying the ground work here for RAID10 to be made available in the same way.
-
-You may wish to have a look at linux/Documentation/device-mapper/dm-raid.txt for additional information.  Also note that in "[PATCH 4 of 4] MD RAID10: Export md_raid10_congested", I referenced a couple of other times that these types of changes were necessary.
-
-Thanks,
- brassow 
+T24gMjAxMi0wNy0wNiAyMDo1NiBQYXVsIE1lbnplbCA8cGF1bGVwYW50ZXJAdXNlcnMuc291cmNl
+Zm9yZ2UubmV0PiBXcm90ZToNCj5EZWFyIE1hIEppYW4sDQo+DQo+DQo+dGhhbmtzIGZvciB0aGUg
+cGF0Y2guDQo+DQo+DQo+QW0gRnJlaXRhZywgZGVuIDA2LjA3LjIwMTIsIDIwOjM4ICswODAwIHNj
+aHJpZWIgbWFqaWFucGVuZzoNCj4+IFRvIGltcG9ydmUgd3JpdGUgcGVyZm9ybWFuY2UgYW5kIGFz
+IHBvc3NzaWJsZSBhcyB0byBhY2hpZXZlIGZ1bGwtd3JpdGUsDQo+DQo+cyxpbXBvcnZlLGltcHJv
+dmUsDQo+cyxwb3Nzc2libGUscG9zc2libGUsDQo+DQo+VGhlIHNlY29uZCBwYXJ0IG9mIHRoZSBz
+ZW50ZW5jZSBpcyBub3QgY2xlYXIgdG8gbWUuDQo+DQo+TWF5YmU6IKGtIGFuZCB0byBhY2hpZXZl
+IGZ1bGwtd3JpdGUgaWYgcG9zc2libGUuDQo+DQo+PiBpdCBvbmx5IGZldGNoIElPX1RIUkVTSE9M
+RCBzdHJpcGVzIGZyb20gZGVsYXlfbGlzdCB0byBob2xkX2xpc3QuDQo+DQo+Q2FuIHlvdSBwcm9v
+ZiB0aGUgc3BlZWQgdXAgd2l0aCBzb21lIGJlbmNobWFya3M/IFRoYXQgd291bGQgYmUgYXdlc29t
+ZS4NClllcywgSSB3aWxsIGRvIA0KPg0KPj4gU2lnbmVkLW9mZi1ieTogbWFqaWFucGVuZyA8bWFq
+aWFucGVuZ0BnbWFpbC5jb20+DQo+DQo+TGFzdCBub3QgbGVhc3QsIGNvdWxkIHlvdSB3cml0ZSB5
+b3VyIGZpcnN0IGFuZCBsYXN0IG5hbWVzIHNlcGFyYXRlZCBieSBhDQo+c3BhY2U/IChJIGRvIG5v
+dCBrbm93IGlmIEkgc2VwYXJhdGVkIHRoZW0gY29ycmVjdGx5LikNCj4NCj5NYSBKaWFuIFBlbmcg
+KMLtvajF8ykgPG1hamlhbnBlbmdAZ21haWwuY29tPg0KPg0KPiAgICAkIGdpdCBjb25maWcgdXNl
+ci5uYW1lICJNYSBKaWFuIFBlbmcgKMLtvajF8ykiDQo+DQpUaGFua3MsIEkgd2lsbCBhY2NlY3B0
+IGl0Lg0KPk1heWJlIGV2ZW4gcGFzcyBgLS1nbG9iYWxgIHRvIGl0Lg0KPg0KPj4gLS0tDQo+PiAg
+ZHJpdmVycy9tZC9yYWlkNS5jIHwgICAgMyArKysNCj4+ICAxIGZpbGVzIGNoYW5nZWQsIDMgaW5z
+ZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkNCj4+IA0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
+bWQvcmFpZDUuYyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gaW5kZXggMDQzNDhkNy4uNDUzMDhj
+NSAxMDA2NDQNCj4+IC0tLSBhL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gKysrIGIvZHJpdmVycy9t
+ZC9yYWlkNS5jDQo+PiBAQCAtMzY2Miw2ICszNjYyLDcgQEAgZmluaXNoOg0KPj4gIA0KPj4gIHN0
+YXRpYyB2b2lkIHJhaWQ1X2FjdGl2YXRlX2RlbGF5ZWQoc3RydWN0IHI1Y29uZiAqY29uZikNCj4+
+ICB7DQo+PiArCWludCBjb3VudCA9IDA7DQo+PiAgCWlmIChhdG9taWNfcmVhZCgmY29uZi0+cHJl
+cmVhZF9hY3RpdmVfc3RyaXBlcykgPCBJT19USFJFU0hPTEQpIHsNCj4+ICAJCXdoaWxlICghbGlz
+dF9lbXB0eSgmY29uZi0+ZGVsYXllZF9saXN0KSkgew0KPj4gIAkJCXN0cnVjdCBsaXN0X2hlYWQg
+KmwgPSBjb25mLT5kZWxheWVkX2xpc3QubmV4dDsNCj4+IEBAIC0zNjcyLDYgKzM2NzMsOCBAQCBz
+dGF0aWMgdm9pZCByYWlkNV9hY3RpdmF0ZV9kZWxheWVkKHN0cnVjdCByNWNvbmYgKmNvbmYpDQo+
+PiAgCQkJaWYgKCF0ZXN0X2FuZF9zZXRfYml0KFNUUklQRV9QUkVSRUFEX0FDVElWRSwgJnNoLT5z
+dGF0ZSkpDQo+PiAgCQkJCWF0b21pY19pbmMoJmNvbmYtPnByZXJlYWRfYWN0aXZlX3N0cmlwZXMp
+Ow0KPj4gIAkJCWxpc3RfYWRkX3RhaWwoJnNoLT5scnUsICZjb25mLT5ob2xkX2xpc3QpOw0KPj4g
+KwkJCWlmIChjb3VudCsrID49IElPX1RIUkVTSE9MRCkNCj4+ICsJCQkJYnJlYWs7DQo+PiAgCQl9
+DQo+PiAgCX0NCj4+ICB9DQo+DQo+DQo+VGhhbmtzLA0KPg0KPlBhdWwNCj4=
 
