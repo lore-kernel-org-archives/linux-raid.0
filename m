@@ -1,50 +1,54 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: Re: [PATCH] raid5:Only move IO_THRESHOLD stripes from delay_list to hold_list in raid5_activate_delayed().
-Date: Sat, 7 Jul 2012 10:04:26 +0800
-Message-ID: <201207071004217185340@gmail.com>
-References: <201207062038188750110@gmail.com>,
-	<1341579403.5595.5.camel@mattotaupa>
+From: Kerin Millar <kerframil@gmail.com>
+Subject: Re: raid10 make_request failure during iozone benchmark upon btrfs
+Date: Sat, 07 Jul 2012 18:29:02 +0100
+Message-ID: <4FF871DE.4060805@gmail.com>
+References: <4FF108A8.6090606@gmail.com> <20120702125227.179c4343@notabene.brown> <4FF10E71.2090501@gmail.com> <20120703113943.3e4c43ad@notabene.brown> <4FF2554D.2040300@gmail.com> <20120703124727.6e2232d1@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120703124727.6e2232d1@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul Menzel <paulepanter@users.sourceforge.net>
-Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wNy0wNiAyMDo1NiBQYXVsIE1lbnplbCA8cGF1bGVwYW50ZXJAdXNlcnMuc291cmNl
-Zm9yZ2UubmV0PiBXcm90ZToNCj5EZWFyIE1hIEppYW4sDQo+DQo+DQo+dGhhbmtzIGZvciB0aGUg
-cGF0Y2guDQo+DQo+DQo+QW0gRnJlaXRhZywgZGVuIDA2LjA3LjIwMTIsIDIwOjM4ICswODAwIHNj
-aHJpZWIgbWFqaWFucGVuZzoNCj4+IFRvIGltcG9ydmUgd3JpdGUgcGVyZm9ybWFuY2UgYW5kIGFz
-IHBvc3NzaWJsZSBhcyB0byBhY2hpZXZlIGZ1bGwtd3JpdGUsDQo+DQo+cyxpbXBvcnZlLGltcHJv
-dmUsDQo+cyxwb3Nzc2libGUscG9zc2libGUsDQo+DQo+VGhlIHNlY29uZCBwYXJ0IG9mIHRoZSBz
-ZW50ZW5jZSBpcyBub3QgY2xlYXIgdG8gbWUuDQo+DQo+TWF5YmU6IKGtIGFuZCB0byBhY2hpZXZl
-IGZ1bGwtd3JpdGUgaWYgcG9zc2libGUuDQo+DQo+PiBpdCBvbmx5IGZldGNoIElPX1RIUkVTSE9M
-RCBzdHJpcGVzIGZyb20gZGVsYXlfbGlzdCB0byBob2xkX2xpc3QuDQo+DQo+Q2FuIHlvdSBwcm9v
-ZiB0aGUgc3BlZWQgdXAgd2l0aCBzb21lIGJlbmNobWFya3M/IFRoYXQgd291bGQgYmUgYXdlc29t
-ZS4NClllcywgSSB3aWxsIGRvIA0KPg0KPj4gU2lnbmVkLW9mZi1ieTogbWFqaWFucGVuZyA8bWFq
-aWFucGVuZ0BnbWFpbC5jb20+DQo+DQo+TGFzdCBub3QgbGVhc3QsIGNvdWxkIHlvdSB3cml0ZSB5
-b3VyIGZpcnN0IGFuZCBsYXN0IG5hbWVzIHNlcGFyYXRlZCBieSBhDQo+c3BhY2U/IChJIGRvIG5v
-dCBrbm93IGlmIEkgc2VwYXJhdGVkIHRoZW0gY29ycmVjdGx5LikNCj4NCj5NYSBKaWFuIFBlbmcg
-KMLtvajF8ykgPG1hamlhbnBlbmdAZ21haWwuY29tPg0KPg0KPiAgICAkIGdpdCBjb25maWcgdXNl
-ci5uYW1lICJNYSBKaWFuIFBlbmcgKMLtvajF8ykiDQo+DQpUaGFua3MsIEkgd2lsbCBhY2NlY3B0
-IGl0Lg0KPk1heWJlIGV2ZW4gcGFzcyBgLS1nbG9iYWxgIHRvIGl0Lg0KPg0KPj4gLS0tDQo+PiAg
-ZHJpdmVycy9tZC9yYWlkNS5jIHwgICAgMyArKysNCj4+ICAxIGZpbGVzIGNoYW5nZWQsIDMgaW5z
-ZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkNCj4+IA0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
-bWQvcmFpZDUuYyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gaW5kZXggMDQzNDhkNy4uNDUzMDhj
-NSAxMDA2NDQNCj4+IC0tLSBhL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gKysrIGIvZHJpdmVycy9t
-ZC9yYWlkNS5jDQo+PiBAQCAtMzY2Miw2ICszNjYyLDcgQEAgZmluaXNoOg0KPj4gIA0KPj4gIHN0
-YXRpYyB2b2lkIHJhaWQ1X2FjdGl2YXRlX2RlbGF5ZWQoc3RydWN0IHI1Y29uZiAqY29uZikNCj4+
-ICB7DQo+PiArCWludCBjb3VudCA9IDA7DQo+PiAgCWlmIChhdG9taWNfcmVhZCgmY29uZi0+cHJl
-cmVhZF9hY3RpdmVfc3RyaXBlcykgPCBJT19USFJFU0hPTEQpIHsNCj4+ICAJCXdoaWxlICghbGlz
-dF9lbXB0eSgmY29uZi0+ZGVsYXllZF9saXN0KSkgew0KPj4gIAkJCXN0cnVjdCBsaXN0X2hlYWQg
-KmwgPSBjb25mLT5kZWxheWVkX2xpc3QubmV4dDsNCj4+IEBAIC0zNjcyLDYgKzM2NzMsOCBAQCBz
-dGF0aWMgdm9pZCByYWlkNV9hY3RpdmF0ZV9kZWxheWVkKHN0cnVjdCByNWNvbmYgKmNvbmYpDQo+
-PiAgCQkJaWYgKCF0ZXN0X2FuZF9zZXRfYml0KFNUUklQRV9QUkVSRUFEX0FDVElWRSwgJnNoLT5z
-dGF0ZSkpDQo+PiAgCQkJCWF0b21pY19pbmMoJmNvbmYtPnByZXJlYWRfYWN0aXZlX3N0cmlwZXMp
-Ow0KPj4gIAkJCWxpc3RfYWRkX3RhaWwoJnNoLT5scnUsICZjb25mLT5ob2xkX2xpc3QpOw0KPj4g
-KwkJCWlmIChjb3VudCsrID49IElPX1RIUkVTSE9MRCkNCj4+ICsJCQkJYnJlYWs7DQo+PiAgCQl9
-DQo+PiAgCX0NCj4+ICB9DQo+DQo+DQo+VGhhbmtzLA0KPg0KPlBhdWwNCj4=
+On 03/07/2012 03:47, NeilBrown wrote:
 
+[snip]
+
+> Thanks.  Looks like it is a btrfs bug - so a big "hello" to linux-btrfs :-)
+>
+> The symptom is that iozone on btrfs on md/raid10 can result in
+>
+> [  919.893454] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653500160 256
+> [  919.893465] btrfs: bdev /dev/mapper/vg0-test errs: wr 1, rd 0, flush 0, corrupt 0, gen 0
+>
+>
+> i.e. RAID10 has a 256K chunk size, but is getting 256K requests which overlap
+> two chunks - the last half of one chunk and the first half of the next.
+> That isn't allowed and raid10_mergeable_bvec, called by bio_add_page, should
+> prevent it.
+>
+> However btrfs_map_bio() sets ->bi_sector to a new value without verifying
+> that the resulting bio is still acceptable - which it isn't.
+>
+> The core problem is that you cannot build a bio for one location, then use it
+> freely at another location.
+> md/raid1 handles this by checking each addition to a bio against all the
+> possible location that it might read/write it.  Maybe btrfs could do the
+> same.
+> Alternately we could work with Kent Overstreet (of bcache fame) to remove the
+> restriction that the fs must make the bio compatible with the device -
+> instead requiring the device to split bios when needed, and making it easy to
+> do that (currently it is not easy).
+> And there are probably other alternative.
+>
+
+Thanks very much for identifying the bug. I'm glad to find that the raid 
+subsystem is not at fault. I'll give btrfs a spin at some point in the 
+future and see whether anything has changed by then.
+
+Cheers,
+
+--Kerin
