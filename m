@@ -1,54 +1,174 @@
-From: Kerin Millar <kerframil@gmail.com>
-Subject: Re: raid10 make_request failure during iozone benchmark upon btrfs
-Date: Sat, 07 Jul 2012 18:29:02 +0100
-Message-ID: <4FF871DE.4060805@gmail.com>
-References: <4FF108A8.6090606@gmail.com> <20120702125227.179c4343@notabene.brown> <4FF10E71.2090501@gmail.com> <20120703113943.3e4c43ad@notabene.brown> <4FF2554D.2040300@gmail.com> <20120703124727.6e2232d1@notabene.brown>
+From: Dietrich Heise <dh@dhde.de>
+Subject: RAID5 faild while in degraded mode, need help
+Date: Sun, 8 Jul 2012 21:05:02 +0200
+Message-ID: <CACMY3vC=iAbKCssHH8CQ=msqNtmE1zF1muoZTusfRd989HvD_w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120703124727.6e2232d1@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/07/2012 03:47, NeilBrown wrote:
+Hi,
 
-[snip]
+the following Problem,
+One of four drives has S.M.A.R.T. errors, so I removed it and
+replaced, with a new one.
 
-> Thanks.  Looks like it is a btrfs bug - so a big "hello" to linux-btrfs :-)
->
-> The symptom is that iozone on btrfs on md/raid10 can result in
->
-> [  919.893454] md/raid10:md0: make_request bug: can't convert block across chunks or bigger than 256k 6653500160 256
-> [  919.893465] btrfs: bdev /dev/mapper/vg0-test errs: wr 1, rd 0, flush 0, corrupt 0, gen 0
->
->
-> i.e. RAID10 has a 256K chunk size, but is getting 256K requests which overlap
-> two chunks - the last half of one chunk and the first half of the next.
-> That isn't allowed and raid10_mergeable_bvec, called by bio_add_page, should
-> prevent it.
->
-> However btrfs_map_bio() sets ->bi_sector to a new value without verifying
-> that the resulting bio is still acceptable - which it isn't.
->
-> The core problem is that you cannot build a bio for one location, then use it
-> freely at another location.
-> md/raid1 handles this by checking each addition to a bio against all the
-> possible location that it might read/write it.  Maybe btrfs could do the
-> same.
-> Alternately we could work with Kent Overstreet (of bcache fame) to remove the
-> restriction that the fs must make the bio compatible with the device -
-> instead requiring the device to split bios when needed, and making it easy to
-> do that (currently it is not easy).
-> And there are probably other alternative.
->
+In the time the drive was rebuilding, one of the three left devices
+has an I/O error (sdd1) (sdc1 was the replaced drive an was syncing).
 
-Thanks very much for identifying the bug. I'm glad to find that the raid 
-subsystem is not at fault. I'll give btrfs a spin at some point in the 
-future and see whether anything has changed by then.
+Now the following happends (two drives are spare drives :( )
 
-Cheers,
+p3 disks # mdadm -D /dev/md1
+/dev/md1:
+        Version : 1.2
+  Creation Time : Mon Feb 28 19:57:56 2011
+     Raid Level : raid5
+  Used Dev Size : 1465126400 (1397.25 GiB 1500.29 GB)
+   Raid Devices : 4
+  Total Devices : 4
+    Persistence : Superblock is persistent
 
---Kerin
+    Update Time : Sun Jul  8 20:37:12 2012
+          State : active, FAILED, Not Started
+ Active Devices : 2
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 2
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+           Name : p3:0  (local to host p3)
+           UUID : 6d4ebfd4:491bcb50:d98d5e67:f226f362
+         Events : 121205
+
+    Number   Major   Minor   RaidDevice State
+       0       8       81        0      active sync   /dev/sdf1
+       1       8       65        1      active sync   /dev/sde1
+       2       0        0        2      removed
+       3       0        0        3      removed
+
+       4       8       49        -      spare   /dev/sdd1
+       5       8       33        -      spare   /dev/sdc1
+
+here is more information:
+
+p3 disks # mdadm -E /dev/sdc1
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 6d4ebfd4:491bcb50:d98d5e67:f226f362
+           Name : p3:0  (local to host p3)
+  Creation Time : Mon Feb 28 19:57:56 2011
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 2930275057 (1397.26 GiB 1500.30 GB)
+     Array Size : 8790758400 (4191.76 GiB 4500.87 GB)
+  Used Dev Size : 2930252800 (1397.25 GiB 1500.29 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : caefb029:526187ef:2051f578:db2b82b7
+
+    Update Time : Sun Jul  8 20:37:12 2012
+       Checksum : 18e2bfe1 - correct
+         Events : 121205
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : spare
+   Array State : AA.. ('A' == active, '.' == missing)
+p3 disks # mdadm -E /dev/sdd1
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 6d4ebfd4:491bcb50:d98d5e67:f226f362
+           Name : p3:0  (local to host p3)
+  Creation Time : Mon Feb 28 19:57:56 2011
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 2930269954 (1397.26 GiB 1500.30 GB)
+     Array Size : 8790758400 (4191.76 GiB 4500.87 GB)
+  Used Dev Size : 2930252800 (1397.25 GiB 1500.29 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 4231e244:60e27ed4:eff405d0:2e615493
+
+    Update Time : Sun Jul  8 20:37:12 2012
+       Checksum : 4bec6e25 - correct
+         Events : 0
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : spare
+   Array State : AA.. ('A' == active, '.' == missing)
+p3 disks # mdadm -E /dev/sde1
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 6d4ebfd4:491bcb50:d98d5e67:f226f362
+           Name : p3:0  (local to host p3)
+  Creation Time : Mon Feb 28 19:57:56 2011
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 2930253889 (1397.25 GiB 1500.29 GB)
+     Array Size : 8790758400 (4191.76 GiB 4500.87 GB)
+  Used Dev Size : 2930252800 (1397.25 GiB 1500.29 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 28b08f44:4cc24663:84d39337:94c35d67
+
+    Update Time : Sun Jul  8 20:37:12 2012
+       Checksum : 15faa8a1 - correct
+         Events : 121205
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 1
+   Array State : AA.. ('A' == active, '.' == missing)
+p3 disks # mdadm -E /dev/sdf1
+/dev/sdf1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 6d4ebfd4:491bcb50:d98d5e67:f226f362
+           Name : p3:0  (local to host p3)
+  Creation Time : Mon Feb 28 19:57:56 2011
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 2930269954 (1397.26 GiB 1500.30 GB)
+     Array Size : 8790758400 (4191.76 GiB 4500.87 GB)
+  Used Dev Size : 2930252800 (1397.25 GiB 1500.29 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 78d5600a:91927758:f78a1cea:3bfa3f5b
+
+    Update Time : Sun Jul  8 20:37:12 2012
+       Checksum : 7767cb10 - correct
+         Events : 121205
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : AA.. ('A' == active, '.' == missing)
+
+Is there a way to repair the raid?
+
+thanks!
+Dietrich
