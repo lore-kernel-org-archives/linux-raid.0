@@ -1,46 +1,63 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: md device is read only mode
-Date: Mon, 9 Jul 2012 19:34:07 +0200
-Message-ID: <20120709173406.GA4206@lazy.lzy>
-References: <20120705172748.GA6464@lazy.lzy>
- <20120709114022.58f5d52b@notabene.brown>
+From: Robert Trace <maillist@farcaster.org>
+Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
+Date: Mon, 09 Jul 2012 15:37:09 -0400
+Message-ID: <4FFB32E5.1050109@farcaster.org>
+References: <4FE454CA.6080007@matthiasprager.de> <4FFAED4F.3080100@matthiasprager.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120709114022.58f5d52b@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4FFAED4F.3080100@matthiasprager.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Matthias Prager <linux@matthiasprager.de>
+Cc: linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+> I did some further research regarding my problem.
+> It appears to me the fault does not lie with the mpt2sas driver (not
+> that I can definitely exclude it), but with the md implementation.
 
-please see one comment below.
+I'm actually discovering some of the same issues (LSI 9211-8i w/ SATA
+disks), but I've come to a slightly different conclusion.
 
-On Mon, Jul 09, 2012 at 11:40:22AM +1000, NeilBrown wrote:
-[...]
-> The mount system call will notice that the device is read-only, and will make
-> assume the read-only mount option.
+I noticed that when my SATA disks are on a SATA controller and they spin
+down (or are spun down via hdparm -y), then they response to TUR (TEST
+UNIT READY) commands with an OK.  Any I/O sent to these disks simply
+wait while the disks spin up and then complete as usual.
 
-OK, so it should work as expected.
+However, my SATA disks on the SAS controller respond to TUR with the
+sense error "Not Ready/Initializing command required".  Any I/O sent to
+these disks immediately fails.  You saw this in your logging:
 
-The story was this.
-After fixing the RAID-5 superblock problem, we
-wanted to see if the filesystem was still OK.
-So we started the RAID in r/o mode (so to avoid
-any possible further damage from mount) and then
-mounted the filesystem (actually, now that I
-think of it, there was an LVM layer in the middle).
-This mount caused a kernel error report (I do
-not know if BUG() or else).
+> [  604.838640] sd 2:0:0:0: [sda] Device not ready
+> [  604.838645] sd 2:0:0:0: [sda]  Result: hostbyte=DID_OK
+> driverbyte=DRIVER_SENSE
+> [  604.838655] sd 2:0:0:0: [sda]  Sense Key : Not Ready [current]
+> [  604.838663] sd 2:0:0:0: [sda]  Add. Sense: Logical unit not ready,
+> initializing command required
+> [  604.838668] sd 2:0:0:0: [sda] CDB: Read(10): 28 00 00 00 08 00 00 00
+> 20 00
+> [  604.838680] end_request: I/O error, dev sda, sector 2048
+> [  604.838688] Buffer I/O error on device md127, logical block 0
+> [  604.838695] Buffer I/O error on device md127, logical block 1
+> [  604.838699] Buffer I/O error on device md127, logical block 2
+> [  604.838702] Buffer I/O error on device md127, logical block 3
 
-Is there any explanation for that?
+Sending an explicit START UNIT command to these sleeping disks will wake
+them up and then they behave normally.  (BTW, you can issue TURs and
+START UNITs via the sg_turs and sg_start commands).
 
-Thanks,
+I've reproduced this behavior on the raw disks themselves, no MD layer
+involved (although the freak-out by my MD layer is what alerted me to
+this issue too... Having your entire array punted the first time you
+access it is a little scary :-).  I'm also on raw hardware and I've seen
+this behavior on kernels 3.0.33 through 3.4.4.
 
-bye,
+So, SATA disks respond differently depending on the controller they're
+on.  I don't know if this is a SCSI thing, a SAS thing or a
+firmware/driver thing for the 9211.
 
--- 
+Now, whether or not the MD layer should be assembling arrays from
+"failed" disks is, I think, a separate issue.
 
-piergiorgio
+-- Rob
