@@ -1,102 +1,66 @@
-From: Jose Manuel dos Santos Calhariz <jose.calhariz@netvisao.pt>
-Subject: Re: md raid6 deadlock on write
-Date: Mon, 9 Jul 2012 12:22:18 +0100
-Message-ID: <20120709112218.GA18431@calhariz.com>
-References: <20120629194600.GA23859@calhariz.com>
- <20120702221508.GA24801@calhariz.com>
- <20120704113811.180be107@notabene.brown>
- <20120704102411.GG15287@calhariz.com>
- <20120706135524.GI15287@calhariz.com>
- <20120709134653.332102fd@notabene.brown>
-Reply-To: jose.spam@netvisao.pt
+From: kedacomkernel <kedacomkernel@gmail.com>
+Subject: Re: Re: mkfs.xfs states log stripe unit is too large
+Date: Mon, 9 Jul 2012 20:02:28 +0800
+Message-ID: <201207092002243437160@gmail.com>
+References: <D3F781FA-CEB0-4896-9441-772A9E533354@2012.bluespice.org> <20120623234445.GZ19223@dastard> <4FE67970.2030008@sandeen.net> <4FE710B7.5010704@hardwarefreak.com> <d71834a062ffd666ab53a4695eb643e9@muaddib.hro.localnet> <20120626023059.GC19223@dastard> <20120626080217.GA30767@infradead.org> <20120702061827.GB16671@infradead.org> <20120702164113.109162be@notabene.brown>,
+	<20120702080802.GQ19223@dastard>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="envbJBWh7q8WU6mo"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120709134653.332102fd@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: jose.spam@netvisao.pt, jose.calhariz@netvisao.pt, linux-raid@vger.kernel.org, ns-list@dsi.ist.utl.pt
+To: Dave Chinner <david@fromorbit.com>, Neil Brown <neilb@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Ingo J?rgensmann <ij@2012.bluespice.org>, xfs <xfs@oss.sgi.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+T24gMjAxMi0wNy0wMiAxNjowOCBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5jb20+IFdy
+b3RlOg0KPk9uIE1vbiwgSnVsIDAyLCAyMDEyIGF0IDA0OjQxOjEzUE0gKzEwMDAsIE5laWxCcm93
+biB3cm90ZToNCj4+IE9uIE1vbiwgMiBKdWwgMjAxMiAwMjoxODoyNyAtMDQwMCBDaHJpc3RvcGgg
+SGVsbHdpZyA8aGNoQGluZnJhZGVhZC5vcmc+IHdyb3RlOg0KPj4gDQo+PiA+IFBpbmcgdG8gTmVp
+bCAvIHRoZSByYWlkIGxpc3QuDQo+PiANCj4+IFRoYW5rcyBmb3IgdGhlIHJlbWluZGVyLg0KPj4g
+DQo+PiA+IA0KW3NuaXBdDQo+DQo+VGhhdCdzIHRydWUsIGJ1dCB0aGUgY2hhcmFjdGVyaXNpdGlj
+cyBvZiBzcGlubmluZyBkaXNrcyBoYXZlIG5vdA0KPmNoYW5nZWQgaW4gdGhlIHBhc3QgMjAgeWVh
+cnMsIG5vciBoYXMgdGhlIHR5cGljYWwgZmlsZSBzaXplDQo+ZGlzdHJpYnV0aW9ucyBpbiBmaWxl
+c3lzdGVtcywgbm9yIGhhdmUgdGhlIFJBSUQ1LzYgYWxnb3JpdGhtcy4gU28NCj5pdCdzIG5vdCBy
+ZWFsbHkgY2xlYXIgdG8gbWUgd2h5IHlvdTtkIHdvdWwgZGV2ZW4gY29uc2lkZXIgY2hhbmdpbmcN
+Cj50aGUgZGVmYXVsdCB0aGUgZG93bnNpZGVzIG9mIGxhcmdlIGNodW5rIHNpemVzIG9uIFJBSUQ1
+LzYgdm9sdW1lcyBpcw0KPndlbGwga25vd24uIFRoaXMgbWF5IHdlbGwgZXhwbGFpbiB0aGUgYXBw
+YXJlbnQgaW5jcmVhc2UgaW4gIlhGUyBoYXMNCj5odW5nIGJ1dCBpdCdzIHJlYWxseSBqdXN0IHdh
+aXRpbmcgZm9yIGxvdHMgb2YgcmVhbGx5IHNsb3cgSU8gb24gTUQiDQo+Y2FzZXMgSSd2ZSBzZWVu
+IG92ZXIgdGhlIHBhc3QgY291cGxlIG9mIHllYXJzLg0KPg0KQXQgcHJlc2VudCwgY2F0IC9zeXMv
+YmxvY2svc2RiL3F1ZXVlL21heF9zZWN0b3JzX2tiOg0KaXMgNTEyay4gTWF5YmUgYmVjYXVzZSB0
+aGlzLg0KDQo+VGhlIG9ubHkgdGltZSBJJ2QgZXZlciBjb25zaWRlciBzdHJpcGUgLXdpZHRocy0g
+b2YgbW9yZSB0aGFuIDUxMmsgb3INCj4xTUIgd2l0aCBSQUlENS82IGlzIGlmIEkga25ldyBteSB3
+b3JrbG9hZCBpcyBhbG1vc3QgZXhjbHVzaXZlbHkNCj51c2luZyBsYXJnZSBmaWxlcyBhbmQgc2Vx
+dWVudGlhbCBhY2Nlc3Mgd2l0aCBsaXR0bGUgbWV0YWRhdGEgbG9hZCwNCj5hbmQgdGhlcmUncyBy
+ZWxhdGl2ZWx5IGZldyB3b3JrbG9hZHMgd2hlcmUgdGhhdCBpcyB0aGUgY2FzZS4NCj5UeXBpY2Fs
+bHkgdGhvc2Ugd29ya2xvYWRzIG1lYXN1cmUgdGhyb3VnaHB1dCBpbiBHQi9zIGFuZCBldmVyeW9u
+ZQ0KPnVzZXMgaGFyZHdhcmUgUkFJRCBmb3IgdGhlbSBiZWNhdXNlIE1EIHNpbXBseSBkb2Vzbid0
+IHNjYWxlIHRvIHRoaXMNCj5zb3J0IG9mIHVzYWdlLg0KPg0KPj4gSWYgNTEySyBpcyBhbHdheXMg
+c3Vib3B0aW1hbCBmb3IgWEZTIHRoZW4gdGhhdCBpcyB1bmZvcnR1bmF0ZSBidXQgSSBkb24ndA0K
+Pg0KPkkgdGhpbmsgNTEyayBjaHVuayBzaXplcyBhcmUgc3Vib3B0aW1hbCBmb3IgbW9zdCB1c2Vy
+cywgcmVnYXJkbGVzcw0KPm9mIHRoZSBmaWxlc3lzdGVtIG9yIHdvcmtsb2FkLi4uLg0KPg0KPj4g
+dGhpbmsgaXQgaXMgcmVhbGx5IHBvc3NpYmxlIHRvIGNob29zZSBhIGRlZmF1bHQgdGhhdCBldmVy
+eW9uZSB3aWxsIGJlIGhhcHB5DQo+PiB3aXRoLiAgTWF5YmUgd2UganVzdCBuZWVkIG1vcmUgZG9j
+dW1lbnRhdGlvbiBhbmQgd2FybmluZyBlbWl0dGVkIGJ5IHZhcmlvdXMNCj4+IHRvb2xzLiAgTWF5
+YmUgbWtmcy54ZnMgY291bGQgYXVnbWVudCB0aGUgInN0cmlwZSB1bml0IHRvbyBsYXJnZSIgbWVz
+c2FnZSB3aXRoDQo+PiBzb21lIHRleHQgYWJvdXQgY2hvb3NpbmcgYSBzbWFsbGVyIGNodW5rIHNp
+emU/DQo+DQo+V2Ugd29yayB0byB0aGUgbWFudHJhIHRoYXQgWEZTIHNob3VsZCBhbHdheXMgY2hv
+b3NlIHRoZSBkZWZhdWx0cw0KPnRoYXQgZ2l2ZSB0aGUgYmVzdCBvdmVyYWxsIHBlcmZvcm1hbmNl
+IGFuZCBhZ2luZyBjaGFyYWN0ZXJpc3RpY3Mgc28NCj51c2VycyBkb24ndCBuZWVkIHRvIGJlIGEg
+c3RvcmFnZSBleHBlcnQgdG8gZ2V0IHRoZSBiZXN0IHRoZQ0KPmZpbGVzeXN0ZW0gY2FuIG9mZmVy
+LiBUaGUgWEZTIHdhcm5pbmcgaXMgdGhlcmUgdG8gaW5kaWNhdGUgdGhhdCB0aGUNCj51c2VyIG1p
+Z2h0IGJlIGRvaW5nIHNvbWV0aGluZyB3cm9uZy4gSWYgdGhhdCdzIGJlaW5nIGVtaXR0ZWQgd2l0
+aCBhDQo+ZGVmYXVsdCBNRCBjb25maWd1cmF0aW9uLCB0aGVuIHRoYXQgaW5kaWNhdGVzIHRoYXQg
+dGhlIE1EIGRlZmF1bHRzDQo+bmVlZCB0byBiZSByZXZpc2VkLi4uLg0KPg0KPklmIHlvdSBrbm93
+IHdoYXQgYSBzdHJpcGUgdW5pdCBvciBjaHVuayBzaXplIGlzLCB0aGVuIHlvdSBrbm93IGhvdw0K
+PnRvIGRlYWwgd2l0aCB0aGUgcHJvYmxlbS4gQnV0IGZvciB0aGUgbWFqb3JpdHkgb2YgcGVvcGxl
+LCB0aGF0J3Mgd2F5DQo+bW9yZSBrbm93bGVkZ2UgdGhhbiB0aGV5IGFyZSBwcmVwYXJlZCB0byBs
+ZWFybiBhYm91dCBvciBzaG91bGQgYmUNCj5mb3JjZWQgdG8gbGVhcm4gYWJvdXQuDQo+DQo+Q2hl
+ZXJzLA0KPg0KPkRhdmUuDQo+LS0gDQo+RGF2ZSBDaGlubmVyDQo+ZGF2aWRAZnJvbW9yYml0LmNv
+bQ0KPi0tDQo+VG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVu
+c3Vic2NyaWJlIGxpbnV4LXJhaWQiIGluDQo+dGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9y
+ZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj5Nb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdl
+ci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWw=
 
---envbJBWh7q8WU6mo
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, Jul 09, 2012 at 01:46:53PM +1000, NeilBrown wrote:
-> On Fri, 6 Jul 2012 14:55:24 +0100 Jose Manuel dos Santos Calhariz
-> <jose.calhariz@netvisao.pt> wrote:
->=20
-> > On Wed, Jul 04, 2012 at 11:24:11AM +0100, Jose Manuel dos Santos Calhar=
-iz wrote:
-> > > On Wed, Jul 04, 2012 at 11:38:11AM +1000, NeilBrown wrote:
-> > > > On Mon, 2 Jul 2012 23:15:08 +0100 Jose Manuel dos Santos Calhariz
-> > > > <jose.calhariz@netvisao.pt> wrote:
-> > > >=20
-> > > > >=20
-> > > > > We have a group of servers with a LVM over a RAID6 of 16 drives.
-> > > > > During normal work loads, sometimes, the md raid enter on deadloc=
-k for
-> > > > > writes and only a power off/power on allows to recover the machin=
-e.
-> > > >=20
-> > > > This might be fixed by the following commit which was recently incl=
-uded in
-> > > > 3.5-rc. If could test with that I'd appreciate it.
-> > >=20
-> > > We will do it, at first opportunity.
-> >=20
-> > We have two machines that are running fio for 24 hours without
-> > problems.  So the bug seams to be fixed, thank you.
->=20
-> Thanks for testing and reported.
->=20
->=20
-> >=20
-> > Any possibility of the fix being ported to kernel 3.2?
->=20
-> It seems that I didn't tag that patch for -stable so it won't automatical=
-ly
-> get included.  I'll send it the old way - maybe it'll get into
-> 3.2.23.
-
-That would be great.=20
-
->=20
-> Thanks,
-> NeilBrown
->=20
-
-     Jose Calhariz
-
---=20
---
-Pregui=E7a =E9 o habito de descansar antes da fadiga.
-
---envbJBWh7q8WU6mo
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBCAAGBQJP+r7pAAoJEDSKd41ohe+PbA4P/3xyZi+iPjpJPpq3f3tPXTXz
-+SVhkp9ZN4qlBuiXTZRriwAtj1KL9BHtfLn9RHsHCWlbFggcQAC3/sR0bDcVhCfk
-/Z24Jkx9wuZIfleQV8KTcgjRmHbOe0zIX2nw4M9y+3N/+Pl9Jr0MvWSJZzC4XIS8
-7tSf4vCrKQAOPTSldSqxyYUoIQplPZMWXtDS1CwNAs2yvf1B9QZxzaBS82byvCqB
-Qb/LtgsxpWgfx24JURZn4FKEpKku+Lin0iIOA+8YbP8mizNszcJJ1yF4aMICh08n
-rd+cbZJ4ytJ9Tew2BKHmhQS+wG3w8vdjPwn4QAyS5Msejd3GkbFqA6O9fgRBeSiF
-GMzmToggchbocY/mjn55GHi8NsXJTRzZ0z8e4chFFYEhkOjjN8esDKExfwclFW9Q
-tR0P5gpr78ulzplauuHePNxZ6qNjG/7nnLMv4CC3em/JYE1km7Pf1D/p18oxAQgv
-J5IADMMnQaPYqTMWupzShHPgFf0a2C0QmLDnzEeypjOkcdL04envb44RFbNbcfrF
-995QKAr9TYWxDwac51EzR+ops9jzAIKvds8BdY6zlARLZ+CdairX/ASyTr6QRmXU
-9lvR34fjvEmP2lutg5054dVA+fuO9BnPWuDkgTl7rzkecnL6wEQxXppNMTY791uj
-53681Gd00KttxxCptFp1
-=YPp7
------END PGP SIGNATURE-----
-
---envbJBWh7q8WU6mo--
