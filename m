@@ -1,66 +1,39 @@
-From: kedacomkernel <kedacomkernel@gmail.com>
-Subject: Re: Re: mkfs.xfs states log stripe unit is too large
-Date: Mon, 9 Jul 2012 20:02:28 +0800
-Message-ID: <201207092002243437160@gmail.com>
-References: <D3F781FA-CEB0-4896-9441-772A9E533354@2012.bluespice.org> <20120623234445.GZ19223@dastard> <4FE67970.2030008@sandeen.net> <4FE710B7.5010704@hardwarefreak.com> <d71834a062ffd666ab53a4695eb643e9@muaddib.hro.localnet> <20120626023059.GC19223@dastard> <20120626080217.GA30767@infradead.org> <20120702061827.GB16671@infradead.org> <20120702164113.109162be@notabene.brown>,
-	<20120702080802.GQ19223@dastard>
+From: Jan Engelhardt <jengelh@inai.de>
+Subject: mdadm crash with lots of devs
+Date: Mon, 9 Jul 2012 16:38:47 +0200 (CEST)
+Message-ID: <alpine.LNX.2.01.1207091635040.1330@frira.zrqbmnf.qr>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dave Chinner <david@fromorbit.com>, Neil Brown <neilb@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, Ingo J?rgensmann <ij@2012.bluespice.org>, xfs <xfs@oss.sgi.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wNy0wMiAxNjowOCBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5jb20+IFdy
-b3RlOg0KPk9uIE1vbiwgSnVsIDAyLCAyMDEyIGF0IDA0OjQxOjEzUE0gKzEwMDAsIE5laWxCcm93
-biB3cm90ZToNCj4+IE9uIE1vbiwgMiBKdWwgMjAxMiAwMjoxODoyNyAtMDQwMCBDaHJpc3RvcGgg
-SGVsbHdpZyA8aGNoQGluZnJhZGVhZC5vcmc+IHdyb3RlOg0KPj4gDQo+PiA+IFBpbmcgdG8gTmVp
-bCAvIHRoZSByYWlkIGxpc3QuDQo+PiANCj4+IFRoYW5rcyBmb3IgdGhlIHJlbWluZGVyLg0KPj4g
-DQo+PiA+IA0KW3NuaXBdDQo+DQo+VGhhdCdzIHRydWUsIGJ1dCB0aGUgY2hhcmFjdGVyaXNpdGlj
-cyBvZiBzcGlubmluZyBkaXNrcyBoYXZlIG5vdA0KPmNoYW5nZWQgaW4gdGhlIHBhc3QgMjAgeWVh
-cnMsIG5vciBoYXMgdGhlIHR5cGljYWwgZmlsZSBzaXplDQo+ZGlzdHJpYnV0aW9ucyBpbiBmaWxl
-c3lzdGVtcywgbm9yIGhhdmUgdGhlIFJBSUQ1LzYgYWxnb3JpdGhtcy4gU28NCj5pdCdzIG5vdCBy
-ZWFsbHkgY2xlYXIgdG8gbWUgd2h5IHlvdTtkIHdvdWwgZGV2ZW4gY29uc2lkZXIgY2hhbmdpbmcN
-Cj50aGUgZGVmYXVsdCB0aGUgZG93bnNpZGVzIG9mIGxhcmdlIGNodW5rIHNpemVzIG9uIFJBSUQ1
-LzYgdm9sdW1lcyBpcw0KPndlbGwga25vd24uIFRoaXMgbWF5IHdlbGwgZXhwbGFpbiB0aGUgYXBw
-YXJlbnQgaW5jcmVhc2UgaW4gIlhGUyBoYXMNCj5odW5nIGJ1dCBpdCdzIHJlYWxseSBqdXN0IHdh
-aXRpbmcgZm9yIGxvdHMgb2YgcmVhbGx5IHNsb3cgSU8gb24gTUQiDQo+Y2FzZXMgSSd2ZSBzZWVu
-IG92ZXIgdGhlIHBhc3QgY291cGxlIG9mIHllYXJzLg0KPg0KQXQgcHJlc2VudCwgY2F0IC9zeXMv
-YmxvY2svc2RiL3F1ZXVlL21heF9zZWN0b3JzX2tiOg0KaXMgNTEyay4gTWF5YmUgYmVjYXVzZSB0
-aGlzLg0KDQo+VGhlIG9ubHkgdGltZSBJJ2QgZXZlciBjb25zaWRlciBzdHJpcGUgLXdpZHRocy0g
-b2YgbW9yZSB0aGFuIDUxMmsgb3INCj4xTUIgd2l0aCBSQUlENS82IGlzIGlmIEkga25ldyBteSB3
-b3JrbG9hZCBpcyBhbG1vc3QgZXhjbHVzaXZlbHkNCj51c2luZyBsYXJnZSBmaWxlcyBhbmQgc2Vx
-dWVudGlhbCBhY2Nlc3Mgd2l0aCBsaXR0bGUgbWV0YWRhdGEgbG9hZCwNCj5hbmQgdGhlcmUncyBy
-ZWxhdGl2ZWx5IGZldyB3b3JrbG9hZHMgd2hlcmUgdGhhdCBpcyB0aGUgY2FzZS4NCj5UeXBpY2Fs
-bHkgdGhvc2Ugd29ya2xvYWRzIG1lYXN1cmUgdGhyb3VnaHB1dCBpbiBHQi9zIGFuZCBldmVyeW9u
-ZQ0KPnVzZXMgaGFyZHdhcmUgUkFJRCBmb3IgdGhlbSBiZWNhdXNlIE1EIHNpbXBseSBkb2Vzbid0
-IHNjYWxlIHRvIHRoaXMNCj5zb3J0IG9mIHVzYWdlLg0KPg0KPj4gSWYgNTEySyBpcyBhbHdheXMg
-c3Vib3B0aW1hbCBmb3IgWEZTIHRoZW4gdGhhdCBpcyB1bmZvcnR1bmF0ZSBidXQgSSBkb24ndA0K
-Pg0KPkkgdGhpbmsgNTEyayBjaHVuayBzaXplcyBhcmUgc3Vib3B0aW1hbCBmb3IgbW9zdCB1c2Vy
-cywgcmVnYXJkbGVzcw0KPm9mIHRoZSBmaWxlc3lzdGVtIG9yIHdvcmtsb2FkLi4uLg0KPg0KPj4g
-dGhpbmsgaXQgaXMgcmVhbGx5IHBvc3NpYmxlIHRvIGNob29zZSBhIGRlZmF1bHQgdGhhdCBldmVy
-eW9uZSB3aWxsIGJlIGhhcHB5DQo+PiB3aXRoLiAgTWF5YmUgd2UganVzdCBuZWVkIG1vcmUgZG9j
-dW1lbnRhdGlvbiBhbmQgd2FybmluZyBlbWl0dGVkIGJ5IHZhcmlvdXMNCj4+IHRvb2xzLiAgTWF5
-YmUgbWtmcy54ZnMgY291bGQgYXVnbWVudCB0aGUgInN0cmlwZSB1bml0IHRvbyBsYXJnZSIgbWVz
-c2FnZSB3aXRoDQo+PiBzb21lIHRleHQgYWJvdXQgY2hvb3NpbmcgYSBzbWFsbGVyIGNodW5rIHNp
-emU/DQo+DQo+V2Ugd29yayB0byB0aGUgbWFudHJhIHRoYXQgWEZTIHNob3VsZCBhbHdheXMgY2hv
-b3NlIHRoZSBkZWZhdWx0cw0KPnRoYXQgZ2l2ZSB0aGUgYmVzdCBvdmVyYWxsIHBlcmZvcm1hbmNl
-IGFuZCBhZ2luZyBjaGFyYWN0ZXJpc3RpY3Mgc28NCj51c2VycyBkb24ndCBuZWVkIHRvIGJlIGEg
-c3RvcmFnZSBleHBlcnQgdG8gZ2V0IHRoZSBiZXN0IHRoZQ0KPmZpbGVzeXN0ZW0gY2FuIG9mZmVy
-LiBUaGUgWEZTIHdhcm5pbmcgaXMgdGhlcmUgdG8gaW5kaWNhdGUgdGhhdCB0aGUNCj51c2VyIG1p
-Z2h0IGJlIGRvaW5nIHNvbWV0aGluZyB3cm9uZy4gSWYgdGhhdCdzIGJlaW5nIGVtaXR0ZWQgd2l0
-aCBhDQo+ZGVmYXVsdCBNRCBjb25maWd1cmF0aW9uLCB0aGVuIHRoYXQgaW5kaWNhdGVzIHRoYXQg
-dGhlIE1EIGRlZmF1bHRzDQo+bmVlZCB0byBiZSByZXZpc2VkLi4uLg0KPg0KPklmIHlvdSBrbm93
-IHdoYXQgYSBzdHJpcGUgdW5pdCBvciBjaHVuayBzaXplIGlzLCB0aGVuIHlvdSBrbm93IGhvdw0K
-PnRvIGRlYWwgd2l0aCB0aGUgcHJvYmxlbS4gQnV0IGZvciB0aGUgbWFqb3JpdHkgb2YgcGVvcGxl
-LCB0aGF0J3Mgd2F5DQo+bW9yZSBrbm93bGVkZ2UgdGhhbiB0aGV5IGFyZSBwcmVwYXJlZCB0byBs
-ZWFybiBhYm91dCBvciBzaG91bGQgYmUNCj5mb3JjZWQgdG8gbGVhcm4gYWJvdXQuDQo+DQo+Q2hl
-ZXJzLA0KPg0KPkRhdmUuDQo+LS0gDQo+RGF2ZSBDaGlubmVyDQo+ZGF2aWRAZnJvbW9yYml0LmNv
-bQ0KPi0tDQo+VG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVu
-c3Vic2NyaWJlIGxpbnV4LXJhaWQiIGluDQo+dGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9y
-ZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj5Nb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdl
-ci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWw=
 
+Using mdadm-3.2.2 from openSUSE_12.1:
+
+# modprobe brd rd_size=1 rd_nr=4096
+# mdadm -C /dev/md9 -l 10 -n 384 /dev/ram{0..383}
+mdadm: Defaulting to version 1.2 metadata
+Segmentation fault (core dumped)
+
+#1  Create (st=0xb4c600, mddev=0x7fff3bda64c0 "/dev/md9", chunk=512, level=10, 
+    layout=12593328, size=4, raiddisks=384, sparedisks=0, 
+    name=0x7fff3bda64c7 "9", homehost=0x7fff3bda6fe0 "seven", uuid=0x0, 
+    subdevs=384, devlist=0xb49030, runstop=0, verbose=0, force=0, 
+    assume_clean=0, bitmap_file=0x0, bitmap_chunk=65534, write_behind=0, 
+    delay=5, autof=0) at Create.c:899
+899                                     fprintf(stderr,
+(gdb) l
+894                                                info_new.uuid, chosen_name);
+895                                     me = map_by_devnum(&map, st->container_dev);
+896                             }
+897
+898                             if (st->ss->write_init_super(st)) {
+899                                     fprintf(stderr,
+900                                             Name ": Failed to write metadata to %s\n",
+901                                             dv->devname);
+902                                     st->ss->free_super(st);
+903                                     goto abort;
+(gdb) p dv
+$1 = <optimized out>
