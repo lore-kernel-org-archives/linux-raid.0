@@ -1,133 +1,252 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID5 superblock and filesystem recovery after re-creation
-Date: Mon, 9 Jul 2012 10:02:08 +1000
-Message-ID: <20120709100208.5b9c56cd@notabene.brown>
-References: <CA+=meHXO02k4hSJihNFiYXb+LOjik_LX3n8UZbqERC2tYy+L-g@mail.gmail.com>
-	<20120709081358.199630c8@notabene.brown>
-	<CA+=meHVhYu8Z5a+D5beWQ-4M7YXq1bCabsqqntMMKfFy5dqAPA@mail.gmail.com>
+Subject: Re: RAID5 faild while in degraded mode, need help
+Date: Mon, 9 Jul 2012 10:12:08 +1000
+Message-ID: <20120709101208.49528808@notabene.brown>
+References: <CACMY3vC=iAbKCssHH8CQ=msqNtmE1zF1muoZTusfRd989HvD_w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/NAGIOcA_9lgcjf_v_MQAZgt"; protocol="application/pgp-signature"
+ boundary="Sig_/qrSTN29ra7i_smGCA1XKfIL"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+=meHVhYu8Z5a+D5beWQ-4M7YXq1bCabsqqntMMKfFy5dqAPA@mail.gmail.com>
+In-Reply-To: <CACMY3vC=iAbKCssHH8CQ=msqNtmE1zF1muoZTusfRd989HvD_w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Schleifer <alexander.schleifer@googlemail.com>
+To: Dietrich Heise <dh@dhde.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/NAGIOcA_9lgcjf_v_MQAZgt
+--Sig_/qrSTN29ra7i_smGCA1XKfIL
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 9 Jul 2012 00:45:08 +0200 Alexander Schleifer
-<alexander.schleifer@googlemail.com> wrote:
+On Sun, 8 Jul 2012 21:05:02 +0200 Dietrich Heise <dh@dhde.de> wrote:
 
-> 2012/7/9 NeilBrown <neilb@suse.de>:
-> > On Sun, 8 Jul 2012 23:47:16 +0200 Alexander Schleifer
-> > <alexander.schleifer@googlemail.com> wrote:
-> >
-> >> Hi,
-> >>
-> >> after a new installation of Ubuntu, my RAID5 device was set to
-> >> "inactive". All devices were set to spare device and the level was
-> >> unknown. So I tried to re-create the array by the following command.
-> >
-> > Sorry about that.  In case you haven't seen it,
-> >    http://neil.brown.name/blog/20120615073245
-> > explains the background
-> >
-> >>
-> >> mdadm --create /dev/md0 --assume-clean --level=3D5 --raid-disk=3D6
-> >> --chunk=3D512 --metadata=3D1.2 /dev/sde /dev/sdd /dev/sda /dev/sdc
-> >> /dev/sdg /dev/sdh
-> >>
-> >> I have a backup of the mdadm -Evvvvs output, so I could recover the
-> >> chunk size, metadata and offset (2048) from this information.
-> >>
-> >> The partially output of mdadm --create... shows this output:
-> >>
-> >> ...
-> >> mdadm: /dev/sde appears to be part of a raid array:
-> >>     level=3Draid5 devices=3D6 ctime=3DSun Jul  8 23:02:51 2012
-> >> mdadm: partition table exists on /dev/sde but will be lost or
-> >>        meaningless after creating array
-> >> ...
-> >>
-> >> The array is recreated, but no valid filesystem is found on /dev/md0
-> >> (dumpe2fs: Filesystem revision too high while trying to open /dev/md0.
-> >> Couldn't find valid filesystem superblock.). Also fdisk /dev/sde shows
-> >> no partition.
-> >> My next step would be creating Linux RAID type partitions on the 6
-> >> devices with fdisk and call mdadm --create with /dev/sde1 /dev/sdd1
-> >> and so on.
-> >> Is this step a possible solution for recovering the filesystem?
-> >
-> > Depends.. Was the original array created on partitions, or on whole dev=
-ices?
-> > The saved '-E' output should show that.
-> >
-> > Maybe you have the devices in the wrong order.  The order you have look=
-s odd
-> > for a recently created array.
-> >
-> > NeilBrown
+> Hi,
 >=20
-> The original array was created on whole devices, as the saved output
-> starts with e.g. "/dev/sde:".
+> the following Problem,
+> One of four drives has S.M.A.R.T. errors, so I removed it and
+> replaced, with a new one.
+>=20
+> In the time the drive was rebuilding, one of the three left devices
+> has an I/O error (sdd1) (sdc1 was the replaced drive an was syncing).
+>=20
+> Now the following happends (two drives are spare drives :( )
 
-Right, so you definitely don't want to create partitions.  Maybe when mdadm
-reported "partition table exists' it was a false positive, or maybe old
-information - creating a 1.2 array doesn't destroy the partition table.
+It looks like you tried to --add /dev/sdd1 back in after it failed, and mda=
+dm
+let new.  Newer versions of mdadm will refuse as that is not a good thing to
+do but it shouldn't stop you getting your data back.
 
-> I used the order of the 'Device UUID' from the saved output to
-> recreate the order in the new system (the ports changed due to a new
-> mainboard).
+First thing to realise is that you could have data corruption.  There is at
+least one block in the array which cannot be recovered, possibly more.  i.e.
+any block on sdd1 which is bad, and any block at the same offset in sdc1.
+These blocks may not be in files which would be lucky, or they may contain
+important metadata which might mean you've lost lots of files.
 
-When you say "the order", do you mean the numerical order?
+If you hadn't tried to --add /dev/sdd1 you could just force-assemble the
+array back to degraded mode (without sdc1) and back up any critical data.
+As sdd1 now thinks it is a spare you need to re-create the array instead:
 
-If you looked at the old "mdadm -E" output matching the "Device Role" with
-"Device UUID" to determine the order of the UUIDs, then looked at the
-"mdadm -E" output after the metadata got corrupted and used the "Device UUI=
-D"
-to determine the correct "Device Role", then ordered the devices by that Ro=
-le,
-then that should have worked.
+ mdadm -S /dev/md1
+ mdadm -C /dev/md1 -l5 -n4 -e 1.2 -c 512 /dev/sdf1 /dev/sde1 /dev/sdd1 miss=
+ing
+or
+ mdadm -C /dev/md1 -l5 -n4 -e 1.2 -c 512 /dev/sdf1 /dev/sde1 missing /dev/s=
+dd1
 
-I assume you did have a filesystem directly on /dev/md0, and hadn't
-partitioned it or used LVM on it?
+depending on whether sdd1 as the 3rd or 4th device in the array - I cannot
+tell from the output here.
+
+You should then be able to mount the array and backup stuff.
+
+You then want to use 'ddrescue' to copy sdd1 onto a device with no bad
+blocks, and assemble  the array using the device instead of sdd1.
+
+Finally, you can add the new spare (sdc1) to the array and it should rebuild
+successfully - providing there are no bad blocks on sdf1 or sde1.
+
+I hope that makes sense.  Do ask if anything is unclear.
 
 NeilBrown
 
 
->              After the installation I had a degraded array in
-> initramfs, but I was able to simply "exit" the debug shell and the
-> array was accessible. I will now skip the step of creating raid type
-> partitions and try every possible order of devices.
 >=20
-> Thanks,
-> -Alex
+> p3 disks # mdadm -D /dev/md1
+> /dev/md1:
+>         Version : 1.2
+>   Creation Time : Mon Feb 28 19:57:56 2011
+>      Raid Level : raid5
+>   Used Dev Size : 1465126400 (1397.25 GiB 1500.29 GB)
+>    Raid Devices : 4
+>   Total Devices : 4
+>     Persistence : Superblock is persistent
+>=20
+>     Update Time : Sun Jul  8 20:37:12 2012
+>           State : active, FAILED, Not Started
+>  Active Devices : 2
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 2
+>=20
+>          Layout : left-symmetric
+>      Chunk Size : 512K
+>=20
+>            Name : p3:0  (local to host p3)
+>            UUID : 6d4ebfd4:491bcb50:d98d5e67:f226f362
+>          Events : 121205
+>=20
+>     Number   Major   Minor   RaidDevice State
+>        0       8       81        0      active sync   /dev/sdf1
+>        1       8       65        1      active sync   /dev/sde1
+>        2       0        0        2      removed
+>        3       0        0        3      removed
+>=20
+>        4       8       49        -      spare   /dev/sdd1
+>        5       8       33        -      spare   /dev/sdc1
+>=20
+> here is more information:
+>=20
+> p3 disks # mdadm -E /dev/sdc1
+> /dev/sdc1:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x0
+>      Array UUID : 6d4ebfd4:491bcb50:d98d5e67:f226f362
+>            Name : p3:0  (local to host p3)
+>   Creation Time : Mon Feb 28 19:57:56 2011
+>      Raid Level : raid5
+>    Raid Devices : 4
+>=20
+>  Avail Dev Size : 2930275057 (1397.26 GiB 1500.30 GB)
+>      Array Size : 8790758400 (4191.76 GiB 4500.87 GB)
+>   Used Dev Size : 2930252800 (1397.25 GiB 1500.29 GB)
+>     Data Offset : 2048 sectors
+>    Super Offset : 8 sectors
+>           State : active
+>     Device UUID : caefb029:526187ef:2051f578:db2b82b7
+>=20
+>     Update Time : Sun Jul  8 20:37:12 2012
+>        Checksum : 18e2bfe1 - correct
+>          Events : 121205
+>=20
+>          Layout : left-symmetric
+>      Chunk Size : 512K
+>=20
+>    Device Role : spare
+>    Array State : AA.. ('A' =3D=3D active, '.' =3D=3D missing)
+> p3 disks # mdadm -E /dev/sdd1
+> /dev/sdd1:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x0
+>      Array UUID : 6d4ebfd4:491bcb50:d98d5e67:f226f362
+>            Name : p3:0  (local to host p3)
+>   Creation Time : Mon Feb 28 19:57:56 2011
+>      Raid Level : raid5
+>    Raid Devices : 4
+>=20
+>  Avail Dev Size : 2930269954 (1397.26 GiB 1500.30 GB)
+>      Array Size : 8790758400 (4191.76 GiB 4500.87 GB)
+>   Used Dev Size : 2930252800 (1397.25 GiB 1500.29 GB)
+>     Data Offset : 2048 sectors
+>    Super Offset : 8 sectors
+>           State : active
+>     Device UUID : 4231e244:60e27ed4:eff405d0:2e615493
+>=20
+>     Update Time : Sun Jul  8 20:37:12 2012
+>        Checksum : 4bec6e25 - correct
+>          Events : 0
+>=20
+>          Layout : left-symmetric
+>      Chunk Size : 512K
+>=20
+>    Device Role : spare
+>    Array State : AA.. ('A' =3D=3D active, '.' =3D=3D missing)
+> p3 disks # mdadm -E /dev/sde1
+> /dev/sde1:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x0
+>      Array UUID : 6d4ebfd4:491bcb50:d98d5e67:f226f362
+>            Name : p3:0  (local to host p3)
+>   Creation Time : Mon Feb 28 19:57:56 2011
+>      Raid Level : raid5
+>    Raid Devices : 4
+>=20
+>  Avail Dev Size : 2930253889 (1397.25 GiB 1500.29 GB)
+>      Array Size : 8790758400 (4191.76 GiB 4500.87 GB)
+>   Used Dev Size : 2930252800 (1397.25 GiB 1500.29 GB)
+>     Data Offset : 2048 sectors
+>    Super Offset : 8 sectors
+>           State : active
+>     Device UUID : 28b08f44:4cc24663:84d39337:94c35d67
+>=20
+>     Update Time : Sun Jul  8 20:37:12 2012
+>        Checksum : 15faa8a1 - correct
+>          Events : 121205
+>=20
+>          Layout : left-symmetric
+>      Chunk Size : 512K
+>=20
+>    Device Role : Active device 1
+>    Array State : AA.. ('A' =3D=3D active, '.' =3D=3D missing)
+> p3 disks # mdadm -E /dev/sdf1
+> /dev/sdf1:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x0
+>      Array UUID : 6d4ebfd4:491bcb50:d98d5e67:f226f362
+>            Name : p3:0  (local to host p3)
+>   Creation Time : Mon Feb 28 19:57:56 2011
+>      Raid Level : raid5
+>    Raid Devices : 4
+>=20
+>  Avail Dev Size : 2930269954 (1397.26 GiB 1500.30 GB)
+>      Array Size : 8790758400 (4191.76 GiB 4500.87 GB)
+>   Used Dev Size : 2930252800 (1397.25 GiB 1500.29 GB)
+>     Data Offset : 2048 sectors
+>    Super Offset : 8 sectors
+>           State : active
+>     Device UUID : 78d5600a:91927758:f78a1cea:3bfa3f5b
+>=20
+>     Update Time : Sun Jul  8 20:37:12 2012
+>        Checksum : 7767cb10 - correct
+>          Events : 121205
+>=20
+>          Layout : left-symmetric
+>      Chunk Size : 512K
+>=20
+>    Device Role : Active device 0
+>    Array State : AA.. ('A' =3D=3D active, '.' =3D=3D missing)
+>=20
+> Is there a way to repair the raid?
+>=20
+> thanks!
+> Dietrich
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
---Sig_/NAGIOcA_9lgcjf_v_MQAZgt
+--Sig_/qrSTN29ra7i_smGCA1XKfIL
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT/ofgDnsnt1WYoG5AQJ0fg/+K8Kai+bKfNnvnx9uP+4cGAwMGJlkji0q
-wMcf6tUc8u4gyFmgE7/RoNQH6ONQL4fSdivt1gWytVq28NhlN9wzNlDPsFM0F+wT
-0jSW8TCgqOUjishpSOgVD0SB9SlUtppL02X4IFeQu78o3Hj6qxHJlW922XukfFQM
-5Sp3JwykjOOinz37ZGkZq/fPKq5+osqZSp2JD/kSd+osrXab/EKK+2u0AfVi9qLC
-lF2YZRL1nNduc5cfe1oU2WcXqW8hqfjkCLnq/xwLF5juNuWGHWQ0kPfAFkjMjXlO
-Mp6V2HDLrGc72QVNn6xyRhdxG3GW/O94KUfn9hq2NLWkgxKSCG0WMZim1eR4gB3F
-VzWGcOgkiZB5+s/EoqL/aib09M1oKeuapLYIxBalbHhq3Mkms9gnbhcgcyVb/ixb
-iYjawZ2I8XGgPC9zLpYvYJACJp4+3aQEcqsWzkYr96z7WCVzP2nm653rzieEfWgb
-cjlkVCNbFtlNEcQ+fqAAuoefKo8G8fUM+Yz/IpzmF8gh/lq3ISyyibxMK9im+C1F
-Mfw9P9q/OvjUY0E/CCX7IZ1MxDimdEatOKKMFpMO3f+lQQTcsjaIjyWTGhMuZTJR
-6E5hnJmcoTsMWDZzAaLLo8wPNtrm7lF39JtvwBSSm+FzzMIv/2KFSGbFQldrOrT7
-nte2jrkvabI=
-=Ldd+
+iQIVAwUBT/oh2Dnsnt1WYoG5AQJDAQ/+OH2MWgZMmQNZTpigEezNiQfZ6+0UmeJ8
+7yXhTaHYBHWQD+sa0whFrbNE2gXnsl/4cxYfKWzRDKGz8OqNsxwCUCaOTFO+GkNC
+Kvnr6XG4ahJ/TDS424R9qgHKGJVHasfnhUnDwUC4iJIjk8A6/ccF6XX/nLDSC58U
+UodxiphaUIWo06P8UeBi223kDeyCZxG5XjoztwcccxrGvAOlaaicYIc5/5A/NVwY
+zBQ5KvsBx1/iF/Pybb8FssP1/KZx3WNsqZQc9jOrheCF+6H4qINxKSZfYp4mrHsR
+UmypmlamWqyxW7kQJM8lhi3GlWn4FVcgUG28QtwIc8xZIXGA/fHCDkaJ5leX3oq0
+NFYfNoig++aOnwhrJZbix/1PoTWXhoPRxodKzNVmOZPAWo8rDBZKeYUCt/c7pMRt
+Pe2mdSzUSNU8PgvLey0SKLLUau525fr9s1YmYDbZ7prqC4Lc2LDNRkF0v2AwQtel
+6jppnMGfR29IHId8qmEhz43rhLKWGeheeRrvTcSdzvOzf4R9SZbTA4ygk5LswWEm
+l9GioMeN5PMZXqzmmZFW5JgC28kCcFGrQq9mUjuXU9bZperTXgXpxmh4MQG8tC/Z
+H3Q5tqClFs6doLReW2Ikzc+Z8SyyGLymmZvV8Nt8kmFtBbciMXQYpQ60srGl8STd
+Wi8yyclIxTo=
+=PSLi
 -----END PGP SIGNATURE-----
 
---Sig_/NAGIOcA_9lgcjf_v_MQAZgt--
+--Sig_/qrSTN29ra7i_smGCA1XKfIL--
