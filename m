@@ -1,26 +1,56 @@
-From: Matthias Prager <linux@matthiasprager.de>
-Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
-Date: Tue, 10 Jul 2012 02:21:09 +0200
-Message-ID: <4FFB7575.4060603@matthiasprager.de>
-References: <4FE454CA.6080007@matthiasprager.de> <4FFAED4F.3080100@matthiasprager.de> <4FFB32E5.1050109@farcaster.org> <20120709204513.GD25664@kernel.stglabs.ibm.com> <4FFB5A0F.30400@farcaster.org>
+From: cultura@pmpf.rs.gov.br
+Subject: Mortgages Loan
+Date: Tue, 10 Jul 2012 04:45:06 -0300
+Message-ID: <20120710044506.wkcu19275kww4gkw__47782.0305306979$1341906433$gmane$org@webmail.pmpf.rs.gov.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4FFB5A0F.30400@farcaster.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert Trace <maillist@farcaster.org>
-Cc: djwong@us.ibm.com, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org, Matthias Prager <linux@matthiasprager.de>
 List-Id: linux-raid.ids
 
-Am 10.07.2012 00:24, schrieb Robert Trace:
-> 
-> Also, TURs don't appear to actually wake the disk up (should they?).
-> The only thing I've found that'll wake the disk up is an explicit START
-> UNIT command.
 
-I haven't checked the scsi logging side, but about the only commands
-that wake up the disks are 'smartctl -a /dev/sda' and 'sg_start'
-(smartcl maybe issuing a START UNIT command on it's own).
 
-Matthias
+
+
+
+Attn,
+
+This is to inform you that Mortgages Loan BI Plc is offering loans at  
+a very low
+interest rate of 2.5%. Are you tired of Seeking Loans and  
+Mortgages?,or have you
+Been Turned down constantly By your banks and Other Financial  
+Institutions?, we
+can help make your dreams a reality.
+
+  Loans for any purpose: vacation, home Improvements, major purchases,  
+education
+or debt consolidation. A variety of payment plans to fit your budget. To get
+more details and information,
+follow the instruction do not click reply to, contact us on our DIRECT service
+E-mail: pigottrobertsmith@yahoo.com
+
+
+FILL THE BORROWER'S INFORMATION:
+
+Your Full Name:_____________
+Your Country:_______________
+Your Address:_______________
+Your Occupation:__________
+Your Sex:_________________
+Monthly Income:_____________
+Loan Amount Needed:_________
+Loan Duration:_______________
+Your Cell phone Number:______________
+
+Thanks for your understanding and cooperation...
+
+Best Regards.
+Mr.Pigott Robert.
+
+----------------------------------------------------------------
+	Acesse http://www.pmpf.rs.gov.br
+
