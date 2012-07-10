@@ -1,56 +1,58 @@
-From: cultura@pmpf.rs.gov.br
-Subject: Mortgages Loan
-Date: Tue, 10 Jul 2012 04:45:06 -0300
-Message-ID: <20120710044506.wkcu19275kww4gkw__47782.0305306979$1341906433$gmane$org@webmail.pmpf.rs.gov.br>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	DelSp=Yes	format=flowed
-Content-Transfer-Encoding: 7BIT
+From: Sebastian Hegler <sebastian.hegler@tu-dresden.de>
+Subject: mdadm-3.2.5: segfault in "--grow --continue"
+Date: Tue, 10 Jul 2012 12:46:19 +0200
+Message-ID: <D6EAEC68-9C5B-4CBF-943C-85ABF3E319BD@tu-dresden.de>
+Mime-Version: 1.0 (Apple Message framework v1278)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de
 List-Id: linux-raid.ids
 
+Hi!
+
+I had to shut down a server with a raid grow operation (cleanly). After some hassles I got the array assembled again (manually), but it would not continue to grow. When trying 
+
+mdadm --grow --continue /dev/md127 
+
+(as per the manpage) I receive a segfault. Compiling from source, and using gdb, I see:
+
+root@kuiper:~/mdadm-3.2.5# gdb ./mdadm 
+[SNIP]
+Reading symbols from /root/mdadm-3.2.5/mdadm...done.
+(gdb) set args --grow --continue /dev/md127 
+(gdb) run 
+Starting program: /root/mdadm-3.2.5/mdadm --grow --continue /dev/md127 
+
+Program received signal SIGSEGV, Segmentation fault.
+Grow_continue_command (devname=0x7fffffffe8cc "/dev/md127", fd=7, backup_file=0x0, verbose=0) at Grow.c:4118
+4118		if (verify_reshape_position(content,
+(gdb) bt
+#0  Grow_continue_command (devname=0x7fffffffe8cc "/dev/md127", fd=7, backup_file=0x0, verbose=0) at Grow.c:4118
+#1  0x0000000000407ac2 in main (argc=4, argv=0x7fffffffe678) at mdadm.c:1701
 
 
 
+The same bug is present in the git repository, but another location:
+
+root@kuiper:~/mdadm.git# gdb ./mdadm 
+[SNIP]
+Reading symbols from /root/mdadm.git/mdadm...done.
+(gdb) set args --grow --continue /dev/md127 
+(gdb) run 
+Starting program: /root/mdadm.git/mdadm --grow --continue /dev/md127 
+
+Program received signal SIGSEGV, Segmentation fault.
+Grow_continue_command (devname=0x7fffffffe8d0 "/dev/md127", fd=7, backup_file=0x0, verbose=0) at Grow.c:4086
+4086		if (verify_reshape_position(content,
+(gdb) bt
+#0  Grow_continue_command (devname=0x7fffffffe8d0 "/dev/md127", fd=7, backup_file=0x0, verbose=0) at Grow.c:4086
+#1  0x0000000000406c39 in main (argc=4, argv=0x7fffffffe678) at mdadm.c:1447
 
 
-Attn,
+I also filed a bug against Debian's BTS, but I did not receive a bug number yet. In the meantime, I'd be very happy about any information on how to get my RAID array back into growing. I'm not on the list, please CC me.
 
-This is to inform you that Mortgages Loan BI Plc is offering loans at  
-a very low
-interest rate of 2.5%. Are you tired of Seeking Loans and  
-Mortgages?,or have you
-Been Turned down constantly By your banks and Other Financial  
-Institutions?, we
-can help make your dreams a reality.
-
-  Loans for any purpose: vacation, home Improvements, major purchases,  
-education
-or debt consolidation. A variety of payment plans to fit your budget. To get
-more details and information,
-follow the instruction do not click reply to, contact us on our DIRECT service
-E-mail: pigottrobertsmith@yahoo.com
-
-
-FILL THE BORROWER'S INFORMATION:
-
-Your Full Name:_____________
-Your Country:_______________
-Your Address:_______________
-Your Occupation:__________
-Your Sex:_________________
-Monthly Income:_____________
-Loan Amount Needed:_________
-Loan Duration:_______________
-Your Cell phone Number:______________
-
-Thanks for your understanding and cooperation...
-
-Best Regards.
-Mr.Pigott Robert.
-
-----------------------------------------------------------------
-	Acesse http://www.pmpf.rs.gov.br
-
+Thanks.
+Sebastian
