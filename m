@@ -1,47 +1,37 @@
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: Assembly failure
-Date: Tue, 10 Jul 2012 19:59:27 +0100
-Message-ID: <20120710185927.GA30164@nsrc.org>
-References: <20120710163345.GB29855@nsrc.org>
- <4FFC5CC0.8050808@profitbricks.com> <20120710170646.GA29962@nsrc.org>
- <4FFC68AB.4010801@profitbricks.com>
-Mime-Version: 1.0
+From: Brassow Jonathan <jbrassow@redhat.com>
+Subject: Re: [PATCH] DM RAID:  Add support for MD RAID10 personality
+Date: Tue, 10 Jul 2012 14:27:30 -0500
+Message-ID: <5DAA9465-E7B1-4F61-A559-745D653048C2@redhat.com>
+References: <1340712231.19015.42.camel@f16> <20120704112159.36cdb42a@notabene.brown> <262AC9F3-56D9-48A8-8A03-32D6B81D4689@redhat.com> <20120704151537.7c91076d@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v1084)
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4FFC68AB.4010801@profitbricks.com>
+In-Reply-To: <20120704151537.7c91076d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, agk@redhat.com
 List-Id: linux-raid.ids
 
-On Tue, Jul 10, 2012 at 07:38:51PM +0200, Sebastian Riemer wrote:
-> Your kernel is similar to v3.4 mainline. Your kernel has been compiled
-> one day after Linus tagged v3.4. This kernel has major issues. Please
-> reboot into the old 3.2 kernel.
+
+On Jul 4, 2012, at 12:15 AM, NeilBrown wrote:
+
+>> 
+>> I like your suggestion of changing the parameter names.  I've found the original names somewhat confusing.  ('far_offset' seems to imply to me that the copy would not be the very next stripe, but _offset_ somehow - it seems to have the reverse meaning to me.  I think this comes from the fact that it acts as a modifier to 'far_copy'.)  I toyed with a couple different ways of doing this but figured it was best to just go along.  Anyway, what you are suggesting seems to be:
+>> 	raid10_copies <number> (Default: 2)
+>> 	raid10_layout <string> (Default: "near"/"adjacent")
+>> Where <string> could be "near", "far", "offset" and "some-future-thing".  That seems nice to me and seems to clear up some of the confusion caused by "far_offset" seeming to be a modifier to "far_copies".
 > 
-> Your kernel has no tag in the Ubuntu Git repos!
-> 
-> http://kernel.ubuntu.com/git?p=ubuntu/ubuntu-precise.git;a=tags
-> http://kernel.ubuntu.com/git?p=ubuntu/ubuntu-quantal.git;a=tags
-> 
-> Your kernel is absolutely unstable. Who built this kernel? Can't be
-> official release!
+> Yes, that is what I'm suggesting.
 
-I don't know who makes ~kernel-ppa packages.
+One problem with this approach is that users can no longer mix and match.  They can't have 2 near copies and 2 far copies, for example.  Perhaps someone might choose this layout for read balancing performance...
 
-Anyway, box is now on linux-image-3.2.0-24-generic. Same problem:
+The original method didn't allow for two different simultaneous "far" algorithms (because it would add no redundancy unless they were shifted from each other as well as the original), but this new way of specifying makes it worse.
 
-brian@dev-storage1:~$ cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
-md127 : inactive sdm[1](S) sdg[5](S) sdh[4](S) sdd[3](S) sdj[9](S) sdl[11](S) sdi[8](S) sdk[10](S) sdb[0](S) sde[7](S) sdf[6](S) sdc[2](S)
-      35163186720 blocks super 1.2
-       
-unused devices: <none>
+Do you see this as a problem?  If so, we need to find a way to specify the number of copies for each layout /and/ include the potential for "double-shift" vs "single-shift" or some further variant.  One idea I had before was:
+	raid10_near_copies <#>
+	raid10_far_copies <#>
+	raid10_stripe_copies <#>  (similar to far+offset, but still allows for simultaneous "far" w/o "offset")
+To allow for the different variants of "shifting", we could have different raid10 variants, like "raid10_2s" or "raid1e_2s" - similar to the extensions on RAID5 ("raid5_ls") that you don't like.  :)
 
-What's my best next step? There's nothing critical on here, but I would like
-to use this as practice of recovering a broken md raid volume.
-
-Regards,
-
-Brian.
+ brassow
