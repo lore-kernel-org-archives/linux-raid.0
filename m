@@ -1,43 +1,60 @@
-From: Bernd Schubert <bernd.schubert@fastmail.fm>
-Subject: Re: Does mdadm supports TRIM command to SSDs?
-Date: Wed, 11 Jul 2012 18:44:08 +0200
-Message-ID: <4FFDAD58.8090101@fastmail.fm>
-References: <CAF-9JegPGmayAO0gAsqY4J3rpRpTq_ciLA5e+nu0PsSjJhwr-A@mail.gmail.com> <4FFD632F.3060407@hesbynett.no> <4FFDA815.4080006@fastmail.fm> <CAF-9JeiKvs+_aXF0gCJxLkGJsVqnqhBvcW7q2UyyDLSFoysxLQ@mail.gmail.com>
+From: Christian Balzer <chibi@gol.com>
+Subject: Re: Assembly failure
+Date: Thu, 12 Jul 2012 02:21:29 +0900
+Message-ID: <20120712022129.3c45303b@batzmaru.gol.ad.jp>
+References: <20120710163345.GB29855@nsrc.org>
+	<4FFC5CC0.8050808@profitbricks.com>
+	<20120710170646.GA29962@nsrc.org>
+	<4FFC68AB.4010801@profitbricks.com>
+	<20120710185927.GA30164@nsrc.org>
+	<20120711124316.206ab3d9@notabene.brown>
+	<20120711075818.GA30527@nsrc.org>
+	<20120711172742.2b8e13e9@batzmaru.gol.ad.jp>
+	<20120711164441.2790ac3b@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAF-9JeiKvs+_aXF0gCJxLkGJsVqnqhBvcW7q2UyyDLSFoysxLQ@mail.gmail.com>
+In-Reply-To: <20120711164441.2790ac3b@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bar Ziony <bartzy@gmail.com>
-Cc: David Brown <david.brown@hesbynett.no>, linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.ru>
+Cc: linux-raid@vger.kernel.org, Brian Candler <B.Candler@pobox.com>
 List-Id: linux-raid.ids
 
-On 07/11/2012 06:22 PM, Bar Ziony wrote:
-> If they are connected to a regular LSI controller they won't get TRIM
-> commands... How do you know they need TRIM?
+On Wed, 11 Jul 2012 16:44:41 +0600 Roman Mamedov wrote:
+
+> On Wed, 11 Jul 2012 17:27:42 +0900
+> Christian Balzer <chibi@gol.com> wrote:
 > 
+> > RAID until they get a non-braindead firmware that won't park (look at
+> > the Load_Cycle_Count in SMART) the heads every 30 seconds, come rain
+> > or shine.
+> 
+> So I seem to have such firmware, what do I win?
+> 
+An inflatable washer machine...
 
-We discussed this with LSI, their answer from generic support was
-basically nonsense, IMHO. This is a SAS Raid Controller, but after we
-run into the trim issue for the first time, we are using it in non-raid
-mode (flashed the corresponding fw). After we did so, we can trim with
-sg_unmap, but as we don't know which blocks are in use by the
-filesystem, we obviously have to trim the entire disk. And that means we
-have to recreate LVM + file-system every time trimming is required.
-Basic problem of those LSI controllers is that they don't announce their
-trimming capabilities via scsi VPD or Read Capacity (16), which the
-linux-scsi layer uses to query the disk for trim support. So the actual
-problem is the LSI SATA-to-SAS translation, which doesn't seem to let
-those important information through.
-I already thought about writing a kernel patch to set those values vai
-sysfs, but it probably will not get accepted, as setting the wrong
-values would result in data corruption after trimming...
+> Device Model:     ST1000DM003-9YN162
+> 
+>   9 Power_On_Hours          0x0032   097   097   000    Old_age
+> Always       -       2796 193 Load_Cycle_Count        0x0032   100
+> 100   000    Old_age   Always       -       326
+>
+Read the respective threads on the Seagate forums.
 
-We are an HPC development group and our cluster is used sometimes for
-benchmarking. Once trimming is required, write performance of those
-disks goes down by about 50%. After manual sg_unmap performance is fine
-again...
+If your drive is not busy most of the time, once the heads get parked
+(unloaded), they will stay that way, until it gets accessed again.
+However if the drive is busy every second or so, the aforementioned
+statement holds. 
 
-Cheers,
-Bernd
+Device Model:     ST2000DM001-9YN164
+Firmware Version: CC4C
+193 Load_Cycle_Count        0x0032   099   099   000    Old_age   Always       -       2419
+
+Those were accumulated in the first 2 days or so of that drive, before I
+set the APM level to 255.
+
+-- 
+Christian Balzer        Network/Systems Engineer                
+chibi@gol.com   	Global OnLine Japan/Fusion Communications
+http://www.gol.com/
