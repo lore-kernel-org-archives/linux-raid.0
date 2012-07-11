@@ -1,43 +1,59 @@
-From: Bar Ziony <bartzy@gmail.com>
-Subject: Re: Does mdadm supports TRIM command to SSDs?
-Date: Wed, 11 Jul 2012 10:59:25 +0300
-Message-ID: <CAF-9Jei-Jv=TrZoJsnc=gqoSasFs40rD99akpwV5Ch7JPwUJ0g@mail.gmail.com>
-References: <CAF-9JegPGmayAO0gAsqY4J3rpRpTq_ciLA5e+nu0PsSjJhwr-A@mail.gmail.com>
-	<CA+sTkh7+==A7FxM_E-UN1gvLq0qqrojEXOTZwzup4+YG72FQpA@mail.gmail.com>
-	<CA+sTkh7CGExOh6gpkv9+7R2nXsMdjyOBA92fN9gPMPZsE=xoRA@mail.gmail.com>
+From: Christian Balzer <chibi@gol.com>
+Subject: Re: Assembly failure
+Date: Wed, 11 Jul 2012 17:27:42 +0900
+Message-ID: <20120711172742.2b8e13e9@batzmaru.gol.ad.jp>
+References: <20120710163345.GB29855@nsrc.org>
+	<4FFC5CC0.8050808@profitbricks.com>
+	<20120710170646.GA29962@nsrc.org>
+	<4FFC68AB.4010801@profitbricks.com>
+	<20120710185927.GA30164@nsrc.org>
+	<20120711124316.206ab3d9@notabene.brown>
+	<20120711075818.GA30527@nsrc.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+sTkh7CGExOh6gpkv9+7R2nXsMdjyOBA92fN9gPMPZsE=xoRA@mail.gmail.com>
+In-Reply-To: <20120711075818.GA30527@nsrc.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Igor M Podlesny <for.poige+lsr@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Brian Candler <B.Candler@pobox.com>
 List-Id: linux-raid.ids
 
-So does that mean that there's no TRIM support? Because as I
-understood, TRIM support was added from 2.6.37. As I'm not familiar
-with the code, can someone check some recent version to see if there
-is TRIM support?
+On Wed, 11 Jul 2012 08:58:18 +0100 Brian Candler wrote:
 
-Thanks,
-Bar.
+[snip]
+> 
+> BTW these are all Seagate ST3000DM001. Yes, I know :-(
+> 
+Indeed, there is your problem. And on a LSI controller (which one?) to
+boot. ^o^ 
+Though the later part should be fine with a kernel as new as yours.
 
+The new STxxxxM drives from Seagate are <expletive deleted>. 
+They're wonderfully fast, but you absolutely can NOT use them in any HW
+RAID until they get a non-braindead firmware that won't park (look at the
+Load_Cycle_Count in SMART) the heads every 30 seconds, come rain or shine.
+Not only will this wear out the drives in any remotely busy scenario, but
+it will also cause them to be considered off-line by the SATA controller in
+the right (wrong) circumstances, leading to exactly what you're seeing
+here.
+I experienced the same thing and have switched to Hitachi drives for the
+foreseeable future, which seem from one year of experience to be of far
+higher quality/reliability anyway.
 
-On Wed, Jul 11, 2012 at 4:08 AM, Igor M Podlesny
-<for.poige+lsr@gmail.com> wrote:
-> On 11 July 2012 08:43, Igor M Podlesny <for.poige+lsr@gmail.com> wrote:
->> On 11 July 2012 06:55, Bar Ziony <bartzy@gmail.com> wrote:
->>> Hi,
->>>
->>> I wasn't able to find any information about it after searching for
->>> hours - Does mdadm supports sending the TRIM command to SSDs, if using
->>> the right filesystem with the 'discard' flag?
->>> If it does support it, from what kernel version it is?
->>
->>    Hi!
->>
->>    https://lkml.org/lkml/2012/3/11/261
->>
->    But those patches don't seem to be accepted though.
->
-> --
+These Seagates are also suffering from quality control issues and large DOA
+and early death rates.
+
+With direct attached drives that you can issue hdparm commands to, you can
+"fix" this deadly behavior by issuing an "apm = 255" command to them (in
+hdparm.conf, needs to be done on each boot...).
+
+[snip]
+
+Regards,
+
+Christian
+-- 
+Christian Balzer        Network/Systems Engineer                
+chibi@gol.com   	Global OnLine Japan/Fusion Communications
+http://www.gol.com/
