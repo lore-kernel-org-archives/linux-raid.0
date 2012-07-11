@@ -1,73 +1,104 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm-3.2.5: segfault in "--grow --continue"
-Date: Wed, 11 Jul 2012 12:26:26 +1000
-Message-ID: <20120711122626.51cf7070@notabene.brown>
-References: <D6EAEC68-9C5B-4CBF-943C-85ABF3E319BD@tu-dresden.de>
-	<20120710230205.171ee562@notabene.brown>
-	<BC57DF1E-7CA3-429E-8935-44A94003B5E5@tu-dresden.de>
+Subject: Re: Assembly failure
+Date: Wed, 11 Jul 2012 12:43:16 +1000
+Message-ID: <20120711124316.206ab3d9@notabene.brown>
+References: <20120710163345.GB29855@nsrc.org>
+	<4FFC5CC0.8050808@profitbricks.com>
+	<20120710170646.GA29962@nsrc.org>
+	<4FFC68AB.4010801@profitbricks.com>
+	<20120710185927.GA30164@nsrc.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/080n8m8Qadw/8Saf8T/daBk"; protocol="application/pgp-signature"
+ boundary="Sig_/z4T4UQQa/xmPsosg0Vd4adY"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BC57DF1E-7CA3-429E-8935-44A94003B5E5@tu-dresden.de>
+In-Reply-To: <20120710185927.GA30164@nsrc.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sebastian Hegler <sebastian.hegler@tu-dresden.de>
-Cc: linux-raid@vger.kernel.org, 681056@bugs.debian.org
+To: Brian Candler <B.Candler@pobox.com>
+Cc: Sebastian Riemer <sebastian.riemer@profitbricks.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/080n8m8Qadw/8Saf8T/daBk
+--Sig_/z4T4UQQa/xmPsosg0Vd4adY
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 10 Jul 2012 18:51:22 +0200 Sebastian Hegler
-<sebastian.hegler@tu-dresden.de> wrote:
+On Tue, 10 Jul 2012 19:59:27 +0100 Brian Candler <B.Candler@pobox.com> wrot=
+e:
 
-> Hi!
+> On Tue, Jul 10, 2012 at 07:38:51PM +0200, Sebastian Riemer wrote:
+> > Your kernel is similar to v3.4 mainline. Your kernel has been compiled
+> > one day after Linus tagged v3.4. This kernel has major issues. Please
+> > reboot into the old 3.2 kernel.
+> >=20
+> > Your kernel has no tag in the Ubuntu Git repos!
+> >=20
+> > http://kernel.ubuntu.com/git?p=3Dubuntu/ubuntu-precise.git;a=3Dtags
+> > http://kernel.ubuntu.com/git?p=3Dubuntu/ubuntu-quantal.git;a=3Dtags
+> >=20
+> > Your kernel is absolutely unstable. Who built this kernel? Can't be
+> > official release!
+>=20
+> I don't know who makes ~kernel-ppa packages.
+>=20
+> Anyway, box is now on linux-image-3.2.0-24-generic. Same problem:
+>=20
+> brian@dev-storage1:~$ cat /proc/mdstat
+> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [rai=
+d4] [raid10]=20
+> md127 : inactive sdm[1](S) sdg[5](S) sdh[4](S) sdd[3](S) sdj[9](S) sdl[11=
+](S) sdi[8](S) sdk[10](S) sdb[0](S) sde[7](S) sdf[6](S) sdc[2](S)
+>       35163186720 blocks super 1.2
+>       =20
+> unused devices: <none>
+>=20
+> What's my best next step? There's nothing critical on here, but I would l=
+ike
+> to use this as practice of recovering a broken md raid volume.
 >=20
 
-Hi,
- thanks for all the extra details.
+mdadm -S /dev/md127
 
-I should have asked which kernel you were running.  I'm guessing that it is
-earlier than 2.6.25, and so is missing upstream commit
-   25156198235325805cd7295ed694509fd6e3a29e
+Then assemble again with "--force" as you expected.
 
-that fixes a bug which causes reshape not to restart if array was assembled
-auto-read-only.
+Don't try to --create --assume-clean, it isn't needed.
+And don't worry too much about the kernel - though keep away from any Ubuntu
+3.2 kernel before the one you have -there is a nasty bug (unrelated to your
+current experience) that you don't want to go near.
 
-http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux.git;a=3Dcommitdi=
-ff;h=3D25156198235325805cd7295ed694509fd6e3a29e
+When you re-assemble it won't include all the devices in the array - just
+enough to make the array functional.  You would then need to add the others
+back in if you trust them.
 
-The mdadm bug is because we never tested the code with anything but IMSM
-arrays because those are the only ones that need to use it.
-Adding a test for 'mdstat' being NULL and not trying to call
-verify_reshape_position in that case is the simplest fixed I expect, though=
- I
-haven't tested yet. Possibly something more thorough is needed.
 
+As others have suggested, there is probably some hardware problem somewhere.
+It looks like sdr failed first, around "Jul  3 04:21:50 2012".
+The array continued working until about 06:36 when sdu then sds failed.
+Since then it doesn't look like much if anything has been written to the
+array - but I cannot be completely certain.
+
+Do you have kernel logs from the morning of 3rd July?
 
 NeilBrown
 
---Sig_/080n8m8Qadw/8Saf8T/daBk
+--Sig_/z4T4UQQa/xmPsosg0Vd4adY
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT/zkUznsnt1WYoG5AQJ8EA//QT06dg5wMwxvpwzRZVut8AChRHsULln0
-qrBqnEcoTnLp9+DW8NaGm0kzX4jL2M61yoX3ItXR0739LwE444XwGqxIzHIqIOaR
-VZ3tqFXyIu+0MGY825IRONkqwSTlKlQ0JKyN88MsCA3V8X53aeYlDUoYLgxuRnwx
-p01GqTD6HqtRmqTAwyc6VB2L8WmrKsB8dl7AUASVfvmkTSic+K7zMjKSC9imxSvx
-0SMtm3v2YdB1Q8883Pk3EOaxA3po8GlHjKjYLAdreXbsYY2Yd49wUzj9AmHPoIps
-wUo7RC68rvnsI1rXWtm0DDKRRneXnPgkTyUu8Ca3i/kRW6fC8RlMaGkT7M2C0gXr
-iT9gGHlGgBwnVNszyEfHBmFUtKk5DfL/g4N2pWNgiHS41/paxyyh7uxxGSA3Hj6x
-x0NYAVclbaW+rVcbI0UkpEQ//Sjcub7J0dNLjt9avcOYf546sgwsqsAHb1WYYxqU
-QJLJk89dm7CsQq4i/3B3YajkQHFoPnOtBYgEMIloeOqdThMKkCJmc7mkq4e7xXIN
-UCiBi7zXUDgbsKg5YVdunDu350aEWjP7Wu+lGe8IogW08hBSvtihfe90eFwsyJmh
-7D0Nc3T82/sObB/Ao9orfY+mJgi7LrG7P8GMi99HLhWIC3DI6/8yc96CJ8lylyYE
-SM1Xp4EGOfs=
-=Dgqd
+iQIVAwUBT/zoRDnsnt1WYoG5AQKbUQ//f7ozHdBCBUVu2pej0Ri16TjeIRlYY1B2
+Wq7tjZGTOoTa5XuIYR21UD5y5XPFErjweoYdzsIiZ5NbHRKHrwVBRw0AppVflAPc
+xqWZdgKQOoFeNPxYVka3Hu3w1WUVgTJxa3bhz7hrH2dneLC2ENpA/2yizdLC8ODU
+8E3ry0RSB6GndbJLLhUom/VdGYugq9MKf1e7FT0wMQs+RUP7qPtG+z2WI/6H1qCs
+P/j+0TQxCICbqt4va0vGC8PXt5xmy+oGUoUn0J9hvVMQ8Bt8wAE4QlB+VW9wqJ3d
+CSSeT8sT2EzqVDQkqYVxI+XteTXlMrQz9ScFXbIVjbliNS/NtqnmJHCvy9LkbJ61
+flqfuqYGGRodD37roxh+9XoB+z+tbbM5nmGhpuUSdif57KkxWRG5SITNmG2iYXx4
+k3MeDVOVzL5ZLbQzoEJmUTvPqmYBqfntTm4h/xB3MmJnLrd/GVISrrAngLmZgEKB
+05rawVxwi6MirKxv11Dlf9VxqJOXe/aRBuD+sJV6EGB+m9BZtXr4iAEbtiqGXX2G
+B8L+svks7FW6eeBr8fTTwHE4JNVmuEqXKV+d/WMM4C5VTLUq6zcES8JV3Z+2c5Oh
+XpwCgmRJ9rPZVSP+teFXyj9jOhP1KwaTnkFt9y9mCY0KKB9lGPzAOhA8H5MpO/xl
+I3lrieXgGNo=
+=9DTX
 -----END PGP SIGNATURE-----
 
---Sig_/080n8m8Qadw/8Saf8T/daBk--
+--Sig_/z4T4UQQa/xmPsosg0Vd4adY--
