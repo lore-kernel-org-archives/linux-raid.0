@@ -1,29 +1,30 @@
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: Assembly failure
-Date: Wed, 11 Jul 2012 11:47:41 +0100
-Message-ID: <20120711104741.GA31077@nsrc.org>
-References: <20120710163345.GB29855@nsrc.org>
- <4FFC5CC0.8050808@profitbricks.com> <20120710170646.GA29962@nsrc.org>
- <4FFC68AB.4010801@profitbricks.com> <20120710185927.GA30164@nsrc.org>
- <20120711124316.206ab3d9@notabene.brown> <20120711075818.GA30527@nsrc.org>
- <20120711172742.2b8e13e9@batzmaru.gol.ad.jp>
- <20120711090935.GD30723@nsrc.org>
- <alpine.DEB.2.00.1207111229190.27169@uplift.swm.pp.se>
-Mime-Version: 1.0
+From: Sebastian Hegler <sebastian.hegler@tu-dresden.de>
+Subject: Re: mdadm-3.2.5: segfault in "--grow --continue"
+Date: Wed, 11 Jul 2012 13:15:38 +0200
+Message-ID: <0A5D7060-7727-4CBD-A1D7-34ED7D9747BC@tu-dresden.de>
+References: <D6EAEC68-9C5B-4CBF-943C-85ABF3E319BD@tu-dresden.de> <20120710230205.171ee562@notabene.brown> <BC57DF1E-7CA3-429E-8935-44A94003B5E5@tu-dresden.de> <20120711122626.51cf7070@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v1278)
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.1207111229190.27169@uplift.swm.pp.se>
+In-Reply-To: <20120711122626.51cf7070@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Christian Balzer <chibi@gol.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, 681056@bugs.debian.org
 List-Id: linux-raid.ids
 
-On Wed, Jul 11, 2012 at 12:32:28PM +0200, Mikael Abrahamsson wrote:
-> That is really low:
-> 
-> $ sudo smartctl -a /dev/sdd | grep -i load
-> 193 Load_Cycle_Count        0x0032   052   052   000    Old_age   Always       -       444425
+Hi!
 
-The drives had -B 254 before I changed them to -B 255. According to
-hdparm(8) that should be the least aggressive power management.
+Am 11.07.2012 um 04:26 schrieb NeilBrown:
+> I should have asked which kernel you were running.  
+> I'm guessing that it is earlier than 2.6.25, and so is missing upstream commit
+>   25156198235325805cd7295ed694509fd6e3a29e
+> 
+> that fixes a bug which causes reshape not to restart if array was assembled auto-read-only.
+The system is running vanilla 3.4.4, actually. So maybe there's another code path where this is missing...
+
+Thank you four your help. My RAID6 arrays are up again, and all data is still there.
+
+
+Yours,
+Sebastian
