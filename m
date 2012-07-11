@@ -1,61 +1,49 @@
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: Assembly failure
-Date: Wed, 11 Jul 2012 10:09:35 +0100
-Message-ID: <20120711090935.GD30723@nsrc.org>
-References: <20120710163345.GB29855@nsrc.org>
- <4FFC5CC0.8050808@profitbricks.com> <20120710170646.GA29962@nsrc.org>
- <4FFC68AB.4010801@profitbricks.com> <20120710185927.GA30164@nsrc.org>
- <20120711124316.206ab3d9@notabene.brown> <20120711075818.GA30527@nsrc.org>
- <20120711172742.2b8e13e9@batzmaru.gol.ad.jp>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: On mdadm 3.2 and bad-block-log
+Date: Wed, 11 Jul 2012 12:40:57 +0300
+Message-ID: <CAGRgLy5Eryf_kT69a3SSPi8-MVpVmhEL96tNWJZQd9-vf4iYZQ@mail.gmail.com>
+References: <4FD7738D.3040403@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120711172742.2b8e13e9@batzmaru.gol.ad.jp>
+In-Reply-To: <4FD7738D.3040403@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian Balzer <chibi@gol.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Asdo <asdo@shiftmail.org>
 List-Id: linux-raid.ids
 
-On Wed, Jul 11, 2012 at 05:27:42PM +0900, Christian Balzer wrote:
-> > BTW these are all Seagate ST3000DM001. Yes, I know :-(
-> > 
-> Indeed, there is your problem. And on a LSI controller (which one?) to
-> boot. ^o^ 
-> Though the later part should be fine with a kernel as new as yours.
+Hi Neil,
+can you pls clarify whether the bad block management code in existing
+kernels is still considered experimental, and that's the reason there
+is no mdadm 3.3.x release yet?
+If yes, which kernel do you recommend to experiment with this feature?
+If no, should we then use the "devel-3.3" branch of mdadm, which was
+last updated ~1 year ago?
 
-The drives were only bought because the supplier was out of Hitachis, and we
-didn't realise the Seagates don't have ERC.  This is why the Hitachis have
-moved to production, and I'm stuck with the Seagates on the dev systems :-(
+Thanks,
+Alex.
 
-> (look at the Load_Cycle_Count in SMART)
 
-193 Load_Cycle_Count        0x0032   100   100   000    Old_age   Always       -       490
-193 Load_Cycle_Count        0x0032   100   100   000    Old_age   Always       -       549
-193 Load_Cycle_Count        0x0032   100   100   000    Old_age   Always       -       516
-193 Load_Cycle_Count        0x0032   100   100   000    Old_age   Always       -       505
-193 Load_Cycle_Count        0x0032   100   100   000    Old_age   Always       -       76
-193 Load_Cycle_Count        0x0032   100   100   000    Old_age   Always       -       77
-193 Load_Cycle_Count        0x0032   100   100   000    Old_age   Always       -       502
-193 Load_Cycle_Count        0x0032   100   100   000    Old_age   Always       -       495
-193 Load_Cycle_Count        0x0032   100   100   000    Old_age   Always       -       550
-193 Load_Cycle_Count        0x0032   100   100   000    Old_age   Always       -       562
-193 Load_Cycle_Count        0x0032   100   100   000    Old_age   Always       -       532
-193 Load_Cycle_Count        0x0032   100   100   000    Old_age   Always       -       556
 
-Ugh. (Two have a lower count, but maybe those are bad...)
-
-> With direct attached drives that you can issue hdparm commands to, you can
-> "fix" this deadly behavior by issuing an "apm = 255" command to them (in
-> hdparm.conf, needs to be done on each boot...).
-
-Thanks, rc.local now has:
-
-# Set Error Recovery Control if drive supports it
-for i in /dev/sd*; do /usr/sbin/smartctl -l scterc,70,70 $i >/dev/null; done
-# Stop drives from spinning down
-for i in /dev/sd*; do hdparm -q -B255 $i; done
-
-Cheers,
-
-Brian.
+On Tue, Jun 12, 2012 at 7:51 PM, Asdo <asdo@shiftmail.org> wrote:
+> Hello
+> is it possible to keep mdadm 3.2 installed in the system (e.g. 3.2 as the
+> monitoring daemon) and have an array with bad-block functionality (created
+> with 3.3) running, or this will do a mess?
+>
+> Bad-block functionality is in mdadm-3.3 but this has not been released yet.
+> I was thinking about using it only once to create the array.
+>
+> However I am still missing the manual for mdadm-3.3, where is that? without
+> that I don't know how I should launch it to create an array with bad blocks.
+>
+> Another question: are older kernels such as 3.0 capable to run an array
+> created with bad-block-log, obviously without using the bad-block-log
+> functionality? oh but that could be dangerous, couldn't it...
+>
+> Thank you
+> A.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
