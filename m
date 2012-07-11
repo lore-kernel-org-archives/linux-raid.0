@@ -1,30 +1,39 @@
-From: Sebastian Hegler <sebastian.hegler@tu-dresden.de>
-Subject: Re: mdadm-3.2.5: segfault in "--grow --continue"
-Date: Wed, 11 Jul 2012 13:15:38 +0200
-Message-ID: <0A5D7060-7727-4CBD-A1D7-34ED7D9747BC@tu-dresden.de>
-References: <D6EAEC68-9C5B-4CBF-943C-85ABF3E319BD@tu-dresden.de> <20120710230205.171ee562@notabene.brown> <BC57DF1E-7CA3-429E-8935-44A94003B5E5@tu-dresden.de> <20120711122626.51cf7070@notabene.brown>
-Mime-Version: 1.0 (Apple Message framework v1278)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: Does mdadm supports TRIM command to SSDs?
+Date: Wed, 11 Jul 2012 13:27:43 +0200
+Message-ID: <4FFD632F.3060407@hesbynett.no>
+References: <CAF-9JegPGmayAO0gAsqY4J3rpRpTq_ciLA5e+nu0PsSjJhwr-A@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120711122626.51cf7070@notabene.brown>
+In-Reply-To: <CAF-9JegPGmayAO0gAsqY4J3rpRpTq_ciLA5e+nu0PsSjJhwr-A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, 681056@bugs.debian.org
+To: Bar Ziony <bartzy@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi!
+On 07/11/2012 12:55 AM, Bar Ziony wrote:
+> Hi,
+>
+> I wasn't able to find any information about it after searching for
+> hours - Does mdadm supports sending the TRIM command to SSDs, if using
+> the right filesystem with the 'discard' flag?
+> If it does support it, from what kernel version it is?
+>
+> Thank you,
+> Bar.
 
-Am 11.07.2012 um 04:26 schrieb NeilBrown:
-> I should have asked which kernel you were running.  
-> I'm guessing that it is earlier than 2.6.25, and so is missing upstream commit
->   25156198235325805cd7295ed694509fd6e3a29e
-> 
-> that fixes a bug which causes reshape not to restart if array was assembled auto-read-only.
-The system is running vanilla 3.4.4, actually. So maybe there's another code path where this is missing...
+The big question here is /why/ would you want TRIM support?  In many 
+circumstances it leads to slower operations, and for SSDs from the past 
+couple of years it is almost entirely superseded by the SSD's own 
+garbage collection.
 
-Thank you four your help. My RAID6 arrays are up again, and all data is still there.
+So while there certainly has been some work done on TRIM and md raid, it 
+is not a priority as it is of questionable benefit.  You might find some 
+operations are a little faster for older SSDs if you use TRIM, but your 
+metadata operations will be a lot slower.
 
+Your best bet is just to make sure you only buy SSDs that are at least 
+half decent, and don't worry about TRIM.
 
-Yours,
-Sebastian
