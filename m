@@ -1,104 +1,155 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Assembly failure
-Date: Wed, 11 Jul 2012 12:43:16 +1000
-Message-ID: <20120711124316.206ab3d9@notabene.brown>
-References: <20120710163345.GB29855@nsrc.org>
-	<4FFC5CC0.8050808@profitbricks.com>
-	<20120710170646.GA29962@nsrc.org>
-	<4FFC68AB.4010801@profitbricks.com>
-	<20120710185927.GA30164@nsrc.org>
+Subject: Re: tests/03r5assemV1 issues
+Date: Wed, 11 Jul 2012 14:20:53 +1000
+Message-ID: <20120711142053.36d33f61@notabene.brown>
+References: <wrfjtxxqcn38.fsf@redhat.com>
+	<20120703114459.29c21b8f@notabene.brown>
+	<wrfjpq8c96c9.fsf@redhat.com>
+	<20120704152327.30dcf73e@notabene.brown>
+	<wrfjehop1a8e.fsf@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/z4T4UQQa/xmPsosg0Vd4adY"; protocol="application/pgp-signature"
+ boundary="Sig_/TGxYAALA0n5KdLePQSc+Pxq"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120710185927.GA30164@nsrc.org>
+In-Reply-To: <wrfjehop1a8e.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brian Candler <B.Candler@pobox.com>
-Cc: Sebastian Riemer <sebastian.riemer@profitbricks.com>, linux-raid@vger.kernel.org
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/z4T4UQQa/xmPsosg0Vd4adY
+--Sig_/TGxYAALA0n5KdLePQSc+Pxq
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 10 Jul 2012 19:59:27 +0100 Brian Candler <B.Candler@pobox.com> wrot=
-e:
+On Fri, 06 Jul 2012 11:59:13 +0200 Jes Sorensen <Jes.Sorensen@redhat.com>
+wrote:
 
-> On Tue, Jul 10, 2012 at 07:38:51PM +0200, Sebastian Riemer wrote:
-> > Your kernel is similar to v3.4 mainline. Your kernel has been compiled
-> > one day after Linus tagged v3.4. This kernel has major issues. Please
-> > reboot into the old 3.2 kernel.
-> >=20
-> > Your kernel has no tag in the Ubuntu Git repos!
-> >=20
-> > http://kernel.ubuntu.com/git?p=3Dubuntu/ubuntu-precise.git;a=3Dtags
-> > http://kernel.ubuntu.com/git?p=3Dubuntu/ubuntu-quantal.git;a=3Dtags
-> >=20
-> > Your kernel is absolutely unstable. Who built this kernel? Can't be
-> > official release!
+> NeilBrown <neilb@suse.de> writes:
+> > On Tue, 03 Jul 2012 18:07:02 +0200 Jes Sorensen <Jes.Sorensen@redhat.co=
+m>
+> > wrote:
+> >
+> >> NeilBrown <neilb@suse.de> writes:
+> >> > On Mon, 02 Jul 2012 15:24:43 +0200 Jes Sorensen <Jes.Sorensen@redhat=
+.com>
+> >> > wrote:
+> >> >
+> >> >> Hi Neil,
+> >> >>=20
+> >> >> I am trying to get the test suite stable on RHEL, but I see a lot of
+> >> >> failures in 03r5assemV1, in particular between these two cases:
+> >> >>=20
+> >> >> mdadm -A $md1 -u $uuid $devlist
+> >> >> check state U_U
+> >> >> eval $tst
+> >> >>=20
+> >> >> mdadm -A $md1 --name=3Done $devlist
+> >> >> check state U_U
+> >> >> check spares 1
+> >> >> eval $tst
+> >> >>=20
+> >> >> I have tested it with the latest upstream kernel as well and see the
+> >> >> same problems. I suspect it is simply the box that is too fast, end=
+ing
+> >> >> up with the raid check completing inbetween the two test cases?
+> >> >>=20
+> >> >> Are you seeing the same thing there? I tried playing with the max s=
+peed
+> >> >> variable but it doesn't really seem to make any difference.
+> >> >>=20
+> >> >> Any ideas for what we can be done to make this case more resilient =
+to
+> >> >> false positives? I guess one option would be to re-create the array
+> >> >> inbetween each test?
+> >> >
+> >> > Maybe it really is a bug?
+> >> > The test harness set the resync speed to be very slow.  A fast box w=
+ill get
+> >> > through the test more quickly and be more likely to see the array st=
+ill
+> >> > syncing.
+> >> >
+> >> > I'll try to make time to look more closely.
+> >> > But I wouldn't discount the possibility that the second "mdadm -A" is
+> >> > short-circuiting the recovery somehow.
+> >>=20
+> >> That could certainly explain what I am seeing. I noticed it doesn't
+> >> happen every single time in the same place (from memory), but it is
+> >> mostly in that spot in my case.
+> >>=20
+> >> Even if I trimmed the max speed down to 50 it still happens.
+> >
+> > I cannot easily reproduce this.
+> > Exactly which kernel and which mdadm do you find it with - just to make=
+ sure
+> > I'm testing the same thing as you?
 >=20
-> I don't know who makes ~kernel-ppa packages.
+> Hi Neil,
 >=20
-> Anyway, box is now on linux-image-3.2.0-24-generic. Same problem:
+> Odd - I see it with
+> mdadm:  721b662b5b33830090c220bbb04bf1904d4b7eed
+> kernel: ca24a145573124732152daff105ba68cc9a2b545
 >=20
-> brian@dev-storage1:~$ cat /proc/mdstat
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [rai=
-d4] [raid10]=20
-> md127 : inactive sdm[1](S) sdg[5](S) sdh[4](S) sdd[3](S) sdj[9](S) sdl[11=
-](S) sdi[8](S) sdk[10](S) sdb[0](S) sde[7](S) sdf[6](S) sdc[2](S)
->       35163186720 blocks super 1.2
->       =20
-> unused devices: <none>
+> I've seen this happen for a while fwiw.
 >=20
-> What's my best next step? There's nothing critical on here, but I would l=
-ike
-> to use this as practice of recovering a broken md raid volume.
+> Note the box has a number of external drives with a number of my scratch
+> raid arrays on it. It shouldn't affect this, but just in case.
 >=20
+> The system installed mdadm is a 3.2.3 derivative, but I checked running
+> with PATH=3D. as well.
 
-mdadm -S /dev/md127
+Thanks.
+I think I figured out what is happening.
 
-Then assemble again with "--force" as you expected.
+It seems that setting the max_speed down to 1000 is often enough, but not
+always.  So we need to set it lower.
+But setting max_speed lowers is not effective unless you also set min_speed
+lower.  This is the tricky bit that took me way too long to realised.
 
-Don't try to --create --assume-clean, it isn't needed.
-And don't worry too much about the kernel - though keep away from any Ubuntu
-3.2 kernel before the one you have -there is a nasty bug (unrelated to your
-current experience) that you don't want to go near.
-
-When you re-assemble it won't include all the devices in the array - just
-enough to make the array functional.  You would then need to add the others
-back in if you trust them.
-
-
-As others have suggested, there is probably some hardware problem somewhere.
-It looks like sdr failed first, around "Jul  3 04:21:50 2012".
-The array continued working until about 06:36 when sdu then sds failed.
-Since then it doesn't look like much if anything has been written to the
-array - but I cannot be completely certain.
-
-Do you have kernel logs from the morning of 3rd July?
+So with this patch, it is quite reliable.
 
 NeilBrown
 
---Sig_/z4T4UQQa/xmPsosg0Vd4adY
+diff --git a/tests/03r5assemV1 b/tests/03r5assemV1
+index 52b1107..bca0c58 100644
+--- a/tests/03r5assemV1
++++ b/tests/03r5assemV1
+@@ -60,7 +60,8 @@ eval $tst
+ ### Now with a missing device
+ # We don't want the recovery to complete while we are
+ # messing about here.
+-echo 1000 > /proc/sys/dev/raid/speed_limit_max
++echo 100 > /proc/sys/dev/raid/speed_limit_max
++echo 100 > /proc/sys/dev/raid/speed_limit_min
+=20
+ mdadm -AR $md1 $dev0 $dev2 $dev3 $dev4 #
+ check state U_U
+@@ -124,3 +125,4 @@ mdadm -I -c $conf $dev1
+ mdadm -I -c $conf $dev2
+ eval $tst
+ echo 2000 > /proc/sys/dev/raid/speed_limit_max
++echo 1000 > /proc/sys/dev/raid/speed_limit_min
+
+--Sig_/TGxYAALA0n5KdLePQSc+Pxq
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT/zoRDnsnt1WYoG5AQKbUQ//f7ozHdBCBUVu2pej0Ri16TjeIRlYY1B2
-Wq7tjZGTOoTa5XuIYR21UD5y5XPFErjweoYdzsIiZ5NbHRKHrwVBRw0AppVflAPc
-xqWZdgKQOoFeNPxYVka3Hu3w1WUVgTJxa3bhz7hrH2dneLC2ENpA/2yizdLC8ODU
-8E3ry0RSB6GndbJLLhUom/VdGYugq9MKf1e7FT0wMQs+RUP7qPtG+z2WI/6H1qCs
-P/j+0TQxCICbqt4va0vGC8PXt5xmy+oGUoUn0J9hvVMQ8Bt8wAE4QlB+VW9wqJ3d
-CSSeT8sT2EzqVDQkqYVxI+XteTXlMrQz9ScFXbIVjbliNS/NtqnmJHCvy9LkbJ61
-flqfuqYGGRodD37roxh+9XoB+z+tbbM5nmGhpuUSdif57KkxWRG5SITNmG2iYXx4
-k3MeDVOVzL5ZLbQzoEJmUTvPqmYBqfntTm4h/xB3MmJnLrd/GVISrrAngLmZgEKB
-05rawVxwi6MirKxv11Dlf9VxqJOXe/aRBuD+sJV6EGB+m9BZtXr4iAEbtiqGXX2G
-B8L+svks7FW6eeBr8fTTwHE4JNVmuEqXKV+d/WMM4C5VTLUq6zcES8JV3Z+2c5Oh
-XpwCgmRJ9rPZVSP+teFXyj9jOhP1KwaTnkFt9y9mCY0KKB9lGPzAOhA8H5MpO/xl
-I3lrieXgGNo=
-=9DTX
+iQIVAwUBT/z/Jjnsnt1WYoG5AQLn8Q//e5JoNvGAw1WaEhA6lAdrrIj7eAGJ7RnM
+KCsdAD5skDW2eCYKWIj/YAjPvjzKSSKZklN+PUpplxFKrO/YNoPIThstdklkIMPv
+mtTZr13Q2wAalMZd6L4zObfxeLwAppwCfS0u3qh4eFskbae31lvAarRwC42M3psU
+eaXrygkpdk3atMYoy1UXaqU5GheEWETT9BRdthxxXKBl/W29h85ACMS+vXYwDqX2
+9Bjb+yD+f7jw4UmxY/hbppjwQTMI5UxvPFDrk+cFOa92ivT6hc6Ih6xHvD+sPRqz
+5ybObBoiz3GyNg6pGE8r50av8aPyFU59liQ3Fu3vGNLbH4GJHQXsPr4+F19Fwmbc
+hYh8iMn6PQ31p9FdV0fpbqCaJfcDQtNRa73IkczR8O1tmvu7KwQb/dnSFIb2Kx6C
+a+iN0XmvHqHQu7tdHjSScRRkMmO+jEFsklWMtaSJ87Lfe1CA1TJOuPvP7ZO3QeR5
+uUa1z4iuATjsJ4oG9Vx8EKokSAzKyy2/Pblv9M1alImLB3SNBA8qPR6O4preqNqc
+z93KIQ3PROmL65gbC+7tsz4Tx8y2JPFuuClyrcdC+mfl1uHQsChmlzZzNeeh9Tbd
+Uk6m2RrUBHwhCn3h6jVEEisjItwa2fdlx2iqDrRYxVsJ8JsQD21L2kCvSdUZZsy3
+9IM3eEOtHpE=
+=dwl5
 -----END PGP SIGNATURE-----
 
---Sig_/z4T4UQQa/xmPsosg0Vd4adY--
+--Sig_/TGxYAALA0n5KdLePQSc+Pxq--
