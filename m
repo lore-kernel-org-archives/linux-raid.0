@@ -1,140 +1,81 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH v2] DM RAID: Add support for MD RAID10
-Date: Thu, 12 Jul 2012 16:32:07 +1000
-Message-ID: <20120712163207.222b4bcc@notabene.brown>
-References: <1342057001.22214.6.camel@f16>
+Subject: Re: [PATCH] 07reshape5intr: Set speed_limit_min to be able to
+ reduce resync speed below 1000
+Date: Thu, 12 Jul 2012 16:40:04 +1000
+Message-ID: <20120712164004.573c65c6@notabene.brown>
+References: <1341993186-8207-1-git-send-email-Jes.Sorensen@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Qa2JBRqoXmBLxj_a+=ve78O"; protocol="application/pgp-signature"
+ boundary="Sig_/hH1c7qVc9bOTO3kljOjQYdD"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1342057001.22214.6.camel@f16>
+In-Reply-To: <1341993186-8207-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jonathan Brassow <jbrassow@redhat.com>
-Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, agk@redhat.com
+To: Jes.Sorensen@redhat.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/Qa2JBRqoXmBLxj_a+=ve78O
+--Sig_/hH1c7qVc9bOTO3kljOjQYdD
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 11 Jul 2012 20:36:41 -0500 Jonathan Brassow <jbrassow@redhat.com>
-wrote:
+On Wed, 11 Jul 2012 09:53:06 +0200 Jes.Sorensen@redhat.com wrote:
 
-> Neil,
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
 >=20
-> I've changed the tunables to the way we discussed.  If it becomes
-> necessary to have the freedom to have simultaneous near and far copies,
-> then I will likely add 'raid10_near|far|offset_copies' to compliment the
-> existing 'raid10_copies' arg.  Like you, I doubt they will be necessary
-> though.
+> We need to set speed_limit_min accordingly, otherwise setting
+> speed_limit_max below 1000 will have no effect.
 >=20
-> I have yet to add the code that allows new devices to replace old/failed
-> devices (i.e. handles the 'rebuild' parameter).  That will be a future
-> patch.
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> ---
+>  tests/07reshape5intr |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
 >=20
->  brassow
-
-Looks good, though a couple of comments below.
-
-Alasdair: I guess we should make sure we are in agreement about how patches
-to dm-raid.c are funnelled through.  So far both you and I have feed them to
-Linus, which doesn't seem to have caused any problems yet.  Are you OK with
-us continuing like that, would you rather all dm-raid.c patched went through
-you?
-I'm happy either way.
-
-> @@ -76,6 +80,7 @@ static struct raid_type {
->  	const unsigned algorithm;	/* RAID algorithm. */
->  } raid_types[] =3D {
->  	{"raid1",    "RAID1 (mirroring)",               0, 2, 1, 0 /* NONE */},
-> +	{"raid10",   "RAID10 (striped mirrors)",        0, 2, 10, -1 /* Varies =
-*/},
->  	{"raid4",    "RAID4 (dedicated parity disk)",	1, 2, 5, ALGORITHM_PARITY=
-_0},
->  	{"raid5_la", "RAID5 (left asymmetric)",		1, 2, 5, ALGORITHM_LEFT_ASYMME=
-TRIC},
->  	{"raid5_ra", "RAID5 (right asymmetric)",	1, 2, 5, ALGORITHM_RIGHT_ASYMM=
-ETRIC},
-
-Initialising the "unsigned" algorithm to "-1" looks like it is asking for
-trouble.
-
-> @@ -493,7 +554,7 @@ static int parse_raid_params(struct raid
->  			 */
->  			value /=3D 2;
+> diff --git a/tests/07reshape5intr b/tests/07reshape5intr
+> index 6a26bf0..71ef2c7 100644
+> --- a/tests/07reshape5intr
+> +++ b/tests/07reshape5intr
+> @@ -20,6 +20,7 @@ do
 > =20
-> -			if (rs->raid_type->level < 5) {
-> +			if (rs->raid_type->level !=3D 5) {
->  				rs->ti->error =3D "Inappropriate argument: stripe_cache";
->  				return -EINVAL;
->  			}
-
-This leaves RAID6 out in the cold.  Maybe
-  level < 5 || level > 6
-or      !=3D5          !=3D6
-or a switch statement?
-
-
-> @@ -536,9 +605,25 @@ static int parse_raid_params(struct raid
->  	if (dm_set_target_max_io_len(rs->ti, max_io_len))
->  		return -EINVAL;
-> =20
-> -	if ((rs->raid_type->level > 1) &&
-> -	    sector_div(sectors_per_dev, (rs->md.raid_disks - rs->raid_type->par=
-ity_devs))) {
-> +	if (rs->raid_type->level =3D=3D 10) {
-> +		/* (Len * Stripes) / Mirrors */
-> +		sectors_per_dev *=3D rs->md.raid_disks;
-> +		if (sector_div(sectors_per_dev, raid10_copies)) {
-> +			rs->ti->error =3D "Target length not divisible by number of data devi=
-ces";
-> +			return -EINVAL;
-> +		}
-
-I'm not entirely sure what you are trying to do here, but I don't think it
-works.
-
-At the very least you would need to convert the "sectors_per_dev" number to=
- a
-'chunks_per_dev' before multiplying by raid_disks and dividing by copies.
-
-But even that isn't necessary.  If you have a 3-device near=3D2 array with =
-an
-odd number of chunks per device, that will still work.  The last chunk won't
-be mirrored, so won't be used.
-Until a couple of weeks ago a recovery of the last device would trigger an
-error when we try to recover that last chunk, but that is fixed now.
-
-So if you want to impose this limitation (and there is some merit in making
-sure people don't confuse themselves), I suggest it get imposed in the
-user-space tools which create the RAID10.
+>    mdadm -CR $md0 -amd -l5 -c $chunk -n$disks --assume-clean $devs
+>    mdadm $md0 --add $dev6
+> +  echo 20 > /proc/sys/dev/raid/speed_limit_min
+>    echo 20 > /proc/sys/dev/raid/speed_limit_max
+>    mdadm --grow $md0 -n $[disks+1]
+>    check reshape
+> @@ -27,6 +28,7 @@ do
+>    mdadm --stop $md0
+>    mdadm --assemble $md0 $devs $dev6
+>    check reshape
+> +  echo 1000 > /proc/sys/dev/raid/speed_limit_min
+>    echo 2000 > /proc/sys/dev/raid/speed_limit_max
+>    check wait
+>    echo check > /sys/block/md0/md/sync_action
 
 
-Otherwise it looks good.
+Applied, thanks.
 
-Thanks,
 NeilBrown
 
---Sig_/Qa2JBRqoXmBLxj_a+=ve78O
+--Sig_/hH1c7qVc9bOTO3kljOjQYdD
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBT/5vZznsnt1WYoG5AQL6PhAAqHQCaCQL63UGaUfA2h/865N/BMloH/+Y
-rPk6cUMCat68PVT89R2oGMCwOxazeEd7/dmw3GEai4H+kY69Sl1vT6B2Q2Ti3O3T
-l1krrSo1VggqUXSybA4Gya3oECQdt+h0iI5pgQyr3r9fF/awiH4wHABHKDRtxc5w
-U+A/i8MHIupKdjU/yw283A7/Wr/baJb1IhnJOCpAS2rXcBhubkgKby68wsTcsbo+
-X4owVyoGKobzFECZSL5YtSznTtBcgwn3rkwu+WeR8jTuEsEW1+iWXqrV3jvPZmld
-KNFQYRMXYOX3B1BRlPqxP5ffHSiASPeLbqbsmIVeZHKOMsqJbcV9xcshqc5l1IWj
-dFUFFN/Rh7pUc+foEpCaB1RSyFsPrgNnfFOBi+LeZ1Nk04QTbIqx0OlprGtC4rUi
-MqdgqqCbhVrvJyvd/BRXkJ2hr1X1dMiKcQaCa7ehBujK03F+N7MMK7Zw2zeq1t2K
-sCPgUIdUPtQ0xDa6qg8rY9/MBFAvHveoYcos8t/BAAWiWRDvCN7BDLx37djpezaa
-UO0GKoDuJzZqjk5oOBLlIy6A/KdKxrMy2kr3wG+N9R59Sj4esH0lkShCnE9udvlf
-AJxq3/JW3DMw36cXvrUp30q4r9LNFQjV8mvXiplzcud7InAaknE9AYrz+Ph7C+O+
-/3Z2Z9e1umM=
-=xsWq
+iQIVAwUBT/5xRDnsnt1WYoG5AQJf6w/9Gt02m50w54CAdZ2yAqwKRH/CRpCrkn+N
+s4jYuGZ6ZQDtu78R07cCtfn1oLgfXC9qrpjxRhH8c4tFa5Ex2udsfrDUBcqV9C/A
+1XpHCYDf1hfpb1sxAKJXITwOkc3ZznBMilv/x7T0Avk7wBl/R+pnyaAcf75M349z
+96cPVKAwKEl+/hnE0co3YVlgu/iuvFCzsTw3cGHz/QoushBhETYkKqV3yohgmsfh
+/BVBmuh6ocWYKHWCSxUvdndphMj4UrP1c8/2xfuN43eedv9c9v+8gpmuOslL2V++
+PLG6BJhE3Tt5d4uFWXF49kljgTBPzz35B79mJCV+xU+CGs1cDVy7Ga41YTZ+ObkJ
+H6qjf5aL6uCjFab/CyKcKd0L2YWBhjYoVSw1BrWZpl6X/etCLW8gLzspCmj//Df7
+vsok10+i0nUR1/yc9JlwOFZ2q55sdEAtjS7xb3bjt3bybcdnpe5besA5df4LxlmZ
+aHkWTsClSC7WcnMr8qvVm2xX55q9zoKUTg3lJWeruAO+rd2xjNbrNv+RtfVjmFJt
+92/1cFsQhjmXrBEScODmnXSKEszy3QYbs8ROY2MLkM2iE7L9Klya9FmqLqBtlLOK
+fWayUKrI2rBtuqgOnSYocHW3xsyXMtOmpQ8GY+Zp2IYJ+9cg3D80VFpQoEZf5pQh
+5PlAGUcjaJg=
+=Zsf2
 -----END PGP SIGNATURE-----
 
---Sig_/Qa2JBRqoXmBLxj_a+=ve78O--
+--Sig_/hH1c7qVc9bOTO3kljOjQYdD--
