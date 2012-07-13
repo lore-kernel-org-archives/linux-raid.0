@@ -1,68 +1,44 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PULL REQUEST] one new bugfix for md/RAID1
-Date: Sat, 14 Jul 2012 09:41:09 +1000
-Message-ID: <20120714094109.554bce65@notabene.brown>
+From: Dan Williams <dan.j.williams@gmail.com>
+Subject: Re: [PATCH V1] raidd5:Only move IO_THRESHOLD stripes from delay_list
+ to hold_list once.
+Date: Fri, 13 Jul 2012 16:56:18 -0700
+Message-ID: <CAA9_cmcLEYeu9VaVTgVW=CX+JvTyA_ubAmrAkpQdxGmRkGj_3A@mail.gmail.com>
+References: <201207131831085787372@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/NYRywZrtPpBMOtS23/Kl0lc"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201207131831085787372@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>, Arnold Schulz <arnysch@gmx.net>
+To: majianpeng <majianpeng@gmail.com>
+Cc: Neil Brown <neilb@suse.de>, Paul Menzel <paulepanter@users.sourceforge.net>, linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/NYRywZrtPpBMOtS23/Kl0lc
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+[ adding Shaohua ]
 
+On Fri, Jul 13, 2012 at 3:31 AM, majianpeng <majianpeng@gmail.com> wrote:
+> To improve write perfomance by decreasing the preread stripe,only move
+> IO_THRESHOLD stripes from delay_list to hold_list once.
+>
+> Using the follow command:
+> dd if=/dev/zero of=/dev/md0 bs=2M count=52100.
+>
+> At default condition: speed is 95MB/s.
+> At the condition of preread_bypass_threshold was equal zero:speed is 105MB/s.
+> Using this patch:speed is 123MB/s.
+>
+> If preread_bypass_threshold was zero,the performance will be better,but
+> not better than this patch.
+> I think maybe two reason:
+> 1:If bio is REQ_SYNC
+> 2:In function __get_priority_stripe():
+>>> } else if (!list_empty(&conf->hold_list) &&
+>>>                 ((conf->bypass_threshold &&
+>>>                   conf->bypass_count > conf->bypass_threshold) ||
+>>>                  atomic_read(&conf->pending_full_writes) == 0)) {
+> Preread_bypass_threshold is one condition of getting stripe from
+> hold_list.So only control the number of hold_list can get better
+> performance.
 
-The following changes since commit 10684112c9d154172ac34e48a2ab68649e8f63ac:
-
-  md/raid10: fix careless build error (2012-07-04 09:35:35 +1000)
-
-are available in the git repository at:
-
-  git://neil.brown.name/md/ tags/md-3.5-fixes
-
-for you to fetch changes up to 2d4f4f3384d4ef4f7c571448e803a1ce721113d5:
-
-  md/raid1: fix use-after-free bug in RAID1 data-check code. (2012-07-09 11=
-:34:13 +1000)
-
-----------------------------------------------------------------
-md: One use-after-free bugfix for RAID1
-
-----------------------------------------------------------------
-NeilBrown (1):
-      md/raid1: fix use-after-free bug in RAID1 data-check code.
-
- drivers/md/raid1.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-
-Thanks,
-NeilBrown
-
---Sig_/NYRywZrtPpBMOtS23/Kl0lc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUACyFTnsnt1WYoG5AQJ+Og/9FiGutwHqh9OmwPStjlpLWntFk/WcsYoV
-WRmjmkf1rde0e+sVOIa7cchcL7fvKOrYJjNmYUFM5/n68PsldWh47Mn1g7ZQzYMc
-WLqjfE7i3ObrGGqwpWwbK1xU2D0YFf95lB47gY9Tk8Jf36O0pxyVEnZH1fNESqXs
-dEUwOe/Jq8oZ7TrOvz3+UB5bBC1o5L9UGFwqmChi0tL959Zou3SqH6Dhh0AvzBQb
-u3dGlL028OvGVpR8ZaceAiCbYVIurS8un2mN7NcQ2AreIwIlJ3BNLqmOvDRfEefH
-/T/RcSPe1NJ/SG1dUgk71t/RmTYdqRm7HwiIRlVJOm7RGE3pAXxNbC/t2iiW7Lzv
-g2NXHQOooeiCf6cKD2oVCfvxg/KOTFFnLu9U14rNJJPs/J8YEEDF0x+9r2SdXUpi
-E0ujD+CfNe/TxFgE6nw1vXDHo8C5HhoT8mxJCEUwk5M+dY262W7vWO9ku0aRfCMA
-9zHDC1D3o0myEdA7CSj9csd0ZEFRRnJy1MoSdfrVwu/P7sEC2mzTN6E5vp2QfR7O
-waNdcbhHwV0jA3Qc02AcqMwcyKcshGLfU4J9qi9T4qrduVAfoWwzqHcpWwWMxf/I
-d1xOvHu5pVXYeTff0Jxx1fmPtInme38QXx5JgB093vjnh1h2776MoKiRp/YinLCs
-RHDYbdTnmes=
-=v/19
------END PGP SIGNATURE-----
-
---Sig_/NYRywZrtPpBMOtS23/Kl0lc--
+So this is a pretty obvious tradeoff of increased latency for improved
+throughput.  Any idea how much this change affects latency?
+Especially in the fast device case?
