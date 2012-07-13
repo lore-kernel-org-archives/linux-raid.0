@@ -1,62 +1,220 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: [RFC PATCH V1] raid5: Add R5_ReadNoMerge flag which prevent bio from merging at block layer
-Date: Fri, 13 Jul 2012 19:13:35 +0800
-Message-ID: <201207131913329371733@gmail.com>
+From: Brian Candler <B.Candler@pobox.com>
+Subject: Re: Assembly failure
+Date: Fri, 13 Jul 2012 19:52:35 +0100
+Message-ID: <20120713185235.GA40886@nsrc.org>
+References: <20120710163345.GB29855@nsrc.org>
+ <4FFC5CC0.8050808@profitbricks.com> <20120710170646.GA29962@nsrc.org>
+ <4FFC68AB.4010801@profitbricks.com> <20120710185927.GA30164@nsrc.org>
+ <20120711124316.206ab3d9@notabene.brown> <20120711075818.GA30527@nsrc.org>
+ <20120711172742.2b8e13e9@batzmaru.gol.ad.jp>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120711172742.2b8e13e9@batzmaru.gol.ad.jp>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Christian Balzer <chibi@gol.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-QmVjYXVzZSBiaW9zIHdpbGwgbWVyZ2UgYXQgYmxvY2stbGF5ZXIsc28gYmlvcy1lcnJvciBtYXkg
-Y2F1c2VkIGJ5IG90aGVyDQpiaW8gd2hpY2ggYmUgbWVyZ2VkIGludG8gdG8gdGhlIHNhbWUgcmVx
-dWVzdC4NClVzaW5nIHRoaXMgZmxhZyxpdCB3aWxsIGZpbmQgZXhhY3RseSBlcnJvci1zZWN0b3Ig
-YW5kIG5vdCBkbyByZWR1bmRhbnQNCm9wZXJhdGlvbiBsaWtlIHJlLXdyaXRlIGFuZCByZS1yZWFk
-Lg0KDQpWMC0+VjE6VXNpbmcgUkVRX0ZMVVNIIGluc3RlYWQgUkVRX05PTUVSR0UgYXZvaWQgYmlv
-IG1lcmdpbmcgYXQgYmxvY2sNCmxheWVyLg0KDQpTaWduZWQtb2ZmLWJ5OiBKaWFucGVuZyBNYSA8
-bWFqaWFucGVuZ0BnbWFpbC5jb20+DQotLS0NCiBkcml2ZXJzL21kL3JhaWQ1LmMgfCAgIDE0ICsr
-KysrKysrKysrKy0tDQogZHJpdmVycy9tZC9yYWlkNS5oIHwgICAgMSArDQogMiBmaWxlcyBjaGFu
-Z2VkLCAxMyBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJp
-dmVycy9tZC9yYWlkNS5jIGIvZHJpdmVycy9tZC9yYWlkNS5jDQppbmRleCAwNDM0OGQ3Li4wNTk5
-ODlmNiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbWQvcmFpZDUuYw0KKysrIGIvZHJpdmVycy9tZC9y
-YWlkNS5jDQpAQCAtNjQwLDYgKzY0MCw5IEBAIHN0YXRpYyB2b2lkIG9wc19ydW5faW8oc3RydWN0
-IHN0cmlwZV9oZWFkICpzaCwgc3RydWN0IHN0cmlwZV9oZWFkX3N0YXRlICpzKQ0KIAkJCWVsc2UN
-CiAJCQkJYmktPmJpX3NlY3RvciA9IChzaC0+c2VjdG9yDQogCQkJCQkJICsgcmRldi0+ZGF0YV9v
-ZmZzZXQpOw0KKwkJCWlmICh0ZXN0X2JpdChSNV9SZWFkTm9NZXJnZSwgJnNoLT5kZXZbaV0uZmxh
-Z3MpKQ0KKwkJCQliaS0+YmlfcncgfD0gUkVRX0ZMVVNIOw0KKw0KIAkJCWJpLT5iaV9mbGFncyA9
-IDEgPDwgQklPX1VQVE9EQVRFOw0KIAkJCWJpLT5iaV9pZHggPSAwOw0KIAkJCWJpLT5iaV9pb192
-ZWNbMF0uYnZfbGVuID0gU1RSSVBFX1NJWkU7DQpAQCAtMTczOSw3ICsxNzQyLDkgQEAgc3RhdGlj
-IHZvaWQgcmFpZDVfZW5kX3JlYWRfcmVxdWVzdChzdHJ1Y3QgYmlvICogYmksIGludCBlcnJvcikN
-CiAJCQlhdG9taWNfYWRkKFNUUklQRV9TRUNUT1JTLCAmcmRldi0+Y29ycmVjdGVkX2Vycm9ycyk7
-DQogCQkJY2xlYXJfYml0KFI1X1JlYWRFcnJvciwgJnNoLT5kZXZbaV0uZmxhZ3MpOw0KIAkJCWNs
-ZWFyX2JpdChSNV9SZVdyaXRlLCAmc2gtPmRldltpXS5mbGFncyk7DQotCQl9DQorCQl9IGVsc2Ug
-aWYgKHRlc3RfYml0KFI1X1JlYWROb01lcmdlLCAmc2gtPmRldltpXS5mbGFncykpDQorCQkJY2xl
-YXJfYml0KFI1X1JlYWROb01lcmdlLCAmc2gtPmRldltpXS5mbGFncyk7DQorDQogCQlpZiAoYXRv
-bWljX3JlYWQoJnJkZXYtPnJlYWRfZXJyb3JzKSkNCiAJCQlhdG9taWNfc2V0KCZyZGV2LT5yZWFk
-X2Vycm9ycywgMCk7DQogCX0gZWxzZSB7DQpAQCAtMTc4NCw3ICsxNzg5LDExIEBAIHN0YXRpYyB2
-b2lkIHJhaWQ1X2VuZF9yZWFkX3JlcXVlc3Qoc3RydWN0IGJpbyAqIGJpLCBpbnQgZXJyb3IpDQog
-CQllbHNlDQogCQkJcmV0cnkgPSAxOw0KIAkJaWYgKHJldHJ5KQ0KLQkJCXNldF9iaXQoUjVfUmVh
-ZEVycm9yLCAmc2gtPmRldltpXS5mbGFncyk7DQorCQkJaWYgKHRlc3RfYml0KFI1X1JlYWROb01l
-cmdlLCAmc2gtPmRldltpXS5mbGFncykpIHsNCisJCQkJc2V0X2JpdChSNV9SZWFkRXJyb3IsICZz
-aC0+ZGV2W2ldLmZsYWdzKTsNCisJCQkJY2xlYXJfYml0KFI1X1JlYWROb01lcmdlLCAmc2gtPmRl
-dltpXS5mbGFncyk7DQorCQkJfSBlbHNlDQorCQkJCXNldF9iaXQoUjVfUmVhZE5vTWVyZ2UsICZz
-aC0+ZGV2W2ldLmZsYWdzKTsNCiAJCWVsc2Ugew0KIAkJCWNsZWFyX2JpdChSNV9SZWFkRXJyb3Is
-ICZzaC0+ZGV2W2ldLmZsYWdzKTsNCiAJCQljbGVhcl9iaXQoUjVfUmVXcml0ZSwgJnNoLT5kZXZb
-aV0uZmxhZ3MpOw0KQEAgLTQ1MDQsNiArNDUxMyw3IEBAIHN0YXRpYyBpbnQgIHJldHJ5X2FsaWdu
-ZWRfcmVhZChzdHJ1Y3QgcjVjb25mICpjb25mLCBzdHJ1Y3QgYmlvICpyYWlkX2JpbykNCiAJCQly
-ZXR1cm4gaGFuZGxlZDsNCiAJCX0NCiANCisJCXNldF9iaXQoUjVfUmVhZE5vTWVyZ2UsICZzaC0+
-ZGV2W2RkX2lkeF0uZmxhZ3MpOw0KIAkJaGFuZGxlX3N0cmlwZShzaCk7DQogCQlyZWxlYXNlX3N0
-cmlwZShzaCk7DQogCQloYW5kbGVkKys7DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5o
-IGIvZHJpdmVycy9tZC9yYWlkNS5oDQppbmRleCAyMTY0MDIxLi42NzY3ZDA3IDEwMDY0NA0KLS0t
-IGEvZHJpdmVycy9tZC9yYWlkNS5oDQorKysgYi9kcml2ZXJzL21kL3JhaWQ1LmgNCkBAIC0yNzMs
-NiArMjczLDcgQEAgZW51bSByNWRldl9mbGFncyB7DQogCVI1X1dhbnR3cml0ZSwNCiAJUjVfT3Zl
-cmxhcCwJLyogVGhlcmUgaXMgYSBwZW5kaW5nIG92ZXJsYXBwaW5nIHJlcXVlc3QNCiAJCQkgKiBv
-biB0aGlzIGJsb2NrICovDQorCVI1X1JlYWROb01lcmdlLCAvKiBwcmV2ZW50IGJpbyBmcm9tIG1l
-cmdpbmcgaW4gYmxvY2stbGF5ZXIgKi8NCiAJUjVfUmVhZEVycm9yLAkvKiBzZWVuIGEgcmVhZCBl
-cnJvciBoZXJlIHJlY2VudGx5ICovDQogCVI1X1JlV3JpdGUsCS8qIGhhdmUgdHJpZWQgdG8gb3Zl
-ci13cml0ZSB0aGUgcmVhZGVycm9yICovDQogDQotLSANCjEuNy41LjQNCg==
+OK, after reseating drives and removing the three definitely bad ones, I
+think the hardware is stable again now.
 
+So now I have a problem with the five-drive array I had set up in the mean
+time.  All five drives are there, but one is a bit behind the others in its
+event count and last update time.
+
+Here's the mdadm --examine output:
+
+/dev/sdb:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 149c0025:e7c5da3a:62b7a318:4ca57af7
+           Name : storage1.2
+  Creation Time : Wed Jul 11 14:50:06 2012
+     Raid Level : raid6
+   Raid Devices : 5
+
+ Avail Dev Size : 5860531120 (2794.52 GiB 3000.59 GB)
+     Array Size : 17581590528 (8383.56 GiB 9001.77 GB)
+  Used Dev Size : 5860530176 (2794.52 GiB 3000.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 56e9ce91:c5df8850:2105c86d:c9c710a1
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Wed Jul 11 15:19:31 2012
+       Checksum : 80c0762 - correct
+         Events : 276
+
+         Layout : left-symmetric
+     Chunk Size : 1024K
+
+   Device Role : Active device 0
+   Array State : AAAAA ('A' == active, '.' == missing)
+/dev/sdj:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 149c0025:e7c5da3a:62b7a318:4ca57af7
+           Name : storage1.2
+  Creation Time : Wed Jul 11 14:50:06 2012
+     Raid Level : raid6
+   Raid Devices : 5
+
+ Avail Dev Size : 5860531120 (2794.52 GiB 3000.59 GB)
+     Array Size : 17581590528 (8383.56 GiB 9001.77 GB)
+  Used Dev Size : 5860530176 (2794.52 GiB 3000.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : db72c8d7:672760b4:572dc944:fc7c151b
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Wed Jul 11 15:29:52 2012
+       Checksum : 11ec5fef - correct
+         Events : 357
+
+         Layout : left-symmetric
+     Chunk Size : 1024K
+
+   Device Role : Active device 1
+   Array State : .AAAA ('A' == active, '.' == missing)
+/dev/sdk:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 149c0025:e7c5da3a:62b7a318:4ca57af7
+           Name : storage1.2
+  Creation Time : Wed Jul 11 14:50:06 2012
+     Raid Level : raid6
+   Raid Devices : 5
+
+ Avail Dev Size : 5860531120 (2794.52 GiB 3000.59 GB)
+     Array Size : 17581590528 (8383.56 GiB 9001.77 GB)
+  Used Dev Size : 5860530176 (2794.52 GiB 3000.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : b12fefdd:74914e6e:9f3ca2bd:8b433e34
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Wed Jul 11 15:29:52 2012
+       Checksum : 64035caa - correct
+         Events : 357
+
+         Layout : left-symmetric
+     Chunk Size : 1024K
+
+   Device Role : Active device 2
+   Array State : .AAAA ('A' == active, '.' == missing)
+/dev/sdl:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 149c0025:e7c5da3a:62b7a318:4ca57af7
+           Name : storage1.2
+  Creation Time : Wed Jul 11 14:50:06 2012
+     Raid Level : raid6
+   Raid Devices : 5
+
+ Avail Dev Size : 5860531120 (2794.52 GiB 3000.59 GB)
+     Array Size : 17581590528 (8383.56 GiB 9001.77 GB)
+  Used Dev Size : 5860530176 (2794.52 GiB 3000.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : db387f8a:383c26f4:4012a3ec:12c7679e
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Wed Jul 11 15:29:52 2012
+       Checksum : 2f9569c2 - correct
+         Events : 357
+
+         Layout : left-symmetric
+     Chunk Size : 1024K
+
+   Device Role : Active device 3
+   Array State : .AAAA ('A' == active, '.' == missing)
+/dev/sdm:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 149c0025:e7c5da3a:62b7a318:4ca57af7
+           Name : storage1.2
+  Creation Time : Wed Jul 11 14:50:06 2012
+     Raid Level : raid6
+   Raid Devices : 5
+
+ Avail Dev Size : 5860531120 (2794.52 GiB 3000.59 GB)
+     Array Size : 17581590528 (8383.56 GiB 9001.77 GB)
+  Used Dev Size : 5860530176 (2794.52 GiB 3000.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : ac50fe77:91ce387a:e819a38d:4d56a734
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Wed Jul 11 15:29:52 2012
+       Checksum : da66aace - correct
+         Events : 357
+
+         Layout : left-symmetric
+     Chunk Size : 1024K
+
+   Device Role : Active device 4
+   Array State : .AAAA ('A' == active, '.' == missing)
+
+Now, a simple assemble fails:
+
+    root@dev-storage1:~# mdadm --assemble /dev/md/storage1.2 /dev/sd{b,j,k,l,m}
+    mdadm: /dev/md/storage1.2 assembled from 4 drives - not enough to start the array while not clean - consider --force.
+    root@dev-storage1:~# cat /proc/mdstat
+    Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
+    md127 : inactive sdj[1](S) sdm[4](S) sdl[3](S) sdk[2](S) sdb[0](S)
+          14651327800 blocks super 1.2
+           
+    unused devices: <none>
+
+(Well, md127 exists, but I don't know how to "start" it).
+So let's try using --force as it suggests:
+
+    root@dev-storage1:~# mdadm -S /dev/md127
+    mdadm: stopped /dev/md127
+    root@dev-storage1:~# mdadm --assemble --force /dev/md/storage1.2 /dev/sd{b,j,k,l,m}
+    mdadm: /dev/md/storage1.2 has been started with 4 drives (out of 5).
+    root@dev-storage1:~# cat /proc/mdstatPersonalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
+    md127 : active raid6 sdj[1] sdm[4] sdl[3] sdk[2]
+          8790795264 blocks super 1.2 level 6, 1024k chunk, algorithm 2 [5/4] [_UUUU]
+          bitmap: 22/22 pages [88KB], 65536KB chunk
+
+    unused devices: <none>
+    root@dev-storage1:~# 
+
+Now I have a 4-drive degraded RAID6, /dev/sdb isn't even listed (even though
+I gave it on the command line).  Is this correct?  Is the next thing to do
+to add the 5th drive into it manually?
+
+    root@dev-storage1:~# mdadm --manage --re-add /dev/md127 /dev/sdb
+    mdadm: re-added /dev/sdb
+    root@dev-storage1:~# cat /proc/mdstat
+    Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4]
+    [raid10] 
+    md127 : active raid6 sdb[0] sdj[1] sdm[4] sdl[3] sdk[2]
+          8790795264 blocks super 1.2 level 6, 1024k chunk, algorithm 2 [5/4]
+    [_UUUU]
+          [>....................]  recovery =  1.1% (32854540/2930265088)
+    finish=952.5min speed=50692K/sec
+          bitmap: 22/22 pages [88KB], 65536KB chunk
+
+    unused devices: <none>
+
+That seems to have worked, can someone just confirm that's the right
+sequence of things to do though. This is a test system, next time I do this
+might be for real :-)
+
+Cheers,
+
+Brian.
