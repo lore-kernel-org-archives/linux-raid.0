@@ -1,104 +1,72 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: [PATCH] raid5: Flush data when do_md_stop in order to avoid stripe_cache leaking.
-Date: Fri, 13 Jul 2012 13:58:00 +0800
-Message-ID: <201207131357572035860@gmail.com>
+From: keld@keldix.com
+Subject: Re: [PATCH v2] DM RAID: Add support for MD RAID10
+Date: Fri, 13 Jul 2012 10:29:23 +0200
+Message-ID: <20120713082923.GA19771@www5.open-std.org>
+References: <1342057001.22214.6.camel@f16> <20120712162205.GA13485@www5.open-std.org> <331FD2B6-AD96-4513-AF37-4E1B9EE7A34F@redhat.com> <20120713011505.GA3099@www5.open-std.org> <20120713112717.3b15647c@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120713112717.3b15647c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Brassow Jonathan <jbrassow@redhat.com>, dm-devel@redhat.com, linux-raid@vger.kernel.org, agk@redhat.com
 List-Id: linux-raid.ids
 
-SSBmb3VuZCBzb21lIGtlcm5lbCBtZXNzYWdlIGJlbG93Og0KPT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0N
-ClsgIDQzMi4yMTM4MTldIEJVRyByYWlkNS1tZDAgKE5vdCB0YWludGVkKTogT2JqZWN0cyByZW1h
-aW5pbmcgb24ga21lbV9jYWNoZV9jbG9zZSgpDQpbICA0MzIuMjEzODIwXQ0KLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0NClsgIDQzMi4yMTM4MjBdDQpbICA0MzIuMjEzODIzXSBJTkZPOiBTbGFiIDB4ZmZm
-ZmVhMDAwMjljYWUwMCBvYmplY3RzPTI0IHVzZWQ9MQ0KZnA9MHhmZmZmODgwMGE3MmJiOTEwIGZs
-YWdzPTB4MTAwMDAwMDAwMDA0MDgwDQpbICA0MzIuMjEzODI1XSBQaWQ6IDYyMDcsIGNvbW06IG1k
-YWRtIE5vdCB0YWludGVkIDMuNS4wLXJjNisgIzU2DQpbICA0MzIuMjEzODI3XSBDYWxsIFRyYWNl
-Og0KWyAgNDMyLjIxMzgzM10gIFs8ZmZmZmZmZmY4MTExYjRhMT5dIHNsYWJfZXJyKzB4NzEvMHg4
-MA0KWyAgNDMyLjIxMzgzNl0gIFs8ZmZmZmZmZmY4MTBlNDk5OD5dID8gX19mcmVlX3BhZ2VzKzB4
-MTgvMHgzMA0KWyAgNDMyLjIxMzgzOV0gIFs8ZmZmZmZmZmY4MTExZjQ1YT5dID8ga21lbV9jYWNo
-ZV9kZXN0cm95KzB4MTZhLzB4M2EwDQpbICA0MzIuMjEzODQxXSAgWzxmZmZmZmZmZjgxMTFmNDdk
-Pl0ga21lbV9jYWNoZV9kZXN0cm95KzB4MThkLzB4M2EwDQpbICA0MzIuMjEzODQ1XSAgWzxmZmZm
-ZmZmZmEwMDdlZjhkPl0gZnJlZV9jb25mKzB4MmQvMHhmMCBbcmFpZDQ1Nl0NClsgIDQzMi4yMTM4
-NDhdICBbPGZmZmZmZmZmYTAwN2Y4YjE+XSBzdG9wKzB4NDEvMHg2MCBbcmFpZDQ1Nl0NClsgIDQz
-Mi4yMTM4NTFdICBbPGZmZmZmZmZmODE0NzVlNGE+XSBtZF9zdG9wKzB4MWEvMHg2MA0KWyAgNDMy
-LjIxMzg1NF0gIFs8ZmZmZmZmZmY4MTQ3ZWYyMD5dIGRvX21kX3N0b3ArMHg5MC8weDRjMA0KWyAg
-NDMyLjIxMzg1N10gIFs8ZmZmZmZmZmY4MTI0OGVhMz5dID8gc2VjdXJpdHlfY2FwYWJsZSsweDEz
-LzB4MjANClsgIDQzMi4yMTM4NTldICBbPGZmZmZmZmZmODE0ODBmOTQ+XSBtZF9pb2N0bCsweDVm
-NC8weDExZjANClsgIDQzMi4yMTM4NjJdICBbPGZmZmZmZmZmODEwNWNiNWI+XSA/bG9ja19ocnRp
-bWVyX2Jhc2UuaXNyYS4yNCsweDJiLzB4NjANClsgIDQzMi4yMTM4NjVdICBbPGZmZmZmZmZmODEy
-ODMyMjg+XSBibGtkZXZfaW9jdGwrMHhkOC8weDc5MA0KWyAgNDMyLjIxMzg2N10gIFs8ZmZmZmZm
-ZmY4MTA1Y2U3YT5dID8gaHJ0aW1lcl9jYW5jZWwrMHgxYS8weDMwDQpbICA0MzIuMjEzODcwXSAg
-WzxmZmZmZmZmZjgxMTU4N2ZiPl0gYmxvY2tfaW9jdGwrMHgzYi8weDQwDQpbICA0MzIuMjEzODcz
-XSAgWzxmZmZmZmZmZjgxMTM1Yjg2Pl0gZG9fdmZzX2lvY3RsKzB4OTYvMHg1NTANClsgIDQzMi4y
-MTM4NzZdICBbPGZmZmZmZmZmODEyNGMxYTU+XSA/aW5vZGVfaGFzX3Blcm0uaXNyYS4zNy5jb25z
-dHByb3AuNjErMHgyNS8weDMwDQpbICA0MzIuMjEzODc4XSAgWzxmZmZmZmZmZjgxMjRlMGFmPl0g
-PyBmaWxlX2hhc19wZXJtKzB4OGYvMHhhMA0KWyAgNDMyLjIxMzg4MF0gIFs8ZmZmZmZmZmY4MTA1
-YzZlMD5dID8gdXBkYXRlX3JtdHArMHg3MC8weDcwDQpbICA0MzIuMjEzODgyXSAgWzxmZmZmZmZm
-ZjgxMTM2MGQxPl0gc3lzX2lvY3RsKzB4OTEvMHhhMA0KWyAgNDMyLjIxMzg4Nl0gIFs8ZmZmZmZm
-ZmY4MTY2YTBhMj5dIHN5c3RlbV9jYWxsX2Zhc3RwYXRoKzB4MTYvMHgxYg0KWyAgNDMyLjIxMzg4
-OF0gSU5GTzogT2JqZWN0IDB4ZmZmZjg4MDBhNzJiYmU0MCBAb2Zmc2V0PTE1OTM2DQpbICA0MzIu
-MjEzODkwXSBTTFVCIHJhaWQ1LW1kMDoga21lbV9jYWNoZV9kZXN0cm95IGNhbGxlZCBmb3IgY2Fj
-aGUgdGhhdA0Kc3RpbGwgaGFzIG9iamVjdHMuDQpbICA0MzIuMjEzODkyXSBQaWQ6IDYyMDcsIGNv
-bW06IG1kYWRtIE5vdCB0YWludGVkIDMuNS4wLXJjNisgIzU2DQpbICA0MzIuMjEzODkzXSBDYWxs
-IFRyYWNlOg0KWyAgNDMyLjIxMzg5NV0gIFs8ZmZmZmZmZmY4MTExZjYxYT5dIGttZW1fY2FjaGVf
-ZGVzdHJveSsweDMyYS8weDNhMA0KWyAgNDMyLjIxMzg5OF0gIFs8ZmZmZmZmZmZhMDA3ZWY4ZD5d
-IGZyZWVfY29uZisweDJkLzB4ZjAgW3JhaWQ0NTZdDQpbICA0MzIuMjEzOTAwXSAgWzxmZmZmZmZm
-ZmEwMDdmOGIxPl0gc3RvcCsweDQxLzB4NjAgW3JhaWQ0NTZdDQpbICA0MzIuMjEzOTAyXSAgWzxm
-ZmZmZmZmZjgxNDc1ZTRhPl0gbWRfc3RvcCsweDFhLzB4NjANClsgIDQzMi4yMTM5MDRdICBbPGZm
-ZmZmZmZmODE0N2VmMjA+XSBkb19tZF9zdG9wKzB4OTAvMHg0YzANClsgIDQzMi4yMTM5MDddICBb
-PGZmZmZmZmZmODEyNDhlYTM+XSA/IHNlY3VyaXR5X2NhcGFibGUrMHgxMy8weDIwDQpbICA0MzIu
-MjEzOTA5XSAgWzxmZmZmZmZmZjgxNDgwZjk0Pl0gbWRfaW9jdGwrMHg1ZjQvMHgxMWYwDQpbICA0
-MzIuMjEzOTExXSAgWzxmZmZmZmZmZjgxMDVjYjViPl0gP2xvY2tfaHJ0aW1lcl9iYXNlLmlzcmEu
-MjQrMHgyYi8weDYwDQpbICA0MzIuMjEzOTEzXSAgWzxmZmZmZmZmZjgxMjgzMjI4Pl0gYmxrZGV2
-X2lvY3RsKzB4ZDgvMHg3OTANClsgIDQzMi4yMTM5MTVdICBbPGZmZmZmZmZmODEwNWNlN2E+XSA/
-IGhydGltZXJfY2FuY2VsKzB4MWEvMHgzMA0KWyAgNDMyLjIxMzkxN10gIFs8ZmZmZmZmZmY4MTE1
-ODdmYj5dIGJsb2NrX2lvY3RsKzB4M2IvMHg0MA0KWyAgNDMyLjIxMzkxOV0gIFs8ZmZmZmZmZmY4
-MTEzNWI4Nj5dIGRvX3Zmc19pb2N0bCsweDk2LzB4NTUwDQpbICA0MzIuMjEzOTIxXSAgWzxmZmZm
-ZmZmZjgxMjRjMWE1Pl0gP2lub2RlX2hhc19wZXJtLmlzcmEuMzcuY29uc3Rwcm9wLjYxKzB4MjUv
-MHgzMA0KWyAgNDMyLjIxMzkyM10gIFs8ZmZmZmZmZmY4MTI0ZTBhZj5dID8gZmlsZV9oYXNfcGVy
-bSsweDhmLzB4YTANClsgIDQzMi4yMTM5MjVdICBbPGZmZmZmZmZmODEwNWM2ZTA+XSA/IHVwZGF0
-ZV9ybXRwKzB4NzAvMHg3MA0KWyAgNDMyLjIxMzkyOF0gIFs8ZmZmZmZmZmY4MTEzNjBkMT5dIHN5
-c19pb2N0bCsweDkxLzB4YTANClsgIDQzMi4yMTM5MzBdICBbPGZmZmZmZmZmODE2NmEwYTI+XSBz
-eXN0ZW1fY2FsbF9mYXN0cGF0aCsweDE2LzB4MWINCg0KQnkgdGhlIGZvbGxvd2luZyBzdGVwcywg
-aXQgY2FuIHJlYXBwZWFyLg0KMTpjcmVhdGUgcmFpZDUNCjI6ZGQgaWY9L2Rldi96ZXJvIG9mPS9k
-ZXYvbWQwIGJzPTFNDQozOndoZW4gZXhlYyAibWRhZG0gLVMgL2Rldi9tZDAiLCBwcmVzcyAiQ1RS
-TCtDIiBpbiBkZC1jb21tYW5kIHNjcmVlbi4NCg0KSW4gY29tbWl0IDI3MWY1YTliOGY4YWUwZGI5
-NWRlNzI3NzlkMTE1YzlkMGI5ZDNjYzUNCkF1dGhvcjogTmVpbEJyb3duIDxuZWlsYkBzdXNlLmRl
-Pg0KUmVtb3ZlIGludmFsaWRhdGVfcGFydGl0aW9uIGNhbGwgZnJvbSBkb19tZF9zdG9wDQoNCkJl
-Y2F1c2UgdGhlIGRlYWRsb2NrLCBOZWlsIHJlbW92ZSB0aGUgZmx1c2ggZGF0YS5CdXQgaW4gdGhp
-cyBwYXRoY2gsTmVpbA0Kb25seSB0aG91bmd0IHRoZSBmaWxlc3lzdGVtLGJ1dCBub3QgY29uc2lk
-ZXIgdGhlIHJhdyBibG9jayBkZWl2Y2VzLg0KDQpVc2luZyB0aGUgbGF0ZXN0IGtlcm5lbCBhbmQg
-cmVhZGRpbmcgImludmFsaWRhdGVfcGFydGl0aW9uIiBmdW5jdGlvbi4NCkJ5IHRoZSBwYXRjaCBz
-dWdnZXN0ZWQsIGkgY3JlYXRlIG9zIGluIG1kMChzb2Z0cmFpZDUpLkJ1dCB0aGUgZGVhZGxvY2sN
-CmRpZCBub3QgYXBwZWFyLg0KQnV0IG1heWJlIG15IHRlc3Qgbm90IGNvcnJlY3Qsc28gaSBkb24n
-dCB1c2luZyAiaW52YWxpZGF0ZV9wYXJ0aXRpb24iIHRvDQpmbHVzaCBkYXRhLiBJIHVzZWQgc3lu
-Y19ibG9jayB0byBmbHVzaCBkYXRhLg0KDQpTaWduZWQtb2ZmLWJ5OiBKaWFucGVuZyBNYSA8bWFq
-aWFucGVuZ0BnbWFpbC5jb20+DQotLS0NCiBkcml2ZXJzL21kL21kLmMgICAgfCAgICA2ICsrKysr
-Kw0KIGRyaXZlcnMvbWQvcmFpZDUuYyB8ICAgIDEgKw0KIDIgZmlsZXMgY2hhbmdlZCwgNyBpbnNl
-cnRpb25zKCspLCAwIGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9tZC5j
-IGIvZHJpdmVycy9tZC9tZC5jDQppbmRleCBhNGMyMTllLi41NzE2NTY5IDEwMDY0NA0KLS0tIGEv
-ZHJpdmVycy9tZC9tZC5jDQorKysgYi9kcml2ZXJzL21kL21kLmMNCkBAIC01Mzk1LDEwICs1Mzk1
-LDE2IEBAIHN0YXRpYyBpbnQgZG9fbWRfc3RvcChzdHJ1Y3QgbWRkZXYgKiBtZGRldiwgaW50IG1v
-ZGUsIGludCBpc19vcGVuKQ0KIAl9DQogDQogCWlmIChtZGRldi0+cGVycykgew0KKwkJc3RydWN0
-IGJsb2NrX2RldmljZSAqYmRldjsNCiAJCWlmIChtZGRldi0+cm8pDQogCQkJc2V0X2Rpc2tfcm8o
-ZGlzaywgMCk7DQogDQogCQlfX21kX3N0b3Bfd3JpdGVzKG1kZGV2KTsNCisJCS8qZmx1c2ggZGF0
-YSovDQorCQliZGV2ID0gYmRnZXRfZGlzayhkaXNrLCAwKTsNCisJCXN5bmNfYmxvY2tkZXYoYmRl
-dik7DQorCQliZHB1dChiZGV2KTsNCisNCiAJCW1kX3N0b3AobWRkZXYpOw0KIAkJbWRkZXYtPnF1
-ZXVlLT5tZXJnZV9idmVjX2ZuID0gTlVMTDsNCiAJCW1kZGV2LT5xdWV1ZS0+YmFja2luZ19kZXZf
-aW5mby5jb25nZXN0ZWRfZm4gPSBOVUxMOw0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUu
-YyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KaW5kZXggMDQzNDhkNy4uOTIyZTI2ZSAxMDA2NDQNCi0t
-LSBhL2RyaXZlcnMvbWQvcmFpZDUuYw0KKysrIGIvZHJpdmVycy9tZC9yYWlkNS5jDQpAQCAtMTY4
-Miw2ICsxNjgyLDcgQEAgc3RhdGljIHZvaWQgc2hyaW5rX3N0cmlwZXMoc3RydWN0IHI1Y29uZiAq
-Y29uZikNCiAJd2hpbGUgKGRyb3Bfb25lX3N0cmlwZShjb25mKSkNCiAJCTsNCiANCisJQlVHX09O
-KGF0b21pY19yZWFkKCZjb25mLT5hY3RpdmVfc3RyaXBlcykpOw0KIAlpZiAoY29uZi0+c2xhYl9j
-YWNoZSkNCiAJCWttZW1fY2FjaGVfZGVzdHJveShjb25mLT5zbGFiX2NhY2hlKTsNCiAJY29uZi0+
-c2xhYl9jYWNoZSA9IE5VTEw7DQotLSANCjEuNy41LjQNCg==
+On Fri, Jul 13, 2012 at 11:27:17AM +1000, NeilBrown wrote:
+> On Fri, 13 Jul 2012 03:15:05 +0200 keld@keldix.com wrote:
+> 
+> > I think the layout you described should not be promoted at all,
+> > and only kept for backward compatibility. As there is no backward 
+> > compatibility in your case I think it is an error to implement it.
+> > I understand that you do not reuse any of the MD code here?
+> 
+> Not correct.  The whole point of this exercise is to reuse md code.
 
+OK, I also think it is only sensible to reuse the code already done.
+I misunderstood then your mail on not to repeat mistakes - which I took to mean that
+Barrow should not implement things with mistakes. Maybe that means to not make hooks
+to MD code that is a mistake?
+
+So Barrow will implement the improved far layout once there is MD code for it, and
+then he can make the neceessary hooks in DM code?
+
+> > The flaw is worse than Neil described, as far as I understand.
+> > With n=2 you can in the current implementation only have 1 disk failing,
+> > for any numbers of drives in the array. With the suggested layout
+> > then for 4 drives you have the probability of surviving 66 % 
+> > of 2 drives failing. This get even better for 6, 8 .. disks in the array.
+> > And you may even survive 3 or more disk failures, dependent on the number
+> > of drives employed. The probability is the same as  for raid-1+0
+> 
+> Also not correct.  You can certainly have more than one failed device
+> providing you don't have 'n' adjacent devices all failed.
+> So e.g. if you have 2 drives in a far-2 layout then you can survive the
+> failure of three devices if they are 0,2,4 or 1,3,5.
+
+On further investigations I agree that you can survive more than one drive failing with
+the current layout.
+
+> > > When it is available to MD, I'll make it available to dm-raid also.
+> > 
+> > Please dont implement it in the flawed  way. It will just create a number of problems
+> > for when to switch over and convert between the two formats, and then which should
+> > be the default (I fear some would say the old flawed should be the default), and we need
+> > to explain the two formats and implement two sets of repairs and so on.
+> 
+> This "flawed" arrangement is the only one that makes sense for an odd number
+> of devices (assuming 2 copies).
+
+Well, I have an idea for the odd number of devices:
+Have the disks arranged in groups (for N=2 in pairs) and then the last group extended with
+the leftover disks in the way it is done now.
+
+For 2 copies, this would be a number of pairs, and then a rest group of 3 disks.
+For 3 copies, this would be a number of triplets, and then 4 or 5 disks in the last group.
+
+Can I assume, Neil, that you agree with the rest I wrote? :-)
+Especially that we should only advice the new layout, and there is no reason for the
+current implementation except for backwards compatibility?
+
+best regards
+keld
