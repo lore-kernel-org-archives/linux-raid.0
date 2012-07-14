@@ -1,44 +1,32 @@
-From: Dan Williams <dan.j.williams@gmail.com>
-Subject: Re: [PATCH V1] raidd5:Only move IO_THRESHOLD stripes from delay_list
- to hold_list once.
-Date: Fri, 13 Jul 2012 16:56:18 -0700
-Message-ID: <CAA9_cmcLEYeu9VaVTgVW=CX+JvTyA_ubAmrAkpQdxGmRkGj_3A@mail.gmail.com>
-References: <201207131831085787372@gmail.com>
+From: Istvan Pusztai <istvanp@gmail.com>
+Subject: Resizing/merging partitions on soft RAID
+Date: Fri, 13 Jul 2012 22:24:55 -0400
+Message-ID: <CAHhFfPZze2BFznqYeMH3Fy4BwcnGzvvmrQgo8hq18Ny5ydYWuQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201207131831085787372@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: Neil Brown <neilb@suse.de>, Paul Menzel <paulepanter@users.sourceforge.net>, linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[ adding Shaohua ]
+Hello linux-raid,
 
-On Fri, Jul 13, 2012 at 3:31 AM, majianpeng <majianpeng@gmail.com> wrote:
-> To improve write perfomance by decreasing the preread stripe,only move
-> IO_THRESHOLD stripes from delay_list to hold_list once.
->
-> Using the follow command:
-> dd if=/dev/zero of=/dev/md0 bs=2M count=52100.
->
-> At default condition: speed is 95MB/s.
-> At the condition of preread_bypass_threshold was equal zero:speed is 105MB/s.
-> Using this patch:speed is 123MB/s.
->
-> If preread_bypass_threshold was zero,the performance will be better,but
-> not better than this patch.
-> I think maybe two reason:
-> 1:If bio is REQ_SYNC
-> 2:In function __get_priority_stripe():
->>> } else if (!list_empty(&conf->hold_list) &&
->>>                 ((conf->bypass_threshold &&
->>>                   conf->bypass_count > conf->bypass_threshold) ||
->>>                  atomic_read(&conf->pending_full_writes) == 0)) {
-> Preread_bypass_threshold is one condition of getting stripe from
-> hold_list.So only control the number of hold_list can get better
-> performance.
+Reddit brought me here but I am not sure this is the right place to
+ask for help, but here goes...
 
-So this is a pretty obvious tradeoff of increased latency for improved
-throughput.  Any idea how much this change affects latency?
-Especially in the fast device case?
+I'm new to working with RAID from the command line and I'm having
+difficulty trying to resize my RAID 1 array. There is no data at all
+on it; it's a fresh CentOS 6.3 minimal install (hence no GUI). Also
+note I only have SSH access since this is a dedicated server. I am
+booting into Debian 6 for repartitioning if that's pertinent.
+
+I am resizing it because I only have 10GB for the root partition and
+990GB for /home which I seldom use (usage is quite mixed on the other
+root directories). I essentially want to get rid of sda2 and sdb2 and
+have one large root partition of 1TB  (sda1/sdb1) + swap (sda2/sdb2).
+
+Here is the layout of the RAID using output from several commands:
+http://pastie.org/4253318 (I can add more information if requested.)
+How do I approach this problem? (As much step by step as possible please ^^;)
+
+Istvan
