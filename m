@@ -1,77 +1,77 @@
 From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: commit backport request
-Date: Mon, 16 Jul 2012 11:59:06 +0300
-Message-ID: <CAGRgLy73UuvD0829rbozHmocgw5OUb5uBQjTBBdSzzOF98uHZQ@mail.gmail.com>
-References: <20120709140230.3cf926ec@notabene.brown>
-	<20120711220740.GE10930@kroah.com>
-	<20120712141422.05809022@notabene.brown>
-	<CAGRgLy4tBOS1B8raJmxoge1CaWc-18=c_fMe6E_oCqa1ntSHzQ@mail.gmail.com>
-	<20120716132300.11fad63c@notabene.brown>
+Subject: Re: On mdadm 3.2 and bad-block-log
+Date: Mon, 16 Jul 2012 12:08:38 +0300
+Message-ID: <CAGRgLy5x6dtHGDg7D8O6W63DeEVUbZ_mB8JQ4RBMqyNe5Cqf4g@mail.gmail.com>
+References: <4FD7738D.3040403@shiftmail.org>
+	<CAGRgLy5Eryf_kT69a3SSPi8-MVpVmhEL96tNWJZQd9-vf4iYZQ@mail.gmail.com>
+	<20120716134138.0f1c9cfc@notabene.brown>
+	<5003C5BC.3070609@shiftmail.org>
+	<CAGRgLy6udWWhYn_UEwyyVrKsV5auAdfN5qkLVxbNnVqgWE=+UQ@mail.gmail.com>
+	<5003D73B.3010609@shiftmail.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120716132300.11fad63c@notabene.brown>
+In-Reply-To: <5003D73B.3010609@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Asdo <asdo@shiftmail.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Thanks.
-Not sure if this is the issue I saw. I did not see any thread blocked
-on get_active_stripe(). In my case "stripe_cache_active" got stuck on
-a high value and was never decreased. But some IOs (perhaps on other
-stripes?) managed to go through. In addition, in one case, after
-several hours(!), somehow the stuck IOs got freed and
-stripe_cache_active dropped and everything got back to normal.
+That's not what I was saying. The mdadm code to support bad blocks is
+really one or two lines. The rest is in the kernel. (On the other
+hand, the mdadm version which has those one or two lines is about a
+year behind the mainline mdadm, so it lacks many other
+things/fixes/improvements, but that's a different issue).
+
+Yes, the kernel code is out, but as Neil pointed out, it might still
+have some glitches. Since mdadm that supports bad-blocks is not out
+yet, you have no (official) way to create an array with bad-blocks
+support. So you should not suffer from those glitches.
 
 Alex.
 
 
-On Mon, Jul 16, 2012 at 6:23 AM, NeilBrown <neilb@suse.de> wrote:
-> On Fri, 13 Jul 2012 00:28:00 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-> wrote:
+On Mon, Jul 16, 2012 at 11:56 AM, Asdo <asdo@shiftmail.org> wrote:
+> Right, that's the reason of my question.
+> Neil wrote "I probably don't want to rush it out" so that would mean that
+> the buggy code is not "out" yet.
+> So that would point to mdadm-3.3 because the bad block code of the kernel is
+> already "out".
+> However as you say the bad block code in mdadm-3.3 is very simple so it's
+> strange that it could be buggy.
 >
->> Hi,
->> Is there any indication that can tell I am hitting this particular issue?
->> I think I hit something similar to that once, IOs were hang within a
->> raid5 and not returning. I issues w > sysrq-trigger and also have most
->> of the procfs/<pid> info, so is there something I can look at to
->> confirm?
+> Now thinking at myself: if there were bugs in the mdadm-3.3 I probably have
+> dodged them because I was able to create the array.
+> However if there are known bugs in the kernel code our data is still at risk
+> so i'd rather ask.
+> FWIW I am not using mdadm-3.3 as monitoring daemon: the daemon is mdadm-3.2
+> , I don't know if this "helps".
 >
-> IO stops, processes get blocked in get_active_stripe().  Increasing
-> stripe_cache_size allows a bit more IO through it eventually all fills up
-> again.
+> Thank you
+> A.
 >
-> NeilBrown
 >
+>
+> On 07/16/12 09:55, Alexander Lyakas wrote:
 >>
+>> The mdadm code only reserves some space for bad-blocks log and
+>> notifies the kernel that this feature is enabled during array
+>> creation.
 >>
->>
->> On Thu, Jul 12, 2012 at 7:14 AM, NeilBrown <neilb@suse.de> wrote:
->> > On Wed, 11 Jul 2012 15:07:40 -0700 Greg KH <gregkh@linuxfoundation.org> wrote:
->> >
->> >> On Mon, Jul 09, 2012 at 02:02:30PM +1000, NeilBrown wrote:
->> >> >
->> >> > Hi Mr Stable,
->> >> >
->> >> >  please apply patch
->> >> >
->> >> > commit fab363b5ff502d1b39ddcfec04271f5858d9f26e
->> >> > Author: Shaohua Li <shli@kernel.org>
->> >> > Date:   Tue Jul 3 15:57:19 2012 +1000
->> >> >
->> >> >     raid5: delayed stripe fix
->> >> >
->> >> >
->> >> > to 3.4.y and 3.2.y.
->> >> >
->> >> > It fixes a deadlock in RAID5 which can cause all IO to hang.
->> >> > It has been demonstrated to fix a real-life problem (the race is not
->> >> > theoretical).
->> >>
->> >> Is it also needed for 3.0.x?  It seems to apply there just fine.
->> >
->> > Yes it is.  Don't know why I missed that.
->> > I see you've already included it - thanks.
->> >
->> > NeilBrown
+>> On Mon, Jul 16, 2012 at 10:41 AM, Asdo<asdo@shiftmail.org>  wrote:
+>>>
+>>> On 07/16/12 05:41, NeilBrown wrote:
+>>>>
+>>>> and as the bad block code is
+>>>> clearly still buggy, I probably don't want to rush it out :-)
+>>>
+>>>
+>>> The bad block code is buggy... the one in the kernel or the one in
+>>> mdadm-3.3
+>>> ?
+>>> 'cause I am currently using an array created with bad block log on kernel
+>>> 3.4.3...
+>>>
+>>> Thanks
+>
 >
