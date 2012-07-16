@@ -1,74 +1,69 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm-3.2.5: segfault in "--grow --continue"
-Date: Mon, 16 Jul 2012 16:26:38 +1000
-Message-ID: <20120716162638.31b66823@notabene.brown>
-References: <D6EAEC68-9C5B-4CBF-943C-85ABF3E319BD@tu-dresden.de>
-	<20120710230205.171ee562@notabene.brown>
-	<BC57DF1E-7CA3-429E-8935-44A94003B5E5@tu-dresden.de>
-	<20120711122626.51cf7070@notabene.brown>
-	<0A5D7060-7727-4CBD-A1D7-34ED7D9747BC@tu-dresden.de>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH 2/2] raid5: For write performance, remove REQ_SYNC when write was odirect.
+Date: Mon, 16 Jul 2012 14:42:54 +0800
+Message-ID: <201207161442513597497@gmail.com>
+References: <201207160931507187344@gmail.com>,
+	<20120716154010.0ef12c57@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/BgHiJlTn3xZZbVQ2V+p_X9B"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0A5D7060-7727-4CBD-A1D7-34ED7D9747BC@tu-dresden.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Sebastian Hegler <sebastian.hegler@tu-dresden.de>
-Cc: linux-raid@vger.kernel.org, 681056@bugs.debian.org
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: viro <viro@ZenIV.linux.org.uk>, linux-raid <linux-raid@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/BgHiJlTn3xZZbVQ2V+p_X9B
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+T24gMjAxMi0wNy0xNiAxMzo0MCBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
+IE1vbiwgMTYgSnVsIDIwMTIgMDk6MzE6NTUgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVuZ0Bn
+bWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gSW4gY29tbWl0IGU5Yzc0NjliYjRmNTAyZGFmYzA5MjE2
+NjIwMWJlYTFhZDVmYzBmYmY6DQo+PiBUZWp1biBIZW8gaW50cm9kdWNlZCAiaW1wbG1lbnQgUkVR
+X0ZMVVNIL0ZVQSBzdXBwb3J0Ii4NCj4+IEJ1dCBmb3IgZGlyZWN0LXdyaXRlLWJsb2NrcywgaXQg
+bWF5YmUgZm9yIG90aGVyIHB1cnBvc2Ugd2hpY2ggbGlrZSB0aGUNCj4+IHJlZ3VsYXIgZmlsZS4N
+Cj4+IEFuZCB0aGlzIGZsYWcgd2lsbCBzZXQgU1RSSVBFX1BSRVJFQURfQUNUSVZFIHdoaWNoIGRl
+Y3JlYWVkIHRoZSBjaGFuZ2UNCj4+IHRvIGZ1bGwgd3JpdGUuDQo+PiANCj4+IEJ1dCB0aGlzIHBh
+dGNoIHJlbW92ZSBSRVFfU1lOQyBvbmx5IGp1ZGdpbmcgdGhlIFdSSVRFX09ESVJFQ1QsaXQgd2ls
+bA0KPj4gY29udGFpbCByZWd1bGFyIGZpbGUuU28gaXQgbWF5YmUgbm90IGNvcnJlY3RseS4NCj4+
+IEhvdyBjYW4gZGlmZmVyZW5jZSBvZHJpZWN0X3dyaXRlIGJldHdlZW4gcmVndWxhciBmaWxlIG9y
+IGJsb2NrIGZpbGU/DQo+DQo+SGksDQo+IEkgdGhpbmsgeW91IGFyZSBzYXlpbmcgdGhlIHdoZW4g
+UkVRX1NZTkMgaXMgdXNlZCB3aXRoIE9fRElSRUNUIHdyaXRlcyBpdCBpcw0KPiBoYXZpbmcgYSBu
+ZWdhdGl2ZSBlZmZlY3Qgb24gdGhyb3VnaHB1dCBiZWNhdXNlIGl0IGFsbG93cyB0aGUgc3RyaXBl
+IHRvIGJlDQo+IHByb2Nlc3NlZCBpbW1lZGlhdGVseSB3aXRob3V0IHdhaXRpbmcgZm9yIG1vcmUg
+cmVxdWVzdHMgdG8gYmUgYWRkZWQgdG8gdGhlDQo+IHN0cmlwZS4NCj4NCj4gTm9ybWFsICdzeW5j
+JyByZXF1ZXN0cyB1c2UgV1JJVEVfU1lOQyB3aGljaCBpbmNsdWRlcyAiUkVRX05PSURMRSIgd2hp
+Y2ggbWVhbnMNCj4gICAvKiBkb24ndCBhbnRpY2lwYXRlIG1vcmUgSU8gYWZ0ZXIgdGhpcyBvbmUg
+Ki8NCj4gT19ESVJFQ1QgcmVxdWVzdCB1c2UgV1JJVEVfT0RJUkVDVCB3aGljaCBkb2VzIG5vdCBp
+bmNsdWRlIHRoaXMgZmxhZy4NCj4NClVzaW5nIFJFUV9OT0lERUwgdG8gZGlmZmVyZW5jZSBvZGly
+ZWN0IGFuZCBzeW5jLldoeSBub3QgdXNpbmc6DQogKwlpZiAoYmktPmJpX3J3ICYgV1JJVEVfT0RJ
+UkVDVCkNCiArCQliaS0+YmlfcncgJj0gflJFUV9TWU5DOw0KDQpUaGUgZmxhZyBXUklURV9PRElS
+RUNUIGlzIG9ubHkgdXNlZCBpbiBvZGlyZWN0LXdyaXRlLg0KDQo+IFNvIG1heWJlIHdlIHNob3Vs
+ZCBzaW1wbHkgY2hhbmdlIHJhaWQ1IHRvIG9ubHkgc2V0IFNUUklQRV9QUkVSRUFEX0FDVElWRSBp
+Zg0KPiBSRVFfTk9JRExFIGlzIHNldCBvbiB0aGUgYmlvLiAgSSB0aGluayB0aGlzIHdvdWxkIGhh
+dmUgdGhlIHNhbWUgZWZmZWN0IGFzDQo+IHdoYXQgeW91IGFyZSB0cnlpbmcgdG8gYWNoaWV2ZS4N
+Cj4NCj4gQ291bGQgeW91IHBsZWFzZSB0cnkgdGhhdCBhbmQgc2VlIGlmIGl0IGhhcyB0aGUgZGVz
+aXJlZCBlZmZlY3Qgb24NCj4gcGVyZm9ybWFuY2U/DQo+DQpJIHRlc3RlZCBhbmQgdGhlIHBlcmZv
+cm1hbmNlIGlzIHRoZSBzYW1lLg0KPlRoYW5rcywNCj5OZWlsQnJvd24NCj4NCj5pLmUuIHNvbWV0
+aGluZyBsaWtlIHRoaXM6DQo+DQo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2Ry
+aXZlcnMvbWQvcmFpZDUuYw0KPmluZGV4IGQ1NmQ3NGQuLjJkNzJhNTcgMTAwNjQ0DQo+LS0tIGEv
+ZHJpdmVycy9tZC9yYWlkNS5jDQo+KysrIGIvZHJpdmVycy9tZC9yYWlkNS5jDQo+QEAgLTQxNzgs
+NyArNDE3OCw3IEBAIHN0YXRpYyB2b2lkIG1ha2VfcmVxdWVzdChzdHJ1Y3QgbWRkZXYgKm1kZGV2
+LCBzdHJ1Y3QgYmlvICogYmkpDQo+IAkJCWZpbmlzaF93YWl0KCZjb25mLT53YWl0X2Zvcl9vdmVy
+bGFwLCAmdyk7DQo+IAkJCXNldF9iaXQoU1RSSVBFX0hBTkRMRSwgJnNoLT5zdGF0ZSk7DQo+IAkJ
+CWNsZWFyX2JpdChTVFJJUEVfREVMQVlFRCwgJnNoLT5zdGF0ZSk7DQo+LQkJCWlmICgoYmktPmJp
+X3J3ICYgUkVRX1NZTkMpICYmDQo+KwkJCWlmICgoYmktPmJpX3J3ICYgUkVRX05PSURMRSkgJiYN
+Cj4gCQkJICAgICF0ZXN0X2FuZF9zZXRfYml0KFNUUklQRV9QUkVSRUFEX0FDVElWRSwgJnNoLT5z
+dGF0ZSkpDQo+IAkJCQlhdG9taWNfaW5jKCZjb25mLT5wcmVyZWFkX2FjdGl2ZV9zdHJpcGVzKTsN
+Cj4gCQkJcmVsZWFzZV9zdHJpcGVfcGx1ZyhtZGRldiwgc2gpOw0KPg0KPg0KPj4gDQo+PiBTaWdu
+ZWQtb2ZmLWJ5OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQo+PiAtLS0NCj4+
+ICBkcml2ZXJzL21kL3JhaWQ1LmMgfCAgICAzICsrKw0KPj4gIDEgZmlsZXMgY2hhbmdlZCwgMyBp
+bnNlcnRpb25zKCspLCAwIGRlbGV0aW9ucygtKQ0KPj4gDQo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVy
+cy9tZC9yYWlkNS5jIGIvZHJpdmVycy9tZC9yYWlkNS5jDQo+PiBpbmRleCAwNDM0OGQ3Li44ZDJk
+NGQxIDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVycy9tZC9yYWlkNS5jDQo+PiArKysgYi9kcml2ZXJz
+L21kL3JhaWQ1LmMNCj4+IEBAIC00MDEwLDYgKzQwMTAsOSBAQCBzdGF0aWMgdm9pZCBtYWtlX3Jl
+cXVlc3Qoc3RydWN0IG1kZGV2ICptZGRldiwgc3RydWN0IGJpbyAqIGJpKQ0KPj4gIAkgICAgIGNo
+dW5rX2FsaWduZWRfcmVhZChtZGRldixiaSkpDQo+PiAgCQlyZXR1cm47DQo+PiAgDQo+PiArCWlm
+IChiaS0+YmlfcncgJiBXUklURV9PRElSRUNUKQ0KPj4gKwkJYmktPmJpX3J3ICY9IH5SRVFfU1lO
+QzsNCj4+ICsNCj4+ICAJbG9naWNhbF9zZWN0b3IgPSBiaS0+Ymlfc2VjdG9yICYgfigoc2VjdG9y
+X3QpU1RSSVBFX1NFQ1RPUlMtMSk7DQo+PiAgCWxhc3Rfc2VjdG9yID0gYmktPmJpX3NlY3RvciAr
+IChiaS0+Ymlfc2l6ZT4+OSk7DQo+PiAgCWJpLT5iaV9uZXh0ID0gTlVMTDsNCj4NCj4=
 
-On Wed, 11 Jul 2012 13:15:38 +0200 Sebastian Hegler
-<sebastian.hegler@tu-dresden.de> wrote:
-
-> Hi!
->=20
-> Am 11.07.2012 um 04:26 schrieb NeilBrown:
-> > I should have asked which kernel you were running. =20
-> > I'm guessing that it is earlier than 2.6.25, and so is missing upstream=
- commit
-> >   25156198235325805cd7295ed694509fd6e3a29e
-> >=20
-> > that fixes a bug which causes reshape not to restart if array was assem=
-bled auto-read-only.
-> The system is running vanilla 3.4.4, actually. So maybe there's another c=
-ode path where this is missing...
-
-Odd..  I cannot reproduce this (as RAID5 reshaping to more devices always
-starts reshaping once it becomes writable).
-
->=20
-> Thank you four your help. My RAID6 arrays are up again, and all data is s=
-till there.
->
-Thanks this important thing!
-
-Thanks,
-NeilBrown
-
---Sig_/BgHiJlTn3xZZbVQ2V+p_X9B
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUAO0Hjnsnt1WYoG5AQL1pxAAoFL2d4k1U15IJ4itSPsupYM3+sC3j2Hl
-tvLLzDfnOhg4EJkwHtQPPLslQ6LPtBfH/bbIs45SflwSWkB6sZjLZ2J8gp6HjMZW
-0qyqKHjqTj4rfshIPzT2JG4ImtCbqr6j1YtGuRQclcaeJCL6nm6MG1eO9mMaEgyb
-ZetdU3WHUOgmQDXXKROaLDqzHDuRnGXD5vRR9AlmVxEpogalsP6TckFUfI1xRuHF
-fumK7UtV3YOeJw4cgGWwD0l33EZ5smnDHqyHRTRXcOdFF0u1mdk8JJh54UOw/XXk
-I3Ry482BJgqBEe4MFCaj+Fhkoa7BTy9Vr+kG7R6bpmc6qBKrbenQ/NQmk9HEJ0KQ
-C4PF0Vrf7W3pg3fUyhv5XvG0xOVBsSzKzz0WGXsKyV4pzXm4aeuaSCQPMqCBLlZ1
-ixz5oQMSLgHT3F8+7OouIP57MAGORPajwZJNAoBYtoHwqHc7O1TpbtUekkqsFoSY
-a2PIRk/k7x4PcUuCWUQK/0XmntLVf0GaO6B2lW90IrDu8LDB+4nT2LIylPpUewG6
-zVnYVSt7vaiLrH6AUVycPrtxQjjjMOQrjNGcKFGQBprFOkpi9VTuy+YQZRFBp4Lm
-HPCDfLcre2qux+GtVD2u9y28pA1o8TVGIL/S9KA5Mf95bLodjd3GLSG0kaEEsHZd
-Sn65Ay13g5Y=
-=O5eX
------END PGP SIGNATURE-----
-
---Sig_/BgHiJlTn3xZZbVQ2V+p_X9B--
