@@ -1,70 +1,117 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: Re: [PATCH 0/2] Improve odirect-write performance for block-device.
-Date: Mon, 16 Jul 2012 07:21:38 -0600
-Message-ID: <CANejiEXRqfFufuT0HeCc1r=4u6yu1soCDw3q3SOOX=JCpkUKOQ@mail.gmail.com>
-References: <201207160929453906032@gmail.com>
-	<CANejiEW6znDtKZ+d5BzHb9TSM4ywC2CKyWhM95rJZJRgMgUZKw@mail.gmail.com>
-	<201207161343099841872@gmail.com>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: PATCH: md/raid1: sync_request_write() may complete r1_bio without rescheduling
+Date: Mon, 16 Jul 2012 17:55:25 +0300
+Message-ID: <CAGRgLy7Wtk1OByAGH4m19tyH+obMbaV=QD7cAv++HyojvK+C2Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <201207161343099841872@gmail.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: Neil Brown <neilb@suse.de>, viro <viro@zeniv.linux.org.uk>, linux-raid <linux-raid@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-2012/7/15 majianpeng <majianpeng@gmail.com>:
-> On 2012-07-16 11:29 Shaohua Li <shli@kernel.org> Wrote:
->>2012/7/15 majianpeng <majianpeng@gmail.com>:
->>> Create a raid5 using four disk and the chunksize is 512K.
->>> Test command is: dd if=/dev/zero of=/dev/md0 bs=1536K count=90000 oflag=direct
->>>
->>> In RHEL6(kernel 2.6.32):speed about 240MB/s
->>> In 3.5.0-rc5:speed about 77MB/S
->>> Add two patch in 3.5.0-rc5, speed about 200MB/S.
->>>
->>> So the performance of odirect-wrirte for block-deivce was obvious reduced.
->>> PATCH 1/2: Add blk_plug function for odirect-write block-device
->>> PATCH 2/2: Remove REQ_SYNC for odirect-write in raid456.
->>>
->>> PATCH 2/2 maybe not correct because it alse for odirect-write for regular file.
->>> Jianpeng Ma (2):
->>>   fs/block-dev.c:fix performance regression in O_DIRECT writes to
->>>     md block devices.
->>
->>In raid5, all requests are submitted by raid5d thread, which already has
->>plug. Why doesn't it work?
-> No. the purpose of two patch is to reduce the read operation when write which was not full-write.
-> I tested in RHEL6.The read operation is zero.But in 3.5.0-rc5, the read operaiton may equal to write-operation.
-> And i used the bs was 1536k(3*512k(chunk-size)).
+Hi Neil,
+this is yet another issue I encounter, which is indirectly related to
+bad-blocks code, but I think it can be hit when bad-blocks logging is
+disabled too.
 
-yes, I know. But I want to understand why we need the plug in your
-test. The IO is dispatched from raid5d, it already has plug.
+Scenario:
+- RAID1 with one device A, one device missing
+- mdadm --manage /dev/mdX --add /dev/B (fresh device B added)
+- recovery of B starts
 
-Fengguang used to post a patch to move the plug from generic_file_aio_write
-to do_blockdev_direct_IO, which sounds better.
+Now at some point, end_sync_write() on B returns with error. Now the
+following can happen:
+In sync_request_write() we do:
+1/
+	/*
+	 * schedule writes
+	 */
+	atomic_set(&r1_bio->remaining, 1);
 
->>>   raid5: For write performance, remove REQ_SYNC when write was odirect.
->>
->>REQ_SYNC only impacts CFQ, this sounds not reasonable. So the disks
->>are using CFQ ioscheduler. Can you check if you can see the same issue
->>with deadline?
-> I tested and the result is the same like cfq.
-> But in RHEL6, the ioscheduler is also cfq.
->>
->>Let me guess, without REQ_SYNC, read will get higher priority against write
->>in CFQ, so in this case, write gets delayed, and maybe get better write
->>request merge. And now with REQ_SYNC, read and write has the same
->>priority, there is less request merge.
->>
->>Thanks,
->>Shaohua
-> For harddisk,the read for not full-write will remarkly reduce the performance.
-> So the first it to make write full-write as posible.
+2/ then we schedule WRITEs, so for each WRITE scheduled we do:
+atomic_inc(&r1_bio->remaining);
 
-yes, this is the symptom, but I'd like to understand why REQ_SYNC makes
-the difference.
+3/ then we do:
+	if (atomic_dec_and_test(&r1_bio->remaining)) {
+		/* if we're here, all write(s) have completed, so clean up */
+		md_done_sync(mddev, r1_bio->sectors, 1);
+		put_buf(r1_bio);
+	}
+
+So assume that end_sync_write() completed with error, before we got to
+3/. Then in end_sync_write() we set R1BIO_WriteError, and the we
+decrement r1_bio->remaining, so it becomes 1, so we bail out and don't
+call reschedule_retry().
+Then in 3/ we decrement r1_bio->remaining again, see that it is 0 now
+and complete the bio....without marking bad block or failing the
+device. So we think that this region is in-sync, while it's not,
+because we hit IO error on B.
+
+I checked vs 2.6 versions and such behavior makes sense there, because
+R1BIO_WriteError or R1BIO_MadeGood cases are not present there (no
+bad-blocks functionality). But now, we must call reschedule_retry() at
+both places (if needed). Does this make sense?
+
+I tested the following patch, which seems to work ok:
+
+$ diff -U 20  c:/work/code_backups/psp13/bad_sectors/raid1.c
+ubuntu-precise/source/drivers/md/raid1.c
+--- c:/work/code_backups/psp13/bad_sectors/raid1.c      Mon Jul 16 17:10:24 2012
++++ ubuntu-precise/source/drivers/md/raid1.c    Mon Jul 16 17:45:13 2012
+@@ -1793,42 +1793,47 @@
+         */
+        atomic_set(&r1_bio->remaining, 1);
+        for (i = 0; i < disks ; i++) {
+                wbio = r1_bio->bios[i];
+                if (wbio->bi_end_io == NULL ||
+                    (wbio->bi_end_io == end_sync_read &&
+                     (i == r1_bio->read_disk ||
+                      !test_bit(MD_RECOVERY_SYNC, &mddev->recovery))))
+                        continue;
+
+                wbio->bi_rw = WRITE;
+                wbio->bi_end_io = end_sync_write;
+                atomic_inc(&r1_bio->remaining);
+                md_sync_acct(conf->mirrors[i].rdev->bdev, wbio->bi_size >> 9);
+
+                generic_make_request(wbio);
+        }
+
+        if (atomic_dec_and_test(&r1_bio->remaining)) {
+                /* if we're here, all write(s) have completed, so clean up */
+-               md_done_sync(mddev, r1_bio->sectors, 1);
+-               put_buf(r1_bio);
++               if (test_bit(R1BIO_MadeGood, &r1_bio->state) ||
++                   test_bit(R1BIO_WriteError, &r1_bio->state))
++                       reschedule_retry(r1_bio);
++               else {
++                       md_done_sync(mddev, r1_bio->sectors, 1);
++                       put_buf(r1_bio);
++               }
+        }
+ }
+
+ /*
+  * This is a kernel thread which:
+  *
+  *     1.      Retries failed read operations on working mirrors.
+  *     2.      Updates the raid superblock when problems encounter.
+  *     3.      Performs writes following reads for array synchronising.
+  */
+
+ static void fix_read_error(struct r1conf *conf, int read_disk,
+                           sector_t sect, int sectors)
+ {
+        struct mddev *mddev = conf->mddev;
+        while(sectors) {
+                int s = sectors;
+                int d = read_disk;
+                int success = 0;
+                int start;
+
+
+
 
 Thanks,
-Shaohua
+Alex.
