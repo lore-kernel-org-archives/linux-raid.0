@@ -1,128 +1,62 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: raid1 repair: sync_request() aborts if one of the drives has bad
- block recorded
-Date: Mon, 16 Jul 2012 11:45:12 +0300
-Message-ID: <CAGRgLy6JZXiHFg11Z-_3krj8iKp_Wk7X_wz8OyikyvhLpxzcxg@mail.gmail.com>
-References: <CAGRgLy6j3pEeXGXJbVc4Sz3gdShWWfaT7hyXnurgO-6N-_E_ZA@mail.gmail.com>
-	<20120716133753.1a34e149@notabene.brown>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH V1] raidd5:Only move IO_THRESHOLD stripes from delay_list to hold_list once.
+Date: Mon, 16 Jul 2012 16:53:43 +0800
+Message-ID: <2012071616534060998615@gmail.com>
+References: <201207131831085787372@gmail.com>,
+	<20120716174600.25589b7c@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120716133753.1a34e149@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: Dan Williams <dan.j.williams@gmail.com>, Paul Menzel <paulepanter@users.sourceforge.net>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Neil,
-thanks for your comments.
+T24gMjAxMi0wNy0xNiAxNTo0NiBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
+IEZyaSwgMTMgSnVsIDIwMTIgMTg6MzE6MTEgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVuZ0Bn
+bWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gVG8gaW1wcm92ZSB3cml0ZSBwZXJmb21hbmNlIGJ5IGRl
+Y3JlYXNpbmcgdGhlIHByZXJlYWQgc3RyaXBlLG9ubHkgbW92ZQ0KPj4gSU9fVEhSRVNIT0xEIHN0
+cmlwZXMgZnJvbSBkZWxheV9saXN0IHRvIGhvbGRfbGlzdCBvbmNlLg0KPj4gDQo+PiBVc2luZyB0
+aGUgZm9sbG93IGNvbW1hbmQ6DQo+PiBkZCBpZj0vZGV2L3plcm8gb2Y9L2Rldi9tZDAgYnM9Mk0g
+Y291bnQ9NTIxMDAuDQo+PiANCj4+IEF0IGRlZmF1bHQgY29uZGl0aW9uOiBzcGVlZCBpcyA5NU1C
+L3MuDQo+PiBBdCB0aGUgY29uZGl0aW9uIG9mIHByZXJlYWRfYnlwYXNzX3RocmVzaG9sZCB3YXMg
+ZXF1YWwgemVybzpzcGVlZCBpcyAxMDVNQi9zLg0KPj4gVXNpbmcgdGhpcyBwYXRjaDpzcGVlZCBp
+cyAxMjNNQi9zLg0KPj4gDQo+PiBJZiBwcmVyZWFkX2J5cGFzc190aHJlc2hvbGQgd2FzIHplcm8s
+dGhlIHBlcmZvcm1hbmNlIHdpbGwgYmUgYmV0dGVyLGJ1dA0KPj4gbm90IGJldHRlciB0aGFuIHRo
+aXMgcGF0Y2guDQo+PiBJIHRoaW5rIG1heWJlIHR3byByZWFzb246DQo+PiAxOklmIGJpbyBpcyBS
+RVFfU1lOQw0KPj4gMjpJbiBmdW5jdGlvbiBfX2dldF9wcmlvcml0eV9zdHJpcGUoKToNCj4+ID4+
+IH0gZWxzZSBpZiAoIWxpc3RfZW1wdHkoJmNvbmYtPmhvbGRfbGlzdCkgJiYNCj4+ID4+CQkgICAo
+KGNvbmYtPmJ5cGFzc190aHJlc2hvbGQgJiYNCj4+ID4+CQkgICAgIGNvbmYtPmJ5cGFzc19jb3Vu
+dCA+IGNvbmYtPmJ5cGFzc190aHJlc2hvbGQpIHx8DQo+PiA+PgkJICAgIGF0b21pY19yZWFkKCZj
+b25mLT5wZW5kaW5nX2Z1bGxfd3JpdGVzKSA9PSAwKSkgew0KPj4gUHJlcmVhZF9ieXBhc3NfdGhy
+ZXNob2xkIGlzIG9uZSBjb25kaXRpb24gb2YgZ2V0dGluZyBzdHJpcGUgZnJvbQ0KPj4gaG9sZF9s
+aXN0LlNvIG9ubHkgY29udHJvbCB0aGUgbnVtYmVyIG9mIGhvbGRfbGlzdCBjYW4gZ2V0IGJldHRl
+cg0KPj4gcGVyZm9ybWFuY2UuDQo+PiANCj4+IFNpZ25lZC1vZmYtYnk6IEppYW5wZW5nIE1hIDxt
+YWppYW5wZW5nQGdtYWlsLmNvbT4NCj4+IC0tLQ0KPj4gIGRyaXZlcnMvbWQvcmFpZDUuYyB8ICAg
+IDMgKysrDQo+PiAgMSBmaWxlcyBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25z
+KC0pDQo+PiANCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LmMgYi9kcml2ZXJzL21k
+L3JhaWQ1LmMNCj4+IGluZGV4IDA0MzQ4ZDcuLmE2NzQ5YmIgMTAwNjQ0DQo+PiAtLS0gYS9kcml2
+ZXJzL21kL3JhaWQ1LmMNCj4+ICsrKyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gQEAgLTM2NjIs
+NiArMzY2Miw3IEBAIGZpbmlzaDoNCj4+ICANCj4+ICBzdGF0aWMgdm9pZCByYWlkNV9hY3RpdmF0
+ZV9kZWxheWVkKHN0cnVjdCByNWNvbmYgKmNvbmYpDQo+PiAgew0KPj4gKwlpbnQgY291bnQgPSAw
+Ow0KPj4gIAlpZiAoYXRvbWljX3JlYWQoJmNvbmYtPnByZXJlYWRfYWN0aXZlX3N0cmlwZXMpIDwg
+SU9fVEhSRVNIT0xEKSB7DQo+PiAgCQl3aGlsZSAoIWxpc3RfZW1wdHkoJmNvbmYtPmRlbGF5ZWRf
+bGlzdCkpIHsNCj4+ICAJCQlzdHJ1Y3QgbGlzdF9oZWFkICpsID0gY29uZi0+ZGVsYXllZF9saXN0
+Lm5leHQ7DQo+PiBAQCAtMzY3Miw2ICszNjczLDggQEAgc3RhdGljIHZvaWQgcmFpZDVfYWN0aXZh
+dGVfZGVsYXllZChzdHJ1Y3QgcjVjb25mICpjb25mKQ0KPj4gIAkJCWlmICghdGVzdF9hbmRfc2V0
+X2JpdChTVFJJUEVfUFJFUkVBRF9BQ1RJVkUsICZzaC0+c3RhdGUpKQ0KPj4gIAkJCQlhdG9taWNf
+aW5jKCZjb25mLT5wcmVyZWFkX2FjdGl2ZV9zdHJpcGVzKTsNCj4+ICAJCQlsaXN0X2FkZF90YWls
+KCZzaC0+bHJ1LCAmY29uZi0+aG9sZF9saXN0KTsNCj4+ICsJCQlpZiAoKytjb3VudCA+PSBJT19U
+SFJFU0hPTEQpDQo+PiArCQkJCWJyZWFrOw0KPj4gIAkJfQ0KPj4gIAl9DQo+PiAgfQ0KPg0KPg0K
+PkkgdHJpZWQgdGhpcyBwYXRjaCAtIGFnYWluc3QgbXkgY3VycmVudCBmb3ItbmV4dCB0cmVlIC0g
+b24gbXkgb3duIG1vZGVzdA0KPmhhcmR3YXJlIGFuZCBjb3VsZCBub3QgbWVhc3VyZSBhbnkgZGlm
+ZmVyZW5jZSBpbiB3cml0ZSB0aHJvdWdocHV0Lg0KPg0KPk1heWJlIHNvbWUgb3RoZXIgcGF0Y2gg
+aGFzIGZpeGVkIHNvbWV0aGluZy4NCj4NCj5Ib3dldmVyIGl0IGlzIHN0aWxsIHJlYWRpbmcgYSBs
+b3QgZHVyaW5nIGEgd3JpdGUtb25seSB0ZXN0IGFuZCB0aGF0IGlzIG5vdA0KPmlkZWFsLiAgSXQg
+d291bGQgYmUgbmljZSBpZiB3ZSBjb3VsZCBhcnJhbmdlIHRoYXQgaXQgZGlkbid0IHJlYWQgYXQg
+YWxsLg0KPg0KQnkgY29tcGFyZSB0byBrZXJuZWwgMi42LjE4LzIuNi4zMiwgdGhlcmUgYXJlIG5v
+dCBhbnkgcmVhZGluZy4NClNvIGkgdGhpbmsgIGl0IHNob3VsZCBtb3JlIHdvcmsgdG8gZG8gLg0K
+Pk5laWxCUm93bg0KPg==
 
-> I don't see that MD_RECOVERY_REQUESTED is really an issue is it?
-> We the wrong thing happen in any case where there just one device with no bad
-> block, and at least one device with a bad block.  In that case we want to
-> skip forward by the number of bad blocks, not skip to the end of the array.
-
-I think that MD_RECOVERY_REQUESTED has some meaning here. Because
-there are only two places where we increase "write_targets":
-Here:
-		} else if (!test_bit(In_sync, &rdev->flags)) {
-			bio->bi_rw = WRITE;
-			bio->bi_end_io = end_sync_write;
-			write_targets ++;
-and
-	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) && read_targets > 0)
-		/* extra read targets are also write targets */
-		write_targets += read_targets-1;
-
-So if we'll see a device that is not In_sync, we will increase
-write_targets and won't fall into that issue. That's why I was
-thinking to check for MD_RECOVERY_REQUESTED.
-
->
-> So this?
->
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 240ff31..c443f93 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -2422,7 +2422,10 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr, int *skipp
->                 /* There is nowhere to write, so all non-sync
->                  * drives must be failed - so we are finished
->                  */
-> -               sector_t rv = max_sector - sector_nr;
-> +               sector_t rv;
-> +               if (min_bad > 0)
-> +                       max_sector = sector_nr + min_bad;
-> +               rv = max_sector - sector_nr;
->                 *skipped = 1;
->                 put_buf(r1_bio);
->                 return rv;
->
-
-I tested it and it works. However, I have a question: shouldn't we try
-to clear bad blocks during "repair" in particular or during any
-kind-of-sync in general?
-
-Because currently the following is happening:
-- In sync_request devices are selected as candidates for READs and for
-WRITEs (using various criteria)
-- Then we issue the READs and eventually end up in sync_request_write()
-- Here we schedule WRITEs (without consulting bad blocks or WriteErrorSeen bit)
-- In end_sync_write, we check if we can clear some bad blocks, and if
-yes, eventually we end up in handle_sync_write_finished(), where we
-clear bad blocks
-
-So getting back to sync_request(), the issue is this: if we consider a
-device for READs, we check for badblocks. If we find a badblock, we
-skip it and don't consider this device neither for READs nor for
-WRITEs. How about:
-- We consider a device for READs
-- If it has a bad block, we consider it for WRITEs instead (so we have
-a 3rd place where we consider the device for WRITE).
-- We may consult WriteErrorSeen bit as we do in normal make_request(),
-but not sure, because right now on sync path, we don't consult it
-
-So this patch:
---- c:/work/code_backups/psp13/raid1.c  Sun Jul 15 16:39:07 2012
-+++ ubuntu-precise/source/drivers/md/raid1.c    Mon Jul 16 11:35:40 2012
-@@ -2385,20 +2385,25 @@
-                                        if (wonly < 0)
-                                                wonly = i;
-                                } else {
-                                        if (disk < 0)
-                                                disk = i;
-                                }
-                                bio->bi_rw = READ;
-                                bio->bi_end_io = end_sync_read;
-                                read_targets++;
-                        }
-+                       else {
-+                               bio->bi_rw = WRITE;
-+                               bio->bi_end_io = end_sync_write;
-+                               write_targets ++;
-+                       }
-                }
-                if (bio->bi_end_io) {
-                        atomic_inc(&rdev->nr_pending);
-                        bio->bi_sector = sector_nr + rdev->data_offset;
-                        bio->bi_bdev = rdev->bdev;
-                        bio->bi_private = r1_bio;
-                }
-        }
-        rcu_read_unlock();
-        if (disk < 0)
-
-
-I tested this patch (together with yours) and it cleared the bad
-blocks, but not sure what else I might be missing. My Linux kernel
-programming skills are still ... questionable.
-
-Thanks,
-Alex.
-
-
-
->
-> Thanks,
-> NeilBrown
->
