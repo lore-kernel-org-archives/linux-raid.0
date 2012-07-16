@@ -1,88 +1,84 @@
-From: Brassow Jonathan <jbrassow@redhat.com>
-Subject: Re: [PATCH v2] DM RAID: Add support for MD RAID10
-Date: Mon, 16 Jul 2012 17:53:53 -0500
-Message-ID: <B5AB774E-C433-4DDC-B878-F1A50AD03AB2@redhat.com>
-References: <1342057001.22214.6.camel@f16> <20120712162205.GA13485@www5.open-std.org> <331FD2B6-AD96-4513-AF37-4E1B9EE7A34F@redhat.com> <20120713011505.GA3099@www5.open-std.org> <20120713112717.3b15647c@notabene.brown> <20120713082923.GA19771@www5.open-std.org> <20120716161431.42749a15@notabene.brown> <20120716082843.GA30247@www5.open-std.org>
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Alex <mysqlstudent@gmail.com>
+Subject: Need to remove failed disk from RAID5 array
+Date: Mon, 16 Jul 2012 19:17:02 -0400
+Message-ID: <CAB1R3shxBWebm13ie5gR0h++-GBTyfZrranHr8tjGkbPipV32w@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120716082843.GA30247@www5.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: keld@keldix.com
-Cc: NeilBrown <neilb@suse.de>, dm-devel@redhat.com, linux-raid@vger.kernel.org, agk@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
-On Jul 16, 2012, at 3:28 AM, keld@keldix.com wrote:
+I have a degraded RAID5 array on an fc15 box due to sda failing:
 
->> 
->> Maybe you are suggesting that dmraid should not support raid10-far or
->> raid10-offset until the "new" approach is implemented.
-> 
-> I don't know. It may take a while to get it implemented as long as no seasoned 
-> kernel hackers are working on it. As it is implemented now by Barrow, why not then go
-> forward as planned. 
-> 
-> For the offset layout I don't have a good idea on how to improve the redundancy.
-> Maybe you or others have good ideas. Or is the offset layout an implementation
-> of a standard layout? Then there is not much ado. Except if we could find a layout that has
-> the same advantages but with better redundancy.
+Personalities : [raid6] [raid5] [raid4]
+md1 : active raid5 sda3[5](F) sdd2[4] sdc2[2] sdb2[1]
+      2890747392 blocks super 1.1 level 5, 512k chunk, algorithm 2 [4/3] [_UUU]
+      bitmap: 8/8 pages [32KB], 65536KB chunk
 
-Excuse me, s/Barrow/Brassow/ - my parents insist.
+md0 : active raid5 sda2[5] sdd1[4] sdc1[2] sdb1[1]
+      30715392 blocks super 1.1 level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
+      bitmap: 0/1 pages [0KB], 65536KB chunk
 
-I've got a "simple" idea for improving the redundancy of the "far" algorithms.  Right now, when calculating the device on which the far copy will go, we perform:
-	d += geo->near_copies;
-	d %= geo->raid_disks;
-This effectively "shifts" the copy rows over by 'near_copies' (1 in the simple case), as follows:
-	disk1	disk2	or	disk1	disk2	disk3
-	=====	=====		=====	=====	=====
-	 A1	 A2		 A1	 A2	 A3
-	 ..	 ..		 ..	 ..	 ..
-	 A2	 A1		 A3	 A1	 A2
-For all odd numbers of 'far' copies, this is what we should do.  However, for an even number of far copies, we should shift "near_copies + 1" - unless (far_copies == (raid_disks / near_copies)), in which case it should be simply "near_copies".  This should provide maximum redundancy for all cases, I think.  I will call the number of devices the copy is shifted the "device stride", or dev_stride.  Here are a couple examples:
-	2-devices, near=1, far=2, offset=0/1: dev_stride = nc (SAME AS CURRENT ALGORITHM)
+There's a ton of messages like these:
 
-	3-devices, near=1, far=2, offset=0/1: dev_stride = nc + 1.  Layout changes as follows:
-	disk1	disk2	disk3
-	=====	=====	=====
-	 A1	 A2	 A3
-	 ..	 ..	 ..
-	 A2	 A3	 A1
+end_request: I/O error, dev sda, sector 1668467332
+md/raid:md1: read error NOT corrected!! (sector 1646961280 on sda3).
+md/raid:md1: Disk failure on sda3, disabling device.
+md/raid:md1: Operation continuing on 3 devices.
+md/raid:md1: read error not correctable (sector 1646961288 on sda3).
 
-	4-devices, near=1, far=2, offset=0/1: dev_stride = nc + 1.  Layout changes as follows:
-	disk1	disk2	disk3	disk4
-	=====	=====	=====   =====
-	 A1	 A2	 A3	 A4
-	 ..	 ..	 ..	 ..
-	 A3	 A4	 A1	 A2
-This gives max redundancy for 3, 4, 5, etc far copies too, as long as each stripe that's copied is laid down at: 	d += geo->dev_stride * copy#;  (where far=2, copy# would be 0 and 1.  Far=3, copy# would be 0, 1, 2).
-Here's a couple more quick examples to make that clear:
-	3-devices, near=1, far=3, offset=0/1: dev_stride = nc (SHOULD BE SAME AS CURRENT)
-	disk1	disk2	disk3
-	=====	=====	=====
-	 A1	 A2	 A3
-	 ..	 ..	 ..
-	 A3	 A1	 A2
-	 ..	 ..	 ..
-	 A2	 A3	 A1  -- Each copy "shifted" 'nc' from the last
-	 ..	 ..	 ..
+What is the proper procedure to remove the disk from the array,
+shutdown the server, and reboot with a new sda?
 
-	5-devices, near=1, far=4, offset=0/1: dev_stride = nc + 1.  Layout changes to:
-	disk1	disk2	disk3	disk4	disk5
-	=====	=====	=====   =====	=====
-	 A1	 A2	 A3	 A4	 A5
-	 ..	 ..	 ..	 ..	 ..
-	 A4	 A5	 A1	 A2	 A3
-	 ..	 ..	 ..	 ..	 ..
-	 A2	 A3	 A4	 A5	 A1  -- Each copy "shifted" (nc + 1) from the last
-	 ..	 ..	 ..	 ..	 ..
-	 A5	 A1	 A2	 A3	 A4
-	 ..	 ..	 ..	 ..	 ..
+# mdadm --version
+mdadm - v3.2.5 - 18th May 2012
 
-This should require a new bit in 'layout' (bit 17) to signify a different calculation in the way the copy device selection happens.  We then need to replace 'd += geo->near_copies' with 'd += geo->dev_stride' and set dev_stride in 'setup_geo'.  I'm not certain how much work it is beyond that, but I don't *think* it looks that bad and I'd be happy to do it.
+# mdadm -Es
+ARRAY /dev/md/0 metadata=1.1 UUID=4b5a3704:c681f663:99e744e4:254ebe3e
+name=pixie.example.com:0
+ARRAY /dev/md/1 metadata=1.1 UUID=d5032866:15381f0b:e725e8ae:26f9a971
+name=pixie.example.com:1
 
-So, should I allow the current "far" and "offset" in dm-raid, or should I simply allow "near" for now?
+# mdadm --detail /dev/md1
+/dev/md1:
+        Version : 1.1
+  Creation Time : Sun Aug  7 12:52:18 2011
+     Raid Level : raid5
+     Array Size : 2890747392 (2756.83 GiB 2960.13 GB)
+  Used Dev Size : 963582464 (918.94 GiB 986.71 GB)
+   Raid Devices : 4
+  Total Devices : 4
+    Persistence : Superblock is persistent
 
- brassow
+  Intent Bitmap : Internal
 
+    Update Time : Mon Jul 16 19:14:11 2012
+          State : active, degraded
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+           Name : pixie.example.com:1  (local to host pixie.example.com)
+           UUID : d5032866:15381f0b:e725e8ae:26f9a971
+         Events : 162567
+
+    Number   Major   Minor   RaidDevice State
+       0       0        0        0      removed
+       1       8       18        1      active sync   /dev/sdb2
+       2       8       34        2      active sync   /dev/sdc2
+       4       8       50        3      active sync   /dev/sdd2
+
+       5       8        3        -      faulty spare   /dev/sda3
+
+I'd appreciate a pointer to any existing documentation, or some
+general guidance on the proper procedure.
+
+Thanks,
+Alex
