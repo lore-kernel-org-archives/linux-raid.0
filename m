@@ -1,34 +1,47 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: On mdadm 3.2 and bad-block-log
-Date: Mon, 16 Jul 2012 10:55:40 +0300
-Message-ID: <CAGRgLy6udWWhYn_UEwyyVrKsV5auAdfN5qkLVxbNnVqgWE=+UQ@mail.gmail.com>
-References: <4FD7738D.3040403@shiftmail.org>
-	<CAGRgLy5Eryf_kT69a3SSPi8-MVpVmhEL96tNWJZQd9-vf4iYZQ@mail.gmail.com>
-	<20120716134138.0f1c9cfc@notabene.brown>
-	<5003C5BC.3070609@shiftmail.org>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH 2/2] raid5: For write performance, remove REQ_SYNC when write was odirect.
+Date: Mon, 16 Jul 2012 16:14:43 +0800
+Message-ID: <2012071616143768718310@gmail.com>
+References: <201207160931507187344@gmail.com> <20120716154010.0ef12c57@notabene.brown> <201207161442513597497@gmail.com> <20120716170717.5d5ee04c@notabene.brown> <201207161511247039289@gmail.com>,
+	<20120716173028.69dd5ead@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5003C5BC.3070609@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: viro <viro@ZenIV.linux.org.uk>, linux-raid <linux-raid@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-The mdadm code only reserves some space for bad-blocks log and
-notifies the kernel that this feature is enabled during array
-creation.
+T24gMjAxMi0wNy0xNiAxNTozMCBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
+IE1vbiwgMTYgSnVsIDIwMTIgMTU6MTE6MjkgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVuZ0Bn
+bWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gT24gMjAxMi0wNy0xNiAxNTowNyBOZWlsQnJvd24gPG5l
+aWxiQHN1c2UuZGU+IFdyb3RlOg0KPj4gPk9uIE1vbiwgMTYgSnVsIDIwMTIgMTQ6NDI6NTQgKzA4
+MDAgbWFqaWFucGVuZyA8bWFqaWFucGVuZ0BnbWFpbC5jb20+IHdyb3RlOg0KPj4gPg0KPj4gPj4g
+T24gMjAxMi0wNy0xNiAxMzo0MCBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPj4g
+Pj4gPk9uIE1vbiwgMTYgSnVsIDIwMTIgMDk6MzE6NTUgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFu
+cGVuZ0BnbWFpbC5jb20+IHdyb3RlOg0KPj4gPj4gPg0KPj4gW3NuaXBdDQo+PiA+PiA+IE5vcm1h
+bCAnc3luYycgcmVxdWVzdHMgdXNlIFdSSVRFX1NZTkMgd2hpY2ggaW5jbHVkZXMgIlJFUV9OT0lE
+TEUiIHdoaWNoIG1lYW5zDQo+PiA+PiA+ICAgLyogZG9uJ3QgYW50aWNpcGF0ZSBtb3JlIElPIGFm
+dGVyIHRoaXMgb25lICovDQo+PiA+PiA+IE9fRElSRUNUIHJlcXVlc3QgdXNlIFdSSVRFX09ESVJF
+Q1Qgd2hpY2ggZG9lcyBub3QgaW5jbHVkZSB0aGlzIGZsYWcuDQo+PiA+PiA+DQo+PiA+DQo+PiA+
+PiBVc2luZyBSRVFfTk9JREVMIHRvIGRpZmZlcmVuY2Ugb2RpcmVjdCBhbmQgc3luYy5XaHkgbm90
+IHVzaW5nOg0KPj4gPj4gICsJaWYgKGJpLT5iaV9ydyAmIFdSSVRFX09ESVJFQ1QpDQo+PiA+PiAg
+KwkJYmktPmJpX3J3ICY9IH5SRVFfU1lOQzsNCj4+ID4NCj4+ID5CZWNhdXNlIHRoYXQgY29kZSBp
+cyB3cm9uZy4gIFdSSVRFX09ESVJFQ1QgaXMgbm90IG9uZSBmbGFnLCBpdCBpcyB0d28gZmxhZ3MN
+Cj4+ID4nb3InZWQgdG9nZXRoZXIuICBTbyB0aGlzIGNvZGUgZG9lcyBub3QgZG8gd2hhdCB5b3Ug
+ZXhwZWN0Lg0KPj4gPg0KPj4gTm8sIEkgdXNlZCB0aG9zZSBjb2RlIHRlc3QgYW5kIGl0J3Mgb2su
+DQo+PiBUaGUgY29kZSB1c2VkICYgbm90ICYmLg0KPj4gTWF5YmUgSSB3cm9uZz8NCj4NCj5UaGlu
+ayBhYm91dCBpdC4uLg0KPg0KPiNkZWZpbmUgUkVRX1dSSVRFICAgICAgICAgICAgICAgKDEgPDwg
+X19SRVFfV1JJVEUpDQo+I2RlZmluZSBSRVFfU1lOQyAgICAgICAgICAgICAgICAoMSA8PCBfX1JF
+UV9TWU5DKQ0KPg0KPiNkZWZpbmUgUldfTUFTSyAgICAgICAgICAgICAgICAgUkVRX1dSSVRFDQo+
+I2RlZmluZSBXUklURSAgICAgICAgICAgICAgICAgICBSV19NQVNLDQo+DQo+I2RlZmluZSBXUklU
+RV9PRElSRUNUCQkoV1JJVEUgfCBSRVFfU1lOQykNCj4NCj5TbyAgIA0KPiAgICAoYmktPmJpX3J3
+ICYgV1JJVEVfT0RJUkVDVCkNCj4NCj53aWxsIGJlIHRydWUgaWYgZWl0aGVyIFJFUV9XUklURSBv
+ciBSRVFfU1lOQyBhcmUgc2V0IGluIGJpX3J3DQo+U28gd2hlbmV2ZXIgUkVRX1NZTkMgaXMgc2V0
+LCB5b3VyIGNvZGUgY2xlYXJzIHRoZSBmbGFnLg0KPlNvIHlvdXIgY29kZSBpcyBmdW5jdGlvbmFs
+bHkgaWRlbnRpY2FsIHRvDQo+DQo+ICAgYmktPmJpX3J3ICY9IH5SRVFfU1lOQzsNCj4NCj5OZWls
+QnJvd24NCj4NCj4NClllcywgdGhhbmtzIHlvdXIgdGltZS5JIG1ha2VkIGEgc3R1cGlkIG1pc3Rh
+a2UuDQpJJ2xsIGNvcnJlY3RlZCBieSB5b3VyIHN1Z2dlc3Rpb24gYW5kIHJlc2VuZCB0byB5b3Uu
 
-On Mon, Jul 16, 2012 at 10:41 AM, Asdo <asdo@shiftmail.org> wrote:
-> On 07/16/12 05:41, NeilBrown wrote:
->>
->> and as the bad block code is
->> clearly still buggy, I probably don't want to rush it out :-)
->
->
-> The bad block code is buggy... the one in the kernel or the one in mdadm-3.3
-> ?
-> 'cause I am currently using an array created with bad block log on kernel
-> 3.4.3...
->
-> Thanks
