@@ -1,62 +1,54 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: Re: [PATCH V1] raidd5:Only move IO_THRESHOLD stripes from delay_list to hold_list once.
-Date: Mon, 16 Jul 2012 16:53:43 +0800
-Message-ID: <2012071616534060998615@gmail.com>
-References: <201207131831085787372@gmail.com>,
-	<20120716174600.25589b7c@notabene.brown>
+From: Asdo <asdo@shiftmail.org>
+Subject: Re: On mdadm 3.2 and bad-block-log
+Date: Mon, 16 Jul 2012 10:56:27 +0200
+Message-ID: <5003D73B.3010609@shiftmail.org>
+References: <4FD7738D.3040403@shiftmail.org>
+ <CAGRgLy5Eryf_kT69a3SSPi8-MVpVmhEL96tNWJZQd9-vf4iYZQ@mail.gmail.com>
+ <20120716134138.0f1c9cfc@notabene.brown> <5003C5BC.3070609@shiftmail.org>
+ <CAGRgLy6udWWhYn_UEwyyVrKsV5auAdfN5qkLVxbNnVqgWE=+UQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; format=flowed; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-reply-to: <CAGRgLy6udWWhYn_UEwyyVrKsV5auAdfN5qkLVxbNnVqgWE=+UQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Dan Williams <dan.j.williams@gmail.com>, Paul Menzel <paulepanter@users.sourceforge.net>, linux-raid <linux-raid@vger.kernel.org>
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wNy0xNiAxNTo0NiBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
-IEZyaSwgMTMgSnVsIDIwMTIgMTg6MzE6MTEgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVuZ0Bn
-bWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gVG8gaW1wcm92ZSB3cml0ZSBwZXJmb21hbmNlIGJ5IGRl
-Y3JlYXNpbmcgdGhlIHByZXJlYWQgc3RyaXBlLG9ubHkgbW92ZQ0KPj4gSU9fVEhSRVNIT0xEIHN0
-cmlwZXMgZnJvbSBkZWxheV9saXN0IHRvIGhvbGRfbGlzdCBvbmNlLg0KPj4gDQo+PiBVc2luZyB0
-aGUgZm9sbG93IGNvbW1hbmQ6DQo+PiBkZCBpZj0vZGV2L3plcm8gb2Y9L2Rldi9tZDAgYnM9Mk0g
-Y291bnQ9NTIxMDAuDQo+PiANCj4+IEF0IGRlZmF1bHQgY29uZGl0aW9uOiBzcGVlZCBpcyA5NU1C
-L3MuDQo+PiBBdCB0aGUgY29uZGl0aW9uIG9mIHByZXJlYWRfYnlwYXNzX3RocmVzaG9sZCB3YXMg
-ZXF1YWwgemVybzpzcGVlZCBpcyAxMDVNQi9zLg0KPj4gVXNpbmcgdGhpcyBwYXRjaDpzcGVlZCBp
-cyAxMjNNQi9zLg0KPj4gDQo+PiBJZiBwcmVyZWFkX2J5cGFzc190aHJlc2hvbGQgd2FzIHplcm8s
-dGhlIHBlcmZvcm1hbmNlIHdpbGwgYmUgYmV0dGVyLGJ1dA0KPj4gbm90IGJldHRlciB0aGFuIHRo
-aXMgcGF0Y2guDQo+PiBJIHRoaW5rIG1heWJlIHR3byByZWFzb246DQo+PiAxOklmIGJpbyBpcyBS
-RVFfU1lOQw0KPj4gMjpJbiBmdW5jdGlvbiBfX2dldF9wcmlvcml0eV9zdHJpcGUoKToNCj4+ID4+
-IH0gZWxzZSBpZiAoIWxpc3RfZW1wdHkoJmNvbmYtPmhvbGRfbGlzdCkgJiYNCj4+ID4+CQkgICAo
-KGNvbmYtPmJ5cGFzc190aHJlc2hvbGQgJiYNCj4+ID4+CQkgICAgIGNvbmYtPmJ5cGFzc19jb3Vu
-dCA+IGNvbmYtPmJ5cGFzc190aHJlc2hvbGQpIHx8DQo+PiA+PgkJICAgIGF0b21pY19yZWFkKCZj
-b25mLT5wZW5kaW5nX2Z1bGxfd3JpdGVzKSA9PSAwKSkgew0KPj4gUHJlcmVhZF9ieXBhc3NfdGhy
-ZXNob2xkIGlzIG9uZSBjb25kaXRpb24gb2YgZ2V0dGluZyBzdHJpcGUgZnJvbQ0KPj4gaG9sZF9s
-aXN0LlNvIG9ubHkgY29udHJvbCB0aGUgbnVtYmVyIG9mIGhvbGRfbGlzdCBjYW4gZ2V0IGJldHRl
-cg0KPj4gcGVyZm9ybWFuY2UuDQo+PiANCj4+IFNpZ25lZC1vZmYtYnk6IEppYW5wZW5nIE1hIDxt
-YWppYW5wZW5nQGdtYWlsLmNvbT4NCj4+IC0tLQ0KPj4gIGRyaXZlcnMvbWQvcmFpZDUuYyB8ICAg
-IDMgKysrDQo+PiAgMSBmaWxlcyBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25z
-KC0pDQo+PiANCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LmMgYi9kcml2ZXJzL21k
-L3JhaWQ1LmMNCj4+IGluZGV4IDA0MzQ4ZDcuLmE2NzQ5YmIgMTAwNjQ0DQo+PiAtLS0gYS9kcml2
-ZXJzL21kL3JhaWQ1LmMNCj4+ICsrKyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gQEAgLTM2NjIs
-NiArMzY2Miw3IEBAIGZpbmlzaDoNCj4+ICANCj4+ICBzdGF0aWMgdm9pZCByYWlkNV9hY3RpdmF0
-ZV9kZWxheWVkKHN0cnVjdCByNWNvbmYgKmNvbmYpDQo+PiAgew0KPj4gKwlpbnQgY291bnQgPSAw
-Ow0KPj4gIAlpZiAoYXRvbWljX3JlYWQoJmNvbmYtPnByZXJlYWRfYWN0aXZlX3N0cmlwZXMpIDwg
-SU9fVEhSRVNIT0xEKSB7DQo+PiAgCQl3aGlsZSAoIWxpc3RfZW1wdHkoJmNvbmYtPmRlbGF5ZWRf
-bGlzdCkpIHsNCj4+ICAJCQlzdHJ1Y3QgbGlzdF9oZWFkICpsID0gY29uZi0+ZGVsYXllZF9saXN0
-Lm5leHQ7DQo+PiBAQCAtMzY3Miw2ICszNjczLDggQEAgc3RhdGljIHZvaWQgcmFpZDVfYWN0aXZh
-dGVfZGVsYXllZChzdHJ1Y3QgcjVjb25mICpjb25mKQ0KPj4gIAkJCWlmICghdGVzdF9hbmRfc2V0
-X2JpdChTVFJJUEVfUFJFUkVBRF9BQ1RJVkUsICZzaC0+c3RhdGUpKQ0KPj4gIAkJCQlhdG9taWNf
-aW5jKCZjb25mLT5wcmVyZWFkX2FjdGl2ZV9zdHJpcGVzKTsNCj4+ICAJCQlsaXN0X2FkZF90YWls
-KCZzaC0+bHJ1LCAmY29uZi0+aG9sZF9saXN0KTsNCj4+ICsJCQlpZiAoKytjb3VudCA+PSBJT19U
-SFJFU0hPTEQpDQo+PiArCQkJCWJyZWFrOw0KPj4gIAkJfQ0KPj4gIAl9DQo+PiAgfQ0KPg0KPg0K
-PkkgdHJpZWQgdGhpcyBwYXRjaCAtIGFnYWluc3QgbXkgY3VycmVudCBmb3ItbmV4dCB0cmVlIC0g
-b24gbXkgb3duIG1vZGVzdA0KPmhhcmR3YXJlIGFuZCBjb3VsZCBub3QgbWVhc3VyZSBhbnkgZGlm
-ZmVyZW5jZSBpbiB3cml0ZSB0aHJvdWdocHV0Lg0KPg0KPk1heWJlIHNvbWUgb3RoZXIgcGF0Y2gg
-aGFzIGZpeGVkIHNvbWV0aGluZy4NCj4NCj5Ib3dldmVyIGl0IGlzIHN0aWxsIHJlYWRpbmcgYSBs
-b3QgZHVyaW5nIGEgd3JpdGUtb25seSB0ZXN0IGFuZCB0aGF0IGlzIG5vdA0KPmlkZWFsLiAgSXQg
-d291bGQgYmUgbmljZSBpZiB3ZSBjb3VsZCBhcnJhbmdlIHRoYXQgaXQgZGlkbid0IHJlYWQgYXQg
-YWxsLg0KPg0KQnkgY29tcGFyZSB0byBrZXJuZWwgMi42LjE4LzIuNi4zMiwgdGhlcmUgYXJlIG5v
-dCBhbnkgcmVhZGluZy4NClNvIGkgdGhpbmsgIGl0IHNob3VsZCBtb3JlIHdvcmsgdG8gZG8gLg0K
-Pk5laWxCUm93bg0KPg==
+Right, that's the reason of my question.
+Neil wrote "I probably don't want to rush it out" so that would mean 
+that the buggy code is not "out" yet.
+So that would point to mdadm-3.3 because the bad block code of the 
+kernel is already "out".
+However as you say the bad block code in mdadm-3.3 is very simple so 
+it's strange that it could be buggy.
+
+Now thinking at myself: if there were bugs in the mdadm-3.3 I probably 
+have dodged them because I was able to create the array.
+However if there are known bugs in the kernel code our data is still at 
+risk so i'd rather ask.
+FWIW I am not using mdadm-3.3 as monitoring daemon: the daemon is 
+mdadm-3.2 , I don't know if this "helps".
+
+Thank you
+A.
+
+
+On 07/16/12 09:55, Alexander Lyakas wrote:
+> The mdadm code only reserves some space for bad-blocks log and
+> notifies the kernel that this feature is enabled during array
+> creation.
+>
+> On Mon, Jul 16, 2012 at 10:41 AM, Asdo<asdo@shiftmail.org>  wrote:
+>> On 07/16/12 05:41, NeilBrown wrote:
+>>> and as the bad block code is
+>>> clearly still buggy, I probably don't want to rush it out :-)
+>>
+>> The bad block code is buggy... the one in the kernel or the one in mdadm-3.3
+>> ?
+>> 'cause I am currently using an array created with bad block log on kernel
+>> 3.4.3...
+>>
+>> Thanks
 
