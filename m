@@ -1,62 +1,54 @@
-From: Zdenek Kaspar <zkaspar82@gmail.com>
-Subject: Re: Linux RAID subsystem future
-Date: Sat, 14 Jul 2012 23:41:12 +0200
-Message-ID: <5001E778.5040600@gmail.com>
-References: <jtn1c5$q0u$1@dough.gmane.org> <CACJz6Qsx-xNxDRw5kUqUpf9ogVp23jokHOdGL9xO=kqFXmiNZg@mail.gmail.com> <20120713063501.3f9a3bd8@notabene.brown>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH V1] raidd5:Only move IO_THRESHOLD stripes from delay_list to hold_list once.
+Date: Mon, 16 Jul 2012 09:09:54 +0800
+Message-ID: <201207160909343901731@gmail.com>
+References: <201207131831085787372@gmail.com>,
+	<CAA9_cmcLEYeu9VaVTgVW=CX+JvTyA_ubAmrAkpQdxGmRkGj_3A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120713063501.3f9a3bd8@notabene.brown>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@gmail.com>
+Cc: Neil Brown <neilb@suse.de>, Paul Menzel <paulepanter@users.sourceforge.net>, linux-raid <linux-raid@vger.kernel.org>, shli <shli@kernel.org>
 List-Id: linux-raid.ids
 
-On 07/12/2012 10:35 PM, NeilBrown wrote:
-> On Thu, 12 Jul 2012 13:28:24 -0700 Drew <drew.kay@gmail.com> wrote:
-> 
->>> Hello lists,
->>>
->>> I noticed recent patches added MD RAID compatibility into the DM
->>> subsystem. Is there a valid reason to duplicate efforts ?
->>>
->>> Hopefully its not silent preparation step for DM takeover. Can someone
->>> shed more light on this topic ?
->>>
->>> TIA, Z.
->>
->> I'm not a developer by any stretch of the word so take what I say with
->> a grain of salt.
->>
->> I think it's more just a case of dm using md's RAID algorithms, which
->> IMHO are better tested, to support fakeraid controllers like Intel's
->> Matrix RAID. Besides, we're all one big happy linux family so why not
->> borrow your brother's socks? :-)
->>
->>
-> Indeed!
-> 
-> It isn't duplication of effort - it is avoiding or removing duplication of
-> effort.  That's the theory any way.
-> 
-> There is no "DM takeover" - just engineers working together to try to find
-> optimal solutions.
-> 
-> NeilBrown
-> 
+T24gMjAxMi0wNy0xNCAwNzo1NiBEYW4gV2lsbGlhbXMgPGRhbi5qLndpbGxpYW1zQGdtYWlsLmNv
+bT4gV3JvdGU6DQo+WyBhZGRpbmcgU2hhb2h1YSBdDQo+DQo+T24gRnJpLCBKdWwgMTMsIDIwMTIg
+YXQgMzozMSBBTSwgbWFqaWFucGVuZyA8bWFqaWFucGVuZ0BnbWFpbC5jb20+IHdyb3RlOg0KPj4g
+VG8gaW1wcm92ZSB3cml0ZSBwZXJmb21hbmNlIGJ5IGRlY3JlYXNpbmcgdGhlIHByZXJlYWQgc3Ry
+aXBlLG9ubHkgbW92ZQ0KPj4gSU9fVEhSRVNIT0xEIHN0cmlwZXMgZnJvbSBkZWxheV9saXN0IHRv
+IGhvbGRfbGlzdCBvbmNlLg0KPj4NCj4+IFVzaW5nIHRoZSBmb2xsb3cgY29tbWFuZDoNCj4+IGRk
+IGlmPS9kZXYvemVybyBvZj0vZGV2L21kMCBicz0yTSBjb3VudD01MjEwMC4NCj4+DQo+PiBBdCBk
+ZWZhdWx0IGNvbmRpdGlvbjogc3BlZWQgaXMgOTVNQi9zLg0KPj4gQXQgdGhlIGNvbmRpdGlvbiBv
+ZiBwcmVyZWFkX2J5cGFzc190aHJlc2hvbGQgd2FzIGVxdWFsIHplcm86c3BlZWQgaXMgMTA1TUIv
+cy4NCj4+IFVzaW5nIHRoaXMgcGF0Y2g6c3BlZWQgaXMgMTIzTUIvcy4NCj4+DQo+PiBJZiBwcmVy
+ZWFkX2J5cGFzc190aHJlc2hvbGQgd2FzIHplcm8sdGhlIHBlcmZvcm1hbmNlIHdpbGwgYmUgYmV0
+dGVyLGJ1dA0KPj4gbm90IGJldHRlciB0aGFuIHRoaXMgcGF0Y2guDQo+PiBJIHRoaW5rIG1heWJl
+IHR3byByZWFzb246DQo+PiAxOklmIGJpbyBpcyBSRVFfU1lOQw0KPj4gMjpJbiBmdW5jdGlvbiBf
+X2dldF9wcmlvcml0eV9zdHJpcGUoKToNCj4+Pj4gfSBlbHNlIGlmICghbGlzdF9lbXB0eSgmY29u
+Zi0+aG9sZF9saXN0KSAmJg0KPj4+PiAgICAgICAgICAgICAgICAgKChjb25mLT5ieXBhc3NfdGhy
+ZXNob2xkICYmDQo+Pj4+ICAgICAgICAgICAgICAgICAgIGNvbmYtPmJ5cGFzc19jb3VudCA+IGNv
+bmYtPmJ5cGFzc190aHJlc2hvbGQpIHx8DQo+Pj4+ICAgICAgICAgICAgICAgICAgYXRvbWljX3Jl
+YWQoJmNvbmYtPnBlbmRpbmdfZnVsbF93cml0ZXMpID09IDApKSB7DQo+PiBQcmVyZWFkX2J5cGFz
+c190aHJlc2hvbGQgaXMgb25lIGNvbmRpdGlvbiBvZiBnZXR0aW5nIHN0cmlwZSBmcm9tDQo+PiBo
+b2xkX2xpc3QuU28gb25seSBjb250cm9sIHRoZSBudW1iZXIgb2YgaG9sZF9saXN0IGNhbiBnZXQg
+YmV0dGVyDQo+PiBwZXJmb3JtYW5jZS4NCj4NCj5TbyB0aGlzIGlzIGEgcHJldHR5IG9idmlvdXMg
+dHJhZGVvZmYgb2YgaW5jcmVhc2VkIGxhdGVuY3kgZm9yIGltcHJvdmVkDQo+dGhyb3VnaHB1dC4g
+IEFueSBpZGVhIGhvdyBtdWNoIHRoaXMgY2hhbmdlIGFmZmVjdHMgbGF0ZW5jeT8NCj5Fc3BlY2lh
+bGx5IGluIHRoZSBmYXN0IGRldmljZSBjYXNlPw0KSSBkaWQgbm90IHRoaW5rIHRoZSBsYXRlbmN5
+LklmIGl0IG9ubHkgZmV0Y2ggcHJlcmVhZF9ieXBhc3NfdGhyZXNob2xkIHN0cmlwZXMgZnJvbSBk
+ZWxheV9saXN0IHRvIA0KaG9zdF9saXN0LHRoZSBsYXRlbmN5IGNhbiBiZSBjb250cm9sIGJ5IHVz
+ZXJzcGFjZS4NClRoZSBjb2RlIGxpa2UgOg0KDQpzdGF0aWMgdm9pZCByYWlkNV9hY3RpdmF0ZV9k
+ZWxheWVkKHN0cnVjdCByNWNvbmYgKmNvbmYpDQogew0KKyBpbnQgY291bnQgPSAwOw0KICBpZiAo
+YXRvbWljX3JlYWQoJmNvbmYtPnByZXJlYWRfYWN0aXZlX3N0cmlwZXMpIDwgSU9fVEhSRVNIT0xE
+KSB7DQogIHdoaWxlICghbGlzdF9lbXB0eSgmY29uZi0+ZGVsYXllZF9saXN0KSkgew0KICBzdHJ1
+Y3QgbGlzdF9oZWFkICpsID0gY29uZi0+ZGVsYXllZF9saXN0Lm5leHQ7DQpAQCAtMzY3Miw2ICsz
+NjczLDggQEAgc3RhdGljIHZvaWQgcmFpZDVfYWN0aXZhdGVfZGVsYXllZChzdHJ1Y3QgcjVjb25m
+ICpjb25mKQ0KICBpZiAoIXRlc3RfYW5kX3NldF9iaXQoU1RSSVBFX1BSRVJFQURfQUNUSVZFLCAm
+c2gtPnN0YXRlKSkNCiAgYXRvbWljX2luYygmY29uZi0+cHJlcmVhZF9hY3RpdmVfc3RyaXBlcyk7
+DQogIGxpc3RfYWRkX3RhaWwoJnNoLT5scnUsICZjb25mLT5ob2xkX2xpc3QpOw0KKyBpZiAoKytj
+b3VudCA+PSBjb25mLT5wcmVyZWFkX2FjdGl2ZV9zdHJpcGVzKQ0KKyBicmVhazsNCiAgfQ0KIA0K
+DQoNCg==
 
-So this Intel Matrix/Firmware RAID can be used to boot Linux with
-/dev/mapper/target - DM-raid. DM-raid is missing some functionality,
-most notable raid5 I guess, that was the main reason behind injecting
-MD-raid code into DM?
-
-What is clearly a good thing (multiple OS support, easier setup from
-firmware and more raid levels to boot from) makes me wonder about MD
-future. I'm sure this will attract users to use DM-raid in favor of
-MD-raid, if its good or bad, time will tell.
-
-Neil, don't take this in some BAD way please, I'm just not convinced of
-dm-every{thing,where} movement. At least not yet..
-
-TIA, Z.
