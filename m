@@ -1,60 +1,62 @@
-From: Brassow Jonathan <jbrassow@redhat.com>
-Subject: Re: [PATCH v2] DM RAID: Add support for MD RAID10
-Date: Tue, 17 Jul 2012 11:15:56 -0500
-Message-ID: <3A8FC300-59E8-48CA-81DF-CCCF780BFE0C@redhat.com>
-References: <1342057001.22214.6.camel@f16> <20120712163207.222b4bcc@notabene.brown> <544F2898-B9C7-42CD-A0FD-F1DE35C5E628@redhat.com> <20120717123404.3516b943@notabene.brown>
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [RFC]raid5: multiple thread handle stripe
+Date: Tue, 17 Jul 2012 14:03:40 -0600
+Message-ID: <CANejiEUPDjaV3psEAuJ5tqom6sKF=NbXhkKO6Xzg9r61hkAtSg@mail.gmail.com>
+References: <20120709080024.GA801@kernel.org>
+	<20120716144746.08d26926@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120717123404.3516b943@notabene.brown>
+In-Reply-To: <20120716144746.08d26926@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, agk@redhat.com
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
+2012/7/15 NeilBrown <neilb@suse.de>:
+> On Mon, 9 Jul 2012 16:00:24 +0800 Shaohua Li <shli@kernel.org> wrote:
+>
+>> I had another implementation of raid5 mult-thread. The basic idea is to record
+>> stripe submitted CPU. Each cpu has a thread, which only handles stripes
+>> submitted from this cpu.
+>>
+>> Dan mentioned similar idea several day ago. I used to think we need make
+>> conf->device_lock per-cpu to make this work, but turn out that isn't required.
+>> Simply using percpu list and still using global device_lock works here.
+>> Performance is good too.
+>>
+>> This is a RFC patch, I'll resubmit in a better reviewable way if you like the idea.
+>
+> I mostly like this, thanks.  It seems to take a fairly simple approach -
+> having a single list of pending stripes and each thread just takes the ones
+> that are relevant for it.
+>
+> I'm not convinced of the idea of having one thread for every CPU though. I
+> wonder if we should be more NUMA-aware.
+> E.g. on an Intel core with SMT we want at most one thread per core, not one
+> thread per control thread.
+> Similarly in a larger NUMA machine we might want one or 2 threads per node
+> even if they have multiple CPUs.  Does that seem reasonable?
+>
+> So I imagine having each aux thread be tied to some collection of CPUs.
+> We keep a mask of all CPUs that any thread is tied to.  If a stripe_head is
+> marked for a CPU not in that mask (or that is not available) the main thread
+> handles that stripe, otherwise it is left for the thread (or threads) which
+> request that CPU.
+> Then we have a simple program that, based on some policy configuration,
+> creates multiple threads, sets the allows_cpu mask for each, and then calls
+> some new "MD_RUN_AUX_THREAD" ioctl passing a mask of cpus to service
+> (presumably similar to the mask of CPUs that it can run on).
+>
+> This gives up  the flexiblity to experiment with different NUMA and SMT
+> policies without putting too much knowledge into the kernel.
+>
+> What do you think of that?
 
-On Jul 16, 2012, at 9:34 PM, NeilBrown wrote:
+I definitely like this. It's basically a combination of my first implementation
+(thread number is configurable) and this implementation (thread only handles
+relevant stripes). One thing I want to avoid is wakeup unrelevant thread, I'll
+check how to do it.
 
->>>> 
->>>> @@ -536,9 +605,25 @@ static int parse_raid_params(struct raid
->>>> 	if (dm_set_target_max_io_len(rs->ti, max_io_len))
->>>> 		return -EINVAL;
->>>> 
->>>> -	if ((rs->raid_type->level > 1) &&
->>>> -	    sector_div(sectors_per_dev, (rs->md.raid_disks - rs->raid_type->parity_devs))) {
->>>> +	if (rs->raid_type->level == 10) {
->>>> +		/* (Len * Stripes) / Mirrors */
->>>> +		sectors_per_dev *= rs->md.raid_disks;
->>>> +		if (sector_div(sectors_per_dev, raid10_copies)) {
->>>> +			rs->ti->error = "Target length not divisible by number of data devices";
->>>> +			return -EINVAL;
->>>> +		}
->>> 
->>> I'm not entirely sure what you are trying to do here, but I don't think it
->>> works.
->>> 
->>> At the very least you would need to convert the "sectors_per_dev" number to a
->>> 'chunks_per_dev' before multiplying by raid_disks and dividing by copies.
->>> 
->>> But even that isn't necessary.  If you have a 3-device near=2 array with an
->>> odd number of chunks per device, that will still work.  The last chunk won't
->>> be mirrored, so won't be used.
->>> Until a couple of weeks ago a recovery of the last device would trigger an
->>> error when we try to recover that last chunk, but that is fixed now.
->>> 
->>> So if you want to impose this limitation (and there is some merit in making
->>> sure people don't confuse themselves), I suggest it get imposed in the
->>> user-space tools which create the RAID10.
->> 
->> I have seen what you do in calc_sectors(), I suppose I could bring that in.  However, I'm simply trying to find the value that will be preliminarily assigned to mddev->dev_sectors.  It is an enforced (perhaps unnecessary) constraint that the array length be divisible by the number of data devices.  I'm not accounting for chunk boundaries - I leave that to userspace to configure and MD to catch.
-> 
-> In that case I suggest you keep it out of dmraid.
-> 
-> It might make sense to check that the resulting array size matches what
-> user-space said to expect - or is at-least-as-big-as.  However I don't see
-> much point in other size changes there.
-
-I'm not changing any sizes.  I'm finding a value for mddev->dev_sectors (what should I set it to if not the above?), which is the size of each device as computed from the total array size.  If the value can't be computed evenly, then an error is given.  I'm not sure what you are suggesting my alternative is when you say, "keep it out of dm-raid"...  I think this is the least I can do in dm-raid.
-
- brassow
+Thanks,
+Shaohua
