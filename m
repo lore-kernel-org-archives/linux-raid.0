@@ -1,62 +1,53 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [RFC]raid5: multiple thread handle stripe
-Date: Tue, 17 Jul 2012 14:03:40 -0600
-Message-ID: <CANejiEUPDjaV3psEAuJ5tqom6sKF=NbXhkKO6Xzg9r61hkAtSg@mail.gmail.com>
-References: <20120709080024.GA801@kernel.org>
-	<20120716144746.08d26926@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Brassow Jonathan <jbrassow@redhat.com>
+Subject: Re: [PATCH v2] DM RAID: Add support for MD RAID10
+Date: Tue, 17 Jul 2012 15:30:54 -0500
+Message-ID: <6CC78E36-3B8F-4F9B-B4CA-7A4D0C677DF4@redhat.com>
+References: <1342057001.22214.6.camel@f16> <20120712162205.GA13485@www5.open-std.org> <331FD2B6-AD96-4513-AF37-4E1B9EE7A34F@redhat.com> <20120713011505.GA3099@www5.open-std.org> <20120713112717.3b15647c@notabene.brown> <20120713082923.GA19771@www5.open-std.org> <20120716161431.42749a15@notabene.brown> <20120716082843.GA30247@www5.open-std.org> <B5AB774E-C433-4DDC-B878-F1A50AD03AB2@redhat.com> <20120717122914.4d6d160f@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v1084)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120716144746.08d26926@notabene.brown>
+In-Reply-To: <20120717122914.4d6d160f@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com
+Cc: keld@keldix.com, dm-devel@redhat.com, linux-raid@vger.kernel.org, agk@redhat.com
 List-Id: linux-raid.ids
 
-2012/7/15 NeilBrown <neilb@suse.de>:
-> On Mon, 9 Jul 2012 16:00:24 +0800 Shaohua Li <shli@kernel.org> wrote:
->
->> I had another implementation of raid5 mult-thread. The basic idea is to record
->> stripe submitted CPU. Each cpu has a thread, which only handles stripes
->> submitted from this cpu.
->>
->> Dan mentioned similar idea several day ago. I used to think we need make
->> conf->device_lock per-cpu to make this work, but turn out that isn't required.
->> Simply using percpu list and still using global device_lock works here.
->> Performance is good too.
->>
->> This is a RFC patch, I'll resubmit in a better reviewable way if you like the idea.
->
-> I mostly like this, thanks.  It seems to take a fairly simple approach -
-> having a single list of pending stripes and each thread just takes the ones
-> that are relevant for it.
->
-> I'm not convinced of the idea of having one thread for every CPU though. I
-> wonder if we should be more NUMA-aware.
-> E.g. on an Intel core with SMT we want at most one thread per core, not one
-> thread per control thread.
-> Similarly in a larger NUMA machine we might want one or 2 threads per node
-> even if they have multiple CPUs.  Does that seem reasonable?
->
-> So I imagine having each aux thread be tied to some collection of CPUs.
-> We keep a mask of all CPUs that any thread is tied to.  If a stripe_head is
-> marked for a CPU not in that mask (or that is not available) the main thread
-> handles that stripe, otherwise it is left for the thread (or threads) which
-> request that CPU.
-> Then we have a simple program that, based on some policy configuration,
-> creates multiple threads, sets the allows_cpu mask for each, and then calls
-> some new "MD_RUN_AUX_THREAD" ioctl passing a mask of cpus to service
-> (presumably similar to the mask of CPUs that it can run on).
->
-> This gives up  the flexiblity to experiment with different NUMA and SMT
-> policies without putting too much knowledge into the kernel.
->
-> What do you think of that?
 
-I definitely like this. It's basically a combination of my first implementation
-(thread number is configurable) and this implementation (thread only handles
-relevant stripes). One thing I want to avoid is wakeup unrelevant thread, I'll
-check how to do it.
+On Jul 16, 2012, at 9:29 PM, NeilBrown wrote:
 
-Thanks,
-Shaohua
+> The layout with data stored on device 'x' is mirrored on device 'x^1' has
+> N/2 pairs which are vulnerable. 
+> An alternate way to gain this low level of vulnerability would be to mirror
+> data on X onto 'X+N/2'  This is the same as your arrangement for N==4.
+> For N==6 it would be:
+> 
+> A  B  C  D  E  F
+> G  H  I  J  K  L
+> ....
+> D  E  F  A  B  C
+> J  K  L  G  H  I
+> ...
+> 
+> so the vulnerable pairs are 0,3 1,4 2,5
+> This might be slightly easier to implement (as you suggest: have a
+> dev_stride, only set it to raid_disks/fc*nc).
+
+Yes, that looks nice.  Plus, it doesn't have as many conditions as my idea.
+
+> 
+>> 
+>> This should require a new bit in 'layout' (bit 17) to signify a different calculation in the way the copy device selection happens.  We then need to replace 'd += geo->near_copies' with 'd += geo->dev_stride' and set dev_stride in 'setup_geo'.  I'm not certain how much work it is beyond that, but I don't *think* it looks that bad and I'd be happy to do it.
+> 
+> I'm tempted to set bit 31 to mean "bits 0xFF are number of copies and bits
+> 0xFF00 define the layout of those copies".. but just adding a bit17 probably
+> makes more sense.
+> 
+> If you create and test a patch using the calculation I suggested, I'll be
+> happy to review it.
+
+ok.  Might come after my current dm-raid patch (that will skip over the current "far" implementations.
+
+If the 17th bit makes it simple to change the 'far' algorithms, that's probably the right idea.  We could save the very last bits for when we need a completely changed view of how the variable is used.  I don't think we are there yet.
+
+ brassow
