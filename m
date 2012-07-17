@@ -1,84 +1,46 @@
-From: Alex <mysqlstudent@gmail.com>
-Subject: Need to remove failed disk from RAID5 array
-Date: Mon, 16 Jul 2012 19:17:02 -0400
-Message-ID: <CAB1R3shxBWebm13ie5gR0h++-GBTyfZrranHr8tjGkbPipV32w@mail.gmail.com>
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+Subject: Re: doubt about raid 'quality'
+Date: Tue, 17 Jul 2012 01:34:56 +0100
+Message-ID: <CADNH=7G7FXj7skqQ7_P54-GM6rDgAcUPBuKnFrQ6-qGbRNsf_g@mail.gmail.com>
+References: <CABYL=TobGA_eHqfLQXMnTJ8B8hPQ2B1HrBvTAdM3XAhn8x27uw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CABYL=TobGA_eHqfLQXMnTJ8B8hPQ2B1HrBvTAdM3XAhn8x27uw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On 16 July 2012 16:56, Roberto Spadim <roberto@spadim.com.br> wrote:
+> hi guys, some days ago, i lost some data from my mysql database, it
+> was running nice, but start given bad record (one of my disks is bad)
+> i read some time ago about checks on md raids, could it be done
+> weekly? it=C2=B4s a raid1 md device, i don=C2=B4t know if it=C2=B4s p=
+ossible because
+> i read about raid5/6 devices only
+> it=C2=B4s a newbie question, sorry
+>
+> --
+> Roberto Spadim
+> Spadim Technology / SPAEmpresarial
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I have a degraded RAID5 array on an fc15 box due to sda failing:
 
-Personalities : [raid6] [raid5] [raid4]
-md1 : active raid5 sda3[5](F) sdd2[4] sdc2[2] sdb2[1]
-      2890747392 blocks super 1.1 level 5, 512k chunk, algorithm 2 [4/3] [_UUU]
-      bitmap: 8/8 pages [32KB], 65536KB chunk
+Doesn't
 
-md0 : active raid5 sda2[5] sdd1[4] sdc1[2] sdb1[1]
-      30715392 blocks super 1.1 level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
-      bitmap: 0/1 pages [0KB], 65536KB chunk
+echo check >> /sys/block/md0/md/sync_action
 
-There's a ton of messages like these:
+work?
 
-end_request: I/O error, dev sda, sector 1668467332
-md/raid:md1: read error NOT corrected!! (sector 1646961280 on sda3).
-md/raid:md1: Disk failure on sda3, disabling device.
-md/raid:md1: Operation continuing on 3 devices.
-md/raid:md1: read error not correctable (sector 1646961288 on sda3).
-
-What is the proper procedure to remove the disk from the array,
-shutdown the server, and reboot with a new sda?
-
-# mdadm --version
-mdadm - v3.2.5 - 18th May 2012
-
-# mdadm -Es
-ARRAY /dev/md/0 metadata=1.1 UUID=4b5a3704:c681f663:99e744e4:254ebe3e
-name=pixie.example.com:0
-ARRAY /dev/md/1 metadata=1.1 UUID=d5032866:15381f0b:e725e8ae:26f9a971
-name=pixie.example.com:1
-
-# mdadm --detail /dev/md1
-/dev/md1:
-        Version : 1.1
-  Creation Time : Sun Aug  7 12:52:18 2011
-     Raid Level : raid5
-     Array Size : 2890747392 (2756.83 GiB 2960.13 GB)
-  Used Dev Size : 963582464 (918.94 GiB 986.71 GB)
-   Raid Devices : 4
-  Total Devices : 4
-    Persistence : Superblock is persistent
-
-  Intent Bitmap : Internal
-
-    Update Time : Mon Jul 16 19:14:11 2012
-          State : active, degraded
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 1
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-           Name : pixie.example.com:1  (local to host pixie.example.com)
-           UUID : d5032866:15381f0b:e725e8ae:26f9a971
-         Events : 162567
-
-    Number   Major   Minor   RaidDevice State
-       0       0        0        0      removed
-       1       8       18        1      active sync   /dev/sdb2
-       2       8       34        2      active sync   /dev/sdc2
-       4       8       50        3      active sync   /dev/sdd2
-
-       5       8        3        -      faulty spare   /dev/sda3
-
-I'd appreciate a pointer to any existing documentation, or some
-general guidance on the proper procedure.
-
-Thanks,
-Alex
+Mathias
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
