@@ -1,149 +1,107 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: PATCH: md/raid1: sync_request_write() may complete r1_bio
- without rescheduling
-Date: Tue, 17 Jul 2012 11:45:01 +1000
-Message-ID: <20120717114501.678c8098@notabene.brown>
-References: <CAGRgLy7Wtk1OByAGH4m19tyH+obMbaV=QD7cAv++HyojvK+C2Q@mail.gmail.com>
+Subject: Re: On mdadm 3.2 and bad-block-log
+Date: Tue, 17 Jul 2012 11:49:16 +1000
+Message-ID: <20120717114916.46263d92@notabene.brown>
+References: <4FD7738D.3040403@shiftmail.org>
+	<CAGRgLy5Eryf_kT69a3SSPi8-MVpVmhEL96tNWJZQd9-vf4iYZQ@mail.gmail.com>
+	<20120716134138.0f1c9cfc@notabene.brown>
+	<5003C5BC.3070609@shiftmail.org>
+	<CAGRgLy6udWWhYn_UEwyyVrKsV5auAdfN5qkLVxbNnVqgWE=+UQ@mail.gmail.com>
+	<5003D73B.3010609@shiftmail.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/qzKqNQUFrCjWHL3_RqsuMpf"; protocol="application/pgp-signature"
+ boundary="Sig_/EfcxRsIo0JtIXwe7=uCwr9z"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy7Wtk1OByAGH4m19tyH+obMbaV=QD7cAv++HyojvK+C2Q@mail.gmail.com>
+In-Reply-To: <5003D73B.3010609@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Asdo <asdo@shiftmail.org>
+Cc: Alexander Lyakas <alex.bolshoy@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/qzKqNQUFrCjWHL3_RqsuMpf
+--Sig_/EfcxRsIo0JtIXwe7=uCwr9z
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 16 Jul 2012 17:55:25 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-wrote:
+On Mon, 16 Jul 2012 10:56:27 +0200 Asdo <asdo@shiftmail.org> wrote:
 
-> Hi Neil,
-> this is yet another issue I encounter, which is indirectly related to
-> bad-blocks code, but I think it can be hit when bad-blocks logging is
-> disabled too.
+> Right, that's the reason of my question.
+> Neil wrote "I probably don't want to rush it out" so that would mean=20
+> that the buggy code is not "out" yet.
+> So that would point to mdadm-3.3 because the bad block code of the=20
+> kernel is already "out".
+> However as you say the bad block code in mdadm-3.3 is very simple so=20
+> it's strange that it could be buggy.
 >=20
-> Scenario:
-> - RAID1 with one device A, one device missing
-> - mdadm --manage /dev/mdX --add /dev/B (fresh device B added)
-> - recovery of B starts
->=20
-> Now at some point, end_sync_write() on B returns with error. Now the
-> following can happen:
-> In sync_request_write() we do:
-> 1/
-> 	/*
-> 	 * schedule writes
-> 	 */
-> 	atomic_set(&r1_bio->remaining, 1);
->=20
-> 2/ then we schedule WRITEs, so for each WRITE scheduled we do:
-> atomic_inc(&r1_bio->remaining);
->=20
-> 3/ then we do:
-> 	if (atomic_dec_and_test(&r1_bio->remaining)) {
-> 		/* if we're here, all write(s) have completed, so clean up */
-> 		md_done_sync(mddev, r1_bio->sectors, 1);
-> 		put_buf(r1_bio);
-> 	}
->=20
-> So assume that end_sync_write() completed with error, before we got to
-> 3/. Then in end_sync_write() we set R1BIO_WriteError, and the we
-> decrement r1_bio->remaining, so it becomes 1, so we bail out and don't
-> call reschedule_retry().
-> Then in 3/ we decrement r1_bio->remaining again, see that it is 0 now
-> and complete the bio....without marking bad block or failing the
-> device. So we think that this region is in-sync, while it's not,
-> because we hit IO error on B.
->=20
-> I checked vs 2.6 versions and such behavior makes sense there, because
-> R1BIO_WriteError or R1BIO_MadeGood cases are not present there (no
-> bad-blocks functionality). But now, we must call reschedule_retry() at
-> both places (if needed). Does this make sense?
->=20
-> I tested the following patch, which seems to work ok:
+> Now thinking at myself: if there were bugs in the mdadm-3.3 I probably=20
+> have dodged them because I was able to create the array.
+> However if there are known bugs in the kernel code our data is still at=20
+> risk so i'd rather ask.
 
-Thanks. I agree with you analysis.
+Yes, there is a degree to which your data is at risk.  This is always the
+case with new code.
+If you upgrade to new -stable kernels as they become available, that should
+minimise your risk as any fix that could risk data or stability is backport=
+ed
+to these -stable kernels.
 
-I've made a small change to fix another problem with that code.
+I don't know of any particularly serious bugs that have been found - they
+mostly are triggered by unusual conditions.  However unusual conditions do
+happen.
 
-Thanks,
+Thank you for using and testing the code.  Has md found and recorded any bad
+blocks for you, or are your bad-block logs still empty?
+
 NeilBrown
 
 
-=46rom af671b264f271563d343249886db16155a3130e0 Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Tue, 17 Jul 2012 11:43:47 +1000
-Subject: [PATCH] commit 4367af556133723d0f443e14ca8170d9447317cb    md/raid=
-1:
- clear bad-block record when write succeeds.
 
-Added a 'reschedule_retry' call possibility at the end of
-end_sync_write, but didn't add matching code at the end of
-sync_request_write.  So if the writes complete very quickly, or
-scheduling makes it seem that way, then we can miss rescheduling
-the request and the resync could hang.
+> FWIW I am not using mdadm-3.3 as monitoring daemon: the daemon is=20
+> mdadm-3.2 , I don't know if this "helps".
+>=20
+> Thank you
+> A.
+>=20
+>=20
+> On 07/16/12 09:55, Alexander Lyakas wrote:
+> > The mdadm code only reserves some space for bad-blocks log and
+> > notifies the kernel that this feature is enabled during array
+> > creation.
+> >
+> > On Mon, Jul 16, 2012 at 10:41 AM, Asdo<asdo@shiftmail.org>  wrote:
+> >> On 07/16/12 05:41, NeilBrown wrote:
+> >>> and as the bad block code is
+> >>> clearly still buggy, I probably don't want to rush it out :-)
+> >>
+> >> The bad block code is buggy... the one in the kernel or the one in mda=
+dm-3.3
+> >> ?
+> >> 'cause I am currently using an array created with bad block log on ker=
+nel
+> >> 3.4.3...
+> >>
+> >> Thanks
 
-Also commit 73d5c38a9536142e062c35997b044e89166e063b
-    md: avoid races when stopping resync.
 
-Fix a race condition in this same code in end_sync_write but didn't
-make the change in sync_request_write.
-
-This patch updates sync_request_write to fix both of those.
-Patch is suitable for 3.1 and later kernels.
-
-Reported-by: Alexander Lyakas <alex.bolshoy@gmail.com>
-Original-version-by: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index e2e6ec2..506d055 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1892,8 +1892,14 @@ static void sync_request_write(struct mddev *mddev, =
-struct r1bio *r1_bio)
-=20
- 	if (atomic_dec_and_test(&r1_bio->remaining)) {
- 		/* if we're here, all write(s) have completed, so clean up */
--		md_done_sync(mddev, r1_bio->sectors, 1);
--		put_buf(r1_bio);
-+		int s =3D r1_bio->sectors;
-+		if (test_bit(R1BIO_MadeGood, &r1_bio->state) ||
-+		    test_bit(R1BIO_WriteError, &r1_bio->state))
-+			reschedule_retry(r1_bio);
-+		else {
-+			put_buf(r1_bio);
-+			md_done_sync(mddev, s, 1);
-+		}
- 	}
- }
-=20
-
---Sig_/qzKqNQUFrCjWHL3_RqsuMpf
+--Sig_/EfcxRsIo0JtIXwe7=uCwr9z
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUATDnTnsnt1WYoG5AQJsdA/9FQmYDo0UDxWMJP18cTHXSWVSMn8qtOMp
-O1tIkpg8IFBj9l17rITZ+qiJssMNmK2EDYsarjd5m9Rn4Bp5KNmMZdvwjD39RGbA
-l3s2g2Z50hTxgr/50r+0QOsl6V3nHaOjICpmf6lj/h4Mv6EMUuVDn3QiBiXZsvz5
-ho4GgszfEWG2b27MocUk2PWDZuCzmKchUx9DmKeWmzu1EFmMO7sioVKbhfI9UM71
-3/1Zah/Kb+DrjvIvQtY+U6XYevNU0K55MaBLi0YlY5Xi2BKsVgrboxU3CG9y6HR/
-j5EubZym0wkuIvmjwLnf94Ilj7qjfiDAiQ1ImM5KZNNWnKpnk4yNR/jX0J1kiNr+
-LUbnCw5Hip/gYVm3jg1Vo8829786G3XcQaZ5f9w/SxzsvgIJYaDJOneYn4l++zeW
-8vyEtG/7kfXKf234yuag2OFEMRvvOSvUkYV+M3fcJnqVKG7DfC4Bmm4TodkP4r4c
-6T7ntQKYjGfYkP1CxRVVQenKGa/bKtv1kFdTLesLIBBb9ajrOy3Nk3+7KAywmfrY
-KPVLvYN2rsJfscDSUjh25FjHm5Tpg6cqk1fFFz3nz5cPkHwOnO7CPckhc67S3B5E
-RJBgyVmBuSW4rKj+B1WSIvZKBZ0GDvvs35pXMPszQmgBMXM8TtfZsOl+GBncTm/A
-XdTkH9ht5+w=
-=zMap
+iQIVAwUBUATEnDnsnt1WYoG5AQJrPw/9Fdh+uNlsv5wnp48ENZXos5Pl0/OD3FKn
+tPwtB7IHmVx9xIvWseY/q9jxkFiZ4cU6YBNEagelZ2+D/5+qCIXKrcGgZp++k3U4
+QTwSb+LEOphfgT3nTroK+apuDw28gpx6pozAn4ir6JTDr5E7SZuxUC/dsJ99jU+P
+Fk7bDBfcBbAJRlABuAWBz1mN8Siy+xKxwXMsK/haAtPYpKuoWNxETzPSBlbO0cWF
+WXqg3ryXCF3YKu/DOJNcA1WE3z330+pBx+JIGyT5iOAEsES5XDmgIccoJxmfukVf
+83h/kw6Y5A9KbPpoAWPYmhNVTWhmFVPUJBi457jnfzMAbS0gn4QYTE9Lye2z87r4
+E+I4JGq5MP9cE70QUCJ6HtrjJyChFEnpyIvSkowBZGxNExx8GNLaR2aj+uXs2c1A
+NA1b6LRPl8ueu2d2fwBFFMHSNrKvkMUZbv0T7Bc20qMi/Jp7ILMOf6OdMxiGaAp0
+OYBots/zgESXbvEbR5tXyK2qdLLC6cYc1vxLAbvm7JB6pQ879UTA6G+wayWSZciS
++6eV3tL76jO78alMsfWA/xNnT43t2/PEMaw70DdFcWI0ELSNKw5UC/eCZTMfhO9g
+xRYoOgdcg+BYmFLQZCUr7M7CC4Dx+5JhE6L/Bs6tk9HjR38IKDxfX99pNwB7pH5C
+OF42RHeD2RI=
+=hRTc
 -----END PGP SIGNATURE-----
 
---Sig_/qzKqNQUFrCjWHL3_RqsuMpf--
+--Sig_/EfcxRsIo0JtIXwe7=uCwr9z--
