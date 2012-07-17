@@ -3,14 +3,14 @@ Subject: =?utf-8?B?MjAxMuaYpeWtozExMeWxiuW5v+S6pOS8muS5sOWutu+8jOe+pOWPkei9r+S7t
 	=?utf-8?B?77yMQjJC6K+i55uY5Lmw5a6244CBdGhvbWFzbmV0IOmHhw==?=
 	=?utf-8?B?6LSt5ZWGLOa1t+WFs+aVsOaNrizlsZXkvJrkubDlrrYg5LuFMzAw5YWDIQ==?=
 Date: Tue, 17 Jul 2012 11:03:11 +0000 (UTC)
-Message-ID: <20160717185816128403@xunyang.com.cn>
+Message-ID: <20160717185816128403__36392.3035249629$1342522992$gmane$org@xunyang.com.cn>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-x11-owner@vger.kernel.org>
 Date: Sun, 17 Jul 2016 18:58:08 +0800
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-x11-owner@vger.kernel.org
 To: lionellogue@gmail.com, linux.lu@tom.com, linux_farmer@hotmail.com, linuxbaby@163.com, linux-embedded@xxxxx.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-x11@vger.kernel.org, linvongshu@sohu.com, linwei_design@126.com
 List-Id: linux-raid.ids
 
