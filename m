@@ -1,34 +1,26 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: [PATCH 1/2 V1] fs/block-dev.c:fix performance regression in O_DIRECT writes to md block devices
-Date: Tue, 17 Jul 2012 15:04:51 +0800
-Message-ID: <201207171504460007296@gmail.com>
+From: Igor M Podlesny <for.poige+lsr@gmail.com>
+Subject: Re: doubt about raid 'quality'
+Date: Tue, 17 Jul 2012 16:12:14 +0800
+Message-ID: <CA+sTkh5CzbpRMr=ZNgDMxdQcceQHNK_rhLGpxN_LvPab-mS2wA@mail.gmail.com>
+References: <CABYL=TobGA_eHqfLQXMnTJ8B8hPQ2B1HrBvTAdM3XAhn8x27uw@mail.gmail.com>
+ <CADNH=7G7FXj7skqQ7_P54-GM6rDgAcUPBuKnFrQ6-qGbRNsf_g@mail.gmail.com> <CABYL=Tr=tMxmNhTz=U0bUae+f8rj+44jcnHTS0uguDqnXvJA5A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, Axboe <jaxboe@fusionio.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CABYL=Tr=tMxmNhTz=U0bUae+f8rj+44jcnHTS0uguDqnXvJA5A@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Rm9yIHJlZ3VsYXIgZmlsZSwgd3JpdGUgb3BlcmFpb24gdXNlZCBibGtfcGx1ZyBmdW5jdGlvbi5C
-dXQgZm9yIGJsb2NrDQpmaWxlLHdyaXRlIG9wZXJhdGlvbiBkaWQgbm90IHVzZSBibGtfcGx1Zy4N
-ClRoaXMgcGF0Y2ggaXMgYWxzbyBmb3Igd3JpdGUtY2FjaGUgbW9kZSBmb3IgYmxvY2stZGV2aWNl
-Lg0KIA0KU2lnbmVkLW9mZi1ieTogSmlhbnBlbmcgTWEgPG1hamlhbnBlbmdAZ21haWwuY29tPg0K
-LS0tDQogZnMvYmxvY2tfZGV2LmMgfCAgICAzICsrKw0KIDEgZmlsZXMgY2hhbmdlZCwgMyBpbnNl
-cnRpb25zKCspLCAwIGRlbGV0aW9ucygtKQ0KIA0KZGlmZiAtLWdpdCBhL2ZzL2Jsb2NrX2Rldi5j
-IGIvZnMvYmxvY2tfZGV2LmMNCmluZGV4IGMyYmJlMWYuLmNmMTA3NzggMTAwNjQ0DQotLS0gYS9m
-cy9ibG9ja19kZXYuYw0KKysrIGIvZnMvYmxvY2tfZGV2LmMNCkBAIC0xNTc5LDkgKzE1NzksMTEg
-QEAgc3NpemVfdCBibGtkZXZfYWlvX3dyaXRlKHN0cnVjdCBraW9jYiAqaW9jYiwgY29uc3Qgc3Ry
-dWN0IGlvdmVjICppb3YsDQogew0KICBzdHJ1Y3QgZmlsZSAqZmlsZSA9IGlvY2ItPmtpX2ZpbHA7
-DQogIHNzaXplX3QgcmV0Ow0KKyBzdHJ1Y3QgYmxrX3BsdWcgcGx1ZzsNCiANCiAgQlVHX09OKGlv
-Y2ItPmtpX3BvcyAhPSBwb3MpOw0KIA0KKyBibGtfc3RhcnRfcGx1ZygmcGx1Zyk7DQogIHJldCA9
-IF9fZ2VuZXJpY19maWxlX2Fpb193cml0ZShpb2NiLCBpb3YsIG5yX3NlZ3MsICZpb2NiLT5raV9w
-b3MpOw0KICBpZiAocmV0ID4gMCB8fCByZXQgPT0gLUVJT0NCUVVFVUVEKSB7DQogIHNzaXplX3Qg
-ZXJyOw0KQEAgLTE1OTAsNiArMTU5Miw3IEBAIHNzaXplX3QgYmxrZGV2X2Fpb193cml0ZShzdHJ1
-Y3Qga2lvY2IgKmlvY2IsIGNvbnN0IHN0cnVjdCBpb3ZlYyAqaW92LA0KICBpZiAoZXJyIDwgMCAm
-JiByZXQgPiAwKQ0KICByZXQgPSBlcnI7DQogIH0NCisgYmxrX2ZpbmlzaF9wbHVnKCZwbHVnKTsN
-CiAgcmV0dXJuIHJldDsNCiB9DQogRVhQT1JUX1NZTUJPTF9HUEwoYmxrZGV2X2Fpb193cml0ZSk7
-DQotLSANCjEuNy41LjQ=
+On 17 July 2012 11:00, Roberto Spadim <roberto@spadim.com.br> wrote:
+> humm and how i know if the check is ok?
 
+   Kinda like that: watch -n3 cat /proc/mdstat
+/sys/block/md123/md/mismatch_cnt -- if you want to keep your finger on
+its pulse, or simply cat the counter's file when it's done.
+
+   Neil, I have already thought bout it -- maybe check/repair action
+should output mismatch_cnt into dmesg's buffer after its completion?
+
+--
