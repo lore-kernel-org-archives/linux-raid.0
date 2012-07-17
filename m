@@ -1,107 +1,117 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: On mdadm 3.2 and bad-block-log
-Date: Tue, 17 Jul 2012 11:49:16 +1000
-Message-ID: <20120717114916.46263d92@notabene.brown>
-References: <4FD7738D.3040403@shiftmail.org>
-	<CAGRgLy5Eryf_kT69a3SSPi8-MVpVmhEL96tNWJZQd9-vf4iYZQ@mail.gmail.com>
-	<20120716134138.0f1c9cfc@notabene.brown>
-	<5003C5BC.3070609@shiftmail.org>
-	<CAGRgLy6udWWhYn_UEwyyVrKsV5auAdfN5qkLVxbNnVqgWE=+UQ@mail.gmail.com>
-	<5003D73B.3010609@shiftmail.org>
+Subject: Re: [PATCH 2/2 V1] raid5: For odirect-write performance, not set
+ STRIPE_PREREAD_ACTIVE.
+Date: Tue, 17 Jul 2012 12:02:09 +1000
+Message-ID: <20120717120209.6b9591ce@notabene.brown>
+References: <2012071616325740688511@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/EfcxRsIo0JtIXwe7=uCwr9z"; protocol="application/pgp-signature"
+ boundary="Sig_/AUpcoV3Nq/_=1l26TgxdctW"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5003D73B.3010609@shiftmail.org>
+In-Reply-To: <2012071616325740688511@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: Alexander Lyakas <alex.bolshoy@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: majianpeng <majianpeng@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, viro <viro@ZenIV.linux.org.uk>
 List-Id: linux-raid.ids
 
---Sig_/EfcxRsIo0JtIXwe7=uCwr9z
+--Sig_/AUpcoV3Nq/_=1l26TgxdctW
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 16 Jul 2012 10:56:27 +0200 Asdo <asdo@shiftmail.org> wrote:
+On Mon, 16 Jul 2012 16:33:02 +0800 majianpeng <majianpeng@gmail.com> wrote:
 
-> Right, that's the reason of my question.
-> Neil wrote "I probably don't want to rush it out" so that would mean=20
-> that the buggy code is not "out" yet.
-> So that would point to mdadm-3.3 because the bad block code of the=20
-> kernel is already "out".
-> However as you say the bad block code in mdadm-3.3 is very simple so=20
-> it's strange that it could be buggy.
+> Using flag REQ_NOIDLE to difference odirect-write and sync_write.
 >=20
-> Now thinking at myself: if there were bugs in the mdadm-3.3 I probably=20
-> have dodged them because I was able to create the array.
-> However if there are known bugs in the kernel code our data is still at=20
-> risk so i'd rather ask.
+> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
+> ---
+>  drivers/md/raid5.c |    5 ++++-
+>  1 files changed, 4 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 04348d7..29edaf0 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -4113,7 +4113,10 @@ static void make_request(struct mddev *mddev, stru=
+ct bio * bi)
+>  			finish_wait(&conf->wait_for_overlap, &w);
+>  			set_bit(STRIPE_HANDLE, &sh->state);
+>  			clear_bit(STRIPE_DELAYED, &sh->state);
+> -			if ((bi->bi_rw & REQ_SYNC) &&
+> +			/* Difference odirect-write between regular file
+> +			 * and block-device
+> +			 */
+> +			if ((bi->bi_rw & REQ_NOIDLE) &&
+>  			    !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
+>  				atomic_inc(&conf->preread_active_stripes);
+>  			mddev_check_plugged(mddev);
 
-Yes, there is a degree to which your data is at risk.  This is always the
-case with new code.
-If you upgrade to new -stable kernels as they become available, that should
-minimise your risk as any fix that could risk data or stability is backport=
-ed
-to these -stable kernels.
 
-I don't know of any particularly serious bugs that have been found - they
-mostly are triggered by unusual conditions.  However unusual conditions do
-happen.
-
-Thank you for using and testing the code.  Has md found and recorded any bad
-blocks for you, or are your bad-block logs still empty?
+Thanks.
+I've improved that patch description and remove the code comment and I don't
+think it is helpful.
 
 NeilBrown
 
 
+=46rom c6e353648f062901f435f67b91e9438897d42ddf Mon Sep 17 00:00:00 2001
+From: majianpeng <majianpeng@gmail.com>
+Date: Tue, 17 Jul 2012 12:00:35 +1000
+Subject: [PATCH] md/raid5: For odirect-write performance, do not set
+ STRIPE_PREREAD_ACTIVE.
 
-> FWIW I am not using mdadm-3.3 as monitoring daemon: the daemon is=20
-> mdadm-3.2 , I don't know if this "helps".
->=20
-> Thank you
-> A.
->=20
->=20
-> On 07/16/12 09:55, Alexander Lyakas wrote:
-> > The mdadm code only reserves some space for bad-blocks log and
-> > notifies the kernel that this feature is enabled during array
-> > creation.
-> >
-> > On Mon, Jul 16, 2012 at 10:41 AM, Asdo<asdo@shiftmail.org>  wrote:
-> >> On 07/16/12 05:41, NeilBrown wrote:
-> >>> and as the bad block code is
-> >>> clearly still buggy, I probably don't want to rush it out :-)
-> >>
-> >> The bad block code is buggy... the one in the kernel or the one in mda=
-dm-3.3
-> >> ?
-> >> 'cause I am currently using an array created with bad block log on ker=
-nel
-> >> 3.4.3...
-> >>
-> >> Thanks
+'sync' writes set both REQ_SYNC and REQ_NOIDLE.
+O_DIRECT writes set REQ_SYNC but not REQ_NOIDLE.
 
+We currently assume that a REQ_SYNC request will not be followed by
+more requests and so set STRIPE_PREREAD_ACTIVE to expedite the
+request.
+This is appropriate for sync requests, but not for O_DIRECT requests.
 
---Sig_/EfcxRsIo0JtIXwe7=uCwr9z
+So make the setting of STRIPE_PREREAD_ACTIVE conditional on REQ_NOIDLE
+rather than REQ_SYNC.  This is consistent with the documented meaning
+of REQ_NOIDLE:
+
+        __REQ_NOIDLE,           /* don't anticipate more IO after this one =
+*/
+
+Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 0e4439e..ee492a8 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4187,7 +4187,7 @@ static void make_request(struct mddev *mddev, struct =
+bio * bi)
+ 			finish_wait(&conf->wait_for_overlap, &w);
+ 			set_bit(STRIPE_HANDLE, &sh->state);
+ 			clear_bit(STRIPE_DELAYED, &sh->state);
+-			if ((bi->bi_rw & REQ_SYNC) &&
++			if ((bi->bi_rw & REQ_NOIDLE) &&
+ 			    !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
+ 				atomic_inc(&conf->preread_active_stripes);
+ 			release_stripe_plug(mddev, sh);
+
+--Sig_/AUpcoV3Nq/_=1l26TgxdctW
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUATEnDnsnt1WYoG5AQJrPw/9Fdh+uNlsv5wnp48ENZXos5Pl0/OD3FKn
-tPwtB7IHmVx9xIvWseY/q9jxkFiZ4cU6YBNEagelZ2+D/5+qCIXKrcGgZp++k3U4
-QTwSb+LEOphfgT3nTroK+apuDw28gpx6pozAn4ir6JTDr5E7SZuxUC/dsJ99jU+P
-Fk7bDBfcBbAJRlABuAWBz1mN8Siy+xKxwXMsK/haAtPYpKuoWNxETzPSBlbO0cWF
-WXqg3ryXCF3YKu/DOJNcA1WE3z330+pBx+JIGyT5iOAEsES5XDmgIccoJxmfukVf
-83h/kw6Y5A9KbPpoAWPYmhNVTWhmFVPUJBi457jnfzMAbS0gn4QYTE9Lye2z87r4
-E+I4JGq5MP9cE70QUCJ6HtrjJyChFEnpyIvSkowBZGxNExx8GNLaR2aj+uXs2c1A
-NA1b6LRPl8ueu2d2fwBFFMHSNrKvkMUZbv0T7Bc20qMi/Jp7ILMOf6OdMxiGaAp0
-OYBots/zgESXbvEbR5tXyK2qdLLC6cYc1vxLAbvm7JB6pQ879UTA6G+wayWSZciS
-+6eV3tL76jO78alMsfWA/xNnT43t2/PEMaw70DdFcWI0ELSNKw5UC/eCZTMfhO9g
-xRYoOgdcg+BYmFLQZCUr7M7CC4Dx+5JhE6L/Bs6tk9HjR38IKDxfX99pNwB7pH5C
-OF42RHeD2RI=
-=hRTc
+iQIVAwUBUATHoTnsnt1WYoG5AQIvgBAAnQZ/2CdSwXfsfF1SLz1yCsOH0k9Fe67L
+Nz1q9MpuDD/UH7bt7ntyUeiXRJM1dM5oOsI26loQsl1OjnO+2zhzYYiuYynnt1bA
+9J8GZO92w1cQFM6v1DEbeuLMC44lKW9qvZciL5HGKyCoyQTMC2CiWV9gfpk+pUiQ
+i1p4Uvubb0WWx4jRAqVKVofIsq9eolJ8oG+jsQSQKCideSyAdgotoZ1e6lKRaylS
+rGondvR2hGoxWbagYsQa1L+hhu9hBEwjhDMjjRb+VuIluZ72XZJLj6aGZbdivYcC
+MYUt/MkdlMOdrvu7SAsMS+82e2PleX2MLNzwBPF4FXGHqorWufZE24iv3rDUn1GP
+vY22y9mKODo1Vd5aBXN39nHcJXpoqmD7H57iSH7VI0TBp0LCniAVsf1dWmTyEFFe
+rtDkKw/i0+GK8upOtHBZZEXINVAk1nkU8/UZidKr7yxYpx2GJN8fN7Xy39opwKsC
+hKxagUV7N2jnP8Cg/CRZyRp5VVPZ3fz4hxn4+3IYTHUlshkFUOmaoxwE9gvAgQYo
+Sf1aYbLRo3uIy60PZpOxDnGbASpppZpgYqmVuxX6GaR8wuZkUVCl+MS0KmdfMO77
+9xKtHea+Ff5iuuKGvBGMN818cMlThUaYeI5KQlNfk0cUv/1vKcP7rq2jk4lFfpBZ
+XfY7oHlm+50=
+=Ma4G
 -----END PGP SIGNATURE-----
 
---Sig_/EfcxRsIo0JtIXwe7=uCwr9z--
+--Sig_/AUpcoV3Nq/_=1l26TgxdctW--
