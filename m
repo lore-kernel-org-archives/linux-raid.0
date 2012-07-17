@@ -1,82 +1,198 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: Re: [PATCH 0/2] Improve odirect-write performance for block-device.
-Date: Tue, 17 Jul 2012 09:13:37 +0800
-Message-ID: <201207170913319532444@gmail.com>
-References: <201207160929453906032@gmail.com> <CANejiEW6znDtKZ+d5BzHb9TSM4ywC2CKyWhM95rJZJRgMgUZKw@mail.gmail.com> <201207161343099841872@gmail.com>,
-	<CANejiEXRqfFufuT0HeCc1r=4u6yu1soCDw3q3SOOX=JCpkUKOQ@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: raid1 repair: sync_request() aborts if one of the drives has
+ bad block recorded
+Date: Tue, 17 Jul 2012 11:17:53 +1000
+Message-ID: <20120717111753.178d53d5@notabene.brown>
+References: <CAGRgLy6j3pEeXGXJbVc4Sz3gdShWWfaT7hyXnurgO-6N-_E_ZA@mail.gmail.com>
+	<20120716133753.1a34e149@notabene.brown>
+	<CAGRgLy6JZXiHFg11Z-_3krj8iKp_Wk7X_wz8OyikyvhLpxzcxg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: shli <shli@kernel.org>
-Cc: Neil Brown <neilb@suse.de>, viro <viro@zeniv.linux.org.uk>, linux-raid <linux-raid@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/8t4QfkgVsEBweMX56.Cs5D_"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAGRgLy6JZXiHFg11Z-_3krj8iKp_Wk7X_wz8OyikyvhLpxzcxg@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wNy0xNiAyMToyMSBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
-PjIwMTIvNy8xNSBtYWppYW5wZW5nIDxtYWppYW5wZW5nQGdtYWlsLmNvbT46DQo+PiBPbiAyMDEy
-LTA3LTE2IDExOjI5IFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4gV3JvdGU6DQo+Pj4yMDEy
-LzcvMTUgbWFqaWFucGVuZyA8bWFqaWFucGVuZ0BnbWFpbC5jb20+Og0KPj4+PiBDcmVhdGUgYSBy
-YWlkNSB1c2luZyBmb3VyIGRpc2sgYW5kIHRoZSBjaHVua3NpemUgaXMgNTEySy4NCj4+Pj4gVGVz
-dCBjb21tYW5kIGlzOiBkZCBpZj0vZGV2L3plcm8gb2Y9L2Rldi9tZDAgYnM9MTUzNksgY291bnQ9
-OTAwMDAgb2ZsYWc9ZGlyZWN0DQo+Pj4+DQo+Pj4+IEluIFJIRUw2KGtlcm5lbCAyLjYuMzIpOnNw
-ZWVkIGFib3V0IDI0ME1CL3MNCj4+Pj4gSW4gMy41LjAtcmM1OnNwZWVkIGFib3V0IDc3TUIvUw0K
-Pj4+PiBBZGQgdHdvIHBhdGNoIGluIDMuNS4wLXJjNSwgc3BlZWQgYWJvdXQgMjAwTUIvUy4NCj4+
-Pj4NCj4+Pj4gU28gdGhlIHBlcmZvcm1hbmNlIG9mIG9kaXJlY3Qtd3JpcnRlIGZvciBibG9jay1k
-ZWl2Y2Ugd2FzIG9idmlvdXMgcmVkdWNlZC4NCj4+Pj4gUEFUQ0ggMS8yOiBBZGQgYmxrX3BsdWcg
-ZnVuY3Rpb24gZm9yIG9kaXJlY3Qtd3JpdGUgYmxvY2stZGV2aWNlDQo+Pj4+IFBBVENIIDIvMjog
-UmVtb3ZlIFJFUV9TWU5DIGZvciBvZGlyZWN0LXdyaXRlIGluIHJhaWQ0NTYuDQo+Pj4+DQo+Pj4+
-IFBBVENIIDIvMiBtYXliZSBub3QgY29ycmVjdCBiZWNhdXNlIGl0IGFsc2UgZm9yIG9kaXJlY3Qt
-d3JpdGUgZm9yIHJlZ3VsYXIgZmlsZS4NCj4+Pj4gSmlhbnBlbmcgTWEgKDIpOg0KPj4+PiAgIGZz
-L2Jsb2NrLWRldi5jOmZpeCBwZXJmb3JtYW5jZSByZWdyZXNzaW9uIGluIE9fRElSRUNUIHdyaXRl
-cyB0bw0KPj4+PiAgICAgbWQgYmxvY2sgZGV2aWNlcy4NCj4+Pg0KPj4+SW4gcmFpZDUsIGFsbCBy
-ZXF1ZXN0cyBhcmUgc3VibWl0dGVkIGJ5IHJhaWQ1ZCB0aHJlYWQsIHdoaWNoIGFscmVhZHkgaGFz
-DQo+Pj5wbHVnLiBXaHkgZG9lc24ndCBpdCB3b3JrPw0KPj4gTm8uIHRoZSBwdXJwb3NlIG9mIHR3
-byBwYXRjaCBpcyB0byByZWR1Y2UgdGhlIHJlYWQgb3BlcmF0aW9uIHdoZW4gd3JpdGUgd2hpY2gg
-d2FzIG5vdCBmdWxsLXdyaXRlLg0KPj4gSSB0ZXN0ZWQgaW4gUkhFTDYuVGhlIHJlYWQgb3BlcmF0
-aW9uIGlzIHplcm8uQnV0IGluIDMuNS4wLXJjNSwgdGhlIHJlYWQgb3BlcmFpdG9uIG1heSBlcXVh
-bCB0byB3cml0ZS1vcGVyYXRpb24uDQo+PiBBbmQgaSB1c2VkIHRoZSBicyB3YXMgMTUzNmsoMyo1
-MTJrKGNodW5rLXNpemUpKS4NCj4NCj55ZXMsIEkga25vdy4gQnV0IEkgd2FudCB0byB1bmRlcnN0
-YW5kIHdoeSB3ZSBuZWVkIHRoZSBwbHVnIGluIHlvdXINCj50ZXN0LiBUaGUgSU8gaXMgZGlzcGF0
-Y2hlZCBmcm9tIHJhaWQ1ZCwgaXQgYWxyZWFkeSBoYXMgcGx1Zy4NClBsdWcgaW4gcmFpZDUgb25s
-eSBlZmZlY3QgdGhlIGJsa19xdWV1ZV9iaW8oKS4NClBsdWcgaW4gZGlyZWN0X2Fpb193cml0ZSBv
-bmx5IGVmZmVjdCB0aGUgbWRkZXZfY2hlY2tfcGx1Z2dlZC4NCkl0IHdpbGwgZWZmZWN0IHRoZSBj
-b2RlIDoNCnJhaWQ1ZDoNCj5pZiAoYXRvbWljX3JlYWQoJm1kZGV2LT5wbHVnX2NudCkgPT0gMCkN
-Cj4JCQlyYWlkNV9hY3RpdmF0ZV9kZWxheWVkKGNvbmYpOw0KPg0KU28gdHdvIHBsdWdzIGFyZSB0
-d28gZGlmZmVyZW50IGZ1bmN0aW9uLg0KDQo+RmVuZ2d1YW5nIHVzZWQgdG8gcG9zdCBhIHBhdGNo
-IHRvIG1vdmUgdGhlIHBsdWcgZnJvbSBnZW5lcmljX2ZpbGVfYWlvX3dyaXRlDQo+dG8gZG9fYmxv
-Y2tkZXZfZGlyZWN0X0lPLCB3aGljaCBzb3VuZHMgYmV0dGVyLg0KPg0KSSBkaWQgZmluZCB0aGlz
-IHBhdGNoIGluIGtlcm5lbC4NCnN5c2NhbGxfd3JpdGUgcGF0Y2ggaXMgOg0Kc3lzY2FsbF93cml0
-ZS0tLT52ZnNfd3JpdGUtPmZfb3Aud3JpdGUgb3IgZG9fc3luY193cml0ZS0tPmZfb3AuYWlvX3dy
-aXRlDQpGb3IgcmVndWxhciBmaWxlOiBhaW9fd2lydGUgaXMgZ2VuZXJpY19maWxlX2Fpb193cml0
-ZSgpLg0KZ2VuZXJpY19maWxlX2Fpb193cml0ZSgpIHVzZWQgYmxrX3BsdWcuc28gZm9yIG9kaXJl
-Y3Qgd2lydGUgZm9yIHJlZ3VsYXIgZmlsZSx0aGUgcGx1ZyB1c2VkLkJ1dCBpdCBub3QgaW4gZG9f
-YmxvY2tkZXZfZGlyZWN0X0lPLg0KRm9yIGJsb2NrIGZpbGU6IGFpb193cml0ZSBpcyBibGtkZXZf
-YWlvX3dyaXRlKCkuDQpibGtkZXZfYWlvX3dyaXRlIGNhbGwgX19nZW5lcmljX2ZpbGVfYWlvX3dy
-aXRlLS0tPmdlbmVyaWNfZmlsZV9kaXJlY3Rfd3JpdGUtLT5hX29wcy5kaXJlY3RfaW8gdGhhdCBp
-cyBibGtkZXZfZGlyZWN0X0lPLg0KU28gb2RpcmVjdC13cml0ZSAgZm9yIGJsb2NrLHRoZXJlIGlz
-IG5vdCBwbHVnLg0KDQpDYW4geW91IHNlbmQgdGhlIHBhdGNoIG9yIHRoZSBjb21taXQ/IEkgd2Fu
-dCB0byBmaW5kIHRoZSBwZXJmb3JtYW5jZSAgd2hpY2ggYmV0dGVyLg0KPj4+PiAgIHJhaWQ1OiBG
-b3Igd3JpdGUgcGVyZm9ybWFuY2UsIHJlbW92ZSBSRVFfU1lOQyB3aGVuIHdyaXRlIHdhcyBvZGly
-ZWN0Lg0KPj4+DQo+Pj5SRVFfU1lOQyBvbmx5IGltcGFjdHMgQ0ZRLCB0aGlzIHNvdW5kcyBub3Qg
-cmVhc29uYWJsZS4gU28gdGhlIGRpc2tzDQo+Pj5hcmUgdXNpbmcgQ0ZRIGlvc2NoZWR1bGVyLiBD
-YW4geW91IGNoZWNrIGlmIHlvdSBjYW4gc2VlIHRoZSBzYW1lIGlzc3VlDQo+Pj53aXRoIGRlYWRs
-aW5lPw0KPj4gSSB0ZXN0ZWQgYW5kIHRoZSByZXN1bHQgaXMgdGhlIHNhbWUgbGlrZSBjZnEuDQo+
-PiBCdXQgaW4gUkhFTDYsIHRoZSBpb3NjaGVkdWxlciBpcyBhbHNvIGNmcS4NCj4+Pg0KPj4+TGV0
-IG1lIGd1ZXNzLCB3aXRob3V0IFJFUV9TWU5DLCByZWFkIHdpbGwgZ2V0IGhpZ2hlciBwcmlvcml0
-eSBhZ2FpbnN0IHdyaXRlDQo+Pj5pbiBDRlEsIHNvIGluIHRoaXMgY2FzZSwgd3JpdGUgZ2V0cyBk
-ZWxheWVkLCBhbmQgbWF5YmUgZ2V0IGJldHRlciB3cml0ZQ0KPj4+cmVxdWVzdCBtZXJnZS4gQW5k
-IG5vdyB3aXRoIFJFUV9TWU5DLCByZWFkIGFuZCB3cml0ZSBoYXMgdGhlIHNhbWUNCj4+PnByaW9y
-aXR5LCB0aGVyZSBpcyBsZXNzIHJlcXVlc3QgbWVyZ2UuDQo+Pj4NCj4+PlRoYW5rcywNCj4+PlNo
-YW9odWENCj4+IEZvciBoYXJkZGlzayx0aGUgcmVhZCBmb3Igbm90IGZ1bGwtd3JpdGUgd2lsbCBy
-ZW1hcmtseSByZWR1Y2UgdGhlIHBlcmZvcm1hbmNlLg0KPj4gU28gdGhlIGZpcnN0IGl0IHRvIG1h
-a2Ugd3JpdGUgZnVsbC13cml0ZSBhcyBwb3NpYmxlLg0KPg0KPnllcywgdGhpcyBpcyB0aGUgc3lt
-cHRvbSwgYnV0IEknZCBsaWtlIHRvIHVuZGVyc3RhbmQgd2h5IFJFUV9TWU5DIG1ha2VzDQo+dGhl
-IGRpZmZlcmVuY2UuDQo+DQpCZWNhdXNlIHRoZSBSRVFfU1lOQywgdGhlIHN0cmlwZSBzZXQgU1RS
-SVBFX1BSRVJFQURfQUNUSVZFLlNvIHRoZSBzdHJpcGUgd2lsbCBiZSBub3QgZGVsYXkgYW5kIHJl
-YWQgc29tZSBkYXRhLg0KQmVjYXVzZSB0aGUgcmVhZCBvcGVyYXRpb24sIHRoZSBwZXJmb3JtYW5j
-ZSB3aWxsIHJlbWFya2x5IHJlZHVjZSBmb3IgaGFyZGRpc2suDQpJIGRpZCBub3QgaGF2ZSBzc2Qg
-ZGV2aWNlLHNvIGkgZG9uJ3Qga25vdyB0aGUgZWZmZWN0IHRvIHNzZCBkZXZjaWUuDQo+VGhhbmtz
-LA0KPlNoYW9odWE=
+--Sig_/8t4QfkgVsEBweMX56.Cs5D_
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, 16 Jul 2012 11:45:12 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
+
+> Hi Neil,
+> thanks for your comments.
+>=20
+> > I don't see that MD_RECOVERY_REQUESTED is really an issue is it?
+> > We the wrong thing happen in any case where there just one device with =
+no bad
+> > block, and at least one device with a bad block.  In that case we want =
+to
+> > skip forward by the number of bad blocks, not skip to the end of the ar=
+ray.
+>=20
+> I think that MD_RECOVERY_REQUESTED has some meaning here. Because
+> there are only two places where we increase "write_targets":
+> Here:
+> 		} else if (!test_bit(In_sync, &rdev->flags)) {
+> 			bio->bi_rw =3D WRITE;
+> 			bio->bi_end_io =3D end_sync_write;
+> 			write_targets ++;
+> and
+> 	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) && read_targets > 0)
+> 		/* extra read targets are also write targets */
+> 		write_targets +=3D read_targets-1;
+>=20
+> So if we'll see a device that is not In_sync, we will increase
+> write_targets and won't fall into that issue. That's why I was
+> thinking to check for MD_RECOVERY_REQUESTED.
+
+But neither of the code segements you have identified depend on
+MD_RECOVERY_REQUESTED.
+
+The problem occurs with resync/repair/check but not with recover.
+
+
+>=20
+> >
+> > So this?
+> >
+> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> > index 240ff31..c443f93 100644
+> > --- a/drivers/md/raid1.c
+> > +++ b/drivers/md/raid1.c
+> > @@ -2422,7 +2422,10 @@ static sector_t sync_request(struct mddev *mddev=
+, sector_t sector_nr, int *skipp
+> >                 /* There is nowhere to write, so all non-sync
+> >                  * drives must be failed - so we are finished
+> >                  */
+> > -               sector_t rv =3D max_sector - sector_nr;
+> > +               sector_t rv;
+> > +               if (min_bad > 0)
+> > +                       max_sector =3D sector_nr + min_bad;
+> > +               rv =3D max_sector - sector_nr;
+> >                 *skipped =3D 1;
+> >                 put_buf(r1_bio);
+> >                 return rv;
+> >
+>=20
+> I tested it and it works. However, I have a question: shouldn't we try
+> to clear bad blocks during "repair" in particular or during any
+> kind-of-sync in general?
+
+Thanks for testing.
+
+
+>=20
+> Because currently the following is happening:
+> - In sync_request devices are selected as candidates for READs and for
+> WRITEs (using various criteria)
+> - Then we issue the READs and eventually end up in sync_request_write()
+> - Here we schedule WRITEs (without consulting bad blocks or WriteErrorSee=
+n bit)
+> - In end_sync_write, we check if we can clear some bad blocks, and if
+> yes, eventually we end up in handle_sync_write_finished(), where we
+> clear bad blocks
+>=20
+> So getting back to sync_request(), the issue is this: if we consider a
+> device for READs, we check for badblocks. If we find a badblock, we
+> skip it and don't consider this device neither for READs nor for
+> WRITEs. How about:
+> - We consider a device for READs
+> - If it has a bad block, we consider it for WRITEs instead (so we have
+> a 3rd place where we consider the device for WRITE).
+> - We may consult WriteErrorSeen bit as we do in normal make_request(),
+> but not sure, because right now on sync path, we don't consult it
+
+Good point.
+I think we should consider WriteErrorSeen here.  We don't currently consult
+it in sync because we avoid bad blocks completely.
+So you patch would become:
+
+  } else if (!test_bit(WriteErrorSeen, &rdev->flags)) {
+         bio->bi_rw =3D WRITE;
+         bio->bi_end_io =3D end_sync_write;
+         write_targets++;
+  }
+
+If you could confirm that works and resubmit it with a 'Signed-off-by:' line
+I'll apply it.
+Thanks.
+I've already included my previous patch in my queue and tagged it for -stab=
+le.
+
+NeilBrown
+
+>=20
+> So this patch:
+> --- c:/work/code_backups/psp13/raid1.c  Sun Jul 15 16:39:07 2012
+> +++ ubuntu-precise/source/drivers/md/raid1.c    Mon Jul 16 11:35:40 2012
+> @@ -2385,20 +2385,25 @@
+>                                         if (wonly < 0)
+>                                                 wonly =3D i;
+>                                 } else {
+>                                         if (disk < 0)
+>                                                 disk =3D i;
+>                                 }
+>                                 bio->bi_rw =3D READ;
+>                                 bio->bi_end_io =3D end_sync_read;
+>                                 read_targets++;
+>                         }
+> +                       else {
+> +                               bio->bi_rw =3D WRITE;
+> +                               bio->bi_end_io =3D end_sync_write;
+> +                               write_targets ++;
+> +                       }
+>                 }
+>                 if (bio->bi_end_io) {
+>                         atomic_inc(&rdev->nr_pending);
+>                         bio->bi_sector =3D sector_nr + rdev->data_offset;
+>                         bio->bi_bdev =3D rdev->bdev;
+>                         bio->bi_private =3D r1_bio;
+>                 }
+>         }
+>         rcu_read_unlock();
+>         if (disk < 0)
+>=20
+>=20
+> I tested this patch (together with yours) and it cleared the bad
+> blocks, but not sure what else I might be missing. My Linux kernel
+> programming skills are still ... questionable.
+>=20
+> Thanks,
+> Alex.
+>=20
+>=20
+>=20
+> >
+> > Thanks,
+> > NeilBrown
+> >
+
+
+--Sig_/8t4QfkgVsEBweMX56.Cs5D_
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBUAS9QTnsnt1WYoG5AQLGXRAAnn0nITH6lGrEkNvi05Xa58t6PVrAZ7x9
+jKNV5etcxWZsf7R/Xiho1P5Lu6yWiEEbXDoutNaT23FeTjnDIkl4pFuBUgZr2ct+
+3T51VNJN/U4CAdQh6+rX71HdqrYBwpa1IvZI6PSt93m1Lui6cXpa46CM4gCMPiaF
+l+0SkAJjdyKsHeVDkxSkyVpMTnTay2UN05qjHjsbrKKdGJ4qehEDEWAFcg+s2LvZ
+/oo70BFKIhvalQCFmUAfTRbvdv2BrDHpj2IYrEt+LDIEP+bht90OVvv7HVv4EW1Z
+OR5pgxuuwFqpzM/xvB+EEGZrG+AYRZ8YZ4MBTI6InwCbW0h8NUDIZRczgSYTOLjW
+zhgyvo21s2qQ/BPUTI2rF9lDqELCboO7WSJ/f/syA4Hon7MDW6ch7AkKV/5f57e1
+iTgLWBraSJhrSAy6QCyHmsWyefaRwqCX6dbFzZZ8Tk5KlawHaoY4Ehngey6M+LjY
+BxcRBEeKNubuwn7pFR2r1s4vo+uBW8yifl741E4ZNJtriewir7KYjRM+P1os9UeK
+Jv8mAg/cpxRAW7liBCt+tuWWAVkFjeaA6mq/2seDbvYaVq/KpKPb89lSQwHtZjv5
+MFSRsRmc2mEtpy1fADl03AAkP333aHqICNTqzWLXK+cdDX2hrQdtlgqo9tErxCZr
+mbnUkPYxm5s=
+=7pXY
+-----END PGP SIGNATURE-----
+
+--Sig_/8t4QfkgVsEBweMX56.Cs5D_--
