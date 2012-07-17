@@ -1,392 +1,238 @@
-From: Somewhere ToHide <andre_39145@hotmail.de>
-Subject: recreating a non-damaged RAID5
-Date: Tue, 17 Jul 2012 11:41:57 +0000
-Message-ID: <BAY157-W42EFACE2669430565E1972B6DB0@phx.gbl>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: raid1 repair: sync_request() aborts if one of the drives has bad
+ block recorded
+Date: Tue, 17 Jul 2012 16:17:55 +0300
+Message-ID: <CAGRgLy6jDTGXu1Yk2tCnHKDVTfCKjA2P6L-qgrD8EcPb8gCaBA@mail.gmail.com>
+References: <CAGRgLy6j3pEeXGXJbVc4Sz3gdShWWfaT7hyXnurgO-6N-_E_ZA@mail.gmail.com>
+	<20120716133753.1a34e149@notabene.brown>
+	<CAGRgLy6JZXiHFg11Z-_3krj8iKp_Wk7X_wz8OyikyvhLpxzcxg@mail.gmail.com>
+	<20120717111753.178d53d5@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120717111753.178d53d5@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Thanks for your comments, I got confused with the REQUESTED bit.
+I prepared the patch, with couple of notes:
 
-Hi all,
+1/ I decided to be more careful and schedule a write only in case of
+resync or repair. I was not sure whether we should try to correct bad
+blocks on device X, when device Y is recovering. Pls change it if you
+feel otherwise.
 
-I have some trouble in recreating a likely undamaged RAID5-Array with 4=
- disks.
-Initially I created the array one year ago:
+2/ I tested and committed the patch on top of ubuntu-precise 3.2.0-25.
+I looked at your "for-next" branch, and saw that there is some new
+code, which handles hot-replace, which I am not familiar with at this
+point.
 
-mdadm --create /dev/md0 --level=3D5 --chunk=3D128 --raid-devices=3D4 /d=
-ev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
+From 2cf85226e76ab7f5d3c2bfdb207244cd9ed7ae19 Mon Sep 17 00:00:00 2001
+From: Alex Lyakas <alex.bolshoy@gmail.com>
+Date: Tue, 17 Jul 2012 15:47:35 +0300
+Subject: [PATCH] RAID1: When doing resync or repair, attempt to correct bad
+ blocks, according to WriteErrorSeen policy
 
-/dev/md0 is base for a luks container which is used as physical volume =
-for LVM.=20
+Signed-off-by: Alex Lyakas <alex.bolshoy@gmail.com>
 
-Recently I moved the array to a new machine, all working fine. Then I h=
-ave
-experimented with hdparm to put drives into sleep-mode. After a few=20
-sleep/wake-cycles all still working fine. Sunday an event occured that =
-2 of
-the 4 disks dind't wake up properly. I waked up the array by issuing th=
-is=20
-command:=20
-=A0=A0=A0 dd if=3D/dev/zero bs=3D512 count=3D1 > mnt/tmp/test.img
-(mnt/tmp resides in the array/luks/lvm)
-I cannot remember if an error message occured, but I see that 2 drives =
-aren't
-accessible. I decided to restart the machine to get drives working. Aft=
-er
-restart all 4 drives are working, but the array didn't came up because =
-of 2
-missing drives. After some googling I found=20
-=A0=A0=A0 https://raid.wiki.kernel.org/index.php/RAID_Recovery
-This guide seems to deal with my problem. I tried starting recreating m=
-y array
-with this steps:
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 7af60ec..62e4f44 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2257,6 +2257,18 @@ static sector_t sync_request(struct mddev
+*mddev, sector_t sector_nr, int *skipp
+ 				bio->bi_rw = READ;
+ 				bio->bi_end_io = end_sync_read;
+ 				read_targets++;
++			} else if (!test_bit(WriteErrorSeen, &rdev->flags) &&
++				test_bit(MD_RECOVERY_SYNC, &mddev->recovery) &&
++				!test_bit(MD_RECOVERY_CHECK, &mddev->recovery)) {
++				/*
++				 * The device is suitable for reading (InSync),
++				 * but has bad block(s) here. Let's try to correct them,
++				 * if we are doing resync or repair. Otherwise, leave
++				 * this device alone for this sync request.
++				 */
++				bio->bi_rw = WRITE;
++				bio->bi_end_io = end_sync_write;
++				write_targets++;
+ 			}
+ 		}
+ 		if (bio->bi_end_io) {
+=================================
 
-1. mdadm --examine /dev/sd[acde]1 > raid.status
+Final note: I noticed that badblocks_show() fails if there are too
+many bad blocks. It returns value larger than PAGE_SIZE, and then the
+following linux code complains:
+fs/sysfs/file.c:fill_read_buffer()
+	/*
+	 * The code works fine with PAGE_SIZE return but it's likely to
+	 * indicate truncated result or overflow in normal use cases.
+	 */
+	if (count >= (ssize_t)PAGE_SIZE) {
+		print_symbol("fill_read_buffer: %s returned bad count\n",
+			(unsigned long)ops->show);
+		/* Try to struggle along */
+		count = PAGE_SIZE - 1;
+	}
 
-=A0=A0 raid.status contains this:
+So I am not sure how to solve it, but it would be good for
+user/application to receive the full list of bad blocks. Perhaps
+application can pass fd via some ioctl (I feel you don't like ioctls),
+and then kernel can use vfs_write() to print all the bad blocks to the
+fd. Or simply return the bad blocks list through the ioctl output to
+mdadm, and mdadm would print them. Perhaps some other way.
 
-=A0=A0=A0=A0=A0 /dev/sda1:=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : a92b4efc=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Version : 1.2=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=20
-=A0=A0=A0=A0=A0=A0=A0 Feature Map : 0x0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0 Array UUID : 65089aca:483766d3:0db55271:27c733=
-84=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Name : oldman:0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0 Creation Time : Sun Jun 26 14:35:51 2011=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0 Raid Level : raid5=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0 Raid Devices : 4=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0 Avail Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)=20
-=A0=A0=A0=A0=A0=A0=A0=A0 Array Size : 5860536576 (5589.04 GiB 6001.19 G=
-B)=20
-=A0=A0=A0=A0=A0 Used Dev Size : 3907024384 (1863.01 GiB 2000.40 GB)=20
-=A0=A0=A0=A0=A0=A0=A0 Data Offset : 2048 sectors=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0 Super Offset : 8 sectors=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 State : clean=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=20
-=A0=A0=A0=A0=A0=A0=A0 Device UUID : 3d7a888c:7488a859:f53a0fe5:5bbc1bda=
-=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0 Update Time : Sat Jul 14 22:08:08 2012=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Checksum : eeb6d1f1 - correct=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Events : 266=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Layout : left-symmetric=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0 Chunk Size : 128K=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0 Device Role : Active device 3=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0 Array State : AAAA ('A' =3D=3D active, '.' =3D=3D mi=
-ssing)=20
-=A0=A0=A0 /dev/sdc1:=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : a92b4efc=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Version : 1.2=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=20
-=A0=A0=A0=A0=A0=A0=A0 Feature Map : 0x0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0 Array UUID : 65089aca:483766d3:0db55271:27c733=
-84=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Name : oldman:0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0 Creation Time : Sun Jun 26 14:35:51 2011=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0 Raid Level : raid5=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0 Raid Devices : 4=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0 Avail Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)=20
-=A0=A0=A0=A0=A0=A0=A0=A0 Array Size : 5860536576 (5589.04 GiB 6001.19 G=
-B)=20
-=A0=A0=A0=A0=A0 Used Dev Size : 3907024384 (1863.01 GiB 2000.40 GB)=20
-=A0=A0=A0=A0=A0=A0=A0 Data Offset : 2048 sectors=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0 Super Offset : 8 sectors=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 State : clean=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=20
-=A0=A0=A0=A0=A0=A0=A0 Device UUID : 578cb781:387a3537:e42e9414:3d6e25e7=
-=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0 Update Time : Sat Jul 14 22:08:08 2012=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Checksum : fe017b9c - correct=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Events : 266=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Layout : left-symmetric=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0 Chunk Size : 128K=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0 Device Role : Active device 1=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0 Array State : AAAA ('A' =3D=3D active, '.' =3D=3D mi=
-ssing)=20
-=A0=A0=A0 /dev/sdd1:=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : a92b4efc=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Version : 1.2=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=20
-=A0=A0=A0=A0=A0=A0=A0 Feature Map : 0x0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0 Array UUID : 65089aca:483766d3:0db55271:27c733=
-84=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Name : oldman:0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0 Creation Time : Sun Jun 26 14:35:51 2011=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0 Raid Level : raid5=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0 Raid Devices : 4=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0 Avail Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)=20
-=A0=A0=A0=A0=A0=A0=A0=A0 Array Size : 5860536576 (5589.04 GiB 6001.19 G=
-B)=20
-=A0=A0=A0=A0=A0 Used Dev Size : 3907024384 (1863.01 GiB 2000.40 GB)=20
-=A0=A0=A0=A0=A0=A0=A0 Data Offset : 2048 sectors=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0 Super Offset : 8 sectors=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 State : clean=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=20
-=A0=A0=A0=A0=A0=A0=A0 Device UUID : 3dc3e9e2:ab9a2199:5618c6cd:ca0631fa=
-=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0 Update Time : Sun Jul 15 11:25:20 2012=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Checksum : 8d5c0fd0 - correct=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Events : 271=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Layout : left-symmetric=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0 Chunk Size : 128K=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0 Device Role : Active device 2=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0 Array State : A.A. ('A' =3D=3D active, '.' =3D=3D mi=
-ssing)=20
-=A0=A0=A0 /dev/sde1:=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : a92b4efc=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Version : 1.2=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=20
-=A0=A0=A0=A0=A0=A0=A0 Feature Map : 0x0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0 Array UUID : 65089aca:483766d3:0db55271:27c733=
-84=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Name : oldman:0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0 Creation Time : Sun Jun 26 14:35:51 2011=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0 Raid Level : raid5=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0 Raid Devices : 4=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0 Avail Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)=20
-=A0=A0=A0=A0=A0=A0=A0=A0 Array Size : 5860536576 (5589.04 GiB 6001.19 G=
-B)=20
-=A0=A0=A0=A0=A0 Used Dev Size : 3907024384 (1863.01 GiB 2000.40 GB)=20
-=A0=A0=A0=A0=A0=A0=A0 Data Offset : 2048 sectors=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0 Super Offset : 8 sectors=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 State : clean=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=20
-=A0=A0=A0=A0=A0=A0=A0 Device UUID : 22ecbee2:a26678a3:c2aeca18:007edd48=
-=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0 Update Time : Sun Jul 15 11:25:20 2012=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Checksum : 3139124b - correct=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Events : 271=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Layout : left-symmetric=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0 Chunk Size : 128K=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0 Device Role : Active device 0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0 Array State : A.A. ('A' =3D=3D active, '.' =3D=3D mi=
-ssing)=20
+Thanks for your help!
+Alex.
 
-2. grep Role raid.status
 
-=A0 gives:
-=A0=A0 Device Role : Active device 3
-=A0=A0 Device Role : Active device 1
-=A0=A0 Device Role : Active device 2
-=A0=A0 Device Role : Active device 0
-=A0=A0=20
-3. mdadm --create --assume-clean --level=3D5 --chunk=3D128 --raid-devic=
-es=3D4 /dev/md0 /dev/sde1 /dev/sdc1 /dev/sdd1 /dev/sda1
-
-=A0 THis gives the message that all drives apears to be part of a raid =
-array.
-=A0 I confirmed "Continue creating array" and /dev/md0 was created. But=
- data
-=A0 in /dev/md0 is corrupted. I cannot luksOpen the device. The first b=
-ytes=20
-=A0 of /dev/md0 did not contain the luks header. Something went wrong i=
-n
-=A0 recreating the array. I've build a simple script that tries to crea=
-te the
-=A0 array and luksOpen it in all possible 24 permutations in disk-arran=
-gement,
-=A0 but none of them brings me up my data.
-=A0=20
-I'm pretty sure that I didn't write something to the array, except the =
-512
-bytes to wake up it from sleep (see above). The kernel messages around =
-the
-time drive didn't respond are:
-=A0=20
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.863193] sd 2:0:0:0: [sdc] Unha=
-ndled error code
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.863197] sd 2:0:0:0: [sdc]=A0 R=
-esult: hostbyte=3DDID_BAD_TARGET driverbyte=3DDRIVER_OK
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.863201] sd 2:0:0:0: [sdc] CDB:=
- Read(10): 28 00 2f 91 75 00 00 00 a0 00
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.863374] sd 0:0:0:0: [sda] Unha=
-ndled error code
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.863376] sd 0:0:0:0: [sda]=A0 R=
-esult: hostbyte=3DDID_BAD_TARGET driverbyte=3DDRIVER_OK
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.863378] sd 0:0:0:0: [sda] CDB:=
- Read(10): 28 00 2f 91 75 00 00 00 a0 00
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.864442] sd 0:0:0:0: [sda] Unha=
-ndled error code
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.864445] sd 0:0:0:0: [sda]=A0 R=
-esult: hostbyte=3DDID_BAD_TARGET driverbyte=3DDRIVER_OK
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.864449] sd 0:0:0:0: [sda] CDB:=
- Read(10): 28 00 2f 91 76 00 00 00 a0 00
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.864508] sd 2:0:0:0: [sdc] Unha=
-ndled error code
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.864510] sd 2:0:0:0: [sdc]=A0 R=
-esult: hostbyte=3DDID_BAD_TARGET driverbyte=3DDRIVER_OK
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.864513] sd 2:0:0:0: [sdc] CDB:=
- Read(10): 28 00 2f 91 75 a0 00 00 60 00
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.864638] sd 0:0:0:0: [sda] Unha=
-ndled error code
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.864640] sd 0:0:0:0: [sda]=A0 R=
-esult: hostbyte=3DDID_BAD_TARGET driverbyte=3DDRIVER_OK
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.864642] sd 0:0:0:0: [sda] CDB:=
- Read(10): 28 00 2f 91 75 a0 00 00 60 00
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.864680] sd 2:0:0:0: [sdc] Unha=
-ndled error code
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.864681] sd 2:0:0:0: [sdc]=A0 R=
-esult: hostbyte=3DDID_BAD_TARGET driverbyte=3DDRIVER_OK
-=A0 Jul 15 11:21:12 EBENE kernel: [30046.864683] sd 2:0:0:0: [sdc] CDB:=
- Read(10): 28 00 2f 91 76 00 00 00 a0 00
-=A0 Jul 15 11:23:38 EBENE kernel: [30192.746530] sd 0:0:0:0: [sda] Unha=
-ndled error code
-=A0 Jul 15 11:23:38 EBENE kernel: [30192.746534] sd 0:0:0:0: [sda]=A0 R=
-esult: hostbyte=3DDID_BAD_TARGET driverbyte=3DDRIVER_OK
-=A0 Jul 15 11:23:38 EBENE kernel: [30192.746539] sd 0:0:0:0: [sda] CDB:=
- Read(10): 28 00 00 00 00 00 00 00 20 00
-=A0 Jul 15 11:23:38 EBENE kernel: [30192.746810] sd 0:0:0:0: [sda] Unha=
-ndled error code
-=A0 Jul 15 11:23:38 EBENE kernel: [30192.746812] sd 0:0:0:0: [sda]=A0 R=
-esult: hostbyte=3DDID_BAD_TARGET driverbyte=3DDRIVER_OK
-=A0 Jul 15 11:23:38 EBENE kernel: [30192.746815] sd 0:0:0:0: [sda] CDB:=
- Read(10): 28 00 00 00 00 00 00 00 08 00
-=A0=20
-I have modified the Permute_array.pl on the wiki page to not mount /dev=
-/md0
-but print out the first 4 bytes of /dev/md0. These must be "LUKS", if a=
-rray
-is recreated in a succesful way. But I didn't ge this result after all
-permutations.
-
-I'm afraid of having killed my array by not using "missing" on some dri=
-ve in
-the first try (see above Point 3). Will may array remain corrupted?
-Any suggestions?
-
-Thanks in advance
-Andr=E9
-
- 		 	   		  --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Tue, Jul 17, 2012 at 4:17 AM, NeilBrown <neilb@suse.de> wrote:
+> On Mon, 16 Jul 2012 11:45:12 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+> wrote:
+>
+>> Hi Neil,
+>> thanks for your comments.
+>>
+>> > I don't see that MD_RECOVERY_REQUESTED is really an issue is it?
+>> > We the wrong thing happen in any case where there just one device with no bad
+>> > block, and at least one device with a bad block.  In that case we want to
+>> > skip forward by the number of bad blocks, not skip to the end of the array.
+>>
+>> I think that MD_RECOVERY_REQUESTED has some meaning here. Because
+>> there are only two places where we increase "write_targets":
+>> Here:
+>>               } else if (!test_bit(In_sync, &rdev->flags)) {
+>>                       bio->bi_rw = WRITE;
+>>                       bio->bi_end_io = end_sync_write;
+>>                       write_targets ++;
+>> and
+>>       if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) && read_targets > 0)
+>>               /* extra read targets are also write targets */
+>>               write_targets += read_targets-1;
+>>
+>> So if we'll see a device that is not In_sync, we will increase
+>> write_targets and won't fall into that issue. That's why I was
+>> thinking to check for MD_RECOVERY_REQUESTED.
+>
+> But neither of the code segements you have identified depend on
+> MD_RECOVERY_REQUESTED.
+>
+> The problem occurs with resync/repair/check but not with recover.
+>
+>
+>>
+>> >
+>> > So this?
+>> >
+>> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>> > index 240ff31..c443f93 100644
+>> > --- a/drivers/md/raid1.c
+>> > +++ b/drivers/md/raid1.c
+>> > @@ -2422,7 +2422,10 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr, int *skipp
+>> >                 /* There is nowhere to write, so all non-sync
+>> >                  * drives must be failed - so we are finished
+>> >                  */
+>> > -               sector_t rv = max_sector - sector_nr;
+>> > +               sector_t rv;
+>> > +               if (min_bad > 0)
+>> > +                       max_sector = sector_nr + min_bad;
+>> > +               rv = max_sector - sector_nr;
+>> >                 *skipped = 1;
+>> >                 put_buf(r1_bio);
+>> >                 return rv;
+>> >
+>>
+>> I tested it and it works. However, I have a question: shouldn't we try
+>> to clear bad blocks during "repair" in particular or during any
+>> kind-of-sync in general?
+>
+> Thanks for testing.
+>
+>
+>>
+>> Because currently the following is happening:
+>> - In sync_request devices are selected as candidates for READs and for
+>> WRITEs (using various criteria)
+>> - Then we issue the READs and eventually end up in sync_request_write()
+>> - Here we schedule WRITEs (without consulting bad blocks or WriteErrorSeen bit)
+>> - In end_sync_write, we check if we can clear some bad blocks, and if
+>> yes, eventually we end up in handle_sync_write_finished(), where we
+>> clear bad blocks
+>>
+>> So getting back to sync_request(), the issue is this: if we consider a
+>> device for READs, we check for badblocks. If we find a badblock, we
+>> skip it and don't consider this device neither for READs nor for
+>> WRITEs. How about:
+>> - We consider a device for READs
+>> - If it has a bad block, we consider it for WRITEs instead (so we have
+>> a 3rd place where we consider the device for WRITE).
+>> - We may consult WriteErrorSeen bit as we do in normal make_request(),
+>> but not sure, because right now on sync path, we don't consult it
+>
+> Good point.
+> I think we should consider WriteErrorSeen here.  We don't currently consult
+> it in sync because we avoid bad blocks completely.
+> So you patch would become:
+>
+>   } else if (!test_bit(WriteErrorSeen, &rdev->flags)) {
+>          bio->bi_rw = WRITE;
+>          bio->bi_end_io = end_sync_write;
+>          write_targets++;
+>   }
+>
+> If you could confirm that works and resubmit it with a 'Signed-off-by:' line
+> I'll apply it.
+> Thanks.
+> I've already included my previous patch in my queue and tagged it for -stable.
+>
+> NeilBrown
+>
+>>
+>> So this patch:
+>> --- c:/work/code_backups/psp13/raid1.c  Sun Jul 15 16:39:07 2012
+>> +++ ubuntu-precise/source/drivers/md/raid1.c    Mon Jul 16 11:35:40 2012
+>> @@ -2385,20 +2385,25 @@
+>>                                         if (wonly < 0)
+>>                                                 wonly = i;
+>>                                 } else {
+>>                                         if (disk < 0)
+>>                                                 disk = i;
+>>                                 }
+>>                                 bio->bi_rw = READ;
+>>                                 bio->bi_end_io = end_sync_read;
+>>                                 read_targets++;
+>>                         }
+>> +                       else {
+>> +                               bio->bi_rw = WRITE;
+>> +                               bio->bi_end_io = end_sync_write;
+>> +                               write_targets ++;
+>> +                       }
+>>                 }
+>>                 if (bio->bi_end_io) {
+>>                         atomic_inc(&rdev->nr_pending);
+>>                         bio->bi_sector = sector_nr + rdev->data_offset;
+>>                         bio->bi_bdev = rdev->bdev;
+>>                         bio->bi_private = r1_bio;
+>>                 }
+>>         }
+>>         rcu_read_unlock();
+>>         if (disk < 0)
+>>
+>>
+>> I tested this patch (together with yours) and it cleared the bad
+>> blocks, but not sure what else I might be missing. My Linux kernel
+>> programming skills are still ... questionable.
+>>
+>> Thanks,
+>> Alex.
+>>
+>>
+>>
+>> >
+>> > Thanks,
+>> > NeilBrown
+>> >
+>
