@@ -1,68 +1,46 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: commit backport request
-Date: Tue, 17 Jul 2012 04:48:22 +0100
-Message-ID: <1342496902.11373.33.camel@deadeye.wl.decadent.org.uk>
-References: <20120709140230.3cf926ec@notabene.brown>
-	 <1342065131.25597.352.camel@deadeye.wl.decadent.org.uk>
-	 <CA+sTkh6Nnfx3OAF0CN0CfRCUHUg2XEtivY-DmTXrRGwnPLgY2Q@mail.gmail.com>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH 1/2 V1] [PATCH] fs/block-dev.c:fix performance regression in O_DIRECT writes to md block devices
+Date: Tue, 17 Jul 2012 13:07:50 +0800
+Message-ID: <201207171307471253605@gmail.com>
+References: <201207161422001403795@gmail.com>,
+	<20120717130434.670e51e9@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-OUgBUp1L+gcpPa9evfYE"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+sTkh6Nnfx3OAF0CN0CfRCUHUg2XEtivY-DmTXrRGwnPLgY2Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Igor M Podlesny <for.poige+lsr@gmail.com>
-Cc: NeilBrown <neilb@suse.de>, stable@vger.kernel.org, Jose Manuel dos Santos Calhariz <jose.calhariz@netvisao.pt>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: viro <viro@ZenIV.linux.org.uk>, axboe <axboe@fusionio.com>, linux-raid <linux-raid@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 List-Id: linux-raid.ids
 
+T24gMjAxMi0wNy0xNyAxMTowNCBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
+IE1vbiwgMTYgSnVsIDIwMTIgMTQ6MjI6MDMgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVuZ0Bn
+bWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gRm9yIHJlZ3VsYXIgZmlsZSwgd3JpdGUgb3BlcmFpb24g
+dXNlZCBibGtfcGx1ZyBmdW5jdGlvbi5CdXQgZm9yIGJsb2NrDQo+PiBmaWxlLHdyaXRlIG9wZXJh
+dGlvbiBkaWQgbm90IHVzZSBibGtfcGx1Zy4NCj4+IFRoaXMgcGF0Y2ggaXMgYWxzbyBmb3Igd3Jp
+dGUtY2FjaGUgbW9kZSBmb3IgYmxvY2stZGV2aWNlLg0KPj4gDQo+PiBTaWduZWQtb2ZmLWJ5OiBK
+aWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQo+DQo+UmV2aWV3ZWQtYnk6IE5laWxC
+cm93biA8bmVpbGJAc3VzZS5kZT4NCj4NCj5XaWxsIHlvdSB0YWtlIHRoaXMgSmVucz8gIFRob3Vn
+aCBtYWlsIHRvIHlvdSBzZWVtIHRvIGJlIGJvdW5jaW5nOg0KPg0KPjxheGJvZUBmdXNpb25pby5j
+b20+OiBob3N0IG1haWwuZnVzaW9uaW8uY29tWzEwLjEwMS4xLjE5XSBzYWlkOiA1NTQgNS40LjYg
+SG9wDQo+ICAgIGNvdW50IGV4Y2VlZGVkIC0gcG9zc2libGUgbWFpbCBsb29wIChpbiByZXBseSB0
+byBlbmQgb2YgREFUQSBjb21tYW5kKQ0KPg0KPnNvIEknbSBub3Qgc3VyZSB5b3UnbGwgZXZlbiBz
+ZWUgdGhpcyA6LSgNCj4NCkkgc2VlIGl0Lg0KPk5laWxCcm93bg0KPg0KPj4gLS0tDQo+PiAgZnMv
+YmxvY2tfZGV2LmMgfCAgICAzICsrKw0KPj4gIDEgZmlsZXMgY2hhbmdlZCwgMyBpbnNlcnRpb25z
+KCspLCAwIGRlbGV0aW9ucygtKQ0KPj4gDQo+PiBkaWZmIC0tZ2l0IGEvZnMvYmxvY2tfZGV2LmMg
+Yi9mcy9ibG9ja19kZXYuYw0KPj4gaW5kZXggYzJiYmUxZi4uY2YxMDc3OCAxMDA2NDQNCj4+IC0t
+LSBhL2ZzL2Jsb2NrX2Rldi5jDQo+PiArKysgYi9mcy9ibG9ja19kZXYuYw0KPj4gQEAgLTE1Nzks
+OSArMTU3OSwxMSBAQCBzc2l6ZV90IGJsa2Rldl9haW9fd3JpdGUoc3RydWN0IGtpb2NiICppb2Ni
+LCBjb25zdCBzdHJ1Y3QgaW92ZWMgKmlvdiwNCj4+ICB7DQo+PiAgCXN0cnVjdCBmaWxlICpmaWxl
+ID0gaW9jYi0+a2lfZmlscDsNCj4+ICAJc3NpemVfdCByZXQ7DQo+PiArCXN0cnVjdCBibGtfcGx1
+ZyBwbHVnOw0KPj4gIA0KPj4gIAlCVUdfT04oaW9jYi0+a2lfcG9zICE9IHBvcyk7DQo+PiAgDQo+
+PiArCWJsa19zdGFydF9wbHVnKCZwbHVnKTsNCj4+ICAJcmV0ID0gX19nZW5lcmljX2ZpbGVfYWlv
+X3dyaXRlKGlvY2IsIGlvdiwgbnJfc2VncywgJmlvY2ItPmtpX3Bvcyk7DQo+PiAgCWlmIChyZXQg
+PiAwIHx8IHJldCA9PSAtRUlPQ0JRVUVVRUQpIHsNCj4+ICAJCXNzaXplX3QgZXJyOw0KPj4gQEAg
+LTE1OTAsNiArMTU5Miw3IEBAIHNzaXplX3QgYmxrZGV2X2Fpb193cml0ZShzdHJ1Y3Qga2lvY2Ig
+KmlvY2IsIGNvbnN0IHN0cnVjdCBpb3ZlYyAqaW92LA0KPj4gIAkJaWYgKGVyciA8IDAgJiYgcmV0
+ID4gMCkNCj4+ICAJCQlyZXQgPSBlcnI7DQo+PiAgCX0NCj4+ICsJYmxrX2ZpbmlzaF9wbHVnKCZw
+bHVnKTsNCj4+ICAJcmV0dXJuIHJldDsNCj4+ICB9DQo+PiAgRVhQT1JUX1NZTUJPTF9HUEwoYmxr
+ZGV2X2Fpb193cml0ZSk7DQo+DQo+
 
---=-OUgBUp1L+gcpPa9evfYE
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2012-07-17 at 11:26 +0800, Igor M Podlesny wrote:
-> On 12 July 2012 11:52, Ben Hutchings <ben@decadent.org.uk> wrote:
-> > On Mon, 2012-07-09 at 14:02 +1000, NeilBrown wrote:
-> [...]
-> > Queued up for 3.2.y, thanks.
-> >
-> > Ben.
->=20
->    Hm, it looks like 3.2.23 misses it =E2=80=94 at least my during rebase=
- the
-> cherry-picked fix applied again cleanly.
-
-I queued it up some hours after tagging that release.  I *announced* the
-release later, but that's because uploading tarballs etc. involves a
-round trip via Greg.
-
-Ben.
-
---=20
-Ben Hutchings
-Gates has joked that everything goes on and off unexepectedly in the house,
-which is run by a high-end PC network built on Windows NT. - Seattle Times
-
---=-OUgBUp1L+gcpPa9evfYE
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAUATghue/yOyVhhEJAQoGOQ//QIpc30dLKi4kFVPAzEksGdVv/9E+Tb+U
-yMj5SHygy+CDEbzlxNq+XXXujdF3WkpqgHAr5eLPJxp07kpfmqlbHCub423xVJiL
-uGLOVexJVJP1okkb2iRqsc6SFZj7LMNiVcmwuys4/UWS1ZqRkIr3AznyX8jyk0H8
-/4E2MsCpj6aP1wob8MtZxVUtc2ucrQ5R9rS2YMbRQ4p8RTbVZeE3ok6tz8nToohP
-EirwPhYiqkFhoz9lyKl2gQFftFcrbee/6uh9FhjIELzXUSwUxumzdOUJ5EMBUoiU
-bQS7KW4IcT2pS4cmio8DtpT6/lsKZGzzhXxMgFYvBOQ0wb7amcV+Kat84RZ6usq8
-Qxerig7O9IMAk9NaqjE4nM7mXCuzMZnIcy+keECZAKKWrtC/E7fP+fsnw2qCT49y
-vZfCUAfCMU/n0oPf5P/YXK/mzfTH8szV4MsaXgwdatN3G9uXHvdm6xa1Ycrfhlxl
-aI7tHsYBIM0F9yqhyyrzaQb7dcCvts1gAsovJk8qt+HV9KRV5+7yvtPIA/XCmnmL
-RnlTMlaonZZrpVA9TkNF6Tan1S3ztu2DJZIaQJMCg9dgKFuromH3bqVFTiaaNwcF
-zDU5+nEki0hh324U4RCKYul4hhb97H+7G81DXFEDVkTfc4rbdHSU+O0ns10uKT7o
-MeFvIaeKQHI=
-=C8Ch
------END PGP SIGNATURE-----
-
---=-OUgBUp1L+gcpPa9evfYE--
