@@ -1,155 +1,156 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: v3.5 regression in IMSM support
-Date: Wed, 18 Jul 2012 10:34:58 +1000
-Message-ID: <20120718103458.70046aaf@notabene.brown>
-References: <20120717090526.GF23042@glaurung.lavos.net>
+Subject: Re: [PATCH v2] DM RAID: Add support for MD RAID10
+Date: Wed, 18 Jul 2012 11:11:46 +1000
+Message-ID: <20120718111146.336c3228@notabene.brown>
+References: <1342057001.22214.6.camel@f16>
+	<20120712163207.222b4bcc@notabene.brown>
+	<544F2898-B9C7-42CD-A0FD-F1DE35C5E628@redhat.com>
+	<20120717123404.3516b943@notabene.brown>
+	<3A8FC300-59E8-48CA-81DF-CCCF780BFE0C@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/lmSBS4fQC3=qYiI/BS7RlUo"; protocol="application/pgp-signature"
+ boundary="Sig_/EqkI3+vgHGQ=19C+oTGAwtg"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120717090526.GF23042@glaurung.lavos.net>
+In-Reply-To: <3A8FC300-59E8-48CA-81DF-CCCF780BFE0C@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brian Downing <bdowning@lavos.net>
-Cc: linux-raid@vger.kernel.org
+To: Brassow Jonathan <jbrassow@redhat.com>
+Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, agk@redhat.com
 List-Id: linux-raid.ids
 
---Sig_/lmSBS4fQC3=qYiI/BS7RlUo
+--Sig_/EqkI3+vgHGQ=19C+oTGAwtg
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 17 Jul 2012 04:05:26 -0500 Brian Downing <bdowning@lavos.net> wrote:
+On Tue, 17 Jul 2012 11:15:56 -0500 Brassow Jonathan <jbrassow@redhat.com>
+wrote:
 
-> I've noticed a regression in IMSM metadata support in v3.5-rc kernels.
-> I have a two-disk laptop that I run an IMSM RAID0 on so I can dual-boot
-> Windows:
 >=20
-> :; sudo mdadm --detail-platform
->        Platform : Intel(R) Matrix Storage Manager
->         Version : 8.0.0.1039
->     RAID Levels : raid0 raid1
->     Chunk Sizes : 4k 8k 16k 32k 64k 128k
->     2TB volumes : not supported
->       2TB disks : not supported
->       Max Disks : 4
->     Max Volumes : 2 per array, 2 per controller
->  I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
+> On Jul 16, 2012, at 9:34 PM, NeilBrown wrote:
 >=20
-> :; cat /proc/mdstat=20
-> Personalities : [raid0]=20
-> md126 : active raid0 sda[1] sdb[0]
->       625137664 blocks super external:/md127/0 128k chunks
->      =20
-> md127 : inactive sdb[1](S) sda[0](S)
->       4520 blocks super external:imsm
->       =20
-> unused devices: <none>
+> >>>>=20
+> >>>> @@ -536,9 +605,25 @@ static int parse_raid_params(struct raid
+> >>>> 	if (dm_set_target_max_io_len(rs->ti, max_io_len))
+> >>>> 		return -EINVAL;
+> >>>>=20
+> >>>> -	if ((rs->raid_type->level > 1) &&
+> >>>> -	    sector_div(sectors_per_dev, (rs->md.raid_disks - rs->raid_type=
+->parity_devs))) {
+> >>>> +	if (rs->raid_type->level =3D=3D 10) {
+> >>>> +		/* (Len * Stripes) / Mirrors */
+> >>>> +		sectors_per_dev *=3D rs->md.raid_disks;
+> >>>> +		if (sector_div(sectors_per_dev, raid10_copies)) {
+> >>>> +			rs->ti->error =3D "Target length not divisible by number of data=
+ devices";
+> >>>> +			return -EINVAL;
+> >>>> +		}
+> >>>=20
+> >>> I'm not entirely sure what you are trying to do here, but I don't thi=
+nk it
+> >>> works.
+> >>>=20
+> >>> At the very least you would need to convert the "sectors_per_dev" num=
+ber to a
+> >>> 'chunks_per_dev' before multiplying by raid_disks and dividing by cop=
+ies.
+> >>>=20
+> >>> But even that isn't necessary.  If you have a 3-device near=3D2 array=
+ with an
+> >>> odd number of chunks per device, that will still work.  The last chun=
+k won't
+> >>> be mirrored, so won't be used.
+> >>> Until a couple of weeks ago a recovery of the last device would trigg=
+er an
+> >>> error when we try to recover that last chunk, but that is fixed now.
+> >>>=20
+> >>> So if you want to impose this limitation (and there is some merit in =
+making
+> >>> sure people don't confuse themselves), I suggest it get imposed in the
+> >>> user-space tools which create the RAID10.
+> >>=20
+> >> I have seen what you do in calc_sectors(), I suppose I could bring tha=
+t in.  However, I'm simply trying to find the value that will be preliminar=
+ily assigned to mddev->dev_sectors.  It is an enforced (perhaps unnecessary=
+) constraint that the array length be divisible by the number of data devic=
+es.  I'm not accounting for chunk boundaries - I leave that to userspace to=
+ configure and MD to catch.
+> >=20
+> > In that case I suggest you keep it out of dmraid.
+> >=20
+> > It might make sense to check that the resulting array size matches what
+> > user-space said to expect - or is at-least-as-big-as.  However I don't =
+see
+> > much point in other size changes there.
 >=20
-> What's happened in v3.5 is that it's no longer possible to incrementally
-> assemble this array, as for example udev rules do.  This breaks my
-> initramfs, and I wind up at a recovery prompt.  'mdadm --assemble --scan'
-> is still able to bring up the array enough to get lvm going, though I
-> think it's still a little messed up; note the 0 length metadata partition
-> reported here:
->=20
-> :; cat mdstat.bad=20
-> Personalities : [raid0]=20
-> md126 : active raid0 sda[1] sdb[0]
->       625137664 blocks super external:/md127/0 128k chunks
->      =20
-> md127 : inactive sdb[1](S) sda[0](S)
->       0 blocks super external:imsm
->       =20
-> unused devices: <none>
->=20
-> Manually running the incremental mdadm looks like this:
->=20
-> # mdadm -I /dev/sda
-> [   22.514509] md: bind<sda>
-> mdadm: failed to add /dev/sda to /dev/md/imsm0: Invalid argument.
-> [   22.516151] md: md127 stopped.
-> [   22.516234] md: unbind<sda>
-> [   22.536399] md: export_rdev(sda)
->=20
-> The same "mdadm: ... Invalid argument." messages print out from the
-> --assemble --scan, yet the array comes up (enough to mount, anyway).
->=20
-> I bisected down to this commit:
->=20
->     commit c6563a8c38fde3c1c7fc925a10bde3ca20799301
->     Author: NeilBrown <neilb@suse.de>
->     Date:   Mon May 21 09:27:00 2012 +1000
->=20
->         md: add possibility to change data-offset for devices.
+> I'm not changing any sizes.  I'm finding a value for mddev->dev_sectors (=
+what should I set it to if not the above?), which is the size of each devic=
+e as computed from the total array size.  If the value can't be computed ev=
+enly, then an error is given.  I'm not sure what you are suggesting my alte=
+rnative is when you say, "keep it out of dm-raid"...  I think this is the l=
+east I can do in dm-raid.
 
-Thank you so much for a very thorough bug report!!
+Sorry, I mean 'checks', not 'changes'.
 
-Fix is below - please test and confirm that it fixes your symptoms.
+I was confused a bit by the code.  It might be clearer to have
+
+   sectors_per_dev =3D ti->len * rs->md.raid_disks;
+   remainder =3D sector_div(sectors_per_dev, raid10_copies);
+
+In almost all cases raid10_copies will be 2 and ti->len will be a multiple =
+of
+8 (as we don't support chunk sizes less than 4K), so remainder will be 0.
+However this doesn't really prove anything.  It is still entirely possible
+that the resulting 'sectors_per_dev' will not result in a RAID10 which has
+the full ti->len sectors required.
+So your test is not sufficient.
+
+Also your calculation is incorrect as it doesn't allow for the possibility =
+of
+unused space in the array.
+A 3-drive 2-copy RAID10 with an odd number of chunks will not use the last
+chunk on the last device. In that case the above calculation will result in
+a sectors_per_dev that it too small.
+
+I think your sectors_per_dev calculation should round up to a whole number =
+of
+chunks.
+
+   sectors_per_dev =3D DIV_ROUND_UP_SECTOR_T(ti->len * rs->md.raid_disks,
+                                           raid10_copies);
+   sectors_per_dev =3D round_up(sectors_per_dev, rs->md.chunk_sectors);
+
+And then after calling md_run(), you should check that
+ pers->size(mddev, 0, 0) =3D=3D ti->len
+and abort if not.
+
+Note that getting the sectors_per_dev right is really really important for
+RAID10-far.  For other layouts and levels a smaller sectors_per_dev will ju=
+st
+result in less data being available.
+For raid10-far, sectors_per_dev is included in the layout calculations so
+changing it will change the location of data and could result in corruption.
 
 NeilBrown
 
-=46rom a8969e09fd854e9ff302e443c6a185505c3a6624 Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Wed, 18 Jul 2012 10:34:18 +1000
-Subject: [PATCH] md: fix bug in handling of new_data_offset
-
-commit c6563a8c38fde3c1c7fc925a10bde3ca20799301
-    md: add possibility to change data-offset for devices.
-
-introduced a 'new_data_offset' attribute which should normally
-be the same as 'data_offset', but can be explicitly set to a different
-value to allow a reshape operation to move the data.
-
-Unfortunately when the 'data_offset' is explicitly set through
-sysfs, the new_data_offset is not also set, so the two would become
-out-of-sync incorrectly.
-
-One result of this is that trying to set the 'size' after the
-'data_offset' would fail because it is not permitted to set the size
-when the 'data_offset' and 'new_data_offset' are different - as that
-can be confusing.
-Consequently when mdadm tried to do this while assembling an IMSM
-array it would fail.
-
-This bug was introduced in 3.5-rc1.
-
-Reported-by: Brian Downing <bdowning@lavos.net>
-Bisected-by: Brian Downing <bdowning@lavos.net>
-Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index bdc5c7b..775688e 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2884,6 +2884,7 @@ offset_store(struct md_rdev *rdev, const char *buf, s=
-ize_t len)
- 		 * can be sane */
- 		return -EBUSY;
- 	rdev->data_offset =3D offset;
-+	rdev->new_data_offset =3D offset;
- 	return len;
- }
-=20
-
---Sig_/lmSBS4fQC3=qYiI/BS7RlUo
+--Sig_/EqkI3+vgHGQ=19C+oTGAwtg
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUAYEsjnsnt1WYoG5AQLxuA//Y79wL1mHwkwSr16qyZqy+QALmGRu41La
-tEBp06oqMSoprpQ5a7bdVOJ/ARYRPIXWCbRjbnppxX+uvNfrgtK5r9T3a6QHsP03
-UQ7yF5FsDtVYuucEIqXPOqQ911JPm3e8gsLhjbi3FHxP9CArRuBPLHzXk7oPQDhM
-xaubaUV1sAzDHKAAC2CvTZMGKRTJE5ZAN7kf8rAEKHbkCELS63Mu6e2KVexRIiMQ
-UdvvNIL4JdQa7ab3CUEYTaaz5tRv4TNBEEHuXSi4kZ4nzTdECFDkZBltRXQ8GOmr
-X7vOjCQH8bzpXlIPHgV8nYLNt+gSyDxsnEfFGadMXA0lAa3FZKTKnk2x2VoFQHw6
-AeYmWQXcp5SNrMk5B9d1tE54eXqtJM3pB+RZHCUkZyJPu0b3LlkvVRfuWXCXeD8o
-JuNbz8faxMqVeLrxjwO4geUra+TnKalJBkSqSOklEY/xlyPNt39yQJtZPXj5CI9D
-Sr3KqvGw7uUTcuXAwn4gob5AG9aT2Y/RmNM02NtkrGMRMcQYl2+rkE7OlvnBFU7N
-EvzwNOBe2npTeef3PVNw/pPN7PdH0Y74i6aa0PnDSMJoF8zeE1O1TpqlKriRK4jA
-l354m8gXbVLRrpduTu2qCh2tF9DFHBpIL1Y8efy8bHG2X9qek23HbeVqLl8cDDHV
-WwLM/gv0RUE=
-=edTc
+iQIVAwUBUAYNUjnsnt1WYoG5AQJU0xAAo6LDO63+TtcRO4+kRA/m0uwmm0ajAO9p
+Y5IftvE0TnUWMZzp1ziU2SBnm9ewdyYNPhyrnMN4c1/YC2TSIqEj/eGW45ekDzPa
+AkJnr0nElGrRkqqmGmp/4OsFecUayMk7T4sxyNtKIeKKymnevzhBom/lugqEUp4h
+PTpMFPvcByunicU7s1Q6N6I6cwQpt4cwDyE0ePH2CLERTtEaPi4jRdrIt/unVFx+
+yXUd2n+nZrTCdwQZdJJUOQkOFvH1b1aHKSxtKSVOCgc7p01RTGwmVuvs2Xo9UmX2
+FmHcJeqHjJc47nwnJrk6lgahfVEW9mCqDDjFQwRLINPkS0XQ/J4zJO6p/oHDgT2f
+AXofROrl2jpkXoNdImSmqsfJJe/WsFTqX2XHK9IBfXpPitm4cLd/WA2twJqqjX+7
+yQi9I4jiqZ19uwgXmVdvGj3wsqylwzNChSm9lmebAiejhu2r2ujdHGTTsu1j7zSq
+jdyiikVrQ01V+R5SweQyscTJI6jdmV4Y2gCpeSwsqRvFUDbFHX5t4mkgqB4Xayyh
+LbtZKXcyUPQWNjuYsKHqufd1N1JheMzP6AKkBxYZRx7wzIFVj4VY6nv5w+nF6p3I
+T60eonltBoLv1eNZ04QHwjL2/3pbmnxsitvX8WazO87+qDHtpfjRz5IRSQTisG0h
+phA/efF1AVM=
+=pn7h
 -----END PGP SIGNATURE-----
 
---Sig_/lmSBS4fQC3=qYiI/BS7RlUo--
+--Sig_/EqkI3+vgHGQ=19C+oTGAwtg--
