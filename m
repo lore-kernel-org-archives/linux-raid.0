@@ -1,52 +1,36 @@
 From: Jaromir Capik <jcapik@redhat.com>
 Subject: Re: [RFE] Please, add optional RAID1 feature (= chunk checksums) to make it more robust
-Date: Wed, 18 Jul 2012 09:04:18 -0400 (EDT)
-Message-ID: <691e878b-1a0d-4042-bb92-c8af76ba063b@zmail15.collab.prod.int.phx2.redhat.com>
-References: <20120718211537.516b574f@notabene.brown>
+Date: Wed, 18 Jul 2012 09:08:51 -0400 (EDT)
+Message-ID: <aa819a8e-1502-4a46-9840-45068d607306@zmail15.collab.prod.int.phx2.redhat.com>
+References: <20120718114935.GA29915@www5.open-std.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120718211537.516b574f@notabene.brown>
+In-Reply-To: <20120718114935.GA29915@www5.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: keld@keldix.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Neil.
-
-> 
-> If a drive ever lets you read incorrect data rather than giving you
-> an error
-> indication, then the drive is broken by design.  Don't use drives
-> that do
-> that.
-
-Unfortunately many drives do that. This happens transparently
-during the drive's idle surface checks, when there's no read request
-from the OS. I don't know how it is done in server harddrives, but
-I experienced data corruptions related to bad sector reallocations
-in case of several different desktop drives. I got no read errors
-at all even when the SMART attributes were showing reallocations.
-Somebody could ask, why people want to implement RAID on top of cheap
-desktop harddrives. It's surprisingly because of their price.
-Chunk checksums would give people a cheap and safe/robust solution.
-
-> 
-> >     Would it be possible
+> > Hello.
+> > 
+> > I'd like to ask you to implement the following ...
+> > 
+> > The current RAID1 solution is not robust enough to protect the data
+> > against random data corruptions. Such corruptions usually happen
+> > when an unreadable sector is found by the drive's electronics
+> > and when the drive's trying to reallocate the sector to the spare
+> > area.
+> > There's no guarantee that the reallocated data will always match
+> > the original stored data since the drive sometimes can't read the
+> > data
+> > correctly even with several retries. That unfortunately completely
+> > masks
+> > the issue, because the sector can be read by the OS without
+> > problems
+> > even if it doesn't contain correct data. Would it be possible
 > > to implement chunk checksums to avoid such data corruptions?
-> 
-> No.
-
-I respect your decision.
-Thank you for your time.
-
-Jaromir.
-
-> 
-> NeilBrown
-> 
-> 
 > > If a corrupted chunk is encountered, it would be taken from the
 > > second
 > > drive and immediately synced back. This would have a small
@@ -57,27 +41,21 @@ Jaromir.
 > > chunks).
 > > 
 > > Please, let me know if you find my request reasonable or not.
-> > 
-> > Thanks in advance.
-> > 
-> > Regards,
-> > Jaromir.
-> > 
-> > --
-> > Jaromir Capik
-> > Red Hat Czech, s.r.o.
-> > Software Engineer / BaseOS
-> > 
-> > Email: jcapik@redhat.com
-> > Web: www.cz.redhat.com
-> > Red Hat Czech s.r.o., Purkynova 99/71, 612 45, Brno, Czech Republic
-> > IC: 27690016
-> > 
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe
-> > linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
+> I believe alternative to that is implemented via the Linux RAID MD
+> badblock feature.
+
+Hello keld ...
+
+I couldn't find any info about that feature.  Could you please give
+me more info about that?
+
+Thanks in advance.
+
+Regards,
+Jaromir.
+
+> 
+> best regards
+> keld
 > 
