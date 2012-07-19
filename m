@@ -1,81 +1,65 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Catching a RAID error in a process
-Date: Thu, 19 Jul 2012 09:00:45 +1000
-Message-ID: <20120719090045.361edaef@notabene.brown>
-References: <50071D3B.3090309@tmr.com>
+From: Alex <mysqlstudent@gmail.com>
+Subject: Re: Need to remove failed disk from RAID5 array
+Date: Wed, 18 Jul 2012 22:44:06 -0400
+Message-ID: <CAB1R3sjhES1+0XB43oXLomgH7Q6LPiTm11tPSoDJ91RRrfNy=A@mail.gmail.com>
+References: <CAB1R3shxBWebm13ie5gR0h++-GBTyfZrranHr8tjGkbPipV32w@mail.gmail.com>
+	<50071C0A.8080307@tmr.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/HoZ=JQpi=o+E9w=ym.oHX1o"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50071D3B.3090309@tmr.com>
+In-Reply-To: <50071C0A.8080307@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
---Sig_/HoZ=JQpi=o+E9w=ym.oHX1o
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Wed, 18 Jul 2012 16:31:55 -0400 Bill Davidsen <davidsen@tmr.com> wrote:
+>> What is the proper procedure to remove the disk from the array,
+>> shutdown the server, and reboot with a new sda?
+...
+>> I'd appreciate a pointer to any existing documentation, or some
+>> general guidance on the proper procedure.
+>>
+>
+> Once the drive is failed about all you can do is add another drive as a
+> spare, wait until the rebuild completes, then remove the old drive from the
+> array. If you have a new kernel, 3.3 or newer you might have been able to
+> use the undocumented but amazing "want_replacement" action to speed your
+> rebuild, but when it is so bad it gets kicked I think it's too late.
+>
+> Neil might have a thought on this, the option makes the rebuild vastly
+> faster and safer.
 
-> Can someone point me to the docs to have a process run or notified when a=
- RAID=20
-> event triggers? I've been playing with some recovery ideas, but polling s=
-tates=20
-> and status is not the proper way to do this, and I want to test with a us=
-er=20
-> program before I start putting patches in the kernel.
->=20
+I've just successfully replaced the failed disk. I marked it as
+failed, removed it from the array, powered the server off, switched
+the disk with a replacement, rebooted and added the new disk, and it's
+now starting the rebuild process.
 
-I guess you don't mean "run mdadm --monitor --program /bin/myscript" ??
+However, it's extremely slow. This isn't a super-fast machine, but it
+should at least be able to do 40M/sec as I've seen it do before. Why
+would it be going at only 11M?
 
-Do you want "just any event" or some specific set of events?
+[root@pixie ~]# echo 100000 > /proc/sys/dev/raid/speed_limit_max
+[root@pixie ~]# echo 100000 > /proc/sys/dev/raid/speed_limit_min
+[root@pixie ~]# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md1 : active raid5 sda3[5] sdb2[1] sdd2[4] sdc2[2]
+      2890747392 blocks super 1.1 level 5, 512k chunk, algorithm 2 [4/3] [_UUU]
+      [>....................]  recovery =  4.0% (38872364/963582464)
+finish=1347.4min speed=11437K/sec
+      bitmap: 8/8 pages [32KB], 65536KB chunk
 
-See mdstat_wait in mdstat.c in the mdadm sources.  It waits for any event by
-using 'select' on /proc/mdstat.
+md0 : active raid5 sda2[5] sdb1[1] sdd1[4] sdc1[2]
+      30715392 blocks super 1.1 level 5, 512k chunk, algorithm 2 [4/3] [_UUU]
+        resync=DELAYED
+      bitmap: 1/1 pages [4KB], 65536KB chunk
 
-void mdstat_wait(int seconds)
-{
-	fd_set fds;
-	struct timeval tm;
-	int maxfd =3D 0;
-	FD_ZERO(&fds);
-	if (mdstat_fd >=3D 0) {
-		FD_SET(mdstat_fd, &fds);
-		maxfd =3D mdstat_fd;
-	}
-	tm.tv_sec =3D seconds;
-	tm.tv_usec =3D 0;
-	select(maxfd + 1, NULL, NULL, &fds, &tm);
-}
+unused devices: <none>
 
+I'm not sure what stats I could provide to troubleshoot this further.
+At this rate, the 2.7T array will take a full day to resync. Is that
+to be expected?
 
-mdstat_fd is a global variable=20
-    mdstat_fd =3D open("/proc/mdstat", O_RDONLY);
-
-NeilBrown
-
---Sig_/HoZ=JQpi=o+E9w=ym.oHX1o
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUAdAHTnsnt1WYoG5AQI5Cg/+L0KxrlRrnJHUzGytDxHPNibWLQhtJF5u
-J418P29+2H8CuAazRxJW9nsCBpsGqkWSfOUQ0e0hDJMw4eCrO4iHBfanpiCDa/k/
-5eEzcf3lxzvA7zPyofSMKtwOm0Nm9/5ffi24LToLezSYEQ9F4cPY5wwS2PqezHPn
-mTwFUh+Wppmxix+kYGtMl0yhmZfsHGFFbW9lPgsPMW0nHBntHZZ0jkjWeF/M/+6W
-RswpaqDKfthh/3ITGLL4BYIDCXbOHoz544H68dcYPGlJqaIYESal/X6BbbXxbK4f
-GvLl/jgtpXsFubs2TDIPk5g7h7P0FYAiiuzDdlP8959qapnp2n2GMYt3ZhNlUD6T
-QcPFRe/4LMPzJqQOCzVe1USB6wVUMb4R3UedxSkCFvcyVv2qN0Hyr+LIW7fDY+7+
-ppJRXWV2ux2mbIv19lu2tsPtfqSVyVFo+7Z25rffQhvFaClu1bTreTmBJtvsyfiu
-hSESEqFP2NKGoZtE0o0+O26Irs3Z2h9FkAqnUPCz9lmvgxmtMMRp/BeUBjxE4wh9
-OzLpsnPazVFANut0aUrkupYgNaQEl9i3deC47ubyL4kdezxaS1wIN++S0R/qFvyg
-FLw0mEDrhAZQtn6SMPKsU8MzEsKh4jv0zxy18pZigBS/9RZg0naaZ4dFtcFThZDL
-fZgYfLjkO44=
-=vIKh
------END PGP SIGNATURE-----
-
---Sig_/HoZ=JQpi=o+E9w=ym.oHX1o--
+Thanks,
+Alex
