@@ -1,56 +1,50 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: Need to remove failed disk from RAID5 array
-Date: Thu, 19 Jul 2012 09:16:11 +0600
-Message-ID: <20120719091611.22e16100@natsu>
-References: <CAB1R3shxBWebm13ie5gR0h++-GBTyfZrranHr8tjGkbPipV32w@mail.gmail.com>
-	<50071C0A.8080307@tmr.com>
-	<CAB1R3sjhES1+0XB43oXLomgH7Q6LPiTm11tPSoDJ91RRrfNy=A@mail.gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: [RFE] Please, add optional RAID1 feature (= chunk checksums)
+ to make it more robust
+Date: Wed, 18 Jul 2012 22:48:05 -0500
+Message-ID: <50078375.7050208@hardwarefreak.com>
+References: <691e878b-1a0d-4042-bb92-c8af76ba063b@zmail15.collab.prod.int.phx2.redhat.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/TzmTT1fcpR0RgQlYO70Rv4s"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAB1R3sjhES1+0XB43oXLomgH7Q6LPiTm11tPSoDJ91RRrfNy=A@mail.gmail.com>
+In-Reply-To: <691e878b-1a0d-4042-bb92-c8af76ba063b@zmail15.collab.prod.int.phx2.redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alex <mysqlstudent@gmail.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, Linux RAID <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
+To: Jaromir Capik <jcapik@redhat.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/TzmTT1fcpR0RgQlYO70Rv4s
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 7/18/2012 8:04 AM, Jaromir Capik wrote:
 
-On Wed, 18 Jul 2012 22:44:06 -0400
-Alex <mysqlstudent@gmail.com> wrote:
+> Unfortunately many drives do that. This happens transparently
+> during the drive's idle surface checks, 
 
-> I'm not sure what stats I could provide to troubleshoot this further.
-> At this rate, the 2.7T array will take a full day to resync. Is that
-> to be expected?
+Please list the SATA drives you have verified that perform firmware self
+initiated surface scans when idle, and transparently (to the OS)
+relocate bad sectors during this process.
 
-1) did you try increasing stripe_cache_size?
+Then list the drives that have relocated sectors during such a process
+for which they could not read all the data, causing the silent data
+corruption you describe.
 
-2) maybe it's an "Advanced Format" drive, the RAID partition is not properly
-aligned?
+> I experienced data corruptions related to bad sector reallocations
+> in case of several different desktop drives.
 
---=20
-With respect,
-Roman
+Please name the drives, make/model/manufacturer, the drive count of the
+array, and the array type used when these silent corruptions occurred.
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-"Stallman had a printer,
-with code he could not see.
-So he began to tinker,
-and set the software free."
+For one user to experience silent corruption once is extremely rare.  To
+experience it multiple times within a human lifetime is statistically
+impossible, unless you manage very large disk farms with high cap drives.
 
---Sig_/TzmTT1fcpR0RgQlYO70Rv4s
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+If your multiple silent corruptions relate strictly to RAID1 pairs, it
+would seem the problem is not with the drives, but lay somewhere else.
+Unless you're using some el cheapo 3rd rate Asian sourced white label
+drives nobody ever heard of.  One such company flooded the market with
+such drives in the mid 90s.  I've not heard of anything similar since,
+but that doesn't mean such drives aren't in the wild.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+-- 
+Stan
 
-iEYEARECAAYFAlAHe/sACgkQTLKSvz+PZwhbDACdEEW60z8DWBMGLPQ0MXTxLZRk
-W7wAoJQdMUMQCRoY1jGrKLBRMwVhnb3u
-=z0vQ
------END PGP SIGNATURE-----
-
---Sig_/TzmTT1fcpR0RgQlYO70Rv4s--
