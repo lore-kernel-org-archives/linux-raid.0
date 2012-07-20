@@ -1,97 +1,50 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Need to remove failed disk from RAID5 array
-Date: Fri, 20 Jul 2012 11:37:17 +1000
-Message-ID: <20120720113717.7888da79@notabene.brown>
-References: <CAB1R3shxBWebm13ie5gR0h++-GBTyfZrranHr8tjGkbPipV32w@mail.gmail.com>
-	<50071C0A.8080307@tmr.com>
-	<CAB1R3sjhES1+0XB43oXLomgH7Q6LPiTm11tPSoDJ91RRrfNy=A@mail.gmail.com>
-	<20120719091611.22e16100@natsu>
-	<500818D5.4080208@tmr.com>
-	<20120720070801.498902ba@notabene.brown>
-	<CAB1R3sgV9e9Ngvh+H6VtDB=mSfvPC8S3hafOncasz+EmTWRA-A@mail.gmail.com>
+From: Igor M Podlesny <for.poige+lsr@gmail.com>
+Subject: Re: commit backport request
+Date: Fri, 20 Jul 2012 10:38:50 +0800
+Message-ID: <CA+sTkh43mpEiL5bUhx=tak3gO+Mg1W3-3A3zbScR8op2iKKyXQ@mail.gmail.com>
+References: <20120709140230.3cf926ec@notabene.brown> <1342065131.25597.352.camel@deadeye.wl.decadent.org.uk>
+ <CA+sTkh6Nnfx3OAF0CN0CfRCUHUg2XEtivY-DmTXrRGwnPLgY2Q@mail.gmail.com> <1342496902.11373.33.camel@deadeye.wl.decadent.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Lqvv88ywWZ7XEAZC_2Y/9cg"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAB1R3sgV9e9Ngvh+H6VtDB=mSfvPC8S3hafOncasz+EmTWRA-A@mail.gmail.com>
+In-Reply-To: <1342496902.11373.33.camel@deadeye.wl.decadent.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alex <mysqlstudent@gmail.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, Roman Mamedov <rm@romanrm.ru>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>, stable@vger.kernel.org, Jose Manuel dos Santos Calhariz <jose.calhariz@netvisao.pt>
 List-Id: linux-raid.ids
 
---Sig_/Lqvv88ywWZ7XEAZC_2Y/9cg
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 17 July 2012 11:48, Ben Hutchings <ben@decadent.org.uk> wrote:
+> On Tue, 2012-07-17 at 11:26 +0800, Igor M Podlesny wrote:
+>> On 12 July 2012 11:52, Ben Hutchings <ben@decadent.org.uk> wrote:
+>> > On Mon, 2012-07-09 at 14:02 +1000, NeilBrown wrote:
+>> [...]
+>> > Queued up for 3.2.y, thanks.
+>> >
+>> > Ben.
+>>
+>>    Hm, it looks like 3.2.23 misses it =E2=80=94 at least my during r=
+ebase the
+>> cherry-picked fix applied again cleanly.
+>
+> I queued it up some hours after tagging that release.  I *announced* =
+the
+> release later, but that's because uploading tarballs etc. involves a
+> round trip via Greg.
+>
+> Ben.
 
-On Thu, 19 Jul 2012 21:04:17 -0400 Alex <mysqlstudent@gmail.com> wrote:
+   JFYI, 3.4.6 doesn't have it either...
 
-> Hi,
->=20
-> >> That's a good argument for not using "whole disk" array members, a par=
-tition can
-> >> be started at a good offset and may perform better. As for the speed, =
-since it
-> >> is reconstructing the array data (hope the other drives are okay), eve=
-ry block
-> >> written requires three blocks read and a reconstruct in cpu and memory=
-. You can
-> >> use "blockdev" to increase readahead, and set the devices to use the d=
-eadline
-> >> scheduler, that _may_ improve things somewhat, but you have to read th=
-ree block
-> >> to write one, so it's not going to be fast.
-> >>
-> >
-> > Read-ahead has absolutely no effect in this context.
-> >
-> > Read-ahead is a function of the page cache.  When filling the page cach=
-e,
-> > read-ahead suggests how much more to be read than has been asked for.
-> >
-> > resync/recovery does not use the page cache, consequently the readahead
-> > setting is irrelevant.
-> >
-> > IO scheduler choice may make a difference.
->=20
-> It's already set for cfq. I assume that would be the preferred over deadl=
-ine?
+commit 1c8f63c2758096c3b6425f4ecb274901151d6f17
+Author: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Date:   Thu Jul 19 12:11:49 2012 -0700
 
-The one that is preferred is the one that works best.  I suggest trying them
-all and seeing what effect they have on your workload.
+    Linux 3.4.6
 
->=20
-> I set it on the actual disk devices. Should I also set it on md0/1
-> devices as well? It is currently 'none'.
->=20
-> /sys/devices/virtual/block/md0/queue/scheduler
-
-The queue/scheduler is meaningless for md devices.  They do not use the
-block-layer queuing code.
-The queue/scheduler setting on the actual devices is meaningful.
-
-NeilBrown
-
-
---Sig_/Lqvv88ywWZ7XEAZC_2Y/9cg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUAi2TTnsnt1WYoG5AQJb6RAAj7QNJ+Alm2GtuJNc1aSjbLvQGgriKHp8
-d0QGV28nnCRrNoMV9uap3buyW8ibdYTzHHYAFbWaO6hcmHVcPbak/RUgLJtO1GWa
-n4AMq7nib/HrSXPLhbhEtS0+nvedIo+PTMos8fJRpT0IM64xPP/8i05k9OFYE0TW
-Amg6YtOXSnsWCn0d/2CzVYzFBNG4RrSzJgXmcpKBVkkvr+s55UmyD3vneRziOgho
-19pm+540fVY99h8Wi1NZ2OXbk6A+2MvYKLH7jKNuGApk92Zj+VExIMVyXXbZKKYa
-4LeFPYGl1uJGlz21fzdfpxwZ6bP7QGFankDMxSfswNVFQ8u4uDbV3JTdEbjOOxLZ
-A8UOWKpeXhWwffOZeXSoakXdTjVQAhdSivOapYlpaUicVQNrokPVUu5E+sb+ebxd
-d/+GX7xBAvIKm9L3LTYMvZ0FSEIYdK2n88S4y6V300xh8gfr6pIR98VFk6MzM6Bk
-veiFOPH9jHsqRXfgfwGgsPmHL00mWp9BFZj16e3d5tUNLfsPjn7amCdpCQmPgkyE
-pMdMe/McgdY3UsCvsPG/RTf1/gFatYiLrifz0tlQNXq0hQ9TVza/zlQ4Q53VUjil
-GJhHotcuSPqcRGzbK3ZsowBQKvIuHIS2Ht/Ky2weZpl9wC6QILXTBhSdGeWeCywg
-pklqnrpL0Pg=
-=9o5Z
------END PGP SIGNATURE-----
-
---Sig_/Lqvv88ywWZ7XEAZC_2Y/9cg--
+--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
