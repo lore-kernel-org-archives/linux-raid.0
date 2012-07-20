@@ -1,75 +1,74 @@
-From: "vincent" <hanguozhong@meganovo.com>
-Subject: raid10 array tend to two degraded raid10 array
-Date: Fri, 20 Jul 2012 17:10:14 +0800
-Message-ID: <50092079.a287440a.5002.ffff88ef@mx.google.com>
+From: Jaromir Capik <jcapik@redhat.com>
+Subject: Re: [RFE] Please, add optional RAID1 feature (= chunk checksums) to make it more robust
+Date: Fri, 20 Jul 2012 06:35:33 -0400 (EDT)
+Message-ID: <2bdff9a4-8da2-40d8-bd59-a2daaad95304@zmail15.collab.prod.int.phx2.redhat.com>
+References: <CABYL=Tq0qfOtW-+XEaMzapCbAG2zW7Z91jn3ev1YSVQAk35jig@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CABYL=Tq0qfOtW-+XEaMzapCbAG2zW7Z91jn3ev1YSVQAk35jig@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: keld@keldix.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SGksIGV2ZXJ5b25lOg0KoKCgoKCgoKCgoEkgYW0gVmluY2VudCwgSSBhbSB3cml0aW5nIHRvIHlv
-dSB0byBhc2sgYSBxdWVzdGlvbiBhYm91dCBvZg0KbWRhZG0uDQqgoKCgoKCgoKCgSSBjcmVhdGVk
-IGEgcmFpZDEwIGFycmF5IHdpdGggNCAxNjBHIGRpc2tzIHVzZWQgdGhlIGNvbW1hbmQ6IG1kYWRt
-DQotQ3YgL2Rldi9tZDAgLWwxMCAtbjQgL2Rldi9zZFthYmNkXSwNCqCgoKCgoKCgoCBUaGUgdmVy
-c2lvbiBvZiBteSBtZGFkbSBpcyAzLjIuMiwgYW5kIHRoZSB2ZXJzaW9uIG9mIG15IGtlcm5lbKBp
-cw0KMi42LjM4DQqgoKCgoKCgoKAgd2hlbiB0aGUgcmFpZDEwIGlzIGluIHJlc3luY2luZywgSSB1
-c2VkIHRoZSBmb2xsb3dpbmcgY29tbWFuZCB0bw0KbWFrZSBmaWxlIHN5c3RlbSBmb3IgaXQ6IG1r
-ZnMuZXh0MyAvZGV2L21kMA0KoKCgoKCgoKCgIGV2ZXJ5IHdhcyBPSy4gVGhlIGFycmF5IGNvbnRp
-bnVlZCB0byByZXN5bmMsIGJ1dCB3aGVuIHRoZaBwcm9jZXNzDQpvZiByZXN5bmNpbmcgaXMgMy40
-JSwgdGhlcmUgd2VyZSBhIGxvdCBvZg0KoKCgoKCgoKCgIElPIGVycm9yIG9mICJzZGEiIGFuZCAi
-c2RjIi4gVGhlcmUgd2VyZSBiYWQgYmxvY2tzIGluIHNkYSBhbmQgc2RjLg0KoKCgoKCgoKCgIFRo
-ZW4gSSB1c2VkICJjYXQgL3Byb2MvbWRzdGF0IiB0byBzZWUgdGhlIHN0YXR1cyBvZiAvZGV2L21k
-MDoNCqANCqCgoKCgoKCgoCBQZXJzb25hbGl0aWVzoDqgW3JhaWQxMF2goKCgoKANCqCgoKCgoKCg
-oCBtZDCgOqBhY3RpdmWgcmFpZDEwoHNkYlsxXaBzZGRbM10NCqCgoKCgoKCgoCAzMTAzNDM2ODCg
-YmxvY2tzoHN1cGVyoDEuMqA1MTJLoGNodW5rc6AyoG5lYXItY29waWVzoFs0LzJdoFtfVV9VXQ0K
-oA0KoKCgoKCgoKCgIHVudXNlZKBkZXZpY2VzOqA8bm9uZT4NCqCgoKCgoKCgIA0KoKCgoKCgoKCg
-IC9kZXYvc2RjIGFuZCAvZGV2L3NkYSBoYWQgbG9zdC4gDQqgoKCgoKCgoKAgVGhlbqBJIHJlYm9v
-dCB0aGUgc3lzdGVtLCBidXQgd2hlbiBpIHVzZWQgImNhdCAvcHJvYy9tZHN0YXQiIHRvDQpzZWUg
-dGhlIHN0YXR1cyBvZiAvZGV2L21kMDoNCqANCqCgoKCgoKCgoKBQZXJzb25hbGl0aWVzoDqgW3Jh
-aWQxMF2gDQqgoKCgoKCgoKCgbWQxMjagOqBhY3RpdmWgcmFpZDEwoHNkYVswXaBzZGNbMl0NCqCg
-oKCgoKCgoKAzMTAzNDM2ODCgYmxvY2tzoHN1cGVyoDEuMqA1MTJLoGNodW5rc6AyoG5lYXItY29w
-aWVzoFs0LzJdoFtVX1VfXQ0KoKCgoKCgDQqgoKCgoKCgoKCgbWQwoDqgYWN0aXZloHJhaWQxMKBz
-ZGJbMV2gc2RkWzNdDQqgoKCgoKCgoKCgMzEwMzQzNjgwoGJsb2Nrc6BzdXBlcqAxLjKgNTEyS6Bj
-aHVua3OgMqBuZWFyLWNvcGllc6BbNC8yXaBbX1VfVV0NCqCgoKCgoA0KoKCgoKCgoKCgoHVudXNl
-ZKBkZXZpY2VzOqA8bm9uZT4NCqCgoKCgoKCgoKAgDQqgoKCgoKCgoKCgdGhlcmUgaGFkIGEgYXJy
-YXkgd2hpY2ggbmFtZSB3YXMgbWQxMjYsIGFuZCBjb25zaXN0ZWQgYnkgL2Rldi9zZGMNCi9kZXYv
-c2RhLg0KoKCgoKCgoKCgoEkgdXNlZCAibWRhZG0gLS1hc3NlbWJsZSAtLXNjYW4iIHRvIGFzc2Vt
-YmxlIHRoZaBtZCBkZXZpY2VzLiB0aGUNCm91dHB1dKBvZiB0aGUgY29tbWFuZCBpczoNCqCgoKCg
-oKCgoKCgoKCgoKCgIA0KoKCgoKCgoKCgIGRtOqAvZGV2L21kLzCgZXhpc3RzoC2gaWdub3JpbmcN
-CqCgoKCgoKCgoCBtZDqgbWQwoHN0b3BwZWQuDQqgoKCgoKCgoKAgbWRhZG06oGlnbm9yaW5noC9k
-ZXYvc2RhoGFzoGl0oHJlcG9ydHOgL2Rldi9zZGSgYXOgZmFpbGVkDQqgoKCgoKCgoKAgbWRhZG06
-oGlnbm9yaW5noC9kZXYvc2RjoGFzoGl0oHJlcG9ydHOgL2Rldi9zZGSgYXOgZmFpbGVkDQqgoKCg
-oKCgoKAgbWQ6oGJpbmQ8c2RkPg0KoKCgoKCgoKCgIG1kOqBiaW5kPHNkYj4NCqCgoKCgoKCgoCBt
-ZC9yYWlkMTA6bWQwOqBhY3RpdmWgd2l0aKAyoG91dKBvZqA0oGRldmljZXMNCqCgoKCgoKCgoCBt
-ZDA6oGRldGVjdGVkoGNhcGFjaXR5oGNoYW5nZaBmcm9toDCgdG+gMzE3NzkxOTI4MzIwDQqgoKCg
-oKCgoKAgbWRhZG06oC9kZXYvbWQwoGhhc6BiZWVuoHN0YXJ0ZWSgd2l0aKAyoGRyaXZlc6Aob3V0
-oG9moDQpLg0KoKCgoKCgoKCgIG1kMDqgdW5rbm93bqBwYXJ0aXRpb26gdGFibGUNCqCgoKCgoKCg
-oCBtZGFkbTqgL2Rldi9tZC8woGV4aXN0c6AtoGlnbm9yaW5nDQqgoKCgoKCgoKAgbWQ6oG1kMTI2
-oHN0b3BwZWQuDQqgoKCgoKCgoKAgbWQ6oGJpbmQ8c2RjPg0KoKCgoKCgoKCgIG1kOqBiaW5kPHNk
-YT4NCqCgoKCgoKCgoCBtZC9yYWlkMTA6bWQxMjY6oGFjdGl2ZaB3aXRooDKgb3V0oG9moDSgZGV2
-aWNlcw0KoKCgoKCgoKCgIG1kMTI2OqBkZXRlY3RlZKBjYXBhY2l0eaBjaGFuZ2WgZnJvbaAwoHRv
-oDMxNzc5MTkyODMyMA0KoKCgoKCgoKCgIG1kYWRtOqAvZGV2L21kMTI2oGhhc6BiZWVuoHN0YXJ0
-ZWSgd2l0aKAyoGRyaXZlc6Aob3V0oG9moDQpLg0KoKCgoKCgoKCgIG1kMTI2OqB1bmtub3duoHBh
-cnRpdGlvbqB0YWJsZQ0KoA0KoKCgoKCgoKCgIEFuZCB0aGVuoEkgdXNlZCAibWRhZG0gLUUgL2Rl
-di9zZGEiLCAibWRhZG0gLUUgL2Rldi9zZGIiLCAibWRhZG0NCi1FoC9kZXYvc2RjIiwgIm1kYWRt
-IC1FIC9kZXYvc2RjIiAsIA0KoKCgoKCgoKCgICJtZGFkbSAtRCAvZGV2L21kMCIgYW5kICJtZGFk
-bSAtRCAvZGV2L21kMTI3IiB0b6AgY2hlY2sgdGhlDQpkZXRhaWxzIGluZm8gb2Ygc2RhLCBzZGIs
-IHNkYyBhbmQgc2RkLiANCqCgoKCgoKCgoCBJIGZvdW5koHRoZSBwcm9wZXJ0eSBvZiAiQXJyYXkg
-VVVJRCIgb2YgYWxsIG9mIHRoZXNlIGRldmljZXMoc2RhLA0Kc2RiLCBzZGMsIHNkZCl3ZXJlIHRo
-ZSBzYW1lLiBCdXQgdGhlIA0KoKCgoKCgoKCgIHByb3BlcnR5IG9mICJFdmVudHMiIGFuZCAiVXBk
-YXRlIFRpbWUiIG9mICJzZGEiIGFuZKAic2RjIiB3ZXJlIHRoZQ0Kc2FtZSgyMSwgoEZyaSBKdWwg
-NiAxMTowMjowOSAyMDEyKSygIA0KoKCgoKCgoKCgIHRoZSBwcm9wZXJ0eSBvZiAiRXZlbnRzIiBh
-bmQgIlVwZGF0ZSBUaW1lIiBvZiAic2RiIiBhbmQgInNkZCIgd2VyZQ0KdGhlIHNhbWUoMzUsoCBG
-cmkgSnVsIDYgMTE6MDY6MjEgMjAxMikuDQqgDQqgoKCgoKCgoKCgQWx0aG91Z2ggdGhlICJVcGRh
-dGUgVGltZSIgYW5kICJldmVudHMiIHByb3BlcnR5IG9mICJzZGEiIGFuZA0KInNkYyIgd2VyZSBu
-b3QgZXF1YWwgdG8gInNkYiIgYW5koCJzZGQiLCANCqCgoKCgoKCgoCB0aGV5IGhhZCB0aGUgc2Ft
-ZaAiQXJyYXkgVVVJRCIuIHdoeaB0aGlzIGFycmF5IHRlbmSgdG+gdHdvDQpkZWdyYWRlZCBhcnJh
-eXMgdGhvc2UgaGFkIHRoZSBzYW1lIHV1aWQ/oA0KoKCgoKCgoKCgIEFzIHRoZSB0d28gYXJyYXlz
-IGhhZCB0aGUgc2FtZSB1dWlkLCBpdCBpcyBkaWZmaWN1bHQgdG8NCmRpc3Rpbmd1aXNoIGFuZKB1
-c2UgdGhlbS4gSSB0aGluayBpdCBpcyB1bnJlYXNvbmFibGUsDQqgoKCgoKCgoKAgY291bGQgeW91
-IGhlbHAgbWUgPw0KDQo=
+> yeah, i think this data corruption could/should be implemented as
+> badblocks...
+> do you have a disk that read blocks with wrong data like you told?
 
+All of them were replaced during the warranty period ... but it seems
+I have a new candidate. I'll use it for my tests. I'll write specific
+data there and then I'll be reading them with sufficient idle time
+intervals until I get either a read error or corrupted data without
+read errors.
+
+> if yes, could you check if it have bad blocks? (via some software,
+> since i don=C2=B4t know if linux kernel will report it as badblock on
+> dmesg or something else)
+
+I always check S.M.A.R.T. atributes and all of the drives reported
+reallocated and pending sectors, while there were no uncorrectable
+sectors reported in some cases. I remember, that one of the drives
+stopped booting because of MBR corruption, but the sector was readable
+with dd without problems. I could also clean it and created new
+partition table with fdisk (but the SMART atributes didn't change
+with the new write operation. That really looks like there was=20
+a reallocation done prior to my checks even if reallocations should
+be done only during the write operation and I'm sure there was
+absolutely no need for writing to MBR. I suspect some of the drive
+firmwares, that they do the reallocation transparently during
+the idle state. Especially seagate drives with capacities around
+200GB can be heard, that they're doing their own surface checks
+when they're idle. Maybe that's intention of the manufacturers.
+I could imagine they don't want people to claim for the drive
+replacement and thus they're trying to cover the issues up.
+I also believe, that the SMART attributes might be intentionally
+misreported by the firmware. The drive's electronics might be=20
+transparently doing a lot of internal stuff dependent on the current
+drive's internal design, that can't be easily mapped to any of the
+SMART attributes and thus not reported at all. You know, nobody
+can make the manufacturers to follow the rules ... moreover, there
+might be a design/firmware bug or something else preventing the drive
+working correctly in some cases. I can imagine many different
+scenarios since I was a hardware designer for almost 10 years
+and writing a firmware for conceptually wrong hardware design
+might be the worst nightmare you could ever imagine. And low-price
+device designs are often cheated and full of workarounds.
+
+Anyway ... I believe, that relying on (by nature) unreliable hardware
+might be considered a conceptual issue of the current MD-RAID layer.
+
+
+> --
+> Roberto Spadim
+> Spadim Technology / SPAEmpresarial
+>=20
+
+Regards,
+Jaromir.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
