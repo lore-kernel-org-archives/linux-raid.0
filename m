@@ -1,39 +1,32 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: [RFE] Please, add optional RAID1 feature (= chunk checksums)
- to make it more robust
-Date: Fri, 20 Jul 2012 22:58:44 -0500
-Message-ID: <500A28F4.6060005@hardwarefreak.com>
-References: <f05fcb33-b518-426e-b308-6fac462554fd@zmail15.collab.prod.int.phx2.redhat.com>
-Reply-To: stan@hardwarefreak.com
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [RFC PATCH V1] raid5: Add R5_ReadNoMerge flag which prevent bio from merging at block layer
+Date: Sat, 21 Jul 2012 12:35:52 +0800
+Message-ID: <201207211235474533141@gmail.com>
+References: <201207131913329371733@gmail.com>,
+	<20120716154822.2774ff5e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f05fcb33-b518-426e-b308-6fac462554fd@zmail15.collab.prod.int.phx2.redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 7/20/2012 7:53 AM, Jaromir Capik wrote:
-
-> I admit, that the problem could lie elsewhere ... but that doesn't 
-> change anything on the fact, that the data became corrupted without
-> me noticing that.
-
-The key here I think is "without me noticing that".  Drives normally cry
-out in the night, spitting errors to logs, when they encounter problems.
- You may not receive an immediate error in your application, especially
-when the drive is a RAID member and the data can be shipped regardless
-of the drive error.  If you never check your logs, or simply don't see
-these disk errors, how will you know there's a problem?
-
-Likewise, if the checksumming you request is implemented in md/RAID1,
-and your application never sees a problem when a drive heads South, and
-you never check your logs and thus don't see the checksum errors...
-
-How is this new checksumming any better than the current situation?  The
-drive is still failing and you're still unaware of it.
-
--- 
-Stan
+T24gMjAxMi0wNy0xNiAxMzo0OCBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
+IEZyaSwgMTMgSnVsIDIwMTIgMTk6MTM6MzUgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVuZ0Bn
+bWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gQmVjYXVzZSBiaW9zIHdpbGwgbWVyZ2UgYXQgYmxvY2st
+bGF5ZXIsc28gYmlvcy1lcnJvciBtYXkgY2F1c2VkIGJ5IG90aGVyDQo+PiBiaW8gd2hpY2ggYmUg
+bWVyZ2VkIGludG8gdG8gdGhlIHNhbWUgcmVxdWVzdC4NCj4+IFVzaW5nIHRoaXMgZmxhZyxpdCB3
+aWxsIGZpbmQgZXhhY3RseSBlcnJvci1zZWN0b3IgYW5kIG5vdCBkbyByZWR1bmRhbnQNCj4+IG9w
+ZXJhdGlvbiBsaWtlIHJlLXdyaXRlIGFuZCByZS1yZWFkLg0KPj4gDQo+PiBWMC0+VjE6VXNpbmcg
+UkVRX0ZMVVNIIGluc3RlYWQgUkVRX05PTUVSR0UgYXZvaWQgYmlvIG1lcmdpbmcgYXQgYmxvY2sN
+Cj4+IGxheWVyLg0KPj4gDQo+PiBTaWduZWQtb2ZmLWJ5OiBKaWFucGVuZyBNYSA8bWFqaWFucGVu
+Z0BnbWFpbC5jb20+DQoNCltzbmlwXQ0KPg0KPg0KPlRoYW5rcywgSSd2ZSBhcHBsaWVkIHRoaXMu
+DQo+DQo+V2Ugc2hvdWxkIHByb2JhYmx5IGRvIGEgc2ltaWxhciB0aGluZyBpbiBmaXhfcmVhZF9l
+cnJvciBhbmQNCj5maXhfc3luY19yZWFkX2Vycm9yIGluIFJBSUQxIGFuZCBSQUlEMTAuLi4NCj4N
+CkkgcmV2aWV3ZWQgdGhlIGNvZGUgYWJvdXQgZml4X3JlYWRfZXJyb3IvZml4X3N5bmNfcmVhZF9l
+cnJvci4NCkl0IGFscmVhZHkgZG8gdGhlIHNpbWlsYXIgdGhpbmcuDQo+VGhhbmtzLA0KPk5laWxC
+cm93bg0KPg0KPg==
 
