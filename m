@@ -1,117 +1,162 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Problem recovering failed Intel Rapid Storage raid5 volume
-Date: Mon, 23 Jul 2012 09:08:56 +1000
-Message-ID: <20120723090856.2738a2fc@notabene.brown>
-References: <CAHijsZt-CZ4BhjLU2sdWaGRtDa6bXjz0Bx+RRqoGRzvD6N6yvA@mail.gmail.com>
-	<CAHijsZvPb5PZLmKxUwV4iZ-UOUfpGP_Hf9afaWdX34iO86EHKw@mail.gmail.com>
+Subject: Re: raid10 array tend to two degraded raid10 array
+Date: Mon, 23 Jul 2012 09:11:05 +1000
+Message-ID: <20120723091105.5cb8dcf0@notabene.brown>
+References: <50092079.a287440a.5002.ffff88ef@mx.google.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/D=KR_EmzfZwm8S09KzVHD11"; protocol="application/pgp-signature"
+ boundary="Sig_/7OGRG.RCA0t2dLKZmTx8TH2"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHijsZvPb5PZLmKxUwV4iZ-UOUfpGP_Hf9afaWdX34iO86EHKw@mail.gmail.com>
+In-Reply-To: <50092079.a287440a.5002.ffff88ef@mx.google.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Khurram Hassan <kfhassan@gmail.com>
+To: vincent <hanguozhong@meganovo.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/D=KR_EmzfZwm8S09KzVHD11
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/7OGRG.RCA0t2dLKZmTx8TH2
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 21 Jul 2012 21:00:19 +0500 Khurram Hassan <kfhassan@gmail.com> wrot=
-e:
+On Fri, 20 Jul 2012 17:10:14 +0800 "vincent" <hanguozhong@meganovo.com> wro=
+te:
 
-> I have this 3 disk raid5 volumne on an Asus motherboard sporting an
-> Intel Rapid Storage chipset. The problem began when I noticed in
-> windows that one of the hard disks (the first one in the array) was
-> marked as failed in the Intel raid utility. I shutdown the system to
-> remove the hard disk and removed the cables for the faulty hard disk.
-> But I made a mistake and remove the cables for one of the working hard
-> disks. So when I booted, it showed the raid volume as failed. I
-> quickly shutdown the system and corrected the mistake. But it
-> completely hosed my raid volume. When I booted the system up again,
-> both of the remaining 2 hard disks were showed as offline.
+> Hi, everyone:
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0I am Vincent, I am writing to you to ask a =
+question about of
+> mdadm.
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0I created a raid10 array with 4 160G disks =
+used the command: mdadm
+> -Cv /dev/md0 -l10 -n4 /dev/sd[abcd],
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 The version of my mdadm is 3.2.2, and the ver=
+sion of my kernel=A0is
+> 2.6.38
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 when the raid10 is in resyncing, I used the f=
+ollowing command to
+> make file system for it: mkfs.ext3 /dev/md0
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 every was OK. The array continued to resync, =
+but when the=A0process
+> of resyncing is 3.4%, there were a lot of
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 IO error of "sda" and "sdc". There were bad b=
+locks in sda and sdc.
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 Then I used "cat /proc/mdstat" to see the sta=
+tus of /dev/md0:
+> =A0
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 Personalities=A0:=A0[raid10]=A0=A0=A0=A0=A0=A0
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 md0=A0:=A0active=A0raid10=A0sdb[1]=A0sdd[3]
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 310343680=A0blocks=A0super=A01.2=A0512K=A0chu=
+nks=A02=A0near-copies=A0[4/2]=A0[_U_U]
+> =A0
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 unused=A0devices:=A0<none>
+> =A0=A0=A0=A0=A0=A0=A0=A0=20
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 /dev/sdc and /dev/sda had lost.=20
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 Then=A0I reboot the system, but when i used "=
+cat /proc/mdstat" to
+> see the status of /dev/md0:
+> =A0
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0Personalities=A0:=A0[raid10]=A0
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0md126=A0:=A0active=A0raid10=A0sda[0]=A0sdc[=
+2]
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0310343680=A0blocks=A0super=A01.2=A0512K=A0c=
+hunks=A02=A0near-copies=A0[4/2]=A0[U_U_]
+> =A0=A0=A0=A0=A0=A0
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0md0=A0:=A0active=A0raid10=A0sdb[1]=A0sdd[3]
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0310343680=A0blocks=A0super=A01.2=A0512K=A0c=
+hunks=A02=A0near-copies=A0[4/2]=A0[_U_U]
+> =A0=A0=A0=A0=A0=A0
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0unused=A0devices:=A0<none>
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0there had a array which name was md126, and=
+ consisted by /dev/sdc
+> /dev/sda.
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0I used "mdadm --assemble --scan" to assembl=
+e the=A0md devices. the
+> output=A0of the command is:
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 dm:=A0/dev/md/0=A0exists=A0-=A0ignoring
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 md:=A0md0=A0stopped.
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 mdadm:=A0ignoring=A0/dev/sda=A0as=A0it=A0repo=
+rts=A0/dev/sdd=A0as=A0failed
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 mdadm:=A0ignoring=A0/dev/sdc=A0as=A0it=A0repo=
+rts=A0/dev/sdd=A0as=A0failed
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 md:=A0bind<sdd>
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 md:=A0bind<sdb>
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 md/raid10:md0:=A0active=A0with=A02=A0out=A0of=
+=A04=A0devices
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 md0:=A0detected=A0capacity=A0change=A0from=A0=
+0=A0to=A0317791928320
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 mdadm:=A0/dev/md0=A0has=A0been=A0started=A0wi=
+th=A02=A0drives=A0(out=A0of=A04).
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 md0:=A0unknown=A0partition=A0table
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 mdadm:=A0/dev/md/0=A0exists=A0-=A0ignoring
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 md:=A0md126=A0stopped.
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 md:=A0bind<sdc>
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 md:=A0bind<sda>
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 md/raid10:md126:=A0active=A0with=A02=A0out=A0=
+of=A04=A0devices
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 md126:=A0detected=A0capacity=A0change=A0from=
+=A00=A0to=A0317791928320
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 mdadm:=A0/dev/md126=A0has=A0been=A0started=A0=
+with=A02=A0drives=A0(out=A0of=A04).
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 md126:=A0unknown=A0partition=A0table
+> =A0
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 And then=A0I used "mdadm -E /dev/sda", "mdadm=
+ -E /dev/sdb", "mdadm
+> -E=A0/dev/sdc", "mdadm -E /dev/sdc" ,=20
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 "mdadm -D /dev/md0" and "mdadm -D /dev/md127"=
+ to=A0 check the
+> details info of sda, sdb, sdc and sdd.=20
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 I found=A0the property of "Array UUID" of all=
+ of these devices(sda,
+> sdb, sdc, sdd)were the same. But the=20
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 property of "Events" and "Update Time" of "sd=
+a" and=A0"sdc" were the
+> same(21, =A0Fri Jul 6 11:02:09 2012),=A0=20
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 the property of "Events" and "Update Time" of=
+ "sdb" and "sdd" were
+> the same(35,=A0 Fri Jul 6 11:06:21 2012).
+> =A0
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0Although the "Update Time" and "events" pro=
+perty of "sda" and
+> "sdc" were not equal to "sdb" and=A0"sdd",=20
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 they had the same=A0"Array UUID". why=A0this =
+array tend=A0to=A0two
+> degraded arrays those had the same uuid?=A0
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 As the two arrays had the same uuid, it is di=
+fficult to
+> distinguish and=A0use them. I think it is unreasonable,
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0 could you help me ?
 >=20
-> I read the raid recovery section in the wiki and installed ubuntu
-> 12.04 on a separate non-raid hard disk (after completely disconnecting
-> the offline raid5 volume). Then I reconnected the 2 hard disks and
-> booted ubuntu. Then I gave the following commands:
->=20
-> 1) mdadm --examine /dev/sd[bc] > raid.status
-> 2) mdadm --create --assume-clean -c 128 --level=3D5 --raid-devices=3D3
-> /dev/md1 missing /dev/sdb /dev/sdc
->=20
-> It gave the following output:
->     mdadm: /dev/sdb appears to be part of a raid array:
->         level=3Dcontainer devices=3D0 ctime=3DThu Jan  1 05:00:00 1970
->     mdadm: /dev/sdc appears to be part of a raid array:
->         level=3Dcontainer devices=3D0 ctime=3DThu Jan  1 05:00:00 1970
->     Continue creating array? y
->     mdadm: Defaulting to version 1.2 metadata
->     mdadm: array /dev/md1 started.
->=20
-> But the raid volume is not accessible. mdadm --examine /dev/md1 gives:
->=20
->     mdadm: No md superblock detected on /dev/md1.
->=20
-> Worse, upon booting the system, the raid chipset message says the 2
-> hard disk are non-raid hard disks. Have I completely messed up the
-> raid volume? Is it not recoverable at all?
 
-Possibly :-(
-
-You had an array with Intel-specific metadata.  This metadata is stored at
-the end of the device.
-
-When you tried to "--create" the array, you did not ask for intel metadata =
-so
-you got the default v1.2 metadata.  This metadata is stored at the beginning
-of the device (a 1K block, 4K from the start).
-So this would have over-written a small amount of filesystem data.
-
-Also when you --create an array, mdadm erases any other metadata that it
-finds to avoid confusion.  So it will have erased the Intel metadata from t=
-he
-end.
-
-Your best hope is to recreate the array correctly with intel metadata.  The
-filesystem will quite possibly be corrupted, but you might get some or even
-all of your data back.
-
-Can you post the "raid.status".  That would help be certain we are doing the
-right thing.
-Something like
-  mdadm --create /dev/md/imsm -e imsm -n 3 missing /dev/sdb /dev/sdc
-  mdadm --create /dev/md1 -c 128 -l 5 -n 3 /dev/md/imsm
-
-might do it  ... or might not.  I'm not sure about creating imsm arrays with
-missing devices.  Maybe you still list the 3 devices rather than just the
-container.  I'd need to experiment.  If you post the raid.status I'll see if
-I can work out the best way forward.
+Yes, this is a known problem.  Hopefully it will be fixed in the next relea=
+se
+of mdadm. =20
+For now, just remove the faulty devices, or at least remove the metadata fr=
+om
+them with
+  mdadm --zero-superblock /dev/sd[ac]
 
 NeilBrown
 
-
---Sig_/D=KR_EmzfZwm8S09KzVHD11
+--Sig_/7OGRG.RCA0t2dLKZmTx8TH2
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUAyICDnsnt1WYoG5AQK6cQ//XhGBi0K95J7Ei/HPK3Xwu3EJQfhyMdGy
-l2Er70vGm4N3oxrphEXKNeryBDaZejB0KRihAIX6rrfVw9+UgKe3KKKn4L4npI11
-fcFT3wTJVcmz2SI3jrdQmtNDgmuK8PvWmu5NODyI2I90l3l99MUkAvzYQUkIcffg
-ZmRaYUQGRGLC4X89zEn9kQLrR/ZE9WQeY7nBXUzD3/xTPgLp7U4yEVxTAdHZlXWe
-ulkT64WnlKwbRpNxFZLsyh+WpK6IcmJnAqEqsirgdYrH8wkVJbCLtiLwLiy2i6ow
-K9WW52ixTRWvqNA/tq5md9PAZVD2dgB+Wn6Oaf0pQhlRw/SJDzvY3W8CsqEDWr1p
-84GqG7KchGNlQouwml5iIjzFkenXx1peRb5+TYfJLXtOYECWFVRUijSlbdUq/tyJ
-h2mPRq6egvLplKusCra+FGi99pTgH4H94PUc4pfMuaz0ZIE1YZupJShq5N5H+6AZ
-QwdRC+bDY8Wdysumym2Jh1AXC7o4UAC9QY2G4mgzHcLc8JPXepqaQFKWirHQoqx3
-fi46SBGCppbtesSnw5gcrJiNk0Sga68E4v3jOqnwxyvXaLZ3/HVyC1bF6Tr7Vcdx
-/zci1v1q8mQ6f/24I70TeGQrAu8qKTYHSiYxYT8n0FryG9Ch6TvjuKNKaNibGylv
-isQis2/mXQY=
-=5BFe
+iQIVAwUBUAyIiTnsnt1WYoG5AQK20RAAiW8khgTWK8d4+lJHbP2MDE8/aebcWVnV
+RfVybg0ELArd9BuIgKeHklvSMA31zSHRXd4nGKQpemlsZic+fX81/YT1VVjOn9xX
+t3vucdfYy0mtOrhiaiTh+wNWp/qZYNzOcwyCA2pnzF16axPWjhPsH/+cU3Vgc5Eg
+dKithTDvi1/1fC0E1U12wHGunyOdSR6ngcWMJjiDszuqIRarLLWSAJEGq0CNhDhQ
+1Grnxfa1FCPMxT5F3Ml1XDXkF9gtLQw9Bvqj/Bn3ffbJiRuwznmxv+EMR7J4nPRt
+UIvtHJJyrdKVy+Zs8ZkcGrebo/oZrpVCCEZs7kv0v5jeYZ41UyzWwbphPM62REgo
+dn5Z1ZO98mhSs9vA12sdRCtpd/+tBb4ViSIXfPk9P5vIHMvAHiyBMUKjfjowiQ4j
+lY6lFnNfMWlTyJOekOuYMtaeg6Mr5EAvmfHWmf78J9IaJstreGveybLFZc05rktQ
+WhmViRZx07vhnxL/YAuFwAf9c1C0jEo7JTjx/IqfM/IXGfVrrVefhD30BVmrovjo
+bPe8WDgonuKLL1aHCair13nv0YvzAjVvSkDzmeTBBucUoosX/vEWGyQpLuLcBg5z
+QVEsSCTRnuYBz9w9gGAGE5Y7yUYZ8TFj+6gh8ri5AMaeBjGc2sU+zayIdpBsLD30
+g4fTKD0RwvA=
+=jObp
 -----END PGP SIGNATURE-----
 
---Sig_/D=KR_EmzfZwm8S09KzVHD11--
+--Sig_/7OGRG.RCA0t2dLKZmTx8TH2--
