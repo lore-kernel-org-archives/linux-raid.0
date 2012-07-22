@@ -1,166 +1,280 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: Find mismatch in data blocks during raid6 repair
-Date: Sat, 21 Jul 2012 18:00:22 +0200
-Message-ID: <20120721160022.GA12973@lazy.lzy>
-References: <10900468.MPSjVn2C3J@peanut>
- <2116390.poR22k1RqP@peanut>
- <20120703202734.GA10087@lazy.lzy>
- <8207620.GXFZJrd6g5@peanut>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: "A Nasty md/raid bug"
+Date: Mon, 23 Jul 2012 09:00:21 +1000
+Message-ID: <20120723090021.3a2fa144@notabene.brown>
+References: <20120721161607.8820D2C3@centrum.sk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/hp.u.733jNoFemIvK8v/lZc"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <8207620.GXFZJrd6g5@peanut>
+In-Reply-To: <20120721161607.8820D2C3@centrum.sk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert Buchholz <robert.buchholz@goodpoint.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org
+To: Peter Modrala <x3m2@centrum.sk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Robert,
+--Sig_/hp.u.733jNoFemIvK8v/lZc
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Jul 20, 2012 at 12:53:10PM +0200, Robert Buchholz wrote:
-> Hello Piergiorgio,
-> 
-> On Tuesday, July 03, 2012 10:27:34 PM Piergiorgio Sartor wrote:
-> > Hi Robert,
-> > 
-> > On Tue, Jul 03, 2012 at 09:10:41PM +0200, Robert Buchholz wrote:
-> > [...]
-> > 
-> > > > Why always two blocks?
-> > > 
-> > > The reason is simply to have less cases to handle in the code.
-> > > There's already three ways to regenerate regenerate two blocks
-> > > (D&D, D/P&Q and D&P), and there would be two more cases if only
-> > > one block was to be repaired. With the original patch, if you can
-> > > repair two blocks, that allows you to repair one (and one other
-> > > in addition) as well.
-> > sorry, I express myself not clearly.
-> > 
-> > I mean, a two parities Reed-Solomon system can
-> > only detect one incorrect slot position, so I would
-> > expect to have the possibility to fix only one, not
-> > two slots.
-> > 
-> > So, I did not understand why two. I mean, I understand
-> > that a RAID-6 can correct exact up two incorrect slots,
-> > but the "unknown" case might have more and correcting
-> > will mean no correction or, maybe, even more damage.
-> 
-> Well, if two slots have failed and you do not know which, or more than 
-> two have failed, there is no way to recover anything reliably.
-> I implemented the two slot fix to recover from a case where you *do* 
-> know which two slots failed (e.g., from syslog messages such as this: 
-> end_request: I/O error, dev sdk, sector 3174422). Obviously, this 
-> expects a lot of knowledge from the admin running the command and 
-> selecting the slots and comes with no guarantees that the "repaired" 
-> blocks will contain more of the expected data than before.
+On Sat, 21 Jul 2012 16:16:07 +0200 "Peter Modrala" <x3m2@centrum.sk> wrote:
 
-OK, thanks, I see.
+> Hi,
+> =C2=A0
+> I firstly installed ubuntu server 12.04 and set up LVM on top of RAID1. A=
+fter several days the system wasn't able to boot. RAID array was broken. Th=
+en I found this bug on your page:
+> http://neil.brown.name/blog/20120615073245
+> Then I decided to install newest ubuntu alternate which provides 3.5.0-5 =
+version of kernel. After instalation's very first reboot I got the same mes=
+sages as previously.
+> I also installed linux-source-3.5.0 to verify the bug was fixed in this v=
+ersion of kernel.
 
-> > I would prefer, if you agree, to simply tell "raid6check"
-> > to fix a single slot, or the (single) wrong slots it finds
-> > during the check.
-> > 
-> > Does it make sense to you, or, maybe, you're considering
-> > something I'm missing?
-> 
-> This makes perfect sense.
-> 
-> > > > Of course, this is just a statistical assumption, which
-> > > > means a second, "aggressive", option will have to be
-> > > > available, with all the warnings of the case.
-> > > 
-> > > As you point out, it is impossible to determine which of two
-> > > failed
-> > > slots are in error. I would leave such decision to an admin, but
-> > > giving one or more "advices" may be a nice idea.
-> > 
-> > That would be exactly the background.
-> > For example, considering that "raid6check" processes
-> > stripes, but the check is done per byte, already
-> > knowing how many bytes per stripe (or block) need
-> > to be corrected (per device) will hint a lot about
-> > the overall status of the storage.
-> 
-> That piece of information is definitely interesting. What is the 
-> smartest way to determine the number of incorrect bytes for one failed 
-> slot?
+If I understand correctly you simply gave up on the original installation,
+didn't want to recovery any data of the array, and just installed a new
+version of Ubuntu.  Is that correct?
 
-The function "raid6_collect()" of "raif6check"
-performs the check per byte position and returns
-an array (of int) in which each value has a
-status representing the condition of the bytes
-of the slot at that position.
-The possible values are, if my memory serves me:
--255 = OK
-positive integer = failed data (if greater than
-number of disks, then "unknown", of course, but
-this is checked later)
--1 or -2 = failed P or Q parity
+In that case this is definitely a different problem, and the further details
+you provided seem to confirm this.
 
-The "raid6_stats()" function uses the returned
-array in order to try to detect the status of
-the complete slot.
-This (bugs apart) tries to be consistent, that
-is different errors are considered "unknown"
-slot status. But this is the minimal possible
-approach.
+I gather that your aren't using the md/raid1 array for the root filesystem =
+so
+the machine boot ups reasonably OK, it is just that the array isn't assembl=
+ed
+properly.  Correct?
 
-Now, the "results[]" array could also be used
-to count how many positions of the slot are
-correct or incorrect and how.
-I guess this information could be used to
-understand better the status of the slot.
-Collecting statistics across the slots, that
-is for the whole array, could allow to do a
-better assessment of the RAID-6.
+So we need to treat this as a new problem:
+  You installed some new Ubuntu distro and it didn't set up the arrays
+  properly.
 
-It clearly makes a difference if a single
-byte position is incorrect or all.
-Or if a byte is -1 and all the others are -2.
+I would suggest that your best bet is to ask for support in some Ubuntu for=
+um.
 
-> > > Personally, I am recovering from a simultaneous three-disk failure
-> > > on a backup storage. My best hope was to ddrescue "most" from all
-> > > three disks onto fresh ones, and I lost a total of a few KB on
-> > > each disk. Using the ddrescue log, I can even say which sectors
-> > > of each disk were damaged. Interestingly, two disks of the same
-> > > model failed on the very same sector (even though they were
-> > > produced at different times), so I now have "unknown" slot errors
-> > > in some stripes. But with context information, I am certain I
-> > > know which slots need to be repaired.
-> > That's good!
-> > Did you use "raid6check" for a verification?
-> 
-> Yes, since John Robinson pointed me to it earlier in this thread.
-> 
-> > > I am a big supporter of getting it to work, then make it fast.
-> > > Since a full raid check takes the magnitude of hours anyway, I do
-> > > not mind that repairing blocks from the user space will take five
-> > > minutes when it could be done in 3. That said, I think the faster
-> > > code in the kernel is warranted (as it needs this calculation
-> > > very often when a disk is failed), and if it is possible to reuse
-> > > easily, we sure should.
-> > The check is pretty slow, also due to the terminal
-> > print out, which is a bit too verbose, I think.
-> 
-> That is true. The stripe geometry output could be optional, especially 
-> when there is no error to be reported.
-> 
-> > Anyhow, I'm really happy someone has interest in
-> > improving "raid6check", I hope you'll be able to
-> > improve it and, maybe, someone else will join
-> > the bandwagon... :-)
-> 
-> Well, thank you for starting it and sorry for my slow replies.
-> 
-> 
-> Cheers
-> 
-> Robert
+However if you can provide the exact details of the error you receive when
+you boot, then I might be able to suggest something.
 
-bye,
+Alternately if I misunderstood your problem description, please help me
+understand exactly what happened.
 
--- 
+> =C2=A0
+> I can provide you root access if you want to check anything on my server.
 
-piergiorgio
+I'd rather avoid that if possible.  Let's start with precise error messages.
+
+NeilBrown
+
+
+
+
+
+
+> =C2=A0
+> Thank You
+> =C2=A0
+> Martin
+> =C2=A0
+> ---
+> =C2=A0
+> # uname -a
+> Linux rat 3.5.0-5-generic #5-Ubuntu SMP Tue Jul 17 16:17:55 UTC 2012 x86_=
+64 x86_64 x86_64 GNU/Linux
+> =C2=A0
+> linux-source-3.5.0/drivers/md/md.c:
+> ...
+> static int md_notify_reboot(struct notifier_block *this,
+>  unsigned long code, void *x)
+> {
+>  struct list_head *tmp;
+>  struct mddev *mddev;
+>  int need_delay =3D 0;
+>=20
+>  for_each_mddev(mddev, tmp) {
+>  if (mddev_trylock(mddev)) {
+>  if (mddev->pers)
+>  __md_stop_writes(mddev);
+>  mddev->safemode =3D 2;
+>  mddev_unlock(mddev);
+>  }
+>  need_delay =3D 1;
+>  }
+>  /*
+>  * certain more exotic SCSI devices are known to be
+>  * volatile wrt too early system reboots. While the
+>  * right place to handle this issue is the given
+>  * driver, we do want to have a safe RAID driver ...
+>  */
+>  if (need_delay)
+>  mdelay(1000*1);
+>=20
+>  return NOTIFY_DONE;
+> }=C2=A0
+> ...
+> =C2=A0
+> =C2=A0
+> # update-grub
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> Generating grub.cfg ...
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> Found linux image: /boot/vmlinuz-3.5.0-5-generic
+> Found initrd image: /boot/initrd.img-3.5.0-5-generic
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> Found linux image: /boot/vmlinuz-3.5.0-5-generic
+> Found initrd image: /boot/initrd.img-3.5.0-5-generic
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> error: unknown LVM metadata header.
+> Found memtest86+ image: /boot/memtest86+.bin
+> done
+> =C2=A0
+> =C2=A0
+> # mdadm -Evvvvs
+> mdadm: No md superblock detected on /dev/dm-3.
+> mdadm: No md superblock detected on /dev/dm-2.
+> mdadm: No md superblock detected on /dev/dm-1.
+> mdadm: No md superblock detected on /dev/dm-0.
+> mdadm: No md superblock detected on /dev/md/0.
+> mdadm: No md superblock detected on /dev/sdb5.
+> /dev/sdb2:
+>  MBR Magic : aa55
+> Partition[0] : 683800576 sectors at 2 (type 8e)
+> /dev/sdb1:
+>  Magic : a92b4efc
+>  Version : 1.2
+>  Feature Map : 0x0
+>  Array UUID : dec31ddc:13aa86e0:d0635ca8:b630b4a5
+>  Name : rat:0 (local to host rat)
+>  Creation Time : Fri Jul 20 23:11:14 2012
+>  Raid Level : raid1
+>  Raid Devices : 2
+>=20
+>  Avail Dev Size : 292704256 (139.57 GiB 149.86 GB)
+>  Array Size : 146352000 (139.57 GiB 149.86 GB)
+>  Used Dev Size : 292704000 (139.57 GiB 149.86 GB)
+>  Data Offset : 262144 sectors
+>  Super Offset : 8 sectors
+>  State : clean
+>  Device UUID : a9e91e4b:550235d5:de6f6a16:44d74be1
+>=20
+>  Update Time : Sat Jul 21 16:06:32 2012
+>  Checksum : c91e067d - correct
+>  Events : 26
+>=20
+>=20
+>  Device Role : Active device 1
+>  Array State : AA ('A' =3D=3D active, '.' =3D=3D missing)
+> /dev/sdb:
+>  MBR Magic : aa55
+> Partition[0] : 292966400 sectors at 2048 (type fd)
+> Partition[1] : 683800578 sectors at 292970494 (type 05)
+> mdadm: No md superblock detected on /dev/sda5.
+> /dev/sda2:
+>  MBR Magic : aa55
+> Partition[0] : 683800576 sectors at 2 (type 8e)
+> /dev/sda1:
+>  Magic : a92b4efc
+>  Version : 1.2
+>  Feature Map : 0x0
+>  Array UUID : dec31ddc:13aa86e0:d0635ca8:b630b4a5
+>  Name : rat:0 (local to host rat)
+>  Creation Time : Fri Jul 20 23:11:14 2012
+>  Raid Level : raid1
+>  Raid Devices : 2
+>=20
+>  Avail Dev Size : 292704256 (139.57 GiB 149.86 GB)
+>  Array Size : 146352000 (139.57 GiB 149.86 GB)
+>  Used Dev Size : 292704000 (139.57 GiB 149.86 GB)
+>  Data Offset : 262144 sectors
+>  Super Offset : 8 sectors
+>  State : clean
+>  Device UUID : 458f63c4:1a882d4d:1ce3c46c:b0da0244
+>=20
+>  Update Time : Sat Jul 21 16:06:32 2012
+>  Checksum : 736ca887 - correct
+>  Events : 26
+>=20
+>=20
+>  Device Role : Active device 0
+>  Array State : AA ('A' =3D=3D active, '.' =3D=3D missing)
+> /dev/sda:
+>  MBR Magic : aa55
+> Partition[0] : 292966400 sectors at 2048 (type fd)
+> Partition[1] : 683800578 sectors at 292970494 (type 05)
+>=20
+>=20
+> =C2=A0
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/hp.u.733jNoFemIvK8v/lZc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBUAyGBTnsnt1WYoG5AQL7vA//c2a0daTT7PrigRN2G/s66yNpCyseqiri
+94RWupaDFRiBSQlBTdwnx+lRdNvTr9sL7Cs3SVKy5uwCVmaxv0FSTbaaHHE5KFDA
+up07XvwXB1EzQtFVaS64ZsPxANIrWTvGNcfqy64KTorek8M3BmOXi/O8KzxLZ76v
+6v4a+WgLMLZJ/SJ6OIDgNS9qRWY6Xv4EQNjw/3ktmLPF35bUpCirKGvszd+51SEe
+lxAQfto5PVFNdxUi+d/iw/ogUcVRHTEiGj1HL8rAXS2j4KF3NCXlRlmqF9vCvEb+
+uB/hbJ1JtjMsOo5ukCmsUm+1csYAjQ1sWnd7uVh2SThBafIs5CvAB9QpNJibhcYj
+CFCmT4BtovOlnZf/HOK4kRwB4XaqEE6+jz00t469mX54sDUE6pNjMD8sUj7PDae7
+lQBEb67qlfHcmp/cy75iYNowAvo2SqbdafJxlK8tJI5nxHa2iEMRs9wVYSHaQrbX
+MkEzuhLNKuAYBL7+HgErmnEtksWfxQ9Ho+XPsO8Trk6HFoRd5P2nP2khoyA78qRl
+qdE9VKPGpDG33YbVcd283QJrIbujBurbREmCKWhOO+SOtLIv1eI/C9Uh8J9CQtcQ
+Bc1zp/0fv53023p+tL6OuQcKk71oFb2pWx9dUtPdPUDoVX6lGJsUEBh3GpnB61BJ
+ejxgOoyXx/Y=
+=4zab
+-----END PGP SIGNATURE-----
+
+--Sig_/hp.u.733jNoFemIvK8v/lZc--
