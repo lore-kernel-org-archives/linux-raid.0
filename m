@@ -1,280 +1,117 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: "A Nasty md/raid bug"
-Date: Mon, 23 Jul 2012 09:00:21 +1000
-Message-ID: <20120723090021.3a2fa144@notabene.brown>
-References: <20120721161607.8820D2C3@centrum.sk>
+Subject: Re: Problem recovering failed Intel Rapid Storage raid5 volume
+Date: Mon, 23 Jul 2012 09:08:56 +1000
+Message-ID: <20120723090856.2738a2fc@notabene.brown>
+References: <CAHijsZt-CZ4BhjLU2sdWaGRtDa6bXjz0Bx+RRqoGRzvD6N6yvA@mail.gmail.com>
+	<CAHijsZvPb5PZLmKxUwV4iZ-UOUfpGP_Hf9afaWdX34iO86EHKw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/hp.u.733jNoFemIvK8v/lZc"; protocol="application/pgp-signature"
+ boundary="Sig_/D=KR_EmzfZwm8S09KzVHD11"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120721161607.8820D2C3@centrum.sk>
+In-Reply-To: <CAHijsZvPb5PZLmKxUwV4iZ-UOUfpGP_Hf9afaWdX34iO86EHKw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Modrala <x3m2@centrum.sk>
+To: Khurram Hassan <kfhassan@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/hp.u.733jNoFemIvK8v/lZc
-Content-Type: text/plain; charset=UTF-8
+--Sig_/D=KR_EmzfZwm8S09KzVHD11
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 21 Jul 2012 16:16:07 +0200 "Peter Modrala" <x3m2@centrum.sk> wrote:
+On Sat, 21 Jul 2012 21:00:19 +0500 Khurram Hassan <kfhassan@gmail.com> wrot=
+e:
 
-> Hi,
-> =C2=A0
-> I firstly installed ubuntu server 12.04 and set up LVM on top of RAID1. A=
-fter several days the system wasn't able to boot. RAID array was broken. Th=
-en I found this bug on your page:
-> http://neil.brown.name/blog/20120615073245
-> Then I decided to install newest ubuntu alternate which provides 3.5.0-5 =
-version of kernel. After instalation's very first reboot I got the same mes=
-sages as previously.
-> I also installed linux-source-3.5.0 to verify the bug was fixed in this v=
-ersion of kernel.
+> I have this 3 disk raid5 volumne on an Asus motherboard sporting an
+> Intel Rapid Storage chipset. The problem began when I noticed in
+> windows that one of the hard disks (the first one in the array) was
+> marked as failed in the Intel raid utility. I shutdown the system to
+> remove the hard disk and removed the cables for the faulty hard disk.
+> But I made a mistake and remove the cables for one of the working hard
+> disks. So when I booted, it showed the raid volume as failed. I
+> quickly shutdown the system and corrected the mistake. But it
+> completely hosed my raid volume. When I booted the system up again,
+> both of the remaining 2 hard disks were showed as offline.
+>=20
+> I read the raid recovery section in the wiki and installed ubuntu
+> 12.04 on a separate non-raid hard disk (after completely disconnecting
+> the offline raid5 volume). Then I reconnected the 2 hard disks and
+> booted ubuntu. Then I gave the following commands:
+>=20
+> 1) mdadm --examine /dev/sd[bc] > raid.status
+> 2) mdadm --create --assume-clean -c 128 --level=3D5 --raid-devices=3D3
+> /dev/md1 missing /dev/sdb /dev/sdc
+>=20
+> It gave the following output:
+>     mdadm: /dev/sdb appears to be part of a raid array:
+>         level=3Dcontainer devices=3D0 ctime=3DThu Jan  1 05:00:00 1970
+>     mdadm: /dev/sdc appears to be part of a raid array:
+>         level=3Dcontainer devices=3D0 ctime=3DThu Jan  1 05:00:00 1970
+>     Continue creating array? y
+>     mdadm: Defaulting to version 1.2 metadata
+>     mdadm: array /dev/md1 started.
+>=20
+> But the raid volume is not accessible. mdadm --examine /dev/md1 gives:
+>=20
+>     mdadm: No md superblock detected on /dev/md1.
+>=20
+> Worse, upon booting the system, the raid chipset message says the 2
+> hard disk are non-raid hard disks. Have I completely messed up the
+> raid volume? Is it not recoverable at all?
 
-If I understand correctly you simply gave up on the original installation,
-didn't want to recovery any data of the array, and just installed a new
-version of Ubuntu.  Is that correct?
+Possibly :-(
 
-In that case this is definitely a different problem, and the further details
-you provided seem to confirm this.
+You had an array with Intel-specific metadata.  This metadata is stored at
+the end of the device.
 
-I gather that your aren't using the md/raid1 array for the root filesystem =
+When you tried to "--create" the array, you did not ask for intel metadata =
 so
-the machine boot ups reasonably OK, it is just that the array isn't assembl=
-ed
-properly.  Correct?
+you got the default v1.2 metadata.  This metadata is stored at the beginning
+of the device (a 1K block, 4K from the start).
+So this would have over-written a small amount of filesystem data.
 
-So we need to treat this as a new problem:
-  You installed some new Ubuntu distro and it didn't set up the arrays
-  properly.
+Also when you --create an array, mdadm erases any other metadata that it
+finds to avoid confusion.  So it will have erased the Intel metadata from t=
+he
+end.
 
-I would suggest that your best bet is to ask for support in some Ubuntu for=
-um.
+Your best hope is to recreate the array correctly with intel metadata.  The
+filesystem will quite possibly be corrupted, but you might get some or even
+all of your data back.
 
-However if you can provide the exact details of the error you receive when
-you boot, then I might be able to suggest something.
+Can you post the "raid.status".  That would help be certain we are doing the
+right thing.
+Something like
+  mdadm --create /dev/md/imsm -e imsm -n 3 missing /dev/sdb /dev/sdc
+  mdadm --create /dev/md1 -c 128 -l 5 -n 3 /dev/md/imsm
 
-Alternately if I misunderstood your problem description, please help me
-understand exactly what happened.
-
-> =C2=A0
-> I can provide you root access if you want to check anything on my server.
-
-I'd rather avoid that if possible.  Let's start with precise error messages.
+might do it  ... or might not.  I'm not sure about creating imsm arrays with
+missing devices.  Maybe you still list the 3 devices rather than just the
+container.  I'd need to experiment.  If you post the raid.status I'll see if
+I can work out the best way forward.
 
 NeilBrown
 
 
-
-
-
-
-> =C2=A0
-> Thank You
-> =C2=A0
-> Martin
-> =C2=A0
-> ---
-> =C2=A0
-> # uname -a
-> Linux rat 3.5.0-5-generic #5-Ubuntu SMP Tue Jul 17 16:17:55 UTC 2012 x86_=
-64 x86_64 x86_64 GNU/Linux
-> =C2=A0
-> linux-source-3.5.0/drivers/md/md.c:
-> ...
-> static int md_notify_reboot(struct notifier_block *this,
->  unsigned long code, void *x)
-> {
->  struct list_head *tmp;
->  struct mddev *mddev;
->  int need_delay =3D 0;
->=20
->  for_each_mddev(mddev, tmp) {
->  if (mddev_trylock(mddev)) {
->  if (mddev->pers)
->  __md_stop_writes(mddev);
->  mddev->safemode =3D 2;
->  mddev_unlock(mddev);
->  }
->  need_delay =3D 1;
->  }
->  /*
->  * certain more exotic SCSI devices are known to be
->  * volatile wrt too early system reboots. While the
->  * right place to handle this issue is the given
->  * driver, we do want to have a safe RAID driver ...
->  */
->  if (need_delay)
->  mdelay(1000*1);
->=20
->  return NOTIFY_DONE;
-> }=C2=A0
-> ...
-> =C2=A0
-> =C2=A0
-> # update-grub
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> Generating grub.cfg ...
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> Found linux image: /boot/vmlinuz-3.5.0-5-generic
-> Found initrd image: /boot/initrd.img-3.5.0-5-generic
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> Found linux image: /boot/vmlinuz-3.5.0-5-generic
-> Found initrd image: /boot/initrd.img-3.5.0-5-generic
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> error: unknown LVM metadata header.
-> Found memtest86+ image: /boot/memtest86+.bin
-> done
-> =C2=A0
-> =C2=A0
-> # mdadm -Evvvvs
-> mdadm: No md superblock detected on /dev/dm-3.
-> mdadm: No md superblock detected on /dev/dm-2.
-> mdadm: No md superblock detected on /dev/dm-1.
-> mdadm: No md superblock detected on /dev/dm-0.
-> mdadm: No md superblock detected on /dev/md/0.
-> mdadm: No md superblock detected on /dev/sdb5.
-> /dev/sdb2:
->  MBR Magic : aa55
-> Partition[0] : 683800576 sectors at 2 (type 8e)
-> /dev/sdb1:
->  Magic : a92b4efc
->  Version : 1.2
->  Feature Map : 0x0
->  Array UUID : dec31ddc:13aa86e0:d0635ca8:b630b4a5
->  Name : rat:0 (local to host rat)
->  Creation Time : Fri Jul 20 23:11:14 2012
->  Raid Level : raid1
->  Raid Devices : 2
->=20
->  Avail Dev Size : 292704256 (139.57 GiB 149.86 GB)
->  Array Size : 146352000 (139.57 GiB 149.86 GB)
->  Used Dev Size : 292704000 (139.57 GiB 149.86 GB)
->  Data Offset : 262144 sectors
->  Super Offset : 8 sectors
->  State : clean
->  Device UUID : a9e91e4b:550235d5:de6f6a16:44d74be1
->=20
->  Update Time : Sat Jul 21 16:06:32 2012
->  Checksum : c91e067d - correct
->  Events : 26
->=20
->=20
->  Device Role : Active device 1
->  Array State : AA ('A' =3D=3D active, '.' =3D=3D missing)
-> /dev/sdb:
->  MBR Magic : aa55
-> Partition[0] : 292966400 sectors at 2048 (type fd)
-> Partition[1] : 683800578 sectors at 292970494 (type 05)
-> mdadm: No md superblock detected on /dev/sda5.
-> /dev/sda2:
->  MBR Magic : aa55
-> Partition[0] : 683800576 sectors at 2 (type 8e)
-> /dev/sda1:
->  Magic : a92b4efc
->  Version : 1.2
->  Feature Map : 0x0
->  Array UUID : dec31ddc:13aa86e0:d0635ca8:b630b4a5
->  Name : rat:0 (local to host rat)
->  Creation Time : Fri Jul 20 23:11:14 2012
->  Raid Level : raid1
->  Raid Devices : 2
->=20
->  Avail Dev Size : 292704256 (139.57 GiB 149.86 GB)
->  Array Size : 146352000 (139.57 GiB 149.86 GB)
->  Used Dev Size : 292704000 (139.57 GiB 149.86 GB)
->  Data Offset : 262144 sectors
->  Super Offset : 8 sectors
->  State : clean
->  Device UUID : 458f63c4:1a882d4d:1ce3c46c:b0da0244
->=20
->  Update Time : Sat Jul 21 16:06:32 2012
->  Checksum : 736ca887 - correct
->  Events : 26
->=20
->=20
->  Device Role : Active device 0
->  Array State : AA ('A' =3D=3D active, '.' =3D=3D missing)
-> /dev/sda:
->  MBR Magic : aa55
-> Partition[0] : 292966400 sectors at 2048 (type fd)
-> Partition[1] : 683800578 sectors at 292970494 (type 05)
->=20
->=20
-> =C2=A0
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/hp.u.733jNoFemIvK8v/lZc
+--Sig_/D=KR_EmzfZwm8S09KzVHD11
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUAyGBTnsnt1WYoG5AQL7vA//c2a0daTT7PrigRN2G/s66yNpCyseqiri
-94RWupaDFRiBSQlBTdwnx+lRdNvTr9sL7Cs3SVKy5uwCVmaxv0FSTbaaHHE5KFDA
-up07XvwXB1EzQtFVaS64ZsPxANIrWTvGNcfqy64KTorek8M3BmOXi/O8KzxLZ76v
-6v4a+WgLMLZJ/SJ6OIDgNS9qRWY6Xv4EQNjw/3ktmLPF35bUpCirKGvszd+51SEe
-lxAQfto5PVFNdxUi+d/iw/ogUcVRHTEiGj1HL8rAXS2j4KF3NCXlRlmqF9vCvEb+
-uB/hbJ1JtjMsOo5ukCmsUm+1csYAjQ1sWnd7uVh2SThBafIs5CvAB9QpNJibhcYj
-CFCmT4BtovOlnZf/HOK4kRwB4XaqEE6+jz00t469mX54sDUE6pNjMD8sUj7PDae7
-lQBEb67qlfHcmp/cy75iYNowAvo2SqbdafJxlK8tJI5nxHa2iEMRs9wVYSHaQrbX
-MkEzuhLNKuAYBL7+HgErmnEtksWfxQ9Ho+XPsO8Trk6HFoRd5P2nP2khoyA78qRl
-qdE9VKPGpDG33YbVcd283QJrIbujBurbREmCKWhOO+SOtLIv1eI/C9Uh8J9CQtcQ
-Bc1zp/0fv53023p+tL6OuQcKk71oFb2pWx9dUtPdPUDoVX6lGJsUEBh3GpnB61BJ
-ejxgOoyXx/Y=
-=4zab
+iQIVAwUBUAyICDnsnt1WYoG5AQK6cQ//XhGBi0K95J7Ei/HPK3Xwu3EJQfhyMdGy
+l2Er70vGm4N3oxrphEXKNeryBDaZejB0KRihAIX6rrfVw9+UgKe3KKKn4L4npI11
+fcFT3wTJVcmz2SI3jrdQmtNDgmuK8PvWmu5NODyI2I90l3l99MUkAvzYQUkIcffg
+ZmRaYUQGRGLC4X89zEn9kQLrR/ZE9WQeY7nBXUzD3/xTPgLp7U4yEVxTAdHZlXWe
+ulkT64WnlKwbRpNxFZLsyh+WpK6IcmJnAqEqsirgdYrH8wkVJbCLtiLwLiy2i6ow
+K9WW52ixTRWvqNA/tq5md9PAZVD2dgB+Wn6Oaf0pQhlRw/SJDzvY3W8CsqEDWr1p
+84GqG7KchGNlQouwml5iIjzFkenXx1peRb5+TYfJLXtOYECWFVRUijSlbdUq/tyJ
+h2mPRq6egvLplKusCra+FGi99pTgH4H94PUc4pfMuaz0ZIE1YZupJShq5N5H+6AZ
+QwdRC+bDY8Wdysumym2Jh1AXC7o4UAC9QY2G4mgzHcLc8JPXepqaQFKWirHQoqx3
+fi46SBGCppbtesSnw5gcrJiNk0Sga68E4v3jOqnwxyvXaLZ3/HVyC1bF6Tr7Vcdx
+/zci1v1q8mQ6f/24I70TeGQrAu8qKTYHSiYxYT8n0FryG9Ch6TvjuKNKaNibGylv
+isQis2/mXQY=
+=5BFe
 -----END PGP SIGNATURE-----
 
---Sig_/hp.u.733jNoFemIvK8v/lZc--
+--Sig_/D=KR_EmzfZwm8S09KzVHD11--
