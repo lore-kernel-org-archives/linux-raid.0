@@ -1,33 +1,49 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: [RFE] Please, add optional RAID1 feature (= chunk checksums)
- to make it more robust
-Date: Sun, 22 Jul 2012 23:30:01 -0500
-Message-ID: <500CD349.5090500@hardwarefreak.com>
-References: <1897705147.341625.1342995720661.JavaMail.root@redhat.com>
-Reply-To: stan@hardwarefreak.com
+From: Brendan Hide <brendan@swiftspirit.co.za>
+Subject: vulnerability during partition-size-growth procedures
+Date: Mon, 23 Jul 2012 07:45:47 +0200
+Message-ID: <500CE50B.5010201@swiftspirit.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1897705147.341625.1342995720661.JavaMail.root@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jaromir Capik <jcapik@redhat.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Same issue likely.
+Hi all
 
-On 7/22/2012 5:22 PM, Jaromir Capik wrote:
->>> Likewise, if the checksumming you request is implemented in
->>> md/RAID1,
-> 
-> Btw. I like what Roberto proposed ... this could be a completely
-> independent layer having it's own device file. MD RAID1 would
-> be then built on top of such safe device files. The only thing
-> to be implemented directly in the RAID1 would be that immediate
-> resyncing in case of discovered read error received from such
-> safety layer. And this immediate resyncing could/should be
-> optional ...
-> 
-> Jaromir.
-> 
+In the wiki 
+(https://raid.wiki.kernel.org/index.php/Growing#Expanding_existing_partitions) 
+there's mention of increased vulnerability to failure when growing an 
+array because disks have to be failed before additional disks can come 
+into play.
+
+Are there plans to allow a disk migration/clone feature in future? If 
+not having this feature built-in, would dd (or GNU ddrescue) perhaps be 
+used to do this manually? The only down side I can see to doing it 
+manually is that it would likely require downtime. See below.
+
+2-disk RAID0 (Simplest for illustration purposes, also impossible to do 
+with current procedure):
+02468AC <- disk0
+13579BD <- disk1
+
+Introduce a new larger disk intended to replace disk1 and sync the data 
+across:
+02468AC <- disk0
+13579BD <- disk1
+13579BD------- <- disk2
+
+Fail/remove disk1:
+02468AC <- disk0
+13579BD------- <- disk2
+
+The current procedure has us degrade the array before we put any data 
+onto the larger disk2.
+
+-- 
+Brendan Hide
+
++27 83 448 3867
+http://swiftspirit.co.za/
 
