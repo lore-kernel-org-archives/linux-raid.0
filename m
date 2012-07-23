@@ -1,360 +1,218 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Problem recovering failed Intel Rapid Storage raid5 volume
-Date: Tue, 24 Jul 2012 08:13:49 +1000
-Message-ID: <20120724081349.41a30efa@notabene.brown>
-References: <CAHijsZt-CZ4BhjLU2sdWaGRtDa6bXjz0Bx+RRqoGRzvD6N6yvA@mail.gmail.com>
-	<CAHijsZvPb5PZLmKxUwV4iZ-UOUfpGP_Hf9afaWdX34iO86EHKw@mail.gmail.com>
-	<20120723090856.2738a2fc@notabene.brown>
-	<CAHijsZvUoXcoee6kj84M9mYj=J-+9kSd8Zox2JCWrW+yhR_j1g@mail.gmail.com>
-	<CAHijsZthcioN7YEcR2RGQcdeXJBVXpT8hniGZDbMxtXhVGM3vQ@mail.gmail.com>
+Subject: Re: [PATCH v4] DM RAID: Add support for MD RAID10
+Date: Tue, 24 Jul 2012 08:26:11 +1000
+Message-ID: <20120724082611.41a275d2@notabene.brown>
+References: <1343072962.20599.2.camel@f16>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/I=bNMrvtVC.f942UiJnqXML"; protocol="application/pgp-signature"
+ boundary="Sig_/49B1_T8/ah3to=FtgVqGLln"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHijsZthcioN7YEcR2RGQcdeXJBVXpT8hniGZDbMxtXhVGM3vQ@mail.gmail.com>
+In-Reply-To: <1343072962.20599.2.camel@f16>
 Sender: linux-raid-owner@vger.kernel.org
-To: Khurram Hassan <kfhassan@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Jonathan Brassow <jbrassow@redhat.com>
+Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, agk@redhat.com
 List-Id: linux-raid.ids
 
---Sig_/I=bNMrvtVC.f942UiJnqXML
+--Sig_/49B1_T8/ah3to=FtgVqGLln
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 23 Jul 2012 21:54:24 +0500 Khurram Hassan <kfhassan@gmail.com> wrot=
-e:
+On Mon, 23 Jul 2012 14:49:22 -0500 Jonathan Brassow <jbrassow@redhat.com>
+wrote:
 
-> raid.status contents:
+> Neil,
 >=20
-> /dev/sdb:
->           Magic : Intel Raid ISM Cfg Sig.
->         Version : 1.2.02
->     Orig Family : 00000000
->          Family : 6eb404da
->      Generation : 002308e9
->      Attributes : All supported
->            UUID : 51c75501:a307676f:d2d6e547:dfcb2476
->        Checksum : 06cf5ff9 correct
->     MPB Sectors : 2
->           Disks : 3
->    RAID Devices : 1
+> Updated 'sectors_per_dev' calculation and integrated your other
+> suggestions.
+
+Mostly ...
+
 >=20
->   Disk01 Serial : 5VMLEGC6
->           State : active
->              Id : 00030000
->     Usable Size : 976768264 (465.76 GiB 500.11 GB)
+>  brassow
 >=20
-> [VolumeData500:1]:
->            UUID : a0865f28:57b7246b:ff43fa76:5531f5ca
->      RAID Level : 5
->         Members : 3
->           Slots : [___]
->     Failed disk : 1
->       This Slot : 1 (out-of-sync)
->      Array Size : 1953536000 (931.52 GiB 1000.21 GB)
->    Per Dev Size : 976768264 (465.76 GiB 500.11 GB)
->   Sector Offset : 0
->     Num Stripes : 3815500
->      Chunk Size : 128 KiB
->        Reserved : 0
->   Migrate State : idle
->       Map State : failed
->     Dirty State : clean
+> dm raid: add md raid10 support
 >=20
->   Disk00 Serial : 9VM1GGJK:1
->           State : active failed
->              Id : ffffffff
->     Usable Size : 976768264 (465.76 GiB 500.11 GB)
+> Support the MD RAID10 personality through dm-raid.c
 >=20
->   Disk02 Serial : 6VM4EGHC
->           State : active
->              Id : 00040000
->     Usable Size : 976768264 (465.76 GiB 500.11 GB)
+> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+>=20
+> Index: linux-upstream/drivers/md/dm-raid.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-upstream.orig/drivers/md/dm-raid.c
+> +++ linux-upstream/drivers/md/dm-raid.c
+> @@ -11,6 +11,7 @@
+>  #include "md.h"
+>  #include "raid1.h"
+>  #include "raid5.h"
+> +#include "raid10.h"
+>  #include "bitmap.h"
+> =20
+>  #include <linux/device-mapper.h>
+> @@ -52,7 +53,10 @@ struct raid_dev {
+>  #define DMPF_MAX_RECOVERY_RATE 0x20
+>  #define DMPF_MAX_WRITE_BEHIND  0x40
+>  #define DMPF_STRIPE_CACHE      0x80
+> -#define DMPF_REGION_SIZE       0X100
+> +#define DMPF_REGION_SIZE       0x100
+> +#define DMPF_RAID10_COPIES     0x200
+> +#define DMPF_RAID10_FORMAT     0x400
+> +
+>  struct raid_set {
+>  	struct dm_target *ti;
+> =20
+> @@ -76,6 +80,7 @@ static struct raid_type {
+>  	const unsigned algorithm;	/* RAID algorithm. */
+>  } raid_types[] =3D {
+>  	{"raid1",    "RAID1 (mirroring)",               0, 2, 1, 0 /* NONE */},
+> +	{"raid10",   "RAID10 (striped mirrors)",        0, 2, 10, UINT_MAX /* V=
+aries */},
+>  	{"raid4",    "RAID4 (dedicated parity disk)",	1, 2, 5, ALGORITHM_PARITY=
+_0},
+>  	{"raid5_la", "RAID5 (left asymmetric)",		1, 2, 5, ALGORITHM_LEFT_ASYMME=
+TRIC},
+>  	{"raid5_ra", "RAID5 (right asymmetric)",	1, 2, 5, ALGORITHM_RIGHT_ASYMM=
+ETRIC},
+> @@ -86,6 +91,17 @@ static struct raid_type {
+>  	{"raid6_nc", "RAID6 (N continue)",		2, 4, 6, ALGORITHM_ROTATING_N_CONTI=
+NUE}
+>  };
+> =20
+> +static unsigned raid10_md_layout_to_copies(int layout)
+> +{
+> +	return layout & 0xFF;
+> +}
+> +
+> +static int raid10_format_to_md_layout(char *format, unsigned copies)
+> +{
+> +	/* 1 "far" copy, and 'copies' "near" copies */
+> +	return (1 << 8) | (copies & 0xFF);
+> +}
+> +
+>  static struct raid_type *get_raid_type(char *name)
+>  {
+>  	int i;
+> @@ -339,10 +355,16 @@ static int validate_region_size(struct r
+>   *    [max_write_behind <sectors>]	See '-write-behind=3D' (man mdadm)
+>   *    [stripe_cache <sectors>]		Stripe cache size for higher RAIDs
+>   *    [region_size <sectors>]           Defines granularity of bitmap
+> + *
+> + * RAID10-only options:
+> + *    [raid10_copies <# copies>]        Number of copies.  (Default: 2)
+> + *    [raid10_format <near>]            Layout algorithm.  (Default: nea=
+r)
+>   */
+>  static int parse_raid_params(struct raid_set *rs, char **argv,
+>  			     unsigned num_raid_params)
+>  {
+> +	char *raid10_format =3D "near";
+> +	unsigned raid10_copies =3D 2;
+>  	unsigned i, rebuild_cnt =3D 0;
+>  	unsigned long value, region_size =3D 0;
+>  	sector_t sectors_per_dev =3D rs->ti->len;
+> @@ -416,11 +438,28 @@ static int parse_raid_params(struct raid
+>  		}
+> =20
+>  		key =3D argv[i++];
+> +
+> +		/* Parameters that take a string value are checked here. */
+> +		if (!strcasecmp(key, "raid10_format")) {
+> +			if (rs->raid_type->level !=3D 10) {
+> +				rs->ti->error =3D "'raid10_format' is an invalid parameter for this =
+RAID type";
+> +				return -EINVAL;
+> +			}
+> +			if (strcmp("near", argv[i])) {
+> +				rs->ti->error =3D "Invalid 'raid10_format' value given";
+> +				return -EINVAL;
+> +			}
+> +			raid10_format =3D argv[i];
+> +			rs->print_flags |=3D DMPF_RAID10_FORMAT;
+> +			continue;
+> +		}
+> +
+>  		if (strict_strtoul(argv[i], 10, &value) < 0) {
+>  			rs->ti->error =3D "Bad numerical argument given in raid params";
+>  			return -EINVAL;
+>  		}
+> =20
+> +		/* Parameters that take a numeric value are checked here */
+>  		if (!strcasecmp(key, "rebuild")) {
+>  			rebuild_cnt++;
+>  			rs->ti->error =3D NULL;
+> @@ -436,6 +475,7 @@ static int parse_raid_params(struct raid
+>  				if (rebuild_cnt > rs->raid_type->parity_devs)
+>  					rs->ti->error =3D "Too many rebuild devices specified for given RAI=
+D type";
+>  				break;
+> +			case 10:
+>  			default:
+>  				DMERR("The rebuild parameter is not supported for %s", rs->raid_type=
+->name);
+>  				rs->ti->error =3D "Rebuild not supported for this RAID type";
 
-You'll need to start out with=20
+This hunk doesn't apply for me, or against 3.5.  Is there some patch I'm
+missing.
+I do vaguely recall you changing this to a switch statement I think, but I
+still have an if statement here.
+If I'm missing a patch - could you resend it please?
 
-   echo 1 > /sys/module/md_mod/parameters/start_dirty_degraded=20
 
-otherwise creating the degraded raid5 won't work - I need to fix that.
-Then
 
- mdadm -C /dev/md/imsm -e imsm -n 2 /dev/sdb /dev/sdc
- mdadm -C /dev/md0 -l5 -n3 -c 128 missing /dev/sdb /dev/sdc
+>> @@ -536,8 +585,30 @@ static int parse_raid_params(struct raid
+>  	if (dm_set_target_max_io_len(rs->ti, max_io_len))
+>  		return -EINVAL;
+> =20
+> -	if ((rs->raid_type->level > 1) &&
+> -	    sector_div(sectors_per_dev, (rs->md.raid_disks - rs->raid_type->par=
+ity_devs))) {
+> +	if (rs->raid_type->level =3D=3D 10) {
+> +		if (raid10_copies > rs->md.raid_disks) {
+> +			rs->ti->error =3D "Not enough devices to satisfy specification";
+> +			return -EINVAL;
+> +		}
+> +
+> +		/* (Len * #mirrors) / #devices */
+> +		sectors_per_dev =3D rs->ti->len * raid10_copies;
+> +		if (sector_div(sectors_per_dev, rs->md.raid_disks)) {
+> +			rs->ti->error =3D "Target length not evenly divisible by number of st=
+ripes";
+> +			return -EINVAL;
+> +		}
 
-so you create an IMSM container, then create the RAID5 inside that.
+This test is still completely pointless, and putting an extra test for chunk
+alignment after it doesn't make it any less pointless.=20
+And putting an important division inside the condition of an if(), hides it=
+ a
+bit more than I like.
+But it probably isn't worth arguing about it any more so once I can get a
+patch to apply I'll take it.
 
-You should then check the filesystem to make sure it looks right.
-If not, you might need to stop the arrays  and start again, using a differe=
-nt
-order of devices in the second command.
-
-Good luck,
-
+Thanks,
 NeilBrown
 
 
-
-
-> /dev/sdc:
->           Magic : Intel Raid ISM Cfg Sig.
->         Version : 1.2.02
->     Orig Family : 00000000
->          Family : 6eb404da
->      Generation : 002308e9
->      Attributes : All supported
->            UUID : 51c75501:a307676f:d2d6e547:dfcb2476
->        Checksum : 06cf5ff9 correct
->     MPB Sectors : 2
->           Disks : 3
->    RAID Devices : 1
->=20
->   Disk02 Serial : 6VM4EGHC
->           State : active
->              Id : 00040000
->     Usable Size : 976768264 (465.76 GiB 500.11 GB)
->=20
-> [VolumeData500:1]:
->            UUID : a0865f28:57b7246b:ff43fa76:5531f5ca
->      RAID Level : 5
->         Members : 3
->           Slots : [___]
->     Failed disk : 1
->       This Slot : 2 (out-of-sync)
->      Array Size : 1953536000 (931.52 GiB 1000.21 GB)
->    Per Dev Size : 976768264 (465.76 GiB 500.11 GB)
->   Sector Offset : 0
->     Num Stripes : 3815500
->      Chunk Size : 128 KiB
->        Reserved : 0
->   Migrate State : idle
->       Map State : failed
->     Dirty State : clean
->=20
->   Disk00 Serial : 9VM1GGJK:1
->           State : active failed
->              Id : ffffffff
->     Usable Size : 976768264 (465.76 GiB 500.11 GB)
->=20
->   Disk01 Serial : 5VMLEGC6
->           State : active
->              Id : 00030000
->     Usable Size : 976768264 (465.76 GiB 500.11 GB)
->=20
->=20
-> I hope you can figure it out as I am quite lost here.
->=20
-> Thanks,
-> Khurram
->=20
->=20
-> On Mon, Jul 23, 2012 at 4:31 PM, Khurram Hassan <kfhassan@gmail.com> wrot=
-e:
-> > raid.status contents:
-> >
-> > /dev/sdb:
-> >           Magic : Intel Raid ISM Cfg Sig.
-> >         Version : 1.2.02
-> >     Orig Family : 00000000
-> >          Family : 6eb404da
-> >      Generation : 002308e9
-> >      Attributes : All supported
-> >            UUID : 51c75501:a307676f:d2d6e547:dfcb2476
-> >        Checksum : 06cf5ff9 correct
-> >     MPB Sectors : 2
-> >           Disks : 3
-> >    RAID Devices : 1
-> >
-> >   Disk01 Serial : 5VMLEGC6
-> >           State : active
-> >              Id : 00030000
-> >     Usable Size : 976768264 (465.76 GiB 500.11 GB)
-> >
-> > [VolumeData500:1]:
-> >            UUID : a0865f28:57b7246b:ff43fa76:5531f5ca
-> >      RAID Level : 5
-> >         Members : 3
-> >           Slots : [___]
-> >     Failed disk : 1
-> >       This Slot : 1 (out-of-sync)
-> >      Array Size : 1953536000 (931.52 GiB 1000.21 GB)
-> >    Per Dev Size : 976768264 (465.76 GiB 500.11 GB)
-> >   Sector Offset : 0
-> >     Num Stripes : 3815500
-> >      Chunk Size : 128 KiB
-> >        Reserved : 0
-> >   Migrate State : idle
-> >       Map State : failed
-> >     Dirty State : clean
-> >
-> >   Disk00 Serial : 9VM1GGJK:1
-> >           State : active failed
-> >              Id : ffffffff
-> >     Usable Size : 976768264 (465.76 GiB 500.11 GB)
-> >
-> >   Disk02 Serial : 6VM4EGHC
-> >           State : active
-> >              Id : 00040000
-> >     Usable Size : 976768264 (465.76 GiB 500.11 GB)
-> > /dev/sdc:
-> >           Magic : Intel Raid ISM Cfg Sig.
-> >         Version : 1.2.02
-> >     Orig Family : 00000000
-> >          Family : 6eb404da
-> >      Generation : 002308e9
-> >      Attributes : All supported
-> >            UUID : 51c75501:a307676f:d2d6e547:dfcb2476
-> >        Checksum : 06cf5ff9 correct
-> >     MPB Sectors : 2
-> >           Disks : 3
-> >    RAID Devices : 1
-> >
-> >   Disk02 Serial : 6VM4EGHC
-> >           State : active
-> >              Id : 00040000
-> >     Usable Size : 976768264 (465.76 GiB 500.11 GB)
-> >
-> > [VolumeData500:1]:
-> >            UUID : a0865f28:57b7246b:ff43fa76:5531f5ca
-> >      RAID Level : 5
-> >         Members : 3
-> >           Slots : [___]
-> >     Failed disk : 1
-> >       This Slot : 2 (out-of-sync)
-> >      Array Size : 1953536000 (931.52 GiB 1000.21 GB)
-> >    Per Dev Size : 976768264 (465.76 GiB 500.11 GB)
-> >   Sector Offset : 0
-> >     Num Stripes : 3815500
-> >      Chunk Size : 128 KiB
-> >        Reserved : 0
-> >   Migrate State : idle
-> >       Map State : failed
-> >     Dirty State : clean
-> >
-> >   Disk00 Serial : 9VM1GGJK:1
-> >           State : active failed
-> >              Id : ffffffff
-> >     Usable Size : 976768264 (465.76 GiB 500.11 GB)
-> >
-> >   Disk01 Serial : 5VMLEGC6
-> >           State : active
-> >              Id : 00030000
-> >     Usable Size : 976768264 (465.76 GiB 500.11 GB)
-> >
-> >
-> > I hope you can figure it out as I am quite lost here.
-> >
-> > Thanks,
-> > Khurram
-> >
-> > On Mon, Jul 23, 2012 at 4:08 AM, NeilBrown <neilb@suse.de> wrote:
-> >> On Sat, 21 Jul 2012 21:00:19 +0500 Khurram Hassan <kfhassan@gmail.com>=
- wrote:
-> >>
-> >>> I have this 3 disk raid5 volumne on an Asus motherboard sporting an
-> >>> Intel Rapid Storage chipset. The problem began when I noticed in
-> >>> windows that one of the hard disks (the first one in the array) was
-> >>> marked as failed in the Intel raid utility. I shutdown the system to
-> >>> remove the hard disk and removed the cables for the faulty hard disk.
-> >>> But I made a mistake and remove the cables for one of the working hard
-> >>> disks. So when I booted, it showed the raid volume as failed. I
-> >>> quickly shutdown the system and corrected the mistake. But it
-> >>> completely hosed my raid volume. When I booted the system up again,
-> >>> both of the remaining 2 hard disks were showed as offline.
-> >>>
-> >>> I read the raid recovery section in the wiki and installed ubuntu
-> >>> 12.04 on a separate non-raid hard disk (after completely disconnecting
-> >>> the offline raid5 volume). Then I reconnected the 2 hard disks and
-> >>> booted ubuntu. Then I gave the following commands:
-> >>>
-> >>> 1) mdadm --examine /dev/sd[bc] > raid.status
-> >>> 2) mdadm --create --assume-clean -c 128 --level=3D5 --raid-devices=3D3
-> >>> /dev/md1 missing /dev/sdb /dev/sdc
-> >>>
-> >>> It gave the following output:
-> >>>     mdadm: /dev/sdb appears to be part of a raid array:
-> >>>         level=3Dcontainer devices=3D0 ctime=3DThu Jan  1 05:00:00 1970
-> >>>     mdadm: /dev/sdc appears to be part of a raid array:
-> >>>         level=3Dcontainer devices=3D0 ctime=3DThu Jan  1 05:00:00 1970
-> >>>     Continue creating array? y
-> >>>     mdadm: Defaulting to version 1.2 metadata
-> >>>     mdadm: array /dev/md1 started.
-> >>>
-> >>> But the raid volume is not accessible. mdadm --examine /dev/md1 gives:
-> >>>
-> >>>     mdadm: No md superblock detected on /dev/md1.
-> >>>
-> >>> Worse, upon booting the system, the raid chipset message says the 2
-> >>> hard disk are non-raid hard disks. Have I completely messed up the
-> >>> raid volume? Is it not recoverable at all?
-> >>
-> >> Possibly :-(
-> >>
-> >> You had an array with Intel-specific metadata.  This metadata is store=
-d at
-> >> the end of the device.
-> >>
-> >> When you tried to "--create" the array, you did not ask for intel meta=
-data so
-> >> you got the default v1.2 metadata.  This metadata is stored at the beg=
-inning
-> >> of the device (a 1K block, 4K from the start).
-> >> So this would have over-written a small amount of filesystem data.
-> >>
-> >> Also when you --create an array, mdadm erases any other metadata that =
-it
-> >> finds to avoid confusion.  So it will have erased the Intel metadata f=
-rom the
-> >> end.
-> >>
-> >> Your best hope is to recreate the array correctly with intel metadata.=
-  The
-> >> filesystem will quite possibly be corrupted, but you might get some or=
- even
-> >> all of your data back.
-> >>
-> >> Can you post the "raid.status".  That would help be certain we are doi=
-ng the
-> >> right thing.
-> >> Something like
-> >>   mdadm --create /dev/md/imsm -e imsm -n 3 missing /dev/sdb /dev/sdc
-> >>   mdadm --create /dev/md1 -c 128 -l 5 -n 3 /dev/md/imsm
-> >>
-> >> might do it  ... or might not.  I'm not sure about creating imsm array=
-s with
-> >> missing devices.  Maybe you still list the 3 devices rather than just =
-the
-> >> container.  I'd need to experiment.  If you post the raid.status I'll =
-see if
-> >> I can work out the best way forward.
-> >>
-> >> NeilBrown
-> >>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/I=bNMrvtVC.f942UiJnqXML
+--Sig_/49B1_T8/ah3to=FtgVqGLln
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUA3Mnjnsnt1WYoG5AQLIYg//ZtHBOkpZVZOaWTPdKWqq6V76wbxOnm0B
-wZZlAba+rHYnA9w9yRqM49NpL2Gps067bBPkyI72fFwXVKXbgqrZ3vjsWuhdLM1O
-AexZrYekX0IAZfd0Z7BBonvyA/9w4bVeFjcUQRV2e3/KeS4Hn6oSqsNtdt9LU/jB
-pxq1jAwAAhCYDYWdU73QmXTRUfXGOeNwdG6z7s431gLrtBlXvjRJuXhfqmF+eedC
-i24BWXW/AzFdY5W+8hmjmekKIri2IN0H332tiW/nTYsAk56pvqYYnMgrIKYzJ1iD
-E40Gkk3T72hkySCNC4uw4aCKmiSfg/wX8w89f8zQftSH1VqYJYCbwkQX1B52w96J
-3TMhFbi3D7ZD1YwEikuIGiS+n1k13tk+UwD6rwG+/SLEXvwQFPrba8kem2eMYJJD
-dMCBwuL+EvtDYVCLHGPG7s3+0yDOW178C7cQ/gHcrH5C35L626rdtxw8JD1C995C
-CxPPOhR0NxFj7tK4KLZ/Aket1EYxM5nLx6JCgaJhkYCcVsv19nNtzoLkHtlcPrae
-0X5+wkIjsvc5Dal3JiDrZQ+39h51GoR68g+x48faW64S6Msyy5RY8qKGadXz1zGj
-OsWTetOanLjjVJ4ykZOJnW9xesptp9RcTfZs5sMEnbzeF2UhOK9gncRgbNGd//8P
-bpbRBUjH8E4=
-=aRps
+iQIVAwUBUA3Pgznsnt1WYoG5AQKRNQ//e5shuHsHVH2BjM4JTYNPuabU/8PhG5Ho
+g7tRSjb0zBMtWCAmQO4RQba3uNsfShUE8ORb/vTOVKqtYq6XoRfK11QXLNQTagg8
+vgkrlEWzuhPCMZue6rGaDjJKN2j8rtQChmoqhGaoyfl3DTH0X4cs3EHeu1hK9Q+m
+gV/ABLLHqxdbr78+jHz4Aq9lKTXWbcYImMI5Kr8Pz/arRVKNj5I6B/dhcaHeQdNb
+LWkgaLAQ4xijp76oOTY0B2jB4W7T5ewg9bibNR6UkeQ2Bzta7g5hmuUhfY+8LEmj
+WCmGDsTqm6RgtdTXjhMNQE2kQhMPMSkSuQHrA863TsOjqoyjuo8sQ+YUT3jkECxE
+UB/OI0CiNutWwOkqOKHwjaB7AK9Hc0DqktX+mbGyJxBGvleJq4wXjmf432RmsocO
+DO3/AUZ35M+XGSz/muhnuRxceX10aRJ/vgpR+XhfGuRwkBTtAFEv/48f/nD2HMOs
+HHLn1xLjdSXZ+Qi5RDAbtSqf9Jvax7QIFYPE8EK5An5c+SptGy8y0Y9rJQJ0qeqG
+CIpfvCsd2vQgM+t+EScHYj23TUI9OLVfZzqeyVHwZkWrwhwTjgSeDlJ4HSuRA61j
+fhgl36wyDbx/V6/oE9wWxuizeoVjpX7sUh5tuMJAjsoUAyWXXATXnb98G+gi5JB8
+K2FAaSszQyQ=
+=TWeE
 -----END PGP SIGNATURE-----
 
---Sig_/I=bNMrvtVC.f942UiJnqXML--
+--Sig_/49B1_T8/ah3to=FtgVqGLln--
