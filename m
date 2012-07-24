@@ -1,68 +1,97 @@
-From: Alex <mysqlstudent@gmail.com>
-Subject: Re: Need to remove failed disk from RAID5 array
-Date: Tue, 24 Jul 2012 10:02:50 -0400
-Message-ID: <CAB1R3siQ6iVVNuQKkfCh4F5MFOS6qn61iaOhkcyytaO8optynA@mail.gmail.com>
-References: <CAB1R3shxBWebm13ie5gR0h++-GBTyfZrranHr8tjGkbPipV32w@mail.gmail.com>
-	<50071C0A.8080307@tmr.com>
-	<CAB1R3sjhES1+0XB43oXLomgH7Q6LPiTm11tPSoDJ91RRrfNy=A@mail.gmail.com>
-	<20120719091611.22e16100@natsu>
-	<500818D5.4080208@tmr.com>
-	<20120720070801.498902ba@notabene.brown>
-	<CAB1R3sgV9e9Ngvh+H6VtDB=mSfvPC8S3hafOncasz+EmTWRA-A@mail.gmail.com>
-	<500CCF90.5030002@tmr.com>
+From: Jaromir Capik <jcapik@redhat.com>
+Subject: Re: [RFE] Please, add optional RAID1 feature (= chunk checksums) to
+ make it more robust
+Date: Tue, 24 Jul 2012 11:09:00 -0400 (EDT)
+Message-ID: <1033621438.2057828.1343142540202.JavaMail.root@redhat.com>
+References: <CABYL=Tq0w150QMcehdsScUfDfCD2tGFeuROjWjwsepy1rRXk_w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <500CCF90.5030002@tmr.com>
+In-Reply-To: <CABYL=Tq0w150QMcehdsScUfDfCD2tGFeuROjWjwsepy1rRXk_w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: stan@hardwarefreak.com, Linux RAID <linux-raid@vger.kernel.org>, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
 List-Id: linux-raid.ids
 
-Hi,
+> yeah, i think this too, but IMO Jamiro exposed a specific scenario,
+> let=C2=B4s get back to it and after check a generic scenario,
+> he is using small computers (i don=C2=B4t know if it=C2=B4s ARM or X8=
+6) with
+> space to only 2 disks (i told him to use raid5 or raid6 because the
+> checksums but he don=C2=B4t have space for >=3D3 disks in computer ca=
+se,
+> maybe if we could run raid5 with 2 disks could help... or 1 disk...
+> just a idiot idea, but this could help...)
 
->>>> That's a good argument for not using "whole disk" array members, a
->>>> partition can
->>>> be started at a good offset and may perform better. As for the speed,
->>>> since it
->>>> is reconstructing the array data (hope the other drives are okay), every
->>>> block
->>>> written requires three blocks read and a reconstruct in cpu and memory.
->>>> You can
->>>> use "blockdev" to increase readahead, and set the devices to use the
->>>> deadline
->>>> scheduler, that _may_ improve things somewhat, but you have to read
->>>> three block
->>>> to write one, so it's not going to be fast.
->>>>
->>>
->>> Read-ahead has absolutely no effect in this context.
->>>
->>> Read-ahead is a function of the page cache.  When filling the page cache,
->>> read-ahead suggests how much more to be read than has been asked for.
->>>
->>> resync/recovery does not use the page cache, consequently the readahead
->>> setting is irrelevant.
->>>
->>> IO scheduler choice may make a difference.
->>
->>
->> It's already set for cfq. I assume that would be the preferred over
->> deadline?
->>
->> I set it on the actual disk devices. Should I also set it on md0/1
->> devices as well? It is currently 'none'.
->>
->> /sys/devices/virtual/block/md0/queue/scheduler
->
-> For what it's worth, my experience has beem that deadline works better for
-> writes to arrays. In arrays with only a few drives, sometimes markedly
-> better.
+I believe, that Piergiorgio meant something else. It was about
+creation of a high number of small partitions on two physical
+drives and then build a RAID6 array on top of them. But that's
+really a bit overkill :]
 
-Guys, it thought it would be worth it to follow up and let you know
-that the array eventually did rebuild successfully, and is now fully
-functional. It took about 4 full days to rebuild the 3.0T 4-disk RAID5
-at about 4M/sec, sometimes much slower.
 
-Thanks again,
-Alex
+> i don=C2=B4t know the real scenario, i think he will not use it in
+> 100partitions, maybe 4 or 5 partitions, and performance to be a
+> second
+> option, security is priority here
+> in the implementation of this new layer (maybe like LINEAR, MULTIPATH
+> or another not raid level) we could focus on security and after
+> performace
+>=20
+> just some ideas...
+>=20
+> 2012/7/23 Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+> >
+> > Hi all,
+> >
+> > actually, what you would like to do is already
+> > possible, albeit it will kill the performance
+> > of a rotating, mechanical, HDD.
+> > With SSD might work better.
+> >
+> > If you take an HDD and partition it, let's say
+> > with 100 partitions (GPT will be required),
+> > then you can build a RAID-6 using this 100
+> > partitions, having a redundancy of 2%.
+> > Taking two, or more, of such configured RAID-6,
+> > it will be possible to build (with them) a
+> > RAID-1 (or else).
+> >
+> > If a check of this RAID-1 returns mismatches,
+> > it will be possible to check the single devices
+> > and find out which is not OK.
+> > With RAID-6 (per device), and a bit of luck, it
+> > will be possible to fix it directly.
+> >
+> > Of course a lot of variables are tunable here.
+> > For example the number of partitions, the chunk
+> > size, or even the fact that with X partitions
+> > it could be possible to build more than one RAID-6,
+> > increasing the effective redundancy.
+> >
+> > All with the performance price I mentioned at the
+> > beginning.
+> >
+> > bye,
+> >
+> > --
+> >
+> > piergiorgio
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe
+> > linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+>=20
+>=20
+>=20
+> --
+> Roberto Spadim
+> Spadim Technology / SPAEmpresarial
+>=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
