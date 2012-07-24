@@ -1,320 +1,45 @@
-From: Khurram Hassan <kfhassan@gmail.com>
-Subject: Re: Problem recovering failed Intel Rapid Storage raid5 volume
-Date: Tue, 24 Jul 2012 12:14:13 +0500
-Message-ID: <CAHijsZsbrKOcUUL4U9BwOR3QXL2Nc5y5aqYSHfo94RKwsx859w@mail.gmail.com>
-References: <CAHijsZt-CZ4BhjLU2sdWaGRtDa6bXjz0Bx+RRqoGRzvD6N6yvA@mail.gmail.com>
-	<CAHijsZvPb5PZLmKxUwV4iZ-UOUfpGP_Hf9afaWdX34iO86EHKw@mail.gmail.com>
-	<20120723090856.2738a2fc@notabene.brown>
-	<CAHijsZvUoXcoee6kj84M9mYj=J-+9kSd8Zox2JCWrW+yhR_j1g@mail.gmail.com>
-	<CAHijsZthcioN7YEcR2RGQcdeXJBVXpT8hniGZDbMxtXhVGM3vQ@mail.gmail.com>
-	<20120724081349.41a30efa@notabene.brown>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: [RFE] Please, add optional RAID1 feature (= chunk checksums) to
+ make it more robust
+Date: Tue, 24 Jul 2012 09:51:04 -0300
+Message-ID: <CABYL=TpSEscGdzESPRycXvGv7o649xt7XCEPqNhCKQyien+K9Q@mail.gmail.com>
+References: <500CD32E.4000800@hardwarefreak.com>
+	<542194327.593466.1343036057599.JavaMail.root@redhat.com>
+	<20120723170320.GA2691@lazy.lzy>
+	<CABYL=Tq0w150QMcehdsScUfDfCD2tGFeuROjWjwsepy1rRXk_w@mail.gmail.com>
+	<CACJz6Qu6qVAroTTZJL=Q_Gs5VRsn=VttaKMu0WOKCh2sdJdgqQ@mail.gmail.com>
+	<500E27BE.3040605@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120724081349.41a30efa@notabene.brown>
+In-Reply-To: <500E27BE.3040605@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: stan@hardwarefreak.com
+Cc: Drew <drew.kay@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thanks, that recovered the array in degraded mode :)  I have added
-another hard disk and the array is rebuilding now. Thanks again.
+10 milion bad blocks (5gb of lost information)
+check that we are talking about one device (it can be a disk, a
+partition, a raid1 a raid0, nbd, drbd, or anything else)
 
-On Tue, Jul 24, 2012 at 3:13 AM, NeilBrown <neilb@suse.de> wrote:
-> On Mon, 23 Jul 2012 21:54:24 +0500 Khurram Hassan <kfhassan@gmail.com> wrote:
+2012/7/24 Stan Hoeppner <stan@hardwarefreak.com>:
+> On 7/23/2012 4:31 PM, Drew wrote:
 >
->> raid.status contents:
->>
->> /dev/sdb:
->>           Magic : Intel Raid ISM Cfg Sig.
->>         Version : 1.2.02
->>     Orig Family : 00000000
->>          Family : 6eb404da
->>      Generation : 002308e9
->>      Attributes : All supported
->>            UUID : 51c75501:a307676f:d2d6e547:dfcb2476
->>        Checksum : 06cf5ff9 correct
->>     MPB Sectors : 2
->>           Disks : 3
->>    RAID Devices : 1
->>
->>   Disk01 Serial : 5VMLEGC6
->>           State : active
->>              Id : 00030000
->>     Usable Size : 976768264 (465.76 GiB 500.11 GB)
->>
->> [VolumeData500:1]:
->>            UUID : a0865f28:57b7246b:ff43fa76:5531f5ca
->>      RAID Level : 5
->>         Members : 3
->>           Slots : [___]
->>     Failed disk : 1
->>       This Slot : 1 (out-of-sync)
->>      Array Size : 1953536000 (931.52 GiB 1000.21 GB)
->>    Per Dev Size : 976768264 (465.76 GiB 500.11 GB)
->>   Sector Offset : 0
->>     Num Stripes : 3815500
->>      Chunk Size : 128 KiB
->>        Reserved : 0
->>   Migrate State : idle
->>       Map State : failed
->>     Dirty State : clean
->>
->>   Disk00 Serial : 9VM1GGJK:1
->>           State : active failed
->>              Id : ffffffff
->>     Usable Size : 976768264 (465.76 GiB 500.11 GB)
->>
->>   Disk02 Serial : 6VM4EGHC
->>           State : active
->>              Id : 00040000
->>     Usable Size : 976768264 (465.76 GiB 500.11 GB)
+>> What if the corruption goes across several sectors and both data & ECC
+>> chuncks are corrupted?
 >
-> You'll need to start out with
+> What if the 'silent' corruption spans 10 million sectors (~5GB)?
 >
->    echo 1 > /sys/module/md_mod/parameters/start_dirty_degraded
+> --
+> Stan
 >
-> otherwise creating the degraded raid5 won't work - I need to fix that.
-> Then
->
->  mdadm -C /dev/md/imsm -e imsm -n 2 /dev/sdb /dev/sdc
->  mdadm -C /dev/md0 -l5 -n3 -c 128 missing /dev/sdb /dev/sdc
->
-> so you create an IMSM container, then create the RAID5 inside that.
->
-> You should then check the filesystem to make sure it looks right.
-> If not, you might need to stop the arrays  and start again, using a different
-> order of devices in the second command.
->
-> Good luck,
->
-> NeilBrown
->
->
->
->
->> /dev/sdc:
->>           Magic : Intel Raid ISM Cfg Sig.
->>         Version : 1.2.02
->>     Orig Family : 00000000
->>          Family : 6eb404da
->>      Generation : 002308e9
->>      Attributes : All supported
->>            UUID : 51c75501:a307676f:d2d6e547:dfcb2476
->>        Checksum : 06cf5ff9 correct
->>     MPB Sectors : 2
->>           Disks : 3
->>    RAID Devices : 1
->>
->>   Disk02 Serial : 6VM4EGHC
->>           State : active
->>              Id : 00040000
->>     Usable Size : 976768264 (465.76 GiB 500.11 GB)
->>
->> [VolumeData500:1]:
->>            UUID : a0865f28:57b7246b:ff43fa76:5531f5ca
->>      RAID Level : 5
->>         Members : 3
->>           Slots : [___]
->>     Failed disk : 1
->>       This Slot : 2 (out-of-sync)
->>      Array Size : 1953536000 (931.52 GiB 1000.21 GB)
->>    Per Dev Size : 976768264 (465.76 GiB 500.11 GB)
->>   Sector Offset : 0
->>     Num Stripes : 3815500
->>      Chunk Size : 128 KiB
->>        Reserved : 0
->>   Migrate State : idle
->>       Map State : failed
->>     Dirty State : clean
->>
->>   Disk00 Serial : 9VM1GGJK:1
->>           State : active failed
->>              Id : ffffffff
->>     Usable Size : 976768264 (465.76 GiB 500.11 GB)
->>
->>   Disk01 Serial : 5VMLEGC6
->>           State : active
->>              Id : 00030000
->>     Usable Size : 976768264 (465.76 GiB 500.11 GB)
->>
->>
->> I hope you can figure it out as I am quite lost here.
->>
->> Thanks,
->> Khurram
->>
->>
->> On Mon, Jul 23, 2012 at 4:31 PM, Khurram Hassan <kfhassan@gmail.com> wrote:
->> > raid.status contents:
->> >
->> > /dev/sdb:
->> >           Magic : Intel Raid ISM Cfg Sig.
->> >         Version : 1.2.02
->> >     Orig Family : 00000000
->> >          Family : 6eb404da
->> >      Generation : 002308e9
->> >      Attributes : All supported
->> >            UUID : 51c75501:a307676f:d2d6e547:dfcb2476
->> >        Checksum : 06cf5ff9 correct
->> >     MPB Sectors : 2
->> >           Disks : 3
->> >    RAID Devices : 1
->> >
->> >   Disk01 Serial : 5VMLEGC6
->> >           State : active
->> >              Id : 00030000
->> >     Usable Size : 976768264 (465.76 GiB 500.11 GB)
->> >
->> > [VolumeData500:1]:
->> >            UUID : a0865f28:57b7246b:ff43fa76:5531f5ca
->> >      RAID Level : 5
->> >         Members : 3
->> >           Slots : [___]
->> >     Failed disk : 1
->> >       This Slot : 1 (out-of-sync)
->> >      Array Size : 1953536000 (931.52 GiB 1000.21 GB)
->> >    Per Dev Size : 976768264 (465.76 GiB 500.11 GB)
->> >   Sector Offset : 0
->> >     Num Stripes : 3815500
->> >      Chunk Size : 128 KiB
->> >        Reserved : 0
->> >   Migrate State : idle
->> >       Map State : failed
->> >     Dirty State : clean
->> >
->> >   Disk00 Serial : 9VM1GGJK:1
->> >           State : active failed
->> >              Id : ffffffff
->> >     Usable Size : 976768264 (465.76 GiB 500.11 GB)
->> >
->> >   Disk02 Serial : 6VM4EGHC
->> >           State : active
->> >              Id : 00040000
->> >     Usable Size : 976768264 (465.76 GiB 500.11 GB)
->> > /dev/sdc:
->> >           Magic : Intel Raid ISM Cfg Sig.
->> >         Version : 1.2.02
->> >     Orig Family : 00000000
->> >          Family : 6eb404da
->> >      Generation : 002308e9
->> >      Attributes : All supported
->> >            UUID : 51c75501:a307676f:d2d6e547:dfcb2476
->> >        Checksum : 06cf5ff9 correct
->> >     MPB Sectors : 2
->> >           Disks : 3
->> >    RAID Devices : 1
->> >
->> >   Disk02 Serial : 6VM4EGHC
->> >           State : active
->> >              Id : 00040000
->> >     Usable Size : 976768264 (465.76 GiB 500.11 GB)
->> >
->> > [VolumeData500:1]:
->> >            UUID : a0865f28:57b7246b:ff43fa76:5531f5ca
->> >      RAID Level : 5
->> >         Members : 3
->> >           Slots : [___]
->> >     Failed disk : 1
->> >       This Slot : 2 (out-of-sync)
->> >      Array Size : 1953536000 (931.52 GiB 1000.21 GB)
->> >    Per Dev Size : 976768264 (465.76 GiB 500.11 GB)
->> >   Sector Offset : 0
->> >     Num Stripes : 3815500
->> >      Chunk Size : 128 KiB
->> >        Reserved : 0
->> >   Migrate State : idle
->> >       Map State : failed
->> >     Dirty State : clean
->> >
->> >   Disk00 Serial : 9VM1GGJK:1
->> >           State : active failed
->> >              Id : ffffffff
->> >     Usable Size : 976768264 (465.76 GiB 500.11 GB)
->> >
->> >   Disk01 Serial : 5VMLEGC6
->> >           State : active
->> >              Id : 00030000
->> >     Usable Size : 976768264 (465.76 GiB 500.11 GB)
->> >
->> >
->> > I hope you can figure it out as I am quite lost here.
->> >
->> > Thanks,
->> > Khurram
->> >
->> > On Mon, Jul 23, 2012 at 4:08 AM, NeilBrown <neilb@suse.de> wrote:
->> >> On Sat, 21 Jul 2012 21:00:19 +0500 Khurram Hassan <kfhassan@gmail.com> wrote:
->> >>
->> >>> I have this 3 disk raid5 volumne on an Asus motherboard sporting an
->> >>> Intel Rapid Storage chipset. The problem began when I noticed in
->> >>> windows that one of the hard disks (the first one in the array) was
->> >>> marked as failed in the Intel raid utility. I shutdown the system to
->> >>> remove the hard disk and removed the cables for the faulty hard disk.
->> >>> But I made a mistake and remove the cables for one of the working hard
->> >>> disks. So when I booted, it showed the raid volume as failed. I
->> >>> quickly shutdown the system and corrected the mistake. But it
->> >>> completely hosed my raid volume. When I booted the system up again,
->> >>> both of the remaining 2 hard disks were showed as offline.
->> >>>
->> >>> I read the raid recovery section in the wiki and installed ubuntu
->> >>> 12.04 on a separate non-raid hard disk (after completely disconnecting
->> >>> the offline raid5 volume). Then I reconnected the 2 hard disks and
->> >>> booted ubuntu. Then I gave the following commands:
->> >>>
->> >>> 1) mdadm --examine /dev/sd[bc] > raid.status
->> >>> 2) mdadm --create --assume-clean -c 128 --level=5 --raid-devices=3
->> >>> /dev/md1 missing /dev/sdb /dev/sdc
->> >>>
->> >>> It gave the following output:
->> >>>     mdadm: /dev/sdb appears to be part of a raid array:
->> >>>         level=container devices=0 ctime=Thu Jan  1 05:00:00 1970
->> >>>     mdadm: /dev/sdc appears to be part of a raid array:
->> >>>         level=container devices=0 ctime=Thu Jan  1 05:00:00 1970
->> >>>     Continue creating array? y
->> >>>     mdadm: Defaulting to version 1.2 metadata
->> >>>     mdadm: array /dev/md1 started.
->> >>>
->> >>> But the raid volume is not accessible. mdadm --examine /dev/md1 gives:
->> >>>
->> >>>     mdadm: No md superblock detected on /dev/md1.
->> >>>
->> >>> Worse, upon booting the system, the raid chipset message says the 2
->> >>> hard disk are non-raid hard disks. Have I completely messed up the
->> >>> raid volume? Is it not recoverable at all?
->> >>
->> >> Possibly :-(
->> >>
->> >> You had an array with Intel-specific metadata.  This metadata is stored at
->> >> the end of the device.
->> >>
->> >> When you tried to "--create" the array, you did not ask for intel metadata so
->> >> you got the default v1.2 metadata.  This metadata is stored at the beginning
->> >> of the device (a 1K block, 4K from the start).
->> >> So this would have over-written a small amount of filesystem data.
->> >>
->> >> Also when you --create an array, mdadm erases any other metadata that it
->> >> finds to avoid confusion.  So it will have erased the Intel metadata from the
->> >> end.
->> >>
->> >> Your best hope is to recreate the array correctly with intel metadata.  The
->> >> filesystem will quite possibly be corrupted, but you might get some or even
->> >> all of your data back.
->> >>
->> >> Can you post the "raid.status".  That would help be certain we are doing the
->> >> right thing.
->> >> Something like
->> >>   mdadm --create /dev/md/imsm -e imsm -n 3 missing /dev/sdb /dev/sdc
->> >>   mdadm --create /dev/md1 -c 128 -l 5 -n 3 /dev/md/imsm
->> >>
->> >> might do it  ... or might not.  I'm not sure about creating imsm arrays with
->> >> missing devices.  Maybe you still list the 3 devices rather than just the
->> >> container.  I'd need to experiment.  If you post the raid.status I'll see if
->> >> I can work out the best way forward.
->> >>
->> >> NeilBrown
->> >>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
