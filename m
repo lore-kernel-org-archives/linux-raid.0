@@ -1,144 +1,122 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Does mdadm require udev/sysfs to create imsm RAID1?
-Date: Wed, 25 Jul 2012 11:24:35 +1000
-Message-ID: <20120725112435.30517e97@notabene.brown>
-References: <CABxOMqwmk8TBaj9KXz9X12PmFx5mRnUe-xv+DsP5pmqojK3Dng@mail.gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID extremely slow
+Date: Wed, 25 Jul 2012 21:00:51 -0400
+Message-ID: <501096C3.5060700@turmel.org>
+References: <501078B2.8070707@familyross.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/A/O=ZHhEiE/IhvlfanX.5_R"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CABxOMqwmk8TBaj9KXz9X12PmFx5mRnUe-xv+DsP5pmqojK3Dng@mail.gmail.com>
+In-Reply-To: <501078B2.8070707@familyross.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Scott Johnson <scottej23@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Kevin Ross <kevin@familyross.net>
+Cc: linux-kernel@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/A/O=ZHhEiE/IhvlfanX.5_R
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+[Added linux-raid to the CC]
 
-On Tue, 24 Jul 2012 17:54:08 -0700 Scott Johnson <scottej23@gmail.com> wrot=
-e:
+Hi Kevin,
 
-> The question may seem strange but here's the problem I'm trying to solve.
->=20
-> I have setup all the servers in my environment to PXE boot and nfs
-> mount an older root filesystem that is a bit aged and predates udev
-> and sysfs.  It just has the /dev/ device tree.
->=20
-> This worked well for installing proprietary PCI highpoint 1720 raid
-> drivers that aren't included in the kernel.  Then I would write my OS
-> images to the drives after installing the raid driver.  However, now
-> my latest hardware comes with the Intel IMSM and I don't need to use
-> the pci raid anymore if I can get this on-board imsm raid to work.
->=20
-> I built the latest mdadm (3.2.5) and added it to my root filesystem.
-> The mdadm --examine /dev/sda seems to see that the drives are
-> configured but mdadm create fails and the mdadm --assemble --scan does
-> nothing.  I did configure the RAID1 array in the bios.
->=20
-> I'm currently using an older 2.6.30 kernel, but should be new enough
-> for imsm via mdadm.  If mdadm requires udev and sysfs info then I'll
-> have to figure out how to include that into my root filesystem.
->=20
-> -bash-3.1# uname -r
-> 2.6.30
->=20
-> -bash-3.1# mdadm -V
-> mdadm - v3.2.5 - 18th May 2012
->=20
-> -bash-3.1# cat /proc/mdstat
-> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+Notes interleaved:
+
+On 07/25/2012 06:52 PM, Kevin Ross wrote:
+> Hello,
+> 
+> I'm having a problem.  After a while, my software RAID rebuild becomes
+> extremely slow, and the filesystem on the RAID is essentially blocked. 
+> I don't know what is causing this.  I guess it could be a bad drive, but
+> how can I find out?
+
+Probably not.  That pretty much always shows up in dmesg.
+
+> I used atop to show the transfer speeds to each drive. Here's a
+> screenshot:
+> http://img402.imageshack.us/img402/6484/screenshotfrom201207251.png
+
+Piles of small reads  scattered across multiple drives, and a
+concentration of queued writes to /dev/sda.  What's on /dev/sda?
+It's not a member of the raid, so it must be some other system task
+involved.
+
+[ The output of "lsdrv" [1] might be useful here, along with
+"mdadm -D /dev/md0" and "mdadm -E /dev/[b-j]" ]
+
+> "smartctl -a" for all the drives looks good to me, no pending failures,
+> or errors logged.  dmesg doesn't report anything wrong with any of the
+> drives.  It does, however, report lots of hung tasks, which are trying
+> to access the RAID volume.  For example:
+> 
+> [51000.672064] INFO: task mythbackend:10677 blocked for more than 120
+> seconds.
+> [51000.672098] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [51000.672143] mythbackend     D 0000000e     0 10677      1 0x00000000
+> [51000.672146]  f38bea00 00000086 c1095415 0000000e 00000002 00000000
+> 00000000 c147aac0
+> [51000.672152]  f38bebac c147aac0 eb2cff04 003d2f4b 00000000 c109cacb
+> 01872f02 eb2cfe50
+> [51000.672157]  c100f28b c13df480 01872f02 eb2cfe68 c10532b1 0069a8d0
+> f79d6ac0 00000000
+> [51000.672162] Call Trace:
+> [51000.672169]  [<c1095415>] ? find_get_pages_tag+0x2f/0xa2
+> [51000.672173]  [<c109cacb>] ? pagevec_lookup_tag+0x18/0x1e
+> [51000.672176]  [<c100f28b>] ? read_tsc+0xa/0x28
+> [51000.672179]  [<c10532b1>] ? timekeeping_get_ns+0x11/0x55
+> [51000.672182]  [<c10536a4>] ? ktime_get_ts+0x7a/0x82
+> [51000.672186]  [<c12bea8b>] ? io_schedule+0x4a/0x5f
+> [51000.672188]  [<c1095659>] ? sleep_on_page+0x5/0x8
+> [51000.672191]  [<c12bedeb>] ? __wait_on_bit+0x2f/0x54
+> [51000.672193]  [<c1095654>] ? lock_page+0x1d/0x1d
+> [51000.672196]  [<c1095754>] ? wait_on_page_bit+0x57/0x5e
+> [51000.672199]  [<c104d171>] ? autoremove_wake_function+0x29/0x29
+> [51000.672201]  [<c1095823>] ? filemap_fdatawait_range+0x71/0x11e
+> [51000.672205]  [<c109630f>] ? filemap_write_and_wait_range+0x3e/0x4c
+> [51000.672232]  [<f86bfb39>] ? xfs_file_fsync+0x68/0x214 [xfs]
+> [51000.672246]  [<f86bfad1>] ? xfs_file_splice_write+0x144/0x144 [xfs]
+> [51000.672249]  [<c10e7e3b>] ? vfs_fsync_range+0x27/0x2d
+> [51000.672252]  [<c10e7e52>] ? vfs_fsync+0x11/0x15
+> [51000.672254]  [<c10e80b8>] ? sys_fdatasync+0x20/0x2e
+
+MythTV is trying to flush recorded video to disk, I presume.  Sync is
+known to cause stalls--a great deal of work is on-going to improve
+this.  How old is this kernel?
+
+> [51000.672258]  [<c12c409f>] ? sysenter_do_call+0x12/0x28
+> [51000.672261]  [<c12b0000>] ? quirk_usb_early_handoff+0x4a9/0x522
+> 
+> Here is some other possibly relevant info:
+> 
+> # cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> md0 : active raid6 sdh1[0] sdd1[9] sde1[10] sdb1[6] sdi1[7] sdc1[4]
+> sdf1[3] sdg1[8] sdj1[1]
+>       6837311488 blocks super 1.2 level 6, 512k chunk, algorithm 2 [9/9]
+> [UUUUUUUUU]
+>       [==========>..........]  resync = 51.3% (501954432/976758784)
+> finish=28755.6min speed=275K/sec
+
+Is this resync a weekly check, or did something else trigger it?
+
 > unused devices: <none>
->=20
-> -bash-3.1# mdadm -E /dev/sda
-> mdadm: /dev/sda is not attached to Intel(R) RAID controller.
-> mdadm: /dev/sda is not attached to Intel(R) RAID controller.
-> /dev/sda:
->           Magic : Intel Raid ISM Cfg Sig.
->         Version : 1.1.00
->     Orig Family : 41dddea6
->          Family : 41dddea6
->      Generation : 00000035
->      Attributes : All supported
->            UUID : 64fabbb6:c0dfc0df:dc004a9e:620cffc5
->        Checksum : 242ff277 correct
->     MPB Sectors : 1
->           Disks : 2
->    RAID Devices : 1
->=20
->   Disk00 Serial : Z2AFVZJZ
->           State : active
->              Id : 00020000
->     Usable Size : 625137928 (298.09 GiB 320.07 GB)
->=20
-> [Volume0]:
->            UUID : 83543199:fdb1493f:0f2af5ef:e2287504
->      RAID Level : 1
->         Members : 2
->           Slots : [UU]
->     Failed disk : none
->       This Slot : 0
->      Array Size : 625137664 (298.09 GiB 320.07 GB)
->    Per Dev Size : 625137928 (298.09 GiB 320.07 GB)
->   Sector Offset : 0
->     Num Stripes : 2441944
->      Chunk Size : 64 KiB
->        Reserved : 0
->   Migrate State : idle
->       Map State : normal
->     Dirty State : clean
->=20
->   Disk01 Serial : Z2AFVZN8
->           State : active
->              Id : 00030000
->     Usable Size : 625137928 (298.09 GiB 320.07 GB)
->=20
-> -bash-3.1# mdadm --assemble --scan
-> mdadm main: failed to get exclusive lock on mapfile
-> mdadm: No arrays found in config file or automatically
->=20
-> -bash-3.1# mdadm --create /dev/md/imsm -e imsm -n 2 /dev/sda /dev/sdb
-> mdadm: /dev/sda is not attached to Intel(R) RAID controller.
-> mdadm: /dev/sda is not suitable for this array.
-> mdadm: /dev/sdb is not attached to Intel(R) RAID controller.
-> mdadm: /dev/sdb is not suitable for this array.
+> 
+> # cat /proc/sys/dev/raid/speed_limit_min
+> 10000
 
-IMSM raid should work without udev.  It definitely does require sysfs thoug=
-h.
+MD is unable to reach its minimum rebuild rate while other system
+activity is ongoing.  You might want to lower this number to see if that
+gets you out of the stalls.
 
-However it seems that mdadm doesn't think you have an Intel RAID controller,
-so it isn't going to work for you.
-You can over-ride that check using
-  export IMSM_NO_PLATFORM=3D1
+Or temporarily shut down mythtv.
 
-However it may be that it says  that because you don't have /sys mounted.
-If you really don't (and I imagine many things would fail without /sys)
-then you really need to get it mounted.
+> # cat /proc/sys/dev/raid/speed_limit_max
+> 200000
+> 
+> Thanks in advance!
+> -- Kevin
 
-NeilBrown
+HTH,
 
+Phil
 
---Sig_/A/O=ZHhEiE/IhvlfanX.5_R
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+[1] http://github.com/pturmel/lsdrv
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUA9K0znsnt1WYoG5AQKH5Q//XP2fg7RvjR9lCvPy64m/BtXwQ7CSGMlw
-hsbCgwNAWqiyUZba4ijj5VU/cbg/NIpJYWoS8N8T21LRt9H4a8LEXmHaXQZ+ac16
-fEcb0UNi1Lesman4VW3+/mvAoe9jJ4/QD/wgHYUqDp5oL0j/p6fhYmxP34TxpBxO
-ZrGZ//1LqwMmwiiXae53I9U9NJnBKGaoFi3meq29iEUwbgd10ahEea44Kkm6LanF
-2uERgTlh5kw7Lj4hjpAzEIGS/Z6FYHzLMbbDBawGzrY4GKrW/Dhghxw1va/eix0g
-uF5zxuPCI4zz5MV8y10sQasYCdTfPubzMKUsIe5j5d8iwgHioPWKHwspO2YrkpNk
-2quVrr0vwOG7kiTbfGnlkEd2Ciytsd7DF4I6EExkkHbJO3/CegUpmnA5pVcecTnl
-zJDoibEdSeioK3MBvtlhMlGmyCGwLUBlyFOgPh0ms4jeol7+/nN9YBfTQOGSMtu0
-tmLEjz7Qbwl1HpDKdi98dWKAIV4UB0g7u9cUt8PAhLBqvw9dEMNOFRdcjnxmgnmw
-uI141trkNpYa27/pkj1kO8uSkfnzb/NqgRrrpx7YbORwfgRciGSskwbRd6aT9ja4
-Hz88mkLcpys9p/vEB+g4CScojcPxXQ4CIPk1rUTGaLva3lLs6UdRLvUi1tliMDl1
-OoC4CFhQJ98=
-=9/6Q
------END PGP SIGNATURE-----
-
---Sig_/A/O=ZHhEiE/IhvlfanX.5_R--
