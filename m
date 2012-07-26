@@ -1,122 +1,108 @@
-From: Phil Turmel <philip@turmel.org>
+From: Kevin Ross <kevin@familyross.net>
 Subject: Re: RAID extremely slow
-Date: Wed, 25 Jul 2012 21:00:51 -0400
-Message-ID: <501096C3.5060700@turmel.org>
-References: <501078B2.8070707@familyross.net>
+Date: Wed, 25 Jul 2012 18:55:18 -0700
+Message-ID: <5010A386.4080209@familyross.net>
+References: <501078B2.8070707@familyross.net> <501096C3.5060700@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <501078B2.8070707@familyross.net>
-Sender: linux-raid-owner@vger.kernel.org
-To: Kevin Ross <kevin@familyross.net>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <501096C3.5060700@turmel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
 Cc: linux-kernel@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-[Added linux-raid to the CC]
+Thank you very much for taking the time to look into this.
 
-Hi Kevin,
+On 07/25/2012 06:00 PM, Phil Turmel wrote:
+> Piles of small reads  scattered across multiple drives, and a
+> concentration of queued writes to /dev/sda.  What's on /dev/sda?
+> It's not a member of the raid, so it must be some other system task
+> involved.
 
-Notes interleaved:
+/dev/sda1 is the root filesystem.  The writes were most likely by MySQL, 
+but I would have to run iotop to be sure.
 
-On 07/25/2012 06:52 PM, Kevin Ross wrote:
-> Hello,
-> 
-> I'm having a problem.  After a while, my software RAID rebuild becomes
-> extremely slow, and the filesystem on the RAID is essentially blocked. 
-> I don't know what is causing this.  I guess it could be a bad drive, but
-> how can I find out?
+> [ The output of "lsdrv" [1] might be useful here, along with
+> "mdadm -D /dev/md0" and "mdadm -E /dev/[b-j]" ]
 
-Probably not.  That pretty much always shows up in dmesg.
+Here you go: http://pastebin.ca/2174740
 
-> I used atop to show the transfer speeds to each drive. Here's a
-> screenshot:
-> http://img402.imageshack.us/img402/6484/screenshotfrom201207251.png
+> MythTV is trying to flush recorded video to disk, I presume.  Sync is
+> known to cause stalls--a great deal of work is on-going to improve
+> this.  How old is this kernel?
 
-Piles of small reads  scattered across multiple drives, and a
-concentration of queued writes to /dev/sda.  What's on /dev/sda?
-It's not a member of the raid, so it must be some other system task
-involved.
+After rebooting, MythTV is currently recording two shows, and the resync 
+is running at full speed.
 
-[ The output of "lsdrv" [1] might be useful here, along with
-"mdadm -D /dev/md0" and "mdadm -E /dev/[b-j]" ]
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid6 sdh1[0] sdd1[9] sde1[10] sdb1[6] sdi1[7] sdc1[4] 
+sdf1[3] sdg1[8] sdj1[1]
+       6837311488 blocks super 1.2 level 6, 512k chunk, algorithm 2 
+[9/9] [UUUUUUUUU]
+       [=>...................]  resync =  9.3% (91363840/976758784) 
+finish=1434.3min speed=10287K/sec
 
-> "smartctl -a" for all the drives looks good to me, no pending failures,
-> or errors logged.  dmesg doesn't report anything wrong with any of the
-> drives.  It does, however, report lots of hung tasks, which are trying
-> to access the RAID volume.  For example:
-> 
-> [51000.672064] INFO: task mythbackend:10677 blocked for more than 120
-> seconds.
-> [51000.672098] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-> disables this message.
-> [51000.672143] mythbackend     D 0000000e     0 10677      1 0x00000000
-> [51000.672146]  f38bea00 00000086 c1095415 0000000e 00000002 00000000
-> 00000000 c147aac0
-> [51000.672152]  f38bebac c147aac0 eb2cff04 003d2f4b 00000000 c109cacb
-> 01872f02 eb2cfe50
-> [51000.672157]  c100f28b c13df480 01872f02 eb2cfe68 c10532b1 0069a8d0
-> f79d6ac0 00000000
-> [51000.672162] Call Trace:
-> [51000.672169]  [<c1095415>] ? find_get_pages_tag+0x2f/0xa2
-> [51000.672173]  [<c109cacb>] ? pagevec_lookup_tag+0x18/0x1e
-> [51000.672176]  [<c100f28b>] ? read_tsc+0xa/0x28
-> [51000.672179]  [<c10532b1>] ? timekeeping_get_ns+0x11/0x55
-> [51000.672182]  [<c10536a4>] ? ktime_get_ts+0x7a/0x82
-> [51000.672186]  [<c12bea8b>] ? io_schedule+0x4a/0x5f
-> [51000.672188]  [<c1095659>] ? sleep_on_page+0x5/0x8
-> [51000.672191]  [<c12bedeb>] ? __wait_on_bit+0x2f/0x54
-> [51000.672193]  [<c1095654>] ? lock_page+0x1d/0x1d
-> [51000.672196]  [<c1095754>] ? wait_on_page_bit+0x57/0x5e
-> [51000.672199]  [<c104d171>] ? autoremove_wake_function+0x29/0x29
-> [51000.672201]  [<c1095823>] ? filemap_fdatawait_range+0x71/0x11e
-> [51000.672205]  [<c109630f>] ? filemap_write_and_wait_range+0x3e/0x4c
-> [51000.672232]  [<f86bfb39>] ? xfs_file_fsync+0x68/0x214 [xfs]
-> [51000.672246]  [<f86bfad1>] ? xfs_file_splice_write+0x144/0x144 [xfs]
-> [51000.672249]  [<c10e7e3b>] ? vfs_fsync_range+0x27/0x2d
-> [51000.672252]  [<c10e7e52>] ? vfs_fsync+0x11/0x15
-> [51000.672254]  [<c10e80b8>] ? sys_fdatasync+0x20/0x2e
+unused devices: <none>
 
-MythTV is trying to flush recorded video to disk, I presume.  Sync is
-known to cause stalls--a great deal of work is on-going to improve
-this.  How old is this kernel?
+atop shows the avio of all the drives to be less than 1ms, where before 
+they were much higher.  It will run for a couple days under load just 
+fine, and then it will come to a halt.
 
-> [51000.672258]  [<c12c409f>] ? sysenter_do_call+0x12/0x28
-> [51000.672261]  [<c12b0000>] ? quirk_usb_early_handoff+0x4a9/0x522
-> 
-> Here is some other possibly relevant info:
-> 
-> # cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4]
-> md0 : active raid6 sdh1[0] sdd1[9] sde1[10] sdb1[6] sdi1[7] sdc1[4]
-> sdf1[3] sdg1[8] sdj1[1]
->       6837311488 blocks super 1.2 level 6, 512k chunk, algorithm 2 [9/9]
-> [UUUUUUUUU]
->       [==========>..........]  resync = 51.3% (501954432/976758784)
-> finish=28755.6min speed=275K/sec
+It's a 3.2.21 kernel.  I'm running Debian Testing, and the exact Debian 
+package version is:
 
-Is this resync a weekly check, or did something else trigger it?
+ii  linux-image-3.2.0-3-686-pae                    
+3.2.21-3                                       Linux 3.2 for modern PCs
 
-> unused devices: <none>
-> 
-> # cat /proc/sys/dev/raid/speed_limit_min
-> 10000
+>
+>> [51000.672258]  [<c12c409f>] ? sysenter_do_call+0x12/0x28
+>> [51000.672261]  [<c12b0000>] ? quirk_usb_early_handoff+0x4a9/0x522
+>>
+>> Here is some other possibly relevant info:
+>>
+>> # cat /proc/mdstat
+>> Personalities : [raid6] [raid5] [raid4]
+>> md0 : active raid6 sdh1[0] sdd1[9] sde1[10] sdb1[6] sdi1[7] sdc1[4]
+>> sdf1[3] sdg1[8] sdj1[1]
+>>        6837311488 blocks super 1.2 level 6, 512k chunk, algorithm 2 [9/9]
+>> [UUUUUUUUU]
+>>        [==========>..........]  resync = 51.3% (501954432/976758784)
+>> finish=28755.6min speed=275K/sec
+> Is this resync a weekly check, or did something else trigger it?
 
-MD is unable to reach its minimum rebuild rate while other system
-activity is ongoing.  You might want to lower this number to see if that
-gets you out of the stalls.
+This is not a scheduled check.  It was triggered by, I believe, an 
+unclean shutdown.  An unclean shutdown will trigger a resync.  I don't 
+think it used to do this, but I could be remembering wrong.
 
-Or temporarily shut down mythtv.
+>
+>> unused devices:<none>
+>>
+>> # cat /proc/sys/dev/raid/speed_limit_min
+>> 10000
+> MD is unable to reach its minimum rebuild rate while other system
+> activity is ongoing.  You might want to lower this number to see if that
+> gets you out of the stalls.
+>
+> Or temporarily shut down mythtv.
 
-> # cat /proc/sys/dev/raid/speed_limit_max
-> 200000
-> 
-> Thanks in advance!
-> -- Kevin
+I will try lowering those numbers next time this happens, which will 
+probably be within the next day or two.  That's about how often this 
+happens.
 
-HTH,
+>> # cat /proc/sys/dev/raid/speed_limit_max
+>> 200000
+>>
+>> Thanks in advance!
+>> -- Kevin
+> HTH,
+>
+> Phil
+>
+> [1] http://github.com/pturmel/lsdrv
+>
 
-Phil
-
-[1] http://github.com/pturmel/lsdrv
-
+Thanks!
+-- Kevin
