@@ -1,23 +1,48 @@
-From: Kevin Ross <kevin@familyross.net>
-Subject: Re: RAID extremely slow
-Date: Wed, 25 Jul 2012 19:18:03 -0700
-Message-ID: <5010A8DB.40805@familyross.net>
-References: <501078B2.8070707@familyross.net> <501096C3.5060700@turmel.org> <5010A386.4080209@familyross.net> <CAGqmV7p3c4PCgzJOwP+QGrRSPq=Kszh4a2ncmasWaUdSagv_HQ@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 0/4] Plugging changes for blk/md/umem
+Date: Thu, 26 Jul 2012 12:58:29 +1000
+Message-ID: <20120726025650.32180.65163.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGqmV7p3c4PCgzJOwP+QGrRSPq=Kszh4a2ncmasWaUdSagv_HQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: Phil Turmel <philip@turmel.org>, linux-kernel@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>
 List-Id: linux-raid.ids
 
-On 07/25/2012 07:09 PM, CoolCold wrote:
-> You might be interested in write intent bitmap then, it gonna help a 
-> lot. (resending in plain text)
+Hi Jens,
+ the following series makes a number of changes to plugging, moving
+ common code from md and umem into block, and modifying it to allow
+ md to get more value out of it.
+ They've been sitting in -next for a while.
+ Are you OK with me forwarding them to Linus, or would you rather they
+ went though your tree?
 
-Thanks, I'll look into that!
+Thanks,
+NeilBrown
 
--- Kevin
+---
+
+NeilBrown (3):
+      blk: pass from_schedule to non-request unplug functions.
+      blk: centralize non-request unplug handling.
+      md: remove plug_cnt feature of plugging.
+
+Shaohua Li (1):
+      block: stack unplug
+
+
+ block/blk-core.c       |   44 ++++++++++++++++++++++++++++--------
+ drivers/block/umem.c   |   37 ++++++------------------------
+ drivers/md/md.c        |   59 ++++--------------------------------------------
+ drivers/md/md.h        |   11 ++++++---
+ drivers/md/raid1.c     |    3 +-
+ drivers/md/raid10.c    |    3 +-
+ drivers/md/raid5.c     |    5 ++--
+ include/linux/blkdev.h |    8 +++++--
+ 8 files changed, 63 insertions(+), 107 deletions(-)
+
+-- 
+Signature
 
