@@ -1,120 +1,128 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [RFC 2/2]raid1: use discard if sync data is 0
-Date: Thu, 26 Jul 2012 16:02:55 +0800
-Message-ID: <20120726080255.GB21457@kernel.org>
+From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Subject: RAID10 Performance
+Date: Fri, 27 Jul 2012 00:16:03 +1000
+Message-ID: <50115123.1020900@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-In raid sync, if disks data isn't match and data of source disk is 0, we can
-further optimize write for SSD - discard other disks. This will involve extra
-memory compare, but discard can improve garbage collection of SSD. This is
-disabled by default too.
+Hi all,
 
-Block layer doesn't provide async version API to do discard, so currently we do
-synchronization discard.
+I've got a system with the following config that I am trying to improve
+performance on. Hopefully you can help guide me in the best direction
+please.
 
-Signed-off-by: Shaohua Li <shli@fusionio.com>
----
- drivers/md/raid1.c |   33 +++++++++++++++++++++++++++++++--
- 1 file changed, 31 insertions(+), 2 deletions(-)
+1 x SSD (OS drive only)
+3 x 2TB WDC WD2003FYYS-02W0B1
 
-Index: linux/drivers/md/raid1.c
-===================================================================
---- linux.orig/drivers/md/raid1.c	2012-07-26 10:39:20.250706326 +0800
-+++ linux/drivers/md/raid1.c	2012-07-26 14:59:05.186777126 +0800
-@@ -1730,7 +1730,7 @@ static int fix_sync_read_error(struct r1
- 	return 1;
- }
- 
--static int process_checks(struct r1bio *r1_bio)
-+static int process_checks(struct r1bio *r1_bio, int *do_discard)
- {
- 	/* We have read all readable devices.  If we haven't
- 	 * got the block, then there is no hope left.
-@@ -1744,7 +1744,9 @@ static int process_checks(struct r1bio *
- 	int primary;
- 	int i;
- 	int vcnt;
-+	int check_do_discard = 0;
- 
-+	*do_discard = 0;
- 	for (primary = 0; primary < conf->raid_disks * 2; primary++)
- 		if (r1_bio->bios[primary]->bi_end_io == end_sync_read &&
- 		    test_bit(BIO_UPTODATE, &r1_bio->bios[primary]->bi_flags)) {
-@@ -1761,6 +1763,7 @@ static int process_checks(struct r1bio *
- 		struct bio *pbio = r1_bio->bios[primary];
- 		struct bio *sbio = r1_bio->bios[i];
- 		int size;
-+		struct request_queue *queue;
- 
- 		if (sbio->bi_end_io != end_sync_read &&
- 		    !(sbio->bi_end_io == end_sync_write &&
-@@ -1788,6 +1791,22 @@ static int process_checks(struct r1bio *
- 			rdev_dec_pending(conf->mirrors[i].rdev, mddev);
- 			continue;
- 		}
-+		queue = bdev_get_queue(conf->mirrors[i].rdev->bdev);
-+		if (j >= 0 && !check_do_discard && blk_queue_discard(queue) &&
-+		    queue_discard_zeroes_data(queue) &&
-+		    test_bit(MD_RECOVERY_MODE_DISCARD, &mddev->recovery_mode)) {
-+			for (j = vcnt; j-- ; ) {
-+				struct page *p;
-+				p = pbio->bi_io_vec[j].bv_page;
-+				if (memcmp(page_address(p),
-+				    page_address(ZERO_PAGE(0)),
-+				    pbio->bi_io_vec[j].bv_len))
-+					break;
-+			}
-+			if (j < 0)
-+				*do_discard = 1;
-+			check_do_discard = 1;
-+		}
- 		/* fixup the bio for reuse */
- 		sbio->bi_vcnt = vcnt;
- 		sbio->bi_size = r1_bio->sectors << 9;
-@@ -1800,6 +1819,8 @@ static int process_checks(struct r1bio *
- 			conf->mirrors[i].rdev->data_offset;
- 		sbio->bi_bdev = conf->mirrors[i].rdev->bdev;
- 
-+		if (*do_discard)
-+			continue;
- 		size = sbio->bi_size;
- 		for (j = 0; j < vcnt ; j++) {
- 			struct bio_vec *bi;
-@@ -1824,6 +1845,7 @@ static void sync_request_write(struct md
- 	int i;
- 	int disks = conf->raid_disks * 2;
- 	struct bio *bio, *wbio;
-+	int do_discard = 0;
- 
- 	bio = r1_bio->bios[r1_bio->read_disk];
- 
-@@ -1834,7 +1856,7 @@ static void sync_request_write(struct md
- 
- 	if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) ||
- 	    test_bit(MD_RECOVERY_MODE_REPAIR, &mddev->recovery_mode))
--		if (process_checks(r1_bio) < 0)
-+		if (process_checks(r1_bio, &do_discard) < 0)
- 			return;
- 	/*
- 	 * schedule writes
-@@ -1848,6 +1870,13 @@ static void sync_request_write(struct md
- 		      !test_bit(MD_RECOVERY_SYNC, &mddev->recovery))))
- 			continue;
- 
-+		if (do_discard) {
-+			md_sync_acct(wbio->bi_bdev, wbio->bi_size >> 9);
-+			/* This is a silly synchronization IO */
-+			blkdev_issue_discard(wbio->bi_bdev, wbio->bi_sector,
-+				r1_bio->sectors, GFP_NOIO, 0);
-+			continue;
-+		}
- 		wbio->bi_rw = WRITE;
- 		wbio->bi_end_io = end_sync_write;
- 		atomic_inc(&r1_bio->remaining);
+The three HDD's are configured in a single RAID10 (I configured as
+RAID10 to easily support adding additional drives later, I realise/hope
+it is currently equivalent to RAID1)
+md0 : active raid10 sdb1[0] sdd1[2](S) sdc1[1]
+      1953511936 blocks super 1.2 2 near-copies [2/2] [UU]
+
+Which is then shared with DRBD to another identical system.
+Then LVM is used to carve the redundant storage into virtual disks
+Finally, iSCSI is used to export the virtual disks to the various
+virtual machines running on other physical boxes.
+
+When a single VM is accessing data, performance is more than acceptable
+(max around 110M/s as reported by dd)
+
+The two SAN machines have 1 Gb ethernet crossover between them, and 4 x
+Gb bonded to the switch which connects to the physical machines running
+the VM's (which have only a single Gb connection).
+
+The issue is poor performance when more than one machine attempts to do
+disk intensive activity at the same time (ie, when the anti virus scan
+starts on all VM's at the same time, or during the backup window, etc).
+
+During these times, performance can drop to 5M/s (reported by dd, or
+calculated timings from windows VM etc). I'd like to:
+a) improve overall performance when multiple VM's are r/w data to the drives
+b) Hopefully set a minimum performance level for each VM (so one VM
+can't starve the others).
+
+I have adjusted some drbd related values, and significantly improved
+performance there, not to say it is perfect yet).
+I am currently using the deadline scheduler on the HDD's, but this
+doesn't make much difference.
+I have manually balanced IRQ's across the available CPU's (two bonded
+ethernet on one, two bonded ethernet on second, SATA on third, and the
+rest of the IRQ's on the fourth, it is a quad core CPU).
+
+If I add the third (hot spare) disk into the RAID10 array, could I get
+1.5x the total storage capacity, and improve performance by approx 30%?
+If I add another two disks (on each server) could I extend the array to
+2x total storage capacity, double performance, and still keep the hot spare?
+If I add the third (hot spare) disk into the RAID10 array, could I get
+1x the total storage capacity (ie, 3 disk RAID1) and improve read
+performance?
+
+Is there some other details I should provide, or knobs that I can tweak
+to get better performance?
+
+Additional data:
+mdadm --detail /dev/md0
+/dev/md0:
+        Version : 1.2
+  Creation Time : Mon Jun  4 23:31:20 2012
+     Raid Level : raid10
+     Array Size : 1953511936 (1863.01 GiB 2000.40 GB)
+  Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
+   Raid Devices : 2
+  Total Devices : 3
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Jul 27 00:07:21 2012
+          State : active
+ Active Devices : 2
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 1
+
+         Layout : near=2
+     Chunk Size : 512K
+
+           Name : san2:0  (local to host san2)
+           UUID : b402c62b:2ae7eca3:89422456:2cd7c6f3
+         Events : 82
+
+    Number   Major   Minor   RaidDevice State
+       0       8       17        0      active sync   /dev/sdb1
+       1       8       33        1      active sync   /dev/sdc1
+
+       2       8       49        -      spare   /dev/sdd1
+
+cat /proc/drbd
+version: 8.3.7 (api:88/proto:86-91)
+srcversion: EE47D8BF18AC166BE219757
+ 0: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r----
+    ns:295435862 nr:0 dw:298389532 dr:1582870916 al:10877089 bm:53752
+lo:2 pe:0 ua:0 ap:1 ep:1 wo:b oos:0
+
+Running debian stable 2.6.32-5-amd64
+
+top - 00:10:57 up 20 days, 18:41,  1 user,  load average: 0.25, 0.50, 0.61
+Tasks: 340 total,   1 running, 339 sleeping,   0 stopped,   0 zombie
+Cpu(s):  0.0%us,  0.1%sy,  0.0%ni, 99.8%id,  0.0%wa,  0.0%hi,  0.0%si, 
+0.0%st
+Mem:   7903292k total,  7702696k used,   200596k free,  5871076k buffers
+Swap:  3939320k total,        0k used,  3939320k free,  1266756k cached
+
+(Note, CPU load peaks up to 12 during heavy IO load periods)
+
+Thank you for any advice or assistance you can provide.
+
+Regards,
+Adam
+
+-- 
+Adam Goryachev
+Website Managers
+www.websitemanagers.com.au
+
