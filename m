@@ -1,112 +1,155 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: RAID10 Performance
-Date: Fri, 27 Jul 2012 23:02:46 +1000
-Message-ID: <50129176.3050604@websitemanagers.com.au>
-References: <50115123.1020900@websitemanagers.com.au> <50123E2C.8090108@hardwarefreak.com>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: [RFE] Please, add optional RAID1 feature (= chunk checksums) to
+ make it more robust
+Date: Fri, 27 Jul 2012 10:42:59 -0300
+Message-ID: <CABYL=TrMbrFz7JY6NjidbhEwt7F8mC6iXkMGfPJcV+uDbh07RQ@mail.gmail.com>
+References: <500CD32E.4000800@hardwarefreak.com>
+	<542194327.593466.1343036057599.JavaMail.root@redhat.com>
+	<20120723170320.GA2691@lazy.lzy>
+	<CABYL=Tq0w150QMcehdsScUfDfCD2tGFeuROjWjwsepy1rRXk_w@mail.gmail.com>
+	<CACJz6Qu6qVAroTTZJL=Q_Gs5VRsn=VttaKMu0WOKCh2sdJdgqQ@mail.gmail.com>
+	<50122FCA.3070304@websitemanagers.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50123E2C.8090108@hardwarefreak.com>
+In-Reply-To: <50122FCA.3070304@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 27/07/12 17:07, Stan Hoeppner wrote:
-> On 7/26/2012 9:16 AM, Adam Goryachev wrote:
-> 
->> I've got a system with the following config that I am trying to
->> improve performance on. Hopefully you can help guide me in the
->> best direction please.
-> 
->> 3 x 2TB WDC WD2003FYYS-02W0B1
-> ...
->> The three HDD's are configured in a single RAID10
-> ...
->> Which is then shared with DRBD to another identical system. Then
->> LVM is used to carve the redundant storage into virtual disks 
->> Finally, iSCSI is used to export the virtual disks to the
->> various virtual machines running on other physical boxes.
->> 
->> When a single VM is accessing data, performance is more than
->> acceptable (max around 110M/s as reported by dd)
->> 
->> The two SAN machines have 1 Gb ethernet crossover between them,
->> and 4 x Gb bonded to the switch which connects to the physical
->> machines running the VM's (which have only a single Gb
->> connection).
->> 
->> The issue is poor performance when more than one machine attempts
->> to do disk intensive activity at the same time (ie, when the anti
->> virus scan starts on all VM's at the same time, or during the
->> backup window, etc).
-> ...
-> 
-> I'm really surprised you don't already know the answer, and that
-> you gave such a lengthy detailed description.
+IMO
+the first idea was put this only in md_raid1,
+the second idea was a new md device (maybe a md_security or
+md_redundancy or md_conformity or any another beautiful name...) in
+this case the device will do a checksum and report 'badblock' (maybe
+the right word could be badchecksum), that the option that i agree,
+since we could do it to any device, doesn=B4t matter if it=B4s a raid1 =
+or
+raid4 or raidXYZ
 
-Ummm, yes, well I was hoping for some magic I didn't already know :)
+just to explain words:
+badchecksum -> we can read data but we know that it doesn=B4t match
+checksum, or checksum doesn=B4t match data
+badblock -> we can=B4t read, because 'physical block' reported as bad
 
-> Your problem is very simple.  It is suffered by many people, who
-> lack basic understanding of rotating drive performance in relation
-> to their workloads.
-> 
-> You don't have enough seek bandwidth.  The drive heads simply can't
-> move fast enough to service all sector requests in a timely manner.
-> There is no way to fix this by tweaking the operating system.  You
-> need to increase your seek rate.
-> 
-> 1.  Recreate the arrays with 6 or 8 drives each, use a 64KB chunk
+for mirror layers we could do more than just know if we have a
+badchecksum (this is not good, check...)
+in the case of all mirrors reporting badchecksum, we could read data
+(doesn=B4t matter the badchecksum information) and vote to the data tha=
+t
+have more repeated values and resync data from this new 'primary
+information', for example:
 
-Would you suggest these 6 - 8 drives in RAID10 or some other RAID
-level? (IMHO, the best performance with reasonable protection is RAID10)
+/dev/md0 -> disks: /dev/sda /dev/sdb /dev/sdc
+original data: block=3D "ABCDEF", checksum=3D5
 
-How do you get that many drives into a decent "server"? I'm using a
-4RU rackmount server case, but it only has capacity for 5 x hot swap
-3.5" drives (plus one internal drive).
+for /dev/sda: block=3D"ABCDEH", checksum=3D5 (badchecksum)
+for /dev/sdb: block=3D"ABCDEG", checksum=3D5 (badchecksum)
+for /dev/sdc: block=3D"ABCDEG", checksum=3D5 (badchecksum)
 
-> 2.  Replace the 7.2k WD drives with 10k SATA, or 15k SAS drives
+in this case, we could elect "ABCEG" (2 repeats) as the 'new data'
+recalcule the checksum and sync data to all devices (check that we
+coudl have a a 1 repeat for each device and couln=B4t elect the new
+primary information source...)
 
-Which drives would you suggest? The drives I have are already over
-$350 each (AUD)...
+well this ideal could be good and bad... for application level that=B4s
+bad, since we done a silent data corruption..., but maybe for a
+recovery tool this could be good since we corrected the checksum...
+maybe this could be a tool of the new device level... (CHECKS and
+REPAIRS like mdadm do today with echo "check">
+/sys/block/md0/md/sync_action, or echo "repair" >
+/sys/block/md0/md/sync_action )
 
-> 3.  Replace the drives with SSDs
+i don=B4t like the idea of put the 'recovery' inside md_raid1, i prefer
+a badblock per device (doesn=B4t matter if it=B4s a badblock or
+badchecksum..), and don=B4t do any 'silent recover' of information at
+raid level, to do a checksum correction or data correction, maybe
+leave this problem to a external tool, like harddisks have badblocks
+tools, we could have a badblock tool too
 
-Yes, I'd love to do this.
+going back to our new device,
+check that a data corruption (silent or not) is a data corruption, and
+in any case (checksum corruption or data corruption) we have a bad
+device, and we should report that we have a badblock in that read
+operation
+the best we could do when we have a badchecksum is reread many times
+and recalculate the checksum, if the good matches are bigger than X%
+(maybe 80%) we could send a write to device (to ensure that disk wrote
+the good value to disk again) and do a new read if that match (only
+with 1 read) that=B4s nice we done a good 'silent' repair with a 'good'
+(80% of probabilty of good) data, this could be an option of the new
+device to the new device ("silent recover")
 
-> Any of these 3 things will decrease latency per request.
 
-I have already advised adding an additional pair of drives, and
-converting to SSD's.
+i think that=B4s all we could do of interesting =3D)
+maybe in some future... we could do a realoc?! like ssd do...
+mark the badchecksum block as badblock (inside a badblock list) and
+sync the data inside current badblock, to a new never used block (we
+could alloc 1% of device to use as never used blocks), this could be
+good for data security, but administrator should read logs to ensure
+that system don=B4t run with badblocks....
 
-Would adding another 2 identical drives and configuring in RAID10
-really improve performance by double?
+that=B4s are the ideas of the 'new' security device level that i could =
+imagine...
+thanks guys :)
 
-Would it be more than double (because much less seeking should give
-better throughput, similar I expect to performance of two concurrent
-reads is less than half of a single read)?
 
-If using SSD's, what would you suggest to get 1TB usable space?
-Would 4 x Intel 480GB SSD 520 Series (see link) in RAID10 be the best
-solution? Would it make more sense to use 4 in RAID6 so that expansion
-is easier in future (ie, add a 5th drive to add 480G usable storage)?
+2012/7/27 Adam Goryachev <mailinglists@websitemanagers.com.au>:
+> On 24/07/12 07:31, Drew wrote:
+>> Been mulling this problem over and I keep getting hung up on one
+>> problem with ECC on a two disk RAID1 setup.
+>>
+>> In the event of silent corruption of one disk, which one is the good
+>> copy?
+>>
+>> It works fine if the ECC code is identical across both mirrors. Just
+>> checksum both chunks and discard the incorrect one.
+>>
+>> It also works fine if the ECC codes are corrupted but the data
+>> chunks are identical. Discard the bad checksum.
+>>
+>> What if the corruption goes across several sectors and both data &
+>> ECC chuncks are corrupted? Now you're back to square one.
+>
+> I know I'm a bit late to this discussion, and I know very little abou=
+t
+> the code level/etc... however, I thought the whole point of the check=
+sum
+> is to determine that the data + checksum do not match, therefore the
+> data is wrong and should be discarded. You would re-write the data an=
+d
+> checksum from another source (ie, the other drive in RAID1, or other
+> drives in RAID5/6 etc...).
+>
+> ie, it should be treated the same as a bad block / non-readable secto=
+r
+> (or lots of unreadable sectors....)
+>
+> Regards,
+> Adam
+>
+>
+> --
+> Adam Goryachev
+> Website Managers
+> www.websitemanagers.com.au
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-http://www.megaware.com.au/index.php?main_page=product_info&cPath=16_1579&products_id=133503
 
-I'm just trying to get some real life experiences from others. This
-system is pretty much the highest performing system I've built to date....
 
-Thank you for your comments, I do appreciate them.
-
-Regards,
-Adam
-
-PS, thanks for the reminder that RAID10 grow is not yet supported, I
-may need to do some creative raid management to "grow" the array,
-extended downtime is possible to get that done when needed...
-
--- 
-Adam Goryachev
-Website Managers
-www.websitemanagers.com.au
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
