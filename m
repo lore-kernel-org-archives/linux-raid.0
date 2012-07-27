@@ -1,50 +1,33 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [RFC PATCH] fs/direct-io.c: Set bi_rw when alloc bio.
-Date: Fri, 27 Jul 2012 10:21:58 -0400
-Message-ID: <x496299708p.fsf@segfault.boston.devel.redhat.com>
-References: <201207271602081096921@gmail.com>
+From: Jan Ceuleers <jan.ceuleers@computer.org>
+Subject: Re: [RFC 1/2]raid1: only write mismatch sectors in sync
+Date: Fri, 27 Jul 2012 18:01:49 +0200
+Message-ID: <5012BB6D.8070104@computer.org>
+References: <20120726080150.GA21457@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <201207271602081096921@gmail.com> (majianpeng@gmail.com's message
-	of "Fri, 27 Jul 2012 16:02:10 +0800")
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: viro <viro@ZenIV.linux.org.uk>, Neil Brown <neilb@suse.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120726080150.GA21457@kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-majianpeng <majianpeng@gmail.com> writes:
+On 07/26/2012 10:01 AM, Shaohua Li wrote:
+...
+> To reduce write, we always compare raid disk data and only write mismatch part.
+> This means sync will have extra IO read and memory compare. So this scheme is
+> very bad for hard disk raid and sometimes SSD raid too if mismatch part is
+> majority. But sometimes this can be very helpful to reduce write, in that case,
+> since sync is rare operation, the extra IO/CPU usage is worthy paying. People
+> who want to use the feature should understand the risk first. So this ability
+> is off by default, a sysfs entry can be used to enable it.
 
-> When exec bio_alloc, the bi_rw is zero.But after calling bio_add_page,
-> it will use bi_rw.
-> Fox example, in functiion __bio_add_page,it will call merge_bvec_fn().
-> The merge_bvec_fn of raid456 will use the bi_rw to judge the merge.
->>> if ((bvm->bi_rw & 1) == WRITE)
->>>		return biovec->bv_len; /* always allow writes to be mergeable */
->
-> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
+For clarity: the risk you are talking about is that the sync will result in more reads, as well as more CPU cycles spent comparing data. Is that right? I.e. there is no risk whatsoever to data integrity?
 
-Good catch.  How did you find this?  Did you experience data corruption
-as a result of this oversight, reduced performance due to missed merge
-opportunities, or did you just notice it in reviewing the code?
+Can you comment on the magnitude of this risk? For example, if this functionality is inadvertently applied to hard disks, and assuming that the components reside on separate spindles (which is a safe bet), wouldn't those reads happen in parallel thereby not significantly contributing to the slowdown? In other words: the principal component of the slowdown is the in-memory data comparison?
 
-Reviewed-by: Jeff Moyer <jmoyer@redhat.com>
+But isn't there then an upside resulting from the avoidance of some writes where data is found to already match?
 
->
-> There are many place like this in kernel.If you think this patch ok, i will correct those.
-> ---
->  fs/direct-io.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/fs/direct-io.c b/fs/direct-io.c
-> index 1faf4cb..77f0bbf 100644
-> --- a/fs/direct-io.c
-> +++ b/fs/direct-io.c
-> @@ -349,6 +349,7 @@ dio_bio_alloc(struct dio *dio, struct dio_submit *sdio,
->  
->  	bio->bi_bdev = bdev;
->  	bio->bi_sector = first_sector;
-> +	bio->bi_rw = dio->rw;
->  	if (dio->is_async)
->  		bio->bi_end_io = dio_bio_end_aio;
->  	else
+Thanks, Jan
+
