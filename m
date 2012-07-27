@@ -1,76 +1,24 @@
 From: Kevin Ross <kevin@familyross.net>
 Subject: Re: RAID extremely slow
-Date: Thu, 26 Jul 2012 15:36:57 -0700
-Message-ID: <5011C689.3090901@familyross.net>
-References: <501078B2.8070707@familyross.net> <501096C3.5060700@turmel.org> <5010A386.4080209@familyross.net> <5010CEFF.5030606@familyross.net>
+Date: Thu, 26 Jul 2012 19:17:41 -0700
+Message-ID: <5011FA45.7030407@familyross.net>
+References: <501078B2.8070707@familyross.net> <501096C3.5060700@turmel.org>  <5010A386.4080209@familyross.net>  <1343355303.29938.5.camel@obelisk.thedillows.org> <1343355430.29938.6.camel@obelisk.thedillows.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5010CEFF.5030606@familyross.net>
+In-Reply-To: <1343355430.29938.6.camel@obelisk.thedillows.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-kernel@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>
+To: David Dillow <dave@thedillows.org>
+Cc: Phil Turmel <philip@turmel.org>, linux-kernel@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 07/25/2012 10:00 PM, Kevin Ross wrote:
+On 07/26/2012 07:17 PM, David Dillow wrote:
+> On Thu, 2012-07-26 at 22:15 -0400, David Dillow wrote:
+>> If you can, upgrade to the latest 3.4 stable kernel (3.4.6 right now).
+>> As far as I can see, the latest 3.2 stable does not contain the delayed
+>> stripe fix.
+> And I was looking at the wrong version; 3.2.24 does indeed have the fix.
 >
->>>
->>>> unused devices:<none>
->>>>
->>>> # cat /proc/sys/dev/raid/speed_limit_min
->>>> 10000
->>> MD is unable to reach its minimum rebuild rate while other system
->>> activity is ongoing.  You might want to lower this number to see if 
->>> that
->>> gets you out of the stalls.
->>>
->>> Or temporarily shut down mythtv.
->>
->> I will try lowering those numbers next time this happens, which will 
->> probably be within the next day or two.  That's about how often this 
->> happens.
->
-> Unfortunately, it has happened again, with speeds at near zero.
->
-> # cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4]
-> md0 : active raid6 sdh1[0] sdd1[9] sde1[10] sdb1[6] sdi1[7] sdc1[4] 
-> sdf1[3] sdg1[8] sdj1[1]
->       6837311488 blocks super 1.2 level 6, 512k chunk, algorithm 2 
-> [9/9] [UUUUUUUUU]
->       [=>...................]  resync =  8.3% (81251712/976758784) 
-> finish=1057826.4min speed=14K/sec
->
-> unused devices: <none>
->
-> atop doesn't show ANY activity on the raid device or the individual 
-> drives.
-> http://img687.imageshack.us/img687/2913/screenshotfrom201207252.png
->
-> Also, I tried writing to a test file with the following command, and 
-> it hangs.  I let it go for about 30 minutes, with no change.
->
-> # dd if=/dev/zero of=test bs=1M count=1
->
-> dmesg only reports hung tasks.  It doesn't report any other problems.  
-> Here's my dmesg output:
-> http://pastebin.ca/2174778
->
-> I'm going to try rebooting into single user mode, and see if the 
-> rebuild succeeds without stalling.
->
-> -- Kevin
 
-It rebuilt fine in single user mode, with speeds usually around 
-50MB/sec.  But after exiting single user mode, and allowing MythTV and 
-other programs to start, within 30 minutes I had the problem again.  
-Basically a hung filesystem.  I couldn't even "cat /proc/mdstat", that 
-just hung.  Lots of hung task warnings in dmesg.
-
-Because Phil suggested that fsync calls might cause stalls, I commented 
-out the fsync in MythTV.  I'll run with that for awhile, and see how 
-things work out.  So far it isn't adversely affecting MythTV.
-
-Thanks!
--- Kevin
+I'm running 3.2.21, does that contain the fix?
