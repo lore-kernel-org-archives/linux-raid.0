@@ -1,44 +1,51 @@
-From: Kevin Ross <kevin@familyross.net>
-Subject: Re: RAID extremely slow
-Date: Thu, 26 Jul 2012 20:17:53 -0700
-Message-ID: <50120861.5020605@familyross.net>
-References: <501078B2.8070707@familyross.net> <501096C3.5060700@turmel.org>   <5010A386.4080209@familyross.net>   <1343355303.29938.5.camel@obelisk.thedillows.org>  <1343355430.29938.6.camel@obelisk.thedillows.org>  <5011FA45.7030407@familyross.net> <1343356044.29938.7.camel@obelisk.thedillows.org> <5012028C.9080107@familyross.net>
+From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Subject: Re: [RFE] Please, add optional RAID1 feature (= chunk checksums)
+ to make it more robust
+Date: Fri, 27 Jul 2012 16:06:02 +1000
+Message-ID: <50122FCA.3070304@websitemanagers.com.au>
+References: <500CD32E.4000800@hardwarefreak.com> <542194327.593466.1343036057599.JavaMail.root@redhat.com> <20120723170320.GA2691@lazy.lzy> <CABYL=Tq0w150QMcehdsScUfDfCD2tGFeuROjWjwsepy1rRXk_w@mail.gmail.com> <CACJz6Qu6qVAroTTZJL=Q_Gs5VRsn=VttaKMu0WOKCh2sdJdgqQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5012028C.9080107@familyross.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: David Dillow <dave@thedillows.org>
-Cc: Phil Turmel <philip@turmel.org>, linux-kernel@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CACJz6Qu6qVAroTTZJL=Q_Gs5VRsn=VttaKMu0WOKCh2sdJdgqQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 07/26/2012 07:53 PM, Kevin Ross wrote:
-> On 07/26/2012 07:27 PM, David Dillow wrote:
->> On Thu, 2012-07-26 at 19:17 -0700, Kevin Ross wrote:
->>> On 07/26/2012 07:17 PM, David Dillow wrote:
->>>> On Thu, 2012-07-26 at 22:15 -0400, David Dillow wrote:
->>>>> If you can, upgrade to the latest 3.4 stable kernel (3.4.6 right 
->>>>> now).
->>>>> As far as I can see, the latest 3.2 stable does not contain the 
->>>>> delayed
->>>>> stripe fix.
->>>> And I was looking at the wrong version; 3.2.24 does indeed have the 
->>>> fix.
->>>>
->>> I'm running 3.2.21, does that contain the fix?
->> No, that was the one I looked at. It is commit
->> c0159c780e8d42309d04e83271986274d3880826.
->>
+On 24/07/12 07:31, Drew wrote:
+> Been mulling this problem over and I keep getting hung up on one
+> problem with ECC on a two disk RAID1 setup.
 >
-> Okay, I grabbed 3.4.4 from Debian experimental, and I'm running with 
-> that now.  Hopefully this fixes the problem.
+> In the event of silent corruption of one disk, which one is the good
+> copy?
 >
-> Thanks for your help!
-> -- Kevin
+> It works fine if the ECC code is identical across both mirrors. Just
+> checksum both chunks and discard the incorrect one.
+>
+> It also works fine if the ECC codes are corrupted but the data
+> chunks are identical. Discard the bad checksum.
+>
+> What if the corruption goes across several sectors and both data &
+> ECC chuncks are corrupted? Now you're back to square one.
 
-Just noticed I need 3.4.5 or later.  Doh!  I'll grab a vanilla kernel 
-from kernel.org and build it.
+I know I'm a bit late to this discussion, and I know very little about
+the code level/etc... however, I thought the whole point of the checksum
+is to determine that the data + checksum do not match, therefore the
+data is wrong and should be discarded. You would re-write the data and
+checksum from another source (ie, the other drive in RAID1, or other
+drives in RAID5/6 etc...).
 
-Thanks!
--- Kevin
+ie, it should be treated the same as a bad block / non-readable sector
+(or lots of unreadable sectors....)
+
+Regards,
+Adam
+
+
+-- 
+Adam Goryachev
+Website Managers
+www.websitemanagers.com.au
+
+
