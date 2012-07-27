@@ -1,32 +1,24 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: [RFC PATCH] fs/direct-io.c: Set bi_rw when alloc bio.
-Date: Fri, 27 Jul 2012 16:02:10 +0800
-Message-ID: <201207271602081096921@gmail.com>
+From: "pjfsr" <keith.underhill@methodist.org.uk>
+Subject: =?utf-8?B?5bel56iL?=
+Date: Fri, 27 Jul 2012 18:06:31 +0800
+Message-ID: <4D93BE0718CD18B389FE32B24CF69E3C@ncdf>
+Reply-To: <1399313157@qq.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="gb2312"
+	charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: viro <viro@ZenIV.linux.org.uk>, Neil Brown <neilb@suse.de>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org, linwehu@hotmail.com, linwei@yonggao.com, linweipeng008@163.com, linwenhua@linwenhua.cn, linwfxmmm@sohu.com
 List-Id: linux-raid.ids
 
-V2hlbiBleGVjIGJpb19hbGxvYywgdGhlIGJpX3J3IGlzIHplcm8uQnV0IGFmdGVyIGNhbGxpbmcg
-YmlvX2FkZF9wYWdlLA0KaXQgd2lsbCB1c2UgYmlfcncuDQpGb3ggZXhhbXBsZSwgaW4gZnVuY3Rp
-aW9uIF9fYmlvX2FkZF9wYWdlLGl0IHdpbGwgY2FsbCBtZXJnZV9idmVjX2ZuKCkuDQpUaGUgbWVy
-Z2VfYnZlY19mbiBvZiByYWlkNDU2IHdpbGwgdXNlIHRoZSBiaV9ydyB0byBqdWRnZSB0aGUgbWVy
-Z2UuDQo+PiBpZiAoKGJ2bS0+YmlfcncgJiAxKSA9PSBXUklURSkNCj4+CQlyZXR1cm4gYmlvdmVj
-LT5idl9sZW47IC8qIGFsd2F5cyBhbGxvdyB3cml0ZXMgdG8gYmUgbWVyZ2VhYmxlICovDQoNClNp
-Z25lZC1vZmYtYnk6IEppYW5wZW5nIE1hIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4NCg0KVGhlcmUg
-YXJlIG1hbnkgcGxhY2UgbGlrZSB0aGlzIGluIGtlcm5lbC5JZiB5b3UgdGhpbmsgdGhpcyBwYXRj
-aCBvaywgaSB3aWxsIGNvcnJlY3QgdGhvc2UuDQotLS0NCiBmcy9kaXJlY3QtaW8uYyB8ICAgIDEg
-Kw0KIDEgZmlsZXMgY2hhbmdlZCwgMSBpbnNlcnRpb25zKCspLCAwIGRlbGV0aW9ucygtKQ0KDQpk
-aWZmIC0tZ2l0IGEvZnMvZGlyZWN0LWlvLmMgYi9mcy9kaXJlY3QtaW8uYw0KaW5kZXggMWZhZjRj
-Yi4uNzdmMGJiZiAxMDA2NDQNCi0tLSBhL2ZzL2RpcmVjdC1pby5jDQorKysgYi9mcy9kaXJlY3Qt
-aW8uYw0KQEAgLTM0OSw2ICszNDksNyBAQCBkaW9fYmlvX2FsbG9jKHN0cnVjdCBkaW8gKmRpbywg
-c3RydWN0IGRpb19zdWJtaXQgKnNkaW8sDQogDQogCWJpby0+YmlfYmRldiA9IGJkZXY7DQogCWJp
-by0+Ymlfc2VjdG9yID0gZmlyc3Rfc2VjdG9yOw0KKwliaW8tPmJpX3J3ID0gZGlvLT5ydzsNCiAJ
-aWYgKGRpby0+aXNfYXN5bmMpDQogCQliaW8tPmJpX2VuZF9pbyA9IGRpb19iaW9fZW5kX2FpbzsN
-CiAJZWxzZQ0KLS0gDQoxLjcuNS40DQo=
+5oKo5aW977ybIOaIkeWFrOWPuOS4gOebtOS7juS6i+WbveWGheWVhuS4mui0uOaYk+S4muWKoe+8
+jOWSjOWbveWGheWkmuS4quWfjuW4gueahOWkmuS4quWFrOWPuOacieWPkS3npajkuJrliqHmnaXl
+voDvvIzlj6/luK7mgqjku6Mg5Yqe5LiA5Lqb6ZyA6KaB55qE56Wo5o2u44CC5YWs5Y+45Li76KaB
+5Lul5aKe5YC8Leeoji3npajkuLrkuLvvvIzlkITnsbvlm73lnLAt56iOLeelqOWmguWVhuWTgemU
+gC3llK7vvIzlt6XkuJrnlJ/kuqfvvIzphZLlupfppJDppa7vvIzov5DovpPnrYnjgILlkITpobnn
+pajpg73mmK/lhazlj7jlvIDlh7rnmoTmraPop4Tnpajlj6/liLDlvZPlnLAg56iOLeWKoeWxgOaf
+peivgeOAguWmgumcgOWPr+ivou+8mzEzNjQwMjM0NjE1IFFROzE0MTY2NjE2NzMu5Lia5Yqh57uP
+55CGO+WImOmVh+W5sw0K
+
 
