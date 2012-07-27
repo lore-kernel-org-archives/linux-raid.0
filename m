@@ -1,24 +1,43 @@
-From: "pjfsr" <keith.underhill@methodist.org.uk>
-Subject: =?utf-8?B?5bel56iL?=
-Date: Fri, 27 Jul 2012 18:06:31 +0800
-Message-ID: <4D93BE0718CD18B389FE32B24CF69E3C@ncdf>
-Reply-To: <1399313157@qq.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID10 Performance
+Date: Fri, 27 Jul 2012 08:05:22 -0400
+Message-ID: <50128402.5040004@turmel.org>
+References: <50115123.1020900@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <50115123.1020900@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, linwehu@hotmail.com, linwei@yonggao.com, linweipeng008@163.com, linwenhua@linwenhua.cn, linwfxmmm@sohu.com
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-5oKo5aW977ybIOaIkeWFrOWPuOS4gOebtOS7juS6i+WbveWGheWVhuS4mui0uOaYk+S4muWKoe+8
-jOWSjOWbveWGheWkmuS4quWfjuW4gueahOWkmuS4quWFrOWPuOacieWPkS3npajkuJrliqHmnaXl
-voDvvIzlj6/luK7mgqjku6Mg5Yqe5LiA5Lqb6ZyA6KaB55qE56Wo5o2u44CC5YWs5Y+45Li76KaB
-5Lul5aKe5YC8Leeoji3npajkuLrkuLvvvIzlkITnsbvlm73lnLAt56iOLeelqOWmguWVhuWTgemU
-gC3llK7vvIzlt6XkuJrnlJ/kuqfvvIzphZLlupfppJDppa7vvIzov5DovpPnrYnjgILlkITpobnn
-pajpg73mmK/lhazlj7jlvIDlh7rnmoTmraPop4Tnpajlj6/liLDlvZPlnLAg56iOLeWKoeWxgOaf
-peivgeOAguWmgumcgOWPr+ivou+8mzEzNjQwMjM0NjE1IFFROzE0MTY2NjE2NzMu5Lia5Yqh57uP
-55CGO+WImOmVh+W5sw0K
+Hi Adam,
 
+On 07/26/2012 10:16 AM, Adam Goryachev wrote:
+> Hi all,
+> 
+> I've got a system with the following config that I am trying to improve
+> performance on. Hopefully you can help guide me in the best direction
+> please.
+> 
+> 1 x SSD (OS drive only)
+> 3 x 2TB WDC WD2003FYYS-02W0B1
+> 
+> The three HDD's are configured in a single RAID10 (I configured as
+> RAID10 to easily support adding additional drives later, I realise/hope
+> it is currently equivalent to RAID1)
+> md0 : active raid10 sdb1[0] sdd1[2](S) sdc1[1]
+>       1953511936 blocks super 1.2 2 near-copies [2/2] [UU]
+
+In addition to Stan's comments, you should know that MD raid10 is not
+reshapeable yet.  You cannot use --grow to increase that array's
+capacity.
+
+That feature is in the roadmap, so you can expect it eventually.
+
+HTH,
+
+Phil
 
