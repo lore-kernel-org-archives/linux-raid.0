@@ -1,43 +1,42 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: problem hot-adding spare / internal bitmap problem?
-Date: Sun, 29 Jul 2012 18:48:16 +0200 (CEST)
-Message-ID: <alpine.DEB.2.00.1207291845320.27169@uplift.swm.pp.se>
-References: <alpine.DEB.2.00.1207290601000.27169@uplift.swm.pp.se> <CAGRgLy4VEa5b0bJ8g__HaZaVWdEsA75mg2Mg3Rp3K8cTutTxwg@mail.gmail.com>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [RFC PATCH] fs/direct-io.c: Set bi_rw when alloc bio.
+Date: Mon, 30 Jul 2012 08:40:11 +0800
+Message-ID: <201207300840005466080@gmail.com>
+References: <201207271602081096921@gmail.com>,
+	<x496299708p.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy4VEa5b0bJ8g__HaZaVWdEsA75mg2Mg3Rp3K8cTutTxwg@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: viro <viro@ZenIV.linux.org.uk>, Neil Brown <neilb@suse.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, 29 Jul 2012, Alexander Lyakas wrote:
-
-> Once you confirmed these, grab mdadm 3.2.4 or the following commit: 
-> 6ef8905 super1: make aread/awrite always use an aligned buffer.
-
-I found their proposed update to 3.2.5 at:
-
-https://launchpad.net/ubuntu/+source/mdadm/3.2.5-1ubuntu0.1/+build/3682539
-
-I have downloaded it, but it seems it cannot remove the bitmap file now:
-
-swmike@ub:~/mdadm$ sudo mdadm -V
-mdadm - v3.2.5 - 18th May 2012
-swmike@ub:~/mdadm$ cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4] [linear] [multipath] [raid0] 
-[raid1] [raid10]
-md0 : active raid6 sdj[15](S) sdk[13] sdg[11] sdh[14] sdi[10] sde[12] sdd[9] sdc[2] sdb[6] sdf[7]
-       13674601024 blocks super 1.2 level 6, 64k chunk, algorithm 2 [9/9] [UUUUUUUUU]
-       [============>........]  check = 60.4% (1180025928/1953514432) finish=1760.2min speed=7323K/sec
-       bitmap: 0/466 pages [0KB], 2048KB chunk, file: /boot/md0-bitmap
-
-unused devices: <none>
-swmike@ub:~/mdadm$ sudo mdadm --grow /dev/md0 --bitmap=none
-mdadm: failed to remove bitmap /boot/md0-bitmap
-
-Is that because there is a check in progress?
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+T24gMjAxMi0wNy0yNyAyMjoyMSBKZWZmIE1veWVyIDxqbW95ZXJAcmVkaGF0LmNvbT4gV3JvdGU6
+DQo+bWFqaWFucGVuZyA8bWFqaWFucGVuZ0BnbWFpbC5jb20+IHdyaXRlczoNCj4NCj4+IFdoZW4g
+ZXhlYyBiaW9fYWxsb2MsIHRoZSBiaV9ydyBpcyB6ZXJvLkJ1dCBhZnRlciBjYWxsaW5nIGJpb19h
+ZGRfcGFnZSwNCj4+IGl0IHdpbGwgdXNlIGJpX3J3Lg0KPj4gRm94IGV4YW1wbGUsIGluIGZ1bmN0
+aWlvbiBfX2Jpb19hZGRfcGFnZSxpdCB3aWxsIGNhbGwgbWVyZ2VfYnZlY19mbigpLg0KPj4gVGhl
+IG1lcmdlX2J2ZWNfZm4gb2YgcmFpZDQ1NiB3aWxsIHVzZSB0aGUgYmlfcncgdG8ganVkZ2UgdGhl
+IG1lcmdlLg0KPj4+PiBpZiAoKGJ2bS0+YmlfcncgJiAxKSA9PSBXUklURSkNCj4+Pj4JCXJldHVy
+biBiaW92ZWMtPmJ2X2xlbjsgLyogYWx3YXlzIGFsbG93IHdyaXRlcyB0byBiZSBtZXJnZWFibGUg
+Ki8NCj4+DQo+PiBTaWduZWQtb2ZmLWJ5OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5j
+b20+DQo+DQo+R29vZCBjYXRjaC4gIEhvdyBkaWQgeW91IGZpbmQgdGhpcz8gIERpZCB5b3UgZXhw
+ZXJpZW5jZSBkYXRhIGNvcnJ1cHRpb24NCj5hcyBhIHJlc3VsdCBvZiB0aGlzIG92ZXJzaWdodCwg
+cmVkdWNlZCBwZXJmb3JtYW5jZSBkdWUgdG8gbWlzc2VkIG1lcmdlDQo+b3Bwb3J0dW5pdGllcywg
+b3IgZGlkIHlvdSBqdXN0IG5vdGljZSBpdCBpbiByZXZpZXdpbmcgdGhlIGNvZGU/DQo+DQo+UmV2
+aWV3ZWQtYnk6IEplZmYgTW95ZXIgPGptb3llckByZWRoYXQuY29tPg0KPg0KU29ycnkgZm9yIGxh
+dGUgdG8gcmVwbHkuIFdoZW4gaSBhbmFseXNlZCB0aGUgcGVyZm9ybWFuY2Ugb2YgcmFpZDUsIGkg
+Zm91bmQgdGhpcyBidWcuDQoNCj4+DQo+PiBUaGVyZSBhcmUgbWFueSBwbGFjZSBsaWtlIHRoaXMg
+aW4ga2VybmVsLklmIHlvdSB0aGluayB0aGlzIHBhdGNoIG9rLCBpIHdpbGwgY29ycmVjdCB0aG9z
+ZS4NCj4+IC0tLQ0KPj4gIGZzL2RpcmVjdC1pby5jIHwgICAgMSArDQo+PiAgMSBmaWxlcyBjaGFu
+Z2VkLCAxIGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0pDQo+Pg0KPj4gZGlmZiAtLWdpdCBh
+L2ZzL2RpcmVjdC1pby5jIGIvZnMvZGlyZWN0LWlvLmMNCj4+IGluZGV4IDFmYWY0Y2IuLjc3ZjBi
+YmYgMTAwNjQ0DQo+PiAtLS0gYS9mcy9kaXJlY3QtaW8uYw0KPj4gKysrIGIvZnMvZGlyZWN0LWlv
+LmMNCj4+IEBAIC0zNDksNiArMzQ5LDcgQEAgZGlvX2Jpb19hbGxvYyhzdHJ1Y3QgZGlvICpkaW8s
+IHN0cnVjdCBkaW9fc3VibWl0ICpzZGlvLA0KPj4gIA0KPj4gIAliaW8tPmJpX2JkZXYgPSBiZGV2
+Ow0KPj4gIAliaW8tPmJpX3NlY3RvciA9IGZpcnN0X3NlY3RvcjsNCj4+ICsJYmlvLT5iaV9ydyA9
+IGRpby0+cnc7DQo+PiAgCWlmIChkaW8tPmlzX2FzeW5jKQ0KPj4gIAkJYmlvLT5iaV9lbmRfaW8g
+PSBkaW9fYmlvX2VuZF9haW87DQo+PiAgCWVsc2U=
