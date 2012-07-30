@@ -1,23 +1,44 @@
-From: Jinghao Printing - CHINA <ulyssesijli@gmail.com>
-Subject: hi
-Date: Mon, 30 Jul 2012 09:38:08 +0800
-Message-ID: <CAKmqBnbZp2YZestfpRq3SoY+ac0p-2rGK91Bg18B+PYBkyceJQ@mail.gmail.com>
-References: <CAKmqBnaO5dXKRBLkvz7M68QjjXGGHmPXwcsuTFp0APb3q_tC-A@mail.gmail.com>
-	<CAKmqBnZgZfXPsbBhJOAH1kkmtJ6pB0-DthwX30cRE0qCAuVagw@mail.gmail.com>
-	<CAKmqBna81qZ7nrz-v7rnizU=VPLk6Sw35YsLc5srvkUwf-Qp8Q@mail.gmail.com>
-	<CAKmqBnbyRuvCbKRTY=pgeYDo9BMbGSPn727a_xMKMOvSBeaqoA@mail.gmail.com>
-	<CAKmqBnbw1Ukkt7JrHHep8cB4dOSbo2eKp6rdsrGWMZTDentF1g@mail.gmail.com>
-	<CAKmqBnbtRcWTtaVREcKPwOf2H=3ZqXDa9RuAo5byW-ZafE5nog@mail.gmail.com>
-	<CAKmqBnaNMLqLUTbUq==am-SAHEDNCpRnTmq2Wokw4oSv_BLnQw@mail.gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: problem hot-adding spare / internal bitmap problem?
+Date: Mon, 30 Jul 2012 07:49:45 +0200 (CEST)
+Message-ID: <alpine.DEB.2.00.1207300747350.27169@uplift.swm.pp.se>
+References: <alpine.DEB.2.00.1207290601000.27169@uplift.swm.pp.se> <CAGRgLy4VEa5b0bJ8g__HaZaVWdEsA75mg2Mg3Rp3K8cTutTxwg@mail.gmail.com> <alpine.DEB.2.00.1207291845320.27169@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKmqBnaNMLqLUTbUq==am-SAHEDNCpRnTmq2Wokw4oSv_BLnQw@mail.gmail.com>
+In-Reply-To: <alpine.DEB.2.00.1207291845320.27169@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi, we are a printing company, we can print hang tags, color box,
-labels. Please reply if you need it.
+On Sun, 29 Jul 2012, Mikael Abrahamsson wrote:
 
-Best regards,
-David Wu
+> Is that because there is a check in progress?
+
+It seems it was:
+
+[145714.150155] md: md0: data-check done.
+[145738.648201] md0: bitmap file is out of date (0 < 4893404) -- forcing full recovery
+[145738.648209] created bitmap (15 pages) for device md0
+[145738.648223] md0: bitmap file is out of date, doing full recovery
+[145738.665780] md0: bitmap initialized from disk: read 1/1 pages, set 29809 of 29809 bits
+swmike@ub:~/mdadm$ cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] [linear] [multipath] [raid0] [raid1] [raid10]
+md0 : active raid6 sdj[15](S) sdk[13] sdg[11] sdh[14] sdi[10] sde[12] sdd[9] sdc[2] sdb[6] sdf[7]
+       13674601024 blocks super 1.2 level 6, 64k chunk, algorithm 2 [9/9] [UUUUUUUUU]
+       bitmap: 0/15 pages [0KB], 65536KB chunk
+
+unused devices: <none>
+
+I now successfully added sdj as spare and removed the bitmap file and 
+enabled internal bitmap.
+
+Thanks for the answer. Now I'm going to find out how to communicate with 
+the mdadm package maintainer(s) in ubuntu and inform them that the 
+proposed fixed package indeed does help with this issue.
+
+Thanks!
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
