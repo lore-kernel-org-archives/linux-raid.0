@@ -1,102 +1,107 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: raid1 repair: sync_request() aborts if one of the drives has bad
- block recorded
-Date: Tue, 31 Jul 2012 08:56:31 +0300
-Message-ID: <CAGRgLy5aSMywZ9Q5AsmTnZgj3hV19UoCiEzsELnztAiPesqMdA@mail.gmail.com>
-References: <CAGRgLy6j3pEeXGXJbVc4Sz3gdShWWfaT7hyXnurgO-6N-_E_ZA@mail.gmail.com>
-	<20120716133753.1a34e149@notabene.brown>
-	<CAGRgLy6JZXiHFg11Z-_3krj8iKp_Wk7X_wz8OyikyvhLpxzcxg@mail.gmail.com>
-	<20120717111753.178d53d5@notabene.brown>
-	<CAGRgLy6jDTGXu1Yk2tCnHKDVTfCKjA2P6L-qgrD8EcPb8gCaBA@mail.gmail.com>
-	<CAGRgLy5FXG9gFgq+QR_OknhNVtEMuSj6d-Hso5PYcjaD2rzXcQ@mail.gmail.com>
-	<20120731121141.109cbfd6@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Version 3.2.5 and ddf issues (bugreport)
+Date: Tue, 31 Jul 2012 16:11:15 +1000
+Message-ID: <20120731161115.46b96f90@notabene.brown>
+References: <4D8A4780.2030401@gmail.com>
+	<20110324090837.689c5a0e@notabene.brown>
+	<5013D0FE.3020906@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/SG0qlNasSAwicZLtWWQI9Kl"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120731121141.109cbfd6@notabene.brown>
+In-Reply-To: <5013D0FE.3020906@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Albert Pauw <albert.pauw@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks for letting me know, Neil. I already know that I just have to
-be patient, and eventually you will attend.
-Thanks!
-Alex.
+--Sig_/SG0qlNasSAwicZLtWWQI9Kl
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jul 31, 2012 at 5:11 AM, NeilBrown <neilb@suse.de> wrote:
-> On Tue, 24 Jul 2012 22:30:33 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-> wrote:
->
->> Hi Neil,
->> apparently you decided not to apply that patch?
->
-> No, worse than that.  I marked your email as 'needs attention'.  That appears
-> to be an almost-certain guarantee that I'll never look at it again - must be
-> a bug in my brain.  Apologies.
->
->> On Tue, Jul 17, 2012 at 4:17 PM, Alexander Lyakas
->> <alex.bolshoy@gmail.com> wrote:
->> > Thanks for your comments, I got confused with the REQUESTED bit.
->> > I prepared the patch, with couple of notes:
->> >
->> > 1/ I decided to be more careful and schedule a write only in case of
->> > resync or repair. I was not sure whether we should try to correct bad
->> > blocks on device X, when device Y is recovering. Pls change it if you
->> > feel otherwise.
->
-> That looks sensible.  I've left it as it is.
->
->> >
->> > 2/ I tested and committed the patch on top of ubuntu-precise 3.2.0-25.
->> > I looked at your "for-next" branch, and saw that there is some new
->> > code, which handles hot-replace, which I am not familiar with at this
->> > point.
->
-> It shouldn't make any important change to this patch.
-> For RAID1, hot-replace just means there can be twice as many devices as you
-> would expect.
->
->
->> >
->> > Final note: I noticed that badblocks_show() fails if there are too
->> > many bad blocks. It returns value larger than PAGE_SIZE, and then the
->> > following linux code complains:
->> > fs/sysfs/file.c:fill_read_buffer()
->> >         /*
->> >          * The code works fine with PAGE_SIZE return but it's likely to
->> >          * indicate truncated result or overflow in normal use cases.
->> >          */
->> >         if (count >= (ssize_t)PAGE_SIZE) {
->> >                 print_symbol("fill_read_buffer: %s returned bad count\n",
->> >                         (unsigned long)ops->show);
->> >                 /* Try to struggle along */
->> >                 count = PAGE_SIZE - 1;
->> >         }
->> >
->> > So I am not sure how to solve it, but it would be good for
->> > user/application to receive the full list of bad blocks. Perhaps
->> > application can pass fd via some ioctl (I feel you don't like ioctls),
->> > and then kernel can use vfs_write() to print all the bad blocks to the
->> > fd. Or simply return the bad blocks list through the ioctl output to
->> > mdadm, and mdadm would print them. Perhaps some other way.
->
-> It isn't possible to get a full list of bad blocks from sysfs, much as it is
-> not possible to read the write-intent-bitmap or other metadata.
->
-> The main purpose for the two bad-blocks files in sysfs is to allow a
-> user-space metadata manager (mdmon) to find out when the kernel discovers a
-> bad block, to record in the metadata, and then to acknowledge it.
-> It is always possible to read the first entry from
-> the unacknowledged_bad_blocks file, then acknowledge it and so remove it from
-> the list, and in that way you can get all unacknowledged bad blocks.
-> Acknowledged bad blocks will be listed in the metadata already.
->
-> Still... I should probably fix the code so that it never displays a partial
-> truncated number, but stops before PAGE_SIZE..
->
->
-> Thanks,
-> NeilBrown
->
->
+On Sat, 28 Jul 2012 13:46:06 +0200 Albert Pauw <albert.pauw@gmail.com> wrot=
+e:
+
+> Hi Neil,
+>=20
+> After a hiatus of 1.5 year (busy with all sorts) I am back and tried the=
+=20
+> ddf code to see how things improved.
+
+Thanks!
+
+>=20
+> I build a VM Centos 6.3 system with 6 extra 1GB disks for testing.
+> I found several issues in the standard installed 3.2.3 version of mdadm=20
+> relating to ddf, but installed the
+> 3.2.5 version in order to work with recent code.
+>=20
+> However, while version 3.2.3 is able to create a ddf container with=20
+> raidsets in it, I found a problem with the 3.2.5 version.
+>=20
+> After initially creating the container:
+>=20
+> mdadm -C /dev/md127 -e ddf -l container /dev/sd[b-g]
+>=20
+> which worked, I created a raid (1 or 5 it doesn't matter in this case)=20
+> in it:
+>=20
+> mdadm -C /dev/md0 -l raid5 -n 3 /dev/md127
+>=20
+> However, it stays on resync=3DPENDING and readonly, and doesn't get build.
+>=20
+> So I tried to set it to readwrite:
+>=20
+> mdadm --readwrite  /dev/md0
+>=20
+> Unfortunately, it stays on readonly and doesn't get build.
+>=20
+> As said before, this did work in 3.2.3.
+>=20
+> Are you already on this problem?
+
+It sounds like a problem with 'mdmon'.  mdmon needs to be running before the
+array can become read-write.  mdadm should start mdmon automatically but
+maybe it isn't.  Maybe it cannot find mdmon?
+
+could you check if mdadm is running?  If it isn't run
+   mdmon /dev/md127 &
+and see if it starts working.
+
+>=20
+> Kind regards,
+>=20
+> Albert
+>=20
+> P.S. My idea was, because the ddf code is not that much used, to create=20
+> a test/validate script for ddf.
+>=20
+There is one 'ddf' test in my test suite and I think it is working.  I'm
+happy to add more tests if you suggest or write some.
+
+NeilBrown
+
+
+--Sig_/SG0qlNasSAwicZLtWWQI9Kl
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBUBd3Aznsnt1WYoG5AQKLcA/+Il4yl08CTux5IelmsnoxgS67aNCZQfwe
++gqML1XCOqWDObg0NWOmQJZtrLR5QkFwJkecobnZUtREpHJfDXEvoa/jeZntkLjD
+HRbslCHYkaPQoGGM/qGSTr3TG66JTPS55Mi+2qy3KJaW8DFuPOc82EWqOmVff40w
+Z+umHmauXgCzy+vsdAN9EjpPFtAOh2WfT2pE4CIrg5F/R4RK/eieMNBf/7b8SI/O
+UJBwacmKaMgqu1CNvBRO/GLWNk2rdL/1yamORXXBEOwa2JkdJKz0nQ3KKAwVnY9S
+F3vL0e/OXeda6nN8nI8g93WJTRlPfoWdu34QlsF149bjt75ZvNKf4RHX5tGPg+pR
+74QajbwkI0AI7wfSpdmI9I+BeYg68ZjxE6lSrmKR+yiXZfWHcRg11AV2DSwM7GrB
+miGWaR4VwAjNLYowV514NIv4YupMAc3WJBtehel8oSnl203AXt9fmxrvpljCIkTt
+DJHVSIQHdSk84vg/JtsvPoSmqZMpIcs4LfTHv5YjZ/2R9Rd5PGa6FCkjXOVmzJD2
+rdtNPhloccwaWaMDoVBpO0H5SJLFQnTy3AX/GYOG1KzT/cs8nmrlqzlClnP0gyWf
+0BbHfz+mIkQhpkcC4PS4Lp8Fup8kbF1puJQsbvymDNMkIX8ee8hd5PwsyTzJ4Ggo
+iurskRS+lqs=
+=/3/6
+-----END PGP SIGNATURE-----
+
+--Sig_/SG0qlNasSAwicZLtWWQI9Kl--
