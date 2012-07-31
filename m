@@ -1,127 +1,113 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: raid1 repair: sync_request() aborts if one of the drives has
- bad block recorded
-Date: Tue, 31 Jul 2012 12:11:41 +1000
-Message-ID: <20120731121141.109cbfd6@notabene.brown>
-References: <CAGRgLy6j3pEeXGXJbVc4Sz3gdShWWfaT7hyXnurgO-6N-_E_ZA@mail.gmail.com>
-	<20120716133753.1a34e149@notabene.brown>
-	<CAGRgLy6JZXiHFg11Z-_3krj8iKp_Wk7X_wz8OyikyvhLpxzcxg@mail.gmail.com>
-	<20120717111753.178d53d5@notabene.brown>
-	<CAGRgLy6jDTGXu1Yk2tCnHKDVTfCKjA2P6L-qgrD8EcPb8gCaBA@mail.gmail.com>
-	<CAGRgLy5FXG9gFgq+QR_OknhNVtEMuSj6d-Hso5PYcjaD2rzXcQ@mail.gmail.com>
+Subject: Re: [RFC 1/2]raid1: only write mismatch sectors in sync
+Date: Tue, 31 Jul 2012 15:53:04 +1000
+Message-ID: <20120731155304.11c40f9b@notabene.brown>
+References: <20120726080150.GA21457@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/TCizFmTscuQB.Bi_63tzG7I"; protocol="application/pgp-signature"
+ boundary="Sig_/7TAS3DSamKpg9UH6BKOQdf6"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy5FXG9gFgq+QR_OknhNVtEMuSj6d-Hso5PYcjaD2rzXcQ@mail.gmail.com>
+In-Reply-To: <20120726080150.GA21457@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/TCizFmTscuQB.Bi_63tzG7I
+--Sig_/7TAS3DSamKpg9UH6BKOQdf6
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 24 Jul 2012 22:30:33 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-wrote:
+On Thu, 26 Jul 2012 16:01:50 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-> Hi Neil,
-> apparently you decided not to apply that patch?
+> Write has some impacts to SSD:
+> 1. wear out flash. Frequent write can speed out the progress.
+> 2. increase the burden of garbage collection of SSD firmware. If no space
+> left for write, SSD firmware garbage collection will try to free some spa=
+ce.
+> 3. slow down subsequent write. After write SSD to some extents (for examp=
+le,
+> write the whole disk), subsequent write will slow down significantly (bec=
+ause
+> almost every write invokes garbage collection in such case).
+>=20
+> We want to avoid unnecessary write as more as possible. raid sync general=
+ly
+> involves a lot of unnecessary write. For example, even two disks don't ha=
+ve
+> any data, we write the second disk for the whole disk size.
+>=20
+> To reduce write, we always compare raid disk data and only write mismatch=
+ part.
+> This means sync will have extra IO read and memory compare. So this schem=
+e is
+> very bad for hard disk raid and sometimes SSD raid too if mismatch part is
+> majority. But sometimes this can be very helpful to reduce write, in that=
+ case,
+> since sync is rare operation, the extra IO/CPU usage is worthy paying. Pe=
+ople
+> who want to use the feature should understand the risk first. So this abi=
+lity
+> is off by default, a sysfs entry can be used to enable it.
+>=20
+> Signed-off-by: Shaohua Li <shli@fusionio.com>
+> ---
+>  drivers/md/md.c    |   41 +++++++++++++++++++++++++++++++
+>  drivers/md/md.h    |    3 ++
+>  drivers/md/raid1.c |   70 ++++++++++++++++++++++++++++++++++++++++++++++=
++++----
+>  3 files changed, 110 insertions(+), 4 deletions(-)
+>=20
+> Index: linux/drivers/md/md.h
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux.orig/drivers/md/md.h	2012-07-25 13:51:00.353775521 +0800
+> +++ linux/drivers/md/md.h	2012-07-26 10:36:38.500740552 +0800
+> @@ -325,6 +325,9 @@ struct mddev {
+>  #define	MD_RECOVERY_FROZEN	9
+> =20
+>  	unsigned long			recovery;
+> +#define MD_RECOVERY_MODE_REPAIR		0
+> +#define MD_RECOVERY_MODE_DISCARD	1
+> +	unsigned long			recovery_mode;
 
-No, worse than that.  I marked your email as 'needs attention'.  That appea=
-rs
-to be an almost-certain guarantee that I'll never look at it again - must be
-a bug in my brain.  Apologies.
+You have not documented the meaning of these two flags at all, and I don't
+feel up to guessing.
 
-> On Tue, Jul 17, 2012 at 4:17 PM, Alexander Lyakas
-> <alex.bolshoy@gmail.com> wrote:
-> > Thanks for your comments, I got confused with the REQUESTED bit.
-> > I prepared the patch, with couple of notes:
-> >
-> > 1/ I decided to be more careful and schedule a write only in case of
-> > resync or repair. I was not sure whether we should try to correct bad
-> > blocks on device X, when device Y is recovering. Pls change it if you
-> > feel otherwise.
+The patch looks more complex that it should be.  The behaviour you are
+suggesting is exactly the behaviour you get when MD_RECOVERY_REQUESTED is
+set, so at most I expect to see a few places where that flag is tested
+changed to test something else as well.
 
-That looks sensible.  I've left it as it is.
+How would this be used?  It affects resync and resync happens as soon as the
+array is assembled.  So when and how would you set the flag which says
+"prefer reads to writes"?  It seems like it needs to be set in the metadata.
 
-> >
-> > 2/ I tested and committed the patch on top of ubuntu-precise 3.2.0-25.
-> > I looked at your "for-next" branch, and saw that there is some new
-> > code, which handles hot-replace, which I am not familiar with at this
-> > point.
+BTW RAID10 already does this - it reads and compares for a normal sync.  So
+maybe just tell people to use raid10 if they want this behaviour?
 
-It shouldn't make any important change to this patch.
-For RAID1, hot-replace just means there can be twice as many devices as you
-would expect.
-
-
-> >
-> > Final note: I noticed that badblocks_show() fails if there are too
-> > many bad blocks. It returns value larger than PAGE_SIZE, and then the
-> > following linux code complains:
-> > fs/sysfs/file.c:fill_read_buffer()
-> >         /*
-> >          * The code works fine with PAGE_SIZE return but it's likely to
-> >          * indicate truncated result or overflow in normal use cases.
-> >          */
-> >         if (count >=3D (ssize_t)PAGE_SIZE) {
-> >                 print_symbol("fill_read_buffer: %s returned bad count\n=
-",
-> >                         (unsigned long)ops->show);
-> >                 /* Try to struggle along */
-> >                 count =3D PAGE_SIZE - 1;
-> >         }
-> >
-> > So I am not sure how to solve it, but it would be good for
-> > user/application to receive the full list of bad blocks. Perhaps
-> > application can pass fd via some ioctl (I feel you don't like ioctls),
-> > and then kernel can use vfs_write() to print all the bad blocks to the
-> > fd. Or simply return the bad blocks list through the ioctl output to
-> > mdadm, and mdadm would print them. Perhaps some other way.
-
-It isn't possible to get a full list of bad blocks from sysfs, much as it is
-not possible to read the write-intent-bitmap or other metadata.
-
-The main purpose for the two bad-blocks files in sysfs is to allow a
-user-space metadata manager (mdmon) to find out when the kernel discovers a
-bad block, to record in the metadata, and then to acknowledge it.
-It is always possible to read the first entry from
-the unacknowledged_bad_blocks file, then acknowledge it and so remove it fr=
-om
-the list, and in that way you can get all unacknowledged bad blocks.
-Acknowledged bad blocks will be listed in the metadata already.
-
-Still... I should probably fix the code so that it never displays a partial
-truncated number, but stops before PAGE_SIZE..
-
-
-Thanks,
 NeilBrown
 
-
-
---Sig_/TCizFmTscuQB.Bi_63tzG7I
+--Sig_/7TAS3DSamKpg9UH6BKOQdf6
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUBc+3Tnsnt1WYoG5AQL6CA//VgGDWmJPgmhUpYkgCSHeEv0xIYMMlWow
-2Zj3cF7gk+G0K+NOT8FkBJogPpJfw8DD0Ta4mZx8M0nVtsemLXA1SrZOQO1MQLhL
-/9dm5X6auY13fpMbf1MSRIPw8aiwjhY6IUPVXYn1s6h1klpTrT8gN/3MXAIhpfrJ
-r+s21KqIzK8PHnu1I9w43q2jIgLgWQWQkSxX/+W9Xv6wTqlNG5zH/IntrcWAaM8s
-wIb9Oa596sUIu6IdiBm04MTAv6oFwNRbN/AUjGV50hWV97IZZ4Tl0YoeQCmVuv1l
-V2f7ubnmrlfMy7cVA/I945ElL/Je7w+VauRPtnK5iZ7ZyXnbNC8mzulh6wedmTmw
-RdNX4xEaP7WTfxzDwBegUbc2xO4Vaq/bG9vCjGqdprLMt9bf4A/sc+o0SInZBN+B
-U0meWToIOui701S5eyApIZtIgmF0DxG+ynPfTGE+4ksBztHgO90XXiTLYLxzJpZs
-XbQejJcYucYyi+N/jyz3EUOK+BTviiIVmt7uHTTSl7UArBkrxvOg6jQegtKP3xgi
-2+wxicSwQAG6ELyiz2rvRbyg+6F80X1XOKAnDXhh1zG5qWjS61bwImtPuD18kWN0
-NbjtWsS0En9nzMMoYI1hcC3Ta5p/QKwrTUo/jYDTwPb9Ettex8KnzLNUHh27NDF4
-3OtR8HZQgVw=
-=zGsL
+iQIVAwUBUBdywDnsnt1WYoG5AQLH0w/+P7FqY+x8nct2yquk+Zo18rJA7IXLpUCw
+Ye34UZhev3VrXKZlGDtFhYMPbL1PPz2FsvJ3ddJKnJk1js4zXeB1WMbwNQv2shXO
+uc7+E38IEWLKdc3CDUddTTlPBLOA2TY/8KJVkvgE0d8QkOMbzU1xev6SuEOMmga9
+spVjwIv7XAzkx2X0sCnf4PyE+CTastZm/0oF7HKRqRTF477u7k8y4t9cGrFYtmhK
+o3Xl+3MXrtsgFVfvhYX2tf0iE+uAmMktSJACjSnCg4QCHRH+msGvmoHXXdDc+upO
+L3rSmHtuyX2FsNZqo90KFOVrRs/hdfhYNSOgpUJHP2okRUUp7a3SfiBL7jLt6LvF
+rTzuNll13rP/doLSr7BLeF7/mGqqWc6je5ZkOOVdsoO6bMtp5jBOZYhYsivCbG8M
+kweuNUSOPZqYHusvmGE7YRNjohW0aUgHvp4JQneY6xFjFEyIjLbicgPhl4wjX9JY
+0xNBvKnwwOc59tUeRplB+40KjmkVQYVsReChu41JF/c1bUvZODD0knk1QQhqX1l0
+DI5mHqwwlGF/fz9fonk2M7qAlfnzrihgG+Wc8+2MyiZWyzQQZ2VI2EySjfGrBZhn
+6ifNqAMYhlSYsm98bxvVVKy3+J9Ji24v67Tj0YL/1iNrfzoOWb09BZt6esdHIViq
+rYZIHLY8FHU=
+=QJQ1
 -----END PGP SIGNATURE-----
 
---Sig_/TCizFmTscuQB.Bi_63tzG7I--
+--Sig_/7TAS3DSamKpg9UH6BKOQdf6--
