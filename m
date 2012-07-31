@@ -1,57 +1,127 @@
-From: Adam Goryachev <adam@websitemanagers.com.au>
-Subject: Re: persistent removed MD referrence on reboot
-Date: Tue, 31 Jul 2012 11:26:48 +1000
-Message-ID: <50173458.40505@websitemanagers.com.au>
-References: <CAO7BsSnu+CZMeQ=YNUKDOCQGF9FYjCTV37rhkBiW1JGAVexxuQ@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: raid1 repair: sync_request() aborts if one of the drives has
+ bad block recorded
+Date: Tue, 31 Jul 2012 12:11:41 +1000
+Message-ID: <20120731121141.109cbfd6@notabene.brown>
+References: <CAGRgLy6j3pEeXGXJbVc4Sz3gdShWWfaT7hyXnurgO-6N-_E_ZA@mail.gmail.com>
+	<20120716133753.1a34e149@notabene.brown>
+	<CAGRgLy6JZXiHFg11Z-_3krj8iKp_Wk7X_wz8OyikyvhLpxzcxg@mail.gmail.com>
+	<20120717111753.178d53d5@notabene.brown>
+	<CAGRgLy6jDTGXu1Yk2tCnHKDVTfCKjA2P6L-qgrD8EcPb8gCaBA@mail.gmail.com>
+	<CAGRgLy5FXG9gFgq+QR_OknhNVtEMuSj6d-Hso5PYcjaD2rzXcQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/TCizFmTscuQB.Bi_63tzG7I"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAO7BsSnu+CZMeQ=YNUKDOCQGF9FYjCTV37rhkBiW1JGAVexxuQ@mail.gmail.com>
+In-Reply-To: <CAGRgLy5FXG9gFgq+QR_OknhNVtEMuSj6d-Hso5PYcjaD2rzXcQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Skip Coombe <skipcoombe@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 07/31/2012 11:02 AM, Skip Coombe wrote:
-> I have an md entry referring to a badly removed RAID1 device (by me) after
-> the associated device crashed (can't afford a replacement drive at this
-> time).
-> Despite attempts to remove the reference, after a reboot I see:
->
-> ================================
-> $ cat /proc/mdstat
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4]
-> [raid10]
-> md2 : inactive sdc[1](S)
->        488385560 blocks super 1.2
->
-> unused devices: <none>
-> ================================
->
-> I am trying to repurpose the good drive as a not-RAID device. I have done
-> sudo mdadm --zero-superblock /dev/sdc
-> and
-> sudo mdadm --zero-superblock --force /dev/sdc
-> and even low level formatted /dev/sdc
-What do you mean "low level formatted"? Have you done a
-dd if=/dev/zero of=/dev/sdc
-> ================================
-> $ ls /etc/mdadm/mdadm.conf
-> ls: cannot access /etc/mdadm/mdadm.conf: No such file or directory
-> ================================
-Did you update the initrd file? This file probably contains a copy of 
-the mdadm.conf
+--Sig_/TCizFmTscuQB.Bi_63tzG7I
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Also, did you modify the partition type, from fd to 83
-I would suggest running the above dd command, which will erase ALL 
-traces of anything, including any data on the drive (so back it up 
-elsewhere first).
+On Tue, 24 Jul 2012 22:30:33 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
 
-Most likely, the md code looks at a couple of different places on the 
-drive for the md information, so when you run the zero-superblock, it is 
-only erasing one of the possible locations. See man mdadm, especially 
-the --metadata section.
+> Hi Neil,
+> apparently you decided not to apply that patch?
 
-Regards,
-Adam
+No, worse than that.  I marked your email as 'needs attention'.  That appea=
+rs
+to be an almost-certain guarantee that I'll never look at it again - must be
+a bug in my brain.  Apologies.
+
+> On Tue, Jul 17, 2012 at 4:17 PM, Alexander Lyakas
+> <alex.bolshoy@gmail.com> wrote:
+> > Thanks for your comments, I got confused with the REQUESTED bit.
+> > I prepared the patch, with couple of notes:
+> >
+> > 1/ I decided to be more careful and schedule a write only in case of
+> > resync or repair. I was not sure whether we should try to correct bad
+> > blocks on device X, when device Y is recovering. Pls change it if you
+> > feel otherwise.
+
+That looks sensible.  I've left it as it is.
+
+> >
+> > 2/ I tested and committed the patch on top of ubuntu-precise 3.2.0-25.
+> > I looked at your "for-next" branch, and saw that there is some new
+> > code, which handles hot-replace, which I am not familiar with at this
+> > point.
+
+It shouldn't make any important change to this patch.
+For RAID1, hot-replace just means there can be twice as many devices as you
+would expect.
+
+
+> >
+> > Final note: I noticed that badblocks_show() fails if there are too
+> > many bad blocks. It returns value larger than PAGE_SIZE, and then the
+> > following linux code complains:
+> > fs/sysfs/file.c:fill_read_buffer()
+> >         /*
+> >          * The code works fine with PAGE_SIZE return but it's likely to
+> >          * indicate truncated result or overflow in normal use cases.
+> >          */
+> >         if (count >=3D (ssize_t)PAGE_SIZE) {
+> >                 print_symbol("fill_read_buffer: %s returned bad count\n=
+",
+> >                         (unsigned long)ops->show);
+> >                 /* Try to struggle along */
+> >                 count =3D PAGE_SIZE - 1;
+> >         }
+> >
+> > So I am not sure how to solve it, but it would be good for
+> > user/application to receive the full list of bad blocks. Perhaps
+> > application can pass fd via some ioctl (I feel you don't like ioctls),
+> > and then kernel can use vfs_write() to print all the bad blocks to the
+> > fd. Or simply return the bad blocks list through the ioctl output to
+> > mdadm, and mdadm would print them. Perhaps some other way.
+
+It isn't possible to get a full list of bad blocks from sysfs, much as it is
+not possible to read the write-intent-bitmap or other metadata.
+
+The main purpose for the two bad-blocks files in sysfs is to allow a
+user-space metadata manager (mdmon) to find out when the kernel discovers a
+bad block, to record in the metadata, and then to acknowledge it.
+It is always possible to read the first entry from
+the unacknowledged_bad_blocks file, then acknowledge it and so remove it fr=
+om
+the list, and in that way you can get all unacknowledged bad blocks.
+Acknowledged bad blocks will be listed in the metadata already.
+
+Still... I should probably fix the code so that it never displays a partial
+truncated number, but stops before PAGE_SIZE..
+
+
+Thanks,
+NeilBrown
+
+
+
+--Sig_/TCizFmTscuQB.Bi_63tzG7I
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBUBc+3Tnsnt1WYoG5AQL6CA//VgGDWmJPgmhUpYkgCSHeEv0xIYMMlWow
+2Zj3cF7gk+G0K+NOT8FkBJogPpJfw8DD0Ta4mZx8M0nVtsemLXA1SrZOQO1MQLhL
+/9dm5X6auY13fpMbf1MSRIPw8aiwjhY6IUPVXYn1s6h1klpTrT8gN/3MXAIhpfrJ
+r+s21KqIzK8PHnu1I9w43q2jIgLgWQWQkSxX/+W9Xv6wTqlNG5zH/IntrcWAaM8s
+wIb9Oa596sUIu6IdiBm04MTAv6oFwNRbN/AUjGV50hWV97IZZ4Tl0YoeQCmVuv1l
+V2f7ubnmrlfMy7cVA/I945ElL/Je7w+VauRPtnK5iZ7ZyXnbNC8mzulh6wedmTmw
+RdNX4xEaP7WTfxzDwBegUbc2xO4Vaq/bG9vCjGqdprLMt9bf4A/sc+o0SInZBN+B
+U0meWToIOui701S5eyApIZtIgmF0DxG+ynPfTGE+4ksBztHgO90XXiTLYLxzJpZs
+XbQejJcYucYyi+N/jyz3EUOK+BTviiIVmt7uHTTSl7UArBkrxvOg6jQegtKP3xgi
+2+wxicSwQAG6ELyiz2rvRbyg+6F80X1XOKAnDXhh1zG5qWjS61bwImtPuD18kWN0
+NbjtWsS0En9nzMMoYI1hcC3Ta5p/QKwrTUo/jYDTwPb9Ettex8KnzLNUHh27NDF4
+3OtR8HZQgVw=
+=zGsL
+-----END PGP SIGNATURE-----
+
+--Sig_/TCizFmTscuQB.Bi_63tzG7I--
