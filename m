@@ -1,29 +1,37 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PULL REQUEST] md update for 3.6
-Date: Wed, 01 Aug 2012 12:51:17 +0200
-Message-ID: <50190A25.3070503@kernel.dk>
-References: <20120801204744.61884ce9@notabene.brown>
+From: matt <listy@fastmail.fm>
+Subject: OT: silent data corruption reading from hard drives
+Date: Wed, 01 Aug 2012 08:02:38 -0400
+Message-ID: <50191ADE.10809@fastmail.fm>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120801204744.61884ce9@notabene.brown>
-Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Jonathan Brassow <jbrassow@redhat.com>, Alexander Lyakas <alex.bolshoy@gmail.com>, Shaohua Li <shli@kernel.org>, majianpeng <majianpeng@gmail.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/01/2012 12:47 PM, NeilBrown wrote:
-> 
-> Hi Linus,
->  please pull as follows.  Sorry it is late - I was hoping to sync up with Jens
-> as I have some patches which depend on some in his tree, but that doesn't
-> seem to have worked.
-> I'll probably send you another pull request once his tree has been included,
-> but I'll not be surprised if it has to wait for 3.7.
+Quick intro: Last year I was having problems with an md array
+continuously having a mismatch_cnt in the tens of thousands,
+inexplicably.  After a week or two of hardware swapping and such, I
+narrowed it down to bad reads of the hard drive block devices.  I used
+scripts that would repetitively do something like this on all my drives:
+      dd if=/dev/sdk1 bs=1024 count=50000000 |md5sum -b
+Some devices would intermittently get different results.  I ended up
+resolving (?) it by replacing the cheapo (Syba) SATA controller cards
+with other cheapo (Rosewill) ones.  I've been fine for about a year
+since then.
 
-My pull is going out today. Delayed by vacation, it's currently running
-testing.
+But now it's just started happening again.  Although this isn't an md
+question per se, I'm hoping some of you raid/kernel/storage gurus can
+give me some tips on how to trace this in a better way than my haphazard
+method last year.  Is there any way to detect these bad reads when they
+happen?  (Apparently not?)   What about finding out if the cause is the
+motherboard, the controller card, the device driver, or the kernel?
+(Besides swapping hardware?)  Can the md layer help out in this regard?
+  Are there known bugs or hardware nuances that relate to this?  Is
+silent data corruption like this simply to be expected when using cheap
+commodity hardware?
 
--- 
-Jens Axboe
+Thanks for reading...
+
+matt
