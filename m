@@ -1,141 +1,109 @@
-From: Albert Pauw <albert.pauw@gmail.com>
-Subject: ddf failed disk disappears after adding spare
-Date: Wed, 01 Aug 2012 10:29:51 +0200
-Message-ID: <5018E8FF.6030402@gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: [PULL REQUEST] md update for 3.6
+Date: Wed, 1 Aug 2012 20:47:44 +1000
+Message-ID: <20120801204744.61884ce9@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Sl03xx5kUKf_oXP_wq4DBoh"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, neilb@suse.de
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Jonathan Brassow <jbrassow@redhat.com>, Alexander Lyakas <alex.bolshoy@gmail.com>, Shaohua Li <shli@kernel.org>, majianpeng <majianpeng@gmail.com>, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-raid.ids
 
-Hi Neil,
-
-here is a procedure which shows you another problem. It has to do with 
-the table produced at the end of the mdadm -E command, showing the disks 
-and their status. Seems when a disk has failed and another added, the 
-failed one disappears.
-
-Hope you can find the problem and fix it.
-
-Regards,
-
-Albert
-
-Here is the exact procedure which shows the problem:
-
-Create a container with 5 disks:
-
-mdadm -CR /dev/md127 -e ddf -l container -n 5 /dev/loop[1-5]
-
-  Physical Disks : 5
-       Number    RefNo      Size       Device      Type/State
-          0    d1c8c16e    479232K /dev/loop1 Global-Spare/Online
-          1    6de79cb6    479232K /dev/loop2 Global-Spare/Online
-          2    b5fd1d6c    479232K /dev/loop3 Global-Spare/Online
-          3    0be2d310    479232K /dev/loop4 Global-Spare/Online
-          4    5d8ac3d0    479232K /dev/loop5 Global-Spare/Online
+--Sig_/Sl03xx5kUKf_oXP_wq4DBoh
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
 
-Create a RAID 5 set of 3 disks in container:
+Hi Linus,
+ please pull as follows.  Sorry it is late - I was hoping to sync up with J=
+ens
+as I have some patches which depend on some in his tree, but that doesn't
+seem to have worked.
+I'll probably send you another pull request once his tree has been included,
+but I'll not be surprised if it has to wait for 3.7.
 
-mdadm -CR /dev/md0 -l 5 -n 3 /dev/md127
-
-Physical Disks : 5
-       Number    RefNo      Size       Device      Type/State
-          0    d1c8c16e    479232K /dev/loop1      active/Online
-          1    6de79cb6    479232K /dev/loop2      active/Online
-          2    b5fd1d6c    479232K /dev/loop3      active/Online
-          3    0be2d310    479232K /dev/loop4 Global-Spare/Online
-          4    5d8ac3d0    479232K /dev/loop5 Global-Spare/Online
-
-
-Create a RAID 1 set of 2 disks in container:
-
-mdadm -CR /dev/md1 -l 1 -n 2 /dev/md127
-
-Physical Disks : 5
-       Number    RefNo      Size       Device      Type/State
-          0    d1c8c16e    479232K /dev/loop1      active/Online
-          1    6de79cb6    479232K /dev/loop2      active/Online
-          2    b5fd1d6c    479232K /dev/loop3      active/Online
-          3    0be2d310    479232K /dev/loop4      active/Online
-          4    5d8ac3d0    479232K /dev/loop5      active/Online
+Thanks,
+NeilBrown
 
 
-Fail first disk in RAID 5 set:
+The following changes since commit c039c332f23e794deb6d6f37b9f07ff3b27fb2cf:
 
-mdadm -f /dev/md0 /dev/loop1
+  dm raid: move sectors_per_dev calculation (2012-07-27 15:08:04 +0100)
 
-Physical Disks : 5
-       Number    RefNo      Size       Device      Type/State
-          0    d1c8c16e    479232K /dev/loop1      active/Offline, Failed
-          1    6de79cb6    479232K /dev/loop2      active/Online
-          2    b5fd1d6c    479232K /dev/loop3      active/Online
-          3    0be2d310    479232K /dev/loop4      active/Online
-          4    5d8ac3d0    479232K /dev/loop5      active/Online
+are available in the git repository at:
 
+  git://neil.brown.name/md/ for-next
 
-Remove failed disk:
+for you to fetch changes up to 63f33b8dda88923487004b20fba825486d009e7b:
 
-mdadm -r /dev/md0 /dev/loop1
+  DM RAID: Add support for MD RAID10 (2012-08-01 20:41:20 +1000)
 
-Physical Disks : 5
-       Number    RefNo      Size       Device      Type/State
-          0    d1c8c16e    479232K                 active/Offline, 
-Failed, Missing
-          1    6de79cb6    479232K /dev/loop2      active/Online
-          2    b5fd1d6c    479232K /dev/loop3      active/Online
-          3    0be2d310    479232K /dev/loop4      active/Online
-          4    5d8ac3d0    479232K /dev/loop5      active/Online
+----------------------------------------------------------------
+Alexander Lyakas (1):
+      md/RAID1: Add missing case for attempting to repair known bad blocks.
 
+Jonathan Brassow (6):
+      MD RAID10: Fix compiler warning.
+      MD RAID10: rename mirror_info structure
+      MD RAID1: rename mirror_info structure
+      MD: Move macros from raid1*.h to raid1*.c
+      MD RAID10: Export md_raid10_congested
+      DM RAID: Add support for MD RAID10
 
-Add failed disk back:
+NeilBrown (3):
+      md: remove duplicated test on ->openers when calling do_md_stop()
+      md/raid1: don't abort a resync on the first badblock.
+      Merge commit 'c039c332f23e794deb6d6f37b9f07ff3b27fb2cf' into md
 
-mdadm -a --force /dev/md0 /dev/loop1
+Shaohua Li (7):
+      raid5: reduce chance release_stripe() taking device_lock
+      raid5: lockless access raid5 overrided bi_phys_segments
+      raid5: remove unnecessary bitmap write optimization
+      raid5: add a per-stripe lock
+      md/raid1: make sequential read detection per disk based
+      md/raid1: read balance chooses idlest disk for SSD
+      md/raid1: prevent merging too large request
 
-Physical Disks : 5
-       Number    RefNo      Size       Device      Type/State
-          0    d1c8c16e    479232K /dev/loop1      active/Offline, 
-Failed, Missing
-          1    6de79cb6    479232K /dev/loop2      active/Online
-          2    b5fd1d6c    479232K /dev/loop3      active/Online
-          3    0be2d310    479232K /dev/loop4      active/Online
-          4    5d8ac3d0    479232K /dev/loop5      active/Online
+majianpeng (2):
+      raid5: Add R5_ReadNoMerge flag which prevent bio from merging at bloc=
+k layer
+      md/raid5: For odirect-write performance, do not set STRIPE_PREREAD_AC=
+TIVE.
 
+ Documentation/device-mapper/dm-raid.txt |   26 ++++
+ drivers/md/dm-raid.c                    |   95 +++++++++++++-
+ drivers/md/md.c                         |    8 +-
+ drivers/md/raid1.c                      |  164 ++++++++++++++++++-------
+ drivers/md/raid1.h                      |   30 ++---
+ drivers/md/raid10.c                     |   92 +++++++++-----
+ drivers/md/raid10.h                     |   23 +---
+ drivers/md/raid5.c                      |  205 +++++++++++++++++----------=
+----
+ drivers/md/raid5.h                      |    2 +
+ 9 files changed, 426 insertions(+), 219 deletions(-)
 
-Add spare disk to container:
+--Sig_/Sl03xx5kUKf_oXP_wq4DBoh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-mdadm -a --force /dev/md0 /dev/loop6
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-Physical Disks : 5
-       Number    RefNo      Size       Device      Type/State
-          0    6de79cb6    479232K /dev/loop2      active/Online
-          1    b5fd1d6c    479232K /dev/loop3      active/Online
-          2    0be2d310    479232K /dev/loop4      active/Online
-          3    5d8ac3d0    479232K /dev/loop5      active/Online
-          4    1dcfe3cf    479232K /dev/loop6      active/Online, Rebuilding
+iQIVAwUBUBkJUDnsnt1WYoG5AQLgZRAAj1Jvh8NhS2I/1QEkJn5x12QnbtbrS9EO
+JaHYqIRSUgkOuQBSBDFJHbn1FwHaXb8JVfFsovhMNeYVn7t1Ca5yJtyKSj24I7FK
+0wuTfCjjpUcKuqF0VWXLc3EmBLl5C88m/DFlCe/KZxNjf5yHNMS8kggn9r+MY0b4
+lfuf4WfV4S+eMPevkN8k+fqMddNmdqsRvPP97P9F+7GCg4YART1QkBnqIXCBH+LX
+CZ8eX42aiIFClv3U9qNQObI4XuWcw+MgHTrDIe6lRhEDx6J37OFCc1IOhqJrxphG
+PsKvIO7ksyTmJKSs92YNXrZMZkz9oqWhplvRmJHuInwfd9kesQNMHlm8WWqwrFHN
+i7kWHLivZt1/IsIpKPsXBQtCNbbyM447Tv8pAPMtxx8VCqcjbmmgErl+fMIm8sJN
+J7xY42Xq2JB1eMAyMoA8NpAsCYFvD/NS9IqeEf7oO+7mX/QCAHjkl6u0dvi/SqFo
+iyy6jafAYefYuAqSnoyy/PwafEqInBTH+g89gQnzQG6HgCT0SEH4Q3A/0H5Gh9eG
+S/5Wg9PtgTRr7nG5JwbogdsKX0rT/+t3VimQ96N30RzuDYBS+Hn4XwEqWPas6/kQ
+KWH2S4jkQfbPj/ulYMO9pmx4cPIZhzp83ochUd3/q8wrNqPfi/CSDb0rQTZ8WhL3
+r1eYvm7Pzkw=
+=/EFu
+-----END PGP SIGNATURE-----
 
-This is wrong! Physical disks should be 6 now!
-
-Removed failed disk (which is missing from list now!) again, zero 
-superblock and add again:
-
-mdadm -r /dev/md0 /dev/loop1
-mdadm --zero-superblock /dev/loop1
-mdadm -a --force /dev/md0 /dev/loop1
-
-
-Physical Disks : 6
-       Number    RefNo      Size       Device      Type/State
-          0    6de79cb6    479232K /dev/loop2      active/Online
-          1    b5fd1d6c    479232K /dev/loop3      active/Online
-          2    0be2d310    479232K /dev/loop4      active/Online
-          3    5d8ac3d0    479232K /dev/loop5      active/Online
-          4    1dcfe3cf    479232K /dev/loop6      active/Online
-          5    8147a3ef    479232K /dev/loop1 Global-Spare/Online
-
-And there they are, all 6 of them.
-
-
+--Sig_/Sl03xx5kUKf_oXP_wq4DBoh--
