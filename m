@@ -1,63 +1,102 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 0/4] Plugging changes for blk/md/umem
-Date: Tue, 31 Jul 2012 10:54:17 +0200
-Message-ID: <50179D39.6080608@kernel.dk>
-References: <20120726025650.32180.65163.stgit@notabene.brown> <50178487.4090302@kernel.dk> <20120731172539.4feea95e@notabene.brown> <50178A4F.8010806@kernel.dk> <20120731184425.389515ed@notabene.brown>
+From: Skip Coombe <skipcoombe@gmail.com>
+Subject: Re: persistent removed MD referrence on reboot
+Date: Tue, 31 Jul 2012 21:43:02 -0400
+Message-ID: <CAO7BsSnMTAWRjxFcq2AS1QGbudy82HVGYFTB395cKTdnfD2bVw@mail.gmail.com>
+References: <CAO7BsSnu+CZMeQ=YNUKDOCQGF9FYjCTV37rhkBiW1JGAVexxuQ@mail.gmail.com>
+	<50173458.40505@websitemanagers.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120731184425.389515ed@notabene.brown>
+In-Reply-To: <50173458.40505@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>
+To: Adam Goryachev <adam@websitemanagers.com.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/31/2012 10:44 AM, NeilBrown wrote:
-> On Tue, 31 Jul 2012 09:33:35 +0200 Jens Axboe <axboe@kernel.dk> wrote:
-> 
->> On 07/31/2012 09:25 AM, NeilBrown wrote:
->>> On Tue, 31 Jul 2012 09:08:55 +0200 Jens Axboe <axboe@kernel.dk> wrote:
->>>
->>>> On 07/26/2012 04:58 AM, NeilBrown wrote:
->>>>> Hi Jens,
->>>>>  the following series makes a number of changes to plugging, moving
->>>>>  common code from md and umem into block, and modifying it to allow
->>>>>  md to get more value out of it.
->>>>>  They've been sitting in -next for a while.
->>>>>  Are you OK with me forwarding them to Linus, or would you rather they
->>>>>  went though your tree?
->>>>
->>>> Thanks Neil, looks good. I will apply them to my tree and do some basic
->>>> testing, too, then push it off for this round (where I haven't pushed
->>>> out yet).
->>>>
->>>
->>> Thanks Jens,
->>>  However I've just today discovered that the very first patch causes a real
->>>  regression in throughput for RAID5 and while I'm sure I can fix it with a
->>>  subsequent patch (once I figure out exactly what it happening) it might make
->>>  sense to hold them all back for 3.7.
->>>
->>>  However if you would like to take them now and fix up later (it is only a
->>>  performance regression so it won't really affect bisection) I can work with
->>>  that.
->>
->> If you're confident we can fix it in this cycle (sounds like it, if you
->> have a grasp on the situation), then I don't think that should stop us.
->>
-> 
-> Sounds like a plan.
-> I have a few md patches queue which depend on those plugging patches, so if
-> you could cc me when you send you pull request (which Linus is keen for "by
-> Wedneday at the latest" I gather), I'll sort my tree out and send my pull
-> request.
+Thanks for the quick response.
 
-They'll go out today, or tomorrow at the latest. I'll CC you. This merge
-window has been unfortunately timed with my vacation (Linus, how dare
-you!), so I have a bit of a time crunch. On the plus side, it's smaller
-than last round.
+I did "dd -if=/dev/zero -of=/dev/sdc" and modified the the partition to 83.
+
+Today I followed your advice to investigate initrd. I deleted all the
+ARRAY specs from /etc/mdadm/mdadm.conf (they were
+from the time of installing 12-4, including the md2 ARRAY), wrote the
+new initrd, and rebooted.
+
+The reference to md2 went away, but now I see
+======================
+$ cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md127 : inactive sdc[1](S)
+      488385560 blocks super 1.2
+
+unused devices: <none>
+======================
+
+I will repeat after "rm -rf /etc/mdadm" from the initrd dir tree. If
+that does not work I will probably just reinstall 12-4. I hate to do
+all the config again, but I've burned too many hours on this already.
+There are no superblocks left so I hope to get a clean start.
+
+n.b. md127 seems to be the default array, but still sdc is identified.
+There must be more info buried in the initrd.
+
+Thanks for the good advice, but I am still missing something.
+
+Skip
+
+On Mon, Jul 30, 2012 at 9:26 PM, Adam Goryachev
+<adam@websitemanagers.com.au> wrote:
+> On 07/31/2012 11:02 AM, Skip Coombe wrote:
+>>
+>> I have an md entry referring to a badly removed RAID1 device (by me) after
+>> the associated device crashed (can't afford a replacement drive at this
+>> time).
+>> Despite attempts to remove the reference, after a reboot I see:
+>>
+>> ================================
+>> $ cat /proc/mdstat
+>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+>> [raid4]
+>> [raid10]
+>> md2 : inactive sdc[1](S)
+>>        488385560 blocks super 1.2
+>>
+>> unused devices: <none>
+>> ================================
+>>
+>> I am trying to repurpose the good drive as a not-RAID device. I have done
+>> sudo mdadm --zero-superblock /dev/sdc
+>> and
+>> sudo mdadm --zero-superblock --force /dev/sdc
+>> and even low level formatted /dev/sdc
+>
+> What do you mean "low level formatted"? Have you done a
+> dd if=/dev/zero of=/dev/sdc
+>
+>> ================================
+>> $ ls /etc/mdadm/mdadm.conf
+>> ls: cannot access /etc/mdadm/mdadm.conf: No such file or directory
+>> ================================
+>
+> Did you update the initrd file? This file probably contains a copy of the
+> mdadm.conf
+>
+> Also, did you modify the partition type, from fd to 83
+> I would suggest running the above dd command, which will erase ALL traces of
+> anything, including any data on the drive (so back it up elsewhere first).
+>
+> Most likely, the md code looks at a couple of different places on the drive
+> for the md information, so when you run the zero-superblock, it is only
+> erasing one of the possible locations. See man mdadm, especially the
+> --metadata section.
+>
+> Regards,
+> Adam
+
+
 
 -- 
-Jens Axboe
-
+Skip Coombe
+skip.coombe@gmail.com
+919.442.VLSI
