@@ -1,72 +1,165 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: OT: silent data corruption reading from hard drives
-Date: Wed, 1 Aug 2012 19:03:18 +0600
-Message-ID: <20120801190318.05d2431e@natsu>
-References: <50191ADE.10809@fastmail.fm>
+From: Albert Pauw <albert.pauw@gmail.com>
+Subject: Re: ddf failed disk disappears after adding spare
+Date: Wed, 1 Aug 2012 18:46:29 +0200
+Message-ID: <CAGkViCGWjF=YZ4BWRxwXRw0ER4XmMPA9HN35twDmEzt+X_uX2g@mail.gmail.com>
+References: <5018E8FF.6030402@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/kZMO8+sIrWObcSkZWp1VM3+"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50191ADE.10809@fastmail.fm>
+In-Reply-To: <5018E8FF.6030402@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: matt <listy@fastmail.fm>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
---Sig_/kZMO8+sIrWObcSkZWp1VM3+
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Neil,
 
-On Wed, 01 Aug 2012 08:02:38 -0400
-matt <listy@fastmail.fm> wrote:
+looking at it again I think the following happened:
 
-> Quick intro: Last year I was having problems with an md array
-> continuously having a mismatch_cnt in the tens of thousands,
-> inexplicably.  After a week or two of hardware swapping and such, I
-> narrowed it down to bad reads of the hard drive block devices.  I used
-> scripts that would repetitively do something like this on all my drives:
->       dd if=3D/dev/sdk1 bs=3D1024 count=3D50000000 |md5sum -b
-> Some devices would intermittently get different results.  I ended up
-> resolving (?) it by replacing the cheapo (Syba) SATA controller cards
-> with other cheapo (Rosewill) ones.  I've been fine for about a year
-> since then.
+When the disk was removed, the entry got the status "missing", which is correct.
+When I re-added the same disk (actually I used add, re-add doesn't
+work with containers) the "missing" status isn't cleared, as can be
+seen.
+But it is recognised as belonging to its original slot, albeit the
+missing status isn't cleared, the other status (failed, offline) can
+stay as they are.
 
-Syba was mentioned in a bad context last time we discussed this here, somew=
-here
-down the thread: http://comments.gmane.org/gmane.linux.raid/33346
-I don't remember if you have participated in that discussion, if not, have =
-an
-entertaining read. Is your new Rosewill card also Silicon Image based?
+When I now add another disk (a spare) the slot of the missing disk is
+re-used, as it is marked "missing". Only by removing that disk,
+zeroing
+the superblock and adding it again, i.e. effectively adding a new
+disk, the total amount of slots is increased to 6.
 
-> Is silent data corruption like this simply to be expected when using cheap
-> commodity hardware?
 
-I'd say no. There are known good and known bad hardware, where both good and
-bad is most easily measured by the amount (or lack of) problem reports you =
-hear
-or can find. One method to do that is asking a searching engine about "<chip
-name> data corruption".
 
---=20
-With respect,
-Roman
+just my two cents,
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-"Stallman had a printer,
-with code he could not see.
-So he began to tinker,
-and set the software free."
+Albert
 
---Sig_/kZMO8+sIrWObcSkZWp1VM3+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlAZKRYACgkQTLKSvz+PZwgKqgCdFZrG2KQ9ICbCwIZf95KaOm8D
-PacAn1uq3jzEcpRjNY7iqeTE9lbUQrMN
-=M0Uh
------END PGP SIGNATURE-----
-
---Sig_/kZMO8+sIrWObcSkZWp1VM3+--
+On 1 August 2012 10:29, Albert Pauw <albert.pauw@gmail.com> wrote:
+> Hi Neil,
+>
+> here is a procedure which shows you another problem. It has to do with the
+> table produced at the end of the mdadm -E command, showing the disks and
+> their status. Seems when a disk has failed and another added, the failed one
+> disappears.
+>
+> Hope you can find the problem and fix it.
+>
+> Regards,
+>
+> Albert
+>
+> Here is the exact procedure which shows the problem:
+>
+> Create a container with 5 disks:
+>
+> mdadm -CR /dev/md127 -e ddf -l container -n 5 /dev/loop[1-5]
+>
+>  Physical Disks : 5
+>       Number    RefNo      Size       Device      Type/State
+>          0    d1c8c16e    479232K /dev/loop1 Global-Spare/Online
+>          1    6de79cb6    479232K /dev/loop2 Global-Spare/Online
+>          2    b5fd1d6c    479232K /dev/loop3 Global-Spare/Online
+>          3    0be2d310    479232K /dev/loop4 Global-Spare/Online
+>          4    5d8ac3d0    479232K /dev/loop5 Global-Spare/Online
+>
+>
+> Create a RAID 5 set of 3 disks in container:
+>
+> mdadm -CR /dev/md0 -l 5 -n 3 /dev/md127
+>
+> Physical Disks : 5
+>       Number    RefNo      Size       Device      Type/State
+>          0    d1c8c16e    479232K /dev/loop1      active/Online
+>          1    6de79cb6    479232K /dev/loop2      active/Online
+>          2    b5fd1d6c    479232K /dev/loop3      active/Online
+>          3    0be2d310    479232K /dev/loop4 Global-Spare/Online
+>          4    5d8ac3d0    479232K /dev/loop5 Global-Spare/Online
+>
+>
+> Create a RAID 1 set of 2 disks in container:
+>
+> mdadm -CR /dev/md1 -l 1 -n 2 /dev/md127
+>
+> Physical Disks : 5
+>       Number    RefNo      Size       Device      Type/State
+>          0    d1c8c16e    479232K /dev/loop1      active/Online
+>          1    6de79cb6    479232K /dev/loop2      active/Online
+>          2    b5fd1d6c    479232K /dev/loop3      active/Online
+>          3    0be2d310    479232K /dev/loop4      active/Online
+>          4    5d8ac3d0    479232K /dev/loop5      active/Online
+>
+>
+> Fail first disk in RAID 5 set:
+>
+> mdadm -f /dev/md0 /dev/loop1
+>
+> Physical Disks : 5
+>       Number    RefNo      Size       Device      Type/State
+>          0    d1c8c16e    479232K /dev/loop1      active/Offline, Failed
+>          1    6de79cb6    479232K /dev/loop2      active/Online
+>          2    b5fd1d6c    479232K /dev/loop3      active/Online
+>          3    0be2d310    479232K /dev/loop4      active/Online
+>          4    5d8ac3d0    479232K /dev/loop5      active/Online
+>
+>
+> Remove failed disk:
+>
+> mdadm -r /dev/md0 /dev/loop1
+>
+> Physical Disks : 5
+>       Number    RefNo      Size       Device      Type/State
+>          0    d1c8c16e    479232K                 active/Offline, Failed, Missing
+>          1    6de79cb6    479232K /dev/loop2      active/Online
+>          2    b5fd1d6c    479232K /dev/loop3      active/Online
+>          3    0be2d310    479232K /dev/loop4      active/Online
+>          4    5d8ac3d0    479232K /dev/loop5      active/Online
+>
+>
+> Add failed disk back:
+>
+> mdadm -a --force /dev/md0 /dev/loop1
+>
+> Physical Disks : 5
+>       Number    RefNo      Size       Device      Type/State
+>          0    d1c8c16e    479232K /dev/loop1      active/Offline, Failed, Missing
+>          1    6de79cb6    479232K /dev/loop2      active/Online
+>          2    b5fd1d6c    479232K /dev/loop3      active/Online
+>          3    0be2d310    479232K /dev/loop4      active/Online
+>          4    5d8ac3d0    479232K /dev/loop5      active/Online
+>
+>
+> Add spare disk to container:
+>
+> mdadm -a --force /dev/md0 /dev/loop6
+>
+> Physical Disks : 5
+>       Number    RefNo      Size       Device      Type/State
+>          0    6de79cb6    479232K /dev/loop2      active/Online
+>          1    b5fd1d6c    479232K /dev/loop3      active/Online
+>          2    0be2d310    479232K /dev/loop4      active/Online
+>          3    5d8ac3d0    479232K /dev/loop5      active/Online
+>          4    1dcfe3cf    479232K /dev/loop6      active/Online, Rebuilding
+>
+> This is wrong! Physical disks should be 6 now!
+>
+> Removed failed disk (which is missing from list now!) again, zero superblock
+> and add again:
+>
+> mdadm -r /dev/md0 /dev/loop1
+> mdadm --zero-superblock /dev/loop1
+> mdadm -a --force /dev/md0 /dev/loop1
+>
+>
+> Physical Disks : 6
+>       Number    RefNo      Size       Device      Type/State
+>          0    6de79cb6    479232K /dev/loop2      active/Online
+>          1    b5fd1d6c    479232K /dev/loop3      active/Online
+>          2    0be2d310    479232K /dev/loop4      active/Online
+>          3    5d8ac3d0    479232K /dev/loop5      active/Online
+>          4    1dcfe3cf    479232K /dev/loop6      active/Online
+>          5    8147a3ef    479232K /dev/loop1 Global-Spare/Online
+>
+> And there they are, all 6 of them.
+>
+>
