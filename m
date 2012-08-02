@@ -1,82 +1,92 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] udev-rules: prevent systemd from mount devices before
- they are ready.
-Date: Thu, 2 Aug 2012 10:09:30 +1000
-Message-ID: <20120802100930.20c5cb9b@notabene.brown>
-References: <1343724827-2179-1-git-send-email-harald@redhat.com>
+Subject: [PULL REQUEST] few more md patches now that dependencies are
+ present.
+Date: Thu, 2 Aug 2012 10:35:24 +1000
+Message-ID: <20120802103524.043132e7@notabene.brown>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/D0RtzqS2dEv40PEaM3sMIwT"; protocol="application/pgp-signature"
+ boundary="Sig_/G6QEaDuQ_g6z3VdFwiNKM8B"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1343724827-2179-1-git-send-email-harald@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: harald@redhat.com
-Cc: linux-raid@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>, Jens Axboe <jaxboe@fusionio.com>, Shaohua Li <shli@kernel.org>, Fengguang Wu <fengguang.wu@intel.com>, Jonathan Brassow <jbrassow@redhat.com>
 List-Id: linux-raid.ids
 
---Sig_/D0RtzqS2dEv40PEaM3sMIwT
+--Sig_/G6QEaDuQ_g6z3VdFwiNKM8B
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 31 Jul 2012 10:53:47 +0200 harald@redhat.com wrote:
 
-> From: Harald Hoyer <harald@redhat.com>
->=20
-> In the "add" uevent, ATTR{md/array_state} does not exist, so the next
-> rule does not kick in.
->=20
-> When an array is assembled incrementally, systemd might see it
-> before it is ready, try to mount it, fail, and give up.
-> Result is that array doesn't get mounted.
->=20
-> If we ask udev to tell systemd that it isn't ready yet in this
-> case, systemd waits until it is ready, and all are happy.
-> ---
->  udev-md-raid.rules | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/udev-md-raid.rules b/udev-md-raid.rules
-> index 814c897..da9d3c5 100644
-> --- a/udev-md-raid.rules
-> +++ b/udev-md-raid.rules
-> @@ -27,7 +27,7 @@ ENV{DEVTYPE}=3D=3D"partition", GOTO=3D"md_ignore_state"
->  # container devices have a metadata version of e.g. 'external:ddf' and
->  # never leave state 'inactive'
->  ATTR{md/metadata_version}=3D=3D"external:[A-Za-z]*", ATTR{md/array_state=
-}=3D=3D"inactive", GOTO=3D"md_ignore_state"
-> -TEST!=3D"md/array_state", GOTO=3D"md_end"
-> +TEST!=3D"md/array_state", ENV{SYSTEMD_READY}=3D"0", GOTO=3D"md_end"
->  ATTR{md/array_state}=3D=3D"|clear|inactive", ENV{SYSTEMD_READY}=3D"0", G=
-OTO=3D"md_end"
->  LABEL=3D"md_ignore_state"
-> =20
+Is it still Wednesday?
 
-Thanks!
+As promised, here are the last bits for md.  Primarily performance
+improvements made possible the new plugging code.  These can make a
+significant difference on SDD's and a noticeable difference on spinning rus=
+t.
 
-applied.
-
+Thanks,
 NeilBrown
 
---Sig_/D0RtzqS2dEv40PEaM3sMIwT
+
+The following changes since commit 74018dc3063a2c729fc73041c0a9f03aac995920:
+
+  blk: pass from_schedule to non-request unplug functions. (2012-07-31 09:0=
+8:15 +0200)
+
+are available in the git repository at:
+
+  git://neil.brown.name/md tags/md-3.6
+
+for you to fetch changes up to d9f691c365a83ce2530f0e46b947365c2db44ea0:
+
+  md/dm-raid: DM_RAID should select MD_RAID10 (2012-08-02 08:35:43 +1000)
+
+----------------------------------------------------------------
+Additional md update for 3.6
+
+This contains a few patches that depend on
+plugging changes in the block layer so needs to wait
+for those.
+It also contains a Kconfig fix for the new RAID10 support
+in dm-raid.
+
+----------------------------------------------------------------
+NeilBrown (2):
+      md/raid1: submit IO from originating thread instead of md thread.
+      md/dm-raid: DM_RAID should select MD_RAID10
+
+Shaohua Li (2):
+      raid5: make_request use batch stripe release
+      raid5: raid5d handle stripe in batch way
+
+ drivers/md/Kconfig  |    5 ++-
+ drivers/md/bitmap.c |    2 +-
+ drivers/md/raid1.c  |   57 +++++++++++++++++++++++++--
+ drivers/md/raid5.c  |  107 +++++++++++++++++++++++++++++++++++++++++++----=
+----
+ drivers/md/raid5.h  |    1 +
+ 5 files changed, 150 insertions(+), 22 deletions(-)
+
+--Sig_/G6QEaDuQ_g6z3VdFwiNKM8B
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUBnFOjnsnt1WYoG5AQL8VQ//UTzfO/0wpwPwAQsSy7GK6DcRyD1tqmDC
-Q41LSjDGRfVj386zUsvCSzLCSVJtenJcEYc/WJBrVrhj/ySraFH2IipXPxm/kkAg
-DtlENnoy00TNDqK4vqtLl1bW9tsiJpL9iQ5qx8RbZSZxsJqhutoriLh4OQNjTiOX
-lPHQbRSBQSxOymlYrJez1bNGTCyL80vJiiyqJPNGiIGn+RA4usxDR2HKasHq2/GA
-NXOCAPHijozSvmRuc6kcBU3A7MWJLjCq+QAkrkGJQ/hukPFUwRlIZPfN8OffLGjk
-xt25GxELGYfbyhQXGupwt4Gh9ZRHw590m3By/PRBxEcbDHlZK397GazyYLouutS7
-SpfmKaZxzdSAArjij0aBLp47QcgDsIaKp/N6yIlusXUH3ufL0KujFpjKU30KbJ3C
-p0dPpAU07Tmpnbp4lFQXE/uJzZr/ncO5widTepFoSjgLhnE+Cvx7Nfg4La/Lo5zq
-83XR19ZcSYrpUu419EMccYdNVRa4KtHvnVx1mY3m6ZHkYbpyf9Vu1WlzS4mxB6uO
-AM6q6JexIZp/XKuCWuFpA+WRbDEc7lm6rrvqje8oN4M5kK+9qwH8QYVldNShS2QI
-UNZp2hgf+c/+BFICy1q+lfMOVo75wbVUjOWoueH8ePyoVe8+FumAbmZ3nmv0sTg6
-wdHliguLqVU=
-=3JXf
+iQIVAwUBUBnLTDnsnt1WYoG5AQKSSQ/9E5c9SJj6HYE3pRc6k21fnJS58rmpudS8
+xj70LT/1sn2azFqroleTh/FKdCfCzZUloMW47LKN9O9402YZDut8fQfwoX7BYNDX
+eLJTD909iZ4GA/HJl4QLO59b3JtluLzk6jKRy3uYp70OOoVm7j7tXNLYcXLSDMu1
+TUXQj7DdkKQKdPzvuFwmLFHfQA+e9vBfBDdta9w9va+RmYEk6bT+noEoxs9m/0mR
+wbH3y1PQGFdOFbxPEwQYanuzMpzIKXH4eqBDKvmqaLeMQuF/QNOgWOwiG4amIlXG
+4a3ssx3pKa4T4Ow4pL7iRwEcUOAkR9NzkMKeXQzDwpgXYY+FqDdDNozrLhIASrNX
+EFvNUJFjmtNrg03CEqPCoSMCjhWKXm0gWDWx741LSkLUrk8/2Oc1Z1bMwCtLDGHw
+04IDIr+7ohzoSZrt1O+xjtVy8vNvOz/d6+fIcl5i4IWGqHRjiwnL7pVODU2w+5Nf
+L95ubBbh6BpZJkvBqXssNO6VrfkLIRn7JrA9SKlb8VcYCazWzRS4dlGZ0OOtBvWe
+CgCcDSRx5gtzWzhpgq4QIn6F9AzbL3sKMFaRqlj2S7nThj8953HT4+P3OEi8Pigc
+wMa7P1vRxLj/EnXeJHo0fJCW8YrS7ENNh3pzT0kSLDNvf5gxA3t3swREar4S+MFp
+UvxaLbdyB1c=
+=jTHV
 -----END PGP SIGNATURE-----
 
---Sig_/D0RtzqS2dEv40PEaM3sMIwT--
+--Sig_/G6QEaDuQ_g6z3VdFwiNKM8B--
