@@ -1,85 +1,56 @@
-From: Roman Mamedov <rm@romanrm.ru>
+From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: OT: silent data corruption reading from hard drives
-Date: Thu, 2 Aug 2012 09:19:17 +0600
-Message-ID: <20120802091917.32fb0ca5@natsu>
-References: <50191ADE.10809@fastmail.fm>
-	<5019D052.4000409@hardwarefreak.com>
+Date: Wed, 01 Aug 2012 22:23:52 -0500
+Message-ID: <5019F2C8.2070503@hardwarefreak.com>
+References: <50191ADE.10809@fastmail.fm> <5019D052.4000409@hardwarefreak.com> <5019D78E.30609@websitemanagers.com.au>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/njLROfOneLl=K8nnbl81dep"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5019D052.4000409@hardwarefreak.com>
+In-Reply-To: <5019D78E.30609@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: matt <listy@fastmail.fm>, linux-raid@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/njLROfOneLl=K8nnbl81dep
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 8/1/2012 8:27 PM, Adam Goryachev wrote:
 
-On Wed, 01 Aug 2012 19:56:50 -0500
-Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> On a related note, is there a specific model card you would suggest that
+> fits the following:
+> a) 4 or 8 ports
+> b) PCI (for older systems)
+> c) affordable (note, not cheap, but not expensive)
+> d) does not need to support RAID since we will use software raid anyway
 
-> On 8/1/2012 7:02 AM, matt wrote:
-> > Is silent data corruption like this simply to be expected when using ch=
-eap
-> > commodity hardware?
->=20
-> When you pay less than 1/4th the price of one drive for the controller
-> card directing all your drives, is it really necessary to ask this questi=
-on?
->=20
-> Two large pizzas cost more than a Syba/Rosewill/Koutech/etc SATA card.
-> The pizza is consumed in one night, maybe some for breakfast.  Would you
-> trust a day worth of pizza with your RAID?  With your data?
->=20
-> One tank of gas for the average car today costs $50, the same as two of
-> these SATA cards.  The gas is gone in a week or two.  You want the cards
-> to run for 2-4 years.
->=20
-> Your drives cost anywhere from $400-$1000, yet your controller maybe
-> $50.  Do I really need to say any more?  Spend $150-250 on a decent
-> SAS/SATA controller such as an LSI or Adaptec and you won't have to
-> worry about this kind of thing.
+If you're stuck with PCI I'd stick with a more recognized vendor such as
+Promise Tech.  They still sell a 4 port PCI card.  $70 USD at Newegg.
 
-While you're at it also don't forget to get yourself some quality
-Ethernet cabling, you don't want any data corruption on your LAN, do you
-http://www.amazon.com/Denon-AKDL1-Dedicated-Link-Cable/dp/tech-data/B000I1X=
-6PM/ref=3Dde_a_smtd
+> I am always unsure, and see very cheap SATA cards (around $50) and worry
+> as you suggest, and very expensive (around $1000), and feel that is a
+> waste of money for what should be a fairly simple card.
 
-It's not a matter of "just pay more and all your problems will be solved".
+A "very cheap" SATA card is a 2-port SiI 3512 based card--Syba,
+Rosewill, Koutech, etc-- for $15 on sale, $20 regular price, all prices
+USD.  A $50 card with the same port count *should* hopefully be much
+higher quality.
 
-There are some really crappy controllers even in the "enterprise" range
-(e.g. those using the mv_sas driver). And there's a lot of $15 models giving
-zero problems whatsoever (e.g. the ahci-compliant Marvell 88SE912x, JMicron
-JMB36x).=20
+> Also, would you use on board controller, or prefer to always use an
+> external controller? Or is it worthwhile using a combination (in case of
+> controller failure)?
 
-Also, if you only use the mdadm software RAID, getting an enterprise hardwa=
-re
-RAID controller is truly a waste of money, unless you really need the extra
-port density.
+Motherboard-down SATA controllers are usually fine for md/RAID as
+they're part of an Intel or AMD chipset, and of high quality.  But this
+also depends on the quality of the board as well--there have been plenty
+of boards with good chipsets but also a buggy BIOS.  Overall they're
+usually much better than a $20 card.
 
---=20
-With respect,
-Roman
+In 20+ years of computing I've never had an HBA or RAID card fail on me.
+ I've had plenty of mobos go toes up and plenty of NICs and VGA cards
+burn out.  I have a 128MB 3-channel AMI MegaRAID 428 UW-SCSI built in
+1998 that still works and an Adaptec 1542 ISA SCSI card from 1993 that
+still works.  I've tossed piles of dead mobos over the same period.
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-"Stallman had a printer,
-with code he could not see.
-So he began to tinker,
-and set the software free."
+-- 
+Stan
 
---Sig_/njLROfOneLl=K8nnbl81dep
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlAZ8bUACgkQTLKSvz+PZwiDSACeP7hzZIVlJ/yku78Y0XgkksZ/
-tXoAn2SrtRqunpSIgX51z108i2MqlMDP
-=1cZ7
------END PGP SIGNATURE-----
-
---Sig_/njLROfOneLl=K8nnbl81dep--
