@@ -1,56 +1,47 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: OT: silent data corruption reading from hard drives
-Date: Wed, 01 Aug 2012 22:23:52 -0500
-Message-ID: <5019F2C8.2070503@hardwarefreak.com>
-References: <50191ADE.10809@fastmail.fm> <5019D052.4000409@hardwarefreak.com> <5019D78E.30609@websitemanagers.com.au>
-Reply-To: stan@hardwarefreak.com
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH 1/2 V1] [PATCH] fs/block-dev.c:fix performance regression in O_DIRECT writes to md block devices
+Date: Thu, 2 Aug 2012 14:48:41 +0800
+Message-ID: <201208021448392819731@gmail.com>
+References: <201207161422001403795@gmail.com>,
+	<20120717130434.670e51e9@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5019D78E.30609@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: linux-raid@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: viro <viro@ZenIV.linux.org.uk>, linux-raid <linux-raid@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On 8/1/2012 8:27 PM, Adam Goryachev wrote:
-
-> On a related note, is there a specific model card you would suggest that
-> fits the following:
-> a) 4 or 8 ports
-> b) PCI (for older systems)
-> c) affordable (note, not cheap, but not expensive)
-> d) does not need to support RAID since we will use software raid anyway
-
-If you're stuck with PCI I'd stick with a more recognized vendor such as
-Promise Tech.  They still sell a 4 port PCI card.  $70 USD at Newegg.
-
-> I am always unsure, and see very cheap SATA cards (around $50) and worry
-> as you suggest, and very expensive (around $1000), and feel that is a
-> waste of money for what should be a fairly simple card.
-
-A "very cheap" SATA card is a 2-port SiI 3512 based card--Syba,
-Rosewill, Koutech, etc-- for $15 on sale, $20 regular price, all prices
-USD.  A $50 card with the same port count *should* hopefully be much
-higher quality.
-
-> Also, would you use on board controller, or prefer to always use an
-> external controller? Or is it worthwhile using a combination (in case of
-> controller failure)?
-
-Motherboard-down SATA controllers are usually fine for md/RAID as
-they're part of an Intel or AMD chipset, and of high quality.  But this
-also depends on the quality of the board as well--there have been plenty
-of boards with good chipsets but also a buggy BIOS.  Overall they're
-usually much better than a $20 card.
-
-In 20+ years of computing I've never had an HBA or RAID card fail on me.
- I've had plenty of mobos go toes up and plenty of NICs and VGA cards
-burn out.  I have a 128MB 3-channel AMI MegaRAID 428 UW-SCSI built in
-1998 that still works and an Adaptec 1542 ISA SCSI card from 1993 that
-still works.  I've tossed piles of dead mobos over the same period.
-
--- 
-Stan
+T24gMjAxMi0wNy0xNyAxMTowNCBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
+IE1vbiwgMTYgSnVsIDIwMTIgMTQ6MjI6MDMgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVuZ0Bn
+bWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gRm9yIHJlZ3VsYXIgZmlsZSwgd3JpdGUgb3BlcmFpb24g
+dXNlZCBibGtfcGx1ZyBmdW5jdGlvbi5CdXQgZm9yIGJsb2NrDQo+PiBmaWxlLHdyaXRlIG9wZXJh
+dGlvbiBkaWQgbm90IHVzZSBibGtfcGx1Zy4NCj4+IFRoaXMgcGF0Y2ggaXMgYWxzbyBmb3Igd3Jp
+dGUtY2FjaGUgbW9kZSBmb3IgYmxvY2stZGV2aWNlLg0KPj4gDQo+PiBTaWduZWQtb2ZmLWJ5OiBK
+aWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQo+DQo+UmV2aWV3ZWQtYnk6IE5laWxC
+cm93biA8bmVpbGJAc3VzZS5kZT4NCj4NCj5XaWxsIHlvdSB0YWtlIHRoaXMgSmVucz8gIFRob3Vn
+aCBtYWlsIHRvIHlvdSBzZWVtIHRvIGJlIGJvdW5jaW5nOg0KPg0KPjxheGJvZUBmdXNpb25pby5j
+b20+OiBob3N0IG1haWwuZnVzaW9uaW8uY29tWzEwLjEwMS4xLjE5XSBzYWlkOiA1NTQgNS40LjYg
+SG9wDQo+ICAgIGNvdW50IGV4Y2VlZGVkIC0gcG9zc2libGUgbWFpbCBsb29wIChpbiByZXBseSB0
+byBlbmQgb2YgREFUQSBjb21tYW5kKQ0KPg0KPnNvIEknbSBub3Qgc3VyZSB5b3UnbGwgZXZlbiBz
+ZWUgdGhpcyA6LSgNCj4NCj5OZWlsQnJvd24NCj4NCj4+IC0tLQ0KPj4gIGZzL2Jsb2NrX2Rldi5j
+IHwgICAgMyArKysNCj4+ICAxIGZpbGVzIGNoYW5nZWQsIDMgaW5zZXJ0aW9ucygrKSwgMCBkZWxl
+dGlvbnMoLSkNCj4+IA0KPj4gZGlmZiAtLWdpdCBhL2ZzL2Jsb2NrX2Rldi5jIGIvZnMvYmxvY2tf
+ZGV2LmMNCj4+IGluZGV4IGMyYmJlMWYuLmNmMTA3NzggMTAwNjQ0DQo+PiAtLS0gYS9mcy9ibG9j
+a19kZXYuYw0KPj4gKysrIGIvZnMvYmxvY2tfZGV2LmMNCj4+IEBAIC0xNTc5LDkgKzE1NzksMTEg
+QEAgc3NpemVfdCBibGtkZXZfYWlvX3dyaXRlKHN0cnVjdCBraW9jYiAqaW9jYiwgY29uc3Qgc3Ry
+dWN0IGlvdmVjICppb3YsDQo+PiAgew0KPj4gIAlzdHJ1Y3QgZmlsZSAqZmlsZSA9IGlvY2ItPmtp
+X2ZpbHA7DQo+PiAgCXNzaXplX3QgcmV0Ow0KPj4gKwlzdHJ1Y3QgYmxrX3BsdWcgcGx1ZzsNCj4+
+ICANCj4+ICAJQlVHX09OKGlvY2ItPmtpX3BvcyAhPSBwb3MpOw0KPj4gIA0KPj4gKwlibGtfc3Rh
+cnRfcGx1ZygmcGx1Zyk7DQo+PiAgCXJldCA9IF9fZ2VuZXJpY19maWxlX2Fpb193cml0ZShpb2Ni
+LCBpb3YsIG5yX3NlZ3MsICZpb2NiLT5raV9wb3MpOw0KPj4gIAlpZiAocmV0ID4gMCB8fCByZXQg
+PT0gLUVJT0NCUVVFVUVEKSB7DQo+PiAgCQlzc2l6ZV90IGVycjsNCj4+IEBAIC0xNTkwLDYgKzE1
+OTIsNyBAQCBzc2l6ZV90IGJsa2Rldl9haW9fd3JpdGUoc3RydWN0IGtpb2NiICppb2NiLCBjb25z
+dCBzdHJ1Y3QgaW92ZWMgKmlvdiwNCj4+ICAJCWlmIChlcnIgPCAwICYmIHJldCA+IDApDQo+PiAg
+CQkJcmV0ID0gZXJyOw0KPj4gIAl9DQo+PiArCWJsa19maW5pc2hfcGx1ZygmcGx1Zyk7DQo+PiAg
+CXJldHVybiByZXQ7DQo+PiAgfQ0KPj4gIEVYUE9SVF9TWU1CT0xfR1BMKGJsa2Rldl9haW9fd3Jp
+dGUpOw0KPg0KPg0KDQpIb3cgYWJvdXQgdGhpcyBwYXRjaD8gYXBwbHkgb3IgcmVqZWN0PyBUaGFu
+a3Mh
 
