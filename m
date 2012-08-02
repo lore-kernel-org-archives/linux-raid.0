@@ -1,92 +1,39 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PULL REQUEST] few more md patches now that dependencies are
- present.
-Date: Thu, 2 Aug 2012 10:35:24 +1000
-Message-ID: <20120802103524.043132e7@notabene.brown>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: OT: silent data corruption reading from hard drives
+Date: Wed, 01 Aug 2012 19:56:50 -0500
+Message-ID: <5019D052.4000409@hardwarefreak.com>
+References: <50191ADE.10809@fastmail.fm>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/G6QEaDuQ_g6z3VdFwiNKM8B"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <50191ADE.10809@fastmail.fm>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>, Jens Axboe <jaxboe@fusionio.com>, Shaohua Li <shli@kernel.org>, Fengguang Wu <fengguang.wu@intel.com>, Jonathan Brassow <jbrassow@redhat.com>
+To: matt <listy@fastmail.fm>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/G6QEaDuQ_g6z3VdFwiNKM8B
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 8/1/2012 7:02 AM, matt wrote:
+> Is silent data corruption like this simply to be expected when using cheap
+> commodity hardware?
 
+When you pay less than 1/4th the price of one drive for the controller
+card directing all your drives, is it really necessary to ask this question?
 
-Is it still Wednesday?
+Two large pizzas cost more than a Syba/Rosewill/Koutech/etc SATA card.
+The pizza is consumed in one night, maybe some for breakfast.  Would you
+trust a day worth of pizza with your RAID?  With your data?
 
-As promised, here are the last bits for md.  Primarily performance
-improvements made possible the new plugging code.  These can make a
-significant difference on SDD's and a noticeable difference on spinning rus=
-t.
+One tank of gas for the average car today costs $50, the same as two of
+these SATA cards.  The gas is gone in a week or two.  You want the cards
+to run for 2-4 years.
 
-Thanks,
-NeilBrown
+Your drives cost anywhere from $400-$1000, yet your controller maybe
+$50.  Do I really need to say any more?  Spend $150-250 on a decent
+SAS/SATA controller such as an LSI or Adaptec and you won't have to
+worry about this kind of thing.
 
+-- 
+Stan
 
-The following changes since commit 74018dc3063a2c729fc73041c0a9f03aac995920:
-
-  blk: pass from_schedule to non-request unplug functions. (2012-07-31 09:0=
-8:15 +0200)
-
-are available in the git repository at:
-
-  git://neil.brown.name/md tags/md-3.6
-
-for you to fetch changes up to d9f691c365a83ce2530f0e46b947365c2db44ea0:
-
-  md/dm-raid: DM_RAID should select MD_RAID10 (2012-08-02 08:35:43 +1000)
-
-----------------------------------------------------------------
-Additional md update for 3.6
-
-This contains a few patches that depend on
-plugging changes in the block layer so needs to wait
-for those.
-It also contains a Kconfig fix for the new RAID10 support
-in dm-raid.
-
-----------------------------------------------------------------
-NeilBrown (2):
-      md/raid1: submit IO from originating thread instead of md thread.
-      md/dm-raid: DM_RAID should select MD_RAID10
-
-Shaohua Li (2):
-      raid5: make_request use batch stripe release
-      raid5: raid5d handle stripe in batch way
-
- drivers/md/Kconfig  |    5 ++-
- drivers/md/bitmap.c |    2 +-
- drivers/md/raid1.c  |   57 +++++++++++++++++++++++++--
- drivers/md/raid5.c  |  107 +++++++++++++++++++++++++++++++++++++++++++----=
-----
- drivers/md/raid5.h  |    1 +
- 5 files changed, 150 insertions(+), 22 deletions(-)
-
---Sig_/G6QEaDuQ_g6z3VdFwiNKM8B
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUBnLTDnsnt1WYoG5AQKSSQ/9E5c9SJj6HYE3pRc6k21fnJS58rmpudS8
-xj70LT/1sn2azFqroleTh/FKdCfCzZUloMW47LKN9O9402YZDut8fQfwoX7BYNDX
-eLJTD909iZ4GA/HJl4QLO59b3JtluLzk6jKRy3uYp70OOoVm7j7tXNLYcXLSDMu1
-TUXQj7DdkKQKdPzvuFwmLFHfQA+e9vBfBDdta9w9va+RmYEk6bT+noEoxs9m/0mR
-wbH3y1PQGFdOFbxPEwQYanuzMpzIKXH4eqBDKvmqaLeMQuF/QNOgWOwiG4amIlXG
-4a3ssx3pKa4T4Ow4pL7iRwEcUOAkR9NzkMKeXQzDwpgXYY+FqDdDNozrLhIASrNX
-EFvNUJFjmtNrg03CEqPCoSMCjhWKXm0gWDWx741LSkLUrk8/2Oc1Z1bMwCtLDGHw
-04IDIr+7ohzoSZrt1O+xjtVy8vNvOz/d6+fIcl5i4IWGqHRjiwnL7pVODU2w+5Nf
-L95ubBbh6BpZJkvBqXssNO6VrfkLIRn7JrA9SKlb8VcYCazWzRS4dlGZ0OOtBvWe
-CgCcDSRx5gtzWzhpgq4QIn6F9AzbL3sKMFaRqlj2S7nThj8953HT4+P3OEi8Pigc
-wMa7P1vRxLj/EnXeJHo0fJCW8YrS7ENNh3pzT0kSLDNvf5gxA3t3swREar4S+MFp
-UvxaLbdyB1c=
-=jTHV
------END PGP SIGNATURE-----
-
---Sig_/G6QEaDuQ_g6z3VdFwiNKM8B--
