@@ -1,54 +1,63 @@
-From: Jeff Johnson <jeff.johnson@aeoncomputing.com>
+From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: OT: silent data corruption reading from hard drives
-Date: Thu, 02 Aug 2012 10:13:55 -0700
-Message-ID: <501AB553.2030003@aeoncomputing.com>
-References: <50191ADE.10809@fastmail.fm> <5019D052.4000409@hardwarefreak.com> <20120802091917.32fb0ca5@natsu> <501A316C.3020305@hardwarefreak.com> <20120802140634.6f729d07@natsu> <1343926790.28421.140661109896017.1A222237@webmail.messagingengine.com> <CABYL=TpDU0YD4orJqyZzeYPtUJ+vBEeM=CWhFxa4GWGj8SjGMQ@mail.gmail.com>
+Date: Thu, 2 Aug 2012 23:19:23 +0600
+Message-ID: <20120802231923.45b6f1fc@natsu>
+References: <50191ADE.10809@fastmail.fm>
+	<5019D052.4000409@hardwarefreak.com>
+	<20120802091917.32fb0ca5@natsu>
+	<501A316C.3020305@hardwarefreak.com>
+	<20120802140634.6f729d07@natsu>
+	<1343926790.28421.140661109896017.1A222237@webmail.messagingengine.com>
+	<CABYL=TpDU0YD4orJqyZzeYPtUJ+vBEeM=CWhFxa4GWGj8SjGMQ@mail.gmail.com>
+	<501AB553.2030003@aeoncomputing.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/TJwp64Ky.Ywe04n=0GrgnJN"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CABYL=TpDU0YD4orJqyZzeYPtUJ+vBEeM=CWhFxa4GWGj8SjGMQ@mail.gmail.com>
+In-Reply-To: <501AB553.2030003@aeoncomputing.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jeff Johnson <jeff.johnson@aeoncomputing.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The only ways I know of to currently detect/repair silent data=20
-corruption are via the use of T10-DIF on SAS drives with 520-byte=20
-sectors and embedded per block CRCs (bytes 513-520) or via a patented=20
-algorithm used in a commercial Linux software RAID product=20
-(www.streamscale.com).
+--Sig_/TJwp64Ky.Ywe04n=0GrgnJN
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Neither approach is cost effective for small or personal use RAID=20
-applications.
+On Thu, 02 Aug 2012 10:13:55 -0700
+Jeff Johnson <jeff.johnson@aeoncomputing.com> wrote:
 
+> The only ways I know of to currently detect/repair silent data=20
+> corruption are via the use of T10-DIF on SAS drives with 520-byte=20
+> sectors and embedded per block CRCs (bytes 513-520) or via a patented=20
+> algorithm used in a commercial Linux software RAID product=20
+> (www.streamscale.com).
 
-On 8/2/12 10:04 AM, Roberto Spadim wrote:
-> well i think the integrity is know, but it=B4s not fully needed since
-> the security isn=B4t a problem we can buy secure sata/sas
-> controlers/disks
-> the main problem will be in some days when we are using SoC systems
-> and we only have USB to connect a harddrive... maybe when this become
-> more popular we will see a development of a module to have data
-> integrity (silient corruption detection and maybe repair)
->
+Well, you can simply use BTRFS RAID1/RAID10 (RAID5/6 to come some time soon=
+).
+It has per block checksums and auto-healing from other drive(s) if data on
+some drive turns out not to match the checksums anymore.
 
 --=20
-------------------------------
-Jeff Johnson
-Manager
-Aeon Computing
+With respect,
+Roman
 
-jeff.johnson@aeoncomputing.com
-www.aeoncomputing.com
-t: 858-412-3810 x101   f: 858-412-3845
-m: 619-204-9061
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"Stallman had a printer,
+with code he could not see.
+So he began to tinker,
+and set the software free."
 
-/* New Address */
-4170 Morena Boulevard, Suite D - San Diego, CA 92117
+--Sig_/TJwp64Ky.Ywe04n=0GrgnJN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlAatpsACgkQTLKSvz+PZwhcfQCdFdvufIAChs/IsuUQZNyyXE1B
+/U8An0JM26ziGn5V7jkINZ29HrbMlpzJ
+=Dp7x
+-----END PGP SIGNATURE-----
+
+--Sig_/TJwp64Ky.Ywe04n=0GrgnJN--
