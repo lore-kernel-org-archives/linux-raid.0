@@ -1,75 +1,97 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 1/2 V1] [PATCH] fs/block-dev.c:fix performance regression
- in O_DIRECT writes to md block devices
-Date: Thu, 02 Aug 2012 09:51:27 +0200
-Message-ID: <501A317F.40408@kernel.dk>
-References: <201207161422001403795@gmail.com>,  <20120717130434.670e51e9@notabene.brown> <201208021448392819731@gmail.com>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Re: OT: silent data corruption reading from hard drives
+Date: Thu, 2 Aug 2012 14:06:34 +0600
+Message-ID: <20120802140634.6f729d07@natsu>
+References: <50191ADE.10809@fastmail.fm>
+	<5019D052.4000409@hardwarefreak.com>
+	<20120802091917.32fb0ca5@natsu>
+	<501A316C.3020305@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <201208021448392819731@gmail.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: viro <viro@ZenIV.linux.org.uk>, linux-raid <linux-raid@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Neil Brown <neilb@suse.de>
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/tRwjjN2oqbODyzcbRrA6dkw"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <501A316C.3020305@hardwarefreak.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: stan@hardwarefreak.com
+Cc: matt <listy@fastmail.fm>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/02/2012 08:48 AM, majianpeng wrote:
-> On 2012-07-17 11:04 NeilBrown <neilb@suse.de> Wrote:
->> On Mon, 16 Jul 2012 14:22:03 +0800 majianpeng <majianpeng@gmail.com> wrote:
->>
->>> For regular file, write operaion used blk_plug function.But for block
->>> file,write operation did not use blk_plug.
->>> This patch is also for write-cache mode for block-device.
->>>
->>> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
->>
->> Reviewed-by: NeilBrown <neilb@suse.de>
->>
->> Will you take this Jens?  Though mail to you seem to be bouncing:
->>
->> <axboe@fusionio.com>: host mail.fusionio.com[10.101.1.19] said: 554 5.4.6 Hop
->>    count exceeded - possible mail loop (in reply to end of DATA command)
->>
->> so I'm not sure you'll even see this :-(
->>
->> NeilBrown
->>
->>> ---
->>>  fs/block_dev.c |    3 +++
->>>  1 files changed, 3 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/fs/block_dev.c b/fs/block_dev.c
->>> index c2bbe1f..cf10778 100644
->>> --- a/fs/block_dev.c
->>> +++ b/fs/block_dev.c
->>> @@ -1579,9 +1579,11 @@ ssize_t blkdev_aio_write(struct kiocb *iocb, const struct iovec *iov,
->>>  {
->>>  	struct file *file = iocb->ki_filp;
->>>  	ssize_t ret;
->>> +	struct blk_plug plug;
->>>  
->>>  	BUG_ON(iocb->ki_pos != pos);
->>>  
->>> +	blk_start_plug(&plug);
->>>  	ret = __generic_file_aio_write(iocb, iov, nr_segs, &iocb->ki_pos);
->>>  	if (ret > 0 || ret == -EIOCBQUEUED) {
->>>  		ssize_t err;
->>> @@ -1590,6 +1592,7 @@ ssize_t blkdev_aio_write(struct kiocb *iocb, const struct iovec *iov,
->>>  		if (err < 0 && ret > 0)
->>>  			ret = err;
->>>  	}
->>> +	blk_finish_plug(&plug);
->>>  	return ret;
->>>  }
->>>  EXPORT_SYMBOL_GPL(blkdev_aio_write);
->>
->>
-> 
-> How about this patch? apply or reject? Thanks!
+--Sig_/tRwjjN2oqbODyzcbRrA6dkw
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I've applied it for a bit of testing, then it'll got into 3.6. Thanks.
+On Thu, 02 Aug 2012 02:51:08 -0500
+Stan Hoeppner <stan@hardwarefreak.com> wrote:
 
--- 
-Jens Axboe
+> I didn't say, nor imply such a thing.  You missed my point entirely
+> about dollar amount.  It had two aspects:
+>=20
+> 1.  Some people are willing to spend hundreds or thousands on drives,
+> then hook them to $15 controllers without giving that ratio a thought,
+> no reflection upon the sanity of it.
 
+Why should there be any reflection? There is no no automatic "Hmm, this thi=
+ng
+costs $XXX, so the other thing should also cost $XXX" rule.
+
+$15 is simply the right price for a perfectly working 2 port SATA controller
+(based on some of those chip models I named) on the market.
+
+The rule is not "buy expensive", it's "avoid buying (known-)broken". Maybe
+it's more difficult to come across a broken card in the expensive segment.
+Maybe it's not. In any case my suggestion is to just do some research before
+you buy, identify broken chips and cards, avoid those, and save yourself th=
+ose
+$185 or whatever.
+
+> First, there are not "enterprise" controllers that use the Marvell SAS
+> chip, period.  It's a low/mid cost, entry level 8 port SAS ASIC.  The
+> cards based on it a not crappy, but actually pretty decent.  They run
+> very well with Windows, *BSD, SCO, NetWare, and other OSes.  It just
+> happens that the Linux driver, yes mv_sas, totally sucks
+
+The end result for the user is the same, they accidentally buy that card, t=
+hey
+use GNU/Linux, they have to use that sucky driver. The best choice is to av=
+oid
+buying the card in the first place, but how do you know you should, if you
+didn't do the research (see above) and just looked at the price tag.
+
+> > Also, if you only use the mdadm software RAID, getting an enterprise ha=
+rdware
+> > RAID controller is truly a waste of money, unless you really need the e=
+xtra
+> > port density.
+>=20
+> That logic is flawed.  If you have an enterprise hardware RAID
+> controller you're not going to use md/RAID, unless you're stitching LUNs
+> together with linear or RAID0, as I often do.  In fact that's my most
+> frequent use of md/RAID--concatenation of hardware RAID or SAN LUNs.
+
+I do not recommend using hardware RAID. It locks you into one card/vendor,
+usually is much less flexible than mdadm, and often even provides lower
+performance. See http://linux.yyz.us/why-software-raid.html
+
+--=20
+With respect,
+Roman
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"Stallman had a printer,
+with code he could not see.
+So he began to tinker,
+and set the software free."
+
+--Sig_/tRwjjN2oqbODyzcbRrA6dkw
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlAaNQoACgkQTLKSvz+PZwgzUACeJG7CeNn3Kag26led0zA1bwvU
+sOoAnA1Meo0EXQupS3T75LB4kdQbxxz6
+=YOhv
+-----END PGP SIGNATURE-----
+
+--Sig_/tRwjjN2oqbODyzcbRrA6dkw--
