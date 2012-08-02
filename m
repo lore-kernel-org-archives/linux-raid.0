@@ -1,65 +1,52 @@
-From: Roberto Spadim <roberto@spadim.com.br>
+From: Jeff Johnson <jeff.johnson@aeoncomputing.com>
 Subject: Re: OT: silent data corruption reading from hard drives
-Date: Thu, 2 Aug 2012 14:04:35 -0300
-Message-ID: <CABYL=TpDU0YD4orJqyZzeYPtUJ+vBEeM=CWhFxa4GWGj8SjGMQ@mail.gmail.com>
-References: <50191ADE.10809@fastmail.fm>
-	<5019D052.4000409@hardwarefreak.com>
-	<20120802091917.32fb0ca5@natsu>
-	<501A316C.3020305@hardwarefreak.com>
-	<20120802140634.6f729d07@natsu>
-	<1343926790.28421.140661109896017.1A222237@webmail.messagingengine.com>
+Date: Thu, 02 Aug 2012 10:13:55 -0700
+Message-ID: <501AB553.2030003@aeoncomputing.com>
+References: <50191ADE.10809@fastmail.fm> <5019D052.4000409@hardwarefreak.com> <20120802091917.32fb0ca5@natsu> <501A316C.3020305@hardwarefreak.com> <20120802140634.6f729d07@natsu> <1343926790.28421.140661109896017.1A222237@webmail.messagingengine.com> <CABYL=TpDU0YD4orJqyZzeYPtUJ+vBEeM=CWhFxa4GWGj8SjGMQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1343926790.28421.140661109896017.1A222237@webmail.messagingengine.com>
+In-Reply-To: <CABYL=TpDU0YD4orJqyZzeYPtUJ+vBEeM=CWhFxa4GWGj8SjGMQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: listy@fastmail.fm
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-well i think the integrity is know, but it=B4s not fully needed since
-the security isn=B4t a problem we can buy secure sata/sas
-controlers/disks
-the main problem will be in some days when we are using SoC systems
-and we only have USB to connect a harddrive... maybe when this become
-more popular we will see a development of a module to have data
-integrity (silient corruption detection and maybe repair)
+The only ways I know of to currently detect/repair silent data=20
+corruption are via the use of T10-DIF on SAS drives with 520-byte=20
+sectors and embedded per block CRCs (bytes 513-520) or via a patented=20
+algorithm used in a commercial Linux software RAID product=20
+(www.streamscale.com).
 
-2012/8/2  <listy@fastmail.fm>:
-> Thanks for the replies, everyone.  I didn't expect the debate on
-> controller price ranges, though.  :)
->
-> My main concern was not really the price of the hardware ("OMG why
-> doesn't my $15 card work?!?"), but that the entire setup, hardware +
-> software, allows silent data corruption to occur. It's not hard to
-> imagine that something similar might happen with an $800 controller
-> card, for whatever reason.  And how would the user know, unless they
-> noticed bad data, or happened to look at the mismatch_cnt?
->
-> (And in my case, I think that, once the weekly raid-check runs and
-> updates mismatch_cnt, it's already too late, as the check process has
-> potentially rewritten bad data to the drives based on the bogus reads=
-=2E
-> Is that correct?   My array is RAID-6, btw.)
->
-> Anyway, I'm going give up on SI-based controllers for now and try a
-> StarTech PEXSAT34, as the Marvell 88SE9128 is supported natively by
-> the kernel's AHCI driver.
->
-> Thanks,
-> matt
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Neither approach is cost effective for small or personal use RAID=20
+applications.
 
 
+On 8/2/12 10:04 AM, Roberto Spadim wrote:
+> well i think the integrity is know, but it=B4s not fully needed since
+> the security isn=B4t a problem we can buy secure sata/sas
+> controlers/disks
+> the main problem will be in some days when we are using SoC systems
+> and we only have USB to connect a harddrive... maybe when this become
+> more popular we will see a development of a module to have data
+> integrity (silient corruption detection and maybe repair)
+>
 
 --=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
+------------------------------
+Jeff Johnson
+Manager
+Aeon Computing
+
+jeff.johnson@aeoncomputing.com
+www.aeoncomputing.com
+t: 858-412-3810 x101   f: 858-412-3845
+m: 619-204-9061
+
+/* New Address */
+4170 Morena Boulevard, Suite D - San Diego, CA 92117
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
