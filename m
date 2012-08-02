@@ -1,76 +1,85 @@
-From: Roberto Spadim <roberto@spadim.com.br>
+From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: OT: silent data corruption reading from hard drives
-Date: Wed, 1 Aug 2012 22:35:03 -0300
-Message-ID: <CABYL=TovtwpHfQHDPSSheZ7TR96JH=AODLLPrQ=qM2fMaqPbKg@mail.gmail.com>
+Date: Thu, 2 Aug 2012 09:19:17 +0600
+Message-ID: <20120802091917.32fb0ca5@natsu>
 References: <50191ADE.10809@fastmail.fm>
 	<5019D052.4000409@hardwarefreak.com>
-	<5019D78E.30609@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/njLROfOneLl=K8nnbl81dep"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5019D78E.30609@websitemanagers.com.au>
+In-Reply-To: <5019D052.4000409@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: linux-raid@vger.kernel.org
+To: stan@hardwarefreak.com
+Cc: matt <listy@fastmail.fm>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-check this link at oracle
-https://oss.oracle.com/projects/data-integrity/
+--Sig_/njLROfOneLl=K8nnbl81dep
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-i don=B4t know if this is a good solution, but i think it=B4s a start p=
-oint...
+On Wed, 01 Aug 2012 19:56:50 -0500
+Stan Hoeppner <stan@hardwarefreak.com> wrote:
 
+> On 8/1/2012 7:02 AM, matt wrote:
+> > Is silent data corruption like this simply to be expected when using ch=
+eap
+> > commodity hardware?
+>=20
+> When you pay less than 1/4th the price of one drive for the controller
+> card directing all your drives, is it really necessary to ask this questi=
+on?
+>=20
+> Two large pizzas cost more than a Syba/Rosewill/Koutech/etc SATA card.
+> The pizza is consumed in one night, maybe some for breakfast.  Would you
+> trust a day worth of pizza with your RAID?  With your data?
+>=20
+> One tank of gas for the average car today costs $50, the same as two of
+> these SATA cards.  The gas is gone in a week or two.  You want the cards
+> to run for 2-4 years.
+>=20
+> Your drives cost anywhere from $400-$1000, yet your controller maybe
+> $50.  Do I really need to say any more?  Spend $150-250 on a decent
+> SAS/SATA controller such as an LSI or Adaptec and you won't have to
+> worry about this kind of thing.
 
-2012/8/1 Adam Goryachev <mailinglists@websitemanagers.com.au>:
-> On 02/08/12 10:56, Stan Hoeppner wrote:
->> Your drives cost anywhere from $400-$1000, yet your controller maybe=
- $50. Do I really need to say any
-> more? Spend $150-250 on a decent SAS/SATA controller such as an LSI o=
-r
-> Adaptec and you won't have to worry about this kind of thing.
-> On a related note, is there a specific model card you would suggest t=
-hat
-> fits the following:
-> a) 4 or 8 ports
-> b) PCI (for older systems)
-> c) affordable (note, not cheap, but not expensive)
-> d) does not need to support RAID since we will use software raid anyw=
-ay
->
-> I am always unsure, and see very cheap SATA cards (around $50) and wo=
-rry
-> as you suggest, and very expensive (around $1000), and feel that is a
-> waste of money for what should be a fairly simple card.
->
-> Also, would you use on board controller, or prefer to always use an
-> external controller? Or is it worthwhile using a combination (in case=
- of
-> controller failure)?
->
-> Thanks for your opinions.
->
-> Regards,
-> Adam
->
-> --
-> Adam Goryachev
-> Website Managers
-> www.websitemanagers.com.au
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+While you're at it also don't forget to get yourself some quality
+Ethernet cabling, you don't want any data corruption on your LAN, do you
+http://www.amazon.com/Denon-AKDL1-Dedicated-Link-Cable/dp/tech-data/B000I1X=
+6PM/ref=3Dde_a_smtd
 
+It's not a matter of "just pay more and all your problems will be solved".
 
+There are some really crappy controllers even in the "enterprise" range
+(e.g. those using the mv_sas driver). And there's a lot of $15 models giving
+zero problems whatsoever (e.g. the ahci-compliant Marvell 88SE912x, JMicron
+JMB36x).=20
+
+Also, if you only use the mdadm software RAID, getting an enterprise hardwa=
+re
+RAID controller is truly a waste of money, unless you really need the extra
+port density.
 
 --=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+With respect,
+Roman
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"Stallman had a printer,
+with code he could not see.
+So he began to tinker,
+and set the software free."
+
+--Sig_/njLROfOneLl=K8nnbl81dep
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlAZ8bUACgkQTLKSvz+PZwiDSACeP7hzZIVlJ/yku78Y0XgkksZ/
+tXoAn2SrtRqunpSIgX51z108i2MqlMDP
+=1cZ7
+-----END PGP SIGNATURE-----
+
+--Sig_/njLROfOneLl=K8nnbl81dep--
