@@ -1,75 +1,53 @@
-From: Albert Pauw <albert.pauw@gmail.com>
-Subject: Re: How does one assemble a DDF or IMSM array?
-Date: Fri, 03 Aug 2012 08:15:05 +0200
-Message-ID: <501B6C69.8080409@gmail.com>
-References: <20120803010532.GA1285@animx.eu.org>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: RAID6 Reshape Gone Awry
+Date: Fri, 03 Aug 2012 06:18:12 -0500
+Message-ID: <501BB374.9020607@hardwarefreak.com>
+References: <8C493F417CC49C6619BBAF45@ryoohko.kodachi.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120803010532.GA1285@animx.eu.org>
+In-Reply-To: <8C493F417CC49C6619BBAF45@ryoohko.kodachi.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wakko Warner <wakko@animx.eu.org>, linux-raid@vger.kernel.org
+To: Flynn <flynn@kodachi.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On 8/3/2012 12:27 AM, Flynn wrote:
 
-you can start them by using "mdadm -As", that will start up the 
-container first and the other md devices after.
-This will work without mdadm.conf, but it is always good to create a 
-proper mdadm.conf (mdadm -Es > /etc/mdadm.conf).
+> My RAID6 is actually a little bit odd in that the drives are split into
+> 10 partitions.  All the partition 5's are a RAID6; all the partition 6's
+> are a RAID6; etc.
 
-As for what it is, the container contains the disks (in your case sda 
-and sdb), the disks are not the container.
+md offered the ability, so you _could_ create such a monstrosity.  But
+you never bothered to consider if you _should_
 
-So you create a container first:
-mdadm -CR /dev/md127 -e ddf -l container -n 2 /dev/sda /dev/sdb
-Create a RAID1 device of 1 GB in there
-mdadm -CR /dev/md0 -l 1 -n 2 /dev/md127 -z  1G
-Create another RAID1 device of 50 MB in there
-mdadm -CR /dev/md1 -l 1 -n 2 /dev/md127 -z 50M
+The primary function of RAID is to protect your data in the event of a
+_disk_ failure.  Creating multiple arrays from _partitions_ on the same
+set of physical disks does nothing to protect one from disk failure.
 
-(in this case both md devices are created on the same two disks).
+What it can do is cause massive problems for the elevator when you try
+to reshape 10 arrays simultaneously, which just happen to reside on the
+same set of disks.  By doing this you force the heads on the drives into
+a massive random seek pattern, bumping all over the platters, top to
+bottom.  This is likely what caused, or is directly related to, your crash.
 
-If you have e.g. 5 disks you can create two separate RAID1 and RAID5 
-devices in the container:
+> Suggestions very welcome.
 
-mdadm -CR /dev/md127 -e ddf -l container -n 2 /dev/sda /dev/sdb /dev/sdc 
-/dev/sdd /dev/sde
-mdadm -CR /dev/md0 -l 1 -n 2 /dev/md127
-mdadm -CR /dev/md1 -l 5 -n 3 /dev/md127
+Backup what you need to external storage.  Blow the entire mess away.
+Start over from scratch, and build a single RAID6 array, as you should
+have in the first place.
 
-Now, two disk are used fully for the RAID 1 device and three fully for 
-the RAID 5 devices, they both have their own set of disks.
+md allows the use of partitions, but not so you can create 50 arrays on
+the same set of disks, shooting yourself in the foot.  Similarly, most
+cars can travel at velocities over 120 mph, but most people have enough
+sense not to attempt driving that fast.
 
+Learn the difference between "Can I?" and "Should I?".  You never
+bothered to consider the latter when you built this.  Please consider it
+now, for your sake.
 
-Stopping them all:
-mdadm -Ss
-
-Starting them all:
-mdadm -As
-
-Hope this helps,
-
-Albert
-
-
-On 08/03/2012 03:05 AM, Wakko Warner wrote:
-> I've not used DDF or IMSM arrays much.
->
-> I understand that the devices (ie /dev/sda and /dev/sdb) are the containers.
->
-> I know that one can use mdadm -I on the devices and it will create mdXXX
-> (last I tried it was 127) and then will create mdXXX for each virtual disk
-> in the container and they will just work.
->
-> If I do mdadm -A /dev/mdXXX, how would one get the volumes inside started?
-> I tried mdadm -I /dev/mdXXX after mdadm -A.  It created mdXXX where XXX is
-> -2 from the first one (it 127 being the container and 125 being there but
-> not in a state that works)
->
-> Does DDF/IMSM require mdadm.conf to work when using -A?
->
-> I'm not sure if I'm making myself very clear here or not.
->
+-- 
+Stan
 
