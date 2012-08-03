@@ -1,81 +1,76 @@
-From: David Brown <david.brown@hesbynett.no>
+From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: RAID6 Reshape Gone Awry
-Date: Fri, 03 Aug 2012 15:37:36 +0200
-Message-ID: <501BD420.10203@hesbynett.no>
-References: <8C493F417CC49C6619BBAF45@ryoohko.kodachi.com> <501BB374.9020607@hardwarefreak.com>
+Date: Fri, 3 Aug 2012 20:53:30 +0600
+Message-ID: <20120803205330.7c5f5172@natsu>
+References: <8C493F417CC49C6619BBAF45@ryoohko.kodachi.com>
+	<501BB374.9020607@hardwarefreak.com>
+	<501BD420.10203@hesbynett.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/nLM8k3nNzpgjJEsykLVqe+_"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <501BB374.9020607@hardwarefreak.com>
+In-Reply-To: <501BD420.10203@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: Flynn <flynn@kodachi.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: David Brown <david.brown@hesbynett.no>
+Cc: stan@hardwarefreak.com, Flynn <flynn@kodachi.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 03/08/2012 13:18, Stan Hoeppner wrote:
-> On 8/3/2012 12:27 AM, Flynn wrote:
->
->> My RAID6 is actually a little bit odd in that the drives are split into
->> 10 partitions.  All the partition 5's are a RAID6; all the partition 6's
->> are a RAID6; etc.
->
-> md offered the ability, so you _could_ create such a monstrosity.  But
-> you never bothered to consider if you _should_
->
-> The primary function of RAID is to protect your data in the event of a
-> _disk_ failure.  Creating multiple arrays from _partitions_ on the same
-> set of physical disks does nothing to protect one from disk failure.
->
+--Sig_/nLM8k3nNzpgjJEsykLVqe+_
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-That's not how I understand the disk layout - if I'm right, it is still 
-a monstrosity, but one that will offer protection on disk failure.
+On Fri, 03 Aug 2012 15:37:36 +0200
+David Brown <david.brown@hesbynett.no> wrote:
 
-As I read it, he has this (prior to adding the new disk):
+> That's not how I understand the disk layout - if I'm right, it is still=20
+> a monstrosity, but one that will offer protection on disk failure.
+>=20
+> As I read it, he has this (prior to adding the new disk):
+>=20
+> md0 =3D raid6(sda5, sdb5, sdc5, sdd5, sde5)
+> md1 =3D raid6(sda6, sdb6, sdc6, sdd6, sde6)
+> ...
+> md9 =3D raid6(sda14, sdb14, sdc14, sdd14, sde14)
+>=20
+> If that's the case, then it will be an administrative mess (as the OP is=
+=20
+> now experiencing), but it will protect the data, and if the LVM is a=20
+> linear concatenation of these then performance normally will be okay.=20
 
-md0 = raid6(sda5, sdb5, sdc5, sdd5, sde5)
-md1 = raid6(sda6, sdb6, sdc6, sdd6, sde6)
-...
-md9 = raid6(sda14, sdb14, sdc14, sdd14, sde14)
+If you want the RAID5/6 write performance to be okay, you will want to
+increase stripe_cache_size to a good value [1] -- and that's per array, and=
+ the
+RAM consumption increases linearly with disk count - so on 10 five-member
+arrays you won't have anywhere near enough RAM to have a sufficient
+stripe_cache on all of them.
 
-If that's the case, then it will be an administrative mess (as the OP is 
-now experiencing), but it will protect the data, and if the LVM is a 
-linear concatenation of these then performance normally will be okay. 
-Of course, if the LVM tries to use a stripe of these arrays, it will be 
-terrible - and rebuild/reshape will involve massively inefficient head 
-movement (as you noted).
+In other words, one more aspect in which this multi-array configuration is
+highly suboptimal. :)
 
-> What it can do is cause massive problems for the elevator when you try
-> to reshape 10 arrays simultaneously, which just happen to reside on the
-> same set of disks.  By doing this you force the heads on the drives into
-> a massive random seek pattern, bumping all over the platters, top to
-> bottom.  This is likely what caused, or is directly related to, your crash.
->
->> Suggestions very welcome.
->
-> Backup what you need to external storage.  Blow the entire mess away.
-> Start over from scratch, and build a single RAID6 array, as you should
-> have in the first place.
+[1]
+http://peterkieser.com/2009/11/29/raid-mdraid-stripe_cache_size-vs-write-tr=
+ansfer/
 
-If the OP can manage it, then I agree.
+--=20
+With respect,
+Roman
 
->
-> md allows the use of partitions, but not so you can create 50 arrays on
-> the same set of disks, shooting yourself in the foot.  Similarly, most
-> cars can travel at velocities over 120 mph, but most people have enough
-> sense not to attempt driving that fast.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"Stallman had a printer,
+with code he could not see.
+So he began to tinker,
+and set the software free."
 
-I have sometimes used multiple arrays like this:
+--Sig_/nLM8k3nNzpgjJEsykLVqe+_
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-md0 = raid1,n4(sda1, sdb1, sdc1, sdd1) for /boot (makes grub happy)
-md1 = raid5(sda2, sdb2, sdc2, sdd2) for everything else
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-But this particular setup seems very odd to me - I would love to know 
-the reasoning behind it.
+iEYEARECAAYFAlAb5eoACgkQTLKSvz+PZwiOYwCfdRS+N5+81afY1UJHCcI9CnYZ
+nMgAniuqL4V6Fvm7i955cM7QJYQM3Yy/
+=Exqb
+-----END PGP SIGNATURE-----
 
->
-> Learn the difference between "Can I?" and "Should I?".  You never
-> bothered to consider the latter when you built this.  Please consider it
-> now, for your sake.
->
-
+--Sig_/nLM8k3nNzpgjJEsykLVqe+_--
