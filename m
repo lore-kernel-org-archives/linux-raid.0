@@ -1,23 +1,64 @@
-From: "kjhmzk" <kirk@ryanstrucking.com>
-Subject: =?utf-8?B?5bel56iL5oql5ZGK?=
-Date: Sat, 4 Aug 2012 06:58:34 +0800
-Message-ID: <B1CF7F072E1331F35356AED3B0288B73@ovylljjo>
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: Re: How does one assemble a DDF or IMSM array?
+Date: Sat, 4 Aug 2012 12:16:03 -0400
+Message-ID: <20120804161603.GA1030@animx.eu.org>
+References: <20120803010532.GA1285@animx.eu.org>
+ <501B6C69.8080409@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <501B6C69.8080409@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: honglin@uimax.com, linux-raid@vger.kernel.org, dgkizi@163.com, info@ccwt.cnQQ, xl2002@sina.com, 0123@126.COM
+To: Albert Pauw <albert.pauw@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-5oKo5aW977ybIOaIkeWFrOWPuOS4gOebtOS7juS6i+WbveWGheWVhuS4mui0uOaYk+S4muWKoe+8
-jOWSjOWbveWGheWkmuS4quWfjuW4gueahOWkmuS4quWFrOWPuOacieWPkS3npajkuJrliqHmnaXl
-voDvvIzlj6/luK7mgqjku6Mg5Yqe5LiA5Lqb6ZyA6KaB55qE56Wo5o2u44CC5YWs5Y+45Li76KaB
-5Lul5aKe5YC8Leeoji3npajkuLrkuLvvvIzlkITnsbvlm73lnLAt56iOLeelqOWmguWVhuWTgemU
-gC3llK7vvIzlt6XkuJrnlJ/kuqfvvIzphZLlupfppJDppa7vvIzov5DovpPnrYnjgILlkITpobnn
-pajpg73mmK/lhazlj7jlvIDlh7rnmoTmraPop4Tnpajlj6/liLDlvZPlnLAg56iOLeWKoeWxgOaf
-peivgeOAguWmgumcgOWPr+ivou+8mzEzNjQwMjM0NjE1IFFROzE0MTY2NjE2NzMu5Lia5Yqh57uP
-55CGO+WImOmVh+W5sw0K
+Albert Pauw wrote:
+> you can start them by using "mdadm -As", that will start up the
+> container first and the other md devices after.
+> This will work without mdadm.conf, but it is always good to create a
+> proper mdadm.conf (mdadm -Es > /etc/mdadm.conf).
+> 
+> As for what it is, the container contains the disks (in your case
+> sda and sdb), the disks are not the container.
+> 
+> So you create a container first:
+> mdadm -CR /dev/md127 -e ddf -l container -n 2 /dev/sda /dev/sdb
+> Create a RAID1 device of 1 GB in there
+> mdadm -CR /dev/md0 -l 1 -n 2 /dev/md127 -z  1G
+> Create another RAID1 device of 50 MB in there
+> mdadm -CR /dev/md1 -l 1 -n 2 /dev/md127 -z 50M
+> 
+> (in this case both md devices are created on the same two disks).
+> 
+> If you have e.g. 5 disks you can create two separate RAID1 and RAID5
+> devices in the container:
+> 
+> mdadm -CR /dev/md127 -e ddf -l container -n 2 /dev/sda /dev/sdb
+> /dev/sdc /dev/sdd /dev/sde
+> mdadm -CR /dev/md0 -l 1 -n 2 /dev/md127
+> mdadm -CR /dev/md1 -l 5 -n 3 /dev/md127
+> 
+> Now, two disk are used fully for the RAID 1 device and three fully
+> for the RAID 5 devices, they both have their own set of disks.
 
+I created 2 ddf disks in a container on /dev/sd[ab].  I had 3 MD devices at
+that time.
 
+> Stopping them all:
+> mdadm -Ss
+> 
+> Starting them all:
+> mdadm -As
+
+This did stop the devices, but would not start them back up.  mdadm 3.2.5
+was used.
+
+In your example, suppose I have md0 in use and md1 was not in use and was
+stopped.  How would I get md1 started back up w/o shuttind down md0 and
+md127?
+
+-- 
+ Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
+ million bugs.
