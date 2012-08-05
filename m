@@ -1,239 +1,69 @@
-From: pgn14@fastmail.co.uk
-Subject: swapping a single drive with a RAID-1 array.  At array boot,
- "No Boot Device found".  What've I missed?
-Date: Sat, 04 Aug 2012 11:26:17 -0700
-Message-ID: <1344104777.11555.140661110687569.3DB8F4E5@webmail.messagingengine.com>
+From: Jake Thomas <thomasj10@georgefox.edu>
+Subject: Device Unusable At Startup
+Date: Sun, 5 Aug 2012 03:13:43 -0400
+Message-ID: <CACO8viptp4hS91apO=FM8S65w2sOYwjQs5w3=uQ_nd76xNpTAw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+First of all, I have no idea if this e-mail address is a part of a
+mailing list, so please CC me individually, or somehow reply to me
+personally.
 
-I'm currently running my linux system off a single drive, /dev/sda
-
-The drive's starting to act up a bit.  I intend to replace it with a new
-2-drive RAID-1 array.
-
-I'm trying to
-	-- migrate everything from the current single-drive to the array
-	-- modify the grub entries correctly
-	-- switch to booting from the array
-
-I get as far as the 'switch' to booting from the array instead of the
-single drive.
-
-Booting from the array, the system gets to
-
-		"No Boot Device found.
-
-and halts.  I supsect I've missed something simple/obvious.
+My goal: create a RAID 1 array between a partition on the hard drive
+and a ramdisk and mount this md array at /usr. Once poplulated, the
+vast majority of my programs will run out of RAM, and be very fast! I
+have 8 GB of RAM, so why not?
 
 
-Here's what I've done:
+On startup, the partition, which is a linux_raid_member, is detected
+as such, and /dev/md127 is automatically created.
 
-The single/current drive's partitioned as:
+The problem: /dev/md127 is not usable. "sudo blkid /dev/md127" yeilds
+nothing. mdadm can't even query anything about it.
 
-	/dev/sda1   1G   ext4   "/boot"
-	/dev/sda2   *    lvm
-		/dev/VG0/lvROOT   *   ext4   "/"
+Since this is RAID _one_ it should be able to function just fine with
+only one member, but it doesn't.
 
-Its grub boot entry is:
+In fact, to get it going again, I have to do:
 
-	title Main
-		root (hd0,0)
-		kernel /vmlinuz root=/dev/VG0/LVROOT rootfstype=ext4
-		rootflags=journal_checksum noresume
-		initrd /initrd
+sudo mdadm --stop /dev/md127
+sudo mdadm -A /dev/md127 -f /dev/sda2
 
-To prepare the array, I
-
-(1) Identically formatted the two new drives, /dev/sdb & /dev/sdc, for
-RAID use, making sure the 'bootable' flag is set on the 1st partition:
-
-	fdisk -u -c -l /dev/sd[bc]
-		Disk /dev/sdb: 500.1 GB, 500107862016 bytes
-		255 heads, 63 sectors/track, 60801 cylinders, total
-		976773168 sectors
-		Units = sectors of 1 * 512 = 512 bytes
-		Sector size (logical/physical): 512 bytes / 512 bytes
-		I/O size (minimum/optimal): 512 bytes / 512 bytes
-		Disk identifier: 0x4170c717
-
-		   Device Boot      Start         End      Blocks   Id 
-		   System
-		/dev/sdb1   *        2048     2099199     1048576   fd 
-		Linux raid autodetect
-		/dev/sdb2         2099200   976773167   487336984   fd 
-		Linux raid autodetect
-
-		Disk /dev/sdc: 500.1 GB, 500107862016 bytes
-		255 heads, 63 sectors/track, 60801 cylinders, total
-		976773168 sectors
-		Units = sectors of 1 * 512 = 512 bytes
-		Sector size (logical/physical): 512 bytes / 4096 bytes
-		I/O size (minimum/optimal): 4096 bytes / 4096 bytes
-		Disk identifier: 0x76a841ea
-
-		   Device Boot      Start         End      Blocks   Id 
-		   System
-		/dev/sdc1   *        2048     2099199     1048576   fd 
-		Linux raid autodetect
-		/dev/sdc2         2099200   976773167   487336984   fd 
-		Linux raid autodetect
-
-(2) Created the RAID arrays
-
-	mdadm --create /dev/md0 --name=md0 --homehost=cattail \
-	  --level=raid1 --raid-devices=2 --metadata=0.90 \
-	  --verbose --bitmap=internal \
-	  /dev/sdb1 /dev/sdc1
-
-	mdadm --create /dev/md1 --name=md1 --homehost=cattail \
-	  --level=raid1 --raid-devices=2 --metadata=1.2 \
-	  --verbose --bitmap=internal \
-	  /dev/sdb2 /dev/sdc2
-
-(3) Waited until they're synced
-
-	cat /proc/mdstat
-		...
-		Personalities : [raid0] [raid1] [raid10] [raid6] [raid5]
-		[raid4] [linear]
-		md1 : active raid1 sdc2[1] sdb2[0]
-		      487335824 blocks super 1.2 [2/2] [UU]
-		      bitmap: 0/4 pages [0KB], 65536KB chunk
-
-		md0 : active raid1 sdc1[1] sdb1[0]
-		      1048512 blocks [2/2] [UU]
-		      bitmap: 0/1 pages [0KB], 65536KB chunk
-
-		unused devices: <none>
-
-(4) Formatted the RAID partitions
-
-	mkfs.ext4 -v -L BOOT /dev/md0
-
-	pvcreate -ff --metadatacopies 2 /dev/md1
-	vgcreate -v -s 32M VG1 /dev/md1
-	lvcreate -L  100% -n LVROOT     /dev/VG1
-	vgchange -ay
-	mkfs.ext4 -v /dev/VG1/LVROOT
-
-(5) mounted the RAID partitions
-
-	mkdir -p /mnt/migrate/BOOT
-	mkdir -p /mnt/migrate/LVROOT
-	mount /dev/md0        /mnt/migrate_temp/BOOT
-	mount /dev/VG1/LVROOT /mnt/migrate/LVROOT
-
-(6) synced the current drive to the new array
-
-	rsync -xavH -z --compress-level=1 /boot/*      /mnt/migrate/BOOT
-	rsync -xavH -z --compress-level=1 /           
-	/mnt/migrate/LVROOT
-
-(7) got the UUID of the array '/boot' partition
-
-	tune2fs -l /dev/md0 | grep UUID
-		Filesystem UUID:         
-		1d2d9f26-b3b4-4561-a2de-b6e3fe6bb065
-
-(8) modified the /etc/fstab on the array so it boots from the array
-
-	cat /mnt/migrate/LVROOT/etc/fstab
-		UUID=1d2d9f26-b3b4-4561-a2de-b6e3fe6bb065   /boot   ext4
-		  noatime,acl,user_xattr,barrier=1   1 2
-		/dev/VG1/LVROOT   /       ext4  
-		noatime,acl,user_xattr,journal_checksum,barrier=1   1 1
-		proc      /proc              proc    defaults           
-		      0 0
-		sysfs     /sys               sysfs   noauto             
-		      0 0
-		debugfs   /sys/kernel/debug  debugfs noauto             
-		      0 0
-		devpts    /dev/pts           devpts  mode=0620,gid=5    
-		      0 0
-		none      /tmp               tmpfs  
-		nosuid,nodev,size=1024m   1 2
-
-(9) modified /boot/grub/menu.lst on BOTH the local drive and the array
-
-	cat /boot/grub/menu.lst
-	cat /mnt/migrate/BOOT/grub/menu.lst
-		...
-		title Main
-			root (hd0,0)
-			kernel /vmlinuz root=/dev/VG0/LVROOT
-			rootfstype=ext4 rootflags=journal_checksum
-			noresume
-			initrd /initrd
-
-		title Array1
-			root (hd1,0)
-			kernel /vmlinuz root=/dev/VG1/LVROOT
-			rootfstype=ext4 rootflags=journal_checksum
-			noresume
-			initrd /initrd
-
-		title Array2
-			root (hd2,0)
-			kernel /vmlinuz root=/dev/VG1/LVROOT
-			rootfstype=ext4 rootflags=journal_checksum
-			noresume
-			initrd /initrd
-		...
-
-(10) Identified the drive aliases
-
-	cd /dev/disk/by-id/
-	ls -al \
-	 ata-ST3500418AS_9RYC7TD8 \
-	 ata-ST3500418AS_9ODK9DH6 \
-	 ata-ST3500418AS_9VKF6MF4
-		lrwxrwxrwx 1 root root 9 Aug  3 13:11
-		ata-ST3500418AS_9RYC7TD8 -> ../../sda
-		lrwxrwxrwx 1 root root 9 Aug  3 13:11
-		ata-ST3500418AS_9ODK9DH6 -> ../../sdb
-		lrwxrwxrwx 1 root root 9 Aug  3 13:11
-		ata-ST3500418AS_9VKF6MF4 -> ../../sdc
-
-(11) updated /boot/grub/device.map on the current/active drive
-
-	cat /boot/grub/device.map
-		(hd0)   /dev/disk/by-id/ata-ST3500418AS_9RYC7TD8
-		(hd1)   /dev/disk/by-id/ata-ST3500418AS_9ODK9DH6
-		(hd2)   /dev/disk/by-id/ata-ST3500418AS_9VKF6MF4
-
-(12) setup a grub batch file
-
-	cat /etc/grub.conf
-		setup --stage2=/boot/grub/stage2 --force-lba (hd0)
-		(hd0,0)
-		setup --stage2=/boot/grub/stage2 --force-lba (hd1)
-		(hd1,0)
-		setup --stage2=/boot/grub/stage2 --force-lba (hd2)
-		(hd2,0)
-		quit
-
-(13) wrote updated info to the boot record of all three drives
-
-	grub --batch --device-map=/boot/grub/device.map < /etc/grub.conf
+#works at this point, now to add in the ramdisk:
+sudo mdadm /dev/md127 -a /dev/ram0
 
 
-At this point, if I reboot from the "Main" grub record, everything still
-works.
+Then "sudo blkid /dev/md127" says that it's ext4 formatted, that it
+has a UUID, etc., and it is usable. After mounting it after fixing it,
+all my data is there.
 
-But, if I reboot from either "Array1" or "Array2", the system gets as
-far as
+Problem restated: /usr needs to be mounted so early in startup that
+there is no script that I can have automate the fixing of my /usr RAID
+device in time for it to be mounted when it needs to be. I shouldn't
+even have to do that. It should just be functional from the get-go.
 
-		"No Boot Device found.
+I have a thread going on about this here:
+http://bbs.archbang.org/viewtopic.php?id=3179 .
 
-and just sits.
+I have even tried renaming /sbin/mdadm to /sbin/mdadm.moved and doing
+"sudo /sbin/mdadm.moved --stop --scan" before shutdown, as mentioned
+here: http://neil.brown.name/blog/20120615073245#6 . After restart,
+the automatically generated md device for the found linux_raid_member
+partition is still unusable.
 
-As I said -- I suspect I've missed or misconfigured something
-simple/obvious.
+I have tried both kernel 3.3.4-1-ARCH with mdadm 3.2.3-2 and kernel
+3.4.7-1 with mdadm 3.2.5-2.
 
-Any suggestions as to what?
+The original idea for this came from here:
+https://bbs.archlinux.org/viewtopic.php?pid=493773#p493773 . I, of
+course, can't afford enough RAM to put the entirety of my installation
+in RAM, but I can afford to put /usr entirely in RAM.
+
+Can any of you folks help me out on this?
+
+Cheers,
+Jake
