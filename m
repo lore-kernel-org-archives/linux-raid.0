@@ -1,58 +1,75 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
+From: Shaohua Li <shli@kernel.org>
 Subject: Re: [patch]raid5: fix directio regression
-Date: Tue, 7 Aug 2012 13:13:02 +0800
-Message-ID: <201208071312593120932@gmail.com>
+Date: Tue, 7 Aug 2012 13:32:35 +0800
+Message-ID: <CANejiEUQcA6X75WG0xSgSv6NAQaBQnwpDD-5QaNVbqmo-oqLsA@mail.gmail.com>
 References: <20120807032240.GA22495@kernel.org>
+	<201208071312593120932@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201208071312593120932@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli <shli@kernel.org>, linux-raid <linux-raid@vger.kernel.org>
-Cc: Neil Brown <neilb@suse.de>
+To: Jianpeng Ma <majianpeng@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wOC0wNyAxMToyMiBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
-Pk15IGRpcmVjdElPIHJhbmRvbXdyaXRlIDRrIHdvcmtsb2FkIHNob3dzIGEgMTB+MjAlIHJlZ3Jl
-c3Npb24gY2F1c2VkIGJ5IGNvbW1pdA0KPjg5NWUzYzVjNThhODBiYi4gZGlyZWN0SU8gdXN1YWxs
-eSBpcyByYW5kb20gSU8gYW5kIGlmIHJlcXVlc3Qgc2l6ZSBpc24ndCBiaWcNCj4od2hpY2ggaXMg
-dGhlIGNvbW1vbiBjYXNlKSwgZGVsYXkgaGFuZGxpbmcgb2YgdGhlIHN0cmlwZSBoYXNuJ3QgYW55
-IGFkdmFudGFnZXMuDQo+Rm9yIGJpZyBzaXplIHJlcXVlc3QsIGRlbGF5IGNhbiBzdGlsbCByZWR1
-Y2UgSU8uDQo+DQo+U2lnbmVkLW9mZi1ieTogU2hhb2h1YSBMaSA8c2hsaUBmdXNpb25pby5jb20+
-DQo+LS0tDQo+IGRyaXZlcnMvbWQvcmFpZDUuYyB8ICAgIDkgKysrKysrKystDQo+IDEgZmlsZSBj
-aGFuZ2VkLCA4IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkNCj4NCj5JbmRleDogbGludXgv
-ZHJpdmVycy9tZC9yYWlkNS5jDQo+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQ0KPi0tLSBsaW51eC5vcmlnL2RyaXZlcnMv
-bWQvcmFpZDUuYwkyMDEyLTA4LTA3IDExOjA0OjQ4LjQ0MjgzNDY4MiArMDgwMA0KPisrKyBsaW51
-eC9kcml2ZXJzL21kL3JhaWQ1LmMJMjAxMi0wOC0wNyAxMTowOTowOC43NDM1NjIyMDMgKzA4MDAN
-Cj5AQCAtNDA3Niw2ICs0MDc2LDcgQEAgc3RhdGljIHZvaWQgbWFrZV9yZXF1ZXN0KHN0cnVjdCBt
-ZGRldiAqbQ0KPiAJc3RydWN0IHN0cmlwZV9oZWFkICpzaDsNCj4gCWNvbnN0IGludCBydyA9IGJp
-b19kYXRhX2RpcihiaSk7DQo+IAlpbnQgcmVtYWluaW5nOw0KPisJYm9vbCBsYXJnZV9yZXF1ZXN0
-Ow0KPiANCj4gCWlmICh1bmxpa2VseShiaS0+YmlfcncgJiBSRVFfRkxVU0gpKSB7DQo+IAkJbWRf
-Zmx1c2hfcmVxdWVzdChtZGRldiwgYmkpOw0KPkBAIC00MDg5LDYgKzQwOTAsMTEgQEAgc3RhdGlj
-IHZvaWQgbWFrZV9yZXF1ZXN0KHN0cnVjdCBtZGRldiAqbQ0KPiAJICAgICBjaHVua19hbGlnbmVk
-X3JlYWQobWRkZXYsYmkpKQ0KPiAJCXJldHVybjsNCj4gDQo+KwlpZiAobWRkZXYtPm5ld19jaHVu
-a19zZWN0b3JzIDwgbWRkZXYtPmNodW5rX3NlY3RvcnMpDQo+KwkJbGFyZ2VfcmVxdWVzdCA9IChi
-aS0+Ymlfc2l6ZSA+PiA5KSA+IG1kZGV2LT5uZXdfY2h1bmtfc2VjdG9yczsNCj4rCWVsc2UNCj4r
-CQlsYXJnZV9yZXF1ZXN0ID0gKGJpLT5iaV9zaXplID4+IDkpID4gbWRkZXYtPmNodW5rX3NlY3Rv
-cnM7DQo+Kw0KPiAJbG9naWNhbF9zZWN0b3IgPSBiaS0+Ymlfc2VjdG9yICYgfigoc2VjdG9yX3Qp
-U1RSSVBFX1NFQ1RPUlMtMSk7DQo+IAlsYXN0X3NlY3RvciA9IGJpLT5iaV9zZWN0b3IgKyAoYmkt
-PmJpX3NpemU+PjkpOw0KPiAJYmktPmJpX25leHQgPSBOVUxMOw0KPkBAIC00MTkyLDcgKzQxOTgs
-OCBAQCBzdGF0aWMgdm9pZCBtYWtlX3JlcXVlc3Qoc3RydWN0IG1kZGV2ICptDQo+IAkJCWZpbmlz
-aF93YWl0KCZjb25mLT53YWl0X2Zvcl9vdmVybGFwLCAmdyk7DQo+IAkJCXNldF9iaXQoU1RSSVBF
-X0hBTkRMRSwgJnNoLT5zdGF0ZSk7DQo+IAkJCWNsZWFyX2JpdChTVFJJUEVfREVMQVlFRCwgJnNo
-LT5zdGF0ZSk7DQo+LQkJCWlmICgoYmktPmJpX3J3ICYgUkVRX05PSURMRSkgJiYNCj4rCQkJaWYg
-KChiaS0+YmlfcncgJiBSRVFfU1lOQykgJiYNCj4rCQkJICAgICgoYmktPmJpX3J3ICYgUkVRX05P
-SURMRSkgfHwgIWxhcmdlX3JlcXVlc3QpICYmDQo+IAkJCSAgICAhdGVzdF9hbmRfc2V0X2JpdChT
-VFJJUEVfUFJFUkVBRF9BQ1RJVkUsICZzaC0+c3RhdGUpKQ0KPiAJCQkJYXRvbWljX2luYygmY29u
-Zi0+cHJlcmVhZF9hY3RpdmVfc3RyaXBlcyk7DQo+IAkJCXJlbGVhc2Vfc3RyaXBlX3BsdWcobWRk
-ZXYsIHNoKTsNCj4tLQ0KTWF5IGJlIHVzZWQgc2l6ZSB0byBqdWRnZSBpcyBub3QgYSBnb29kIG1l
-dGhvZC4NCkkgZmlyc3RseSBzZW5kZWQgdGhpcyBwYXRjaCwgb25seSB3YW50IHRvIGNvbnRyb2wg
-ZGlyZWN0LXdyaXRlLWJsb2NrLG5vdCBmb3IgcmVxdWxhciBmaWxlLg0KQmVjYXVzZSBpIHRoaW5r
-IGlmIHNvbWVvbmUgdXNlZCBkaXJlY3Qtd3JpdGUtYmxvY2sgZm9yIHJhaWQ1LGhlIHNob3VsZCBr
-bm93IHRoZSBmZWF0dXJlIG9mIHJhaWQ1IGFuZCBoZSBjYW4gY29udHJvbA0KZm9yIHdyaXRlIHRv
-IGZ1bGwtd3JpdGUuIA0KQnV0IGF0IHRoYXQgdGltZSwgaSBkaWQga25vdyBob3cgdG8gZGlmZmVy
-ZW50aWF0ZSBiZXR3ZWVuIHJlZ3VsYXIgZmlsZSBhbmQgYmxvY2stZGV2aWNlLg0KSSB0aGlrIHdl
-IHNob3VsZCBkbyBzb21ldGhpbmcgdG8gZG8gdGhpcy4NCg==
+2012/8/7 Jianpeng Ma <majianpeng@gmail.com>:
+> On 2012-08-07 11:22 Shaohua Li <shli@kernel.org> Wrote:
+>>My directIO randomwrite 4k workload shows a 10~20% regression caused by commit
+>>895e3c5c58a80bb. directIO usually is random IO and if request size isn't big
+>>(which is the common case), delay handling of the stripe hasn't any advantages.
+>>For big size request, delay can still reduce IO.
+>>
+>>Signed-off-by: Shaohua Li <shli@fusionio.com>
+>>---
+>> drivers/md/raid5.c |    9 ++++++++-
+>> 1 file changed, 8 insertions(+), 1 deletion(-)
+>>
+>>Index: linux/drivers/md/raid5.c
+>>===================================================================
+>>--- linux.orig/drivers/md/raid5.c      2012-08-07 11:04:48.442834682 +0800
+>>+++ linux/drivers/md/raid5.c   2012-08-07 11:09:08.743562203 +0800
+>>@@ -4076,6 +4076,7 @@ static void make_request(struct mddev *m
+>>       struct stripe_head *sh;
+>>       const int rw = bio_data_dir(bi);
+>>       int remaining;
+>>+      bool large_request;
+>>
+>>       if (unlikely(bi->bi_rw & REQ_FLUSH)) {
+>>               md_flush_request(mddev, bi);
+>>@@ -4089,6 +4090,11 @@ static void make_request(struct mddev *m
+>>            chunk_aligned_read(mddev,bi))
+>>               return;
+>>
+>>+      if (mddev->new_chunk_sectors < mddev->chunk_sectors)
+>>+              large_request = (bi->bi_size >> 9) > mddev->new_chunk_sectors;
+>>+      else
+>>+              large_request = (bi->bi_size >> 9) > mddev->chunk_sectors;
+>>+
+>>       logical_sector = bi->bi_sector & ~((sector_t)STRIPE_SECTORS-1);
+>>       last_sector = bi->bi_sector + (bi->bi_size>>9);
+>>       bi->bi_next = NULL;
+>>@@ -4192,7 +4198,8 @@ static void make_request(struct mddev *m
+>>                       finish_wait(&conf->wait_for_overlap, &w);
+>>                       set_bit(STRIPE_HANDLE, &sh->state);
+>>                       clear_bit(STRIPE_DELAYED, &sh->state);
+>>-                      if ((bi->bi_rw & REQ_NOIDLE) &&
+>>+                      if ((bi->bi_rw & REQ_SYNC) &&
+>>+                          ((bi->bi_rw & REQ_NOIDLE) || !large_request) &&
+>>                           !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
+>>                               atomic_inc(&conf->preread_active_stripes);
+>>                       release_stripe_plug(mddev, sh);
+>>--
+> May be used size to judge is not a good method.
+> I firstly sended this patch, only want to control direct-write-block,not for reqular file.
+> Because i think if someone used direct-write-block for raid5,he should know the feature of raid5 and he can control
+> for write to full-write.
+> But at that time, i did know how to differentiate between regular file and block-device.
+> I thik we should do something to do this.
 
+I don't think it's possible user can control his write to be a
+full-write even for
+raw disk IO. Why regular file and block device io matters here?
+
+Thanks,
+Shaohua
