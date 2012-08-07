@@ -1,75 +1,50 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [patch]raid5: fix directio regression
-Date: Tue, 7 Aug 2012 13:32:35 +0800
-Message-ID: <CANejiEUQcA6X75WG0xSgSv6NAQaBQnwpDD-5QaNVbqmo-oqLsA@mail.gmail.com>
-References: <20120807032240.GA22495@kernel.org>
-	<201208071312593120932@gmail.com>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
+Subject: Re: Re: [patch]raid5: fix directio regression
+Date: Tue, 7 Aug 2012 13:42:40 +0800
+Message-ID: <201208071342361877406@gmail.com>
+References: <20120807032240.GA22495@kernel.org> <201208071312593120932@gmail.com>,
+	<CANejiEUQcA6X75WG0xSgSv6NAQaBQnwpDD-5QaNVbqmo-oqLsA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201208071312593120932@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jianpeng Ma <majianpeng@gmail.com>
+To: shli <shli@kernel.org>
 Cc: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-2012/8/7 Jianpeng Ma <majianpeng@gmail.com>:
-> On 2012-08-07 11:22 Shaohua Li <shli@kernel.org> Wrote:
->>My directIO randomwrite 4k workload shows a 10~20% regression caused by commit
->>895e3c5c58a80bb. directIO usually is random IO and if request size isn't big
->>(which is the common case), delay handling of the stripe hasn't any advantages.
->>For big size request, delay can still reduce IO.
->>
->>Signed-off-by: Shaohua Li <shli@fusionio.com>
->>---
->> drivers/md/raid5.c |    9 ++++++++-
->> 1 file changed, 8 insertions(+), 1 deletion(-)
->>
->>Index: linux/drivers/md/raid5.c
->>===================================================================
->>--- linux.orig/drivers/md/raid5.c      2012-08-07 11:04:48.442834682 +0800
->>+++ linux/drivers/md/raid5.c   2012-08-07 11:09:08.743562203 +0800
->>@@ -4076,6 +4076,7 @@ static void make_request(struct mddev *m
->>       struct stripe_head *sh;
->>       const int rw = bio_data_dir(bi);
->>       int remaining;
->>+      bool large_request;
->>
->>       if (unlikely(bi->bi_rw & REQ_FLUSH)) {
->>               md_flush_request(mddev, bi);
->>@@ -4089,6 +4090,11 @@ static void make_request(struct mddev *m
->>            chunk_aligned_read(mddev,bi))
->>               return;
->>
->>+      if (mddev->new_chunk_sectors < mddev->chunk_sectors)
->>+              large_request = (bi->bi_size >> 9) > mddev->new_chunk_sectors;
->>+      else
->>+              large_request = (bi->bi_size >> 9) > mddev->chunk_sectors;
->>+
->>       logical_sector = bi->bi_sector & ~((sector_t)STRIPE_SECTORS-1);
->>       last_sector = bi->bi_sector + (bi->bi_size>>9);
->>       bi->bi_next = NULL;
->>@@ -4192,7 +4198,8 @@ static void make_request(struct mddev *m
->>                       finish_wait(&conf->wait_for_overlap, &w);
->>                       set_bit(STRIPE_HANDLE, &sh->state);
->>                       clear_bit(STRIPE_DELAYED, &sh->state);
->>-                      if ((bi->bi_rw & REQ_NOIDLE) &&
->>+                      if ((bi->bi_rw & REQ_SYNC) &&
->>+                          ((bi->bi_rw & REQ_NOIDLE) || !large_request) &&
->>                           !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
->>                               atomic_inc(&conf->preread_active_stripes);
->>                       release_stripe_plug(mddev, sh);
->>--
-> May be used size to judge is not a good method.
-> I firstly sended this patch, only want to control direct-write-block,not for reqular file.
-> Because i think if someone used direct-write-block for raid5,he should know the feature of raid5 and he can control
-> for write to full-write.
-> But at that time, i did know how to differentiate between regular file and block-device.
-> I thik we should do something to do this.
+T24gMjAxMi0wOC0wNyAxMzozMiBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
+PjIwMTIvOC83IEppYW5wZW5nIE1hIDxtYWppYW5wZW5nQGdtYWlsLmNvbT46DQo+PiBPbiAyMDEy
+LTA4LTA3IDExOjIyIFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4gV3JvdGU6DQo+Pj5NeSBk
+aXJlY3RJTyByYW5kb213cml0ZSA0ayB3b3JrbG9hZCBzaG93cyBhIDEwfjIwJSByZWdyZXNzaW9u
+IGNhdXNlZCBieSBjb21taXQNCj4+Pjg5NWUzYzVjNThhODBiYi4gZGlyZWN0SU8gdXN1YWxseSBp
+cyByYW5kb20gSU8gYW5kIGlmIHJlcXVlc3Qgc2l6ZSBpc24ndCBiaWcNCj4+Pih3aGljaCBpcyB0
+aGUgY29tbW9uIGNhc2UpLCBkZWxheSBoYW5kbGluZyBvZiB0aGUgc3RyaXBlIGhhc24ndCBhbnkg
+YWR2YW50YWdlcy4NCj4+PkZvciBiaWcgc2l6ZSByZXF1ZXN0LCBkZWxheSBjYW4gc3RpbGwgcmVk
+dWNlIElPLg0KPj4+DQo+Pj5TaWduZWQtb2ZmLWJ5OiBTaGFvaHVhIExpIDxzaGxpQGZ1c2lvbmlv
+LmNvbT4NCj4+Pi0tLQ0KPj4+IGRyaXZlcnMvbWQvcmFpZDUuYyB8ICAgIDkgKysrKysrKystDQo+
+Pj4gMSBmaWxlIGNoYW5nZWQsIDggaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KW3NuaXBd
+DQo+Pj4tLQ0KPj4gTWF5IGJlIHVzZWQgc2l6ZSB0byBqdWRnZSBpcyBub3QgYSBnb29kIG1ldGhv
+ZC4NCj4+IEkgZmlyc3RseSBzZW5kZWQgdGhpcyBwYXRjaCwgb25seSB3YW50IHRvIGNvbnRyb2wg
+ZGlyZWN0LXdyaXRlLWJsb2NrLG5vdCBmb3IgcmVxdWxhciBmaWxlLg0KPj4gQmVjYXVzZSBpIHRo
+aW5rIGlmIHNvbWVvbmUgdXNlZCBkaXJlY3Qtd3JpdGUtYmxvY2sgZm9yIHJhaWQ1LGhlIHNob3Vs
+ZCBrbm93IHRoZSBmZWF0dXJlIG9mIHJhaWQ1IGFuZCBoZSBjYW4gY29udHJvbA0KPj4gZm9yIHdy
+aXRlIHRvIGZ1bGwtd3JpdGUuDQo+PiBCdXQgYXQgdGhhdCB0aW1lLCBpIGRpZCBrbm93IGhvdyB0
+byBkaWZmZXJlbnRpYXRlIGJldHdlZW4gcmVndWxhciBmaWxlIGFuZCBibG9jay1kZXZpY2UuDQo+
+PiBJIHRoaWsgd2Ugc2hvdWxkIGRvIHNvbWV0aGluZyB0byBkbyB0aGlzLg0KPg0KPkkgZG9uJ3Qg
+dGhpbmsgaXQncyBwb3NzaWJsZSB1c2VyIGNhbiBjb250cm9sIGhpcyB3cml0ZSB0byBiZSBhDQo+
+ZnVsbC13cml0ZSBldmVuIGZvcg0KPnJhdyBkaXNrIElPLiBXaHkgcmVndWxhciBmaWxlIGFuZCBi
+bG9jayBkZXZpY2UgaW8gbWF0dGVycyBoZXJlPw0KPg0KPlRoYW5rcywNCj5TaGFvaHVhDQoNClRo
+ZSBwcm9ibGVtIGlzIHdoZW4gdG8gc2V0IGZsYWcgU1RSSVBFX1BSRVJFQURfQUNUSVZFLg0KV2hl
+biBzZXR0aW5nIHRoaXMgZmxhZywgaXQgd2lsbCB0byBoYW5kbGUgc3RyaXBlIGluc3RlYWQgb2Yg
+ZGVsYXlpbmcgZm9yIGZ1bGwtd3JpdGUuDQpJIHRoaW5rIGl0IGxpa2UgdGhlIElPUFMgYW5kIHRo
+cm91Z2hwdXQuDQpXaGVuIGluIHJhbmRvbS1zbWFsbC13cml0ZSB3b3JrbG9hZCwgaXQndCBoYXJk
+bHkgdG8gYWNoaWV2ZSBmdWxsLXdyaXRlLlNvIG5vIG5lZWQgdG8gZGVhbHkuVGhpcyBsaWtlIHN5
+bmMtd3JpdGUuDQpCdXQgZm9yIGxhcmdlci13cml0ZSB3b3JrbG9hZCwgaXQncyBlYXNseSB0byBh
+Y2hpZXZlIGZ1bGwtd3JpdGUuDQpUaGlzIGlzIHdoeSBzZW5kIHRoZSBwYXRoLiBNeSB3b3JrbG9h
+ZCBpcyB0aGUgbGF0dGVyLg0KRm9yIHJlZ3VsYXIgZmlsZSwgaXQgY29udHJvbGVkIGJ5IGZzLkJ1
+dCBmb3IgcmF3LWJsb2NrLGkgdGhpbmsgd2UgZG8gdGhlIHdvcmsgYnkgZnMsIHNvIHdlIGNhbiBj
+b250cm9sIHRvIGRvIHRoZSBiZXN0IHBlcmZvcm1hbmNlLg0KT2YgY291cmNlLCBNeSB3b3JrIGlz
+IGRvIHRoaXMsc28gbXkgcG9pbnQgbWF5IGJlIGxpbWl0ZWQu
 
-I don't think it's possible user can control his write to be a
-full-write even for
-raw disk IO. Why regular file and block device io matters here?
-
-Thanks,
-Shaohua
