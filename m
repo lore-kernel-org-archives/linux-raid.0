@@ -1,297 +1,137 @@
-From: Holger Kiehl <Holger.Kiehl@dwd.de>
-Subject: What happened to TRIM support for raid linear/0/1/10?
-Date: Wed, 8 Aug 2012 13:10:51 +0000 (GMT)
-Message-ID: <alpine.LRH.2.02.1208081308380.30954@praktifix.dwd.de>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: RAID10 Performance
+Date: Wed, 08 Aug 2012 11:59:57 -0500
+Message-ID: <50229B0D.5070201@hardwarefreak.com>
+References: <50115123.1020900@websitemanagers.com.au> <50123E2C.8090108@hardwarefreak.com> <50129176.3050604@websitemanagers.com.au> <5012DE22.10108@hardwarefreak.com> <50138853.5030100@websitemanagers.com.au> <50140657.8010802@hardwarefreak.com> <5021E1BC.3060607@websitemanagers.com.au>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-1418712126-1344431451=:30954"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, "neilb@suse.de" <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5021E1BC.3060607@websitemanagers.com.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On 8/7/2012 10:49 PM, Adam Goryachev wrote:
+> Just some followup questions, hopefully this isn't too off-topic for
+> this list, if it is please let me know.
 
---8323328-1418712126-1344431451=:30954
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+> OK, with the given budget, we currently have a couple of options:
+> 1) Replace the primary SAN (which currently has 2 x 2TB WD Caviar Black
+> RE4 drives in RAID1 + a hot spare) with 5 x 1TB Raptors you suggested
+> above (4 x 1TB in RAID10 + 1 hot spare).
 
-Hello,
+Wow, that is a tight budget.  You'll be increasing total IOPS by about
+3x with 4 10k drives.  Probably not optimal for your workload but it's a
+good start.
 
-I have been using the patches posted by Shaohua Li on 16th March 2012:
+Also, don't use a hot spare--just wastes ports, cages, dollars.  It's
+not needed with RAID10.  Keep a spare in a locked cabinet and hot swap
+the drives upon failure notification.  RAID10 has a very large "double
+drive failure kills array" window, like many months to years.
 
-    http://lkml.indiana.edu/hypermail/linux/kernel/1203.2/00048.html
+BTW, Caviar Black != RE4  They're different products.
 
-for several month on a very busy file server (serving 9 million files
-with 5.3 TiB daily) without any problems.
+> 2) Replace the primary SAN with 3 x 480GB SSD drives in linear + one of
+> the existing 2TB drives combined as RAID1 with the 2TB drive in write
+> only mode. This reduces overall capacity, but it does provide enough
+> capacity for at least 6 to 12 months. If needed, one additional SSD will
+> provide almost 2TB across the entire san.
 
-Is there any chance that these patches will go into the official kernel?
-Or what is the reason that these patches are no applied?
+This is simply insane, frankly.  Don't attempt this, even if md does
+support a write only mirror partner.
 
-I have attached the patch set in one big patch for 3.5. Please do not
-use it since I am not sure if it is correct. Shaohua could you please
-take a look if it is correct and maybe post a new one?
+> Further expansion becomes expensive, but this enterprise doesn't have a
+> lot of data growth (over the past 10 years), so I don't expect it to be
+> significant, also given the rate of increasing SSD storage, and
+> decreasing cost. Long term it would be ideal to make this system use 8 x
+> 480G in RAID10, and eventually another 8 on the secondary SAN.
 
-Personally, I would think that TRIM support MD would be a very good thing.
+Wait until *enterprise* SSD is fully mature and less expensive.  Stick
+with mechanical storage for now as your budget doesn't support SSD.
+If/when you go SSD, go *all* SSD, not this asymmetric Frankenstein
+stuff, which will only cause you problems.
 
-Regards,
-Holger
---8323328-1418712126-1344431451=:30954
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name=md-trim-3.5.patch
-Content-Transfer-Encoding: BASE64
-Content-ID: <alpine.LRH.2.02.1208081310510.30954@praktifix.dwd.de>
-Content-Description: 
-Content-Disposition: attachment; filename=md-trim-3.5.patch
+> I'm aware that a single SSD failure will reduce performance back to
+> current levels.
 
-ZGlmZiAtdSAtLXJlY3Vyc2l2ZSAtLW5ldy1maWxlIGxpbnV4LTMuNS5vcmln
-L2RyaXZlcnMvbWQvbGluZWFyLmMgbGludXgtMy41L2RyaXZlcnMvbWQvbGlu
-ZWFyLmMNCi0tLSBsaW51eC0zLjUub3JpZy9kcml2ZXJzL21kL2xpbmVhci5j
-CTIwMTItMDctMjEgMjA6NTg6MjkuMDAwMDAwMDAwICswMDAwDQorKysgbGlu
-dXgtMy41L2RyaXZlcnMvbWQvbGluZWFyLmMJMjAxMi0wNy0yNyAwNjo1Mzoz
-OS41MDcxMjE0MzQgKzAwMDANCkBAIC0xMzgsNiArMTM4LDcgQEANCiAJc3Ry
-dWN0IGxpbmVhcl9jb25mICpjb25mOw0KIAlzdHJ1Y3QgbWRfcmRldiAqcmRl
-djsNCiAJaW50IGksIGNudDsNCisJYm9vbCBkaXNjYXJkX3N1cHBvcnRlZCA9
-IGZhbHNlOw0KIA0KIAljb25mID0ga3phbGxvYyAoc2l6ZW9mICgqY29uZikg
-KyByYWlkX2Rpc2tzKnNpemVvZihzdHJ1Y3QgZGV2X2luZm8pLA0KIAkJCUdG
-UF9LRVJORUwpOw0KQEAgLTE3MSw2ICsxNzIsOCBAQA0KIAkJY29uZi0+YXJy
-YXlfc2VjdG9ycyArPSByZGV2LT5zZWN0b3JzOw0KIAkJY250Kys7DQogDQor
-CQlpZiAoYmxrX3F1ZXVlX2Rpc2NhcmQoYmRldl9nZXRfcXVldWUocmRldi0+
-YmRldikpKQ0KKwkJCWRpc2NhcmRfc3VwcG9ydGVkID0gdHJ1ZTsNCiAJfQ0K
-IAlpZiAoY250ICE9IHJhaWRfZGlza3MpIHsNCiAJCXByaW50ayhLRVJOX0VS
-UiAibWQvbGluZWFyOiVzOiBub3QgZW5vdWdoIGRyaXZlcyBwcmVzZW50LiBB
-Ym9ydGluZyFcbiIsDQpAQCAtMTc4LDYgKzE4MSwxMSBAQA0KIAkJZ290byBv
-dXQ7DQogCX0NCiANCisJaWYgKCFkaXNjYXJkX3N1cHBvcnRlZCkNCisJCXF1
-ZXVlX2ZsYWdfY2xlYXJfdW5sb2NrZWQoUVVFVUVfRkxBR19ESVNDQVJELCBt
-ZGRldi0+cXVldWUpOw0KKwllbHNlDQorCQlxdWV1ZV9mbGFnX3NldF91bmxv
-Y2tlZChRVUVVRV9GTEFHX0RJU0NBUkQsIG1kZGV2LT5xdWV1ZSk7DQorDQog
-CS8qDQogCSAqIEhlcmUgd2UgY2FsY3VsYXRlIHRoZSBkZXZpY2Ugb2Zmc2V0
-cy4NCiAJICovDQpAQCAtMzI2LDYgKzMzNCwxNCBAQA0KIAliaW8tPmJpX3Nl
-Y3RvciA9IGJpby0+Ymlfc2VjdG9yIC0gc3RhcnRfc2VjdG9yDQogCQkrIHRt
-cF9kZXYtPnJkZXYtPmRhdGFfb2Zmc2V0Ow0KIAlyY3VfcmVhZF91bmxvY2so
-KTsNCisNCisJaWYgKHVubGlrZWx5KChiaW8tPmJpX3J3ICYgUkVRX0RJU0NB
-UkQpICYmDQorCQkhYmxrX3F1ZXVlX2Rpc2NhcmQoYmRldl9nZXRfcXVldWUo
-YmlvLT5iaV9iZGV2KSkpKSB7DQorCQkvKiBKdXN0IGlnbm9yZSBpdCAqLw0K
-KwkJYmlvX2VuZGlvKGJpbywgMCk7DQorCQlyZXR1cm47DQorCX0NCisNCiAJ
-Z2VuZXJpY19tYWtlX3JlcXVlc3QoYmlvKTsNCiB9DQogDQpkaWZmIC11IC0t
-cmVjdXJzaXZlIC0tbmV3LWZpbGUgbGludXgtMy41Lm9yaWcvZHJpdmVycy9t
-ZC9yYWlkMC5jIGxpbnV4LTMuNS9kcml2ZXJzL21kL3JhaWQwLmMNCi0tLSBs
-aW51eC0zLjUub3JpZy9kcml2ZXJzL21kL3JhaWQwLmMJMjAxMi0wNy0yMSAy
-MDo1ODoyOS4wMDAwMDAwMDAgKzAwMDANCisrKyBsaW51eC0zLjUvZHJpdmVy
-cy9tZC9yYWlkMC5jCTIwMTItMDctMjcgMDY6NTM6MzkuNTA3MTIxNDM0ICsw
-MDAwDQpAQCAtODgsNiArODgsNyBAQA0KIAljaGFyIGJbQkRFVk5BTUVfU0la
-RV07DQogCWNoYXIgYjJbQkRFVk5BTUVfU0laRV07DQogCXN0cnVjdCByMGNv
-bmYgKmNvbmYgPSBremFsbG9jKHNpemVvZigqY29uZiksIEdGUF9LRVJORUwp
-Ow0KKwlib29sIGRpc2NhcmRfc3VwcG9ydGVkID0gZmFsc2U7DQogDQogCWlm
-ICghY29uZikNCiAJCXJldHVybiAtRU5PTUVNOw0KQEAgLTE5NSw2ICsxOTYs
-OSBAQA0KIAkJaWYgKCFzbWFsbGVzdCB8fCAocmRldjEtPnNlY3RvcnMgPCBz
-bWFsbGVzdC0+c2VjdG9ycykpDQogCQkJc21hbGxlc3QgPSByZGV2MTsNCiAJ
-CWNudCsrOw0KKw0KKwkJaWYgKGJsa19xdWV1ZV9kaXNjYXJkKGJkZXZfZ2V0
-X3F1ZXVlKHJkZXYxLT5iZGV2KSkpDQorCQkJZGlzY2FyZF9zdXBwb3J0ZWQg
-PSB0cnVlOw0KIAl9DQogCWlmIChjbnQgIT0gbWRkZXYtPnJhaWRfZGlza3Mp
-IHsNCiAJCXByaW50ayhLRVJOX0VSUiAibWQvcmFpZDA6JXM6IHRvbyBmZXcg
-ZGlza3MgKCVkIG9mICVkKSAtICINCkBAIC0yNzIsNiArMjc2LDExIEBADQog
-CWJsa19xdWV1ZV9pb19vcHQobWRkZXYtPnF1ZXVlLA0KIAkJCSAobWRkZXYt
-PmNodW5rX3NlY3RvcnMgPDwgOSkgKiBtZGRldi0+cmFpZF9kaXNrcyk7DQog
-DQorCWlmICghZGlzY2FyZF9zdXBwb3J0ZWQpDQorCQlxdWV1ZV9mbGFnX2Ns
-ZWFyX3VubG9ja2VkKFFVRVVFX0ZMQUdfRElTQ0FSRCwgbWRkZXYtPnF1ZXVl
-KTsNCisJZWxzZQ0KKwkJcXVldWVfZmxhZ19zZXRfdW5sb2NrZWQoUVVFVUVf
-RkxBR19ESVNDQVJELCBtZGRldi0+cXVldWUpOw0KKw0KIAlwcl9kZWJ1Zygi
-bWQvcmFpZDA6JXM6IGRvbmUuXG4iLCBtZG5hbWUobWRkZXYpKTsNCiAJKnBy
-aXZhdGVfY29uZiA9IGNvbmY7DQogDQpAQCAtNDIyLDYgKzQzMSw3IEBADQog
-CWlmIChtZF9jaGVja19ub19iaXRtYXAobWRkZXYpKQ0KIAkJcmV0dXJuIC1F
-SU5WQUw7DQogCWJsa19xdWV1ZV9tYXhfaHdfc2VjdG9ycyhtZGRldi0+cXVl
-dWUsIG1kZGV2LT5jaHVua19zZWN0b3JzKTsNCisJYmxrX3F1ZXVlX21heF9k
-aXNjYXJkX3NlY3RvcnMobWRkZXYtPnF1ZXVlLCBtZGRldi0+Y2h1bmtfc2Vj
-dG9ycyk7DQogDQogCS8qIGlmIHByaXZhdGUgaXMgbm90IG51bGwsIHdlIGFy
-ZSBoZXJlIGFmdGVyIHRha2VvdmVyICovDQogCWlmIChtZGRldi0+cHJpdmF0
-ZSA9PSBOVUxMKSB7DQpAQCAtNTA5LDcgKzUxOSw3IEBADQogCQlzZWN0b3Jf
-dCBzZWN0b3IgPSBiaW8tPmJpX3NlY3RvcjsNCiAJCXN0cnVjdCBiaW9fcGFp
-ciAqYnA7DQogCQkvKiBTYW5pdHkgY2hlY2sgLS0gcXVldWUgZnVuY3Rpb25z
-IHNob3VsZCBwcmV2ZW50IHRoaXMgaGFwcGVuaW5nICovDQotCQlpZiAoYmlv
-LT5iaV92Y250ICE9IDEgfHwNCisJCWlmICgoYmlvLT5iaV92Y250ICE9IDEg
-JiYgYmlvLT5iaV92Y250ICE9IDApIHx8DQogCQkgICAgYmlvLT5iaV9pZHgg
-IT0gMCkNCiAJCQlnb3RvIGJhZF9tYXA7DQogCQkvKiBUaGlzIGlzIGEgb25l
-IHBhZ2UgYmlvIHRoYXQgdXBwZXIgbGF5ZXJzDQpAQCAtNTM1LDYgKzU0NSwx
-MyBAQA0KIAliaW8tPmJpX3NlY3RvciA9IHNlY3Rvcl9vZmZzZXQgKyB6b25l
-LT5kZXZfc3RhcnQgKw0KIAkJdG1wX2Rldi0+ZGF0YV9vZmZzZXQ7DQogDQor
-CWlmICh1bmxpa2VseSgoYmlvLT5iaV9ydyAmIFJFUV9ESVNDQVJEKSAmJg0K
-KwkJIWJsa19xdWV1ZV9kaXNjYXJkKGJkZXZfZ2V0X3F1ZXVlKGJpby0+Ymlf
-YmRldikpKSkgew0KKwkJLyogSnVzdCBpZ25vcmUgaXQgKi8NCisJCWJpb19l
-bmRpbyhiaW8sIDApOw0KKwkJcmV0dXJuOw0KKwl9DQorDQogCWdlbmVyaWNf
-bWFrZV9yZXF1ZXN0KGJpbyk7DQogCXJldHVybjsNCiANCmRpZmYgLXUgLS1y
-ZWN1cnNpdmUgLS1uZXctZmlsZSBsaW51eC0zLjUub3JpZy9kcml2ZXJzL21k
-L3JhaWQxMC5jIGxpbnV4LTMuNS9kcml2ZXJzL21kL3JhaWQxMC5jDQotLS0g
-bGludXgtMy41Lm9yaWcvZHJpdmVycy9tZC9yYWlkMTAuYwkyMDEyLTA3LTIx
-IDIwOjU4OjI5LjAwMDAwMDAwMCArMDAwMA0KKysrIGxpbnV4LTMuNS9kcml2
-ZXJzL21kL3JhaWQxMC5jCTIwMTItMDctMjcgMDY6NTM6MzkuNTA3MTIxNDM1
-ICswMDAwDQpAQCAtODg3LDcgKzg4NywxMiBAQA0KIAkJd2hpbGUgKGJpbykg
-eyAvKiBzdWJtaXQgcGVuZGluZyB3cml0ZXMgKi8NCiAJCQlzdHJ1Y3QgYmlv
-ICpuZXh0ID0gYmlvLT5iaV9uZXh0Ow0KIAkJCWJpby0+YmlfbmV4dCA9IE5V
-TEw7DQotCQkJZ2VuZXJpY19tYWtlX3JlcXVlc3QoYmlvKTsNCisJCQlpZiAo
-dW5saWtlbHkoKGJpby0+YmlfcncgJiBSRVFfRElTQ0FSRCkgJiYNCisJCQkg
-ICAgIWJsa19xdWV1ZV9kaXNjYXJkKGJkZXZfZ2V0X3F1ZXVlKGJpby0+Ymlf
-YmRldikpKSkNCisJCQkJLyogSnVzdCBpZ25vcmUgaXQgKi8NCisJCQkJYmlv
-X2VuZGlvKGJpbywgMCk7DQorCQkJZWxzZQ0KKwkJCQlnZW5lcmljX21ha2Vf
-cmVxdWVzdChiaW8pOw0KIAkJCWJpbyA9IG5leHQ7DQogCQl9DQogCX0gZWxz
-ZQ0KQEAgLTEwMTcsNyArMTAyMiw3IEBADQogfQ0KIA0KIHN0YXRpYyBzZWN0
-b3JfdCBjaG9vc2VfZGF0YV9vZmZzZXQoc3RydWN0IHIxMGJpbyAqcjEwX2Jp
-bywNCi0JCQkJICAgc3RydWN0IG1kX3JkZXYgKnJkZXYpDQorCQkJCXN0cnVj
-dCBtZF9yZGV2ICpyZGV2KQ0KIHsNCiAJaWYgKCF0ZXN0X2JpdChNRF9SRUNP
-VkVSWV9SRVNIQVBFLCAmcmRldi0+bWRkZXYtPnJlY292ZXJ5KSB8fA0KIAkg
-ICAgdGVzdF9iaXQoUjEwQklPX1ByZXZpb3VzLCAmcjEwX2Jpby0+c3RhdGUp
-KQ0KQEAgLTEwMzcsNiArMTA0Miw3IEBADQogCWNvbnN0IGludCBydyA9IGJp
-b19kYXRhX2RpcihiaW8pOw0KIAljb25zdCB1bnNpZ25lZCBsb25nIGRvX3N5
-bmMgPSAoYmlvLT5iaV9ydyAmIFJFUV9TWU5DKTsNCiAJY29uc3QgdW5zaWdu
-ZWQgbG9uZyBkb19mdWEgPSAoYmlvLT5iaV9ydyAmIFJFUV9GVUEpOw0KKwlj
-b25zdCB1bnNpZ25lZCBsb25nIGRvX2Rpc2NhcmQgPSAoYmlvLT5iaV9ydyAm
-IChSRVFfRElTQ0FSRCB8IFJFUV9TRUNVUkUpKTsNCiAJdW5zaWduZWQgbG9u
-ZyBmbGFnczsNCiAJc3RydWN0IG1kX3JkZXYgKmJsb2NrZWRfcmRldjsNCiAJ
-aW50IHNlY3RvcnNfaGFuZGxlZDsNCkBAIC0xMDU3LDcgKzEwNjMsNyBAQA0K
-IAkJCSB8fCBjb25mLT5wcmV2Lm5lYXJfY29waWVzIDwgY29uZi0+cHJldi5y
-YWlkX2Rpc2tzKSkpIHsNCiAJCXN0cnVjdCBiaW9fcGFpciAqYnA7DQogCQkv
-KiBTYW5pdHkgY2hlY2sgLS0gcXVldWUgZnVuY3Rpb25zIHNob3VsZCBwcmV2
-ZW50IHRoaXMgaGFwcGVuaW5nICovDQotCQlpZiAoYmlvLT5iaV92Y250ICE9
-IDEgfHwNCisJCWlmICgoYmlvLT5iaV92Y250ICE9IDEgJiYgYmlvLT5iaV92
-Y250ICE9MCkgfHwNCiAJCSAgICBiaW8tPmJpX2lkeCAhPSAwKQ0KIAkJCWdv
-dG8gYmFkX21hcDsNCiAJCS8qIFRoaXMgaXMgYSBvbmUgcGFnZSBiaW8gdGhh
-dCB1cHBlciBsYXllcnMNCkBAIC0xMzg2LDcgKzEzOTIsNyBAQA0KIAkJCQkJ
-CSAgICAgIGNvbmYtPm1pcnJvcnNbZF0ucmRldikpOw0KIAkJbWJpby0+Ymlf
-YmRldiA9IGNvbmYtPm1pcnJvcnNbZF0ucmRldi0+YmRldjsNCiAJCW1iaW8t
-PmJpX2VuZF9pbwk9IHJhaWQxMF9lbmRfd3JpdGVfcmVxdWVzdDsNCi0JCW1i
-aW8tPmJpX3J3ID0gV1JJVEUgfCBkb19zeW5jIHwgZG9fZnVhOw0KKwkJbWJp
-by0+YmlfcncgPSBXUklURSB8IGRvX3N5bmMgfCBkb19mdWEgfCBkb19kaXNj
-YXJkOw0KIAkJbWJpby0+YmlfcHJpdmF0ZSA9IHIxMF9iaW87DQogDQogCQlh
-dG9taWNfaW5jKCZyMTBfYmlvLT5yZW1haW5pbmcpOw0KQEAgLTE0MTUsNyAr
-MTQyMSw3IEBADQogCQkJCQkgICBjb25mLT5taXJyb3JzW2RdLnJlcGxhY2Vt
-ZW50KSk7DQogCQltYmlvLT5iaV9iZGV2ID0gY29uZi0+bWlycm9yc1tkXS5y
-ZXBsYWNlbWVudC0+YmRldjsNCiAJCW1iaW8tPmJpX2VuZF9pbwk9IHJhaWQx
-MF9lbmRfd3JpdGVfcmVxdWVzdDsNCi0JCW1iaW8tPmJpX3J3ID0gV1JJVEUg
-fCBkb19zeW5jIHwgZG9fZnVhOw0KKwkJbWJpby0+YmlfcncgPSBXUklURSB8
-IGRvX3N5bmMgfCBkb19mdWEgfCBkb19kaXNjYXJkOw0KIAkJbWJpby0+Ymlf
-cHJpdmF0ZSA9IHIxMF9iaW87DQogDQogCQlhdG9taWNfaW5jKCZyMTBfYmlv
-LT5yZW1haW5pbmcpOw0KQEAgLTE2OTksNiArMTcwNSw5IEBADQogCQljbGVh
-cl9iaXQoVW5tZXJnZWQsICZyZGV2LT5mbGFncyk7DQogCX0NCiAJbWRfaW50
-ZWdyaXR5X2FkZF9yZGV2KHJkZXYsIG1kZGV2KTsNCisJaWYgKGJsa19xdWV1
-ZV9kaXNjYXJkKGJkZXZfZ2V0X3F1ZXVlKHJkZXYtPmJkZXYpKSkNCisJCXF1
-ZXVlX2ZsYWdfc2V0X3VubG9ja2VkKFFVRVVFX0ZMQUdfRElTQ0FSRCwgbWRk
-ZXYtPnF1ZXVlKTsNCisNCiAJcHJpbnRfY29uZihjb25mKTsNCiAJcmV0dXJu
-IGVycjsNCiB9DQpAQCAtMzQ1Nyw2ICszNDY2LDcgQEANCiAJc2VjdG9yX3Qg
-c2l6ZTsNCiAJc2VjdG9yX3QgbWluX29mZnNldF9kaWZmID0gMDsNCiAJaW50
-IGZpcnN0ID0gMTsNCisJYm9vbCBkaXNjYXJkX3N1cHBvcnRlZCA9IGZhbHNl
-Ow0KIA0KIAlpZiAobWRkZXYtPnByaXZhdGUgPT0gTlVMTCkgew0KIAkJY29u
-ZiA9IHNldHVwX2NvbmYobWRkZXYpOw0KQEAgLTM0NzEsNiArMzQ4MSw3IEBA
-DQogCW1kZGV2LT50aHJlYWQgPSBjb25mLT50aHJlYWQ7DQogCWNvbmYtPnRo
-cmVhZCA9IE5VTEw7DQogDQorCWJsa19xdWV1ZV9tYXhfZGlzY2FyZF9zZWN0
-b3JzKG1kZGV2LT5xdWV1ZSwgbWRkZXYtPmNodW5rX3NlY3RvcnMpOw0KIAlj
-aHVua19zaXplID0gbWRkZXYtPmNodW5rX3NlY3RvcnMgPDwgOTsNCiAJYmxr
-X3F1ZXVlX2lvX21pbihtZGRldi0+cXVldWUsIGNodW5rX3NpemUpOw0KIAlp
-ZiAoY29uZi0+Z2VvLnJhaWRfZGlza3MgJSBjb25mLT5nZW8ubmVhcl9jb3Bp
-ZXMpDQpAQCAtMzUxNSw4ICszNTI2LDE2IEBADQogCQkJCSAgcmRldi0+ZGF0
-YV9vZmZzZXQgPDwgOSk7DQogDQogCQlkaXNrLT5oZWFkX3Bvc2l0aW9uID0g
-MDsNCisNCisJCWlmIChibGtfcXVldWVfZGlzY2FyZChiZGV2X2dldF9xdWV1
-ZShyZGV2LT5iZGV2KSkpDQorCQkJZGlzY2FyZF9zdXBwb3J0ZWQgPSB0cnVl
-Ow0KIAl9DQogDQorCWlmIChkaXNjYXJkX3N1cHBvcnRlZCkNCisJCXF1ZXVl
-X2ZsYWdfc2V0X3VubG9ja2VkKFFVRVVFX0ZMQUdfRElTQ0FSRCwgbWRkZXYt
-PnF1ZXVlKTsNCisJZWxzZQ0KKwkJcXVldWVfZmxhZ19jbGVhcl91bmxvY2tl
-ZChRVUVVRV9GTEFHX0RJU0NBUkQsIG1kZGV2LT5xdWV1ZSk7DQorDQogCS8q
-IG5lZWQgdG8gY2hlY2sgdGhhdCBldmVyeSBibG9jayBoYXMgYXQgbGVhc3Qg
-b25lIHdvcmtpbmcgbWlycm9yICovDQogCWlmICghZW5vdWdoKGNvbmYsIC0x
-KSkgew0KIAkJcHJpbnRrKEtFUk5fRVJSICJtZC9yYWlkMTA6JXM6IG5vdCBl
-bm91Z2ggb3BlcmF0aW9uYWwgbWlycm9ycy5cbiIsDQpkaWZmIC11IC0tcmVj
-dXJzaXZlIC0tbmV3LWZpbGUgbGludXgtMy41Lm9yaWcvZHJpdmVycy9tZC9y
-YWlkMS5jIGxpbnV4LTMuNS9kcml2ZXJzL21kL3JhaWQxLmMNCi0tLSBsaW51
-eC0zLjUub3JpZy9kcml2ZXJzL21kL3JhaWQxLmMJMjAxMi0wNy0yMSAyMDo1
-ODoyOS4wMDAwMDAwMDAgKzAwMDANCisrKyBsaW51eC0zLjUvZHJpdmVycy9t
-ZC9yYWlkMS5jCTIwMTItMDctMjcgMDY6NTM6MzkuNTA3MTIxNDM1ICswMDAw
-DQpAQCAtNzA3LDcgKzcwNywxMiBAQA0KIAkJd2hpbGUgKGJpbykgeyAvKiBz
-dWJtaXQgcGVuZGluZyB3cml0ZXMgKi8NCiAJCQlzdHJ1Y3QgYmlvICpuZXh0
-ID0gYmlvLT5iaV9uZXh0Ow0KIAkJCWJpby0+YmlfbmV4dCA9IE5VTEw7DQot
-CQkJZ2VuZXJpY19tYWtlX3JlcXVlc3QoYmlvKTsNCisJCQlpZiAodW5saWtl
-bHkoKGJpby0+YmlfcncgJiBSRVFfRElTQ0FSRCkgJiYNCisJCQkgICAgIWJs
-a19xdWV1ZV9kaXNjYXJkKGJkZXZfZ2V0X3F1ZXVlKGJpby0+YmlfYmRldikp
-KSkNCisJCQkJLyogSnVzdCBpZ25vcmUgaXQgKi8NCisJCQkJYmlvX2VuZGlv
-KGJpbywgMCk7DQorCQkJZWxzZQ0KKwkJCQlnZW5lcmljX21ha2VfcmVxdWVz
-dChiaW8pOw0KIAkJCWJpbyA9IG5leHQ7DQogCQl9DQogCX0gZWxzZQ0KQEAg
-LTg4Miw2ICs4ODcsNyBAQA0KIAljb25zdCBpbnQgcncgPSBiaW9fZGF0YV9k
-aXIoYmlvKTsNCiAJY29uc3QgdW5zaWduZWQgbG9uZyBkb19zeW5jID0gKGJp
-by0+YmlfcncgJiBSRVFfU1lOQyk7DQogCWNvbnN0IHVuc2lnbmVkIGxvbmcg
-ZG9fZmx1c2hfZnVhID0gKGJpby0+YmlfcncgJiAoUkVRX0ZMVVNIIHwgUkVR
-X0ZVQSkpOw0KKwljb25zdCB1bnNpZ25lZCBsb25nIGRvX2Rpc2NhcmQgPSAo
-YmlvLT5iaV9ydyAmIChSRVFfRElTQ0FSRCB8IFJFUV9TRUNVUkUpKTsNCiAJ
-c3RydWN0IG1kX3JkZXYgKmJsb2NrZWRfcmRldjsNCiAJaW50IGZpcnN0X2Ns
-b25lOw0KIAlpbnQgc2VjdG9yc19oYW5kbGVkOw0KQEAgLTExODEsNyArMTE4
-Nyw3IEBADQogCQkJCSAgIGNvbmYtPm1pcnJvcnNbaV0ucmRldi0+ZGF0YV9v
-ZmZzZXQpOw0KIAkJbWJpby0+YmlfYmRldiA9IGNvbmYtPm1pcnJvcnNbaV0u
-cmRldi0+YmRldjsNCiAJCW1iaW8tPmJpX2VuZF9pbwk9IHJhaWQxX2VuZF93
-cml0ZV9yZXF1ZXN0Ow0KLQkJbWJpby0+YmlfcncgPSBXUklURSB8IGRvX2Zs
-dXNoX2Z1YSB8IGRvX3N5bmM7DQorCQltYmlvLT5iaV9ydyA9IFdSSVRFIHwg
-ZG9fZmx1c2hfZnVhIHwgZG9fc3luYyB8IGRvX2Rpc2NhcmQ7DQogCQltYmlv
-LT5iaV9wcml2YXRlID0gcjFfYmlvOw0KIA0KIAkJYXRvbWljX2luYygmcjFf
-YmlvLT5yZW1haW5pbmcpOw0KQEAgLTE0MjQsNiArMTQzMCw4IEBADQogCQlj
-bGVhcl9iaXQoVW5tZXJnZWQsICZyZGV2LT5mbGFncyk7DQogCX0NCiAJbWRf
-aW50ZWdyaXR5X2FkZF9yZGV2KHJkZXYsIG1kZGV2KTsNCisJaWYgKGJsa19x
-dWV1ZV9kaXNjYXJkKGJkZXZfZ2V0X3F1ZXVlKHJkZXYtPmJkZXYpKSkNCisJ
-CXF1ZXVlX2ZsYWdfc2V0X3VubG9ja2VkKFFVRVVFX0ZMQUdfRElTQ0FSRCwg
-bWRkZXYtPnF1ZXVlKTsNCiAJcHJpbnRfY29uZihjb25mKTsNCiAJcmV0dXJu
-IGVycjsNCiB9DQpAQCAtMjY1NCw2ICsyNjYyLDcgQEANCiAJaW50IGk7DQog
-CXN0cnVjdCBtZF9yZGV2ICpyZGV2Ow0KIAlpbnQgcmV0Ow0KKwlib29sIGRp
-c2NhcmRfc3VwcG9ydGVkID0gZmFsc2U7DQogDQogCWlmIChtZGRldi0+bGV2
-ZWwgIT0gMSkgew0KIAkJcHJpbnRrKEtFUk5fRVJSICJtZC9yYWlkMTolczog
-cmFpZCBsZXZlbCBub3Qgc2V0IHRvIG1pcnJvcmluZyAoJWQpXG4iLA0KQEAg
-LTI2ODMsOCArMjY5MiwxNiBAQA0KIAkJCWNvbnRpbnVlOw0KIAkJZGlza19z
-dGFja19saW1pdHMobWRkZXYtPmdlbmRpc2ssIHJkZXYtPmJkZXYsDQogCQkJ
-CSAgcmRldi0+ZGF0YV9vZmZzZXQgPDwgOSk7DQorDQorCQlpZiAoYmxrX3F1
-ZXVlX2Rpc2NhcmQoYmRldl9nZXRfcXVldWUocmRldi0+YmRldikpKQ0KKwkJ
-CWRpc2NhcmRfc3VwcG9ydGVkID0gdHJ1ZTsNCiAJfQ0KIA0KKwlpZiAoZGlz
-Y2FyZF9zdXBwb3J0ZWQpDQorCQlxdWV1ZV9mbGFnX3NldF91bmxvY2tlZChR
-VUVVRV9GTEFHX0RJU0NBUkQsIG1kZGV2LT5xdWV1ZSk7DQorCWVsc2UNCisJ
-CXF1ZXVlX2ZsYWdfY2xlYXJfdW5sb2NrZWQoUVVFVUVfRkxBR19ESVNDQVJE
-LCBtZGRldi0+cXVldWUpOw0KKw0KIAltZGRldi0+ZGVncmFkZWQgPSAwOw0K
-IAlmb3IgKGk9MDsgaSA8IGNvbmYtPnJhaWRfZGlza3M7IGkrKykNCiAJCWlm
-IChjb25mLT5taXJyb3JzW2ldLnJkZXYgPT0gTlVMTCB8fA0KZGlmZiAtdSAt
-LXJlY3Vyc2l2ZSAtLW5ldy1maWxlIGxpbnV4LTMuNS5vcmlnL2ZzL2Jpby5j
-IGxpbnV4LTMuNS9mcy9iaW8uYw0KLS0tIGxpbnV4LTMuNS5vcmlnL2ZzL2Jp
-by5jCTIwMTItMDctMjEgMjA6NTg6MjkuMDAwMDAwMDAwICswMDAwDQorKysg
-bGludXgtMy41L2ZzL2Jpby5jCTIwMTItMDctMjcgMDY6NTM6MzkuNTA3MTIx
-NDM1ICswMDAwDQpAQCAtMTUwMCw3ICsxNTAwLDcgQEANCiAJdHJhY2VfYmxv
-Y2tfc3BsaXQoYmRldl9nZXRfcXVldWUoYmktPmJpX2JkZXYpLCBiaSwNCiAJ
-CQkJYmktPmJpX3NlY3RvciArIGZpcnN0X3NlY3RvcnMpOw0KIA0KLQlCVUdf
-T04oYmktPmJpX3ZjbnQgIT0gMSk7DQorCUJVR19PTihiaS0+YmlfdmNudCAh
-PSAxICYmIGJpLT5iaV92Y250ICE9IDApOw0KIAlCVUdfT04oYmktPmJpX2lk
-eCAhPSAwKTsNCiAJYXRvbWljX3NldCgmYnAtPmNudCwgMyk7DQogCWJwLT5l
-cnJvciA9IDA7DQpAQCAtMTUxMCwxNyArMTUxMCwxOSBAQA0KIAlicC0+Ymlv
-Mi5iaV9zaXplIC09IGZpcnN0X3NlY3RvcnMgPDwgOTsNCiAJYnAtPmJpbzEu
-Ymlfc2l6ZSA9IGZpcnN0X3NlY3RvcnMgPDwgOTsNCiANCi0JYnAtPmJ2MSA9
-IGJpLT5iaV9pb192ZWNbMF07DQotCWJwLT5idjIgPSBiaS0+YmlfaW9fdmVj
-WzBdOw0KLQlicC0+YnYyLmJ2X29mZnNldCArPSBmaXJzdF9zZWN0b3JzIDw8
-IDk7DQotCWJwLT5idjIuYnZfbGVuIC09IGZpcnN0X3NlY3RvcnMgPDwgOTsN
-Ci0JYnAtPmJ2MS5idl9sZW4gPSBmaXJzdF9zZWN0b3JzIDw8IDk7DQorCWlm
-IChiaS0+YmlfdmNudCAhPSAwKSB7DQorCQlicC0+YnYxID0gYmktPmJpX2lv
-X3ZlY1swXTsNCisJCWJwLT5idjIgPSBiaS0+YmlfaW9fdmVjWzBdOw0KKwkJ
-YnAtPmJ2Mi5idl9vZmZzZXQgKz0gZmlyc3Rfc2VjdG9ycyA8PCA5Ow0KKwkJ
-YnAtPmJ2Mi5idl9sZW4gLT0gZmlyc3Rfc2VjdG9ycyA8PCA5Ow0KKwkJYnAt
-PmJ2MS5idl9sZW4gPSBmaXJzdF9zZWN0b3JzIDw8IDk7DQogDQotCWJwLT5i
-aW8xLmJpX2lvX3ZlYyA9ICZicC0+YnYxOw0KLQlicC0+YmlvMi5iaV9pb192
-ZWMgPSAmYnAtPmJ2MjsNCisJCWJwLT5iaW8xLmJpX2lvX3ZlYyA9ICZicC0+
-YnYxOw0KKwkJYnAtPmJpbzIuYmlfaW9fdmVjID0gJmJwLT5idjI7DQogDQot
-CWJwLT5iaW8xLmJpX21heF92ZWNzID0gMTsNCi0JYnAtPmJpbzIuYmlfbWF4
-X3ZlY3MgPSAxOw0KKwkJYnAtPmJpbzEuYmlfbWF4X3ZlY3MgPSAxOw0KKwkJ
-YnAtPmJpbzIuYmlfbWF4X3ZlY3MgPSAxOw0KKwl9DQogDQogCWJwLT5iaW8x
-LmJpX2VuZF9pbyA9IGJpb19wYWlyX2VuZF8xOw0KIAlicC0+YmlvMi5iaV9l
-bmRfaW8gPSBiaW9fcGFpcl9lbmRfMjsNCmRpZmYgLXUgLS1yZWN1cnNpdmUg
-LS1uZXctZmlsZSBsaW51eC0zLjUub3JpZy9pbmNsdWRlL2xpbnV4L2Jsa2Rl
-di5oIGxpbnV4LTMuNS9pbmNsdWRlL2xpbnV4L2Jsa2Rldi5oDQotLS0gbGlu
-dXgtMy41Lm9yaWcvaW5jbHVkZS9saW51eC9ibGtkZXYuaAkyMDEyLTA3LTIx
-IDIwOjU4OjI5LjAwMDAwMDAwMCArMDAwMA0KKysrIGxpbnV4LTMuNS9pbmNs
-dWRlL2xpbnV4L2Jsa2Rldi5oCTIwMTItMDctMjcgMDY6NTM6MzkuNTA3MTIx
-NDM1ICswMDAwDQpAQCAtNTkwLDcgKzU5MCw3IEBADQogICogaXQgYWxyZWFk
-eSBiZSBzdGFydGVkIGJ5IGRyaXZlci4NCiAgKi8NCiAjZGVmaW5lIFJRX05P
-TUVSR0VfRkxBR1MJXA0KLQkoUkVRX05PTUVSR0UgfCBSRVFfU1RBUlRFRCB8
-IFJFUV9TT0ZUQkFSUklFUiB8IFJFUV9GTFVTSCB8IFJFUV9GVUEpDQorCShS
-RVFfTk9NRVJHRSB8IFJFUV9TVEFSVEVEIHwgUkVRX1NPRlRCQVJSSUVSIHwg
-UkVRX0ZMVVNIIHwgUkVRX0ZVQSB8IFJFUV9ESVNDQVJEKQ0KICNkZWZpbmUg
-cnFfbWVyZ2VhYmxlKHJxKQlcDQogCSghKChycSktPmNtZF9mbGFncyAmIFJR
-X05PTUVSR0VfRkxBR1MpICYmIFwNCiAJICgoKHJxKS0+Y21kX2ZsYWdzICYg
-UkVRX0RJU0NBUkQpIHx8IFwNCg==
+Then why would you ever consider this?  This thread is about increasing
+performance.  Why would you build a system that will instantly decrease
+IOPS by a factor of 1000 upon device failure?  That's insane.
 
---8323328-1418712126-1344431451=:30954--
+>> And don't use the default 512KB chunk size of metadata 1.2.  512KB per
+>> chunk is insane.  With your Win server VM workload, where no server does
+>> much writing of large files or at a sustained rate, usually only small
+>> files, you should be using a small chunk size, something like 32KB,
+>> maybe even 16KB.  If you use a large chunk size you'll rarely be able to
+>> fill a full stripe write, and you'll end up with IO hot spots on
+>> individual drives, decreasing performance.
+> 
+> I'm assuming that this can't be changed?
+
+You assume what can't be changed?  Define what is changing.  It's a
+simple command line switch to change the chunk size from the default.
+See man mdadm.
+
+> Currently, I have:
+> md RAID
+> DRBD
+> LVM
+> 
+> Could I simply create a new MD array with the smaller chunk size, tell
+
+So you're asking how to migrate from the current disks to the new disks?
+ Yes you obviously must create a new RAID10 array.  Do you have enough
+SAS/SATA ports to have all (2+4) disks running?  If so this should be
+straightforward but will require some downtime.
+
+> DRBD to sync from the remote to this new array, and then do the same for
+> the other SAN?
+
+Don't do this over ethernet.  What I would do is simply shut down all
+daemons that may write to the current array, make it "static".  Shut
+down DRBD on both hosts.  Use dd or a partition tool to copy everything
+from the 2TB md/RAID1 mirror to the new 4 drive array.  Change your
+mounts etc to the new RAID10 device.  Down the 2TB mirror array.
+Confirm the new array is working.  Delete the current DRBD configuration
+on both hosts and create a new one.  Start DRBD on both hosts and as its
+syncing up restart services.
+
+> Would this explain why one drive has significantly more activity now? I
+> don't think so, since it is really just a 2 disk RAID1, so both drives
+> should be doing the same writes, and both drives should be servicing the
+> read requests. This doesn't seem to be happening, during very high read
+> IO this morning (multiple VM's running a full antivirus scan
+> simultaneously), one drive activity light was "solid" and the second was
+> "flashing slowly".
+
+md/RAID1 doesn't guarantee symmetric read IO across members of the pair.
+ RAID1 isn't for high performance.  It's for cheap redundancy.  Even
+RAID0 can exhibit this behavior if you have a large chunk size and lots
+of small files.  They tend to align to the first drive in the stripe
+because they fit entirely within the chunk.  This is why a default 512KB
+chunk is insane for most workloads, especially mail servers.
+
+> Added to this, I've just noticed that the array is currently doing a
+> "check", would that explain the drive activity and also reduced
+> performance?
+
+Of course.
+
+> My direct emails to you bounced due to my mail server "losing" it's
+> reverse DNS. That is a local matter, delayed while "proving" we have
+> ownership of the IP space to APNIC.
+
+I see all your list messages so we're good to go.  Better to keep
+discussion on list anyway so others can learn, participate, and it gets
+archived.
+
+> Thanks again for your advise.
+
+You're welcome.
+
+-- 
+Stan
+
