@@ -1,41 +1,53 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
-Subject: Re: Re: [patch]raid5: fix directio regression
-Date: Tue, 7 Aug 2012 14:21:05 +0800
-Message-ID: <201208071421033759628@gmail.com>
-References: <20120807032240.GA22495@kernel.org> <201208071312593120932@gmail.com>,
-	<CANejiEUQcA6X75WG0xSgSv6NAQaBQnwpDD-5QaNVbqmo-oqLsA@mail.gmail.com>
+From: Dan Williams <dan.j.williams@gmail.com>
+Subject: Re: [RFC v2]raid5: create multiple threads to handle stripes
+Date: Tue, 7 Aug 2012 17:58:10 -0700
+Message-ID: <CAA9_cmeZtch8cJ8iYU1CcVFLb_YznQx1sFtjW6VWvNDO_YBZQA@mail.gmail.com>
+References: <20120801034000.GA25799@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120801034000.GA25799@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli <shli@kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wOC0wNyAxMzozMiBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
-PjIwMTIvOC83IEppYW5wZW5nIE1hIDxtYWppYW5wZW5nQGdtYWlsLmNvbT46DQo+PiBPbiAyMDEy
-LTA4LTA3IDExOjIyIFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4gV3JvdGU6DQo+Pj5NeSBk
-aXJlY3RJTyByYW5kb213cml0ZSA0ayB3b3JrbG9hZCBzaG93cyBhIDEwfjIwJSByZWdyZXNzaW9u
-IGNhdXNlZCBieSBjb21taXQNCj4+Pjg5NWUzYzVjNThhODBiYi4gZGlyZWN0SU8gdXN1YWxseSBp
-cyByYW5kb20gSU8gYW5kIGlmIHJlcXVlc3Qgc2l6ZSBpc24ndCBiaWcNCj4+Pih3aGljaCBpcyB0
-aGUgY29tbW9uIGNhc2UpLCBkZWxheSBoYW5kbGluZyBvZiB0aGUgc3RyaXBlIGhhc24ndCBhbnkg
-YWR2YW50YWdlcy4NCj4+PkZvciBiaWcgc2l6ZSByZXF1ZXN0LCBkZWxheSBjYW4gc3RpbGwgcmVk
-dWNlIElPLg0KPj4+DQo+Pj5TaWduZWQtb2ZmLWJ5OiBTaGFvaHVhIExpIDxzaGxpQGZ1c2lvbmlv
-LmNvbT4NCltzbmlwXQ0KPj4+LS0NCj4+IE1heSBiZSB1c2VkIHNpemUgdG8ganVkZ2UgaXMgbm90
-IGEgZ29vZCBtZXRob2QuDQo+PiBJIGZpcnN0bHkgc2VuZGVkIHRoaXMgcGF0Y2gsIG9ubHkgd2Fu
-dCB0byBjb250cm9sIGRpcmVjdC13cml0ZS1ibG9jayxub3QgZm9yIHJlcXVsYXIgZmlsZS4NCj4+
-IEJlY2F1c2UgaSB0aGluayBpZiBzb21lb25lIHVzZWQgZGlyZWN0LXdyaXRlLWJsb2NrIGZvciBy
-YWlkNSxoZSBzaG91bGQga25vdyB0aGUgZmVhdHVyZSBvZiByYWlkNSBhbmQgaGUgY2FuIGNvbnRy
-b2wNCj4+IGZvciB3cml0ZSB0byBmdWxsLXdyaXRlLg0KPj4gQnV0IGF0IHRoYXQgdGltZSwgaSBk
-aWQga25vdyBob3cgdG8gZGlmZmVyZW50aWF0ZSBiZXR3ZWVuIHJlZ3VsYXIgZmlsZSBhbmQgYmxv
-Y2stZGV2aWNlLg0KPj4gSSB0aGlrIHdlIHNob3VsZCBkbyBzb21ldGhpbmcgdG8gZG8gdGhpcy4N
-Cj4NCj5JIGRvbid0IHRoaW5rIGl0J3MgcG9zc2libGUgdXNlciBjYW4gY29udHJvbCBoaXMgd3Jp
-dGUgdG8gYmUgYQ0KPmZ1bGwtd3JpdGUgZXZlbiBmb3INCj5yYXcgZGlzayBJTy4gV2h5IHJlZ3Vs
-YXIgZmlsZSBhbmQgYmxvY2sgZGV2aWNlIGlvIG1hdHRlcnMgaGVyZT8NCj4NCj5UaGFua3MsDQo+
-U2hhb2h1YQ0KQW5vdGhlciBwcm9ibGVtIGlzIHRoZSBzaXplLiBIb3cgdG8ganVkZ2UgdGhlIHNp
-emUgaXMgbGFyZ2Ugb3Igbm90Pw0KQSBzeXNjYWxsIHdyaXRlIGlzIGEgZGlvIGFuZCBhIGRpbyBt
-YXkgYmUgc3BsaXQgbW9yZSBiaW9zLg0KRm9yIG15IHdvcmtsb2FkLCBpIHVzdWFseSB3cml0ZSBj
-aHVuay1zaXplLg0KQnV0IHlvdXIgcGF0Y2ggaXMganVkZ2UgYnkgYmlvLXNpemUu
+On Tue, Jul 31, 2012 at 8:40 PM, Shaohua Li <shli@kernel.org> wrote:
+> This is a new tempt to make raid5 handle stripes in multiple threads, as
+> suggested by Neil to have maxium flexibility and better numa binding. It
+> basically is a combination of my first and second generation patches. By
+> default, no multiple thread is enabled (all stripes are handled by raid5d).
+>
+> An example to enable multiple threads:
+> #echo 3 > /sys/block/md0/md/auxthread_number
+> This will create 3 auxiliary threads to handle stripes. The threads can run
+> on any cpus and handle stripes produced by any cpus.
+>
+> #echo 1-3 > /sys/block/md0/md/aux0_cpulist
+> This will bind auxiliary thread 0 to cpu 1-3, and this thread will only handle
+> stripes produced by cpu 1-3. User tool can further change the thread's
+> affinity, but the thread can only handle stripes produced by cpu 1-3 till the
+> sysfs entry is changed again.
+>
+> If stripes produced by a CPU aren't handled by any auxiliary thread, such
+> stripes will be handled by raid5d. Otherwise, raid5d doesn't handle any
+> stripes.
+>
+> Please let me know how do you think about it. I'll split the patch to a more
+> reviewable form if no one objects the idea.
+>
+> Signed-off-by: Shaohua Li <shli@fusionio.com>
 
+Looks ok to me.
+
+I think the md_sysfs_entry changes are probably asking for a new
+md_thread kobj_type in the hierarchy rather than sprinkling a
+md_sysfs_entry around.  Similar to what happens for rdevs... and I
+expect the threads may grow more attributes once there.
+
+/sys/block/mdX/md/threadX/mask
+...active?
+...idle?
+
+--
+Dan
