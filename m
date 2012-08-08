@@ -1,58 +1,68 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
+From: Shaohua Li <shli@kernel.org>
 Subject: Re: Re: [patch]raid5: fix directio regression
-Date: Wed, 8 Aug 2012 13:21:23 +0800
-Message-ID: <201208081321202343795@gmail.com>
-References: <20120807032240.GA22495@kernel.org> <201208071312593120932@gmail.com> <CANejiEUQcA6X75WG0xSgSv6NAQaBQnwpDD-5QaNVbqmo-oqLsA@mail.gmail.com> <201208071421033759628@gmail.com>,
+Date: Wed, 8 Aug 2012 20:53:00 +0800
+Message-ID: <CANejiEWC5ZKWT2L4DM-bfGi+v=TpkABruQqe5h0qG4oQg9sDhw@mail.gmail.com>
+References: <20120807032240.GA22495@kernel.org>
+	<201208071312593120932@gmail.com>
+	<CANejiEUQcA6X75WG0xSgSv6NAQaBQnwpDD-5QaNVbqmo-oqLsA@mail.gmail.com>
+	<201208071421033759628@gmail.com>
 	<CANejiEVoOprAFoS6mCVYDJKh+nbGE0=7Xw_CpVS+Z9AcUoh6RQ@mail.gmail.com>
+	<201208081321202343795@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201208081321202343795@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli <shli@kernel.org>
+To: Jianpeng Ma <majianpeng@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wOC0wOCAxMDo1OCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
-PjIwMTIvOC83IEppYW5wZW5nIE1hIDxtYWppYW5wZW5nQGdtYWlsLmNvbT46DQo+PiBPbiAyMDEy
-LTA4LTA3IDEzOjMyIFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4gV3JvdGU6DQo+Pj4yMDEy
-LzgvNyBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+Og0KPj4+PiBPbiAyMDEyLTA4
-LTA3IDExOjIyIFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4gV3JvdGU6DQo+Pj4+Pk15IGRp
-cmVjdElPIHJhbmRvbXdyaXRlIDRrIHdvcmtsb2FkIHNob3dzIGEgMTB+MjAlIHJlZ3Jlc3Npb24g
-Y2F1c2VkIGJ5IGNvbW1pdA0KPj4+Pj44OTVlM2M1YzU4YTgwYmIuIGRpcmVjdElPIHVzdWFsbHkg
-aXMgcmFuZG9tIElPIGFuZCBpZiByZXF1ZXN0IHNpemUgaXNuJ3QgYmlnDQo+Pj4+Pih3aGljaCBp
-cyB0aGUgY29tbW9uIGNhc2UpLCBkZWxheSBoYW5kbGluZyBvZiB0aGUgc3RyaXBlIGhhc24ndCBh
-bnkgYWR2YW50YWdlcy4NCj4+Pj4+Rm9yIGJpZyBzaXplIHJlcXVlc3QsIGRlbGF5IGNhbiBzdGls
-bCByZWR1Y2UgSU8uDQo+Pj4+Pg0KPj4+Pj5TaWduZWQtb2ZmLWJ5OiBTaGFvaHVhIExpIDxzaGxp
-QGZ1c2lvbmlvLmNvbT4NCj4+IFtzbmlwXQ0KPj4+Pj4tLQ0KPj4+PiBNYXkgYmUgdXNlZCBzaXpl
-IHRvIGp1ZGdlIGlzIG5vdCBhIGdvb2QgbWV0aG9kLg0KPj4+PiBJIGZpcnN0bHkgc2VuZGVkIHRo
-aXMgcGF0Y2gsIG9ubHkgd2FudCB0byBjb250cm9sIGRpcmVjdC13cml0ZS1ibG9jayxub3QgZm9y
-IHJlcXVsYXIgZmlsZS4NCj4+Pj4gQmVjYXVzZSBpIHRoaW5rIGlmIHNvbWVvbmUgdXNlZCBkaXJl
-Y3Qtd3JpdGUtYmxvY2sgZm9yIHJhaWQ1LGhlIHNob3VsZCBrbm93IHRoZSBmZWF0dXJlIG9mIHJh
-aWQ1IGFuZCBoZSBjYW4gY29udHJvbA0KPj4+PiBmb3Igd3JpdGUgdG8gZnVsbC13cml0ZS4NCj4+
-Pj4gQnV0IGF0IHRoYXQgdGltZSwgaSBkaWQga25vdyBob3cgdG8gZGlmZmVyZW50aWF0ZSBiZXR3
-ZWVuIHJlZ3VsYXIgZmlsZSBhbmQgYmxvY2stZGV2aWNlLg0KPj4+PiBJIHRoaWsgd2Ugc2hvdWxk
-IGRvIHNvbWV0aGluZyB0byBkbyB0aGlzLg0KPj4+DQo+Pj5JIGRvbid0IHRoaW5rIGl0J3MgcG9z
-c2libGUgdXNlciBjYW4gY29udHJvbCBoaXMgd3JpdGUgdG8gYmUgYQ0KPj4+ZnVsbC13cml0ZSBl
-dmVuIGZvcg0KPj4+cmF3IGRpc2sgSU8uIFdoeSByZWd1bGFyIGZpbGUgYW5kIGJsb2NrIGRldmlj
-ZSBpbyBtYXR0ZXJzIGhlcmU/DQo+Pj4NCj4+PlRoYW5rcywNCj4+PlNoYW9odWENCj4+IEFub3Ro
-ZXIgcHJvYmxlbSBpcyB0aGUgc2l6ZS4gSG93IHRvIGp1ZGdlIHRoZSBzaXplIGlzIGxhcmdlIG9y
-IG5vdD8NCj4+IEEgc3lzY2FsbCB3cml0ZSBpcyBhIGRpbyBhbmQgYSBkaW8gbWF5IGJlIHNwbGl0
-IG1vcmUgYmlvcy4NCj4+IEZvciBteSB3b3JrbG9hZCwgaSB1c3VhbHkgd3JpdGUgY2h1bmstc2l6
-ZS4NCj4+IEJ1dCB5b3VyIHBhdGNoIGlzIGp1ZGdlIGJ5IGJpby1zaXplLg0KPg0KPkknZCBpZ25v
-cmUgd29ya2xvYWQgd2hpY2ggZG9lcyBzZXF1ZW50aWFsIGRpcmVjdElPLCB0aG91Z2gNCj55b3Vy
-IHdvcmtsb2FkIGlzLCBidXQgSSBiZXQgbm8gcmVhbCB3b3JrbG9hZHMgYXJlLiBTbyBJJ2QgbGlr
-ZQ0KU29ycnksbXkgZXhwbGFpbiBtYXliZSBub3QgY29yY3JlY3QuIEkgd3JpdGUgZGF0YSBvbmNl
-IHdoaWNoIHNpemUgaXMgYWxtb3N0IGNodW5rcy1zaXplICogZGV2aWNlcyxpbiBvcmRlciB0byBm
-dWxsLXdyaXRlIA0KYW5kIGFzIHBvc3NpYmxlIGFzIHRvIG5vIHByZS1yZWFkIG9wZXJhdGlvbi4N
-Cj5vbmx5IHRvIGNvbnNpZGVyIGJpZyBzaXplIHJhbmRvbSBkaXJlY3Rpby4gSSBhZ3JlZSB0aGUg
-c2l6ZQ0KPmp1ZGdlIGlzIGFyYml0cmFyeS4gSSBjYW4gb3B0aW1pemUgaXQgdG8gYmUgb25seSBj
-b25zaWRlciBzdHJpcGUNCj53aGljaCBoaXRzIHR3byBvciBtb3JlIGRpc2tzIGluIG9uZSBiaW8s
-IGJ1dCBub3Qgc3VyZSBpZiBpdCdzDQo+d29ydGh5IGRvaW5nLiBOb3Qgd2FyZSBiaWcgc2l6ZSBk
-aXJlY3RpbyBpcyBjb21tb24sIGFuZCBldmVuDQo+aXMsIGJpZyBzaXplIHJlcXVlc3QgSU9QUyBp
-cyBsb3csIGEgYml0IGRlbGF5IG1heWJlIG5vdCBhIGJpZw0KPmRlYWwuDQpJZiBhZGQgYSBhY2Nf
-dGltZSBmb3IgJ3N0cmllcF9oZWFkJyB0byBjb250cm9sPw0KV2hlbiBnZXRfYWN0aXZlX3N0cmlw
-ZSgpIGlzIG9rLCB1cGRhdGUgYWNjX3RpbWUuDQpGb3Igc29tZSB0aW1lLCBzdHJpcGVfaGVhZCBk
-aWQgbm90IGFjY2VzcyBhbmQgaXQgc2hvbGQgcHJlLXJlYWQu
+2012/8/8 Jianpeng Ma <majianpeng@gmail.com>:
+> On 2012-08-08 10:58 Shaohua Li <shli@kernel.org> Wrote:
+>>2012/8/7 Jianpeng Ma <majianpeng@gmail.com>:
+>>> On 2012-08-07 13:32 Shaohua Li <shli@kernel.org> Wrote:
+>>>>2012/8/7 Jianpeng Ma <majianpeng@gmail.com>:
+>>>>> On 2012-08-07 11:22 Shaohua Li <shli@kernel.org> Wrote:
+>>>>>>My directIO randomwrite 4k workload shows a 10~20% regression caused by commit
+>>>>>>895e3c5c58a80bb. directIO usually is random IO and if request size isn't big
+>>>>>>(which is the common case), delay handling of the stripe hasn't any advantages.
+>>>>>>For big size request, delay can still reduce IO.
+>>>>>>
+>>>>>>Signed-off-by: Shaohua Li <shli@fusionio.com>
+>>> [snip]
+>>>>>>--
+>>>>> May be used size to judge is not a good method.
+>>>>> I firstly sended this patch, only want to control direct-write-block,not for reqular file.
+>>>>> Because i think if someone used direct-write-block for raid5,he should know the feature of raid5 and he can control
+>>>>> for write to full-write.
+>>>>> But at that time, i did know how to differentiate between regular file and block-device.
+>>>>> I thik we should do something to do this.
+>>>>
+>>>>I don't think it's possible user can control his write to be a
+>>>>full-write even for
+>>>>raw disk IO. Why regular file and block device io matters here?
+>>>>
+>>>>Thanks,
+>>>>Shaohua
+>>> Another problem is the size. How to judge the size is large or not?
+>>> A syscall write is a dio and a dio may be split more bios.
+>>> For my workload, i usualy write chunk-size.
+>>> But your patch is judge by bio-size.
+>>
+>>I'd ignore workload which does sequential directIO, though
+>>your workload is, but I bet no real workloads are. So I'd like
+> Sorry,my explain maybe not corcrect. I write data once which size is almost chunks-size * devices,in order to full-write
+> and as possible as to no pre-read operation.
+>>only to consider big size random directio. I agree the size
+>>judge is arbitrary. I can optimize it to be only consider stripe
+>>which hits two or more disks in one bio, but not sure if it's
+>>worthy doing. Not ware big size directio is common, and even
+>>is, big size request IOPS is low, a bit delay maybe not a big
+>>deal.
+> If add a acc_time for 'striep_head' to control?
+> When get_active_stripe() is ok, update acc_time.
+> For some time, stripe_head did not access and it shold pre-read.
 
+Do you want to add a timer for each stripe? This is even ugly.
+How do you choose the expire time? A time works for harddisk
+definitely will not work for a fast SSD.
