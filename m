@@ -1,115 +1,58 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: RAID10 Performance
-Date: Wed, 08 Aug 2012 13:49:16 +1000
-Message-ID: <5021E1BC.3060607@websitemanagers.com.au>
-References: <50115123.1020900@websitemanagers.com.au> <50123E2C.8090108@hardwarefreak.com> <50129176.3050604@websitemanagers.com.au> <5012DE22.10108@hardwarefreak.com> <50138853.5030100@websitemanagers.com.au> <50140657.8010802@hardwarefreak.com>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
+Subject: Re: Re: [patch]raid5: fix directio regression
+Date: Wed, 8 Aug 2012 13:21:23 +0800
+Message-ID: <201208081321202343795@gmail.com>
+References: <20120807032240.GA22495@kernel.org> <201208071312593120932@gmail.com> <CANejiEUQcA6X75WG0xSgSv6NAQaBQnwpDD-5QaNVbqmo-oqLsA@mail.gmail.com> <201208071421033759628@gmail.com>,
+	<CANejiEVoOprAFoS6mCVYDJKh+nbGE0=7Xw_CpVS+Z9AcUoh6RQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50140657.8010802@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: shli <shli@kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Just some followup questions, hopefully this isn't too off-topic for 
-this list, if it is please let me know.
-
-On 07/29/2012 01:33 AM, Stan Hoeppner wrote:
-> On 7/28/2012 1:36 AM, Adam Goryachev wrote:
->> On 28/07/12 04:29, Stan Hoeppner wrote:
-> But I think you should go with the 10K rpm Raptors.  Same capacity but
-> with a 40% increase in spindle speed for only 30% more cost, at Newegg
-> prices anyway, but I don't think Newegg ships to Australia.  If money
-> were of no concern, which is rarely the case, I'd recommend 15K drives.
->   But they're just so disproportionately expensive compared to 10K drives
-> given the capacities offered.
->
-> If cost isn't an overriding concern, my recommendation would be to add 8
-> of the 10k 1TB Raptor drives and use them for your iSCSI LUN exports,
-> and redeploy the RE4 drives.
->
-> The performance gain with either 6 or 8 of the Raptors will be substantial.
-
-OK, with the given budget, we currently have a couple of options:
-1) Replace the primary SAN (which currently has 2 x 2TB WD Caviar Black 
-RE4 drives in RAID1 + a hot spare) with 5 x 1TB Raptors you suggested 
-above (4 x 1TB in RAID10 + 1 hot spare).
-
-2) Replace the primary SAN with 3 x 480GB SSD drives in linear + one of 
-the existing 2TB drives combined as RAID1 with the 2TB drive in write 
-only mode. This reduces overall capacity, but it does provide enough 
-capacity for at least 6 to 12 months. If needed, one additional SSD will 
-provide almost 2TB across the entire san.
-
-Further expansion becomes expensive, but this enterprise doesn't have a 
-lot of data growth (over the past 10 years), so I don't expect it to be 
-significant, also given the rate of increasing SSD storage, and 
-decreasing cost. Long term it would be ideal to make this system use 8 x 
-480G in RAID10, and eventually another 8 on the secondary SAN.
-
-I'm aware that a single SSD failure will reduce performance back to 
-current levels.
-
-> And don't use the default 512KB chunk size of metadata 1.2.  512KB per
-> chunk is insane.  With your Win server VM workload, where no server does
-> much writing of large files or at a sustained rate, usually only small
-> files, you should be using a small chunk size, something like 32KB,
-> maybe even 16KB.  If you use a large chunk size you'll rarely be able to
-> fill a full stripe write, and you'll end up with IO hot spots on
-> individual drives, decreasing performance.
-
-I'm assuming that this can't be changed?
-
-Currently, I have:
-md RAID
-DRBD
-LVM
-
-Could I simply create a new MD array with the smaller chunk size, tell 
-DRBD to sync from the remote to this new array, and then do the same for 
-the other SAN?
-
-Would this explain why one drive has significantly more activity now? I 
-don't think so, since it is really just a 2 disk RAID1, so both drives 
-should be doing the same writes, and both drives should be servicing the 
-read requests. This doesn't seem to be happening, during very high read 
-IO this morning (multiple VM's running a full antivirus scan 
-simultaneously), one drive activity light was "solid" and the second was 
-"flashing slowly".
-
-Added to this, I've just noticed that the array is currently doing a 
-"check", would that explain the drive activity and also reduced performance?
-
-> And of course you'll have ~1/3rd the IOPS and throughput should you have
-> to deploy the standby in production.
->
-> Many people run a DRBD standby server of lesser performance than their
-> primary, treating it as a hedge against primary failure, and assuming
-> they'll never have to use it.  But it's there just in case.  Thus they
-> don't put as much money or capability in it.  I.e. you'd have lots of
-> company if you did this.
-
-Understood, and in the case of primary SAN failure, at least work can 
-still be completed, even if it is at reduced performance. Replacement 
-drives can be done within one working day, so we are further limiting 
-that reduced performance to one working day. This would be a perfect 
-risk strategy for us, though again, long term we will look at upgrading 
-the secondary san to be more similar to the primary.
-
-> Did you happen to notice the domain in my email address? ;)  If you need
-> hardware information/advice, on anything from channel
-> CPUs/mobos/drives/RAID/NICs/etc to 2560 CPU SGI supercomputers and 1200+
-> drive FC SAN storage arrays, FC switch fabrics, and anything in between,
-> I can usually provide the info you seek.
-
-My direct emails to you bounced due to my mail server "losing" it's 
-reverse DNS. That is a local matter, delayed while "proving" we have 
-ownership of the IP space to APNIC.
-
-Thanks again for your advise.
-
-Regards,
-Adam
+T24gMjAxMi0wOC0wOCAxMDo1OCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
+PjIwMTIvOC83IEppYW5wZW5nIE1hIDxtYWppYW5wZW5nQGdtYWlsLmNvbT46DQo+PiBPbiAyMDEy
+LTA4LTA3IDEzOjMyIFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4gV3JvdGU6DQo+Pj4yMDEy
+LzgvNyBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+Og0KPj4+PiBPbiAyMDEyLTA4
+LTA3IDExOjIyIFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4gV3JvdGU6DQo+Pj4+Pk15IGRp
+cmVjdElPIHJhbmRvbXdyaXRlIDRrIHdvcmtsb2FkIHNob3dzIGEgMTB+MjAlIHJlZ3Jlc3Npb24g
+Y2F1c2VkIGJ5IGNvbW1pdA0KPj4+Pj44OTVlM2M1YzU4YTgwYmIuIGRpcmVjdElPIHVzdWFsbHkg
+aXMgcmFuZG9tIElPIGFuZCBpZiByZXF1ZXN0IHNpemUgaXNuJ3QgYmlnDQo+Pj4+Pih3aGljaCBp
+cyB0aGUgY29tbW9uIGNhc2UpLCBkZWxheSBoYW5kbGluZyBvZiB0aGUgc3RyaXBlIGhhc24ndCBh
+bnkgYWR2YW50YWdlcy4NCj4+Pj4+Rm9yIGJpZyBzaXplIHJlcXVlc3QsIGRlbGF5IGNhbiBzdGls
+bCByZWR1Y2UgSU8uDQo+Pj4+Pg0KPj4+Pj5TaWduZWQtb2ZmLWJ5OiBTaGFvaHVhIExpIDxzaGxp
+QGZ1c2lvbmlvLmNvbT4NCj4+IFtzbmlwXQ0KPj4+Pj4tLQ0KPj4+PiBNYXkgYmUgdXNlZCBzaXpl
+IHRvIGp1ZGdlIGlzIG5vdCBhIGdvb2QgbWV0aG9kLg0KPj4+PiBJIGZpcnN0bHkgc2VuZGVkIHRo
+aXMgcGF0Y2gsIG9ubHkgd2FudCB0byBjb250cm9sIGRpcmVjdC13cml0ZS1ibG9jayxub3QgZm9y
+IHJlcXVsYXIgZmlsZS4NCj4+Pj4gQmVjYXVzZSBpIHRoaW5rIGlmIHNvbWVvbmUgdXNlZCBkaXJl
+Y3Qtd3JpdGUtYmxvY2sgZm9yIHJhaWQ1LGhlIHNob3VsZCBrbm93IHRoZSBmZWF0dXJlIG9mIHJh
+aWQ1IGFuZCBoZSBjYW4gY29udHJvbA0KPj4+PiBmb3Igd3JpdGUgdG8gZnVsbC13cml0ZS4NCj4+
+Pj4gQnV0IGF0IHRoYXQgdGltZSwgaSBkaWQga25vdyBob3cgdG8gZGlmZmVyZW50aWF0ZSBiZXR3
+ZWVuIHJlZ3VsYXIgZmlsZSBhbmQgYmxvY2stZGV2aWNlLg0KPj4+PiBJIHRoaWsgd2Ugc2hvdWxk
+IGRvIHNvbWV0aGluZyB0byBkbyB0aGlzLg0KPj4+DQo+Pj5JIGRvbid0IHRoaW5rIGl0J3MgcG9z
+c2libGUgdXNlciBjYW4gY29udHJvbCBoaXMgd3JpdGUgdG8gYmUgYQ0KPj4+ZnVsbC13cml0ZSBl
+dmVuIGZvcg0KPj4+cmF3IGRpc2sgSU8uIFdoeSByZWd1bGFyIGZpbGUgYW5kIGJsb2NrIGRldmlj
+ZSBpbyBtYXR0ZXJzIGhlcmU/DQo+Pj4NCj4+PlRoYW5rcywNCj4+PlNoYW9odWENCj4+IEFub3Ro
+ZXIgcHJvYmxlbSBpcyB0aGUgc2l6ZS4gSG93IHRvIGp1ZGdlIHRoZSBzaXplIGlzIGxhcmdlIG9y
+IG5vdD8NCj4+IEEgc3lzY2FsbCB3cml0ZSBpcyBhIGRpbyBhbmQgYSBkaW8gbWF5IGJlIHNwbGl0
+IG1vcmUgYmlvcy4NCj4+IEZvciBteSB3b3JrbG9hZCwgaSB1c3VhbHkgd3JpdGUgY2h1bmstc2l6
+ZS4NCj4+IEJ1dCB5b3VyIHBhdGNoIGlzIGp1ZGdlIGJ5IGJpby1zaXplLg0KPg0KPkknZCBpZ25v
+cmUgd29ya2xvYWQgd2hpY2ggZG9lcyBzZXF1ZW50aWFsIGRpcmVjdElPLCB0aG91Z2gNCj55b3Vy
+IHdvcmtsb2FkIGlzLCBidXQgSSBiZXQgbm8gcmVhbCB3b3JrbG9hZHMgYXJlLiBTbyBJJ2QgbGlr
+ZQ0KU29ycnksbXkgZXhwbGFpbiBtYXliZSBub3QgY29yY3JlY3QuIEkgd3JpdGUgZGF0YSBvbmNl
+IHdoaWNoIHNpemUgaXMgYWxtb3N0IGNodW5rcy1zaXplICogZGV2aWNlcyxpbiBvcmRlciB0byBm
+dWxsLXdyaXRlIA0KYW5kIGFzIHBvc3NpYmxlIGFzIHRvIG5vIHByZS1yZWFkIG9wZXJhdGlvbi4N
+Cj5vbmx5IHRvIGNvbnNpZGVyIGJpZyBzaXplIHJhbmRvbSBkaXJlY3Rpby4gSSBhZ3JlZSB0aGUg
+c2l6ZQ0KPmp1ZGdlIGlzIGFyYml0cmFyeS4gSSBjYW4gb3B0aW1pemUgaXQgdG8gYmUgb25seSBj
+b25zaWRlciBzdHJpcGUNCj53aGljaCBoaXRzIHR3byBvciBtb3JlIGRpc2tzIGluIG9uZSBiaW8s
+IGJ1dCBub3Qgc3VyZSBpZiBpdCdzDQo+d29ydGh5IGRvaW5nLiBOb3Qgd2FyZSBiaWcgc2l6ZSBk
+aXJlY3RpbyBpcyBjb21tb24sIGFuZCBldmVuDQo+aXMsIGJpZyBzaXplIHJlcXVlc3QgSU9QUyBp
+cyBsb3csIGEgYml0IGRlbGF5IG1heWJlIG5vdCBhIGJpZw0KPmRlYWwuDQpJZiBhZGQgYSBhY2Nf
+dGltZSBmb3IgJ3N0cmllcF9oZWFkJyB0byBjb250cm9sPw0KV2hlbiBnZXRfYWN0aXZlX3N0cmlw
+ZSgpIGlzIG9rLCB1cGRhdGUgYWNjX3RpbWUuDQpGb3Igc29tZSB0aW1lLCBzdHJpcGVfaGVhZCBk
+aWQgbm90IGFjY2VzcyBhbmQgaXQgc2hvbGQgcHJlLXJlYWQu
 
