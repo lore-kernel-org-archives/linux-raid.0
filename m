@@ -1,97 +1,94 @@
-From: Flynn <flynn@kodachi.com>
-Subject: RAID6 Reshape (one more time)
-Date: Thu, 09 Aug 2012 00:58:03 -0400
-Message-ID: <71AEA6EFEB86AE9F3D4990D4@ryoohko.kodachi.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [patch]raid5: fix directio regression
+Date: Thu, 9 Aug 2012 13:07:01 +0800
+Message-ID: <CANejiEX1TKG_KhAsgUauHaCe2GE7jU1ozD-3c21VFgrm9COajQ@mail.gmail.com>
+References: <20120807032240.GA22495@kernel.org>
+	<201208071312593120932@gmail.com>
+	<CANejiEUQcA6X75WG0xSgSv6NAQaBQnwpDD-5QaNVbqmo-oqLsA@mail.gmail.com>
+	<201208071421033759628@gmail.com>
+	<CANejiEVoOprAFoS6mCVYDJKh+nbGE0=7Xw_CpVS+Z9AcUoh6RQ@mail.gmail.com>
+	<201208081321202343795@gmail.com>
+	<CANejiEWC5ZKWT2L4DM-bfGi+v=TpkABruQqe5h0qG4oQg9sDhw@mail.gmail.com>
+	<201208090919591567972@gmail.com>
+	<20120809113230.152aade3@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20120809113230.152aade3@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Jianpeng Ma <majianpeng@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-raid.ids
 
-(One more time, edited for brevity (hah!), hoping to catch the weekday 
-crowd before I try things that'll be destructive...)
+2012/8/9 NeilBrown <neilb@suse.de>:
+> On Thu, 9 Aug 2012 09:20:05 +0800 "Jianpeng Ma" <majianpeng@gmail.com> wrote:
+>
+>> On 2012-08-08 20:53 Shaohua Li <shli@kernel.org> Wrote:
+>> >2012/8/8 Jianpeng Ma <majianpeng@gmail.com>:
+>> >> On 2012-08-08 10:58 Shaohua Li <shli@kernel.org> Wrote:
+>> >>>2012/8/7 Jianpeng Ma <majianpeng@gmail.com>:
+>> >>>> On 2012-08-07 13:32 Shaohua Li <shli@kernel.org> Wrote:
+>> >>>>>2012/8/7 Jianpeng Ma <majianpeng@gmail.com>:
+>> >>>>>> On 2012-08-07 11:22 Shaohua Li <shli@kernel.org> Wrote:
+>> >>>>>>>My directIO randomwrite 4k workload shows a 10~20% regression caused by commit
+>> >>>>>>>895e3c5c58a80bb. directIO usually is random IO and if request size isn't big
+>> >>>>>>>(which is the common case), delay handling of the stripe hasn't any advantages.
+>> >>>>>>>For big size request, delay can still reduce IO.
+>> >>>>>>>
+>> >>>>>>>Signed-off-by: Shaohua Li <shli@fusionio.com>
+>> >>>> [snip]
+>> >>>>>>>--
+>> >>>>>> May be used size to judge is not a good method.
+>> >>>>>> I firstly sended this patch, only want to control direct-write-block,not for reqular file.
+>> >>>>>> Because i think if someone used direct-write-block for raid5,he should know the feature of raid5 and he can control
+>> >>>>>> for write to full-write.
+>> >>>>>> But at that time, i did know how to differentiate between regular file and block-device.
+>> >>>>>> I thik we should do something to do this.
+>> >>>>>
+>> >>>>>I don't think it's possible user can control his write to be a
+>> >>>>>full-write even for
+>> >>>>>raw disk IO. Why regular file and block device io matters here?
+>> >>>>>
+>> >>>>>Thanks,
+>> >>>>>Shaohua
+>> >>>> Another problem is the size. How to judge the size is large or not?
+>> >>>> A syscall write is a dio and a dio may be split more bios.
+>> >>>> For my workload, i usualy write chunk-size.
+>> >>>> But your patch is judge by bio-size.
+>> >>>
+>> >>>I'd ignore workload which does sequential directIO, though
+>> >>>your workload is, but I bet no real workloads are. So I'd like
+>> >> Sorry,my explain maybe not corcrect. I write data once which size is almost chunks-size * devices,in order to full-write
+>> >> and as possible as to no pre-read operation.
+>> >>>only to consider big size random directio. I agree the size
+>> >>>judge is arbitrary. I can optimize it to be only consider stripe
+>> >>>which hits two or more disks in one bio, but not sure if it's
+>> >>>worthy doing. Not ware big size directio is common, and even
+>> >>>is, big size request IOPS is low, a bit delay maybe not a big
+>> >>>deal.
+>> >> If add a acc_time for 'striep_head' to control?
+>> >> When get_active_stripe() is ok, update acc_time.
+>> >> For some time, stripe_head did not access and it shold pre-read.
+>> >
+>> >Do you want to add a timer for each stripe? This is even ugly.
+>> >How do you choose the expire time? A time works for harddisk
+>> >definitely will not work for a fast SSD.
+>> A time is like the size which is arbitrary.
+>> How about add a interface in sysfs to control by user?
+>> Only user can judge the workload, which sequatial write or random write.
+>
+> This is getting worse by the minute.  A sysfs interface for this is
+> definitely not a good idea.
+>
+> The REQ_NOIDLE flag is a pretty clear statement that no more requests that
+> merge with this one are expected.  If some use cases sends random requests,
+> maybe it should be setting REQ_NOIDLE.
+>
+> Maybe someone should do some research and find out why WRITE_ODIRECT doesn't
+> include REQ_NOIDLE.  Understanding that would help understand the current
+> problem.
 
-Something like four years I created a 4-drive RAID5 on CentOS 5.2. That was 
-current at the time, and I was still at an RHEL shop, so it seemed sane.
-
-I had 500GB drives, which I knew I'd want to upgrade, but mdadm explicitly 
-said it couldn't do reshapes of RAID5 or RAID6 at the time, so I used a 
-hack with LVM + md + multiple partitions instead.  I have ten partitions (5 
-- 14), so I had e.g.
-
-md5: RAID5 (sda5, sdb5, sdc5, sdd5 )
-md6: RAID5 (sda6, sdb6, sdc6, sdd6 )
-etc.
-
-and LVM concatenates 'em all.  Works fine for my use, which is basically 
-backups of other stuff (few writes, many reads), and when the time came I 
-could use LVM to move data off md5, disassemble the md5 RAID, reassemble it 
-with the new disk, etc.
-
-This worked great for four years, including going from 4x500GB RAID5 -> 
-4x1500GB RAID5 -> 5x1500GB RAID6. As such, please, let's skip the 
-discussions about how crazy an idea it is, and move on. It is a crazy idea, 
-but it had a purpose, and it actually filled that purpose pretty well. [ :) 
-]
-
-Fast forward to last week. Still running on CentOS 5.2 (I'm a big fan of 
-sysadmin by not messing with running systems). But I wanted to add a drive 
-to the RAID. Not only is CentOS 5.2 rather long in the tooth, at 5x1500GB 
-that LVM trick is awfully slow (it would've taken several weeks). So I 
-upgraded to Ubuntu 12.04 LTS, to get a better mdadm.
-
-All was well, briefly.
-
-Adding the drive with the 10-partition setup means issuing 10 mdadm --grow 
-commands, and I screwed up a step in the script that did it.  Rather than 
-do one grow, wait for it to finish, do the next, etc., it skipped the 
-'wait' steps and just issued all 10 grow commands.  I ended up with all ten 
-partitions grown to 6 drives, and all but one of them marked "pending 
-reshape".  The one remaining was rebuilding.
-
-A little while later, the machine crashed.  [ :P ]  On reboot, the reshape 
-that had been underway at the time (partition 7) picked up and carried on 
-just fine.  But partition 8 didn't. Nor anything after.
-
-So at this point I have partitions 5, 6, and 7 happy; 8 - 14 are marked 
-inactive.  The initial mdadm --grow reported that it passed the critical 
-section long before the machine crashed, for all partitions.  mdadm 
---examine on the individual drives shows that each of these partitions 
-believes that they are part of a RAID6 with 6 drives, correct checksums 
-everywhere, event counters the same, but:
-
-1)  Trying e.g.
-
-    sudo mdadm --assemble --force /dev/md8 /dev/sd[bdefgh]8
-
-says
-
-mdadm: Failed to restore critical section for reshape, sorry.
-      Possibly you needed to specify the --backup-file
-
-Given that I didn't specify --backup-file to the initial mdadm --grow, this 
-seems... perhaps not entirely helpful.
-
-2)  In a working partition, I always see the 'this' entry in mdadm 
---examine's output matching up with the drive being read (e.g. /dev/sde5 
-will say 'this' is /dev/sde5).  In a _non_-working partition, that's not 
-the case (e.g. /dev/sdb7 says 'this' is /dev/sdg7).
-
-3)  Finally, all the working partitions show that their superblocks are 
-version 0.90.00, but all the non-working partitions show 0.91.00.
-
-Suggestions welcome.  [ ;) ]  In theory there's no data that I can't 
-replace on these arrays (it's a backup, after all) but it'd be nice to not 
-have to make that particular experiment...
-
-Thanks!
-
- -- Flynn
-
---
-Whatever happens will happen, and we'll just happen along with it.
-                             (From a sketch on _A Prairie Home Companion_)
-
+A quick search shows only cfq-iosched uses REQ_NOIDLE. In
+cfq, a queue is idled to avoid losing its share. REQ_NOIDLE
+tells cfq to avoid idle, since the task will not dispatch further
+requests any more. Note this isn't no merge.
