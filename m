@@ -1,94 +1,58 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [patch]raid5: fix directio regression
-Date: Thu, 9 Aug 2012 13:07:01 +0800
-Message-ID: <CANejiEX1TKG_KhAsgUauHaCe2GE7jU1ozD-3c21VFgrm9COajQ@mail.gmail.com>
-References: <20120807032240.GA22495@kernel.org>
-	<201208071312593120932@gmail.com>
-	<CANejiEUQcA6X75WG0xSgSv6NAQaBQnwpDD-5QaNVbqmo-oqLsA@mail.gmail.com>
-	<201208071421033759628@gmail.com>
-	<CANejiEVoOprAFoS6mCVYDJKh+nbGE0=7Xw_CpVS+Z9AcUoh6RQ@mail.gmail.com>
-	<201208081321202343795@gmail.com>
-	<CANejiEWC5ZKWT2L4DM-bfGi+v=TpkABruQqe5h0qG4oQg9sDhw@mail.gmail.com>
-	<201208090919591567972@gmail.com>
-	<20120809113230.152aade3@notabene.brown>
+Subject: Re: What happened to TRIM support for raid linear/0/1/10?
+Date: Thu, 9 Aug 2012 13:14:59 +0800
+Message-ID: <CANejiEUJ=kMMUdogEDsw=-ni1GrFu+QbewTOUbquyg8uVZ-N0w@mail.gmail.com>
+References: <alpine.LRH.2.02.1208081308380.30954@praktifix.dwd.de>
+	<20120809132459.6ed7fc7e@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120809113230.152aade3@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120809132459.6ed7fc7e@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Jianpeng Ma <majianpeng@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc: Holger Kiehl <Holger.Kiehl@dwd.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
 2012/8/9 NeilBrown <neilb@suse.de>:
-> On Thu, 9 Aug 2012 09:20:05 +0800 "Jianpeng Ma" <majianpeng@gmail.com> wrote:
+> On Wed, 8 Aug 2012 13:10:51 +0000 (GMT) Holger Kiehl <Holger.Kiehl@dwd.de>
+> wrote:
 >
->> On 2012-08-08 20:53 Shaohua Li <shli@kernel.org> Wrote:
->> >2012/8/8 Jianpeng Ma <majianpeng@gmail.com>:
->> >> On 2012-08-08 10:58 Shaohua Li <shli@kernel.org> Wrote:
->> >>>2012/8/7 Jianpeng Ma <majianpeng@gmail.com>:
->> >>>> On 2012-08-07 13:32 Shaohua Li <shli@kernel.org> Wrote:
->> >>>>>2012/8/7 Jianpeng Ma <majianpeng@gmail.com>:
->> >>>>>> On 2012-08-07 11:22 Shaohua Li <shli@kernel.org> Wrote:
->> >>>>>>>My directIO randomwrite 4k workload shows a 10~20% regression caused by commit
->> >>>>>>>895e3c5c58a80bb. directIO usually is random IO and if request size isn't big
->> >>>>>>>(which is the common case), delay handling of the stripe hasn't any advantages.
->> >>>>>>>For big size request, delay can still reduce IO.
->> >>>>>>>
->> >>>>>>>Signed-off-by: Shaohua Li <shli@fusionio.com>
->> >>>> [snip]
->> >>>>>>>--
->> >>>>>> May be used size to judge is not a good method.
->> >>>>>> I firstly sended this patch, only want to control direct-write-block,not for reqular file.
->> >>>>>> Because i think if someone used direct-write-block for raid5,he should know the feature of raid5 and he can control
->> >>>>>> for write to full-write.
->> >>>>>> But at that time, i did know how to differentiate between regular file and block-device.
->> >>>>>> I thik we should do something to do this.
->> >>>>>
->> >>>>>I don't think it's possible user can control his write to be a
->> >>>>>full-write even for
->> >>>>>raw disk IO. Why regular file and block device io matters here?
->> >>>>>
->> >>>>>Thanks,
->> >>>>>Shaohua
->> >>>> Another problem is the size. How to judge the size is large or not?
->> >>>> A syscall write is a dio and a dio may be split more bios.
->> >>>> For my workload, i usualy write chunk-size.
->> >>>> But your patch is judge by bio-size.
->> >>>
->> >>>I'd ignore workload which does sequential directIO, though
->> >>>your workload is, but I bet no real workloads are. So I'd like
->> >> Sorry,my explain maybe not corcrect. I write data once which size is almost chunks-size * devices,in order to full-write
->> >> and as possible as to no pre-read operation.
->> >>>only to consider big size random directio. I agree the size
->> >>>judge is arbitrary. I can optimize it to be only consider stripe
->> >>>which hits two or more disks in one bio, but not sure if it's
->> >>>worthy doing. Not ware big size directio is common, and even
->> >>>is, big size request IOPS is low, a bit delay maybe not a big
->> >>>deal.
->> >> If add a acc_time for 'striep_head' to control?
->> >> When get_active_stripe() is ok, update acc_time.
->> >> For some time, stripe_head did not access and it shold pre-read.
->> >
->> >Do you want to add a timer for each stripe? This is even ugly.
->> >How do you choose the expire time? A time works for harddisk
->> >definitely will not work for a fast SSD.
->> A time is like the size which is arbitrary.
->> How about add a interface in sysfs to control by user?
->> Only user can judge the workload, which sequatial write or random write.
+>> Hello,
+>>
+>> I have been using the patches posted by Shaohua Li on 16th March 2012:
+>>
+>>     http://lkml.indiana.edu/hypermail/linux/kernel/1203.2/00048.html
+>>
+>> for several month on a very busy file server (serving 9 million files
+>> with 5.3 TiB daily) without any problems.
+>>
+>> Is there any chance that these patches will go into the official kernel?
+>> Or what is the reason that these patches are no applied?
 >
-> This is getting worse by the minute.  A sysfs interface for this is
-> definitely not a good idea.
+> I'm trying to appear to be an incompetent maintainer so that someone will
+> offer to take over.  It isn't working yet.  I'm probably scuttling the
+> attempt just by replying to this email - drat.
 >
-> The REQ_NOIDLE flag is a pretty clear statement that no more requests that
-> merge with this one are expected.  If some use cases sends random requests,
-> maybe it should be setting REQ_NOIDLE.
+>>
+>> I have attached the patch set in one big patch for 3.5. Please do not
+>> use it since I am not sure if it is correct. Shaohua could you please
+>> take a look if it is correct and maybe post a new one?
+>>
+>> Personally, I would think that TRIM support MD would be a very good thing.
 >
-> Maybe someone should do some research and find out why WRITE_ODIRECT doesn't
-> include REQ_NOIDLE.  Understanding that would help understand the current
-> problem.
+> Probably.  Maybe if they get posted again I'll feel guilty and do something
+> about them.
+>
+> One issue that needs to be fixed is that a few places assumed that the
+> "discard_zeros_data" flag is always set, which is not the case (else we
+> wouldn't have that flag).  That was only a couple of places though, not a
+> wide spread problem.
 
-A quick search shows only cfq-iosched uses REQ_NOIDLE. In
-cfq, a queue is idled to avoid losing its share. REQ_NOIDLE
-tells cfq to avoid idle, since the task will not dispatch further
-requests any more. Note this isn't no merge.
+The big problem is SATA discard request merge is broken, while doing
+MD discard will trigger discard request merge. In this form, I bet Neil will
+not accept the patches. So not the problem MD discard patch itself.
+
+Last time Martin said he is working on SCSI discard request merge
+patches. That isn't happened yet. Maybe I should ping Jens
+to disable discard request merge currently, it's broken for a long
+time anyway.
