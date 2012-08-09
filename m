@@ -1,155 +1,41 @@
-From: Miquel van Smoorenburg <mikevs@xs4all.net>
-Subject: Re: replaced disk in RAID1 imsm array - how to activate?
-Date: Thu, 09 Aug 2012 16:17:42 +0200
-Message-ID: <5023C686.7020704@xs4all.net>
-References: <20120809134201.GA14931@xs4all.net> <CABYL=ToJNYJhOH9jx8Dc-AynVGEMou4tx+echx7H6SGKeabELg@mail.gmail.com>
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: What does the '-1' value of size mean now?
+Date: Thu, 9 Aug 2012 16:11:47 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB18FD8F13@IRSMSX102.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CABYL=ToJNYJhOH9jx8Dc-AynVGEMou4tx+echx7H6SGKeabELg@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
-Cc: linux-raid@vger.kernel.org
+To: "Neil Brown (neilb@suse.de)" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi Neil
 
-(oh apologies- I misspelt imsm as imsi in the subject - really mean=20
-imsm, the Intel Matrix BIOS fakeraid).
+What does the '-1' value of size (Grow.c:1990 and Grow.c:2678) mean now regarding your recent patch:?
 
-This server has two disks, /dev/sda and /dev/sdb. I created a RAID1 IMS=
-M=20
-array in the BIOS, then booted linux and detected the array with
+From d04f65f48c93e7e57cc3c1d70dd07d094dece717 Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Mon, 9 Jul 2012 17:20:32 +1000
+Subject: [PATCH] Change the values for "max size" from -1 to 1.
 
-mdadm --examine --scan > /etc/mdadm/mdadm.conf
-mdadm --assemble --scan --run --auto=3Dyes
+There are two places (Grow.c:1990 and Grow.c:2678) where reshape_super() is called with size==-1. Is it still right?
 
-Then /dev/md127 shows up as imsm container, /dev/md126 is the array=20
-itself, and (after partitioning) /dev/md looks like this:
+I am asking you because you have changed also the 'size' parameter of imsm_reshape_super() from signed to unsigned (super-intel.c:9884). 
+When reshape_super() is called with size==-1 at Grow.c:2678, imsm_reshape_super() is called with size==-1 too, so the size is converted to unsigned value 0xFFFFFFFFFFFFFFFF and the logic is broken down, because the condition "geo->size != -1" at super-intel.c:9310 had been false previously and now the condition "geo->size > 0" is true, because size==0xFFFFFFFFFFFFFFFF now:
 
-root@server3-b05-tpb:~# ls -l /dev/md
-total 0
-lrwxrwxrwx 1 root root  8 Aug  9 14:15 Volume0 -> ../md126
-lrwxrwxrwx 1 root root 10 Aug  9 13:34 Volume0p1 -> ../md126p1
-lrwxrwxrwx 1 root root 10 Aug  9 13:34 Volume0p2 -> ../md126p2
-lrwxrwxrwx 1 root root 10 Aug  9 13:34 Volume0p5 -> ../md126p5
-lrwxrwxrwx 1 root root  8 Aug  9 13:55 imsm0 -> ../md127
+@@ -9307,7 +9307,7 @@ static int imsm_reshape_is_allowed_on_container(struct supertype *st,
+ 		"st->devnum = (%i)\n",
+ 		st->devnum);
+ 
+-	if (geo->size != -1 ||
++	if (geo->size > 0 ||
 
-Then I removed /dev/sda (by pulling it out), put it back in, zero'd the=
-=20
-superblock, added it back with mdadm --add /dev/md127 /dev/sda, and now=
-=20
-it just sits there as member of the container, but the array in md126=20
-doesn't start to rebuild.
+I am going to correct it, but I don't know if the '-1' value of size parameter at Grow.c:1990 and Grow.c:2678 is still right?
 
-[ actually, it's a bit more complicated than this, since I am fixing up=
-=20
-the debian wheezy installer to support imsm arrays, with quite a bit of=
-=20
-success, so I installed debian with this array as the root filesystem ]
-
-Yes, mdmon is running.
-
-dmesg when I pulled out /dev/sda:
-
-ata1: exception Emask 0x50 SAct 0x0 SErr 0x4090800 action 0xe frozen
-ata1: irq_stat 0x00400040, connection status changed
-ata1: SError: { HostInt PHYRdyChg 10B8B DevExch }
-ata1: hard resetting link
-ata1: SATA link down (SStatus 0 SControl 300)
-ata1: hard resetting link
-ata1: SATA link down (SStatus 0 SControl 300)
-ata1: limiting SATA link speed to 1.5 Gbps
-ata1: hard resetting link
-ata1: SATA link down (SStatus 0 SControl 310)
-ata1.00: disabled
-ata1: EH complete
-sd 1:0:0:0: rejecting I/O to offline device
-killing request
-Unhandled error code
-  Result: hostbyte=3DDID_NO_CONNECT driverbyte=3DDRIVER_OK
-CDB: Write(10): 2a 00 57 54 66 ef 00 00 01 00
-end_request: I/O error, dev sda, sector 1465149167
-ata1.00: detaching (SCSI 1:0:0:0)
-Synchronizing SCSI cache
-  Result: hostbyte=3DDID_BAD_TARGET driverbyte=3DDRIVER_OK
-Stopping disk
-START_STOP FAILED
-  Result: hostbyte=3DDID_BAD_TARGET driverbyte=3DDRIVER_OK
-md/raid1:md126: Disk failure on sda, disabling device.
-md/raid1:md126: Operation continuing on 1 devices.
-RAID1 conf printout:
-  --- wd:1 rd:2
-  disk 0, wo:1, o:0, dev:sda
-  disk 1, wo:0, o:1, dev:sdb
-RAID1 conf printout:
-  --- wd:1 rd:2
-  disk 1, wo:0, o:1, dev:sdb
-md: unbind<sda>
-md: export_rdev(sda)
+Regards,
+Lukasz
 
 
-
-On 08/09/2012 03:47 PM, Roberto Spadim wrote:
-> explain better..
-> do you have 2 disks in raid1, and removed one disk, or removed two di=
-sks?
-> could you send dmesg messages?
->
-> 2012/8/9 Miquel van Smoorenburg <mikevs@xs4all.net>:
->> Setup: kernel 3.2.21 (debian testing), mdadm 3.2.5.
->>
->> I created a RAID1 imsi array on a supermicro server for testing
->> purposes. I'm trying to see what happens if I hot-remove disks,
->> hot-add them, reboot, etc to test the resiliency of this setup.
->>
->> So I removed (by pulling it out) one disk, then simulated adding
->> a blank replacement disk by putting it back in and running
->> mdadm --zero-superblock on it.
->>
->> I re-added it to the container with mdadm /dev/md127 --add /dev/sda.=
-=2E
->> and now it just sits there. How do I get the RAID1 array (dev/md126)
->> to start using this disk? The manpage says:
->>
->>         -a, --add
->>                hot-add  listed  devices.  If a device appears to hav=
-e recently
->>                been part of the array (possibly it failed or was rem=
-oved)  the
->>                device  is  re-added  as  described in the next point=
-=2E  If that
->>                fails or the device was never part of the array, the =
-device  is
->>                added  as a hot-spare.  If the array is degraded, it =
-will imme=E2=80=90
->>                diately start to rebuild data onto that spare.
->>
->> However, nothing is happening:
->>
->> root@server3-b05-tpb:~/tmp# cat /proc/mdstat
->> Personalities : [raid1]
->> md126 : active raid1 sdb[0]
->>        31457280 blocks super external:/md127/0 [2/1] [_U]
->>
->> md127 : inactive sda[1](S) sdb[0](S)
->>        6306 blocks super external:imsm
->>
->>
->> Thanks,
->>
->> Mike.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
