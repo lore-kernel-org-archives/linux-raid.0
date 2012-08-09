@@ -1,84 +1,97 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: What happened to TRIM support for raid linear/0/1/10?
-Date: Thu, 9 Aug 2012 13:24:59 +1000
-Message-ID: <20120809132459.6ed7fc7e@notabene.brown>
-References: <alpine.LRH.2.02.1208081308380.30954@praktifix.dwd.de>
+From: Flynn <flynn@kodachi.com>
+Subject: RAID6 Reshape (one more time)
+Date: Thu, 09 Aug 2012 00:58:03 -0400
+Message-ID: <71AEA6EFEB86AE9F3D4990D4@ryoohko.kodachi.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/688z6ejlwP=j3=19nNcKsWm"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.02.1208081308380.30954@praktifix.dwd.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Holger Kiehl <Holger.Kiehl@dwd.de>
-Cc: Shaohua Li <shli@kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/688z6ejlwP=j3=19nNcKsWm
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+(One more time, edited for brevity (hah!), hoping to catch the weekday 
+crowd before I try things that'll be destructive...)
 
-On Wed, 8 Aug 2012 13:10:51 +0000 (GMT) Holger Kiehl <Holger.Kiehl@dwd.de>
-wrote:
+Something like four years I created a 4-drive RAID5 on CentOS 5.2. That was 
+current at the time, and I was still at an RHEL shop, so it seemed sane.
 
-> Hello,
->=20
-> I have been using the patches posted by Shaohua Li on 16th March 2012:
->=20
->     http://lkml.indiana.edu/hypermail/linux/kernel/1203.2/00048.html
->=20
-> for several month on a very busy file server (serving 9 million files
-> with 5.3 TiB daily) without any problems.
->=20
-> Is there any chance that these patches will go into the official kernel?
-> Or what is the reason that these patches are no applied?
+I had 500GB drives, which I knew I'd want to upgrade, but mdadm explicitly 
+said it couldn't do reshapes of RAID5 or RAID6 at the time, so I used a 
+hack with LVM + md + multiple partitions instead.  I have ten partitions (5 
+- 14), so I had e.g.
 
-I'm trying to appear to be an incompetent maintainer so that someone will
-offer to take over.  It isn't working yet.  I'm probably scuttling the
-attempt just by replying to this email - drat.
+md5: RAID5 (sda5, sdb5, sdc5, sdd5 )
+md6: RAID5 (sda6, sdb6, sdc6, sdd6 )
+etc.
 
->=20
-> I have attached the patch set in one big patch for 3.5. Please do not
-> use it since I am not sure if it is correct. Shaohua could you please
-> take a look if it is correct and maybe post a new one?
->=20
-> Personally, I would think that TRIM support MD would be a very good thing.
+and LVM concatenates 'em all.  Works fine for my use, which is basically 
+backups of other stuff (few writes, many reads), and when the time came I 
+could use LVM to move data off md5, disassemble the md5 RAID, reassemble it 
+with the new disk, etc.
 
-Probably.  Maybe if they get posted again I'll feel guilty and do something
-about them.
+This worked great for four years, including going from 4x500GB RAID5 -> 
+4x1500GB RAID5 -> 5x1500GB RAID6. As such, please, let's skip the 
+discussions about how crazy an idea it is, and move on. It is a crazy idea, 
+but it had a purpose, and it actually filled that purpose pretty well. [ :) 
+]
 
-One issue that needs to be fixed is that a few places assumed that the
-"discard_zeros_data" flag is always set, which is not the case (else we
-wouldn't have that flag).  That was only a couple of places though, not a
-wide spread problem.
+Fast forward to last week. Still running on CentOS 5.2 (I'm a big fan of 
+sysadmin by not messing with running systems). But I wanted to add a drive 
+to the RAID. Not only is CentOS 5.2 rather long in the tooth, at 5x1500GB 
+that LVM trick is awfully slow (it would've taken several weeks). So I 
+upgraded to Ubuntu 12.04 LTS, to get a better mdadm.
 
-NeilBrown
+All was well, briefly.
 
+Adding the drive with the 10-partition setup means issuing 10 mdadm --grow 
+commands, and I screwed up a step in the script that did it.  Rather than 
+do one grow, wait for it to finish, do the next, etc., it skipped the 
+'wait' steps and just issued all 10 grow commands.  I ended up with all ten 
+partitions grown to 6 drives, and all but one of them marked "pending 
+reshape".  The one remaining was rebuilding.
 
+A little while later, the machine crashed.  [ :P ]  On reboot, the reshape 
+that had been underway at the time (partition 7) picked up and carried on 
+just fine.  But partition 8 didn't. Nor anything after.
 
->=20
-> Regards,
-> Holger
+So at this point I have partitions 5, 6, and 7 happy; 8 - 14 are marked 
+inactive.  The initial mdadm --grow reported that it passed the critical 
+section long before the machine crashed, for all partitions.  mdadm 
+--examine on the individual drives shows that each of these partitions 
+believes that they are part of a RAID6 with 6 drives, correct checksums 
+everywhere, event counters the same, but:
 
---Sig_/688z6ejlwP=j3=19nNcKsWm
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+1)  Trying e.g.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+    sudo mdadm --assemble --force /dev/md8 /dev/sd[bdefgh]8
 
-iQIVAwUBUCMtiznsnt1WYoG5AQIQsRAAoVrPXjJ3Lwwyw0rLveeWZkbJvzy+w2ZE
-SXug8NflvEjr5EvoMc8SAEip6xT1lWQo02xC3LAjv78UC7K1ydJbBTci/Ul0EotT
-IMA+oBQ327zJEt+O93G9NVZnZEch3dUrYTNDs/o/mms/FQfEVhdmuONc2+5J0zbj
-zFWNFFnaNO8NXcV/opvqrMGrF2rTN1Klzpl9hBUk8XFyhlkS+6Sge0VXX8rrLIsE
-OSrEUO5om1qWezpoQbubGgNWqUel8w4Vpv/6LDyES8DVTbbCWCHexD/iMz+qeBdt
-ZAiidnH3VMrzCaez5qNruYuUbuEPmrddqDWA068KtThW8AkdEK4WUD7oB7u81xI+
-pNgQOnT2H+1oEbTn8hc8dXC6Cfhje0kSM904ZmJkBry2w9No6QtTtNFQdRRZJCvp
-kwXu71w+LhixQjHQda2jUU/ESz01SqDIw03UrtKITmThx0XXK8+8Vkz564+bf9wn
-gPqachCEIv6SurO2WA90HWwutf9tCISbOfr8u1m0l7go+FWbb4WyhwcyXsZVQS4x
-5Jbm2OjKHzR4+L8V2eB1wvPMtzFqcqcOA+12+aMn+77+viVAwTBXO3nDlW2Ieq7h
-FaYCsWDqk6Wen6y9VJDSdjuhSPbEPryD9jF7HWC7WS4cegSxcNIFNFIqmxEiDEZD
-5WkTdVyNa3c=
-=TVcV
------END PGP SIGNATURE-----
+says
 
---Sig_/688z6ejlwP=j3=19nNcKsWm--
+mdadm: Failed to restore critical section for reshape, sorry.
+      Possibly you needed to specify the --backup-file
+
+Given that I didn't specify --backup-file to the initial mdadm --grow, this 
+seems... perhaps not entirely helpful.
+
+2)  In a working partition, I always see the 'this' entry in mdadm 
+--examine's output matching up with the drive being read (e.g. /dev/sde5 
+will say 'this' is /dev/sde5).  In a _non_-working partition, that's not 
+the case (e.g. /dev/sdb7 says 'this' is /dev/sdg7).
+
+3)  Finally, all the working partitions show that their superblocks are 
+version 0.90.00, but all the non-working partitions show 0.91.00.
+
+Suggestions welcome.  [ ;) ]  In theory there's no data that I can't 
+replace on these arrays (it's a backup, after all) but it'd be nice to not 
+have to make that particular experiment...
+
+Thanks!
+
+ -- Flynn
+
+--
+Whatever happens will happen, and we'll just happen along with it.
+                             (From a sketch on _A Prairie Home Companion_)
+
