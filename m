@@ -1,88 +1,84 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
-Subject: Re: Re: [patch]raid5: fix directio regression
-Date: Thu, 9 Aug 2012 10:27:35 +0800
-Message-ID: <201208091027320311633@gmail.com>
-References: <20120807032240.GA22495@kernel.org> <201208071312593120932@gmail.com> <CANejiEUQcA6X75WG0xSgSv6NAQaBQnwpDD-5QaNVbqmo-oqLsA@mail.gmail.com> <201208071421033759628@gmail.com> <CANejiEVoOprAFoS6mCVYDJKh+nbGE0=7Xw_CpVS+Z9AcUoh6RQ@mail.gmail.com> <201208081321202343795@gmail.com> <CANejiEWC5ZKWT2L4DM-bfGi+v=TpkABruQqe5h0qG4oQg9sDhw@mail.gmail.com> <201208090919591567972@gmail.com>,
-	<20120809113230.152aade3@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: What happened to TRIM support for raid linear/0/1/10?
+Date: Thu, 9 Aug 2012 13:24:59 +1000
+Message-ID: <20120809132459.6ed7fc7e@notabene.brown>
+References: <alpine.LRH.2.02.1208081308380.30954@praktifix.dwd.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: shli <shli@kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/688z6ejlwP=j3=19nNcKsWm"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <alpine.LRH.2.02.1208081308380.30954@praktifix.dwd.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Holger Kiehl <Holger.Kiehl@dwd.de>
+Cc: Shaohua Li <shli@kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wOC0wOSAwOTozMiBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
-IFRodSwgOSBBdWcgMjAxMiAwOToyMDowNSArMDgwMCAiSmlhbnBlbmcgTWEiIDxtYWppYW5wZW5n
-QGdtYWlsLmNvbT4gd3JvdGU6DQo+DQo+PiBPbiAyMDEyLTA4LTA4IDIwOjUzIFNoYW9odWEgTGkg
-PHNobGlAa2VybmVsLm9yZz4gV3JvdGU6DQo+PiA+MjAxMi84LzggSmlhbnBlbmcgTWEgPG1hamlh
-bnBlbmdAZ21haWwuY29tPjoNCj4+ID4+IE9uIDIwMTItMDgtMDggMTA6NTggU2hhb2h1YSBMaSA8
-c2hsaUBrZXJuZWwub3JnPiBXcm90ZToNCj4+ID4+PjIwMTIvOC83IEppYW5wZW5nIE1hIDxtYWpp
-YW5wZW5nQGdtYWlsLmNvbT46DQo+PiA+Pj4+IE9uIDIwMTItMDgtMDcgMTM6MzIgU2hhb2h1YSBM
-aSA8c2hsaUBrZXJuZWwub3JnPiBXcm90ZToNCj4+ID4+Pj4+MjAxMi84LzcgSmlhbnBlbmcgTWEg
-PG1hamlhbnBlbmdAZ21haWwuY29tPjoNCj4+ID4+Pj4+PiBPbiAyMDEyLTA4LTA3IDExOjIyIFNo
-YW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4gV3JvdGU6DQo+PiA+Pj4+Pj4+TXkgZGlyZWN0SU8g
-cmFuZG9td3JpdGUgNGsgd29ya2xvYWQgc2hvd3MgYSAxMH4yMCUgcmVncmVzc2lvbiBjYXVzZWQg
-YnkgY29tbWl0DQo+PiA+Pj4+Pj4+ODk1ZTNjNWM1OGE4MGJiLiBkaXJlY3RJTyB1c3VhbGx5IGlz
-IHJhbmRvbSBJTyBhbmQgaWYgcmVxdWVzdCBzaXplIGlzbid0IGJpZw0KPj4gPj4+Pj4+Pih3aGlj
-aCBpcyB0aGUgY29tbW9uIGNhc2UpLCBkZWxheSBoYW5kbGluZyBvZiB0aGUgc3RyaXBlIGhhc24n
-dCBhbnkgYWR2YW50YWdlcy4NCj4+ID4+Pj4+Pj5Gb3IgYmlnIHNpemUgcmVxdWVzdCwgZGVsYXkg
-Y2FuIHN0aWxsIHJlZHVjZSBJTy4NCj4+ID4+Pj4+Pj4NCj4+ID4+Pj4+Pj5TaWduZWQtb2ZmLWJ5
-OiBTaGFvaHVhIExpIDxzaGxpQGZ1c2lvbmlvLmNvbT4NCj4+ID4+Pj4gW3NuaXBdDQo+PiA+Pj4+
-Pj4+LS0NCj4+ID4+Pj4+PiBNYXkgYmUgdXNlZCBzaXplIHRvIGp1ZGdlIGlzIG5vdCBhIGdvb2Qg
-bWV0aG9kLg0KPj4gPj4+Pj4+IEkgZmlyc3RseSBzZW5kZWQgdGhpcyBwYXRjaCwgb25seSB3YW50
-IHRvIGNvbnRyb2wgZGlyZWN0LXdyaXRlLWJsb2NrLG5vdCBmb3IgcmVxdWxhciBmaWxlLg0KPj4g
-Pj4+Pj4+IEJlY2F1c2UgaSB0aGluayBpZiBzb21lb25lIHVzZWQgZGlyZWN0LXdyaXRlLWJsb2Nr
-IGZvciByYWlkNSxoZSBzaG91bGQga25vdyB0aGUgZmVhdHVyZSBvZiByYWlkNSBhbmQgaGUgY2Fu
-IGNvbnRyb2wNCj4+ID4+Pj4+PiBmb3Igd3JpdGUgdG8gZnVsbC13cml0ZS4NCj4+ID4+Pj4+PiBC
-dXQgYXQgdGhhdCB0aW1lLCBpIGRpZCBrbm93IGhvdyB0byBkaWZmZXJlbnRpYXRlIGJldHdlZW4g
-cmVndWxhciBmaWxlIGFuZCBibG9jay1kZXZpY2UuDQo+PiA+Pj4+Pj4gSSB0aGlrIHdlIHNob3Vs
-ZCBkbyBzb21ldGhpbmcgdG8gZG8gdGhpcy4NCj4+ID4+Pj4+DQo+PiA+Pj4+PkkgZG9uJ3QgdGhp
-bmsgaXQncyBwb3NzaWJsZSB1c2VyIGNhbiBjb250cm9sIGhpcyB3cml0ZSB0byBiZSBhDQo+PiA+
-Pj4+PmZ1bGwtd3JpdGUgZXZlbiBmb3INCj4+ID4+Pj4+cmF3IGRpc2sgSU8uIFdoeSByZWd1bGFy
-IGZpbGUgYW5kIGJsb2NrIGRldmljZSBpbyBtYXR0ZXJzIGhlcmU/DQo+PiA+Pj4+Pg0KPj4gPj4+
-Pj5UaGFua3MsDQo+PiA+Pj4+PlNoYW9odWENCj4+ID4+Pj4gQW5vdGhlciBwcm9ibGVtIGlzIHRo
-ZSBzaXplLiBIb3cgdG8ganVkZ2UgdGhlIHNpemUgaXMgbGFyZ2Ugb3Igbm90Pw0KPj4gPj4+PiBB
-IHN5c2NhbGwgd3JpdGUgaXMgYSBkaW8gYW5kIGEgZGlvIG1heSBiZSBzcGxpdCBtb3JlIGJpb3Mu
-DQo+PiA+Pj4+IEZvciBteSB3b3JrbG9hZCwgaSB1c3VhbHkgd3JpdGUgY2h1bmstc2l6ZS4NCj4+
-ID4+Pj4gQnV0IHlvdXIgcGF0Y2ggaXMganVkZ2UgYnkgYmlvLXNpemUuDQo+PiA+Pj4NCj4+ID4+
-PkknZCBpZ25vcmUgd29ya2xvYWQgd2hpY2ggZG9lcyBzZXF1ZW50aWFsIGRpcmVjdElPLCB0aG91
-Z2gNCj4+ID4+PnlvdXIgd29ya2xvYWQgaXMsIGJ1dCBJIGJldCBubyByZWFsIHdvcmtsb2FkcyBh
-cmUuIFNvIEknZCBsaWtlDQo+PiA+PiBTb3JyeSxteSBleHBsYWluIG1heWJlIG5vdCBjb3JjcmVj
-dC4gSSB3cml0ZSBkYXRhIG9uY2Ugd2hpY2ggc2l6ZSBpcyBhbG1vc3QgY2h1bmtzLXNpemUgKiBk
-ZXZpY2VzLGluIG9yZGVyIHRvIGZ1bGwtd3JpdGUNCj4+ID4+IGFuZCBhcyBwb3NzaWJsZSBhcyB0
-byBubyBwcmUtcmVhZCBvcGVyYXRpb24uDQo+PiA+Pj5vbmx5IHRvIGNvbnNpZGVyIGJpZyBzaXpl
-IHJhbmRvbSBkaXJlY3Rpby4gSSBhZ3JlZSB0aGUgc2l6ZQ0KPj4gPj4+anVkZ2UgaXMgYXJiaXRy
-YXJ5LiBJIGNhbiBvcHRpbWl6ZSBpdCB0byBiZSBvbmx5IGNvbnNpZGVyIHN0cmlwZQ0KPj4gPj4+
-d2hpY2ggaGl0cyB0d28gb3IgbW9yZSBkaXNrcyBpbiBvbmUgYmlvLCBidXQgbm90IHN1cmUgaWYg
-aXQncw0KPj4gPj4+d29ydGh5IGRvaW5nLiBOb3Qgd2FyZSBiaWcgc2l6ZSBkaXJlY3RpbyBpcyBj
-b21tb24sIGFuZCBldmVuDQo+PiA+Pj5pcywgYmlnIHNpemUgcmVxdWVzdCBJT1BTIGlzIGxvdywg
-YSBiaXQgZGVsYXkgbWF5YmUgbm90IGEgYmlnDQo+PiA+Pj5kZWFsLg0KPj4gPj4gSWYgYWRkIGEg
-YWNjX3RpbWUgZm9yICdzdHJpZXBfaGVhZCcgdG8gY29udHJvbD8NCj4+ID4+IFdoZW4gZ2V0X2Fj
-dGl2ZV9zdHJpcGUoKSBpcyBvaywgdXBkYXRlIGFjY190aW1lLg0KPj4gPj4gRm9yIHNvbWUgdGlt
-ZSwgc3RyaXBlX2hlYWQgZGlkIG5vdCBhY2Nlc3MgYW5kIGl0IHNob2xkIHByZS1yZWFkLg0KPj4g
-Pg0KPj4gPkRvIHlvdSB3YW50IHRvIGFkZCBhIHRpbWVyIGZvciBlYWNoIHN0cmlwZT8gVGhpcyBp
-cyBldmVuIHVnbHkuDQo+PiA+SG93IGRvIHlvdSBjaG9vc2UgdGhlIGV4cGlyZSB0aW1lPyBBIHRp
-bWUgd29ya3MgZm9yIGhhcmRkaXNrDQo+PiA+ZGVmaW5pdGVseSB3aWxsIG5vdCB3b3JrIGZvciBh
-IGZhc3QgU1NELg0KPj4gQSB0aW1lIGlzIGxpa2UgdGhlIHNpemUgd2hpY2ggaXMgYXJiaXRyYXJ5
-Lg0KPj4gSG93IGFib3V0IGFkZCBhIGludGVyZmFjZSBpbiBzeXNmcyB0byBjb250cm9sIGJ5IHVz
-ZXI/IA0KPj4gT25seSB1c2VyIGNhbiBqdWRnZSB0aGUgd29ya2xvYWQsIHdoaWNoIHNlcXVhdGlh
-bCB3cml0ZSBvciByYW5kb20gd3JpdGUuDQo+DQo+VGhpcyBpcyBnZXR0aW5nIHdvcnNlIGJ5IHRo
-ZSBtaW51dGUuICBBIHN5c2ZzIGludGVyZmFjZSBmb3IgdGhpcyBpcw0KPmRlZmluaXRlbHkgbm90
-IGEgZ29vZCBpZGVhLg0KPg0KPlRoZSBSRVFfTk9JRExFIGZsYWcgaXMgYSBwcmV0dHkgY2xlYXIg
-c3RhdGVtZW50IHRoYXQgbm8gbW9yZSByZXF1ZXN0cyB0aGF0DQo+bWVyZ2Ugd2l0aCB0aGlzIG9u
-ZSBhcmUgZXhwZWN0ZWQuICBJZiBzb21lIHVzZSBjYXNlcyBzZW5kcyByYW5kb20gcmVxdWVzdHMs
-DQo+bWF5YmUgaXQgc2hvdWxkIGJlIHNldHRpbmcgUkVRX05PSURMRS4NCj4NCj5NYXliZSBzb21l
-b25lIHNob3VsZCBkbyBzb21lIHJlc2VhcmNoIGFuZCBmaW5kIG91dCB3aHkgV1JJVEVfT0RJUkVD
-VCBkb2Vzbid0DQo+aW5jbHVkZSBSRVFfTk9JRExFLiAgVW5kZXJzdGFuZGluZyB0aGF0IHdvdWxk
-IGhlbHAgdW5kZXJzdGFuZCB0aGUgY3VycmVudA0KPnByb2JsZW0uDQo+DQo+TmVpbEJyb3duDQo+
-DQpIaSBuZWlsOg0KCVRoYW5rcyB5b3VyIHN1Z2dlc3Rpb24uDQpEaXJlY3Qtd3JpdGUgY2FuIHNl
-dCBSRVFfTk9JRExFIGJlY2F1c2Ugb25seSBmaW5pc2ggdGhpcyB3cml0ZS1vcGVyYXRpb24gdGhl
-IG5leHQgY2FuIGRvLg0KQnV0IGRpcmVjdC13cml0ZShzdHJ1Y3QgZGlvKSBjYW4gYnJlYWsgdXAg
-dG8gc29tZSBiaW9zKHN0cnVjdCBiaW9zKS4NCkZvciB0aG9zZSBiaW9zLCB0aGV5IGhhdmUgcmVs
-ZWF0aW9uU28gdGhleSBtYXkgbm90IHNldCBSRVFfTk9JRExFIHVubGVzcyB0aGUgbGFzdCBiaW8u
-DQpJIHRoaW5rIHRoaXMgbWF5IGluY3JlYXNlIHRoZSBwZXJmb3JtYW5jZSwgYmVjYXVzZSByYW5k
-b20tZGlyZWN0LXdyaXRlIGF0IG1vc3Qgb25seSBvbmUgYmlvPw0K
+--Sig_/688z6ejlwP=j3=19nNcKsWm
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, 8 Aug 2012 13:10:51 +0000 (GMT) Holger Kiehl <Holger.Kiehl@dwd.de>
+wrote:
+
+> Hello,
+>=20
+> I have been using the patches posted by Shaohua Li on 16th March 2012:
+>=20
+>     http://lkml.indiana.edu/hypermail/linux/kernel/1203.2/00048.html
+>=20
+> for several month on a very busy file server (serving 9 million files
+> with 5.3 TiB daily) without any problems.
+>=20
+> Is there any chance that these patches will go into the official kernel?
+> Or what is the reason that these patches are no applied?
+
+I'm trying to appear to be an incompetent maintainer so that someone will
+offer to take over.  It isn't working yet.  I'm probably scuttling the
+attempt just by replying to this email - drat.
+
+>=20
+> I have attached the patch set in one big patch for 3.5. Please do not
+> use it since I am not sure if it is correct. Shaohua could you please
+> take a look if it is correct and maybe post a new one?
+>=20
+> Personally, I would think that TRIM support MD would be a very good thing.
+
+Probably.  Maybe if they get posted again I'll feel guilty and do something
+about them.
+
+One issue that needs to be fixed is that a few places assumed that the
+"discard_zeros_data" flag is always set, which is not the case (else we
+wouldn't have that flag).  That was only a couple of places though, not a
+wide spread problem.
+
+NeilBrown
+
+
+
+>=20
+> Regards,
+> Holger
+
+--Sig_/688z6ejlwP=j3=19nNcKsWm
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBUCMtiznsnt1WYoG5AQIQsRAAoVrPXjJ3Lwwyw0rLveeWZkbJvzy+w2ZE
+SXug8NflvEjr5EvoMc8SAEip6xT1lWQo02xC3LAjv78UC7K1ydJbBTci/Ul0EotT
+IMA+oBQ327zJEt+O93G9NVZnZEch3dUrYTNDs/o/mms/FQfEVhdmuONc2+5J0zbj
+zFWNFFnaNO8NXcV/opvqrMGrF2rTN1Klzpl9hBUk8XFyhlkS+6Sge0VXX8rrLIsE
+OSrEUO5om1qWezpoQbubGgNWqUel8w4Vpv/6LDyES8DVTbbCWCHexD/iMz+qeBdt
+ZAiidnH3VMrzCaez5qNruYuUbuEPmrddqDWA068KtThW8AkdEK4WUD7oB7u81xI+
+pNgQOnT2H+1oEbTn8hc8dXC6Cfhje0kSM904ZmJkBry2w9No6QtTtNFQdRRZJCvp
+kwXu71w+LhixQjHQda2jUU/ESz01SqDIw03UrtKITmThx0XXK8+8Vkz564+bf9wn
+gPqachCEIv6SurO2WA90HWwutf9tCISbOfr8u1m0l7go+FWbb4WyhwcyXsZVQS4x
+5Jbm2OjKHzR4+L8V2eB1wvPMtzFqcqcOA+12+aMn+77+viVAwTBXO3nDlW2Ieq7h
+FaYCsWDqk6Wen6y9VJDSdjuhSPbEPryD9jF7HWC7WS4cegSxcNIFNFIqmxEiDEZD
+5WkTdVyNa3c=
+=TVcV
+-----END PGP SIGNATURE-----
+
+--Sig_/688z6ejlwP=j3=19nNcKsWm--
