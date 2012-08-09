@@ -1,340 +1,158 @@
-From: Sam Clark <sclark_77@hotmail.com>
-Subject: RAID5 - Disk failed during re-shape
-Date: Thu, 9 Aug 2012 10:38:05 +0200
-Message-ID: <BLU153-ds1688A6A36A974526D12FDB94CC0@phx.gbl>
+From: Shaohua Li <shli@kernel.org>
+Subject: [patch 1/2 V3]MD: change the parameter of md thread
+Date: Thu, 9 Aug 2012 16:57:35 +0800
+Message-ID: <20120809085735.GA30111@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-gb
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de, dan.j.williams@gmail.com
 List-Id: linux-raid.ids
 
-Hi All,=20
+Change the thread parameter, so the thread can carry extra info. Next patch
+will use it.
 
-Hoping you can help recover my data!
+Signed-off-by: Shaohua Li <shli@fusionio.com>
+---
+ drivers/md/md.c        |    9 +++++----
+ drivers/md/md.h        |    7 ++++---
+ drivers/md/multipath.c |    3 ++-
+ drivers/md/raid1.c     |    3 ++-
+ drivers/md/raid10.c    |    3 ++-
+ drivers/md/raid5.c     |    3 ++-
+ 6 files changed, 17 insertions(+), 11 deletions(-)
 
-I have (had?) a software RAID 5 volume, created on Ubuntu 10.04 a few y=
-ears
-back consisting of 4 x 1500GB drives.=A0 Was running great until the
-motherboard died last week.=A0=A0 Purchased new motherboard, CPU & RAM,
-installed Ubuntu 12.04, and got everything assembled fine, and working =
-for
-around 48 hours.=A0=20
-
-After that I added a 2000GB drive to increase capacity, and ran mdadm -=
--add
-/dev/md0 /dev/sdf.=A0 The Re-configuration started to run, and then aro=
-und
-11.4% of the reshaping I saw that the server had some errors:
-Aug=A0 8 22:17:41 nas kernel: [ 5927.453434] Buffer I/O error on device=
- md0,
-logical block 715013760
-Aug=A0 8 22:17:41 nas kernel: [ 5927.453439] EXT4-fs warning (device md=
-0):
-ext4_end_bio:251: I/O error writing to inode 224003641 (offset 15781068=
-8
-size 4096 starting block 715013760)
-Aug=A0 8 22:17:41 nas kernel: [ 5927.453448] JBD2: Detected IO errors w=
-hile
-flushing file data on md0-8
-Aug=A0 8 22:17:41 nas kernel: [ 5927.453467] Aborting journal on device=
- md0-8.
-Aug=A0 8 22:17:41 nas kernel: [ 5927.453642] Buffer I/O error on device=
- md0,
-logical block 548962304
-Aug=A0 8 22:17:41 nas kernel: [ 5927.453643] lost page write due to I/O=
- error
-on md0
-Aug=A0 8 22:17:41 nas kernel: [ 5927.453656] JBD2: I/O error detected w=
-hen
-updating journal superblock for md0-8.
-Aug=A0 8 22:17:41 nas kernel: [ 5927.453688] Buffer I/O error on device=
- md0,
-logical block 0
-Aug=A0 8 22:17:41 nas kernel: [ 5927.453690] lost page write due to I/O=
- error
-on md0
-Aug=A0 8 22:17:41 nas kernel: [ 5927.453697] EXT4-fs error (device md0)=
-:
-ext4_journal_start_sb:327: Detected aborted journal
-Aug=A0 8 22:17:41 nas kernel: [ 5927.453700] EXT4-fs (md0): Remounting
-filesystem read-only
-Aug=A0 8 22:17:41 nas kernel: [ 5927.453703] EXT4-fs (md0): previous I/=
-O error
-to superblock detected
-Aug=A0 8 22:17:41 nas kernel: [ 5927.453826] Buffer I/O error on device=
- md0,
-logical block 715013760
-Aug=A0 8 22:17:41 nas kernel: [ 5927.453828] lost page write due to I/O=
- error
-on md0
-Aug=A0 8 22:17:41 nas kernel: [ 5927.453842] JBD2: Detected IO errors w=
-hile
-flushing file data on md0-8
-Aug=A0 8 22:17:41 nas kernel: [ 5927.453848] Buffer I/O error on device=
- md0,
-logical block 0
-Aug=A0 8 22:17:41 nas kernel: [ 5927.453850] lost page write due to I/O=
- error
-on md0
-Aug=A0 8 22:20:54 nas kernel: [ 6120.964129] INFO: task md0_reshape:297
-blocked for more than 120 seconds.
-
-On checking the progress of /proc/mdstat, I found that 2 drives were li=
-sted
-as failed (__UUU), and the finish time was simply growing by hundreds o=
-f
-minutes at a time.
-
-I was able to browse some data on the Raid set (incl my Home folder), b=
-ut
-couldn't browse some other sections - shell simply hung when I tried to
-issue "ls /raidmount".=A0 I tied to add one of the failed disks back in=
-, but
-got the response that there was no superblock on it.=A0 rebooted it at =
-that
-time.
-
-During boot I was given the option to manually recover, or skip mountin=
-g - I
-chose the latter.=20
-
-Now that the system is running, I tried to assemble, but keeps failing.=
-=A0
-Have tried:
-mdadm --assemble --force /dev/md0 /dev/sdb /dev/sdc /dev/sdd /dev/sde
-/dev/sdf
-
-I am able to see all the drives, but can see the UUID is incorrect and =
-the
-Raid Level states -unknown-, as below... does this mean the data can't =
-be
-recovered?=A0=20
-
-root@nas:/var/log$ mdadm --examine /dev/sd[b-f]
-/dev/sdb:
-=A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : a92b4efc
-=A0=A0=A0=A0=A0=A0=A0 Version : 0.90.00
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 UUID : 00000000:00000000:00000000:000000=
-00
-=A0 Creation Time : Thu Aug=A0 9 07:44:48 2012
-=A0=A0=A0=A0 Raid Level : -unknown-
-=A0=A0 Raid Devices : 0
-=A0 Total Devices : 5
-Preferred Minor : 0
-
-=A0=A0=A0 Update Time : Thu Aug=A0 9 07:45:10 2012
-=A0=A0=A0=A0=A0=A0=A0=A0 =A0State : active
-Active Devices : 0
-Working Devices : 5
-=46ailed Devices : 0
-=A0 Spare Devices : 5
-=A0=A0=A0=A0=A0=A0 Checksum : a0b6e863 - correct
-=A0=A0=A0=A0=A0=A0=A0=A0 Events : 1
-
-
-=A0=A0=A0=A0=A0 Number=A0=A0 Major=A0=A0 Minor=A0=A0 RaidDevice State
-this=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 16=A0=A0=A0=A0=
-=A0=A0=A0 0=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdb
-
-=A0=A0 0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 16=A0=A0=A0=
-=A0=A0=A0=A0 0=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdb
-=A0=A0 1=A0=A0=A0=A0 1=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 48=A0=A0=A0=
-=A0=A0=A0=A0 1=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdd
-=A0=A0 2=A0=A0=A0=A0 2=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 80=A0=A0=A0=
-=A0=A0=A0=A0 2=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdf
-=A0=A0 3=A0=A0=A0=A0 3=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 64=A0=A0=A0=
-=A0=A0=A0=A0 3=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sde
-=A0=A0 4=A0=A0=A0=A0 4=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 32=A0=A0=A0=
-=A0=A0=A0=A0 4=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdc
-/dev/sdc:
-=A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : a92b4efc
-=A0=A0=A0=A0=A0=A0=A0 Version : 0.90.00
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 UUID : 00000000:00000000:00000000:000000=
-00
-=A0 Creation Time : Thu Aug=A0 9 07:44:48 2012
-=A0=A0=A0=A0 Raid Level : -unknown-
-=A0=A0 Raid Devices : 0
-=A0 Total Devices : 5
-Preferred Minor : 0
-
-=A0=A0=A0 Update Time : Thu Aug=A0 9 07:45:10 2012
-=A0=A0=A0=A0=A0=A0=A0=A0=A0 State : active
-Active Devices : 0
-Working Devices : 5
-=46ailed Devices : 0
-=A0 Spare Devices : 5
-=A0=A0=A0=A0=A0=A0 Checksum : a0b6e87b - correct
-=A0=A0=A0=A0=A0=A0=A0=A0 Events : 1
-
-
-=A0=A0=A0=A0=A0 Number=A0=A0 Major=A0=A0 Minor=A0=A0 RaidDevice State
-this=A0=A0=A0=A0 4=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 32=A0=A0=A0=A0=
-=A0=A0=A0 4=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdc
-
-=A0=A0 0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 16=A0=A0=A0=
-=A0=A0=A0=A0 0=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdb
-=A0=A0 1=A0=A0=A0=A0 1=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 48=A0=A0=A0=
-=A0=A0=A0=A0 1=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdd
-=A0=A0 2=A0=A0=A0=A0 2=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 80=A0=A0=A0=
-=A0=A0=A0=A0 2=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdf
-=A0=A0 3=A0=A0=A0=A0 3=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 64=A0=A0=A0=
-=A0=A0=A0=A0 3=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sde
-=A0=A0 4=A0=A0=A0=A0 4=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 32=A0=A0=A0=
-=A0=A0=A0=A0 4=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdc
-/dev/sdd:
-=A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : a92b4efc
-=A0=A0=A0=A0=A0=A0=A0 Version : 0.90.00
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 UUID : 00000000:00000000:00000000:000000=
-00
-=A0 Creation Time : Thu Aug=A0 9 07:44:48 2012
-=A0=A0=A0=A0 Raid Level : -unknown-
-=A0=A0 Raid Devices : 0
-=A0 Total Devices : 5
-Preferred Minor : 0
-
-=A0=A0=A0 Update Time : Thu Aug=A0 9 07:45:10 2012
-=A0=A0=A0=A0=A0=A0=A0=A0=A0 State : active
-Active Devices : 0
-Working Devices : 5
-=46ailed Devices : 0
-=A0 Spare Devices : 5
-=A0=A0=A0=A0=A0=A0 Checksum : a0b6e885 - correct
-=A0=A0=A0=A0=A0=A0=A0=A0 Events : 1
-
-
-=A0=A0=A0=A0=A0 Number=A0=A0 Major=A0=A0 Minor=A0=A0 RaidDevice State
-this=A0=A0=A0=A0 1=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 48=A0=A0=A0=A0=
-=A0=A0=A0 1=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdd
-
-=A0=A0 0=A0=A0=A0=A0 0 =A0=A0=A0=A0=A0=A08=A0=A0=A0=A0=A0=A0 16=A0=A0=A0=
-=A0=A0=A0=A0 0=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdb
-=A0=A0 1=A0=A0=A0=A0 1=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 48=A0=A0=A0=
-=A0=A0=A0=A0 1=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdd
-=A0=A0 2=A0=A0=A0=A0 2=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 80=A0=A0=A0=
-=A0=A0=A0=A0 2=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdf
-=A0=A0 3=A0=A0=A0=A0 3=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 64=A0=A0=A0=
-=A0=A0=A0=A0 3=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sde
-=A0=A0 4=A0=A0=A0=A0 4=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 32=A0=A0=A0=
- =A0=A0=A0=A04=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdc
-/dev/sde:
-=A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : a92b4efc
-=A0=A0=A0=A0=A0=A0=A0 Version : 0.90.00
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 UUID : 00000000:00000000:00000000:000000=
-00
-=A0 Creation Time : Thu Aug=A0 9 07:44:48 2012
-=A0=A0=A0=A0 Raid Level : -unknown-
-=A0=A0 Raid Devices : 0
-=A0 Total Devices : 5
-Preferred Minor : 0
-
-=A0=A0=A0 Update Time : Thu Aug=A0 9 07:45:10 2012
-=A0=A0=A0=A0=A0=A0=A0=A0=A0 State : active
-Active Devices : 0
-Working Devices : 5
-=46ailed Devices : 0
-=A0 Spare Devices : 5
-=A0=A0=A0=A0=A0=A0 Checksum : a0b6e899 - correct
-=A0=A0=A0=A0=A0=A0=A0=A0 Events : 1
-
-
-=A0=A0=A0=A0=A0 Number=A0=A0 Major=A0=A0 Minor=A0=A0 RaidDevice State
-this=A0=A0=A0=A0 3=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 64=A0=A0=A0=A0=
-=A0=A0=A0 3=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sde
-
-=A0=A0 0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 16=A0=A0=A0=
-=A0=A0=A0=A0 0=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdb
-=A0=A0 1=A0=A0=A0=A0 1=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 48=A0=A0=A0=
-=A0=A0=A0=A0 1=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdd
-=A0=A0 2=A0=A0=A0=A0 2=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 80=A0=A0=A0=
-=A0=A0=A0=A0 2=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdf
-=A0=A0 3=A0=A0=A0=A0 3=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 64=A0=A0=A0=
-=A0=A0=A0=A0 3=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sde
-=A0=A0 4=A0=A0=A0=A0 4=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 32=A0=A0=A0=
-=A0=A0=A0=A0 4=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdc
-/dev/sdf:
-=A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : a92b4efc
-=A0=A0=A0=A0=A0=A0=A0 Version : 0.90.00
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 UUID : 00000000:00000000:00000000:000000=
-00
-=A0 Creation Time : Thu Aug=A0 9 07:44:48 2012
-=A0=A0=A0=A0 Raid Level : -unknown-
-=A0=A0 Raid Devices : 0
-=A0 Total Devices : 5
-Preferred Minor : 0
-
-=A0=A0=A0 Update Time : Thu Aug=A0 9 07:45:10 2012
-=A0=A0=A0=A0=A0=A0=A0=A0=A0 State : active
-Active Devices : 0
-Working Devices : 5
-=46ailed Devices : 0
-=A0 Spare Devices : 5
-=A0=A0=A0=A0=A0=A0 Checksum : a0b6e8a7 - correct
-=A0=A0=A0=A0=A0=A0=A0=A0 Events : 1
-
-
-=A0=A0=A0=A0=A0 Number=A0=A0 Major=A0=A0 Minor=A0=A0 RaidDevice State
-this=A0=A0=A0=A0 2=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 80=A0=A0=A0=A0=
-=A0=A0=A0 2=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdf
-
-=A0=A0 0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 16=A0=A0=A0=
-=A0=A0=A0=A0 0=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdb
-=A0=A0 1=A0 =A0=A0=A01=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 48=A0=A0=A0=
-=A0=A0=A0=A0 1=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdd
-=A0=A0 2=A0=A0=A0=A0 2=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 80=A0=A0=A0=
-=A0=A0=A0=A0 2=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdf
-=A0=A0 3=A0=A0=A0=A0 3=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 64=A0=A0=A0=
-=A0=A0=A0=A0 3=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sde
-=A0=A0 4=A0=A0=A0=A0 4=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 32=A0=A0=A0=
-=A0=A0=A0=A0 4=A0=A0=A0=A0=A0 spare=A0=A0 /dev/sdc
-
-According to Syslog, the only drive failure that I had was /dev/sde, bu=
-t I
-guess that the re-shape has caused this to go awry.
-syslog.1:Aug=A0 8 22:17:41 nas mdadm[1029]: Fail event detected on md d=
-evice
-/dev/md0, component device /dev/sde
-
-I tried removing the /etc/mdadm/mdadm.conf file, and re-running the sca=
-n,
-where I got:
-root@nas:/var/log$ sudo mdadm --assemble --scan -f -vv
-mdadm: looking for devices for further assembly
-mdadm: cannot open device /dev/sda5: Device or resource busy
-mdadm: no RAID superblock on /dev/sda2
-mdadm: cannot open device /dev/sda1: Device or resource busy
-mdadm: cannot open device /dev/sda: Device or resource busy
-mdadm: /dev/sdf is identified as a member of /dev/md/0_0, slot 2.
-mdadm: /dev/sde is identified as a member of /dev/md/0_0, slot 3.
-mdadm: /dev/sdd is identified as a member of /dev/md/0_0, slot 1.
-mdadm: /dev/sdc is identified as a member of /dev/md/0_0, slot 4.
-mdadm: /dev/sdb is identified as a member of /dev/md/0_0, slot 0.
-mdadm: failed to add /dev/sdd to /dev/md/0_0: Invalid argument
-mdadm: failed to add /dev/sdf to /dev/md/0_0: Invalid argument
-mdadm: failed to add /dev/sde to /dev/md/0_0: Invalid argument
-mdadm: failed to add /dev/sdc to /dev/md/0_0: Invalid argument
-mdadm: failed to add /dev/sdb to /dev/md/0_0: Invalid argument
-mdadm: /dev/md/0_0 assembled from -1 drives and 1 spare - not enough to
-start the array.
-mdadm: looking for devices for further assembly
-mdadm: No arrays found in config file or automatically
-
-I guess the 'invalid argument' is the -unknown- in the raid level.. but=
- it's
-only a guess.=20
-
-I'm at the extent of my knowledge - would appreciate some expert assist=
-ance
-in recovering this array, if it's possible!
-
-Many thanks,=20
-Sam
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Index: linux/drivers/md/md.c
+===================================================================
+--- linux.orig/drivers/md/md.c	2012-08-08 11:18:52.486201816 +0800
++++ linux/drivers/md/md.c	2012-08-08 14:30:21.285768391 +0800
+@@ -6676,7 +6676,7 @@ static int md_thread(void * arg)
+ 
+ 		clear_bit(THREAD_WAKEUP, &thread->flags);
+ 		if (!kthread_should_stop())
+-			thread->run(thread->mddev);
++			thread->run(thread);
+ 	}
+ 
+ 	return 0;
+@@ -6691,8 +6691,8 @@ void md_wakeup_thread(struct md_thread *
+ 	}
+ }
+ 
+-struct md_thread *md_register_thread(void (*run) (struct mddev *), struct mddev *mddev,
+-				 const char *name)
++struct md_thread *md_register_thread(void (*run) (struct md_thread *),
++		struct mddev *mddev, const char *name)
+ {
+ 	struct md_thread *thread;
+ 
+@@ -7241,8 +7241,9 @@ EXPORT_SYMBOL_GPL(md_allow_write);
+ 
+ #define SYNC_MARKS	10
+ #define	SYNC_MARK_STEP	(3*HZ)
+-void md_do_sync(struct mddev *mddev)
++void md_do_sync(struct md_thread *thread)
+ {
++	struct mddev *mddev = thread->mddev;
+ 	struct mddev *mddev2;
+ 	unsigned int currspeed = 0,
+ 		 window;
+Index: linux/drivers/md/md.h
+===================================================================
+--- linux.orig/drivers/md/md.h	2012-08-08 11:18:52.494201720 +0800
++++ linux/drivers/md/md.h	2012-08-08 14:28:49.298931668 +0800
+@@ -540,12 +540,13 @@ static inline void sysfs_unlink_rdev(str
+ 	list_for_each_entry_rcu(rdev, &((mddev)->disks), same_set)
+ 
+ struct md_thread {
+-	void			(*run) (struct mddev *mddev);
++	void			(*run) (struct md_thread *thread);
+ 	struct mddev		*mddev;
+ 	wait_queue_head_t	wqueue;
+ 	unsigned long           flags;
+ 	struct task_struct	*tsk;
+ 	unsigned long		timeout;
++	void			*private;
+ };
+ 
+ #define THREAD_WAKEUP  0
+@@ -584,7 +585,7 @@ static inline void safe_put_page(struct
+ extern int register_md_personality(struct md_personality *p);
+ extern int unregister_md_personality(struct md_personality *p);
+ extern struct md_thread *md_register_thread(
+-	void (*run)(struct mddev *mddev),
++	void (*run)(struct md_thread *thread),
+ 	struct mddev *mddev,
+ 	const char *name);
+ extern void md_unregister_thread(struct md_thread **threadp);
+@@ -603,7 +604,7 @@ extern void md_super_write(struct mddev
+ extern void md_super_wait(struct mddev *mddev);
+ extern int sync_page_io(struct md_rdev *rdev, sector_t sector, int size, 
+ 			struct page *page, int rw, bool metadata_op);
+-extern void md_do_sync(struct mddev *mddev);
++extern void md_do_sync(struct md_thread *thread);
+ extern void md_new_event(struct mddev *mddev);
+ extern int md_allow_write(struct mddev *mddev);
+ extern void md_wait_for_blocked_rdev(struct md_rdev *rdev, struct mddev *mddev);
+Index: linux/drivers/md/multipath.c
+===================================================================
+--- linux.orig/drivers/md/multipath.c	2012-08-07 12:21:06.797276972 +0800
++++ linux/drivers/md/multipath.c	2012-08-08 11:19:15.673910298 +0800
+@@ -335,8 +335,9 @@ abort:
+  *	3.	Performs writes following reads for array syncronising.
+  */
+ 
+-static void multipathd (struct mddev *mddev)
++static void multipathd (struct md_thread *thread)
+ {
++	struct mddev *mddev = thread->mddev;
+ 	struct multipath_bh *mp_bh;
+ 	struct bio *bio;
+ 	unsigned long flags;
+Index: linux/drivers/md/raid1.c
+===================================================================
+--- linux.orig/drivers/md/raid1.c	2012-08-08 11:18:52.506201568 +0800
++++ linux/drivers/md/raid1.c	2012-08-08 11:19:15.677910253 +0800
+@@ -2285,8 +2285,9 @@ read_more:
+ 	}
+ }
+ 
+-static void raid1d(struct mddev *mddev)
++static void raid1d(struct md_thread *thread)
+ {
++	struct mddev *mddev = thread->mddev;
+ 	struct r1bio *r1_bio;
+ 	unsigned long flags;
+ 	struct r1conf *conf = mddev->private;
+Index: linux/drivers/md/raid10.c
+===================================================================
+--- linux.orig/drivers/md/raid10.c	2012-08-07 12:21:06.813276770 +0800
++++ linux/drivers/md/raid10.c	2012-08-08 11:19:15.677910253 +0800
+@@ -2667,8 +2667,9 @@ static void handle_write_completed(struc
+ 	}
+ }
+ 
+-static void raid10d(struct mddev *mddev)
++static void raid10d(struct md_thread *thread)
+ {
++	struct mddev *mddev = thread->mddev;
+ 	struct r10bio *r10_bio;
+ 	unsigned long flags;
+ 	struct r10conf *conf = mddev->private;
+Index: linux/drivers/md/raid5.c
+===================================================================
+--- linux.orig/drivers/md/raid5.c	2012-08-07 12:21:06.905275614 +0800
++++ linux/drivers/md/raid5.c	2012-08-08 19:10:03.578786155 +0800
+@@ -4625,8 +4625,9 @@ static int handle_active_stripes(struct
+  * During the scan, completed stripes are saved for us by the interrupt
+  * handler, so that they will not have to wait for our next wakeup.
+  */
+-static void raid5d(struct mddev *mddev)
++static void raid5d(struct md_thread *thread)
+ {
++	struct mddev *mddev = thread->mddev;
+ 	struct r5conf *conf = mddev->private;
+ 	int handled;
+ 	struct blk_plug plug;
