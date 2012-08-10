@@ -1,67 +1,94 @@
-From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Subject: RE: What does the '-1' value of size mean now?
-Date: Fri, 10 Aug 2012 14:20:34 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB18FD92A8@IRSMSX102.ger.corp.intel.com>
-References: <D9FFE20C522965449E182ACE73889AEB18FD8F13@IRSMSX102.ger.corp.intel.com>
+From: Muthu Kumar <muthu.lkml@gmail.com>
+Subject: Re: Re: [PATCH 0/8] Set bi_rw when alloc bio before call bio_add_page.
+Date: Fri, 10 Aug 2012 08:29:45 -0700
+Message-ID: <CAFR8uedP7pGm+KbW4q0fR3L1GS6GwG0yAGUDBsJbrTfKNHnWag@mail.gmail.com>
+References: <201207301514247032532@gmail.com>
+	<20120730214213.GF2877@dastard>
+	<201207310855556258267@gmail.com>
+	<20120731011457.GO2877@dastard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <D9FFE20C522965449E182ACE73889AEB18FD8F13@IRSMSX102.ger.corp.intel.com>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: "Neil Brown (neilb@suse.de)" <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ext4-owner@vger.kernel.org>
+In-Reply-To: <20120731011457.GO2877@dastard>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: majianpeng <majianpeng@gmail.com>, Neil Brown <neilb@suse.de>, axboe <axboe@kernel.dk>, "konrad.wilk" <konrad.wilk@oracle.com>, "chris.mason" <chris.mason@fusionio.com>, viro <viro@zeniv.linux.org.uk>, tytso <tytso@mit.edu>, "adilger.kernel" <adilger.kernel@dilger.ca>, shaggy <shaggy@kernel.org>, mfasheh <mfasheh@suse.com>, jlbec <jlbec@evilplan.org>, bpm <bpm@sgi.com>, elder <elder@kernel.org>, jfs-discussion <jfs-discussion@lists.sourceforge.net>, linux-kernel <linux-kernel@vger.kernel.org>, xfs <xfs@oss.sgi.com>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thursday, August 09, 2012 6:12 PM Dorau, Lukasz wrote:
-> 
-> Hi Neil
-> 
-> What does the '-1' value of size (Grow.c:1990 and Grow.c:2678) mean now
-> regarding your recent patch:?
-> 
-> From d04f65f48c93e7e57cc3c1d70dd07d094dece717 Mon Sep 17 00:00:00
-> 2001
-> From: NeilBrown <neilb@suse.de>
-> Date: Mon, 9 Jul 2012 17:20:32 +1000
-> Subject: [PATCH] Change the values for "max size" from -1 to 1.
-> 
-> There are two places (Grow.c:1990 and Grow.c:2678) where reshape_super()
-> is called with size==-1. Is it still right?
-> 
+[ Resending in plain text... sorry for the duplicate ]
 
-The patch "Grow.c: change size to be unsigned and use '0' in case of 'no change'"
-that I've just sent to linux-raid fixes it.
+Hi,
+
+On Mon, Jul 30, 2012 at 6:14 PM, Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Tue, Jul 31, 2012 at 08:55:59AM +0800, majianpeng wrote:
+> > On 2012-07-31 05:42 Dave Chinner <david@fromorbit.com> Wrote:
+> > >On Mon, Jul 30, 2012 at 03:14:28PM +0800, majianpeng wrote:
+> > >> When exec bio_alloc, the bi_rw is zero.But after calling
+> > >> bio_add_page,
+> > >> it will use bi_rw.
+> > >> Fox example, in functiion __bio_add_page,it will call
+> > >> merge_bvec_fn().
+> > >> The merge_bvec_fn of raid456 will use the bi_rw to judge the merge.
+> > >> >> if ((bvm->bi_rw & 1) == WRITE)
+> > >> >> return biovec->bv_len; /* always allow writes to be mergeable */
+> > >
+> > >So if bio_add_page() requires bi_rw to be set, then shouldn't it be
+> > >set up for every caller? I noticed there are about 50 call sites for
+> > >bio_add_page(), and you've only touched about 10 of them. Indeed, I
+> > >notice that the RAID0/1 code uses bio_add_page, and as that can be
+> > >stacked on top of RAID456, it also needs to set bi_rw correctly.
+> > >As a result, your patch set is nowhere near complete, not does it
+> > >document that bio_add_page requires that bi_rw be set before calling
+> > >(which is the new API requirement, AFAICT).
+> > There are many place call bio_add_page and I send some of those. Because
+> > my abilty, so I only send
+> > some patchs which i understand clearly.
+>
+> Sure, but my point is that there is no point changing only a few and
+> ignoring the great majority of callers. Either fix them all, fix it
+> some other way (e.g. API change), or remove the code from the RAID5
+> function that requires it.
+
+A while back, we tried to address this by changing the alloc functions to
+take rw argument and set it (as per Jens suggestion). I guess the patch did
+not make it in. Please check:
+
+https://lkml.org/lkml/2011/7/11/275
+
+and the follow ups. If needed, I can dust up that patch and resend it.
+
+>
+
+<snip>
+
+>
+> It's entirely possible that when bi_rw was added to struct
+> bvec_merge_data, the person who added it was mistaken that bi_rw was
+> set at this point in time when in fact it never has been. Hence it's
+> presence and reliance on it would be a bug.
+>
+> That's what I'm asking - is this actually beneificial, or should it
+> simply be removed from struct bvec_merge_data? Data is needed to
+> answer that question....
+
+There are cases where we found it really beneficial to know the rw
+field to decide if the can be really merged or not.
+
 
 Regards,
-Lukasz
+Muthu
 
-> I am asking you because you have changed also the 'size' parameter of
-> imsm_reshape_super() from signed to unsigned (super-intel.c:9884).
-> When reshape_super() is called with size==-1 at Grow.c:2678,
-> imsm_reshape_super() is called with size==-1 too, so the size is converted to
-> unsigned value 0xFFFFFFFFFFFFFFFF and the logic is broken down, because
-> the condition "geo->size != -1" at super-intel.c:9310 had been false previously
-> and now the condition "geo->size > 0" is true, because
-> size==0xFFFFFFFFFFFFFFFF now:
-> 
-> @@ -9307,7 +9307,7 @@ static int
-> imsm_reshape_is_allowed_on_container(struct supertype *st,
->  		"st->devnum = (%i)\n",
->  		st->devnum);
-> 
-> -	if (geo->size != -1 ||
-> +	if (geo->size > 0 ||
-> 
-> I am going to correct it, but I don't know if the '-1' value of size parameter at
-> Grow.c:1990 and Grow.c:2678 is still right?
-> 
-> Regards,
-> Lukasz
-> 
-> 
+
+>
+> Cheers,
+>
+> Dave.
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
