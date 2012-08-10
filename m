@@ -1,233 +1,61 @@
-From: Shaohua Li <shli@fusionio.com>
-Subject: [patch 7/7 v2] MD: raid5 avoid unnecessary zero page for trim
-Date: Fri, 10 Aug 2012 10:51:20 +0800
-Message-ID: <20120810025303.421346869@kernel.org>
-References: <20120810025113.050392766@kernel.org>
+From: Lukasz Dorau <lukasz.dorau@intel.com>
+Subject: [PATCH] Grow.c: change size to be unsigned and use '0' in case of 'no
+	change'
+Date: Fri, 10 Aug 2012 16:06:34 +0200
+Message-ID: <20120810140634.13510.1639.stgit@gklab-128-085.igk.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline; filename=md-raid5-remove-unnecessary-memset.patch
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de, axboe@kernel.dk, shli@kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com, ed.ciechanowski@intel.com, Jacek.Danecki@intel.com
 List-Id: linux-raid.ids
 
-We want to avoid zero discarded dev page, because it's useless for discard.
-But if we don't zero it, another read/write hit such page in the cache and
-will get inconsistent data. To avoid zero the page, we set R5_WantZeroFill
-for discarded dev page. Every time before the page is accessed and the
-flag is set, we zero the page and clear the flag. If the page will be
-drained or computed, we just clear the flag for it. In this way, the dev
-page data is alway consistent. And since the chance discarded data is
-accessed soon is low, zero discard dev page is largely avoided.
+The 'size' has been changed to be unsigned recently.
+Analogous changes should be made to reshape_super().
+'0' should be used in case of 'no change' now.
 
-Signed-off-by: Shaohua Li <shli@fusionio.com>
+Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
 ---
- drivers/md/raid5.c |   83 +++++++++++++++++++++++++++++++++++++++++++----------
- drivers/md/raid5.h |    1 
- 2 files changed, 69 insertions(+), 15 deletions(-)
+ Grow.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-Index: linux/drivers/md/raid5.c
-===================================================================
---- linux.orig/drivers/md/raid5.c	2012-08-10 07:38:49.000000000 +0800
-+++ linux/drivers/md/raid5.c	2012-08-10 07:40:02.544779350 +0800
-@@ -824,6 +824,10 @@ static void ops_run_biofill(struct strip
- 			dev->read = rbi = dev->toread;
- 			dev->toread = NULL;
- 			spin_unlock_irq(&sh->stripe_lock);
-+
-+			if (test_and_clear_bit(R5_WantZeroFill, &dev->flags))
-+				memset(page_address(dev->page), 0, STRIPE_SIZE);
-+
- 			while (rbi && rbi->bi_sector <
- 				dev->sector + STRIPE_SECTORS) {
- 				tx = async_copy_data(0, rbi, dev->page,
-@@ -893,9 +897,16 @@ ops_run_compute5(struct stripe_head *sh,
- 		__func__, (unsigned long long)sh->sector, target);
- 	BUG_ON(!test_bit(R5_Wantcompute, &tgt->flags));
+diff --git a/Grow.c b/Grow.c
+index d13b7f3..f1ce284 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -639,8 +639,8 @@ static void wait_reshape(struct mdinfo *sra)
+ 	close(fd);
+ }
  
--	for (i = disks; i--; )
--		if (i != target)
-+	for (i = disks; i--; ) {
-+		if (i != target) {
- 			xor_srcs[count++] = sh->dev[i].page;
-+			if (test_and_clear_bit(R5_WantZeroFill,
-+			   &sh->dev[i].flags))
-+				memset(page_address(sh->dev[i].page), 0,
-+					STRIPE_SIZE);
-+		}
-+		clear_bit(R5_WantZeroFill, &sh->dev[i].flags);
-+	}
- 
- 	atomic_inc(&sh->count);
- 
-@@ -972,6 +983,10 @@ ops_run_compute6_1(struct stripe_head *s
- 
- 	atomic_inc(&sh->count);
- 
-+	for (i = 0; i < sh->disks; i++)
-+		if (test_and_clear_bit(R5_WantZeroFill, &sh->dev[i].flags))
-+			memset(page_address(sh->dev[i].page), 0, STRIPE_SIZE);
-+
- 	if (target == qd_idx) {
- 		count = set_syndrome_sources(blocks, sh);
- 		blocks[count] = NULL; /* regenerating p is not necessary */
-@@ -1022,8 +1037,11 @@ ops_run_compute6_2(struct stripe_head *s
- 	/* we need to open-code set_syndrome_sources to handle the
- 	 * slot number conversion for 'faila' and 'failb'
- 	 */
--	for (i = 0; i < disks ; i++)
-+	for (i = 0; i < disks ; i++) {
- 		blocks[i] = NULL;
-+		if (test_and_clear_bit(R5_WantZeroFill, &sh->dev[i].flags))
-+			memset(page_address(sh->dev[i].page), 0, STRIPE_SIZE);
-+	}
- 	count = 0;
- 	i = d0_idx;
- 	do {
-@@ -1134,6 +1152,9 @@ ops_run_prexor(struct stripe_head *sh, s
- 		/* Only process blocks that are known to be uptodate */
- 		if (test_bit(R5_Wantdrain, &dev->flags))
- 			xor_srcs[count++] = dev->page;
-+		if ((i == pd_idx || test_bit(R5_Wantdrain, &dev->flags)) &&
-+		   test_and_clear_bit(R5_WantZeroFill, &dev->flags))
-+			memset(page_address(dev->page), 0, STRIPE_SIZE);
- 	}
- 
- 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_DROP_DST, tx,
-@@ -1173,12 +1194,13 @@ ops_run_biodrain(struct stripe_head *sh,
- 				if (wbi->bi_rw & REQ_SYNC)
- 					set_bit(R5_SyncIO, &dev->flags);
- 				if (wbi->bi_rw & REQ_DISCARD) {
--					memset(page_address(dev->page), 0,
--						STRIPE_SECTORS << 9);
-+					set_bit(R5_WantZeroFill, &dev->flags);
- 					set_bit(R5_Discard, &dev->flags);
--				} else
-+				} else {
-+					clear_bit(R5_WantZeroFill, &dev->flags);
- 					tx = async_copy_data(1, wbi, dev->page,
- 						dev->sector, tx);
-+				}
- 				wbi = r5_next_bio(wbi, dev->sector);
- 			}
- 		}
-@@ -1252,8 +1274,7 @@ ops_run_reconstruct5(struct stripe_head
- 	}
- 	if (i >= sh->disks) {
- 		atomic_inc(&sh->count);
--		memset(page_address(sh->dev[pd_idx].page), 0,
--			STRIPE_SECTORS << 9);
-+		set_bit(R5_WantZeroFill, &sh->dev[pd_idx].flags);
- 		set_bit(R5_Discard, &sh->dev[pd_idx].flags);
- 		ops_complete_reconstruct(sh);
- 		return;
-@@ -1268,13 +1289,21 @@ ops_run_reconstruct5(struct stripe_head
- 			struct r5dev *dev = &sh->dev[i];
- 			if (dev->written)
- 				xor_srcs[count++] = dev->page;
-+			if ((i == pd_idx || dev->written) &&
-+			   test_and_clear_bit(R5_WantZeroFill, &dev->flags))
-+				memset(page_address(dev->page), 0, STRIPE_SIZE);
- 		}
- 	} else {
- 		xor_dest = sh->dev[pd_idx].page;
-+		clear_bit(R5_WantZeroFill, &sh->dev[pd_idx].flags);
- 		for (i = disks; i--; ) {
- 			struct r5dev *dev = &sh->dev[i];
--			if (i != pd_idx)
-+			if (i != pd_idx) {
- 				xor_srcs[count++] = dev->page;
-+			   	if (test_and_clear_bit(R5_WantZeroFill, &dev->flags))
-+					memset(page_address(dev->page), 0,
-+					      STRIPE_SIZE);
-+			}
- 		}
- 	}
- 
-@@ -1314,16 +1343,23 @@ ops_run_reconstruct6(struct stripe_head
- 	}
- 	if (i >= sh->disks) {
- 		atomic_inc(&sh->count);
--		memset(page_address(sh->dev[sh->pd_idx].page), 0,
--			STRIPE_SECTORS << 9);
--		memset(page_address(sh->dev[sh->qd_idx].page), 0,
--			STRIPE_SECTORS << 9);
-+		set_bit(R5_WantZeroFill, &sh->dev[sh->pd_idx].flags);
- 		set_bit(R5_Discard, &sh->dev[sh->pd_idx].flags);
-+		set_bit(R5_WantZeroFill, &sh->dev[sh->qd_idx].flags);
- 		set_bit(R5_Discard, &sh->dev[sh->qd_idx].flags);
- 		ops_complete_reconstruct(sh);
- 		return;
- 	}
- 
-+	for (i = 0; i < sh->disks; i++) {
-+		if (sh->pd_idx == i || sh->qd_idx == i) {
-+			clear_bit(R5_WantZeroFill, &sh->dev[i].flags);
-+			continue;
-+		}
-+		if (test_and_clear_bit(R5_WantZeroFill, &sh->dev[i].flags))
-+			memset(page_address(sh->dev[i].page), 0, STRIPE_SIZE);
-+	}
-+
- 	count = set_syndrome_sources(blocks, sh);
- 
- 	atomic_inc(&sh->count);
-@@ -1364,8 +1400,13 @@ static void ops_run_check_p(struct strip
- 	xor_dest = sh->dev[pd_idx].page;
- 	xor_srcs[count++] = xor_dest;
- 	for (i = disks; i--; ) {
--		if (i == pd_idx || i == qd_idx)
-+		if (i != qd_idx &&
-+		   test_and_clear_bit(R5_WantZeroFill, &sh->dev[i].flags))
-+			memset(page_address(sh->dev[i].page), 0, STRIPE_SIZE);
-+		if (i == pd_idx || i == qd_idx) {
-+			clear_bit(R5_WantZeroFill, &sh->dev[i].flags);
- 			continue;
-+		}
- 		xor_srcs[count++] = sh->dev[i].page;
- 	}
- 
-@@ -1383,11 +1424,20 @@ static void ops_run_check_pq(struct stri
+-static int reshape_super(struct supertype *st, long long size, int level,
+-			 int layout, int chunksize, int raid_disks,
++static int reshape_super(struct supertype *st, unsigned long long size,
++			 int level, int layout, int chunksize, int raid_disks,
+ 			 int delta_disks, char *backup_file, char *dev,
+ 			 int direction, int verbose)
  {
- 	struct page **srcs = percpu->scribble;
- 	struct async_submit_ctl submit;
--	int count;
-+	int count, i;
+@@ -1987,7 +1987,7 @@ size_change_error:
+ 		/* Impose these changes on a single array.  First
+ 		 * check that the metadata is OK with the change. */
  
- 	pr_debug("%s: stripe %llu checkp: %d\n", __func__,
- 		(unsigned long long)sh->sector, checkp);
+-		if (reshape_super(st, -1, info.new_level,
++		if (reshape_super(st, 0, info.new_level,
+ 				  info.new_layout, info.new_chunk,
+ 				  info.array.raid_disks, info.delta_disks,
+ 				  c->backup_file, devname, APPLY_METADATA_CHANGES,
+@@ -2672,10 +2672,10 @@ int reshape_container(char *container, char *devname,
+ 	int last_devnum = -1;
  
-+	for (i = 0; i < sh->disks; i++) {
-+		if (sh->pd_idx == i || sh->qd_idx == i) {
-+			clear_bit(R5_WantZeroFill, &sh->dev[i].flags);
-+			continue;
-+		}
-+		if (test_and_clear_bit(R5_WantZeroFill, &sh->dev[i].flags))
-+			memset(page_address(sh->dev[i].page), 0, STRIPE_SIZE);
-+	}
-+
- 	count = set_syndrome_sources(srcs, sh);
- 	if (!checkp)
- 		srcs[count] = NULL;
-@@ -3213,6 +3263,9 @@ static void handle_stripe_expansion(stru
- 				release_stripe(sh2);
- 				continue;
- 			}
-+			if (test_and_clear_bit(R5_WantZeroFill, &sh->dev[i].flags))
-+				memset(page_address(sh->dev[i].page),
-+					0, STRIPE_SIZE);
- 
- 			/* place all the copies on one channel */
- 			init_async_submit(&submit, 0, tx, NULL, NULL, NULL);
-Index: linux/drivers/md/raid5.h
-===================================================================
---- linux.orig/drivers/md/raid5.h	2012-08-10 07:38:49.000000000 +0800
-+++ linux/drivers/md/raid5.h	2012-08-10 07:40:02.544779350 +0800
-@@ -299,6 +299,7 @@ enum r5dev_flags {
- 			 * data in, and now is a good time to write it out.
- 			 */
- 	R5_Discard,	/* Discard the stripe */
-+	R5_WantZeroFill, /* should be zero filled before read */
- };
- 
- /*
+ 	/* component_size is not meaningful for a container,
+-	 * so pass '-1' meaning 'no change'
++	 * so pass '0' meaning 'no change'
+ 	 */
+ 	if (!restart &&
+-	    reshape_super(st, -1, info->new_level,
++	    reshape_super(st, 0, info->new_level,
+ 			  info->new_layout, info->new_chunk,
+ 			  info->array.raid_disks, info->delta_disks,
+ 			  backup_file, devname, APPLY_METADATA_CHANGES,
 
