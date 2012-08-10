@@ -1,61 +1,67 @@
-From: Lukasz Dorau <lukasz.dorau@intel.com>
-Subject: [PATCH] Grow.c: change size to be unsigned and use '0' in case of 'no
-	change'
-Date: Fri, 10 Aug 2012 16:06:34 +0200
-Message-ID: <20120810140634.13510.1639.stgit@gklab-128-085.igk.intel.com>
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: RE: What does the '-1' value of size mean now?
+Date: Fri, 10 Aug 2012 14:20:34 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB18FD92A8@IRSMSX102.ger.corp.intel.com>
+References: <D9FFE20C522965449E182ACE73889AEB18FD8F13@IRSMSX102.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <D9FFE20C522965449E182ACE73889AEB18FD8F13@IRSMSX102.ger.corp.intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com, ed.ciechanowski@intel.com, Jacek.Danecki@intel.com
+To: "Neil Brown (neilb@suse.de)" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-The 'size' has been changed to be unsigned recently.
-Analogous changes should be made to reshape_super().
-'0' should be used in case of 'no change' now.
+On Thursday, August 09, 2012 6:12 PM Dorau, Lukasz wrote:
+> 
+> Hi Neil
+> 
+> What does the '-1' value of size (Grow.c:1990 and Grow.c:2678) mean now
+> regarding your recent patch:?
+> 
+> From d04f65f48c93e7e57cc3c1d70dd07d094dece717 Mon Sep 17 00:00:00
+> 2001
+> From: NeilBrown <neilb@suse.de>
+> Date: Mon, 9 Jul 2012 17:20:32 +1000
+> Subject: [PATCH] Change the values for "max size" from -1 to 1.
+> 
+> There are two places (Grow.c:1990 and Grow.c:2678) where reshape_super()
+> is called with size==-1. Is it still right?
+> 
 
-Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
----
- Grow.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+The patch "Grow.c: change size to be unsigned and use '0' in case of 'no change'"
+that I've just sent to linux-raid fixes it.
 
-diff --git a/Grow.c b/Grow.c
-index d13b7f3..f1ce284 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -639,8 +639,8 @@ static void wait_reshape(struct mdinfo *sra)
- 	close(fd);
- }
- 
--static int reshape_super(struct supertype *st, long long size, int level,
--			 int layout, int chunksize, int raid_disks,
-+static int reshape_super(struct supertype *st, unsigned long long size,
-+			 int level, int layout, int chunksize, int raid_disks,
- 			 int delta_disks, char *backup_file, char *dev,
- 			 int direction, int verbose)
- {
-@@ -1987,7 +1987,7 @@ size_change_error:
- 		/* Impose these changes on a single array.  First
- 		 * check that the metadata is OK with the change. */
- 
--		if (reshape_super(st, -1, info.new_level,
-+		if (reshape_super(st, 0, info.new_level,
- 				  info.new_layout, info.new_chunk,
- 				  info.array.raid_disks, info.delta_disks,
- 				  c->backup_file, devname, APPLY_METADATA_CHANGES,
-@@ -2672,10 +2672,10 @@ int reshape_container(char *container, char *devname,
- 	int last_devnum = -1;
- 
- 	/* component_size is not meaningful for a container,
--	 * so pass '-1' meaning 'no change'
-+	 * so pass '0' meaning 'no change'
- 	 */
- 	if (!restart &&
--	    reshape_super(st, -1, info->new_level,
-+	    reshape_super(st, 0, info->new_level,
- 			  info->new_layout, info->new_chunk,
- 			  info->array.raid_disks, info->delta_disks,
- 			  backup_file, devname, APPLY_METADATA_CHANGES,
+Regards,
+Lukasz
 
+> I am asking you because you have changed also the 'size' parameter of
+> imsm_reshape_super() from signed to unsigned (super-intel.c:9884).
+> When reshape_super() is called with size==-1 at Grow.c:2678,
+> imsm_reshape_super() is called with size==-1 too, so the size is converted to
+> unsigned value 0xFFFFFFFFFFFFFFFF and the logic is broken down, because
+> the condition "geo->size != -1" at super-intel.c:9310 had been false previously
+> and now the condition "geo->size > 0" is true, because
+> size==0xFFFFFFFFFFFFFFFF now:
+> 
+> @@ -9307,7 +9307,7 @@ static int
+> imsm_reshape_is_allowed_on_container(struct supertype *st,
+>  		"st->devnum = (%i)\n",
+>  		st->devnum);
+> 
+> -	if (geo->size != -1 ||
+> +	if (geo->size > 0 ||
+> 
+> I am going to correct it, but I don't know if the '-1' value of size parameter at
+> Grow.c:1990 and Grow.c:2678 is still right?
+> 
+> Regards,
+> Lukasz
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
