@@ -1,50 +1,70 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
-Subject: Re: [patch 2/2 v3]raid5: create multiple threads to handle stripes
-Date: Sat, 11 Aug 2012 16:45:34 +0800
-Message-ID: <201208111645321254409@gmail.com>
-References: <20120809085808.GB30111@kernel.org>
+From: Flynn <flynn@kodachi.com>
+Subject: Solved! (was Re: RAID6 Reshape (one more time))
+Date: Sat, 11 Aug 2012 23:47:47 -0400
+Message-ID: <980CE3239B1B4E7215C9CE30@ryoohko.kodachi.com>
+References: <71AEA6EFEB86AE9F3D4990D4@ryoohko.kodachi.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <71AEA6EFEB86AE9F3D4990D4@ryoohko.kodachi.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: shli <shli@kernel.org>, linux-raid <linux-raid@vger.kernel.org>
-Cc: Neil Brown <neilb@suse.de>, Dan Williams <dan.j.williams@gmail.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wOC0wOSAxNjo1OCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
-PlRoaXMgaXMgYSBuZXcgdGVtcHQgdG8gbWFrZSByYWlkNSBoYW5kbGUgc3RyaXBlcyBpbiBtdWx0
-aXBsZSB0aHJlYWRzLCBhcw0KPnN1Z2dlc3RlZCBieSBOZWlsIHRvIGhhdmUgbWF4aXVtIGZsZXhp
-YmlsaXR5IGFuZCBiZXR0ZXIgbnVtYSBiaW5kaW5nLiBJdA0KPmJhc2ljYWxseSBpcyBhIGNvbWJp
-bmF0aW9uIG9mIG15IGZpcnN0IGFuZCBzZWNvbmQgZ2VuZXJhdGlvbiBwYXRjaGVzLiBCeQ0KPmRl
-ZmF1bHQsIG5vIG11bHRpcGxlIHRocmVhZCBpcyBlbmFibGVkIChhbGwgc3RyaXBlcyBhcmUgaGFu
-ZGxlZCBieSByYWlkNWQpLg0KPg0KPkFuIGV4YW1wbGUgdG8gZW5hYmxlIG11bHRpcGxlIHRocmVh
-ZHM6DQo+I2VjaG8gMyA+IC9zeXMvYmxvY2svbWQwL21kL2F1eHRocmVhZF9udW1iZXINCj5UaGlz
-IHdpbGwgY3JlYXRlIDMgYXV4aWxpYXJ5IHRocmVhZHMgdG8gaGFuZGxlIHN0cmlwZXMuIFRoZSB0
-aHJlYWRzIGNhbiBydW4NCj5vbiBhbnkgY3B1cyBhbmQgaGFuZGxlIHN0cmlwZXMgcHJvZHVjZWQg
-YnkgYW55IGNwdXMuDQo+DQo+I2VjaG8gMS0zID4gL3N5cy9ibG9jay9tZDAvbWQvYXV4dGgwL2Nw
-dWxpc3QNCj5UaGlzIHdpbGwgYmluZCBhdXhpbGlhcnkgdGhyZWFkIDAgdG8gY3B1IDEtMywgYW5k
-IHRoaXMgdGhyZWFkIHdpbGwgb25seSBoYW5kbGUNCj5zdHJpcGVzIHByb2R1Y2VkIGJ5IGNwdSAx
-LTMuIFVzZXIgdG9vbCBjYW4gZnVydGhlciBjaGFuZ2UgdGhlIHRocmVhZCdzDQo+YWZmaW5pdHks
-IGJ1dCB0aGUgdGhyZWFkIGNhbiBvbmx5IGhhbmRsZSBzdHJpcGVzIHByb2R1Y2VkIGJ5IGNwdSAx
-LTMgdGlsbCB0aGUNCj5zeXNmcyBlbnRyeSBpcyBjaGFuZ2VkIGFnYWluLg0KPg0KPklmIHN0cmlw
-ZXMgcHJvZHVjZWQgYnkgYSBDUFUgYXJlbid0IGhhbmRsZWQgYnkgYW55IGF1eGlsaWFyeSB0aHJl
-YWQsIHN1Y2gNCj5zdHJpcGVzIHdpbGwgYmUgaGFuZGxlZCBieSByYWlkNWQuIE90aGVyd2lzZSwg
-cmFpZDVkIGRvZXNuJ3QgaGFuZGxlIGFueQ0KPnN0cmlwZXMuDQo+DQpJIHRlc3RlZCBhbmQgZm91
-bmQgdHdvIHByb2JsZW0obWF5YmUgbm90KS4NCg0KMTpwcmludCBjcHVsaXN0IG9mIGF1eHRoLCB5
-b3UgbWF5YmUgbG9zdCBwcmludCB0aGUgJ1xuJy4NCmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3Jh
-aWQ1LmMgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCmluZGV4IDdjODE1MWEuLjM3MDBjZGMgMTAwNjQ0
-DQotLS0gYS9kcml2ZXJzL21kL3JhaWQ1LmMNCisrKyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KQEAg
-LTQ5MTEsOSArNDkxMSwxMyBAQCBzdHJ1Y3QgcmFpZDVfYXV4dGhfc3lzZnMgew0KIHN0YXRpYyBz
-c2l6ZV90IHJhaWQ1X3Nob3dfdGhyZWFkX2NwdWxpc3Qoc3RydWN0IG1kZGV2ICptZGRldiwNCiAg
-ICAgICAgc3RydWN0IHJhaWQ1X2F1eHRoICp0aHJlYWQsIGNoYXIgKnBhZ2UpDQogew0KKyAgICAg
-ICBpbnQgbjsNCiAgICAgICAgaWYgKCFtZGRldi0+cHJpdmF0ZSkNCiAgICAgICAgICAgICAgICBy
-ZXR1cm4gMDsNCi0gICAgICAgcmV0dXJuIGNwdWxpc3Rfc2NucHJpbnRmKHBhZ2UsIFBBR0VfU0la
-RSwgJnRocmVhZC0+d29ya19tYXNrKTsNCisgICAgICAgbiA9IGNwdWxpc3Rfc2NucHJpbnRmKHBh
-Z2UsIFBBR0VfU0laRSAtIDIsICZ0aHJlYWQtPndvcmtfbWFzayk7DQorICAgICAgIHBhZ2Vbbisr
-XSA9ICdcbic7DQorICAgICAgIHBhZ2Vbbl0gPSAwOw0KKyAgICAgICByZXR1cm4gbjsNCiB9DQog
-DQogc3RhdGljIHNzaXplX3QNCg0KMjogVGVzdCAnZGQgaWY9L2Rldi96ZXJvIG9mPS9kZXYvbWQw
-IGJzPTJNICcsIHRoZSBwZXJmb3JtYW5jZSByZWdyZXNzIHJlbWFya2FibGUuDQphdXh0aHJlYWRf
-bnVtYmVyPTAsIDIwME1CL3M7DQphdXh0aHJlYWRfbnVtYmVyPTQsIDk1TUIvcy4NCg0K
+> So at this point I have partitions 5, 6, and 7 happy; 8 - 14 are mark=
+ed
+> inactive...
 
+NeilBrown was kind enough to offer some advice.  Here's the short versi=
+on,=20
+for anyone who runs across this searching:
+
+1) Yes, metadata version 0.91 is OK, it just means a reshape is pending=
+=2E
+
+2) Mismatches in 'this' are most likely due to probe ordering changes; =
+no=20
+problem.
+
+3) The most likely cause for a failure like this if you know that the=20
+critical section was passed, and the checksums etc. are consistent, is=20
+simply that the backup of the critical section is too old:
+
+3a) mdadm -A -v will confirm that the issue is that the backup is too o=
+ld:=20
+it will say 'too-old timestamp on backup-metadata on xxxx' and, indeed,=
+=20
+that was my issue.
+
+3b) export MDADM_GROW_ALLOW_OLD=3D1 will allow mdadm -A to use the old =
+backup=20
+anyway.
+
+=2E..and I'm happy to report that that worked just fine.  I was using m=
+dadm=20
+3.2.5 for this; I don't know if 3.2.3 (which Ubuntu 12.04 ships with)=20
+supports MDADM_GROW_ALLOW_OLD.
+
+Thanks, Neil!
+
+ -- Flynn
+
+--
+=D0=A6=D0=B5=D1=80=D0=BA=D0=BE=D0=B2=D1=8C =D0=B1=D0=BB=D0=B8=D0=B7=D0=BA=
+=D0=BE, =D0=BD=D0=BE =D0=B4=D0=BE=D1=80=D0=BE=D0=B3=D0=B0 =D0=BE=D1=87=D0=
+=B5=D0=BD=D1=8C=20
+=D1=81=D0=BA=D0=BE=D0=BB=D1=8C=D0=B7=D0=BA=D0=B0=D1=8F; =D0=BF=D0=B8=D0=
+=B2=D0=BD=D1=83=D1=88=D0=BA=D0=B0 =D0=B4=D0=B0=D0=BB=D0=B5=D0=BA=D0=BE,=
+ =D0=BD=D0=BE =D1=8F =D0=B1=D1=83=D0=B4=D1=83 =D0=B8=D0=B4=D1=82=D0=B8
+=D0=BE=D1=81=D1=82=D0=BE=D1=80=D0=BE=D0=B6=D0=BD=D0=BE.                =
+                                (Yakov=20
+Smirnoff)
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
