@@ -1,78 +1,115 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/2] fix handling of CPPFLAGS
-Date: Mon, 13 Aug 2012 08:13:12 +1000
-Message-ID: <20120813081312.308af64f@notabene.brown>
-References: <1344799457-2478-1-git-send-email-vapier@gentoo.org>
+From: Jake Thomas <thomasj10@georgefox.edu>
+Subject: Re: Device Unusable At Startup
+Date: Sun, 12 Aug 2012 15:17:09 -0700
+Message-ID: <CACO8vio9vg_E9bwV6E0KdK43jg26_VBg0KC-YO5S4TSr7DoJuA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/zN=gs.=ycK71ZLOr.+q.nfN"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1344799457-2478-1-git-send-email-vapier@gentoo.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Frysinger <vapier@gentoo.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/zN=gs.=ycK71ZLOr.+q.nfN
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+CC to linux-raid mailing list:
 
-On Sun, 12 Aug 2012 15:24:15 -0400 Mike Frysinger <vapier@gentoo.org> wrote:
+Hi Neil!
 
-> The current Makefile ends up ignoring the system CPPFLAGS settings,
-> so make sure we append the variable.  Also, the old metadata logic
-> has a typo with the flag name.
->=20
-> Signed-off-by: Mike Frysinger <vapier@gentoo.org>
-> ---
->  Makefile |    6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
->=20
-> diff --git a/Makefile b/Makefile
-> index 315455b..704b374 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -48,12 +48,10 @@ CWFLAGS +=3D -Wp,-D_FORTIFY_SOURCE=3D2 -O
->  endif
-> =20
->  ifdef DEBIAN
-> -CPPFLAGS :=3D -DDEBIAN
-> -else
-> -CPPFLAGS :=3D
-> +CPPFLAGS +=3D -DDEBIAN
->  endif
->  ifdef DEFAULT_OLD_METADATA
-> - CPPFLAG +=3D -DDEFAULT_OLD_METADATA
-> + CPPFLAGS +=3D -DDEFAULT_OLD_METADATA
->   DEFAULT_METADATA=3D0.90
->  else
->   DEFAULT_METADATA=3D1.2
+   Sorry for the delayed response. I kept checking on my iPhone for a
+response, and for some reason or lack thereof didn't see it. I figured
+that I'd have to wait a few days for my post to go through. I started
+checking over here everyday and never got a response:
+http://marc.info/?l=linux-raid&m=134415164808677&w=2 . I guess I
+neglected this blog. And I was out camping for a few days.
+
+   When I do "sudo /sbin/mdadm.moved -D /dev/md127" after startup
+(before it's working), it says:
+
+mdadm: md device /dev/md127 does not appear to be active.
+
+(I now moved /sbin/mdadm.moved back to /sbin/mdadm for ease of use.)
+
+When I do "sudo mdadm --misc --query /dev/md127", I get:
+
+/dev/md127: is an md device which is not active
 
 
-Applied,
-thanks,
-NeilBrown
+I found out that I can do:
 
---Sig_/zN=gs.=ycK71ZLOr.+q.nfN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+"sudo mdadm -R /dev/md127" and that starts it up just fine and
+everything is good again. (Don't have to stop it or anything.)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+I can then do:
+sudo mdadm /dev/md127 -a /dev/ram0.
 
-iQIVAwUBUCgqeDnsnt1WYoG5AQKGjQ//Z+TXGybVnxRmgy5II6azkSfGoL7RmBZj
-3EutmpzPHZU8cUKgvaMGJV1rbLCoWjFUQpj9MAOYzkvtTbKgu4HI+kg8qTuNK5Xo
-I6FR5uaqtNmr7Bajv9Z2rARE8Ma3a3vtMFY7qnvjbj9KxWBKsHxbIidQHc5y4v+/
-eA6ul+4MHYaLhaBWzHL5rJnQpaS9Rxfno3bOUN/HQ1TKYVRjs7i5Wd0VRKNRJgcV
-GtFJ9J+RSX0U5CPJ5/nxOMaWZTytAFL+zu3tCOWNr1WDdSfW9qs9Gb38GsrrZpyq
-0HSZHLa7vrOoG/RkcT8I/Jmm2+9S44QjPG+mEkp4NGaU1QTihaqiCLiL85Gub9tF
-oBEvXaupOuT3xScJCHJCRTJQM58SKrnRf3NE0vfNSw2d/NCmOe5CnKAPRJj3f6VS
-qYkMQiPwcitvxRYhbH1BD3szyVGZQSnmUFbgcgfIGp8X0aEJMYTFrXoFPSuKeHez
-RChLGzwPham/0OFpd3CSL1xdesXOftB+zlH1GKAgkWgUdtw6ICa4GSXhRgLzGqo9
-j3IEekXZYKNIZAw58Rd7WNCByihjrS1SHCsa3y419AlXAA/JcMHRFYapvR8gkuM7
-zrgtzDEXmOa4aETxzp7uLKz1lreonbY6KXy84kMqypqsxmRcBlE3sCxaDiP4fzjJ
-djEJg+Ee2Ms=
-=Yygn
------END PGP SIGNATURE-----
+However, the problem still remains that it is not started on start-up,
+thus I cannot have /usr be such a raid device, which needs to be
+mounted very early in startup, before any scripts get ran. Therefore I
+can't just put "mdadm -R /dev/md127" in a script somewhere to fix the
+issue. I even tried the raid=autodetect option at the kernel
+parameters line (And yes, "mdadm_udev" was in the HOOKS line in
+mkinitcpio.conf and "md_mod" and "raid0" were in the MODULES line in
+mkinitcpio.conf when I built the initial ramdisk with mkinitcpio.)
+I also tried doing "md=1,/dev/sda2" at the kernel line, which was
+ignored, because /dev/md1 was not created. Instead, I got the regular
+/dev/md127 (which is not active). Also tried "md=1,/dev/sda2,missing".
+Same result. Also tried "md=1,/dev/sda2,/dev/ram0". Same result. Also
+tried "md=1,/dev/ram0,/dev/sda2". Same result. Also tried
+"md=1,missing,/dev/sda2". Same result.
+I also tried  md-mod.start_dirty_degraded=1. Still wasn't active on startup.
 
---Sig_/zN=gs.=ycK71ZLOr.+q.nfN--
+After running the above two commands (before the kernel parameters
+paragraph) to get the raid device going, "sudo mdadm -D /dev/md127"
+gives:
+/dev/md127:
+        Version : 1.2
+  Creation Time : Wed Aug  1 19:33:20 2012
+     Raid Level : raid1
+     Array Size : 3144692 (3.00 GiB 3.22 GB)
+  Used Dev Size : 3144692 (3.00 GiB 3.22 GB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
+
+    Update Time : Sun Aug 12 13:39:56 2012
+          State : clean, degraded, recovering
+ Active Devices : 1
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 1
+
+ Rebuild Status : 9% complete
+
+           Name : archbang:0
+           UUID : 31f0bda6:4cd69924:46a0e3b2:4f7e32ba
+         Events : 166
+
+    Number   Major   Minor   RaidDevice State
+       2       1        0        0      spare rebuilding   /dev/ram0
+       1       8        2        1      active sync writemostly   /dev/sda2
+
+
+Also, when I first startup, if I do:
+sudo mdadm --manage /dev/md127 --remove /dev/sda2
+
+I get:
+mdadm: cannot get array info for /dev/md127
+
+And if I do:
+sudo mdadm --manage /dev/md* --remove /dev/sda2
+
+I get:
+mdadm: Must give one of -a/-r/-f for subsequent devices at /dev/md127
+
+What's going on with the above two command outputs?
+
+
+I will put a copy of this reply here:
+http://marc.info/?l=linux-raid&m=134415164808677&w=2
+
+For those of you looking at the linux-raid mailing list, I am coming
+from here: http://neil.brown.name/blog/20120615073245 .
+
+The idea of RAID1ing with a ramdisk came from
+here:https://bbs.archlinux.org/viewtopic.php?pid=493773#p493773 .
+
+Cheers,
+Jake
