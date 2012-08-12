@@ -1,49 +1,39 @@
-From: Mike Frysinger <vapier@gentoo.org>
-Subject: [PATCH 2/2] mdassemble: split dietlibc logic into dedicated target
-Date: Sun, 12 Aug 2012 15:24:16 -0400
-Message-ID: <1344799457-2478-2-git-send-email-vapier@gentoo.org>
-References: <1344799457-2478-1-git-send-email-vapier@gentoo.org>
+From: Jonathan Tripathy <jonnyt@abpni.co.uk>
+Subject: Disk Order
+Date: Sun, 12 Aug 2012 22:10:09 +0100
+Message-ID: <50281BB1.6030309@abpni.co.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1344799457-2478-1-git-send-email-vapier@gentoo.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This lets people run `make mdassemble` and get a sane build by default.
+Hi Everyone,
 
-Signed-off-by: Mike Frysinger <vapier@gentoo.org>
----
- .gitignore |    1 +
- Makefile   |    3 +++
- 2 files changed, 4 insertions(+)
+Our server currently has 6 SATA ports on the motherboard filled with 6 
+drives in RAID10. I have a need to install an additional PCIe SATA 
+controller in a server in order to obtain 2 more SATA ports to install 
+an additional 2 new drives (As I want a new RAID1 array). However I 
+would like to move one of the current drives onto the new controller, 
+and one of the new drives onto the motherboard. This should give me a 
+little redundancy in case the new controller card were to fail (I don't 
+want the new controller to bring down 2 drives).
 
-diff --git a/.gitignore b/.gitignore
-index 7200741..fcbe069 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -4,6 +4,7 @@
- /mdadm
- /mdadm.8
- /mdadm.udeb
-+/mdassemble
- /mdmon
- /swap_super
- /test_stripe
-diff --git a/Makefile b/Makefile
-index 704b374..72f609e 100644
---- a/Makefile
-+++ b/Makefile
-@@ -180,6 +180,9 @@ raid6check : raid6check.o mdadm.h $(CHECK_OBJS)
- 	$(CC) $(CXFLAGS) $(LDFLAGS) -o raid6check raid6check.o $(CHECK_OBJS)
- 
- mdassemble : $(ASSEMBLE_SRCS) $(INCL)
-+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $(ASSEMBLE_FLAGS) -o mdassemble $(ASSEMBLE_SRCS)  $(STATICSRC)
-+
-+mdassemble.diet : $(ASSEMBLE_SRCS) $(INCL)
- 	rm -f $(OBJS)
- 	$(DIET_GCC) $(ASSEMBLE_FLAGS) -o mdassemble $(ASSEMBLE_SRCS)  $(STATICSRC)
- 
--- 
-1.7.9.7
+When setting up MD RAID in this configuration, how would I go about tell 
+MD RAID which disk is which in the array (referring to the near/far 
+configurations)? I'm assuming by default that MD RAID just uses 
+alphabetical order in order to determine the drive order?
 
+Let's say the RAID10 drives will be sda sdb sdc sdd sde sdg*, where sdg 
+is the second of the RAID0 strip of sde.
+And the two new RAID1 drives are sdf sdh*.
+The drives with the asterisks beside them will be on the new PCIe 
+controller.
+
+Do I have to do anything special for this configuration? Will there be a 
+performance hit since one drive in the RAID10 array will be on a 
+different controller?
+
+Thanks
