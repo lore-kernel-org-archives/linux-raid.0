@@ -1,81 +1,85 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch 6/7 v2] MD: raid5 trim support
-Date: Mon, 13 Aug 2012 13:58:31 +1000
-Message-ID: <20120813135831.284d721d@notabene.brown>
-References: <20120810025113.050392766@kernel.org>
-	<20120810025255.292192477@kernel.org>
-	<20120813115051.64d5d44e@notabene.brown>
-	<20120813020454.GA447@kernel.org>
+Subject: Re: [patch 2/2 v3]raid5: create multiple threads to handle stripes
+Date: Mon, 13 Aug 2012 14:21:16 +1000
+Message-ID: <20120813142116.24cb6ab5@notabene.brown>
+References: <20120809085808.GB30111@kernel.org>
+	<201208111645321254409@gmail.com>
+	<CANejiEVNPv6qVJ1nsvt21VMF8Py=3L8sABh9wab9eCQfdRAGeA@mail.gmail.com>
+	<201208130906432967842@gmail.com>
+	<20120813021324.GB447@kernel.org>
+	<CANejiEUoguBD8PRAAuj=ATk+gd0RAqCTNjV12odSChejX-+R6Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/lBATm/VdtuUxNrZMZeAeyzR"; protocol="application/pgp-signature"
+ boundary="Sig_/p94NWsB.=xEdM0Z3OL6ZG=d"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120813020454.GA447@kernel.org>
+In-Reply-To: <CANejiEUoguBD8PRAAuj=ATk+gd0RAqCTNjV12odSChejX-+R6Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
-Cc: Shaohua Li <shli@fusionio.com>, linux-raid@vger.kernel.org, axboe@kernel.dk
+Cc: Jianpeng Ma <majianpeng@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@gmail.com>
 List-Id: linux-raid.ids
 
---Sig_/lBATm/VdtuUxNrZMZeAeyzR
+--Sig_/p94NWsB.=xEdM0Z3OL6ZG=d
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 13 Aug 2012 10:04:54 +0800 Shaohua Li <shli@kernel.org> wrote:
+On Mon, 13 Aug 2012 10:20:01 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-> On Mon, Aug 13, 2012 at 11:50:51AM +1000, NeilBrown wrote:
-> > On Fri, 10 Aug 2012 10:51:19 +0800 Shaohua Li <shli@fusionio.com> wrote:
-> >=20
-> > > @@ -4094,6 +4159,19 @@ static void make_request(struct mddev *m
-> > >  	bi->bi_next =3D NULL;
-> > >  	bi->bi_phys_segments =3D 1;	/* over-loaded to count active stripes =
-*/
-> > > =20
-> > > +	/* block layer doesn't correctly do alignment even we set correct a=
-lignment */
-> > > +	if (unlikely(bi->bi_rw & REQ_DISCARD)) {
-> > > +		int stripe_sectors =3D conf->chunk_sectors *
-> > > +			(conf->raid_disks - conf->max_degraded);
-> >=20
-> > This isn't right when an array is being reshaped.
-> > I suspect that during a reshape we should only attempt DISCARD on the p=
-art of
-> > the array which has already been reshaped.  On the other section we can
-> > either fail the discard (is that a good idea?) or write zeros.
->=20
-> I had a check in below for-loop for reshape, is it enough? If not, I'd li=
-ke
-> just ignore discard request for reshape. We force discard_zero_data to be=
- 0, so
-> should be ok.
 
-Yes, you are right - that is sufficient.  I hadn't read it properly.
+> >> >> 1:print cpulist of auxth, you maybe lost print the '\n'.
+> >> >> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> >> >> index 7c8151a..3700cdc 100644
+> >> >> --- a/drivers/md/raid5.c
+> >> >> +++ b/drivers/md/raid5.c
+> >> >> @@ -4911,9 +4911,13 @@ struct raid5_auxth_sysfs {
+> >> >>  static ssize_t raid5_show_thread_cpulist(struct mddev *mddev,
+> >> >>         struct raid5_auxth *thread, char *page)
+> >> >>  {
+> >> >> +       int n;
+> >> >>         if (!mddev->private)
+> >> >>                 return 0;
+> >> >> -       return cpulist_scnprintf(page, PAGE_SIZE, &thread->work_mas=
+k);
+> >> >> +       n =3D cpulist_scnprintf(page, PAGE_SIZE - 2, &thread->work_=
+mask);
+> >> >> +       page[n++] =3D '\n';
+> >> >> +       page[n] =3D 0;
+> >> >> +       return n;
+> >> >>  }
+> >> >>
+> >> >>  static ssize_t
+> >> >
+> >> >some sysfs entries print out '\n', some not, I don't mind add it
+> >> I search kernel code found places which like this print out '\n';
+> >> Can you tell rule which use or not?
+> >> Thanks!
+> >
+> > I'm not aware any rule about this
 
->=20
-> I'll fix other two issues. Will repost the raid5 discard patches later.
+I can provide a rule if it helps:
+  sysfs files must *always* end with '\n' unless they are empty.
 
-thanks,
 NeilBrown
 
---Sig_/lBATm/VdtuUxNrZMZeAeyzR
+--Sig_/p94NWsB.=xEdM0Z3OL6ZG=d
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUCh7Zznsnt1WYoG5AQKLCRAAkcR1P8AH3964zEtsPgg42a5YOG3voQLe
-59FQxfhKtjPFuJNNCu7csj2k06mfTxP7NX/2mfKp13O8P55oEfoj1+IkD4g2zBoN
-BJHxbCisnFDt3RxH1x0coddJPtUP+oMS8S+K0PQWJ0UU66HCujxGJoq970ES6hkd
-0hd/4jcPQreMF1+g3glD61D0EfzcvRv6zXIWDMlFuDZ1ls2Q7OgWNkn6cFo9Zac4
-D0TBnf2juVV7FahuM7Lf4O/blHxS6npjdDtog/TGBkAeqJOCYIZoRYrxfaEZF6uY
-OOszkJ0kRo4nLVFCQugc+G4VRpqcajLH/rVF5YDBIZPZ+BoJtNkinDdfLp2cQpAp
-ZVbhImsRp4qoBYDPIBgU0CSp+XAPlvXkJfopA8RZHAIjTsYxUKVU7arRb5E4Pi8l
-Ns2TKkWK9vdaulyx0jcULRaEoRN91jZ9dxKTgbadSyMGjG2Anv9oA1PFK1V7gJOw
-yeHSBN4MHt4FQmfemFBuMsQJo80cioAQTXvQ8B8CNDFx/y25xBGbyZ2hTXFbur3w
-nMd9dHAuP/KZVG+kYRaSFN1eeOX/I25fJ1SYSlRI4giZ5sHXLe7mySVPOcqH4sEK
-/j3TmhqcZeN3GWSbqoEml5L4Zp87k3XnZAAePtB2VSzRasylqeLxIh+ybq0Fyvfs
-lGn9tQZy7X4=
-=5XkN
+iQIVAwUBUCiAvDnsnt1WYoG5AQIJSw//flSqf3ScW1yB/pMx0Bd3qQlCa+Mg0d9U
+cGWZHPZoEQY5SvdyrZm7yyTm2WN2pIdIUC6Vwc8F5DITmzoO6pJ2iNjiQdm7d9+n
+6omcKGG2ERlB7HRxMICtwU7WuDwiwPy4MV++XV5pm1/jMo+27o2DjdwPR57jVczb
+PQH51yourBckW6yQQKvf6YEIWe7AWraC5w9udw8sarGWsY5fU8D2hNr+E+JbhJhB
+fM+VjprnkIe8BaBBUCHfW/LH3aEuGWBJ12/TBne/XVpUCBHLoG77YeleRtkMuGOn
+o/mw+EsRT4FW0imzAFcgPMvXzTupslBtYEXtq1gZD3rK5pV4JwdGGMQcUx+R0GPb
+a84+gbt0KGNRqV/HlcV7LXNt+fRHxgOF2F1S3ghKk7BM/SEkGgUSoVL/XJ+Vy9Wp
+kbHQQEKnWGWXJtwzLG83HFu13PMtcL+1jtFGBrxBdQ5Qqgrtw7I2yp8PH3M6RV5P
+Zz7NZ6Bf2Y05vdTGygzXKd6Hoem51flR5YQprvvd8jYqoBjyedpsb7TWBAzEcbhE
+nu3SC1Urk7ZadbNcfSyhO1VOPO2lYrmK4BltDvz/xpZOtUbhJR3jDScUfmL9RecU
+/QhpzovOck0+qIcEkgxKdBTILNBfP8EipXAuoTFuTra29o/pKugnux3ad5PpL/2E
+w2o6o16opeY=
+=02mL
 -----END PGP SIGNATURE-----
 
---Sig_/lBATm/VdtuUxNrZMZeAeyzR--
+--Sig_/p94NWsB.=xEdM0Z3OL6ZG=d--
