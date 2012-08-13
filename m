@@ -1,90 +1,79 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md/linear: rcu_dereference outside read-lock section
-Date: Tue, 14 Aug 2012 09:52:40 +1000
-Message-ID: <20120814095240.66d30903@notabene.brown>
-References: <1344892092-13686-1-git-send-email-yefremov.denis@gmail.com>
+Subject: Re: [PATCH] sha1.h: remove ansidecl.h header inclusion
+Date: Tue, 14 Aug 2012 09:53:46 +1000
+Message-ID: <20120814095346.68a2cdec@notabene.brown>
+References: <20120813122043.25583.21352.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/sZu7htboQz06eJPgrKJALLD"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1344892092-13686-1-git-send-email-yefremov.denis@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Denis Efremov <yefremov.denis@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@ispras.ru
+ boundary="Sig_/1Eje+wW5bcqjRccS6dQGVa."; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120813122043.25583.21352.stgit@gklab-128-085.igk.intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com, ed.ciechanowski@intel.com, Jacek.Danecki@intel.com
 List-Id: linux-raid.ids
 
---Sig_/sZu7htboQz06eJPgrKJALLD
+--Sig_/1Eje+wW5bcqjRccS6dQGVa.
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 14 Aug 2012 01:08:12 +0400 Denis Efremov <yefremov.denis@gmail.com>
+On Mon, 13 Aug 2012 14:20:43 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
 wrote:
 
-> According to the comment in linear_stop function
-> rcu_dereference in linear_start and linear_stop functions
-> occurs under reconfig_mutex. The patch represents this
-> agreement in code and prevents lockdep complaint.
+> Inclusion of the 'ansidecl.h' header requires the 'binutils-devel'
+> package to be installed but is not needed.
 >=20
-> Found by Linux Driver Verification project (linuxtesting.org)
->=20
-> Signed-off-by: Denis Efremov <yefremov.denis@gmail.com>
+> Signed-off-by: Maciej Patelczyk <maciej.patelczyk@intel.com>
+> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
 > ---
->  drivers/md/linear.c |    7 +++++--
->  1 files changed, 5 insertions(+), 2 deletions(-)
+>  sha1.h |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
 >=20
-> diff --git a/drivers/md/linear.c b/drivers/md/linear.c
-> index fa211d8..093f3e4 100644
-> --- a/drivers/md/linear.c
-> +++ b/drivers/md/linear.c
-> @@ -244,7 +244,8 @@ static int linear_add(struct mddev *mddev, struct md_=
-rdev *rdev)
->  	if (!newconf)
->  		return -ENOMEM;
+> diff --git a/sha1.h b/sha1.h
+> index 5473f91..a601d96 100644
+> --- a/sha1.h
+> +++ b/sha1.h
+> @@ -26,8 +26,6 @@
+>  # include <limits.h>
+>  #endif
 > =20
-> -	oldconf =3D rcu_dereference(mddev->private);
-> +	oldconf =3D rcu_dereference_protected(mddev->private,
-> +					    lockdep_is_held(&mddev->reconfig_mutex));
->  	mddev->raid_disks++;
->  	rcu_assign_pointer(mddev->private, newconf);
->  	md_set_array_sectors(mddev, linear_size(mddev, 0, 0));
-> @@ -256,7 +257,9 @@ static int linear_add(struct mddev *mddev, struct md_=
-rdev *rdev)
-> =20
->  static int linear_stop (struct mddev *mddev)
->  {
-> -	struct linear_conf *conf =3D mddev->private;
-> +	struct linear_conf *conf =3D
-> +		rcu_dereference_protected(mddev->private,
-> +					  lockdep_is_held(&mddev->reconfig_mutex));
-> =20
->  	/*
->  	 * We do not require rcu protection here since
+> -#include "ansidecl.h"
+> -
+>  /* The following contortions are an attempt to use the C preprocessor
+>     to determine an unsigned integral type that is 32 bits wide.  An
+>     alternative approach is to use autoconf's AC_CHECK_SIZEOF macro, but
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
-Applied, thanks.
+applied, thanks.
 
 NeilBrown
 
---Sig_/sZu7htboQz06eJPgrKJALLD
+
+--Sig_/1Eje+wW5bcqjRccS6dQGVa.
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUCmTSDnsnt1WYoG5AQIzxg//awAi/Ha1S9wqEs0Tg5BI/bGRssRYPPeA
-3SM7LdMQmsvSiOMcaZTdsFvhwYzNgRqIjjf4bjGFrmZAfmQo+ZXeneV1UAu3wMtR
-WV343jxzBfYlVS8j84r5zqEYVcRa11OmmoXYV46StFB5HNgt1BJBZp4kaQeQ5jTH
-Ho2cmevt2nxPTUYZzyn4CZgmwF9Ur08ciFytiPf6cmBsNtW1DTdcp/4MCbSUTPM2
-1D2squvYkE9t2MNR9JPJxVztgccc2URaPPgjp2nRgHQ2zGmRvMLDe6UTFk6InxXN
-0xjk2E1uKj1pgexb6ZhB0tt0Nahpa4jfXY61n9eU00W/DuiYFKED7cooCxDZRGn7
-H8YR1mfkZFxCNClBmwWhlWaNGb9Li3fwtUEI4sqxwWs8ixFSr9IrnaZvKgOjlYNh
-xpihqkUuYSIIcJDakFZXWH5JUNcarJ82QiAHtp4cYP/XUMlo+zkYpcIqMYdYW4Ez
-vEug9t0FCJlyHJuGaf38ydsnTplzun3l/yIGSbD0zmaV83reoCboY+260AT6uTrK
-n8FC2wLItCOBNhbAj1bMrU8JeVrjYlmjic2SusdSSMPVRDrMBzJ20LfCT9sZGVRE
-3W2slStdhWpadGkokWRuBZK/uu+4IwC5QPx7Kc3psr7lLPTFyPZmJPt01nnBsXE8
-uazkzZYs6ks=
-=yde4
+iQIVAwUBUCmTijnsnt1WYoG5AQK6tw//WKerePcoLMIkcI117r+auufWijt/tvJi
+g9ItJtBOIU50m8rUDK7YvM24MWWh4sdDgmySvCtXQzUQ6xtu7xZYY6Axg3+0FaVo
+3obhIpdijo2wc+0Gg8cQxbGxBX5AduNyeU+6fQm1VELfMJDM6T1qugrxf2ICmitU
+VgAL6nPsF0WN7Toa75QcHHMtOovCy4lpxWPiyNY8yse861R11LWHqfC4HHDNWh8S
+YdhOGP0Qr0uqKBFoEtULDq5K8gl3IJQtmjPmlC0n3eun6PwLqK3sY5HXBo8zJPNP
+PkRQcczCVGR05l5AbEdH7ISDPF94j2YWboFHJVbTvQK15UpznHc8xJiahrrjmhC0
+sCIsIhdcxyLTSdEKYElFse38RejpYVPEiRqjghGRme6pVAxKudWrCtgYalUCDLTY
+/saD0mDicvYVdM3dOOmw6oGE3up27y5ivLddYmMbOqCskBhbfmZTzA4NkzDLECvg
+dV4QiyWjg3zDGqQH6/v3/PSa9M3UnRAGcg9UrY8A9So3BqcszIuoglRwAsAH/Khe
+/sa3A4QWvsZ0aFOvbgJBL6ZBKoOPdgGNPyByP6hqCEzXvaGGLK5BTkh9RtOOQ9qM
+8DCZJEC2zY9CAjSW0k2xvOnVYNAbDUqGy49kCwruk5698Jjr4LDv9oqTzGCn2U5t
+JqBjAuJbhSs=
+=gzNV
 -----END PGP SIGNATURE-----
 
---Sig_/sZu7htboQz06eJPgrKJALLD--
+--Sig_/1Eje+wW5bcqjRccS6dQGVa.--
