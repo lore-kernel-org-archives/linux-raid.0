@@ -1,70 +1,74 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Device Unusable At Startup
-Date: Mon, 13 Aug 2012 10:20:20 +1000
-Message-ID: <20120813102020.172d3a93@notabene.brown>
-References: <CACO8viqZO9bbdYtZMT3E0oMfWUjAzps1uNq7rBm419eXtt6bCg@mail.gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [patch 2/2 v3]raid5: create multiple threads to handle stripes
+Date: Mon, 13 Aug 2012 08:21:31 +0800
+Message-ID: <CANejiEVNPv6qVJ1nsvt21VMF8Py=3L8sABh9wab9eCQfdRAGeA@mail.gmail.com>
+References: <20120809085808.GB30111@kernel.org>
+	<201208111645321254409@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/zt/NDj5Jbw=jV9OYVvfW.P="; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACO8viqZO9bbdYtZMT3E0oMfWUjAzps1uNq7rBm419eXtt6bCg@mail.gmail.com>
+In-Reply-To: <201208111645321254409@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jake Thomas <thomasj10@georgefox.edu>
-Cc: linux-raid@vger.kernel.org
+To: Jianpeng Ma <majianpeng@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>, Dan Williams <dan.j.williams@gmail.com>
 List-Id: linux-raid.ids
 
---Sig_/zt/NDj5Jbw=jV9OYVvfW.P=
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+2012/8/11 Jianpeng Ma <majianpeng@gmail.com>:
+> On 2012-08-09 16:58 Shaohua Li <shli@kernel.org> Wrote:
+>>This is a new tempt to make raid5 handle stripes in multiple threads, as
+>>suggested by Neil to have maxium flexibility and better numa binding. It
+>>basically is a combination of my first and second generation patches. By
+>>default, no multiple thread is enabled (all stripes are handled by raid5d).
+>>
+>>An example to enable multiple threads:
+>>#echo 3 > /sys/block/md0/md/auxthread_number
+>>This will create 3 auxiliary threads to handle stripes. The threads can run
+>>on any cpus and handle stripes produced by any cpus.
+>>
+>>#echo 1-3 > /sys/block/md0/md/auxth0/cpulist
+>>This will bind auxiliary thread 0 to cpu 1-3, and this thread will only handle
+>>stripes produced by cpu 1-3. User tool can further change the thread's
+>>affinity, but the thread can only handle stripes produced by cpu 1-3 till the
+>>sysfs entry is changed again.
+>>
+>>If stripes produced by a CPU aren't handled by any auxiliary thread, such
+>>stripes will be handled by raid5d. Otherwise, raid5d doesn't handle any
+>>stripes.
+>>
+> I tested and found two problem(maybe not).
+>
+> 1:print cpulist of auxth, you maybe lost print the '\n'.
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 7c8151a..3700cdc 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -4911,9 +4911,13 @@ struct raid5_auxth_sysfs {
+>  static ssize_t raid5_show_thread_cpulist(struct mddev *mddev,
+>         struct raid5_auxth *thread, char *page)
+>  {
+> +       int n;
+>         if (!mddev->private)
+>                 return 0;
+> -       return cpulist_scnprintf(page, PAGE_SIZE, &thread->work_mask);
+> +       n = cpulist_scnprintf(page, PAGE_SIZE - 2, &thread->work_mask);
+> +       page[n++] = '\n';
+> +       page[n] = 0;
+> +       return n;
+>  }
+>
+>  static ssize_t
 
-On Sun, 12 Aug 2012 16:59:25 -0700 Jake Thomas <thomasj10@georgefox.edu>
-wrote:
+some sysfs entries print out '\n', some not, I don't mind add it
 
-> sudo mdadm --create /dev/answers --level=3D1 --raid-devices=3D2
-> /dev/blog,/dev/linux-raid@vger.kernel.org
+> 2: Test 'dd if=/dev/zero of=/dev/md0 bs=2M ', the performance regress remarkable.
+> auxthread_number=0, 200MB/s;
+> auxthread_number=4, 95MB/s.
 
-;-)
+So multiple threads handle stripes reduce request merge. In your
+workload, raid5d isn't a bottleneck at all. In practice, I thought only
+array which can drive high IOPS needs enable multi thread. And
+if you create multiple threads, better let the threads handle different
+cpus.
 
->=20
-> Thanks for the responses Neil!
->=20
->    I did try the following kernel parameter:
->=20
-> md-mod.start_dirty_degraded=3D1
->=20
->    Does my kernel simply not honor that parameter? I'll try and look
-> into my initial ramdisk and see some of these scripts you're talking
-> about.
-
-That parameter is for a different issue.  Starting a RAID5 or RAID6 when it
-is dirty and degraded can cause data loss, so it is not done by default.
-
-In your situation the array is not dirty and it isn't RAID5 or RAID6, so th=
-at
-doesn't apply.
-
-NeilBrown
-
---Sig_/zt/NDj5Jbw=jV9OYVvfW.P=
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUChIRDnsnt1WYoG5AQI3VRAAxMasVZkenMuueKoepbL/4nrhO9d5IOF6
-nZT/U9Xeckz2WLAOVjPk2ZP89DaAmTDp+5MKf5mqNfh53PQYpAWL3h8gq7THmgpe
-0SamA+rTZQdgtEDRcUSmENHZKkG7sPiU47PwRHwJO6Z1PmWFkdDHVskTpLzqQbRY
-h+vULL9f8eX2km9sR++V8ipYkCKeGVrqU9C/aV6Huj2nczfpm/YyqlgEcEjhDv3B
-mW5xJJYFuL5Ge4ERQq7pQ20P4Wo0kDCAy4DtPxExOd6ucyhsKPri+w4tm8ZDuhyL
-mUq7v1MK8dKjo1l+PYGtezixC0SvkeWKHECUfjasoMjC5iEIAD8q5TVOwiFiQ4pJ
-gtP3XptKl7vB4zw3HpPWfORq6Ur4T4++dzNmhzfR7fvRWqexRyWvJVQTUCMQL1f8
-goK/EbzxAurhOiuqHUD1S1LVHgtL9+apZyX1APZyrlz+5kSr8uI7sDjPGuADK21j
-FBA9lzbfJ5MiYiQcP3laBV6pbhVOcEWjTDWY+cieimNE8HxssjLKbr6BJBZlRv59
-1PwIUdbch6jOy7z4MxHgPa//hbkAzaIvJ9odTxKFIgdw1bgR1R9pTXH3UGDnjxoV
-xv/WS7/l/CZHS/a4dHBE8qfu5i5u4z6ASNGrsGzZN/QXkUhwWDmDpg0p+jLqN0R7
-dphduGaXfUU=
-=66HO
------END PGP SIGNATURE-----
-
---Sig_/zt/NDj5Jbw=jV9OYVvfW.P=--
+Thanks,
+Shaohua
