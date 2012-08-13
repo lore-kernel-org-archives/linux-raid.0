@@ -1,27 +1,30 @@
-From: Jake Thomas <thomasj10@georgefox.edu>
-Subject: Re: Device Unusable At Startup
-Date: Sun, 12 Aug 2012 16:59:25 -0700
-Message-ID: <CACO8viqZO9bbdYtZMT3E0oMfWUjAzps1uNq7rBm419eXtt6bCg@mail.gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Disk Order
+Date: Sun, 12 Aug 2012 20:01:22 -0400
+Message-ID: <502843D2.60709@turmel.org>
+References: <50281BB1.6030309@abpni.co.uk> <50283949.9050906@grumpydevil.homelinux.org> <502840A9.1000303@abpni.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <502840A9.1000303@abpni.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jonathan Tripathy <jonnyt@abpni.co.uk>
+Cc: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-sudo mdadm --create /dev/answers --level=1 --raid-devices=2
-/dev/blog,/dev/linux-raid@vger.kernel.org
+Hi Jonathan,
 
-Thanks for the responses Neil!
+On 08/12/2012 07:47 PM, Jonathan Tripathy wrote:
 
-   I did try the following kernel parameter:
+[trim /]
 
-md-mod.start_dirty_degraded=1
+> how do I know/configure which disk is A1 and which is A2? I just want to
+> know the disk order after i split my array across different adapters.
 
-   Does my kernel simply not honor that parameter? I'll try and look
-into my initial ramdisk and see some of these scripts you're talking
-about.
+The output of "mdadm -D /dev/md0" will show you the order in the
+"RaidDevice" column.
 
-Ok, I'll post more after I look at what you talked about.
+HTH,
 
-Jake
+Phil
