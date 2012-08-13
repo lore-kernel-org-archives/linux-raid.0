@@ -1,36 +1,65 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Disk Order
-Date: Sun, 12 Aug 2012 20:37:51 -0400
-Message-ID: <50284C5F.80808@turmel.org>
-References: <50281BB1.6030309@abpni.co.uk> <502842D7.40005@turmel.org> <50284495.2030004@abpni.co.uk>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
+Subject: Re: Re: [patch 2/2 v3]raid5: create multiple threads to handle stripes
+Date: Mon, 13 Aug 2012 09:06:45 +0800
+Message-ID: <201208130906432967842@gmail.com>
+References: <20120809085808.GB30111@kernel.org> <201208111645321254409@gmail.com>,
+	<CANejiEVNPv6qVJ1nsvt21VMF8Py=3L8sABh9wab9eCQfdRAGeA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50284495.2030004@abpni.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jonathan Tripathy <jonnyt@abpni.co.uk>
-Cc: linux-raid@vger.kernel.org
+To: shli <shli@kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>, Dan Williams <dan.j.williams@gmail.com>
 List-Id: linux-raid.ids
 
-On 08/12/2012 08:04 PM, Jonathan Tripathy wrote:
-> 
-> Now, onto the topic of PCIe adapter. I was looking at this:
-> http://www.cclonline.com/product/42541/PEXSAT32/IDE-SATA-SCSI-Cards/StarTech-2-Port-SATA-6-Gbps-PCI-Express-SATA-Controller-Card/CNT1075/
-> 
-> 
-> Is that a bad model? Seems a little on the cheap side? Can anyone
-> suggest a good model?
+T24gMjAxMi0wOC0xMyAwODoyMSBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
+PjIwMTIvOC8xMSBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+Og0KPj4gT24gMjAx
+Mi0wOC0wOSAxNjo1OCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0KPj4+VGhp
+cyBpcyBhIG5ldyB0ZW1wdCB0byBtYWtlIHJhaWQ1IGhhbmRsZSBzdHJpcGVzIGluIG11bHRpcGxl
+IHRocmVhZHMsIGFzDQo+Pj5zdWdnZXN0ZWQgYnkgTmVpbCB0byBoYXZlIG1heGl1bSBmbGV4aWJp
+bGl0eSBhbmQgYmV0dGVyIG51bWEgYmluZGluZy4gSXQNCj4+PmJhc2ljYWxseSBpcyBhIGNvbWJp
+bmF0aW9uIG9mIG15IGZpcnN0IGFuZCBzZWNvbmQgZ2VuZXJhdGlvbiBwYXRjaGVzLiBCeQ0KPj4+
+ZGVmYXVsdCwgbm8gbXVsdGlwbGUgdGhyZWFkIGlzIGVuYWJsZWQgKGFsbCBzdHJpcGVzIGFyZSBo
+YW5kbGVkIGJ5IHJhaWQ1ZCkuDQo+Pj4NCj4+PkFuIGV4YW1wbGUgdG8gZW5hYmxlIG11bHRpcGxl
+IHRocmVhZHM6DQo+Pj4jZWNobyAzID4gL3N5cy9ibG9jay9tZDAvbWQvYXV4dGhyZWFkX251bWJl
+cg0KPj4+VGhpcyB3aWxsIGNyZWF0ZSAzIGF1eGlsaWFyeSB0aHJlYWRzIHRvIGhhbmRsZSBzdHJp
+cGVzLiBUaGUgdGhyZWFkcyBjYW4gcnVuDQo+Pj5vbiBhbnkgY3B1cyBhbmQgaGFuZGxlIHN0cmlw
+ZXMgcHJvZHVjZWQgYnkgYW55IGNwdXMuDQo+Pj4NCj4+PiNlY2hvIDEtMyA+IC9zeXMvYmxvY2sv
+bWQwL21kL2F1eHRoMC9jcHVsaXN0DQo+Pj5UaGlzIHdpbGwgYmluZCBhdXhpbGlhcnkgdGhyZWFk
+IDAgdG8gY3B1IDEtMywgYW5kIHRoaXMgdGhyZWFkIHdpbGwgb25seSBoYW5kbGUNCj4+PnN0cmlw
+ZXMgcHJvZHVjZWQgYnkgY3B1IDEtMy4gVXNlciB0b29sIGNhbiBmdXJ0aGVyIGNoYW5nZSB0aGUg
+dGhyZWFkJ3MNCj4+PmFmZmluaXR5LCBidXQgdGhlIHRocmVhZCBjYW4gb25seSBoYW5kbGUgc3Ry
+aXBlcyBwcm9kdWNlZCBieSBjcHUgMS0zIHRpbGwgdGhlDQo+Pj5zeXNmcyBlbnRyeSBpcyBjaGFu
+Z2VkIGFnYWluLg0KPj4+DQo+Pj5JZiBzdHJpcGVzIHByb2R1Y2VkIGJ5IGEgQ1BVIGFyZW4ndCBo
+YW5kbGVkIGJ5IGFueSBhdXhpbGlhcnkgdGhyZWFkLCBzdWNoDQo+Pj5zdHJpcGVzIHdpbGwgYmUg
+aGFuZGxlZCBieSByYWlkNWQuIE90aGVyd2lzZSwgcmFpZDVkIGRvZXNuJ3QgaGFuZGxlIGFueQ0K
+Pj4+c3RyaXBlcy4NCj4+Pg0KPj4gSSB0ZXN0ZWQgYW5kIGZvdW5kIHR3byBwcm9ibGVtKG1heWJl
+IG5vdCkuDQo+Pg0KPj4gMTpwcmludCBjcHVsaXN0IG9mIGF1eHRoLCB5b3UgbWF5YmUgbG9zdCBw
+cmludCB0aGUgJ1xuJy4NCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LmMgYi9kcml2
+ZXJzL21kL3JhaWQ1LmMNCj4+IGluZGV4IDdjODE1MWEuLjM3MDBjZGMgMTAwNjQ0DQo+PiAtLS0g
+YS9kcml2ZXJzL21kL3JhaWQ1LmMNCj4+ICsrKyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gQEAg
+LTQ5MTEsOSArNDkxMSwxMyBAQCBzdHJ1Y3QgcmFpZDVfYXV4dGhfc3lzZnMgew0KPj4gIHN0YXRp
+YyBzc2l6ZV90IHJhaWQ1X3Nob3dfdGhyZWFkX2NwdWxpc3Qoc3RydWN0IG1kZGV2ICptZGRldiwN
+Cj4+ICAgICAgICAgc3RydWN0IHJhaWQ1X2F1eHRoICp0aHJlYWQsIGNoYXIgKnBhZ2UpDQo+PiAg
+ew0KPj4gKyAgICAgICBpbnQgbjsNCj4+ICAgICAgICAgaWYgKCFtZGRldi0+cHJpdmF0ZSkNCj4+
+ICAgICAgICAgICAgICAgICByZXR1cm4gMDsNCj4+IC0gICAgICAgcmV0dXJuIGNwdWxpc3Rfc2Nu
+cHJpbnRmKHBhZ2UsIFBBR0VfU0laRSwgJnRocmVhZC0+d29ya19tYXNrKTsNCj4+ICsgICAgICAg
+biA9IGNwdWxpc3Rfc2NucHJpbnRmKHBhZ2UsIFBBR0VfU0laRSAtIDIsICZ0aHJlYWQtPndvcmtf
+bWFzayk7DQo+PiArICAgICAgIHBhZ2VbbisrXSA9ICdcbic7DQo+PiArICAgICAgIHBhZ2Vbbl0g
+PSAwOw0KPj4gKyAgICAgICByZXR1cm4gbjsNCj4+ICB9DQo+Pg0KPj4gIHN0YXRpYyBzc2l6ZV90
+DQo+DQo+c29tZSBzeXNmcyBlbnRyaWVzIHByaW50IG91dCAnXG4nLCBzb21lIG5vdCwgSSBkb24n
+dCBtaW5kIGFkZCBpdA0KSSBzZWFyY2gga2VybmVsIGNvZGUgZm91bmQgcGxhY2VzIHdoaWNoIGxp
+a2UgdGhpcyBwcmludCBvdXQgJ1xuJzsNCkNhbiB5b3UgdGVsbCBydWxlIHdoaWNoIHVzZSBvciBu
+b3Q/DQpUaGFua3MhDQo+DQo+PiAyOiBUZXN0ICdkZCBpZj0vZGV2L3plcm8gb2Y9L2Rldi9tZDAg
+YnM9Mk0gJywgdGhlIHBlcmZvcm1hbmNlIHJlZ3Jlc3MgcmVtYXJrYWJsZS4NCj4+IGF1eHRocmVh
+ZF9udW1iZXI9MCwgMjAwTUIvczsNCj4+IGF1eHRocmVhZF9udW1iZXI9NCwgOTVNQi9zLg0KPg0K
+PlNvIG11bHRpcGxlIHRocmVhZHMgaGFuZGxlIHN0cmlwZXMgcmVkdWNlIHJlcXVlc3QgbWVyZ2Uu
+IEluIHlvdXINCj53b3JrbG9hZCwgcmFpZDVkIGlzbid0IGEgYm90dGxlbmVjayBhdCBhbGwuIElu
+IHByYWN0aWNlLCBJIHRob3VnaHQgb25seQ0KPmFycmF5IHdoaWNoIGNhbiBkcml2ZSBoaWdoIElP
+UFMgbmVlZHMgZW5hYmxlIG11bHRpIHRocmVhZC4gQW5kDQo+aWYgeW91IGNyZWF0ZSBtdWx0aXBs
+ZSB0aHJlYWRzLCBiZXR0ZXIgbGV0IHRoZSB0aHJlYWRzIGhhbmRsZSBkaWZmZXJlbnQNCj5jcHVz
+Lg0KSSB3aWxsIHRlc3QgZm9yIG11bHRpcGxlIHRocmVhZHMuDQo+DQo+VGhhbmtzLA0KPlNoYW9o
+dWE=
 
-Amazon users aren't impressed.  But the limitation is really the PCIe x1
-v2 bus interface: 500MB/sec.  Two SSDs would certainly overwhelm it, and
-any other similar card.
-
-I have a similar card, the Highpoint 620, in an older system at home
-(PCIe v1): it maxes out at 200MB/sec.
-
-So, it depends on what you want it to do.
-
-{I'll let others make card recommendations--I prefer to *listen* to those.}
-
-Phil
