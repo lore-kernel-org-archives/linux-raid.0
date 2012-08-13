@@ -1,35 +1,29 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
-Subject: Re: Re: [patch 2/2 v3]raid5: create multiple threads to handle stripes
-Date: Mon, 13 Aug 2012 17:11:32 +0800
-Message-ID: <201208131711290157375@gmail.com>
-References: <20120809085808.GB30111@kernel.org> <201208111645321254409@gmail.com>,
-	<CANejiEVNPv6qVJ1nsvt21VMF8Py=3L8sABh9wab9eCQfdRAGeA@mail.gmail.com>
+From: Andy Smith <andy@strugglers.net>
+Subject: Experience of LSI MegaRAID 9260CV?
+Date: Mon, 13 Aug 2012 09:30:16 +0000
+Message-ID: <20120813093015.GY3867@bitfolk.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: shli <shli@kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>, Dan Williams <dan.j.williams@gmail.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wOC0xMyAwODoyMSBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
-PjIwMTIvOC8xMSBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+Og0KPj4gT24gMjAx
-Mi0wOC0wOSAxNjo1OCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0KPj4+VGhp
-cyBpcyBhIG5ldyB0ZW1wdCB0byBtYWtlIHJhaWQ1IGhhbmRsZSBzdHJpcGVzIGluIG11bHRpcGxl
-IHRocmVhZHMsIGFzDQo+Pj5zdWdnZXN0ZWQgYnkgTmVpbCB0byBoYXZlIG1heGl1bSBmbGV4aWJp
-bGl0eSBhbmQgYmV0dGVyIG51bWEgYmluZGluZy4gSXQNCltzbmlwXQ0KPj4gMjogVGVzdCAnZGQg
-aWY9L2Rldi96ZXJvIG9mPS9kZXYvbWQwIGJzPTJNICcsIHRoZSBwZXJmb3JtYW5jZSByZWdyZXNz
-IHJlbWFya2FibGUuDQo+PiBhdXh0aHJlYWRfbnVtYmVyPTAsIDIwME1CL3M7DQo+PiBhdXh0aHJl
-YWRfbnVtYmVyPTQsIDk1TUIvcy4NCj4NCj5TbyBtdWx0aXBsZSB0aHJlYWRzIGhhbmRsZSBzdHJp
-cGVzIHJlZHVjZSByZXF1ZXN0IG1lcmdlLiBJbiB5b3VyDQo+d29ya2xvYWQsIHJhaWQ1ZCBpc24n
-dCBhIGJvdHRsZW5lY2sgYXQgYWxsLiBJbiBwcmFjdGljZSwgSSB0aG91Z2h0IG9ubHkNCj5hcnJh
-eSB3aGljaCBjYW4gZHJpdmUgaGlnaCBJT1BTIG5lZWRzIGVuYWJsZSBtdWx0aSB0aHJlYWQuIEFu
-ZA0KPmlmIHlvdSBjcmVhdGUgbXVsdGlwbGUgdGhyZWFkcywgYmV0dGVyIGxldCB0aGUgdGhyZWFk
-cyBoYW5kbGUgZGlmZmVyZW50DQo+Y3B1cy4NCklmIGRkIHdyaXRlIHVzaW5nIGJ1ZmZlci1tb2Rl
-LCB0aGUgbWFrZS1ycXVlc3QgaXMgZXhlYyBieSBrZXJuZWwtdGhyZWFkICJmbHVzaC1uOjAiLg0K
-U28gd2Ugb25seSB1c2VkIG11bHRpcGxlIHRocmVhZCB0byB3cml0ZSBieSBvZGlyZWN0IG9yIHN5
-bmMgdG8gYWNoaWV2ZSB0aGUgcmVzdWx0IHdoaWNoIHdlIHdhbnRlZC4NCj4NCj5UaGFua3MsDQo+
-U2hhb2h1YQ==
+Hi,
 
+I'm fairly familiar with the 3ware range of SATA RAID controllers
+and their particular quirks. I'm finding them harder to get hold of
+however, and I've now repeatedly run into the situation where my
+suppliers are pushing LSI MegaRAID instead.
+
+Have any of you transitioned from 3Ware to LSI and how have you
+found it?
+
+Particularly the 9260CV controller is being suggested to me instead
+of the 3ware 9250SE-8LP. This appears to have a large capacitor
+instead of a Li-Ion battery in order to achieve its battery backup.
+Anyone got any experience with that?
+
+Cheers,
+Andy
