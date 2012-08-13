@@ -1,79 +1,61 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] sha1.h: remove ansidecl.h header inclusion
-Date: Tue, 14 Aug 2012 09:53:46 +1000
-Message-ID: <20120814095346.68a2cdec@notabene.brown>
-References: <20120813122043.25583.21352.stgit@gklab-128-085.igk.intel.com>
+Subject: Re: RFC: Add WWN in superblock
+Date: Tue, 14 Aug 2012 09:54:59 +1000
+Message-ID: <20120814095459.009ad345@notabene.brown>
+References: <201208131829289067947@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/1Eje+wW5bcqjRccS6dQGVa."; protocol="application/pgp-signature"
+ boundary="Sig_/8QbqvJX1HjcME.e2kquPmcH"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120813122043.25583.21352.stgit@gklab-128-085.igk.intel.com>
+In-Reply-To: <201208131829289067947@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com, ed.ciechanowski@intel.com, Jacek.Danecki@intel.com
+To: Jianpeng Ma <majianpeng@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/1Eje+wW5bcqjRccS6dQGVa.
+--Sig_/8QbqvJX1HjcME.e2kquPmcH
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 13 Aug 2012 14:20:43 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
-wrote:
+On Mon, 13 Aug 2012 18:29:31 +0800 "Jianpeng Ma" <majianpeng@gmail.com> wro=
+te:
 
-> Inclusion of the 'ansidecl.h' header requires the 'binutils-devel'
-> package to be installed but is not needed.
+> Hi neil:
+> 	In mailist, many people ask the question about disk order.
+> But because the reboot or anthor probelm, the disk-name maybe change.
+> So we can't get disk-order.But if we can add WWN(Now,most harddisk has th=
+is attribute),
+> we can find the orders anything.
 >=20
-> Signed-off-by: Maciej Patelczyk <maciej.patelczyk@intel.com>
-> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
-> ---
->  sha1.h |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
->=20
-> diff --git a/sha1.h b/sha1.h
-> index 5473f91..a601d96 100644
-> --- a/sha1.h
-> +++ b/sha1.h
-> @@ -26,8 +26,6 @@
->  # include <limits.h>
->  #endif
-> =20
-> -#include "ansidecl.h"
-> -
->  /* The following contortions are an attempt to use the C preprocessor
->     to determine an unsigned integral type that is 32 bits wide.  An
->     alternative approach is to use autoconf's AC_CHECK_SIZEOF macro, but
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Thanks!
 
+What exactly do you propose doing with a WWN - how would you use it.
 
-applied, thanks.
+The metadata already contains enough information to determine the correct
+disk order.
 
 NeilBrown
 
-
---Sig_/1Eje+wW5bcqjRccS6dQGVa.
+--Sig_/8QbqvJX1HjcME.e2kquPmcH
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUCmTijnsnt1WYoG5AQK6tw//WKerePcoLMIkcI117r+auufWijt/tvJi
-g9ItJtBOIU50m8rUDK7YvM24MWWh4sdDgmySvCtXQzUQ6xtu7xZYY6Axg3+0FaVo
-3obhIpdijo2wc+0Gg8cQxbGxBX5AduNyeU+6fQm1VELfMJDM6T1qugrxf2ICmitU
-VgAL6nPsF0WN7Toa75QcHHMtOovCy4lpxWPiyNY8yse861R11LWHqfC4HHDNWh8S
-YdhOGP0Qr0uqKBFoEtULDq5K8gl3IJQtmjPmlC0n3eun6PwLqK3sY5HXBo8zJPNP
-PkRQcczCVGR05l5AbEdH7ISDPF94j2YWboFHJVbTvQK15UpznHc8xJiahrrjmhC0
-sCIsIhdcxyLTSdEKYElFse38RejpYVPEiRqjghGRme6pVAxKudWrCtgYalUCDLTY
-/saD0mDicvYVdM3dOOmw6oGE3up27y5ivLddYmMbOqCskBhbfmZTzA4NkzDLECvg
-dV4QiyWjg3zDGqQH6/v3/PSa9M3UnRAGcg9UrY8A9So3BqcszIuoglRwAsAH/Khe
-/sa3A4QWvsZ0aFOvbgJBL6ZBKoOPdgGNPyByP6hqCEzXvaGGLK5BTkh9RtOOQ9qM
-8DCZJEC2zY9CAjSW0k2xvOnVYNAbDUqGy49kCwruk5698Jjr4LDv9oqTzGCn2U5t
-JqBjAuJbhSs=
-=gzNV
+iQIVAwUBUCmT0znsnt1WYoG5AQJl2g//Xs1kjT6eo992ulQ4bkO4NMGKLINC2vEb
+ui/4ixVHL43hSDuk7XIEutXg3RcA11LUcNCkh18rUNSIHunm6oim6o0SICC+2VZQ
+y7mUFM6EMgzd1n8ztEWk9KuaEa6/f93fBq2I6P+uc2eg5J/pWEIcam7Xo4ieFnMB
+7D9eqIe6X2pRF00rBaC9Vf4nq1X9otn6egv+Kk5YgIK30bB+gUPLWvi5cRcnKnE+
+GlSh3KWdlLxkQV/HrS7R062TfJVS1pDqwjLzRIuT9mjEoCJWPWEikiZpU+K86Bcp
+xmGVN00775FzjmF5g7jEXrH/AVoUq1Z8SJfx/wvYWZpNqi79rx521Alvhc8HqeG6
+XWa44rxD7Tp5gStR9z/wyQKO5k3IwBkoZacPV2HDRNY7dFcY55X4y2AAUa7rPr4k
+1/rqnwuL+TXovBOc3/r4Qk0aHnULjmwUTWGGtsz/9vF3p2TkKa+3e/cMjpVX4+Vg
+Yt6eM/Ve55iWWdxnpzvZNisHWNYQaOuapMYiq47Tjg0kIYmWSAjaJ9zJYZ1f81jy
+B4DOu5eOTFFWjBSuyxcTDMmIKLZyKjgiJ+gHxrl1bmlKY3v93vVvwzXQUim1oE7n
+DK30WRy5qmmFwpY2hgYrqwSA2GBh7nyFMv404izQNJyEOWRpH4TLSJ6HeomTbYkW
+yaBRJQZZg/I=
+=2dAJ
 -----END PGP SIGNATURE-----
 
---Sig_/1Eje+wW5bcqjRccS6dQGVa.--
+--Sig_/8QbqvJX1HjcME.e2kquPmcH--
