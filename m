@@ -1,104 +1,90 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] query udev dir via pkg-config
-Date: Tue, 14 Aug 2012 09:47:59 +1000
-Message-ID: <20120814094759.51b8e2c2@notabene.brown>
-References: <1344879862-23299-1-git-send-email-vapier@gentoo.org>
+Subject: Re: [PATCH] md/linear: rcu_dereference outside read-lock section
+Date: Tue, 14 Aug 2012 09:52:40 +1000
+Message-ID: <20120814095240.66d30903@notabene.brown>
+References: <1344892092-13686-1-git-send-email-yefremov.denis@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/7zeItxB.1x0UI8AesO7J0u."; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1344879862-23299-1-git-send-email-vapier@gentoo.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Mike Frysinger <vapier@gentoo.org>
-Cc: linux-raid@vger.kernel.org, Samuli Suominen <ssuominen@gentoo.org>
+ boundary="Sig_/sZu7htboQz06eJPgrKJALLD"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1344892092-13686-1-git-send-email-yefremov.denis@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Denis Efremov <yefremov.denis@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@ispras.ru
 List-Id: linux-raid.ids
 
---Sig_/7zeItxB.1x0UI8AesO7J0u.
+--Sig_/sZu7htboQz06eJPgrKJALLD
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 13 Aug 2012 13:44:22 -0400 Mike Frysinger <vapier@gentoo.org> wrote:
+On Tue, 14 Aug 2012 01:08:12 +0400 Denis Efremov <yefremov.denis@gmail.com>
+wrote:
 
-> From: Samuli Suominen <ssuominen@gentoo.org>
+> According to the comment in linear_stop function
+> rcu_dereference in linear_start and linear_stop functions
+> occurs under reconfig_mutex. The patch represents this
+> agreement in code and prevents lockdep complaint.
 >=20
-> Since udev is moving its internal dir around, query it via pkg-config
-> rather than hardcoding the old path.  This should work with new/old
-> versions.
+> Found by Linux Driver Verification project (linuxtesting.org)
 >=20
-> Signed-off-by: Samuli Suominen <ssuominen@gentoo.org>
-> Signed-off-by: Mike Frysinger <vapier@gentoo.org>
+> Signed-off-by: Denis Efremov <yefremov.denis@gmail.com>
 > ---
->  Makefile |    9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
+>  drivers/md/linear.c |    7 +++++--
+>  1 files changed, 5 insertions(+), 2 deletions(-)
 >=20
-> diff --git a/Makefile b/Makefile
-> index 72f609e..a3e4027 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -57,6 +57,8 @@ else
->   DEFAULT_METADATA=3D1.2
->  endif
+> diff --git a/drivers/md/linear.c b/drivers/md/linear.c
+> index fa211d8..093f3e4 100644
+> --- a/drivers/md/linear.c
+> +++ b/drivers/md/linear.c
+> @@ -244,7 +244,8 @@ static int linear_add(struct mddev *mddev, struct md_=
+rdev *rdev)
+>  	if (!newconf)
+>  		return -ENOMEM;
 > =20
-> +PKG_CONFIG ?=3D pkg-config
-> +
->  SYSCONFDIR =3D /etc
->  CONFFILE =3D $(SYSCONFDIR)/mdadm.conf
->  CONFFILE2 =3D $(SYSCONFDIR)/mdadm/mdadm.conf
-> @@ -96,6 +98,11 @@ MAN4DIR =3D $(MANDIR)/man4
->  MAN5DIR =3D $(MANDIR)/man5
->  MAN8DIR =3D $(MANDIR)/man8
+> -	oldconf =3D rcu_dereference(mddev->private);
+> +	oldconf =3D rcu_dereference_protected(mddev->private,
+> +					    lockdep_is_held(&mddev->reconfig_mutex));
+>  	mddev->raid_disks++;
+>  	rcu_assign_pointer(mddev->private, newconf);
+>  	md_set_array_sectors(mddev, linear_size(mddev, 0, 0));
+> @@ -256,7 +257,9 @@ static int linear_add(struct mddev *mddev, struct md_=
+rdev *rdev)
 > =20
-> +UDEVDIR :=3D $(shell $(PKG_CONFIG) --variable=3Dudevdir udev 2>/dev/null)
-> +ifndef UDEVDIR
-> + UDEVDIR =3D /lib/udev
-> +endif
-> +
->  OBJS =3D  mdadm.o config.o policy.o mdstat.o  ReadMe.o util.o maps.o lib=
-.o \
->  	Manage.o Assemble.o Build.o \
->  	Create.o Detail.o Examine.o Grow.o Monitor.o dlink.o Kill.o Query.o \
-> @@ -255,7 +262,7 @@ install-man: mdadm.8 md.4 mdadm.conf.5 mdmon.8
->  	$(INSTALL) -D -m 644 mdadm.conf.5 $(DESTDIR)$(MAN5DIR)/mdadm.conf.5
+>  static int linear_stop (struct mddev *mddev)
+>  {
+> -	struct linear_conf *conf =3D mddev->private;
+> +	struct linear_conf *conf =3D
+> +		rcu_dereference_protected(mddev->private,
+> +					  lockdep_is_held(&mddev->reconfig_mutex));
 > =20
->  install-udev: udev-md-raid.rules
-> -	$(INSTALL) -D -m 644 udev-md-raid.rules $(DESTDIR)/lib/udev/rules.d/64-=
-md-raid.rules
-> +	$(INSTALL) -D -m 644 udev-md-raid.rules $(DESTDIR)$(UDEVDIR)/rules.d/64=
--md-raid.rules
-> =20
->  uninstall:
->  	rm -f $(DESTDIR)$(MAN8DIR)/mdadm.8 $(DESTDIR)$(MAN8DIR)/mdmon.8 $(DESTD=
-IR)$(MAN4DIR)/md.4 $(DESTDIR)$(MAN5DIR)/mdadm.conf.5 $(DESTDIR)$(BINDIR)/md=
-adm
+>  	/*
+>  	 * We do not require rcu protection here since
 
 
-Applied - thanks....
-
-So where is /lib/udev being moved to?
+Applied, thanks.
 
 NeilBrown
 
-
---Sig_/7zeItxB.1x0UI8AesO7J0u.
+--Sig_/sZu7htboQz06eJPgrKJALLD
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUCmSLznsnt1WYoG5AQIqKBAAgT7IzYXuInu+k1LEKpwohkFzny/MbgxG
-T8xMed7+6jcxoLCJANGYGeIO59lbCwkEFC6Xe0hv0h2Ua+qeLNxCsCKjHzoBWRSY
-+ZlBpgPN6r3C+fMzNtD2x6HF8diPojDDdzTG5tr1TzLJUoqNx3OjhDcdC9WDBWGk
-vOt2X2RiubENKO/m51Be5b/EDWlv+xPUWZ9UTscrNeXNrwtn2GeOBes8Fhcbi7IV
-YIW7d3JV8lPNVWTePzuuBD9RcbUfSmdxenkNu5JVmSJVPCzjb7b/N9jTPG4L7bkz
-/WEZPgGuXh2m0bcn1pgWBXdBLtqTXOOrzUzkIr48QfPmy4gBAD7NHE6HoYvtJOSU
-AKzbPLd8+qLz8N0BoWdv3dj0B2JyvjV2CRzHvkPbig4SJKpwsTycp4IcIFV5Tg4A
-oexM/jCgPPPs6uBlTkpYqM+hXDZ7cO87DvVk+mGUmFJqel7ROsitEUnXaeCOcmW4
-tWmCFCIizWFcZjFZ2xFy7yrK++QMa+Kiov0paLGbozu+NDaScnF9KK6L5TbNkQzt
-3/qtKCeex5PFOKSuqQVRaNPe/au81DjysQ5/YOgODfj4lLOLD0fnN01BPxBL+Lnc
-HuWkm3NTyiQxhKTpGF6uYOoQRyKXg50+e8vKiDTAfbIwQf9pKhN2DymO4CbJk3U8
-AvWN8j0HP9E=
-=nfwO
+iQIVAwUBUCmTSDnsnt1WYoG5AQIzxg//awAi/Ha1S9wqEs0Tg5BI/bGRssRYPPeA
+3SM7LdMQmsvSiOMcaZTdsFvhwYzNgRqIjjf4bjGFrmZAfmQo+ZXeneV1UAu3wMtR
+WV343jxzBfYlVS8j84r5zqEYVcRa11OmmoXYV46StFB5HNgt1BJBZp4kaQeQ5jTH
+Ho2cmevt2nxPTUYZzyn4CZgmwF9Ur08ciFytiPf6cmBsNtW1DTdcp/4MCbSUTPM2
+1D2squvYkE9t2MNR9JPJxVztgccc2URaPPgjp2nRgHQ2zGmRvMLDe6UTFk6InxXN
+0xjk2E1uKj1pgexb6ZhB0tt0Nahpa4jfXY61n9eU00W/DuiYFKED7cooCxDZRGn7
+H8YR1mfkZFxCNClBmwWhlWaNGb9Li3fwtUEI4sqxwWs8ixFSr9IrnaZvKgOjlYNh
+xpihqkUuYSIIcJDakFZXWH5JUNcarJ82QiAHtp4cYP/XUMlo+zkYpcIqMYdYW4Ez
+vEug9t0FCJlyHJuGaf38ydsnTplzun3l/yIGSbD0zmaV83reoCboY+260AT6uTrK
+n8FC2wLItCOBNhbAj1bMrU8JeVrjYlmjic2SusdSSMPVRDrMBzJ20LfCT9sZGVRE
+3W2slStdhWpadGkokWRuBZK/uu+4IwC5QPx7Kc3psr7lLPTFyPZmJPt01nnBsXE8
+uazkzZYs6ks=
+=yde4
 -----END PGP SIGNATURE-----
 
---Sig_/7zeItxB.1x0UI8AesO7J0u.--
+--Sig_/sZu7htboQz06eJPgrKJALLD--
