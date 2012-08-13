@@ -1,49 +1,59 @@
-From: Marcus Sorensen <shadowsor@gmail.com>
-Subject: Re: Experience of LSI MegaRAID 9260CV?
-Date: Mon, 13 Aug 2012 09:06:07 -0600
-Message-ID: <CALFpzo75AD0ej-M=DUQxFMRztw6q39zBBun3nb0RN73FgFk85g@mail.gmail.com>
-References: <20120813093015.GY3867@bitfolk.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Mike Frysinger <vapier@gentoo.org>
+Subject: [PATCH] query udev dir via pkg-config
+Date: Mon, 13 Aug 2012 13:44:22 -0400
+Message-ID: <1344879862-23299-1-git-send-email-vapier@gentoo.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120813093015.GY3867@bitfolk.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, Samuli Suominen <ssuominen@gentoo.org>
 List-Id: linux-raid.ids
 
- It works. It has both a capacitor and flash memory, the idea being
-that you won't have battery maintenance. The capacitor has enough
-juice to dump the RAM cache to flash during an outage and is far more
-heat resistant and more stable as far as reliably holding a charge.
-Adaptec has been doing it longer with their Zero Maintenance flash
-modules, I believe they introduced the technology to the market, but
-at the moment LSI has the performance lead if you're using hardware
-RAID. That might change in a month or two when Adaptec's quad-core 7
-series comes out.
+From: Samuli Suominen <ssuominen@gentoo.org>
 
- LSI's MegaCli utility is a pain to work with compared to twcli, but
-I've been told that they are on the verge of releasing a better
-'megaware' cli that mimics twcli and is thus more user friendly.
+Since udev is moving its internal dir around, query it via pkg-config
+rather than hardcoding the old path.  This should work with new/old
+versions.
 
-On Mon, Aug 13, 2012 at 3:30 AM, Andy Smith <andy@strugglers.net> wrote:
-> Hi,
->
-> I'm fairly familiar with the 3ware range of SATA RAID controllers
-> and their particular quirks. I'm finding them harder to get hold of
-> however, and I've now repeatedly run into the situation where my
-> suppliers are pushing LSI MegaRAID instead.
->
-> Have any of you transitioned from 3Ware to LSI and how have you
-> found it?
->
-> Particularly the 9260CV controller is being suggested to me instead
-> of the 3ware 9250SE-8LP. This appears to have a large capacitor
-> instead of a Li-Ion battery in order to achieve its battery backup.
-> Anyone got any experience with that?
->
-> Cheers,
-> Andy
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Samuli Suominen <ssuominen@gentoo.org>
+Signed-off-by: Mike Frysinger <vapier@gentoo.org>
+---
+ Makefile |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 72f609e..a3e4027 100644
+--- a/Makefile
++++ b/Makefile
+@@ -57,6 +57,8 @@ else
+  DEFAULT_METADATA=1.2
+ endif
+ 
++PKG_CONFIG ?= pkg-config
++
+ SYSCONFDIR = /etc
+ CONFFILE = $(SYSCONFDIR)/mdadm.conf
+ CONFFILE2 = $(SYSCONFDIR)/mdadm/mdadm.conf
+@@ -96,6 +98,11 @@ MAN4DIR = $(MANDIR)/man4
+ MAN5DIR = $(MANDIR)/man5
+ MAN8DIR = $(MANDIR)/man8
+ 
++UDEVDIR := $(shell $(PKG_CONFIG) --variable=udevdir udev 2>/dev/null)
++ifndef UDEVDIR
++ UDEVDIR = /lib/udev
++endif
++
+ OBJS =  mdadm.o config.o policy.o mdstat.o  ReadMe.o util.o maps.o lib.o \
+ 	Manage.o Assemble.o Build.o \
+ 	Create.o Detail.o Examine.o Grow.o Monitor.o dlink.o Kill.o Query.o \
+@@ -255,7 +262,7 @@ install-man: mdadm.8 md.4 mdadm.conf.5 mdmon.8
+ 	$(INSTALL) -D -m 644 mdadm.conf.5 $(DESTDIR)$(MAN5DIR)/mdadm.conf.5
+ 
+ install-udev: udev-md-raid.rules
+-	$(INSTALL) -D -m 644 udev-md-raid.rules $(DESTDIR)/lib/udev/rules.d/64-md-raid.rules
++	$(INSTALL) -D -m 644 udev-md-raid.rules $(DESTDIR)$(UDEVDIR)/rules.d/64-md-raid.rules
+ 
+ uninstall:
+ 	rm -f $(DESTDIR)$(MAN8DIR)/mdadm.8 $(DESTDIR)$(MAN8DIR)/mdmon.8 $(DESTDIR)$(MAN4DIR)/md.4 $(DESTDIR)$(MAN5DIR)/mdadm.conf.5 $(DESTDIR)$(BINDIR)/mdadm
+-- 
+1.7.9.7
+
