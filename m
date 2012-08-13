@@ -1,89 +1,78 @@
-From: Shaohua Li <shli@kernel.org>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
 Subject: Re: Re: [patch 2/2 v3]raid5: create multiple threads to handle stripes
-Date: Mon, 13 Aug 2012 10:20:01 +0800
-Message-ID: <CANejiEUoguBD8PRAAuj=ATk+gd0RAqCTNjV12odSChejX-+R6Q@mail.gmail.com>
-References: <20120809085808.GB30111@kernel.org>
-	<201208111645321254409@gmail.com>
-	<CANejiEVNPv6qVJ1nsvt21VMF8Py=3L8sABh9wab9eCQfdRAGeA@mail.gmail.com>
-	<201208130906432967842@gmail.com>
-	<20120813021324.GB447@kernel.org>
+Date: Mon, 13 Aug 2012 10:25:06 +0800
+Message-ID: <201208131025026713343@gmail.com>
+References: <20120809085808.GB30111@kernel.org> <201208111645321254409@gmail.com> <CANejiEVNPv6qVJ1nsvt21VMF8Py=3L8sABh9wab9eCQfdRAGeA@mail.gmail.com> <201208130906432967842@gmail.com> <20120813021324.GB447@kernel.org>,
+	<CANejiEUoguBD8PRAAuj=ATk+gd0RAqCTNjV12odSChejX-+R6Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120813021324.GB447@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jianpeng Ma <majianpeng@gmail.com>
+To: shli <shli@kernel.org>
 Cc: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>, Dan Williams <dan.j.williams@gmail.com>
 List-Id: linux-raid.ids
 
-2012/8/13 Shaohua Li <shli@kernel.org>:
-> On Mon, Aug 13, 2012 at 09:06:45AM +0800, Jianpeng Ma wrote:
->> On 2012-08-13 08:21 Shaohua Li <shli@kernel.org> Wrote:
->> >2012/8/11 Jianpeng Ma <majianpeng@gmail.com>:
->> >> On 2012-08-09 16:58 Shaohua Li <shli@kernel.org> Wrote:
->> >>>This is a new tempt to make raid5 handle stripes in multiple threads, as
->> >>>suggested by Neil to have maxium flexibility and better numa binding. It
->> >>>basically is a combination of my first and second generation patches. By
->> >>>default, no multiple thread is enabled (all stripes are handled by raid5d).
->> >>>
->> >>>An example to enable multiple threads:
->> >>>#echo 3 > /sys/block/md0/md/auxthread_number
->> >>>This will create 3 auxiliary threads to handle stripes. The threads can run
->> >>>on any cpus and handle stripes produced by any cpus.
->> >>>
->> >>>#echo 1-3 > /sys/block/md0/md/auxth0/cpulist
->> >>>This will bind auxiliary thread 0 to cpu 1-3, and this thread will only handle
->> >>>stripes produced by cpu 1-3. User tool can further change the thread's
->> >>>affinity, but the thread can only handle stripes produced by cpu 1-3 till the
->> >>>sysfs entry is changed again.
->> >>>
->> >>>If stripes produced by a CPU aren't handled by any auxiliary thread, such
->> >>>stripes will be handled by raid5d. Otherwise, raid5d doesn't handle any
->> >>>stripes.
->> >>>
->> >> I tested and found two problem(maybe not).
->> >>
->> >> 1:print cpulist of auxth, you maybe lost print the '\n'.
->> >> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> >> index 7c8151a..3700cdc 100644
->> >> --- a/drivers/md/raid5.c
->> >> +++ b/drivers/md/raid5.c
->> >> @@ -4911,9 +4911,13 @@ struct raid5_auxth_sysfs {
->> >>  static ssize_t raid5_show_thread_cpulist(struct mddev *mddev,
->> >>         struct raid5_auxth *thread, char *page)
->> >>  {
->> >> +       int n;
->> >>         if (!mddev->private)
->> >>                 return 0;
->> >> -       return cpulist_scnprintf(page, PAGE_SIZE, &thread->work_mask);
->> >> +       n = cpulist_scnprintf(page, PAGE_SIZE - 2, &thread->work_mask);
->> >> +       page[n++] = '\n';
->> >> +       page[n] = 0;
->> >> +       return n;
->> >>  }
->> >>
->> >>  static ssize_t
->> >
->> >some sysfs entries print out '\n', some not, I don't mind add it
->> I search kernel code found places which like this print out '\n';
->> Can you tell rule which use or not?
->> Thanks!
->
-> I'm not aware any rule about this
->
->> >> 2: Test 'dd if=/dev/zero of=/dev/md0 bs=2M ', the performance regress remarkable.
->> >> auxthread_number=0, 200MB/s;
->> >> auxthread_number=4, 95MB/s.
->> >
->> >So multiple threads handle stripes reduce request merge. In your
->> >workload, raid5d isn't a bottleneck at all. In practice, I thought only
->> >array which can drive high IOPS needs enable multi thread. And
->> >if you create multiple threads, better let the threads handle different
->> >cpus.
->> I will test for multiple threads.
-> Thanks
+T24gMjAxMi0wOC0xMyAxMDoyMCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
+PjIwMTIvOC8xMyBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+Og0KPj4gT24gTW9uLCBBdWcg
+MTMsIDIwMTIgYXQgMDk6MDY6NDVBTSArMDgwMCwgSmlhbnBlbmcgTWEgd3JvdGU6DQo+Pj4gT24g
+MjAxMi0wOC0xMyAwODoyMSBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0KPj4+
+ID4yMDEyLzgvMTEgSmlhbnBlbmcgTWEgPG1hamlhbnBlbmdAZ21haWwuY29tPjoNCj4+PiA+PiBP
+biAyMDEyLTA4LTA5IDE2OjU4IFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4gV3JvdGU6DQo+
+Pj4gPj4+VGhpcyBpcyBhIG5ldyB0ZW1wdCB0byBtYWtlIHJhaWQ1IGhhbmRsZSBzdHJpcGVzIGlu
+IG11bHRpcGxlIHRocmVhZHMsIGFzDQo+Pj4gPj4+c3VnZ2VzdGVkIGJ5IE5laWwgdG8gaGF2ZSBt
+YXhpdW0gZmxleGliaWxpdHkgYW5kIGJldHRlciBudW1hIGJpbmRpbmcuIEl0DQo+Pj4gPj4+YmFz
+aWNhbGx5IGlzIGEgY29tYmluYXRpb24gb2YgbXkgZmlyc3QgYW5kIHNlY29uZCBnZW5lcmF0aW9u
+IHBhdGNoZXMuIEJ5DQo+Pj4gPj4+ZGVmYXVsdCwgbm8gbXVsdGlwbGUgdGhyZWFkIGlzIGVuYWJs
+ZWQgKGFsbCBzdHJpcGVzIGFyZSBoYW5kbGVkIGJ5IHJhaWQ1ZCkuDQo+Pj4gPj4+DQo+Pj4gPj4+
+QW4gZXhhbXBsZSB0byBlbmFibGUgbXVsdGlwbGUgdGhyZWFkczoNCj4+PiA+Pj4jZWNobyAzID4g
+L3N5cy9ibG9jay9tZDAvbWQvYXV4dGhyZWFkX251bWJlcg0KPj4+ID4+PlRoaXMgd2lsbCBjcmVh
+dGUgMyBhdXhpbGlhcnkgdGhyZWFkcyB0byBoYW5kbGUgc3RyaXBlcy4gVGhlIHRocmVhZHMgY2Fu
+IHJ1bg0KPj4+ID4+Pm9uIGFueSBjcHVzIGFuZCBoYW5kbGUgc3RyaXBlcyBwcm9kdWNlZCBieSBh
+bnkgY3B1cy4NCj4+PiA+Pj4NCj4+PiA+Pj4jZWNobyAxLTMgPiAvc3lzL2Jsb2NrL21kMC9tZC9h
+dXh0aDAvY3B1bGlzdA0KPj4+ID4+PlRoaXMgd2lsbCBiaW5kIGF1eGlsaWFyeSB0aHJlYWQgMCB0
+byBjcHUgMS0zLCBhbmQgdGhpcyB0aHJlYWQgd2lsbCBvbmx5IGhhbmRsZQ0KPj4+ID4+PnN0cmlw
+ZXMgcHJvZHVjZWQgYnkgY3B1IDEtMy4gVXNlciB0b29sIGNhbiBmdXJ0aGVyIGNoYW5nZSB0aGUg
+dGhyZWFkJ3MNCj4+PiA+Pj5hZmZpbml0eSwgYnV0IHRoZSB0aHJlYWQgY2FuIG9ubHkgaGFuZGxl
+IHN0cmlwZXMgcHJvZHVjZWQgYnkgY3B1IDEtMyB0aWxsIHRoZQ0KPj4+ID4+PnN5c2ZzIGVudHJ5
+IGlzIGNoYW5nZWQgYWdhaW4uDQo+Pj4gPj4+DQo+Pj4gPj4+SWYgc3RyaXBlcyBwcm9kdWNlZCBi
+eSBhIENQVSBhcmVuJ3QgaGFuZGxlZCBieSBhbnkgYXV4aWxpYXJ5IHRocmVhZCwgc3VjaA0KPj4+
+ID4+PnN0cmlwZXMgd2lsbCBiZSBoYW5kbGVkIGJ5IHJhaWQ1ZC4gT3RoZXJ3aXNlLCByYWlkNWQg
+ZG9lc24ndCBoYW5kbGUgYW55DQo+Pj4gPj4+c3RyaXBlcy4NCj4+PiA+Pj4NCj4+PiA+PiBJIHRl
+c3RlZCBhbmQgZm91bmQgdHdvIHByb2JsZW0obWF5YmUgbm90KS4NCj4+PiA+Pg0KPj4+ID4+IDE6
+cHJpbnQgY3B1bGlzdCBvZiBhdXh0aCwgeW91IG1heWJlIGxvc3QgcHJpbnQgdGhlICdcbicuDQo+
+Pj4gPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2RyaXZlcnMvbWQvcmFpZDUu
+Yw0KPj4+ID4+IGluZGV4IDdjODE1MWEuLjM3MDBjZGMgMTAwNjQ0DQo+Pj4gPj4gLS0tIGEvZHJp
+dmVycy9tZC9yYWlkNS5jDQo+Pj4gPj4gKysrIGIvZHJpdmVycy9tZC9yYWlkNS5jDQo+Pj4gPj4g
+QEAgLTQ5MTEsOSArNDkxMSwxMyBAQCBzdHJ1Y3QgcmFpZDVfYXV4dGhfc3lzZnMgew0KPj4+ID4+
+ICBzdGF0aWMgc3NpemVfdCByYWlkNV9zaG93X3RocmVhZF9jcHVsaXN0KHN0cnVjdCBtZGRldiAq
+bWRkZXYsDQo+Pj4gPj4gICAgICAgICBzdHJ1Y3QgcmFpZDVfYXV4dGggKnRocmVhZCwgY2hhciAq
+cGFnZSkNCj4+PiA+PiAgew0KPj4+ID4+ICsgICAgICAgaW50IG47DQo+Pj4gPj4gICAgICAgICBp
+ZiAoIW1kZGV2LT5wcml2YXRlKQ0KPj4+ID4+ICAgICAgICAgICAgICAgICByZXR1cm4gMDsNCj4+
+PiA+PiAtICAgICAgIHJldHVybiBjcHVsaXN0X3NjbnByaW50ZihwYWdlLCBQQUdFX1NJWkUsICZ0
+aHJlYWQtPndvcmtfbWFzayk7DQo+Pj4gPj4gKyAgICAgICBuID0gY3B1bGlzdF9zY25wcmludGYo
+cGFnZSwgUEFHRV9TSVpFIC0gMiwgJnRocmVhZC0+d29ya19tYXNrKTsNCj4+PiA+PiArICAgICAg
+IHBhZ2VbbisrXSA9ICdcbic7DQo+Pj4gPj4gKyAgICAgICBwYWdlW25dID0gMDsNCj4+PiA+PiAr
+ICAgICAgIHJldHVybiBuOw0KPj4+ID4+ICB9DQo+Pj4gPj4NCj4+PiA+PiAgc3RhdGljIHNzaXpl
+X3QNCj4+PiA+DQo+Pj4gPnNvbWUgc3lzZnMgZW50cmllcyBwcmludCBvdXQgJ1xuJywgc29tZSBu
+b3QsIEkgZG9uJ3QgbWluZCBhZGQgaXQNCj4+PiBJIHNlYXJjaCBrZXJuZWwgY29kZSBmb3VuZCBw
+bGFjZXMgd2hpY2ggbGlrZSB0aGlzIHByaW50IG91dCAnXG4nOw0KPj4+IENhbiB5b3UgdGVsbCBy
+dWxlIHdoaWNoIHVzZSBvciBub3Q/DQo+Pj4gVGhhbmtzIQ0KPj4NCj4+IEknbSBub3QgYXdhcmUg
+YW55IHJ1bGUgYWJvdXQgdGhpcw0KPj4NCj4+PiA+PiAyOiBUZXN0ICdkZCBpZj0vZGV2L3plcm8g
+b2Y9L2Rldi9tZDAgYnM9Mk0gJywgdGhlIHBlcmZvcm1hbmNlIHJlZ3Jlc3MgcmVtYXJrYWJsZS4N
+Cj4+PiA+PiBhdXh0aHJlYWRfbnVtYmVyPTAsIDIwME1CL3M7DQo+Pj4gPj4gYXV4dGhyZWFkX251
+bWJlcj00LCA5NU1CL3MuDQo+Pj4gPg0KPj4+ID5TbyBtdWx0aXBsZSB0aHJlYWRzIGhhbmRsZSBz
+dHJpcGVzIHJlZHVjZSByZXF1ZXN0IG1lcmdlLiBJbiB5b3VyDQo+Pj4gPndvcmtsb2FkLCByYWlk
+NWQgaXNuJ3QgYSBib3R0bGVuZWNrIGF0IGFsbC4gSW4gcHJhY3RpY2UsIEkgdGhvdWdodCBvbmx5
+DQo+Pj4gPmFycmF5IHdoaWNoIGNhbiBkcml2ZSBoaWdoIElPUFMgbmVlZHMgZW5hYmxlIG11bHRp
+IHRocmVhZC4gQW5kDQo+Pj4gPmlmIHlvdSBjcmVhdGUgbXVsdGlwbGUgdGhyZWFkcywgYmV0dGVy
+IGxldCB0aGUgdGhyZWFkcyBoYW5kbGUgZGlmZmVyZW50DQo+Pj4gPmNwdXMuDQo+Pj4gSSB3aWxs
+IHRlc3QgZm9yIG11bHRpcGxlIHRocmVhZHMuDQo+PiBUaGFua3MNCj4NCj5CVFcsIGNhbiB5b3Ug
+dHJ5IGJlbG93IHBhdGNoIGZvciB0aGUgYWJvdmUgZGQgd29ya2xvYWQ/DQo+aHR0cDovL2dpdC5r
+ZXJuZWwuZGsvP3A9bGludXgtYmxvY2suZ2l0O2E9Y29tbWl0ZGlmZjtoPTI3NDE5MzIyNGNkYWJk
+Njg3ZDgwNGEyNmUwMTUwYmIyMGYyZGQ1MmMNCj5UaGF0IG9uZSBpcyByZXZlcnRlZCBpbiB1cHN0
+cmVhbSwgYnV0IGV2ZW50dWFsbHkgd2Ugc2hvdWxkIG1ha2UgaXQNCj5lbnRlciBhZ2FpbiBhZnRl
+ciBzb21lIENGUSBpc3N1ZXMgYXJlIGZpeGVkLg0KT2ssIGkgd2lsbCBkbyBhbmQgc2VudCB0aGUg
+cmVzdWx0Lg==
 
-BTW, can you try below patch for the above dd workload?
-http://git.kernel.dk/?p=linux-block.git;a=commitdiff;h=274193224cdabd687d804a26e0150bb20f2dd52c
-That one is reverted in upstream, but eventually we should make it
-enter again after some CFQ issues are fixed.
