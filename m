@@ -1,163 +1,218 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID5 - Disk failed during re-shape
-Date: Wed, 15 Aug 2012 07:05:33 +1000
-Message-ID: <20120815070533.5f7eb1e5@notabene.brown>
-References: <BLU153-ds1688A6A36A974526D12FDB94CC0@phx.gbl>
-	<50258CEA.10100@turmel.org>
-	<BLU401-EAS3343C9BB7296EA68990FF2294B20@phx.gbl>
-	<20120813093554.600d46c2@notabene.brown>
-	<BLU153-ds10943E39726EDC983C484594B00@phx.gbl>
-	<20120814123829.23126b08@notabene.brown>
-	<BLU153-ds7438ACF3B689B6D7DA9E294B70@phx.gbl>
+Subject: Re: Version 3.2.5 and ddf issues (bugreport)
+Date: Wed, 15 Aug 2012 09:31:05 +1000
+Message-ID: <20120815093105.05402855@notabene.brown>
+References: <4D8A4780.2030401@gmail.com>
+	<20110324090837.689c5a0e@notabene.brown>
+	<5013D0FE.3020906@gmail.com>
+	<20120731161115.46b96f90@notabene.brown>
+	<50179B62.9020603@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/XBpw2UNFpCBcgq_6jd93Vr0"; protocol="application/pgp-signature"
+ boundary="Sig_/u4qDz64kN7WOQe3Z5uoc3Gi"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU153-ds7438ACF3B689B6D7DA9E294B70@phx.gbl>
+In-Reply-To: <50179B62.9020603@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sam Clark <sclark_77@hotmail.com>
-Cc: 'Phil Turmel' <philip@turmel.org>, linux-raid@vger.kernel.org
+To: Albert Pauw <albert.pauw@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/XBpw2UNFpCBcgq_6jd93Vr0
+--Sig_/u4qDz64kN7WOQe3Z5uoc3Gi
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 14 Aug 2012 15:40:50 +0200 Sam Clark <sclark_77@hotmail.com> wrote:
+On Tue, 31 Jul 2012 10:46:26 +0200 Albert Pauw <albert.pauw@gmail.com> wrot=
+e:
 
-> Thanks Neil,=20
->=20
-> Tried that and failed on the first attempt, so I tried shuffling around t=
+> On 07/31/2012 08:11 AM, NeilBrown wrote:
+> > On Sat, 28 Jul 2012 13:46:06 +0200 Albert Pauw <albert.pauw@gmail.com> =
+wrote:
+> >
+> >> Hi Neil,
+> >>
+> >> After a hiatus of 1.5 year (busy with all sorts) I am back and tried t=
 he
-> dev order.. unfortunately I don't know what they were previously, but I do
-> recall being surprised that sdd was first on the list when I was looking =
-at
-> it previously, so perhaps a starting point.  Since there are some 120
-> different permutations of device order (assuming all 5 could be anywhere)=
-, I
-> modified the script to accept parameters and automated it a little furthe=
-r.=20
+> >> ddf code to see how things improved.
+> > Thanks!
+> >
+> >> I build a VM Centos 6.3 system with 6 extra 1GB disks for testing.
+> >> I found several issues in the standard installed 3.2.3 version of mdadm
+> >> relating to ddf, but installed the
+> >> 3.2.5 version in order to work with recent code.
+> >>
+> >> However, while version 3.2.3 is able to create a ddf container with
+> >> raidsets in it, I found a problem with the 3.2.5 version.
+> >>
+> >> After initially creating the container:
+> >>
+> >> mdadm -C /dev/md127 -e ddf -l container /dev/sd[b-g]
+> >>
+> >> which worked, I created a raid (1 or 5 it doesn't matter in this case)
+> >> in it:
+> >>
+> >> mdadm -C /dev/md0 -l raid5 -n 3 /dev/md127
+> >>
+> >> However, it stays on resync=3DPENDING and readonly, and doesn't get bu=
+ild.
+> >>
+> >> So I tried to set it to readwrite:
+> >>
+> >> mdadm --readwrite  /dev/md0
+> >>
+> >> Unfortunately, it stays on readonly and doesn't get build.
+> >>
+> >> As said before, this did work in 3.2.3.
+> >>
+> >> Are you already on this problem?
+> > It sounds like a problem with 'mdmon'.  mdmon needs to be running befor=
+e the
+> > array can become read-write.  mdadm should start mdmon automatically but
+> > maybe it isn't.  Maybe it cannot find mdmon?
+> >
+> > could you check if mdadm is running?  If it isn't run
+> >     mdmon /dev/md127 &
+> > and see if it starts working.
+> Hi Neil,
 >=20
-> I ended up with a few 'possible successes' but none that would mount (i.e.
-> fsck actually ran and found problems with the superblocks, group descript=
-or
-> checksums and Inode details, instead of failing with errorlevel 8).  The
-> most successful so far was the ones with SDD as device 1 and SDE as device
-> 2.. one particular combination (sdd sde sdb sdc sdf) seems to report every
-> time "/dev/md_restore has been mounted 35 times without being checked, ch=
-eck
-> forced.".. does this mean we're on the right combination?=20
+> thanks for your reply. Yes, mdmon wasn't running. Couldn't get it=20
+> running with a recompiled 3.2.5, the standard one which came with Centos=
+=20
+> (3.2.3) works fine, I assume the made some changes to the code? Anyway,=20
+> I moved to my own laptop, running Fedora 16 and pulled mdadm frm git and=
+=20
+> recompiled. That works. I also used loop devices as disks.
+>=20
+> Here is the first of my findings:
+>=20
+> I created a container with six disks, disk 1-2 is a raid 1 device, disk=20
+> 3-6 are a raid 6 device.
+>=20
+> Here is the table shown at the end of the mdadm -E command for the=20
+> container:
+>=20
+>   Physical Disks : 6
+>        Number    RefNo      Size       Device      Type/State
+>           0    06a5f547    479232K /dev/loop2      active/Online
+>           1    47564acc    479232K /dev/loop3      active/Online
+>           2    bf30692c    479232K /dev/loop5      active/Online
+>           3    275d02f5    479232K /dev/loop4      active/Online
+>           4    b0916b3f    479232K /dev/loop6      active/Online
+>           5    65956a72    479232K /dev/loop1      active/Online
+>=20
+> I now fail a disk (disk 0) and I get:
+>=20
+>   Physical Disks : 6
+>        Number    RefNo      Size       Device      Type/State
+>           0    06a5f547    479232K /dev/loop2      active/Online
+>           1    47564acc    479232K /dev/loop3      active/Online
+>           2    bf30692c    479232K /dev/loop5      active/Online
+>           3    275d02f5    479232K /dev/loop4      active/Online
+>           4    b0916b3f    479232K /dev/loop6      active/Online
+>           5    65956a72    479232K /dev/loop1      active/Offline, Failed
+>=20
+> Then I removed the disk from the container:
+>=20
+>   Physical Disks : 6
+>        Number    RefNo      Size       Device      Type/State
+>           0    06a5f547    479232K /dev/loop2      active/Online
+>           1    47564acc    479232K /dev/loop3      active/Online
+>           2    bf30692c    479232K /dev/loop5      active/Online
+>           3    275d02f5    479232K /dev/loop4      active/Online
+>           4    b0916b3f    479232K /dev/loop6      active/Online
+>           5    65956a72    479232K                 active/Offline,=20
+> Failed, Missing
+>=20
+> Notice the active/Offline status, is this correct?
 
-Certainly encouraging.  However it might just mean that the first device is
-correct.  I think you only need to find the filesystem superblock to be able
-to report that.
+To be honest, I don't know.  The DDF spec doesn't really go into that sort =
+of
+detail, or at least I didn't find it.
+Given that the device is Missing, it hardly seems to matter whether it is
+Active or Spare or Foreign or Legacy.
+I guess if it re-appears we want to know what it was ... maybe.
 
 >=20
-> In any case, that one produces a lot of output (some 54MB when fsck is pi=
-ped
-> to a file) that looks bad and still fails to mount.  (I assume that "mount
-> -r /dev/md_restore /mnt/restore" I all I need to mount with?  I also tried
-> with "-t ext4", but that didn't seem to help either).
+> I added the disk back into the container, NO zero-superblock:
+>=20
+>   Physical Disks : 6
+>        Number    RefNo      Size       Device      Type/State
+>           0    06a5f547    479232K /dev/loop2      active/Online
+>           1    47564acc    479232K /dev/loop3      active/Online
+>           2    bf30692c    479232K /dev/loop5      active/Online
+>           3    275d02f5    479232K /dev/loop4      active/Online
+>           4    b0916b3f    479232K /dev/loop6      active/Online
+>           5    65956a72    479232K /dev/loop1      active/Offline,=20
+> Failed, Missing
+>=20
+> It stays active/Offline (this is now correct I assume), Failed (again=20
+> correct if had failed before), but also still missing.
 
-54MB certainly seems like more that we were hoping for.
-Yes, that mount command should be sufficient.  You could try adding "-o
-noload".  I'm not sure what it does but from the code it looks like it tried
-to be more forgiving of some stuff.
-
-
->=20
-> This is a summary of the errors that appear:=20
-> Pass 1: Checking inodes, blocks, and sizes
-> (51 of these)
-> Inode 198574650 has an invalid extent node (blk 38369280, lblk 0)
-> Clear? no
->=20
-> (47 of these)
-> Inode 223871986, i_blocks is 2737216, should be 0.  Fix? no
->=20
-> Pass 2: Checking directory structure
-> Pass 3: Checking directory connectivity
-> /lost+found not found.  Create? no
->=20
-> Pass 4: Checking reference counts
-> Pass 5: Checking group summary information
-> Block bitmap differences:  +(36700161--36700162) +36700164 +36700166
-> +(36700168--36700170) (this goes on like this for many pages.. in fact, m=
-ost
-> of the 54 MB is here)
->=20
-> (and 492 of these)=20
-> Free blocks count wrong for group #3760 (24544, counted=3D16439).
-> Fix? no
->=20
-> Free blocks count wrong for group #3761 (0, counted=3D16584).
-> Fix? no
->=20
-> /dev/md_restore: ********** WARNING: Filesystem still has errors ********=
-**
-> /dev/md_restore: 107033/274718720 files (5.6% non-contiguous),
-> 976413581/1098853872 blocks
->=20
->=20
-> I also tried setting the reshape number to 1002152448 , 1002153984,
-> 1002157056 , 1002158592 and 1002160128 (+/ - a couple of multiples) but
-> output didn't seem to change much in any case.. Not sure if there are many
-> different values worth testing there.
-
-Probably not.
-
->=20
-> So, unless there's something else worth trying based on the above, it loo=
-ks
-> to me that it's time to raise the white flag and start again... it's not =
-too
-> bad, I'll recover most of the data.
->=20
-> Many thanks for your help so far, but if I may... 1 more question...
-> Hopefully I won't lose a disk during re-shape in the future, but just in
-> case I do, or for other unforeseen issues, what are good things to backup=
- on
-> a system?  Is it enough to backup the /etc/mdadm/mdadm.conf and /proc/mds=
-tat
-> on a regular basis?  Or should I also backup the device superblocks?  Or
-> something else? =20
-
-There isn't really any need to backup anything.  Just don't use a buggy
-kernel (which unfortunately I let out into the wild and got into Ubuntu).
-The most useful thing if things do go wrong is the "mdadm --examine" output
-of all devices.
+I found why this happens.  When I added code to support incremental assembly
+of DDF arrays, I broke the ability to hot-add a device which happened to ha=
+ve
+reasonably good looking metadata on it.  The best approach for now is to
+--zero the device first.  I'll push out a patch which does just that.
 
 
 >=20
-> Ok, so that's actually 4 questions  ... sorry :-)
+> I remove the disk again, do a zero-superblock and add it again:
 >=20
-> Thanks again for all your efforts.=20
-> Sam
+> Physical Disks : 6
+>        Number    RefNo      Size       Device      Type/State
+>           0    06a5f547    479232K /dev/loop2      active/Online
+>           1    47564acc    479232K /dev/loop3      active/Online
+>           2    bf30692c    479232K /dev/loop5      active/Online
+>           3    275d02f5    479232K /dev/loop4      active/Online
+>           4    b0916b3f    479232K /dev/loop6      active/Online
+>           5    ede51ba3    479232K /dev/loop1      active/Online, Rebuild=
+ing
+>=20
+> This is correct, the disk is seen as a new disk and rebuilding starts.
+>=20
+>=20
+> Regards,
+>=20
+> Albert
 
-Sorry we couldn't get your data back.
+diff --git a/Manage.c b/Manage.c
+index f83af65..7f27f74 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -786,6 +786,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 			return -1;
+ 		}
+=20
++		Kill(dv->devname, NULL, 0, -1, 0);
+ 		dfd =3D dev_open(dv->devname, O_RDWR | O_EXCL|O_DIRECT);
+ 		if (mdmon_running(tst->container_dev))
+ 			tst->update_tail =3D &tst->updates;
 
+
+
+Thanks,
 NeilBrown
 
---Sig_/XBpw2UNFpCBcgq_6jd93Vr0
+
+--Sig_/u4qDz64kN7WOQe3Z5uoc3Gi
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUCq9nTnsnt1WYoG5AQLDng//dnQICckmsLq4M74f3pWjYhDnub1cc6I0
-lX42yRppGiYYTIW0ocuSzLo+4oMYYIqDOOFpisce1QlCI+1YhC3KqIqtxpn5+MmW
-RPbIU4U1ntYiqD2651cj7jpVgtJ/aQTFadDTBITRiYmlrApHb59rBFtdJT/WXKp7
-QGF62aV6UXSxjPidSEazxN1w7j34acTOdTWqnGxa7Vuj+hyplF6QY0Gd/IWptDvL
-zN+R9AbfCem5ULONG7DaoWVFog6t9J861upPvAJR7YXmgWF3zcpet/eqbl8nzmQE
-Q2sWUObuZqA6u4ti8HsgW1wrY1CjIfZm9jW4QrFoVhwCbH7J5F+k5LgDuYv4i9xU
-xhjUGKEI5W55+BAHQr+GE72LlcO6hfcd5MFMpUFIkVxWxMEIGxegMVS3BZw9F+dT
-fwA9lbocYdgD16iLG0rBcicjzUu+sf0VxHnDJNTIzxg+8l0G2MhCJEKdsryeeaxA
-W1a6MvFVSJYxDk43oWHieLLn+6ZwydOVua91efqFUWcFxq/R7H2hMTH5RuyG0AwA
-gavy7L2fjtjj5RoevX6H6pLxK12Kq1SaTrhgooQVcQ4G5dhD+fyDC2T/rKG6uU9w
-hCdbO2ASzGwDkFplXZ1iR9W67vhV3wn9B1TzrAC/e+ffaiy1pLOpi1m0Zif2uEkG
-lKq15mPUBVk=
-=Srar
+iQIVAwUBUCrfuTnsnt1WYoG5AQLkUxAAkUAKXNwVerYZnUMR9pegw/iulyXIoLLw
+0SFb+F98l5TR/x0/9MRS5mYigE4o2iNpWn2C6tJgoeyCKGA9Q309vwqGyVtTOmcL
+Khj9sOFb+o9XbxAcwTrZlVOYTEBHDfo7cR+DWuhxrGMgUtuZJh9QfFKAG510wlMY
+daoSwd9rHw/VjMDru9Da+zISfpzOkK20ex6DKd9plkoy25VA4iATtzn6yNFmDdBy
+1WnqRcDduU2cufZhuVQ9L1nj9yZMm/xTLeIsa6LIQ8Vr1GcQa3tzhgvpH7pImN7Z
+mEaWJJC0pue148c/H51Pss5pRMSbx7Vzp8YWjPE+c3ngKjH5vn1af8DfJwGoHJFv
+kvtW8JsBrKJjcqUREKeLIukAmIY6mTbmBWpWEYyN7uTvO5/O6f1ymk6GWIf3aDup
+lEuXpdJ/Mu/zBuwT+lLxv0fOQJ6twOd/zoi5esk+b61eBwCgFX7dFCTkXZDx0rUT
+HjpHkuj06vJ/cGfrYmLcoFVYl7jnXOtTUmvSL+VeDBtIT/IqFxqULl9SunvGvrX7
+TQIRUhjoYsCE4WLCqREE8a7tVCS9s3f4ZryWFrEXb2ABCS6ckSdWTmJIcMQOpT2F
+ZzfS0M29pyOiJ7UhqN60o6nW+sDK9/kKd80Bs9j6JoRQk7g5NWvfSir3RQO71P9p
+wP6gqqEYV3g=
+=4LTx
 -----END PGP SIGNATURE-----
 
---Sig_/XBpw2UNFpCBcgq_6jd93Vr0--
+--Sig_/u4qDz64kN7WOQe3Z5uoc3Gi--
