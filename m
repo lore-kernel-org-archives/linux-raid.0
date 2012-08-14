@@ -1,161 +1,83 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [patch v2]raid5: fix directio regression
-Date: Tue, 14 Aug 2012 14:33:43 +0800
-Message-ID: <20120814063343.GA30353@kernel.org>
-References: <20120807032240.GA22495@kernel.org>
- <201208071312593120932@gmail.com>
- <CANejiEUQcA6X75WG0xSgSv6NAQaBQnwpDD-5QaNVbqmo-oqLsA@mail.gmail.com>
- <201208071421033759628@gmail.com>
- <CANejiEVoOprAFoS6mCVYDJKh+nbGE0=7Xw_CpVS+Z9AcUoh6RQ@mail.gmail.com>
- <201208081321202343795@gmail.com>
- <CANejiEWC5ZKWT2L4DM-bfGi+v=TpkABruQqe5h0qG4oQg9sDhw@mail.gmail.com>
- <201208090919591567972@gmail.com>
- <20120809113230.152aade3@notabene.brown>
- <CANejiEX1TKG_KhAsgUauHaCe2GE7jU1ozD-3c21VFgrm9COajQ@mail.gmail.com>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
+Subject: Re: Re: [patch 2/2 v3]raid5: create multiple threads to handle stripes
+Date: Tue, 14 Aug 2012 18:39:34 +0800
+Message-ID: <201208141839308288603@gmail.com>
+References: <20120809085808.GB30111@kernel.org> <201208111645321254409@gmail.com> <CANejiEVNPv6qVJ1nsvt21VMF8Py=3L8sABh9wab9eCQfdRAGeA@mail.gmail.com> <201208130906432967842@gmail.com> <20120813021324.GB447@kernel.org>,
+	<CANejiEUoguBD8PRAAuj=ATk+gd0RAqCTNjV12odSChejX-+R6Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CANejiEX1TKG_KhAsgUauHaCe2GE7jU1ozD-3c21VFgrm9COajQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Jianpeng Ma <majianpeng@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
+To: shli <shli@kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Aug 09, 2012 at 01:07:01PM +0800, Shaohua Li wrote:
-> 2012/8/9 NeilBrown <neilb@suse.de>:
-> > On Thu, 9 Aug 2012 09:20:05 +0800 "Jianpeng Ma" <majianpeng@gmail.com> wrote:
-> >
-> >> On 2012-08-08 20:53 Shaohua Li <shli@kernel.org> Wrote:
-> >> >2012/8/8 Jianpeng Ma <majianpeng@gmail.com>:
-> >> >> On 2012-08-08 10:58 Shaohua Li <shli@kernel.org> Wrote:
-> >> >>>2012/8/7 Jianpeng Ma <majianpeng@gmail.com>:
-> >> >>>> On 2012-08-07 13:32 Shaohua Li <shli@kernel.org> Wrote:
-> >> >>>>>2012/8/7 Jianpeng Ma <majianpeng@gmail.com>:
-> >> >>>>>> On 2012-08-07 11:22 Shaohua Li <shli@kernel.org> Wrote:
-> >> >>>>>>>My directIO randomwrite 4k workload shows a 10~20% regression caused by commit
-> >> >>>>>>>895e3c5c58a80bb. directIO usually is random IO and if request size isn't big
-> >> >>>>>>>(which is the common case), delay handling of the stripe hasn't any advantages.
-> >> >>>>>>>For big size request, delay can still reduce IO.
-> >> >>>>>>>
-> >> >>>>>>>Signed-off-by: Shaohua Li <shli@fusionio.com>
-> >> >>>> [snip]
-> >> >>>>>>>--
-> >> >>>>>> May be used size to judge is not a good method.
-> >> >>>>>> I firstly sended this patch, only want to control direct-write-block,not for reqular file.
-> >> >>>>>> Because i think if someone used direct-write-block for raid5,he should know the feature of raid5 and he can control
-> >> >>>>>> for write to full-write.
-> >> >>>>>> But at that time, i did know how to differentiate between regular file and block-device.
-> >> >>>>>> I thik we should do something to do this.
-> >> >>>>>
-> >> >>>>>I don't think it's possible user can control his write to be a
-> >> >>>>>full-write even for
-> >> >>>>>raw disk IO. Why regular file and block device io matters here?
-> >> >>>>>
-> >> >>>>>Thanks,
-> >> >>>>>Shaohua
-> >> >>>> Another problem is the size. How to judge the size is large or not?
-> >> >>>> A syscall write is a dio and a dio may be split more bios.
-> >> >>>> For my workload, i usualy write chunk-size.
-> >> >>>> But your patch is judge by bio-size.
-> >> >>>
-> >> >>>I'd ignore workload which does sequential directIO, though
-> >> >>>your workload is, but I bet no real workloads are. So I'd like
-> >> >> Sorry,my explain maybe not corcrect. I write data once which size is almost chunks-size * devices,in order to full-write
-> >> >> and as possible as to no pre-read operation.
-> >> >>>only to consider big size random directio. I agree the size
-> >> >>>judge is arbitrary. I can optimize it to be only consider stripe
-> >> >>>which hits two or more disks in one bio, but not sure if it's
-> >> >>>worthy doing. Not ware big size directio is common, and even
-> >> >>>is, big size request IOPS is low, a bit delay maybe not a big
-> >> >>>deal.
-> >> >> If add a acc_time for 'striep_head' to control?
-> >> >> When get_active_stripe() is ok, update acc_time.
-> >> >> For some time, stripe_head did not access and it shold pre-read.
-> >> >
-> >> >Do you want to add a timer for each stripe? This is even ugly.
-> >> >How do you choose the expire time? A time works for harddisk
-> >> >definitely will not work for a fast SSD.
-> >> A time is like the size which is arbitrary.
-> >> How about add a interface in sysfs to control by user?
-> >> Only user can judge the workload, which sequatial write or random write.
-> >
-> > This is getting worse by the minute.  A sysfs interface for this is
-> > definitely not a good idea.
-> >
-> > The REQ_NOIDLE flag is a pretty clear statement that no more requests that
-> > merge with this one are expected.  If some use cases sends random requests,
-> > maybe it should be setting REQ_NOIDLE.
-> >
-> > Maybe someone should do some research and find out why WRITE_ODIRECT doesn't
-> > include REQ_NOIDLE.  Understanding that would help understand the current
-> > problem.
-> 
-> A quick search shows only cfq-iosched uses REQ_NOIDLE. In
-> cfq, a queue is idled to avoid losing its share. REQ_NOIDLE
-> tells cfq to avoid idle, since the task will not dispatch further
-> requests any more. Note this isn't no merge.
+T24gMjAxMi0wOC0xMyAxMDoyMCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
+PjIwMTIvOC8xMyBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+Og0KPj4gT24gTW9uLCBBdWcg
+MTMsIDIwMTIgYXQgMDk6MDY6NDVBTSArMDgwMCwgSmlhbnBlbmcgTWEgd3JvdGU6DQo+Pj4gT24g
+MjAxMi0wOC0xMyAwODoyMSBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0KPj4+
+ID4yMDEyLzgvMTEgSmlhbnBlbmcgTWEgPG1hamlhbnBlbmdAZ21haWwuY29tPjoNCj4+PiA+PiBP
+biAyMDEyLTA4LTA5IDE2OjU4IFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4gV3JvdGU6DQo+
+Pj4gPj4+VGhpcyBpcyBhIG5ldyB0ZW1wdCB0byBtYWtlIHJhaWQ1IGhhbmRsZSBzdHJpcGVzIGlu
+IG11bHRpcGxlIHRocmVhZHMsIGFzDQo+Pj4gPj4+c3VnZ2VzdGVkIGJ5IE5laWwgdG8gaGF2ZSBt
+YXhpdW0gZmxleGliaWxpdHkgYW5kIGJldHRlciBudW1hIGJpbmRpbmcuIEl0DQo+Pj4gPj4+YmFz
+aWNhbGx5IGlzIGEgY29tYmluYXRpb24gb2YgbXkgZmlyc3QgYW5kIHNlY29uZCBnZW5lcmF0aW9u
+IHBhdGNoZXMuIEJ5DQo+Pj4gPj4+ZGVmYXVsdCwgbm8gbXVsdGlwbGUgdGhyZWFkIGlzIGVuYWJs
+ZWQgKGFsbCBzdHJpcGVzIGFyZSBoYW5kbGVkIGJ5IHJhaWQ1ZCkuDQo+Pj4gPj4+DQo+Pj4gPj4+
+QW4gZXhhbXBsZSB0byBlbmFibGUgbXVsdGlwbGUgdGhyZWFkczoNCj4+PiA+Pj4jZWNobyAzID4g
+L3N5cy9ibG9jay9tZDAvbWQvYXV4dGhyZWFkX251bWJlcg0KPj4+ID4+PlRoaXMgd2lsbCBjcmVh
+dGUgMyBhdXhpbGlhcnkgdGhyZWFkcyB0byBoYW5kbGUgc3RyaXBlcy4gVGhlIHRocmVhZHMgY2Fu
+IHJ1bg0KPj4+ID4+Pm9uIGFueSBjcHVzIGFuZCBoYW5kbGUgc3RyaXBlcyBwcm9kdWNlZCBieSBh
+bnkgY3B1cy4NCj4+PiA+Pj4NCj4+PiA+Pj4jZWNobyAxLTMgPiAvc3lzL2Jsb2NrL21kMC9tZC9h
+dXh0aDAvY3B1bGlzdA0KPj4+ID4+PlRoaXMgd2lsbCBiaW5kIGF1eGlsaWFyeSB0aHJlYWQgMCB0
+byBjcHUgMS0zLCBhbmQgdGhpcyB0aHJlYWQgd2lsbCBvbmx5IGhhbmRsZQ0KPj4+ID4+PnN0cmlw
+ZXMgcHJvZHVjZWQgYnkgY3B1IDEtMy4gVXNlciB0b29sIGNhbiBmdXJ0aGVyIGNoYW5nZSB0aGUg
+dGhyZWFkJ3MNCj4+PiA+Pj5hZmZpbml0eSwgYnV0IHRoZSB0aHJlYWQgY2FuIG9ubHkgaGFuZGxl
+IHN0cmlwZXMgcHJvZHVjZWQgYnkgY3B1IDEtMyB0aWxsIHRoZQ0KPj4+ID4+PnN5c2ZzIGVudHJ5
+IGlzIGNoYW5nZWQgYWdhaW4uDQo+Pj4gPj4+DQo+Pj4gPj4+SWYgc3RyaXBlcyBwcm9kdWNlZCBi
+eSBhIENQVSBhcmVuJ3QgaGFuZGxlZCBieSBhbnkgYXV4aWxpYXJ5IHRocmVhZCwgc3VjaA0KPj4+
+ID4+PnN0cmlwZXMgd2lsbCBiZSBoYW5kbGVkIGJ5IHJhaWQ1ZC4gT3RoZXJ3aXNlLCByYWlkNWQg
+ZG9lc24ndCBoYW5kbGUgYW55DQo+Pj4gPj4+c3RyaXBlcy4NCj4+PiA+Pj4NCj4+PiA+PiBJIHRl
+c3RlZCBhbmQgZm91bmQgdHdvIHByb2JsZW0obWF5YmUgbm90KS4NCj4+PiA+Pg0KPj4+ID4+IDE6
+cHJpbnQgY3B1bGlzdCBvZiBhdXh0aCwgeW91IG1heWJlIGxvc3QgcHJpbnQgdGhlICdcbicuDQo+
+Pj4gPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2RyaXZlcnMvbWQvcmFpZDUu
+Yw0KPj4+ID4+IGluZGV4IDdjODE1MWEuLjM3MDBjZGMgMTAwNjQ0DQo+Pj4gPj4gLS0tIGEvZHJp
+dmVycy9tZC9yYWlkNS5jDQo+Pj4gPj4gKysrIGIvZHJpdmVycy9tZC9yYWlkNS5jDQo+Pj4gPj4g
+QEAgLTQ5MTEsOSArNDkxMSwxMyBAQCBzdHJ1Y3QgcmFpZDVfYXV4dGhfc3lzZnMgew0KPj4+ID4+
+ICBzdGF0aWMgc3NpemVfdCByYWlkNV9zaG93X3RocmVhZF9jcHVsaXN0KHN0cnVjdCBtZGRldiAq
+bWRkZXYsDQo+Pj4gPj4gICAgICAgICBzdHJ1Y3QgcmFpZDVfYXV4dGggKnRocmVhZCwgY2hhciAq
+cGFnZSkNCj4+PiA+PiAgew0KPj4+ID4+ICsgICAgICAgaW50IG47DQo+Pj4gPj4gICAgICAgICBp
+ZiAoIW1kZGV2LT5wcml2YXRlKQ0KPj4+ID4+ICAgICAgICAgICAgICAgICByZXR1cm4gMDsNCj4+
+PiA+PiAtICAgICAgIHJldHVybiBjcHVsaXN0X3NjbnByaW50ZihwYWdlLCBQQUdFX1NJWkUsICZ0
+aHJlYWQtPndvcmtfbWFzayk7DQo+Pj4gPj4gKyAgICAgICBuID0gY3B1bGlzdF9zY25wcmludGYo
+cGFnZSwgUEFHRV9TSVpFIC0gMiwgJnRocmVhZC0+d29ya19tYXNrKTsNCj4+PiA+PiArICAgICAg
+IHBhZ2VbbisrXSA9ICdcbic7DQo+Pj4gPj4gKyAgICAgICBwYWdlW25dID0gMDsNCj4+PiA+PiAr
+ICAgICAgIHJldHVybiBuOw0KPj4+ID4+ICB9DQo+Pj4gPj4NCj4+PiA+PiAgc3RhdGljIHNzaXpl
+X3QNCj4+PiA+DQo+Pj4gPnNvbWUgc3lzZnMgZW50cmllcyBwcmludCBvdXQgJ1xuJywgc29tZSBu
+b3QsIEkgZG9uJ3QgbWluZCBhZGQgaXQNCj4+PiBJIHNlYXJjaCBrZXJuZWwgY29kZSBmb3VuZCBw
+bGFjZXMgd2hpY2ggbGlrZSB0aGlzIHByaW50IG91dCAnXG4nOw0KPj4+IENhbiB5b3UgdGVsbCBy
+dWxlIHdoaWNoIHVzZSBvciBub3Q/DQo+Pj4gVGhhbmtzIQ0KPj4NCj4+IEknbSBub3QgYXdhcmUg
+YW55IHJ1bGUgYWJvdXQgdGhpcw0KPj4NCj4+PiA+PiAyOiBUZXN0ICdkZCBpZj0vZGV2L3plcm8g
+b2Y9L2Rldi9tZDAgYnM9Mk0gJywgdGhlIHBlcmZvcm1hbmNlIHJlZ3Jlc3MgcmVtYXJrYWJsZS4N
+Cj4+PiA+PiBhdXh0aHJlYWRfbnVtYmVyPTAsIDIwME1CL3M7DQo+Pj4gPj4gYXV4dGhyZWFkX251
+bWJlcj00LCA5NU1CL3MuDQo+Pj4gPg0KPj4+ID5TbyBtdWx0aXBsZSB0aHJlYWRzIGhhbmRsZSBz
+dHJpcGVzIHJlZHVjZSByZXF1ZXN0IG1lcmdlLiBJbiB5b3VyDQo+Pj4gPndvcmtsb2FkLCByYWlk
+NWQgaXNuJ3QgYSBib3R0bGVuZWNrIGF0IGFsbC4gSW4gcHJhY3RpY2UsIEkgdGhvdWdodCBvbmx5
+DQo+Pj4gPmFycmF5IHdoaWNoIGNhbiBkcml2ZSBoaWdoIElPUFMgbmVlZHMgZW5hYmxlIG11bHRp
+IHRocmVhZC4gQW5kDQo+Pj4gPmlmIHlvdSBjcmVhdGUgbXVsdGlwbGUgdGhyZWFkcywgYmV0dGVy
+IGxldCB0aGUgdGhyZWFkcyBoYW5kbGUgZGlmZmVyZW50DQo+Pj4gPmNwdXMuDQo+Pj4gSSB3aWxs
+IHRlc3QgZm9yIG11bHRpcGxlIHRocmVhZHMuDQo+PiBUaGFua3MNCkkgdXNlZCBmaW8gZm9yIHJh
+bmR3cml0ZSB0ZXN0IHVzaW5nIGZvdXIgdGhyZWFkIHdoaWNoIHJ1biBkaWZmZXJlbnQgY3B1cy4N
+ClRoZSBicyBpcyA0ay84ay8xNmsuDQpUaGUgcmVzdWx0IGlzbid0IGluY3JlYXNlIHJlZ2FyZGxl
+c3Mgb2Ygd2hldGhlciB1c2luZyBhdXRocmVhZChmb3VyIGF1dGhyZWFkIHdoaWNoIHJ1biBkaWZm
+ZXJlbnQgY3B1KSBvciBub3Q/DQpNYXliZSBteSB0ZXN0IGNvbmZpZyBoYWQgcHJvYmxlbT8NCj4N
+Cj5CVFcsIGNhbiB5b3UgdHJ5IGJlbG93IHBhdGNoIGZvciB0aGUgYWJvdmUgZGQgd29ya2xvYWQ/
+DQo+aHR0cDovL2dpdC5rZXJuZWwuZGsvP3A9bGludXgtYmxvY2suZ2l0O2E9Y29tbWl0ZGlmZjto
+PTI3NDE5MzIyNGNkYWJkNjg3ZDgwNGEyNmUwMTUwYmIyMGYyZGQ1MmMNCj5UaGF0IG9uZSBpcyBy
+ZXZlcnRlZCBpbiB1cHN0cmVhbSwgYnV0IGV2ZW50dWFsbHkgd2Ugc2hvdWxkIG1ha2UgaXQNCj5l
+bnRlciBhZ2FpbiBhZnRlciBzb21lIENGUSBpc3N1ZXMgYXJlIGZpeGVkLg0KSSB0ZXN0ZWQgdGhp
+cyBwYXRjaC5BbmQgbm90IGZvdW5kIHByb2JsZW0uQW5kIHRoZSBwZXJmb3JtYW5jZSBkaWQgbm90
+IGluY3JlYXNlLg0K
 
-Since REQ_NOIDLE has no relationship with request merge, we'd better remove it.
-I came out a new patch, which doesn't depend on request size any more. With
-this patch, sequential directio will still introduce unnecessary raid5 preread
-(especially for small size IO), but I bet no app does sequential small size
-directIO.
-
-Thanks,
-Shaohua
-
-Subject: raid5: fix directio regression
-
-My directIO randomwrite 4k workload shows a 10~20% regression caused by commit
-895e3c5c58a80bb. This commit isn't friendly for small size random IO, because
-delaying such request hasn't any advantages.
-
-DirectIO usually is random IO. I thought we can ignore request merge between
-bios from different io_submit. So we only consider one bio which can drive
-unnecessary preread in raid5, which is large request. If a bio is large enough
-and some of its stripes will access two or more disks, such stripes should be
-delayed to avoid unnecessary preread till bio for the last disk of the strips
-is added.
-
-REQ_NOIDLE doesn't mean about request merge, I deleted it.
-
-Signed-off-by: Shaohua Li <shli@fusionio.com>
----
- drivers/md/raid5.c |    9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
-
-Index: linux/drivers/md/raid5.c
-===================================================================
---- linux.orig/drivers/md/raid5.c	2012-08-13 15:03:16.479473326 +0800
-+++ linux/drivers/md/raid5.c	2012-08-14 11:10:37.335982170 +0800
-@@ -4076,6 +4076,7 @@ static void make_request(struct mddev *m
- 	struct stripe_head *sh;
- 	const int rw = bio_data_dir(bi);
- 	int remaining;
-+	int chunk_sectors;
- 
- 	if (unlikely(bi->bi_rw & REQ_FLUSH)) {
- 		md_flush_request(mddev, bi);
-@@ -4089,6 +4090,11 @@ static void make_request(struct mddev *m
- 	     chunk_aligned_read(mddev,bi))
- 		return;
- 
-+	if (mddev->new_chunk_sectors < mddev->chunk_sectors)
-+		chunk_sectors = mddev->new_chunk_sectors;
-+	else
-+		chunk_sectors = mddev->chunk_sectors;
-+
- 	logical_sector = bi->bi_sector & ~((sector_t)STRIPE_SECTORS-1);
- 	last_sector = bi->bi_sector + (bi->bi_size>>9);
- 	bi->bi_next = NULL;
-@@ -4192,7 +4198,8 @@ static void make_request(struct mddev *m
- 			finish_wait(&conf->wait_for_overlap, &w);
- 			set_bit(STRIPE_HANDLE, &sh->state);
- 			clear_bit(STRIPE_DELAYED, &sh->state);
--			if ((bi->bi_rw & REQ_NOIDLE) &&
-+			if ((bi->bi_rw & REQ_SYNC) &&
-+			    (last_sector - logical_sector < chunk_sectors) &&
- 			    !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
- 				atomic_inc(&conf->preread_active_stripes);
- 			release_stripe_plug(mddev, sh);
