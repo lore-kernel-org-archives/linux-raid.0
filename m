@@ -1,210 +1,128 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: md raid10 Oops on recent kernels
-Date: Wed, 15 Aug 2012 14:44:01 +1000
-Message-ID: <20120815144401.122152d7@notabene.brown>
-References: <CANZ+j8dDLqe=30AFd7oJ9WjhTSTRfbkXPBfBdG3GH=7eHkUqeA@mail.gmail.com>
-	<20120814105043.05c62805@notabene.brown>
-	<CANZ+j8dT9PhokMroU-8bMDQGCnYJsmEn807j2GeyOC3gQ9OiEA@mail.gmail.com>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
+Subject: Re: Re: [patch 2/2 v3]raid5: create multiple threads to handle stripes
+Date: Wed, 15 Aug 2012 14:21:26 +0800
+Message-ID: <2012081514211356241613@gmail.com>
+References: <20120809085808.GB30111@kernel.org> <201208111645321254409@gmail.com> <CANejiEVNPv6qVJ1nsvt21VMF8Py=3L8sABh9wab9eCQfdRAGeA@mail.gmail.com> <201208130906432967842@gmail.com> <20120813021324.GB447@kernel.org> <CANejiEUoguBD8PRAAuj=ATk+gd0RAqCTNjV12odSChejX-+R6Q@mail.gmail.com> <201208141839308288603@gmail.com>,
+	<CANejiEUjxR1Rt=2APf+kGXmzKYbcg_ZOztR3LirKbDERj7FG0A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/oWI8LaIIVB0F5CWfDOzG8/S"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CANZ+j8dT9PhokMroU-8bMDQGCnYJsmEn807j2GeyOC3gQ9OiEA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ivan Vasilyev <ivan.vasilyev@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: shli <shli@kernel.org>, Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/oWI8LaIIVB0F5CWfDOzG8/S
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+T24gMjAxMi0wOC0xNSAxMTo1MSBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
+PjIwMTIvOC8xNCBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+Og0KPj4gT24gMjAx
+Mi0wOC0xMyAxMDoyMCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0KPj4+MjAx
+Mi84LzEzIFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz46DQo+Pj4+IE9uIE1vbiwgQXVnIDEz
+LCAyMDEyIGF0IDA5OjA2OjQ1QU0gKzA4MDAsIEppYW5wZW5nIE1hIHdyb3RlOg0KPj4+Pj4gT24g
+MjAxMi0wOC0xMyAwODoyMSBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0KPj4+
+Pj4gPjIwMTIvOC8xMSBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+Og0KPj4+Pj4g
+Pj4gT24gMjAxMi0wOC0wOSAxNjo1OCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3Rl
+Og0KPj4+Pj4gPj4+VGhpcyBpcyBhIG5ldyB0ZW1wdCB0byBtYWtlIHJhaWQ1IGhhbmRsZSBzdHJp
+cGVzIGluIG11bHRpcGxlIHRocmVhZHMsIGFzDQo+Pj4+PiA+Pj5zdWdnZXN0ZWQgYnkgTmVpbCB0
+byBoYXZlIG1heGl1bSBmbGV4aWJpbGl0eSBhbmQgYmV0dGVyIG51bWEgYmluZGluZy4gSXQNCj4+
+Pj4+ID4+PmJhc2ljYWxseSBpcyBhIGNvbWJpbmF0aW9uIG9mIG15IGZpcnN0IGFuZCBzZWNvbmQg
+Z2VuZXJhdGlvbiBwYXRjaGVzLiBCeQ0KPj4+Pj4gPj4+ZGVmYXVsdCwgbm8gbXVsdGlwbGUgdGhy
+ZWFkIGlzIGVuYWJsZWQgKGFsbCBzdHJpcGVzIGFyZSBoYW5kbGVkIGJ5IHJhaWQ1ZCkuDQo+Pj4+
+PiA+Pj4NCj4+Pj4+ID4+PkFuIGV4YW1wbGUgdG8gZW5hYmxlIG11bHRpcGxlIHRocmVhZHM6DQo+
+Pj4+PiA+Pj4jZWNobyAzID4gL3N5cy9ibG9jay9tZDAvbWQvYXV4dGhyZWFkX251bWJlcg0KPj4+
+Pj4gPj4+VGhpcyB3aWxsIGNyZWF0ZSAzIGF1eGlsaWFyeSB0aHJlYWRzIHRvIGhhbmRsZSBzdHJp
+cGVzLiBUaGUgdGhyZWFkcyBjYW4gcnVuDQo+Pj4+PiA+Pj5vbiBhbnkgY3B1cyBhbmQgaGFuZGxl
+IHN0cmlwZXMgcHJvZHVjZWQgYnkgYW55IGNwdXMuDQo+Pj4+PiA+Pj4NCj4+Pj4+ID4+PiNlY2hv
+IDEtMyA+IC9zeXMvYmxvY2svbWQwL21kL2F1eHRoMC9jcHVsaXN0DQo+Pj4+PiA+Pj5UaGlzIHdp
+bGwgYmluZCBhdXhpbGlhcnkgdGhyZWFkIDAgdG8gY3B1IDEtMywgYW5kIHRoaXMgdGhyZWFkIHdp
+bGwgb25seSBoYW5kbGUNCj4+Pj4+ID4+PnN0cmlwZXMgcHJvZHVjZWQgYnkgY3B1IDEtMy4gVXNl
+ciB0b29sIGNhbiBmdXJ0aGVyIGNoYW5nZSB0aGUgdGhyZWFkJ3MNCj4+Pj4+ID4+PmFmZmluaXR5
+LCBidXQgdGhlIHRocmVhZCBjYW4gb25seSBoYW5kbGUgc3RyaXBlcyBwcm9kdWNlZCBieSBjcHUg
+MS0zIHRpbGwgdGhlDQo+Pj4+PiA+Pj5zeXNmcyBlbnRyeSBpcyBjaGFuZ2VkIGFnYWluLg0KPj4+
+Pj4gPj4+DQo+Pj4+PiA+Pj5JZiBzdHJpcGVzIHByb2R1Y2VkIGJ5IGEgQ1BVIGFyZW4ndCBoYW5k
+bGVkIGJ5IGFueSBhdXhpbGlhcnkgdGhyZWFkLCBzdWNoDQo+Pj4+PiA+Pj5zdHJpcGVzIHdpbGwg
+YmUgaGFuZGxlZCBieSByYWlkNWQuIE90aGVyd2lzZSwgcmFpZDVkIGRvZXNuJ3QgaGFuZGxlIGFu
+eQ0KPj4+Pj4gPj4+c3RyaXBlcy4NCj4+Pj4+ID4+Pg0KPj4+Pj4gPj4gSSB0ZXN0ZWQgYW5kIGZv
+dW5kIHR3byBwcm9ibGVtKG1heWJlIG5vdCkuDQo+Pj4+PiA+Pg0KPj4+Pj4gPj4gMTpwcmludCBj
+cHVsaXN0IG9mIGF1eHRoLCB5b3UgbWF5YmUgbG9zdCBwcmludCB0aGUgJ1xuJy4NCj4+Pj4+ID4+
+IGRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LmMgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCj4+
+Pj4+ID4+IGluZGV4IDdjODE1MWEuLjM3MDBjZGMgMTAwNjQ0DQo+Pj4+PiA+PiAtLS0gYS9kcml2
+ZXJzL21kL3JhaWQ1LmMNCj4+Pj4+ID4+ICsrKyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4+Pj4g
+Pj4gQEAgLTQ5MTEsOSArNDkxMSwxMyBAQCBzdHJ1Y3QgcmFpZDVfYXV4dGhfc3lzZnMgew0KPj4+
+Pj4gPj4gIHN0YXRpYyBzc2l6ZV90IHJhaWQ1X3Nob3dfdGhyZWFkX2NwdWxpc3Qoc3RydWN0IG1k
+ZGV2ICptZGRldiwNCj4+Pj4+ID4+ICAgICAgICAgc3RydWN0IHJhaWQ1X2F1eHRoICp0aHJlYWQs
+IGNoYXIgKnBhZ2UpDQo+Pj4+PiA+PiAgew0KPj4+Pj4gPj4gKyAgICAgICBpbnQgbjsNCj4+Pj4+
+ID4+ICAgICAgICAgaWYgKCFtZGRldi0+cHJpdmF0ZSkNCj4+Pj4+ID4+ICAgICAgICAgICAgICAg
+ICByZXR1cm4gMDsNCj4+Pj4+ID4+IC0gICAgICAgcmV0dXJuIGNwdWxpc3Rfc2NucHJpbnRmKHBh
+Z2UsIFBBR0VfU0laRSwgJnRocmVhZC0+d29ya19tYXNrKTsNCj4+Pj4+ID4+ICsgICAgICAgbiA9
+IGNwdWxpc3Rfc2NucHJpbnRmKHBhZ2UsIFBBR0VfU0laRSAtIDIsICZ0aHJlYWQtPndvcmtfbWFz
+ayk7DQo+Pj4+PiA+PiArICAgICAgIHBhZ2VbbisrXSA9ICdcbic7DQo+Pj4+PiA+PiArICAgICAg
+IHBhZ2Vbbl0gPSAwOw0KPj4+Pj4gPj4gKyAgICAgICByZXR1cm4gbjsNCj4+Pj4+ID4+ICB9DQo+
+Pj4+PiA+Pg0KPj4+Pj4gPj4gIHN0YXRpYyBzc2l6ZV90DQo+Pj4+PiA+DQo+Pj4+PiA+c29tZSBz
+eXNmcyBlbnRyaWVzIHByaW50IG91dCAnXG4nLCBzb21lIG5vdCwgSSBkb24ndCBtaW5kIGFkZCBp
+dA0KPj4+Pj4gSSBzZWFyY2gga2VybmVsIGNvZGUgZm91bmQgcGxhY2VzIHdoaWNoIGxpa2UgdGhp
+cyBwcmludCBvdXQgJ1xuJzsNCj4+Pj4+IENhbiB5b3UgdGVsbCBydWxlIHdoaWNoIHVzZSBvciBu
+b3Q/DQo+Pj4+PiBUaGFua3MhDQo+Pj4+DQo+Pj4+IEknbSBub3QgYXdhcmUgYW55IHJ1bGUgYWJv
+dXQgdGhpcw0KPj4+Pg0KPj4+Pj4gPj4gMjogVGVzdCAnZGQgaWY9L2Rldi96ZXJvIG9mPS9kZXYv
+bWQwIGJzPTJNICcsIHRoZSBwZXJmb3JtYW5jZSByZWdyZXNzIHJlbWFya2FibGUuDQo+Pj4+PiA+
+PiBhdXh0aHJlYWRfbnVtYmVyPTAsIDIwME1CL3M7DQo+Pj4+PiA+PiBhdXh0aHJlYWRfbnVtYmVy
+PTQsIDk1TUIvcy4NCj4+Pj4+ID4NCj4+Pj4+ID5TbyBtdWx0aXBsZSB0aHJlYWRzIGhhbmRsZSBz
+dHJpcGVzIHJlZHVjZSByZXF1ZXN0IG1lcmdlLiBJbiB5b3VyDQo+Pj4+PiA+d29ya2xvYWQsIHJh
+aWQ1ZCBpc24ndCBhIGJvdHRsZW5lY2sgYXQgYWxsLiBJbiBwcmFjdGljZSwgSSB0aG91Z2h0IG9u
+bHkNCj4+Pj4+ID5hcnJheSB3aGljaCBjYW4gZHJpdmUgaGlnaCBJT1BTIG5lZWRzIGVuYWJsZSBt
+dWx0aSB0aHJlYWQuIEFuZA0KPj4+Pj4gPmlmIHlvdSBjcmVhdGUgbXVsdGlwbGUgdGhyZWFkcywg
+YmV0dGVyIGxldCB0aGUgdGhyZWFkcyBoYW5kbGUgZGlmZmVyZW50DQo+Pj4+PiA+Y3B1cy4NCj4+
+Pj4+IEkgd2lsbCB0ZXN0IGZvciBtdWx0aXBsZSB0aHJlYWRzLg0KPj4+PiBUaGFua3MNCj4+IEkg
+dXNlZCBmaW8gZm9yIHJhbmR3cml0ZSB0ZXN0IHVzaW5nIGZvdXIgdGhyZWFkIHdoaWNoIHJ1biBk
+aWZmZXJlbnQgY3B1cy4NCj4+IFRoZSBicyBpcyA0ay84ay8xNmsuDQo+PiBUaGUgcmVzdWx0IGlz
+bid0IGluY3JlYXNlIHJlZ2FyZGxlc3Mgb2Ygd2hldGhlciB1c2luZyBhdXRocmVhZChmb3VyIGF1
+dGhyZWFkIHdoaWNoIHJ1biBkaWZmZXJlbnQgY3B1KSBvciBub3Q/DQo+PiBNYXliZSBteSB0ZXN0
+IGNvbmZpZyBoYWQgcHJvYmxlbT8NCj4NCj5ob3cgZmFzdCBpcyB5b3VyIHJhaWQ/IElmIHlvdXIg
+cmFpZCBjYW4ndCBkcml2ZSBoaWdoIElPUFMsIGl0J3MNCj5ub3Qgc3RyYW5nZSBtdWx0aXRocmVh
+ZCBtYWtlcyBubyBkaWZmZXJlbmNlLg0KPg0KT25seSAxNzUgZm9yIDRLLiBJIHRoaW5rIHlvdXIg
+cGF0Y2ggZm9yIGhhcmRkaXNrIGRvc2Ugbm90IGVmZmVjdC4NCk1heWJlIGl0J3Mgb25seSBmb3Ig
+c3NkLg0KPj4+QlRXLCBjYW4geW91IHRyeSBiZWxvdyBwYXRjaCBmb3IgdGhlIGFib3ZlIGRkIHdv
+cmtsb2FkPw0KPj4+aHR0cDovL2dpdC5rZXJuZWwuZGsvP3A9bGludXgtYmxvY2suZ2l0O2E9Y29t
+bWl0ZGlmZjtoPTI3NDE5MzIyNGNkYWJkNjg3ZDgwNGEyNmUwMTUwYmIyMGYyZGQ1MmMNCj4+PlRo
+YXQgb25lIGlzIHJldmVydGVkIGluIHVwc3RyZWFtLCBidXQgZXZlbnR1YWxseSB3ZSBzaG91bGQg
+bWFrZSBpdA0KPj4+ZW50ZXIgYWdhaW4gYWZ0ZXIgc29tZSBDRlEgaXNzdWVzIGFyZSBmaXhlZC4N
+Cj4+IEkgdGVzdGVkIHRoaXMgcGF0Y2guQW5kIG5vdCBmb3VuZCBwcm9ibGVtLkFuZCB0aGUgcGVy
+Zm9ybWFuY2UgZGlkIG5vdCBpbmNyZWFzZS4NCj4NCj5PaywgZWFjaCB0aHJlYWQgZGVsaXZlcnMg
+cmVxdWVzdCBpbiByYW5kb20gdGltZSwgc28gbWVyZ2UgZG9lc24ndA0KPndvcmsgZXZlbiB3aXRo
+IHRoYXQgcGF0Y2guIEkgZGlkbid0IHdvcnJ5IGFib3V0IGJpZyBzaXplIHJlcXVlc3QgdG9vDQo+
+bXVjaCwgc2luY2UgaWYgeW91IHNldCBjb3JyZWN0IGFmZmluaXR5IGZvciB0aGUgYXV4dGhyZWFk
+LCB0aGUgaXNzdWUNCj5zaG91bGQgZ28gYXdheS4gQW5kIG11bGl0aHJlYWQgaXMgZm9yIGZhc3Qg
+c3RvcmFnZSwgSSBzdXBwb3NlIGl0IGhhcw0KPm5vIGFkdmFudGFnZXMgZm9yIGhhcmRkaXNrIHJh
+aWQuIE9uIHRoZSBvdGhlciBoYW5kLCBtYXliZSB3ZSBjYW4NCj5tYWtlIE1BWF9TVFJJUEVfQkFU
+Q0ggYmlnZ2VyLiBDdXJyZW50bHkgaXQncyA4LCBzbyB0aGUgYXV4dGhyZWFkDQo+d2lsbCBkaXNw
+YXRjaCA4KjRrIHJlcXVlc3QgZm9yIHRoZSB3b3JrbG9hZC4gQ2hhbmdpbmcgaXQgdG8gMTYNCj4o
+MTYqND02NGspIHNob3VsZCBiZSBnb29kIGVub3VnaCBldmVuIGZvciBoYXJkIGRpc2sgcmFpZC4N
+Cj4NCkkgcmV2aWV3IHlvdXIgY29kZSBhbmQgaGF2ZSBhIHF1ZXN0aW9uIGFib3V0IHdha2V1cCBh
+dXRocmVhZDoNCj5zdGF0aWMgdm9pZCByYWlkNV93YWtldXBfc3RyaXBlX3RocmVhZChzdHJ1Y3Qg
+c3RyaXBlX2hlYWQgKnNoKQ0KPnsNCj4gICAgICAgc3RydWN0IHI1Y29uZiAqY29uZiA9IHNoLT5y
+YWlkX2NvbmY7DQo+ICAgICAgIHN0cnVjdCByYWlkNV9wZXJjcHUgKnBlcmNwdTsNCj4gICAgICAg
+aW50IGksIG9ycGhhbmVkID0gMTsNCj4NCj4gICAgICAgcGVyY3B1ID0gcGVyX2NwdV9wdHIoY29u
+Zi0+cGVyY3B1LCBzaC0+Y3B1KTsNCj4gICAgICAgZm9yX2VhY2hfY3B1KGksICZwZXJjcHUtPmhh
+bmRsZV90aHJlYWRzKSB7DQo+ICAgICAgICAgICAgICAgbWRfd2FrZXVwX3RocmVhZChjb25mLT5h
+dXhfdGhyZWFkc1tpXS0+dGhyZWFkKTsNCj4gICAgICAgICAgICAgICBvcnBoYW5lZCA9IDA7DQo+
+ICAgICAgIH0NCklmIHRoZXJlIGFyZSBzbWFsbCBzdHJpcGVzIGluIGhhbmRsZV90aHJlYWRzIG9m
+IGNwdTAuQnV0IHRoZSBhdXRocmVhZDAvMSBjYW4gcnVuIGNwdTAuDQpJdCdzIG5vIG5lY2Vzc2Fy
+eSB0byB3YWt1cCBhbGwgdGhyZWFkLmF1dGhyZWFkMCBtYXkgZXhlYyBhbGwgc3RyaXBlLGJ1dCB0
+aGUgYXV0aHJlYWQxIG9ubHkgd2FrZXVwIGFuZCBzbGVlcCxidXQgaXQgd2lsbCBzcGluX2xvY2tf
+aXJxKCZjb25mLT5kZXZpY2VfbG9jaykuDQpJIHRoaW5rIHlvdSBzaG91bGQgYWRkIHNvbWUgbGlt
+aXRlZCB0byBkbyAuDQoNCkJUVywgSW4gbXkgd29ya2xvYWQsIGkgZm91bmQgc29tZSBtZXJnZSBw
+cm9ibGVtIGxpa2UgdGhpcyBwYXRjaC5BdCBmaXJzdCxpIHdhbnRlZCB0byBhZGQgZnJvbnQtbWVy
+Z2Uod2h5IG9ubHkgaGFkIGJhY2ttZXJnZT8pLg0KQnV0IGkgcmVhZGVkIHlvdXIgcGF0Y2ggYW5k
+IGl0J3MgYSBnb29kIGlkZWEgdGhhbiBteS4NCkxhdGVyLCBpIHJlYWRlZCB0aGUgbWFpbGlzdCBh
+Ym91dCByZXZlcnRpbmcgeW91ciBwYXRjaC4NCklmIHVzZSB0aGUgY29kZSBpbiBibGtfcXVldWVf
+YmlvKCk6DQo+aWYgKGVsX3JldCA9PSBFTEVWQVRPUl9CQUNLX01FUkdFKSB7DQo+CQlpZiAoYmlv
+X2F0dGVtcHRfYmFja19tZXJnZShxLCByZXEsIGJpbykpIHsNCj4JCQllbHZfYmlvX21lcmdlZChx
+LCByZXEsIGJpbyk7DQo+CQkJaWYgKCFhdHRlbXB0X2JhY2tfbWVyZ2UocSwgcmVxKSkNCj4JCQkJ
+ZWx2X21lcmdlZF9yZXF1ZXN0KHEsIHJlcSwgZWxfcmV0KTsNCj4JCQlnb3RvIG91dF91bmxvY2s7
+DQo+CQl9DQo+CX0gZWxzZSBpZiAoZWxfcmV0ID09IEVMRVZBVE9SX0ZST05UX01FUkdFKSB7DQo+
+CQlpZiAoYmlvX2F0dGVtcHRfZnJvbnRfbWVyZ2UocSwgcmVxLCBiaW8pKSB7DQo+CQkJZWx2X2Jp
+b19tZXJnZWQocSwgcmVxLCBiaW8pOw0KPgkJCWlmICghYXR0ZW1wdF9mcm9udF9tZXJnZShxLCBy
+ZXEpKQ0KPgkJCQllbHZfbWVyZ2VkX3JlcXVlc3QocSwgcmVxLCBlbF9yZXQpOw0KPgkJCWdvdG8g
+b3V0X3VubG9jazsNCj4JCX0NClRoZSByZXN1bHQgaXMgbm90IGdvb2QgYXMgeW91ciBwYXRjaC5C
+dXQgaXQncyBjb3JyZWN0Lg==
 
-On Tue, 14 Aug 2012 22:56:59 +0400 Ivan Vasilyev <ivan.vasilyev@gmail.com>
-wrote:
-
-> 2012/8/14 NeilBrown <neilb@suse.de>:
-> > On Mon, 13 Aug 2012 16:49:26 +0400 Ivan Vasilyev <ivan.vasilyev@gmail.c=
-om>
-> > wrote:
-> >
-> >>  ---[ end trace b86c49ca25a6cdb2 ]---
-> >> ----------
-> >
-> > It looks like the ->merge_bvec_fn is bad - the code is jumping to
-> > 0xffffffff00000001, which strongly suggests some function pointer is ba=
-d, and
-> > merge_bvec_fn is the only one in that area of code.
-> > However I cannot see how it could possibly get a bad value like that.
-> >
-> > There were changes to merge_bvec_fn handling in RAID10 in 3.4 which is =
-when
-> > you say the problem appeared.  However I cannot see how direct IO would=
- be
-> > affected any differently to normal IO.
-> >
-> > If I were to try to debug this I'd build a kernel and put a printk in
-> > __bio_add_page in fs/bio.c just before calling q->merge_bvec_fn to prin=
-t a
-> > message if that value has the low bit set. (i.e. if (q->merge_bvec_fn &=
- 1) ...).
->=20
-> Such printk is triggered right befire oops:
->=20
-> DEBUG q-> merge_bvec_fn=3D0xffffffffa011a1c3 queue_flags=3D0x40
-> queuedata=3D0xffff880058bf1520
-> backing_dev_info.congested_fn=3D0xffffffffa011d39a
-> BUG: unable to handle kernel paging request at ffffffff00000001
->=20
-> although address is different (so this means the bug does not occur
-> exactly on merge_bvec_fn() call?)
->=20
-> Checked again - this problem affects only directIO:
->=20
-> dd if=3D/dev/md/rtest_a count=3D10000 of=3D/dev/null
->  =3D> ok
-> dd if=3D/dev/md/rtest_a iflag=3Ddirect count=3D10000 of=3D/dev/null
->  =3D> oops (first since boot)
->=20
-
-Hmmm.. not what I expected. =20
-I found it was indeed easy to reproduce and after being sure it was
-impossible for half the afternoon I've found the problem.
-The following patch fixes it.  I'm not sure yet if that it was what I'll
-submit upstream.
-The problem is that "struct r10bio" isn't by itself big enough.  It is
-usually allocated with extra memory at the end.  So when declared on the
-stack, the same is needed.
-
-Thanks,
-NeilBrown
-
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 93fe561..12565c3 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -659,7 +659,10 @@ static int raid10_mergeable_bvec(struct request_queue =
-*q,
- 		max =3D biovec->bv_len;
-=20
- 	if (mddev->merge_check_needed) {
--		struct r10bio r10_bio;
-+		struct {
-+			struct r10bio r10_bio;
-+			struct r10dev devs[conf->copies];
-+		} x;
- 		int s;
- 		if (conf->reshape_progress !=3D MaxSector) {
- 			/* Cannot give any guidance during reshape */
-@@ -667,18 +670,18 @@ static int raid10_mergeable_bvec(struct request_queue=
- *q,
- 				return biovec->bv_len;
- 			return 0;
- 		}
--		r10_bio.sector =3D sector;
--		raid10_find_phys(conf, &r10_bio);
-+		x.r10_bio.sector =3D sector;
-+		raid10_find_phys(conf, &x.r10_bio);
- 		rcu_read_lock();
- 		for (s =3D 0; s < conf->copies; s++) {
--			int disk =3D r10_bio.devs[s].devnum;
-+			int disk =3D x.r10_bio.devs[s].devnum;
- 			struct md_rdev *rdev =3D rcu_dereference(
- 				conf->mirrors[disk].rdev);
- 			if (rdev && !test_bit(Faulty, &rdev->flags)) {
- 				struct request_queue *q =3D
- 					bdev_get_queue(rdev->bdev);
- 				if (q->merge_bvec_fn) {
--					bvm->bi_sector =3D r10_bio.devs[s].addr
-+					bvm->bi_sector =3D x.r10_bio.devs[s].addr
- 						+ rdev->data_offset;
- 					bvm->bi_bdev =3D rdev->bdev;
- 					max =3D min(max, q->merge_bvec_fn(
-@@ -690,7 +693,7 @@ static int raid10_mergeable_bvec(struct request_queue *=
-q,
- 				struct request_queue *q =3D
- 					bdev_get_queue(rdev->bdev);
- 				if (q->merge_bvec_fn) {
--					bvm->bi_sector =3D r10_bio.devs[s].addr
-+					bvm->bi_sector =3D x.r10_bio.devs[s].addr
- 						+ rdev->data_offset;
- 					bvm->bi_bdev =3D rdev->bdev;
- 					max =3D min(max, q->merge_bvec_fn(
-@@ -4434,14 +4437,17 @@ static int handle_reshape_read_error(struct mddev *=
-mddev,
- {
- 	/* Use sync reads to get the blocks from somewhere else */
- 	int sectors =3D r10_bio->sectors;
--	struct r10bio r10b;
- 	struct r10conf *conf =3D mddev->private;
-+	struct {
-+		struct r10bio r10b;
-+		struct r10dev devs[conf->copies];
-+	} x;
- 	int slot =3D 0;
- 	int idx =3D 0;
- 	struct bio_vec *bvec =3D r10_bio->master_bio->bi_io_vec;
-=20
--	r10b.sector =3D r10_bio->sector;
--	__raid10_find_phys(&conf->prev, &r10b);
-+	x.r10b.sector =3D r10_bio->sector;
-+	__raid10_find_phys(&conf->prev, &x.r10b);
-=20
- 	while (sectors) {
- 		int s =3D sectors;
-@@ -4452,7 +4458,7 @@ static int handle_reshape_read_error(struct mddev *md=
-dev,
- 			s =3D PAGE_SIZE >> 9;
-=20
- 		while (!success) {
--			int d =3D r10b.devs[slot].devnum;
-+			int d =3D x.r10b.devs[slot].devnum;
- 			struct md_rdev *rdev =3D conf->mirrors[d].rdev;
- 			sector_t addr;
- 			if (rdev =3D=3D NULL ||
-@@ -4460,7 +4466,7 @@ static int handle_reshape_read_error(struct mddev *md=
-dev,
- 			    !test_bit(In_sync, &rdev->flags))
- 				goto failed;
-=20
--			addr =3D r10b.devs[slot].addr + idx * PAGE_SIZE;
-+			addr =3D x.r10b.devs[slot].addr + idx * PAGE_SIZE;
- 			success =3D sync_page_io(rdev,
- 					       addr,
- 					       s << 9,
-diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
-index 007c2c6..1054cf6 100644
---- a/drivers/md/raid10.h
-+++ b/drivers/md/raid10.h
-@@ -110,7 +110,7 @@ struct r10bio {
- 	 * We choose the number when they are allocated.
- 	 * We sometimes need an extra bio to write to the replacement.
- 	 */
--	struct {
-+	struct r10dev {
- 		struct bio	*bio;
- 		union {
- 			struct bio	*repl_bio; /* used for resync and
-
---Sig_/oWI8LaIIVB0F5CWfDOzG8/S
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUCspETnsnt1WYoG5AQJxuA/+MK5TigB6HnZ07PpDQ3qpNPFdcodaAydY
-Bk1OKIpE72JleR+jEygLkpk7HXbYZnRFTDQxK742+6uVPiDPKKOznh0O12hiL7Mk
-jbB7BDSMh2eWvHarRtX/sbIqJTiO5XWssggOGP/NxR+Y4SDUM6pAIbpD1ejd7hdC
-+3+zRP1axzxw5IsmUZyJxdfrWl4V2nLwJG2vpoDH1w5Jg+5rW6Q85E2Sst2PR40+
-1sY9y/S809qgvk1n8aVI0l6CuUxd6HT5SKreugC3JGLU51Fg/qSpyssz2OQmXNyW
-XoGrJY0l47XH+LCkK3d61O0+TltIIiLV7Rr6Wbh8iMkRHRQwXP7x3Vu22MqKI+X3
-jfXSVacKwmXH4OfMA1CyOWPc//I8po2kTMVJw3+snYfdqySgm2kk2dkwEieAp1Mb
-CmJDflG/E6AO1PHTKV+KZ3E2kZ1apVmbc/gXtC7PGO0sS7/o5HZGGPZJEWb+7qfi
-gY9qtQ0B0TRfS4L4UVDCPAZr9ZD+wM9ky4trGcIQ9Py/74iOoNJu2a7nJkXUXdbv
-tAD3qWE5d7aHQ1CjbTx67mSGWvYkEEJvXKDqNantsqAp5zyT50Oyl5HpSr26jOTw
-9w7g/8qMTJJzdm7P5lR5iMzp90RBV2Q90JCguri6BHpz53/C6OyZO40PhHhn0EX5
-1shuYpoofa8=
-=wRqH
------END PGP SIGNATURE-----
-
---Sig_/oWI8LaIIVB0F5CWfDOzG8/S--
