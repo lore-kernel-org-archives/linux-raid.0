@@ -1,72 +1,147 @@
-From: Andy Lutomirski <luto@amacapital.net>
-Subject: Re: O_DIRECT to md raid 6 is slow
-Date: Tue, 14 Aug 2012 18:12:24 -0700
-Message-ID: <CALCETrUnb5jk7GdQnaXki8PVTjNFr7TG8Vfmyd-=0BuSqtii8g@mail.gmail.com>
-References: <CALCETrWCu=UPATPdqWP=Gpvswv-RDwaxfr1W1jxYtUMZsqKgSQ@mail.gmail.com>
- <201208150906343285670@gmail.com>
+From: kedacomkernel <kedacomkernel@gmail.com>
+Subject: Re: Re: [patch v2]raid5: fix directio regression
+Date: Wed, 15 Aug 2012 09:20:50 +0800
+Message-ID: <201208150920373901223@gmail.com>
+References: <20120807032240.GA22495@kernel.org> <201208071312593120932@gmail.com> <CANejiEUQcA6X75WG0xSgSv6NAQaBQnwpDD-5QaNVbqmo-oqLsA@mail.gmail.com> <201208071421033759628@gmail.com> <CANejiEVoOprAFoS6mCVYDJKh+nbGE0=7Xw_CpVS+Z9AcUoh6RQ@mail.gmail.com> <201208081321202343795@gmail.com> <CANejiEWC5ZKWT2L4DM-bfGi+v=TpkABruQqe5h0qG4oQg9sDhw@mail.gmail.com> <201208090919591567972@gmail.com> <20120809113230.152aade3@notabene.brown> <CANejiEX1TKG_KhAsgUauHaCe2GE7jU1ozD-3c21VFgrm9COajQ@mail.gmail.com> <20120814063343.GA30353@kernel.org>,
+	<20120815105610.74fe418e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201208150906343285670@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: kedacomkernel <kedacomkernel@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>, shli <shli@kernel.org>
+Cc: majianpeng <majianpeng@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, axboe <axboe@kernel.dk>
 List-Id: linux-raid.ids
 
-Ubuntu's 3.2.0-27-generic.  I can test on a newer kernel tomorrow.
+T24gMjAxMi0wOC0xNSAwODo1NiBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
+IFR1ZSwgMTQgQXVnIDIwMTIgMTQ6MzM6NDMgKzA4MDAgU2hhb2h1YSBMaSA8c2hsaUBrZXJuZWwu
+b3JnPiB3cm90ZToNCj4NCj4+IE9uIFRodSwgQXVnIDA5LCAyMDEyIGF0IDAxOjA3OjAxUE0gKzA4
+MDAsIFNoYW9odWEgTGkgd3JvdGU6DQo+PiA+IDIwMTIvOC85IE5laWxCcm93biA8bmVpbGJAc3Vz
+ZS5kZT46DQo+PiA+ID4gT24gVGh1LCA5IEF1ZyAyMDEyIDA5OjIwOjA1ICswODAwICJKaWFucGVu
+ZyBNYSIgPG1hamlhbnBlbmdAZ21haWwuY29tPiB3cm90ZToNCj4+ID4gPg0KPj4gPiA+PiBPbiAy
+MDEyLTA4LTA4IDIwOjUzIFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4gV3JvdGU6DQo+PiA+
+ID4+ID4yMDEyLzgvOCBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+Og0KPj4gPiA+
+PiA+PiBPbiAyMDEyLTA4LTA4IDEwOjU4IFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4gV3Jv
+dGU6DQo+PiA+ID4+ID4+PjIwMTIvOC83IEppYW5wZW5nIE1hIDxtYWppYW5wZW5nQGdtYWlsLmNv
+bT46DQo+PiA+ID4+ID4+Pj4gT24gMjAxMi0wOC0wNyAxMzozMiBTaGFvaHVhIExpIDxzaGxpQGtl
+cm5lbC5vcmc+IFdyb3RlOg0KPj4gPiA+PiA+Pj4+PjIwMTIvOC83IEppYW5wZW5nIE1hIDxtYWpp
+YW5wZW5nQGdtYWlsLmNvbT46DQo+PiA+ID4+ID4+Pj4+PiBPbiAyMDEyLTA4LTA3IDExOjIyIFNo
+YW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4gV3JvdGU6DQo+PiA+ID4+ID4+Pj4+Pj5NeSBkaXJl
+Y3RJTyByYW5kb213cml0ZSA0ayB3b3JrbG9hZCBzaG93cyBhIDEwfjIwJSByZWdyZXNzaW9uIGNh
+dXNlZCBieSBjb21taXQNCj4+ID4gPj4gPj4+Pj4+Pjg5NWUzYzVjNThhODBiYi4gZGlyZWN0SU8g
+dXN1YWxseSBpcyByYW5kb20gSU8gYW5kIGlmIHJlcXVlc3Qgc2l6ZSBpc24ndCBiaWcNCj4+ID4g
+Pj4gPj4+Pj4+Pih3aGljaCBpcyB0aGUgY29tbW9uIGNhc2UpLCBkZWxheSBoYW5kbGluZyBvZiB0
+aGUgc3RyaXBlIGhhc24ndCBhbnkgYWR2YW50YWdlcy4NCj4+ID4gPj4gPj4+Pj4+PkZvciBiaWcg
+c2l6ZSByZXF1ZXN0LCBkZWxheSBjYW4gc3RpbGwgcmVkdWNlIElPLg0KPj4gPiA+PiA+Pj4+Pj4+
+DQo+PiA+ID4+ID4+Pj4+Pj5TaWduZWQtb2ZmLWJ5OiBTaGFvaHVhIExpIDxzaGxpQGZ1c2lvbmlv
+LmNvbT4NCj4+ID4gPj4gPj4+PiBbc25pcF0NCj4+ID4gPj4gPj4+Pj4+Pi0tDQo+PiA+ID4+ID4+
+Pj4+PiBNYXkgYmUgdXNlZCBzaXplIHRvIGp1ZGdlIGlzIG5vdCBhIGdvb2QgbWV0aG9kLg0KPj4g
+PiA+PiA+Pj4+Pj4gSSBmaXJzdGx5IHNlbmRlZCB0aGlzIHBhdGNoLCBvbmx5IHdhbnQgdG8gY29u
+dHJvbCBkaXJlY3Qtd3JpdGUtYmxvY2ssbm90IGZvciByZXF1bGFyIGZpbGUuDQo+PiA+ID4+ID4+
+Pj4+PiBCZWNhdXNlIGkgdGhpbmsgaWYgc29tZW9uZSB1c2VkIGRpcmVjdC13cml0ZS1ibG9jayBm
+b3IgcmFpZDUsaGUgc2hvdWxkIGtub3cgdGhlIGZlYXR1cmUgb2YgcmFpZDUgYW5kIGhlIGNhbiBj
+b250cm9sDQo+PiA+ID4+ID4+Pj4+PiBmb3Igd3JpdGUgdG8gZnVsbC13cml0ZS4NCj4+ID4gPj4g
+Pj4+Pj4+IEJ1dCBhdCB0aGF0IHRpbWUsIGkgZGlkIGtub3cgaG93IHRvIGRpZmZlcmVudGlhdGUg
+YmV0d2VlbiByZWd1bGFyIGZpbGUgYW5kIGJsb2NrLWRldmljZS4NCj4+ID4gPj4gPj4+Pj4+IEkg
+dGhpayB3ZSBzaG91bGQgZG8gc29tZXRoaW5nIHRvIGRvIHRoaXMuDQo+PiA+ID4+ID4+Pj4+DQo+
+PiA+ID4+ID4+Pj4+SSBkb24ndCB0aGluayBpdCdzIHBvc3NpYmxlIHVzZXIgY2FuIGNvbnRyb2wg
+aGlzIHdyaXRlIHRvIGJlIGENCj4+ID4gPj4gPj4+Pj5mdWxsLXdyaXRlIGV2ZW4gZm9yDQo+PiA+
+ID4+ID4+Pj4+cmF3IGRpc2sgSU8uIFdoeSByZWd1bGFyIGZpbGUgYW5kIGJsb2NrIGRldmljZSBp
+byBtYXR0ZXJzIGhlcmU/DQo+PiA+ID4+ID4+Pj4+DQo+PiA+ID4+ID4+Pj4+VGhhbmtzLA0KPj4g
+PiA+PiA+Pj4+PlNoYW9odWENCj4+ID4gPj4gPj4+PiBBbm90aGVyIHByb2JsZW0gaXMgdGhlIHNp
+emUuIEhvdyB0byBqdWRnZSB0aGUgc2l6ZSBpcyBsYXJnZSBvciBub3Q/DQo+PiA+ID4+ID4+Pj4g
+QSBzeXNjYWxsIHdyaXRlIGlzIGEgZGlvIGFuZCBhIGRpbyBtYXkgYmUgc3BsaXQgbW9yZSBiaW9z
+Lg0KPj4gPiA+PiA+Pj4+IEZvciBteSB3b3JrbG9hZCwgaSB1c3VhbHkgd3JpdGUgY2h1bmstc2l6
+ZS4NCj4+ID4gPj4gPj4+PiBCdXQgeW91ciBwYXRjaCBpcyBqdWRnZSBieSBiaW8tc2l6ZS4NCj4+
+ID4gPj4gPj4+DQo+PiA+ID4+ID4+PkknZCBpZ25vcmUgd29ya2xvYWQgd2hpY2ggZG9lcyBzZXF1
+ZW50aWFsIGRpcmVjdElPLCB0aG91Z2gNCj4+ID4gPj4gPj4+eW91ciB3b3JrbG9hZCBpcywgYnV0
+IEkgYmV0IG5vIHJlYWwgd29ya2xvYWRzIGFyZS4gU28gSSdkIGxpa2UNCj4+ID4gPj4gPj4gU29y
+cnksbXkgZXhwbGFpbiBtYXliZSBub3QgY29yY3JlY3QuIEkgd3JpdGUgZGF0YSBvbmNlIHdoaWNo
+IHNpemUgaXMgYWxtb3N0IGNodW5rcy1zaXplICogZGV2aWNlcyxpbiBvcmRlciB0byBmdWxsLXdy
+aXRlDQo+PiA+ID4+ID4+IGFuZCBhcyBwb3NzaWJsZSBhcyB0byBubyBwcmUtcmVhZCBvcGVyYXRp
+b24uDQo+PiA+ID4+ID4+Pm9ubHkgdG8gY29uc2lkZXIgYmlnIHNpemUgcmFuZG9tIGRpcmVjdGlv
+LiBJIGFncmVlIHRoZSBzaXplDQo+PiA+ID4+ID4+Pmp1ZGdlIGlzIGFyYml0cmFyeS4gSSBjYW4g
+b3B0aW1pemUgaXQgdG8gYmUgb25seSBjb25zaWRlciBzdHJpcGUNCj4+ID4gPj4gPj4+d2hpY2gg
+aGl0cyB0d28gb3IgbW9yZSBkaXNrcyBpbiBvbmUgYmlvLCBidXQgbm90IHN1cmUgaWYgaXQncw0K
+Pj4gPiA+PiA+Pj53b3J0aHkgZG9pbmcuIE5vdCB3YXJlIGJpZyBzaXplIGRpcmVjdGlvIGlzIGNv
+bW1vbiwgYW5kIGV2ZW4NCj4+ID4gPj4gPj4+aXMsIGJpZyBzaXplIHJlcXVlc3QgSU9QUyBpcyBs
+b3csIGEgYml0IGRlbGF5IG1heWJlIG5vdCBhIGJpZw0KPj4gPiA+PiA+Pj5kZWFsLg0KPj4gPiA+
+PiA+PiBJZiBhZGQgYSBhY2NfdGltZSBmb3IgJ3N0cmllcF9oZWFkJyB0byBjb250cm9sPw0KPj4g
+PiA+PiA+PiBXaGVuIGdldF9hY3RpdmVfc3RyaXBlKCkgaXMgb2ssIHVwZGF0ZSBhY2NfdGltZS4N
+Cj4+ID4gPj4gPj4gRm9yIHNvbWUgdGltZSwgc3RyaXBlX2hlYWQgZGlkIG5vdCBhY2Nlc3MgYW5k
+IGl0IHNob2xkIHByZS1yZWFkLg0KPj4gPiA+PiA+DQo+PiA+ID4+ID5EbyB5b3Ugd2FudCB0byBh
+ZGQgYSB0aW1lciBmb3IgZWFjaCBzdHJpcGU/IFRoaXMgaXMgZXZlbiB1Z2x5Lg0KPj4gPiA+PiA+
+SG93IGRvIHlvdSBjaG9vc2UgdGhlIGV4cGlyZSB0aW1lPyBBIHRpbWUgd29ya3MgZm9yIGhhcmRk
+aXNrDQo+PiA+ID4+ID5kZWZpbml0ZWx5IHdpbGwgbm90IHdvcmsgZm9yIGEgZmFzdCBTU0QuDQo+
+PiA+ID4+IEEgdGltZSBpcyBsaWtlIHRoZSBzaXplIHdoaWNoIGlzIGFyYml0cmFyeS4NCj4+ID4g
+Pj4gSG93IGFib3V0IGFkZCBhIGludGVyZmFjZSBpbiBzeXNmcyB0byBjb250cm9sIGJ5IHVzZXI/
+DQo+PiA+ID4+IE9ubHkgdXNlciBjYW4ganVkZ2UgdGhlIHdvcmtsb2FkLCB3aGljaCBzZXF1YXRp
+YWwgd3JpdGUgb3IgcmFuZG9tIHdyaXRlLg0KPj4gPiA+DQo+PiA+ID4gVGhpcyBpcyBnZXR0aW5n
+IHdvcnNlIGJ5IHRoZSBtaW51dGUuICBBIHN5c2ZzIGludGVyZmFjZSBmb3IgdGhpcyBpcw0KPj4g
+PiA+IGRlZmluaXRlbHkgbm90IGEgZ29vZCBpZGVhLg0KPj4gPiA+DQo+PiA+ID4gVGhlIFJFUV9O
+T0lETEUgZmxhZyBpcyBhIHByZXR0eSBjbGVhciBzdGF0ZW1lbnQgdGhhdCBubyBtb3JlIHJlcXVl
+c3RzIHRoYXQNCj4+ID4gPiBtZXJnZSB3aXRoIHRoaXMgb25lIGFyZSBleHBlY3RlZC4gIElmIHNv
+bWUgdXNlIGNhc2VzIHNlbmRzIHJhbmRvbSByZXF1ZXN0cywNCj4+ID4gPiBtYXliZSBpdCBzaG91
+bGQgYmUgc2V0dGluZyBSRVFfTk9JRExFLg0KPj4gPiA+DQo+PiA+ID4gTWF5YmUgc29tZW9uZSBz
+aG91bGQgZG8gc29tZSByZXNlYXJjaCBhbmQgZmluZCBvdXQgd2h5IFdSSVRFX09ESVJFQ1QgZG9l
+c24ndA0KPj4gPiA+IGluY2x1ZGUgUkVRX05PSURMRS4gIFVuZGVyc3RhbmRpbmcgdGhhdCB3b3Vs
+ZCBoZWxwIHVuZGVyc3RhbmQgdGhlIGN1cnJlbnQNCj4+ID4gPiBwcm9ibGVtLg0KPj4gPiANCj4+
+ID4gQSBxdWljayBzZWFyY2ggc2hvd3Mgb25seSBjZnEtaW9zY2hlZCB1c2VzIFJFUV9OT0lETEUu
+IEluDQo+PiA+IGNmcSwgYSBxdWV1ZSBpcyBpZGxlZCB0byBhdm9pZCBsb3NpbmcgaXRzIHNoYXJl
+LiBSRVFfTk9JRExFDQo+PiA+IHRlbGxzIGNmcSB0byBhdm9pZCBpZGxlLCBzaW5jZSB0aGUgdGFz
+ayB3aWxsIG5vdCBkaXNwYXRjaCBmdXJ0aGVyDQo+PiA+IHJlcXVlc3RzIGFueSBtb3JlLiBOb3Rl
+IHRoaXMgaXNuJ3Qgbm8gbWVyZ2UuDQo+PiANCj4+IFNpbmNlIFJFUV9OT0lETEUgaGFzIG5vIHJl
+bGF0aW9uc2hpcCB3aXRoIHJlcXVlc3QgbWVyZ2UsIHdlJ2QgYmV0dGVyIHJlbW92ZSBpdC4NCj4+
+IEkgY2FtZSBvdXQgYSBuZXcgcGF0Y2gsIHdoaWNoIGRvZXNuJ3QgZGVwZW5kIG9uIHJlcXVlc3Qg
+c2l6ZSBhbnkgbW9yZS4gV2l0aA0KPj4gdGhpcyBwYXRjaCwgc2VxdWVudGlhbCBkaXJlY3RpbyB3
+aWxsIHN0aWxsIGludHJvZHVjZSB1bm5lY2Vzc2FyeSByYWlkNSBwcmVyZWFkDQo+PiAoZXNwZWNp
+YWxseSBmb3Igc21hbGwgc2l6ZSBJTyksIGJ1dCBJIGJldCBubyBhcHAgZG9lcyBzZXF1ZW50aWFs
+IHNtYWxsIHNpemUNCj4+IGRpcmVjdElPLg0KPj4gDQo+PiBUaGFua3MsDQo+PiBTaGFvaHVhDQo+
+PiANCj4+IFN1YmplY3Q6IHJhaWQ1OiBmaXggZGlyZWN0aW8gcmVncmVzc2lvbg0KPj4gDQo+PiBN
+eSBkaXJlY3RJTyByYW5kb213cml0ZSA0ayB3b3JrbG9hZCBzaG93cyBhIDEwfjIwJSByZWdyZXNz
+aW9uIGNhdXNlZCBieSBjb21taXQNCj4+IDg5NWUzYzVjNThhODBiYi4gVGhpcyBjb21taXQgaXNu
+J3QgZnJpZW5kbHkgZm9yIHNtYWxsIHNpemUgcmFuZG9tIElPLCBiZWNhdXNlDQo+PiBkZWxheWlu
+ZyBzdWNoIHJlcXVlc3QgaGFzbid0IGFueSBhZHZhbnRhZ2VzLg0KPj4gDQo+PiBEaXJlY3RJTyB1
+c3VhbGx5IGlzIHJhbmRvbSBJTy4gSSB0aG91Z2h0IHdlIGNhbiBpZ25vcmUgcmVxdWVzdCBtZXJn
+ZSBiZXR3ZWVuDQo+PiBiaW9zIGZyb20gZGlmZmVyZW50IGlvX3N1Ym1pdC4gU28gd2Ugb25seSBj
+b25zaWRlciBvbmUgYmlvIHdoaWNoIGNhbiBkcml2ZQ0KPj4gdW5uZWNlc3NhcnkgcHJlcmVhZCBp
+biByYWlkNSwgd2hpY2ggaXMgbGFyZ2UgcmVxdWVzdC4gSWYgYSBiaW8gaXMgbGFyZ2UgZW5vdWdo
+DQo+PiBhbmQgc29tZSBvZiBpdHMgc3RyaXBlcyB3aWxsIGFjY2VzcyB0d28gb3IgbW9yZSBkaXNr
+cywgc3VjaCBzdHJpcGVzIHNob3VsZCBiZQ0KPj4gZGVsYXllZCB0byBhdm9pZCB1bm5lY2Vzc2Fy
+eSBwcmVyZWFkIHRpbGwgYmlvIGZvciB0aGUgbGFzdCBkaXNrIG9mIHRoZSBzdHJpcHMNCj4+IGlz
+IGFkZGVkLg0KPj4gDQo+PiBSRVFfTk9JRExFIGRvZXNuJ3QgbWVhbiBhYm91dCByZXF1ZXN0IG1l
+cmdlLCBJIGRlbGV0ZWQgaXQuDQo+DQo+SGksDQo+IEhhdmUgeW91IHRlc3RlZCB3aGF0IGVmZmVj
+dCB0aGlzIGhhcyBvbiBsYXJnZSBzZXF1ZW50aWFsIGRpcmVjdCB3cml0ZXM/DQo+IEJlY2F1c2Ug
+aXQgZG9uJ3QgbWFrZSBzZW5zZSB0byBtZSBhbmQgSSB3b3VsZCBiZSBzdXJwcmlzZWQgaWYgaXQg
+aW1wcm92ZXMNCj4gdGhpbmdzLg0KPg0KPiBZb3UgYXJlIGRlbGF5aW5nIHNldHRpbmcgdGhlIFNU
+UklQRV9QUkVSRUFEX0FDVElWRSBiaXQgdW50aWwgeW91IHRoaW5rIHlvdQ0KPiBoYXZlIHN1Ym1p
+dHRlZCBhbGwgdGhlIHdyaXRlcyBmcm9tIHRoaXMgYmlvIHRoYXQgYXBwbHkgdG8gdGhlIGdpdmUg
+c3RyaXBlLg0KPiBUaGF0IGRvZXMgbWFrZSBzb21lIHNlbnNlLCBob3dldmVyIGl0IGRvZXNuJ3Qg
+c2VlbSB0byBkZWFsIHdpdGggdGhlDQo+IHBvc3NpYmlsaXR5IHRoYXQgdGhlIG9uZSBiaW8gY292
+ZXJzIHBhcnRzIG9mIHR3byBkaWZmZXJlbnQgc3RyaXBlcy4gIEluIHRoYXQNCj4gY2FzZSB0aGUg
+Zmlyc3Qgc3RyaXBlIG5ldmVyIGdldHMgU1RSSVBFX1BSRVJFQURfQUNUSVZFIHNldCwgc28gaXQg
+aXMgZGVsYXllZA0KPiBkZXNwaXRlIGhhdmluZyAnUkVRX1NZTkMnIHNldC4NCj4NCj4gQWxzbywg
+YW5kIG1vcmUgc2lnbmlmaWNhbnRseSwgcGx1Z2dpbmcgc2hvdWxkIG1lYW4gdGhhdCB0aGUgdmFy
+aW91cw0KPiBzdHJpcGVfaGVhZHMgYXJlIG5vdCBldmVuIGxvb2tlZCBhdCB1bnRpbCBhbGwgb2Yg
+dGhlIG9yaWdpbmFsIGJpbyBpcw0KPiBwcm9jZXNzZWQsIHNvIHdoaWxlIFNUUklQRV9QUkVSRUFE
+X0FDVElWRSBtaWdodCBnZXQgc2V0IGVhcmx5LCBpdCBzaG91bGQgbm90DQo+IGdldCBwcm9jZXNz
+ZWQgdW50aWwgdGhlIHdob2xlIGJpbyBpcyBwcm9jZXNzZWQgYW5kIHRoZSBxdWV1ZSBpcyB1bnBs
+dWdnZWQuDQo+DQo+IFNvIEkgZG9uJ3QgdGhpbmsgdGhpcyBwYXRjaCBzaG91bGQgbWFrZSBhIGRp
+ZmZlcmVuY2Ugb24gbGFyZ2UgZGlyZWN0IHdyaXRlcywNCj4gYW5kIGlmIGl0IGRvZXMgdGhlbiBz
+b21ldGhpbmcgc3RyYW5nZSBpcyBnb2luZyBvbiB0aGF0IEknZCBsaWtlIHRvDQo+IHVuZGVyc3Rh
+bmQgZmlyc3QuDQo+DQo+IEkgc3VzcGVjdCB0aGF0IHRoZSBvcmlnaW5hbCBwYXRjaCBzaG91bGQg
+YmUgcmV2ZXJ0ZWQgYmVjYXVzZSB3aGlsZSBpdCBkb2VzDQo+IGltcHJvdmUgb25lIGNhc2UsIGl0
+IGNhdXNlcyBhIHJlZ3Jlc3Npb24gaW4gYW5vdGhlciBhbmQgcmVncmVzc2lvbnMgc2hvdWxkDQo+
+IGJlIGF2b2lkZWQuICBJdCB3b3VsZCBiZSBuaWNlIHRvIGZpbmQgYSB3YXkgZm9yIGJvdGggdG8g
+Z28gZmFzdCB0aG91Z2guLi4NCj4NCj5UaGFua3MsDQo+TmVpbEJyb3duDQpIaSBhbGw6DQoJSW4g
+bWQtbGF5ZXIsIHdlIGhhcmRseSBkZWNpZGUgdG8ganVkZ2UgdGhlIGxhcmdlLXNlcXVlbnRpYWwt
+ZGlyZWN0LXdyaXRlcyBvciByYW5kb20gd3JpdGUoYXQgbW9zdCBzbWFsbCBzaXplKSBieSANCmJp
+by4NCglJIGluc2lzdCBteSBvcHRpb246IHdlIG9ubHkganVkZ2UgYmlvIGZyb20gZnMtbGF5ZXIu
+IEZvciBvbmUgZGlyZWN0LXdyaXRlLCBpdCBjYW4gc2VuZCBtb3JlIGJpb3MgdG8gbWQtZHJpdmVy
+Lg0KCVRob3NlIGJpb3MgYXJlIHNlcXVlbnRpYWwuU28gaWYgdGhlIGxhc3QgdGhlIGJpbyBzZXQg
+UkVRX05PRkxBRyB3aGljaCB0ZWxsIG1kLWRyaXZlciwgaXQgdGhlIGxhc3QgYW5kIG5vIGJpbyBj
+YW4gYXJyaXZlIHVubGVzcyB0aGUgcHJldmlvdXMgY29tcGxldGVkLg0KCVRoaXMgbWF5IGdvb2Qg
+Zm9yIHNpbmdsZSBwcm9jZXNzLkJ1dCBmb3IgbXV0aXBsZSB0aHJlYWQsIGkgdGhpbmsgaXQgbWF5
+YmUgbm90IGdvb2QuDQo=
 
---Andy
-
-On Tue, Aug 14, 2012 at 6:07 PM, kedacomkernel <kedacomkernel@gmail.com> wrote:
-> On 2012-08-15 08:49 Andy Lutomirski <luto@amacapital.net> Wrote:
->>If I do:
->># dd if=/dev/zero of=/dev/md0p1 bs=8M
->>then iostat -m 5 says:
->>
->>avg-cpu:  %user   %nice %system %iowait  %steal   %idle
->>           0.00    0.00   26.88   35.27    0.00   37.85
->>
->>Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
->>sdb             265.20         1.16        54.79          5        273
->>sdc             266.20         1.47        54.73          7        273
->>sdd             264.20         1.38        54.54          6        272
->>sdf             286.00         1.84        54.74          9        273
->>sde             266.60         1.04        54.75          5        273
->>sdg             265.00         1.02        54.74          5        273
->>md0           55808.00         0.00       218.00          0       1090
->>
->>If I do:
->># dd if=/dev/zero of=/dev/md0p1 bs=8M oflag=direct
->>then iostat -m 5 says:
->>avg-cpu:  %user   %nice %system %iowait  %steal   %idle
->>           0.00    0.00   11.70   12.94    0.00   75.36
->>
->>Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
->>sdb             831.00         8.58        30.42         42        152
->>sdc             832.80         8.05        29.99         40        149
->>sdd             832.00         9.10        29.78         45        148
->>sdf             838.40         9.11        29.72         45        148
->>sde             828.80         7.91        29.79         39        148
->>sdg             850.80         8.00        30.18         40        150
->>md0            1012.60         0.00       101.27          0        506
->>
->>It looks like md isn't recognizing that I'm writing whole stripes when
->>I'm in O_DIRECT mode.
->>
-> kernel version?
->
->>--Andy
->>
->>--
->>Andy Lutomirski
->>AMA Capital Management, LLC
->>--
->>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>the body of a message to majordomo@vger.kernel.org
->>More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--- 
-Andy Lutomirski
-AMA Capital Management, LLC
