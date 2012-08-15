@@ -1,49 +1,95 @@
-From: Andy Lutomirski <luto@amacapital.net>
-Subject: Re: O_DIRECT to md raid 6 is slow
-Date: Wed, 15 Aug 2012 10:57:40 -0700
-Message-ID: <CALCETrX=mi92qwOAjt_7Qu-ho_Hdg_5SHX-_8nXYRer4JnzD0w@mail.gmail.com>
-References: <CALCETrWCu=UPATPdqWP=Gpvswv-RDwaxfr1W1jxYtUMZsqKgSQ@mail.gmail.com>
- <502B8D1F.7030706@anonymous.org.uk>
+From: Albert Pauw <albert.pauw@gmail.com>
+Subject: Re: Error in rebuild of two "layered" md devices in container
+Date: Wed, 15 Aug 2012 22:04:27 +0200
+Message-ID: <502C00CB.3080407@gmail.com>
+References: <CAGkViCEBCMgPXbByGPe8MgTKsSkn1Dc=_XLgCCDCfSrEGwEs_w@mail.gmail.com> <20120815094352.38550670@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <502B8D1F.7030706@anonymous.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120815094352.38550670@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Aug 15, 2012 at 4:50 AM, John Robinson
-<john.robinson@anonymous.org.uk> wrote:
-> On 15/08/2012 01:49, Andy Lutomirski wrote:
+Hi Neil,
+
+as a first test I can confirm that this fixes the problem with the 
+layered md devices in a container.
+
+So far so good on this.
+
+Thanks,
+
+regards,
+
+Albert
+
+On 08/15/2012 01:43 AM, NeilBrown wrote:
+> On Wed, 1 Aug 2012 19:52:51 +0200 Albert Pauw <albert.pauw@gmail.com> wrote:
+>
+>> Hi Neil,
 >>
->> If I do:
->> # dd if=/dev/zero of=/dev/md0p1 bs=8M
+>> found another bug.
+>>
+>> - Created a container with six disks
+>> - Created two md devices in it:
+>>
+>> mdadm -CR /dev/md0 -l 6 -n 6 -z 50M
+>> mdadm -CR /dev/md1 -l 5 -n 6 -z 50M
+>>
+>> The md devices are "layered" in the container across all disks.
+>>
+>> They both get build and are online.
+>>
+>> - Fail one disk, both md devices are affected
+>> - Remove disk
+>> - Clear superblock of removed disk
+>> - Add disk again (in essence, I just added a spare disk)
+>>
+>> Now comes the error:
+>>
+>> - md0 is rebuild
+>> - md1 is NOT rebuild
+> The reason for this is somewhat messy.
+> mdadm will currently only add a 'spare' device to an array which needs a
+> replacement device.
+> In DDF the whole device is either 'active' or 'spare'.  There isn't a concept
+> of 'partly active, partly spare'.
+> So when mdadm adds part of the disk to one array it stops being spare and
+> started being active.  So when mdadm looks for a spare to add to the second
+> array, there are no spare devices.
 >
-> [...]
+> I can hack around it by allowing any non-failed device to be considered as a
+> spare but I need to find a better solution.  That might take a while.  I've
+> made a note on my to-do list, but it is a rather long list.
 >
->> It looks like md isn't recognizing that I'm writing whole stripes when
->> I'm in O_DIRECT mode.
+> Thanks,
+> NeilBrown
 >
->
-> I see your md device is partitioned. Is the partition itself stripe-aligned?
+> diff --git a/super-ddf.c b/super-ddf.c
+> index d006a04..11b98f7 100644
+> --- a/super-ddf.c
+> +++ b/super-ddf.c
+> @@ -2616,7 +2616,7 @@ static int validate_geometry_ddf(struct supertype *st,
+>   	if (chunk && *chunk == UnSet)
+>   		*chunk = DEFAULT_CHUNK;
+>   
+> -
+> +	if (level == -1000000) level = LEVEL_CONTAINER;
+>   	if (level == LEVEL_CONTAINER) {
+>   		/* Must be a fresh device to add to a container */
+>   		return validate_geometry_ddf_container(st, level, layout,
+> @@ -3701,6 +3701,10 @@ static struct mdinfo *ddf_activate_spare(struct active_array *a,
+>   			} else if (ddf->phys->entries[dl->pdnum].type &
+>   				   __cpu_to_be16(DDF_Global_Spare)) {
+>   				is_global = 1;
+> +			} else if (!(ddf->phys->entries[dl->pdnum].state &
+> +				     __cpu_to_be16(DDF_Failed))) {
+> +				/* we can possibly use some of this */
+> +				is_global = 1;
+>   			}
+>   			if ( ! (is_dedicated ||
+>   				(is_global && global_ok))) {
 
-Crud.
-
-md0 : active raid6 sdg1[5] sdf1[4] sde1[3] sdd1[2] sdc1[1] sdb1[0]
-      11720536064 blocks super 1.2 level 6, 512k chunk, algorithm 2
-[6/6] [UUUUUU]
-
-IIUC this means that I/O should be aligned on 2MB boundaries (512k
-chunk * 4 non-parity disks).  gdisk put my partition on a 2048 sector
-(i.e. 1MB) boundary.
-
-Sadly, /sys/block/md0/md0p1/alignment_offset reports 0 (instead of 1MB).
-
-Fixing this has no effect, though.
-
---Andy
-
--- 
-Andy Lutomirski
-AMA Capital Management, LLC
