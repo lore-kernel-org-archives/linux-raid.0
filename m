@@ -1,50 +1,72 @@
-From: kedacomkernel <kedacomkernel@gmail.com>
+From: Andy Lutomirski <luto@amacapital.net>
 Subject: Re: O_DIRECT to md raid 6 is slow
-Date: Wed, 15 Aug 2012 09:07:06 +0800
-Message-ID: <201208150906343285670@gmail.com>
+Date: Tue, 14 Aug 2012 18:12:24 -0700
+Message-ID: <CALCETrUnb5jk7GdQnaXki8PVTjNFr7TG8Vfmyd-=0BuSqtii8g@mail.gmail.com>
 References: <CALCETrWCu=UPATPdqWP=Gpvswv-RDwaxfr1W1jxYtUMZsqKgSQ@mail.gmail.com>
+ <201208150906343285670@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andy Lutomirski <luto@amacapital.net>, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201208150906343285670@gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: kedacomkernel <kedacomkernel@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wOC0xNSAwODo0OSBBbmR5IEx1dG9taXJza2kgPGx1dG9AYW1hY2FwaXRhbC5uZXQ+
-IFdyb3RlOg0KPklmIEkgZG86DQo+IyBkZCBpZj0vZGV2L3plcm8gb2Y9L2Rldi9tZDBwMSBicz04
-TQ0KPnRoZW4gaW9zdGF0IC1tIDUgc2F5czoNCj4NCj5hdmctY3B1OiAgJXVzZXIgICAlbmljZSAl
-c3lzdGVtICVpb3dhaXQgICVzdGVhbCAgICVpZGxlDQo+ICAgICAgICAgICAwLjAwICAgIDAuMDAg
-ICAyNi44OCAgIDM1LjI3ICAgIDAuMDAgICAzNy44NQ0KPg0KPkRldmljZTogICAgICAgICAgICB0
-cHMgICAgTUJfcmVhZC9zICAgIE1CX3dydG4vcyAgICBNQl9yZWFkICAgIE1CX3dydG4NCj5zZGIg
-ICAgICAgICAgICAgMjY1LjIwICAgICAgICAgMS4xNiAgICAgICAgNTQuNzkgICAgICAgICAgNSAg
-ICAgICAgMjczDQo+c2RjICAgICAgICAgICAgIDI2Ni4yMCAgICAgICAgIDEuNDcgICAgICAgIDU0
-LjczICAgICAgICAgIDcgICAgICAgIDI3Mw0KPnNkZCAgICAgICAgICAgICAyNjQuMjAgICAgICAg
-ICAxLjM4ICAgICAgICA1NC41NCAgICAgICAgICA2ICAgICAgICAyNzINCj5zZGYgICAgICAgICAg
-ICAgMjg2LjAwICAgICAgICAgMS44NCAgICAgICAgNTQuNzQgICAgICAgICAgOSAgICAgICAgMjcz
-DQo+c2RlICAgICAgICAgICAgIDI2Ni42MCAgICAgICAgIDEuMDQgICAgICAgIDU0Ljc1ICAgICAg
-ICAgIDUgICAgICAgIDI3Mw0KPnNkZyAgICAgICAgICAgICAyNjUuMDAgICAgICAgICAxLjAyICAg
-ICAgICA1NC43NCAgICAgICAgICA1ICAgICAgICAyNzMNCj5tZDAgICAgICAgICAgIDU1ODA4LjAw
-ICAgICAgICAgMC4wMCAgICAgICAyMTguMDAgICAgICAgICAgMCAgICAgICAxMDkwDQo+DQo+SWYg
-SSBkbzoNCj4jIGRkIGlmPS9kZXYvemVybyBvZj0vZGV2L21kMHAxIGJzPThNIG9mbGFnPWRpcmVj
-dA0KPnRoZW4gaW9zdGF0IC1tIDUgc2F5czoNCj5hdmctY3B1OiAgJXVzZXIgICAlbmljZSAlc3lz
-dGVtICVpb3dhaXQgICVzdGVhbCAgICVpZGxlDQo+ICAgICAgICAgICAwLjAwICAgIDAuMDAgICAx
-MS43MCAgIDEyLjk0ICAgIDAuMDAgICA3NS4zNg0KPg0KPkRldmljZTogICAgICAgICAgICB0cHMg
-ICAgTUJfcmVhZC9zICAgIE1CX3dydG4vcyAgICBNQl9yZWFkICAgIE1CX3dydG4NCj5zZGIgICAg
-ICAgICAgICAgODMxLjAwICAgICAgICAgOC41OCAgICAgICAgMzAuNDIgICAgICAgICA0MiAgICAg
-ICAgMTUyDQo+c2RjICAgICAgICAgICAgIDgzMi44MCAgICAgICAgIDguMDUgICAgICAgIDI5Ljk5
-ICAgICAgICAgNDAgICAgICAgIDE0OQ0KPnNkZCAgICAgICAgICAgICA4MzIuMDAgICAgICAgICA5
-LjEwICAgICAgICAyOS43OCAgICAgICAgIDQ1ICAgICAgICAxNDgNCj5zZGYgICAgICAgICAgICAg
-ODM4LjQwICAgICAgICAgOS4xMSAgICAgICAgMjkuNzIgICAgICAgICA0NSAgICAgICAgMTQ4DQo+
-c2RlICAgICAgICAgICAgIDgyOC44MCAgICAgICAgIDcuOTEgICAgICAgIDI5Ljc5ICAgICAgICAg
-MzkgICAgICAgIDE0OA0KPnNkZyAgICAgICAgICAgICA4NTAuODAgICAgICAgICA4LjAwICAgICAg
-ICAzMC4xOCAgICAgICAgIDQwICAgICAgICAxNTANCj5tZDAgICAgICAgICAgICAxMDEyLjYwICAg
-ICAgICAgMC4wMCAgICAgICAxMDEuMjcgICAgICAgICAgMCAgICAgICAgNTA2DQo+DQo+SXQgbG9v
-a3MgbGlrZSBtZCBpc24ndCByZWNvZ25pemluZyB0aGF0IEknbSB3cml0aW5nIHdob2xlIHN0cmlw
-ZXMgd2hlbg0KPkknbSBpbiBPX0RJUkVDVCBtb2RlLg0KPg0Ka2VybmVsIHZlcnNpb24/DQoNCj4t
-LUFuZHkNCj4NCj4tLSANCj5BbmR5IEx1dG9taXJza2kNCj5BTUEgQ2FwaXRhbCBNYW5hZ2VtZW50
-LCBMTEMNCj4tLQ0KPlRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5l
-ICJ1bnN1YnNjcmliZSBsaW51eC1yYWlkIiBpbg0KPnRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBt
-YWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+TW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDov
-L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1s
+Ubuntu's 3.2.0-27-generic.  I can test on a newer kernel tomorrow.
+
+--Andy
+
+On Tue, Aug 14, 2012 at 6:07 PM, kedacomkernel <kedacomkernel@gmail.com> wrote:
+> On 2012-08-15 08:49 Andy Lutomirski <luto@amacapital.net> Wrote:
+>>If I do:
+>># dd if=/dev/zero of=/dev/md0p1 bs=8M
+>>then iostat -m 5 says:
+>>
+>>avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+>>           0.00    0.00   26.88   35.27    0.00   37.85
+>>
+>>Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
+>>sdb             265.20         1.16        54.79          5        273
+>>sdc             266.20         1.47        54.73          7        273
+>>sdd             264.20         1.38        54.54          6        272
+>>sdf             286.00         1.84        54.74          9        273
+>>sde             266.60         1.04        54.75          5        273
+>>sdg             265.00         1.02        54.74          5        273
+>>md0           55808.00         0.00       218.00          0       1090
+>>
+>>If I do:
+>># dd if=/dev/zero of=/dev/md0p1 bs=8M oflag=direct
+>>then iostat -m 5 says:
+>>avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+>>           0.00    0.00   11.70   12.94    0.00   75.36
+>>
+>>Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
+>>sdb             831.00         8.58        30.42         42        152
+>>sdc             832.80         8.05        29.99         40        149
+>>sdd             832.00         9.10        29.78         45        148
+>>sdf             838.40         9.11        29.72         45        148
+>>sde             828.80         7.91        29.79         39        148
+>>sdg             850.80         8.00        30.18         40        150
+>>md0            1012.60         0.00       101.27          0        506
+>>
+>>It looks like md isn't recognizing that I'm writing whole stripes when
+>>I'm in O_DIRECT mode.
+>>
+> kernel version?
+>
+>>--Andy
+>>
+>>--
+>>Andy Lutomirski
+>>AMA Capital Management, LLC
+>>--
+>>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>the body of a message to majordomo@vger.kernel.org
+>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+Andy Lutomirski
+AMA Capital Management, LLC
