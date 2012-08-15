@@ -1,70 +1,65 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: O_DIRECT to md raid 6 is slow
-Date: Wed, 15 Aug 2012 17:00:33 -0500
-Message-ID: <502C1C01.1040509@hardwarefreak.com>
-References: <CALCETrWCu=UPATPdqWP=Gpvswv-RDwaxfr1W1jxYtUMZsqKgSQ@mail.gmail.com> <502B8D1F.7030706@anonymous.org.uk> <CALCETrX=mi92qwOAjt_7Qu-ho_Hdg_5SHX-_8nXYRer4JnzD0w@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
+Subject: Re: OT: silent data corruption reading from hard drives
+Date: Wed, 15 Aug 2012 22:55:43 +0100
+Message-ID: <20524.6904.183888.747899@tree.ty.sabi.co.UK>
+References: <50191ADE.10809@fastmail.fm>
+	<5019D052.4000409@hardwarefreak.com>
+	<20120802091917.32fb0ca5@natsu>
+	<501A316C.3020305@hardwarefreak.com>
+	<20120802140634.6f729d07@natsu>
+	<1343926790.28421.140661109896017.1A222237@webmail.messagingengine.com>
+	<501AB9D8.1030404@turmel.org>
+	<1343932322.14845.140661109934445.709DABBB@webmail.messagingengine.com>
+	<501BD3E6.6050004@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CALCETrX=mi92qwOAjt_7Qu-ho_Hdg_5SHX-_8nXYRer4JnzD0w@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <501BD3E6.6050004@turmel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 8/15/2012 12:57 PM, Andy Lutomirski wrote:
-> On Wed, Aug 15, 2012 at 4:50 AM, John Robinson
-> <john.robinson@anonymous.org.uk> wrote:
->> On 15/08/2012 01:49, Andy Lutomirski wrote:
->>>
->>> If I do:
->>> # dd if=/dev/zero of=/dev/md0p1 bs=8M
->>
->> [...]
->>
->>> It looks like md isn't recognizing that I'm writing whole stripes when
->>> I'm in O_DIRECT mode.
->>
->>
->> I see your md device is partitioned. Is the partition itself stripe-aligned?
-> 
-> Crud.
-> 
-> md0 : active raid6 sdg1[5] sdf1[4] sde1[3] sdd1[2] sdc1[1] sdb1[0]
->       11720536064 blocks super 1.2 level 6, 512k chunk, algorithm 2
-> [6/6] [UUUUUU]
-> 
-> IIUC this means that I/O should be aligned on 2MB boundaries (512k
-> chunk * 4 non-parity disks).  gdisk put my partition on a 2048 sector
-> (i.e. 1MB) boundary.
+[ ... ]
 
-It's time to blow away the array and start over.  You're already
-misaligned, and a 512KB chunk is insanely unsuitable for parity RAID,
-but for a handful of niche all streaming workloads with little/no
-rewrite, such as video surveillance or DVR workloads.
+> In my opinion, any corruption noticed in a non-ECC system is
+> most likely due to the RAM.
 
-Yes, 512KB is the md 1.2 default.  And yes, it is insane.  Here's why:
-Deleting a single file changes only a few bytes of directory metadata.
-With your 6 drive md/RAID6 with 512KB chunk, you must read 3MB of data,
-modify the directory block in question, calculate parity, then write out
-3MB of data to rust.  So you consume 6MB of bandwidth to write less than
-a dozen bytes.  With a 12 drive RAID6 that's 12MB of bandwidth to modify
-a few bytes of metadata.  Yes, insane.
+That's pretty common, but many disk drive models also have bugs,
+and most hw RAID host adapters have many (terrible) bugs.
 
-Parity RAID sucks in general because of RMW, but it is orders of
-magnitude worse when one chooses to use an insane chunk size to boot,
-and especially so with a large drive count.
+> You really need to run memtest86 on your system, preferably
+> for 24 hours or more.
 
-It seems people tend to use large chunk sizes because array
-initialization is a bit faster, and running block x-fer "tests" with dd
-buffered sequential reads/writes makes their Levi's expand.  Then they
-are confused when their actual workloads are horribly slow.
+Even that is not conclusive. Some "memory" errors are due to
+activity/noise spikes on the PCI/PCIe bus due to hw bugs or
+poorly electrically designed cards.
 
-Recreate your array, partition aligned, and manually specify a sane
-chunk size of something like 32KB.  You'll be much happier with real
-workloads.
+>>> Hard drives write extensive ECC payloads to catch
+>>> corruptions there; SATA and SAS protocols have CRC checks on
+>>> every frame transferred;
 
--- 
-Stan
+A warning to the masses: USB mass storage is weak as to this and
+in particular as to error recovery, and most USB chipsets
+(especially USB-drive ones, but also motherboard ones) are
+massively buggy.
+
+>>> the PCIe bus uses CRC checks on each lane, with low-level
+>>> encoding very similar to SATA.  Even modern processors are
+>>> using PCIe-style encoded [ ... ]
+
+> [ ... ] machine handling data you really care about
+
+... should have end-to-end verification, that is the data itself
+should be checksummed at least to detect corruption. For example
+by putting it into checksummed containers (even just ZIP without
+compression).
+
+> should have ECC ram.
+
+Oh yes, and any machine should have ECC RAM as the cost is
+really modest. Unfortunately the usual evil marketers like to
+segment artificially the market into cheap stuff without ECC and
+premium stuff with ECC, and will not put ECC into cheap stuff to
+avoid tempting business customers to buy it instead of the
+premium stuff.
