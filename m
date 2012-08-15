@@ -1,128 +1,139 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
+From: Shaohua Li <shli@kernel.org>
 Subject: Re: Re: [patch 2/2 v3]raid5: create multiple threads to handle stripes
-Date: Wed, 15 Aug 2012 14:21:26 +0800
-Message-ID: <2012081514211356241613@gmail.com>
-References: <20120809085808.GB30111@kernel.org> <201208111645321254409@gmail.com> <CANejiEVNPv6qVJ1nsvt21VMF8Py=3L8sABh9wab9eCQfdRAGeA@mail.gmail.com> <201208130906432967842@gmail.com> <20120813021324.GB447@kernel.org> <CANejiEUoguBD8PRAAuj=ATk+gd0RAqCTNjV12odSChejX-+R6Q@mail.gmail.com> <201208141839308288603@gmail.com>,
+Date: Wed, 15 Aug 2012 16:04:58 +0800
+Message-ID: <CANejiEU_JeNGEeMO+u8_8pXt6jVfb5SBfnLUJSsSCrfr9bgi0A@mail.gmail.com>
+References: <20120809085808.GB30111@kernel.org>
+	<201208111645321254409@gmail.com>
+	<CANejiEVNPv6qVJ1nsvt21VMF8Py=3L8sABh9wab9eCQfdRAGeA@mail.gmail.com>
+	<201208130906432967842@gmail.com>
+	<20120813021324.GB447@kernel.org>
+	<CANejiEUoguBD8PRAAuj=ATk+gd0RAqCTNjV12odSChejX-+R6Q@mail.gmail.com>
+	<201208141839308288603@gmail.com>
 	<CANejiEUjxR1Rt=2APf+kGXmzKYbcg_ZOztR3LirKbDERj7FG0A@mail.gmail.com>
+	<2012081514211356241613@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <2012081514211356241613@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli <shli@kernel.org>, Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Jianpeng Ma <majianpeng@gmail.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wOC0xNSAxMTo1MSBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
-PjIwMTIvOC8xNCBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+Og0KPj4gT24gMjAx
-Mi0wOC0xMyAxMDoyMCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0KPj4+MjAx
-Mi84LzEzIFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz46DQo+Pj4+IE9uIE1vbiwgQXVnIDEz
-LCAyMDEyIGF0IDA5OjA2OjQ1QU0gKzA4MDAsIEppYW5wZW5nIE1hIHdyb3RlOg0KPj4+Pj4gT24g
-MjAxMi0wOC0xMyAwODoyMSBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0KPj4+
-Pj4gPjIwMTIvOC8xMSBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+Og0KPj4+Pj4g
-Pj4gT24gMjAxMi0wOC0wOSAxNjo1OCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3Rl
-Og0KPj4+Pj4gPj4+VGhpcyBpcyBhIG5ldyB0ZW1wdCB0byBtYWtlIHJhaWQ1IGhhbmRsZSBzdHJp
-cGVzIGluIG11bHRpcGxlIHRocmVhZHMsIGFzDQo+Pj4+PiA+Pj5zdWdnZXN0ZWQgYnkgTmVpbCB0
-byBoYXZlIG1heGl1bSBmbGV4aWJpbGl0eSBhbmQgYmV0dGVyIG51bWEgYmluZGluZy4gSXQNCj4+
-Pj4+ID4+PmJhc2ljYWxseSBpcyBhIGNvbWJpbmF0aW9uIG9mIG15IGZpcnN0IGFuZCBzZWNvbmQg
-Z2VuZXJhdGlvbiBwYXRjaGVzLiBCeQ0KPj4+Pj4gPj4+ZGVmYXVsdCwgbm8gbXVsdGlwbGUgdGhy
-ZWFkIGlzIGVuYWJsZWQgKGFsbCBzdHJpcGVzIGFyZSBoYW5kbGVkIGJ5IHJhaWQ1ZCkuDQo+Pj4+
-PiA+Pj4NCj4+Pj4+ID4+PkFuIGV4YW1wbGUgdG8gZW5hYmxlIG11bHRpcGxlIHRocmVhZHM6DQo+
-Pj4+PiA+Pj4jZWNobyAzID4gL3N5cy9ibG9jay9tZDAvbWQvYXV4dGhyZWFkX251bWJlcg0KPj4+
-Pj4gPj4+VGhpcyB3aWxsIGNyZWF0ZSAzIGF1eGlsaWFyeSB0aHJlYWRzIHRvIGhhbmRsZSBzdHJp
-cGVzLiBUaGUgdGhyZWFkcyBjYW4gcnVuDQo+Pj4+PiA+Pj5vbiBhbnkgY3B1cyBhbmQgaGFuZGxl
-IHN0cmlwZXMgcHJvZHVjZWQgYnkgYW55IGNwdXMuDQo+Pj4+PiA+Pj4NCj4+Pj4+ID4+PiNlY2hv
-IDEtMyA+IC9zeXMvYmxvY2svbWQwL21kL2F1eHRoMC9jcHVsaXN0DQo+Pj4+PiA+Pj5UaGlzIHdp
-bGwgYmluZCBhdXhpbGlhcnkgdGhyZWFkIDAgdG8gY3B1IDEtMywgYW5kIHRoaXMgdGhyZWFkIHdp
-bGwgb25seSBoYW5kbGUNCj4+Pj4+ID4+PnN0cmlwZXMgcHJvZHVjZWQgYnkgY3B1IDEtMy4gVXNl
-ciB0b29sIGNhbiBmdXJ0aGVyIGNoYW5nZSB0aGUgdGhyZWFkJ3MNCj4+Pj4+ID4+PmFmZmluaXR5
-LCBidXQgdGhlIHRocmVhZCBjYW4gb25seSBoYW5kbGUgc3RyaXBlcyBwcm9kdWNlZCBieSBjcHUg
-MS0zIHRpbGwgdGhlDQo+Pj4+PiA+Pj5zeXNmcyBlbnRyeSBpcyBjaGFuZ2VkIGFnYWluLg0KPj4+
-Pj4gPj4+DQo+Pj4+PiA+Pj5JZiBzdHJpcGVzIHByb2R1Y2VkIGJ5IGEgQ1BVIGFyZW4ndCBoYW5k
-bGVkIGJ5IGFueSBhdXhpbGlhcnkgdGhyZWFkLCBzdWNoDQo+Pj4+PiA+Pj5zdHJpcGVzIHdpbGwg
-YmUgaGFuZGxlZCBieSByYWlkNWQuIE90aGVyd2lzZSwgcmFpZDVkIGRvZXNuJ3QgaGFuZGxlIGFu
-eQ0KPj4+Pj4gPj4+c3RyaXBlcy4NCj4+Pj4+ID4+Pg0KPj4+Pj4gPj4gSSB0ZXN0ZWQgYW5kIGZv
-dW5kIHR3byBwcm9ibGVtKG1heWJlIG5vdCkuDQo+Pj4+PiA+Pg0KPj4+Pj4gPj4gMTpwcmludCBj
-cHVsaXN0IG9mIGF1eHRoLCB5b3UgbWF5YmUgbG9zdCBwcmludCB0aGUgJ1xuJy4NCj4+Pj4+ID4+
-IGRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LmMgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCj4+
-Pj4+ID4+IGluZGV4IDdjODE1MWEuLjM3MDBjZGMgMTAwNjQ0DQo+Pj4+PiA+PiAtLS0gYS9kcml2
-ZXJzL21kL3JhaWQ1LmMNCj4+Pj4+ID4+ICsrKyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4+Pj4g
-Pj4gQEAgLTQ5MTEsOSArNDkxMSwxMyBAQCBzdHJ1Y3QgcmFpZDVfYXV4dGhfc3lzZnMgew0KPj4+
-Pj4gPj4gIHN0YXRpYyBzc2l6ZV90IHJhaWQ1X3Nob3dfdGhyZWFkX2NwdWxpc3Qoc3RydWN0IG1k
-ZGV2ICptZGRldiwNCj4+Pj4+ID4+ICAgICAgICAgc3RydWN0IHJhaWQ1X2F1eHRoICp0aHJlYWQs
-IGNoYXIgKnBhZ2UpDQo+Pj4+PiA+PiAgew0KPj4+Pj4gPj4gKyAgICAgICBpbnQgbjsNCj4+Pj4+
-ID4+ICAgICAgICAgaWYgKCFtZGRldi0+cHJpdmF0ZSkNCj4+Pj4+ID4+ICAgICAgICAgICAgICAg
-ICByZXR1cm4gMDsNCj4+Pj4+ID4+IC0gICAgICAgcmV0dXJuIGNwdWxpc3Rfc2NucHJpbnRmKHBh
-Z2UsIFBBR0VfU0laRSwgJnRocmVhZC0+d29ya19tYXNrKTsNCj4+Pj4+ID4+ICsgICAgICAgbiA9
-IGNwdWxpc3Rfc2NucHJpbnRmKHBhZ2UsIFBBR0VfU0laRSAtIDIsICZ0aHJlYWQtPndvcmtfbWFz
-ayk7DQo+Pj4+PiA+PiArICAgICAgIHBhZ2VbbisrXSA9ICdcbic7DQo+Pj4+PiA+PiArICAgICAg
-IHBhZ2Vbbl0gPSAwOw0KPj4+Pj4gPj4gKyAgICAgICByZXR1cm4gbjsNCj4+Pj4+ID4+ICB9DQo+
-Pj4+PiA+Pg0KPj4+Pj4gPj4gIHN0YXRpYyBzc2l6ZV90DQo+Pj4+PiA+DQo+Pj4+PiA+c29tZSBz
-eXNmcyBlbnRyaWVzIHByaW50IG91dCAnXG4nLCBzb21lIG5vdCwgSSBkb24ndCBtaW5kIGFkZCBp
-dA0KPj4+Pj4gSSBzZWFyY2gga2VybmVsIGNvZGUgZm91bmQgcGxhY2VzIHdoaWNoIGxpa2UgdGhp
-cyBwcmludCBvdXQgJ1xuJzsNCj4+Pj4+IENhbiB5b3UgdGVsbCBydWxlIHdoaWNoIHVzZSBvciBu
-b3Q/DQo+Pj4+PiBUaGFua3MhDQo+Pj4+DQo+Pj4+IEknbSBub3QgYXdhcmUgYW55IHJ1bGUgYWJv
-dXQgdGhpcw0KPj4+Pg0KPj4+Pj4gPj4gMjogVGVzdCAnZGQgaWY9L2Rldi96ZXJvIG9mPS9kZXYv
-bWQwIGJzPTJNICcsIHRoZSBwZXJmb3JtYW5jZSByZWdyZXNzIHJlbWFya2FibGUuDQo+Pj4+PiA+
-PiBhdXh0aHJlYWRfbnVtYmVyPTAsIDIwME1CL3M7DQo+Pj4+PiA+PiBhdXh0aHJlYWRfbnVtYmVy
-PTQsIDk1TUIvcy4NCj4+Pj4+ID4NCj4+Pj4+ID5TbyBtdWx0aXBsZSB0aHJlYWRzIGhhbmRsZSBz
-dHJpcGVzIHJlZHVjZSByZXF1ZXN0IG1lcmdlLiBJbiB5b3VyDQo+Pj4+PiA+d29ya2xvYWQsIHJh
-aWQ1ZCBpc24ndCBhIGJvdHRsZW5lY2sgYXQgYWxsLiBJbiBwcmFjdGljZSwgSSB0aG91Z2h0IG9u
-bHkNCj4+Pj4+ID5hcnJheSB3aGljaCBjYW4gZHJpdmUgaGlnaCBJT1BTIG5lZWRzIGVuYWJsZSBt
-dWx0aSB0aHJlYWQuIEFuZA0KPj4+Pj4gPmlmIHlvdSBjcmVhdGUgbXVsdGlwbGUgdGhyZWFkcywg
-YmV0dGVyIGxldCB0aGUgdGhyZWFkcyBoYW5kbGUgZGlmZmVyZW50DQo+Pj4+PiA+Y3B1cy4NCj4+
-Pj4+IEkgd2lsbCB0ZXN0IGZvciBtdWx0aXBsZSB0aHJlYWRzLg0KPj4+PiBUaGFua3MNCj4+IEkg
-dXNlZCBmaW8gZm9yIHJhbmR3cml0ZSB0ZXN0IHVzaW5nIGZvdXIgdGhyZWFkIHdoaWNoIHJ1biBk
-aWZmZXJlbnQgY3B1cy4NCj4+IFRoZSBicyBpcyA0ay84ay8xNmsuDQo+PiBUaGUgcmVzdWx0IGlz
-bid0IGluY3JlYXNlIHJlZ2FyZGxlc3Mgb2Ygd2hldGhlciB1c2luZyBhdXRocmVhZChmb3VyIGF1
-dGhyZWFkIHdoaWNoIHJ1biBkaWZmZXJlbnQgY3B1KSBvciBub3Q/DQo+PiBNYXliZSBteSB0ZXN0
-IGNvbmZpZyBoYWQgcHJvYmxlbT8NCj4NCj5ob3cgZmFzdCBpcyB5b3VyIHJhaWQ/IElmIHlvdXIg
-cmFpZCBjYW4ndCBkcml2ZSBoaWdoIElPUFMsIGl0J3MNCj5ub3Qgc3RyYW5nZSBtdWx0aXRocmVh
-ZCBtYWtlcyBubyBkaWZmZXJlbmNlLg0KPg0KT25seSAxNzUgZm9yIDRLLiBJIHRoaW5rIHlvdXIg
-cGF0Y2ggZm9yIGhhcmRkaXNrIGRvc2Ugbm90IGVmZmVjdC4NCk1heWJlIGl0J3Mgb25seSBmb3Ig
-c3NkLg0KPj4+QlRXLCBjYW4geW91IHRyeSBiZWxvdyBwYXRjaCBmb3IgdGhlIGFib3ZlIGRkIHdv
-cmtsb2FkPw0KPj4+aHR0cDovL2dpdC5rZXJuZWwuZGsvP3A9bGludXgtYmxvY2suZ2l0O2E9Y29t
-bWl0ZGlmZjtoPTI3NDE5MzIyNGNkYWJkNjg3ZDgwNGEyNmUwMTUwYmIyMGYyZGQ1MmMNCj4+PlRo
-YXQgb25lIGlzIHJldmVydGVkIGluIHVwc3RyZWFtLCBidXQgZXZlbnR1YWxseSB3ZSBzaG91bGQg
-bWFrZSBpdA0KPj4+ZW50ZXIgYWdhaW4gYWZ0ZXIgc29tZSBDRlEgaXNzdWVzIGFyZSBmaXhlZC4N
-Cj4+IEkgdGVzdGVkIHRoaXMgcGF0Y2guQW5kIG5vdCBmb3VuZCBwcm9ibGVtLkFuZCB0aGUgcGVy
-Zm9ybWFuY2UgZGlkIG5vdCBpbmNyZWFzZS4NCj4NCj5PaywgZWFjaCB0aHJlYWQgZGVsaXZlcnMg
-cmVxdWVzdCBpbiByYW5kb20gdGltZSwgc28gbWVyZ2UgZG9lc24ndA0KPndvcmsgZXZlbiB3aXRo
-IHRoYXQgcGF0Y2guIEkgZGlkbid0IHdvcnJ5IGFib3V0IGJpZyBzaXplIHJlcXVlc3QgdG9vDQo+
-bXVjaCwgc2luY2UgaWYgeW91IHNldCBjb3JyZWN0IGFmZmluaXR5IGZvciB0aGUgYXV4dGhyZWFk
-LCB0aGUgaXNzdWUNCj5zaG91bGQgZ28gYXdheS4gQW5kIG11bGl0aHJlYWQgaXMgZm9yIGZhc3Qg
-c3RvcmFnZSwgSSBzdXBwb3NlIGl0IGhhcw0KPm5vIGFkdmFudGFnZXMgZm9yIGhhcmRkaXNrIHJh
-aWQuIE9uIHRoZSBvdGhlciBoYW5kLCBtYXliZSB3ZSBjYW4NCj5tYWtlIE1BWF9TVFJJUEVfQkFU
-Q0ggYmlnZ2VyLiBDdXJyZW50bHkgaXQncyA4LCBzbyB0aGUgYXV4dGhyZWFkDQo+d2lsbCBkaXNw
-YXRjaCA4KjRrIHJlcXVlc3QgZm9yIHRoZSB3b3JrbG9hZC4gQ2hhbmdpbmcgaXQgdG8gMTYNCj4o
-MTYqND02NGspIHNob3VsZCBiZSBnb29kIGVub3VnaCBldmVuIGZvciBoYXJkIGRpc2sgcmFpZC4N
-Cj4NCkkgcmV2aWV3IHlvdXIgY29kZSBhbmQgaGF2ZSBhIHF1ZXN0aW9uIGFib3V0IHdha2V1cCBh
-dXRocmVhZDoNCj5zdGF0aWMgdm9pZCByYWlkNV93YWtldXBfc3RyaXBlX3RocmVhZChzdHJ1Y3Qg
-c3RyaXBlX2hlYWQgKnNoKQ0KPnsNCj4gICAgICAgc3RydWN0IHI1Y29uZiAqY29uZiA9IHNoLT5y
-YWlkX2NvbmY7DQo+ICAgICAgIHN0cnVjdCByYWlkNV9wZXJjcHUgKnBlcmNwdTsNCj4gICAgICAg
-aW50IGksIG9ycGhhbmVkID0gMTsNCj4NCj4gICAgICAgcGVyY3B1ID0gcGVyX2NwdV9wdHIoY29u
-Zi0+cGVyY3B1LCBzaC0+Y3B1KTsNCj4gICAgICAgZm9yX2VhY2hfY3B1KGksICZwZXJjcHUtPmhh
-bmRsZV90aHJlYWRzKSB7DQo+ICAgICAgICAgICAgICAgbWRfd2FrZXVwX3RocmVhZChjb25mLT5h
-dXhfdGhyZWFkc1tpXS0+dGhyZWFkKTsNCj4gICAgICAgICAgICAgICBvcnBoYW5lZCA9IDA7DQo+
-ICAgICAgIH0NCklmIHRoZXJlIGFyZSBzbWFsbCBzdHJpcGVzIGluIGhhbmRsZV90aHJlYWRzIG9m
-IGNwdTAuQnV0IHRoZSBhdXRocmVhZDAvMSBjYW4gcnVuIGNwdTAuDQpJdCdzIG5vIG5lY2Vzc2Fy
-eSB0byB3YWt1cCBhbGwgdGhyZWFkLmF1dGhyZWFkMCBtYXkgZXhlYyBhbGwgc3RyaXBlLGJ1dCB0
-aGUgYXV0aHJlYWQxIG9ubHkgd2FrZXVwIGFuZCBzbGVlcCxidXQgaXQgd2lsbCBzcGluX2xvY2tf
-aXJxKCZjb25mLT5kZXZpY2VfbG9jaykuDQpJIHRoaW5rIHlvdSBzaG91bGQgYWRkIHNvbWUgbGlt
-aXRlZCB0byBkbyAuDQoNCkJUVywgSW4gbXkgd29ya2xvYWQsIGkgZm91bmQgc29tZSBtZXJnZSBw
-cm9ibGVtIGxpa2UgdGhpcyBwYXRjaC5BdCBmaXJzdCxpIHdhbnRlZCB0byBhZGQgZnJvbnQtbWVy
-Z2Uod2h5IG9ubHkgaGFkIGJhY2ttZXJnZT8pLg0KQnV0IGkgcmVhZGVkIHlvdXIgcGF0Y2ggYW5k
-IGl0J3MgYSBnb29kIGlkZWEgdGhhbiBteS4NCkxhdGVyLCBpIHJlYWRlZCB0aGUgbWFpbGlzdCBh
-Ym91dCByZXZlcnRpbmcgeW91ciBwYXRjaC4NCklmIHVzZSB0aGUgY29kZSBpbiBibGtfcXVldWVf
-YmlvKCk6DQo+aWYgKGVsX3JldCA9PSBFTEVWQVRPUl9CQUNLX01FUkdFKSB7DQo+CQlpZiAoYmlv
-X2F0dGVtcHRfYmFja19tZXJnZShxLCByZXEsIGJpbykpIHsNCj4JCQllbHZfYmlvX21lcmdlZChx
-LCByZXEsIGJpbyk7DQo+CQkJaWYgKCFhdHRlbXB0X2JhY2tfbWVyZ2UocSwgcmVxKSkNCj4JCQkJ
-ZWx2X21lcmdlZF9yZXF1ZXN0KHEsIHJlcSwgZWxfcmV0KTsNCj4JCQlnb3RvIG91dF91bmxvY2s7
-DQo+CQl9DQo+CX0gZWxzZSBpZiAoZWxfcmV0ID09IEVMRVZBVE9SX0ZST05UX01FUkdFKSB7DQo+
-CQlpZiAoYmlvX2F0dGVtcHRfZnJvbnRfbWVyZ2UocSwgcmVxLCBiaW8pKSB7DQo+CQkJZWx2X2Jp
-b19tZXJnZWQocSwgcmVxLCBiaW8pOw0KPgkJCWlmICghYXR0ZW1wdF9mcm9udF9tZXJnZShxLCBy
-ZXEpKQ0KPgkJCQllbHZfbWVyZ2VkX3JlcXVlc3QocSwgcmVxLCBlbF9yZXQpOw0KPgkJCWdvdG8g
-b3V0X3VubG9jazsNCj4JCX0NClRoZSByZXN1bHQgaXMgbm90IGdvb2QgYXMgeW91ciBwYXRjaC5C
-dXQgaXQncyBjb3JyZWN0Lg==
+2012/8/15 Jianpeng Ma <majianpeng@gmail.com>:
+> On 2012-08-15 11:51 Shaohua Li <shli@kernel.org> Wrote:
+>>2012/8/14 Jianpeng Ma <majianpeng@gmail.com>:
+>>> On 2012-08-13 10:20 Shaohua Li <shli@kernel.org> Wrote:
+>>>>2012/8/13 Shaohua Li <shli@kernel.org>:
+>>>>> On Mon, Aug 13, 2012 at 09:06:45AM +0800, Jianpeng Ma wrote:
+>>>>>> On 2012-08-13 08:21 Shaohua Li <shli@kernel.org> Wrote:
+>>>>>> >2012/8/11 Jianpeng Ma <majianpeng@gmail.com>:
+>>>>>> >> On 2012-08-09 16:58 Shaohua Li <shli@kernel.org> Wrote:
+>>>>>> >>>This is a new tempt to make raid5 handle stripes in multiple threads, as
+>>>>>> >>>suggested by Neil to have maxium flexibility and better numa binding. It
+>>>>>> >>>basically is a combination of my first and second generation patches. By
+>>>>>> >>>default, no multiple thread is enabled (all stripes are handled by raid5d).
+>>>>>> >>>
+>>>>>> >>>An example to enable multiple threads:
+>>>>>> >>>#echo 3 > /sys/block/md0/md/auxthread_number
+>>>>>> >>>This will create 3 auxiliary threads to handle stripes. The threads can run
+>>>>>> >>>on any cpus and handle stripes produced by any cpus.
+>>>>>> >>>
+>>>>>> >>>#echo 1-3 > /sys/block/md0/md/auxth0/cpulist
+>>>>>> >>>This will bind auxiliary thread 0 to cpu 1-3, and this thread will only handle
+>>>>>> >>>stripes produced by cpu 1-3. User tool can further change the thread's
+>>>>>> >>>affinity, but the thread can only handle stripes produced by cpu 1-3 till the
+>>>>>> >>>sysfs entry is changed again.
+>>>>>> >>>
+>>>>>> >>>If stripes produced by a CPU aren't handled by any auxiliary thread, such
+>>>>>> >>>stripes will be handled by raid5d. Otherwise, raid5d doesn't handle any
+>>>>>> >>>stripes.
+>>>>>> >>>
+>>>>>> >> I tested and found two problem(maybe not).
+>>>>>> >>
+>>>>>> >> 1:print cpulist of auxth, you maybe lost print the '\n'.
+>>>>>> >> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>>>>>> >> index 7c8151a..3700cdc 100644
+>>>>>> >> --- a/drivers/md/raid5.c
+>>>>>> >> +++ b/drivers/md/raid5.c
+>>>>>> >> @@ -4911,9 +4911,13 @@ struct raid5_auxth_sysfs {
+>>>>>> >>  static ssize_t raid5_show_thread_cpulist(struct mddev *mddev,
+>>>>>> >>         struct raid5_auxth *thread, char *page)
+>>>>>> >>  {
+>>>>>> >> +       int n;
+>>>>>> >>         if (!mddev->private)
+>>>>>> >>                 return 0;
+>>>>>> >> -       return cpulist_scnprintf(page, PAGE_SIZE, &thread->work_mask);
+>>>>>> >> +       n = cpulist_scnprintf(page, PAGE_SIZE - 2, &thread->work_mask);
+>>>>>> >> +       page[n++] = '\n';
+>>>>>> >> +       page[n] = 0;
+>>>>>> >> +       return n;
+>>>>>> >>  }
+>>>>>> >>
+>>>>>> >>  static ssize_t
+>>>>>> >
+>>>>>> >some sysfs entries print out '\n', some not, I don't mind add it
+>>>>>> I search kernel code found places which like this print out '\n';
+>>>>>> Can you tell rule which use or not?
+>>>>>> Thanks!
+>>>>>
+>>>>> I'm not aware any rule about this
+>>>>>
+>>>>>> >> 2: Test 'dd if=/dev/zero of=/dev/md0 bs=2M ', the performance regress remarkable.
+>>>>>> >> auxthread_number=0, 200MB/s;
+>>>>>> >> auxthread_number=4, 95MB/s.
+>>>>>> >
+>>>>>> >So multiple threads handle stripes reduce request merge. In your
+>>>>>> >workload, raid5d isn't a bottleneck at all. In practice, I thought only
+>>>>>> >array which can drive high IOPS needs enable multi thread. And
+>>>>>> >if you create multiple threads, better let the threads handle different
+>>>>>> >cpus.
+>>>>>> I will test for multiple threads.
+>>>>> Thanks
+>>> I used fio for randwrite test using four thread which run different cpus.
+>>> The bs is 4k/8k/16k.
+>>> The result isn't increase regardless of whether using authread(four authread which run different cpu) or not?
+>>> Maybe my test config had problem?
+>>
+>>how fast is your raid? If your raid can't drive high IOPS, it's
+>>not strange multithread makes no difference.
+>>
+> Only 175 for 4K. I think your patch for harddisk dose not effect.
+> Maybe it's only for ssd.
+>>>>BTW, can you try below patch for the above dd workload?
+>>>>http://git.kernel.dk/?p=linux-block.git;a=commitdiff;h=274193224cdabd687d804a26e0150bb20f2dd52c
+>>>>That one is reverted in upstream, but eventually we should make it
+>>>>enter again after some CFQ issues are fixed.
+>>> I tested this patch.And not found problem.And the performance did not increase.
+>>
+>>Ok, each thread delivers request in random time, so merge doesn't
+>>work even with that patch. I didn't worry about big size request too
+>>much, since if you set correct affinity for the auxthread, the issue
+>>should go away. And mulithread is for fast storage, I suppose it has
+>>no advantages for harddisk raid. On the other hand, maybe we can
+>>make MAX_STRIPE_BATCH bigger. Currently it's 8, so the auxthread
+>>will dispatch 8*4k request for the workload. Changing it to 16
+>>(16*4=64k) should be good enough even for hard disk raid.
+>>
+> I review your code and have a question about wakeup authread:
+>>static void raid5_wakeup_stripe_thread(struct stripe_head *sh)
+>>{
+>>       struct r5conf *conf = sh->raid_conf;
+>>       struct raid5_percpu *percpu;
+>>       int i, orphaned = 1;
+>>
+>>       percpu = per_cpu_ptr(conf->percpu, sh->cpu);
+>>       for_each_cpu(i, &percpu->handle_threads) {
+>>               md_wakeup_thread(conf->aux_threads[i]->thread);
+>>               orphaned = 0;
+>>       }
+> If there are small stripes in handle_threads of cpu0.But the authread0/1 can run cpu0.
+> It's no necessary to wakup all thread.authread0 may exec all stripe,but the authread1 only wakeup and sleep,but it will spin_lock_irq(&conf->device_lock).
+> I think you should add some limited to do .
 
+I used to have a counter for stripes queued, with it, we can determine
+how many threads should be waken up. That is what I did when each
+each thread can handle stripes from any CPU. I thought this problem
+isn't sever now since each thread can just handle strips from one or
+several CPUs. If this really is a problem, we can fix it later, but my test
+doesn't show this is a problem.
