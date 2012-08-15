@@ -1,139 +1,130 @@
-From: Shaohua Li <shli@kernel.org>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
 Subject: Re: Re: [patch 2/2 v3]raid5: create multiple threads to handle stripes
-Date: Wed, 15 Aug 2012 16:04:58 +0800
-Message-ID: <CANejiEU_JeNGEeMO+u8_8pXt6jVfb5SBfnLUJSsSCrfr9bgi0A@mail.gmail.com>
-References: <20120809085808.GB30111@kernel.org>
-	<201208111645321254409@gmail.com>
-	<CANejiEVNPv6qVJ1nsvt21VMF8Py=3L8sABh9wab9eCQfdRAGeA@mail.gmail.com>
-	<201208130906432967842@gmail.com>
-	<20120813021324.GB447@kernel.org>
-	<CANejiEUoguBD8PRAAuj=ATk+gd0RAqCTNjV12odSChejX-+R6Q@mail.gmail.com>
-	<201208141839308288603@gmail.com>
-	<CANejiEUjxR1Rt=2APf+kGXmzKYbcg_ZOztR3LirKbDERj7FG0A@mail.gmail.com>
-	<2012081514211356241613@gmail.com>
+Date: Wed, 15 Aug 2012 16:19:01 +0800
+Message-ID: <201208151618587507590@gmail.com>
+References: <20120809085808.GB30111@kernel.org> <201208111645321254409@gmail.com> <CANejiEVNPv6qVJ1nsvt21VMF8Py=3L8sABh9wab9eCQfdRAGeA@mail.gmail.com> <201208130906432967842@gmail.com> <20120813021324.GB447@kernel.org> <CANejiEUoguBD8PRAAuj=ATk+gd0RAqCTNjV12odSChejX-+R6Q@mail.gmail.com> <201208141839308288603@gmail.com> <CANejiEUjxR1Rt=2APf+kGXmzKYbcg_ZOztR3LirKbDERj7FG0A@mail.gmail.com> <2012081514211356241613@gmail.com>,
+	<CANejiEU_JeNGEeMO+u8_8pXt6jVfb5SBfnLUJSsSCrfr9bgi0A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2012081514211356241613@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jianpeng Ma <majianpeng@gmail.com>
+To: shli <shli@kernel.org>
 Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-2012/8/15 Jianpeng Ma <majianpeng@gmail.com>:
-> On 2012-08-15 11:51 Shaohua Li <shli@kernel.org> Wrote:
->>2012/8/14 Jianpeng Ma <majianpeng@gmail.com>:
->>> On 2012-08-13 10:20 Shaohua Li <shli@kernel.org> Wrote:
->>>>2012/8/13 Shaohua Li <shli@kernel.org>:
->>>>> On Mon, Aug 13, 2012 at 09:06:45AM +0800, Jianpeng Ma wrote:
->>>>>> On 2012-08-13 08:21 Shaohua Li <shli@kernel.org> Wrote:
->>>>>> >2012/8/11 Jianpeng Ma <majianpeng@gmail.com>:
->>>>>> >> On 2012-08-09 16:58 Shaohua Li <shli@kernel.org> Wrote:
->>>>>> >>>This is a new tempt to make raid5 handle stripes in multiple threads, as
->>>>>> >>>suggested by Neil to have maxium flexibility and better numa binding. It
->>>>>> >>>basically is a combination of my first and second generation patches. By
->>>>>> >>>default, no multiple thread is enabled (all stripes are handled by raid5d).
->>>>>> >>>
->>>>>> >>>An example to enable multiple threads:
->>>>>> >>>#echo 3 > /sys/block/md0/md/auxthread_number
->>>>>> >>>This will create 3 auxiliary threads to handle stripes. The threads can run
->>>>>> >>>on any cpus and handle stripes produced by any cpus.
->>>>>> >>>
->>>>>> >>>#echo 1-3 > /sys/block/md0/md/auxth0/cpulist
->>>>>> >>>This will bind auxiliary thread 0 to cpu 1-3, and this thread will only handle
->>>>>> >>>stripes produced by cpu 1-3. User tool can further change the thread's
->>>>>> >>>affinity, but the thread can only handle stripes produced by cpu 1-3 till the
->>>>>> >>>sysfs entry is changed again.
->>>>>> >>>
->>>>>> >>>If stripes produced by a CPU aren't handled by any auxiliary thread, such
->>>>>> >>>stripes will be handled by raid5d. Otherwise, raid5d doesn't handle any
->>>>>> >>>stripes.
->>>>>> >>>
->>>>>> >> I tested and found two problem(maybe not).
->>>>>> >>
->>>>>> >> 1:print cpulist of auxth, you maybe lost print the '\n'.
->>>>>> >> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->>>>>> >> index 7c8151a..3700cdc 100644
->>>>>> >> --- a/drivers/md/raid5.c
->>>>>> >> +++ b/drivers/md/raid5.c
->>>>>> >> @@ -4911,9 +4911,13 @@ struct raid5_auxth_sysfs {
->>>>>> >>  static ssize_t raid5_show_thread_cpulist(struct mddev *mddev,
->>>>>> >>         struct raid5_auxth *thread, char *page)
->>>>>> >>  {
->>>>>> >> +       int n;
->>>>>> >>         if (!mddev->private)
->>>>>> >>                 return 0;
->>>>>> >> -       return cpulist_scnprintf(page, PAGE_SIZE, &thread->work_mask);
->>>>>> >> +       n = cpulist_scnprintf(page, PAGE_SIZE - 2, &thread->work_mask);
->>>>>> >> +       page[n++] = '\n';
->>>>>> >> +       page[n] = 0;
->>>>>> >> +       return n;
->>>>>> >>  }
->>>>>> >>
->>>>>> >>  static ssize_t
->>>>>> >
->>>>>> >some sysfs entries print out '\n', some not, I don't mind add it
->>>>>> I search kernel code found places which like this print out '\n';
->>>>>> Can you tell rule which use or not?
->>>>>> Thanks!
->>>>>
->>>>> I'm not aware any rule about this
->>>>>
->>>>>> >> 2: Test 'dd if=/dev/zero of=/dev/md0 bs=2M ', the performance regress remarkable.
->>>>>> >> auxthread_number=0, 200MB/s;
->>>>>> >> auxthread_number=4, 95MB/s.
->>>>>> >
->>>>>> >So multiple threads handle stripes reduce request merge. In your
->>>>>> >workload, raid5d isn't a bottleneck at all. In practice, I thought only
->>>>>> >array which can drive high IOPS needs enable multi thread. And
->>>>>> >if you create multiple threads, better let the threads handle different
->>>>>> >cpus.
->>>>>> I will test for multiple threads.
->>>>> Thanks
->>> I used fio for randwrite test using four thread which run different cpus.
->>> The bs is 4k/8k/16k.
->>> The result isn't increase regardless of whether using authread(four authread which run different cpu) or not?
->>> Maybe my test config had problem?
->>
->>how fast is your raid? If your raid can't drive high IOPS, it's
->>not strange multithread makes no difference.
->>
-> Only 175 for 4K. I think your patch for harddisk dose not effect.
-> Maybe it's only for ssd.
->>>>BTW, can you try below patch for the above dd workload?
->>>>http://git.kernel.dk/?p=linux-block.git;a=commitdiff;h=274193224cdabd687d804a26e0150bb20f2dd52c
->>>>That one is reverted in upstream, but eventually we should make it
->>>>enter again after some CFQ issues are fixed.
->>> I tested this patch.And not found problem.And the performance did not increase.
->>
->>Ok, each thread delivers request in random time, so merge doesn't
->>work even with that patch. I didn't worry about big size request too
->>much, since if you set correct affinity for the auxthread, the issue
->>should go away. And mulithread is for fast storage, I suppose it has
->>no advantages for harddisk raid. On the other hand, maybe we can
->>make MAX_STRIPE_BATCH bigger. Currently it's 8, so the auxthread
->>will dispatch 8*4k request for the workload. Changing it to 16
->>(16*4=64k) should be good enough even for hard disk raid.
->>
-> I review your code and have a question about wakeup authread:
->>static void raid5_wakeup_stripe_thread(struct stripe_head *sh)
->>{
->>       struct r5conf *conf = sh->raid_conf;
->>       struct raid5_percpu *percpu;
->>       int i, orphaned = 1;
->>
->>       percpu = per_cpu_ptr(conf->percpu, sh->cpu);
->>       for_each_cpu(i, &percpu->handle_threads) {
->>               md_wakeup_thread(conf->aux_threads[i]->thread);
->>               orphaned = 0;
->>       }
-> If there are small stripes in handle_threads of cpu0.But the authread0/1 can run cpu0.
-> It's no necessary to wakup all thread.authread0 may exec all stripe,but the authread1 only wakeup and sleep,but it will spin_lock_irq(&conf->device_lock).
-> I think you should add some limited to do .
+T24gMjAxMi0wOC0xNSAxNjowNCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
+PjIwMTIvOC8xNSBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+Og0KPj4gT24gMjAx
+Mi0wOC0xNSAxMTo1MSBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0KPj4+MjAx
+Mi84LzE0IEppYW5wZW5nIE1hIDxtYWppYW5wZW5nQGdtYWlsLmNvbT46DQo+Pj4+IE9uIDIwMTIt
+MDgtMTMgMTA6MjAgU2hhb2h1YSBMaSA8c2hsaUBrZXJuZWwub3JnPiBXcm90ZToNCj4+Pj4+MjAx
+Mi84LzEzIFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz46DQo+Pj4+Pj4gT24gTW9uLCBBdWcg
+MTMsIDIwMTIgYXQgMDk6MDY6NDVBTSArMDgwMCwgSmlhbnBlbmcgTWEgd3JvdGU6DQo+Pj4+Pj4+
+IE9uIDIwMTItMDgtMTMgMDg6MjEgU2hhb2h1YSBMaSA8c2hsaUBrZXJuZWwub3JnPiBXcm90ZToN
+Cj4+Pj4+Pj4gPjIwMTIvOC8xMSBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+Og0K
+Pj4+Pj4+PiA+PiBPbiAyMDEyLTA4LTA5IDE2OjU4IFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9y
+Zz4gV3JvdGU6DQo+Pj4+Pj4+ID4+PlRoaXMgaXMgYSBuZXcgdGVtcHQgdG8gbWFrZSByYWlkNSBo
+YW5kbGUgc3RyaXBlcyBpbiBtdWx0aXBsZSB0aHJlYWRzLCBhcw0KPj4+Pj4+PiA+Pj5zdWdnZXN0
+ZWQgYnkgTmVpbCB0byBoYXZlIG1heGl1bSBmbGV4aWJpbGl0eSBhbmQgYmV0dGVyIG51bWEgYmlu
+ZGluZy4gSXQNCj4+Pj4+Pj4gPj4+YmFzaWNhbGx5IGlzIGEgY29tYmluYXRpb24gb2YgbXkgZmly
+c3QgYW5kIHNlY29uZCBnZW5lcmF0aW9uIHBhdGNoZXMuIEJ5DQo+Pj4+Pj4+ID4+PmRlZmF1bHQs
+IG5vIG11bHRpcGxlIHRocmVhZCBpcyBlbmFibGVkIChhbGwgc3RyaXBlcyBhcmUgaGFuZGxlZCBi
+eSByYWlkNWQpLg0KPj4+Pj4+PiA+Pj4NCj4+Pj4+Pj4gPj4+QW4gZXhhbXBsZSB0byBlbmFibGUg
+bXVsdGlwbGUgdGhyZWFkczoNCj4+Pj4+Pj4gPj4+I2VjaG8gMyA+IC9zeXMvYmxvY2svbWQwL21k
+L2F1eHRocmVhZF9udW1iZXINCj4+Pj4+Pj4gPj4+VGhpcyB3aWxsIGNyZWF0ZSAzIGF1eGlsaWFy
+eSB0aHJlYWRzIHRvIGhhbmRsZSBzdHJpcGVzLiBUaGUgdGhyZWFkcyBjYW4gcnVuDQo+Pj4+Pj4+
+ID4+Pm9uIGFueSBjcHVzIGFuZCBoYW5kbGUgc3RyaXBlcyBwcm9kdWNlZCBieSBhbnkgY3B1cy4N
+Cj4+Pj4+Pj4gPj4+DQo+Pj4+Pj4+ID4+PiNlY2hvIDEtMyA+IC9zeXMvYmxvY2svbWQwL21kL2F1
+eHRoMC9jcHVsaXN0DQo+Pj4+Pj4+ID4+PlRoaXMgd2lsbCBiaW5kIGF1eGlsaWFyeSB0aHJlYWQg
+MCB0byBjcHUgMS0zLCBhbmQgdGhpcyB0aHJlYWQgd2lsbCBvbmx5IGhhbmRsZQ0KPj4+Pj4+PiA+
+Pj5zdHJpcGVzIHByb2R1Y2VkIGJ5IGNwdSAxLTMuIFVzZXIgdG9vbCBjYW4gZnVydGhlciBjaGFu
+Z2UgdGhlIHRocmVhZCdzDQo+Pj4+Pj4+ID4+PmFmZmluaXR5LCBidXQgdGhlIHRocmVhZCBjYW4g
+b25seSBoYW5kbGUgc3RyaXBlcyBwcm9kdWNlZCBieSBjcHUgMS0zIHRpbGwgdGhlDQo+Pj4+Pj4+
+ID4+PnN5c2ZzIGVudHJ5IGlzIGNoYW5nZWQgYWdhaW4uDQo+Pj4+Pj4+ID4+Pg0KPj4+Pj4+PiA+
+Pj5JZiBzdHJpcGVzIHByb2R1Y2VkIGJ5IGEgQ1BVIGFyZW4ndCBoYW5kbGVkIGJ5IGFueSBhdXhp
+bGlhcnkgdGhyZWFkLCBzdWNoDQo+Pj4+Pj4+ID4+PnN0cmlwZXMgd2lsbCBiZSBoYW5kbGVkIGJ5
+IHJhaWQ1ZC4gT3RoZXJ3aXNlLCByYWlkNWQgZG9lc24ndCBoYW5kbGUgYW55DQo+Pj4+Pj4+ID4+
+PnN0cmlwZXMuDQo+Pj4+Pj4+ID4+Pg0KPj4+Pj4+PiA+PiBJIHRlc3RlZCBhbmQgZm91bmQgdHdv
+IHByb2JsZW0obWF5YmUgbm90KS4NCj4+Pj4+Pj4gPj4NCj4+Pj4+Pj4gPj4gMTpwcmludCBjcHVs
+aXN0IG9mIGF1eHRoLCB5b3UgbWF5YmUgbG9zdCBwcmludCB0aGUgJ1xuJy4NCj4+Pj4+Pj4gPj4g
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4+
+Pj4+PiA+PiBpbmRleCA3YzgxNTFhLi4zNzAwY2RjIDEwMDY0NA0KPj4+Pj4+PiA+PiAtLS0gYS9k
+cml2ZXJzL21kL3JhaWQ1LmMNCj4+Pj4+Pj4gPj4gKysrIGIvZHJpdmVycy9tZC9yYWlkNS5jDQo+
+Pj4+Pj4+ID4+IEBAIC00OTExLDkgKzQ5MTEsMTMgQEAgc3RydWN0IHJhaWQ1X2F1eHRoX3N5c2Zz
+IHsNCj4+Pj4+Pj4gPj4gIHN0YXRpYyBzc2l6ZV90IHJhaWQ1X3Nob3dfdGhyZWFkX2NwdWxpc3Qo
+c3RydWN0IG1kZGV2ICptZGRldiwNCj4+Pj4+Pj4gPj4gICAgICAgICBzdHJ1Y3QgcmFpZDVfYXV4
+dGggKnRocmVhZCwgY2hhciAqcGFnZSkNCj4+Pj4+Pj4gPj4gIHsNCj4+Pj4+Pj4gPj4gKyAgICAg
+ICBpbnQgbjsNCj4+Pj4+Pj4gPj4gICAgICAgICBpZiAoIW1kZGV2LT5wcml2YXRlKQ0KPj4+Pj4+
+PiA+PiAgICAgICAgICAgICAgICAgcmV0dXJuIDA7DQo+Pj4+Pj4+ID4+IC0gICAgICAgcmV0dXJu
+IGNwdWxpc3Rfc2NucHJpbnRmKHBhZ2UsIFBBR0VfU0laRSwgJnRocmVhZC0+d29ya19tYXNrKTsN
+Cj4+Pj4+Pj4gPj4gKyAgICAgICBuID0gY3B1bGlzdF9zY25wcmludGYocGFnZSwgUEFHRV9TSVpF
+IC0gMiwgJnRocmVhZC0+d29ya19tYXNrKTsNCj4+Pj4+Pj4gPj4gKyAgICAgICBwYWdlW24rK10g
+PSAnXG4nOw0KPj4+Pj4+PiA+PiArICAgICAgIHBhZ2Vbbl0gPSAwOw0KPj4+Pj4+PiA+PiArICAg
+ICAgIHJldHVybiBuOw0KPj4+Pj4+PiA+PiAgfQ0KPj4+Pj4+PiA+Pg0KPj4+Pj4+PiA+PiAgc3Rh
+dGljIHNzaXplX3QNCj4+Pj4+Pj4gPg0KPj4+Pj4+PiA+c29tZSBzeXNmcyBlbnRyaWVzIHByaW50
+IG91dCAnXG4nLCBzb21lIG5vdCwgSSBkb24ndCBtaW5kIGFkZCBpdA0KPj4+Pj4+PiBJIHNlYXJj
+aCBrZXJuZWwgY29kZSBmb3VuZCBwbGFjZXMgd2hpY2ggbGlrZSB0aGlzIHByaW50IG91dCAnXG4n
+Ow0KPj4+Pj4+PiBDYW4geW91IHRlbGwgcnVsZSB3aGljaCB1c2Ugb3Igbm90Pw0KPj4+Pj4+PiBU
+aGFua3MhDQo+Pj4+Pj4NCj4+Pj4+PiBJJ20gbm90IGF3YXJlIGFueSBydWxlIGFib3V0IHRoaXMN
+Cj4+Pj4+Pg0KPj4+Pj4+PiA+PiAyOiBUZXN0ICdkZCBpZj0vZGV2L3plcm8gb2Y9L2Rldi9tZDAg
+YnM9Mk0gJywgdGhlIHBlcmZvcm1hbmNlIHJlZ3Jlc3MgcmVtYXJrYWJsZS4NCj4+Pj4+Pj4gPj4g
+YXV4dGhyZWFkX251bWJlcj0wLCAyMDBNQi9zOw0KPj4+Pj4+PiA+PiBhdXh0aHJlYWRfbnVtYmVy
+PTQsIDk1TUIvcy4NCj4+Pj4+Pj4gPg0KPj4+Pj4+PiA+U28gbXVsdGlwbGUgdGhyZWFkcyBoYW5k
+bGUgc3RyaXBlcyByZWR1Y2UgcmVxdWVzdCBtZXJnZS4gSW4geW91cg0KPj4+Pj4+PiA+d29ya2xv
+YWQsIHJhaWQ1ZCBpc24ndCBhIGJvdHRsZW5lY2sgYXQgYWxsLiBJbiBwcmFjdGljZSwgSSB0aG91
+Z2h0IG9ubHkNCj4+Pj4+Pj4gPmFycmF5IHdoaWNoIGNhbiBkcml2ZSBoaWdoIElPUFMgbmVlZHMg
+ZW5hYmxlIG11bHRpIHRocmVhZC4gQW5kDQo+Pj4+Pj4+ID5pZiB5b3UgY3JlYXRlIG11bHRpcGxl
+IHRocmVhZHMsIGJldHRlciBsZXQgdGhlIHRocmVhZHMgaGFuZGxlIGRpZmZlcmVudA0KPj4+Pj4+
+PiA+Y3B1cy4NCj4+Pj4+Pj4gSSB3aWxsIHRlc3QgZm9yIG11bHRpcGxlIHRocmVhZHMuDQo+Pj4+
+Pj4gVGhhbmtzDQo+Pj4+IEkgdXNlZCBmaW8gZm9yIHJhbmR3cml0ZSB0ZXN0IHVzaW5nIGZvdXIg
+dGhyZWFkIHdoaWNoIHJ1biBkaWZmZXJlbnQgY3B1cy4NCj4+Pj4gVGhlIGJzIGlzIDRrLzhrLzE2
+ay4NCj4+Pj4gVGhlIHJlc3VsdCBpc24ndCBpbmNyZWFzZSByZWdhcmRsZXNzIG9mIHdoZXRoZXIg
+dXNpbmcgYXV0aHJlYWQoZm91ciBhdXRocmVhZCB3aGljaCBydW4gZGlmZmVyZW50IGNwdSkgb3Ig
+bm90Pw0KPj4+PiBNYXliZSBteSB0ZXN0IGNvbmZpZyBoYWQgcHJvYmxlbT8NCj4+Pg0KPj4+aG93
+IGZhc3QgaXMgeW91ciByYWlkPyBJZiB5b3VyIHJhaWQgY2FuJ3QgZHJpdmUgaGlnaCBJT1BTLCBp
+dCdzDQo+Pj5ub3Qgc3RyYW5nZSBtdWx0aXRocmVhZCBtYWtlcyBubyBkaWZmZXJlbmNlLg0KPj4+
+DQo+PiBPbmx5IDE3NSBmb3IgNEsuIEkgdGhpbmsgeW91ciBwYXRjaCBmb3IgaGFyZGRpc2sgZG9z
+ZSBub3QgZWZmZWN0Lg0KPj4gTWF5YmUgaXQncyBvbmx5IGZvciBzc2QuDQo+Pj4+PkJUVywgY2Fu
+IHlvdSB0cnkgYmVsb3cgcGF0Y2ggZm9yIHRoZSBhYm92ZSBkZCB3b3JrbG9hZD8NCj4+Pj4+aHR0
+cDovL2dpdC5rZXJuZWwuZGsvP3A9bGludXgtYmxvY2suZ2l0O2E9Y29tbWl0ZGlmZjtoPTI3NDE5
+MzIyNGNkYWJkNjg3ZDgwNGEyNmUwMTUwYmIyMGYyZGQ1MmMNCj4+Pj4+VGhhdCBvbmUgaXMgcmV2
+ZXJ0ZWQgaW4gdXBzdHJlYW0sIGJ1dCBldmVudHVhbGx5IHdlIHNob3VsZCBtYWtlIGl0DQo+Pj4+
+PmVudGVyIGFnYWluIGFmdGVyIHNvbWUgQ0ZRIGlzc3VlcyBhcmUgZml4ZWQuDQo+Pj4+IEkgdGVz
+dGVkIHRoaXMgcGF0Y2guQW5kIG5vdCBmb3VuZCBwcm9ibGVtLkFuZCB0aGUgcGVyZm9ybWFuY2Ug
+ZGlkIG5vdCBpbmNyZWFzZS4NCj4+Pg0KPj4+T2ssIGVhY2ggdGhyZWFkIGRlbGl2ZXJzIHJlcXVl
+c3QgaW4gcmFuZG9tIHRpbWUsIHNvIG1lcmdlIGRvZXNuJ3QNCj4+PndvcmsgZXZlbiB3aXRoIHRo
+YXQgcGF0Y2guIEkgZGlkbid0IHdvcnJ5IGFib3V0IGJpZyBzaXplIHJlcXVlc3QgdG9vDQo+Pj5t
+dWNoLCBzaW5jZSBpZiB5b3Ugc2V0IGNvcnJlY3QgYWZmaW5pdHkgZm9yIHRoZSBhdXh0aHJlYWQs
+IHRoZSBpc3N1ZQ0KPj4+c2hvdWxkIGdvIGF3YXkuIEFuZCBtdWxpdGhyZWFkIGlzIGZvciBmYXN0
+IHN0b3JhZ2UsIEkgc3VwcG9zZSBpdCBoYXMNCj4+Pm5vIGFkdmFudGFnZXMgZm9yIGhhcmRkaXNr
+IHJhaWQuIE9uIHRoZSBvdGhlciBoYW5kLCBtYXliZSB3ZSBjYW4NCj4+Pm1ha2UgTUFYX1NUUklQ
+RV9CQVRDSCBiaWdnZXIuIEN1cnJlbnRseSBpdCdzIDgsIHNvIHRoZSBhdXh0aHJlYWQNCj4+Pndp
+bGwgZGlzcGF0Y2ggOCo0ayByZXF1ZXN0IGZvciB0aGUgd29ya2xvYWQuIENoYW5naW5nIGl0IHRv
+IDE2DQo+Pj4oMTYqND02NGspIHNob3VsZCBiZSBnb29kIGVub3VnaCBldmVuIGZvciBoYXJkIGRp
+c2sgcmFpZC4NCj4+Pg0KPj4gSSByZXZpZXcgeW91ciBjb2RlIGFuZCBoYXZlIGEgcXVlc3Rpb24g
+YWJvdXQgd2FrZXVwIGF1dGhyZWFkOg0KPj4+c3RhdGljIHZvaWQgcmFpZDVfd2FrZXVwX3N0cmlw
+ZV90aHJlYWQoc3RydWN0IHN0cmlwZV9oZWFkICpzaCkNCj4+PnsNCj4+PiAgICAgICBzdHJ1Y3Qg
+cjVjb25mICpjb25mID0gc2gtPnJhaWRfY29uZjsNCj4+PiAgICAgICBzdHJ1Y3QgcmFpZDVfcGVy
+Y3B1ICpwZXJjcHU7DQo+Pj4gICAgICAgaW50IGksIG9ycGhhbmVkID0gMTsNCj4+Pg0KPj4+ICAg
+ICAgIHBlcmNwdSA9IHBlcl9jcHVfcHRyKGNvbmYtPnBlcmNwdSwgc2gtPmNwdSk7DQo+Pj4gICAg
+ICAgZm9yX2VhY2hfY3B1KGksICZwZXJjcHUtPmhhbmRsZV90aHJlYWRzKSB7DQo+Pj4gICAgICAg
+ICAgICAgICBtZF93YWtldXBfdGhyZWFkKGNvbmYtPmF1eF90aHJlYWRzW2ldLT50aHJlYWQpOw0K
+Pj4+ICAgICAgICAgICAgICAgb3JwaGFuZWQgPSAwOw0KPj4+ICAgICAgIH0NCj4+IElmIHRoZXJl
+IGFyZSBzbWFsbCBzdHJpcGVzIGluIGhhbmRsZV90aHJlYWRzIG9mIGNwdTAuQnV0IHRoZSBhdXRo
+cmVhZDAvMSBjYW4gcnVuIGNwdTAuDQo+PiBJdCdzIG5vIG5lY2Vzc2FyeSB0byB3YWt1cCBhbGwg
+dGhyZWFkLmF1dGhyZWFkMCBtYXkgZXhlYyBhbGwgc3RyaXBlLGJ1dCB0aGUgYXV0aHJlYWQxIG9u
+bHkgd2FrZXVwIGFuZCBzbGVlcCxidXQgaXQgd2lsbCBzcGluX2xvY2tfaXJxKCZjb25mLT5kZXZp
+Y2VfbG9jaykuDQo+PiBJIHRoaW5rIHlvdSBzaG91bGQgYWRkIHNvbWUgbGltaXRlZCB0byBkbyAu
+DQo+DQo+SSB1c2VkIHRvIGhhdmUgYSBjb3VudGVyIGZvciBzdHJpcGVzIHF1ZXVlZCwgd2l0aCBp
+dCwgd2UgY2FuIGRldGVybWluZQ0KPmhvdyBtYW55IHRocmVhZHMgc2hvdWxkIGJlIHdha2VuIHVw
+LiBUaGF0IGlzIHdoYXQgSSBkaWQgd2hlbiBlYWNoDQo+ZWFjaCB0aHJlYWQgY2FuIGhhbmRsZSBz
+dHJpcGVzIGZyb20gYW55IENQVS4gSSB0aG91Z2h0IHRoaXMgcHJvYmxlbQ0KPmlzbid0IHNldmVy
+IG5vdyBzaW5jZSBlYWNoIHRocmVhZCBjYW4ganVzdCBoYW5kbGUgc3RyaXBzIGZyb20gb25lIG9y
+DQo+c2V2ZXJhbCBDUFVzLiBJZiB0aGlzIHJlYWxseSBpcyBhIHByb2JsZW0sIHdlIGNhbiBmaXgg
+aXQgbGF0ZXIsIGJ1dCBteSB0ZXN0DQo+ZG9lc24ndCBzaG93IHRoaXMgaXMgYSBwcm9ibGVtLg0K
+WWVzLCB5b3UgcHJvdmlkZSB0aGUgaW50ZXJmYWNlIGZvciB1c2VyLg0KQXJlIHRoZXJlIGRlYnVn
+aW5mbyBmb3IgdXNlciB0byBmaW5kIGluZm8gdG8gY29udHJvbD8NCkJlY2F1c2UgaSBkaWRuJ3Qg
+aGF2ZSBzc2QgZGV2aWNlLHNvIHRoZSB0ZXN0IGFib3V0IHRoaXMgcGF0Y2ggY2FuJ3QgZG8gYW55
+bW9yZS4NCg==
 
-I used to have a counter for stripes queued, with it, we can determine
-how many threads should be waken up. That is what I did when each
-each thread can handle stripes from any CPU. I thought this problem
-isn't sever now since each thread can just handle strips from one or
-several CPUs. If this really is a problem, we can fix it later, but my test
-doesn't show this is a problem.
