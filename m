@@ -1,153 +1,124 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
-Subject: Re: Re: [patch v2]raid5: fix directio regression
-Date: Thu, 16 Aug 2012 15:36:34 +0800
-Message-ID: <201208161536313436886@gmail.com>
-References: <CANejiEUQcA6X75WG0xSgSv6NAQaBQnwpDD-5QaNVbqmo-oqLsA@mail.gmail.com> <201208071421033759628@gmail.com> <CANejiEVoOprAFoS6mCVYDJKh+nbGE0=7Xw_CpVS+Z9AcUoh6RQ@mail.gmail.com> <201208081321202343795@gmail.com> <CANejiEWC5ZKWT2L4DM-bfGi+v=TpkABruQqe5h0qG4oQg9sDhw@mail.gmail.com> <201208090919591567972@gmail.com> <20120809113230.152aade3@notabene.brown> <CANejiEX1TKG_KhAsgUauHaCe2GE7jU1ozD-3c21VFgrm9COajQ@mail.gmail.com> <20120814063343.GA30353@kernel.org> <20120815105610.74fe418e@notabene.brown>,
-	<20120815014436.GA355@kernel.org>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: raid5 to utilize upto 8 cores
+Date: Thu, 16 Aug 2012 09:52:46 +0200
+Message-ID: <502CA6CE.1080105@hesbynett.no>
+References: <CAEyJA_sSzmgcK6miWfxC4jgvbH7WJ_hgZhnmFABaK9r7X=SLDQ@mail.gmail.com> <502C8C18.5070501@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <502C8C18.5070501@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli <shli@kernel.org>, Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, axboe <axboe@kernel.dk>
+To: stan@hardwarefreak.com
+Cc: vincent Ferrer <vincentchicago1@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wOC0xNSAwOTo0NCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
-Pk9uIFdlZCwgQXVnIDE1LCAyMDEyIGF0IDEwOjU2OjEwQU0gKzEwMDAsIE5laWxCcm93biB3cm90
-ZToNCj4+IE9uIFR1ZSwgMTQgQXVnIDIwMTIgMTQ6MzM6NDMgKzA4MDAgU2hhb2h1YSBMaSA8c2hs
-aUBrZXJuZWwub3JnPiB3cm90ZToNCj4+IA0KPj4gPiBPbiBUaHUsIEF1ZyAwOSwgMjAxMiBhdCAw
-MTowNzowMVBNICswODAwLCBTaGFvaHVhIExpIHdyb3RlOg0KPj4gPiA+IDIwMTIvOC85IE5laWxC
-cm93biA8bmVpbGJAc3VzZS5kZT46DQo+PiA+ID4gPiBPbiBUaHUsIDkgQXVnIDIwMTIgMDk6MjA6
-MDUgKzA4MDAgIkppYW5wZW5nIE1hIiA8bWFqaWFucGVuZ0BnbWFpbC5jb20+IHdyb3RlOg0KPj4g
-PiA+ID4NCj4+ID4gPiA+PiBPbiAyMDEyLTA4LTA4IDIwOjUzIFNoYW9odWEgTGkgPHNobGlAa2Vy
-bmVsLm9yZz4gV3JvdGU6DQo+PiA+ID4gPj4gPjIwMTIvOC84IEppYW5wZW5nIE1hIDxtYWppYW5w
-ZW5nQGdtYWlsLmNvbT46DQo+PiA+ID4gPj4gPj4gT24gMjAxMi0wOC0wOCAxMDo1OCBTaGFvaHVh
-IExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0KPj4gPiA+ID4+ID4+PjIwMTIvOC83IEppYW5w
-ZW5nIE1hIDxtYWppYW5wZW5nQGdtYWlsLmNvbT46DQo+PiA+ID4gPj4gPj4+PiBPbiAyMDEyLTA4
-LTA3IDEzOjMyIFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4gV3JvdGU6DQo+PiA+ID4gPj4g
-Pj4+Pj4yMDEyLzgvNyBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+Og0KPj4gPiA+
-ID4+ID4+Pj4+PiBPbiAyMDEyLTA4LTA3IDExOjIyIFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9y
-Zz4gV3JvdGU6DQo+PiA+ID4gPj4gPj4+Pj4+Pk15IGRpcmVjdElPIHJhbmRvbXdyaXRlIDRrIHdv
-cmtsb2FkIHNob3dzIGEgMTB+MjAlIHJlZ3Jlc3Npb24gY2F1c2VkIGJ5IGNvbW1pdA0KPj4gPiA+
-ID4+ID4+Pj4+Pj44OTVlM2M1YzU4YTgwYmIuIGRpcmVjdElPIHVzdWFsbHkgaXMgcmFuZG9tIElP
-IGFuZCBpZiByZXF1ZXN0IHNpemUgaXNuJ3QgYmlnDQo+PiA+ID4gPj4gPj4+Pj4+Pih3aGljaCBp
-cyB0aGUgY29tbW9uIGNhc2UpLCBkZWxheSBoYW5kbGluZyBvZiB0aGUgc3RyaXBlIGhhc24ndCBh
-bnkgYWR2YW50YWdlcy4NCj4+ID4gPiA+PiA+Pj4+Pj4+Rm9yIGJpZyBzaXplIHJlcXVlc3QsIGRl
-bGF5IGNhbiBzdGlsbCByZWR1Y2UgSU8uDQo+PiA+ID4gPj4gPj4+Pj4+Pg0KPj4gPiA+ID4+ID4+
-Pj4+Pj5TaWduZWQtb2ZmLWJ5OiBTaGFvaHVhIExpIDxzaGxpQGZ1c2lvbmlvLmNvbT4NCj4+ID4g
-PiA+PiA+Pj4+IFtzbmlwXQ0KPj4gPiA+ID4+ID4+Pj4+Pj4tLQ0KPj4gPiA+ID4+ID4+Pj4+PiBN
-YXkgYmUgdXNlZCBzaXplIHRvIGp1ZGdlIGlzIG5vdCBhIGdvb2QgbWV0aG9kLg0KPj4gPiA+ID4+
-ID4+Pj4+PiBJIGZpcnN0bHkgc2VuZGVkIHRoaXMgcGF0Y2gsIG9ubHkgd2FudCB0byBjb250cm9s
-IGRpcmVjdC13cml0ZS1ibG9jayxub3QgZm9yIHJlcXVsYXIgZmlsZS4NCj4+ID4gPiA+PiA+Pj4+
-Pj4gQmVjYXVzZSBpIHRoaW5rIGlmIHNvbWVvbmUgdXNlZCBkaXJlY3Qtd3JpdGUtYmxvY2sgZm9y
-IHJhaWQ1LGhlIHNob3VsZCBrbm93IHRoZSBmZWF0dXJlIG9mIHJhaWQ1IGFuZCBoZSBjYW4gY29u
-dHJvbA0KPj4gPiA+ID4+ID4+Pj4+PiBmb3Igd3JpdGUgdG8gZnVsbC13cml0ZS4NCj4+ID4gPiA+
-PiA+Pj4+Pj4gQnV0IGF0IHRoYXQgdGltZSwgaSBkaWQga25vdyBob3cgdG8gZGlmZmVyZW50aWF0
-ZSBiZXR3ZWVuIHJlZ3VsYXIgZmlsZSBhbmQgYmxvY2stZGV2aWNlLg0KPj4gPiA+ID4+ID4+Pj4+
-PiBJIHRoaWsgd2Ugc2hvdWxkIGRvIHNvbWV0aGluZyB0byBkbyB0aGlzLg0KPj4gPiA+ID4+ID4+
-Pj4+DQo+PiA+ID4gPj4gPj4+Pj5JIGRvbid0IHRoaW5rIGl0J3MgcG9zc2libGUgdXNlciBjYW4g
-Y29udHJvbCBoaXMgd3JpdGUgdG8gYmUgYQ0KPj4gPiA+ID4+ID4+Pj4+ZnVsbC13cml0ZSBldmVu
-IGZvcg0KPj4gPiA+ID4+ID4+Pj4+cmF3IGRpc2sgSU8uIFdoeSByZWd1bGFyIGZpbGUgYW5kIGJs
-b2NrIGRldmljZSBpbyBtYXR0ZXJzIGhlcmU/DQo+PiA+ID4gPj4gPj4+Pj4NCj4+ID4gPiA+PiA+
-Pj4+PlRoYW5rcywNCj4+ID4gPiA+PiA+Pj4+PlNoYW9odWENCj4+ID4gPiA+PiA+Pj4+IEFub3Ro
-ZXIgcHJvYmxlbSBpcyB0aGUgc2l6ZS4gSG93IHRvIGp1ZGdlIHRoZSBzaXplIGlzIGxhcmdlIG9y
-IG5vdD8NCj4+ID4gPiA+PiA+Pj4+IEEgc3lzY2FsbCB3cml0ZSBpcyBhIGRpbyBhbmQgYSBkaW8g
-bWF5IGJlIHNwbGl0IG1vcmUgYmlvcy4NCj4+ID4gPiA+PiA+Pj4+IEZvciBteSB3b3JrbG9hZCwg
-aSB1c3VhbHkgd3JpdGUgY2h1bmstc2l6ZS4NCj4+ID4gPiA+PiA+Pj4+IEJ1dCB5b3VyIHBhdGNo
-IGlzIGp1ZGdlIGJ5IGJpby1zaXplLg0KPj4gPiA+ID4+ID4+Pg0KPj4gPiA+ID4+ID4+PkknZCBp
-Z25vcmUgd29ya2xvYWQgd2hpY2ggZG9lcyBzZXF1ZW50aWFsIGRpcmVjdElPLCB0aG91Z2gNCj4+
-ID4gPiA+PiA+Pj55b3VyIHdvcmtsb2FkIGlzLCBidXQgSSBiZXQgbm8gcmVhbCB3b3JrbG9hZHMg
-YXJlLiBTbyBJJ2QgbGlrZQ0KPj4gPiA+ID4+ID4+IFNvcnJ5LG15IGV4cGxhaW4gbWF5YmUgbm90
-IGNvcmNyZWN0LiBJIHdyaXRlIGRhdGEgb25jZSB3aGljaCBzaXplIGlzIGFsbW9zdCBjaHVua3Mt
-c2l6ZSAqIGRldmljZXMsaW4gb3JkZXIgdG8gZnVsbC13cml0ZQ0KPj4gPiA+ID4+ID4+IGFuZCBh
-cyBwb3NzaWJsZSBhcyB0byBubyBwcmUtcmVhZCBvcGVyYXRpb24uDQo+PiA+ID4gPj4gPj4+b25s
-eSB0byBjb25zaWRlciBiaWcgc2l6ZSByYW5kb20gZGlyZWN0aW8uIEkgYWdyZWUgdGhlIHNpemUN
-Cj4+ID4gPiA+PiA+Pj5qdWRnZSBpcyBhcmJpdHJhcnkuIEkgY2FuIG9wdGltaXplIGl0IHRvIGJl
-IG9ubHkgY29uc2lkZXIgc3RyaXBlDQo+PiA+ID4gPj4gPj4+d2hpY2ggaGl0cyB0d28gb3IgbW9y
-ZSBkaXNrcyBpbiBvbmUgYmlvLCBidXQgbm90IHN1cmUgaWYgaXQncw0KPj4gPiA+ID4+ID4+Pndv
-cnRoeSBkb2luZy4gTm90IHdhcmUgYmlnIHNpemUgZGlyZWN0aW8gaXMgY29tbW9uLCBhbmQgZXZl
-bg0KPj4gPiA+ID4+ID4+PmlzLCBiaWcgc2l6ZSByZXF1ZXN0IElPUFMgaXMgbG93LCBhIGJpdCBk
-ZWxheSBtYXliZSBub3QgYSBiaWcNCj4+ID4gPiA+PiA+Pj5kZWFsLg0KPj4gPiA+ID4+ID4+IElm
-IGFkZCBhIGFjY190aW1lIGZvciAnc3RyaWVwX2hlYWQnIHRvIGNvbnRyb2w/DQo+PiA+ID4gPj4g
-Pj4gV2hlbiBnZXRfYWN0aXZlX3N0cmlwZSgpIGlzIG9rLCB1cGRhdGUgYWNjX3RpbWUuDQo+PiA+
-ID4gPj4gPj4gRm9yIHNvbWUgdGltZSwgc3RyaXBlX2hlYWQgZGlkIG5vdCBhY2Nlc3MgYW5kIGl0
-IHNob2xkIHByZS1yZWFkLg0KPj4gPiA+ID4+ID4NCj4+ID4gPiA+PiA+RG8geW91IHdhbnQgdG8g
-YWRkIGEgdGltZXIgZm9yIGVhY2ggc3RyaXBlPyBUaGlzIGlzIGV2ZW4gdWdseS4NCj4+ID4gPiA+
-PiA+SG93IGRvIHlvdSBjaG9vc2UgdGhlIGV4cGlyZSB0aW1lPyBBIHRpbWUgd29ya3MgZm9yIGhh
-cmRkaXNrDQo+PiA+ID4gPj4gPmRlZmluaXRlbHkgd2lsbCBub3Qgd29yayBmb3IgYSBmYXN0IFNT
-RC4NCj4+ID4gPiA+PiBBIHRpbWUgaXMgbGlrZSB0aGUgc2l6ZSB3aGljaCBpcyBhcmJpdHJhcnku
-DQo+PiA+ID4gPj4gSG93IGFib3V0IGFkZCBhIGludGVyZmFjZSBpbiBzeXNmcyB0byBjb250cm9s
-IGJ5IHVzZXI/DQo+PiA+ID4gPj4gT25seSB1c2VyIGNhbiBqdWRnZSB0aGUgd29ya2xvYWQsIHdo
-aWNoIHNlcXVhdGlhbCB3cml0ZSBvciByYW5kb20gd3JpdGUuDQo+PiA+ID4gPg0KPj4gPiA+ID4g
-VGhpcyBpcyBnZXR0aW5nIHdvcnNlIGJ5IHRoZSBtaW51dGUuICBBIHN5c2ZzIGludGVyZmFjZSBm
-b3IgdGhpcyBpcw0KPj4gPiA+ID4gZGVmaW5pdGVseSBub3QgYSBnb29kIGlkZWEuDQo+PiA+ID4g
-Pg0KPj4gPiA+ID4gVGhlIFJFUV9OT0lETEUgZmxhZyBpcyBhIHByZXR0eSBjbGVhciBzdGF0ZW1l
-bnQgdGhhdCBubyBtb3JlIHJlcXVlc3RzIHRoYXQNCj4+ID4gPiA+IG1lcmdlIHdpdGggdGhpcyBv
-bmUgYXJlIGV4cGVjdGVkLiAgSWYgc29tZSB1c2UgY2FzZXMgc2VuZHMgcmFuZG9tIHJlcXVlc3Rz
-LA0KPj4gPiA+ID4gbWF5YmUgaXQgc2hvdWxkIGJlIHNldHRpbmcgUkVRX05PSURMRS4NCj4+ID4g
-PiA+DQo+PiA+ID4gPiBNYXliZSBzb21lb25lIHNob3VsZCBkbyBzb21lIHJlc2VhcmNoIGFuZCBm
-aW5kIG91dCB3aHkgV1JJVEVfT0RJUkVDVCBkb2Vzbid0DQo+PiA+ID4gPiBpbmNsdWRlIFJFUV9O
-T0lETEUuICBVbmRlcnN0YW5kaW5nIHRoYXQgd291bGQgaGVscCB1bmRlcnN0YW5kIHRoZSBjdXJy
-ZW50DQo+PiA+ID4gPiBwcm9ibGVtLg0KPj4gPiA+IA0KPj4gPiA+IEEgcXVpY2sgc2VhcmNoIHNo
-b3dzIG9ubHkgY2ZxLWlvc2NoZWQgdXNlcyBSRVFfTk9JRExFLiBJbg0KPj4gPiA+IGNmcSwgYSBx
-dWV1ZSBpcyBpZGxlZCB0byBhdm9pZCBsb3NpbmcgaXRzIHNoYXJlLiBSRVFfTk9JRExFDQo+PiA+
-ID4gdGVsbHMgY2ZxIHRvIGF2b2lkIGlkbGUsIHNpbmNlIHRoZSB0YXNrIHdpbGwgbm90IGRpc3Bh
-dGNoIGZ1cnRoZXINCj4+ID4gPiByZXF1ZXN0cyBhbnkgbW9yZS4gTm90ZSB0aGlzIGlzbid0IG5v
-IG1lcmdlLg0KPj4gPiANCj4+ID4gU2luY2UgUkVRX05PSURMRSBoYXMgbm8gcmVsYXRpb25zaGlw
-IHdpdGggcmVxdWVzdCBtZXJnZSwgd2UnZCBiZXR0ZXIgcmVtb3ZlIGl0Lg0KPj4gPiBJIGNhbWUg
-b3V0IGEgbmV3IHBhdGNoLCB3aGljaCBkb2Vzbid0IGRlcGVuZCBvbiByZXF1ZXN0IHNpemUgYW55
-IG1vcmUuIFdpdGgNCj4+ID4gdGhpcyBwYXRjaCwgc2VxdWVudGlhbCBkaXJlY3RpbyB3aWxsIHN0
-aWxsIGludHJvZHVjZSB1bm5lY2Vzc2FyeSByYWlkNSBwcmVyZWFkDQo+PiA+IChlc3BlY2lhbGx5
-IGZvciBzbWFsbCBzaXplIElPKSwgYnV0IEkgYmV0IG5vIGFwcCBkb2VzIHNlcXVlbnRpYWwgc21h
-bGwgc2l6ZQ0KPj4gPiBkaXJlY3RJTy4NCj4+ID4gDQo+PiA+IFRoYW5rcywNCj4+ID4gU2hhb2h1
-YQ0KPj4gPiANCj4+ID4gU3ViamVjdDogcmFpZDU6IGZpeCBkaXJlY3RpbyByZWdyZXNzaW9uDQo+
-PiA+IA0KPj4gPiBNeSBkaXJlY3RJTyByYW5kb213cml0ZSA0ayB3b3JrbG9hZCBzaG93cyBhIDEw
-fjIwJSByZWdyZXNzaW9uIGNhdXNlZCBieSBjb21taXQNCj4+ID4gODk1ZTNjNWM1OGE4MGJiLiBU
-aGlzIGNvbW1pdCBpc24ndCBmcmllbmRseSBmb3Igc21hbGwgc2l6ZSByYW5kb20gSU8sIGJlY2F1
-c2UNCj4+ID4gZGVsYXlpbmcgc3VjaCByZXF1ZXN0IGhhc24ndCBhbnkgYWR2YW50YWdlcy4NCj4+
-ID4gDQo+PiA+IERpcmVjdElPIHVzdWFsbHkgaXMgcmFuZG9tIElPLiBJIHRob3VnaHQgd2UgY2Fu
-IGlnbm9yZSByZXF1ZXN0IG1lcmdlIGJldHdlZW4NCj4+ID4gYmlvcyBmcm9tIGRpZmZlcmVudCBp
-b19zdWJtaXQuIFNvIHdlIG9ubHkgY29uc2lkZXIgb25lIGJpbyB3aGljaCBjYW4gZHJpdmUNCj4+
-ID4gdW5uZWNlc3NhcnkgcHJlcmVhZCBpbiByYWlkNSwgd2hpY2ggaXMgbGFyZ2UgcmVxdWVzdC4g
-SWYgYSBiaW8gaXMgbGFyZ2UgZW5vdWdoDQo+PiA+IGFuZCBzb21lIG9mIGl0cyBzdHJpcGVzIHdp
-bGwgYWNjZXNzIHR3byBvciBtb3JlIGRpc2tzLCBzdWNoIHN0cmlwZXMgc2hvdWxkIGJlDQo+PiA+
-IGRlbGF5ZWQgdG8gYXZvaWQgdW5uZWNlc3NhcnkgcHJlcmVhZCB0aWxsIGJpbyBmb3IgdGhlIGxh
-c3QgZGlzayBvZiB0aGUgc3RyaXBzDQo+PiA+IGlzIGFkZGVkLg0KPj4gPiANCj4+ID4gUkVRX05P
-SURMRSBkb2Vzbid0IG1lYW4gYWJvdXQgcmVxdWVzdCBtZXJnZSwgSSBkZWxldGVkIGl0Lg0KPj4g
-DQo+PiBIaSwNCj4+ICBIYXZlIHlvdSB0ZXN0ZWQgd2hhdCBlZmZlY3QgdGhpcyBoYXMgb24gbGFy
-Z2Ugc2VxdWVudGlhbCBkaXJlY3Qgd3JpdGVzPw0KPj4gIEJlY2F1c2UgaXQgZG9uJ3QgbWFrZSBz
-ZW5zZSB0byBtZSBhbmQgSSB3b3VsZCBiZSBzdXJwcmlzZWQgaWYgaXQgaW1wcm92ZXMNCj4+ICB0
-aGluZ3MuDQo+PiANCj4+ICBZb3UgYXJlIGRlbGF5aW5nIHNldHRpbmcgdGhlIFNUUklQRV9QUkVS
-RUFEX0FDVElWRSBiaXQgdW50aWwgeW91IHRoaW5rIHlvdQ0KPj4gIGhhdmUgc3VibWl0dGVkIGFs
-bCB0aGUgd3JpdGVzIGZyb20gdGhpcyBiaW8gdGhhdCBhcHBseSB0byB0aGUgZ2l2ZSBzdHJpcGUu
-DQo+PiAgVGhhdCBkb2VzIG1ha2Ugc29tZSBzZW5zZSwgaG93ZXZlciBpdCBkb2Vzbid0IHNlZW0g
-dG8gZGVhbCB3aXRoIHRoZQ0KPj4gIHBvc3NpYmlsaXR5IHRoYXQgdGhlIG9uZSBiaW8gY292ZXJz
-IHBhcnRzIG9mIHR3byBkaWZmZXJlbnQgc3RyaXBlcy4gIEluIHRoYXQNCj4+ICBjYXNlIHRoZSBm
-aXJzdCBzdHJpcGUgbmV2ZXIgZ2V0cyBTVFJJUEVfUFJFUkVBRF9BQ1RJVkUgc2V0LCBzbyBpdCBp
-cyBkZWxheWVkDQo+PiAgZGVzcGl0ZSBoYXZpbmcgJ1JFUV9TWU5DJyBzZXQuDQo+DQo+SSBkaWRu
-J3QgZ2V0IHlvdXIgcG9pbnQuIElzbid0IGxhc3Rfc2VjdG9yIC0gbG9naWNhbF9zZWN0b3IgPCBj
-aHVua19zZWN0b3JzIHRydWUNCj5pbiB0aGUgY2FzZT8NCj4gDQo+PiAgQWxzbywgYW5kIG1vcmUg
-c2lnbmlmaWNhbnRseSwgcGx1Z2dpbmcgc2hvdWxkIG1lYW4gdGhhdCB0aGUgdmFyaW91cw0KPj4g
-IHN0cmlwZV9oZWFkcyBhcmUgbm90IGV2ZW4gbG9va2VkIGF0IHVudGlsIGFsbCBvZiB0aGUgb3Jp
-Z2luYWwgYmlvIGlzDQo+PiAgcHJvY2Vzc2VkLCBzbyB3aGlsZSBTVFJJUEVfUFJFUkVBRF9BQ1RJ
-VkUgbWlnaHQgZ2V0IHNldCBlYXJseSwgaXQgc2hvdWxkIG5vdA0KPj4gIGdldCBwcm9jZXNzZWQg
-dW50aWwgdGhlIHdob2xlIGJpbyBpcyBwcm9jZXNzZWQgYW5kIHRoZSBxdWV1ZSBpcyB1bnBsdWdn
-ZWQuDQo+PiANCj4+ICBTbyBJIGRvbid0IHRoaW5rIHRoaXMgcGF0Y2ggc2hvdWxkIG1ha2UgYSBk
-aWZmZXJlbmNlIG9uIGxhcmdlIGRpcmVjdCB3cml0ZXMsDQo+PiAgYW5kIGlmIGl0IGRvZXMgdGhl
-biBzb21ldGhpbmcgc3RyYW5nZSBpcyBnb2luZyBvbiB0aGF0IEknZCBsaWtlIHRvDQo+PiAgdW5k
-ZXJzdGFuZCBmaXJzdC4NCj4NCj5BaGEsIG9rLCB0aGlzIG1ha2VzIHNlbnNlLiByZWNlbnQgZGVs
-YXllZCBzdHJpcGUgcmVsZWFzZSBzaG91bGQgbWFrZSB0aGUNCj5wcm9ibGVtIGdvIGF3YXkuIFNv
-IEppYW5wZW5nLCBjYW4geW91IHRyeSB5b3VyIHdvcmtsb2FkIHdpdGggdGhlIGNvbW1pdA0KPnJl
-dmVydGVkIHdpdGggYSByZWNlbnQga2VybmVsIHBsZWFzZT8NCj4NCkkgdGVzdGVkIHVzZWQgeW91
-ciBwYXRjaCBpbiBteSB3b3JrbG9hZC4gDQpMaWtlIHRoZSBuZWlsIHNhaWQsIHRoZSBwZXJmb3Jt
-YW5jZSBkb2VzIG5vdCByZWdyZXNzLg0KQnV0IGlmIHRoZSBjb2RlIGlzIDoNCj4gICAgICAgICAg
-ICAgICAgICAgICAgIGlmICh0ZXN0X2JpdChTVFJJUEVfUFJFUkVBRF9BQ1RJVkUsICZzaC0+c3Rh
-dGUpKQ0KPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICByZWxlYXNlX3N0cmlwZShzaCk7
-DQo+ICAgICAgICAgICAgICAgICAgICAgICBlbHNlDQo+ICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgIHJlbGVhc2Vfc3RyaXBlX3BsdWcobWRkZXYsIHNoKTsNClRoZSBzcGVlZCBpcyBhYm91
-dCA3Nk1CL3MuV2l0aCB0aG9zZSBjb2RlIHRoZSBzcGVlZCBpcyAyMDBNQi9zLg0KDQpCVFcsIHdo
-eSBhcmUgeW91IGFuZCBuZWlsIG5vdCB0byBhbnN3ZXIgbXkgb3B0aW9uIHdoaWNoIGFkZGluZyBS
-RVFfTk9JRExFIGZvciBsYXN0IGJpbyBvZiBvbmUgZGlvPw0KDQo=
+On 16/08/2012 07:58, Stan Hoeppner wrote:
+> On 8/15/2012 9:56 PM, vincent Ferrer wrote:
+>
+>> - My  storage server  has upto 8 cores  running linux kernel 2.6.32.27.
+>> - I created  a raid5 device of  10  SSDs .
+>> -  It seems  I only have single raid5 kernel thread,  limiting  my
+>> WRITE  throughput  to single cpu  core/thread.
+>
+> The single write threads of md/RAID5/6/10 are being addressed by patches
+> in development.  Read the list archives for progress/status.  There were
+> 3 posts to the list today regarding the RAID5 patch.
+>
+>> Question :   What are my options to make  my raid5 thread use all the
+>> CPU cores ?
+>>                    My SSDs  can do much more but  single raid5 thread
+>> from mdadm   is becoming the bottleneck.
+>>
+>> To overcome above single-thread-raid5 limitation (for now)  I  re-configured.
+>>       1)  I partitioned  all  my  10 SSDs into 8  partitions:
+>>       2)  I created  8   raid5 threads. Each raid5 thread having
+>> partition from each of the 8 SSDs
+>>       3)  My WRITE performance   quadrupled  because I have 8 RAID5 threads.
+>> Question: Is this workaround a   normal practice  or may give me
+>> maintenance problems later on.
+>
+> No it is not normal practice.  I 'preach' against it regularly when I
+> see OPs doing it.  It's quite insane.  The glaring maintenance problem
+> is that when one SSD fails, and at least one will, you'll have 8 arrays
+> to rebuild vs one.  This may be acceptable to you, but not to the
+> general population.  With rust drives, and real workloads, it tends to
+> hammer the drive heads prodigiously, increasing latency and killing
+> performance, and decreasing drive life.  That's not an issue with SSD,
+> but multiple rebuilds is.  That and simply keeping track of 80 partitions.
+>
+
+The rebuilds will, I believe, be done sequentially rather than in 
+parallel.  And each rebuild will take 1/8 of the time a full array 
+rebuild would have done.  So it really should not be much more time or 
+wear-and-tear for a rebuild of this monster setup, compared to a single 
+raid5 array rebuild.  (With hard disks, it would be worse due to head 
+seeks - but still not as bad as you imply, if I am right about the 
+rebuilds being done sequentially.)
+
+However, there was a recent thread here about someone with a similar 
+setup (on hard disks) who had a failure during such a rebuild and had 
+lots of trouble.  That makes me sceptical to this sort of multiple array 
+setup (in addition to Stan's other points).
+
+And of course, all Stan's other points about maintenance, updates to 
+later kernels with multiple raid5 threads, etc., still stand.
+
+> There are a couple of sane things you can do today to address your problem:
+>
+> 1.  Create a RAID50, a layered md/RAID0 over two 5 SSD md/RAID5 arrays.
+>   This will double your threads and your IOPS.  It won't be as fast as
+> your Frankenstein setup and you'll lose one SSD of capacity to
+> additional parity.  However, it's sane, stable, doubles your
+> performance, and you have only one array to rebuild after an SSD
+> failure.  Any filesystem will work well with it, including XFS if
+> aligned properly.  It gives you an easy upgrade path-- as soon as the
+> threaded patches hit, a simple kernel upgrade will give your two RAID5
+> arrays the extra threads, so you're simply out one SSD of capacity.  You
+> won't need to, and probably won't want to rebuild the entire thing after
+> the patch.  With the Frankenstein setup you'll be destroying and
+> rebuilding arrays.  And if these are consumer grade SSDs, you're much
+> better off having two drives worth of redundancy anyway, so a RAID50
+> makes good sense all around.
+>
+> 2.  Make 5 md/RAID1 mirrors and concatenate them with md/RAID linear.
+> You'll get one md write thread per RAID1 device utilizing 5 cores in
+> parallel.  The linear driver doesn't use threads, but passes offsets to
+> the block layer, allowing infinite core scaling.  Format the linear
+> device with XFS and mount with inode64.  XFS has been fully threaded for
+> 15 years.  Its allocation group design along with the inode64 allocator
+> allows near linear parallel scaling across a concatenated device[1],
+> assuming your workload/directory layout is designed for parallel file
+> throughput.
+>
+> #2, with a parallel write workload, may be competitive with your
+> Frankenstein setup in both IOPS and throughput, even with 3 fewer RAID
+> threads and 4 fewer SSD "spindles".  It will outrun the RAID50 setup
+> like it's standing still.  You'll lose half your capacity to redundancy
+> as with RAID10, but you'll have 5 write threads for md/RAID1, one per
+> SSD pair.  One core should be plenty to drive a single SSD mirror, with
+> plenty of cycles to spare for actual applications, while sparing 3 cores
+> for apps as well.  You'll get unlimited core scaling with both md/linear
+> and XFS.  This setup will yield the best balance of IOPS and throughput
+> performance for the amount of cycles burned on IO, compared to
+> Frankenstein and the RAID50.
+
+For those that don't want to use XFS, or won't have balanced directories 
+in their filesystem, or want greater throughput of larger files (rather 
+than greater average throughput of multiple parallel accesses), you can 
+also take your 5 raid1 mirror pairs and combine them with raid0.  You 
+should get similar scaling (the cpu does not limit raid0).  For some 
+applications (such as mail server, /home mount, etc.), the XFS over a 
+linear concatenation is probably unbeatable.  But for others (such as 
+serving large media files), a raid0 over raid1 pairs could well be 
+better.  As always, it depends on your load - and you need to test with 
+realistic loads or at least realistic simulations.
+
+>
+> [1] If you are one of the uneducated masses who believe dd gives an
+> accurate measure of storage performance, then ignore option #2.  Such a
+> belief would indicate you thoroughly lack understanding of storage
+> workloads, and thus you will be greatly disappointed with the dd numbers
+> this configuration will give you.
+>
 
