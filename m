@@ -1,103 +1,90 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: raid5 to utilize upto 8 cores
-Date: Fri, 17 Aug 2012 13:47:49 +0200
-Message-ID: <502E2F65.7040501@hesbynett.no>
-References: <CAEyJA_sSzmgcK6miWfxC4jgvbH7WJ_hgZhnmFABaK9r7X=SLDQ@mail.gmail.com> <502C8C18.5070501@hardwarefreak.com> <502CA6CE.1080105@hesbynett.no> <502DEFAB.3060206@hardwarefreak.com> <502DF2E8.4030207@hesbynett.no> <502E2253.9020409@hardwarefreak.com>
+From: Fengguang Wu <fengguang.wu@intel.com>
+Subject: Re: ext4 write performance regression in 3.6-rc1 on RAID0/5
+Date: Fri, 17 Aug 2012 22:25:26 +0800
+Message-ID: <20120817142526.GA1059@localhost>
+References: <CABRT9RAOhaxcYdCxMn5neJ9WT85r=h=7WgZ2dmLaOs-MMqDW9A@mail.gmail.com>
+ <20120816024654.GB3781@thunk.org>
+ <20120816111051.GA16036@localhost>
+ <20120816152513.GA31346@thunk.org>
+ <20120817060915.GB28786@localhost>
+ <20120817134039.GB11439@thunk.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <502E2253.9020409@hardwarefreak.com>
+Content-Disposition: inline
+In-Reply-To: <20120817134039.GB11439@thunk.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: vincent Ferrer <vincentchicago1@gmail.com>, linux-raid@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>, Marti Raudsepp <marti@juffo.org>, Kernel hackers <linux-kernel@vger.kernel.org>, ext4 hackers <linux-ext4@vger.kernel.org>, maze@google.com, "Shi, Alex" <alex.shi@intel.com>, linux-fsdevel@vger.kernel.org
+Cc: linux RAID <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, Li Shaohua <shli@fusionio.com>
 List-Id: linux-raid.ids
 
-On 17/08/2012 12:52, Stan Hoeppner wrote:
-> On 8/17/2012 2:29 AM, David Brown wrote:
->> On 17/08/2012 09:15, Stan Hoeppner wrote:
->>> On 8/16/2012 2:52 AM, David Brown wrote:
->>>> For those that don't want to use XFS, or won't have balanced directories
->>>> in their filesystem, or want greater throughput of larger files (rather
->>>> than greater average throughput of multiple parallel accesses), you can
->>>> also take your 5 raid1 mirror pairs and combine them with raid0.  You
->>>> should get similar scaling (the cpu does not limit raid0).  For some
->>>> applications (such as mail server, /home mount, etc.), the XFS over a
->>>> linear concatenation is probably unbeatable.  But for others (such as
->>>> serving large media files), a raid0 over raid1 pairs could well be
->>>> better.  As always, it depends on your load - and you need to test with
->>>> realistic loads or at least realistic simulations.
->>>
->>> Sure, a homemade RAID10 would work as it avoids the md/RAID10 single
->>> write thread.  I intentionally avoided mentioning this option for a few
->>> reasons:
->>>
->>> 1.  Anyone needing 10 SATA SSDs obviously has a parallel workload
->>> 2.  Any thread will have up to 200-500MB/s available (one SSD)
->>>       with a concat, I can't see a single thread needing 4.5GB/s of B/W
->>>       If so, md/RAID isn't capable, not on COTS hardware
->>> 3.  With a parallel workload requiring this many SSDs, XFS is a must
->>> 4.  With a concat, mkfs.xfs is simple, no stripe aligning, etc
->>>       ~$ mkfs.xfs /dev/md0
->>>
->>
->> These are all good points.  There is always a lot to learn from your posts.
->>
->> My only concern with XFS over linear concat is that its performance
->> depends on the spread of allocation groups across the elements of the
->> concatenation (the raid1 pairs in this case), and that in turn depends
->> on the directory structure.  (I'm sure you'll correct me if I'm wrong in
->> this - indeed I would /like/ to be wrong!)  If you have large numbers of
->> top-level directories and a spread of access, then this is ideal.  But
->> if you have very skewed access with most access within only one or two
->> top-level directories, then as far as I understand XFS allocation
->> groups, access will then be concentrated heavily on only one (or a few)
->> of the concat elements.
->
-> This depends on the allocator.  inode32, the default allocator, does
-> RAID0 with files--each file being a chunk.  All inodes go in AG0, all
-> files round robin'd across the other AGs.  Great for parallel streaming
-> workloads on a mirror concat, obviously not metadata intensive
-> workloads, as metadata is on the first spindle.
->
-> The optional inode64 allocator spreads inodes and files across all AGs.
->   Every new dir is created in a different AG round robin, regardless of
-> the on disk location of the parent dir.  File however always get created
-> in their parent dir.  Much better for metadata workloads.  It's just as
-> good with parallel streaming workloads if the user has read the XFS
-> Users Guide and does some manual placement.
->
+[CC md list]
 
-It sounds like I /have/ misunderstood things - at least regarding the 
-inode64 allocator (which will surely be the best choice for a large 
-array).  I had though that while directories "/a/" and "/b/" get 
-different allocation groups, directories "/a/1/" and "/a/2/" would go in 
-the same AG as "/a/".  What you are saying is that this is not correct - 
-each of these four directories would go in a separate AG.  File "/a/1/x" 
-would go in the same AG as "/a/1/", of course.  Assuming this is the 
-case, XFS over linear concat sounds more appealing for a much wider set 
-of applications than I had previously thought.
+On Fri, Aug 17, 2012 at 09:40:39AM -0400, Theodore Ts'o wrote:
+> On Fri, Aug 17, 2012 at 02:09:15PM +0800, Fengguang Wu wrote:
+> > Ted,
+> > 
+> > I find ext4 write performance dropped by 3.3% on average in the
+> > 3.6-rc1 merge window. xfs and btrfs are fine.
+> > 
+> > Two machines are tested. The performance regression happens in the
+> > lkp-nex04 machine, which is equipped with 12 SSD drives. lkp-st02 does
+> > not see regression, which is equipped with HDD drives. I'll continue
+> > to repeat the tests and report variations.
+> 
+> Hmm... I've checked out the commits in "git log v3.5..v3.6-rc1 --
+> fs/ext4 fs/jbd2" and I don't see anything that I would expect would
+> cause that.  The are the lock elimination changes for Direct I/O
+> overwrites, but that shouldn't matter for your tests which are
+> measuring buffered writes, correct?
+> 
+> Is there any chance you could do me a favor and do a git bisect
+> restricted to commits involving fs/ext4 and fs/jbd2?
 
->> raid0 of the raid1 pairs may not be the best way to spread out access
->> (assuming XFS linear concat is not a good fit for the workload), but it
->> might still be an improvement.  Perhaps a good solution would be raid0
->> with a very large chunk size - that make most accesses non-striped (as
->> you say, the user probably doesn't need striping), thus allowing more
->> parallel accesses, while scattering the accesses evenly across all raid1
->> elements?
->
-> No matter how anyone tries to slice it, striped RAID is only optimal for
-> streaming writes/reads of large files.  This represents less than 1% of
-> real world workloads.  The rest are all concurrent relatively small file
-> workloads, and for these using an intelligent filesystem with an
-> allocation group design (XFS, JFS) will yield better performance.
->
-> The only real benefit of striped RAID over concat, for the majority of
-> workloads, is $/GB.
->
->> Of course, we are still waiting to hear a bit about the OP's real load.
->
-> It seems clear he has some hardware, real or fantasy, in need of a
-> workload, so I'm not holding my breath.
->
+I noticed that the regressions all happen in the RAID0/RAID5 cases.
+So it may be some interactions between the RAID/ext4 code?
 
+I'll try to get some ext2/3 numbers, which should have less changes on the fs side.
+
+wfg@bee /export/writeback% ./compare -g ext4 lkp-nex04/*/*-{3.5.0,3.6.0-rc1+}     
+                   3.5.0                3.6.0-rc1+
+------------------------  ------------------------
+                  720.62        -1.5%       710.16  lkp-nex04/JBOD-12HDD-thresh=1000M/ext4-100dd-1-3.5.0
+                  706.04        -0.0%       705.86  lkp-nex04/JBOD-12HDD-thresh=1000M/ext4-10dd-1-3.5.0
+                  702.86        -0.2%       701.74  lkp-nex04/JBOD-12HDD-thresh=1000M/ext4-1dd-1-3.5.0
+                  702.41        -0.0%       702.06  lkp-nex04/JBOD-12HDD-thresh=1000M/ext4-1dd-2-3.5.0
+                  779.52        +6.5%       830.11  lkp-nex04/JBOD-12HDD-thresh=100M/ext4-100dd-1-3.5.0
+                  646.70        +4.9%       678.59  lkp-nex04/JBOD-12HDD-thresh=100M/ext4-10dd-1-3.5.0
+                  704.49        +2.6%       723.00  lkp-nex04/JBOD-12HDD-thresh=100M/ext4-1dd-1-3.5.0
+                  704.21        +1.2%       712.47  lkp-nex04/JBOD-12HDD-thresh=100M/ext4-1dd-2-3.5.0
+                  705.26        -1.2%       696.61  lkp-nex04/JBOD-12HDD-thresh=8G/ext4-100dd-1-3.5.0
+                  703.37        +0.1%       703.76  lkp-nex04/JBOD-12HDD-thresh=8G/ext4-10dd-1-3.5.0
+                  701.66        -0.1%       700.83  lkp-nex04/JBOD-12HDD-thresh=8G/ext4-1dd-1-3.5.0
+                  701.17        +0.0%       701.36  lkp-nex04/JBOD-12HDD-thresh=8G/ext4-1dd-2-3.5.0
+                  675.08       -10.5%       604.29  lkp-nex04/RAID0-12HDD-thresh=1000M/ext4-100dd-1-3.5.0
+                  676.52        -2.7%       658.38  lkp-nex04/RAID0-12HDD-thresh=1000M/ext4-10dd-1-3.5.0
+                  512.70        +4.0%       533.22  lkp-nex04/RAID0-12HDD-thresh=1000M/ext4-1dd-1-3.5.0
+                  524.61        -0.3%       522.90  lkp-nex04/RAID0-12HDD-thresh=1000M/ext4-1dd-2-3.5.0
+                  709.76       -15.7%       598.44  lkp-nex04/RAID0-12HDD-thresh=100M/ext4-100dd-1-3.5.0
+                  681.39        -2.1%       667.25  lkp-nex04/RAID0-12HDD-thresh=100M/ext4-10dd-1-3.5.0
+                  524.16        +0.8%       528.25  lkp-nex04/RAID0-12HDD-thresh=100M/ext4-1dd-2-3.5.0
+                  699.77       -19.2%       565.54  lkp-nex04/RAID0-12HDD-thresh=8G/ext4-100dd-1-3.5.0
+                  675.79        -1.9%       663.17  lkp-nex04/RAID0-12HDD-thresh=8G/ext4-10dd-1-3.5.0
+                  484.84        -7.4%       448.83  lkp-nex04/RAID0-12HDD-thresh=8G/ext4-1dd-1-3.5.0
+                  470.40        -3.2%       455.31  lkp-nex04/RAID0-12HDD-thresh=8G/ext4-1dd-2-3.5.0
+                  167.97       -38.7%       103.03  lkp-nex04/RAID5-12HDD-thresh=1000M/ext4-100dd-1-3.5.0
+                  243.67        -9.1%       221.41  lkp-nex04/RAID5-12HDD-thresh=1000M/ext4-10dd-1-3.5.0
+                  248.98       +12.2%       279.33  lkp-nex04/RAID5-12HDD-thresh=1000M/ext4-1dd-1-3.5.0
+                  208.45       +14.1%       237.86  lkp-nex04/RAID5-12HDD-thresh=1000M/ext4-1dd-2-3.5.0
+                   71.18       -34.2%        46.82  lkp-nex04/RAID5-12HDD-thresh=100M/ext4-100dd-1-3.5.0
+                  145.84        -7.3%       135.25  lkp-nex04/RAID5-12HDD-thresh=100M/ext4-10dd-1-3.5.0
+                  255.22        +6.7%       272.35  lkp-nex04/RAID5-12HDD-thresh=100M/ext4-1dd-1-3.5.0
+                  243.09       +20.7%       293.30  lkp-nex04/RAID5-12HDD-thresh=100M/ext4-1dd-2-3.5.0
+                  209.24       -23.6%       159.96  lkp-nex04/RAID5-12HDD-thresh=8G/ext4-100dd-1-3.5.0
+                  243.73       -10.9%       217.28  lkp-nex04/RAID5-12HDD-thresh=8G/ext4-10dd-1-3.5.0
+                  214.25        +5.6%       226.32  lkp-nex04/RAID5-12HDD-thresh=8G/ext4-1dd-1-3.5.0
+                  207.16       +13.4%       234.98  lkp-nex04/RAID5-12HDD-thresh=8G/ext4-1dd-2-3.5.0
+                17572.12        -1.9%     17240.05  TOTAL write_bw
+
+Thanks,
+Fengguang
