@@ -1,124 +1,180 @@
-From: "Singer, Benedict" <bzsing@dolby.com>
-Subject: Array rebuilding over and over
-Date: Fri, 17 Aug 2012 17:53:51 +0000
-Message-ID: <0622703D64D8944D9624A1C5833B7A06A99D@DLB-XCHPW02.dolby.net>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: ext4 write performance regression in 3.6-rc1 on RAID0/5
+Date: Sat, 18 Aug 2012 06:44:57 +1000
+Message-ID: <20120818064457.7e94d266@notabene.brown>
+References: <CABRT9RAOhaxcYdCxMn5neJ9WT85r=h=7WgZ2dmLaOs-MMqDW9A@mail.gmail.com>
+	<20120816024654.GB3781@thunk.org>
+	<20120816111051.GA16036@localhost>
+	<20120816152513.GA31346@thunk.org>
+	<20120817060915.GB28786@localhost>
+	<20120817134039.GB11439@thunk.org>
+	<20120817142526.GA1059@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/JF6F84O2BVSjr5cCV0mGbUN"; protocol="application/pgp-signature"
+Return-path: <linux-ext4-owner@vger.kernel.org>
+In-Reply-To: <20120817142526.GA1059@localhost>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Fengguang Wu <fengguang.wu@intel.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, Marti Raudsepp <marti@juffo.org>, Kernel hackers <linux-kernel@vger.kernel.org>, ext4 hackers <linux-ext4@vger.kernel.org>, maze@google.com, "Shi, Alex" <alex.shi@intel.com>, linux-fsdevel@vger.kernel.org, linux RAID <linux-raid@vger.kernel.org>, Li Shaohua <shli@fusionio.com>
 List-Id: linux-raid.ids
 
-Hello all,
+--Sig_/JF6F84O2BVSjr5cCV0mGbUN
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Got a strange issue here. The setup is as follows: 4 RAID5 arrays, 3 drives (partitions - 3 drives total) each. We run some monitoring software to deal with keeping them all happy, ie removing faulty drives from all arrays if it goes bad in one of them, partitioning and adding new drives to all of them, tracking rebuild progress, etc. The situation we're in now is that it's somehow possible to get an array in a state where the rebuild consistently fails; then the monitoring software detects the degraded array + available physical disk, and starts a new rebuild, which then fails again (and again, and again...).
+On Fri, 17 Aug 2012 22:25:26 +0800 Fengguang Wu <fengguang.wu@intel.com>
+wrote:
 
-The really baffling part is that no information is present in any logs about why the rebuild fails, making this very hard to diagnose. The array appears to start rebuilding, fail, and finish all within a second, suggesting it's not actually trying to rebuild, but something else is stopping it. The smartctl short selftest reports no errors on any disks. This seems to happen most of the time with md4, and the only way to get out of it is to reboot the system and try the rebuild again, which suggests a kernel issue rather than a hardware issue. I have seen it once on a different array, but in that case the rebuild worked the second time, whereas in the md4 case it appears to be impossible to get out of this state without rebooting. While it's in this state I can remove and add the disk back t
- o md4 and idle the other rebuild to get it to happen on command, so if there are any debugging suggestions it's easy to reproduce on command at this point.
+> [CC md list]
+>=20
+> On Fri, Aug 17, 2012 at 09:40:39AM -0400, Theodore Ts'o wrote:
+> > On Fri, Aug 17, 2012 at 02:09:15PM +0800, Fengguang Wu wrote:
+> > > Ted,
+> > >=20
+> > > I find ext4 write performance dropped by 3.3% on average in the
+> > > 3.6-rc1 merge window. xfs and btrfs are fine.
+> > >=20
+> > > Two machines are tested. The performance regression happens in the
+> > > lkp-nex04 machine, which is equipped with 12 SSD drives. lkp-st02 does
+> > > not see regression, which is equipped with HDD drives. I'll continue
+> > > to repeat the tests and report variations.
+> >=20
+> > Hmm... I've checked out the commits in "git log v3.5..v3.6-rc1 --
+> > fs/ext4 fs/jbd2" and I don't see anything that I would expect would
+> > cause that.  The are the lock elimination changes for Direct I/O
+> > overwrites, but that shouldn't matter for your tests which are
+> > measuring buffered writes, correct?
+> >=20
+> > Is there any chance you could do me a favor and do a git bisect
+> > restricted to commits involving fs/ext4 and fs/jbd2?
+>=20
+> I noticed that the regressions all happen in the RAID0/RAID5 cases.
+> So it may be some interactions between the RAID/ext4 code?
 
-I've checked the kernel config to see if there's any other block/md logging to turn on, but was unsuccessful; watching the console and dmesg don't show any other useful information either.
+I'm aware of some performance regression in RAID5 which I will be drilling
+down into next week.  Some things are faster, but some are slower :-(
 
-Here's the relevant info:
+RAID0 should be unchanged though - I don't think I've changed anything ther=
+e.
 
-uname:
-Linux showstore-1 3.2.23 #1 SMP Mon Aug 13 21:19:58 UTC 2012 i686 GNU/Linux
+Looking at your numbers, JBOD ranges from  +6.5% to -1.5%
+                        RAID0 ranges from  +4.0% to -19.2%
+                        RAID5 ranges from +20.7% to -39.7%
 
-mdadm:
-mdadm - v3.1.4 - 31st August 2010
+I'm guessing + is good and - is bad?
+The RAID5 numbers don't surprise me.  The RAID0 do.
 
-/proc/mdstat - this is in the middle of a rebuild cycle (2/4 finished, 1/4 in progress, and the last one (md4) will fail and start the whole process again):
-Personalities : [raid0] [raid1] [raid10] [raid6] [raid5] [raid4] 
-md4 : active raid5 sda4[3] sdc4[2] sdb4[1]
-      2096640 blocks level 5, 256k chunk, algorithm 2 [3/2] [_UU]
-      resync=DELAYED
-      
-md126 : active raid5 sda3[4] sdc3[5] sdb3[3]
-      1936479232 blocks super 1.2 level 5, 256k chunk, algorithm 2 [3/2] [_UU]
-      [=========>...........]  recovery = 49.1% (476073216/968239616) finish=92.8min speed=88333K/sec
-      
-md127 : active raid5 sda2[4] sdc2[5] sdb2[3]
-      8386048 blocks super 1.2 level 5, 256k chunk, algorithm 2 [3/3] [UUU]
-      
-md1 : active raid5 sda1[0] sdc1[2] sdb1[1]
-      6290944 blocks level 5, 256k chunk, algorithm 2 [3/3] [UUU]
-      
-unused devices: <none>
+>=20
+> I'll try to get some ext2/3 numbers, which should have less changes on th=
+e fs side.
 
-Log entries from syslog and messages from the last time the failure occurred:
+Thanks.  That will be useful.
 
-syslog (covering the full rebuild cycle on all 4 arrays):
-Aug 17 05:13:20 showstore-1 mdadm[5991]: RebuildStarted event detected on md device /dev/md1
-Aug 17 05:13:24 showstore-1 kernel: EXT2-fs (md1): warning: maximal mount count reached, running e2fsck is recommended
-Aug 17 05:13:26 showstore-1 kernel: scsi_verify_blk_ioctl: 58 callbacks suppressed
-Aug 17 05:13:26 showstore-1 kernel: grub-probe: sending ioctl 1261 to a partition!
-Aug 17 05:14:00 showstore-1 kernel: last message repeated 9 times
-Aug 17 05:14:00 showstore-1 mdadm[5991]: RebuildStarted event detected on md device /dev/md/status
-Aug 17 05:14:00 showstore-1 mdadm[5991]: RebuildFinished event detected on md device /dev/md1
-Aug 17 05:14:01 showstore-1 mdadm[5991]: SpareActive event detected on md device /dev/md1, component device /dev/sda1
-Aug 17 05:14:29 showstore-1 kernel: EXT2-fs (md1): warning: maximal mount count reached, running e2fsck is recommended
-Aug 17 05:14:29 showstore-1 kernel: scsi_verify_blk_ioctl: 612 callbacks suppressed
-Aug 17 05:14:29 showstore-1 kernel: grub-probe: sending ioctl 1261 to a partition!
-Aug 17 05:14:49 showstore-1 kernel: last message repeated 9 times
-Aug 17 05:14:49 showstore-1 mdadm[5991]: RebuildStarted event detected on md device /dev/md/content
-Aug 17 05:14:49 showstore-1 mdadm[5991]: RebuildFinished event detected on md device /dev/md/status
-Aug 17 05:14:49 showstore-1 mdadm[5991]: SpareActive event detected on md device /dev/md/status
-Aug 17 05:48:10 showstore-1 mdadm[5991]: Rebuild20 event detected on md device /dev/md/content
-Aug 17 06:38:10 showstore-1 mdadm[5991]: Rebuild48 event detected on md device /dev/md/content
-Aug 17 07:11:31 showstore-1 mdadm[5991]: Rebuild66 event detected on md device /dev/md/content
-Aug 17 07:44:51 showstore-1 mdadm[5991]: Rebuild82 event detected on md device /dev/md/content
-Aug 17 08:29:41 showstore-1 kernel: md/raid:md4: Disk failure on sda4, disabling device.
-Aug 17 08:29:41 showstore-1 kernel: md/raid:md4: Operation continuing on 2 devices.
-Aug 17 08:29:41 showstore-1 mdadm[5991]: FailSpare event detected on md device /dev/md4, component device /dev/sda4
-Aug 17 08:29:41 showstore-1 mdadm[5991]: RebuildFinished event detected on md device /dev/md/content
-Aug 17 08:29:41 showstore-1 mdadm[5991]: SpareActive event detected on md device /dev/md/content
+NeilBrown
 
-messages (also covering the full rebuild cycle):
-Aug 17 05:13:20 showstore-1 kernel: md: bind<sda1>
-Aug 17 05:13:20 showstore-1 kernel: md: recovery of RAID array md1
-Aug 17 05:13:20 showstore-1 kernel: md: minimum _guaranteed_  speed: 20000 KB/sec/disk.
-Aug 17 05:13:20 showstore-1 kernel: md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
-Aug 17 05:13:20 showstore-1 kernel: md: using 128k window, over a total of 3145472k.
-Aug 17 05:13:21 showstore-1 kernel: md: bind<sda2>
-Aug 17 05:13:21 showstore-1 kernel: md: delaying recovery of md127 until md1 has finished (they share one or more physical units)
-Aug 17 05:13:21 showstore-1 kernel: md: bind<sda3>
-Aug 17 05:13:22 showstore-1 kernel: md: delaying recovery of md126 until md127 has finished (they share one or more physical units)
-Aug 17 05:13:22 showstore-1 kernel: md: delaying recovery of md127 until md1 has finished (they share one or more physical units)
-Aug 17 05:13:22 showstore-1 kernel: md: bind<sda4>
-Aug 17 05:13:22 showstore-1 kernel: md: delaying recovery of md4 until md126 has finished (they share one or more physical units)
-Aug 17 05:13:22 showstore-1 kernel: md: delaying recovery of md127 until md1 has finished (they share one or more physical units)
-Aug 17 05:13:22 showstore-1 kernel: md: delaying recovery of md126 until md127 has finished (they share one or more physical units)
-Aug 17 05:13:26 showstore-1 kernel: grub-probe[21583]: segfault at 18 ip 08049057 sp bfa87b60 error 4 in grub-probe[8048000+1f000]
-Aug 17 05:13:59 showstore-1 kernel: md: md1: recovery done.
-Aug 17 05:14:00 showstore-1 kernel: md: delaying recovery of md126 until md127 has finished (they share one or more physical units)
-Aug 17 05:14:00 showstore-1 kernel: md: recovery of RAID array md127
-Aug 17 05:14:00 showstore-1 kernel: md: minimum _guaranteed_  speed: 20000 KB/sec/disk.
-Aug 17 05:14:00 showstore-1 kernel: md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
-Aug 17 05:14:00 showstore-1 kernel: md: using 128k window, over a total of 4193024k.
-Aug 17 05:14:00 showstore-1 kernel: md: delaying recovery of md4 until md126 has finished (they share one or more physical units)
-Aug 17 05:14:49 showstore-1 kernel: md: md127: recovery done.
-Aug 17 05:14:49 showstore-1 kernel: md: delaying recovery of md4 until md126 has finished (they share one or more physical units)
-Aug 17 05:14:49 showstore-1 kernel: md: recovery of RAID array md126
-Aug 17 05:14:49 showstore-1 kernel: md: minimum _guaranteed_  speed: 20000 KB/sec/disk.
-Aug 17 05:14:49 showstore-1 kernel: md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
-Aug 17 05:14:49 showstore-1 kernel: md: using 128k window, over a total of 968239616k.
-Aug 17 05:40:27 showstore-1 rsyslogd: -- MARK --
-Aug 17 06:00:27 showstore-1 rsyslogd: -- MARK --
-Aug 17 06:20:28 showstore-1 rsyslogd: -- MARK --
-Aug 17 06:40:28 showstore-1 rsyslogd: -- MARK --
-Aug 17 07:00:28 showstore-1 rsyslogd: -- MARK --
-Aug 17 07:20:28 showstore-1 rsyslogd: -- MARK --
-Aug 17 07:40:28 showstore-1 rsyslogd: -- MARK --
-Aug 17 08:00:28 showstore-1 rsyslogd: -- MARK --
-Aug 17 08:20:28 showstore-1 rsyslogd: -- MARK --
-Aug 17 08:29:41 showstore-1 kernel: md: md126: recovery done.
-Aug 17 08:29:41 showstore-1 kernel: md: recovery of RAID array md4
-Aug 17 08:29:41 showstore-1 kernel: md: minimum _guaranteed_  speed: 20000 KB/sec/disk.
-Aug 17 08:29:41 showstore-1 kernel: md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
-Aug 17 08:29:41 showstore-1 kernel: md: using 128k window, over a total of 1048320k.
-Aug 17 08:29:41 showstore-1 kernel: md: md4: recovery done.
 
-Any suggestions gratefully received!
+>=20
+> wfg@bee /export/writeback% ./compare -g ext4 lkp-nex04/*/*-{3.5.0,3.6.0-r=
+c1+}    =20
+>                    3.5.0                3.6.0-rc1+
+> ------------------------  ------------------------
+>                   720.62        -1.5%       710.16  lkp-nex04/JBOD-12HDD-=
+thresh=3D1000M/ext4-100dd-1-3.5.0
+>                   706.04        -0.0%       705.86  lkp-nex04/JBOD-12HDD-=
+thresh=3D1000M/ext4-10dd-1-3.5.0
+>                   702.86        -0.2%       701.74  lkp-nex04/JBOD-12HDD-=
+thresh=3D1000M/ext4-1dd-1-3.5.0
+>                   702.41        -0.0%       702.06  lkp-nex04/JBOD-12HDD-=
+thresh=3D1000M/ext4-1dd-2-3.5.0
+>                   779.52        +6.5%       830.11  lkp-nex04/JBOD-12HDD-=
+thresh=3D100M/ext4-100dd-1-3.5.0
+>                   646.70        +4.9%       678.59  lkp-nex04/JBOD-12HDD-=
+thresh=3D100M/ext4-10dd-1-3.5.0
+>                   704.49        +2.6%       723.00  lkp-nex04/JBOD-12HDD-=
+thresh=3D100M/ext4-1dd-1-3.5.0
+>                   704.21        +1.2%       712.47  lkp-nex04/JBOD-12HDD-=
+thresh=3D100M/ext4-1dd-2-3.5.0
+>                   705.26        -1.2%       696.61  lkp-nex04/JBOD-12HDD-=
+thresh=3D8G/ext4-100dd-1-3.5.0
+>                   703.37        +0.1%       703.76  lkp-nex04/JBOD-12HDD-=
+thresh=3D8G/ext4-10dd-1-3.5.0
+>                   701.66        -0.1%       700.83  lkp-nex04/JBOD-12HDD-=
+thresh=3D8G/ext4-1dd-1-3.5.0
+>                   701.17        +0.0%       701.36  lkp-nex04/JBOD-12HDD-=
+thresh=3D8G/ext4-1dd-2-3.5.0
+>                   675.08       -10.5%       604.29  lkp-nex04/RAID0-12HDD=
+-thresh=3D1000M/ext4-100dd-1-3.5.0
+>                   676.52        -2.7%       658.38  lkp-nex04/RAID0-12HDD=
+-thresh=3D1000M/ext4-10dd-1-3.5.0
+>                   512.70        +4.0%       533.22  lkp-nex04/RAID0-12HDD=
+-thresh=3D1000M/ext4-1dd-1-3.5.0
+>                   524.61        -0.3%       522.90  lkp-nex04/RAID0-12HDD=
+-thresh=3D1000M/ext4-1dd-2-3.5.0
+>                   709.76       -15.7%       598.44  lkp-nex04/RAID0-12HDD=
+-thresh=3D100M/ext4-100dd-1-3.5.0
+>                   681.39        -2.1%       667.25  lkp-nex04/RAID0-12HDD=
+-thresh=3D100M/ext4-10dd-1-3.5.0
+>                   524.16        +0.8%       528.25  lkp-nex04/RAID0-12HDD=
+-thresh=3D100M/ext4-1dd-2-3.5.0
+>                   699.77       -19.2%       565.54  lkp-nex04/RAID0-12HDD=
+-thresh=3D8G/ext4-100dd-1-3.5.0
+>                   675.79        -1.9%       663.17  lkp-nex04/RAID0-12HDD=
+-thresh=3D8G/ext4-10dd-1-3.5.0
+>                   484.84        -7.4%       448.83  lkp-nex04/RAID0-12HDD=
+-thresh=3D8G/ext4-1dd-1-3.5.0
+>                   470.40        -3.2%       455.31  lkp-nex04/RAID0-12HDD=
+-thresh=3D8G/ext4-1dd-2-3.5.0
+>                   167.97       -38.7%       103.03  lkp-nex04/RAID5-12HDD=
+-thresh=3D1000M/ext4-100dd-1-3.5.0
+>                   243.67        -9.1%       221.41  lkp-nex04/RAID5-12HDD=
+-thresh=3D1000M/ext4-10dd-1-3.5.0
+>                   248.98       +12.2%       279.33  lkp-nex04/RAID5-12HDD=
+-thresh=3D1000M/ext4-1dd-1-3.5.0
+>                   208.45       +14.1%       237.86  lkp-nex04/RAID5-12HDD=
+-thresh=3D1000M/ext4-1dd-2-3.5.0
+>                    71.18       -34.2%        46.82  lkp-nex04/RAID5-12HDD=
+-thresh=3D100M/ext4-100dd-1-3.5.0
+>                   145.84        -7.3%       135.25  lkp-nex04/RAID5-12HDD=
+-thresh=3D100M/ext4-10dd-1-3.5.0
+>                   255.22        +6.7%       272.35  lkp-nex04/RAID5-12HDD=
+-thresh=3D100M/ext4-1dd-1-3.5.0
+>                   243.09       +20.7%       293.30  lkp-nex04/RAID5-12HDD=
+-thresh=3D100M/ext4-1dd-2-3.5.0
+>                   209.24       -23.6%       159.96  lkp-nex04/RAID5-12HDD=
+-thresh=3D8G/ext4-100dd-1-3.5.0
+>                   243.73       -10.9%       217.28  lkp-nex04/RAID5-12HDD=
+-thresh=3D8G/ext4-10dd-1-3.5.0
+>                   214.25        +5.6%       226.32  lkp-nex04/RAID5-12HDD=
+-thresh=3D8G/ext4-1dd-1-3.5.0
+>                   207.16       +13.4%       234.98  lkp-nex04/RAID5-12HDD=
+-thresh=3D8G/ext4-1dd-2-3.5.0
+>                 17572.12        -1.9%     17240.05  TOTAL write_bw
+>=20
+> Thanks,
+> Fengguang
 
-Benedict
+
+--Sig_/JF6F84O2BVSjr5cCV0mGbUN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBUC6tSTnsnt1WYoG5AQI6gA/+Os4LBdN77tmEAc2rdiiqPK0ZmnbsI09B
++vgiqg/HJyhxptZnKU3GzyQ6gUCCegA45inZP1IddYH4SiRgNxlzctNQ6Je2vmkd
+Wg6FQ/ZQoWxBhpJvldBAWt5aO6Rj1TnYZ8X/i4HoSGaA/pxrvF3KBNmWCpi12mE5
+gVT5Mefw61NSpbm1gzC8I7jBbCwytQnVLCFGSVissJOaLDA8kwaaNU2XchzYGmfm
+Wh5iEKBzTsjCAOK7wbkIWsd8RLubWlAl4EDAwKUdckIDFqRMeaAS+ykk19+h3VKG
+TYrC+9ThbPgQmRl9ObIhKcScPCSpr5mAkE/oedvLA7FtO3IfQld/TBDTOnGrcC7a
+vdPue/AVtwEtyrTc2glC1kcYU8GRXK6s93dgF65c2ymX4GIbPJ4/BPgOn4+iC6aX
+6dolP53LUDmHLzhN4lmWdo9WxfRfiRMKUR/fC8WXr7er4yH8zTXXgwpgyjMg2Ldk
+d6T4iELQW09XuX/MUhTh8w6MbIgRCV7tXTYC0IfXAEN595S6ei689W/WwgHD5EDO
+J96YzggNjgMRIGPe30TGhGpxun5JRRNGUNI7IZqLigEXV0xr8Ch+wVTz0MvSyVGE
+ldNs1I0nu4RDO09UclT2uoZFBKzSanvLv/Wm2fvNc+26Y2pnDtyLZ7xgSJnywlIS
+x9qYVWhfHBM=
+=1tkN
+-----END PGP SIGNATURE-----
+
+--Sig_/JF6F84O2BVSjr5cCV0mGbUN--
