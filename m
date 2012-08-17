@@ -1,52 +1,56 @@
 From: Michael Wang <wangyun@linux.vnet.ibm.com>
-Subject: [PATCH 0/3] raid, kmemleak, netfilter: replace list_for_each_continue_rcu
- with new interface
-Date: Fri, 17 Aug 2012 12:33:22 +0800
-Message-ID: <502DC992.4040304@linux.vnet.ibm.com>
-References: <502CB91E.4050304@linux.vnet.ibm.com>
+Subject: [PATCH 1/3] raid: replace	list_for_each_continue_rcu with new interface
+Date: Fri, 17 Aug 2012 12:33:29 +0800
+Message-ID: <502DC999.1040407@linux.vnet.ibm.com>
+References: <502CB924.10200@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <502CB91E.4050304@linux.vnet.ibm.com>
-Sender: owner-linux-mm@kvack.org
-To: LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, linux-mm@kvack.org, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, netfilter@vger.kernel.org, coreteam@netfilter.org, netfilter-devel@vger.kernel.org
-Cc: neilb@suse.de, catalin.marinas@arm.com, David Miller <davem@davemloft.net>, kaber@trash.net, pablo@netfilter.org, "paulmck@linux.vnet.ibm.com" <paulmck@linux.vnet.ibm.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <502CB924.10200@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+Cc: neilb@suse.de, "paulmck@linux.vnet.ibm.com" <paulmck@linux.vnet.ibm.com>
 List-Id: linux-raid.ids
 
 From: Michael Wang <wangyun@linux.vnet.ibm.com>
 
-This patch set will replace the list_for_each_continue_rcu with the new
-interface list_for_each_entry_continue_rcu, so we could remove the old
-one later.
-
-Changed:
-	raid:		in "next_active_rdev"
-	kmemleak:	in "kmemleak_seq_next"
-	netfilter:	in "nf_iterate"	
-
-Tested:
-	raid:
-		mdadm command with an internal bitmap.
-	kmemleak:
-		enable kmemleak and check the info it captured.
-	netfilter:
-		add rule to iptables and check result by ping.
-		nfqnl_test which is a test utility of libnetfilter_queue.
-
-	All testing are using printk to make sure the code we want test
-	was invoked.
+This patch replaces list_for_each_continue_rcu() with
+list_for_each_entry_continue_rcu() to save a few lines
+of code and allow removing list_for_each_continue_rcu().
 
 Signed-off-by: Michael Wang <wangyun@linux.vnet.ibm.com>
 ---
- drivers/md/bitmap.c  |    9 +++------
- mm/kmemleak.c        |    6 ++----
- net/netfilter/core.c |   11 +++++++----
- 3 files changed, 12 insertions(+), 14 deletions(-)
+ drivers/md/bitmap.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
 
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index 15dbe03..b160828 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -163,20 +163,17 @@ static struct md_rdev *next_active_rdev(struct md_rdev *rdev, struct mddev *mdde
+ 	 * As devices are only added or removed when raid_disk is < 0 and
+ 	 * nr_pending is 0 and In_sync is clear, the entries we return will
+ 	 * still be in the same position on the list when we re-enter
+-	 * list_for_each_continue_rcu.
++	 * list_for_each_entry_continue_rcu.
+ 	 */
+-	struct list_head *pos;
+ 	rcu_read_lock();
+ 	if (rdev == NULL)
+ 		/* start at the beginning */
+-		pos = &mddev->disks;
++		rdev = list_entry_rcu(&mddev->disks, struct md_rdev, same_set);
+ 	else {
+ 		/* release the previous rdev and start from there. */
+ 		rdev_dec_pending(rdev, mddev);
+-		pos = &rdev->same_set;
+ 	}
+-	list_for_each_continue_rcu(pos, &mddev->disks) {
+-		rdev = list_entry(pos, struct md_rdev, same_set);
++	list_for_each_entry_continue_rcu(rdev, &mddev->disks, same_set) {
+ 		if (rdev->raid_disk >= 0 &&
+ 		    !test_bit(Faulty, &rdev->flags)) {
+ 			/* this is a usable devices */
+-- 
+1.7.4.1
