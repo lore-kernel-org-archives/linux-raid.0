@@ -1,65 +1,83 @@
 From: David Brown <david.brown@hesbynett.no>
 Subject: Re: raid5 to utilize upto 8 cores
-Date: Fri, 17 Aug 2012 09:29:44 +0200
-Message-ID: <502DF2E8.4030207@hesbynett.no>
-References: <CAEyJA_sSzmgcK6miWfxC4jgvbH7WJ_hgZhnmFABaK9r7X=SLDQ@mail.gmail.com> <502C8C18.5070501@hardwarefreak.com> <502CA6CE.1080105@hesbynett.no> <502DEFAB.3060206@hardwarefreak.com>
+Date: Fri, 17 Aug 2012 09:52:40 +0200
+Message-ID: <502DF848.6050903@hesbynett.no>
+References: <CAEyJA_sSzmgcK6miWfxC4jgvbH7WJ_hgZhnmFABaK9r7X=SLDQ@mail.gmail.com> <502C8C18.5070501@hardwarefreak.com> <CAEyJA_sfAUk9PNFfss9m=pAi90Pb0gTHo9seV-BDexr3pLVvxg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <502DEFAB.3060206@hardwarefreak.com>
+In-Reply-To: <CAEyJA_sfAUk9PNFfss9m=pAi90Pb0gTHo9seV-BDexr3pLVvxg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: vincent Ferrer <vincentchicago1@gmail.com>, linux-raid@vger.kernel.org
+To: vincent Ferrer <vincentchicago1@gmail.com>
+Cc: stan@hardwarefreak.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 17/08/2012 09:15, Stan Hoeppner wrote:
-> On 8/16/2012 2:52 AM, David Brown wrote:
->> For those that don't want to use XFS, or won't have balanced directories
->> in their filesystem, or want greater throughput of larger files (rather
->> than greater average throughput of multiple parallel accesses), you can
->> also take your 5 raid1 mirror pairs and combine them with raid0.  You
->> should get similar scaling (the cpu does not limit raid0).  For some
->> applications (such as mail server, /home mount, etc.), the XFS over a
->> linear concatenation is probably unbeatable.  But for others (such as
->> serving large media files), a raid0 over raid1 pairs could well be
->> better.  As always, it depends on your load - and you need to test with
->> realistic loads or at least realistic simulations.
+On 17/08/2012 00:11, vincent Ferrer wrote:
+> On Wed, Aug 15, 2012 at 10:58 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+>> On 8/15/2012 9:56 PM, vincent Ferrer wrote:
+>>
+>>> - My  storage server  has upto 8 cores  running linux kernel 2.6.32.27.
+>>> - I created  a raid5 device of  10  SSDs .
+>>
+>> No it is not normal practice.  I 'preach' against it regularly when I
+>> see OPs doing it.  It's quite insane.
+>>
+>> There are a couple of sane things you can do today to address your problem:
+>>
+>> Stan
+>>
 >
-> Sure, a homemade RAID10 would work as it avoids the md/RAID10 single
-> write thread.  I intentionally avoided mentioning this option for a few
-> reasons:
->
-> 1.  Anyone needing 10 SATA SSDs obviously has a parallel workload
-> 2.  Any thread will have up to 200-500MB/s available (one SSD)
->      with a concat, I can't see a single thread needing 4.5GB/s of B/W
->      If so, md/RAID isn't capable, not on COTS hardware
-> 3.  With a parallel workload requiring this many SSDs, XFS is a must
-> 4.  With a concat, mkfs.xfs is simple, no stripe aligning, etc
->      ~$ mkfs.xfs /dev/md0
+> Hi Stan,
+> Follow-up question for  2  types of setups i may have to prepare:
+> 1) setup A   has   80   SSDs.    Question: Should I still  create one
+> raid5 device or should I create  8  raid5 device each having 10 SSDs ?
+>      My linux based storage server may be accessed by  upto   10-20
+> physically  different clients.
 >
 
-These are all good points.  There is always a lot to learn from your posts.
+I have difficultly imagining the sort of workload that would justify 80 
+SSDs.  Certainly you have to think about far more than just the disks or 
+the raid setup - you would be looking at massive network bandwidth, 
+multiple servers with large PCI express buses, etc.  Probably you would 
+want dedicated SAN hardware of some sort.  Otherwise you could get 
+pretty much the same performance and capacity using 10 hard disks (and 
+maybe a little extra ram to improve caching).
 
-My only concern with XFS over linear concat is that its performance 
-depends on the spread of allocation groups across the elements of the 
-concatenation (the raid1 pairs in this case), and that in turn depends 
-on the directory structure.  (I'm sure you'll correct me if I'm wrong in 
-this - indeed I would /like/ to be wrong!)  If you have large numbers of 
-top-level directories and a spread of access, then this is ideal.  But 
-if you have very skewed access with most access within only one or two 
-top-level directories, then as far as I understand XFS allocation 
-groups, access will then be concentrated heavily on only one (or a few) 
-of the concat elements.
+But as a general rule, you want to limit the number of disks (or 
+partitions) you have in a single raid5 to perhaps 6 devices.  With too 
+many devices, you increase the probability that you will get a failure, 
+and then a second failure during a rebuild.  You can use raid6 for extra 
+protection - but that also (currently) suffers from the single-thread 
+bottleneck.
 
-raid0 of the raid1 pairs may not be the best way to spread out access 
-(assuming XFS linear concat is not a good fit for the workload), but it 
-might still be an improvement.  Perhaps a good solution would be raid0 
-with a very large chunk size - that make most accesses non-striped (as 
-you say, the user probably doesn't need striping), thus allowing more 
-parallel accesses, while scattering the accesses evenly across all raid1 
-elements?
+Remember also that raid5 (or raid6) requires a RMW for updates larger 
+than a single block but smaller than a full stripe - that means it needs 
+to read from every disk in the array before it can write.  The wider the 
+array, the bigger effect this is.
 
+>   2) Setup B  has only 12 SSDs.  Question:  Is it more practical to
+> have only one raid5  device,  even though I may have 4-5  physically
+> different  clients or create 2 raid5 devices each having  6 SSDs.
 
-Of course, we are still waiting to hear a bit about the OP's real load.
+Again, I would put only 6 disks in a raid5.
+
+>
+> Reason I am asking because I have seen enterprise storage arrays from
+> EMC/IBM where new raid5 device is created on demand  and (storage
+> firmware may spread across automatically across all the available
+> drives/spindles or can be intelligently selected by storage admin by
+> analyzing  workload to avoid  hot-spots)
+>
+> Partitioning was only done because I am still waiting  budget approval
+> to buy SSDs.
+>
+> regards
+> vincy
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
 
