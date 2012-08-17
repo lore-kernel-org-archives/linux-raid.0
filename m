@@ -1,166 +1,152 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
-Subject: Re: Re: [patch v2]raid5: fix directio regression
-Date: Fri, 17 Aug 2012 09:00:41 +0800
-Message-ID: <201208170900357812770@gmail.com>
-References: <CANejiEUQcA6X75WG0xSgSv6NAQaBQnwpDD-5QaNVbqmo-oqLsA@mail.gmail.com> <201208071421033759628@gmail.com> <CANejiEVoOprAFoS6mCVYDJKh+nbGE0=7Xw_CpVS+Z9AcUoh6RQ@mail.gmail.com> <201208081321202343795@gmail.com> <CANejiEWC5ZKWT2L4DM-bfGi+v=TpkABruQqe5h0qG4oQg9sDhw@mail.gmail.com> <201208090919591567972@gmail.com> <20120809113230.152aade3@notabene.brown> <CANejiEX1TKG_KhAsgUauHaCe2GE7jU1ozD-3c21VFgrm9COajQ@mail.gmail.com> <20120814063343.GA30353@kernel.org> <20120815105610.74fe418e@notabene.brown> <20120815014436.GA355@kernel.org> <201208161536313436886@gmail.com>,
-	<CANejiEU7dD+VMLidGQZ4OpCTcsOXReExeA-Qtr5Ng9DRGU5Geg@mail.gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: md: raid 10 supports TRIM
+Date: Fri, 17 Aug 2012 12:00:15 +0800
+Message-ID: <20120817040015.GA8644@kernel.org>
+References: <20120816110237.GA4709@elgon.mountain>
+ <502DAEB3.6080302@fusionio.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <502DAEB3.6080302@fusionio.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli <shli@kernel.org>
-Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: dan.carpenter@oracle.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wOC0xNiAxNzo0MiBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
-PjIwMTIvOC8xNiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+Og0KPj4gT24gMjAx
-Mi0wOC0xNSAwOTo0NCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0KPj4+T24g
-V2VkLCBBdWcgMTUsIDIwMTIgYXQgMTA6NTY6MTBBTSArMTAwMCwgTmVpbEJyb3duIHdyb3RlOg0K
-Pj4+PiBPbiBUdWUsIDE0IEF1ZyAyMDEyIDE0OjMzOjQzICswODAwIFNoYW9odWEgTGkgPHNobGlA
-a2VybmVsLm9yZz4gd3JvdGU6DQo+Pj4+DQo+Pj4+ID4gT24gVGh1LCBBdWcgMDksIDIwMTIgYXQg
-MDE6MDc6MDFQTSArMDgwMCwgU2hhb2h1YSBMaSB3cm90ZToNCj4+Pj4gPiA+IDIwMTIvOC85IE5l
-aWxCcm93biA8bmVpbGJAc3VzZS5kZT46DQo+Pj4+ID4gPiA+IE9uIFRodSwgOSBBdWcgMjAxMiAw
-OToyMDowNSArMDgwMCAiSmlhbnBlbmcgTWEiIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4gd3JvdGU6
-DQo+Pj4+ID4gPiA+DQo+Pj4+ID4gPiA+PiBPbiAyMDEyLTA4LTA4IDIwOjUzIFNoYW9odWEgTGkg
-PHNobGlAa2VybmVsLm9yZz4gV3JvdGU6DQo+Pj4+ID4gPiA+PiA+MjAxMi84LzggSmlhbnBlbmcg
-TWEgPG1hamlhbnBlbmdAZ21haWwuY29tPjoNCj4+Pj4gPiA+ID4+ID4+IE9uIDIwMTItMDgtMDgg
-MTA6NTggU2hhb2h1YSBMaSA8c2hsaUBrZXJuZWwub3JnPiBXcm90ZToNCj4+Pj4gPiA+ID4+ID4+
-PjIwMTIvOC83IEppYW5wZW5nIE1hIDxtYWppYW5wZW5nQGdtYWlsLmNvbT46DQo+Pj4+ID4gPiA+
-PiA+Pj4+IE9uIDIwMTItMDgtMDcgMTM6MzIgU2hhb2h1YSBMaSA8c2hsaUBrZXJuZWwub3JnPiBX
-cm90ZToNCj4+Pj4gPiA+ID4+ID4+Pj4+MjAxMi84LzcgSmlhbnBlbmcgTWEgPG1hamlhbnBlbmdA
-Z21haWwuY29tPjoNCj4+Pj4gPiA+ID4+ID4+Pj4+PiBPbiAyMDEyLTA4LTA3IDExOjIyIFNoYW9o
-dWEgTGkgPHNobGlAa2VybmVsLm9yZz4gV3JvdGU6DQo+Pj4+ID4gPiA+PiA+Pj4+Pj4+TXkgZGly
-ZWN0SU8gcmFuZG9td3JpdGUgNGsgd29ya2xvYWQgc2hvd3MgYSAxMH4yMCUgcmVncmVzc2lvbiBj
-YXVzZWQgYnkgY29tbWl0DQo+Pj4+ID4gPiA+PiA+Pj4+Pj4+ODk1ZTNjNWM1OGE4MGJiLiBkaXJl
-Y3RJTyB1c3VhbGx5IGlzIHJhbmRvbSBJTyBhbmQgaWYgcmVxdWVzdCBzaXplIGlzbid0IGJpZw0K
-Pj4+PiA+ID4gPj4gPj4+Pj4+Pih3aGljaCBpcyB0aGUgY29tbW9uIGNhc2UpLCBkZWxheSBoYW5k
-bGluZyBvZiB0aGUgc3RyaXBlIGhhc24ndCBhbnkgYWR2YW50YWdlcy4NCj4+Pj4gPiA+ID4+ID4+
-Pj4+Pj5Gb3IgYmlnIHNpemUgcmVxdWVzdCwgZGVsYXkgY2FuIHN0aWxsIHJlZHVjZSBJTy4NCj4+
-Pj4gPiA+ID4+ID4+Pj4+Pj4NCj4+Pj4gPiA+ID4+ID4+Pj4+Pj5TaWduZWQtb2ZmLWJ5OiBTaGFv
-aHVhIExpIDxzaGxpQGZ1c2lvbmlvLmNvbT4NCj4+Pj4gPiA+ID4+ID4+Pj4gW3NuaXBdDQo+Pj4+
-ID4gPiA+PiA+Pj4+Pj4+LS0NCj4+Pj4gPiA+ID4+ID4+Pj4+PiBNYXkgYmUgdXNlZCBzaXplIHRv
-IGp1ZGdlIGlzIG5vdCBhIGdvb2QgbWV0aG9kLg0KPj4+PiA+ID4gPj4gPj4+Pj4+IEkgZmlyc3Rs
-eSBzZW5kZWQgdGhpcyBwYXRjaCwgb25seSB3YW50IHRvIGNvbnRyb2wgZGlyZWN0LXdyaXRlLWJs
-b2NrLG5vdCBmb3IgcmVxdWxhciBmaWxlLg0KPj4+PiA+ID4gPj4gPj4+Pj4+IEJlY2F1c2UgaSB0
-aGluayBpZiBzb21lb25lIHVzZWQgZGlyZWN0LXdyaXRlLWJsb2NrIGZvciByYWlkNSxoZSBzaG91
-bGQga25vdyB0aGUgZmVhdHVyZSBvZiByYWlkNSBhbmQgaGUgY2FuIGNvbnRyb2wNCj4+Pj4gPiA+
-ID4+ID4+Pj4+PiBmb3Igd3JpdGUgdG8gZnVsbC13cml0ZS4NCj4+Pj4gPiA+ID4+ID4+Pj4+PiBC
-dXQgYXQgdGhhdCB0aW1lLCBpIGRpZCBrbm93IGhvdyB0byBkaWZmZXJlbnRpYXRlIGJldHdlZW4g
-cmVndWxhciBmaWxlIGFuZCBibG9jay1kZXZpY2UuDQo+Pj4+ID4gPiA+PiA+Pj4+Pj4gSSB0aGlr
-IHdlIHNob3VsZCBkbyBzb21ldGhpbmcgdG8gZG8gdGhpcy4NCj4+Pj4gPiA+ID4+ID4+Pj4+DQo+
-Pj4+ID4gPiA+PiA+Pj4+PkkgZG9uJ3QgdGhpbmsgaXQncyBwb3NzaWJsZSB1c2VyIGNhbiBjb250
-cm9sIGhpcyB3cml0ZSB0byBiZSBhDQo+Pj4+ID4gPiA+PiA+Pj4+PmZ1bGwtd3JpdGUgZXZlbiBm
-b3INCj4+Pj4gPiA+ID4+ID4+Pj4+cmF3IGRpc2sgSU8uIFdoeSByZWd1bGFyIGZpbGUgYW5kIGJs
-b2NrIGRldmljZSBpbyBtYXR0ZXJzIGhlcmU/DQo+Pj4+ID4gPiA+PiA+Pj4+Pg0KPj4+PiA+ID4g
-Pj4gPj4+Pj5UaGFua3MsDQo+Pj4+ID4gPiA+PiA+Pj4+PlNoYW9odWENCj4+Pj4gPiA+ID4+ID4+
-Pj4gQW5vdGhlciBwcm9ibGVtIGlzIHRoZSBzaXplLiBIb3cgdG8ganVkZ2UgdGhlIHNpemUgaXMg
-bGFyZ2Ugb3Igbm90Pw0KPj4+PiA+ID4gPj4gPj4+PiBBIHN5c2NhbGwgd3JpdGUgaXMgYSBkaW8g
-YW5kIGEgZGlvIG1heSBiZSBzcGxpdCBtb3JlIGJpb3MuDQo+Pj4+ID4gPiA+PiA+Pj4+IEZvciBt
-eSB3b3JrbG9hZCwgaSB1c3VhbHkgd3JpdGUgY2h1bmstc2l6ZS4NCj4+Pj4gPiA+ID4+ID4+Pj4g
-QnV0IHlvdXIgcGF0Y2ggaXMganVkZ2UgYnkgYmlvLXNpemUuDQo+Pj4+ID4gPiA+PiA+Pj4NCj4+
-Pj4gPiA+ID4+ID4+PkknZCBpZ25vcmUgd29ya2xvYWQgd2hpY2ggZG9lcyBzZXF1ZW50aWFsIGRp
-cmVjdElPLCB0aG91Z2gNCj4+Pj4gPiA+ID4+ID4+PnlvdXIgd29ya2xvYWQgaXMsIGJ1dCBJIGJl
-dCBubyByZWFsIHdvcmtsb2FkcyBhcmUuIFNvIEknZCBsaWtlDQo+Pj4+ID4gPiA+PiA+PiBTb3Jy
-eSxteSBleHBsYWluIG1heWJlIG5vdCBjb3JjcmVjdC4gSSB3cml0ZSBkYXRhIG9uY2Ugd2hpY2gg
-c2l6ZSBpcyBhbG1vc3QgY2h1bmtzLXNpemUgKiBkZXZpY2VzLGluIG9yZGVyIHRvIGZ1bGwtd3Jp
-dGUNCj4+Pj4gPiA+ID4+ID4+IGFuZCBhcyBwb3NzaWJsZSBhcyB0byBubyBwcmUtcmVhZCBvcGVy
-YXRpb24uDQo+Pj4+ID4gPiA+PiA+Pj5vbmx5IHRvIGNvbnNpZGVyIGJpZyBzaXplIHJhbmRvbSBk
-aXJlY3Rpby4gSSBhZ3JlZSB0aGUgc2l6ZQ0KPj4+PiA+ID4gPj4gPj4+anVkZ2UgaXMgYXJiaXRy
-YXJ5LiBJIGNhbiBvcHRpbWl6ZSBpdCB0byBiZSBvbmx5IGNvbnNpZGVyIHN0cmlwZQ0KPj4+PiA+
-ID4gPj4gPj4+d2hpY2ggaGl0cyB0d28gb3IgbW9yZSBkaXNrcyBpbiBvbmUgYmlvLCBidXQgbm90
-IHN1cmUgaWYgaXQncw0KPj4+PiA+ID4gPj4gPj4+d29ydGh5IGRvaW5nLiBOb3Qgd2FyZSBiaWcg
-c2l6ZSBkaXJlY3RpbyBpcyBjb21tb24sIGFuZCBldmVuDQo+Pj4+ID4gPiA+PiA+Pj5pcywgYmln
-IHNpemUgcmVxdWVzdCBJT1BTIGlzIGxvdywgYSBiaXQgZGVsYXkgbWF5YmUgbm90IGEgYmlnDQo+
-Pj4+ID4gPiA+PiA+Pj5kZWFsLg0KPj4+PiA+ID4gPj4gPj4gSWYgYWRkIGEgYWNjX3RpbWUgZm9y
-ICdzdHJpZXBfaGVhZCcgdG8gY29udHJvbD8NCj4+Pj4gPiA+ID4+ID4+IFdoZW4gZ2V0X2FjdGl2
-ZV9zdHJpcGUoKSBpcyBvaywgdXBkYXRlIGFjY190aW1lLg0KPj4+PiA+ID4gPj4gPj4gRm9yIHNv
-bWUgdGltZSwgc3RyaXBlX2hlYWQgZGlkIG5vdCBhY2Nlc3MgYW5kIGl0IHNob2xkIHByZS1yZWFk
-Lg0KPj4+PiA+ID4gPj4gPg0KPj4+PiA+ID4gPj4gPkRvIHlvdSB3YW50IHRvIGFkZCBhIHRpbWVy
-IGZvciBlYWNoIHN0cmlwZT8gVGhpcyBpcyBldmVuIHVnbHkuDQo+Pj4+ID4gPiA+PiA+SG93IGRv
-IHlvdSBjaG9vc2UgdGhlIGV4cGlyZSB0aW1lPyBBIHRpbWUgd29ya3MgZm9yIGhhcmRkaXNrDQo+
-Pj4+ID4gPiA+PiA+ZGVmaW5pdGVseSB3aWxsIG5vdCB3b3JrIGZvciBhIGZhc3QgU1NELg0KPj4+
-PiA+ID4gPj4gQSB0aW1lIGlzIGxpa2UgdGhlIHNpemUgd2hpY2ggaXMgYXJiaXRyYXJ5Lg0KPj4+
-PiA+ID4gPj4gSG93IGFib3V0IGFkZCBhIGludGVyZmFjZSBpbiBzeXNmcyB0byBjb250cm9sIGJ5
-IHVzZXI/DQo+Pj4+ID4gPiA+PiBPbmx5IHVzZXIgY2FuIGp1ZGdlIHRoZSB3b3JrbG9hZCwgd2hp
-Y2ggc2VxdWF0aWFsIHdyaXRlIG9yIHJhbmRvbSB3cml0ZS4NCj4+Pj4gPiA+ID4NCj4+Pj4gPiA+
-ID4gVGhpcyBpcyBnZXR0aW5nIHdvcnNlIGJ5IHRoZSBtaW51dGUuICBBIHN5c2ZzIGludGVyZmFj
-ZSBmb3IgdGhpcyBpcw0KPj4+PiA+ID4gPiBkZWZpbml0ZWx5IG5vdCBhIGdvb2QgaWRlYS4NCj4+
-Pj4gPiA+ID4NCj4+Pj4gPiA+ID4gVGhlIFJFUV9OT0lETEUgZmxhZyBpcyBhIHByZXR0eSBjbGVh
-ciBzdGF0ZW1lbnQgdGhhdCBubyBtb3JlIHJlcXVlc3RzIHRoYXQNCj4+Pj4gPiA+ID4gbWVyZ2Ug
-d2l0aCB0aGlzIG9uZSBhcmUgZXhwZWN0ZWQuICBJZiBzb21lIHVzZSBjYXNlcyBzZW5kcyByYW5k
-b20gcmVxdWVzdHMsDQo+Pj4+ID4gPiA+IG1heWJlIGl0IHNob3VsZCBiZSBzZXR0aW5nIFJFUV9O
-T0lETEUuDQo+Pj4+ID4gPiA+DQo+Pj4+ID4gPiA+IE1heWJlIHNvbWVvbmUgc2hvdWxkIGRvIHNv
-bWUgcmVzZWFyY2ggYW5kIGZpbmQgb3V0IHdoeSBXUklURV9PRElSRUNUIGRvZXNuJ3QNCj4+Pj4g
-PiA+ID4gaW5jbHVkZSBSRVFfTk9JRExFLiAgVW5kZXJzdGFuZGluZyB0aGF0IHdvdWxkIGhlbHAg
-dW5kZXJzdGFuZCB0aGUgY3VycmVudA0KPj4+PiA+ID4gPiBwcm9ibGVtLg0KPj4+PiA+ID4NCj4+
-Pj4gPiA+IEEgcXVpY2sgc2VhcmNoIHNob3dzIG9ubHkgY2ZxLWlvc2NoZWQgdXNlcyBSRVFfTk9J
-RExFLiBJbg0KPj4+PiA+ID4gY2ZxLCBhIHF1ZXVlIGlzIGlkbGVkIHRvIGF2b2lkIGxvc2luZyBp
-dHMgc2hhcmUuIFJFUV9OT0lETEUNCj4+Pj4gPiA+IHRlbGxzIGNmcSB0byBhdm9pZCBpZGxlLCBz
-aW5jZSB0aGUgdGFzayB3aWxsIG5vdCBkaXNwYXRjaCBmdXJ0aGVyDQo+Pj4+ID4gPiByZXF1ZXN0
-cyBhbnkgbW9yZS4gTm90ZSB0aGlzIGlzbid0IG5vIG1lcmdlLg0KPj4+PiA+DQo+Pj4+ID4gU2lu
-Y2UgUkVRX05PSURMRSBoYXMgbm8gcmVsYXRpb25zaGlwIHdpdGggcmVxdWVzdCBtZXJnZSwgd2Un
-ZCBiZXR0ZXIgcmVtb3ZlIGl0Lg0KPj4+PiA+IEkgY2FtZSBvdXQgYSBuZXcgcGF0Y2gsIHdoaWNo
-IGRvZXNuJ3QgZGVwZW5kIG9uIHJlcXVlc3Qgc2l6ZSBhbnkgbW9yZS4gV2l0aA0KPj4+PiA+IHRo
-aXMgcGF0Y2gsIHNlcXVlbnRpYWwgZGlyZWN0aW8gd2lsbCBzdGlsbCBpbnRyb2R1Y2UgdW5uZWNl
-c3NhcnkgcmFpZDUgcHJlcmVhZA0KPj4+PiA+IChlc3BlY2lhbGx5IGZvciBzbWFsbCBzaXplIElP
-KSwgYnV0IEkgYmV0IG5vIGFwcCBkb2VzIHNlcXVlbnRpYWwgc21hbGwgc2l6ZQ0KPj4+PiA+IGRp
-cmVjdElPLg0KPj4+PiA+DQo+Pj4+ID4gVGhhbmtzLA0KPj4+PiA+IFNoYW9odWENCj4+Pj4gPg0K
-Pj4+PiA+IFN1YmplY3Q6IHJhaWQ1OiBmaXggZGlyZWN0aW8gcmVncmVzc2lvbg0KPj4+PiA+DQo+
-Pj4+ID4gTXkgZGlyZWN0SU8gcmFuZG9td3JpdGUgNGsgd29ya2xvYWQgc2hvd3MgYSAxMH4yMCUg
-cmVncmVzc2lvbiBjYXVzZWQgYnkgY29tbWl0DQo+Pj4+ID4gODk1ZTNjNWM1OGE4MGJiLiBUaGlz
-IGNvbW1pdCBpc24ndCBmcmllbmRseSBmb3Igc21hbGwgc2l6ZSByYW5kb20gSU8sIGJlY2F1c2UN
-Cj4+Pj4gPiBkZWxheWluZyBzdWNoIHJlcXVlc3QgaGFzbid0IGFueSBhZHZhbnRhZ2VzLg0KPj4+
-PiA+DQo+Pj4+ID4gRGlyZWN0SU8gdXN1YWxseSBpcyByYW5kb20gSU8uIEkgdGhvdWdodCB3ZSBj
-YW4gaWdub3JlIHJlcXVlc3QgbWVyZ2UgYmV0d2Vlbg0KPj4+PiA+IGJpb3MgZnJvbSBkaWZmZXJl
-bnQgaW9fc3VibWl0LiBTbyB3ZSBvbmx5IGNvbnNpZGVyIG9uZSBiaW8gd2hpY2ggY2FuIGRyaXZl
-DQo+Pj4+ID4gdW5uZWNlc3NhcnkgcHJlcmVhZCBpbiByYWlkNSwgd2hpY2ggaXMgbGFyZ2UgcmVx
-dWVzdC4gSWYgYSBiaW8gaXMgbGFyZ2UgZW5vdWdoDQo+Pj4+ID4gYW5kIHNvbWUgb2YgaXRzIHN0
-cmlwZXMgd2lsbCBhY2Nlc3MgdHdvIG9yIG1vcmUgZGlza3MsIHN1Y2ggc3RyaXBlcyBzaG91bGQg
-YmUNCj4+Pj4gPiBkZWxheWVkIHRvIGF2b2lkIHVubmVjZXNzYXJ5IHByZXJlYWQgdGlsbCBiaW8g
-Zm9yIHRoZSBsYXN0IGRpc2sgb2YgdGhlIHN0cmlwcw0KPj4+PiA+IGlzIGFkZGVkLg0KPj4+PiA+
-DQo+Pj4+ID4gUkVRX05PSURMRSBkb2Vzbid0IG1lYW4gYWJvdXQgcmVxdWVzdCBtZXJnZSwgSSBk
-ZWxldGVkIGl0Lg0KPj4+Pg0KPj4+PiBIaSwNCj4+Pj4gIEhhdmUgeW91IHRlc3RlZCB3aGF0IGVm
-ZmVjdCB0aGlzIGhhcyBvbiBsYXJnZSBzZXF1ZW50aWFsIGRpcmVjdCB3cml0ZXM/DQo+Pj4+ICBC
-ZWNhdXNlIGl0IGRvbid0IG1ha2Ugc2Vuc2UgdG8gbWUgYW5kIEkgd291bGQgYmUgc3VycHJpc2Vk
-IGlmIGl0IGltcHJvdmVzDQo+Pj4+ICB0aGluZ3MuDQo+Pj4+DQo+Pj4+ICBZb3UgYXJlIGRlbGF5
-aW5nIHNldHRpbmcgdGhlIFNUUklQRV9QUkVSRUFEX0FDVElWRSBiaXQgdW50aWwgeW91IHRoaW5r
-IHlvdQ0KPj4+PiAgaGF2ZSBzdWJtaXR0ZWQgYWxsIHRoZSB3cml0ZXMgZnJvbSB0aGlzIGJpbyB0
-aGF0IGFwcGx5IHRvIHRoZSBnaXZlIHN0cmlwZS4NCj4+Pj4gIFRoYXQgZG9lcyBtYWtlIHNvbWUg
-c2Vuc2UsIGhvd2V2ZXIgaXQgZG9lc24ndCBzZWVtIHRvIGRlYWwgd2l0aCB0aGUNCj4+Pj4gIHBv
-c3NpYmlsaXR5IHRoYXQgdGhlIG9uZSBiaW8gY292ZXJzIHBhcnRzIG9mIHR3byBkaWZmZXJlbnQg
-c3RyaXBlcy4gIEluIHRoYXQNCj4+Pj4gIGNhc2UgdGhlIGZpcnN0IHN0cmlwZSBuZXZlciBnZXRz
-IFNUUklQRV9QUkVSRUFEX0FDVElWRSBzZXQsIHNvIGl0IGlzIGRlbGF5ZWQNCj4+Pj4gIGRlc3Bp
-dGUgaGF2aW5nICdSRVFfU1lOQycgc2V0Lg0KPj4+DQo+Pj5JIGRpZG4ndCBnZXQgeW91ciBwb2lu
-dC4gSXNuJ3QgbGFzdF9zZWN0b3IgLSBsb2dpY2FsX3NlY3RvciA8IGNodW5rX3NlY3RvcnMgdHJ1
-ZQ0KPj4+aW4gdGhlIGNhc2U/DQo+Pj4NCj4+Pj4gIEFsc28sIGFuZCBtb3JlIHNpZ25pZmljYW50
-bHksIHBsdWdnaW5nIHNob3VsZCBtZWFuIHRoYXQgdGhlIHZhcmlvdXMNCj4+Pj4gIHN0cmlwZV9o
-ZWFkcyBhcmUgbm90IGV2ZW4gbG9va2VkIGF0IHVudGlsIGFsbCBvZiB0aGUgb3JpZ2luYWwgYmlv
-IGlzDQo+Pj4+ICBwcm9jZXNzZWQsIHNvIHdoaWxlIFNUUklQRV9QUkVSRUFEX0FDVElWRSBtaWdo
-dCBnZXQgc2V0IGVhcmx5LCBpdCBzaG91bGQgbm90DQo+Pj4+ICBnZXQgcHJvY2Vzc2VkIHVudGls
-IHRoZSB3aG9sZSBiaW8gaXMgcHJvY2Vzc2VkIGFuZCB0aGUgcXVldWUgaXMgdW5wbHVnZ2VkLg0K
-Pj4+Pg0KPj4+PiAgU28gSSBkb24ndCB0aGluayB0aGlzIHBhdGNoIHNob3VsZCBtYWtlIGEgZGlm
-ZmVyZW5jZSBvbiBsYXJnZSBkaXJlY3Qgd3JpdGVzLA0KPj4+PiAgYW5kIGlmIGl0IGRvZXMgdGhl
-biBzb21ldGhpbmcgc3RyYW5nZSBpcyBnb2luZyBvbiB0aGF0IEknZCBsaWtlIHRvDQo+Pj4+ICB1
-bmRlcnN0YW5kIGZpcnN0Lg0KPj4+DQo+Pj5BaGEsIG9rLCB0aGlzIG1ha2VzIHNlbnNlLiByZWNl
-bnQgZGVsYXllZCBzdHJpcGUgcmVsZWFzZSBzaG91bGQgbWFrZSB0aGUNCj4+PnByb2JsZW0gZ28g
-YXdheS4gU28gSmlhbnBlbmcsIGNhbiB5b3UgdHJ5IHlvdXIgd29ya2xvYWQgd2l0aCB0aGUgY29t
-bWl0DQo+Pj5yZXZlcnRlZCB3aXRoIGEgcmVjZW50IGtlcm5lbCBwbGVhc2U/DQo+Pj4NCj4+IEkg
-dGVzdGVkIHVzZWQgeW91ciBwYXRjaCBpbiBteSB3b3JrbG9hZC4NCj4+IExpa2UgdGhlIG5laWwg
-c2FpZCwgdGhlIHBlcmZvcm1hbmNlIGRvZXMgbm90IHJlZ3Jlc3MuDQo+PiBCdXQgaWYgdGhlIGNv
-ZGUgaXMgOg0KPj4+ICAgICAgICAgICAgICAgICAgICAgICBpZiAodGVzdF9iaXQoU1RSSVBFX1BS
-RVJFQURfQUNUSVZFLCAmc2gtPnN0YXRlKSkNCj4+PiAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICByZWxlYXNlX3N0cmlwZShzaCk7DQo+Pj4gICAgICAgICAgICAgICAgICAgICAgIGVsc2UN
-Cj4+PiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICByZWxlYXNlX3N0cmlwZV9wbHVnKG1k
-ZGV2LCBzaCk7DQo+PiBUaGUgc3BlZWQgaXMgYWJvdXQgNzZNQi9zLldpdGggdGhvc2UgY29kZSB0
-aGUgc3BlZWQgaXMgMjAwTUIvcy4NCj4NCj5IbW0sIHdoYXQgSSB3YW50IHRvIHRlc3QgaXMgdXBz
-dHJlYW0ga2VybmVsIHdpdGggY29tbWl0IDg5NWUzYzVjNThhODBiYg0KPnJldmVydGVkLiBkb24n
-dCBhcHBseSBteSBwYXRjaC4gV2Ugd2FudCB0byBqdXN0IHJldmVydCB0aGUgY29tbWl0Lg0KPg0K
-Pj4gQlRXLCB3aHkgYXJlIHlvdSBhbmQgbmVpbCBub3QgdG8gYW5zd2VyIG15IG9wdGlvbiB3aGlj
-aCBhZGRpbmcgUkVRX05PSURMRSBmb3IgbGFzdCBiaW8gb2Ygb25lIGRpbz8NCj4NCj5JJ20gbm90
-IHF1aXRlIHBvc2l0aXZlIHRvIHRoaXMuIGVhY2ggaW9fc3VibWl0IGNhbiBzdWJtaXQgc2V2ZXJh
-bA0KPnJlcXVlc3RzLCBhbmQgZWFjaCByZXF1ZXN0IGhhcyBhIGRpby4gU2V0dGluZyB0aGUgZmxh
-ZyBmb3IgdGhlIGZpcnN0DQo+ZGlvIGRvZXNuJ3QgbWFrZSBzZW5zZSwgZm9yIGV4YW1wbGUNCj4N
-ClRoYW5rcywgaSBkaWRuJ3Qga25vdyB0aGUgYWlvLiBTbywgaG1tLiBUaGFua3MgYWdhaW4uDQo=
+> 
+> This is a semi-automatic email about new static checker warnings.
+> 
+> The patch d61b764704ca: "md: raid 10 supports TRIM" from Aug 15,
+> 2012, leads to the following Smatch complaint:
+> 
+> drivers/md/raid10.c:3510 run()
+> 	 warn: variable dereferenced before check 'mddev->queue' (see line 3508)
+> 
+> drivers/md/raid10.c
+>   3507	
+>   3508		blk_queue_max_discard_sectors(mddev->queue, mddev->chunk_sectors);
+>                                               ^^^^^^^^^^^^
+> New dereference.
+> 
+>   3509		chunk_size = mddev->chunk_sectors<<  9;
+>   3510		if (mddev->queue) {
+>                     ^^^^^^^^^^^^
+> Old check.
+> 
+>   3511			blk_queue_io_min(mddev->queue, chunk_size);
+>   3512			if (conf->geo.raid_disks % conf->geo.near_copies)
 
+Thanks! Neil, this is the updated patch. If you prefer a fix against original
+patch, please let me know. 
+
+
+Subject: md: raid 10 supports TRIM
+
+This makes md raid 10 support TRIM.
+If one disk supports discard and another not, or one has discard_zero_data and
+another not, there could be inconsistent between data from such disks. But this
+should not matter, discarded data is useless. This will add extra copy in rebuild
+though.
+
+Signed-off-by: Shaohua Li <shli@fusionio.com>
+---
+ drivers/md/raid10.c |   27 +++++++++++++++++++++++----
+ 1 file changed, 23 insertions(+), 4 deletions(-)
+
+Index: linux/drivers/md/raid10.c
+===================================================================
+--- linux.orig/drivers/md/raid10.c	2012-08-13 15:03:16.511472922 +0800
++++ linux/drivers/md/raid10.c	2012-08-17 10:29:05.071273189 +0800
+@@ -907,7 +907,12 @@ static void flush_pending_writes(struct
+ 		while (bio) { /* submit pending writes */
+ 			struct bio *next = bio->bi_next;
+ 			bio->bi_next = NULL;
+-			generic_make_request(bio);
++			if (unlikely((bio->bi_rw & REQ_DISCARD) &&
++			    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
++				/* Just ignore it */
++				bio_endio(bio, 0);
++			else
++				generic_make_request(bio);
+ 			bio = next;
+ 		}
+ 	} else
+@@ -1057,6 +1062,7 @@ static void make_request(struct mddev *m
+ 	const int rw = bio_data_dir(bio);
+ 	const unsigned long do_sync = (bio->bi_rw & REQ_SYNC);
+ 	const unsigned long do_fua = (bio->bi_rw & REQ_FUA);
++	const unsigned long do_discard = (bio->bi_rw & (REQ_DISCARD | REQ_SECURE));
+ 	unsigned long flags;
+ 	struct md_rdev *blocked_rdev;
+ 	int sectors_handled;
+@@ -1077,7 +1083,7 @@ static void make_request(struct mddev *m
+ 			 || conf->prev.near_copies < conf->prev.raid_disks))) {
+ 		struct bio_pair *bp;
+ 		/* Sanity check -- queue functions should prevent this happening */
+-		if (bio->bi_vcnt != 1 ||
++		if ((bio->bi_vcnt != 1 && bio->bi_vcnt !=0) ||
+ 		    bio->bi_idx != 0)
+ 			goto bad_map;
+ 		/* This is a one page bio that upper layers
+@@ -1406,7 +1412,7 @@ retry_write:
+ 						      conf->mirrors[d].rdev));
+ 		mbio->bi_bdev = conf->mirrors[d].rdev->bdev;
+ 		mbio->bi_end_io	= raid10_end_write_request;
+-		mbio->bi_rw = WRITE | do_sync | do_fua;
++		mbio->bi_rw = WRITE | do_sync | do_fua | do_discard;
+ 		mbio->bi_private = r10_bio;
+ 
+ 		atomic_inc(&r10_bio->remaining);
+@@ -1435,7 +1441,7 @@ retry_write:
+ 					   conf->mirrors[d].replacement));
+ 		mbio->bi_bdev = conf->mirrors[d].replacement->bdev;
+ 		mbio->bi_end_io	= raid10_end_write_request;
+-		mbio->bi_rw = WRITE | do_sync | do_fua;
++		mbio->bi_rw = WRITE | do_sync | do_fua | do_discard;
+ 		mbio->bi_private = r10_bio;
+ 
+ 		atomic_inc(&r10_bio->remaining);
+@@ -1719,6 +1725,9 @@ static int raid10_add_disk(struct mddev
+ 		clear_bit(Unmerged, &rdev->flags);
+ 	}
+ 	md_integrity_add_rdev(rdev, mddev);
++	if (blk_queue_discard(bdev_get_queue(rdev->bdev)))
++		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, mddev->queue);
++
+ 	print_conf(conf);
+ 	return err;
+ }
+@@ -3476,6 +3485,7 @@ static int run(struct mddev *mddev)
+ 	sector_t size;
+ 	sector_t min_offset_diff = 0;
+ 	int first = 1;
++	bool discard_supported = false;
+ 
+ 	if (mddev->private == NULL) {
+ 		conf = setup_conf(mddev);
+@@ -3492,6 +3502,7 @@ static int run(struct mddev *mddev)
+ 
+ 	chunk_size = mddev->chunk_sectors << 9;
+ 	if (mddev->queue) {
++		blk_queue_max_discard_sectors(mddev->queue, mddev->chunk_sectors);
+ 		blk_queue_io_min(mddev->queue, chunk_size);
+ 		if (conf->geo.raid_disks % conf->geo.near_copies)
+ 			blk_queue_io_opt(mddev->queue, chunk_size * conf->geo.raid_disks);
+@@ -3537,8 +3548,16 @@ static int run(struct mddev *mddev)
+ 					  rdev->data_offset << 9);
+ 
+ 		disk->head_position = 0;
++
++		if (blk_queue_discard(bdev_get_queue(rdev->bdev)))
++			discard_supported = true;
+ 	}
+ 
++	if (discard_supported)
++		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, mddev->queue);
++	else
++		queue_flag_clear_unlocked(QUEUE_FLAG_DISCARD, mddev->queue);
++
+ 	/* need to check that every block has at least one working mirror */
+ 	if (!enough(conf, -1)) {
+ 		printk(KERN_ERR "md/raid10:%s: not enough operational mirrors.\n",
