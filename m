@@ -1,79 +1,94 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdraid6 problem post 3.5.0
-Date: Sat, 18 Aug 2012 08:58:43 +1000
-Message-ID: <20120818085843.54b231ed@notabene.brown>
-References: <CAEhu1-4gv=uAu7K=O6DqeXr05frD4_Yp+0VnRuF_n8mnbaqF6w@mail.gmail.com>
+Subject: Re: md: raid 10 supports TRIM
+Date: Sat, 18 Aug 2012 09:51:10 +1000
+Message-ID: <20120818095110.125b3d3a@notabene.brown>
+References: <20120816110237.GA4709@elgon.mountain>
+	<502DAEB3.6080302@fusionio.com>
+	<20120817040015.GA8644@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/2eMa55FtH7IYkFk5wD9BzL6"; protocol="application/pgp-signature"
+ boundary="Sig_/CVQw+F0F8jIngVanjcghY5a"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAEhu1-4gv=uAu7K=O6DqeXr05frD4_Yp+0VnRuF_n8mnbaqF6w@mail.gmail.com>
+In-Reply-To: <20120817040015.GA8644@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Drescher <drescherjm@gmail.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, dan.carpenter@oracle.com
 List-Id: linux-raid.ids
 
---Sig_/2eMa55FtH7IYkFk5wD9BzL6
+--Sig_/CVQw+F0F8jIngVanjcghY5a
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 17 Aug 2012 18:30:11 -0400 John Drescher <drescherjm@gmail.com> wro=
-te:
+On Fri, 17 Aug 2012 12:00:15 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-> For the last few weeks I have been doing some reliability testing on a
->  mdraid6 array. One of my test was to physically hot remove a raid
-> member disk. This worked flawlessly with gentoo-sources-3.5.0 for the
-> 5 or so times I tried it with my 12 disk + 1 spare mdraid6 array.
-> After pulling a disk a few seconds later the array automatically
-> rebuilds with a spare and after finishing all data checks out via
-> btrfs a scrub. However trying this with gentoo-sources-3.5.2 or the
-> latest kernel.org git sources the machine does not start the rebuild
-> and any access to /proc/mdstat or and disk access that is not in cache
-> for that array just leads to an a long (possibly infinite) wait
-> eventually forcing me to have to use the reset button when the sysrq
-> key combinations fail to shut down the machine. I do see some kernel
-> debug message in the console alt-ctrl-f12 but I was unable to save
-> that to copy.
+> >=20
+> > This is a semi-automatic email about new static checker warnings.
+> >=20
+> > The patch d61b764704ca: "md: raid 10 supports TRIM" from Aug 15,
+> > 2012, leads to the following Smatch complaint:
+> >=20
+> > drivers/md/raid10.c:3510 run()
+> > 	 warn: variable dereferenced before check 'mddev->queue' (see line 350=
+8)
+> >=20
+> > drivers/md/raid10.c
+> >   3507=09
+> >   3508		blk_queue_max_discard_sectors(mddev->queue, mddev->chunk_sector=
+s);
+> >                                               ^^^^^^^^^^^^
+> > New dereference.
+> >=20
+> >   3509		chunk_size =3D mddev->chunk_sectors<<  9;
+> >   3510		if (mddev->queue) {
+> >                     ^^^^^^^^^^^^
+> > Old check.
+> >=20
+> >   3511			blk_queue_io_min(mddev->queue, chunk_size);
+> >   3512			if (conf->geo.raid_disks % conf->geo.near_copies)
 >=20
-> Is this a known problem? If not it may be possible that I could bisect
-> this next week to the patch that causes this behavior.
+> Thanks! Neil, this is the updated patch. If you prefer a fix against orig=
+inal
+> patch, please let me know.=20
 >=20
+>=20
+> Subject: md: raid 10 supports TRIM
+>=20
+> This makes md raid 10 support TRIM.
+> If one disk supports discard and another not, or one has discard_zero_dat=
+a and
+> another not, there could be inconsistent between data from such disks. Bu=
+t this
+> should not matter, discarded data is useless. This will add extra copy in=
+ rebuild
+> though.
+>=20
+> Signed-off-by: Shaohua Li <shli@fusionio.com>
 
-Thanks for the report.
 
-The problem is not known to me..  There are no changes to raid6 between 3.5=
-.0
-and 3.5.2, so unless gentoo broke something (unlikely) this is very strange.
-
-A digital-photo of the debug messages might be useful if you can catch that.
-Setting up a network console to capture messages isn't too hard if you have
-another machine with a wired network connection.
-See Documentation/networking/netconsole.txt
-If you can set that us, then alt-sysrq-T might provide useful info.
-
+Applied, thanks.
 
 NeilBrown
 
---Sig_/2eMa55FtH7IYkFk5wD9BzL6
+--Sig_/CVQw+F0F8jIngVanjcghY5a
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUC7Moznsnt1WYoG5AQLSGQ/+PwJEnpw10Aw9Hhmk1GSchdNWeAIvt6sE
-ivCXZJEZOVGFBwXKTPSjPvyhtO4KRT0sezgjYvxhRj69CVErkVV5Ynri/ruFgYlD
-iJjIaqdRkbIQU2r+iNUIUOOM6rECvDdDu8ONHYibrZloDWsfALxjBqBJ+XSLvy92
-hi0WfBsC2xXu8+/+qqwmlWSRvhU0jhmpbc6/gDYjhvvmd6/idxoLd2lINFWVdhez
-0RhGH1Cr7fi87fTBmXEadfTCXsJYuZ1NFv5TQt3kM0F4cNWopL2ld6v+UXK76os/
-SuS92i1D6F34BdV6R2QQjezAbIawnVYd40Ut2m2FoblUCAL5VSZG47Lbo0wEONKm
-jvAq8EQBgFxspkkU2+93G1zRVpTJZEnqo3M52K0jM54bKuP+cVcndVQa8bvBTNfa
-cEyCXEdgI2xyIJvHjI/k168Nrjri5FLOMk4hYz9meNGS2eEUOQVXVV6qDNAp9/zq
-oi2bOy1ShoGt9g22zSkaRLp2Mj7gZQ7sMT29AOv9bsoQHAwj45N+OBsoE978p3Qt
-x1V9wklV0qLB20kHfv+iLUjRPok5cBIZkjfcuoMO3K4NJ7lzx/zCNj5CWyYAlpAz
-3KNIcGpqJYt0rTl7DLcK3q9/0DoI9qpg9WuTSP+rZo5ul9Ge93XXPgLol9d62p19
-/Zo4ZLdrnnw=
-=qQMs
+iQIVAwUBUC7Y7jnsnt1WYoG5AQIWFBAAlZb0n6tHmtDfw4mv6P/q+e8+AAYDg1hD
+1P8ajKeUGfJZchXtDvf+qjXnV38FIJGbjsbKTvqwUeiYfKFxuQNCVTgAw9Wr6KIm
+UsM+SmuYVgCoRw5svNbmRdBfe2yPXvucrwgREiC1Ry9XgKZx5JCJBhyHdoZBIp+2
+UnmMTKLvkhSQOdJqo1elL5Fw+fF96z24ciFZOA4MRU2ETWj2OSxnh3cbteIlZ52j
+5p59a5UQMf8tofkmkewdmxlHs4Wt6QsweQ38OqP0uNaOK6vKvv5AMVBKOHqC8Ns0
+gj+H3QD0PrVaR0FzweCi04Imdz6yCziIgk85OcLKBWUecKhKKcAx/BP+UhgIomsK
+B6p5W9uCxKqPfzK8nn1in03kwf4dqeK/0d5To5iSw+XghlB40C6PK5vldJY7Iy1H
+oxtiyBgNt69PbAbJVvfb7xBHsXpJX/mB5vp7YNQqqPtPxSGdIB1tmSLsBWAFyovO
+fROzCz4wfrWJPSExRSsfnpbNmWWI2MKp2x7RYRw8pInmLdZAa4W/GIlOBXuNNjuH
+eIVvxKMyqYjd7XQCswOtstcSmULJOfYkZ1BUmW6hafErWm5jsioi6wUOINgi9qgK
+Z9e5MsJ/7eWOcA7AtkOj/dUWcFK08JMvhpHmVKA8lI+RtIbTjjI9MFwAwW67ryC9
+6GK+m9m9NbA=
+=sQyr
 -----END PGP SIGNATURE-----
 
---Sig_/2eMa55FtH7IYkFk5wD9BzL6--
+--Sig_/CVQw+F0F8jIngVanjcghY5a--
