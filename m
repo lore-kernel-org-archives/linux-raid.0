@@ -1,56 +1,49 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
-Subject: raid5: When add stripe_head to inactive_list, it should remove hash.
-Date: Sat, 18 Aug 2012 10:53:36 +0800
-Message-ID: <201208181053324376710@gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: raid5 to utilize upto 8 cores
+Date: Fri, 17 Aug 2012 23:55:41 -0500
+Message-ID: <502F204D.5020506@hardwarefreak.com>
+References: <CAEyJA_sSzmgcK6miWfxC4jgvbH7WJ_hgZhnmFABaK9r7X=SLDQ@mail.gmail.com> <502C8C18.5070501@hardwarefreak.com> <502CA6CE.1080105@hesbynett.no> <502DEFAB.3060206@hardwarefreak.com> <502DF2E8.4030207@hesbynett.no> <502E2253.9020409@hardwarefreak.com> <502E2F65.7040501@hesbynett.no>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <502E2F65.7040501@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: David Brown <david.brown@hesbynett.no>
+Cc: vincent Ferrer <vincentchicago1@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SWYgaXQgcmVsZWFzZWQgc3RyaXBlX2hlYWQgdG8gaW5hY3RpdmVfbGlzdCBhbmQgc29vbiBnZXQg
-aXQgZnJvbSBoYXNoDQpsaXN0LiBTbyB0aGUgc3RyaXBlX2hlYWQgZGlkbid0IGNhbGwgaW5pdF9z
-dHJpcGUsIHRoZSBkZXYuZmxhZ3MgaXNuJ3QNCmNsZWFyLiBTbyB0aGUgZGVidWcgaW5mbyBpcyBl
-cnJvciB3aGljaCBwcmludGVkIHRoZSBiZWZvcmUgaW5mby4NCkFsdGhvdWdoLCBpIGNhbid0IGZp
-bmQgbG9naWMgZXJyb3IgYmVjYXVzZSB0aGlzLkkgdGhpbmsgaXQgc2hvdWxkIGJlDQpjb3JyZWN0
-Lg0KDQpTaWduZWQtb2ZmLWJ5OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQot
-LS0NCiBkcml2ZXJzL21kL3JhaWQ1LmMgfCAgIDM1ICsrKysrKysrKysrKysrKysrKystLS0tLS0t
-LS0tLS0tLS0tDQogMSBmaWxlIGNoYW5nZWQsIDE5IGluc2VydGlvbnMoKyksIDE2IGRlbGV0aW9u
-cygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5jIGIvZHJpdmVycy9tZC9yYWlk
-NS5jDQppbmRleCBhZGRhOTRkLi4wM2QyZjY0IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9tZC9yYWlk
-NS5jDQorKysgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCkBAIC0xOTYsNiArMTk2LDI0IEBAIHN0YXRp
-YyBpbnQgc3RyaXBlX29wZXJhdGlvbnNfYWN0aXZlKHN0cnVjdCBzdHJpcGVfaGVhZCAqc2gpDQog
-CSAgICAgICB0ZXN0X2JpdChTVFJJUEVfQ09NUFVURV9SVU4sICZzaC0+c3RhdGUpOw0KIH0NCiAN
-CitzdGF0aWMgaW5saW5lIHZvaWQgcmVtb3ZlX2hhc2goc3RydWN0IHN0cmlwZV9oZWFkICpzaCkN
-Cit7DQorCXByX2RlYnVnKCJyZW1vdmVfaGFzaCgpLCBzdHJpcGUgJWxsdVxuIiwNCisJCSh1bnNp
-Z25lZCBsb25nIGxvbmcpc2gtPnNlY3Rvcik7DQorDQorCWhsaXN0X2RlbF9pbml0KCZzaC0+aGFz
-aCk7DQorfQ0KKw0KK3N0YXRpYyBpbmxpbmUgdm9pZCBpbnNlcnRfaGFzaChzdHJ1Y3QgcjVjb25m
-ICpjb25mLCBzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoKQ0KK3sNCisJc3RydWN0IGhsaXN0X2hlYWQg
-KmhwID0gc3RyaXBlX2hhc2goY29uZiwgc2gtPnNlY3Rvcik7DQorDQorCXByX2RlYnVnKCJpbnNl
-cnRfaGFzaCgpLCBzdHJpcGUgJWxsdVxuIiwNCisJCSh1bnNpZ25lZCBsb25nIGxvbmcpc2gtPnNl
-Y3Rvcik7DQorDQorCWhsaXN0X2FkZF9oZWFkKCZzaC0+aGFzaCwgaHApOw0KK30NCisNCiBzdGF0
-aWMgdm9pZCBkb19yZWxlYXNlX3N0cmlwZShzdHJ1Y3QgcjVjb25mICpjb25mLCBzdHJ1Y3Qgc3Ry
-aXBlX2hlYWQgKnNoKQ0KIHsNCiAJQlVHX09OKCFsaXN0X2VtcHR5KCZzaC0+bHJ1KSk7DQpAQCAt
-MjIyLDYgKzI0MCw3IEBAIHN0YXRpYyB2b2lkIGRvX3JlbGVhc2Vfc3RyaXBlKHN0cnVjdCByNWNv
-bmYgKmNvbmYsIHN0cnVjdCBzdHJpcGVfaGVhZCAqc2gpDQogCQlhdG9taWNfZGVjKCZjb25mLT5h
-Y3RpdmVfc3RyaXBlcyk7DQogCQlpZiAoIXRlc3RfYml0KFNUUklQRV9FWFBBTkRJTkcsICZzaC0+
-c3RhdGUpKSB7DQogCQkJbGlzdF9hZGRfdGFpbCgmc2gtPmxydSwgJmNvbmYtPmluYWN0aXZlX2xp
-c3QpOw0KKwkJCXJlbW92ZV9oYXNoKHNoKTsNCiAJCQl3YWtlX3VwKCZjb25mLT53YWl0X2Zvcl9z
-dHJpcGUpOw0KIAkJCWlmIChjb25mLT5yZXRyeV9yZWFkX2FsaWduZWQpDQogCQkJCW1kX3dha2V1
-cF90aHJlYWQoY29uZi0+bWRkZXYtPnRocmVhZCk7DQpAQCAtMjQ4LDIzICsyNjcsNyBAQCBzdGF0
-aWMgdm9pZCByZWxlYXNlX3N0cmlwZShzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoKQ0KIAlsb2NhbF9p
-cnFfcmVzdG9yZShmbGFncyk7DQogfQ0KIA0KLXN0YXRpYyBpbmxpbmUgdm9pZCByZW1vdmVfaGFz
-aChzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoKQ0KLXsNCi0JcHJfZGVidWcoInJlbW92ZV9oYXNoKCks
-IHN0cmlwZSAlbGx1XG4iLA0KLQkJKHVuc2lnbmVkIGxvbmcgbG9uZylzaC0+c2VjdG9yKTsNCiAN
-Ci0JaGxpc3RfZGVsX2luaXQoJnNoLT5oYXNoKTsNCi19DQotDQotc3RhdGljIGlubGluZSB2b2lk
-IGluc2VydF9oYXNoKHN0cnVjdCByNWNvbmYgKmNvbmYsIHN0cnVjdCBzdHJpcGVfaGVhZCAqc2gp
-DQotew0KLQlzdHJ1Y3QgaGxpc3RfaGVhZCAqaHAgPSBzdHJpcGVfaGFzaChjb25mLCBzaC0+c2Vj
-dG9yKTsNCi0NCi0JcHJfZGVidWcoImluc2VydF9oYXNoKCksIHN0cmlwZSAlbGx1XG4iLA0KLQkJ
-KHVuc2lnbmVkIGxvbmcgbG9uZylzaC0+c2VjdG9yKTsNCi0NCi0JaGxpc3RfYWRkX2hlYWQoJnNo
-LT5oYXNoLCBocCk7DQotfQ0KIA0KIA0KIC8qIGZpbmQgYW4gaWRsZSBzdHJpcGUsIG1ha2Ugc3Vy
-ZSBpdCBpcyB1bmhhc2hlZCwgYW5kIHJldHVybiBpdC4gKi8NCi0tIA0KMS43LjkuNQ0KAg==
+On 8/17/2012 6:47 AM, David Brown wrote:
+> On 17/08/2012 12:52, Stan Hoeppner wrote:
+
+> It sounds like I /have/ misunderstood things - at least regarding the
+> inode64 allocator (which will surely be the best choice for a large
+> array).  I had though that while directories "/a/" and "/b/" get
+> different allocation groups, directories "/a/1/" and "/a/2/" would go in
+> the same AG as "/a/".  What you are saying is that this is not correct -
+> each of these four directories would go in a separate AG.  File "/a/1/x"
+> would go in the same AG as "/a/1/", of course.  Assuming this is the
+> case, XFS over linear concat sounds more appealing for a much wider set
+> of applications than I had previously thought.
+
+I may bear some blame for this.  Long ago I thought the inode64
+allocator worked as you describe.  I may have spread that
+misinformation.  If so, my apologies to all.
+
+Indeed the inode64 allocator creates new directories evenly across all
+AGs in a round robin fashion.  Thus it will work better with most
+workloads on storage with some level of concatenation than with straight
+striped RAID on rust.  This is due to excessive seeks across all the
+AGs, which line up from outer to inner tracks when striping.  With SSD
+seek starvation is irrelevant, so concat and striping are pretty much equal.
+
+>> The only real benefit of striped RAID over concat, for the majority of
+>> workloads, is $/GB.
+
+To be more clear, I was obviously referring to striped parity RAID here,
+not RAID10, which has the same cost as concat+mirror.
+
+-- 
+Stan
 
