@@ -1,56 +1,25 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Few questions about TRIM/discard
-Date: Sun, 19 Aug 2012 01:35:27 +0600
-Message-ID: <20120819013527.55c1a55f@natsu>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/BvbOeIlzDrvDp_d8lmxIyYO"; protocol="application/pgp-signature"
+From: Chris Murphy <lists@colorremedies.com>
+Subject: md raid behavior, bad sector uncorrectable read error
+Date: Sat, 18 Aug 2012 16:40:56 -0600
+Message-ID: <3E06D7FC-092A-4CB6-B79C-7EC94424DEEE@colorremedies.com>
+Mime-Version: 1.0 (Apple Message framework v1278)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/BvbOeIlzDrvDp_d8lmxIyYO
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+I'm not experiencing this at the moment, but I'm curious about what happens if it were to happen.
 
-Hello,
+A drive detects a sector error, but can't correct it, and returns an 0x40 error to the system.
 
-Setting up a new array and have a couple of questions, maybe someone can
-clarify. Thanks in advance.
+Presumably md raid (any RAID I would think) becomes aware of this error, as the chunk is incomplete without the sector. Next, does md raid rebuild the affected chunk from parity on-the-fly? Or is the entire drive dropped from the array and placed into degraded mode?
 
-- Does md in the 3.4.8 kernel support passing discard to SSDs in RAID1?
+If the affected chunk is rebuilt from parity (or copy in case of mirror), does md raid issue a write command to write the rebuilt chunk back to the disk at the same LBAs? If so, shouldn't this force the drive to determine if the sector error is transient or persistent, and if persistent the disk firmware will remap the bad sector to a reserve sector?
 
-- Will it still work if a RAID1 has not only SSD members, but also an HDD?
+Thanks,
 
-- How to verify that TRIM works properly (i.e. actually being issued)?
+Chris Murphy
 
-- Is TRIM usage generally recommended and not known to cause problems on an
-older generation SandForce controller (in a Corsair F60-A)? And on a newer
-SandForce (Adata S511)?
 
-Feel free to ignore some (or all) of these questions. :)
-
---=20
-With respect,
-Roman
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-"Stallman had a printer,
-with code he could not see.
-So he began to tinker,
-and set the software free."
-
---Sig_/BvbOeIlzDrvDp_d8lmxIyYO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlAv7n8ACgkQTLKSvz+PZwhX+wCfU5DMBGJNai3KaqulfccMUtOB
-o4YAniYCnwGEpppOUfPJ74tP1OIIS7Jn
-=Nd6y
------END PGP SIGNATURE-----
-
---Sig_/BvbOeIlzDrvDp_d8lmxIyYO--
