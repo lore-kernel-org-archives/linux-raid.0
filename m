@@ -1,94 +1,70 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: md: raid 10 supports TRIM
-Date: Sat, 18 Aug 2012 09:51:10 +1000
-Message-ID: <20120818095110.125b3d3a@notabene.brown>
-References: <20120816110237.GA4709@elgon.mountain>
-	<502DAEB3.6080302@fusionio.com>
-	<20120817040015.GA8644@kernel.org>
+Subject: [PULL REQUEST] md: 2 patches, both heading for -stable
+Date: Sat, 18 Aug 2012 10:03:16 +1000
+Message-ID: <20120818100316.79b269e2@notabene.brown>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/CVQw+F0F8jIngVanjcghY5a"; protocol="application/pgp-signature"
+ boundary="Sig_/W5HT/sQnJTs6yM=VdF_kTK0"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120817040015.GA8644@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, dan.carpenter@oracle.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>, Ivan Vasilyev <ivan.vasilyev@gmail.com>
 List-Id: linux-raid.ids
 
---Sig_/CVQw+F0F8jIngVanjcghY5a
+--Sig_/W5HT/sQnJTs6yM=VdF_kTK0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 17 Aug 2012 12:00:15 +0800 Shaohua Li <shli@kernel.org> wrote:
+The following changes since commit 0d7614f09c1ebdbaa1599a5aba7593f147bf96ee:
 
-> >=20
-> > This is a semi-automatic email about new static checker warnings.
-> >=20
-> > The patch d61b764704ca: "md: raid 10 supports TRIM" from Aug 15,
-> > 2012, leads to the following Smatch complaint:
-> >=20
-> > drivers/md/raid10.c:3510 run()
-> > 	 warn: variable dereferenced before check 'mddev->queue' (see line 350=
-8)
-> >=20
-> > drivers/md/raid10.c
-> >   3507=09
-> >   3508		blk_queue_max_discard_sectors(mddev->queue, mddev->chunk_sector=
-s);
-> >                                               ^^^^^^^^^^^^
-> > New dereference.
-> >=20
-> >   3509		chunk_size =3D mddev->chunk_sectors<<  9;
-> >   3510		if (mddev->queue) {
-> >                     ^^^^^^^^^^^^
-> > Old check.
-> >=20
-> >   3511			blk_queue_io_min(mddev->queue, chunk_size);
-> >   3512			if (conf->geo.raid_disks % conf->geo.near_copies)
->=20
-> Thanks! Neil, this is the updated patch. If you prefer a fix against orig=
-inal
-> patch, please let me know.=20
->=20
->=20
-> Subject: md: raid 10 supports TRIM
->=20
-> This makes md raid 10 support TRIM.
-> If one disk supports discard and another not, or one has discard_zero_dat=
-a and
-> another not, there could be inconsistent between data from such disks. Bu=
-t this
-> should not matter, discarded data is useless. This will add extra copy in=
- rebuild
-> though.
->=20
-> Signed-off-by: Shaohua Li <shli@fusionio.com>
+  Linux 3.6-rc1 (2012-08-02 16:38:10 -0700)
+
+are available in the git repository at:
+
+  git://neil.brown.name/md/ tags/md-3.6-fixes
+
+for you to fetch changes up to e0ee778528bbaad28a5c69d2e219269a3a096607:
+
+  md/raid10: fix problem with on-stack allocation of r10bio structure. (201=
+2-08-18 09:51:42 +1000)
+
+----------------------------------------------------------------
+2 fixes for md, tagged for -stable
+
+----------------------------------------------------------------
+NeilBrown (2):
+      md: Don't truncate size at 4TB for RAID0 and Linear
+      md/raid10: fix problem with on-stack allocation of r10bio structure.
+
+ drivers/md/md.c     |  9 ++++++---
+ drivers/md/raid10.c | 30 +++++++++++++++++++-----------
+ drivers/md/raid10.h |  2 +-
+ 3 files changed, 26 insertions(+), 15 deletions(-)
 
 
-Applied, thanks.
-
+Thanks,
 NeilBrown
 
---Sig_/CVQw+F0F8jIngVanjcghY5a
+--Sig_/W5HT/sQnJTs6yM=VdF_kTK0
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUC7Y7jnsnt1WYoG5AQIWFBAAlZb0n6tHmtDfw4mv6P/q+e8+AAYDg1hD
-1P8ajKeUGfJZchXtDvf+qjXnV38FIJGbjsbKTvqwUeiYfKFxuQNCVTgAw9Wr6KIm
-UsM+SmuYVgCoRw5svNbmRdBfe2yPXvucrwgREiC1Ry9XgKZx5JCJBhyHdoZBIp+2
-UnmMTKLvkhSQOdJqo1elL5Fw+fF96z24ciFZOA4MRU2ETWj2OSxnh3cbteIlZ52j
-5p59a5UQMf8tofkmkewdmxlHs4Wt6QsweQ38OqP0uNaOK6vKvv5AMVBKOHqC8Ns0
-gj+H3QD0PrVaR0FzweCi04Imdz6yCziIgk85OcLKBWUecKhKKcAx/BP+UhgIomsK
-B6p5W9uCxKqPfzK8nn1in03kwf4dqeK/0d5To5iSw+XghlB40C6PK5vldJY7Iy1H
-oxtiyBgNt69PbAbJVvfb7xBHsXpJX/mB5vp7YNQqqPtPxSGdIB1tmSLsBWAFyovO
-fROzCz4wfrWJPSExRSsfnpbNmWWI2MKp2x7RYRw8pInmLdZAa4W/GIlOBXuNNjuH
-eIVvxKMyqYjd7XQCswOtstcSmULJOfYkZ1BUmW6hafErWm5jsioi6wUOINgi9qgK
-Z9e5MsJ/7eWOcA7AtkOj/dUWcFK08JMvhpHmVKA8lI+RtIbTjjI9MFwAwW67ryC9
-6GK+m9m9NbA=
-=sQyr
+iQIVAwUBUC7bxDnsnt1WYoG5AQLQLw//RFeJdxBlu3qNHV6lBKYpIqIP12hGK2mU
+SCDgjKxSc1KYF1ueHrX/GiVtMf/yHi5k1jbJA5MUyORMUPNq1QA84CjmxgKPA6s5
+TRsSzqRLYw+9YJ18oi1Sx1DIiM3VNQJuwtHnbR6LZdkdsbQxesGrlNgqGHflGCX1
+d/UQp30wNUNhjgY7eY4rbm3LTEyO+OBenSeFr4WpptEuxl7eynY8qOqL8BjFJ3uy
+p8g/HM2nmDKKiQAD06NPxvCGvtbvTpqDhky2n4IAYBAekX8QZkwOFFDYnuWG4qk0
+OWBeak0bJL/t5bH1l/G26IzA02Koh3DNLvgw/Ah5zcYoatJldadzAkgYChhAcU4p
+j8HyHQNBb0cngx1lO5seA2S882YVE9lXe7yiK5UFR80kutW404aodNSlMkO0xC7W
+Po8I96z473ezKJGnc1b4V8GnyKN2Hkj7IgmDjQw3LidwtAFDk1q4CcOf/JF3liFj
+t57BPHzIhL8ZAgEEPG8YkWIwhu7mwRnHCr58bhr1DXMRe2OT4Z+vBh3dk98x3z2z
+3SkEYM5NlVac17oEVBjSaAyKamgkS2gJUrhn/1xcLNqZvoW4lG0vsjSl8M+ZjvaW
+mQnnLF4LS9feyUWqXaojUvMqaJObN+CeZDv81S7SauNFdFzgRQFSHJKcb8fAu890
+Kzrv2VgLhXc=
+=Q+4w
 -----END PGP SIGNATURE-----
 
---Sig_/CVQw+F0F8jIngVanjcghY5a--
+--Sig_/W5HT/sQnJTs6yM=VdF_kTK0--
