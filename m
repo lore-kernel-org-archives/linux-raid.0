@@ -1,22 +1,33 @@
-From: sonia <sonialife2@yahoo.com>
-Subject: hii
-Date: Sat, 18 Aug 2012 15:33:22 +0200 (CEST)
-Message-ID: <11103526.7711651345296802125.JavaMail.defaultUser__40149.1949371577$1345296847$gmane$org@defaultHost>
-Reply-To: sonia <sonialife2@yahoo.com>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Inexpensive RAID1 controller for home server?
+Date: Sat, 18 Aug 2012 12:18:23 -0700
+Message-ID: <CAK2H+eeLncyi6tCrM-vEhDzT7ykOA6LJP+Qka56rxUFGv2_urw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: sonialife2@yahoo.com
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello my dear
- How was your living life today i hope all is well, am Sonia by name i just
-went into your profile at this site  linux-archive.org  and saw how you have 
-pest
-your explanation over it i feel to know who your are so that we can shear one
-thing or the
-other from there i can send you my photo you can know who am ok . i am waiting
-for your reply yours Sonia
+Hi,
+   I wonder if there is direct knowledge here about this controller?
 
+http://www.amazon.com/HighPoint-Rocket-SATA-PCI-Express-Controller/dp/B002VEWBGO
+
+   I'm looking to add an inexpensive 2-port controller for a home
+server that's out of ports on the MB but has room in the chassis for a
+couple more drives running RAID1. The machine has been successfully
+running mdadm for the last couple of years and the power supply is
+plenty big enough to take on the new hardware.
+
+   According the the Highpoint site is has native Linux support so it
+doesn't appear there are any major driver availability issues. The one
+problem I've read about that concerns me is it may conflict with
+existing on-board Marvell eSATA controllers which this machine has.
+
+   If this is a bad type of controller for a sinple RAID1 addition
+please feel free to point me at an alternative. Amazon or NewEgg is
+preferred.
+
+Thanks,
+Mark
