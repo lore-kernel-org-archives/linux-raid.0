@@ -1,70 +1,56 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PULL REQUEST] md: 2 patches, both heading for -stable
-Date: Sat, 18 Aug 2012 10:03:16 +1000
-Message-ID: <20120818100316.79b269e2@notabene.brown>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
+Subject: raid5: When add stripe_head to inactive_list, it should remove hash.
+Date: Sat, 18 Aug 2012 10:53:36 +0800
+Message-ID: <201208181053324376710@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/W5HT/sQnJTs6yM=VdF_kTK0"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>, Ivan Vasilyev <ivan.vasilyev@gmail.com>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/W5HT/sQnJTs6yM=VdF_kTK0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+SWYgaXQgcmVsZWFzZWQgc3RyaXBlX2hlYWQgdG8gaW5hY3RpdmVfbGlzdCBhbmQgc29vbiBnZXQg
+aXQgZnJvbSBoYXNoDQpsaXN0LiBTbyB0aGUgc3RyaXBlX2hlYWQgZGlkbid0IGNhbGwgaW5pdF9z
+dHJpcGUsIHRoZSBkZXYuZmxhZ3MgaXNuJ3QNCmNsZWFyLiBTbyB0aGUgZGVidWcgaW5mbyBpcyBl
+cnJvciB3aGljaCBwcmludGVkIHRoZSBiZWZvcmUgaW5mby4NCkFsdGhvdWdoLCBpIGNhbid0IGZp
+bmQgbG9naWMgZXJyb3IgYmVjYXVzZSB0aGlzLkkgdGhpbmsgaXQgc2hvdWxkIGJlDQpjb3JyZWN0
+Lg0KDQpTaWduZWQtb2ZmLWJ5OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQot
+LS0NCiBkcml2ZXJzL21kL3JhaWQ1LmMgfCAgIDM1ICsrKysrKysrKysrKysrKysrKystLS0tLS0t
+LS0tLS0tLS0tDQogMSBmaWxlIGNoYW5nZWQsIDE5IGluc2VydGlvbnMoKyksIDE2IGRlbGV0aW9u
+cygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5jIGIvZHJpdmVycy9tZC9yYWlk
+NS5jDQppbmRleCBhZGRhOTRkLi4wM2QyZjY0IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9tZC9yYWlk
+NS5jDQorKysgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCkBAIC0xOTYsNiArMTk2LDI0IEBAIHN0YXRp
+YyBpbnQgc3RyaXBlX29wZXJhdGlvbnNfYWN0aXZlKHN0cnVjdCBzdHJpcGVfaGVhZCAqc2gpDQog
+CSAgICAgICB0ZXN0X2JpdChTVFJJUEVfQ09NUFVURV9SVU4sICZzaC0+c3RhdGUpOw0KIH0NCiAN
+CitzdGF0aWMgaW5saW5lIHZvaWQgcmVtb3ZlX2hhc2goc3RydWN0IHN0cmlwZV9oZWFkICpzaCkN
+Cit7DQorCXByX2RlYnVnKCJyZW1vdmVfaGFzaCgpLCBzdHJpcGUgJWxsdVxuIiwNCisJCSh1bnNp
+Z25lZCBsb25nIGxvbmcpc2gtPnNlY3Rvcik7DQorDQorCWhsaXN0X2RlbF9pbml0KCZzaC0+aGFz
+aCk7DQorfQ0KKw0KK3N0YXRpYyBpbmxpbmUgdm9pZCBpbnNlcnRfaGFzaChzdHJ1Y3QgcjVjb25m
+ICpjb25mLCBzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoKQ0KK3sNCisJc3RydWN0IGhsaXN0X2hlYWQg
+KmhwID0gc3RyaXBlX2hhc2goY29uZiwgc2gtPnNlY3Rvcik7DQorDQorCXByX2RlYnVnKCJpbnNl
+cnRfaGFzaCgpLCBzdHJpcGUgJWxsdVxuIiwNCisJCSh1bnNpZ25lZCBsb25nIGxvbmcpc2gtPnNl
+Y3Rvcik7DQorDQorCWhsaXN0X2FkZF9oZWFkKCZzaC0+aGFzaCwgaHApOw0KK30NCisNCiBzdGF0
+aWMgdm9pZCBkb19yZWxlYXNlX3N0cmlwZShzdHJ1Y3QgcjVjb25mICpjb25mLCBzdHJ1Y3Qgc3Ry
+aXBlX2hlYWQgKnNoKQ0KIHsNCiAJQlVHX09OKCFsaXN0X2VtcHR5KCZzaC0+bHJ1KSk7DQpAQCAt
+MjIyLDYgKzI0MCw3IEBAIHN0YXRpYyB2b2lkIGRvX3JlbGVhc2Vfc3RyaXBlKHN0cnVjdCByNWNv
+bmYgKmNvbmYsIHN0cnVjdCBzdHJpcGVfaGVhZCAqc2gpDQogCQlhdG9taWNfZGVjKCZjb25mLT5h
+Y3RpdmVfc3RyaXBlcyk7DQogCQlpZiAoIXRlc3RfYml0KFNUUklQRV9FWFBBTkRJTkcsICZzaC0+
+c3RhdGUpKSB7DQogCQkJbGlzdF9hZGRfdGFpbCgmc2gtPmxydSwgJmNvbmYtPmluYWN0aXZlX2xp
+c3QpOw0KKwkJCXJlbW92ZV9oYXNoKHNoKTsNCiAJCQl3YWtlX3VwKCZjb25mLT53YWl0X2Zvcl9z
+dHJpcGUpOw0KIAkJCWlmIChjb25mLT5yZXRyeV9yZWFkX2FsaWduZWQpDQogCQkJCW1kX3dha2V1
+cF90aHJlYWQoY29uZi0+bWRkZXYtPnRocmVhZCk7DQpAQCAtMjQ4LDIzICsyNjcsNyBAQCBzdGF0
+aWMgdm9pZCByZWxlYXNlX3N0cmlwZShzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoKQ0KIAlsb2NhbF9p
+cnFfcmVzdG9yZShmbGFncyk7DQogfQ0KIA0KLXN0YXRpYyBpbmxpbmUgdm9pZCByZW1vdmVfaGFz
+aChzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoKQ0KLXsNCi0JcHJfZGVidWcoInJlbW92ZV9oYXNoKCks
+IHN0cmlwZSAlbGx1XG4iLA0KLQkJKHVuc2lnbmVkIGxvbmcgbG9uZylzaC0+c2VjdG9yKTsNCiAN
+Ci0JaGxpc3RfZGVsX2luaXQoJnNoLT5oYXNoKTsNCi19DQotDQotc3RhdGljIGlubGluZSB2b2lk
+IGluc2VydF9oYXNoKHN0cnVjdCByNWNvbmYgKmNvbmYsIHN0cnVjdCBzdHJpcGVfaGVhZCAqc2gp
+DQotew0KLQlzdHJ1Y3QgaGxpc3RfaGVhZCAqaHAgPSBzdHJpcGVfaGFzaChjb25mLCBzaC0+c2Vj
+dG9yKTsNCi0NCi0JcHJfZGVidWcoImluc2VydF9oYXNoKCksIHN0cmlwZSAlbGx1XG4iLA0KLQkJ
+KHVuc2lnbmVkIGxvbmcgbG9uZylzaC0+c2VjdG9yKTsNCi0NCi0JaGxpc3RfYWRkX2hlYWQoJnNo
+LT5oYXNoLCBocCk7DQotfQ0KIA0KIA0KIC8qIGZpbmQgYW4gaWRsZSBzdHJpcGUsIG1ha2Ugc3Vy
+ZSBpdCBpcyB1bmhhc2hlZCwgYW5kIHJldHVybiBpdC4gKi8NCi0tIA0KMS43LjkuNQ0KAg==
 
-The following changes since commit 0d7614f09c1ebdbaa1599a5aba7593f147bf96ee:
-
-  Linux 3.6-rc1 (2012-08-02 16:38:10 -0700)
-
-are available in the git repository at:
-
-  git://neil.brown.name/md/ tags/md-3.6-fixes
-
-for you to fetch changes up to e0ee778528bbaad28a5c69d2e219269a3a096607:
-
-  md/raid10: fix problem with on-stack allocation of r10bio structure. (201=
-2-08-18 09:51:42 +1000)
-
-----------------------------------------------------------------
-2 fixes for md, tagged for -stable
-
-----------------------------------------------------------------
-NeilBrown (2):
-      md: Don't truncate size at 4TB for RAID0 and Linear
-      md/raid10: fix problem with on-stack allocation of r10bio structure.
-
- drivers/md/md.c     |  9 ++++++---
- drivers/md/raid10.c | 30 +++++++++++++++++++-----------
- drivers/md/raid10.h |  2 +-
- 3 files changed, 26 insertions(+), 15 deletions(-)
-
-
-Thanks,
-NeilBrown
-
---Sig_/W5HT/sQnJTs6yM=VdF_kTK0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUC7bxDnsnt1WYoG5AQLQLw//RFeJdxBlu3qNHV6lBKYpIqIP12hGK2mU
-SCDgjKxSc1KYF1ueHrX/GiVtMf/yHi5k1jbJA5MUyORMUPNq1QA84CjmxgKPA6s5
-TRsSzqRLYw+9YJ18oi1Sx1DIiM3VNQJuwtHnbR6LZdkdsbQxesGrlNgqGHflGCX1
-d/UQp30wNUNhjgY7eY4rbm3LTEyO+OBenSeFr4WpptEuxl7eynY8qOqL8BjFJ3uy
-p8g/HM2nmDKKiQAD06NPxvCGvtbvTpqDhky2n4IAYBAekX8QZkwOFFDYnuWG4qk0
-OWBeak0bJL/t5bH1l/G26IzA02Koh3DNLvgw/Ah5zcYoatJldadzAkgYChhAcU4p
-j8HyHQNBb0cngx1lO5seA2S882YVE9lXe7yiK5UFR80kutW404aodNSlMkO0xC7W
-Po8I96z473ezKJGnc1b4V8GnyKN2Hkj7IgmDjQw3LidwtAFDk1q4CcOf/JF3liFj
-t57BPHzIhL8ZAgEEPG8YkWIwhu7mwRnHCr58bhr1DXMRe2OT4Z+vBh3dk98x3z2z
-3SkEYM5NlVac17oEVBjSaAyKamgkS2gJUrhn/1xcLNqZvoW4lG0vsjSl8M+ZjvaW
-mQnnLF4LS9feyUWqXaojUvMqaJObN+CeZDv81S7SauNFdFzgRQFSHJKcb8fAu890
-Kzrv2VgLhXc=
-=Q+4w
------END PGP SIGNATURE-----
-
---Sig_/W5HT/sQnJTs6yM=VdF_kTK0--
