@@ -1,85 +1,122 @@
-From: Kyle Brantley <kyle@averageurl.com>
-Subject: Issue with md and 4K sector alignment
-Date: Sun, 19 Aug 2012 15:06:51 -0600
-Message-ID: <5031556B.5050706@averageurl.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Inexpensive RAID1 controller for home server?
+Date: Sun, 19 Aug 2012 16:48:41 -0500
+Message-ID: <50315F39.2030404@hardwarefreak.com>
+References: <CAK2H+eeLncyi6tCrM-vEhDzT7ykOA6LJP+Qka56rxUFGv2_urw@mail.gmail.com> <50306707.40302@hardwarefreak.com> <20120819153443.7f697ca6@natsu>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120819153443.7f697ca6@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.ru>
+Cc: Mark Knecht <markknecht@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I've got a set of 9x3TB drives that I'm trying to place in RAID6. These 
-have the 512B/4096B logical/physical compatibility emulation:
+On 8/19/2012 4:34 AM, Roman Mamedov wrote:
+> On Sat, 18 Aug 2012 23:09:43 -0500
+> Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> 
+>> On 8/18/2012 2:18 PM, Mark Knecht wrote:
+>>> Hi,
+>>>    I wonder if there is direct knowledge here about this controller?
+>>>
+>>> http://www.amazon.com/HighPoint-Rocket-SATA-PCI-Express-Controller/dp/B002VEWBGO
+>>>
+>>>    I'm looking to add an inexpensive 2-port controller for a home
+>>> server that's out of ports on the MB but has room in the chassis for a
+>>> couple more drives running RAID1. The machine has been successfully
+>>> running mdadm for the last couple of years and the power supply is
+>>> plenty big enough to take on the new hardware.
+>>>
+>>>    According the the Highpoint site is has native Linux support so it
+>>> doesn't appear there are any major driver availability issues. The one
+>>> problem I've read about that concerns me is it may conflict with
+>>> existing on-board Marvell eSATA controllers which this machine has.
+>>
+>> Given the potential Marvell conflict issue, go with Silicon Image:
+>>
+>> http://www.newegg.com/Product/Product.aspx?Item=N82E16815124027
+>>
+>> All Silicon Image chips are supported in mainline, have been forever.
+>>
+> 
+> Now, maybe I am missing something and Mark Knecht is your worst enemy --
+> because I see no other explanation why give him such a terrible advice.
 
-Model: ATA ST3000DM001-1CH1 (scsi)
-Disk /dev/sda: 3001GB
-Sector size (logical/physical): 512B/4096B
+/me rolls eyes..
 
-This is being run on CentOS6:
+> Silicon Image chips are well known for having caused data corruption to many
+> people including in discussions on this list, usually this triggers when both
+> ports on the card are accessed at high speed in parallel.
 
-mdadm - v3.2.3 - 23rd December 2011
-Linux vmbox 2.6.32-279.5.1.el6.x86_64 #1 SMP Tue Aug 14 23:54:45 UTC 
-2012 x86_64 x86_64 x86_64 GNU/Linux
+Yeah, you're right.  All Silicon Image ASICs suck.  That must be the
+reason they ship over 10x as many chips into the market as Marvell and
+the others.  This must also be why BackBlaze chose SiI, twice, over
+Marvell, Jmicron, etc, for their 1st and 2nd generation pods.
 
+http://blog.backblaze.com/2011/07/20/petabytes-on-a-budget-v2-0revealing-more-secrets/
 
-In general, I'm having a hard time telling the md subsystem to align to 
-4K sectors. This is evident in a few ways:
+They use 3x Syba SiI3124 4 port PCIe x1 cards per system, 3 ports per
+card, with 9x SiI3726 PMPs.  They run hundreds of these pods, thousands
+of SiI SATA ASICs and 3x as many SiI PMPs.  No problems reported that
+I've found.  If data corruption was a pervasive issue with SiI SATA
+ASICs, based simply on numbers, BackBlaze would have run into this
+problem.  As they haven't, I'd say that in the cases of data corruption
+you mention, the root cause didn't lay in the SiI ASICs themselves, but
+either in the cards (whose QC/QA can vary widely from vendor to vendor
+and batch to batch), or in a compatibility issue in the individual
+hosts, either hardware or software.  There is no design flaw in the SiI
+chips that causes data corruption.  Please don't repeat such BS.
 
-* resync speed / time
+That said, I personally don't use cheap SATA controllers, and normally
+don't recommend them, no matter the ASIC used.  But the OP obviously
+isn't in the market for a $150-$200 LSI HBA, which is what I'd normally
+recommend.
 
-Default 512k chunk:
-       20511855616 blocks super 1.2 level 6, 512k chunk, algorithm 2 
-[9/9] [UUUUUUUUU]
-       [>....................]  resync =  0.0% (187904/2930265088) 
-finish=1559.2min speed=31317K/sec
+> There is also a performance-related reason to avoid Silicon Image (if
+> having them corrupt data isn't enough for someone):
+> 
+>   "Warning: the overall bottleneck of the PCIe link is 150-175MB/s, or
+>   75-88MB/s/port, but the chip has a 110-120MB/s bottleneck per port. So a
+>   single SATA device on a single port cannot fully use the 150-175MB/s by
+>   itself, it will be bottlenecked at 110-120MB/s."
+>  
+>    -- http://blog.zorinaq.com/?e=10
 
-4k chunk size (no functional change):
-       20511857968 blocks super 1.2 level 6, 4k chunk, algorithm 2 [9/9] 
-[UUUUUUUUU]
-       [>....................]  resync =  0.0% (475820/2930265424) 
-finish=1436.6min speed=33987K/sec
+This is a non issue for the vast majority of users with rust, as most
+drives can't stream more than 110-120 anyway.
 
+> Now, what to choose instead:
+> 
+> I highly doubt having two Marvell controllers in a system would lead to a
+> conflict; and as the article linked above concludes, a Marvell 88SE912x would
+> be an excellent choice, as it "supports PCIe gen2 [...] is also fully AHCI
+> compliant, in other words robust, well-designed, and virtually compatible with
+> all operating systems".
+> 
+> But if Mark believes there could be a conflict, and wants a non-Marvell
+> recommendation, I'd say take a look at a JMicron, which is also the second
+> recommendation in that article.
+> http://www.newegg.com/Product/Product.aspx?Item=N82E16816124047
 
-I rebuilt the array  with --assume-clean and default chunk size, and 
-then ran some simple tests with dd.
+Yes, I always base my purchasing decisions on the opinions found in a
+single blog, and unsupported conclusions that the data loss of a few
+people was caused by a claimed and unconfirmed flaw in an ASIC, an ASIC
+which has shipped in the tens of millions of units.  If the problem were
+the ASIC, there would be thousands of such reports, and the ASIC would
+be respun to fix the problems, or a new BIOS, and the issue would be
+documented by the manufacturer.
 
-* Read test, not 4K aligned:
-[root@vmbox ~]# dd if=/dev/md127 of=/dev/zero
-12228837376 bytes (12 GB) copied, 30.568 s, 400 MB/s
-24344251904 bytes (24 GB) copied, 60.9207 s, 400 MB/s
+Roman has a beef with SiI.  It's unfounded and unsubstantiated, but he
+has one nonetheless.  He also apparently has a beef with me for
+constantly correcting him on these issues.
 
-* Read test, manually 4K aligned:
-[root@vmbox ~]# dd if=/dev/md127 of=/dev/zero bs=4096
-18783485952 bytes (19 GB) copied, 30.7766 s, 610 MB/s
-37306327040 bytes (37 GB) copied, 61.1433 s, 610 MB/s
+Believe who you wish.  I simply recommend you do your homework and
+independently verify everyone's claims.  Or, you can simply buy any ~$20
+HBA, and if it doesn't work, return it and get a different one.
 
-* Write test, not 4K aligned:
-[root@vmbox ~]# dd if=/dev/zero of=/dev/md127
-774734336 bytes (775 MB) copied, 31.1458 s, 24.9 MB/s
-1438485504 bytes (1.4 GB) copied, 61.5351 s, 23.4 MB/s
+-- 
+Stan
 
-* Write test, manually 4K aligned, and ran over a much longer period of 
-time to ensure that the buffers don't get in the way:
-30602686464 bytes (31 GB) copied, 121.036 s, 253 MB/s
-63765032960 bytes (64 GB) copied, 301.284 s, 212 MB/s
-
-Or, in other words, I'm seeing a 200MB/sec (+1.5x) read boost if I 
-manually align the I/O, and a 200MB/sec (+10x) write boost if manually 
-aligned. Note how the non-aligned dd run more or less matches the resync 
-speeds listed above.
-
-I understand that I may need to work on the higher layers (LVM, 
-partitioning -- and if there is any insight here, it would be 
-appreciated!) with respect to the alignment, but my concern is the 
-resync times. I've tried building the array off of both the raw disks 
-and 4K aligned partitions placed on the disks -- the resync performance 
-is identical, and poor.
-
-How exactly should I construct this array to fix the resync time / align 
-the I/O? I've searched everywhere that I can find but have yet to find a 
-solution.
-
-Thanks for any insight!
---Kyle
