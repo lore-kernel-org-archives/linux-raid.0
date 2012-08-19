@@ -1,122 +1,99 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: Inexpensive RAID1 controller for home server?
-Date: Sun, 19 Aug 2012 16:48:41 -0500
-Message-ID: <50315F39.2030404@hardwarefreak.com>
-References: <CAK2H+eeLncyi6tCrM-vEhDzT7ykOA6LJP+Qka56rxUFGv2_urw@mail.gmail.com> <50306707.40302@hardwarefreak.com> <20120819153443.7f697ca6@natsu>
-Reply-To: stan@hardwarefreak.com
+Date: Mon, 20 Aug 2012 04:06:40 +0600
+Message-ID: <20120820040640.5b4f77ac@natsu>
+References: <CAK2H+eeLncyi6tCrM-vEhDzT7ykOA6LJP+Qka56rxUFGv2_urw@mail.gmail.com>
+	<50306707.40302@hardwarefreak.com>
+	<20120819153443.7f697ca6@natsu>
+	<50315F39.2030404@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/m42/BdWpBYh49xFz/i4I9C+"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120819153443.7f697ca6@natsu>
+In-Reply-To: <50315F39.2030404@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
+To: stan@hardwarefreak.com
 Cc: Mark Knecht <markknecht@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 8/19/2012 4:34 AM, Roman Mamedov wrote:
-> On Sat, 18 Aug 2012 23:09:43 -0500
-> Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> 
->> On 8/18/2012 2:18 PM, Mark Knecht wrote:
->>> Hi,
->>>    I wonder if there is direct knowledge here about this controller?
->>>
->>> http://www.amazon.com/HighPoint-Rocket-SATA-PCI-Express-Controller/dp/B002VEWBGO
->>>
->>>    I'm looking to add an inexpensive 2-port controller for a home
->>> server that's out of ports on the MB but has room in the chassis for a
->>> couple more drives running RAID1. The machine has been successfully
->>> running mdadm for the last couple of years and the power supply is
->>> plenty big enough to take on the new hardware.
->>>
->>>    According the the Highpoint site is has native Linux support so it
->>> doesn't appear there are any major driver availability issues. The one
->>> problem I've read about that concerns me is it may conflict with
->>> existing on-board Marvell eSATA controllers which this machine has.
->>
->> Given the potential Marvell conflict issue, go with Silicon Image:
->>
->> http://www.newegg.com/Product/Product.aspx?Item=N82E16815124027
->>
->> All Silicon Image chips are supported in mainline, have been forever.
->>
-> 
-> Now, maybe I am missing something and Mark Knecht is your worst enemy --
-> because I see no other explanation why give him such a terrible advice.
+--Sig_/m42/BdWpBYh49xFz/i4I9C+
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-/me rolls eyes..
+On Sun, 19 Aug 2012 16:48:41 -0500
+Stan Hoeppner <stan@hardwarefreak.com> wrote:
 
-> Silicon Image chips are well known for having caused data corruption to many
-> people including in discussions on this list, usually this triggers when both
-> ports on the card are accessed at high speed in parallel.
+> Yeah, you're right.  All Silicon Image ASICs suck.
 
-Yeah, you're right.  All Silicon Image ASICs suck.  That must be the
-reason they ship over 10x as many chips into the market as Marvell and
-the others.  This must also be why BackBlaze chose SiI, twice, over
-Marvell, Jmicron, etc, for their 1st and 2nd generation pods.
+"The only generic advice I can give you at this point) is to avoid
+Silicon Image controllers, particularly their SATA controllers.  They
+have a history of causing data corruption on Linux, FreeBSD, and
+Windows, and some have reported other miscellaneous problems with them
+as well."
+http://lists.freebsd.org/pipermail/freebsd-questions/2008-October/185065.ht=
+ml
 
-http://blog.backblaze.com/2011/07/20/petabytes-on-a-budget-v2-0revealing-more-secrets/
+> Roman has a beef with SiI.  It's unfounded and unsubstantiated
 
-They use 3x Syba SiI3124 4 port PCIe x1 cards per system, 3 ports per
-card, with 9x SiI3726 PMPs.  They run hundreds of these pods, thousands
-of SiI SATA ASICs and 3x as many SiI PMPs.  No problems reported that
-I've found.  If data corruption was a pervasive issue with SiI SATA
-ASICs, based simply on numbers, BackBlaze would have run into this
-problem.  As they haven't, I'd say that in the cases of data corruption
-you mention, the root cause didn't lay in the SiI ASICs themselves, but
-either in the cards (whose QC/QA can vary widely from vendor to vendor
-and batch to batch), or in a compatibility issue in the individual
-hosts, either hardware or software.  There is no design flaw in the SiI
-chips that causes data corruption.  Please don't repeat such BS.
+"I've had problems with XFS and EXT4 over the md device driver that turned =
+out
+to be a bug in the Silicon Image 3132 chipset.  It quietly corrupts data."
+-- https://bbs.archlinux.org/viewtopic.php?id=3D115128
 
-That said, I personally don't use cheap SATA controllers, and normally
-don't recommend them, no matter the ASIC used.  But the OP obviously
-isn't in the market for a $150-$200 LSI HBA, which is what I'd normally
-recommend.
+"...Sil3132 2-port SATA-card which couldn't handle heavy load on both ports.
+Single port was fine, so preclear did not reveal any problems. I have one
+working and one non-working coming from the same supplier and looking almost
+exactly the same so it would be impossible to know before hand which card
+make/model might cause problems. In this case random read errors were produ=
+ced
+for the two attached disks."
+-- http://lime-technology.com/forum/index.php?topic=3D21052.0
 
-> There is also a performance-related reason to avoid Silicon Image (if
-> having them corrupt data isn't enough for someone):
-> 
->   "Warning: the overall bottleneck of the PCIe link is 150-175MB/s, or
->   75-88MB/s/port, but the chip has a 110-120MB/s bottleneck per port. So a
->   single SATA device on a single port cannot fully use the 150-175MB/s by
->   itself, it will be bottlenecked at 110-120MB/s."
->  
->    -- http://blog.zorinaq.com/?e=10
+"This might be the Sil3132 itself that's creating the problem. It's somewhat
+notorious for corrupting data under high IO pressure. It's trivially easy to
+trigger if you're using both ports at the same time, but I've seen similar
+data corruption with just one port under active use."
+-- http://arstechnica.com/civis/viewtopic.php?f=3D11&t=3D37779&start=3D1880
 
-This is a non issue for the vast majority of users with rust, as most
-drives can't stream more than 110-120 anyway.
+"There are confirmed problems within certain models of their SATA controlle=
+rs
+which cause silent data corruption and other issues, affecting Linux, FreeB=
+SD,
+and Windows. ... I'm not even willing to trust later revisions like the 312=
+4;
+not catching data corruption during QA/testing is simply unacceptable
+regardless of what "class" of product it is.  I would be very surprised to
+hear someone advocate use of Silicon Image controllers after reading the
+above."
+-- http://comments.gmane.org/gmane.os.freebsd.devel.hardware/6624
 
-> Now, what to choose instead:
-> 
-> I highly doubt having two Marvell controllers in a system would lead to a
-> conflict; and as the article linked above concludes, a Marvell 88SE912x would
-> be an excellent choice, as it "supports PCIe gen2 [...] is also fully AHCI
-> compliant, in other words robust, well-designed, and virtually compatible with
-> all operating systems".
-> 
-> But if Mark believes there could be a conflict, and wants a non-Marvell
-> recommendation, I'd say take a look at a JMicron, which is also the second
-> recommendation in that article.
-> http://www.newegg.com/Product/Product.aspx?Item=N82E16816124047
+Etc, etc, etc. And here on this list:
+http://comments.gmane.org/gmane.linux.raid/30629
 
-Yes, I always base my purchasing decisions on the opinions found in a
-single blog, and unsupported conclusions that the data loss of a few
-people was caused by a claimed and unconfirmed flaw in an ASIC, an ASIC
-which has shipped in the tens of millions of units.  If the problem were
-the ASIC, there would be thousands of such reports, and the ASIC would
-be respun to fix the problems, or a new BIOS, and the issue would be
-documented by the manufacturer.
+> Believe who you wish.
 
-Roman has a beef with SiI.  It's unfounded and unsubstantiated, but he
-has one nonetheless.  He also apparently has a beef with me for
-constantly correcting him on these issues.
+Can fully agree with this. :)
 
-Believe who you wish.  I simply recommend you do your homework and
-independently verify everyone's claims.  Or, you can simply buy any ~$20
-HBA, and if it doesn't work, return it and get a different one.
+--=20
+With respect,
+Roman
 
--- 
-Stan
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"Stallman had a printer,
+with code he could not see.
+So he began to tinker,
+and set the software free."
 
+--Sig_/m42/BdWpBYh49xFz/i4I9C+
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlAxY3AACgkQTLKSvz+PZwhEoACgjux9K9r5R918ZdlFZfs1cGlt
+rHIAoJI1AaYKyq9KYZEKQr+dKZ91mH4U
+=u5lq
+-----END PGP SIGNATURE-----
+
+--Sig_/m42/BdWpBYh49xFz/i4I9C+--
