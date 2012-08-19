@@ -1,99 +1,64 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: Inexpensive RAID1 controller for home server?
-Date: Mon, 20 Aug 2012 04:06:40 +0600
-Message-ID: <20120820040640.5b4f77ac@natsu>
-References: <CAK2H+eeLncyi6tCrM-vEhDzT7ykOA6LJP+Qka56rxUFGv2_urw@mail.gmail.com>
-	<50306707.40302@hardwarefreak.com>
-	<20120819153443.7f697ca6@natsu>
-	<50315F39.2030404@hardwarefreak.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: md raid behavior, bad sector uncorrectable read error
+Date: Mon, 20 Aug 2012 08:19:35 +1000
+Message-ID: <20120820081935.24289755@notabene.brown>
+References: <3E06D7FC-092A-4CB6-B79C-7EC94424DEEE@colorremedies.com>
+	<CAGkViCFBqJJWeaA1Wrpc_BBw=wd1wV3nVrArEB51LJpJsrmsug@mail.gmail.com>
+	<FEEB11B4-5CCB-49F4-8010-80CE03A49FA4@colorremedies.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/m42/BdWpBYh49xFz/i4I9C+"; protocol="application/pgp-signature"
+ boundary="Sig_/H9ABiM37aCe0_Mw+7FrDYwZ"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50315F39.2030404@hardwarefreak.com>
+In-Reply-To: <FEEB11B4-5CCB-49F4-8010-80CE03A49FA4@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: Mark Knecht <markknecht@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/m42/BdWpBYh49xFz/i4I9C+
+--Sig_/H9ABiM37aCe0_Mw+7FrDYwZ
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 19 Aug 2012 16:48:41 -0500
-Stan Hoeppner <stan@hardwarefreak.com> wrote:
+On Sun, 19 Aug 2012 12:12:38 -0600 Chris Murphy <lists@colorremedies.com>
+wrote:
 
-> Yeah, you're right.  All Silicon Image ASICs suck.
+> On Aug 19, 2012, at 3:47 AM, Mikael Abrahamsson wrote:
+> > If I remember correctly from what has been described here before, a rea=
+d error will cause a re-write with information created from parity
+>=20
+> That's the thing I'd like to get a definitive answer one. If only it were=
+ easy to simulate bad sectors in VM's I could just test it!
 
-"The only generic advice I can give you at this point) is to avoid
-Silicon Image controllers, particularly their SATA controllers.  They
-have a history of causing data corruption on Linux, FreeBSD, and
-Windows, and some have reported other miscellaneous problems with them
-as well."
-http://lists.freebsd.org/pipermail/freebsd-questions/2008-October/185065.ht=
-ml
+If only it were easy to read the documentation, and if only the documentati=
+on
+were sufficiently complete.....
 
-> Roman has a beef with SiI.  It's unfounded and unsubstantiated
+% man 4 md
 
-"I've had problems with XFS and EXT4 over the md device driver that turned =
-out
-to be a bug in the Silicon Image 3132 chipset.  It quietly corrupts data."
--- https://bbs.archlinux.org/viewtopic.php?id=3D115128
+search for 'read error'
 
-"...Sil3132 2-port SATA-card which couldn't handle heavy load on both ports.
-Single port was fine, so preclear did not reveal any problems. I have one
-working and one non-working coming from the same supplier and looking almost
-exactly the same so it would be impossible to know before hand which card
-make/model might cause problems. In this case random read errors were produ=
-ced
-for the two attached disks."
--- http://lime-technology.com/forum/index.php?topic=3D21052.0
+NeilBrown
 
-"This might be the Sil3132 itself that's creating the problem. It's somewhat
-notorious for corrupting data under high IO pressure. It's trivially easy to
-trigger if you're using both ports at the same time, but I've seen similar
-data corruption with just one port under active use."
--- http://arstechnica.com/civis/viewtopic.php?f=3D11&t=3D37779&start=3D1880
-
-"There are confirmed problems within certain models of their SATA controlle=
-rs
-which cause silent data corruption and other issues, affecting Linux, FreeB=
-SD,
-and Windows. ... I'm not even willing to trust later revisions like the 312=
-4;
-not catching data corruption during QA/testing is simply unacceptable
-regardless of what "class" of product it is.  I would be very surprised to
-hear someone advocate use of Silicon Image controllers after reading the
-above."
--- http://comments.gmane.org/gmane.os.freebsd.devel.hardware/6624
-
-Etc, etc, etc. And here on this list:
-http://comments.gmane.org/gmane.linux.raid/30629
-
-> Believe who you wish.
-
-Can fully agree with this. :)
-
---=20
-With respect,
-Roman
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-"Stallman had a printer,
-with code he could not see.
-So he began to tinker,
-and set the software free."
-
---Sig_/m42/BdWpBYh49xFz/i4I9C+
+--Sig_/H9ABiM37aCe0_Mw+7FrDYwZ
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-iEYEARECAAYFAlAxY3AACgkQTLKSvz+PZwhEoACgjux9K9r5R918ZdlFZfs1cGlt
-rHIAoJI1AaYKyq9KYZEKQr+dKZ91mH4U
-=u5lq
+iQIVAwUBUDFmfTnsnt1WYoG5AQLYwA//dN398CCKUYpH3zCPxcKqqKFn81Ic8xIG
+vUvUDIPGMXXW0Q67Tan3u8B5zDgwUqeUb8FVyWsqILseO10b7Hpho3nPUcSI1O+Q
+S6xa84Xg8Zco6NPjaFpvQuOqAYWBbJS4zCh/NvlN3wRnZB/yPUezqi2BmMXdld/d
+zN/YC9UBJggdUuBP+jVXWjzuw5itogLvHrSD9pTZIr8lHYZ8uyYiyrEaC7LNbv/O
+3OHoSiLM/aXrv0HCnkVTb0Ql44crH3uzHRONm7ds8eZA81t28oDl3Q0eJnFa6F7j
+SAGEUyTFgtJh1VdD12WIJgtPwtQytlZmhUkOYScszG1OjEJDRXc9SV0s9EJo01ZX
+woNE8S3v+KzcBb+LVQZ2jVrHl5ZyFMh0+w33VA18eScF9XdNra08lu7KYJhxBTGy
+QMxxDAE9cDjx0aytiEQPWEdKuaCmuxWmQGwrs0XxKRbHTPrglAhJTNfQ4p9ZcQzX
+pTMbenk7p/14BfnVRZIvLDd+1gEBHkW8BiEFT8TdYspwY8XTgc8adlM4J5G27aHM
+F7kBcVeIcOcH1+rqSnhGc6B0kRKg+uPDujarqnaPdwQXDs7rcWcFOHymoS5BjHW3
+8oSdWTK4FH6suAGHGoytA0CgRjbk21MPybv6U9NSkIwOkRQ9iloroz0rAETsIUnO
+jmw1FcH4lXA=
+=lUb9
 -----END PGP SIGNATURE-----
 
---Sig_/m42/BdWpBYh49xFz/i4I9C+--
+--Sig_/H9ABiM37aCe0_Mw+7FrDYwZ--
