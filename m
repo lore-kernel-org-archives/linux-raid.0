@@ -1,64 +1,52 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: md raid behavior, bad sector uncorrectable read error
-Date: Mon, 20 Aug 2012 08:19:35 +1000
-Message-ID: <20120820081935.24289755@notabene.brown>
-References: <3E06D7FC-092A-4CB6-B79C-7EC94424DEEE@colorremedies.com>
-	<CAGkViCFBqJJWeaA1Wrpc_BBw=wd1wV3nVrArEB51LJpJsrmsug@mail.gmail.com>
-	<FEEB11B4-5CCB-49F4-8010-80CE03A49FA4@colorremedies.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: O_DIRECT to md raid 6 is slow
+Date: Sun, 19 Aug 2012 18:34:28 -0500
+Message-ID: <50317804.9010701@hardwarefreak.com>
+References: <CALCETrWCu=UPATPdqWP=Gpvswv-RDwaxfr1W1jxYtUMZsqKgSQ@mail.gmail.com> <502B8D1F.7030706@anonymous.org.uk> <CALCETrX=mi92qwOAjt_7Qu-ho_Hdg_5SHX-_8nXYRer4JnzD0w@mail.gmail.com> <201208152307.q7FN7hMR008630@xs8.xs4all.nl> <502CD3F8.70001@hardwarefreak.com> <502D6B0A.6090508@xs4all.net> <502DF357.8090205@hardwarefreak.com> <502E2817.8040306@xs4all.net> <502F237D.6060806@hardwarefreak.com> <502F698C.9010507@msgid.tls.msk.ru> <50305AB9.5080302@hardwarefreak.com> <5030F1C6.90205@hesbynett.no>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/H9ABiM37aCe0_Mw+7FrDYwZ"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <FEEB11B4-5CCB-49F4-8010-80CE03A49FA4@colorremedies.com>
+In-Reply-To: <5030F1C6.90205@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: David Brown <david.brown@hesbynett.no>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, Miquel van Smoorenburg <mikevs@xs4all.net>, Linux RAID <linux-raid@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/H9ABiM37aCe0_Mw+7FrDYwZ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 8/19/2012 9:01 AM, David Brown wrote:
+> I'm sort of jumping in to this thread, so my apologies if I repeat
+> things other people have said already.
 
-On Sun, 19 Aug 2012 12:12:38 -0600 Chris Murphy <lists@colorremedies.com>
-wrote:
+I'm glad you jumped in David.  You made a critical statement of fact
+below which clears some things up.  If you had stated it early on,
+before Miquel stole the thread and moved it to LKML proper, it would
+have short circuited a lot of this discussion.  Which is:
 
-> On Aug 19, 2012, at 3:47 AM, Mikael Abrahamsson wrote:
-> > If I remember correctly from what has been described here before, a rea=
-d error will cause a re-write with information created from parity
->=20
-> That's the thing I'd like to get a definitive answer one. If only it were=
- easy to simulate bad sectors in VM's I could just test it!
+> AFAIK, there is scope for a few performance optimisations in raid6.  One
+> is that for small writes which only need to change one block, raid5 uses
+> a "short-cut" RMW cycle (read the old data block, read the old parity
+> block, calculate the new parity block, write the new data and parity
+> blocks).  A similar short-cut could be implemented in raid6, though it
+> is not clear how much a difference it would really make.
 
-If only it were easy to read the documentation, and if only the documentati=
-on
-were sufficiently complete.....
+Thus my original statement was correct, or at least half correct[1], as
+it pertained to md/RAID6.  Then Miquel switched the discussion to
+md/RAID5 and stated I was all wet.  I wasn't, and neither was Dave
+Chinner.  I was simply unaware of this md/RAID5 single block write RMW
+shortcut.  I'm copying lkml proper on this simply to set the record
+straight.  Not that anyone was paying attention, but it needs to be in
+the same thread in the archives.  The takeaway:
 
-% man 4 md
+md/RAID6 must read all devices in a RMW cycle.
 
-search for 'read error'
+md/RAID5 takes a shortcut for single block writes, and must only read
+one drive for the RMW cycle.
 
-NeilBrown
+[1}The only thing that's not clear at this point is if md/RAID6 also
+always writes back all chunks during RMW, or only the chunk that has
+changed.
 
---Sig_/H9ABiM37aCe0_Mw+7FrDYwZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+-- 
+Stan
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUDFmfTnsnt1WYoG5AQLYwA//dN398CCKUYpH3zCPxcKqqKFn81Ic8xIG
-vUvUDIPGMXXW0Q67Tan3u8B5zDgwUqeUb8FVyWsqILseO10b7Hpho3nPUcSI1O+Q
-S6xa84Xg8Zco6NPjaFpvQuOqAYWBbJS4zCh/NvlN3wRnZB/yPUezqi2BmMXdld/d
-zN/YC9UBJggdUuBP+jVXWjzuw5itogLvHrSD9pTZIr8lHYZ8uyYiyrEaC7LNbv/O
-3OHoSiLM/aXrv0HCnkVTb0Ql44crH3uzHRONm7ds8eZA81t28oDl3Q0eJnFa6F7j
-SAGEUyTFgtJh1VdD12WIJgtPwtQytlZmhUkOYScszG1OjEJDRXc9SV0s9EJo01ZX
-woNE8S3v+KzcBb+LVQZ2jVrHl5ZyFMh0+w33VA18eScF9XdNra08lu7KYJhxBTGy
-QMxxDAE9cDjx0aytiEQPWEdKuaCmuxWmQGwrs0XxKRbHTPrglAhJTNfQ4p9ZcQzX
-pTMbenk7p/14BfnVRZIvLDd+1gEBHkW8BiEFT8TdYspwY8XTgc8adlM4J5G27aHM
-F7kBcVeIcOcH1+rqSnhGc6B0kRKg+uPDujarqnaPdwQXDs7rcWcFOHymoS5BjHW3
-8oSdWTK4FH6suAGHGoytA0CgRjbk21MPybv6U9NSkIwOkRQ9iloroz0rAETsIUnO
-jmw1FcH4lXA=
-=lUb9
------END PGP SIGNATURE-----
-
---Sig_/H9ABiM37aCe0_Mw+7FrDYwZ--
