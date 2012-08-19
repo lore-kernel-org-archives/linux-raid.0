@@ -1,49 +1,105 @@
-From: Albert Pauw <albert.pauw@gmail.com>
-Subject: Re: md raid behavior, bad sector uncorrectable read error
-Date: Sun, 19 Aug 2012 10:54:40 +0200
-Message-ID: <CAGkViCFBqJJWeaA1Wrpc_BBw=wd1wV3nVrArEB51LJpJsrmsug@mail.gmail.com>
-References: <3E06D7FC-092A-4CB6-B79C-7EC94424DEEE@colorremedies.com>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Re: Inexpensive RAID1 controller for home server?
+Date: Sun, 19 Aug 2012 15:34:43 +0600
+Message-ID: <20120819153443.7f697ca6@natsu>
+References: <CAK2H+eeLncyi6tCrM-vEhDzT7ykOA6LJP+Qka56rxUFGv2_urw@mail.gmail.com>
+	<50306707.40302@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/DR7=t55jDAm9Nnpg4m/qGK9"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3E06D7FC-092A-4CB6-B79C-7EC94424DEEE@colorremedies.com>
+In-Reply-To: <50306707.40302@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: linux-raid@vger.kernel.org
+To: stan@hardwarefreak.com
+Cc: Mark Knecht <markknecht@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From what I know (and please correct me if I'm wrong), the drive
-happily remaps the sector to a different, spare, location. Only when
-it can't do that it throws an error status back. Mind you, more than
-10 years ago I had a scsi disk in a linux machine which suddenly broke
-down. Checking the logs I saw a lot of remap messages in the log in
-the weeks before. So it maybe that the drive gives warnings back up
-the controller chain.
-If this is true, what is md doing with this? If the remaps increase on
-that particular drive does i throw it out of the raid set?
+--Sig_/DR7=t55jDAm9Nnpg4m/qGK9
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Curious on what actually happens, interesting question.
+On Sat, 18 Aug 2012 23:09:43 -0500
+Stan Hoeppner <stan@hardwarefreak.com> wrote:
 
-Just my two cents,
+> On 8/18/2012 2:18 PM, Mark Knecht wrote:
+> > Hi,
+> >    I wonder if there is direct knowledge here about this controller?
+> >=20
+> > http://www.amazon.com/HighPoint-Rocket-SATA-PCI-Express-Controller/dp/B=
+002VEWBGO
+> >=20
+> >    I'm looking to add an inexpensive 2-port controller for a home
+> > server that's out of ports on the MB but has room in the chassis for a
+> > couple more drives running RAID1. The machine has been successfully
+> > running mdadm for the last couple of years and the power supply is
+> > plenty big enough to take on the new hardware.
+> >=20
+> >    According the the Highpoint site is has native Linux support so it
+> > doesn't appear there are any major driver availability issues. The one
+> > problem I've read about that concerns me is it may conflict with
+> > existing on-board Marvell eSATA controllers which this machine has.
+>=20
+> Given the potential Marvell conflict issue, go with Silicon Image:
+>=20
+> http://www.newegg.com/Product/Product.aspx?Item=3DN82E16815124027
+>=20
+> All Silicon Image chips are supported in mainline, have been forever.
+>=20
 
-Albert
+Now, maybe I am missing something and Mark Knecht is your worst enemy --
+because I see no other explanation why give him such a terrible advice.
 
-On 19 August 2012 00:40, Chris Murphy <lists@colorremedies.com> wrote:
-> I'm not experiencing this at the moment, but I'm curious about what happens if it were to happen.
->
-> A drive detects a sector error, but can't correct it, and returns an 0x40 error to the system.
->
-> Presumably md raid (any RAID I would think) becomes aware of this error, as the chunk is incomplete without the sector. Next, does md raid rebuild the affected chunk from parity on-the-fly? Or is the entire drive dropped from the array and placed into degraded mode?
->
-> If the affected chunk is rebuilt from parity (or copy in case of mirror), does md raid issue a write command to write the rebuilt chunk back to the disk at the same LBAs? If so, shouldn't this force the drive to determine if the sector error is transient or persistent, and if persistent the disk firmware will remap the bad sector to a reserve sector?
->
-> Thanks,
->
-> Chris Murphy
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Silicon Image chips are well known for having caused data corruption to many
+people including in discussions on this list, usually this triggers when bo=
+th
+ports on the card are accessed at high speed in parallel.
+
+There is also a performance-related reason to avoid Silicon Image (if
+having them corrupt data isn't enough for someone):
+
+  "Warning: the overall bottleneck of the PCIe link is 150-175MB/s, or
+  75-88MB/s/port, but the chip has a 110-120MB/s bottleneck per port. So a
+  single SATA device on a single port cannot fully use the 150-175MB/s by
+  itself, it will be bottlenecked at 110-120MB/s."
+=20
+   -- http://blog.zorinaq.com/?e=3D10
+
+
+Now, what to choose instead:
+
+I highly doubt having two Marvell controllers in a system would lead to a
+conflict; and as the article linked above concludes, a Marvell 88SE912x wou=
+ld
+be an excellent choice, as it "supports PCIe gen2 [...] is also fully AHCI
+compliant, in other words robust, well-designed, and virtually compatible w=
+ith
+all operating systems".
+
+But if Mark believes there could be a conflict, and wants a non-Marvell
+recommendation, I'd say take a look at a JMicron, which is also the second
+recommendation in that article.
+http://www.newegg.com/Product/Product.aspx?Item=3DN82E16816124047
+
+--=20
+With respect,
+Roman
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"Stallman had a printer,
+with code he could not see.
+So he began to tinker,
+and set the software free."
+
+--Sig_/DR7=t55jDAm9Nnpg4m/qGK9
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlAwszMACgkQTLKSvz+PZwjbDQCeOkqDTfm6jdtW4y70hzR3J82j
+Jx8AoJTeKOv/BomyR05JQsmBsBDLy7gc
+=XWpp
+-----END PGP SIGNATURE-----
+
+--Sig_/DR7=t55jDAm9Nnpg4m/qGK9--
