@@ -1,44 +1,38 @@
 From: David Brown <david.brown@hesbynett.no>
-Subject: Re: md raid behavior, bad sector uncorrectable read error
-Date: Mon, 20 Aug 2012 08:36:01 +0200
-Message-ID: <5031DAD1.5050502@hesbynett.no>
-References: <3E06D7FC-092A-4CB6-B79C-7EC94424DEEE@colorremedies.com> <CAGkViCFBqJJWeaA1Wrpc_BBw=wd1wV3nVrArEB51LJpJsrmsug@mail.gmail.com> <FEEB11B4-5CCB-49F4-8010-80CE03A49FA4@colorremedies.com>
+Subject: Re: Issue with md and 4K sector alignment
+Date: Mon, 20 Aug 2012 09:28:43 +0200
+Message-ID: <5031E72B.8060002@hesbynett.no>
+References: <5031556B.5050706@averageurl.com> <alpine.DEB.2.00.1208200735020.27104@uplift.swm.pp.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <FEEB11B4-5CCB-49F4-8010-80CE03A49FA4@colorremedies.com>
+In-Reply-To: <alpine.DEB.2.00.1208200735020.27104@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: Kyle Brantley <kyle@averageurl.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 19/08/2012 20:12, Chris Murphy wrote:
-
+On 20/08/2012 07:36, Mikael Abrahamsson wrote:
+> On Sun, 19 Aug 2012, Kyle Brantley wrote:
 >
-> On Aug 19, 2012, at 3:47 AM, Mikael Abrahamsson wrote:
->> If I remember correctly from what has been described here before, a
->> read error will cause a re-write with information created from
->> parity
+>> I understand that I may need to work on the higher layers (LVM,
+>> partitioning -- and if there is any insight here, it would be
+>> appreciated!) with respect to the alignment, but my concern is the
+>> resync times. I've tried building the array off of both the raw disks
+>> and 4K aligned partitions placed on the disks -- the resync
+>> performance is identical, and poor.
 >
-> That's the thing I'd like to get a definitive answer one. If only it
-> were easy to simulate bad sectors in VM's I could just test it!
+> If you create the md directly on the device instead of doing partitions,
+> you don't have to worry. LVM and md are already 4k aligned.
+>
+> If you create partitions, then you have to make sure they're 4k aligned.
 >
 
-I wonder why no one has thought of this idea before...  Wait a minute, 
-they have!  When you read the "man 4 md" or "man mdadm" pages, read 
-about the "faulty" module.  You don't have to use a virtual machine for 
-this, it has been used for testing md raid from long before virtual 
-machines were practical in the PC world.
+It would be nice if LVM and md moved towards a bigger native alignment. 
+  4K is good enough for hard disks, but for SSD's you want to align 
+partitions on erase block boundaries.  The standard used by modern fdisk 
+and gparted (and tools from the-OS-that-must-not-be-named) is 1 MB - a 
+bigger alignment than is necessary for current SSDs, but one that will 
+be good enough for the foreseeable future.
 
-(Sorry for the sarcasm - it was just too tempting in light of Neil's 
-recommendation to read the "man 4 md" page!)
-
-Have fun playing with these things - it's good practice so you know what 
-to expect if a real failure occurs.
-
->> If it throws a write error, the drive is kicked from the array
->> (because a drive with write errors is clearly defective).
->
-> That makes complete sense.
->
