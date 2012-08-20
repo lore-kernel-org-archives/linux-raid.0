@@ -1,38 +1,29 @@
-From: joystick <joystick@shiftmail.org>
-Subject: Using SCSI timeouts in place of ERC
-Date: Mon, 20 Aug 2012 13:37:00 +0200
-Message-ID: <5032215C.9080105@shiftmail.org>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: md raid behavior, bad sector uncorrectable read error
+Date: Mon, 20 Aug 2012 08:36:13 -0400
+Message-ID: <50322F3D.6090409@turmel.org>
+References: <3E06D7FC-092A-4CB6-B79C-7EC94424DEEE@colorremedies.com> <CAGkViCFBqJJWeaA1Wrpc_BBw=wd1wV3nVrArEB51LJpJsrmsug@mail.gmail.com> <FEEB11B4-5CCB-49F4-8010-80CE03A49FA4@colorremedies.com> <20120820081935.24289755@notabene.brown> <3D2BFD32-3039-4D65-9AAC-408D59F878D6@colorremedies.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <3D2BFD32-3039-4D65-9AAC-408D59F878D6@colorremedies.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello lists
-I am wondering what kind of support I can get from linux for 
-"inexpensive" (SATA over SAS HBA in my case) disks on RAID ...
-Inexpensive non-raid-edition disks haven't got settable ERC timeout 
-(scterc) and can take very long time to respond in case of unreadable sector
-However I see an /dev/sdX/device/timeout tunable
-Supposing that I accept one disk being dropped from the array at the 
-first unreadable sector, can I set that tunable low such as 10sec and 
-live happy?
+On 08/19/2012 10:06 PM, Chris Murphy wrote:
 
-Unfortunately I have read that the expiration of the SCSI timeout can 
-trigger a "Host" reset in case the drive does not respond to a reset message
-https://access.redhat.com/knowledge/docs/en-US/Red_Hat_Enterprise_Linux/5/html/Online_Storage_Reconfiguration_Guide/task_controlling-scsi-command-timer-onlining-devices.html
-would that drop all my drives from the array? That would be a major problem.
+> BTW, there's a lot of detail nuggets in man md that I'm not finding
+> documented anywhere else. Nor have I found in other documentation a
+> reference to man md until now.
 
-Firstly, in "reset the bus": isn't the bus just an electrical wire? How 
-can it be "reset" and what does that do? I can understand in the case of 
-iSCSI the bus is maybe the TCP socket, I can somehow understand that it 
-can be reset, but what about physically attached disks?
-I suppose "device" is the disk.. ok for that one, suppose it's doomed
-I suppose "host" is the HBA card... so what does a reset of the HBA do? 
-Does it drop all the drives and rescan? MD wouldn't react well *at all* 
-to this
+Seriously?  Every other man page in my mdadm installation lists "md(4)"
+in the "See Also" section.
 
-Thank you
-J
+Or were you simply not aware that man pages are the *primary*
+form of documentation for most core software in *nix environments?
+You should consider reviewing "man man".
+
+Phil
