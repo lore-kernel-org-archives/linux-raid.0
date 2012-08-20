@@ -1,40 +1,44 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: O_DIRECT to md raid 6 is slow
-Date: Mon, 20 Aug 2012 00:42:05 -0500
-Message-ID: <5031CE2D.8030600@hardwarefreak.com>
-References: <502D6B0A.6090508@xs4all.net> <502DF357.8090205@hardwarefreak.com> <502E2817.8040306@xs4all.net> <502F237D.6060806@hardwarefreak.com> <502F698C.9010507@msgid.tls.msk.ru> <50305AB9.5080302@hardwarefreak.com> <5030F1C6.90205@hesbynett.no> <50317804.9010701@hardwarefreak.com> <20120820100134.22b2b056@notabene.brown> <5031C0A9.60803@hardwarefreak.com> <20120820051951.GC19235@dastard>
-Reply-To: stan@hardwarefreak.com
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: md raid behavior, bad sector uncorrectable read error
+Date: Mon, 20 Aug 2012 08:36:01 +0200
+Message-ID: <5031DAD1.5050502@hesbynett.no>
+References: <3E06D7FC-092A-4CB6-B79C-7EC94424DEEE@colorremedies.com> <CAGkViCFBqJJWeaA1Wrpc_BBw=wd1wV3nVrArEB51LJpJsrmsug@mail.gmail.com> <FEEB11B4-5CCB-49F4-8010-80CE03A49FA4@colorremedies.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120820051951.GC19235@dastard>
+In-Reply-To: <FEEB11B4-5CCB-49F4-8010-80CE03A49FA4@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dave Chinner <david@fromorbit.com>
-Cc: NeilBrown <neilb@suse.de>, David Brown <david.brown@hesbynett.no>, Michael Tokarev <mjt@tls.msk.ru>, Miquel van Smoorenburg <mikevs@xs4all.net>, Linux RAID <linux-raid@vger.kernel.org>, LKML@dastard.hardwarefreak.com
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 8/20/2012 12:19 AM, Dave Chinner wrote:
+On 19/08/2012 20:12, Chris Murphy wrote:
 
-> Oh, you're probably complaining about that write number.
+>
+> On Aug 19, 2012, at 3:47 AM, Mikael Abrahamsson wrote:
+>> If I remember correctly from what has been described here before, a
+>> read error will cause a re-write with information created from
+>> parity
+>
+> That's the thing I'd like to get a definitive answer one. If only it
+> were easy to simulate bad sectors in VM's I could just test it!
+>
 
-I wasn't complaining.  You know me better than that.
+I wonder why no one has thought of this idea before...  Wait a minute, 
+they have!  When you read the "man 4 md" or "man mdadm" pages, read 
+about the "faulty" module.  You don't have to use a virtual machine for 
+this, it has been used for testing md raid from long before virtual 
+machines were practical in the PC world.
 
-The cops caught me robbing a bank.  Under pressure, I pointed at you and
-said "He gave me the gun and ammo!". ;)  Of course it was completely my
-responsibility for shooting myself in the foot with it. :)
+(Sorry for the sarcasm - it was just too tempting in light of Neil's 
+recommendation to read the "man 4 md" page!)
 
-> Either way, the point I was making in the original post stands -
-> RAID6 sucks balls for most workloads as they only do small writes in
-> comparison to the stripe width of the volume....
+Have fun playing with these things - it's good practice so you know what 
+to expect if a real failure occurs.
 
-Agreed.  Which was the point I originally made in this thread.  "We"
-simply got a minor detail wrong.  It seems folks on the linux-raid list
-like to split every hair 2^6 times, with extremely valid points getting
-lost when the discussion drops into the weeds.
-
-Sorry I dragged you into this Dave.
-
--- 
-Stan
-
+>> If it throws a write error, the drive is kicked from the array
+>> (because a drive with write errors is clearly defective).
+>
+> That makes complete sense.
+>
