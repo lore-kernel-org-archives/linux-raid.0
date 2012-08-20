@@ -1,46 +1,91 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Inexpensive RAID1 controller for home server?
-Date: Mon, 20 Aug 2012 00:17:37 -0500
-Message-ID: <5031C871.8080105@hardwarefreak.com>
-References: <CAK2H+eeLncyi6tCrM-vEhDzT7ykOA6LJP+Qka56rxUFGv2_urw@mail.gmail.com> <50306707.40302@hardwarefreak.com> <20120819153443.7f697ca6@natsu> <50315F39.2030404@hardwarefreak.com> <20120820040640.5b4f77ac@natsu>
-Reply-To: stan@hardwarefreak.com
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: O_DIRECT to md raid 6 is slow
+Date: Mon, 20 Aug 2012 15:19:51 +1000
+Message-ID: <20120820051951.GC19235@dastard>
+References: <502D6B0A.6090508@xs4all.net>
+ <502DF357.8090205@hardwarefreak.com>
+ <502E2817.8040306@xs4all.net>
+ <502F237D.6060806@hardwarefreak.com>
+ <502F698C.9010507@msgid.tls.msk.ru>
+ <50305AB9.5080302@hardwarefreak.com>
+ <5030F1C6.90205@hesbynett.no>
+ <50317804.9010701@hardwarefreak.com>
+ <20120820100134.22b2b056@notabene.brown>
+ <5031C0A9.60803@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120820040640.5b4f77ac@natsu>
+Content-Disposition: inline
+In-Reply-To: <5031C0A9.60803@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: Mark Knecht <markknecht@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: NeilBrown <neilb@suse.de>, David Brown <david.brown@hesbynett.no>, Michael Tokarev <mjt@tls.msk.ru>, Miquel van Smoorenburg <mikevs@xs4all.net>, Linux RAID <linux-raid@vger.kernel.org>, LKML@dastard
 List-Id: linux-raid.ids
 
-On 8/19/2012 5:06 PM, Roman Mamedov wrote:
-> On Sun, 19 Aug 2012 16:48:41 -0500
-> Stan Hoeppner <stan@hardwarefreak.com> wrote:
+On Sun, Aug 19, 2012 at 11:44:25PM -0500, Stan Hoeppner wrote:
+> I'm copying Dave C. as he apparently misunderstood the behavior of
+> md/RAID6 as well.  My statement was based largely on Dave's information.
+>  See [1] below.
+
+Not sure what I'm supposed to have misunderstood...
+
+> On 8/19/2012 7:01 PM, NeilBrown wrote:
+> > On Sun, 19 Aug 2012 18:34:28 -0500 Stan Hoeppner <stan@hardwarefreak.com>
+> > wrote:
 > 
->> Yeah, you're right.  All Silicon Image ASICs suck.
+> > Since we are trying to set the record straight....
 > 
-> "The only generic advice I can give you at this point) is to avoid
-> Silicon Image controllers, particularly their SATA controllers.  They
-> have a history of causing data corruption on Linux, FreeBSD, and
-> Windows, and some have reported other miscellaneous problems with them
-> as well."
+> Thank you for finally jumping in Neil--had hoped to see your
+> authoritative information sooner.
+> 
+> > md/RAID6 must read all data devices (i.e. not parity devices) which it is not
+> > going to write to, in an RWM cycle (which the code actually calls RCW -
+> > reconstruct-write).
 
-There is no confirmation of a bug in the 3132 because of all these
-issues you quote are board specific.  Known product flaw/failure
-statistics dictate there will be thousands of bad cards shipped when the
-total chip volume is in the 10s of millions.
+That's a RMW cycle from an IO point of view. i.e. sycnhronous read
+must take place before the data can be modified and written...
 
-So please, stop spreading FUD about SiI chips.  It's fine to have an
-opinion and share it.  Just don't back it up with unsubstantiated and
-unconfirmed claims.
+> > md/RAID5 uses an alternate mechanism when the number of data blocks that need
+> > to be written is less than half the number of data blocks in a stripe.  In
+> > this alternate mechansim (which the code calls RMW - read-modify-write),
+> > md/RAID5 reads all the blocks that it is about to write to, plus the parity
+> > block.  It then computes the new parity and writes it out along with the new
+> > data.
 
-Simply say what you know to be fact:  Some people have had problems with
-some cards containing the SiI 3132.  Don't make the claim that all 3132
-chips have a defect when you can't back that statement up with facts.
+And by the same definition, that's also a RMW cycle.
 
-Thank you.
+> >> [1}The only thing that's not clear at this point is if md/RAID6 also
+> >> always writes back all chunks during RMW, or only the chunk that has
+> >> changed.
+> 
+> > Do you seriously imagine anyone would write code to write out data which it
+> > is known has not changed?  Sad. :-)
 
+Two words: media scrubbing.
+
+> On 6/25/2012 9:30 PM, Dave Chinner wrote:
+> > IOWs, every time you do a small isolated write, the MD RAID volume
+> > will do a RMW cycle, reading 11MB and writing 12MB of data to disk.
+
+Oh, you're probably complaining about that write number.  All I was
+trying to do was demonstrate what a worst case RMW cycle looks like.
+So by the above, that occurs when you have a same isolated write to
+each chunk of the stripe. A single write is read 11MB, write 1.5MB
+(data + 2 parity). It doesn't really change the IO latency or load,
+though, you've still got the same read-all, modify, write-multiple
+IO pattern....
+
+> > Given that most workloads are not doing lots and lots of large
+> > sequential writes this is, IMO, a pretty bad default given typical
+> > RAID5/6 volume configurations we see....
+
+Either way, the point I was making in the original post stands -
+RAID6 sucks balls for most workloads as they only do small writes in
+comparison to the stripe width of the volume....
+
+Cheers,
+
+Dave.
 -- 
-Stan
-
+Dave Chinner
+david@fromorbit.com
