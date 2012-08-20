@@ -1,127 +1,267 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
-Subject: Re: raid5: When add stripe_head to inactive_list, it should remove hash.
-Date: Mon, 20 Aug 2012 16:17:07 +0800
-Message-ID: <201208201617046561993@gmail.com>
-References: <201208181053324376710@gmail.com>
+From: =?UTF-8?B?U2VyZ2l1c3ogQnJ6ZXppxYRza2k=?=
+	<Sergiusz.Brzezinski@supersystem.pl>
+Subject: mdadm -add doesn't start rebuilding array
+Date: Mon, 20 Aug 2012 11:36:10 +0200
+Message-ID: <5032050A.4000801@supersystem.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wOC0xOCAxMDo1MyBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+IFdy
-b3RlOg0KPklmIGl0IHJlbGVhc2VkIHN0cmlwZV9oZWFkIHRvIGluYWN0aXZlX2xpc3QgYW5kIHNv
-b24gZ2V0IGl0IGZyb20gaGFzaA0KPmxpc3QuIFNvIHRoZSBzdHJpcGVfaGVhZCBkaWRuJ3QgY2Fs
-bCBpbml0X3N0cmlwZSwgdGhlIGRldi5mbGFncyBpc24ndA0KPmNsZWFyLiBTbyB0aGUgZGVidWcg
-aW5mbyBpcyBlcnJvciB3aGljaCBwcmludGVkIHRoZSBiZWZvcmUgaW5mby4NCj5BbHRob3VnaCwg
-aSBjYW4ndCBmaW5kIGxvZ2ljIGVycm9yIGJlY2F1c2UgdGhpcy5JIHRoaW5rIGl0IHNob3VsZCBi
-ZQ0KPmNvcnJlY3QuDQo+DQo+U2lnbmVkLW9mZi1ieTogSmlhbnBlbmcgTWEgPG1hamlhbnBlbmdA
-Z21haWwuY29tPg0KPi0tLQ0KPiBkcml2ZXJzL21kL3JhaWQ1LmMgfCAgIDM1ICsrKysrKysrKysr
-KysrKysrKystLS0tLS0tLS0tLS0tLS0tDQo+IDEgZmlsZSBjaGFuZ2VkLCAxOSBpbnNlcnRpb25z
-KCspLCAxNiBkZWxldGlvbnMoLSkNCj4NCj5kaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5j
-IGIvZHJpdmVycy9tZC9yYWlkNS5jDQo+aW5kZXggYWRkYTk0ZC4uMDNkMmY2NCAxMDA2NDQNCj4t
-LS0gYS9kcml2ZXJzL21kL3JhaWQ1LmMNCj4rKysgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCj5AQCAt
-MTk2LDYgKzE5NiwyNCBAQCBzdGF0aWMgaW50IHN0cmlwZV9vcGVyYXRpb25zX2FjdGl2ZShzdHJ1
-Y3Qgc3RyaXBlX2hlYWQgKnNoKQ0KPiAJICAgICAgIHRlc3RfYml0KFNUUklQRV9DT01QVVRFX1JV
-TiwgJnNoLT5zdGF0ZSk7DQo+IH0NCj4gDQo+K3N0YXRpYyBpbmxpbmUgdm9pZCByZW1vdmVfaGFz
-aChzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoKQ0KPit7DQo+Kwlwcl9kZWJ1ZygicmVtb3ZlX2hhc2go
-KSwgc3RyaXBlICVsbHVcbiIsDQo+KwkJKHVuc2lnbmVkIGxvbmcgbG9uZylzaC0+c2VjdG9yKTsN
-Cj4rDQo+KwlobGlzdF9kZWxfaW5pdCgmc2gtPmhhc2gpOw0KPit9DQo+Kw0KPitzdGF0aWMgaW5s
-aW5lIHZvaWQgaW5zZXJ0X2hhc2goc3RydWN0IHI1Y29uZiAqY29uZiwgc3RydWN0IHN0cmlwZV9o
-ZWFkICpzaCkNCj4rew0KPisJc3RydWN0IGhsaXN0X2hlYWQgKmhwID0gc3RyaXBlX2hhc2goY29u
-Ziwgc2gtPnNlY3Rvcik7DQo+Kw0KPisJcHJfZGVidWcoImluc2VydF9oYXNoKCksIHN0cmlwZSAl
-bGx1XG4iLA0KPisJCSh1bnNpZ25lZCBsb25nIGxvbmcpc2gtPnNlY3Rvcik7DQo+Kw0KPisJaGxp
-c3RfYWRkX2hlYWQoJnNoLT5oYXNoLCBocCk7DQo+K30NCj4rDQo+IHN0YXRpYyB2b2lkIGRvX3Jl
-bGVhc2Vfc3RyaXBlKHN0cnVjdCByNWNvbmYgKmNvbmYsIHN0cnVjdCBzdHJpcGVfaGVhZCAqc2gp
-DQo+IHsNCj4gCUJVR19PTighbGlzdF9lbXB0eSgmc2gtPmxydSkpOw0KPkBAIC0yMjIsNiArMjQw
-LDcgQEAgc3RhdGljIHZvaWQgZG9fcmVsZWFzZV9zdHJpcGUoc3RydWN0IHI1Y29uZiAqY29uZiwg
-c3RydWN0IHN0cmlwZV9oZWFkICpzaCkNCj4gCQlhdG9taWNfZGVjKCZjb25mLT5hY3RpdmVfc3Ry
-aXBlcyk7DQo+IAkJaWYgKCF0ZXN0X2JpdChTVFJJUEVfRVhQQU5ESU5HLCAmc2gtPnN0YXRlKSkg
-ew0KPiAJCQlsaXN0X2FkZF90YWlsKCZzaC0+bHJ1LCAmY29uZi0+aW5hY3RpdmVfbGlzdCk7DQo+
-KwkJCXJlbW92ZV9oYXNoKHNoKTsNCj4gCQkJd2FrZV91cCgmY29uZi0+d2FpdF9mb3Jfc3RyaXBl
-KTsNCj4gCQkJaWYgKGNvbmYtPnJldHJ5X3JlYWRfYWxpZ25lZCkNCj4gCQkJCW1kX3dha2V1cF90
-aHJlYWQoY29uZi0+bWRkZXYtPnRocmVhZCk7DQo+QEAgLTI0OCwyMyArMjY3LDcgQEAgc3RhdGlj
-IHZvaWQgcmVsZWFzZV9zdHJpcGUoc3RydWN0IHN0cmlwZV9oZWFkICpzaCkNCj4gCWxvY2FsX2ly
-cV9yZXN0b3JlKGZsYWdzKTsNCj4gfQ0KPiANCj4tc3RhdGljIGlubGluZSB2b2lkIHJlbW92ZV9o
-YXNoKHN0cnVjdCBzdHJpcGVfaGVhZCAqc2gpDQo+LXsNCj4tCXByX2RlYnVnKCJyZW1vdmVfaGFz
-aCgpLCBzdHJpcGUgJWxsdVxuIiwNCj4tCQkodW5zaWduZWQgbG9uZyBsb25nKXNoLT5zZWN0b3Ip
-Ow0KPiANCj4tCWhsaXN0X2RlbF9pbml0KCZzaC0+aGFzaCk7DQo+LX0NCj4tDQo+LXN0YXRpYyBp
-bmxpbmUgdm9pZCBpbnNlcnRfaGFzaChzdHJ1Y3QgcjVjb25mICpjb25mLCBzdHJ1Y3Qgc3RyaXBl
-X2hlYWQgKnNoKQ0KPi17DQo+LQlzdHJ1Y3QgaGxpc3RfaGVhZCAqaHAgPSBzdHJpcGVfaGFzaChj
-b25mLCBzaC0+c2VjdG9yKTsNCj4tDQo+LQlwcl9kZWJ1ZygiaW5zZXJ0X2hhc2goKSwgc3RyaXBl
-ICVsbHVcbiIsDQo+LQkJKHVuc2lnbmVkIGxvbmcgbG9uZylzaC0+c2VjdG9yKTsNCj4tDQo+LQlo
-bGlzdF9hZGRfaGVhZCgmc2gtPmhhc2gsIGhwKTsNCj4tfQ0KPiANCj4gDQo+IC8qIGZpbmQgYW4g
-aWRsZSBzdHJpcGUsIG1ha2Ugc3VyZSBpdCBpcyB1bmhhc2hlZCwgYW5kIHJldHVybiBpdC4gKi8N
-Cj4tLSANCj4xLjcuOS41DQo+DQpIaSBuZWlsOg0KCVRvZGF5LCBpIGZvdW5kIGEgcHJvYmxlbSBh
-Ym91dCB0aGlzLg0KMTptZGFkbSAtQ1IgL2Rldi9tZDAgLWw1IC1jNCAtbjQgL2Rldi9zZFtiY2Rd
-IG1pc3NpbmcNCjI6ZGQgaWY9L2Rldi96ZXJvIG9mPS9kZXYvbWQwIGJzPTRLIGNvdW50PTEgb2Zs
-YWc9ZGlyZWN0DQozOmhkcGFybSAtLW1ha2UtYmFkLXNlY3RvciAyMDQ4IC0teWVzLWkta25vdy13
-aGF0LWktYW0tZG9pbmcgL2Rldi9zZGINCiAgKDIwNDggaXMgdGhlIGRhdGEtb2Zmc2V0IG9mIHNk
-YikNCjQ6ZGQgaWY9L2Rldi9tZDAgb2Y9L2Rldi96ZXJvIGJzPTRLIGNvdW50PTEgaWZsYWc9ZGly
-ZWN0DQoNCkkgdGhpbmsgc3RlcDQgbWF5YmUgcmV0dXJuIGlvZXJyb3IuQnV0IGl0J3Mgc3VjY2Vz
-cy4NClRoZSBrZXJuZWwgbWVzc2FnZSBsaWtlIDoNClsxOTI3Ny41ODEyNDVdIGF0YTMuMDA6IGV4
-Y2VwdGlvbiBFbWFzayAweDAgU0FjdCAweDEgU0VyciAweDAgYWN0aW9uIDB4MA0KWzE5Mjc3LjU4
-MTI1MF0gYXRhMy4wMDogaXJxX3N0YXQgMHg0MDAwMDAwOA0KWzE5Mjc3LjU4MTI1M10gYXRhMy4w
-MDogZmFpbGVkIGNvbW1hbmQ6IFJFQUQgRlBETUEgUVVFVUVEDQpbMTkyNzcuNTgxMjYwXSBhdGEz
-LjAwOiBjbWQgNjAvMDg6MDA6MDA6MDg6MDAvMDA6MDA6MDA6MDA6MDAvNDAgdGFnIDAgbmNxIDQw
-OTYgaW4NClsxOTI3Ny41ODEyNjBdICAgICAgICAgIHJlcyA0MS80MDowODowMDowODowMC8wMDow
-MDowMDowMDowMC8wMCBFbWFzayAweDQwOSAobWVkaWEgZXJyb3IpIDxGPg0KWzE5Mjc3LjU4MTI2
-M10gYXRhMy4wMDogc3RhdHVzOiB7IERSRFkgRVJSIH0NClsxOTI3Ny41ODEyNjVdIGF0YTMuMDA6
-IGVycm9yOiB7IFVOQyB9DQpbMTkyNzcuNTg1ODA5XSBhdGEzLjAwOiBjb25maWd1cmVkIGZvciBV
-RE1BLzEzMw0KWzE5Mjc3LjU4NTgyOF0gc2QgMjowOjA6MDogXHgwMTBbc2RiXSBVbmhhbmRsZWQg
-c2Vuc2UgY29kZQ0KWzE5Mjc3LjU4NTgzMV0gc2QgMjowOjA6MDogXHgwMTBbc2RiXSAgDQpbMTky
-NzcuNTg1ODMzXSBSZXN1bHQ6IGhvc3RieXRlPURJRF9PSyBkcml2ZXJieXRlPURSSVZFUl9TRU5T
-RQ0KWzE5Mjc3LjU4NTgzNV0gc2QgMjowOjA6MDogXHgwMTBbc2RiXSAgDQpbMTkyNzcuNTg1ODM3
-XSBTZW5zZSBLZXkgOiBNZWRpdW0gRXJyb3IgW2N1cnJlbnRdIFtkZXNjcmlwdG9yXQ0KWzE5Mjc3
-LjU4NTg0Ml0gRGVzY3JpcHRvciBzZW5zZSBkYXRhIHdpdGggc2Vuc2UgZGVzY3JpcHRvcnMgKGlu
-IGhleCk6DQpbMTkyNzcuNTg1ODQ0XSAgICAgICAgIDcyIDAzIDExIDA0IDAwIDAwIDAwIDBjIDAw
-IDBhIDgwIDAwIDAwIDAwIDAwIDAwIA0KWzE5Mjc3LjU4NTg1Nl0gICAgICAgICAwMCAwMCAwOCAw
-MCANClsxOTI3Ny41ODU4NjJdIHNkIDI6MDowOjA6IFx4MDEwW3NkYl0gIA0KWzE5Mjc3LjU4NTg2
-NF0gQWRkLiBTZW5zZTogVW5yZWNvdmVyZWQgcmVhZCBlcnJvciAtIGF1dG8gcmVhbGxvY2F0ZSBm
-YWlsZWQNClsxOTI3Ny41ODU4NjddIHNkIDI6MDowOjA6IFx4MDEwW3NkYl0gQ0RCOiANClsxOTI3
-Ny41ODU4NjldIFJlYWQoMTApOiAyOCAwMCAwMCAwMCAwOCAwMCAwMCAwMCAwOCAwMA0KWzE5Mjc3
-LjU4NTg3OV0gZW5kX3JlcXVlc3Q6IEkvTyBlcnJvciwgZGV2IHNkYiwgc2VjdG9yIDIwNDgNClsx
-OTI3Ny41ODU4ODldIHJhaWQ1X2FsaWduX2VuZGlvIDogaW8gZXJyb3IuLi5oYW5kaW5nIElPIGZv
-ciBhIHJldHJ5DQpbMTkyNzcuNTg1OTAxXSArKysgcmFpZDVkIGFjdGl2ZQ0KWzE5Mjc3LjU4NTkw
-Nl0gZ2V0X3N0cmlwZSwgc2VjdG9yIDANClsxOTI3Ny41ODU5MDhdIF9fZmluZF9zdHJpcGUsIHNl
-Y3RvciAwDQpbMTkyNzcuNTg1OTExXSBhZGRpbmcgYmkgYiMwIHRvIHN0cmlwZSBzIzANClsxOTI3
-Ny41ODU5MTRdIGFkZGVkIGJpIGIjMCB0byBzdHJpcGUgcyMwLCBkaXNrIDAuDQpbMTkyNzcuNTg1
-OTE4XSBoYW5kbGluZyBzdHJpcGUgMCwgc3RhdGU9MHgxMDkxIGNudD0xLCBwZF9pZHg9MywgcWRf
-aWR4PS0xDQpbMTkyNzcuNTg1OTE4XSAsIGNoZWNrOjAsIHJlY29uc3RydWN0OjANClsxOTI3Ny41
-ODU5MjJdIGNoZWNrIDM6IHN0YXRlIDB4MSByZWFkICAgICAgICAgICAobnVsbCkgd3JpdGUgICAg
-ICAgICAgIChudWxsKSB3cml0dGVuICAgICAgICAgICAobnVsbCkNClsxOTI3Ny41ODU5MjVdIGNo
-ZWNrIDI6IHN0YXRlIDB4MTEgcmVhZCAgICAgICAgICAgKG51bGwpIHdyaXRlICAgICAgICAgICAo
-bnVsbCkgd3JpdHRlbiAgICAgICAgICAgKG51bGwpDQpbMTkyNzcuNTg1OTI3XSBhdGEzOiBFSCBj
-b21wbGV0ZQ0KWzE5Mjc3LjU4NTkzMF0gY2hlY2sgMTogc3RhdGUgMHgxMSByZWFkICAgICAgICAg
-ICAobnVsbCkgd3JpdGUgICAgICAgICAgIChudWxsKSB3cml0dGVuICAgICAgICAgICAobnVsbCkN
-ClsxOTI3Ny41ODU5MzNdIGNoZWNrIDA6IHN0YXRlIDB4MTE5IHJlYWQgZmZmZjg4MDBiNjljZDkw
-MCB3cml0ZSAgICAgICAgICAgKG51bGwpIHdyaXR0ZW4gICAgICAgICAgIChudWxsKQ0KWzE5Mjc3
-LjU4NTkzNl0gbG9ja2VkPTAgdXB0b2RhdGU9NCB0b19yZWFkPTAgdG9fd3JpdGU9MCBmYWlsZWQ9
-MSBmYWlsZWRfbnVtPTMsLTENClsxOTI3Ny41ODU5MzldIG9wc19ydW5fYmlvZmlsbDogc3RyaXBl
-IDANClsxOTI3Ny41ODU5NDRdIG9wc19jb21wbGV0ZV9iaW9maWxsOiBzdHJpcGUgMA0KWzE5Mjc3
-LjU4NTk1NV0gX19nZXRfcHJpb3JpdHlfc3RyaXBlOiBoYW5kbGU6IGJ1c3kgaG9sZDogZW1wdHkg
-ZnVsbF93cml0ZXM6IDAgYnlwYXNzX2NvdW50OiAwDQpbMTkyNzcuNTg1OTU4XSBfX2dldF9wcmlv
-cml0eV9zdHJpcGU6IGhhbmRsZTogZW1wdHkgaG9sZDogZW1wdHkgZnVsbF93cml0ZXM6IDAgYnlw
-YXNzX2NvdW50OiAwDQpbMTkyNzcuNTg1OTYxXSBoYW5kbGluZyBzdHJpcGUgMCwgc3RhdGU9MHgx
-MDkxIGNudD0xLCBwZF9pZHg9MywgcWRfaWR4PS0xDQpbMTkyNzcuNTg1OTYxXSAsIGNoZWNrOjAs
-IHJlY29uc3RydWN0OjANClsxOTI3Ny41ODU5NjRdIGNoZWNrIDM6IHN0YXRlIDB4MSByZWFkICAg
-ICAgICAgICAobnVsbCkgd3JpdGUgICAgICAgICAgIChudWxsKSB3cml0dGVuICAgICAgICAgICAo
-bnVsbCkNClsxOTI3Ny41ODU5NjddIGNoZWNrIDI6IHN0YXRlIDB4MTEgcmVhZCAgICAgICAgICAg
-KG51bGwpIHdyaXRlICAgICAgICAgICAobnVsbCkgd3JpdHRlbiAgICAgICAgICAgKG51bGwpDQpb
-MTkyNzcuNTg1OTY5XSBjaGVjayAxOiBzdGF0ZSAweDExIHJlYWQgICAgICAgICAgIChudWxsKSB3
-cml0ZSAgICAgICAgICAgKG51bGwpIHdyaXR0ZW4gICAgICAgICAgIChudWxsKQ0KWzE5Mjc3LjU4
-NTk3Ml0gY2hlY2sgMDogc3RhdGUgMHgxMTkgcmVhZCAgICAgICAgICAgKG51bGwpIHdyaXRlICAg
-ICAgICAgICAobnVsbCkgd3JpdHRlbiAgICAgICAgICAgKG51bGwpDQpbMTkyNzcuNTg1OTc1XSBs
-b2NrZWQ9MCB1cHRvZGF0ZT00IHRvX3JlYWQ9MCB0b193cml0ZT0wIGZhaWxlZD0xIGZhaWxlZF9u
-dW09MywtMQ0KWzE5Mjc3LjU4NTk3OV0gX19nZXRfcHJpb3JpdHlfc3RyaXBlOiBoYW5kbGU6IGVt
-cHR5IGhvbGQ6IGVtcHR5IGZ1bGxfd3JpdGVzOiAwIGJ5cGFzc19jb3VudDogMA0KWzE5Mjc3LjU4
-NTk4MV0gMiBzdHJpcGVzIGhhbmRsZWQNClsxOTI3Ny41ODU5ODNdIC0tLSByYWlkNWQgaW5hY3Rp
-dmUNClsxOTI3Ny41ODU5ODRdICsrKyByYWlkNWQgYWN0aXZlDQpbMTkyNzcuNTg1OTg3XSBfX2dl
-dF9wcmlvcml0eV9zdHJpcGU6IGhhbmRsZTogZW1wdHkgaG9sZDogZW1wdHkgZnVsbF93cml0ZXM6
-IDAgYnlwYXNzX2NvdW50OiAwDQpbMTkyNzcuNTg1OTg5XSAwIHN0cmlwZXMgaGFuZGxlZA0KWzE5
-Mjc3LjU4NTk5MV0gLS0tIHJhaWQ1ZCBpbmFjdGl2ZQ0K
+Hi,
 
+My system is Ubuntu 12.04, kernel 3.2.0-27. mdadm: 3.2.3
+
+If I do:
+
+# mdadm /dev/md0 -a /dev/sdc3
+
+then nothing happen! No message on command line, no info in logs!
+
+Man mdadm says:
+
+-a, --add
+hot-add listed devices.  If a device appears to have recently been part=
+ of the=20
+array (possibly it failed or was removed) the device is  re-added  as  =
+describe=20
+  in  the  next point.   If  that  fails  or the device was never part =
+of the=20
+array, the device is added as a hot-spare.  If the array is degraded, i=
+t will=20
+immediately start to rebuild data onto that spare.
+
+But array doesn't wont to rebuild.
+
+But not exactly. The bad info is, that sometimes it works and sometimes=
+ it doesn't.
+
+And if I restart the system, the array SOMETIMES start rebuilding and s=
+omethimes=20
+doesn't!
+
+There is no information what's up (comnand line or logs) so I don't kno=
+w what to do.
+
+
+
+I describe bellow the whole procedure:
+
+1.
+There ist a working Raid1 array:
+
+# cat /proc/mdstat
+
+Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5] [r=
+aid4]=20
+[raid10]
+md0 : active raid1 sda3[2] sdb3[3]
+       115999672 blocks super 1.0 [2/2] [UU]
+       bitmap: 0/1 pages [0KB], 65536KB chunk
+
+# mdadm --detail /dev/md0
+
+/dev/md0:
+         Version : 1.0
+   Creation Time : Wed Aug  1 15:45:56 2012
+      Raid Level : raid1
+      Array Size : 115999672 (110.63 GiB 118.78 GB)
+   Used Dev Size : 115999672 (110.63 GiB 118.78 GB)
+    Raid Devices : 2
+   Total Devices : 2
+     Persistence : Superblock is persistent
+
+   Intent Bitmap : Internal
+
+     Update Time : Mon Aug 20 11:10:00 2012
+           State : active
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+
+            Name : linux:0
+            UUID : b7407176:2e88c73d:2c85e940:05ff7e06
+          Events : 5897
+
+     Number   Major   Minor   RaidDevice State
+        3       8       19        0      active sync   /dev/sdb3
+        2       8        3        1      active sync   /dev/sda3
+
+
+2.
+I remove (phisicaly) the "/dev/sdb" drive of the box (hot-swap)
+
+# cat /proc/mdstat
+
+Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5] [r=
+aid4]=20
+[raid10]
+md0 : active raid1 sda3[2] sdb3[3](F)
+       115999672 blocks super 1.0 [2/1] [_U]
+       bitmap: 1/1 pages [4KB], 65536KB chunk
+
+# mdadm --detail /dev/md0
+/dev/md0:
+         Version : 1.0
+   Creation Time : Wed Aug  1 15:45:56 2012
+      Raid Level : raid1
+      Array Size : 115999672 (110.63 GiB 118.78 GB)
+   Used Dev Size : 115999672 (110.63 GiB 118.78 GB)
+    Raid Devices : 2
+   Total Devices : 2
+     Persistence : Superblock is persistent
+
+   Intent Bitmap : Internal
+
+     Update Time : Mon Aug 20 11:11:58 2012
+           State : active, degraded
+  Active Devices : 1
+Working Devices : 1
+  Failed Devices : 1
+   Spare Devices : 0
+
+            Name : linux:0
+            UUID : b7407176:2e88c73d:2c85e940:05ff7e06
+          Events : 5908
+
+     Number   Major   Minor   RaidDevice State
+        0       0        0        0      removed
+        2       8        3        1      active sync   /dev/sda3
+
+        3       8       19        -      faulty spare
+
+
+3.
+I insert the drive again - it become "/dev/sdc" instead of "/dev/sdb"
+
+4.
+And now I do the following to rebuild the array:
+
+# mdadm /dev/md0 -a /dev/sdc3
+
+mdadm: /dev/sdc3 reports being an active member for /dev/md0, but a --r=
+e-add fails.
+mdadm: not performing --add as that would convert /dev/sdc3 in to a spa=
+re.
+mdadm: To make this a spare, use "mdadm --zero-superblock /dev/sdc3" fi=
+rst.
+
+I have never seen this messages before (on another systems). But this i=
+s not a=20
+problem. I do, what they suggest:
+
+# mdadm --zero-superblock /dev/sdc3
+
+# mdadm --examine /dev/sdc3
+mdadm: No md superblock detected on /dev/sdc3.
+
+5.
+And now I try again rebuild the array:
+
+# mdadm /dev/md0 -a /dev/sdc3
+
+=2E.. and nothing happen! No message, no info. I repeat some times the =
+command.
+
+I also try this:
+
+# mdadm /dev/md0 -a -vv --force /dev/sdc3
+
+=2E.. also nothing. Somethimes, if I repeat the command one by one, in =
+logs appear=20
+the line:
+
+Aug 20 11:30:52 serwer-linmot kernel: [ 1978.111282] md: export_rdev(sd=
+c3)
+
+=2E.. and nothing else
+
+
+# mdadm --examine /dev/sdc3
+/dev/sdc3:
+           Magic : a92b4efc
+         Version : 1.0
+     Feature Map : 0x1
+      Array UUID : b7407176:2e88c73d:2c85e940:05ff7e06
+            Name : linux:0
+   Creation Time : Wed Aug  1 15:45:56 2012
+      Raid Level : raid1
+    Raid Devices : 2
+
+  Avail Dev Size : 231999344 (110.63 GiB 118.78 GB)
+      Array Size : 231999344 (110.63 GiB 118.78 GB)
+    Super Offset : 231999472 sectors
+           State : clean
+     Device UUID : f1a1f291:e10d85cc:b574c6d2:45fc0c5d
+
+Internal Bitmap : -8 sectors from superblock
+     Update Time : Mon Aug 20 11:17:07 2012
+        Checksum : 71bcac04 - correct
+          Events : 0
+
+
+    Device Role : spare
+    Array State : .A ('A' =3D=3D active, '.' =3D=3D missing)
+
+
+# mdadm --detail /dev/md0
+
+/dev/md0:
+         Version : 1.0
+   Creation Time : Wed Aug  1 15:45:56 2012
+      Raid Level : raid1
+      Array Size : 115999672 (110.63 GiB 118.78 GB)
+   Used Dev Size : 115999672 (110.63 GiB 118.78 GB)
+    Raid Devices : 2
+   Total Devices : 2
+     Persistence : Superblock is persistent
+
+   Intent Bitmap : Internal
+
+     Update Time : Mon Aug 20 11:18:43 2012
+           State : active, degraded
+  Active Devices : 1
+Working Devices : 1
+  Failed Devices : 1
+   Spare Devices : 0
+
+            Name : linux:0
+            UUID : b7407176:2e88c73d:2c85e940:05ff7e06
+          Events : 5946
+
+     Number   Major   Minor   RaidDevice State
+        0       0        0        0      removed
+        2       8        3        1      active sync   /dev/sda3
+
+        3       8       19        -      faulty spare
+
+
+Can anyone help?
+
+many thanks in advance
+
+Sergiusz Brzezi=C5=84ski
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
