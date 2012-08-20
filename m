@@ -1,220 +1,287 @@
-From: Tim Small <tim@buttersideup.com>
-Subject: Controller problems during reshape -> can't continue reshape after
- reboot.
-Date: Mon, 20 Aug 2012 20:55:38 +0100
-Message-ID: <5032963A.8000908@buttersideup.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: mdadm -add doesn't start rebuilding array
+Date: Tue, 21 Aug 2012 08:30:40 +1000
+Message-ID: <20120821083040.0d466ceb@notabene.brown>
+References: <5032050A.4000801@supersystem.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/EO64ts6ngjRO5wj_b0+X606"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5032050A.4000801@supersystem.pl>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Sergiusz =?UTF-8?Q?Brzezi=C5=84ski?= <Sergiusz.Brzezinski@supersystem.pl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+--Sig_/EO64ts6ngjRO5wj_b0+X606
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-I was attempting to reshape a RAID5 from 4 to 5 devices.  During the
-reshape, I had a problem with one of the controller cards in the
-machine, so that first one drive, had repeated errors (and was
-eventually marked as failed), and then several hours later, I/O to
-another drive effectively stalled.  At this point, /proc/mdstat was
-showing the reshape proceeding (with one drive marked as failed), but
-the throughput had dropped to zero.
+On Mon, 20 Aug 2012 11:36:10 +0200 Sergiusz Brzezi=C5=84ski
+<Sergiusz.Brzezinski@supersystem.pl> wrote:
 
+> Hi,
+>=20
+> My system is Ubuntu 12.04, kernel 3.2.0-27. mdadm: 3.2.3
+>=20
+> If I do:
+>=20
+> # mdadm /dev/md0 -a /dev/sdc3
+>=20
+> then nothing happen! No message on command line, no info in logs!
+>=20
+> Man mdadm says:
+>=20
+> -a, --add
+> hot-add listed devices.  If a device appears to have recently been part o=
+f the=20
+> array (possibly it failed or was removed) the device is  re-added  as  de=
+scribe=20
+>   in  the  next point.   If  that  fails  or the device was never part of=
+ the=20
+> array, the device is added as a hot-spare.  If the array is degraded, it =
+will=20
+> immediately start to rebuild data onto that spare.
+>=20
+> But array doesn't wont to rebuild.
+>=20
+> But not exactly. The bad info is, that sometimes it works and sometimes i=
+t doesn't.
+>=20
+> And if I restart the system, the array SOMETIMES start rebuilding and som=
+ethimes=20
+> doesn't!
+>=20
+> There is no information what's up (comnand line or logs) so I don't know =
+what to do.
+>=20
+>=20
+>=20
+> I describe bellow the whole procedure:
+>=20
+> 1.
+> There ist a working Raid1 array:
+>=20
+> # cat /proc/mdstat
+>=20
+> Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5] [rai=
+d4]=20
+> [raid10]
+> md0 : active raid1 sda3[2] sdb3[3]
+>        115999672 blocks super 1.0 [2/2] [UU]
+>        bitmap: 0/1 pages [0KB], 65536KB chunk
+>=20
+> # mdadm --detail /dev/md0
+>=20
+> /dev/md0:
+>          Version : 1.0
+>    Creation Time : Wed Aug  1 15:45:56 2012
+>       Raid Level : raid1
+>       Array Size : 115999672 (110.63 GiB 118.78 GB)
+>    Used Dev Size : 115999672 (110.63 GiB 118.78 GB)
+>     Raid Devices : 2
+>    Total Devices : 2
+>      Persistence : Superblock is persistent
+>=20
+>    Intent Bitmap : Internal
+>=20
+>      Update Time : Mon Aug 20 11:10:00 2012
+>            State : active
+>   Active Devices : 2
+> Working Devices : 2
+>   Failed Devices : 0
+>    Spare Devices : 0
+>=20
+>             Name : linux:0
+>             UUID : b7407176:2e88c73d:2c85e940:05ff7e06
+>           Events : 5897
+>=20
+>      Number   Major   Minor   RaidDevice State
+>         3       8       19        0      active sync   /dev/sdb3
+>         2       8        3        1      active sync   /dev/sda3
+>=20
+>=20
+> 2.
+> I remove (phisicaly) the "/dev/sdb" drive of the box (hot-swap)
+>=20
+> # cat /proc/mdstat
+>=20
+> Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5] [rai=
+d4]=20
+> [raid10]
+> md0 : active raid1 sda3[2] sdb3[3](F)
+>        115999672 blocks super 1.0 [2/1] [_U]
+>        bitmap: 1/1 pages [4KB], 65536KB chunk
+>=20
+> # mdadm --detail /dev/md0
+> /dev/md0:
+>          Version : 1.0
+>    Creation Time : Wed Aug  1 15:45:56 2012
+>       Raid Level : raid1
+>       Array Size : 115999672 (110.63 GiB 118.78 GB)
+>    Used Dev Size : 115999672 (110.63 GiB 118.78 GB)
+>     Raid Devices : 2
+>    Total Devices : 2
+>      Persistence : Superblock is persistent
+>=20
+>    Intent Bitmap : Internal
+>=20
+>      Update Time : Mon Aug 20 11:11:58 2012
+>            State : active, degraded
+>   Active Devices : 1
+> Working Devices : 1
+>   Failed Devices : 1
+>    Spare Devices : 0
+>=20
+>             Name : linux:0
+>             UUID : b7407176:2e88c73d:2c85e940:05ff7e06
+>           Events : 5908
+>=20
+>      Number   Major   Minor   RaidDevice State
+>         0       0        0        0      removed
+>         2       8        3        1      active sync   /dev/sda3
+>=20
+>         3       8       19        -      faulty spare
+>=20
+>=20
+> 3.
+> I insert the drive again - it become "/dev/sdc" instead of "/dev/sdb"
+>=20
+> 4.
+> And now I do the following to rebuild the array:
+>=20
+> # mdadm /dev/md0 -a /dev/sdc3
+>=20
+> mdadm: /dev/sdc3 reports being an active member for /dev/md0, but a --re-=
+add fails.
+> mdadm: not performing --add as that would convert /dev/sdc3 in to a spare.
+> mdadm: To make this a spare, use "mdadm --zero-superblock /dev/sdc3" firs=
+t.
+>=20
+> I have never seen this messages before (on another systems). But this is =
+not a=20
+> problem. I do, what they suggest:
+>=20
+> # mdadm --zero-superblock /dev/sdc3
+>=20
+> # mdadm --examine /dev/sdc3
+> mdadm: No md superblock detected on /dev/sdc3.
+>=20
+> 5.
+> And now I try again rebuild the array:
+>=20
+> # mdadm /dev/md0 -a /dev/sdc3
+>=20
+> ... and nothing happen! No message, no info. I repeat some times the comm=
+and.
+>=20
+> I also try this:
+>=20
+> # mdadm /dev/md0 -a -vv --force /dev/sdc3
+>=20
+> ... also nothing. Somethimes, if I repeat the command one by one, in logs=
+ appear=20
+> the line:
+>=20
+> Aug 20 11:30:52 serwer-linmot kernel: [ 1978.111282] md: export_rdev(sdc3)
+>=20
+> ... and nothing else
+>=20
+>=20
+> # mdadm --examine /dev/sdc3
+> /dev/sdc3:
+>            Magic : a92b4efc
+>          Version : 1.0
+>      Feature Map : 0x1
+>       Array UUID : b7407176:2e88c73d:2c85e940:05ff7e06
+>             Name : linux:0
+>    Creation Time : Wed Aug  1 15:45:56 2012
+>       Raid Level : raid1
+>     Raid Devices : 2
+>=20
+>   Avail Dev Size : 231999344 (110.63 GiB 118.78 GB)
+>       Array Size : 231999344 (110.63 GiB 118.78 GB)
+>     Super Offset : 231999472 sectors
+>            State : clean
+>      Device UUID : f1a1f291:e10d85cc:b574c6d2:45fc0c5d
+>=20
+> Internal Bitmap : -8 sectors from superblock
+>      Update Time : Mon Aug 20 11:17:07 2012
+>         Checksum : 71bcac04 - correct
+>           Events : 0
+>=20
+>=20
+>     Device Role : spare
+>     Array State : .A ('A' =3D=3D active, '.' =3D=3D missing)
+>=20
+>=20
+> # mdadm --detail /dev/md0
+>=20
+> /dev/md0:
+>          Version : 1.0
+>    Creation Time : Wed Aug  1 15:45:56 2012
+>       Raid Level : raid1
+>       Array Size : 115999672 (110.63 GiB 118.78 GB)
+>    Used Dev Size : 115999672 (110.63 GiB 118.78 GB)
+>     Raid Devices : 2
+>    Total Devices : 2
+>      Persistence : Superblock is persistent
+>=20
+>    Intent Bitmap : Internal
+>=20
+>      Update Time : Mon Aug 20 11:18:43 2012
+>            State : active, degraded
+>   Active Devices : 1
+> Working Devices : 1
+>   Failed Devices : 1
+>    Spare Devices : 0
+>=20
+>             Name : linux:0
+>             UUID : b7407176:2e88c73d:2c85e940:05ff7e06
+>           Events : 5946
+>=20
+>      Number   Major   Minor   RaidDevice State
+>         0       0        0        0      removed
+>         2       8        3        1      active sync   /dev/sda3
+>=20
+>         3       8       19        -      faulty spare
+>=20
+>=20
+> Can anyone help?
+>=20
 
-After rebooting the machine (alt-sysrq s, u, b) the array won't
-reassemble (with or without '--force')...
+I cannot see why that would happen.
+It seems to be failing somewhere in bind_rdev_to_array, but I don't know
+where.
+Can you run
+  strace -o /tmp/strace mdadm /dev/md0 --add /dev/sdc3
+and post the output ... or at last the tail end of the output.  There should
+be an ioctl which fails and I need to know what the error was (EEXIST,
+EINVAL, ENOSPC are the likely ones).  But don't just post that line, include
+at least the last 100 lines.
 
-(I've now replaced the card, and read all data on all drives
-successfully...)
+NeilBrown
 
-[ 2716.070788] raid5: md1 is not clean -- starting background reconstruction
-[ 2716.070984] raid5: reshape will continue
-[ 2716.071166] raid5: device sda1 operational as raid disk 0
-[ 2716.071350] raid5: device sdi1 operational as raid disk 4
-[ 2716.071534] raid5: device sdj1 operational as raid disk 3
-[ 2716.071715] raid5: device sdk1 operational as raid disk 1
-[ 2716.072217] raid5: allocated 5334kB for md1
-[ 2716.072452] 0: w=1 pa=2 pr=4 m=1 a=2 r=5 op1=0 op2=0
-[ 2716.072633] 4: w=2 pa=2 pr=4 m=1 a=2 r=5 op1=0 op2=0
-[ 2716.072816] 3: w=3 pa=2 pr=4 m=1 a=2 r=5 op1=0 op2=0
-[ 2716.073001] 1: w=4 pa=2 pr=4 m=1 a=2 r=5 op1=0 op2=0
-[ 2716.073180] raid5: cannot start dirty degraded array for md1
-[ 2716.073372] RAID5 conf printout:
-[ 2716.073544]  --- rd:5 wd:4
-[ 2716.073717]  disk 0, o:1, dev:sda1
-[ 2716.073884]  disk 1, o:1, dev:sdk1
-[ 2716.074071]  disk 3, o:1, dev:sdj1
-[ 2716.074239]  disk 4, o:1, dev:sdi1
-[ 2716.074575] raid5: failed to run raid set md1
-[ 2716.074749] md: pers->run() failed ...
+--Sig_/EO64ts6ngjRO5wj_b0+X606
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-Any chance of carrying on where it left off, or should I recreate the
-array from scratch?
+iQIVAwUBUDK6ojnsnt1WYoG5AQIgyw/+OWFi/gz43gnNwo/Xx19qKaMImuLEJiIP
+/DSDlSw4HHt1q706uhW5abvaaoJl3L8RDWuC+WXaM5VvFxdfXL4XHe+UBA6i9IZ/
+qvlY0cuB3cKpTMGXkOaft01GjMn+kyjX4f36qbIcTOROB8NOiZik/DRNCTjjIqoQ
+SFZ99JWPCUqWrs61mRZ//rmPjhNBj0i1u+aIxXLf67lRilVagpjbW80GIIkqa7dE
+Rqsd8BSwg55TKUsZDExCkDAS6WrwSBhuu3YHm4JNV1HUMqi3cRXCiZJJ0K4HmMLZ
+12dTVC/kirlAqfQ1Hb44DwTmhCnuww5kYUAwnd+aCmm+W1u/T68PmDNU6aTDMN5p
+BCyNWZAetfXxJXoAKMBSUNMl/x8wtVHl7sj8mlXaf5Jo1oStutvRNiYn1ha8WIh2
+vc0PBqOgz1cqaL5Hvmnk3Xlm+aQXB1aAgkYifCp+NbTtwGsXfGeQIztxzzET3Sqm
+lUUOupZyFTzFVbwc9zzEeze37CrXuu+mk+jl6ZW6LMgW6zWv9oVnaw4i4oXf39ZN
+hg2J0/6gZR7ajoYlBgsfMlrOPwR+HrLZRhTIoU2KZOK+BM21Td5GZM29xqjEf9TK
+BJTZ8IMTvx1L8Dl97r/64VuL6sYNRtToNPXcWmZq6IcOlBs7H3HoltX3jWkdnb8U
+yTN5y2Rqh40=
+=dKcn
+-----END PGP SIGNATURE-----
 
-# cat /etc/debian_version ; uname -a
-6.0.2
-Linux rodmell 2.6.32-5-amd64 #1 SMP Tue Jun 14 09:42:28 UTC 2011 x86_64
-GNU/Linux
-# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md1 : inactive sda1[0] sdi1[5] sdj1[4] sdk1[1]
-      7814054112 blocks super 1.2
-# mdadm -E /dev/sd[hijak]1
-/dev/sda1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x4
-     Array UUID : 717d7de6:49a886f6:fb20ac87:5a1e8a84
-           Name : rodmell:1  (local to host rodmell)
-  Creation Time : Mon Dec 19 18:00:13 2011
-     Raid Level : raid5
-   Raid Devices : 5
-
- Avail Dev Size : 3907027056 (1863.02 GiB 2000.40 GB)
-     Array Size : 15628103680 (7452.06 GiB 8001.59 GB)
-  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : active
-    Device UUID : 1bf82ae0:82b71e9b:6283dc62:467026fc
-
-  Reshape pos'n : 1622353920 (1547.20 GiB 1661.29 GB)
-  Delta Devices : 1 (4->5)
-
-    Update Time : Mon Aug 20 08:42:56 2012
-       Checksum : 46d057ad - correct
-         Events : 24587
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 0
-   Array State : AA.AA ('A' == active, '.' == missing)
-/dev/sdh1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x4
-     Array UUID : 717d7de6:49a886f6:fb20ac87:5a1e8a84
-           Name : rodmell:1  (local to host rodmell)
-  Creation Time : Mon Dec 19 18:00:13 2011
-     Raid Level : raid5
-   Raid Devices : 5
-
- Avail Dev Size : 3907027056 (1863.02 GiB 2000.40 GB)
-     Array Size : 15628103680 (7452.06 GiB 8001.59 GB)
-  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 3e9cca4d:3872738b:1903ee56:5a91b935
-
-  Reshape pos'n : 10582016 (10.09 GiB 10.84 GB)
-  Delta Devices : 1 (4->5)
-
-    Update Time : Thu Aug 16 17:30:46 2012
-       Checksum : 12400b18 - correct
-         Events : 15896
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 2
-   Array State : AAAAA ('A' == active, '.' == missing)
-/dev/sdi1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x4
-     Array UUID : 717d7de6:49a886f6:fb20ac87:5a1e8a84
-           Name : rodmell:1  (local to host rodmell)
-  Creation Time : Mon Dec 19 18:00:13 2011
-     Raid Level : raid5
-   Raid Devices : 5
-
- Avail Dev Size : 3907027056 (1863.02 GiB 2000.40 GB)
-     Array Size : 15628103680 (7452.06 GiB 8001.59 GB)
-  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 904de121:58fbef1d:16546bd7:d3ab29c5
-
-  Reshape pos'n : 1622353920 (1547.20 GiB 1661.29 GB)
-  Delta Devices : 1 (4->5)
-
-    Update Time : Fri Aug 17 01:32:23 2012
-       Checksum : 48e5a3d3 - correct
-         Events : 24586
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 4
-   Array State : AA.AA ('A' == active, '.' == missing)
-/dev/sdj1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x4
-     Array UUID : 717d7de6:49a886f6:fb20ac87:5a1e8a84
-           Name : rodmell:1  (local to host rodmell)
-  Creation Time : Mon Dec 19 18:00:13 2011
-     Raid Level : raid5
-   Raid Devices : 5
-
- Avail Dev Size : 3907027056 (1863.02 GiB 2000.40 GB)
-     Array Size : 15628103680 (7452.06 GiB 8001.59 GB)
-  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : active
-    Device UUID : 59efcddf:9e679807:09ce1bc4:d882af69
-
-  Reshape pos'n : 1622353920 (1547.20 GiB 1661.29 GB)
-  Delta Devices : 1 (4->5)
-
-    Update Time : Mon Aug 20 08:42:56 2012
-       Checksum : 81b55c43 - correct
-         Events : 24587
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 3
-   Array State : AA.AA ('A' == active, '.' == missing)
-/dev/sdk1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x4
-     Array UUID : 717d7de6:49a886f6:fb20ac87:5a1e8a84
-           Name : rodmell:1  (local to host rodmell)
-  Creation Time : Mon Dec 19 18:00:13 2011
-     Raid Level : raid5
-   Raid Devices : 5
-
- Avail Dev Size : 3907027056 (1863.02 GiB 2000.40 GB)
-     Array Size : 15628103680 (7452.06 GiB 8001.59 GB)
-  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : active
-    Device UUID : 31b29cdb:0b70201e:de2036a4:5aecda02
-
-  Reshape pos'n : 1622353920 (1547.20 GiB 1661.29 GB)
-  Delta Devices : 1 (4->5)
-
-    Update Time : Mon Aug 20 08:42:56 2012
-       Checksum : d51e3dc - correct
-         Events : 24587
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 1
-   Array State : AA.AA ('A' == active, '.' == missing)
-
-
-
-Cheers,
-
-Tim.
+--Sig_/EO64ts6ngjRO5wj_b0+X606--
