@@ -1,45 +1,37 @@
-From: Brad Campbell <brad@fnarfbargle.com>
-Subject: Re: Inexpensive RAID1 controller for home server?
-Date: Mon, 20 Aug 2012 07:59:17 +0800
-Message-ID: <50317DD5.5090708@fnarfbargle.com>
-References: <CAK2H+eeLncyi6tCrM-vEhDzT7ykOA6LJP+Qka56rxUFGv2_urw@mail.gmail.com> <50306707.40302@hardwarefreak.com> <20120819153443.7f697ca6@natsu> <50315F39.2030404@hardwarefreak.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: md raid behavior, bad sector uncorrectable read error
+Date: Sun, 19 Aug 2012 20:06:45 -0600
+Message-ID: <3D2BFD32-3039-4D65-9AAC-408D59F878D6@colorremedies.com>
+References: <3E06D7FC-092A-4CB6-B79C-7EC94424DEEE@colorremedies.com> <CAGkViCFBqJJWeaA1Wrpc_BBw=wd1wV3nVrArEB51LJpJsrmsug@mail.gmail.com> <FEEB11B4-5CCB-49F4-8010-80CE03A49FA4@colorremedies.com> <20120820081935.24289755@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v1278)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50315F39.2030404@hardwarefreak.com>
+In-Reply-To: <20120820081935.24289755@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: Roman Mamedov <rm@romanrm.ru>, Mark Knecht <markknecht@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 20/08/12 05:48, Stan Hoeppner wrote:
-> Roman has a beef with SiI. It's unfounded and unsubstantiated, but he has one nonetheless. He also 
-> apparently has a beef with me for constantly correcting him on these issues. Believe who you wish. 
-> I simply recommend you do your homework and independently verify everyone's claims. Or, you can 
-> simply buy any ~$20 HBA, and if it doesn't work, return it and get a different one. 
 
-Coming from someone who lost gigabytes of data to silent and unreported corruption in precisely the 
-fashion Roman is talking about (in fact it was his pointer that lead me to diagnose the card as 
-bad), It'll be a cold day in hell before I recommend a SIL card to anybody.
+On Aug 19, 2012, at 4:19 PM, NeilBrown wrote:
 
-Now, I bought my card from vendor in the Middle East, and it was an odd far-eastern brand with 
-little or no backup, so it may well be an artefact of the cards layout or manufacture that caused it 
-to occur. The fact it was reproducible in precisely the same manner as all the other reported issues 
-points toward a common fault of some kind.
+> On Sun, 19 Aug 2012 12:12:38 -0600 Chris Murphy <lists@colorremedies.com>
+> wrote:
+> 
+>> On Aug 19, 2012, at 3:47 AM, Mikael Abrahamsson wrote:
+>>> If I remember correctly from what has been described here before, a read error will cause a re-write with information created from parity
+>> 
+>> That's the thing I'd like to get a definitive answer one. If only it were easy to simulate bad sectors in VM's I could just test it!
+> 
+> If only it were easy to read the documentation, and if only the documentation
+> were sufficiently complete.....
+> 
+> % man 4 md
+> 
+> search for 'read error'
 
-I stumped up a bit more cash and bought 4 "IBM" branded LSI SAS cards from fleabay and have not 
-looked back.
+The well deserved and diplomatic variant of RTFM. So the summary is: a write error on RAID 1456 causes md to mark the device as faulty. A read error (with recent kernels) causes correct data to overwrite the bad block *and* re-read, and if either write or re-read fails, the device is marked faulty. Very cool.
 
-To quote Stan directly :
-"Believe who you wish. I simply recommend you do your homework and independently verify everyone's 
-claims. Or, you can simply buy any ~$20 HBA, and if it doesn't work, return it and get a different one."
+BTW, there's a lot of detail nuggets in man md that I'm not finding documented anywhere else. Nor have I found in other documentation a reference to man md until now.
 
-The big problem with that last sentence in the context of the SIL card is often you won't know about 
-the issue until it has eaten most of your data, and done it so slowly and insidiously that your 3 
-months of rotating backups are corrupted also.
-
-But then I'm not espousing contents of other peoples blogs, only talking from first hand experience. 
-As always, YMMV.
-
-Brad
+Chris Murphy
