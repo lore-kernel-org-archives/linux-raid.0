@@ -1,161 +1,220 @@
-From: "Vanhorn, Mike" <michael.vanhorn@wright.edu>
-Subject: md raid6 not working
-Date: Mon, 20 Aug 2012 19:06:17 +0000
-Message-ID: <CC5802CB.287BB%michael.vanhorn@wright.edu>
+From: Tim Small <tim@buttersideup.com>
+Subject: Controller problems during reshape -> can't continue reshape after
+ reboot.
+Date: Mon, 20 Aug 2012 20:55:38 +0100
+Message-ID: <5032963A.8000908@buttersideup.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
-Content-ID: <0565DB80A46FAA43998553268B77DFB9@prod.exchangelabs.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi,
 
-I have/had an 8-disk md raid 6, /dev/md0. At some point over the weekend,
-two of the disks suddently became marked as "spare" and the other has
-disappeared completely (at least as far as mdadm is concerned).
+I was attempting to reshape a RAID5 from 4 to 5 devices.  During the
+reshape, I had a problem with one of the controller cards in the
+machine, so that first one drive, had repeated errors (and was
+eventually marked as failed), and then several hours later, I/O to
+another drive effectively stalled.  At this point, /proc/mdstat was
+showing the reshape proceeding (with one drive marked as failed), but
+the throughput had dropped to zero.
 
-All eight disks seem to be just fine, so I think the data is okay, and if
-I could just convince it to start the array with all 8 disks, I actually
-think everything would be fine. However, everything I've tried has come to
-nothing, and now I think I am stuck.
 
-Is there some way to just "force" is to change the two spare disks from
-"spare" to "active", and then let it go?
+After rebooting the machine (alt-sysrq s, u, b) the array won't
+reassemble (with or without '--force')...
 
-Here's what I think are relevant details:
+(I've now replaced the card, and read all data on all drives
+successfully...)
 
-The RAID is/was composed of /dev/sd[bcdefghi]1.
+[ 2716.070788] raid5: md1 is not clean -- starting background reconstruction
+[ 2716.070984] raid5: reshape will continue
+[ 2716.071166] raid5: device sda1 operational as raid disk 0
+[ 2716.071350] raid5: device sdi1 operational as raid disk 4
+[ 2716.071534] raid5: device sdj1 operational as raid disk 3
+[ 2716.071715] raid5: device sdk1 operational as raid disk 1
+[ 2716.072217] raid5: allocated 5334kB for md1
+[ 2716.072452] 0: w=1 pa=2 pr=4 m=1 a=2 r=5 op1=0 op2=0
+[ 2716.072633] 4: w=2 pa=2 pr=4 m=1 a=2 r=5 op1=0 op2=0
+[ 2716.072816] 3: w=3 pa=2 pr=4 m=1 a=2 r=5 op1=0 op2=0
+[ 2716.073001] 1: w=4 pa=2 pr=4 m=1 a=2 r=5 op1=0 op2=0
+[ 2716.073180] raid5: cannot start dirty degraded array for md1
+[ 2716.073372] RAID5 conf printout:
+[ 2716.073544]  --- rd:5 wd:4
+[ 2716.073717]  disk 0, o:1, dev:sda1
+[ 2716.073884]  disk 1, o:1, dev:sdk1
+[ 2716.074071]  disk 3, o:1, dev:sdj1
+[ 2716.074239]  disk 4, o:1, dev:sdi1
+[ 2716.074575] raid5: failed to run raid set md1
+[ 2716.074749] md: pers->run() failed ...
 
-/proc/mdstat says:
 
+Any chance of carrying on where it left off, or should I recreate the
+array from scratch?
+
+# cat /etc/debian_version ; uname -a
+6.0.2
+Linux rodmell 2.6.32-5-amd64 #1 SMP Tue Jun 14 09:42:28 UTC 2011 x86_64
+GNU/Linux
 # cat /proc/mdstat
-Personalities : [raid6]
-md0 : inactive sdc1[1] sdd1[10] sdi1[8] sdg1[5] sdf1[4] sde1[3] sdh1[2]
-      13674583552 blocks
-       
-unused devices: <none>
-# 
+Personalities : [raid6] [raid5] [raid4]
+md1 : inactive sda1[0] sdi1[5] sdj1[4] sdk1[1]
+      7814054112 blocks super 1.2
+# mdadm -E /dev/sd[hijak]1
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : 717d7de6:49a886f6:fb20ac87:5a1e8a84
+           Name : rodmell:1  (local to host rodmell)
+  Creation Time : Mon Dec 19 18:00:13 2011
+     Raid Level : raid5
+   Raid Devices : 5
 
-So, here, sdb is the only one missing. However, if I try to start the array
+ Avail Dev Size : 3907027056 (1863.02 GiB 2000.40 GB)
+     Array Size : 15628103680 (7452.06 GiB 8001.59 GB)
+  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 1bf82ae0:82b71e9b:6283dc62:467026fc
 
-# mdadm --assemble /dev/md0
-mdadm: /dev/sdi1 has no superblock - assembly aborted
-#
+  Reshape pos'n : 1622353920 (1547.20 GiB 1661.29 GB)
+  Delta Devices : 1 (4->5)
 
+    Update Time : Mon Aug 20 08:42:56 2012
+       Checksum : 46d057ad - correct
+         Events : 24587
 
-So, I check /dev/sdi1:
+         Layout : left-symmetric
+     Chunk Size : 512K
 
-# mdadm --examine /dev/sdi1
+   Device Role : Active device 0
+   Array State : AA.AA ('A' == active, '.' == missing)
+/dev/sdh1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : 717d7de6:49a886f6:fb20ac87:5a1e8a84
+           Name : rodmell:1  (local to host rodmell)
+  Creation Time : Mon Dec 19 18:00:13 2011
+     Raid Level : raid5
+   Raid Devices : 5
+
+ Avail Dev Size : 3907027056 (1863.02 GiB 2000.40 GB)
+     Array Size : 15628103680 (7452.06 GiB 8001.59 GB)
+  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 3e9cca4d:3872738b:1903ee56:5a91b935
+
+  Reshape pos'n : 10582016 (10.09 GiB 10.84 GB)
+  Delta Devices : 1 (4->5)
+
+    Update Time : Thu Aug 16 17:30:46 2012
+       Checksum : 12400b18 - correct
+         Events : 15896
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 2
+   Array State : AAAAA ('A' == active, '.' == missing)
 /dev/sdi1:
           Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 6b8b4567:327b23c6:643c9869:66334873
-  Creation Time : Mon Jun 28 10:46:51 2010
-     Raid Level : raid6
-  Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
-     Array Size : 11721071616 (11178.09 GiB 12002.38 GB)
-   Raid Devices : 8
-  Total Devices : 6
-Preferred Minor : 0
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : 717d7de6:49a886f6:fb20ac87:5a1e8a84
+           Name : rodmell:1  (local to host rodmell)
+  Creation Time : Mon Dec 19 18:00:13 2011
+     Raid Level : raid5
+   Raid Devices : 5
 
-    Update Time : Mon Aug 20 12:10:18 2012
+ Avail Dev Size : 3907027056 (1863.02 GiB 2000.40 GB)
+     Array Size : 15628103680 (7452.06 GiB 8001.59 GB)
+  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
           State : clean
- Active Devices : 5
-Working Devices : 6
- Failed Devices : 2
-  Spare Devices : 1
-       Checksum : 297da62d - correct
-         Events : 59235337
+    Device UUID : 904de121:58fbef1d:16546bd7:d3ab29c5
+
+  Reshape pos'n : 1622353920 (1547.20 GiB 1661.29 GB)
+  Delta Devices : 1 (4->5)
+
+    Update Time : Fri Aug 17 01:32:23 2012
+       Checksum : 48e5a3d3 - correct
+         Events : 24586
 
          Layout : left-symmetric
-     Chunk Size : 64K
+     Chunk Size : 512K
 
-      Number   Major   Minor   RaidDevice State
-this     8       8      129        8      spare   /dev/sdi1
-
-   0     0       0        0        0      removed
-   1     1       8       33        1      active sync   /dev/sdc1
-   2     2       8      113        2      active sync   /dev/sdh1
-   3     3       8       65        3      active sync   /dev/sde1
-   4     4       8       81        4      active sync   /dev/sdf1
-   5     5       8       97        5      active sync   /dev/sdg1
-   6     6       0        0        6      faulty removed
-   7     7       0        0        7      faulty removed
-   8     8       8      129        8      spare   /dev/sdi1
-#
-
-
-The fact that that command worked on /dev/sdi1 indicates that there is, in
-fact, a superblock, doesn't it?
-
-At any rate, going from the output of --examine on sdi1, it would seem
-that /dev/sdd1 is also not working. So,
-
-# mdadm --examine /dev/sdd1
-/dev/sdd1:
+   Device Role : Active device 4
+   Array State : AA.AA ('A' == active, '.' == missing)
+/dev/sdj1:
           Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 6b8b4567:327b23c6:643c9869:66334873
-  Creation Time : Mon Jun 28 10:46:51 2010
-     Raid Level : raid6
-  Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
-     Array Size : 11721071616 (11178.09 GiB 12002.38 GB)
-   Raid Devices : 8
-  Total Devices : 5
-Preferred Minor : 0
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : 717d7de6:49a886f6:fb20ac87:5a1e8a84
+           Name : rodmell:1  (local to host rodmell)
+  Creation Time : Mon Dec 19 18:00:13 2011
+     Raid Level : raid5
+   Raid Devices : 5
 
-    Update Time : Mon Aug 20 12:10:21 2012
-          State : clean
- Active Devices : 5
-Working Devices : 5
- Failed Devices : 2
-  Spare Devices : 0
-       Checksum : 297da583 - correct
-         Events : 59235338
+ Avail Dev Size : 3907027056 (1863.02 GiB 2000.40 GB)
+     Array Size : 15628103680 (7452.06 GiB 8001.59 GB)
+  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 59efcddf:9e679807:09ce1bc4:d882af69
+
+  Reshape pos'n : 1622353920 (1547.20 GiB 1661.29 GB)
+  Delta Devices : 1 (4->5)
+
+    Update Time : Mon Aug 20 08:42:56 2012
+       Checksum : 81b55c43 - correct
+         Events : 24587
 
          Layout : left-symmetric
-     Chunk Size : 64K
+     Chunk Size : 512K
 
-      Number   Major   Minor   RaidDevice State
-this    10       8       49       -1      spare   /dev/sdd1
+   Device Role : Active device 3
+   Array State : AA.AA ('A' == active, '.' == missing)
+/dev/sdk1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : 717d7de6:49a886f6:fb20ac87:5a1e8a84
+           Name : rodmell:1  (local to host rodmell)
+  Creation Time : Mon Dec 19 18:00:13 2011
+     Raid Level : raid5
+   Raid Devices : 5
 
-   0     0       0        0        0      removed
-   1     1       8       33        1      active sync   /dev/sdc1
-   2     2       8      113        2      active sync   /dev/sdh1
-   3     3       8       65        3      active sync   /dev/sde1
-   4     4       8       81        4      active sync   /dev/sdf1
-   5     5       8       97        5      active sync   /dev/sdg1
-   6     6       0        0        6      faulty removed
-   7     7       0        0        7      faulty removed
-# 
+ Avail Dev Size : 3907027056 (1863.02 GiB 2000.40 GB)
+     Array Size : 15628103680 (7452.06 GiB 8001.59 GB)
+  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 31b29cdb:0b70201e:de2036a4:5aecda02
 
+  Reshape pos'n : 1622353920 (1547.20 GiB 1661.29 GB)
+  Delta Devices : 1 (4->5)
 
-Which would seem to indicate that sdd1 is fine, too. So, then, what about
-sdb1?
+    Update Time : Mon Aug 20 08:42:56 2012
+       Checksum : d51e3dc - correct
+         Events : 24587
 
-# mdadm --examine /dev/sdb1
-mdadm: No md superblock detected on /dev/sdb1.
-#
+         Layout : left-symmetric
+     Chunk Size : 512K
 
-
-Okay, fine, maybe something actually has happened to sdb1. However, since
-it's a RAID6, having that one bad disk should be survivable. If I could
-just get the other two disks (sdi1 and sdd1) to not be spares.
-
-
----
-Mike VanHorn
-Senior Computer Systems Administrator
-College of Engineering and Computer Science
-Wright State University
-265 Russ Engineering Center
-937-775-5157
-michael.vanhorn@wright.edu
-http://www.cecs.wright.edu/~mvanhorn/
+   Device Role : Active device 1
+   Array State : AA.AA ('A' == active, '.' == missing)
 
 
 
+Cheers,
 
+Tim.
