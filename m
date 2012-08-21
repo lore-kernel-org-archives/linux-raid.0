@@ -1,89 +1,36 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: mdadm --monitor: need extra feature?
-Date: Tue, 21 Aug 2012 22:39:33 +1000
-Message-ID: <50338185.4020003@websitemanagers.com.au>
-References: <503365EB.6000006@supersystem.pl> <503366A1.9030307@hesbynett.no> <50337654.9000905@supersystem.pl>
+From: Miquel van Smoorenburg <mikevs@xs4all.net>
+Subject: Re: O_DIRECT to md raid 6 is slow
+Date: Tue, 21 Aug 2012 16:51:23 +0200
+Message-ID: <5033A06B.30508@xs4all.net>
+References: <CALCETrWCu=UPATPdqWP=Gpvswv-RDwaxfr1W1jxYtUMZsqKgSQ@mail.gmail.com> <502B8D1F.7030706@anonymous.org.uk> <CALCETrX=mi92qwOAjt_7Qu-ho_Hdg_5SHX-_8nXYRer4JnzD0w@mail.gmail.com> <201208152307.q7FN7hMR008630@xs8.xs4all.nl> <502CD3F8.70001@hardwarefreak.com> <502D6B0A.6090508@xs4all.net> <502DF357.8090205@hardwarefreak.com> <502E2817.8040306@xs4all.net> <502F237D.6060806@hardwarefreak.com> <502F698C.9010507@msgid.tls.msk.ru> <50305AB9.5080302@hardwarefreak.com> <5030F1C6.90205@hesbynett.no> <50317804.9010701@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50337654.9000905@supersystem.pl>
-Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?U2VyZ2l1c3ogQnJ6ZXppxYRza2k=?= <Sergiusz.Brzezinski@supersystem.pl>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <50317804.9010701@hardwarefreak.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: stan@hardwarefreak.com
+Cc: David Brown <david.brown@hesbynett.no>, Michael Tokarev <mjt@tls.msk.ru>, Linux RAID <linux-raid@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 21/08/12 21:51, Sergiusz Brzezi=C5=84ski wrote:
->
->
-> W dniu 21.08.2012 12:44, David Brown pisze:
->> On 21/08/2012 12:41, Sergiusz Brzezi=C5=84ski wrote:
->>> Hi,
->>>
->>> I use Raid1 to make backup of the whole system.
->>
->> Raid is not a backup system. It is to improve uptimes, minimise
->> downtimes due to
->> disk failures, and possibly to improve disk speed and/or capacity.
->>
->> I would recommend you first think about what you are trying to
->> achieve here -
->> what are you trying to back up, how do you see restores being used, =
-how
->> efficiently are you using your hardware, your bandwidth, your time
->> and effort?
->>
->> You would probably be better off with a normal fixed 2-disk raid1 to
->> minimise
->> the problems caused by a single disk failure, combined with an rsync
->> snapshot
->> style backup that can be fully automated and give quick and easy
->> recovery of
->> multiple old versions of files in the face of the most common cause
->> of data loss
->> - human error.
-> [...]
->
-> I know, I know. Raid is not a backup system :)
-Aside from RAID is not a backup, perhaps the more useful suggestion
-would be to use the right tool for the job...
+On 08/20/2012 01:34 AM, Stan Hoeppner wrote:
+> I'm glad you jumped in David.  You made a critical statement of fact
+> below which clears some things up.  If you had stated it early on,
+> before Miquel stole the thread and moved it to LKML proper, it would
+> have short circuited a lot of this discussion.  Which is:
 
-So, again, ignoring that you possibly should not be using RAID for a
-backup... how about using udev scripts to see when you plugin a drive,
-and that script can check the UUID against any md arrays, and if it
-matches, add it to the array....
+I'm sorry about that, that's because of the software that I use to 
+follow most mailinglist. I didn't notice that the discussion was cc'ed 
+to both lkml and l-r. I should fix that.
 
-BTW, I've used BackupPC (Linux based, free software for complete backup=
-s
-of linux + windows + pretty much any other OS, using hard links to
-de-dupe files), which would export the most recent backup of each
-machine and dump it as a plain tar.bz2 file onto external HDD, which wa=
-s
-auto-detected based on the following criteria (which I decided was "saf=
-e
-enough"):
-1) Matching the UUID to a list of known UUID's for backup drives in the=
- pool
-2) We could mount the first partition with a pre-determined FS type
-(mount -t ext3 blah)
-3) After mounting, a specific file existed (if [ -f
-/mnt/archive/special_file ])
-If all that matched, then we would create a new archive for the first
-host, then delete any old archive for this host, repeat for all hosts,
-unmount, send complete report to monitoring system.
+> Thus my original statement was correct, or at least half correct[1], as
+> it pertained to md/RAID6.  Then Miquel switched the discussion to
+> md/RAID5 and stated I was all wet.  I wasn't, and neither was Dave
+> Chinner.  I was simply unaware of this md/RAID5 single block write RMW
+> shortcut
 
+Well, all I tried to say is that a small write of, say, 4K, to a 
+raid5/raid6 array does not need to re-write the whole stripe (i.e. 
+chunksize * nr_disks) but just 4K * nr_disks, or the RMW variant of that.
 
-Regards,
-Adam
-
-
---=20
-Adam Goryachev
-Website Managers
-www.websitemanagers.com.au
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Mike.
