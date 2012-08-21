@@ -1,131 +1,96 @@
-From: Fengguang Wu <fengguang.wu@intel.com>
-Subject: Re: ext4 write performance regression in 3.6-rc1 on RAID0/5
-Date: Tue, 21 Aug 2012 20:07:11 +0800
-Message-ID: <20120821120711.GA21736@localhost>
-References: <CABRT9RAOhaxcYdCxMn5neJ9WT85r=h=7WgZ2dmLaOs-MMqDW9A@mail.gmail.com>
- <20120816024654.GB3781@thunk.org>
- <20120816111051.GA16036@localhost>
- <20120816152513.GA31346@thunk.org>
- <20120817060915.GB28786@localhost>
- <20120817134039.GB11439@thunk.org>
- <20120817142526.GA1059@localhost>
- <20120818064457.7e94d266@notabene.brown>
- <20120821094221.GA18919@localhost>
+From: =?ISO-8859-2?Q?Sergiusz_Brzezi=F1ski?=
+	<Sergiusz.Brzezinski@supersystem.pl>
+Subject: Re: mdadm -add doesn't start rebuilding array
+Date: Tue, 21 Aug 2012 14:09:47 +0200
+Message-ID: <50337A8B.1080903@supersystem.pl>
+References: <5032050A.4000801@supersystem.pl> <20120821083040.0d466ceb@notabene.brown> <50332E9E.6050108@supersystem.pl> <20120821182202.3ab1b22d@notabene.brown> <503345EB.4070408@debian.org> <503356D5.8050805@supersystem.pl> <alpine.DEB.2.00.1208211218300.27104@uplift.swm.pp.se> <5033692A.4090206@debian.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120821094221.GA18919@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Theodore Ts'o <tytso@mit.edu>, Marti Raudsepp <marti@juffo.org>, Kernel hackers <linux-kernel@vger.kernel.org>, ext4 hackers <linux-ext4@vger.kernel.org>, maze@google.com, "Shi, Alex" <alex.shi@intel.com>, linux-fsdevel@vger.kernel.org, linux RAID <linux-raid@vger.kernel.org>, Li Shaohua <shli@fusionio.com>
+Content-Type: text/plain; charset=ISO-8859-2;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5033692A.4090206@debian.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Dmitrijs Ledkovs <xnox@debian.org>
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Aug 21, 2012 at 05:42:21PM +0800, Fengguang Wu wrote:
-> On Sat, Aug 18, 2012 at 06:44:57AM +1000, NeilBrown wrote:
-> > On Fri, 17 Aug 2012 22:25:26 +0800 Fengguang Wu <fengguang.wu@intel.com>
-> > wrote:
-> > 
-> > > [CC md list]
-> > > 
-> > > On Fri, Aug 17, 2012 at 09:40:39AM -0400, Theodore Ts'o wrote:
-> > > > On Fri, Aug 17, 2012 at 02:09:15PM +0800, Fengguang Wu wrote:
-> > > > > Ted,
-> > > > > 
-> > > > > I find ext4 write performance dropped by 3.3% on average in the
-> > > > > 3.6-rc1 merge window. xfs and btrfs are fine.
-> > > > > 
-> > > > > Two machines are tested. The performance regression happens in the
-> > > > > lkp-nex04 machine, which is equipped with 12 SSD drives. lkp-st02 does
-> > > > > not see regression, which is equipped with HDD drives. I'll continue
-> > > > > to repeat the tests and report variations.
-> > > > 
-> > > > Hmm... I've checked out the commits in "git log v3.5..v3.6-rc1 --
-> > > > fs/ext4 fs/jbd2" and I don't see anything that I would expect would
-> > > > cause that.  The are the lock elimination changes for Direct I/O
-> > > > overwrites, but that shouldn't matter for your tests which are
-> > > > measuring buffered writes, correct?
-> > > > 
-> > > > Is there any chance you could do me a favor and do a git bisect
-> > > > restricted to commits involving fs/ext4 and fs/jbd2?
-> > > 
-> > > I noticed that the regressions all happen in the RAID0/RAID5 cases.
-> > > So it may be some interactions between the RAID/ext4 code?
-> > 
-> > I'm aware of some performance regression in RAID5 which I will be drilling
-> > down into next week.  Some things are faster, but some are slower :-(
-> > 
-> > RAID0 should be unchanged though - I don't think I've changed anything there.
-> > 
-> > Looking at your numbers, JBOD ranges from  +6.5% to -1.5%
-> >                         RAID0 ranges from  +4.0% to -19.2%
-> >                         RAID5 ranges from +20.7% to -39.7%
-> > 
-> > I'm guessing + is good and - is bad?
-> 
-> Yes.
-> 
-> > The RAID5 numbers don't surprise me.  The RAID0 do.
-> 
-> You are right. I did more tests and it's now obvious that RAID0 is
-> mostly fine. The major regressions are in the RAID5 10/100dd cases.
-> JBOD is performing better in 3.6.0-rc1 :-)
-> 
-> > > 
-> > > I'll try to get some ext2/3 numbers, which should have less changes on the fs side.
-> > 
-> > Thanks.  That will be useful.
-> 
-> Here are the more complete results.
-> 
->    RAID5     ext4    100dd    -7.3%
->    RAID5     ext4     10dd    -2.2%
->    RAID5     ext4      1dd   +12.1%
->    RAID5     ext3    100dd    -3.1%
->    RAID5     ext3     10dd   -11.5%
->    RAID5     ext3      1dd    +8.9%
->    RAID5     ext2    100dd   -10.5%
->    RAID5     ext2     10dd    -5.2%
->    RAID5     ext2      1dd   +10.0%
->    RAID0     ext4    100dd    +1.7%
->    RAID0     ext4     10dd    -0.9%
->    RAID0     ext4      1dd    -1.1%
->    RAID0     ext3    100dd    -4.2%
->    RAID0     ext3     10dd    -0.2%
->    RAID0     ext3      1dd    -1.0%
->    RAID0     ext2    100dd   +11.3%
->    RAID0     ext2     10dd    +4.7%
->    RAID0     ext2      1dd    -1.6%
->     JBOD     ext4    100dd    +5.9%
->     JBOD     ext4     10dd    +6.0%
->     JBOD     ext4      1dd    +0.6%
->     JBOD     ext3    100dd    +6.1%
->     JBOD     ext3     10dd    +1.9%
->     JBOD     ext3      1dd    +1.7%
->     JBOD     ext2    100dd    +9.9%
->     JBOD     ext2     10dd    +9.4%
->     JBOD     ext2      1dd    +0.5%
+W dniu 21.08.2012 12:55, Dmitrijs Ledkovs pisze:
+> On 21/08/12 11:19, Mikael Abrahamsson wrote:
+>> On Tue, 21 Aug 2012, Sergiusz Brzezi=F1ski wrote:
+>>
+>>> Hi,
+>>>
+>>> Yes! After ugrading to 3.2.5 it started working.
+>>>
+>>> Sorry, I didn't first check if there is a newer version of mdadm. W=
+e
+>>> would not waste time for this problem.
+>>
+>> It's still in proposed-updates, right? I entered information in the
+>> ubuntu bugzilla regarding these problems and asked for the 3.2.5 to =
+be
+>> pushed out, but I haven't seen any more activity after that (this wa=
+s a
+>> few weeks ago, I was hit by the exact same bug a while ago).
+>>
+>
+> https://launchpad.net/ubuntu/+source/mdadm/+publishinghistory
+>
+> Says it was copied from proposed pocket into updates on
+> 2012-08-13 21:03:40 BST
+>
+> Ubuntu does not use bugzilla. Can you give me a URL where you logged
+> such request?
+>
+> Run apt-get update and/or use a more up to date mirror?
+>
+>
 
-And here are the xfs/btrfs results. Very impressive RAID5 improvements!
+I used synaptics (gui front-end) to install the package.
 
-   RAID5    btrfs    100dd   +25.8%
-   RAID5    btrfs     10dd   +21.3%
-   RAID5    btrfs      1dd   +14.3%
-   RAID5      xfs    100dd   +32.8%
-   RAID5      xfs     10dd   +21.5%
-   RAID5      xfs      1dd   +25.2%
-   RAID0    btrfs    100dd    -7.4%
-   RAID0    btrfs     10dd    -0.2%
-   RAID0    btrfs      1dd    -2.8%
-   RAID0      xfs    100dd   +18.8%
-   RAID0      xfs     10dd    +0.0%
-   RAID0      xfs      1dd    +3.8%
-    JBOD    btrfs    100dd    -0.0%
-    JBOD    btrfs     10dd    +2.3%
-    JBOD    btrfs      1dd    -0.1%
-    JBOD      xfs    100dd    +8.3%
-    JBOD      xfs     10dd    +4.1%
-    JBOD      xfs      1dd    +0.1%
+And in my /etc/apt/sources.list is:
 
-Thanks,
-Fengguang
+deb http://pl.archive.ubuntu.com/ubuntu/ precise main restricted
+deb-src http://pl.archive.ubuntu.com/ubuntu/ precise main restricted
+deb http://pl.archive.ubuntu.com/ubuntu/ precise-updates main restricte=
+d
+deb-src http://pl.archive.ubuntu.com/ubuntu/ precise-updates main restr=
+icted
+deb http://pl.archive.ubuntu.com/ubuntu/ precise universe
+deb-src http://pl.archive.ubuntu.com/ubuntu/ precise universe
+deb http://pl.archive.ubuntu.com/ubuntu/ precise-updates universe
+deb-src http://pl.archive.ubuntu.com/ubuntu/ precise-updates universe
+deb http://pl.archive.ubuntu.com/ubuntu/ precise multiverse
+deb-src http://pl.archive.ubuntu.com/ubuntu/ precise multiverse
+deb http://pl.archive.ubuntu.com/ubuntu/ precise-updates multiverse
+deb-src http://pl.archive.ubuntu.com/ubuntu/ precise-updates multiverse
+deb http://pl.archive.ubuntu.com/ubuntu/ precise-backports main restric=
+ted=20
+universe multiverse
+deb-src http://pl.archive.ubuntu.com/ubuntu/ precise-backports main res=
+tricted=20
+universe multiverse
+deb http://security.ubuntu.com/ubuntu precise-security main restricted
+deb-src http://security.ubuntu.com/ubuntu precise-security main restric=
+ted
+deb http://security.ubuntu.com/ubuntu precise-security universe
+deb-src http://security.ubuntu.com/ubuntu precise-security universe
+deb http://security.ubuntu.com/ubuntu precise-security multiverse
+deb-src http://security.ubuntu.com/ubuntu precise-security multiverse
+deb http://extras.ubuntu.com/ubuntu precise main
+deb-src http://extras.ubuntu.com/ubuntu precise main
+deb http://pl.archive.ubuntu.com/ubuntu/ precise-proposed restricted ma=
+in=20
+multiverse universe
+
+
+Sergiusz
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
