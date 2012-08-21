@@ -1,52 +1,44 @@
-From: Dmitrijs Ledkovs <xnox@debian.org>
-Subject: Re: mdadm -add doesn't start rebuilding array
-Date: Tue, 21 Aug 2012 11:55:38 +0100
-Message-ID: <5033692A.4090206@debian.org>
-References: <5032050A.4000801@supersystem.pl> <20120821083040.0d466ceb@notabene.brown> <50332E9E.6050108@supersystem.pl> <20120821182202.3ab1b22d@notabene.brown> <503345EB.4070408@debian.org> <503356D5.8050805@supersystem.pl> <alpine.DEB.2.00.1208211218300.27104@uplift.swm.pp.se>
+From: "Vanhorn, Mike" <michael.vanhorn@wright.edu>
+Subject: RE: md raid6 not working
+Date: Tue, 21 Aug 2012 11:17:57 +0000
+Message-ID: <429D03F4F1CC234886D1288428CFE8E0D42B0E@CH1PRD0102MB110.prod.exchangelabs.com>
+References: <CC5802CB.287BB%michael.vanhorn@wright.edu>,<20120821083402.5e5b2fcf@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1208211218300.27104@uplift.swm.pp.se>
+In-Reply-To: <20120821083402.5e5b2fcf@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: =?ISO-8859-2?Q?Sergiusz_Brzezi=F1ski?= <Sergiusz.Brzezinski@supersystem.pl>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 21/08/12 11:19, Mikael Abrahamsson wrote:
-> On Tue, 21 Aug 2012, Sergiusz Brzezi=F1ski wrote:
->=20
->> Hi,
->>
->> Yes! After ugrading to 3.2.5 it started working.
->>
->> Sorry, I didn't first check if there is a newer version of mdadm. We
->> would not waste time for this problem.
->=20
-> It's still in proposed-updates, right? I entered information in the
-> ubuntu bugzilla regarding these problems and asked for the 3.2.5 to b=
-e
-> pushed out, but I haven't seen any more activity after that (this was=
- a
-> few weeks ago, I was hit by the exact same bug a while ago).
->=20
+Thank you for your response. Here is the output you requested.
 
-https://launchpad.net/ubuntu/+source/mdadm/+publishinghistory
+>What is the result of:
+>
+>  mdadm -S /dev/md0
 
-Says it was copied from proposed pocket into updates on
-2012-08-13 21:03:40 BST
+# mdadm -S /dev/md0
+mdadm: stopped /dev/md0
+#
 
-Ubuntu does not use bugzilla. Can you give me a URL where you logged
-such request?
+>  mdadm -Avvv /dev/md0
 
-Run apt-get update and/or use a more up to date mirror?
+# mdadm -Avvv /dev/md0
+mdadm: looking for devices for /dev/md0
+mdadm: cannot open device /dev/sdi1: Device or resource busy
+mdadm: /dev/sdi1 has no superblock - assembly aborted
+#
 
+---
+Mike VanHorn
+Senior Computer Systems Administrator
+College of Engineering and Computer Science
+Wright State University
+265 Russ Engineering Center
+937-775-5157
+michael.vanhorn@wright.edu
+http://www.cecs.wright.edu/~mvanhorn/
 
---=20
-Regards,
-Dmitrijs.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
