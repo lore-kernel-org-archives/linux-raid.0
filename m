@@ -1,37 +1,41 @@
-From: Michael-John Turner <mj@mjturner.net>
-Subject: Re: Controller problems during reshape -> can't continue reshape
- after reboot.
-Date: Tue, 21 Aug 2012 17:15:09 +0100
-Message-ID: <20120821161508.GD12850@majestic.pimp.org.za>
-References: <5032963A.8000908@buttersideup.com>
- <5032DB8F.2010101@anonymous.org.uk>
- <50333DE6.8010708@buttersideup.com>
+From: Dan Williams <djbw@fb.com>
+Subject: Re: Re: raid5: When add stripe_head to inactive_list, it should
+ remove hash.
+Date: Tue, 21 Aug 2012 09:43:45 -0700
+Message-ID: <CAA9_cmejVHOsW=u3WMusGSK8+CMiU978=kP5PVkxQO9T7VP1hA@mail.gmail.com>
+References: <201208181053324376710@gmail.com>
+	<201208201617046561993@gmail.com>
+	<CAA9_cmePBesqWEpTfFOnajLuG355Po3X+52TpEvLoRD=DhCBFQ@mail.gmail.com>
+	<201208211114430154301@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <50333DE6.8010708@buttersideup.com>
+In-Reply-To: <201208211114430154301@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tim Small <tim@buttersideup.com>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Jianpeng Ma <majianpeng@gmail.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Aug 21, 2012 at 08:51:02AM +0100, Tim Small wrote:
-> It was a Marvell 9125 AHCI card (highpoint branded), and I've had
-> numerous problems with them locking up (the 9123s are worse), and have
-> scrapped all of the Marvell 9123s already, and gone back to using a
-> combination of Marvell's 88SX7042 (non-AHCI) cards, and Silicon Image
-> 3132 etc. cards.
+On Mon, Aug 20, 2012 at 8:14 PM, Jianpeng Ma <majianpeng@gmail.com> wrote:
+> On 2012-08-21 01:51 Dan Williams <djbw@fb.com> Wrote:
+>>On Mon, Aug 20, 2012 at 1:17 AM, Jianpeng Ma <majianpeng@gmail.com> wrote:
+>>> I think step4 maybe return ioerror.But it's success.
+>>
+>>You would need to check that stripe0 got recycled between step2 and
+>>step3.  If not then the uptodate stripe is in the cache and the read
+>>can be serviced from the cached data.
+>>
+>>...which seems to be the case because of:
+>>
+>>> [19277.585936] locked=0 uptodate=4 to_read=0 to_write=0 failed=1 failed_num=3,-1
+>>
+>
+> Thanks! If stripe had a cache function.I think the chunk_aligned_read should use it for small read situation.
 
-FWIW, I have a Marvell 9123[1] in one of my systems and found that
-disabling NCQ on the two drives hooked to it[2] stopped any funnies.
-Agreed, it's not the best of adapters, but it's been rock solid for the
-year or so since I made that change.
+But the stripe cache is not meant to be a read cache as it would be
+duplicating what the page cache offers.  Most aligned reads are likely
+to miss the stripe cache so adding a lookup for every read would be
+mostly wasted overhead.
 
-[1] "Marvell Technology Group Ltd. 88SE9123 PCIe SATA 6.0 Gb/s controller (rev 10)"
-[2] A pair of WD Scorpio Blacks in an md RAID1 set
-
--mj
--- 
- Michael-John Turner
- mj@mjturner.net      <>     http://mjturner.net/
+--
+Dan
