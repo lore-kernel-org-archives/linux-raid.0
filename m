@@ -1,43 +1,61 @@
-From: Jan Ceuleers <jan.ceuleers@computer.org>
-Subject: Re: Spares not added upon reboot after distro upgrade
-Date: Wed, 22 Aug 2012 18:34:25 +0200
-Message-ID: <50350A11.5030909@computer.org>
-References: <50309900.9040108@computer.org> <5034C1CB.80808@computer.org> <503502FC.1080307@computer.org>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: mdadm: Assemble.c: "force-one" update conflicts with the split-brain
+ protection logic
+Date: Wed, 22 Aug 2012 20:50:20 +0300
+Message-ID: <CAGRgLy5zfK+wLNfMHxAaEsYs=6qeSA4iqaWDZoUhh8a1D2eBBg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <503502FC.1080307@computer.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On 08/22/2012 06:04 PM, Jan Ceuleers wrote:
-> On 08/22/2012 01:26 PM, Jan Ceuleers wrote:
->> On 08/19/2012 09:42 AM, Jan Ceuleers wrote:
->> ...
->>
->>> For the first time ever I tried mdadm's incremental mode. So before
->>> issuing the above two commands I tried the following;
->>>
->>> root@zotac:~# mdadm -I /dev/sde2
->>> mdadm: failed to add /dev/sde2 to /dev/md0: Invalid argument.
->>
->> I have now straced this, and here are the offending lines:
->>
->> ioctl(4, 0x40140921, 0x7fff4bda3858)    = -1 EINVAL (Invalid argument)
->> write(2, "mdadm: failed to add /dev/sde2 t"..., 62mdadm: failed to add
->> /dev/sde2 to /dev/md0: Invalid argument.
->>
->> fd 4 is /dev/md0
->>
->> How does one decode the ioctl call?
-> 
-> Seems to be ADD_NEW_DISK(MD_MAJOR=md0, &mdu_disk_info_t)
-> 
-> I'm afraid I don't know how to interpret the last argument: is this a
-> pointer or is it the contents of the struct (which should contain five
-> ints, namely number, major, minor, raid_disks and state)?
+Hi Neil,
+I see the following issue:
 
-The (minor, major) numbers of /dev/sde2 are (8, 66) or (0x08, 0x42).
-Can't find those in the third ioctl argument.
+# I have a raid5 with drives a,b,c,d. Drive a fails, and then drive b
+fails, and so the whole array fails.
+# Superblocks of c and d show a and b as failed (via 0xffe in
+dev_roles[] array).
+# Now I perform --assemble --force
+# Since b has higher event count than a, b's event count is bumped to
+match the event count of c and d ("force-one")
+# However, something goes wrong and assembly is aborted
+# Now assembly is restarted (--force doesn't matter now)
+
+At this point, drive b is chosen as "most_recent", since it comes
+first and has highest event count (equal to c and d).
+However, when drives c and d are inspected, they are rejected by the
+following split-brain protection code:
+		if (j != most_recent &&
+		    content->array.raid_disks > 0 &&
+		    devices[most_recent].i.disk.raid_disk >= 0 &&
+		    devmap[j * content->array.raid_disks +
+devices[most_recent].i.disk.raid_disk] == 0) {
+			if (c->verbose > -1)
+				pr_err("ignoring %s as it reports %s as failed\n",
+					devices[j].devname, devices[most_recent].devname);
+			best[i] = -1;
+			continue;
+		}
+
+because the dev_roles[] array of c and d show b as failed (because b
+really had failed while c and d were operational).
+
+So I was thinking that the "force-one" update should also somehow
+align the dev_roles[] arrays of all devices that it affects. More
+precisely, if we decide to promote a device via "force-one" path, we
+must update dev_roles[] of all "good" devices to say that the promoted
+device is not 0xffe, but has a valid role. Does this make sense? What
+do you think?
+
+And I also think, that the split-brain protection logic that you added
+should be made a little bit more explicit. Currently, the first device
+with the highest event count is selected as "most_recent", and
+split-brain protection is enforced WRT to that device. But this logic
+can be affected by the order of devices passed to "assemble". I
+already mentioned that in the past I pitched a proposal of dealing
+with it. Do you want me to go over it and try to pitch it again?
+
+Thanks!
+Alex.
