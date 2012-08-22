@@ -1,106 +1,41 @@
-From: "Vanhorn, Mike" <michael.vanhorn@wright.edu>
-Subject: Re: md raid6 not working
-Date: Wed, 22 Aug 2012 12:57:27 +0000
-Message-ID: <CC5A4D65.28AF2%michael.vanhorn@wright.edu>
-References: <20120822083824.4dc16431@notabene.brown>
+From: Jan Ceuleers <jan.ceuleers@computer.org>
+Subject: Re: Spares not added upon reboot after distro upgrade
+Date: Wed, 22 Aug 2012 18:04:12 +0200
+Message-ID: <503502FC.1080307@computer.org>
+References: <50309900.9040108@computer.org> <5034C1CB.80808@computer.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120822083824.4dc16431@notabene.brown>
-Content-Language: en-US
-Content-ID: <8A1D9C971D1D5F4C9F32AA0A1C365A73@prod.exchangelabs.com>
+In-Reply-To: <5034C1CB.80808@computer.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 8/21/12 6:38 PM, "NeilBrown" <neilb@suse.de> wrote:
+On 08/22/2012 01:26 PM, Jan Ceuleers wrote:
+> On 08/19/2012 09:42 AM, Jan Ceuleers wrote:
+> ...
+> 
+>> For the first time ever I tried mdadm's incremental mode. So before
+>> issuing the above two commands I tried the following;
+>>
+>> root@zotac:~# mdadm -I /dev/sde2
+>> mdadm: failed to add /dev/sde2 to /dev/md0: Invalid argument.
+> 
+> I have now straced this, and here are the offending lines:
+> 
+> ioctl(4, 0x40140921, 0x7fff4bda3858)    = -1 EINVAL (Invalid argument)
+> write(2, "mdadm: failed to add /dev/sde2 t"..., 62mdadm: failed to add
+> /dev/sde2 to /dev/md0: Invalid argument.
+> 
+> fd 4 is /dev/md0
+> 
+> How does one decode the ioctl call?
 
->># mdadm -Avvv /dev/md0
->>mdadm: looking for devices for /dev/md0
->>mdadm: cannot open device /dev/sdi1: Device or resource busy
->>mdadm: /dev/sdi1 has no superblock - assembly aborted
->>#
->
->So /dev/sdi1 is busy.  You need to find out why.  (the "no superblock"
->message is a bit misleading... I might have fixed that in newer mdadm, I'm
->not sure).
->
->The "/proc/mdstat" that you showed in the original email had sdi1 as a
->member
->of md0, so it clearly wasn't being used by anything else then.
->"mdadm -S /dev/md0" would have removed it from md0 so it shouldn't have
->been
->busy.
->The fact that it is busy is very odd.
->
->A device can be busy if:
->- it is mounted as a filesystem
->- it is active as swap
->- it is part of an md array
->- it is part of a dm device
->- probably something else, but those are the main ones.
->
->
+Seems to be ADD_NEW_DISK(MD_MAJOR=md0, &mdu_disk_info_t)
 
-
-Okay, I have gone to investigate what was using /dev/sdi1 yesterday
-morning when I tried to assemble the array. I couldn't find anything at
-all that would have been doing something with that disk, so I simply tried
-the assemble again, and this time it worked (well, sort of):
-
-# mdadm -Avvv /dev/md0
-mdadm: looking for devices for /dev/md0
-mdadm: /dev/sdb1 is not one of
-/dev/sdc1,/dev/sdd1,/dev/sde1,/dev/sdf1,/dev/sdg1,/dev/sdh1,/dev/sdi1
-mdadm: /dev/sdi1 is identified as a member of /dev/md0, slot 8.
-mdadm: /dev/sdh1 is identified as a member of /dev/md0, slot 2.
-mdadm: /dev/sdg1 is identified as a member of /dev/md0, slot 5.
-mdadm: /dev/sdf1 is identified as a member of /dev/md0, slot 4.
-mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 3.
-mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot -1.
-mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 1.
-mdadm: no uptodate device for slot 0 of /dev/md0
-mdadm: added /dev/sdh1 to /dev/md0 as 2
-mdadm: added /dev/sde1 to /dev/md0 as 3
-mdadm: added /dev/sdf1 to /dev/md0 as 4
-mdadm: added /dev/sdg1 to /dev/md0 as 5
-mdadm: no uptodate device for slot 6 of /dev/md0
-mdadm: no uptodate device for slot 7 of /dev/md0
-mdadm: added /dev/sdi1 to /dev/md0 as 8
-mdadm: added /dev/sdd1 to /dev/md0 as -1
-mdadm: added /dev/sdc1 to /dev/md0 as 1
-mdadm: /dev/md0 assembled from 5 drives and 2 spares - not enough to start
-the array.
-#
-
-So, sdi1 seems to be just fine. However, since two of the disks are
-getting marked as spares, it can't start the array. I don't ever recall
-setting the two disks as spares, and even if I had, would one of the
-spares have kicked in when sdb1 went bad? Or, am I not understanding the
-concept of a spare as it applies to a level 6 raid?
-
-At this point, I'm thinking that sdd1 and sdi1 really should be in either
-slot 0, 6 or 7, but I'm not sure which ones. Is there a way to use
-trial-and-error to assemble the array with, for example, sdd1 as slot 0,
-and see if it works ("working" meaning that I could then mount the xfs
-file system) and, if it doesn't, stop the array, and then try it in slot 6?
-
-I am, I guess, making the assumption that it being marked a spare is
-incorrect, and that it does, in fact, have data on it.
-
-
----
-Mike VanHorn
-Senior Computer Systems Administrator
-College of Engineering and Computer Science
-Wright State University
-265 Russ Engineering Center
-937-775-5157
-michael.vanhorn@wright.edu
-http://www.cecs.wright.edu/~mvanhorn/
-
-
+I'm afraid I don't know how to interpret the last argument: is this a
+pointer or is it the contents of the struct (which should contain five
+ints, namely number, major, minor, raid_disks and state)?
 
 
