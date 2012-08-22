@@ -1,42 +1,52 @@
-From: kedacomkernel <kedacomkernel@gmail.com>
-Subject: Re: Re: raid5: When add stripe_head to inactive_list, it should remove hash.
-Date: Wed, 22 Aug 2012 09:25:58 +0800
-Message-ID: <201208220925562967563@gmail.com>
-References: <201208181053324376710@gmail.com> <201208201617046561993@gmail.com> <CAA9_cmePBesqWEpTfFOnajLuG355Po3X+52TpEvLoRD=DhCBFQ@mail.gmail.com> <201208211114430154301@gmail.com>,
-	<CAA9_cmejVHOsW=u3WMusGSK8+CMiU978=kP5PVkxQO9T7VP1hA@mail.gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: O_DIRECT to md raid 6 is slow
+Date: Tue, 21 Aug 2012 22:59:59 -0500
+Message-ID: <5034593F.8010806@hardwarefreak.com>
+References: <CALCETrWCu=UPATPdqWP=Gpvswv-RDwaxfr1W1jxYtUMZsqKgSQ@mail.gmail.com> <502B8D1F.7030706@anonymous.org.uk> <CALCETrX=mi92qwOAjt_7Qu-ho_Hdg_5SHX-_8nXYRer4JnzD0w@mail.gmail.com> <201208152307.q7FN7hMR008630@xs8.xs4all.nl> <502CD3F8.70001@hardwarefreak.com> <502D6B0A.6090508@xs4all.net> <502DF357.8090205@hardwarefreak.com> <502E2817.8040306@xs4all.net> <502F237D.6060806@hardwarefreak.com> <502F698C.9010507@msgid.tls.msk.ru> <50305AB9.5080302@hardwarefreak.com> <5030F1C6.90205@hesbynett.no> <50317804.9010701@hardwarefreak.com> <5033A06B.30508@xs4all.net>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <djbw@fb.com>, majianpeng <majianpeng@gmail.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5033A06B.30508@xs4all.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Miquel van Smoorenburg <mikevs@xs4all.net>
+Cc: David Brown <david.brown@hesbynett.no>, Michael Tokarev <mjt@tls.msk.ru>, Linux RAID <linux-raid@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wOC0yMiAwMDo0MyBEYW4gV2lsbGlhbXMgPGRqYndAZmIuY29tPiBXcm90ZToNCj5P
-biBNb24sIEF1ZyAyMCwgMjAxMiBhdCA4OjE0IFBNLCBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0Bn
-bWFpbC5jb20+IHdyb3RlOg0KPj4gT24gMjAxMi0wOC0yMSAwMTo1MSBEYW4gV2lsbGlhbXMgPGRq
-YndAZmIuY29tPiBXcm90ZToNCj4+Pk9uIE1vbiwgQXVnIDIwLCAyMDEyIGF0IDE6MTcgQU0sIEpp
-YW5wZW5nIE1hIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4gd3JvdGU6DQo+Pj4+IEkgdGhpbmsgc3Rl
-cDQgbWF5YmUgcmV0dXJuIGlvZXJyb3IuQnV0IGl0J3Mgc3VjY2Vzcy4NCj4+Pg0KPj4+WW91IHdv
-dWxkIG5lZWQgdG8gY2hlY2sgdGhhdCBzdHJpcGUwIGdvdCByZWN5Y2xlZCBiZXR3ZWVuIHN0ZXAy
-IGFuZA0KPj4+c3RlcDMuICBJZiBub3QgdGhlbiB0aGUgdXB0b2RhdGUgc3RyaXBlIGlzIGluIHRo
-ZSBjYWNoZSBhbmQgdGhlIHJlYWQNCj4+PmNhbiBiZSBzZXJ2aWNlZCBmcm9tIHRoZSBjYWNoZWQg
-ZGF0YS4NCj4+Pg0KPj4+Li4ud2hpY2ggc2VlbXMgdG8gYmUgdGhlIGNhc2UgYmVjYXVzZSBvZjoN
-Cj4+Pg0KPj4+PiBbMTkyNzcuNTg1OTM2XSBsb2NrZWQ9MCB1cHRvZGF0ZT00IHRvX3JlYWQ9MCB0
-b193cml0ZT0wIGZhaWxlZD0xIGZhaWxlZF9udW09MywtMQ0KPj4+DQo+Pg0KPj4gVGhhbmtzISBJ
-ZiBzdHJpcGUgaGFkIGEgY2FjaGUgZnVuY3Rpb24uSSB0aGluayB0aGUgY2h1bmtfYWxpZ25lZF9y
-ZWFkIHNob3VsZCB1c2UgaXQgZm9yIHNtYWxsIHJlYWQgc2l0dWF0aW9uLg0KPg0KPkJ1dCB0aGUg
-c3RyaXBlIGNhY2hlIGlzIG5vdCBtZWFudCB0byBiZSBhIHJlYWQgY2FjaGUgYXMgaXQgd291bGQg
-YmUNCj5kdXBsaWNhdGluZyB3aGF0IHRoZSBwYWdlIGNhY2hlIG9mZmVycy4gIE1vc3QgYWxpZ25l
-ZCByZWFkcyBhcmUgbGlrZWx5DQo+dG8gbWlzcyB0aGUgc3RyaXBlIGNhY2hlIHNvIGFkZGluZyBh
-IGxvb2t1cCBmb3IgZXZlcnkgcmVhZCB3b3VsZCBiZQ0KPm1vc3RseSB3YXN0ZWQgb3ZlcmhlYWQu
-DQo+DQpJIHRoaW5rIG1vc3QgYWxpZ25lZCByZWFkcyBhcmUgbGlrZWx5IHRvIG1pc3NlZCB0aGUg
-c3RyaXBlIGNhY2hlIGJlY2F1c2UgdGhleSBkaWQgbm90IHVzZSBzdHJpcGUtY2FjaGUod2hlbiBm
-cmlzdGx5IHJlYWVkKQ0KRm9yIGRpcmVjdC1pbyB3b3JrbG9hZCwgdGhlcmUgaXMgbm8gcGFnZS1j
-YWNoZS4NCkZZSSwgbW9zdCBoYXJkd2FyZSByYWlkLWNvbnRyb2xlcnMgaGF2ZSBvd24gbWVtb3J5
-IGFuZCBkb24ndCB1c2UgaG9zdC1tZW1lb3J5LiBUaGUgc3RyaXBlLWNhY2hlIG9mIHJhaWQ0NTYg
-aXMgdGhlIHNhbWUgYXMNCnJhaWQtY29udHJvbGxlciBtZW1lb3J5LlRoZXkgYWxzbyBzaG91bGQg
-cHJvdmlkZSB0aGUgcGFnZS1jYWNoZSBmb3IgcmVhZCwgcmF0aGVyIG9ubHkgZm9yIHdyaXRlLg==
+On 8/21/2012 9:51 AM, Miquel van Smoorenburg wrote:
+> On 08/20/2012 01:34 AM, Stan Hoeppner wrote:
+>> I'm glad you jumped in David.  You made a critical statement of fact
+>> below which clears some things up.  If you had stated it early on,
+>> before Miquel stole the thread and moved it to LKML proper, it would
+>> have short circuited a lot of this discussion.  Which is:
+> 
+> I'm sorry about that, that's because of the software that I use to
+> follow most mailinglist. I didn't notice that the discussion was cc'ed
+> to both lkml and l-r. I should fix that.
 
+Oh, my bad.  I thought it was intentional.
+
+Don't feel too bad about it.  When I tried to copy lkml back in on the
+one message I screwed up as well.  I though Tbird had filled in the full
+address but it didn't.
+
+>> Thus my original statement was correct, or at least half correct[1], as
+>> it pertained to md/RAID6.  Then Miquel switched the discussion to
+>> md/RAID5 and stated I was all wet.  I wasn't, and neither was Dave
+>> Chinner.  I was simply unaware of this md/RAID5 single block write RMW
+>> shortcut
+> 
+> Well, all I tried to say is that a small write of, say, 4K, to a
+> raid5/raid6 array does not need to re-write the whole stripe (i.e.
+> chunksize * nr_disks) but just 4K * nr_disks, or the RMW variant of that.
+
+And I'm glad you did.  Before that I didn't know about these efficiency
+shortcuts and exactly how md does writeback on partial stripe updates.
+
+Even with these optimizations, a default 512KB chunk is too big, for the
+reasons I stated, the big one being the fact that you'll rarely fill a
+full stripe, meaning nearly every write will incur an RMW cycle.
+
+-- 
+Stan
