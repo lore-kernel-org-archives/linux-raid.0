@@ -1,89 +1,146 @@
-From: Andreas Dilger <adilger@dilger.ca>
-Subject: Re: ext4 write performance regression in 3.6-rc1 on RAID0/5
-Date: Wed, 22 Aug 2012 01:14:42 -0600
-Message-ID: <1B78C9B4-CC2B-43B3-8513-2221925D25A0@dilger.ca>
-References: <CABRT9RAOhaxcYdCxMn5neJ9WT85r=h=7WgZ2dmLaOs-MMqDW9A@mail.gmail.com> <20120816024654.GB3781@thunk.org> <20120816111051.GA16036@localhost> <20120816152513.GA31346@thunk.org> <20120817060915.GB28786@localhost> <20120817134039.GB11439@thunk.org> <20120817142526.GA1059@localhost> <20120822035702.GF2570@yliu-dev.sh.intel.com> <20120822160025.272188d1@notabene.brown>
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-22-92778657"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120822160025.272188d1@notabene.brown>
-Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Yuanhan Liu <yuanhan.liu@linux.intel.com>, Fengguang Wu <fengguang.wu@intel.com>, Li Shaohua <shli@fusionio.com>, Theodore Ts'o <tytso@mit.edu>, Marti Raudsepp <marti@juffo.org>, Kernel hackers <linux-kernel@vger.kernel.org>, ext4 hackers <linux-ext4@vger.kernel.org>, maze@google.com, "Shi, Alex" <alex.shi@intel.com>, linux-fsdevel@vger.kernel.org, linux RAID <linux-raid@vger.kernel.org>
+From: =?UTF-8?B?U2VyZ2l1c3ogQnJ6ZXppxYRza2k=?=
+	<Sergiusz.Brzezinski@supersystem.pl>
+Subject: Re: mdadm --monitor: need extra feature?
+Date: Wed, 22 Aug 2012 09:14:15 +0200
+Message-ID: <503486C7.70503@supersystem.pl>
+References: <503365EB.6000006@supersystem.pl> <503366A1.9030307@hesbynett.no> <50337654.9000905@supersystem.pl> <50338185.4020003@websitemanagers.com.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <50338185.4020003@websitemanagers.com.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---Apple-Mail-22-92778657
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=us-ascii
+W dniu 21.08.2012 14:39, Adam Goryachev pisze:
+> On 21/08/12 21:51, Sergiusz Brzezi=C5=84ski wrote:
+>>
+>>
+>> W dniu 21.08.2012 12:44, David Brown pisze:
+>>> On 21/08/2012 12:41, Sergiusz Brzezi=C5=84ski wrote:
+>>>> Hi,
+>>>>
+>>>> I use Raid1 to make backup of the whole system.
+>>>
+>>> Raid is not a backup system. It is to improve uptimes, minimise
+>>> downtimes due to
+>>> disk failures, and possibly to improve disk speed and/or capacity.
+>>>
+>>> I would recommend you first think about what you are trying to
+>>> achieve here -
+>>> what are you trying to back up, how do you see restores being used,=
+ how
+>>> efficiently are you using your hardware, your bandwidth, your time
+>>> and effort?
+>>>
+>>> You would probably be better off with a normal fixed 2-disk raid1 t=
+o
+>>> minimise
+>>> the problems caused by a single disk failure, combined with an rsyn=
+c
+>>> snapshot
+>>> style backup that can be fully automated and give quick and easy
+>>> recovery of
+>>> multiple old versions of files in the face of the most common cause
+>>> of data loss
+>>> - human error.
+>> [...]
+>>
+>> I know, I know. Raid is not a backup system :)
+> Aside from RAID is not a backup, perhaps the more useful suggestion
+> would be to use the right tool for the job...
+>
+> So, again, ignoring that you possibly should not be using RAID for a
+> backup... how about using udev scripts to see when you plugin a drive=
+,
+> and that script can check the UUID against any md arrays, and if it
+> matches, add it to the array....
 
-On 2012-08-22, at 12:00 AM, NeilBrown wrote:
-> On Wed, 22 Aug 2012 11:57:02 +0800 Yuanhan Liu =
-<yuanhan.liu@linux.intel.com>
-> wrote:
->>=20
->> -#define NR_STRIPES		256
->> +#define NR_STRIPES		1024
->=20
-> Changing one magic number into another magic number might help your =
-case, but
-> it not really a general solution.
+I wrote a script making this work. It runs once a hour. I pass the para=
+meter=20
+with md device to the script. It checks the state of the array with "md=
+adm=20
+--detail". If there is something wrong (State : degraded) it reads UUID=
+ of that=20
+array. Then it scans for /dev/sd* partitions and checks with "mdadm --e=
+xamine"=20
+if UUID matches. If so, the partition can be added with "mdadm --add". =
+That is=20
+why I asked abut this feature in mdadm - recognising if there is a new =
+partition=20
+belonging to monitored array. With mdadm this procedure would work on e=
+legant=20
+manner.
 
-We've actually been carrying a patch for a few years in Lustre to
-increase the NR_STRIPES to 2048, and made it a configurable module
-parameter.  This made a noticeable improvement to the performance
-for fast systems.
+>
+> BTW, I've used BackupPC (Linux based, free software for complete back=
+ups
+> of linux + windows + pretty much any other OS, using hard links to
+> de-dupe files), which would export the most recent backup of each
+> machine and dump it as a plain tar.bz2 file onto external HDD, which =
+was
+> auto-detected based on the following criteria (which I decided was "s=
+afe
+> enough"):
+> 1) Matching the UUID to a list of known UUID's for backup drives in t=
+he pool
+> 2) We could mount the first partition with a pre-determined FS type
+> (mount -t ext3 blah)
+> 3) After mounting, a specific file existed (if [ -f
+> /mnt/archive/special_file ])
+> If all that matched, then we would create a new archive for the first
+> host, then delete any old archive for this host, repeat for all hosts=
+,
+> unmount, send complete report to monitoring system.
+>
+>
+> Regards,
+> Adam
+>
 
-> Possibly making sure that max_nr_stripes is at least some multiple of =
-the
-> chunk size might make sense, but I wouldn't want to see a very large =
-multiple.
->=20
-> I thing the problems with RAID5 are deeper than that.  Hopefully I'll =
-figure
-> out exactly what the best fix is soon - I'm trying to look into it.
+Yes, that is probably good backup tool. (I don't know this tool, but I =
+guess it=20
+is :) ). In both cases (my, and Your) we can change the hdd in hot-swap=
+ bay. The=20
+difference is (for me it is very importand difference) that in moment o=
+f=20
+removing disk, You have just a backup, and I have the backup + working,=
+ ready to=20
+use, with most up-to-date files, system. Ok, there can be some corrupte=
+d files=20
+(hot-swap removing can cause this) but that is the reason for making "r=
+eal=20
+backup" of critical data independently of raid and storing it for examp=
+le on the=20
+raid device itself! I do it for example with postgres database with pg_=
+dump in=20
+cron. Then I rotate it with logrotate to have some more backups from th=
+e past.=20
+So, on my mirrored, just removed disk is the whole, probably ready for =
+instant=20
+use, system. In case of problems (corrupted database indices or data fi=
+les for=20
+example) I also have "real" backups on the disk from the past.
 
-The other MD RAID-5/6 patches that we have change the page submission
-order to avoid the need to merge pages in the elevator so much, and a
-patch to allow zero-copy IO submission if the caller marks the page for
-direct IO (indicating it will not be modified until after IO completes).
-This avoids a lot of overhead on fast systems.
+I don't want to argue, which solution is better. It can depend on many=20
+circumstances and needs. As we sad, "Raid is not a backup system" - so =
+it=20
+doesn't have many features which real backup system have. I only want t=
+o say,=20
+that for me Raid1 is the excelent backup solution regardless of wheter =
+I should=20
+use Raid1 for backup or not. Fortunately no one can prohibit using Raid=
+ on this=20
+way :) And I just choose the solution which works for me better.
 
-This isn't really my area of expertise, but patches against RHEL6
-could be seen at http://review.whamcloud.com/1142 if you want to
-take a look.  I don't know if that code is at all relevant to what
-is in 3.x today.
+best regards
 
-> I don't think the size of the cache is a big part of the solution.  I =
-think
-> correct scheduling of IO is the real answer.
-
-My experience is that on fast systems the IO scheduler just gets in the
-way.  Submitting larger contiguous IOs to each disk in the first place
-is far better than trying to merge small IOs again at the back end.
-
-Cheers, Andreas
-
-
-
-
-
-
---Apple-Mail-22-92778657
-content-type: application/pgp-signature; x-mac-type=70674453;
-	name=PGP.sig
-content-description: This is a digitally signed message part
-content-disposition: inline; filename=PGP.sig
-content-transfer-encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2.0.17 (Darwin)
-Comment: GPGTools - http://gpgtools.org
-
-iD8DBQFQNIbipIg59Q01vtYRAkAcAKCGtJsylLo4ETG37VAdEClYoaIN3gCfbuCf
-Hnhc3up3Pzt4rcJP0PRnNJQ=
-=Q66g
------END PGP SIGNATURE-----
-
---Apple-Mail-22-92778657--
+Sergiusz
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
