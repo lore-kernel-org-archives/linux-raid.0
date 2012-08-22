@@ -1,32 +1,34 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
-Subject: [PATCH] raid5: remove unnecessary "set_bit(STRIPE_HANDLE,&sh->state)" in func handle_stripe_dirtying.
-Date: Wed, 22 Aug 2012 19:19:55 +0800
-Message-ID: <201208221919524064650@gmail.com>
+From: Jan Ceuleers <jan.ceuleers@computer.org>
+Subject: Re: Spares not added upon reboot after distro upgrade
+Date: Wed, 22 Aug 2012 13:26:03 +0200
+Message-ID: <5034C1CB.80808@computer.org>
+References: <50309900.9040108@computer.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <50309900.9040108@computer.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-U2lnbmVkLW9mZi1ieTogSmlhbnBlbmcgTWEgPG1hamlhbnBlbmdAZ21haWwuY29tPg0KLS0tDQog
-ZHJpdmVycy9tZC9yYWlkNS5jIHwgICAgOCArKy0tLS0tLQ0KIDEgZmlsZSBjaGFuZ2VkLCAyIGlu
-c2VydGlvbnMoKyksIDYgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3Jh
-aWQ1LmMgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCmluZGV4IGFkZGE5NGQuLjhmMDBjNGEgMTAwNjQ0
-DQotLS0gYS9kcml2ZXJzL21kL3JhaWQ1LmMNCisrKyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KQEAg
-LTI4MTcsMTAgKzI4MTcsOCBAQCBzdGF0aWMgdm9pZCBoYW5kbGVfc3RyaXBlX2RpcnR5aW5nKHN0
-cnVjdCByNWNvbmYgKmNvbmYsDQogCQkJCQlzZXRfYml0KFI1X0xPQ0tFRCwgJmRldi0+ZmxhZ3Mp
-Ow0KIAkJCQkJc2V0X2JpdChSNV9XYW50cmVhZCwgJmRldi0+ZmxhZ3MpOw0KIAkJCQkJcy0+bG9j
-a2VkKys7DQotCQkJCX0gZWxzZSB7DQorCQkJCX0gZWxzZQ0KIAkJCQkJc2V0X2JpdChTVFJJUEVf
-REVMQVlFRCwgJnNoLT5zdGF0ZSk7DQotCQkJCQlzZXRfYml0KFNUUklQRV9IQU5ETEUsICZzaC0+
-c3RhdGUpOw0KLQkJCQl9DQogCQkJfQ0KIAkJfQ0KIAlpZiAocmN3IDw9IHJtdyAmJiByY3cgPiAw
-KSB7DQpAQCAtMjg0MywxMCArMjg0MSw4IEBAIHN0YXRpYyB2b2lkIGhhbmRsZV9zdHJpcGVfZGly
-dHlpbmcoc3RydWN0IHI1Y29uZiAqY29uZiwNCiAJCQkJCXNldF9iaXQoUjVfTE9DS0VELCAmZGV2
-LT5mbGFncyk7DQogCQkJCQlzZXRfYml0KFI1X1dhbnRyZWFkLCAmZGV2LT5mbGFncyk7DQogCQkJ
-CQlzLT5sb2NrZWQrKzsNCi0JCQkJfSBlbHNlIHsNCisJCQkJfSBlbHNlDQogCQkJCQlzZXRfYml0
-KFNUUklQRV9ERUxBWUVELCAmc2gtPnN0YXRlKTsNCi0JCQkJCXNldF9iaXQoU1RSSVBFX0hBTkRM
-RSwgJnNoLT5zdGF0ZSk7DQotCQkJCX0NCiAJCQl9DQogCQl9DQogCX0NCi0tIA0KMS43LjkuNQ0K
+On 08/19/2012 09:42 AM, Jan Ceuleers wrote:
+...
 
+> For the first time ever I tried mdadm's incremental mode. So before
+> issuing the above two commands I tried the following;
+> 
+> root@zotac:~# mdadm -I /dev/sde2
+> mdadm: failed to add /dev/sde2 to /dev/md0: Invalid argument.
+
+I have now straced this, and here are the offending lines:
+
+ioctl(4, 0x40140921, 0x7fff4bda3858)    = -1 EINVAL (Invalid argument)
+write(2, "mdadm: failed to add /dev/sde2 t"..., 62mdadm: failed to add
+/dev/sde2 to /dev/md0: Invalid argument.
+
+fd 4 is /dev/md0
+
+How does one decode the ioctl call?
+
+Thanks, Jan
