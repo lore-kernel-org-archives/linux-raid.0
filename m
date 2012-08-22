@@ -1,61 +1,49 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: mdadm: Assemble.c: "force-one" update conflicts with the split-brain
- protection logic
-Date: Wed, 22 Aug 2012 20:50:20 +0300
-Message-ID: <CAGRgLy5zfK+wLNfMHxAaEsYs=6qeSA4iqaWDZoUhh8a1D2eBBg@mail.gmail.com>
+From: Dan Williams <djbw@fb.com>
+Subject: Re: ext4 write performance regression in 3.6-rc1 on RAID0/5
+Date: Wed, 22 Aug 2012 13:47:07 -0700
+Message-ID: <CAA9_cmc4t_P3p-72iZx4UALNe3fupVqBKvvsvCtMH6G3HZUdww@mail.gmail.com>
+References: <CABRT9RAOhaxcYdCxMn5neJ9WT85r=h=7WgZ2dmLaOs-MMqDW9A@mail.gmail.com>
+	<20120816024654.GB3781@thunk.org>
+	<20120816111051.GA16036@localhost>
+	<20120816152513.GA31346@thunk.org>
+	<20120817060915.GB28786@localhost>
+	<20120817134039.GB11439@thunk.org>
+	<20120817142526.GA1059@localhost>
+	<20120822035702.GF2570@yliu-dev.sh.intel.com>
+	<20120822160025.272188d1@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
+Return-path: <linux-ext4-owner@vger.kernel.org>
+In-Reply-To: <20120822160025.272188d1@notabene.brown>
+Sender: linux-ext4-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Yuanhan Liu <yuanhan.liu@linux.intel.com>, Fengguang Wu <fengguang.wu@intel.com>, Li Shaohua <shli@fusionio.com>, Theodore Ts'o <tytso@mit.edu>, Marti Raudsepp <marti@juffo.org>, Kernel hackers <linux-kernel@vger.kernel.org>, ext4 hackers <linux-ext4@vger.kernel.org>, maze@google.com, "Shi, Alex" <alex.shi@intel.com>, linux-fsdevel@vger.kernel.org, linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Neil,
-I see the following issue:
+On Tue, Aug 21, 2012 at 11:00 PM, NeilBrown <neilb@suse.de> wrote:
+> On Wed, 22 Aug 2012 11:57:02 +0800 Yuanhan Liu <yuanhan.liu@linux.intel.com>
+> wrote:
+>
+>>
+>> -#define NR_STRIPES           256
+>> +#define NR_STRIPES           1024
+>
+> Changing one magic number into another magic number might help your case, but
+> it not really a general solution.
+>
+> Possibly making sure that max_nr_stripes is at least some multiple of the
+> chunk size might make sense, but I wouldn't want to see a very large multiple.
+>
+> I thing the problems with RAID5 are deeper than that.  Hopefully I'll figure
+> out exactly what the best fix is soon - I'm trying to look into it.
+>
+> I don't think the size of the cache is a big part of the solution.  I think
+> correct scheduling of IO is the real answer.
 
-# I have a raid5 with drives a,b,c,d. Drive a fails, and then drive b
-fails, and so the whole array fails.
-# Superblocks of c and d show a and b as failed (via 0xffe in
-dev_roles[] array).
-# Now I perform --assemble --force
-# Since b has higher event count than a, b's event count is bumped to
-match the event count of c and d ("force-one")
-# However, something goes wrong and assembly is aborted
-# Now assembly is restarted (--force doesn't matter now)
+Not sure if this is what we are seeing here, but we still have the
+unresolved fast parity effect whereby slower parity calculation gives
+a larger time to coalesce writes.  I saw this effect when playing with
+xor offload.
 
-At this point, drive b is chosen as "most_recent", since it comes
-first and has highest event count (equal to c and d).
-However, when drives c and d are inspected, they are rejected by the
-following split-brain protection code:
-		if (j != most_recent &&
-		    content->array.raid_disks > 0 &&
-		    devices[most_recent].i.disk.raid_disk >= 0 &&
-		    devmap[j * content->array.raid_disks +
-devices[most_recent].i.disk.raid_disk] == 0) {
-			if (c->verbose > -1)
-				pr_err("ignoring %s as it reports %s as failed\n",
-					devices[j].devname, devices[most_recent].devname);
-			best[i] = -1;
-			continue;
-		}
-
-because the dev_roles[] array of c and d show b as failed (because b
-really had failed while c and d were operational).
-
-So I was thinking that the "force-one" update should also somehow
-align the dev_roles[] arrays of all devices that it affects. More
-precisely, if we decide to promote a device via "force-one" path, we
-must update dev_roles[] of all "good" devices to say that the promoted
-device is not 0xffe, but has a valid role. Does this make sense? What
-do you think?
-
-And I also think, that the split-brain protection logic that you added
-should be made a little bit more explicit. Currently, the first device
-with the highest event count is selected as "most_recent", and
-split-brain protection is enforced WRT to that device. But this logic
-can be affected by the order of devices passed to "assemble". I
-already mentioned that in the past I pitched a proposal of dealing
-with it. Do you want me to go over it and try to pitch it again?
-
-Thanks!
-Alex.
+--
+Dan
