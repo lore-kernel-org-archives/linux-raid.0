@@ -1,169 +1,192 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
+From: Shaohua Li <shli@kernel.org>
 Subject: Re: Re: [patch v2]raid5: fix directio regression
-Date: Thu, 23 Aug 2012 14:46:59 +0800
-Message-ID: <201208231446557815641@gmail.com>
-References: <CANejiEUQcA6X75WG0xSgSv6NAQaBQnwpDD-5QaNVbqmo-oqLsA@mail.gmail.com> <201208071421033759628@gmail.com> <CANejiEVoOprAFoS6mCVYDJKh+nbGE0=7Xw_CpVS+Z9AcUoh6RQ@mail.gmail.com> <201208081321202343795@gmail.com> <CANejiEWC5ZKWT2L4DM-bfGi+v=TpkABruQqe5h0qG4oQg9sDhw@mail.gmail.com> <201208090919591567972@gmail.com> <20120809113230.152aade3@notabene.brown> <CANejiEX1TKG_KhAsgUauHaCe2GE7jU1ozD-3c21VFgrm9COajQ@mail.gmail.com> <20120814063343.GA30353@kernel.org> <20120815105610.74fe418e@notabene.brown> <20120815014436.GA355@kernel.org> <201208161536313436886@gmail.com> <CANejiEU7dD+VMLidGQZ4OpCTcsOXReExeA-Qtr5Ng9DRGU5Geg@mail.gmail.com>,
+Date: Thu, 23 Aug 2012 15:55:20 +0800
+Message-ID: <CANejiEU3fG2fAGTE2m47zxy0p9MykHTEDznRKxbUcFReZgVG3g@mail.gmail.com>
+References: <CANejiEUQcA6X75WG0xSgSv6NAQaBQnwpDD-5QaNVbqmo-oqLsA@mail.gmail.com>
+	<201208071421033759628@gmail.com>
+	<CANejiEVoOprAFoS6mCVYDJKh+nbGE0=7Xw_CpVS+Z9AcUoh6RQ@mail.gmail.com>
+	<201208081321202343795@gmail.com>
+	<CANejiEWC5ZKWT2L4DM-bfGi+v=TpkABruQqe5h0qG4oQg9sDhw@mail.gmail.com>
+	<201208090919591567972@gmail.com>
+	<20120809113230.152aade3@notabene.brown>
+	<CANejiEX1TKG_KhAsgUauHaCe2GE7jU1ozD-3c21VFgrm9COajQ@mail.gmail.com>
+	<20120814063343.GA30353@kernel.org>
+	<20120815105610.74fe418e@notabene.brown>
+	<20120815014436.GA355@kernel.org>
+	<201208161536313436886@gmail.com>
+	<CANejiEU7dD+VMLidGQZ4OpCTcsOXReExeA-Qtr5Ng9DRGU5Geg@mail.gmail.com>
 	<CANejiEXCytsYB1ruO0pHcYdkPXBwvkY3uQT36=M=VwRR_ibf4g@mail.gmail.com>
+	<201208231446557815641@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201208231446557815641@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli <shli@kernel.org>
+To: Jianpeng Ma <majianpeng@gmail.com>
 Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>, axboe <axboe@kernel.dk>
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wOC0yMyAxNDowOCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0K
-PjIwMTIvOC8xNiBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+Og0KPj4gMjAxMi84LzE2IEpp
-YW5wZW5nIE1hIDxtYWppYW5wZW5nQGdtYWlsLmNvbT46DQo+Pj4gT24gMjAxMi0wOC0xNSAwOTo0
-NCBTaGFvaHVhIExpIDxzaGxpQGtlcm5lbC5vcmc+IFdyb3RlOg0KPj4+Pk9uIFdlZCwgQXVnIDE1
-LCAyMDEyIGF0IDEwOjU2OjEwQU0gKzEwMDAsIE5laWxCcm93biB3cm90ZToNCj4+Pj4+IE9uIFR1
-ZSwgMTQgQXVnIDIwMTIgMTQ6MzM6NDMgKzA4MDAgU2hhb2h1YSBMaSA8c2hsaUBrZXJuZWwub3Jn
-PiB3cm90ZToNCj4+Pj4+DQo+Pj4+PiA+IE9uIFRodSwgQXVnIDA5LCAyMDEyIGF0IDAxOjA3OjAx
-UE0gKzA4MDAsIFNoYW9odWEgTGkgd3JvdGU6DQo+Pj4+PiA+ID4gMjAxMi84LzkgTmVpbEJyb3du
-IDxuZWlsYkBzdXNlLmRlPjoNCj4+Pj4+ID4gPiA+IE9uIFRodSwgOSBBdWcgMjAxMiAwOToyMDow
-NSArMDgwMCAiSmlhbnBlbmcgTWEiIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4gd3JvdGU6DQo+Pj4+
-PiA+ID4gPg0KPj4+Pj4gPiA+ID4+IE9uIDIwMTItMDgtMDggMjA6NTMgU2hhb2h1YSBMaSA8c2hs
-aUBrZXJuZWwub3JnPiBXcm90ZToNCj4+Pj4+ID4gPiA+PiA+MjAxMi84LzggSmlhbnBlbmcgTWEg
-PG1hamlhbnBlbmdAZ21haWwuY29tPjoNCj4+Pj4+ID4gPiA+PiA+PiBPbiAyMDEyLTA4LTA4IDEw
-OjU4IFNoYW9odWEgTGkgPHNobGlAa2VybmVsLm9yZz4gV3JvdGU6DQo+Pj4+PiA+ID4gPj4gPj4+
-MjAxMi84LzcgSmlhbnBlbmcgTWEgPG1hamlhbnBlbmdAZ21haWwuY29tPjoNCj4+Pj4+ID4gPiA+
-PiA+Pj4+IE9uIDIwMTItMDgtMDcgMTM6MzIgU2hhb2h1YSBMaSA8c2hsaUBrZXJuZWwub3JnPiBX
-cm90ZToNCj4+Pj4+ID4gPiA+PiA+Pj4+PjIwMTIvOC83IEppYW5wZW5nIE1hIDxtYWppYW5wZW5n
-QGdtYWlsLmNvbT46DQo+Pj4+PiA+ID4gPj4gPj4+Pj4+IE9uIDIwMTItMDgtMDcgMTE6MjIgU2hh
-b2h1YSBMaSA8c2hsaUBrZXJuZWwub3JnPiBXcm90ZToNCj4+Pj4+ID4gPiA+PiA+Pj4+Pj4+TXkg
-ZGlyZWN0SU8gcmFuZG9td3JpdGUgNGsgd29ya2xvYWQgc2hvd3MgYSAxMH4yMCUgcmVncmVzc2lv
-biBjYXVzZWQgYnkgY29tbWl0DQo+Pj4+PiA+ID4gPj4gPj4+Pj4+Pjg5NWUzYzVjNThhODBiYi4g
-ZGlyZWN0SU8gdXN1YWxseSBpcyByYW5kb20gSU8gYW5kIGlmIHJlcXVlc3Qgc2l6ZSBpc24ndCBi
-aWcNCj4+Pj4+ID4gPiA+PiA+Pj4+Pj4+KHdoaWNoIGlzIHRoZSBjb21tb24gY2FzZSksIGRlbGF5
-IGhhbmRsaW5nIG9mIHRoZSBzdHJpcGUgaGFzbid0IGFueSBhZHZhbnRhZ2VzLg0KPj4+Pj4gPiA+
-ID4+ID4+Pj4+Pj5Gb3IgYmlnIHNpemUgcmVxdWVzdCwgZGVsYXkgY2FuIHN0aWxsIHJlZHVjZSBJ
-Ty4NCj4+Pj4+ID4gPiA+PiA+Pj4+Pj4+DQo+Pj4+PiA+ID4gPj4gPj4+Pj4+PlNpZ25lZC1vZmYt
-Ynk6IFNoYW9odWEgTGkgPHNobGlAZnVzaW9uaW8uY29tPg0KPj4+Pj4gPiA+ID4+ID4+Pj4gW3Nu
-aXBdDQo+Pj4+PiA+ID4gPj4gPj4+Pj4+Pi0tDQo+Pj4+PiA+ID4gPj4gPj4+Pj4+IE1heSBiZSB1
-c2VkIHNpemUgdG8ganVkZ2UgaXMgbm90IGEgZ29vZCBtZXRob2QuDQo+Pj4+PiA+ID4gPj4gPj4+
-Pj4+IEkgZmlyc3RseSBzZW5kZWQgdGhpcyBwYXRjaCwgb25seSB3YW50IHRvIGNvbnRyb2wgZGly
-ZWN0LXdyaXRlLWJsb2NrLG5vdCBmb3IgcmVxdWxhciBmaWxlLg0KPj4+Pj4gPiA+ID4+ID4+Pj4+
-PiBCZWNhdXNlIGkgdGhpbmsgaWYgc29tZW9uZSB1c2VkIGRpcmVjdC13cml0ZS1ibG9jayBmb3Ig
-cmFpZDUsaGUgc2hvdWxkIGtub3cgdGhlIGZlYXR1cmUgb2YgcmFpZDUgYW5kIGhlIGNhbiBjb250
-cm9sDQo+Pj4+PiA+ID4gPj4gPj4+Pj4+IGZvciB3cml0ZSB0byBmdWxsLXdyaXRlLg0KPj4+Pj4g
-PiA+ID4+ID4+Pj4+PiBCdXQgYXQgdGhhdCB0aW1lLCBpIGRpZCBrbm93IGhvdyB0byBkaWZmZXJl
-bnRpYXRlIGJldHdlZW4gcmVndWxhciBmaWxlIGFuZCBibG9jay1kZXZpY2UuDQo+Pj4+PiA+ID4g
-Pj4gPj4+Pj4+IEkgdGhpayB3ZSBzaG91bGQgZG8gc29tZXRoaW5nIHRvIGRvIHRoaXMuDQo+Pj4+
-PiA+ID4gPj4gPj4+Pj4NCj4+Pj4+ID4gPiA+PiA+Pj4+PkkgZG9uJ3QgdGhpbmsgaXQncyBwb3Nz
-aWJsZSB1c2VyIGNhbiBjb250cm9sIGhpcyB3cml0ZSB0byBiZSBhDQo+Pj4+PiA+ID4gPj4gPj4+
-Pj5mdWxsLXdyaXRlIGV2ZW4gZm9yDQo+Pj4+PiA+ID4gPj4gPj4+Pj5yYXcgZGlzayBJTy4gV2h5
-IHJlZ3VsYXIgZmlsZSBhbmQgYmxvY2sgZGV2aWNlIGlvIG1hdHRlcnMgaGVyZT8NCj4+Pj4+ID4g
-PiA+PiA+Pj4+Pg0KPj4+Pj4gPiA+ID4+ID4+Pj4+VGhhbmtzLA0KPj4+Pj4gPiA+ID4+ID4+Pj4+
-U2hhb2h1YQ0KPj4+Pj4gPiA+ID4+ID4+Pj4gQW5vdGhlciBwcm9ibGVtIGlzIHRoZSBzaXplLiBI
-b3cgdG8ganVkZ2UgdGhlIHNpemUgaXMgbGFyZ2Ugb3Igbm90Pw0KPj4+Pj4gPiA+ID4+ID4+Pj4g
-QSBzeXNjYWxsIHdyaXRlIGlzIGEgZGlvIGFuZCBhIGRpbyBtYXkgYmUgc3BsaXQgbW9yZSBiaW9z
-Lg0KPj4+Pj4gPiA+ID4+ID4+Pj4gRm9yIG15IHdvcmtsb2FkLCBpIHVzdWFseSB3cml0ZSBjaHVu
-ay1zaXplLg0KPj4+Pj4gPiA+ID4+ID4+Pj4gQnV0IHlvdXIgcGF0Y2ggaXMganVkZ2UgYnkgYmlv
-LXNpemUuDQo+Pj4+PiA+ID4gPj4gPj4+DQo+Pj4+PiA+ID4gPj4gPj4+SSdkIGlnbm9yZSB3b3Jr
-bG9hZCB3aGljaCBkb2VzIHNlcXVlbnRpYWwgZGlyZWN0SU8sIHRob3VnaA0KPj4+Pj4gPiA+ID4+
-ID4+PnlvdXIgd29ya2xvYWQgaXMsIGJ1dCBJIGJldCBubyByZWFsIHdvcmtsb2FkcyBhcmUuIFNv
-IEknZCBsaWtlDQo+Pj4+PiA+ID4gPj4gPj4gU29ycnksbXkgZXhwbGFpbiBtYXliZSBub3QgY29y
-Y3JlY3QuIEkgd3JpdGUgZGF0YSBvbmNlIHdoaWNoIHNpemUgaXMgYWxtb3N0IGNodW5rcy1zaXpl
-ICogZGV2aWNlcyxpbiBvcmRlciB0byBmdWxsLXdyaXRlDQo+Pj4+PiA+ID4gPj4gPj4gYW5kIGFz
-IHBvc3NpYmxlIGFzIHRvIG5vIHByZS1yZWFkIG9wZXJhdGlvbi4NCj4+Pj4+ID4gPiA+PiA+Pj5v
-bmx5IHRvIGNvbnNpZGVyIGJpZyBzaXplIHJhbmRvbSBkaXJlY3Rpby4gSSBhZ3JlZSB0aGUgc2l6
-ZQ0KPj4+Pj4gPiA+ID4+ID4+Pmp1ZGdlIGlzIGFyYml0cmFyeS4gSSBjYW4gb3B0aW1pemUgaXQg
-dG8gYmUgb25seSBjb25zaWRlciBzdHJpcGUNCj4+Pj4+ID4gPiA+PiA+Pj53aGljaCBoaXRzIHR3
-byBvciBtb3JlIGRpc2tzIGluIG9uZSBiaW8sIGJ1dCBub3Qgc3VyZSBpZiBpdCdzDQo+Pj4+PiA+
-ID4gPj4gPj4+d29ydGh5IGRvaW5nLiBOb3Qgd2FyZSBiaWcgc2l6ZSBkaXJlY3RpbyBpcyBjb21t
-b24sIGFuZCBldmVuDQo+Pj4+PiA+ID4gPj4gPj4+aXMsIGJpZyBzaXplIHJlcXVlc3QgSU9QUyBp
-cyBsb3csIGEgYml0IGRlbGF5IG1heWJlIG5vdCBhIGJpZw0KPj4+Pj4gPiA+ID4+ID4+PmRlYWwu
-DQo+Pj4+PiA+ID4gPj4gPj4gSWYgYWRkIGEgYWNjX3RpbWUgZm9yICdzdHJpZXBfaGVhZCcgdG8g
-Y29udHJvbD8NCj4+Pj4+ID4gPiA+PiA+PiBXaGVuIGdldF9hY3RpdmVfc3RyaXBlKCkgaXMgb2ss
-IHVwZGF0ZSBhY2NfdGltZS4NCj4+Pj4+ID4gPiA+PiA+PiBGb3Igc29tZSB0aW1lLCBzdHJpcGVf
-aGVhZCBkaWQgbm90IGFjY2VzcyBhbmQgaXQgc2hvbGQgcHJlLXJlYWQuDQo+Pj4+PiA+ID4gPj4g
-Pg0KPj4+Pj4gPiA+ID4+ID5EbyB5b3Ugd2FudCB0byBhZGQgYSB0aW1lciBmb3IgZWFjaCBzdHJp
-cGU/IFRoaXMgaXMgZXZlbiB1Z2x5Lg0KPj4+Pj4gPiA+ID4+ID5Ib3cgZG8geW91IGNob29zZSB0
-aGUgZXhwaXJlIHRpbWU/IEEgdGltZSB3b3JrcyBmb3IgaGFyZGRpc2sNCj4+Pj4+ID4gPiA+PiA+
-ZGVmaW5pdGVseSB3aWxsIG5vdCB3b3JrIGZvciBhIGZhc3QgU1NELg0KPj4+Pj4gPiA+ID4+IEEg
-dGltZSBpcyBsaWtlIHRoZSBzaXplIHdoaWNoIGlzIGFyYml0cmFyeS4NCj4+Pj4+ID4gPiA+PiBI
-b3cgYWJvdXQgYWRkIGEgaW50ZXJmYWNlIGluIHN5c2ZzIHRvIGNvbnRyb2wgYnkgdXNlcj8NCj4+
-Pj4+ID4gPiA+PiBPbmx5IHVzZXIgY2FuIGp1ZGdlIHRoZSB3b3JrbG9hZCwgd2hpY2ggc2VxdWF0
-aWFsIHdyaXRlIG9yIHJhbmRvbSB3cml0ZS4NCj4+Pj4+ID4gPiA+DQo+Pj4+PiA+ID4gPiBUaGlz
-IGlzIGdldHRpbmcgd29yc2UgYnkgdGhlIG1pbnV0ZS4gIEEgc3lzZnMgaW50ZXJmYWNlIGZvciB0
-aGlzIGlzDQo+Pj4+PiA+ID4gPiBkZWZpbml0ZWx5IG5vdCBhIGdvb2QgaWRlYS4NCj4+Pj4+ID4g
-PiA+DQo+Pj4+PiA+ID4gPiBUaGUgUkVRX05PSURMRSBmbGFnIGlzIGEgcHJldHR5IGNsZWFyIHN0
-YXRlbWVudCB0aGF0IG5vIG1vcmUgcmVxdWVzdHMgdGhhdA0KPj4+Pj4gPiA+ID4gbWVyZ2Ugd2l0
-aCB0aGlzIG9uZSBhcmUgZXhwZWN0ZWQuICBJZiBzb21lIHVzZSBjYXNlcyBzZW5kcyByYW5kb20g
-cmVxdWVzdHMsDQo+Pj4+PiA+ID4gPiBtYXliZSBpdCBzaG91bGQgYmUgc2V0dGluZyBSRVFfTk9J
-RExFLg0KPj4+Pj4gPiA+ID4NCj4+Pj4+ID4gPiA+IE1heWJlIHNvbWVvbmUgc2hvdWxkIGRvIHNv
-bWUgcmVzZWFyY2ggYW5kIGZpbmQgb3V0IHdoeSBXUklURV9PRElSRUNUIGRvZXNuJ3QNCj4+Pj4+
-ID4gPiA+IGluY2x1ZGUgUkVRX05PSURMRS4gIFVuZGVyc3RhbmRpbmcgdGhhdCB3b3VsZCBoZWxw
-IHVuZGVyc3RhbmQgdGhlIGN1cnJlbnQNCj4+Pj4+ID4gPiA+IHByb2JsZW0uDQo+Pj4+PiA+ID4N
-Cj4+Pj4+ID4gPiBBIHF1aWNrIHNlYXJjaCBzaG93cyBvbmx5IGNmcS1pb3NjaGVkIHVzZXMgUkVR
-X05PSURMRS4gSW4NCj4+Pj4+ID4gPiBjZnEsIGEgcXVldWUgaXMgaWRsZWQgdG8gYXZvaWQgbG9z
-aW5nIGl0cyBzaGFyZS4gUkVRX05PSURMRQ0KPj4+Pj4gPiA+IHRlbGxzIGNmcSB0byBhdm9pZCBp
-ZGxlLCBzaW5jZSB0aGUgdGFzayB3aWxsIG5vdCBkaXNwYXRjaCBmdXJ0aGVyDQo+Pj4+PiA+ID4g
-cmVxdWVzdHMgYW55IG1vcmUuIE5vdGUgdGhpcyBpc24ndCBubyBtZXJnZS4NCj4+Pj4+ID4NCj4+
-Pj4+ID4gU2luY2UgUkVRX05PSURMRSBoYXMgbm8gcmVsYXRpb25zaGlwIHdpdGggcmVxdWVzdCBt
-ZXJnZSwgd2UnZCBiZXR0ZXIgcmVtb3ZlIGl0Lg0KPj4+Pj4gPiBJIGNhbWUgb3V0IGEgbmV3IHBh
-dGNoLCB3aGljaCBkb2Vzbid0IGRlcGVuZCBvbiByZXF1ZXN0IHNpemUgYW55IG1vcmUuIFdpdGgN
-Cj4+Pj4+ID4gdGhpcyBwYXRjaCwgc2VxdWVudGlhbCBkaXJlY3RpbyB3aWxsIHN0aWxsIGludHJv
-ZHVjZSB1bm5lY2Vzc2FyeSByYWlkNSBwcmVyZWFkDQo+Pj4+PiA+IChlc3BlY2lhbGx5IGZvciBz
-bWFsbCBzaXplIElPKSwgYnV0IEkgYmV0IG5vIGFwcCBkb2VzIHNlcXVlbnRpYWwgc21hbGwgc2l6
-ZQ0KPj4+Pj4gPiBkaXJlY3RJTy4NCj4+Pj4+ID4NCj4+Pj4+ID4gVGhhbmtzLA0KPj4+Pj4gPiBT
-aGFvaHVhDQo+Pj4+PiA+DQo+Pj4+PiA+IFN1YmplY3Q6IHJhaWQ1OiBmaXggZGlyZWN0aW8gcmVn
-cmVzc2lvbg0KPj4+Pj4gPg0KPj4+Pj4gPiBNeSBkaXJlY3RJTyByYW5kb213cml0ZSA0ayB3b3Jr
-bG9hZCBzaG93cyBhIDEwfjIwJSByZWdyZXNzaW9uIGNhdXNlZCBieSBjb21taXQNCj4+Pj4+ID4g
-ODk1ZTNjNWM1OGE4MGJiLiBUaGlzIGNvbW1pdCBpc24ndCBmcmllbmRseSBmb3Igc21hbGwgc2l6
-ZSByYW5kb20gSU8sIGJlY2F1c2UNCj4+Pj4+ID4gZGVsYXlpbmcgc3VjaCByZXF1ZXN0IGhhc24n
-dCBhbnkgYWR2YW50YWdlcy4NCj4+Pj4+ID4NCj4+Pj4+ID4gRGlyZWN0SU8gdXN1YWxseSBpcyBy
-YW5kb20gSU8uIEkgdGhvdWdodCB3ZSBjYW4gaWdub3JlIHJlcXVlc3QgbWVyZ2UgYmV0d2Vlbg0K
-Pj4+Pj4gPiBiaW9zIGZyb20gZGlmZmVyZW50IGlvX3N1Ym1pdC4gU28gd2Ugb25seSBjb25zaWRl
-ciBvbmUgYmlvIHdoaWNoIGNhbiBkcml2ZQ0KPj4+Pj4gPiB1bm5lY2Vzc2FyeSBwcmVyZWFkIGlu
-IHJhaWQ1LCB3aGljaCBpcyBsYXJnZSByZXF1ZXN0LiBJZiBhIGJpbyBpcyBsYXJnZSBlbm91Z2gN
-Cj4+Pj4+ID4gYW5kIHNvbWUgb2YgaXRzIHN0cmlwZXMgd2lsbCBhY2Nlc3MgdHdvIG9yIG1vcmUg
-ZGlza3MsIHN1Y2ggc3RyaXBlcyBzaG91bGQgYmUNCj4+Pj4+ID4gZGVsYXllZCB0byBhdm9pZCB1
-bm5lY2Vzc2FyeSBwcmVyZWFkIHRpbGwgYmlvIGZvciB0aGUgbGFzdCBkaXNrIG9mIHRoZSBzdHJp
-cHMNCj4+Pj4+ID4gaXMgYWRkZWQuDQo+Pj4+PiA+DQo+Pj4+PiA+IFJFUV9OT0lETEUgZG9lc24n
-dCBtZWFuIGFib3V0IHJlcXVlc3QgbWVyZ2UsIEkgZGVsZXRlZCBpdC4NCj4+Pj4+DQo+Pj4+PiBI
-aSwNCj4+Pj4+ICBIYXZlIHlvdSB0ZXN0ZWQgd2hhdCBlZmZlY3QgdGhpcyBoYXMgb24gbGFyZ2Ug
-c2VxdWVudGlhbCBkaXJlY3Qgd3JpdGVzPw0KPj4+Pj4gIEJlY2F1c2UgaXQgZG9uJ3QgbWFrZSBz
-ZW5zZSB0byBtZSBhbmQgSSB3b3VsZCBiZSBzdXJwcmlzZWQgaWYgaXQgaW1wcm92ZXMNCj4+Pj4+
-ICB0aGluZ3MuDQo+Pj4+Pg0KPj4+Pj4gIFlvdSBhcmUgZGVsYXlpbmcgc2V0dGluZyB0aGUgU1RS
-SVBFX1BSRVJFQURfQUNUSVZFIGJpdCB1bnRpbCB5b3UgdGhpbmsgeW91DQo+Pj4+PiAgaGF2ZSBz
-dWJtaXR0ZWQgYWxsIHRoZSB3cml0ZXMgZnJvbSB0aGlzIGJpbyB0aGF0IGFwcGx5IHRvIHRoZSBn
-aXZlIHN0cmlwZS4NCj4+Pj4+ICBUaGF0IGRvZXMgbWFrZSBzb21lIHNlbnNlLCBob3dldmVyIGl0
-IGRvZXNuJ3Qgc2VlbSB0byBkZWFsIHdpdGggdGhlDQo+Pj4+PiAgcG9zc2liaWxpdHkgdGhhdCB0
-aGUgb25lIGJpbyBjb3ZlcnMgcGFydHMgb2YgdHdvIGRpZmZlcmVudCBzdHJpcGVzLiAgSW4gdGhh
-dA0KPj4+Pj4gIGNhc2UgdGhlIGZpcnN0IHN0cmlwZSBuZXZlciBnZXRzIFNUUklQRV9QUkVSRUFE
-X0FDVElWRSBzZXQsIHNvIGl0IGlzIGRlbGF5ZWQNCj4+Pj4+ICBkZXNwaXRlIGhhdmluZyAnUkVR
-X1NZTkMnIHNldC4NCj4+Pj4NCj4+Pj5JIGRpZG4ndCBnZXQgeW91ciBwb2ludC4gSXNuJ3QgbGFz
-dF9zZWN0b3IgLSBsb2dpY2FsX3NlY3RvciA8IGNodW5rX3NlY3RvcnMgdHJ1ZQ0KPj4+PmluIHRo
-ZSBjYXNlPw0KPj4+Pg0KPj4+Pj4gIEFsc28sIGFuZCBtb3JlIHNpZ25pZmljYW50bHksIHBsdWdn
-aW5nIHNob3VsZCBtZWFuIHRoYXQgdGhlIHZhcmlvdXMNCj4+Pj4+ICBzdHJpcGVfaGVhZHMgYXJl
-IG5vdCBldmVuIGxvb2tlZCBhdCB1bnRpbCBhbGwgb2YgdGhlIG9yaWdpbmFsIGJpbyBpcw0KPj4+
-Pj4gIHByb2Nlc3NlZCwgc28gd2hpbGUgU1RSSVBFX1BSRVJFQURfQUNUSVZFIG1pZ2h0IGdldCBz
-ZXQgZWFybHksIGl0IHNob3VsZCBub3QNCj4+Pj4+ICBnZXQgcHJvY2Vzc2VkIHVudGlsIHRoZSB3
-aG9sZSBiaW8gaXMgcHJvY2Vzc2VkIGFuZCB0aGUgcXVldWUgaXMgdW5wbHVnZ2VkLg0KPj4+Pj4N
-Cj4+Pj4+ICBTbyBJIGRvbid0IHRoaW5rIHRoaXMgcGF0Y2ggc2hvdWxkIG1ha2UgYSBkaWZmZXJl
-bmNlIG9uIGxhcmdlIGRpcmVjdCB3cml0ZXMsDQo+Pj4+PiAgYW5kIGlmIGl0IGRvZXMgdGhlbiBz
-b21ldGhpbmcgc3RyYW5nZSBpcyBnb2luZyBvbiB0aGF0IEknZCBsaWtlIHRvDQo+Pj4+PiAgdW5k
-ZXJzdGFuZCBmaXJzdC4NCj4+Pj4NCj4+Pj5BaGEsIG9rLCB0aGlzIG1ha2VzIHNlbnNlLiByZWNl
-bnQgZGVsYXllZCBzdHJpcGUgcmVsZWFzZSBzaG91bGQgbWFrZSB0aGUNCj4+Pj5wcm9ibGVtIGdv
-IGF3YXkuIFNvIEppYW5wZW5nLCBjYW4geW91IHRyeSB5b3VyIHdvcmtsb2FkIHdpdGggdGhlIGNv
-bW1pdA0KPj4+PnJldmVydGVkIHdpdGggYSByZWNlbnQga2VybmVsIHBsZWFzZT8NCj4+Pj4NCj4+
-PiBJIHRlc3RlZCB1c2VkIHlvdXIgcGF0Y2ggaW4gbXkgd29ya2xvYWQuDQo+Pj4gTGlrZSB0aGUg
-bmVpbCBzYWlkLCB0aGUgcGVyZm9ybWFuY2UgZG9lcyBub3QgcmVncmVzcy4NCj4+PiBCdXQgaWYg
-dGhlIGNvZGUgaXMgOg0KPj4+PiAgICAgICAgICAgICAgICAgICAgICAgaWYgKHRlc3RfYml0KFNU
-UklQRV9QUkVSRUFEX0FDVElWRSwgJnNoLT5zdGF0ZSkpDQo+Pj4+ICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgIHJlbGVhc2Vfc3RyaXBlKHNoKTsNCj4+Pj4gICAgICAgICAgICAgICAgICAg
-ICAgIGVsc2UNCj4+Pj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcmVsZWFzZV9zdHJp
-cGVfcGx1ZyhtZGRldiwgc2gpOw0KPj4+IFRoZSBzcGVlZCBpcyBhYm91dCA3Nk1CL3MuV2l0aCB0
-aG9zZSBjb2RlIHRoZSBzcGVlZCBpcyAyMDBNQi9zLg0KPj4NCj4+IEhtbSwgd2hhdCBJIHdhbnQg
-dG8gdGVzdCBpcyB1cHN0cmVhbSBrZXJuZWwgd2l0aCBjb21taXQgODk1ZTNjNWM1OGE4MGJiDQo+
-PiByZXZlcnRlZC4gZG9uJ3QgYXBwbHkgbXkgcGF0Y2guIFdlIHdhbnQgdG8ganVzdCByZXZlcnQg
-dGhlIGNvbW1pdC4NCj4NCj5EaWQgeW91IGhhdmUgZGF0YSBmb3IgeW91ciBvcmlnaW5hbCB3b3Jr
-bG9hZCB3aXRoIDg5NWUzYzVjNThhODBiYg0KPnJldmVydGVkIG5vdz8NCm91ciByYWlkNSB3aGlj
-aCBoYWQgMTQgU0FUQSBIRERzLg0KDQp3aXRoICA4OTVlM2M1YzU4YTgwYmIgcmV2ZXJ0ZWQ6DQp1
-c2luZyBkZCB0byB0ZXN0IDU1TUIvcw0KdXNpbmcgb3VyLWZzIDIwMC0yNTBNYi9zDQoNCndpdGgg
-IDg5NWUzYzVjNThhODBiYjoNCnVzaW5nIGRkIHRvIHRlc3QgMjc1TUIvcw0KdXNpbmcgb3VyLWZz
-IDUwMC01NTBNYi9z
+2012/8/23 Jianpeng Ma <majianpeng@gmail.com>:
+> On 2012-08-23 14:08 Shaohua Li <shli@kernel.org> Wrote:
+>>2012/8/16 Shaohua Li <shli@kernel.org>:
+>>> 2012/8/16 Jianpeng Ma <majianpeng@gmail.com>:
+>>>> On 2012-08-15 09:44 Shaohua Li <shli@kernel.org> Wrote:
+>>>>>On Wed, Aug 15, 2012 at 10:56:10AM +1000, NeilBrown wrote:
+>>>>>> On Tue, 14 Aug 2012 14:33:43 +0800 Shaohua Li <shli@kernel.org> wrote:
+>>>>>>
+>>>>>> > On Thu, Aug 09, 2012 at 01:07:01PM +0800, Shaohua Li wrote:
+>>>>>> > > 2012/8/9 NeilBrown <neilb@suse.de>:
+>>>>>> > > > On Thu, 9 Aug 2012 09:20:05 +0800 "Jianpeng Ma" <majianpeng@gmail.com> wrote:
+>>>>>> > > >
+>>>>>> > > >> On 2012-08-08 20:53 Shaohua Li <shli@kernel.org> Wrote:
+>>>>>> > > >> >2012/8/8 Jianpeng Ma <majianpeng@gmail.com>:
+>>>>>> > > >> >> On 2012-08-08 10:58 Shaohua Li <shli@kernel.org> Wrote:
+>>>>>> > > >> >>>2012/8/7 Jianpeng Ma <majianpeng@gmail.com>:
+>>>>>> > > >> >>>> On 2012-08-07 13:32 Shaohua Li <shli@kernel.org> Wrote:
+>>>>>> > > >> >>>>>2012/8/7 Jianpeng Ma <majianpeng@gmail.com>:
+>>>>>> > > >> >>>>>> On 2012-08-07 11:22 Shaohua Li <shli@kernel.org> Wrote:
+>>>>>> > > >> >>>>>>>My directIO randomwrite 4k workload shows a 10~20% regression caused by commit
+>>>>>> > > >> >>>>>>>895e3c5c58a80bb. directIO usually is random IO and if request size isn't big
+>>>>>> > > >> >>>>>>>(which is the common case), delay handling of the stripe hasn't any advantages.
+>>>>>> > > >> >>>>>>>For big size request, delay can still reduce IO.
+>>>>>> > > >> >>>>>>>
+>>>>>> > > >> >>>>>>>Signed-off-by: Shaohua Li <shli@fusionio.com>
+>>>>>> > > >> >>>> [snip]
+>>>>>> > > >> >>>>>>>--
+>>>>>> > > >> >>>>>> May be used size to judge is not a good method.
+>>>>>> > > >> >>>>>> I firstly sended this patch, only want to control direct-write-block,not for reqular file.
+>>>>>> > > >> >>>>>> Because i think if someone used direct-write-block for raid5,he should know the feature of raid5 and he can control
+>>>>>> > > >> >>>>>> for write to full-write.
+>>>>>> > > >> >>>>>> But at that time, i did know how to differentiate between regular file and block-device.
+>>>>>> > > >> >>>>>> I thik we should do something to do this.
+>>>>>> > > >> >>>>>
+>>>>>> > > >> >>>>>I don't think it's possible user can control his write to be a
+>>>>>> > > >> >>>>>full-write even for
+>>>>>> > > >> >>>>>raw disk IO. Why regular file and block device io matters here?
+>>>>>> > > >> >>>>>
+>>>>>> > > >> >>>>>Thanks,
+>>>>>> > > >> >>>>>Shaohua
+>>>>>> > > >> >>>> Another problem is the size. How to judge the size is large or not?
+>>>>>> > > >> >>>> A syscall write is a dio and a dio may be split more bios.
+>>>>>> > > >> >>>> For my workload, i usualy write chunk-size.
+>>>>>> > > >> >>>> But your patch is judge by bio-size.
+>>>>>> > > >> >>>
+>>>>>> > > >> >>>I'd ignore workload which does sequential directIO, though
+>>>>>> > > >> >>>your workload is, but I bet no real workloads are. So I'd like
+>>>>>> > > >> >> Sorry,my explain maybe not corcrect. I write data once which size is almost chunks-size * devices,in order to full-write
+>>>>>> > > >> >> and as possible as to no pre-read operation.
+>>>>>> > > >> >>>only to consider big size random directio. I agree the size
+>>>>>> > > >> >>>judge is arbitrary. I can optimize it to be only consider stripe
+>>>>>> > > >> >>>which hits two or more disks in one bio, but not sure if it's
+>>>>>> > > >> >>>worthy doing. Not ware big size directio is common, and even
+>>>>>> > > >> >>>is, big size request IOPS is low, a bit delay maybe not a big
+>>>>>> > > >> >>>deal.
+>>>>>> > > >> >> If add a acc_time for 'striep_head' to control?
+>>>>>> > > >> >> When get_active_stripe() is ok, update acc_time.
+>>>>>> > > >> >> For some time, stripe_head did not access and it shold pre-read.
+>>>>>> > > >> >
+>>>>>> > > >> >Do you want to add a timer for each stripe? This is even ugly.
+>>>>>> > > >> >How do you choose the expire time? A time works for harddisk
+>>>>>> > > >> >definitely will not work for a fast SSD.
+>>>>>> > > >> A time is like the size which is arbitrary.
+>>>>>> > > >> How about add a interface in sysfs to control by user?
+>>>>>> > > >> Only user can judge the workload, which sequatial write or random write.
+>>>>>> > > >
+>>>>>> > > > This is getting worse by the minute.  A sysfs interface for this is
+>>>>>> > > > definitely not a good idea.
+>>>>>> > > >
+>>>>>> > > > The REQ_NOIDLE flag is a pretty clear statement that no more requests that
+>>>>>> > > > merge with this one are expected.  If some use cases sends random requests,
+>>>>>> > > > maybe it should be setting REQ_NOIDLE.
+>>>>>> > > >
+>>>>>> > > > Maybe someone should do some research and find out why WRITE_ODIRECT doesn't
+>>>>>> > > > include REQ_NOIDLE.  Understanding that would help understand the current
+>>>>>> > > > problem.
+>>>>>> > >
+>>>>>> > > A quick search shows only cfq-iosched uses REQ_NOIDLE. In
+>>>>>> > > cfq, a queue is idled to avoid losing its share. REQ_NOIDLE
+>>>>>> > > tells cfq to avoid idle, since the task will not dispatch further
+>>>>>> > > requests any more. Note this isn't no merge.
+>>>>>> >
+>>>>>> > Since REQ_NOIDLE has no relationship with request merge, we'd better remove it.
+>>>>>> > I came out a new patch, which doesn't depend on request size any more. With
+>>>>>> > this patch, sequential directio will still introduce unnecessary raid5 preread
+>>>>>> > (especially for small size IO), but I bet no app does sequential small size
+>>>>>> > directIO.
+>>>>>> >
+>>>>>> > Thanks,
+>>>>>> > Shaohua
+>>>>>> >
+>>>>>> > Subject: raid5: fix directio regression
+>>>>>> >
+>>>>>> > My directIO randomwrite 4k workload shows a 10~20% regression caused by commit
+>>>>>> > 895e3c5c58a80bb. This commit isn't friendly for small size random IO, because
+>>>>>> > delaying such request hasn't any advantages.
+>>>>>> >
+>>>>>> > DirectIO usually is random IO. I thought we can ignore request merge between
+>>>>>> > bios from different io_submit. So we only consider one bio which can drive
+>>>>>> > unnecessary preread in raid5, which is large request. If a bio is large enough
+>>>>>> > and some of its stripes will access two or more disks, such stripes should be
+>>>>>> > delayed to avoid unnecessary preread till bio for the last disk of the strips
+>>>>>> > is added.
+>>>>>> >
+>>>>>> > REQ_NOIDLE doesn't mean about request merge, I deleted it.
+>>>>>>
+>>>>>> Hi,
+>>>>>>  Have you tested what effect this has on large sequential direct writes?
+>>>>>>  Because it don't make sense to me and I would be surprised if it improves
+>>>>>>  things.
+>>>>>>
+>>>>>>  You are delaying setting the STRIPE_PREREAD_ACTIVE bit until you think you
+>>>>>>  have submitted all the writes from this bio that apply to the give stripe.
+>>>>>>  That does make some sense, however it doesn't seem to deal with the
+>>>>>>  possibility that the one bio covers parts of two different stripes.  In that
+>>>>>>  case the first stripe never gets STRIPE_PREREAD_ACTIVE set, so it is delayed
+>>>>>>  despite having 'REQ_SYNC' set.
+>>>>>
+>>>>>I didn't get your point. Isn't last_sector - logical_sector < chunk_sectors true
+>>>>>in the case?
+>>>>>
+>>>>>>  Also, and more significantly, plugging should mean that the various
+>>>>>>  stripe_heads are not even looked at until all of the original bio is
+>>>>>>  processed, so while STRIPE_PREREAD_ACTIVE might get set early, it should not
+>>>>>>  get processed until the whole bio is processed and the queue is unplugged.
+>>>>>>
+>>>>>>  So I don't think this patch should make a difference on large direct writes,
+>>>>>>  and if it does then something strange is going on that I'd like to
+>>>>>>  understand first.
+>>>>>
+>>>>>Aha, ok, this makes sense. recent delayed stripe release should make the
+>>>>>problem go away. So Jianpeng, can you try your workload with the commit
+>>>>>reverted with a recent kernel please?
+>>>>>
+>>>> I tested used your patch in my workload.
+>>>> Like the neil said, the performance does not regress.
+>>>> But if the code is :
+>>>>>                       if (test_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
+>>>>>                               release_stripe(sh);
+>>>>>                       else
+>>>>>                               release_stripe_plug(mddev, sh);
+>>>> The speed is about 76MB/s.With those code the speed is 200MB/s.
+>>>
+>>> Hmm, what I want to test is upstream kernel with commit 895e3c5c58a80bb
+>>> reverted. don't apply my patch. We want to just revert the commit.
+>>
+>>Did you have data for your original workload with 895e3c5c58a80bb
+>>reverted now?
+> our raid5 which had 14 SATA HDDs.
+>
+> with  895e3c5c58a80bb reverted:
+> using dd to test 55MB/s
+> using our-fs 200-250Mb/s
+>
+> with  895e3c5c58a80bb:
+> using dd to test 275MB/s
+> using our-fs 500-550Mb/s
 
+what's block size of dd in this test? In your original test, your
+BS covers chunk_sector*data_disks. In that case,
+895e3c5c58a80bb is likely not required.
+
+I guess you are using a smaller bs this time, so we need
+merge different bios to a stripe overwrite?
