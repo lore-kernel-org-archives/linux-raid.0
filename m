@@ -1,98 +1,226 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: mdadm: Assemble.c: "force-one" update conflicts with the
- split-brain protection logic
-Date: Tue, 28 Aug 2012 10:45:49 +0300
-Message-ID: <CAGRgLy7fy49gVAAR4Ti6Hotb1Aw+0UQ9aKBmjzB+uMiqB13qMw@mail.gmail.com>
-References: <CAGRgLy5zfK+wLNfMHxAaEsYs=6qeSA4iqaWDZoUhh8a1D2eBBg@mail.gmail.com>
+From: Kent Overstreet <koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [RFC][PATCH] Immutable bio vecs
+Date: Tue, 28 Aug 2012 23:41:17 -0700
+Message-ID: <20120829064117.GB22214@moria.home.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy5zfK+wLNfMHxAaEsYs=6qeSA4iqaWDZoUhh8a1D2eBBg@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-bcache-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+Sender: linux-bcache-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
 List-Id: linux-raid.ids
 
-Hi Neil,
-yet another issue that I see with the "force-one" update, is that it
-does not increment the event count on the bitmap of the appropriate
-device.
+Ok, I lied about patches. I got something working yesterday, but the
+code is ugly and in flux and not _remotely_ complete.
 
-Here is a scenario that I hit:
+Well, if you want to see actual code, it's up at
+http://evilpiepirate.org/git/linux-bcache.git/log/?h=block_stuff-immutable_bio_vecs
+http://evilpiepirate.org/git/linux-bcache.git/log/?h=block_stuff-immutable_bio_vecs
 
-# raid5 with 4 drives: A,B,C,D
-# drive A fails, then drive B fails
-# force-assembly is performed
-# drive B has higher event count than A, so it is selected for the
-"force-one" update. However, the "force-one" update does not update
-the bitmap event counter. As a result, the following happens:
-# array is started in the kernel
-# bitmap_read_sb() is called and calls read_sb_page()
-# read_sb_page() loops through devices and picks the first one that is
-In_sync. In our case, this is drive B. So bitmap superblock from drive
-B is read. But this superblock has a stale event count. It was not
-updated by "force-one". So, as a result, bitmap is considered as stale
-and marked as BITMAP_STALE.
-# As a result of BITMAP_STALE, bitmap->events_cleared is set to
-mddev->events (and also the bitmap is set to all 1's)
-# Later, when drive A is re-added, its event count is less than
-events_cleared, because events_cleared has been bumped up. So drive A
-is rejected by re-add.
+Anyways: IMMUTABLE BVECS
 
-The workaround in this case, is to wipe the superblock on A and add it
-as a fresh drive.
+This is an idea I've been kicking around for ages, but it turns out it
+had occured to other people besides me, so the other day I finally bit
+the bullet and started writing code and trying to figure out how to make
+it work sanely.
 
-Thanks,
-Alex.
+THE PROBLEM:
 
+This mainly (but not exclusively!) affects stacking block devices, in a
+variety of ways.
 
-On Wed, Aug 22, 2012 at 8:50 PM, Alexander Lyakas
-<alex.bolshoy@gmail.com> wrote:
-> Hi Neil,
-> I see the following issue:
->
-> # I have a raid5 with drives a,b,c,d. Drive a fails, and then drive b
-> fails, and so the whole array fails.
-> # Superblocks of c and d show a and b as failed (via 0xffe in
-> dev_roles[] array).
-> # Now I perform --assemble --force
-> # Since b has higher event count than a, b's event count is bumped to
-> match the event count of c and d ("force-one")
-> # However, something goes wrong and assembly is aborted
-> # Now assembly is restarted (--force doesn't matter now)
->
-> At this point, drive b is chosen as "most_recent", since it comes
-> first and has highest event count (equal to c and d).
-> However, when drives c and d are inspected, they are rejected by the
-> following split-brain protection code:
->                 if (j != most_recent &&
->                     content->array.raid_disks > 0 &&
->                     devices[most_recent].i.disk.raid_disk >= 0 &&
->                     devmap[j * content->array.raid_disks +
-> devices[most_recent].i.disk.raid_disk] == 0) {
->                         if (c->verbose > -1)
->                                 pr_err("ignoring %s as it reports %s as failed\n",
->                                         devices[j].devname, devices[most_recent].devname);
->                         best[i] = -1;
->                         continue;
->                 }
->
-> because the dev_roles[] array of c and d show b as failed (because b
-> really had failed while c and d were operational).
->
-> So I was thinking that the "force-one" update should also somehow
-> align the dev_roles[] arrays of all devices that it affects. More
-> precisely, if we decide to promote a device via "force-one" path, we
-> must update dev_roles[] of all "good" devices to say that the promoted
-> device is not 0xffe, but has a valid role. Does this make sense? What
-> do you think?
->
-> And I also think, that the split-brain protection logic that you added
-> should be made a little bit more explicit. Currently, the first device
-> with the highest event count is selected as "most_recent", and
-> split-brain protection is enforced WRT to that device. But this logic
-> can be affected by the order of devices passed to "assemble". I
-> already mentioned that in the past I pitched a proposal of dealing
-> with it. Do you want me to go over it and try to pitch it again?
->
-> Thanks!
-> Alex.
+ * Stacking block devices pretty much universally have to split bios.
+Bio splitting is inherently problematic when bvecs are mutable.
+Primarily when the split isn't aligned on a bvec boundary, but the block
+layer adds other difficulties.
+
+ * CLONING/RETRYING
+Many stacking block drivers like to handle errors. You know, things like
+raid.
+
+Well, mutable bvecs mean they have to clone not just the bio, but the
+entire bvec to retry failed IOs. Awesome.
+
+I'm sure this is less of a problem for certain filesystems, but I bet
+their error handling code could benefit from this.
+
+ * CONFUSING/INCONSISTENT SEMANTICS
+This isn't so much something that immutable bio vecs will solve, but
+rather something that has to be solved to make immutable bio vecs work.
+
+Clearly separating the fields in struct bio into things that change
+after submission and things that don't, and making the mutable things
+mutate consistently has the potential to simplify and clarify a lot of
+code.
+
+I've been staring at a _lot_ of block layer code lately.
+
+BENEFITS:
+
+In the shorter term, what this really enables is writing/changing code
+in the block layer to be much more incremental/flexible - instead of
+going to ridiculous lengths to set things up ahead of time to adhere to
+all the concievable limits, we simply handle bios incrementally and just
+always make forward progress.
+
+Arbitrary efficient bio splitting means (to pick one thing of many) we
+can get rid of merge_bvec_fn. I did that in one of my branches, and I
+deleted over 800 lines of code.
+
+800 lines of HORRIBLE HORRIBLE code.
+
+It isn't just stacking block devices that are benefited by this stuff,
+normal block drivers should see improvements to, I just haven't spent as
+much time with that kind of code. A lot of code related to
+merging/counting segments can be gotten rid of, though - and that is
+tricky code.
+
+FURTHER OFF:
+
+Something I've heard Tejun complain about (and I agree with) is the
+ridiculous number of forms scatter/gather list an IO goes through on the
+way down the stack.
+
+By my count, it's as many as 4. Say you're doing aio:
+
+ * kiocb page vector
+ * the direct io code has its own page vector
+ * struct bio/bvec
+ * struct scatterlist
+
+The immutable bvec stuff helps because it helps with lifting the
+restrictions on bio sizes; the dio code can just _start_ by allocating a
+bio that holds however many pages it needs, instead of creating its own
+page vector then looping over that.
+
+I think unifying bvecs and struct scatterlist is feasible too, and this
+should help with that. Haven't thought about that one much though.
+
+HOW DO WE GET TO THIS MAGICAL PLACE?
+
+Pain, misery, and the tears of innocent children.
+
+Well, there's a nontrivial amount of nontrivial restructing to do in a
+a fair driver coder, but it looks doable and a lot can be done
+incrementally.
+
+THE PLAN:
+
+Step 2: Add a field to struct bio - bi_bvec_done.
+
+This is the number of bytes done in the current bvec; starts at 0 and
+when bi_bvec_done == bv_len, set it to 0 and increment bi_idx.
+
+That's really the gist of it, but getting to the point where that can be
+done without breaking any existing code is going to take awhile.
+
+Step 1: Introduce a bio iterator
+
+struct bvec_iter {
+	sector_t		bi_sector;	/* device address in 512 byte
+						   sectors */
+	unsigned int		bi_size;	/* residual I/O count */
+
+	unsigned int		bi_idx;		/* current index into bvl_vec */
+};
+
+To this gets add bi_bvec_done later.
+
+Initially, I just shoved those fields from struct bio into that struct,
+and added a bi_iter field to struct bio - that was just a mass renaming.
+
+This struct bvec_iter is more than just shuffling things around though,
+it becomes the only way for driver code to do anything with the bvecs.
+
+IMPLICATIONS:
+
+The big one is that it is no longer possible for code to just poke into
+bi_io_vec, without going through the abstractions. You can't use bv_len
+or bv_offset on the first bvec without consulting bi_bvec_done, but you
+also can't use bv_len on the _last_ bvec.
+
+The reason for this is non aligned splits; if we split we can't modify
+the bvec so the last bvec in the first split is going to have a bv_len
+that has more bytes than belong to the bio.
+
+So the only way to use the bvec is to iterate from the start,
+decrementing bi_size as you go along - bi_size, _not_ bi_vcnt is what
+tells you when you're done.
+
+But with the bvec_iter we can construct a new bio_for_each_segment()
+that works pretty much just like the old one:
+
+#define __bio_for_each_segment(bvl, bio, iter, start)			\
+	for (iter = start, bvl = bio_iovec_iter(bio, iter);		\
+	     bvl.bv_len = min(bvl.bv_len, iter.bi_size),		\
+		iter.bi_size;						\
+	     iter.bi_size -= bvl.bv_len, iter.bi_idx++,			\
+		bvl = *__bio_iovec_iter(bio, iter))
+
+#define bio_for_each_segment(bvl, bio, iter)				\
+	__bio_for_each_segment(bvl, bio, iter, (bio)->bi_iter)
+
+I'm not including the definition of bio_iovec_iter, but it just returns
+a bio_vec (a literal struct, not a pointer) that represents the start of
+the bvec array, after taking into account bi_bvec_done.
+
+So from the caller's perspective, they now just use a struct bvec to
+iterate, not a pointer - and they use a struct bvec_iter instead of an
+integer. For most callers it's a trivial conversion (I've already
+converted all uses in my tree).
+
+The non trivial conversions are basically any driver code that looks
+into bi_io_vec directly. Besides bi_bvec_done, arbitrary splitting means
+that when a driver gets a bio bi_idx may not be 0 - that is a major
+concern, it turns out; because of that it just isn't reasonable or safe
+for driver code to munge about in bi_io_vec directly.
+
+Everything's got to be converted over to standard abstractions, which is
+definitely going to require new utility code in fs/bio.c for various
+types of cloning and whatnot (really to complement what's already
+there).
+
+So far, it seems the best way to find all the nontrivial stuff to
+convert is to just grep around for bi_idx:
+
+$ git grep bi_idx|wc -l
+80
+
+Not that bad... almost exactly half in drivers/md.
+
+WHAT ABOUT THE IMMUTABLE BVEC ARRAY ITSELF?
+
+Well, it turns out when we've got all this done, there actually doesn't
+seem to be much code that modifies bi_idx or the bvec array itself -
+that stuff is pretty well centralized/abstracted.
+
+In practice it's mostly done from blk_update_request()/req_bio_endio()
+in blk-core.c, which just does the obvious/simple thing as far as
+consistently incrementing/decrementing all the various fields.
+
+I abstracted this out into a new function, bio_advance() - this nicely
+simplified blk_update_request(), and bio_advance() is going to be useful
+elsewhere.
+
+bio_advance() just takes a bio and some number of sectors to increment
+the iterator by - aside from bi_bvec_done and the fields in the bvec
+array, bi_size/bi_sector mean exactly what they used to and a bio is
+complete when bi_size == 0.
+
+This is really awesome for the new splitting code. That is the coolest
+part of all this, if you ask me:
+
+struct bio *split = bio_clone_bioset(bio, gfp, bio_set);
+split->bi_size = sectors << 9;
+bio_advance(bio, sectors);
+
+Except 2 lines of code for the bio integrity stuff, that is the _entire_
+new implementation of arbitrary bio splitting, and I'm going to get rid
+of the extra bits for bio integrity too.
+
+So anyways, I'm making excellent progress but I doubt I'm going to be
+able to finish 100% of this on my own. I can do everything in the core
+block layer code - including the stuff for merging/counting segments,
+which is nasty - but for driver code I think I'm going to need help from
+people working in the relevant areas to finish this stuff off.
