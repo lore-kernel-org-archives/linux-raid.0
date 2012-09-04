@@ -1,60 +1,39 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Safe disk replace
-Date: Tue, 4 Sep 2012 18:12:52 +0100
-Message-ID: <20120904171252.GA8544@cthulhu.home.robinhill.me.uk>
-References: <20120904041447.GB14445@onthe.net.au>
- <5045D7D9.9000108@hesbynett.no>
- <alpine.DEB.2.00.1209041423250.13902@uplift.swm.pp.se>
- <20120904153342.GA26999@cthulhu.home.robinhill.me.uk>
- <alpine.DEB.2.00.1209041834220.13902@uplift.swm.pp.se>
+From: Chris Friesen <chris.friesen@genband.com>
+Subject: RFC: use TRIM data from filesystems to speed up array rebuild?
+Date: Tue, 04 Sep 2012 12:06:26 -0600
+Message-ID: <50464322.3010509@genband.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="4Ckj6UjgE2iN1+kY"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.1209041834220.13902@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Robin Hill <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---4Ckj6UjgE2iN1+kY
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Tue Sep 04, 2012 at 06:34:39PM +0200, Mikael Abrahamsson wrote:
+I'm not really a filesystem guy so this may be a really dumb question.
 
-> On Tue, 4 Sep 2012, Robin Hill wrote:
->=20
-> > I'm currently upgrading my RAID-6 arrays via hot-replacement. The
-> > process I followed (to replace device YYY in array mdXX) is:
-> >    - add the new disk to the array as a spare
-> >    - echo want_replacement > /sys/block/mdXX/md/dev-YYY/state
->=20
-> What kernel version are you using?
->=20
-3.4.9 at the moment. A quick search on the list suggests that this
-functionality went in at 3.3 though.
+We currently have an issue where we have a ~1TB RAID1 array that is 
+mostly given over to LVM.  If we swap one of the disks it will rebuild 
+everything, even though we may only be using a small fraction of the space.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+This got me thinking.  Has anyone given thought to using the TRIM 
+information from filesystems to allow the RAID code to maintain a 
+bitmask of used disk blocks and only sync the ones that are actually used?
 
---4Ckj6UjgE2iN1+kY
-Content-Type: application/pgp-signature
+Presumably this bitmask would itself need to be stored on the disk.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+Thanks,
+Chris
 
-iEYEARECAAYFAlBGNpQACgkQShxCyD40xBJFUACgqF1JfnrU6D1jDRrQZAKEriEF
-eeAAoMErYTXWpckMcjNOgF1WVxLw5Wrr
-=rzsw
------END PGP SIGNATURE-----
 
---4Ckj6UjgE2iN1+kY--
+-- 
+
+Chris Friesen
+Software Designer
+
+3500 Carling Avenue
+Ottawa, Ontario K2H 8E9
+www.genband.com
