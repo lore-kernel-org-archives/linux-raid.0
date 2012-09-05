@@ -1,116 +1,211 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1 of 3] MD RAID10: Prep for DM RAID10 device replacement
- capability
-Date: Wed, 5 Sep 2012 12:03:57 +1000
-Message-ID: <20120905120357.7e7dd316@notabene.brown>
-References: <1345832315.25206.16.camel@f16>
+From: Carabetta Giulio <g.carabetta@abi.it>
+Subject: Data recovery after the failure of two disks of 4
+Date: Wed, 5 Sep 2012 15:34:00 +0200
+Message-ID: <4FDB990B62C2D849BA8EADBDD1C5928E13718F91D0@CCRMBX.abiad.abi.lan>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/qhhh5YOnPYuW_CwtUq8cDis"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1345832315.25206.16.camel@f16>
+Content-Language: it-IT
 Sender: linux-raid-owner@vger.kernel.org
-To: Jonathan Brassow <jbrassow@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/qhhh5YOnPYuW_CwtUq8cDis
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+I'm trying to retrieve a raid 5 array after the failure of two disks of 4.
+"Simply", the controller has lost a disk, and after a couple of minutes, it lost another.
+The disappearance of the disk also happened to me while I was trying to pull out the data from the disk, so I guess it should be a problem with the control board of the disks...
 
-On Fri, 24 Aug 2012 13:18:35 -0500 Jonathan Brassow <jbrassow@redhat.com>
-wrote:
+However, the server at the time of the fault was not doing anything special, so the data "critics"  are still there, on the surface of the disk ...
 
-> MD RAID10:  Fix a couple potential kernel panics if RAID10 is used by dm-=
-raid
->=20
-> When device-mapper uses the RAID10 personality through dm-raid.c, there i=
-s no
-> 'gendisk' structure in mddev and some sysfs information is also not popul=
-ated.
->=20
-> This patch avoids touching those non-existent structures.
->=20
-> Signed-off-by: Jonathan Brassow <jbrassow@rehdat.com>
->=20
-> Index: linux-upstream/drivers/md/md.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-upstream.orig/drivers/md/md.c
-> +++ linux-upstream/drivers/md/md.c
-> @@ -2056,8 +2056,14 @@ EXPORT_SYMBOL(md_integrity_register);
->  /* Disable data integrity if non-capable/non-matching disk is being adde=
-d */
->  void md_integrity_add_rdev(struct md_rdev *rdev, struct mddev *mddev)
->  {
-> -	struct blk_integrity *bi_rdev =3D bdev_get_integrity(rdev->bdev);
-> -	struct blk_integrity *bi_mddev =3D blk_get_integrity(mddev->gendisk);
-> +	struct blk_integrity *bi_rdev;
-> +	struct blk_integrity *bi_mddev;
-> +
-> +	if (!mddev->gendisk)
-> +		return;
-> +
-> +	bi_rdev =3D bdev_get_integrity(rdev->bdev);
-> +	bi_mddev =3D blk_get_integrity(mddev->gendisk);
-> =20
->  	if (!bi_mddev) /* nothing to do */
->  		return;
-> Index: linux-upstream/drivers/md/raid10.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-upstream.orig/drivers/md/raid10.c
-> +++ linux-upstream/drivers/md/raid10.c
-> @@ -1632,7 +1632,7 @@ static int raid10_spare_active(struct md
->  			   && !test_bit(Faulty, &tmp->rdev->flags)
->  			   && !test_and_set_bit(In_sync, &tmp->rdev->flags)) {
->  			count++;
-> -			sysfs_notify_dirent(tmp->rdev->sysfs_state);
-> +			sysfs_notify_dirent_safe(tmp->rdev->sysfs_state);
->  		}
->  	}
->  	spin_lock_irqsave(&conf->device_lock, flags);
->=20
+Anyhow, I have two good disks and two faults.
+
+More specifically, the disks (4 identical 2TB WD20EARS) are all partitioned in the same way: the first partition, about 250mb, the second with the rest of the free space.
+- sda1 and sdb1 as md0 (raid1) with /boot
+- sdc1 and sdd1 as md2 (raid1) with swaps 
+- sd[abcd]2 as md1 (RAID5) with root partition.
+
+Swap is not a matter, and boot array has no problem. The first time I found the problem it didn't boot just because the bios did not see the disks (both with boot partition...), but was temporary error...
+
+The first disk to fail was sdb, and the second was sda: I'm guessing by looking at the differences between the superblocks: (the full dump of superblocks is queued to the message)
+
+---
+sda2:
+        Update Time: Mon Aug 27 20:46:05 2012
+             Events: 622
+       Array State: A.AA ('A' == active, '.' == Missing)
+
+sdb2:
+        Update Time: Mon Aug 27 20:44:22 2012
+             Events: 600
+       Array State: AAAA ('A' == active, '.' == Missing)
+
+SdC2:
+        Update Time: Mon Aug 27 20:46:33 2012
+             Events: 625
+       Array State: ..AA ('A' == active, '.' == Missing)
+
+sdd2:
+        Update Time: Mon Aug 27 20:46:33 2012
+             Events: 625
+       Array State: ..AA ('A' == active, '.' == Missing)
+---
+
+Now I'm copying partitions elsewhere, with ddrescue, to replace the faulty disks and rebuild everything.
+
+In the meantime, I did a first test on the array md1 (root partition, the one with all my data...)
+
+Trying to reassemble the array I got:
+
+# Mdadm --assemble --force --verbose /dev/md11 /dev/sda2 /dev/sdb2 /dev/sdc2 /dev/sdd2
+mdadm: forcing event count in /dev/sda2(o) from 622 upto 625
+mdadm: Marking array /dev/md11 as 'clean'
+mdadm: added /dev/sdb2 to /dev/md11 as 1 (possibly out of date)
+mdadm: /dev/md11 has been started with 3 drives (out of 4).
 
 
-This and the other too all look fine - applied.  Thanks.
+Then I mounted the array and I saw the correct file system.
+To avoid a new fault (with disks very unstable), I stopped and removed the array very quickly, so I didn't tryed to read a file, I simply did few ls...
 
-While reviewing I noticed:
+Now the question.
 
-			if (value > rs->md.raid_disks) {
-				rs->ti->error =3D "Invalid rebuild index given";
-				return -EINVAL;
-			}
+I was copying only 3 disks, sdd, sdc, and the "freshest" faulty: sda. With 3 out of 4 disks in raid5 should be sufficient...
+But while copying the data, I got a read error on sda. I lost just 4Kbyte, but I do not know what piece of data is part of what...
 
-(in the 'rebuild' handling).  That should be  'value >=3D rs->md.raid_disks'
-shouldn't it?
-If you agree, please send a patch.
+So now I'm ddrescue'ing the fourth disk.
 
-Thanks,
-NeilBrown
+And then what?
 
---Sig_/qhhh5YOnPYuW_CwtUq8cDis
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+While I wait for the replacement disks (luckily under warranty, at least that ...), I need some suggestions.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+I supposed to copy the images on the new disk, and then try to assemble the array, but not know what could be the best approach (and if there's another one over a simple "mdadm --assemble").
 
-iQIVAwUBUEazDTnsnt1WYoG5AQLpYQ//YtxdtKZw0ILI4wcB1UM9Y39dnSc9xH4M
-0xXSU73evJbPNlk43p3mhaHNcphbaPyshFDIlZalhvDNVl42rheRdG7mzpHoogIe
-YK0mA/rZ9v/ad0LI592Ae99N6VHC8aFpCDBsLq/2cSdvZoxY2kJSHX9DtzA9g4Hn
-5OPYcZ3T2klYFnxDZcCZtDnTB5/d8PTuPufqd0ePcqhiQU8cPetolCuTA7xKuYH+
-N0Y+rMr/fI0LugppcYXeBi2Evb+wpVulf7/shr1E6A5W8Ekely13kSy/V1hmrQMZ
-d7SX8URTNGUbJEQZakGD6Ox/j3pKPeUPBzuiSaM/GQhdnw39dl9NdJ3Mh0wHM2HI
-J8/tnbPiCy6Qse8T9U1hLxDG7dLVS97OCmXFbdWPs4JtIDgyFPP31x8O/qTZIBxJ
-FQ5TpT4eGMDIwRh1kmwSGRNVXgETlDVd9zVZy9i7ClQEO7EuH9mm/5A20dCIyBuW
-OWddxKIuD7ix9bh7Pzg+rock4iCgkdWyNBTwToF+RbJrGyaf159M1u+nh+rclO3E
-vGSAlW7anmgxAcWxu4lEnnYruSysWRlu9Dzzu5epnPkfLkuP0J8JygV/S3gR375k
-TctSZ9ghaXMhTjqHBDqufK1EZrBaB7tu+avVSYb18zD8VZ/PFSfa6EeOHnU2KTqB
-+h9UczA5HTc=
-=OJW4
------END PGP SIGNATURE-----
+Keeping hold sdc and sdd as they are intact (at the moment ...): on the one hand we have a data disk "old" (sdb, the first to break ...) but without surface errors, and on the other hand, we have the other disk with the newest data (sda, the last to break), but with a 4k hole.
+Moreover sda has been forced as "good"...
 
---Sig_/qhhh5YOnPYuW_CwtUq8cDis--
+Which options I have?
+
+Thanks
+
+Giulio Carabetta
+
+===================================================
+    root@PartedMagic:/mnt# mdadm --examine /dev/sda2
+    /dev/sda2:
+              Magic : a92b4efc
+            Version : 1.2
+        Feature Map : 0x0
+         Array UUID : 4e7bb63f:74d1ac58:b01b1b48:44c7b7d7
+               Name : ubuntu:0
+      Creation Time : Sun Sep 25 09:10:23 2011
+         Raid Level : raid5
+       Raid Devices : 4
+     
+     Avail Dev Size : 3906539520 (1862.78 GiB 2000.15 GB)
+         Array Size : 5859807744 (5588.35 GiB 6000.44 GB)
+      Used Dev Size : 3906538496 (1862.78 GiB 2000.15 GB)
+        Data Offset : 2048 sectors
+       Super Offset : 8 sectors
+              State : active
+        Device UUID : 3d01cfa9:6313d51c:402b3ca5:815a84e9
+     
+        Update Time : Mon Aug 27 20:46:05 2012
+           Checksum : c51fe8dc - correct
+             Events : 622
+     
+             Layout : left-symmetric
+         Chunk Size : 512K
+     
+       Device Role : Active device 0
+       Array State : A.AA ('A' == active, '.' == missing)
+     
+     
+    root@PartedMagic:/mnt# mdadm --examine /dev/sdb2
+    /dev/sdb2:
+              Magic : a92b4efc
+            Version : 1.2
+        Feature Map : 0x0
+         Array UUID : 4e7bb63f:74d1ac58:b01b1b48:44c7b7d7
+               Name : ubuntu:0
+      Creation Time : Sun Sep 25 09:10:23 2011
+         Raid Level : raid5
+       Raid Devices : 4
+     
+     Avail Dev Size : 3906539520 (1862.78 GiB 2000.15 GB)
+         Array Size : 5859807744 (5588.35 GiB 6000.44 GB)
+      Used Dev Size : 3906538496 (1862.78 GiB 2000.15 GB)
+        Data Offset : 2048 sectors
+       Super Offset : 8 sectors
+              State : clean
+        Device UUID : 0c64fdf8:c55ee450:01f05a3c:57b87308
+     
+        Update Time : Mon Aug 27 20:44:22 2012
+           Checksum : fe6eb926 - correct
+             Events : 600
+     
+             Layout : left-symmetric
+         Chunk Size : 512K
+     
+       Device Role : Active device 1
+       Array State : AAAA ('A' == active, '.' == missing)
+     
+     
+    root@PartedMagic:/mnt# mdadm --examine /dev/sdc2
+    /dev/sdc2:
+              Magic : a92b4efc
+            Version : 1.2
+        Feature Map : 0x0
+         Array UUID : 4e7bb63f:74d1ac58:b01b1b48:44c7b7d7
+               Name : ubuntu:0
+      Creation Time : Sun Sep 25 09:10:23 2011
+         Raid Level : raid5
+       Raid Devices : 4
+     
+     Avail Dev Size : 3906539520 (1862.78 GiB 2000.15 GB)
+         Array Size : 5859807744 (5588.35 GiB 6000.44 GB)
+      Used Dev Size : 3906538496 (1862.78 GiB 2000.15 GB)
+        Data Offset : 2048 sectors
+       Super Offset : 8 sectors
+              State : clean
+        Device UUID : 0bb6c440:a2e47ae9:50eee929:fee9fa5e
+     
+        Update Time : Mon Aug 27 20:46:33 2012
+           Checksum : 22e0c195 - correct
+             Events : 625
+     
+             Layout : left-symmetric
+         Chunk Size : 512K
+     
+       Device Role : Active device 2
+       Array State : ..AA ('A' == active, '.' == missing)
+     
+     
+    root@PartedMagic:/mnt# mdadm --examine /dev/sdd2
+    /dev/sdd2:
+              Magic : a92b4efc
+            Version : 1.2
+        Feature Map : 0x0
+         Array UUID : 4e7bb63f:74d1ac58:b01b1b48:44c7b7d7
+               Name : ubuntu:0
+      Creation Time : Sun Sep 25 09:10:23 2011
+         Raid Level : raid5
+       Raid Devices : 4
+     
+     Avail Dev Size : 3906539520 (1862.78 GiB 2000.15 GB)
+         Array Size : 5859807744 (5588.35 GiB 6000.44 GB)
+      Used Dev Size : 3906538496 (1862.78 GiB 2000.15 GB)
+        Data Offset : 2048 sectors
+       Super Offset : 8 sectors
+              State : clean
+        Device UUID : 1f06610d:379589ed:db2a719b:82419b35
+     
+        Update Time : Mon Aug 27 20:46:33 2012
+           Checksum : 3bb3564f - correct
+             Events : 625
+     
+             Layout : left-symmetric
+         Chunk Size : 512K
+     
+       Device Role : Active device 3
+       Array State : ..AA ('A' == active, '.' == missing)
+
+===================================================
