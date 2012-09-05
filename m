@@ -1,51 +1,68 @@
-From: John Drescher <drescherjm@gmail.com>
-Subject: Re: Safe disk replace
-Date: Wed, 5 Sep 2012 10:25:19 -0400
-Message-ID: <CAEhu1-6oNLaPuoh-aXtrFsnmPZ2fMGVaQSbtQp7Wkx-sf8MfDg@mail.gmail.com>
-References: <20120904041447.GB14445@onthe.net.au>
-	<5045D7D9.9000108@hesbynett.no>
-	<alpine.DEB.2.00.1209041423250.13902@uplift.swm.pp.se>
-	<20120904153342.GA26999@cthulhu.home.robinhill.me.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Brassow Jonathan <jbrassow@redhat.com>
+Subject: Re: [PATCH] DM RAID: Fix for ineffective "sync" directive
+Date: Wed, 5 Sep 2012 09:32:16 -0500
+Message-ID: <D4625EDF-9059-4716-A3B2-CEC8418047F4@redhat.com>
+References: <1345735914.25206.8.camel@f16> <20120905114426.1ce3c898@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v1084)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120904153342.GA26999@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <20120905114426.1ce3c898@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, Jonathan Brassow <jbrassow@redhat.com>
 List-Id: linux-raid.ids
 
-> I'm currently upgrading my RAID-6 arrays via hot-replacement. The
-> process I followed (to replace device YYY in array mdXX) is:
->     - add the new disk to the array as a spare
->     - echo want_replacement > /sys/block/mdXX/md/dev-YYY/state
->
-> That kicks off the recovery (a straight disk-to-disk copy from YYY to
-> the new disk). After the rebuild is complete, YYY gets failed in the
-> array, so can be safely removed:
->     - mdadm -r /dev/mdXX /dev/mdYYY
->
 
-Thanks for the info. I wanted this feature for years at work..
+On Sep 4, 2012, at 8:44 PM, NeilBrown wrote:
 
-I am testing this now on my test box. Here I have 13 x 250GB SATA 1
-drives. Yes these are 8+ years old..
+> On Thu, 23 Aug 2012 10:31:54 -0500 Jonathan Brassow <jbrassow@redhat.com>
+> wrote:
+> 
+>> Neil,
+>> 
+>> There are two ways I see to fix the problem of the "sync" table argument
+>> not causing the array to re-sync.  We could set mddev->events to
+>> UINT_MAX and force an mddev/bitmap event mismatch - causing the bitmap
+>> code to set BITMAP_STALE itself.  Otherwise, we can do as I have below
+>> and set BITMAP_STALE ourselves.  The real difference is whether this is
+>> done before or after md_run().  The first solution can be done before
+>> md_run(); the second cannot because the bitmap is allocated during
+>> md_run().  Either solution works and correctly sets the bitmap to stale
+>> before bitmap_load() is called.  So, rather than having to think about
+>> issues that come with setting events to UINT_MAX, I chose to set the
+>> bitmap stale after md_run().
+> 
+> I'm not at all sure this is the right way to look at the issue.
+> 
+> The only reason that we have 'sync' and 'nosync' table args is because
+> originally we weren't storing any metadata on disk.  The 'in-sync?' state of
+> the array is important metadata, so it needed to be given to md via a table
+> option.
+> 
+> If you have a bitmap, then you are storing this information in metadata, so
+> including it as a table option is redundant and - as you noticed - ignored.
+> 
+> If you want to assert that the data in the bitmap is incorrect, then I think
+> the best approach is to change it so that it is correct.
+> i.e. if you want to assert that an array is not in-sync and should be fully
+> 'synced', then the right thing to do is to write lots of '1's to the bitmap
+> before trying to assemble the array.
+> 
+> However I'm not violently against the patch - though I would be against
+> fiddling with event_count. It does seem unpleasantly asymmetric though.
+> The 'sync' option says 'assume all bits in the bitmap are set', but the
+> 'nosync' option doesn't say 'assume all bits in the bitmap are clear'.
+> 
+> Is simply writing to the bitmap when you want to force some behaviour an
+> option, or do you really really want "sync" to mean "please ignore the
+> bitmap"?  (or maybe an "ignorebitmap" option is what we want??).
 
-md1 : active raid6 sda2[13](R) sdk2[17] sdj2[18] sdf2[16] sdm2[19]
-sdl2[14] sdi2[12] sdg2[15] sde2[5] sdd2[4] sdh2[21] sdb2[20] sdc2[1]
-      2431477760 blocks super 1.2 level 6, 512k chunk, algorithm 2
-[12/12] [UUUUUUUUUUUU]
-      [>....................]  recovery =  3.4% (8401408/243147776)
-finish=75.9min speed=51540K/sec
+For me, the 'sync' and 'nosync' args are not just a vestige of when we didn't have metadata; but also a form of continuity with dm-raid1.  The 'sync' option has - for device-mapper - always been a way to reset the bitmap and force a resync.
 
+I don't particularly care for forcing userspace to understand how the kernel is handling the metadata (i.e. forcing it to know where and what to write WRT the bitmap).  However, another way of tackling this problem is simply to wipe the metadata areas.  I do not think there is any information that must be carried over from the superblock if our desire is to simply resync.  (Although, there are exceptions to /when/ this action should occur - like not when a reshape is happening.)
 
-Speeds are faster than failing a drive but I would do this more for
-the lower chance of failure more than the improved performance:
+Wiping the metadata areas involves a number of additional steps for LVM, but this is not the kernel's problem per se.  Wiping the metadata areas is also the way LVM resyncs dm-raid1 arrays right now, which is a bit strange to me. The only (admittedly weak) arguments for adding this patch is 1) "sync" should work if it is an allowed argument and 2) it seems a better way of clearing the bitmap than wiping all the metadata while allowing for more error checking.
 
-md1 : active raid6 sdk2[17] sdj2[18] sdf2[16] sdm2[19] sdl2[14]
-sdi2[12] sdg2[15] sde2[5] sdd2[4] sdh2[21] sdb2[20] sdc2[1]
-      2431477760 blocks super 1.2 level 6, 512k chunk, algorithm 2
-[12/11] [_UUUUUUUUUUU]
-      [>....................]  recovery =  1.2% (3134952/243147776)
-finish=100.1min speed=39954K/sec
+ brassow
 
-John
