@@ -1,69 +1,130 @@
-From: Ross Boylan <ross@biostat.ucsf.edu>
-Subject: Re: Problems after extending partition [SOLVED]
-Date: Tue, 04 Sep 2012 16:29:48 -0700
-Message-ID: <1346801388.11821.22.camel@corn.betterworld.us>
-References: <504009DF.4070408@biostat.ucsf.edu>
-	 <5040178C.1070900@websitemanagers.com.au>
-	 <1346473267.11608.14.camel@corn.betterworld.us>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] DM RAID: Fix for ineffective "sync" directive
+Date: Wed, 5 Sep 2012 11:44:26 +1000
+Message-ID: <20120905114426.1ce3c898@notabene.brown>
+References: <1345735914.25206.8.camel@f16>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/5d0GCftSKxFKgc7OO_2U4z8"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1346473267.11608.14.camel@corn.betterworld.us>
+In-Reply-To: <1345735914.25206.8.camel@f16>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: ross@biostat.ucsf.edu, linux-raid@vger.kernel.org
+To: Jonathan Brassow <jbrassow@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 2012-08-31 at 21:21 -0700, Ross Boylan wrote:
-> On Fri, 2012-08-31 at 11:46 +1000, Adam Goryachev wrote:
-> > On 31/08/12 10:48, Ross Boylan wrote:
-> > > /dev/md1 was RAID 1 built from hda3 and hdb3.  After increasing the
-> > > partition size of hd[ab]3, md1 could not be assembled.  I think I
-> > > understand why and have a solution, but I would appreciate it if
-> > > someone could check it.  This is with 0.90 format on Debian Lenny with
-> > > the partitions in raid auto-detect mode.  hda and hdb are virtual
-> > > disks inside a kvm VM; it would be time-consuming to rebuild it from
-> > > scratch.
-> > >
-> > > The final wrinkle is that when I brought the VM up and dm1 was not
-> > > constructed one of the partitions was used anyway, so they are now out
-> > > of sync.
-> > >
-> > > Analysis: Growing the partitions meant that the mdadm superblocks were
-> > > not at the expected offset from the end of the partitions, and so they
-> > > weren't recognized as part of the array.
+--Sig_/5d0GCftSKxFKgc7OO_2U4z8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-[description of a possible solution and problems preserving the UUID
-when using mdadm in squeeze deleted]
+On Thu, 23 Aug 2012 10:31:54 -0500 Jonathan Brassow <jbrassow@redhat.com>
+wrote:
 
-Since the more recent mdadm insisted on tweaking my uuid with a home
-host, I did it from early in the boot process for the lenny VM.
+> Neil,
+>=20
+> There are two ways I see to fix the problem of the "sync" table argument
+> not causing the array to re-sync.  We could set mddev->events to
+> UINT_MAX and force an mddev/bitmap event mismatch - causing the bitmap
+> code to set BITMAP_STALE itself.  Otherwise, we can do as I have below
+> and set BITMAP_STALE ourselves.  The real difference is whether this is
+> done before or after md_run().  The first solution can be done before
+> md_run(); the second cannot because the bitmap is allocated during
+> md_run().  Either solution works and correctly sets the bitmap to stale
+> before bitmap_load() is called.  So, rather than having to think about
+> issues that come with setting events to UINT_MAX, I chose to set the
+> bitmap stale after md_run().
 
-Set the break=mount option for system startup.  This is a Debianism, I
-think.  It also requires the use of an initrd.
+I'm not at all sure this is the right way to look at the issue.
 
-This drops you into a shell.
-modprobe md    # essential
-#lenny uses hda not sda for disk name
-mdadm --create /dev/md1 --uuid=6f05ff4e:b4d49c1f:7fa21d88:ad0c50a9 =0.90 --level=mirror --raid-devices=2 /dev/hdb3 missing
-mdadm --manage /dev/md1 --add /dev/hda3
-mdadm --wait /dev/md1
+The only reason that we have 'sync' and 'nosync' table args is because
+originally we weren't storing any metadata on disk.  The 'in-sync?' state of
+the array is important metadata, so it needed to be given to md via a table
+option.
 
-Restarted the VM (not sure if necessary).
+If you have a bitmap, then you are storing this information in metadata, so
+including it as a table option is redundant and - as you noticed - ignored.
 
+If you want to assert that the data in the bitmap is incorrect, then I think
+the best approach is to change it so that it is correct.
+i.e. if you want to assert that an array is not in-sync and should be fully
+'synced', then the right thing to do is to write lots of '1's to the bitmap
+before trying to assemble the array.
 
-Although mdadm has some commands for --grow'ing the size of the md, I
-did not need to use any of them.  Possibly that's because I used RAID1.
-Can anyone comment?
+However I'm not violently against the patch - though I would be against
+fiddling with event_count. It does seem unpleasantly asymmetric though.
+The 'sync' option says 'assume all bits in the bitmap are set', but the
+'nosync' option doesn't say 'assume all bits in the bitmap are clear'.
 
-For completeness, the final steps were
-pvresize /dev/md1  # makes the PV fill the whole md1
-lvextend -L+1G myvg/usr  # grow an LV that needed more room
-resize2fs /dev/myvg/usr  # online resize of filesystem
+Is simply writing to the bitmap when you want to force some behaviour an
+option, or do you really really want "sync" to mean "please ignore the
+bitmap"?  (or maybe an "ignorebitmap" option is what we want??).
 
-This is for ext3 on top of LVM on top of RAID.
-
-Ross
+NeilBrown
 
 
+
+>=20
+>  brassow
+>=20
+> DM RAID: Fix for "sync" directive ineffectiveness
+>=20
+> There are two table arguments that can be given to a DM RAID target that
+> control whether the array is forced to (re)synchronize or skip initializa=
+tion:
+> "sync" and "nosync".  When "sync" is given, we set mddev->recovery_cp to 0
+> in order to cause the device to resynchronize.  This is insufficient if t=
+here
+> is a bitmap in use, because the array will simply look at the bitmap and =
+see
+> that there is no recovery necessary.
+>=20
+> Once md_run() is called and creates the bitmap, we set the bitmap as stal=
+e.
+> When the bitmap is loaded during the resume phase, a full resync will
+> result.
+>=20
+> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+>=20
+> Index: linux-upstream/drivers/md/dm-raid.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-upstream.orig/drivers/md/dm-raid.c
+> +++ linux-upstream/drivers/md/dm-raid.c
+> @@ -1123,6 +1123,10 @@ static int raid_ctr(struct dm_target *ti
+>  		ret =3D -EINVAL;
+>  		goto size_mismatch;
+>  	}
+> +
+> +	if (rs->print_flags & DMPF_SYNC)
+> +		set_bit(BITMAP_STALE, &(rs->md.bitmap->flags));
+> +
+>  	rs->callbacks.congested_fn =3D raid_is_congested;
+>  	dm_table_add_target_callbacks(ti->table, &rs->callbacks);
+> =20
+>=20
+
+
+--Sig_/5d0GCftSKxFKgc7OO_2U4z8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBUEauejnsnt1WYoG5AQJIvRAAnqCTsB2MJAYRN69jwuHqmLQg7D7Kx9UJ
+96tD8mkhvqZ9dDI5rLnGabbFmLlpaZ/44Hp7ZUBwBnurdCuF3Q8GEHEAs0JYxCc2
+xuf+PnAgJhsoQF4iWnjiwPR81svyBrbICvE3qxNzmAbQwAdAmgF+0RFgV+tzQytN
+g0m2soYzm0EeFhjXbx6h/U1eTY2BqD68DvjTRsg907eJqliafhOwNIhYF1drG5Lz
+MFHgQhJYxHPxPo0yu/a+9gbg35N3d7QuRINmQJFrn4jBPa1I1foc2nCxhDAEkNC3
+1VphOr1qD/l9aSyIShert1Z1Z0vvNtOsRKYOUPfmDQathkozW7Xg0I7NZrS+jTtS
+PqvQ9zjEpr++3Z2CDklwUI4og7Bpx/9dUmF1w+d/5PGzMZvpck50mM3ha1XCTgPU
+Sxx/DSi5ElJM22GHGNYG0M4RmvgQympfjkzDs4E/P2fL/L1kAe0vq5t7InMlDyD+
+DZi1pa9Jxds5/Ky6wVPylzfckiAJUTGrcY5RILiMXR3g+kQp2GJ+qjGio1m8zfIl
+e+yXI6U/nbD4skpscu+eJ3G/hWqOP0I4LjHBwpBdK/cZc+i/pMej/AhbteAhthVw
+Nhx0IEemOMD6K4QgmKoWWakN8f+250WJX/4jLLPd3LZQVIFu563jUXa3Vscp5YY5
+21a1QzZmocY=
+=M45K
+-----END PGP SIGNATURE-----
+
+--Sig_/5d0GCftSKxFKgc7OO_2U4z8--
