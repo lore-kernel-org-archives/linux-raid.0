@@ -1,103 +1,78 @@
-From: John Drescher <drescherjm@gmail.com>
-Subject: Re: Safe disk replace
-Date: Wed, 5 Sep 2012 15:46:47 -0400
-Message-ID: <CAEhu1-7GGh2bH97PJt22OYMVwXw2YXO+g1iRshsHC0Q8pmc0PA@mail.gmail.com>
-References: <20120904041447.GB14445@onthe.net.au>
-	<5045D7D9.9000108@hesbynett.no>
-	<alpine.DEB.2.00.1209041423250.13902@uplift.swm.pp.se>
-	<20120904153342.GA26999@cthulhu.home.robinhill.me.uk>
-	<CAEhu1-6oNLaPuoh-aXtrFsnmPZ2fMGVaQSbtQp7Wkx-sf8MfDg@mail.gmail.com>
-	<CAEhu1-6+PQr_UG6NLTgXcWgYJYfpp5j7EHt5BnfMmWJr=s-i_g@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] DM RAID: Fix comparison of index and quantity for
+ "rebuild" parameter
+Date: Thu, 6 Sep 2012 06:22:40 +1000
+Message-ID: <20120906062240.23b224f9@notabene.brown>
+References: <1346860400.10156.50.camel@f16>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/4SKrvtxRME4EHh+A2n+h=qs"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAEhu1-6+PQr_UG6NLTgXcWgYJYfpp5j7EHt5BnfMmWJr=s-i_g@mail.gmail.com>
+In-Reply-To: <1346860400.10156.50.camel@f16>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jonathan Brassow <jbrassow@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Sep 5, 2012 at 3:35 PM, John Drescher <drescherjm@gmail.com> wrote:
-> On Wed, Sep 5, 2012 at 10:25 AM, John Drescher <drescherjm@gmail.com> wrote:
->>> I'm currently upgrading my RAID-6 arrays via hot-replacement. The
->>> process I followed (to replace device YYY in array mdXX) is:
->>>     - add the new disk to the array as a spare
->>>     - echo want_replacement > /sys/block/mdXX/md/dev-YYY/state
->>>
->>> That kicks off the recovery (a straight disk-to-disk copy from YYY to
->>> the new disk). After the rebuild is complete, YYY gets failed in the
->>> array, so can be safely removed:
->>>     - mdadm -r /dev/mdXX /dev/mdYYY
->>>
->>
->> Thanks for the info. I wanted this feature for years at work..
->>
->> I am testing this now on my test box. Here I have 13 x 250GB SATA 1
->> drives. Yes these are 8+ years old..
->>
->> md1 : active raid6 sda2[13](R) sdk2[17] sdj2[18] sdf2[16] sdm2[19]
->> sdl2[14] sdi2[12] sdg2[15] sde2[5] sdd2[4] sdh2[21] sdb2[20] sdc2[1]
->>       2431477760 blocks super 1.2 level 6, 512k chunk, algorithm 2
->> [12/12] [UUUUUUUUUUUU]
->>       [>....................]  recovery =  3.4% (8401408/243147776)
->> finish=75.9min speed=51540K/sec
->>
->>
->> Speeds are faster than failing a drive but I would do this more for
->> the lower chance of failure more than the improved performance:
->>
->> md1 : active raid6 sdk2[17] sdj2[18] sdf2[16] sdm2[19] sdl2[14]
->> sdi2[12] sdg2[15] sde2[5] sdd2[4] sdh2[21] sdb2[20] sdc2[1]
->>       2431477760 blocks super 1.2 level 6, 512k chunk, algorithm 2
->> [12/11] [_UUUUUUUUUUU]
->>       [>....................]  recovery =  1.2% (3134952/243147776)
->> finish=100.1min speed=39954K/sec
->>
->
-> I found something interesting. I issued want_replacement without spares.
->
-> localhost md # echo want_replacement > dev-sdd2/state
-> localhost md # cat /proc/mdstat
-> Personalities : [raid1] [raid10] [raid6] [raid5] [raid4] [raid0]
-> [linear] [multipath]
-> md0 : active raid1 sda1[10](S) sdj1[0] sdk1[2] sdf1[11](S) sdb1[12](S)
-> sdg1[9] sdh1[8] sdl1[7] sdm1[6] sde1[5] sdd1[4] sdi1[3] sdc1[1]
->       1048512 blocks [10/10] [UUUUUUUUUU]
->
-> md1 : active raid6 sdb2[20] sdk2[17] sda2[13] sdj2[18] sdf2[16]
-> sdm2[19] sdl2[14] sdi2[12] sdg2[15] sde2[5] sdd2[4] sdh2[21]
-> sdc2[1](F)
->       2431477760 blocks super 1.2 level 6, 512k chunk, algorithm 2
-> [12/11] [UUUUUUUUUUUU]
->
-> Then I added the failed disk from a previous round as a spare.
->
-> localhost md # mdadm --manage /dev/md1 --remove /dev/sdc2
-> mdadm: hot removed /dev/sdc2 from /dev/md1
-> localhost md # mdadm --zero-superblock /dev/sdc2
-> localhost md # mdadm --manage /dev/md1 --add /dev/sdc2
-> mdadm: added /dev/sdc2
->
-> localhost md # cat /proc/mdstat
-> Personalities : [raid1] [raid10] [raid6] [raid5] [raid4] [raid0]
-> [linear] [multipath]
-> md0 : active raid1 sda1[10](S) sdj1[0] sdk1[2] sdf1[11](S) sdb1[12](S)
-> sdg1[9] sdh1[8] sdl1[7] sdm1[6] sde1[5] sdd1[4] sdi1[3] sdc1[1]
->       1048512 blocks [10/10] [UUUUUUUUUU]
->
-> md1 : active raid6 sdc2[22](R) sdb2[20] sdk2[17] sda2[13] sdj2[18]
-> sdf2[16] sdm2[19] sdl2[14] sdi2[12] sdg2[15] sde2[5] sdd2[4] sdh2[21]
->       2431477760 blocks super 1.2 level 6, 512k chunk, algorithm 2
-> [12/11] [UUUUUUUUUUUU]
->       [>....................]  recovery =  0.6% (1592256/243147776)
-> finish=119.2min speed=33746K/sec
->
->
-> Now its taking much longer and it says 12/11 instead of 12/12.
->
-I am not sure why it is taking longer this time, however from the
-drive activity lights on the lsi sas cards it appears that only 2
-drives are active in the copy so the raid appears to be doing the
-correct thing except for the minor difference in the 12/11 versus
-12/12.
+--Sig_/4SKrvtxRME4EHh+A2n+h=qs
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-John
+On Wed, 05 Sep 2012 10:53:20 -0500 Jonathan Brassow <jbrassow@redhat.com>
+wrote:
+
+> DM RAID: Fix comparison of index and quantity for "rebuild" parameter
+>=20
+> The "rebuild" parameter takes an index argument that starts counting from
+> zero.  The conditional used to validate the index was using '>' rather th=
+an
+> '>=3D', leaving the door open for an index value that would be 1 too larg=
+e.
+>=20
+> Reported-by: Neil Brown <neilb@suse.de>
+> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+>=20
+> Index: linux-upstream/drivers/md/dm-raid.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-upstream.orig/drivers/md/dm-raid.c
+> +++ linux-upstream/drivers/md/dm-raid.c
+> @@ -539,7 +539,7 @@ static int parse_raid_params(struct raid
+> =20
+>  		/* Parameters that take a numeric value are checked here */
+>  		if (!strcasecmp(key, "rebuild")) {
+> -			if (value > rs->md.raid_disks) {
+> +			if (value >=3D rs->md.raid_disks) {
+>  				rs->ti->error =3D "Invalid rebuild index given";
+>  				return -EINVAL;
+>  			}
+>=20
+
+Applied, thanks.
+
+NeilBrown
+
+--Sig_/4SKrvtxRME4EHh+A2n+h=qs
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBUEe0kDnsnt1WYoG5AQLp7xAAoWk4zaqWl5/kAv0T//maEIIslTQK8WXh
+lyrG24muKHG/FcLm/EIYJpjNI2f+HY3z1NdsiNqKswUnjihUMOd1uwDqtOADJhSK
+G9yrDcL5GEDV4jxEYtYaf0um3+edBOKew7hj/kWGCSX9QuIGP7eDPlZkafS7lJU+
+/aO9W0rSoAKT2aamgFdKZfdjj7pXE3mAkVBdXRoTY6XxWgKSkMaRyDI+kzH71ZDv
+TmnXTIF/ltLbXxr0Nn+RbIAga1aADgzSDWtbsZHuDU+0xeDI9EOmrJSTBeHBVLvS
+3U+1xL7XkGdInBERmGvTss+Zns15pqRyiPBTipQAAraB13Gin0mkRJ97BI1hkosk
+nr2f4k1HbGZave2kF5F0i4sZqOZTzRwfIte7eC91oXV2v9gc8kNO07OIGtgJocMO
+UyJKAVUckT0uW1EXdGGvv2c67akZq9Stux3Z78Q6ErPmd4rErD+K4L7lD4AWIbG2
+p3/IqstAaucAlnkDDxM/dPwWhD33vJV/pr8U94RVhRFQlEC9q2dkKndm7Ux3tVOK
+TFCYl6nwoUASvS/kvo7iJ76A7Jcjho2mYFE1xnxxdcWSrWYH5jfumE3ijuS9NxT9
+4RtyjViOcVD5fHocUe2I9Wohwcbz8B3zbnUio8rxbOTIwRysyoKSzpdqZHA2XMxH
+kzRes5m5F88=
+=MLUT
+-----END PGP SIGNATURE-----
+
+--Sig_/4SKrvtxRME4EHh+A2n+h=qs--
