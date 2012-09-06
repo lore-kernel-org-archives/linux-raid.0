@@ -1,45 +1,62 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
-Subject: [PATCH 3/3] raid5:Move comment to func handle_stripe.
-Date: Thu, 6 Sep 2012 09:28:11 +0800
-Message-ID: <201209060928037812864@gmail.com>
+From: Chris Dunlop <chris@onthe.net.au>
+Subject: Re: Safe disk replace
+Date: Thu, 6 Sep 2012 13:28:37 +1000
+Message-ID: <20120906032837.GA10993@onthe.net.au>
+References: <20120904041447.GB14445@onthe.net.au>
+ <5045D7D9.9000108@hesbynett.no>
+ <alpine.DEB.2.00.1209041423250.13902@uplift.swm.pp.se>
+ <20120904153342.GA26999@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120904153342.GA26999@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-U2lnbmVkLW9mZi1ieTogSmlhbnBlbmcgTWEgPG1hamlhbnBlbmdAZ21haWwuY29tPg0KLS0tDQog
-ZHJpdmVycy9tZC9yYWlkNS5jIHwgICAyNiArKysrKysrKysrKysrLS0tLS0tLS0tLS0tLQ0KIDEg
-ZmlsZSBjaGFuZ2VkLCAxMyBpbnNlcnRpb25zKCspLCAxMyBkZWxldGlvbnMoLSkNCg0KZGlmZiAt
-LWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KaW5kZXggMGQ2
-MTk3MmIuLjdmOTczYWMgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL21kL3JhaWQ1LmMNCisrKyBiL2Ry
-aXZlcnMvbWQvcmFpZDUuYw0KQEAgLTMxNzcsMTkgKzMxNzcsNiBAQCBzdGF0aWMgdm9pZCBoYW5k
-bGVfc3RyaXBlX2V4cGFuc2lvbihzdHJ1Y3QgcjVjb25mICpjb25mLCBzdHJ1Y3Qgc3RyaXBlX2hl
-YWQgKnNoKQ0KIAl9DQogfQ0KIA0KLS8qDQotICogaGFuZGxlX3N0cmlwZSAtIGRvIHRoaW5ncyB0
-byBhIHN0cmlwZS4NCi0gKg0KLSAqIFdlIGxvY2sgdGhlIHN0cmlwZSBieSBzZXR0aW5nIFNUUklQ
-RV9BQ1RJVkUgYW5kIHRoZW4gZXhhbWluZSB0aGUNCi0gKiBzdGF0ZSBvZiB2YXJpb3VzIGJpdHMg
-dG8gc2VlIHdoYXQgbmVlZHMgdG8gYmUgZG9uZS4NCi0gKiBQb3NzaWJsZSByZXN1bHRzOg0KLSAq
-ICAgIHJldHVybiBzb21lIHJlYWQgcmVxdWVzdHMgd2hpY2ggbm93IGhhdmUgZGF0YQ0KLSAqICAg
-IHJldHVybiBzb21lIHdyaXRlIHJlcXVlc3RzIHdoaWNoIGFyZSBzYWZlbHkgb24gc3RvcmFnZQ0K
-LSAqICAgIHNjaGVkdWxlIGEgcmVhZCBvbiBzb21lIGJ1ZmZlcnMNCi0gKiAgICBzY2hlZHVsZSBh
-IHdyaXRlIG9mIHNvbWUgYnVmZmVycw0KLSAqICAgIHJldHVybiBjb25maXJtYXRpb24gb2YgcGFy
-aXR5IGNvcnJlY3RuZXNzDQotICoNCi0gKi8NCiANCiBzdGF0aWMgdm9pZCBhbmFseXNlX3N0cmlw
-ZShzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoLCBzdHJ1Y3Qgc3RyaXBlX2hlYWRfc3RhdGUgKnMpDQog
-ew0KQEAgLTMzNzIsNiArMzM1OSwxOSBAQCBzdGF0aWMgdm9pZCBhbmFseXNlX3N0cmlwZShzdHJ1
-Y3Qgc3RyaXBlX2hlYWQgKnNoLCBzdHJ1Y3Qgc3RyaXBlX2hlYWRfc3RhdGUgKnMpDQogCXJjdV9y
-ZWFkX3VubG9jaygpOw0KIH0NCiANCisvKg0KKyAqIGhhbmRsZV9zdHJpcGUgLSBkbyB0aGluZ3Mg
-dG8gYSBzdHJpcGUuDQorICoNCisgKiBXZSBsb2NrIHRoZSBzdHJpcGUgYnkgc2V0dGluZyBTVFJJ
-UEVfQUNUSVZFIGFuZCB0aGVuIGV4YW1pbmUgdGhlDQorICogc3RhdGUgb2YgdmFyaW91cyBiaXRz
-IHRvIHNlZSB3aGF0IG5lZWRzIHRvIGJlIGRvbmUuDQorICogUG9zc2libGUgcmVzdWx0czoNCisg
-KiAgICByZXR1cm4gc29tZSByZWFkIHJlcXVlc3RzIHdoaWNoIG5vdyBoYXZlIGRhdGENCisgKiAg
-ICByZXR1cm4gc29tZSB3cml0ZSByZXF1ZXN0cyB3aGljaCBhcmUgc2FmZWx5IG9uIHN0b3JhZ2UN
-CisgKiAgICBzY2hlZHVsZSBhIHJlYWQgb24gc29tZSBidWZmZXJzDQorICogICAgc2NoZWR1bGUg
-YSB3cml0ZSBvZiBzb21lIGJ1ZmZlcnMNCisgKiAgICByZXR1cm4gY29uZmlybWF0aW9uIG9mIHBh
-cml0eSBjb3JyZWN0bmVzcw0KKyAqDQorICovDQogc3RhdGljIHZvaWQgaGFuZGxlX3N0cmlwZShz
-dHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoKQ0KIHsNCiAJc3RydWN0IHN0cmlwZV9oZWFkX3N0YXRlIHM7
-DQotLSANCjEuNy45LjUNCg==
+On Tue, Sep 04, 2012 at 04:33:42PM +0100, Robin Hill wrote:
+> On Tue Sep 04, 2012 at 02:26:24PM +0200, Mikael Abrahamsson wrote:
+>> On Tue, 4 Sep 2012, David Brown wrote:
+>> 
+>>> The "raid1" copy you mention will one day be possible with "hot replace"
+>>> <http://neil.brown.name/blog/20110216044002#2>
+>>>
+>>> I don't know how far along this idea is at the moment.
+>> 
+>> https://lwn.net/Articles/465048/
+>> 
+>> "hot-replace support for RAID4/5/6:
+>> 
+>> In order to activate hot-replace you need to mark the device as 
+>> 'replaceable'. This happens automatically when a write error is recorded 
+>> in a bad-block log (if you happen to have one).
+>> 
+>> It can be achieved manually by
+>>     echo replaceable > /sys/block/mdXX/md/dev-YYY/state
+>> 
+>> This makes YYY, in XX, replaceable."
+>> 
+>> I don't know if it actually made it into 3.2, I believe I saw somewhere 
+>> that it was available for 3.3, but Neil Brown should know more.
+> 
+> I'm currently upgrading my RAID-6 arrays via hot-replacement. The
+> process I followed (to replace device YYY in array mdXX) is:
+>     - add the new disk to the array as a spare
+>     - echo want_replacement > /sys/block/mdXX/md/dev-YYY/state
+> 
+> That kicks off the recovery (a straight disk-to-disk copy from YYY to
+> the new disk). After the rebuild is complete, YYY gets failed in the
+> array, so can be safely removed:
+>     - mdadm -r /dev/mdXX /dev/mdYYY
+> 
+> That's worked fine so far, and looks to run at the single disk write
+> speed. There were no errors on the old disks though, so I've not seen
+> how that gets handled (it _should_ just do a parity-based recovery from
+> the remaining disks and continue).
 
+Thanks all, this is exactly what I was looking for!
+
+Cheers,
+
+Chris
