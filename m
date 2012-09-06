@@ -1,31 +1,45 @@
-From: John Drescher <drescherjm@gmail.com>
-Subject: Re: Safe disk replace
-Date: Thu, 6 Sep 2012 08:59:56 -0400
-Message-ID: <CAEhu1-7eJq1-Z0yW=HjqKyYaGFC+Dm+4JT0CzKCobanBGAWT-A@mail.gmail.com>
-References: <20120904041447.GB14445@onthe.net.au>
-	<5045D7D9.9000108@hesbynett.no>
-	<alpine.DEB.2.00.1209041423250.13902@uplift.swm.pp.se>
-	<20120904153342.GA26999@cthulhu.home.robinhill.me.uk>
-	<CAEhu1-6oNLaPuoh-aXtrFsnmPZ2fMGVaQSbtQp7Wkx-sf8MfDg@mail.gmail.com>
-	<CAEhu1-6+PQr_UG6NLTgXcWgYJYfpp5j7EHt5BnfMmWJr=s-i_g@mail.gmail.com>
-	<20120905203203.GA4391@cthulhu.home.robinhill.me.uk>
+From: Lukasz Dorau <lukasz.dorau@intel.com>
+Subject: [PATCH] fix segfaults in Detail()
+Date: Thu, 06 Sep 2012 17:41:19 +0200
+Message-ID: <20120906154119.754.88103.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120905203203.GA4391@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com, ed.ciechanowski@intel.com, Jacek.Danecki@intel.com
 List-Id: linux-raid.ids
 
-> The problem's actually at the point it finishes the recovery. When it
-> fails the replaced disk, it treats it as a failure of an in-array disk.
-> You get the failure email and the array shows as degraded, even though
-> it has the full number of working devices. Your 12/11 would have shown
-> even before you started doing the second replacement. It doesn't seem to
-> cause any problems in use though, and it gets corrected after a reboot.
->
+If disk has been removed, 'st' and 'info' can be NULL. It causes segfault.
+'st' and 'info' should be checked against being NULL before being used.
 
-Thanks. You are correct. It did show 12/11 before the replacement
-happened and even after it finished.
+Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+---
+ Detail.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-John
+diff --git a/Detail.c b/Detail.c
+index 17aa516..79b1047 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -430,7 +430,7 @@ int Detail(char *dev, struct context *c)
+ 		}
+ 		free_mdstat(ms);
+ 
+-		if (st->sb && info->reshape_active) {
++		if ((st && st->sb) && (info && info->reshape_active)) {
+ #if 0
+ This is pretty boring
+ 			printf("  Reshape pos'n : %llu%s\n", (unsigned long long) info->reshape_progress<<9,
+@@ -596,7 +596,8 @@ This is pretty boring
+ 	if (spares && c->brief && array.raid_disks) printf(" spares=%d", spares);
+ 	if (c->brief && st && st->sb)
+ 		st->ss->brief_detail_super(st);
+-	st->ss->free_super(st);
++	if (st && st->ss)
++		st->ss->free_super(st);
+ 
+ 	if (c->brief > 1 && devices) printf("\n   devices=%s", devices);
+ 	if (c->brief)
+
