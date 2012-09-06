@@ -1,40 +1,31 @@
-From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH] dm-bufio: use list_move instead of list_del/list_add
-Date: Thu, 6 Sep 2012 12:35:53 +0800
-Message-ID: <CAPgLHd-8yZNyqj1saoD8M4QRYqs_kruJijoj14XPHRBbp0hVsQ@mail.gmail.com>
+From: John Drescher <drescherjm@gmail.com>
+Subject: Re: Safe disk replace
+Date: Thu, 6 Sep 2012 08:59:56 -0400
+Message-ID: <CAEhu1-7eJq1-Z0yW=HjqKyYaGFC+Dm+4JT0CzKCobanBGAWT-A@mail.gmail.com>
+References: <20120904041447.GB14445@onthe.net.au>
+	<5045D7D9.9000108@hesbynett.no>
+	<alpine.DEB.2.00.1209041423250.13902@uplift.swm.pp.se>
+	<20120904153342.GA26999@cthulhu.home.robinhill.me.uk>
+	<CAEhu1-6oNLaPuoh-aXtrFsnmPZ2fMGVaQSbtQp7Wkx-sf8MfDg@mail.gmail.com>
+	<CAEhu1-6+PQr_UG6NLTgXcWgYJYfpp5j7EHt5BnfMmWJr=s-i_g@mail.gmail.com>
+	<20120905203203.GA4391@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120905203203.GA4391@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: agk@redhat.com, neilb@suse.de
-Cc: yongjun_wei@trendmicro.com.cn, dm-devel@redhat.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> The problem's actually at the point it finishes the recovery. When it
+> fails the replaced disk, it treats it as a failure of an in-array disk.
+> You get the failure email and the array shows as degraded, even though
+> it has the full number of working devices. Your 12/11 would have shown
+> even before you started doing the second replacement. It doesn't seem to
+> cause any problems in use though, and it gets corrected after a reboot.
+>
 
-Using list_move() instead of list_del() + list_add().
+Thanks. You are correct. It did show 12/11 before the replacement
+happened and even after it finished.
 
-spatch with a semantic match is used to found this problem.
-(http://coccinelle.lip6.fr/)
-
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/md/dm-bufio.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-index cc06a1e..b9e006a 100644
---- a/drivers/md/dm-bufio.c
-+++ b/drivers/md/dm-bufio.c
-@@ -441,8 +441,7 @@ static void __relink_lru(struct dm_buffer *b, int dirty)
- 	c->n_buffers[b->list_mode]--;
- 	c->n_buffers[dirty]++;
- 	b->list_mode = dirty;
--	list_del(&b->lru_list);
--	list_add(&b->lru_list, &c->lru[dirty]);
-+	list_move(&b->lru_list, &c->lru[dirty]);
- }
- 
- /*----------------------------------------------------------------
-
-
+John
