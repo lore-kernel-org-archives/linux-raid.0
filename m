@@ -1,118 +1,56 @@
-From: Benjamin ESTRABAUD <be@mpstor.com>
-Subject: Re: RFC: use TRIM data from filesystems to speed up array rebuild?
-Date: Fri, 07 Sep 2012 10:23:42 +0100
-Message-ID: <5049BD1E.7070205@mpstor.com>
-References: <50464322.3010509@genband.com> <5046525E.10500@gmail.com> <20120905062405.3741239a@notabene.brown> <5048DAAF.8060300@mpstor.com> <5048EE7E.3060106@hesbynett.no>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: =?iso-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
+Subject: Re: Howto avoid full re-sync
+Date: Fri, 7 Sep 2012 11:41:38 +0200
+Message-ID: <81BAA7A8-B1C3-49A1-A600-A9D9D8279E30@bj-ig.de>
+References: <50497AE6.2010005@websitemanagers.com.au>
+Mime-Version: 1.0 (Apple Message framework v1278)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5048EE7E.3060106@hesbynett.no>
+In-Reply-To: <50497AE6.2010005@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: NeilBrown <neilb@suse.de>, Ric Wheeler <ricwheeler@gmail.com>, Chris Friesen <chris.friesen@genband.com>, linux-raid@vger.kernel.org
+To: Adam Goryachev <adam@websitemanagers.com.au>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/09/12 19:42, David Brown wrote:
-> On 06/09/12 19:17, Benjamin ESTRABAUD wrote:
->> On 04/09/12 21:24, NeilBrown wrote:
->>> On Tue, 04 Sep 2012 15:11:26 -0400 Ric Wheeler<ricwheeler@gmail.com>
->>> wrote:
->>>
->>>> On 09/04/2012 02:06 PM, Chris Friesen wrote:
->>>>> Hi,
->>>>>
->>>>> I'm not really a filesystem guy so this may be a really dumb 
->>>>> question.
->>>>>
->>>>> We currently have an issue where we have a ~1TB RAID1 array that is
->>>>> mostly
->>>>> given over to LVM. If we swap one of the disks it will rebuild
->>>>> everything,
->>>>> even though we may only be using a small fraction of the space.
->>>>>
->>>>> This got me thinking. Has anyone given thought to using the TRIM
->>>>> information
->>>>> from filesystems to allow the RAID code to maintain a bitmask of
->>>>> used disk
->>>>> blocks and only sync the ones that are actually used?
->>>>>
->>>>> Presumably this bitmask would itself need to be stored on the disk.
->>>>>
->>>>> Thanks,
->>>>> Chris
->>>>>
->>>> Device mapper has a "thin" target now that tracks blocks that are
->>>> allocated or
->>>> free (and works with discard).
->>>>
->>>> That might be a basis for doing an focused RAID rebuild,
->>> I wonder how....
->>> Maybe the block-later interface could grow something equivalent to
->>> "SEEK_HOLE" and friends so that the upper level can find "holes" and
->>> "allocated space" in the underlying device.
->>> I wonder if it is time to discard the 'block device' abstraction and
->>> just use
->>> files every .... but I seriously doubt it.
->>>
->>> NeilBrown
->> Hi,
->>
->> I've got a brief question about this feature that seems extremely
->> promising:
->>
->> You mentioned on your blog:
->>
->> "A 'write' to a non-in-sync region should cause that region to be
->> resynced. Writing zeros would in some sense be ideal, but to do that we
->> would have to block the write, which would be unfortunate."
->>
->> So, if we had a write on a "non-in-sync" region (let's imagine the
->> bitmap allows for 1M granularity), we would compute the parity of every
->> stripe that this write "touches" and update it? Is the solution zeroing
->> the area used to save time reading and writing the data on the stripe to
->> compute the parity, as well as any other stripes that are referenced by
->> this "non-in-sync" region, even if the write wouldn't affect them,
->> allowing us to then flip that entire region to "clean"?
->
-> That would, I think, be correct.  All zeros are the easiest to 
-> calculate - the parities (raid5 and raid6) are all zeros too.  It is 
-> also the ideal pattern to write to SSDs - many SSDs these days 
-> implement transparent compression, and you don't get more compressible 
-> than zeros!
->
->>
->> Would this open the door to some "thin provisioned" MD RAID, where one
->> could grow the underlying devices (in the case of a RAID built ontop of
->> say LVM devices), and marking the new "space" as "non-in-sync" without
->> disrupting (slowing) operations on the array with a sync?
->>
->
-> Yes, that would work.  More importantly (because it would affect more 
-> people), it means that the creation of a md raid array on top of disks 
-> or partitions will immediately be "in sync", and there would be no 
-> need for a long and effectively useless re-sync process at creation.
->
->> In any case, seems like a great feature.
->
-> Yes indeed.
->
->>
->> Regards,
->> Ben.
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at http://vger.kernel.org/majordomo-info.html
->>
->>
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-Thank you very much for your reply!
 
-Regards,
-Ben.
+Am 07.09.2012 um 06:41 schrieb Adam Goryachev:
+
+> I have a MD raid6 with 5 drives, and every now and then one (random)
+> drive will fail. I've done all sorts of checks, and the drive is
+> actually working fine, so I suspect an issue with the Linux driver
+> and/or SATA controller (onboard).
+> 
+> It isn't really relevant to the question, but I'll run through the sata
+> stuff, in case anyone can point out a simple solution to stop this from
+> happening (yes, a new server is on the way, but with budgets etc, that
+> could be some time away. This issue has happened for years, but we are
+> becoming more active with these failures now).
+> 
+> 00:0e.0 IDE interface: nVidia Corporation MCP51 Serial ATA Controller
+> (rev a1)
+> 00:0f.0 IDE interface: nVidia Corporation MCP51 Serial ATA Controller
+> (rev a1)
+> 01:07.0 RAID bus controller: Silicon Image, Inc. Adaptec AAR-1210SA SATA
+> HostRAID Controller (rev 02)
+> 
+> cat /proc/mdstat
+> Personalities : [raid1] [raid6] [raid5] [raid4]
+> md2 : active raid6 sdh1[5] sdg1[4] sdf1[0] sdd1[6](F) sde1[2] sda1[1]
+>      5860535808 blocks level 6, 64k chunk, algorithm 2 [5/4] [UUU_U]
+>      [>....................]  recovery =  1.4% (28663240/1953511936)
+> finish=486.5min speed=65938K/sec
+> 
+> 
+> 
+> Since I know sdh is actually almost up to date, is there some way to
+> re-add it, and only have to sync the portions of the disk which have
+> changed?
+
+
+Besides all the stuff about fix your server, a raid is not a backup and you risk your data - simply add a write intent bitmap:
+
+# mdadm /dev/md2 --grow bitmap=internal
+
+Best regards
+Ralf
