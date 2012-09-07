@@ -1,89 +1,47 @@
-From: Adam Goryachev <adam@websitemanagers.com.au>
-Subject: Howto avoid full re-sync
-Date: Fri, 07 Sep 2012 14:41:10 +1000
-Message-ID: <50497AE6.2010005@websitemanagers.com.au>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Issue with md and 4K sector alignment
+Date: Fri, 7 Sep 2012 08:19:47 +0200 (CEST)
+Message-ID: <alpine.DEB.2.00.1209070804500.13902@uplift.swm.pp.se>
+References: <5031556B.5050706@averageurl.com> <alpine.DEB.2.00.1208200735020.27104@uplift.swm.pp.se> <5031E72B.8060002@hesbynett.no> <504908CC.2030400@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <504908CC.2030400@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: David Brown <david.brown@hesbynett.no>, Kyle Brantley <kyle@averageurl.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have a MD raid6 with 5 drives, and every now and then one (random)
-drive will fail. I've done all sorts of checks, and the drive is
-actually working fine, so I suspect an issue with the Linux driver
-and/or SATA controller (onboard).
+On Thu, 6 Sep 2012, H. Peter Anvin wrote:
 
-It isn't really relevant to the question, but I'll run through the sata
-stuff, in case anyone can point out a simple solution to stop this from
-happening (yes, a new server is on the way, but with budgets etc, that
-could be some time away. This issue has happened for years, but we are
-becoming more active with these failures now).
+> This is one advantage with superblock 1.0 -- the alignment of the 
+> underlying device is preserved since the metadata is at the end.
 
-00:0e.0 IDE interface: nVidia Corporation MCP51 Serial ATA Controller
-(rev a1)
-00:0f.0 IDE interface: nVidia Corporation MCP51 Serial ATA Controller
-(rev a1)
-01:07.0 RAID bus controller: Silicon Image, Inc. Adaptec AAR-1210SA SATA
-HostRAID Controller (rev 02)
+This whole problem becomes quite complicated when one starts to take into 
+account the whole block device stack, for instance 
+drives->md->crypto->lvm->fs, when one wants to get the filesystem to 
+understand where an md complete RAID6 stride (?) starts and ends, 
+especially when this changes over time when drives are being added at a 
+later date, or the LV being moved around, even when the filesystem is 
+mounted.
 
-cat /proc/mdstat
-Personalities : [raid1] [raid6] [raid5] [raid4]
-md2 : active raid6 sdh1[5] sdg1[4] sdf1[0] sdd1[6](F) sde1[2] sda1[1]
-      5860535808 blocks level 6, 64k chunk, algorithm 2 [5/4] [UUU_U]
-      [>....................]  recovery =  1.4% (28663240/1953511936)
-finish=486.5min speed=65938K/sec
+I don't know how hard it would be to add infrastructure for an fs to find 
+out this underlying information through all these layers, and if there is 
+interest in doing so? I have just gotten accustomed to seeing 
+approximately 10% reads when I do file writing to my RAID6. I tried to 
+align it from the beginning, but now I just try to make sure it's 4k 
+aligned (which is not hard, since I don't use partitions and cryptsetup, 
+md and lvm are all 4k aligned already). I suspect that xfs doesn't 
+correctly understand even where my 64k stripe size starts and ends even 
+though I tried to align it, but it does know my stripe size, but I suspect 
+that since I have added drives over time, xfs first block isn't aligned 
+with the start of an even 1:st stripe location (so even though it knows 
+that a complete stride set is X drives and Y k per stripe, this isn't 
+correctly aligned to 1:st drive, so a complete stride write from xfs would 
+span two different md strides).
 
-(As you can see, sdd failed, but the kernel found it again as sdh, so
-I've re-added it).
-
-/dev/md2:
-        Version : 0.90
-  Creation Time : Fri Aug 11 21:45:20 2006
-     Raid Level : raid6
-     Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
-  Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
-   Raid Devices : 5
-  Total Devices : 6
-Preferred Minor : 2
-    Persistence : Superblock is persistent
-
-    Update Time : Fri Sep  7 14:31:10 2012
-          State : clean, degraded, recovering
- Active Devices : 4
-Working Devices : 5
- Failed Devices : 1
-  Spare Devices : 1
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
- Rebuild Status : 1% complete
-
-           UUID : e6cfbc82:c23e52da:9cb07c6d:11629c30
-         Events : 0.7762116
-
-    Number   Major   Minor   RaidDevice State
-       0       8       81        0      active sync   /dev/sdf1
-       1       8        1        1      active sync   /dev/sda1
-       2       8       65        2      active sync   /dev/sde1
-       5       8      113        3      spare rebuilding   /dev/sdh1
-       4       8       97        4      active sync   /dev/sdg1
-
-       6       8       49        -      faulty spare
-
-
-Since I know sdh is actually almost up to date, is there some way to
-re-add it, and only have to sync the portions of the disk which have
-changed?
-
-Thanks,
-Adam
+PS. I am not sure I got the stripe/stride wording correct here, hope it 
+can still be understood what I mean.
 
 -- 
-Adam Goryachev
-Website Managers
-Ph: +61 2 8304 0000                            adam@websitemanagers.com.au
-Fax: +61 2 8304 0001                            www.websitemanagers.com.au
-
+Mikael Abrahamsson    email: swmike@swm.pp.se
