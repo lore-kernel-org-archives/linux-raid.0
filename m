@@ -1,126 +1,128 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Wrong array size detected after reboot
-Date: Sat, 08 Sep 2012 22:52:18 -0400
-Message-ID: <504C0462.2000609@turmel.org>
-References: <CAFEwywaeGevnDMu7Do_wK+_Jgtyd0vman0804C2LyqbyzcJ9Sw@mail.gmail.com>
+From: Oliver Schinagl <oliver+list@schinagl.nl>
+Subject: Re: Recovering from the kernel bug, Neil?
+Date: Sun, 09 Sep 2012 22:22:19 +0200
+Message-ID: <504CFA7B.7090606@schinagl.nl>
+References: <5030F07F.7000303@schinagl.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFEwywaeGevnDMu7Do_wK+_Jgtyd0vman0804C2LyqbyzcJ9Sw@mail.gmail.com>
+In-Reply-To: <5030F07F.7000303@schinagl.nl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Markus Irle <tha.bear@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Markus,
+Since I had no reply as of yet, I wonder if I would arbitrarly change 
+the data at offset 0x1100 to something that _might_ be right could I 
+horribly break something?
 
-On 09/07/2012 04:54 PM, Markus Irle wrote:
-> Hi guys,
-> 
-> After a reboot mdadm detects a much too small size for a raid5 array.
-> The array is part of a lvm volume group, which fails because the
-> device mapper notices that the physical volume is too small for the
-> volume group. At the moment I can't access any data.
+oliver
 
-As soon as I read this far I thought "version 0.90?".
+On 08/19/12 15:56, Oliver Schinagl wrote:
+> Hi list,
+>
+> I've once again started to try to repair my broken array. I've tried
+> most things suggested by Neil before (create array in place whilst
+> keeping data etc etc) only breaking it more (having to new of mdadm).
+>
+> So instead, I made a dd of: sda4 and sdb4; sda5 and sdb5, both working
+> raid10 arrays, f2 and o2 layouts. I then compared that to an image of
+> sdb6. Granted, I only used 256mb worth of data.
+>
+> Using https://raid.wiki.kernel.org/index.php/RAID_superblock_formats I
+> compared my broken sdb6 array to the two working and active arrays.
+>
+> I haven't completly finished comparing, since the wiki falls short at
+> the end, which I think is the more important bit concerning my situation.
+>
+> Some info about sdb6:
+>
+> /dev/sdb6:
+> Magic : a92b4efc
+> Version : 1.2
+> Feature Map : 0x0
+> Array UUID : cde37e2e:309beb19:3461f3f3:1ea70694
+> Name : valexia:opt (local to host valexia)
+> Creation Time : Sun Aug 28 17:46:27 2011
+> Raid Level : -unknown-
+> Raid Devices : 0
+>
+> Avail Dev Size : 456165376 (217.52 GiB 233.56 GB)
+> Data Offset : 2048 sectors
+> Super Offset : 8 sectors
+> State : active
+> Device UUID : 7b47e9ab:ea4b27ce:50e12587:9c572944
+>
+> Update Time : Mon May 28 20:53:42 2012
+> Checksum : 32e1e116 - correct
+> Events : 1
+>
+>
+> Device Role : spare
+> Array State : ('A' == active, '.' == missing)
+>
+>
+> Now my questions regarding trying to repair this array are the following:
+>
+> At offset 0x10A0, (metaversion 1.2 accounts for the 0x1000 extra) I
+> found on the wiki:
+>
+> "This is shown as "Array Slot" by the mdadm v2.x "--examine" command
+>
+> Note: This is a 32-bit unsigned integer, but the Device-Roles
+> (Positions-in-Array) Area indexes these values using only 16-bit
+> unsigned integers, and reserves the values 0xFFFF as spare and 0xFFFE as
+> faulty, so only 65,534 devices per array are possible."
+>
+> sda4 and sdb4 list this as 02 00 00 00 and 01 00 00 00. Sounds sensible,
+> although I would have expected 0x0 and 0x1, but I'm sure there's some
+> sensible explanation. sda5 and sdb5 however are slightly different, 03
+> 00 00 00 and 02 00 00 00. It quickly shows that for some coincidental
+> reason, but the 'b' parts have a higher number then the 'a' parts. So a
+> 02 00 00 00 on sdb6 (the broken array) should be okay.
+>
+> Then next, is 'resync_offset' at 0x10D0. I think all devices list it as
+> FF FF FF FF, but the broken device has it at 00 00 00 00. Any impact on
+> this one?
+>
+> Then of course tehre's the 0x10D8 checksum. mdadm currently says it
+> matches, but once I start editing things those probably won't match
+> anymore. Any way around that?
+>
+> Then offset 0x1100 is slightly different for each array. Array sd?5
+> looks like: FE FF FE FF 01 00 00 00
+> Array sd?4 looks similar enough, FE FF 01 00 00 00 FE FF
+>
+> Does this correspond to the 01, 02 and 03 value pairs for 0x10A0?
+>
+> The broken array reads FE FF FE FF FE FF FE, which probably is wrong?
+>
+>
+> As for determining whether the first data block is offset, or 'real', I
+> compared dataoffsets 0x100000 - 0x100520-ish and noticed something that
+> looks like s_volume_name and s_last_mounted of ext4. Thus this should be
+> the 'real' first block. Since sdb6 has something that looks a lot like
+> what's on sdb5, 20 80 00 00 20 80 01 00 20 80 02 etc etc at 0x100000
+> this should be the first offset block, correct?
+>
+>
+> Assuming I can force somehow that mdadm recognizes my disk as part of an
+> array, and no longer a spare, how does mdadm know which of the two parts
+> it is? 'real' or offset? I haven't bumped into anything that would tell
+> mdadm that bit of information. The data seems to all be still very much
+> available, so I still have hope. I did try making a copy of the entire
+> partition, and re-create the array as missing /dev/loop0 (with loop0
+> being the dd-ed copy) but that didn't work.
+>
+> Finally, would it even be possible to 'restore' my first 127mb on sda6,
+> those that the wrong version of mdadm destroyed by reserving 128mb of
+> data instead of the usual 1mb using data from sdb6?
+>
+> Sorry for the long mail, I tried to be complete :)
+>
+> Oliver
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
 
-> What I did:
-> 
-> Array consisted of 3x 1.5TB disks.
-> After a disk failure a replaced the disks one by one with 3TB disks.
-> Resized array, volume group and partition to the new size according to
-> these instructions: https://raid.wiki.kernel.org/index.php/Growing
-> 
-> Everything went fine the array's up and running for a couple of months.
-> I believe this is the first reboot since.
-> 
-> I'm at a complete loss as what to do now. Any help is greatly appreciated.
-> 
-> Here's the kern.log (I don't remember the misaligned warning, when I
-> replaced the disks):
-> Sep  7 19:09:43 fandango kernel: [    3.259374] raid5: device sde1
-> operational as raid disk 2
-> Sep  7 19:09:43 fandango kernel: [    3.259378] raid5: device sdd1
-> operational as raid disk 1
-> Sep  7 19:09:43 fandango kernel: [    3.259380] raid5: device sdb1
-> operational as raid disk 0
-> Sep  7 19:09:43 fandango kernel: [    3.259727] raid5: allocated 3228kB for md2
-> Sep  7 19:09:43 fandango kernel: [    3.259764] raid5: raid level 5
-> set md2 active with 3 out of 3 devices, algorithm 2
-> Sep  7 19:09:43 fandango kernel: [    3.259766] RAID5 conf printout:
-> Sep  7 19:09:43 fandango kernel: [    3.259768]  --- rd:3 wd:3
-> Sep  7 19:09:43 fandango kernel: [    3.259770]  disk 0, o:1, dev:sdb1
-> Sep  7 19:09:43 fandango kernel: [    3.259771]  disk 1, o:1, dev:sdd1
-> Sep  7 19:09:43 fandango kernel: [    3.259773]  disk 2, o:1, dev:sde1
-> Sep  7 19:09:43 fandango kernel: [    3.259781] md2: Warning: Device
-> sde1 is misaligned
-> Sep  7 19:09:43 fandango kernel: [    3.259783] md2: Warning: Device
-> sdd1 is misaligned
-> Sep  7 19:09:43 fandango kernel: [    3.259785] md2: Warning: Device
-> sdb1 is misaligned
-> Sep  7 19:09:43 fandango kernel: [    3.259806] md2: detected capacity
-> change from 0 to 1603139141632
-> Sep  7 19:09:43 fandango kernel: [    3.261439]  md2: unknown partition table
-> Sep  7 19:09:43 fandango kernel: [    3.409802] device-mapper: table:
-> 252:2: md2 too small for target: start=384, len=11721064448,
-> dev_size=3131131136
-> 
-> mdadm:
-> /dev/md2:
->         Version : 00.90
-
-Uh-huh.
-
->   Creation Time : Wed Apr 29 23:31:24 2009
->      Raid Level : raid5
->      Array Size : 1565565568 (1493.04 GiB 1603.14 GB)
->   Used Dev Size : 782782784 (746.52 GiB 801.57 GB)
->    Raid Devices : 3
->   Total Devices : 3
-> Preferred Minor : 2
->     Persistence : Superblock is persistent
-> 
->     Update Time : Fri Sep  7 21:30:40 2012
->           State : clean
->  Active Devices : 3
-> Working Devices : 3
->  Failed Devices : 0
->   Spare Devices : 0
-> 
->          Layout : left-symmetric
->      Chunk Size : 64K
-> 
->            UUID : bbc76518:54235173:67388cd8:6b8a4141 (local to host fandango)
->          Events : 0.16232920
-> 
->     Number   Major   Minor   RaidDevice State
->        0       8       17        0      active sync   /dev/sdb1
->        1       8       49        1      active sync   /dev/sdd1
->        2       8       65        2      active sync   /dev/sde1
-> 
-> 
-> The size is much too small. It should be around 6TB not 1.5TB.
-> Interestingly enough, the Array Size / Used Dev Size ratio seems to be correct.
-
-Until recently, due to a long-standing bug, devices larger than 2T were
-not usable with v0.90 meta-data.  I don't remember precisely when that
-bug was fixed, but I believe it was in the past year.  There are also
-potential identification problems with v0.90 when used on the last
-partition of a device, but you have a misalignment warning that would
-prevent that.
-
-You should see that the used dev size is very close to 2TiB less than
-the actual size of your devices.
-
-First, try the latest stable mainline kernel that you can.  That should
-let you back up your data.
-
-Second, reconstruct your array with a recent version of fdisk or parted
-that won't put your first partition at sector 63.  Use metadata version
-1.0 for bootable mirrored partitions, or version 1.2 otherwise (the
-modern default).
-
-HTH,
-
-Phil
