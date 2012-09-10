@@ -1,87 +1,78 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH RESEND] Fix and extend raid6check repair
-Date: Mon, 10 Sep 2012 17:39:25 +1000
-Message-ID: <20120910173925.3e995909@notabene.brown>
-References: <2586585.1GSuNNC3Ge@peanut>
+From: Michael Wang <wangyun@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/3] raid: replace	list_for_each_continue_rcu with new
+ interface
+Date: Mon, 10 Sep 2012 16:30:11 +0800
+Message-ID: <504DA513.2060004@linux.vnet.ibm.com>
+References: <502CB924.10200@linux.vnet.ibm.com> <502DC999.1040407@linux.vnet.ibm.com> <5036D00F.2040009@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/dJjqZpW_RodBnFf8/kKpuE0"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2586585.1GSuNNC3Ge@peanut>
-Sender: linux-raid-owner@vger.kernel.org
-To: Robert Buchholz <robert.buchholz@goodpoint.de>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5036D00F.2040009@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+Cc: neilb@suse.de, "paulmck@linux.vnet.ibm.com" <paulmck@linux.vnet.ibm.com>
 List-Id: linux-raid.ids
 
---Sig_/dJjqZpW_RodBnFf8/kKpuE0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 08/24/2012 08:51 AM, Michael Wang wrote:
+> On 08/17/2012 12:33 PM, Michael Wang wrote:
+>> From: Michael Wang <wangyun@linux.vnet.ibm.com>
+>>
+>> This patch replaces list_for_each_continue_rcu() with
+>> list_for_each_entry_continue_rcu() to save a few lines
+>> of code and allow removing list_for_each_continue_rcu().
+>>
+> 
+> Hi, Neil
+> 
+> Could I get some comments on this patch?
 
-On Wed, 15 Aug 2012 14:55:43 +0200 Robert Buchholz
-<robert.buchholz@goodpoint.de> wrote:
+Hi, Neil
 
-> Hello,
->=20
-> this is a resend of my patches dated Jul 20th in the "Find mismatch in=20
-> data blocks during raid6 repair" thread.
->=20
-> Currently, the raid6check tool does not compile (due to the xmalloc=20
-> changes) and my initial set of repair patches are faulty.  Please merge=20
-> and see my original emails for extended comments
-> http://thread.gmane.org/gmane.linux.raid/38922/focus=3D39454
-> http://thread.gmane.org/gmane.linux.raid/38922/focus=3D39460
->=20
->=20
->=20
-> Cheers
->=20
-> Robert
+Could I get some comments?
 
-Hi,
- sorry for the long delay in getting to these.
-They mostly look OK.  However:
+And please forgive and warn me if this patch has came to the wrong
+place...I get the address from get_maintainer.
 
-1/ They way you added 'autorepair' as a new, final positional parameter is
-not good.  I understand why you did it (it was easy) but I think we really
-need to bite the bullet and introduce proper "getopt" parameter parsing.
+Regards,
+Michael Wang
 
-2/ your new test scripts (thanks for including them!!) call=20
-   blockdev --flushbufs $md0
-  after
-    mdadm -S $md0
-  This is pointless. Once $md0 is stopped, there can be no bufs to flush.
-  I don't think there is any point in the 'udevadm settle' 'flushbufs' and
-  'drop_caches' at the end.
-
-I've applied your patches but if you could send updates to address those
-issues, I'd appreciate it.
-
-Also: please send one patch per email, preferably in-line (not an
-attachment).  It makes it easier to reply to and also easier to apply.
-
-Thanks,
-NeilBrown
-
---Sig_/dJjqZpW_RodBnFf8/kKpuE0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUE2ZLTnsnt1WYoG5AQLZSQ/+KkaQVB+lLioo/6rfuXTxEn/F6pakx+2q
-cHG0na/E0hkS2pX4t28MT5w1UwQ5KBKImHNjai5PFNX6PEJ1l5f8A3owiUnKzvIC
-+xZzzym24q2wOKDXcSkCLGJUacUzPQhqt86rYPtVWVcnCzkOwq9cI4m1KUcUZT9K
-2K2LGkcOhIg6Ri2aeldXBT0MYbEYltnnwlUQfmizZeM4gQBwyIHrRX7WShP/tXj1
-PFsZ5Npaxb+W8b7GX4RkrkX8/f8cFVrJOY+SF5kwqfHZzToUtSk2iAa15kGXPhIB
-5f/basCAdVal+u5Ru6264jmTejvUYWeYr3wLSNh+pqgGJSvS+p2cy/AiUoO7JNBR
-lcjpoIk2xLuWCLFFXRvLU1W/ePkHPbCaIACUMtlCQk27fSGuv80aDG+eOelvDYgR
-Jgp0wQtey67ao/CwznZbA/e32TGD/DvzYl88rMvDrZ2+HdLPfX3MiW0DmamAncXZ
-S0E8RWq2laRPMDjfrvuAMKQcJjNSausVmPeijYjb4jQ2BBkKkB4hmpIJI8R/hFnm
-NraSZP4UWtu/1rd4589ySsYWH0UisT0hxd4S3p7eh3DbFH0u0SnDY0kdHmzD4qYn
-jxlcypBpcDZAbOlhYTarZjEvzgkr0oZFSx7plt8tnG7E/qVvQlw3RdWOC4ByJa9f
-Bw0BKHODvvc=
-=j1Cb
------END PGP SIGNATURE-----
-
---Sig_/dJjqZpW_RodBnFf8/kKpuE0--
+> 
+> Regards,
+> Michael Wang
+> 
+>> Signed-off-by: Michael Wang <wangyun@linux.vnet.ibm.com>
+>> ---
+>>  drivers/md/bitmap.c |    9 +++------
+>>  1 files changed, 3 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+>> index 15dbe03..b160828 100644
+>> --- a/drivers/md/bitmap.c
+>> +++ b/drivers/md/bitmap.c
+>> @@ -163,20 +163,17 @@ static struct md_rdev *next_active_rdev(struct md_rdev *rdev, struct mddev *mdde
+>>  	 * As devices are only added or removed when raid_disk is < 0 and
+>>  	 * nr_pending is 0 and In_sync is clear, the entries we return will
+>>  	 * still be in the same position on the list when we re-enter
+>> -	 * list_for_each_continue_rcu.
+>> +	 * list_for_each_entry_continue_rcu.
+>>  	 */
+>> -	struct list_head *pos;
+>>  	rcu_read_lock();
+>>  	if (rdev == NULL)
+>>  		/* start at the beginning */
+>> -		pos = &mddev->disks;
+>> +		rdev = list_entry_rcu(&mddev->disks, struct md_rdev, same_set);
+>>  	else {
+>>  		/* release the previous rdev and start from there. */
+>>  		rdev_dec_pending(rdev, mddev);
+>> -		pos = &rdev->same_set;
+>>  	}
+>> -	list_for_each_continue_rcu(pos, &mddev->disks) {
+>> -		rdev = list_entry(pos, struct md_rdev, same_set);
+>> +	list_for_each_entry_continue_rcu(rdev, &mddev->disks, same_set) {
+>>  		if (rdev->raid_disk >= 0 &&
+>>  		    !test_bit(Faulty, &rdev->flags)) {
+>>  			/* this is a usable devices */
+>>
+> 
