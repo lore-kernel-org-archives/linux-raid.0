@@ -1,172 +1,188 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Wrong array size detected after reboot
-Date: Mon, 10 Sep 2012 09:13:52 +1000
-Message-ID: <20120910091352.38dfdc20@notabene.brown>
-References: <CAFEwywaeGevnDMu7Do_wK+_Jgtyd0vman0804C2LyqbyzcJ9Sw@mail.gmail.com>
-	<504C0462.2000609@turmel.org>
+Subject: Re: Safe disk replace
+Date: Mon, 10 Sep 2012 11:01:17 +1000
+Message-ID: <20120910110117.61d1b204@notabene.brown>
+References: <20120904041447.GB14445@onthe.net.au>
+	<5045D7D9.9000108@hesbynett.no>
+	<alpine.DEB.2.00.1209041423250.13902@uplift.swm.pp.se>
+	<20120904153342.GA26999@cthulhu.home.robinhill.me.uk>
+	<CAEhu1-6oNLaPuoh-aXtrFsnmPZ2fMGVaQSbtQp7Wkx-sf8MfDg@mail.gmail.com>
+	<CAEhu1-6+PQr_UG6NLTgXcWgYJYfpp5j7EHt5BnfMmWJr=s-i_g@mail.gmail.com>
+	<20120905203203.GA4391@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/uEyZUZFfPPzt4O_Hqhgq8/5"; protocol="application/pgp-signature"
+ boundary="Sig_/Ywrjoju4oFF8zNTBkj8uDRI"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <504C0462.2000609@turmel.org>
+In-Reply-To: <20120905203203.GA4391@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Markus Irle <tha.bear@gmail.com>, linux-raid@vger.kernel.org
+To: Robin Hill <robin@robinhill.me.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/uEyZUZFfPPzt4O_Hqhgq8/5
+--Sig_/Ywrjoju4oFF8zNTBkj8uDRI
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 08 Sep 2012 22:52:18 -0400 Phil Turmel <philip@turmel.org> wrote:
+On Wed, 5 Sep 2012 21:32:03 +0100 Robin Hill <robin@robinhill.me.uk> wrote:
 
-> Hi Markus,
+> On Wed Sep 05, 2012 at 03:35:29PM -0400, John Drescher wrote:
 >=20
-> On 09/07/2012 04:54 PM, Markus Irle wrote:
-> > Hi guys,
+> > On Wed, Sep 5, 2012 at 10:25 AM, John Drescher <drescherjm@gmail.com> w=
+rote:
+> > >> I'm currently upgrading my RAID-6 arrays via hot-replacement. The
+> > >> process I followed (to replace device YYY in array mdXX) is:
+> > >>     - add the new disk to the array as a spare
+> > >>     - echo want_replacement > /sys/block/mdXX/md/dev-YYY/state
+> > >>
+> > >> That kicks off the recovery (a straight disk-to-disk copy from YYY to
+> > >> the new disk). After the rebuild is complete, YYY gets failed in the
+> > >> array, so can be safely removed:
+> > >>     - mdadm -r /dev/mdXX /dev/mdYYY
+> > >>
+> > >
+> > > Thanks for the info. I wanted this feature for years at work..
+> > >
+> > > I am testing this now on my test box. Here I have 13 x 250GB SATA 1
+> > > drives. Yes these are 8+ years old..
+> > >
+> > > md1 : active raid6 sda2[13](R) sdk2[17] sdj2[18] sdf2[16] sdm2[19]
+> > > sdl2[14] sdi2[12] sdg2[15] sde2[5] sdd2[4] sdh2[21] sdb2[20] sdc2[1]
+> > >       2431477760 blocks super 1.2 level 6, 512k chunk, algorithm 2
+> > > [12/12] [UUUUUUUUUUUU]
+> > >       [>....................]  recovery =3D  3.4% (8401408/243147776)
+> > > finish=3D75.9min speed=3D51540K/sec
+> > >
+> > >
+> > > Speeds are faster than failing a drive but I would do this more for
+> > > the lower chance of failure more than the improved performance:
+> > >
+> > > md1 : active raid6 sdk2[17] sdj2[18] sdf2[16] sdm2[19] sdl2[14]
+> > > sdi2[12] sdg2[15] sde2[5] sdd2[4] sdh2[21] sdb2[20] sdc2[1]
+> > >       2431477760 blocks super 1.2 level 6, 512k chunk, algorithm 2
+> > > [12/11] [_UUUUUUUUUUU]
+> > >       [>....................]  recovery =3D  1.2% (3134952/243147776)
+> > > finish=3D100.1min speed=3D39954K/sec
+> > >
 > >=20
-> > After a reboot mdadm detects a much too small size for a raid5 array.
-> > The array is part of a lvm volume group, which fails because the
-> > device mapper notices that the physical volume is too small for the
-> > volume group. At the moment I can't access any data.
+> > I found something interesting. I issued want_replacement without spares.
+> >=20
+> > localhost md # echo want_replacement > dev-sdd2/state
+> > localhost md # cat /proc/mdstat
+> > Personalities : [raid1] [raid10] [raid6] [raid5] [raid4] [raid0]
+> > [linear] [multipath]
+> > md0 : active raid1 sda1[10](S) sdj1[0] sdk1[2] sdf1[11](S) sdb1[12](S)
+> > sdg1[9] sdh1[8] sdl1[7] sdm1[6] sde1[5] sdd1[4] sdi1[3] sdc1[1]
+> >       1048512 blocks [10/10] [UUUUUUUUUU]
+> >=20
+> > md1 : active raid6 sdb2[20] sdk2[17] sda2[13] sdj2[18] sdf2[16]
+> > sdm2[19] sdl2[14] sdi2[12] sdg2[15] sde2[5] sdd2[4] sdh2[21]
+> > sdc2[1](F)
+> >       2431477760 blocks super 1.2 level 6, 512k chunk, algorithm 2
+> > [12/11] [UUUUUUUUUUUU]
+> >
+> > Then I added the failed disk from a previous round as a spare.
+> >=20
+> > localhost md # mdadm --manage /dev/md1 --remove /dev/sdc2
+> > mdadm: hot removed /dev/sdc2 from /dev/md1
+> > localhost md # mdadm --zero-superblock /dev/sdc2
+> > localhost md # mdadm --manage /dev/md1 --add /dev/sdc2
+> > mdadm: added /dev/sdc2
+> >=20
+> > localhost md # cat /proc/mdstat
+> > Personalities : [raid1] [raid10] [raid6] [raid5] [raid4] [raid0]
+> > [linear] [multipath]
+> > md0 : active raid1 sda1[10](S) sdj1[0] sdk1[2] sdf1[11](S) sdb1[12](S)
+> > sdg1[9] sdh1[8] sdl1[7] sdm1[6] sde1[5] sdd1[4] sdi1[3] sdc1[1]
+> >       1048512 blocks [10/10] [UUUUUUUUUU]
+> >=20
+> > md1 : active raid6 sdc2[22](R) sdb2[20] sdk2[17] sda2[13] sdj2[18]
+> > sdf2[16] sdm2[19] sdl2[14] sdi2[12] sdg2[15] sde2[5] sdd2[4] sdh2[21]
+> >       2431477760 blocks super 1.2 level 6, 512k chunk, algorithm 2
+> > [12/11] [UUUUUUUUUUUU]
+> >       [>....................]  recovery =3D  0.6% (1592256/243147776)
+> > finish=3D119.2min speed=3D33746K/sec
+> >=20
+> >=20
+> > Now its taking much longer and it says 12/11 instead of 12/12.
+> >=20
+> The problem's actually at the point it finishes the recovery. When it
+> fails the replaced disk, it treats it as a failure of an in-array disk.
+> You get the failure email and the array shows as degraded, even though
+> it has the full number of working devices. Your 12/11 would have shown
+> even before you started doing the second replacement. It doesn't seem to
+> cause any problems in use though, and it gets corrected after a reboot.
 >=20
-> As soon as I read this far I thought "version 0.90?".
->=20
-> > What I did:
-> >=20
-> > Array consisted of 3x 1.5TB disks.
-> > After a disk failure a replaced the disks one by one with 3TB disks.
-> > Resized array, volume group and partition to the new size according to
-> > these instructions: https://raid.wiki.kernel.org/index.php/Growing
-> >=20
-> > Everything went fine the array's up and running for a couple of months.
-> > I believe this is the first reboot since.
-> >=20
-> > I'm at a complete loss as what to do now. Any help is greatly appreciat=
-ed.
-> >=20
-> > Here's the kern.log (I don't remember the misaligned warning, when I
-> > replaced the disks):
-> > Sep  7 19:09:43 fandango kernel: [    3.259374] raid5: device sde1
-> > operational as raid disk 2
-> > Sep  7 19:09:43 fandango kernel: [    3.259378] raid5: device sdd1
-> > operational as raid disk 1
-> > Sep  7 19:09:43 fandango kernel: [    3.259380] raid5: device sdb1
-> > operational as raid disk 0
-> > Sep  7 19:09:43 fandango kernel: [    3.259727] raid5: allocated 3228kB=
- for md2
-> > Sep  7 19:09:43 fandango kernel: [    3.259764] raid5: raid level 5
-> > set md2 active with 3 out of 3 devices, algorithm 2
-> > Sep  7 19:09:43 fandango kernel: [    3.259766] RAID5 conf printout:
-> > Sep  7 19:09:43 fandango kernel: [    3.259768]  --- rd:3 wd:3
-> > Sep  7 19:09:43 fandango kernel: [    3.259770]  disk 0, o:1, dev:sdb1
-> > Sep  7 19:09:43 fandango kernel: [    3.259771]  disk 1, o:1, dev:sdd1
-> > Sep  7 19:09:43 fandango kernel: [    3.259773]  disk 2, o:1, dev:sde1
-> > Sep  7 19:09:43 fandango kernel: [    3.259781] md2: Warning: Device
-> > sde1 is misaligned
-> > Sep  7 19:09:43 fandango kernel: [    3.259783] md2: Warning: Device
-> > sdd1 is misaligned
-> > Sep  7 19:09:43 fandango kernel: [    3.259785] md2: Warning: Device
-> > sdb1 is misaligned
-> > Sep  7 19:09:43 fandango kernel: [    3.259806] md2: detected capacity
-> > change from 0 to 1603139141632
-> > Sep  7 19:09:43 fandango kernel: [    3.261439]  md2: unknown partition=
- table
-> > Sep  7 19:09:43 fandango kernel: [    3.409802] device-mapper: table:
-> > 252:2: md2 too small for target: start=3D384, len=3D11721064448,
-> > dev_size=3D3131131136
-> >=20
-> > mdadm:
-> > /dev/md2:
-> >         Version : 00.90
->=20
-> Uh-huh.
->=20
-> >   Creation Time : Wed Apr 29 23:31:24 2009
-> >      Raid Level : raid5
-> >      Array Size : 1565565568 (1493.04 GiB 1603.14 GB)
-> >   Used Dev Size : 782782784 (746.52 GiB 801.57 GB)
-> >    Raid Devices : 3
-> >   Total Devices : 3
-> > Preferred Minor : 2
-> >     Persistence : Superblock is persistent
-> >=20
-> >     Update Time : Fri Sep  7 21:30:40 2012
-> >           State : clean
-> >  Active Devices : 3
-> > Working Devices : 3
-> >  Failed Devices : 0
-> >   Spare Devices : 0
-> >=20
-> >          Layout : left-symmetric
-> >      Chunk Size : 64K
-> >=20
-> >            UUID : bbc76518:54235173:67388cd8:6b8a4141 (local to host fa=
-ndango)
-> >          Events : 0.16232920
-> >=20
-> >     Number   Major   Minor   RaidDevice State
-> >        0       8       17        0      active sync   /dev/sdb1
-> >        1       8       49        1      active sync   /dev/sdd1
-> >        2       8       65        2      active sync   /dev/sde1
-> >=20
-> >=20
-> > The size is much too small. It should be around 6TB not 1.5TB.
-> > Interestingly enough, the Array Size / Used Dev Size ratio seems to be =
-correct.
->=20
-> Until recently, due to a long-standing bug, devices larger than 2T were
-> not usable with v0.90 meta-data.  I don't remember precisely when that
-> bug was fixed, but I believe it was in the past year.  There are also
-> potential identification problems with v0.90 when used on the last
-> partition of a device, but you have a misalignment warning that would
-> prevent that.
+> Cheers,
+>     Robin
 
-The bug was fixed in 3.1-rc6, (commit 27a7b260f71439c40546)
+Thanks for the bug report.
+This patch should  fix it.
 
 NeilBrown
 
->=20
-> You should see that the used dev size is very close to 2TiB less than
-> the actual size of your devices.
->=20
-> First, try the latest stable mainline kernel that you can.  That should
-> let you back up your data.
->=20
-> Second, reconstruct your array with a recent version of fdisk or parted
-> that won't put your first partition at sector 63.  Use metadata version
-> 1.0 for bootable mirrored partitions, or version 1.2 otherwise (the
-> modern default).
->=20
-> HTH,
->=20
-> Phil
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+=46rom d72d7b15e100fc0f9ac95999f39360f44e7b875d Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Mon, 10 Sep 2012 11:00:32 +1000
+Subject: [PATCH] md/raid5: fix calculate of 'degraded' when a replacement
+ becomes active.
+
+When a replacement device becomes active, we mark the device that it
+replaces as 'faulty' so that it can subsequently get removed.
+However 'calc_degraded' only pays attention to the primary device, not
+the replacement, so the array appears to become degraded, which is
+wrong.
+
+So teach 'calc_degraded' to consider any replacement if a primary
+device is faulty.
+
+Reported-by: Robin Hill <robin@robinhill.me.uk>
+Reported-by: John Drescher <drescherjm@gmail.com>
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 7c8151a..919327a 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -419,6 +419,8 @@ static int calc_degraded(struct r5conf *conf)
+ 	degraded =3D 0;
+ 	for (i =3D 0; i < conf->previous_raid_disks; i++) {
+ 		struct md_rdev *rdev =3D rcu_dereference(conf->disks[i].rdev);
++		if (rdev && test_bit(Faulty, &rdev->flags))
++			rdev =3D rcu_dereference(conf->disks[i].replacement);
+ 		if (!rdev || test_bit(Faulty, &rdev->flags))
+ 			degraded++;
+ 		else if (test_bit(In_sync, &rdev->flags))
+@@ -443,6 +445,8 @@ static int calc_degraded(struct r5conf *conf)
+ 	degraded2 =3D 0;
+ 	for (i =3D 0; i < conf->raid_disks; i++) {
+ 		struct md_rdev *rdev =3D rcu_dereference(conf->disks[i].rdev);
++		if (rdev && test_bit(Faulty, &rdev->flags))
++			rdev =3D rcu_dereference(conf->disks[i].replacement);
+ 		if (!rdev || test_bit(Faulty, &rdev->flags))
+ 			degraded2++;
+ 		else if (test_bit(In_sync, &rdev->flags))
 
 
---Sig_/uEyZUZFfPPzt4O_Hqhgq8/5
+--Sig_/Ywrjoju4oFF8zNTBkj8uDRI
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUE0isTnsnt1WYoG5AQI9Sw/9GT7k4SQRtOvfYpkNze7vZNf0tSOuo9om
-QI+DbyrCzKrbVBaaUBq8Xq+d1kMmr5AuJ4WhFTh7kOmlslpeW5tR978SZamYBdE9
-s6fM/QN0A44kfWG1eu9dDde/TFJK8FDeWFDQt73Z0BwTFlc5p4C2DNM1KXRJu2ap
-8zT85geokreEJcLqGMzg65NM3athGcg3z/Jjy9bds2zEyeeieeRiL/70KMrrlmwL
-hVgOAh+Cnm5mip9WVG05IhCNIZuiGCqI+g3GfMsps2ZLgh1FY55kr+orHXbtMt9l
-vZXRsfTyEaqZp1VWvKERX2ZQJ3OdMFJlpR3BnD6tojU8bJEooAOTuI6GTselJasB
-dQMmJEQ/sDfTaKBgIBXE58ml/QIi4kdfFZckFuEcZcWv5x3Va6Gnm4YOjOZOGHR2
-KEE6VvyLDAO6YB4veZWmtzGVOEGSFqbktFTG6eFH6sysr8N7nR9s15ML9rUYRSqd
-v3Ec4Nhn8JB7/uBb6/rFePyZnkF7RHMXuUeGlQLrQzOvkITuwtuLaeJQe6lgYNEH
-OZS1N81ND5gmFvf3kAHsxKeiDGUInKHqKGqO9F2gFsWFSnuMPvpurXWghDQzd1LH
-5Zbp+S1YkIo1WrmAQgTwb7U7QbbZ4OVRs//lUFuPIAT8YFdM+NS5vm1v5z/2meVD
-vd7ZPQTR4uY=
-=CWR3
+iQIVAwUBUE073Tnsnt1WYoG5AQKeKw//XVduWeuLdxxU0gQ7dM/vxohz96lfmtYj
+I3NOSa/9Ax+nfVXXvzndji1VfJfj6l/OSadyRW5HLbhRrTAFI/J1IJUQ7S0jZUgq
+cdpmfd5A+LORtVWoglnPZfeCMbgO232alGvRIf8QXDHjSLY94/pIiFlfcy7ZemoY
+ARoea474GixLdqP2qDgtugzTTGTiVt9eVRPZDXqk/Diqwh+oWeykLDHpnTSM2KYH
+vo0iqLQcLMEPt7zMRqeWxR2VK87RB3ikYYEp+RmoPlkmrnXxjSPk+OUHeFyzIGf4
+ZVUL2IpCZqhU1YceDHyZZxaHSNIWp9t0TxCfRVaO5LGEi9485Ivcv+T+f0yz0XFw
+yYQ0tMiURT7eYevz0T8gc8Lm7uqEK84Cr056iLmtenViG0q4PDrWallhznIF6D91
+lDeYgV/l4C8g1ZVtbcPvJCtyfsZYaIwDfz1zA2BzLlHyVHzPOKtc4t6GzyCntQB6
+5Hj0ot8c2f0B3WSiuSFDH9LDCFaE0t3pRk9FAPo6kWcHlLxZkroU1qXUfZ9g3y1g
+h204IYqDihcSdwxcvlIHXBAZKJNaW5yLGJL2xuM7wA3A6n5paVYjMP3t5HQbhVxR
+dHrgUmLgr5IRYeCloHu+bEi2opu3Le15sA8rqrlOcGv6jthuK3rf/m6EHQoqN9FW
+u23QVjdKea4=
+=aucv
 -----END PGP SIGNATURE-----
 
---Sig_/uEyZUZFfPPzt4O_Hqhgq8/5--
+--Sig_/Ywrjoju4oFF8zNTBkj8uDRI--
