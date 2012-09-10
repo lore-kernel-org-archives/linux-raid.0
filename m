@@ -1,33 +1,28 @@
-From: =?iso-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
-Subject: Re: Howto avoid full re-sync
-Date: Mon, 10 Sep 2012 16:12:44 +0200
-Message-ID: <C0796F33-32E4-4F28-B6FB-469AF438C545@bj-ig.de>
-References: <50497AE6.2010005@websitemanagers.com.au> <81BAA7A8-B1C3-49A1-A600-A9D9D8279E30@bj-ig.de> <504D223A.6020707@websitemanagers.com.au>
-Mime-Version: 1.0 (Apple Message framework v1278)
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Jeanene Okamoto <mairawij@yahoo.com>
+Subject: I wanna be your friend if you do not mind
+Date: Mon, 10 Sep 2012 15:26:57 +0100 (BST)
+Message-ID: <1347287217.30494.YahooMailNeo@web132501.mail.ird.yahoo.com>
+Reply-To: Jeanene Okamoto <jeanene.okamoto@yahoo.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <504D223A.6020707@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <adam@websitemanagers.com.au>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi,
+My name is Jeanene. In three words about myself =E2=80=93 pretty, cool =
+& free.
+I am sending this letter because I wanna meet u man and I wanna meet u|=
+think that you are hot and I would like to know more about u. Probably =
+it will be an interesting conversation and that's all, maybe it'll be i=
+nteresting to have some closer relationships, who knows, right? Don't m=
+iss your chance!
+I would be really happy if you'll send me your answer, what u think?)
 
-Am 10.09.2012 um 01:11 schrieb Adam Goryachev:
->> 
->> Besides all the stuff about fix your server, a raid is not a backup and you risk your data - simply add a write intent bitmap:
->> 
->> # mdadm /dev/md2 --grow bitmap=internal
->> 
-> mdadm /dev/md2 --grow bitmap=internal
-> mdadm: can only add devices to linear arrays
-> 
-
-My fault: 
-
-mdadm /dev/md2 --grow --bitmap=internal
-
-Ralf
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
