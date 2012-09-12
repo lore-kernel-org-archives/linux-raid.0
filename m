@@ -1,54 +1,52 @@
-From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
-Subject: Re: raid6 low performance 8x3tb drives in singledegraded mode(=7x3tb)
-Date: Wed, 12 Sep 2012 10:42:29 +0100
-Message-ID: <20560.22789.265849.102178@tree.ty.sabi.co.UK>
-References: <504FD153.9090602@sandberg-consult.dk>
+From: Adam Goryachev <adam@websitemanagers.com.au>
+Subject: Re: Howto avoid full re-sync
+Date: Wed, 12 Sep 2012 22:52:18 +1000
+Message-ID: <50508582.3070501@websitemanagers.com.au>
+References: <50497AE6.2010005@websitemanagers.com.au> <81BAA7A8-B1C3-49A1-A600-A9D9D8279E30@bj-ig.de> <504D223A.6020707@websitemanagers.com.au> <C0796F33-32E4-4F28-B6FB-469AF438C545@bj-ig.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <504FD153.9090602@sandberg-consult.dk>
+In-Reply-To: <C0796F33-32E4-4F28-B6FB-469AF438C545@bj-ig.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-[ ... ]
+On 11/09/12 00:12, Ralf M=FCller wrote:
+> Besides all the stuff about fix your server, a raid is not a backup a=
+nd you risk your data - simply add a write intent bitmap:
+>
+> mdadm /dev/md2 --grow --bitmap=3Dinternal
+I've added this across a number of my systems now, and it seems to work
+really well (Thank You), especially one system which has a RAID1 with a=
+n
+external USB drive + internal drive which normally take over 2 days for
+a full resync.
 
-> I have setup an array of 7x3tb WD30EZRX drives, though its
-> meant for 8x, so it runs in singledegraded mode.
+Can you suggest if there is any dis-advantage to using the bitmap (mayb=
+e
+write performance will suffer), or disk space is reduced, or ....
 
-An (euphemism) amazing concept, with (euphemism) surprising
-effects:
+While I can see the benefits, I'm just wondering if it might be too goo=
+d
+to be true, or what I am missing....
 
-> the issue is that i get very poor performance, generally
-> roughly 25MB/s writes only. [ ... ]
+Thanks again for your assistance.
 
-> Device:         rrqm/s   wrqm/s     r/s     w/s   rsec/s   wsec/s [ ... ]
-> sdb            1370.00   732.00  109.00   30.00 11824.00  5864.00 [ ... ]
-> sdf            1392.00   839.00   88.00   33.00 11840.00  6976.00 [ ... ]
-> sdd            1422.00   863.00   64.00   29.00 13448.00  6384.00 [ ... ]
-> sdg            1388.00   446.00   92.00   18.00 11840.00  3248.00 [ ... ]
-> sdc            1395.00   857.00   85.00   40.00 11840.00  6944.00 [ ... ]
-> sda            1370.00   985.00  111.00   41.00 11888.00  7744.00 [ ... ] 
-> sde            1417.00   669.00   70.00   21.00 13528.00  5040.00 [ ... ]
-> sdh               0.00     0.00    0.00    0.00     0.00     0.00 [ ... ]
-> md0               0.00     0.00    0.00   86.00     0.00 17656.00 [ ... ]
-> dm-0              0.00     0.00    0.00    0.00     0.00     0.00 [ ... ]
+Regards,
+Adam
 
-It is (euphemism) mysterious that 'rsec/s' is nearly twice as
-high as 'wsec/s', and (euphemism) obscure that the RAID set is
-also 'sync'ing:
+--=20
+Adam Goryachev
+Website Managers
+Ph: +61 2 8304 0000                            adam@websitemanagers.com=
+=2Eau
+=46ax: +61 2 8304 0001                            www.websitemanagers.c=
+om.au
 
->     Number   Major   Minor   RaidDevice State
->        0       8        0        0      active sync   /dev/sda
->        1       8       16        1      active sync   /dev/sdb
->        2       8       32        2      active sync   /dev/sdc
->        3       8       48        3      active sync   /dev/sdd
->        4       8       64        4      active sync   /dev/sde
->        5       8       80        5      active sync   /dev/sdf
->        8       8       96        6      active sync   /dev/sdg
->        7       0        0        7      removed
-
-> [ ... ] so i must assume the issue is in the raid layer.
-
-Or perhaps in the greyware layer :-).
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
