@@ -1,131 +1,54 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: make filesystem failed while the capacity of raid5 is big than
- 16TB
-Date: Wed, 12 Sep 2012 11:46:05 +0200
-Message-ID: <505059DD.8000108@hesbynett.no>
-References: <505033fe.8aec440a.5d52.ffffe37b@mx.google.com> <50504094.2040302@hesbynett.no> <CACY-59cLmV2SRY+FrvhHxseDD1+r-B-3bOKPGzJdGttW+9U2mw@mail.gmail.com>
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
+Subject: Re: raid6 low performance 8x3tb drives in singledegraded mode(=7x3tb)
+Date: Wed, 12 Sep 2012 10:42:29 +0100
+Message-ID: <20560.22789.265849.102178@tree.ty.sabi.co.UK>
+References: <504FD153.9090602@sandberg-consult.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACY-59cLmV2SRY+FrvhHxseDD1+r-B-3bOKPGzJdGttW+9U2mw@mail.gmail.com>
+In-Reply-To: <504FD153.9090602@sandberg-consult.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: GuoZhong Han <hanguozhong@meganovo.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+[ ... ]
 
-(Please remember to include the linux raid mailing list in your replies, 
-unless you have particular reason for posting off-list.
+> I have setup an array of 7x3tb WD30EZRX drives, though its
+> meant for 8x, so it runs in singledegraded mode.
 
-And please post in plain-text only, not HTML.  HTML screws up quoting 
-and formatting for emails.)
+An (euphemism) amazing concept, with (euphemism) surprising
+effects:
 
+> the issue is that i get very poor performance, generally
+> roughly 25MB/s writes only. [ ... ]
 
-On 12/09/2012 11:14, GuoZhong Han wrote:
-> Hi David:
->              Thanks for your reply.
->              From your point of view, I feel like I made some mistakes.
-> And when I created the raid5,
->              I noticed that the speed of the recovery is slower than
-> 4*2T raid5.while 4*2T can reach to 140MB/s,16*2T raid 70MB/s.
+> Device:         rrqm/s   wrqm/s     r/s     w/s   rsec/s   wsec/s [ ... ]
+> sdb            1370.00   732.00  109.00   30.00 11824.00  5864.00 [ ... ]
+> sdf            1392.00   839.00   88.00   33.00 11840.00  6976.00 [ ... ]
+> sdd            1422.00   863.00   64.00   29.00 13448.00  6384.00 [ ... ]
+> sdg            1388.00   446.00   92.00   18.00 11840.00  3248.00 [ ... ]
+> sdc            1395.00   857.00   85.00   40.00 11840.00  6944.00 [ ... ]
+> sda            1370.00   985.00  111.00   41.00 11888.00  7744.00 [ ... ] 
+> sde            1417.00   669.00   70.00   21.00 13528.00  5040.00 [ ... ]
+> sdh               0.00     0.00    0.00    0.00     0.00     0.00 [ ... ]
+> md0               0.00     0.00    0.00   86.00     0.00 17656.00 [ ... ]
+> dm-0              0.00     0.00    0.00    0.00     0.00     0.00 [ ... ]
 
-I'll let others say exactly what is going on here, but I suspect it is 
-simply that the single-threaded nature of raid5 gives poor performance 
-here (as mentioned earlier, the md raid developers are working hard on 
-this).
+It is (euphemism) mysterious that 'rsec/s' is nearly twice as
+high as 'wsec/s', and (euphemism) obscure that the RAID set is
+also 'sync'ing:
 
->              The requirement of my application is :
->              1.There are 16 2T disks in the system, the app must be able
-> to identify these disks.
->              2.The users can create a raid0,raid10 or raid5 use the
-> disks they designated.
->              3.Performance for writes of the array will reach at least
-> 100MB per second.
+>     Number   Major   Minor   RaidDevice State
+>        0       8        0        0      active sync   /dev/sda
+>        1       8       16        1      active sync   /dev/sdb
+>        2       8       32        2      active sync   /dev/sdc
+>        3       8       48        3      active sync   /dev/sdd
+>        4       8       64        4      active sync   /dev/sde
+>        5       8       80        5      active sync   /dev/sdf
+>        8       8       96        6      active sync   /dev/sdg
+>        7       0        0        7      removed
 
-This does not make sense as a set of requirements unless you are making 
-a disk tester.  1 and 2 are a list of possible solutions, not a 
-description of the application and requirements.
+> [ ... ] so i must assume the issue is in the raid layer.
 
-Your requirements should be in terms of the required/desired storage 
-space, the required/desired speeds, the required/desired redundancy, and 
-the required/desired cost.
-
-The best solution to this depends highly on the mixture of reads and 
-writes, the type of access (lots of small accesses or large streamed 
-accesses), the level of parallelism (a few big client machines or 
-processes, or lots in parallel), and the types of files (a few big 
-files, lots of small files, databases, etc.).
-
-
->              I had not tested the write performace for write of 16*2T raid5.
->              There was a same problem about 4*2T raid5 and 8*2T raid5.
-> when the array was going to be full,
->              the speed of the write performance tend to slower, and it
-> can not reach to 100MB/s.
->              could you give me some advice?
-
-Yes - don't make raid5 from large numbers of disks arrays.  The 
-performance is always bad (except for individual large streamed reads), 
-and the redundancy is bad.  If you are trying to maximise the storage 
-space for a given cost, then at least use raid6 unless your data is 
-worthless (though performance will be even worse, especially for 
-writes).  Otherwise there are better ways to structure your array.
-
-Once we know what you are trying to do, we can give better advice.
-
-mvh.,
-
-David
-
-
-
-> 2012/9/12 David Brown <david.brown@hesbynett.no
-> <mailto:david.brown@hesbynett.no>>
->
->     On 12/09/2012 09:04, vincent wrote:
->
->         Hi, everyone:
->                   I am Vincent, I am writing to you to ask a question
->         about how to
->         make file system about my raid5.
->                   I created a raid5 with 16 *2T disks, it was OK.
->                   Then I used mk2fs to make file system for the raid5.
->                   Unfortunately, it was failed.
->                   The output was:
->                   # mke2fs -t ext4 /dev/md126
->                     mke2fs 1.41.12 (17-May-2010)
->                     mke2fs: Size of device /dev/md126 too big to be
->         expressed in 32
->         bits
->                     using a blocksize of 4096.
->                   Is anyone had the same problem? Could you help me?
->                   The version of my mdadm is 3.2.2, and the version of
->         my kernel is
->         2.6.38
->                   Thanks.
->
->
->     You need e2fsprogs version 1.42 or above to create an ext4
->     filesystem larger than 16 TB.
->
->     However, it is more common to use XFS for such large filesystems.
->
->     Another possibility is putting an LVM physical volume on the array
->     and making multiple smaller logical partitions for your filesystem.
->
->     Almost certainly, however, a raid5 of 16 disks is a bad idea.
->     Performance for writes will be terrible, as will parallel reads and
->     writes (though that will improve dramatically as the current
->     developments in multi-threaded raid5 make their way into mainstream
->     distros).  And it is very poor from a reliability viewpoint - your
->     risk of a second failure during a rebuild is high with a 16 disk raid5.
->
->     What is your actual application here?  If you tell us how this
->     system will be used, it will be a lot easier to advise you on a
->     better solution (perhaps a raid6, perhaps a raid10, perhaps a number
->     of raid5 systems connected with raid0, perhaps multiple raid0 or
->     raid5 arrays with a linear concatenation and XFS).
->
->
-
+Or perhaps in the greyware layer :-).
