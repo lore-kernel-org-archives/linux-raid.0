@@ -1,113 +1,96 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: md: raid5 resync corrects read errors on data block - is this correct?
-Date: Wed, 12 Sep 2012 19:49:52 +0300
-Message-ID: <CAGRgLy6Syso2dfELFhpK9nCyEgvuD6k3F=MRJBnrVU=btKqKVw@mail.gmail.com>
-References: <CAGRgLy6Cqxyf2im+tG2JiaQFooLBBzT76hGpfTb47Cr_sFLr6g@mail.gmail.com>
-	<20120912082909.33c8eec0@notabene.brown>
+From: Marc MERLIN <marc@merlins.org>
+Subject: How can I ensure that my swraid saves checkpoints with sysrq reboot?
+Date: Wed, 12 Sep 2012 09:52:08 -0700
+Message-ID: <20120912165208.GA12152@merlins.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120912082909.33c8eec0@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
-I have done some more investigation on that.
+I don't have a lot of data on this because each time I get it wrong, I have
+to endure 2 days of resync (2TB drives/raid5).
 
-I see that according to handle_stripe_dirtying(), raid6 always does
-reconstruct-write, while raid5 checks what will be cheaper in terms of
-IOs - read-modify-write or reconstruct-write. For example, for a
-3-drive raid5, both are the same, so because of:
+I'm using kernel 3.5.3.
 
-if (rmw < rcw && rmw > 0)
-... /* this is not picked, because in this case rmw==rcw==1 */
+It seems that when my system is having issues and I need to sysrq reboot,
+I do:
+- sync
+- umount
+- (re)boot
 
-reconstruct-write is always performed for such 3-drvie raid5. Is this correct?
+Last time I did this, all I saw was:
+[33415.717023] SysRq : Resetting                                                
+[33415.721143] ACPI MEMORY or I/O RESET_REG.  
 
-The issue with doing read-modify-writes is that later we have no
-reliable way to know whether the parity block is correct - when we
-later do reconstruct-write because of a read error, for example. For
-read requests we could have perhaps checked the bitmap, and do
-reconstruct-write if the relevant bit is not set, but for write
-requests the relevant bit will always be set, because it is set when
-the write is started.
+and sure enough, my raid came back unclean.
 
-I tried the following scenario, which showed a data corruption:
-# Create 4-drive raid5 in "--force" mode, so resync starts
-# Write one sector on a stripe that resync has not handled yet. RMW is
-performed, but the parity is incorrect because two other data blocks
-were not taken into account (they contain garbage).
-# Induce a read-error on the sector that I just wrote to
-# Let resync handle this stripe
+Next time, I tried 'o' instead of 'b', and got the following which seems to
+sync up my raid checkpoints before shutdown:
 
-As a result, resync corrects my sector using other two data blocks +
-parity block, which is out of sync. When I read back the sector, data
-is incorrect.
-
-I see that I can easily enforce raid5 to always do reconstruct-write,
-the same way like you do for raid6. However, I realize that for
-performance reasons, it is better to do RMW if possible.
-
-What do you think about the following rough suggestion: in
-handle_stripe_dirtying() check whether resync is ongoing or should be
-started - using MD_RECOVERY_SYNC, for example. If there is an ongoing
-resync, there is a good reason for that, probably parity on some
-stripes is out of date. So in that case, always force
-reconstruct-write. Otherwise, count what is cheaper like you do now.
-(Can RCW be really cheaper than RMW?)
-
-So during resync, array performance will be lower, but we will ensure
-that all stripe-blocks are consistent. What do you think?
-
-Thanks!
-Alex.
+Is sysrq-reboot also supposed to sync checkpoints, but just fails to do so
+when I'm rebooting due to stuck controller issues anyway?
+(note that in this case it's another controller than the one the drives are on)
+Or does 'off' sync raid checkpoints and 'reboot' does not?
 
 
-On Wed, Sep 12, 2012 at 1:29 AM, NeilBrown <neilb@suse.de> wrote:
-> On Tue, 11 Sep 2012 22:10:01 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-> wrote:
->
->> Hi Neil,
->> I have been doing some investigation about resync on raid5, and I
->> induced a repairable read error on a drive that contains a data block
->> for a particular stripe_head. I saw that resync corrects the read
->> error by recomputing the missing data block, rewriting it (twice) and
->> then re-reading back.
->>
->> Then I dug into code and eventually saw that fetch_block():
->>
->> if ((s->uptodate == disks - 1) &&
->>     (s->failed && (disk_idx == s->failed_num[0] ||
->>                  disk_idx == s->failed_num[1]))) {
->>       /* have disk failed, and we're requested to fetch it;
->>        * do compute it
->>        */
->>
->> doesn't care whether disk_idx holds data or parity for this
->> stripe_head. It only checks that stripe_head has enough redundancy to
->> recompute the block.
->>
->> My question: is this behavior correct? I mean that if we are doing
->> resync, it means that we are not sure that parity is correct (e.g.,
->> after an unclean shutdown). But we still use this possibly-incorrect
->> parity to recompute the missing data block. So is this a potential
->> bug?
->>
->
-> Maybe.
-> I guess that if bad-block recording is enabled, then recording a bad block
-> there would be the "right" thing to do.
-> However if bad-block recording is not enabled then there are two options:
->  1/ kick the device from the array
->  2/ re-write the failing block based on the parity block which might be
->     incorrect, but very probably is correct.
->
-> I suspect that the second option (which is currently implemented) will cause
-> less data loss than the first.
->
-> So I think the current code is the best option (unless we want to add some
-> bad-block-recording support).
->
-> NeilBrown
+[  581.511867] SysRq : Power Off
+[  581.526466] md: md5: resync done.
+[  581.538448] md: checkpointing resync of md5.
+[  581.544403] md: delaying resync of md0 until md3 has finished (they share one or more physical units)
+[  581.583046] md: md3: resync done.
+[  581.669506] md: checkpointing resync of md3.
+[  581.675550] md: resync of RAID array md0
+[  581.681256] md: minimum _guaranteed_  speed: 40000 KB/sec/disk.
+[  581.688938] md: using maximum available idle IO bandwidth (but not more than 81920 KB/sec) for resync.
+[  581.699385] md: using 128k window, over a total of 1048512k.
+[  581.748192] md: md0: resync done.
+[  581.957972] md: checkpointing resync of md0.
+[  582.984647] kvm: exiting hardware virtualization
+[  583.192431] sd 15:0:0:0: [sdq] Synchronizing SCSI cache
+[  583.219673] sd 15:0:0:0: [sdq] Stopping disk
+[  583.678907] sd 14:0:0:0: [sdp] Synchronizing SCSI cache
+[  583.706855] sd 14:0:0:0: [sdp] Stopping disk
+[  584.166092] sd 13:0:0:0: [sdo] Synchronizing SCSI cache
+[  584.194037] sd 13:0:0:0: [sdo] Stopping disk
+[  584.653278] sd 12:0:0:0: [sdn] Synchronizing SCSI cache
+[  584.681225] sd 12:0:0:0: [sdn] Stopping disk
+[  585.140459] sd 10:0:0:0: [sdm] Synchronizing SCSI cache
+[  585.164369] sd 10:0:0:0: [sdm] Stopping disk
+[  585.616919] sd 8:4:0:0: [sdl] Synchronizing SCSI cache
+[  585.623818] sd 8:4:0:0: [sdl] Stopping disk
+[  586.083546] sd 8:3:0:0: [sdk] Synchronizing SCSI cache
+[  586.090333] sd 8:3:0:0: [sdk] Stopping disk
+[  586.098364] sd 8:2:0:0: [sdj] Synchronizing SCSI cache
+[  586.104642] sd 8:2:0:0: [sdj] Stopping disk
+[  586.562706] sd 8:1:0:0: [sdi] Synchronizing SCSI cache
+[  586.569474] sd 8:1:0:0: [sdi] Stopping disk
+[  586.577436] sd 8:0:0:0: [sdh] Synchronizing SCSI cache
+[  586.583685] sd 8:0:0:0: [sdh] Stopping disk
+[  586.596304] sd 4:0:1:0: [sdg] Synchronizing SCSI cache
+[  586.602869] sd 4:0:1:0: [sdg] Stopping disk
+[  586.759081] sd 4:0:0:0: [sdf] Synchronizing SCSI cache
+[  586.765676] sd 4:0:0:0: [sdf] Stopping disk
+[  586.771551] sd 3:0:0:0: [sde] Synchronizing SCSI cache
+[  586.778175] sd 3:0:0:0: [sde] Stopping disk
+[  587.219806] sd 2:0:0:0: [sdd] Synchronizing SCSI cache
+[  587.263591] sd 2:0:0:0: [sdd] Stopping disk
+[  588.024999] sd 1:0:1:0: [sdc] Synchronizing SCSI cache
+[  588.064693] sd 1:0:1:0: [sdc] Stopping disk
+[  588.826957] sd 0:0:1:0: [sdb] Synchronizing SCSI cache
+[  588.833460] sd 0:0:1:0: [sdb] Stopping disk
+[  589.258918] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+[  589.265434] sd 0:0:0:0: [sda] Stopping disk
+[  589.690313] r8169 0000:05:00.0: wake-up capability enabled by ACPI
+[  589.713372] pcieport 0000:00:01.0: wake-up capability enabled by ACPI
+
+
+Thanks,
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
