@@ -1,63 +1,40 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: md: raid5 resync corrects read errors on data block - is this correct?
-Date: Wed, 12 Sep 2012 10:15:40 +0300
-Message-ID: <CAGRgLy5oDC5NjysCNOwiUPh5YvdqQmgm+7rSDADrnLDsCrM4Jg@mail.gmail.com>
-References: <CAGRgLy6Cqxyf2im+tG2JiaQFooLBBzT76hGpfTb47Cr_sFLr6g@mail.gmail.com>
-	<20120912082909.33c8eec0@notabene.brown>
+From: Jack Wang <jack.wang.usish@gmail.com>
+Subject: Re: make filesystem failed while the capacity of raid5 is big than 16TB
+Date: Wed, 12 Sep 2012 15:32:10 +0800
+Message-ID: <CA+res+T2Tuxy4vbe9czU9AAhp3-od3HLZRrYpPzyppeXK-CunQ@mail.gmail.com>
+References: <505033fe.8aec440a.5d52.ffffe37b@mx.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120912082909.33c8eec0@notabene.brown>
+In-Reply-To: <505033fe.8aec440a.5d52.ffffe37b@mx.google.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: vincent <hanguozhong@meganovo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks for clarifying, Neil.
+You need to change to use bigger blocksize or switch to XFS.
 
-On Wed, Sep 12, 2012 at 1:29 AM, NeilBrown <neilb@suse.de> wrote:
-> On Tue, 11 Sep 2012 22:10:01 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-> wrote:
+Jack
+
+2012/9/12 vincent <hanguozhong@meganovo.com>:
+> Hi, everyone:
+>         I am Vincent, I am writing to you to ask a question about how to
+> make file system about my raid5.
+>         I created a raid5 with 16 *2T disks, it was OK.
+>         Then I used mk2fs to make file system for the raid5.
+>         Unfortunately, it was failed.
+>         The output was:
+>         # mke2fs -t ext4 /dev/md126
+>           mke2fs 1.41.12 (17-May-2010)
+>           mke2fs: Size of device /dev/md126 too big to be expressed in 32
+> bits
+>           using a blocksize of 4096.
+>         Is anyone had the same problem? Could you help me?
+>         The version of my mdadm is 3.2.2, and the version of my kernel is
+> 2.6.38
+>         Thanks.
 >
->> Hi Neil,
->> I have been doing some investigation about resync on raid5, and I
->> induced a repairable read error on a drive that contains a data block
->> for a particular stripe_head. I saw that resync corrects the read
->> error by recomputing the missing data block, rewriting it (twice) and
->> then re-reading back.
->>
->> Then I dug into code and eventually saw that fetch_block():
->>
->> if ((s->uptodate == disks - 1) &&
->>     (s->failed && (disk_idx == s->failed_num[0] ||
->>                  disk_idx == s->failed_num[1]))) {
->>       /* have disk failed, and we're requested to fetch it;
->>        * do compute it
->>        */
->>
->> doesn't care whether disk_idx holds data or parity for this
->> stripe_head. It only checks that stripe_head has enough redundancy to
->> recompute the block.
->>
->> My question: is this behavior correct? I mean that if we are doing
->> resync, it means that we are not sure that parity is correct (e.g.,
->> after an unclean shutdown). But we still use this possibly-incorrect
->> parity to recompute the missing data block. So is this a potential
->> bug?
->>
->
-> Maybe.
-> I guess that if bad-block recording is enabled, then recording a bad block
-> there would be the "right" thing to do.
-> However if bad-block recording is not enabled then there are two options:
->  1/ kick the device from the array
->  2/ re-write the failing block based on the parity block which might be
->     incorrect, but very probably is correct.
->
-> I suspect that the second option (which is currently implemented) will cause
-> less data loss than the first.
->
-> So I think the current code is the best option (unless we want to add some
-> bad-block-recording support).
->
-> NeilBrown
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
