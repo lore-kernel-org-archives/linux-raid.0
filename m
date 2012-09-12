@@ -1,87 +1,119 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Can't reshape RAID1 to RAID5 due to chunk size
-Date: Wed, 12 Sep 2012 10:59:56 +0600
-Message-ID: <20120912105956.155f5d5e@natsu>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [RFC 1/2]raid1: only write mismatch sectors in sync
+Date: Wed, 12 Sep 2012 13:29:41 +0800
+Message-ID: <20120912052941.GA15827@kernel.org>
+References: <20120726080150.GA21457@kernel.org>
+ <20120731155304.11c40f9b@notabene.brown>
+ <CANejiEWZk6JcErw9Y6cqpotYMypQA_jvv8N0612FBq81Lo8jVQ@mail.gmail.com>
+ <20120911105908.51681433@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/h4xADXx1DEilpAJCtm_TsIH"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120911105908.51681433@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/h4xADXx1DEilpAJCtm_TsIH
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, Sep 11, 2012 at 10:59:08AM +1000, NeilBrown wrote:
+> On Tue, 31 Jul 2012 16:12:04 +0800 Shaohua Li <shli@kernel.org> wrote:
+> 
+> > 2012/7/31 NeilBrown <neilb@suse.de>:
+> > > On Thu, 26 Jul 2012 16:01:50 +0800 Shaohua Li <shli@kernel.org> wrote:
+> > >
+> > >> Write has some impacts to SSD:
+> > >> 1. wear out flash. Frequent write can speed out the progress.
+> > >> 2. increase the burden of garbage collection of SSD firmware. If no space
+> > >> left for write, SSD firmware garbage collection will try to free some space.
+> > >> 3. slow down subsequent write. After write SSD to some extents (for example,
+> > >> write the whole disk), subsequent write will slow down significantly (because
+> > >> almost every write invokes garbage collection in such case).
+> > >>
+> > >> We want to avoid unnecessary write as more as possible. raid sync generally
+> > >> involves a lot of unnecessary write. For example, even two disks don't have
+> > >> any data, we write the second disk for the whole disk size.
+> > >>
+> > >> To reduce write, we always compare raid disk data and only write mismatch part.
+> > >> This means sync will have extra IO read and memory compare. So this scheme is
+> > >> very bad for hard disk raid and sometimes SSD raid too if mismatch part is
+> > >> majority. But sometimes this can be very helpful to reduce write, in that case,
+> > >> since sync is rare operation, the extra IO/CPU usage is worthy paying. People
+> > >> who want to use the feature should understand the risk first. So this ability
+> > >> is off by default, a sysfs entry can be used to enable it.
+> > >>
+> > >> Signed-off-by: Shaohua Li <shli@fusionio.com>
+> > >> ---
+> > >>  drivers/md/md.c    |   41 +++++++++++++++++++++++++++++++
+> > >>  drivers/md/md.h    |    3 ++
+> > >>  drivers/md/raid1.c |   70 +++++++++++++++++++++++++++++++++++++++++++++++++----
+> > >>  3 files changed, 110 insertions(+), 4 deletions(-)
+> > >>
+> > >> Index: linux/drivers/md/md.h
+> > >> ===================================================================
+> > >> --- linux.orig/drivers/md/md.h        2012-07-25 13:51:00.353775521 +0800
+> > >> +++ linux/drivers/md/md.h     2012-07-26 10:36:38.500740552 +0800
+> > >> @@ -325,6 +325,9 @@ struct mddev {
+> > >>  #define      MD_RECOVERY_FROZEN      9
+> > >>
+> > >>       unsigned long                   recovery;
+> > >> +#define MD_RECOVERY_MODE_REPAIR              0
+> > >> +#define MD_RECOVERY_MODE_DISCARD     1
+> > >> +     unsigned long                   recovery_mode;
+> > >
+> > > You have not documented the meaning of these two flags at all, and I don't
+> > > feel up to guessing.
+> > >
+> > > The patch looks more complex that it should be.  The behaviour you are
+> > > suggesting is exactly the behaviour you get when MD_RECOVERY_REQUESTED is
+> > > set, so at most I expect to see a few places where that flag is tested
+> > > changed to test something else as well.
+> > >
+> > > How would this be used?  It affects resync and resync happens as soon as the
+> > > array is assembled.  So when and how would you set the flag which says
+> > > "prefer reads to writes"?  It seems like it needs to be set in the metadata.
+> > >
+> > > BTW RAID10 already does this - it reads and compares for a normal sync.  So
+> > > maybe just tell people to use raid10 if they want this behaviour?
+> > 
+> > It's true, the behavior likes MD_RECOVERY_REQUESTED, ie, read all disks,
+> > only do write if two disk data not match. But I hope it works as soon as the
+> > array is assembled. Surely we can set in the metadata, but I didn't want to
+> > enable it by default, since even with SSD, the read-compare-write isn't optimal
+> > some times, because it involves extra IO read and memory compare.
+> > 
+> > It appears MD_RECOVERY_REQUESTED assumes disks are insync.
+> > It doesn't read disk !insync, so it doesn't work for assemble.
+> > 
+> > In my mind, user frozen the sync first (with sync_action setting), and then
+> > enable read-compare-write, and finally continue the sync. I can't stop
+> > a recovery and set MD_RECOVERY_REQUESTED, so I added a flag.
+> > Anyway, please suggest what the preferred way for this.
+> 
+> I guess I just don't find this functionality at all convincing.  It isn't
+> clear when anyone would use it, or how they would use it.  It seems best not
+> to provide it.
 
-Hello,
+The background is: For SSD, writting a hard formatted disk and fully filled
+disk, the first case could be 300% faster than the second case depending on SSD
+firmware and how fragmented the filled disk is. So this isn't a trival
+performance issue.
 
-# mdadm --detail /dev/md1=20
-/dev/md1:
-        Version : 1.2
-  Creation Time : Fri May 27 09:50:54 2011
-     Raid Level : raid1
-     Array Size : 488372863 (465.75 GiB 500.09 GB)
-  Used Dev Size : 488372863 (465.75 GiB 500.09 GB)
-   Raid Devices : 2
-  Total Devices : 3
-    Persistence : Superblock is persistent
+The usage model is something like this: one disk is borken, add a new disk to
+the raid. Currently we copy the whole disk of the first disk to the second. For
+SSD, if the first disk and second disk have most data identical or most content
+of the first is 0, the copy is very bad. In this scenario, we can avoid some
+copy, which will make latter write to the disk faster. Thinking about 300%
+faster :).
 
-  Intent Bitmap : Internal
+I don't think we can do this in underlayer. We don't want to do it always.
+Detecting 0 is very expensive.
 
-    Update Time : Wed Sep 12 10:54:33 2012
-          State : active=20
- Active Devices : 2
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 1
+And this isn't intrusive to me. We only do the 'copy avoidness' in sync, and
+sync is rare event.
 
-           Name : avdeb:1  (local to host avdeb)
-           UUID : e29a222d:e6245302:5ff3f834:ad471a01
-         Events : 26
+I hope to convince you this is a useful functionality, then we can discuss the
+implementation.
 
-    Number   Major   Minor   RaidDevice State
-       0       8       82        0      active sync   /dev/sdf2
-       1       8       34        1      active sync   /dev/sdc2
-
-       2       8       50        -      spare   /dev/sdd2
-
-# mdadm --grow /dev/md1 --chunk=3D64K --level=3D5 --raid-devices=3D3
-mdadm: New chunk size does not divide component size
-
------
-Shouldn't mdadm be able to figure out a way to somehow proceed in this case=
-? :)
-So what if it does not divide, I am increasing the array size by 33%, it
-has plenty of new space, why not leave a bit of it in the end of all device=
-s so
-the chunk size does divide...
-Also I heard of cases (on #linux-raid IRC, I think) when people reshaped li=
-ke
-this without specifying the chunk size explicitly, and ended up with someth=
-ing
-like a 4K chunk, which is certainly less than optimal.
-
---=20
-With respect,
-Roman
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-"Stallman had a printer,
-with code he could not see.
-So he began to tinker,
-and set the software free."
-
---Sig_/h4xADXx1DEilpAJCtm_TsIH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlBQFswACgkQTLKSvz+PZwg9fQCcDw2r5j5BN5fs3OIMTlqmXbWf
-PZAAnj57NRcEs+BEYjW5d64A60j3vqnE
-=FMKx
------END PGP SIGNATURE-----
-
---Sig_/h4xADXx1DEilpAJCtm_TsIH--
+Thanks,
+Shaohua
