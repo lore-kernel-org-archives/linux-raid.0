@@ -1,42 +1,42 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: make filesystem failed while the capacity of raid5 is big than
- 16TB
-Date: Thu, 13 Sep 2012 11:15:34 +0200
-Message-ID: <5051A436.5030306@hesbynett.no>
-References: <505033fe.8aec440a.5d52.ffffe37b@mx.google.com> <50504094.2040302@hesbynett.no> <CACY-59cLmV2SRY+FrvhHxseDD1+r-B-3bOKPGzJdGttW+9U2mw@mail.gmail.com> <505059DD.8000108@hesbynett.no> <CACY-59dAbS=8ncRAeZrAYBAvo7G6FEyoGREHtC-ze4cwhiF9GQ@mail.gmail.com> <50518BA4.6090503@hesbynett.no> <50518E95.5050104@yuiop.co.uk>
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: RE: [PATCH] fix segfaults in Detail()
+Date: Thu, 13 Sep 2012 10:04:56 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB19009863@IRSMSX102.ger.corp.intel.com>
+References: <20120906154119.754.88103.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50518E95.5050104@yuiop.co.uk>
+In-Reply-To: <20120906154119.754.88103.stgit@gklab-128-085.igk.intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@yuiop.co.uk>
-Cc: GuoZhong Han <hanguozhong@meganovo.com>, stan@hardwarefreak.com, linux-raid@vger.kernel.org
+To: "neilb@suse.de" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 13/09/2012 09:43, John Robinson wrote:
-> On 13/09/2012 08:30, David Brown wrote:
-> [...]
->>   Using 2 x 8-disk raid6 connected by
->> raid0 (or linear concat for XFS) will be faster and safer than a single
->> large raid5/6 array, but unless you use the latest multithreaded raid
->> kernel then it will still be very slow.
->
-> Not as far as I understand it, it won't. The multithreaded code is only
-> really a benefit on SSDs which can manage tens of thousands of IOPS,
-> while on spinning rust HDDs which can only manage hundreds of IOPS, the
-> single-threaded code is fine.
->
-
-HDDs have longer latencies, so that can't do lots of different accesses 
-in rapid succession.  But they have pretty high throughputs for streamed 
-reads and writes, once they get going.  Raid6 writes involve quite a bit 
-of processing to calculate the second parity - when you have enough HD 
-spindles you will saturate the performance of a single CPU core in 
-processing speed, memory bandwidth and IO bandwidth.  I freely admit 
-that I'm speculating here without real numbers, but I believe this cpu 
-bottleneck is part of the problems people see with larger raid5/6 arrays.
-
-It is certainly true that you will see the biggest difference with SSDs, 
-especially in the IOPS numbers.
-
+T24gVGh1cnNkYXksIFNlcHRlbWJlciAwNiwgMjAxMiA1OjQxIFBNIEx1a2FzeiBEb3JhdSB3cm90
+ZToNCj4gDQo+IElmIGRpc2sgaGFzIGJlZW4gcmVtb3ZlZCwgJ3N0JyBhbmQgJ2luZm8nIGNhbiBi
+ZSBOVUxMLiBJdCBjYXVzZXMgc2VnZmF1bHQuDQo+ICdzdCcgYW5kICdpbmZvJyBzaG91bGQgYmUg
+Y2hlY2tlZCBhZ2FpbnN0IGJlaW5nIE5VTEwgYmVmb3JlIGJlaW5nIHVzZWQuDQo+IA0KPiBTaWdu
+ZWQtb2ZmLWJ5OiBMdWthc3ogRG9yYXUgPGx1a2Fzei5kb3JhdUBpbnRlbC5jb20+DQo+IC0tLQ0K
+DQpIaSBOZWlsDQoNCkFyZSB5b3UgZ29pbmcgdG8gYXBwbHkgdGhpcyBwYXRjaD8NCg0KLS0NCkx1
+a2Fzeg0KDQo+ICBEZXRhaWwuYyB8ICAgIDUgKysrLS0NCj4gIDEgZmlsZXMgY2hhbmdlZCwgMyBp
+bnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL0RldGFpbC5j
+IGIvRGV0YWlsLmMNCj4gaW5kZXggMTdhYTUxNi4uNzliMTA0NyAxMDA2NDQNCj4gLS0tIGEvRGV0
+YWlsLmMNCj4gKysrIGIvRGV0YWlsLmMNCj4gQEAgLTQzMCw3ICs0MzAsNyBAQCBpbnQgRGV0YWls
+KGNoYXIgKmRldiwgc3RydWN0IGNvbnRleHQgKmMpDQo+ICAJCX0NCj4gIAkJZnJlZV9tZHN0YXQo
+bXMpOw0KPiANCj4gLQkJaWYgKHN0LT5zYiAmJiBpbmZvLT5yZXNoYXBlX2FjdGl2ZSkgew0KPiAr
+CQlpZiAoKHN0ICYmIHN0LT5zYikgJiYgKGluZm8gJiYgaW5mby0+cmVzaGFwZV9hY3RpdmUpKSB7
+DQo+ICAjaWYgMA0KPiAgVGhpcyBpcyBwcmV0dHkgYm9yaW5nDQo+ICAJCQlwcmludGYoIiAgUmVz
+aGFwZSBwb3MnbiA6ICVsbHUlc1xuIiwgKHVuc2lnbmVkIGxvbmcNCj4gbG9uZykgaW5mby0+cmVz
+aGFwZV9wcm9ncmVzczw8OSwNCj4gQEAgLTU5Niw3ICs1OTYsOCBAQCBUaGlzIGlzIHByZXR0eSBi
+b3JpbmcNCj4gIAlpZiAoc3BhcmVzICYmIGMtPmJyaWVmICYmIGFycmF5LnJhaWRfZGlza3MpIHBy
+aW50ZigiIHNwYXJlcz0lZCIsDQo+IHNwYXJlcyk7DQo+ICAJaWYgKGMtPmJyaWVmICYmIHN0ICYm
+IHN0LT5zYikNCj4gIAkJc3QtPnNzLT5icmllZl9kZXRhaWxfc3VwZXIoc3QpOw0KPiAtCXN0LT5z
+cy0+ZnJlZV9zdXBlcihzdCk7DQo+ICsJaWYgKHN0ICYmIHN0LT5zcykNCj4gKwkJc3QtPnNzLT5m
+cmVlX3N1cGVyKHN0KTsNCj4gDQo+ICAJaWYgKGMtPmJyaWVmID4gMSAmJiBkZXZpY2VzKSBwcmlu
+dGYoIlxuICAgZGV2aWNlcz0lcyIsIGRldmljZXMpOw0KPiAgCWlmIChjLT5icmllZikNCj4gDQo+
+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1
+YnNjcmliZSBsaW51eC1yYWlkIiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jk
+b21vQHZnZXIua2VybmVsLm9yZw0KPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdl
+ci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg==
