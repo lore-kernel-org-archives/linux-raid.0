@@ -1,79 +1,105 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: make filesystem failed while the capacity of raid5 is big than
- 16TB
-Date: Thu, 13 Sep 2012 15:52:21 +0200
-Message-ID: <5051E515.4030106@hesbynett.no>
-References: <505033fe.8aec440a.5d52.ffffe37b@mx.google.com> <50504094.2040302@hesbynett.no> <CACY-59cLmV2SRY+FrvhHxseDD1+r-B-3bOKPGzJdGttW+9U2mw@mail.gmail.com> <505059DD.8000108@hesbynett.no> <CACY-59dAbS=8ncRAeZrAYBAvo7G6FEyoGREHtC-ze4cwhiF9GQ@mail.gmail.com> <5051DEC3.9050703@hardwarefreak.com>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: raid1 issue after disk failure: both disks of the array are still active
+Date: Thu, 13 Sep 2012 12:32:09 -0300
+Message-ID: <CABYL=TrQPH9aPVAGbqrGcFWuwbAs=7h2H3BjpjUZHRmnwzaC6Q@mail.gmail.com>
+References: <5051AF17.8010501@linuxsystems.it>
+	<20120913103432.GA11764@cthulhu.home.robinhill.me.uk>
+	<5051B992.7030200@linuxsystems.it>
+	<CABYL=TpKD2B0vwTrHH=iFK3PcMWueEsi84ACRbBQkDXuiWG3kw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5051DEC3.9050703@hardwarefreak.com>
+In-Reply-To: <CABYL=TpKD2B0vwTrHH=iFK3PcMWueEsi84ACRbBQkDXuiWG3kw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: GuoZhong Han <hanguozhong@meganovo.com>, linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Niccol=F2_Belli?= <darkbasic@linuxsystems.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 13/09/2012 15:25, Stan Hoeppner wrote:
-> On 9/12/2012 10:21 PM, GuoZhong Han wrote:
+2012/9/13 Niccol=F2 Belli <darkbasic@linuxsystems.it>
 >
->>           This system has a 36 cores CPU, the frequency of each core is
->> 1.2G.
+> Il 13/09/2012 12:34, Robin Hill ha scritto:
 >
-> Obviously not an x86 CPU.  36 cores.  Must be a Tilera chip.
+>> Has anything actually attempted to read from that part of the array?
+>> Even if so, it may just have happened to read from the working disk
+>> anyway. md can only detect the error when it tries to read/write tha=
+t
+>> sector of that disk.
 >
-
-I don't know of any other 36-core chips - but the OP would have to 
-answer that.
-
-> GuoZhong, be aware that high core count systems are a poor match for
-> Linux md/RAID levels 1/5/6/10.  These md/RAID drivers currently utilize
-> a single write thread, and thus can only use one CPU core at a time.
 >
+> I forced a read with "dd if=3D/dev/md0 of=3D/dev/null bs=3D524228 cou=
+nt=3D1 skip=3D1", I even get errors in syslog!
 
-Even with multitheaded raid support, such high core-count chips are not 
-ideal for this sort of application.
+you forced read from a block device (md0) that have a md raid1. check
+in source of raid1 read balance... it don=B4t read from all disks, just
+from 'near/fasters' disks. to read from all, run check like the
+command echo check > /sys/block/md0/md/sync_action
 
-> To begin to sufficiently scale these md array types across 36x 1.2GHz
-> cores you would need something like the following configurations, all
-> striped together or concatenated with md or LVM:
 >
-> 72x md/RAID1 mirror pairs
->   36x 4 disk RAID10 arrays
->   36x 4 disk RAID6 ararys
->   36x 3 disk RAID5 arrays
 >
-> Patches are currently being developed to increase the parallelism of
-> RAID1/5/6/10 but will likely not be ready for production kernels for
-> some time.   These patches will however still not allow scaling an
-> md/RAID driver across such a high core count.  You'll still need
-> multiple arrays to take advantage of 36 cores.  Thus, this 16 drive
-> storage appliance would have much better performance with a single/dual
-> core CPU with a 2-3GHz clock speed.
 >
+>> Your best bet now is to do an array check:
+>>      echo check>  /sys/block/md0/md/sync_action
+>>
+>> This will force a read of all disks in the array. This should trigge=
+r
+>> the read error, causing an attempt to re-write the faulty block, in =
+turn
+>> causing the drive remap the bad sector (assuming the re-write fails)=
+=2E
+>> This should also be scheduled to run regularly for all arrays in ord=
+er
+>> to pick up these sort of issues before they cause major problems dur=
+ing
+>> a rebuild.
+>
+>
+> /etc/init.d/mdadm should do exactly this kind of things (distro is De=
+bian Squeeze). I have this in cron.d:
+> 57 0 * * 0 root if [ -x /usr/share/mdadm/checkarray ] && [ $(date +\%=
+d) -le 7 ]; then /usr/share/mdadm/checkarray --cron --all --idle --quie=
+t; fi
+>
+> Unfortunately it seems it didn't work :(
 
-I doubt if the OP is aiming to saturate all 36 cores.  There is no need 
-to scale across all the cores - the aim is just to spread the load 
-amongst enough cores that processing power is not a bottleneck.  If you 
-can achieve this with four cores in use and 32 cores sitting idle, then 
-that is just as good as running 36 cores at 10% capacity.
+i=B4m not a debian expert but, it=B4s easier to put the bash logic insi=
+de
+a bash file, and call this file from crond, maybe some part of your
+configuration file of cron failed?
 
-But I absolutely agree that it is a lot easier to achieve the required 
-performance with a few fast cores than lots of slower cores.
+>
+>
+> Shouldn't a dd if=3D/dev/md0 be enough to trigger the read error?
 
-The other issue to consider here is IO and memory bandwidths - high core 
-count chips don't have the bandwidth to fully utilise the cores on 
-storage applications.
+no
 
-> If I were doing such a product, I'd immediately toss out the 36 core
-> logic platform and switch to a low power single/dual core x86 chip.
+>
+>
+> Thanks,
+> Niccol=F2
+>
+> --
+> http://www.linuxsystems.it
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I'd go for at least two, but probably four cores - the difference in 
-price is going to be irrelevant compared to the rest of the hardware. 
-But I agree that large numbers of cores are probably wasted.
 
-The only reason I would want lots of cores here is if the device is more 
-than just a storage array.  For example, if you are compressing or 
-encrypting the data, or using encryption on the network connections, 
-then extra cores will be useful.
 
+
+--
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+
+
+
+--
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
