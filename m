@@ -1,66 +1,42 @@
-From: Mathias Buren <mathias.buren@gmail.com>
-Subject: Re: raid5:bad sectors after lost power
-Date: Thu, 13 Sep 2012 16:57:35 +0800
-Message-ID: <50519FFF.5010809@gmail.com>
-References: <50519cb3.21bf440a.60ca.ffffa83b@mx.google.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: make filesystem failed while the capacity of raid5 is big than
+ 16TB
+Date: Thu, 13 Sep 2012 11:15:34 +0200
+Message-ID: <5051A436.5030306@hesbynett.no>
+References: <505033fe.8aec440a.5d52.ffffe37b@mx.google.com> <50504094.2040302@hesbynett.no> <CACY-59cLmV2SRY+FrvhHxseDD1+r-B-3bOKPGzJdGttW+9U2mw@mail.gmail.com> <505059DD.8000108@hesbynett.no> <CACY-59dAbS=8ncRAeZrAYBAvo7G6FEyoGREHtC-ze4cwhiF9GQ@mail.gmail.com> <50518BA4.6090503@hesbynett.no> <50518E95.5050104@yuiop.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50519cb3.21bf440a.60ca.ffffa83b@mx.google.com>
+In-Reply-To: <50518E95.5050104@yuiop.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: vincent <hanguozhong@meganovo.com>
-Cc: linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@yuiop.co.uk>
+Cc: GuoZhong Han <hanguozhong@meganovo.com>, stan@hardwarefreak.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 13/09/12 16:43, vincent wrote:
-> Hi everyone:
->      I have a problem about raid5.
->      I created a raid5 with the command =E2=80=9Cmdadm =E2=80=93Cv --=
-chuck=3D128 /dev/md0 =E2=80=93
-> l5 =E2=80=93n4 sd[abcd]=E2=80=9D for write performance test, the capa=
-city of each disk is
-> 2TB. After the array was created, I modified the strip_catch_size of =
-it to
-> 2048.
->      Then I used a program to parallel write 150 files to the array, =
-the
-> speed of each is 1MB/s. Unfortunately, the electricity went off sudde=
-nly at
-> the time. when I turn on the device again, I found the raid5 is in re=
-covery.
-> When     the progress of the recovery went up to 98%, there was a wri=
-te
-> error occurred. I used =E2=80=9Csmartctl =E2=80=93A /dev/sd*=E2=80=9D=
- to check the heath status
-> of these disks. I found the =E2=80=9CRAW_VALUE=E2=80=9D of the attrib=
-ute whose name was
-> =E2=80=9CCurrent_Pending_Sector=E2=80=9D of sda and sdb were 1.
-> =E3=80=80=E3=80=80Then I used =E2=80=9CHDD_Regenerator=E2=80=9D to ch=
-eck if there were bad blocks in the
-> disks. The result of the output indicated that sda and sdb did have a=
- bad
-> sector.
->      These disks were used for the first time after purchased. Is it =
-normal
-> to have bad sectors? Could you please help me?
+On 13/09/2012 09:43, John Robinson wrote:
+> On 13/09/2012 08:30, David Brown wrote:
+> [...]
+>>   Using 2 x 8-disk raid6 connected by
+>> raid0 (or linear concat for XFS) will be faster and safer than a single
+>> large raid5/6 array, but unless you use the latest multithreaded raid
+>> kernel then it will still be very slow.
 >
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Not as far as I understand it, it won't. The multithreaded code is only
+> really a benefit on SSDs which can manage tens of thousands of IOPS,
+> while on spinning rust HDDs which can only manage hundreds of IOPS, the
+> single-threaded code is fine.
 >
 
+HDDs have longer latencies, so that can't do lots of different accesses 
+in rapid succession.  But they have pretty high throughputs for streamed 
+reads and writes, once they get going.  Raid6 writes involve quite a bit 
+of processing to calculate the second parity - when you have enough HD 
+spindles you will saturate the performance of a single CPU core in 
+processing speed, memory bandwidth and IO bandwidth.  I freely admit 
+that I'm speculating here without real numbers, but I believe this cpu 
+bottleneck is part of the problems people see with larger raid5/6 arrays.
 
-RMA the HDDs (or return to vendor), they are not healthy.
+It is certainly true that you will see the biggest difference with SSDs, 
+especially in the IOPS numbers.
 
-
-// Mathias
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
