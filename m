@@ -1,64 +1,50 @@
-From: Daniel Frey <djqfrey@gmail.com>
-Subject: Re: Stop IMSM verify?
-Date: Wed, 12 Sep 2012 18:34:41 -0700
-Message-ID: <CA+ZgY1FMZm-g3-ODPLaRnN14+da+8QBcWhSX-p08kx70pGz97g@mail.gmail.com>
-References: <CA+ZgY1E2T6C+Db1eb8_GFnXm7nzo4ecgGbMiPPf18C9-p5X5WQ@mail.gmail.com>
-	<20120913112246.77b3041e@notabene.brown>
+From: hank <pyu@redhat.com>
+Subject: Re: Subject: [PATCH 1/1] drivers/md/raid1.c: fix NULL pointer bug
+ in fix_read_error function
+Date: Thu, 13 Sep 2012 10:28:32 +0800
+Message-ID: <505144D0.4080908@redhat.com>
+References: <5045708C.10705@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120913112246.77b3041e@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5045708C.10705@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: neilb@suse.de, miku@iki.fi, jakob@ostenfeld.dk, ptb@it.uc3m.es
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Sep 12, 2012 at 6:22 PM, NeilBrown <neilb@suse.de> wrote:
-> On Wed, 12 Sep 2012 18:00:21 -0700 Daniel Frey <djqfrey@gmail.com> wrote:
->
->> Is there any way to stop the verify of an IMSM raid through mdadm?
->
-> No.
+On 09/04/2012 11:07 AM, hank wrote:
 
-Darn.
+> From 0ba5879082544dc3aa13807087563b1258124b1e Mon Sep 17 00:00:00 2001
+> From: hank <pyu@redhat.com>
+> Date: Tue, 4 Sep 2012 10:23:45 +0800
+> Subject: [PATCH 1/1] drivers/md/raid1.c: fix NULL pointer bug in
+>  fix_read_error function
+> 
+> in fix_read_error function, the conf->mirrors[read_disk].rdev may
+> become NULL, as in this function, rdev->nr_pending may be zero, anyone
+> can delete it. So should check if it is NULL before use.
+> 
+> Signed-off-by: hank <pyu@redhat.com>
+> ---
+>  drivers/md/raid1.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 611b5f7..fd8de28 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -2005,7 +2005,7 @@ static void fix_read_error(struct r1conf *conf, int read_disk,
+>  		if (!success) {
+>  			/* Cannot read from anywhere - mark it bad */
+>  			struct md_rdev *rdev = conf->mirrors[read_disk].rdev;
+> -			if (!rdev_set_badblocks(rdev, sect, s, 0))
+> +			if (!rdev || !rdev_set_badblocks(rdev, sect, s, 0))
+>  				md_error(mddev, rdev);
+>  			break;
+>  		}
 
->> I found https://raid.wiki.kernel.org/index.php/RAID_Administration,
->> but the imsm raid does not seem to have sync_action anywhere in the
->> /sys/block tree.
->
-> It certainly should be there.
->   find /sys/block -name sync_action
-> ??
 
-I'm using mdadm exclusively for my imsm raid, and:
 
- ~ # find /sys/block -name sync_action
- ~ #
-
-I take it the imsm raid should have that? I used that exact same
-command (and found nothing) before I posted to the list.
-
->> I've been having issues with suspend which I'm trying to troubleshoot,
->> and I know I can stop it if I boot into Windows. Just wondering if
->> that functionality is in mdadm.
->
-> I suspect your problem is that mdmon is being killed at an awkward time
-> during shutdown.
-> What distro?  Is 'systemd' being used?
-
-The distro is gentoo (no systemd) - suspend works (as in it goes into
-suspend properly) but 8 out of 10 times it fails to wake out of
-suspend by either the keyboard or power button. The only way to "wake"
-it is to yank the power plug from the PSU for a few seconds and plug
-it in. As you can imagine, the imsm raid isn't too happy about that...
-it boots in Verify mode. I've found I can stop the raid verify in
-Windows, so I thought perhaps mdadm could do the same.
-
-I haven't quite figured the suspend issue out yet. It could be
-hardware (thinking maybe PSU?) but I'm trying to troubleshoot this
-issue methodologically. It started after an upgrade to a kernel >
-3.0.2, I have yet to try a 2.6.x to see if it goes back to normal.
-When it does resume properly, everything is fine (mdadm doesn't
-resync.) It's related to the sleep of death (or eternal sleep?) issue.
-
-Dan
+Anyone can review this patch? I think it is a bug and should be fixed.
