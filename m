@@ -1,45 +1,59 @@
 From: David Brown <david.brown@hesbynett.no>
 Subject: Re: make filesystem failed while the capacity of raid5 is big than
  16TB
-Date: Thu, 13 Sep 2012 09:06:52 +0200
-Message-ID: <5051860C.9060902@hesbynett.no>
-References: <505033fe.8aec440a.5d52.ffffe37b@mx.google.com> <50504094.2040302@hesbynett.no> <CACY-59cLmV2SRY+FrvhHxseDD1+r-B-3bOKPGzJdGttW+9U2mw@mail.gmail.com> <505059DD.8000108@hesbynett.no> <50509881.60607@hardwarefreak.com>
+Date: Thu, 13 Sep 2012 09:13:11 +0200
+Message-ID: <50518787.4010501@hesbynett.no>
+References: <505033fe.8aec440a.5d52.ffffe37b@mx.google.com> <50504094.2040302@hesbynett.no> <CACY-59cLmV2SRY+FrvhHxseDD1+r-B-3bOKPGzJdGttW+9U2mw@mail.gmail.com> <505059DD.8000108@hesbynett.no> <CACY-59dAbS=8ncRAeZrAYBAvo7G6FEyoGREHtC-ze4cwhiF9GQ@mail.gmail.com> <5051542A.4090901@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50509881.60607@hardwarefreak.com>
+In-Reply-To: <5051542A.4090901@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: GuoZhong Han <hanguozhong@meganovo.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Mathias Buren <mathias.buren@gmail.com>
+Cc: GuoZhong Han <hanguozhong@meganovo.com>, stan@hardwarefreak.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/09/2012 16:13, Stan Hoeppner wrote:
-> On 9/12/2012 4:46 AM, David Brown wrote:
->
->>>               The requirement of my application is :
->>>               1.There are 16 2T disks in the system, the app must be able
->>> to identify these disks.
->>>               2.The users can create a raid0,raid10 or raid5 use the
->>> disks they designated.
->>>               3.Performance for writes of the array will reach at least
->>> 100MB per second.
+On 13/09/2012 05:34, Mathias Buren wrote:
+> On 13/09/12 11:21, GuoZhong Han wrote:
+>> Hi David:
 >>
->> This does not make sense as a set of requirements unless you are making
->> a disk tester.  1 and 2 are a list of possible solutions, not a
->> description of the application and requirements.
+>>           I am sorry for last mail that I had not described the
+>> requirements of the system very clear.
+>>
+>>           I will detail for you to describe the requirements of the
+>> system.
+>>
 >
-> It makes perfect sense if the OP is designing a storage appliance
-> product and a management front end for it.  Based on the information
-> given, this seems to be the case.
+> (snip)
+>
+>>
+>>           As you said, the performance for write of 16*2T raid5 will be
+>> terrible, so what do you think that how many disks to be build to a
+>> raid5 will be more appropriate?
+>
+> Personally I wouldn't use more than 5 drives in a RAID5 with drives
+> larger than 1TB, the failure risk is too high. With 16x 2TB drives, how
+> about two RAID6 arrays of 8 drives each, then RAID0 them? (RAID60)
+>
+> Or, two RAID6 arrays with 7 drives each, 2 hotspares, and RAID0 on top.
+> (RAID10 + 2 HSP)
 >
 
-If he had said "up to 16 disks" of "up to 2TB", and a more general 
-performance description, then I would have agreed.  I read the 
-requirements as being /exactly/ 16 2TB disks, which I thought odd.  But 
-the OP has replied with more information anyway.
+I wouldn't bother with hotspares with RAID6 unless service and 
+replacement of a dead disk is going to take a long time - you already 
+have double redundancy with the raid6.  Raid6 on 8 disks is already 
+orders of magnitude safer than raid5 with 16 disks - once you have a 
+higher risk of the power supply taking fire and burning /all/ your 
+disks, you don't benefit from even greater redundancy!
 
-mvh.,
+> You mention 36 cores. Perhaps you should try the very latest mdadm
+> versions and Linux kernels (perhaps from the MD Linux git tree), and
+> enable the multicore option.
+>
 
-David
+If that is possible for the OP, then that is definitely worth trying. 
+It is this kind of setup that will benefit most from the newer 
+multithreading support.
+
 
