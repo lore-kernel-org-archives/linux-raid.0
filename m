@@ -1,51 +1,68 @@
-From: Daniel Frey <djqfrey@gmail.com>
-Subject: Re: mdadm forces resync every boot
-Date: Wed, 12 Sep 2012 18:11:37 -0700
-Message-ID: <CA+ZgY1Exb8y4V2Vwyr+W5EDZKOJHhpWYUffOEPT4sAw4DP56oQ@mail.gmail.com>
-References: <4E3C06D1.6030301@gmail.com>
-	<20110809093437.299036be@notabene.brown>
-	<4E41D9EC.1070706@gmail.com>
-	<20110810113146.3667affb@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Stop IMSM verify?
+Date: Thu, 13 Sep 2012 11:22:46 +1000
+Message-ID: <20120913112246.77b3041e@notabene.brown>
+References: <CA+ZgY1E2T6C+Db1eb8_GFnXm7nzo4ecgGbMiPPf18C9-p5X5WQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/QkBm6xt5tc+uv8voNmVkOF4"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110810113146.3667affb@notabene.brown>
+In-Reply-To: <CA+ZgY1E2T6C+Db1eb8_GFnXm7nzo4ecgGbMiPPf18C9-p5X5WQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Daniel Frey <djqfrey@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Aug 9, 2011 at 6:31 PM, NeilBrown <neilb@suse.de> wrote:
->
-> It need /proc, /sys, and /dev (assuming udev).
-> There is really no point in unmounting any of these as they are virtual.
-> Unmount everything else, remount root readonly, then "mdadm --wait-clean".
->
-> However I would expect missing filesystems to cause an early failure rather
-> than a hang.  If mdmon had been killed already that might cause a bit of a
-> hang, but it should be limited to 5 seconds.
->
-> Maybe run 'mdadm --wait-clean --scan' under 'strace' and see what it is
-> doing??
->
-> NeilBrown
->
+--Sig_/QkBm6xt5tc+uv8voNmVkOF4
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I actually forgot I posted to this list so long ago. I hesitated about
-posting here and resurrecting it, but I figured it'd be for the
-benefit of others searching about this problem with gentoo.
+On Wed, 12 Sep 2012 18:00:21 -0700 Daniel Frey <djqfrey@gmail.com> wrote:
 
-I eventually traced the problem to a script while shutting down, it
-killed all running processes (including mdmon.) I had an almost
-working solution, and with a collaboration with someone else on the
-gentoo forums, there's a full solution now.
+> Is there any way to stop the verify of an IMSM raid through mdadm?
 
-The forum thread is @
-http://forums.gentoo.org/viewtopic-t-888520.html
+No.
 
-I've reported it as a bug on the bugtracker, I've also got a
-workaround for it on that bug report:
-https://bugs.gentoo.org/show_bug.cgi?id=395203
+>=20
+> I found https://raid.wiki.kernel.org/index.php/RAID_Administration,
+> but the imsm raid does not seem to have sync_action anywhere in the
+> /sys/block tree.
 
-The workaround still hasn't made it into the main repository.
+It certainly should be there.
+  find /sys/block -name sync_action
+??
 
-Hopefully this will get threaded properly...
+>=20
+> I've been having issues with suspend which I'm trying to troubleshoot,
+> and I know I can stop it if I boot into Windows. Just wondering if
+> that functionality is in mdadm.
+
+I suspect your problem is that mdmon is being killed at an awkward time
+during shutdown.
+What distro?  Is 'systemd' being used?
+
+NeilBrown
+
+--Sig_/QkBm6xt5tc+uv8voNmVkOF4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBUFE1Zjnsnt1WYoG5AQJHIg//dOt1NtNEnTffGjdvhxGp6rGsSMYPZa+w
+D3RHbIohoAr/gTvqtE2UI6qGgFh6UyeWRbUJNmvODLmZ/v41gV7Nvk9q8IKSigk0
+oFOlEFSd8zVWsQBb3vwASScOyg8ACAdn7aud0yHEy3Ic5rrP3rNspp+1TYK9orKF
+jHNsVMMjSHEwInZDV2VF0VxqMHPUOw905+SJTsBNpbdPgnGpUxM/4KprG+h5GfRv
+55GUp7rG9Y1Fu4bV2qArTqm77gtRQXZPdcOlcaf/+Ef5rr7rpSGx6WHIW4uJ/3Jt
+KIlToo7ywG+PLBDhHI1OTeoUFoa8TmykU9eq8sXPTCQW4qH0ATzpvTuuDK7WUuWS
+EuvJyRBded1MwCbI1CUcmdqyVxwTBSlmlfXC9Q/vQJ9NSAZvoBsT7ckVxwLbXdpi
+gnXN/ormhRCc7IVm0o+E6yKbn5LpFykxsfEkrLWR1maZY8j62j4MCQt+M+47qeLz
+Dt+ibry173Kn0bDSMscLJDywGx+pmfn8HAE1c5IJMWqsEWPnV2BNCwrKqwGSZi8Z
+9qgsiyC9R4bNEew/4oL3ftQYVYdY06psrSQ2N2Jf5PW5/FG44gX+B50B9fmSnmnU
+3q5ffBvk9JjfeF2d/B0SkmPl5iq2Bur8S3iqqlQB0QGS5zI+OULBGhh8FYMKvwLe
+JM6Zktms05c=
+=d1DN
+-----END PGP SIGNATURE-----
+
+--Sig_/QkBm6xt5tc+uv8voNmVkOF4--
