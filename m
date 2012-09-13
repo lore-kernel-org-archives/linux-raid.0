@@ -1,28 +1,38 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: raid1 issue after disk failure: both disks of the array are still active
-Date: Thu, 13 Sep 2012 14:13:05 -0600
-Message-ID: <DA01BB41-EA5A-4023-B8EA-D2778DF537F6@colorremedies.com>
-References: <5051AF17.8010501@linuxsystems.it> <20120913103432.GA11764@cthulhu.home.robinhill.me.uk> <B9AFB9BB-22CE-470D-AB47-E4CDA91C307B@colorremedies.com> <CABYL=TpKNm9NAnrpdu5GWb-4cAVX24pwY6-1uLn_aGhy+FQL+w@mail.gmail.com>
-Mime-Version: 1.0 (Apple Message framework v1278)
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: make filesystem failed while the capacity of raid5 is big than
+ 16TB
+Date: Thu, 13 Sep 2012 17:47:41 -0500
+Message-ID: <5052628D.6090600@hardwarefreak.com>
+References: <505033fe.8aec440a.5d52.ffffe37b@mx.google.com> <50504094.2040302@hesbynett.no> <CACY-59cLmV2SRY+FrvhHxseDD1+r-B-3bOKPGzJdGttW+9U2mw@mail.gmail.com> <505059DD.8000108@hesbynett.no> <CACY-59dAbS=8ncRAeZrAYBAvo7G6FEyoGREHtC-ze4cwhiF9GQ@mail.gmail.com> <5051DEC3.9050703@hardwarefreak.com> <5051E515.4030106@hesbynett.no>
+Reply-To: stan@hardwarefreak.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CABYL=TpKNm9NAnrpdu5GWb-4cAVX24pwY6-1uLn_aGhy+FQL+w@mail.gmail.com>
+In-Reply-To: <5051E515.4030106@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: David Brown <david.brown@hesbynett.no>
+Cc: GuoZhong Han <hanguozhong@meganovo.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 9/13/2012 8:52 AM, David Brown wrote:
+> On 13/09/2012 15:25, Stan Hoeppner wrote:
 
-On Sep 13, 2012, at 11:39 AM, Roberto Spadim wrote:
+>> If I were doing such a product, I'd immediately toss out the 36 core
+>> logic platform and switch to a low power single/dual core x86 chip.
+> 
+> I'd go for at least two, but probably four cores - the difference in
+> price is going to be irrelevant compared to the rest of the hardware.
+> But I agree that large numbers of cores are probably wasted.
 
->> "check" records errors, no action is taken by the md driver to correct it, although the disk firmware itself may try reallocation. So far, that appears to not be the case.
->> 
->> "repair" causes the md driver to write correct data (from copy or reconstructed from parity), which should force the disk firmware to reallocate the affected LBAs from bad physical sectors to good ones.
->> 
->> It seems in this case "repair" is indicated.
->> 
-> Or replace the bad disk =)
+Price is only one concern of many.  With an embedded storage appliance
+TDP and low power draw are as important as price.  For instance, a 64bit
+dual core, 4 thread 1.86GHz Intel Atom N2800 has a TDP of 6.5 watts.
+Each core is easily capable of handling IO and parity for 8 rust drives
+making it an excellent fit for this storage appliance.  There are dual
+core MIPS64 chips that are suitable as well.
 
-Yes or replace the disk. But from the SMART info provided, it's just a few sectors that are affected. None of the attribute values have even budged so far.
+-- 
+Stan
 
-Chris Murphy
+
