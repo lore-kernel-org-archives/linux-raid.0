@@ -1,36 +1,25 @@
-From: =?ISO-8859-1?Q?Niccol=F2_Belli?= <darkbasic@linuxsystems.it>
+From: =?UTF-8?B?TmljY29sw7IgQmVsbGk=?= <darkbasic@linuxsystems.it>
 Subject: Re: raid1 issue after disk failure: both disks of the array are still
  active
-Date: Fri, 14 Sep 2012 09:45:26 +0200
-Message-ID: <5052E096.5040509@linuxsystems.it>
-References: <5051AF17.8010501@linuxsystems.it> <20120913103432.GA11764@cthulhu.home.robinhill.me.uk> <B9AFB9BB-22CE-470D-AB47-E4CDA91C307B@colorremedies.com> <alpine.DEB.2.00.1209140912350.13902@uplift.swm.pp.se>
+Date: Fri, 14 Sep 2012 09:54:38 +0200
+Message-ID: <5052E2BE.2030307@linuxsystems.it>
+References: <5051AF17.8010501@linuxsystems.it> <20120913103432.GA11764@cthulhu.home.robinhill.me.uk> <5051B992.7030200@linuxsystems.it> <CABYL=TpKD2B0vwTrHH=iFK3PcMWueEsi84ACRbBQkDXuiWG3kw@mail.gmail.com> <CABYL=TrQPH9aPVAGbqrGcFWuwbAs=7h2H3BjpjUZHRmnwzaC6Q@mail.gmail.com> <50520031.4010906@linuxsystems.it> <CABYL=TqfHqBz7uh165Oa9jhiTLe4fFjYuhMW+BYJNbiAstjY9w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1209140912350.13902@uplift.swm.pp.se>
+In-Reply-To: <CABYL=TqfHqBz7uh165Oa9jhiTLe4fFjYuhMW+BYJNbiAstjY9w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I also would like to know if the raid1 will *surely* use data from the=20
-other disk to write on the broken sector after a CHECK. I mean, i did=20
-nothing even after a read error on md0 with a "failed command: READ DMA=
-"=20
-in dmesg (possibly because after a few reads it succeeded reading?). I=20
-read that when raid1 is in doubt there is a 50%-50% chance it uses data=
-=20
-from the good disk, wouldn't be better to fail the broken disk and then=
-=20
-re-add it to the array?
+Il 13/09/2012 17:53, Roberto Spadim ha scritto:
+> check the read error counters of you md in sys folder
+> (max_read_errors,  device/errors)
+> maybe it got a error and retried and readed without error
 
-Cheers,
-Niccol=F2
---=20
+max_read_errors is 20 and md0/errors is 0. Unfortunately I did reboot in 
+the meantime and I cannot manage to trigger the read error anymore while 
+reading md0 :(
+-- 
 http://www.linuxsystems.it
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
