@@ -1,43 +1,71 @@
-From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
-Subject: Re: Small short question
-Date: Fri, 14 Sep 2012 17:43:01 +0100
-Message-ID: <20563.24213.638530.461182@tree.ty.sabi.co.UK>
-References: <5030F07F.7000303@schinagl.nl>
-	<504CFA7B.7090606@schinagl.nl>
-	<20120910090829.19100cdf@notabene.brown>
-	<504DA85C.6080000@schinagl.nl>
-	<20120911161622.0b0fcf8c@notabene.brown>
-	<505301E1.10707@schinagl.nl>
-	<50531A52.7060205@schinagl.nl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: raid1 issue after disk failure: both disks of the array are still active
+Date: Fri, 14 Sep 2012 12:04:56 -0600
+Message-ID: <45F26B36-1890-4F8E-BDF9-0DB49FDEE922@colorremedies.com>
+References: <5051AF17.8010501@linuxsystems.it> <20120913103432.GA11764@cthulhu.home.robinhill.me.uk> <B9AFB9BB-22CE-470D-AB47-E4CDA91C307B@colorremedies.com> <alpine.DEB.2.00.1209140912350.13902@uplift.swm.pp.se> <5052E096.5040509@linuxsystems.it>
+Mime-Version: 1.0 (Apple Message framework v1278)
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50531A52.7060205@schinagl.nl>
+In-Reply-To: <5052E096.5040509@linuxsystems.it>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> Since I had only one valid device to check with etc, I assume
-> that if fsck -n -f /dev/md2 runs sucessfully, it is 100% safe
-> to assume the array is perfectly healthy?
 
-If the filesystem used supports both metadata and data checksums
-and its 'fsck -f' does verify all of them, then yes. Otherwise
-obviously no.
+On Sep 14, 2012, at 1:45 AM, Niccol=F2 Belli wrote:
 
-> [ ... ] recommended to simply create a new array, with a new
-> FS on it, and copy all data over (Logically also with
-> /dev/md2, /dev/sda6 missing and later adding sdb6)?
+> I also would like to know if the raid1 will *surely* use data from th=
+e other disk to write on the broken sector after a CHECK.
 
-Given the number of people who ask here to recover the unique
-data they have on a RAID set, perhaps it is good to restate here
-that RAID does not mean "no longer need backups" :-).
+Not according to documentation. In normal operation, and for a repair, =
+what you describe is correct. But not for check.
 
->> [ ... ] I was wrong. I was so sure I made it o2, that I ruled
->> out the possibility it being f2. [ ... ] Short story short,
->> it turns out it was 128k chunks, Far2 offset. [ ... ]
+> I mean, i did nothing even after a read error on md0 with a "failed c=
+ommand: READ DMA" in dmesg (possibly because after a few reads it succe=
+eded reading?).
 
-While you go the lengths of choosing particular layouts on
-specific filetrees, saving the output of '--scan' in
-'mdadm.conf' seems strangely to have been a lower priority :-).
+Possibly. Possibly the disk firmware finally was able to relocate that =
+sector's data. Possibly its ECC thinks it has reconstructed the data on=
+ that sector, but in fact the data is corrupt.
+
+> I read that when raid1 is in doubt there is a 50%-50% chance it uses =
+data from the good disk, wouldn't be better to fail the broken disk and=
+ then re-add it to the array?
+
+I don't know what this means.
+
+But I think there's a misunderstanding about disk behavior. A disk's re=
+liability is not always a binary condition. Most often it's a continuum=
+, because sector problems are masked by disk's ECC, and they go entirel=
+y unreported to the kernel, and thus md. This includes the case when th=
+e disk ECC detects an error, and thinks it has corrected it, but actual=
+ly returns bogus (corrupt) data rather than a read error; as well as wh=
+en disk ECC does not detect an error at all, but the data is in fact co=
+rrupt.
+
+The md driver has no practical choice but to trust the data the disk re=
+turns, absent an error. So I'm confused by what you mean by "when raid1=
+ is in doubt" and what you mean by this "50/50 chance" part.
+
+When the disk ECC detects an error, and fails to correct it, only then =
+will it report a read error to the kernel, and then md will get that da=
+ta elsewhere. There is no good reason for md to mark a 99.99% correctly=
+ performing disk as faulty. If it did this, you've unnecessarily abando=
+ned those 99.99% useful sectors, and in so doing have significantly red=
+uced redundancy.
+
+There's a reason why there are check and repair functions, rather than =
+wholesale discarding an otherwise valuable disk with a handful of bad s=
+ectors (or even one), and the ensuing loss of redundancy. Check is read=
+ only so it will be faster than repair, is a good reason to use check f=
+requently and repair less frequently unless check warrants it. And ther=
+e's good reason to include some smartd periodic testing as well since t=
+here are parts of the disk that md check/repair can't test *and* becaus=
+e the disk ECC masks problems, whereas SMART should report them.
+
+Chris Murphy--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
