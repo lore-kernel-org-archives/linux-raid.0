@@ -1,87 +1,64 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: raid1 issue after disk failure: both disks of the array are
- still active
-Date: Fri, 14 Sep 2012 19:27:55 +0100
-Message-ID: <20120914182755.GA2534@cthulhu.home.robinhill.me.uk>
-References: <5051AF17.8010501@linuxsystems.it>
- <20120913103432.GA11764@cthulhu.home.robinhill.me.uk>
- <B9AFB9BB-22CE-470D-AB47-E4CDA91C307B@colorremedies.com>
- <alpine.DEB.2.00.1209140912350.13902@uplift.swm.pp.se>
- <5052E096.5040509@linuxsystems.it>
- <45F26B36-1890-4F8E-BDF9-0DB49FDEE922@colorremedies.com>
+From: Jonathan Brassow <jbrassow@redhat.com>
+Subject: [PATCH - v2] DM RAID: Fix for ineffective "sync" directive
+Date: Fri, 14 Sep 2012 13:48:03 -0500
+Message-ID: <1347648483.27926.8.camel@f16>
+References: <1345735914.25206.8.camel@f16>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="MGYHOYXEY6WxJCY8"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <45F26B36-1890-4F8E-BDF9-0DB49FDEE922@colorremedies.com>
+In-Reply-To: <1345735914.25206.8.camel@f16>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de, jbrassow@redhat.com
 List-Id: linux-raid.ids
 
+Neil,
 
---MGYHOYXEY6WxJCY8
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I've taken your suggestion to not muck around with the BITMAP_STALE, and
+instead simply clear the superblocks as a whole when the "sync"
+directive is given.
 
-On Fri Sep 14, 2012 at 12:04:56 -0600, Chris Murphy wrote:
+ brassow
 
->=20
-> On Sep 14, 2012, at 1:45 AM, Niccol=F2 Belli wrote:
->=20
-> > I also would like to know if the raid1 will *surely* use data from
-> > the other disk to write on the broken sector after a CHECK.
->=20
-> Not according to documentation. In normal operation, and for a repair,
-> what you describe is correct. But not for check.
->=20
-Maybe you need to reread the documentation. The md manual page says:
+DM RAID: Fix for "sync" directive ineffectiveness
 
-    Requesting a scrub will cause md to read every block on every device
-    in the array, and check that the data is consistent. For RAID1 and
-    RAID10, this means checking that the copies are identical. For
-    RAID4, RAID5, RAID6 this means checking that the parity block is (or
-    blocks are) correct.
+There are two table arguments that can be given to a DM RAID target that
+control whether the array is forced to (re)synchronize or skip initialization:
+"sync" and "nosync".  When "sync" is given, we set mddev->recovery_cp to 0
+in order to cause the device to resynchronize.  This is insufficient if there
+is a bitmap in use, because the array will simply look at the bitmap and see
+that there is no recovery necessary.
 
-    If a read error is detected during this process, the normal
-    read-error handling causes correct data to be found from other
-    devices and to be written back to the faulty device. In many case
-    this will effectively fix the bad block.
+The fix is to skip over the loading of the superblocks when "sync" is given,
+causing new superblocks to be written that will force the array to go through
+initialization (i.e. synchronization).
 
-So a check will repair cases where the data cannot be read at all, but
-will not repair cases where the data is returned but does not match the
-data on the other mirror(s).
+Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
 
-> > I read that when raid1 is in doubt there is a 50%-50% chance it uses
-> > data from the good disk, wouldn't be better to fail the broken disk
-> > and then re-add it to the array?
->=20
-> I don't know what this means.
->=20
-I assume he's referring to cases where the data is read successfully but
-does not match the data on the mirror(s). In this case a repair will
-cause one copy to overwrite the others, which may or may not be the
-correct copy (md has no way of knowing for a mirrored pair).
+Index: linux-upstream/drivers/md/dm-raid.c
+===================================================================
+--- linux-upstream.orig/drivers/md/dm-raid.c
++++ linux-upstream/drivers/md/dm-raid.c
+@@ -960,6 +960,19 @@ static int analyse_superblocks(struct dm
+ 
+ 	freshest = NULL;
+ 	rdev_for_each_safe(rdev, tmp, mddev) {
++		/*
++		 * Skipping super_load due to DMPF_SYNC will cause
++		 * the array to undergo initialization again as
++		 * though it were new.  This is the intended effect
++		 * of the "sync" directive.
++		 *
++		 * When reshaping capability is added, we must ensure
++		 * that the "sync" directive is disallowed during the
++		 * reshape.
++		 */
++		if (rs->print_flags & DMPF_SYNC)
++			continue;
++
+ 		if (!rdev->meta_bdev)
+ 			continue;
+ 
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
 
---MGYHOYXEY6WxJCY8
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAlBTdysACgkQShxCyD40xBK/BACfdd4wMag3kaKVhjam4BxedMzA
-0JkAnRQpoYTdk0+EAqIycb486V45UUQA
-=ldow
------END PGP SIGNATURE-----
-
---MGYHOYXEY6WxJCY8--
