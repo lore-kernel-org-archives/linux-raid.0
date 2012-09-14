@@ -1,41 +1,43 @@
-From: Lukasz Dorau <lukasz.dorau@intel.com>
-Subject: [PATCH] fix: imsm: do not accept too small sizes
-Date: Fri, 14 Sep 2012 16:20:31 +0200
-Message-ID: <20120914142030.19105.28984.stgit@gklab-128-085.igk.intel.com>
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
+Subject: Re: Small short question
+Date: Fri, 14 Sep 2012 17:43:01 +0100
+Message-ID: <20563.24213.638530.461182@tree.ty.sabi.co.UK>
+References: <5030F07F.7000303@schinagl.nl>
+	<504CFA7B.7090606@schinagl.nl>
+	<20120910090829.19100cdf@notabene.brown>
+	<504DA85C.6080000@schinagl.nl>
+	<20120911161622.0b0fcf8c@notabene.brown>
+	<505301E1.10707@schinagl.nl>
+	<50531A52.7060205@schinagl.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <50531A52.7060205@schinagl.nl>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, maciej.patelczyk@intel.com
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Inappriopriate error messages (e.g. mdadm: platform does not support
-raid5 with 0 disk) have been displayed when too small size was given.
-This patch fixes it.
+> Since I had only one valid device to check with etc, I assume
+> that if fsck -n -f /dev/md2 runs sucessfully, it is 100% safe
+> to assume the array is perfectly healthy?
 
-Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
----
- super-intel.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+If the filesystem used supports both metadata and data checksums
+and its 'fsck -f' does verify all of them, then yes. Otherwise
+obviously no.
 
-diff --git a/super-intel.c b/super-intel.c
-index 1d36613..107550f 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -9744,6 +9744,13 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
- 				    get_imsm_raid_level(dev->vol.map),
- 				    chunk * 1024,
- 				    geo->size * 2);
-+		if (geo->size == 0) {
-+			pr_err("Error. Size expansion is " \
-+				   "supported only (current size is %llu, " \
-+				   "requested size /rounded/ is 0).\n",
-+				   current_size);
-+			goto analyse_change_exit;
-+		}
- 	}
- 
- 	if ((current_size != geo->size) && (geo->size > 0)) {
+> [ ... ] recommended to simply create a new array, with a new
+> FS on it, and copy all data over (Logically also with
+> /dev/md2, /dev/sda6 missing and later adding sdb6)?
 
+Given the number of people who ask here to recover the unique
+data they have on a RAID set, perhaps it is good to restate here
+that RAID does not mean "no longer need backups" :-).
+
+>> [ ... ] I was wrong. I was so sure I made it o2, that I ruled
+>> out the possibility it being f2. [ ... ] Short story short,
+>> it turns out it was 128k chunks, Far2 offset. [ ... ]
+
+While you go the lengths of choosing particular layouts on
+specific filetrees, saving the output of '--scan' in
+'mdadm.conf' seems strangely to have been a lower priority :-).
