@@ -1,52 +1,61 @@
-From: Oliver Schinagl <oliver+list@schinagl.nl>
-Subject: Re: Small short question
-Date: Fri, 14 Sep 2012 22:19:26 +0200
-Message-ID: <5053914E.1040803@schinagl.nl>
-References: <5030F07F.7000303@schinagl.nl> <504CFA7B.7090606@schinagl.nl> <20120910090829.19100cdf@notabene.brown> <504DA85C.6080000@schinagl.nl> <20120911161622.0b0fcf8c@notabene.brown> <505301E1.10707@schinagl.nl> <50531A52.7060205@schinagl.nl> <20563.24213.638530.461182@tree.ty.sabi.co.UK>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
+Subject: [PATCH] raid5: Avoid doing more read on dev of a stripe at the same time
+Date: Sat, 15 Sep 2012 10:20:35 +0800
+Message-ID: <2012091510203206229010@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20563.24213.638530.461182@tree.ty.sabi.co.UK>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg@lxra2.for.sabi.co.UK>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 14-09-12 18:43, Peter Grandi wrote:
->> Since I had only one valid device to check with etc, I assume
->> that if fsck -n -f /dev/md2 runs sucessfully, it is 100% safe
->> to assume the array is perfectly healthy?
-> If the filesystem used supports both metadata and data checksums
-> and its 'fsck -f' does verify all of them, then yes. Otherwise
-> obviously no.
-I dont' think ext4 has datachecksums yet? Let me rephrase that, I know 
-there's a patch circulating I think but it wasn't recommended yet as it 
-wasn't 'stable' yet? Anyway, I doubt my older ext4 disk has 
-datachecksums yet. Metadata is pretty much default if i'm not mistaken 
-:) So 0 errors from fsck, should mean all data is okay, right?
->
->> [ ... ] recommended to simply create a new array, with a new
->> FS on it, and copy all data over (Logically also with
->> /dev/md2, /dev/sda6 missing and later adding sdb6)?
-> Given the number of people who ask here to recover the unique
-> data they have on a RAID set, perhaps it is good to restate here
-> that RAID does not mean "no longer need backups" :-).
-It's not super crucial important data. That said, its never nice to 
-loose data, right? :) Yes, always backup! :p
-
->
->>> [ ... ] I was wrong. I was so sure I made it o2, that I ruled
->>> out the possibility it being f2. [ ... ] Short story short,
->>> it turns out it was 128k chunks, Far2 offset. [ ... ]
-> While you go the lengths of choosing particular layouts on
-> specific filetrees, saving the output of '--scan' in
-> 'mdadm.conf' seems strangely to have been a lower priority :-).
-Oh I have mdadm.conf, but it doesn't list raid level, layout nor chunk 
-sizes :( Only array name, meta-data and raid ID.
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SW4gZnVuYyAnb3BzX3J1bl9iaW8nIGlmIHlvdSByZWFkIHRoZSBkZXYgd2hpY2ggdGhlIGxhc3Qg
+cmVhZGluZw0Kb2YgdGhpcyBkZXYgZGlkbid0IHJldHVybixpdCB3aWxsIGRlc3Ryb3J5IHRoZSAg
+cmVxL3JyZXEnc291cmNlIG9mIHJkZXYuDQpJdCBtYXkgY2FsbCBodW5nLXRhc2suDQpGb3IgZXhh
+bXBsZSwgZm9yIGJhZHNlY3RvciBvciBvdGhlciByZWFzb25zLCByZWFkLW9wZXJhdGlvbiBvbmx5
+IHVzZWQNCnN0cmlwZSBpbnN0ZWFkIG9mIGNodW5rX2FsaWduZWRfcmVhZC4NCkZpcnN0OnN0cmlw
+ZSAwO3NlY29uZDogc3RyaXBlIDg7dGhpcmQ6c3RyaXBlIDE2LkF0IHRoZSBibG9jay1sYXllcix0
+aHJlZQ0KYmlvcyBtZXJnZWQuDQpCZWNhdXNlIG1lZGlhIGVycm9yIG9mIHNlY3RvciBmcm9tIDAg
+dG8gNywgdGhlIHJlcXVlc3QgcmV0cmllZC4NCkF0IHRoaXMgdGltZSwgcmFpZDVkIHJlYWRlZCBz
+dHJpcGUwIGFnYWluLkJ1dCBpdCB3aWxsIHNldCAnYmlvLT5uZXh0ID0NCk5VTEwnLlNvIHRoZSBz
+dHJpcGUgOCBhbmQgMTYgZGlkbid0IHJldHVybi4NCg0KU2lnbmVkLW9mZi1ieTogSmlhbnBlbmcg
+TWEgPG1hamlhbnBlbmdAZ21haWwuY29tPg0KLS0tDQogZHJpdmVycy9tZC9yYWlkNS5jIHwgICAx
+MyArKysrKysrKysrLS0tDQogZHJpdmVycy9tZC9yYWlkNS5oIHwgICAgMSArDQogMiBmaWxlcyBj
+aGFuZ2VkLCAxMSBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEv
+ZHJpdmVycy9tZC9yYWlkNS5jIGIvZHJpdmVycy9tZC9yYWlkNS5jDQppbmRleCBhZGRhOTRkLi5l
+NTJiYTFiIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9tZC9yYWlkNS5jDQorKysgYi9kcml2ZXJzL21k
+L3JhaWQ1LmMNCkBAIC01NDcsOSArNTQ3LDE0IEBAIHN0YXRpYyB2b2lkIG9wc19ydW5faW8oc3Ry
+dWN0IHN0cmlwZV9oZWFkICpzaCwgc3RydWN0IHN0cmlwZV9oZWFkX3N0YXRlICpzKQ0KIAkJCQly
+dyA9IFdSSVRFX0ZVQTsNCiAJCQllbHNlDQogCQkJCXJ3ID0gV1JJVEU7DQotCQl9IGVsc2UgaWYg
+KHRlc3RfYW5kX2NsZWFyX2JpdChSNV9XYW50cmVhZCwgJnNoLT5kZXZbaV0uZmxhZ3MpKQ0KLQkJ
+CXJ3ID0gUkVBRDsNCi0JCWVsc2UgaWYgKHRlc3RfYW5kX2NsZWFyX2JpdChSNV9XYW50UmVwbGFj
+ZSwNCisJCX0gZWxzZSBpZiAodGVzdF9hbmRfY2xlYXJfYml0KFI1X1dhbnRyZWFkLCAmc2gtPmRl
+dltpXS5mbGFncykpIHsNCisJCQkvKlRoZSBsYXN0IHJlYWQgZGlkIG5vdCByZXR1cm4sc28gc2tp
+cCB0aGlzIHJlYWQqLw0KKwkJCWlmICh0ZXN0X2FuZF9zZXRfYml0KFI1X1JlYWRpbmcsICZzaC0+
+ZGV2W2ldLmZsYWdzKSkgew0KKwkJCQljbGVhcl9iaXQoUjVfTE9DS0VELCAmc2gtPmRldltpXS5m
+bGFncyk7DQorCQkJCWNvbnRpbnVlOw0KKwkJCX0gZWxzZQ0KKwkJCQlydyA9IFJFQUQ7DQorCQl9
+IGVsc2UgaWYgKHRlc3RfYW5kX2NsZWFyX2JpdChSNV9XYW50UmVwbGFjZSwNCiAJCQkJCSAgICAm
+c2gtPmRldltpXS5mbGFncykpIHsNCiAJCQlydyA9IFdSSVRFOw0KIAkJCXJlcGxhY2Vfb25seSA9
+IDE7DQpAQCAtNzAwLDYgKzcwNSw3IEBAIHN0YXRpYyB2b2lkIG9wc19ydW5faW8oc3RydWN0IHN0
+cmlwZV9oZWFkICpzaCwgc3RydWN0IHN0cmlwZV9oZWFkX3N0YXRlICpzKQ0KIAkJCXByX2RlYnVn
+KCJza2lwIG9wICVsZCBvbiBkaXNjICVkIGZvciBzZWN0b3IgJWxsdVxuIiwNCiAJCQkJYmktPmJp
+X3J3LCBpLCAodW5zaWduZWQgbG9uZyBsb25nKXNoLT5zZWN0b3IpOw0KIAkJCWNsZWFyX2JpdChS
+NV9MT0NLRUQsICZzaC0+ZGV2W2ldLmZsYWdzKTsNCisJCQljbGVhcl9iaXQoUjVfUmVhZGluZywg
+JnNoLT5kZXZbaV0uZmxhZ3MpOw0KIAkJCXNldF9iaXQoU1RSSVBFX0hBTkRMRSwgJnNoLT5zdGF0
+ZSk7DQogCQl9DQogCX0NCkBAIC0xODE4LDYgKzE4MjQsNyBAQCBzdGF0aWMgdm9pZCByYWlkNV9l
+bmRfcmVhZF9yZXF1ZXN0KHN0cnVjdCBiaW8gKiBiaSwgaW50IGVycm9yKQ0KIAl9DQogCXJkZXZf
+ZGVjX3BlbmRpbmcocmRldiwgY29uZi0+bWRkZXYpOw0KIAljbGVhcl9iaXQoUjVfTE9DS0VELCAm
+c2gtPmRldltpXS5mbGFncyk7DQorCWNsZWFyX2JpdChSNV9SZWFkaW5nLCAmc2gtPmRldltpXS5m
+bGFncyk7DQogCXNldF9iaXQoU1RSSVBFX0hBTkRMRSwgJnNoLT5zdGF0ZSk7DQogCXJlbGVhc2Vf
+c3RyaXBlKHNoKTsNCiB9DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5oIGIvZHJpdmVy
+cy9tZC9yYWlkNS5oDQppbmRleCBhOWZjMjQ5Li5hNTk2ZGY4IDEwMDY0NA0KLS0tIGEvZHJpdmVy
+cy9tZC9yYWlkNS5oDQorKysgYi9kcml2ZXJzL21kL3JhaWQ1LmgNCkBAIC0yOTgsNiArMjk4LDcg
+QEAgZW51bSByNWRldl9mbGFncyB7DQogCVI1X1dhbnRSZXBsYWNlLCAvKiBXZSBuZWVkIHRvIHVw
+ZGF0ZSB0aGUgcmVwbGFjZW1lbnQsIHdlIGhhdmUgcmVhZA0KIAkJCSAqIGRhdGEgaW4sIGFuZCBu
+b3cgaXMgYSBnb29kIHRpbWUgdG8gd3JpdGUgaXQgb3V0Lg0KIAkJCSAqLw0KKwlSNV9SZWFkaW5n
+LAkvKiB0aGlzIGRldiBvbiByZWFkaW5nIG9uIGxsZCovDQogfTsNCiANCiAvKg0KLS0gDQoxLjcu
+OS41DQo=
 
