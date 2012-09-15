@@ -1,213 +1,258 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: raid1 issue after disk failure: both disks of the array are
- still active
-Date: Sat, 15 Sep 2012 20:41:02 +0100
-Message-ID: <20120915194102.GA10403@cthulhu.home.robinhill.me.uk>
-References: <5051AF17.8010501@linuxsystems.it>
- <20120913103432.GA11764@cthulhu.home.robinhill.me.uk>
- <B9AFB9BB-22CE-470D-AB47-E4CDA91C307B@colorremedies.com>
- <alpine.DEB.2.00.1209140912350.13902@uplift.swm.pp.se>
- <5052E096.5040509@linuxsystems.it>
- <45F26B36-1890-4F8E-BDF9-0DB49FDEE922@colorremedies.com>
- <20120914182755.GA2534@cthulhu.home.robinhill.me.uk>
- <7664099D-4C11-4254-B970-2DCAD5F86A46@colorremedies.com>
- <5054D175.5070303@linuxsystems.it>
+From: =?ISO-8859-1?Q?Niccol=F2_Belli?= <darkbasic@linuxsystems.it>
+Subject: Re: raid1 issue after disk failure: both disks of the array are still
+ active
+Date: Sun, 16 Sep 2012 00:06:48 +0200
+Message-ID: <5054FBF8.8070901@linuxsystems.it>
+References: <5051AF17.8010501@linuxsystems.it> <20120913103432.GA11764@cthulhu.home.robinhill.me.uk> <B9AFB9BB-22CE-470D-AB47-E4CDA91C307B@colorremedies.com> <alpine.DEB.2.00.1209140912350.13902@uplift.swm.pp.se> <5052E096.5040509@linuxsystems.it> <45F26B36-1890-4F8E-BDF9-0DB49FDEE922@colorremedies.com> <20120914182755.GA2534@cthulhu.home.robinhill.me.uk> <7664099D-4C11-4254-B970-2DCAD5F86A46@colorremedies.com> <5054D175.5070303@linuxsystems.it> <20120915194102.GA10403@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="C7zPtVaVf+AK4Oqc"
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5054D175.5070303@linuxsystems.it>
+In-Reply-To: <20120915194102.GA10403@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?iso-8859-1?Q?Niccol=F2?= Belli <darkbasic@linuxsystems.it>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Il 15/09/2012 21:41, Robin Hill ha scritto:
+> If md hasn't failed the drive then either:
+>    - md didn't get a read error
+>    - md got a success message when re-writing the block
+>    - there's a bug in md and it's not handled the error at all
 
---C7zPtVaVf+AK4Oqc
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It seems it's case one, while manually verifying the checksums with
 
-On Sat Sep 15, 2012 at 09:05:25 +0200, Niccol=F2 Belli wrote:
+for i in $(seq 50); do dd if=3D/dev/sda1 of=3Dsda${i} bs=3D100000 count=
+=3D50=20
+skip=3D$((($i-1)*50+10)) > /dev/null 2> /dev/null; dd if=3D/dev/sdb1=20
+of=3Dsdb${i} bs=3D100000 count=3D50 skip=3D$((($i-1)*50+10)) > /dev/nul=
+l 2>=20
+/dev/null; md5sum sda${i}; md5sum sdb${i}; echo; done
 
-> CHECK didn't help me, so I did a echo "repair >=20
-> /sys/block/md0/md/sync_action". REPAIR didn't work too :(
->=20
-Didn't work for what you were wanting anyway. It may well have worked
-for its intended purpose.
+I get this in syslog:
 
-> Here is syslog of REPAIR:
->=20
-> Sep 15 19:34:10 asterisk mdadm[2117]: RebuildStarted event detected on=20
-> md device /dev/md/0
-> Sep 15 19:34:10 asterisk kernel: [258470.152296] md: requested-resync of=
+Sep 15 23:50:09 asterisk kernel: [273828.407914] scsi_verify_blk_ioctl:=
 =20
-> RAID array md0
-> Sep 15 19:34:10 asterisk kernel: [258470.152301] md: minimum=20
-> _guaranteed_  speed: 1000 KB/sec/disk.
-> Sep 15 19:34:10 asterisk kernel: [258470.152304] md: using maximum=20
-> available idle IO bandwidth (but not more than 200000 KB/sec) for=20
-> requested-resync.
-> Sep 15 19:34:10 asterisk kernel: [258470.152310] md: using 128k window,=
-=20
-> over a total of 311619448k.
-> Sep 15 19:34:11 asterisk kernel: [258471.165653] ata3.00: exception=20
-> Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> Sep 15 19:34:11 asterisk kernel: [258471.167468] ata3.00: BMDMA stat 0x44
-> Sep 15 19:34:11 asterisk kernel: [258471.169912] ata3.00: failed=20
-> command: READ DMA EXT
-> Sep 15 19:34:11 asterisk kernel: [258471.172769] ata3.00: cmd=20
-> 25/00:00:00:15:00/00:04:00:00:00/e0 tag 0 dma 524288 in
-> Sep 15 19:34:11 asterisk kernel: [258471.172771]          res=20
-> 51/40:00:90:17:00/40:00:00:00:00/e0 Emask 0x9 (media error)
-> Sep 15 19:34:11 asterisk kernel: [258471.176753] ata3.00: status: { DRDY=
-=20
-> ERR }
-> Sep 15 19:34:11 asterisk kernel: [258471.178605] ata3.00: error: { UNC }
-> Sep 15 19:34:12 asterisk kernel: [258472.148217] ata3.00: configured for=
-=20
-> UDMA/133
-> Sep 15 19:34:12 asterisk kernel: [258472.148232] ata3: EH complete
-> Sep 15 19:34:13 asterisk kernel: [258473.131054] ata3.00: exception=20
-> Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> Sep 15 19:34:13 asterisk kernel: [258473.132881] ata3.00: BMDMA stat 0x44
-> Sep 15 19:34:13 asterisk kernel: [258473.134639] ata3.00: failed=20
-> command: READ DMA EXT
-> Sep 15 19:34:13 asterisk kernel: [258473.136413] ata3.00: cmd=20
-> 25/00:00:00:15:00/00:04:00:00:00/e0 tag 0 dma 524288 in
-> Sep 15 19:34:13 asterisk kernel: [258473.136415]          res=20
-> 51/40:00:90:17:00/40:00:00:00:00/e0 Emask 0x9 (media error)
-> Sep 15 19:34:13 asterisk kernel: [258473.141768] ata3.00: status: { DRDY=
-=20
-> ERR }
-> Sep 15 19:34:13 asterisk kernel: [258473.144049] ata3.00: error: { UNC }
-> Sep 15 19:34:14 asterisk kernel: [258474.112209] ata3.00: configured for=
-=20
-> UDMA/133
-> Sep 15 19:34:14 asterisk kernel: [258474.112224] ata3: EH complete
-> Sep 15 19:34:15 asterisk kernel: [258475.071642] ata3.00: exception=20
-> Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> Sep 15 19:34:15 asterisk kernel: [258475.073476] ata3.00: BMDMA stat 0x44
-> Sep 15 19:34:15 asterisk kernel: [258475.075240] ata3.00: failed=20
-> command: READ DMA EXT
-> Sep 15 19:34:15 asterisk kernel: [258475.077027] ata3.00: cmd=20
-> 25/00:00:00:15:00/00:04:00:00:00/e0 tag 0 dma 524288 in
-> Sep 15 19:34:15 asterisk kernel: [258475.077029]          res=20
-> 51/40:00:90:17:00/40:00:00:00:00/e0 Emask 0x9 (media error)
-> Sep 15 19:34:15 asterisk kernel: [258475.080720] ata3.00: status: { DRDY=
-=20
-> ERR }
-> Sep 15 19:34:15 asterisk kernel: [258475.083512] ata3.00: error: { UNC }
-> Sep 15 19:34:16 asterisk kernel: [258476.100935] ata3.00: configured for=
-=20
-> UDMA/133
-> Sep 15 19:34:16 asterisk kernel: [258476.100960] ata3: EH complete
-> Sep 15 19:41:29 asterisk asterisk[3492]: rc_avpair_new: unknown=20
-> attribute 1490026597
-> Sep 15 19:41:46 asterisk asterisk[3492]: rc_avpair_new: unknown=20
-> attribute 1490026597
-> Sep 15 19:41:52 asterisk asterisk[3492]: rc_avpair_new: unknown=20
-> attribute 1490026597
-> Sep 15 19:42:52 asterisk asterisk[3492]: rc_avpair_new: unknown=20
-> attribute 1490026597
-> Sep 15 19:46:34 asterisk smartd[2581]: Device: /dev/sda [SAT], 2=20
-> Currently unreadable (pending) sectors
-> Sep 15 19:46:34 asterisk smartd[2581]: Device: /dev/sda [SAT], 1 Offline=
-=20
-> uncorrectable sectors
-> Sep 15 19:50:51 asterisk mdadm[2117]: Rebuild26 event detected on md=20
-> device /dev/md/0
-> Sep 15 20:07:31 asterisk mdadm[2117]: Rebuild53 event detected on md=20
-> device /dev/md/0
-> Sep 15 20:16:34 asterisk smartd[2581]: Device: /dev/sda [SAT], 2=20
-> Currently unreadable (pending) sectors
-> Sep 15 20:16:34 asterisk smartd[2581]: Device: /dev/sda [SAT], 1 Offline=
-=20
-> uncorrectable sectors
-> Sep 15 20:16:34 asterisk smartd[2581]: Device: /dev/sda [SAT],=20
-> Temperature changed +4 Celsius to 42 Celsius (Min/Max 30/46)
-> Sep 15 20:16:34 asterisk smartd[2581]: Device: /dev/sda [SAT], SMART=20
-> Usage Attribute: 201 Soft_Read_Error_Rate changed from 99 to 100
-> Sep 15 20:16:34 asterisk smartd[2581]: Device: /dev/sdb [SAT], SMART=20
-> Usage Attribute: 190 Airflow_Temperature_Cel changed from 61 to 60
-> Sep 15 20:24:11 asterisk mdadm[2117]: Rebuild75 event detected on md=20
-> device /dev/md/0
-> Sep 15 20:40:51 asterisk mdadm[2117]: Rebuild93 event detected on md=20
-> device /dev/md/0
-> Sep 15 20:46:34 asterisk smartd[2581]: Device: /dev/sda [SAT], 2=20
-> Currently unreadable (pending) sectors
-> Sep 15 20:46:34 asterisk smartd[2581]: Device: /dev/sda [SAT], 1 Offline=
-=20
-> uncorrectable sectors
-> Sep 15 20:46:34 asterisk smartd[2581]: Device: /dev/sda [SAT], SMART=20
-> Usage Attribute: 190 Airflow_Temperature_Cel changed from 61 to 60
-> Sep 15 20:47:24 asterisk kernel: [262863.781068] md: md0:=20
-> requested-resync done.
-> Sep 15 20:47:24 asterisk mdadm[2117]: RebuildFinished event detected on=
-=20
-> md device /dev/md/0
->=20
->=20
-Okay, so the drive logs an exception at 19:34:11, then completes its
-error handling at 19:34:16.
+30 callbacks suppressed
+Sep 15 23:50:09 asterisk kernel: [273828.407920] dd: sending ioctl=20
+80306d02 to a partition!
+Sep 15 23:50:09 asterisk kernel: [273828.407925] dd: sending ioctl=20
+80306d02 to a partition!
+Sep 15 23:50:10 asterisk kernel: [273829.422247] ata3.00: exception=20
+Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+Sep 15 23:50:10 asterisk kernel: [273829.424071] ata3.00: BMDMA stat 0x=
+44
+Sep 15 23:50:10 asterisk kernel: [273829.425855] ata3.00: failed=20
+command: READ DMA
+Sep 15 23:50:10 asterisk kernel: [273829.427625] ata3.00: cmd=20
+c8/00:00:68:17:00/00:00:00:00:00/e0 tag 0 dma 131072 in
+Sep 15 23:50:10 asterisk kernel: [273829.427627]          res=20
+51/40:00:90:17:00/40:00:00:00:00/e0 Emask 0x9 (media error)
+Sep 15 23:50:10 asterisk kernel: [273829.431184] ata3.00: status: { DRD=
+Y=20
+ERR }
+Sep 15 23:50:10 asterisk kernel: [273829.432992] ata3.00: error: { UNC =
+}
+Sep 15 23:50:11 asterisk kernel: [273830.404203] ata3.00: configured fo=
+r=20
+UDMA/133
+Sep 15 23:50:11 asterisk kernel: [273830.404217] ata3: EH complete
 
-If md hasn't failed the drive then either:
-  - md didn't get a read error
-  - md got a success message when re-writing the block
-  - there's a bug in md and it's not handled the error at all
 
-My guess would be on one of the first two (I'm not sure what's logged if
-md gets a read error and does a re-write).
 
->=20
-> I still get:
->=20
-> Num  Test_Description    Status                  Remaining=20
-> LifeTime(hours)  LBA_of_first_error
-> # 1  Offline             Completed: read failure       90%      8985=20
->       3912
->=20
-> and
->=20
-> 197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always=
+but this is the output of the command:
+
+
+b7d4e3c3bb461a1aa6619c22ef11d072  sda1
+b7d4e3c3bb461a1aa6619c22ef11d072  sdb1
+
+8649ae5a732bc808f228677b27a1e9b6  sda2
+8649ae5a732bc808f228677b27a1e9b6  sdb2
+
+8649ae5a732bc808f228677b27a1e9b6  sda3
+8649ae5a732bc808f228677b27a1e9b6  sdb3
+
+8649ae5a732bc808f228677b27a1e9b6  sda4
+8649ae5a732bc808f228677b27a1e9b6  sdb4
+
+8649ae5a732bc808f228677b27a1e9b6  sda5
+8649ae5a732bc808f228677b27a1e9b6  sdb5
+
+8649ae5a732bc808f228677b27a1e9b6  sda6
+8649ae5a732bc808f228677b27a1e9b6  sdb6
+
+8649ae5a732bc808f228677b27a1e9b6  sda7
+8649ae5a732bc808f228677b27a1e9b6  sdb7
+
+f2fb77841db5dd577449cfeee07c4108  sda8
+f2fb77841db5dd577449cfeee07c4108  sdb8
+
+e311789a1fabd3758694c35c74e20612  sda9
+e311789a1fabd3758694c35c74e20612  sdb9
+
+8649ae5a732bc808f228677b27a1e9b6  sda10
+8649ae5a732bc808f228677b27a1e9b6  sdb10
+
+8649ae5a732bc808f228677b27a1e9b6  sda11
+8649ae5a732bc808f228677b27a1e9b6  sdb11
+
+8649ae5a732bc808f228677b27a1e9b6  sda12
+8649ae5a732bc808f228677b27a1e9b6  sdb12
+
+8649ae5a732bc808f228677b27a1e9b6  sda13
+8649ae5a732bc808f228677b27a1e9b6  sdb13
+
+8649ae5a732bc808f228677b27a1e9b6  sda14
+8649ae5a732bc808f228677b27a1e9b6  sdb14
+
+8649ae5a732bc808f228677b27a1e9b6  sda15
+8649ae5a732bc808f228677b27a1e9b6  sdb15
+
+8649ae5a732bc808f228677b27a1e9b6  sda16
+8649ae5a732bc808f228677b27a1e9b6  sdb16
+
+8649ae5a732bc808f228677b27a1e9b6  sda17
+8649ae5a732bc808f228677b27a1e9b6  sdb17
+
+8649ae5a732bc808f228677b27a1e9b6  sda18
+8649ae5a732bc808f228677b27a1e9b6  sdb18
+
+8649ae5a732bc808f228677b27a1e9b6  sda19
+8649ae5a732bc808f228677b27a1e9b6  sdb19
+
+8649ae5a732bc808f228677b27a1e9b6  sda20
+8649ae5a732bc808f228677b27a1e9b6  sdb20
+
+8649ae5a732bc808f228677b27a1e9b6  sda21
+8649ae5a732bc808f228677b27a1e9b6  sdb21
+
+8649ae5a732bc808f228677b27a1e9b6  sda22
+8649ae5a732bc808f228677b27a1e9b6  sdb22
+
+8649ae5a732bc808f228677b27a1e9b6  sda23
+8649ae5a732bc808f228677b27a1e9b6  sdb23
+
+8649ae5a732bc808f228677b27a1e9b6  sda24
+8649ae5a732bc808f228677b27a1e9b6  sdb24
+
+8649ae5a732bc808f228677b27a1e9b6  sda25
+8649ae5a732bc808f228677b27a1e9b6  sdb25
+
+8649ae5a732bc808f228677b27a1e9b6  sda26
+8649ae5a732bc808f228677b27a1e9b6  sdb26
+
+4531da1579310425e2d3343846f5b16d  sda27
+4531da1579310425e2d3343846f5b16d  sdb27
+
+3721bf34547dc2967741bf6bfbd76670  sda28
+3721bf34547dc2967741bf6bfbd76670  sdb28
+
+14a2be518f90d3060b3438ac75d91e7e  sda29
+14a2be518f90d3060b3438ac75d91e7e  sdb29
+
+36fb275af7608d0aff8c7b454168f8c3  sda30
+36fb275af7608d0aff8c7b454168f8c3  sdb30
+
+2026b2cf40470f059d264b2c78f3a989  sda31
+2026b2cf40470f059d264b2c78f3a989  sdb31
+
+36f825d926a6195c70efabd0a045fce0  sda32
+36f825d926a6195c70efabd0a045fce0  sdb32
+
+44be6fdd8adb83f1328d6fa21e72a5f9  sda33
+44be6fdd8adb83f1328d6fa21e72a5f9  sdb33
+
+90a771705992c1ba15c17a30520b0b56  sda34
+90a771705992c1ba15c17a30520b0b56  sdb34
+
+c37584adcad03dc74b0ea9e431fd78e3  sda35
+c37584adcad03dc74b0ea9e431fd78e3  sdb35
+
+f044f24e528316cf5a40e894e7d84c36  sda36
+f044f24e528316cf5a40e894e7d84c36  sdb36
+
+4447d6a338fdac8cf179dde83deb7f43  sda37
+4447d6a338fdac8cf179dde83deb7f43  sdb37
+
+b4115994e66cb739dc49fedcaf5649eb  sda38
+b4115994e66cb739dc49fedcaf5649eb  sdb38
+
+65c9226105cbba0fd7dbefb9bedac940  sda39
+65c9226105cbba0fd7dbefb9bedac940  sdb39
+
+e05366f8be4b66595c2aadbb133c6b4c  sda40
+e05366f8be4b66595c2aadbb133c6b4c  sdb40
+
+afc039520def52590a5fd289b423545a  sda41
+afc039520def52590a5fd289b423545a  sdb41
+
+6d47c3b1265afc3dbbd832d8088501c4  sda42
+6d47c3b1265afc3dbbd832d8088501c4  sdb42
+
+749140fe9a80f20dd5449976db66ce0f  sda43
+749140fe9a80f20dd5449976db66ce0f  sdb43
+
+41bd354c1cca819dd4a8d19b8c1a637e  sda44
+41bd354c1cca819dd4a8d19b8c1a637e  sdb44
+
+b2fc15b0147853d76a7c5fe87820d26b  sda45
+b2fc15b0147853d76a7c5fe87820d26b  sdb45
+
+a9b3ac7ac3556950887959dea3b6ae3c  sda46
+a9b3ac7ac3556950887959dea3b6ae3c  sdb46
+
+3daf2ee98c1d3d24f779234f6f7d58d6  sda47
+3daf2ee98c1d3d24f779234f6f7d58d6  sdb47
+
+31fe58f24393d199b63102a45b8b44c3  sda48
+31fe58f24393d199b63102a45b8b44c3  sdb48
+
+43e0657b350cd60efdf1ca0c8324f85c  sda49
+43e0657b350cd60efdf1ca0c8324f85c  sdb49
+
+94f883b45084b72cd9269a4821b2d509  sda50
+94f883b45084b72cd9269a4821b2d509  sdb50
+
+
+
+*BUT* if I start reading from the start of partition (+0 instead of +10=
 =20
->        -       2
-> 198 Offline_Uncorrectable   0x0030   100   100   000    Old_age=20
-> Offline      -       1
->=20
->=20
-> How is it possible? Next thing I will try is manually failing /dev/sda=20
-> and filling it with zeros. I would like to do a *low level format* but I=
-=20
-> didn't find the utility for my disk :(
->=20
-I'm pretty sure there's no such thing as a *low level format* for any
-modern disk (or not one that does anything more than writing a known
-pattern to the disk). The low-level information is far too precisely
-laid out for the disk heads to be able to write.
+in count=3D) I get a mismatch, on both md0 and md1 (which is supposed t=
+o=20
+be ok)!!!
 
-Writing zeros is certainly what I'd do in this situation - I've done it
-for several drives in the past where they've had offline uncorrectable
-sectors flagged.
+root@asterisk:~# i=3D1; dd if=3D/dev/sda1 of=3Dsda${i} bs=3D100000 coun=
+t=3D50=20
+skip=3D$((($i-1)*50+0)) > /dev/null 2> /dev/null; dd if=3D/dev/sdb1=20
+of=3Dsdb${i} bs=3D100000 count=3D50 skip=3D$((($i-1)*50+0)) > /dev/null=
+ 2>=20
+/dev/null; md5sum sda${i}; md5sum sdb${i}
+9f9f11ffeb0aed0abc8097417b293f41  sda1
+394efde218ad700774bfcb3c43255529  sdb1
+root@asterisk:~# i=3D1; dd if=3D/dev/sda2 of=3Dsda${i} bs=3D100000 coun=
+t=3D50=20
+skip=3D$((($i-1)*50+0)) > /dev/null 2> /dev/null; dd if=3D/dev/sdb2=20
+of=3Dsdb${i} bs=3D100000 count=3D50 skip=3D$((($i-1)*50+0)) > /dev/null=
+ 2>=20
+/dev/null; md5sum sda${i}; md5sum sdb${i}
+8cb0b6fa2bf7f0f88a2a2a91598429d4  sda1
+732c42e14b8e78930d08cdb4f1c49a40  sdb1
+
+Shouldn't raid1 match even at the very beginning of the partition?
+
+
+Il 15/09/2012 22:40, Roberto Spadim ha scritto:
+ > today disks arent expensives, why not change the disk and be happy?
+
+Because I get the problem after a power failure, disk *should* be ok I=20
+think.
 
 Cheers,
-    Robin
+Niccol=F2
 --=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---C7zPtVaVf+AK4Oqc
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAlBU2c0ACgkQShxCyD40xBIl0QCffAP9OtcGiBWP4HM2E3VhiH12
-no8AoJJE38bJKx2VINK1M+kJPgA/uk/8
-=TPKa
------END PGP SIGNATURE-----
-
---C7zPtVaVf+AK4Oqc--
+http://www.linuxsystems.it
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
