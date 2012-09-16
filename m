@@ -1,94 +1,42 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: mdadm kernel log messages explained
-Date: Sun, 16 Sep 2012 11:57:06 +0100
-Message-ID: <20120916105706.GB26357@cthulhu.home.robinhill.me.uk>
-References: <50559575.4090806@statystyka.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="8P1HSweYDcXXzwPJ"
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: raid1 issue after disk failure: both disks of the array are still active
+Date: Sun, 16 Sep 2012 09:26:17 -0600
+Message-ID: <44576376-12B0-4A78-B5CF-C759ED2EBA9A@colorremedies.com>
+References: <5051AF17.8010501@linuxsystems.it> <20120913103432.GA11764@cthulhu.home.robinhill.me.uk> <B9AFB9BB-22CE-470D-AB47-E4CDA91C307B@colorremedies.com> <alpine.DEB.2.00.1209140912350.13902@uplift.swm.pp.se> <5052E096.5040509@linuxsystems.it> <45F26B36-1890-4F8E-BDF9-0DB49FDEE922@colorremedies.com> <20120914182755.GA2534@cthulhu.home.robinhill.me.uk> <7664099D-4C11-4254-B970-2DCAD5F86A46@colorremedies.com> <5054D175.5070303@linuxsystems.it> <20120915194102.GA10403@cthulhu.home.robinhill.me.uk> <5055AD0A.60704@linuxsystems.it>
+Mime-Version: 1.0 (Apple Message framework v1278)
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <50559575.4090806@statystyka.net>
+In-Reply-To: <5055AD0A.60704@linuxsystems.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Ryczkowski <adam.ryczkowski@statystyka.net>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
---8P1HSweYDcXXzwPJ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Sep 16, 2012, at 4:42 AM, Niccol=F2 Belli wrote:
 
-On Sun Sep 16, 2012 at 11:01:41 +0200, Adam Ryczkowski wrote:
-
-> Welcome.
+> Il 15/09/2012 21:41, Robin Hill ha scritto:
+>> Writing zeros is certainly what I'd do in this situation - I've done=
+ it
+>> for several drives in the past where they've had offline uncorrectab=
+le
+>> sectors flagged.
 >=20
-> I try to recover from linux software raid failure. I am in a process of=
-=20
-> recreating the superblocks based on a syslog from the system when it was=
-=20
-> healthy. The log speaks about 2 md devices, each based on 5 500GB=20
-> partitions. The RAID-5 /dev/md5 is composed from /dev/sd[b-f]6 and=20
-> RAID-6 /dev/md6 is composed from /dev/sd[b-f]5. The relevant part dmesg=
-=20
-> log looks like this:
->=20
-> Questions:
-> #    What do the numbers on the line [ 5.979771] 4: w=3D1 pa=3D0 pr=3D5 m=
-=3D1=20
-> a=3D2 r=3D5 op1=3D0 op2=3D0 mean, including the first 4:?
-4 is the raid device number
-w=3D1 indicates the number of working disks found so far
-pa=3D0 is the previous algorithm (used when reshaping)
-pr=3D5 is the previous number of raid devices (used when reshaping)
-m=3D1 is the maximum number of degraded disks allowed for the array to run
-a=3D2 is the algorithm used
-r=3D5 is the number of raid devices
-op1=3D0 indicates that the disk is not a parity-only disk in the previous
-      layout (used when reshaping)
-op2=3D0 indicates that the disk is not a parity-only disk in the current
-      layout
+> I just tried to write zeros, it didn't help: the disk doesn't realloc=
+ate the bad sector :(
 
-> #    What do the numbers on the line [ 6.039266] --- rd:5 wd:5] mean?
-rd is the number of devices in the array
-wd is the number of working devices in the array
+Something isn't right. How did you write zeros?
 
-> #    What do the numbers on the line [ 6.046856] disk 0, o:1, dev:sdb6 me=
-an?
-0 is the raid device number
-o:1 indicates that it's operational (i.e. not marked as faulty)
-dev:sdb6 indicates the kernel device name
+I went through the archives and wasn't able to find the full smartctl -=
+x results for this drive, can you post them?
 
-> #    Does the line [ 6.096768] created bitmap (15 pages) for device md5=
-=20
-> tell anything about the place, where the bitmap is located and what is=20
-> its size?
->=20
-It doesn't tell you anything about the place. I've no idea how the
-number of pages equates to the bitmap size/bitmap chunk size though.
+Does anyone know for sure if the ATA Secure Erase command verifies its =
+writes? i.e. does it even have a way of knowing if there are bad sector=
+s on a write and remove them from use? Or is the write-read verificatio=
+n always occurring on hard drives?
 
-In the above cases, the raid device number is its position within the
-array, so from 0..N-1 for an N-device array. This will indicate the
-order you'll need to use when recreating the array.
-
-HTH,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---8P1HSweYDcXXzwPJ
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAlBVsIAACgkQShxCyD40xBKBIQCeM4V7OeWDkTUSfTxnISwD7k4e
-4hMAoKCI/nXMhcUicjElrfnubitea3ux
-=iVur
------END PGP SIGNATURE-----
-
---8P1HSweYDcXXzwPJ--
+Chris Murphy--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
