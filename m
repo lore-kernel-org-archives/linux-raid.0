@@ -1,85 +1,142 @@
-From: Adam Ryczkowski <adam.ryczkowski@statystyka.net>
-Subject: mdadm kernel log messages explained
-Date: Sun, 16 Sep 2012 11:01:41 +0200
-Message-ID: <50559575.4090806@statystyka.net>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: raid1 issue after disk failure: both disks of the array are
+ still active
+Date: Sun, 16 Sep 2012 11:18:16 +0100
+Message-ID: <20120916101816.GA26357@cthulhu.home.robinhill.me.uk>
+References: <20120913103432.GA11764@cthulhu.home.robinhill.me.uk>
+ <B9AFB9BB-22CE-470D-AB47-E4CDA91C307B@colorremedies.com>
+ <alpine.DEB.2.00.1209140912350.13902@uplift.swm.pp.se>
+ <5052E096.5040509@linuxsystems.it>
+ <45F26B36-1890-4F8E-BDF9-0DB49FDEE922@colorremedies.com>
+ <20120914182755.GA2534@cthulhu.home.robinhill.me.uk>
+ <7664099D-4C11-4254-B970-2DCAD5F86A46@colorremedies.com>
+ <5054D175.5070303@linuxsystems.it>
+ <20120915194102.GA10403@cthulhu.home.robinhill.me.uk>
+ <5054FBF8.8070901@linuxsystems.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="GvXjxJ+pjyke8COw"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <5054FBF8.8070901@linuxsystems.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: =?iso-8859-1?Q?Niccol=F2?= Belli <darkbasic@linuxsystems.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Welcome.
 
-I try to recover from linux software raid failure. I am in a process of 
-recreating the superblocks based on a syslog from the system when it was 
-healthy. The log speaks about 2 md devices, each based on 5 500GB 
-partitions. The RAID-5 /dev/md5 is composed from /dev/sd[b-f]6 and 
-RAID-6 /dev/md6 is composed from /dev/sd[b-f]5. The relevant part dmesg 
-log looks like this:
+--GvXjxJ+pjyke8COw
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Questions:
-#    What do the numbers on the line [ 5.979771] 4: w=1 pa=0 pr=5 m=1 
-a=2 r=5 op1=0 op2=0 mean, including the first 4:?
-#    What do the numbers on the line [ 6.039266] --- rd:5 wd:5] mean?
-#    What do the numbers on the line [ 6.046856] disk 0, o:1, dev:sdb6 mean?
-#    Does the line [ 6.096768] created bitmap (15 pages) for device md5 
-tell anything about the place, where the bitmap is located and what is 
-its size?
+On Sun Sep 16, 2012 at 12:06:48 +0200, Niccol=F2 Belli wrote:
 
-The messages are produced by the 2.6.32 kernel, Ubuntu Lucid.
+> Il 15/09/2012 21:41, Robin Hill ha scritto:
+> > If md hasn't failed the drive then either:
+> >    - md didn't get a read error
+> >    - md got a success message when re-writing the block
+> >    - there's a bug in md and it's not handled the error at all
+>=20
+> It seems it's case one, while manually verifying the checksums with
+>=20
+> for i in $(seq 50); do dd if=3D/dev/sda1 of=3Dsda${i} bs=3D100000 count=
+=3D50=20
+> skip=3D$((($i-1)*50+10)) > /dev/null 2> /dev/null; dd if=3D/dev/sdb1=20
+> of=3Dsdb${i} bs=3D100000 count=3D50 skip=3D$((($i-1)*50+10)) > /dev/null =
+2>=20
+> /dev/null; md5sum sda${i}; md5sum sdb${i}; echo; done
+>=20
+> I get this in syslog:
+>=20
+> Sep 15 23:50:09 asterisk kernel: [273828.407914] scsi_verify_blk_ioctl:=
+=20
+> 30 callbacks suppressed
+> Sep 15 23:50:09 asterisk kernel: [273828.407920] dd: sending ioctl=20
+> 80306d02 to a partition!
+> Sep 15 23:50:09 asterisk kernel: [273828.407925] dd: sending ioctl=20
+> 80306d02 to a partition!
+> Sep 15 23:50:10 asterisk kernel: [273829.422247] ata3.00: exception=20
+> Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+> Sep 15 23:50:10 asterisk kernel: [273829.424071] ata3.00: BMDMA stat 0x44
+> Sep 15 23:50:10 asterisk kernel: [273829.425855] ata3.00: failed=20
+> command: READ DMA
+> Sep 15 23:50:10 asterisk kernel: [273829.427625] ata3.00: cmd=20
+> c8/00:00:68:17:00/00:00:00:00:00/e0 tag 0 dma 131072 in
+> Sep 15 23:50:10 asterisk kernel: [273829.427627]          res=20
+> 51/40:00:90:17:00/40:00:00:00:00/e0 Emask 0x9 (media error)
+> Sep 15 23:50:10 asterisk kernel: [273829.431184] ata3.00: status: { DRDY=
+=20
+> ERR }
+> Sep 15 23:50:10 asterisk kernel: [273829.432992] ata3.00: error: { UNC }
+> Sep 15 23:50:11 asterisk kernel: [273830.404203] ata3.00: configured for=
+=20
+> UDMA/133
+> Sep 15 23:50:11 asterisk kernel: [273830.404217] ata3: EH complete
+>=20
+>=20
+>=20
+> but this is the output of the command:
+>=20
+>=20
+> b7d4e3c3bb461a1aa6619c22ef11d072  sda1
+> b7d4e3c3bb461a1aa6619c22ef11d072  sdb1
+>
+<- snip sets of identical checksums ->
+>
+> 94f883b45084b72cd9269a4821b2d509  sda50
+> 94f883b45084b72cd9269a4821b2d509  sdb50
+>=20
+Okay, so it looks like the drive is managing to return the correct data
+eventually (or it's returning some default value which has also been
+written to the other mirror now).
 
-(This mail is a copy of serverfault question 
-(http://serverfault.com/questions/427692/mdadm-kernel-log-messages-explained) 
-which I guess didn't get to the right audience)
+> *BUT* if I start reading from the start of partition (+0 instead of +10=
+=20
+> in count=3D) I get a mismatch, on both md0 and md1 (which is supposed to=
+=20
+> be ok)!!!
+>=20
+> root@asterisk:~# i=3D1; dd if=3D/dev/sda1 of=3Dsda${i} bs=3D100000 count=
+=3D50=20
+> skip=3D$((($i-1)*50+0)) > /dev/null 2> /dev/null; dd if=3D/dev/sdb1=20
+> of=3Dsdb${i} bs=3D100000 count=3D50 skip=3D$((($i-1)*50+0)) > /dev/null 2=
+>=20
+> /dev/null; md5sum sda${i}; md5sum sdb${i}
+> 9f9f11ffeb0aed0abc8097417b293f41  sda1
+> 394efde218ad700774bfcb3c43255529  sdb1
+> root@asterisk:~# i=3D1; dd if=3D/dev/sda2 of=3Dsda${i} bs=3D100000 count=
+=3D50=20
+> skip=3D$((($i-1)*50+0)) > /dev/null 2> /dev/null; dd if=3D/dev/sdb2=20
+> of=3Dsdb${i} bs=3D100000 count=3D50 skip=3D$((($i-1)*50+0)) > /dev/null 2=
+>=20
+> /dev/null; md5sum sda${i}; md5sum sdb${i}
+> 8cb0b6fa2bf7f0f88a2a2a91598429d4  sda1
+> 732c42e14b8e78930d08cdb4f1c49a40  sdb1
+>=20
+> Shouldn't raid1 match even at the very beginning of the partition?
+>=20
+No, the start of the partition will contain the md superblock (for 1.1
+and 1.2 metadata formats), which will be slightly different for the two
+devices.
 
-[    5.964928] raid5: allocated 5265kB for md5
-[    5.979771] 4: w=1 pa=0 pr=5 m=1 a=2 r=5 op1=0 op2=0
-[    5.987064] 1: w=2 pa=0 pr=5 m=1 a=2 r=5 op1=0 op2=0
-[    5.994256] 3: w=3 pa=0 pr=5 m=1 a=2 r=5 op1=0 op2=0
-[    6.001441] 2: w=4 pa=0 pr=5 m=1 a=2 r=5 op1=0 op2=0
-[    6.008665] 0: w=5 pa=0 pr=5 m=1 a=2 r=5 op1=0 op2=0
-[    6.015883] raid5: raid level 5 set md5 active with 5 out of 5 
-devices, algorithm 2
-[    6.031441] RAID5 conf printout:
-[    6.039266]  --- rd:5 wd:5
-[    6.046856]  disk 0, o:1, dev:sdb6
-[    6.054308]  disk 1, o:1, dev:sdf6
-[    6.061524]  disk 2, o:1, dev:sdc6
-[    6.068667]  disk 3, o:1, dev:sde6
-[    6.075774]  disk 4, o:1, dev:sdd6
-[    6.089504] md5: bitmap initialized from disk: read 1/1 pages, set 0 bits
-[    6.096768] created bitmap (15 pages) for device md5
-[    6.141010] md5: detected capacity change from 0 to 1978409418752
-[    6.153794]  md5: unknown partition table
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-[    5.594614] raid5: device sde5 operational as raid disk 3
-[    5.599701] raid5: device sdd5 operational as raid disk 4
-[    5.604750] raid5: device sdf5 operational as raid disk 1
-[    5.609879] raid5: device sdc5 operational as raid disk 2
-[    5.615032] raid5: device sdb5 operational as raid disk 0
-[    5.621672] raid5: allocated 5265kB for md6
-[    5.627243] 3: w=1 pa=0 pr=5 m=2 a=2 r=5 op1=0 op2=0
-[    5.632846] 4: w=2 pa=0 pr=5 m=2 a=2 r=5 op1=0 op2=0
-[    5.638502] 1: w=3 pa=0 pr=5 m=2 a=2 r=5 op1=0 op2=0
-[    5.644155] 2: w=4 pa=0 pr=5 m=2 a=2 r=5 op1=0 op2=0
-[    5.649844] 0: w=5 pa=0 pr=5 m=2 a=2 r=5 op1=0 op2=0
-[    5.655566] raid5: raid level 6 set md6 active with 5 out of 5 
-devices, algorithm 2
-[    5.667653] RAID5 conf printout:
-[    5.673791]  --- rd:5 wd:5
-[    5.679837]  disk 0, o:1, dev:sdb5
-[    5.685721]  disk 1, o:1, dev:sdf5
-[    5.691570]  disk 2, o:1, dev:sdc5
-[    5.697348]  disk 3, o:1, dev:sde5
-[    5.703122]  disk 4, o:1, dev:sdd5
-[    5.710762] md6: bitmap initialized from disk: read 1/1 pages, set 0 bits
-[    5.716915] created bitmap (15 pages) for device md6
+--GvXjxJ+pjyke8COw
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
+iEYEARECAAYFAlBVp2cACgkQShxCyD40xBKfhQCfVi/Def+rsKCT96SKW1vEKEHA
+B9cAoJQMUSbnDPCtZk6lp/r4c6gN57Mf
+=uLOE
+-----END PGP SIGNATURE-----
 
--- 
-Adam Ryczkowski
-Skype:sisteczko
-
+--GvXjxJ+pjyke8COw--
