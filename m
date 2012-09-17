@@ -1,79 +1,103 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: md: raid5 resync corrects read errors on data block - is this correct?
-Date: Mon, 17 Sep 2012 14:15:16 +0300
-Message-ID: <CAGRgLy6wNUNWjOb8-5p2Wbag9R260AL++KU8xe-JTzgSoSqwpA@mail.gmail.com>
-References: <CAGRgLy6Cqxyf2im+tG2JiaQFooLBBzT76hGpfTb47Cr_sFLr6g@mail.gmail.com>
-	<20120912082909.33c8eec0@notabene.brown>
-	<CAGRgLy6Syso2dfELFhpK9nCyEgvuD6k3F=MRJBnrVU=btKqKVw@mail.gmail.com>
-	<20120913101924.13431e6e@notabene.brown>
-	<CAGRgLy7VRTeegGXbxhzn4zrCt6agoQqLaOT5mM7=vSkq6XDN5A@mail.gmail.com>
-	<CAGRgLy4bbfuK0zF8kkP2at+2kZz8CYrFy+EgTDFPMjPc+edUgg@mail.gmail.com>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: What parameters to mdadm, to re-create md device with payload
+ starting at 0x22000 position on backing storage?
+Date: Mon, 17 Sep 2012 18:49:52 +0100
+Message-ID: <20120917174952.GA6559@cthulhu.home.robinhill.me.uk>
+References: <5056CA7E.5040303@statystyka.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="dDRMvlgZJXvWKvBx"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy4bbfuK0zF8kkP2at+2kZz8CYrFy+EgTDFPMjPc+edUgg@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <5056CA7E.5040303@statystyka.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Adam Ryczkowski <adam.ryczkowski@statystyka.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
-below is a bit less-ugly version of the patch.
-Thanks,
-Alex.
 
-From 05cf800d623bf558c99d542cf8bf083c85b7e5d5 Mon Sep 17 00:00:00 2001
-From: Alex Lyakas <alex@zadarastorage.com>
-Date: Thu, 13 Sep 2012 18:55:00 +0300
-Subject: [PATCH] When RAID5 is dirty, force reconstruct-write instead of
- read-modify-write.
+--dDRMvlgZJXvWKvBx
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
-Signed-off-by: Yair Hershko <yair@zadarastorage.com>
+On Mon Sep 17, 2012 at 09:00:14AM +0200, Adam Ryczkowski wrote:
 
-diff --git a/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
-b/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
-index 5332202..0702785 100644
---- a/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
-+++ b/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
-@@ -2555,12 +2555,36 @@ static void handle_stripe_dirtying(struct r5conf *conf,
-                                   int disks)
- {
-        int rmw = 0, rcw = 0, i;
--       if (conf->max_degraded == 2) {
--               /* RAID6 requires 'rcw' in current implementation
--                * Calculate the real rcw later - for now fake it
-+       sector_t recovery_cp = conf->mddev->recovery_cp;
-+       unsigned long recovery = conf->mddev->recovery;
-+       int needed = test_bit(MD_RECOVERY_NEEDED, &recovery);
-+       int resyncing = test_bit(MD_RECOVERY_SYNC, &recovery) &&
-+                       !test_bit(MD_RECOVERY_REQUESTED, &recovery) &&
-+                       !test_bit(MD_RECOVERY_CHECK, &recovery);
-+       int transitional = test_bit(MD_RECOVERY_RUNNING, &recovery) &&
-+                          !test_bit(MD_RECOVERY_SYNC, &recovery) &&
-+                          !test_bit(MD_RECOVERY_RECOVER, &recovery) &&
-+                          !test_bit(MD_RECOVERY_DONE, &recovery) &&
-+                          !test_bit(MD_RECOVERY_RESHAPE, &recovery);
-+
-+       /* RAID6 requires 'rcw' in current implementation.
-+        * Otherwise, attempt to check whether resync is now happening
-+        * or should start.
-+         * If yes, then the array is dirty (after unclean shutdown or
-+         * initial creation), so parity in some stripes might be inconsistent.
-+         * In this case, we need to always do reconstruct-write, to ensure
-+         * that in case of drive failure or read-error correction, we
-+         * generate correct data from the parity.
-+         */
-+       if (conf->max_degraded == 2 ||
-+           (recovery_cp < MaxSector && sh->sector >= recovery_cp &&
-+            (needed || resyncing || transitional))) {
-+               /* Calculate the real rcw later - for now fake it
-                 * look like rcw is cheaper
-                 */
-                rcw = 1; rmw = 2;
-+               pr_debug("force RCW max_degraded=%u, recovery_cp=%lu
-sh->sector=%lu recovery=0x%lx\n",
-+                        conf->max_degraded, recovery_cp, sh->sector, recovery);
-        } else for (i = disks; i--; ) {
-                /* would I have to read this buffer for read_modify_write */
-                struct r5dev *dev = &sh->dev[i];
+> I try to recover from mdadm raid disaster, which happened when moving=20
+> from ubuntu server 10.04 to 12.04. I know the correct order of devices=20
+> from dmesg log, but given this information, I still cannot access the dat=
+a.
+>=20
+> The superblocks look messy; the mdadm --examine for each disk is on=20
+> http://askubuntu.com/questions/186666/mdadm-fails-after-10-04-12-04-upgra=
+de
+>=20
+> By inspecting the raw contents of backing storage, I found the beginning=
+=20
+> of my data (the LUKS container in my case) starts at position 0x22000=20
+> relative to the beginning of the first partition in the raid, .i.e.=20
+> /dev/sdb6.
+>=20
+> Question: What is the combination of options issued to "mdadm --create"=
+=20
+> to re-create mdadm that starts with the given offset? Bitmap size?
+>=20
+> The relevant information from syslog when the system was healthy are=20
+> pasted here: http://pastebin.com/9KKaXXiU
+>=20
+Looks like you've been hit by the bug mentioned here:
+    http://neil.brown.name/blog/20120615073245
+
+You've got most of the required data to recreate the array. It's just
+the chunk size missing I think. This is probably 512K as the arrays are
+using 1.2 superblocks, but it may be 64K if you were using an old mdadm
+version.
+
+Your data offset is 272 sectors, which means you'll need to use an older
+mdadm version to re-create the array. Newer versions use 2048 sectors,
+but it looks like version 3.0 uses 272, so grab a copy of that if
+possible.
+
+Assuming your drives are numbered in the same order as previously, the
+create commands will be:
+    mdadm -C /dev/md5 -e 1.2 -l 5 -n 5 /dev/sd{b,f,c,e,d}6 \
+        --assume-clean --uuid=3Da3945c40:73237cd6:3d61998e:8f773d03
+and
+    mdadm -C /dev/md6 -e 1.2 -l 6 -n 5 /dev/sd{b,f,c,e,d}5 \
+        --assume-clean --uuid=3D2a8fd2df:3ad53552:e8b80ecf:a46d93a2
+
+Make sure you use the curly brace format to list the disks rather than
+square brackets - that'll ensure the order is maintained. Also make sure
+that --assume-clean is used to prevent rebuilding from kicking off, and
+losing data.
+
+After recreating the array, run a "fsck -n" on the array to check
+whether the details are correct. If not, stop the array and try
+recreating it again, adding "-c 64" to set the chunk size to 64K.
+
+Once you've got them up and fsck shows clean, you can re-add the bitmaps
+using "mdadm -G /dev/mdX --bitmap=3Dinternal".
+
+Do read through Neil's blog post first as there may be something I've
+missed.
+
+HTH and good luck,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
+
+--dDRMvlgZJXvWKvBx
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAlBXYr8ACgkQShxCyD40xBIxuQCfWzVkIlwAab9c07+mpTmkYI6I
+aSkAnjxPFc7Nsxp2Du9Od7C/DLgLeH8o
+=XHoI
+-----END PGP SIGNATURE-----
+
+--dDRMvlgZJXvWKvBx--
