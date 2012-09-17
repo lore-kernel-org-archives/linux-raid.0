@@ -1,16 +1,45 @@
-From: Jack Wang <jack.wang.usish@gmail.com>
-Subject: Re: RAID0 DeviceDisappeared event happen when restart mdmonitor service
-Date: Mon, 17 Sep 2012 10:30:49 +0800
-Message-ID: <CA+res+TafD=pdpX-8bz8M4keGDO45Jd=W9VGSY+=douiqGPy5w@mail.gmail.com>
-References: <012401cd9260$141ca630$3c55f290$@com>
+From: "Johnson Yan" <johnson_yan@usish.com>
+Subject: RE: RAID0 DeviceDisappeared event happen when restart mdmonitor service
+Date: Mon, 17 Sep 2012 10:44:56 +0800
+Message-ID: <015c01cd947e$6c596340$450c29c0$@com>
+References: <012401cd9260$141ca630$3c55f290$@com> <CA+res+TafD=pdpX-8bz8M4keGDO45Jd=W9VGSY+=douiqGPy5w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <012401cd9260$141ca630$3c55f290$@com>
+In-Reply-To: <CA+res+TafD=pdpX-8bz8M4keGDO45Jd=W9VGSY+=douiqGPy5w@mail.gmail.com>
+Content-Language: zh-cn
 Sender: linux-raid-owner@vger.kernel.org
-To: Johnson Yan <johnson_yan@usish.com>
+To: 'Jack Wang' <jack.wang.usish@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Hi Jack,
+Thanks for your feedback.
+
+This event should be caused by following code, due to the field "Wrong-Level" can be found in the notify email.
+
+	/* It's much easier to list what array levels can't
+	 * have a device disappear than all of them that can
+	 */
+	if (array.level == 0 || array.level == -1) {
+		if (!st->err)
+			alert("DeviceDisappeared", dev, "Wrong-Level", ainfo);
+		st->err = 1;
+		close(fd);
+		return 0;
+	}
+
+Best Regards,
+Johnson
+
+-----Original Message-----
+From: Jack Wang [mailto:jack.wang.usish@gmail.com] 
+Sent: Monday, September 17, 2012 10:31 AM
+To: Johnson Yan
+Cc: linux-raid@vger.kernel.org
+Subject: Re: RAID0 DeviceDisappeared event happen when restart mdmonitor service
 
 I check into code in mdmonitor.c in function check_array:
 
@@ -40,9 +69,7 @@ I check into code in mdmonitor.c in function check_array:
 		return 0;
 	}
 
-I suspect above code lead to the DeviceDisapeared event you see, not
-sure why this get GET_ARRAY_INFO return array.level == 0 means Device
-Disappeared?
+I suspect above code lead to the DeviceDisapeared event you see, not sure why this get GET_ARRAY_INFO return array.level == 0 means Device Disappeared?
 
 Anyone who more familiar with the logic may gave a comment?
 
@@ -53,9 +80,9 @@ Jack
 
 2012/9/14 Johnson Yan <johnson_yan@usish.com>:
 > Hi All,
-> When I restart mdmonitor service, a notify email will be received, which
-> indicate DeviceDisappeared event happened for RAID0, is this phenomenon
-> reasonable? Could anyone explain this?
+> When I restart mdmonitor service, a notify email will be received, 
+> which indicate DeviceDisappeared event happened for RAID0, is this 
+> phenomenon reasonable? Could anyone explain this?
 >
 >
 > The email info as below
@@ -97,6 +124,7 @@ Jack
 >
 >
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" 
+> in the body of a message to majordomo@vger.kernel.org More majordomo 
+> info at  http://vger.kernel.org/majordomo-info.html
+
