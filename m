@@ -1,106 +1,79 @@
-From: Lukasz Dorau <lukasz.dorau@intel.com>
-Subject: [PATCH] fix: imsm: mdmon should reread component_size on wakeup
-Date: Mon, 17 Sep 2012 10:37:55 +0200
-Message-ID: <20120917083755.26592.53269.stgit@gklab-128-085.igk.intel.com>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: md: raid5 resync corrects read errors on data block - is this correct?
+Date: Mon, 17 Sep 2012 14:15:16 +0300
+Message-ID: <CAGRgLy6wNUNWjOb8-5p2Wbag9R260AL++KU8xe-JTzgSoSqwpA@mail.gmail.com>
+References: <CAGRgLy6Cqxyf2im+tG2JiaQFooLBBzT76hGpfTb47Cr_sFLr6g@mail.gmail.com>
+	<20120912082909.33c8eec0@notabene.brown>
+	<CAGRgLy6Syso2dfELFhpK9nCyEgvuD6k3F=MRJBnrVU=btKqKVw@mail.gmail.com>
+	<20120913101924.13431e6e@notabene.brown>
+	<CAGRgLy7VRTeegGXbxhzn4zrCt6agoQqLaOT5mM7=vSkq6XDN5A@mail.gmail.com>
+	<CAGRgLy4bbfuK0zF8kkP2at+2kZz8CYrFy+EgTDFPMjPc+edUgg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAGRgLy4bbfuK0zF8kkP2at+2kZz8CYrFy+EgTDFPMjPc+edUgg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, maciej.patelczyk@intel.com
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Mdmon has not read component_size (in read_and_act()) on wakeup so far.
-In case of size's expansion component_size has been changed but
-mdmon has not updated it. As a result the metadata was incorrect
-during the size's expansion. It has contained no information
-that resync was in progress (there has been no checkpoint too).
-The metadata has been as if resync has already been finished
-but it has not.
+Hi Neil,
+below is a bit less-ugly version of the patch.
+Thanks,
+Alex.
 
-Updating of component_size has been added to read_and_act().
-Now mdmon uses the correct value of component_size and the correct
-metadata (containing information about resync and checkpoint) is written.
+From 05cf800d623bf558c99d542cf8bf083c85b7e5d5 Mon Sep 17 00:00:00 2001
+From: Alex Lyakas <alex@zadarastorage.com>
+Date: Thu, 13 Sep 2012 18:55:00 +0300
+Subject: [PATCH] When RAID5 is dirty, force reconstruct-write instead of
+ read-modify-write.
 
-Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
----
- managemon.c |    6 +++++-
- mdmon.h     |    1 +
- monitor.c   |   12 ++++++++++++
- 3 files changed, 18 insertions(+), 1 deletions(-)
+Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
+Signed-off-by: Yair Hershko <yair@zadarastorage.com>
 
-diff --git a/managemon.c b/managemon.c
-index ef351b3..fd41463 100644
---- a/managemon.c
-+++ b/managemon.c
-@@ -123,6 +123,8 @@ static void close_aa(struct active_array *aa)
- 		close(aa->info.state_fd);
- 	if (aa->resync_start_fd >= 0)
- 		close(aa->resync_start_fd);
-+	if (aa->component_size_fd >= 0)
-+		close(aa->component_size_fd);
- 	if (aa->metadata_fd >= 0)
- 		close(aa->metadata_fd);
- 	if (aa->sync_completed_fd >= 0)
-@@ -598,7 +600,8 @@ static int aa_ready(struct active_array *aa)
- 	if (aa->info.state_fd < 0)
- 		return 0;
- 
--	if (level > 0 && (aa->action_fd < 0 || aa->resync_start_fd < 0))
-+	if (level > 0 && (aa->action_fd < 0 || aa->resync_start_fd < 0 \
-+					    || aa->component_size_fd < 0))
- 		return 0;
- 
- 	if (!aa->container)
-@@ -676,6 +679,7 @@ static void manage_new(struct mdstat_ent *mdstat,
- 	new->action_fd = sysfs_open(new->devnum, NULL, "sync_action");
- 	new->info.state_fd = sysfs_open(new->devnum, NULL, "array_state");
- 	new->resync_start_fd = sysfs_open(new->devnum, NULL, "resync_start");
-+	new->component_size_fd = sysfs_open(new->devnum, NULL, "component_size");
- 	new->metadata_fd = sysfs_open(new->devnum, NULL, "metadata_version");
- 	new->sync_completed_fd = sysfs_open(new->devnum, NULL, "sync_completed");
- 	dprintf("%s: inst: %d action: %d state: %d\n", __func__, atoi(inst),
-diff --git a/mdmon.h b/mdmon.h
-index 59e1b53..0b82598 100644
---- a/mdmon.h
-+++ b/mdmon.h
-@@ -32,6 +32,7 @@ struct active_array {
- 
- 	int action_fd;
- 	int resync_start_fd;
-+	int component_size_fd; /* in case of change of array's size */
- 	int metadata_fd; /* for monitoring rw/ro status */
- 	int sync_completed_fd; /* for checkpoint notification events */
- 	unsigned long long last_checkpoint; /* sync_completed fires for many
-diff --git a/monitor.c b/monitor.c
-index c987d10..aa58384 100644
---- a/monitor.c
-+++ b/monitor.c
-@@ -80,6 +80,17 @@ static unsigned long long read_resync_start(int fd)
- 		return strtoull(buf, NULL, 10);
- }
- 
-+static unsigned long long read_component_size(int fd)
-+{
-+	char buf[30];
-+	int n;
-+
-+	n = read_attr(buf, 30, fd);
-+	if (n <= 0)
-+		return 0;
-+	return strtoull(buf, NULL, 10);
-+}
-+
- static unsigned long long read_sync_completed(int fd)
+diff --git a/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
+b/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
+index 5332202..0702785 100644
+--- a/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
++++ b/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
+@@ -2555,12 +2555,36 @@ static void handle_stripe_dirtying(struct r5conf *conf,
+                                   int disks)
  {
- 	unsigned long long val;
-@@ -229,6 +240,7 @@ static int read_and_act(struct active_array *a)
- 	a->curr_state = read_state(a->info.state_fd);
- 	a->curr_action = read_action(a->action_fd);
- 	a->info.resync_start = read_resync_start(a->resync_start_fd);
-+	a->info.component_size = read_component_size(a->component_size_fd) << 1;
- 	sync_completed = read_sync_completed(a->sync_completed_fd);
- 	for (mdi = a->info.devs; mdi ; mdi = mdi->next) {
- 		mdi->next_state = 0;
-
+        int rmw = 0, rcw = 0, i;
+-       if (conf->max_degraded == 2) {
+-               /* RAID6 requires 'rcw' in current implementation
+-                * Calculate the real rcw later - for now fake it
++       sector_t recovery_cp = conf->mddev->recovery_cp;
++       unsigned long recovery = conf->mddev->recovery;
++       int needed = test_bit(MD_RECOVERY_NEEDED, &recovery);
++       int resyncing = test_bit(MD_RECOVERY_SYNC, &recovery) &&
++                       !test_bit(MD_RECOVERY_REQUESTED, &recovery) &&
++                       !test_bit(MD_RECOVERY_CHECK, &recovery);
++       int transitional = test_bit(MD_RECOVERY_RUNNING, &recovery) &&
++                          !test_bit(MD_RECOVERY_SYNC, &recovery) &&
++                          !test_bit(MD_RECOVERY_RECOVER, &recovery) &&
++                          !test_bit(MD_RECOVERY_DONE, &recovery) &&
++                          !test_bit(MD_RECOVERY_RESHAPE, &recovery);
++
++       /* RAID6 requires 'rcw' in current implementation.
++        * Otherwise, attempt to check whether resync is now happening
++        * or should start.
++         * If yes, then the array is dirty (after unclean shutdown or
++         * initial creation), so parity in some stripes might be inconsistent.
++         * In this case, we need to always do reconstruct-write, to ensure
++         * that in case of drive failure or read-error correction, we
++         * generate correct data from the parity.
++         */
++       if (conf->max_degraded == 2 ||
++           (recovery_cp < MaxSector && sh->sector >= recovery_cp &&
++            (needed || resyncing || transitional))) {
++               /* Calculate the real rcw later - for now fake it
+                 * look like rcw is cheaper
+                 */
+                rcw = 1; rmw = 2;
++               pr_debug("force RCW max_degraded=%u, recovery_cp=%lu
+sh->sector=%lu recovery=0x%lx\n",
++                        conf->max_degraded, recovery_cp, sh->sector, recovery);
+        } else for (i = disks; i--; ) {
+                /* would I have to read this buffer for read_modify_write */
+                struct r5dev *dev = &sh->dev[i];
