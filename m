@@ -1,103 +1,196 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: What parameters to mdadm, to re-create md device with payload
- starting at 0x22000 position on backing storage?
-Date: Mon, 17 Sep 2012 18:49:52 +0100
-Message-ID: <20120917174952.GA6559@cthulhu.home.robinhill.me.uk>
-References: <5056CA7E.5040303@statystyka.net>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [patch 6/7 v2] MD: raid5 trim support
+Date: Tue, 18 Sep 2012 14:52:11 +1000
+Message-ID: <20120918145211.0cbfbfa1@notabene.brown>
+References: <20120810025113.050392766@kernel.org>
+	<20120810025255.292192477@kernel.org>
+	<20120813115051.64d5d44e@notabene.brown>
+	<20120813020454.GA447@kernel.org>
+	<20120813135831.284d721d@notabene.brown>
+	<20120813054347.GA20261@kernel.org>
+	<20120911141008.10dd0a50@notabene.brown>
+	<20120912040953.GA10047@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="dDRMvlgZJXvWKvBx"
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/XTCG5wJNVqtHkkmSUn.XMqH"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5056CA7E.5040303@statystyka.net>
+In-Reply-To: <20120912040953.GA10047@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Ryczkowski <adam.ryczkowski@statystyka.net>
-Cc: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: Shaohua Li <shli@fusionio.com>, linux-raid@vger.kernel.org, axboe@kernel.dk
 List-Id: linux-raid.ids
 
-
---dDRMvlgZJXvWKvBx
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--Sig_/XTCG5wJNVqtHkkmSUn.XMqH
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon Sep 17, 2012 at 09:00:14AM +0200, Adam Ryczkowski wrote:
+On Wed, 12 Sep 2012 12:09:53 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-> I try to recover from mdadm raid disaster, which happened when moving=20
-> from ubuntu server 10.04 to 12.04. I know the correct order of devices=20
-> from dmesg log, but given this information, I still cannot access the dat=
-a.
+> On Tue, Sep 11, 2012 at 02:10:08PM +1000, NeilBrown wrote:
+> > > +	bi =3D orig_bi;
+> > > +	if (bi->bi_rw & REQ_DISCARD) {
+> > > +		dd_idx++;
+> > > +		while (dd_idx =3D=3D sh->pd_idx || dd_idx =3D=3D sh->qd_idx)
+> > > +			dd_idx++;
+> > > +		if (dd_idx < sh->disks)
+> > > +			goto again;
+> > > +	}
+> >=20
+> > I'm afraid there there is something else here that I can't make my self=
+ happy
+> > with.
+> >=20
+> > You added a new "goto again" loop inside add_stripe_bio, and to compens=
+ate
+> > the increase logical_sector in make_request so that it doesn't call
+> > add_stripe_bio so many times.
+> > This means that to control flow between make_request and add_stripe_bio=
+ is
+> > very different depending on whether it is a discard or not.  That make =
+the
+> > code harder to understand and easier to break later.
+> >=20
+> > I think it would to create a completely separate "make_trim_request()" =
+which
+> > handles the trim/discard case, and leave the current code as it is.
+> >=20
+> > If/when you do send a patch to do that, please also resend the other ra=
+id5
+> > patch which comes after this one.  I tend not to keep patches once I've
+> > devices not to apply them immediately.  It also reduces the chance of
+> > confusion if you just send whatever you want me to apply.
 >=20
-> The superblocks look messy; the mdadm --examine for each disk is on=20
-> http://askubuntu.com/questions/186666/mdadm-fails-after-10-04-12-04-upgra=
-de
->=20
-> By inspecting the raw contents of backing storage, I found the beginning=
+> I'm afraid there will be a lot of duplicate code doing this way. How about
+> below patch? I made it clearer for discard. If you like it, I'll send oth=
+er
+> patches.
+
+I don't think there will be that much duplicate code.  And even if there is
+some, it is worth it to get a clearer control flow.
+
+I tried writing something and realised that your code is (I think) racy.
+You really need the whole stripe to be either all-discard, or no-discards.
+So you need to hold the stripe_lock while adding the discard bios to every
+device.  Your code doesn't do that.
+
+Here is what I came up with.  It only addresses the 'make_request' part of
+the patch and isn't even compile tested but it should show the general shape
+of the solution, and show how little code is duplicated.
+
+NeilBrown
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 7031b86..ca80290 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4071,6 +4071,73 @@ static void release_stripe_plug(struct mddev *mddev,
+ 		release_stripe(sh);
+ }
 =20
-> of my data (the LUKS container in my case) starts at position 0x22000=20
-> relative to the beginning of the first partition in the raid, .i.e.=20
-> /dev/sdb6.
->=20
-> Question: What is the combination of options issued to "mdadm --create"=
++static void make_discard_request(struct mddev *mddev, struct bio *bi)
++{
++	sector_t logical_sector, last_sector;
++	int stripe_sectors;
++	struct r5conf *conf =3D mddev->private;
++
++	if (mddev->reshape_position !=3D MaxSector)
++		/* Skip discard while reshape is happening */
++		return;
++
++	logical_sector =3D bi->bi_sector & ~((sector_t)STRIPE_SECTORS-1);
++	last_sector =3D bi->bi_sector + (bi->bi_size>>9);
++
++	bi->bi_next =3D NULL;
++	bi->bi_phys_segments =3D 1;	/* over-loaded to count active stripes */
++
++	stripe_sectors =3D conf->chunk_sectors *
++		(conf->raid_disks - conf->max_degraded);
++	logical_sector =3D DIV_ROUND_UP_SECTOR_T(logical_sector,
++					       stripe_sectors);
++	sector_div(last_sector, stripe_sectors);
++
++	for (;logical_sector < last_sector;
++	     logical_sector +=3D STRIPE_SECTORS) {
++		sh =3D get_active_stripe(conf, logical_sector, previous,
++				       0, 0);
++	again:
++		prepare_to_wait(&conf->wait_for_overlap, &w,
++				TASK_UNINTERRUPTIBLE);
++		spin_lock_irq(&sh->stripe_lock);
++		for (d =3D 0; d < conf->raid_disks; d++) {
++			if (sh->dev[d].towrite ||
++			    sh->dev[d].toread) {
++				set_bit(R5_Overwrite, &sh->dev[d].flags);
++				spin_unlock_irq(&sh->stripe_lock);
++				schedule();
++				goto again;
++			}
++		}
++		finish_wait(&conf->wait_for_overlap, &w);
++		for (d =3D 0; d < conf->raid_disks; d++)
++			if (d !=3D conf->pd_idx &&
++			    d !=3D conf->qd_idx) {
++				sh->dev[d].towrite =3D bi;
++				set_bit(R5_OVERWRITE, &sh->dev[d].flags);
++			}
++		spin_unlock_irq(&sh->stripe_lock);
++		if (conf->mddev->bitmap) {
++			for (d =3D 0; d < conf->raid_disks - conf->max_degraded;
++			     d++)
++				bitmap_startwrite(mddev->bitmap,
++						  sh->sector,
++						  STRIPE_SECTORS,
++						  0);
++			sh->bm_seq =3D conf->seq_flush + 1;
++			set_bit(STRIPE_BIT_DELAY, &sh->state);
++		}
++
++		set_bit(STRIPE_HANDLE, &sh->state);
++		clear_bit(STRIPE_DELAYED, &sh->state);
++		if (!test_and_set_bit(STRIPE_PREREAD_ACTIVE,
++				      &sh->state))
++			atomic_inc(&conf->preread_active_stripes);
++		release_stripe_plug(mddev, sh);
++	}
++}
++
+ static void make_request(struct mddev *mddev, struct bio * bi)
+ {
+ 	struct r5conf *conf =3D mddev->private;
+@@ -4093,6 +4160,11 @@ static void make_request(struct mddev *mddev, struct=
+ bio * bi)
+ 	     chunk_aligned_read(mddev,bi))
+ 		return;
 =20
-> to re-create mdadm that starts with the given offset? Bitmap size?
->=20
-> The relevant information from syslog when the system was healthy are=20
-> pasted here: http://pastebin.com/9KKaXXiU
->=20
-Looks like you've been hit by the bug mentioned here:
-    http://neil.brown.name/blog/20120615073245
++	if (unlikely(bi->bi_rw & REQ_DISCARD)) {
++		make_discard_request(mddev, bi);
++		return;
++	}
++
+ 	logical_sector =3D bi->bi_sector & ~((sector_t)STRIPE_SECTORS-1);
+ 	last_sector =3D bi->bi_sector + (bi->bi_size>>9);
+ 	bi->bi_next =3D NULL;
 
-You've got most of the required data to recreate the array. It's just
-the chunk size missing I think. This is probably 512K as the arrays are
-using 1.2 superblocks, but it may be 64K if you were using an old mdadm
-version.
-
-Your data offset is 272 sectors, which means you'll need to use an older
-mdadm version to re-create the array. Newer versions use 2048 sectors,
-but it looks like version 3.0 uses 272, so grab a copy of that if
-possible.
-
-Assuming your drives are numbered in the same order as previously, the
-create commands will be:
-    mdadm -C /dev/md5 -e 1.2 -l 5 -n 5 /dev/sd{b,f,c,e,d}6 \
-        --assume-clean --uuid=3Da3945c40:73237cd6:3d61998e:8f773d03
-and
-    mdadm -C /dev/md6 -e 1.2 -l 6 -n 5 /dev/sd{b,f,c,e,d}5 \
-        --assume-clean --uuid=3D2a8fd2df:3ad53552:e8b80ecf:a46d93a2
-
-Make sure you use the curly brace format to list the disks rather than
-square brackets - that'll ensure the order is maintained. Also make sure
-that --assume-clean is used to prevent rebuilding from kicking off, and
-losing data.
-
-After recreating the array, run a "fsck -n" on the array to check
-whether the details are correct. If not, stop the array and try
-recreating it again, adding "-c 64" to set the chunk size to 64K.
-
-Once you've got them up and fsck shows clean, you can re-add the bitmaps
-using "mdadm -G /dev/mdX --bitmap=3Dinternal".
-
-Do read through Neil's blog post first as there may be something I've
-missed.
-
-HTH and good luck,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---dDRMvlgZJXvWKvBx
-Content-Type: application/pgp-signature
+--Sig_/XTCG5wJNVqtHkkmSUn.XMqH
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-iEYEARECAAYFAlBXYr8ACgkQShxCyD40xBIxuQCfWzVkIlwAab9c07+mpTmkYI6I
-aSkAnjxPFc7Nsxp2Du9Od7C/DLgLeH8o
-=XHoI
+iQIVAwUBUFf9+znsnt1WYoG5AQI26Q/+NjJn+dPBGiBlh0MX052ldxNSb+bT80th
+UKu2wVY1ZFCSBQi0/NqrFuhA9BcBR2HyVAWcCobDQrBM5phG6sRtZrhVuGKt8b2m
+vqZXF/dKIDc7y+lpih17SSwrb593lrcLr/NGAxgTIxR7XrZzCyJgY0mgnHYDi9+N
+s7SiP7W3hCy2np2wq/1a2Ht7p7GDLgQANlPK35l6pDb29A0Y4P8Vf0t8Ymt0SKg9
+D5QOPaNWhFlsO1IiVQIMBxU+d56sboEF0x+Z4SutO8ddKhIyallLUKvyGlSvkxwy
+j16L0rf4Z94DwxnR1vOWyfpCb37OfSCRrnoIFBrrpFRyOsdMF1mqu50TOn7PqbfA
+e82vryNzPL36GkNk+iEIYMFdb8Yoi0LclGZr3L8oGD7ISz8QKQjkrN7kOGCfvMLQ
+wQ5tC90IddXAMJzyqXRPkBVhXCkcVRS0JsXlI8myqPqIC+YBoNURpzjmx6qRmQVd
+dj8y04o4gC1Hj27OCCZ/Qa89SZWMBxDXrchGLz8DV+eWLQoz36Zm618tJMHODqRF
+p26d3e2STp7ad8b3KKixaxSQAHo8fxE5TQXgmJvCeeFwHOULcLTIVH3uQVcTwJmX
+Jx5hopY9vDRIi0/jKQ/lmhTajc8pLfHIkpDVhSo1MaHf9W1HdnS1heZt4uPWMcXl
+gHUE8wrHmt4=
+=N2ao
 -----END PGP SIGNATURE-----
 
---dDRMvlgZJXvWKvBx--
+--Sig_/XTCG5wJNVqtHkkmSUn.XMqH--
