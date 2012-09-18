@@ -1,199 +1,195 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [RFC 1/2]raid1: only write mismatch sectors in sync
-Date: Tue, 18 Sep 2012 14:57:10 +1000
-Message-ID: <20120918145710.55394bd4@notabene.brown>
-References: <20120726080150.GA21457@kernel.org>
-	<20120731155304.11c40f9b@notabene.brown>
-	<CANejiEWZk6JcErw9Y6cqpotYMypQA_jvv8N0612FBq81Lo8jVQ@mail.gmail.com>
-	<20120911105908.51681433@notabene.brown>
-	<20120912052941.GA15827@kernel.org>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Wrong count of devices in /proc/mdstat after "want_replacement"
+Date: Tue, 18 Sep 2012 11:04:36 +0600
+Message-ID: <20120918110436.0215e5ec@natsu>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/lk4mr.RBYhlHa+6wbdFcSoM"; protocol="application/pgp-signature"
+ boundary="Sig_/2Tf5GnW_TX/65wXc1HMNczp"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120912052941.GA15827@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/lk4mr.RBYhlHa+6wbdFcSoM
+--Sig_/2Tf5GnW_TX/65wXc1HMNczp
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 12 Sep 2012 13:29:41 +0800 Shaohua Li <shli@kernel.org> wrote:
+Hello,
 
-> On Tue, Sep 11, 2012 at 10:59:08AM +1000, NeilBrown wrote:
-> > On Tue, 31 Jul 2012 16:12:04 +0800 Shaohua Li <shli@kernel.org> wrote:
-> >=20
-> > > 2012/7/31 NeilBrown <neilb@suse.de>:
-> > > > On Thu, 26 Jul 2012 16:01:50 +0800 Shaohua Li <shli@kernel.org> wro=
-te:
-> > > >
-> > > >> Write has some impacts to SSD:
-> > > >> 1. wear out flash. Frequent write can speed out the progress.
-> > > >> 2. increase the burden of garbage collection of SSD firmware. If n=
-o space
-> > > >> left for write, SSD firmware garbage collection will try to free s=
-ome space.
-> > > >> 3. slow down subsequent write. After write SSD to some extents (fo=
-r example,
-> > > >> write the whole disk), subsequent write will slow down significant=
-ly (because
-> > > >> almost every write invokes garbage collection in such case).
-> > > >>
-> > > >> We want to avoid unnecessary write as more as possible. raid sync =
-generally
-> > > >> involves a lot of unnecessary write. For example, even two disks d=
-on't have
-> > > >> any data, we write the second disk for the whole disk size.
-> > > >>
-> > > >> To reduce write, we always compare raid disk data and only write m=
-ismatch part.
-> > > >> This means sync will have extra IO read and memory compare. So thi=
-s scheme is
-> > > >> very bad for hard disk raid and sometimes SSD raid too if mismatch=
- part is
-> > > >> majority. But sometimes this can be very helpful to reduce write, =
-in that case,
-> > > >> since sync is rare operation, the extra IO/CPU usage is worthy pay=
-ing. People
-> > > >> who want to use the feature should understand the risk first. So t=
-his ability
-> > > >> is off by default, a sysfs entry can be used to enable it.
-> > > >>
-> > > >> Signed-off-by: Shaohua Li <shli@fusionio.com>
-> > > >> ---
-> > > >>  drivers/md/md.c    |   41 +++++++++++++++++++++++++++++++
-> > > >>  drivers/md/md.h    |    3 ++
-> > > >>  drivers/md/raid1.c |   70 +++++++++++++++++++++++++++++++++++++++=
-++++++++++----
-> > > >>  3 files changed, 110 insertions(+), 4 deletions(-)
-> > > >>
-> > > >> Index: linux/drivers/md/md.h
-> > > >> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > > >> --- linux.orig/drivers/md/md.h        2012-07-25 13:51:00.35377552=
-1 +0800
-> > > >> +++ linux/drivers/md/md.h     2012-07-26 10:36:38.500740552 +0800
-> > > >> @@ -325,6 +325,9 @@ struct mddev {
-> > > >>  #define      MD_RECOVERY_FROZEN      9
-> > > >>
-> > > >>       unsigned long                   recovery;
-> > > >> +#define MD_RECOVERY_MODE_REPAIR              0
-> > > >> +#define MD_RECOVERY_MODE_DISCARD     1
-> > > >> +     unsigned long                   recovery_mode;
-> > > >
-> > > > You have not documented the meaning of these two flags at all, and =
-I don't
-> > > > feel up to guessing.
-> > > >
-> > > > The patch looks more complex that it should be.  The behaviour you =
-are
-> > > > suggesting is exactly the behaviour you get when MD_RECOVERY_REQUES=
-TED is
-> > > > set, so at most I expect to see a few places where that flag is tes=
-ted
-> > > > changed to test something else as well.
-> > > >
-> > > > How would this be used?  It affects resync and resync happens as so=
-on as the
-> > > > array is assembled.  So when and how would you set the flag which s=
-ays
-> > > > "prefer reads to writes"?  It seems like it needs to be set in the =
-metadata.
-> > > >
-> > > > BTW RAID10 already does this - it reads and compares for a normal s=
-ync.  So
-> > > > maybe just tell people to use raid10 if they want this behaviour?
-> > >=20
-> > > It's true, the behavior likes MD_RECOVERY_REQUESTED, ie, read all dis=
-ks,
-> > > only do write if two disk data not match. But I hope it works as soon=
- as the
-> > > array is assembled. Surely we can set in the metadata, but I didn't w=
-ant to
-> > > enable it by default, since even with SSD, the read-compare-write isn=
-'t optimal
-> > > some times, because it involves extra IO read and memory compare.
-> > >=20
-> > > It appears MD_RECOVERY_REQUESTED assumes disks are insync.
-> > > It doesn't read disk !insync, so it doesn't work for assemble.
-> > >=20
-> > > In my mind, user frozen the sync first (with sync_action setting), an=
-d then
-> > > enable read-compare-write, and finally continue the sync. I can't stop
-> > > a recovery and set MD_RECOVERY_REQUESTED, so I added a flag.
-> > > Anyway, please suggest what the preferred way for this.
-> >=20
-> > I guess I just don't find this functionality at all convincing.  It isn=
-'t
-> > clear when anyone would use it, or how they would use it.  It seems bes=
-t not
-> > to provide it.
->=20
-> The background is: For SSD, writting a hard formatted disk and fully fill=
-ed
-> disk, the first case could be 300% faster than the second case depending =
-on SSD
-> firmware and how fragmented the filled disk is. So this isn't a trival
-> performance issue.
->=20
-> The usage model is something like this: one disk is borken, add a new dis=
-k to
-> the raid. Currently we copy the whole disk of the first disk to the secon=
-d. For
-> SSD, if the first disk and second disk have most data identical or most c=
-ontent
-> of the first is 0, the copy is very bad. In this scenario, we can avoid s=
-ome
-> copy, which will make latter write to the disk faster. Thinking about 300%
-> faster :).
->=20
-> I don't think we can do this in underlayer. We don't want to do it always.
-> Detecting 0 is very expensive.
->=20
-> And this isn't intrusive to me. We only do the 'copy avoidness' in sync, =
-and
-> sync is rare event.
->=20
-> I hope to convince you this is a useful functionality, then we can discus=
-s the
-> implementation.
->=20
+Summary:
 
-Let's start with "when would someone use it".
+After removing a disk via "want_replacement", disk count in /proc/mdstat is
+wrong ("[5/4]", not "[5/5]" as it should be).
 
-You said that you don't want to make it the default.  If something isn't a
-default it will not be used very often, and will only be used at all if it =
-is
-reasonably easy to use.
-So how would someone use this?  What would make them choose to use it, and
-what action would that take to make it happen?
+More details below:
 
-NeilBrown
+----
 
---Sig_/lk4mr.RBYhlHa+6wbdFcSoM
+# mdadm --add /dev/md0 /dev/sdb1=20
+mdadm: added /dev/sdb1
+
+# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 1.2
+  Creation Time : Wed May 25 00:07:38 2011
+     Raid Level : raid5
+     Array Size : 3907003136 (3726.01 GiB 4000.77 GB)
+  Used Dev Size : 976750784 (931.50 GiB 1000.19 GB)
+   Raid Devices : 5
+  Total Devices : 6
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Tue Sep 18 01:01:38 2012
+          State : active=20
+ Active Devices : 5
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 1
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           Name : avdeb:0  (local to host avdeb)
+           UUID : b99961fb:ed1f76c8:ec2dad31:6db45332
+         Events : 14135
+
+    Number   Major   Minor   RaidDevice State
+       0       8       65        0      active sync   /dev/sde1
+       6       8       33        1      active sync   /dev/sdc1
+       3       8       81        2      active sync   /dev/sdf1
+       4       8       49        3      active sync   /dev/sdd1
+       5       8       97        4      active sync   /dev/sdg1
+
+       7       8       17        -      spare   /dev/sdb1
+
+# echo want_replacement > /sys/block/md0/md/dev-sde1/state=20
+
+// It's rebuilding:
+
+# cat /proc/mdstat=20
+Personalities : [raid6] [raid5] [raid4]=20
+md0 : active raid5 sdb1[7](R) sde1[0] sdg1[5] sdd1[4] sdf1[3] sdc1[6]
+      3907003136 blocks super 1.2 level 5, 64k chunk, algorithm 2 [5/5] [UU=
+UUU]
+      [>....................]  recovery =3D  0.1% (1724936/976750784) finis=
+h=3D150.7min speed=3D107808K/sec
+      bitmap: 0/4 pages [0KB], 131072KB chunk
+
+// Rebuild finished:
+
+# cat /proc/mdstat=20
+md0 : active raid5 sdb1[7] sde1[0](F) sdg1[5] sdd1[4] sdf1[3] sdc1[6]
+      3907003136 blocks super 1.2 level 5, 64k chunk, algorithm 2 [5/4] [UU=
+UUU]
+      bitmap: 0/4 pages [0KB], 131072KB chunk
+
+# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 1.2
+  Creation Time : Wed May 25 00:07:38 2011
+     Raid Level : raid5
+     Array Size : 3907003136 (3726.01 GiB 4000.77 GB)
+  Used Dev Size : 976750784 (931.50 GiB 1000.19 GB)
+   Raid Devices : 5
+  Total Devices : 6
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Tue Sep 18 04:46:14 2012
+          State : active=20
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 1
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           Name : avdeb:0  (local to host avdeb)
+           UUID : b99961fb:ed1f76c8:ec2dad31:6db45332
+         Events : 14231
+
+    Number   Major   Minor   RaidDevice State
+       7       8       17        0      active sync   /dev/sdb1
+       6       8       33        1      active sync   /dev/sdc1
+       3       8       81        2      active sync   /dev/sdf1
+       4       8       49        3      active sync   /dev/sdd1
+       5       8       97        4      active sync   /dev/sdg1
+
+       0       8       65        -      faulty spare   /dev/sde1
+
+// Removing sde1:
+
+# mdadm --remove /dev/md0 /dev/sde1=20
+mdadm: hot removed /dev/sde1 from /dev/md0
+
+// Removed ok:
+
+# mdadm --detail /dev/md0=20
+/dev/md0:
+        Version : 1.2
+  Creation Time : Wed May 25 00:07:38 2011
+     Raid Level : raid5
+     Array Size : 3907003136 (3726.01 GiB 4000.77 GB)
+  Used Dev Size : 976750784 (931.50 GiB 1000.19 GB)
+   Raid Devices : 5
+  Total Devices : 5
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Tue Sep 18 08:49:24 2012
+          State : active=20
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           Name : avdeb:0  (local to host avdeb)
+           UUID : b99961fb:ed1f76c8:ec2dad31:6db45332
+         Events : 14234
+
+    Number   Major   Minor   RaidDevice State
+       7       8       17        0      active sync   /dev/sdb1
+       6       8       33        1      active sync   /dev/sdc1
+       3       8       81        2      active sync   /dev/sdf1
+       4       8       49        3      active sync   /dev/sdd1
+       5       8       97        4      active sync   /dev/sdg1
+
+// In the end /proc/mdstat shows "[5/4]", not "[5/5]":
+
+# cat /proc/mdstat=20
+md0 : active raid5 sdb1[7] sdg1[5] sdd1[4] sdf1[3] sdc1[6]
+      3907003136 blocks super 1.2 level 5, 64k chunk, algorithm 2 [5/4] [UU=
+UUU]
+      bitmap: 0/4 pages [0KB], 131072KB chunk
+
+--=20
+With respect,
+Roman
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"Stallman had a printer,
+with code he could not see.
+So he began to tinker,
+and set the software free."
+
+--Sig_/2Tf5GnW_TX/65wXc1HMNczp
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-iQIVAwUBUFf/Jjnsnt1WYoG5AQLlRg/9EmgVgkHfrq4MEDYy4F/aIhsSG82JNwHm
-2cocP9xNCDoGFcquQcHiy1mTCx/UfwiRRASb/d3SivJ2y0OkClv66pys7B+UPP3v
-Dtxz6JF6reF9aZfOH/Ow0cZJwJmXfSWaZ3sfWHpru6SIteYMkma+lLL5zKKexJGV
-EWsJXGeI2/MwR59bA2bcllS6Gh91XXfpM4LUFi+m8ieZCRkG/JQvagtk1Z/DvEZi
-vfKHKj+AmuodgHzKUu5bJr2qcMc7GskRotAf5u0VUAZKsdOkfm2daqzD4/I81TSL
-lUA4nVNBuNP50GQuSotjiAaSXoFJIZD+/EdXb5pFtfWZZaNvRD2ozmtYylDcmMfD
-fgMPIWOqVqVYuVUe4AxhfgjwEypeyWGNXdJonCBASLtr8sI6CrTN7tXowmfccg++
-86jMloBv11MbzDFhjljoLCUrsxJgyMjGcYV55EovveMEM/MCrpRO+Cu9olPutQ5Y
-M5eD91F/0KCNCgaJY4t2LGLqKUY5eb1Ux0RWwj2r9aLR70A8V534QDmW4Ok9zamA
-B2Ch3hJrKJc4ivhh1+YiOkbKWY3G8xrQaQTh2dJTberdS6/x/rRLGuEjK3MZ9fWS
-kCr57CyYEz48KHVbv9wVHNknUYJ5xXSMnExjTv9oYfDj2RtdIIv7WBbnxcVUqW5Q
-HXSN/rTrhCg=
-=5IdA
+iEYEARECAAYFAlBYAOQACgkQTLKSvz+PZwhp1QCcCZlmSpf2pCfk0RyHvLct9yzs
+bl4An2SRtyAQucx6iRKa59JtjG/f9FXF
+=UKT5
 -----END PGP SIGNATURE-----
 
---Sig_/lk4mr.RBYhlHa+6wbdFcSoM--
+--Sig_/2Tf5GnW_TX/65wXc1HMNczp--
