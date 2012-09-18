@@ -1,233 +1,186 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [patch 2/2]MD: raid5 avoid unnecessary zero page for trim
-Date: Tue, 18 Sep 2012 16:25:33 +0800
-Message-ID: <20120918082533.GB6298@kernel.org>
+From: GuoZhong Han <hanguozhong@meganovo.com>
+Subject: Re: make filesystem failed while the capacity of raid5 is big than 16TB
+Date: Tue, 18 Sep 2012 17:35:20 +0800
+Message-ID: <CACY-59eJvv98xz_E-0qO_MGF8M40AZ-bCeXOA6zscd+HZdsy+g@mail.gmail.com>
+References: <505033fe.8aec440a.5d52.ffffe37b@mx.google.com>
+	<50504094.2040302@hesbynett.no>
+	<CACY-59cLmV2SRY+FrvhHxseDD1+r-B-3bOKPGzJdGttW+9U2mw@mail.gmail.com>
+	<505059DD.8000108@hesbynett.no>
+	<CACY-59dAbS=8ncRAeZrAYBAvo7G6FEyoGREHtC-ze4cwhiF9GQ@mail.gmail.com>
+	<5051DEC3.9050703@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <5051DEC3.9050703@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de
+To: stan@hardwarefreak.com
+Cc: David Brown <david.brown@hesbynett.no>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We want to avoid zero discarded dev page, because it's useless for discard.
-But if we don't zero it, another read/write hit such page in the cache and
-will get inconsistent data. To avoid zero the page, we set R5_WantZeroFill
-for discarded dev page. Every time before the page is accessed and the
-flag is set, we zero the page and clear the flag. If the page will be
-drained or computed, we just clear the flag for it. In this way, the dev
-page data is alway consistent. And since the chance discarded data is
-accessed soon is low, zero discard dev page is largely avoided.
+Hi Stan:
+        Thanks for your advice. In your last mail, you mentioned XFS
+file system. According to your suggestion, I changed the file system
+from raid5 (4*2T, chunksize: 128K, strip_catch_size:2048) to XFS. Then
+I did a write performance test on XFS.
+The test was as follows:
+        My program used 4 threads to do parallel writing to 30 files
+with 1MB/s writing speed on each file. Each thread was bound on a
+single core. The estimated total speed should be stable at 30MB/s. I
+recorded the total writing speed every second in the test. Compared
+with speed of ext4, when the array was going to be full, the
+performance of XFS has indeed increased. The time to create the XFS
+file system was much less than the cost of ext4. However, I found that
+the total speed wasn=92t steady. Although most of time the speed can
+reach to 30M/s, it fell to only about 10MB/s in rare cases. Writing to
+30 files in parallel was supposed to be easy. Why did this happen?
 
-Signed-off-by: Shaohua Li <shli@fusionio.com>
----
- drivers/md/raid5.c |   83 +++++++++++++++++++++++++++++++++++++++++++----------
- drivers/md/raid5.h |    1 
- 2 files changed, 69 insertions(+), 15 deletions(-)
 
-Index: linux/drivers/md/raid5.c
-===================================================================
---- linux.orig/drivers/md/raid5.c	2012-09-18 16:15:55.471299904 +0800
-+++ linux/drivers/md/raid5.c	2012-09-18 16:16:02.531211118 +0800
-@@ -824,6 +824,10 @@ static void ops_run_biofill(struct strip
- 			dev->read = rbi = dev->toread;
- 			dev->toread = NULL;
- 			spin_unlock_irq(&sh->stripe_lock);
-+
-+			if (test_and_clear_bit(R5_WantZeroFill, &dev->flags))
-+				memset(page_address(dev->page), 0, STRIPE_SIZE);
-+
- 			while (rbi && rbi->bi_sector <
- 				dev->sector + STRIPE_SECTORS) {
- 				tx = async_copy_data(0, rbi, dev->page,
-@@ -893,9 +897,16 @@ ops_run_compute5(struct stripe_head *sh,
- 		__func__, (unsigned long long)sh->sector, target);
- 	BUG_ON(!test_bit(R5_Wantcompute, &tgt->flags));
- 
--	for (i = disks; i--; )
--		if (i != target)
-+	for (i = disks; i--; ) {
-+		if (i != target) {
- 			xor_srcs[count++] = sh->dev[i].page;
-+			if (test_and_clear_bit(R5_WantZeroFill,
-+			   &sh->dev[i].flags))
-+				memset(page_address(sh->dev[i].page), 0,
-+					STRIPE_SIZE);
-+		}
-+		clear_bit(R5_WantZeroFill, &sh->dev[i].flags);
-+	}
- 
- 	atomic_inc(&sh->count);
- 
-@@ -972,6 +983,10 @@ ops_run_compute6_1(struct stripe_head *s
- 
- 	atomic_inc(&sh->count);
- 
-+	for (i = 0; i < sh->disks; i++)
-+		if (test_and_clear_bit(R5_WantZeroFill, &sh->dev[i].flags))
-+			memset(page_address(sh->dev[i].page), 0, STRIPE_SIZE);
-+
- 	if (target == qd_idx) {
- 		count = set_syndrome_sources(blocks, sh);
- 		blocks[count] = NULL; /* regenerating p is not necessary */
-@@ -1022,8 +1037,11 @@ ops_run_compute6_2(struct stripe_head *s
- 	/* we need to open-code set_syndrome_sources to handle the
- 	 * slot number conversion for 'faila' and 'failb'
- 	 */
--	for (i = 0; i < disks ; i++)
-+	for (i = 0; i < disks ; i++) {
- 		blocks[i] = NULL;
-+		if (test_and_clear_bit(R5_WantZeroFill, &sh->dev[i].flags))
-+			memset(page_address(sh->dev[i].page), 0, STRIPE_SIZE);
-+	}
- 	count = 0;
- 	i = d0_idx;
- 	do {
-@@ -1134,6 +1152,9 @@ ops_run_prexor(struct stripe_head *sh, s
- 		/* Only process blocks that are known to be uptodate */
- 		if (test_bit(R5_Wantdrain, &dev->flags))
- 			xor_srcs[count++] = dev->page;
-+		if ((i == pd_idx || test_bit(R5_Wantdrain, &dev->flags)) &&
-+		   test_and_clear_bit(R5_WantZeroFill, &dev->flags))
-+			memset(page_address(dev->page), 0, STRIPE_SIZE);
- 	}
- 
- 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_DROP_DST, tx,
-@@ -1173,12 +1194,13 @@ ops_run_biodrain(struct stripe_head *sh,
- 				if (wbi->bi_rw & REQ_SYNC)
- 					set_bit(R5_SyncIO, &dev->flags);
- 				if (wbi->bi_rw & REQ_DISCARD) {
--					memset(page_address(dev->page), 0,
--						STRIPE_SECTORS << 9);
-+					set_bit(R5_WantZeroFill, &dev->flags);
- 					set_bit(R5_Discard, &dev->flags);
--				} else
-+				} else {
-+					clear_bit(R5_WantZeroFill, &dev->flags);
- 					tx = async_copy_data(1, wbi, dev->page,
- 						dev->sector, tx);
-+				}
- 				wbi = r5_next_bio(wbi, dev->sector);
- 			}
- 		}
-@@ -1252,8 +1274,7 @@ ops_run_reconstruct5(struct stripe_head
- 	}
- 	if (i >= sh->disks) {
- 		atomic_inc(&sh->count);
--		memset(page_address(sh->dev[pd_idx].page), 0,
--			STRIPE_SECTORS << 9);
-+		set_bit(R5_WantZeroFill, &sh->dev[pd_idx].flags);
- 		set_bit(R5_Discard, &sh->dev[pd_idx].flags);
- 		ops_complete_reconstruct(sh);
- 		return;
-@@ -1268,13 +1289,21 @@ ops_run_reconstruct5(struct stripe_head
- 			struct r5dev *dev = &sh->dev[i];
- 			if (dev->written)
- 				xor_srcs[count++] = dev->page;
-+			if ((i == pd_idx || dev->written) &&
-+			   test_and_clear_bit(R5_WantZeroFill, &dev->flags))
-+				memset(page_address(dev->page), 0, STRIPE_SIZE);
- 		}
- 	} else {
- 		xor_dest = sh->dev[pd_idx].page;
-+		clear_bit(R5_WantZeroFill, &sh->dev[pd_idx].flags);
- 		for (i = disks; i--; ) {
- 			struct r5dev *dev = &sh->dev[i];
--			if (i != pd_idx)
-+			if (i != pd_idx) {
- 				xor_srcs[count++] = dev->page;
-+			   	if (test_and_clear_bit(R5_WantZeroFill, &dev->flags))
-+					memset(page_address(dev->page), 0,
-+					      STRIPE_SIZE);
-+			}
- 		}
- 	}
- 
-@@ -1314,16 +1343,23 @@ ops_run_reconstruct6(struct stripe_head
- 	}
- 	if (i >= sh->disks) {
- 		atomic_inc(&sh->count);
--		memset(page_address(sh->dev[sh->pd_idx].page), 0,
--			STRIPE_SECTORS << 9);
--		memset(page_address(sh->dev[sh->qd_idx].page), 0,
--			STRIPE_SECTORS << 9);
-+		set_bit(R5_WantZeroFill, &sh->dev[sh->pd_idx].flags);
- 		set_bit(R5_Discard, &sh->dev[sh->pd_idx].flags);
-+		set_bit(R5_WantZeroFill, &sh->dev[sh->qd_idx].flags);
- 		set_bit(R5_Discard, &sh->dev[sh->qd_idx].flags);
- 		ops_complete_reconstruct(sh);
- 		return;
- 	}
- 
-+	for (i = 0; i < sh->disks; i++) {
-+		if (sh->pd_idx == i || sh->qd_idx == i) {
-+			clear_bit(R5_WantZeroFill, &sh->dev[i].flags);
-+			continue;
-+		}
-+		if (test_and_clear_bit(R5_WantZeroFill, &sh->dev[i].flags))
-+			memset(page_address(sh->dev[i].page), 0, STRIPE_SIZE);
-+	}
-+
- 	count = set_syndrome_sources(blocks, sh);
- 
- 	atomic_inc(&sh->count);
-@@ -1364,8 +1400,13 @@ static void ops_run_check_p(struct strip
- 	xor_dest = sh->dev[pd_idx].page;
- 	xor_srcs[count++] = xor_dest;
- 	for (i = disks; i--; ) {
--		if (i == pd_idx || i == qd_idx)
-+		if (i != qd_idx &&
-+		   test_and_clear_bit(R5_WantZeroFill, &sh->dev[i].flags))
-+			memset(page_address(sh->dev[i].page), 0, STRIPE_SIZE);
-+		if (i == pd_idx || i == qd_idx) {
-+			clear_bit(R5_WantZeroFill, &sh->dev[i].flags);
- 			continue;
-+		}
- 		xor_srcs[count++] = sh->dev[i].page;
- 	}
- 
-@@ -1383,11 +1424,20 @@ static void ops_run_check_pq(struct stri
- {
- 	struct page **srcs = percpu->scribble;
- 	struct async_submit_ctl submit;
--	int count;
-+	int count, i;
- 
- 	pr_debug("%s: stripe %llu checkp: %d\n", __func__,
- 		(unsigned long long)sh->sector, checkp);
- 
-+	for (i = 0; i < sh->disks; i++) {
-+		if (sh->pd_idx == i || sh->qd_idx == i) {
-+			clear_bit(R5_WantZeroFill, &sh->dev[i].flags);
-+			continue;
-+		}
-+		if (test_and_clear_bit(R5_WantZeroFill, &sh->dev[i].flags))
-+			memset(page_address(sh->dev[i].page), 0, STRIPE_SIZE);
-+	}
-+
- 	count = set_syndrome_sources(srcs, sh);
- 	if (!checkp)
- 		srcs[count] = NULL;
-@@ -3187,6 +3237,9 @@ static void handle_stripe_expansion(stru
- 				release_stripe(sh2);
- 				continue;
- 			}
-+			if (test_and_clear_bit(R5_WantZeroFill, &sh->dev[i].flags))
-+				memset(page_address(sh->dev[i].page),
-+					0, STRIPE_SIZE);
- 
- 			/* place all the copies on one channel */
- 			init_async_submit(&submit, 0, tx, NULL, NULL, NULL);
-Index: linux/drivers/md/raid5.h
-===================================================================
---- linux.orig/drivers/md/raid5.h	2012-09-18 16:15:55.471299904 +0800
-+++ linux/drivers/md/raid5.h	2012-09-18 16:16:02.531211118 +0800
-@@ -299,6 +299,7 @@ enum r5dev_flags {
- 			 * data in, and now is a good time to write it out.
- 			 */
- 	R5_Discard,	/* Discard the stripe */
-+	R5_WantZeroFill, /* should be zero filled before read */
- };
- 
- /*
+2012/9/13 Stan Hoeppner <stan@hardwarefreak.com>:
+> On 9/12/2012 10:21 PM, GuoZhong Han wrote:
+>
+>>          This system has a 36 cores CPU, the frequency of each core =
+is
+>> 1.2G.
+>
+> Obviously not an x86 CPU.  36 cores.  Must be a Tilera chip.
+>
+> GuoZhong, be aware that high core count systems are a poor match for
+> Linux md/RAID levels 1/5/6/10.  These md/RAID drivers currently utili=
+ze
+> a single write thread, and thus can only use one CPU core at a time.
+>
+> To begin to sufficiently scale these md array types across 36x 1.2GHz
+> cores you would need something like the following configurations, all
+> striped together or concatenated with md or LVM:
+>
+> 72x md/RAID1 mirror pairs
+>  36x 4 disk RAID10 arrays
+>  36x 4 disk RAID6 ararys
+>  36x 3 disk RAID5 arrays
+>
+> Patches are currently being developed to increase the parallelism of
+> RAID1/5/6/10 but will likely not be ready for production kernels for
+> some time.   These patches will however still not allow scaling an
+> md/RAID driver across such a high core count.  You'll still need
+> multiple arrays to take advantage of 36 cores.  Thus, this 16 drive
+> storage appliance would have much better performance with a single/du=
+al
+> core CPU with a 2-3GHz clock speed.
+>
+>> The users can create a raid0, raid10
+>> and raid5 use the disks they designated.
+>
+> This is a storage appliance.  Due to the market you're targeting, the
+> RAID level should be chosen by the manufacturer and not selectable by
+> the user.  Choice is normally a good thing.  But with this type of
+> product, allowing users the choice of array type will simply cause yo=
+ur
+> company may problems.  You will constantly field support issues about
+> actual performance not meeting expectations, etc.  And you don't want=
+ to
+> allow RAID5 under any circumstances for a storage appliance product. =
+ In
+> this category, most users won't immediately replace failed drives, so
+> you need to "force" the extra protection of RAID6 or RAID10 upon the
+> customer.
+>
+> If I were doing such a product, I'd immediately toss out the 36 core
+> logic platform and switch to a low power single/dual core x86 chip.  =
+And
+> as much as I disdain parity RAID, for such an appliance I'd make RAID=
+6
+> the factory default, not changeable by the user.  Since md/RAID doesn=
+'t
+> scale well across multicore CPUs, and because wide parity arrays yiel=
+d
+> poor performance, I would make 2x 8 drive RAID6 arrays at the factory=
+,
+> concatenate them with md/RAID linear, and format the linear device wi=
+th
+> XFS.  Manually force a 64KB chunk size for the RAID6 arrays.  You don=
+'t
+> want the 512KB default in a storage appliance.  Specify stripe alignm=
+ent
+> when formatting with XFS.  In this case, su=3D64K and sw=3D6.  See "m=
+an
+> mdadm" and "man mkfs.xfs".
+>
+>>          1. The system must support parallel write more than 150
+>> files; the speed of each will reach to 1M/s.
+>
+> For highly parallel write workloads you definitely want XFS.
+>
+>> If the array is full,
+>> wipe its data to re-write.
+>
+> What do you mean by this?  Surely you don't mean to arbitrarily erase
+> user date to make room for more user data.
+>
+>>          2. Necessarily parallel the ability to read multiple files.
+>
+> Again, XFS best fits this requirement.
+>
+>>          3. as much as possible to use the storage space
+>
+> RAID6 is the best option here for space efficiency and resilience to
+> array failure.  RAID5 is asking for heartache, especially in an
+> appliance product, where users tend to neglect the box until it break=
+s
+> to the point of no longer working.
+>
+>>          4. The system must have certain redundancy, when a disk
+>> failed, the users can use other disk instead of the failed disk.
+>
+> That's what RAID is for, so you're on the right track. ;)
+>
+>>          5. The system must support disk hot-swap
+>
+> That up to your hardware design.  Lots of pre-built solution already =
+on
+> the OEM market.
+>
+>>          I have tested the performance for write of 4*2T raid5 and
+>> 8*2T raid5 of which the file system is ext4, the chuck size is 128K
+>> and the strip_cache_size is 2048. At the beginning, these two raid5s
+>> worked well. But there was a same problem, when the array was going =
+to
+>> be full, the speeds of the write performance tend to slower, there
+>> were lots of data lost while parallel write 1M/s to 150 files.
+>
+> You shouldn't have lost data doing this.  That suggests some other
+> problem.  EXT4 is not particularly adept at managing free space
+> fragmentation.  XFS will do much better here.  But even with XFS,
+> depending on the workload and the "aging" of the filesystem, even XFS
+> will will slow down considerably when the filesystem approaches ~95%
+> full.  This obviously depends a bit on drive size and total array siz=
+e
+> as well.  5% of a 12TB filesystem is quite less than a 36TB filesyste=
+m,
+> 600GB vs 1.8TB.  And the degradation depends on what types of files
+> you're writing and how many in parallel to your nearly full XFS.
+>
+>>          As you said, the performance for write of 16*2T raid5 will =
+be
+>> terrible, so what do you think that how many disks to be build to a
+>> raid5 will be more appropriate?
+>
+> Again, do not use RAID5 for a storage appliance.  Use RAID6 instead, =
+and
+> use multiple RAID6 arrays concatenated together.
+>
+>>          I do not know whether I describe the requirement of the
+>> system accurately. I hope I can get your advice.
+>
+> You described it well, except for the part about wipe data and rewrit=
+e
+> when array is full.
+>
+> --
+> Stan
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
