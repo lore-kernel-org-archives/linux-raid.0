@@ -1,160 +1,163 @@
 From: freaky <freaky@bananateam.nl>
 Subject: Re: Serious performance issues with mdadm RAID-5 partition exported
  through LIO (iSCSI)
-Date: Wed, 19 Sep 2012 15:08:19 +0200
-Message-ID: <5059C3C3.8020808@bananateam.nl>
-References: <50588731.5050502@bananateam.nl> <20568.54327.717927.127094@tree.ty.sabi.co.UK>
+Date: Wed, 19 Sep 2012 16:19:17 +0200
+Message-ID: <5059D465.9020802@bananateam.nl>
+References: <50588731.5050502@bananateam.nl> <1347997760.25356.16.camel@haakon2.linux-iscsi.org> <20568.58664.669085.313654@tree.ty.sabi.co.UK>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20568.54327.717927.127094@tree.ty.sabi.co.UK>
+In-Reply-To: <20568.58664.669085.313654@tree.ty.sabi.co.UK>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg@lxra2.for.sabi.co.UK>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: target-devel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 18-09-12 22:06, Peter Grandi wrote:
-> [ ... ]
+
+> For a RAID set of 6+1 2TB drives each capable of 60-120MB/s that
+> is still pretty terrible speed (even if the performance seems
+> not too bad).
 >
->> I noticed in iostat something I personally find very weird.
->> All the disks in the RAID set (minus the spare) seem to read
->> 6-7 times as much as they write. Since there is no other I/O
->> (so there aren't really any reads issued besides some very
->> occasional overhead for NTFS perhaps once in a while) I find
->> this really weird. Note also that iostat doesn't show the
->> reads in iostat on the md device (which is the case if the
->> initiator issues reads) but only on the active disks in the
->> RAID set, which to me (unknowingly as I am :)) indicates mdadm
->> in the kernel is issuing those reads. [ ... ]
-> It is not at all weird. The performance of MD ('mdadm' is just
-> the user level tool to configure it) is pretty good in this case
-> even if the speed is pretty low. MD is working as expected when
-> read-modify-write (or some kind of resync or degraded operation)
-> is occurring. BTW I like your use of the term "RAID set" because
-> that's what I use myself (because "RAID array" is redundant
-> :->).
 
-Yes, with read-modify-write this is to be expected. However, I'm copying
-a large file (largely sequentially thus especially since there was no
-other I/O), which is buffered in which case most of the writes should be
-entire stripes.
+Yes, but do note the 3.2 kernel has issues with the queue thingy. max
+sectors and max hw sectors is set on 127. I've seen this on some
+machines with late 2.6 kernels and 3.0 and 3.1 too iirc. It seems fixed
+in 3.5. However, I had issues compiling the iscsitarget-dkms modules
+against the 3.5 kernel (from package manager) and haven't taken the time
+to build a newer version myself, so I haven't tested IET with 3.5.
 
-I wouldn't have mentioned it if IETD didn't perform this much better.
-Since I'm not aware of kernel internals I figured it might have
-something to with the ways the buffers are committed. As in with IETD it
-recognizes it's a large contiguous part of data and consolidates it to a
-single stripe write and with LIO it writes 64k chunks synchronously
-causing it to write say chunk 1 out of 6, reads chunks 2-6, calculates
-parity and writes chunk 1 and the parity block and thus has a lot more
-operations to write the same stripe. It is also why for example vmware,
-which does nothing but sync I/O, has extremely lousy performance on
-non-caching RAID controllers. By far the easiest way to show people in
-my experience.
+Also, since it's reading and writing at the same time now it's no longer
+(nearly due to fs overhead) purely sequential.
 
-Anyway, to me it looks like that's what going on - but I didn't want to
-jump to conclusions w/o in-depth kernel knowledge. As far as I know
-there aren't any separate buffers though, so LIO and IETD would be using
-the same buffers / infrastructure in which case my assumption will be
-embarrassingly wrong.
+>>> Iostat with IETD whilst writing shows say 110-120% read per
+>>> write, however, in this case we were also actually reading.
+>>> [ ... ] IETD is running in fileio mode (write-back), so it
+>>> buffers too. [ ... ]
+> That probably helps the MD get a bit of help with aligned
+> writes, or perhaps at that point the array had been resynced,
+> who knows...
 
-Concerning the RAID set terminology, I didn't even realise that.
+The results I've submitted now all have been taken whilst the array was
+healthy.
 
-> Apparently awareness of the effects of RMW )or resyncing or
-> degraded operation) is sort of (euphemism) unspecial RAID
-> knowledge, but only the very elite of sysadms seem to be aware
-> of it :-). A recent similar enquiry was the (euphemism) strange
-> concern about dire speed by someone who had (euphemism) bravely
-> setup RAID6 running deliberately in degraded mode.
-
-Even less seem to be aware of the write-hole :D
-
-> My usual refrain is: if you don't know better, never use parity
-> RAID, only use RAID1 or RAID10 (if you want redundancy).
+>> Are you enabling emulate_write_cache=1 with your iblock
+>> backends..? This can have a gigantic effect on initiator
+>> performance for both MSFT + Linux SCSI clients.
+> That sounds interesting, but also potentially rather dangerous,
+> unless there is a very reliable implementation of IO barriers.
+> Just like with enabling write caches on real disks...
 >
-> But while the performance of MD you report is good, the speed is
-> bad even for a mere RMW/resync/degraded issue, so this detail
-> matters:
+>> [ ... ] check your [ ... ]/queue/max*sectors_kb for the MD
+>> RAID to make sure the WRITEs are striped aligned to get best
+>> performance with software MD raid.
+> That does not quite ensure that the writes are stripe aligned,
+> but perhaps a larger stripe cache would help.
+
+Does this help?
+
+root@datavault:~# parted /dev/md4
+GNU Parted 2.3
+Using /dev/md4
+Welcome to GNU Parted! Type 'help' to view a list of commands.
+(parted) u b                                                             
+(parted) pr                                                              
+Model: Linux Software RAID Array (md)
+Disk /dev/md4: 12002393063424B
+Sector size (logical/physical): 512B/4096B
+Partition Table: gpt
+
+Number  Start            End              Size             File system 
+Name           Flags
+ 1      1966080B         10115507159039B  10115505192960B              
+ReplayStorage
+ 2      10115507159040B  12002393046527B  1886885887488B               
+VDR-Storage
+
+(parted) sel /dev/md4p1
+Using /dev/md4p1
+(parted) pr                                                              
+Model: Unknown (unknown)
+Disk /dev/md4p1: 10115505192960B
+Sector size (logical/physical): 512B/4096B
+Partition Table: gpt
+
+Number  Start       End              Size             File system 
+Name                          Flags
+ 1      17408B      134235135B       134217728B                   
+Microsoft reserved partition  msftres
+ 2      135266304B  10115504668671B  10115369402368B  ntfs         Basic
+data partition
+
+(parted) quit                                                            
+
+1966080/(1024*64*6)=5 (not rounded)
+135266304/(1024*64*6)=344 (not rounded)
+
+If my calculations are correct it shouldn't thus only be chunk but even
+stripe aligned. I did pay a lot of attention to this during setup. It's
+not my daily thing tho', so I do hope I did it correctly. 1024 to get
+from B to kiB, 64 kiB's per chunk, 6 data chunks in a 7 disk RAID-5 set
+(or well, originally a 8 disk RAID-6 but shouldn't differ).
+
+NTFS is formatted with 64kiB block/cluster size. I've just verified this
+again, in 3 ways :).
+
 >
->> Do note - I'm running somewhat unorthodox. I've created a
->> RAID-5 of 7 disks + hotspare
-> One could (euphemism) wonder how well a 6x stripe/stripelet size
-> is going to play with 4KiB aligned NTFS operations...
-It's formatted with a 64kiB blocksize (or cluster size in NTFS
-terminology) . This is also the RAID's chunk size.
+>> Please use FILEIO with this reporting emulate_write_cache=1
+>> (WCE=1) to the SCSI clients. Note that by default in the last
+>> kernel releases we've change FILEIO backends to only always
+>> use O_SYNC to ensure data consistency during a hard power
+>> failure, regardless of the emulate_write_cache=1 setting.
+> Ahh interesting too. That's also the right choice unless there
+> is IO barrier support at all levels.
+This is too low level for me currently. I'll have to look it up. I also
+take from this that *emulating* write cache != write cache :). I've only
+conciously set the buffered mode, but as stated the targetcli utility,
+at least the version that comes with ubuntu 12.04, doesn't show this is
+set. Then again, not running in fileio mode either and the functionality
+has been disabled in 3.5 if I understood correctly.
 
->> (it was originally a RAID-6 w/o hotspare but converted it to
->> RAID-5 in hopes of improving performance).
-> A rather (euphemism) audacious operation, especially because of
-> the expectation that reshaping a RAID set leaves the content in
-> an optimal stripe layout. I am guessing that you reshaped rather
-> than recreated because you did not want to dump/reload the
-> content, rather (euphemism) optimistically.
-Correct. Also, with exception of 3 machines it actually does back up
-itself, other jobs replicate to it. If it really would go wrong I'd have
-to drive by a customer or 6 to seed-load the other ~50 servers on it
-again. Given the risk (never had issues with reshaping) we took it.
-Loosing the data is thus not life threatening, just very very annoying /
-time consuming. So I was either guaranteed to loose a lot of time moving
-the data (and an investment on something to store it on), or take the
-risk of loosing a bit more time. It turned out well :). Did use a log
-file for the reshaping btw. So it could survive reboots (would have had
-to manually restart/bring it up).
+>> Also note that by default it's my understanding that IETD uses
+>> buffered FILEIO for performance, so in your particular type of
+>> setup you'd still see better performance with buffered FILEIO,
+>> but would still have the potential risk of silent data
+>> corruption with buffered FILEIO.
+> Not silent data corruption, but data loss. Silent data
+> corruption is usually meant for the case where an IO completes
+> and reports success, but the data recorded is not the data
+> submitted.
 
-> There are likely to be other (euphemism) peculiarities in your
-> setup, probably to do with network flow control, but the above
-> seems enough...
+Ok, then we have the same concepts. The loss might cause corruption
+obviously, but I've never seen it happen silently :).
+
 >
-> Sometimes it is difficult for me to find sufficiently mild yet
-> suggestive euphemisms to describe some of the stuff that gets
-> reported here. This is one of those cases.
+>> [ ... ] understand the possible data integrity risks
+>> associated with using buffered FILEIO during a hard power
+>> failure, I'm fine with re-adding this back into
+>> target_core_file for v3.7 code for people who really know what
+>> they are doing.
+> That "people who really know what they are doing" is generally a
+> bit optimistic :-).
+
+I like to be free to choose. Might not always choose the smart thing -
+but at least it's been my choice, not some spoon fed thing :). Others
+like to be nurtured tho'. If you're concerned about users (or well
+admins - I've never seen a regular user set up a RAID + iSCSI target)
+safety that much though I'd take the middle ground - just throw a big
+fat red warning. Targetcli already uses fancy colors :). If people
+choose to ignore that it's *most definitely* their responsibility (not
+that it's anyone elses otherwise, the license clearly states no warranty
+whatsoever). There's other ways to make things safe tho' and sometimes
+speed is more important than integrity. There's probably still other
+reasons people might want to enable it.
+
+
+
 >
-> Unless you are absolutely sure you know better:
->
-> * Never grow or reshape a RAID set or a filetree.
-> * Just use RAID1 or RAID10 (or a 3 member RAID5 in some cases
->   where writes are rare).
-> * Don't partition the member or array devices or use GPT for
->   both if you must.
-Not really an option to use msdos partitioning (way larger than 2TiB)
-:). Did look seriously at the offsets being a multiple of 64 so it
-doesn't start somewhere in the middle of a chunk. Parted also reports
-aligning is properly (I do seriously despise these kind of tools, that
-work with blocksizes specifically, using decimal instead of binary
-k/M/G's etc).
+> Do the various modes support IO barriers? That usually is what
+> is critical, at least for the better informed people.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-> If you are absolutely sure you know better then you will not
-> need to ask for help here :-).
-Do note I'm specifically asking about the interaction with LIO :). Don't
-have the benchmarks any more, but several local tests (on the machine
-itself w/o the iSCSI layer in between) showed very acceptable numbers. I
-just need some descent performance (~50MB/s sequential and in the order
-of 10MB/s random - the local benches were way faster than that) and a
-lot of storage in this case as it's just to store back-ups (image based
-- very large files) and their incrementals. On a daily basis some
-incrementals are merged but a lot of the I/O should be sequential and
-large (often causing entire stripe writes when buffered/cached - or well
-they should and it seems to do this just fine with IET, but not with LIO).
-
-I'll never put anything (random) I/O intensive on anything but 10 :). Or
-there must be some really fancy new developments (haven't digged into
-ZFS and the likes deep enough yet).
-
->> This disk is about 12TB. It's partitioned with GPT in ~9TB
-> At least you used GPT partitioning, which is commendable, even
-> if you regret it below...
-
-Yea, not that I had a choice :P.
-
->> and ~2.5TB (there's huge rounding differences at these sizes
->> 1000 vs 1024et al :)).
-> It is very nearly 5%/7% depending which way.
->
->> With msdos partitions I could easily mess with it myself. [
->> ... ]
-> MSDOS style labels are fraught with subtle problem that require
-> careful handling.
-
-But they're very easy to backup/restore with dd :).
-
-Thanks for the re' :).
