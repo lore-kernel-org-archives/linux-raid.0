@@ -1,39 +1,51 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Serious performance issues with mdadm RAID-5 partition exported through LIO (iSCSI)
-Date: Wed, 19 Sep 2012 11:20:35 -0600
-Message-ID: <D9B1133B-29BC-48C9-9859-26A376F75849@colorremedies.com>
-References: <50588731.5050502@bananateam.nl> <1347997760.25356.16.camel@haakon2.linux-iscsi.org> <20568.58664.669085.313654@tree.ty.sabi.co.UK> <5059D465.9020802@bananateam.nl>
-Mime-Version: 1.0 (Apple Message framework v1278)
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Markus Irle <tha.bear@gmail.com>
+Subject: Re: Wrong array size detected after reboot
+Date: Wed, 19 Sep 2012 20:34:11 +0200
+Message-ID: <CAFEwywbuH1689UStqoGOsvAh_X9afCpojKouY=Po5sXFGDFutw@mail.gmail.com>
+References: <CAFEwywaeGevnDMu7Do_wK+_Jgtyd0vman0804C2LyqbyzcJ9Sw@mail.gmail.com>
+	<504C0462.2000609@turmel.org>
+	<20120910091352.38dfdc20@notabene.brown>
+	<CAFEwywaGN3cvXVAJxsWuc1-j0mfeLtKs_iqNznFQN8QA7JO8qQ@mail.gmail.com>
+	<20120919114202.0ad6355b@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5059D465.9020802@bananateam.nl>
+In-Reply-To: <20120919114202.0ad6355b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
-Cc: target-devel@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi Neal,
 
-On Sep 19, 2012, at 8:19 AM, freaky wrote:
-> 
-> Sector size (logical/physical): 512B/4096B
+On Wed, Sep 19, 2012 at 3:42 AM, NeilBrown <neilb@suse.de> wrote:
+> On Sun, 16 Sep 2012 01:32:06 +0200 Markus Irle <tha.bear@gmail.com> wrote:
+>
+>> I'm running 3.2 (3.2.0-31-generic, latest in current Ubuntu release 12.04) now.
+>
+> Sorry, I got that wrong.
+> That commit is the one that introduced the bug.
+>
+> It's fixed by 667a5313ecd7308d which will be in 3.6, and is being
+> back-ported to most -stable kernels, thought it doesn't seem to have arrived
+> in any yet.
+>
+> Maybe you can ask Ubuntu to provide a kernel containing that commit?
+> Or compile your own?
+>
+> Or find a kernel older than 3.2...
 
-Are all of the underlying drives 512e AF disks? At least one of the embedded GPTs (I'm uncertain how three layers of partitioning can be anything be complicated) defines an unaligned partition, but it's a tiny reserved partition. Everything else appears to be aligned to 4K sectors, but the two start sectors you provided are different which is also confusing why they don't start on 2048s which is the parted default.
+Ok, I'm a bit confused.
 
-On all of the physical devices are all of the partitions 4K aligned?
+I was running 2.6.38 when I replaced the drives and grew the array.
+Apparently growing went fine, because I was using the array for a
+couple of weeks. But it didn't write the correct metadata (0.90), thus
+reassembling after boot fails (or rather is the wrong size).
 
+I tried booting with 3.0.0, 3.2.0 and 3.5.0 with exactly the same results.
 
-> Disk /dev/md4
-> 1      1966080B
+I feel that no matter what kernel, as long as the metadata's wrong, I
+can't assemble it correctly, correct?
 
-That's a start sector of 3840.
-
-> 
-> Disk /dev/md4p1
->  1      17408B
-
-That's a start sector of 34, and not 4K divisible. 
-
-
-Chris Murphy
-
+Cheers,
+Marks.
