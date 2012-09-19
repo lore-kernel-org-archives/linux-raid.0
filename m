@@ -1,62 +1,119 @@
-From: =?utf-8?B?5q+P5aSp5LuFMTDlhYM=?= <admin@soontest.com>
-Subject: =?utf-8?B?MjAxMuaYpeWtozExMeWxiuW5v+S6pOS8muS5sOWutu+8jEIyQuivog==?=
-	=?utf-8?B?55uY5Lmw5a6244CBdGhvbWFzbmV0IOmHh+i0reWVhizmtbflhbM=?=
-	=?utf-8?B?5pWw5o2uLOe+pOWPkei9r+S7tu+8jOWxleS8muS5sOWutiDku4UzMDDlhYMh?=
-Date: Wed, 19 Sep 2012 07:21:38 +0000 (UTC)
-Message-ID: <20240919150759536837@soontest.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: make filesystem failed while the capacity of raid5 is big than
+ 16TB
+Date: Wed, 19 Sep 2012 09:20:13 +0200
+Message-ID: <5059722D.1070409@hesbynett.no>
+References: <505033fe.8aec440a.5d52.ffffe37b@mx.google.com> <50504094.2040302@hesbynett.no> <CACY-59cLmV2SRY+FrvhHxseDD1+r-B-3bOKPGzJdGttW+9U2mw@mail.gmail.com> <505059DD.8000108@hesbynett.no> <CACY-59dAbS=8ncRAeZrAYBAvo7G6FEyoGREHtC-ze4cwhiF9GQ@mail.gmail.com> <5051DEC3.9050703@hardwarefreak.com> <CACY-59eJvv98xz_E-0qO_MGF8M40AZ-bCeXOA6zscd+HZdsy+g@mail.gmail.com> <50584B75.1060606@hesbynett.no> <5058E9DF.6090007@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Date: Thu, 19 Sep 2024 15:07:50 +0800
+In-Reply-To: <5058E9DF.6090007@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linuschicago@yahoo.com, lucan@ac.tut.fi, linux-dell-laptops-owner@yahoogroups.com, lucas.city@mailcity.com, lucas.lin2000@gmail.com, linux-mm@kvack.org, linux-raid@vger.kernel.org, lucas@host153.190-31-17.telecom.net.ar, linv5800@comcast.net, linvon602404129@qq.com
+To: stan@hardwarefreak.com
+Cc: GuoZhong Han <hanguozhong@meganovo.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-MjAxMuaYpeWtozExMeWxiuW5v+S6pOS8muS5sOWutu+8jOa1t+WFs+aVsOaNruaPkOWNlXBpZXJz
-54mI77yMMjAwOC0yMDEy5bm0OeWxiuW5v+S6pOS8muaVsOaNruOAgg0KDQrkuIDlhbExMOS4quWM
-hSjmlbDmja7mmK/lhajooYzkuJrnmoTvvIzlj6/ku6XmjInnhaflhbPplK7or43mj5Dlj5blh7rm
-naXnmoQp77yaIA0KMe+8jDIwMTLmmKXlraMxMTHlsYrlub/kuqTkvJrkubDlrrbnjrDlnLror6Ln
-m5jmlbDmja7lupPmlrDpspzlh7rngonvvIzotoXnuqfmlrDpspzkubDlrrbvvIzmlrDpspzmlbDm
-ja7vvIzlrrnmmJPmiJDljZXvvIEgDQoy77yM6LSt5Lmw5ZCO5Y+v5Lul5YWN6LS55pu05pawMjAx
-Mueni+Wto+W5v+S6pOS8muS5sOWutuaVsOaNruOAguWkqui2heWAvOS6huOAgg0KM++8jDIwMTLm
-nIDmlrDlhajnkIPlsZXkvJrnjrDlnLrkubDlrrblupMo5LiO6LS45Y+R5ZCM5q2lKSzlhbE0NuS4
-h+adoeaVsOaNruOAgiAo5oyJ54Wn6KGM5Lia5YiG57G7KQ0KNO+8jDIwMTEsMjAxMOW5tCwyMDA5
-5bm0LDIwMDjlubQg5pil5a2jK+eni+Wto+W5v+S6pOS8muS5sOWutuWQjeW9le+8jDEwMyAxMDQg
-MTA1IDEwNiAxMDcgMTA4LDEwOSwxMTAg5YWx5YWt5bGKIOWFsTEyMC425LiH5pWw5o2u44CCDQo1
-77yMNDguNjjkuIfmnaHmnIDmlrDkubDlrrbor6Lnm5jvvIzpg73luKbmnIlFbWFpbO+8jOacgOac
-ieS7t+WAvOeahOivouebmOOAgg0KNu+8jDIwMTHmnIDmlrAgQjJCIOiLseaWh+WbvemZheermTYw
-5LiH5bim6IGU57uc5pa55byP6K+i55uYIOacgOacieS7t+WAvOivouebmOS5i+S4gC4NCjfvvIwy
-MDEw5rW35YWz5o+Q5Y2VcGllcnPniYgxMDAw5LiH5pWw5o2uLg0KOO+8jDIwMTHlubTliLDpppnm
-uK/ph4fotK3nmoTlm73lpJblrqLkurrlkI3lvZUo6aaZ5riv6LS45Y+R5bGA5o+Q5L6bKe+8jOi2
-hee6p+mHjeimgeeahOS5sOWutuOAgg0KOe+8jDIwMTHlubTmlrDlop7liqDnmoQt576O5Zu9QjJC
-IHRob21hc25ldCDph4fotK3llYblkI3ljZXjgIINCjEw77yM576k5Y+R6L2v5Lu25a6J6KOF5LiO
-6YOo572y5pyN5Yqh44CCDQoNCui/meS6m+WFqOacie+8jOWFsTEyODDkuIcg5pWw5o2u44CCDQoN
-CiANCuimgeeahOaKk+e0p+iBlOezu1FROiA0NjAxMjI2NDEg5oiW6ICF56uL5Y2z5Zue5aSN6YKu
-566xOiA0NjAxMjI2NDFAcXEuY29tDQropoHnmoTmipPntKfogZTns7tRUTogNDYwMTIyNjQxIOaI
-luiAheeri+WNs+WbnuWkjemCrueusTogNDYwMTIyNjQxQHFxLmNvbQ0K6KaB55qE5oqT57Sn6IGU
-57O7UVE6IDQ2MDEyMjY0MSDmiJbogIXnq4vljbPlm57lpI3pgq7nrrE6IDQ2MDEyMjY0MUBxcS5j
-b20NCg0K6K+a5L+h5Li65pys77yM5aaC5p6c5LiN5L+h5Lu75pys5Lq6LOWPr+S7pei1sOa3mOWu
-neS6pOaYkyzmlLbliLDmlbDmja7pqozor4Ez5aSp5ZCO5YaN5LuY5qy+LOi/meaYr+WvueaCqOac
-gOWlveeahOS/nemanOS6huOAgiANCg0KDQoNCuWwj+aKgOW3p++8miANCuaKijUwMOS4h+S5sOWu
-tue+pOWPkeS7peS4gOmBje+8jOWdh+S8muacieaVsOWNg+S4quWbnuWkjeeahO+8jOi/meS6m+Ww
-seaYr+mdnuW4uOmrmOi0qOmHj+eahOS5sOWutuOAgiANCuS9v+eUqOaIkeS7rOmAgeeahOe+pOWP
-kei9r+S7tu+8jDEtMuWRqOWwseWPr+WujOWFqOWPkeWujOOAgg0KDQoNCg0KDQoNCuW5v+S6pOS8
-muS5sOWutuaMieS6p+WTgeexu+WIq+WIhuexu++8jOWIhuS4uuS7peS4i+WHoOexu++8mg0KMSDl
-ip7lhazorr7lpIcNCjIg57yW57uH5Y+K6Jek6ZOB5bel6Im65ZOBDQozIOeOu+eSgw0KNCDppJDl
-jqjnlKjlhbcNCjUg6L2m6L6GDQo2IOWkp+Wei+acuuaisOWPiuiuvuWkhw0KNyDnlLXlrZDnlLXm
-sJQNCjgg55S15a2Q5raI6LS55ZOBDQo5IOe6uue7hw0KMTAg5pyN6KOFDQoxMSDkuKrkurrmiqTn
-kIYNCjEyIOW3peeoi+acuuaisA0KMTMg5bel5YW3DQoxNCDljJblt6UNCjE1IOiuoeeul+acuuWP
-iumAmuiurw0KMTYg5a625bGF55So5ZOBDQoxNyDlrrblsYXoo4XppbANCjE4IOWutuWFtw0KMTkg
-5a6255So55S15ZmoDQoyMCDlu7rnrZHlj4roo4XppbDmnZDmlpkNCjIxIOiKguaXpeeUqOWTgQ0K
-MjIg56S85ZOB5Y+K6LWg5ZOBDQoyMyDmkanmiZjovaYNCjI0IOaxvei9pumFjeS7tg0KMjUg6aOf
-5ZOBDQoyNiDpmbbnk7cNCjI3IOmTgeefsw0KMjgg546p5YW3DQoyOSDljavmtbQNCjMwIOS6lOmH
-kQ0KMzEg5bCP5Z6L5py65qKwDQozMiDpnosNCjMzIOS8kemXsueUqOWTgQ0KMzQg5Yy755aXDQoz
-NSDmtbTlrqTkuqflk4ENCjM2IOWbreaelw0KMzcg54Wn5piO5Lqn5ZOBDQozOCDpkp/ooajnnLzp
-lZwNCjM5IOiHquihjOi9pg0KNDAg5YyFDQoNCg0K5paw6bKc5pWw5o2uLeaIkOWNleeOh+aegemr
-mA0K5paw6bKc5pWw5o2uLeaIkOWNleeOh+aegemrmA0K5paw6bKc5pWw5o2uLeaIkOWNleeOh+ae
-gemrmA0K5paw6bKc5pWw5o2uLeaIkOWNleeOh+aegemrmA0K5paw6bKc5pWw5o2uLeaIkOWNleeO
-h+aegemrmA0K
+On 18/09/2012 23:38, Stan Hoeppner wrote:
+> On 9/18/2012 5:22 AM, David Brown wrote:
+>> On 18/09/2012 11:35, GuoZhong Han wrote:
+>>> Hi Stan:
+>>>           Thanks for your advice. In your last mail, you mentioned =
+XFS
+>>> file system. According to your suggestion, I changed the file syste=
+m
+>>> from raid5 (4*2T, chunksize: 128K, strip_catch_size:2048) to XFS. T=
+hen
+>>> I did a write performance test on XFS.
+>>> The test was as follows:
+>>>           My program used 4 threads to do parallel writing to 30 fi=
+les
+>>> with 1MB/s writing speed on each file. Each thread was bound on a
+>>> single core. The estimated total speed should be stable at 30MB/s. =
+I
+>>> recorded the total writing speed every second in the test. Compared
+>>> with speed of ext4, when the array was going to be full, the
+>>> performance of XFS has indeed increased. The time to create the XFS
+>>> file system was much less than the cost of ext4. However, I found t=
+hat
+>>> the total speed wasn=92t steady. Although most of time the speed ca=
+n
+>>> reach to 30M/s, it fell to only about 10MB/s in rare cases. Writing=
+ to
+>>> 30 files in parallel was supposed to be easy. Why did this happen?
+>>>
+>>>
+>>
+>> Two questions - what is the XFS built on? 4 x 2TB in a linear
+>> concatenation, or something else?
+>
+> According to the above it's a 4 drive RAID5.
 
+He wrote "I changed the file system from raid5 (4 x 2T) to XFS", so I a=
+m=20
+looking for clarification here.
 
+>
+>> Secondly, are all your files in the same directory, or in different
+>> directories?  XFS scales by using multiple threads for different
+>> allocation groups,
+>
+> This is partially correct if he's using the inode64 allocator.  Do no=
+te
+> multiple XFS write threads can target the same AG and get parallel
+> performance.
+
+I didn't know that - there is always something new to learn!
+
+However, I don't think that should make a huge difference - after all,=20
+the work done by these threads is going to be fairly small until you=20
+actually get to writing out the data to the AG.  Latency for the=20
+application might be reduced a little, but disk throughput will not=20
+benefit much.
+
+> What you are referring to above is writing to multiple AGs
+> in parallel, where each AG resides on a different member device of a
+> concatenation.
+
+Yes, although I know that each AG does not necessarily reside on a=20
+different member device.
+
+As far as I see it now, there are three stages -
+
+1. write threads (can be several per AG)
+2. AGs (can be several per disk)
+3. Disks (members of a linear concat)
+
+>
+> Writing to say 16 AGs in parallel where all reside on the same disk
+> array will actually decrease performance compared to 16 writes to one=
+ AG
+> on that array.  The reason is the latter causes far less head travel
+> between writes.
+>
+
+Yes.
+
+>> and putting these groups in different places on the
+>> underlying disk or disks - but files in the same directory go in the
+>> same allocation group.  So 30 files in 30 directories will give much
+>> more parallelism than 30 files in 1 directory.
+>
+> Actually, no.  The level of parallelism is the same--30 concurrent
+> writes.  As noted above, the increase in performance comes from locat=
+ing
+> each of the AGs on a different disk, or array.  This decreases the
+> number of seeks requires per write, especially with parity arrays.
+>
+
+OK, so you get 30 parallel logical writes, but if it does not translate=
+=20
+into multiple parallel physical writes to the disks by having multiple=20
+member disks, then the gains are small.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
