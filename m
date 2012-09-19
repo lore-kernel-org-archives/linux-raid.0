@@ -1,53 +1,35 @@
-From: Ferry <iscsitmp@bananateam.nl>
-Subject: Re: Serious performance issues with mdadm RAID-5 partition exported
- through LIO (iSCSI)
-Date: Wed, 19 Sep 2012 16:27:00 +0200
-Message-ID: <5059D634.1020509@bananateam.nl>
-References: <50588731.5050502@bananateam.nl> <1347997760.25356.16.camel@haakon2.linux-iscsi.org> <CA+XKKQpHkg1YCNzQ=tWhb6Ub1z9J4useJCqdykiFdY5Lxv0-Ag@mail.gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: make filesystem failed while the capacity of raid5 is big than
+ 16TB
+Date: Wed, 19 Sep 2012 11:00:42 -0500
+Message-ID: <5059EC2A.7070407@hardwarefreak.com>
+References: <505033fe.8aec440a.5d52.ffffe37b@mx.google.com> <50504094.2040302@hesbynett.no> <CACY-59cLmV2SRY+FrvhHxseDD1+r-B-3bOKPGzJdGttW+9U2mw@mail.gmail.com> <505059DD.8000108@hesbynett.no> <CACY-59dAbS=8ncRAeZrAYBAvo7G6FEyoGREHtC-ze4cwhiF9GQ@mail.gmail.com> <5051DEC3.9050703@hardwarefreak.com> <CACY-59eJvv98xz_E-0qO_MGF8M40AZ-bCeXOA6zscd+HZdsy+g@mail.gmail.com> <50584B75.1060606@hesbynett.no> <5058E9DF.6090007@hardwarefreak.com> <5059722D.1070409@hesbynett.no>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+XKKQpHkg1YCNzQ=tWhb6Ub1z9J4useJCqdykiFdY5Lxv0-Ag@mail.gmail.com>
+In-Reply-To: <5059722D.1070409@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, target-devel@vger.kernel.org
+To: David Brown <david.brown@hesbynett.no>
+Cc: GuoZhong Han <hanguozhong@meganovo.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 19-09-12 08:44, Arne Redlich wrote:
-> [Resending without HTML]
->
-> 2012/9/18 Nicholas A. Bellinger <nab@linux-iscsi.org>:
->
->> Also note that by default it's my understanding that IETD uses buffered
->> FILEIO for performance, so in your particular type of setup you'd still
->> see better performance with buffered FILEIO, but would still have the
->> potential risk of silent data corruption with buffered FILEIO.
-> Nicholas,
->
-> IETs fileio defaults to writethrough caching (by issueing a sync after
-> writing and before returning a response to the client). Writeback
-> behaviour as employed by the OP needs to be switched on explicitly.
->
-> Also, the failure scenario for writeback caching you're referring to
-> is neither silent data corruption (as pointed out by Peter already)
-> nor silent data loss, as the WCE bit makes it pretty clear to the
-> client side that data is not guaranteed to be on persistent storage
-> unless explicitly flushed.
->
-> Arne
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On 9/19/2012 2:20 AM, David Brown wrote:
+> On 18/09/2012 23:38, Stan Hoeppner wrote:
 
-What's the definition of explicitly flushed here? For example, vmware
-does nothing but sync I/O. Just start a NFS server on non-cached storage
-and run a vm of it, then force the export to async and it'll be lots and
-lots faster. I know from test labs setting IET to fileio with writeback
-is notably (much) faster than fileio with write through (on non-cached
-storage oc). Is this the same as explicitly flushing? Because then it
-wouldn't make sense to me that that it's faster with writeback caching
-since all I/O is sync from vmware (or more accurately ESX(i)).
+>> Actually, no.  The level of parallelism is the same--30 concurrent
+>> writes.  As noted above, the increase in performance comes from locating
+>> each of the AGs on a different disk, or array.  This decreases the
+>> number of seeks requires per write, especially with parity arrays.
 
-Also wouldn't explain why the buffers fill as seen by the free tool for
-example :).
+> OK, so you get 30 parallel logical writes, but if it does not translate
+> into multiple parallel physical writes to the disks by having multiple
+> member disks, then the gains are small.
+
+The problem in the OP's case isn't a lack of physical write parallelism,
+but most likely a problem of seek starvation caused by write parallelism.
+
+-- 
+Stan
+
