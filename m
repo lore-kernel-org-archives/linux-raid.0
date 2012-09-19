@@ -1,107 +1,74 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Wrong array size detected after reboot
-Date: Wed, 19 Sep 2012 11:42:02 +1000
-Message-ID: <20120919114202.0ad6355b@notabene.brown>
-References: <CAFEwywaeGevnDMu7Do_wK+_Jgtyd0vman0804C2LyqbyzcJ9Sw@mail.gmail.com>
-	<504C0462.2000609@turmel.org>
-	<20120910091352.38dfdc20@notabene.brown>
-	<CAFEwywaGN3cvXVAJxsWuc1-j0mfeLtKs_iqNznFQN8QA7JO8qQ@mail.gmail.com>
+Subject: [PULL REQUEST] 3 fixes for md in 3.6.
+Date: Wed, 19 Sep 2012 13:01:55 +1000
+Message-ID: <20120919130155.1f783b29@notabene.brown>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/CJLc_Ps0qCvreih=Uy.rFmg"; protocol="application/pgp-signature"
+ boundary="Sig_/Jf/JA9IjtsIZk_EpG9pInJf"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFEwywaGN3cvXVAJxsWuc1-j0mfeLtKs_iqNznFQN8QA7JO8qQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Markus Irle <tha.bear@gmail.com>
-Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/CJLc_Ps0qCvreih=Uy.rFmg
+--Sig_/Jf/JA9IjtsIZk_EpG9pInJf
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 16 Sep 2012 01:32:06 +0200 Markus Irle <tha.bear@gmail.com> wrote:
+The following changes since commit 55d512e245bc7699a8800e23df1a24195dd08217:
 
-> Hi guys,
->=20
-> Thanks for your help.
->=20
-> On Mon, Sep 10, 2012 at 1:13 AM, NeilBrown <neilb@suse.de> wrote:
-> > On Sat, 08 Sep 2012 22:52:18 -0400 Phil Turmel <philip@turmel.org> wrot=
-e:
->=20
-> **snip**
->=20
-> >> Until recently, due to a long-standing bug, devices larger than 2T were
-> >> not usable with v0.90 meta-data.  I don't remember precisely when that
-> >> bug was fixed, but I believe it was in the past year.  There are also
-> >> potential identification problems with v0.90 when used on the last
-> >> partition of a device, but you have a misalignment warning that would
-> >> prevent that.
-> >
-> > The bug was fixed in 3.1-rc6, (commit 27a7b260f71439c40546)
->=20
-> I'm running 3.2 (3.2.0-31-generic, latest in current Ubuntu release 12.04=
-) now.
+  Linux 3.6-rc5 (2012-09-08 16:43:45 -0700)
 
-Sorry, I got that wrong.
-That commit is the one that introduced the bug.
+are available in the git repository at:
 
-It's fixed by 667a5313ecd7308d which will be in 3.6, and is being
-back-ported to most -stable kernels, thought it doesn't seem to have arrived
-in any yet.
+  git://neil.brown.name/md/ tags/md-3.6-fixes
 
-Maybe you can ask Ubuntu to provide a kernel containing that commit?
-Or compile your own?
+for you to fetch changes up to 6dafab6b1383e912cd252fa809570b484eb6e0dc:
 
-Or find a kernel older than 3.2...
+  md: make sure metadata is updated when spares are activated or removed. (=
+2012-09-19 12:54:22 +1000)
 
-NeilBrown
+----------------------------------------------------------------
+3 fixes for md in 3.6.
 
->=20
-> >> You should see that the used dev size is very close to 2TiB less than
-> >> the actual size of your devices.
-> >>
-> >> First, try the latest stable mainline kernel that you can.  That should
-> >> let you back up your data.
->=20
-> Unfortunately nothing's changed.
->=20
-> The array still thinks it's small:
-> [    1.693557]  --- level:5 rd:3 wd:3
-> [    1.693559]  disk 0, o:1, dev:sdb1
-> [    1.693561]  disk 1, o:1, dev:sdd1
-> [    1.693562]  disk 2, o:1, dev:sde1
-> [    1.693593] md2: detected capacity change from 0 to 1603139141632
->=20
-> and the vg doesn't start:
-> [    1.778499] device-mapper: table: 252:0: md2 too small for target:
-> start=3D384, len=3D11721064448, dev_size=3D3131131136
->=20
-> Cheers,
-> Markus
+One reverts a recent patch which turns out to not be such a good
+idea.
+Other two fix minor bugs with the new (since 3.3) 'replacement' code
+and have been tagged for -stable.
 
+----------------------------------------------------------------
+NeilBrown (3):
+      Revert "md/raid5: For odirect-write performance, do not set STRIPE_PR=
+EREAD_ACTIVE."
+      md/raid5: fix calculate of 'degraded' when a replacement becomes acti=
+ve.
+      md: make sure metadata is updated when spares are activated or remove=
+d.
 
---Sig_/CJLc_Ps0qCvreih=Uy.rFmg
+ drivers/md/md.c    | 6 +++++-
+ drivers/md/raid5.c | 6 +++++-
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+--Sig_/Jf/JA9IjtsIZk_EpG9pInJf
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUFki6jnsnt1WYoG5AQJEAg//aLyeEv6EtjPFdSdVedDIxN74hY4KDYPJ
-+P7XZLRxj0KxDIDdQKMhAC6urkhRMe6BdjRzkG6b20wErHwEBd6KvSuRr/jJbJlL
-wxgCVlAZ4Cn8xjSaVodWUoSC84JVY28lJyDDsEPBK3l7eC94ub+w5+AbHpgHOE4C
-X/jUxboBOLcUPCEsa6Qkv2UWug97rb+1CEqnabrD/WzDvbiLF5+olsACTBj++MaM
-ANESqjYGxgMCk8qQMw0W6tpXz2NpLhdsgNsesteHNHrsECNYO0san9R9TLX0tiUq
-B8sIBDUE3jHh1Jtb1eC62H/XUA73o8j4LE4U1SJzjqbCptH5VO6tVOndskMQoVMO
-kuBzoAOcQ4UXRQlQN02HXfVEZJIzVogxUn6hkFjFsTUFAniuk6/a7Je2qTM6zhzO
-qxVrlXXlwH/9eg+wIGjINAQsHUNDAvBFNItwyX8Kkent2gWmthdjwlbaUSBLQagk
-JJfP1BejlAAgJ8oyyBMBes9+waRIYx9wsqBR6UVy5XMkvl64GttQsfq30ysj7hT1
-TUKESeF2hu1D+TJGCH7579aSSoQzL4Z9Du5353RHx/uDW6xZmNUxcGVDHhmYEMQu
-wGA97gQE3NQzVYQV6XVW21egzBXsQThhVcFw+yQNMKf6MjdPLrq6GcJ4mkM7zfi6
-y8tIPY680ZY=
-=sFUD
+iQIVAwUBUFk1oznsnt1WYoG5AQKgBxAAmz0bWhgOYKOSh2nYpbTDSUBCfYtRKRAT
+hklr3yeCKP+yUSdQ4ctSumLH0BIlsFyihyxDDVHOfIBjqQnCKYOdu7UVf+mJBbwl
+wUji6QkXxAB9m2q/NuHlb8nPHn9Oyrq5zp05IqfTwSZNdw2M4UJQuDWWmgTWuZzZ
+m0Dy2Fcjn65Sr9cdGY14RMlFMXZwaa+CmxOFFlOAaiqGSWN2kkwuZv23nVOXb4Yp
+FBDKCHmbFAwKDgGXGaBaNahgMd0Wva4LIgjUkLAdz/0u1NfIPxb2W5Si1CpJ59wY
+lOVVFObe18sONV6LqrTFFzMBPVTt5ofmdZJ6qVt/EwP4vf6p2+N21aTGuryOzD8C
+XX6eTLO2yan2fcEVkWMtK1j4pAdeMZm2KoekK6KOq0TPx2o9kWZwIoR+Zjavs8rI
+l3ZAevhJybvWNh1Ew2Ha1PFMHKQAth9IdYmdjOXbfVaPkMqP4ZqfMavWJG6tCXuR
+0N+WSPpDKLbdmgFsVTg3qymgs51/0jiZpVnWcK9gw7dNo26bOdW4VB1oyehgDZrW
+IELETWhUaOBg3G/XjC2yUFxFjL3o9NugKoV/5NzuHzpRlu97o1Sznjxr00/3Kivy
+JgwsyYG06tBP4o/GpZ+uZea4mnAHVFvsPjIAGaF5f0/AN93jZHQ4ywAeh5JJfmi5
+1u8Wa7RvEtw=
+=43WA
 -----END PGP SIGNATURE-----
 
---Sig_/CJLc_Ps0qCvreih=Uy.rFmg--
+--Sig_/Jf/JA9IjtsIZk_EpG9pInJf--
