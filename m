@@ -1,85 +1,102 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Areca hardware RAID / first-ever SCSI bus reset: am I about to
- lose this disk controller?
-Date: Wed, 19 Sep 2012 17:30:56 -0500
-Message-ID: <505A47A0.1060709@hardwarefreak.com>
-References: <87mx0lsv4d.fsf@spindle.srvr.nix>
-Reply-To: stan@hardwarefreak.com
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Wrong array size detected after reboot
+Date: Thu, 20 Sep 2012 09:11:09 +1000
+Message-ID: <20120920091109.5d950820@notabene.brown>
+References: <CAFEwywaeGevnDMu7Do_wK+_Jgtyd0vman0804C2LyqbyzcJ9Sw@mail.gmail.com>
+	<504C0462.2000609@turmel.org>
+	<20120910091352.38dfdc20@notabene.brown>
+	<CAFEwywaGN3cvXVAJxsWuc1-j0mfeLtKs_iqNznFQN8QA7JO8qQ@mail.gmail.com>
+	<20120919114202.0ad6355b@notabene.brown>
+	<CAFEwywbuH1689UStqoGOsvAh_X9afCpojKouY=Po5sXFGDFutw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <87mx0lsv4d.fsf@spindle.srvr.nix>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/KO2RVY/NFyrKqJRHn/P5h6Z"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAFEwywbuH1689UStqoGOsvAh_X9afCpojKouY=Po5sXFGDFutw@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Markus Irle <tha.bear@gmail.com>
+Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 9/19/2012 1:52 PM, Nix wrote:
-> So I have this x86-64 server running Linux 3.5.1 
+--Sig_/KO2RVY/NFyrKqJRHn/P5h6Z
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-When did you install 3.5.1 on this machine?  If fairly recently, does it
-run without these errors when booted into the previous kernel?
+On Wed, 19 Sep 2012 20:34:11 +0200 Markus Irle <tha.bear@gmail.com> wrote:
 
-> with a SATA-on-PCIe
-> Areca 1210 hardware RAID-5 controller driven by libata which has been
-> humming along happily for years -- but suddenly, today, the entire
-> machine froze for a couple of minutes (or at least fs access froze),
-> followed by this in the logs:
-> 
-> Sep 19 16:55:47 spindle notice: [3447524.381843] arcmsr0: abort device command of scsi id = 0 lun = 1 
-> [... repeated a few times at intervals over the next five minutes,
->  followed by a mass of them at 16:59:29, and...]
-> Sep 19 16:59:25 spindle err: [3447657.821450] arcmsr: executing bus reset eh.....num_resets = 0, num_aborts = 33 
-> Sep 19 16:59:25 spindle notice: [3447697.878386] arcmsr0: wait 'abort all outstanding command' timeout 
-> Sep 19 16:59:25 spindle notice: [3447697.878628] arcmsr0: executing hw bus reset .....
-> Sep 19 16:59:25 spindle err: [3447698.287054] irq 16: nobody cared (try booting with the "irqpoll" option)
-> Sep 19 16:59:25 spindle warning: [3447698.287291] Pid: 0, comm: swapper/4 Not tainted 3.5.1-dirty #1
-> Sep 19 16:59:25 spindle warning: [3447698.287522] Call Trace:
-> Sep 19 16:59:25 spindle warning: [3447698.287754]  <IRQ>  [<ffffffff810af5ba>] __report_bad_irq+0x31/0xc2
-> Sep 19 16:59:25 spindle warning: [3447698.288031]  [<ffffffff810af84e>] note_interrupt+0x16a/0x1e8
-> Sep 19 16:59:25 spindle warning: [3447698.288263]  [<ffffffff810ad9d5>] handle_irq_event_percpu+0x163/0x1a5
-> Sep 19 16:59:25 spindle warning: [3447698.288497]  [<ffffffff810ada4f>] handle_irq_event+0x38/0x55
-> Sep 19 16:59:25 spindle warning: [3447698.288727]  [<ffffffff810b01a0>] handle_fasteoi_irq+0x78/0xab
-> Sep 19 16:59:25 spindle warning: [3447698.288960]  [<ffffffff8103631c>] handle_irq+0x24/0x2a
-> Sep 19 16:59:25 spindle warning: [3447698.289189]  [<ffffffff81036229>] do_IRQ+0x4d/0xb4
-> Sep 19 16:59:25 spindle warning: [3447698.289419]  [<ffffffff815070e7>] common_interrupt+0x67/0x67
-> Sep 19 16:59:25 spindle warning: [3447698.289648]  <EOI>  [<ffffffff812ab174>] ? acpi_idle_enter_c1+0xcb/0xf2
-> Sep 19 16:59:25 spindle warning: [3447698.289919]  [<ffffffff812ab152>] ? acpi_idle_enter_c1+0xa9/0xf2
-> Sep 19 16:59:25 spindle warning: [3447698.290152]  [<ffffffff813c1446>] cpuidle_enter+0x12/0x14
-> Sep 19 16:59:25 spindle warning: [3447698.290382]  [<ffffffff813c1902>] cpuidle_idle_call+0xc5/0x175
-> Sep 19 16:59:25 spindle warning: [3447698.290614]  [<ffffffff8103c2da>] cpu_idle+0x5b/0xa5
-> Sep 19 16:59:25 spindle warning: [3447698.290844]  [<ffffffff81ad4fcb>] start_secondary+0x1a2/0x1a6
-> Sep 19 16:59:25 spindle err: [3447698.291074] handlers:
-> Sep 19 16:59:25 spindle err: [3447698.291294] [<ffffffff8133b9a3>] usb_hcd_irq
-> Sep 19 16:59:25 spindle emerg: [3447698.291553] Disabling IRQ #16
-> Sep 19 16:59:25 spindle err: [3447710.888187] arcmsr0: waiting for hw bus reset return, retry=0
-> Sep 19 16:59:25 spindle err: [3447720.882155] arcmsr0: waiting for hw bus reset return, retry=1
-> Sep 19 16:59:25 spindle notice: [3447730.896410] Areca RAID Controller0: F/W V1.46 2009-01-06 & Model ARC-1210
-> Sep 19 16:59:25 spindle err: [3447730.916348] arcmsr: scsi  bus reset eh returns with success
-> 
-> This is the first SCSI (that is, um, ATA) bus reset I have *ever* had on
-> this machine, hence my concern. (The IRQ disable we can ignore: it was
-> just bad luck that an interrupt destined for the Areca hit after the
-> controller had briefly vanished from the PCI bus as part of resetting.)
-> 
-> Now just last week another (surge-protected) machine on the same power
-> main as it died without warning with a fried power supply which
-> apparently roasted the BIOS and/or other motherboard components before
-> it died (the ACPI DSDT was filled with rubbish, and other things must
-> have been fried because even with ACPI off Linux wouldn't boot more than
-> one time out of a hundred (freezing solid at different places in the
-> boot each time). So my worry level when this SCSI bus reset turned up
-> today is quite high. It's higher given that the controller logs
-> (accessed via the Areca binary-only utility for this purpose) show no
-> sign of any problem at all.
-> 
-> EDAC shows no PCI bus problems and no memory problems, so this probably
-> *is* the controller.
-> 
-> So... is this a serious problem? Does anyone know if I'm about to lose
-> this controller, or indeed machine as well? (I really, really hope not.)
-> 
-> I'd write this off as a spurious problem and not report it at all, but
-> I'm jittery as heck after the catastrophic hardware failure last week,
-> and when this happens in close proximity, I worry.
+> Hi Neal,
+>=20
+> On Wed, Sep 19, 2012 at 3:42 AM, NeilBrown <neilb@suse.de> wrote:
+> > On Sun, 16 Sep 2012 01:32:06 +0200 Markus Irle <tha.bear@gmail.com> wro=
+te:
+> >
+> >> I'm running 3.2 (3.2.0-31-generic, latest in current Ubuntu release 12=
+.04) now.
+> >
+> > Sorry, I got that wrong.
+> > That commit is the one that introduced the bug.
+> >
+> > It's fixed by 667a5313ecd7308d which will be in 3.6, and is being
+> > back-ported to most -stable kernels, thought it doesn't seem to have ar=
+rived
+> > in any yet.
+> >
+> > Maybe you can ask Ubuntu to provide a kernel containing that commit?
+> > Or compile your own?
+> >
+> > Or find a kernel older than 3.2...
+>=20
+> Ok, I'm a bit confused.
+
+Me too it would seem - sorry.  I was thinking of a RAID0 problem with simil=
+ar
+symptoms.
+
+>=20
+> I was running 2.6.38 when I replaced the drives and grew the array.
+> Apparently growing went fine, because I was using the array for a
+> couple of weeks. But it didn't write the correct metadata (0.90), thus
+> reassembling after boot fails (or rather is the wrong size).
+>=20
+> I tried booting with 3.0.0, 3.2.0 and 3.5.0 with exactly the same results.
+>=20
+> I feel that no matter what kernel, as long as the metadata's wrong, I
+> can't assemble it correctly, correct?
+
+Yes, the metadata has lots the most-significant-bit of the 'size'.
+
+So it should be sufficient to:
+  mdadm -G /dev/md2 --size 2930266432
+
+where the size is calculated as the current "used device size" plus 2^31.
+You could probably just do "--size max"
+
+This will cause a resync of the 2G of data which is probably unnecessary, b=
+ut
+is awkward to avoid.
+
+NeilBrown
+
+--Sig_/KO2RVY/NFyrKqJRHn/P5h6Z
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBUFpRDTnsnt1WYoG5AQK8OA/+MmyyORZ5yETHUIlRUdLpf+XoveaRT65k
+zBJ6504KQvg5dtQnG2azNyvWINMOJnXUWua1tZv0zymA5mmVHRmxlu5+wUInurvs
+C/WpZTq/P7zev5SD1C3ZUxnBJgNMOy5HkbBATKRPfV7jnYChJ/Cec8TY8IlUwPfM
+KXvAhJM+RFId1wk5Ko60MClrqZ6nEj4an2guTOb2joWJTSwQJy3nfO4Oi3Q3PUwL
+0za/YgkWNn2wWs1u5epdFmgBvqj8P2U07V4WtPOP0dvtBFhb0ZIpby+LZ+GDE9mG
+j9YNtGW/n9uYm2S1rNZ0M8Byp2sMY6Q3bMOHSlG96WHMqO9wm3DW88AlvzBhA3w7
+h2gVqTdxTbBznPwIe6+RJewrXzVT3acrWRLGBfq4gJ2DWhfINxDMVSdF2ZO1T6/T
+ovlpbXWqgwXZXoMtrlHmRzqvgXaMZFxxm105wZf5KcOZXlsALZ5K568J3afXs+zH
+Tx1HMYL2TjNA4SezyFHsF5LcJfp9bkpCYRQPmFvCMafFJH/jdtSRF+YwQEpyYnCH
+TyAduvoE+7Fz2Tp/QNw3PhVasUbOi6ZNZRIFYqImUPYJF9cyaUbO6JTmF7cyb//x
+/MKEdLfrcUwrlo+u/gehhT0FN+9JieUqtGYlVjPaB0LFvb1yD6AdB9d6+kSuQnxW
+0UtYUgHyuHc=
+=TV1R
+-----END PGP SIGNATURE-----
+
+--Sig_/KO2RVY/NFyrKqJRHn/P5h6Z--
