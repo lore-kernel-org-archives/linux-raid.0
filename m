@@ -1,97 +1,72 @@
-From: joystick <joystick@shiftmail.org>
-Subject: Re: Serious performance issues with mdadm RAID-5 partition exported
- through LIO (iSCSI)
-Date: Wed, 19 Sep 2012 12:49:19 +0200
-Message-ID: <5059A32F.8030606@shiftmail.org>
-References: <50588731.5050502@bananateam.nl>  <1347997760.25356.16.camel@haakon2.linux-iscsi.org>  <20568.58664.669085.313654@tree.ty.sabi.co.UK> <1348006818.25356.62.camel@haakon2.linux-iscsi.org>
+From: =?ISO-8859-1?Q?G=FCnther_J=2E?= Niederwimmer <gjn@gjn.priv.at>
+Subject: GPT Table broken on a Raid1
+Date: Wed, 19 Sep 2012 13:03:44 +0200
+Message-ID: <4961154.0TR9MeFlIq@techz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1348006818.25356.62.camel@haakon2.linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: nab@risingtidesystems.com
-Cc: Peter Grandi <pg@lxra2.for.sabi.co.UK>, Linux RAID <linux-raid@vger.kernel.org>, target-devel@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/19/12 00:20, Nicholas A. Bellinger wrote:
->
->>> Are you enabling emulate_write_cache=1 with your iblock
->>> backends..? This can have a gigantic effect on initiator
->>> performance for both MSFT + Linux SCSI clients.
->> That sounds interesting, but also potentially rather dangerous,
->> unless there is a very reliable implementation of IO barriers.
->> Just like with enabling write caches on real disks...
->>
-> Not exactly.  The name of the 'emulate_write_cache' device attribute is
-> a bit mis-leading here.  This bit simply reports (to the SCSI client)
-> that the WCE=1 bit is set during SCSI mode sense (caching page) is read
-> during the initial LUN scan.
+Hello,
 
-Then can I say that the default is wrong?
-You are declaring writethrough a device that is almost certainly a 
-writeback (because at least HDDs will have caches).
+can any tell me, why the GPT Table is broken by a linux installation
 
-If power is lost at the iscsi target, there WILL be data loss. People do 
-not expect that. Change the default!
+I have a dual boot system, the GPT Table is created with Win "diskpart"=
+ This=20
+is a (U)EFI installation.
 
+With linux kernel 3.5.x, I have always this message in the log
 
-Besides this, I don't understand how declaring an iscsi target as 
-writethrough could slow down operations volountarily by initiators. That 
-would be a bug of the initiators because writethrough is "better" than 
-writeback for all purposes: initiators should just skip the queue drain 
-/ flush / FUA, and all the rest should be the same.
-
-
->>> [ ... ] check your [ ... ]/queue/max*sectors_kb for the MD
->>> RAID to make sure the WRITEs are striped aligned to get best
->>> performance with software MD raid.
->> That does not quite ensure that the writes are stripe aligned,
->> but perhaps a larger stripe cache would help.
->>
-> I'm talking about what MD raid has chosen as it's underlying
-> max_sectors_kb to issue I/O to the underlying raid member devices.  This
-> depends on what backend storage hardware is in use, this may end up as
-> '127', which will result in ugly mis-aligned writes that ends up killing
-> performance.
-
-Interesting observation.
-For local processes writing, probably MD waits enough time for other 
-requests to come and fill a stripe before initiating a rmw; but maybe 
-iscsi is too slow for that and MD initiates an rmw for each request 
-which would be a zillion of RMWs.
-Can that be? Anyone knows MD enough to say if MD waits a little bit for 
-more data in the attempt of filling an entire stripe before proceeding 
-with rmw? If yes, can such timeout be set?
-
-> We've (RTS) changed this with a one-liner patch to raid456.c code on .32
-> basded distro kernels in the past to get proper stripe aligned writes,
-> and it obviously makes a huge difference with fast storage hardware.
-
-This value is writable via sysfs, why do you need a patch?
-
-> That's exactly what I'm talking about.
->
-> With buffered FILEIO enabled a incoming WRITE payload will have already
-> been ACKs back to the SCSI fabric and up the storage -> filesystem
-> stack, but if a power loss was to occur before that data has been
-> written out (using a battery back-up unit for example), then the FS on
-> the client will have (silently) lost data.
->
-> This is why we removed the buffered FILEIO from mainline in the first
-> place, but in retrospect if people understand the consequences and still
-> want to use buffered FILEIO for performance reasons they should be able
-> to do so.
+Sep 17 09:54:27 techz kernel: [    1.204681] GPT:Primary header thinks =
+Alt.=20
+header is not at the end of the disk.
+Sep 17 09:54:27 techz kernel: [    1.204685] GPT:625137663 !=3D 6251424=
+47
+Sep 17 09:54:27 techz kernel: [    1.204687] GPT:Alternate GPT header n=
+ot at=20
+the end of the disk.
+Sep 17 09:54:27 techz kernel: [    1.204689] GPT:625137663 !=3D 6251424=
+47
+Sep 17 09:54:27 techz kernel: [    1.204691] GPT: Use GNU Parted to cor=
+rect=20
+GPT errors.
+Sep 17 09:54:27 techz kernel: [    1.204710]  sdb: sdb1 sdb2 sdb3 sdb4 =
+sdb5=20
+sdb6
+Sep 17 09:54:27 techz kernel: [    1.205613] sd 1:0:0:0: [sdb] Attached=
+ SCSI=20
+disk
+Sep 17 09:54:27 techz kernel: [    1.212374] GPT:Primary header thinks =
+Alt.=20
+header is not at the end of the disk.
+Sep 17 09:54:27 techz kernel: [    1.212377] GPT:625137663 !=3D 6251424=
+47
+Sep 17 09:54:27 techz kernel: [    1.212379] GPT:Alternate GPT header n=
+ot at=20
+the end of the disk.
+Sep 17 09:54:27 techz kernel: [    1.212381] GPT:625137663 !=3D 6251424=
+47
+Sep 17 09:54:27 techz kernel: [    1.212382] GPT: Use GNU Parted to cor=
+rect=20
+GPT errors.
+Sep 17 09:54:27 techz kernel: [    1.212404]  sda: sda1 sda2 sda3 sda4 =
+sda5=20
+sda6
 
 
-If you declare the target as writeback and implement flush+FUA, no data 
-loss should occur AFAIU, isn't that so?
+When I like to repair this with parted the system is not booting and th=
+e Raid1=20
+is destroyed.=20
 
-AFAIR, hard disks do normally declare all operations to be complete 
-immediately after you submit (while they are still in the cache in 
-reality), but if you issue a flush+FUA they make an exception to this 
-rule and make sure that this operation and all previously submitted 
-operations are indeed on the platter before returning. Do I remember 
-correctly?
+--=20
+mit freundlichen Gr=FC=DFen / best Regards.
 
-Can you do the same for buffered FILEIO?
+  G=FCnther J. Niederwimmer
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
