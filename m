@@ -1,169 +1,189 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] fix: imsm: mdmon should reread component_size on wakeup
-Date: Thu, 20 Sep 2012 11:30:57 +1000
-Message-ID: <20120920113057.70de3a65@notabene.brown>
-References: <20120917083755.26592.53269.stgit@gklab-128-085.igk.intel.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [patch 1/2]MD: raid5 trim support
+Date: Thu, 20 Sep 2012 09:36:42 +0800
+Message-ID: <20120920013642.GA6798@kernel.org>
+References: <20120918082511.GA6298@kernel.org>
+ <20120920111517.54d05380@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/UDdylkYMSKdVWY+YIo.fg/G"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120917083755.26592.53269.stgit@gklab-128-085.igk.intel.com>
+Content-Disposition: inline
+In-Reply-To: <20120920111517.54d05380@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, maciej.patelczyk@intel.com
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/UDdylkYMSKdVWY+YIo.fg/G
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Thu, Sep 20, 2012 at 11:15:17AM +1000, NeilBrown wrote:
+> On Tue, 18 Sep 2012 16:25:11 +0800 Shaohua Li <shli@kernel.org> wrote:
+> 
+> > Discard for raid4/5/6 has limitation. If discard request size is small, we do
+> > discard for one disk, but we need calculate parity and write parity disk.  To
+> > correctly calculate parity, zero_after_discard must be guaranteed. Even it's
+> > true, we need do discard for one disk but write another disks, which makes the
+> > parity disks wear out fast. This doesn't make sense. So an efficient discard
+> > for raid4/5/6 should discard all data disks and parity disks, which requires
+> > the write pattern to be (A, A+chunk_size, A+chunk_size*2...). If A's size is
+> > smaller than chunk_size, such pattern is almost impossible in practice. So in
+> > this patch, I only handle the case that A's size equals to chunk_size. That is
+> > discard request should be aligned to stripe size and its size is multiple of
+> > stripe size.
+> > 
+> > Since we can only handle request with specific alignment and size (or part of
+> > the request fitting stripes), we can't guarantee zero_after_discard even
+> > zero_after_discard is true in low level drives.
+> > 
+> > The block layer doesn't send down correctly aligned requests even correct
+> > discard alignment is set, so I must filter out.
+> > 
+> > For raid4/5/6 parity calculation, if data is 0, parity is 0. So if
+> > zero_after_discard is true for all disks, data is consistent after discard.
+> > Otherwise, data might be lost. Let's consider a scenario: discard a stripe,
+> > write data to one disk and write parity disk. The stripe could be still
+> > inconsistent till then depending on using data from other data disks or parity
+> > disks to calculate new parity. If the disk is broken, we can't restore it. So
+> > in this patch, we only enable discard support if all disks have
+> > zero_after_discard.
+> > 
+> > If discard fails in one disk, we face the similar inconsistent issue above. The
+> > patch will make discard follow the same path as normal write request. If
+> > discard fails, a resync will be scheduled to make the data consistent. This
+> > isn't good to have extra writes, but data consistency is important.
+> > 
+> > If a subsequent read/write request hits raid5 cache of a discarded stripe, the
+> > discarded dev page should have zero filled, so the data is consistent. This
+> > patch will always zero dev page for discarded request stripe. This isn't
+> > optimal because discard request doesn't need such payload. Next patch will
+> > avoid it.
+> > 
+> > Signed-off-by: Shaohua Li <shli@fusionio.com>
+> > ---
+> >  drivers/md/raid5.c |  176 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+> >  drivers/md/raid5.h |    1 
+> >  2 files changed, 174 insertions(+), 3 deletions(-)
+> > 
+> > Index: linux/drivers/md/raid5.c
+> > ===================================================================
+> > --- linux.orig/drivers/md/raid5.c	2012-09-18 16:15:51.219353357 +0800
+> > +++ linux/drivers/md/raid5.c	2012-09-18 16:15:55.471299904 +0800
+> > @@ -547,6 +547,8 @@ static void ops_run_io(struct stripe_hea
+> >  				rw = WRITE_FUA;
+> >  			else
+> >  				rw = WRITE;
+> > +			if (test_and_clear_bit(R5_Discard, &sh->dev[i].flags))
+> > +				rw |= REQ_DISCARD;
+> >  		} else if (test_and_clear_bit(R5_Wantread, &sh->dev[i].flags))
+> >  			rw = READ;
+> >  		else if (test_and_clear_bit(R5_WantReplace,
+> > @@ -1170,8 +1172,13 @@ ops_run_biodrain(struct stripe_head *sh,
+> >  					set_bit(R5_WantFUA, &dev->flags);
+> >  				if (wbi->bi_rw & REQ_SYNC)
+> >  					set_bit(R5_SyncIO, &dev->flags);
+> > -				tx = async_copy_data(1, wbi, dev->page,
+> > -					dev->sector, tx);
+> > +				if (wbi->bi_rw & REQ_DISCARD) {
+> > +					memset(page_address(dev->page), 0,
+> > +						STRIPE_SECTORS << 9);
+> > +					set_bit(R5_Discard, &dev->flags);
+> > +				} else
+> > +					tx = async_copy_data(1, wbi, dev->page,
+> > +						dev->sector, tx);
+> >  				wbi = r5_next_bio(wbi, dev->sector);
+> >  			}
+> >  		}
+> > @@ -1237,6 +1244,20 @@ ops_run_reconstruct5(struct stripe_head
+> >  	pr_debug("%s: stripe %llu\n", __func__,
+> >  		(unsigned long long)sh->sector);
+> >  
+> > +	for (i = 0; i < sh->disks; i++) {
+> > +		if (pd_idx == i)
+> > +			continue;
+> > +		if (!test_bit(R5_Discard, &sh->dev[i].flags))
+> > +			break;
+> > +	}
+> > +	if (i >= sh->disks) {
+> > +		atomic_inc(&sh->count);
+> > +		memset(page_address(sh->dev[pd_idx].page), 0,
+> > +			STRIPE_SECTORS << 9);
+> > +		set_bit(R5_Discard, &sh->dev[pd_idx].flags);
+> > +		ops_complete_reconstruct(sh);
+> > +		return;
+> > +	}
+> >  	/* check if prexor is active which means only process blocks
+> >  	 * that are part of a read-modify-write (written)
+> >  	 */
+> > @@ -1281,10 +1302,28 @@ ops_run_reconstruct6(struct stripe_head
+> >  {
+> >  	struct async_submit_ctl submit;
+> >  	struct page **blocks = percpu->scribble;
+> > -	int count;
+> > +	int count, i;
+> >  
+> >  	pr_debug("%s: stripe %llu\n", __func__, (unsigned long long)sh->sector);
+> >  
+> > +	for (i = 0; i < sh->disks; i++) {
+> > +		if (sh->pd_idx == i || sh->qd_idx == i)
+> > +			continue;
+> > +		if (!test_bit(R5_Discard, &sh->dev[i].flags))
+> > +			break;
+> > +	}
+> > +	if (i >= sh->disks) {
+> > +		atomic_inc(&sh->count);
+> > +		memset(page_address(sh->dev[sh->pd_idx].page), 0,
+> > +			STRIPE_SECTORS << 9);
+> > +		memset(page_address(sh->dev[sh->qd_idx].page), 0,
+> > +			STRIPE_SECTORS << 9);
+> > +		set_bit(R5_Discard, &sh->dev[sh->pd_idx].flags);
+> > +		set_bit(R5_Discard, &sh->dev[sh->qd_idx].flags);
+> > +		ops_complete_reconstruct(sh);
+> > +		return;
+> > +	}
+> > +
+> >  	count = set_syndrome_sources(blocks, sh);
+> >  
+> >  	atomic_inc(&sh->count);
+> > @@ -4067,6 +4106,96 @@ static void release_stripe_plug(struct m
+> >  		release_stripe(sh);
+> >  }
+> >  
+> > +static void make_discard_request(struct mddev *mddev, struct bio *bi)
+> > +{
+> > +	struct r5conf *conf = mddev->private;
+> > +	sector_t logical_sector, last_sector;
+> > +	struct stripe_head *sh;
+> > +	int remaining;
+> > +	int stripe_sectors;
+> > +
+> > +	if (mddev->reshape_position != MaxSector)
+> > +		/* Skip discard while reshape is happening */
+> > +		return;
+> > +
+> > +	logical_sector = bi->bi_sector & ~((sector_t)STRIPE_SECTORS-1);
+> > +	last_sector = bi->bi_sector + (bi->bi_size>>9);
+> > +
+> > +	bi->bi_next = NULL;
+> > +	bi->bi_phys_segments = 1; /* over-loaded to count active stripes */
+> > +
+> > +	stripe_sectors = conf->chunk_sectors *
+> > +		(conf->raid_disks - conf->max_degraded);
+> > +	logical_sector = DIV_ROUND_UP_SECTOR_T(logical_sector,
+> > +			stripe_sectors);
+> > +	sector_div(last_sector, stripe_sectors);
+> > +
+> > +	logical_sector *= stripe_sectors;
+> > +	last_sector *= stripe_sectors;
+> > +
+> > +	for (;logical_sector < last_sector;
+> > +					logical_sector += STRIPE_SECTORS) {
+> > +		DEFINE_WAIT(w);
+> > +		sector_t new_sector;
+> > +		int d;
+> > +
+> > +		new_sector = raid5_compute_sector(conf, logical_sector,
+> > +						  0, &d, NULL);
+> 
+> This is pointless.  Look at the patch I posted again.  You don't need to call
+> raid5_compute_sector().  It essentially just divides logical_sector by
+> stripe_sectors.  It is cleaner not to do the multiple in the first place.
 
-On Mon, 17 Sep 2012 10:37:55 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
-wrote:
-
-> Mdmon has not read component_size (in read_and_act()) on wakeup so far.
-> In case of size's expansion component_size has been changed but
-> mdmon has not updated it. As a result the metadata was incorrect
-> during the size's expansion. It has contained no information
-> that resync was in progress (there has been no checkpoint too).
-> The metadata has been as if resync has already been finished
-> but it has not.
->=20
-> Updating of component_size has been added to read_and_act().
-> Now mdmon uses the correct value of component_size and the correct
-> metadata (containing information about resync and checkpoint) is written.
-
-Thanks, but I don't think I like this approach.
-
-In my mind, the 'monitor' thread should only be monitoring things that it h=
-as
-to respond to quickly - before another write can complete.
-A size change does not need to be so immediate.
-So I would rather that mdadm updates component_size but not array_size, and
-then 'ping's the manager.   The manager thread then checks and notices that
-the component size has changed, asks the monitor to update the metadata, th=
-en
-sets the array_size to match.
-
-Possibly mdadm shouldn't just 'ping' the monitor, but should send the
-metadata update ... not sure which is best.
-
-Does that make sense to you?
-
-Thanks,
-NeilBrown
-
-
->=20
-> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
-> ---
->  managemon.c |    6 +++++-
->  mdmon.h     |    1 +
->  monitor.c   |   12 ++++++++++++
->  3 files changed, 18 insertions(+), 1 deletions(-)
->=20
-> diff --git a/managemon.c b/managemon.c
-> index ef351b3..fd41463 100644
-> --- a/managemon.c
-> +++ b/managemon.c
-> @@ -123,6 +123,8 @@ static void close_aa(struct active_array *aa)
->  		close(aa->info.state_fd);
->  	if (aa->resync_start_fd >=3D 0)
->  		close(aa->resync_start_fd);
-> +	if (aa->component_size_fd >=3D 0)
-> +		close(aa->component_size_fd);
->  	if (aa->metadata_fd >=3D 0)
->  		close(aa->metadata_fd);
->  	if (aa->sync_completed_fd >=3D 0)
-> @@ -598,7 +600,8 @@ static int aa_ready(struct active_array *aa)
->  	if (aa->info.state_fd < 0)
->  		return 0;
-> =20
-> -	if (level > 0 && (aa->action_fd < 0 || aa->resync_start_fd < 0))
-> +	if (level > 0 && (aa->action_fd < 0 || aa->resync_start_fd < 0 \
-> +					    || aa->component_size_fd < 0))
->  		return 0;
-> =20
->  	if (!aa->container)
-> @@ -676,6 +679,7 @@ static void manage_new(struct mdstat_ent *mdstat,
->  	new->action_fd =3D sysfs_open(new->devnum, NULL, "sync_action");
->  	new->info.state_fd =3D sysfs_open(new->devnum, NULL, "array_state");
->  	new->resync_start_fd =3D sysfs_open(new->devnum, NULL, "resync_start");
-> +	new->component_size_fd =3D sysfs_open(new->devnum, NULL, "component_siz=
-e");
->  	new->metadata_fd =3D sysfs_open(new->devnum, NULL, "metadata_version");
->  	new->sync_completed_fd =3D sysfs_open(new->devnum, NULL, "sync_complete=
-d");
->  	dprintf("%s: inst: %d action: %d state: %d\n", __func__, atoi(inst),
-> diff --git a/mdmon.h b/mdmon.h
-> index 59e1b53..0b82598 100644
-> --- a/mdmon.h
-> +++ b/mdmon.h
-> @@ -32,6 +32,7 @@ struct active_array {
-> =20
->  	int action_fd;
->  	int resync_start_fd;
-> +	int component_size_fd; /* in case of change of array's size */
->  	int metadata_fd; /* for monitoring rw/ro status */
->  	int sync_completed_fd; /* for checkpoint notification events */
->  	unsigned long long last_checkpoint; /* sync_completed fires for many
-> diff --git a/monitor.c b/monitor.c
-> index c987d10..aa58384 100644
-> --- a/monitor.c
-> +++ b/monitor.c
-> @@ -80,6 +80,17 @@ static unsigned long long read_resync_start(int fd)
->  		return strtoull(buf, NULL, 10);
->  }
-> =20
-> +static unsigned long long read_component_size(int fd)
-> +{
-> +	char buf[30];
-> +	int n;
-> +
-> +	n =3D read_attr(buf, 30, fd);
-> +	if (n <=3D 0)
-> +		return 0;
-> +	return strtoull(buf, NULL, 10);
-> +}
-> +
->  static unsigned long long read_sync_completed(int fd)
->  {
->  	unsigned long long val;
-> @@ -229,6 +240,7 @@ static int read_and_act(struct active_array *a)
->  	a->curr_state =3D read_state(a->info.state_fd);
->  	a->curr_action =3D read_action(a->action_fd);
->  	a->info.resync_start =3D read_resync_start(a->resync_start_fd);
-> +	a->info.component_size =3D read_component_size(a->component_size_fd) <<=
- 1;
->  	sync_completed =3D read_sync_completed(a->sync_completed_fd);
->  	for (mdi =3D a->info.devs; mdi ; mdi =3D mdi->next) {
->  		mdi->next_state =3D 0;
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/UDdylkYMSKdVWY+YIo.fg/G
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUFpx0jnsnt1WYoG5AQKuvQ/+JXZ0yjQIiC2z9UZtXXDrdN91IrKTN9bK
-0cF3KCKIxGft5Yie9MqCYCJG2dir8Ts8oRNzcqluKK5zyBjT/dLzPM89+ZCnnCxb
-8SVyDdjj9QB9zckYscuqet4fC4+d1aADeNEAGV96dasSHbNKoT7hrHkCAPun6Qz0
-0T1MAzDI6/y8Tu0gqtJl8N2YJhZuxjiNoNVxr73SZ60KcaX0tgglW3AcUyxdRF8E
-gZ9GxX3EMfw7YJVbdo59yJO8PQwhe+0SfVu7FP9HBTlhO6RDyAER2ZC+DoaamRag
-xX2akMY/FuLoAVpsWq4GfthlLqFpaJaY4GkoBjr0Q8rZEzn5t5c3zJ37M+ZphO/u
-HEPP10mxDouCPhq3KqTyRd3QYabgpvTP492MuCGikAgkkpzxTptPNtj1eYPH4//0
-bInMBd9Cx6FnFDwnAw4lkjqkR98+M4HQ9zMkPr0QrQ94aL6YMI1wyr2JM/aX42dF
-wc6kRIr3fIe9nvGDbpRnYET2U42lkzSxwumz0P3dKWIs7fxI/cpY7eUT2yh7/Sb+
-iU7iSDdAbzMM05NdceqGd+/3Hkcv4X+TqlqT+MjSwTWcsQ996yM2pBPpskAqWkQe
-AGlPcbm/mT+73cbX6/X3k6uqCia+7Zc7om4lNZ3CAw+vXQ1E73cLocYJScQasfxC
-46bHXzCNElg=
-=YkI3
------END PGP SIGNATURE-----
-
---Sig_/UDdylkYMSKdVWY+YIo.fg/G--
+in my test, without it, wrong sectors are trimmed.
