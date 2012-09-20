@@ -1,47 +1,26 @@
 From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: GPT Table broken on a Raid1
-Date: Thu, 20 Sep 2012 11:34:12 -0600
-Message-ID: <1BDFB79A-E375-47F2-8EDF-8F51D8774651@colorremedies.com>
-References: <4961154.0TR9MeFlIq@techz> <7577D4C6-344F-4AE6-BB6A-3B4F29D4CAA0@colorremedies.com> <2627519.Y2VdWh5VBI@techz>
+Subject: Re: Small short question Was: Re: Recovering from the kernel bug, Neil?
+Date: Thu, 20 Sep 2012 11:49:07 -0600
+Message-ID: <18C5DA72-E9B2-4657-B5B6-8B3EAB99E9C2@colorremedies.com>
+References: <5030F07F.7000303@schinagl.nl> <504CFA7B.7090606@schinagl.nl> <20120910090829.19100cdf@notabene.brown> <504DA85C.6080000@schinagl.nl> <20120911161622.0b0fcf8c@notabene.brown> <505301E1.10707@schinagl.nl> <50531A52.7060205@schinagl.nl> <20120920122218.07f89443@notabene.brown> <505B4CDD.7010509@schinagl.nl>
 Mime-Version: 1.0 (Apple Message framework v1278)
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2627519.Y2VdWh5VBI@techz>
+In-Reply-To: <505B4CDD.7010509@schinagl.nl>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
-On Sep 20, 2012, at 5:05 AM, G=FCnther J. Niederwimmer wrote:
->=20
-> this is "normal" I install "windows 7" first ;). but the problem with=
- the=20
-> wrong GPT Table Message I have also on a Raid10 with "Intel Matrix St=
-orage"=20
-> and dmraid installation.
->=20
->=20
+On Sep 20, 2012, at 11:05 AM, Oliver Schinagl wrote:
 
-OK you didn't answer my question about what mdadm metadata version your=
- md RAID is using. If it's 1.0 instead of 1.2 that could be the culprit=
-=2E
+>> 
+> I did check the FS, I ran some fsck tests and checked data on the drive, everything appeared to be normal. I still have to verify some unimportant iso images, once that is done, I cannot imagine the data being bad.
 
-> The Question is, work parted correct with Raid GPT Table?
+You should make sure it wasn't just a quick journal check, which is now common. If the journal is clean, the file system is assumed to be clean, because that's faster than fully checking the file system. For e2fsck this means passing -f. You might want to use the -n option also.
 
-Could be a bug in parted 2.3, which is old. Try using parted 3.0.
+For XFS you'd xfs_check first, and then xfs_repair -n which could take quite a while depending on the size of the file system.
 
-Another question is, do you really think it's a good idea to be mixing =
-different RAID implementations on the same physical devices, which also=
- appear to contain boot volumes?
 
-I think one of your RAID implementations is stepping on the GPT seconda=
-ry header. I've seen this before in a BIOS "fakeraid" implementation. S=
-o I would look at all of your RAID implementations, make sure they're u=
-sing the latest versions.
-
-Chris Murphy--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Chris Murphy
