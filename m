@@ -1,47 +1,70 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [patch 1/2]MD: raid5 trim support
-Date: Thu, 20 Sep 2012 12:25:41 +0800
-Message-ID: <20120920042541.GA12704@kernel.org>
-References: <20120918082511.GA6298@kernel.org>
- <20120920111517.54d05380@notabene.brown>
- <20120920013642.GA6798@kernel.org>
- <20120920114740.7e2c2d1f@notabene.brown>
- <20120920022717.GD6798@kernel.org>
- <20120920135914.63bf9ff4@notabene.brown>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH] raid5: Avoid doing more read on dev of a stripe at the same time
+Date: Thu, 20 Sep 2012 14:04:54 +0800
+Message-ID: <2012092014045245356613@gmail.com>
+References: <2012091510203206229010@gmail.com> <20120920125144.0ed69ec3@notabene.brown> <201209201104415460652@gmail.com>,
+	<20120920132422.0f7841f1@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120920135914.63bf9ff4@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Sep 20, 2012 at 01:59:14PM +1000, NeilBrown wrote:
-> On Thu, 20 Sep 2012 10:27:17 +0800 Shaohua Li <shli@kernel.org> wrote:
-> 
-> in which wrong sectors were trimmed....
-> > 
-> > Ok, just confirmed, delete raid5_compute_sector is ok if I adjust
-> > logical_sector calculation. Here is the new patch.
-> > 
-> 
-> Thanks.  That looks better.  I've applied it with some minor formatting
-> changes.
-> 
-> I then went to look at the follow-up page and .....
-> I count 11 separate places where you test the new flag and possibly memset a
-> page to zero.  This doesn't seem like an improvement to me.
+T24gMjAxMi0wOS0yMCAxMToyNCBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
+IFRodSwgMjAgU2VwIDIwMTIgMTE6MDQ6NDYgKzA4MDAgIkppYW5wZW5nIE1hIiA8bWFqaWFucGVu
+Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gT24gMjAxMi0wOS0yMCAxMDo1MSBOZWlsQnJvd24g
+PG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPj4gPk9uIFNhdCwgMTUgU2VwIDIwMTIgMTA6MjA6MzUg
+KzA4MDAgIkppYW5wZW5nIE1hIiA8bWFqaWFucGVuZ0BnbWFpbC5jb20+IHdyb3RlOg0KPj4gPg0K
+Pj4gPj4gSW4gZnVuYyAnb3BzX3J1bl9iaW8nIGlmIHlvdSByZWFkIHRoZSBkZXYgd2hpY2ggdGhl
+IGxhc3QgcmVhZGluZw0KPj4gPj4gb2YgdGhpcyBkZXYgZGlkbid0IHJldHVybixpdCB3aWxsIGRl
+c3Ryb3J5IHRoZSAgcmVxL3JyZXEnc291cmNlIG9mIHJkZXYuDQo+PiA+PiBJdCBtYXkgY2FsbCBo
+dW5nLXRhc2suDQo+PiA+PiBGb3IgZXhhbXBsZSwgZm9yIGJhZHNlY3RvciBvciBvdGhlciByZWFz
+b25zLCByZWFkLW9wZXJhdGlvbiBvbmx5IHVzZWQNCj4+ID4+IHN0cmlwZSBpbnN0ZWFkIG9mIGNo
+dW5rX2FsaWduZWRfcmVhZC4NCj4+ID4+IEZpcnN0OnN0cmlwZSAwO3NlY29uZDogc3RyaXBlIDg7
+dGhpcmQ6c3RyaXBlIDE2LkF0IHRoZSBibG9jay1sYXllcix0aHJlZQ0KPj4gPj4gYmlvcyBtZXJn
+ZWQuDQo+PiA+PiBCZWNhdXNlIG1lZGlhIGVycm9yIG9mIHNlY3RvciBmcm9tIDAgdG8gNywgdGhl
+IHJlcXVlc3QgcmV0cmllZC4NCj4+ID4+IEF0IHRoaXMgdGltZSwgcmFpZDVkIHJlYWRlZCBzdHJp
+cGUwIGFnYWluLkJ1dCBpdCB3aWxsIHNldCAnYmlvLT5uZXh0ID0NCj4+ID4+IE5VTEwnLlNvIHRo
+ZSBzdHJpcGUgOCBhbmQgMTYgZGlkbid0IHJldHVybi4NCj4+ID4+IA0KPj4gPj4gU2lnbmVkLW9m
+Zi1ieTogSmlhbnBlbmcgTWEgPG1hamlhbnBlbmdAZ21haWwuY29tPg0KPj4gPg0KPj4gPkhpLA0K
+Pj4gPiBJJ20gcmVhbGx5IHRyeWluZywgYnV0IEkgY2Fubm90IHVuZGVyc3RhbmQgd2hhdCB5b3Ug
+YXJlIHNheWluZy4NCj4+ID4NCj4+IFNvcnJ5IGZvciBteSBiYWQgZW5nbGlzaC4NCj4+ID5JIHRo
+aW5rIHRoZSBzaXR1YXRpb24gdGhhdCB5b3UgYXJlIGRlc2NyaWJpbmcgaW52b2x2ZXMgYSAyNCBz
+ZWN0b3IgcmVxdWVzdC4NCj4+ID5UaGlzIGlzIGF0dGFjaGVkIHRvIDMgc3RyaXBlX2hlYWRzIC0g
+OCBzZWN0b3JzIGVhY2ggLSBhdCBhZGRyZXNzIDAsIDgsIDE2Lg0KPj4gPg0KPj4gPlNvICd0b3Jl
+YWQnIG9uIHRoZSBmaXJzdCBkZXZpY2Ugb2YgZWFjaCBzdHJpcGUgcG9pbnRzIHRvIHRoaXMgYmlv
+LCBhbmQNCj4+ID5iaV9uZXh0IGlzIE5VTEwuDQo+PiA+DQo+PiA+VGhlICJyZXEiIGJpbyBmb3Ig
+ZWFjaCBkZXZpY2UgaXMgZmlsbGVkIG91dCB0byByZWFkIG9uZSBwYWdlIGFuZCB0aGVzZSB0aHJl
+ZQ0KPj4gPidyZXEnIGJpb3MgYXJlIHN1Ym1pdHRlZC4gIFRoZSBibG9jayBsYXllciBtZXJnZXMg
+dGhlc2UgaW50byBhIHNpbmdsZSByZXF1ZXN0Lg0KPj4gPg0KPj4gPlRoaXMgcmVxdWVzdCByZXBv
+cnRzIGFuIGVycm9yIGJlY2F1c2UgdGhlcmUgaXMgYSByZWFkIGVycm9yIHNvbWV3aGVyZSBpbiB0
+aGUNCj4+ID5maXJzdCAgOCBzZWN0b3JzLg0KPj4gPg0KPj4gWWVzLA0KPj4gPlNvIG9uZSwgb3Ig
+bWF5YmUgYWxsLCBvZiB0aGUgJ3JlcScgYmlvcyByZXR1cm4gd2l0aCBhbiBlcnJvcj8NCj4+IEZy
+b20gbXkgdGVzdCwgd2hlbiByZXEgZGlkIG5vdCByZXR1cm4gYW5kIGF0IHRoZSBzYW1lIHRpbWUs
+IHRoZSBiaW8oc3RyaXBlIDApIHNlbmQuDQo+PiBTbyB0aGlzIG9wZXJhdGlvbiB3aWxsIHNldCBi
+aV9uZXh0IGlzIE5VTEwuDQo+DQo+QXJlIHlvdSBzYXlpbmcgdGhhdCB3ZSBzZW5kIGFub3RoZXIg
+YmlvIGJlZm9yZSB0aGUgZmlyc3Qgb25lIGhhcyByZXR1cm5lZD8NCj5UaGF0IHNob3VsZG4ndCBi
+ZSBwb3NzaWJsZSBhcyBzaC0+Y291bnQgd2lsbCBwcmV2ZW50IGl0IGZyb20gaGFwcGVuaW5nLg0K
+PldoaWxlIHRoZXJlIGlzIGFuIG91dHN0YW5kaW5nIHJlcXVlc3QsIHNoLT5jb3VudCB3aWxsIGJl
+ID4wLCBhbmQgdW50aWwNCj5zaC0+Y291bnQgaXMgMCwgd2Ugd29uJ3QgdHJ5IHRvIHNlbmQgYW55
+IG1vcmUgcmVxdWVzdHMuDQo+DQoNCj5TbyBJIHN0aWxsIGRvbid0IHVuZGVyc3RhbmQuICBQbGVh
+c2UgdHJ5IHRvIHByb3ZpZGUgYXMgbXVjaCBkZXRhaWwgYXMNCj5wb3NzaWJsZS4gIElmIGl0IGlz
+IGVhc2llciwgd3JpdGUgaW4geW91ciBvd24gbGFuZ3VhZ2UgYW5kIHVzZQ0KPnRyYW5zbGF0ZS5n
+b29nbGUuY29tIHRvIGNvbnZlcnQgdG8gZW5nbGlzaC4gPz8NCj4NCkJlY2F1c2UgbXkgZGlza3Mg
+d2hpY2ggaGFkIGJhZHNlY3RvciB3cm90ZSBhbmQgY2FuJ3QgcmVwcm9kdWNlIHRoaXMgYnVnIG5v
+dy4NCjE6IGNyZWF0ZSByYWlkNSANCgltZGFkbSAtQ1IgL2Rldi9tZDAgLWw1IC1jNCAtbjQgbWlz
+c2luZyAvZGV2L3NkW2NkZV0gDQoJc2RiIGFuZCBzZGMgIGhhZCBiYWRzZWN0b3JzLg0KMjpkbyBy
+ZWFkIG9wZXJhdGlvbiANCiAgd2hpbGUgdHJ1ZTtkbw0KICBkZCBpZj0vZGV2L21kMCBvZj0vZGV2
+L251bGwgYnM9M00gY291bnQ9MSBvZmxhZz1kaXJlY3QNCiAgZG9uZQ0KMzpkZCB3aWxsIGJlIGhh
+bmcuDQoNClN1cHBvc2UgcmVhZCBzdHJpcGVOIGZyb20gbWlzc2VkIGRpc2ssIGl0IG9ubHkgcmVh
+ZCBkaXNrIHNkYy9zZGQvc2RlIGFuZCB0byBjb21wdXRlci4NCjE6IGZpcnN0IHNlbmQgcmVhZCBv
+cGVyYXRpb24gYWJvdXQgc2RjL3NkZC9zZGUgZm9yIGNvbXB1dGVyDQoyOiB0aGVuIHJlYWQgc2Rj
+IHRocm91Z2ggY2h1bmtfYWxpZ25lZF9yZWFkIGFuZCBtZXQgZXJyb3IgYW5kIHVzZWQgc3RyaXBl
+IHRvIHJlYWQuDQpJZiB0aGlzIHJlYWQtb3BlcmF0aW9uIGNhbiBhZGQgc3RyaXBlIGFuZCBzZW5k
+IHRvIHNkYyx0aGVyZSBpcyBjaGFuY2UgdG8gb2NjdXIgdGhlIHByb2JsZW0gbGlrZSBleHBsYWlu
+ZWQuDQoNCg==
 
-We do the zero page just before the stripe is hit in cache, which is rare case.
- 
-> Why don't we just mark the page as not up-to-date when we discard it?  That
-> would avoid storing inconsistent data, and would avoid needing to zero pages.
-
-We need re-read the strip if it's hit in cache, but it's rare case, we don't
-care. So when we clear the up-to-date flag? I saw a lot of places checking
-up-to-date flag in the write path. Need close look to check if there is race.
-
-Thanks,
-Shaohua
