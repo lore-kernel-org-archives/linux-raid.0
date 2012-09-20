@@ -1,70 +1,55 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: Areca hardware RAID / first-ever SCSI bus reset: am I about to lose this disk controller?
-Date: Thu, 20 Sep 2012 07:51:01 +0100
-Message-ID: <87r4pxqjai.fsf@spindle.srvr.nix>
-References: <87mx0lsv4d.fsf@spindle.srvr.nix>
-	<505A47A0.1060709@hardwarefreak.com>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH] raid5: fix possible oops in add_stripe_bio when enable pr_debug
+Date: Thu, 20 Sep 2012 15:17:54 +0800
+Message-ID: <2012092015175190687821@gmail.com>
+References: <2012092014334148441317@gmail.com>,
+	<20120920164744.1aab090c@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <505A47A0.1060709@hardwarefreak.com> (Stan Hoeppner's message of
-	"Wed, 19 Sep 2012 17:30:56 -0500")
-Sender: linux-kernel-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 19 Sep 2012, Stan Hoeppner stated:
+T24gMjAxMi0wOS0yMCAxNDo0NyBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
+IFRodSwgMjAgU2VwIDIwMTIgMTQ6MzQ6MDAgKzA4MDAgIkppYW5wZW5nIE1hIiA8bWFqaWFucGVu
+Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gSW4gZnVuYyBhZGRfc3RyaXBlX2JpbzoNCj4+ID4+
+IC4uLi4uDQo+PiA+PgkJYmlwID0gJnNoLT5kZXZbZGRfaWR4XS50b3JlYWQ7DQo+PiA+PiAuLi4u
+Li4NCj4+ID4+c3Bpbl91bmxvY2tfaXJxKCZzaC0+c3RyaXBlX2xvY2spOw0KPj4gDQo+PiA+Pglw
+cl9kZWJ1ZygiYWRkZWQgYmkgYiMlbGx1IHRvIHN0cmlwZSBzIyVsbHUsIGRpc2sgJWQuXG4iLA0K
+Pj4gPj4JCSh1bnNpZ25lZCBsb25nIGxvbmcpKCpiaXApLT5iaV9zZWN0b3IsDQo+PiA+PgkJKHVu
+c2lnbmVkIGxvbmcgbG9uZylzaC0+c2VjdG9yLCBkZF9pZHgpOw0KPj4gQWZ0ZXIgc3Bpbl91bmxv
+Y2tfaXJxLCB0aGlzIHRocmVhZCBzY2hlZGVkIGFuZCB0b3JlYWQgbWF5IGJlY29tZSBudWxsLg0K
+Pj4gU28gaXQgd2lsbCBiZSBvb3BzLg0KPj4gDQo+PiBTaWduZWQtb2ZmLWJ5OiBKaWFucGVuZyBN
+YSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQo+PiAtLS0NCj4+ICBkcml2ZXJzL21kL3JhaWQ1LmMg
+fCAgICAzICsrLQ0KPj4gIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDEgZGVsZXRp
+b24oLSkNCj4+IA0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2RyaXZlcnMv
+bWQvcmFpZDUuYw0KPj4gaW5kZXggYWRkYTk0ZC4uZjE3MmIxZSAxMDA2NDQNCj4+IC0tLSBhL2Ry
+aXZlcnMvbWQvcmFpZDUuYw0KPj4gKysrIGIvZHJpdmVycy9tZC9yYWlkNS5jDQo+PiBAQCAtMjM1
+Niw2ICsyMzU2LDcgQEAgc3RhdGljIGludCBhZGRfc3RyaXBlX2JpbyhzdHJ1Y3Qgc3RyaXBlX2hl
+YWQgKnNoLCBzdHJ1Y3QgYmlvICpiaSwgaW50IGRkX2lkeCwgaW4NCj4+ICAJc3RydWN0IGJpbyAq
+KmJpcDsNCj4+ICAJc3RydWN0IHI1Y29uZiAqY29uZiA9IHNoLT5yYWlkX2NvbmY7DQo+PiAgCWlu
+dCBmaXJzdHdyaXRlPTA7DQo+PiArCXNlY3Rvcl90IHNlY3RvciA9IGJpLT5iaV9zZWN0b3I7DQo+
+PiAgDQo+PiAgCXByX2RlYnVnKCJhZGRpbmcgYmkgYiMlbGx1IHRvIHN0cmlwZSBzIyVsbHVcbiIs
+DQo+PiAgCQkodW5zaWduZWQgbG9uZyBsb25nKWJpLT5iaV9zZWN0b3IsDQo+PiBAQCAtMjQwNiw3
+ICsyNDA3LDcgQEAgc3RhdGljIGludCBhZGRfc3RyaXBlX2JpbyhzdHJ1Y3Qgc3RyaXBlX2hlYWQg
+KnNoLCBzdHJ1Y3QgYmlvICpiaSwgaW50IGRkX2lkeCwgaW4NCj4+ICAJc3Bpbl91bmxvY2tfaXJx
+KCZzaC0+c3RyaXBlX2xvY2spOw0KPj4gIA0KPj4gIAlwcl9kZWJ1ZygiYWRkZWQgYmkgYiMlbGx1
+IHRvIHN0cmlwZSBzIyVsbHUsIGRpc2sgJWQuXG4iLA0KPj4gLQkJKHVuc2lnbmVkIGxvbmcgbG9u
+ZykoKmJpcCktPmJpX3NlY3RvciwNCj4+ICsJCSh1bnNpZ25lZCBsb25nIGxvbmcpc2VjdG9yLA0K
+Pj4gIAkJKHVuc2lnbmVkIGxvbmcgbG9uZylzaC0+c2VjdG9yLCBkZF9pZHgpOw0KPj4gIA0KPj4g
+IAlpZiAoY29uZi0+bWRkZXYtPmJpdG1hcCAmJiBmaXJzdHdyaXRlKSB7DQo+DQo+DQo+aG93IGFi
+b3V0IHdlIGp1c3QgbW92ZSB0aGUgc3Bpbl91bmxvY2tfaXJxIGFmdGVyIHRoZSBwcl9kZWJ1Zz8/
+DQo+DQphaCEgV2h5IGFyZSB5b3UgdGhpbmsgPyBteSBtZXRob2Qgb25seSBhZGQgYSBwYXJhbWV0
+ZXIuDQpCVFcsIGluIGZ1bmMgaGFuZGxlX2ZhaWxlZF9zdHJpcGU6DQo+PmlmICghdGVzdF9iaXQo
+UjVfV2FudGZpbGwsICZzaC0+ZGV2W2ldLmZsYWdzKSAmJg0KPj4JCSAgICAoIXRlc3RfYml0KFI1
+X0luc3luYywgJnNoLT5kZXZbaV0uZmxhZ3MpIHx8DQo+PgkJICAgICAgdGVzdF9iaXQoUjVfUmVh
+ZEVycm9yLCAmc2gtPmRldltpXS5mbGFncykpKSB7DQo+PgkJCWJpID0gc2gtPmRldltpXS50b3Jl
+YWQ7DQo+PgkJCXNoLT5kZXZbaV0udG9yZWFkID0gTlVMTDsNCj4+CQkJaWYgKHRlc3RfYW5kX2Ns
+ZWFyX2JpdChSNV9PdmVybGFwLCAmc2gtPmRldltpXS5mbGFncykpDQo+PgkJCQl3YWtlX3VwKCZj
+b25mLT53YWl0X2Zvcl9vdmVybGFwKTsNCldoeSB1c2Ugc3RyaXBlX2xvY2sgdG8gcHJvdGVjdCB0
+b3JlYWQ/DQoNClRoYW5rcyENCg==
 
-> On 9/19/2012 1:52 PM, Nix wrote:
->> So I have this x86-64 server running Linux 3.5.1 
->
-> When did you install 3.5.1 on this machine?
-
-Forty days ago.
-
->                                              If fairly recently, does it
-> run without these errors when booted into the previous kernel?
-
-Well, since this error happened only once, and after thirty-nine days of
-uptime at that, I'm not sure how I can find out. :)
-
->> with a SATA-on-PCIe
->> Areca 1210 hardware RAID-5 controller driven by libata which has been
->> humming along happily for years -- but suddenly, today, the entire
->> machine froze for a couple of minutes (or at least fs access froze),
->> followed by this in the logs:
->> 
->> Sep 19 16:55:47 spindle notice: [3447524.381843] arcmsr0: abort device command of scsi id = 0 lun = 1 
->> [... repeated a few times at intervals over the next five minutes,
->>  followed by a mass of them at 16:59:29, and...]
->> Sep 19 16:59:25 spindle err: [3447657.821450] arcmsr: executing bus reset eh.....num_resets = 0, num_aborts = 33 
->> Sep 19 16:59:25 spindle notice: [3447697.878386] arcmsr0: wait 'abort all outstanding command' timeout 
->> Sep 19 16:59:25 spindle notice: [3447697.878628] arcmsr0: executing hw bus reset .....
->> Sep 19 16:59:25 spindle err: [3447698.287054] irq 16: nobody cared (try booting with the "irqpoll" option)
->> Sep 19 16:59:25 spindle warning: [3447698.287291] Pid: 0, comm: swapper/4 Not tainted 3.5.1-dirty #1
->> Sep 19 16:59:25 spindle warning: [3447698.287522] Call Trace:
->> Sep 19 16:59:25 spindle warning: [3447698.287754]  <IRQ>  [<ffffffff810af5ba>] __report_bad_irq+0x31/0xc2
->> Sep 19 16:59:25 spindle warning: [3447698.288031]  [<ffffffff810af84e>] note_interrupt+0x16a/0x1e8
->> Sep 19 16:59:25 spindle warning: [3447698.288263]  [<ffffffff810ad9d5>] handle_irq_event_percpu+0x163/0x1a5
->> Sep 19 16:59:25 spindle warning: [3447698.288497]  [<ffffffff810ada4f>] handle_irq_event+0x38/0x55
->> Sep 19 16:59:25 spindle warning: [3447698.288727]  [<ffffffff810b01a0>] handle_fasteoi_irq+0x78/0xab
->> Sep 19 16:59:25 spindle warning: [3447698.288960]  [<ffffffff8103631c>] handle_irq+0x24/0x2a
->> Sep 19 16:59:25 spindle warning: [3447698.289189]  [<ffffffff81036229>] do_IRQ+0x4d/0xb4
->> Sep 19 16:59:25 spindle warning: [3447698.289419]  [<ffffffff815070e7>] common_interrupt+0x67/0x67
->> Sep 19 16:59:25 spindle warning: [3447698.289648]  <EOI>  [<ffffffff812ab174>] ? acpi_idle_enter_c1+0xcb/0xf2
->> Sep 19 16:59:25 spindle warning: [3447698.289919]  [<ffffffff812ab152>] ? acpi_idle_enter_c1+0xa9/0xf2
->> Sep 19 16:59:25 spindle warning: [3447698.290152]  [<ffffffff813c1446>] cpuidle_enter+0x12/0x14
->> Sep 19 16:59:25 spindle warning: [3447698.290382]  [<ffffffff813c1902>] cpuidle_idle_call+0xc5/0x175
->> Sep 19 16:59:25 spindle warning: [3447698.290614]  [<ffffffff8103c2da>] cpu_idle+0x5b/0xa5
->> Sep 19 16:59:25 spindle warning: [3447698.290844]  [<ffffffff81ad4fcb>] start_secondary+0x1a2/0x1a6
->> Sep 19 16:59:25 spindle err: [3447698.291074] handlers:
->> Sep 19 16:59:25 spindle err: [3447698.291294] [<ffffffff8133b9a3>] usb_hcd_irq
->> Sep 19 16:59:25 spindle emerg: [3447698.291553] Disabling IRQ #16
->> Sep 19 16:59:25 spindle err: [3447710.888187] arcmsr0: waiting for hw bus reset return, retry=0
->> Sep 19 16:59:25 spindle err: [3447720.882155] arcmsr0: waiting for hw bus reset return, retry=1
->> Sep 19 16:59:25 spindle notice: [3447730.896410] Areca RAID Controller0: F/W V1.46 2009-01-06 & Model ARC-1210
->> Sep 19 16:59:25 spindle err: [3447730.916348] arcmsr: scsi  bus reset eh returns with success
-
--- 
-NULL && (void)
