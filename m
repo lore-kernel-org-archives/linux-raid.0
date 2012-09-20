@@ -1,51 +1,85 @@
-From: =?ISO-8859-1?Q?G=FCnther_J=2E?= Niederwimmer <gjn@gjn.priv.at>
-Subject: Re: GPT Table broken on a Raid1
-Date: Thu, 20 Sep 2012 13:05:54 +0200
-Message-ID: <2627519.Y2VdWh5VBI@techz>
-References: <4961154.0TR9MeFlIq@techz> <7577D4C6-344F-4AE6-BB6A-3B4F29D4CAA0@colorremedies.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Wrong array size detected after reboot
+Date: Thu, 20 Sep 2012 21:39:48 +1000
+Message-ID: <20120920213948.7dfc5f78@notabene.brown>
+References: <CAFEwywaeGevnDMu7Do_wK+_Jgtyd0vman0804C2LyqbyzcJ9Sw@mail.gmail.com>
+	<504C0462.2000609@turmel.org>
+	<20120910091352.38dfdc20@notabene.brown>
+	<CAFEwywaGN3cvXVAJxsWuc1-j0mfeLtKs_iqNznFQN8QA7JO8qQ@mail.gmail.com>
+	<20120919114202.0ad6355b@notabene.brown>
+	<CAFEwywbuH1689UStqoGOsvAh_X9afCpojKouY=Po5sXFGDFutw@mail.gmail.com>
+	<20120920091109.5d950820@notabene.brown>
+	<CAFEwywZ58nJMxd9ae66fEsWcUo94Djvhj44fg3MxFcQp_7_vpw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/8Gb93ka1Qb6r9yzTeK7ERtz"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7577D4C6-344F-4AE6-BB6A-3B4F29D4CAA0@colorremedies.com>
+In-Reply-To: <CAFEwywZ58nJMxd9ae66fEsWcUo94Djvhj44fg3MxFcQp_7_vpw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Markus Irle <tha.bear@gmail.com>
+Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+--Sig_/8Gb93ka1Qb6r9yzTeK7ERtz
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Am Mittwoch, 19. September 2012, 20:39:55 schrieb Chris Murphy:
-> On Sep 19, 2012, at 5:03 AM, G=FCnther J. Niederwimmer wrote:
-> > Hello,
-> >=20
-> > can any tell me, why the GPT Table is broken by a linux installatio=
-n
+On Thu, 20 Sep 2012 11:53:04 +0200 Markus Irle <tha.bear@gmail.com> wrote:
+
+> Hi Neil,
 >=20
-> What format superblock? I will guess it's 1.0 which stores the superb=
-lock at
-> the end of the disk and may be stepping on the secondary GPT header. =
-And
-> then when you repair the GPT, you're wiping out part of the md superb=
-lock
-> so it breaks your RAID.
+> On Thu, Sep 20, 2012 at 1:11 AM, NeilBrown <neilb@suse.de> wrote:
+> >
+> > Yes, the metadata has lots the most-significant-bit of the 'size'.
+> >
+> > So it should be sufficient to:
+> >   mdadm -G /dev/md2 --size 2930266432
+> >
+> > where the size is calculated as the current "used device size" plus 2^3=
+1.
+> > You could probably just do "--size max"
+> >
+> > This will cause a resync of the 2G of data which is probably unnecessar=
+y, but
+> > is awkward to avoid.
 >=20
-> It's confusing that the GPT table is created with diskpart, instead o=
-f
-> parted.
+> Thanks, will try.
+>=20
+> Resyncing won't overwrite the existing data, will it?
 
-this is "normal" I install "windows 7" first ;). but the problem with t=
-he=20
-wrong GPT Table Message I have also on a Raid10 with "Intel Matrix Stor=
-age"=20
-and dmraid installation.
+No, it won't.  It'll just check all the parity blocks are correct.
 
-The Question is, work parted correct with Raid GPT Table?
---=20
-mit freundlichen Gr=FC=DFen / best Regards.
+> Sorry for being overly cautious...
 
-  G=FCnther J. Niederwimmer
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Not something to apologise for ....
+
+NeilBrown
+
+>=20
+> Cheers,
+> Markus
+
+
+--Sig_/8Gb93ka1Qb6r9yzTeK7ERtz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBUFsAhDnsnt1WYoG5AQIcHQ/8D8rorySPIP2Gmc2pC/SX0xAE7lGxBADX
+qJMBETB9PQULd8YPL/KxOFHHNhGM2dPGDIG1TGDO6aVOOKqucILIJQdkQPiPOv3L
+kZO3pNqtXZfOustldaqIb0IsHOeqpil6XnwZBhveMkyfYnT9bgXaqgFaUJs+oKHR
+A/1Jtg1ribRjShITENfqXRSYEAQyS7IL/cenSMGBAdjQv/l8zvswXHhm0p3QnQiy
+c5Og4dhyK1upjwDR1ygah8/MKx/CiS0tRJzfFSGI4nddVXhBRU48PZ9ANLZ4xCJU
+TXLTLcCb+oJxF2t5eNmmo1RSwLwDYNIahVjKEslRMzyfpzfZF7kFibiUMBYnaYco
+BDF6mBcGk4oueUA7sLQm1fgCn2eECwnVzM9N6Dz3cgOWMhFSnqYEItws13PcCosf
+DJP4CefrSPVgj/Ef7prj7pMhDTWZdahAzycjOpftdG25sr0zrgED9ZcGQSZjwogP
+eLM8jFdO1n0crHRlwDPVbZlsoPJT1iYr1V4ZruB1OI+92hhCl9nxKr+EbwJMzN/b
+HD8NOsaPiiEUB7FSR8OdesuLOB6LPsB2UiStzBZPG4pFgWmzYXFZvii8VugR/9VO
+RtcdOFnkO1cMTwRXZaPB+fFGvLYuisy6odU29SPViAED4iZo9lh5Vfiw+X8QAiz0
+0Gu6CvC/j6M=
+=MmSE
+-----END PGP SIGNATURE-----
+
+--Sig_/8Gb93ka1Qb6r9yzTeK7ERtz--
