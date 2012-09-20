@@ -1,260 +1,194 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch 1/2]MD: raid5 trim support
-Date: Thu, 20 Sep 2012 11:47:40 +1000
-Message-ID: <20120920114740.7e2c2d1f@notabene.brown>
-References: <20120918082511.GA6298@kernel.org>
-	<20120920111517.54d05380@notabene.brown>
-	<20120920013642.GA6798@kernel.org>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [RFC 1/2]raid1: only write mismatch sectors in sync
+Date: Thu, 20 Sep 2012 09:56:55 +0800
+Message-ID: <20120920015655.GB6798@kernel.org>
+References: <20120726080150.GA21457@kernel.org>
+ <20120731155304.11c40f9b@notabene.brown>
+ <CANejiEWZk6JcErw9Y6cqpotYMypQA_jvv8N0612FBq81Lo8jVQ@mail.gmail.com>
+ <20120911105908.51681433@notabene.brown>
+ <20120912052941.GA15827@kernel.org>
+ <20120918145710.55394bd4@notabene.brown>
+ <20120919055106.GA1305@kernel.org>
+ <20120919171646.6bc35ba5@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/FzpVVqtDHL+CieGaZW6F6Qz"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120920013642.GA6798@kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120919171646.6bc35ba5@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/FzpVVqtDHL+CieGaZW6F6Qz
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wed, Sep 19, 2012 at 05:16:46PM +1000, NeilBrown wrote:
+> On Wed, 19 Sep 2012 13:51:06 +0800 Shaohua Li <shli@kernel.org> wrote:
+> 
+> > On Tue, Sep 18, 2012 at 02:57:10PM +1000, NeilBrown wrote:
+> > > On Wed, 12 Sep 2012 13:29:41 +0800 Shaohua Li <shli@kernel.org> wrote:
+> > > 
+> > > > On Tue, Sep 11, 2012 at 10:59:08AM +1000, NeilBrown wrote:
+> > > > > On Tue, 31 Jul 2012 16:12:04 +0800 Shaohua Li <shli@kernel.org> wrote:
+> > > > > 
+> > > > > > 2012/7/31 NeilBrown <neilb@suse.de>:
+> > > > > > > On Thu, 26 Jul 2012 16:01:50 +0800 Shaohua Li <shli@kernel.org> wrote:
+> > > > > > >
+> > > > > > >> Write has some impacts to SSD:
+> > > > > > >> 1. wear out flash. Frequent write can speed out the progress.
+> > > > > > >> 2. increase the burden of garbage collection of SSD firmware. If no space
+> > > > > > >> left for write, SSD firmware garbage collection will try to free some space.
+> > > > > > >> 3. slow down subsequent write. After write SSD to some extents (for example,
+> > > > > > >> write the whole disk), subsequent write will slow down significantly (because
+> > > > > > >> almost every write invokes garbage collection in such case).
+> > > > > > >>
+> > > > > > >> We want to avoid unnecessary write as more as possible. raid sync generally
+> > > > > > >> involves a lot of unnecessary write. For example, even two disks don't have
+> > > > > > >> any data, we write the second disk for the whole disk size.
+> > > > > > >>
+> > > > > > >> To reduce write, we always compare raid disk data and only write mismatch part.
+> > > > > > >> This means sync will have extra IO read and memory compare. So this scheme is
+> > > > > > >> very bad for hard disk raid and sometimes SSD raid too if mismatch part is
+> > > > > > >> majority. But sometimes this can be very helpful to reduce write, in that case,
+> > > > > > >> since sync is rare operation, the extra IO/CPU usage is worthy paying. People
+> > > > > > >> who want to use the feature should understand the risk first. So this ability
+> > > > > > >> is off by default, a sysfs entry can be used to enable it.
+> > > > > > >>
+> > > > > > >> Signed-off-by: Shaohua Li <shli@fusionio.com>
+> > > > > > >> ---
+> > > > > > >>  drivers/md/md.c    |   41 +++++++++++++++++++++++++++++++
+> > > > > > >>  drivers/md/md.h    |    3 ++
+> > > > > > >>  drivers/md/raid1.c |   70 +++++++++++++++++++++++++++++++++++++++++++++++++----
+> > > > > > >>  3 files changed, 110 insertions(+), 4 deletions(-)
+> > > > > > >>
+> > > > > > >> Index: linux/drivers/md/md.h
+> > > > > > >> ===================================================================
+> > > > > > >> --- linux.orig/drivers/md/md.h        2012-07-25 13:51:00.353775521 +0800
+> > > > > > >> +++ linux/drivers/md/md.h     2012-07-26 10:36:38.500740552 +0800
+> > > > > > >> @@ -325,6 +325,9 @@ struct mddev {
+> > > > > > >>  #define      MD_RECOVERY_FROZEN      9
+> > > > > > >>
+> > > > > > >>       unsigned long                   recovery;
+> > > > > > >> +#define MD_RECOVERY_MODE_REPAIR              0
+> > > > > > >> +#define MD_RECOVERY_MODE_DISCARD     1
+> > > > > > >> +     unsigned long                   recovery_mode;
+> > > > > > >
+> > > > > > > You have not documented the meaning of these two flags at all, and I don't
+> > > > > > > feel up to guessing.
+> > > > > > >
+> > > > > > > The patch looks more complex that it should be.  The behaviour you are
+> > > > > > > suggesting is exactly the behaviour you get when MD_RECOVERY_REQUESTED is
+> > > > > > > set, so at most I expect to see a few places where that flag is tested
+> > > > > > > changed to test something else as well.
+> > > > > > >
+> > > > > > > How would this be used?  It affects resync and resync happens as soon as the
+> > > > > > > array is assembled.  So when and how would you set the flag which says
+> > > > > > > "prefer reads to writes"?  It seems like it needs to be set in the metadata.
+> > > > > > >
+> > > > > > > BTW RAID10 already does this - it reads and compares for a normal sync.  So
+> > > > > > > maybe just tell people to use raid10 if they want this behaviour?
+> > > > > > 
+> > > > > > It's true, the behavior likes MD_RECOVERY_REQUESTED, ie, read all disks,
+> > > > > > only do write if two disk data not match. But I hope it works as soon as the
+> > > > > > array is assembled. Surely we can set in the metadata, but I didn't want to
+> > > > > > enable it by default, since even with SSD, the read-compare-write isn't optimal
+> > > > > > some times, because it involves extra IO read and memory compare.
+> > > > > > 
+> > > > > > It appears MD_RECOVERY_REQUESTED assumes disks are insync.
+> > > > > > It doesn't read disk !insync, so it doesn't work for assemble.
+> > > > > > 
+> > > > > > In my mind, user frozen the sync first (with sync_action setting), and then
+> > > > > > enable read-compare-write, and finally continue the sync. I can't stop
+> > > > > > a recovery and set MD_RECOVERY_REQUESTED, so I added a flag.
+> > > > > > Anyway, please suggest what the preferred way for this.
+> > > > > 
+> > > > > I guess I just don't find this functionality at all convincing.  It isn't
+> > > > > clear when anyone would use it, or how they would use it.  It seems best not
+> > > > > to provide it.
+> > > > 
+> > > > The background is: For SSD, writting a hard formatted disk and fully filled
+> > > > disk, the first case could be 300% faster than the second case depending on SSD
+> > > > firmware and how fragmented the filled disk is. So this isn't a trival
+> > > > performance issue.
+> > > > 
+> > > > The usage model is something like this: one disk is borken, add a new disk to
+> > > > the raid. Currently we copy the whole disk of the first disk to the second. For
+> > > > SSD, if the first disk and second disk have most data identical or most content
+> > > > of the first is 0, the copy is very bad. In this scenario, we can avoid some
+> > > > copy, which will make latter write to the disk faster. Thinking about 300%
+> > > > faster :).
+> > > > 
+> > > > I don't think we can do this in underlayer. We don't want to do it always.
+> > > > Detecting 0 is very expensive.
+> > > > 
+> > > > And this isn't intrusive to me. We only do the 'copy avoidness' in sync, and
+> > > > sync is rare event.
+> > > > 
+> > > > I hope to convince you this is a useful functionality, then we can discuss the
+> > > > implementation.
+> > > > 
+> > > 
+> > > Let's start with "when would someone use it".
+> > > 
+> > > You said that you don't want to make it the default.  If something isn't a
+> > > default it will not be used very often, and will only be used at all if it is
+> > > reasonably easy to use.
+> > > So how would someone use this?  What would make them choose to use it, and
+> > > what action would that take to make it happen?
+> > 
+> > Ok, let me explain the usage model.
+> > 
+> > For 'compare and avoid write if equal' case:
+> > 1. update SSD firmware. This doesn't change the data, but we need take one disk
+> > off from the raid one time.
+> > 2. One disk has errors, but these errors don't ruin most of the data (for
+> > example, a pcie error)
+> > 3. driver/os crash.
+> > In all these cases, two raid disks must be resync, and they have almost identical
+> > data. write avoidness will be very helpful for these.
+> 
+> This is all valid, but doesn't explain how it actually happens.
 
-On Thu, 20 Sep 2012 09:36:42 +0800 Shaohua Li <shli@kernel.org> wrote:
+Those are real use cases actually.
+ 
+> Maybe the rsync should initially do a comparison and write-if-different.  If
+> at any time after the first megabyte the fraction of blocks that requires a
+> write exceeds (say) 10%, we switch to "read one, write the others".
+> ??
 
-> On Thu, Sep 20, 2012 at 11:15:17AM +1000, NeilBrown wrote:
-> > On Tue, 18 Sep 2012 16:25:11 +0800 Shaohua Li <shli@kernel.org> wrote:
-> >=20
-> > > Discard for raid4/5/6 has limitation. If discard request size is smal=
-l, we do
-> > > discard for one disk, but we need calculate parity and write parity d=
-isk.  To
-> > > correctly calculate parity, zero_after_discard must be guaranteed. Ev=
-en it's
-> > > true, we need do discard for one disk but write another disks, which =
-makes the
-> > > parity disks wear out fast. This doesn't make sense. So an efficient =
-discard
-> > > for raid4/5/6 should discard all data disks and parity disks, which r=
-equires
-> > > the write pattern to be (A, A+chunk_size, A+chunk_size*2...). If A's =
-size is
-> > > smaller than chunk_size, such pattern is almost impossible in practic=
-e. So in
-> > > this patch, I only handle the case that A's size equals to chunk_size=
-. That is
-> > > discard request should be aligned to stripe size and its size is mult=
-iple of
-> > > stripe size.
-> > >=20
-> > > Since we can only handle request with specific alignment and size (or=
- part of
-> > > the request fitting stripes), we can't guarantee zero_after_discard e=
-ven
-> > > zero_after_discard is true in low level drives.
-> > >=20
-> > > The block layer doesn't send down correctly aligned requests even cor=
-rect
-> > > discard alignment is set, so I must filter out.
-> > >=20
-> > > For raid4/5/6 parity calculation, if data is 0, parity is 0. So if
-> > > zero_after_discard is true for all disks, data is consistent after di=
-scard.
-> > > Otherwise, data might be lost. Let's consider a scenario: discard a s=
-tripe,
-> > > write data to one disk and write parity disk. The stripe could be sti=
-ll
-> > > inconsistent till then depending on using data from other data disks =
-or parity
-> > > disks to calculate new parity. If the disk is broken, we can't restor=
-e it. So
-> > > in this patch, we only enable discard support if all disks have
-> > > zero_after_discard.
-> > >=20
-> > > If discard fails in one disk, we face the similar inconsistent issue =
-above. The
-> > > patch will make discard follow the same path as normal write request.=
- If
-> > > discard fails, a resync will be scheduled to make the data consistent=
-. This
-> > > isn't good to have extra writes, but data consistency is important.
-> > >=20
-> > > If a subsequent read/write request hits raid5 cache of a discarded st=
-ripe, the
-> > > discarded dev page should have zero filled, so the data is consistent=
-. This
-> > > patch will always zero dev page for discarded request stripe. This is=
-n't
-> > > optimal because discard request doesn't need such payload. Next patch=
- will
-> > > avoid it.
-> > >=20
-> > > Signed-off-by: Shaohua Li <shli@fusionio.com>
-> > > ---
-> > >  drivers/md/raid5.c |  176 ++++++++++++++++++++++++++++++++++++++++++=
-++++++++++-
-> > >  drivers/md/raid5.h |    1=20
-> > >  2 files changed, 174 insertions(+), 3 deletions(-)
-> > >=20
-> > > Index: linux/drivers/md/raid5.c
-> > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > > --- linux.orig/drivers/md/raid5.c	2012-09-18 16:15:51.219353357 +0800
-> > > +++ linux/drivers/md/raid5.c	2012-09-18 16:15:55.471299904 +0800
-> > > @@ -547,6 +547,8 @@ static void ops_run_io(struct stripe_hea
-> > >  				rw =3D WRITE_FUA;
-> > >  			else
-> > >  				rw =3D WRITE;
-> > > +			if (test_and_clear_bit(R5_Discard, &sh->dev[i].flags))
-> > > +				rw |=3D REQ_DISCARD;
-> > >  		} else if (test_and_clear_bit(R5_Wantread, &sh->dev[i].flags))
-> > >  			rw =3D READ;
-> > >  		else if (test_and_clear_bit(R5_WantReplace,
-> > > @@ -1170,8 +1172,13 @@ ops_run_biodrain(struct stripe_head *sh,
-> > >  					set_bit(R5_WantFUA, &dev->flags);
-> > >  				if (wbi->bi_rw & REQ_SYNC)
-> > >  					set_bit(R5_SyncIO, &dev->flags);
-> > > -				tx =3D async_copy_data(1, wbi, dev->page,
-> > > -					dev->sector, tx);
-> > > +				if (wbi->bi_rw & REQ_DISCARD) {
-> > > +					memset(page_address(dev->page), 0,
-> > > +						STRIPE_SECTORS << 9);
-> > > +					set_bit(R5_Discard, &dev->flags);
-> > > +				} else
-> > > +					tx =3D async_copy_data(1, wbi, dev->page,
-> > > +						dev->sector, tx);
-> > >  				wbi =3D r5_next_bio(wbi, dev->sector);
-> > >  			}
-> > >  		}
-> > > @@ -1237,6 +1244,20 @@ ops_run_reconstruct5(struct stripe_head
-> > >  	pr_debug("%s: stripe %llu\n", __func__,
-> > >  		(unsigned long long)sh->sector);
-> > > =20
-> > > +	for (i =3D 0; i < sh->disks; i++) {
-> > > +		if (pd_idx =3D=3D i)
-> > > +			continue;
-> > > +		if (!test_bit(R5_Discard, &sh->dev[i].flags))
-> > > +			break;
-> > > +	}
-> > > +	if (i >=3D sh->disks) {
-> > > +		atomic_inc(&sh->count);
-> > > +		memset(page_address(sh->dev[pd_idx].page), 0,
-> > > +			STRIPE_SECTORS << 9);
-> > > +		set_bit(R5_Discard, &sh->dev[pd_idx].flags);
-> > > +		ops_complete_reconstruct(sh);
-> > > +		return;
-> > > +	}
-> > >  	/* check if prexor is active which means only process blocks
-> > >  	 * that are part of a read-modify-write (written)
-> > >  	 */
-> > > @@ -1281,10 +1302,28 @@ ops_run_reconstruct6(struct stripe_head
-> > >  {
-> > >  	struct async_submit_ctl submit;
-> > >  	struct page **blocks =3D percpu->scribble;
-> > > -	int count;
-> > > +	int count, i;
-> > > =20
-> > >  	pr_debug("%s: stripe %llu\n", __func__, (unsigned long long)sh->sec=
-tor);
-> > > =20
-> > > +	for (i =3D 0; i < sh->disks; i++) {
-> > > +		if (sh->pd_idx =3D=3D i || sh->qd_idx =3D=3D i)
-> > > +			continue;
-> > > +		if (!test_bit(R5_Discard, &sh->dev[i].flags))
-> > > +			break;
-> > > +	}
-> > > +	if (i >=3D sh->disks) {
-> > > +		atomic_inc(&sh->count);
-> > > +		memset(page_address(sh->dev[sh->pd_idx].page), 0,
-> > > +			STRIPE_SECTORS << 9);
-> > > +		memset(page_address(sh->dev[sh->qd_idx].page), 0,
-> > > +			STRIPE_SECTORS << 9);
-> > > +		set_bit(R5_Discard, &sh->dev[sh->pd_idx].flags);
-> > > +		set_bit(R5_Discard, &sh->dev[sh->qd_idx].flags);
-> > > +		ops_complete_reconstruct(sh);
-> > > +		return;
-> > > +	}
-> > > +
-> > >  	count =3D set_syndrome_sources(blocks, sh);
-> > > =20
-> > >  	atomic_inc(&sh->count);
-> > > @@ -4067,6 +4106,96 @@ static void release_stripe_plug(struct m
-> > >  		release_stripe(sh);
-> > >  }
-> > > =20
-> > > +static void make_discard_request(struct mddev *mddev, struct bio *bi)
-> > > +{
-> > > +	struct r5conf *conf =3D mddev->private;
-> > > +	sector_t logical_sector, last_sector;
-> > > +	struct stripe_head *sh;
-> > > +	int remaining;
-> > > +	int stripe_sectors;
-> > > +
-> > > +	if (mddev->reshape_position !=3D MaxSector)
-> > > +		/* Skip discard while reshape is happening */
-> > > +		return;
-> > > +
-> > > +	logical_sector =3D bi->bi_sector & ~((sector_t)STRIPE_SECTORS-1);
-> > > +	last_sector =3D bi->bi_sector + (bi->bi_size>>9);
-> > > +
-> > > +	bi->bi_next =3D NULL;
-> > > +	bi->bi_phys_segments =3D 1; /* over-loaded to count active stripes =
-*/
-> > > +
-> > > +	stripe_sectors =3D conf->chunk_sectors *
-> > > +		(conf->raid_disks - conf->max_degraded);
-> > > +	logical_sector =3D DIV_ROUND_UP_SECTOR_T(logical_sector,
-> > > +			stripe_sectors);
-> > > +	sector_div(last_sector, stripe_sectors);
-> > > +
-> > > +	logical_sector *=3D stripe_sectors;
-> > > +	last_sector *=3D stripe_sectors;
-> > > +
-> > > +	for (;logical_sector < last_sector;
-> > > +					logical_sector +=3D STRIPE_SECTORS) {
-> > > +		DEFINE_WAIT(w);
-> > > +		sector_t new_sector;
-> > > +		int d;
-> > > +
-> > > +		new_sector =3D raid5_compute_sector(conf, logical_sector,
-> > > +						  0, &d, NULL);
-> >=20
-> > This is pointless.  Look at the patch I posted again.  You don't need t=
-o call
-> > raid5_compute_sector().  It essentially just divides logical_sector by
-> > stripe_sectors.  It is cleaner not to do the multiple in the first plac=
-e.
->=20
-> in my test, without it, wrong sectors are trimmed.
+Not sure, but this will limit the usage. For example, in my case 1, the first
+disk can be written slightly when the second disk is doing firmware upgrade.
+The write can be in the first 1M for sure.
+ 
+> > For 'compare and trim if source disk data is 0' case:
+> > If filesystem support trim, this can be enabled always (or at least we can
+> > enable it if used capacity of the disk is less than 80% for example).
+> 
+> One of my concerns about this is that I would expect smart flash drives to
+> actually do this zero-detection internally.  Maybe they don't now, but surely
+> they will soon.  By the time we get this feature into production there seems
+> a reasonably chance that it won't be needed - at least on new hardware.
 
-Which tells me that the code you tested was wrong.
-However the code you posted was wrong too.
+Doesn't make sense to me. zero-detection is very expensive. blindly doing it
+for every request is insane. While my proposal is just doing it for sync, which
+is a rare scenario.
+ 
+> And on old hardware I believe that 'discard' isn't particularly fast (as it
+> cannot be queued ... or something).  So I would only want to send a discard
+> request if it was very large, though I'm not sure how large is large enough.
 
-Maybe if you post the code you tested and which looked more like mine, and
-explain which wrong sectors were trimmed....
+Yep, discard speed varies between SSDs. Some are very slow, much slower than
+write, some SATA SSD discard speed is even slower than harddisk write. While
+our card is very fast, faster than write.
+ 
+> > User enables these features and then add disk to downgrade raid. raid resync
+> > then avoids write or does trim.
+> 
+> This is the bit that concerns me the most - expecting the user to enable this
+> sort of feature.  In many cases they won't making the code pointless.  If an
+> optimisation is needed, we should use it automatically.  Maybe we can for the
+> first first case.  Not sure yet about the second one.
 
-NeilBrown
+I understood your concerns. Giving this feature can harm/benefit, depending on
+different SSDs and workload/usage model, an interface to enable is preferred.
 
---Sig_/FzpVVqtDHL+CieGaZW6F6Qz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUFp1vDnsnt1WYoG5AQLbIA/6A6yaY3T721b59c45WKH7FFZp9QOYtEB1
-Fi6Y3Ex+Y0SH8QGCW4ycpCU7Fh3l6UbNrDHt4cylXA4nBA/f2UXlT0Ul1TDBlFJ9
-YoJUx8uM2vywHmbKuWgrZ72GSAi69opUrwTnfS2ntfqLzwmlPQMLXgu79daX/gG7
-lAfhA8dWXvH4xpgbmpLiVBavv+VyU/vo+mIKbOi6kiHEPRw52vLGXl9DCq0TXIoC
-QNidO/kM2FS/R1GGaPv0E1W6gStyVkgQ9cEgJ51npzwVj5j+rwkeMtzKH4xnjumS
-XDrT9QmGRmP+zHRkMcNGZ4IDTk/YXIHcPwGCHdmCRR+NnsMEdd/aC1K4Y48FwJI4
-SbsQXewmur/kUWdSUlqceZI0Im6lzhWtpR+b18mx8dQ8DOYFGnW5oUXMR0P0XTQO
-kIAdORkJ3VeQiTwDJEfZI3magKkCTcTppngY38o4cyDD6xI90B7KnJcHKjPUPvpd
-XCPQepiU9LxNdbsgbAbuBsV9PV6GJ9PlYCci9MeJAst1RbgxWd+kiIfZ1uOIEVG/
-OMjzR8bLjpE45O+c2KdlUs+4IK0UWBPxmOS3gV+N/Q4Ety1r+BY5wyorLU+TncBb
-mweTC9yc3O8bKgdaxWnroqFk7iFG3kmsYl8sLV4Hm8l8aB5ywg1V9qjzV5YkXF5Y
-DXxz2POW6Lc=
-=fARR
------END PGP SIGNATURE-----
-
---Sig_/FzpVVqtDHL+CieGaZW6F6Qz--
+Thanks,
+Shaohua
