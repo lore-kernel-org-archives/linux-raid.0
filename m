@@ -1,93 +1,190 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
-Subject: Re: Re: [PATCH] raid5: Avoid doing more read on dev of a stripe at the same time
-Date: Thu, 20 Sep 2012 11:04:46 +0800
-Message-ID: <201209201104415460652@gmail.com>
-References: <2012091510203206229010@gmail.com>,
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] raid5: Avoid doing more read on dev of a stripe at the
+ same time
+Date: Thu, 20 Sep 2012 13:24:22 +1000
+Message-ID: <20120920132422.0f7841f1@notabene.brown>
+References: <2012091510203206229010@gmail.com>
 	<20120920125144.0ed69ec3@notabene.brown>
+	<201209201104415460652@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/bAqg6zoPgrVVrl1vk=WlxZz"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201209201104415460652@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Jianpeng Ma <majianpeng@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wOS0yMCAxMDo1MSBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
-IFNhdCwgMTUgU2VwIDIwMTIgMTA6MjA6MzUgKzA4MDAgIkppYW5wZW5nIE1hIiA8bWFqaWFucGVu
-Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gSW4gZnVuYyAnb3BzX3J1bl9iaW8nIGlmIHlvdSBy
-ZWFkIHRoZSBkZXYgd2hpY2ggdGhlIGxhc3QgcmVhZGluZw0KPj4gb2YgdGhpcyBkZXYgZGlkbid0
-IHJldHVybixpdCB3aWxsIGRlc3Ryb3J5IHRoZSAgcmVxL3JyZXEnc291cmNlIG9mIHJkZXYuDQo+
-PiBJdCBtYXkgY2FsbCBodW5nLXRhc2suDQo+PiBGb3IgZXhhbXBsZSwgZm9yIGJhZHNlY3RvciBv
-ciBvdGhlciByZWFzb25zLCByZWFkLW9wZXJhdGlvbiBvbmx5IHVzZWQNCj4+IHN0cmlwZSBpbnN0
-ZWFkIG9mIGNodW5rX2FsaWduZWRfcmVhZC4NCj4+IEZpcnN0OnN0cmlwZSAwO3NlY29uZDogc3Ry
-aXBlIDg7dGhpcmQ6c3RyaXBlIDE2LkF0IHRoZSBibG9jay1sYXllcix0aHJlZQ0KPj4gYmlvcyBt
-ZXJnZWQuDQo+PiBCZWNhdXNlIG1lZGlhIGVycm9yIG9mIHNlY3RvciBmcm9tIDAgdG8gNywgdGhl
-IHJlcXVlc3QgcmV0cmllZC4NCj4+IEF0IHRoaXMgdGltZSwgcmFpZDVkIHJlYWRlZCBzdHJpcGUw
-IGFnYWluLkJ1dCBpdCB3aWxsIHNldCAnYmlvLT5uZXh0ID0NCj4+IE5VTEwnLlNvIHRoZSBzdHJp
-cGUgOCBhbmQgMTYgZGlkbid0IHJldHVybi4NCj4+IA0KPj4gU2lnbmVkLW9mZi1ieTogSmlhbnBl
-bmcgTWEgPG1hamlhbnBlbmdAZ21haWwuY29tPg0KPg0KPkhpLA0KPiBJJ20gcmVhbGx5IHRyeWlu
-ZywgYnV0IEkgY2Fubm90IHVuZGVyc3RhbmQgd2hhdCB5b3UgYXJlIHNheWluZy4NCj4NClNvcnJ5
-IGZvciBteSBiYWQgZW5nbGlzaC4NCj5JIHRoaW5rIHRoZSBzaXR1YXRpb24gdGhhdCB5b3UgYXJl
-IGRlc2NyaWJpbmcgaW52b2x2ZXMgYSAyNCBzZWN0b3IgcmVxdWVzdC4NCj5UaGlzIGlzIGF0dGFj
-aGVkIHRvIDMgc3RyaXBlX2hlYWRzIC0gOCBzZWN0b3JzIGVhY2ggLSBhdCBhZGRyZXNzIDAsIDgs
-IDE2Lg0KPg0KPlNvICd0b3JlYWQnIG9uIHRoZSBmaXJzdCBkZXZpY2Ugb2YgZWFjaCBzdHJpcGUg
-cG9pbnRzIHRvIHRoaXMgYmlvLCBhbmQNCj5iaV9uZXh0IGlzIE5VTEwuDQo+DQo+VGhlICJyZXEi
-IGJpbyBmb3IgZWFjaCBkZXZpY2UgaXMgZmlsbGVkIG91dCB0byByZWFkIG9uZSBwYWdlIGFuZCB0
-aGVzZSB0aHJlZQ0KPidyZXEnIGJpb3MgYXJlIHN1Ym1pdHRlZC4gIFRoZSBibG9jayBsYXllciBt
-ZXJnZXMgdGhlc2UgaW50byBhIHNpbmdsZSByZXF1ZXN0Lg0KPg0KPlRoaXMgcmVxdWVzdCByZXBv
-cnRzIGFuIGVycm9yIGJlY2F1c2UgdGhlcmUgaXMgYSByZWFkIGVycm9yIHNvbWV3aGVyZSBpbiB0
-aGUNCj5maXJzdCAgOCBzZWN0b3JzLg0KPg0KWWVzLA0KPlNvIG9uZSwgb3IgbWF5YmUgYWxsLCBv
-ZiB0aGUgJ3JlcScgYmlvcyByZXR1cm4gd2l0aCBhbiBlcnJvcj8NCkZyb20gbXkgdGVzdCwgd2hl
-biByZXEgZGlkIG5vdCByZXR1cm4gYW5kIGF0IHRoZSBzYW1lIHRpbWUsIHRoZSBiaW8oc3RyaXBl
-IDApIHNlbmQuDQpTbyB0aGlzIG9wZXJhdGlvbiB3aWxsIHNldCBiaV9uZXh0IGlzIE5VTEwuDQpX
-aHkgYW0gaSBtZW50aW9uIHRoZSBiYWRzZWN0b3I/IEJlY2F1c2UgbXkgZGlza3Mgd2hpY2ggaGFk
-IGJhZHNlY3RvciBjYW4gcmVwcm9kdWNlZCBlYXNpbHkuDQpGb3IgZGlza3Mgd2hpY2ggZGlkbid0
-IGhhdmUgYmFkc2VjdG9yLGkgY2FuJ3QgcmVwcm9kdWNlZCB0aGlzIGJ1Zy4NCg0KPlRoZW4gUkFJ
-RDUgbWFya3MgdGhhdCBkZXZpY2UgYXMgYmVpbmcgYmFkIGFuZCByZWFkcyBmcm9tIHRoZSBvdGhl
-ciBkZXZpY2VzIHRvDQo+cmVjb3ZlciB0aGUgZGF0YS4NCj4NCj5XaGVyZSBleGFjdGx5IGRvZXMg
-c29tZXRoaW5nIGdvIHdyb25nPyAgd2hpY2ggYmlvIGdldHMgYmlfbmV4dCBzZXQgdG8gTlVMTA0K
-PndoZW4gaXQgc2hvdWxkbid0Pw0KPg0KPklmIHlvdSBjb3VsZCBleHBsYWluIHdpdGggbG90cyBv
-ZiBkZXRhaWwgaXQgd291bGQgaGVscCBhIGxvdC4NCj4NClRoZSBxdWVzdGlvbiBpcyB0byBlbnN1
-cmUgdGhlIGZpcnN0LXJlYWQgcmV0dXJuZWQgYW5kIHRoZSBuZXh0IHRvIHNlbmQgb24gc2FtZSBk
-ZXYgb2Ygc3RyaXBlLg0KPlRoYW5rcywNCj5OZWlsQnJvd24NCj4NCj4NCj4+IC0tLQ0KPj4gIGRy
-aXZlcnMvbWQvcmFpZDUuYyB8ICAgMTMgKysrKysrKysrKy0tLQ0KPj4gIGRyaXZlcnMvbWQvcmFp
-ZDUuaCB8ICAgIDEgKw0KPj4gIDIgZmlsZXMgY2hhbmdlZCwgMTEgaW5zZXJ0aW9ucygrKSwgMyBk
-ZWxldGlvbnMoLSkNCj4+IA0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2Ry
-aXZlcnMvbWQvcmFpZDUuYw0KPj4gaW5kZXggYWRkYTk0ZC4uZTUyYmExYiAxMDA2NDQNCj4+IC0t
-LSBhL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gKysrIGIvZHJpdmVycy9tZC9yYWlkNS5jDQo+PiBA
-QCAtNTQ3LDkgKzU0NywxNCBAQCBzdGF0aWMgdm9pZCBvcHNfcnVuX2lvKHN0cnVjdCBzdHJpcGVf
-aGVhZCAqc2gsIHN0cnVjdCBzdHJpcGVfaGVhZF9zdGF0ZSAqcykNCj4+ICAJCQkJcncgPSBXUklU
-RV9GVUE7DQo+PiAgCQkJZWxzZQ0KPj4gIAkJCQlydyA9IFdSSVRFOw0KPj4gLQkJfSBlbHNlIGlm
-ICh0ZXN0X2FuZF9jbGVhcl9iaXQoUjVfV2FudHJlYWQsICZzaC0+ZGV2W2ldLmZsYWdzKSkNCj4+
-IC0JCQlydyA9IFJFQUQ7DQo+PiAtCQllbHNlIGlmICh0ZXN0X2FuZF9jbGVhcl9iaXQoUjVfV2Fu
-dFJlcGxhY2UsDQo+PiArCQl9IGVsc2UgaWYgKHRlc3RfYW5kX2NsZWFyX2JpdChSNV9XYW50cmVh
-ZCwgJnNoLT5kZXZbaV0uZmxhZ3MpKSB7DQo+PiArCQkJLypUaGUgbGFzdCByZWFkIGRpZCBub3Qg
-cmV0dXJuLHNvIHNraXAgdGhpcyByZWFkKi8NCj4+ICsJCQlpZiAodGVzdF9hbmRfc2V0X2JpdChS
-NV9SZWFkaW5nLCAmc2gtPmRldltpXS5mbGFncykpIHsNCj4+ICsJCQkJY2xlYXJfYml0KFI1X0xP
-Q0tFRCwgJnNoLT5kZXZbaV0uZmxhZ3MpOw0KPj4gKwkJCQljb250aW51ZTsNCj4+ICsJCQl9IGVs
-c2UNCj4+ICsJCQkJcncgPSBSRUFEOw0KPj4gKwkJfSBlbHNlIGlmICh0ZXN0X2FuZF9jbGVhcl9i
-aXQoUjVfV2FudFJlcGxhY2UsDQo+PiAgCQkJCQkgICAgJnNoLT5kZXZbaV0uZmxhZ3MpKSB7DQo+
-PiAgCQkJcncgPSBXUklURTsNCj4+ICAJCQlyZXBsYWNlX29ubHkgPSAxOw0KPj4gQEAgLTcwMCw2
-ICs3MDUsNyBAQCBzdGF0aWMgdm9pZCBvcHNfcnVuX2lvKHN0cnVjdCBzdHJpcGVfaGVhZCAqc2gs
-IHN0cnVjdCBzdHJpcGVfaGVhZF9zdGF0ZSAqcykNCj4+ICAJCQlwcl9kZWJ1Zygic2tpcCBvcCAl
-bGQgb24gZGlzYyAlZCBmb3Igc2VjdG9yICVsbHVcbiIsDQo+PiAgCQkJCWJpLT5iaV9ydywgaSwg
-KHVuc2lnbmVkIGxvbmcgbG9uZylzaC0+c2VjdG9yKTsNCj4+ICAJCQljbGVhcl9iaXQoUjVfTE9D
-S0VELCAmc2gtPmRldltpXS5mbGFncyk7DQo+PiArCQkJY2xlYXJfYml0KFI1X1JlYWRpbmcsICZz
-aC0+ZGV2W2ldLmZsYWdzKTsNCj4+ICAJCQlzZXRfYml0KFNUUklQRV9IQU5ETEUsICZzaC0+c3Rh
-dGUpOw0KPj4gIAkJfQ0KPj4gIAl9DQo+PiBAQCAtMTgxOCw2ICsxODI0LDcgQEAgc3RhdGljIHZv
-aWQgcmFpZDVfZW5kX3JlYWRfcmVxdWVzdChzdHJ1Y3QgYmlvICogYmksIGludCBlcnJvcikNCj4+
-ICAJfQ0KPj4gIAlyZGV2X2RlY19wZW5kaW5nKHJkZXYsIGNvbmYtPm1kZGV2KTsNCj4+ICAJY2xl
-YXJfYml0KFI1X0xPQ0tFRCwgJnNoLT5kZXZbaV0uZmxhZ3MpOw0KPj4gKwljbGVhcl9iaXQoUjVf
-UmVhZGluZywgJnNoLT5kZXZbaV0uZmxhZ3MpOw0KPj4gIAlzZXRfYml0KFNUUklQRV9IQU5ETEUs
-ICZzaC0+c3RhdGUpOw0KPj4gIAlyZWxlYXNlX3N0cmlwZShzaCk7DQo+PiAgfQ0KPj4gZGlmZiAt
-LWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuaCBiL2RyaXZlcnMvbWQvcmFpZDUuaA0KPj4gaW5kZXgg
-YTlmYzI0OS4uYTU5NmRmOCAxMDA2NDQNCj4+IC0tLSBhL2RyaXZlcnMvbWQvcmFpZDUuaA0KPj4g
-KysrIGIvZHJpdmVycy9tZC9yYWlkNS5oDQo+PiBAQCAtMjk4LDYgKzI5OCw3IEBAIGVudW0gcjVk
-ZXZfZmxhZ3Mgew0KPj4gIAlSNV9XYW50UmVwbGFjZSwgLyogV2UgbmVlZCB0byB1cGRhdGUgdGhl
-IHJlcGxhY2VtZW50LCB3ZSBoYXZlIHJlYWQNCj4+ICAJCQkgKiBkYXRhIGluLCBhbmQgbm93IGlz
-IGEgZ29vZCB0aW1lIHRvIHdyaXRlIGl0IG91dC4NCj4+ICAJCQkgKi8NCj4+ICsJUjVfUmVhZGlu
-ZywJLyogdGhpcyBkZXYgb24gcmVhZGluZyBvbiBsbGQqLw0KPj4gIH07DQo+PiAgDQo+PiAgLyoN
-Cj4NCj4=
+--Sig_/bAqg6zoPgrVVrl1vk=WlxZz
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Thu, 20 Sep 2012 11:04:46 +0800 "Jianpeng Ma" <majianpeng@gmail.com> wro=
+te:
+
+> On 2012-09-20 10:51 NeilBrown <neilb@suse.de> Wrote:
+> >On Sat, 15 Sep 2012 10:20:35 +0800 "Jianpeng Ma" <majianpeng@gmail.com> =
+wrote:
+> >
+> >> In func 'ops_run_bio' if you read the dev which the last reading
+> >> of this dev didn't return,it will destrory the  req/rreq'source of rde=
+v.
+> >> It may call hung-task.
+> >> For example, for badsector or other reasons, read-operation only used
+> >> stripe instead of chunk_aligned_read.
+> >> First:stripe 0;second: stripe 8;third:stripe 16.At the block-layer,thr=
+ee
+> >> bios merged.
+> >> Because media error of sector from 0 to 7, the request retried.
+> >> At this time, raid5d readed stripe0 again.But it will set 'bio->next =
+=3D
+> >> NULL'.So the stripe 8 and 16 didn't return.
+> >>=20
+> >> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
+> >
+> >Hi,
+> > I'm really trying, but I cannot understand what you are saying.
+> >
+> Sorry for my bad english.
+> >I think the situation that you are describing involves a 24 sector reque=
+st.
+> >This is attached to 3 stripe_heads - 8 sectors each - at address 0, 8, 1=
+6.
+> >
+> >So 'toread' on the first device of each stripe points to this bio, and
+> >bi_next is NULL.
+> >
+> >The "req" bio for each device is filled out to read one page and these t=
+hree
+> >'req' bios are submitted.  The block layer merges these into a single re=
+quest.
+> >
+> >This request reports an error because there is a read error somewhere in=
+ the
+> >first  8 sectors.
+> >
+> Yes,
+> >So one, or maybe all, of the 'req' bios return with an error?
+> From my test, when req did not return and at the same time, the bio(strip=
+e 0) send.
+> So this operation will set bi_next is NULL.
+
+Are you saying that we send another bio before the first one has returned?
+That shouldn't be possible as sh->count will prevent it from happening.
+While there is an outstanding request, sh->count will be >0, and until
+sh->count is 0, we won't try to send any more requests.
+
+So I still don't understand.  Please try to provide as much detail as
+possible.  If it is easier, write in your own language and use
+translate.google.com to convert to english. ??
+
+Thanks,
+NeilBrown
+
+
+
+> Why am i mention the badsector? Because my disks which had badsector can =
+reproduced easily.
+> For disks which didn't have badsector,i can't reproduced this bug.
+>=20
+> >Then RAID5 marks that device as being bad and reads from the other devic=
+es to
+> >recover the data.
+> >
+> >Where exactly does something go wrong?  which bio gets bi_next set to NU=
+LL
+> >when it shouldn't?
+> >
+> >If you could explain with lots of detail it would help a lot.
+> >
+> The question is to ensure the first-read returned and the next to send on=
+ same dev of stripe.
+> >Thanks,
+> >NeilBrown
+> >
+> >
+> >> ---
+> >>  drivers/md/raid5.c |   13 ++++++++++---
+> >>  drivers/md/raid5.h |    1 +
+> >>  2 files changed, 11 insertions(+), 3 deletions(-)
+> >>=20
+> >> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> >> index adda94d..e52ba1b 100644
+> >> --- a/drivers/md/raid5.c
+> >> +++ b/drivers/md/raid5.c
+> >> @@ -547,9 +547,14 @@ static void ops_run_io(struct stripe_head *sh, st=
+ruct stripe_head_state *s)
+> >>  				rw =3D WRITE_FUA;
+> >>  			else
+> >>  				rw =3D WRITE;
+> >> -		} else if (test_and_clear_bit(R5_Wantread, &sh->dev[i].flags))
+> >> -			rw =3D READ;
+> >> -		else if (test_and_clear_bit(R5_WantReplace,
+> >> +		} else if (test_and_clear_bit(R5_Wantread, &sh->dev[i].flags)) {
+> >> +			/*The last read did not return,so skip this read*/
+> >> +			if (test_and_set_bit(R5_Reading, &sh->dev[i].flags)) {
+> >> +				clear_bit(R5_LOCKED, &sh->dev[i].flags);
+> >> +				continue;
+> >> +			} else
+> >> +				rw =3D READ;
+> >> +		} else if (test_and_clear_bit(R5_WantReplace,
+> >>  					    &sh->dev[i].flags)) {
+> >>  			rw =3D WRITE;
+> >>  			replace_only =3D 1;
+> >> @@ -700,6 +705,7 @@ static void ops_run_io(struct stripe_head *sh, str=
+uct stripe_head_state *s)
+> >>  			pr_debug("skip op %ld on disc %d for sector %llu\n",
+> >>  				bi->bi_rw, i, (unsigned long long)sh->sector);
+> >>  			clear_bit(R5_LOCKED, &sh->dev[i].flags);
+> >> +			clear_bit(R5_Reading, &sh->dev[i].flags);
+> >>  			set_bit(STRIPE_HANDLE, &sh->state);
+> >>  		}
+> >>  	}
+> >> @@ -1818,6 +1824,7 @@ static void raid5_end_read_request(struct bio * =
+bi, int error)
+> >>  	}
+> >>  	rdev_dec_pending(rdev, conf->mddev);
+> >>  	clear_bit(R5_LOCKED, &sh->dev[i].flags);
+> >> +	clear_bit(R5_Reading, &sh->dev[i].flags);
+> >>  	set_bit(STRIPE_HANDLE, &sh->state);
+> >>  	release_stripe(sh);
+> >>  }
+> >> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+> >> index a9fc249..a596df8 100644
+> >> --- a/drivers/md/raid5.h
+> >> +++ b/drivers/md/raid5.h
+> >> @@ -298,6 +298,7 @@ enum r5dev_flags {
+> >>  	R5_WantReplace, /* We need to update the replacement, we have read
+> >>  			 * data in, and now is a good time to write it out.
+> >>  			 */
+> >> +	R5_Reading,	/* this dev on reading on lld*/
+> >>  };
+> >> =20
+> >>  /*
+> >
+> >
+
+--Sig_/bAqg6zoPgrVVrl1vk=WlxZz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBUFqMZjnsnt1WYoG5AQL6XQ/6Ak9PTwZqhf5ELCNqnhSKT7AL6G9ASz9H
+cLiSAXoQU9p9bOkYtYp7+UVYzg0AOa1Fik5zGy0HnekD0v1geREdCs5RNF+d0cGW
+qkSp1OLqv22BdtFsA+8GnwqtWcILZJiAbMXzEozGMDs8ohqXIarvWE/m4vFih1Z1
+218tD/p4Xm8zI5yfkt4dWLWQN9ZCtXXVkkDHUPZA4c8wrBA7saXCth99wr7Vz05y
+hN+qqdXul1AszilZQbroDLOh2KVqEy0UvQPU1QQwGcaii2kNK1SsbulQ1wF4loqA
+ok2W6teJVQ9KVdmFHx8XKJBzKUxvKmulhjI61Mp9X3G7ZoLy5LpXnnuZE98TsBXv
+e0EayDn4ZT+ulBbI7xWKCnIVcwSOzqnOb5PNWitWLq2DnTVIxRGi7IpejAp4rb0Y
+JpzymENvK17OnyCAX8d0KnjswPYcSM8DacPyUMhMQmXLNnoT6G4JTcdETB68jkLM
+PHBqNeDTuGQ2Q1pRn48SHocElzkYRk2DHBbVjajZA+/Vg9LvxeCa8JQxgUD9SROF
+4YkFwxaFyTPqwptz+V03R2ARJZaf6XHIiumQGmt+U4n9A9UdyyLay8AsSm3dRoB8
+5Ai4EP13i/SFH9I2u1ofedLNNynpYUAOEys90Jke1rDhYewiBrsbIYM8NbxjIS9K
+b2gtg77ZSy4=
+=zdAH
+-----END PGP SIGNATURE-----
+
+--Sig_/bAqg6zoPgrVVrl1vk=WlxZz--
