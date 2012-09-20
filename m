@@ -1,78 +1,107 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] fix: imsm: re-enable size expansion to the max value
-Date: Thu, 20 Sep 2012 12:32:08 +1000
-Message-ID: <20120920123208.2c8059aa@notabene.brown>
-References: <20120914140408.18473.68610.stgit@gklab-128-085.igk.intel.com>
+Subject: Re: [PATCH - v2] DM RAID: Fix for ineffective "sync" directive
+Date: Thu, 20 Sep 2012 12:35:25 +1000
+Message-ID: <20120920123525.282c04da@notabene.brown>
+References: <1345735914.25206.8.camel@f16>
+	<1347648483.27926.8.camel@f16>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/m3D0WFtWdJHB0iQORvx=i76"; protocol="application/pgp-signature"
+ boundary="Sig_/Wxy2j6=qJ5rlSU77.X64WUu"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120914140408.18473.68610.stgit@gklab-128-085.igk.intel.com>
+In-Reply-To: <1347648483.27926.8.camel@f16>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com, ed.ciechanowski@intel.com, Jacek.Danecki@intel.com
+To: Jonathan Brassow <jbrassow@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/m3D0WFtWdJHB0iQORvx=i76
+--Sig_/Wxy2j6=qJ5rlSU77.X64WUu
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 14 Sep 2012 16:04:08 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
+On Fri, 14 Sep 2012 13:48:03 -0500 Jonathan Brassow <jbrassow@redhat.com>
 wrote:
 
-> Size expansion to the 'max' value has been broken since
-> the following patch:
+> Neil,
 >=20
->     commit d04f65f48c93e7e57cc3c1d70dd07d094dece717
->     Change the values for "max size" from -1 to 1.
+> I've taken your suggestion to not muck around with the BITMAP_STALE, and
+> instead simply clear the superblocks as a whole when the "sync"
+> directive is given.
 >=20
-> This patch re-enables it.
+>  brassow
 >=20
-> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
-> ---
->  super-intel.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+> DM RAID: Fix for "sync" directive ineffectiveness
 >=20
-> diff --git a/super-intel.c b/super-intel.c
-> index d11eabd..1d36613 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -9737,7 +9737,7 @@ enum imsm_reshape_type imsm_analyze_change(struct s=
-upertype *st,
->  	 */
->  	current_size =3D info.custom_array_size / data_disks;
+> There are two table arguments that can be given to a DM RAID target that
+> control whether the array is forced to (re)synchronize or skip initializa=
+tion:
+> "sync" and "nosync".  When "sync" is given, we set mddev->recovery_cp to 0
+> in order to cause the device to resynchronize.  This is insufficient if t=
+here
+> is a bitmap in use, because the array will simply look at the bitmap and =
+see
+> that there is no recovery necessary.
+>=20
+> The fix is to skip over the loading of the superblocks when "sync" is giv=
+en,
+> causing new superblocks to be written that will force the array to go thr=
+ough
+> initialization (i.e. synchronization).
+>=20
+> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+>=20
+> Index: linux-upstream/drivers/md/dm-raid.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-upstream.orig/drivers/md/dm-raid.c
+> +++ linux-upstream/drivers/md/dm-raid.c
+> @@ -960,6 +960,19 @@ static int analyse_superblocks(struct dm
 > =20
-> -	if (geo->size > 0) {
-> +	if ((geo->size > 0) && (geo->size !=3D MAX_SIZE)) {
->  		/* align component size
->  		 */
->  		geo->size =3D imsm_component_size_aligment_check(
+>  	freshest =3D NULL;
+>  	rdev_for_each_safe(rdev, tmp, mddev) {
+> +		/*
+> +		 * Skipping super_load due to DMPF_SYNC will cause
+> +		 * the array to undergo initialization again as
+> +		 * though it were new.  This is the intended effect
+> +		 * of the "sync" directive.
+> +		 *
+> +		 * When reshaping capability is added, we must ensure
+> +		 * that the "sync" directive is disallowed during the
+> +		 * reshape.
+> +		 */
+> +		if (rs->print_flags & DMPF_SYNC)
+> +			continue;
+> +
+>  		if (!rdev->meta_bdev)
+>  			continue;
+> =20
+>=20
 
-Applied, thanks.
+OK, applied.
 
+Thanks.
 NeilBrown
 
-
---Sig_/m3D0WFtWdJHB0iQORvx=i76
+--Sig_/Wxy2j6=qJ5rlSU77.X64WUu
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUFqAKDnsnt1WYoG5AQLwrA//f4aNwrRKkpc3UJoRAM7zVYgdvqtNr/1q
-KqTuQOsQmKBbT+v/CuRW1ntN69PAgXxZVAMH71oA1Lvs28DR98wn7yTYsJeoErBj
-2+Xsc38w2RDRzFZ0kaYd/cQynUWa7mbGIH0lMDHR2klobFx0YxrDKfqJIyYlyuSL
-bCPfaWtYfjrdNseeXwO7ddSQC2lcSLWFlJyOIqlx2tEzx5i9PHam5m7UV0cuS9sF
-s9cmXYlbF9TIq1vgMvK3NLfwsLQLI2SiV6R/60uBpx/cpBkHOJ5nXSYV91yoPy7+
-ysaOQdGE22WHOm/Bag4eheM5/Hsx8lQypUb0qlkTQad4l2GqNyVn23jhv1gWK7tB
-c/Zndf8nBegxDpYGh+YtAmijtOrxSbu1cyA/eN4+1ah4hd+KEIEZOoW3sjCLeg27
-oOCwQ7g8QiiK4fBCymKewx0ZSgASK64f4mO+oY5E1qFwb7UCe3W+7JIXw+WBmyRq
-q3+hdrvHIdyi41vV+XJVhysGY7sIW8Gd8DdteOCA/s699sT8bCHARIn/bNl3fWOA
-r2DcPB0VetNyXspSmfajEWVKdusUTEcz4V7ToAvNNxRmn5AClJLsiRExZqIFtY8h
-t2lipfvq6lpaGb+A2/w/ABDu8+BCOkz6zZusbegcUMiPVMYkTLDeJGRrJ7m2SWRX
-mn72wMDlhMk=
-=qG8m
+iQIVAwUBUFqA7Tnsnt1WYoG5AQIDlhAAuyixuoMKFL61OmkzOWhb4R7SryqXkXEN
+O76Aqw+m1WJ9pZ+xqutPcSxXbuuBHwTrVUsRR5pbmxGSuqrKtQd1ofkufP+Q99FP
+PLZUny2Tqbt1jrXbXBimEIPbZCuMgCF/jCRa24b/ggHUfixMGRDpUym/UOBPlb/3
+3AG6PQXS4OTdD5RdcQ2Aa3Kp/UiCBof/GJGs0CRIWS2ZzV3t3rjhdGLPZFbWZiBX
+AStmX5ouBDob4io9qXhsupvT0WOBHw06W0xy/X0avM/TrY4x5iWzxIut1SKT2lUq
+QpSsjPCNo8j4gvj4HJEg7kDktCvQI0nxtYQzK5BBbBQlW1IcKs4bUc3KQA5uBjhW
+/P2mAk0mP+c3VnHdkqMlioRNnBAZzTVopGdZBJh+Ha7n7SYo9v+2sAzzsYrLl5Nx
+rtr0Z+Q/LBNGZoD/0ggtBLoDBmY1wdlxAPJzbKPV1ux5CdMQXE2FD/wSvFWlfEqq
+dGO7fl0xyH3eKrmJjeKdxD2qaKjNduvh81Kk3+UeV1vo4HBSt8i5cEgdCE/nNteQ
+vtVJ/nQ0wtXdO1jMC0rZiyTU2k3A0Gi1ByP/ZSVmKgMuttYgQYozJjGcUbSt524Q
+BJWQGfwVJJIhlliMdlwJRfIfeZcAE63DExN3WcGMyXpTRcuop7oMowXW4Sbzjc7w
+eBV3H9XCSyo=
+=iwYM
 -----END PGP SIGNATURE-----
 
---Sig_/m3D0WFtWdJHB0iQORvx=i76--
+--Sig_/Wxy2j6=qJ5rlSU77.X64WUu--
