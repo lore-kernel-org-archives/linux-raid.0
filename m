@@ -1,92 +1,70 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] raid5: fix possible oops in add_stripe_bio when enable
- pr_debug
-Date: Thu, 20 Sep 2012 16:47:44 +1000
-Message-ID: <20120920164744.1aab090c@notabene.brown>
-References: <2012092014334148441317@gmail.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: Areca hardware RAID / first-ever SCSI bus reset: am I about to lose this disk controller?
+Date: Thu, 20 Sep 2012 07:51:01 +0100
+Message-ID: <87r4pxqjai.fsf@spindle.srvr.nix>
+References: <87mx0lsv4d.fsf@spindle.srvr.nix>
+	<505A47A0.1060709@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/HVXJ78GH8KHS5+_/v/c=Rkk"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2012092014334148441317@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jianpeng Ma <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <505A47A0.1060709@hardwarefreak.com> (Stan Hoeppner's message of
+	"Wed, 19 Sep 2012 17:30:56 -0500")
+Sender: linux-kernel-owner@vger.kernel.org
+To: stan@hardwarefreak.com
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/HVXJ78GH8KHS5+_/v/c=Rkk
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 19 Sep 2012, Stan Hoeppner stated:
 
-On Thu, 20 Sep 2012 14:34:00 +0800 "Jianpeng Ma" <majianpeng@gmail.com> wro=
-te:
+> On 9/19/2012 1:52 PM, Nix wrote:
+>> So I have this x86-64 server running Linux 3.5.1 
+>
+> When did you install 3.5.1 on this machine?
 
-> In func add_stripe_bio:
-> >> .....
-> >>		bip =3D &sh->dev[dd_idx].toread;
-> >> ......
-> >>spin_unlock_irq(&sh->stripe_lock);
->=20
-> >>	pr_debug("added bi b#%llu to stripe s#%llu, disk %d.\n",
-> >>		(unsigned long long)(*bip)->bi_sector,
-> >>		(unsigned long long)sh->sector, dd_idx);
-> After spin_unlock_irq, this thread scheded and toread may become null.
-> So it will be oops.
->=20
-> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
-> ---
->  drivers/md/raid5.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index adda94d..f172b1e 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -2356,6 +2356,7 @@ static int add_stripe_bio(struct stripe_head *sh, s=
-truct bio *bi, int dd_idx, in
->  	struct bio **bip;
->  	struct r5conf *conf =3D sh->raid_conf;
->  	int firstwrite=3D0;
-> +	sector_t sector =3D bi->bi_sector;
-> =20
->  	pr_debug("adding bi b#%llu to stripe s#%llu\n",
->  		(unsigned long long)bi->bi_sector,
-> @@ -2406,7 +2407,7 @@ static int add_stripe_bio(struct stripe_head *sh, s=
-truct bio *bi, int dd_idx, in
->  	spin_unlock_irq(&sh->stripe_lock);
-> =20
->  	pr_debug("added bi b#%llu to stripe s#%llu, disk %d.\n",
-> -		(unsigned long long)(*bip)->bi_sector,
-> +		(unsigned long long)sector,
->  		(unsigned long long)sh->sector, dd_idx);
-> =20
->  	if (conf->mddev->bitmap && firstwrite) {
+Forty days ago.
 
+>                                              If fairly recently, does it
+> run without these errors when booted into the previous kernel?
 
-how about we just move the spin_unlock_irq after the pr_debug??
+Well, since this error happened only once, and after thirty-nine days of
+uptime at that, I'm not sure how I can find out. :)
 
-NeilBrown
+>> with a SATA-on-PCIe
+>> Areca 1210 hardware RAID-5 controller driven by libata which has been
+>> humming along happily for years -- but suddenly, today, the entire
+>> machine froze for a couple of minutes (or at least fs access froze),
+>> followed by this in the logs:
+>> 
+>> Sep 19 16:55:47 spindle notice: [3447524.381843] arcmsr0: abort device command of scsi id = 0 lun = 1 
+>> [... repeated a few times at intervals over the next five minutes,
+>>  followed by a mass of them at 16:59:29, and...]
+>> Sep 19 16:59:25 spindle err: [3447657.821450] arcmsr: executing bus reset eh.....num_resets = 0, num_aborts = 33 
+>> Sep 19 16:59:25 spindle notice: [3447697.878386] arcmsr0: wait 'abort all outstanding command' timeout 
+>> Sep 19 16:59:25 spindle notice: [3447697.878628] arcmsr0: executing hw bus reset .....
+>> Sep 19 16:59:25 spindle err: [3447698.287054] irq 16: nobody cared (try booting with the "irqpoll" option)
+>> Sep 19 16:59:25 spindle warning: [3447698.287291] Pid: 0, comm: swapper/4 Not tainted 3.5.1-dirty #1
+>> Sep 19 16:59:25 spindle warning: [3447698.287522] Call Trace:
+>> Sep 19 16:59:25 spindle warning: [3447698.287754]  <IRQ>  [<ffffffff810af5ba>] __report_bad_irq+0x31/0xc2
+>> Sep 19 16:59:25 spindle warning: [3447698.288031]  [<ffffffff810af84e>] note_interrupt+0x16a/0x1e8
+>> Sep 19 16:59:25 spindle warning: [3447698.288263]  [<ffffffff810ad9d5>] handle_irq_event_percpu+0x163/0x1a5
+>> Sep 19 16:59:25 spindle warning: [3447698.288497]  [<ffffffff810ada4f>] handle_irq_event+0x38/0x55
+>> Sep 19 16:59:25 spindle warning: [3447698.288727]  [<ffffffff810b01a0>] handle_fasteoi_irq+0x78/0xab
+>> Sep 19 16:59:25 spindle warning: [3447698.288960]  [<ffffffff8103631c>] handle_irq+0x24/0x2a
+>> Sep 19 16:59:25 spindle warning: [3447698.289189]  [<ffffffff81036229>] do_IRQ+0x4d/0xb4
+>> Sep 19 16:59:25 spindle warning: [3447698.289419]  [<ffffffff815070e7>] common_interrupt+0x67/0x67
+>> Sep 19 16:59:25 spindle warning: [3447698.289648]  <EOI>  [<ffffffff812ab174>] ? acpi_idle_enter_c1+0xcb/0xf2
+>> Sep 19 16:59:25 spindle warning: [3447698.289919]  [<ffffffff812ab152>] ? acpi_idle_enter_c1+0xa9/0xf2
+>> Sep 19 16:59:25 spindle warning: [3447698.290152]  [<ffffffff813c1446>] cpuidle_enter+0x12/0x14
+>> Sep 19 16:59:25 spindle warning: [3447698.290382]  [<ffffffff813c1902>] cpuidle_idle_call+0xc5/0x175
+>> Sep 19 16:59:25 spindle warning: [3447698.290614]  [<ffffffff8103c2da>] cpu_idle+0x5b/0xa5
+>> Sep 19 16:59:25 spindle warning: [3447698.290844]  [<ffffffff81ad4fcb>] start_secondary+0x1a2/0x1a6
+>> Sep 19 16:59:25 spindle err: [3447698.291074] handlers:
+>> Sep 19 16:59:25 spindle err: [3447698.291294] [<ffffffff8133b9a3>] usb_hcd_irq
+>> Sep 19 16:59:25 spindle emerg: [3447698.291553] Disabling IRQ #16
+>> Sep 19 16:59:25 spindle err: [3447710.888187] arcmsr0: waiting for hw bus reset return, retry=0
+>> Sep 19 16:59:25 spindle err: [3447720.882155] arcmsr0: waiting for hw bus reset return, retry=1
+>> Sep 19 16:59:25 spindle notice: [3447730.896410] Areca RAID Controller0: F/W V1.46 2009-01-06 & Model ARC-1210
+>> Sep 19 16:59:25 spindle err: [3447730.916348] arcmsr: scsi  bus reset eh returns with success
 
---Sig_/HVXJ78GH8KHS5+_/v/c=Rkk
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUFq8EDnsnt1WYoG5AQLjlA/+PvrCzJfQ/T16NI8+uWH69nXRjklqykJm
-KAiyJA3FYUQifbJrMew3sdS0uGs+vGjDGoPkkgD5j+iMusdlF0kUeOKPUeICDXmH
-QlLmm/LszCLdPvsn0dd54G/vAa+WV31K9cpUfMAuyY98V1gsL4eKDbHUMU7Hc/7x
-I6tYXHY+ymzdtlzIZrgBSdsQc1eu3zFJcI7a0AjnXwELTDlCSitCL5NyMyIbkq00
-CuHn9eIqtQ7R+SG5FIpaez9+D8ct2PgYvxC6TlFkOkqZSfRpWD+p/z2foKmoMONu
-CP3JK8htGGtRpS+h+EoKyPDZ8FVI9zc0bFN325mJsTwM9/BV2l3DPlWBo39G3da6
-odve5NvV1HcNkTnx80WHhodrosCuB++O1msMgmT9JIpMZB0rk16AIk68qM8+iPZV
-J4lLagaPxwM6W7ctkI4vHtD5tdru52WVSyRKd330C+nNLkw0HAKQY/VhrZA4Okrt
-wh60fihJpAuwBv0O6CZTogfY+cihmJ43RWqX39ZilAA9F2bFIYhfmrTWA3+XTWm4
-0VZO1t1RMnI0UGx4N/nIcNCmEAv5sRDNnpcYFP8ytABBICVuWrIjf+DuI4jt+fH8
-EtlAkLrrW2nId8VlVDcdvJ10QixUgoP/s2FdmZ6w1xOkq3HDSyYkKAII2/HWpyJa
-5nw6t5g0G2U=
-=MzW7
------END PGP SIGNATURE-----
-
---Sig_/HVXJ78GH8KHS5+_/v/c=Rkk--
+-- 
+NULL && (void)
