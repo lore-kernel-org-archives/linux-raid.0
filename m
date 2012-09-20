@@ -1,111 +1,78 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] fix: adjust parse_size() to the unsigned size variable
-Date: Thu, 20 Sep 2012 12:31:56 +1000
-Message-ID: <20120920123156.4f1fb8fb@notabene.brown>
-References: <20120914141245.18725.59647.stgit@gklab-128-085.igk.intel.com>
+Subject: Re: [PATCH] fix: imsm: re-enable size expansion to the max value
+Date: Thu, 20 Sep 2012 12:32:08 +1000
+Message-ID: <20120920123208.2c8059aa@notabene.brown>
+References: <20120914140408.18473.68610.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Rd3Hqa.JF1WS0pA2MeIp12C"; protocol="application/pgp-signature"
+ boundary="Sig_/m3D0WFtWdJHB0iQORvx=i76"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120914141245.18725.59647.stgit@gklab-128-085.igk.intel.com>
+In-Reply-To: <20120914140408.18473.68610.stgit@gklab-128-085.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, maciej.patelczyk@intel.com
+Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com, ed.ciechanowski@intel.com, Jacek.Danecki@intel.com
 List-Id: linux-raid.ids
 
---Sig_/Rd3Hqa.JF1WS0pA2MeIp12C
+--Sig_/m3D0WFtWdJHB0iQORvx=i76
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 14 Sep 2012 16:12:45 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
+On Fri, 14 Sep 2012 16:04:08 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
 wrote:
 
-> An error in parse_size() should be reported by 0, not -1,
-> because -1 is changed to the max value of unsigned long long
-> during calculations of size (e.g. at mdadm.c:412).
+> Size expansion to the 'max' value has been broken since
+> the following patch:
 >=20
-> A negative value of size should be reported as error
-> (e.g. size equal -1 has been changed to the max value of
-> unsigned long long so far).
+>     commit d04f65f48c93e7e57cc3c1d70dd07d094dece717
+>     Change the values for "max size" from -1 to 1.
+>=20
+> This patch re-enables it.
 >=20
 > Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
 > ---
->  mdadm.h |    2 +-
->  util.c  |    9 +++++----
->  2 files changed, 6 insertions(+), 5 deletions(-)
+>  super-intel.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 >=20
-> diff --git a/mdadm.h b/mdadm.h
-> index 9feccc6..f202ffa 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -1156,7 +1156,7 @@ extern unsigned long bitmap_sectors(struct bitmap_s=
-uper_s *bsb);
->  extern int md_get_version(int fd);
->  extern int get_linux_version(void);
->  extern int mdadm_version(char *version);
-> -extern long long parse_size(char *size);
-> +extern unsigned long long parse_size(char *size);
->  extern int parse_uuid(char *str, int uuid[4]);
->  extern int parse_layout_10(char *layout);
->  extern int parse_layout_faulty(char *layout);
-> diff --git a/util.c b/util.c
-> index a92a663..c63a232 100644
-> --- a/util.c
-> +++ b/util.c
-> @@ -188,13 +188,13 @@ int mdadm_version(char *version)
->  	return (a*1000000)+(b*1000)+c;
->  }
-> =20
-> -long long parse_size(char *size)
-> +unsigned long long parse_size(char *size)
->  {
->  	/* parse 'size' which should be a number optionally
->  	 * followed by 'K', 'M', or 'G'.
->  	 * Without a suffix, K is assumed.
->  	 * Number returned is in sectors (half-K)
-> -	 * -1 returned on error.
-> +	 * 0 returned on error.
+> diff --git a/super-intel.c b/super-intel.c
+> index d11eabd..1d36613 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -9737,7 +9737,7 @@ enum imsm_reshape_type imsm_analyze_change(struct s=
+upertype *st,
 >  	 */
->  	char *c;
->  	long long s =3D strtoll(size, &c, 10);
-> @@ -214,9 +214,10 @@ long long parse_size(char *size)
->  			s *=3D 1024 * 1024 * 2;
->  			break;
->  		}
-> -	}
-> +	} else
-> +		s =3D 0;
->  	if (*c)
-> -		s =3D -1;
-> +		s =3D 0;
->  	return s;
->  }
+>  	current_size =3D info.custom_array_size / data_disks;
 > =20
+> -	if (geo->size > 0) {
+> +	if ((geo->size > 0) && (geo->size !=3D MAX_SIZE)) {
+>  		/* align component size
+>  		 */
+>  		geo->size =3D imsm_component_size_aligment_check(
 
-Applied, Thanks.
+Applied, thanks.
 
 NeilBrown
 
---Sig_/Rd3Hqa.JF1WS0pA2MeIp12C
+
+--Sig_/m3D0WFtWdJHB0iQORvx=i76
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUFqAHDnsnt1WYoG5AQKt/w//UE2tZAWoi44mGp2oMDTIjxNvYod9Q+gH
-EisN1NjspCSue2ofN6/I/HQR6zZK98KzWmHDTf12vs4a5Bii0sEImwh2o2fCgYFt
-ieFrtcqO8HpwbpRBM/X1k5mY3wOYlXtomoM/vM8lR0kHSIskmh6ZSMYEhx9Lp8fv
-IU88ARj3mDDtlFIVpNGav1WXnGCuKGUtDNQcd/KBQT5xxWy8Jm0E5Pp6BJMirViG
-FZh0Dc9k97JD8ZqW25xMC26w4vnxKZ+IgKzYcPgfOKd+s6y/B1322IJh3FxZCJ4C
-MtIGtsuzdVRTRYSA5aPdVRFiBtPaBeDiM0AUTjZerj1UmHd/8KdCHUBxJ6RZLrqh
-ZJoeTYF30C+AQhtWapJDZjZ+cA+wx0WMqoShHOjBgMKesYnfewf9vTsbl6g3XE6Z
-S1OU+CbUQGKqOgSLOpHOdOcsbo8gn76uJmixGpXec7M98Lea6fnzOlSv0yukxcK9
-iGZ/9SlfXRNQKPbII3HFtJhLwhNQQO/KRqAtDFNsh5JUbcI5muiedj3QEOcef31a
-XBVP8oOnWMsTrgsZ3/94YcUR8de3qx9Uq9hBDCKfJBEaTibKMWfHGdAUWYnCH4/G
-fBy+4Zq5YLI/rfMQpGigby798UcWn9Doj9AB7Bt1LH/AgRvs/ptzoC5GUdf3MWA1
-ceavCcSpuWU=
-=m2qF
+iQIVAwUBUFqAKDnsnt1WYoG5AQLwrA//f4aNwrRKkpc3UJoRAM7zVYgdvqtNr/1q
+KqTuQOsQmKBbT+v/CuRW1ntN69PAgXxZVAMH71oA1Lvs28DR98wn7yTYsJeoErBj
+2+Xsc38w2RDRzFZ0kaYd/cQynUWa7mbGIH0lMDHR2klobFx0YxrDKfqJIyYlyuSL
+bCPfaWtYfjrdNseeXwO7ddSQC2lcSLWFlJyOIqlx2tEzx5i9PHam5m7UV0cuS9sF
+s9cmXYlbF9TIq1vgMvK3NLfwsLQLI2SiV6R/60uBpx/cpBkHOJ5nXSYV91yoPy7+
+ysaOQdGE22WHOm/Bag4eheM5/Hsx8lQypUb0qlkTQad4l2GqNyVn23jhv1gWK7tB
+c/Zndf8nBegxDpYGh+YtAmijtOrxSbu1cyA/eN4+1ah4hd+KEIEZOoW3sjCLeg27
+oOCwQ7g8QiiK4fBCymKewx0ZSgASK64f4mO+oY5E1qFwb7UCe3W+7JIXw+WBmyRq
+q3+hdrvHIdyi41vV+XJVhysGY7sIW8Gd8DdteOCA/s699sT8bCHARIn/bNl3fWOA
+r2DcPB0VetNyXspSmfajEWVKdusUTEcz4V7ToAvNNxRmn5AClJLsiRExZqIFtY8h
+t2lipfvq6lpaGb+A2/w/ABDu8+BCOkz6zZusbegcUMiPVMYkTLDeJGRrJ7m2SWRX
+mn72wMDlhMk=
+=qG8m
 -----END PGP SIGNATURE-----
 
---Sig_/Rd3Hqa.JF1WS0pA2MeIp12C--
+--Sig_/m3D0WFtWdJHB0iQORvx=i76--
