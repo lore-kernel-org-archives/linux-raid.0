@@ -1,50 +1,85 @@
-From: Kasper Sandberg <kontakt@sandberg-consult.dk>
-Subject: Re: raid6 low performance 8x3tb drives in singledegraded mode(=7x3tb)
-Date: Thu, 20 Sep 2012 02:26:41 +0200
-Message-ID: <505A62C1.4050706@sandberg-consult.dk>
-References: <504FD153.9090602@sandberg-consult.dk> <20120919162557.03df6af2@notabene.brown> <20120919134030.222e4b04@natsu>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] fix segfaults in Detail()
+Date: Thu, 20 Sep 2012 11:06:44 +1000
+Message-ID: <20120920110644.463c2fd9@notabene.brown>
+References: <20120906154119.754.88103.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Aoy5G9jOiE6GDYvOI7PN8T1"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120919134030.222e4b04@natsu>
+In-Reply-To: <20120906154119.754.88103.stgit@gklab-128-085.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com, ed.ciechanowski@intel.com, Jacek.Danecki@intel.com
 List-Id: linux-raid.ids
 
-On 19/09/12 09:40, Roman Mamedov wrote:
-> On Wed, 19 Sep 2012 16:25:57 +1000
-> NeilBrown <neilb@suse.de> wrote:
->
->> RAID5/RAID6 write speed is never going to be brilliant, but there probably is
->> room for improvement.  Hopefully one day I figure out how to effect that
->> improvement.
-> "/sys/block/md*/md/stripe_cache_size" is absolutely the first thing one should
-> look at when facing a problem with md RAID5/6 write performance. It is
-> understandable that the default value can't be high (as it consumes a lot of
-> RAM on large disk counts), but increasing it if you have the RAM can increase
-> the write speed by 200 to 400%:
->
->   http://peterkieser.com/2009/11/29/raid-mdraid-stripe_cache_size-vs-write-transfer/
->
+--Sig_/Aoy5G9jOiE6GDYvOI7PN8T1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your answer.
+On Thu, 06 Sep 2012 17:41:19 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
+wrote:
 
-I did try this, it had zero effect.
+> If disk has been removed, 'st' and 'info' can be NULL. It causes segfault.
+> 'st' and 'info' should be checked against being NULL before being used.
+>=20
+> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+> ---
+>  Detail.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/Detail.c b/Detail.c
+> index 17aa516..79b1047 100644
+> --- a/Detail.c
+> +++ b/Detail.c
+> @@ -430,7 +430,7 @@ int Detail(char *dev, struct context *c)
+>  		}
+>  		free_mdstat(ms);
+> =20
+> -		if (st->sb && info->reshape_active) {
+> +		if ((st && st->sb) && (info && info->reshape_active)) {
+>  #if 0
+>  This is pretty boring
+>  			printf("  Reshape pos'n : %llu%s\n", (unsigned long long) info->resha=
+pe_progress<<9,
+> @@ -596,7 +596,8 @@ This is pretty boring
+>  	if (spares && c->brief && array.raid_disks) printf(" spares=3D%d", spar=
+es);
+>  	if (c->brief && st && st->sb)
+>  		st->ss->brief_detail_super(st);
+> -	st->ss->free_super(st);
+> +	if (st && st->ss)
+> +		st->ss->free_super(st);
+> =20
+>  	if (c->brief > 1 && devices) printf("\n   devices=3D%s", devices);
+>  	if (c->brief)
+>=20
 
-And Neil, thank you for your answer too,
+applied, thanks.
+Though I removed the test on 'st->ss' - that is never NULL.
 
-I have now put the disks into the other box, and resynced with the 8th
-disk, and things are fast now. How fast i cannot exactly say, as the
-filesystem is put on top of dm-crypt, which caps me at about 100MB/s on
-this cpu, but that would seem to indicate that things are functioning as
-they should.
+NeilBrown
 
+--Sig_/Aoy5G9jOiE6GDYvOI7PN8T1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
--- 
-Kasper Sandberg
-Sandberg Enterprises
-+45 51944242
-http://www.sandbergenterprises.dk
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
+iQIVAwUBUFpsJDnsnt1WYoG5AQLqgRAAqEAQExK/RlzCUN1W/5FGarRLfrsvCQMy
+if8smmA0/WXQ5cgZUfK6H6TORcDowp04c7vfgaj6fyoWRKC1xzDd480DykI/7PN1
+I5ar0lZQ/AmGtTjNqHWVXKEW8YKkZRMVCoKJmpyOj9gZFs08TqdMC0CW0Hb6UN8j
+XfYipK486nmxDpiKHfmrYWS2qCImn57eEU6JJLRncvm0HlylIHwoQ1yIZaa0rkVo
+WbJOW9MOjZa9OWFQRDn4lgHeD2/6qeEp5aMM+bg3uPwTdUbijISudrtn9/Rq7R8O
+NhxiFir2PLgCUuWjDGt++3ytGYod41q/08NUEzopXOi7+CoGdVS61HYvLDlIFipl
+hHiuYGoTgdTUvedTPJUFSGX3P9wLxYSl9xo7uC2cDawk3+paY1yXVl338S5mxeGP
+6rBvpxcBKp5nh6qEKw8qIYNuvdWRxHjeuhCJKQ+KQfmAbVYcPiJh3lhiHxhnBjPH
+1ideoluFH/rVNU9heS4Hf2MRwCrPOsl7BJQ6IDQ5paJz5xf7yKJID8o1yUGcswFx
+07RAV5LbonZH9Q4YC/bppSC+F6SBrqlQ6KHYlQzcYeu3ImFxaAuYsOg005XBvXUg
+vQxqKp9gOhdmfShkrpJuRNitLdYjaVy0VW1SsWbedhOJBUFO0DebYn51EH2ohAcK
+HXrqQVPxm4g=
+=FgJ9
+-----END PGP SIGNATURE-----
+
+--Sig_/Aoy5G9jOiE6GDYvOI7PN8T1--
