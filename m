@@ -1,155 +1,50 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Subject: [PATCH 1/1] drivers/md/raid1.c: fix NULL pointer bug
- in fix_read_error function
-Date: Thu, 20 Sep 2012 09:46:48 +1000
-Message-ID: <20120920094648.3997ecac@notabene.brown>
-References: <5045708C.10705@redhat.com>
-	<505144D0.4080908@redhat.com>
-	<20120913154417.3f886f8d@notabene.brown>
-	<50517B51.4000805@redhat.com>
+From: Kasper Sandberg <kontakt@sandberg-consult.dk>
+Subject: Re: raid6 low performance 8x3tb drives in singledegraded mode(=7x3tb)
+Date: Thu, 20 Sep 2012 02:26:41 +0200
+Message-ID: <505A62C1.4050706@sandberg-consult.dk>
+References: <504FD153.9090602@sandberg-consult.dk> <20120919162557.03df6af2@notabene.brown> <20120919134030.222e4b04@natsu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/C3Uxdg0ZpWqjcSFQ_5g2fNn"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <50517B51.4000805@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: hank <pyu@redhat.com>
-Cc: miku@iki.fi, jakob@ostenfeld.dk, ptb@it.uc3m.es, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120919134030.222e4b04@natsu>
+Sender: linux-raid-owner@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.ru>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/C3Uxdg0ZpWqjcSFQ_5g2fNn
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 19/09/12 09:40, Roman Mamedov wrote:
+> On Wed, 19 Sep 2012 16:25:57 +1000
+> NeilBrown <neilb@suse.de> wrote:
+>
+>> RAID5/RAID6 write speed is never going to be brilliant, but there probably is
+>> room for improvement.  Hopefully one day I figure out how to effect that
+>> improvement.
+> "/sys/block/md*/md/stripe_cache_size" is absolutely the first thing one should
+> look at when facing a problem with md RAID5/6 write performance. It is
+> understandable that the default value can't be high (as it consumes a lot of
+> RAM on large disk counts), but increasing it if you have the RAM can increase
+> the write speed by 200 to 400%:
+>
+>   http://peterkieser.com/2009/11/29/raid-mdraid-stripe_cache_size-vs-write-transfer/
+>
 
-On Thu, 13 Sep 2012 14:21:05 +0800 hank <pyu@redhat.com> wrote:
+Thank you for your answer.
 
-> On 09/13/2012 01:44 PM, NeilBrown wrote:
->=20
-> > On Thu, 13 Sep 2012 10:28:32 +0800 hank <pyu@redhat.com> wrote:
-> >=20
-> >> On 09/04/2012 11:07 AM, hank wrote:
-> >>
-> >>> From 0ba5879082544dc3aa13807087563b1258124b1e Mon Sep 17 00:00:00 2001
-> >>> From: hank <pyu@redhat.com>
-> >>> Date: Tue, 4 Sep 2012 10:23:45 +0800
-> >>> Subject: [PATCH 1/1] drivers/md/raid1.c: fix NULL pointer bug in
-> >>>  fix_read_error function
-> >>>
-> >>> in fix_read_error function, the conf->mirrors[read_disk].rdev may
-> >>> become NULL, as in this function, rdev->nr_pending may be zero, anyone
-> >>> can delete it. So should check if it is NULL before use.
-> >>>
-> >>> Signed-off-by: hank <pyu@redhat.com>
-> >>> ---
-> >>>  drivers/md/raid1.c |    2 +-
-> >>>  1 files changed, 1 insertions(+), 1 deletions(-)
-> >>>
-> >>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> >>> index 611b5f7..fd8de28 100644
-> >>> --- a/drivers/md/raid1.c
-> >>> +++ b/drivers/md/raid1.c
-> >>> @@ -2005,7 +2005,7 @@ static void fix_read_error(struct r1conf *conf,=
- int read_disk,
-> >>>  		if (!success) {
-> >>>  			/* Cannot read from anywhere - mark it bad */
-> >>>  			struct md_rdev *rdev =3D conf->mirrors[read_disk].rdev;
-> >>> -			if (!rdev_set_badblocks(rdev, sect, s, 0))
-> >>> +			if (!rdev || !rdev_set_badblocks(rdev, sect, s, 0))
-> >>>  				md_error(mddev, rdev);
-> >>>  			break;
-> >>>  		}
-> >>
-> >>
-> >>
-> >> Anyone can review this patch? I think it is a bug and should be fixed.
-> >=20
-> > I agree there is a bug there but I don't think this is the right fix.
-> > If rdev could be NULL there, then it could also be NULL in
-> > 		md_error(mddev, conf->mirrors[r1_bio->read_disk].rdev);
-> > in handle_read_error().
-> > I think we should just hold on to the reference to the rdev until we are
-> > done with it, like the follow.
-> >=20
-> > Would you agree?
-> >=20
-> > Thanks,
-> > NeilBrown
-> >=20
-> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> > index 611b5f7..eb1f8a3 100644
-> > --- a/drivers/md/raid1.c
-> > +++ b/drivers/md/raid1.c
-> > @@ -333,9 +333,10 @@ static void raid1_end_read_request(struct bio *bio=
-, int error)
-> >  		spin_unlock_irqrestore(&conf->device_lock, flags);
-> >  	}
-> > =20
-> > -	if (uptodate)
-> > +	if (uptodate) {
-> >  		raid_end_bio_io(r1_bio);
-> > -	else {
-> > +		rdev_dec_pending(conf->mirrors[mirror].rdev, conf->mddev);
-> > +	} else {
-> >  		/*
-> >  		 * oops, read error:
-> >  		 */
-> > @@ -349,9 +350,8 @@ static void raid1_end_read_request(struct bio *bio,=
- int error)
-> >  			(unsigned long long)r1_bio->sector);
-> >  		set_bit(R1BIO_ReadError, &r1_bio->state);
-> >  		reschedule_retry(r1_bio);
-> > +		/* don't drop the reference on read_disk yet */
-> >  	}
-> > -
-> > -	rdev_dec_pending(conf->mirrors[mirror].rdev, conf->mddev);
-> >  }
-> > =20
-> >  static void close_write(struct r1bio *r1_bio)
-> > @@ -2220,6 +2220,7 @@ static void handle_read_error(struct r1conf *conf=
-, struct r1bio *r1_bio)
-> >  		unfreeze_array(conf);
-> >  	} else
-> >  		md_error(mddev, conf->mirrors[r1_bio->read_disk].rdev);
-> > +	rdev_dec_pending(conf->mirrors[r1_bio->read_disk].rdev, conf->mddev);
-> > =20
-> >  	bio =3D r1_bio->bios[r1_bio->read_disk];
-> >  	bdevname(bio->bi_bdev, b);
->=20
->=20
-> The md_error function will check if rdev is NULL, if it is NULL,
-> md_error will return directly, so I think it is doesn't matther if we
-> pass a NULL rdev to md_error function.
->=20
-> But anyway, I can't find any problem in your patch, it is correct doubtle=
-ss.
+I did try this, it had zero effect.
 
-Thanks.
-I've queued it for the next merge window.
+And Neil, thank you for your answer too,
 
-Thanks,
-NeilBrown
+I have now put the disks into the other box, and resynced with the 8th
+disk, and things are fast now. How fast i cannot exactly say, as the
+filesystem is put on top of dm-crypt, which caps me at about 100MB/s on
+this cpu, but that would seem to indicate that things are functioning as
+they should.
 
 
---Sig_/C3Uxdg0ZpWqjcSFQ_5g2fNn
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+-- 
+Kasper Sandberg
+Sandberg Enterprises
++45 51944242
+http://www.sandbergenterprises.dk
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUFpZaDnsnt1WYoG5AQI6Ew//WlvrNWJ+Tupu/MMLYtX0O2lwo2P7X00c
-Yuzdrz8VCsndkdd5bnNQUWrlqn1x1ywiool7uQCKIVCPFOVtBf+hWAUpw+4l8E0m
-/DPs29eXcj0J3y2xEQuZabMsuLD9zlZO7Od37N4vSEz3ilXw+qdpkMzTTLbpPyQl
-JOuIZ2oFdvEY6+msemxrDw7Zfc4OLKhkAxIcBtYAHK7unDJK8S5tL6UKEOiOxxnh
-jbqmLWEdEk/j/C+Viqss8XPSxseti4en3I2hiwPtMUcVT5qSRHdHpE+i8s5isBS7
-DwnUZ4wCGTP+quQs1m9wSWquilAX66o6Lh2Ufim/iNri8446rni94jAmAgNx3tEm
-mqPXb1Pg9UP7V3i/TLrCUffYavC4tqXI+rbeFxUofrnRLquGumUBHwV4J2OE426M
-/vvEZjV21Qfuhd8vmHmdHnqcosjOAtSowgMXRZnOpTNiDK7El1QfgUo3R9G6jnbK
-fq1qldlHL7oYjowJ+nVLHMUonjPRDDANzCc4oGs6nkL7m76iiEfA6cjBFHsFaAFC
-oRdfti76lcNTvyg/2jhNyxOMNFGjw3nJhDXJkr66q1sp0/fRKUjlsYhhYL4o64TI
-FTlMZd0X/BIJtne2c+Pf4RCutw3L5mtgX+G6+VjanJ7PI1PbYBRKmNuIw8UO6p2x
-+mwj09NgE1w=
-=GDDg
------END PGP SIGNATURE-----
-
---Sig_/C3Uxdg0ZpWqjcSFQ_5g2fNn--
