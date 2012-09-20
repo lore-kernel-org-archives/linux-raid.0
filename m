@@ -1,55 +1,165 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
-Subject: Re: Re: [PATCH] raid5: fix possible oops in add_stripe_bio when enable pr_debug
-Date: Thu, 20 Sep 2012 15:17:54 +0800
-Message-ID: <2012092015175190687821@gmail.com>
-References: <2012092014334148441317@gmail.com>,
-	<20120920164744.1aab090c@notabene.brown>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: md: raid5 resync corrects read errors on data block - is this correct?
+Date: Thu, 20 Sep 2012 11:26:50 +0300
+Message-ID: <CAGRgLy6EsYj90f4UqPt9=p_qumWLq2vCCYwa-YL97P=k6R58HQ@mail.gmail.com>
+References: <CAGRgLy6Cqxyf2im+tG2JiaQFooLBBzT76hGpfTb47Cr_sFLr6g@mail.gmail.com>
+	<20120912082909.33c8eec0@notabene.brown>
+	<CAGRgLy6Syso2dfELFhpK9nCyEgvuD6k3F=MRJBnrVU=btKqKVw@mail.gmail.com>
+	<20120913101924.13431e6e@notabene.brown>
+	<CAGRgLy7VRTeegGXbxhzn4zrCt6agoQqLaOT5mM7=vSkq6XDN5A@mail.gmail.com>
+	<CAGRgLy4bbfuK0zF8kkP2at+2kZz8CYrFy+EgTDFPMjPc+edUgg@mail.gmail.com>
+	<CAGRgLy6wNUNWjOb8-5p2Wbag9R260AL++KU8xe-JTzgSoSqwpA@mail.gmail.com>
+	<20120919155917.3d67f890@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120919155917.3d67f890@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wOS0yMCAxNDo0NyBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
-IFRodSwgMjAgU2VwIDIwMTIgMTQ6MzQ6MDAgKzA4MDAgIkppYW5wZW5nIE1hIiA8bWFqaWFucGVu
-Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gSW4gZnVuYyBhZGRfc3RyaXBlX2JpbzoNCj4+ID4+
-IC4uLi4uDQo+PiA+PgkJYmlwID0gJnNoLT5kZXZbZGRfaWR4XS50b3JlYWQ7DQo+PiA+PiAuLi4u
-Li4NCj4+ID4+c3Bpbl91bmxvY2tfaXJxKCZzaC0+c3RyaXBlX2xvY2spOw0KPj4gDQo+PiA+Pglw
-cl9kZWJ1ZygiYWRkZWQgYmkgYiMlbGx1IHRvIHN0cmlwZSBzIyVsbHUsIGRpc2sgJWQuXG4iLA0K
-Pj4gPj4JCSh1bnNpZ25lZCBsb25nIGxvbmcpKCpiaXApLT5iaV9zZWN0b3IsDQo+PiA+PgkJKHVu
-c2lnbmVkIGxvbmcgbG9uZylzaC0+c2VjdG9yLCBkZF9pZHgpOw0KPj4gQWZ0ZXIgc3Bpbl91bmxv
-Y2tfaXJxLCB0aGlzIHRocmVhZCBzY2hlZGVkIGFuZCB0b3JlYWQgbWF5IGJlY29tZSBudWxsLg0K
-Pj4gU28gaXQgd2lsbCBiZSBvb3BzLg0KPj4gDQo+PiBTaWduZWQtb2ZmLWJ5OiBKaWFucGVuZyBN
-YSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQo+PiAtLS0NCj4+ICBkcml2ZXJzL21kL3JhaWQ1LmMg
-fCAgICAzICsrLQ0KPj4gIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDEgZGVsZXRp
-b24oLSkNCj4+IA0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2RyaXZlcnMv
-bWQvcmFpZDUuYw0KPj4gaW5kZXggYWRkYTk0ZC4uZjE3MmIxZSAxMDA2NDQNCj4+IC0tLSBhL2Ry
-aXZlcnMvbWQvcmFpZDUuYw0KPj4gKysrIGIvZHJpdmVycy9tZC9yYWlkNS5jDQo+PiBAQCAtMjM1
-Niw2ICsyMzU2LDcgQEAgc3RhdGljIGludCBhZGRfc3RyaXBlX2JpbyhzdHJ1Y3Qgc3RyaXBlX2hl
-YWQgKnNoLCBzdHJ1Y3QgYmlvICpiaSwgaW50IGRkX2lkeCwgaW4NCj4+ICAJc3RydWN0IGJpbyAq
-KmJpcDsNCj4+ICAJc3RydWN0IHI1Y29uZiAqY29uZiA9IHNoLT5yYWlkX2NvbmY7DQo+PiAgCWlu
-dCBmaXJzdHdyaXRlPTA7DQo+PiArCXNlY3Rvcl90IHNlY3RvciA9IGJpLT5iaV9zZWN0b3I7DQo+
-PiAgDQo+PiAgCXByX2RlYnVnKCJhZGRpbmcgYmkgYiMlbGx1IHRvIHN0cmlwZSBzIyVsbHVcbiIs
-DQo+PiAgCQkodW5zaWduZWQgbG9uZyBsb25nKWJpLT5iaV9zZWN0b3IsDQo+PiBAQCAtMjQwNiw3
-ICsyNDA3LDcgQEAgc3RhdGljIGludCBhZGRfc3RyaXBlX2JpbyhzdHJ1Y3Qgc3RyaXBlX2hlYWQg
-KnNoLCBzdHJ1Y3QgYmlvICpiaSwgaW50IGRkX2lkeCwgaW4NCj4+ICAJc3Bpbl91bmxvY2tfaXJx
-KCZzaC0+c3RyaXBlX2xvY2spOw0KPj4gIA0KPj4gIAlwcl9kZWJ1ZygiYWRkZWQgYmkgYiMlbGx1
-IHRvIHN0cmlwZSBzIyVsbHUsIGRpc2sgJWQuXG4iLA0KPj4gLQkJKHVuc2lnbmVkIGxvbmcgbG9u
-ZykoKmJpcCktPmJpX3NlY3RvciwNCj4+ICsJCSh1bnNpZ25lZCBsb25nIGxvbmcpc2VjdG9yLA0K
-Pj4gIAkJKHVuc2lnbmVkIGxvbmcgbG9uZylzaC0+c2VjdG9yLCBkZF9pZHgpOw0KPj4gIA0KPj4g
-IAlpZiAoY29uZi0+bWRkZXYtPmJpdG1hcCAmJiBmaXJzdHdyaXRlKSB7DQo+DQo+DQo+aG93IGFi
-b3V0IHdlIGp1c3QgbW92ZSB0aGUgc3Bpbl91bmxvY2tfaXJxIGFmdGVyIHRoZSBwcl9kZWJ1Zz8/
-DQo+DQphaCEgV2h5IGFyZSB5b3UgdGhpbmsgPyBteSBtZXRob2Qgb25seSBhZGQgYSBwYXJhbWV0
-ZXIuDQpCVFcsIGluIGZ1bmMgaGFuZGxlX2ZhaWxlZF9zdHJpcGU6DQo+PmlmICghdGVzdF9iaXQo
-UjVfV2FudGZpbGwsICZzaC0+ZGV2W2ldLmZsYWdzKSAmJg0KPj4JCSAgICAoIXRlc3RfYml0KFI1
-X0luc3luYywgJnNoLT5kZXZbaV0uZmxhZ3MpIHx8DQo+PgkJICAgICAgdGVzdF9iaXQoUjVfUmVh
-ZEVycm9yLCAmc2gtPmRldltpXS5mbGFncykpKSB7DQo+PgkJCWJpID0gc2gtPmRldltpXS50b3Jl
-YWQ7DQo+PgkJCXNoLT5kZXZbaV0udG9yZWFkID0gTlVMTDsNCj4+CQkJaWYgKHRlc3RfYW5kX2Ns
-ZWFyX2JpdChSNV9PdmVybGFwLCAmc2gtPmRldltpXS5mbGFncykpDQo+PgkJCQl3YWtlX3VwKCZj
-b25mLT53YWl0X2Zvcl9vdmVybGFwKTsNCldoeSB1c2Ugc3RyaXBlX2xvY2sgdG8gcHJvdGVjdCB0
-b3JlYWQ/DQoNClRoYW5rcyENCg==
+Hi Neil,
+you are completely right. I got confused between mddev->recovery_cp
+and sb->resync_offset; the latter may become 0 due to in-flight WRITEs
+and not due to resync. Looking at the code again, I see that
+recovery_cp is totally one-way from sb->resync_offset to MaxSector
+(except for explicit loading via sysfs). Also recovery_cp is not
+relevant to "check" and "repair". So recovery_cp is pretty simple
+after all.
 
+Below is V2 patch. (I have also to credit it to somebody else, because
+he was the one that said - just do rcw while you are resyncing).
+
+Thanks,
+Alex.
+
+
+-----------------
+From cc3e2bfcf2fd2c69180577949425d69de88706bb Mon Sep 17 00:00:00 2001
+From: Alex Lyakas <alex@zadarastorage.com>
+Date: Thu, 13 Sep 2012 18:55:00 +0300
+Subject: [PATCH] When RAID5 is dirty, force reconstruct-write instead of
+ read-modify-write.
+
+Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
+Signed-off-by: Yair Hershko <yair@zadarastorage.com>
+
+diff --git a/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
+b/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
+index 5332202..9fdd5e3 100644
+--- a/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
++++ b/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
+@@ -2555,12 +2555,24 @@ static void handle_stripe_dirtying(struct r5conf *conf,
+                                   int disks)
+ {
+        int rmw = 0, rcw = 0, i;
+-       if (conf->max_degraded == 2) {
+-               /* RAID6 requires 'rcw' in current implementation
+-                * Calculate the real rcw later - for now fake it
++       sector_t recovery_cp = conf->mddev->recovery_cp;
++
++       /* RAID6 requires 'rcw' in current implementation.
++        * Otherwise, check whether resync is now happening or should start.
++        * If yes, then the array is dirty (after unclean shutdown or
++        * initial creation), so parity in some stripes might be inconsistent.
++        * In this case, we need to always do reconstruct-write, to ensure
++        * that in case of drive failure or read-error correction, we
++        * generate correct data from the parity.
++        */
++       if (conf->max_degraded == 2 ||
++           (recovery_cp < MaxSector && sh->sector >= recovery_cp)) {
++               /* Calculate the real rcw later - for now make it
+                 * look like rcw is cheaper
+                 */
+                rcw = 1; rmw = 2;
++               pr_debug("force RCW max_degraded=%u, recovery_cp=%lu
+sh->sector=%lu\n",
++                        conf->max_degraded, recovery_cp, sh->sector);
+        } else for (i = disks; i--; ) {
+                /* would I have to read this buffer for read_modify_write */
+                struct r5dev *dev = &sh->dev[i];
+
+
+
+
+
+
+On Wed, Sep 19, 2012 at 8:59 AM, NeilBrown <neilb@suse.de> wrote:
+> On Mon, 17 Sep 2012 14:15:16 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+> wrote:
+>
+>> Hi Neil,
+>> below is a bit less-ugly version of the patch.
+>> Thanks,
+>> Alex.
+>>
+>> >From 05cf800d623bf558c99d542cf8bf083c85b7e5d5 Mon Sep 17 00:00:00 2001
+>> From: Alex Lyakas <alex@zadarastorage.com>
+>> Date: Thu, 13 Sep 2012 18:55:00 +0300
+>> Subject: [PATCH] When RAID5 is dirty, force reconstruct-write instead of
+>>  read-modify-write.
+>>
+>> Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
+>> Signed-off-by: Yair Hershko <yair@zadarastorage.com>
+>>
+>> diff --git a/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
+>> b/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
+>> index 5332202..0702785 100644
+>> --- a/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
+>> +++ b/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
+>> @@ -2555,12 +2555,36 @@ static void handle_stripe_dirtying(struct r5conf *conf,
+>>                                    int disks)
+>>  {
+>>         int rmw = 0, rcw = 0, i;
+>> -       if (conf->max_degraded == 2) {
+>> -               /* RAID6 requires 'rcw' in current implementation
+>> -                * Calculate the real rcw later - for now fake it
+>> +       sector_t recovery_cp = conf->mddev->recovery_cp;
+>> +       unsigned long recovery = conf->mddev->recovery;
+>> +       int needed = test_bit(MD_RECOVERY_NEEDED, &recovery);
+>> +       int resyncing = test_bit(MD_RECOVERY_SYNC, &recovery) &&
+>> +                       !test_bit(MD_RECOVERY_REQUESTED, &recovery) &&
+>> +                       !test_bit(MD_RECOVERY_CHECK, &recovery);
+>> +       int transitional = test_bit(MD_RECOVERY_RUNNING, &recovery) &&
+>> +                          !test_bit(MD_RECOVERY_SYNC, &recovery) &&
+>> +                          !test_bit(MD_RECOVERY_RECOVER, &recovery) &&
+>> +                          !test_bit(MD_RECOVERY_DONE, &recovery) &&
+>> +                          !test_bit(MD_RECOVERY_RESHAPE, &recovery);
+>
+> Thanks Alex,
+>  however I don't understand why you want to test all of these bits.
+> Isn't it enough just to check ->recovery_cp ??
+>
+>> +
+>> +       /* RAID6 requires 'rcw' in current implementation.
+>> +        * Otherwise, attempt to check whether resync is now happening
+>> +        * or should start.
+>> +         * If yes, then the array is dirty (after unclean shutdown or
+>> +         * initial creation), so parity in some stripes might be inconsistent.
+>> +         * In this case, we need to always do reconstruct-write, to ensure
+>> +         * that in case of drive failure or read-error correction, we
+>> +         * generate correct data from the parity.
+>> +         */
+>> +       if (conf->max_degraded == 2 ||
+>> +           (recovery_cp < MaxSector && sh->sector >= recovery_cp &&
+>> +            (needed || resyncing || transitional))) {
+>> +               /* Calculate the real rcw later - for now fake it
+>>                  * look like rcw is cheaper
+>
+> Also, we should probably fix this comment.  s/fake/make/
+>
+> Thanks,
+> NeilBrown
+>
+>
+>
+>>                  */
+>>                 rcw = 1; rmw = 2;
+>> +               pr_debug("force RCW max_degraded=%u, recovery_cp=%lu
+>> sh->sector=%lu recovery=0x%lx\n",
+>> +                        conf->max_degraded, recovery_cp, sh->sector, recovery);
+>>         } else for (i = disks; i--; ) {
+>>                 /* would I have to read this buffer for read_modify_write */
+>>                 struct r5dev *dev = &sh->dev[i];
+>
