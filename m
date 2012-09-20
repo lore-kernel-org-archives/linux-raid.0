@@ -1,73 +1,93 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md/bitmap:Don't use IS_ERR to judge alloc_page().
-Date: Thu, 20 Sep 2012 12:54:40 +1000
-Message-ID: <20120920125440.7f0fdea9@notabene.brown>
-References: <2012091510425793786613@gmail.com>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH] raid5: Avoid doing more read on dev of a stripe at the same time
+Date: Thu, 20 Sep 2012 11:04:46 +0800
+Message-ID: <201209201104415460652@gmail.com>
+References: <2012091510203206229010@gmail.com>,
+	<20120920125144.0ed69ec3@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/N2Ig+/_FE+e7I36dNW8qVoO"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2012091510425793786613@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jianpeng Ma <majianpeng@gmail.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/N2Ig+/_FE+e7I36dNW8qVoO
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+T24gMjAxMi0wOS0yMCAxMDo1MSBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
+IFNhdCwgMTUgU2VwIDIwMTIgMTA6MjA6MzUgKzA4MDAgIkppYW5wZW5nIE1hIiA8bWFqaWFucGVu
+Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gSW4gZnVuYyAnb3BzX3J1bl9iaW8nIGlmIHlvdSBy
+ZWFkIHRoZSBkZXYgd2hpY2ggdGhlIGxhc3QgcmVhZGluZw0KPj4gb2YgdGhpcyBkZXYgZGlkbid0
+IHJldHVybixpdCB3aWxsIGRlc3Ryb3J5IHRoZSAgcmVxL3JyZXEnc291cmNlIG9mIHJkZXYuDQo+
+PiBJdCBtYXkgY2FsbCBodW5nLXRhc2suDQo+PiBGb3IgZXhhbXBsZSwgZm9yIGJhZHNlY3RvciBv
+ciBvdGhlciByZWFzb25zLCByZWFkLW9wZXJhdGlvbiBvbmx5IHVzZWQNCj4+IHN0cmlwZSBpbnN0
+ZWFkIG9mIGNodW5rX2FsaWduZWRfcmVhZC4NCj4+IEZpcnN0OnN0cmlwZSAwO3NlY29uZDogc3Ry
+aXBlIDg7dGhpcmQ6c3RyaXBlIDE2LkF0IHRoZSBibG9jay1sYXllcix0aHJlZQ0KPj4gYmlvcyBt
+ZXJnZWQuDQo+PiBCZWNhdXNlIG1lZGlhIGVycm9yIG9mIHNlY3RvciBmcm9tIDAgdG8gNywgdGhl
+IHJlcXVlc3QgcmV0cmllZC4NCj4+IEF0IHRoaXMgdGltZSwgcmFpZDVkIHJlYWRlZCBzdHJpcGUw
+IGFnYWluLkJ1dCBpdCB3aWxsIHNldCAnYmlvLT5uZXh0ID0NCj4+IE5VTEwnLlNvIHRoZSBzdHJp
+cGUgOCBhbmQgMTYgZGlkbid0IHJldHVybi4NCj4+IA0KPj4gU2lnbmVkLW9mZi1ieTogSmlhbnBl
+bmcgTWEgPG1hamlhbnBlbmdAZ21haWwuY29tPg0KPg0KPkhpLA0KPiBJJ20gcmVhbGx5IHRyeWlu
+ZywgYnV0IEkgY2Fubm90IHVuZGVyc3RhbmQgd2hhdCB5b3UgYXJlIHNheWluZy4NCj4NClNvcnJ5
+IGZvciBteSBiYWQgZW5nbGlzaC4NCj5JIHRoaW5rIHRoZSBzaXR1YXRpb24gdGhhdCB5b3UgYXJl
+IGRlc2NyaWJpbmcgaW52b2x2ZXMgYSAyNCBzZWN0b3IgcmVxdWVzdC4NCj5UaGlzIGlzIGF0dGFj
+aGVkIHRvIDMgc3RyaXBlX2hlYWRzIC0gOCBzZWN0b3JzIGVhY2ggLSBhdCBhZGRyZXNzIDAsIDgs
+IDE2Lg0KPg0KPlNvICd0b3JlYWQnIG9uIHRoZSBmaXJzdCBkZXZpY2Ugb2YgZWFjaCBzdHJpcGUg
+cG9pbnRzIHRvIHRoaXMgYmlvLCBhbmQNCj5iaV9uZXh0IGlzIE5VTEwuDQo+DQo+VGhlICJyZXEi
+IGJpbyBmb3IgZWFjaCBkZXZpY2UgaXMgZmlsbGVkIG91dCB0byByZWFkIG9uZSBwYWdlIGFuZCB0
+aGVzZSB0aHJlZQ0KPidyZXEnIGJpb3MgYXJlIHN1Ym1pdHRlZC4gIFRoZSBibG9jayBsYXllciBt
+ZXJnZXMgdGhlc2UgaW50byBhIHNpbmdsZSByZXF1ZXN0Lg0KPg0KPlRoaXMgcmVxdWVzdCByZXBv
+cnRzIGFuIGVycm9yIGJlY2F1c2UgdGhlcmUgaXMgYSByZWFkIGVycm9yIHNvbWV3aGVyZSBpbiB0
+aGUNCj5maXJzdCAgOCBzZWN0b3JzLg0KPg0KWWVzLA0KPlNvIG9uZSwgb3IgbWF5YmUgYWxsLCBv
+ZiB0aGUgJ3JlcScgYmlvcyByZXR1cm4gd2l0aCBhbiBlcnJvcj8NCkZyb20gbXkgdGVzdCwgd2hl
+biByZXEgZGlkIG5vdCByZXR1cm4gYW5kIGF0IHRoZSBzYW1lIHRpbWUsIHRoZSBiaW8oc3RyaXBl
+IDApIHNlbmQuDQpTbyB0aGlzIG9wZXJhdGlvbiB3aWxsIHNldCBiaV9uZXh0IGlzIE5VTEwuDQpX
+aHkgYW0gaSBtZW50aW9uIHRoZSBiYWRzZWN0b3I/IEJlY2F1c2UgbXkgZGlza3Mgd2hpY2ggaGFk
+IGJhZHNlY3RvciBjYW4gcmVwcm9kdWNlZCBlYXNpbHkuDQpGb3IgZGlza3Mgd2hpY2ggZGlkbid0
+IGhhdmUgYmFkc2VjdG9yLGkgY2FuJ3QgcmVwcm9kdWNlZCB0aGlzIGJ1Zy4NCg0KPlRoZW4gUkFJ
+RDUgbWFya3MgdGhhdCBkZXZpY2UgYXMgYmVpbmcgYmFkIGFuZCByZWFkcyBmcm9tIHRoZSBvdGhl
+ciBkZXZpY2VzIHRvDQo+cmVjb3ZlciB0aGUgZGF0YS4NCj4NCj5XaGVyZSBleGFjdGx5IGRvZXMg
+c29tZXRoaW5nIGdvIHdyb25nPyAgd2hpY2ggYmlvIGdldHMgYmlfbmV4dCBzZXQgdG8gTlVMTA0K
+PndoZW4gaXQgc2hvdWxkbid0Pw0KPg0KPklmIHlvdSBjb3VsZCBleHBsYWluIHdpdGggbG90cyBv
+ZiBkZXRhaWwgaXQgd291bGQgaGVscCBhIGxvdC4NCj4NClRoZSBxdWVzdGlvbiBpcyB0byBlbnN1
+cmUgdGhlIGZpcnN0LXJlYWQgcmV0dXJuZWQgYW5kIHRoZSBuZXh0IHRvIHNlbmQgb24gc2FtZSBk
+ZXYgb2Ygc3RyaXBlLg0KPlRoYW5rcywNCj5OZWlsQnJvd24NCj4NCj4NCj4+IC0tLQ0KPj4gIGRy
+aXZlcnMvbWQvcmFpZDUuYyB8ICAgMTMgKysrKysrKysrKy0tLQ0KPj4gIGRyaXZlcnMvbWQvcmFp
+ZDUuaCB8ICAgIDEgKw0KPj4gIDIgZmlsZXMgY2hhbmdlZCwgMTEgaW5zZXJ0aW9ucygrKSwgMyBk
+ZWxldGlvbnMoLSkNCj4+IA0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2Ry
+aXZlcnMvbWQvcmFpZDUuYw0KPj4gaW5kZXggYWRkYTk0ZC4uZTUyYmExYiAxMDA2NDQNCj4+IC0t
+LSBhL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gKysrIGIvZHJpdmVycy9tZC9yYWlkNS5jDQo+PiBA
+QCAtNTQ3LDkgKzU0NywxNCBAQCBzdGF0aWMgdm9pZCBvcHNfcnVuX2lvKHN0cnVjdCBzdHJpcGVf
+aGVhZCAqc2gsIHN0cnVjdCBzdHJpcGVfaGVhZF9zdGF0ZSAqcykNCj4+ICAJCQkJcncgPSBXUklU
+RV9GVUE7DQo+PiAgCQkJZWxzZQ0KPj4gIAkJCQlydyA9IFdSSVRFOw0KPj4gLQkJfSBlbHNlIGlm
+ICh0ZXN0X2FuZF9jbGVhcl9iaXQoUjVfV2FudHJlYWQsICZzaC0+ZGV2W2ldLmZsYWdzKSkNCj4+
+IC0JCQlydyA9IFJFQUQ7DQo+PiAtCQllbHNlIGlmICh0ZXN0X2FuZF9jbGVhcl9iaXQoUjVfV2Fu
+dFJlcGxhY2UsDQo+PiArCQl9IGVsc2UgaWYgKHRlc3RfYW5kX2NsZWFyX2JpdChSNV9XYW50cmVh
+ZCwgJnNoLT5kZXZbaV0uZmxhZ3MpKSB7DQo+PiArCQkJLypUaGUgbGFzdCByZWFkIGRpZCBub3Qg
+cmV0dXJuLHNvIHNraXAgdGhpcyByZWFkKi8NCj4+ICsJCQlpZiAodGVzdF9hbmRfc2V0X2JpdChS
+NV9SZWFkaW5nLCAmc2gtPmRldltpXS5mbGFncykpIHsNCj4+ICsJCQkJY2xlYXJfYml0KFI1X0xP
+Q0tFRCwgJnNoLT5kZXZbaV0uZmxhZ3MpOw0KPj4gKwkJCQljb250aW51ZTsNCj4+ICsJCQl9IGVs
+c2UNCj4+ICsJCQkJcncgPSBSRUFEOw0KPj4gKwkJfSBlbHNlIGlmICh0ZXN0X2FuZF9jbGVhcl9i
+aXQoUjVfV2FudFJlcGxhY2UsDQo+PiAgCQkJCQkgICAgJnNoLT5kZXZbaV0uZmxhZ3MpKSB7DQo+
+PiAgCQkJcncgPSBXUklURTsNCj4+ICAJCQlyZXBsYWNlX29ubHkgPSAxOw0KPj4gQEAgLTcwMCw2
+ICs3MDUsNyBAQCBzdGF0aWMgdm9pZCBvcHNfcnVuX2lvKHN0cnVjdCBzdHJpcGVfaGVhZCAqc2gs
+IHN0cnVjdCBzdHJpcGVfaGVhZF9zdGF0ZSAqcykNCj4+ICAJCQlwcl9kZWJ1Zygic2tpcCBvcCAl
+bGQgb24gZGlzYyAlZCBmb3Igc2VjdG9yICVsbHVcbiIsDQo+PiAgCQkJCWJpLT5iaV9ydywgaSwg
+KHVuc2lnbmVkIGxvbmcgbG9uZylzaC0+c2VjdG9yKTsNCj4+ICAJCQljbGVhcl9iaXQoUjVfTE9D
+S0VELCAmc2gtPmRldltpXS5mbGFncyk7DQo+PiArCQkJY2xlYXJfYml0KFI1X1JlYWRpbmcsICZz
+aC0+ZGV2W2ldLmZsYWdzKTsNCj4+ICAJCQlzZXRfYml0KFNUUklQRV9IQU5ETEUsICZzaC0+c3Rh
+dGUpOw0KPj4gIAkJfQ0KPj4gIAl9DQo+PiBAQCAtMTgxOCw2ICsxODI0LDcgQEAgc3RhdGljIHZv
+aWQgcmFpZDVfZW5kX3JlYWRfcmVxdWVzdChzdHJ1Y3QgYmlvICogYmksIGludCBlcnJvcikNCj4+
+ICAJfQ0KPj4gIAlyZGV2X2RlY19wZW5kaW5nKHJkZXYsIGNvbmYtPm1kZGV2KTsNCj4+ICAJY2xl
+YXJfYml0KFI1X0xPQ0tFRCwgJnNoLT5kZXZbaV0uZmxhZ3MpOw0KPj4gKwljbGVhcl9iaXQoUjVf
+UmVhZGluZywgJnNoLT5kZXZbaV0uZmxhZ3MpOw0KPj4gIAlzZXRfYml0KFNUUklQRV9IQU5ETEUs
+ICZzaC0+c3RhdGUpOw0KPj4gIAlyZWxlYXNlX3N0cmlwZShzaCk7DQo+PiAgfQ0KPj4gZGlmZiAt
+LWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuaCBiL2RyaXZlcnMvbWQvcmFpZDUuaA0KPj4gaW5kZXgg
+YTlmYzI0OS4uYTU5NmRmOCAxMDA2NDQNCj4+IC0tLSBhL2RyaXZlcnMvbWQvcmFpZDUuaA0KPj4g
+KysrIGIvZHJpdmVycy9tZC9yYWlkNS5oDQo+PiBAQCAtMjk4LDYgKzI5OCw3IEBAIGVudW0gcjVk
+ZXZfZmxhZ3Mgew0KPj4gIAlSNV9XYW50UmVwbGFjZSwgLyogV2UgbmVlZCB0byB1cGRhdGUgdGhl
+IHJlcGxhY2VtZW50LCB3ZSBoYXZlIHJlYWQNCj4+ICAJCQkgKiBkYXRhIGluLCBhbmQgbm93IGlz
+IGEgZ29vZCB0aW1lIHRvIHdyaXRlIGl0IG91dC4NCj4+ICAJCQkgKi8NCj4+ICsJUjVfUmVhZGlu
+ZywJLyogdGhpcyBkZXYgb24gcmVhZGluZyBvbiBsbGQqLw0KPj4gIH07DQo+PiAgDQo+PiAgLyoN
+Cj4NCj4=
 
-On Sat, 15 Sep 2012 10:43:00 +0800 "Jianpeng Ma" <majianpeng@gmail.com> wro=
-te:
-
-> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
-> ---
->  drivers/md/bitmap.c |    7 ++-----
->  1 file changed, 2 insertions(+), 5 deletions(-)
->=20
-> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-> index 94e7f6b..f03ad11 100644
-> --- a/drivers/md/bitmap.c
-> +++ b/drivers/md/bitmap.c
-> @@ -476,11 +476,8 @@ static int bitmap_new_disk_sb(struct bitmap *bitmap)
->  	int err =3D -EINVAL;
-> =20
->  	bitmap->storage.sb_page =3D alloc_page(GFP_KERNEL);
-> -	if (IS_ERR(bitmap->storage.sb_page)) {
-> -		err =3D PTR_ERR(bitmap->storage.sb_page);
-> -		bitmap->storage.sb_page =3D NULL;
-> -		return err;
-> -	}
-> +	if (bitmap->storage.sb_page =3D=3D NULL)
-> +		return -ENOMEM;
->  	bitmap->storage.sb_page->index =3D 0;
-> =20
->  	sb =3D kmap_atomic(bitmap->storage.sb_page);
-
-Applied,
-Thanks,
-NeilBrown
-
---Sig_/N2Ig+/_FE+e7I36dNW8qVoO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUFqFcDnsnt1WYoG5AQLI2g/+O+1MHVaIl4vIbXlco4z02qAaJdZW0xeE
-zqVlraRzYR9yRoxnpO/0L2rL9+MdZP0/L61m8bxeEYM09k7K0Pwx0GiR3RBQkJKU
-3MUQy7JqK+M80xgzpLDXNGeckAd5m0iZEc0ewqAI09lxJExtA3HPXjLV2m01gNmp
-Ig9o1FWfRUK2KlPKAni8Ux643++Zu1m44yCGgZzlvx3mw78FJV/hkmnf+lvbsDO1
-BsVMyRNB57TVVnzO0dMmIbQlUH1PMTjRekQJY1yoBVu4KbZnbVjH18xyFOjt5QtG
-seVb8C/taQ3ztc3KQAyiBZi9o768xSE4e/RTr02jzN/Ln2RzhJHUOUGuTCQzV1xG
-cvvhZXe+ataVhP+oU65cRdE1/14gptPvoa6VrerJdct3wdsh0bn88CJ0TXIDkbvQ
-ntxf+liJWU5sxyVCIw3eH7s7zht01QJKMl5O3YHXhI/Ts0/9L4WVrUgF2F2/Pm4S
-cz53YEIqiR5cMR+79ac0YepadNNDL6VRJl08Hym4ck0dsSZsgkqkifCGt5CYNz7B
-qXmXcj3V+XeCG0B4UeIpcF0F9IU35Vm+xUjoGeNhF53jHVLEQ90bV1oXzhN3Y2++
-8f/RoHW6Snf48lPcU17/iyOprMqtaDVTigdXmyZML9hFIvFrfL8c6rfR65qSVKf4
-/QJT21hStX4=
-=pNVx
------END PGP SIGNATURE-----
-
---Sig_/N2Ig+/_FE+e7I36dNW8qVoO--
