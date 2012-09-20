@@ -1,48 +1,47 @@
-From: Oliver Schinagl <oliver+list@schinagl.nl>
-Subject: Re: Small short question Was: Re: Recovering from the kernel bug,
- Neil?
-Date: Thu, 20 Sep 2012 19:05:33 +0200
-Message-ID: <505B4CDD.7010509@schinagl.nl>
-References: <5030F07F.7000303@schinagl.nl> <504CFA7B.7090606@schinagl.nl> <20120910090829.19100cdf@notabene.brown> <504DA85C.6080000@schinagl.nl> <20120911161622.0b0fcf8c@notabene.brown> <505301E1.10707@schinagl.nl> <50531A52.7060205@schinagl.nl> <20120920122218.07f89443@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: GPT Table broken on a Raid1
+Date: Thu, 20 Sep 2012 11:34:12 -0600
+Message-ID: <1BDFB79A-E375-47F2-8EDF-8F51D8774651@colorremedies.com>
+References: <4961154.0TR9MeFlIq@techz> <7577D4C6-344F-4AE6-BB6A-3B4F29D4CAA0@colorremedies.com> <2627519.Y2VdWh5VBI@techz>
+Mime-Version: 1.0 (Apple Message framework v1278)
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120920122218.07f89443@notabene.brown>
+In-Reply-To: <2627519.Y2VdWh5VBI@techz>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 20-09-12 04:22, NeilBrown wrote:
-> On Fri, 14 Sep 2012 13:51:46 +0200 Oliver Schinagl <oliver+list@schinagl.nl>
-> wrote:
->
->> Since I had only one valid device to check with etc, I assume that if
->> fsck -n -f /dev/md2 runs sucessfully, it is 100% safe to assume the
->> array is perfectly healthy?
-> I might be a bit late here but....
->
-> No, not 100% safe.
-> I would at least mount the filesystem and have a look around - take a random
-> sample and see if it all looks credible.  If it does then that is as good as
-> it gets.
-I did check the FS, I ran some fsck tests and checked data on the drive, 
-everything appeared to be normal. I still have to verify some 
-unimportant iso images, once that is done, I cannot imagine the data 
-being bad.
->
->> E.g. it should be perfectly safe to mdadm --zero-superblock on /dev/sda6
->> and add it to /dev/md2 (missing /dev/sdb6)?
->>
->> I know technically this all works out fine, and the bug shouldn't have
->> broken anything in that regard. Or is it absolutly recommended to simply
->> create a new array, with a new FS on it, and copy all data over
->> (Logically also with /dev/md2, /dev/sda6 missing and later adding sdb6)?
-> Creating a new array shouldn't be necessary.  In general I would avoid
-> copying data when convenient.
-I didn't think it would have mattered. The meta-data is rewritten so if 
-data is good, everything is good. Since I added an empty disk to the 
-'half' array, everything is re-synced and a-ok.
-> NeilBrown
 
+On Sep 20, 2012, at 5:05 AM, G=FCnther J. Niederwimmer wrote:
+>=20
+> this is "normal" I install "windows 7" first ;). but the problem with=
+ the=20
+> wrong GPT Table Message I have also on a Raid10 with "Intel Matrix St=
+orage"=20
+> and dmraid installation.
+>=20
+>=20
+
+OK you didn't answer my question about what mdadm metadata version your=
+ md RAID is using. If it's 1.0 instead of 1.2 that could be the culprit=
+=2E
+
+> The Question is, work parted correct with Raid GPT Table?
+
+Could be a bug in parted 2.3, which is old. Try using parted 3.0.
+
+Another question is, do you really think it's a good idea to be mixing =
+different RAID implementations on the same physical devices, which also=
+ appear to contain boot volumes?
+
+I think one of your RAID implementations is stepping on the GPT seconda=
+ry header. I've seen this before in a BIOS "fakeraid" implementation. S=
+o I would look at all of your RAID implementations, make sure they're u=
+sing the latest versions.
+
+Chris Murphy--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
