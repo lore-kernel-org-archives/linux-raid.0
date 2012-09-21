@@ -1,71 +1,89 @@
-From: "Jianpeng Ma" <majianpeng@gmail.com>
-Subject: Re: Re: [PATCH] raid5: Avoid doing more read on dev of a stripe at the same time
-Date: Fri, 21 Sep 2012 10:24:45 +0800
-Message-ID: <201209211024418590971@gmail.com>
-References: <2012091510203206229010@gmail.com> <20120920125144.0ed69ec3@notabene.brown> <201209201104415460652@gmail.com>,
-	<20120920132422.0f7841f1@notabene.brown>
+From: =?ISO-8859-1?Q?G=FCnther_J=2E?= Niederwimmer <gjn@gjn.priv.at>
+Subject: Re: GPT Table broken on a Raid1
+Date: Fri, 21 Sep 2012 13:42:21 +0200
+Message-ID: <1361158.MkTZ6QR6cp@techz>
+References: <4961154.0TR9MeFlIq@techz> <2627519.Y2VdWh5VBI@techz> <1BDFB79A-E375-47F2-8EDF-8F51D8774651@colorremedies.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1BDFB79A-E375-47F2-8EDF-8F51D8774651@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gMjAxMi0wOS0yMCAxMToyNCBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
-IFRodSwgMjAgU2VwIDIwMTIgMTE6MDQ6NDYgKzA4MDAgIkppYW5wZW5nIE1hIiA8bWFqaWFucGVu
-Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gT24gMjAxMi0wOS0yMCAxMDo1MSBOZWlsQnJvd24g
-PG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPj4gPk9uIFNhdCwgMTUgU2VwIDIwMTIgMTA6MjA6MzUg
-KzA4MDAgIkppYW5wZW5nIE1hIiA8bWFqaWFucGVuZ0BnbWFpbC5jb20+IHdyb3RlOg0KPj4gPg0K
-Pj4gPj4gSW4gZnVuYyAnb3BzX3J1bl9iaW8nIGlmIHlvdSByZWFkIHRoZSBkZXYgd2hpY2ggdGhl
-IGxhc3QgcmVhZGluZw0KPj4gPj4gb2YgdGhpcyBkZXYgZGlkbid0IHJldHVybixpdCB3aWxsIGRl
-c3Ryb3J5IHRoZSAgcmVxL3JyZXEnc291cmNlIG9mIHJkZXYuDQo+PiA+PiBJdCBtYXkgY2FsbCBo
-dW5nLXRhc2suDQo+PiA+PiBGb3IgZXhhbXBsZSwgZm9yIGJhZHNlY3RvciBvciBvdGhlciByZWFz
-b25zLCByZWFkLW9wZXJhdGlvbiBvbmx5IHVzZWQNCj4+ID4+IHN0cmlwZSBpbnN0ZWFkIG9mIGNo
-dW5rX2FsaWduZWRfcmVhZC4NCj4+ID4+IEZpcnN0OnN0cmlwZSAwO3NlY29uZDogc3RyaXBlIDg7
-dGhpcmQ6c3RyaXBlIDE2LkF0IHRoZSBibG9jay1sYXllcix0aHJlZQ0KPj4gPj4gYmlvcyBtZXJn
-ZWQuDQo+PiA+PiBCZWNhdXNlIG1lZGlhIGVycm9yIG9mIHNlY3RvciBmcm9tIDAgdG8gNywgdGhl
-IHJlcXVlc3QgcmV0cmllZC4NCj4+ID4+IEF0IHRoaXMgdGltZSwgcmFpZDVkIHJlYWRlZCBzdHJp
-cGUwIGFnYWluLkJ1dCBpdCB3aWxsIHNldCAnYmlvLT5uZXh0ID0NCj4+ID4+IE5VTEwnLlNvIHRo
-ZSBzdHJpcGUgOCBhbmQgMTYgZGlkbid0IHJldHVybi4NCj4+ID4+IA0KPj4gPj4gU2lnbmVkLW9m
-Zi1ieTogSmlhbnBlbmcgTWEgPG1hamlhbnBlbmdAZ21haWwuY29tPg0KPj4gPg0KPj4gPkhpLA0K
-Pj4gPiBJJ20gcmVhbGx5IHRyeWluZywgYnV0IEkgY2Fubm90IHVuZGVyc3RhbmQgd2hhdCB5b3Ug
-YXJlIHNheWluZy4NCj4+ID4NCj4+IFNvcnJ5IGZvciBteSBiYWQgZW5nbGlzaC4NCj4+ID5JIHRo
-aW5rIHRoZSBzaXR1YXRpb24gdGhhdCB5b3UgYXJlIGRlc2NyaWJpbmcgaW52b2x2ZXMgYSAyNCBz
-ZWN0b3IgcmVxdWVzdC4NCj4+ID5UaGlzIGlzIGF0dGFjaGVkIHRvIDMgc3RyaXBlX2hlYWRzIC0g
-OCBzZWN0b3JzIGVhY2ggLSBhdCBhZGRyZXNzIDAsIDgsIDE2Lg0KPj4gPg0KPj4gPlNvICd0b3Jl
-YWQnIG9uIHRoZSBmaXJzdCBkZXZpY2Ugb2YgZWFjaCBzdHJpcGUgcG9pbnRzIHRvIHRoaXMgYmlv
-LCBhbmQNCj4+ID5iaV9uZXh0IGlzIE5VTEwuDQo+PiA+DQo+PiA+VGhlICJyZXEiIGJpbyBmb3Ig
-ZWFjaCBkZXZpY2UgaXMgZmlsbGVkIG91dCB0byByZWFkIG9uZSBwYWdlIGFuZCB0aGVzZSB0aHJl
-ZQ0KPj4gPidyZXEnIGJpb3MgYXJlIHN1Ym1pdHRlZC4gIFRoZSBibG9jayBsYXllciBtZXJnZXMg
-dGhlc2UgaW50byBhIHNpbmdsZSByZXF1ZXN0Lg0KPj4gPg0KPj4gPlRoaXMgcmVxdWVzdCByZXBv
-cnRzIGFuIGVycm9yIGJlY2F1c2UgdGhlcmUgaXMgYSByZWFkIGVycm9yIHNvbWV3aGVyZSBpbiB0
-aGUNCj4+ID5maXJzdCAgOCBzZWN0b3JzLg0KPj4gPg0KPj4gWWVzLA0KPj4gPlNvIG9uZSwgb3Ig
-bWF5YmUgYWxsLCBvZiB0aGUgJ3JlcScgYmlvcyByZXR1cm4gd2l0aCBhbiBlcnJvcj8NCj4+IEZy
-b20gbXkgdGVzdCwgd2hlbiByZXEgZGlkIG5vdCByZXR1cm4gYW5kIGF0IHRoZSBzYW1lIHRpbWUs
-IHRoZSBiaW8oc3RyaXBlIDApIHNlbmQuDQo+PiBTbyB0aGlzIG9wZXJhdGlvbiB3aWxsIHNldCBi
-aV9uZXh0IGlzIE5VTEwuDQo+DQo+QXJlIHlvdSBzYXlpbmcgdGhhdCB3ZSBzZW5kIGFub3RoZXIg
-YmlvIGJlZm9yZSB0aGUgZmlyc3Qgb25lIGhhcyByZXR1cm5lZD8NCj5UaGF0IHNob3VsZG4ndCBi
-ZSBwb3NzaWJsZSBhcyBzaC0+Y291bnQgd2lsbCBwcmV2ZW50IGl0IGZyb20gaGFwcGVuaW5nLg0K
-PldoaWxlIHRoZXJlIGlzIGFuIG91dHN0YW5kaW5nIHJlcXVlc3QsIHNoLT5jb3VudCB3aWxsIGJl
-ID4wLCBhbmQgdW50aWwNCj5zaC0+Y291bnQgaXMgMCwgd2Ugd29uJ3QgdHJ5IHRvIHNlbmQgYW55
-IG1vcmUgcmVxdWVzdHMuDQo+DQo+U28gSSBzdGlsbCBkb24ndCB1bmRlcnN0YW5kLiAgUGxlYXNl
-IHRyeSB0byBwcm92aWRlIGFzIG11Y2ggZGV0YWlsIGFzDQo+cG9zc2libGUuICBJZiBpdCBpcyBl
-YXNpZXIsIHdyaXRlIGluIHlvdXIgb3duIGxhbmd1YWdlIGFuZCB1c2UNCj50cmFuc2xhdGUuZ29v
-Z2xlLmNvbSB0byBjb252ZXJ0IHRvIGVuZ2xpc2guID8/DQo+DQo+VGhhbmtzLA0KPk5laWxCcm93
-bg0KDQpIaSwNCiBpIHdyb3RlIGEgc2hlbGwtc2NyaXB0IGNhbiByZXByb2R1Y3QgdGhpcyBidWcu
-DQpOb3RlOiBtZGFkbSAtVg0KbWRhZG0gLSB2My4zLXByZSAtIFVucmVsZWFzZWQNCg0KDQojIS9i
-aW4vYmFzaA0KDQpkZWNsYXJlIC1pIGNvdW50DQpkZWNsYXJlIC1pIHNlY3Rvcg0KY291bnQ9MA0K
-c2VjdG9yPTIwNDgNCndoaWxlIHRydWUNCmRvDQoJaGRwYXJtIC0tbWFrZS1iYWQtc2VjdG9yICRz
-ZWN0b3IgLS15ZXMtaS1rbm93LXdoYXQtaS1hbS1kb2luZyAvZGV2L3NkYyA+IC9kZXYvbnVsbA0K
-CWhkcGFybSAtLW1ha2UtYmFkLXNlY3RvciAkc2VjdG9yIC0teWVzLWkta25vdy13aGF0LWktYW0t
-ZG9pbmcgL2Rldi9zZGQgPiAvZGV2L251bGwNCgloZHBhcm0gLS1tYWtlLWJhZC1zZWN0b3IgJHNl
-Y3RvciAtLXllcy1pLWtub3ctd2hhdC1pLWFtLWRvaW5nIC9kZXYvc2RlID4gL2Rldi9udWxsDQoJ
-bGV0IGNvdW50KysNCglsZXQgc2VjdG9yKz0kY291bnQqOA0KCWlmICgoJGNvdW50ID09IDQwKSk7
-dGhlbg0KCQlicmVhaw0KCWZpDQpkb25lDQoNCndoaWxlIHRydWUNCmRvDQoJbWRhZG0gLVMgL2Rl
-di9tZDANCgltZGFkbSAtQ1IgL2Rldi9tZDAgLWw1IC1jNCAtbjQgbWlzc2luZyAvZGV2L3NkW2Nk
-ZV0NCglkZCBpZj0vZGV2L21kMCBvZj0vZGV2L251bGwgYnM9MTBNIGNvdW50PTEgaWZsYWc9ZGly
-ZWN0DQoJc2xlZXAgMQ0KZG9uZQ0KDQoNClRoYW5rcw==
+Hello Chris,
 
+Am Donnerstag, 20. September 2012, 11:34:12 schrieb Chris Murphy:
+> On Sep 20, 2012, at 5:05 AM, G=FCnther J. Niederwimmer wrote:
+> > this is "normal" I install "windows 7" first ;). but the problem wi=
+th the
+> > wrong GPT Table Message I have also on a Raid10 with "Intel Matrix
+> > Storage"
+> > and dmraid installation.
+>=20
+> OK you didn't answer my question about what mdadm metadata version yo=
+ur md
+> RAID is using. If it's 1.0 instead of 1.2 that could be the culprit.
+> > The Question is, work parted correct with Raid GPT Table?
+
+Thank you for the answer.
+
+excuse ;).
+
+OK.
+
+I have=20
+mdadm-3.2.5-3.7.1
+parted 2.4.-24.2.2
+
+on the computer.
+=20
+> Could be a bug in parted 2.3, which is old. Try using parted 3.0.
+
+I will search ;)
+
+> Another question is, do you really think it's a good idea to be mixin=
+g
+> different RAID implementations on the same physical devices, which al=
+so
+> appear to contain boot volumes?
+
+My installing is, win7 on the Raid1 GPT EFI the Raid1 have Partitions, =
+5 for=20
+NTFS and one ext4 for the "/Home" Direktory
+
+My Linux is on a SSD, SSD is also GPT EFI formated.
+
+>=20
+> I think one of your RAID implementations is stepping on the GPT secon=
+dary
+> header. I've seen this before in a BIOS "fakeraid" implementation. So=
+ I
+> would look at all of your RAID implementations, make sure they're usi=
+ng the
+> latest versions.
+
+Yes, it is a Intel Matrix Storage System, the Board is a DX58SO2 with l=
+ast=20
+Bios & Firmware for the "fakeraid" ;)
+
+my question is,  win can work with no Problem on the "Fakeraid" and a G=
+PT=20
+Table. Could it be, that the kernel or / and parted have a Problem with=
+ the=20
+GPT Table on a Raid1 or a Raid10 Fakeraid ?
+
+I have this Problem on all my three Systems (Intel), also on my Small 1=
+9"=20
+Intel Server.
+
+--=20
+mit freundlichen Gr=FC=DFen / best Regards.
+
+  G=FCnther J. Niederwimmer
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
