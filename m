@@ -1,7 +1,7 @@
 From: "Jianpeng Ma" <majianpeng@gmail.com>
-Subject: [PATCH 0/3] raid5: fix three bugs.
-Date: Sat, 22 Sep 2012 10:22:48 +0800
-Message-ID: <201209221022451097345@gmail.com>
+Subject: [PATCH 1/3] raid5: Add per-stripe lock on toread in func
+Date: Sat, 22 Sep 2012 10:22:52 +0800
+Message-ID: <201209221022496094906@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="gb2312"
@@ -9,14 +9,23 @@ Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Cc: shli <shli@kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-UGF0Y2gwLzEgcmVzb2x2ZSBwb3NzaWJsZSBvb3BzLg0KUGF0Y2gyIHJlc29sdmUgYnVnIGFib3V0
-IGNhbGwgYXluY194b3IuDQoNCkppYW5wZW5nIE1hICgzKToNCiAgcmFpZDU6IEFkZCBwZXItc3Ry
-aXBlIGxvY2sgb24gdG9yZWFkIGluIGZ1bmMgaGFuZGxlX2ZhaWxlZF9zdHJpcGUuDQogIHJhaWQ1
-OiBmaXggcG9zc2libGUgb29wcyBpbiBhZGRfc3RyaXBlX2JpbyB3aGVuIGVuYWJsZSBwcl9kZWJ1
-Zy4NCiAgcmFpZDU6IEZpeCB0b19yZWFkL3RvX3dyaXRlIGp1ZGdlbWVudC4NCg0KIGRyaXZlcnMv
-bWQvcmFpZDUuYyB8ICAgMTMgKysrKysrKystLS0tLQ0KIDEgZmlsZSBjaGFuZ2VkLCA4IGluc2Vy
-dGlvbnMoKyksIDUgZGVsZXRpb25zKC0pDQoNCi0tIA0KMS43LjkuNQ0K
+Q29tbWl0IGIxNzQ1OWMwNTAwMGZkYmU4IGludHJvZHVjZSBwZXItc3RyaXBlIGxvY2ssYnV0IGl0
+IG9taXQgdGhpcw0KcGxhY2UuDQoNClNpZ25lZC1vZmYtYnk6IEppYW5wZW5nIE1hIDxtYWppYW5w
+ZW5nQGdtYWlsLmNvbT4NCi0tLQ0KIGRyaXZlcnMvbWQvcmFpZDUuYyB8ICAgIDIgKysNCiAxIGZp
+bGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3Jh
+aWQ1LmMgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCmluZGV4IDcwMzFiODYuLmRkNzMyMDkgMTAwNjQ0
+DQotLS0gYS9kcml2ZXJzL21kL3JhaWQ1LmMNCisrKyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KQEAg
+LTI1MjMsOCArMjUyMywxMCBAQCBoYW5kbGVfZmFpbGVkX3N0cmlwZShzdHJ1Y3QgcjVjb25mICpj
+b25mLCBzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoLA0KIAkJaWYgKCF0ZXN0X2JpdChSNV9XYW50Zmls
+bCwgJnNoLT5kZXZbaV0uZmxhZ3MpICYmDQogCQkgICAgKCF0ZXN0X2JpdChSNV9JbnN5bmMsICZz
+aC0+ZGV2W2ldLmZsYWdzKSB8fA0KIAkJICAgICAgdGVzdF9iaXQoUjVfUmVhZEVycm9yLCAmc2gt
+PmRldltpXS5mbGFncykpKSB7DQorCQkJc3Bpbl9sb2NrX2lycSgmc2gtPnN0cmlwZV9sb2NrKTsN
+CiAJCQliaSA9IHNoLT5kZXZbaV0udG9yZWFkOw0KIAkJCXNoLT5kZXZbaV0udG9yZWFkID0gTlVM
+TDsNCisJCQlzcGluX3VubG9ja19pcnEoJnNoLT5zdHJpcGVfbG9jayk7DQogCQkJaWYgKHRlc3Rf
+YW5kX2NsZWFyX2JpdChSNV9PdmVybGFwLCAmc2gtPmRldltpXS5mbGFncykpDQogCQkJCXdha2Vf
+dXAoJmNvbmYtPndhaXRfZm9yX292ZXJsYXApOw0KIAkJCWlmIChiaSkgcy0+dG9fcmVhZC0tOw0K
+LS0gDQoxLjcuOS41DQo=
 
