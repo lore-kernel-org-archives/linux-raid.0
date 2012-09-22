@@ -1,178 +1,183 @@
-From: =?ISO-8859-1?Q?G=FCnther_J=2E?= Niederwimmer <gjn@gjn.priv.at>
-Subject: Re: GPT Table broken on a Raid1
-Date: Sat, 22 Sep 2012 10:37:19 +0200
-Message-ID: <1718683.C0AtuyUDq1@techz>
-References: <4961154.0TR9MeFlIq@techz> <E9C051A7-65EB-48F5-8D3B-1C374F271E0C@colorremedies.com> <3EC7177F-9973-4D2E-988B-7020298E1727@colorremedies.com>
+From: "mirovis" <mirovis@inet.hr>
+Subject: Re: Shouldn't --zero-superblock reset the UUID?
+Date: Sat, 22 Sep 2012 14:53:38 +0200
+Message-ID: <505db4d2.3dc.3e7d.1665654674@inet.hr>
+Reply-To: mirovis@inet.hr
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3EC7177F-9973-4D2E-988B-7020298E1727@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Chris,
+=46rom: "mirovis" <mirovis@inet.hr>
+To: linux-raid@vger.kernel.org
+Subject: Re: Shouldn't --zero-superblock reset the UUID?
+Date: Fri, 21 Sep 2012 22:29:04 +0200
 
-Am Freitag, 21. September 2012, 16:43:52 schrieb Chris Murphy:
-> On Sep 21, 2012, at 1:35 PM, Chris Murphy wrote:
-> > If you're making the RAID with that, it defaults to metadata versio=
-n 1.2.
-> > But to be sure mdadm -E /dev/mdX
+----- Original Message Follows -----
+> Almost the entire little thread of concern is half a page:
+> http://marc.info/?l=3Dlinux-raid&m=3D129790712716243&w=3D2
 >=20
-> Scratch that. I was confused. Try these instead:
-
-This is the output from a openSUSE 12.2 (DX58SO2)
-=20
-> mdadm -=E2=80=93detail-platform
-
-       Platform : Intel(R) Matrix Storage Manager
-        Version : 11.0.0.1339
-    RAID Levels : raid0 raid1 raid10 raid5
-    Chunk Sizes : 4k 8k 16k 32k 64k 128k
-    2TB volumes : supported
-      2TB disks : supported
-      Max Disks : 6
-    Max Volumes : 2 per array, 4 per controller
- I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
-
-
-> mdadm =E2=80=93D /dev/md/imsm
-On my system I have a /imsm0
-
-/dev/md/imsm0:
-        Version : imsm
-     Raid Level : container
-  Total Devices : 2
-
-Working Devices : 2
-
-
-           UUID : 363f146f:e7f29dc8:f05996c3:577ead6a
-  Member Arrays : /dev/md/Volume0
-
-    Number   Major   Minor   RaidDevice
-
-       0       8        0        -        /dev/sda
-       1       8       16        -        /dev/sdb
-
-
-
-> mdadm =E2=80=93E /dev/sdX
-/dev/sda:
-          Magic : Intel Raid ISM Cfg Sig.
-        Version : 1.1.00
-    Orig Family : e3958f4b
-         Family : e3958f4b
-     Generation : 00013417
-     Attributes : All supported
-           UUID : 363f146f:e7f29dc8:f05996c3:577ead6a
-       Checksum : 3e9e527c correct
-    MPB Sectors : 1
-          Disks : 2
-   RAID Devices : 1
-
-  Disk00 Serial : 6QF4WDE3
-          State : active
-             Id : 00000000
-    Usable Size : 625137928 (298.09 GiB 320.07 GB)
-
-[Volume0]:
-           UUID : ec120401:b6ed52e6:3814fac4:48fcf4fc
-     RAID Level : 1
-        Members : 2
-          Slots : [UU]
-    Failed disk : none
-      This Slot : 0
-     Array Size : 625137664 (298.09 GiB 320.07 GB)
-   Per Dev Size : 625137928 (298.09 GiB 320.07 GB)
-  Sector Offset : 0
-    Num Stripes : 2441944
-     Chunk Size : 64 KiB
-       Reserved : 0
-  Migrate State : idle
-      Map State : normal
-    Dirty State : dirty
-
-  Disk01 Serial : 6QF4WF5Z
-          State : active
-             Id : 00000001
-    Usable Size : 625137928 (298.09 GiB 320.07 GB)
-
-
-/dev/sdb:
-          Magic : Intel Raid ISM Cfg Sig.
-        Version : 1.1.00
-    Orig Family : e3958f4b
-         Family : e3958f4b
-     Generation : 0001342f
-     Attributes : All supported
-           UUID : 363f146f:e7f29dc8:f05996c3:577ead6a
-       Checksum : 3e9e5294 correct
-    MPB Sectors : 1
-          Disks : 2
-   RAID Devices : 1
-
-  Disk01 Serial : 6QF4WF5Z
-          State : active
-             Id : 00000001
-    Usable Size : 625137928 (298.09 GiB 320.07 GB)
-
-[Volume0]:
-           UUID : ec120401:b6ed52e6:3814fac4:48fcf4fc
-     RAID Level : 1
-        Members : 2
-          Slots : [UU]
-    Failed disk : none
-      This Slot : 1
-     Array Size : 625137664 (298.09 GiB 320.07 GB)
-   Per Dev Size : 625137928 (298.09 GiB 320.07 GB)
-  Sector Offset : 0
-    Num Stripes : 2441944
-     Chunk Size : 64 KiB
-       Reserved : 0
-  Migrate State : idle
-      Map State : normal
-    Dirty State : dirty
-
-  Disk00 Serial : 6QF4WDE3
-          State : active
-             Id : 00000000
-    Usable Size : 625137928 (298.09 GiB 320.07 GB)
-
-=20
-> Anyway, I'm suspicious that you've got either your SATA controller al=
-so with
-> RAID enabled, or you're also using dmraid and it's conflicting with t=
-he md
-> driver. Or you've misconfigured mdadm for imsm. The result is the sec=
-ondary
-> GPT is getting squished. I think you should read this document, as it
-> proposes creating a container first, then RAID within that. If you're
-> creating the RAID entirely from within Windows this may not be what i=
-t
-> does.
+> I'm reconstructing it from web, because wasn't subscribed then (Feb 2=
+011).
 >=20
-> http://download.intel.com/design/intarch/PAPERS/326024.pdf
-
-I working on this, to read all.
-
-I installed with YaST2 and I hope it is only mdadm not all together ;).
-
-But I mean I have read in the changelog from parted 3.1, it is a Raid(1=
-) GPT=20
-Error Bug corrected ?
-
-I hope I can create a working mdadm 3.1 package witch is working with o=
-penSUSE=20
-12.2. (I am not a programmer) =20
-
-Thanks for the hint to fedora, for the tool gdisk I don't found it befo=
-re.=20
---=20
-mit freundlichen Gr=C3=BC=C3=9Fen / best Regards.
-
-  G=C3=BCnther J. Niederwimmer
+>=20
+> > hansbkk@gmail.com wrote:
+> > > I've only seen this problem with RAID1, but perhaps it applies to=
+ other levels.
+> > >
+> > > When adding a member partition to an array, the UUID of that part=
+ition
+> > > gets set to that of the array (and all the other members)
+> > >
+> > > However, when fail/remove/zero-superblock 'ing a member back out =
+of
+> > > the array, the UUID gets left behind, along with the label and fs
+> > > type.
+> > >
+> > > Ideally the partition would be left in a state as if it never had=
+ any
+> > > filesystem at all on it, as when using dd /if=3Ddev/zero and a fr=
+esh
+> > > sfdisk.
+> > >
+> > > If this isn't possible, perhaps the zero-superblock option should
+> > > trigger a reminder message to either zero the drive or re-format =
+the
+> > > partition?
+> > >
+> > >  =20
+> > I recall reading on this list that zero-superblock only zero's the =
+first=20
+> > superblock that it finds. It may be necessary to run mdadm=20
+> > zero-superblock several times to remove all superblocks that may be=
+ on=20
+> > the device from historical times.
+> >=20
+>=20
+> The latest mdadm will zero all superblocks it can find.
+>=20
+> How I suspec the OP is actually talking about a 'filesystem' uuid rat=
+her than
+> a 'raid' uuid...  After all it is "along with the label and fs type".
+>=20
+> So: kansbkk: What makes you think the uuid is left behind?  Knowing t=
+hat will
+>   help know what uuid you are talking about.
+>=20
+> NeilBrown
+>=20
+> There.
+> In the first place, thank you for giving the world such great program=
+!
+> Here's my woe, however. Pls. bear with me!
+> I am struggling on system update matters (
+> https://forums.gentoo.org/viewtopic-p-7146038.html#7145606 raid1/rai5=
+ there too ).
+> I made a fine raid1 /dev/md0 from /dev/sdb2 and /dev/sdc2 as boot pat=
+ition but grub2 and initrd
+> wouldn't properly work on it.
+> So I did (from memory writing):
+> # mdadm -S /dev/md0
+> # mdadm --zero-superblock /dev/sdb2
+> # mdadm --zero-superblock /dev/sdc2
+> Still, after numerous reboots and many tries, those, the raid's uuid =
+and the part uuids are still
+> there, and I can not use /dev/sdb2 or /dev/sdc2 for boot partition be=
+cause now I am still getting
+> on them, upon grub2-mkconfig (pls find the line in forums.gentoo link=
+ above):
+> /usr/sbin/grub2-probe: warning: Couldn't find physical volume `(null)=
+'. Some modules may be
+> missing from core image..=20
+> or something to that effect.
+> Wait, I just explained it there in a sequence. Now search for more re=
+cent
+> ..Couldn't find physical volume `(null)'
+> in the same forums' thread.
+> Too many numerous tries I made on that grub2 on raid1 and than revert=
+ed to plain partitions boot
+> issue, to find now the configuration with the original uuids.
+> But, the construction that blkid shows with my other raid devices, sa=
+y:
+> # blkid -c /dev/null | egrep 'sdb3|sdc3'
+> /dev/sdb3: UUID=3D"bb6ad459-356a-4801-ad1f-7887fea0a4a5"
+> UUID_SUB=3D"aa20fe15-5856-4ee5-8267-8b1d126e00e7" LABEL=3D"at8-g250-c=
+:1"
+TYPE=3D"linux_raid_member"=20
+> /dev/sdc3: UUID=3D"bb6ad459-356a-4801-ad1f-7887fea0a4a5"
+> UUID_SUB=3D"041a185c-91f6-49df-7024-d1ea9c7e09e5" LABEL=3D"at8-g250-c=
+:1"
+TYPE=3D"linux_raid_member"=20
+> #
+> which is on raid5 /dev/md1 device:
+> # mdadm -D /dev/md1 | egrep 'sdb3|sdc3|UUID'
+>            UUID : bb6ad459:356a4801:ad1f7887:fea0a4a5
+>        0       8       19        0      active sync   /dev/sdb3
+>        1       8       35        1      active sync   /dev/sdc3
+> In the same fashion:
+> cf771640-1e0f-4ddf-a0cd-10a191d86f75
+> from blkid in the forums.gentoo is gotten from the not-killable, no w=
+ay, can't kill that beast!,
+> raid1 /dev/md0
+> cf771640:1e0f4ddf:a0cd10a1:91d86f75
+> How do I recover now plain partitions for me.
+> I tried:
+> mdadm --kill-subarray ...
+> but can't quite figure how exactly to use that.
+> I will be grateful for any insight to resolve this issue so I get my =
+plain partitions back from
+> these UUID that seem to be as sticky as Google cookies! No Libert=E9,=
+ no Tails can run away from
+> them! Or maybe...
+> How do I kill these UUIDs? In general terms. Because I sure want to b=
+e able to remake my boot
+> raid1, or even raid5 partition when Grub2 learns to treat them!
+> Thanks again in advance!
+> Miroslav Rovis
+> Pls. allow me to possible add a correction mail if I wrongly or uncle=
+arly worded or mispasted some
+> data. I am quite exhausted with this work on my hands.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+I may have gotten some numbers (and a bit of concept) a little wrong, a=
+nd I can't even reconstruct
+how it really was.
+But raid1 did retain some uuids even after stopping it and zero-superbl=
+ock'ing its component devices
+(sdb2 and sdc2).
+The answer how to kill the zombie uuids is, boot partitions are general=
+ly small, the files can be
+easily properly backed up by programs like rsync, and, the answer I fou=
+nd where it was supposed to
+be found, in `man mdadm`.
+Where it reads, talking about versions of mdadm:
+"...store the superblock at different locations on the device..."=20
+So:
+# cat /dev/zero | dd of=3D/dev/sdb2
+and
+# cat /dev/zero | dd of=3D/dev/sdc2
+(!! warning to readers not sufficiently knowledgeable: Know what you're=
+ doing, these command wipe
+the partitions clean!)
+got my former raid1 partitions finally free from unkillable zombie uuid=
+'s.
+Now blkid finally gets:
+#  blkid|egrep 'sdb2|sdc2'
+/dev/sdb2: UUID=3D"2c591283-6822-4399-9e97-048626681f46" TYPE=3D"ext2"=20
+/dev/sdc2: UUID=3D"1df80e60-d9f4-4f0a-b098-8e0607d6fb78" TYPE=3D"ext2"=20
+#
+And that's fair enough.
+Hope this helps others who get into this kind of trouble (as rad is now=
+adays increasingly used by
+common non-expert users like me)!
+Cheers!
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
