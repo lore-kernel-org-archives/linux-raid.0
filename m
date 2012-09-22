@@ -1,71 +1,86 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: GPT Table broken on a Raid1
-Date: Sat, 22 Sep 2012 23:07:06 +0100
-Message-ID: <505E368A.4020200@anonymous.org.uk>
-References: <4961154.0TR9MeFlIq@techz> <2627519.Y2VdWh5VBI@techz> <1BDFB79A-E375-47F2-8EDF-8F51D8774651@colorremedies.com> <1361158.MkTZ6QR6cp@techz> <E9C051A7-65EB-48F5-8D3B-1C374F271E0C@colorremedies.com> <3EC7177F-9973-4D2E-988B-7020298E1727@colorremedies.com> <505DD9E2.7090908@anonymous.org.uk> <F7E53090-1143-4811-86B9-E71923B98AA2@colorremedies.com>
+From: Alexander =?iso-8859-1?b?S/xobg==?= <alexander.kuehn@nagilum.de>
+Subject: sync action not working/ignored
+Date: Sun, 23 Sep 2012 00:27:34 +0200
+Message-ID: <20120923002734.Horde.j1X3SZk8pphQXjtWHRF5P_A@cakebox.homeunix.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed; DelSp=Yes
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <F7E53090-1143-4811-86B9-E71923B98AA2@colorremedies.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 22/09/2012 19:45, Chris Murphy wrote:
-> On Sep 22, 2012, at 9:31 AM, John Robinson wrote:
->> I don't think there's anything wrong here.
->>
->> The kernel sees the whole discs, sda and sdb, and complains that the=
- GPT partition table looks wrong becase the second copy isn't at the en=
-d of the discs. That's correct, at the end of the raw discs is the IMSM=
- metadata.
->
-> OK so sda and sdb shouldn't have been partitioned in the first place,=
- is what that tells me.
+Hi,
+for some reason linux appears to be ignoring my sync_action requests:
+root@nas:~# uname -a
+Linux nas 3.5.4 #1 SMP Sat Sep 15 15:41:21 CEST 2012 x86_64 GNU/Linux
+root@nas:~# echo /sys/block/md*/md/sync_action
+/sys/block/md1/md/sync_action
+root@nas:~# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md1 : active (auto-read-only) raid5 sdb[5] sdg[9] sdd[7] sdf[6] sde[8]  
+sdc[2] sda[1]
+       11719408128 blocks super 1.2 level 5, 64k chunk, algorithm 2  
+[7/7] [UUUUUUU]
+       bitmap: 0/15 pages [0KB], 65536KB chunk
 
-That's not what I'm saying. I'm saying that sda and sdb weren't=20
-partitioned in the first place. I'm saying that when the Linux kernel=20
-boots, and the AHCI driver starts, it sees the IMSM member discs as raw=
-=20
-discs, which get probed for partitions. The GPT partition probe spots=20
-one of the copies of the GPT partition, but can't find the other one=20
-because the IMSM metadata's there. Then later on, md starts, reads the=20
-IMSM metadata, and presents the RAID set, including the GPT partition=20
-table that the raw-disc probe already whinged about, but which in the=20
-RAID set is correct.
+unused devices: <none>
+root@nas:~# echo check >/sys/block/md1/md/sync_action
+root@nas:~# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md1 : active (auto-read-only) raid5 sdb[5] sdg[9] sdd[7] sdf[6] sde[8]  
+sdc[2] sda[1]
+       11719408128 blocks super 1.2 level 5, 64k chunk, algorithm 2  
+[7/7] [UUUUUUU]
+       bitmap: 0/15 pages [0KB], 65536KB chunk
 
-The error messages that G=FCnther saw are a false positive and harmless=
- -=20
-or at least, harmless until someone starts telling him to go messing=20
-around rewriting the contents of the raw drives underneath md by=20
-deleting the misidentified partition tables, the effect of which is=20
-likely to be to damage his partitions inside the IMSM array and/or=20
-destroy the IMSM array metadata.
+unused devices: <none>
+root@nas:~# echo repair >/sys/block/md1/md/sync_action
+root@nas:~# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md1 : active (auto-read-only) raid5 sdb[5] sdg[9] sdd[7] sdf[6] sde[8]  
+sdc[2] sda[1]
+       11719408128 blocks super 1.2 level 5, 64k chunk, algorithm 2  
+[7/7] [UUUUUUU]
+       bitmap: 0/15 pages [0KB], 65536KB chunk
 
->> Don't try to change the partition tables on /dev/sda and sdb or you =
-will damage the IMSM metadata.
->
-> Sounds like either imsm metadata is either not well designed for GPT
+unused devices: <none>
+root@nas:~# mdadm -Q --detail /dev/md1
+/dev/md1:
+         Version : 1.2
+   Creation Time : Thu Sep  9 20:43:43 2010
+      Raid Level : raid5
+      Array Size : 11719408128 (11176.50 GiB 12000.67 GB)
+   Used Dev Size : 1953234688 (1862.75 GiB 2000.11 GB)
+    Raid Devices : 7
+   Total Devices : 7
+     Persistence : Superblock is persistent
 
-I think I'd describe it was being designed so that individual discs fro=
-m=20
-RAID-1 mirrors can be read independently.
+   Intent Bitmap : Internal
 
-IMSM predates GPT anyway.
+     Update Time : Sat Sep 22 23:28:50 2012
+           State : active
+  Active Devices : 7
+Working Devices : 7
+  Failed Devices : 0
+   Spare Devices : 0
 
-> or it was intended to be placed on an unpartitioned disk in the first=
- place.
+          Layout : left-symmetric
+      Chunk Size : 64K
 
-It can't be anything else.
+            Name : nas:1  (local to host nas)
+            UUID : 5dbc572f:0e6b18bd:125db183:3511c054
+          Events : 109708
 
-Cheers,
+     Number   Major   Minor   RaidDevice State
+        5       8       16        0      active sync   /dev/sdb
+        1       8        0        1      active sync   /dev/sda
+        2       8       32        2      active sync   /dev/sdc
+        8       8       64        3      active sync   /dev/sde
+        6       8       80        4      active sync   /dev/sdf
+        7       8       48        5      active sync   /dev/sdd
+        9       8       96        6      active sync   /dev/sdg
 
-John.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Nothing in dmesg/syslog.
+No idea what's going on. :(
+Alex.
