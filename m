@@ -1,84 +1,152 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: GPT Table broken on a Raid1
-Date: Sat, 22 Sep 2012 16:30:28 -0600
-Message-ID: <6FBE5434-A133-43C0-8296-58978301D32B@colorremedies.com>
-References: <4961154.0TR9MeFlIq@techz> <2627519.Y2VdWh5VBI@techz> <1BDFB79A-E375-47F2-8EDF-8F51D8774651@colorremedies.com> <1361158.MkTZ6QR6cp@techz> <E9C051A7-65EB-48F5-8D3B-1C374F271E0C@colorremedies.com> <3EC7177F-9973-4D2E-988B-7020298E1727@colorremedies.com> <505DD9E2.7090908@anonymous.org.uk> <F7E53090-1143-4811-86B9-E71923B98AA2@colorremedies.com> <505E368A.4020200@anonymous.org.uk>
-Mime-Version: 1.0 (Apple Message framework v1278)
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: "Nicholas A. Bellinger" <nab@risingtidesystems.com>
+Subject: Re: Serious performance issues with mdadm RAID-5 partition
+ exported through LIO (iSCSI)
+Date: Sat, 22 Sep 2012 18:01:47 -0700
+Message-ID: <1348362107.8016.46.camel@haakon2.linux-iscsi.org>
+References: <50588731.5050502@bananateam.nl>
+	 <1347997760.25356.16.camel@haakon2.linux-iscsi.org>
+	 <20568.58664.669085.313654@tree.ty.sabi.co.UK>
+	 <1348006818.25356.62.camel@haakon2.linux-iscsi.org>
+	 <5059A32F.8030606@shiftmail.org>
+Reply-To: nab@risingtidesystems.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <505E368A.4020200@anonymous.org.uk>
+In-Reply-To: <5059A32F.8030606@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: joystick <joystick@shiftmail.org>
+Cc: Peter Grandi <pg@lxra2.for.sabi.co.UK>, Linux RAID <linux-raid@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Wed, 2012-09-19 at 12:49 +0200, joystick wrote:
+> On 09/19/12 00:20, Nicholas A. Bellinger wrote:
+> >
+> >>> Are you enabling emulate_write_cache=1 with your iblock
+> >>> backends..? This can have a gigantic effect on initiator
+> >>> performance for both MSFT + Linux SCSI clients.
+> >> That sounds interesting, but also potentially rather dangerous,
+> >> unless there is a very reliable implementation of IO barriers.
+> >> Just like with enabling write caches on real disks...
+> >>
+> > Not exactly.  The name of the 'emulate_write_cache' device attribute is
+> > a bit mis-leading here.  This bit simply reports (to the SCSI client)
+> > that the WCE=1 bit is set during SCSI mode sense (caching page) is read
+> > during the initial LUN scan.
+> 
+> Then can I say that the default is wrong?
 
-On Sep 22, 2012, at 4:07 PM, John Robinson wrote:
+No, spinning media drives never enable WRITE cache by default from the
+factory.
 
-> On 22/09/2012 19:45, Chris Murphy wrote:
->> On Sep 22, 2012, at 9:31 AM, John Robinson wrote:
->>> I don't think there's anything wrong here.
->>>=20
->>> The kernel sees the whole discs, sda and sdb, and complains that th=
-e GPT partition table looks wrong becase the second copy isn't at the e=
-nd of the discs. That's correct, at the end of the raw discs is the IMS=
-M metadata.
->>=20
->> OK so sda and sdb shouldn't have been partitioned in the first place=
-, is what that tells me.
->=20
-> That's not what I'm saying. I'm saying that sda and sdb weren't parti=
-tioned in the first place.
+The SSDs that enable WCE=1 typically aren't going to have a traditional
+cache, but from what I understand can still disable WCE=0 in-band.
 
-I disagree, it appears they were partitioned, but we'll see when the OP=
- posts back the results from gdisk. The kernel messages in the very fir=
-st post seems to imply it was partitioned (at least, at one time) or th=
-ere wouldn't be an sdb1, sdb2, sdb3, etc.
+But you are correct for this case the user would still currently be
+expected to set WCE=1 for IBLOCK when the backends have enabled their
+own write caching policy.
 
-=46rom the first post:
-> Sep 17 09:54:27 techz kernel: [    1.204710]  sdb: sdb1 sdb2 sdb3 sdb=
-4 sdb5=20
-> sdb6
+The reason being that both of those virtual drivers can't peek at the
+lower SCSI layer (at the kernel code level) to figure what the
+underlying block device (or virtual device) is doing for caching. 
 
-> I'm saying that when the Linux kernel boots, and the AHCI driver star=
-ts, it sees the IMSM member discs as raw discs, which get probed for pa=
-rtitions. The GPT partition probe spots one of the copies of the GPT pa=
-rtition, but can't find the other one because the IMSM metadata's there=
-=2E
+> You are declaring writethrough a device that is almost certainly a 
+> writeback (because at least HDDs will have caches).
+> 
 
-The IMSM metadata will go at the end of the PHYSICAL disk. If you parti=
-tion the virtual disk, i.e. the array, /dev/md/imsm0, then the GPT alte=
-rnate header goes at the end of the virtual disk, NOT the end of the ph=
-ysical disk.
+That is controlled by the scsi caching mode page on the underlying
+drive, which can be changed with sg_raw or sdparm --set=WCE.
 
-Besides, if what you say is true, as soon as he GPT partitioned the arr=
-ay, if the secondary GPT header stepped on IMSM metadata, then the arra=
-y would instantly break. That's not what happened.=20
+> If power is lost at the iscsi target, there WILL be data loss. People do 
+> not expect that. Change the default!
+> 
 
->=20
->=20
-> The error messages that G=FCnther saw are a false positive and harmle=
-ss
+Just blindly enabling WCE=1 for all cases is the not the correct
+solution for all cases.
 
-I think so too, but are the result of the raw disks being previously pa=
-rtitioned. Possibly even they are stale GPTs that should have been nuke=
-d before getting started with IMSM RAID.
+> 
+> Besides this, I don't understand how declaring an iscsi target as 
+> writethrough could slow down operations volountarily by initiators. That 
+> would be a bug of the initiators because writethrough is "better" than 
+> writeback for all purposes: initiators should just skip the queue drain 
+> / flush / FUA, and all the rest should be the same.
+> 
 
-> - or at least, harmless until someone starts telling him to go messin=
-g around rewriting the contents of the raw drives underneath md by dele=
-ting the misidentified partition tables, the effect of which is likely =
-to be to damage his partitions inside the IMSM array and/or destroy the=
- IMSM array metadata.
+Depends on the client.  For example .32 distro based SCSI initiators are
+still using legacy barriers instead of modern WRITE_FUA starting in
+>= .38, and end up having a huge effect when going 20 Gb/sec with lots
+of 15K SAS disks.
 
-There's every reason to believe the primary GPT header on /dev/sda and =
-/dev/sdb is a.) intact and b.) is in LBA 1 and c.) Cannot also include =
-IMSM metadata. So removing that header would thus make obliterate the G=
-PT on the physical disks and he'd stop getting the error message. If he=
-'s really bothered by what is in effect a harmless error message becaus=
-e that (stale) GPT doesn't matter anyway.
+> 
+> >>> [ ... ] check your [ ... ]/queue/max*sectors_kb for the MD
+> >>> RAID to make sure the WRITEs are striped aligned to get best
+> >>> performance with software MD raid.
+> >> That does not quite ensure that the writes are stripe aligned,
+> >> but perhaps a larger stripe cache would help.
+> >>
+> > I'm talking about what MD raid has chosen as it's underlying
+> > max_sectors_kb to issue I/O to the underlying raid member devices.  This
+> > depends on what backend storage hardware is in use, this may end up as
+> > '127', which will result in ugly mis-aligned writes that ends up killing
+> > performance.
+> 
+> Interesting observation.
+> For local processes writing, probably MD waits enough time for other 
+> requests to come and fill a stripe before initiating a rmw; but maybe 
+> iscsi is too slow for that and MD initiates an rmw for each request 
+> which would be a zillion of RMWs.
+> Can that be? Anyone knows MD enough to say if MD waits a little bit for 
+> more data in the attempt of filling an entire stripe before proceeding 
+> with rmw? If yes, can such timeout be set?
+> 
+> > We've (RTS) changed this with a one-liner patch to raid456.c code on .32
+> > basded distro kernels in the past to get proper stripe aligned writes,
+> > and it obviously makes a huge difference with fast storage hardware.
+> 
+> This value is writable via sysfs, why do you need a patch?
+> 
 
-Chris Murphy--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Actually I meant max_hw_sectors_kb here, and no it's not changeable via
+sysfs either when the default is set to a value (like 127) that would
+cause unaligned WRITEs to occur.
+
+This can also have a devastating effect on MD raid performance
+
+> > That's exactly what I'm talking about.
+> >
+> > With buffered FILEIO enabled a incoming WRITE payload will have already
+> > been ACKs back to the SCSI fabric and up the storage -> filesystem
+> > stack, but if a power loss was to occur before that data has been
+> > written out (using a battery back-up unit for example), then the FS on
+> > the client will have (silently) lost data.
+> >
+> > This is why we removed the buffered FILEIO from mainline in the first
+> > place, but in retrospect if people understand the consequences and still
+> > want to use buffered FILEIO for performance reasons they should be able
+> > to do so.
+> 
+> 
+> If you declare the target as writeback and implement flush+FUA, no data 
+> loss should occur AFAIU, isn't that so?
+> 
+> AFAIR, hard disks do normally declare all operations to be complete 
+> immediately after you submit (while they are still in the cache in 
+> reality), but if you issue a flush+FUA they make an exception to this 
+> rule and make sure that this operation and all previously submitted 
+> operations are indeed on the platter before returning. Do I remember 
+> correctly?
+> 
+> Can you do the same for buffered FILEIO?
+> 
+
+So for v3.7 we'll be re-allowing buffered FILEIO to be optionally
+enabled + force WCE=1 for people who know really know what they are
+doing.
+
+For the other case you've mentioned, I'd much rather do this in
+userspace via rtslib based upon existing sysfs values to automatically
+set emulate_write_cache=1 for IBLOCK backend export of struct
+block_device, rather than enable WCE=1 for all cases with IBLOCK.
+
+--nab
+
