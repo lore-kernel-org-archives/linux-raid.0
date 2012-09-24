@@ -1,44 +1,94 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: GPT Table broken on a Raid1
-Date: Mon, 24 Sep 2012 10:37:31 +0100
-Message-ID: <506029DB.3080407@anonymous.org.uk>
-References: <4961154.0TR9MeFlIq@techz> <2627519.Y2VdWh5VBI@techz> <1BDFB79A-E375-47F2-8EDF-8F51D8774651@colorremedies.com> <1361158.MkTZ6QR6cp@techz> <E9C051A7-65EB-48F5-8D3B-1C374F271E0C@colorremedies.com> <3EC7177F-9973-4D2E-988B-7020298E1727@colorremedies.com> <505DD9E2.7090908@anonymous.org.uk> <F7E53090-1143-4811-86B9-E71923B98AA2@colorremedies.com> <505E368A.4020200@anonymous.org.uk> <6FBE5434-A133-43C0-8296-58978301D32B@colorremedies.com> <505EF9F3.7000908@anonymous.org.uk> <142B3AEB-45FE-4A6E-A03F-BEAA9599C2DC@colorremedies.com> <D14F019C-39C6-4C60-88EF-A7565FA93D6F@colorremedies.com>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
+Subject: Re: Re: [patch 2/2 v3]raid5: create multiple threads to handle stripes
+Date: Mon, 24 Sep 2012 19:15:12 +0800
+Message-ID: <201209241914270784655@gmail.com>
+References: <20120809085808.GB30111@kernel.org> <201208111645321254409@gmail.com> <CANejiEVNPv6qVJ1nsvt21VMF8Py=3L8sABh9wab9eCQfdRAGeA@mail.gmail.com> <201208130906432967842@gmail.com> <20120813021324.GB447@kernel.org> <CANejiEUoguBD8PRAAuj=ATk+gd0RAqCTNjV12odSChejX-+R6Q@mail.gmail.com> <201208141839308288603@gmail.com> <CANejiEUjxR1Rt=2APf+kGXmzKYbcg_ZOztR3LirKbDERj7FG0A@mail.gmail.com> <2012081514211356241613@gmail.com>,
+	<CANejiEU_JeNGEeMO+u8_8pXt6jVfb5SBfnLUJSsSCrfr9bgi0A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <D14F019C-39C6-4C60-88EF-A7565FA93D6F@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: shli <shli@kernel.org>
+Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 23/09/2012 19:53, Chris Murphy wrote:
-[...]
-> Upon creating a GPT on /dev/md/vol0, identical structures at identical byte offsets are created on /dev/sd[bc] and /dev/md/vol0.
->
-> The primary GPT header says the alternate header is at 0xffdfff.
-> The alternate GPT header is at 0xffdfff., or sector 16769023, right where it should be.
->
-> Regardless of whether the kernel sees the disk as Intel RAID or a bare disk, it finds the alternate GPT header, and doesn't complain about anything.
-
-Yes, it does. It finds the alternate header just fine, according to the 
-offset in the primary header, but warns that it's not at the end of the 
-disc, which is where it expected to find it:
-
-Sep 17 09:54:27 techz kernel: [    1.204681] GPT:Primary header thinks Alt.
-header is not at the end of the disk.
-Sep 17 09:54:27 techz kernel: [    1.204685] GPT:625137663 != 625142447
-Sep 17 09:54:27 techz kernel: [    1.204687] GPT:Alternate GPT header 
-not at
-the end of the disk.
-Sep 17 09:54:27 techz kernel: [    1.204689] GPT:625137663 != 625142447
-
-I know that's not what I said earlier, so my apologies for that, but it 
-remains true that this is not a problem and there are no more GPT 
-headers anywhere else on the disc than those written inside the IMSM volume.
-
-Cheers,
-
-John.
+U29ycnkgZm9yIHVzaW5nIHRoaXMgdGl0bGUgdG8gc2VuZCB0aGlzLg0KVGhpcyBjb2RlIG1heWJl
+IGVycm9yLHNvIGl0IHNob3VsZCBjb3JyZWN0KElmIG11bHRpcGxlLXRocmVhZCBkb3Nlbid0IGVu
+YWJsZSxpdCBtYXliZSBhbHNvIGVycm9yLGJ1dCBubyBvYnZpb3VzbHkpLg0KSW4gZnVuYyBoYW5k
+bGVfcGFyaXR5X2NoZWNrczU6DQo+PmNvbmYtPm1kZGV2LT5yZXN5bmNfbWlzbWF0Y2hlcyArPSBT
+VFJJUEVfU0VDVE9SUzsNCklmIG11bHRpLXRocmVhZCBoYW5kbGUgc3RyaXBlIG9uIGRpZmZlcmVu
+dCBjcHUsIHRoZXJlIHdpbGwgYmUgcmFjZWQgb24gcmVzeW5jX21pc21hdGNoZXMuDQoNClNvIHRo
+ZSBwYXRjaCBpczoNCg0KU3ViamVjdDogW1BBVENIXSBtZDpjaGFuZ2UgcmVzeW5jX21pc21hdGNo
+ZXMgdG8gYXRvbWljNjRfdCB0byBhdm9pZCByYWNlcw0KDQpTaWduZWQtb2ZmLWJ5OiBKaWFucGVu
+ZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQotLS0NCiBkcml2ZXJzL21kL21kLmMgICAgIHwg
+ICAgNyArKysrLS0tDQogZHJpdmVycy9tZC9tZC5oICAgICB8ICAgIDIgKy0NCiBkcml2ZXJzL21k
+L3JhaWQxLmMgIHwgICAgMiArLQ0KIGRyaXZlcnMvbWQvcmFpZDEwLmMgfCAgICAyICstDQogZHJp
+dmVycy9tZC9yYWlkNS5jICB8ICAgIDQgKystLQ0KIDUgZmlsZXMgY2hhbmdlZCwgOSBpbnNlcnRp
+b25zKCspLCA4IGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9tZC5jIGIv
+ZHJpdmVycy9tZC9tZC5jDQppbmRleCAzMDhlODdiLi5iMGI5NDc0IDEwMDY0NA0KLS0tIGEvZHJp
+dmVycy9tZC9tZC5jDQorKysgYi9kcml2ZXJzL21kL21kLmMNCkBAIC00Mjc4LDcgKzQyNzgsOCBA
+QCBzdGF0aWMgc3NpemVfdA0KIG1pc21hdGNoX2NudF9zaG93KHN0cnVjdCBtZGRldiAqbWRkZXYs
+IGNoYXIgKnBhZ2UpDQogew0KIAlyZXR1cm4gc3ByaW50ZihwYWdlLCAiJWxsdVxuIiwNCi0JCSAg
+ICAgICAodW5zaWduZWQgbG9uZyBsb25nKSBtZGRldi0+cmVzeW5jX21pc21hdGNoZXMpOw0KKwkJ
+ICAgICAgICh1bnNpZ25lZCBsb25nIGxvbmcpDQorCQkgICAgICAgYXRvbWljNjRfcmVhZCgmbWRk
+ZXYtPnJlc3luY19taXNtYXRjaGVzKSk7DQogfQ0KIA0KIHN0YXRpYyBzdHJ1Y3QgbWRfc3lzZnNf
+ZW50cnkgbWRfc2Nhbl9tb2RlID0NCkBAIC01MjQ1LDcgKzUyNDYsNyBAQCBzdGF0aWMgdm9pZCBt
+ZF9jbGVhbihzdHJ1Y3QgbWRkZXYgKm1kZGV2KQ0KIAltZGRldi0+bmV3X2xheW91dCA9IDA7DQog
+CW1kZGV2LT5uZXdfY2h1bmtfc2VjdG9ycyA9IDA7DQogCW1kZGV2LT5jdXJyX3Jlc3luYyA9IDA7
+DQotCW1kZGV2LT5yZXN5bmNfbWlzbWF0Y2hlcyA9IDA7DQorCWF0b21pYzY0X3NldCgmbWRkZXYt
+PnJlc3luY19taXNtYXRjaGVzLCAwKTsNCiAJbWRkZXYtPnN1c3BlbmRfbG8gPSBtZGRldi0+c3Vz
+cGVuZF9oaSA9IDA7DQogCW1kZGV2LT5zeW5jX3NwZWVkX21pbiA9IG1kZGV2LT5zeW5jX3NwZWVk
+X21heCA9IDA7DQogCW1kZGV2LT5yZWNvdmVyeSA9IDA7DQpAQCAtNzM0OSw3ICs3MzUwLDcgQEAg
+dm9pZCBtZF9kb19zeW5jKHN0cnVjdCBtZGRldiAqbWRkZXYpDQogCQkgKiB3aGljaCBkZWZhdWx0
+cyB0byBwaHlzaWNhbCBzaXplLCBidXQgY2FuIGJlIHZpcnR1YWwgc2l6ZQ0KIAkJICovDQogCQlt
+YXhfc2VjdG9ycyA9IG1kZGV2LT5yZXN5bmNfbWF4X3NlY3RvcnM7DQotCQltZGRldi0+cmVzeW5j
+X21pc21hdGNoZXMgPSAwOw0KKwkJYXRvbWljNjRfc2V0KCZtZGRldi0+cmVzeW5jX21pc21hdGNo
+ZXMsIDApOw0KIAkJLyogd2UgZG9uJ3QgdXNlIHRoZSBjaGVja3BvaW50IGlmIHRoZXJlJ3MgYSBi
+aXRtYXAgKi8NCiAJCWlmICh0ZXN0X2JpdChNRF9SRUNPVkVSWV9SRVFVRVNURUQsICZtZGRldi0+
+cmVjb3ZlcnkpKQ0KIAkJCWogPSBtZGRldi0+cmVzeW5jX21pbjsNCmRpZmYgLS1naXQgYS9kcml2
+ZXJzL21kL21kLmggYi9kcml2ZXJzL21kL21kLmgNCmluZGV4IGYzODViMDMuLjhmMzQxZDggMTAw
+NjQ0DQotLS0gYS9kcml2ZXJzL21kL21kLmgNCisrKyBiL2RyaXZlcnMvbWQvbWQuaA0KQEAgLTI4
+Miw3ICsyODIsNyBAQCBzdHJ1Y3QgbWRkZXYgew0KIA0KIAlzZWN0b3JfdAkJCXJlc3luY19tYXhf
+c2VjdG9yczsgLyogbWF5IGJlIHNldCBieSBwZXJzb25hbGl0eSAqLw0KIA0KLQlzZWN0b3JfdAkJ
+CXJlc3luY19taXNtYXRjaGVzOyAvKiBjb3VudCBvZiBzZWN0b3JzIHdoZXJlDQorCWF0b21pYzY0
+X3QJCQlyZXN5bmNfbWlzbWF0Y2hlczsgLyogY291bnQgb2Ygc2VjdG9ycyB3aGVyZQ0KIAkJCQkJ
+CQkgICAgKiBwYXJpdHkvcmVwbGljYSBtaXNtYXRjaCBmb3VuZA0KIAkJCQkJCQkgICAgKi8NCiAN
+CmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQxLmMgYi9kcml2ZXJzL21kL3JhaWQxLmMNCmlu
+ZGV4IDYxMWI1ZjcuLmViY2ViOTggMTAwNjQ0DQotLS0gYS9kcml2ZXJzL21kL3JhaWQxLmMNCisr
+KyBiL2RyaXZlcnMvbWQvcmFpZDEuYw0KQEAgLTE4NjcsNyArMTg2Nyw3IEBAIHN0YXRpYyBpbnQg
+cHJvY2Vzc19jaGVja3Moc3RydWN0IHIxYmlvICpyMV9iaW8pDQogCQl9IGVsc2UNCiAJCQlqID0g
+MDsNCiAJCWlmIChqID49IDApDQotCQkJbWRkZXYtPnJlc3luY19taXNtYXRjaGVzICs9IHIxX2Jp
+by0+c2VjdG9yczsNCisJCQlhdG9taWM2NF9hZGQocjFfYmlvLT5zZWN0b3JzLCAmbWRkZXYtPnJl
+c3luY19taXNtYXRjaGVzKTsNCiAJCWlmIChqIDwgMCB8fCAodGVzdF9iaXQoTURfUkVDT1ZFUllf
+Q0hFQ0ssICZtZGRldi0+cmVjb3ZlcnkpDQogCQkJICAgICAgJiYgdGVzdF9iaXQoQklPX1VQVE9E
+QVRFLCAmc2Jpby0+YmlfZmxhZ3MpKSkgew0KIAkJCS8qIE5vIG5lZWQgdG8gd3JpdGUgdG8gdGhp
+cyBkZXZpY2UuICovDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkMTAuYyBiL2RyaXZlcnMv
+bWQvcmFpZDEwLmMNCmluZGV4IDFjMmViMzguLmFkMGE4YjcgMTAwNjQ0DQotLS0gYS9kcml2ZXJz
+L21kL3JhaWQxMC5jDQorKysgYi9kcml2ZXJzL21kL3JhaWQxMC5jDQpAQCAtMTk1MCw3ICsxOTUw
+LDcgQEAgc3RhdGljIHZvaWQgc3luY19yZXF1ZXN0X3dyaXRlKHN0cnVjdCBtZGRldiAqbWRkZXYs
+IHN0cnVjdCByMTBiaW8gKnIxMF9iaW8pDQogCQkJCQlicmVhazsNCiAJCQlpZiAoaiA9PSB2Y250
+KQ0KIAkJCQljb250aW51ZTsNCi0JCQltZGRldi0+cmVzeW5jX21pc21hdGNoZXMgKz0gcjEwX2Jp
+by0+c2VjdG9yczsNCisJCQlhdG9taWM2NF9hZGQocjEwX2Jpby0+c2VjdG9ycywgJm1kZGV2LT5y
+ZXN5bmNfbWlzbWF0Y2hlcyk7DQogCQkJaWYgKHRlc3RfYml0KE1EX1JFQ09WRVJZX0NIRUNLLCAm
+bWRkZXYtPnJlY292ZXJ5KSkNCiAJCQkJLyogRG9uJ3QgZml4IGFueXRoaW5nLiAqLw0KIAkJCQlj
+b250aW51ZTsNCmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LmMgYi9kcml2ZXJzL21kL3Jh
+aWQ1LmMNCmluZGV4IDcwMzFiODYuLjBhMjcwMmYgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL21kL3Jh
+aWQ1LmMNCisrKyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KQEAgLTI5MzEsNyArMjkzMSw3IEBAIHN0
+YXRpYyB2b2lkIGhhbmRsZV9wYXJpdHlfY2hlY2tzNShzdHJ1Y3QgcjVjb25mICpjb25mLCBzdHJ1
+Y3Qgc3RyaXBlX2hlYWQgKnNoLA0KIAkJCSAqLw0KIAkJCXNldF9iaXQoU1RSSVBFX0lOU1lOQywg
+JnNoLT5zdGF0ZSk7DQogCQllbHNlIHsNCi0JCQljb25mLT5tZGRldi0+cmVzeW5jX21pc21hdGNo
+ZXMgKz0gU1RSSVBFX1NFQ1RPUlM7DQorCQkJYXRvbWljNjRfYWRkKFNUUklQRV9TRUNUT1JTLCAm
+Y29uZi0+bWRkZXYtPnJlc3luY19taXNtYXRjaGVzKTsNCiAJCQlpZiAodGVzdF9iaXQoTURfUkVD
+T1ZFUllfQ0hFQ0ssICZjb25mLT5tZGRldi0+cmVjb3ZlcnkpKQ0KIAkJCQkvKiBkb24ndCB0cnkg
+dG8gcmVwYWlyISEgKi8NCiAJCQkJc2V0X2JpdChTVFJJUEVfSU5TWU5DLCAmc2gtPnN0YXRlKTsN
+CkBAIC0zMDgzLDcgKzMwODMsNyBAQCBzdGF0aWMgdm9pZCBoYW5kbGVfcGFyaXR5X2NoZWNrczYo
+c3RydWN0IHI1Y29uZiAqY29uZiwgc3RydWN0IHN0cmlwZV9oZWFkICpzaCwNCiAJCQkJICovDQog
+CQkJfQ0KIAkJfSBlbHNlIHsNCi0JCQljb25mLT5tZGRldi0+cmVzeW5jX21pc21hdGNoZXMgKz0g
+U1RSSVBFX1NFQ1RPUlM7DQorCQkJYXRvbWljNjRfYWRkKFNUUklQRV9TRUNUT1JTLCAmY29uZi0+
+bWRkZXYtPnJlc3luY19taXNtYXRjaGVzKTsNCiAJCQlpZiAodGVzdF9iaXQoTURfUkVDT1ZFUllf
+Q0hFQ0ssICZjb25mLT5tZGRldi0+cmVjb3ZlcnkpKQ0KIAkJCQkvKiBkb24ndCB0cnkgdG8gcmVw
+YWlyISEgKi8NCiAJCQkJc2V0X2JpdChTVFJJUEVfSU5TWU5DLCAmc2gtPnN0YXRlKTsNCi0tIA0K
+MS43LjkuNQ0KDQo=
 
