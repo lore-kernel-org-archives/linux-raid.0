@@ -1,109 +1,158 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 3/3] raid5: Fix to_read/to_write judgement.
-Date: Tue, 25 Sep 2012 17:12:39 +1000
-Message-ID: <20120925171239.2a2592e9@notabene.brown>
-References: <201209221022560932318@gmail.com>
+Subject: Re: [PATCH] raid5: Avoid doing more read on dev of a stripe at the
+ same time
+Date: Tue, 25 Sep 2012 17:29:12 +1000
+Message-ID: <20120925172912.65db0e03@notabene.brown>
+References: <2012091510203206229010@gmail.com>
+	<20120920125144.0ed69ec3@notabene.brown>
+	<201209201104415460652@gmail.com>
+	<20120920132422.0f7841f1@notabene.brown>
+	<201209211024418590971@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/9WI5IGg+Yd3bnhqc=gVx7_5"; protocol="application/pgp-signature"
+ boundary="Sig_/3PauO7cYUswK3N6m=kLaT_Z"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201209221022560932318@gmail.com>
+In-Reply-To: <201209211024418590971@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jianpeng Ma <majianpeng@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/9WI5IGg+Yd3bnhqc=gVx7_5
+--Sig_/3PauO7cYUswK3N6m=kLaT_Z
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 22 Sep 2012 10:22:58 +0800 "Jianpeng Ma" <majianpeng@gmail.com> wro=
+On Fri, 21 Sep 2012 10:24:45 +0800 "Jianpeng Ma" <majianpeng@gmail.com> wro=
 te:
 
-> In func analyse_stripe, it added to_read/to_write by
-> sh->dev[i]->toread/towrite.
-> If stripe failed, in func handle_failed_stripe it decreased
-> to_read/to_write also by sh->dev[i]->toread/towrite.
-> But between func analyse_stripe and handle_failed_stripe, toread/towrite
-> can change.So the to_read/to_write maybe less zero.
-> For example, if to_write was less zero,it may introduce a bug in func asy=
-nc_xor:
-> 'BUG_ON(src_cnt <=3D 1);'.
-> So after handle_failed_stripe,it should use 'to_read/to_write > 0' instead
-> of judging 'to_read/to_write'.
+> On 2012-09-20 11:24 NeilBrown <neilb@suse.de> Wrote:
+> >On Thu, 20 Sep 2012 11:04:46 +0800 "Jianpeng Ma" <majianpeng@gmail.com> =
+wrote:
+> >
+> >> On 2012-09-20 10:51 NeilBrown <neilb@suse.de> Wrote:
+> >> >On Sat, 15 Sep 2012 10:20:35 +0800 "Jianpeng Ma" <majianpeng@gmail.co=
+m> wrote:
+> >> >
+> >> >> In func 'ops_run_bio' if you read the dev which the last reading
+> >> >> of this dev didn't return,it will destrory the  req/rreq'source of =
+rdev.
+> >> >> It may call hung-task.
+> >> >> For example, for badsector or other reasons, read-operation only us=
+ed
+> >> >> stripe instead of chunk_aligned_read.
+> >> >> First:stripe 0;second: stripe 8;third:stripe 16.At the block-layer,=
+three
+> >> >> bios merged.
+> >> >> Because media error of sector from 0 to 7, the request retried.
+> >> >> At this time, raid5d readed stripe0 again.But it will set 'bio->nex=
+t =3D
+> >> >> NULL'.So the stripe 8 and 16 didn't return.
+> >> >>=20
+> >> >> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
+> >> >
+> >> >Hi,
+> >> > I'm really trying, but I cannot understand what you are saying.
+> >> >
+> >> Sorry for my bad english.
+> >> >I think the situation that you are describing involves a 24 sector re=
+quest.
+> >> >This is attached to 3 stripe_heads - 8 sectors each - at address 0, 8=
+, 16.
+> >> >
+> >> >So 'toread' on the first device of each stripe points to this bio, and
+> >> >bi_next is NULL.
+> >> >
+> >> >The "req" bio for each device is filled out to read one page and thes=
+e three
+> >> >'req' bios are submitted.  The block layer merges these into a single=
+ request.
+> >> >
+> >> >This request reports an error because there is a read error somewhere=
+ in the
+> >> >first  8 sectors.
+> >> >
+> >> Yes,
+> >> >So one, or maybe all, of the 'req' bios return with an error?
+> >> From my test, when req did not return and at the same time, the bio(st=
+ripe 0) send.
+> >> So this operation will set bi_next is NULL.
+> >
+> >Are you saying that we send another bio before the first one has returne=
+d?
+> >That shouldn't be possible as sh->count will prevent it from happening.
+> >While there is an outstanding request, sh->count will be >0, and until
+> >sh->count is 0, we won't try to send any more requests.
+> >
+> >So I still don't understand.  Please try to provide as much detail as
+> >possible.  If it is easier, write in your own language and use
+> >translate.google.com to convert to english. ??
+> >
+> >Thanks,
+> >NeilBrown
 >=20
-> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
-> ---
->  drivers/md/raid5.c |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+> Hi,
+>  i wrote a shell-script can reproduct this bug.
+> Note: mdadm -V
+> mdadm - v3.3-pre - Unreleased
 >=20
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index a56aa5b..554ca9e 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -2641,7 +2641,7 @@ static int fetch_block(struct stripe_head *sh, stru=
-ct stripe_head_state *s,
->  	     (s->failed >=3D 2 && fdev[1]->toread) ||
->  	     (sh->raid_conf->level <=3D 5 && s->failed && fdev[0]->towrite &&
->  	      !test_bit(R5_OVERWRITE, &fdev[0]->flags)) ||
-> -	     (sh->raid_conf->level =3D=3D 6 && s->failed && s->to_write))) {
-> +	     (sh->raid_conf->level =3D=3D 6 && s->failed && s->to_write > 0))) {
->  		/* we would like to get this block, possibly by computing it,
->  		 * otherwise read it if the backing disk is insync
->  		 */
-> @@ -3471,8 +3471,8 @@ static void handle_stripe(struct stripe_head *sh)
->  	 * parity, or to satisfy requests
->  	 * or to load a block that is being partially written.
->  	 */
-> -	if (s.to_read || s.non_overwrite
-> -	    || (conf->level =3D=3D 6 && s.to_write && s.failed)
-> +	if (s.to_read > 0 || s.non_overwrite
-> +	    || (conf->level =3D=3D 6 && s.to_write > 0 && s.failed)
->  	    || (s.syncing && (s.uptodate + s.compute < disks))
->  	    || s.replacing
->  	    || s.expanding)
-> @@ -3519,7 +3519,7 @@ static void handle_stripe(struct stripe_head *sh)
->  	 * 2/ A 'check' operation is in flight, as it may clobber the parity
->  	 *    block.
->  	 */
-> -	if (s.to_write && !sh->reconstruct_state && !sh->check_state)
-> +	if (s.to_write > 0 && !sh->reconstruct_state && !sh->check_state)
->  		handle_stripe_dirtying(conf, sh, &s, disks);
-> =20
->  	/* maybe we need to check and possibly fix the parity for this stripe
+>=20
+> #!/bin/bash
+>=20
+> declare -i count
+> declare -i sector
+> count=3D0
+> sector=3D2048
+> while true
+> do
+> 	hdparm --make-bad-sector $sector --yes-i-know-what-i-am-doing /dev/sdc >=
+ /dev/null
+> 	hdparm --make-bad-sector $sector --yes-i-know-what-i-am-doing /dev/sdd >=
+ /dev/null
+> 	hdparm --make-bad-sector $sector --yes-i-know-what-i-am-doing /dev/sde >=
+ /dev/null
+> 	let count++
+> 	let sector+=3D$count*8
+> 	if (($count =3D=3D 40));then
+> 		break
+> 	fi
+> done
+>=20
+> while true
+> do
+> 	mdadm -S /dev/md0
+> 	mdadm -CR /dev/md0 -l5 -c4 -n4 missing /dev/sd[cde]
+> 	dd if=3D/dev/md0 of=3D/dev/null bs=3D10M count=3D1 iflag=3Ddirect
+> 	sleep 1
+> done
+>=20
+>=20
+> Thanks
 
+Thanks a lot!
+I'll try this out and see what I find.
 
-Thanks.
-However I would prefer to fix this by not decrementing the counters in
-handle_failed_stripe.  There is no harm in the counters being a little bigg=
-er
-than they should be.
-I have queued a patch to do this.
-
-Thanks,
 NeilBrown
 
-
---Sig_/9WI5IGg+Yd3bnhqc=gVx7_5
+--Sig_/3PauO7cYUswK3N6m=kLaT_Z
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUGFZZznsnt1WYoG5AQJGiQ/9EDubsPQB6D/sSQJ32I2VLx82o63VvMFM
-am0SfT/PG6iGpmdAZ7KXM2HHFLrvjZG3ZO3PYVuUzL6SSd2CLLiTXs4GtC2nzIbV
-pNcpUiS+npem6MHmtxlWEkM91F7lo1G8S8qf/Mjw1Z3c50u1MHIcwRaR61WnRTjB
-LMVpjYwWGm4O1X3oBMs7v0gkFAPITRPjCTkEhtBTW5Xhg/See9sD0ubTtja5+P48
-aOZrTeA01IV5Sdjpfq0NaBDfriDnw5yx1tZygPdTySxwd5yPQEZD4Qtx7VT00Ht0
-5s3nJ0VucL6JQvQbjpWS4hl9nLA5GznxQQZ4kxc1vAdaqU0mvQwEUVi2jqrbW+xn
-lBQgowQMcnOnM5gCFaNYTse1EkP/d5ZWRHA362u3EcX5sWymLZ/AQhfI/jSfMbis
-bxMt3z6zdQBGp4rZFVBKtsnVBd4NY8Maa6mDMdBUr44EVak2OgmYEM+Co4DC4YrU
-rZJt3FEcOCLKDCS1bjMvnVEXj/gjFUkzKX4CcbS+sQqe/eJzxErT+HQnf2fQJ7Gs
-9J/RZn1qSAxIv9Huyp9xaSwJX3YfcN68X4nrE44rm4oYYdgqmNwrF7kWdMzXfS9R
-4vfrt8w6Gj5dmGKxBzu+Nn/hrgQECxLUjr1P4QPh+Jt/qOkViWgUfxiz7F74362F
-F1EQTOb7Vaw=
-=oKzo
+iQIVAwUBUGFdSDnsnt1WYoG5AQK67Q//faDaj/XPRH6TI4qwvB6s+xZoYeUEXyQl
+VUYfSV1eZcQmZRGw3EliF54Sx/PWNYfksRhqSwg64ElHu/iGOCKLGBIFfF6yoGL8
+3z+xdTPgk7mqnli8sVpRX4r0rMCmYN5MxEWWqoAks2Mj9RBrVhpYifgh31XE8t0L
+MvO1cTUSetx8mEoLL5AAIsEiIFvYHcAPU5I5OcBOB8FncHjtNXOkgxuFdKsz/VPr
+gToqATStGBoHDBTeGvSEN43yFjsTEz4H3ELf5Y1s28n4fLF3uiqOQGmhPuQqsgIg
+F0E6Nh+OvS4ZzlRco1XJ5WWdbQjaPon/gsSOiLP9QCOBPIgiH4ivpspGoyavxyC3
+XIMeO3wv1krraxxFLXIKgQdiw0msxULYBsxgxDhpA4iLdOSTPcqfyCaAoYxVd3rK
+UBxDzhjdzySrTzz1OP6iqYXVC07nbkN+GXc+ou9I3E0/R2hetM9A3RDf8bNLpQcR
+4tiD+cWqdrxA6hwLUirJ6L/r9IoWLiRxFuhAPYjeHI/j2FlNLJ62TOxyQfW+ZPVp
+Wy4d8Busq44ocw6np+2Om7D4us8RkuJP1iyD63WXNDa+XecTWIgk7Ec1yZulZeru
+TbH6VdEu+KfEWyCP3Jxfn0GIjpD/h4d6toRmHjXNgtO0HRigeEAXb8DAHarbsNTA
+fUEU+dMh5I4=
+=m7wd
 -----END PGP SIGNATURE-----
 
---Sig_/9WI5IGg+Yd3bnhqc=gVx7_5--
+--Sig_/3PauO7cYUswK3N6m=kLaT_Z--
