@@ -1,122 +1,65 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] raid5: fix possible oops in add_stripe_bio when enable
- pr_debug
-Date: Tue, 25 Sep 2012 16:45:46 +1000
-Message-ID: <20120925164546.3882f076@notabene.brown>
-References: <2012092014334148441317@gmail.com>
-	<20120920164744.1aab090c@notabene.brown>
-	<2012092015175190687821@gmail.com>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH] raid5: fix possible oops in add_stripe_bio when enable pr_debug
+Date: Tue, 25 Sep 2012 14:50:25 +0800
+Message-ID: <201209251450227812256@gmail.com>
+References: <2012092014334148441317@gmail.com> <20120920164744.1aab090c@notabene.brown> <2012092015175190687821@gmail.com>,
+	<20120925164546.3882f076@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/0NXk/_xAlGL6.HOJCqA2LJZ"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2012092015175190687821@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jianpeng Ma <majianpeng@gmail.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/0NXk/_xAlGL6.HOJCqA2LJZ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+T24gMjAxMi0wOS0yNSAxNDo0NSBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
+IFRodSwgMjAgU2VwIDIwMTIgMTU6MTc6NTQgKzA4MDAgIkppYW5wZW5nIE1hIiA8bWFqaWFucGVu
+Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gT24gMjAxMi0wOS0yMCAxNDo0NyBOZWlsQnJvd24g
+PG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPj4gPk9uIFRodSwgMjAgU2VwIDIwMTIgMTQ6MzQ6MDAg
+KzA4MDAgIkppYW5wZW5nIE1hIiA8bWFqaWFucGVuZ0BnbWFpbC5jb20+IHdyb3RlOg0KPj4gPg0K
+Pj4gPj4gSW4gZnVuYyBhZGRfc3RyaXBlX2JpbzoNCj4+ID4+ID4+IC4uLi4uDQo+PiA+PiA+PgkJ
+YmlwID0gJnNoLT5kZXZbZGRfaWR4XS50b3JlYWQ7DQo+PiA+PiA+PiAuLi4uLi4NCj4+ID4+ID4+
+c3Bpbl91bmxvY2tfaXJxKCZzaC0+c3RyaXBlX2xvY2spOw0KPj4gPj4gDQo+PiA+PiA+Pglwcl9k
+ZWJ1ZygiYWRkZWQgYmkgYiMlbGx1IHRvIHN0cmlwZSBzIyVsbHUsIGRpc2sgJWQuXG4iLA0KPj4g
+Pj4gPj4JCSh1bnNpZ25lZCBsb25nIGxvbmcpKCpiaXApLT5iaV9zZWN0b3IsDQo+PiA+PiA+PgkJ
+KHVuc2lnbmVkIGxvbmcgbG9uZylzaC0+c2VjdG9yLCBkZF9pZHgpOw0KPj4gPj4gQWZ0ZXIgc3Bp
+bl91bmxvY2tfaXJxLCB0aGlzIHRocmVhZCBzY2hlZGVkIGFuZCB0b3JlYWQgbWF5IGJlY29tZSBu
+dWxsLg0KPj4gPj4gU28gaXQgd2lsbCBiZSBvb3BzLg0KPj4gPj4gDQo+PiA+PiBTaWduZWQtb2Zm
+LWJ5OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQo+PiA+PiAtLS0NCj4+ID4+
+ICBkcml2ZXJzL21kL3JhaWQ1LmMgfCAgICAzICsrLQ0KPj4gPj4gIDEgZmlsZSBjaGFuZ2VkLCAy
+IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkNCj4+ID4+IA0KPj4gPj4gZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvbWQvcmFpZDUuYyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gPj4gaW5kZXggYWRk
+YTk0ZC4uZjE3MmIxZSAxMDA2NDQNCj4+ID4+IC0tLSBhL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4g
+Pj4gKysrIGIvZHJpdmVycy9tZC9yYWlkNS5jDQo+PiA+PiBAQCAtMjM1Niw2ICsyMzU2LDcgQEAg
+c3RhdGljIGludCBhZGRfc3RyaXBlX2JpbyhzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoLCBzdHJ1Y3Qg
+YmlvICpiaSwgaW50IGRkX2lkeCwgaW4NCj4+ID4+ICAJc3RydWN0IGJpbyAqKmJpcDsNCj4+ID4+
+ICAJc3RydWN0IHI1Y29uZiAqY29uZiA9IHNoLT5yYWlkX2NvbmY7DQo+PiA+PiAgCWludCBmaXJz
+dHdyaXRlPTA7DQo+PiA+PiArCXNlY3Rvcl90IHNlY3RvciA9IGJpLT5iaV9zZWN0b3I7DQo+PiA+
+PiAgDQo+PiA+PiAgCXByX2RlYnVnKCJhZGRpbmcgYmkgYiMlbGx1IHRvIHN0cmlwZSBzIyVsbHVc
+biIsDQo+PiA+PiAgCQkodW5zaWduZWQgbG9uZyBsb25nKWJpLT5iaV9zZWN0b3IsDQo+PiA+PiBA
+QCAtMjQwNiw3ICsyNDA3LDcgQEAgc3RhdGljIGludCBhZGRfc3RyaXBlX2JpbyhzdHJ1Y3Qgc3Ry
+aXBlX2hlYWQgKnNoLCBzdHJ1Y3QgYmlvICpiaSwgaW50IGRkX2lkeCwgaW4NCj4+ID4+ICAJc3Bp
+bl91bmxvY2tfaXJxKCZzaC0+c3RyaXBlX2xvY2spOw0KPj4gPj4gIA0KPj4gPj4gIAlwcl9kZWJ1
+ZygiYWRkZWQgYmkgYiMlbGx1IHRvIHN0cmlwZSBzIyVsbHUsIGRpc2sgJWQuXG4iLA0KPj4gPj4g
+LQkJKHVuc2lnbmVkIGxvbmcgbG9uZykoKmJpcCktPmJpX3NlY3RvciwNCj4+ID4+ICsJCSh1bnNp
+Z25lZCBsb25nIGxvbmcpc2VjdG9yLA0KPj4gPj4gIAkJKHVuc2lnbmVkIGxvbmcgbG9uZylzaC0+
+c2VjdG9yLCBkZF9pZHgpOw0KPj4gPj4gIA0KPj4gPj4gIAlpZiAoY29uZi0+bWRkZXYtPmJpdG1h
+cCAmJiBmaXJzdHdyaXRlKSB7DQo+PiA+DQo+PiA+DQo+PiA+aG93IGFib3V0IHdlIGp1c3QgbW92
+ZSB0aGUgc3Bpbl91bmxvY2tfaXJxIGFmdGVyIHRoZSBwcl9kZWJ1Zz8/DQo+PiA+DQo+PiBhaCEg
+V2h5IGFyZSB5b3UgdGhpbmsgPyBteSBtZXRob2Qgb25seSBhZGQgYSBwYXJhbWV0ZXIuDQo+DQo+
+WWVzLg0KPg0KPj4gQlRXLCBpbiBmdW5jIGhhbmRsZV9mYWlsZWRfc3RyaXBlOg0KPj4gPj5pZiAo
+IXRlc3RfYml0KFI1X1dhbnRmaWxsLCAmc2gtPmRldltpXS5mbGFncykgJiYNCj4+ID4+CQkgICAg
+KCF0ZXN0X2JpdChSNV9JbnN5bmMsICZzaC0+ZGV2W2ldLmZsYWdzKSB8fA0KPj4gPj4JCSAgICAg
+IHRlc3RfYml0KFI1X1JlYWRFcnJvciwgJnNoLT5kZXZbaV0uZmxhZ3MpKSkgew0KPj4gPj4JCQli
+aSA9IHNoLT5kZXZbaV0udG9yZWFkOw0KPj4gPj4JCQlzaC0+ZGV2W2ldLnRvcmVhZCA9IE5VTEw7
+DQo+PiA+PgkJCWlmICh0ZXN0X2FuZF9jbGVhcl9iaXQoUjVfT3ZlcmxhcCwgJnNoLT5kZXZbaV0u
+ZmxhZ3MpKQ0KPj4gPj4JCQkJd2FrZV91cCgmY29uZi0+d2FpdF9mb3Jfb3ZlcmxhcCk7DQo+PiBX
+aHkgdXNlIHN0cmlwZV9sb2NrIHRvIHByb3RlY3QgdG9yZWFkPw0KPg0KPkkgYXNzdW1lIHlvdSBt
+ZWFuIHRoYXQgd2Ugc2hvdWxkIGJlIGhvbGRpbmcgdGhlIGxvY2sgdG8gcHJvdGVjdCB0b3JlYWQs
+IGJ1dA0KPndlIGFyZW4ndC4NCj5JJ3ZlIHF1ZXVlZCBhIHBhdGNoIHRvIGZpeCB0aGF0Lg0KPg0K
+SGksDQoJTGFzdCBTYXR1cmRheSwgaSBzZW50IGEgcGF0Y2gtc2V0IHdoaWNoIGNvbnRhaW5lZCBh
+IHBhdGNoIHdoaWNoIGZpeCB0aGlzIGJ1Zy4NCllvdSBjYW4gY2hlY2sgeW91ciBtYWlsIQ0KVGhh
+bmtzIQ0KPlRoYW5rcy4NCj5OZWlsQnJvd24NCj4NCg0KPg0KPj4gDQo+PiBUaGFua3MhDQo+DQo+
 
-On Thu, 20 Sep 2012 15:17:54 +0800 "Jianpeng Ma" <majianpeng@gmail.com> wro=
-te:
-
-> On 2012-09-20 14:47 NeilBrown <neilb@suse.de> Wrote:
-> >On Thu, 20 Sep 2012 14:34:00 +0800 "Jianpeng Ma" <majianpeng@gmail.com> =
-wrote:
-> >
-> >> In func add_stripe_bio:
-> >> >> .....
-> >> >>		bip =3D &sh->dev[dd_idx].toread;
-> >> >> ......
-> >> >>spin_unlock_irq(&sh->stripe_lock);
-> >>=20
-> >> >>	pr_debug("added bi b#%llu to stripe s#%llu, disk %d.\n",
-> >> >>		(unsigned long long)(*bip)->bi_sector,
-> >> >>		(unsigned long long)sh->sector, dd_idx);
-> >> After spin_unlock_irq, this thread scheded and toread may become null.
-> >> So it will be oops.
-> >>=20
-> >> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
-> >> ---
-> >>  drivers/md/raid5.c |    3 ++-
-> >>  1 file changed, 2 insertions(+), 1 deletion(-)
-> >>=20
-> >> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> >> index adda94d..f172b1e 100644
-> >> --- a/drivers/md/raid5.c
-> >> +++ b/drivers/md/raid5.c
-> >> @@ -2356,6 +2356,7 @@ static int add_stripe_bio(struct stripe_head *sh=
-, struct bio *bi, int dd_idx, in
-> >>  	struct bio **bip;
-> >>  	struct r5conf *conf =3D sh->raid_conf;
-> >>  	int firstwrite=3D0;
-> >> +	sector_t sector =3D bi->bi_sector;
-> >> =20
-> >>  	pr_debug("adding bi b#%llu to stripe s#%llu\n",
-> >>  		(unsigned long long)bi->bi_sector,
-> >> @@ -2406,7 +2407,7 @@ static int add_stripe_bio(struct stripe_head *sh=
-, struct bio *bi, int dd_idx, in
-> >>  	spin_unlock_irq(&sh->stripe_lock);
-> >> =20
-> >>  	pr_debug("added bi b#%llu to stripe s#%llu, disk %d.\n",
-> >> -		(unsigned long long)(*bip)->bi_sector,
-> >> +		(unsigned long long)sector,
-> >>  		(unsigned long long)sh->sector, dd_idx);
-> >> =20
-> >>  	if (conf->mddev->bitmap && firstwrite) {
-> >
-> >
-> >how about we just move the spin_unlock_irq after the pr_debug??
-> >
-> ah! Why are you think ? my method only add a parameter.
-
-Yes.
-
-> BTW, in func handle_failed_stripe:
-> >>if (!test_bit(R5_Wantfill, &sh->dev[i].flags) &&
-> >>		    (!test_bit(R5_Insync, &sh->dev[i].flags) ||
-> >>		      test_bit(R5_ReadError, &sh->dev[i].flags))) {
-> >>			bi =3D sh->dev[i].toread;
-> >>			sh->dev[i].toread =3D NULL;
-> >>			if (test_and_clear_bit(R5_Overlap, &sh->dev[i].flags))
-> >>				wake_up(&conf->wait_for_overlap);
-> Why use stripe_lock to protect toread?
-
-I assume you mean that we should be holding the lock to protect toread, but
-we aren't.
-I've queued a patch to fix that.
-
-Thanks.
-NeilBrown
-
-
->=20
-> Thanks!
-
-
---Sig_/0NXk/_xAlGL6.HOJCqA2LJZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUGFTGjnsnt1WYoG5AQIAPhAAvlhM/Oie5EzoADHe4kpDVesztK/k/suI
-fiJHiQXbmptTz2BnesB1z+CfFoAnsn8EXnwjxAOi2+sov9OHuPHoKZ3had8wVqHF
-FiQSZF+Ldo7WlNCQd1z3/O5555znZ/o+5rq/Iqsfpyw5O9Iohd/pvj6ZhKmWYtA5
-jO1o9LnCIwg4SrCwIFbim7MS5gxNRaRCeYirp7hoO/wiTDwYWuwA41yBytrKU/R3
-AQeYmbfDz2VhW+oHM60J2jUI4DUzn7beRtynaZztzEkiZB0gX6D/GxY8RkJia6GK
-4/mIHDELspsufcr0B+VYsOmWJmqTnUm06kcvYZdEtBGUoXga9+8fcPMXkPlsMyH+
-1Oq76Je8qE83vBv50iPr1a1mJDHL8U0hYaYr+FsvbRf/4vSeba7BD+jMBbKCsEGl
-pQkBX8q+YbZ5Ue4Xp1isigQQ5wVJmdRtisbqV5Pztkh45RF0QzhEcQy1vJNc4YUJ
-LX8/6hhlJ+OF+ROCjQAj9MIZKaM3KfnMYa0BGTttwli4iIxjfIm0kQiqnVY1pTPT
-FPuX8AhVJSjH3lim5rA3pc9hrvlzJ3Nmt+7HJrJUZjpEZh8xOSK9NAoYgKc35W7u
-0jH/HWwfPiwGXmgvShjKhnW91/00GuscSqaPbcfASMJ4CQ8S2/qhVvELG5/oSMjs
-hUDZj1hzRl4=
-=P4I9
------END PGP SIGNATURE-----
-
---Sig_/0NXk/_xAlGL6.HOJCqA2LJZ--
