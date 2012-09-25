@@ -1,158 +1,42 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] raid5: Avoid doing more read on dev of a stripe at the
- same time
-Date: Tue, 25 Sep 2012 17:29:12 +1000
-Message-ID: <20120925172912.65db0e03@notabene.brown>
-References: <2012091510203206229010@gmail.com>
-	<20120920125144.0ed69ec3@notabene.brown>
-	<201209201104415460652@gmail.com>
-	<20120920132422.0f7841f1@notabene.brown>
-	<201209211024418590971@gmail.com>
+From: Miquel van Smoorenburg <mikevs@xs4all.net>
+Subject: Re: GPT Table broken on a Raid1
+Date: Tue, 25 Sep 2012 09:33:45 +0200
+Message-ID: <50615E59.9070503@xs4all.net>
+References: <4961154.0TR9MeFlIq@techz> <2627519.Y2VdWh5VBI@techz> <1BDFB79A-E375-47F2-8EDF-8F51D8774651@colorremedies.com> <1361158.MkTZ6QR6cp@techz> <E9C051A7-65EB-48F5-8D3B-1C374F271E0C@colorremedies.com> <3EC7177F-9973-4D2E-988B-7020298E1727@colorremedies.com> <505DD9E2.7090908@anonymous.org.uk> <F7E53090-1143-4811-86B9-E71923B98AA2@colorremedies.com> <505E368A.4020200@anonymous.org.uk> <6FBE5434-A133-43C0-8296-58978301D32B@colorremedies.com> <505EF9F3.7000908@anonymous.org.uk> <142B3AEB-45FE-4A6E-A03F-BEAA9599C2DC@colorremedies.com> <D14F019C-39C6-4C60-88EF-A7565FA93D6F@colorremedies.com> <506029DB.3080407@anonymous.org.uk> <8AB64122-6198-4A2E-BA49-76BD6AFE7907@colorremedies.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/3PauO7cYUswK3N6m=kLaT_Z"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201209211024418590971@gmail.com>
+In-Reply-To: <8AB64122-6198-4A2E-BA49-76BD6AFE7907@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jianpeng Ma <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/3PauO7cYUswK3N6m=kLaT_Z
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 24-09-12 7:35 PM, Chris Murphy wrote:
+> Further, it seems increasingly clear as I'm reading the UEFI spec on
+> GPT, that IMSM is incompatible with GPT. The GPT alternate header by
+> spec is expected at the end of the disk, but then IMSM also demands
+> to be in basically the exact same location. And yet Intel is shipping
+> UEFI hardware, which require GPT disks, with IMSM on board that also
+> requires metadata in the same location? How is this not a WTF
+> moment?
 
-On Fri, 21 Sep 2012 10:24:45 +0800 "Jianpeng Ma" <majianpeng@gmail.com> wro=
-te:
+It isn't. It's just RAID setup with the superblock at the end of the 
+disk- as soon as RAID1 is activated, the RAID volume you see is just a 
+bit smaller than the raw disksize, and the GPT alternate header is at 
+the right place- at the end of the RAID volume.
 
-> On 2012-09-20 11:24 NeilBrown <neilb@suse.de> Wrote:
-> >On Thu, 20 Sep 2012 11:04:46 +0800 "Jianpeng Ma" <majianpeng@gmail.com> =
-wrote:
-> >
-> >> On 2012-09-20 10:51 NeilBrown <neilb@suse.de> Wrote:
-> >> >On Sat, 15 Sep 2012 10:20:35 +0800 "Jianpeng Ma" <majianpeng@gmail.co=
-m> wrote:
-> >> >
-> >> >> In func 'ops_run_bio' if you read the dev which the last reading
-> >> >> of this dev didn't return,it will destrory the  req/rreq'source of =
-rdev.
-> >> >> It may call hung-task.
-> >> >> For example, for badsector or other reasons, read-operation only us=
-ed
-> >> >> stripe instead of chunk_aligned_read.
-> >> >> First:stripe 0;second: stripe 8;third:stripe 16.At the block-layer,=
-three
-> >> >> bios merged.
-> >> >> Because media error of sector from 0 to 7, the request retried.
-> >> >> At this time, raid5d readed stripe0 again.But it will set 'bio->nex=
-t =3D
-> >> >> NULL'.So the stripe 8 and 16 didn't return.
-> >> >>=20
-> >> >> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
-> >> >
-> >> >Hi,
-> >> > I'm really trying, but I cannot understand what you are saying.
-> >> >
-> >> Sorry for my bad english.
-> >> >I think the situation that you are describing involves a 24 sector re=
-quest.
-> >> >This is attached to 3 stripe_heads - 8 sectors each - at address 0, 8=
-, 16.
-> >> >
-> >> >So 'toread' on the first device of each stripe points to this bio, and
-> >> >bi_next is NULL.
-> >> >
-> >> >The "req" bio for each device is filled out to read one page and thes=
-e three
-> >> >'req' bios are submitted.  The block layer merges these into a single=
- request.
-> >> >
-> >> >This request reports an error because there is a read error somewhere=
- in the
-> >> >first  8 sectors.
-> >> >
-> >> Yes,
-> >> >So one, or maybe all, of the 'req' bios return with an error?
-> >> From my test, when req did not return and at the same time, the bio(st=
-ripe 0) send.
-> >> So this operation will set bi_next is NULL.
-> >
-> >Are you saying that we send another bio before the first one has returne=
-d?
-> >That shouldn't be possible as sh->count will prevent it from happening.
-> >While there is an outstanding request, sh->count will be >0, and until
-> >sh->count is 0, we won't try to send any more requests.
-> >
-> >So I still don't understand.  Please try to provide as much detail as
-> >possible.  If it is easier, write in your own language and use
-> >translate.google.com to convert to english. ??
-> >
-> >Thanks,
-> >NeilBrown
->=20
-> Hi,
->  i wrote a shell-script can reproduct this bug.
-> Note: mdadm -V
-> mdadm - v3.3-pre - Unreleased
->=20
->=20
-> #!/bin/bash
->=20
-> declare -i count
-> declare -i sector
-> count=3D0
-> sector=3D2048
-> while true
-> do
-> 	hdparm --make-bad-sector $sector --yes-i-know-what-i-am-doing /dev/sdc >=
- /dev/null
-> 	hdparm --make-bad-sector $sector --yes-i-know-what-i-am-doing /dev/sdd >=
- /dev/null
-> 	hdparm --make-bad-sector $sector --yes-i-know-what-i-am-doing /dev/sde >=
- /dev/null
-> 	let count++
-> 	let sector+=3D$count*8
-> 	if (($count =3D=3D 40));then
-> 		break
-> 	fi
-> done
->=20
-> while true
-> do
-> 	mdadm -S /dev/md0
-> 	mdadm -CR /dev/md0 -l5 -c4 -n4 missing /dev/sd[cde]
-> 	dd if=3D/dev/md0 of=3D/dev/null bs=3D10M count=3D1 iflag=3Ddirect
-> 	sleep 1
-> done
->=20
->=20
-> Thanks
+The thing is that the Linux kernel detects the GPT partition table on 
+the raw disks before the RAID1 volume is assembled. More of a cosmetical 
+bug.
 
-Thanks a lot!
-I'll try this out and see what I find.
+People have argued before that the kernel should do no partitiontable 
+discovery at all, and just leave it to userspace. That's what kpartx is 
+for, for example. In that case, with a correctly ordered and configured 
+stack, the disks would get detected, any whole-disk RAID volumes would 
+get assembled, and only then partition detection would be done. But I 
+think that never got popular because of all the "I want to boot a kernel 
+without an initramfs" people.
 
-NeilBrown
-
---Sig_/3PauO7cYUswK3N6m=kLaT_Z
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUGFdSDnsnt1WYoG5AQK67Q//faDaj/XPRH6TI4qwvB6s+xZoYeUEXyQl
-VUYfSV1eZcQmZRGw3EliF54Sx/PWNYfksRhqSwg64ElHu/iGOCKLGBIFfF6yoGL8
-3z+xdTPgk7mqnli8sVpRX4r0rMCmYN5MxEWWqoAks2Mj9RBrVhpYifgh31XE8t0L
-MvO1cTUSetx8mEoLL5AAIsEiIFvYHcAPU5I5OcBOB8FncHjtNXOkgxuFdKsz/VPr
-gToqATStGBoHDBTeGvSEN43yFjsTEz4H3ELf5Y1s28n4fLF3uiqOQGmhPuQqsgIg
-F0E6Nh+OvS4ZzlRco1XJ5WWdbQjaPon/gsSOiLP9QCOBPIgiH4ivpspGoyavxyC3
-XIMeO3wv1krraxxFLXIKgQdiw0msxULYBsxgxDhpA4iLdOSTPcqfyCaAoYxVd3rK
-UBxDzhjdzySrTzz1OP6iqYXVC07nbkN+GXc+ou9I3E0/R2hetM9A3RDf8bNLpQcR
-4tiD+cWqdrxA6hwLUirJ6L/r9IoWLiRxFuhAPYjeHI/j2FlNLJ62TOxyQfW+ZPVp
-Wy4d8Busq44ocw6np+2Om7D4us8RkuJP1iyD63WXNDa+XecTWIgk7Ec1yZulZeru
-TbH6VdEu+KfEWyCP3Jxfn0GIjpD/h4d6toRmHjXNgtO0HRigeEAXb8DAHarbsNTA
-fUEU+dMh5I4=
-=m7wd
------END PGP SIGNATURE-----
-
---Sig_/3PauO7cYUswK3N6m=kLaT_Z--
+Mike.
