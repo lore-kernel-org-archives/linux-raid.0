@@ -1,190 +1,105 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: md: raid5 resync corrects read errors on data block - is this correct?
-Date: Tue, 25 Sep 2012 09:50:59 +0200
-Message-ID: <CAGRgLy5ch8V16PmJx7fCQnoy5xnYRVw0zCfuD=0DHaFcqH5YQw@mail.gmail.com>
-References: <CAGRgLy6Cqxyf2im+tG2JiaQFooLBBzT76hGpfTb47Cr_sFLr6g@mail.gmail.com>
-	<20120912082909.33c8eec0@notabene.brown>
-	<CAGRgLy6Syso2dfELFhpK9nCyEgvuD6k3F=MRJBnrVU=btKqKVw@mail.gmail.com>
-	<20120913101924.13431e6e@notabene.brown>
-	<CAGRgLy7VRTeegGXbxhzn4zrCt6agoQqLaOT5mM7=vSkq6XDN5A@mail.gmail.com>
-	<CAGRgLy4bbfuK0zF8kkP2at+2kZz8CYrFy+EgTDFPMjPc+edUgg@mail.gmail.com>
-	<CAGRgLy6wNUNWjOb8-5p2Wbag9R260AL++KU8xe-JTzgSoSqwpA@mail.gmail.com>
-	<20120919155917.3d67f890@notabene.brown>
-	<CAGRgLy6EsYj90f4UqPt9=p_qumWLq2vCCYwa-YL97P=k6R58HQ@mail.gmail.com>
-	<20120925165702.0d7afcd7@notabene.brown>
+From: =?ISO-8859-1?Q?G=FCnther_J=2E?= Niederwimmer <gjn@gjn.priv.at>
+Subject: Re: Hello,Re: GPT Table broken on a Raid1
+Date: Tue, 25 Sep 2012 10:27:52 +0200
+Message-ID: <5231765.ZMIFzBOKSc@techz>
+References: <4961154.0TR9MeFlIq@techz> <2286535.1cCOBDZvYY@techz> <505B736A-B9FE-4DB5-BA22-FEFDF1F9EE47@colorremedies.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120925165702.0d7afcd7@notabene.brown>
+In-Reply-To: <505B736A-B9FE-4DB5-BA22-FEFDF1F9EE47@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Yes, Neil, please change it then to "Suggested-By".
+Hello Chris,
 
-Thanks!
-Alex.
+Am Montag, 24. September 2012, 15:12:22 schrieb Chris Murphy:
+> On Sep 24, 2012, at 3:06 PM, G=FCnther J. Niederwimmer wrote:
+> >> mdadm -D /dev/md126
+> >=20
+> > /dev/md126:
+> >      Container : /dev/md/imsm0, member 0
+> >    =20
+> >     Raid Level : raid1
+> >     Array Size : 312568832 (298.09 GiB 320.07 GB)
+> > =20
+> >  Used Dev Size : 312568964 (298.09 GiB 320.07 GB)
+> > =20
+> >   Raid Devices : 2
+> > =20
+> >  Total Devices : 2
+> > =20
+> >          State : active
+>=20
+> Probably clean. Try:
+>=20
+> mdadm -E /dev/sda
+
+/dev/sda:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.1.00
+    Orig Family : e3958f4b
+         Family : e3958f4b
+     Generation : 00017ffe
+     Attributes : All supported
+           UUID : 363f146f:e7f29dc8:f05996c3:577ead6a
+       Checksum : 3e9e9e6b correct
+    MPB Sectors : 1
+          Disks : 2
+   RAID Devices : 1
+
+  Disk00 Serial : 6QF4WDE3
+          State : active
+             Id : 00000000
+    Usable Size : 625137928 (298.09 GiB 320.07 GB)
+
+[Volume0]:
+           UUID : ec120401:b6ed52e6:3814fac4:48fcf4fc
+     RAID Level : 1
+        Members : 2
+          Slots : [UU]
+    Failed disk : none
+      This Slot : 0
+     Array Size : 625137664 (298.09 GiB 320.07 GB)
+   Per Dev Size : 625137928 (298.09 GiB 320.07 GB)
+  Sector Offset : 0
+    Num Stripes : 2441944
+     Chunk Size : 64 KiB
+       Reserved : 0
+  Migrate State : idle
+      Map State : normal
+    Dirty State : dirty
+
+  Disk01 Serial : 6QF4WF5Z
+          State : active
+             Id : 00000001
+    Usable Size : 625137928 (298.09 GiB 320.07 GB)
 
 
-On Tue, Sep 25, 2012 at 8:57 AM, NeilBrown <neilb@suse.de> wrote:
-> On Thu, 20 Sep 2012 11:26:50 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-> wrote:
->
->> Hi Neil,
->> you are completely right. I got confused between mddev->recovery_cp
->> and sb->resync_offset; the latter may become 0 due to in-flight WRITEs
->> and not due to resync. Looking at the code again, I see that
->> recovery_cp is totally one-way from sb->resync_offset to MaxSector
->> (except for explicit loading via sysfs). Also recovery_cp is not
->> relevant to "check" and "repair". So recovery_cp is pretty simple
->> after all.
->>
->> Below is V2 patch. (I have also to credit it to somebody else, because
->> he was the one that said - just do rcw while you are resyncing).
->>
->> Thanks,
->> Alex.
->>
->>
->> -----------------
->> >From cc3e2bfcf2fd2c69180577949425d69de88706bb Mon Sep 17 00:00:00 2001
->> From: Alex Lyakas <alex@zadarastorage.com>
->> Date: Thu, 13 Sep 2012 18:55:00 +0300
->> Subject: [PATCH] When RAID5 is dirty, force reconstruct-write instead of
->>  read-modify-write.
->>
->> Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
->> Signed-off-by: Yair Hershko <yair@zadarastorage.com>
->
-> Signed-off-by has a very specific meaning - it isn't just a way of giving
-> recredit.
-> If Yair wrote some of the code, this is fine.
-> If not, then something like "Suggest-by:" might be more appropriate.
-> Should I change it to that.
->
-> applied, thanks.
->
-> NeilBrown
->
->
->>
->> diff --git a/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
->> b/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
->> index 5332202..9fdd5e3 100644
->> --- a/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
->> +++ b/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
->> @@ -2555,12 +2555,24 @@ static void handle_stripe_dirtying(struct r5conf *conf,
->>                                    int disks)
->>  {
->>         int rmw = 0, rcw = 0, i;
->> -       if (conf->max_degraded == 2) {
->> -               /* RAID6 requires 'rcw' in current implementation
->> -                * Calculate the real rcw later - for now fake it
->> +       sector_t recovery_cp = conf->mddev->recovery_cp;
->> +
->> +       /* RAID6 requires 'rcw' in current implementation.
->> +        * Otherwise, check whether resync is now happening or should start.
->> +        * If yes, then the array is dirty (after unclean shutdown or
->> +        * initial creation), so parity in some stripes might be inconsistent.
->> +        * In this case, we need to always do reconstruct-write, to ensure
->> +        * that in case of drive failure or read-error correction, we
->> +        * generate correct data from the parity.
->> +        */
->> +       if (conf->max_degraded == 2 ||
->> +           (recovery_cp < MaxSector && sh->sector >= recovery_cp)) {
->> +               /* Calculate the real rcw later - for now make it
->>                  * look like rcw is cheaper
->>                  */
->>                 rcw = 1; rmw = 2;
->> +               pr_debug("force RCW max_degraded=%u, recovery_cp=%lu
->> sh->sector=%lu\n",
->> +                        conf->max_degraded, recovery_cp, sh->sector);
->>         } else for (i = disks; i--; ) {
->>                 /* would I have to read this buffer for read_modify_write */
->>                 struct r5dev *dev = &sh->dev[i];
->>
->>
->>
->>
->>
->>
->> On Wed, Sep 19, 2012 at 8:59 AM, NeilBrown <neilb@suse.de> wrote:
->> > On Mon, 17 Sep 2012 14:15:16 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
->> > wrote:
->> >
->> >> Hi Neil,
->> >> below is a bit less-ugly version of the patch.
->> >> Thanks,
->> >> Alex.
->> >>
->> >> >From 05cf800d623bf558c99d542cf8bf083c85b7e5d5 Mon Sep 17 00:00:00 2001
->> >> From: Alex Lyakas <alex@zadarastorage.com>
->> >> Date: Thu, 13 Sep 2012 18:55:00 +0300
->> >> Subject: [PATCH] When RAID5 is dirty, force reconstruct-write instead of
->> >>  read-modify-write.
->> >>
->> >> Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
->> >> Signed-off-by: Yair Hershko <yair@zadarastorage.com>
->> >>
->> >> diff --git a/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
->> >> b/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
->> >> index 5332202..0702785 100644
->> >> --- a/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
->> >> +++ b/ubuntu_kmodules/Ubuntu-3.2.0-25.40/drivers/md/raid5.c
->> >> @@ -2555,12 +2555,36 @@ static void handle_stripe_dirtying(struct r5conf *conf,
->> >>                                    int disks)
->> >>  {
->> >>         int rmw = 0, rcw = 0, i;
->> >> -       if (conf->max_degraded == 2) {
->> >> -               /* RAID6 requires 'rcw' in current implementation
->> >> -                * Calculate the real rcw later - for now fake it
->> >> +       sector_t recovery_cp = conf->mddev->recovery_cp;
->> >> +       unsigned long recovery = conf->mddev->recovery;
->> >> +       int needed = test_bit(MD_RECOVERY_NEEDED, &recovery);
->> >> +       int resyncing = test_bit(MD_RECOVERY_SYNC, &recovery) &&
->> >> +                       !test_bit(MD_RECOVERY_REQUESTED, &recovery) &&
->> >> +                       !test_bit(MD_RECOVERY_CHECK, &recovery);
->> >> +       int transitional = test_bit(MD_RECOVERY_RUNNING, &recovery) &&
->> >> +                          !test_bit(MD_RECOVERY_SYNC, &recovery) &&
->> >> +                          !test_bit(MD_RECOVERY_RECOVER, &recovery) &&
->> >> +                          !test_bit(MD_RECOVERY_DONE, &recovery) &&
->> >> +                          !test_bit(MD_RECOVERY_RESHAPE, &recovery);
->> >
->> > Thanks Alex,
->> >  however I don't understand why you want to test all of these bits.
->> > Isn't it enough just to check ->recovery_cp ??
->> >
->> >> +
->> >> +       /* RAID6 requires 'rcw' in current implementation.
->> >> +        * Otherwise, attempt to check whether resync is now happening
->> >> +        * or should start.
->> >> +         * If yes, then the array is dirty (after unclean shutdown or
->> >> +         * initial creation), so parity in some stripes might be inconsistent.
->> >> +         * In this case, we need to always do reconstruct-write, to ensure
->> >> +         * that in case of drive failure or read-error correction, we
->> >> +         * generate correct data from the parity.
->> >> +         */
->> >> +       if (conf->max_degraded == 2 ||
->> >> +           (recovery_cp < MaxSector && sh->sector >= recovery_cp &&
->> >> +            (needed || resyncing || transitional))) {
->> >> +               /* Calculate the real rcw later - for now fake it
->> >>                  * look like rcw is cheaper
->> >
->> > Also, we should probably fix this comment.  s/fake/make/
->> >
->> > Thanks,
->> > NeilBrown
->> >
->> >
->> >
->> >>                  */
->> >>                 rcw = 1; rmw = 2;
->> >> +               pr_debug("force RCW max_degraded=%u, recovery_cp=%lu
->> >> sh->sector=%lu recovery=0x%lx\n",
->> >> +                        conf->max_degraded, recovery_cp, sh->sector, recovery);
->> >>         } else for (i = disks; i--; ) {
->> >>                 /* would I have to read this buffer for read_modify_write */
->> >>                 struct r5dev *dev = &sh->dev[i];
->> >
->
+=20
+> > ARRAY /dev/md/imsm0 metadata=3Dimsm UUID=3D363f146f:e7f29dc8:f05996=
+c3:577ead6a
+> > ARRAY /dev/md/Volume0 container=3D/dev/md/imsm0 member=3D0
+> > UUID=3Dec120401:b6ed52e6:3814fac4:48fcf4fc
+> >=20
+> >=20
+> > Question: Why create mdadm also a md127, I found this now ?
+>=20
+> Kernel is mapping /dev/md/Volume0 to /dev/md126. It's doing the same =
+on my
+> system, although it's using md126. Not sure if that's controllable or=
+ not.
+> Maybe someone else can answer it.
+
+No Problem, but i tell it to you, for me it is mystery. ;)
+=20
+--=20
+mit freundlichen Gr=FC=DFen / best Regards.
+
+  G=FCnther J. Niederwimmer
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
