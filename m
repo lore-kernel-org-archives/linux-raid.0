@@ -1,76 +1,33 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] raid5: Avoid doing more read on dev of a stripe at the
- same time
-Date: Wed, 26 Sep 2012 12:43:48 +1000
-Message-ID: <20120926124348.3190990c@notabene.brown>
-References: <2012091510203206229010@gmail.com>
-	<20120920125144.0ed69ec3@notabene.brown>
-	<201209201104415460652@gmail.com>
-	<20120920132422.0f7841f1@notabene.brown>
-	<201209211024418590971@gmail.com>
-	<20120925172912.65db0e03@notabene.brown>
+From: "Jianpeng Ma" <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH] raid5: Avoid doing more read on dev of a stripe at the same time
+Date: Wed, 26 Sep 2012 12:09:27 +0800
+Message-ID: <201209261209238128227@gmail.com>
+References: <2012091510203206229010@gmail.com> <20120920125144.0ed69ec3@notabene.brown> <201209201104415460652@gmail.com> <20120920132422.0f7841f1@notabene.brown> <201209211024418590971@gmail.com> <20120925172912.65db0e03@notabene.brown>,
+	<20120926124348.3190990c@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ps1bwIoETtzk0LzLrJT/oqa"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120925172912.65db0e03@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Jianpeng Ma <majianpeng@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/ps1bwIoETtzk0LzLrJT/oqa
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+T24gMjAxMi0wOS0yNiAxMDo0MyBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+IFdyb3RlOg0KPk9u
+IFR1ZSwgMjUgU2VwIDIwMTIgMTc6Mjk6MTIgKzEwMDAgTmVpbEJyb3duIDxuZWlsYkBzdXNlLmRl
+PiB3cm90ZToNCj4NCj4+IE9uIEZyaSwgMjEgU2VwIDIwMTIgMTA6MjQ6NDUgKzA4MDAgIkppYW5w
+ZW5nIE1hIiA8bWFqaWFucGVuZ0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gPiBIaSwNCj4+ID4g
+IGkgd3JvdGUgYSBzaGVsbC1zY3JpcHQgY2FuIHJlcHJvZHVjdCB0aGlzIGJ1Zy4NCj4+ID4gTm90
+ZTogbWRhZG0gLVYNCj4+ID4gbWRhZG0gLSB2My4zLXByZSAtIFVucmVsZWFzZWQNCj4+ID4gDQo+
+Li4uDQo+DQo+PiBUaGFua3MgYSBsb3QhDQo+PiBJJ2xsIHRyeSB0aGlzIG91dCBhbmQgc2VlIHdo
+YXQgSSBmaW5kLg0KPg0KPkkndmUgYmVlbiBydW5uaW5nIHRoaXMgc2NyaXB0ICh3aXRoIHRoZSBt
+ZW50aW9uZWQgdmVyc2lvbiBvZiBtZGFkbSkgYW5kDQo+bm90aGluZyBoYXMgZ29uZSB3cm9uZy4N
+Cj5UaGUgJ2RkJyBrZWVwcyByZXBvcnRpbmcgcmVhZCBlcnJvcnMgb2YgY291cnNlLCBhcyBkb2Vz
+IHRoZSBrZXJuZWwsIGJ1dCBub3QNCj5jcmFzaCBvciBmcmVlemUgb3IgYW55dGhpbmcuDQpXaGF0
+J3MgdGhlIHZlcnNpb24gb2YgbWRhZG0/IFVzZSB0aGUgZmVhdHVyZSBvZiBiYWRibG9jayBsb2cg
+dG8gdGVzdC4NCkFyZSB5b3Ugc3VyZT8NCj4NCj5XaGF0IGV4YWN0bHkgaGFwcGVucyB3aGVuIHlv
+dSBydW4gaXQ/ICBEbyB5b3UgZ2V0IGEga2VybmVsIHN0YWNrIHRyYWNlIGF0IGFsbD8NCj5DYW4g
+eW91IHBvc3QgbG9ncyBzaG93aW5nIHdoZXJlIGl0IGdvZXMgd3Jvbmc/DQo+DQpPaywgaSB3aWxs
+IHJlZG8gYW5kIGNhdGNoIG1lc3NhZ2UgdG8gc2VuZCB5b3UuDQpUaGFua3MhDQo=
 
-On Tue, 25 Sep 2012 17:29:12 +1000 NeilBrown <neilb@suse.de> wrote:
-
-> On Fri, 21 Sep 2012 10:24:45 +0800 "Jianpeng Ma" <majianpeng@gmail.com> w=
-rote:
-
-> > Hi,
-> >  i wrote a shell-script can reproduct this bug.
-> > Note: mdadm -V
-> > mdadm - v3.3-pre - Unreleased
-> >=20
-...
-
-> Thanks a lot!
-> I'll try this out and see what I find.
-
-I've been running this script (with the mentioned version of mdadm) and
-nothing has gone wrong.
-The 'dd' keeps reporting read errors of course, as does the kernel, but not
-crash or freeze or anything.
-
-What exactly happens when you run it?  Do you get a kernel stack trace at a=
-ll?
-Can you post logs showing where it goes wrong?
-
-Thanks,
-NeilBrown
-
-
---Sig_/ps1bwIoETtzk0LzLrJT/oqa
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUGJr5Dnsnt1WYoG5AQK4TRAAqZ3x8Re+Y2+hkobZIRWx5vZ/Q5Q3h9sU
-EwtDM4NebikaWN+h/YRl3hXxYIvGZ9TqUCHTL6LSR1FLozzF1y+TkkxwA77EtypZ
-8NA+FoUNl8aArUSE6KXSEnrFXw58w1EYolno4Q3gUNwN/2de5bTejnJT/BfXOG1X
-FinvfHeCUGyYtqiuZmuEqTPydXACjKH8eREEnO4IuQz3ZKvUM8zoyoV7pS0YajsQ
-9uUN+V/Svk/CaS6lc5eARiRvhy0YLH4Pt3gOVWJ+8O5EMLzNvSUk7kos1bIsm4FF
-J5P4tvPOqQVbozn8wdtUEDAl2wWtJAnLqA24LmzngQD1seMVpK7JliEN1Qb2k6XK
-pThtX2VoPmziZbrFBGZKysmS7j3fqPCox/nHvf/LMJc+SWkVd7lFYiBPV5FKbj/u
-QfcE8OJ8aOyRkNEKyugmepPlD5JRTiCqubKtuoPTAfyA8dNb5cnsicGdT3eUwc3Y
-zgO+uQrLJtsBs20TpFHtUNhtpJkR7LWvfdHMPmekH9vUbnZLA9eJSADKiUJUj3bg
-Bo4aNEKNn8QTHAY4pBWIsRfGZVwJQW5msYfjJ28ONuuzMzpgAp+GNu+TwD8RAMQy
-20nl8Y6X7ypEDn3jFPrqzC9LkRm6lueGKAC7egu/Y2orWWjLLDExw3uakPI1QBd9
-KNygPFT+eQo=
-=mKkm
------END PGP SIGNATURE-----
-
---Sig_/ps1bwIoETtzk0LzLrJT/oqa--
