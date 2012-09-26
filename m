@@ -1,47 +1,46 @@
-From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH] dm persistent data: convert to use le32_add_cpu()
-Date: Wed, 26 Sep 2012 17:45:57 +0800
-Message-ID: <CAPgLHd-10XV1VAhjtr7XRqae37w_TuMXgFTuZRiXetfbOzozXA@mail.gmail.com>
+From: Maciej Naruszewicz <maciej.naruszewicz@intel.com>
+Subject: [mdadm,v1 PATCH 0/6] Extend mdadm [...] --export
+Date: Wed, 26 Sep 2012 13:42:36 +0200
+Message-ID: <20120926114202.328.71156.stgit@gklab-128-174.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: agk@redhat.com, neilb@suse.de
-Cc: yongjun_wei@trendmicro.com.cn, dm-devel@redhat.com, linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com
 List-Id: linux-raid.ids
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+The following patches:
 
-Convert cpu_to_le32(le32_to_cpu(E1) + E2) to use le32_add_cpu().
+1. Add support for --mdadm --detail-platform --export with an additional option to provide specific controller to scan. The controller might be an absolute path to an actual   device, or just a symlink.
 
-dpatch engine is used to auto generate this patch.
-(https://github.com/weiyj/dpatch)
+2. Synchronize two methods of calculating size and add the possibility to choose output format (IEC or JEDEC prefixes).
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+3. Add an additional value to mdadm --examine --export
+
 ---
- drivers/md/persistent-data/dm-space-map-common.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/md/persistent-data/dm-space-map-common.c b/drivers/md/persistent-data/dm-space-map-common.c
-index d77602d..f3a9af8 100644
---- a/drivers/md/persistent-data/dm-space-map-common.c
-+++ b/drivers/md/persistent-data/dm-space-map-common.c
-@@ -434,14 +434,14 @@ int sm_ll_insert(struct ll_disk *ll, dm_block_t b,
- 	if (ref_count && !old) {
- 		*ev = SM_ALLOC;
- 		ll->nr_allocated++;
--		ie_disk.nr_free = cpu_to_le32(le32_to_cpu(ie_disk.nr_free) - 1);
-+		le32_add_cpu(&ie_disk.nr_free, -1);
- 		if (le32_to_cpu(ie_disk.none_free_before) == bit)
- 			ie_disk.none_free_before = cpu_to_le32(bit + 1);
- 
- 	} else if (old && !ref_count) {
- 		*ev = SM_FREE;
- 		ll->nr_allocated--;
--		ie_disk.nr_free = cpu_to_le32(le32_to_cpu(ie_disk.nr_free) + 1);
-+		le32_add_cpu(&ie_disk.nr_free, 1);
- 		ie_disk.none_free_before = cpu_to_le32(min(le32_to_cpu(ie_disk.none_free_before), bit));
- 	}
- 
+Maciej Naruszewicz (6):
+      imsm: Add --export option for --detail-platform
+      imsm: Add --controller-path option for --detail-platform.
+      Fix return code for --detail-platform
+      Synchronize size calculation in human_size and human_size_brief
+      Display size with human_size_brief with a chosen prefix
+      Add MD_ARRAY_SIZE for --examine --export
 
 
+ Create.c      |    2 +
+ Detail.c      |   13 +++++--
+ Query.c       |    2 +
+ ReadMe.c      |    6 ++-
+ mdadm.8.in    |   10 +++++
+ mdadm.c       |   32 +++++++++++++++++
+ mdadm.h       |   14 ++++++--
+ super-intel.c |  105 +++++++++++++++++++++++++++++++++++++++++++++++++--------
+ super1.c      |   19 ++++++++++
+ util.c        |   51 +++++++++++++++++++++-------
+ 10 files changed, 213 insertions(+), 41 deletions(-)
+
+--
+MN
