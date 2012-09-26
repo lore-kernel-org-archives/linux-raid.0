@@ -1,8 +1,7 @@
 From: Maciej Naruszewicz <maciej.naruszewicz@intel.com>
-Subject: [PATCH 4/6] Synchronize size calculation in human_size and
- human_size_brief
-Date: Wed, 26 Sep 2012 13:44:08 +0200
-Message-ID: <20120926114408.328.96284.stgit@gklab-128-174.igk.intel.com>
+Subject: [PATCH 5/6] Display size with human_size_brief with a chosen prefix
+Date: Wed, 26 Sep 2012 13:44:15 +0200
+Message-ID: <20120926114415.328.68023.stgit@gklab-128-174.igk.intel.com>
 References: <20120926114202.328.71156.stgit@gklab-128-174.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,58 +13,112 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com
 List-Id: linux-raid.ids
 
-It would be better if two size-calculating methods had the same
-calculating algorithm. The human_size way of calculation seems
-more readable, so let's use it for both methods.
+When using human_size_brief, only IEC prefixes were supported. Now
+it's possible to specify which format we want to see - either IEC
+(kibi, mibi, gibi) or JEDEC (kilo, mega, giga).
 
 Signed-off-by: Maciej Naruszewicz <maciej.naruszewicz@intel.com>
 ---
- util.c |   33 ++++++++++++++++++++-------------
- 1 file changed, 20 insertions(+), 13 deletions(-)
+ Query.c |    2 +-
+ mdadm.h |    7 ++++++-
+ util.c  |   36 +++++++++++++++++++++++++++---------
+ 3 files changed, 34 insertions(+), 11 deletions(-)
 
+diff --git a/Query.c b/Query.c
+index b9c209f..329e583 100644
+--- a/Query.c
++++ b/Query.c
+@@ -76,7 +76,7 @@ int Query(char *dev)
+ 	else {
+ 		printf("%s: %s %s %d devices, %d spare%s. Use mdadm --detail for more detail.\n",
+ 		       dev,
+-		       human_size_brief(larray_size),
++		       human_size_brief(larray_size,IEC),
+ 		       map_num(pers, array.level),
+ 		       array.raid_disks,
+ 		       array.spare_disks, array.spare_disks==1?"":"s");
+diff --git a/mdadm.h b/mdadm.h
+index e27275b..a24b803 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -329,6 +329,11 @@ enum special_options {
+ 	ControllerPath,
+ };
+ 
++enum prefix_standard {
++	JEDEC,
++	IEC
++};
++
+ /* structures read from config file */
+ /* List of mddevice names and identifiers
+  * Identifiers can be:
+@@ -1242,7 +1247,7 @@ extern int set_array_info(int mdfd, struct supertype *st, struct mdinfo *info);
+ unsigned long long min_recovery_start(struct mdinfo *array);
+ 
+ extern char *human_size(long long bytes);
+-extern char *human_size_brief(long long bytes);
++extern char *human_size_brief(long long bytes, int prefix);
+ extern void print_r10_layout(int layout);
+ 
+ #define NoMdDev (1<<23)
 diff --git a/util.c b/util.c
-index c63a232..09971a2 100644
+index 09971a2..cb97816 100644
 --- a/util.c
 +++ b/util.c
-@@ -686,20 +686,27 @@ char *human_size_brief(long long bytes)
- {
- 	static char buf[30];
- 
-+	/* We convert bytes to either centi-M{ega,ibi}bytes or
-+	 * centi-G{igi,ibi}bytes, with appropriate rounding,
-+	 * and then print 1/100th of those as a decimal.
-+	 * We allow upto 2048Megabytes before converting to
-+	 * gigabytes, as that shows more precision and isn't
-+	 * too large a number.
-+	 * Terabytes are not yet handled.
-+	 */
-+
- 	if (bytes < 5000*1024)
--		snprintf(buf, sizeof(buf), "%ld.%02ldKiB",
--			(long)(bytes>>10), (long)(((bytes&1023)*100+512)/1024)
--			);
--	else if (bytes < 2*1024LL*1024LL*1024LL)
--		snprintf(buf, sizeof(buf), "%ld.%02ldMiB",
--			(long)(bytes>>20),
--			(long)((bytes&0xfffff)+0x100000/200)/(0x100000/100)
--			);
--	else
--		snprintf(buf, sizeof(buf), "%ld.%02ldGiB",
--			(long)(bytes>>30),
--			(long)(((bytes>>10)&0xfffff)+0x100000/200)/(0x100000/100)
--			);
-+		buf[0] = 0;
-+	else if (bytes < 2*1024LL*1024LL*1024LL) {
-+		long cMiB = (bytes / ( (1LL<<20) / 200LL ) +1) /2;
-+		snprintf(buf, sizeof(buf), " (%ld.%02ldMiB)",
-+			cMiB/100 , cMiB % 100);
-+	} else {
-+		long cGiB = (bytes / ( (1LL<<30) / 200LL ) +1) /2;
-+		snprintf(buf, sizeof(buf), " (%ld.%02ldGiB)",
-+				cGiB/100 , cGiB % 100);
-+	}
-+
+@@ -682,7 +682,7 @@ char *human_size(long long bytes)
  	return buf;
  }
  
+-char *human_size_brief(long long bytes)
++char *human_size_brief(long long bytes, int prefix)
+ {
+ 	static char buf[30];
+ 
+@@ -693,19 +693,37 @@ char *human_size_brief(long long bytes)
+ 	 * gigabytes, as that shows more precision and isn't
+ 	 * too large a number.
+ 	 * Terabytes are not yet handled.
++	 *
++	 * If prefix == IEC, we mean prefixes like kibi,mebi,gibi etc.
++	 * If prefix == JEDEC, we mean prefixes like kilo,mega,giga etc.
+ 	 */
+ 
+ 	if (bytes < 5000*1024)
+ 		buf[0] = 0;
+-	else if (bytes < 2*1024LL*1024LL*1024LL) {
+-		long cMiB = (bytes / ( (1LL<<20) / 200LL ) +1) /2;
+-		snprintf(buf, sizeof(buf), " (%ld.%02ldMiB)",
+-			cMiB/100 , cMiB % 100);
+-	} else {
+-		long cGiB = (bytes / ( (1LL<<30) / 200LL ) +1) /2;
+-		snprintf(buf, sizeof(buf), " (%ld.%02ldGiB)",
+-				cGiB/100 , cGiB % 100);
++	else if (prefix == IEC) {
++		if (bytes < 2*1024LL*1024LL*1024LL) {
++			long cMiB = (bytes / ( (1LL<<20) / 200LL ) +1) /2;
++			snprintf(buf, sizeof(buf), "%ld.%02ldMiB",
++				cMiB/100 , cMiB % 100);
++		} else {
++			long cGiB = (bytes / ( (1LL<<30) / 200LL ) +1) /2;
++			snprintf(buf, sizeof(buf), "%ld.%02ldGiB",
++					cGiB/100 , cGiB % 100);
++		}
++	}
++	else if (prefix == JEDEC) {
++		if (bytes < 2*1024LL*1024LL*1024LL) {
++			long cMB  = (bytes / ( 1000000LL / 200LL ) +1) /2;
++			snprintf(buf, sizeof(buf), "%ld.%02ldMB",
++					cMB/100, cMB % 100);
++		} else {
++			long cGB  = (bytes / (1000000000LL/200LL ) +1) /2;
++			snprintf(buf, sizeof(buf), "%ld.%02ldGB",
++					cGB/100 , cGB % 100);
++		}
+ 	}
++	else
++		buf[0] = 0;
+ 
+ 	return buf;
+ }
 
