@@ -1,57 +1,73 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Hello,Re: GPT Table broken on a Raid1
-Date: Wed, 26 Sep 2012 13:33:49 -0600
-Message-ID: <F2C9D196-A5AC-4F35-9177-FDFCA755FB2B@colorremedies.com>
-References: <4961154.0TR9MeFlIq@techz> <5231765.ZMIFzBOKSc@techz> <FABB1E4C-1CAC-429F-96CF-FC563336A913@colorremedies.com> <5315095.pvR2SvTGWe@techz>
-Mime-Version: 1.0 (Apple Message framework v1283)
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5315095.pvR2SvTGWe@techz>
-Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+From: NeilBrown <neilb@suse.de>
+Subject: [PULL REQUEST] 2 bugfixes for md in 3.6
+Date: Thu, 27 Sep 2012 12:37:15 +1000
+Message-ID: <20120927123715.2e17d5de@notabene.brown>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/ZJgT7RkGN+mSyonh3aY2aNC"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
+--Sig_/ZJgT7RkGN+mSyonh3aY2aNC
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On Sep 26, 2012, at 6:17 AM, G=FCnther J. Niederwimmer wrote:
->>=20
->> dirty state.
->=20
-> OK, I run the Intel Tool in windows two times with the last Tool I fo=
-und.
->=20
-> The Tool don't found any Problem (?) and don't repair, but mdadm=85.
+The following changes since commit 6dafab6b1383e912cd252fa809570b484eb6e0dc:
 
-I'm going to trim this down:
+  md: make sure metadata is updated when spares are activated or removed. (=
+2012-09-19 12:54:22 +1000)
 
->=20
-> /dev/sda:
-> [Volume0]:
->           UUID : ec120401:b6ed52e6:3814fac4:48fcf4fc
->       Map State : normal
->    Dirty State : clean
->=20
->=20
-> /dev/sdb:
-> [Volume0]:
->           UUID : ec120401:b6ed52e6:3814fac4:48fcf4fc
->      Map State : normal
->    Dirty State : dirty
->                 =B0=B0=B0=B0=B0=B0=B0
+are available in the git repository at:
 
-I don't understand this UI. Are there two Volume0's?=20
+  git://neil.brown.name/md/ tags/md-3.6-fixes
 
-I can see how the dirty state would apply independently among physical =
-devices /dev/sda and /dev/sdb. But the virtual device, the array volume=
-, "Volume0" seems like it would have only one instance. So I don't unde=
-rstand how it can be clean in one case and dirty in another.
+for you to fetch changes up to 80b4812407c6b1f66a4f2430e69747a13f010839:
 
+  md/raid10: fix "enough" function for detecting if array is failed. (2012-=
+09-27 12:35:21 +1000)
 
+----------------------------------------------------------------
+2 bugfixes for md in 3.6
 
-Chris Murphy
+One (missing spinlock init) was only introduced recently.
+The other has been present as long as raid10 has been supported,
+so is tagged for -stable.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+----------------------------------------------------------------
+NeilBrown (2):
+      md/raid5: add missing spin_lock_init.
+      md/raid10: fix "enough" function for detecting if array is failed.
+
+ drivers/md/raid10.c | 8 +++++---
+ drivers/md/raid5.c  | 1 +
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+Thanks,
+NeilBrown
+
+--Sig_/ZJgT7RkGN+mSyonh3aY2aNC
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBUGO72znsnt1WYoG5AQJ7Og//UhHOOdAMHmbEdxa3bzW71a/+PgGabMes
+HuM+IobyGSjq0/TEQarfinVOITKlSrkMBSVDfgqexyrMb6GUGoul6szHMti4t01Q
+fJO3vv8e4dMiScarvECgoCpIEnqQv4NauBYTU6ut06zDireR3QmnBPklfHmEQlvH
+RENOwpKlxEDEwK0eJMedO1ijTUbxVbywpmL9xbbpkdSAMNOZOdBIboFjD7/gnrA4
+GTgMt3jMrCLUcl/HpHMgIckDvZoCodXPw6/Pme6GjHYEfx2fK07/fRH/OPSVC5fV
+d0iE+SlOzsDk3jsgDxk1fOGz9BvxJnKk8U4Gebc9jDYjl5/zpi9v7uxNwxhYFED6
+BKPTCuriali5BMr01DDj4sQ95Hr1rMwD0q/vG1rD/rb0Y4Dm7RXbQNblVVmr+1OQ
+ntaZ6yKSNqefdJ15gojE/2ExVYwTNjrMSHTxv62CwjR/IEVjTwC5/KBXI2CpPxMB
+sOBBHglhWXpih1Z5uWrfVj7Ko8fY9OIxoSUuOfs5tocd5gGzwrgQx6yQdrrW60cs
+38KCL1Ov8t6xUlWArdmvHDRvyAAEjMlgDR4mRqo0k4Cqe68V/+ZzxLn4Fz3YVVsn
+fTq2vlVAPheLSXXZ0fWulvPg879ykJ1a7eqTV6L4gp1ehd8XbF/ZCjiJgYaZ+eg6
+TUvBaTfoPBw=
+=FwRS
+-----END PGP SIGNATURE-----
+
+--Sig_/ZJgT7RkGN+mSyonh3aY2aNC--
