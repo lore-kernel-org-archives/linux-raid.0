@@ -1,76 +1,323 @@
-From: martin f krafft <madduck@madduck.net>
-Subject: RAID10 copies and missing devices on init
-Date: Sun, 30 Sep 2012 09:15:27 +0200
-Message-ID: <20120930071527.GA8519@albatross.gern.madduck.net>
+From: EJ <ej@ejane.org>
+Subject: Upgrade from Ubuntu 10.04 to 12.04 broken raid6.
+Date: Sun, 30 Sep 2012 09:21:24 +0000 (UTC)
+Message-ID: <loom.20120930T105755-205@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="NzB8fVQJ5HfG6fxh"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid mailing list <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Greetings,
 
---NzB8fVQJ5HfG6fxh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I hope that I'm posting this in the right place, if not my apologies.
 
-Dear list,
+Up until several hours ago, my system was running Ubuntu 10.04 LTS, using the 
+stock version of mdadm--unfortunately I have no idea which version it was.
 
-just a quick question to void a concern I had last night:
+Fast forward to now, I've upgraded the system to 12.04 LTS and have lost access 
+to my array. The array itself is a nine (9) disk raid6 managed by mdadm.
 
-If I set up a RAID10 with offset=3D3 layout across 4 disks, but I only
-provide 3 of them at array creation, MD will not just put a copy of
-each data block onto each of the three disks, right?
+I'm not sure this is pertinent information, but trying to get 12.04 LTS to boot 
+was an exercise in patience.  There was some sort of race condition possibly 
+happening between the disks of the array initializing and 12.04's udev. It would 
+constantly drop me to a busybox shell, trying to degrade the known-working 
+array.
 
-Only every 4th block will be stored 3 times on the 3 disks, the
-other 3 blocks will get stored twice only, until the fourth disk is
-added into the array.
+Eventually, I had to go into /usr/share/initramfs-tools/scripts/mdadm-functions 
+and type "exit 1" into both degraded_arrays() and mountroot_fail() so that my 
+system could at the very least boot.  I fear that the constant rebooting and 
+12.04's aggressive initramfs scripting has somehow damaged my array.
 
-If this weren't the case, then setting up a system RAID10 system
-with missing devices would mean that the initial system setup would
-not be redundantly stored and the disks initially present would
-become points of failure that the other redundant disks could not
-prevent.
+Ok back to the array itself, here's some raw command data:
 
-Is this correct?
+# mdadm --assemble /dev/md0 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 
+/dev/sdg1 /dev/sdh1 /dev/sdi1 /dev/sdj1
+mdadm: superblock on /dev/sdc1 doesn't match others - assembly aborted
 
-Thanks,
+I also tried # mdadm --auto-detect and found this in dmesg:
 
---=20
-martin | http://madduck.net/ | http://two.sentenc.es/
-=20
-philosophy: unintelligible answers to insoluble problems.
-=20
-spamtraps: madduck.bogus@madduck.net
+[  676.998212] md: Autodetecting RAID arrays.
+[  676.998426] md: invalid raid superblock magic on sdc1
+[  676.998458] md: sdc1 does not have a valid v0.90 superblock, not importing!
+[  676.998870] md: invalid raid superblock magic on sde1
+[  676.998911] md: sde1 does not have a valid v0.90 superblock, not importing!
+[  676.999474] md: invalid raid superblock magic on sdb1
+[  676.999495] md: sdb1 does not have a valid v0.90 superblock, not importing!
+[  676.999703] md: invalid raid superblock magic on sdd1
+[  676.999732] md: sdd1 does not have a valid v0.90 superblock, not importing!
+[  677.000137] md: invalid raid superblock magic on sdf1
+[  677.000163] md: sdf1 does not have a valid v0.90 superblock, not importing!
+[  677.000566] md: invalid raid superblock magic on sdg1
+[  677.000586] md: sdg1 does not have a valid v0.90 superblock, not importing!
+[  677.000940] md: invalid raid superblock magic on sdh1
+[  677.000960] md: sdh1 does not have a valid v0.90 superblock, not importing!
+[  677.001356] md: invalid raid superblock magic on sdi1
+[  677.001375] md: sdi1 does not have a valid v0.90 superblock, not importing!
+[  677.001841] md: invalid raid superblock magic on sdj1
+[  677.001871] md: sdj1 does not have a valid v0.90 superblock, not importing!
+[  677.001933] md: Scanned 9 and added 0 devices.
+[  677.001938] md: autorun ...
+[  677.001941] md: ... autorun DONE.
 
---NzB8fVQJ5HfG6fxh
-Content-Type: application/pgp-signature; name="digital_signature_gpg.asc"
-Content-Description: Digital signature (see http://martin-krafft.net/gpg/sig-policy/999bbcc4/current)
+Here are the disks themselves:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+# mdadm -E /dev/sdb1
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 321fc20c:997e9a1a:bb67ffde:9de489f5
+           Name : ruby:6  (local to host ruby)
+  Creation Time : Mon Apr 11 19:40:25 2011
+     Raid Level : raid6
+   Raid Devices : 9
 
-iQLvBAEBCgDZBQJQZ/GOwBEaaHR0cDovL21hcnRpbi1rcmFmZnQubmV0L2dwZy9z
-aWctcG9saWN5LzU1Yzk4ODJkOTk5YmJjYzQvMjAxMTAxMjQxMTI1P3NoYTUxMnN1
-bT0xY2FkOTZmZDI3ZDMyMzNmNTNlMjI4NDk1MzM2NDgxMDdlNWVlOGQ1YmU2NTUy
-NTFkNzRjOGYxYzVjM2JjNDJmMjMwNGZhNTE1MTUwZjdiZDRkZDA1ZTk4MTk5MjRm
-MDQ5NTEzZWU5OTYyY2E3MTcwOWY4MWQ5NDUxNTg1MmJkOAAKCRBVyYgtmZu8xOQ6
-D/4sdU8SHef1Q+bKCCi+oT/KIx4KSHnjILerRHYTEdbx1tb/vJQ1/bBoi3TstNms
-pq7JprFS3xPRvrIKptMRevjQamT+7PhZVTbblNgtxGipmid1IhaJSZAF4GQX+wnm
-tjPm2ud+TTBgbBG4Pd02r8AqVc3bEGfRdh4TfM3YF3XIbISBv41E+oNMxsRtNWCR
-KIPjYQNjTMotWBNDnw5hxGLyINbUDU6J91qLYzzYGySESVLdoeHRgiifjuI1DVZE
-UAaN1oYqATphScwR8DKUcs2flnq4RHYcTKptB0YLwR0pJsO5FWYLyNuudd14PrxN
-GdXB9VxBLEk2eUYKbJYP0Fg9HjRlydCelTgWFgngmblyB0Ia7LIYK2NCUm3uQLzo
-uCzbR1Ka53H5wrIBlvKR0Ql3azDfcXR6N98cf825KxYS5j203xDUh/aavQMevbnL
-Z4PMJLPGWt/hAcaaAPo8AFIFBGhF3GNo7FOpWnZB9brohnqBs/nIP8CJTRVGOnSJ
-6NSP2totszvIfMwdaxdWg18zP8qFhBgLtdLE+baMLSUMo6N8+aAQkKmDnxDZ0joj
-BpDnD/R6D7X/V7hLYHALj4fwOyp+M1l8FEqELAIjKULerTRY+e6E/u+VigiMo229
-DzQrRhyLsgYsrnXB2G2TShb1gQAqVpxchRpZQ2TN5xbugw==
-=+tVQ
------END PGP SIGNATURE-----
+ Avail Dev Size : 3907026672 (1863.02 GiB 2000.40 GB)
+     Array Size : 27349181440 (13041.11 GiB 14002.78 GB)
+  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : a6fd99b2:7bb75287:5d844ec5:822b6d8a
 
---NzB8fVQJ5HfG6fxh--
+    Update Time : Sun Sep 30 04:34:27 2012
+       Checksum : 760485cb - correct
+         Events : 2474296
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 5
+   Array State : AAAAAAAAA ('A' == active, '.' == missing)
+
+# mdadm -E /dev/sdc1
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 321fc20c:997e9a1a:bb67ffde:9de489f5
+           Name : ruby:6  (local to host ruby)
+  Creation Time : Mon Apr 11 19:40:25 2011
+     Raid Level : -unknown-
+   Raid Devices : 0
+
+ Avail Dev Size : 3907026672 (1863.02 GiB 2000.40 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : f3f72549:8543972f:1f4a655d:fa9416bd
+
+    Update Time : Sun Sep 30 07:26:43 2012
+       Checksum : 7e955e4e - correct
+         Events : 1
+
+
+   Device Role : spare
+   Array State :  ('A' == active, '.' == missing)
+
+# mdadm -E /dev/sdd1
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 321fc20c:997e9a1a:bb67ffde:9de489f5
+           Name : ruby:6  (local to host ruby)
+  Creation Time : Mon Apr 11 19:40:25 2011
+     Raid Level : -unknown-
+   Raid Devices : 0
+
+ Avail Dev Size : 3907026672 (1863.02 GiB 2000.40 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 9c908e4b:ad7d8af8:ff5d2ab6:50b013e5
+
+    Update Time : Sun Sep 30 07:26:43 2012
+       Checksum : cab36055 - correct
+         Events : 1
+
+
+   Device Role : spare
+   Array State :  ('A' == active, '.' == missing)
+
+# mdadm -E /dev/sde1
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 321fc20c:997e9a1a:bb67ffde:9de489f5
+           Name : ruby:6  (local to host ruby)
+  Creation Time : Mon Apr 11 19:40:25 2011
+     Raid Level : -unknown-
+   Raid Devices : 0
+
+ Avail Dev Size : 3907026672 (1863.02 GiB 2000.40 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 321368f6:9f38bc16:76f787c3:4b3d398d
+
+    Update Time : Sun Sep 30 07:26:43 2012
+       Checksum : 4941c455 - correct
+         Events : 1
+
+
+   Device Role : spare
+   Array State :  ('A' == active, '.' == missing)
+
+# mdadm -E /dev/sdf1
+/dev/sdf1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 321fc20c:997e9a1a:bb67ffde:9de489f5
+           Name : ruby:6  (local to host ruby)
+  Creation Time : Mon Apr 11 19:40:25 2011
+     Raid Level : -unknown-
+   Raid Devices : 0
+
+ Avail Dev Size : 3907026672 (1863.02 GiB 2000.40 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 6190765b:200ff748:d50a75e3:597405c4
+
+    Update Time : Sun Sep 30 07:26:43 2012
+       Checksum : 37446270 - correct
+         Events : 1
+
+
+   Device Role : spare
+   Array State :  ('A' == active, '.' == missing)
+
+# mdadm -E /dev/sdg1
+/dev/sdg1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 321fc20c:997e9a1a:bb67ffde:9de489f5
+           Name : ruby:6  (local to host ruby)
+  Creation Time : Mon Apr 11 19:40:25 2011
+     Raid Level : -unknown-
+   Raid Devices : 0
+
+ Avail Dev Size : 3907026672 (1863.02 GiB 2000.40 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 7d707598:a8881376:531ae0c6:aac82909
+
+    Update Time : Sun Sep 30 07:26:43 2012
+       Checksum : c9ef1fe9 - correct
+         Events : 1
+
+
+   Device Role : spare
+   Array State :  ('A' == active, '.' == missing)
+
+# mdadm -E /dev/sdh1
+/dev/sdh1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 321fc20c:997e9a1a:bb67ffde:9de489f5
+           Name : ruby:6  (local to host ruby)
+  Creation Time : Mon Apr 11 19:40:25 2011
+     Raid Level : -unknown-
+   Raid Devices : 0
+
+ Avail Dev Size : 3907026672 (1863.02 GiB 2000.40 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 179691a0:fd201c2d:49c73803:409a0a9c
+
+    Update Time : Sun Sep 30 07:26:43 2012
+       Checksum : 584d5c61 - correct
+         Events : 1
+
+
+   Device Role : spare
+   Array State :  ('A' == active, '.' == missing)
+
+# mdadm -E /dev/sdi1
+/dev/sdi1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 321fc20c:997e9a1a:bb67ffde:9de489f5
+           Name : ruby:6  (local to host ruby)
+  Creation Time : Mon Apr 11 19:40:25 2011
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 3907026672 (1863.02 GiB 2000.40 GB)
+     Array Size : 27349181440 (13041.11 GiB 14002.78 GB)
+  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 9d53248b:1db27ffc:a2a511c3:7176a7eb
+
+    Update Time : Sun Sep 30 04:34:27 2012
+       Checksum : 22b9429c - correct
+         Events : 2474296
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 8
+   Array State : AAAAAAAAA ('A' == active, '.' == missing)
+
+# mdadm -E /dev/sdj1
+/dev/sdj1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 321fc20c:997e9a1a:bb67ffde:9de489f5
+           Name : ruby:6  (local to host ruby)
+  Creation Time : Mon Apr 11 19:40:25 2011
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 3907026672 (1863.02 GiB 2000.40 GB)
+     Array Size : 27349181440 (13041.11 GiB 14002.78 GB)
+  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 880ed7fb:b9c673de:929d14c5:53f9b81d
+
+    Update Time : Sun Sep 30 04:34:27 2012
+       Checksum : a9748cf3 - correct
+         Events : 2474296
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 7
+   Array State : AAAAAAAAA ('A' == active, '.' == missing)
+
+I find it odd that the raid levels for some of the disks would register as 
+"unknown" and that their device roles would be shifted to "spare".
+
+Current system:
+
+Linux ruby 3.2.0-23-generic #36-Ubuntu SMP Tue Apr 10 20:39:51 UTC 2012 x86_64 
+x86_64 x86_64 GNU/Linux
+
+Mdadm version:
+
+mdadm - v3.2.3 - 23rd December 2011
+
+I hope I've provided enough information. I would be more than happy to elaborate 
+or provide additional data if need be. Again, this array was functioning 
+normally up until a few hours ago. Am I able to salvage my data?
+
+Thank you.
+
+-EJ
 
