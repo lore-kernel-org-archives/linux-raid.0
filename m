@@ -1,11 +1,10 @@
-From: Jan Ceuleers <jan.ceuleers@gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
 Subject: Re: Upgrade from Ubuntu 10.04 to 12.04 broken raid6.
-Date: Sun, 30 Sep 2012 11:44:04 +0200
-Message-ID: <50681464.4070100@gmail.com>
+Date: Sun, 30 Sep 2012 12:04:40 +0200 (CEST)
+Message-ID: <alpine.DEB.2.00.1209301203060.13902@uplift.swm.pp.se>
 References: <loom.20120930T105755-205@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <loom.20120930T105755-205@post.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -13,18 +12,18 @@ To: EJ <ej@ejane.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/30/2012 11:21 AM, EJ wrote:
-> Greetings,
-> 
-> I hope that I'm posting this in the right place, if not my apologies.
-> 
-> Up until several hours ago, my system was running Ubuntu 10.04 LTS, using the 
-> stock version of mdadm--unfortunately I have no idea which version it was.
+On Sun, 30 Sep 2012, EJ wrote:
 
-If your 10.04 installation was up-to-date before you upgraded, you were
-running the following version of mdadm:
+> Fast forward to now, I've upgraded the system to 12.04 LTS and have lost 
+> access to my array. The array itself is a nine (9) disk raid6 managed by 
+> mdadm.
 
-mdadm - v2.6.7.1 - 15th October 2008
+What version of kernel for 12.04 were you running?
 
-HTH, Jan
+If you didn't upgrade your kernel, you might have been hit by the bug 
+described in:
 
+<http://neil.brown.name/blog/20120615073245>
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
