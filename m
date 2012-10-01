@@ -1,52 +1,23 @@
-From: "=?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?="
-	<st0ff.npl@googlemail.com>
-Subject: Re: MD RAID Bug 7/15/12
-Date: Tue, 02 Oct 2012 00:27:56 +0200
-Message-ID: <506A18EC.1040602@gmail.com>
-References: <022FFCA9-5D0E-41DB-9617-202C6FAADD06@rightthisminute.com> <A65170A9-BE4D-4B22-B1CE-2FFE10928DDD@colorremedies.com> <5068B4BF.6000807@gmail.com> <B09EC2F5-55B5-48A8-B427-81277CF3D136@colorremedies.com>
-Reply-To: st0ff@npl.de
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <B09EC2F5-55B5-48A8-B427-81277CF3D136@colorremedies.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: Areca hardware RAID / first-ever SCSI bus reset: am I about to lose this disk controller?
+Date: Mon, 1 Oct 2012 16:46:20 -0600
+Message-ID: <2A7CFE69-08F3-4C53-928C-A94907027CAC@colorremedies.com>
+References: <87mx0lsv4d.fsf@spindle.srvr.nix> <FCFB407F-9FED-4B4E-B5D9-62AB363050D2@colorremedies.com> <87r4pslpau.fsf@spindle.srvr.nix> <506A0BFB.60606@pierre-beck.de>
+Mime-Version: 1.0 (Apple Message framework v1283)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <506A0BFB.60606@pierre-beck.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Am 01.10.2012 00:16, schrieb Chris Murphy:
->=20
-> On Sep 30, 2012, at 3:08 PM, Stefan /*St0fF*/ H=FCbner wrote:
->=20
->=20
->> Also off topic: 12 drives would be as "nearly unalignable" as 19 are=
-=2E
->=20
-> I'm not sure what you mean by unalignable. A separate question is if =
-a 4K chunks size is a good idea, even with 24 disks, but I'm unsure of =
-the usage and workload.
->=20
->=20
-[...]
-By that I mean that optimal alignment has to do with a reasonable chunk
-size and an amount of data disks that is/should be a power of two.  If
-you made a databases commit chunk size 64k, you'd create maybe a raid6
-of 6 drives with a 16k chunk size.  That way you'd spare many many
-read-modify-write operations, as on every commit it'd write all 6 disks
-once and no rmw would happen.  You'd also have to take care of proper
-partition placement.
 
-That probably is what you know as alignment.  I just want to make it
-more concious that not only the placement of a data partition goes into
-alignment, also the size of a "normal" data packet relative to chunk
-size and amount of disks used.
+On Oct 1, 2012, at 3:33 PM, Pierre Beck wrote:
+> It's particularly annoying when in RAID and the disk could've simply been kicked within few seconds. Something that needs improvement IMHO.
 
-cheers,
-stefan
+Except that while this helps with faster recovery, you're now degraded. You wouldn't want this "fast recovery" behavior if you're at your critical number of disks remaining or you lose the array upon a few seconds worth of subsequent problems. So we kinda need context specific behavior.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Chris Murphy
