@@ -1,43 +1,52 @@
-From: Pierre Beck <mail@pierre-beck.de>
-Subject: Re: Areca hardware RAID / first-ever SCSI bus reset: am I about to
- lose this disk controller?
-Date: Mon, 01 Oct 2012 23:33:15 +0200
-Message-ID: <506A0BFB.60606@pierre-beck.de>
-References: <87mx0lsv4d.fsf@spindle.srvr.nix> <FCFB407F-9FED-4B4E-B5D9-62AB363050D2@colorremedies.com> <87r4pslpau.fsf@spindle.srvr.nix>
+From: "=?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?="
+	<st0ff.npl@googlemail.com>
+Subject: Re: MD RAID Bug 7/15/12
+Date: Tue, 02 Oct 2012 00:27:56 +0200
+Message-ID: <506A18EC.1040602@gmail.com>
+References: <022FFCA9-5D0E-41DB-9617-202C6FAADD06@rightthisminute.com> <A65170A9-BE4D-4B22-B1CE-2FFE10928DDD@colorremedies.com> <5068B4BF.6000807@gmail.com> <B09EC2F5-55B5-48A8-B427-81277CF3D136@colorremedies.com>
+Reply-To: st0ff@npl.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <87r4pslpau.fsf@spindle.srvr.nix>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>
-Cc: Chris Murphy <lists@colorremedies.com>, Linux RAID <linux-raid@vger.kernel.org>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <B09EC2F5-55B5-48A8-B427-81277CF3D136@colorremedies.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Check the SMART values of the disks if possible. Watch for command 
-timeouts and the usual bad sector stuff. I've had similar issues with 
-Adaptec controllers. Bad disks seem to cause havoc. The outstanding 
-operation isn't answered within [SCSI Timeout, default 30, 
-/sys/block/sdX/device/timeout] seconds, so Linux performs a loop reset, 
-eventually resetting the controller. That means between 60 and 120 
-seconds of zero I/O operation, varying between controllers and disk 
-array sizes. It's particularly annoying when in RAID and the disk 
-could've simply been kicked within few seconds. Something that needs 
-improvement IMHO.
+Am 01.10.2012 00:16, schrieb Chris Murphy:
+>=20
+> On Sep 30, 2012, at 3:08 PM, Stefan /*St0fF*/ H=FCbner wrote:
+>=20
+>=20
+>> Also off topic: 12 drives would be as "nearly unalignable" as 19 are=
+=2E
+>=20
+> I'm not sure what you mean by unalignable. A separate question is if =
+a 4K chunks size is a good idea, even with 24 disks, but I'm unsure of =
+the usage and workload.
+>=20
+>=20
+[...]
+By that I mean that optimal alignment has to do with a reasonable chunk
+size and an amount of data disks that is/should be a power of two.  If
+you made a databases commit chunk size 64k, you'd create maybe a raid6
+of 6 drives with a 16k chunk size.  That way you'd spare many many
+read-modify-write operations, as on every commit it'd write all 6 disks
+once and no rmw would happen.  You'd also have to take care of proper
+partition placement.
 
-On 23.09.2012 17:42, Nix wrote:
-> On 19 Sep 2012, Chris Murphy outgrape:
->
->> On Sep 19, 2012, at 12:52 PM, Nix wrote:
->>
->>> So I have this x86-64 server running Linux 3.5.1 with a SATA-on-PCIe
->>> Areca 1210 hardware RAID-5 controller
->> Did you find this? Same controller family. Weird that this just shows
->> up now, but perhaps instead of it being "bad hardware" out the gate,
->> something's happened to it and now it's failing as you suspect.
-> Hm, it's possible I suppose. Just as possible that a disk is dying.
->
->
-> It looks to have been a one-off transient -- no recurrence yet, touch
-> wood :)
->
+That probably is what you know as alignment.  I just want to make it
+more concious that not only the placement of a data partition goes into
+alignment, also the size of a "normal" data packet relative to chunk
+size and amount of disks used.
+
+cheers,
+stefan
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
