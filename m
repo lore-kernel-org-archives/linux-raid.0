@@ -1,44 +1,53 @@
-From: Pierre Beck <mail@pierre-beck.de>
-Subject: Re: Areca hardware RAID / first-ever SCSI bus reset: am I about to
- lose this disk controller?
-Date: Tue, 02 Oct 2012 01:54:47 +0200
-Message-ID: <506A2D25.2040904@pierre-beck.de>
-References: <87mx0lsv4d.fsf@spindle.srvr.nix> <FCFB407F-9FED-4B4E-B5D9-62AB363050D2@colorremedies.com> <87r4pslpau.fsf@spindle.srvr.nix> <506A0BFB.60606@pierre-beck.de> <2A7CFE69-08F3-4C53-928C-A94907027CAC@colorremedies.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: Areca hardware RAID / first-ever SCSI bus reset: am I about to lose this disk controller?
+Date: Tue, 02 Oct 2012 01:10:12 +0100
+Message-ID: <87mx057mzf.fsf@spindle.srvr.nix>
+References: <87mx0lsv4d.fsf@spindle.srvr.nix>
+	<FCFB407F-9FED-4B4E-B5D9-62AB363050D2@colorremedies.com>
+	<87r4pslpau.fsf@spindle.srvr.nix> <506A0BFB.60606@pierre-beck.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <2A7CFE69-08F3-4C53-928C-A94907027CAC@colorremedies.com>
+In-Reply-To: <506A0BFB.60606@pierre-beck.de> (Pierre Beck's message of "Mon,
+	01 Oct 2012 23:33:15 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, linux-kernel@vger.kernel.org
+To: Pierre Beck <mail@pierre-beck.de>
+Cc: Chris Murphy <lists@colorremedies.com>, Linux RAID <linux-raid@vger.kernel.org>, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Yes. When in degraded mode, timeout should be raised to five minutes or 
-so. When in clean mode, timeout should be a tunable in milliseconds. 
-Commercial RAIDs offer timeouts in ranges like 200ms - 2s. Plus a disk 
-which was kicked that way should be scanned for and re-added if 
-possible. With write-intent bitmaps, that would make RAIDs with aging 
-disks or cables much more solid.
+On 1 Oct 2012, Pierre Beck stated:
+> On 23.09.2012 17:42, Nix wrote:
+>> On 19 Sep 2012, Chris Murphy outgrape:
+>>
+>>> On Sep 19, 2012, at 12:52 PM, Nix wrote:
+>>>
+>>>> So I have this x86-64 server running Linux 3.5.1 with a SATA-on-PCIe
+>>>> Areca 1210 hardware RAID-5 controller
+>>> Did you find this? Same controller family. Weird that this just shows
+>>> up now, but perhaps instead of it being "bad hardware" out the gate,
+>>> something's happened to it and now it's failing as you suspect.
+>> Hm, it's possible I suppose. Just as possible that a disk is dying.
+>>
+>>
+>> It looks to have been a one-off transient -- no recurrence yet, touch
+>> wood :)
+>>
+> Check the SMART values of the disks if possible. Watch for command
+> timeouts and the usual bad sector stuff. I've had similar issues with
+> Adaptec controllers. Bad disks seem to cause havoc. The outstanding
+> operation isn't answered within [SCSI Timeout, default 30,
+> /sys/block/sdX/device/timeout] seconds, so Linux performs a loop
+> reset, eventually resetting the controller. That means between 60 and
+> 120 seconds of zero I/O operation, varying between controllers and
+> disk array sizes. It's particularly annoying when in RAID and the disk
+> could've simply been kicked within few seconds. Something that needs
+> improvement IMHO.
 
-Also, non-degraded mode: Skip loop resets. Skip all resets actually, if 
-possible. Just kick the disk. Degraded mode: Perform loop resets as it 
-is now. A hung-up controller would then cause an array to degrade, but 
-won't hang indefinitely. Granted, always doing loop resets keeps the 
-array non-degraded, but a crashed controller is rare whilst failing 
-disks are common.
+The problem has not recurred in more than three weeks. SMART says no
+problems... so I guess the controller dropped off the bus for some
+reason. Probably some sort of subtle firmware bug or something. (There
+are hints in the driver that such bugs exist, hence the enormous amount
+of code the driver devotes to resetting the thing when it goes silent.)
 
-linux-scsi and linux-raid should talk about this one day to make it 
-happen. Requires a bit of interfacing between the layers.
-
-On 02.10.2012 00:53, Chris Murphy wrote:
-> On Oct 1, 2012, at 3:33 PM, Pierre Beck wrote:
->> It's particularly annoying when in RAID and the disk could've simply been kicked within few seconds. Something that needs improvement IMHO.
-> Except that while this helps with faster recovery, you're now degraded. You wouldn't want this "fast recovery" behavior if you're at your critical number of disks remaining or you lose the array upon a few seconds worth of subsequent problems. So we kinda need context specific behavior.
->
->
-> Chris Murphy--
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+-- 
+NULL && (void)
