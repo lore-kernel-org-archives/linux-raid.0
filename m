@@ -1,30 +1,25 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] dm thin: check kmalloc in dm_deferred_set_create()
-Date: Tue, 2 Oct 2012 14:46:49 +0300
-Message-ID: <20121002114649.GA1413@elgon.mountain>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Upgrade from Ubuntu 10.04 to 12.04 broken raid6. [SOLVED]
+Date: Tue, 02 Oct 2012 08:18:28 -0400
+Message-ID: <506ADB94.1000802@turmel.org>
+References: <loom.20120930T105755-205@post.gmane.org> <alpine.DEB.2.00.1209301203060.13902@uplift.swm.pp.se> <50689B6C.8000307@ejane.org> <CADNH=7GbKAvciDoZ1gEBCBUjqdMHJohrBrxoZXpvnNHAW2vQ6g@mail.gmail.com> <50689C9B.1010603@ejane.org> <5068AB81.1060103@turmel.org> <5068D464.4030504@ejane.org> <20121002121520.362564ef@notabene.brown> <506A6524.1030202@ejane.org> <20121002150448.04349054@notabene.brown> <506AA728.8030005@ejane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <506AA728.8030005@ejane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alasdair Kergon <agk@redhat.com>
-Cc: dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: EJ Vincent <ej@ejane.org>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We can simply return NULL here.  The callers already handle that.
+On 10/02/2012 04:34 AM, EJ Vincent wrote:
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Neil,
+> 
+> I've successfully re-created the array using the corrected device order
+> you specified.
 
-diff --git a/drivers/md/dm-thin.c b/drivers/md/dm-thin.c
-index da0d5d1..fa7d21e 100644
---- a/drivers/md/dm-thin.c
-+++ b/drivers/md/dm-thin.c
-@@ -394,6 +394,8 @@ static struct dm_deferred_set *dm_deferred_set_create(void)
- 	struct dm_deferred_set *ds;
- 
- 	ds = kmalloc(sizeof(*ds), GFP_KERNEL);
-+	if (!ds)
-+		return NULL;
- 
- 	spin_lock_init(&ds->lock);
- 	ds->current_entry = 0;
+Great news.  I'm tucking Neil's procedure away in my toolbox...
+
+Phil
