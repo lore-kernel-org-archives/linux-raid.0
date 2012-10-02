@@ -1,97 +1,40 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md: register new md sysfs file 'uuid' read-only
-Date: Wed, 3 Oct 2012 08:30:31 +1000
-Message-ID: <20121003083031.51093f0c@notabene.brown>
-References: <1349185330-9024-1-git-send-email-sebastian.riemer@profitbricks.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/oGJ/PEIO3vV3egRuPEarDdA"; protocol="application/pgp-signature"
+From: Mark Munoz <mark.munoz@rightthisminute.com>
+Subject: Re: MD RAID Bug 7/15/12
+Date: Tue, 2 Oct 2012 15:53:34 -0700
+Message-ID: <2599ECDD-7B9E-4272-BAFC-E4A04880D12E@rightthisminute.com>
+References: <022FFCA9-5D0E-41DB-9617-202C6FAADD06@rightthisminute.com> <20121001130242.745b7ca3@notabene.brown> <42BA87F6-C5A3-4321-A4C7-0DCF0A9DF79D@rightthisminute.com> <20121002114920.1029bed7@notabene.brown> <0B674309-5CBC-4C36-983F-AB75D9C2BDDB@rightthisminute.com> <20121002150740.717a9448@notabene.brown>
+Mime-Version: 1.0 (Mac OS X Mail 6.1 \(1498\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1349185330-9024-1-git-send-email-sebastian.riemer@profitbricks.com>
+In-Reply-To: <20121002150740.717a9448@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
-Cc: sebastian.riemer@profitbricks.com
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/oGJ/PEIO3vV3egRuPEarDdA
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Neil,
 
-On Tue,  2 Oct 2012 15:42:10 +0200 Sebastian Riemer
-<sebastian.riemer@profitbricks.com> wrote:
+I just wanted to send you a HUGE thank you.  We got back all of our data and are very pleased!  Do you guys have some sort of donation fund or something that we can send something to your team to show our appreciation?
 
-> Report the UUID of the MD array in the following format:
-> xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
->=20
-> This is useful if you don't want to wait for udev to
-> identify your MD array.
+Mark
 
-If you don't want to wait for udev, run "mdadm -D --export /dev/mdwhatever"
-and extract the uuid from that.
+On Oct 1, 2012, at 10:07 PM, NeilBrown <neilb@suse.de> wrote:
 
-And the UUID format you mention is different from the format used by mdadm,
-which makes me like the patch even less.
+> On Mon, 1 Oct 2012 19:33:50 -0700 Mark Munoz <mark.munoz@rightthisminute.com>
+> wrote:
+> 
+> 
+>> So I am now thinking that during my shutdown this weekend the device /dev/md0 as part of the array /dev/md2 was affected by the bug as well as 18 of the 19 devices contained inside of /devm/md1
+> 
+> Yes, I agree, so:
+> 
+>>>> 
+>>>> sudo mdadm --create --assume-clean /dev/md2 --level=0 --chunk=64 --metadata=1.2 --raid-devices=2 /dev/md0 /dev/md1
+> 
+> This is the correct thing to do.
+> 
+> NeilBrown
+> 
+> 
 
-
-What problem are you trying to solve here?
-
-NeilBrown
-
->=20
-> Signed-off-by: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-> ---
->  drivers/md/md.c |    9 +++++++++
->  1 files changed, 9 insertions(+), 0 deletions(-)
->=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 308e87b..4e654d1 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -3730,6 +3730,14 @@ static struct md_sysfs_entry md_raid_disks =3D
->  __ATTR(raid_disks, S_IRUGO|S_IWUSR, raid_disks_show, raid_disks_store);
-> =20
->  static ssize_t
-> +uuid_show(struct mddev *mddev, char *page)
-> +{
-> +	return sprintf(page, "%pU\n", mddev->uuid);
-> +}
-> +static struct md_sysfs_entry md_uuid =3D
-> +__ATTR(uuid, S_IRUGO, uuid_show, NULL);
-> +
-> +static ssize_t
->  chunk_size_show(struct mddev *mddev, char *page)
->  {
->  	if (mddev->reshape_position !=3D MaxSector &&
-> @@ -4667,6 +4675,7 @@ static struct attribute *md_default_attrs[] =3D {
->  	&md_level.attr,
->  	&md_layout.attr,
->  	&md_raid_disks.attr,
-> +	&md_uuid.attr,
->  	&md_chunk_size.attr,
->  	&md_size.attr,
->  	&md_resync_start.attr,
-
-
---Sig_/oGJ/PEIO3vV3egRuPEarDdA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUGtrBznsnt1WYoG5AQJmHg/9EP0r5ySrXb0dBmkBDK2h03j+1+2BsLfp
-jPFFf0aNbrSy6LpVx0gM/xUFD7r51BvbmJZROKW5Z5ITS9fGOATd/7PqF/Pzsy8L
-tO+++OJpTVDm9B1JX35vmh3WKfg9y6sOJKdHM3etmo3Fe1uasCEbuU7sBkCRjGIM
-RPPPVlE2OzFE7lOBkXWBqlpkRDKXd/+kMaU7tBeCOMAsw5NFbeIgSnq45yxu/QKz
-SmZEO2d3uiuP6LesFaNTRhfprdFJixxpfyks8PJGPq8KI8hOfBoV3yJtv80PygOO
-eEbVmA49U8IR//2t/fZcG4s+LFwrICNWMw/LEr1BDWVChzwwAxKHEowKcjyavcP7
-RbjPDbK665/406KLaQRDp09ApyN5KsWs9WQSdTiM4ijvgT4aXhd9FnlmqoeD4ba6
-jO9+T+OMfbdGgJbTDbxWEwXD02/itasE7Kbh+ovc/k+MwjOBqDNLdg85yi8aK1ux
-KQUDwOOHDLPM4DQsAx/6QcyehOothlK3e1grwLuEPAU3vvmxQSO0lfxA6qf7t9Lt
-oHJPasjKmJqjxAylLmuDDOfQBYb1WHuAxjKjd47q7/ISJJr+H/jsFhmc11Q+xmVx
-SMsicxlCv+O0SejoZ+Cfv+px50tR5LkHD6fq5ZGYVo6Uy9/ZWdKNMqJa/DAH5cCU
-22i+C4PyRtc=
-=SYKQ
------END PGP SIGNATURE-----
-
---Sig_/oGJ/PEIO3vV3egRuPEarDdA--
