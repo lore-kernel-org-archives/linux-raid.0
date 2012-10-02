@@ -1,24 +1,52 @@
-From: Alasdair G Kergon <agk@redhat.com>
-Subject: Re: [dm-devel] [patch] dm thin: check kmalloc in
-	dm_deferred_set_create()
-Date: Tue, 2 Oct 2012 13:58:08 +0100
-Message-ID: <20121002125807.GB27325@agk-dp.fab.redhat.com>
-References: <20121002114649.GA1413@elgon.mountain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Subject: [PATCH] md: register new md sysfs file 'uuid' read-only
+Date: Tue,  2 Oct 2012 15:42:10 +0200
+Message-ID: <1349185330-9024-1-git-send-email-sebastian.riemer@profitbricks.com>
+Reply-To: linux-raid <linux-raid@vger.kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20121002114649.GA1413@elgon.mountain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, kernel-janitors@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: Sebastian Riemer <sebastian.riemer@profitbricks.com>
 List-Id: linux-raid.ids
 
-On Tue, Oct 02, 2012 at 02:46:49PM +0300, Dan Carpenter wrote:
-> We can simply return NULL here.  The callers already handle that.
- 
-Folded into dm-thin-prepare-to-separate-bio_prison-code.patch in
-linux-next, thanks.
+Report the UUID of the MD array in the following format:
+xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-Alasdair
+This is useful if you don't want to wait for udev to
+identify your MD array.
+
+Signed-off-by: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+---
+ drivers/md/md.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 308e87b..4e654d1 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3730,6 +3730,14 @@ static struct md_sysfs_entry md_raid_disks =
+ __ATTR(raid_disks, S_IRUGO|S_IWUSR, raid_disks_show, raid_disks_store);
+ 
+ static ssize_t
++uuid_show(struct mddev *mddev, char *page)
++{
++	return sprintf(page, "%pU\n", mddev->uuid);
++}
++static struct md_sysfs_entry md_uuid =
++__ATTR(uuid, S_IRUGO, uuid_show, NULL);
++
++static ssize_t
+ chunk_size_show(struct mddev *mddev, char *page)
+ {
+ 	if (mddev->reshape_position != MaxSector &&
+@@ -4667,6 +4675,7 @@ static struct attribute *md_default_attrs[] = {
+ 	&md_level.attr,
+ 	&md_layout.attr,
+ 	&md_raid_disks.attr,
++	&md_uuid.attr,
+ 	&md_chunk_size.attr,
+ 	&md_size.attr,
+ 	&md_resync_start.attr,
+-- 
+1.7.1
 
