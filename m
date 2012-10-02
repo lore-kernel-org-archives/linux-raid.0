@@ -1,279 +1,399 @@
-From: EJ Vincent <ej@ejane.org>
-Subject: Re: Upgrade from Ubuntu 10.04 to 12.04 broken raid6. [SOLVED]
-Date: Tue, 02 Oct 2012 04:34:48 -0400
-Message-ID: <506AA728.8030005@ejane.org>
-References: <loom.20120930T105755-205@post.gmane.org> <alpine.DEB.2.00.1209301203060.13902@uplift.swm.pp.se> <50689B6C.8000307@ejane.org> <CADNH=7GbKAvciDoZ1gEBCBUjqdMHJohrBrxoZXpvnNHAW2vQ6g@mail.gmail.com> <50689C9B.1010603@ejane.org> <5068AB81.1060103@turmel.org> <5068D464.4030504@ejane.org> <20121002121520.362564ef@notabene.brown> <506A6524.1030202@ejane.org> <20121002150448.04349054@notabene.brown>
+From: Maciej Naruszewicz <maciej.naruszewicz@intel.com>
+Subject: Re: [PATCH 2/6] imsm: Add --controller-path option for --detail-platform.
+Date: Tue, 02 Oct 2012 12:54:19 +0200
+Message-ID: <506AC7DB.6070006@intel.com>
+References: <20120926114202.328.71156.stgit@gklab-128-174.igk.intel.com> <20120926114250.328.89530.stgit@gklab-128-174.igk.intel.com> <20121002163630.1e2f7713@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121002150448.04349054@notabene.brown>
+In-Reply-To: <20121002163630.1e2f7713@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com
 List-Id: linux-raid.ids
 
-On 10/2/2012 1:04 AM, NeilBrown wrote:
-> On Mon, 01 Oct 2012 23:53:08 -0400 EJ Vincent <ej@ejane.org> wrote:
+W dniu 10/2/2012 8:36 AM, NeilBrown pisze:
+> On Wed, 26 Sep 2012 13:42:50 +0200 Maciej Naruszewicz
+> <maciej.naruszewicz@intel.com> wrote:
 >
->> On 10/1/2012 10:15 PM, NeilBrown wrote:
->>> On Sun, 30 Sep 2012 19:23:16 -0400 EJ Vincent <ej@ejane.org> wrote:
->>>
->>>> On 9/30/2012 4:28 PM, Phil Turmel wrote:
->>>>> On 09/30/2012 03:25 PM, EJ Vincent wrote:
->>>>>> On 9/30/2012 3:22 PM, Mathias Bur=C3=A9n wrote:
->>>>>>> Can't you just boot off an older Ubuntu USB, install mdadm and =
-scan /
->>>>>>> assemble, see the device order?
->>>>>> Hi Mathias,
->>>>>>
->>>>>> I'm under the impression that damage to the metadata has already=
- been
->>>>>> done by 12.04, making a recovery from an older version of Ubuntu
->>>>>> (10.04), impossible.  Is this line of thinking, flawed?
->>>>> Your impression is correct.  Permanent damage to the metadata was=
- done.
->>>>>     You *must* re-create your array.
->>>>>
->>>>> However, you *cannot* use your new version of mdadm, as it will g=
-et the
->>>>> data offset wrong.  Your first report showed a data offset of 272=
-=2E
->>>>> Newer versions of mdadm default to 2048.  You *must* perform all =
-of your
->>>>> "mdadm --create --assume-clean" permutations with 10.04.
->>>>>
->>>>> Do you have *any* dmesg output from the old system?  Or dmesg fro=
-m the
->>>>> very first boot under 12.04?  That might have enough information =
-to
->>>>> shorten your search.
->>>>>
->>>>> In the future, you should record your setup by saving the output =
-of
->>>>> "mdadm -D" on each array, "mdadm -E" on each member device, and t=
-he
->>>>> output of "ls -l /dev/disk/by-id/"
->>>>>
->>>>> Or try my documentation script "lsdrv". [1]
->>>>>
->>>>> HTH,
->>>>>
->>>>> Phil
->>>>>
->>>>> [1] http://github.com/pturmel/lsdrv
->>>>>
->>>>> --
->>>>> To unsubscribe from this list: send the line "unsubscribe linux-r=
-aid" in
->>>>> the body of a message to majordomo@vger.kernel.org
->>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.htm=
-l
->>>> Hi Phil,
->>>>
->>>> Unfortunately I don't have any dmesg log from the old system or th=
-e
->>>> first boot under 12.04.
->>>>
->>>> Getting my system to boot at all under 12.04 was chaotic enough, w=
-ith
->>>> the overly-aggressive /usr/share/initramfs-tools/scripts/mdadm-fun=
-ctions
->>>> ravaging my array and then dropping me to a busybox shell over and=
- over
->>>> again.  I didn't think to record the very first error.
->>>>
->>>> Here's an observation of mine, disks: /dev/sdb1, /dev/sdi1, and
->>>> /dev/sdj1 don't have the Raid level "-unknown-", neither are they
->>>> labeled as spares.  They are in fact, labeled clean and appear
->>>> *different* from the others.
->>>>
->>>> Could these disks still contain my metadata from 10.04?  I recall =
-during
->>>> my installation of 12.04 I had anywhere from 1 to 3 disks unpowere=
-d, so
->>>> that I could drop in a SATA CD/DVDRW into the slot.
->>>>
->>>> I am downloading 10.04.4 LTS and will be ready to use it soon.  I =
-fear
->>>> having to do permutations-- 9! (factorial) would mean 362,880
->>>> combinations.  *gasp*
->>> You might be able to avoid the 9! combinations, which could take a =
-while ...
->>> 4 days if you could test one per second.
->>>
->>> Try this:
->>>
->>>    for i in /dev/sd?1; do echo -n $i '' ; dd 2> /dev/null if=3D$i b=
-s=3D1 count=3D4 \
->>>       skip=3D4256 | od -D | head -n1; done
->>>
->>> This reads that 'dev_number' fields out of the metadata on each dev=
-ice.
->>> This should not have been corrupted by the bug.
->>> You might want some other pattern in place of "/dev/sd?1" - it need=
-s to match
->>> all the devices in your array.
->>>
->>> Then on one of the devices which doesn't have corrupted metadata, r=
-un
->>>
->>>     dd 2> /dev/null if=3D/dev/sdXXX1 bs=3D2 count=3D$COUNT skip=3D2=
-176 | od -d
->>>
->>> where $COUNT is one more than the largest number that was reported =
-in the
->>> "dev_number" values reported above.
->>>
->>> Now for each device, take the dev_number that was reported, use tha=
-t as an
->>> index into the list of numbers produced by the second command, and =
-that
->>> number if the role of the device in the array.  i.e. it's position =
-in the
->>> list.
->>>
->>> So after making an array of 5 'loop' devices in a non-obvious order=
-, and
->>> failing a device and re-adding it:
->>>
->>> # for i in /dev/loop[01234]; do echo -n $i '' ; dd 2> /dev/null if=3D=
-$i bs=3D1 count=3D4 skip=3D4256 | od -D | head -n1; done
->>> /dev/loop0 0000000          3
->>> /dev/loop1 0000000          4
->>> /dev/loop2 0000000          1
->>> /dev/loop3 0000000          0
->>> /dev/loop4 0000000          5
->>>
->>> and
->>>
->>> # dd 2> /dev/null if=3D/dev/loop0 bs=3D2 count=3D6 skip=3D2176 | od=
- -d
->>> 0000000     0     1 65534     3     4     2
->>> 0000014
->>>
->>> So /dev/loop0 has dev_number '3'. Look for entry '3' in the list an=
-d get '3'
->>> /dev/loop1 has 'dev_number' 4, so is device 4
->>> /dev/loop4 has dev_number '5', so is device 2
->>> etc
->>> So we can reconstruct the order of devices:
->>>
->>>    /dev/loop3 /dev/loop2 /dev/loop4 /dev/loop0 /dev/loop1
->>>
->>> Note the '65534' in the list means that there is no device with tha=
-t
->>> dev_number.  i.e. no device is number '2', and looking at the list =
-confirms
->>> that.
->>>
->>> You should be able to perform the same steps to recover the correct=
- order to
->>> try creating the array.
->>>
->>> NeilBrown
->>>
+>> Usually, 'mdadm --detail-platform -e imsm' scans all the controllers
+>> looking for IMSM capabilities. This patch provides the possibility
+>> to specify a controller to scan, enabling custom usage by other
+>> processes - especially with the --export switch.
 >>
->> Hi Neil,
+>> $ mdadm --detail-platform
+>>         Platform : Intel(R) Matrix Storage Manager
+>>          Version : 9.5.0.1037
+>>      RAID Levels : raid0 raid1 raid10 raid5
+>>      Chunk Sizes : 4k 8k 16k 32k 64k 128k
+>>      2TB volumes : supported
+>>        2TB disks : not supported
+>>        Max Disks : 7
+>>      Max Volumes : 2 per array, 4 per controller
+>>   I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
 >>
->> Thank you so much for taking the time to help me through this.
+>> $ mdadm --detail-platform --controller-path=/sys/devices/pci0000:00/0000:00:1f.2
+>>         Platform : Intel(R) Matrix Storage Manager
+>>          Version : 9.5.0.1037
+>>      RAID Levels : raid0 raid1 raid10 raid5
+>>      Chunk Sizes : 4k 8k 16k 32k 64k 128k
+>>      2TB volumes : supported
+>>        2TB disks : not supported
+>>        Max Disks : 7
+>>      Max Volumes : 2 per array, 4 per controller
+>>   I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
 >>
->> Here's what I've come up with, per your instructions:
+>> $ mdadm --detail-platform --controller-path=/sys/devices/pci0000:00/0000:00:1f.2 --export
+>> MD_FIRMWARE_TYPE=imsm
+>> IMSM_VERSION=9.5.0.1037
+>> IMSM_SUPPORTED_RAID_LEVELS=raid0 raid1 raid10 raid5
+>> IMSM_SUPPORTED_CHUNK_SIZES=4k 8k 16k 32k 64k 128k
+>> IMSM_2TB_VOLUMES=yes
+>> IMSM_2TB_DISKS=no
+>> IMSM_MAX_DISKS=7
+>> IMSM_MAX_VOLUMES_PER_ARRAY=2
+>> IMSM_MAX_VOLUMES_PER_CONTROLLER=4
 >>
->> /dev/sda1 0000000          4
->> /dev/sdb1 0000000         11
->> /dev/sdc1 0000000          7
->> /dev/sde1 0000000          8
->> /dev/sdf1 0000000          1
->> /dev/sdg1 0000000          0
->> /dev/sdh1 0000000          6
->> /dev/sdi1 0000000         10
->> /dev/sdj1 0000000          9
->>
->> dd 2> /dev/null if=3D/dev/sdc1 bs=3D2 count=3D12 skip=3D2176 | od -d
->> 0000000     0     1 65534 65534     2 65534     4     5
->> 0000020     6     7     8     3
->> 0000030
->>
->> Mind doing a sanity check for me?
->>
->> Based on the above information, one such possible device order is:
->>
->> /dev/sdg1 /dev/sdf1 /dev/sdb1* /dev/sdi1* /dev/sda1 /dev/sdj1* /dev/=
-sdh1
->> /dev/sdc1 /dev/sde1
->>
->> where * represents the three unknown devices marked by 65534?
-> Nope.  The 65534 entries should never come into it.
+>> $ mdadm --detail-platform --controller-path=/sys/devices/pci0000:00/0000:00:1f.0 # This isn't an IMSM-capable controller
+>> mdadm: no active Intel(R) RAID controller found under /sys/devices/pci0000:00/0000:00:1f.0
 >
->   sdg1 sdf1 sda1 sdb1 sdh1 sdc1 sde1 sdj1 sdi1
+> hi,
+>   I think this functionality is good.  I think the implementation is not.
 >
-> e.g. sdi1 is device '10'.  Entry 10 in the array is 8, so sdi1 goes i=
-n
-> position 8.
+> 1/ Don't have a "--controller-path" option, just require any name
+>     given as a bare argument to the controller path - and probably require
+>     there is either 0 or 1.
+>     So:
+>        mdadm --detail-platform  /sys/devices/pci0000:00/0000:00:1f.0
 >
->> Once I have your blessing, would I then proceed to:
->>
->> mdadm --create /dev/md0 --assume-clean --level=3D6 --raid-devices=3D=
-9
->> --metadata=3D1.2 --chunk=3D512 /dev/sdg1 /dev/sdf1 /dev/sdb1* /dev/s=
-di1*
->> /dev/sda1 /dev/sdj1* /dev/sdh1 /dev/sdc1 /dev/sde1
->>
->> and this is non-destructive, so I can attempt different orders?
-> Yes.  Well, it destroys the metadata so make sure you have a copy of =
-the "-E"
-> for each device, and it wouldn't hurt to run that second 'dd' command=
- on
-> every device and keep that just in case.
+>     is the correct usage.
 >
+> 2/ You really don't need to
+>       if (asprintf(&c.controller_path, "%s", optarg) <= 0) {
+>
+>     just use 'optarg' directly.
+>
+> 3/ Don't use 'realpath' and 'strcmp'.  To compare two paths, use "stat" and
+>      compare st_dev and st_ino.
+>
+> So: not applied.
+>
+
+Thanks for the input, I'll fix this and send a second version today.
+
+MN
+
+> Thanks,
 > NeilBrown
 >
->> Again, thank you for the help.
+>
+>
 >>
->> Best wishes,
+>> Signed-off-by: Maciej Naruszewicz <maciej.naruszewicz@intel.com>
+>> ---
+>>   Create.c      |    2 +-
+>>   Detail.c      |   10 +++++-----
+>>   ReadMe.c      |    2 ++
+>>   mdadm.8.in    |    8 ++++++++
+>>   mdadm.c       |   32 +++++++++++++++++++++++++++++++-
+>>   mdadm.h       |    8 +++++---
+>>   super-intel.c |   45 +++++++++++++++++++++++++--------------------
+>>   7 files changed, 77 insertions(+), 30 deletions(-)
 >>
->> -EJ
+>> diff --git a/Create.c b/Create.c
+>> index 32683a8..2da07d0 100644
+>> --- a/Create.c
+>> +++ b/Create.c
+>> @@ -492,7 +492,7 @@ int Create(struct supertype *st, char *mddev,
+>>   		warn = 1;
+>>   	}
+>>
+>> -	if (st->ss->detail_platform && st->ss->detail_platform(0, 1) != 0) {
+>> +	if (st->ss->detail_platform && st->ss->detail_platform(0, 1, NULL) != 0) {
+>>   		if (c->runstop != 1 || c->verbose >= 0)
+>>   			pr_err("%s unable to enumerate platform support\n"
+>>   				"    array may not be compatible with hardware/firmware\n",
+>> diff --git a/Detail.c b/Detail.c
+>> index b0c31e6..57faf3c 100644
+>> --- a/Detail.c
+>> +++ b/Detail.c
+>> @@ -616,7 +616,7 @@ out:
+>>   	return rv;
+>>   }
+>>
+>> -int Detail_Platform(struct superswitch *ss, int scan, int verbose, int export)
+>> +int Detail_Platform(struct superswitch *ss, int scan, int verbose, int export, char *controller_path)
+>>   {
+>>   	/* display platform capabilities for the given metadata format
+>>   	 * 'scan' in this context means iterate over all metadata types
+>> @@ -625,9 +625,9 @@ int Detail_Platform(struct superswitch *ss, int scan, int verbose, int export)
+>>   	int err = 1;
+>>
+>>   	if (ss && export && ss->export_detail_platform)
+>> -		err = ss->export_detail_platform(verbose);
+>> +		err = ss->export_detail_platform(verbose, controller_path);
+>>   	else if (ss && ss->detail_platform)
+>> -		err = ss->detail_platform(verbose, 0);
+>> +		err = ss->detail_platform(verbose, 0, controller_path);
+>>   	else if (ss) {
+>>   		if (verbose > 0)
+>>   			pr_err("%s metadata is platform independent\n",
+>> @@ -653,9 +653,9 @@ int Detail_Platform(struct superswitch *ss, int scan, int verbose, int export)
+>>   				pr_err("%s metadata is platform independent\n",
+>>   					meta->name ? : "[no name]");
+>>   		} else if (export){
+>> -			err |= meta->export_detail_platform(verbose);
+>> +			err |= meta->export_detail_platform(verbose, controller_path);
+>>   		} else
+>> -			err |= meta->detail_platform(verbose, 0);
+>> +			err |= meta->detail_platform(verbose, 0, controller_path);
+>>   	}
+>>
+>>   	return err;
+>> diff --git a/ReadMe.c b/ReadMe.c
+>> index 346f08c..0c9c80b 100644
+>> --- a/ReadMe.c
+>> +++ b/ReadMe.c
+>> @@ -159,6 +159,7 @@ struct option long_options[] = {
+>>       {"sparc2.2",  0, 0, Sparc22},
+>>       {"test",      0, 0, 't'},
+>>       {"prefer",    1, 0, Prefer},
+>> +    {"controller-path",1, 0, ControllerPath},
+>>
+>>       /* For Follow/monitor */
+>>       {"mail",      1, 0, EMail},
+>> @@ -240,6 +241,7 @@ char OptionHelp[] =
+>>   "  --brief       -b   : Be less verbose, more brief\n"
+>>   "  --export      -Y   : With --detail, --detail-platform or --examine use\n"
+>>   "                       key=value format for easy import into environment\n"
+>> +"  --controller-path  : Specify controller for --detail-platform\n"
+>>   "  --force       -f   : Override normal checks and be more forceful\n"
+>>   "\n"
+>>   "  --assemble    -A   : Assemble an array\n"
+>> diff --git a/mdadm.8.in b/mdadm.8.in
+>> index 38c8bc8..8792e54 100644
+>> --- a/mdadm.8.in
+>> +++ b/mdadm.8.in
+>> @@ -1329,6 +1329,14 @@ output will be formatted as
+>>   pairs for easy import into the environment.
+>>
+>>   .TP
+>> +.BR \-\-controller\-path
+>> +When used with
+>> +.BR \-\-detail\-platform ,
+>> +mdadm will only print information about the specified controller. The
+>> +controller should be given in form of an absolute filepath, e.g.
+>> +.B \-\-controller\-path /sys/devices/pci0000:00/0000:00:1f.0 .
+>> +
+>> +.TP
+>>   .BR \-E ", " \-\-examine
+>>   Print contents of the metadata stored on the named device(s).
+>>   Note the contrast between
+>> diff --git a/mdadm.c b/mdadm.c
+>> index 3ee7ddb..d313b76 100644
+>> --- a/mdadm.c
+>> +++ b/mdadm.c
+>> @@ -93,6 +93,7 @@ int main(int argc, char *argv[])
+>>   	int rebuild_map = 0;
+>>   	char *remove_path = NULL;
+>>   	char *udev_filename = NULL;
+>> +	char *actual_controller_path;
+>>
+>>   	int print_help = 0;
+>>   	FILE *outf;
+>> @@ -151,6 +152,35 @@ int main(int argc, char *argv[])
+>>   		case 'Y': c.export++;
+>>   			continue;
+>>
+>> +		case ControllerPath:
+>> +			if (c.controller_path)
+>> +				free(c.controller_path);
+>> +			if (asprintf(&c.controller_path, "%s", optarg) <= 0) {
+>> +				pr_err("Empty or wrong controller path, \'%s\' ignored.\n",
+>> +					c.controller_path);
+>> +				c.controller_path = NULL;
+>> +			}
+>> +			else {
+>> +				struct stat st;
+>> +				if (stat(c.controller_path, &st) != 0) {
+>> +					pr_err("Specified controller path %s doesn't exist.\n",
+>> +						c.controller_path);
+>> +					exit(2);
+>> +				}
+>> +				else {
+>> +					actual_controller_path = realpath(c.controller_path,NULL);
+>> +					if (actual_controller_path) {
+>> +						if(asprintf(&c.controller_path, "%s", actual_controller_path) > 0)
+>> +							free(actual_controller_path);
+>> +						else
+>> +							free(c.controller_path);
+>> +					}
+>> +					else
+>> +						free(c.controller_path);
+>> +				}
+>> +			}
+>> +			continue;
+>> +
+>>   		case HomeHost:
+>>   			if (strcasecmp(optarg, "<ignore>") == 0)
+>>   				c.require_homehost = 0;
+>> @@ -1344,7 +1374,7 @@ int main(int argc, char *argv[])
+>>   			}
+>>   			rv = Examine(devlist, &c, ss);
+>>   		} else if (devmode == DetailPlatform) {
+>> -			rv = Detail_Platform(ss ? ss->ss : NULL, ss ? c.scan : 1, c.verbose, c.export);
+>> +			rv = Detail_Platform(ss ? ss->ss : NULL, ss ? c.scan : 1, c.verbose, c.export, c.controller_path);
+>>   		} else if (devlist == NULL) {
+>>   			if (devmode == 'S' && c.scan)
+>>   				rv = stop_scan(c.verbose);
+>> diff --git a/mdadm.h b/mdadm.h
+>> index 6d219f7..e27275b 100644
+>> --- a/mdadm.h
+>> +++ b/mdadm.h
+>> @@ -326,6 +326,7 @@ enum special_options {
+>>   	OffRootOpt,
+>>   	Prefer,
+>>   	KillOpt,
+>> +	ControllerPath,
+>>   };
+>>
+>>   /* structures read from config file */
+>> @@ -394,6 +395,7 @@ struct context {
+>>   	int	freeze_reshape;
+>>   	char	*backup_file;
+>>   	int	invalid_backup;
+>> +	char	*controller_path;
+>>   };
+>>
+>>   struct shape {
+>> @@ -654,8 +656,8 @@ extern struct superswitch {
+>>   	void (*export_detail_super)(struct supertype *st);
+>>
+>>   	/* Optional: platform hardware / firmware details */
+>> -	int (*detail_platform)(int verbose, int enumerate_only);
+>> -	int (*export_detail_platform)(int verbose);
+>> +	int (*detail_platform)(int verbose, int enumerate_only, char *controller_path);
+>> +	int (*export_detail_platform)(int verbose, char *controller_path);
+>>
+>>   	/* Used:
+>>   	 *   to get uuid to storing in bitmap metadata
+>> @@ -1122,7 +1124,7 @@ extern int Create(struct supertype *st, char *mddev,
+>>   		  struct context *c);
+>>
+>>   extern int Detail(char *dev, struct context *c);
+>> -extern int Detail_Platform(struct superswitch *ss, int scan, int verbose, int export);
+>> +extern int Detail_Platform(struct superswitch *ss, int scan, int verbose, int export, char *controller_path);
+>>   extern int Query(char *dev);
+>>   extern int Examine(struct mddev_dev *devlist, struct context *c,
+>>   		   struct supertype *forcest);
+>> diff --git a/super-intel.c b/super-intel.c
+>> index fdf441a..cedc976 100644
+>> --- a/super-intel.c
+>> +++ b/super-intel.c
+>> @@ -1833,7 +1833,7 @@ static void print_imsm_capability_export(const struct imsm_orom *orom)
+>>   	printf("IMSM_MAX_VOLUMES_PER_CONTROLLER=%d\n",orom->vphba);
+>>   }
+>>
+>> -static int detail_platform_imsm(int verbose, int enumerate_only)
+>> +static int detail_platform_imsm(int verbose, int enumerate_only, char *controller_path)
+>>   {
+>>   	/* There are two components to imsm platform support, the ahci SATA
+>>   	 * controller and the option-rom.  To find the SATA controller we
+>> @@ -1850,7 +1850,7 @@ static int detail_platform_imsm(int verbose, int enumerate_only)
+>>   	struct sys_dev *list, *hba;
+>>   	int host_base = 0;
+>>   	int port_count = 0;
+>> -	int result=0;
+>> +	int result=1;
+>>
+>>   	if (enumerate_only) {
+>>   		if (check_env("IMSM_NO_PLATFORM"))
+>> @@ -1864,6 +1864,8 @@ static int detail_platform_imsm(int verbose, int enumerate_only)
+>>   				result = 2;
+>>   				break;
+>>   			}
+>> +			else
+>> +				result = 0;
+>>   		}
+>>   		free_sys_dev(&list);
+>>   		return result;
+>> @@ -1880,34 +1882,38 @@ static int detail_platform_imsm(int verbose, int enumerate_only)
+>>   		print_found_intel_controllers(list);
+>>
+>>   	for (hba = list; hba; hba = hba->next) {
+>> +		if (controller_path != NULL && ( strcmp(hba->path,controller_path) != 0 ))
+>> +			continue;
+>>   		orom = find_imsm_capability(hba->type);
+>>   		if (!orom)
+>>   			pr_err("imsm capabilities not found for controller: %s (type %s)\n",
+>>   				hba->path, get_sys_dev_type(hba->type));
+>> -		else
+>> +		else {
+>> +			result = 0;
+>>   			print_imsm_capability(orom);
+>> -	}
+>> -
+>> -	for (hba = list; hba; hba = hba->next) {
+>> -		printf(" I/O Controller : %s (%s)\n",
+>> -			hba->path, get_sys_dev_type(hba->type));
+>> -
+>> -		if (hba->type == SYS_DEV_SATA) {
+>> -			host_base = ahci_get_port_count(hba->path, &port_count);
+>> -			if (ahci_enumerate_ports(hba->path, port_count, host_base, verbose)) {
+>> -				if (verbose > 0)
+>> -					pr_err("failed to enumerate "
+>> -						"ports on SATA controller at %s.", hba->pci_id);
+>> -				result |= 2;
+>> +			printf(" I/O Controller : %s (%s)\n",
+>> +				hba->path, get_sys_dev_type(hba->type));
+>> +			if (hba->type == SYS_DEV_SATA) {
+>> +				host_base = ahci_get_port_count(hba->path, &port_count);
+>> +				if (ahci_enumerate_ports(hba->path, port_count, host_base, verbose)) {
+>> +					if (verbose > 0)
+>> +						pr_err("failed to enumerate "
+>> +							"ports on SATA controller at %s.\n", hba->pci_id);
+>> +					result |= 2;
+>> +				}
+>>   			}
+>>   		}
+>>   	}
+>>
+>> +	if (controller_path != NULL && result == 1)
+>> +		pr_err("no active Intel(R) RAID "
+>> +				"controller found under %s\n",controller_path);
+>> +
+>>   	free_sys_dev(&list);
+>>   	return result;
+>>   }
+>>
+>> -static int export_detail_platform_imsm(int verbose)
+>> +static int export_detail_platform_imsm(int verbose, char *controller_path)
+>>   {
+>>   	const struct imsm_orom *orom;
+>>   	struct sys_dev *list, *hba;
+>> @@ -1923,6 +1929,8 @@ static int export_detail_platform_imsm(int verbose)
+>>   	}
+>>
+>>   	for (hba = list; hba; hba = hba->next) {
+>> +		if (controller_path != NULL && ( strcmp(hba->path,controller_path) != 0 ))
+>> +			continue;
+>>   		orom = find_imsm_capability(hba->type);
+>>   		if (!orom) {
+>>   			if (verbose > 0)
+>> @@ -1934,9 +1942,6 @@ static int export_detail_platform_imsm(int verbose)
+>>   		}
+>>   	}
+>>
+>> -	if (result == 1 && verbose > 0)
+>> -		pr_err("IMSM_DETAIL_PLATFORM_ERROR=NO_IMSM_CAPABLE_DEVICES\n");
+>> -
+>>   	return result;
+>>   }
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Neil,
-
-I've successfully re-created the array using the corrected device order=
-=20
-you specified.
-
-=46or the purpose of documenting,
-
-I immediately started an 'xfs_check', but due to the size of the=20
-filesystem, it quickly (under 90 seconds) consumed all available memory=
-=20
-on the server (16GB).  I instead used 'xfs_repair -n', which ran for=20
-about one minute before returning me to a shell (no errors reported):
-
-(-n     No modify mode. Specifies that xfs_repair should not modify the=
-=20
-filesystem but should only scan the filesystem and indicate what repair=
-s=20
-would have been made.)
-
-I then set the sync_action under /sys/block/md0/md/ to 'check' and also=
-=20
-increased the stripe_cache_size to something not so modest, 4096 up fro=
-m=20
-256.  I'm monitoring /sys/block/md0/md/mismatch_cnt using tail -f and s=
-o=20
-far it has been stuck at 0, a good sign for sure.  I'm well on my way t=
-o=20
-a complete recovery (about 25% checked as of writing this).
-
-I want to thank you again Neil (and the rest of the linux-raid mailing=20
-list) for the absolutely flawless and expert support you've provided.
-
-Best wishes,
-
--EJ
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
