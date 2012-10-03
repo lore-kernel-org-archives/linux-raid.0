@@ -1,169 +1,34 @@
-From: Arun Khan <knura9@gmail.com>
+From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
 Subject: Re: CentOS 6.2 on partition able RAID1 (md_d0) - kernel panic with
  either disk not present
-Date: Wed, 3 Oct 2012 22:18:46 +0530
-Message-ID: <CAHhM8gDS+n6q+KSMvA0y1SAMLKrLzOhjCQVx63FoJ+_JVYjDGw@mail.gmail.com>
+Date: Wed, 03 Oct 2012 10:45:17 -0700
+Message-ID: <d6auj9xm6g.ln2@goaway.wombat.san-francisco.ca.us>
 References: <CAHhM8gBsxgYUwqOiVePKFb-epbTQwZDRH50HQy9PPaOMOY=Brw@mail.gmail.com>
-	<506C4A73.6050504@anonymous.org.uk>
+ <506C4A73.6050504@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <506C4A73.6050504@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux MDADM Raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Oct 3, 2012 at 7:53 PM, John Robinson  wrote:
+On 2012-10-03, John Robinson <john.robinson@anonymous.org.uk> wrote:
+>
+> I have to say I don't like the wiki article you quoted as a method of 
+> installation, but let's see if we can fix it before starting out doing 
+> it another way.
 
-> Please post the full output of
->   cat /proc/mdstat
+Can you briefly describe your objections?  I'm looking at how to install
+CentOS to a bootable RAID1, and am trying to evaluate that method
+versus the method supported by anaconda (which, AFAICT, is partitioning
+each drive and putting a RAID1 over matching partitions) versus whatever
+other methods I can find.
 
-# cat /proc/mdstat
-Personalities : [raid1]
-md_d0 : active raid1 sda[0] sdb[1]
-      10485696 blocks [2/2] [UU]
-
-unused devices: <none>
-
-
-
->   cat /etc/mdadm.conf
-# cat /etc/mdadm.conf
-ARRAY /dev/md_d0 metadata=0.90 UUID=e04bec5e:534382ba:bfe78010:bc810f04
-
->   mdadm -Evvs
-
-# mdadm -Evvs
-mdadm: No md superblock detected on /dev/md_d0p3.
-mdadm: No md superblock detected on /dev/md_d0p2.
-mdadm: No md superblock detected on /dev/root.
-/dev/md_d0:
-   MBR Magic : aa55
-Partition[0] :      8388608 sectors at         2048 (type fd)
-Partition[1] :      8388608 sectors at      8390656 (type fd)
-Partition[2] :      2097152 sectors at     16779264 (type 82)
-/dev/sdb:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : e04bec5e:534382ba:bfe78010:bc810f04
-  Creation Time : Tue Jun 12 00:20:36 2012
-     Raid Level : raid1
-  Used Dev Size : 10485696 (10.00 GiB 10.74 GB)
-     Array Size : 10485696 (10.00 GiB 10.74 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-
-    Update Time : Wed Oct  3 22:04:38 2012
-          State : active
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : fa05f4fd - correct
-         Events : 71
+--keith
 
 
-      Number   Major   Minor   RaidDevice State
-this     1       8       16        1      active sync   /dev/sdb
-
-   0     0       8        0        0      active sync   /dev/sda
-   1     1       8       16        1      active sync   /dev/sdb
-/dev/sda:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : e04bec5e:534382ba:bfe78010:bc810f04
-  Creation Time : Tue Jun 12 00:20:36 2012
-     Raid Level : raid1
-  Used Dev Size : 10485696 (10.00 GiB 10.74 GB)
-     Array Size : 10485696 (10.00 GiB 10.74 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-
-    Update Time : Wed Oct  3 22:04:38 2012
-          State : active
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : fa05f4eb - correct
-         Events : 71
+-- 
+kkeller@wombat.san-francisco.ca.us
 
 
-      Number   Major   Minor   RaidDevice State
-this     0       8        0        0      active sync   /dev/sda
-
-   0     0       8        0        0      active sync   /dev/sda
-   1     1       8       16        1      active sync   /dev/sdb
-
->   file -s /dev/sda
-
-# file -s /dev/sda
-/dev/sda: x86 boot sector; GRand Unified Bootloader, stage1 version
-0x3, boot drive 0x80, 1st sector stage2 0x443840, GRUB version 0.94;
-partition 1: ID=0xfd, active, starthead 32, startsector 2048, 8388608
-sectors; partition 2: ID=0xfd, starthead 75, startsector 8390656,
-8388608 sectors; partition 3: ID=0x82, starthead 254, startsector
-16779264, 2097152 sectors, code offset 0x48
-
->   file -s /dev/sda1
-# file -s /dev/sda1
-/dev/sda1: cannot open `/dev/sda1' (No such file or directory)
-
->   file -s /dev/sdb
-# file -s /dev/sdb
-/dev/sdb: x86 boot sector; GRand Unified Bootloader, stage1 version
-0x3, boot drive 0x80, 1st sector stage2 0x443840, GRUB version 0.94;
-partition 1: ID=0xfd, active, starthead 32, startsector 2048, 8388608
-sectors; partition 2: ID=0xfd, starthead 75, startsector 8390656,
-8388608 sectors; partition 3: ID=0x82, starthead 254, startsector
-16779264, 2097152 sectors, code offset 0x48
-
-
->   file -s /dev/sdb1
-
-# file -s /dev/sdb1
-/dev/sdb1: cannot open `/dev/sdb1' (No such file or directory)
-
->   cat /etc/grub/grub.conf
-
-# cat /boot/grub/grub.conf
-# grub.conf generated by anaconda
-#
-# Note that you do not have to rerun grub after making changes to this file
-# NOTICE:  You do not have a /boot partition.  This means that
-#          all kernel and initrd paths are relative to /, eg.
-#          root (hd0,0)
-#          kernel /boot/vmlinuz-version ro root=/dev/sda1
-#          initrd /boot/initrd-[generic-]version.img
-#boot=/dev/sda
-default=0
-timeout=2
-# splashimage=(hd0,0)/boot/grub/splash.xpm.gz
-# hiddenmenu
-title CentOS (2.6.32-220.el6.x86_64)
-	root (hd0,0)
-	kernel /boot/vmlinuz-2.6.32-220.el6.x86_64 ro root=/dev/md_d0p1
-rd_NO_LUKS rd_NO_LVM LANG=en_US.UTF-8 SYSFONT=latarcyrheb-sun16
-crashkernel=auto  KEYBOARDTYPE=pc KEYTABLE=us rd_NO_DM
-	initrd /boot/initramfs-2.6.32-220.el6.x86_64.img
-
-> I have to say I don't like the wiki article you quoted as a method of
-> installation, but let's see if we can fix it before starting out doing it
-> another way.
-
-It looked different, rather than carving out disk partitions and
-creating raid1 on paired devices.   However, it is no good if the
-system becomes useless on disk failure as I have found out in the
-process of "break" testing.
-
-> In addition, you probably ought to be testing on bare metal similar to your
-> future production box.
-
-Agree,  but I don't have spare hardware and therefore went the VM way.
-
-Let me know if you need any other information regarding the setup.
-
-Thanks,
--- Arun Khan
