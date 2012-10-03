@@ -1,73 +1,91 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch] md/raid10: use correct limit variable
-Date: Wed, 3 Oct 2012 11:51:05 +1000
-Message-ID: <20121003115105.304923a6@notabene.brown>
-References: <20121002080422.GA12398@elgon.mountain>
+Subject: Re: MD RAID Bug 7/15/12
+Date: Wed, 3 Oct 2012 11:54:17 +1000
+Message-ID: <20121003115417.52cfd598@notabene.brown>
+References: <022FFCA9-5D0E-41DB-9617-202C6FAADD06@rightthisminute.com>
+	<20121001130242.745b7ca3@notabene.brown>
+	<42BA87F6-C5A3-4321-A4C7-0DCF0A9DF79D@rightthisminute.com>
+	<20121002114920.1029bed7@notabene.brown>
+	<0B674309-5CBC-4C36-983F-AB75D9C2BDDB@rightthisminute.com>
+	<20121002150740.717a9448@notabene.brown>
+	<2599ECDD-7B9E-4272-BAFC-E4A04880D12E@rightthisminute.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/HJ8oW3i40R+7Lgm_X/aEpP="; protocol="application/pgp-signature"
+ boundary="Sig_/yBpgteF=fBMExyi8+nKxyAv"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121002080422.GA12398@elgon.mountain>
+In-Reply-To: <2599ECDD-7B9E-4272-BAFC-E4A04880D12E@rightthisminute.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Mark Munoz <mark.munoz@rightthisminute.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/HJ8oW3i40R+7Lgm_X/aEpP=
+--Sig_/yBpgteF=fBMExyi8+nKxyAv
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2 Oct 2012 11:04:22 +0300 Dan Carpenter <dan.carpenter@oracle.com>
+On Tue, 2 Oct 2012 15:53:34 -0700 Mark Munoz <mark.munoz@rightthisminute.co=
+m>
 wrote:
 
-> Clang complains that we are assigning a variable to itself.  This should
-> be using bad_sectors like the similar earlier check does.
+> Neil,
 >=20
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->=20
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 56149ce..4448624 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -3219,7 +3219,7 @@ static sector_t sync_request(struct mddev *mddev, s=
-ector_t sector_nr,
->  				else {
->  					bad_sectors -=3D (sector - first_bad);
->  					if (max_sync > bad_sectors)
-> -						max_sync =3D max_sync;
-> +						max_sync =3D bad_sectors;
->  					continue;
->  				}
->  			}
+> I just wanted to send you a HUGE thank you.  We got back all of our data =
+and are very pleased!  Do you guys have some sort of donation fund or somet=
+hing that we can send something to your team to show our appreciation?
 
-We sure do have some careless programmers around here :-(
-
-That bug has been there since 3.1-rc1.
-
-Thanks for finding it!
+Thanks for the offer, but no: there is nothing like that.
 
 NeilBrown
 
---Sig_/HJ8oW3i40R+7Lgm_X/aEpP=
+
+
+>=20
+> Mark
+>=20
+> On Oct 1, 2012, at 10:07 PM, NeilBrown <neilb@suse.de> wrote:
+>=20
+> > On Mon, 1 Oct 2012 19:33:50 -0700 Mark Munoz <mark.munoz@rightthisminut=
+e.com>
+> > wrote:
+> >=20
+> >=20
+> >> So I am now thinking that during my shutdown this weekend the device /=
+dev/md0 as part of the array /dev/md2 was affected by the bug as well as 18=
+ of the 19 devices contained inside of /devm/md1
+> >=20
+> > Yes, I agree, so:
+> >=20
+> >>>>=20
+> >>>> sudo mdadm --create --assume-clean /dev/md2 --level=3D0 --chunk=3D64=
+ --metadata=3D1.2 --raid-devices=3D2 /dev/md0 /dev/md1
+> >=20
+> > This is the correct thing to do.
+> >=20
+> > NeilBrown
+> >=20
+> >=20
+
+
+--Sig_/yBpgteF=fBMExyi8+nKxyAv
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUGuaCTnsnt1WYoG5AQLX2xAAwLKoCitB5jLx6y7wm3DtprlJBDYliIHt
-JkfjLqZSgZkZ4eLO2sUcbjY5F2402svutI4IWzES9miA7s76eW04mtjBp1BLybBS
-nFFCY0XF4cWme3EQMX3nBoO8f3CeCyIxAV+qbYnrtEzcCBLoApIMRnKFiAJywD/8
-w/z0Pe7+ByaPg9DVN7NO/cOfFIVauzhYEE/7V3uP+PWAtmgJ6eWTTVEkAehxgsJG
-ri1+VJkK20hqSstTozaG/9AqUrPflENprkvT3aSxrnWOJAbWMJKYxR0kTExwxLqd
-wE13lbTtNP9fJKkc/uSh7gmEotLz1vv5LeU4QGPN0f/CJ3SbNDVV5AfABQyz+GfU
-Leiu8TSPa9AEF0VxDgTm7zBr8YEjtY7FMTf1bPhbP3Q/E4/7/OSrOnG/la0Q9SKH
-3DG5cbX5eY1/6JCANd+0Qsi4JhD1kNbrZEh6umlllPow/+Dan0v0nLUE5svAdWE5
-//S4XD2pElR85cAm+jWLS5GFZbFUwYS/0nlvylQ0QFkt2JH7y7wua9Rl+YXayL0k
-mJEpK50jE4t+pUGdAbLkrjDP+7WOGe8tmgLcx2kae/JpfzVkajaVj08n/opyN2Oj
-+aLrbRrklarwibgK8UYATQIudjW3modsrI0RBod84LtoKHrNmvu4/RzNT0QVXU7L
-mVwdffPl4oo=
-=oxzC
+iQIVAwUBUGuayjnsnt1WYoG5AQKtSQ/9HW8L6tbGUejDYC2qc8snaSvvPlOWXSAn
+co/U/enS25lyLPwE0ZfZKjDyHboYRO8MDsXHff1CYryJLRWo5SA84K0/exnFL8Mi
+GIVuDIa2rYErjCYz2KX+Itnzazl9OtQDRG35urSE1VKs+8Yjx/kHzA7dkBDg6fFs
+Pk9x/JqF2d7PM297pbXurMqQgAcSUZQWIsDdz38pjZWOWK3W3UemM9V9UsT68Uuz
+M9JMF6SziTEzWImnJOmOx97DVL+joPaSPmm9kX05NNJHnHXxGoDmpzTLueA3GgHZ
+URRarr7bw6revgLfS9ooAJj+KSkhOebOh407JGA5rRv6YaDFY0ZEbsq5s+78IN6+
+8xFMaLanw4kiWg0sowYVafQ1cjoEibIvWW0NrOk/S6hGB7qCLAUXmft5ZukmMAWf
+h5vRPwaBcfpVfkGwE7v0YODvPIn3fY1DiTCryVpmQ5Y8HDWyDdSkDdRfkElLq/kE
+SyssFEheLbxNk0gf28YA8Y+KXb66oBL1DauNrzJL45hnYgBU88W9ar31pfVflPZs
+ZOHcJuSoL2R8i9fQ/x6Su6aggLBOZgllFCFZ53k9y3SnA6VPWoPq5/B9zIUzsbQZ
+rnw3WlRBX44nkrYjCqS50NlQj/IkgQPuvptxNW3U9kTmxgUyyz1vFk8BhJoKYF5q
+sLRCBge6gro=
+=jXrR
 -----END PGP SIGNATURE-----
 
---Sig_/HJ8oW3i40R+7Lgm_X/aEpP=--
+--Sig_/yBpgteF=fBMExyi8+nKxyAv--
