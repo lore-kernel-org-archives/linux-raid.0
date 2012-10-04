@@ -1,30 +1,58 @@
-From: Dominique <dcouot@hotmail.com>
-Subject: 4HDD Raid5 - 2 Disk fails
-Date: Thu, 4 Oct 2012 11:33:41 +0200
-Message-ID: <BLU0-SMTP21143DB89A7F6581069200BC9840@phx.gbl>
+From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Subject: Re: 4HDD Raid5 - 2 Disk fails
+Date: Thu, 04 Oct 2012 19:55:23 +1000
+Message-ID: <506D5D0B.2000203@websitemanagers.com.au>
+References: <BLU0-SMTP21143DB89A7F6581069200BC9840@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <BLU0-SMTP21143DB89A7F6581069200BC9840@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid mailing list <linux-raid@vger.kernel.org>
+To: Dominique <dcouot@hotmail.com>
+Cc: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On 04/10/12 19:33, Dominique wrote:
+> Hi,
+>
+> I am writing here out of desperation, and lost hope. I have a NAS with
+> a 4 HDD Raid 5 setup. A week ago, we suffered a power outage that
+> seemed to have fried 2 of the 4 disks at the same time. I say seemed,
+> since I have some contradictory information: 3 of the 4 power leds are
+> still active, the web interface shows only 2 of 4 disks, and cli
+> information shows that disk sda is partially answering, sbd and sdc
+> are ok, sdd seems to be totally dead.
+>
+> Don't ask about the backup.
+>
+> Is there anything I can do to get sda back to some life to save what
+> can be saved ?
+My limited suggestions:
+1) Since this is the state of the drive after a power cycle, probably
+another power cycle won't be any worse...
+Remove the drive, and connect to a standard linux machine, also connect
+a brand new identical (size) drive
+Use dd_rescue to attempt to copy as much as possible from the dead drive
+to the new drive
+Add the new drive back to the NAS, and use some CLI magic to re-create
+the raid array pretending that it is all clean
+Do a backup
 
-I am writing here out of desperation, and lost hope. I have a NAS with a 
-4 HDD Raid 5 setup. A week ago, we suffered a power outage that seemed 
-to have fried 2 of the 4 disks at the same time. I say seemed, since I 
-have some contradictory information: 3 of the 4 power leds are still 
-active, the web interface shows only 2 of 4 disks, and cli information 
-shows that disk sda is partially answering, sbd and sdc are ok, sdd 
-seems to be totally dead.
+You should try the dd_rescue ASAP, this could easily take a few days
+depending on the amount of damage, and the size of the drive. If this
+fails, then forget about the rest of the steps.... and start looking for
+backups, or perhaps attempt a professional data recovery agency (very
+expensive).
 
-Don't ask about the backup.
+For how to do the dd_rescue, ask google, there are very good information
+on this already, just ensure to use the gnu dd_rescue.
 
-Is there anything I can do to get sda back to some life to save what can 
-be saved ?
+Regards,
+Adam
 
-Thanks for any help.
+-- 
+Adam Goryachev
+Website Managers
+www.websitemanagers.com.au
 
-Dominique
