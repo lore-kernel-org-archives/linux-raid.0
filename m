@@ -1,56 +1,57 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: Promise SATA TX4 300 + 3TB disks?
-Date: Fri, 05 Oct 2012 03:46:47 -0500
-Message-ID: <506E9E77.1080002@hardwarefreak.com>
-References: <818058745.20121005012826@oudeis.org> <20121005123653.0a5398e0@natsu>
-Reply-To: stan@hardwarefreak.com
+Date: Fri, 5 Oct 2012 14:50:11 +0600
+Message-ID: <20121005145011.673f4974@natsu>
+References: <818058745.20121005012826@oudeis.org>
+	<20121005123653.0a5398e0@natsu>
+	<506E9E77.1080002@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/XTKrB6d3UXKdaluAD4iSLC="; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121005123653.0a5398e0@natsu>
+In-Reply-To: <506E9E77.1080002@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: =?ISO-8859-1?Q?Rainer_F=FCgenstein?= <rfu@oudeis.org>, Linux MDADM Raid <linux-raid@vger.kernel.org>
+To: stan@hardwarefreak.com
+Cc: Rainer =?UTF-8?B?RsO8Z2Vuc3RlaW4=?= <rfu@oudeis.org>, Linux MDADM Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 10/5/2012 1:36 AM, Roman Mamedov wrote:
+--Sig_/XTKrB6d3UXKdaluAD4iSLC=
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> I would not recommend a PMP, with it your 5 disks will be limited to one SATA
-> port's bandwidth, which will not give you good performance.
+On Fri, 05 Oct 2012 03:46:47 -0500
+Stan Hoeppner <stan@hardwarefreak.com> wrote:
 
-Roman is simply wrong here.  The PMP will give far better performance in
-the OP's case than a 4 port PCI 32/33 HBA.
+> > I would not recommend a PMP, with it your 5 disks will be limited to on=
+e SATA
+> > port's bandwidth, which will not give you good performance.
+>=20
+> Roman is simply wrong here.  The PMP will give far better performance in
+> the OP's case than a 4 port PCI 32/33 HBA.
 
-With 4 disks the SiI 3826 PMP will provide 2.27x-4.5x better throughput
-per drive than a 4 port PCI 32/33 card.
+Compared to a 4-port PCI 32/33 card, sure. Sorry, I have overlooked the part
+where author specifically asks for a PCI card.
 
-FYI:
+--=20
+With respect,
+Roman
 
-PCI bus, 32 bit, 33MHz		132MB/s total bandwidth
-SATAII singe channel		600MB/s duplex, 300MB/s unidirectional
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"Stallman had a printer,
+with code he could not see.
+So he began to tinker,
+and set the software free."
 
-4 port PCI 32/33 card 		 33MB/s per drive maximum
-PMP using 4 drive ports		150MB/s per drive maximum
-				 75MB/s per drive unidirectional
+--Sig_/XTKrB6d3UXKdaluAD4iSLC=
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-You failed to take the system bus connection of the SATA chip into
-account.  A single SATAII channel is 2.27x faster than the PCI bus.
-Southbridge integrated SATA controllers typically have upstream
-bandwidth of 2GB-8GB/s depending on the chipset.  Motherboard mounted
-discrete secondary SATA controllers that provide 2-4 additional internal
-or eSATA ports connect upstream via a PCIe x1 1.0/2.0 interface, good
-for 250 or 500MB/s unidirectional, 500MB/s or 1GB/s duplex, ~2-8 times
-faster than PCI 32/33.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-This is why nobody uses PCI HBAs, unless they have no other option.  A
-single 3TB rust drive can stream at ~150MB/s, slightly faster than the
-PCI bus can accept the data.  Recent SSDs can push 500MB/s, 4x faster
-than the PCI bus.
+iEYEARECAAYFAlBun0MACgkQTLKSvz+PZwhnxwCfbbCQmpeZHMVfxF+gqk6Egf4C
+sg8An2xYwzVN+8DtoVZv90vlVWm1HiKT
+=KEBa
+-----END PGP SIGNATURE-----
 
-This is precisely why I recommended the PMP solution over a 4 port PCI
-32/33 HBA.
-
--- 
-Stan
-
+--Sig_/XTKrB6d3UXKdaluAD4iSLC=--
