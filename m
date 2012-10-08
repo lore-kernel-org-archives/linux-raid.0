@@ -1,54 +1,70 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Promise SATA TX4 300 + 3TB disks?
-Date: Sun, 07 Oct 2012 23:02:34 -0500
-Message-ID: <5072505A.6090200@hardwarefreak.com>
-References: <818058745.20121005012826@oudeis.org> <20121005123653.0a5398e0@natsu> <506E9E77.1080002@hardwarefreak.com> <20121005145011.673f4974@natsu> <719665592.20121005153321@oudeis.org> <506F8FEC.7040402@hardwarefreak.com> <123539095.20121007193726@oudeis.org>
-Reply-To: stan@hardwarefreak.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH] Fix race between removing raid1 device and I/O error handling on underlying device
+Date: Mon,  8 Oct 2012 15:57:14 +0200
+Message-ID: <1349704634-18904-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <123539095.20121007193726@oudeis.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Rainer_F=FCgenstein?= <rfu@oudeis.org>
-Cc: Linux MDADM Raid <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, pyu@redhat.com
 List-Id: linux-raid.ids
 
-On 10/7/2012 12:37 PM, Rainer F=FCgenstein wrote:
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> this second-hand server was originally equipped with an U320 scsi
-> backplane which I removed. by this the hotswap capability is lost,
-> the drives will be directly connected to the AOC-SAT2-MV8 controller,
-> I can live with that. nonetheless it would be nice to have a SATA
-> backplane, but by googling I couldn't find one that fits into this
-> chassis (blue/white AVANTEK).
+Avoid calling rdev_set_badblocks() if the underlying device has been
+removed by raid1d() prior to calling fix_read_error().
 
-Trying to locate a SATA backplane/cage/carrier for this old chassis may
-be the proverbial needle in a haystack search.  Your best option here
-would likely be a new 8-bay SATA hot swap chassis and PSU, such as:
+This should be applicable to the 3.x stable kernel series as well.
 
-http://www.newegg.com/Product/Product.aspx?Item=3DN82E16811219024
-http://www.ebay.com/itm/EMACS-2U-460W-EPS12V-24-Pin-Power-Supply-P2G-64=
-60P-/120995054350?pt=3DUS_Server_Power_Supplies&hash=3Ditem1c2bde030e
+Original bug analysis from Peng Yu:
 
-If your current chassis is 2U you should be able to swap the PSU over.
-Slim optical drives are pretty cheap if you need an optical drive:
+Assume this condition:
 
-http://www.newegg.com/Product/Product.aspx?Item=3DN82E16827151242
+We have a software raid1 device /dev/md0, it has two underlying
+devices, they are /dev/sda and /dev/sdb. Assign an IO to sda,
+rdev->pending add 1, an IO error occur on sda, rdev->pending dec 1,
+then wakeup the raid1d thread. At the same time, a user run such a
+command:
 
-Used on Ebay they're about half that price, but I'd avoid used optical
-drives, for obvious reasons, especially slim models.
+Kernel will set Faulty bit to rdev->flags, then wakeup raid1d
+thread. The raid1d thread will call md_check_recovery function, this
+function will call raid1_remove_disk function if it see the Faulty
+flag is set. In raid1_remove_disk function, the rdev->nr_pending is
+zero, so it will set rdev to NULL. Then raid1d thread return from
+md_check_recovery function, continue call handle_read_error to hand
+the read error, handle_read_error function will call fix_read_error
+function, in fix_read_error function, see these lines:
 
-> tnx.
+		if (!success) {
+			/* Cannot read from anywhere - mark it bad */
+			struct md_rdev *rdev = conf->mirrors[read_disk].rdev;
+			if (!rdev_set_badblocks(rdev, sect, s, 0))
+				md_error(mddev, rdev);
+			break;
+		}
 
-You're welcome.  Always glad to help with hardware.  Note my email
-domain. ;)
+It doesn't check whether the rdev is NULL, just pass it to
+rdev_set_badblocks function, and it maybe a NULL pointer, so the
+kernel crash.
 
---=20
-Stan
+Reported-by: Peng Yu <pyu@redhat.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/md/raid1.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 611b5f7..ffdad74 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2005,7 +2005,7 @@ static void fix_read_error(struct r1conf *conf, int read_disk,
+ 		if (!success) {
+ 			/* Cannot read from anywhere - mark it bad */
+ 			struct md_rdev *rdev = conf->mirrors[read_disk].rdev;
+-			if (!rdev_set_badblocks(rdev, sect, s, 0))
++			if (rdev && !rdev_set_badblocks(rdev, sect, s, 0))
+ 				md_error(mddev, rdev);
+ 			break;
+ 		}
+-- 
+1.7.11.4
+
