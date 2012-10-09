@@ -1,56 +1,55 @@
-From: Massimo Gais <massimo.gais@iki.fi>
-Subject: Re: Issue recovering a md device with first 4kB lost.
-Date: Tue, 9 Oct 2012 11:12:54 +0300
-Message-ID: <CAPpPG0XhSij61UmXhUOq3kZbW=n53e8ccPmDO-7xkBdtM1rmcA@mail.gmail.com>
-References: <CAPpPG0WfVjk7qoC=EdJ=E=vt1uK8amMr9Hb0Q_P0tVyy63f+_w@mail.gmail.com>
-	<CAPpPG0UTjpwiWQyxKsT+JcZt3VgDeGBVddUBd_+8a2+U-50AzA@mail.gmail.com>
-	<5073CF69.4@xs4all.net>
-	<alpine.DEB.2.00.1210090918240.21297@uplift.swm.pp.se>
-	<CAPpPG0W0JB3r499LTDeEPDYUe1PjKhvU8tRFS6WMrhQptnM-TA@mail.gmail.com>
+From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Subject: Re: [PATCH] md: register new md sysfs file 'uuid' read-only
+Date: Tue, 09 Oct 2012 10:54:37 +0200
+Message-ID: <5073E64D.2020506@profitbricks.com>
+References: <1349185330-9024-1-git-send-email-sebastian.riemer@profitbricks.com> <20121003083031.51093f0c@notabene.brown> <50730010.5090605@profitbricks.com> <20121009140248.3ad91484@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPpPG0W0JB3r499LTDeEPDYUe1PjKhvU8tRFS6WMrhQptnM-TA@mail.gmail.com>
+In-Reply-To: <20121009140248.3ad91484@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>, Miquel van Smoorenburg <mikevs@xs4all.net>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Oct 9, 2012 at 10:28 AM, Massimo Gais <massimo.gais@iki.fi> wrote:
->
-> How to find that offset for the ext4? And I guess that to verify
-> whether lvm has allocated a continuous amount of blocks, a "fsck -n
-> /dev/loop0" would allow to test that the fs is in a consistent state.
->
-> Otherwise, which command to use to start lvm properly?
+On 09.10.2012 05:02, NeilBrown wrote:
+> Kernel sometimes knows. Some arrays have metadata handled by user-space so
+> the kernel wouldn't be able to report anything.
+> Userspace always knows..
 
-Update: I checked and found that at offset 201728 there is the begin
-of a ext4 superblock.
-Comparing with a working ext4 fs, I see that superblock should be a
-1024 from beginning of the partition,
-so I tried Miquel's suggestion and run a "losetup -o 200704 /dev/loop0
-/dev/sdd5"
-It seems that has worked as an "fsck -n /dev/loop0" finally finds
-something valid...
+Thanks for the hint. I didn't think about that.
 
->fsck 1.41.14 (22-Dec-2010)
->e2fsck 1.41.12 (17-May-2010)
->Warning: skipping journal recovery because doing a read-only filesystem check.
->1.41.12-1285 contains a file system with errors, check forced.
->Pass 1: Checking inodes, blocks, and sizes
->Pass 2: Checking directory structure
->Pass 3: Checking directory connectivity
->Pass 4: Checking reference counts
->Pass 5: Checking group summary information
->Block bitmap differences:  -1100820 -1101341 -1101842 -1487894 -37977108
->Fix? no
->
->Free blocks count wrong (22975283, counted=12863078).
->Fix? no
->
->Free inodes count wrong (60447101, counted=60446034).
->Fix? no
->
+> In that case, how about using /run/mdadm/map ??
+> When mdadm assembles an array it needs to know the uuid, and it
+records this
+> in that file for future reference. Will that do?
 
-Do you think that the fs is in a usable state?
+Thanks for the hint. Our 3.2.5-Version didn't build it for an existing
+location. I made it do so but I don't like the UUID format in there.
 
-Thanks
+I assembled UUID 12345678:12345678:12345678:12345678 and the file
+contains the following:
+
+md0 1.2 78563412:78563412:78563412:78563412 /dev/md0
+
+This would be a nice file if I could grep for the UUID in the same
+format as I've entered it upon creation/assembly.
+So, I guess we can live with a custom patch for now and close the
+discussion here.
+
+>> Btw.: We did an "Assemble-Resize-Stop, Assemble-Resize-Stop, ..."-Test
+>> with "--assume-clean" and the second resize doesn't work. With
+>> "Assemble-Resize-Detail-Stop" it works.
+>
+> More details? What exactly do you mean by "Resize"? What exactly do you
+> mean by "doesn't work"? Can you make a simple script that reproduces this?
+> If so, I'd love to see it.
+
+I'll open a new topic for this after analysing it in more detail today.
+I've only seen the issue on the PC of my boss and some automation guys
+reported it.
+
+Cheers,
+Sebastian
+
