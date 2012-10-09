@@ -1,55 +1,57 @@
-From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Subject: Re: [PATCH] md: register new md sysfs file 'uuid' read-only
-Date: Tue, 09 Oct 2012 10:54:37 +0200
-Message-ID: <5073E64D.2020506@profitbricks.com>
-References: <1349185330-9024-1-git-send-email-sebastian.riemer@profitbricks.com> <20121003083031.51093f0c@notabene.brown> <50730010.5090605@profitbricks.com> <20121009140248.3ad91484@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121009140248.3ad91484@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+From: David Howells <dhowells@redhat.com>
+Subject: [GIT PULL] Disintegrate UAPI for raid
+Date: Tue, 09 Oct 2012 14:30:38 +0100
+Message-ID: <30738.1349789438@warthog.procyon.org.uk>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: dhowells@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09.10.2012 05:02, NeilBrown wrote:
-> Kernel sometimes knows. Some arrays have metadata handled by user-space so
-> the kernel wouldn't be able to report anything.
-> Userspace always knows..
+Can you merge the following branch into the raid tree please.
 
-Thanks for the hint. I didn't think about that.
+This is to complete part of the Userspace API (UAPI) disintegration for which
+the preparatory patches were pulled recently.  After these patches, userspace
+headers will be segregated into:
 
-> In that case, how about using /run/mdadm/map ??
-> When mdadm assembles an array it needs to know the uuid, and it
-records this
-> in that file for future reference. Will that do?
+	include/uapi/linux/.../foo.h
 
-Thanks for the hint. Our 3.2.5-Version didn't build it for an existing
-location. I made it do so but I don't like the UUID format in there.
+for the userspace interface stuff, and:
 
-I assembled UUID 12345678:12345678:12345678:12345678 and the file
-contains the following:
+	include/linux/.../foo.h
 
-md0 1.2 78563412:78563412:78563412:78563412 /dev/md0
+for the strictly kernel internal stuff.
 
-This would be a nice file if I could grep for the UUID in the same
-format as I've entered it upon creation/assembly.
-So, I guess we can live with a custom patch for now and close the
-discussion here.
+---
+The following changes since commit 9e2d8656f5e8aa214e66b462680cf86b210b74a8:
 
->> Btw.: We did an "Assemble-Resize-Stop, Assemble-Resize-Stop, ..."-Test
->> with "--assume-clean" and the second resize doesn't work. With
->> "Assemble-Resize-Detail-Stop" it works.
->
-> More details? What exactly do you mean by "Resize"? What exactly do you
-> mean by "doesn't work"? Can you make a simple script that reproduces this?
-> If so, I'd love to see it.
+  Merge branch 'akpm' (Andrew's patch-bomb) (2012-10-09 16:23:15 +0900)
 
-I'll open a new topic for this after analysing it in more detail today.
-I've only seen the issue on the PC of my boss and some automation guys
-reported it.
+are available in the git repository at:
 
-Cheers,
-Sebastian
 
+  git://git.infradead.org/users/dhowells/linux-headers.git tags/disintegrate-raid-20121009
+
+for you to fetch changes up to fc5a40a2301aa241eedb16caf9169ca5763707c1:
+
+  UAPI: (Scripted) Disintegrate include/linux/raid (2012-10-09 09:49:02 +0100)
+
+----------------------------------------------------------------
+(from the branch description for disintegrate-raid local branch)
+
+clone of "disintegrate-scsi"
+UAPI Disintegration 2012-10-09
+
+----------------------------------------------------------------
+David Howells (1):
+      UAPI: (Scripted) Disintegrate include/linux/raid
+
+ include/linux/raid/Kbuild            |   2 -
+ include/linux/raid/md_u.h            | 141 +------------------------------
+ include/uapi/linux/raid/Kbuild       |   2 +
+ include/{ => uapi}/linux/raid/md_p.h |   0
+ include/uapi/linux/raid/md_u.h       | 155 +++++++++++++++++++++++++++++++++++
+ 5 files changed, 158 insertions(+), 142 deletions(-)
+ rename include/{ => uapi}/linux/raid/md_p.h (100%)
+ create mode 100644 include/uapi/linux/raid/md_u.h
+.
