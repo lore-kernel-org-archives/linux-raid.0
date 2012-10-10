@@ -1,90 +1,121 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: task xfssyncd blocked while raid5 was in recovery
-Date: Wed, 10 Oct 2012 06:54:19 -0500
-Message-ID: <507561EB.1050308@hardwarefreak.com>
-References: <CACY-59dr2Gy5XgddD01yy+c5ktCgYvOdU9w-VX8GK27bvbbgRA@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] Fix tests sh too many arguments warnings
+Date: Thu, 11 Oct 2012 10:39:12 +1100
+Message-ID: <20121011103912.7deef5a4@notabene.brown>
+References: <1349869095-26167-1-git-send-email-g.esp@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/oU2bANTZ6IytZo2wMUZ1FoA"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACY-59dr2Gy5XgddD01yy+c5ktCgYvOdU9w-VX8GK27bvbbgRA@mail.gmail.com>
+In-Reply-To: <1349869095-26167-1-git-send-email-g.esp@free.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: GuoZhong Han <hanguozhong@meganovo.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Gilles Espinasse <g.esp@free.fr>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/9/2012 10:14 PM, GuoZhong Han wrote:
+--Sig_/oU2bANTZ6IytZo2wMUZ1FoA
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> Recently, a problem has troubled me for a long time.
+On Wed, 10 Oct 2012 13:38:15 +0200 Gilles Espinasse <g.esp@free.fr> wrote:
+
+> Signed-off-by: Gilles Espinasse <g.esp@free.fr>
 >=20
-> I created a 4*2T (sda, sdb, sdc, sdd) raid5 with XFS file system, 128=
-K
-> chuck size and 2048 strip_cache_size. The mdadm 3.2.2, kernel 2.6.38
-> and mkfs.xfs 3.1.1 were used. When the raid5 was in recovery and the
-> schedule reached 47%, I/O errors occurred in sdb. The following was
-> the output:
-
-> ata2: translated ATA stat/err 0x41/04 to SCSI SK/ASC/ASCQ 0xb/00/00
+> Add quotes on if [ $sum !=3D $sum1 ]
+> Fix 2 typo /sh1sum/sha1sum/ /matc /match /
+> ---
+>  tests/01r5integ    |    6 +++---
+>  tests/01raid6integ |   10 +++++-----
+>  2 files changed, 8 insertions(+), 8 deletions(-)
 >=20
-> ata2: status=3D0x41 { DriveReady Error }
->=20
-> ata2: error=3D0x04 { DriveStatusError }
-<snip repeated log entries>
+> diff --git a/tests/01r5integ b/tests/01r5integ
+> index 714a57f..97a71f3 100644
+> --- a/tests/01r5integ
+> +++ b/tests/01r5integ
+> @@ -1,7 +1,7 @@
+> =20
+>  # Check integrity of raid5 in degraded mode
+>  # Create a 4 disk raid5, create a filesystem and
+> -# sh1sum it with each device failed
+> +# sha1sum it with each device failed
+> =20
+>  for layout in ls rs la ra
+>  do
+> @@ -16,9 +16,9 @@ do
+>      mdadm $md0 -r $i
+>      blockdev --flushbufs $md0
+>      sum1=3D`sha1sum $md0`
+> -    if [ $sum !=3D $sum1 ]
+> +    if [ "$sum" !=3D "$sum1" ]
+>      then
+> -     echo $sum does not matc $sum1 with $i missing
+> +     echo $sum does not match $sum1 with $i missing
+>       exit 1
+>      fi
+>      mdadm $md0 -a $i
+> diff --git a/tests/01raid6integ b/tests/01raid6integ
+> index 245b0da..7123e2b 100644
+> --- a/tests/01raid6integ
+> +++ b/tests/01raid6integ
+> @@ -1,7 +1,7 @@
+> =20
+>  # Check integrity of raid6 in degraded modes
+>  # Create a 5 disk raid6, dump some data to it, then
+> -# sh1sum it with different pairs of devices failed
+> +# sha1sum it with different pairs of devices failed
+> =20
+>  layouts=3D'ls rs la ra'
+>  lv=3D`uname -r`
+> @@ -25,9 +25,9 @@ do
+>      mdadm $md0 -r $second
+>      blockdev --flushbufs $md0
+>      sum1=3D`sha1sum $md0`
+> -    if [ $sum !=3D $sum1 ]
+> +    if [ "$sum" !=3D "$sum1" ]
+>      then
+> -      echo $sum does not matc $sum1 with $second missing
+> +      echo $sum does not match $sum1 with $second missing
+>        exit 1
+>      fi
+>      for first in $totest
+> @@ -36,9 +36,9 @@ do
+>         mdadm $md0 -r $first
+>         blockdev --flushbufs $md0
+>         sum1=3D`sha1sum $md0`
+> -       if [ $sum !=3D $sum1 ]
+> +       if [ "$sum" !=3D "$sum1" ]
+>         then
+> -         echo $sum does not matc $sum1 with $first and $second missing
+> +         echo $sum does not match $sum1 with $first and $second missing
+>           exit 1
+>         fi
+>         mdadm $md0 -a $first
 
 
-> end_request: I/O error, dev sdb, sector 1867304064
+applied,
+thanks.
+NeilBrown
 
-Run smartctl and post this section:
-"Vendor Specific SMART Attributes with Thresholds"
+--Sig_/oU2bANTZ6IytZo2wMUZ1FoA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-The drive that is sdb may or may not be bad.  smartctl may tell you
-(us).  If the drive is not bad you'll need to force relocation of this
-bad sector to a spare.  If you don't know how we can assist.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-> INFO: task xfssyncd/md127:1058 blocked for more than 120 seconds.
+iQIVAwUBUHYHIDnsnt1WYoG5AQL80Q//SqT2U3Uwxx3CXFmFg9aYTUVQHlaunZah
+I3r8FVK6EToruLsxiZ96yA7iPffXbt5dp9MeX88slF4+3rOFGAJ0vCVjKTFexPKE
+29ppxxfk3qDVABQd7LsvWTDh9c4a1sqOCArScvr7pCTEnCPtpCV3+LodLxyA39P4
+FTAUwuSP4xHzgaEeDUtMXXGxlEpGXHX1xT4o0xogLG8i2kqy6Z7EMgj/uyhQda6S
+gUzgQjIkJeqXJfb7th0UF0Puv4Qe9n0LVn2h3GQpIkmY8Pj79Lr8fzMz5mnbyXyJ
+uPwxHrm1V1VqOS4xomdiz7nQC5txGOXWnief5s8UmVgp9GVR7UjERNwdWrqKyntN
+Zg9hVYwLOaj4sRCV0y3E9n9kAoBcy5b+ir4m3nuMap/XO6ORVbXq5auU7cthn4A2
+R/wEGz3RaF2TVW/gvp8Wi0aPpflIiV8E71vUIsBQyY2oYQS8Zce4wQTQGG74K/zz
+dUcsJqKFC9GgxkTFXXl0Y1/Xj4LkMLG+W38s9uhWmKQ45paSu7GCNrr7Ls0xkT73
+CT6ltSRl2jzXMH38eh9sIqrdACQPO1b0Wz6ySHlJD6E7cZK9C5buGcqmDntZ12gz
+7NPfGMqcs/exeKZZAMCjC1csnbNSAPK2Gp15wOH2U1GOSceEA1EMoYUYt6wAK/sp
+WIbxBDz9+bI=
+=si6V
+-----END PGP SIGNATURE-----
 
-> The output said =93INFO: task xfssyncd/md127:1058 blocked for more th=
-an
-> 120 seconds=94. What did that mean?
-
-Precisely what it says.  It doesn't tell you WHY it was blocked, as it
-can't know.  The fact that your md array was in recovery and having
-problems with one of the member drives is a good reason for xfssyncd to
-block.
-
->      The state of the raid5 was =93PENDING=94. I had never seen such =
-a
-> state of raid5 before. After that, I wrote a program to access the
-> raid5, there was no response any more. Then I used =93ps aux| task
-> xfssyncd=94 to see the state of =93xfssyncd=94. Unfortunately, there =
-was no
-> response yet. Then I tried =93ps aux=94. There were outputs, but the
-> program could exit with =93Ctrl+d=94 or =93Ctrl+z=94. And when I test=
-ed the
-> write performance for raid5, I/O errors often occurred. I did not kno=
-w
-> why this I/O errors occurred so frequently.
->=20
->      What was the problem? Can any one help me?
-
-It looks like drive sdb is bad or going bad.  smartctl output or
-additional testing should confirm this.
-
-Also, your "XFS...blocked for 120s" error reminds me there are some
-known bugs in XFS kernel 2.6.38 which cause a similar error, but are no=
-t
-the cause of your error.  Yours is a drive problem.  Nonetheless, there
-have been dozens of XFS bugs fixed since 2.6.38 and I recommend you
-upgrade to kernel 3.2.31 or 3.4.13 if you roll your own kernels.  If yo=
-u
-use distro kernels get the latest 3.x series in the repos.
-
---=20
-Stan
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/oU2bANTZ6IytZo2wMUZ1FoA--
