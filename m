@@ -1,156 +1,78 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Assemble-Resize-Stop loop doesn't work correctly
-Date: Thu, 11 Oct 2012 11:42:30 +1100
-Message-ID: <20121011114230.54fa9c5a@notabene.brown>
-References: <50744987.8010903@profitbricks.com>
+From: hanguozhong <hanguozhong@meganovo.com>
+Subject: Re: Re: task xfssyncd blocked while raid5 was in recovery
+Date: Thu, 11 Oct 2012 10:42:47 +0800
+Message-ID: <2012101110412757886112@meganovo.com>
+References: <CACY-59dr2Gy5XgddD01yy+c5ktCgYvOdU9w-VX8GK27bvbbgRA@mail.gmail.com>,
+	<507561EB.1050308@hardwarefreak.com>
+Reply-To: hanguozhong <hanguozhong@meganovo.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/zfjWdrb3TlM1UB6Jbq3d+pt"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50744987.8010903@profitbricks.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: stan <stan@hardwarefreak.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/zfjWdrb3TlM1UB6Jbq3d+pt
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+DQpGcm9tOiBTdGFuIEhvZXBwbmVyDQpEYXRlOiAyMDEyLTEwLTEwIDE5OjU0DQpUbzogR3VvWmhv
+bmcgSGFuDQpDQzogbGludXgtcmFpZA0KU3ViamVjdDogUmU6IHRhc2sgeGZzc3luY2QgYmxvY2tl
+ZCB3aGlsZSByYWlkNSB3YXMgaW4gcmVjb3ZlcnkNCk9uIDEwLzkvMjAxMiAxMDoxNCBQTSwgR3Vv
+WmhvbmcgSGFuIHdyb3RlOg0KDQo+IFJlY2VudGx5LCBhIHByb2JsZW0gaGFzIHRyb3VibGVkIG1l
+IGZvciBhIGxvbmcgdGltZS4NCj4gDQo+IEkgY3JlYXRlZCBhIDQqMlQgKHNkYSwgc2RiLCBzZGMs
+IHNkZCkgcmFpZDUgd2l0aCBYRlMgZmlsZSBzeXN0ZW0sIDEyOEsNCj4gY2h1Y2sgc2l6ZSBhbmQg
+MjA0OCBzdHJpcF9jYWNoZV9zaXplLiBUaGUgbWRhZG0gMy4yLjIsIGtlcm5lbCAyLjYuMzgNCj4g
+YW5kIG1rZnMueGZzIDMuMS4xIHdlcmUgdXNlZC4gV2hlbiB0aGUgcmFpZDUgd2FzIGluIHJlY292
+ZXJ5IGFuZCB0aGUNCj4gc2NoZWR1bGUgcmVhY2hlZCA0NyUsIEkvTyBlcnJvcnMgb2NjdXJyZWQg
+aW4gc2RiLiBUaGUgZm9sbG93aW5nIHdhcw0KPiB0aGUgb3V0cHV0Og0KDQo+IGF0YTI6IHRyYW5z
+bGF0ZWQgQVRBIHN0YXQvZXJyIDB4NDEvMDQgdG8gU0NTSSBTSy9BU0MvQVNDUSAweGIvMDAvMDAN
+Cj4gDQo+IGF0YTI6IHN0YXR1cz0weDQxIHsgRHJpdmVSZWFkeSBFcnJvciB9DQo+IA0KPiBhdGEy
+OiBlcnJvcj0weDA0IHsgRHJpdmVTdGF0dXNFcnJvciB9DQoNCg0KPiBlbmRfcmVxdWVzdDogSS9P
+IGVycm9yLCBkZXYgc2RiLCBzZWN0b3IgMTg2NzMwNDA2NA0KDQo+PlJ1biBzbWFydGN0bCBhbmQg
+cG9zdCB0aGlzIHNlY3Rpb246DQo+PiJWZW5kb3IgU3BlY2lmaWMgU01BUlQgQXR0cmlidXRlcyB3
+aXRoIFRocmVzaG9sZHMiDQoNCj4+VGhlIGRyaXZlIHRoYXQgaXMgc2RiIG1heSBvciBtYXkgbm90
+IGJlIGJhZC4gIHNtYXJ0Y3RsIG1heSB0ZWxsIHlvdQ0KPj4odXMpLiAgSWYgdGhlIGRyaXZlIGlz
+IG5vdCBiYWQgeW91J2xsIG5lZWQgdG8gZm9yY2UgcmVsb2NhdGlvbiBvZiB0aGlzDQo+PmJhZCBz
+ZWN0b3IgdG8gYSBzcGFyZS4gIElmIHlvdSBkb24ndCBrbm93IGhvdyB3ZSBjYW4gYXNzaXN0Lg0K
+DQpJIGRpZCBub3Qgc2F2ZSB0aGUgb3V0cHV0cyBvZiBzbWFydGN0bCwgYnV0IEkgcmVtZW1iZXIg
+dGhhdCB0aGUgobBSQVdfVkFMVUWhsSANCm9mIHRoZSBhdHRyaWJ1dGUgd2hvc2UgbmFtZSB3YXOh
+sEN1cnJlbnRfUGVuZGluZ19TZWN0b3KhsSBvZiBzZGIgd2FzIDEuIERpZCB0aGF0DQppbmRpY2F0
+ZSB0aGF0IHRoZSBkcml2ZSB3YXMgYmFkPyBJZiB0aGUgZHJpdmUgd2FzIG5vdCBiYWQsIHdoYXQg
+aXMgdGhlIGJlc3Qgd2F5IHRvIHJlbG9jYXRlDQp0aGVzZSBiYWQgc2VjdG9ycyB0byBzcGFyZT8g
+SSBoYXZlIGJlZW4gdXNpbmcgdGhlIHRvb2wgIkhERF9SZWdlbmVyYXRvciIgcnVubmluZyBpbiB3
+aW5kb3dzLA0Kd2hpY2ggaXMgdG9vIHNsb3cuIEVhY2ggcmVsb2NhdGlvbiB0b29rIGRvemVucyBv
+ZiBob3Vycy4gSXQgdGFrZXMgYSBsb25nIHRpbWUgdG8gZmluZCB0aGUgYmFkIHNlY3Rvci4gDQpJ
+ZiB5b3UgaGF2ZSBhbnkgYmV0dGVyIGlkZWEsIHBsZWFzZSBsZXQgbWUga25vdy4NCg0KPiBJTkZP
+OiB0YXNrIHhmc3N5bmNkL21kMTI3OjEwNTggYmxvY2tlZCBmb3IgbW9yZSB0aGFuIDEyMCBzZWNv
+bmRzLg0KDQo+IFRoZSBvdXRwdXQgc2FpZCAiSU5GTzogdGFzayB4ZnNzeW5jZC9tZDEyNzoxMDU4
+IGJsb2NrZWQgZm9yIG1vcmUgdGhhbg0KPiAxMjAgc2Vjb25kcyIgV2hhdCBkaWQgdGhhdCBtZWFu
+Pw0KDQo+PlByZWNpc2VseSB3aGF0IGl0IHNheXMuICBJdCBkb2Vzbid0IHRlbGwgeW91IFdIWSBp
+dCB3YXMgYmxvY2tlZCwgYXMgaXQNCj4+Y2FuJ3Qga25vdy4gIFRoZSBmYWN0IHRoYXQgeW91ciBt
+ZCBhcnJheSB3YXMgaW4gcmVjb3ZlcnkgYW5kIGhhdmluZw0KPj5wcm9ibGVtcyB3aXRoIG9uZSBv
+ZiB0aGUgbWVtYmVyIGRyaXZlcyBpcyBhIGdvb2QgcmVhc29uIGZvciB4ZnNzeW5jZCB0bw0KPj5i
+bG9jay4NCg0KPiAgICAgIFRoZSBzdGF0ZSBvZiB0aGUgcmFpZDUgd2FzICJQRU5ESU5HIi4gSSBo
+YWQgbmV2ZXIgc2VlbiBzdWNoIGENCj4gc3RhdGUgb2YgcmFpZDUgYmVmb3JlLiBBZnRlciB0aGF0
+LCBJIHdyb3RlIGEgcHJvZ3JhbSB0byBhY2Nlc3MgdGhlDQo+IHJhaWQ1LCB0aGVyZSB3YXMgbm8g
+cmVzcG9uc2UgYW55IG1vcmUuIFRoZW4gSSB1c2VkICJwcyBhdXh8IGdyZXANCj4geGZzc3luY2Qi
+IHRvIHNlZSB0aGUgc3RhdGUgb2YgeGZzc3luY2Q/IFVuZm9ydHVuYXRlbHksIHRoZXJlIHdhcyBu
+bw0KPiByZXNwb25zZSB5ZXQuIFRoZW4gSSB0cmllZCAicHMgYXV4Ii4gVGhlcmUgd2VyZSBvdXRw
+dXRzLCBidXQgdGhlDQo+IHByb2dyYW0gY291bGQgZXhpdCB3aXRoICJjdHJsK2QiIG9yICJjdHJs
+K3oiLiBBbmQgd2hlbiBJIHRlc3RlZCB0aGUNCj4gd3JpdGUgcGVyZm9ybWFuY2UgZm9yIHJhaWQ1
+LCBJL08gZXJyb3JzIG9mdGVuIG9jY3VycmVkLiBJIGRpZCBub3Qga25vdw0KPiB3aHkgdGhpcyBJ
+L08gZXJyb3JzIG9jY3VycmVkIHNvIGZyZXF1ZW50bHkuDQo+IA0KPiAgICAgIFdoYXQgd2FzIHRo
+ZSBwcm9ibGVtPyBDYW4gYW55IG9uZSBoZWxwIG1lPw0KDQo+Pkl0IGxvb2tzIGxpa2UgZHJpdmUg
+c2RiIGlzIGJhZCBvciBnb2luZyBiYWQuICBzbWFydGN0bCBvdXRwdXQgb3INCj4+YWRkaXRpb25h
+bCB0ZXN0aW5nIHNob3VsZCBjb25maXJtIHRoaXMuDQoNCj4+QWxzbywgeW91ciAiWEZTLi4uYmxv
+Y2tlZCBmb3IgMTIwcyIgZXJyb3IgcmVtaW5kcyBtZSB0aGVyZSBhcmUgc29tZQ0KPj5rbm93biBi
+dWdzIGluIFhGUyBrZXJuZWwgMi42LjM4IHdoaWNoIGNhdXNlIGEgc2ltaWxhciBlcnJvciwgYnV0
+IGFyZSBub3QNCj4+dGhlIGNhdXNlIG9mIHlvdXIgZXJyb3IuICBZb3VycyBpcyBhIGRyaXZlIHBy
+b2JsZW0uICBOb25ldGhlbGVzcywgdGhlcmUNCj4+aGF2ZSBiZWVuIGRvemVucyBvZiBYRlMgYnVn
+cyBmaXhlZCBzaW5jZSAyLjYuMzggYW5kIEkgcmVjb21tZW5kIHlvdQ0KPj51cGdyYWRlIHRvIGtl
+cm5lbCAzLjIuMzEgb3IgMy40LjEzIGlmIHlvdSByb2xsIHlvdXIgb3duIGtlcm5lbHMuICBJZiB5
+b3UNCj4+dXNlIGRpc3RybyBrZXJuZWxzIGdldCB0aGUgbGF0ZXN0IDMueCBzZXJpZXMgaW4gdGhl
+IHJlcG9zLg0KDQpIbSwgSSBzZWFyY2hlZCAiWEZTLi4gYmxvY2tlZCBmb3IgMTIwcyIgb24gZ29v
+Z2xlLiBUaGVyZSB3YXMgYSBzYW1lIHByb2JsZW0gDQp3aXRoIG1lLCB0aGUgZmxvd2luZyBpcyB0
+aGUgbGluazogDQpodHRwOi8vbGlzdHMuZGViaWFuLm9yZy9kZWJpYW4ta2VybmVsLzIwMTIvMDEv
+bXNnMDAyNzQuaHRtbA0KSSB1c2UgdGhlIHRpbGVyYSBwbGF0Zm9ybSwgc28gaXQgaXMgaGFyZCB0
+byB1cGdyYWRlIHRvIGtlcm5lbCAzLjIuMzEgb3IgMy40LjEzLiA=
 
-On Tue, 09 Oct 2012 17:57:59 +0200 Sebastian Riemer
-<sebastian.riemer@profitbricks.com> wrote:
-
-> Hi Neil,
->=20
-> I've tested with the following script grow with "--assume-clean" in a
-> loop. The first grow succeeds - following grows fail - mdadm 3.2.5,
-> kernel 3.4.10.
->=20
->=20
-> #!/bin/bash
->=20
-> FIRST=3D"/dev/sda"
-> SECON=3D"/dev/sdd"
-> MDDEV=3D"/dev/md0"
-> SIZE=3D1
->=20
-> mdadm --zero-superblock $FIRST
-> mdadm --zero-superblock $SECON
-> echo y | mdadm -C $MDDEV -e 1.2 \
-> --assume-clean -z "${SIZE}G" --force -l 1 -n 2 $FIRST $SECON
-> sleep 3
-> mdadm -S $MDDEV
-> for ((i=3D0; i<4; i++)); do
->   mdadm -A $MDDEV $FIRST $SECON
->   let "SIZE++"
->   mdadm -G $MDDEV -z ${SIZE}G --assume-clean
->   cat /proc/mdstat
-> #  mdadm -D $MDDEV > /dev/null
->   mdadm -S $MDDEV
-> done
->=20
->=20
-> Output looks like this:
->=20
-> mdadm: /dev/md0 has been started with 2 drives.
-> mdadm: component size of /dev/md0 has been set to 2097152K
-> Personalities : [raid1]
-> md0 : active raid1 sda[0] sdd[1]
->       2097152 blocks super 1.2 [2/2] [UU]
->     =20
-> unused devices: <none>
-> mdadm: stopped /dev/md0
-> mdadm: /dev/md0 has been started with 2 drives.
-> mdadm: /dev/md0 is performing resync/recovery and cannot be reshaped
-> Personalities : [raid1]
-> md0 : active raid1 sda[0] sdd[1]
->       2097152 blocks super 1.2 [2/2] [UU]
->       [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>..........]  resync =3D 50.0% (1050=
-624/2097152)
-> finish=3D8.4min speed=3D2048K/sec
->=20
->=20
-> Now the output with "Detail"-Mode after resize:
->=20
-> mdadm: /dev/md0 has been started with 2 drives.
-> mdadm: component size of /dev/md0 has been set to 2097152K
-> Personalities : [raid1]
-> md0 : active raid1 sda[0] sdd[1]
->       2097152 blocks super 1.2 [2/2] [UU]
->     =20
-> unused devices: <none>
-> mdadm: stopped /dev/md0
-> mdadm: /dev/md0 has been started with 2 drives.
-> mdadm: component size of /dev/md0 has been set to 3145728K
-> Personalities : [raid1]
-> md0 : active raid1 sda[0] sdd[1]
->       3145728 blocks super 1.2 [2/2] [UU]
->=20
->=20
-> This one works. Is this wanted behaviour?
->=20
-> Cheers,
-> Sebastian
-
-
-You've hit an unlikely corner-case there.  Thanks.
-
-This patch fixes it.
-
-NeilBrown
-
-=46rom 2225a657ce9fb4a5390a4a82c03e6a0f937b4327 Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Thu, 11 Oct 2012 11:41:14 +1100
-Subject: [PATCH] md: make sure manual changes to recovery checkpoint are
- saved.
-
-If you make an array bigger but suppress resync of the new region with
-  mdadm --grow /dev/mdX --size=3Dmax --assume-clean
-
-then stop the array before anything is written to it, the effect of
-the "--assume-clean" is lost and the array will resync the new space
-when restarted.
-So ensure that we update the metadata in the case.
-
-Reported-by: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index e868f0c..dff013a 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -3819,6 +3819,8 @@ resync_start_store(struct mddev *mddev, const char *b=
-uf, size_t len)
- 		return -EINVAL;
-=20
- 	mddev->recovery_cp =3D n;
-+	if (mddev->pers)
-+		set_bit(MD_CHANGE_CLEAN, &mddev->flags);
- 	return len;
- }
- static struct md_sysfs_entry md_resync_start =3D
-
---Sig_/zfjWdrb3TlM1UB6Jbq3d+pt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUHYV9jnsnt1WYoG5AQII3hAAhsjiM7b+dIU18SZQt9ox2WgOkk35Umpq
-JthBlddpNt+AroOrwFff+IjF81tdwzVIwSpLWpbgq4PRXudT2e/EYDh1jZfULao5
-/FZW33Od2j8fZjggNW+BiVorjWcSLbmyDWEh1vLT+xJ5v2xusMEgYlGkXSLzDLAp
-YAnRsu1MF1Z3ogrjCcHIlSEj+H97PbWqRqaYC2aC/3urciEvIw1utdk9JEo+K2kA
-IoRXVMy2TnE999NVcXVo9mm9LnzlrSIE/3btMS1fkbcvOKku7U5prGAljJ85HEjj
-JKZMpduHxnIvPMYudPzY/g7U0pq+6KfBGmU1GrPPmoONxiB4mx9psTmhPhD+Ouo4
-0Y268WK9jmPqeWRxQWGBJmGS9NSVqHEx2ofLWpfByGZAC+gopG5XcEs6MGPMbb05
-MaFjVUEVHFMIbGLuNNboDPVi3gg0X3mSv92AL9qjp/QwjsJAup1OSsAjtOGlYwmj
-yUemyayX0gk1mGtMlA768s2nqeMWHXL41XGxOZiKrHDdKnhjJMea3cWSPbE0pyWp
-rbIfCNajdnHYUtIuSfzkn9tItIjZE63JynkVCfxGG2lbZpFi8yjbDbXSDQXN3CmD
-mj2USP86mBU7R0+SKLhyjY4XcGWbyeTS4bcCjJl6qdkiqgWmLZJHERhhDWyM8Jrq
-JuPb7xRktj8=
-=nPPL
------END PGP SIGNATURE-----
-
---Sig_/zfjWdrb3TlM1UB6Jbq3d+pt--
