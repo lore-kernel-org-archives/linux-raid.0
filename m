@@ -1,38 +1,71 @@
-From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Subject: Re: RAID-6 problem
-Date: Sat, 13 Oct 2012 11:45:10 -0700
-Message-ID: <mepok9xf4q.ln2@goaway.wombat.san-francisco.ca.us>
-References: <20121013120328.GA23279@lazy.lzy>
- <alpine.DEB.2.00.1210131919230.21297@uplift.swm.pp.se>
+From: Markus Irle <tha.bear@gmail.com>
+Subject: Re: Wrong array size detected after reboot
+Date: Sat, 13 Oct 2012 21:15:57 +0200
+Message-ID: <CAFEwywYCbQ-EUzcXHZ0-8yPdTVMuaTk9tYM1qm81G++3e=Xucw@mail.gmail.com>
+References: <CAFEwywaeGevnDMu7Do_wK+_Jgtyd0vman0804C2LyqbyzcJ9Sw@mail.gmail.com>
+	<504C0462.2000609@turmel.org>
+	<20120910091352.38dfdc20@notabene.brown>
+	<CAFEwywaGN3cvXVAJxsWuc1-j0mfeLtKs_iqNznFQN8QA7JO8qQ@mail.gmail.com>
+	<20120919114202.0ad6355b@notabene.brown>
+	<CAFEwywbuH1689UStqoGOsvAh_X9afCpojKouY=Po5sXFGDFutw@mail.gmail.com>
+	<20120920091109.5d950820@notabene.brown>
+	<CAFEwywZ58nJMxd9ae66fEsWcUo94Djvhj44fg3MxFcQp_7_vpw@mail.gmail.com>
+	<20120920213948.7dfc5f78@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20120920213948.7dfc5f78@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2012-10-13, Mikael Abrahamsson <swmike@swm.pp.se> wrote:
+Hi Neil,
+
+For the record:
+
+It worked!
+
+I grew to "--size max", sync kicked in, but I'm able to mount the
+volumes and the data's all there.
+
+Thanks for the help guys!
+
+Cheers,
+Markus
+
+
+On Thu, Sep 20, 2012 at 1:39 PM, NeilBrown <neilb@suse.de> wrote:
+> On Thu, 20 Sep 2012 11:53:04 +0200 Markus Irle <tha.bear@gmail.com> wrote:
 >
-> Re-creating a raid5/6 with --assume-clean is for me a disaster recovery, 
-> something that should be performed when everything else fails. It's 
-> extremely unfortunate that a lot of guides bring this in very early in the 
-> fault finding process.
-
-Actually the RAID wiki suggests exactly this path, and suggests against
---force, contrary to the advice I've gotten here from Neil and others.
-
-https://raid.wiki.kernel.org/index.php/RAID_Recovery#Restore_array_by_recreating_.28after_multiple_device_failure.29
-
-I could update this, but not being expert all it'd say is "use
---assemble --force; if it fails ask on the mailing list."  :)  Perhaps
-that's actually the best advice to give, but if there's something more
-useful to put on that page maybe someone with more expertise could
-update it?
-
---keith
-
--- 
-kkeller@wombat.san-francisco.ca.us
-
-
+>> Hi Neil,
+>>
+>> On Thu, Sep 20, 2012 at 1:11 AM, NeilBrown <neilb@suse.de> wrote:
+>> >
+>> > Yes, the metadata has lots the most-significant-bit of the 'size'.
+>> >
+>> > So it should be sufficient to:
+>> >   mdadm -G /dev/md2 --size 2930266432
+>> >
+>> > where the size is calculated as the current "used device size" plus 2^31.
+>> > You could probably just do "--size max"
+>> >
+>> > This will cause a resync of the 2G of data which is probably unnecessary, but
+>> > is awkward to avoid.
+>>
+>> Thanks, will try.
+>>
+>> Resyncing won't overwrite the existing data, will it?
+>
+> No, it won't.  It'll just check all the parity blocks are correct.
+>
+>> Sorry for being overly cautious...
+>
+> Not something to apologise for ....
+>
+> NeilBrown
+>
+>>
+>> Cheers,
+>> Markus
+>
