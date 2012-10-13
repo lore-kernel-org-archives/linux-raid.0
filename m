@@ -1,71 +1,77 @@
-From: Markus Irle <tha.bear@gmail.com>
-Subject: Re: Wrong array size detected after reboot
-Date: Sat, 13 Oct 2012 21:15:57 +0200
-Message-ID: <CAFEwywYCbQ-EUzcXHZ0-8yPdTVMuaTk9tYM1qm81G++3e=Xucw@mail.gmail.com>
-References: <CAFEwywaeGevnDMu7Do_wK+_Jgtyd0vman0804C2LyqbyzcJ9Sw@mail.gmail.com>
-	<504C0462.2000609@turmel.org>
-	<20120910091352.38dfdc20@notabene.brown>
-	<CAFEwywaGN3cvXVAJxsWuc1-j0mfeLtKs_iqNznFQN8QA7JO8qQ@mail.gmail.com>
-	<20120919114202.0ad6355b@notabene.brown>
-	<CAFEwywbuH1689UStqoGOsvAh_X9afCpojKouY=Po5sXFGDFutw@mail.gmail.com>
-	<20120920091109.5d950820@notabene.brown>
-	<CAFEwywZ58nJMxd9ae66fEsWcUo94Djvhj44fg3MxFcQp_7_vpw@mail.gmail.com>
-	<20120920213948.7dfc5f78@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: RAID-6 problem
+Date: Sun, 14 Oct 2012 06:31:02 +1100
+Message-ID: <20121014063102.0755820b@notabene.brown>
+References: <20121013120328.GA23279@lazy.lzy>
+	<alpine.DEB.2.00.1210131919230.21297@uplift.swm.pp.se>
+	<mepok9xf4q.ln2@goaway.wombat.san-francisco.ca.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/KOsF9EV.p7IkWNhSz/EaJDq"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120920213948.7dfc5f78@notabene.brown>
+In-Reply-To: <mepok9xf4q.ln2@goaway.wombat.san-francisco.ca.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+To: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+--Sig_/KOsF9EV.p7IkWNhSz/EaJDq
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-For the record:
+On Sat, 13 Oct 2012 11:45:10 -0700 Keith Keller
+<kkeller@wombat.san-francisco.ca.us> wrote:
 
-It worked!
+> On 2012-10-13, Mikael Abrahamsson <swmike@swm.pp.se> wrote:
+> >
+> > Re-creating a raid5/6 with --assume-clean is for me a disaster recovery=
+,=20
+> > something that should be performed when everything else fails. It's=20
+> > extremely unfortunate that a lot of guides bring this in very early in =
+the=20
+> > fault finding process.
+>=20
+> Actually the RAID wiki suggests exactly this path, and suggests against
+> --force, contrary to the advice I've gotten here from Neil and others.
+>=20
+> https://raid.wiki.kernel.org/index.php/RAID_Recovery#Restore_array_by_rec=
+reating_.28after_multiple_device_failure.29
+>=20
+> I could update this, but not being expert all it'd say is "use
+> --assemble --force; if it fails ask on the mailing list."  :)  Perhaps
+> that's actually the best advice to give, but if there's something more
+> useful to put on that page maybe someone with more expertise could
+> update it?
+>=20
+> --keith
+>=20
 
-I grew to "--size max", sync kicked in, but I'm able to mount the
-volumes and the data's all there.
 
-Thanks for the help guys!
+You should definitely try '--assemble --force' before trying to recreate the
+array.  There is no question about that.
 
-Cheers,
-Markus
+NeilBrown
 
+--Sig_/KOsF9EV.p7IkWNhSz/EaJDq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-On Thu, Sep 20, 2012 at 1:39 PM, NeilBrown <neilb@suse.de> wrote:
-> On Thu, 20 Sep 2012 11:53:04 +0200 Markus Irle <tha.bear@gmail.com> wrote:
->
->> Hi Neil,
->>
->> On Thu, Sep 20, 2012 at 1:11 AM, NeilBrown <neilb@suse.de> wrote:
->> >
->> > Yes, the metadata has lots the most-significant-bit of the 'size'.
->> >
->> > So it should be sufficient to:
->> >   mdadm -G /dev/md2 --size 2930266432
->> >
->> > where the size is calculated as the current "used device size" plus 2^31.
->> > You could probably just do "--size max"
->> >
->> > This will cause a resync of the 2G of data which is probably unnecessary, but
->> > is awkward to avoid.
->>
->> Thanks, will try.
->>
->> Resyncing won't overwrite the existing data, will it?
->
-> No, it won't.  It'll just check all the parity blocks are correct.
->
->> Sorry for being overly cautious...
->
-> Not something to apologise for ....
->
-> NeilBrown
->
->>
->> Cheers,
->> Markus
->
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBUHnBdjnsnt1WYoG5AQIEAw//dqWRD0wfcyyM2hG1sbkNh6QfdV1uJDr3
+1Bp7X18W/sUGr5iJvKZ/adKcF5rdAvXkbwzp+QDj+c12ZKbYtVPRtCTOARuWPeOb
+WgQSGyblrIJEfjn9DC7RV295HrlM6G14e5vg+A2THHVJVKOix/UcpkiZ7fdAwHh1
+H+8F6sPSioyfWp7JruHt1dkSfC8ffeXeV4iWF8G8xVFMjcFn3/MqyOYQpc2zpGh0
+7oMLxVDqqY5e8wXDMGJ4n+Ju2PypEaKX+YvsMknmEax9PvU7L3w0p9r4ubXt8q1A
+C9VIAkfYV70ul/o0L3KRSl4hwo0567NUHKd8j0F75cQLFNhF4aJXc/lI7cH/jFxx
+H2ee1A2BPtWYlmTspbasyZNzVs6Zawf3P8ZebrMbneYOMIjhzFdjOz8tblSscv09
+A95oWOMyLhy+T2Ag+m5UgEGNGLRJnaFkkMR58uGixeJPMYPzOUGaIiLa/d0yg1UJ
+SO0nh68Pg2C+xpHZOE640QQ57GDsIEIt6qffZSTp7bIKGazTo3Hi33t+ReH6b/zc
+5pxKz1hbqqkxoL3ahhBPjpRQVyB9rCaqW4b4cJrxk93Ka/U2L4tpzfHHH5Rwd8gH
+ZemnzPYW3Squ6I4LnVtWLb6jWcYIqAD4BK6Jb/JA9DTKpQJnIqglJYyVc/gl4o6z
+ZrJEAaerehs=
+=wJnY
+-----END PGP SIGNATURE-----
+
+--Sig_/KOsF9EV.p7IkWNhSz/EaJDq--
