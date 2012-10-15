@@ -1,66 +1,61 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: RAID-6 problem
-Date: Sat, 13 Oct 2012 23:22:13 +0200
-Message-ID: <20121013212212.GA15542@lazy.lzy>
-References: <20121013120328.GA23279@lazy.lzy>
- <alpine.DEB.2.00.1210131919230.21297@uplift.swm.pp.se>
- <mepok9xf4q.ln2@goaway.wombat.san-francisco.ca.us>
- <20121014063102.0755820b@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: MITSUNARI Shigeo <herumi@nifty.com>
+Subject: [PATCH 2/2] How about moving a code bdev->bd_invalidated = 0; into check_disk_size_change() instead of putting the code every time after check_disk_size_change().
+Date: Mon, 15 Oct 2012 18:27:08 +0900
+Message-ID: <1350293228-3602-2-git-send-email-herumi@nifty.com>
+References: <1350293228-3602-1-git-send-email-herumi@nifty.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20121014063102.0755820b@notabene.brown>
+In-Reply-To: <1350293228-3602-1-git-send-email-herumi@nifty.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Keith Keller <kkeller@wombat.san-francisco.ca.us>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: MITSUNARI Shigeo <herumi@nifty.com>
 List-Id: linux-raid.ids
 
-On Sun, Oct 14, 2012 at 06:31:02AM +1100, NeilBrown wrote:
-> On Sat, 13 Oct 2012 11:45:10 -0700 Keith Keller
-> <kkeller@wombat.san-francisco.ca.us> wrote:
-> 
-> > On 2012-10-13, Mikael Abrahamsson <swmike@swm.pp.se> wrote:
-> > >
-> > > Re-creating a raid5/6 with --assume-clean is for me a disaster recovery, 
-> > > something that should be performed when everything else fails. It's 
-> > > extremely unfortunate that a lot of guides bring this in very early in the 
-> > > fault finding process.
-> > 
-> > Actually the RAID wiki suggests exactly this path, and suggests against
-> > --force, contrary to the advice I've gotten here from Neil and others.
-> > 
-> > https://raid.wiki.kernel.org/index.php/RAID_Recovery#Restore_array_by_recreating_.28after_multiple_device_failure.29
-> > 
-> > I could update this, but not being expert all it'd say is "use
-> > --assemble --force; if it fails ask on the mailing list."  :)  Perhaps
-> > that's actually the best advice to give, but if there's something more
-> > useful to put on that page maybe someone with more expertise could
-> > update it?
-> > 
-> > --keith
-> > 
-> 
-> 
-> You should definitely try '--assemble --force' before trying to recreate the
-> array.  There is no question about that.
+Signed-off-by: MITSUNARI Shigeo<herumi@nifty.com>
+---
+ block/partition-generic.c |    2 --
+ fs/block_dev.c            |    2 +-
+ 2 files changed, 1 insertion(+), 3 deletions(-)
 
-Thanks to everybody,
-
-The "-A --force" worked fine, the array had, in the
-end, 0 mismatch count.
-
-Thanks again,
-
-bye,
-
-pg
-
-> 
-> NeilBrown
-
-
-
+diff --git a/block/partition-generic.c b/block/partition-generic.c
+index f1d1451..6a65169 100644
+--- a/block/partition-generic.c
++++ b/block/partition-generic.c
+@@ -429,7 +429,6 @@ rescan:
+ 	if (disk->fops->revalidate_disk)
+ 		disk->fops->revalidate_disk(disk);
+ 	check_disk_size_change(disk, bdev);
+-	bdev->bd_invalidated = 0;
+ 	if (!get_capacity(disk) || !(state = check_partition(disk, bdev)))
+ 		return 0;
+ 	if (IS_ERR(state)) {
+@@ -542,7 +541,6 @@ int invalidate_partitions(struct gendisk *disk, struct block_device *bdev)
+ 
+ 	set_capacity(disk, 0);
+ 	check_disk_size_change(disk, bdev);
+-	bdev->bd_invalidated = 0;
+ 	/* tell userspace that the media / partition table may have changed */
+ 	kobject_uevent(&disk_to_dev(disk)->kobj, KOBJ_CHANGE);
+ 
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 2577cf4..ef0189b 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -1022,6 +1022,7 @@ void check_disk_size_change(struct gendisk *disk, struct block_device *bdev)
+ 		i_size_write(bdev->bd_inode, disk_size);
+ 		flush_disk(bdev, false);
+ 	}
++	bdev->bd_invalidated = 0;
+ }
+ EXPORT_SYMBOL(check_disk_size_change);
+ 
+@@ -1047,7 +1048,6 @@ int revalidate_disk(struct gendisk *disk)
+ 
+ 	mutex_lock(&bdev->bd_mutex);
+ 	check_disk_size_change(disk, bdev);
+-	bdev->bd_invalidated = 0;
+ 	mutex_unlock(&bdev->bd_mutex);
+ 	bdput(bdev);
+ 	return ret;
 -- 
+1.7.9.5
 
-piergiorgio
