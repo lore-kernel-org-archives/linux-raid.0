@@ -1,58 +1,38 @@
 From: MITSUNARI Shigeo <herumi@nifty.com>
-Subject: [PATCH 2/2] How about moving a code bdev->bd_invalidated = 0; into check_disk_size_change() instead of putting the code every time after check_disk_size_change().
-Date: Mon, 15 Oct 2012 18:27:08 +0900
-Message-ID: <1350293228-3602-2-git-send-email-herumi@nifty.com>
-References: <1350293228-3602-1-git-send-email-herumi@nifty.com>
+Subject: [PATCH 1/2] block: fs: bd_invalidated should be cleared in check_disk_size_change
+Date: Mon, 15 Oct 2012 18:27:07 +0900
+Message-ID: <1350293228-3602-1-git-send-email-herumi@nifty.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1350293228-3602-1-git-send-email-herumi@nifty.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: MITSUNARI Shigeo <herumi@nifty.com>
 List-Id: linux-raid.ids
 
+rescan_partitions() and invalidate_partitions() in block/partition-generic.c
+set bdev->bd_invalidated = 0 after calling check_disk_size_change().
+But revalidate_disk() in fs/block_dev.c does not clear it so I add
+bdev->bd_invalidated = 0; after calling check_disk_size_change().
+
+If bdev->bd_invalidated = 1 then rescan_partitions() is called when
+__blkdev_get() is called.
+So if revalidate_disk() is once called, all buffer cache pages will be
+cleared every time when the device is opened.
+
+This patch fixes the bug.
 Signed-off-by: MITSUNARI Shigeo<herumi@nifty.com>
 ---
- block/partition-generic.c |    2 --
- fs/block_dev.c            |    2 +-
- 2 files changed, 1 insertion(+), 3 deletions(-)
+ fs/block_dev.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/block/partition-generic.c b/block/partition-generic.c
-index f1d1451..6a65169 100644
---- a/block/partition-generic.c
-+++ b/block/partition-generic.c
-@@ -429,7 +429,6 @@ rescan:
- 	if (disk->fops->revalidate_disk)
- 		disk->fops->revalidate_disk(disk);
- 	check_disk_size_change(disk, bdev);
--	bdev->bd_invalidated = 0;
- 	if (!get_capacity(disk) || !(state = check_partition(disk, bdev)))
- 		return 0;
- 	if (IS_ERR(state)) {
-@@ -542,7 +541,6 @@ int invalidate_partitions(struct gendisk *disk, struct block_device *bdev)
- 
- 	set_capacity(disk, 0);
- 	check_disk_size_change(disk, bdev);
--	bdev->bd_invalidated = 0;
- 	/* tell userspace that the media / partition table may have changed */
- 	kobject_uevent(&disk_to_dev(disk)->kobj, KOBJ_CHANGE);
- 
 diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 2577cf4..ef0189b 100644
+index 38e721b..2577cf4 100644
 --- a/fs/block_dev.c
 +++ b/fs/block_dev.c
-@@ -1022,6 +1022,7 @@ void check_disk_size_change(struct gendisk *disk, struct block_device *bdev)
- 		i_size_write(bdev->bd_inode, disk_size);
- 		flush_disk(bdev, false);
- 	}
-+	bdev->bd_invalidated = 0;
- }
- EXPORT_SYMBOL(check_disk_size_change);
- 
-@@ -1047,7 +1048,6 @@ int revalidate_disk(struct gendisk *disk)
+@@ -1047,6 +1047,7 @@ int revalidate_disk(struct gendisk *disk)
  
  	mutex_lock(&bdev->bd_mutex);
  	check_disk_size_change(disk, bdev);
--	bdev->bd_invalidated = 0;
++	bdev->bd_invalidated = 0;
  	mutex_unlock(&bdev->bd_mutex);
  	bdput(bdev);
  	return ret;
