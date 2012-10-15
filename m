@@ -1,40 +1,105 @@
-From: Drew <drew.kay@gmail.com>
-Subject: Re: convert metadata version: possible/wise?
-Date: Mon, 15 Oct 2012 12:14:50 -0700
-Message-ID: <CACJz6QtmXhsDSwg6GhvRqYggrAx4s89O5o_g1BziLLkS6C9Dow@mail.gmail.com>
-References: <vd2uk9xo62.ln2@goaway.wombat.san-francisco.ca.us>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [GIT PULL] Disintegrate UAPI for raid
+Date: Tue, 16 Oct 2012 09:22:27 +1100
+Message-ID: <20121016092227.6410ed9d@notabene.brown>
+References: <30738.1349789438@warthog.procyon.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <vd2uk9xo62.ln2@goaway.wombat.san-francisco.ca.us>
-Sender: linux-raid-owner@vger.kernel.org
-To: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Cc: linux-raid@vger.kernel.org
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/f8VZGjQHFayUOiEINebZdxh"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <30738.1349789438@warthog.procyon.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: David Howells <dhowells@redhat.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-> The default CentOS 6 install media creates md devices with metadata 1.1
-> (or, it seems like, 1.0 for /boot).  I was wondering, first off, is
-> there any advantage to try to attempt to migrate these to metadata 1.2?
-> I suppose that RHEL/CentOS had some reason for making /boot 1.0 (perhaps
-> the newer metadata formats can not be booted), so for now let's just
-> consider migrating from 1.1 to 1.2.  If there are any advantages, what
-> would they be?  And would it generally be a big advantage or a
-> relatively minor one?
+--Sig_/f8VZGjQHFayUOiEINebZdxh
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-One thing to keep in mind with the 1.x metadata family is that the
-three "versions" merely indicate where the metadata is located, not
-that one is newer or better then the others.
+On Tue, 09 Oct 2012 14:30:38 +0100 David Howells <dhowells@redhat.com> wrot=
+e:
 
-1.0 places metadata at the end, 1.1 at the beginning, and 1.2 4K in
-from the beginning. The 'correct' sub-version will depend on your
-application.
+> Can you merge the following branch into the raid tree please.
+>=20
+> This is to complete part of the Userspace API (UAPI) disintegration for w=
+hich
+> the preparatory patches were pulled recently.  After these patches, users=
+pace
+> headers will be segregated into:
+>=20
+> 	include/uapi/linux/.../foo.h
+>=20
+> for the userspace interface stuff, and:
+>=20
+> 	include/linux/.../foo.h
+>=20
+> for the strictly kernel internal stuff.
+>=20
+> ---
+> The following changes since commit 9e2d8656f5e8aa214e66b462680cf86b210b74=
+a8:
+>=20
+>   Merge branch 'akpm' (Andrew's patch-bomb) (2012-10-09 16:23:15 +0900)
+>=20
+> are available in the git repository at:
+>=20
+>=20
+>   git://git.infradead.org/users/dhowells/linux-headers.git tags/disintegr=
+ate-raid-20121009
+>=20
+> for you to fetch changes up to fc5a40a2301aa241eedb16caf9169ca5763707c1:
+>=20
+>   UAPI: (Scripted) Disintegrate include/linux/raid (2012-10-09 09:49:02 +=
+0100)
+>=20
+> ----------------------------------------------------------------
+> (from the branch description for disintegrate-raid local branch)
+>=20
+> clone of "disintegrate-scsi"
+> UAPI Disintegration 2012-10-09
+>=20
+> ----------------------------------------------------------------
+> David Howells (1):
+>       UAPI: (Scripted) Disintegrate include/linux/raid
+>=20
+>  include/linux/raid/Kbuild            |   2 -
+>  include/linux/raid/md_u.h            | 141 +----------------------------=
+--
+>  include/uapi/linux/raid/Kbuild       |   2 +
+>  include/{ =3D> uapi}/linux/raid/md_p.h |   0
+>  include/uapi/linux/raid/md_u.h       | 155 +++++++++++++++++++++++++++++=
+++++++
+>  5 files changed, 158 insertions(+), 142 deletions(-)
+>  rename include/{ =3D> uapi}/linux/raid/md_p.h (100%)
+>  create mode 100644 include/uapi/linux/raid/md_u.h
+> .
 
+I've pull this into my for-next branch.
 
--- 
-Drew
+Thanks,
+NeilBrown
 
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
+--Sig_/f8VZGjQHFayUOiEINebZdxh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-"This started out as a hobby and spun horribly out of control."
--Unknown
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBUHyMoznsnt1WYoG5AQLuFg//R6Ik2GGBg9oUCmhoJLxKxLeYv4fJOCrD
+7krC6h8tlHeOFrCwH8/rRfi164AIctOfqDH+SFv7yl7FPNUsx/m5GZv5LWvyTxZu
+bOdgAZwyEd/g+b9LYXT1x/YGCi4VR8uYKHP3JRdDloV8RNozrFBDs6PglGYeHjt7
+wvep8u1LRCy0j/tHNzHRzMoiD7b6R0foto7yBPvfaTg/WZkCCzoF1mkKQPltbEpb
+isurjho+z6t5ms40RD/XtEN/W7srGYqqhM09EtBitTrvGoNrL8Obq1UOIwwShij9
+6FfeLXDUwE4G83Pn2pMHLwOcW9DmN4ZUvM+4n2B0f/LjtPj8Enwbd7v9diuO8Gyy
+J7DEZ8TP+ha2l82tby16DhfHLlS2KTfl71c+pF2kq8YJe6bW9djblTkxk4pEAu1X
+DT6pxjIHgygPnuGyAC2vQy7pj/WmodjSXq0A72OBHee52rVlXUwRlTN7vZXtmq1W
+JUk0JR2GF9i7JLBWs+TPckHgCAxBzieOwc0kl44IuWybECb94fmdtg/2bVavnAlz
+mceRbdVl9y9BCwU78/M2eRHvz9Tw/mBiTLLiI/3sUTLt5q7H80DZLjNw4KA64eMN
+2xX9pkbguE72ibA+HMrA2O5pkVdMrpfO3KIqWkeWEPpEXiYBmfx/LaMM62uDOrMV
+2G2VKq43vsc=
+=HPvH
+-----END PGP SIGNATURE-----
+
+--Sig_/f8VZGjQHFayUOiEINebZdxh--
