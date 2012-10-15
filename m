@@ -1,69 +1,36 @@
-From: MITSUNARI Shigeo <herumi@nifty.com>
-Subject: Re: [PATCH 2/2] How about moving a code bdev->bd_invalidated = 0; into check_disk_size_change() instead of putting the code every time after check_disk_size_change().
-Date: Mon, 15 Oct 2012 18:38:04 +0900 (JST)
-Message-ID: <26220921.459141350293884468.herumi@nifty.com>
-References: <1350293228-3602-2-git-send-email-herumi@nifty.com>
- <1350293228-3602-1-git-send-email-herumi@nifty.com>
+From: Arun Khan <knura9@gmail.com>
+Subject: Re: CentOS 6.2 on partition able RAID1 (md_d0) - kernel panic with
+ either disk not present
+Date: Mon, 15 Oct 2012 16:10:59 +0530
+Message-ID: <CAHhM8gAe56TC4w_d-SM2Zm4jgYh4gKmUXzY9Ko1YP2RqQ=33Cg@mail.gmail.com>
+References: <CAHhM8gBsxgYUwqOiVePKFb-epbTQwZDRH50HQy9PPaOMOY=Brw@mail.gmail.com>
+	<506C4A73.6050504@anonymous.org.uk>
+	<CAHhM8gDS+n6q+KSMvA0y1SAMLKrLzOhjCQVx63FoJ+_JVYjDGw@mail.gmail.com>
+	<CAHhM8gAOfUXwPet1EY3gBa_9--K2opvEYFmOxBh9KJnHSCr_Hw@mail.gmail.com>
+	<50714622.4020903@anonymous.org.uk>
+	<CAHhM8gBhEj2EK4oJr-Na7OYjymePYY+Lh5nKH3=R+GkMFcBaNw@mail.gmail.com>
+	<CAHhM8gCL1rnc6g8jEhMvz_jPTGX3SL+9LuBLsZBOg7tGO2WyTQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-2022-jp"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1350293228-3602-2-git-send-email-herumi@nifty.com>
+In-Reply-To: <CAHhM8gCL1rnc6g8jEhMvz_jPTGX3SL+9LuBLsZBOg7tGO2WyTQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all,
-mdadm monitor will clear file cache every 1000 seconds after mdadm resize is e
-xecuted. 
+___ SOLVED ___
 
-We verified the problem occurred at kernel 3.6.2 and mdadm v3.2.5 on ubuntu 12
-.04LTS x86_64
-and the patch worked well.
---- 
-The following steps will reproduce the problem. 
+After experimenting with the boot loader changes (without any success
+in solving the problem), I did some search on the other suspect
+'dracut,' replacement for mkinitrd in RHEL/CentOS 6.
 
-1. prepair a block device(ex. /dev/sdb) 
-2 create two partitions. 
+There were two bug reports on the tool (6.2 and 6.3).
 
-sudo parted /dev/sdb 
-mklabel gpt 
-mkpart primary 0% 50% 
-mkpart primary 50% 100% 
+I updated dracut to dracut-004-284.el6_3.1.noarch and that fixes the problem.
 
-3. create a md device 
+Details on the procedure posted in the CentOS mailing list.
+Ref. <http://lists.centos.org/pipermail/centos/2012-October/129654.html>
 
-sudo mdadm -C /dev/md/hoge -l 1 -n 2 -e 1.2 --assume-clean --auto=md --symlink
-=no /dev/sdb1 /dev/sdb2 
+Thanks to all who helped.
 
-4. create file system and mount it 
-
-sudo mkfs.ext3 /dev/md/hoge 
-sudo mkdir /mnt/test 
-sudo mount /dev/md/hoge /mnt/test 
-
-5. try to resize the device 
-
-sudo mdadm -G /dev/md/hoge --size=max 
-
-6. create a file to fill file cache. 
-
-sudo dd if=/dev/urandom of=/mnt/test/data bs=1M count=10 
-and verity the current status of file by free command. 
-
-7. mdadm monitor will open the md device every 1000 seconds 
-and you will find file cache is cleared. 
-
-The timing can be reduced by the following steps. 
-
-a) kill mdadm and restart it with --delay option 
-/sbin/mdadm --monitor --delay=30 --pid-file /var/run/mdadm/monitor.pid --daemo
-nise --scan --syslog 
-
-or open the md device directly. 
-
-sudo dd if=/dev/md/hoge of=/dev/null bs=4096 count=1 
----
-Yours,
-  Shigeo
-
+-- Arun Khan
