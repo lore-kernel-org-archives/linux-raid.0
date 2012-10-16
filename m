@@ -1,105 +1,28 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [GIT PULL] Disintegrate UAPI for raid
-Date: Tue, 16 Oct 2012 09:22:27 +1100
-Message-ID: <20121016092227.6410ed9d@notabene.brown>
-References: <30738.1349789438@warthog.procyon.org.uk>
+From: hui jiao <simonjiaoh@gmail.com>
+Subject: Are piggybacking of write and redirection of read available in md
+ driver now?
+Date: Tue, 16 Oct 2012 13:44:45 +0800
+Message-ID: <CAEuG+X+b6wr=291NbH5=LR0gSSBVHG_JcWSgk7_SKnBtRaxHrw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/f8VZGjQHFayUOiEINebZdxh"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <30738.1349789438@warthog.procyon.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: David Howells <dhowells@redhat.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/f8VZGjQHFayUOiEINebZdxh
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+there were two optimizations-redirection of reads and piggybacking of
+writes-which first introduced in paper "Performance Analysis of Disk
+Arrays under Failure" 16th VLDB conference 1990.
 
-On Tue, 09 Oct 2012 14:30:38 +0100 David Howells <dhowells@redhat.com> wrot=
-e:
+redirection of reads: the user accesses to data that has already been
+reconstructed are serviced by (redirected to) the replacement disk,
+rather than invoking on-the-fly reconstruction as they would if the
+data were not yet available.
+piggybacking of writes: the user reads that cause on-the-fly
+reconstruction also cause the reconstructed data to be written to the
+replacement disk.
 
-> Can you merge the following branch into the raid tree please.
->=20
-> This is to complete part of the Userspace API (UAPI) disintegration for w=
-hich
-> the preparatory patches were pulled recently.  After these patches, users=
-pace
-> headers will be segregated into:
->=20
-> 	include/uapi/linux/.../foo.h
->=20
-> for the userspace interface stuff, and:
->=20
-> 	include/linux/.../foo.h
->=20
-> for the strictly kernel internal stuff.
->=20
-> ---
-> The following changes since commit 9e2d8656f5e8aa214e66b462680cf86b210b74=
-a8:
->=20
->   Merge branch 'akpm' (Andrew's patch-bomb) (2012-10-09 16:23:15 +0900)
->=20
-> are available in the git repository at:
->=20
->=20
->   git://git.infradead.org/users/dhowells/linux-headers.git tags/disintegr=
-ate-raid-20121009
->=20
-> for you to fetch changes up to fc5a40a2301aa241eedb16caf9169ca5763707c1:
->=20
->   UAPI: (Scripted) Disintegrate include/linux/raid (2012-10-09 09:49:02 +=
-0100)
->=20
-> ----------------------------------------------------------------
-> (from the branch description for disintegrate-raid local branch)
->=20
-> clone of "disintegrate-scsi"
-> UAPI Disintegration 2012-10-09
->=20
-> ----------------------------------------------------------------
-> David Howells (1):
->       UAPI: (Scripted) Disintegrate include/linux/raid
->=20
->  include/linux/raid/Kbuild            |   2 -
->  include/linux/raid/md_u.h            | 141 +----------------------------=
---
->  include/uapi/linux/raid/Kbuild       |   2 +
->  include/{ =3D> uapi}/linux/raid/md_p.h |   0
->  include/uapi/linux/raid/md_u.h       | 155 +++++++++++++++++++++++++++++=
-++++++
->  5 files changed, 158 insertions(+), 142 deletions(-)
->  rename include/{ =3D> uapi}/linux/raid/md_p.h (100%)
->  create mode 100644 include/uapi/linux/raid/md_u.h
-> .
+have these two features been implemented in md driver now? if so,
+where i can find them? if not, is there any plan on them?
 
-I've pull this into my for-next branch.
-
-Thanks,
-NeilBrown
-
---Sig_/f8VZGjQHFayUOiEINebZdxh
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUHyMoznsnt1WYoG5AQLuFg//R6Ik2GGBg9oUCmhoJLxKxLeYv4fJOCrD
-7krC6h8tlHeOFrCwH8/rRfi164AIctOfqDH+SFv7yl7FPNUsx/m5GZv5LWvyTxZu
-bOdgAZwyEd/g+b9LYXT1x/YGCi4VR8uYKHP3JRdDloV8RNozrFBDs6PglGYeHjt7
-wvep8u1LRCy0j/tHNzHRzMoiD7b6R0foto7yBPvfaTg/WZkCCzoF1mkKQPltbEpb
-isurjho+z6t5ms40RD/XtEN/W7srGYqqhM09EtBitTrvGoNrL8Obq1UOIwwShij9
-6FfeLXDUwE4G83Pn2pMHLwOcW9DmN4ZUvM+4n2B0f/LjtPj8Enwbd7v9diuO8Gyy
-J7DEZ8TP+ha2l82tby16DhfHLlS2KTfl71c+pF2kq8YJe6bW9djblTkxk4pEAu1X
-DT6pxjIHgygPnuGyAC2vQy7pj/WmodjSXq0A72OBHee52rVlXUwRlTN7vZXtmq1W
-JUk0JR2GF9i7JLBWs+TPckHgCAxBzieOwc0kl44IuWybECb94fmdtg/2bVavnAlz
-mceRbdVl9y9BCwU78/M2eRHvz9Tw/mBiTLLiI/3sUTLt5q7H80DZLjNw4KA64eMN
-2xX9pkbguE72ibA+HMrA2O5pkVdMrpfO3KIqWkeWEPpEXiYBmfx/LaMM62uDOrMV
-2G2VKq43vsc=
-=HPvH
------END PGP SIGNATURE-----
-
---Sig_/f8VZGjQHFayUOiEINebZdxh--
+Thanks
