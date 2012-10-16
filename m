@@ -1,53 +1,118 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Are piggybacking of write and redirection of read available in
- md driver now?
-Date: Tue, 16 Oct 2012 09:39:32 +0100
-Message-ID: <507D1D44.3050807@anonymous.org.uk>
-References: <CAEuG+X+b6wr=291NbH5=LR0gSSBVHG_JcWSgk7_SKnBtRaxHrw@mail.gmail.com>
+From: Borislav Petkov <bp@alien8.de>
+Subject: Re: Strange crash on Dell R720xd
+Date: Tue, 16 Oct 2012 11:03:53 +0200
+Message-ID: <20121016090353.GB7428@liondog.tnic>
+References: <20121015213522.kaiyahro@trusted.unix-scripts.info>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAEuG+X+b6wr=291NbH5=LR0gSSBVHG_JcWSgk7_SKnBtRaxHrw@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: hui jiao <simonjiaoh@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20121015213522.kaiyahro@trusted.unix-scripts.info>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Laurent CARON <lcaron@unix-scripts.info>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 16/10/2012 06:44, hui jiao wrote:
-> there were two optimizations-redirection of reads and piggybacking of
-> writes-which first introduced in paper "Performance Analysis of Disk
-> Arrays under Failure" 16th VLDB conference 1990.
->
-> redirection of reads: the user accesses to data that has already been
-> reconstructed are serviced by (redirected to) the replacement disk,
-> rather than invoking on-the-fly reconstruction as they would if the
-> data were not yet available.
+On Mon, Oct 15, 2012 at 09:42:58PM +0200, Laurent CARON wrote:
+> Hi,
+> 
+> I'm currently replacing an old system (HP DL 380 G5) by new dell R720xd.
+> On those new boxes I did configure the H310 controler as plain JBOD.
+> 
+> Those boxes appear to crash more often than not (from 5 mins to a couple
+> of hours).
+> I have the impression those crashes appear under heavy IO.
+> 
+> The setup consists of a few md RAID arrays serving as underlying devices
+> for either filesystem, or drbd (plus lvm on top).
+> 
+> I managed to catch a trace over netconsole:
+> ------------[ cut here ]------------
+> kernel BUG at crypto/async_tx/async_tx.c:174!
 
-As I understand it, that's done automatically. If there is a 
-reconstruction in progress, any read from the completed half is read 
-from the replacement disc, but any read from the still-to-do half is 
-reconstructed (obviously).
+That's:
 
-> piggybacking of writes: the user reads that cause on-the-fly
-> reconstruction also cause the reconstructed data to be written to the
-> replacement disk.
+                BUG_ON(async_tx_test_ack(depend_tx) || txd_next(depend_tx) ||
+			txd_parent(tx));
 
-No, that doesn't happen, because it would require a bitmap of which 
-areas of the discs were reconstructed rather than a progress pointer.
+but probably the b0rkage happens up the stack. And this __raid_run_ops
+is probably starting the whole TX so maybe we should add
+linux-raid@vger.kernel.org to CC. Added.
 
-> have these two features been implemented in md driver now? if so,
-> where i can find them? if not, is there any plan on them?
+> invalid opcode: 0000 [#1] SMP 
+> Modules linked in: drbd lru_cache netconsole iptable_filter ip_tables ocfs2_dlmfs ocfs2_stack_o2cb ocfs2_dlm ocfs2_nodemanager ocfs2_stackglue bonding ipv6 btrfs ioatdma lpc_ich sb_edac dca mfd_core
+> CPU 0 
+> Pid: 12580, comm: kworker/u:2 Not tainted 3.6.2-r510-r720xd #1 Dell Inc. PowerEdge R720xd
 
-I can't see the second one making any significant difference in practice 
-unless you're writing to your array so much that the reconstruction time 
-is dramatically delayed, though maybe the paper you referred to says 
-differently. I don't think there's a plan for it, but check out Neil 
-Brown's blog at http://neil.brown.name/blog/ - and it's possible that 
-you get it as a side-effect of the bad block log that's being 
-developed/tested at the moment.
+What is that "r510" thing in the kernel version? You have your patches
+ontop? If yes, please try reproducing this with a kernel.org kernel
+without anything else ontop.
 
-Cheers,
+Also, it might be worth trying plain 3.6 to rule out a regression
+introduced in the stable 3.6 series.
 
-John.
+(leaving in the rest for reference)
 
+> RIP: 0010:[<ffffffff8130f9ab>]  [<ffffffff8130f9ab>] async_tx_submit+0x29/0xab
+> RSP: 0018:ffff88100940fb30  EFLAGS: 00010202
+> RAX: ffff88100b30aeb0 RBX: ffff88080b5cf390 RCX: 0000000000000029
+> RDX: ffff88100940fd00 RSI: ffff88080b5cf390 RDI: ffff880809ad0818
+> RBP: ffff8808054a7d90 R08: ffff88080b5cf900 R09: 0000000000000001
+> R10: 0000000000001000 R11: 0000000000000001 R12: ffff88100940fd00
+> R13: 0000000000000002 R14: ffff880809ad0638 R15: ffff880809ad0818
+> FS:  0000000000000000(0000) GS:ffff88080fc00000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+> CR2: ffffffffff600400 CR3: 0000000e4055f000 CR4: 00000000000407f0
+> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+> Process kworker/u:2 (pid: 12580, threadinfo ffff88100940e000, task ffff880804850630)
+> Stack:
+>  ffff88100940fd00 ffff88100940fc40 0000000000000101 ffffffff8131044b
+>  0000000000000001 0000000000000246 0000000000000201 ffffffffa0073a00
+>  ffff8808054a7d90 ffff8808054a7690 ffff88100940fc40 ffff88080bf9e668
+> Call Trace:
+>  [<ffffffff8131044b>] ? do_async_gen_syndrome+0x2f3/0x320
+>  [<ffffffffa0073a00>] ? ioat2_tx_submit_unlock+0xac/0xb3 [ioatdma]
+>  [<ffffffff815e6820>] ? ops_complete_compute+0x7b/0x7b
+>  [<ffffffff81310540>] ? async_gen_syndrome+0xc8/0x1d6
+>  [<ffffffff815e8b9a>] ? __raid_run_ops+0x9e7/0xb5a
+>  [<ffffffff810848f0>] ? select_task_rq_fair+0x487/0x74b
+>  [<ffffffff815e6820>] ? ops_complete_compute+0x7b/0x7b
+>  [<ffffffff8107e40b>] ? __wake_up+0x35/0x46
+>  [<ffffffff8107ca2a>] ? async_schedule+0x12/0x12
+>  [<ffffffff815e8d3f>] ? async_run_ops+0x32/0x3e
+>  [<ffffffff8107cace>] ? async_run_entry_fn+0xa4/0x17e
+>  [<ffffffff8107ca2a>] ? async_schedule+0x12/0x12
+>  [<ffffffff81071cf8>] ? process_one_work+0x259/0x381
+>  [<ffffffff81072312>] ? worker_thread+0x2ad/0x3e3
+>  [<ffffffff81082e50>] ? try_to_wake_up+0x1fc/0x20c
+>  [<ffffffff81072065>] ? manage_workers+0x245/0x245
+>  [<ffffffff81072065>] ? manage_workers+0x245/0x245
+>  [<ffffffff8107746a>] ? kthread+0x81/0x89
+>  [<ffffffff81791034>] ? kernel_thread_helper+0x4/0x10
+>  [<ffffffff810773e9>] ? kthread_freezable_should_stop+0x4e/0x4e
+>  [<ffffffff81791030>] ? gs_change+0xb/0xb
+> Code: 5b c3 41 54 49 89 d4 55 53 48 89 f3 48 8b 6a 08 48 8b 42 10 48 85 ed 48 89 46 20 48 8b 42 18 48 89 46 28 74 5c f6 45 04 02 74 72 <0f> 0b eb fe 48 8b 02 48 8b 48 28 80 e1 40 74 24 31 f6 48 89 d7 
+> RIP  [<ffffffff8130f9ab>] async_tx_submit+0x29/0xab
+>  RSP <ffff88100940fb30>
+> ---[ end trace 64fb561d16a3b535 ]---
+> Kernel panic - not syncing: Fatal exception in interrupt
+> Rebooting in 5 seconds..
+> 
+> Do any of you guys have a clue about it ?
+> 
+> Thanks
+> 
+> Laurent
+> 
+> PS: The very same kernel doesn't cause any trouble on R510 hardware.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+
+-- 
+Regards/Gruss,
+    Boris.
