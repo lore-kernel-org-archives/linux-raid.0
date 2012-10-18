@@ -1,56 +1,44 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Planning a bug-fix release for mdadm: mdadm 3.2.6
-Date: Thu, 18 Oct 2012 15:48:07 +1100
-Message-ID: <20121018154807.461ddd29@notabene.brown>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: RAID6 reshape, 2 disk failures
+Date: Thu, 18 Oct 2012 06:56:02 -0500
+Message-ID: <507FEE52.50103@hardwarefreak.com>
+References: <CADNH=7FunKmUSREJJz2Lonqjb42gB_WHMQJ7-jmip-X8-1yZnw@mail.gmail.com> <C0A56E30-4D1A-44D3-8480-AC70706897B3@colorremedies.com> <CADNH=7GRyxe7c1NE-5WQUnkpmorchoYCWYtWgeabHkk4pzVMvg@mail.gmail.com> <235A81EB-2E6D-45AD-9175-29ABA1628632@colorremedies.com> <CADNH=7GaGCLdK2Rk_A6vPN+Th0z0QYT7mRV0KJH=CoAffuvb6w@mail.gmail.com> <D5D49452-3E33-4440-91A2-88F1F2E329D8@colorremedies.com> <CADNH=7G0d+7-Y5fwimV6U_u8ep1BAWzFP0jQJOm4RmAkk0urXQ@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/65.Vm613IO6xuvmkKnrkQPu"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CADNH=7G0d+7-Y5fwimV6U_u8ep1BAWzFP0jQJOm4RmAkk0urXQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/65.Vm613IO6xuvmkKnrkQPu
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 10/17/2012 2:03 PM, Mathias Bur=E9n wrote:
 
+> There are no CRC errors so I doubt the cable is at fault. In any way,
+> I've RMA'd drives for less, and an RMA is underway for this drive.
+> Just need to wait for the reshape to finish so I can get in the
+> server. Btw, with a few holes drilled this bad boy holds 7 3.5" HDDs
+> no problem: http://www.antec.com/productPSU.php?id=3D30&pid=3D3
 
-Hi all,
- I had hoped to be close to releasing mdadm-3.3 by now but that doesn't look
- like it'll happen for a couple of months.
- So I'm planning on releasing 3.2.6 which just has bug-fixes on top of 3.2.5
- - no new features or possible breakage.
+It would seem you didn't mod the airflow of the case along with the
+increased drive count.  The NSK1380 has really poor airflow to begin
+with: a single PSU mounted 120mm super low RPM fan.  Antec is currently
+shipping the NSK1380 with an additional PCI slot centrifugal fan to hel=
+p
+overcome the limitations of the native design.
 
- The "mdadm-3.2.x" branch of my git tree (git://neil.brown.name/mdadm)
- contains what I have so far.  If anyone knows of bugs in current mdadm that
- really should be fixed for the next release and aren't in that tree, please
- let me know (or even send me a patch).
- If nothing happens to change my mind I'll release 3.2.6  seven days from n=
-ow
- (which is Thursday afternoon in my time zone - GMT+11).
+You bought crap drives, WD20EARS, then improperly modded a case to hous=
+e
+more than twice the design limit of HDDs.
 
-NeilBrown
+I'd say you stacked the deck against yourself here Mathias.
 
---Sig_/65.Vm613IO6xuvmkKnrkQPu
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+--=20
+Stan
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUH+KBznsnt1WYoG5AQKUwQ//T+qbSHuiaG5ll/Ha2fgog+4rmQD9EYyi
-QWPYDI0R0eng3b2NWYNSjo3GPW2bdBgvPatCNPJpDOykFUPCmhaQ8ZB2nP7mRyvz
-0XVQxHjFUTcgq0sberErHqc2CFwwCCrmj2AvkYBDPmWkUWDnvM6m7SZuGdIWe90J
-+JYou7or0fRlQS56TwfA0UHR/zDHDK/9SRfjeVWEJi9gsL3qCSAMZuFwKjO6VLjF
-HTJPS3kQOtgT080JeG+px+BYPUqE+nOQNBSXsWL7fBj19WeAQtQULDP3z3tMxoVg
-WX2FGqaoMILiRqEEtIDBgJ+c5FtEwtp+vUIU83JvBkzWwQyxqzVeK8q6gf1+9nd4
-F9y9Tq7EkNt1Rx8yWKKKgtNgC7p3UxRfDncYn5DDXheLzZyt7qqNYfrYMCQvlFwG
-DTbtFHbz7hj7BIlqaBFOGj6SFAwCAsRN6VqLnbg/phyEZ6cZMeXbXdcZvwhzoXR2
-J+O43BhZC5nZHGGmHu7+4XrSZCI6ugnqdmxes/i9aNiaB/WeRt58RpcHX0levSQX
-IdHwo5vpALH5tLWVTfj7BCIZjTCp4J2ZVox/T8iitwekDN01hvMtN10GrUIvMJo3
-a6M90rXLpE/wWzQU3KKyaEghxsGOcFS0/HOxpga67xwB9dSLrajTUnHVICGjJaSy
-a63n77kZSRk=
-=9kF4
------END PGP SIGNATURE-----
-
---Sig_/65.Vm613IO6xuvmkKnrkQPu--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
