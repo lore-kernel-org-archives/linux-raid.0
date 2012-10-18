@@ -1,87 +1,98 @@
-From: Haakon Alstadheim <hakon.alstadheim@gmail.com>
-Subject: Re: Interrupted reshape -- mangled backup ?
-Date: Thu, 18 Oct 2012 16:08:10 +0200
-Message-ID: <50800D4A.8090704@gmail.com>
+From: Jivko Sabev <jsabev@nicmus.com>
+Subject: Re: Cannot auto assemble a raid1 array on boot
+Date: Thu, 18 Oct 2012 09:19:58 -0600
+Message-ID: <CAG9W8wCH9bfHou72_+t+JoCS3EA96opcpTOTzkc2E0oFkbX8zg@mail.gmail.com>
+References: <CAG9W8wBsh_i_jtqKFhEVywCk92hef41T0t+6J9saZD3CFT7V9A@mail.gmail.com>
+	<507F7428.6030003@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <507F7428.6030003@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-(I'm copying to the list as well)
+Hi,
 
-On 18. okt. 2012 00:33, NeilBrown wrote:
-> On Wed, 17 Oct 2012 23:34:26 +0200 Haakon Alstadheim
-> <hakon.alstadheim@gmail.com>  wrote:
+The mdadm.conf in the initrd image contains the correct devices. I.e.
+the contents of mdadm.conf in initrd are the output of
+
+mdadm --detail --scan
+
+ARRAY /dev/md0 metadata=1.2 name=mercury:0
+UUID=60ea870e:029dcf99:eaae356e:f1c12085
+ARRAY /dev/md1 metadata=1.2 name=mercury:1
+UUID=d89a52ed:0247f2e8:5edf5d09:21e7fa48
+
+However, the problem remains. That is when booting, the system dumps
+into initramfs shell with the raid array in an inactive state. I have
+to manually stop the array and then reassemble.
+
+mdadm --manage --stop /dev/md1
+mdadm --assemble /dev/md1 /dev/sde1 /dev/md0
+
+
+At the point, I am able to continue booting and everything is fine after.
+
+Here are the contents of /proc/mdstat from the initrd shell before
+reassembling the array.
+
+md1 : inactive sde1[2](S)
+      976639672 blocks super 1.2
+
+md0 : active linear sdb1[0] sdc1[1]
+      976770537 blocks super 1.2 0k rounding
+
+unused devices: <none>
+
+It just seems to me that it is not possible to mix md devices and sata
+devices for new arrays.
+
+Regards,
+
+Jivko
+
+On Wed, Oct 17, 2012 at 9:14 PM, Adam Goryachev
+<mailinglists@websitemanagers.com.au> wrote:
+> On 18/10/12 13:35, Jivko Sabev wrote:
+>> Greetings,
+>>
+>> I have a RAID1 array setup of the following
+>>
+>> /dev/md0 [linear raid array consisting of two 500GB SATA drives]
+>> /dev/md1  [RAID1 array consisting of /dev/md0 and one 1TB SATA drive]
+>>
+>> here is my /proc/mdstat
+>>
+>> --------
+>>
+>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+>> [raid4] [raid10]
+>> md1 : active raid1 md0[0] sde1[2]
+>>       976639296 blocks super 1.2 [2/2] [UU]
+>>
+>> md0 : active linear sdb1[0] sdc1[1]
+>>       976770537 blocks super 1.2 0k rounding
+>>
+>> unused devices: <none>
+>>
+>>
+>> --------
+>>
+>> However, on every reboot, the md1 array is in degraded mode and I get
+>> dumped to a intramfs shell. I can then assemble the said array - i.e.
+>> mdadm --assemble /dev/md1 /dev/md0 /dev/sde1 and everything is fine.
+>> Is it possible to have such an array auto assembled and how?
+>>
 >
->> I have a Raid5 array with 4 devices that I wanted to see if I could get
->> a better performance out of, so i tried changing the chunk size from 64K
->> to something bigger. (famous last words) .  I got into some other
->> trouble and thought I needed a reboot. On reboot I several times managed
->> to mount and specify the device with my backup file during initramfs,
->> but the reshape stopped every time once the system was at initialized.
-> So worst-case you can do that again, but insert a "sleep 365d" immediately
-> after the "mdadm --assemble" is run, so the system never completely
-> initialises.  Then just wait for the reshape to finish.
-Yes, well I need to keep my mail-server running :-). Couple of hours 
-down-time each night is acceptable though.
-
+> Maybe you need to update the mdadm.conf within the initrd image ?
 >
-> When mdadm assembles and array that needs to keep growing it will for a
-> background process to continue monitoring the reshape process.  Presumably
-> that background process is getting killed.  I don't know why.
+> Regards,
+> Adam
 >
->> This is under debian sqeeze with a 3.2.0-0.bpo.3-686-pae kernel from
->> backports. I installed mdadm from backports to get the latest version of
->> that as well, and tried rebooting with --freeze-reshape. Suspect that I
->> mixed up my initrd.img-files and started without --freeze-reshape the
->> first time after installing the new mdadm. Now mdadm says it can not
->> find a backup in my backup file. Opening up the backup in emacs, it
->> seems to contain only NULs. Can't be right, can it? I have been mounting
->> the backup under a directory under /dev/, on the assumption that the
->> mount wold survive past the initramfs stage.
-> The backup file could certainly contain lots of nuls, but it shouldn't be
-> *all* nulls.
-I checked again, isearch-forward-regexp for [^^@] in emacs gives no 
-hits. ^@ is the emacs way of displaying ASCII-NUL
->    At least there should be a header at the start which describes
-> which area of the device is contained in the backup.
+> --
+> Adam Goryachev
+> Website Managers
+> www.websitemanagers.com.au
 >
-> You can continue without a backup.  You still need to specify a backup file,
-> but if you add "--invalid-backup", it will continue even if the backup file
-> doesn't contain anything useful.
-Thanks! device is now running again. These switches are hard to google 
-after. Especially when you are a bit stressed :-)
-> If the machine was shutdown by a crash during reshape you might suffer
-> corruption.  If it was a clean shutdown you won't.
-
-No corruption yet, (last reboot without fsck though).
-
->
-> --freeze-reshape is intended to be the way to handle this, with
->     --grow --continue
-> once you are fully up and running, but I don't think that works correctly for
-> 'native' metadata yet - it was implemented with IMSM metadata in mind.
->
-> NeilBrown
-You are right, mdadm segfaults when I try to do mdadm --grow --continue 
---backup-file=/dev/bak/md1-backup /dev/md1.
-
-We'll se tonight at 04:15 whether my custom initramfs script can make 
-some progress on the reshape, and continue booting without messing up 
-the backup-file.
-
-In my initramfs script, should I do the following ? :
-1. Start the array
-2. Sleep a while
-3. Stop the array
-4. Start with --freeze-reshape
-5. Continue boot
-
-... or is it just as well to live with the timestamps getting out of 
-sync when the reshape dies? I.e skip the stop&restart bit ?
-
-
