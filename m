@@ -1,69 +1,87 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: RAID6 reshape, 2 disk failures
-Date: Thu, 18 Oct 2012 13:17:21 +0100
-Message-ID: <CADNH=7FKd9LuUzwnQ7W4Evo_PzGRjY8nK6u1R3AMvzq17FMe=w@mail.gmail.com>
-References: <CADNH=7FunKmUSREJJz2Lonqjb42gB_WHMQJ7-jmip-X8-1yZnw@mail.gmail.com>
-	<C0A56E30-4D1A-44D3-8480-AC70706897B3@colorremedies.com>
-	<CADNH=7GRyxe7c1NE-5WQUnkpmorchoYCWYtWgeabHkk4pzVMvg@mail.gmail.com>
-	<235A81EB-2E6D-45AD-9175-29ABA1628632@colorremedies.com>
-	<CADNH=7GaGCLdK2Rk_A6vPN+Th0z0QYT7mRV0KJH=CoAffuvb6w@mail.gmail.com>
-	<D5D49452-3E33-4440-91A2-88F1F2E329D8@colorremedies.com>
-	<CADNH=7G0d+7-Y5fwimV6U_u8ep1BAWzFP0jQJOm4RmAkk0urXQ@mail.gmail.com>
-	<507FEE52.50103@hardwarefreak.com>
+From: Haakon Alstadheim <hakon.alstadheim@gmail.com>
+Subject: Re: Interrupted reshape -- mangled backup ?
+Date: Thu, 18 Oct 2012 16:08:10 +0200
+Message-ID: <50800D4A.8090704@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <507FEE52.50103@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: linux-raid RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 18 October 2012 12:56, Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> On 10/17/2012 2:03 PM, Mathias Bur=C3=A9n wrote:
->
->> There are no CRC errors so I doubt the cable is at fault. In any way=
-,
->> I've RMA'd drives for less, and an RMA is underway for this drive.
->> Just need to wait for the reshape to finish so I can get in the
->> server. Btw, with a few holes drilled this bad boy holds 7 3.5" HDDs
->> no problem: http://www.antec.com/productPSU.php?id=3D30&pid=3D3
->
-> It would seem you didn't mod the airflow of the case along with the
-> increased drive count.  The NSK1380 has really poor airflow to begin
-> with: a single PSU mounted 120mm super low RPM fan.  Antec is current=
-ly
-> shipping the NSK1380 with an additional PCI slot centrifugal fan to h=
-elp
-> overcome the limitations of the native design.
->
-> You bought crap drives, WD20EARS, then improperly modded a case to ho=
-use
-> more than twice the design limit of HDDs.
->
-> I'd say you stacked the deck against yourself here Mathias.
->
-> --
-> Stan
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+(I'm copying to the list as well)
 
-Now now, the setup is working like a charm. Disk failures happen all
-the time. There's an additional 120mm at the bottom, blowing up
-towards the 7 HDDs. I bought "crap" drives because they were cheap.
+On 18. okt. 2012 00:33, NeilBrown wrote:
+> On Wed, 17 Oct 2012 23:34:26 +0200 Haakon Alstadheim
+> <hakon.alstadheim@gmail.com>  wrote:
+>
+>> I have a Raid5 array with 4 devices that I wanted to see if I could get
+>> a better performance out of, so i tried changing the chunk size from 64K
+>> to something bigger. (famous last words) .  I got into some other
+>> trouble and thought I needed a reboot. On reboot I several times managed
+>> to mount and specify the device with my backup file during initramfs,
+>> but the reshape stopped every time once the system was at initialized.
+> So worst-case you can do that again, but insert a "sleep 365d" immediately
+> after the "mdadm --assemble" is run, so the system never completely
+> initialises.  Then just wait for the reshape to finish.
+Yes, well I need to keep my mail-server running :-). Couple of hours 
+down-time each night is acceptable though.
 
-In the 2 years a total of 3 drives have failed, but the array has
-never failed. I'm very pleased with it (HTPC, with an ION board and 4x
-SATA PCI-E controller for E10)
+>
+> When mdadm assembles and array that needs to keep growing it will for a
+> background process to continue monitoring the reshape process.  Presumably
+> that background process is getting killed.  I don't know why.
+>
+>> This is under debian sqeeze with a 3.2.0-0.bpo.3-686-pae kernel from
+>> backports. I installed mdadm from backports to get the latest version of
+>> that as well, and tried rebooting with --freeze-reshape. Suspect that I
+>> mixed up my initrd.img-files and started without --freeze-reshape the
+>> first time after installing the new mdadm. Now mdadm says it can not
+>> find a backup in my backup file. Opening up the backup in emacs, it
+>> seems to contain only NULs. Can't be right, can it? I have been mounting
+>> the backup under a directory under /dev/, on the assumption that the
+>> mount wold survive past the initramfs stage.
+> The backup file could certainly contain lots of nuls, but it shouldn't be
+> *all* nulls.
+I checked again, isearch-forward-regexp for [^^@] in emacs gives no 
+hits. ^@ is the emacs way of displaying ASCII-NUL
+>    At least there should be a header at the start which describes
+> which area of the device is contained in the backup.
+>
+> You can continue without a backup.  You still need to specify a backup file,
+> but if you add "--invalid-backup", it will continue even if the backup file
+> doesn't contain anything useful.
+Thanks! device is now running again. These switches are hard to google 
+after. Especially when you are a bit stressed :-)
+> If the machine was shutdown by a crash during reshape you might suffer
+> corruption.  If it was a clean shutdown you won't.
 
-Mathias
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+No corruption yet, (last reboot without fsck though).
+
+>
+> --freeze-reshape is intended to be the way to handle this, with
+>     --grow --continue
+> once you are fully up and running, but I don't think that works correctly for
+> 'native' metadata yet - it was implemented with IMSM metadata in mind.
+>
+> NeilBrown
+You are right, mdadm segfaults when I try to do mdadm --grow --continue 
+--backup-file=/dev/bak/md1-backup /dev/md1.
+
+We'll se tonight at 04:15 whether my custom initramfs script can make 
+some progress on the reshape, and continue booting without messing up 
+the backup-file.
+
+In my initramfs script, should I do the following ? :
+1. Start the array
+2. Sleep a while
+3. Stop the array
+4. Start with --freeze-reshape
+5. Continue boot
+
+... or is it just as well to live with the timestamps getting out of 
+sync when the reshape dies? I.e skip the stop&restart bit ?
+
+
