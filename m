@@ -1,77 +1,47 @@
-From: Marcus Sorensen <shadowsor@gmail.com>
-Subject: Re: raid device gone underneath array
-Date: Fri, 19 Oct 2012 09:45:24 -0600
-Message-ID: <CALFpzo6uyyLmS3dCkyqTGEv-Ro4hMYpkfo+xDeQnuUPUToFvmA@mail.gmail.com>
-References: <CALFpzo4gLGzGWLRdVK7bZnYr3hbR7xOgn402UTP2_7UpRE8j6g@mail.gmail.com>
-	<50809DC5.60106@websitemanagers.com.au>
-	<slrnk81k84.am0.chris@chris.onthe.net.au>
-	<D1C1909A-24CD-48C1-8C6F-2EEA81C50459@colorremedies.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Offtopic: on case
+Date: Fri, 19 Oct 2012 11:44:58 -0500
+Message-ID: <5081838A.1020006@hardwarefreak.com>
+References: <CADNH=7FunKmUSREJJz2Lonqjb42gB_WHMQJ7-jmip-X8-1yZnw@mail.gmail.com> <C0A56E30-4D1A-44D3-8480-AC70706897B3@colorremedies.com> <CADNH=7GRyxe7c1NE-5WQUnkpmorchoYCWYtWgeabHkk4pzVMvg@mail.gmail.com> <235A81EB-2E6D-45AD-9175-29ABA1628632@colorremedies.com> <CADNH=7GaGCLdK2Rk_A6vPN+Th0z0QYT7mRV0KJH=CoAffuvb6w@mail.gmail.com> <D5D49452-3E33-4440-91A2-88F1F2E329D8@colorremedies.com> <CADNH=7G0d+7-Y5fwimV6U_u8ep1BAWzFP0jQJOm4RmAkk0urXQ@mail.gmail.com> <507FEE52.50103@hardwarefreak.com> <CADNH=7FKd9LuUzwnQ7W4Evo_PzGRjY8nK6u1R3AMvzq17FMe=w@mail.gmail.com> <CADNH=7HEBDGrN+2SpLB30mAN0nW0ky=KGwCgnxeY4OSejFr1yw@mail.gmail.com> <3286E6F7-0982-4A87-A83C-5D78B22EE437@colorremedies.com> <CADNH=7HqAweunG0wBG5-Ut5ECxt0zpvQaoFS=FhW=g4Sj9Rmug@mail.gmail.com> <50806D6C.2050103@hardwarefreak.com> <4FDB
+ 990B62C2D849BA8EADBDD1C5928E1372362B18@CCRMBX.abiad.abi.lan>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <D1C1909A-24CD-48C1-8C6F-2EEA81C50459@colorremedies.com>
+In-Reply-To: <4FDB990B62C2D849BA8EADBDD1C5928E1372362B18@CCRMBX.abiad.abi.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: linux-raid RAID <linux-raid@vger.kernel.org>
+To: Carabetta Giulio <g.carabetta@abi.it>
+Cc: =?ISO-8859-1?Q?=27Mathias_Bur=E9n=27?= <mathias.buren@gmail.com>, 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-So in my history I also have:
+On 10/19/2012 9:32 AM, Carabetta Giulio wrote:
+> Sorry for the OT, but...
+...
+> You are right, I know that very well... 
+> Also I'm looking for a compromise between temperature and noise: what do you think about this case?
+> http://www.lian-li.com/v2/en/product/product06.php?pr_index=480&cl_index=1&sc_index=26&ss_index=67&g=f
 
-mdadm --manage /dev/md1 --remove detached
-mdadm --manage /dev/md1 --remove failed
+It should keep six 3.5" SATA drives within normal operating temp range,
+even though the hole punched cage frame is inefficient, along with the
+lateral vs longitudinal orientation.  Going lateral saved them 2" on
+case depth, which is critical to their aesthetics.  They could have
+eliminated the side and bottom intake grilles and the top exhaust fan,
+by rotating the PSU 180 degrees, reversing its fan, and adding a small
+director vane on the back of the case.  This would decrease total noise
+by 3-5 dB without impacting cooling capacity.
 
-Note that also the device is already marked as failed. I think the
-speculation is that the disk was removed from the system and
-references cleaned up without md realizing it. Therefore any
-subsequent code that tries to act upon /dev/sdc gets an ENOENT or
-similar, and md assumes the device is busy. Or it was currently doing
-something at the time the disk was removed, which is now going to
-block indefinitely.
+There are two reasons I've never been big on Lian Li cases:
 
-On Thu, Oct 18, 2012 at 10:29 PM, Chris Murphy <lists@colorremedies.com> wrote:
->
-> On Oct 18, 2012, at 10:03 PM, Chris Dunlop wrote:
->
->> On 2012-10-19, Adam Goryachev <mailinglists@websitemanagers.com.au> wrote:
->>> On 19/10/12 11:01, Marcus Sorensen wrote:
->>>> I've been using software raid to mirror two devices, and recently one
->>>> of the drives went AWOL.
->>>>
->>>> md1 : active raid1 sdm[0] sdc[1](F)
->>>>      12884900728 blocks super 1.2 [2/1] [U_]
->>>>      bitmap: 1/96 pages [4KB], 65536KB chunk
->>>>
->>>> However, md1 froze, and in looking at the logs I saw this:
->>>>
->>>> Oct 18 17:47:48 sys kernel: md: cannot remove active disk sdc from md1 ...
->>>> Oct 18 17:47:48 sys kernel: md: cannot remove active disk sdc from md1 ...
->>>>
->>>> [root(marcus)@sanmirror3-01 ~]# mdadm --manage /dev/md1 --remove /dev/sdc
->>>> mdadm: cannot find /dev/sdc: No such file or directory
->>>>
->>>> /dev/sdc was already gone! The /sys/block was already removed, no
->>>> reference to it in /proc/scsi/scsi. So md1 was destined to sit there
->>>> forever. So I rebooted and started up the degraded array.
->>>>
->>>> Using kernel 3.6.2 from kernel.org
->>>
->>> I've also had this problem, I think the kernel notices the device is
->>> gone, and removes it before MD notices the problem and removes it from
->>> the array. I managed to resolve this without a reboot by manually
->>> creating the device in /dev/sdc1 or whatever, and then doing mdadm
->>> --manage /dev/md0 --remove /dev/sdc1
->>
->> Or you could simply do:
->>
->> mdadm --manage /dev/md1 -r failed
->
-> That's if md knows it's failed. If the speculation is correct, that the kernel bounced the disk before md determined it was failed, then I think the commands are:
->
-> mdadm --manage /dev/md1 -f detached
-> mdadm --manage /dev/md1 -r detached
->
->
-> Chris Murphy--
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+1.  You pay a 3-5x premium for aesthetics and the name
+2.  Airflow is an engineering afterthought--aesthetics comes first
+
+Point 2 is interesting regarding this case.  I'm surprised to see a huge
+blue glowing front intake grille on a Lian Li.  They've heretofore
+always been about the Apple clean lines look, brushed aluminum with as
+few interruptions as possible, which is they they had typically located
+media bays and device connectors on the sides, not the front.
+
+-- 
+Stan
+
