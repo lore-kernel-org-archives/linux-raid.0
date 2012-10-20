@@ -1,28 +1,30 @@
 From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: Planning a bug-fix release for mdadm: mdadm 3.2.6
-Date: Sat, 20 Oct 2012 19:28:34 +0400
-Message-ID: <5082C322.6020506@msgid.tls.msk.ru>
-References: <20121018154807.461ddd29@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Subject: mdadm: super0: do not override uuid with homehost
+Date: Sat, 20 Oct 2012 19:40:02 +0400 (MSK)
+Message-ID: <20121020154002.F24612C12@gandalf.tls.msk.ru>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121018154807.461ddd29@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: linux RAID <linux-raid@vger.kernel.org>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, linux RAID <linux-raid@vger.kernel.org>, 686703@bugs.debian.org
 List-Id: linux-raid.ids
 
-On 18.10.2012 08:48, NeilBrown wrote:
->  The "mdadm-3.2.x" branch of my git tree (git://neil.brown.name/mdadm)
->  contains what I have so far.  If anyone knows of bugs in current mdadm that
->  really should be fixed for the next release and aren't in that tree, please
->  let me know (or even send me a patch).
+When --uuid is specified in the command line, even for v0.90
+superblock we override last portion of uuid with data from
+--homehost, which is wrong (and disagrees with the manpage).
+Only use homehost in super0 if no uuid is specified.
 
-There's apparently a small (but annoying when you hit it) bug mentioned in
-http://bugs.debian.org/686703 -- when specifying --uuid, --homehost is NOT
-ignored as it should be.  I'm looking at it right now, so for now it is JFYI.
+Signed-off-By: Michael Tokarev <mjt@tls.msk.ru>
 
-Thanks,
-
-/mjt
+diff --git a/super0.c b/super0.c
+index 1375799..ca4c082 100644
+--- a/super0.c
++++ b/super0.c
+@@ -657,7 +657,7 @@ static int init_super0(struct supertype *st, mdu_array_info_t *info,
+ 		if (rfd >= 0)
+ 			close(rfd);
+ 	}
+-	if (homehost) {
++	if (homehost && !uuid) {
+ 		char buf[20];
+ 		char *hash = sha1_buffer(homehost,
+ 					 strlen(homehost),
