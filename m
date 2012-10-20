@@ -1,48 +1,26 @@
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] md faulty: use disk_stack_limits()
-Date: Fri, 19 Oct 2012 18:43:45 -0500
-Message-ID: <5081E5B1.3070903@redhat.com>
+From: Ken <ravenpi@gmail.com>
+Subject: Dead three-disk RAID-5. Help?
+Date: Fri, 19 Oct 2012 23:19:42 -0400
+Message-ID: <CAHw0J8hx+_siPsd7ZQN=WKy2yTpiSzyKk1ULUKa+HBbEwsy8pQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid <linux-raid@vger.kernel.org>
-Cc: Mike Snitzer <msnitzer@redhat.com>, Jes Sorensen <Jes.Sorensen@redhat.com>
 List-Id: linux-raid.ids
 
-in:
-fe86cdce block: do not artificially constrain max_sectors for stacking drivers
+I'm currently highly suspicious that I executed the wrong command in
+the wrong window -- which would mean that I blew away the partition
+table, and fsck'd the new partitions, on /dev/sda.  Which
+theoretically leaves me with /dev/sdb and /dev/sdc, no?  Except that
+when I try to access them, it won't allow me to create the array.  If
+I try the whole thing, it either tells me there's no partition table
+on /dev/md0, or that it can't find the superblock on /dev/md0.
 
-max_sectors defaults to UINT_MAX.  md faulty wasn't using
-disk_stack_limits(), so inherited this large value as well.
-This triggered a bug in XFS when stressed over md_faulty, when
-a very large bio_alloc() failed.
+Any pointers on where to go from here would be very much appreciated
+-- as (of course) the irony is that the system I *meant* to be
+fsck'ing was intended to back up the original system.
 
-That was on an older kernel, and I can't reproduce exactly the
-same thing upstream, but I think the fix is appropriate in any
-case.
+Thank you kindly,
 
-Thanks to Mike Snitzer for pointing out the problem.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/drivers/md/faulty.c b/drivers/md/faulty.c
-index 45135f6..5e7dc77 100644
---- a/drivers/md/faulty.c
-+++ b/drivers/md/faulty.c
-@@ -315,8 +315,11 @@ static int run(struct mddev *mddev)
- 	}
- 	conf->nfaults = 0;
- 
--	rdev_for_each(rdev, mddev)
-+	rdev_for_each(rdev, mddev) {
- 		conf->rdev = rdev;
-+		disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				  rdev->data_offset << 9);
-+	}
- 
- 	md_set_array_sectors(mddev, faulty_size(mddev, 0, 0));
- 	mddev->private = conf;
-
+-Ken
