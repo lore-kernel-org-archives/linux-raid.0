@@ -1,43 +1,46 @@
-From: Gilles Espinasse <g.esp@free.fr>
-Subject: [PATCH 3/3] Replace --no-error by --keep-going
-Date: Sat, 20 Oct 2012 18:04:14 +0200
-Message-ID: <1350749054-5519-1-git-send-email-g.esp@free.fr>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: mdadm: super0: do not override uuid with homehost
+Date: Sat, 20 Oct 2012 20:09:27 +0400
+Message-ID: <5082CCB7.3010402@msgid.tls.msk.ru>
+References: <20121020154002.F24612C12@gandalf.tls.msk.ru>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20121020154002.F24612C12@gandalf.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, neilb@suse.de
-Cc: Gilles Espinasse <g.esp@free.fr>
+To: NeilBrown <neilb@suse.de>
+Cc: linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Signed-off-by: Gilles Espinasse <g.esp@free.fr>
+On 20.10.2012 19:40, Michael Tokarev wrote:
+> When --uuid is specified in the command line, even for v0.90
+> superblock we override last portion of uuid with data from
+> --homehost, which is wrong (and disagrees with the manpage).
+> Only use homehost in super0 if no uuid is specified.
+> 
+> Signed-off-By: Michael Tokarev <mjt@tls.msk.ru>
+> 
+> diff --git a/super0.c b/super0.c
+> index 1375799..ca4c082 100644
+> --- a/super0.c
+> +++ b/super0.c
+> @@ -657,7 +657,7 @@ static int init_super0(struct supertype *st, mdu_array_info_t *info,
+>  		if (rfd >= 0)
+>  			close(rfd);
+>  	}
+> -	if (homehost) {
+> +	if (homehost && !uuid) {
 
-Suggest to replace by the option name that 'make' use.
-no error is only a developper hope.
----
- test |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Besides, do we need to check *homehost here too,
+in order to be able to unset homehost given in
+config file or whatnot, by setting it to an empty
+string?
 
-diff --git a/test b/test
-index 8339d06..c5b1982 100755
---- a/test
-+++ b/test
-@@ -252,7 +252,7 @@ do_help() {
-   echo "    --disable-multipath         Disable any tests involving multipath"
-   echo "    --logdir=<directory>        Directory to save logfiles in"
-   echo "    --save-logs                 Save all logs in <logdir>"
--  echo "    --no-error                  Don't stop on error, ie. run all tests"
-+  echo "    --keep-going                Don't stop on error, ie. run all tests"
-   echo "    setup                       Setup test environment and exit"
-   echo "    cleanup                     Cleanup test environment"
-   echo "    <prefix>                    Run tests with <prefix>"
-@@ -289,7 +289,7 @@ parse_args() {
- 	fi
-       fi
-       ;;
--    --no-error)
-+    --keep-going)
-       exitonerror=0
-       ;;
-     --disable-multipath)
--- 
-1.7.2.5
+/mjt
+
+
+>  		char buf[20];
+>  		char *hash = sha1_buffer(homehost,
+>  					 strlen(homehost),
 
