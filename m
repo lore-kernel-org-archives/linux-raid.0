@@ -1,93 +1,76 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm: super0: do not override uuid with homehost
-Date: Mon, 22 Oct 2012 08:50:44 +1100
-Message-ID: <20121022085044.044026cf@notabene.brown>
-References: <20121020154002.F24612C12@gandalf.tls.msk.ru>
-	<5082CCB7.3010402@msgid.tls.msk.ru>
+Subject: Re: Planning a bug-fix release for mdadm: mdadm 3.2.6
+Date: Mon, 22 Oct 2012 09:01:21 +1100
+Message-ID: <20121022090121.68e958e5@notabene.brown>
+References: <20121018154807.461ddd29@notabene.brown>
+	<5082C322.6020506@msgid.tls.msk.ru>
+	<5082C6CE.9050809@msgid.tls.msk.ru>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/+URC_ZLS0Fgn5PhE8bTTelO"; protocol="application/pgp-signature"
+ boundary="Sig_/ktKYcDuD9pv.7XW_ofHvR4_"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5082CCB7.3010402@msgid.tls.msk.ru>
+In-Reply-To: <5082C6CE.9050809@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
 To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: linux RAID <linux-raid@vger.kernel.org>
+Cc: Sergey B Kirpichev <skirpichev@gmail.com>, linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/+URC_ZLS0Fgn5PhE8bTTelO
+--Sig_/ktKYcDuD9pv.7XW_ofHvR4_
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 20 Oct 2012 20:09:27 +0400 Michael Tokarev <mjt@tls.msk.ru> wrote:
+On Sat, 20 Oct 2012 19:44:14 +0400 Michael Tokarev <mjt@tls.msk.ru> wrote:
 
-> On 20.10.2012 19:40, Michael Tokarev wrote:
-> > When --uuid is specified in the command line, even for v0.90
-> > superblock we override last portion of uuid with data from
-> > --homehost, which is wrong (and disagrees with the manpage).
-> > Only use homehost in super0 if no uuid is specified.
+> On 20.10.2012 19:28, Michael Tokarev wrote:
+> > On 18.10.2012 08:48, NeilBrown wrote:
+> >>  The "mdadm-3.2.x" branch of my git tree (git://neil.brown.name/mdadm)
+> >>  contains what I have so far.  If anyone knows of bugs in current mdad=
+m that
+> >>  really should be fixed for the next release and aren't in that tree, =
+please
+> >>  let me know (or even send me a patch).
 > >=20
-> > Signed-off-By: Michael Tokarev <mjt@tls.msk.ru>
-> >=20
-> > diff --git a/super0.c b/super0.c
-> > index 1375799..ca4c082 100644
-> > --- a/super0.c
-> > +++ b/super0.c
-> > @@ -657,7 +657,7 @@ static int init_super0(struct supertype *st, mdu_ar=
-ray_info_t *info,
-> >  		if (rfd >=3D 0)
-> >  			close(rfd);
-> >  	}
-> > -	if (homehost) {
-> > +	if (homehost && !uuid) {
+> > There's apparently a small (but annoying when you hit it) bug mentioned=
+ in
+> > http://bugs.debian.org/686703 -- when specifying --uuid, --homehost is =
+NOT
+> > ignored as it should be.  I'm looking at it right now, so for now it is=
+ JFYI.
 >=20
-> Besides, do we need to check *homehost here too,
-> in order to be able to unset homehost given in
-> config file or whatnot, by setting it to an empty
-> string?
-
-No we don't.
-	if (homehost && (!homehost[0] || strcasecmp(homehost, "<none>") =3D=3D 0))=
- {
-		homehost =3D NULL;
-		require_homehost =3D 0;
-	}
-
-(from 3.2.x, slightly different in 'master') so if *homehost would be nul,
-homehost gets set to NULL.
-
-I've applied your patch as-is.
-Thanks,
-NeilBrown
-
+> I just sent a trivial one-liner patch for this issue.  It is applicable f=
+or
+> older releases too.
+>=20
+> And here's another trivial bugfix, now for spelling mistakes in various
+> places, authred by Sergey Kirpichev (Cc'ed) and carried in debian mdadm
+> package.  Please consider applying.
 >=20
 > /mjt
->=20
->=20
-> >  		char buf[20];
-> >  		char *hash =3D sha1_buffer(homehost,
-> >  					 strlen(homehost),
 
+I've applied these - thanks!
 
---Sig_/+URC_ZLS0Fgn5PhE8bTTelO
+NeilBrown
+
+--Sig_/ktKYcDuD9pv.7XW_ofHvR4_
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUIRuNDnsnt1WYoG5AQLWcA/9Ed9WEPZewDFyzvcI+HHtyz+eEIquEGiW
-VGwEul1R2CRu6lRDFbWAxN8d0pKzxDUgsZvVQgR9ljIikqViASiSwGp286aaZNB/
-nyOP+kq/vI5C3X5FTzYMcPo/WtD3mLyZLlIPkXOnek7XmQj+n/tamgSNNpNxYR2E
-t3uKd7z2BE4FMQDrjzLHyVPlM1WvQ/Ndnp38s3UqfmFthGLOc+TEuTNhIGf+u/tz
-32qjidS7ukYUEf9wLEww4Z3aBiwMC5DQRu5jH1xWGwRZeyhMRBLtxAQqoHZQ7t0w
-zLynQbRngBPjh80qIj1bUDabkVJsYkaxu8Y1zYC+Nc3zGhJQFmiEkRTTaqBl92FG
-uGfEEw0dUhWLmv1qpNaSTYXgYelcm2lS9Z3YYj0q1SXtOQbUIeIznWRBsws6Y8VR
-g98kUrKc3PGpyV3qnKkr3TQuNId+x1zMkavilx+c6Cpft4TednSEa/WYe3vR4NmL
-r8NVvohzG2iJk4ZW/kpj+rL3qATG3pSuoU3qcSp03g+hgsoaNDSnWofNqZf5UTf4
-12kzq/LTIMFh3F+45scBwlyPqJ7DVOTRQM7bmL/j2jNNfElytEPKPBh8S1wTE8eL
-iRWudOTPB4yG9CQDyKph1YHrEE4+KLYCX6PWDzhb3Dp2kobv1zN4jLObG0/MdGDU
-5OaqJiHHMHA=
-=nbuT
+iQIVAwUBUIRwsTnsnt1WYoG5AQLAQhAAmf6g6k+ZA2dsGz+/DpijQ+CvmbDxOtQd
+WPuDvTWRVOxX3/FlGqMZfl9FpoWoRUN3uadJmkShMzfoBUktygCA02jOVpTrU887
+nOaVxtd7mOXyT7uduSi9yoWcnmsgjSYf4g1PxYV9RYPTnO0RN6iSExaQHm3JfwRj
+NRWxLrnv2vn5fglr8Nmvp8bgrd4C/2EhqPLCgdFmiQl8dpHH8Wzl0SxbPNxiavCR
+Z4ZCARuJOxtn9a1xMCgmjhhocn+rFkA/Gpe8GhF1oKDUwGF6QZgcjNNUxPAtgDZA
+n4P54j0Ze6a9leTsV+Mx4jL9CpzTrmYGBWf8mquPMFB9Mfq4VKuZzX077cRZuzZm
+SwfKLE/uoQ+oEgZB7BUsvN3V9FMJNq0t3rVVANzrDufIasdHlbf4uxtSMfh3P8wO
+eOyrNYpvQdfRUJnmRyadOUvexFqwltGWuQ07mTb93KRdCfLieHhr1aTVaABU3cdA
+yTeoRCEFE00Hts40IiJWjKTiSLmNBNa5GddwQ/Oo5xc092HWi3Z/goiiDZxsRbhe
+Spyu7D0nVKKvyKT88cd5LLO2KJNGQk9o1s0NvDHXqcD2cMWknc3kpWDuL8pPM/Ci
+RbRSQ25/3FJCYrz4NDEiovep1/NmrdETcxanredGwdJCJ3P4dqGmZQLByBcG7DuK
+QiqV+BFFFv4=
+=F4I7
 -----END PGP SIGNATURE-----
 
---Sig_/+URC_ZLS0Fgn5PhE8bTTelO--
+--Sig_/ktKYcDuD9pv.7XW_ofHvR4_--
