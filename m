@@ -1,85 +1,72 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: raid device gone underneath array
-Date: Mon, 22 Oct 2012 09:19:21 +1100
-Message-ID: <20121022091921.33f78a22@notabene.brown>
-References: <CALFpzo4gLGzGWLRdVK7bZnYr3hbR7xOgn402UTP2_7UpRE8j6g@mail.gmail.com>
+Subject: Re: RAID6 reshape, 2 disk failures
+Date: Mon, 22 Oct 2012 09:31:36 +1100
+Message-ID: <20121022093136.6a959859@notabene.brown>
+References: <CADNH=7FunKmUSREJJz2Lonqjb42gB_WHMQJ7-jmip-X8-1yZnw@mail.gmail.com>
+	<C0A56E30-4D1A-44D3-8480-AC70706897B3@colorremedies.com>
+	<CADNH=7GRyxe7c1NE-5WQUnkpmorchoYCWYtWgeabHkk4pzVMvg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ZNR8WAN15bjS=Q3_vE9VeCz"; protocol="application/pgp-signature"
+ boundary="Sig_/a7wB5AGMy41HX4./dwugOn="; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CALFpzo4gLGzGWLRdVK7bZnYr3hbR7xOgn402UTP2_7UpRE8j6g@mail.gmail.com>
+In-Reply-To: <CADNH=7GRyxe7c1NE-5WQUnkpmorchoYCWYtWgeabHkk4pzVMvg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marcus Sorensen <shadowsor@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>
+Cc: Chris Murphy <lists@colorremedies.com>, linux-raid RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/ZNR8WAN15bjS=Q3_vE9VeCz
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/a7wB5AGMy41HX4./dwugOn=
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 18 Oct 2012 18:01:34 -0600 Marcus Sorensen <shadowsor@gmail.com>
+On Wed, 17 Oct 2012 09:03:11 +0100 Mathias Bur=C3=A9n <mathias.buren@gmail.=
+com>
 wrote:
 
-> I've been using software raid to mirror two devices, and recently one
-> of the drives went AWOL.
->=20
-> md1 : active raid1 sdm[0] sdc[1](F)
->       12884900728 blocks super 1.2 [2/1] [U_]
->       bitmap: 1/96 pages [4KB], 65536KB chunk
->=20
-> However, md1 froze, and in looking at the logs I saw this:
->=20
-> Oct 18 17:47:48 sys kernel: md: cannot remove active disk sdc from md1 ...
-> Oct 18 17:47:48 sys kernel: md: cannot remove active disk sdc from md1 ...
->=20
-> [root(marcus)@sanmirror3-01 ~]# mdadm --manage /dev/md1 --remove /dev/sdc
-> mdadm: cannot find /dev/sdc: No such file or directory
->=20
-> /dev/sdc was already gone! The /sys/block was already removed, no
-> reference to it in /proc/scsi/scsi. So md1 was destined to sit there
-> forever. So I rebooted and started up the degraded array.
 
-These messages imply that 'sdc' was sent a request and no reply has been
-received.  Until the count of pending requests hits zero, md cannot
-completely release sdc, and if it was a write - cannot reply to the request
-that it received from a files system.
+> Any idea why it says rebuilding, when it's not? Is it going to attempt
+> a rebuild after the reshape?
 
-When a device fails or disappears the driver should ensure that all pending
-requests fail - and return that failure status.  md depends on this.
-So - assuming this status continued for more than a minute - it looks like a
-bug with the driver for 'sdc'.
+Minor bug in mdadm.
+The device is clearly faulty:
+
+    Number   Major   Minor   RaidDevice State
+       0       8       65        0      faulty spare rebuilding   /dev/sde1
+
+so mdadm should never suggest that it is also spare and rebuilding.=20
+I'll fix that.
+
+What is a little odd is that 'RaidDevice' is still '0'.  Normally when a
+device fails the RaidDevice gets set to '-1'.
+This doesn't happen immediately though - md waits until all pending requests
+have completed and then disassociated with the device and sets raid_disk to
+-1.
+So you seem to have caught it before the device was fully quiesced .... or
+some bug has slipped in and devices that get errors don't fully quiesce any
+more....
 
 NeilBrown
 
-
->=20
-> Using kernel 3.6.2 from kernel.org
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/ZNR8WAN15bjS=Q3_vE9VeCz
+--Sig_/a7wB5AGMy41HX4./dwugOn=
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUIR06Tnsnt1WYoG5AQIy0g//UtqqZQf1cINWTQx1rS182VwHipMh6wDo
-/8Yr16TsB33tmmze+ckokmWmgVGg+3eaIQh3j8iBD1itPsjMTpcx8zNkkuQG9S90
-k9RWPw/iVNz5R2lm7rlEc0Wu3tF6ibWVXbMQEMkh1TD3gz1wqQu5af764SpjN3eT
-f5t1wTech3RTJ3wuK0XlVuo1Hi10R6FnvacptCT1gLSvWfoQ/69AG1xTaGf6Fqxq
-Z3QEX8ODvt4wWiN9BLvjfrKq02jyaiqvEOJDIhrEm42V9O5UKipJ6ttt4k1vMwA2
-BoDGu2OdTuWCMj6p0RXibgiWlSOJmMz02awD8xxkJ8pssFxbnoU5giPnTkScvwJX
-3BtWM9dS917YgMvWfKHJoaowAQsJDhgGq9aWi7DKsf+xcBRqAZb07j2AqM2zwmfD
-iiqLcYXnIyla17i+g49RIn9JzQe4/H2Zbhgvgzzngcn3b5JXP3Tijyyf98cooo3a
-0pNfe6NAiuymQDtSz/B1UJGkJbuCVyewB7UqbCDYZm1xoPv1AuBCTEVaVHGYEfUz
-UyDZN6YSGnxxqb9yeOcbfxOmAPts4w3ocwVx7yX76REgwTTXY4ejs92RpE9NAdu+
-MTO+OyTGgPXR7UuhbGWgTOQdx/R2qnv8h2V+rJJ4bg13BKoZJXhidxMQ97JGZVW7
-9C1sTnA6STc=
-=VP6G
+iQIVAwUBUIR3yDnsnt1WYoG5AQLmPg//fC1aknxxDI4l4G/GhpgOaCzSAKErck8k
+dbTKN/PS891kit2LC7sF/hIVM8lmP6OWrt0pGFvMRkva0Cr0dEmr5jMibb46yJBj
+7q9PnoLNL+Tioz/csveGrQl79CLhPpjsf/H4Pa6kRQSldX9Nf6WqfUiv3wiLeNgT
+WZFx00jGBWgyWE4ZKyBy5bhHnDyOFkIK3uYKy7yIYv1/WF5IznnIChunrR/3upU3
+mrZ9BhGMKv863Web7irikLcR4tkwyaj1rWOEHubbtmyznc2x6iWZQKcBfrL5G4Xq
+LYoO7+GmnCI1Eb/iCX5g1XyTg0yI40E0GGkay43jS4Hds7MXqY8eYtjBratG/Omh
+Hx5FJ3ZHsqm2FuKQuLEyuJNf67Glam58wq29LH2a5tUzSt7AJhy3BODkMHX1pEcF
+2r9spoFrHojD3Ptwgi/J9pYWTWsmEAvwLBv+X0ve4cHXLzlkgxaGi4LkdxkO/A3E
+6G2f6O/hAryedPJbU0psGk7I2RI76265mV3XwXQynYKfbSH1l2WvxDw8CBRT9HPm
+za4oekMHmjHa7EkdZmk1N9OkglbuGl7mhOHbQy/yOZOAHqQtxDYgPzFR6My6/egn
+OdpkhM2QocQzdE6mnyAKlxAbh4ljTNgoT7FSKF6MbZJHORoMADCKEKLPycDD//MU
+hZg5z9emCBc=
+=0yHG
 -----END PGP SIGNATURE-----
 
---Sig_/ZNR8WAN15bjS=Q3_vE9VeCz--
+--Sig_/a7wB5AGMy41HX4./dwugOn=--
