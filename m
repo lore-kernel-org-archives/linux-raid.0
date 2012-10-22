@@ -1,56 +1,36 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: 4x3TB raid5 - no autodetect
-Date: Mon, 22 Oct 2012 15:11:11 +0100
-Message-ID: <508553FF.6020302@anonymous.org.uk>
+From: =?ISO-8859-1?Q?Rainer_F=FCgenstein?= <rfu@oudeis.org>
+Subject: Re[2]: 4x3TB raid5 - no autodetect
+Date: Mon, 22 Oct 2012 17:56:00 +0200
+Message-ID: <123699751.20121022175600@oudeis.org>
 References: <441614417.20121022155507@oudeis.org>
+ <508553FF.6020302@anonymous.org.uk>
+Reply-To: =?ISO-8859-1?Q?Rainer_F=FCgenstein?= <rfu@oudeis.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <441614417.20121022155507@oudeis.org>
+In-Reply-To: <508553FF.6020302@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Rainer_F=FCgenstein?= <rfu@oudeis.org>
+To: John Robinson <john.robinson@anonymous.org.uk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 22/10/2012 14:55, Rainer F=FCgenstein wrote:
-> I'm trying to create a RAID5 consisting of 4 3TB drives from scratch:
-[...]
-> - raid created using:
-> # mdadm --create /dev/md0 --level=3D5 --metadata=3D1.2 --raid-devices=
-=3D4 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
-> before that the raid was created without "--metadata=3D1.2", also did=
-n't
-> work.
->
-> - on boot, dmesg says:
-> md: Autodetecting RAID arrays.
-> md: invalid raid superblock magic on sdb1
-> md: sdb1 has invalid sb, not importing!
-> md: invalid raid superblock magic on sdc1
-> md: sdc1 has invalid sb, not importing!
-> md: invalid raid superblock magic on sdd1
-> md: sdd1 has invalid sb, not importing!
-> md: invalid raid superblock magic on sde1
-> md: sde1 has invalid sb, not importing!
-> md: autorun ...
-> md: ... autorun DONE.
-[...]
->
-> there's something I'm missing here - please advise.
 
-In-kernel auto-assembly is only supported for metadata 0.90, and even=20
-then the feature is deprecated. If you have your root filesystem on a m=
-d=20
-array, use an initrd with mdadm in it to start it.
+JR> In-kernel auto-assembly is only supported for metadata 0.90, and even 
+JR> then the feature is deprecated. If you have your root filesystem on a md 
+JR> array, use an initrd with mdadm in it to start it.
 
-Cheers,
+if I understand it correctly, metadata 0.90 is not supporting drives >
+2TB?
 
-John.
+will in-kernel auto-assembly be supported sometimes in the future?
+this was quite a useful feature.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+tnx & cu
+
+------------------------------------------------------------------------------
+Unix gives you just enough rope to hang yourself -- and then a couple of more 
+feet, just to be sure.
+(Eric Allman)
+------------------------------------------------------------------------------
+
