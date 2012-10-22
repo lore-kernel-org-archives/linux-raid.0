@@ -1,90 +1,124 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md faulty: use disk_stack_limits()
-Date: Mon, 22 Oct 2012 10:45:56 +1100
-Message-ID: <20121022104556.2ddcb2f3@notabene.brown>
-References: <5081E5B1.3070903@redhat.com>
+From: g.esp@free.fr
+Subject: Re: [PATCH 1/3] Align FAILED to test name to be parsable
+Date: Mon, 22 Oct 2012 10:31:23 +0200 (CEST)
+Message-ID: <364625821.319540709.1350894683732.JavaMail.root@zimbra33-e6.priv.proxad.net>
+References: <20121022090855.1bb52c91@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/sZ5DClM.VKJQId/nca.4ege"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5081E5B1.3070903@redhat.com>
+In-Reply-To: <20121022090855.1bb52c91@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Mike Snitzer <msnitzer@redhat.com>, Jes Sorensen <Jes.Sorensen@redhat.com>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/sZ5DClM.VKJQId/nca.4ege
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
 
-On Fri, 19 Oct 2012 18:43:45 -0500 Eric Sandeen <sandeen@redhat.com> wrote:
 
-> in:
-> fe86cdce block: do not artificially constrain max_sectors for stacking dr=
-ivers
+----- Mail original -----
+> De: "NeilBrown" <neilb@suse.de>
+> =C3=80: "Gilles Espinasse" <g.esp@free.fr>
+> Cc: linux-raid@vger.kernel.org
+> Envoy=C3=A9: Lundi 22 Octobre 2012 00:08:55
+> Objet: Re: [PATCH 1/3] Align FAILED to test name to be parsable
 >=20
-> max_sectors defaults to UINT_MAX.  md faulty wasn't using
-> disk_stack_limits(), so inherited this large value as well.
-> This triggered a bug in XFS when stressed over md_faulty, when
-> a very large bio_alloc() failed.
+> On Sat, 20 Oct 2012 18:03:22 +0200 Gilles Espinasse <g.esp@free.fr>
+> wrote:
 >=20
-> That was on an older kernel, and I can't reproduce exactly the
-> same thing upstream, but I think the fix is appropriate in any
-> case.
+> > Signed-off-by: Gilles Espinasse <g.esp@free.fr>
+> >=20
+> > So 'grep FAILED log' is now meaningfull.
+> > Let both stdout and sderr be displayed after a failed test
+> > ---
+> >  test |    5 +++--
+> >  1 files changed, 3 insertions(+), 2 deletions(-)
+> >=20
+> > diff --git a/test b/test
+> > index 9340afe..2bb482c 100755
+> > --- a/test
+> > +++ b/test
+> > @@ -222,12 +222,13 @@ do_test() {
+> >      # source script in a subshell, so it has access to our
+> >      # namespace, but cannot change it.
+> >      echo -ne "$_script... "
+> > -    if ( set -ex ; . $_script )  2> $targetdir/log
+> > +    if ( set -ex ; . $_script ) &> $targetdir/log
+> >      then
+> >        echo "succeeded"
+> >        _fail=3D0
+> >      else
+> > -      echo "FAILED - see $targetdir/log for details"
+> > +      echo "FAILED"
+> > +      cat $targetdir/log
+> >        _fail=3D1
+> >      fi
+> >      if [ "$savelogs" =3D=3D "1" ]; then
 >=20
-> Thanks to Mike Snitzer for pointing out the problem.
+> Hi,
+>  the patch makes some sense, but it doesn't seem to match the
+>  description,
+>  though maybe I'm just being dense.
 >=20
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+>  How does the patch "Align FAILED to test name" ?
 >=20
-> diff --git a/drivers/md/faulty.c b/drivers/md/faulty.c
-> index 45135f6..5e7dc77 100644
-> --- a/drivers/md/faulty.c
-> +++ b/drivers/md/faulty.c
-> @@ -315,8 +315,11 @@ static int run(struct mddev *mddev)
->  	}
->  	conf->nfaults =3D 0;
-> =20
-> -	rdev_for_each(rdev, mddev)
-> +	rdev_for_each(rdev, mddev) {
->  		conf->rdev =3D rdev;
-> +		disk_stack_limits(mddev->gendisk, rdev->bdev,
-> +				  rdev->data_offset << 9);
-> +	}
-> =20
->  	md_set_array_sectors(mddev, faulty_size(mddev, 0, 0));
->  	mddev->private =3D conf;
+> Thanks,
+> NeilBrown
 >=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I have a test that failed with
+tests/06r5swap... --- /var/tmp/d1	2012-10-20 08:36:12.000000000 +0200
++++ /var/tmp/d1s	2012-10-20 08:36:12.000000000 +0200
+@@ -1,32 +0,0 @@
+-/dev/loop1:
+-          Magic : a92b4efc
+-        Version : 0.90.00
+-           UUID : 3a6a4fbd:b6c09cce:37479202:ddc39261 (local to host a=
+7n8x-e)
+-  Creation Time : Sat Oct 20 08:36:07 2012
+-     Raid Level : raid5
+-  Used Dev Size : 19456 (19.00 MiB 19.92 MB)
+-     Array Size : 58368 (57.01 MiB 59.77 MB)
+-   Raid Devices : 4
+-  Total Devices : 4
+-Preferred Minor : 0
+-
+-    Update Time : Sat Oct 20 08:36:11 2012
+-          State : clean
+- Active Devices : 3
+-Working Devices : 4
+- Failed Devices : 1
+-  Spare Devices : 1
+-       Checksum : 506e39b6 - correct
+-         Events : 9
+-
+-         Layout : left-symmetric
+-     Chunk Size : 512K
+-
+-      Number   Major   Minor   RaidDevice State
+-this     1       7        8        1      active sync   /dev/loop1
+-
+-   0     0       7        0        0      active sync   /dev/loop0
+-   1     1       7        8        1      active sync   /dev/loop1
+-   2     2       7       16        2      active sync   /dev/loop2
+-   3     3       0        0        3      faulty removed
+-   4     4       7       24        4      spare   /dev/loop3
+Personalities : [linear] [multipath] [raid0] [raid1] [raid10] [raid6] [=
+raid5] [raid4]=20
+unused devices: <none>
+=46AILED - see /var/tmp/log for details
 
+When standard output is redirected like in the patch, diff output goes =
+to $targetdir/log and FAILED would be printed one the same line as the =
+test name.
 
-Applied, thanks.
+I hadn't yet reported that failure as I am only recently trying to run =
+mdadm test suite and I had some issues to solve before on my build chro=
+ot scripts. I suppose there is less value to run that test suite if the=
+ running kernel is not from the same version as the=20
+Once using the same kernel (3.4.14), first failure is the one above.
 
-NeilBrown
-
---Sig_/sZ5DClM.VKJQId/nca.4ege
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUISJNDnsnt1WYoG5AQKvwg//Tq/WeWpHBgnd8ZyWHS7YRZPwzYnwDu7L
-GOSJXZz5iOuOA/OgYYLCoPjxLGBNvUlGGy/HyZWgCOfXyZfrAPYf/79FrGNxlMz3
-frpA/b57ritLdAObq09l2Z01+7yLttBAcvyjE+C98iebpn8VJ8nV/tR9LEOtWbT7
-7rjY2YvjDBFV7kg6gE4lb6sIHBmEszKt7D6cueTkjVAif3Yicr7LcjxakjPJP1NB
-ymBKZnhN+fPlV2YVoiYh2UedLrFUg+T0R8b4vZj7f3Afj3DSYNo9do6wOQDVhtin
-ajfeAk+KONfPHDNO+dVISNRr9H+NrvvmNb+e97Bq12ed+wgQbtzBm0EXe+BNeg/B
-2fkIpOpxHk4Lp/5qNMgpcT9VgwKET9Tvy1ZFtATwRtJGf60n1TZI+oARWl6R95cX
-ntwV29Yy6NzhC8qpkpoEYLwapulFnhD8VMAI+ilvWNF8Jj7y2xe4ib4H31v+xLe3
-oLt+q5G4y8xzph9+lpaUh4wpMmg3n1Y3wgSDAtOAQ0vtrjDsBbFGD4sqk0mH/qUc
-q+EcRv8SiF31EEyOd1iwpd6BwuOeUQG/XhGuVvv6OPaDU9SIYDKxrl8Wl6zw/8ag
-hkYlhAgRvCQDvd6kfeMq/OV2HGImrlqH7TK0Ka8zSQ5O9ePNjYjCtdzBzBvBOHiy
-E+T4dCQHGXQ=
-=rP36
------END PGP SIGNATURE-----
-
---Sig_/sZ5DClM.VKJQId/nca.4ege--
+Gilles
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
