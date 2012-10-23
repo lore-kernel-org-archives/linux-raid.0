@@ -1,43 +1,49 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: About re-adding disk to raid which havent' bitmap
-Date: Tue, 23 Oct 2012 10:40:28 +0800
-Message-ID: <2012102310402085755311@gmail.com>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: g.esp@free.fr
+Subject: Re: [PATCH 1/3] Align FAILED to test name to be parsable
+Date: Tue, 23 Oct 2012 10:31:15 +0200 (CEST)
+Message-ID: <975144635.322922429.1350981075121.JavaMail.root@zimbra33-e6.priv.proxad.net>
+References: <20121023092356.1834e0a1@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20121023092356.1834e0a1@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Shaohua Li <shli@kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SGkgTmVpbCwNCglBdCBwcmVzZW50LCByZS1hZGQgb3BlcmF0aW9uIG9ubHkgdXNlZnVsIHJhaWQg
-d2hpY2ggaGFkIGJpdG1hcC4NCglUaHJvdWdoIHRoZSBnaXQtbG9nLCBpIGZvdW5kIHRoZSBjb21t
-aXQ6DQo+Y29tbWl0IDA3ZDg0ZDEwOWQ4YmVlZGQ2OGRmOWRhMmU0ZTlmMjVjODIxN2U3ZmINCj5B
-dXRob3I6IE5laWxCcm93biA8bmVpbGJAc3VzZS5kZT4NCj5EYXRlOiAgIE1vbiBKdW4gMjYgMDA6
-Mjc6NTYgMjAwNiAtMDcwMA0KPiAgICBbUEFUQ0hdIG1kOiBBbGxvdyByZS1hZGQgdG8gd29yayBv
-biBhcnJheSB3aXRob3V0IGJpdG1hcHMNCiA+ICAgV2hlbiBhbiBhcnJheSBoYXMgYSBiaXRtYXAs
-IGEgZGV2aWNlIGNhbiBiZSByZW1vdmVkIGFuZCByZS1hZGRlZCBhbmQgb25seQ0KID4gICBibG9j
-a3MgY2hhbmdlcyBzaW5jZSB0aGUgcmVtb3ZhbCAoYXMgcmVjb3JkZWQgaW4gdGhlIGJpdG1hcCkg
-d2lsbCBiZSByZXN5bmNlZC4gICAgDQogPiAgIEl0IHNob3VsZCBiZSBwb3NzaWJsZSB0byBkbyBh
-IHNpbWlsYXIgdGhpbmcgdG8gYXJyYXlzIHdpdGhvdXQgYml0bWFwcy4gIGkuZS4NCiA+ICAgaWYg
-YSBkZXZpY2UgaXMgcmVtb3ZlZCBhbmQgcmUtYWRkZWQgYW5kICpubyogY2hhbmdlcyBoYXZlIGJl
-ZW4gbWFkZSBpbiB0aGUNCiA+ICAgaW50ZXJpbSwgdGhlbiB0aGUgYWRkIHNob3VsZCBub3QgcmVx
-dWlyZSBhIHJlc3luYy4gICAgDQogPiAgIFRoaXMgcGF0Y2ggYWxsb3dzIHRoYXQgb3B0aW9uLiAg
-VGhpcyBtZWFucyB0aGF0IHdoZW4gYXNzZW1ibGluZyBhbiBhcnJheSBvbmUNCiA+ICAgZGV2aWNl
-IGF0IGEgdGltZSAoZS5nLiAgZHVyaW5nIGRldmljZSBkaXNjb3ZlcnkpIHRoZSBhcnJheSBjYW4g
-YmUgZW5hYmxlZA0KID4gICByZWFkLW9ubHkgYXMgc29vbiBhcyBlbm91Z2ggZGV2aWNlcyBhcmUg
-YXZhaWxhYmxlLCBidXQgZXh0cmEgZGV2aWNlcyBjYW4gc3RpbGwNCiA+ICAgYmUgYWRkZWQgd2l0
-aG91dCBjYXVzaW5nIGEgcmVzeW5jLg0KDQpRMTp3aHkgeW91IHRoaW5rICIgaWYgYSBkZXZpY2Ug
-aXMgcmVtb3ZlZCBhbmQgcmUtYWRkZWQgYW5kICpubyogY2hhbmdlcyBoYXZlIGJlZW4gbWFkZSBp
-biB0aGUNCiAgIGludGVyaW0sIHRoZW4gdGhlIGFkZCBzaG91bGQgbm90IHJlcXVpcmUgYSByZXN5
-bmMuIj8NClEyOiBXaGV0aGVyIGludGVudGlvbmFsIG9yIG5vdCwgcmVtb3ZlIHRoZSBkZXZpY2Ug
-d2lsbCBjYXVzZSB0aGUgZXZlbnQgb2YgcmFpZCBjaGFuZ2VkLlNvIGZvciByYWlkIHdoaWNoIGhh
-dmVuJ3QgYml0bWFwLA0KcmUtYWRkIG11c3QgZmFpbGVkIGFuZCBvbmx5IGFkZGVkIHdoaWNoIGNh
-dXNlIHJlY292ZXJ5Lg0KCUZvciBzc2QsIHJlY292ZXJ5IHdpbGwgd3JpdGUgd2hvbGUgZGlzay5C
-dXQgaWYgdXNlciB1c2VkIHJlLWFkZCBwYXJhbWV0ZXIsIGhlL3NoZSBrbm93IHRoZSBkaWZmZXJl
-bnQgb2YgZGF0YS5TbyBpIHRoaW5rIGl0IHNob3VsZCBkbyBzb21ldGhpbmcgZm9yIHRoaXMuDQoJ
-DQoJDQoNClRoYW5rcyENCkppYW5wZW5nDQoJ
 
+
+----- Mail original -----
+> De: "NeilBrown" <neilb@suse.de>
+> =C3=80: "g esp" <g.esp@free.fr>
+> Cc: linux-raid@vger.kernel.org
+> Envoy=C3=A9: Mardi 23 Octobre 2012 00:23:56
+> Objet: Re: [PATCH 1/3] Align FAILED to test name to be parsable
+>=20
+> On Mon, 22 Oct 2012 10:31:23 +0200 (CEST) g.esp@free.fr wrote:
+>=20
+=2E..
+> I've change the patch description and removed the change to the faile=
+d
+> message, because I don't want the log to appear in-line:
+>=20
+When using an automated build system (like I do in the linux from sourc=
+es way), usually the last action is to remove the package source that w=
+as just build. So that would remove any log needed to check the reasons=
+ of the failures.
+
+coreutils, after the test suite end, add all logs for failed and skippe=
+d tests.
+I think this is a good compromise.
+
+Did you want that sort of behavior?
+
+
+Gilles
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
