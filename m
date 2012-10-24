@@ -1,82 +1,119 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Create new md devices consistently
-Date: Wed, 24 Oct 2012 12:09:57 +1100
-Message-ID: <20121024120957.65aa4318@notabene.brown>
-References: <1351029840-5030-1-git-send-email-jmaggard10@gmail.com>
+Subject: Re: Cannot auto assemble a raid1 array on boot
+Date: Wed, 24 Oct 2012 12:33:30 +1100
+Message-ID: <20121024123330.3084e7b3@notabene.brown>
+References: <CAG9W8wBsh_i_jtqKFhEVywCk92hef41T0t+6J9saZD3CFT7V9A@mail.gmail.com>
+	<507F7428.6030003@websitemanagers.com.au>
+	<CAG9W8wCH9bfHou72_+t+JoCS3EA96opcpTOTzkc2E0oFkbX8zg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/JcOR5+cw_xzXH/Q9.zTvnSv"; protocol="application/pgp-signature"
+ boundary="Sig_/RGR2LNbMN05L2ZouuwRj5oV"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1351029840-5030-1-git-send-email-jmaggard10@gmail.com>
+In-Reply-To: <CAG9W8wCH9bfHou72_+t+JoCS3EA96opcpTOTzkc2E0oFkbX8zg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Maggard <jmaggard10@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Jivko Sabev <jsabev@nicmus.com>
+Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/JcOR5+cw_xzXH/Q9.zTvnSv
+--Sig_/RGR2LNbMN05L2ZouuwRj5oV
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 23 Oct 2012 15:04:00 -0700 Justin Maggard <jmaggard10@gmail.com>
-wrote:
+On Thu, 18 Oct 2012 09:19:58 -0600 Jivko Sabev <jsabev@nicmus.com> wrote:
 
->  Creating a new MD device with the name 'd-0' results in some
->  unexpected behavior, since mdadm sees that '-0' is a
->  non-negative integer and therefore makes a "partitionable"
->  device (/dev/md_d0).  This is not the expected behavior,
->  since the documentation mentions 'dN' several places, and a
->  reboot brings it up as /dev/md/d-0.  Make this consistent
->  by ensuring that the character immediately following 'd' is
->  a digit during creation.
+> Hi,
 >=20
-> ---
->  mdopen.c |    5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
+> The mdadm.conf in the initrd image contains the correct devices. I.e.
+> the contents of mdadm.conf in initrd are the output of
 >=20
-> diff --git a/mdopen.c b/mdopen.c
-> index 61eda81..24188df 100644
-> --- a/mdopen.c
-> +++ b/mdopen.c
-> @@ -207,7 +207,10 @@ int create_mddev(char *dev, char *name, int autof, i=
-nt trustworthy,
->  			char *ep;
->  			if (cname[0] =3D=3D 'd')
->  				sp++;
-> -			num =3D strtoul(sp, &ep, 10);
-> +			if (isdigit(sp[0]))
-> +				num =3D strtoul(sp, &ep, 10);
-> +			else
-> +				ep =3D sp;
->  			if (ep =3D=3D sp || *ep || num < 0)
->  				num =3D -1;
->  			else if (cname[0] =3D=3D 'd')
+> mdadm --detail --scan
+>=20
+> ARRAY /dev/md0 metadata=3D1.2 name=3Dmercury:0
+> UUID=3D60ea870e:029dcf99:eaae356e:f1c12085
+> ARRAY /dev/md1 metadata=3D1.2 name=3Dmercury:1
+> UUID=3Dd89a52ed:0247f2e8:5edf5d09:21e7fa48
+>=20
+> However, the problem remains. That is when booting, the system dumps
+> into initramfs shell with the raid array in an inactive state. I have
+> to manually stop the array and then reassemble.
+>=20
+> mdadm --manage --stop /dev/md1
+> mdadm --assemble /dev/md1 /dev/sde1 /dev/md0
+>=20
+>=20
+> At the point, I am able to continue booting and everything is fine after.
+>=20
+> Here are the contents of /proc/mdstat from the initrd shell before
+> reassembling the array.
+>=20
+> md1 : inactive sde1[2](S)
+>       976639672 blocks super 1.2
+>=20
+> md0 : active linear sdb1[0] sdc1[1]
+>       976770537 blocks super 1.2 0k rounding
 
-applied, thanks.
+There are two problems here.
 
-Will be in mdadm-3.2.6 which I plan to release tomorrow.
+Firstly, the fact that the array doesn't assemble completely should not cau=
+se
+the boot to fail.  A degraded raid1 is perfectly sufficient for booting.
+
+What is happening is that the initrd is relying on udev to assemble the arr=
+ay
+by passing each new device to "mdadm --incremental $DEVNAME".
+This will assemble the array as soon as all devices are present, but not
+before.   If a device failed before shutdown that will be recorded in the
+metadata and "mdadm --incremental" will not wait for it.  If it disappears
+during reboot, mdadm will still expect it.
+
+To deal with this issue, the initrd should run
+  mdadm --incremental --scan --run
+
+which means "look for all arrays that are being incrementally assembled, and
+start them".
+This should be called after running "udevadm settle" and before mounting the
+root filesystem.
+
+However fixing this won't fix your problem, it will just change it.
+
+The udev rules files which is calling "mdadm --incremental" does so
+on /dev/sdb1 /dev/sdc1 and /dev/sde1, but apparently not on /dev/md0.
+
+If at the initrd shell prompt you run
+  mdadm -I /dev/md0
+
+it should finish assembling md1 for you.  For some reason udev isn't doing
+that.
+
+Have a look in /lib/udev/rules.d or /etc/udev/rules.d for a file that runs
+"mdadm --incremental" or "mdadm -I" and see how it works.
+Maybe post it.
+
+BTW what distro are you using?
 
 NeilBrown
 
---Sig_/JcOR5+cw_xzXH/Q9.zTvnSv
+
+--Sig_/RGR2LNbMN05L2ZouuwRj5oV
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUIc/5Tnsnt1WYoG5AQJaehAAvj5XofNtJSQIuz0SQiDbuTIWuUMfXYQM
-lrV/p6E+45T2+xJYJJPAbi4ceMNtmWC9u55lfi/1ZggdYQT4WMBsDHMrCmpScAN+
-ezIqvylOE3fVkXFJ6iB2auhvhU4cWmhyRzaQUrjoBkWMJQERyLEUzYBhIcuZoCTP
-9VPtLvvVIwoBGT/+uwfj74GSwpqfB83jx3RzORjUyYUTcKrsB457QMnoPEr5G9u4
-KTzuTqcS3ABd/kNdNKa/ugW+eN2k7lF5LrNgdmEW7fCVIEArLdpvNinfFaPg8us/
-QykmyAEc/MjxB2a6xUk+gjIuPv0if/v8rsu9LYiHJdxU7OCyJAxKNrS6r4xWVivK
-agtooE9Md3eVmgwLn1RjxPTrLnpLAnXHDUURsVKXvdTGB3jjevbJdFvXjI2/m8hd
-uQX7b3RNNaE4xRls9PlijsW9C7zTpNSi5//ZH/kD7mCNZp/J1s0RcaC8EMuoowPl
-CrNJSFXYKSawoQK7K8SyLXtLtKDdB3VLbIpNC1MIR5N4nygR+cNgabUTzAojOYSY
-XdUJkREWFM1+xh4oxuGOsqB1JyUrmaV8KkeA8bmVH4483Sv2wT1MwpRg3azOVvp1
-qVOAurDKrES9U/tz/cMwIik/Q1ixRRw4VMpk+UVNHaCRKHLjwl/nufVpf1pri0af
-TWAx5qlJo1U=
-=CYGk
+iQIVAwUBUIdFajnsnt1WYoG5AQLuRQ//RqHw99Vjx87781xNjrPiYYgAxe0Fd1ii
+FJcPO6EUUxsisLIII+QA7EM8eB7Y/6T/E8jFj/VuFC1xnjJfw5Djx8Bxcljd0Fbk
+GsbrU8AbOEU5MguRr3RO6/l1DX6XwJDW6TOQckSqihbVwcOwa9TfNzzkrD2JfI2i
+f7OCo5m5gZg+XQNASk8tWgD78IrPcumumUuTCRfTVTSTJrIarKOIZ7fR60aZHMRH
+Vst6FQuz/E82lE7Wuu3hRT8uteVLrzsMPq2R+u92Q9zbXPR+Ln8DsrdEPPURGh2b
+pEJMGBwXpqvGua6ts+kPuenlRwKsWrtiiRrOlbSb+n4SAlq804ucIbL0au3PmYIh
+gvNWI6YdHSgKOsUyo5X3nTaLZdt+Rx/bhytUmJf6C9alZXVZiVYWd4GNjL1EVthj
++Rc7zh76MJzu8FwTaRNZIclWTWnomCRxMa5aN4pzcsTsXKBBEWQXg0uJ5sNq62+N
+TuPmNk4TEcgR8G8XtuaIcz/0mtoOqL5OQmxM1ZDQdHl8oKr6BePnJDvbG70kHf44
+sCDj7/obin+2Q2WbrEzS/QwBE6+KHw5flX1pb9VTKa2P82Yav/8qWFmJcYANShYH
+PJt0BV7PTyMq3DM3r4/PD+RGjom9RuvFq7K5QGMn79/Aup400dJYp33IYk7Al2N4
+qlteZfNrErU=
+=lkM3
 -----END PGP SIGNATURE-----
 
---Sig_/JcOR5+cw_xzXH/Q9.zTvnSv--
+--Sig_/RGR2LNbMN05L2ZouuwRj5oV--
