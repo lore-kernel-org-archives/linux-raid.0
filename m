@@ -1,37 +1,64 @@
-From: Emmanuel Noobadmin <centos.admin@gmail.com>
-Subject: Re: mdadm --grow Hard Drive Size Puzzle
-Date: Sat, 27 Oct 2012 00:53:27 +0800
-Message-ID: <CAAYorBJq9Jf4j3jV=EjK3FJBx6Rf1NNV6kM7Kwv6+M=F2O0Kxg@mail.gmail.com>
-References: <67FBE301-6EF3-4B0D-87FC-8A3C66473416@thinkcomputer.com>
-	<20121001125510.6cc0c2be@notabene.brown>
+From: John Drescher <drescherjm@gmail.com>
+Subject: mdadm: Cannot convert RAID1 of this size - reduce size to multiple of
+ 4K first.
+Date: Fri, 26 Oct 2012 16:31:40 -0400
+Message-ID: <CAEhu1-6MpArC4AehLdfUX-zabspB_Dn6j2R20CGUwv8NSHEPwQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121001125510.6cc0c2be@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/1/12, NeilBrown <neilb@suse.de> wrote:
-> Should work.... what kernel are you running?  There was a bug between
-> 2.6.30
-> and 2.6.37 which would have the effect.
-> A quick good search suggest that Centos 6 uses 2.6.32, which would be
-> affected until 2.6.32.27 which contains the fix.
->
-> If you reboot (or just stop the array and re-assemble it), md should get
-> itself sorted out and the --grow will work.
+I got the following message when trying to convert a 2 disk raid1 to a
+6 disk raid 6 in a 3.3.8 kernel:
 
-I found this thread on the list while trying to figure out almost the
-exact same problem on CentOS 6.3 where --grow doesn't increase the
-array size inside a VM guest after I've lvextended the underlying LV
-on the host machine.
+fileserver1 btrfs-root # mdadm --grow /dev/md3 --level=6 --raid-devices=6
+mdadm: Cannot convert RAID1 of this size - reduce size to multiple of 4K first.
 
-You mentioned this bug was fixed in 2.6.32.27, does this mean my
-kernel version 2.6.32-279.11.1.el6.x86_64 should not be seeing this
-bug and I should be looking at some other cause? This is because fdisk
--l doesn't seem to be seeing the new size either.
+Fileserver1 btrfs-root # uname -a
+Linux fileserver1 3.3.8-gentoo-fileserver1-raid1 #3 SMP Thu Jul 12
+20:06:18 EDT 2012 x86_64 Intel(R) Xeon(R) CPU E31230 @ 3.20GHz
+GenuineIntel GNU/Linux
 
-p.s. replying to the list appears to default to include your personal
-email in the reply, apologies if that is not right.
+fileserver1 btrfs-root # mdadm --version
+mdadm - v3.2.6 - 25th October 2012
+
+fileserver1 btrfs-root # mdadm -D /dev/md3
+/dev/md3:
+        Version : 1.2
+  Creation Time : Wed Sep 28 16:03:56 2011
+     Raid Level : raid1
+     Array Size : 1874607039 (1787.76 GiB 1919.60 GB)
+  Used Dev Size : 1874607039 (1787.76 GiB 1919.60 GB)
+   Raid Devices : 2
+  Total Devices : 6
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Oct 26 16:24:22 2012
+          State : clean
+ Active Devices : 2
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 4
+
+           Name : fileserver1:3  (local to host fileserver1)
+           UUID : df2200d4:3ba5d29c:524dc437:35d663ea
+         Events : 785
+
+    Number   Major   Minor   RaidDevice State
+       0       8      116        0      active sync   /dev/sdh4
+       1       8        4        1      active sync   /dev/sda4
+
+       2       8      244        -      spare   /dev/sdp4
+       3       8      196        -      spare   /dev/sdm4
+       4       8      212        -      spare   /dev/sdn4
+       5       8      228        -      spare   /dev/sdo4
+
+
+Would upgrading the kernel avoid needing to reduce the size of the
+array? If not I assume I have to reduce the size of the btrfs
+filesystem then resize the array to 1874604032. Is that correct?
+
+-- 
+John M. Drescher
