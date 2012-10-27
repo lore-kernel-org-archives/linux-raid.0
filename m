@@ -1,35 +1,47 @@
-From: kernelmail <kedacomkernel@gmail.com>
-Subject: [PATCH 1/5] md: When resync aborted,using ->curr_resync as the last completed request rather than ->curr_resync_completed.
-Date: Sat, 27 Oct 2012 10:28:58 +0800
-Message-ID: <2012102710283109761110@gmail.com>
-Reply-To: kedacomkernel <kedacomkernel@gmail.com>
+From: Sam van Ratt <sam.vanratt@gmx.net>
+Subject: MDADM after QNAP Support disaster QNAP 859 Pro
+Date: Sat, 27 Oct 2012 17:26:42 +0200
+Message-ID: <508BFD32.7010901@gmx.net>
+Reply-To: Sam.vanRatt@gmx.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org, Michael Samer EPOS GmbH <michael.samer@epos-cat.de>
 List-Id: linux-raid.ids
 
-SW4gY29tbWl0KGRiOTFmZjU1YmRmMDY3MzZiODQ5YWZjMWIxZmNlNTc2M2JiYjhkNWQpLGl0IHNh
-aWQ6DQo+SWYgYSByZXN5bmMgaXMgYWJvcnRlZCB3ZSBzaG91bGQgcmVjb3JkIGhvdyBmYXIgd2Ug
-Z290DQo+KHJlY292ZXJ5X2NwKSB0aGUgbGFzdCByZXF1ZXN0IHRoYXQgd2Uga25vdyBoYXMgY29t
-cGxldGVkDQo+KC0+Y3Vycl9yZXN5bmNfY29tcGxldGVkKSByYXRoZXIgdGhhbiB0aGUgbGFzdCBy
-ZXF1ZXN0IHRoYXQgd2FzDQo+c3VibWl0dGVkICgtPmN1cnJfcmVzeW5jKS4NCkJ1dCB3aGVuIHJl
-c3luYyBhYm9ydGVkLCBpdCBleGVjZWQNCj53YWl0X2V2ZW50KG1kZGV2LT5yZWNvdmVyeV93YWl0
-LCAhYXRvbWljX3JlYWQoJm1kZGV2LT5yZWNvdmVyeV9hY3RpdmUpKTsNCkFmdGVyIHRoaXMsIHRo
-ZSAtPmN1cnJfcmVzeW5jIGlzIHRoZSBsYXN0IGNvbXBsZXRlZCByZXF1ZXN0Lg0KDQpTaWduZWQt
-b2ZmLWJ5OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQotLS0NCiBkcml2ZXJz
-L21kL21kLmMgfCAgICAzICstLQ0KIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMiBk
-ZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvbWQuYyBiL2RyaXZlcnMvbWQv
-bWQuYw0KaW5kZXggOWFiNzY4YS4uMWQ5OTQwZCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbWQvbWQu
-Yw0KKysrIGIvZHJpdmVycy9tZC9tZC5jDQpAQCAtNzU1OCw4ICs3NTU4LDcgQEAgdm9pZCBtZF9k
-b19zeW5jKHN0cnVjdCBtZF90aHJlYWQgKnRocmVhZCkNCiAJCQkJCXByaW50ayhLRVJOX0lORk8N
-CiAJCQkJCSAgICAgICAibWQ6IGNoZWNrcG9pbnRpbmcgJXMgb2YgJXMuXG4iLA0KIAkJCQkJICAg
-ICAgIGRlc2MsIG1kbmFtZShtZGRldikpOw0KLQkJCQkJbWRkZXYtPnJlY292ZXJ5X2NwID0NCi0J
-CQkJCQltZGRldi0+Y3Vycl9yZXN5bmNfY29tcGxldGVkOw0KKwkJCQkJbWRkZXYtPnJlY292ZXJ5
-X2NwID0gbWRkZXYtPmN1cnJfcmVzeW5jOw0KIAkJCQl9DQogCQkJfSBlbHNlDQogCQkJCW1kZGV2
-LT5yZWNvdmVyeV9jcCA9IE1heFNlY3RvcjsNCi0tIA0KMS43LjkuNQ0K
+Hello
+a few days I received a NAS with 8 Slots. The original config consistet 
+of 8* 2TB HDs as a RAID6 mdadm softraid system. After a normal reboot 
+the array was no longer found, so QNAP was contacted.
+The support told the keyuser todo this:
 
+
+mdadm -D /dev/md0 (zeigt das gesamte RAID auf)
+to assemble the HDs you have to:
+mdadm -A /dev/md0 /dev/sda3.... (take care here, depending on the HDs 
+they get a value like /dev/sdb3 dev/sdc3 ...) - with 8 HDs:
+mdadm -A /dev/md0 /dev/sda3 /sdb3 /dev/sdc3 /dev/sdd3 /dev/sde3 
+/dev/sdf3 /dev/sdg3 /dev/sdh3 (be careful with the order!)
+If you get an error message about the assemble, you have to stop md0
+mdadm -S /dev/md0 (stopping md0)
+umount /dev/md0 (unmount of md0)
+
+After serveral failed tries it endet in have a RAID 1 Konfig on sda and 
+sdb but not seeing anything else of the config before (funnily only a 
+500MB partition (as /dev/md9 sounds as a lot of tries).
+As I'm not using mdadm in my workplace anywhere:
+
+How can I delete the RAID1 (pretty simple I know) and reconstruct the R6 
+Array without damaging the config further (and therefore the datas). The 
+R6 should be about 11TiB usable size.
+Is there a init build with searching for the old conifg? As R6 it should 
+even be readable without sda or sdb if this should be needed. I manly 
+use HW RAID Controller where a few (ICP, Infortrend, Areca)  which 
+allows a reassembly by just declaring the disks as member to mdx and 
+assemble then again; I hope mdadm could offer something similar
+
+
+Cheers
+Sam
