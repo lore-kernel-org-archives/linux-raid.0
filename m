@@ -1,70 +1,147 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Commit "db91ff55bdf06736b" using curr_resync_completed instead
- of curr_resync when interrupted the resync operation
-Date: Mon, 29 Oct 2012 09:47:44 +1100
-Message-ID: <20121029094744.1ddfb4e5@notabene.brown>
-References: <201210251415581641823@gmail.com>
+From: Peter Kieser <peter@kieser.ca>
+Subject: Re: 3TB drives failure rate
+Date: Sun, 28 Oct 2012 16:51:09 -0700
+Message-ID: <508DC4ED.3030706@kieser.ca>
+References: <11510711257.20121028131527@oudeis.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/X6myk8PtjUCzKECVZmnd.=y"; protocol="application/pgp-signature"
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms070807000309070700080507"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201210251415581641823@gmail.com>
+In-Reply-To: <11510711257.20121028131527@oudeis.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: =?ISO-8859-1?Q?Rainer_F=FCgenstein?= <rfu@oudeis.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/X6myk8PtjUCzKECVZmnd.=y
-Content-Type: text/plain; charset=US-ASCII
+This is a cryptographically signed message in MIME format.
+
+--------------ms070807000309070700080507
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 25 Oct 2012 14:16:02 +0800 majianpeng <majianpeng@gmail.com> wrote:
+I've had interesting cases where WD Green Drives (specifically WD15EARS, =
 
-> Hi Neil,
-> >commit db91ff55bdf06736b849afc1b1fce5763bbb8d5d
-> >    1/ If a resync is aborted we should record how far we got
-> >     (recovery_cp) the last request that we know has completed
-> >     (->curr_resync_completed) rather than the last request that was
-> >     submitted (->curr_resync).
-> If resync operation interrupted,it will call:
-> >	wait_event(mddev->recovery_wait, !atomic_read(&mddev->recovery_active));
-> So the curr_resync must be complete. Using curr_resync is safe.
-> --------------
-> majianpeng
+WD15EADS) don't necessarily "fail" but suddenly have very slow=20
+random/read write performance which slows down the rest of the array.=20
+Removing the drive, and replacing it with a (new) drive usually resolves =
 
-I must have had a reason for that patch.  Unfortunately the change log isn't
-the best...
+the issue. I have since started to avoid "green" drives due to this issue=
+=2E
 
-If the resync aborted cleanly with no errors (e.g. while stopping the array=
-),
-then I agree.
-However if some read error was involved I'm not so sure.  I would have to
-examine the code closely, which I don't feel up to at the moment (plenty of
-other things to do).
+-Peter
+
+On 2012-10-28 5:15 AM, Rainer F=FCgenstein wrote:
+> when trying to upgrade my raid5 with 4 Western digital caviar green
+> 3TB drives [WDC WD30EZRX-00MMMB0] (3 brandnew, 1 about 4months old),
+> the "old" drive and one of the brand new ones failed with
+> unrecoverable read errors and about 70 reallocated sectors each. the
+> failures already occured during the initial resync after creating the
+> raid.
+>
+> until now I was very fond of WD caviar green drives, but after this
+> 50% failure rate I'm not very eager to restore data from the backup.
+>
+> what is your experience with 3TB drives, WD and others?
+>
+> (low power drives appreciated, performance is not an issue)
+>
+> tnx.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
-NeilBrown
 
---Sig_/X6myk8PtjUCzKECVZmnd.=y
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+--------------ms070807000309070700080507
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUI22EDnsnt1WYoG5AQJvdg/9HBwxb8YCRgd1y5ccoEHvgH6eWoeu3d19
-QY3JPBgRo3UfDh92p8NXFKRTaQESW4AoX1gAsRqKYC+fsM8RpaW3mT59gDJ/CTbD
-3pKjUWogWyI0+kq7TkIZflpMlLmcmkNMH0MvS+ZRoKZ6bZnpkUe754JzmvGGv3Ay
-RVIsmoCg3DtL++crOnZkPnaInTg8orS4K6jwYTyDOlkuZEHo7OWUfJTJxnEhxBmY
-5Lnfyps7h/75Nh00ezX6jm6lonVLNARdqr2gNNNHSdY3lrP4LZkCKJ65zvlBUqCB
-Y4z9bWulqi444jh/aBKVJ8jgx9/johhyNiekIMI8R8kkdtcfg4KfeXdGhSHjcgNc
-GM8Vo4bK9CZ6NRcvWacZSL0j/iUjOAMeSGdpAjAK7NkSlf0R02yJaVDbtOL4QZge
-aiQGi55ULPiw5otlqmVSiyqigdq0wu6TSMhIJia7nKtyD7t/EaXlznUiORSB74kI
-OUu0orz6aTTX0EOkJokLE64PFjyXysG1epjGBdBu74ibiIlkCIpz09gk4h7f6KK/
-G4oUiu8Pv8FgyAo5LRHmDoJ3ZONOkspLE/jhOsAtq4QnMs4t3eRJSFkSHvitRWpT
-mrHHWwyLeN3NcYOMVEkozNe7SQ/49cxfF0PLIkueiEXhoC4hkVUSN/1SqMiI9Jhc
-F8/bJ7shbks=
-=smzN
------END PGP SIGNATURE-----
-
---Sig_/X6myk8PtjUCzKECVZmnd.=y--
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIINgDCC
+BjQwggQcoAMCAQICASAwDQYJKoZIhvcNAQEFBQAwfTELMAkGA1UEBhMCSUwxFjAUBgNVBAoT
+DVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNp
+Z25pbmcxKTAnBgNVBAMTIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4XDTA3
+MTAyNDIxMDI1NVoXDTE3MTAyNDIxMDI1NVowgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1T
+dGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWdu
+aW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAyIFByaW1hcnkgSW50ZXJtZWRpYXRlIENs
+aWVudCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMsohUWcASz7GfKrpTOM
+KqANy9BV7V0igWdGxA8IU77L3aTxErQ+fcxtDYZ36Z6GH0YFn7fq5RADteP0AYzrCA+EQTfi
+8q1+kA3m0nwtwXG94M5sIqsvs7lRP1aycBke/s5g9hJHryZ2acScnzczjBCAo7X1v5G3yw8M
+DP2m2RCye0KfgZ4nODerZJVzhAlOD9YejvAXZqHksw56HzElVIoYSZ3q4+RJuPXXfIoyby+Y
+2m1E+YzX5iCZXBx05gk6MKAW1vaw4/v2OOLy6FZH3XHHtOkzUreG//CsFnB9+uaYSlR65cdG
+zTsmoIK8WH1ygoXhRBm98SD7Hf/r3FELNvUCAwEAAaOCAa0wggGpMA8GA1UdEwEB/wQFMAMB
+Af8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBSuVYNv7DHKufcd+q9rMfPIHeOsuzAfBgNV
+HSMEGDAWgBROC+8apEBbpRdphzDKNGhD0EGu8jBmBggrBgEFBQcBAQRaMFgwJwYIKwYBBQUH
+MAGGG2h0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9jYTAtBggrBgEFBQcwAoYhaHR0cDovL3d3
+dy5zdGFydHNzbC5jb20vc2ZzY2EuY3J0MFsGA1UdHwRUMFIwJ6AloCOGIWh0dHA6Ly93d3cu
+c3RhcnRzc2wuY29tL3Nmc2NhLmNybDAnoCWgI4YhaHR0cDovL2NybC5zdGFydHNzbC5jb20v
+c2ZzY2EuY3JsMIGABgNVHSAEeTB3MHUGCysGAQQBgbU3AQIBMGYwLgYIKwYBBQUHAgEWImh0
+dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93
+d3cuc3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwDQYJKoZIhvcNAQEFBQADggIBADqp
+Jw3I07QWke9plNBpxUxcffc7nUrIQpJHDci91DFG7fVhHRkMZ1J+BKg5UNUxIFJ2Z9B90Mic
+c/NXcs7kPBRdn6XGO/vPc87Y6R+cWS9Nc9+fp3Enmsm94OxOwI9wn8qnr/6o3mD4noP9Jphw
+UPTXwHovjavRnhUQHLfo/i2NG0XXgTHXS2Xm0kVUozXqpYpAdumMiB/vezj1QHQJDmUdPYMc
+p+reg9901zkyT3fDW/ivJVv6pWtkh6Pw2ytZT7mvg7YhX3V50Nv860cV11mocUVcqBLv0gcT
++HBDYtbuvexNftwNQKD5193A7zN4vG7CTYkXxytSjKuXrpEatEiFPxWgb84nVj25SU5q/r1X
+hwby6mLhkbaXslkVtwEWT3Van49rKjlK4XrUKYYWtnfzq6aSak5u0Vpxd1rY79tWhD3EdCvO
+hNz/QplNa+VkIsrcp7+8ZhP1l1b2U6MaxIVteuVMD3X0vziIwr7jxYae9FZjbxlpUemqXjcC
+0QaFfN7qI0JsQMALL7iGRBg7K0CoOBzECdD3fuZil5kU/LP9cr1BK31U0Uy651bFnAMMMkqh
+AChIbn0ei72VnbpSsrrSdF0BAGYQ8vyHae5aCg+H75dVCV33K6FuxZrf09yTz+Vx/PkdRUYk
+XmZz/OTfyJXsUOUXrym6KvI2rYpccSk5MIIHRDCCBiygAwIBAgICJYcwDQYJKoZIhvcNAQEF
+BQAwgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSswKQYDVQQLEyJT
+ZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFydENvbSBD
+bGFzcyAyIFByaW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQTAeFw0xMjA4MjkyMzM0MjZa
+Fw0xNDA4MzExMzE0MzFaMIGOMRkwFwYDVQQNExBpd3JteTFzNGhOaHZLMDQ0MQswCQYDVQQG
+EwJDQTEZMBcGA1UECBMQQnJpdGlzaCBDb2x1bWJpYTESMBAGA1UEBxMJVmFuY291dmVyMRUw
+EwYDVQQDEwxQZXRlciBLaWVzZXIxHjAcBgkqhkiG9w0BCQEWD3BldGVyQGtpZXNlci5jYTCC
+ASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAOdZjqh64jWRFwTsYZZ0bKt5xOIxLlV4
+jrN0wY5KMu5RotLfYnu53fCMGJVk1n8h4QFRDxGuQmE4ugw47rv7FMDWYPb7PisPAWbcbUlG
+pmxhZB/avqpC8P2uuvJ0dsKsyNo8HeROfvrLkT6PSpYE35UXTLESoHSYkkyhcklVRf6ygChd
+PKUMNhEAMH3ZGtsw8N24hSoiW6Sb3vqv4ZCZcLvlKRVjJtOyc2vbSw8ndc62EbFMFeP+AZOw
+r7flFGQanYjfeXeeXV/29hstVPv88okwEpJCWdmSA1/gh5Yc6bjpQ7YuSxOVKP5UAl+Ehyld
+XWIcWEcUoeuZ1XeSyRuwRmcCAwEAAaOCA6owggOmMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgSw
+MB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDBDAdBgNVHQ4EFgQUKlB/4e9ZfesCCiNm
+UHJOZibv8FAwHwYDVR0jBBgwFoAUrlWDb+wxyrn3HfqvazHzyB3jrLswGgYDVR0RBBMwEYEP
+cGV0ZXJAa2llc2VyLmNhMIICIQYDVR0gBIICGDCCAhQwggIQBgsrBgEEAYG1NwECAjCCAf8w
+LgYIKwYBBQUHAgEWImh0dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYB
+BQUHAgEWKGh0dHA6Ly93d3cuc3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwgfcGCCsG
+AQUFBwICMIHqMCcWIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MAMCAQEagb5U
+aGlzIGNlcnRpZmljYXRlIHdhcyBpc3N1ZWQgYWNjb3JkaW5nIHRvIHRoZSBDbGFzcyAyIFZh
+bGlkYXRpb24gcmVxdWlyZW1lbnRzIG9mIHRoZSBTdGFydENvbSBDQSBwb2xpY3ksIHJlbGlh
+bmNlIG9ubHkgZm9yIHRoZSBpbnRlbmRlZCBwdXJwb3NlIGluIGNvbXBsaWFuY2Ugb2YgdGhl
+IHJlbHlpbmcgcGFydHkgb2JsaWdhdGlvbnMuMIGcBggrBgEFBQcCAjCBjzAnFiBTdGFydENv
+bSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTADAgECGmRMaWFiaWxpdHkgYW5kIHdhcnJhbnRp
+ZXMgYXJlIGxpbWl0ZWQhIFNlZSBzZWN0aW9uICJMZWdhbCBhbmQgTGltaXRhdGlvbnMiIG9m
+IHRoZSBTdGFydENvbSBDQSBwb2xpY3kuMDYGA1UdHwQvMC0wK6ApoCeGJWh0dHA6Ly9jcmwu
+c3RhcnRzc2wuY29tL2NydHUyLWNybC5jcmwwgY4GCCsGAQUFBwEBBIGBMH8wOQYIKwYBBQUH
+MAGGLWh0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9zdWIvY2xhc3MyL2NsaWVudC9jYTBCBggr
+BgEFBQcwAoY2aHR0cDovL2FpYS5zdGFydHNzbC5jb20vY2VydHMvc3ViLmNsYXNzMi5jbGll
+bnQuY2EuY3J0MCMGA1UdEgQcMBqGGGh0dHA6Ly93d3cuc3RhcnRzc2wuY29tLzANBgkqhkiG
+9w0BAQUFAAOCAQEAvd8Wn0ZXlB3mV+fWae/hAFquDNjyWMJ29rJymKaGOOYTCiPdmDRJNV9R
+k0YTP9+B06A0Vx6bbg+rZwIdv2k+GBSjCSb4T8IsawVphbbWMohFzxGzo36NaYZ/wCTcrlVv
+oXmPFkEaOJzqQ1DAYetJTfDMIfkBeOZSJ9KmdLos1Z9fOc0nGq9ioy/6gIPGchsWuhrl3vxW
+ej1MUPjVKn5wW967cPcLFnNLR1gxYB3fjptyHbJpRq/54rH2BMR0kicK9EyVUoDM35R6Ux6n
+djaJmH1ZFcHVc+FmalNisvlIlGSWwnkyvpmyD25LSJ+BlfZEUHE8tcicdZPAqQ8f+Yo/dTGC
+A9owggPWAgEBMIGTMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjEr
+MCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMv
+U3RhcnRDb20gQ2xhc3MgMiBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0ECAiWHMAkG
+BSsOAwIaBQCgggIbMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8X
+DTEyMTAyODIzNTEwOVowIwYJKoZIhvcNAQkEMRYEFGmmGFXzcNYVo9JPuaNb34UKf/nVMGwG
+CSqGSIb3DQEJDzFfMF0wCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzAO
+BggqhkiG9w0DAgICAIAwDQYIKoZIhvcNAwICAUAwBwYFKw4DAgcwDQYIKoZIhvcNAwICASgw
+gaQGCSsGAQQBgjcQBDGBljCBkzCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29t
+IEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2
+BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDIgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENB
+AgIlhzCBpgYLKoZIhvcNAQkQAgsxgZaggZMwgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1T
+dGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWdu
+aW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAyIFByaW1hcnkgSW50ZXJtZWRpYXRlIENs
+aWVudCBDQQICJYcwDQYJKoZIhvcNAQEBBQAEggEAldkUV11aKgyjMK96KaD7CqeV0GndJ6IG
+BPU2PIF+xtfaECIdTFuyrb8/RuV6kUq3YmDOlJ5W+iXwxO5fEW0KlXa79oQi7szeK9o+F708
+vRKVw811kKklI4zpxm79vqSkP2MFuEBEmKI4g51WAqMn6fmIwRVZr+tjxCUs8nF4tN92bx5L
+DowpmzCitxe47cO7nhK+TiYOk/T9/h+KbCH9iBf6s1Edh7Udq+bZz1uLWyUoq0mi8s83eG1j
+OluehrMKKI9NQ+CHnJI8h2xycW3Fv3BbmGA/Er7fEGd37C3IX7LQLZMTFkwX/uDJn9kJrH7o
+ytsqQyydvpyHZIxmiOaS6wAAAAAAAA==
+--------------ms070807000309070700080507--
