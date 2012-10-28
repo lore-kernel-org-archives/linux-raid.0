@@ -1,75 +1,89 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/5] md:Add place to update ->recovery_cp.
-Date: Mon, 29 Oct 2012 08:35:29 +1100
-Message-ID: <20121029083529.78c2024e@notabene.brown>
-References: <201210271028113375556@gmail.com>
+Subject: Re: [PATCH 3/5] md: Increase the frequency of recording checkpoint
+ of recovery.
+Date: Mon, 29 Oct 2012 08:41:47 +1100
+Message-ID: <20121029084147.2d292bc5@notabene.brown>
+References: <201210271028177376247@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/reFnLC6hWJfW.qhiLOtBbjL"; protocol="application/pgp-signature"
+ boundary="Sig_/iTcJKz5paKTCFe6OoURx+6y"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201210271028113375556@gmail.com>
+In-Reply-To: <201210271028177376247@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: kedacomkernel <kedacomkernel@gmail.com>
+To: majianpeng <majianpeng@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/reFnLC6hWJfW.qhiLOtBbjL
+--Sig_/iTcJKz5paKTCFe6OoURx+6y
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 27 Oct 2012 10:28:18 +0800 kernelmail <kedacomkernel@gmail.com> wro=
-te:
+On Sat, 27 Oct 2012 10:28:20 +0800 majianpeng <majianpeng@gmail.com> wrote:
 
-> In resyncing, recovery_cp only updated when resync aborted or completed.
-> But in md drives,many place used it to judge.So add a place to update.
+> With the hard disk capacity of larger,the entire recovery process
+> becomes longer.So it should increase the frequency.
+> Supposed the speed of recovery is 100MB/s(i think for HDD is good).
+> The total time of recovery 4TB hdd is about 666 minutes.So change the
+> frequency from 16 to 64 times,it's about 10mins.
 >=20
 > Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
 > ---
->  drivers/md/md.c |    2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/md/md.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 >=20
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 1d9940d..01e25bd 100644
+> index 01e25bd..ba328ee 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -7454,6 +7454,8 @@ void md_do_sync(struct md_thread *thread)
->  			wait_event(mddev->recovery_wait,
->  				   atomic_read(&mddev->recovery_active) =3D=3D 0);
->  			mddev->curr_resync_completed =3D j;
-> +			if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery))
-> +				mddev->recovery_cp =3D j;
->  			set_bit(MD_CHANGE_CLEAN, &mddev->flags);
->  			sysfs_notify(&mddev->kobj, NULL, "sync_completed");
->  		}
+> @@ -7446,7 +7446,7 @@ void md_do_sync(struct md_thread *thread)
+>  		if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
+>  		    ((mddev->curr_resync > mddev->curr_resync_completed &&
+>  		      (mddev->curr_resync - mddev->curr_resync_completed)
+> -		      > (max_sectors >> 4)) ||
+> +		      > (max_sectors >> 6)) ||
+>  		     (j - mddev->curr_resync_completed)*2
+>  		     >=3D mddev->resync_max - mddev->curr_resync_completed
+>  			    )) {
 
-This isn't correct.  If MD_RECOVERY_REQUESTED, then j might be less than
-recovery_cp and we don't want to reduce recovery_cp.
+I don't like this - the number '6' is completely arbitrary.
 
-If you would like to fix that (i.e. only set recovery_cp if it is less than
-'j'), then I'll apply the patch.
+The original '4' was never about number of minutes.  It was a fraction of t=
+he
+total effort needed.
+I wanted to make sure you only repeated at most 10% of the required effort
+(one order of magnitude).  >>4 is about 6% and easy to calculate.
+
+If you want it to be about time (which I don't object to), then make it abo=
+ut
+time.  Keep track of the last time we updated curr_resync_completed, and if
+that is more than a few minutes ago, update it again.
+This is what I said last time - if you want something to be based on time,
+test the time.
+If 'echo idle > sync_action' doesn't work (Which it seems it doesn't), then
+it is OK to just do it in the kernel.
 
 NeilBrown
 
---Sig_/reFnLC6hWJfW.qhiLOtBbjL
+--Sig_/iTcJKz5paKTCFe6OoURx+6y
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUI2lITnsnt1WYoG5AQISLhAAkw3NU+kNFRb6bzheZ4R6KT9vFRhj4BDy
-b+GlxCWUjtze+nXWCloOkhOMvFoO2CmJXE26O0WWW8Z+jEdDu4TsOq+xud5Xol8W
-M2Qa1ly4hjCLVBUxsqFW4GGLLGZfeoUbrUAwEJttBrxdNX8j+dgB+gDievE5pa56
-X8onnSd+YrqRmOePy5RE4tZ2ZdFu3ag2oOXyvKWMUGiErbwHeeg6zANa0rkU1wtI
-zskyhZ1BU0onIcol9P1INoPx22KndQILRWum1FAu+Zfhtf+Ne3DYFaSHWpwbs80t
-a5fbmbQ5ev0i72sDrPVJg7SfsI/FMS/CY/1Ez23TDRdN2yxDLeqChUXRyHbzV/Sf
-aU0hWuBAsP8mFaujKtv4XZhXHfZpQAzCtV1P38c5HZgn+fOTalCj50g3CES1R9C6
-urcLR1IijOHiYZktDbOASB5q7zyB3cZ5C+dyzDLHU9BzE+7t36+9dKReIKkYRmWf
-nYLgFyitFPU+0Fjd+mFc6vEL3ylOFYqMVOqPALYtphfxvmQCkJa+YpwOfMicnKlk
-3lYBH3vIYGCHeMFlL4DYgP0AGK8gWROCCu0zgyav1JKJSna3I6fNzKGfl1yRT4DQ
-KBm51Nqtu5xEhjidOryZkyP84jFWLlsOuoZdrkB/xPCwkvfLBRJzPbkJ+Hj2L2v0
-hB+K1uCa2BI=
-=nubY
+iQIVAwUBUI2mmznsnt1WYoG5AQKurw//Vz+h3BZ7iO7dGBNHD4c8YL9wiXduL4JC
+Kg1GnTYXLjBIfJUkbtw9e+9lbUV8Bg9A2jVWetYZnschZCIS5eUBfZRK919OvKgc
+QF3x9Bg6HJTJRjL1GxSw88TnQjVonn7mxrdQaVS01co53Sf9dnUFmokxXk24hsa5
+eh8CBv4Jky2XngIDmPoVfPr5Bn9UJ2tm7jWl3ZCBiPGThPVHA5OkmgQ1kFYJ2Ihs
+IpvL9SD7cbCILRm5n0BJ4bOPXI7xHWy4pDd8cForcpk85XdhwB0iqdHaDhZ2fE+Y
+IKt/gdCie0iMMYmmcb1k1m2ahhQyZOPpJTxj4/Axt20bZiYD9AYROCVsaPj83SEX
+/HqbrUuskKwZw6Ya5z57ajKu646hmJGuOKaQP7gSMwzpzPmowW5dFnTpWM5Y7R65
+0MBRHUGmZp1CICJfeqC4Ew+CCNJvLkTjNb1QaLYa2Xl/toeg/72CI1lI2/8xPVSI
+PvqtjzXBgX75EUEhYm6k7TbsECtkukfGsU6iwxGazRFXENoF36hmxOK87h09wL8S
+Ec3YYQYUYX6tUJi50JAWIfIetApMZy+6miOjrc8ihlzXBZTWzMExBIEGX78EHE5l
+n9qVs07x4C/Y74kAALKI/HkJjArarASTwDEyVqr1goGnMsyaC8Ab6z8CvkOZcMlx
+KTM3uh2VAjA=
+=+kZx
 -----END PGP SIGNATURE-----
 
---Sig_/reFnLC6hWJfW.qhiLOtBbjL--
+--Sig_/iTcJKz5paKTCFe6OoURx+6y--
