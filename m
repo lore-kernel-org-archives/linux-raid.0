@@ -1,56 +1,75 @@
-From: Chris Murphy <lists@colorremedies.com>
+From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: 3TB drives failure rate
-Date: Sun, 28 Oct 2012 14:10:00 -0600
-Message-ID: <F548750F-8D0E-4D05-813B-58D85D652226@colorremedies.com>
-References: <11510711257.20121028131527@oudeis.org> <DB91871A-731F-44B4-9381-8FBF7D9CC3BF@colorremedies.com> <20121029015910.018efb17@natsu>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Date: Mon, 29 Oct 2012 02:16:43 +0600
+Message-ID: <20121029021643.1c9e3195@natsu>
+References: <11510711257.20121028131527@oudeis.org>
+	<DB91871A-731F-44B4-9381-8FBF7D9CC3BF@colorremedies.com>
+	<20121029015910.018efb17@natsu>
+	<F548750F-8D0E-4D05-813B-58D85D652226@colorremedies.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/TfXRUlFAlP8v2IA2T9VEvie"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121029015910.018efb17@natsu>
+In-Reply-To: <F548750F-8D0E-4D05-813B-58D85D652226@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+--Sig_/TfXRUlFAlP8v2IA2T9VEvie
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On Oct 28, 2012, at 1:59 PM, Roman Mamedov <rm@romanrm.ru> wrote:
+On Sun, 28 Oct 2012 14:10:00 -0600
+Chris Murphy <lists@colorremedies.com> wrote:
 
-> On Sun, 28 Oct 2012 13:50:41 -0600
-> Chris Murphy <lists@colorremedies.com> wrote:
+> >> not for RAID 5
+> >=20
+> >> RAID 5 implies 24x7=20
+> >=20
+> >> they're also not a 24x7 drive
+> >=20
+> > Wrong on pretty much all points. Or perhaps you are just way too easily
+> > misguided by marketing b/s.
 >=20
->> not for RAID 5
->=20
->> RAID 5 implies 24x7=20
->=20
->> they're also not a 24x7 drive
->=20
-> Wrong on pretty much all points. Or perhaps you are just way too easi=
-ly
-> misguided by marketing b/s.
+> I read their own published specs. Doesn't matter whether that piece is us=
+ed predominantly by marketing or not, it is a defacto contract that cannot =
+substantially depart from the legalized warranty verbiage.
 
-I read their own published specs. Doesn't matter whether that piece is =
-used predominantly by marketing or not, it is a defacto contract that c=
-annot substantially depart from the legalized warranty verbiage.
+I could not find any specs from WD where it would say that this particular
+drive should be powered on for no more than X hours a day, and not 24x7.
+Really, just downloaded the PDF and rechecked.
 
->=20
->> I *think* it's a 24x7 drive also but I could be wrong.
->=20
-> There is no such thing as a "24x7" drive or not. Given adequate cooli=
-ng,
-> powering down and spinning up are an order of magnitude much more str=
-essful
-> and wearing out operation for a drive than just staying on.
+The closest thing I could find is [1], which after cutting out all the
+"we really really want to sell you this enterprise drive for 1.5x as much"
+boils down to describing the problem that dumb "hardware RAID" controllers
+have with drives without TLER, an issue irrelevant to mdadm users. So,
+anything else?
 
-Yeah that's more of a marketing term for sure, but in determining the d=
-rive warranty, how much it's doing the various things it does is a sign=
-ificant factor. It's not at all the same thing to take a 2.5" laptop dr=
-ive and run it 24x7 without it ever spinning down. Just like it's not t=
-he at all the same thing to take an RE drive and have it spin up and do=
-wn 15 times a day=85 like a laptop drive.
+[1]
+http://wdc.custhelp.com/app/answers/detail/a_id/1397/~/difference-between-d=
+esktop-edition-(wd-blue,-wd-green-and-wd-black)-and-raid
 
+--=20
+With respect,
+Roman
 
-Chris Murphy--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"Stallman had a printer,
+with code he could not see.
+So he began to tinker,
+and set the software free."
+
+--Sig_/TfXRUlFAlP8v2IA2T9VEvie
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlCNkqsACgkQTLKSvz+PZwjgCQCgjbU1EQTSlbmCERm61AeBXBth
+aWAAn3eJYVsNFky1j7Ws2oiwQTna6I/z
+=NSRo
+-----END PGP SIGNATURE-----
+
+--Sig_/TfXRUlFAlP8v2IA2T9VEvie--
