@@ -1,56 +1,61 @@
-From: Chris Murphy <lists@colorremedies.com>
+From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: 3TB drives failure rate
-Date: Sun, 28 Oct 2012 13:50:41 -0600
-Message-ID: <DB91871A-731F-44B4-9381-8FBF7D9CC3BF@colorremedies.com>
+Date: Mon, 29 Oct 2012 01:59:10 +0600
+Message-ID: <20121029015910.018efb17@natsu>
 References: <11510711257.20121028131527@oudeis.org>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+	<DB91871A-731F-44B4-9381-8FBF7D9CC3BF@colorremedies.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/T/e2oBTuHqJ674/IYdEJzXt"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <11510711257.20121028131527@oudeis.org>
+In-Reply-To: <DB91871A-731F-44B4-9381-8FBF7D9CC3BF@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+--Sig_/T/e2oBTuHqJ674/IYdEJzXt
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On Oct 28, 2012, at 6:15 AM, Rainer F=FCgenstein <rfu@oudeis.org> wrote=
-:
+On Sun, 28 Oct 2012 13:50:41 -0600
+Chris Murphy <lists@colorremedies.com> wrote:
 
->=20
-> when trying to upgrade my raid5 with 4 Western digital caviar green
-> 3TB drives [WDC WD30EZRX-00MMMB0] (3 brandnew, 1 about 4months old),
-> the "old" drive and one of the brand new ones failed with
-> unrecoverable read errors and about 70 reallocated sectors each. the
-> failures already occured during the initial resync after creating the
-> raid.
->=20
-> until now I was very fond of WD caviar green drives, but after this
-> 50% failure rate I'm not very eager to restore data from the backup.
+> not for RAID 5
 
-Sounds like they are cooking or vibrating themselves to death?
+> RAID 5 implies 24x7=20
 
-But also, longer term, you realize Greens are explicitly stated by WDC =
-as not for RAID 5? And RAID 5 implies 24x7 and they're also not a 24x7 =
-drive? The early failure isn't what you asked for, but you've got drive=
-s that aren't really applicable for your use case.
+> they're also not a 24x7 drive
 
+Wrong on pretty much all points. Or perhaps you are just way too easily
+misguided by marketing b/s.
 
-> what is your experience with 3TB drives, WD and others?
->=20
-> (low power drives appreciated, performance is not an issue)
+> I *think* it's a 24x7 drive also but I could be wrong.
 
-The WDC Reds are what (it seems) the buyers of Greens thought they were=
- buying. Take a look at those, you can use them in RAID5 and 24x7 and t=
-hey have a 3 year warranty.
+There is no such thing as a "24x7" drive or not. Given adequate cooling,
+powering down and spinning up are an order of magnitude much more stressful
+and wearing out operation for a drive than just staying on.
 
-And for a non-enterprise disk the Hitachi Deskstar for that same size a=
-nd warranty range, and I *think* it's a 24x7 drive also but I could be =
-wrong.
+--=20
+With respect,
+Roman
 
-Chris Murphy
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"Stallman had a printer,
+with code he could not see.
+So he began to tinker,
+and set the software free."
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/T/e2oBTuHqJ674/IYdEJzXt
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlCNjo4ACgkQTLKSvz+PZwjo0gCfTDed7yTeacsR+A+Sot3VqFzm
+eZkAoIZZ0LM6F5YHsusYMDWnDYc3OMBB
+=6L5H
+-----END PGP SIGNATURE-----
+
+--Sig_/T/e2oBTuHqJ674/IYdEJzXt--
