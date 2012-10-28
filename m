@@ -1,57 +1,54 @@
-From: Joe Landman <joe.landman@gmail.com>
-Subject: Re: 3TB drives failure rate
-Date: Sun, 28 Oct 2012 13:05:19 -0400
-Message-ID: <508D65CF.1080904@gmail.com>
-References: <11510711257.20121028131527@oudeis.org> <508D61A1.7020106@wildgooses.com>
+From: Curtis J Blank <curt@curtronics.com>
+Subject: Best way (only?) to setup SSD's for using TRIM
+Date: Sun, 28 Oct 2012 13:59:22 -0500
+Message-ID: <508D808A.7040100@curtronics.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <508D61A1.7020106@wildgooses.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ed W <lists@wildgooses.com>
-Cc: =?ISO-8859-1?Q?Rainer_F=FCgenstein?= <rfu@oudeis.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/28/2012 12:47 PM, Ed W wrote:
+I've got two new SSD's that I want to set up as RAID1 and use strictly 
+for the OS and MySQL DB's partitioned accordingly.
 
-> - Green consumer drives likely are satisfactorarily reliable for most
-> uses, caveat that you accept they will fail catastrophically eventually
-> (just like your enterprise drive will).  We can debate the relative life
-> of each, but it's almost certainly just a linear factor...
+I'll be using the 3.4.6 kernel for now in openSuSE 12.2 with ext4. So 
+after a lot of Google'n and reading it is my understanding that discard 
+is not sent to the devices via the raid drivers. I am aware of Shaohua 
+Li's patches to make it work but am not inclined to use them due to 
+openSuSE's Online Update replacing the kernel. I'm not against patching 
+and gen'ing a kernel, that used to be SOP, but just don't want deal with 
+that overhead. Of course unless I really need to.
 
-Our experience is that they aren't acceptable for RAIDs in most cases, 
-unless you turn on TLER, and turn off the green functions at minimum. 
-In which case, what advantage do they have other than price?
+So I've read, and if I understand things correctly, I can use LVM and 
+RAID1 and the the discard commands will be sent to the devices. Is that 
+correct and currently the only way or is/are there other ways?
 
-Part of the issue is them falling out of RAIDs.  Part of the the issue 
-are the occasional hiccups on coming out of sleep mode, which for most 
-desktops isn't a problem, but DEFINITELY an issue for RAIDs.
+I've also read that a lot of people are saying TRIM isn't needed because 
+the SSD's garbage collection is so good now TRIM isn't needed. But I 
+don't see how that could work because the SSD's don't have access to the 
+file system so they don't know which pages in the blocks are marked 
+unused to do any consolidation and erasing. And using TRIM is suggested 
+in a OCZ document I read and who's drives these are. Unless, the SDD 
+when it has to change a page moves the whole block then erases the old 
+block? But without TRIM in could be moving invalid data too because it 
+doesn't know that and that to me sure doesn't sound efficient and this 
+operation would be a perfect time to get rid of the invalid data if it 
+did know.
 
-Another (sometimes significant) issue is that we've been noticing 
-partial coverage (e.g. missing functions) in some of the pages available 
-to sdparm with the desktop/consumer drives.  This is very annoying, 
-especially if you are building a RAID.  Most egregious on SSDs, but 
-we've seen one spinning rust device that did the same.
+And due to PEC I'm wondering if this is even a good idea? Granted the OS 
+files can be considered somewhat static, with the exception of /var/log 
+so maybe that shouldn't go on the SSD, and maybe MySQL shouldn't either 
+because for things like ZoneMinder it's DB is pretty dynamic. But with 
+all the logging going on, and there is a lot, and the dynamic nature of 
+the MySQL data is the exact reason I want it put it on SSD's, for the 
+speed. See my quandary?
 
-There's not a huge difference in pricing between the two types, and your 
-time is valuable.  I'd argue for the lower time cost as part of a longer 
-term lower TCO.  We've built systems with both types of drives, but 
-based upon the experiences with desktop/consumer drives, we'd have to 
-advise avoiding this route if possible.  The upfront money you might 
-save will be spent more than likely on your time/efforts to repair 
-hiccups in the system later.
+This is my best understanding of things right now so I came here to and 
+am asking the experts for help in clarifying and  understanding this and 
+pick the best direction to go. Have the SSD's for a couple of weeks now 
+but holding off using them until the I can determine the best way to use 
+them. Oh and the SSD's are OCZ Vertex 4 VTX4-25SAT3-256G.
 
-
-
--- 
-Joseph Landman, Ph.D
-Founder and CEO
-Scalable Informatics Inc.
-email: landman@scalableinformatics.com
-web  : http://scalableinformatics.com
-        http://scalableinformatics.com/sicluster
-phone: +1 734 786 8423 x121
-fax  : +1 866 888 3112
-cell : +1 734 612 4615
-
+Thanks.
