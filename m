@@ -1,54 +1,56 @@
-From: Curtis J Blank <curt@curtronics.com>
-Subject: Best way (only?) to setup SSD's for using TRIM
-Date: Sun, 28 Oct 2012 13:59:22 -0500
-Message-ID: <508D808A.7040100@curtronics.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: 3TB drives failure rate
+Date: Sun, 28 Oct 2012 13:50:41 -0600
+Message-ID: <DB91871A-731F-44B4-9381-8FBF7D9CC3BF@colorremedies.com>
+References: <11510711257.20121028131527@oudeis.org>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <11510711257.20121028131527@oudeis.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've got two new SSD's that I want to set up as RAID1 and use strictly 
-for the OS and MySQL DB's partitioned accordingly.
 
-I'll be using the 3.4.6 kernel for now in openSuSE 12.2 with ext4. So 
-after a lot of Google'n and reading it is my understanding that discard 
-is not sent to the devices via the raid drivers. I am aware of Shaohua 
-Li's patches to make it work but am not inclined to use them due to 
-openSuSE's Online Update replacing the kernel. I'm not against patching 
-and gen'ing a kernel, that used to be SOP, but just don't want deal with 
-that overhead. Of course unless I really need to.
+On Oct 28, 2012, at 6:15 AM, Rainer F=FCgenstein <rfu@oudeis.org> wrote=
+:
 
-So I've read, and if I understand things correctly, I can use LVM and 
-RAID1 and the the discard commands will be sent to the devices. Is that 
-correct and currently the only way or is/are there other ways?
+>=20
+> when trying to upgrade my raid5 with 4 Western digital caviar green
+> 3TB drives [WDC WD30EZRX-00MMMB0] (3 brandnew, 1 about 4months old),
+> the "old" drive and one of the brand new ones failed with
+> unrecoverable read errors and about 70 reallocated sectors each. the
+> failures already occured during the initial resync after creating the
+> raid.
+>=20
+> until now I was very fond of WD caviar green drives, but after this
+> 50% failure rate I'm not very eager to restore data from the backup.
 
-I've also read that a lot of people are saying TRIM isn't needed because 
-the SSD's garbage collection is so good now TRIM isn't needed. But I 
-don't see how that could work because the SSD's don't have access to the 
-file system so they don't know which pages in the blocks are marked 
-unused to do any consolidation and erasing. And using TRIM is suggested 
-in a OCZ document I read and who's drives these are. Unless, the SDD 
-when it has to change a page moves the whole block then erases the old 
-block? But without TRIM in could be moving invalid data too because it 
-doesn't know that and that to me sure doesn't sound efficient and this 
-operation would be a perfect time to get rid of the invalid data if it 
-did know.
+Sounds like they are cooking or vibrating themselves to death?
 
-And due to PEC I'm wondering if this is even a good idea? Granted the OS 
-files can be considered somewhat static, with the exception of /var/log 
-so maybe that shouldn't go on the SSD, and maybe MySQL shouldn't either 
-because for things like ZoneMinder it's DB is pretty dynamic. But with 
-all the logging going on, and there is a lot, and the dynamic nature of 
-the MySQL data is the exact reason I want it put it on SSD's, for the 
-speed. See my quandary?
+But also, longer term, you realize Greens are explicitly stated by WDC =
+as not for RAID 5? And RAID 5 implies 24x7 and they're also not a 24x7 =
+drive? The early failure isn't what you asked for, but you've got drive=
+s that aren't really applicable for your use case.
 
-This is my best understanding of things right now so I came here to and 
-am asking the experts for help in clarifying and  understanding this and 
-pick the best direction to go. Have the SSD's for a couple of weeks now 
-but holding off using them until the I can determine the best way to use 
-them. Oh and the SSD's are OCZ Vertex 4 VTX4-25SAT3-256G.
 
-Thanks.
+> what is your experience with 3TB drives, WD and others?
+>=20
+> (low power drives appreciated, performance is not an issue)
+
+The WDC Reds are what (it seems) the buyers of Greens thought they were=
+ buying. Take a look at those, you can use them in RAID5 and 24x7 and t=
+hey have a 3 year warranty.
+
+And for a non-enterprise disk the Hitachi Deskstar for that same size a=
+nd warranty range, and I *think* it's a 24x7 drive also but I could be =
+wrong.
+
+Chris Murphy
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
