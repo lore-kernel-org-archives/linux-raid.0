@@ -1,74 +1,34 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 5/5] md/raid5: Using conf->max_degraded rather than 2 to
- determine whether there is excess compute-disks for raid4/5/6.
-Date: Mon, 29 Oct 2012 08:45:51 +1100
-Message-ID: <20121029084551.16188427@notabene.brown>
-References: <201210271028214347208@gmail.com>
+From: Miles Fidelman <mfidelman@meetinghouse.net>
+Subject: Re: 3TB drives failure rate
+Date: Sun, 28 Oct 2012 17:45:56 -0400
+Message-ID: <508DA794.9030106@meetinghouse.net>
+References: <11510711257.20121028131527@oudeis.org> <DB91871A-731F-44B4-9381-8FBF7D9CC3BF@colorremedies.com> <20121029015910.018efb17@natsu> <F548750F-8D0E-4D05-813B-58D85D652226@colorremedies.com> <20121029021643.1c9e3195@natsu> <46B8932A-58A5-4C1A-9C8C-DCCD5D3A1CD9@colorremedies.com> <A9ED9351-3430-43B8-AEA8-031B3DE29522@colorremedies.com> <6FAB7F92-66E2-4276-9774-B80DAC92E450@colorremedies.com> <20121029031851.42a5e1e9@natsu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/8Sg3L3MNJTjNZoACf2G5D8m"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201210271028214347208@gmail.com>
+In-Reply-To: <20121029031851.42a5e1e9@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/8Sg3L3MNJTjNZoACf2G5D8m
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Roman Mamedov wrote:
+> I do not think there is a state in modern HDDs that there would be a 
+> sector which consistently takes 30-120 seconds to read. Those are 
+> either unreadable at all, or readable after a delay -- and then 
+> already remapped by the HDD into the reserved zone, so the delay is 
+> not there the next time. 
 
-On Sat, 27 Oct 2012 10:28:25 +0800 majianpeng <majianpeng@gmail.com> wrote:
+Umm... yes.  This is a common near-failure mode with WD disks, as I 
+learned the hard way when I discovered that I had a server that had been 
+built with desktop drives rather than enterprise drives.  Took quite 
+some time to figure out why my server was slowing WAY down. I still kind 
+of wonder why md doesn't consider exceptionally long read times as a 
+reason to drop a drive from a RAID array.
 
-> In func analyse_stripe, about judging how many want-computer disks,it
-> used 2.But for raid4/5, it is at most is one.So using conf->max_degraded
-> to replace.
->=20
-> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
-> ---
->  drivers/md/raid5.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 684ca76..930dee0 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -3285,7 +3285,7 @@ static void analyse_stripe(struct stripe_head *sh, =
-struct stripe_head_state *s)
->  			s->uptodate++;
->  		if (test_bit(R5_Wantcompute, &dev->flags)) {
->  			s->compute++;
-> -			BUG_ON(s->compute > 2);
-> +			BUG_ON(s->compute > conf->max_degraded);
->  		}
-> =20
->  		if (test_bit(R5_Wantfill, &dev->flags))
+Miles Fidelman
 
-If I were to bother changing that code at all, I'd just remove the BUG_ON.
-But I won't bother.
+-- 
+In theory, there is no difference between theory and practice.
+In practice, there is.   .... Yogi Berra
 
-NeilBrown
-
---Sig_/8Sg3L3MNJTjNZoACf2G5D8m
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUI2njznsnt1WYoG5AQJ4mA/6A1tOVP1jANcrz1FHBFFHIXAJpLJKKA7f
-AIbgBP9PwdaNA+eYaB2nodgHSDHgoWNo9zfr4asAiswsgh2zT5NGJAiU/Z2ocg2e
-a++CGB0lOMrs+iefFmNI2DHQZTasOpQTezA6Trivtde1R2QLqrHFQynk6+KcwO+0
-C5N/ChmzLtRKmVaHy+SLZXpUXwDLAfAYJ3JHf5NtPfK0O4l7ZO75bIggFm/Z4mAA
-6RnpX+QEGa1ybZPIVvHQaR+Lkfykk1oiHNU/Kgius/4RfDegIqHf0aunCIaYf0cn
-huYI0dlB4CL87aVslckCVrNRiUPDs51msWm5ZZ6FjgEleHjTJy0XRLXBXMCup1+r
-Rnoi/wTg0iPffRaobo5FaJK5Aqce402HTZXR64O5Iew0CKOPiBFSSw7xPv47wn0W
-ny8bFxQX+TPNX55JwFcr/dDS7qOvBSI8Y2X7IG1bUx1+W3pdyNm40UAx9rbtijPD
-N9oTPDplqfInS62Ca885MHBmsAdcqxNr7Mm2DDLrMDw3rM+P2AjuFBkAkmf9MfDr
-WFjo+1X30otxOezrMup+BGqtnh1ZR8L2sU2/QFy2+e01zb7CySFHxtMCfh5FPV1e
-hAhJ+3pWDz6WayM6zeQfPLhLNnZzhB1XLwnBg7cn5t+AdlF4dOBkC7DQxNAwQvCc
-jxUX39vaiMk=
-=5iWq
------END PGP SIGNATURE-----
-
---Sig_/8Sg3L3MNJTjNZoACf2G5D8m--
