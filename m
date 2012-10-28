@@ -1,104 +1,74 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 4/5] md: Return proper error rather than EIO.
-Date: Mon, 29 Oct 2012 08:43:49 +1100
-Message-ID: <20121029084349.615c1ea8@notabene.brown>
-References: <201210271028260803459@gmail.com>
+Subject: Re: [PATCH 5/5] md/raid5: Using conf->max_degraded rather than 2 to
+ determine whether there is excess compute-disks for raid4/5/6.
+Date: Mon, 29 Oct 2012 08:45:51 +1100
+Message-ID: <20121029084551.16188427@notabene.brown>
+References: <201210271028214347208@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/kT4Li19AbPNXVlLPKVut6vi"; protocol="application/pgp-signature"
+ boundary="Sig_/8Sg3L3MNJTjNZoACf2G5D8m"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201210271028260803459@gmail.com>
+In-Reply-To: <201210271028214347208@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: majianpeng <majianpeng@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/kT4Li19AbPNXVlLPKVut6vi
+--Sig_/8Sg3L3MNJTjNZoACf2G5D8m
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 27 Oct 2012 10:28:30 +0800 majianpeng <majianpeng@gmail.com> wrote:
+On Sat, 27 Oct 2012 10:28:25 +0800 majianpeng <majianpeng@gmail.com> wrote:
 
+> In func analyse_stripe, about judging how many want-computer disks,it
+> used 2.But for raid4/5, it is at most is one.So using conf->max_degraded
+> to replace.
+>=20
 > Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
 > ---
->  drivers/md/raid1.c |    4 ++--
->  drivers/md/raid5.c |    4 ++--
->  2 files changed, 4 insertions(+), 4 deletions(-)
+>  drivers/md/raid5.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 >=20
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 8034fbd..e2f3783 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -2799,12 +2799,12 @@ static int run(struct mddev *mddev)
->  	if (mddev->level !=3D 1) {
->  		printk(KERN_ERR "md/raid1:%s: raid level not set to mirroring (%d)\n",
->  		       mdname(mddev), mddev->level);
-> -		return -EIO;
-> +		return -EINVAL;
->  	}
->  	if (mddev->reshape_position !=3D MaxSector) {
->  		printk(KERN_ERR "md/raid1:%s: reshape_position set but not supported\n=
-",
->  		       mdname(mddev));
-> -		return -EIO;
-> +		return -EINVAL;
->  	}
->  	/*
->  	 * copy the already verified devices into our private RAID1
 > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index c5439dc..684ca76 100644
+> index 684ca76..930dee0 100644
 > --- a/drivers/md/raid5.c
 > +++ b/drivers/md/raid5.c
-> @@ -5088,7 +5088,7 @@ static struct r5conf *setup_conf(struct mddev *mdde=
-v)
->  	    && mddev->new_level !=3D 6) {
->  		printk(KERN_ERR "md/raid:%s: raid level not set to 4/5/6 (%d)\n",
->  		       mdname(mddev), mddev->new_level);
-> -		return ERR_PTR(-EIO);
-> +		return ERR_PTR(-EINVAL);
->  	}
->  	if ((mddev->new_level =3D=3D 5
->  	     && !algorithm_valid_raid5(mddev->new_layout)) ||
-> @@ -5096,7 +5096,7 @@ static struct r5conf *setup_conf(struct mddev *mdde=
-v)
->  	     && !algorithm_valid_raid6(mddev->new_layout))) {
->  		printk(KERN_ERR "md/raid:%s: layout %d not supported\n",
->  		       mdname(mddev), mddev->new_layout);
-> -		return ERR_PTR(-EIO);
-> +		return ERR_PTR(-EINVAL);
->  	}
->  	if (mddev->new_level =3D=3D 6 && mddev->raid_disks < 4) {
->  		printk(KERN_ERR "md/raid:%s: not enough configured devices (%d, minimu=
-m 4)\n",
+> @@ -3285,7 +3285,7 @@ static void analyse_stripe(struct stripe_head *sh, =
+struct stripe_head_state *s)
+>  			s->uptodate++;
+>  		if (test_bit(R5_Wantcompute, &dev->flags)) {
+>  			s->compute++;
+> -			BUG_ON(s->compute > 2);
+> +			BUG_ON(s->compute > conf->max_degraded);
+>  		}
+> =20
+>  		if (test_bit(R5_Wantfill, &dev->flags))
 
-
-One doesn't just randomly change error return codes.
-Maybe the current ones are "wrong", but they have been that way for many
-years so they are effectively part of the API.  So they are "right" be
-definition, even if they seem wrong.
+If I were to bother changing that code at all, I'd just remove the BUG_ON.
+But I won't bother.
 
 NeilBrown
 
---Sig_/kT4Li19AbPNXVlLPKVut6vi
+--Sig_/8Sg3L3MNJTjNZoACf2G5D8m
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUI2nFTnsnt1WYoG5AQK3lA/8DgFzzIED3lEYPQAlRrBjk96Gl6g5PxZ3
-XGDwPw0BUupGkToz3b35LYhMvTCDfzFsGCl+0i0Cs9pcni2TkZKnq4ugWoe038aN
-RTNfN7atJyKPTrX8InRs/8siR5pvlkjq4MH3Wi0ihjV0s0yziH3OfmO7ifmb38Xk
-zNIX/UKy9pXViAzzb061FTl1p8JhUeJHraSB+tL5cawi2QKwLZ4H2N8bzG/hIbwa
-Delzbu51TFxOVr+D7WiczUZWFkRWRr0WJumRmkNPPQg3ljVpTOx9cENX9wVynDbi
-GJgnmUuGxJSetLBunIMRaRxnliCERTNwjO1hhF62/Zo2BXHNu3clRd/bEKy80kTS
-Y3g8G9d1Y8BtvpQaj8wwd5GJtjStjr3W5jDHW+puMZZ4PcAjopH8zbcxFi4oqZSH
-BmEqryOUNf5Pn0bsXMYuSEAVNNei9cPFZct4piIprBEsz8nU0fJF/pBYCxFr9dna
-q1wI+VwS1m4FGSzAnTMCYZIJvNqCCc+tkx+u5TLNPcPAHMLPNSpZaU4hGov4obvP
-Xi5HvzokIls7aW0pVmy728uZRXV3bkaeBhKZ0hTVe5nJ7TPCJ/WHbIcVOQGMSG1/
-UtpH9Ij6bQ2cjRjRUjyPZ3EFzZD6vOr2lDOU8AjNZE0iCgaZpX24gfZRUi37h0cp
-9bLBk8AAHck=
-=y0iD
+iQIVAwUBUI2njznsnt1WYoG5AQJ4mA/6A1tOVP1jANcrz1FHBFFHIXAJpLJKKA7f
+AIbgBP9PwdaNA+eYaB2nodgHSDHgoWNo9zfr4asAiswsgh2zT5NGJAiU/Z2ocg2e
+a++CGB0lOMrs+iefFmNI2DHQZTasOpQTezA6Trivtde1R2QLqrHFQynk6+KcwO+0
+C5N/ChmzLtRKmVaHy+SLZXpUXwDLAfAYJ3JHf5NtPfK0O4l7ZO75bIggFm/Z4mAA
+6RnpX+QEGa1ybZPIVvHQaR+Lkfykk1oiHNU/Kgius/4RfDegIqHf0aunCIaYf0cn
+huYI0dlB4CL87aVslckCVrNRiUPDs51msWm5ZZ6FjgEleHjTJy0XRLXBXMCup1+r
+Rnoi/wTg0iPffRaobo5FaJK5Aqce402HTZXR64O5Iew0CKOPiBFSSw7xPv47wn0W
+ny8bFxQX+TPNX55JwFcr/dDS7qOvBSI8Y2X7IG1bUx1+W3pdyNm40UAx9rbtijPD
+N9oTPDplqfInS62Ca885MHBmsAdcqxNr7Mm2DDLrMDw3rM+P2AjuFBkAkmf9MfDr
+WFjo+1X30otxOezrMup+BGqtnh1ZR8L2sU2/QFy2+e01zb7CySFHxtMCfh5FPV1e
+hAhJ+3pWDz6WayM6zeQfPLhLNnZzhB1XLwnBg7cn5t+AdlF4dOBkC7DQxNAwQvCc
+jxUX39vaiMk=
+=5iWq
 -----END PGP SIGNATURE-----
 
---Sig_/kT4Li19AbPNXVlLPKVut6vi--
+--Sig_/8Sg3L3MNJTjNZoACf2G5D8m--
