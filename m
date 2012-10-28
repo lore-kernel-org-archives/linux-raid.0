@@ -1,85 +1,57 @@
-From: Ed W <lists@wildgooses.com>
+From: Joe Landman <joe.landman@gmail.com>
 Subject: Re: 3TB drives failure rate
-Date: Sun, 28 Oct 2012 16:47:29 +0000
-Message-ID: <508D61A1.7020106@wildgooses.com>
-References: <11510711257.20121028131527@oudeis.org>
+Date: Sun, 28 Oct 2012 13:05:19 -0400
+Message-ID: <508D65CF.1080904@gmail.com>
+References: <11510711257.20121028131527@oudeis.org> <508D61A1.7020106@wildgooses.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <11510711257.20121028131527@oudeis.org>
+In-Reply-To: <508D61A1.7020106@wildgooses.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Rainer_F=FCgenstein?= <rfu@oudeis.org>
-Cc: linux-raid@vger.kernel.org
+To: Ed W <lists@wildgooses.com>
+Cc: =?ISO-8859-1?Q?Rainer_F=FCgenstein?= <rfu@oudeis.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 28/10/2012 12:15, Rainer F=FCgenstein wrote:
-> when trying to upgrade my raid5 with 4 Western digital caviar green
-> 3TB drives [WDC WD30EZRX-00MMMB0] (3 brandnew, 1 about 4months old),
-> the "old" drive and one of the brand new ones failed with
-> unrecoverable read errors and about 70 reallocated sectors each. the
-> failures already occured during the initial resync after creating the
-> raid.
->
-> until now I was very fond of WD caviar green drives, but after this
-> 50% failure rate I'm not very eager to restore data from the backup.
->
-> what is your experience with 3TB drives, WD and others?
->
-> (low power drives appreciated, performance is not an issue)
->
+On 10/28/2012 12:47 PM, Ed W wrote:
 
-I think there is clearly serial correlation in drive failures and this=20
-tends to cause people to have brand love/hate stories.
+> - Green consumer drives likely are satisfactorarily reliable for most
+> uses, caveat that you accept they will fail catastrophically eventually
+> (just like your enterprise drive will).  We can debate the relative life
+> of each, but it's almost certainly just a linear factor...
 
-I bought 9x Samsung 2TB green things about 2 years back  (to go in an 8=
-x=20
-NAS + 1 spare).  I think I had to return 4 almost immediately due to=20
-either out of box reallocation warning, or that appeared within 2=20
-weeks.  Probably if I hadn't been looking I wouldn't have noticed these=
-=20
-warnings and then been one of those groaning about Samsung when probabl=
-y=20
-they all expired within a few weeks of each other.  The RMA'd drives=20
-have all been fine and the whole array seems ok some years later (teste=
-d=20
-weekly).  Note that I think I got 2x drives from a different supplier=20
-(hence different batch), so that implies something like 4 out of 7 in a=
-=20
-given batch were "worrying", but the next 4 from a new batch showed no=20
-obvious problems
+Our experience is that they aren't acceptable for RAIDs in most cases, 
+unless you turn on TLER, and turn off the green functions at minimum. 
+In which case, what advantage do they have other than price?
 
-I think this fits with the idea that the spinning disk failure curve ha=
-s=20
-a bump in the first few weeks, then flat until some years later when it=
-=20
-peaks again...
+Part of the issue is them falling out of RAIDs.  Part of the the issue 
+are the occasional hiccups on coming out of sleep mode, which for most 
+desktops isn't a problem, but DEFINITELY an issue for RAIDs.
 
-My conclusion:
-- RAID6 for data that is highly valuable (and performance is acceptable=
-)
-- Thrash the drives initially for some weeks before you accept them int=
-o=20
-production.
-- Although highly debated, I believe that failures are likely to be=20
-correlated in time, when one drive goes there is a high probability of=20
-loosing others in the next 24 hours. Take precautions as you see fit, e=
-g=20
-regular backups, hot/warm spares, etc
-- Green consumer drives likely are satisfactorarily reliable for most=20
-uses, caveat that you accept they will fail catastrophically eventually=
-=20
-(just like your enterprise drive will).  We can debate the relative lif=
-e=20
-of each, but it's almost certainly just a linear factor...
+Another (sometimes significant) issue is that we've been noticing 
+partial coverage (e.g. missing functions) in some of the pages available 
+to sdparm with the desktop/consumer drives.  This is very annoying, 
+especially if you are building a RAID.  Most egregious on SSDs, but 
+we've seen one spinning rust device that did the same.
 
-Good luck
+There's not a huge difference in pricing between the two types, and your 
+time is valuable.  I'd argue for the lower time cost as part of a longer 
+term lower TCO.  We've built systems with both types of drives, but 
+based upon the experiences with desktop/consumer drives, we'd have to 
+advise avoiding this route if possible.  The upfront money you might 
+save will be spent more than likely on your time/efforts to repair 
+hiccups in the system later.
 
-Ed W
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Joseph Landman, Ph.D
+Founder and CEO
+Scalable Informatics Inc.
+email: landman@scalableinformatics.com
+web  : http://scalableinformatics.com
+        http://scalableinformatics.com/sicluster
+phone: +1 734 786 8423 x121
+fax  : +1 866 888 3112
+cell : +1 734 612 4615
+
