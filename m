@@ -1,61 +1,56 @@
-From: Roman Mamedov <rm@romanrm.ru>
+From: Chris Murphy <lists@colorremedies.com>
 Subject: Re: 3TB drives failure rate
-Date: Mon, 29 Oct 2012 01:59:10 +0600
-Message-ID: <20121029015910.018efb17@natsu>
-References: <11510711257.20121028131527@oudeis.org>
-	<DB91871A-731F-44B4-9381-8FBF7D9CC3BF@colorremedies.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/T/e2oBTuHqJ674/IYdEJzXt"; protocol="application/pgp-signature"
+Date: Sun, 28 Oct 2012 14:10:00 -0600
+Message-ID: <F548750F-8D0E-4D05-813B-58D85D652226@colorremedies.com>
+References: <11510711257.20121028131527@oudeis.org> <DB91871A-731F-44B4-9381-8FBF7D9CC3BF@colorremedies.com> <20121029015910.018efb17@natsu>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <DB91871A-731F-44B4-9381-8FBF7D9CC3BF@colorremedies.com>
+In-Reply-To: <20121029015910.018efb17@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/T/e2oBTuHqJ674/IYdEJzXt
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
 
-On Sun, 28 Oct 2012 13:50:41 -0600
-Chris Murphy <lists@colorremedies.com> wrote:
+On Oct 28, 2012, at 1:59 PM, Roman Mamedov <rm@romanrm.ru> wrote:
 
-> not for RAID 5
+> On Sun, 28 Oct 2012 13:50:41 -0600
+> Chris Murphy <lists@colorremedies.com> wrote:
+>=20
+>> not for RAID 5
+>=20
+>> RAID 5 implies 24x7=20
+>=20
+>> they're also not a 24x7 drive
+>=20
+> Wrong on pretty much all points. Or perhaps you are just way too easi=
+ly
+> misguided by marketing b/s.
 
-> RAID 5 implies 24x7=20
+I read their own published specs. Doesn't matter whether that piece is =
+used predominantly by marketing or not, it is a defacto contract that c=
+annot substantially depart from the legalized warranty verbiage.
 
-> they're also not a 24x7 drive
+>=20
+>> I *think* it's a 24x7 drive also but I could be wrong.
+>=20
+> There is no such thing as a "24x7" drive or not. Given adequate cooli=
+ng,
+> powering down and spinning up are an order of magnitude much more str=
+essful
+> and wearing out operation for a drive than just staying on.
 
-Wrong on pretty much all points. Or perhaps you are just way too easily
-misguided by marketing b/s.
+Yeah that's more of a marketing term for sure, but in determining the d=
+rive warranty, how much it's doing the various things it does is a sign=
+ificant factor. It's not at all the same thing to take a 2.5" laptop dr=
+ive and run it 24x7 without it ever spinning down. Just like it's not t=
+he at all the same thing to take an RE drive and have it spin up and do=
+wn 15 times a day=85 like a laptop drive.
 
-> I *think* it's a 24x7 drive also but I could be wrong.
 
-There is no such thing as a "24x7" drive or not. Given adequate cooling,
-powering down and spinning up are an order of magnitude much more stressful
-and wearing out operation for a drive than just staying on.
-
---=20
-With respect,
-Roman
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-"Stallman had a printer,
-with code he could not see.
-So he began to tinker,
-and set the software free."
-
---Sig_/T/e2oBTuHqJ674/IYdEJzXt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlCNjo4ACgkQTLKSvz+PZwjo0gCfTDed7yTeacsR+A+Sot3VqFzm
-eZkAoIZZ0LM6F5YHsusYMDWnDYc3OMBB
-=6L5H
------END PGP SIGNATURE-----
-
---Sig_/T/e2oBTuHqJ674/IYdEJzXt--
+Chris Murphy--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
