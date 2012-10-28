@@ -1,44 +1,31 @@
 From: Mikael Abrahamsson <swmike@swm.pp.se>
 Subject: Re: 3TB drives failure rate
-Date: Sun, 28 Oct 2012 22:21:40 +0100 (CET)
-Message-ID: <alpine.DEB.2.00.1210282217230.28593@uplift.swm.pp.se>
-References: <11510711257.20121028131527@oudeis.org>
+Date: Sun, 28 Oct 2012 22:24:12 +0100 (CET)
+Message-ID: <alpine.DEB.2.00.1210282222170.28593@uplift.swm.pp.se>
+References: <11510711257.20121028131527@oudeis.org> <DB91871A-731F-44B4-9381-8FBF7D9CC3BF@colorremedies.com> <20121029015910.018efb17@natsu> <F548750F-8D0E-4D05-813B-58D85D652226@colorremedies.com> <20121029021643.1c9e3195@natsu>
+ <46B8932A-58A5-4C1A-9C8C-DCCD5D3A1CD9@colorremedies.com> <A9ED9351-3430-43B8-AEA8-031B3DE29522@colorremedies.com> <6FAB7F92-66E2-4276-9774-B80DAC92E450@colorremedies.com> <20121029031851.42a5e1e9@natsu>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-137064504-1545639286-1351459300=:28593"
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <11510711257.20121028131527@oudeis.org>
+In-Reply-To: <20121029031851.42a5e1e9@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.ru>
+Cc: Chris Murphy <lists@colorremedies.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Mon, 29 Oct 2012, Roman Mamedov wrote:
 
----137064504-1545639286-1351459300=:28593
-Content-Type: TEXT/PLAIN; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 8BIT
+> I do not think there is a state in modern HDDs that there would be a 
+> sector which consistently takes 30-120 seconds to read. Those are either 
+> unreadable at all, or readable after a delay -- and then already 
+> remapped by the HDD into the reserved zone, so the delay is not there 
+> the next time.
 
-On Sun, 28 Oct 2012, Rainer Fügenstein wrote:
-
-> what is your experience with 3TB drives, WD and others?
-
-I have some experience with the 2TB Green drives, the ones I bought right 
-after launch had a very high failure rate, the ones I got as replacement 
-and purchased 6-12 months after launch, have fared a lot better.
-
-I am however replacing them now with WD Red drives (only one so far, had 
-my first failure in a year a few months back). The raid resync went very 
-smoothly, I had constant 130 megabyte/s write speed to that 2TB Red drive 
-during the resync.
-
-As for people still talking RAID5 for these sized drives, I don't 
-understand anyone not running RAID6. The rated read error rate on the 
-drives are frightening (10^-14), so with single drive failure and doing 
-resync, it's not uncommon to get read errors. RAID6 is definitely 
-recommended.
-
-<www.zdnet.com/blog/storage/why-raid-5-stops-working-in-2009/162>
+I have seen drives with abysimal read speed with constant hiccups when 
+reading. When reading your text below I believe you're implying that a 
+drive will re-write or re-map a sector that took 5 seconds to read. I wish 
+this was true, but from what I've seen that is just not happening. If you 
+have evidence that contradicts this, do share.
 
 -- 
 Mikael Abrahamsson    email: swmike@swm.pp.se
----137064504-1545639286-1351459300=:28593--
