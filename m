@@ -1,56 +1,95 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: 3TB drives failure rate
-Date: Mon, 29 Oct 2012 08:54:14 +0100
-Message-ID: <508E3626.8080404@hesbynett.no>
-References: <11510711257.20121028131527@oudeis.org> <508D61A1.7020106@wildgooses.com> <508D65CF.1080904@gmail.com> <508DADC3.4080104@shiftmail.org> <508DB08D.20002@meetinghouse.net> <508DC6E9.8070001@shiftmail.org> <508DC922.7040400@meetinghouse.net> <20121029102919.1134a797@natsu>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH 3/5] md: Increase the frequency of recording checkpoint of recovery.
+Date: Mon, 29 Oct 2012 17:24:11 +0800
+Message-ID: <201210291724062634040@gmail.com>
+References: <201210271028177376247@gmail.com>,
+	<20121029084147.2d292bc5@notabene.brown>
+Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121029102919.1134a797@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: Miles Fidelman <mfidelman@meetinghouse.net>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 29/10/2012 05:29, Roman Mamedov wrote:
-> On Sun, 28 Oct 2012 20:09:06 -0400
-> Miles Fidelman <mfidelman@meetinghouse.net> wrote:
->
->> Two separate issues.
->
->> The comments about "dropping out of raid" had to do with drives that are
->> slow to come out of sleep mode - causing hiccups when the RAID
->> hardware/software simply doesn't see the drive, and drops it.
->
-> There are no drives in good working order that would come out of sleep mode SO
-> slowly, that the Linux kernel ATA subsystem would even give up trying and
-> return an I/O error from it (and it's only after that point, when this begins
-> to become mdraid's concern).
->
-> I have yet to see even any first sign of "SATA frozen" due to drive sleep
-> mode, let alone to imagine this last through all the port resets and speed
-> step-downs the SATA driver will attempt.
->
-> So the "sleep" issue is not relevant with Linux software RAID, and if you're
-> still concerned that it might be, you can just reconfigure your drives so they
-> don't enter that sleep mode.
->
-
-The same applies to the long retry times of "desktop" drives - Linux 
-software raid has no problem with them.  Some (perhaps "many" or "all" - 
-I don't have the experience with hardware raid cards to say) hardware 
-raid cards see long read retries as a timeout on the disk, and will drop 
-the whole disk from the array.
-
-Linux md raid will wait for the data to come in, and use it if it is 
-valid.  If the disk returns an error, the md layer will re-create the 
-data from the other disks, then re-write the bad block.  The disk will 
-then re-locate the bad block to one of its spare blocks, and everything 
-should be fine.  (If the write also fails, the drive gets kicked out.)
-
-So with software raid, there are no problems using desktop drives of any 
-sort in your array (assuming, of course, you don't have physical issues 
-such as heat generation, vibration, support contracts, etc., that might 
-otherwise make you prefer "raid" or "enterprise" drives).
+Pk9uIFNhdCwgMjcgT2N0IDIwMTIgMTA6Mjg6MjAgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVu
+Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gV2l0aCB0aGUgaGFyZCBkaXNrIGNhcGFjaXR5IG9m
+IGxhcmdlcix0aGUgZW50aXJlIHJlY292ZXJ5IHByb2Nlc3MNCj4+IGJlY29tZXMgbG9uZ2VyLlNv
+IGl0IHNob3VsZCBpbmNyZWFzZSB0aGUgZnJlcXVlbmN5Lg0KPj4gU3VwcG9zZWQgdGhlIHNwZWVk
+IG9mIHJlY292ZXJ5IGlzIDEwME1CL3MoaSB0aGluayBmb3IgSEREIGlzIGdvb2QpLg0KPj4gVGhl
+IHRvdGFsIHRpbWUgb2YgcmVjb3ZlcnkgNFRCIGhkZCBpcyBhYm91dCA2NjYgbWludXRlcy5TbyBj
+aGFuZ2UgdGhlDQo+PiBmcmVxdWVuY3kgZnJvbSAxNiB0byA2NCB0aW1lcyxpdCdzIGFib3V0IDEw
+bWlucy4NCj4+IA0KPj4gU2lnbmVkLW9mZi1ieTogSmlhbnBlbmcgTWEgPG1hamlhbnBlbmdAZ21h
+aWwuY29tPg0KPj4gLS0tDQo+PiAgZHJpdmVycy9tZC9tZC5jIHwgICAgMiArLQ0KPj4gIDEgZmls
+ZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQ0KPj4gDQo+PiBkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9tZC9tZC5jIGIvZHJpdmVycy9tZC9tZC5jDQo+PiBpbmRleCAwMWUyNWJk
+Li5iYTMyOGVlIDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVycy9tZC9tZC5jDQo+PiArKysgYi9kcml2
+ZXJzL21kL21kLmMNCj4+IEBAIC03NDQ2LDcgKzc0NDYsNyBAQCB2b2lkIG1kX2RvX3N5bmMoc3Ry
+dWN0IG1kX3RocmVhZCAqdGhyZWFkKQ0KPj4gIAkJaWYgKCF0ZXN0X2JpdChNRF9SRUNPVkVSWV9S
+RVNIQVBFLCAmbWRkZXYtPnJlY292ZXJ5KSAmJg0KPj4gIAkJICAgICgobWRkZXYtPmN1cnJfcmVz
+eW5jID4gbWRkZXYtPmN1cnJfcmVzeW5jX2NvbXBsZXRlZCAmJg0KPj4gIAkJICAgICAgKG1kZGV2
+LT5jdXJyX3Jlc3luYyAtIG1kZGV2LT5jdXJyX3Jlc3luY19jb21wbGV0ZWQpDQo+PiAtCQkgICAg
+ICA+IChtYXhfc2VjdG9ycyA+PiA0KSkgfHwNCj4+ICsJCSAgICAgID4gKG1heF9zZWN0b3JzID4+
+IDYpKSB8fA0KPj4gIAkJICAgICAoaiAtIG1kZGV2LT5jdXJyX3Jlc3luY19jb21wbGV0ZWQpKjIN
+Cj4+ICAJCSAgICAgPj0gbWRkZXYtPnJlc3luY19tYXggLSBtZGRldi0+Y3Vycl9yZXN5bmNfY29t
+cGxldGVkDQo+PiAgCQkJICAgICkpIHsNCj4NCj5JIGRvbid0IGxpa2UgdGhpcyAtIHRoZSBudW1i
+ZXIgJzYnIGlzIGNvbXBsZXRlbHkgYXJiaXRyYXJ5Lg0KPg0KPlRoZSBvcmlnaW5hbCAnNCcgd2Fz
+IG5ldmVyIGFib3V0IG51bWJlciBvZiBtaW51dGVzLiAgSXQgd2FzIGEgZnJhY3Rpb24gb2YgdGhl
+DQo+dG90YWwgZWZmb3J0IG5lZWRlZC4NCj5JIHdhbnRlZCB0byBtYWtlIHN1cmUgeW91IG9ubHkg
+cmVwZWF0ZWQgYXQgbW9zdCAxMCUgb2YgdGhlIHJlcXVpcmVkIGVmZm9ydA0KPihvbmUgb3JkZXIg
+b2YgbWFnbml0dWRlKS4gID4+NCBpcyBhYm91dCA2JSBhbmQgZWFzeSB0byBjYWxjdWxhdGUuDQo+
+DQo+SWYgeW91IHdhbnQgaXQgdG8gYmUgYWJvdXQgdGltZSAod2hpY2ggSSBkb24ndCBvYmplY3Qg
+dG8pLCB0aGVuIG1ha2UgaXQgYWJvdXQNCj50aW1lLiAgS2VlcCB0cmFjayBvZiB0aGUgbGFzdCB0
+aW1lIHdlIHVwZGF0ZWQgY3Vycl9yZXN5bmNfY29tcGxldGVkLCBhbmQgaWYNCj50aGF0IGlzIG1v
+cmUgdGhhbiBhIGZldyBtaW51dGVzIGFnbywgdXBkYXRlIGl0IGFnYWluLg0KPlRoaXMgaXMgd2hh
+dCBJIHNhaWQgbGFzdCB0aW1lIC0gaWYgeW91IHdhbnQgc29tZXRoaW5nIHRvIGJlIGJhc2VkIG9u
+IHRpbWUsDQo+dGVzdCB0aGUgdGltZS4NCj5JZiAnZWNobyBpZGxlID4gc3luY19hY3Rpb24nIGRv
+ZXNuJ3Qgd29yayAoV2hpY2ggaXQgc2VlbXMgaXQgZG9lc24ndCksIHRoZW4NCj5pdCBpcyBPSyB0
+byBqdXN0IGRvIGl0IGluIHRoZSBrZXJuZWwuDQo+DQo+TmVpbEJyb3duDQo+DQpPaywgSSB1c2Vk
+IHlvdXIgc3VnZ2VzdGlvbnMuDQoNCltQQVRDSCBWMV0gbWQ6VXBkYXRpbmcgY2hlY2twb2ludCBv
+ZiByZXN5bmMvcmVjb3ZlcnkgYmFzZWQgdGltZS4NCg0KV2l0aCB0aGUgaGFyZCBkaXNrIGNhcGFj
+aXR5IG9mIGxhcmdlcix0aGUgZW50aXJlIHJlY292ZXJ5IHByb2Nlc3MNCmJlY29tZXMgbG9uZ2Vy
+LlNvIGl0IHNob3VsZCBpbmNyZWFzZSB0aGUgZnJlcXVlbmN5Lg0KVG8gZG8gc28gdGhlcmUgYXJl
+IGEgbG90IG9mIGJlbmVmaXRzLGZvciBleGFtcGxlDQoxOmF2b2lkIGRvaW5nIHJlcGVhdGVkIHdv
+cmsgd2hlbiBvcyBjcmFzaGVkIG9yIHN1ZGRlbmx5IHBvd2VyIGZhaWx1cmUuDQoyOkluIG1kIGRy
+aXZlcnMsIHRoZXJlIGFyZSBtYW55IHBsYWNlcyB0byBiZSB0cmVhdGVkIGRpZmZlcmVudGx5IGJh
+c2VkDQpvbiByZWNvdmVyeV9jcC5Gb3IgZXhhbXBsZSwgY29tbWl0IGE3ODU0NDg3Y2Q3MTI4YTMw
+YTdmNC4NCg0KSXQgaXMgZGlmZmljdWx0IHRvIGp1ZGdlIGhvdyBsb25nIGl0IHVwZGF0ZWQuVGhl
+cmUgaSBjaG9zZWQgZml2ZQ0KbWludXRlcy5ObyBpbXBhY3Qgb24gcGVyZm9ybWFuY2UuDQoNClNp
+Z25lZC1vZmYtYnk6IEppYW5wZW5nIE1hIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4NCi0tLQ0KIGRy
+aXZlcnMvbWQvbWQuYyB8ICAgIDcgKysrKysrLQ0KIDEgZmlsZSBjaGFuZ2VkLCA2IGluc2VydGlv
+bnMoKyksIDEgZGVsZXRpb24oLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvbWQuYyBiL2Ry
+aXZlcnMvbWQvbWQuYw0KaW5kZXggOWFiNzY4YS4uZWRkYjg0MCAxMDA2NDQNCi0tLSBhL2RyaXZl
+cnMvbWQvbWQuYw0KKysrIGIvZHJpdmVycy9tZC9tZC5jDQpAQCAtNzI2OSw2ICs3MjY5LDcgQEAg
+RVhQT1JUX1NZTUJPTF9HUEwobWRfYWxsb3dfd3JpdGUpOw0KIA0KICNkZWZpbmUgU1lOQ19NQVJL
+UwkxMA0KICNkZWZpbmUJU1lOQ19NQVJLX1NURVAJKDMqSFopDQorI2RlZmluZSBVUERBVEVfRlJF
+UVVFTkNZICg1KjYwKkhaKQ0KIHZvaWQgbWRfZG9fc3luYyhzdHJ1Y3QgbWRfdGhyZWFkICp0aHJl
+YWQpDQogew0KIAlzdHJ1Y3QgbWRkZXYgKm1kZGV2ID0gdGhyZWFkLT5tZGRldjsNCkBAIC03Mjc3
+LDYgKzcyNzgsNyBAQCB2b2lkIG1kX2RvX3N5bmMoc3RydWN0IG1kX3RocmVhZCAqdGhyZWFkKQ0K
+IAkJIHdpbmRvdzsNCiAJc2VjdG9yX3QgbWF4X3NlY3RvcnMsaiwgaW9fc2VjdG9yczsNCiAJdW5z
+aWduZWQgbG9uZyBtYXJrW1NZTkNfTUFSS1NdOw0KKwl1bnNpZ25lZCBsb25nIHVwZGF0ZV90aW1l
+Ow0KIAlzZWN0b3JfdCBtYXJrX2NudFtTWU5DX01BUktTXTsNCiAJaW50IGxhc3RfbWFyayxtOw0K
+IAlzdHJ1Y3QgbGlzdF9oZWFkICp0bXA7DQpAQCAtNzQzNiwxNyArNzQzOCwxOSBAQCB2b2lkIG1k
+X2RvX3N5bmMoc3RydWN0IG1kX3RocmVhZCAqdGhyZWFkKQ0KIAltZGRldi0+Y3Vycl9yZXN5bmNf
+Y29tcGxldGVkID0gajsNCiAJc3lzZnNfbm90aWZ5KCZtZGRldi0+a29iaiwgTlVMTCwgInN5bmNf
+Y29tcGxldGVkIik7DQogCW1kX25ld19ldmVudChtZGRldik7DQorCXVwZGF0ZV90aW1lID0gamlm
+ZmllczsNCiANCiAJYmxrX3N0YXJ0X3BsdWcoJnBsdWcpOw0KIAl3aGlsZSAoaiA8IG1heF9zZWN0
+b3JzKSB7DQogCQlzZWN0b3JfdCBzZWN0b3JzOw0KLQ0KKw0KIAkJc2tpcHBlZCA9IDA7DQogDQog
+CQlpZiAoIXRlc3RfYml0KE1EX1JFQ09WRVJZX1JFU0hBUEUsICZtZGRldi0+cmVjb3ZlcnkpICYm
+DQogCQkgICAgKChtZGRldi0+Y3Vycl9yZXN5bmMgPiBtZGRldi0+Y3Vycl9yZXN5bmNfY29tcGxl
+dGVkICYmDQogCQkgICAgICAobWRkZXYtPmN1cnJfcmVzeW5jIC0gbWRkZXYtPmN1cnJfcmVzeW5j
+X2NvbXBsZXRlZCkNCiAJCSAgICAgID4gKG1heF9zZWN0b3JzID4+IDQpKSB8fA0KKwkJICAgICB0
+aW1lX2FmdGVyX2VxKGppZmZpZXMsIHVwZGF0ZV90aW1lICsgVVBEQVRFX0ZSRVFVRU5DWSkgfHwN
+CiAJCSAgICAgKGogLSBtZGRldi0+Y3Vycl9yZXN5bmNfY29tcGxldGVkKSoyDQogCQkgICAgID49
+IG1kZGV2LT5yZXN5bmNfbWF4IC0gbWRkZXYtPmN1cnJfcmVzeW5jX2NvbXBsZXRlZA0KIAkJCSAg
+ICApKSB7DQpAQCAtNzQ1NCw2ICs3NDU4LDcgQEAgdm9pZCBtZF9kb19zeW5jKHN0cnVjdCBtZF90
+aHJlYWQgKnRocmVhZCkNCiAJCQl3YWl0X2V2ZW50KG1kZGV2LT5yZWNvdmVyeV93YWl0LA0KIAkJ
+CQkgICBhdG9taWNfcmVhZCgmbWRkZXYtPnJlY292ZXJ5X2FjdGl2ZSkgPT0gMCk7DQogCQkJbWRk
+ZXYtPmN1cnJfcmVzeW5jX2NvbXBsZXRlZCA9IGo7DQorCQkJdXBkYXRlX3RpbWUgPSBqaWZmaWVz
+Ow0KIAkJCXNldF9iaXQoTURfQ0hBTkdFX0NMRUFOLCAmbWRkZXYtPmZsYWdzKTsNCiAJCQlzeXNm
+c19ub3RpZnkoJm1kZGV2LT5rb2JqLCBOVUxMLCAic3luY19jb21wbGV0ZWQiKTsNCiAJCX0NCi0t
+IA0KMS43LjkuNQ0K
 
