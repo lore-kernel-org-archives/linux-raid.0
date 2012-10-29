@@ -1,87 +1,74 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: Re: [PATCH 1/5] md: When resync aborted,using ->curr_resync as the last completed request rather than ->curr_resync_completed.
-Date: Mon, 29 Oct 2012 11:27:25 +0800
-Message-ID: <2012102911174841643114@gmail.com>
-References: <2012102710283109761110@gmail.com>,
-	<20121029083241.2a2dedcc@notabene.brown>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Re: 3TB drives failure rate
+Date: Mon, 29 Oct 2012 10:29:19 +0600
+Message-ID: <20121029102919.1134a797@natsu>
+References: <11510711257.20121028131527@oudeis.org>
+	<508D61A1.7020106@wildgooses.com>
+	<508D65CF.1080904@gmail.com>
+	<508DADC3.4080104@shiftmail.org>
+	<508DB08D.20002@meetinghouse.net>
+	<508DC6E9.8070001@shiftmail.org>
+	<508DC922.7040400@meetinghouse.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/SO0VcOtt1EsXe002DgJpNH7"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <508DC922.7040400@meetinghouse.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Miles Fidelman <mfidelman@meetinghouse.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Pk9uIFNhdCwgMjcgT2N0IDIwMTIgMTA6Mjg6NTggKzA4MDAga2VybmVsbWFpbCA8a2VkYWNvbWtl
-cm5lbEBnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gSW4gY29tbWl0KGRiOTFmZjU1YmRmMDY3MzZi
-ODQ5YWZjMWIxZmNlNTc2M2JiYjhkNWQpLGl0IHNhaWQ6DQo+PiA+SWYgYSByZXN5bmMgaXMgYWJv
-cnRlZCB3ZSBzaG91bGQgcmVjb3JkIGhvdyBmYXIgd2UgZ290DQo+PiA+KHJlY292ZXJ5X2NwKSB0
-aGUgbGFzdCByZXF1ZXN0IHRoYXQgd2Uga25vdyBoYXMgY29tcGxldGVkDQo+PiA+KC0+Y3Vycl9y
-ZXN5bmNfY29tcGxldGVkKSByYXRoZXIgdGhhbiB0aGUgbGFzdCByZXF1ZXN0IHRoYXQgd2FzDQo+
-PiA+c3VibWl0dGVkICgtPmN1cnJfcmVzeW5jKS4NCj4+IEJ1dCB3aGVuIHJlc3luYyBhYm9ydGVk
-LCBpdCBleGVjZWQNCj4+ID53YWl0X2V2ZW50KG1kZGV2LT5yZWNvdmVyeV93YWl0LCAhYXRvbWlj
-X3JlYWQoJm1kZGV2LT5yZWNvdmVyeV9hY3RpdmUpKTsNCj4+IEFmdGVyIHRoaXMsIHRoZSAtPmN1
-cnJfcmVzeW5jIGlzIHRoZSBsYXN0IGNvbXBsZXRlZCByZXF1ZXN0Lg0KPj4gDQo+PiBTaWduZWQt
-b2ZmLWJ5OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQo+PiAtLS0NCj4+ICBk
-cml2ZXJzL21kL21kLmMgfCAgICAzICstLQ0KPj4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlv
-bigrKSwgMiBkZWxldGlvbnMoLSkNCj4+IA0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvbWQu
-YyBiL2RyaXZlcnMvbWQvbWQuYw0KPj4gaW5kZXggOWFiNzY4YS4uMWQ5OTQwZCAxMDA2NDQNCj4+
-IC0tLSBhL2RyaXZlcnMvbWQvbWQuYw0KPj4gKysrIGIvZHJpdmVycy9tZC9tZC5jDQo+PiBAQCAt
-NzU1OCw4ICs3NTU4LDcgQEAgdm9pZCBtZF9kb19zeW5jKHN0cnVjdCBtZF90aHJlYWQgKnRocmVh
-ZCkNCj4+ICAJCQkJCXByaW50ayhLRVJOX0lORk8NCj4+ICAJCQkJCSAgICAgICAibWQ6IGNoZWNr
-cG9pbnRpbmcgJXMgb2YgJXMuXG4iLA0KPj4gIAkJCQkJICAgICAgIGRlc2MsIG1kbmFtZShtZGRl
-dikpOw0KPj4gLQkJCQkJbWRkZXYtPnJlY292ZXJ5X2NwID0NCj4+IC0JCQkJCQltZGRldi0+Y3Vy
-cl9yZXN5bmNfY29tcGxldGVkOw0KPj4gKwkJCQkJbWRkZXYtPnJlY292ZXJ5X2NwID0gbWRkZXYt
-PmN1cnJfcmVzeW5jOw0KPj4gIAkJCQl9DQo+PiAgCQkJfSBlbHNlDQo+PiAgCQkJCW1kZGV2LT5y
-ZWNvdmVyeV9jcCA9IE1heFNlY3RvcjsNCj4NCj5Oby4NCj5UaGlzIHJldmVydHMgY29tbWl0IGRi
-OTFmZjU1YmRmMDY3MzZiODQ5YWZjMWIxZmNlNTc2M2JiYjhkNWQNCj4NCj5NYXliZSBpZiB3ZSBk
-aWZmZXJlbnRpYXRlZCBiZXR3ZWVuIGFuIGFib3J0LWR1ZS10by1lcnJvciBhbmQgYW4NCj5hYm9y
-dC1kdWUtdG8tcmVxdWVzdCwgdGhlbiBpbiB0aGUgc2Vjb25kIGNhcmQgd2UgY291bGQgdXNlIC0+
-Y3Vycl9yZXN5bmMuDQo+DQo+TmVpbEJyb3duDQo+DQpZZXMsIGkgbWlzc2VkIHRoZSBjYXNlIHdo
-aWNoIGludGVycnVwdGVkIGJ5IGlvLWVycm9yLg0KU28gaSBhZGQgYSBmbGFnIE1EX1JFQ09WRVJZ
-X0VSUk9SIGluIG1kX2RvbmVfc3luYy4NCiANCmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL21kLmMg
-Yi9kcml2ZXJzL21kL21kLmMNCmluZGV4IDlhYjc2OGEuLmNiOTg2NGMgMTAwNjQ0DQotLS0gYS9k
-cml2ZXJzL21kL21kLmMNCisrKyBiL2RyaXZlcnMvbWQvbWQuYw0KQEAgLTcxNzIsNiArNzE3Miw3
-IEBAIHZvaWQgbWRfZG9uZV9zeW5jKHN0cnVjdCBtZGRldiAqbWRkZXYsIGludCBibG9ja3MsIGlu
-dCBvaykNCiAgICAgICAgd2FrZV91cCgmbWRkZXYtPnJlY292ZXJ5X3dhaXQpOw0KICAgICAgICBp
-ZiAoIW9rKSB7DQogICAgICAgICAgICAgICAgc2V0X2JpdChNRF9SRUNPVkVSWV9JTlRSLCAmbWRk
-ZXYtPnJlY292ZXJ5KTsNCisgICAgICAgICAgICAgICBzZXRfYml0KE1EX1JFQ09WRVJZX0VSUk9S
-LCAmbWRkZXYtPnJlY292ZXJ5KTsNCiAgICAgICAgICAgICAgICBtZF93YWtldXBfdGhyZWFkKG1k
-ZGV2LT50aHJlYWQpOw0KICAgICAgICAgICAgICAgIC8vIHN0b3AgcmVjb3ZlcnksIHNpZ25hbCBk
-b19zeW5jIC4uLi4NCiAgICAgICAgfQ0KQEAgLTc1NTgsOCArNzU1OSwxMiBAQCB2b2lkIG1kX2Rv
-X3N5bmMoc3RydWN0IG1kX3RocmVhZCAqdGhyZWFkKQ0KICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgIHByaW50ayhLRVJOX0lORk8NCiAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgIm1kOiBjaGVja3BvaW50aW5nICVzIG9mICVzLlxuIiwN
-CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGVzYywgbWRu
-YW1lKG1kZGV2KSk7DQotICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbWRk
-ZXYtPnJlY292ZXJ5X2NwID0NCi0gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIG1kZGV2LT5jdXJyX3Jlc3luY19jb21wbGV0ZWQ7DQorICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgaWYgKHRlc3RfYml0KE1EX1JFQ09WRVJZX0VSUk9SLCAm
-bWRkZXYtPnJlY292ZXJ5KSkNCisgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIG1kZGV2LT5yZWNvdmVyeV9jcCA9DQorICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIG1kZGV2LT5jdXJyX3Jlc3luY19jb21wbGV0
-ZWQ7DQorICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZWxzZQ0KKyAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbWRkZXYtPnJlY292ZXJ5
-X2NwID0NCisgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgbWRkZXYtPmN1cnJfcmVzeW5jOw0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICB9DQogICAgICAgICAgICAgICAgICAgICAgICB9IGVsc2UNCiAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgbWRkZXYtPnJlY292ZXJ5X2NwID0gTWF4U2VjdG9yOw0KZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvbWQvbWQuaCBiL2RyaXZlcnMvbWQvbWQuaA0KaW5kZXggYWY0NDNhYi4uM2IxYTM1
-ZiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbWQvbWQuaA0KKysrIGIvZHJpdmVycy9tZC9tZC5oDQpA
-QCAtMzA3LDYgKzMwNyw3IEBAIHN0cnVjdCBtZGRldiB7DQogICAgICAgICAqIFJFUVVFU1Q6ICB1
-c2VyLXNwYWNlIGhhcyByZXF1ZXN0ZWQgYSBzeW5jICh1c2VkIHdpdGggU1lOQykNCiAgICAgICAg
-ICogQ0hFQ0s6ICAgIHVzZXItc3BhY2UgcmVxdWVzdCBmb3IgY2hlY2stb25seSwgbm8gcmVwYWly
-DQogICAgICAgICAqIFJFU0hBUEU6ICBBIHJlc2hhcGUgaXMgaGFwcGVuaW5nDQorICAgICAgICAq
-IEVSUk9SOiAgICBpbnRlcnJ1cHRlZCBieSBJTyBlcnJvciBub3QgYnkgcmVxdWVzdA0KICAgICAg
-ICAgKg0KICAgICAgICAgKiBJZiBuZWl0aGVyIFNZTkMgb3IgUkVTSEFQRSBhcmUgc2V0LCB0aGVu
-IGl0IGlzIGEgcmVjb3ZlcnkuDQogICAgICAgICAqLw0KQEAgLTMyMCw2ICszMjEsNyBAQCBzdHJ1
-Y3QgbWRkZXYgew0KICNkZWZpbmUgICAgICAgIE1EX1JFQ09WRVJZX0NIRUNLICAgICAgIDcNCiAj
-ZGVmaW5lIE1EX1JFQ09WRVJZX1JFU0hBUEUgICAgOA0KICNkZWZpbmUgICAgICAgIE1EX1JFQ09W
-RVJZX0ZST1pFTiAgICAgIDkNCisjZGVmaW5lIE1EX1JFQ09WRVJZX0VSUk9SICAgICAgMTANCiAN
-CiAgICAgICAgdW5zaWduZWQgbG9uZyAgICAgICAgICAgICAgICAgICByZWNvdmVyeTsNCiAgICAg
-ICAgLyogSWYgYSBSQUlEIHBlcnNvbmFsaXR5IGRldGVybWluZXMgdGhhdCByZWNvdmVyeSAob2Yg
-YSBwYXJ0aWN1bGFyDQoNCg0KSG93IGFib3V0IHRoaXMgcGF0Y2g/DQoNCkppYW5wZW5nDQoNCg0K
+--Sig_/SO0VcOtt1EsXe002DgJpNH7
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Sun, 28 Oct 2012 20:09:06 -0400
+Miles Fidelman <mfidelman@meetinghouse.net> wrote:
+
+> Two separate issues.
+
+> The comments about "dropping out of raid" had to do with drives that are=
+=20
+> slow to come out of sleep mode - causing hiccups when the RAID=20
+> hardware/software simply doesn't see the drive, and drops it.
+
+There are no drives in good working order that would come out of sleep mode=
+ SO
+slowly, that the Linux kernel ATA subsystem would even give up trying and
+return an I/O error from it (and it's only after that point, when this begi=
+ns
+to become mdraid's concern).
+
+I have yet to see even any first sign of "SATA frozen" due to drive sleep
+mode, let alone to imagine this last through all the port resets and speed
+step-downs the SATA driver will attempt.
+
+So the "sleep" issue is not relevant with Linux software RAID, and if you're
+still concerned that it might be, you can just reconfigure your drives so t=
+hey
+don't enter that sleep mode.=20
+
+--=20
+With respect,
+Roman
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"Stallman had a printer,
+with code he could not see.
+So he began to tinker,
+and set the software free."
+
+--Sig_/SO0VcOtt1EsXe002DgJpNH7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlCOBh8ACgkQTLKSvz+PZwgKDgCfVyH1hohyjvwTDi+LRX+wJhcB
+U7EAoIdgUQiBfZPeEVqxh9uLXcxe0kiF
+=eR1E
+-----END PGP SIGNATURE-----
+
+--Sig_/SO0VcOtt1EsXe002DgJpNH7--
