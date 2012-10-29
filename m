@@ -1,32 +1,62 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: 3TB drives failure rate
-Date: Sun, 28 Oct 2012 18:27:08 -0600
-Message-ID: <B63BE7FC-919F-43BC-A1F8-51D2804A6F48@colorremedies.com>
-References: <11510711257.20121028131527@oudeis.org> <DB91871A-731F-44B4-9381-8FBF7D9CC3BF@colorremedies.com> <20121029015910.018efb17@natsu> <F548750F-8D0E-4D05-813B-58D85D652226@colorremedies.com> <20121029021643.1c9e3195@natsu> <46B8932A-58A5-4C1A-9C8C-DCCD5D3A1CD9@colorremedies.com> <508DAAD3.4050209@shiftmail.org> <508DAD6F.1070509@turmel.org> <508DC9F5.1040504@shiftmail.org>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH 4/5] md: Return proper error rather than EIO.
+Date: Mon, 29 Oct 2012 09:16:43 +0800
+Message-ID: <201210290916375316776@gmail.com>
+References: <201210271028260803459@gmail.com>,
+	<20121029084349.615c1ea8@notabene.brown>
+Reply-To: majianpeng <majianpeng@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <508DC9F5.1040504@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
-On Oct 28, 2012, at 6:12 PM, joystick <joystick@shiftmail.org> wrote:
-
-> On 10/28/12 23:10, Phil Turmel wrote:
->> The drives I've suffered with on this have ignored the link reset and
->> were still unresponsive when MD tried to rewrite the sector(s) involved
->> (from the other drives in the array).
-> 
-> Very interesting
-> 
-> I would like to see this behaviour to make some experiments.
-> I would like to simulate an unreadable sector...
-> I see --make-bad-sector in hdparm, does that simulate an unreadable sector faithfully?
-
-In this (simulated) case, it knows the answer: bad sector. In a real scenario it doesn't know. So with hdparm's bad sector you're probably going to get an immediate read failure. And hence no hang.
-
-Chris Murphy
+Pk9uIFNhdCwgMjcgT2N0IDIwMTIgMTA6Mjg6MzAgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVu
+Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gU2lnbmVkLW9mZi1ieTogSmlhbnBlbmcgTWEgPG1h
+amlhbnBlbmdAZ21haWwuY29tPg0KPj4gLS0tDQo+PiAgZHJpdmVycy9tZC9yYWlkMS5jIHwgICAg
+NCArKy0tDQo+PiAgZHJpdmVycy9tZC9yYWlkNS5jIHwgICAgNCArKy0tDQo+PiAgMiBmaWxlcyBj
+aGFuZ2VkLCA0IGluc2VydGlvbnMoKyksIDQgZGVsZXRpb25zKC0pDQo+PiANCj4+IGRpZmYgLS1n
+aXQgYS9kcml2ZXJzL21kL3JhaWQxLmMgYi9kcml2ZXJzL21kL3JhaWQxLmMNCj4+IGluZGV4IDgw
+MzRmYmQuLmUyZjM3ODMgMTAwNjQ0DQo+PiAtLS0gYS9kcml2ZXJzL21kL3JhaWQxLmMNCj4+ICsr
+KyBiL2RyaXZlcnMvbWQvcmFpZDEuYw0KPj4gQEAgLTI3OTksMTIgKzI3OTksMTIgQEAgc3RhdGlj
+IGludCBydW4oc3RydWN0IG1kZGV2ICptZGRldikNCj4+ICAJaWYgKG1kZGV2LT5sZXZlbCAhPSAx
+KSB7DQo+PiAgCQlwcmludGsoS0VSTl9FUlIgIm1kL3JhaWQxOiVzOiByYWlkIGxldmVsIG5vdCBz
+ZXQgdG8gbWlycm9yaW5nICglZClcbiIsDQo+PiAgCQkgICAgICAgbWRuYW1lKG1kZGV2KSwgbWRk
+ZXYtPmxldmVsKTsNCj4+IC0JCXJldHVybiAtRUlPOw0KPj4gKwkJcmV0dXJuIC1FSU5WQUw7DQo+
+PiAgCX0NCj4+ICAJaWYgKG1kZGV2LT5yZXNoYXBlX3Bvc2l0aW9uICE9IE1heFNlY3Rvcikgew0K
+Pj4gIAkJcHJpbnRrKEtFUk5fRVJSICJtZC9yYWlkMTolczogcmVzaGFwZV9wb3NpdGlvbiBzZXQg
+YnV0IG5vdCBzdXBwb3J0ZWRcbiIsDQo+PiAgCQkgICAgICAgbWRuYW1lKG1kZGV2KSk7DQo+PiAt
+CQlyZXR1cm4gLUVJTzsNCj4+ICsJCXJldHVybiAtRUlOVkFMOw0KPj4gIAl9DQo+PiAgCS8qDQo+
+PiAgCSAqIGNvcHkgdGhlIGFscmVhZHkgdmVyaWZpZWQgZGV2aWNlcyBpbnRvIG91ciBwcml2YXRl
+IFJBSUQxDQo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5jIGIvZHJpdmVycy9tZC9y
+YWlkNS5jDQo+PiBpbmRleCBjNTQzOWRjLi42ODRjYTc2IDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVy
+cy9tZC9yYWlkNS5jDQo+PiArKysgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCj4+IEBAIC01MDg4LDcg
+KzUwODgsNyBAQCBzdGF0aWMgc3RydWN0IHI1Y29uZiAqc2V0dXBfY29uZihzdHJ1Y3QgbWRkZXYg
+Km1kZGV2KQ0KPj4gIAkgICAgJiYgbWRkZXYtPm5ld19sZXZlbCAhPSA2KSB7DQo+PiAgCQlwcmlu
+dGsoS0VSTl9FUlIgIm1kL3JhaWQ6JXM6IHJhaWQgbGV2ZWwgbm90IHNldCB0byA0LzUvNiAoJWQp
+XG4iLA0KPj4gIAkJICAgICAgIG1kbmFtZShtZGRldiksIG1kZGV2LT5uZXdfbGV2ZWwpOw0KPj4g
+LQkJcmV0dXJuIEVSUl9QVFIoLUVJTyk7DQo+PiArCQlyZXR1cm4gRVJSX1BUUigtRUlOVkFMKTsN
+Cj4+ICAJfQ0KPj4gIAlpZiAoKG1kZGV2LT5uZXdfbGV2ZWwgPT0gNQ0KPj4gIAkgICAgICYmICFh
+bGdvcml0aG1fdmFsaWRfcmFpZDUobWRkZXYtPm5ld19sYXlvdXQpKSB8fA0KPj4gQEAgLTUwOTYs
+NyArNTA5Niw3IEBAIHN0YXRpYyBzdHJ1Y3QgcjVjb25mICpzZXR1cF9jb25mKHN0cnVjdCBtZGRl
+diAqbWRkZXYpDQo+PiAgCSAgICAgJiYgIWFsZ29yaXRobV92YWxpZF9yYWlkNihtZGRldi0+bmV3
+X2xheW91dCkpKSB7DQo+PiAgCQlwcmludGsoS0VSTl9FUlIgIm1kL3JhaWQ6JXM6IGxheW91dCAl
+ZCBub3Qgc3VwcG9ydGVkXG4iLA0KPj4gIAkJICAgICAgIG1kbmFtZShtZGRldiksIG1kZGV2LT5u
+ZXdfbGF5b3V0KTsNCj4+IC0JCXJldHVybiBFUlJfUFRSKC1FSU8pOw0KPj4gKwkJcmV0dXJuIEVS
+Ul9QVFIoLUVJTlZBTCk7DQo+PiAgCX0NCj4+ICAJaWYgKG1kZGV2LT5uZXdfbGV2ZWwgPT0gNiAm
+JiBtZGRldi0+cmFpZF9kaXNrcyA8IDQpIHsNCj4+ICAJCXByaW50ayhLRVJOX0VSUiAibWQvcmFp
+ZDolczogbm90IGVub3VnaCBjb25maWd1cmVkIGRldmljZXMgKCVkLCBtaW5pbXVtIDQpXG4iLA0K
+Pg0KPg0KPk9uZSBkb2Vzbid0IGp1c3QgcmFuZG9tbHkgY2hhbmdlIGVycm9yIHJldHVybiBjb2Rl
+cy4NCj5NYXliZSB0aGUgY3VycmVudCBvbmVzIGFyZSAid3JvbmciLCBidXQgdGhleSBoYXZlIGJl
+ZW4gdGhhdCB3YXkgZm9yIG1hbnkNCj55ZWFycyBzbyB0aGV5IGFyZSBlZmZlY3RpdmVseSBwYXJ0
+IG9mIHRoZSBBUEkuICBTbyB0aGV5IGFyZSAicmlnaHQiIGJlDQo+ZGVmaW5pdGlvbiwgZXZlbiBp
+ZiB0aGV5IHNlZW0gd3JvbmcuDQo+DQpZZXMsIGkgYWdyZWUgd2l0aCB5b3VyIHBvaW50Lg0KRm9y
+IGZ1bmMgc2V0dXBfY29uZix0aGVyZSB3YXMgYWxyZWRheSBFSU5WQUwsIHNvIG1vZGlmeSBFSU8g
+dG8gRUlOVkFMIGlzbid0IGFkZCBhIG5ldyByZXR1cm4gY29kZS4NCkkgdGhpbmsgZm9yIHVwcGVy
+IGNhbGxlciBubyBlZmZlY3QuDQpGb3IgZnVuYyBydW4sIHRoZSBjYWxsZXIgYWxzZSBoYWQgRUlO
+VkFMLlNvIG1vZGlmeSBoYWQgbm8gZWZmZWN0Lg0KDQpKaWFucGVuZw0KPk5laWxCcm93bg0KPg==
 
