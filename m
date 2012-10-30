@@ -1,89 +1,47 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: MDADM after QNAP Support disaster QNAP 859 Pro
-Date: Tue, 30 Oct 2012 13:58:45 +1100
-Message-ID: <20121030135845.49256a70@notabene.brown>
-References: <508BFD32.7010901@gmx.net>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: task xfssyncd blocked while raid5 was in recovery
+Date: Mon, 29 Oct 2012 23:49:47 -0500
+Message-ID: <508F5C6B.6060304@hardwarefreak.com>
+References: <CACY-59cbWX9Gu_xsfqv_p8=Q7CabWZuj=ZH2K41j4N0-o-8WLw@mail.gmail.com> <2012102411171145340220@meganovo.com>,  <20121024161440.239ea8b8@notabene.brown> <201210301018322655420@meganovo.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/P+6p7xaQVSrnl.JIL.Pz/24"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <508BFD32.7010901@gmx.net>
+In-Reply-To: <201210301018322655420@meganovo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sam.vanRatt@gmx.net
-Cc: linux-raid@vger.kernel.org, Michael Samer EPOS GmbH <michael.samer@epos-cat.de>
+To: GuoZhong Han <hanguozhong@meganovo.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, neilb <neilb@suse.de>, =?UTF-8?B?6buE5pil6L6J?= <childhood@meganovo.com>
 List-Id: linux-raid.ids
 
---Sig_/P+6p7xaQVSrnl.JIL.Pz/24
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 10/29/2012 9:19 PM, hanguozhong wrote:
 
-On Sat, 27 Oct 2012 17:26:42 +0200 Sam van Ratt <sam.vanratt@gmx.net> wrote:
+>     The disks were plugged in the device via 2 2680 Rocket cards. Each Rocket card supported at most 8 disks.
 
-> Hello
-> a few days I received a NAS with 8 Slots. The original config consistet=20
-> of 8* 2TB HDs as a RAID6 mdadm softraid system. After a normal reboot=20
-> the array was no longer found, so QNAP was contacted.
-> The support told the keyuser todo this:
->=20
->=20
-> mdadm -D /dev/md0 (zeigt das gesamte RAID auf)
-> to assemble the HDs you have to:
-> mdadm -A /dev/md0 /dev/sda3.... (take care here, depending on the HDs=20
-> they get a value like /dev/sdb3 dev/sdc3 ...) - with 8 HDs:
-> mdadm -A /dev/md0 /dev/sda3 /sdb3 /dev/sdc3 /dev/sdd3 /dev/sde3=20
-> /dev/sdf3 /dev/sdg3 /dev/sdh3 (be careful with the order!)
-> If you get an error message about the assemble, you have to stop md0
-> mdadm -S /dev/md0 (stopping md0)
-> umount /dev/md0 (unmount of md0)
->=20
-> After serveral failed tries it endet in have a RAID 1 Konfig on sda and=20
-> sdb but not seeing anything else of the config before (funnily only a=20
-> 500MB partition (as /dev/md9 sounds as a lot of tries).
-> As I'm not using mdadm in my workplace anywhere:
->=20
-> How can I delete the RAID1 (pretty simple I know) and reconstruct the R6=
-=20
-> Array without damaging the config further (and therefore the datas). The=
-=20
-> R6 should be about 11TiB usable size.
-> Is there a init build with searching for the old conifg? As R6 it should=
-=20
-> even be readable without sda or sdb if this should be needed. I manly=20
-> use HW RAID Controller where a few (ICP, Infortrend, Areca)  which=20
-> allows a reassembly by just declaring the disks as member to mdx and=20
-> assemble then again; I hope mdadm could offer something similar
->=20
+Card: HighPoint RocketRAID 2680/2680SGL Marvell 88SE6485
+Driver: MVSAS
 
-The advice you were given doesn't seem very helpful.
+After years of development the MVSAS driver is still not suitable for
+production use.  It is the cause of your problems here.  Any board using
+the Marvell SAS chips is not suitable for use with Linux at this time
+due to the poor driver quality.  These boards work fine under Windows
+apparently.
 
-Please run
+>     2012-10-27 23:57:04 ata9.00: exception Emask 0x0 SAct 0x7fffffff SErr 0x0 action 0x6 t0
+>     2012-10-27 23:57:04 ata9.00: failed command: READ FPDMA QUEUED
+>     2012-10-27 23:57:04 ata9.00: cmd 60/00:00:80:62:a7/04:00:d6:00:00/40 tag 0 ncq 524288 in
+>     2012-10-27 23:57:04          res 01/04:b4:80:ca:a7/00:00:d6:00:00/40 Emask 0x2 (HSM violation)
+<snip>
+>     2012-10-27 23:57:07 ata9.00: configured for UDMA/133
+>     2012-10-27 23:57:07 ata9: EH complete
+<snip>
+>     My problem seems not really be solved, can you help me? I would be very grateful to you.
 
- mdadm --examine /dev/sd*
+Yes, I can help.  Replace the HighPoint boards with LSI 9211-8i boards
+and everything should work fine, barring any compatibility issue with
+the Tilera platform.
 
-collect the output, and post it.
+-- 
+Stan
 
-NeilBrown
 
---Sig_/P+6p7xaQVSrnl.JIL.Pz/24
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUI9CZTnsnt1WYoG5AQJKAg//bWeaSd6zmSrDA50Mo+VegLguGShbt+IY
-EfBtfw9MxxXGHGmaYXEX7ltqQSL/pbHHWRfrVTceU2Ioh+UT6OOf2YbdMlZGMLwl
-duhanwfnhuo0+tVI/SByZ8nCTQPynI6s55ngPdT3kctOJncAwcssXEwde0AyN2y9
-74m+v2XPoOvWVrMoBjsnd0GEbXbxXtMSQPpcqYPUx835JyjYzyeM9Bi1cXEf0iiO
-wf8iV4zwoAmBy+4g4kH9QVkGPwPhbLlNyJ8naoHzgeJoCd9887cYqoCPLQMsZ3bj
-RhClnclrrJm0T0QfWF1GlZcSGNtEYTLlrJsG0uJ80Wmxc6ZqfZ3xYhMbZ/ZC/s64
-R5udunAiBrN/b8wXr2NjhKi0mUnXCmaeZMNH53vJDKPRs4BZnxPs4CIbR/+z+qt3
-yRxS6xzrq51WIB4yibSg+CvkKLDvEdLe1xaXnjbTpTZIBsiEvjBu24T37YJ5R72U
-r3kE6p6JJsmVrPR6HuvnDfseZvwcBaGVTPBM9DPLMSvTjRaWwZeSBNTnn6fZtgpA
-uKvA3oJX/aBNhnRe3gAg7XVTlMfsPrkW0LTtDTU5UxGeExVG630HchFt47YatZXU
-U0eDiCH6z1suz03SC3A79O2W0YY1zpdQffYDBcJzoa3QM0fJFjum3nHvGl02Z5pU
-zvGQB95M8zU=
-=bar1
------END PGP SIGNATURE-----
-
---Sig_/P+6p7xaQVSrnl.JIL.Pz/24--
