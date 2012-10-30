@@ -1,47 +1,95 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: task xfssyncd blocked while raid5 was in recovery
-Date: Mon, 29 Oct 2012 23:49:47 -0500
-Message-ID: <508F5C6B.6060304@hardwarefreak.com>
-References: <CACY-59cbWX9Gu_xsfqv_p8=Q7CabWZuj=ZH2K41j4N0-o-8WLw@mail.gmail.com> <2012102411171145340220@meganovo.com>,  <20121024161440.239ea8b8@notabene.brown> <201210301018322655420@meganovo.com>
-Reply-To: stan@hardwarefreak.com
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: Best way (only?) to setup SSD's for using TRIM
+Date: Tue, 30 Oct 2012 10:49:58 +0100
+Message-ID: <508FA2C6.2050800@hesbynett.no>
+References: <508D808A.7040100@curtronics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201210301018322655420@meganovo.com>
+In-Reply-To: <508D808A.7040100@curtronics.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: GuoZhong Han <hanguozhong@meganovo.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, neilb <neilb@suse.de>, =?UTF-8?B?6buE5pil6L6J?= <childhood@meganovo.com>
+To: Curtis J Blank <curt@curtronics.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/29/2012 9:19 PM, hanguozhong wrote:
+On 28/10/2012 19:59, Curtis J Blank wrote:
+> I've got two new SSD's that I want to set up as RAID1 and use strictly
+> for the OS and MySQL DB's partitioned accordingly.
+>
+> I'll be using the 3.4.6 kernel for now in openSuSE 12.2 with ext4. So
+> after a lot of Google'n and reading it is my understanding that discard
+> is not sent to the devices via the raid drivers. I am aware of Shaohua
+> Li's patches to make it work but am not inclined to use them due to
+> openSuSE's Online Update replacing the kernel. I'm not against patching
+> and gen'ing a kernel, that used to be SOP, but just don't want deal with
+> that overhead. Of course unless I really need to.
+>
+> So I've read, and if I understand things correctly, I can use LVM and
+> RAID1 and the the discard commands will be sent to the devices. Is that
+> correct and currently the only way or is/are there other ways?
+>
+> I've also read that a lot of people are saying TRIM isn't needed because
+> the SSD's garbage collection is so good now TRIM isn't needed. But I
+> don't see how that could work because the SSD's don't have access to the
+> file system so they don't know which pages in the blocks are marked
+> unused to do any consolidation and erasing. And using TRIM is suggested
+> in a OCZ document I read and who's drives these are. Unless, the SDD
+> when it has to change a page moves the whole block then erases the old
+> block? But without TRIM in could be moving invalid data too because it
+> doesn't know that and that to me sure doesn't sound efficient and this
+> operation would be a perfect time to get rid of the invalid data if it
+> did know.
+>
 
->     The disks were plugged in the device via 2 2680 Rocket cards. Each Rocket card supported at most 8 disks.
+TRIM is not necessary.
 
-Card: HighPoint RocketRAID 2680/2680SGL Marvell 88SE6485
-Driver: MVSAS
+In some situations, TRIM can improve speed - in other cases, it can make 
+the system significantly slower.  And it is only ever a help until the 
+disk is getting fairly full.
 
-After years of development the MVSAS driver is still not suitable for
-production use.  It is the cause of your problems here.  Any board using
-the Marvell SAS chips is not suitable for use with Linux at this time
-due to the poor driver quality.  These boards work fine under Windows
-apparently.
+Before deciding about TRIM, it is important to understand what it does, 
+and how it works.  TRIM lets the filesystem tell the SSD that a 
+particular logical disk block is no longer in use.  The SSD can then 
+find the physical flash block associated with that logical block, and 
+mark it for garbage collection.
 
->     2012-10-27 23:57:04 ata9.00: exception Emask 0x0 SAct 0x7fffffff SErr 0x0 action 0x6 t0
->     2012-10-27 23:57:04 ata9.00: failed command: READ FPDMA QUEUED
->     2012-10-27 23:57:04 ata9.00: cmd 60/00:00:80:62:a7/04:00:d6:00:00/40 tag 0 ncq 524288 in
->     2012-10-27 23:57:04          res 01/04:b4:80:ca:a7/00:00:d6:00:00/40 Emask 0x2 (HSM violation)
-<snip>
->     2012-10-27 23:57:07 ata9.00: configured for UDMA/133
->     2012-10-27 23:57:07 ata9: EH complete
-<snip>
->     My problem seems not really be solved, can you help me? I would be very grateful to you.
+If TRIM had been specified /properly/ for SATA (as it is for SCSI/SAS), 
+then it would have been quite useful.  But it has two huge failings - 
+there is no specification as to what the host will get if it tries to 
+read the trimmed logical block (this is what makes it terrible for RAID 
+systems), and it causes a pipeline flush and stall (which is what makes 
+TRIM so slow).  The pipeline flushing and stalling will cause particular 
+problems if you have a lot of metadata changes or small reads and writes 
+in parallel - the sort of accesses you get with database servers.  So 
+enabling TRIM will make databases significantly slower.
 
-Yes, I can help.  Replace the HighPoint boards with LSI 9211-8i boards
-and everything should work fine, barring any compatibility issue with
-the Tilera platform.
+And what do you lose if you /don't/ enable TRIM?  When a filesystem 
+deletes a file, it knows the logical blocks are free, but the SSD keeps 
+them around.  When the filesystem re-uses them for new data, the SSD 
+then knows that the old physical blocks can be garbage-collected and 
+re-used.  So all you are really doing by not using TRIM is delaying the 
+collection of unneeded blocks.  As long as the SSD has plenty of spare 
+blocks (and this is one of the reasons why any half-decent SSD has 
+over-provisioning), TRIM gains you nothing at all here.  (If you have a 
+very old SSD, or a very small one, or a very cheap one, then you will 
+have poor over-provisioning and poor garbage collection - TRIM might 
+then improve the SSD speed as long as the disk is mostly empty.)
 
--- 
-Stan
+It is possible that blocks that could have been TRIMMED will get 
+unnecessarily copied as part of a wear-levelling pass - but the effect 
+of this is going to be completely negligible on the SSD's lifetime.
+
+
+So TRIM complicates RAID, limits your flexibility for how to set up your 
+disks and arrays, and slows down your metadata transactions and small 
+accesses.
+
+
+TRIM /did/ have a useful role for early SSDs - in particular, it 
+improved the artificial benchmarks used by testers and reviewers.  So it 
+has ended up being seen as a "must have" feature for both the SSD 
+itself, and the software and filesystems accessing them.
+
 
 
