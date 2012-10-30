@@ -1,165 +1,320 @@
-From: Roberto Spadim <rspadim@gmail.com>
-Subject: Re: Best way (only?) to setup SSD's for using TRIM
-Date: Mon, 29 Oct 2012 16:06:13 -0200
-Message-ID: <CAH3kUhEYz6+wsBoyDftP=+8YxhKpMBHwBAqK_oEeTm4_GRKDgQ@mail.gmail.com>
-References: <508D808A.7040100@curtronics.com>
-	<CAH3kUhHX28yNXggLuA+D_cH0STY-Rn_BjxVt_bh1sMeYLnM0cw@mail.gmail.com>
-	<508E9289.5070904@curtronics.com>
-	<CAH3kUhEdOO+GXKK6ALFUYJdYeTw2Mx-PF9M=0vQvkzzidihxSg@mail.gmail.com>
-	<Pine.LNX.4.64.1210291148140.19033@router.curtronics.com>
+From: hanguozhong <hanguozhong@meganovo.com>
+Subject: Re: task xfssyncd blocked while raid5 was in recovery
+Date: Tue, 30 Oct 2012 10:19:24 +0800
+Message-ID: <201210301018322655420@meganovo.com>
+References: <CACY-59cbWX9Gu_xsfqv_p8=Q7CabWZuj=ZH2K41j4N0-o-8WLw@mail.gmail.com> <2012102411171145340220@meganovo.com>,
+	<20121024161440.239ea8b8@notabene.brown>
+Reply-To: "GuoZhong Han" <hanguozhong@meganovo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.1210291148140.19033@router.curtronics.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Curt Blank <curt@curtronics.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: neilb <neilb@suse.de>, stan <stan@hardwarefreak.com>, =?gb2312?B?u8a0urvU?= <childhood@meganovo.com>
 List-Id: linux-raid.ids
 
-maybe you want a 'cache', there's bcache and others patchs to kernel
-that make harddisk 'hibrid' (ssd+hdd), it's nice and have a good
-future in my opnion, google it, and tell what you think
+PkZyb206IE5laWxCcm93bg0KPkRhdGU6IDIwMTItMTAtMjQgMTM6MTQNCj5UbzogaGFuZ3Vvemhv
+bmcNCj5DQzogbGludXgtcmFpZDsgc3Rhbg0KPlN1YmplY3Q6IFJlOiB0YXNrIHhmc3N5bmNkIGJs
+b2NrZWQgd2hpbGUgcmFpZDUgd2FzIGluIHJlY292ZXJ5DQo+T24gV2VkLCAyNCBPY3QgMjAxMiAx
+MToxNzoxNSArMDgwMCBoYW5ndW96aG9uZyA8aGFuZ3VvemhvbmdAbWVnYW5vdm8uY29tPg0KPndy
+b3RlOg0KDQo+ID5Gcm9tOiBHdW9aaG9uZyBIYW4NCj4gPkRhdGU6IDIwMTItMTAtMTAgMTA6NDQN
+Cj4gPlRvOiBsaW51eC1yYWlkDQo+ID5TdWJqZWN0OiB0YXNrIHhmc3N5bmNkIGJsb2NrZWQgd2hp
+bGUgcmFpZDUgd2FzIGluIHJlY292ZXJ5DQo+ICAgDQo+ID5IZWxsbywgZXZlcnkgb25lOg0KPiA+
+UmVjZW50bHksIGEgcHJvYmxlbSBoYXMgdHJvdWJsZWQgbWUgZm9yIGEgbG9uZyB0aW1lLg0KPiA+
+SSBjcmVhdGVkIGEgNCoyVCAoc2RhLCBzZGIsIHNkYywgc2RkKSByYWlkNSB3aXRoIFhGUyBmaWxl
+IHN5c3RlbSwgMTI4SyBjaHVjayBzaXplIGFuZCAyMDQ4IHN0cmlwX2NhY2hlX3NpemUuIFRoZSBt
+ZGFkbSAzLjIuMiwga2VybmVsIDIuNi4zOCBhbmQgbWtmcy54ZnMgMy4xLjEgd2VyZSB1c2VkLiBX
+aGVuIHRoZSByYWlkNSB3YXMgaW4gPnJlY292ZXJ5IGFuZCB0aGUgc2NoZWR1bGUgcmVhY2hlZCA0
+NyUsIEkvTyBlcnJvcnMgb2NjdXJyZWQgaW4gc2RiLiBUaGUgZm9sbG93aW5nIHdhcyB0aGUgb3V0
+cHV0Og0KPiANCj4gPi4uLi4uLg0KPiA+YXRhMjogdHJhbnNsYXRlZCBBVEEgc3RhdC9lcnIgMHg0
+MS8wNCB0byBTQ1NJIFNLL0FTQy9BU0NRIDB4Yi8wMC8wMA0KPiA+YXRhMjogc3RhdHVzPTB4NDEg
+eyBEcml2ZVJlYWR5IEVycm9yIH0NCj4gPmF0YTI6IGVycm9yPTB4MDQgeyBEcml2ZVN0YXR1c0Vy
+cm9yIH0NCj4gPmF0YTI6IHRyYW5zbGF0ZWQgQVRBIHN0YXQvZXJyIDB4NDEvMDQgdG8gU0NTSSBT
+Sy9BU0MvQVNDUSAweGIvMDAvMDANCj4gPmF0YTI6IHN0YXR1cz0weDQxIHsgRHJpdmVSZWFkeSBF
+cnJvciB9DQo+ID5hdGEyOiBlcnJvcj0weDA0IHsgRHJpdmVTdGF0dXNFcnJvciB9DQo+ID5hdGEy
+OiB0cmFuc2xhdGVkIEFUQSBzdGF0L2VyciAweDQxLzA0IHRvIFNDU0kgU0svQVNDL0FTQ1EgMHhi
+LzAwLzAwDQo+ID5hdGEyOiBzdGF0dXM9MHg0MSB7IERyaXZlUmVhZHkgRXJyb3IgfQ0KPiA+YXRh
+MjogZXJyb3I9MHgwNCB7IERyaXZlU3RhdHVzRXJyb3IgfQ0KPiA+YXRhMjogdHJhbnNsYXRlZCBB
+VEEgc3RhdC9lcnIgMHg0MS8wNCB0byBTQ1NJIFNLL0FTQy9BU0NRIDB4Yi8wMC8wMA0KPiA+YXRh
+Mjogc3RhdHVzPTB4NDEgeyBEcml2ZVJlYWR5IEVycm9yIH0NCj4gPmF0YTI6IGVycm9yPTB4MDQg
+eyBEcml2ZVN0YXR1c0Vycm9yIH0NCj4gPmF0YTI6IHRyYW5zbGF0ZWQgQVRBIHN0YXQvZXJyIDB4
+NDEvMDQgdG8gU0NTSSBTSy9BU0MvQVNDUSAweGIvMDAvMDANCj4gPmF0YTI6IHN0YXR1cz0weDQx
+IHsgRHJpdmVSZWFkeSBFcnJvciB9DQo+ID5hdGEyOiBlcnJvcj0weDA0IHsgRHJpdmVTdGF0dXNF
+cnJvciB9DQo+ID5hdGEyOiB0cmFuc2xhdGVkIEFUQSBzdGF0L2VyciAweDQxLzA0IHRvIFNDU0kg
+U0svQVNDL0FTQ1EgMHhiLzAwLzAwDQo+ID5hdGEyOiBzdGF0dXM9MHg0MSB7IERyaXZlUmVhZHkg
+RXJyb3IgfQ0KPiA+YXRhMjogZXJyb3I9MHgwNCB7IERyaXZlU3RhdHVzRXJyb3IgfQ0KPiA+YXRh
+MjogdHJhbnNsYXRlZCBBVEEgc3RhdC9lcnIgMHg0MS8wNCB0byBTQ1NJIFNLL0FTQy9BU0NRIDB4
+Yi8wMC8wMA0KPiA+YXRhMjogc3RhdHVzPTB4NDEgeyBEcml2ZVJlYWR5IEVycm9yIH0NCj4gPmF0
+YTI6IGVycm9yPTB4MDQgeyBEcml2ZVN0YXR1c0Vycm9yIH0NCj4gPmF0YTI6IHRyYW5zbGF0ZWQg
+QVRBIHN0YXQvZXJyIDB4NDEvMDQgdG8gU0NTSSBTSy9BU0MvQVNDUSAweGIvMDAvMDANCj4gPmF0
+YTI6IHN0YXR1cz0weDQxIHsgRHJpdmVSZWFkeSBFcnJvciB9DQo+ID5hdGEyOiBlcnJvcj0weDA0
+IHsgRHJpdmVTdGF0dXNFcnJvciB9DQo+ID5hdGEyOiB0cmFuc2xhdGVkIEFUQSBzdGF0L2VyciAw
+eDQxLzA0IHRvIFNDU0kgU0svQVNDL0FTQ1EgMHhiLzAwLzAwDQo+ID5hdGEyOiBzdGF0dXM9MHg0
+MSB7IERyaXZlUmVhZHkgRXJyb3IgfQ0KPiA+YXRhMjogZXJyb3I9MHgwNCB7IERyaXZlU3RhdHVz
+RXJyb3IgfQ0KPiA+YXRhMjogdHJhbnNsYXRlZCBBVEEgc3RhdC9lcnIgMHg0MS8wNCB0byBTQ1NJ
+IFNLL0FTQy9BU0NRIDB4Yi8wMC8wMA0KPiA+YXRhMjogc3RhdHVzPTB4NDEgeyBEcml2ZVJlYWR5
+IEVycm9yIH0NCj4gPmF0YTI6IGVycm9yPTB4MDQgeyBEcml2ZVN0YXR1c0Vycm9yIH0NCj4gPmF0
+YTI6IHRyYW5zbGF0ZWQgQVRBIHN0YXQvZXJyIDB4NDEvMDQgdG8gU0NTSSBTSy9BU0MvQVNDUSAw
+eGIvMDAvMDANCj4gPmF0YTI6IHN0YXR1cz0weDQxIHsgRHJpdmVSZWFkeSBFcnJvciB9DQo+ID5h
+dGEyOiBlcnJvcj0weDA0IHsgRHJpdmVTdGF0dXNFcnJvciB9DQo+ID5hdGEyOiB0cmFuc2xhdGVk
+IEFUQSBzdGF0L2VyciAweDQxLzA0IHRvIFNDU0kgU0svQVNDL0FTQ1EgMHhiLzAwLzAwDQo+ID5h
+dGEyOiBzdGF0dXM9MHg0MSB7IERyaXZlUmVhZHkgRXJyb3IgfQ0KPiA+YXRhMjogZXJyb3I9MHgw
+NCB7IERyaXZlU3RhdHVzRXJyb3IgfQ0KPiA+YXRhMjogdHJhbnNsYXRlZCBBVEEgc3RhdC9lcnIg
+MHg0MS8wNCB0byBTQ1NJIFNLL0FTQy9BU0NRIDB4Yi8wMC8wMA0KPiA+oa2hrQ0KPiA+ZCAwOjA6
+MTowOiBbc2RiXSAgUmVzdWx0OiBob3N0Ynl0ZT1ESURfT0sgZHJpdmVyYnl0ZT1EUklWRVJfU0VO
+U0UNCj4gPnNkIDA6MDoxOjA6IFtzZGJdICBTZW5zZSBLZXkgOiBBYm9ydGVkIENvbW1hbmQgW2N1
+cnJlbnRdIFtkZXNjcmlwdG9yXQ0KPiA+RGVzY3JpcHRvciBzZW5zZSBkYXRhIHdpdGggc2Vuc2Ug
+ZGVzY3JpcHRvcnMgKGluIGhleCk6DQo+ID4gICAgICAgIDcyIDBiIDAwIDAwIDAwIDAwIDAwIDBj
+IDAwIDBhIDgwIDAwIDAwIDAwIDAwIDAwIA0KPiA+ICAgICAgICAwMCAwMCAwMCBmNyANCj4gPiBz
+ZCAwOjA6MTowOiBbc2RiXSAgQWRkLiBTZW5zZTogTm8gYWRkaXRpb25hbCBzZW5zZSBpbmZvcm1h
+dGlvbg0KPiA+IHNkIDA6MDoxOjA6IFtzZGJdIENEQjogUmVhZCgxMCk6IDI4IDAwIDZmIDRjIGNj
+IDgwIDAwIDA0IDAwIDAwDQo+ID4gZW5kX3JlcXVlc3Q6IEkvTyBlcnJvciwgZGV2IHNkYiwgc2Vj
+dG9yIDE4NjczMDQwNjQNCj4gPiBocnRpbWVyOiBpbnRlcnJ1cHQgdG9vayAyODAyNDk1NiBucw0K
+PiA+IGF0YTI6IHN0YXR1cz0weDQxIHsgRHJpdmVSZWFkeSBFcnJvciB9DQo+ID4gYXRhMjogZXJy
+b3I9MHgwNCB7IERyaXZlU3RhdHVzRXJyb3IgfQ0KPiA+IGF0YTI6IHRyYW5zbGF0ZWRzZXJ2ZXIg
+UnNwQ29kZSBGNjg4IEN0cmwgMCBJZHggQTZGIExlbiA3MCBBVEEgc3RhdC9lcnIgMHgNCj4gPiA0
+MS8wNCB0byBTQ1NJIFNLMDAgMDAgNjQgNjUgMzUgNjQgNjIgNjUgNjUgMzEgM0EgMzIgNjQgMzgg
+MzUgNjMgMzcgMzAgNjMgM0EgMzkgNjQgMzEgNjMgMzMgNjMgMzggMzkgM0EgMzIgMzIgNjQgMzkg
+MzIgNjUgMzIgMzEgMDAgMDAgMDAgMDAgMDAgMDAvQVNDL0FTQ1EgMHhiLzAwIC8wMA0KPiA+IDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDJGIDAwIDAwIDAwIGF0YTI6IHN0YXR1cz0weDQNCj4gPiAxIHsgRHJpdmVSZWFk
+eSBFcnJvciB9DQo+ID4gYXRhMjogZXJyb3I9MHgwNCB7IERyaXZlU3RhdHVzRXJyb3IgfQ0KPiA+
+IGF0YTI6IHRyYW5zbGF0ZWQgQVRBIHN0YXQvZXJyIDB4NDEvMDQgdG8gU0NTSSBTSy9BU0MvQVND
+USAweGIvMDAvMDANCj4gPiBzZCAwOjA6MTowOiBbc2RiXSAgUmVzdWx0OiBob3N0Ynl0ZT1ESURf
+T0sgZHJpdmVyYnl0ZT1EUklWRVJfU0VOU0UNCj4gPiBzZCAwOjA6MTowOiBbc2RiXSAgU2Vuc2Ug
+S2V5IDogQWJvcnRlZCBDb21tYW5kIFtjdXJyZW50XSBbZGVzY3JpcHRvcl0NCj4gPiBEZXNjcmlw
+dG9yIHNlbnNlIGRhdGEgd2l0aCBzZW5zZSBkZXNjcmlwdG9ycyAoaW4gaGV4KToNCj4gPiAgICAg
+ICAgIDcyIDBiIDAwIDAwIDAwIDAwIDAwIDBjIDAwIDBhIDgwIDAwIDAwIDAwIDAwIDAwIA0KPiA+
+ICAgICAgICAgMDAgMDAgMDAgZjcgDQo+ID4gc2QgMDowOjE6MDogW3NkYl0gIEFkZC4gU2Vuc2U6
+IE5vIGFkZGl0aW9uYWwgc2Vuc2UgaW5mb3JtYXRpb24NCj4gPiBzZCAwOjA6MTowOiBbc2RiXSBD
+REI6IFJlYWQoMTApOiAyOCAwMCA2ZiA0YyBhNCA4MCAwMCAwNCAwMCAwMA0KPiA+IGVuZF9yZXF1
+ZXN0OiBJL08gZXJyb3IsIGRldiBzZGIsIHNlY3RvciAxODY3MjkzODI0DQo+ID4gYXRhMjogc3Rh
+dHVzPTB4NDEgeyBEcml2ZVJlYWR5IEVycm9yIH0NCj4gPiChraGtDQo+IA0KPiA+IFRoZW4sIHRo
+ZXJlIHdlcmUgbG90cyBvZiBlcnJvciBtZXNzYWdlcyBhYm91dCB0aGUgZmlsZSBzeXN0ZW0uIFRo
+ZSBmb2xsb3dpbmcgd2FzIHRoZSBvdXRwdXQ6DQo+IA0KPiA+IC4uLi4uLg0KPiA+IElORk86IHRh
+c2sgeGZzc3luY2QvbWQxMjc6MTA1OCBibG9ja2VkIGZvciBtb3JlIHRoYW4gMTIwIHNlY29uZHMu
+DQo+ID4gImVjaG8gMCA+IC9wcm9jL3N5cy9rZXJuZWwvaHVuZ190YXNrX3RpbWVvdXRfc2VjcyIg
+ZGlzYWJsZXMgdGhpcyBtZXNzYWdlLg0KPiA+IHhmc3N5bmNkL21kMTI3ICBEIGZmZmZmZmY3MDAw
+MjE2ZDAgICAgIDAgIDEwNTggICAgICAyIDB4MDAwMDAwMDANCj4gPiAgIGZyYW1lIDA6IDB4ZmZm
+ZmZmZjcwMDAyMDU3MCBfX3N3aXRjaF90bysweDFiOC8weDFjMCAoc3AgMHhmZmZmZmUwMDhkN2Zm
+OTAwKQ0KPiA+ICAgZnJhbWUgMTogMHhmZmZmZmZmNzAwMDIxNmQwIHNjaGVkdWxlKzB4OTE4LzB4
+MTUzOCAoc3AgMHhmZmZmZmUwMDhkN2ZmOWQwKQ0KPiA+ICAgZnJhbWUgMjogMHhmZmZmZmZmNzAw
+MDIyYTkwIHNjaGVkdWxlX3RpbWVvdXQrMHgyNjgvMHg1YjAgKHNwIDB4ZmZmZmZlMDA4ZDdmZmQx
+OCkNCj4gPiAgIGZyYW1lIDM6IDB4ZmZmZmZmZjcwMDAyNGVlMCBfX2Rvd24rMHhkOC8weDE1OCAo
+c3AgMHhmZmZmZmUwMDhkN2ZmZGE4KQ0KPiA+ICAgZnJhbWUgNDogMHhmZmZmZmZmNzAwODVkYTc4
+IGRvd24uY29sZCsweDgvMHgyOCAoc3AgMHhmZmZmZmUwMDhkN2ZmZTE4KQ0KPiA+ICAgZnJhbWUg
+NTogMHhmZmZmZmZmNzAwNzUwNzg4IHhmc19idWZfbG9jaysweGQwLzB4MTIwIChzcCAweGZmZmZm
+ZTAwOGQ3ZmZlMzgpDQo+ID4gIGZyYW1lIDY6IDB4ZmZmZmZmZjcwMDgyMWI0MCB4ZnNfZ2V0c2Ir
+MHgzOC8weDc4IChzcCAweGZmZmZmZTAwOGQ3ZmZlNTApDQo+ID4gICBmcmFtZSA3OiAweGZmZmZm
+ZmY3MDA3N2UyMzAgeGZzX3RyYW5zX2dldHNiKzB4ZTAvMHgxMDAgKHNwIDB4ZmZmZmZlMDA4ZDdm
+ZmU2OCkNCj4gPiAgIGZyYW1lIDg6IDB4ZmZmZmZmZjcwMDZiYWJjMCB4ZnNfbW9kX3NiKzB4ODgv
+MHgxOTggKHNwIDB4ZmZmZmZlMDA4ZDdmZmU4OCkNCj4gPiAgIGZyYW1lIDk6IDB4ZmZmZmZmZjcw
+MDdhNjQ4MCB4ZnNfZnNfbG9nX2R1bW15KzB4NjgvMHhlMCAoc3AgMHhmZmZmZmUwMDhkN2ZmZWI4
+KQ0KPiA+ICAgZnJhbWUgMTA6IDB4ZmZmZmZmZjcwMDc5YzZjMCB4ZnNfc3luY193b3JrZXIrMHhl
+MC8weGU4IChzcCAweGZmZmZmZTAwOGQ3ZmZlZDgpDQo+ID4gICBmcmFtZSAxMTogMHhmZmZmZmZm
+NzAwNTcwYTAwIHhmc3N5bmNkKzB4MjQwLzB4MzI4IChzcCAweGZmZmZmZTAwOGQ3ZmZlZjApDQo+
+ID4gICBmcmFtZSAxMjogMHhmZmZmZmZmNzAwMGYwNTMwIGt0aHJlYWQrMHhlMC8weGU4IChzcCAw
+eGZmZmZmZTAwOGQ3ZmZmODApDQo+ID4gICBmcmFtZSAxMzogMHhmZmZmZmZmNzAwMGJhYjM4IHN0
+YXJ0X2tlcm5lbF90aHJlYWQrMHgxOC8weDIwIChzcCAweGZmZmZmZTAwOGQ3ZmZmZTgpDQo+ID4g
+SU5GTzogdGFzayB4ZnNzeW5jZC9tZDEyNzoxMDU4IGJsb2NrZWQgZm9yIG1vcmUgdGhhbiAxMjAg
+c2Vjb25kcy4NCj4gPiAiZWNobyAwID4gL3Byb2Mvc3lzL2tlcm5lbC9odW5nX3Rhc2tfdGltZW91
+dF9zZWNzIiBkaXNhYmxlcyB0aGlzIG1lc3NhZ2UuDQo+ID4geGZzc3luY2QvbWQxMjcgIEQgZmZm
+ZmZmZjcwMDAyMTZkMCAgICAgMCAgMTA1OCAgICAgIDIgMHgwMDAwMDAwMA0KPiA+ICAgZnJhbWUg
+MDogMHhmZmZmZmZmNzAwMDIwNTcwIF9fc3dpdGNoX3RvKzB4MWI4LzB4MWMwIChzcCAweGZmZmZm
+ZTAwOGQ3ZmY5MDApDQo+ID4gICBmcmFtZSAxOiAweGZmZmZmZmY3MDAwMjE2ZDAgc2NoZWR1bGUr
+MHg5MTgvMHgxNTM4IChzcCAweGZmZmZmZTAwOGQ3ZmY5ZDApDQo+ID4gICBmcmFtZSAyOiAweGZm
+ZmZmZmY3MDAwMjJhOTAgc2NoZWR1bGVfdGltZW91dCsweDI2OC8weDViMCAoc3AgMHhmZmZmZmUw
+MDhkN2ZmZDE4KQ0KPiA+ICAgZnJhbWUgMzogMHhmZmZmZmZmNzAwMDI0ZWUwIF9fZG93bisweGQ4
+LzB4MTU4IChzcCAweGZmZmZmZTAwOGQ3ZmZkYTgpDQo+ID4gICBmcmFtZSA0OiAweGZmZmZmZmY3
+MDA4NWRhNzggZG93bi5jb2xkKzB4OC8weDI4IChzcCAweGZmZmZmZTAwOGQ3ZmZlMTgpDQo+ID4g
+ICBmcmFtZSA1OiAweGZmZmZmZmY3MDA3NTA3ODggeGZzX2J1Zl9sb2NrKzB4ZDAvMHgxMjAgKHNw
+IDB4ZmZmZmZlMDA4ZDdmZmUzOCkNCj4gPiAgIGZyYW1lIDY6IDB4ZmZmZmZmZjcwMDgyMWI0MCB4
+ZnNfZ2V0c2IrMHgzOC8weDc4IChzcCAweGZmZmZmZTAwOGQ3ZmZlNTApDQo+ID4gICBmcmFtZSA3
+OiAweGZmZmZmZmY3MDA3N2UyMzAgeGZzX3RyYW5zX2dldHNiKzB4ZTAvMHgxMDAgKHNwIDB4ZmZm
+ZmZlMDA4ZDdmZmU2OCkNCj4gPiAgIGZyYW1lIDg6IDB4ZmZmZmZmZjcwMDZiYWJjMCB4ZnNfbW9k
+X3NiKzB4ODgvMHgxOTggKHNwIDB4ZmZmZmZlMDA4ZDdmZmU4OCkNCj4gPiAgIGZyYW1lIDk6IDB4
+ZmZmZmZmZjcwMDdhNjQ4MCB4ZnNfZnNfbG9nX2R1bW15KzB4NjgvMHhlMCAoc3AgMHhmZmZmZmUw
+MDhkN2ZmZWI4KQ0KPiA+ICAgZnJhbWUgMTA6IDB4ZmZmZmZmZjcwMDc5YzZjMCB4ZnNfc3luY193
+b3JrZXIrMHhlMC8weGU4IChzcCAweGZmZmZmZTAwOGQ3ZmZlZDgpDQo+ID4gICBmcmFtZSAxMTog
+MHhmZmZmZmZmNzAwNTcwYTAwIHhmc3N5bmNkKzB4MjQwLzB4MzI4IChzcCAweGZmZmZmZTAwOGQ3
+ZmZlZjApDQo+ID4gICBmcmFtZSAxMjogMHhmZmZmZmZmNzAwMGYwNTMwIGt0aHJlYWQrMHhlMC8w
+eGU4IChzcCAweGZmZmZmZTAwOGQ3ZmZmODApDQo+ID4gICBmcmFtZSAxMzogMHhmZmZmZmZmNzAw
+MGJhYjM4IHN0YXJ0X2tlcm5lbF90aHJlYWQrMHgxOC8weDIwIChzcCAweGZmZmZmZTAwOGQ3ZmZm
+ZTgpDQo+ID4gSU5GTzogdGFzayB4ZnNzeW5jZC9tZDEyNzoxMDU4IGJsb2NrZWQgZm9yIG1vcmUg
+dGhhbiAxMjAgc2Vjb25kcy4NCj4gPiAiZWNobyAwID4gL3Byb2Mvc3lzL2tlcm5lbC9odW5nX3Rh
+c2tfdGltZW91dF9zZWNzIiBkaXNhYmxlcyB0aGlzIG1lc3NhZ2UuDQo+ID4geGZzc3luY2QvbWQx
+MjcgIEQgZmZmZmZmZjcwMDAyMTZkMCAgICAgMCAgMTA1OCAgICAgIDIgMHgwMDAwMDAwMA0KPiA+
+ICAgZnJhbWUgMDogMHhmZmZmZmZmNzAwMDIwNTcwIF9fc3dpdGNoX3RvKzB4MWI4LzB4MWMwIChz
+cCAweGZmZmZmZTAwOGQ3ZmY5MDApDQo+ID4gICBmcmFtZSAxOiAweGZmZmZmZmY3MDAwMjE2ZDAg
+c2NoZWR1bGUrMHg5MTgvMHgxNTM4IChzcCAweGZmZmZmZTAwOGQ3ZmY5ZDApDQo+ID4gICBmcmFt
+ZSAyOiAweGZmZmZmZmY3MDAwMjJhOTAgc2NoZWR1bGVfdGltZW91dCsweDI2OC8weDViMCAoc3Ag
+MHhmZmZmZmUwMDhkN2ZmZDE4KQ0KPiA+ICAgZnJhbWUgMzogMHhmZmZmZmZmNzAwMDI0ZWUwIF9f
+ZG93bisweGQ4LzB4MTU4IChzcCAweGZmZmZmZTAwOGQ3ZmZkYTgpDQo+ID4gICBmcmFtZSA0OiAw
+eGZmZmZmZmY3MDA4NWRhNzggZG93bi5jb2xkKzB4OC8weDI4IChzcCAweGZmZmZmZTAwOGQ3ZmZl
+MTgpDQo+ID4gICBmcmFtZSA1OiAweGZmZmZmZmY3MDA3NTA3ODggeGZzX2J1Zl9sb2NrKzB4ZDAv
+MHgxMjAgKHNwIDB4ZmZmZmZlMDA4ZDdmZmUzOCkNCj4gPiAgIGZyYW1lIDY6IDB4ZmZmZmZmZjcw
+MDgyMWI0MCB4ZnNfZ2V0c2IrMHgzOC8weDc4IChzcCAweGZmZmZmZTAwOGQ3ZmZlNTApDQo+ID4g
+ICBmcmFtZSA3OiAweGZmZmZmZmY3MDA3N2UyMzAgeGZzX3RyYW5zX2dldHNiKzB4ZTAvMHgxMDAg
+KHNwIDB4ZmZmZmZlMDA4ZDdmZmU2OCkNCj4gPiAgIGZyYW1lIDg6IDB4ZmZmZmZmZjcwMDZiYWJj
+MCB4ZnNfbW9kX3NiKzB4ODgvMHgxOTggKHNwIDB4ZmZmZmZlMDA4ZDdmZmU4OCkNCj4gPiAgIGZy
+YW1lIDk6IDB4ZmZmZmZmZjcwMDdhNjQ4MCB4ZnNfZnNfbG9nX2R1bW15KzB4NjgvMHhlMCAoc3Ag
+MHhmZmZmZmUwMDhkN2ZmZWI4KQ0KPiA+ICAgZnJhbWUgMTA6IDB4ZmZmZmZmZjcwMDc5YzZjMCB4
+ZnNfc3luY193b3JrZXIrMHhlMC8weGU4IChzcCAweGZmZmZmZTAwOGQ3ZmZlZDgpDQo+ID4gICBm
+cmFtZSAxMTogMHhmZmZmZmZmNzAwNTcwYTAwIHhmc3N5bmNkKzB4MjQwLzB4MzI4IChzcCAweGZm
+ZmZmZTAwOGQ3ZmZlZjApDQo+ID4gICBmcmFtZSAxMjogMHhmZmZmZmZmNzAwMGYwNTMwIGt0aHJl
+YWQrMHhlMC8weGU4IChzcCAweGZmZmZmZTAwOGQ3ZmZmODApDQo+ID4gLi4uLi4uDQo+IA0KPiA+
+IFRoZSBvdXRwdXQgc2FpZCChsElORk86IHRhc2sgeGZzc3luY2QvbWQxMjc6MTA1OCBibG9ja2Vk
+IGZvciBtb3JlIHRoYW4gMTIwIHNlY29uZHOhsS4gV2hhdCBkaWQgdGhhdCBtZWFuPyBJIHVzZWQg
+obBjYXQgL3Byb2MvbWRzdGF0obEgdG8gc2VlIHRoZSBzdGF0ZSBvZiB0aGUgcmFpZDUuIFRoZSBv
+dXRwdXQgd2FzOg0KPiANCj4gPiBQZXJzb25hbGl0aWVzIDogW3JhaWQwXSBbcmFpZDZdIFtyYWlk
+NV0gW3JhaWQ0XSANCj4gPiBtZDEyNyA6IGFjdGl2ZSByYWlkNSBzZGRbM10gc2RjWzJdIHNkYlsx
+XShGKSBzZGFbMF0NCj4gPiAgICAgICA1ODYwNTQwMDMyIGJsb2NrcyBzdXBlciAxLjIgbGV2ZWwg
+NSwgMTI4ayBjaHVuaywgYWxnb3JpdGhtIDIgWzQvM10gW1VfVVVdDQo+ID4gICAgICAgICByZXN5
+bmM9UEVORElORw0KPiAgICAgICANCj4gPiB1bnVzZWQgZGV2aWNlczogPG5vbmU+DQo+IA0KPiA+
+ICAgICAgVGhlIHN0YXRlIG9mIHRoZSByYWlkNSB3YXMgobBQRU5ESU5HobEuIEkgaGFkIG5ldmVy
+IHNlZW4gc3VjaCBhIHN0YXRlIG9mIHJhaWQ1IGJlZm9yZS4gQWZ0ZXIgdGhhdCwgSSB3cm90ZSBh
+IHByb2dyYW0gdG8gYWNjZXNzIHRoZSByYWlkNSwgdGhlcmUgd2FzIG5vIHJlc3BvbnNlIGFueSBt
+b3JlLiBUaGVuIEkgdXNlZCChsHBzIGF1eHwgPiB0YXNrIHhmc3N5bmNkobEgdG8gc2VlIHRoZSBz
+dGF0ZSBvZiChsHhmc3N5bmNkobEuIFVuZm9ydHVuYXRlbHksIHRoZXJlIHdhcyBubyByZXNwb25z
+ZSB5ZXQuIFRoZW4gSSB0cmllZCChsHBzIGF1eKGxLiBUaGVyZSB3ZXJlIG91dHB1dHMsIGJ1dCB0
+aGUgcHJvZ3JhbSBjb3VsZCBleGl0IHdpdGggobBDdHJsK2ShsSBvciChsEN0cmwreqGxLiBBbmQg
+PiB3aGVuIEkgdGVzdGVkIHRoZSB3cml0ZSBwZXJmb3JtYW5jZSBmb3IgcmFpZDUsIEkvTyBlcnJv
+cnMgb2Z0ZW4gb2NjdXJyZWQuIEkgZGlkIG5vdCBrbm93IHdoeSB0aGlzIEkvTyBlcnJvcnMgb2Nj
+dXJyZWQgc28gZnJlcXVlbnRseS4gDQo+ID4gICAgICBXaGF0IHdhcyB0aGUgcHJvYmxlbT8gQ2Fu
+IGFueSBvbmUgaGVscCBtZT8NCj4gDQo+ICAgICAgIEF0IGZpcnN0LCBJIHRob3VnaHQgaXQgd2Fz
+IGEgYnVnIG9mIHhmcyBmaWxlc3lzdGVtLiBUaGVuIEkgY2hhbmdlIHRoZSBmaWxlc3lzdGVtIHRv
+IGV4dDQuIEkgdXNlZCBzZGEsIHNkYiwgc2RjIGFuZCBzZGQgdG8gYnVpbGQgYSByYWlkNSBhZ2Fp
+bi4gDQo+ICAgICAgIFdoZW4gdGhlIHJhaWQ1IHdhcyBpbiByZWNvdmVyeSwgSS9PIGVycm9ycyBv
+Y2N1cnJlZCBpbiAic2RiIi4gQW5kIHRoZSBzdGF0ZSBvZiB0aGUgcmFpZDUgdGVuZCB0byAiUEVO
+RElORyIgYWdhaW4uIA0KPiAgICAgICBJIHVzZWQgInBzIGF1eHxncmVwIDEyNyIgdG8gc2VlIHRo
+ZSBzdGF0dXMgb2YgdGhlIHByb2dyYW1zLiBUaGUgZm9sbG93aW5nIHdlcmUgdGhlIG91dHB1dHM6
+DQo+IA0KPiAgICAgICByb290ICAgICAgMTE5NyAgMC4wICAwLjAgICAgICAwICAgICAwID8gICAg
+ICAgIEQgICAgT2N0MjMgICAwOjAzIFtqYmQyL21kMTI3LThdDQo+ICAgICAgIHJvb3QgICAgICAx
+MTU3IDc1LjYgIDAuMCAgICAgIDAgICAgIDAgPyAgICAgICAgUiAgICBPY3QyMyA5MDg6MDIgW21k
+MTI3X3JhaWQ1XQ0KPiAgICAgICByb290ICAgICAgMTE1OSAgMS4yICAwLjAgICAgICAwICAgICAw
+ID8gICAgICAgIFMgICAgT2N0MjMgIDE0OjM2IFttZDEyN19yZXN5bmNdDQo+ICAgICAgIHJvb3Qg
+ICAgICAxMzgxICAwLjAgIDAuMCAgICAgIDAgICAgIDAgPyAgICAgICAgRCAgICBPY3QyMyAgIDA6
+MTIgW2ZsdXNoLTk6MTI3XQ0KPiANCj4gICAgICAgVGhlIHN0YXRlIG9mICJtZDEyN19yYWlkNSIs
+ICJqYmQyL21kMTI3LTgiLCAibWQxMjdfcmVzeW5jIiwgYW5kICJmbHVzaC05OjEyNyIgZGlkIG5v
+dCBjaGFuZ2UgdG8gb3RoZXIgc3RhdGUgd2hlbiBJIHVzZWQgInBzIGF1eHxncmVwIDEyNyIgbWFu
+eSB0aW1lcy4NCj4gICAgICAgQW5kIHRoZSAlY3B1IG9mICJtZDEyN19yYWlkNSIgaGFkIGJlZW4g
+dGhlIGhpZ2hlc3QgaW4gYWJvdXQgNzUuNiUuIFByb2dyYW1zIHRvIHJlYWQgYW5kIHdyaXRlIHRv
+ICJtZDEyNyIgc2VlbWVkIGhhbmcsIHRoZXJlIHdhcyBubyByZXNwb25zZS4NCj4gICAgICAgSSBo
+YXMgbm8gb3RoZXIgd2F5LCB1bmxlc3MgcmVzdGFydCB0aGUgbWFjaGluZS4NCj4gICAgICAgDQo+
+ICAgICAgIFRoZSBmb2xsb3dpbmcgd2VyZSB0aGUgb3V0cHV0cyBvZiAic21hcnRjdGwgLUEgL2Rl
+di9zZGUiOg0KPiAgICAgICAjIC4vc21hcnRjdGwgLUEgL2Rldi9zZGUgDQo+ICAgICAgIHNtYXJ0
+Y3RsIDUuMzkuMSAyMDEwLTAxLTI4IHIzMDU0IFt0aWxlZ3gtdW5rbm93bi1saW51eC1nbnVdIChs
+b2NhbCBidWlsZCkNCj4gICAgICAgQ29weXJpZ2h0IChDKSAyMDAyLTEwIGJ5IEJydWNlIEFsbGVu
+LCBodHRwOi8vc21hcnRtb250b29scy5zb3VyY2Vmb3JnZS5uZXQNCj4gDQo+ICAgICAgIFByb2Jh
+YmxlIEFUQSBkZXZpY2UgYmVoaW5kIGEgU0FUIGxheWVyDQo+ICAgICAgIFRyeSBhbiBhZGRpdGlv
+bmFsICctZCBhdGEnIG9yICctZCBzYXQnIGFyZ3VtZW50Lg0KPiAgDQo+ICAgICAgIEkgdXNlIHRo
+ZSB0aWxlcmEgcGxhdGZvcm0sIHRoZSBuZXdlc3Qga2VybmVsIEkgY2FuIHVwZGF0ZSBpcyAzLjAu
+MzguIE5vdyBJIHRyeSB0byB1cGRhdGUgbXkga2VybmVsIHRvIHRoaXMgdmVyc2lvbi4NCj4gICAg
+ICAgQnV0IEkgZG8gbm90IGtub3cgaWYgdGhpcyBwcm9ibGVtIGhhdmUgZml4ZWQgaW4gMy4wLjM4
+LiBJZiB5b3UgaGF2ZSBiZXR0ZXIgc29sdXRpb25zLCBwbGVhc2UgdGVsbCBtZS4gDQoNCg0KPj5N
+aWdodCBiZSBmaXhlZCBieSB1cHN0cmVhbSBjb21taXQ6DQoNCj4+Y29tbWl0IGZhYjM2M2I1ZmY1
+MDJkMWIzOWRkY2ZlYzA0MjcxZjU4NThkOWYyNmUNCj4+QXV0aG9yOiBTaGFvaHVhIExpIDxzaGxp
+QGtlcm5lbC5vcmc+DQo+PkRhdGU6ICAgVHVlIEp1bCAzIDE1OjU3OjE5IDIwMTIgKzEwMDANCg0K
+Pj4gICAgcmFpZDU6IGRlbGF5ZWQgc3RyaXBlIGZpeA0KDQo+PndoaWNoIGlzIGluIDMuMC4zOC4N
+Cj4+SWYgaXQgaXNuJ3QgdGhhdCwgSSBkb24ndCBrbm93IHdoYXQgaXQgaXMuDQoNCj4+U28gaXQg
+aXMgd29ydGggdHJ5aW5nIDMuMC4zOC4NCg0KPj5OZWlsQnJvd24NCg0KSGksIE5laWw6DQogICAg
+VGhhbmtzIGZvciB5b3VyIGFkdmljZS4NCiAgICBJIHRyaWVkIHRvIHVwZGF0ZSBteSBrZXJuZWwg
+dG8gMy4wLjM4IGxhc3Qgd2Vlay4NCiAgICBUaGVuIEkgY3JldGVkIGEgNCoyVChzZGEsIHNkYiwg
+c2RjLCBzZGQpIHJhaWQ1IGluY2x1ZGUgdGhlICJiYWQiIGRpc2soc2RiKSBqdXN0IGxpa2UgbGFz
+dCB0aW1lLg0KICAgIERpZmZyZW50IGZyb20gdGhlIGxhc3QgdGVzdCwgSSBhZGRlZCA4IGRpc2tz
+KHNkZSwgc2RmLCBzZGcsIHNkaCwgc2RpLCBzZGosIHNqaywgc2RsKSBmb3IgdGhlIHRlc3RzLg0K
+ICAgIFRoZSBkaXNrcyB3ZXJlIHBsdWdnZWQgaW4gdGhlIGRldmljZSB2aWEgMiAyNjgwIFJvY2tl
+dCBjYXJkcy4gRWFjaCBSb2NrZXQgY2FyZCBzdXBwb3J0ZWQgYXQgbW9zdCA4IGRpc2tzLg0KDQog
+ICAgSW4gdGhlIGZpcnN0IHRlc3QsIFJvY2tldCBjYXJkIDEgYWNjZXNzZWQgc2RhLHNkYi4uLixz
+ZGcgYW5kIHNkaCwgbWVhbndoaWxlIFJvY2tldCBjYXIgYWNjZXNzZWQgc2RpLHNkaixzZGsgYW5k
+IHNkbC4NCiAgICBJIHVzZWQgYSBwcm9ncmFtIHRvIHdyaXRlIDEwTSBkYXRhcyB0byB0aGUgYXJy
+YXkgcGVyIHNlY29uZCBmb3IgdGVzdCB3aGlsZSB0aGUgYXJyYXkgd2FzIGluIHJlY292ZXJ5Lg0K
+ICAgIEFuZCB3aGVuIHRoZSBwZXJjZW50YWdlIG9mIHRoZSByZWNvdmVyeSB3ZW50IHVwIHRvIDky
+LjElLCB0aGUgc3BlZWQgb2YgdGhlIHJlY292ZXJ5IHR1cm5lZCBkb3duIHRvIDE4Sy9zZWMuDQog
+ICAgVGhlIG91dHB1dHMgb2YgdGhlIHN5c3RlbSBzYWlkOiANCiAgICANCiAgICAyMDEyLTEwLTI3
+IDIzOjU3OjA0IGF0YTkuMDA6IGV4Y2VwdGlvbiBFbWFzayAweDAgU0FjdCAweDdmZmZmZmZmIFNF
+cnIgMHgwIGFjdGlvbiAweDYgdDANCiAgICAyMDEyLTEwLTI3IDIzOjU3OjA0IGF0YTkuMDA6IGZh
+aWxlZCBjb21tYW5kOiBSRUFEIEZQRE1BIFFVRVVFRA0KICAgIDIwMTItMTAtMjcgMjM6NTc6MDQg
+YXRhOS4wMDogY21kIDYwLzAwOjAwOjgwOjYyOmE3LzA0OjAwOmQ2OjAwOjAwLzQwIHRhZyAwIG5j
+cSA1MjQyODggaW4NCiAgICAyMDEyLTEwLTI3IDIzOjU3OjA0ICAgICAgICAgIHJlcyAwMS8wNDpi
+NDo4MDpjYTphNy8wMDowMDpkNjowMDowMC80MCBFbWFzayAweDIgKEhTTSB2aW9sYXRpb24pDQog
+ICAgMjAxMi0xMC0yNyAyMzo1NzowNCBhdGE5LjAwOiBzdGF0dXM6IHsgRVJSIH0NCiAgICAyMDEy
+LTEwLTI3IDIzOjU3OjA0IGF0YTkuMDA6IGVycm9yOiB7IEFCUlQgfQ0KICAgIDIwMTItMTAtMjcg
+MjM6NTc6MDQgYXRhOS4wMDogZmFpbGVkIGNvbW1hbmQ6IFJFQUQgRlBETUEgUVVFVUVEDQogICAg
+MjAxMi0xMC0yNyAyMzo1NzowNCBhdGE5LjAwOiBjbWQgNjAvMDA6MDA6ODA6ODI6YTcvMDQ6MDA6
+ZDY6MDA6MDAvNDAgdGFnIDEgbmNxIDUyNDI4OCBpbg0KICAgIDIwMTItMTAtMjcgMjM6NTc6MDQg
+ICAgICAgICAgcmVzIDAxLzA0OmI0OjgwOmNhOmE3LzAwOjAwOmQ2OjAwOjAwLzQwIEVtYXNrIDB4
+MiAoSFNNIHZpb2xhdGlvbikNCiAgICAyMDEyLTEwLTI3IDIzOjU3OjA0IGF0YTkuMDA6IHN0YXR1
+czogeyBFUlIgfQ0KICAgIDIwMTItMTAtMjcgMjM6NTc6MDQgYXRhOS4wMDogZXJyb3I6IHsgQUJS
+VCB9DQogICAgMjAxMi0xMC0yNyAyMzo1NzowNCBhdGE5LjAwOiBmYWlsZWQgY29tbWFuZDogUkVB
+RCBGUERNQSBRVUVVRUQNCiAgICAyMDEyLTEwLTI3IDIzOjU3OjA0IGF0YTkuMDA6IGNtZCA2MC8w
+MDowMDo4MDo2NjphNy8wNDowMDpkNjowMDowMC80MCB0YWcgMiBuY3EgNTI0Mjg4IGluDQogICAg
+MjAxMi0xMC0yNyAyMzo1NzowNCAgICAgICAgICByZXMgMDEvMDQ6YjQ6ODA6Y2E6YTcvMDA6MDA6
+ZDY6MDA6MDAvNDAgRW1hc2sgMHgyIChIU00gdmlvbGF0aW9uKQ0KICAgIDIwMTItMTAtMjcgMjM6
+NTc6MDQgYXRhOS4wMDogc3RhdHVzOiB7IEVSUiB9DQogICAgMjAxMi0xMC0yNyAyMzo1NzowNCBh
+dGE5LjAwOiBlcnJvcjogeyBBQlJUIH0NCiAgICAyMDEyLTEwLTI3IDIzOjU3OjA0IGF0YTkuMDA6
+IGZhaWxlZCBjb21tYW5kOiBSRUFEIEZQRE1BIFFVRVVFRA0KICAgIDIwMTItMTAtMjcgMjM6NTc6
+MDQgYXRhOS4wMDogY21kIDYwLzAwOjAwOjgwOjZhOmE3LzA0OjAwOmQ2OjAwOjAwLzQwIHRhZyAz
+IG5jcSA1MjQyODggaW4NCiAgICAyMDEyLTEwLTI3IDIzOjU3OjA0ICAgICAgICAgIHJlcyAwMS8w
+NDpiNDo4MDpjYTphNy8wMDowMDpkNjowMDowMC80MCBFbWFzayAweDIgKEhTTSB2aW9sYXRpb24p
+DQogICAgMjAxMi0xMC0yNyAyMzo1NzowNCBhdGE5LjAwOiBzdGF0dXM6IHsgRVJSIH0NCiAgICAy
+MDEyLTEwLTI3IDIzOjU3OjA0IGF0YTkuMDA6IGVycm9yOiB7IEFCUlQgfQ0KICAgIC4uLg0KICAg
+IDIwMTItMTAtMjcgMjM6NTc6MDQgYXRhOS4wMDogZmFpbGVkIGNvbW1hbmQ6IFJFQUQgRlBETUEg
+UVVFVUVEDQogICAgMjAxMi0xMC0yNyAyMzo1NzowNCBhdGE5LjAwOiBjbWQgNjAvMDA6MDA6ODA6
+YmU6YTcvMDQ6MDA6ZDY6MDA6MDAvNDAgdGFnIDE5IG5jcSA1MjQyODggaW4NCiAgICAyMDEyLTEw
+LTI3IDIzOjU3OjA0ICAgICAgICAgIHJlcyAwMS8wNDpiNDo4MDpjYTphNy8wMDowMDpkNjowMDow
+MC80MCBFbWFzayAweDIgKEhTTSB2aW9sYXRpb24pDQogICAgLi4uDQogICAgMjAxMi0xMC0yNyAy
+Mzo1NzowNSBhdGE5LjAwOiBjbWQgNjAvMDA6MDA6ODA6NGU6YTIvMDQ6MDA6ZDY6MDA6MDAvNDAg
+dGFnIDMwIG5jcSA1MjQyODggaW4NCiAgICAyMDEyLTEwLTI3IDIzOjU3OjA1ICAgICAgICAgIHJl
+cyAwMS8wNDpiNDo4MDpjYTphNy8wMDowMDpkNjowMDowMC80MCBFbWFzayAweDIgKEhTTSB2aW9s
+YXRpb24pDQogICAgMjAxMi0xMC0yNyAyMzo1NzowNSBhdGE5LjAwOiBzdGF0dXM6IHsgRVJSIH0N
+CiAgICAyMDEyLTEwLTI3IDIzOjU3OjA1IGF0YTkuMDA6IGVycm9yOiB7IEFCUlQgfQ0KICAgIDIw
+MTItMTAtMjcgMjM6NTc6MDUgYXRhOTogaGFyZCByZXNldHRpbmcgbGluaw0KICAgIDIwMTItMTAt
+MjcgMjM6NTc6MDcgYXRhOS4wMDogY29uZmlndXJlZCBmb3IgVURNQS8xMzMNCiAgICAyMDEyLTEw
+LTI3IDIzOjU3OjA3IGF0YTk6IEVIIGNvbXBsZXRlDQoNCiAgICBUaGUgc3RhdHVzIG9mIHRoZSBy
+YWlkNSB3YXMgbm90ICJQRU5ESU5HIiBpbiB0aGlzIHRlc3QsIGFuZCB0aGUgJWNwdSBvZiAibWQx
+MjdfcmFpZDUiIHdhcyBub3JtYWwuDQogICAgQnV0IHRocmVlIHdhcyBubyByZXNwb25zZSB0byBt
+eSBwcm9ncmFtIHdoaWNoIHdyb3RlIGRhdGFzIHRvIHRoZSBhcnJheSBzaW5jZSB0aGUgcmVjb3Zl
+cnkgc3BlZWQgc2xvd2VkIGRvd24uDQogICAgVGhlIGZvbGxvd2luZyB3ZXJlIHRoZSBvdXRwdXRz
+IG9mICJwcyBhdXh8Z3JlcCBtZDEyNyIgYW5kICJjYXQgL3Byb2MvbWRzdGF0Ig0KIA0KICAgICNw
+cyBhdXh8Z3JlcCBtZDEyNw0KICAgIHJvb3QgICAgICAxNDYyICAxLjMgIDAuMCAgICAgIDAgICAg
+IDAgPyAgICAgICAgUyAgICBPY3QyNyAgMzM6NDIgW21kMTI3X3JhaWQ1XQ0KICAgIHJvb3QgICAg
+ICAxNDY0ICAwLjYgIDAuMCAgICAgIDAgICAgIDAgPyAgICAgICAgRCAgICBPY3QyNyAgMTY6MDkg
+W21kMTI3X3Jlc3luY10NCiAgICByb290ICAgICAgMTQ5NyAgMC4wICAwLjAgICAgICAwICAgICAw
+ID8gICAgICAgIFMgICAgT2N0MjcgICAwOjEyIFt4ZnNidWZkL21kMTI3XQ0KICAgIHJvb3QgICAg
+ICAxNDk4ICAwLjAgIDAuMCAgICAgIDAgICAgIDAgPyAgICAgICAgUyAgICBPY3QyNyAgIDE6NDUg
+W3hmc2FpbGQvbWQxMjddDQogICAgcm9vdCAgICAgIDE1MDEgIDAuMCAgMC4wICAgICAgMCAgICAg
+MCA/ICAgICAgICBEICAgIE9jdDI3ICAgMToxNiBbZmx1c2gtOToxMjddDQoNCiAgICAjIGNhdCAv
+cHJvYy9tZHN0YXQNCiAgICBQZXJzb25hbGl0aWVzIDogW3JhaWQ2XSBbcmFpZDVdIFtyYWlkNF0g
+DQogICAgbWQxMjcgOiBhY3RpdmUgcmFpZDUgc2RkWzNdIHNkY1syXSBzZGJbMV0gc2RhWzBdDQog
+ICAgNTg2MDU0MDAzMiBibG9ja3Mgc3VwZXIgMS4yIGxldmVsIDUsIDEyOGsgY2h1bmssIGFsZ29y
+aXRobSAyIFs0LzRdIFtVVVVVXQ0KICAgIFs9PT09PT09PT09PT09PT09PT0+Li5dICByZXN5bmMg
+PSA5Mi4xJSAoMTgwMDY0NDE2MC8xOTUzNTEzMzQ0KSBmaW5pc2g9MTQwNjA3LjltaW4gc3BlZWQ9
+MThLL3NlYw0KIA0KICAgICB1bnVzZWQgZGV2aWNlczogPG5vbmU+DQoNCiAgICBJIHVzZWQgImZk
+aXNrIC1sIC9kZXYvc2QqIiB0byBzZWUgaWYgImZkaXNrIiBjb3VsZCBhY2Nlc3MgdGhlIGRpc2tz
+LCB0aGVyZSB3ZXJlIG5vIHJlc3BvbnNlcyBvZiBzZGEsc2RiLi4uLA0KICAgIHNkZyBhbmQgc2Ro
+IHdoaWNoIGNvdWxkIGJlIGFjY2Vzc2VkIHZpYSBjYXJkIDEuIE9uIHRoZSBjb250cmFyeSwgdGhl
+IG91dHB1dHMgb2Ygc2RpLHNkaixzZGsgYW5kIHNkbCB3ZXJlIHF1aXRlIG5vcm1hbC4NCiAgICBQ
+cm9ncmFtcyB0byByZWFkIGFuZCB3cml0ZSB0byB0aGUgZGV2aWNlIHdoaWNoIGNvbm5lY3RlZCB0
+byBjYXJkIDEgc2VlbWVkIGhhbmcsIHRoZXkgd2VyZSBhbGwgaW4gdGhlICJEIiBzdGF1cy4gQW5k
+DQogICAgdGhlbiBJIHVzZWQgInJlYm9vdCIgdG8gcmVzdGFydCB0aGUgc3lzdGVtLCB0aGVyZSB3
+YXMgbm8gcmVzcG9uZXMgeWV0Lg0KIA0KICAgIFRoZW4gSSBkaWQgYW5vdGhlciB0ZXN0LCBJIHVu
+cGx1Z2dlZCBzZGEsIHNkYiwgc2RjIGFuZCBzZGQgYW5kIHBsdWdnZWQgdGhleSB0aGUgb3RoZXIg
+c2xvdHMgd2hpY2ggY29ubmVjdGVkIHRvIGNhcmQgMi4NCiAgICBUaGUgcmVzdWx0IHdhcyBhcyB0
+aGUgc2FtZSBhcyB0aGUgZmlyc3QgdGVzdC4gVGhlIHNwZWVkIG9mIHJlY292ZXJ5IHNsb3dlZCBk
+b3duIHdoZW4gdGhlIHBlcmNlbnRhZ2Ugb2YgcmVjb3Zlcnkgd2VudCB1cCB0byA5Mi4xJS4NCiAg
+ICBBbmQgdGhlcmUgd2VyZSB0aGUgc2FtZSBvdXRwdXRzIGFzIHRoZSBmb3JtZXIuIFdoZW4gSSB1
+c2VkICJmZGlzayAtbCAvZGV2L3NkKiIgdG8gc2VlIGlmICJmZGlzayIgY291bGQgYWNjZXNzIHRo
+ZSBkaXNrcy4gSSBmb3VuZA0KICAgIHRoZXJlIHdlcmUgbm8gcmVzcG9uZXMgb2YgdGhlIGRpc2tz
+IHdoaWNoIGNvdWxkIGJlIGFjY2VzcyB2aWEgY2FyZCAyLiBUaGUgb3V0cHV0cyBvZiB0aGUgZGlz
+a3MgY29ubmVjdCB0byBjYXJkIDEgd2VyZSBub3JtYWwuDQogICAgDQogICAgSXQgc2VlbWVkIHRo
+YXQgdGhlICJiYWQiIGRpc2sgaW4gdGhlIHJhaWQ1IGhhbmdlZCB0aGUgSU8gb2YgdGhlIGNhcmQg
+d2hpY2ggaXQgd2FzIGNvbm5lY3RlZCB0by4gDQogICAgT3RoZXIgZGlza3MsIHJlZ2FyZGxlc3Mg
+b2Ygd2hldGhlciB0aGV5IHdlcmUgaW4gdGhlIGFycmF5IG9yIG5vdCwgYXMgbG9uZyBhcyB0aGV5
+IHdlcmUgY29ubmVjdGVkIHRvIHRoZSBjYXJkLA0KICAgIHRoZSBwcm9ncmFtcyB0byB3cml0ZSB0
+byBvciByZWFkIGZyb20gdGhlIHRoZXkgd291bGQgYmUgYmxvY2tlZC4gDQogICAgDQogICAgTXkg
+cHJvYmxlbSBzZWVtcyBub3QgcmVhbGx5IGJlIHNvbHZlZCwgY2FuIHlvdSBoZWxwIG1lPyBJIHdv
+dWxkIGJlIHZlcnkgZ3JhdGVmdWwgdG8geW91LiAgDQogICAgICAgICANCiAgICAg
 
-2012/10/29 Curt Blank <curt@curtronics.com>
->
-> Thanks. That made me think. Since as I said it's mainly going to contain
-> the Linux OS that lessens my concern because of the static nature of those
-> files. With the exception of /var/log and the MySQL DB's. /var/log files
-> are rotated on a 24 hour basis, kept, then gzip'd after 14 days then kept,
-> pretty much forever as long as space is available. MySQL DB's are mostly
-> insert with some updates with the exception of the ZoneMinder DB which is
-> mostly inserts and deletes continuously, majority of the data seldom lives
-> past a month or two.
->
-> I can maybe see the need for TRIM on /var/log and maybe /mysql and
-> possibly /usr/local (which is it's own MP) where I do all my code
-> development.
->
-> Like I said, I'm not against compiling a kernel I just really don't want
-> to have to do that every time the distribution updates and installs a new
-> one.
->
-> So still looking for a way to use TRIM with RAID1 which gets me back to
-> the LVM option I heard might work?
->
-> Also trying to find out if using my raid card might be the ticket but if
-> not then it have to be the kernel if I want TRIM.
->
-> On Mon, 29 Oct 2012, Roberto Spadim wrote:
->
-> > trim is used by file system to clean space to new files be writen, in other
-> > words, if you never need new space you won't need trim
-> > does your application a log like app? if yes trim is useless, the only use
-> > here is if you delete old log files and it normally is very rare, maybe
-> > once a month, maybe a week?
-> >
-> > if you need always delete files and write new ones, yes trim can help you
-> > but it will not save your life, it give more 'clean' space to garbage
-> > collect of ssd, and ssd don't reuse spaces with informations, it will use
-> > new ones, so in other words a trim help ssd to write faster and dont do
-> > (read-merge-write)
-> > vertex 4 have a good firmware, i used a vertex 2 some years ago without
-> > trim, and it runs nice with mysql in a generic aplication with delete
-> > update select, it execute >300iops very easly, and 300MB/s too, i didn't
-> > checked a slow don't after some time using it, so i don't see why trim
-> > could speed a lot my app,
-> > try, and say what you got, it's not unsafe, and sounds good, i don't know
-> > about suse kernel support, but it's not hard to compile a new kernel if you
-> > need it
-> >
-> > i used the vertex2 in raid1 configuration (it's better for many threads
-> > apps like mysql, but worst for stream application, for stream a raid10 or
-> > raid0 is better)
-> >
-> >
-> > 2012/10/29 Curtis J Blank <curt@curtronics.com>
-> >
-> > >  Could you explain this a little more please? I don't understand why
-> > > applications come into play? Thought the file system, in this case ext4,
-> > > handles space allocation on the device not any application.
-> > >
-> > > And here again, I don't need TRIM, but everything I've been reading, even
-> > > from the SSD manufacturer, OCZ, says you do need TRIM to reduce write
-> > > amplification.
-> > >
-> > > If you don't need TRIM that makes things easy but my concern is write
-> > > amplification over time.
-> > >
-> > > [Had to resend, got rejected due to "reason: 550 5.7.1 Content-Policy
-> > > reject msg: The message contains HTML subpart, therefore we consider it
-> > > SPAM or Outlook Virus." from ThunderBird]
-> > >
-> > >
-> > > On 10/29/12 07:20, Roberto Spadim wrote:
-> > >
-> > > if you don't have DELETE and DROP in you application, you don't need
-> > > TRIM...
-> > >
-> > > 2012/10/28 Curtis J Blank <curt@curtronics.com>
-> > >
-> > >> I've got two new SSD's that I want to set up as RAID1 and use strictly
-> > >> for the OS and MySQL DB's partitioned accordingly.
-> > >>
-> > >> I'll be using the 3.4.6 kernel for now in openSuSE 12.2 with ext4. So
-> > >> after a lot of Google'n and reading it is my understanding that discard is
-> > >> not sent to the devices via the raid drivers. I am aware of Shaohua Li's
-> > >> patches to make it work but am not inclined to use them due to openSuSE's
-> > >> Online Update replacing the kernel. I'm not against patching and gen'ing a
-> > >> kernel, that used to be SOP, but just don't want deal with that overhead.
-> > >> Of course unless I really need to.
-> > >>
-> > >> So I've read, and if I understand things correctly, I can use LVM and
-> > >> RAID1 and the the discard commands will be sent to the devices. Is that
-> > >> correct and currently the only way or is/are there other ways?
-> > >>
-> > >> I've also read that a lot of people are saying TRIM isn't needed because
-> > >> the SSD's garbage collection is so good now TRIM isn't needed. But I don't
-> > >> see how that could work because the SSD's don't have access to the file
-> > >> system so they don't know which pages in the blocks are marked unused to do
-> > >> any consolidation and erasing. And using TRIM is suggested in a OCZ
-> > >> document I read and who's drives these are. Unless, the SDD when it has to
-> > >> change a page moves the whole block then erases the old block? But without
-> > >> TRIM in could be moving invalid data too because it doesn't know that and
-> > >> that to me sure doesn't sound efficient and this operation would be a
-> > >> perfect time to get rid of the invalid data if it did know.
-> > >>
-> > >> And due to PEC I'm wondering if this is even a good idea? Granted the OS
-> > >> files can be considered somewhat static, with the exception of /var/log so
-> > >> maybe that shouldn't go on the SSD, and maybe MySQL shouldn't either
-> > >> because for things like ZoneMinder it's DB is pretty dynamic. But with all
-> > >> the logging going on, and there is a lot, and the dynamic nature of the
-> > >> MySQL data is the exact reason I want it put it on SSD's, for the speed.
-> > >> See my quandary?
-> > >>
-> > >> This is my best understanding of things right now so I came here to and
-> > >> am asking the experts for help in clarifying and  understanding this and
-> > >> pick the best direction to go. Have the SSD's for a couple of weeks now but
-> > >> holding off using them until the I can determine the best way to use them.
-> > >> Oh and the SSD's are OCZ Vertex 4 VTX4-25SAT3-256G.
-> > >>
-> > >> Thanks.
-> > >> --
-> > >> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > >> the body of a message to majordomo@vger.kernel.org
-> > >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > >>
-> > >
-> > >
-> > >
-> > >  --
-> > > Roberto Spadim
-> > >
-> > >
-> > >
-> > >
-> >
-> >
-> > --
-> > Roberto Spadim
-> >
-
-
-
-
---
-Roberto Spadim
