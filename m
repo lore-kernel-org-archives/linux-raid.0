@@ -1,131 +1,106 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Best way (only?) to setup SSD's for using TRIM
-Date: Tue, 30 Oct 2012 16:55:11 +0100
-Message-ID: <508FF85F.1030308@hesbynett.no>
-References: <508D808A.7040100@curtronics.com> <508FA2C6.2050800@hesbynett.no> <508FE44A.3040507@curtronics.com>
+From: Behan Webster <behanw@converseincode.com>
+Subject: [PATCH] Remove VLAIS usage from dm-crypt
+Date: Tue, 30 Oct 2012 14:15:56 -0400
+Message-ID: <1351620956-17583-2-git-send-email-behanw@converseincode.com>
+References: <1351620956-17583-1-git-send-email-behanw@converseincode.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <508FE44A.3040507@curtronics.com>
+In-Reply-To: <1351620956-17583-1-git-send-email-behanw@converseincode.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Curtis J Blank <curt@curtronics.com>
-Cc: linux-raid@vger.kernel.org
+To: agk@redhat.com, dm-devel@redhat.com
+Cc: linux-raid@vger.kernel.org, =?UTF-8?q?Jan-Simon=20M=C3=B6ller?= <dl9pf@gmx.de>, pageexec@freemail.hu, Behan Webster <behanw@converseincode.com>
 List-Id: linux-raid.ids
 
-On 30/10/2012 15:29, Curtis J Blank wrote:
-> On 10/30/12 04:49, David Brown wrote:
->> On 28/10/2012 19:59, Curtis J Blank wrote:
->>> I've got two new SSD's that I want to set up as RAID1 and use strictly
->>> for the OS and MySQL DB's partitioned accordingly.
->>>
->>> I'll be using the 3.4.6 kernel for now in openSuSE 12.2 with ext4. So
->>> after a lot of Google'n and reading it is my understanding that discard
->>> is not sent to the devices via the raid drivers. I am aware of Shaohua
->>> Li's patches to make it work but am not inclined to use them due to
->>> openSuSE's Online Update replacing the kernel. I'm not against patching
->>> and gen'ing a kernel, that used to be SOP, but just don't want deal with
->>> that overhead. Of course unless I really need to.
->>>
->>> So I've read, and if I understand things correctly, I can use LVM and
->>> RAID1 and the the discard commands will be sent to the devices. Is that
->>> correct and currently the only way or is/are there other ways?
->>>
->>> I've also read that a lot of people are saying TRIM isn't needed because
->>> the SSD's garbage collection is so good now TRIM isn't needed. But I
->>> don't see how that could work because the SSD's don't have access to the
->>> file system so they don't know which pages in the blocks are marked
->>> unused to do any consolidation and erasing. And using TRIM is suggested
->>> in a OCZ document I read and who's drives these are. Unless, the SDD
->>> when it has to change a page moves the whole block then erases the old
->>> block? But without TRIM in could be moving invalid data too because it
->>> doesn't know that and that to me sure doesn't sound efficient and this
->>> operation would be a perfect time to get rid of the invalid data if it
->>> did know.
->>>
->>
->> TRIM is not necessary.
->>
->> In some situations, TRIM can improve speed - in other cases, it can make
->> the system significantly slower.  And it is only ever a help until the
->> disk is getting fairly full.
->>
->> Before deciding about TRIM, it is important to understand what it does,
->> and how it works.  TRIM lets the filesystem tell the SSD that a
->> particular logical disk block is no longer in use.  The SSD can then
->> find the physical flash block associated with that logical block, and
->> mark it for garbage collection.
->>
->> If TRIM had been specified /properly/ for SATA (as it is for SCSI/SAS),
->> then it would have been quite useful.  But it has two huge failings -
->> there is no specification as to what the host will get if it tries to
->> read the trimmed logical block (this is what makes it terrible for RAID
->> systems), and it causes a pipeline flush and stall (which is what makes
->> TRIM so slow).  The pipeline flushing and stalling will cause particular
->> problems if you have a lot of metadata changes or small reads and writes
->> in parallel - the sort of accesses you get with database servers.  So
->> enabling TRIM will make databases significantly slower.
->>
->> And what do you lose if you /don't/ enable TRIM?  When a filesystem
->> deletes a file, it knows the logical blocks are free, but the SSD keeps
->> them around.  When the filesystem re-uses them for new data, the SSD
->> then knows that the old physical blocks can be garbage-collected and
->> re-used.  So all you are really doing by not using TRIM is delaying the
->> collection of unneeded blocks.  As long as the SSD has plenty of spare
->> blocks (and this is one of the reasons why any half-decent SSD has
->> over-provisioning), TRIM gains you nothing at all here.  (If you have a
->> very old SSD, or a very small one, or a very cheap one, then you will
->> have poor over-provisioning and poor garbage collection - TRIM might
->> then improve the SSD speed as long as the disk is mostly empty.)
->>
->> It is possible that blocks that could have been TRIMMED will get
->> unnecessarily copied as part of a wear-levelling pass - but the effect
->> of this is going to be completely negligible on the SSD's lifetime.
->>
->>
->> So TRIM complicates RAID, limits your flexibility for how to set up your
->> disks and arrays, and slows down your metadata transactions and small
->> accesses.
->>
->>
->> TRIM /did/ have a useful role for early SSDs - in particular, it
->> improved the artificial benchmarks used by testers and reviewers.  So it
->> has ended up being seen as a "must have" feature for both the SSD
->> itself, and the software and filesystems accessing them.
->>
->>
->
-> Thanks for the explanation, makes a lot of sense, has me leaning towards
-> not using TRIM.
->
-> But your explanation focused on blocks, leaving out pages. Does TRIM
-> info sent to the device only do that on the block level or does it do it
-> at the page level? I was thinking that if it did it at the page level
-> the SSD's garbage collection would consolidate blocks by removing unused
-> pages (akin to defragmenting) then erasing those pages thus making them
-> ready to be written.
->
+=46rom: Jan-Simon M=C3=B6ller <dl9pf@gmx.de>
 
-I was not using "block" in a particularly strict of formal way.  There 
-are a number of different levels of structure involved here, including 
-"logical blocks", "sectors", "allocation units", "erase blocks", "write 
-pages", etc.  I am simply talking about "lumps of data", rather than any 
-specific structure.
+The use of variable length arrays in structs (VLAIS) in the Linux Kerne=
+l code
+precludes the use of compilers which don't implement VLAIS (for instanc=
+e the
+Clang compiler). This patch instead allocates the appropriate amount of=
+ memory
+using an char array.
 
-As far as the computer is concerned, it deals with "sector numbers" of 
-512 byte or 4K sectors.  It is up to the SSD to map these logical 
-numbers to physical pages within flash erase blocks.  The PC has no way 
-of knowing whether a given set of logical sectors are mapped to pages 
-within the same erase block or different ones.
+Patch from series at
+http://lists.cs.uiuc.edu/pipermail/llvm-commits/Week-of-Mon-20120507/14=
+2707.html
+by PaX Team.
 
-You are right that the SSD's garbage collection routines will sometimes 
-collect together the used pages of an erase block, and copy them over to 
-another erase block, so that the first erase block can be recycled.  But 
-this is done independently of the TRIM, and is part of the normal 
-garbage collection function.
+Signed-off-by: Jan-Simon M=C3=B6ller <dl9pf@gmx.de>
+Cc: pageexec@freemail.hu
+Signed-off-by: Behan Webster <behanw@converseincode.com>
+---
+ drivers/md/dm-crypt.c |   22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
-mvh.,
+diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
+index bbf459b..8b724ea 100644
+--- a/drivers/md/dm-crypt.c
++++ b/drivers/md/dm-crypt.c
+@@ -525,29 +525,29 @@ static int crypt_iv_lmk_one(struct crypt_config *=
+cc, u8 *iv,
+ 			    u8 *data)
+ {
+ 	struct iv_lmk_private *lmk =3D &cc->iv_gen_private.lmk;
+-	struct {
+-		struct shash_desc desc;
+-		char ctx[crypto_shash_descsize(lmk->hash_tfm)];
+-	} sdesc;
++	char sdesc[sizeof(struct shash_desc)
++		+ crypto_shash_descsize(lmk->hash_tfm)
++		+ CRYPTO_MINALIGN] CRYPTO_MINALIGN_ATTR;
++	struct shash_desc *desc =3D (struct shash_desc *)sdesc;
+ 	struct md5_state md5state;
+ 	u32 buf[4];
+ 	int i, r;
+=20
+-	sdesc.desc.tfm =3D lmk->hash_tfm;
+-	sdesc.desc.flags =3D CRYPTO_TFM_REQ_MAY_SLEEP;
++	desc->tfm =3D lmk->hash_tfm;
++	desc->flags =3D CRYPTO_TFM_REQ_MAY_SLEEP;
+=20
+-	r =3D crypto_shash_init(&sdesc.desc);
++	r =3D crypto_shash_init(desc);
+ 	if (r)
+ 		return r;
+=20
+ 	if (lmk->seed) {
+-		r =3D crypto_shash_update(&sdesc.desc, lmk->seed, LMK_SEED_SIZE);
++		r =3D crypto_shash_update(desc, lmk->seed, LMK_SEED_SIZE);
+ 		if (r)
+ 			return r;
+ 	}
+=20
+ 	/* Sector is always 512B, block size 16, add data of blocks 1-31 */
+-	r =3D crypto_shash_update(&sdesc.desc, data + 16, 16 * 31);
++	r =3D crypto_shash_update(desc, data + 16, 16 * 31);
+ 	if (r)
+ 		return r;
+=20
+@@ -556,12 +556,12 @@ static int crypt_iv_lmk_one(struct crypt_config *=
+cc, u8 *iv,
+ 	buf[1] =3D cpu_to_le32((((u64)dmreq->iv_sector >> 32) & 0x00FFFFFF) |=
+ 0x80000000);
+ 	buf[2] =3D cpu_to_le32(4024);
+ 	buf[3] =3D 0;
+-	r =3D crypto_shash_update(&sdesc.desc, (u8 *)buf, sizeof(buf));
++	r =3D crypto_shash_update(desc, (u8 *)buf, sizeof(buf));
+ 	if (r)
+ 		return r;
+=20
+ 	/* No MD5 padding here */
+-	r =3D crypto_shash_export(&sdesc.desc, &md5state);
++	r =3D crypto_shash_export(desc, &md5state);
+ 	if (r)
+ 		return r;
+=20
+--=20
+1.7.9.5
 
-David
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
