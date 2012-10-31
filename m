@@ -1,89 +1,119 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PULL REQUEST] md fixes (plus UAPI reorg) for 3.7
-Date: Wed, 31 Oct 2012 12:09:39 +1100
-Message-ID: <20121031120939.30e27e50@notabene.brown>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [RFC 1/2]raid1: only write mismatch sectors in sync
+Date: Wed, 31 Oct 2012 11:25:33 +0800
+Message-ID: <20121031032533.GA1487@kernel.org>
+References: <20120918145710.55394bd4@notabene.brown>
+ <20120919055106.GA1305@kernel.org>
+ <20120919171646.6bc35ba5@notabene.brown>
+ <20120920015655.GB6798@kernel.org>
+ <20121017051113.GA17821@kernel.org>
+ <20121018095601.7aa3238b@notabene.brown>
+ <20121018011735.GA1448@kernel.org>
+ <20121018122959.10bb6c87@notabene.brown>
+ <20121018020134.GB1448@kernel.org>
+ <20121018133657.1bd012f6@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/k/=ydgv9JDNxOLoNUh/n=Cv"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Jonathan Brassow <jbrassow@redhat.com>, David Howells <dhowells@redhat.com>, Eric Sandeen <sandeen@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20121018133657.1bd012f6@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/k/=ydgv9JDNxOLoNUh/n=Cv
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Thu, Oct 18, 2012 at 01:36:57PM +1100, NeilBrown wrote:
+> On Thu, 18 Oct 2012 10:01:34 +0800 Shaohua Li <shli@kernel.org> wrote:
+> 
+> > On Thu, Oct 18, 2012 at 12:29:59PM +1100, NeilBrown wrote:
+> > > On Thu, 18 Oct 2012 09:17:35 +0800 Shaohua Li <shli@kernel.org> wrote:
+> > >  
+> > > > > > Neil,
+> > > > > > any further comments on this? This is a usable feature, I hope we can have some
+> > > > > > agreements.
+> > > > > 
+> > > > > You still haven't answered my main question, which possibly means I haven't
+> > > > > asked it very clearly.
+> > > > > 
+> > > > > You are saying that this new behaviour should not be the default and I think
+> > > > > I agree.
+> > > > > So the question is:  how it is selected?
+> > > > > 
+> > > > > You cannot expect the user to explicitly enable it any time a resync or
+> > > > > recovery starts that should use this new feature.  You must have some
+> > > > > automatic, or semi-automatic, way for the feature to be activated, otherwise
+> > > > > it will never be used.
+> > > > > 
+> > > > > I'm not asking "when should the feature be used" - you've answered that
+> > > > > question a few time and it really isn't an issue.
+> > > > > The question it "What it the exact process by which the feature is turned on
+> > > > > for any particular resync or recovery?"
+> > > > 
+> > > > So you worried about users don't know how to correctly select the feature. An
+> > > > experienced user knows this, the usage scenario I mentioned describes how to do
+> > > > the decision. For example, a resync after system crash should enable the
+> > > > feature. I admit an inexperienced user doesn't know how to select it, but this
+> > > > isn't a big problem to me. There are a lot of tunables in the kernel (even MD),
+> > > > which can significantly impact kernel behavior. These tunables are just for
+> > > > experienced users.
+> > > > 
+> > > > Thanks,
+> > > > Shaohua
+> > > 
+> > > 
+> > > You still aren't answering my question.
+> > > 
+> > > What exactly, precisely, specifically, will an "experienced user" do?
+> > 
+> > Set something to a sysfs entry to enable the feature (like my RFC patch does to
+> > have a new sysfs entry for the feature), and readd disk. resync then does 'only
+> > write mismatch data'. Is this what you asked?
 
-The following changes since commit ddffeb8c4d0331609ef2581d84de4d763607bd37:
+sorry for the delay.
+ 
+> Yes, that is the sort of thing I was asking for.
+> When you say "readd disk" I assume you mean to use the --readd option to
+> mdadm.
+> The only works when there is a bitmap active on the array,  so relatively few
+> blocks will be resynced so does it really matter which approach is taken?
+> Always copy, or read-and-test?
+> 
+> Though maybe you really mean to "--add" the device.  In that case it would
+> probably make sense to add some other option to mdadm to say "enable
+> read-mostly recovery".  I wonder what a good name would be.
+> --minimize-writes ??
 
-  Linux 3.7-rc1 (2012-10-14 14:41:04 -0700)
+Yep, it's '--add' case. For the '--readd' with bitmap case, bitmap can already
+avoid a lot of write already. The useage case is something like:
+one disk is broken; trim whole disk of a new disk; add the new disk
+If source disk has a lot of 0 and we only write mismatch data, we can avoid
+write a lot.
 
-are available in the git repository at:
+I believe we need such mechanism for '--create' too, if the first disk has some
+data, but the second disk is empty.
+ 
+> You earlier gave a list of scenarios in which you thought this would be
+> useful.  It was:
+> 
+> > > > For 'compare and avoid write if equal' case:
+> > > > 1. update SSD firmware. This doesn't change the data, but we need take one disk
+> > > > off from the raid one time.
+> > > > 2. One disk has errors, but these errors don't ruin most of the data (for
+> > > > example, a pcie error)
+> > > > 3. driver/os crash.
+> > > > In all these cases, two raid disks must be resync, and they have almost identical
+> > > > data. write avoidness will be very helpful for these.  
+> 
+> 
+> For case '3', it would be a "resync" rather than a "recovery".  How would you
+> expect an "advanced user" to choose read-and-test recovery in that case?
+> There is no "readd" command happening.
 
-  git://neil.brown.name/md tags/md-3.7-fixes
+If there is bitmap, maybe we don't need do read-and-test, so this one isn't
+very necessary in current stage. If not, what I suggested is:
+1. user suspends resync (write something to a sysfs file)
+2. user enables read-and-test (again, write a sysfs file)
+3. resume resync
 
-for you to fetch changes up to ed30be077e705e0dff53bfc51d23feb8aeeab78f:
-
-  MD RAID10: Fix oops when creating RAID10 arrays via dm-raid.c (2012-10-31=
- 11:42:30 +1100)
-
-----------------------------------------------------------------
-Some fixes for md in 3.7
- - one recently introduced crash for dm-raid10 with discard
- - one bug in new functionality that has been around for a few releases.
- - minor bug in md's 'faulty' personality
-
- and UAPI disintegration for md.
-
-----------------------------------------------------------------
-David Howells (1):
-      UAPI: (Scripted) Disintegrate include/linux/raid
-
-Eric Sandeen (1):
-      md faulty: use disk_stack_limits()
-
-Jonathan Brassow (1):
-      MD RAID10: Fix oops when creating RAID10 arrays via dm-raid.c
-
-NeilBrown (2):
-      Merge tag 'disintegrate-raid-20121009' of git://git.infradead.org/use=
-rs/dhowells/linux-headers into for-next
-      md/raid1: Fix assembling of arrays containing Replacements.
-
- drivers/md/faulty.c                  |   5 +-
- drivers/md/raid1.c                   |   2 +-
- drivers/md/raid10.c                  |  15 ++--
- include/linux/raid/Kbuild            |   2 -
- include/linux/raid/md_u.h            | 141 +------------------------------
- include/uapi/linux/raid/Kbuild       |   2 +
- include/{ =3D> uapi}/linux/raid/md_p.h |   0
- include/uapi/linux/raid/md_u.h       | 155 +++++++++++++++++++++++++++++++=
-++++
- 8 files changed, 172 insertions(+), 150 deletions(-)
- rename include/{ =3D> uapi}/linux/raid/md_p.h (100%)
- create mode 100644 include/uapi/linux/raid/md_u.h
-
---Sig_/k/=ydgv9JDNxOLoNUh/n=Cv
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUJB6VDnsnt1WYoG5AQJdPhAAhRaWZECYa/O+15/LemiI+bSgt2DcZDVB
-WRFfKvacrZbPpK4SYx/SkNeij69aHJ3dZg1d0ZC+TqDU+tPo58t/+f1yfKeOz1Mz
-VXfjpu1AILDaLXKZ8miQTx3yb40bwgD+Jiz0rVTe2ldvZJwRx/tUMyWSMHGQNdKn
-OdoZqZ7HRmkPQt3nOHFWLwDKV9do0D9Td/gyfRAl228kfbaaAHnbQrc1cbgyLjzx
-yrBS/1cgM7yMdeH81mlPjjv4t8lB76s/chjsnKTP1HOo5T6m+k/F0R+n3riZ9Pz/
-GlUJxkbMuz0kusNzUg+DzqZuKQmh/njOSCyTLTkSchKm/tdO7DTZab4fBxxlxCSF
-nmPbp1D4EeXKmaEvW4HHihqFMo/eG6C55sfK4DhnfZNPk8gIxqq091UfswuiQv45
-oOh2s9H3fqvQRTOr6e4E1oHj4Ynvxh46d7GyclShlPFzA1h5xgdw0eZuR9Om0AWe
-WTtFvR8CHCr8fL1Hh/t3adW/3CAJCuJoAX5FL3YGEqBEagykSAPs6+VjOPu3jbhp
-HtZsgNeyAcBh8VgYzxnW7AH3UaEw49Ebxc7dXciTZyQ+c8NIn+tuzzgVaApXcnRV
-ZXN7n1Ex/GSRYgjKL/2JlwNGLZ6CBL+LvhvSj0WgV4NNUatiV1xe7+ZnK8ZGEogZ
-nQCG9qMSJRI=
-=9GdI
------END PGP SIGNATURE-----
-
---Sig_/k/=ydgv9JDNxOLoNUh/n=Cv--
+Thanks,
+Shaohua
