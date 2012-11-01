@@ -1,222 +1,38 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: About RAID1/10 io barrier between normal io and resync/recovery
- io.
-Date: Thu, 1 Nov 2012 19:24:44 +1100
-Message-ID: <20121101192444.2ac1050a@notabene.brown>
-References: <2012110115580062797811@gmail.com>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: Best way (only?) to setup SSD's for using TRIM
+Date: Thu, 01 Nov 2012 16:01:44 +0100
+Message-ID: <20121101150144.6BA1D2005D0@gemini.denx.de>
+References: <508D808A.7040100@curtronics.com> <508FA2C6.2050800@hesbynett.no> <508FE44A.3040507@curtronics.com> <508FF85F.1030308@hesbynett.no> <Pine.LNX.4.64.1210301306470.20143@router.curtronics.com> <B371ADF3-F328-4E1B-A6D2-87DE1974D8FF@colorremedies.com> <5090E239.9040302@hesbynett.no> <50916132.3010405@curtronics.com> <50918432.906@hesbynett.no> <5091D63E.1080007@curtronics.com> <50922FA4.7070702@hesbynett.no>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/tRfRlUtpI=UrPdoH3q_r7vK"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2012110115580062797811@gmail.com>
+In-reply-to: <50922FA4.7070702@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: David Brown <david.brown@hesbynett.no>
+Cc: Curtis J Blank <curt@curtronics.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/tRfRlUtpI=UrPdoH3q_r7vK
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Dear David,
 
-On Thu, 1 Nov 2012 15:58:04 +0800 majianpeng <majianpeng@gmail.com> wrote:
+In message <50922FA4.7070702@hesbynett.no> you wrote:
+>
+> If you make your big raid1 pair an LVM physical volume, you can split it 
+> into logical volumes as and when you want, and re-size them whenever 
+> necessary.  Note, however, that the unpartitioned space within the LVM 
+> physical volume is still "used" as far as the SSD is concerned, since 
+> the initial raid1 synchronisation has written to it.  So only space 
 
-> Hi Neil:
-> 	At present, there are barriers in raid1/10.About barrier,you described:	=
-"Sometimes we need to suspend IO while we do something else,  either some r=
-esync/recovery, or reconfigure the array"
->    So when do normal request in func make_request, it call wait_barrier.A=
-nd in sync_request it call raise_barrier.
-> Of course,there are some place to call raise_barrier to do other things.
-> But there, i only wanted to talk about normal io and resync/recovery.
->=20
-> 1:I think you add io barrier is because raid1/10 didn't stripe like raid4=
-56.So it only for the situation which normal io and sync io had same conten=
-t. Is that right?
+What if the creation of the array was done with "--assume-clean" ?
 
-Same sector, yes.
+Best regards,
 
-> 2: If normal ios outside the resync/recovery window, i think there is no =
-necessary to use io barrier.
+Wolfgang Denk
 
-correct.
-
-> I wanted to find the reason by reviewing the git log.But at present, git =
-log of kernel is only after kernel 2.6.12.
-> So i looked into the code about kernel 2.4.And found something like i tho=
-ught. There were resync window.
-> But why did you remove or modify ?
-
-I didn't.  Ingo Molnar did.
-
-http://git.kernel.org/?p=3Dlinux/kernel/git/tglx/history.git;a=3Dcommitdiff=
-;h=3D0925bad356699684440720f2a908030f98bc3284
-
-It wouldn't have generalised to raid10 very well (because resync and recove=
-ry
-are handled very differently in raid10).
-
-> 3: I think using resync window to control normal io is perfect but compli=
-cated.So i only used one positon which before mddev->curr_resync_completed.
-
-Looks good, though I'll have a proper look next week when I have a bit more
-time.
-
-You only need the barrier for write operations, but I think we raise it for
-read operations too.  We can probably skip that.
-
-Thanks,
-NeilBrown
-
-
-> The code is:
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 8034fbd..c45a769 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -234,6 +234,7 @@ static void call_bio_endio(struct r1bio *r1_bio)
->  {
->         struct bio *bio =3D r1_bio->master_bio;
->         int done;
-> +       int skip_barrier =3D test_bit(R1BIO_SKIP_BARRIER, &r1_bio->state);
->         struct r1conf *conf =3D r1_bio->mddev->private;
-> =20
->         if (bio->bi_phys_segments) {
-> @@ -253,7 +254,8 @@ static void call_bio_endio(struct r1bio *r1_bio)
->                  * Wake up any possible resync thread that waits for the =
-device
->                  * to go idle.
->                  */
-> -               allow_barrier(conf);
-> +               if (!skip_barrier)
-> +                       allow_barrier(conf);
->         }
->  }
-> =20
-> @@ -1007,6 +1009,7 @@ static void make_request(struct mddev *mddev, struc=
-t bio * bio)
->         int first_clone;
->         int sectors_handled;
->         int max_sectors;
-> +       int skip_barrier =3D 0;
-> =20
->         /*
->          * Register the new request and wait if the reconstruction
-> @@ -1036,7 +1039,13 @@ static void make_request(struct mddev *mddev, stru=
-ct bio * bio)
->                 finish_wait(&conf->wait_barrier, &w);
->         }
-> =20
-> -       wait_barrier(conf);
-> +       if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
-> +               (bio->bi_sector + bio->bi_size/512 <=3D=20
-> +                mddev->curr_resync_completed))
-> +               skip_barrier =3D 1;
-> +
-> +       if (!skip_barrier)
-> +               wait_barrier(conf);
-> =20
->         bitmap =3D mddev->bitmap;
-> =20
-> @@ -1053,6 +1062,8 @@ static void make_request(struct mddev *mddev, struc=
-t bio * bio)
->         r1_bio->mddev =3D mddev;
->         r1_bio->sector =3D bio->bi_sector;
-> =20
-> +       if (skip_barrier)
-> +               set_bit(R1BIO_SKIP_BARRIER, &r1_bio->state);
->         /* We might need to issue multiple reads to different
->          * devices if there are bad blocks around, so we keep
->          * track of the number of reads in bio->bi_phys_segments.
-> @@ -1229,10 +1240,15 @@ read_again:
->                 for (j =3D 0; j < i; j++)
->                         if (r1_bio->bios[j])
->                                 rdev_dec_pending(conf->mirrors[j].rdev, m=
-ddev);
-> -               r1_bio->state =3D 0;
-> -               allow_barrier(conf);
-> +               if (!skip_barrier)
-> +                       r1_bio->state =3D 0;
-> +               else
-> +                       set_bit(R1BIO_SKIP_BARRIER, &r1_bio->state);
-> +               if (!skip_barrier)
-> +                       allow_barrier(conf);
->                 md_wait_for_blocked_rdev(blocked_rdev, mddev);
-> -               wait_barrier(conf);
-> +               if (!skip_barrier)
-> +                       wait_barrier(conf);
->                 goto retry_write;
->         }
-> =20
-> diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
-> index 0ff3715..fab9fda 100644
-> --- a/drivers/md/raid1.h
-> +++ b/drivers/md/raid1.h
-> @@ -158,6 +158,8 @@ struct r1bio {
->  #define        R1BIO_MadeGood 7
->  #define        R1BIO_WriteError 8
-> =20
-> +#define R1BIO_SKIP_BARRIER 9
-> +
->  extern int md_raid1_congested(struct mddev *mddev, int bits);
-> =20
->  #endif
->=20
-> At present, the code only for normal io and sync io.But etc stop/remove d=
-isk /add disk/fix_read_error also used io barrier.
-> I used fio to test.
-> The fio script is:
-> [global]
-> filename=3D/dev/md0
-> direct=3D1
-> bs=3D512K
->=20
-> [write]
-> rw=3Dwrite
-> runtime=3D600
->=20
-> [read]
-> stonewall
-> rw=3Dread
-> runtime=3D600
->=20
-> I firstly started resync/recovery for some times in order to normal io po=
-sition is before curr_resync_completed.
-> And i also keep the resync/recovery speed is about 30MB/s throught sys_sp=
-eed_min.
-> The result is:
-> w/ above code:
-> 	write  recovery/resync 30MB/S; fio 70MB/s
-> 	read   recovery/resync 30MB/s;  fio 90MB/s
->=20
-> w/o above code:
-> 	write recovery/resync 30MB/s; fio 29MB/s
->     read  recovery/resync  30MB/s; fio  31MB/s
->=20
-> The result is remarkable.
->=20
->=20
-> Jianpeng
-
---Sig_/tRfRlUtpI=UrPdoH3q_r7vK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUJIxzDnsnt1WYoG5AQLZHBAAmGuCMoKLKYMgRhE4eXGTIAltpxfgH0L2
-E2Z6YpwQ9q7kK/a8TvOdA8ZlXlwEE2gSXrTyvN04v3S6E6i2RbuWqsJ8KNRKBBS2
-obi8yQEQYuii+VoX7d9OyreNELOfPXM1FDljD17s+Vsd1qGfjcsAbVfXcfL6VRnt
-eHw6Doxw+tI06vivJXJ7GJv5bveZBhOok4iU6WsCCnaS06ptJNApsYa69Jdi14wp
-SWgdSkCB/WXKIJ47ISOBbP/tzfISy8WuM+3x2nBe7N2P0LYhmwGEltHttyYzrRUJ
-WmSsRbAxoQZY7R+xXtfi4Am2Rhx1v7L7969M0cUDTGcuwwmrnUCdNy51MuaXXXoj
-xABuXzq56vr/0C0xMLFuy4BnBETmvBqbqKouzh7CzebmBn1GpvxJlo2ebXpjFBYE
-VfWjX6yTZlc+784RL1okv8eZzJlHw82Z+t41zxKjYviI9H1+6JCh1AoF+teQKzfQ
-wsR0D9JiHjBRus20baBk4GHL/oZ9FiYTyHLi5vlJMXjmC3TeGFhyQoM/hy0mJrfL
-Fw2GFoyJD7qDrKr8BQeUOQfDAuADM9Om6yGVX09ndzuJ2T3FY4X8b7xHbiyQ18Nw
-fcnXMnGcRs4WHOVdUmMtCfvnHR2GJvmQYQ/VonZfx8VWLGMGJ2sFca29YtI9tycO
-GObsllf5sS0=
-=SgsQ
------END PGP SIGNATURE-----
-
---Sig_/tRfRlUtpI=UrPdoH3q_r7vK--
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+Common sense and a sense of humor  are  the  same  thing,  moving  at
+different speeds.  A sense of humor is just common sense, dancing.
+                                                        - Clive James
