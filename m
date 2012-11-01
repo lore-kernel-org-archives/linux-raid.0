@@ -1,232 +1,222 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Best way (only?) to setup SSD's for using TRIM
-Date: Thu, 01 Nov 2012 09:15:32 +0100
-Message-ID: <50922FA4.7070702@hesbynett.no>
-References: <508D808A.7040100@curtronics.com> <508FA2C6.2050800@hesbynett.no> <508FE44A.3040507@curtronics.com> <508FF85F.1030308@hesbynett.no> <Pine.LNX.4.64.1210301306470.20143@router.curtronics.com> <B371ADF3-F328-4E1B-A6D2-87DE1974D8FF@colorremedies.com> <5090E239.9040302@hesbynett.no> <50916132.3010405@curtronics.com> <50918432.906@hesbynett.no> <5091D63E.1080007@curtronics.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: About RAID1/10 io barrier between normal io and resync/recovery
+ io.
+Date: Thu, 1 Nov 2012 19:24:44 +1100
+Message-ID: <20121101192444.2ac1050a@notabene.brown>
+References: <2012110115580062797811@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/tRfRlUtpI=UrPdoH3q_r7vK"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5091D63E.1080007@curtronics.com>
+In-Reply-To: <2012110115580062797811@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Curtis J Blank <curt@curtronics.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: majianpeng <majianpeng@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 01/11/2012 02:54, Curtis J Blank wrote:
-> On 10/31/12 15:04, David Brown wrote:
->> On 31/10/12 18:34, Curtis J Blank wrote:
->>> On 10/31/12 03:32, David Brown wrote:
->>>
->>> I was planning, all the partitions i.e. mount points will be below 50%
->>> used, most way below that and I don't see them filling up. That is on
->>> purpose, theses SSD's are for the OS to gain performance and not a lot
->>> of data storage with the exception of mysql.
->>>
->>> So, if I have unused space at the end of the SSD, say 60G out of the
->>> 256G don't use it, don't partition it the SSD will use it for what ever?
->>> It will know that it can use it when in a RAID1 set? Or make the raidset
->>> only using cylinders to 196G and partition that leaving the rest unused?
->>>
->>
->> If you want to leave extra space to improve the over-provisioning (it is
->> typically not necessary with more high-end SSDs, but you might want to
->> do it anyway), then it is important that the extra space is never
->> written.  The easiest way to ensure that is to leave extra space during
->> partitioning.  But be careful with raid - you have to use the
->> partition(s) for your raid devices, not the disk, or else you will write
->> to the entire SSD during the initial raid1 sync.
->>
->> A typical arrangement would be to make a 1 GB partition at the start of
->> each SSD, then perhaps a 4 GB partition, then a big partition of about
->> 200 GB in this case.  Make a raid1 with metadata 1.0 from the first
->> partition of each disk for /boot, to make life easier for the
->> bootloader.  Use the second partition of each disk for swap (no need for
->> raid here unless you are really concerned about uptime in the face of
->> disk failure and you actually expect to use swap significantly - in
->> which case go for raid1 or raid10 if you have more than 2 disks).  Use
->> the third partition for your main raid (such as raid1, or perhaps
->> something else if you have more than two disks).
->
-> David, first off I want to say thanks for all the advice and your time.
-> This was what I was looking for to make informed decisions and I see I
-> came to the right place.
->
+--Sig_/tRfRlUtpI=UrPdoH3q_r7vK
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-No problem.  I learn a lot by making suggestions her, and having other 
-people correct me!  So if my advice had been badly wrong, I expect 
-someone else would have said by now.
+On Thu, 1 Nov 2012 15:58:04 +0800 majianpeng <majianpeng@gmail.com> wrote:
 
-> Yep, that's the way I do it, partition the disk then use the partitions
-> in the raid, not the whole disk. Although I do make more partitions and
-> more mount points only so that one thing can't use up all the space and
-> break other things. But still any one won't be over 50% utilization.
+> Hi Neil:
+> 	At present, there are barriers in raid1/10.About barrier,you described:	=
+"Sometimes we need to suspend IO while we do something else,  either some r=
+esync/recovery, or reconfigure the array"
+>    So when do normal request in func make_request, it call wait_barrier.A=
+nd in sync_request it call raise_barrier.
+> Of course,there are some place to call raise_barrier to do other things.
+> But there, i only wanted to talk about normal io and resync/recovery.
+>=20
+> 1:I think you add io barrier is because raid1/10 didn't stripe like raid4=
+56.So it only for the situation which normal io and sync io had same conten=
+t. Is that right?
 
-If you make your big raid1 pair an LVM physical volume, you can split it 
-into logical volumes as and when you want, and re-size them whenever 
-necessary.  Note, however, that the unpartitioned space within the LVM 
-physical volume is still "used" as far as the SSD is concerned, since 
-the initial raid1 synchronisation has written to it.  So only space 
-outside the raid1 partition acts as extra over-provisioning.  (Not that 
-you will need much extra, if any.)
+Same sector, yes.
 
-Of course, you can always start with a 50% size partition for your raid1 
-pair, leaving (almost) 50% of the SSD completely unused.  And if you 
-want more space, you can just add another partition of say 30% on each 
-disk, match them up as a raid1 pair, put a new LVM physical volume onto 
-it, then add that physical volume to the volume group.  You end up with 
-the same data in the same place, with only a tiny overhead for the LVM 
-indirection.
+> 2: If normal ios outside the resync/recovery window, i think there is no =
+necessary to use io barrier.
 
-Once no-sync tracking is in place for md raid, it will be easier, as 
-there is no initial sync for raid1 (everything is marked no-sync).  In 
-that case, space that is not partitioned within the LVM physical volume 
-will not be written to at all, and will therefore act as extra 
-over-provisioning until you actually need it.
+correct.
 
-If your SSDs do transparent compression, then another trick is to write 
-blocks of zero to unused space (you can do this across the whole disk 
-before partitioning).  Blocks of zero compress rather well, so take tiny 
-amounts of physical space on the disk - and the freed space is then 
-extra recyclable blocks.
+> I wanted to find the reason by reviewing the git log.But at present, git =
+log of kernel is only after kernel 2.6.12.
+> So i looked into the code about kernel 2.4.And found something like i tho=
+ught. There were resync window.
+> But why did you remove or modify ?
 
->
-> Oh and I do raid swap, not because it's used a lot, it's not, but to
-> raid everything else and leave a single point of failure kind of defeats
-> the purpose unless the goal is only to protect the data. Mine is that
-> and uptime.
+I didn't.  Ingo Molnar did.
 
-That makes lots of sense.
+http://git.kernel.org/?p=3Dlinux/kernel/git/tglx/history.git;a=3Dcommitdiff=
+;h=3D0925bad356699684440720f2a908030f98bc3284
 
-I find swap useful even on machines with lots of ram - I put /tmp and 
-/var/tmp on tmpfs mounts, and sometimes use tmpfs mounts in other 
-places.  tmpfs is always the fastest filesystem, as it has no overheads 
-for safety or to match sector layouts on disk.  And with plenty of swap, 
-you don't have to worry about the space it takes - anything beyond 
-memory will automatically spill out to disk (making it slower, but still 
-faster than putting those same files on a disk filesystem).
+It wouldn't have generalised to raid10 very well (because resync and recove=
+ry
+are handled very differently in raid10).
 
-<snip>
+> 3: I think using resync window to control normal io is perfect but compli=
+cated.So i only used one positon which before mddev->curr_resync_completed.
 
->> Put the DB's on the SSD.
->>
->> As with all database applications, if you can get enough memory to have
->> most work done without reading from disks, it will go faster.
->>
->> With decent SSD's (and since you have quite big ones, I assume they are
->> good quality), there is no harm in writing lots.  You can probably write
->> at 30 MB/s continuously for years before causing any wearout on the disk.
->>
->
-> Memory is currently at 16G, when I get around to it which won't be in
-> the too distant future it will be 32G. I'm fully aware and try to have
-> everything running in memory
->
-> The SSD's are OCZ Vertex 4 VTX4-25SAT3-256G. I hope they're good ones.
-> I'm trying to get their PEC just because I want to know. I'm also going
-> to try and get the over provisioned number, again just so I know.
->
-> I still haven't decided whether to connect the SSD's to the motherboard
-> which is SATA III and use Linux raid or connect them to my Areca 1882i
-> battery backed up caching raid controller which is also SATA III. Kind
-> of hinges on whether or not the controller passes discard. It's their
-> second generation card PCIe 2.0 not the new third generation PCIe 3.0
-> card. Trying to find that out too.
+Looks good, though I'll have a proper look next week when I have a bit more
+time.
 
-One thing to be very careful about with raid cards is that they can add 
-a lot of latency to SSDs.  You can end up dropping your IOPs by a factor 
-of 20 or more.  So check if the card works well with SSDs before using it.
+You only need the barrier for write operations, but I think we raise it for
+read operations too.  We can probably skip that.
 
-For two disks, I'd connect them directly to the motherboard SATA (and 
-use an external UPS).  But that depends on how much you value the 
-battery on the raid card, and how likely you see the risk of a system 
-crash (there is slightly lower chance of data loss via a raid card with 
-battery cache in such circumstances).
-
->
-> Like to hear your thoughts on this. My thinking is the performance would
-> really scream on the 1882i. And it just dawned on me if I use the
-> motherboard I might not be able to use the noop scheduler which is what
-> I currently use with my ARC-1220 because it has all the disks.
->
-
-I would be very surprised if it ran faster on the raid card than 
-connected directly to the motherboard SATA.  Raid cards can, sometimes, 
-give you higher speeds for raid5/6 compared to direct connections.  In 
-particular, they help if you have a large number of disks (though with 
-the latest md raid multithreading for raid5/6, that will probably 
-change).  But generally speaking, a raid card is not for speed - 
-especially not for SSDs where the extra layer will add noticeable 
-latency.  Your CPU, motherboard and memory are more than capable of 
-saturating two fast SSDs - how could a raid card go any faster?
+Thanks,
+NeilBrown
 
 
->>>
->>> Ok but what about making a change to a page in a block whose other pages
->>> are valid? The whole block gets moved then the old block is later
->>> erased? That's what I'm understanding which sounds ok.
->>
->> No, the changed page will get re-mapped to a different page somewhere
->> else - the unchanged data will remain where it was.  That data will only
->> get moved if it makes sense for "defragmenting" to free up erase blocks,
->> or as part of wear-levelling routines.
->
-> Got it.
->
->>
->>>
->>> I think I was over thinking this. If a page changes the only way to do
->>> that is read-modify-write of the block to where ever. So it might as
->>> well be to an already erased block. I was getting hung up on having
->>> erased pages in the blocks that can be immediately and just written.
->>> Period. But that only occurs when appending data to a file. Let the
->>> filesystem and SSD's do there thing...
->>>
->>> I'm really thinking I don't need TRIM now. And when it is finally in the
->>> kernel I can maybe try it. I was worried that if I don't do it from the
->>> start it be too late later after the SSD's had been used for a while to
->>> get the full benefit of it.
->>>
->>
->>
->> I think what you really want to use is "fstrim" - this walks through a
->> filesystem metadata, identifies free blocks, and sends TRIM commands for
->> each of them.  Obviously this can take a bit of time, and will slow down
->> the disks while working, but you typically do it with a cron job in the
->> middle of the night.
->>
->> <http://www.vdmeulen.net/cgi-bin/man/man2html?fstrim+8>
->>
->
-> Yep, this sounds like the ticket. I was aware of it but didn't pursue it.
->
+> The code is:
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 8034fbd..c45a769 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -234,6 +234,7 @@ static void call_bio_endio(struct r1bio *r1_bio)
+>  {
+>         struct bio *bio =3D r1_bio->master_bio;
+>         int done;
+> +       int skip_barrier =3D test_bit(R1BIO_SKIP_BARRIER, &r1_bio->state);
+>         struct r1conf *conf =3D r1_bio->mddev->private;
+> =20
+>         if (bio->bi_phys_segments) {
+> @@ -253,7 +254,8 @@ static void call_bio_endio(struct r1bio *r1_bio)
+>                  * Wake up any possible resync thread that waits for the =
+device
+>                  * to go idle.
+>                  */
+> -               allow_barrier(conf);
+> +               if (!skip_barrier)
+> +                       allow_barrier(conf);
+>         }
+>  }
+> =20
+> @@ -1007,6 +1009,7 @@ static void make_request(struct mddev *mddev, struc=
+t bio * bio)
+>         int first_clone;
+>         int sectors_handled;
+>         int max_sectors;
+> +       int skip_barrier =3D 0;
+> =20
+>         /*
+>          * Register the new request and wait if the reconstruction
+> @@ -1036,7 +1039,13 @@ static void make_request(struct mddev *mddev, stru=
+ct bio * bio)
+>                 finish_wait(&conf->wait_barrier, &w);
+>         }
+> =20
+> -       wait_barrier(conf);
+> +       if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
+> +               (bio->bi_sector + bio->bi_size/512 <=3D=20
+> +                mddev->curr_resync_completed))
+> +               skip_barrier =3D 1;
+> +
+> +       if (!skip_barrier)
+> +               wait_barrier(conf);
+> =20
+>         bitmap =3D mddev->bitmap;
+> =20
+> @@ -1053,6 +1062,8 @@ static void make_request(struct mddev *mddev, struc=
+t bio * bio)
+>         r1_bio->mddev =3D mddev;
+>         r1_bio->sector =3D bio->bi_sector;
+> =20
+> +       if (skip_barrier)
+> +               set_bit(R1BIO_SKIP_BARRIER, &r1_bio->state);
+>         /* We might need to issue multiple reads to different
+>          * devices if there are bad blocks around, so we keep
+>          * track of the number of reads in bio->bi_phys_segments.
+> @@ -1229,10 +1240,15 @@ read_again:
+>                 for (j =3D 0; j < i; j++)
+>                         if (r1_bio->bios[j])
+>                                 rdev_dec_pending(conf->mirrors[j].rdev, m=
+ddev);
+> -               r1_bio->state =3D 0;
+> -               allow_barrier(conf);
+> +               if (!skip_barrier)
+> +                       r1_bio->state =3D 0;
+> +               else
+> +                       set_bit(R1BIO_SKIP_BARRIER, &r1_bio->state);
+> +               if (!skip_barrier)
+> +                       allow_barrier(conf);
+>                 md_wait_for_blocked_rdev(blocked_rdev, mddev);
+> -               wait_barrier(conf);
+> +               if (!skip_barrier)
+> +                       wait_barrier(conf);
+>                 goto retry_write;
+>         }
+> =20
+> diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+> index 0ff3715..fab9fda 100644
+> --- a/drivers/md/raid1.h
+> +++ b/drivers/md/raid1.h
+> @@ -158,6 +158,8 @@ struct r1bio {
+>  #define        R1BIO_MadeGood 7
+>  #define        R1BIO_WriteError 8
+> =20
+> +#define R1BIO_SKIP_BARRIER 9
+> +
+>  extern int md_raid1_congested(struct mddev *mddev, int bits);
+> =20
+>  #endif
+>=20
+> At present, the code only for normal io and sync io.But etc stop/remove d=
+isk /add disk/fix_read_error also used io barrier.
+> I used fio to test.
+> The fio script is:
+> [global]
+> filename=3D/dev/md0
+> direct=3D1
+> bs=3D512K
+>=20
+> [write]
+> rw=3Dwrite
+> runtime=3D600
+>=20
+> [read]
+> stonewall
+> rw=3Dread
+> runtime=3D600
+>=20
+> I firstly started resync/recovery for some times in order to normal io po=
+sition is before curr_resync_completed.
+> And i also keep the resync/recovery speed is about 30MB/s throught sys_sp=
+eed_min.
+> The result is:
+> w/ above code:
+> 	write  recovery/resync 30MB/S; fio 70MB/s
+> 	read   recovery/resync 30MB/s;  fio 90MB/s
+>=20
+> w/o above code:
+> 	write recovery/resync 30MB/s; fio 29MB/s
+>     read  recovery/resync  30MB/s; fio  31MB/s
+>=20
+> The result is remarkable.
+>=20
+>=20
+> Jianpeng
 
-I haven't tried fstrim myself.  Some day I must upgrade my ageing Fedora 
-14 system so that I can play with these new toys instead of just reading 
-about them...
+--Sig_/tRfRlUtpI=UrPdoH3q_r7vK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
->>
->> I don't think the patches for passing TRIM through the md layer have yet
->> made it to mainstream distro kernels, but once they do you can run
->> fstrim.
->>
->
-> Neil Brown told me probably 3.7, so we'll see I guess. It's becoming
-> less important to me though, but maybe nice when they do. I haven't
-> totally ruled out building a kernel with the patches but leaning towards
-> not doing it.
->
->>
->>
->> Incidentally, have a look at the figures in this:
->>
->> <https://patrick-nagel.net/blog/archives/337>
->>
->> A sample size of 1 web page is not great statistically evidence, but the
->> difference in the times for "sync" are quite large...
->
-> That says pretty much what I learned so far and the numbers are
-> interesting. Sort of says not to use trim real time continuously.
->
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
+iQIVAwUBUJIxzDnsnt1WYoG5AQLZHBAAmGuCMoKLKYMgRhE4eXGTIAltpxfgH0L2
+E2Z6YpwQ9q7kK/a8TvOdA8ZlXlwEE2gSXrTyvN04v3S6E6i2RbuWqsJ8KNRKBBS2
+obi8yQEQYuii+VoX7d9OyreNELOfPXM1FDljD17s+Vsd1qGfjcsAbVfXcfL6VRnt
+eHw6Doxw+tI06vivJXJ7GJv5bveZBhOok4iU6WsCCnaS06ptJNApsYa69Jdi14wp
+SWgdSkCB/WXKIJ47ISOBbP/tzfISy8WuM+3x2nBe7N2P0LYhmwGEltHttyYzrRUJ
+WmSsRbAxoQZY7R+xXtfi4Am2Rhx1v7L7969M0cUDTGcuwwmrnUCdNy51MuaXXXoj
+xABuXzq56vr/0C0xMLFuy4BnBETmvBqbqKouzh7CzebmBn1GpvxJlo2ebXpjFBYE
+VfWjX6yTZlc+784RL1okv8eZzJlHw82Z+t41zxKjYviI9H1+6JCh1AoF+teQKzfQ
+wsR0D9JiHjBRus20baBk4GHL/oZ9FiYTyHLi5vlJMXjmC3TeGFhyQoM/hy0mJrfL
+Fw2GFoyJD7qDrKr8BQeUOQfDAuADM9Om6yGVX09ndzuJ2T3FY4X8b7xHbiyQ18Nw
+fcnXMnGcRs4WHOVdUmMtCfvnHR2GJvmQYQ/VonZfx8VWLGMGJ2sFca29YtI9tycO
+GObsllf5sS0=
+=SgsQ
+-----END PGP SIGNATURE-----
 
+--Sig_/tRfRlUtpI=UrPdoH3q_r7vK--
