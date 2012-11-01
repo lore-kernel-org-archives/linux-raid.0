@@ -1,54 +1,44 @@
-From: Miles Fidelman <mfidelman@meetinghouse.net>
-Subject: Re: 3TB drives failure rate (summary)
-Date: Thu, 01 Nov 2012 12:25:04 -0400
-Message-ID: <5092A260.4070402@meetinghouse.net>
-References: <11510711257.20121028131527@oudeis.org> <508D61A1.7020106@wildgooses.com> <508D65CF.1080904@gmail.com> <508DADC3.4080104@shiftmail.org> <508DB08D.20002@meetinghouse.net> <508DC6E9.8070001@shiftmail.org> <508DC922.7040400@meetinghouse.net> <20121029102919.1134a797@natsu> <508E3626.8080404@hesbynett.no> <508E7E68.1030202@turmel.org> <1494377384.20121031005457@oudeis.org> <50911AFF.9020707@turmel.org> <509291B2.5000907@meetinghouse.net> <50929430.50201@anonymous.org.uk> <509297CA.4090606@meetinghouse.net> <50929DDE.60906@anonymous.org.uk>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: Best way (only?) to setup SSD's for using TRIM
+Date: Thu, 01 Nov 2012 17:41:28 +0100
+Message-ID: <5092A638.8060307@hesbynett.no>
+References: <508D808A.7040100@curtronics.com> <508FA2C6.2050800@hesbynett.no> <508FE44A.3040507@curtronics.com> <508FF85F.1030308@hesbynett.no> <Pine.LNX.4.64.1210301306470.20143@router.curtronics.com> <B371ADF3-F328-4E1B-A6D2-87DE1974D8FF@colorremedies.com> <5090E239.9040302@hesbynett.no> <50916132.3010405@curtronics.com> <50918432.906@hesbynett.no> <5091D63E.1080007@curtronics.com> <50922FA4.7070702@hesbynett.no> <20121101150144.6BA1D2005D0@gemini.denx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50929DDE.60906@anonymous.org.uk>
+In-Reply-To: <20121101150144.6BA1D2005D0@gemini.denx.de>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: Wolfgang Denk <wd@denx.de>
+Cc: Curtis J Blank <curt@curtronics.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-John Robinson wrote:
-> On 01/11/2012 15:39, Miles Fidelman wrote:
->> John Robinson wrote:
->>> On 01/11/2012 15:13, Miles Fidelman wrote:
->>>> Phil Turmel wrote:
->>>>> I strongly encourage you to run "smartctl -l scterc /dev/sdX" for 
->>>>> each
->>>>> of your drives.  For any drive that warns that it doesn't support SCT
->>>>> ERC, set the controller device timeout to 180 like so:
->>>>>
->>>>> echo 180 >/sys/block/sdX/device/timeout
->>>>>
->>>>> If the report says read or write ERC is disabled, run "smartctl -l
->>>>> scterc,70,70 /dev/sdX" to set it to 7.0 seconds.
->>>>>
->>>>> You then set up a boot-time script to do these adjustments at every
->>>>> restart.
->>>>
->>>> Sounds like a very bad idea if your drive is part of a RAID array.
->>>
->>> Either of these - the scterc if you can, the device timeout if you
->>> can't - are an excellent idea if you are using a desktop drive as part
->>> of a md RAID array. Why do you think otherwise?
->>
->> If I'm seeing that kind of device timeout, I want it out of my array,
->> and I want an alert telling me to replace it.  Otherwise my server's
->> performance goes to s*&t.
+On 01/11/12 16:01, Wolfgang Denk wrote:
+> Dear David,
 >
-> You might not want that kind of device timeout, but as you've made 
-> clear earlier in this thread, you wouldn't use desktop drives in md 
-> RAID, so this doesn't really apply to you.
+> In message <50922FA4.7070702@hesbynett.no> you wrote:
+>>
+>> If you make your big raid1 pair an LVM physical volume, you can split it
+>> into logical volumes as and when you want, and re-size them whenever
+>> necessary.  Note, however, that the unpartitioned space within the LVM
+>> physical volume is still "used" as far as the SSD is concerned, since
+>> the initial raid1 synchronisation has written to it.  So only space
+>
+> What if the creation of the array was done with "--assume-clean" ?
+>
 
-Except for the time I learned this the hard way.
+I think in that case you will avoid writing to the disks - but you will 
+have trouble if you try to check or scrub the disk, or if it runs a 
+resync due to an unclean shutdown.
 
+I suppose new SSDs may consistently return all zeros or all ones when 
+read - so if they are consistent then you should be fine to 
+"--assume-clean" (for raid1).
 
+However, I think that resyncs currently write data to the second drive 
+without checking if it is out of sync, which would put you back where 
+you started.  (I believe there are patches on their way to change that 
+behaviour to save writes on SSDs - but re-writing everything on the 
+second disk is the fastest resync method for normal hard disk setups.)
 
--- 
-In theory, there is no difference between theory and practice.
-In practice, there is.   .... Yogi Berra
 
