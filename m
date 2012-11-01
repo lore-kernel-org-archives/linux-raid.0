@@ -1,44 +1,44 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Best way (only?) to setup SSD's for using TRIM
-Date: Thu, 01 Nov 2012 17:41:28 +0100
-Message-ID: <5092A638.8060307@hesbynett.no>
-References: <508D808A.7040100@curtronics.com> <508FA2C6.2050800@hesbynett.no> <508FE44A.3040507@curtronics.com> <508FF85F.1030308@hesbynett.no> <Pine.LNX.4.64.1210301306470.20143@router.curtronics.com> <B371ADF3-F328-4E1B-A6D2-87DE1974D8FF@colorremedies.com> <5090E239.9040302@hesbynett.no> <50916132.3010405@curtronics.com> <50918432.906@hesbynett.no> <5091D63E.1080007@curtronics.com> <50922FA4.7070702@hesbynett.no> <20121101150144.6BA1D2005D0@gemini.denx.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Sebastian Hegler <sebastian.hegler@tu-dresden.de>
+Subject: mdadm recovery after HW failure: missing blocks at the end
+Date: Thu, 1 Nov 2012 22:03:17 +0100
+Message-ID: <976F9B53-9E94-4684-B714-6F1FFD4FBFEF@tu-dresden.de>
+Mime-Version: 1.0 (Apple Message framework v1283)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121101150144.6BA1D2005D0@gemini.denx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
-Cc: Curtis J Blank <curt@curtronics.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On 01/11/12 16:01, Wolfgang Denk wrote:
-> Dear David,
->
-> In message <50922FA4.7070702@hesbynett.no> you wrote:
->>
->> If you make your big raid1 pair an LVM physical volume, you can split it
->> into logical volumes as and when you want, and re-size them whenever
->> necessary.  Note, however, that the unpartitioned space within the LVM
->> physical volume is still "used" as far as the SSD is concerned, since
->> the initial raid1 synchronisation has written to it.  So only space
->
-> What if the creation of the array was done with "--assume-clean" ?
->
+Hello all, hello Neil!
 
-I think in that case you will avoid writing to the disks - but you will 
-have trouble if you try to check or scrub the disk, or if it runs a 
-resync due to an unclean shutdown.
+Please help!
 
-I suppose new SSDs may consistently return all zeros or all ones when 
-read - so if they are consistent then you should be fine to 
-"--assume-clean" (for raid1).
+After a host controller failure, our md RAIDs failed.
 
-However, I think that resyncs currently write data to the second drive 
-without checking if it is out of sync, which would put you back where 
-you started.  (I believe there are patches on their way to change that 
-behaviour to save writes on SSDs - but re-writing everything on the 
-second disk is the fastest resync method for normal hard disk setups.)
+So far, I've managed to find the data again (see below), there's only some bytes in the end missing. However, these bits are important.
+
+I am using git mdadm, as it supports "Data Offset" setting ("http://www.spinics.net/lists/raid/msg38695.html"), making my mdadm invocation look like this:
+
+./mdadm --create /dev/md/scratch2G --assume-clean -l 6 -n 15 --metadata=1.2 -p ls -c 128 /dev/sdb:432s /dev/sdc:432s /dev/sdd:432s /dev/sde:432s /dev/sdf:432s /dev/sdg:432s /dev/sdh:432s /dev/sdi:432s /dev/sdj:432s /dev/sdk:432s missing /dev/sdl:432s /dev/sdm:432s /dev/sdn:432s /dev/sdo:432s
+
+This gives me a valid FS signature on the assumed-clean device. However, running xfs_repair gives me the error message:
+
+xfs_repair: error - read only 0 of 512 bytes
 
 
+Digging deeper into the logs I found a size mismatch between the array re-created as shown above and the original setup:
+(26005181562880-26005183266816)/(1024*13) = -128 kiB per device (a RAID6 with 15 devices has 13 "data" devices). Trying to fix this by passing a data size (" -z 1953514368 ") to the command mentioned above results in:
+
+mdadm: /dev/sdb is smaller than given size. 1953514240K < 1953514368K + metadata
+[SNIP ... same message for all 14 devices ... ]
+
+So, I've got two questions: 
+* Did mdadm (or the kernel md driver) write to the end area of the disk?
+* Is it possible to make mdadm give me back the 128kiB at the end of each device? There's 88kiB left on each disk; this used to be enough when I created the original array in 2010.
+
+Thanks a lot!
+
+
+Yours,
+Sebastian
