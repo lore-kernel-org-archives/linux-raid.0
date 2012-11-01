@@ -1,38 +1,35 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: Best way (only?) to setup SSD's for using TRIM
-Date: Thu, 01 Nov 2012 16:01:44 +0100
-Message-ID: <20121101150144.6BA1D2005D0@gemini.denx.de>
-References: <508D808A.7040100@curtronics.com> <508FA2C6.2050800@hesbynett.no> <508FE44A.3040507@curtronics.com> <508FF85F.1030308@hesbynett.no> <Pine.LNX.4.64.1210301306470.20143@router.curtronics.com> <B371ADF3-F328-4E1B-A6D2-87DE1974D8FF@colorremedies.com> <5090E239.9040302@hesbynett.no> <50916132.3010405@curtronics.com> <50918432.906@hesbynett.no> <5091D63E.1080007@curtronics.com> <50922FA4.7070702@hesbynett.no>
+From: Miles Fidelman <mfidelman@meetinghouse.net>
+Subject: Re: 3TB drives failure rate (summary)
+Date: Thu, 01 Nov 2012 11:13:54 -0400
+Message-ID: <509291B2.5000907@meetinghouse.net>
+References: <11510711257.20121028131527@oudeis.org> <508D61A1.7020106@wildgooses.com> <508D65CF.1080904@gmail.com> <508DADC3.4080104@shiftmail.org> <508DB08D.20002@meetinghouse.net> <508DC6E9.8070001@shiftmail.org> <508DC922.7040400@meetinghouse.net> <20121029102919.1134a797@natsu> <508E3626.8080404@hesbynett.no> <508E7E68.1030202@turmel.org> <1494377384.20121031005457@oudeis.org> <50911AFF.9020707@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <50922FA4.7070702@hesbynett.no>
+In-Reply-To: <50911AFF.9020707@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: Curtis J Blank <curt@curtronics.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear David,
-
-In message <50922FA4.7070702@hesbynett.no> you wrote:
+Phil Turmel wrote:
+> I strongly encourage you to run "smartctl -l scterc /dev/sdX" for each
+> of your drives.  For any drive that warns that it doesn't support SCT
+> ERC, set the controller device timeout to 180 like so:
 >
-> If you make your big raid1 pair an LVM physical volume, you can split it 
-> into logical volumes as and when you want, and re-size them whenever 
-> necessary.  Note, however, that the unpartitioned space within the LVM 
-> physical volume is still "used" as far as the SSD is concerned, since 
-> the initial raid1 synchronisation has written to it.  So only space 
+> echo 180 >/sys/block/sdX/device/timeout
+>
+> If the report says read or write ERC is disabled, run "smartctl -l
+> scterc,70,70 /dev/sdX" to set it to 7.0 seconds.
+>
+> You then set up a boot-time script to do these adjustments at every restart.
+>
 
-What if the creation of the array was done with "--assume-clean" ?
+Sounds like a very bad idea if your drive is part of a RAID array.
 
-Best regards,
 
-Wolfgang Denk
 
 -- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-Common sense and a sense of humor  are  the  same  thing,  moving  at
-different speeds.  A sense of humor is just common sense, dancing.
-                                                        - Clive James
+In theory, there is no difference between theory and practice.
+In practice, there is.   .... Yogi Berra
+
