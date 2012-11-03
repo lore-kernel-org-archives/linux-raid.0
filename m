@@ -1,56 +1,49 @@
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH 3/16] drivers/md/raid5.c: use WARN
-Date: Sat,  3 Nov 2012 11:58:24 +0100
-Message-ID: <1351940317-14812-4-git-send-email-Julia.Lawall@lip6.fr>
-References: <1351940317-14812-1-git-send-email-Julia.Lawall@lip6.fr>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1351940317-14812-1-git-send-email-Julia.Lawall@lip6.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: kernel-janitors@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Milan Broz <mbroz@redhat.com>
+Subject: Re: [PATCH] Remove VLAIS usage from dm-crypt
+Date: Sat, 03 Nov 2012 20:30:08 +0100
+Message-ID: <509570C0.30208@redhat.com>
+References: <1351620956-17583-1-git-send-email-behanw@converseincode.com> <1351620956-17583-2-git-send-email-behanw@converseincode.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1351620956-17583-2-git-send-email-behanw@converseincode.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Behan Webster <behanw@converseincode.com>
+Cc: agk@redhat.com, dm-devel@redhat.com, linux-raid@vger.kernel.org, =?UTF-8?B?SmFuLVNpbW9uIE3DtmxsZXI=?= <dl9pf@gmx.de>, pageexec@freemail.hu
 List-Id: linux-raid.ids
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+On 10/30/2012 07:15 PM, Behan Webster wrote:
+> From: Jan-Simon M=C3=B6ller <dl9pf@gmx.de>
+>=20
+> The use of variable length arrays in structs (VLAIS) in the Linux Ker=
+nel code
+> precludes the use of compilers which don't implement VLAIS (for insta=
+nce the
+> Clang compiler). This patch instead allocates the appropriate amount =
+of memory
+> using an char array.
 
-Use WARN rather than printk followed by WARN_ON(1), for conciseness.
+The dmcrypt code should use the same code practices as crypto API.
 
-A simplified version of the semantic patch that makes this transformation
-is as follows: (http://coccinelle.lip6.fr/)
+Apparently, your approach was not accepted there
 
-// <smpl>
-@@
-expression list es;
-@@
+http://article.gmane.org/gmane.linux.kernel/1386451
+http://article.gmane.org/gmane.linux.kernel.cryptoapi/7993
 
--printk(
-+WARN(1,
-  es);
--WARN_ON(1);
-// </smpl>
+> +	char sdesc[sizeof(struct shash_desc)
+> +		+ crypto_shash_descsize(lmk->hash_tfm)
+> +		+ CRYPTO_MINALIGN] CRYPTO_MINALIGN_ATTR;
+> +	struct shash_desc *desc =3D (struct shash_desc *)sdesc;
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+I would like to see kenrel compilable by Clang but obfuscating the code
+this way is perhaps not the ideal way.
 
----
- drivers/md/raid5.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Until it is accepted in crypto layer, NACK.
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 320df0c..8c3b9bb 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -373,13 +373,11 @@ static void init_stripe(struct stripe_head *sh, sector_t sector, int previous)
- 		struct r5dev *dev = &sh->dev[i];
- 
- 		if (dev->toread || dev->read || dev->towrite || dev->written ||
--		    test_bit(R5_LOCKED, &dev->flags)) {
--			printk(KERN_ERR "sector=%llx i=%d %p %p %p %p %d\n",
-+		    test_bit(R5_LOCKED, &dev->flags))
-+			WARN(1, KERN_ERR "sector=%llx i=%d %p %p %p %p %d\n",
- 			       (unsigned long long)sh->sector, i, dev->toread,
- 			       dev->read, dev->towrite, dev->written,
- 			       test_bit(R5_LOCKED, &dev->flags));
--			WARN_ON(1);
--		}
- 		dev->flags = 0;
- 		raid5_build_block(sh, i, previous);
- 	}
+Milan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
