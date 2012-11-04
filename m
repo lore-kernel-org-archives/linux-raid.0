@@ -1,49 +1,18 @@
-From: Milan Broz <mbroz@redhat.com>
-Subject: Re: [PATCH] Remove VLAIS usage from dm-crypt
-Date: Sat, 03 Nov 2012 20:30:08 +0100
-Message-ID: <509570C0.30208@redhat.com>
-References: <1351620956-17583-1-git-send-email-behanw@converseincode.com> <1351620956-17583-2-git-send-email-behanw@converseincode.com>
+From: Julia Lawall <julia.lawall@lip6.fr>
+Subject: merging printk and WARN
+Date: Sun, 4 Nov 2012 21:25:53 +0100 (CET)
+Message-ID: <alpine.DEB.2.02.1211042120200.1960@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1351620956-17583-2-git-send-email-behanw@converseincode.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Behan Webster <behanw@converseincode.com>
-Cc: agk@redhat.com, dm-devel@redhat.com, linux-raid@vger.kernel.org, =?UTF-8?B?SmFuLVNpbW9uIE3DtmxsZXI=?= <dl9pf@gmx.de>, pageexec@freemail.hu
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, airlied@linux.ie, netdev@vger.kernel.org, arnd@arndb.de, joern@logfs.org, chris.mason@fusionio.com, m@bues.ch, jejb@parisc-linux.org, faisal.latif@intel.com, neilb@suse.de, gregkh@linuxfoundation.org, JBottomley@parallels.com, swise@chelsio.com, achim_leubner@adaptec.comswise@chelsio.com, tytso@mit.edu
+Cc: dri-devel@lists.freedesktop.org, jason.wessel@windriver.com, kgdb-bugreport@lists.sourceforge.net, Prasad Joshi <prasadjoshi.linux@gmail.com>, logfs@logfs.org, linux-btrfs@vger.kernel.org, Helge Deller <deller@gmx.de>, linux-parisc@vger.kernel.org, Roland Dreier <roland@kernel.org>, Sean Hefty <sean.hefty@intel.com>, hal.rosenstock@gmail.com, linux-rdma@vger.kernel.org, linux-raid@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Andreas Dilger <adilger.kernel@dilger.ca>, linux-ext4@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/30/2012 07:15 PM, Behan Webster wrote:
-> From: Jan-Simon M=C3=B6ller <dl9pf@gmx.de>
->=20
-> The use of variable length arrays in structs (VLAIS) in the Linux Ker=
-nel code
-> precludes the use of compilers which don't implement VLAIS (for insta=
-nce the
-> Clang compiler). This patch instead allocates the appropriate amount =
-of memory
-> using an char array.
+It looks like these patches were not a good idea, because in each case the 
+printk provides an error level, and WARN then provides another one.
 
-The dmcrypt code should use the same code practices as crypto API.
+Sorry for the noise.
 
-Apparently, your approach was not accepted there
-
-http://article.gmane.org/gmane.linux.kernel/1386451
-http://article.gmane.org/gmane.linux.kernel.cryptoapi/7993
-
-> +	char sdesc[sizeof(struct shash_desc)
-> +		+ crypto_shash_descsize(lmk->hash_tfm)
-> +		+ CRYPTO_MINALIGN] CRYPTO_MINALIGN_ATTR;
-> +	struct shash_desc *desc =3D (struct shash_desc *)sdesc;
-
-I would like to see kenrel compilable by Clang but obfuscating the code
-this way is perhaps not the ideal way.
-
-Until it is accepted in crypto layer, NACK.
-
-Milan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+julia
