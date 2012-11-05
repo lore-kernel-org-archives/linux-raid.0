@@ -1,24 +1,64 @@
-From: David Sterba <dave@jikos.cz>
-Subject: Re: merging printk and WARN
-Date: Mon, 5 Nov 2012 16:42:32 +0100
-Message-ID: <20121105154232.GL3102@twin.jikos.cz>
-References: <alpine.DEB.2.02.1211042120200.1960@localhost6.localdomain6>
-Reply-To: dave@jikos.cz
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Problem with DISCARD and RAID5
+Date: Tue, 6 Nov 2012 08:48:46 +1100
+Message-ID: <20121105214846.GM29378@dastard>
+References: <20121101173854.62061307@notabene.brown>
+ <20121102014058.GA20526@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ext4-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1211042120200.1960@localhost6.localdomain6>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: linux-kernel@vger.kernel.org, airlied@linux.ie, netdev@vger.kernel.org, arnd@arndb.de, joern@logfs.org, chris.mason@fusionio.com, m@bues.ch, jejb@parisc-linux.org, faisal.latif@intel.com, neilb@suse.de, gregkh@linuxfoundation.org, JBottomley@parallels.com, swise@chelsio.com, achim_leubner@adaptec.com, tytso@mit.edu, dri-devel@lists.freedesktop.org, jason.wessel@windriver.com, kgdb-bugreport@lists.sourceforge.net, Prasad Joshi <prasadjoshi.linux@gmail.com>, logfs@logfs.org, linux-btrfs@vger.kernel.org, Helge Deller <deller@gmx.de>, linux-parisc@vger.kernel.org, Roland Dreier <roland@kernel.org>, Sean Hefty <sean.hefty@intel.com>, hal.rosenstock@gmail.com, linux-rdma@vger.kernel.org, linux-raid@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Andreas Dilger <adilger.kernel@dilger.ca>, linux-ext4@vger.kernel.org
+In-Reply-To: <20121102014058.GA20526@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: NeilBrown <neilb@suse.de>, linux RAID <linux-raid@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, Nov 04, 2012 at 09:25:53PM +0100, Julia Lawall wrote:
-> It looks like these patches were not a good idea, because in each case the
-> printk provides an error level, and WARN then provides another one.
+On Fri, Nov 02, 2012 at 09:40:58AM +0800, Shaohua Li wrote:
+> On Thu, Nov 01, 2012 at 05:38:54PM +1100, NeilBrown wrote:
+> > 
+> > Hi Shaohua,
+> >  I've been doing some testing and discovered a problem with your discard
+> >  support for RAID5.
+> > 
+> >  The code in blkdev_issue_discard assumes that the 'granularity' is a power
+> >  of 2, and for example subtracts 1 to get a mask.
+> > 
+> >  However RAID5 sets the granularity to be the stripe size which often is not
+> >  a power of two.  When this happens you can easily get into an infinite loop.
+> > 
+> >  I suspect that to make this work properly, blkdev_issue_discard will need to
+> >  be changed to allow 'granularity' to be an arbitrary value.
+> >  When it is a power of two, the current masking can be used.
+> >  When it is anything else, it will need to use sector_div().
+> 
+> Yep, looks we need use sector_div. And this isn't the only problem. discard
+> request can be merged, and the merge check only checks max_discard_sectors.
+> That means the split requests in blkdev_issue_discard can be merged again. The
+> split nerver works.
+> 
+> I'm wondering what's purpose of discard_alignment and discard_granularity. Are
+> there devices with discard_granularity not 1 sector?
 
-I think this is not a problem within btrfs at the place where this has
-changed.
+Most certainly. Thin provisioned storage often has granularity in the
+order of megabytes....
 
-david
+> If bio isn't discard
+> aligned, what device will do?
+
+Up to the device.
+
+> Further, why driver handles alignment/granularity
+> if device will ignore misaligned request.
+
+When you send a series of sequential unaligned requests, the device
+may ignore them all. Hence you end up with nothing being discarded,
+even though the entire range being discarded is much, much larger
+than the discard granularity....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
