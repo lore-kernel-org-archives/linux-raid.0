@@ -1,75 +1,67 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: Re: [PATCH 1/2] md:Avoid write invalid address if read_seqretry returned true.
-Date: Tue, 6 Nov 2012 19:05:07 +0800
-Message-ID: <201211061905037019319@gmail.com>
-References: <201211061712569914353@gmail.com> <20121106211455.417b35f1@notabene.brown> <201211061836292577626@gmail.com>,
-	<20121106220114.40b8fbc2@notabene.brown>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: Jens Axboe <jaxboe@fusionio.com>
+Subject: [PATCH] Fix deadlock with request based dm and some drivers
+Date: Tue, 6 Nov 2012 12:29:03 +0100
+Message-ID: <5098F47F.9030201@fusionio.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, zhuwenfeng <zhuwenfeng@kedacom.com>
+To: Alasdair Kergon <agk@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Pk9uIFR1ZSwgNiBOb3YgMjAxMiAxODozNjozMyArMDgwMCBtYWppYW5wZW5nIDxtYWppYW5wZW5n
-QGdtYWlsLmNvbT4gd3JvdGU6DQo+DQo+PiA+T24gVHVlLCA2IE5vdiAyMDEyIDE3OjEzOjAwICsw
-ODAwIG1hamlhbnBlbmcgPG1hamlhbnBlbmdAZ21haWwuY29tPiB3cm90ZToNCj4+ID4NCj4+ID4+
-IElmIHJlYWRfc2VxcmV0cnkgcmV0dXJuZWQgdHJ1ZSBhbmQgYmJwIHdhcyBjaGFuZ2VkLCBpdCB3
-aWxsIHdyaXRlDQo+PiA+PiBpbnZhbGlkIGFkZHJlc3Mgd2hpY2ggY2FuIGNhdXNlIHNvbWUgc2Vy
-aW91cyBwcm9ibGVtLg0KPj4gPj4gDQo+PiA+PiBUaGlzIGJ1ZyB3YXMgaW50cm9kdWNlZCBieSBj
-b21taXQgdjMuMC1yYzctMTMwLWcyNjk5YjY3Lg0KPj4gPj4gU28gZml4IGlzIHN1aXRhYmxlIGZv
-ciAzLjAueSB0aHJ1IDMuNi55Lg0KPj4gPj4gDQo+PiA+PiBSZXBvcnRlZC1ieTogemh1d2VuZmVu
-Z0BrZWRhY29tLmNvbQ0KPj4gPj4gVGVzdGVkLWJ5OiB6aHV3ZW5mZW5nQGtlZGFjb20uY29tDQo+
-PiA+PiBDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0KPj4gPj4gU2lnbmVkLW9mZi1ieTogSmlh
-bnBlbmcgTWEgPG1hamlhbnBlbmdAZ21haWwuY29tPg0KPj4gPj4gLS0tDQo+PiA+PiAgZHJpdmVy
-cy9tZC9tZC5jIHwgICAgNCArKy0tDQo+PiA+PiAgMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9u
-cygrKSwgMiBkZWxldGlvbnMoLSkNCj4+ID4+IA0KPj4gPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
-bWQvbWQuYyBiL2RyaXZlcnMvbWQvbWQuYw0KPj4gPj4gaW5kZXggOWFiNzY4YS4uZDYzYWE3OCAx
-MDA2NDQNCj4+ID4+IC0tLSBhL2RyaXZlcnMvbWQvbWQuYw0KPj4gPj4gKysrIGIvZHJpdmVycy9t
-ZC9tZC5jDQo+PiA+PiBAQCAtMTgwNSwxNSArMTgwNSwxNSBAQCBzdGF0aWMgdm9pZCBzdXBlcl8x
-X3N5bmMoc3RydWN0IG1kZGV2ICptZGRldiwgc3RydWN0IG1kX3JkZXYgKnJkZXYpDQo+PiA+PiAg
-CQltZF9lcnJvcihtZGRldiwgcmRldik7DQo+PiA+PiAgCWVsc2Ugew0KPj4gPj4gIAkJc3RydWN0
-IGJhZGJsb2NrcyAqYmIgPSAmcmRldi0+YmFkYmxvY2tzOw0KPj4gPj4gLQkJdTY0ICpiYnAgPSAo
-dTY0ICopcGFnZV9hZGRyZXNzKHJkZXYtPmJiX3BhZ2UpOw0KPj4gPj4gIAkJdTY0ICpwID0gYmIt
-PnBhZ2U7DQo+PiA+PiAgCQlzYi0+ZmVhdHVyZV9tYXAgfD0gY3B1X3RvX2xlMzIoTURfRkVBVFVS
-RV9CQURfQkxPQ0tTKTsNCj4+ID4+ICAJCWlmIChiYi0+Y2hhbmdlZCkgew0KPj4gPj4gIAkJCXVu
-c2lnbmVkIHNlcTsNCj4+ID4+ICsJCQl1NjQgKmJicDsNCj4+ID4+ICANCj4+ID4+ICByZXRyeToN
-Cj4+ID4+ICsJCQliYnAgPSAodTY0ICopcGFnZV9hZGRyZXNzKHJkZXYtPmJiX3BhZ2UpOw0KPj4g
-Pj4gIAkJCXNlcSA9IHJlYWRfc2VxYmVnaW4oJmJiLT5sb2NrKTsNCj4+ID4+IC0NCj4+ID4+ICAJ
-CQltZW1zZXQoYmJwLCAweGZmLCBQQUdFX1NJWkUpOw0KPj4gPj4gIA0KPj4gPj4gIAkJCWZvciAo
-aSA9IDAgOyBpIDwgYmItPmNvdW50IDsgaSsrKSB7DQo+PiA+DQo+PiA+DQo+PiA+Tm8uDQo+PiA+
-VGhlIGNvbnRlbnRzIG9mIHRoZSBwYWdlIG1pZ2h0IGNoYW5nZSwgYnV0IGl0IGlzIGFsd2F5cyB0
-aGUgc2FtZSBwYWdlLCBzbyBpdA0KPj4gPmFsd2F5cyBoYXMgdGhlIHNhbWUgYWRkcmVzcywgc28g
-ImJicCIgaXMgZ3VhcmFudGVlZCB0byBiZSBzdGFibGUuDQo+PiA+DQo+PiA+TmVpbEJyb3duDQo+
-PiA+DQo+PiBJcyBteSB1bmRlcnN0YW5kIHdyb25nPw0KPj4gPnU2NCAqYmJwID0gKHU2NCAqKXBh
-Z2VfYWRkcmVzcyhyZGV2LT5iYl9wYWdlKTsNCj4+ID4JCXU2NCAqcCA9IGJiLT5wYWdlOw0KPj4g
-PgkJc2ItPmZlYXR1cmVfbWFwIHw9IGNwdV90b19sZTMyKE1EX0ZFQVRVUkVfQkFEX0JMT0NLUyk7
-DQo+PiA+CQlpZiAoYmItPmNoYW5nZWQpIHsNCj4+ID4JCQl1bnNpZ25lZCBzZXE7DQo+PiANCj4+
-ID5yZXRyeToNCj4+ID4JCQlzZXEgPSByZWFkX3NlcWJlZ2luKCZiYi0+bG9jayk7DQo+PiANCj4+
-ID4JCQltZW1zZXQoYmJwLCAweGZmLCBQQUdFX1NJWkUpOw0KPj4gDQo+PiA+CQkJZm9yIChpID0g
-MCA7IGkgPCBiYi0+Y291bnQgOyBpKyspIHsNCj4+ID4JCQkJdTY0IGludGVybmFsX2JiID0gKnAr
-KzsNCj4+ID4JCQkJdTY0IHN0b3JlX2JiID0gKChCQl9PRkZTRVQoaW50ZXJuYWxfYmIpIDw8IDEw
-KQ0KPj4gPgkJCQkJCXwgQkJfTEVOKGludGVybmFsX2JiKSk7DQo+PiA+CQkJCSpiYnArKyA9IGNw
-dV90b19sZTY0KHN0b3JlX2JiKTsNCj4+IEkgdGhpbmsgYmJwIHdpbGwgYmUgY2hhbmdlZC4gSXMg
-b2s/DQo+DQo+DQpNeSBwYXRjaCBtaXNzZWQgb25lIHBhcmFtZXRlcjoNCj4+ID4JCQkJdTY0IGlu
-dGVybmFsX2JiID0gKnArKzsNClNvIHRoZSBjb2RlIHNob3VsZCBiZToNCmRpZmYgLS1naXQgYS9k
-cml2ZXJzL21kL21kLmMgYi9kcml2ZXJzL21kL21kLmMNCmluZGV4IDlhYjc2OGEuLjFmODZjNDgg
-MTAwNjQ0DQotLS0gYS9kcml2ZXJzL21kL21kLmMNCisrKyBiL2RyaXZlcnMvbWQvbWQuYw0KQEAg
-LTE4MTcsMTAgKzE4MTcsMTAgQEAgcmV0cnk6DQogICAgICAgICAgICAgICAgICAgICAgICBtZW1z
-ZXQoYmJwLCAweGZmLCBQQUdFX1NJWkUpOw0KIA0KICAgICAgICAgICAgICAgICAgICAgICAgZm9y
-IChpID0gMCA7IGkgPCBiYi0+Y291bnQgOyBpKyspIHsNCi0gICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgdTY0IGludGVybmFsX2JiID0gKnArKzsNCisgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgdTY0IGludGVybmFsX2JiID0gcFtpXTsNCiAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgdTY0IHN0b3JlX2JiID0gKChCQl9PRkZTRVQoaW50ZXJuYWxfYmIpIDw8IDEwKQ0K
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCBCQl9MRU4o
-aW50ZXJuYWxfYmIpKTsNCi0gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKmJicCsrID0g
-Y3B1X3RvX2xlNjQoc3RvcmVfYmIpOw0KKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBi
-YnBbaV0gPSBjcHVfdG9fbGU2NChzdG9yZV9iYik7DQogICAgICAgICAgICAgICAgICAgICAgICB9
-DQogICAgICAgICAgICAgICAgICAgICAgICBiYi0+Y2hhbmdlZCA9IDA7DQogICAgICAgICAgICAg
-ICAgICAgICAgICBpZiAocmVhZF9zZXFyZXRyeSgmYmItPmxvY2ssIHNlcSkpDQoNCg0KSSB0aGlu
-ayB0aGlzIGlzIHlvdXIgZmlyc3Qgd2FudGVkIQ==
+Hi Alasdair,
+
+I recently fixed a deadlock for a customer we have with
+the below patch. I have queued it up in my tree as not
+to lose it. Can I have an ack from you, or do you want
+to submit it yourself? I've marked it stable as well.
+
+
+From 8ca211056519ac06bc96fb134dca1f8eb2141407 Mon Sep 17 00:00:00 2001
+From: Jens Axboe <axboe@kernel.dk>
+Date: Tue, 6 Nov 2012 12:24:26 +0100
+Subject: [PATCH] dm: fix deadlock with request based dm and queue request_fn
+ recursion
+
+Request based dm attempts to re-run the request queue off the
+request completion path. If used with a driver that potentially does
+end_io from its request_fn, we could deadlock trying to recurse
+back into request dispatch. Fix this by punting the request queue
+run to kblockd.
+
+Tested to fix a quickly reproducible deadlock in such a scenario.
+
+Cc: stable@kernel.org
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+---
+ drivers/md/dm.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 02db918..77e6eff 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -740,8 +740,14 @@ static void rq_completed(struct mapped_device *md, int rw, int run_queue)
+ 	if (!md_in_flight(md))
+ 		wake_up(&md->wait);
+ 
++	/*
++	 * Run this off this callpath, as drivers could invoke end_io while
++	 * inside their request_fn (and holding the queue lock). Calling
++	 * back into ->request_fn() could deadlock attempting to grab the
++	 * queue lock again.
++	 */
+ 	if (run_queue)
+-		blk_run_queue(md->queue);
++		blk_run_queue_async(md->queue);
+ 
+ 	/*
+ 	 * dm_put() must be at the end of this function. See the comment above
+-- 
+1.7.12.rc3
+
+
+-- 
+Jens Axboe
 
