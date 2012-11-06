@@ -1,87 +1,55 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/2] md: Reassigned the parameters if read_seqretry
- returned true in func md_is_badblock.
-Date: Tue, 6 Nov 2012 21:19:07 +1100
-Message-ID: <20121106211907.7df50c4a@notabene.brown>
-References: <201211061713404301164@gmail.com>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH 1/2] md:Avoid write invalid address if read_seqretry returned true.
+Date: Tue, 6 Nov 2012 18:36:33 +0800
+Message-ID: <201211061836292577626@gmail.com>
+References: <201211061712569914353@gmail.com>,
+	<20121106211455.417b35f1@notabene.brown>
+Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/8YKc+wvwJmAcwV/K7cy4+h1"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201211061713404301164@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>, zhuwenfeng <zhuwenfeng@kedacom.com>
 List-Id: linux-raid.ids
 
---Sig_/8YKc+wvwJmAcwV/K7cy4+h1
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Pk9uIFR1ZSwgNiBOb3YgMjAxMiAxNzoxMzowMCArMDgwMCBtYWppYW5wZW5nIDxtYWppYW5wZW5n
+QGdtYWlsLmNvbT4gd3JvdGU6DQo+DQo+PiBJZiByZWFkX3NlcXJldHJ5IHJldHVybmVkIHRydWUg
+YW5kIGJicCB3YXMgY2hhbmdlZCwgaXQgd2lsbCB3cml0ZQ0KPj4gaW52YWxpZCBhZGRyZXNzIHdo
+aWNoIGNhbiBjYXVzZSBzb21lIHNlcmlvdXMgcHJvYmxlbS4NCj4+IA0KPj4gVGhpcyBidWcgd2Fz
+IGludHJvZHVjZWQgYnkgY29tbWl0IHYzLjAtcmM3LTEzMC1nMjY5OWI2Ny4NCj4+IFNvIGZpeCBp
+cyBzdWl0YWJsZSBmb3IgMy4wLnkgdGhydSAzLjYueS4NCj4+IA0KPj4gUmVwb3J0ZWQtYnk6IHpo
+dXdlbmZlbmdAa2VkYWNvbS5jb20NCj4+IFRlc3RlZC1ieTogemh1d2VuZmVuZ0BrZWRhY29tLmNv
+bQ0KPj4gQ2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcNCj4+IFNpZ25lZC1vZmYtYnk6IEppYW5w
+ZW5nIE1hIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4NCj4+IC0tLQ0KPj4gIGRyaXZlcnMvbWQvbWQu
+YyB8ICAgIDQgKystLQ0KPj4gIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDIgZGVs
+ZXRpb25zKC0pDQo+PiANCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL21kL21kLmMgYi9kcml2ZXJz
+L21kL21kLmMNCj4+IGluZGV4IDlhYjc2OGEuLmQ2M2FhNzggMTAwNjQ0DQo+PiAtLS0gYS9kcml2
+ZXJzL21kL21kLmMNCj4+ICsrKyBiL2RyaXZlcnMvbWQvbWQuYw0KPj4gQEAgLTE4MDUsMTUgKzE4
+MDUsMTUgQEAgc3RhdGljIHZvaWQgc3VwZXJfMV9zeW5jKHN0cnVjdCBtZGRldiAqbWRkZXYsIHN0
+cnVjdCBtZF9yZGV2ICpyZGV2KQ0KPj4gIAkJbWRfZXJyb3IobWRkZXYsIHJkZXYpOw0KPj4gIAll
+bHNlIHsNCj4+ICAJCXN0cnVjdCBiYWRibG9ja3MgKmJiID0gJnJkZXYtPmJhZGJsb2NrczsNCj4+
+IC0JCXU2NCAqYmJwID0gKHU2NCAqKXBhZ2VfYWRkcmVzcyhyZGV2LT5iYl9wYWdlKTsNCj4+ICAJ
+CXU2NCAqcCA9IGJiLT5wYWdlOw0KPj4gIAkJc2ItPmZlYXR1cmVfbWFwIHw9IGNwdV90b19sZTMy
+KE1EX0ZFQVRVUkVfQkFEX0JMT0NLUyk7DQo+PiAgCQlpZiAoYmItPmNoYW5nZWQpIHsNCj4+ICAJ
+CQl1bnNpZ25lZCBzZXE7DQo+PiArCQkJdTY0ICpiYnA7DQo+PiAgDQo+PiAgcmV0cnk6DQo+PiAr
+CQkJYmJwID0gKHU2NCAqKXBhZ2VfYWRkcmVzcyhyZGV2LT5iYl9wYWdlKTsNCj4+ICAJCQlzZXEg
+PSByZWFkX3NlcWJlZ2luKCZiYi0+bG9jayk7DQo+PiAtDQo+PiAgCQkJbWVtc2V0KGJicCwgMHhm
+ZiwgUEFHRV9TSVpFKTsNCj4+ICANCj4+ICAJCQlmb3IgKGkgPSAwIDsgaSA8IGJiLT5jb3VudCA7
+IGkrKykgew0KPg0KPg0KPk5vLg0KPlRoZSBjb250ZW50cyBvZiB0aGUgcGFnZSBtaWdodCBjaGFu
+Z2UsIGJ1dCBpdCBpcyBhbHdheXMgdGhlIHNhbWUgcGFnZSwgc28gaXQNCj5hbHdheXMgaGFzIHRo
+ZSBzYW1lIGFkZHJlc3MsIHNvICJiYnAiIGlzIGd1YXJhbnRlZWQgdG8gYmUgc3RhYmxlLg0KPg0K
+Pk5laWxCcm93bg0KPg0KSXMgbXkgdW5kZXJzdGFuZCB3cm9uZz8NCj51NjQgKmJicCA9ICh1NjQg
+KilwYWdlX2FkZHJlc3MocmRldi0+YmJfcGFnZSk7DQo+CQl1NjQgKnAgPSBiYi0+cGFnZTsNCj4J
+CXNiLT5mZWF0dXJlX21hcCB8PSBjcHVfdG9fbGUzMihNRF9GRUFUVVJFX0JBRF9CTE9DS1MpOw0K
+PgkJaWYgKGJiLT5jaGFuZ2VkKSB7DQo+CQkJdW5zaWduZWQgc2VxOw0KDQo+cmV0cnk6DQo+CQkJ
+c2VxID0gcmVhZF9zZXFiZWdpbigmYmItPmxvY2spOw0KDQo+CQkJbWVtc2V0KGJicCwgMHhmZiwg
+UEFHRV9TSVpFKTsNCg0KPgkJCWZvciAoaSA9IDAgOyBpIDwgYmItPmNvdW50IDsgaSsrKSB7DQo+
+CQkJCXU2NCBpbnRlcm5hbF9iYiA9ICpwKys7DQo+CQkJCXU2NCBzdG9yZV9iYiA9ICgoQkJfT0ZG
+U0VUKGludGVybmFsX2JiKSA8PCAxMCkNCj4JCQkJCQl8IEJCX0xFTihpbnRlcm5hbF9iYikpOw0K
+PgkJCQkqYmJwKysgPSBjcHVfdG9fbGU2NChzdG9yZV9iYik7DQpJIHRoaW5rIGJicCB3aWxsIGJl
+IGNoYW5nZWQuIElzIG9rPw0KPgkJCX0NCj4JCQliYi0+Y2hhbmdlZCA9IDA7DQo+CQkJaWYgKHJl
+YWRfc2VxcmV0cnkoJmJiLT5sb2NrLCBzZXEpKQ0KPgkJCQlnb3RvIHJldHJ5Ow0KDQoJ
 
-On Tue, 6 Nov 2012 17:13:44 +0800 majianpeng <majianpeng@gmail.com> wrote:
-
-> This bug was introduced by commit(v3.0-rc7-126-g2230dfe).
-> So fix is suitable for 3.0.y thru 3.6.y.
->=20
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
-> ---
->  drivers/md/md.c |    7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index d63aa78..541c74c 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -7936,9 +7936,9 @@ int md_is_badblock(struct badblocks *bb, sector_t s=
-, int sectors,
->  		   sector_t *first_bad, int *bad_sectors)
->  {
->  	int hi;
-> -	int lo =3D 0;
-> +	int lo;
->  	u64 *p =3D bb->page;
-> -	int rv =3D 0;
-> +	int rv;
->  	sector_t target =3D s + sectors;
->  	unsigned seq;
-> =20
-> @@ -7953,7 +7953,8 @@ int md_is_badblock(struct badblocks *bb, sector_t s=
-, int sectors,
-> =20
->  retry:
->  	seq =3D read_seqbegin(&bb->lock);
-> -
-> +	lo =3D 0;
-> +	rv =3D 0;
->  	hi =3D bb->count;
-> =20
->  	/* Binary search between lo and hi for 'target'
-
-Applied, thanks.
-
-NeilBrown
-
---Sig_/8YKc+wvwJmAcwV/K7cy4+h1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUJjkGznsnt1WYoG5AQKRRRAAvKLNCGmM86yqg6FaLnYUzf2MNYtQt3HB
-VmLx8z/7iwtyiF6qWq2+hI1FpVLkpN769N+2nxQvxqfmXVyusU6MaM1VuhDZwFca
-0pLgW/eid7WQS8oHu6uaS/yeir+p4AE3JHm/uOpTdbZrrpUo6/dXcR8Nc8DzFGpa
-nXGkguQ2YSBdM1XnSYOzAUJKXFvIFtIFeUa6szmYIxFoSZ4LTEwY95XLuQvHfVd7
-THqpkHBMkz0Jt4Oa1kUgUODYchsdwfLIzc83xXgku4nymXSsGd0/db1Jq8Jlp95B
-Eg1gzOmHTHMaQXvuzS4i38ruwAFgbeLHticj95BfCLov1k43JKjXdy3jlwGgl6bO
-liGqTX7HW6FN3sGvq8SN5bDvgIRnL7IeFoOMXchvGi13PI8z7fTZUDkHrKf8WN5w
-QrV6U8loX5RLo3Lgk3eIu3l+4GRC+GwDLfmBt/alxzV9MgmrlTQpIQ9D3VtDI1xR
-X2cldvtyduGp2ha0oodSLRSqQs0AoZIZNUfbyJNaKn60Ki6ZhL2m1KE8gRnAF+QA
-O4mJAJxFZaeAVNe0ew7rATQK5PqoDPK1uI7Bh+GdUfUVNSH44YFaF/wxX3T8C8iR
-HzmVRyUizHl2xZNxTB24EcgxUCfP3hjGdP6eU3ZGqJQT03oup8hILKKa/MtObf5u
-ctsW/agQpDA=
-=CzAW
------END PGP SIGNATURE-----
-
---Sig_/8YKc+wvwJmAcwV/K7cy4+h1--
