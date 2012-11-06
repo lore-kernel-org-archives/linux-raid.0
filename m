@@ -1,145 +1,90 @@
-From: Brad Campbell <brad@fnarfbargle.com>
-Subject: Problem with DISCARD and RAID10
-Date: Tue, 06 Nov 2012 17:32:26 +0800
-Message-ID: <5098D92A.3000503@fnarfbargle.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 1/2] md:Avoid write invalid address if read_seqretry
+ returned true.
+Date: Tue, 6 Nov 2012 21:14:55 +1100
+Message-ID: <20121106211455.417b35f1@notabene.brown>
+References: <201211061712569914353@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/hGG83FWbdaHyUJalTjTuIyc"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201211061712569914353@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux RAID <linux-raid@vger.kernel.org>, Shaohua Li <shli@kernel.org>
+To: majianpeng <majianpeng@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, zhuwenfeng <zhuwenfeng@kedacom.com>
 List-Id: linux-raid.ids
 
-G'day Shaohua,
+--Sig_/hGG83FWbdaHyUJalTjTuIyc
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I'm testing Vanilla 3.7.0-rc4 and bumping up against squillions of these :
+On Tue, 6 Nov 2012 17:13:00 +0800 majianpeng <majianpeng@gmail.com> wrote:
 
-[   41.094726] request botched: dev sdc: type=1, flags=122d8081
-[   41.094774]   sector 28317178, nr/cnr 0/32
-[   41.094815]   bio ffff8807fe885300, biotail ffff8807fe887300, buffer 
-           (null), len 0
-[   41.100045] request botched: dev sda: type=1, flags=122d8081
-[   41.100094]   sector 28317403, nr/cnr 0/32
-[   41.100134]   bio ffff8807fe885840, biotail ffff8807fe887840, buffer 
-           (null), len 0
-[   41.100718] request botched: dev sdb: type=1, flags=122d8081
-[   41.100767]   sector 28317179, nr/cnr 0/224
-[   41.100808]   bio ffff8807fe885a80, biotail ffff8807fe887d80, buffer 
-           (null), len 0
-[   41.104649] request botched: dev sdc: type=1, flags=122d8081
-[   41.104697]   sector 28317179, nr/cnr 0/224
-[   41.104738]   bio ffff8807fe886000, biotail ffff8807fe887300, buffer 
-           (null), len 0
-
-This is a staging system that is eventually intended for production use, 
-however it's not important at the moment and might make a good test mule 
-for a while.
-
-I'll lay out my whole background and config.
-
-I have 6 x 240GB SSD on a test bench (3 Intel 330 & 3 Samsung 830). I 
-have the three Samsung connected to the on-board AHCI ports and I have 
-the three Intel on a Marvell PCIe board serviced by sata_mv.
-
-System is an AMD FX8350 with 32G ram. Kernel is X86_64. Nothing else of 
-note.
-
-All drives pass individual read/write and filesystem trim tests (if I 
-just create the filesystem on the individual drive).
-
-All six drives are partitioned identically.
-
-root@test:~# sfdisk -d /dev/sda
-# partition table of /dev/sda
-unit: sectors
-
-/dev/sda1 : start=       63, size=   273042, Id=83, bootable
-/dev/sda2 : start=   273105, size=419441085, Id=83
-/dev/sda3 : start=        0, size=        0, Id= 0
-/dev/sda4 : start=        0, size=        0, Id= 0
+> If read_seqretry returned true and bbp was changed, it will write
+> invalid address which can cause some serious problem.
+>=20
+> This bug was introduced by commit v3.0-rc7-130-g2699b67.
+> So fix is suitable for 3.0.y thru 3.6.y.
+>=20
+> Reported-by: zhuwenfeng@kedacom.com
+> Tested-by: zhuwenfeng@kedacom.com
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
+> ---
+>  drivers/md/md.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 9ab768a..d63aa78 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -1805,15 +1805,15 @@ static void super_1_sync(struct mddev *mddev, str=
+uct md_rdev *rdev)
+>  		md_error(mddev, rdev);
+>  	else {
+>  		struct badblocks *bb =3D &rdev->badblocks;
+> -		u64 *bbp =3D (u64 *)page_address(rdev->bb_page);
+>  		u64 *p =3D bb->page;
+>  		sb->feature_map |=3D cpu_to_le32(MD_FEATURE_BAD_BLOCKS);
+>  		if (bb->changed) {
+>  			unsigned seq;
+> +			u64 *bbp;
+> =20
+>  retry:
+> +			bbp =3D (u64 *)page_address(rdev->bb_page);
+>  			seq =3D read_seqbegin(&bb->lock);
+> -
+>  			memset(bbp, 0xff, PAGE_SIZE);
+> =20
+>  			for (i =3D 0 ; i < bb->count ; i++) {
 
 
-Partition 1 on all drives is a bootable 6 way RAID-1 and not relevant 
-here (gets mounted as /boot and is ext2).
+No.
+The contents of the page might change, but it is always the same page, so it
+always has the same address, so "bbp" is guaranteed to be stable.
 
-The second partitions are configured in a RAID10 near 2, so there are 
-three pairs of mirrors that are striped together (Intel/Samsung x 3).
+NeilBrown
 
-root@test:~# mdadm --detail /dev/md2
-/dev/md2:
-         Version : 1.2
-   Creation Time : Thu Nov  1 20:11:38 2012
-      Raid Level : raid10
-      Array Size : 628767744 (599.64 GiB 643.86 GB)
-   Used Dev Size : 209589248 (199.88 GiB 214.62 GB)
-    Raid Devices : 6
-   Total Devices : 6
-     Persistence : Superblock is persistent
+--Sig_/hGG83FWbdaHyUJalTjTuIyc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-   Intent Bitmap : Internal
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-     Update Time : Tue Nov  6 17:07:13 2012
-           State : active
-  Active Devices : 6
-Working Devices : 6
-  Failed Devices : 0
-   Spare Devices : 0
+iQIVAwUBUJjjHznsnt1WYoG5AQLcDg//eGW0an3zQrYH7r61A7zcZvD5e59lySLg
+I9FfKeM+WT5NnWAzXgplk69it1aEdJaUvltOmS4F0uOKSZrEjlne/EmGf30ZDMv0
+YnOMD9z5H++uVhQ1aY4u9W2WbAuK6Vg+QQ6Al2THyYqFSVvjCIh/RuDW/LL14Onb
+NcU0nlHxYnlphNNj9Tk3I8LjQvNlIBbDG+Gd30LUUEjczyXxurzsC4D5LRM7fhRc
+DH/ioj/W860lXND/9WBgBOZI4vU1sysOIUtWf6EghT92/IQTsqLytbdaYYxs6OK/
+hdpc21AtpofcyDnJXORHCafLQlQ6WxpG9+X4J11OK8qb2r76LKM4o9ssEUkD9hXr
+/PKvQxL9A2Z8bfk/Soey6ngB/Q+Mmlt4UVfoj8jndkd31Jvw5onB5UzK6fxgx1bh
+iBjPWzJJAtYDeiwbf8vt1MxVwstbKqecuNwouL1kYpjWoVLPb4IgitV14cxdr6+f
+FB6XlV1ousyOAScf1dUSG7MdsCzSnz2SaUZYBGV1FS3YcCpangSb/L4tHd0Kawd2
+Ujwy43AX5UPsBgAvS4ldnnZ1+Jcn1zL8NlLmyCJWzOAchIERqEBKPgAGxDwGm0QS
+gxGnpjRGWVWWq8lmtFBjEUntvLoO3MvK/D8e/VH4C+s3uR8GyhOAURLsHKfjvcZV
+dVu3Ze1x+MY=
+=CX5j
+-----END PGP SIGNATURE-----
 
-          Layout : near=2
-      Chunk Size : 128K
-
-            Name : test:2  (local to host test)
-            UUID : abe7511b:5eb834e1:f425f2a9:3d3ebd56
-          Events : 842
-
-     Number   Major   Minor   RaidDevice State
-        0       8        2        0      active sync   /dev/sda2
-        1       8       66        1      active sync   /dev/sde2
-        2       8       18        2      active sync   /dev/sdb2
-        3       8       82        3      active sync   /dev/sdf2
-        4       8       34        4      active sync   /dev/sdc2
-        5       8       98        5      active sync   /dev/sdg2
-
-
-The array is partitioned :
-root@test:~# sfdisk -d /dev/md2
-# partition table of /dev/md2
-unit: sectors
-
-/dev/md2p1 : start=     3072, size= 41942016, Id=83
-/dev/md2p2 : start= 41945088, size= 83887104, Id=83
-/dev/md2p3 : start=125832192, size=1131703296, Id=83
-/dev/md2p4 : start=        0, size=        0, Id= 0
-
-All three partitions are default ext4 created with mke2fs -t ext4 /dev/blah
-
-The Intel drives support :
-            *    Data Set Management TRIM supported (limit 1 block)
-            *    Deterministic read data after TRIM
-
-The Samsung Drives support :
-            *    Data Set Management TRIM supported (limit 8 blocks)
-
-I don't use, test or intend to use discard as a filesystem option, 
-however on my other machines (with single or multiple non-RAID ssd's) I 
-batch fun fstrim once a week or so.
-
-Kernel version is vanilla git 3.7.0-rc4.
-
-When I run fstrim on a partition in the array :
-
-ie fstrim -v /home (where /home is on /dev/md2p2)
-
-I get a dmesg full of the messages quoted at the top of the mail.
-
-I did see some data corruption on one of the partitions that required a 
-re-format and re-load at one point, but I have been unable to reproduce 
-that.
-
-As this is a test system, a complete reformat and reload is mostly 
-automated and therefore loss or corruption is of little overall consequence.
-
-Please let me know if there is anything I can do to assist.
-
-Regards,
-Brad
+--Sig_/hGG83FWbdaHyUJalTjTuIyc--
