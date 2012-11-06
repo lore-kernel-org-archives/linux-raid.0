@@ -1,64 +1,70 @@
-From: Dave Chinner <david@fromorbit.com>
+From: Jens Axboe <axboe@kernel.dk>
 Subject: Re: Problem with DISCARD and RAID5
-Date: Tue, 6 Nov 2012 08:48:46 +1100
-Message-ID: <20121105214846.GM29378@dastard>
-References: <20121101173854.62061307@notabene.brown>
- <20121102014058.GA20526@kernel.org>
+Date: Tue, 06 Nov 2012 09:06:16 +0100
+Message-ID: <5098C4F8.9050700@kernel.dk>
+References: <20121101173854.62061307@notabene.brown> <20121102014058.GA20526@kernel.org> <20121105214846.GM29378@dastard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20121102014058.GA20526@kernel.org>
+In-Reply-To: <20121105214846.GM29378@dastard>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: NeilBrown <neilb@suse.de>, linux RAID <linux-raid@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, lkml <linux-kernel@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.de>, linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Nov 02, 2012 at 09:40:58AM +0800, Shaohua Li wrote:
-> On Thu, Nov 01, 2012 at 05:38:54PM +1100, NeilBrown wrote:
-> > 
-> > Hi Shaohua,
-> >  I've been doing some testing and discovered a problem with your discard
-> >  support for RAID5.
-> > 
-> >  The code in blkdev_issue_discard assumes that the 'granularity' is a power
-> >  of 2, and for example subtracts 1 to get a mask.
-> > 
-> >  However RAID5 sets the granularity to be the stripe size which often is not
-> >  a power of two.  When this happens you can easily get into an infinite loop.
-> > 
-> >  I suspect that to make this work properly, blkdev_issue_discard will need to
-> >  be changed to allow 'granularity' to be an arbitrary value.
-> >  When it is a power of two, the current masking can be used.
-> >  When it is anything else, it will need to use sector_div().
+On 2012-11-05 22:48, Dave Chinner wrote:
+> On Fri, Nov 02, 2012 at 09:40:58AM +0800, Shaohua Li wrote:
+>> On Thu, Nov 01, 2012 at 05:38:54PM +1100, NeilBrown wrote:
+>>>
+>>> Hi Shaohua,
+>>>  I've been doing some testing and discovered a problem with your discard
+>>>  support for RAID5.
+>>>
+>>>  The code in blkdev_issue_discard assumes that the 'granularity' is a power
+>>>  of 2, and for example subtracts 1 to get a mask.
+>>>
+>>>  However RAID5 sets the granularity to be the stripe size which often is not
+>>>  a power of two.  When this happens you can easily get into an infinite loop.
+>>>
+>>>  I suspect that to make this work properly, blkdev_issue_discard will need to
+>>>  be changed to allow 'granularity' to be an arbitrary value.
+>>>  When it is a power of two, the current masking can be used.
+>>>  When it is anything else, it will need to use sector_div().
+>>
+>> Yep, looks we need use sector_div. And this isn't the only problem. discard
+>> request can be merged, and the merge check only checks max_discard_sectors.
+>> That means the split requests in blkdev_issue_discard can be merged again. The
+>> split nerver works.
+>>
+>> I'm wondering what's purpose of discard_alignment and discard_granularity. Are
+>> there devices with discard_granularity not 1 sector?
 > 
-> Yep, looks we need use sector_div. And this isn't the only problem. discard
-> request can be merged, and the merge check only checks max_discard_sectors.
-> That means the split requests in blkdev_issue_discard can be merged again. The
-> split nerver works.
+> Most certainly. Thin provisioned storage often has granularity in the
+> order of megabytes....
+
+Can't really to to much about that...
+
+>> If bio isn't discard
+>> aligned, what device will do?
 > 
-> I'm wondering what's purpose of discard_alignment and discard_granularity. Are
-> there devices with discard_granularity not 1 sector?
+> Up to the device.
 
-Most certainly. Thin provisioned storage often has granularity in the
-order of megabytes....
+We should not send those down, if they are violating the restrictions
+set by the driver.
 
-> If bio isn't discard
-> aligned, what device will do?
+>> Further, why driver handles alignment/granularity
+>> if device will ignore misaligned request.
+> 
+> When you send a series of sequential unaligned requests, the device
+> may ignore them all. Hence you end up with nothing being discarded,
+> even though the entire range being discarded is much, much larger
+> than the discard granularity....
 
-Up to the device.
+That's just tough luck, unfortunately. Shaohua, I'd suggest sending down
+whatever discards you can, IFF they are aligned according to the
+restrictions being set. If that ends up not discarding to devices that
+have large alignment/size constraints, nothing we can do about that.
 
-> Further, why driver handles alignment/granularity
-> if device will ignore misaligned request.
-
-When you send a series of sequential unaligned requests, the device
-may ignore them all. Hence you end up with nothing being discarded,
-even though the entire range being discarded is much, much larger
-than the discard granularity....
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Jens Axboe
