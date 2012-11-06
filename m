@@ -1,90 +1,87 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/2] md:Avoid write invalid address if read_seqretry
- returned true.
-Date: Tue, 6 Nov 2012 21:14:55 +1100
-Message-ID: <20121106211455.417b35f1@notabene.brown>
-References: <201211061712569914353@gmail.com>
+Subject: Re: [PATCH 2/2] md: Reassigned the parameters if read_seqretry
+ returned true in func md_is_badblock.
+Date: Tue, 6 Nov 2012 21:19:07 +1100
+Message-ID: <20121106211907.7df50c4a@notabene.brown>
+References: <201211061713404301164@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/hGG83FWbdaHyUJalTjTuIyc"; protocol="application/pgp-signature"
+ boundary="Sig_/8YKc+wvwJmAcwV/K7cy4+h1"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201211061712569914353@gmail.com>
+In-Reply-To: <201211061713404301164@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: majianpeng <majianpeng@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>, zhuwenfeng <zhuwenfeng@kedacom.com>
 List-Id: linux-raid.ids
 
---Sig_/hGG83FWbdaHyUJalTjTuIyc
+--Sig_/8YKc+wvwJmAcwV/K7cy4+h1
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 6 Nov 2012 17:13:00 +0800 majianpeng <majianpeng@gmail.com> wrote:
+On Tue, 6 Nov 2012 17:13:44 +0800 majianpeng <majianpeng@gmail.com> wrote:
 
-> If read_seqretry returned true and bbp was changed, it will write
-> invalid address which can cause some serious problem.
->=20
-> This bug was introduced by commit v3.0-rc7-130-g2699b67.
+> This bug was introduced by commit(v3.0-rc7-126-g2230dfe).
 > So fix is suitable for 3.0.y thru 3.6.y.
 >=20
-> Reported-by: zhuwenfeng@kedacom.com
-> Tested-by: zhuwenfeng@kedacom.com
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
 > ---
->  drivers/md/md.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  drivers/md/md.c |    7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
 >=20
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 9ab768a..d63aa78 100644
+> index d63aa78..541c74c 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -1805,15 +1805,15 @@ static void super_1_sync(struct mddev *mddev, str=
-uct md_rdev *rdev)
->  		md_error(mddev, rdev);
->  	else {
->  		struct badblocks *bb =3D &rdev->badblocks;
-> -		u64 *bbp =3D (u64 *)page_address(rdev->bb_page);
->  		u64 *p =3D bb->page;
->  		sb->feature_map |=3D cpu_to_le32(MD_FEATURE_BAD_BLOCKS);
->  		if (bb->changed) {
->  			unsigned seq;
-> +			u64 *bbp;
+> @@ -7936,9 +7936,9 @@ int md_is_badblock(struct badblocks *bb, sector_t s=
+, int sectors,
+>  		   sector_t *first_bad, int *bad_sectors)
+>  {
+>  	int hi;
+> -	int lo =3D 0;
+> +	int lo;
+>  	u64 *p =3D bb->page;
+> -	int rv =3D 0;
+> +	int rv;
+>  	sector_t target =3D s + sectors;
+>  	unsigned seq;
+> =20
+> @@ -7953,7 +7953,8 @@ int md_is_badblock(struct badblocks *bb, sector_t s=
+, int sectors,
 > =20
 >  retry:
-> +			bbp =3D (u64 *)page_address(rdev->bb_page);
->  			seq =3D read_seqbegin(&bb->lock);
+>  	seq =3D read_seqbegin(&bb->lock);
 > -
->  			memset(bbp, 0xff, PAGE_SIZE);
+> +	lo =3D 0;
+> +	rv =3D 0;
+>  	hi =3D bb->count;
 > =20
->  			for (i =3D 0 ; i < bb->count ; i++) {
+>  	/* Binary search between lo and hi for 'target'
 
-
-No.
-The contents of the page might change, but it is always the same page, so it
-always has the same address, so "bbp" is guaranteed to be stable.
+Applied, thanks.
 
 NeilBrown
 
---Sig_/hGG83FWbdaHyUJalTjTuIyc
+--Sig_/8YKc+wvwJmAcwV/K7cy4+h1
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBUJjjHznsnt1WYoG5AQLcDg//eGW0an3zQrYH7r61A7zcZvD5e59lySLg
-I9FfKeM+WT5NnWAzXgplk69it1aEdJaUvltOmS4F0uOKSZrEjlne/EmGf30ZDMv0
-YnOMD9z5H++uVhQ1aY4u9W2WbAuK6Vg+QQ6Al2THyYqFSVvjCIh/RuDW/LL14Onb
-NcU0nlHxYnlphNNj9Tk3I8LjQvNlIBbDG+Gd30LUUEjczyXxurzsC4D5LRM7fhRc
-DH/ioj/W860lXND/9WBgBOZI4vU1sysOIUtWf6EghT92/IQTsqLytbdaYYxs6OK/
-hdpc21AtpofcyDnJXORHCafLQlQ6WxpG9+X4J11OK8qb2r76LKM4o9ssEUkD9hXr
-/PKvQxL9A2Z8bfk/Soey6ngB/Q+Mmlt4UVfoj8jndkd31Jvw5onB5UzK6fxgx1bh
-iBjPWzJJAtYDeiwbf8vt1MxVwstbKqecuNwouL1kYpjWoVLPb4IgitV14cxdr6+f
-FB6XlV1ousyOAScf1dUSG7MdsCzSnz2SaUZYBGV1FS3YcCpangSb/L4tHd0Kawd2
-Ujwy43AX5UPsBgAvS4ldnnZ1+Jcn1zL8NlLmyCJWzOAchIERqEBKPgAGxDwGm0QS
-gxGnpjRGWVWWq8lmtFBjEUntvLoO3MvK/D8e/VH4C+s3uR8GyhOAURLsHKfjvcZV
-dVu3Ze1x+MY=
-=CX5j
+iQIVAwUBUJjkGznsnt1WYoG5AQKRRRAAvKLNCGmM86yqg6FaLnYUzf2MNYtQt3HB
+VmLx8z/7iwtyiF6qWq2+hI1FpVLkpN769N+2nxQvxqfmXVyusU6MaM1VuhDZwFca
+0pLgW/eid7WQS8oHu6uaS/yeir+p4AE3JHm/uOpTdbZrrpUo6/dXcR8Nc8DzFGpa
+nXGkguQ2YSBdM1XnSYOzAUJKXFvIFtIFeUa6szmYIxFoSZ4LTEwY95XLuQvHfVd7
+THqpkHBMkz0Jt4Oa1kUgUODYchsdwfLIzc83xXgku4nymXSsGd0/db1Jq8Jlp95B
+Eg1gzOmHTHMaQXvuzS4i38ruwAFgbeLHticj95BfCLov1k43JKjXdy3jlwGgl6bO
+liGqTX7HW6FN3sGvq8SN5bDvgIRnL7IeFoOMXchvGi13PI8z7fTZUDkHrKf8WN5w
+QrV6U8loX5RLo3Lgk3eIu3l+4GRC+GwDLfmBt/alxzV9MgmrlTQpIQ9D3VtDI1xR
+X2cldvtyduGp2ha0oodSLRSqQs0AoZIZNUfbyJNaKn60Ki6ZhL2m1KE8gRnAF+QA
+O4mJAJxFZaeAVNe0ew7rATQK5PqoDPK1uI7Bh+GdUfUVNSH44YFaF/wxX3T8C8iR
+HzmVRyUizHl2xZNxTB24EcgxUCfP3hjGdP6eU3ZGqJQT03oup8hILKKa/MtObf5u
+ctsW/agQpDA=
+=CzAW
 -----END PGP SIGNATURE-----
 
---Sig_/hGG83FWbdaHyUJalTjTuIyc--
+--Sig_/8YKc+wvwJmAcwV/K7cy4+h1--
