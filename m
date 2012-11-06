@@ -1,130 +1,75 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/2] md:Avoid write invalid address if read_seqretry
- returned true.
-Date: Tue, 6 Nov 2012 22:01:14 +1100
-Message-ID: <20121106220114.40b8fbc2@notabene.brown>
-References: <201211061712569914353@gmail.com>
-	<20121106211455.417b35f1@notabene.brown>
-	<201211061836292577626@gmail.com>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH 1/2] md:Avoid write invalid address if read_seqretry returned true.
+Date: Tue, 6 Nov 2012 19:05:07 +0800
+Message-ID: <201211061905037019319@gmail.com>
+References: <201211061712569914353@gmail.com> <20121106211455.417b35f1@notabene.brown> <201211061836292577626@gmail.com>,
+	<20121106220114.40b8fbc2@notabene.brown>
+Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/vxOZOGmzXPKyVG4tnhrvBtm"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201211061836292577626@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>, zhuwenfeng <zhuwenfeng@kedacom.com>
 List-Id: linux-raid.ids
 
---Sig_/vxOZOGmzXPKyVG4tnhrvBtm
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Pk9uIFR1ZSwgNiBOb3YgMjAxMiAxODozNjozMyArMDgwMCBtYWppYW5wZW5nIDxtYWppYW5wZW5n
+QGdtYWlsLmNvbT4gd3JvdGU6DQo+DQo+PiA+T24gVHVlLCA2IE5vdiAyMDEyIDE3OjEzOjAwICsw
+ODAwIG1hamlhbnBlbmcgPG1hamlhbnBlbmdAZ21haWwuY29tPiB3cm90ZToNCj4+ID4NCj4+ID4+
+IElmIHJlYWRfc2VxcmV0cnkgcmV0dXJuZWQgdHJ1ZSBhbmQgYmJwIHdhcyBjaGFuZ2VkLCBpdCB3
+aWxsIHdyaXRlDQo+PiA+PiBpbnZhbGlkIGFkZHJlc3Mgd2hpY2ggY2FuIGNhdXNlIHNvbWUgc2Vy
+aW91cyBwcm9ibGVtLg0KPj4gPj4gDQo+PiA+PiBUaGlzIGJ1ZyB3YXMgaW50cm9kdWNlZCBieSBj
+b21taXQgdjMuMC1yYzctMTMwLWcyNjk5YjY3Lg0KPj4gPj4gU28gZml4IGlzIHN1aXRhYmxlIGZv
+ciAzLjAueSB0aHJ1IDMuNi55Lg0KPj4gPj4gDQo+PiA+PiBSZXBvcnRlZC1ieTogemh1d2VuZmVu
+Z0BrZWRhY29tLmNvbQ0KPj4gPj4gVGVzdGVkLWJ5OiB6aHV3ZW5mZW5nQGtlZGFjb20uY29tDQo+
+PiA+PiBDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0KPj4gPj4gU2lnbmVkLW9mZi1ieTogSmlh
+bnBlbmcgTWEgPG1hamlhbnBlbmdAZ21haWwuY29tPg0KPj4gPj4gLS0tDQo+PiA+PiAgZHJpdmVy
+cy9tZC9tZC5jIHwgICAgNCArKy0tDQo+PiA+PiAgMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9u
+cygrKSwgMiBkZWxldGlvbnMoLSkNCj4+ID4+IA0KPj4gPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
+bWQvbWQuYyBiL2RyaXZlcnMvbWQvbWQuYw0KPj4gPj4gaW5kZXggOWFiNzY4YS4uZDYzYWE3OCAx
+MDA2NDQNCj4+ID4+IC0tLSBhL2RyaXZlcnMvbWQvbWQuYw0KPj4gPj4gKysrIGIvZHJpdmVycy9t
+ZC9tZC5jDQo+PiA+PiBAQCAtMTgwNSwxNSArMTgwNSwxNSBAQCBzdGF0aWMgdm9pZCBzdXBlcl8x
+X3N5bmMoc3RydWN0IG1kZGV2ICptZGRldiwgc3RydWN0IG1kX3JkZXYgKnJkZXYpDQo+PiA+PiAg
+CQltZF9lcnJvcihtZGRldiwgcmRldik7DQo+PiA+PiAgCWVsc2Ugew0KPj4gPj4gIAkJc3RydWN0
+IGJhZGJsb2NrcyAqYmIgPSAmcmRldi0+YmFkYmxvY2tzOw0KPj4gPj4gLQkJdTY0ICpiYnAgPSAo
+dTY0ICopcGFnZV9hZGRyZXNzKHJkZXYtPmJiX3BhZ2UpOw0KPj4gPj4gIAkJdTY0ICpwID0gYmIt
+PnBhZ2U7DQo+PiA+PiAgCQlzYi0+ZmVhdHVyZV9tYXAgfD0gY3B1X3RvX2xlMzIoTURfRkVBVFVS
+RV9CQURfQkxPQ0tTKTsNCj4+ID4+ICAJCWlmIChiYi0+Y2hhbmdlZCkgew0KPj4gPj4gIAkJCXVu
+c2lnbmVkIHNlcTsNCj4+ID4+ICsJCQl1NjQgKmJicDsNCj4+ID4+ICANCj4+ID4+ICByZXRyeToN
+Cj4+ID4+ICsJCQliYnAgPSAodTY0ICopcGFnZV9hZGRyZXNzKHJkZXYtPmJiX3BhZ2UpOw0KPj4g
+Pj4gIAkJCXNlcSA9IHJlYWRfc2VxYmVnaW4oJmJiLT5sb2NrKTsNCj4+ID4+IC0NCj4+ID4+ICAJ
+CQltZW1zZXQoYmJwLCAweGZmLCBQQUdFX1NJWkUpOw0KPj4gPj4gIA0KPj4gPj4gIAkJCWZvciAo
+aSA9IDAgOyBpIDwgYmItPmNvdW50IDsgaSsrKSB7DQo+PiA+DQo+PiA+DQo+PiA+Tm8uDQo+PiA+
+VGhlIGNvbnRlbnRzIG9mIHRoZSBwYWdlIG1pZ2h0IGNoYW5nZSwgYnV0IGl0IGlzIGFsd2F5cyB0
+aGUgc2FtZSBwYWdlLCBzbyBpdA0KPj4gPmFsd2F5cyBoYXMgdGhlIHNhbWUgYWRkcmVzcywgc28g
+ImJicCIgaXMgZ3VhcmFudGVlZCB0byBiZSBzdGFibGUuDQo+PiA+DQo+PiA+TmVpbEJyb3duDQo+
+PiA+DQo+PiBJcyBteSB1bmRlcnN0YW5kIHdyb25nPw0KPj4gPnU2NCAqYmJwID0gKHU2NCAqKXBh
+Z2VfYWRkcmVzcyhyZGV2LT5iYl9wYWdlKTsNCj4+ID4JCXU2NCAqcCA9IGJiLT5wYWdlOw0KPj4g
+PgkJc2ItPmZlYXR1cmVfbWFwIHw9IGNwdV90b19sZTMyKE1EX0ZFQVRVUkVfQkFEX0JMT0NLUyk7
+DQo+PiA+CQlpZiAoYmItPmNoYW5nZWQpIHsNCj4+ID4JCQl1bnNpZ25lZCBzZXE7DQo+PiANCj4+
+ID5yZXRyeToNCj4+ID4JCQlzZXEgPSByZWFkX3NlcWJlZ2luKCZiYi0+bG9jayk7DQo+PiANCj4+
+ID4JCQltZW1zZXQoYmJwLCAweGZmLCBQQUdFX1NJWkUpOw0KPj4gDQo+PiA+CQkJZm9yIChpID0g
+MCA7IGkgPCBiYi0+Y291bnQgOyBpKyspIHsNCj4+ID4JCQkJdTY0IGludGVybmFsX2JiID0gKnAr
+KzsNCj4+ID4JCQkJdTY0IHN0b3JlX2JiID0gKChCQl9PRkZTRVQoaW50ZXJuYWxfYmIpIDw8IDEw
+KQ0KPj4gPgkJCQkJCXwgQkJfTEVOKGludGVybmFsX2JiKSk7DQo+PiA+CQkJCSpiYnArKyA9IGNw
+dV90b19sZTY0KHN0b3JlX2JiKTsNCj4+IEkgdGhpbmsgYmJwIHdpbGwgYmUgY2hhbmdlZC4gSXMg
+b2s/DQo+DQo+DQpNeSBwYXRjaCBtaXNzZWQgb25lIHBhcmFtZXRlcjoNCj4+ID4JCQkJdTY0IGlu
+dGVybmFsX2JiID0gKnArKzsNClNvIHRoZSBjb2RlIHNob3VsZCBiZToNCmRpZmYgLS1naXQgYS9k
+cml2ZXJzL21kL21kLmMgYi9kcml2ZXJzL21kL21kLmMNCmluZGV4IDlhYjc2OGEuLjFmODZjNDgg
+MTAwNjQ0DQotLS0gYS9kcml2ZXJzL21kL21kLmMNCisrKyBiL2RyaXZlcnMvbWQvbWQuYw0KQEAg
+LTE4MTcsMTAgKzE4MTcsMTAgQEAgcmV0cnk6DQogICAgICAgICAgICAgICAgICAgICAgICBtZW1z
+ZXQoYmJwLCAweGZmLCBQQUdFX1NJWkUpOw0KIA0KICAgICAgICAgICAgICAgICAgICAgICAgZm9y
+IChpID0gMCA7IGkgPCBiYi0+Y291bnQgOyBpKyspIHsNCi0gICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgdTY0IGludGVybmFsX2JiID0gKnArKzsNCisgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgdTY0IGludGVybmFsX2JiID0gcFtpXTsNCiAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgdTY0IHN0b3JlX2JiID0gKChCQl9PRkZTRVQoaW50ZXJuYWxfYmIpIDw8IDEwKQ0K
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCBCQl9MRU4o
+aW50ZXJuYWxfYmIpKTsNCi0gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKmJicCsrID0g
+Y3B1X3RvX2xlNjQoc3RvcmVfYmIpOw0KKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBi
+YnBbaV0gPSBjcHVfdG9fbGU2NChzdG9yZV9iYik7DQogICAgICAgICAgICAgICAgICAgICAgICB9
+DQogICAgICAgICAgICAgICAgICAgICAgICBiYi0+Y2hhbmdlZCA9IDA7DQogICAgICAgICAgICAg
+ICAgICAgICAgICBpZiAocmVhZF9zZXFyZXRyeSgmYmItPmxvY2ssIHNlcSkpDQoNCg0KSSB0aGlu
+ayB0aGlzIGlzIHlvdXIgZmlyc3Qgd2FudGVkIQ==
 
-On Tue, 6 Nov 2012 18:36:33 +0800 majianpeng <majianpeng@gmail.com> wrote:
-
-> >On Tue, 6 Nov 2012 17:13:00 +0800 majianpeng <majianpeng@gmail.com> wrot=
-e:
-> >
-> >> If read_seqretry returned true and bbp was changed, it will write
-> >> invalid address which can cause some serious problem.
-> >>=20
-> >> This bug was introduced by commit v3.0-rc7-130-g2699b67.
-> >> So fix is suitable for 3.0.y thru 3.6.y.
-> >>=20
-> >> Reported-by: zhuwenfeng@kedacom.com
-> >> Tested-by: zhuwenfeng@kedacom.com
-> >> Cc: stable@vger.kernel.org
-> >> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
-> >> ---
-> >>  drivers/md/md.c |    4 ++--
-> >>  1 file changed, 2 insertions(+), 2 deletions(-)
-> >>=20
-> >> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> >> index 9ab768a..d63aa78 100644
-> >> --- a/drivers/md/md.c
-> >> +++ b/drivers/md/md.c
-> >> @@ -1805,15 +1805,15 @@ static void super_1_sync(struct mddev *mddev, =
-struct md_rdev *rdev)
-> >>  		md_error(mddev, rdev);
-> >>  	else {
-> >>  		struct badblocks *bb =3D &rdev->badblocks;
-> >> -		u64 *bbp =3D (u64 *)page_address(rdev->bb_page);
-> >>  		u64 *p =3D bb->page;
-> >>  		sb->feature_map |=3D cpu_to_le32(MD_FEATURE_BAD_BLOCKS);
-> >>  		if (bb->changed) {
-> >>  			unsigned seq;
-> >> +			u64 *bbp;
-> >> =20
-> >>  retry:
-> >> +			bbp =3D (u64 *)page_address(rdev->bb_page);
-> >>  			seq =3D read_seqbegin(&bb->lock);
-> >> -
-> >>  			memset(bbp, 0xff, PAGE_SIZE);
-> >> =20
-> >>  			for (i =3D 0 ; i < bb->count ; i++) {
-> >
-> >
-> >No.
-> >The contents of the page might change, but it is always the same page, s=
-o it
-> >always has the same address, so "bbp" is guaranteed to be stable.
-> >
-> >NeilBrown
-> >
-> Is my understand wrong?
-> >u64 *bbp =3D (u64 *)page_address(rdev->bb_page);
-> >		u64 *p =3D bb->page;
-> >		sb->feature_map |=3D cpu_to_le32(MD_FEATURE_BAD_BLOCKS);
-> >		if (bb->changed) {
-> >			unsigned seq;
->=20
-> >retry:
-> >			seq =3D read_seqbegin(&bb->lock);
->=20
-> >			memset(bbp, 0xff, PAGE_SIZE);
->=20
-> >			for (i =3D 0 ; i < bb->count ; i++) {
-> >				u64 internal_bb =3D *p++;
-> >				u64 store_bb =3D ((BB_OFFSET(internal_bb) << 10)
-> >						| BB_LEN(internal_bb));
-> >				*bbp++ =3D cpu_to_le64(store_bb);
-> I think bbp will be changed. Is ok?
-
-
-Ahh yes, I see now.
-
-Applied, thanks.
-
-NeilBrown
-
-
-> >			}
-> >			bb->changed =3D 0;
-> >			if (read_seqretry(&bb->lock, seq))
-> >				goto retry;
->=20
-> =09
-
---Sig_/vxOZOGmzXPKyVG4tnhrvBtm
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBUJjt+jnsnt1WYoG5AQKPLw/+O77Epl77fzEXhbivTK8HJCNq9Sg5iupS
-VSn4wXGCdFbHOlIywuC7QuQIl6rylzgGzsaNxBnFujreoeB9fF01FYONhw17kF5x
-KzYE6sG4KxZp2pMGiGdq0gRC7i4gTeI2NM1tzqU2rA286diqbS6Xhaa2olCSYXAD
-69b71hdDVFs8BdpOAs7wmteM2AF51kcUiuXh1dw8bHPasyv3Cpy3WOQYrlrE2xIG
-NjCPiDpXhRwp71zKIcTrrz4WDj8AqunE1XEHXt44pC5l/ned3Q3TXdCBh8j1P7ff
-bG5VLJOgHk8CQ3NsDL3P1GrUqaV/wEJGtXgKRwqMEu0VUqcLsBOFl9YQGPnwHdZN
-Oy6TC/ZPryfdEQXxy8iFV42oQDRCefzCRNd///gq2fumsognZw2E6o3xNyMG7KCs
-w6ikIRsp6mifZTJAOGzkRJwUDhrtQXpMI9eR8T9geEvfH4jRHodcARUAfKWcITRt
-XbEWORL3IYxv/HVJjSCvrbnqIo0HEodaB42ibGEs7BRrqN8qha2FWBg9WD2jZQlr
-XEoDxoVNa8hjJe9Kc2bin3XFzcTrF5WKVI1WXQWmHx+WlXyU2XbsRH2vdQ4cxxX5
-M4y8DcjK5l9MWBcQ9Uy9EyLcNL8O636Nhpr8Wg3WxKUrVeDpc8q0HuSqV61ZK0AR
-me18apRdELo=
-=Mo/C
------END PGP SIGNATURE-----
-
---Sig_/vxOZOGmzXPKyVG4tnhrvBtm--
