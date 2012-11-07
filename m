@@ -1,45 +1,54 @@
-From: Teng-Feng Yang <shinrairis@gmail.com>
-Subject: Error correction and Bad block tracking in RAID5
-Date: Wed, 7 Nov 2012 19:49:54 +0800
-Message-ID: <CAKTMprPUvV57khuKPQ20vyvOxTBiO7=t=ddNu4H0O0YC1jtJHA@mail.gmail.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: is "replaceable" in 3.2 considered stable
+Date: Wed, 07 Nov 2012 21:44:47 +0800
+Message-ID: <509A65CF.8020409@fnarfbargle.com>
+References: <alpine.DEB.2.00.1211050546420.13802@uplift.swm.pp.se> <20121105162227.7bc5c103@notabene.brown> <5099BC6B.7030500@fnarfbargle.com> <509A3029.4050402@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <509A3029.4050402@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: joystick <joystick@shiftmail.org>
+Cc: NeilBrown <neilb@suse.de>, Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi
+On 07/11/12 17:55, joystick wrote:
 
-I have tried to understand how RAID5 works in linux-3.6.4 by tracing
-the raid5.c in md driver.
-After days of work on the source code, I get confused by the error
-correction and bad block tracking   mechanism.
-I try to come up with some conclusions, but I don't know if I am right or not.
-Here's my findings these days, hope someone could correct me if I am wrong.
+>
+> we still need someone to test the other case, a more common scenario I'd
+> say: the disk to be replaced fails during hot-replace
 
-In RAID5, the bad block will be identified and register to upper layer
-under two conditions:
-1. When read error occurs, we success to rewrite the data back but
-fail to re-read it back
-2. When write error occurs
+I suspect I can do that by creating some "media errors" using hdparm 
+while the replacement is in progress.
 
-Since write error is critical, we prevent the error disk from being
-written again, which makes the bad block registered by write errors
-impossible to be corrected again.
+I'd have *thought* that the procedure should be to re-direct the read to 
+another mirror (it is a raid-10 after all).
 
-On the other hands, the following read or write on the known bad
-blocks registered by read errors could possibly make bad block "good"
-again, and then we can unregister these bad blocks.
+>> The test machine is on UPS, so I have not done any testing that
+>> involves reboots during a re-sync.
+>
+> And also this one...
+> Best simulation would be unpulling the plug so that disks do not flush
+> if you have still time for us, of course :-)
 
-Therefore, comparing to older version of md, the benefit of
-introducing bad block tracking into RAID5 is that we reserve the
-possibility that a read error block could still be corrected by
-following read/write.
-(In older version, the code simply called md_error when re-read still
-fails upon a read error)
+I assume to test that adequately (as in re-assemble an array with a 
+replacement in progress) I'd need to upgrade mdadm to the latest git code?
 
-Thanks for your patience.
-Any help would be grateful
+No biggie, just requires a bit more tweaking the initramfs stuff.
 
-Dennis
+The tests thus far have been conducted in spare drive slots in my 
+production server. This afternoon I picked up a new motherboard for my 
+test box so tomorrow I'll have a dedicated machine to play with.
+
+Debian on SSD, and 10 x 1TB 7200 RPM drives that have been retired from 
+active hard service (they have about 22,000 hours on them) and ready as 
+a test mule.
+
+If you put together a set of tests you'd like performed I'll be happy to 
+run them and see what happens. The machine is on a managed APC PDU (yay 
+Gumtree!), so remote power cycling is a lot easier than it used to be 
+and I really don't mind hammering the disks with emergency parks or 
+excessive cycles.
+
+
