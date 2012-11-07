@@ -1,89 +1,38 @@
-From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
-Subject: Re: [PATCH] Fix deadlock with request based dm and some drivers
-Date: Wed, 07 Nov 2012 09:15:07 +0900
-Message-ID: <5099A80B.8070900@ce.jp.nec.com>
-References: <5098F47F.9030201@fusionio.com> <5098FF26.4070907@ce.jp.nec.com> <50990410.8080207@fusionio.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: is "replaceable" in 3.2 considered stable
+Date: Wed, 07 Nov 2012 09:42:03 +0800
+Message-ID: <5099BC6B.7030500@fnarfbargle.com>
+References: <alpine.DEB.2.00.1211050546420.13802@uplift.swm.pp.se> <20121105162227.7bc5c103@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50990410.8080207@fusionio.com>
+In-Reply-To: <20121105162227.7bc5c103@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jens Axboe <jaxboe@fusionio.com>
-Cc: Alasdair Kergon <agk@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
+To: NeilBrown <neilb@suse.de>
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/06/12 21:35, Jens Axboe wrote:
-> On 2012-11-06 13:14, Jun'ichi Nomura wrote:
->> (Cc to dm-devel)
->>
->> On 11/06/12 20:29, Jens Axboe wrote:
->>> I recently fixed a deadlock for a customer we have with
->>> the below patch. I have queued it up in my tree as not
->>> to lose it. Can I have an ack from you, or do you want
->>> to submit it yourself? I've marked it stable as well.
->>
->> Could you tell details about how the deadlock happened?
->>
->> dm's end_io always throws the completion handling to softirq:
->>   end_clone_request()
->>     dm_complete_request()
->>       blk_complete_request()
->>
->> then it is processed in softirq context:
->>   dm_softirq_done()
->>     dm_done()
->>       dm_end_request()
->>         rq_completed(run_queue=true)
->>           blk_run_queue()
->>
->> Since queue_lock is always held with interrupt disabled,
->> I couldn't see why it could deadlock.
->>
->> Request-based dm followed the completion model of scsi
->> mid layer. So similar code path exists in scsi, too.
->> For example:
->>   scsi_request_fn()
->>     scsi_kill_request()
->>       blk_complete_request()
->> then:
->>   scsi_softirq_done()
->>     scsi_io_completion()
->>       scsi_next_command()
->>         scsi_run_queue()
->>           spin_lock queue_lock
->>           __blk_run_queue()
->>
->> If calling run-queue from softirq_done_fn() can cause deadlock,
->> I'm afraid the problem is not limited to dm.
-> 
-> dm_softirq_done()
->     rq_completed()
->         blk_run_queue()
-          ^^ this is for dm's queue
->             dm_request_fn()
->                 dm_dispatch_request()
->                     blk_insert_cloned_request()
->                         __elv_add_request()
->                             elv_insert()
->                                 blk_run_queue()
-                                  ^^ this is for lower device's queue
->                                     ...
-> 
-> Basically you recurse back into the request handler, since it ends up
-> running the queue.
+On 05/11/12 13:22, NeilBrown wrote:
 
-But the queues are different as commented inline above.
-So it should be ok. (from deadlock point of view)
+>
+> Try it.  If it works for you, we can be more confident that it is stable :-)
+>
+> Seriously I think it is safe to try but I won't promise that nothing will go
+> wrong.  I do promise that if something goes wrong (which is fairly unlikely),
+> I'll do my best to help you fix it, and think it is extremely unlikely that
+> the experiment will cause data loss.
 
-> But I see I've been too focused on the older release,
-> since we don't actually do that anymore after the plugging rewrite. So
-> it should actually be safe in current kernels and hence the patch only
-> needed for the stable series where that is not the case.
+I have a test system set up at the moment with a RAID10 n,2 across 6 1TB 
+drives + 2 spares.
 
-BTW, using blk_run_queue_async() in softirq_done_fn() might be good
-from performance point of view? It may reduce latency of the softirq
-and have an effect of batching request_fn calls.
+I've run several hot-replace tests using 3.6.2 and found it works as 
+advertised.
 
--- 
-Jun'ichi Nomura, NEC Corporation
+I also have two drives with hard write errors (excellent for failure 
+testing), and trying to replace a drive with one that contains a write 
+error fails the replace as you would expect.
+
+The test machine is on UPS, so I have not done any testing that involves 
+reboots during a re-sync.
+
