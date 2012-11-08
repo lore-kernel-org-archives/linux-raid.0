@@ -1,38 +1,135 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: [PATCH 1/2 V1] md:Avoid write invalid address if read_seqretry returned true.
-Date: Thu, 8 Nov 2012 08:56:27 +0800
-Message-ID: <201211080856156202401@gmail.com>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: RAID10 hot replacement issue
+Date: Thu, 08 Nov 2012 14:54:51 +0800
+Message-ID: <509B573B.9040806@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, zhuwenfeng <zhuwenfeng@kedacom.com>
+To: Linux-RAID <linux-raid@vger.kernel.org>, joystick <joystick@shiftmail.org>, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-SGkgTmVpbCwNCglJIHVwZGF0ZWQgdGhpcyBwYXRjaC5UaGVyZSBhcmUgdHdvIHBsYWNlIHRvIGNo
-YW5nZWQNCjE6VGhlIHByZXZpb3VzIHBhdGNoIG9taXQgdGhlIHBhcmFtZXRlciAncCcNCjI6VXNp
-bmcgcFtpXSBpbnN0ZWFkIG9mICpwKys7IGJicFtpXSBpbnN0ZWFkICpiYnArKy5JdCBtYWtlIHRo
-ZSBjb2RlIGxvb2tzIGJldHRlci4NCkFmdGVyIHJld3JpdGluZyAsaSB0ZXN0ZWQgYW5kIGl0IGxv
-b2tlZCBnb29kLg0KDQoNCklmIHJlYWRfc2VxcmV0cnkgcmV0dXJuZWQgdHJ1ZSBhbmQgYmJwIHdh
-cyBjaGFuZ2VkLCBpdCB3aWxsIHdyaXRlDQppbnZhbGlkIGFkZHJlc3Mgd2hpY2ggY2FuIGNhdXNl
-IHNvbWUgc2VyaW91cyBwcm9ibGVtLg0KDQpUaGlzIGJ1ZyB3YXMgaW50cm9kdWNlZCBieSBjb21t
-aXQgdjMuMC1yYzctMTMwLWcyNjk5YjY3Lg0KU28gZml4IGlzIHN1aXRhYmxlIGZvciAzLjAueSB0
-aHJ1IDMuNi55Lg0KDQpSZXBvcnRlZC1ieTogemh1d2VuZmVuZ0BrZWRhY29tLmNvbQ0KVGVzdGVk
-LWJ5OiB6aHV3ZW5mZW5nQGtlZGFjb20uY29tDQpDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0K
-U2lnbmVkLW9mZi1ieTogSmlhbnBlbmcgTWEgPG1hamlhbnBlbmdAZ21haWwuY29tPg0KLS0tDQog
-ZHJpdmVycy9tZC9tZC5jIHwgICAgNCArKy0tDQogMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9u
-cygrKSwgMiBkZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvbWQuYyBiL2Ry
-aXZlcnMvbWQvbWQuYw0KaW5kZXggOWFiNzY4YS4uMWY4NmM0OCAxMDA2NDQNCi0tLSBhL2RyaXZl
-cnMvbWQvbWQuYw0KKysrIGIvZHJpdmVycy9tZC9tZC5jDQpAQCAtMTgxNywxMCArMTgxNywxMCBA
-QCByZXRyeToNCiAJCQltZW1zZXQoYmJwLCAweGZmLCBQQUdFX1NJWkUpOw0KIA0KIAkJCWZvciAo
-aSA9IDAgOyBpIDwgYmItPmNvdW50IDsgaSsrKSB7DQotCQkJCXU2NCBpbnRlcm5hbF9iYiA9ICpw
-Kys7DQorCQkJCXU2NCBpbnRlcm5hbF9iYiA9IHBbaV07DQogCQkJCXU2NCBzdG9yZV9iYiA9ICgo
-QkJfT0ZGU0VUKGludGVybmFsX2JiKSA8PCAxMCkNCiAJCQkJCQl8IEJCX0xFTihpbnRlcm5hbF9i
-YikpOw0KLQkJCQkqYmJwKysgPSBjcHVfdG9fbGU2NChzdG9yZV9iYik7DQorCQkJCWJicFtpXSA9
-IGNwdV90b19sZTY0KHN0b3JlX2JiKTsNCiAJCQl9DQogCQkJYmItPmNoYW5nZWQgPSAwOw0KIAkJ
-CWlmIChyZWFkX3NlcXJldHJ5KCZiYi0+bG9jaywgc2VxKSkNCi0tIA0KMS43LjkuNQ0K
+G'day Neil,
+
+Not a real problem, but a data point and possible issue.
+
+I tried a hot replace on one of my main system disks. It all appeared to 
+work as-planned, but now I can't remove the replacement flag from /dev/sdg2.
+
+I failed and removed /dev/sdg2 from /dev/md2, and then re-added it. It 
+synced up, a check shows no mismatches and it all appears to work ok, 
+but with the replacement flag set on that partition I can't do any 
+further hot-replace on that array. The flag survived a reboot.
+
+I suspect I need to remove /dev/sdg2 and zero the superblock before 
+adding it back.
+
+This came about when I originally replaced /dev/sds2 with /dev/sdg2. All 
+went well except at the end of the process sds2 was marked as failed and 
+sdg2 was marked as (R), and nothing I could do would change it. I could 
+remove sds2, but can't clear the replacement flag on sdg2.
+
+I performed the original replacement on kernel 3.6.2, and am now running 
+3.6.6.
+
+root@srv:/sys/block/md2/md# cat /proc/mdstat
+<snip>
+md2 : active raid10 sdg2[3](R) sdh2[2]
+       976247808 blocks super 1.2 512K chunks 2 far-copies [2/2] [UU]
+       bitmap: 1/8 pages [4KB], 65536KB chunk
+
+root@srv:/sys/block/md2/md# mdadm --examine /dev/sd[hg]2
+/dev/sdg2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x11
+      Array UUID : 6df98448:8cfbee7e:acdf3947:f282c441
+            Name : sysresccd:2
+   Creation Time : Sun May  8 14:02:40 2011
+      Raid Level : raid10
+    Raid Devices : 2
+
+  Avail Dev Size : 1952497072 (931.02 GiB 999.68 GB)
+      Array Size : 976247808 (931.02 GiB 999.68 GB)
+   Used Dev Size : 1952495616 (931.02 GiB 999.68 GB)
+     Data Offset : 2048 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 9ba8a9af:e01c51d4:f9555d3e:2906f9a2
+
+Internal Bitmap : 2 sectors from superblock
+     Update Time : Thu Nov  8 14:46:34 2012
+        Checksum : bb70195e - correct
+          Events : 1252869
+
+          Layout : far=2
+      Chunk Size : 512K
+
+    Device Role : Replacement device 1
+    Array State : AA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdh2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : 6df98448:8cfbee7e:acdf3947:f282c441
+            Name : sysresccd:2
+   Creation Time : Sun May  8 14:02:40 2011
+      Raid Level : raid10
+    Raid Devices : 2
+
+  Avail Dev Size : 1952497072 (931.02 GiB 999.68 GB)
+      Array Size : 976247808 (931.02 GiB 999.68 GB)
+   Used Dev Size : 1952495616 (931.02 GiB 999.68 GB)
+     Data Offset : 2048 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 9245b92c:1b491bd5:0f35fb14:9faab3c9
+
+Internal Bitmap : 2 sectors from superblock
+     Update Time : Thu Nov  8 14:46:34 2012
+        Checksum : 36a2660b - correct
+          Events : 1252869
+
+          Layout : far=2
+      Chunk Size : 512K
+
+    Device Role : Active device 0
+    Array State : AA ('A' == active, '.' == missing, 'R' == replacing)
+root@srv:/sys/block/md2/md# mdadm --detail /dev/md2
+/dev/md2:
+         Version : 1.2
+   Creation Time : Sun May  8 14:02:40 2011
+      Raid Level : raid10
+      Array Size : 976247808 (931.02 GiB 999.68 GB)
+   Used Dev Size : 976247808 (931.02 GiB 999.68 GB)
+    Raid Devices : 2
+   Total Devices : 2
+     Persistence : Superblock is persistent
+
+   Intent Bitmap : Internal
+
+     Update Time : Thu Nov  8 14:46:46 2012
+           State : active
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+
+          Layout : far=2
+      Chunk Size : 512K
+
+            Name : sysresccd:2
+            UUID : 6df98448:8cfbee7e:acdf3947:f282c441
+          Events : 1252869
+
+     Number   Major   Minor   RaidDevice State
+        2       8      114        0      active sync   /dev/sdh2
+        3       8       98        1      active sync   /dev/sdg2
+
+root@srv:/sys/block/md2/md# cat dev-sdg2/state
+in_sync,replacement
+
+root@srv:/sys/block/md2/md# echo -replacement > dev-sdg2/state
+bash: echo: write error: Device or resource busy
 
