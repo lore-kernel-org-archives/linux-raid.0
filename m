@@ -1,77 +1,60 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [PATCH] lib/raid6: Add AVX2 optimized recovery functions
-Date: Fri, 09 Nov 2012 13:24:56 +0100
-Message-ID: <71d4fc0f-f147-4cc6-8626-d1f255a2f7f7@email.android.com>
-References: <1352411264-5156-1-git-send-email-james.t.kukunas@linux.intel.com> <1352460945.4387.7.camel@mattotaupa> <ead47490-afc3-48f1-871f-ba421eac3dd5@email.android.com> <20121109225025.13a846ca@notabene.brown>
+From: Marcin Tomczak <marcin.tomczak@intel.com>
+Subject: [PATCH] imsm: Forbid spanning between multiple controllers.
+Date: Fri, 09 Nov 2012 15:46:36 +0100
+Message-ID: <20121109144636.2215.91684.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121109225025.13a846ca@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Paul Menzel <pm.debian@googlemail.com>, Jim Kukunas <james.t.kukunas@linux.intel.com>, Linux Raid <linux-raid@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com, lukasz.dorau@intel.com
 List-Id: linux-raid.ids
 
-Yes, consider it an implicit Acked-by.
+QXR0YWNoaW5nIGRpc2tzIHRvIG11bHRpcGxlIGNvbnRyb2xsZXJzIG9mIHRoZSBzYW1lIHR5cGUg
+aGFzIGJlZW4KYWxsb3dlZCBzbyBmYXIuIE5vdyBzcGFubmluZyBiZXR3ZWVuIG11bHRpcGxlIGNv
+bnRyb2xsZXJzIGlzIGRpc2FsbG93ZWQKYXQgYWxsIGJ5IElNU00gbWV0YWRhdGEuCgpTaWduZWQt
+b2ZmLWJ5OiBNYXJjaW4gVG9tY3phayA8bWFyY2luLnRvbWN6YWtAaW50ZWwuY29tPgpSZXZpZXdl
+ZC1ieTogTHVrYXN6IERvcmF1IDxsdWthc3ouZG9yYXVAaW50ZWwuY29tPgotLS0KIHN1cGVyLWlu
+dGVsLmMgfCAgIDI1ICsrKysrKysrLS0tLS0tLS0tLS0tLS0tLS0KIDEgZmlsZXMgY2hhbmdlZCwg
+OCBpbnNlcnRpb25zKCspLCAxNyBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9zdXBlci1pbnRl
+bC5jIGIvc3VwZXItaW50ZWwuYwppbmRleCA1NDRjYjA1Li5kYjQzN2I5IDEwMDY0NAotLS0gYS9z
+dXBlci1pbnRlbC5jCisrKyBiL3N1cGVyLWludGVsLmMKQEAgLTU1OCwyMCArNTU4LDExIEBAIHN0
+YXRpYyBpbnQgYXR0YWNoX2hiYV90b19zdXBlcihzdHJ1Y3QgaW50ZWxfc3VwZXIgKnN1cGVyLCBz
+dHJ1Y3Qgc3lzX2RldiAqZGV2aWNlCiAJaWYgKHN1cGVyLT5oYmEgPT0gTlVMTCkgewogCQlzdXBl
+ci0+aGJhID0gYWxsb2NfaW50ZWxfaGJhKGRldmljZSk7CiAJCXJldHVybiAxOwotCX0KLQotCWhi
+YSA9IHN1cGVyLT5oYmE7Ci0JLyogSW50ZWwgbWV0YWRhdGEgYWxsb3dzIGZvciBhbGwgZGlza3Mg
+YXR0YWNoZWQgdG8gdGhlIHNhbWUgdHlwZSBIQkEuCi0JICogRG8gbm90IHN5cHBvcnQgb2RmIEhC
+QSB0eXBlcyBtaXhpbmcKLQkgKi8KLQlpZiAoZGV2aWNlLT50eXBlICE9IGhiYS0+dHlwZSkKKwl9
+IGVsc2UKKwkJLyogSU1TTSBtZXRhZGF0YSBkaXNhbGxvd3MgdG8gYXR0YWNoIGRpc2tzIHRvIG11
+bHRpcGxlCisJCSAqIGNvbnRyb2xsZXJzLgorCQkgKi8KIAkJcmV0dXJuIDI7Ci0KLQl3aGlsZSAo
+aGJhLT5uZXh0KQotCQloYmEgPSBoYmEtPm5leHQ7Ci0KLQloYmEtPm5leHQgPSBhbGxvY19pbnRl
+bF9oYmEoZGV2aWNlKTsKLQlyZXR1cm4gMTsKIH0KIAogc3RhdGljIHN0cnVjdCBzeXNfZGV2KiBm
+aW5kX2Rpc2tfYXR0YWNoZWRfaGJhKGludCBmZCwgY29uc3QgY2hhciAqZGV2bmFtZSkKQEAgLTMw
+MTgsMTEgKzMwMDksMTEgQEAgc3RhdGljIGludCBjb21wYXJlX3N1cGVyX2ltc20oc3RydWN0IHN1
+cGVydHlwZSAqc3QsIHN0cnVjdCBzdXBlcnR5cGUgKnRzdCkKIAkgKi8KIAlpZiAoIWNoZWNrX2Vu
+digiSU1TTV9OT19QTEFURk9STSIpKSB7CiAJCWlmICghZmlyc3QtPmhiYSB8fCAhc2VjLT5oYmEg
+fHwKLQkJICAgIChmaXJzdC0+aGJhLT50eXBlICE9IHNlYy0+aGJhLT50eXBlKSkgIHsKKwkJICAg
+IHN0cmNtcChmaXJzdC0+aGJhLT5wYXRoLCBzZWMtPmhiYS0+cGF0aCkgIT0gMCkgIHsKIAkJCWZw
+cmludGYoc3RkZXJyLAogCQkJCSJIQkFzIG9mIGRldmljZXMgZG9lcyBub3QgbWF0Y2ggJXMgIT0g
+JXNcbiIsCi0JCQkJZmlyc3QtPmhiYSA/IGdldF9zeXNfZGV2X3R5cGUoZmlyc3QtPmhiYS0+dHlw
+ZSkgOiBOVUxMLAotCQkJCXNlYy0+aGJhID8gZ2V0X3N5c19kZXZfdHlwZShzZWMtPmhiYS0+dHlw
+ZSkgOiBOVUxMKTsKKwkJCQlmaXJzdC0+aGJhID8gZmlyc3QtPmhiYS0+cGF0aCA6IE5VTEwsCisJ
+CQkJc2VjLT5oYmEgPyBzZWMtPmhiYS0+cGF0aCA6IE5VTEwpOwogCQkJcmV0dXJuIDM7CiAJCX0K
+IAl9CkBAIC0zODAwLDcgKzM3OTEsNyBAQCBzdGF0aWMgaW50IGZpbmRfaW50ZWxfaGJhX2NhcGFi
+aWxpdHkoaW50IGZkLCBzdHJ1Y3QgaW50ZWxfc3VwZXIgKnN1cGVyLCBjaGFyICpkZQogCQkJfQog
+CiAJCQlmcHJpbnRmKHN0ZGVyciwgIikuXG4iCi0JCQkJIiAgICBNaXhpbmcgZGV2aWNlcyBhdHRh
+Y2hlZCB0byBkaWZmZXJlbnQgY29udHJvbGxlcnMgIgorCQkJCSIgICAgTWl4aW5nIGRldmljZXMg
+YXR0YWNoZWQgdG8gbXVsdGlwbGUgY29udHJvbGxlcnMgIgogCQkJCSJpcyBub3QgYWxsb3dlZC5c
+biIpOwogCQl9CiAJCWZyZWVfc3lzX2RldigmaGJhX25hbWUpOwoKLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkludGVs
+IFRlY2hub2xvZ3kgUG9sYW5kIHNwLiB6IG8uby4KeiBzaWVkemliYSB3IEdkYW5za3UKdWwuIFNs
+b3dhY2tpZWdvIDE3Mwo4MC0yOTggR2RhbnNrCgpTYWQgUmVqb25vd3kgR2RhbnNrIFBvbG5vYyB3
+IEdkYW5za3UsIApWSUkgV3lkemlhbCBHb3Nwb2RhcmN6eSBLcmFqb3dlZ28gUmVqZXN0cnUgU2Fk
+b3dlZ28sIApudW1lciBLUlMgMTAxODgyCgpOSVAgOTU3LTA3LTUyLTMxNgpLYXBpdGFsIHpha2xh
+ZG93eSAyMDAuMDAwIHpsCgpUaGlzIGUtbWFpbCBhbmQgYW55IGF0dGFjaG1lbnRzIG1heSBjb250
+YWluIGNvbmZpZGVudGlhbCBtYXRlcmlhbCBmb3IKdGhlIHNvbGUgdXNlIG9mIHRoZSBpbnRlbmRl
+ZCByZWNpcGllbnQocykuIEFueSByZXZpZXcgb3IgZGlzdHJpYnV0aW9uCmJ5IG90aGVycyBpcyBz
+dHJpY3RseSBwcm9oaWJpdGVkLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQKcmVjaXBpZW50
+LCBwbGVhc2UgY29udGFjdCB0aGUgc2VuZGVyIGFuZCBkZWxldGUgYWxsIGNvcGllcy4K
 
-NeilBrown <neilb@suse.de> wrote:
-
->On Fri, 09 Nov 2012 12:39:05 +0100 "H. Peter Anvin" <hpa@zytor.com>
->wrote:
->
->> Sorry, we cannot share those at this time since the hardwarenis not
->yet released.
->
->Can I take that to imply "Acked-by: "H. Peter Anvin" <hpa@zytor.com>"
->??
->
->It would be nice to have at least a statement like:
->These patches have been tested both with the user-space testing tool
->and in=20
->a RAID6 md array and the pass all test.  While we cannot release
->performance
->numbers as the hardwere is not released, we can confirm that on that
->hardware
-> the performance with these patches is faster than without.
->
->I guess I should be able to assume that - surely the patches would not
->be
->posted if it were not true...  But I like to avoid assuming when I can=
-=2E
->
->Thanks,
->NeilBrown
->
->
->>=20
->> Paul Menzel <pm.debian@googlemail.com> wrote:
->>=20
->> >Dear Jim,
->> >
->> >
->> >Am Donnerstag, den 08.11.2012, 13:47 -0800 schrieb Jim Kukunas:
->> >> Optimize RAID6 recovery functions to take advantage of
->> >> the 256-bit YMM integer instructions introduced in AVX2.
->> >
->> >in my experiencing optimizations always have to be back up by
->> >benchmarks. Could you add those to the commit message please.
->> >
->> >> Signed-off-by: Jim Kukunas <james.t.kukunas@linux.intel.com>
->> >
->> >[=E2=80=A6]
->> >
->> >
->> >Thanks,
->> >
->> >Paul
->>=20
-
---=20
-Sent from my mobile phone. Please excuse brevity and lack of formatting=
-=2E
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
