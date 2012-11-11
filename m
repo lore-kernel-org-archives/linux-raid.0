@@ -1,50 +1,54 @@
-From: Mike Frysinger <vapier@gentoo.org>
-Subject: mdadm: error when using multiple ARRAY <ignore> lines in mdadm.conf
-Date: Sun, 11 Nov 2012 03:43:42 -0500
-Message-ID: <201211110343.43052.vapier@gentoo.org>
+From: starlight.2012q4@binnacle.cx
+Subject: question: no-bitmap RAID1 with off-site drive
+Date: Sun, 11 Nov 2012 16:40:27 -0500
+Message-ID: <6.2.5.6.2.20121111163935.05df8b18@binnacle.cx>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1647637.gcNIhnlPI6";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---nextPart1647637.gcNIhnlPI6
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Hello,
 
-the mdadm.conf documentation indicates that <ignore> is special and can be=
-=20
-specified multiple times.  unfortunately, that is not the case:
-	mdadm: Device <ignore> given twice in config file
-	mdadm: Duplicate MD device names in conf file were found.
-=2Dmike
+Sorry if this has been answered before,
+but I'm having trouble finding the
+relevant messages by searching.  Several
+solutions are floating around.
 
---nextPart1647637.gcNIhnlPI6
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+Want to configure a simple no-bitmap
+RAID1 with three-drives, one always
+stored off-site.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (GNU/Linux)
+Will rotate only two or three times a
+year so I'd rather have the no-bitmap
+setup where the incoming drive gets a
+full resync--takes just eight hours.
+Have a daily incremental cloud-backup,
+which allows infrequent visits to the
+safe-deposit box.
 
-iQIcBAABAgAGBQJQn2U/AAoJEEFjO5/oN/WBwocP/j9dqMTAM3AUu0dGOT6sVGup
-ku0CK2Cl2gORDa5ehToc9teySL9DMDTyFTZjy4XyLIpLf3+Admv3c1YdbmBtZOJS
-No8U8/ED6eE1Sn1S5K7sQpzuKxi1y6sLaYPVuVWLBbUBmhy3GRmfcpEvIKQBwq9P
-tttLBpQNb5oMqrRny05/3DpC9FhpK7mTEJaxXg/t1S+PbQB5HMyjGl85BuCATMQ8
-MwUNTSAJ9L84KDahokHHgAKWaun3rrmUVwcp1HcWotT+HDLqAR/V/zgE881WUlhF
-f3sGlElfOvBnEterkc0xG/Dv6SMY8iBw5ht/sUsPywfjiGkvzNZODBcTOc2UIcXm
-9IIJ2lx+7C3YaoWtx4f+bppK6G1h1vxmwCzI0+t3mCOu5WnVVtfULrJBFeD2mOdm
-Eq/qwlCpM1aFoAvGyj/qpeqa4G9i3WlnW56wgmEV56x7RTh6cVQEvQq4+pg4ZNEZ
-lqQRhxwoNYsDgvnh0Av/6lqx72vkJggWju44J0VlJBdR17Ej/8YE4kdGzdZpZ9k6
-cBu1ccHB9SnqIFnef0RfKM5/CukVDDbT/rLyTEWyYSOeuFcFAJ6woYBXvnhMcOLX
-TsjNqUbotKpsKI2bZJnl8RhoIeBAUZZPfVbzslpbq7astrze4Y0nYEgTOQ5ZKwxG
-mi+I8FtUQZE12LS1hGvH
-=8VCR
------END PGP SIGNATURE-----
+What are the correct approach and
+commands for this?  Will never
+have three drives together on-site.
 
---nextPart1647637.gcNIhnlPI6--
+I'm nervous about using --fail --remove
+to take the mirror copy offline, fearing
+that it could put the backup in an
+unusable state.  Thinking a --stop
+might be cleanest approach.
+
+Wondering if --grow --raid-devices=1 --force
+after the drive is removed and then
+--grow --add --raid-devices=2 with
+the returning drive is correct or if a
+--raid-devices=3 with no --grow on
+rotation is better.
+
+I'm looking for the most correct way to
+go, but don't have enough experience of
+'mdadm' to have a sense of what it
+should be.
+
+Thank you for any help!
+
