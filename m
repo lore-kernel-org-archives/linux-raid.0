@@ -1,54 +1,46 @@
 From: starlight.2012q4@binnacle.cx
-Subject: question: no-bitmap RAID1 with off-site drive
-Date: Sun, 11 Nov 2012 16:40:27 -0500
-Message-ID: <6.2.5.6.2.20121111163935.05df8b18@binnacle.cx>
+Subject: Re: question: no-bitmap RAID1 with off-site drive
+Date: Sun, 11 Nov 2012 17:14:03 -0500
+Message-ID: <6.2.5.6.2.20121111170842.05dfe758@binnacle.cx>
+References: <6.2.5.6.2.20121111163935.05df8b18@binnacle.cx>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <6.2.5.6.2.20121111163935.05df8b18@binnacle.cx>
+References: <6.2.5.6.2.20121111163935.05df8b18@binnacle.cx>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Would like to have the option to zero the
+superblock of an incoming drive and have
+it treated as a virgin replacement.
 
-Sorry if this has been answered before,
-but I'm having trouble finding the
-relevant messages by searching.  Several
-solutions are floating around.
+I tried this (I think) by running
 
-Want to configure a simple no-bitmap
-RAID1 with three-drives, one always
-stored off-site.
+   mdadm --add /dev/md2 /dev/sde
 
-Will rotate only two or three times a
-year so I'd rather have the no-bitmap
-setup where the incoming drive gets a
-full resync--takes just eight hours.
-Have a daily incremental cloud-backup,
-which allows infrequent visits to the
-safe-deposit box.
+It worked, but assigned the new drive
+as device number [2], which seems
+incorrect.  I tried failing/removing the
+drive followed by a
 
-What are the correct approach and
-commands for this?  Will never
-have three drives together on-site.
+   mdadm --remove /dev/md2 detached
 
-I'm nervous about using --fail --remove
-to take the mirror copy offline, fearing
-that it could put the backup in an
-unusable state.  Thinking a --stop
-might be cleanest approach.
+and repeated the --add with a zero-superblock
+drive but it does the same thing every time.
+Only way to get it to reuse drive slot 1
+was to do a 
 
-Wondering if --grow --raid-devices=1 --force
-after the drive is removed and then
---grow --add --raid-devices=2 with
-the returning drive is correct or if a
---raid-devices=3 with no --grow on
-rotation is better.
+   mdadm --grow --raid-devices=1 --force /dev/md2
 
-I'm looking for the most correct way to
-go, but don't have enough experience of
-'mdadm' to have a sense of what it
-should be.
+followed by a
 
-Thank you for any help!
+   mdadm --grow --add --raid-devices=2 /dev/md2 /dev/sde
+
+Is this the expected behavior?  I find it
+confusing and probably don't understand
+it properly.
+
+Kernel is 3.1.8.
 
