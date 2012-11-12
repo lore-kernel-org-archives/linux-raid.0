@@ -1,40 +1,37 @@
-From: Salatiel Filho <salatiel.filho@gmail.com>
-Subject: Raid over USB disks and eject
-Date: Mon, 12 Nov 2012 09:44:04 -0300
-Message-ID: <CAGmni9rBn9V0kEqirNnLR1iGdaXc48+afuL1NbTg8R5Cr1q9hw@mail.gmail.com>
+From: starlight.2012q4@binnacle.cx
+Subject: Re: question: no-bitmap RAID1 with off-site drive
+Date: Mon, 12 Nov 2012 09:55:08 -0500
+Message-ID: <6.2.5.6.2.20121112095127.039df8b0@binnacle.cx>
+References: <6.2.5.6.2.20121111163935.05df8b18@binnacle.cx>
+ <6.2.5.6.2.20121111170842.05dfe758@binnacle.cx>
+ <50A06F9F.3090600@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <50A06F9F.3090600@websitemanagers.com.au>
+References: <6.2.5.6.2.20121111163935.05df8b18@binnacle.cx>
+ <6.2.5.6.2.20121111170842.05dfe758@binnacle.cx>
+ <50A06F9F.3090600@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi guys,  i have an external USB enclosure with 4 disks  in RAID5 mode
-using mdadm. I dont know exactly why but if i use this disks for
-massive I/O for lots of hours (over 12 hours), linux usually eject
-some or all disks (causing a faulty in the raid) and remaps them: sdb
--> sdf , sdc -> sdg , sdd -> sdh , sde -> sdi
-Well , this was never exactly a problem because most of the time those
-disks are idle (just backup), but i had a real disk failure and i will
-replace the disk. But probably the rebuild process will take a lot
-more than 12 hours so the chances are that some disk will be ejected
-and i will be in a trouble situation where a raid5 rebuilding process
-will probably be stopped by an apparently failure. So my question is:
+At 02:40 PM 11/12/2012 +1100, Adam Goryachev wrote:
+>5) madam --manage /dev/md2 --fail /dev/sdd (fail the disk you want to remove)
+>6) mdadm --manage /dev/md2 --remove /dev/sdd (remove the disk from the array)
 
-If i get into that situation , will i be able to disassemble and
-reassemble the disk using the three disks i know are 'fine' and
-restart the rebuild process from where it stopped ? I have internal
-bitmap enabled.
+So this sequence will not harm the image
+on the drive being roatated offsite?
+Absolutely 100% for certain?  If there
+is any chance of a problem I can
+--stop the array before removing the
+drive.  The volume is used for a Bacula
+network backup that is often idle.
 
-Is it possible to somehow freeze the rebuild process ? So i could
-pause the process for a few hours after 8 hours of work for example.
+The third drive will never be on site
+(think about the risk), but that just
+means that the array will grow from
+2->1 and then from 1->2 instead
+of from 2->3 and 3->2.
 
-The raid will be assembled but umounted during the rebuild proccess.
-
-I am using kernel 3.2.30.
-
-Thanks !!!
-
-
-[]'s
-Salatiel
