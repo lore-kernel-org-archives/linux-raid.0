@@ -1,225 +1,302 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: Best way (only?) to setup SSD's for using TRIM
-Date: Tue, 13 Nov 2012 10:39:37 -0500
-Message-ID: <50A269B9.1090208@redhat.com>
-References: <508D808A.7040100@curtronics.com> <508FA2C6.2050800@hesbynett.no> <508FE44A.3040507@curtronics.com> <508FF85F.1030308@hesbynett.no> <Pine.LNX.4.64.1210301306470.20143@router.curtronics.com> <B371ADF3-F328-4E1B-A6D2-87DE1974D8FF@colorremedies.com> <5090E239.9040302@hesbynett.no> <CAJEsFnkM9w0kNbNd51ShP0uExvsZE6V9h3WKKs3nxWfncUCYJA@mail.gmail.com> <509131AF.2030400@hesbynett.no> <50A24D9B.8040002@redhat.com> <50A263A0.70502@hesbynett.no>
+From: Peter Maloney <peter.maloney@brockmann-consult.de>
+Subject: 3.7-rc4 hang with mdadm raid10 near layout, with 4 disks, and an
+ internal bitmap
+Date: Tue, 13 Nov 2012 19:11:31 +0100
+Message-ID: <50A28D53.2080409@brockmann-consult.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50A263A0.70502@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: Alexander Haase <mail.alexhaase@gmail.com>, Chris Murphy <lists@colorremedies.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/13/2012 10:13 AM, David Brown wrote:
-> On 13/11/2012 14:39, Ric Wheeler wrote:
->> On 10/31/2012 10:11 AM, David Brown wrote:
->>> On 31/10/2012 14:12, Alexander Haase wrote:
->>>> Has anyone considered handling TRIM via an idle IO queue? You'd have to
->>>> purge queue items that conflicted with incoming writes, but it does get
->>>> around the performance complaint. If the idle period never comes, old
->>>> TRIMs can be silently dropped to lessen queue bloat.
->>>>
->>>
->>> I am sure it has been considered - but is it worth the effort and the
->>> complications?  TRIM has been implemented in several filesystems (ext4
->>> and, I believe, btrfs) - but is disabled by default because it
->>> typically slows down the system.  You are certainly correct that
->>> putting TRIM at the back of the queue will avoid the delays it causes
->>> - but it still will not give any significant benefit (except for old
->>> SSDs with limited garbage collection and small over-provisioning ),
->>> and you have a lot of extra complexity to ensure that a TRIM is never
->>> pushed back until after a new write to the same logical sectors.
->>
->> I think that you are vastly understating the need for discard support or
->> what your first hand experience is, so let me  inject some facts into
->> this thread from working on this for several years (with vendors) :)
->>
->
-> That is quite possible - my experience is limited.  My aim in this discussion 
-> is not to say that TRIM should be ignored completely, but to ask if it really 
-> is necessary, and if its benefits outweigh its disadvantages and the added 
-> complexity.  I am trying to dispel the widely held myths that TRIM is 
-> essential, that SSDs are painfully slow without it, that SSDs do not work with 
-> RAID because RAID does not support TRIM, and that you must always enable TRIM 
-> (and "discard" mount options) to get the best from your SSDs.
+I am using kernel 3.7-rc4. I have 2 LV on a 4 disk raid10 near layout
+mdadm device which I am trying to copy to another LV on the same VG
+using dd. The mdadm device has an internal bitmap. When I copy the first
+LV, it goes smoothly, but with the 2nd it hangs before it is done.
 
-It really is required, the question and challenge is how to use it correctly and 
-how to use the right technique on the right device.
+I don't know if I can reproduce it, so I'll just leave it broken with a
+bitmap until this is resolved, and work around by using files for what
+I'm trying to do right now. It's my home desktop machine.
 
-If you have an extremely light workload on any device (an SSD in a laptop used 
-for web browsing?), this probably won't matter for a long time but also would 
-not impact your performance much since you are not pushing a lot of IO :)
+Should I start by installing 3.6.6 or 3.7.0-rc5?
 
->
-> Nothing makes me happier here than seeing someone with strong experience from 
-> multiple vendors bringing in some facts - so thank you for your comments and 
-> help here.
->
->> Overview:
->>
->> * In Linux, we have "discard" support which vectors down into the device
->> appropriate method (TRIM for S-ATA, UNMAP/WRITE_SAME+UNMAP for SCSI,
->> just discard for various SW only block devices)
->> * There is support for inline discard in many file systems (ext4, xfs,
->> btrfs, gfs2, ...)
->> * There is support for "batched" discard (still online) via tools like
->> fstrim
->>
->
-> OK.
->
->> Every SSD device benefits from TRIM and the SSD companies test this code
->> with the upstream community.
->>
->> In our testing with various devices, the inline (mount -o discard) can
->> have a performance impact so typically using the batched method is better.
->>
->
-> I am happy to see you confirm this.  I think fstrim is a much more practical 
-> choice than inline trim for many uses (with SATA SSD's at least - SCSI/SAS 
-> SSD's have better "trim" equivalents with less performance impact, since they 
-> can be queued).  I also think fstrim will work better along with RAID and 
-> other layered systems, since it will have fewer, larger TRIMs and allow the 
-> RAID system to trim whole stripes at a time (and just drop any leftovers).
+When I created my raid, I was probably using kernel 3.1 or 3.4.4. When I
+added the bitmap, it was probably 3.7-rc2.
 
-The basic observation - again important to note that this is for S-ATA devices, 
-not all discard enabled devices - is that an ATA_TRIM command takes about the 
-same time regardless of the size being trimmed. It is also currently a 
-non-queued command, so we shut down NCQ (draining the queue for a S-ATA device 
-on each command).
+# uname -a
+Linux peter 3.7.0-rc4-1-default #7 SMP Sun Nov 4 23:11:57 CET 2012
+x86_64 x86_64 x86_64 GNU/Linux
 
-Basically a good idea for S-ATA to use fewer commands to minimize that impact.
+# mdadm -D /dev/md2
+/dev/md2:
+        Version : 1.2
+  Creation Time : Sat Jul  7 10:16:20 2012
+     Raid Level : raid10
+     Array Size : 1292850176 (1232.96 GiB 1323.88 GB)
+  Used Dev Size : 646425088 (616.48 GiB 661.94 GB)
+   Raid Devices : 4
+  Total Devices : 4
+    Persistence : Superblock is persistent
 
-The standards body T13 is thinking about fixing the non-queueable issue so this 
-might improve.
+  Intent Bitmap : Internal
 
-Note again, there a loads of other device types where this is not such an impact.
+    Update Time : Tue Nov 13 18:49:12 2012
+          State : active
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
 
-As a footnote, if you want to see the various bits of capability we scrape out 
-of devices, we put a lot of information into /sys/block/sda/queue (discard 
-support, etc).
+         Layout : near=2
+     Chunk Size : 512K
 
->
->> For SCSI arrays (less an issue here on this list), the discard allows
->> for over-provisioning of LUN's.
->>
->> Device mapper has support (newly added) for dm-thinp targets which can
->> do the same without hardware support.
->>
->>>
->>> It would be much easier and safer, and give much better effect, to
->>> make sure the block allocation procedure for filesystems emphasised
->>> re-writing old blocks as soon as possible (when on an SSD). Then
->>> there is no need for TRIM at all.  This would have the added benefit
->>> of working well for compressed (or sparse) hard disk image files used
->>> by virtual machines - such image files only take up real disk space
->>> for blocks that are written, so re-writes would save real-world disk
->>> space.
->>
->> Above you are mixing the need for TRIM (which allows devices like SSD's
->> to do wear levelling and performance tuning on physical blocks) with the
->> virtual block layout of SSD devices. Please keep in mind that the block
->> space advertised out to a file system is contiguous, but SSD's
->> internally remapped the physical blocks aggressively. Think of physical
->> DRAM and your virtual memory layout.
->
-> I don't think I am mixing these concepts - but I might well be expressing 
-> myself badly.
->
-> Suppose the disk has logical blocks log000 to log499, and physical blocks 
-> phy000 to phy599.  The filesystem sees 500 blocks, which the SSD's firmware 
-> maps onto the 600 physical blocks as needed (20% overprovisioning).  We start 
-> off with a blank SSD.
->
-> The filesystem writes out a file to blocks log000 through log009. The SSD has 
-> to map these to physical blocks, and picks phy000 through phy009.
->
-> Then the filesystem deletes that file.  Logical blocks log000 to log009 are 
-> now free for re-use by the filesystem.  But without TRIM, the SSD does not 
-> know that - so it must preserve phy000 to phy009.
->
-> Then the filesystem writes a new 10-block file.  If it picks log010 to log019 
-> for the logical blocks, then the SSD will write them to phy010 through 
-> phy019.  Everything works fine, but the SSD is carrying around these extra 
-> physical blocks that it believes are important, because they are still mapped 
-> to logical blocks log000 to log009, and the SSD does not know they are now 
-> unused.
->
-> But if instead the filesystem wrote the new file to log000 to log009, we would 
-> have a different case.  The SSD would again allocate phy010 to phy019, since 
-> it needs to use blank blocks. But now the SSD has changed the mapping for 
-> log000 to phy010 instead of phy000, and knows that physical blocks phy000 to 
-> phy009 are not needed - without a logical block mapping, they cannot be 
-> accessed by the file system.  So these physical blocks can be re-cycled in 
-> exactly the same manner as if they were TRIM'ed.
->
-> In this way, if the filesystem is careful about re-using free logical blocks 
-> (rather than aiming for low fragmentation and contiguous block allocation, as 
-> done for hard disk speed), there is no need for TRIM. The only benefit of TRIM 
-> is to move the recycling process to a slightly earlier stage - but I believe 
-> that effect would be negligible with appropriate overprovisioning.
->
-> That's my theory, anyway.
+           Name : peter:2  (local to host peter)
+           UUID : fa4434c7:96ebd0ca:87b3e34f:e4800a10
+         Events : 47371
 
-I think that any assumptions about the logical layout for an SSD mapping into 
-the same physical layout is optimistic.
+    Number   Major   Minor   RaidDevice State
+       5       8        4        0      active sync   /dev/sda4
+       1       8       20        1      active sync   /dev/sdb4
+       2       8       52        2      active sync   /dev/sdd4
+       4       8       36        3      active sync   /dev/sdc4
 
-Still not clear to me why you are trying to combine the two concepts.
+# cat /proc/mdstat
+Personalities : [raid1] [raid10]
+md2 : active raid10 sda4[5] sdc4[4] sdd4[2] sdb4[1]
+      1292850176 blocks super 1.2 512K chunks 2 near-copies [4/4] [UUUU]
+      bitmap: 1/10 pages [4KB], 65536KB chunk
 
-Putting things together (contiguous allocation) in your virtual address space 
-(block space) is good since you can allocate larger IO's to get your file read 
-from the device into DRAM.
+md0 : active raid1 sda1[0] sdc1[3] sdd1[2] sdb1[1]
+      524224 blocks [4/4] [UUUU]
+     
+unused devices: <none>
 
-Letting the target storage device know what is used/unused (discard) is totally 
-unrelated. It allows the device to optimize/garbage collect/wear level/etc.
 
-Not that simple allocation schemes are a bad idea for SSD's (why work harder 
-than you need to, avoid wasting CPU cycles, etc), but it is not tied into 
-discard or not.
+Symptoms:
 
-If you want to see a lot of hard data on SSD's, there is a fairly solid body of 
-work published at USENIX FAST conferences (www.usenix.org) including work on 
-various firmware ideas, testing, etc.
+1 - iostat shows nothing but avgqu-sz and %util for the device.
 
->
->>
->> Doing a naive always allocate and reuse the lowest block would have
->> horrendous performance impact on certain devices. Even on SSD's where
->> seek is negligible, having to do lots of small IO's instead of larger,
->> contiguous IO's is much slower.
->
-> Clearly the allocation algorithms would have to be different for SSDs and hard 
-> disks (and I realise this complicates matters - an aim with the block device 
-> system is to keep things device independent when possible.  There is always 
-> someone who wants to make a three-way raid1 mirror from an SSD, a hard disk 
-> partition, and a block of memory exported by iSCSI from a remote server - and 
-> it is great that they can do so).  And clearly having lots of small IOs will 
-> increase overheads and reduce any performance benefits.  But somewhere here is 
-> the possibility to bias the filesystems' allocation schemes towards reuse, 
-> giving most of the benefits of TRIM "for free".
->
-> It may also be the case that filesystems already do this, and I am 
-> recommending a re-invention of a wheel that is already optimised - obviously 
-> you will know that far better than me.  I am just trying to come up with 
-> helpful ideas.
->
-> mvh.,
->
-> David
->
->
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           2.76    0.00    1.00   12.43    0.00   83.81
 
-It is unfortunately not just SSD's versus S-ATA spindles. We have SAS SSD's, 
-PCI-e SSD's, enterprise arrays (SCSI luns), consumer S-ATA SSDs and software 
-only discard enabled devices.
+Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s
+avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
+sda               0.00     0.00    0.00    0.00     0.00     0.00    
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+sdb               0.00     0.00    0.00    0.00     0.00     0.00    
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+sdd               0.00     0.00    0.00    0.00     0.00     0.00    
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+sdc               0.00     0.00    0.00    0.00     0.00     0.00    
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+md0               0.00     0.00    0.00    0.00     0.00     0.00    
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+md2               0.00     0.00    0.00    0.00     0.00     0.00    
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+dm-0              0.00     0.00    0.00    0.00     0.00     0.00    
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+dm-1              0.00     0.00    0.00    0.00     0.00     0.00    
+0.00   114.00    0.00    0.00    0.00   0.00 100.00
+dm-2              0.00     0.00    0.00    0.00     0.00     0.00    
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+dm-3              0.00     0.00    0.00    0.00     0.00     0.00    
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+dm-4              0.00     0.00    0.00    0.00     0.00     0.00    
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+dm-5              0.00     0.00    0.00    0.00     0.00     0.00    
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+dm-6              0.00     0.00    0.00    0.00     0.00     0.00    
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
+dm-7              0.00     0.00    0.00    0.00     0.00     0.00    
+0.00     0.00    0.00    0.00    0.00   0.00   0.00
 
-We do work hard to deduce the generic type of the device (again, see the 
-/sys/block information) but we need to be careful not to spin into a ton of 
-device specific algorithms :)
+2 - "ls /backup/" works but "ls /backup/win8-32/" hangs. I haven't found
+anything else that hangs.
 
-Ric
+3 - umount -f fails saying it is in use
+
+4 - on normal shutdown, the system fails to stop the raid device,
+eventually giving up
+
+
+Here is output from alt+sysrq+w right after the hang happens.
+
+
+Nov 13 18:43:23 peter kernel: EXT4-fs (dm-1): mounted filesystem with
+ordered data mode. Opts: (null)
+Nov 13 18:51:40 peter kernel: SysRq : Show Blocked State
+Nov 13 18:51:40 peter kernel:   task                        PC stack  
+pid father
+Nov 13 18:51:40 peter kernel: flush-253:1     D ffffffff81823c60     0 
+4162      2 0x00000000
+Nov 13 18:51:40 peter kernel:  ffff8803cc12d008 0000000000000046
+ffff880428118c00 ffff880422a3b5c0
+Nov 13 18:51:40 peter kernel:  ffff8803cc12dfd8 ffff8803cc12dfd8
+ffff8803cc12dfd8 00000000000141c0
+Nov 13 18:51:40 peter kernel:  ffff88042e156480 ffff8803c5f9a7c0
+ffff8803cc12d018 ffff880428118e80
+Nov 13 18:51:40 peter kernel: Call Trace:
+Nov 13 18:51:40 peter kernel:  [<ffffffff815fcd84>] schedule+0x24/0x70
+Nov 13 18:51:40 peter kernel:  [<ffffffff814ac09d>] md_super_wait+0x4d/0x80
+Nov 13 18:51:40 peter kernel:  [<ffffffff810c3040>] ?
+add_wait_queue+0x60/0x60
+Nov 13 18:51:40 peter kernel:  [<ffffffff814b2468>]
+bitmap_unplug.part.22+0x158/0x160
+Nov 13 18:51:40 peter kernel:  [<ffffffff811af427>] ? __kmalloc+0x1e7/0x230
+Nov 13 18:51:40 peter kernel:  [<ffffffff814b248d>] bitmap_unplug+0x1d/0x20
+Nov 13 18:51:40 peter kernel:  [<ffffffffa057ea50>]
+raid10_unplug+0xa0/0x120 [raid10]
+Nov 13 18:51:40 peter kernel:  [<ffffffff8130be85>]
+blk_flush_plug_list+0xb5/0x230
+Nov 13 18:51:40 peter kernel:  [<ffffffff815fce43>] io_schedule+0x73/0xd0
+Nov 13 18:51:40 peter kernel:  [<ffffffff8130b011>] get_request+0x141/0x320
+Nov 13 18:51:40 peter kernel:  [<ffffffff810c3040>] ?
+add_wait_queue+0x60/0x60
+Nov 13 18:51:40 peter kernel:  [<ffffffff8130c0cf>] blk_queue_bio+0x7f/0x3a0
+Nov 13 18:51:40 peter kernel:  [<ffffffff81308b2f>]
+generic_make_request.part.55+0x6f/0xa0
+Nov 13 18:51:40 peter kernel:  [<ffffffff81309080>]
+generic_make_request+0x60/0x70
+Nov 13 18:51:40 peter kernel:  [<ffffffff813090f7>] submit_bio+0x67/0x130
+Nov 13 18:51:40 peter kernel:  [<ffffffff811ea37d>] submit_bh+0xed/0x120
+Nov 13 18:51:40 peter kernel:  [<ffffffff8124c50a>]
+ext4_read_block_bitmap_nowait+0x18a/0x2e0
+Nov 13 18:51:40 peter kernel:  [<ffffffff81285e0f>]
+ext4_mb_init_cache+0x14f/0x730
+Nov 13 18:51:40 peter kernel:  [<ffffffff8128648e>]
+ext4_mb_init_group+0x9e/0x100
+Nov 13 18:51:40 peter kernel:  [<ffffffff81286989>]
+ext4_mb_load_buddy+0x339/0x350
+Nov 13 18:51:40 peter kernel:  [<ffffffff81287efb>]
+ext4_mb_find_by_goal+0x9b/0x2d0
+Nov 13 18:51:40 peter kernel:  [<ffffffff81288899>]
+ext4_mb_regular_allocator+0x59/0x420
+Nov 13 18:51:40 peter kernel:  [<ffffffffa042694f>] ?
+_dm_request.isra.24+0xff/0x150 [dm_mod]
+Nov 13 18:51:40 peter kernel:  [<ffffffff811eb5d7>] ?
+__find_get_block+0x87/0xe0
+Nov 13 18:51:40 peter kernel:  [<ffffffff8128a54d>]
+ext4_mb_new_blocks+0x40d/0x4a0
+Nov 13 18:51:40 peter kernel:  [<ffffffff8127bf14>] ?
+ext4_ext_check_overlap.isra.22+0xb4/0xd0
+Nov 13 18:51:40 peter kernel:  [<ffffffff8128130d>]
+ext4_ext_map_blocks+0x96d/0xba0
+Nov 13 18:51:40 peter kernel:  [<ffffffff81255743>] ?
+mpage_da_submit_io+0x313/0x590
+Nov 13 18:51:40 peter kernel:  [<ffffffff81253585>]
+ext4_map_blocks+0x1f5/0x2c0
+Nov 13 18:51:40 peter kernel:  [<ffffffff812576ea>]
+mpage_da_map_and_submit+0xba/0x390
+Nov 13 18:51:40 peter kernel:  [<ffffffff811654db>] ?
+find_get_pages_tag+0xcb/0x170
+Nov 13 18:51:40 peter kernel:  [<ffffffff81257a25>]
+mpage_add_bh_to_extent+0x65/0xf0
+Nov 13 18:51:40 peter kernel:  [<ffffffff81257dc0>]
+write_cache_pages_da+0x310/0x450
+Nov 13 18:51:40 peter kernel:  [<ffffffff81258248>]
+ext4_da_writepages+0x348/0x620
+Nov 13 18:51:40 peter kernel:  [<ffffffff8105d58a>] ?
+__switch_to+0x12a/0x4a0
+Nov 13 18:51:40 peter kernel:  [<ffffffff811706bb>] do_writepages+0x1b/0x30
+Nov 13 18:51:40 peter kernel:  [<ffffffff811e135a>]
+__writeback_single_inode+0x3a/0x170
+Nov 13 18:51:40 peter kernel:  [<ffffffff811e35f8>]
+writeback_sb_inodes+0x198/0x330
+Nov 13 18:51:40 peter kernel:  [<ffffffff811e3826>]
+__writeback_inodes_wb+0x96/0xc0
+Nov 13 18:51:40 peter kernel:  [<ffffffff811e3acb>] wb_writeback+0x27b/0x330
+Nov 13 18:51:40 peter kernel:  [<ffffffff8105d58a>] ?
+__switch_to+0x12a/0x4a0
+Nov 13 18:51:40 peter kernel:  [<ffffffff811d4d02>] ?
+get_nr_dirty_inodes+0x52/0x80
+Nov 13 18:51:40 peter kernel:  [<ffffffff811e3c17>]
+wb_check_old_data_flush+0x97/0xa0
+Nov 13 18:51:40 peter kernel:  [<ffffffff811e50e9>]
+wb_do_writeback+0x149/0x1d0
+Nov 13 18:51:40 peter kernel:  [<ffffffff810aeff0>] ? usleep_range+0x40/0x40
+Nov 13 18:51:40 peter kernel:  [<ffffffff811e51f3>]
+bdi_writeback_thread+0x83/0x280
+Nov 13 18:51:40 peter kernel:  [<ffffffff811e5170>] ?
+wb_do_writeback+0x1d0/0x1d0
+Nov 13 18:51:40 peter kernel:  [<ffffffff810c24bb>] kthread+0xbb/0xc0
+Nov 13 18:51:40 peter kernel:  [<ffffffff81050000>] ?
+xen_extend_mmuext_op+0x60/0x120
+Nov 13 18:51:40 peter kernel:  [<ffffffff810c2400>] ?
+flush_kthread_worker+0xa0/0xa0
+Nov 13 18:51:40 peter kernel:  [<ffffffff81605f7c>] ret_from_fork+0x7c/0xb0
+Nov 13 18:51:40 peter kernel:  [<ffffffff810c2400>] ?
+flush_kthread_worker+0xa0/0xa0
+Nov 13 18:51:40 peter kernel: jbd2/dm-1-8     D 0000000000000000     0 
+4229      2 0x00000000
+Nov 13 18:51:40 peter kernel:  ffff8803c359bcb8 0000000000000046
+ffff8803c0f9c000 0000000300000001
+Nov 13 18:51:40 peter kernel:  ffff8803c359bfd8 ffff8803c359bfd8
+ffff8803c359bfd8 00000000000141c0
+Nov 13 18:51:40 peter kernel:  ffff8803ddff8680 ffff88042ac303c0
+ffff8803c359bcc8 ffff8803c359bdc0
+Nov 13 18:51:40 peter kernel: Call Trace:
+Nov 13 18:51:40 peter kernel:  [<ffffffff815fcd84>] schedule+0x24/0x70
+Nov 13 18:51:40 peter kernel:  [<ffffffff812a0879>]
+jbd2_journal_commit_transaction+0x1b9/0x1360
+Nov 13 18:51:40 peter kernel:  [<ffffffff810d98cc>] ?
+dequeue_entity+0x10c/0x1f0
+Nov 13 18:51:40 peter kernel:  [<ffffffff810c3040>] ?
+add_wait_queue+0x60/0x60
+Nov 13 18:51:40 peter kernel:  [<ffffffff812a5893>] kjournald2+0xb3/0x240
+Nov 13 18:51:40 peter kernel:  [<ffffffff810c3040>] ?
+add_wait_queue+0x60/0x60
+Nov 13 18:51:40 peter kernel:  [<ffffffff812a57e0>] ?
+commit_timeout+0x10/0x10
+Nov 13 18:51:40 peter kernel:  [<ffffffff810c24bb>] kthread+0xbb/0xc0
+Nov 13 18:51:40 peter kernel:  [<ffffffff81050000>] ?
+xen_extend_mmuext_op+0x60/0x120
+Nov 13 18:51:40 peter kernel:  [<ffffffff810c2400>] ?
+flush_kthread_worker+0xa0/0xa0
+Nov 13 18:51:40 peter kernel:  [<ffffffff81605f7c>] ret_from_fork+0x7c/0xb0
+Nov 13 18:51:40 peter kernel:  [<ffffffff810c2400>] ?
+flush_kthread_worker+0xa0/0xa0
+Nov 13 18:51:40 peter kernel: tee             D 0000000000000000     0 
+4244   4235 0x00000000
+Nov 13 18:51:40 peter kernel:  ffff8803853a79e8 0000000000000082
+ffff8803b5352cd8 ffff8803c5079870
+Nov 13 18:51:40 peter kernel:  ffff8803853a7fd8 ffff8803853a7fd8
+ffff8803853a7fd8 00000000000141c0
+Nov 13 18:51:40 peter kernel:  ffff8803a3194740 ffff8803853a4700
+ffff8803853a79f8 ffff8803c0f9c000
+Nov 13 18:51:40 peter kernel: Call Trace:
+Nov 13 18:51:40 peter kernel:  [<ffffffff815fcd84>] schedule+0x24/0x70
+Nov 13 18:51:40 peter kernel:  [<ffffffff8129dffa>]
+start_this_handle.isra.8+0x2aa/0x3b0
+Nov 13 18:51:40 peter kernel:  [<ffffffff810c3040>] ?
+add_wait_queue+0x60/0x60
+Nov 13 18:51:40 peter kernel:  [<ffffffff8129e2f2>]
+jbd2__journal_start+0xc2/0x110
+Nov 13 18:51:40 peter kernel:  [<ffffffff8129e34e>]
+jbd2_journal_start+0xe/0x10
+Nov 13 18:51:40 peter kernel:  [<ffffffff81273edf>]
+ext4_journal_start_sb+0x6f/0x150
+Nov 13 18:51:40 peter kernel:  [<ffffffff81255137>] ?
+ext4_da_write_begin+0x77/0x210
+Nov 13 18:51:40 peter kernel:  [<ffffffff81255137>]
+ext4_da_write_begin+0x77/0x210
+Nov 13 18:51:40 peter kernel:  [<ffffffff81164d4a>]
+generic_perform_write+0xca/0x210
+Nov 13 18:51:40 peter kernel:  [<ffffffff811d7cfd>] ?
+mnt_clone_write+0xd/0x30
+Nov 13 18:51:40 peter kernel:  [<ffffffff81164ee8>]
+generic_file_buffered_write+0x58/0x90
+Nov 13 18:51:40 peter kernel:  [<ffffffff811668e6>]
+__generic_file_aio_write+0x1b6/0x3b0
+Nov 13 18:51:40 peter kernel:  [<ffffffff81166b5a>]
+generic_file_aio_write+0x7a/0xf0
+Nov 13 18:51:40 peter kernel:  [<ffffffff8124df0b>]
+ext4_file_write+0x8b/0xd0
+Nov 13 18:51:40 peter kernel:  [<ffffffff811bb493>] do_sync_write+0xa3/0xe0
+Nov 13 18:51:40 peter kernel:  [<ffffffff811bbb0e>] vfs_write+0xae/0x180
+Nov 13 18:51:40 peter kernel:  [<ffffffff811bbe2d>] sys_write+0x4d/0x90
+Nov 13 18:51:40 peter kernel:  [<ffffffff81606029>]
+system_call_fastpath+0x16/0x1b
 
 
