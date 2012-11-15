@@ -1,44 +1,42 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 1/3] md:Add a func 'dm_md_stop' for dm-raid to clear up
- md resources.
-Date: Thu, 15 Nov 2012 08:52:41 -0500
-Message-ID: <20121115135241.GB15279@redhat.com>
-References: <201211151646546882035@gmail.com>
- <20121115114529.GA12798@agk-dp.fab.redhat.com>
- <201211151951429245011@gmail.com>
+From: Ming Lei <Ming.Lei@riverbed.com>
+Subject: a code question on raid5.c
+Date: Thu, 15 Nov 2012 19:14:44 +0000
+Message-ID: <2CE44BD3DBCF9541909CCB42F11CA392872F23@SFO1EXC-MBXP06.nbttech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201211151951429245011@gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: agk <agk@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, dm-devel <dm-devel@redhat.com>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Nov 15 2012 at  6:51am -0500,
-majianpeng <majianpeng@gmail.com> wrote:
 
-> >On Thu, Nov 15, 2012 at 04:46:59PM +0800, majianpeng wrote:
-> >> So add a func dm_md_stop to clear up resource.
-> > 
-> >> +++ b/drivers/md/md.c
-> >
-> >> +void dm_md_stop(struct mddev *mddev)
-> >> +{
-> >> +	md_stop(mddev);
-> >> +	bitmap_destroy(mddev);
-> >> +	if (mddev->bio_set)
-> >> +		bioset_free(mddev->bio_set);
-> >> +}
-> >> +EXPORT_SYMBOL_GPL(dm_md_stop);
-> >
-> >Let's not put a function with a dm_ prefix in an md file?
-> >
-> >Alasdair
-> >
-> Can you give me a hint? My thought is this func only by dm to call and there was a md_stop already?
-> I firstly want to add those statements in dm driver like md_stop rather than a func include those.
-> But i think dm don't know to much.
+In add_stripe_bio() there is some code as shown below:
+ 
+    if (forwrite) {
+        /* check if page is covered */
+        sector_t sector = sh->dev[dd_idx].sector;
+        for (bi=sh->dev[dd_idx].towrite;
+             sector < sh->dev[dd_idx].sector + STRIPE_SECTORS &&
+                 bi && bi->bi_sector <= sector;
+             bi = r5_next_bio(bi, sh->dev[dd_idx].sector)) {
+            if (bi->bi_sector + (bi->bi_size>>9) >= sector)
+                sector = bi->bi_sector + (bi->bi_size>>9);
+        }
+        if (sector >= sh->dev[dd_idx].sector + STRIPE_SECTORS)
+            set_bit(R5_OVERWRITE, &sh->dev[dd_idx].flags);
+    }
 
-Nmae it mddev_stop_and_cleanup?
+Say I have 3 bio(s) that is:
+1. bi->bi_sector = 654618968;
+    bi->bi_size = 2*512;
+2. bi->bi_sector = 654618970;
+    bi->bi_size = 1*512;
+3. bi->bi_sector = 654618973;
+    bi->bi_size = 5*512;
+
+I expected that the third bio could cause R5_OVERWRITE be set. But I didn't see this bit got set. What does this code really do? I thought it checks if the single 4K page can cover the bio chains targeted at this stripe cache(4K).
+
+Thanks
+M.
