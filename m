@@ -1,28 +1,40 @@
-From: Joyce Drach <jdrach@SHenry.k12.in.us>
-Subject: RE: Re-Validate Your Mailbox
-Date: Thu, 15 Nov 2012 01:24:39 -0500
-Message-ID: <CF79D3E39A12A54D9F67F91A7AF775C5B6BDF4C49C@sh-ths-exch01.SHenry.k12.in.us>
-References: <CF79D3E39A12A54D9F67F91A7AF775C5B6BDF4C412@sh-ths-exch01.SHenry.k12.in.us>
+From: majianpeng <majianpeng@gmail.com>
+Subject: [PATCH 0/3] Add a new func to handle with clearing up for stoping dm-raid.
+Date: Thu, 15 Nov 2012 16:46:54 +0800
+Message-ID: <201211151646510171304@gmail.com>
+Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CF79D3E39A12A54D9F67F91A7AF775C5B6BDF4C412@sh-ths-exch01.SHenry.k12.in.us>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Joyce Drach <jdrach@SHenry.k12.in.us>
+To: NeilBrown <neilb@suse.de>, agk <agk@redhat.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, dm-devel <dm-devel@redhat.com>
 List-Id: linux-raid.ids
 
+QmVjYXVzZSBkbS1yYWlkIGNhbGwgbWRfc3RvcCB0byBjbGVhciB1cCxidXQgbWRfc3RvcCBjYW4n
+dCBjbGVhciB1cCBjb21wbGV0ZWx5Lg0KU28gYWRkIGEgbmV3IGZ1bmMgdG8gZG8uDQoNCkppYW5w
+ZW5nIE1hICgzKToNCiAgbWQ6QWRkIGEgZnVuYyAnZG1fbWRfc3RvcCcgZm9yIGRtLXJhaWQgdG8g
+Y2xlYXIgdXAgbWQgcmVzb3VyY2UuDQogIGRtOiBXaGVuIHN0b3BpbmcgZG0tcmFpZCwgaXQgY2Fs
+bCBkbV9tZF9zdG9wIHJhdGhlciB0aGFuIG1kX3N0b3AgdG8NCiAgICBkbyBjbGVhci11cCB3b3Jr
+Lg0KICBtZDogUmVtb3ZlIEVYUE9SVF9TWU1CT0xfR1BMKG1kX3N0b3ApLg0KDQogZHJpdmVycy9t
+ZC9kbS1yYWlkLmMgfCAgICA0ICsrLS0NCiBkcml2ZXJzL21kL21kLmMgICAgICB8ICAgMTAgKysr
+KysrKysrLQ0KIGRyaXZlcnMvbWQvbWQuaCAgICAgIHwgICAgMSArDQogMyBmaWxlcyBjaGFuZ2Vk
+LCAxMiBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQ0KDQotLSANCjEuNy45LjUNCg0Kcm9v
+dEBtYWppYW5wZW5nOi9tbnQva2VybmVsL2xpbnV4IyBjYXQgMDAwMC1jb3Zlci1sZXR0ZXIucGF0
+Y2ggDQpGcm9tIGY0M2YyMmNiNTMwN2Q1YWQ4ZGZlMTdhYTQ3MWUzZjM5ZDJjOWYxZGMgTW9uIFNl
+cCAxNyAwMDowMDowMCAyMDAxDQpGcm9tOiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5j
+b20+DQpEYXRlOiBGcmksIDE2IE5vdiAyMDEyIDA3OjA0OjU2ICswODAwDQpTdWJqZWN0OiBbUEFU
+Q0ggMC8zXSBBZGQgYSBuZXcgZnVuYyB0byBoYW5kbGUgd2l0aCBjbGVhcmluZyB1cCBmb3Igc3Rv
+cGluZw0KZG0tcmFpZC4NCg0KQmVjYXVzZSBkbS1yYWlkIGNhbGwgbWRfc3RvcCB0byBjbGVhciB1
+cCxidXQgbWRfc3RvcCBjYW4ndCBjbGVhciB1cCBjb21wbGV0ZWx5Lg0KU28gYWRkIGEgbmV3IGZ1
+bmMgdG8gZG8uDQoNCkppYW5wZW5nIE1hICgzKToNCiAgbWQ6QWRkIGEgZnVuYyAnZG1fbWRfc3Rv
+cCcgZm9yIGRtLXJhaWQgdG8gY2xlYXIgdXAgbWQgcmVzb3VyY2UuDQogIGRtOiBXaGVuIHN0b3Bp
+bmcgZG0tcmFpZCwgaXQgY2FsbCBkbV9tZF9zdG9wIHJhdGhlciB0aGFuIG1kX3N0b3AgdG8NCiAg
+ICBkbyBjbGVhci11cCB3b3JrLg0KICBtZDogUmVtb3ZlIEVYUE9SVF9TWU1CT0xfR1BMKG1kX3N0
+b3ApLg0KDQogZHJpdmVycy9tZC9kbS1yYWlkLmMgfCAgICA0ICsrLS0NCiBkcml2ZXJzL21kL21k
+LmMgICAgICB8ICAgMTAgKysrKysrKysrLQ0KIGRyaXZlcnMvbWQvbWQuaCAgICAgIHwgICAgMSAr
+DQogMyBmaWxlcyBjaGFuZ2VkLCAxMiBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQ0KDQot
+LSANCjEuNy45LjUNCg==
 
-________________________________
-From: Joyce Drach
-Sent: Thursday, November 15, 2012 12:07 AM
-To: info@nt.org
-Subject: Re-Validate Your Mailbox
-
-Dear User,
-
-You have exceeded the limit of your mailbox set by your IT service provider, you will be unable to receive new emails and sent successfully. Just before this message was sent, you are Currently running on 91624 KB, You have has exceeded the storage limit which is 20GB. To prevent this, please click to reset your account.CLICK HERE<http://1hvj2iu373br89-896jt09gnsouhg890inf8705jn0h89055j.geniusaid.com/accessdefault>
-
-Thanks
-System Administrator.
