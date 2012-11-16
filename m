@@ -1,42 +1,52 @@
-From: Ming Lei <Ming.Lei@riverbed.com>
-Subject: a code question on raid5.c
-Date: Thu, 15 Nov 2012 19:14:44 +0000
-Message-ID: <2CE44BD3DBCF9541909CCB42F11CA392872F23@SFO1EXC-MBXP06.nbttech.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Subject: [PATCH] md: also hot remove disk from pers when hot removing
+Date: Fri, 16 Nov 2012 16:17:42 +0100
+Message-ID: <1353079062-6711-1-git-send-email-sebastian.riemer@profitbricks.com>
+Reply-To: linux-raid <linux-raid@vger.kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: Sebastian Riemer <sebastian.riemer@profitbricks.com>
 List-Id: linux-raid.ids
 
+If hot adding a disk not as spare but at the same slot, the disk isn't added
+correctly in the pers and it is possible to cause a kernel panic/oops due to
+the invalid pointer to the old rdev in the pers. So hot remove the disk from
+the personality before removing it from the array.
 
-In add_stripe_bio() there is some code as shown below:
+Tested with raid1.
+
+Signed-off-by: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+---
+ drivers/md/md.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 9ab768a..1fc545b 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5852,6 +5852,7 @@ static int hot_remove_disk(struct mddev * mddev, dev_t dev)
+ {
+ 	char b[BDEVNAME_SIZE];
+ 	struct md_rdev *rdev;
++	int err;
  
-    if (forwrite) {
-        /* check if page is covered */
-        sector_t sector = sh->dev[dd_idx].sector;
-        for (bi=sh->dev[dd_idx].towrite;
-             sector < sh->dev[dd_idx].sector + STRIPE_SECTORS &&
-                 bi && bi->bi_sector <= sector;
-             bi = r5_next_bio(bi, sh->dev[dd_idx].sector)) {
-            if (bi->bi_sector + (bi->bi_size>>9) >= sector)
-                sector = bi->bi_sector + (bi->bi_size>>9);
-        }
-        if (sector >= sh->dev[dd_idx].sector + STRIPE_SECTORS)
-            set_bit(R5_OVERWRITE, &sh->dev[dd_idx].flags);
-    }
+ 	rdev = find_rdev(mddev, dev);
+ 	if (!rdev)
+@@ -5860,6 +5861,13 @@ static int hot_remove_disk(struct mddev * mddev, dev_t dev)
+ 	if (rdev->raid_disk >= 0)
+ 		goto busy;
+ 
++	if (mddev->pers && mddev->pers->hot_remove_disk) {
++		err = mddev->pers->hot_remove_disk(mddev, rdev);
++		if (err)
++			return err;
++		sysfs_unlink_rdev(rdev->mddev, rdev);
++		rdev->raid_disk = -1;
++	}
+ 	kick_rdev_from_array(rdev);
+ 	md_update_sb(mddev, 1);
+ 	md_new_event(mddev);
+-- 
+1.7.1
 
-Say I have 3 bio(s) that is:
-1. bi->bi_sector = 654618968;
-    bi->bi_size = 2*512;
-2. bi->bi_sector = 654618970;
-    bi->bi_size = 1*512;
-3. bi->bi_sector = 654618973;
-    bi->bi_size = 5*512;
-
-I expected that the third bio could cause R5_OVERWRITE be set. But I didn't see this bit got set. What does this code really do? I thought it checks if the single 4K page can cover the bio chains targeted at this stripe cache(4K).
-
-Thanks
-M.
