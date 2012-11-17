@@ -1,59 +1,65 @@
-From: Gilles Espinasse <g.esp@free.fr>
-Subject: [PATCH] Fix recommended test command
-Date: Sat, 17 Nov 2012 13:37:53 +0100
-Message-ID: <1353155873-28770-1-git-send-email-g.esp@free.fr>
+From: Drew Reusser <dreusser@gmail.com>
+Subject: Issue with Raid 10 super block failing
+Date: Sat, 17 Nov 2012 18:06:26 +0000
+Message-ID: <CAPAnFc_USC=a8S_0wcsK36Sx=HXgfVTQ4LPC=m9Y9mDFrYrepg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, neilb@suse.de
-Cc: Gilles Espinasse <g.esp@free.fr>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Signed-off-by: Gilles Espinasse <g.esp@free.fr>
+I hate to be a newbie on this list, and ask a question but I am really at a
+loss.  I have a raid 10 that I have had working and was throwing no errors,
+and I rebooted and now I cannot get it to come back.  I am running a live
+CD and trying to get it to mount, and I am getting errors about bad
+superblocks, invalid bitmaps, and invalid partition tables.  I have been
+scouring the interwebs for the last few days and ran across the archive on
+http://www.spinics.net but cannot find anything that has worked there for
+me so I figured I would join and at least hope.  Last chance for me to take
+it to a data retrieval office which I really don't want to do.
 
-Recommended 'sh ./test' fail with
-LANG=C sudo sh ./test
-./test: line 73: `ctrl-c': not a valid identifier
+Here is my setup.  4x1tb disks in raid 10.  I can get the array to mount -
+but it tells me the file system is invalid.  I have the following from
+commands I have seen people ask below.  The devices are currently sitting
+unmounted and not in an array until I can go forward with some confidence I
+am not going to loose my data.
 
-Replace '-' by '_' in the ctrl-c function name fix that.
-In the same time, update the recommended command to 'bash ./test' to match the shebang
----
- Makefile |    2 +-
- test     |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index d99ea2b..94229fa 100644
---- a/Makefile
-+++ b/Makefile
-@@ -268,7 +268,7 @@ uninstall:
- 	rm -f $(DESTDIR)$(MAN8DIR)/mdadm.8 $(DESTDIR)$(MAN8DIR)/mdmon.8 $(DESTDIR)$(MAN4DIR)/md.4 $(DESTDIR)$(MAN5DIR)/mdadm.conf.5 $(DESTDIR)$(BINDIR)/mdadm
- 
- test: mdadm mdmon test_stripe swap_super
--	@echo "Please run 'sh ./test' as root"
-+	@echo "Please run 'bash ./test' as root"
- 
- clean : 
- 	rm -f mdadm mdmon $(OBJS) $(MON_OBJS) $(STATICOBJS) core *.man \
-diff --git a/test b/test
-index 3f8515f..a3c2a24 100755
---- a/test
-+++ b/test
-@@ -68,13 +68,13 @@ cleanup() {
- 	done
- }
- 
--ctrl-c() {
-+ctrl_c() {
- 	exitonerror=1
- }
- 
- do_setup() {
-   trap cleanup 0 1 3 15
--  trap ctrl-c 2
-+  trap ctrl_c 2
- 
-   devlist=
-   for d in 0 1 2 3 4 5 6 7 8 9 10 11 12
--- 
-1.7.2.5
 
+
+mint dev # mdadm --examine /dev/sd[abde]
+/dev/sda:
+   MBR Magic : aa55
+Partition[0] :   1953521664 sectors at         2048 (type 83)
+/dev/sdb:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 5a2570f4:0bbaf2d4:8a3cc761:
+69b655ba
+           Name : mint:0  (local to host mint)
+  Creation Time : Wed Nov 14 20:55:09 2012
+     Raid Level : raid10
+   Raid Devices : 4
+
+ Avail Dev Size : 1953263024 (931.39 GiB 1000.07 GB)
+     Array Size : 1953262592 (1862.78 GiB 2000.14 GB)
+  Used Dev Size : 1953262592 (931.39 GiB 1000.07 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : e955cd6f:96e08ba2:c40bddae:ac633f0d
+
+    Update Time : Wed Nov 14 21:15:27 2012
+       Checksum : 5b7c4f1e - correct
+         Events : 9
+
+         Layout : near=2
+     Chunk Size : 512K
+
+   Device Role : Active device 1
+   Array State : .A.A ('A' == active, '.' == missing)
+/dev/sdd:
+          Magic : a92b4efc
+        Version : 1.2
