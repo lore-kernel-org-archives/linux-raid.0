@@ -1,57 +1,59 @@
-From: Dan Williams <djbw@fb.com>
-Subject: Re: [PATCH v2] md: also hot remove disk from pers when hot removing
-Date: Fri, 16 Nov 2012 16:07:34 -0800
-Message-ID: <CAA9_cmcViMsVMrxyEcC9yaHPq9Xc-5Dt63fMEJ+X+kZst8O9Fg@mail.gmail.com>
-References: <1353081849-10516-1-git-send-email-sebastian.riemer@profitbricks.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Gilles Espinasse <g.esp@free.fr>
+Subject: [PATCH] Fix recommended test command
+Date: Sat, 17 Nov 2012 13:37:53 +0100
+Message-ID: <1353155873-28770-1-git-send-email-g.esp@free.fr>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1353081849-10516-1-git-send-email-sebastian.riemer@profitbricks.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
-Cc: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+To: linux-raid@vger.kernel.org, neilb@suse.de
+Cc: Gilles Espinasse <g.esp@free.fr>
 List-Id: linux-raid.ids
 
-On Fri, Nov 16, 2012 at 8:04 AM, Sebastian Riemer
-<sebastian.riemer@profitbricks.com> wrote:
-> If hot adding a disk not as spare but at the same slot, the disk isn't added
-> correctly in the pers and it is possible to cause a kernel panic/oops due to
-> the invalid pointer to the old rdev in the pers. So hot remove the disk from
-> the personality before removing it from the array.
->
-> Tested with raid1.
->
-> Signed-off-by: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-> ---
->  drivers/md/md.c |    8 ++++++++
->  1 files changed, 8 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 9ab768a..1fc545b 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -5852,6 +5852,7 @@ static int hot_remove_disk(struct mddev * mddev, dev_t dev)
->  {
->         char b[BDEVNAME_SIZE];
->         struct md_rdev *rdev;
-> +       int err;
->
->         rdev = find_rdev(mddev, dev);
->         if (!rdev)
-> @@ -5860,6 +5861,12 @@ static int hot_remove_disk(struct mddev * mddev, dev_t dev)
->         if (rdev->raid_disk >= 0)
->                 goto busy;
->
-> +       if (mddev->pers && mddev->pers->hot_remove_disk) {
-> +               err = mddev->pers->hot_remove_disk(mddev, rdev);
-> +               if (err)
-> +                       return err;
-> +               sysfs_unlink_rdev(mddev, rdev);
-> +       }
+Signed-off-by: Gilles Espinasse <g.esp@free.fr>
 
-Hmm, how are you getting ->raid_disk set to -1 without the personality
-being notified?  That seems to be the source of the bug.  Otherwise it
-would seem the state_store("remove") path is also susceptible.
+Recommended 'sh ./test' fail with
+LANG=C sudo sh ./test
+./test: line 73: `ctrl-c': not a valid identifier
 
---
-Dan
+Replace '-' by '_' in the ctrl-c function name fix that.
+In the same time, update the recommended command to 'bash ./test' to match the shebang
+---
+ Makefile |    2 +-
+ test     |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index d99ea2b..94229fa 100644
+--- a/Makefile
++++ b/Makefile
+@@ -268,7 +268,7 @@ uninstall:
+ 	rm -f $(DESTDIR)$(MAN8DIR)/mdadm.8 $(DESTDIR)$(MAN8DIR)/mdmon.8 $(DESTDIR)$(MAN4DIR)/md.4 $(DESTDIR)$(MAN5DIR)/mdadm.conf.5 $(DESTDIR)$(BINDIR)/mdadm
+ 
+ test: mdadm mdmon test_stripe swap_super
+-	@echo "Please run 'sh ./test' as root"
++	@echo "Please run 'bash ./test' as root"
+ 
+ clean : 
+ 	rm -f mdadm mdmon $(OBJS) $(MON_OBJS) $(STATICOBJS) core *.man \
+diff --git a/test b/test
+index 3f8515f..a3c2a24 100755
+--- a/test
++++ b/test
+@@ -68,13 +68,13 @@ cleanup() {
+ 	done
+ }
+ 
+-ctrl-c() {
++ctrl_c() {
+ 	exitonerror=1
+ }
+ 
+ do_setup() {
+   trap cleanup 0 1 3 15
+-  trap ctrl-c 2
++  trap ctrl_c 2
+ 
+   devlist=
+   for d in 0 1 2 3 4 5 6 7 8 9 10 11 12
+-- 
+1.7.2.5
+
