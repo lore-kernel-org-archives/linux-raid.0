@@ -1,77 +1,62 @@
-From: Martijn <mailinglist@mindconnect.nl>
-Subject: RAID1 performance and "task X blocked for more than 120 seconds"
-Date: Sun, 18 Nov 2012 19:39:14 +0100
-Message-ID: <50A92B52.7030905@mindconnect.nl>
-Reply-To: mailinglist@mindconnect.nl
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Issue with Raid 10 super block failing
+Date: Sun, 18 Nov 2012 13:56:19 -0500
+Message-ID: <50A92F53.5080100@turmel.org>
+References: <CAPAnFc_USC=a8S_0wcsK36Sx=HXgfVTQ4LPC=m9Y9mDFrYrepg@mail.gmail.com> <50A82267.9030802@turmel.org> <CAPAnFc_ZtiE_-6usMHZA56Vx9JOw=gT3O3ABdpb2kcqLV6hcBw@mail.gmail.com> <50A8F247.8060002@turmel.org> <CAPAnFc9_AqQCHnzpNukVJNuaAZ0k9+i0wEZn6SAX=ucF_X_k2g@mail.gmail.com> <50A91487.70806@turmel.org> <CAPAnFc9KLBDhCDt1WYiOye5wvRv=zvBDfL1=8OEYg04VBCLHBQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAPAnFc9KLBDhCDt1WYiOye5wvRv=zvBDfL1=8OEYg04VBCLHBQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Drew Reusser <dreusser@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good day,
+Hi Drew,
 
-I have a machine here that suffers from poor performance that I'm not 
-able to explain, even with previous tips from this list.
+Please don't top-post.  Repaired again.
 
-Some details:
-- Ubuntu Linux 10.04 LTS install
-- mdadm 2.6.7.1-1ubuntu15
+On 11/18/2012 12:39 PM, Drew Reusser wrote:
+> On Sun, Nov 18, 2012 at 5:01 PM, Phil Turmel <philip@turmel.org> wrote:
 
-- RAID is a RAID1 array with 3 disks: 2 active, 1 spare
-- a partitionable device is used: /dev/md127
+[trim /]
 
-- Mount lists the following partitions:
-/dev/md127p2 on / type ext3 (rw)
-/dev/md127p6 on /tmp type ext3 (rw,noexec,noatime)
-/dev/md127p1 on /boot type ext2 (rw)
-/dev/md127p3 on /home type ext3 (rw,noatime,usrquota)
-/dev/md127p5 on /var type ext3 (rw,noatime)
+>> This all looks like it should work.
+>>
+>> Please try "mdadm -v --assemble /dev/md0 /dev/sd[abde]1" and show the
+>> output.  If it doesn't work, also show "cat /proc/mdstat" and "dmesg".
 
-- All 3 disks are connected over SATA 150 to a K8S Pro S2882 motherboard 
-(http://www.tyan.com/archive/products/html/thunderk8spro_spec.html)
-- Disks are all Seagate Barracuda 7200.12 ST31000528AS, 1TB.
-- Smart finds the disks all in good condition
+> The issue is not that I cannot get the raid to create, it is that I
+> cannot access any of the files on the system when I mount it.  It was
+> setup as an ext4 filesystem and it all was working and I rebooted and
+> it was not after that point.
+>
+>
+> mint mnt # mount -t ext4 /dev/md0 /mnt/raid
+> mount: wrong fs type, bad option, bad superblock on /dev/md0,
+>        missing codepage or helper program, or other error
+>        In some cases useful info is found in syslog - try
+>        dmesg | tail  or so
+>
+> mint dev # mdadm -v --assemble /dev/md0 /dev/sd[abde]1
+> mdadm: looking for devices for /dev/md0
+> mdadm: /dev/sda1 is identified as a member of /dev/md0, slot 0.
+> mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 1.
+> mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 2.
+> mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 3.
+> mdadm: added /dev/sdb1 to /dev/md0 as 1
+> mdadm: added /dev/sdd1 to /dev/md0 as 2
+> mdadm: added /dev/sde1 to /dev/md0 as 3
+> mdadm: added /dev/sda1 to /dev/md0 as 0
+> mdadm: /dev/md0 has been started with 4 drives.
+> mint dev # cat /proc/mdstat
+> Personalities : [raid10]
+> md0 : active raid10 sda1[0] sde1[3] sdd1[2] sdb1[1]
+>       1952211968 blocks super 1.2 512K chunks 2 near-copies [4/4] [UUUU]
+>
+> unused devices: <none>
 
-These tips from earlier performance questions where checked and applied 
-already:
-- The RAID member disks, /dev/sda and /dev/sdb, both have their 
-scheduler set to deadline.
-- NCQ is disabled by setting queue_depth to 1.
-- The system has run without problems for almost 250 days. During this 
-time, no large copy-actions where done. Installation and other processes 
-where completed without trouble or any sign of performance problems.
+Ok.  So it's not a raid problem.  You didn't show your dmesg.
 
-The problem:
-I was copying 3 GB of data using rsync, from another server to this 
-machine over a 100 mbit connection. After some time it appeared to me as 
-if one of the two systems was having trouble keeping up. Copying speed 
-was a few MB/s and the transfer sometimes stopped for a longer period of 
-time, then to continue again.
-
-Looking at the receiving system, I noticed this in syslog:
-task kjournald blocked for more than 120 seconds
-task dkpg-preconfigure blocked for more than 120 seconds
-[...]
-
-dpkg-preconfigure being a process running at that time.
-
-Eventually, the copy completed. But some time after the copy was 
-completed, I still noticed a high (50-80%) %iowait and 2000 to 4000 
-blocks being written to sda and sdb. I monitored this using iostat.
-
-I waited for the system to return to 0 writes and a load of near 0 when 
-I attempted to copy the data on disk from directory A to B, and the same 
-problem occured.
-
-This is a pretty normal Ubuntu 10.04 installation on a machine that I've 
-used with mdadm RAID1 before with much older disks, performing without 
-any problem.
-
-Basically:
-Any tips on how to trace this and how to fix it?
-
-Thanks in advance,
-- Martijn
+Phil
