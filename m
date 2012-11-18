@@ -1,127 +1,105 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 0/3] Add a new func to handle with clearing up for
- stoping dm-raid.
-Date: Mon, 19 Nov 2012 10:49:53 +1100
-Message-ID: <20121119104953.359f60ed@notabene.brown>
-References: <201211151646510171304@gmail.com>
+Subject: Re: [PATCH] Create.c: check if freesize is equal 0
+Date: Mon, 19 Nov 2012 10:56:59 +1100
+Message-ID: <20121119105659.206a4487@notabene.brown>
+References: <20121116162436.11415.87524.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/XTAnAm=iBJbP/TsKNbNmGtf"; protocol="application/pgp-signature"
+ boundary="Sig_/ngSM1a6ZxeNAKpF53M=gYc7"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201211151646510171304@gmail.com>
+In-Reply-To: <20121116162436.11415.87524.stgit@gklab-128-085.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: agk <agk@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, dm-devel <dm-devel@redhat.com>
+To: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com
 List-Id: linux-raid.ids
 
---Sig_/XTAnAm=iBJbP/TsKNbNmGtf
+--Sig_/ngSM1a6ZxeNAKpF53M=gYc7
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 15 Nov 2012 16:46:54 +0800 majianpeng <majianpeng@gmail.com> wrote:
+On Fri, 16 Nov 2012 17:24:36 +0100 Lukasz Dorau <lukasz.dorau@intel.com>
+wrote:
 
-> Because dm-raid call md_stop to clear up,but md_stop can't clear up compl=
-etely.
-> So add a new func to do.
+> "freesize" can be equal 0 after rounding to the chunk's size.
+> Creating should be aborted in such case.
 >=20
-> Jianpeng Ma (3):
->   md:Add a func 'dm_md_stop' for dm-raid to clear up md resource.
->   dm: When stoping dm-raid, it call dm_md_stop rather than md_stop to
->     do clear-up work.
->   md: Remove EXPORT_SYMBOL_GPL(md_stop).
+> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+> ---
+>  Create.c |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
 >=20
->  drivers/md/dm-raid.c |    4 ++--
->  drivers/md/md.c      |   10 +++++++++-
->  drivers/md/md.h      |    1 +
->  3 files changed, 12 insertions(+), 3 deletions(-)
->=20
+> diff --git a/Create.c b/Create.c
+> index afcf1a5..f5b7194 100644
+> --- a/Create.c
+> +++ b/Create.c
+> @@ -399,6 +399,11 @@ int Create(struct supertype *st, char *mddev,
+>  		if (s->chunk && s->chunk !=3D UnSet) {
+>  			/* round to chunk size */
+>  			freesize =3D freesize & ~(s->chunk-1);
+> +			if (!freesize) {
+> +				pr_err("no free space left on %s\n", dname);
+> +				fail =3D 1;
+> +				continue;
+> +			}
+>  			if (do_default_chunk) {
+>  				/* default chunk was just set */
+>  				if (c->verbose > 0)
 
-You don't really need 3 patches for this one little change.
 
-I've applied the following.
+I think it would be best to have this test even if chunk is not set.
+So I've applied the following.
 
-Thanks for the report.
-
+Thanks,
 NeilBrown
 
-=46rom 4ba69e1a88480249918ed2df8be0896be6ba7952 Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Mon, 19 Nov 2012 10:47:48 +1100
-Subject: [PATCH] md: make sure everything is freed when dm-raid stops an
- array.
+=46rom 3339b154fdc9dcc70b9be1c5ab203d3d011f5434 Mon Sep 17 00:00:00 2001
+From: Lukasz Dorau <lukasz.dorau@intel.com>
+Date: Fri, 16 Nov 2012 17:24:36 +0100
+Subject: [PATCH] Create.c: check if freesize is equal 0
 
-md_stop() would stop an array, but not free various attached
-data structures.
-For internal arrays, these are freed later in do_md_stop() or
-mddev_put(), but they don't apply for dm-raid arrays.
-So get md_stop() to free them, and only all it from dm-raid.
-For internal arrays we now call __md_stop.
+"freesize" can be equal 0, particularly after rounding to the chunk's size.
+Creating should be aborted in such case.
 
-Reported-by: majianpeng <majianpeng@gmail.com>
+Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
 Signed-off-by: NeilBrown <neilb@suse.de>
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 98e1484..71df3c2 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5294,7 +5294,7 @@ void md_stop_writes(struct mddev *mddev)
- }
- EXPORT_SYMBOL_GPL(md_stop_writes);
+diff --git a/Create.c b/Create.c
+index 79fdec8..a4aab41 100644
+--- a/Create.c
++++ b/Create.c
+@@ -408,6 +408,11 @@ int Create(struct supertype *st, char *mddev,
+ 				do_default_chunk =3D 0;
+ 			}
+ 		}
++		if (!freesize) {
++			pr_err("no free space left on %s\n", dname);
++			fail =3D 1;
++			continue;
++		}
 =20
--void md_stop(struct mddev *mddev)
-+void __md_stop(struct mddev *mddev)
- {
- 	mddev->ready =3D 0;
- 	mddev->pers->stop(mddev);
-@@ -5304,6 +5304,18 @@ void md_stop(struct mddev *mddev)
- 	mddev->pers =3D NULL;
- 	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- }
-+
-+void md_stop(struct mddev *mddev)
-+{
-+	/* stop the array and free an attached data structures.
-+	 * This is called from dm-raid
-+	 */
-+	__md_stop(mddev);
-+	bitmap_destroy(mddev);
-+	if (mddev->bio_set)
-+		bioset_free(mddev->bio_set);
-+}
-+
- EXPORT_SYMBOL_GPL(md_stop);
-=20
- static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
-@@ -5364,7 +5376,7 @@ static int do_md_stop(struct mddev * mddev, int mode,
- 			set_disk_ro(disk, 0);
-=20
- 		__md_stop_writes(mddev);
--		md_stop(mddev);
-+		__md_stop(mddev);
- 		mddev->queue->merge_bvec_fn =3D NULL;
- 		mddev->queue->backing_dev_info.congested_fn =3D NULL;
-=20
+ 		if (s->size && freesize < s->size) {
+ 			pr_err("%s is smaller than given size."
 
---Sig_/XTAnAm=iBJbP/TsKNbNmGtf
+--Sig_/ngSM1a6ZxeNAKpF53M=gYc7
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUKl0ITnsnt1WYoG5AQJtzBAAlUG4BnmHY7WB0BNUtM98+vflGNBkVQRj
-7XIkO6oxCS6Ep1rnu+sAA6oDN71RIrd67dhgvP1+it6yNdTlMALUb1XHsvUuZOJq
-9gbmTPTcj7kL8SqX57nH4MImmPlaXavR8WpIaEmPhIKMvvpMpaOz2iwwdM7tJASj
-PMnqF1kI36ONVUH1/crGMGioCSo75PUI0mV8QrBpgUq28nawEoSd5vUXLFRxkGue
-usu9hcarqQj8E3HCaJOug4xQeE3Il5XePuKBBz5b9D/cXAHB9LxneX+QbCjcCoUx
-VR9DEpkWuscB012bNaviYllJpkx4edTjJuZXZcfQI+YlzAhuBslnlv63miJULxfl
-fi+3Efu2hTdsylJHg6QEL/v+yAXO6AMh7hr2lyKGWZ5AjJ8aPLfyYpji5tJOPfBf
-W6/QrqjsImaA+psDwScuqZhtEPZrgGGO4JgSZRNUM+mYCpSpxsS+qId01AdRhLDJ
-Ba2ie/OFct5iC39lpiHnULt2Bu1Bfzev6H6ntABADMaCyyJgKiH7O4sqKkOaix8V
-jWyB4aGw3PQvb3L3N+S2dDl8glPHoyzilyR1Q2PIwYuTC7Wad6xrKq/MZqhB75DE
-UC43WRN9mTZmGMtC8v3/ZvvGR/BpWfpH6ARRJ/60TGDkyTzSRLobX/n66KrKw6pV
-S4lPNMYHZqE=
-=GZ3O
+iQIVAwUBUKl1yznsnt1WYoG5AQLYMRAAj4ihwHi9xGhEfNNLV/KI4FJTbptLrxqQ
+oCbeJdgTjzTkxjXL+fVrWNziN5hc6rt+hN9nWrU7X5Zi1+CVI2FvVJsd7Ef+0jOd
+cdFASH/wFmmC0VDMF0sszrrz4x0TnyKJhT7iejSIGyJJPrEOm7PO0/3ZAuwzeKVK
+OHOXOOAaS3kK838u0HWyweXavBpsrdCd42cyftmsryGWio/990f6mFiML9MVRLu4
+Qo050zX5skmcz+Axgz2jQ0t1INHvgvcuv5HVm0adO1zrpSrG0siBBbVXQUeJfA47
+QdX6oQU6U0wylAO2z4y2df+bsHlg9RLsuUkGbZB9t9xXfex0bhmst5KBisWPa2qV
+JkvJqwFU5zmYHgEddVU+6l6fYDNm3Ab7+6g7ALWsTbZzH8lxKLuRkEzaLE4Cmtrf
+4P0aoSfDukBwYQA6FZMC51Bk3fpFMQtfat8YAXXeNOGVsSJUfaH6eCkqow+sxgQd
+DkuXlTRoJzsMEava9QB/hOxFg+0cECW3vRJSvAuWNaAM03BFnfVlolMRqE+VUKQK
+qaCCyKrcYgugpQyX9pxlsCUJN7dnr3hjI7DbIlHZrkypuMcu2CMnftafPr+4ebjM
+g5nAbN0UmTFPdd0ENEWGI2fxpewrhwrD4nojLmL8zfM1cy+QKVoann4l00RnCkf/
+OwDDJxfbK9g=
+=PoN3
 -----END PGP SIGNATURE-----
 
---Sig_/XTAnAm=iBJbP/TsKNbNmGtf--
+--Sig_/ngSM1a6ZxeNAKpF53M=gYc7--
