@@ -1,64 +1,95 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: Re: [PATCH 0/3] Add a new func to handle with clearing up for stoping dm-raid.
-Date: Mon, 19 Nov 2012 08:36:53 +0800
-Message-ID: <201211190836499417920@gmail.com>
-References: <201211151646510171304@gmail.com>,
-	<20121119104953.359f60ed@notabene.brown>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] lib/raid6: Add AVX2 optimized recovery functions
+Date: Mon, 19 Nov 2012 11:57:28 +1100
+Message-ID: <20121119115728.2d175646@notabene.brown>
+References: <1352411264-5156-1-git-send-email-james.t.kukunas@linux.intel.com>
+	<1352460945.4387.7.camel@mattotaupa>
+	<ead47490-afc3-48f1-871f-ba421eac3dd5@email.android.com>
+	<20121109225025.13a846ca@notabene.brown>
+	<20121109195610.GA2928@jtkukuna_gentoo_sb.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: agk <agk@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, dm-devel <dm-devel@redhat.com>
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/0_dUvfKNSfqQzIhJuwJEBGx"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20121109195610.GA2928@jtkukuna_gentoo_sb.jf.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jim Kukunas <james.t.kukunas@linux.intel.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Paul Menzel <pm.debian@googlemail.com>, Linux Raid <linux-raid@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Pk9uIFRodSwgMTUgTm92IDIwMTIgMTY6NDY6NTQgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVu
-Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gQmVjYXVzZSBkbS1yYWlkIGNhbGwgbWRfc3RvcCB0
-byBjbGVhciB1cCxidXQgbWRfc3RvcCBjYW4ndCBjbGVhciB1cCBjb21wbGV0ZWx5Lg0KPj4gU28g
-YWRkIGEgbmV3IGZ1bmMgdG8gZG8uDQo+PiANCj4+IEppYW5wZW5nIE1hICgzKToNCj4+ICAgbWQ6
-QWRkIGEgZnVuYyAnZG1fbWRfc3RvcCcgZm9yIGRtLXJhaWQgdG8gY2xlYXIgdXAgbWQgcmVzb3Vy
-Y2UuDQo+PiAgIGRtOiBXaGVuIHN0b3BpbmcgZG0tcmFpZCwgaXQgY2FsbCBkbV9tZF9zdG9wIHJh
-dGhlciB0aGFuIG1kX3N0b3AgdG8NCj4+ICAgICBkbyBjbGVhci11cCB3b3JrLg0KPj4gICBtZDog
-UmVtb3ZlIEVYUE9SVF9TWU1CT0xfR1BMKG1kX3N0b3ApLg0KPj4gDQo+PiAgZHJpdmVycy9tZC9k
-bS1yYWlkLmMgfCAgICA0ICsrLS0NCj4+ICBkcml2ZXJzL21kL21kLmMgICAgICB8ICAgMTAgKysr
-KysrKysrLQ0KPj4gIGRyaXZlcnMvbWQvbWQuaCAgICAgIHwgICAgMSArDQo+PiAgMyBmaWxlcyBj
-aGFuZ2VkLCAxMiBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQ0KPj4gDQo+DQo+WW91IGRv
-bid0IHJlYWxseSBuZWVkIDMgcGF0Y2hlcyBmb3IgdGhpcyBvbmUgbGl0dGxlIGNoYW5nZS4NCj4N
-Cj5JJ3ZlIGFwcGxpZWQgdGhlIGZvbGxvd2luZy4NCj4NCj5UaGFua3MgZm9yIHRoZSByZXBvcnQu
-DQo+DQo+TmVpbEJyb3duDQo+DQo+RnJvbSA0YmE2OWUxYTg4NDgwMjQ5OTE4ZWQyZGY4YmUwODk2
-YmU2YmE3OTUyIE1vbiBTZXAgMTcgMDA6MDA6MDAgMjAwMQ0KPkZyb206IE5laWxCcm93biA8bmVp
-bGJAc3VzZS5kZT4NCj5EYXRlOiBNb24sIDE5IE5vdiAyMDEyIDEwOjQ3OjQ4ICsxMTAwDQo+U3Vi
-amVjdDogW1BBVENIXSBtZDogbWFrZSBzdXJlIGV2ZXJ5dGhpbmcgaXMgZnJlZWQgd2hlbiBkbS1y
-YWlkIHN0b3BzIGFuDQo+IGFycmF5Lg0KPg0KPm1kX3N0b3AoKSB3b3VsZCBzdG9wIGFuIGFycmF5
-LCBidXQgbm90IGZyZWUgdmFyaW91cyBhdHRhY2hlZA0KPmRhdGEgc3RydWN0dXJlcy4NCj5Gb3Ig
-aW50ZXJuYWwgYXJyYXlzLCB0aGVzZSBhcmUgZnJlZWQgbGF0ZXIgaW4gZG9fbWRfc3RvcCgpIG9y
-DQo+bWRkZXZfcHV0KCksIGJ1dCB0aGV5IGRvbid0IGFwcGx5IGZvciBkbS1yYWlkIGFycmF5cy4N
-Cj5TbyBnZXQgbWRfc3RvcCgpIHRvIGZyZWUgdGhlbSwgYW5kIG9ubHkgYWxsIGl0IGZyb20gZG0t
-cmFpZC4NCj5Gb3IgaW50ZXJuYWwgYXJyYXlzIHdlIG5vdyBjYWxsIF9fbWRfc3RvcC4NCj4NCj5S
-ZXBvcnRlZC1ieTogbWFqaWFucGVuZyA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQo+U2lnbmVkLW9m
-Zi1ieTogTmVpbEJyb3duIDxuZWlsYkBzdXNlLmRlPg0KPg0KPmRpZmYgLS1naXQgYS9kcml2ZXJz
-L21kL21kLmMgYi9kcml2ZXJzL21kL21kLmMNCj5pbmRleCA5OGUxNDg0Li43MWRmM2MyIDEwMDY0
-NA0KPi0tLSBhL2RyaXZlcnMvbWQvbWQuYw0KPisrKyBiL2RyaXZlcnMvbWQvbWQuYw0KPkBAIC01
-Mjk0LDcgKzUyOTQsNyBAQCB2b2lkIG1kX3N0b3Bfd3JpdGVzKHN0cnVjdCBtZGRldiAqbWRkZXYp
-DQo+IH0NCj4gRVhQT1JUX1NZTUJPTF9HUEwobWRfc3RvcF93cml0ZXMpOw0KPiANCj4tdm9pZCBt
-ZF9zdG9wKHN0cnVjdCBtZGRldiAqbWRkZXYpDQo+K3ZvaWQgX19tZF9zdG9wKHN0cnVjdCBtZGRl
-diAqbWRkZXYpDQo+IHsNCj4gCW1kZGV2LT5yZWFkeSA9IDA7DQo+IAltZGRldi0+cGVycy0+c3Rv
-cChtZGRldik7DQo+QEAgLTUzMDQsNiArNTMwNCwxOCBAQCB2b2lkIG1kX3N0b3Aoc3RydWN0IG1k
-ZGV2ICptZGRldikNCj4gCW1kZGV2LT5wZXJzID0gTlVMTDsNCj4gCWNsZWFyX2JpdChNRF9SRUNP
-VkVSWV9GUk9aRU4sICZtZGRldi0+cmVjb3ZlcnkpOw0KPiB9DQo+Kw0KPit2b2lkIG1kX3N0b3Ao
-c3RydWN0IG1kZGV2ICptZGRldikNCj4rew0KPisJLyogc3RvcCB0aGUgYXJyYXkgYW5kIGZyZWUg
-YW4gYXR0YWNoZWQgZGF0YSBzdHJ1Y3R1cmVzLg0KPisJICogVGhpcyBpcyBjYWxsZWQgZnJvbSBk
-bS1yYWlkDQo+KwkgKi8NCj4rCV9fbWRfc3RvcChtZGRldik7DQo+KwliaXRtYXBfZGVzdHJveSht
-ZGRldik7DQo+KwlpZiAobWRkZXYtPmJpb19zZXQpDQo+KwkJYmlvc2V0X2ZyZWUobWRkZXYtPmJp
-b19zZXQpOw0KPit9DQo+Kw0KPiBFWFBPUlRfU1lNQk9MX0dQTChtZF9zdG9wKTsNCj4gDQo+IHN0
-YXRpYyBpbnQgbWRfc2V0X3JlYWRvbmx5KHN0cnVjdCBtZGRldiAqbWRkZXYsIHN0cnVjdCBibG9j
-a19kZXZpY2UgKmJkZXYpDQo+QEAgLTUzNjQsNyArNTM3Niw3IEBAIHN0YXRpYyBpbnQgZG9fbWRf
-c3RvcChzdHJ1Y3QgbWRkZXYgKiBtZGRldiwgaW50IG1vZGUsDQo+IAkJCXNldF9kaXNrX3JvKGRp
-c2ssIDApOw0KPiANCj4gCQlfX21kX3N0b3Bfd3JpdGVzKG1kZGV2KTsNCj4tCQltZF9zdG9wKG1k
-ZGV2KTsNCj4rCQlfX21kX3N0b3AobWRkZXYpOw0KPiAJCW1kZGV2LT5xdWV1ZS0+bWVyZ2VfYnZl
-Y19mbiA9IE5VTEw7DQo+IAkJbWRkZXYtPnF1ZXVlLT5iYWNraW5nX2Rldl9pbmZvLmNvbmdlc3Rl
-ZF9mbiA9IE5VTEw7DQo+IA0KPg0KVGhhbmtzISANCkppYW5wZW5n
+--Sig_/0_dUvfKNSfqQzIhJuwJEBGx
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, 9 Nov 2012 11:56:10 -0800 Jim Kukunas
+<james.t.kukunas@linux.intel.com> wrote:
+
+> On Fri, Nov 09, 2012 at 10:50:25PM +1100, Neil Brown wrote:
+> > On Fri, 09 Nov 2012 12:39:05 +0100 "H. Peter Anvin" <hpa@zytor.com> wro=
+te:
+> >=20
+> > > Sorry, we cannot share those at this time since the hardwarenis not y=
+et released.
+> >=20
+> > Can I take that to imply "Acked-by: "H. Peter Anvin" <hpa@zytor.com>" ??
+> >=20
+> > It would be nice to have at least a statement like:
+> >  These patches have been tested both with the user-space testing tool a=
+nd in=20
+> >  a RAID6 md array and the pass all test.  While we cannot release perfo=
+rmance
+> >  numbers as the hardwere is not released, we can confirm that on that h=
+ardware
+> >  the performance with these patches is faster than without.
+> >=20
+> > I guess I should be able to assume that - surely the patches would not =
+be
+> > posted if it were not true...  But I like to avoid assuming when I can.
+>=20
+> Hi Neil,
+>=20
+> That assumption is correct. The patch was tested and benchmarked before s=
+ubmission.
+
+Thanks.  I've queued the patch up.
+>=20
+> You'll notice that this code is very similar to the SSSE3-optimized
+> recovery routines I wrote earlier. This implementation extends that same
+> algorithm from 128-bit registers to 256-bit registers.
+
+I might notice that if I actually looked, but it all starts swimming before
+my eyes when I try :-)
+If both you and hpa like it, then that is good enough for me.
+
+Thanks,
+NeilBrown
+
+
+>=20
+> Thanks.
+>=20
+
+
+--Sig_/0_dUvfKNSfqQzIhJuwJEBGx
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUKmD+Dnsnt1WYoG5AQJ0JQ/+Mqt/mNZF95htpa6Gy1yIxeriasuxSIDT
+nNCCkIFk4sWyPWvEf4/aPHGmsvzpzY0/fSkxV3RYbi5tVDD53gGNV0p3qAmFIppN
+ioWFvXzRRIbsc3cmNUtKlyfXbeIa/NAyfNQ2duHIc5M0oZyxf/upsVaWfAbF5A8X
+X//TDMn3WD5XqzldtFSotusiQf1OzO0z0LR5sqKvgITZYLHlAtfnCa+Bob0aau7m
+rTsuLxEBtO4qA5Fx4GIKI9O7Zt6Iz9o/LJlOECugEkz3jUuYP7m2Q3x0dEGkN3gQ
+l1F1VhbJtMh4v2cV4247ZTYLRFYU8DRHzfVp/gpZ27AJ5rN4GIf2YuKD5W5pq9jO
+vEelCIw9vlQgx46RGbosRU1teDc5hSWQLBdVBdcsnEemf3CaODyJCNStG0xIhDS4
+lY43hrIxbyICc4bK//vYVqXm43kO1CShwCf8sQ/i+xucdqLKox3n24EQq6e8HuGR
+4Mh30TH00SGpTWoZDLkYry6y90kueVG0qF5htKKWubHRZ2SfZRs6BTXL+t89md2m
+vthGd2HhenmLPEN9Kv7fPB0mcLwi+3PM2TBbAXcanW2tqW2dGl03BCKwAgQWdC5s
+H/woM4P6FqiX/pvi3GPTQ4WVBe+7sKVBk7KDiP7GnNxiv473ul5VeeyReiXQPFvZ
+CLXGNujeV/o=
+=hSnv
+-----END PGP SIGNATURE-----
+
+--Sig_/0_dUvfKNSfqQzIhJuwJEBGx--
