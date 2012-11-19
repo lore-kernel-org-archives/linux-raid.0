@@ -1,48 +1,59 @@
-From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Subject: Re: [PATCH v2] md: also hot remove disk from pers when hot removing
-Date: Mon, 19 Nov 2012 11:27:17 +0100
-Message-ID: <50AA0985.6060601@profitbricks.com>
-References: <1353081849-10516-1-git-send-email-sebastian.riemer@profitbricks.com> <CAA9_cmcViMsVMrxyEcC9yaHPq9Xc-5Dt63fMEJ+X+kZst8O9Fg@mail.gmail.com>
+From: majianpeng <majianpeng@gmail.com>
+Subject: [PATCH V1] md:For aborted a resync by request,using ->curr_resync as the last completed request rather than ->curr_resync_completed.
+Date: Mon, 19 Nov 2012 19:57:34 +0800
+Message-ID: <201211191957314065143@gmail.com>
+Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAA9_cmcViMsVMrxyEcC9yaHPq9Xc-5Dt63fMEJ+X+kZst8O9Fg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <djbw@fb.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 17.11.2012 01:07, Dan Williams wrote:
-> Hmm, how are you getting ->raid_disk set to -1 without the personality
-> being notified?  That seems to be the source of the bug.  Otherwise it
-> would seem the state_store("remove") path is also susceptible.
->
-> --
-> Dan
-Thanks for your feedback!
+VjAtLT5WMToNCkFzIHN1Z2dlc3RlZCBieSBuZWlsLCBpdCBhZGRlZCBhIGZsYWcgTURfUkVDT1ZF
+UllfRVJST1IgdG8gZGlmZmVyZW50aWF0ZSBiZXR3ZWVuIGFuDQphYm9ydC1kdWUtdG8tZXJyb3Ig
+YW5kIGFuIGFib3J0LWR1ZS10by1yZXF1ZXN0LldlIG9ubHkgZGVhbCB3aXRoIHRoZSBsYXRlciBj
+YXNlLg0KDQpUaGFua3MhDQpKaWFucGVuZw0KDQpBYm9ydGluZyBhIHJlc3luYyBtYXliZSBieSBp
+by1lcnJvcixvciByZXF1ZXN0KHN0b3AgYXJyYXkgb3IgcmVib290DQpzeXN0ZW0pLg0KU28gd2Ug
+YWRkIGEgZmxhZyBNRF9SRUNPVkVSWV9FUlJPUiB0byBkaWZmZXJlbnRpYXRlIGJldHdlZW4gYW4N
+CmFib3J0LWR1ZS10by1lcnJvciBhbmQgYW4gYWJvcnQtZHVlLXRvLXJlcXVlc3QuDQpGb3IgdGhl
+IGxhdGVyIGNhc2Usd2hlbiByZXN5bmMgYWJvcnRlZCxpdCBleGVjDQp3YWl0X2V2ZW50KG1kZGV2
+LT5yZWNvdmVyeV93YWl0LCAhYXRvbWljX3JlYWQoJm1kZGV2LT5yZWNvdmVyeV9hY3RpdmUpKS4N
+ClNvIHRoZSAtPmN1cnJfcmVzeW5jIGlzIHRoZSBsYXN0IGNvbXBsZXRlZCByZXF1ZXN0Lg0KDQpT
+aWduZWQtb2ZmLWJ5OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQotLS0NCiBk
+cml2ZXJzL21kL21kLmMgfCAgIDEwICsrKysrKysrLS0NCiBkcml2ZXJzL21kL21kLmggfCAgICAy
+ICsrDQogMiBmaWxlcyBjaGFuZ2VkLCAxMCBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0K
+DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9tZC5jIGIvZHJpdmVycy9tZC9tZC5jDQppbmRleCA5
+YWI3NjhhLi41MTk5NjU3IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9tZC9tZC5jDQorKysgYi9kcml2
+ZXJzL21kL21kLmMNCkBAIC03MTcyLDYgKzcxNzIsNyBAQCB2b2lkIG1kX2RvbmVfc3luYyhzdHJ1
+Y3QgbWRkZXYgKm1kZGV2LCBpbnQgYmxvY2tzLCBpbnQgb2spDQogCXdha2VfdXAoJm1kZGV2LT5y
+ZWNvdmVyeV93YWl0KTsNCiAJaWYgKCFvaykgew0KIAkJc2V0X2JpdChNRF9SRUNPVkVSWV9JTlRS
+LCAmbWRkZXYtPnJlY292ZXJ5KTsNCisJCXNldF9iaXQoTURfUkVDT1ZFUllfRVJST1IsICZtZGRl
+di0+cmVjb3ZlcnkpOw0KIAkJbWRfd2FrZXVwX3RocmVhZChtZGRldi0+dGhyZWFkKTsNCiAJCS8v
+IHN0b3AgcmVjb3ZlcnksIHNpZ25hbCBkb19zeW5jIC4uLi4NCiAJfQ0KQEAgLTc1NTgsOCArNzU1
+OSwxMyBAQCB2b2lkIG1kX2RvX3N5bmMoc3RydWN0IG1kX3RocmVhZCAqdGhyZWFkKQ0KIAkJCQkJ
+cHJpbnRrKEtFUk5fSU5GTw0KIAkJCQkJICAgICAgICJtZDogY2hlY2twb2ludGluZyAlcyBvZiAl
+cy5cbiIsDQogCQkJCQkgICAgICAgZGVzYywgbWRuYW1lKG1kZGV2KSk7DQotCQkJCQltZGRldi0+
+cmVjb3ZlcnlfY3AgPQ0KLQkJCQkJCW1kZGV2LT5jdXJyX3Jlc3luY19jb21wbGV0ZWQ7DQorCQkJ
+CQlpZiAodGVzdF9iaXQoTURfUkVDT1ZFUllfRVJST1IsDQorCQkJCQkJJm1kZGV2LT5yZWNvdmVy
+eV9jcCkpDQorCQkJCQkJbWRkZXYtPnJlY292ZXJ5X2NwID0NCisJCQkJCQkJbWRkZXYtPmN1cnJf
+cmVzeW5jX2NvbXBsZXRlZDsNCisJCQkJCWVsc2UNCisJCQkJCQltZGRldi0+cmVjb3ZlcnlfY3Ag
+PQ0KKwkJCQkJCQltZGRldi0+Y3Vycl9yZXN5bmM7DQogCQkJCX0NCiAJCQl9IGVsc2UNCiAJCQkJ
+bWRkZXYtPnJlY292ZXJ5X2NwID0gTWF4U2VjdG9yOw0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQv
+bWQuaCBiL2RyaXZlcnMvbWQvbWQuaA0KaW5kZXggYWY0NDNhYi4uYzI5ZTYyZSAxMDA2NDQNCi0t
+LSBhL2RyaXZlcnMvbWQvbWQuaA0KKysrIGIvZHJpdmVycy9tZC9tZC5oDQpAQCAtMzA3LDYgKzMw
+Nyw3IEBAIHN0cnVjdCBtZGRldiB7DQogCSAqIFJFUVVFU1Q6ICB1c2VyLXNwYWNlIGhhcyByZXF1
+ZXN0ZWQgYSBzeW5jICh1c2VkIHdpdGggU1lOQykNCiAJICogQ0hFQ0s6ICAgIHVzZXItc3BhY2Ug
+cmVxdWVzdCBmb3IgY2hlY2stb25seSwgbm8gcmVwYWlyDQogCSAqIFJFU0hBUEU6ICBBIHJlc2hh
+cGUgaXMgaGFwcGVuaW5nDQorCSAqIEVSUk9SOiAgICBzeW5jLWFjdGlvbiBpbnRlcnJ1cHRlZCBi
+ZWNhdXNlIGlvLWVycm9yDQogCSAqDQogCSAqIElmIG5laXRoZXIgU1lOQyBvciBSRVNIQVBFIGFy
+ZSBzZXQsIHRoZW4gaXQgaXMgYSByZWNvdmVyeS4NCiAJICovDQpAQCAtMzIwLDYgKzMyMSw3IEBA
+IHN0cnVjdCBtZGRldiB7DQogI2RlZmluZQlNRF9SRUNPVkVSWV9DSEVDSwk3DQogI2RlZmluZSBN
+RF9SRUNPVkVSWV9SRVNIQVBFCTgNCiAjZGVmaW5lCU1EX1JFQ09WRVJZX0ZST1pFTgk5DQorI2Rl
+ZmluZQlNRF9SRUNPVkVSWV9FUlJPUgkxMA0KIA0KIAl1bnNpZ25lZCBsb25nCQkJcmVjb3Zlcnk7
+DQogCS8qIElmIGEgUkFJRCBwZXJzb25hbGl0eSBkZXRlcm1pbmVzIHRoYXQgcmVjb3ZlcnkgKG9m
+IGEgcGFydGljdWxhcg0KLS0gDQoxLjcuOS41DQo=
 
-Perhaps it's only something for my use-case of read-only
-raid1-replicated volumes where I never have any spares. I don't set
-->raid_disk to -1 when hot adding them. I have to put them directly to
-their stored slot because I assemble read-only on read-only rdevs. So
-the syncer never runs. Those read-only rdevs are coming from remote
-storage. Imagine HA CD-ROM images.
-
-My thought was that it would be cleaner behavior if the cleanup of an
-rdev in the personality already happens when hot removing the disk.
-
-You're right, the state_store("remove") path would need this change, too.
-
-With the "slot_store" path I could trigger a panic when I hot added the
-disk as spare, marked it insync and tried to give it the slot it belongs
-to. I'll test this with the latest vanilla kernel and try to reproduce
-this on rw volumes which I set to read-only. If I can also crash it that
-way, I've got a proof that there is a bug.
-
-If the disk isn't cleaned up in the pers, then hot_add_disk doesn't
-return any error for raid1. Instead it crashes when referencing the old
-pointer when calling "print_conf" in raid1.c.
-
-Cheers,
-Sebastian
