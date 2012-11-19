@@ -1,92 +1,158 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/2 V1] md:Avoid write invalid address if read_seqretry
- returned true.
-Date: Mon, 19 Nov 2012 12:31:45 +1100
-Message-ID: <20121119123145.2d9c0fc1@notabene.brown>
-References: <201211080856156202401@gmail.com>
+Subject: Re: [PATCH 1/5] md: When resync aborted,using ->curr_resync as the
+ last completed request rather than ->curr_resync_completed.
+Date: Mon, 19 Nov 2012 12:37:33 +1100
+Message-ID: <20121119123733.097b3804@notabene.brown>
+References: <2012102710283109761110@gmail.com>
+	<20121029083241.2a2dedcc@notabene.brown>
+	<2012102911174841643114@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ptzB23SLjMmzIOtGiJDLibw"; protocol="application/pgp-signature"
+ boundary="Sig_/=cSoUvVDCZml3dTvjuZ=K9l"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201211080856156202401@gmail.com>
+In-Reply-To: <2012102911174841643114@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: majianpeng <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, zhuwenfeng <zhuwenfeng@kedacom.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/ptzB23SLjMmzIOtGiJDLibw
+--Sig_/=cSoUvVDCZml3dTvjuZ=K9l
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 8 Nov 2012 08:56:27 +0800 majianpeng <majianpeng@gmail.com> wrote:
+On Mon, 29 Oct 2012 11:27:25 +0800 majianpeng <majianpeng@gmail.com> wrote:
 
-> Hi Neil,
-> 	I updated this patch.There are two place to changed
-> 1:The previous patch omit the parameter 'p'
-> 2:Using p[i] instead of *p++; bbp[i] instead *bbp++.It make the code look=
-s better.
-> After rewriting ,i tested and it looked good.
->=20
->=20
-> If read_seqretry returned true and bbp was changed, it will write
-> invalid address which can cause some serious problem.
->=20
-> This bug was introduced by commit v3.0-rc7-130-g2699b67.
-> So fix is suitable for 3.0.y thru 3.6.y.
->=20
-> Reported-by: zhuwenfeng@kedacom.com
-> Tested-by: zhuwenfeng@kedacom.com
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
-> ---
->  drivers/md/md.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->=20
+> >On Sat, 27 Oct 2012 10:28:58 +0800 kernelmail <kedacomkernel@gmail.com> =
+wrote:
+> >
+> >> In commit(db91ff55bdf06736b849afc1b1fce5763bbb8d5d),it said:
+> >> >If a resync is aborted we should record how far we got
+> >> >(recovery_cp) the last request that we know has completed
+> >> >(->curr_resync_completed) rather than the last request that was
+> >> >submitted (->curr_resync).
+> >> But when resync aborted, it execed
+> >> >wait_event(mddev->recovery_wait, !atomic_read(&mddev->recovery_active=
+));
+> >> After this, the ->curr_resync is the last completed request.
+> >>=20
+> >> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
+> >> ---
+> >>  drivers/md/md.c |    3 +--
+> >>  1 file changed, 1 insertion(+), 2 deletions(-)
+> >>=20
+> >> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> >> index 9ab768a..1d9940d 100644
+> >> --- a/drivers/md/md.c
+> >> +++ b/drivers/md/md.c
+> >> @@ -7558,8 +7558,7 @@ void md_do_sync(struct md_thread *thread)
+> >>  					printk(KERN_INFO
+> >>  					       "md: checkpointing %s of %s.\n",
+> >>  					       desc, mdname(mddev));
+> >> -					mddev->recovery_cp =3D
+> >> -						mddev->curr_resync_completed;
+> >> +					mddev->recovery_cp =3D mddev->curr_resync;
+> >>  				}
+> >>  			} else
+> >>  				mddev->recovery_cp =3D MaxSector;
+> >
+> >No.
+> >This reverts commit db91ff55bdf06736b849afc1b1fce5763bbb8d5d
+> >
+> >Maybe if we differentiated between an abort-due-to-error and an
+> >abort-due-to-request, then in the second card we could use ->curr_resync.
+> >
+> >NeilBrown
+> >
+> Yes, i missed the case which interrupted by io-error.
+> So i add a flag MD_RECOVERY_ERROR in md_done_sync.
+> =20
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 9ab768a..1f86c48 100644
+> index 9ab768a..cb9864c 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -1817,10 +1817,10 @@ retry:
->  			memset(bbp, 0xff, PAGE_SIZE);
+> @@ -7172,6 +7172,7 @@ void md_done_sync(struct mddev *mddev, int blocks, =
+int ok)
+>         wake_up(&mddev->recovery_wait);
+>         if (!ok) {
+>                 set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> +               set_bit(MD_RECOVERY_ERROR, &mddev->recovery);
+>                 md_wakeup_thread(mddev->thread);
+>                 // stop recovery, signal do_sync ....
+>         }
+> @@ -7558,8 +7559,12 @@ void md_do_sync(struct md_thread *thread)
+>                                         printk(KERN_INFO
+>                                                "md: checkpointing %s of %=
+s.\n",
+>                                                desc, mdname(mddev));
+> -                                       mddev->recovery_cp =3D
+> -                                               mddev->curr_resync_comple=
+ted;
+> +                                       if (test_bit(MD_RECOVERY_ERROR, &=
+mddev->recovery))
+> +                                               mddev->recovery_cp =3D
+> +                                                       mddev->curr_resyn=
+c_completed;
+> +                                       else
+> +                                               mddev->recovery_cp =3D
+> +                                                       mddev->curr_resyn=
+c;
+>                                 }
+>                         } else
+>                                 mddev->recovery_cp =3D MaxSector;
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index af443ab..3b1a35f 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -307,6 +307,7 @@ struct mddev {
+>          * REQUEST:  user-space has requested a sync (used with SYNC)
+>          * CHECK:    user-space request for check-only, no repair
+>          * RESHAPE:  A reshape is happening
+> +        * ERROR:    interrupted by IO error not by request
+>          *
+>          * If neither SYNC or RESHAPE are set, then it is a recovery.
+>          */
+> @@ -320,6 +321,7 @@ struct mddev {
+>  #define        MD_RECOVERY_CHECK       7
+>  #define MD_RECOVERY_RESHAPE    8
+>  #define        MD_RECOVERY_FROZEN      9
+> +#define MD_RECOVERY_ERROR      10
 > =20
->  			for (i =3D 0 ; i < bb->count ; i++) {
-> -				u64 internal_bb =3D *p++;
-> +				u64 internal_bb =3D p[i];
->  				u64 store_bb =3D ((BB_OFFSET(internal_bb) << 10)
->  						| BB_LEN(internal_bb));
-> -				*bbp++ =3D cpu_to_le64(store_bb);
-> +				bbp[i] =3D cpu_to_le64(store_bb);
->  			}
->  			bb->changed =3D 0;
->  			if (read_seqretry(&bb->lock, seq))
+>         unsigned long                   recovery;
+>         /* If a RAID personality determines that recovery (of a particular
+>=20
+>=20
+> How about this patch?
+>=20
+> Jianpeng
+>=20
+>=20
 
-Yes, that does look cleaner.  Thanks.
-
-Applied in place of the previous version.
+Look OK except that it is badly white-space damaged.
+Could you try resending it properly please?
 
 Thanks,
 NeilBrown
 
---Sig_/ptzB23SLjMmzIOtGiJDLibw
+--Sig_/=cSoUvVDCZml3dTvjuZ=K9l
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUKmMATnsnt1WYoG5AQLqXQ//RxFKBAcMVH5hwcRsoPaMBtTY3GR50tBX
-Ke3xyBKfPFcky+/JWb0QxqxWVgOicfJvPPfGRvjON5hpdKunpQGTN3aSs9CAE4jJ
-BnN19sAmbh4iXsuotb5vY2iISYcIdmvaSqekKzs0m6POdbu2q9atSWVWnhGhxaot
-tQUsYfwB2SSyGzc8dDXtuEu13di9BV0mt0NsnirEniJqLx90qZhv4xJfC94vdb4Z
-dR/JhfshjR1wO1Y6dWSIWiXUkVaiOvSGL7oTHWAPJ7dy/m0epO7Boioar4KR5AhP
-5IGnGb/hkvYQLFQFEl+7QZ61TT8+FLL28DMpxeqJFn5xRzhZXJtWr4SzFXZy4ai8
-N6WCjQPQJ8ZwcBZ8VaWl4LJKt42tu8GEUUJo5LD+1SM6H/8nf1ldsmAFFuyCfw9p
-ae/1GDc9SiHAtEt5erVfiMQlQlgKeMYBTrDtUEQ2deTeIVzME42jxIs+Zz3SzHum
-Xs3C3Q5962mYmWiED7sklgR2baopOzEdkqp/i6xlzRqjGf0zivd33/nf1OH2LXN4
-kHRNVnT4Dg/VxVrCuCr1uoy2SulfMDisJcflV/axaeT14uvQQ/5MxV5uwPp4va+z
-KnhegnUY0MkJYcvEP2PeojcHbP5FfwXVd9nwHyddNqYJpw5qDpwPTaGcgA4oijhh
-fB36ISIvI/8=
-=UU9H
+iQIVAwUBUKmNXTnsnt1WYoG5AQK5ww//Sw4eoHX2I1NtaxV6SG2OKxWx4IXCt4IF
+XWvz5os2Vfmiuo2Wqw2VlezXUWGRV79kBnFsuwtKlEYd/O2XZEzZikquFTON8pnw
+Nf0KOCKXkGNAjD9+2S+iwPa/nyxmHKWQoCOBb/0g70SgeTSYblj9g4ADFTER5Cva
+kHZ/rDYSKP36GyxnxD9A0pdAxf55HhTUSbTbBhnSB9jVl93OYw/lm5hadaWQlCej
+l14tvpSEdF+TgMBK6WtsZus3AW9OIDlAVXUelt4JaihIyqtUkjLHrzaaIykoexIq
+YjnHb270jp8ZSu7KuEEKWndcwEcoFuDj4qEWTu9JuSzv0I+5bbVPG+gZwP3sHxmA
+HJa5QtXs2ThdUrHfCqmEdBnipYMt3teA3bPPbbyQ+W335EoQNfbPU21LZijCDU2e
+3ZN8HDdtiJqQc5VinvnR55LYu5HL+S6JJzFWhKh65/EpCDoTm4UhL3eNQXr1DfzK
+maKKBI/OL/QX/NQVwizT+MoMBZEZm470LktkoPLJyq3caIY50I9J1rXG+Gaug4n5
+ch6AzBjLW/IHVU3Gm3mv5slCUV9L1zZjIzxo1FuV/n2GW+SkaiuURvFBjbsZoejq
+wUcX4Iq+0Ugoc26uxQ/tXd+7InWc+HowGsUy2OfrZjrpXDsKdDo6iIt6zcj5zw5I
+FgUdDA20pQ4=
+=rnB3
 -----END PGP SIGNATURE-----
 
---Sig_/ptzB23SLjMmzIOtGiJDLibw--
+--Sig_/=cSoUvVDCZml3dTvjuZ=K9l--
