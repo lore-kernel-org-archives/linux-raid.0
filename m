@@ -1,107 +1,78 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: RAID1 performance and "task X blocked for more than 120 seconds"
-Date: Mon, 19 Nov 2012 10:51:30 -0600
-Message-ID: <50AA6392.2040006@hardwarefreak.com>
-References: <50A92B52.7030905@mindconnect.nl> <50A94D9F.3060601@hardwarefreak.com> <50A958CE.5030902@mindconnect.nl>
-Reply-To: stan@hardwarefreak.com
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Issue with Raid 10 super block failing
+Date: Mon, 19 Nov 2012 12:12:24 -0500
+Message-ID: <50AA6878.1010002@turmel.org>
+References: <CAPAnFc_USC=a8S_0wcsK36Sx=HXgfVTQ4LPC=m9Y9mDFrYrepg@mail.gmail.com> <50A82267.9030802@turmel.org> <CAPAnFc_ZtiE_-6usMHZA56Vx9JOw=gT3O3ABdpb2kcqLV6hcBw@mail.gmail.com> <50A8F247.8060002@turmel.org> <CAPAnFc9_AqQCHnzpNukVJNuaAZ0k9+i0wEZn6SAX=ucF_X_k2g@mail.gmail.com> <50A91487.70806@turmel.org> <CAPAnFc9KLBDhCDt1WYiOye5wvRv=zvBDfL1=8OEYg04VBCLHBQ@mail.gmail.com> <50A92F53.5080100@turmel.org> <CAPAnFc_siNMWcYtYf56dYO1LgkCKPxMDhC-PuMD-18D4jNJcqw@mail.gmail.com> <50AA36AD.4080100@turmel.org> <CAPAnFc8WG9cH=MvqpdM830kNeoE2TuT3HcMh0u+m23EqOKvdeQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50A958CE.5030902@mindconnect.nl>
+In-Reply-To: <CAPAnFc8WG9cH=MvqpdM830kNeoE2TuT3HcMh0u+m23EqOKvdeQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: mailinglist@mindconnect.nl
+To: Drew Reusser <dreusser@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/18/2012 3:53 PM, Martijn wrote:
-> Thank you for your response Stan.
-> 
-> On 18-11-2012 22:05, Stan Hoeppner wrote:
->> On 11/18/2012 12:39 PM, Martijn wrote:
->>> - Disks are all Seagate Barracuda 7200.12 ST31000528AS, 1TB.
->>> - NCQ is disabled by setting queue_depth to 1.
->> WRT write throughput, you have effectively a single 7.2k spindle.  The
->> only way to get lower performance is a 5xxx RPM 'green' or laptop drive.
->>   This is a low performance machine.
-> It's certainly not a top notch performance machine and I know that. It's
-> old hardware. The disks are the newest component. For the record: no
-> great performance is needed. I only expect the machine the behave
-> normally under normal ("copying a few files") circumstances.
-> 
-> For comparison:
-> I've (had) more of these machines, working well, with mdadm RAID1 on
-> much lower performance disks. Same motherboard. Same (deadline)
-> scheduler. A difference is they don't use a partitionable device, but
-> seperate partitions in RAID1, so /dev/sda1 mirroring /dev/sdb1, and so
-> on. Also, a different OS: an older version of Gentoo.
-> 
-> They never had any trouble keeping up and certainly never had an entry
-> in the syslog like the one I got now. Actually I just tried copying that
-> same 3 GB of files, and it worked flawlessly. No hickups and without
-> starving the machine. That is even while it's in production, under some
-> load.
-> 
-> %iowait on that machine is around 30% while copying. When the copy is
-> done, writing very quickly returns to 0 blocks/s normal on that machine.
-> 
->>> The problem:
->>> I was copying 3 GB of data using rsync, from another server to this
->>> machine over a 100 mbit connection. After some time it appeared to me as
->>> if one of the two systems was having trouble keeping up. Copying speed
->>> was a few MB/s and the transfer sometimes stopped for a longer period of
->>> time, then to continue again.
->>>
->>> Looking at the receiving system, I noticed this in syslog:
->>> task kjournald blocked for more than 120 seconds
->>> task dkpg-preconfigure blocked for more than 120 seconds
->>> [...]
->>>
->>> dpkg-preconfigure being a process running at that time.
->>
->> Multiple disk intensive processes running concurrently.
-> The dkpg-preconfigure was a coincidence. It wasn't running when I did
-> the local copy. The syslog entries then mentioned a few vim editors I
-> had open to edit config files.
-> 
->>> Eventually, the copy completed. But some time after the copy was
->>> completed, I still noticed a high (50-80%) %iowait and 2000 to 4000
->>> blocks being written to sda and sdb. I monitored this using iostat.
->>
->> This is the buffer cache flushing.
->>
->>> I waited for the system to return to 0 writes and a load of near 0 when
->>> I attempted to copy the data on disk from directory A to B, and the same
->>> problem occured.
->>
->> Your previously mentioned symptoms were leading me to this, but this one
->> kinda seals the deal.  This sounds like classic filesystem free space
->> fragmentation.  What filesystem is this?  The 3GB of files--are they
->> large or small files?
-> 
-> Except for /boot, it's all ext3. Free space:
-> Filesystem            Size  Used Avail Use% Mounted on
-> /dev/md127p2           60G  1.1G   56G   2% /
-> /dev/md127p6          7.9G  149M  7.4G   2% /tmp
-> /dev/md127p1          243M   19M  212M   9% /boot
-> /dev/md127p3          709G  6.5G  667G   1% /home
-> /dev/md127p5          119G  420M  112G   1% /var
-> 
-> Less than 10% usage on every partition. The filesystems have always been
-> empty. This data was amongst the very first data written to the /home.
-> All partitions where created using standard Linux fdisk and then
-> formatted using mkfs.ext3.
-> 
-> The 3GB consists of very mixed content: mostly small files (~1KB), and
-> just a few bigger (50MB+).
+On 11/19/2012 11:44 AM, Drew Reusser wrote:
+> On Mon, Nov 19, 2012 at 1:39 PM, Phil Turmel <philip@turmel.org> wrote:
 
-Ok, so it's not a fragmentation issue.  When you copied the 3GB of files
-from one directory to another on /home you said you experienced the
-"same problem".  Could you describe that in more detail?  Also, do you
-see any lines in dmesg showing any SATA links being reset, or any
-disk/interface messages, either warnings or errors?
+[trim /]
 
+>> So you've re-created the MD array.  That's bad.  Chunk size and Data
+>> offset size and alignment defaults have changed in the past couple
+>> years, so re-creating an array with a different mdadm version can cause
+>> these problems.  You can also lose the original order of devices, with
+>> similar consequences.
+>>
+> 
+> Yes I did multiple creates to try to get the devices back together
+> after mdadm --Fail commands.  I did not know about the assemble
+> command yet and was following what "experts" were saying to try to
+> recover failed superblock errors after a reboot (which is what errors
+> I found).
 
--- 
-Stan
+The odds of success have dropped.  If you used "--assume-clean" *every*
+time you used "--create", the odds are still greater than zero.
+Otherwise, the odds your data is destroyed is *very* high.
 
+>> (Side note:  there's various pieces of advice floating around the
+>> internet on recovering a broken array that start with re-creating the
+>> array.  It's horribly wrong, and only a last resort, and only after
+>> recording all the details about the original array.)
+>>
+>> Unless you kept a copy of "mdadm --examine /dev/sd[abde]1" for the
+>> original array, this will be difficult to debug further.  Your best
+>> chance is to go back to the version of mdadm available when you first
+>> built the system and recreate with that, trying the various device order
+>> combinations.
+>>
+>> Don't attempt to mount to check for success.  First, use "fsck -n" to
+>> non-destructively check the FS.  If that gives few errors, then you can
+>> mount the FS.
+>>
+>> Phil
+> 
+> I don't have the original mdadm --examine as I never knew to keep a
+> copy of it.  I created this array when I installed Mint on this server
+> in August, so the the version I am running now is the same as the
+> version on the pen drive I am booting from.  I know the disks were all
+> the same.  I set them up intentionally so they would be identical.
+> 
+> here is the output of the fsck ..
+> 
+> mint mnt # fsck -n /dev/md0
+> fsck from util-linux 2.20.1
+> fsck: fsck.linux_raid_member: not found
+> fsck: error 2 while executing fsck.linux_raid_member for /dev/md0
+
+So, mount doesn't see it as an ext4 device at all.  Stop the array, and
+scan each member for ext4 superblock magic:
+
+for x in /dev/sd[abde]1 ; do echo $x ; \
+dd if=$x bs=1M count=256 2>/dev/null | \
+hexdump -C |grep '30  .\+  53 ef 0' ; done
+
+Hopefully, each device will show one or more superblock candidates whose
+offsets may help us decide which roles are which, and at what data offset.
+
+Phil
