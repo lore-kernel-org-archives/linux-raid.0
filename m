@@ -1,50 +1,91 @@
-From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Subject: Re: [PATCH v2] md: also hot remove disk from pers when hot removing
-Date: Mon, 19 Nov 2012 17:08:13 +0100
-Message-ID: <50AA596D.4080003@profitbricks.com>
-References: <1353081849-10516-1-git-send-email-sebastian.riemer@profitbricks.com> <CAA9_cmcViMsVMrxyEcC9yaHPq9Xc-5Dt63fMEJ+X+kZst8O9Fg@mail.gmail.com> <50AA0985.6060601@profitbricks.com>
+From: Drew Reusser <dreusser@gmail.com>
+Subject: Re: Issue with Raid 10 super block failing
+Date: Mon, 19 Nov 2012 16:44:58 +0000
+Message-ID: <CAPAnFc8WG9cH=MvqpdM830kNeoE2TuT3HcMh0u+m23EqOKvdeQ@mail.gmail.com>
+References: <CAPAnFc_USC=a8S_0wcsK36Sx=HXgfVTQ4LPC=m9Y9mDFrYrepg@mail.gmail.com>
+	<50A82267.9030802@turmel.org>
+	<CAPAnFc_ZtiE_-6usMHZA56Vx9JOw=gT3O3ABdpb2kcqLV6hcBw@mail.gmail.com>
+	<50A8F247.8060002@turmel.org>
+	<CAPAnFc9_AqQCHnzpNukVJNuaAZ0k9+i0wEZn6SAX=ucF_X_k2g@mail.gmail.com>
+	<50A91487.70806@turmel.org>
+	<CAPAnFc9KLBDhCDt1WYiOye5wvRv=zvBDfL1=8OEYg04VBCLHBQ@mail.gmail.com>
+	<50A92F53.5080100@turmel.org>
+	<CAPAnFc_siNMWcYtYf56dYO1LgkCKPxMDhC-PuMD-18D4jNJcqw@mail.gmail.com>
+	<50AA36AD.4080100@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50AA0985.6060601@profitbricks.com>
+In-Reply-To: <50AA36AD.4080100@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <djbw@fb.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 19.11.2012 11:27, Sebastian Riemer wrote:
-> On 17.11.2012 01:07, Dan Williams wrote:
->> Hmm, how are you getting ->raid_disk set to -1 without the personality
->> being notified?  That seems to be the source of the bug.  Otherwise it
->> would seem the state_store("remove") path is also susceptible.
->>
->> --
->> Dan
-> Thanks for your feedback!
+On Mon, Nov 19, 2012 at 1:39 PM, Phil Turmel <philip@turmel.org> wrote:
+> Hi Drew,
 >
-> Perhaps it's only something for my use-case of read-only
-> raid1-replicated volumes where I never have any spares. I don't set
-> ->raid_disk to -1 when hot adding them. I have to put them directly to
-> their stored slot because I assemble read-only on read-only rdevs. So
-> the syncer never runs. Those read-only rdevs are coming from remote
-> storage. Imagine HA CD-ROM images.
+> On 11/18/2012 02:10 PM, Drew Reusser wrote:
 >
-> My thought was that it would be cleaner behavior if the cleanup of an
-> rdev in the personality already happens when hot removing the disk.
+> [trim /]
+>> Sorry - did not know the rules about top posting.  Is there something
+>> specific in the dmesg you are looking for?  I tried to mount it again
+>> and copied everything in the buffer.
 >
-> You're right, the state_store("remove") path would need this change, too.
+> Here's what I wanted to see:
 >
-> With the "slot_store" path I could trigger a panic when I hot added the
-> disk as spare, marked it insync and tried to give it the slot it belongs
-> to. I'll test this with the latest vanilla kernel and try to reproduce
-> this on rw volumes which I set to read-only. If I can also crash it that
-> way, I've got a proof that there is a bug.
+>> [270303.640240] EXT4-fs (md0): VFS: Can't find ext4 filesystem
+>
+> This suggests that the ext4 superblock isn't near the beginning like
+> it's supposed to be.  One of the ways that happens with MD raid is if
+> someone does "mdadm --create" and destroys their old raid superblocks.
+>
+> I went back and looked at:
+>
+>>   Creation Time : Thu Nov 15 16:08:02 2012
+>
+> and:
+>
+>>     Data Offset : 262144 sectors
+>
+> So you've re-created the MD array.  That's bad.  Chunk size and Data
+> offset size and alignment defaults have changed in the past couple
+> years, so re-creating an array with a different mdadm version can cause
+> these problems.  You can also lose the original order of devices, with
+> similar consequences.
+>
 
-The kernel blocks most ioctls on a read-only mddev. So I guess I've got
-another custom patch. IMHO it would be still cleaner to also hot remove
-the disk from the personality when hot removing an rdev.
+Yes I did multiple creates to try to get the devices back together
+after mdadm --Fail commands.  I did not know about the assemble
+command yet and was following what "experts" were saying to try to
+recover failed superblock errors after a reboot (which is what errors
+I found).
 
-> If the disk isn't cleaned up in the pers, then hot_add_disk doesn't
-> return any error for raid1. Instead it crashes when referencing the old
-> pointer when calling "print_conf" in raid1.c.
+> (Side note:  there's various pieces of advice floating around the
+> internet on recovering a broken array that start with re-creating the
+> array.  It's horribly wrong, and only a last resort, and only after
+> recording all the details about the original array.)
+>
+> Unless you kept a copy of "mdadm --examine /dev/sd[abde]1" for the
+> original array, this will be difficult to debug further.  Your best
+> chance is to go back to the version of mdadm available when you first
+> built the system and recreate with that, trying the various device order
+> combinations.
+>
+> Don't attempt to mount to check for success.  First, use "fsck -n" to
+> non-destructively check the FS.  If that gives few errors, then you can
+> mount the FS.
+>
+> Phil
+
+I don't have the original mdadm --examine as I never knew to keep a
+copy of it.  I created this array when I installed Mint on this server
+in August, so the the version I am running now is the same as the
+version on the pen drive I am booting from.  I know the disks were all
+the same.  I set them up intentionally so they would be identical.
+
+here is the output of the fsck ..
+
+mint mnt # fsck -n /dev/md0
+fsck from util-linux 2.20.1
+fsck: fsck.linux_raid_member: not found
+fsck: error 2 while executing fsck.linux_raid_member for /dev/md0
