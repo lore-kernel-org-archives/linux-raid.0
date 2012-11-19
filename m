@@ -1,128 +1,132 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH V1] md:For aborted a resync by request,using
- ->curr_resync as the last completed request rather than
- ->curr_resync_completed.
-Date: Tue, 20 Nov 2012 09:07:25 +1100
-Message-ID: <20121120090725.7de3348a@notabene.brown>
-References: <201211191957314065143@gmail.com>
+Subject: Re: [PATCH] raid5: panic() on dma_wait_for_async_tx() error
+Date: Tue, 20 Nov 2012 09:18:24 +1100
+Message-ID: <20121120091824.58ed4565@notabene.brown>
+References: <20121119120632.1c97e306@notabene.brown>
+	<84A937D219C2B44EB8EA44831ACA1E49166C741F@SC-MBX02-3.TheFacebook.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/AX/Iq+M/VrfEAy3d4O+2LaO"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201211191957314065143@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+ boundary="Sig_/./or77N3mka38mJ6uyci_o9"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <84A937D219C2B44EB8EA44831ACA1E49166C741F@SC-MBX02-3.TheFacebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Williams <djbw@fb.com>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Vinod Koul <vinod.koul@intel.com>, Tomasz Figa <t.figa@samsung.com>, Kyungmin Park <kyungmin.park@samsung.com>
 List-Id: linux-raid.ids
 
---Sig_/AX/Iq+M/VrfEAy3d4O+2LaO
+--Sig_/./or77N3mka38mJ6uyci_o9
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 19 Nov 2012 19:57:34 +0800 majianpeng <majianpeng@gmail.com> wrote:
+On Mon, 19 Nov 2012 05:22:25 +0000 Dan Williams <djbw@fb.com> wrote:
 
-> V0-->V1:
-> As suggested by neil, it added a flag MD_RECOVERY_ERROR to differentiate =
-between an
-> abort-due-to-error and an abort-due-to-request.We only deal with the late=
-r case.
 >=20
-> Thanks!
-> Jianpeng
 >=20
-> Aborting a resync maybe by io-error,or request(stop array or reboot
-> system).
-> So we add a flag MD_RECOVERY_ERROR to differentiate between an
-> abort-due-to-error and an abort-due-to-request.
-> For the later case,when resync aborted,it exec
-> wait_event(mddev->recovery_wait, !atomic_read(&mddev->recovery_active)).
-> So the ->curr_resync is the last completed request.
+> On 11/18/12 5:06 PM, "NeilBrown" <neilb@suse.de> wrote:
 >=20
-> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
-> ---
->  drivers/md/md.c |   10 ++++++++--
->  drivers/md/md.h |    2 ++
->  2 files changed, 10 insertions(+), 2 deletions(-)
+> >
+> >Hi Dan,
+> > could you comment on this please?  Would it make sense to arrange for
+> >errors
+> > to propagate up?  Or should we arrange to do a software-fallback in the
+> >dma
+> > engine is a problem?  What sort of things can cause error here anyway?
 >=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 9ab768a..5199657 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -7172,6 +7172,7 @@ void md_done_sync(struct mddev *mddev, int blocks, =
-int ok)
->  	wake_up(&mddev->recovery_wait);
->  	if (!ok) {
->  		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> +		set_bit(MD_RECOVERY_ERROR, &mddev->recovery);
->  		md_wakeup_thread(mddev->thread);
->  		// stop recovery, signal do_sync ....
->  	}
-> @@ -7558,8 +7559,13 @@ void md_do_sync(struct md_thread *thread)
->  					printk(KERN_INFO
->  					       "md: checkpointing %s of %s.\n",
->  					       desc, mdname(mddev));
-> -					mddev->recovery_cp =3D
-> -						mddev->curr_resync_completed;
-> +					if (test_bit(MD_RECOVERY_ERROR,
-> +						&mddev->recovery_cp))
-> +						mddev->recovery_cp =3D
-> +							mddev->curr_resync_completed;
-> +					else
-> +						mddev->recovery_cp =3D
-> +							mddev->curr_resync;
->  				}
->  			} else
->  				mddev->recovery_cp =3D MaxSector;
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index af443ab..c29e62e 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -307,6 +307,7 @@ struct mddev {
->  	 * REQUEST:  user-space has requested a sync (used with SYNC)
->  	 * CHECK:    user-space request for check-only, no repair
->  	 * RESHAPE:  A reshape is happening
-> +	 * ERROR:    sync-action interrupted because io-error
->  	 *
->  	 * If neither SYNC or RESHAPE are set, then it is a recovery.
->  	 */
-> @@ -320,6 +321,7 @@ struct mddev {
->  #define	MD_RECOVERY_CHECK	7
->  #define MD_RECOVERY_RESHAPE	8
->  #define	MD_RECOVERY_FROZEN	9
-> +#define	MD_RECOVERY_ERROR	10
-> =20
->  	unsigned long			recovery;
->  	/* If a RAID personality determines that recovery (of a particular
+> Propagating up is missing reliable "dma abort" operation.
+>=20
+> In these cases the engine failed to complete due to hardware hang / driver
+> bug, or has hit a memory error (uncorrectable even with software
+> fallback).  This originally should have been using async_tx_quiesce()
+> which also does the panic.
+>=20
+> The engines that I have worked with have either lacked support for
+> aborting, or were otherwise unable to recover from a hardware hang.
+> However, for engines that do support error recovery they should be able to
+> hide the failure from the upper layers.
+>
+
+So maybe I could:
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index ac09fa4..ffbf0ca 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3268,7 +3268,7 @@ static void handle_stripe_expansion(struct r5conf *co=
+nf, struct stripe_head *sh)
+ 	/* done submitting copies, wait for them to complete */
+ 	if (tx) {
+ 		async_tx_ack(tx);
+-		dma_wait_for_async_tx(tx);
++		async_tx_quiesce(&tx);
+ 	}
+ }
+=20
 
 
+and then the panic would be somebody else's problem?
 
-The attachment still have MS-windows line endings ("\r\n" instead of just
-"\n") but it wasn't too hard to strip those out.
+I note that handle_stripe_expansion has:
 
-Applied, thanks,
+ 		async_tx_ack(tx);
+		dma_wait_for_async_tx(tx);
+
+while async_tx_quiesce() has:
+
+		if (dma_wait_for_async_tx(*tx) =3D=3D DMA_ERROR)
+			panic("DMA_ERROR waiting for transaction\n");
+		async_tx_ack(*tx);
+
+
+i.e. the same two functions called in the reverse order.  Is the order
+important?  Is handle_stripe_expansion wrong?   Should the patch I apply
+actually be:
+
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index ac09fa4..e51d903 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3266,10 +3266,7 @@ static void handle_stripe_expansion(struct r5conf *c=
+onf, struct stripe_head *sh)
+=20
+ 		}
+ 	/* done submitting copies, wait for them to complete */
+-	if (tx) {
+-		async_tx_ack(tx);
+-		dma_wait_for_async_tx(tx);
+-	}
++	async_tx_quiesce(&tx);
+ }
+=20
+ /*
+
+
+because async_tx_quiesce() does the NULL test too???
+
+Thanks,
 NeilBrown
 
 
---Sig_/AX/Iq+M/VrfEAy3d4O+2LaO
+--Sig_/./or77N3mka38mJ6uyci_o9
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUKqtnTnsnt1WYoG5AQJdgBAAq2qzCNM7shkVLSgFS2tyqPm/YR25GOiZ
-1/Fj/OFe6OF/QEQ+8yjJBsbTstiybQSbnyeW04xWK3vlatfy4GKSdoclqX8Yw/UM
-w7bQxlZQ16J88j5cC1o4ampJUkQmdP9OSBttCtkgmV0Ekik4BgyUmLnrBe1xv6iF
-MdQMo0oeDzkEFoxH7slW1akLfm0BipT5ALyZdIeFiCBZ4uihm3IpbCT3fm72bvui
-avGX6ZMWgCxX02LBZU63WzSgW1M7RO+tyNiOsvvn8Seml3C8LwXYM5xyg9dr19M9
-6mbkiQs52xodPXqfxGf88oi/8Pdw899g5EJc86sN3O56fs+rHRBduXDYcBN7bGGH
-Uru6NyD98xCdF8fq0lA0uteJ4utib869zzmivkRYBBshZcmk99nhUQjvYcgSnzg+
-LyFEyRxfyLZUbD55xAyMDee/x7zlZWOdjodyVKWRnQrXVXxTrZjyZPNjPO9Yt4Om
-dRqtJqmtC50i63HjHcAzrl5vgozmupeZO0gcoIKJao6GkDqTRqgwFPUt3VSHuzRI
-5oDf3o9i8/On0DfENoSdOOWjdXlq4/I9nRVFTmG1wXSOARDW/wlbPo117nJ+jdUp
-fkgWDKZk1OSgPy1uhHx0DsaPcXRwkNv1fvNBcIY37yXyUrotMjp4kzqZZUCNV7PI
-X/+5GOnSYCc=
-=E25M
+iQIVAwUBUKqwMDnsnt1WYoG5AQKb8g//VGcrtF6SE62X6xcuHE/SamzcwvjXdy0V
+8pBUwoHpw8ul6MEKqgnVYwAKUpJHdMCwhjv6Ryshx940/q80E3kclgZbm7Hupr/f
+h9OuFnpwhbYU53Qk/Q8WvEP/2vI2qHokKjblREUwQjekDqtSNsy34DaC24qUeBnR
+btux4i9nzoxt9AlE4nKab5O1IR9II/onVuYKdGnOdL6ym78A5DGoHqDUZFIQpqHb
+Vxm6SW0vvXv91hD42jh+gBLpcmq1+eWh1kbnOh0FQVqVMqk/fH+WY1yR59ZFHcZS
+9L6OX3aAwrEar0r5xrZJoRk2yvv3p5rJ5rRE+F7sExgKUkmpThUbqpPMBbdSJgDL
++4Gel6/QI6j+cGGxafOlbrEBo2ainLnPwAr89GbBxmdnSrpRGU2wHYPob3wajw4A
+lm7QzjJ9GV4CnVlHTvOqUxzvgA8FuJNFNL/2KgUHWoz9h2bPJ+01VTkJDwxHdzfq
+2aN/Ez5SKpTXICWplugsoMmeL244OJon+CrK5gNfidZR6x7M6xshJ7rNY31OMetS
+vOzhEDblYtkzXmjVAAdyoP9EVftNHI7jkQYao2frr6YJWqlUvDgpznZNGGl6CC2q
+AtwQiN7anOeb1DBGlwvhVKRDhOL1CwkUiJ/LHfNzHhsXTzFK3vycSDLc9XyJv+nw
+CjnscqWZqlw=
+=j44Z
 -----END PGP SIGNATURE-----
 
---Sig_/AX/Iq+M/VrfEAy3d4O+2LaO--
+--Sig_/./or77N3mka38mJ6uyci_o9--
