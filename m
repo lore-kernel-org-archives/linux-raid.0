@@ -1,67 +1,86 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Keep track on which kernel the test suite has run
-Date: Mon, 19 Nov 2012 11:10:14 +1100
-Message-ID: <20121119111014.659eb4d4@notabene.brown>
-References: <1352538883-24288-1-git-send-email-g.esp@free.fr>
+Subject: Re: [PATCH] Grow.c: fix uninitialized variables compilation-time
+ error
+Date: Mon, 19 Nov 2012 11:18:00 +1100
+Message-ID: <20121119111800.08edee0c@notabene.brown>
+References: <20121113122943.4041.51702.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/y0m3ufw/Wo=3YakjtWifXlw"; protocol="application/pgp-signature"
+ boundary="Sig_/sUAVJgdfvYcG91cCDRMPKe2"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1352538883-24288-1-git-send-email-g.esp@free.fr>
+In-Reply-To: <20121113122943.4041.51702.stgit@gklab-128-085.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gilles Espinasse <g.esp@free.fr>
-Cc: linux-raid@vger.kernel.org
+To: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com
 List-Id: linux-raid.ids
 
---Sig_/y0m3ufw/Wo=3YakjtWifXlw
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/sUAVJgdfvYcG91cCDRMPKe2
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 10 Nov 2012 10:14:43 +0100 Gilles Espinasse <g.esp@free.fr> wrote:
+On Tue, 13 Nov 2012 13:29:43 +0100 Lukasz Dorau <lukasz.dorau@intel.com>
+wrote:
 
-> Signed-off-by: Gilles Espinasse <g.esp@free.fr>
-> ---
->  test |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
+> It fixes the following uninitialized variables compilation-time error:
+> WARN  - Grow.c: In function =E2=80=98reshape_array=E2=80=99:
+> WARN  - Grow.c:2413:21: error: =E2=80=98min_space_after=E2=80=99 may be u=
+sed uninitialized in this function [-Werror=3Dmaybe-uninitialized]
+> WARN  - Grow.c:2376:39: note: =E2=80=98min_space_after=E2=80=99 was decla=
+red here
+> WARN  - Grow.c:2414:22: error: =E2=80=98min_space_before=E2=80=99 may be =
+used uninitialized in this function [-Werror=3Dmaybe-uninitialized]
+> WARN  - Grow.c:2376:21: note: =E2=80=98min_space_before=E2=80=99 was decl=
+ared here
+> WARN  - cc1: all warnings being treated as errors
+> WARN  - make: *** [Grow.o] Error 1
+> It occurs during compilation of mdadm on Fedora 17.
 >=20
-> diff --git a/test b/test
-> index 3f8515f..352c1e1 100755
-> --- a/test
-> +++ b/test
-> @@ -21,6 +21,8 @@ logdir=3D"$testdir/logs"
->  logsave=3D0
->  exitonerror=3D1
+> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+> ---
+>  Grow.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/Grow.c b/Grow.c
+> index 4de8029..a526a65 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -2373,7 +2373,7 @@ release:
+>  static void get_space_after(int fd, struct supertype *st, struct mdinfo =
+*info)
+>  {
+>  	struct mdinfo *sra, *sd;
+> -	unsigned long long min_space_before, min_space_after;
+> +	unsigned long long min_space_before =3D 0, min_space_after =3D 0;
+>  	int first =3D 1;
 > =20
-> +echo "Testing on linux-$(uname -r) kernel"
-> +
->  # Check whether to run multipath tests
->  modprobe multipath 2> /dev/null
->  if grep -s 'Personalities : .*multipath' > /dev/null /proc/mdstat ; then
+>  	sra =3D sysfs_read(fd, 0, GET_DEVS);
 
-Applied,
-Thanks,
+Applied, thanks - though I added a comment to clarify that the initialisati=
+on
+is only to silence a compiler warning.
+
 NeilBrown
 
---Sig_/y0m3ufw/Wo=3YakjtWifXlw
+--Sig_/sUAVJgdfvYcG91cCDRMPKe2
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUKl45jnsnt1WYoG5AQKFBg/9Gri+3/huN7Dd3ZGYQmNRZJiDe0+ztv/s
-RVQv1gduDXO96lPJoIwmT7ffXZFs4i14uzAWUoJOvTEq69n2OvOPN2S5GIFidYe1
-NsaFbdB01znRy0hKmBhFQ28o6OOt8baYBlf7cGO6O2yJ5hT7gSW+cfK4kiSyHq0L
-5WHgBzBi8gQJ07iAVb9fbrz7zpiRVl3gQsX9B3z3T6WiA7xaIhwb8xFTfq0U4YMm
-8U7Bhta346wrXiwMYNp2XMAEoHukDUJTGxLPIOvzkJJEH6PTOLmhLQ0Xa+olnhbF
-P57JgjS0qeiO51UCKPVfFFs4jFLAejJvws+FBJCn1mqLbFcaQs/fAIWji6snpIdw
-eDclQCGLzJLsN0IQSJdZZVnZwLUBtPqkM3TKZzx2H+/qxm3BYbgmhHo8ieTkes8P
-8juzwxrSN3JhQGMkW2yHWAIBickpU1jQyuAc5pjVqhdh1tCnxnFT69ovC9PvRKpt
-B7qJJvmjxTNaS+SewWxEndPbSiZhZG9oTsrg9eBj0/uWMhnKOqXyVIWDF86qiZXv
-Wip2XMZbAz9fN5hYCxy48R5X2S4L0djK9AKUoASQCTCkgB6iYqCUcxpa1e3J0+6x
-k1A1nVoxXQiYxK/SHB6OFGjmZ037CT6YASL7JBO4ehMHri99+Egl2BlY08tSlOJj
-WYoXJMEqpDo=
-=wxyW
+iQIVAwUBUKl6uDnsnt1WYoG5AQILug//Wh5RN2eeYKwGBiiijqsgiYfHN/L8Sot1
+YPaN8PtmfU10HE/OdZIqfhbbP+rkWd/28LiTBkyQtK0rErCL3XnXt8QiWpopuHuG
+E6Sjis8nBiEZsyPpR9j5zHcOJl/KnIx30eXDVUN6Yml2TAK/WH6nuwbbhrsoHLun
+60eH56q28IKHodgiVqbkgOh2c3eej0tBLTgae01YSkVvQ8BoM5rBjpNkfhH8P5CQ
+cEq93bfe8YBKt2jdOoojMfeMtzOad1ZyarsPSJ/7BySI6X70y4tWVGDogLFLu/q0
+G+2Zmu6zANZaIaZi629H7JmeQxP7dCjlOchOs/3uOMnqjFnYJ+h0HD1EDoTaSUAN
+3oH6YgNJTpD80hsEKRRGDGK5JgWwO2zXU83uZaWysWOBhfKPP2nQlEEZXOiW7evK
+cTXvX9YkKWzKYZyQmOtnmiT/8s2lzVjfRyptu4I4WFzMq9oKC0S5uaJ+DxDUeIUJ
+CVVESiF5WzduCvMMQDx1abV9TsCHTKIPbwNtamPiRrkb2nssxQd8cFcE1naa9O4B
+7c6PZ4sZ5dNlZYf1ff4EaA6cR/M4+pJAPXfwuaDc/M40i9gDEIqKerKBcK5NUaB6
+aR5D1aptgGu8kIO4vJ/RJNkl19689uRTYAEVNE2IV8n7agBI25LZ5qHc4l38ervU
+tFbTYJFvGLw=
+=xeec
 -----END PGP SIGNATURE-----
 
---Sig_/y0m3ufw/Wo=3YakjtWifXlw--
+--Sig_/sUAVJgdfvYcG91cCDRMPKe2--
