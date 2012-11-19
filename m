@@ -1,92 +1,128 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH v2] md: also hot remove disk from pers when hot removing
-Date: Tue, 20 Nov 2012 08:19:38 +1100
-Message-ID: <20121120081938.1c49f6e8@notabene.brown>
-References: <1353081849-10516-1-git-send-email-sebastian.riemer@profitbricks.com>
-	<CAA9_cmcViMsVMrxyEcC9yaHPq9Xc-5Dt63fMEJ+X+kZst8O9Fg@mail.gmail.com>
-	<50AA0985.6060601@profitbricks.com>
-	<50AA596D.4080003@profitbricks.com>
+Subject: Re: [PATCH V1] md:For aborted a resync by request,using
+ ->curr_resync as the last completed request rather than
+ ->curr_resync_completed.
+Date: Tue, 20 Nov 2012 09:07:25 +1100
+Message-ID: <20121120090725.7de3348a@notabene.brown>
+References: <201211191957314065143@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/gCSoJvPbQUllrEDvGoqDBZB"; protocol="application/pgp-signature"
+ boundary="Sig_/AX/Iq+M/VrfEAy3d4O+2LaO"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50AA596D.4080003@profitbricks.com>
+In-Reply-To: <201211191957314065143@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Cc: Dan Williams <djbw@fb.com>, linux-raid <linux-raid@vger.kernel.org>
+To: majianpeng <majianpeng@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/gCSoJvPbQUllrEDvGoqDBZB
+--Sig_/AX/Iq+M/VrfEAy3d4O+2LaO
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 19 Nov 2012 17:08:13 +0100 Sebastian Riemer
-<sebastian.riemer@profitbricks.com> wrote:
+On Mon, 19 Nov 2012 19:57:34 +0800 majianpeng <majianpeng@gmail.com> wrote:
 
-> On 19.11.2012 11:27, Sebastian Riemer wrote:
-> > On 17.11.2012 01:07, Dan Williams wrote:
-> >> Hmm, how are you getting ->raid_disk set to -1 without the personality
-> >> being notified?  That seems to be the source of the bug.  Otherwise it
-> >> would seem the state_store("remove") path is also susceptible.
-> >>
-> >> --
-> >> Dan
-> > Thanks for your feedback!
-> >
-> > Perhaps it's only something for my use-case of read-only
-> > raid1-replicated volumes where I never have any spares. I don't set
-> > ->raid_disk to -1 when hot adding them. I have to put them directly to
-> > their stored slot because I assemble read-only on read-only rdevs. So
-> > the syncer never runs. Those read-only rdevs are coming from remote
-> > storage. Imagine HA CD-ROM images.
-> >
-> > My thought was that it would be cleaner behavior if the cleanup of an
-> > rdev in the personality already happens when hot removing the disk.
-> >
-> > You're right, the state_store("remove") path would need this change, to=
-o.
-> >
-> > With the "slot_store" path I could trigger a panic when I hot added the
-> > disk as spare, marked it insync and tried to give it the slot it belongs
-> > to. I'll test this with the latest vanilla kernel and try to reproduce
-> > this on rw volumes which I set to read-only. If I can also crash it that
-> > way, I've got a proof that there is a bug.
+> V0-->V1:
+> As suggested by neil, it added a flag MD_RECOVERY_ERROR to differentiate =
+between an
+> abort-due-to-error and an abort-due-to-request.We only deal with the late=
+r case.
 >=20
-> The kernel blocks most ioctls on a read-only mddev. So I guess I've got
-> another custom patch. IMHO it would be still cleaner to also hot remove
-> the disk from the personality when hot removing an rdev.
+> Thanks!
+> Jianpeng
+>=20
+> Aborting a resync maybe by io-error,or request(stop array or reboot
+> system).
+> So we add a flag MD_RECOVERY_ERROR to differentiate between an
+> abort-due-to-error and an abort-due-to-request.
+> For the later case,when resync aborted,it exec
+> wait_event(mddev->recovery_wait, !atomic_read(&mddev->recovery_active)).
+> So the ->curr_resync is the last completed request.
+>=20
+> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
+> ---
+>  drivers/md/md.c |   10 ++++++++--
+>  drivers/md/md.h |    2 ++
+>  2 files changed, 10 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 9ab768a..5199657 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -7172,6 +7172,7 @@ void md_done_sync(struct mddev *mddev, int blocks, =
+int ok)
+>  	wake_up(&mddev->recovery_wait);
+>  	if (!ok) {
+>  		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> +		set_bit(MD_RECOVERY_ERROR, &mddev->recovery);
+>  		md_wakeup_thread(mddev->thread);
+>  		// stop recovery, signal do_sync ....
+>  	}
+> @@ -7558,8 +7559,13 @@ void md_do_sync(struct md_thread *thread)
+>  					printk(KERN_INFO
+>  					       "md: checkpointing %s of %s.\n",
+>  					       desc, mdname(mddev));
+> -					mddev->recovery_cp =3D
+> -						mddev->curr_resync_completed;
+> +					if (test_bit(MD_RECOVERY_ERROR,
+> +						&mddev->recovery_cp))
+> +						mddev->recovery_cp =3D
+> +							mddev->curr_resync_completed;
+> +					else
+> +						mddev->recovery_cp =3D
+> +							mddev->curr_resync;
+>  				}
+>  			} else
+>  				mddev->recovery_cp =3D MaxSector;
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index af443ab..c29e62e 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -307,6 +307,7 @@ struct mddev {
+>  	 * REQUEST:  user-space has requested a sync (used with SYNC)
+>  	 * CHECK:    user-space request for check-only, no repair
+>  	 * RESHAPE:  A reshape is happening
+> +	 * ERROR:    sync-action interrupted because io-error
+>  	 *
+>  	 * If neither SYNC or RESHAPE are set, then it is a recovery.
+>  	 */
+> @@ -320,6 +321,7 @@ struct mddev {
+>  #define	MD_RECOVERY_CHECK	7
+>  #define MD_RECOVERY_RESHAPE	8
+>  #define	MD_RECOVERY_FROZEN	9
+> +#define	MD_RECOVERY_ERROR	10
+> =20
+>  	unsigned long			recovery;
+>  	/* If a RAID personality determines that recovery (of a particular
 
-But you *cannot* hot-remove an rdev when it is owned by the personality.
-The "remove from the personality" operation is called  "--fail".
-The "remove from array" operation is call "--remove".
 
-It would be wrong to conflate these two.
 
-Thanks for confirming it was a local problem - I won't go hunting.
+The attachment still have MS-windows line endings ("\r\n" instead of just
+"\n") but it wasn't too hard to strip those out.
 
+Applied, thanks,
 NeilBrown
 
 
---Sig_/gCSoJvPbQUllrEDvGoqDBZB
+--Sig_/AX/Iq+M/VrfEAy3d4O+2LaO
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUKqiajnsnt1WYoG5AQKn0RAAqP1nP+2y9GM2ztJBW6qcU2WGs2k2thqs
-BkHhW6Rko7/i3uH05Yh3dKMjhaTtbq0CjSzYkagS3+TKiPGoabWL4P0qH836cuWF
-AjvBGS5h04e9mt5ER6EFVLcdSXy4uKz5ab0dTVT1gwWTOAo+39vDIKmmi06vacuG
-0uXTp44bvljo8A0KkPhBzJp1LWqoYyK+fcS3buHjVOiTB2DamiR9zS4AIJZSj7XO
-Sy4abOynr1ZaCdK65trpuqAB5xuICrQPmj5vd3PyHk8jZAyWs0GHN2M2PyuC/teG
-RXJzFJ15qtpzkB6R51L5s6nMsonwWxZ+NgoDXyLbLzVSpxI8K+Lt6k6CVMuy5dpR
-wDbYdLdwmD0quaUNEHMlsImKAAMChf8sPS9XyogF/ZZmcfRYOmDxm1kcHDBacpqy
-vMj6icGI7voAi7urnjBmzFyPJgV50pN1pBpUn9+zEnZiRZ/ZnzrnnUhfxGcHuvFc
-XbZtB6Mda6nCsWBLZREZjjfgXX28ePxt/s6LGmhqqK/vH8iUjD3xbaLj02kwNTeP
-kjQGVf6t0CI7czHSMxT7pTn+GtnNhYVuNz/eV1nJscIT6ab54BZnAXWiYBKq/yG5
-aESPLDMOmn4SO2aui+m6aFHXb21CHp6Ts0ksaokhps4oCXIwyM1/321+l9kRL5yo
-UQUes212rMY=
-=s6hi
+iQIVAwUBUKqtnTnsnt1WYoG5AQJdgBAAq2qzCNM7shkVLSgFS2tyqPm/YR25GOiZ
+1/Fj/OFe6OF/QEQ+8yjJBsbTstiybQSbnyeW04xWK3vlatfy4GKSdoclqX8Yw/UM
+w7bQxlZQ16J88j5cC1o4ampJUkQmdP9OSBttCtkgmV0Ekik4BgyUmLnrBe1xv6iF
+MdQMo0oeDzkEFoxH7slW1akLfm0BipT5ALyZdIeFiCBZ4uihm3IpbCT3fm72bvui
+avGX6ZMWgCxX02LBZU63WzSgW1M7RO+tyNiOsvvn8Seml3C8LwXYM5xyg9dr19M9
+6mbkiQs52xodPXqfxGf88oi/8Pdw899g5EJc86sN3O56fs+rHRBduXDYcBN7bGGH
+Uru6NyD98xCdF8fq0lA0uteJ4utib869zzmivkRYBBshZcmk99nhUQjvYcgSnzg+
+LyFEyRxfyLZUbD55xAyMDee/x7zlZWOdjodyVKWRnQrXVXxTrZjyZPNjPO9Yt4Om
+dRqtJqmtC50i63HjHcAzrl5vgozmupeZO0gcoIKJao6GkDqTRqgwFPUt3VSHuzRI
+5oDf3o9i8/On0DfENoSdOOWjdXlq4/I9nRVFTmG1wXSOARDW/wlbPo117nJ+jdUp
+fkgWDKZk1OSgPy1uhHx0DsaPcXRwkNv1fvNBcIY37yXyUrotMjp4kzqZZUCNV7PI
+X/+5GOnSYCc=
+=E25M
 -----END PGP SIGNATURE-----
 
---Sig_/gCSoJvPbQUllrEDvGoqDBZB--
+--Sig_/AX/Iq+M/VrfEAy3d4O+2LaO--
