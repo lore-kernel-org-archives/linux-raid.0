@@ -1,119 +1,67 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] imsm: Forbid spanning between multiple controllers.
-Date: Mon, 19 Nov 2012 11:08:00 +1100
-Message-ID: <20121119110800.5ba2b63e@notabene.brown>
-References: <20121109144636.2215.91684.stgit@localhost.localdomain>
+Subject: Re: [PATCH] Keep track on which kernel the test suite has run
+Date: Mon, 19 Nov 2012 11:10:14 +1100
+Message-ID: <20121119111014.659eb4d4@notabene.brown>
+References: <1352538883-24288-1-git-send-email-g.esp@free.fr>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ZSd3ehWwh6Cfr5s94B=KsG2"; protocol="application/pgp-signature"
+ boundary="Sig_/y0m3ufw/Wo=3YakjtWifXlw"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121109144636.2215.91684.stgit@localhost.localdomain>
+In-Reply-To: <1352538883-24288-1-git-send-email-g.esp@free.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marcin Tomczak <marcin.tomczak@intel.com>
-Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com, lukasz.dorau@intel.com
+To: Gilles Espinasse <g.esp@free.fr>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/ZSd3ehWwh6Cfr5s94B=KsG2
+--Sig_/y0m3ufw/Wo=3YakjtWifXlw
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 09 Nov 2012 15:46:36 +0100 Marcin Tomczak <marcin.tomczak@intel.com>
-wrote:
+On Sat, 10 Nov 2012 10:14:43 +0100 Gilles Espinasse <g.esp@free.fr> wrote:
 
-> Attaching disks to multiple controllers of the same type has been
-> allowed so far. Now spanning between multiple controllers is disallowed
-> at all by IMSM metadata.
->=20
-> Signed-off-by: Marcin Tomczak <marcin.tomczak@intel.com>
-> Reviewed-by: Lukasz Dorau <lukasz.dorau@intel.com>
+> Signed-off-by: Gilles Espinasse <g.esp@free.fr>
 > ---
->  super-intel.c |   25 ++++++++-----------------
->  1 files changed, 8 insertions(+), 17 deletions(-)
+>  test |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
 >=20
-> diff --git a/super-intel.c b/super-intel.c
-> index 544cb05..db437b9 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -558,20 +558,11 @@ static int attach_hba_to_super(struct intel_super *=
-super, struct sys_dev *device
->  	if (super->hba =3D=3D NULL) {
->  		super->hba =3D alloc_intel_hba(device);
->  		return 1;
-> -	}
-> -
-> -	hba =3D super->hba;
-> -	/* Intel metadata allows for all disks attached to the same type HBA.
-> -	 * Do not sypport odf HBA types mixing
-> -	 */
-> -	if (device->type !=3D hba->type)
-> +	} else
-> +		/* IMSM metadata disallows to attach disks to multiple
-> +		 * controllers.
-> +		 */
->  		return 2;
-> -
-> -	while (hba->next)
-> -		hba =3D hba->next;
-> -
-> -	hba->next =3D alloc_intel_hba(device);
-> -	return 1;
->  }
+> diff --git a/test b/test
+> index 3f8515f..352c1e1 100755
+> --- a/test
+> +++ b/test
+> @@ -21,6 +21,8 @@ logdir=3D"$testdir/logs"
+>  logsave=3D0
+>  exitonerror=3D1
 > =20
->  static struct sys_dev* find_disk_attached_hba(int fd, const char *devnam=
-e)
-> @@ -3018,11 +3009,11 @@ static int compare_super_imsm(struct supertype *s=
-t, struct supertype *tst)
->  	 */
->  	if (!check_env("IMSM_NO_PLATFORM")) {
->  		if (!first->hba || !sec->hba ||
-> -		    (first->hba->type !=3D sec->hba->type))  {
-> +		    strcmp(first->hba->path, sec->hba->path) !=3D 0)  {
->  			fprintf(stderr,
->  				"HBAs of devices does not match %s !=3D %s\n",
-> -				first->hba ? get_sys_dev_type(first->hba->type) : NULL,
-> -				sec->hba ? get_sys_dev_type(sec->hba->type) : NULL);
-> +				first->hba ? first->hba->path : NULL,
-> +				sec->hba ? sec->hba->path : NULL);
->  			return 3;
->  		}
->  	}
-> @@ -3800,7 +3791,7 @@ static int find_intel_hba_capability(int fd, struct=
- intel_super *super, char *de
->  			}
-> =20
->  			fprintf(stderr, ").\n"
-> -				"    Mixing devices attached to different controllers "
-> +				"    Mixing devices attached to multiple controllers "
->  				"is not allowed.\n");
->  		}
->  		free_sys_dev(&hba_name);
->=20
+> +echo "Testing on linux-$(uname -r) kernel"
+> +
+>  # Check whether to run multipath tests
+>  modprobe multipath 2> /dev/null
+>  if grep -s 'Personalities : .*multipath' > /dev/null /proc/mdstat ; then
 
-applied, thanks.
-
+Applied,
+Thanks,
 NeilBrown
 
-
---Sig_/ZSd3ehWwh6Cfr5s94B=KsG2
+--Sig_/y0m3ufw/Wo=3YakjtWifXlw
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUKl4YDnsnt1WYoG5AQKP5Q//SbNgH2rj/OUK3E84CyVv2lug9gTg0vsO
-Qm/zIksx44oS7qs4X/X2L6r24KZug4rDzCc8HyMnYUA6G8A05Qv0fp0pMErJO37f
-/Ll6vjC7hlIQLNWs8iVlH7pr2w7+uD8wdWt11YM+Zntt435m6eT2qHCDRMCkoiX1
-HZRfd3rnGBrkbGUc45tgPzvqAbu26UR4AQEDFcgRXRBJGVhqsJYuGNDPcgxWXnVq
-OzjFFrXIww7E5Ae4msy7jiVvO1wkdg5F+HVhQc1Gdtgdt0/1k8Lt5cwoASzfq8ZT
-u9Z6rxkGnFKNXGERHKpRufa1jnc96uoHlqddHqR6S4malSV3WiC+syFbb86OZ9IC
-kcD4CqMtzzzYT500RFJOHKUmq6DKr6nxHXLi6mqMO+C0E17UpNL0JVKMJnW/6A9o
-JGXjM1zy76R3qRvNl8N7PXVQcNc5Hv/mfdVBsONZDHRhhPyinhFVqhQAz2ERsRPl
-5MWCq0NTZSSIyLxC2dgfBtB0BaFIIC+Qji+ImzkJ1JvJC1gX2DQqN3GciP7vjN11
-9ush0VlvAROrd8BOOAGIYnCSAb+g8pmjp73XNxN78p9EqFJ/XyKvR5sLPT4kbhMM
-Cvfli6vYCOKDVVzxAt/Wo1TUs+Q0fi17voeolrQuM5wWTnUp9OwN9BHy2uWvpx6g
-lvGvTbyhCXE=
-=1rD5
+iQIVAwUBUKl45jnsnt1WYoG5AQKFBg/9Gri+3/huN7Dd3ZGYQmNRZJiDe0+ztv/s
+RVQv1gduDXO96lPJoIwmT7ffXZFs4i14uzAWUoJOvTEq69n2OvOPN2S5GIFidYe1
+NsaFbdB01znRy0hKmBhFQ28o6OOt8baYBlf7cGO6O2yJ5hT7gSW+cfK4kiSyHq0L
+5WHgBzBi8gQJ07iAVb9fbrz7zpiRVl3gQsX9B3z3T6WiA7xaIhwb8xFTfq0U4YMm
+8U7Bhta346wrXiwMYNp2XMAEoHukDUJTGxLPIOvzkJJEH6PTOLmhLQ0Xa+olnhbF
+P57JgjS0qeiO51UCKPVfFFs4jFLAejJvws+FBJCn1mqLbFcaQs/fAIWji6snpIdw
+eDclQCGLzJLsN0IQSJdZZVnZwLUBtPqkM3TKZzx2H+/qxm3BYbgmhHo8ieTkes8P
+8juzwxrSN3JhQGMkW2yHWAIBickpU1jQyuAc5pjVqhdh1tCnxnFT69ovC9PvRKpt
+B7qJJvmjxTNaS+SewWxEndPbSiZhZG9oTsrg9eBj0/uWMhnKOqXyVIWDF86qiZXv
+Wip2XMZbAz9fN5hYCxy48R5X2S4L0djK9AKUoASQCTCkgB6iYqCUcxpa1e3J0+6x
+k1A1nVoxXQiYxK/SHB6OFGjmZ037CT6YASL7JBO4ehMHri99+Egl2BlY08tSlOJj
+WYoXJMEqpDo=
+=wxyW
 -----END PGP SIGNATURE-----
 
---Sig_/ZSd3ehWwh6Cfr5s94B=KsG2--
+--Sig_/y0m3ufw/Wo=3YakjtWifXlw--
