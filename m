@@ -1,86 +1,106 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Grow.c: fix uninitialized variables compilation-time
- error
-Date: Mon, 19 Nov 2012 11:18:00 +1100
-Message-ID: <20121119111800.08edee0c@notabene.brown>
-References: <20121113122943.4041.51702.stgit@gklab-128-085.igk.intel.com>
+From: starlight.2012q4@binnacle.cx
+Subject: Re: question: no-bitmap RAID1 with off-site drive
+Date: Sun, 18 Nov 2012 19:11:56 -0500
+Message-ID: <6.2.5.6.2.20121118185613.05e63580@binnacle.cx>
+References: <6.2.5.6.2.20121111163935.05df8b18@binnacle.cx>
+ <6.2.5.6.2.20121112122534.05dfec78@binnacle.cx>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/sUAVJgdfvYcG91cCDRMPKe2"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121113122943.4041.51702.stgit@gklab-128-085.igk.intel.com>
+In-Reply-To: <6.2.5.6.2.20121112122534.05dfec78@binnacle.cx>
+References: <6.2.5.6.2.20121111163935.05df8b18@binnacle.cx>
+ <6.2.5.6.2.20121112122534.05dfec78@binnacle.cx>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/sUAVJgdfvYcG91cCDRMPKe2
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Started playing with the third drive
+and my invented approach may not
+be correct.  That, as recommended,
+using --grow to eliminate the offsite
+"removed" drive and put back the
+rotate-in drive is right.
 
-On Tue, 13 Nov 2012 13:29:43 +0100 Lukasz Dorau <lukasz.dorau@intel.com>
-wrote:
+It looks like MD re-initializes the
+superblock (different UUID) when
+something like
 
-> It fixes the following uninitialized variables compilation-time error:
-> WARN  - Grow.c: In function =E2=80=98reshape_array=E2=80=99:
-> WARN  - Grow.c:2413:21: error: =E2=80=98min_space_after=E2=80=99 may be u=
-sed uninitialized in this function [-Werror=3Dmaybe-uninitialized]
-> WARN  - Grow.c:2376:39: note: =E2=80=98min_space_after=E2=80=99 was decla=
-red here
-> WARN  - Grow.c:2414:22: error: =E2=80=98min_space_before=E2=80=99 may be =
-used uninitialized in this function [-Werror=3Dmaybe-uninitialized]
-> WARN  - Grow.c:2376:21: note: =E2=80=98min_space_before=E2=80=99 was decl=
-ared here
-> WARN  - cc1: all warnings being treated as errors
-> WARN  - make: *** [Grow.o] Error 1
-> It occurs during compilation of mdadm on Fedora 17.
->=20
-> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
-> ---
->  Grow.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/Grow.c b/Grow.c
-> index 4de8029..a526a65 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -2373,7 +2373,7 @@ release:
->  static void get_space_after(int fd, struct supertype *st, struct mdinfo =
-*info)
->  {
->  	struct mdinfo *sra, *sd;
-> -	unsigned long long min_space_before, min_space_after;
-> +	unsigned long long min_space_before =3D 0, min_space_after =3D 0;
->  	int first =3D 1;
-> =20
->  	sra =3D sysfs_read(fd, 0, GET_DEVS);
+  mdadm --grow --add --raid-devices=3 /dev/md3 /dev/sde
 
-Applied, thanks - though I added a comment to clarify that the initialisati=
-on
-is only to silence a compiler warning.
+is run, even if /dev/sde has a previous
+superblock from the same array.  However
+I only tested it with a drive image that
+had not been fully synced and from the
+same (not different) array.  Running
 
-NeilBrown
+   mdadm --re-add /dev/md3 /dev/sde
 
---Sig_/sUAVJgdfvYcG91cCDRMPKe2
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+results 'mdadm' refusing the
+drive that had been from the
+same array (though not fully synced).
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+Appears then that 'mdadm' may not
+check the superblock to see if the
+drive came from a different array
+and should not be overwritten, and
+instead prefers to just zap it.
 
-iQIVAwUBUKl6uDnsnt1WYoG5AQILug//Wh5RN2eeYKwGBiiijqsgiYfHN/L8Sot1
-YPaN8PtmfU10HE/OdZIqfhbbP+rkWd/28LiTBkyQtK0rErCL3XnXt8QiWpopuHuG
-E6Sjis8nBiEZsyPpR9j5zHcOJl/KnIx30eXDVUN6Yml2TAK/WH6nuwbbhrsoHLun
-60eH56q28IKHodgiVqbkgOh2c3eej0tBLTgae01YSkVvQ8BoM5rBjpNkfhH8P5CQ
-cEq93bfe8YBKt2jdOoojMfeMtzOad1ZyarsPSJ/7BySI6X70y4tWVGDogLFLu/q0
-G+2Zmu6zANZaIaZi629H7JmeQxP7dCjlOchOs/3uOMnqjFnYJ+h0HD1EDoTaSUAN
-3oH6YgNJTpD80hsEKRRGDGK5JgWwO2zXU83uZaWysWOBhfKPP2nQlEEZXOiW7evK
-cTXvX9YkKWzKYZyQmOtnmiT/8s2lzVjfRyptu4I4WFzMq9oKC0S5uaJ+DxDUeIUJ
-CVVESiF5WzduCvMMQDx1abV9TsCHTKIPbwNtamPiRrkb2nssxQd8cFcE1naa9O4B
-7c6PZ4sZ5dNlZYf1ff4EaA6cR/M4+pJAPXfwuaDc/M40i9gDEIqKerKBcK5NUaB6
-aR5D1aptgGu8kIO4vJ/RJNkl19689uRTYAEVNE2IV8n7agBI25LZ5qHc4l38ervU
-tFbTYJFvGLw=
-=xeec
------END PGP SIGNATURE-----
+Can anyone confirm or deny the
+possibility?  I can manually run
+an --examine and check the array
+name as a precaution when rotating
+drives if 'mdadm' doesn't perform
+the check.  Want to avoid inserting
+a offsite drive in the wrong array.
 
---Sig_/sUAVJgdfvYcG91cCDRMPKe2--
+
+
+
+At 12:26 PM 11/12/2012 -0500, starlight.2012q4@binnacle.cx wrote:
+>After some pondering, think I've figure it out.
+>
+>Best way to go is to set it up with
+>
+>  --create --level=1 --raid-devices=2
+>
+>for the initial pair of drives, then
+>
+>  --fail --remove
+>
+>the rotate-out drive, then
+>
+>  --add
+>
+>the alternate drive.  Now there will be
+>three drive slots with one "removed" and two
+>"active".
+>
+>To rotate a drive off-site
+>
+>   --fail --remove
+>
+>go to the off-site, swap the drives and on return
+>
+>   --re-add
+>
+>the rotate-in drive.
+>
+>This way the 'mdadm' UUID labels will stay on the
+>drives and 'mdadm' will warn against mistakes
+>such as trying to use the wrong drive for
+>a mirror pair.  Will always have one "removed"
+>drive.
+>
+>The
+>
+>   --grow --raid-devices=1 --force
+>
+>and
+>
+>   --grow --raid-devices=2 --add
+>
+>would be used only if a drive fails and needs to
+>be replaced.
+>
+>If anyone disagrees please advise.
+
