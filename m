@@ -1,106 +1,64 @@
-From: starlight.2012q4@binnacle.cx
-Subject: Re: question: no-bitmap RAID1 with off-site drive
-Date: Sun, 18 Nov 2012 19:11:56 -0500
-Message-ID: <6.2.5.6.2.20121118185613.05e63580@binnacle.cx>
-References: <6.2.5.6.2.20121111163935.05df8b18@binnacle.cx>
- <6.2.5.6.2.20121112122534.05dfec78@binnacle.cx>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH 0/3] Add a new func to handle with clearing up for stoping dm-raid.
+Date: Mon, 19 Nov 2012 08:36:53 +0800
+Message-ID: <201211190836499417920@gmail.com>
+References: <201211151646510171304@gmail.com>,
+	<20121119104953.359f60ed@notabene.brown>
+Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6.2.5.6.2.20121112122534.05dfec78@binnacle.cx>
-References: <6.2.5.6.2.20121111163935.05df8b18@binnacle.cx>
- <6.2.5.6.2.20121112122534.05dfec78@binnacle.cx>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: agk <agk@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, dm-devel <dm-devel@redhat.com>
 List-Id: linux-raid.ids
 
-Started playing with the third drive
-and my invented approach may not
-be correct.  That, as recommended,
-using --grow to eliminate the offsite
-"removed" drive and put back the
-rotate-in drive is right.
-
-It looks like MD re-initializes the
-superblock (different UUID) when
-something like
-
-  mdadm --grow --add --raid-devices=3 /dev/md3 /dev/sde
-
-is run, even if /dev/sde has a previous
-superblock from the same array.  However
-I only tested it with a drive image that
-had not been fully synced and from the
-same (not different) array.  Running
-
-   mdadm --re-add /dev/md3 /dev/sde
-
-results 'mdadm' refusing the
-drive that had been from the
-same array (though not fully synced).
-
-Appears then that 'mdadm' may not
-check the superblock to see if the
-drive came from a different array
-and should not be overwritten, and
-instead prefers to just zap it.
-
-Can anyone confirm or deny the
-possibility?  I can manually run
-an --examine and check the array
-name as a precaution when rotating
-drives if 'mdadm' doesn't perform
-the check.  Want to avoid inserting
-a offsite drive in the wrong array.
-
-
-
-
-At 12:26 PM 11/12/2012 -0500, starlight.2012q4@binnacle.cx wrote:
->After some pondering, think I've figure it out.
->
->Best way to go is to set it up with
->
->  --create --level=1 --raid-devices=2
->
->for the initial pair of drives, then
->
->  --fail --remove
->
->the rotate-out drive, then
->
->  --add
->
->the alternate drive.  Now there will be
->three drive slots with one "removed" and two
->"active".
->
->To rotate a drive off-site
->
->   --fail --remove
->
->go to the off-site, swap the drives and on return
->
->   --re-add
->
->the rotate-in drive.
->
->This way the 'mdadm' UUID labels will stay on the
->drives and 'mdadm' will warn against mistakes
->such as trying to use the wrong drive for
->a mirror pair.  Will always have one "removed"
->drive.
->
->The
->
->   --grow --raid-devices=1 --force
->
->and
->
->   --grow --raid-devices=2 --add
->
->would be used only if a drive fails and needs to
->be replaced.
->
->If anyone disagrees please advise.
+Pk9uIFRodSwgMTUgTm92IDIwMTIgMTY6NDY6NTQgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVu
+Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gQmVjYXVzZSBkbS1yYWlkIGNhbGwgbWRfc3RvcCB0
+byBjbGVhciB1cCxidXQgbWRfc3RvcCBjYW4ndCBjbGVhciB1cCBjb21wbGV0ZWx5Lg0KPj4gU28g
+YWRkIGEgbmV3IGZ1bmMgdG8gZG8uDQo+PiANCj4+IEppYW5wZW5nIE1hICgzKToNCj4+ICAgbWQ6
+QWRkIGEgZnVuYyAnZG1fbWRfc3RvcCcgZm9yIGRtLXJhaWQgdG8gY2xlYXIgdXAgbWQgcmVzb3Vy
+Y2UuDQo+PiAgIGRtOiBXaGVuIHN0b3BpbmcgZG0tcmFpZCwgaXQgY2FsbCBkbV9tZF9zdG9wIHJh
+dGhlciB0aGFuIG1kX3N0b3AgdG8NCj4+ICAgICBkbyBjbGVhci11cCB3b3JrLg0KPj4gICBtZDog
+UmVtb3ZlIEVYUE9SVF9TWU1CT0xfR1BMKG1kX3N0b3ApLg0KPj4gDQo+PiAgZHJpdmVycy9tZC9k
+bS1yYWlkLmMgfCAgICA0ICsrLS0NCj4+ICBkcml2ZXJzL21kL21kLmMgICAgICB8ICAgMTAgKysr
+KysrKysrLQ0KPj4gIGRyaXZlcnMvbWQvbWQuaCAgICAgIHwgICAgMSArDQo+PiAgMyBmaWxlcyBj
+aGFuZ2VkLCAxMiBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQ0KPj4gDQo+DQo+WW91IGRv
+bid0IHJlYWxseSBuZWVkIDMgcGF0Y2hlcyBmb3IgdGhpcyBvbmUgbGl0dGxlIGNoYW5nZS4NCj4N
+Cj5JJ3ZlIGFwcGxpZWQgdGhlIGZvbGxvd2luZy4NCj4NCj5UaGFua3MgZm9yIHRoZSByZXBvcnQu
+DQo+DQo+TmVpbEJyb3duDQo+DQo+RnJvbSA0YmE2OWUxYTg4NDgwMjQ5OTE4ZWQyZGY4YmUwODk2
+YmU2YmE3OTUyIE1vbiBTZXAgMTcgMDA6MDA6MDAgMjAwMQ0KPkZyb206IE5laWxCcm93biA8bmVp
+bGJAc3VzZS5kZT4NCj5EYXRlOiBNb24sIDE5IE5vdiAyMDEyIDEwOjQ3OjQ4ICsxMTAwDQo+U3Vi
+amVjdDogW1BBVENIXSBtZDogbWFrZSBzdXJlIGV2ZXJ5dGhpbmcgaXMgZnJlZWQgd2hlbiBkbS1y
+YWlkIHN0b3BzIGFuDQo+IGFycmF5Lg0KPg0KPm1kX3N0b3AoKSB3b3VsZCBzdG9wIGFuIGFycmF5
+LCBidXQgbm90IGZyZWUgdmFyaW91cyBhdHRhY2hlZA0KPmRhdGEgc3RydWN0dXJlcy4NCj5Gb3Ig
+aW50ZXJuYWwgYXJyYXlzLCB0aGVzZSBhcmUgZnJlZWQgbGF0ZXIgaW4gZG9fbWRfc3RvcCgpIG9y
+DQo+bWRkZXZfcHV0KCksIGJ1dCB0aGV5IGRvbid0IGFwcGx5IGZvciBkbS1yYWlkIGFycmF5cy4N
+Cj5TbyBnZXQgbWRfc3RvcCgpIHRvIGZyZWUgdGhlbSwgYW5kIG9ubHkgYWxsIGl0IGZyb20gZG0t
+cmFpZC4NCj5Gb3IgaW50ZXJuYWwgYXJyYXlzIHdlIG5vdyBjYWxsIF9fbWRfc3RvcC4NCj4NCj5S
+ZXBvcnRlZC1ieTogbWFqaWFucGVuZyA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQo+U2lnbmVkLW9m
+Zi1ieTogTmVpbEJyb3duIDxuZWlsYkBzdXNlLmRlPg0KPg0KPmRpZmYgLS1naXQgYS9kcml2ZXJz
+L21kL21kLmMgYi9kcml2ZXJzL21kL21kLmMNCj5pbmRleCA5OGUxNDg0Li43MWRmM2MyIDEwMDY0
+NA0KPi0tLSBhL2RyaXZlcnMvbWQvbWQuYw0KPisrKyBiL2RyaXZlcnMvbWQvbWQuYw0KPkBAIC01
+Mjk0LDcgKzUyOTQsNyBAQCB2b2lkIG1kX3N0b3Bfd3JpdGVzKHN0cnVjdCBtZGRldiAqbWRkZXYp
+DQo+IH0NCj4gRVhQT1JUX1NZTUJPTF9HUEwobWRfc3RvcF93cml0ZXMpOw0KPiANCj4tdm9pZCBt
+ZF9zdG9wKHN0cnVjdCBtZGRldiAqbWRkZXYpDQo+K3ZvaWQgX19tZF9zdG9wKHN0cnVjdCBtZGRl
+diAqbWRkZXYpDQo+IHsNCj4gCW1kZGV2LT5yZWFkeSA9IDA7DQo+IAltZGRldi0+cGVycy0+c3Rv
+cChtZGRldik7DQo+QEAgLTUzMDQsNiArNTMwNCwxOCBAQCB2b2lkIG1kX3N0b3Aoc3RydWN0IG1k
+ZGV2ICptZGRldikNCj4gCW1kZGV2LT5wZXJzID0gTlVMTDsNCj4gCWNsZWFyX2JpdChNRF9SRUNP
+VkVSWV9GUk9aRU4sICZtZGRldi0+cmVjb3ZlcnkpOw0KPiB9DQo+Kw0KPit2b2lkIG1kX3N0b3Ao
+c3RydWN0IG1kZGV2ICptZGRldikNCj4rew0KPisJLyogc3RvcCB0aGUgYXJyYXkgYW5kIGZyZWUg
+YW4gYXR0YWNoZWQgZGF0YSBzdHJ1Y3R1cmVzLg0KPisJICogVGhpcyBpcyBjYWxsZWQgZnJvbSBk
+bS1yYWlkDQo+KwkgKi8NCj4rCV9fbWRfc3RvcChtZGRldik7DQo+KwliaXRtYXBfZGVzdHJveSht
+ZGRldik7DQo+KwlpZiAobWRkZXYtPmJpb19zZXQpDQo+KwkJYmlvc2V0X2ZyZWUobWRkZXYtPmJp
+b19zZXQpOw0KPit9DQo+Kw0KPiBFWFBPUlRfU1lNQk9MX0dQTChtZF9zdG9wKTsNCj4gDQo+IHN0
+YXRpYyBpbnQgbWRfc2V0X3JlYWRvbmx5KHN0cnVjdCBtZGRldiAqbWRkZXYsIHN0cnVjdCBibG9j
+a19kZXZpY2UgKmJkZXYpDQo+QEAgLTUzNjQsNyArNTM3Niw3IEBAIHN0YXRpYyBpbnQgZG9fbWRf
+c3RvcChzdHJ1Y3QgbWRkZXYgKiBtZGRldiwgaW50IG1vZGUsDQo+IAkJCXNldF9kaXNrX3JvKGRp
+c2ssIDApOw0KPiANCj4gCQlfX21kX3N0b3Bfd3JpdGVzKG1kZGV2KTsNCj4tCQltZF9zdG9wKG1k
+ZGV2KTsNCj4rCQlfX21kX3N0b3AobWRkZXYpOw0KPiAJCW1kZGV2LT5xdWV1ZS0+bWVyZ2VfYnZl
+Y19mbiA9IE5VTEw7DQo+IAkJbWRkZXYtPnF1ZXVlLT5iYWNraW5nX2Rldl9pbmZvLmNvbmdlc3Rl
+ZF9mbiA9IE5VTEw7DQo+IA0KPg0KVGhhbmtzISANCkppYW5wZW5n
 
