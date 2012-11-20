@@ -1,65 +1,102 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Where can i download mdadm 3.3
-Date: Tue, 20 Nov 2012 12:26:22 +1100
-Message-ID: <20121120122622.34f9bacd@notabene.brown>
-References: <CAGmni9ozPTrqeg+RLBu=J8NEqqK95nwf0ymK7qA7DgpZNRHX=A@mail.gmail.com>
+From: Dan Williams <djbw@fb.com>
+Subject: Re: [PATCH] raid5: panic() on dma_wait_for_async_tx() error
+Date: Mon, 19 Nov 2012 18:23:57 -0800
+Message-ID: <1353378237.26735.11.camel@localhost.localdomain>
+References: <20121119120632.1c97e306@notabene.brown>
+	 <84A937D219C2B44EB8EA44831ACA1E49166C741F@SC-MBX02-3.TheFacebook.com>
+	 <20121120091824.58ed4565@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ZE_.HuBUZGCM2ZpuTej1uc2"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGmni9ozPTrqeg+RLBu=J8NEqqK95nwf0ymK7qA7DgpZNRHX=A@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Salatiel Filho <salatiel.filho@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20121120091824.58ed4565@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Vinod Koul <vinod.koul@intel.com>, Tomasz Figa <t.figa@samsung.com>, Kyungmin Park <kyungmin.park@samsung.com>
 List-Id: linux-raid.ids
 
---Sig_/ZE_.HuBUZGCM2ZpuTej1uc2
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, 2012-11-20 at 09:18 +1100, NeilBrown wrote:
+> On Mon, 19 Nov 2012 05:22:25 +0000 Dan Williams <djbw@fb.com> wrote:
+> 
+> > 
+> > 
+> > On 11/18/12 5:06 PM, "NeilBrown" <neilb@suse.de> wrote:
+> > 
+> > >
+> > >Hi Dan,
+> > > could you comment on this please?  Would it make sense to arrange for
+> > >errors
+> > > to propagate up?  Or should we arrange to do a software-fallback in the
+> > >dma
+> > > engine is a problem?  What sort of things can cause error here anyway?
+> > 
+> > Propagating up is missing reliable "dma abort" operation.
+> > 
+> > In these cases the engine failed to complete due to hardware hang / driver
+> > bug, or has hit a memory error (uncorrectable even with software
+> > fallback).  This originally should have been using async_tx_quiesce()
+> > which also does the panic.
+> > 
+> > The engines that I have worked with have either lacked support for
+> > aborting, or were otherwise unable to recover from a hardware hang.
+> > However, for engines that do support error recovery they should be able to
+> > hide the failure from the upper layers.
+> >
+> 
+> So maybe I could:
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index ac09fa4..ffbf0ca 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -3268,7 +3268,7 @@ static void handle_stripe_expansion(struct r5conf *conf, struct stripe_head *sh)
+>  	/* done submitting copies, wait for them to complete */
+>  	if (tx) {
+>  		async_tx_ack(tx);
+> -		dma_wait_for_async_tx(tx);
+> +		async_tx_quiesce(&tx);
+>  	}
+>  }
+>  
+> 
+> 
+> and then the panic would be somebody else's problem?
+> 
+> I note that handle_stripe_expansion has:
+> 
+>  		async_tx_ack(tx);
+> 		dma_wait_for_async_tx(tx);
+> 
+> while async_tx_quiesce() has:
+> 
+> 		if (dma_wait_for_async_tx(*tx) == DMA_ERROR)
+> 			panic("DMA_ERROR waiting for transaction\n");
+> 		async_tx_ack(*tx);
+> 
+> 
+> i.e. the same two functions called in the reverse order.  Is the order
+> important?  Is handle_stripe_expansion wrong?   Should the patch I apply
+> actually be:
+> 
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index ac09fa4..e51d903 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -3266,10 +3266,7 @@ static void handle_stripe_expansion(struct r5conf *conf, struct stripe_head *sh)
+>  
+>  		}
+>  	/* done submitting copies, wait for them to complete */
+> -	if (tx) {
+> -		async_tx_ack(tx);
+> -		dma_wait_for_async_tx(tx);
+> -	}
+> +	async_tx_quiesce(&tx);
+>  }
+>  
 
-On Sun, 18 Nov 2012 10:42:22 -0300 Salatiel Filho <salatiel.filho@gmail.com>
-wrote:
+Yes, this one, handles it like the other cases of needing to do a
+synchronous wait and does not care if tx is NULL.
 
-> Hi guys, i will be building a few arrays very soon and i'd like to
-> test the badblock feature and the replaceable feature, but i haven`t
-> found where i can download the source of mdadm 1.3. Where can i get it
-> ?
->
-You can't.  3.3 doesn't exist yet.
-
-However
-  git clone git://neil.brown.name/mdadm
-  cd mdadm
-  make
-
-will get you code that supports bad blocks and replaceable devices.
-
-Alternately you can get a tar file at
-
-   http://git.neil.brown.name/git?p=3Dmdadm.git;a=3Dsnapshot;h=3Dmaster
-
-NeilBrown
-
---Sig_/ZE_.HuBUZGCM2ZpuTej1uc2
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUKrcPjnsnt1WYoG5AQIZ+A/+I0+dxrG950DeVR81doJFOONGN7aBvzvs
-OlHRTrf4PM09nmNbI9wdXoc1Y1N2WE87G3BOwfngP6Lqaqq2jrs01JxQVsX/dFJJ
-hIKgyM1B2qq3g6RMzmnR+z6ZjejMqS2PHhY/SPi8nmIZcHkRvlQFi9GHR2EIFfs/
-/oPIl9uPyiQ5mafw4o00MXzu4tzf0vts9ReST+eXRLnJyzTLLvXZUus4ptDH3Yqb
-ojgKtfjwycuVaE7feBM2x8PyNTrsi+Abny1eR4g2DWxvfFD/lEwrYw6r4z9M+82d
-AVn0EcvRdmWq5QgyyhnodkKKnvJ3ifpXmJbM4MH2/iGreHLbiU9jb5+nTcFIT5Fx
-HItmtCKvBqIGUCz6HoEkC/gM3q15HtAiPR07wpwJ5U2SyyqdL0IavOEm6JFO2JTg
-jArBq+LIjg+VV8Xx1+gwTBk0IBLUgt53uiYZj3GPKpLHHvdMAl3BFU9MSYz4FwxV
-dyA1+D96YfOQvoahlquT0XFLVakJ8tUBKBbLrlR0yQyADY2GGhRhdUnPyWgsCbeW
-3/Ud/rwEO4fmX3VVWiZp0ZhwILCaeSohVaUkO0UKuq2hU5cOaZZePyN1xYgDq+/I
-TkdG6GufTuX7tyiKwU/+W3JGuIruoTuZQfmOhkpd8NOpGC/0iWDr32l+lEI+ikf4
-5BZJQzqAeE8=
-=BXgY
------END PGP SIGNATURE-----
-
---Sig_/ZE_.HuBUZGCM2ZpuTej1uc2--
+--
+Dan
