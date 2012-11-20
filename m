@@ -1,97 +1,99 @@
-From: Stephen Haran <steveharan@gmail.com>
-Subject: RAID5 NAS Recovery...00.90.01 vs 00.90
-Date: Tue, 20 Nov 2012 15:41:57 -0500
-Message-ID: <CAKcp_7ZrR+L5jZBK3cd-z780Cw76XpwMuWmwtUGt=ecwbx_LPg@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: mdadm: use static major/minor numbers.
+Date: Wed, 21 Nov 2012 08:16:22 +1100
+Message-ID: <20121121081622.162d6f08@notabene.brown>
+References: <50AB7964.60002@mpstor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/3eRTanusNA+WQu_X9qGLfyn"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <50AB7964.60002@mpstor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Benjamin ESTRABAUD <be@mpstor.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi, I'm trying to recover a Western Digital Share Space NAS.
-I'm able to assemble the RAID5 and restore the LVM but it can't see
-any filesystem.
+--Sig_/3eRTanusNA+WQu_X9qGLfyn
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Below is a raid.log file that shows how the raid was configured when
-it was working.
-And also the output of mdadm -D showing the raid in it's current state.
-Note the Version difference 00.90.01 vs. 0.90. And the array size
-difference 2925293760  vs. 2925894144
-I'm thinking this difference may be the reason Linux can not see a filesystem.
+On Tue, 20 Nov 2012 12:36:52 +0000 Benjamin ESTRABAUD <be@mpstor.com> wrote:
 
-My question is would the version difference explain the array size difference?
-And is it possible to create a version 00.90.01 array? I do not see
-that in the mdadm docs.
+> Hi!
+>=20
+> I recently updated mdadm-2.6.9 to mdadm-3.2.6 on a system (own busybox=20
+> based distro) that had its kernel version updated from 2.6.35 to 3.4.
+>=20
+> Everything works well apart from a feature I used that I seem to be=20
+> unable to reactivate:
+>=20
+> In the past, to ensure knowing the number of possible RAID devices that=20
+> could be created on the system, I used static major:minor mappings by=20
+> building the /dev/md/dXX and /dev/md/dXXpXX entries (with major 254, and=
+=20
+> three minors for each device for 3 partitions), allowing me to be=20
+> certain that 64 RAID devices could be created at all times.
+>=20
+> When creating an array, the /dev/md/dXX and dXXpXX devices "nodes" would=
+=20
+> be used (not recreated) and the major/minor number these devices point=20
+> to would be used for the actual MD block device.
+>=20
+> This was a very handy feature. With the latest mdadm, I simply cannot do=
+=20
+> that, as creating a /dev/md/dXX will in fact remove that device file and=
+=20
+> symlink it to /dev/md_dXX. I then created /dev/md_dXX devices prior to=20
+> creating an array, and got the following error message: "mdadm:=20
+> /dev/md_d3 exists but looks wrong, please fix".
+>=20
+> Looking through the source I can see that mdadm basically verifies if=20
+> the file's major/minor matches the one that it had planned for the=20
+> device, which in this case doesn't.
+>=20
+> Is there any way to work around that? Or in fact, I don't actually=20
+> *need* to use static major/minor numbers, but I need to know in advance=20
+> how many RAIDs I'll be able to create provided I'll always use 2=20
+> partitions for them and can provide the -amdp2 argument to mdadm to make=
+=20
+> sure that only 2 partitions devices nodes are created.
+>=20
+> Is there a way to know the maximum number of RAIDs that can be created,=20
+> provided that nothing else uses major 9 and 254?
+>=20
+> Thank you very much in advance for your help!
 
-....original working raid config....
-/dev/md2:
-        Version : 00.90.01
-  Creation Time : Wed Jun 24 19:00:59 2009
-     Raid Level : raid5
-     Array Size : 2925293760 (2789.78 GiB 2995.50 GB)
-    Device Size : 975097920 (929.93 GiB 998.50 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 2
-    Persistence : Superblock is persistent
+I don't really understand what your problem is.
 
-    Update Time : Thu Jun 25 02:36:31 2009
-          State : clean
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
+mdadm should create any devices it needs - unless it detects udev, in which
+case it leaves the device creation to udev.
 
-         Layout : left-symmetric
-     Chunk Size : 64K
+So simply don't create any md devices in /dev and let mdadm do whatever is
+required.
+Does that approach not suit your needs?  If not, why not?
 
-           UUID : 6860a291:a5479bc6:e782da22:90dbd792
-         Events : 0.45705
+NeilBrown
 
-    Number   Major   Minor   RaidDevice State
-       0       8        4        0      active sync   /dev/sda4
-       1       8       20        1      active sync   /dev/sdb4
-       2       8       36        2      active sync   /dev/sdc4
-       3       8       52        3      active sync   /dev/sdd4
+--Sig_/3eRTanusNA+WQu_X9qGLfyn
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-....and here is the raid as it stands now. Note the end user I'm
-helping tried to rebuild back on Sunday...
+iQIVAwUBUKvzJjnsnt1WYoG5AQK3ig/7BaKrqVmv/UNnDCeEdmzn8kREtpmcUQuT
+Y370m5q04aeXs94nW9QBCmLD69UWlTyJwWBgv+4i0STH5bUu5MKQi5V6q4q0hvDK
+WLBmVJxISpziZ6UM3ks4Fv/T4loep91lQWo8Rjn7KSbIJAArdVoAC2+KQ1piRrDd
+4IqIAg/ZstSbIaru+mNgeTj/Z5x0vR6qa9l1rWn8C9ujTLffwHN79OVU2ByXRBKW
+/bo/TOWhtwXTBJiHNhh9bMJU/3wVe+eocxBhcVvsw4zW0iXeCpk4fD8lqxIqZb6a
+B0Y40rN4fqsSp4nnZRgplCPCI6y/BHCRfIpyCyk/BiiwKZ7qC4v5BobI7TTgVdQo
++vZVnIlbADsm2ov9J3BrxJBBLl/Vr2ILAF+aI8Gl3cv7EWGeq7YWr7UO/H35IvHx
+xwabrtpMaMpyAj5JP5ITHr4vYPRmCfvYhHsaSAqCDy9XAI76biXkdgXq8RKjbT2A
+hL79XVHw20DKZoV7jrcNI6MB5094AlqNa5amnqmcq7dCo+hjsG3vuE81qpMhqmlj
+oQ4e0IBajO5vztfJsoPoI90YWEny/aHbNM6o8Jhuf7gJpH2g6aEcD+z71ECNnpY1
+Fw+s2Ai6l/byy1pUxJBaPwm8c4NaFD9RUH+IXd37ViJfeVXxmSn3U+0gIUUp4Ps9
+SyB4BUAVZOk=
+=EUrw
+-----END PGP SIGNATURE-----
 
- % mdadm -D /dev/md2
-/dev/md2:
-        Version : 0.90
-  Creation Time : Sun Nov 18 12:07:53 2012
-     Raid Level : raid5
-     Array Size : 2925894144 (2790.35 GiB 2996.12 GB)
-  Used Dev Size : 975298048 (930.12 GiB 998.71 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 2
-    Persistence : Superblock is persistent
-
-    Update Time : Tue Nov 20 16:06:10 2012
-          State : clean
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-           UUID : 2ac5bacd:b40dc3f5:cb031839:58437670
-         Events : 0.1
-
-    Number   Major   Minor   RaidDevice State
-       0     253       19        0      active sync   /dev/dm-19  <<<
-Note I am using cow devices via dmsetup
-       1     253       11        1      active sync   /dev/dm-11
-       2     253       15        2      active sync   /dev/dm-15
-       3     253        7        3      active sync   /dev/dm-7
-
-Thank you for any and all help.
-
-Regards,
-Stephen
+--Sig_/3eRTanusNA+WQu_X9qGLfyn--
