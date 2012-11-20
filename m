@@ -1,93 +1,130 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm --wait returns while array under construction?
-Date: Wed, 21 Nov 2012 08:43:57 +1100
-Message-ID: <20121121084357.41f2f9d9@notabene.brown>
-References: <1353434141.27671.13.camel@corn.betterworld.us>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/mjcKw5fwzAkDTdgdRqkGlMS"; protocol="application/pgp-signature"
+From: "George Spelvin" <linux@horizon.com>
+Subject: want-replacement got stuck?
+Date: 20 Nov 2012 17:11:45 -0500
+Message-ID: <20121120221145.9905.qmail@science.horizon.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1353434141.27671.13.camel@corn.betterworld.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ross Boylan <ross@biostat.ucsf.edu>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux@horizon.com
 List-Id: linux-raid.ids
 
---Sig_/mjcKw5fwzAkDTdgdRqkGlMS
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+I have a RAID10 array with 4 active + 1 spare.
+Kernel is 3.6.5, x86-64 but running 32-bit unserland.
 
-On Tue, 20 Nov 2012 09:55:41 -0800 Ross Boylan <ross@biostat.ucsf.edu> wrot=
-e:
+After a recent failure on sdd2, the spare sdc2 was
+activated and things looked something like (manual edit,
+may not be perfectly faithful):
 
-> While switching the disks a RAID 1 is based on I used the --wait command
-> to wait for the rebuild to finish.  It returned immediately, but a
-> subsequent query showed it had not been rebuilt.  Have I misunderstood
-> something, or is this an error?
->=20
-> While doing these commands a much larger rebuild was going on with a
-> different array, involving some of the same physical disks but different
-> partitions.  The partitions being rebuilt are on different physical
-> disks for the different arrays.
->=20
-> Here are the logs, with version info at the end (Debian Lenny + more
-> recent kernel):
-....
+md5 : active raid10 sdd2[4](F) sdb2[1] sde2[2] sdc2[3] sda2[0]
+      725591552 blocks 256K chunks 2 near-copies [4/4] [UUUU]
+      bitmap: 50/173 pages [200KB], 2048KB chunk
 
-> markov:~# uname -a
-> Linux markov 2.6.32-5-amd64 #1 SMP Wed Jan 12 03:40:32 UTC 2011 x86_64 GN=
-U/Linux
-> markov:~# mdadm --version
-> mdadm - v2.6.7.2 - 14th November 2008
->=20
->=20
-> I notice that in this case, unlike the other array, the message during
-> the rebuild (the last detail report) does not include a line like
-> Rebuild Status : 0% complete
->=20
-> I just tried --wait again to see if there was some kind of race, but
-> once again it returned immediately, though detail says the spare is
-> rebuilding.
+smartctl -A showed 1 pending sector, but badblocks didn't
+find it, so I decided to play with moving things back:
 
-Can you test this patch to see if it fixes the problem?
+# badblocks -s -v /dev/sdd2
+# mdadm /dev/md5 -r /dev/sdd2 -a /dev/sdd2
+# echo want_replacement >  /sys/block/md5/md/dev-sdc2/state
 
-diff --git a/Monitor.c b/Monitor.c
-index c4d57c3..a5e7aaa 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -973,7 +973,7 @@ int Wait(char *dev)
- 			if (e->devnum =3D=3D devnum)
- 				break;
-=20
--		if (!e || e->percent < 0) {
-+		if (!e || e->percent =3D=3D RESYNC_NONE) {
- 			if (e && e->metadata_version &&
- 			    strncmp(e->metadata_version, "external:", 9) =3D=3D 0) {
- 				if (is_subarray(&e->metadata_version[9]))
+This ran for a while, but now it has stopped, with the following
+configuration:
 
+md5 : active raid10 sdd2[3](R) sdb2[1] sde2[2] sdc2[4](F) sda2[0]
+      725591552 blocks 256K chunks 2 near-copies [4/4] [UUU_]
+      bitmap: 50/173 pages [200KB], 2048KB chunk
 
-NeilBrown
+# [530]# cat /sys/block/md5/md/dev-sd?2/state
+in_sync
+in_sync
+faulty,want_replacement
+in_sync,replacement
+in_sync
 
---Sig_/mjcKw5fwzAkDTdgdRqkGlMS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+I'm not quite sure how to interpret this state, and why it is showing
+"4/4" good drives but [UUU_].
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+Unlike the failures which caused sdd2 to drop out, that are quite verbose
+in the syslog, I can't see what cause the resync to stop.
 
-iQIVAwUBUKv5njnsnt1WYoG5AQLX6w/9GdD9vQcKPyd3abEuOXR7uejVpebnlGTJ
-zVXk/NcKw8dY5NBRUQD2DBwMae1t+xzjwu6Yn/KZtJu+8F/QxPOkDR9k64CpIs2N
-fDYK1ka8M9yEO4lZtc7LhGqTV3OotOpYz/Dqn+1oJPAJ6iRNDP4uYGDbBbj6VdTP
-9c9RcwTTMDCLN/r/sF43STj5iMDoSr8KQXROwZuwg2tKXrCpM00zwoGFThIc02l+
-bwt/eJHLgzH88WIbtnubdYSK1wgtxwIuxUR17jCi/ItYWL0fA8rGBnJjLZvLgeec
-DS7ynBn0RgNXZ30DYuGlzwJMPnauCstJZ54unnPi0u5n6tOtqwJIFRfE94schTgt
-iqq+5tu7+HE7K0+lD7tXjAimiTezGjFhFnSFeLZx6OHqSaSN2V3IF+fNoocgwDow
-PmxsA6ki5a+QPsX8B67ZFpVlt47PBEoWwYTQdoM9j1bl75HHaDXdQeJH5mxog0Gm
-LgsF3iLIKlXn+N71PqNzFTlQGzKJqFkqNroQLZ7EL+qkMgfGVOHAP1R8PkSfCGW/
-R8aN6ioY6uWVPjoVqF+9yf34g1haoiTTJ0denEA00WHQZghogcjC1koOSPqN4Znu
-RxeTYbFgnpY7FIOf/4umqSOVHJTV7ScCxQCXgboNb7YyNaNmpDhVrL2Z8AVWSQSo
-bRTd5dTfWF4=
-=YgwC
------END PGP SIGNATURE-----
+Here's the initial failover:
 
---Sig_/mjcKw5fwzAkDTdgdRqkGlMS--
+Nov 20 11:49:06 science kernel: ata4: EH complete
+Nov 20 11:49:06 science kernel: md/raid10:md5: read error corrected (8 sectors at 40 on sdd2)
+Nov 20 11:49:06 science kernel: md/raid10:md5: sdd2: Raid device exceeded read_error threshold [cur 21:max 20]
+Nov 20 11:49:06 science kernel: md/raid10:md5: sdd2: Failing raid device
+Nov 20 11:49:06 science kernel: md/raid10:md5: Disk failure on sdd2, disabling device.
+Nov 20 11:49:06 science kernel: md/raid10:md5: Operation continuing on 3 devices.
+Nov 20 11:49:06 science kernel: RAID10 conf printout:
+Nov 20 11:49:06 science kernel: --- wd:3 rd:4
+Nov 20 11:49:06 science kernel: disk 0, wo:0, o:1, dev:sda2
+Nov 20 11:49:06 science kernel: disk 1, wo:0, o:1, dev:sdb2
+Nov 20 11:49:06 science kernel: disk 2, wo:0, o:1, dev:sde2
+Nov 20 11:49:06 science kernel: disk 3, wo:1, o:0, dev:sdd2
+Nov 20 11:49:06 science kernel: RAID10 conf printout:
+Nov 20 11:49:06 science kernel: --- wd:3 rd:4
+Nov 20 11:49:06 science kernel: disk 0, wo:0, o:1, dev:sda2
+Nov 20 11:49:06 science kernel: disk 1, wo:0, o:1, dev:sdb2
+Nov 20 11:49:06 science kernel: disk 2, wo:0, o:1, dev:sde2
+Nov 20 11:49:06 science kernel: disk 3, wo:1, o:0, dev:sdd2
+Nov 20 11:49:06 science kernel: RAID10 conf printout:
+Nov 20 11:49:06 science kernel: --- wd:3 rd:4
+Nov 20 11:49:06 science kernel: disk 0, wo:0, o:1, dev:sda2
+Nov 20 11:49:06 science kernel: disk 1, wo:0, o:1, dev:sdb2
+Nov 20 11:49:06 science kernel: disk 2, wo:0, o:1, dev:sde2
+Nov 20 11:49:06 science kernel: RAID10 conf printout:
+Nov 20 11:49:06 science kernel: --- wd:3 rd:4
+Nov 20 11:49:06 science kernel: disk 0, wo:0, o:1, dev:sda2
+Nov 20 11:49:06 science kernel: disk 1, wo:0, o:1, dev:sdb2
+Nov 20 11:49:06 science kernel: disk 2, wo:0, o:1, dev:sde2
+Nov 20 11:49:06 science kernel: disk 3, wo:1, o:1, dev:sdc2
+Nov 20 11:49:06 science kernel: md: recovery of RAID array md5
+Nov 20 11:49:06 science kernel: md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+Nov 20 11:49:06 science kernel: md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
+Nov 20 11:49:06 science kernel: md: using 128k window, over a total of 362795776k.
+u
+
+And its completion:
+Nov 20 13:50:47 science kernel: md: md5: recovery done.
+Nov 20 13:50:47 science kernel: RAID10 conf printout:
+Nov 20 13:50:47 science kernel: --- wd:4 rd:4
+Nov 20 13:50:47 science kernel: disk 0, wo:0, o:1, dev:sda2
+Nov 20 13:50:47 science kernel: disk 1, wo:0, o:1, dev:sdb2
+Nov 20 13:50:47 science kernel: disk 2, wo:0, o:1, dev:sde2
+Nov 20 13:50:47 science kernel: disk 3, wo:0, o:1, dev:sdc2
+
+Here's where I remove and re-add sdd2:
+Nov 20 16:34:01 science kernel: md: unbind<sdd2>
+Nov 20 16:34:01 science kernel: md: export_rdev(sdd2)
+Nov 20 16:34:11 science kernel: md: bind<sdd2>
+Nov 20 16:34:12 science kernel: RAID10 conf printout:
+Nov 20 16:34:12 science kernel: --- wd:4 rd:4
+Nov 20 16:34:12 science kernel: disk 0, wo:0, o:1, dev:sda2
+Nov 20 16:34:12 science kernel: disk 1, wo:0, o:1, dev:sdb2
+Nov 20 16:34:12 science kernel: disk 2, wo:0, o:1, dev:sde2
+Nov 20 16:34:12 science kernel: disk 3, wo:0, o:1, dev:sdc2
+
+And do the want_replacement:
+Nov 20 16:38:07 science kernel: RAID10 conf printout:
+Nov 20 16:38:07 science kernel: --- wd:4 rd:4
+Nov 20 16:38:07 science kernel: disk 0, wo:0, o:1, dev:sda2
+Nov 20 16:38:07 science kernel: disk 1, wo:0, o:1, dev:sdb2
+Nov 20 16:38:07 science kernel: disk 2, wo:0, o:1, dev:sde2
+Nov 20 16:38:07 science kernel: disk 3, wo:0, o:1, dev:sdc2
+Nov 20 16:38:07 science kernel: md: recovery of RAID array md5
+Nov 20 16:38:07 science kernel: md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+Nov 20 16:38:07 science kernel: md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
+Nov 20 16:38:07 science kernel: md: using 128k window, over a total of 362795776k.
+
+It appears to have completed:
+Nov 20 18:40:01 science kernel: md: md5: recovery done.
+Nov 20 18:40:01 science kernel: RAID10 conf printout:
+Nov 20 18:40:01 science kernel: --- wd:4 rd:4
+Nov 20 18:40:01 science kernel: disk 0, wo:0, o:1, dev:sda2
+Nov 20 18:40:01 science kernel: disk 1, wo:0, o:1, dev:sdb2
+Nov 20 18:40:01 science kernel: disk 2, wo:0, o:1, dev:sde2
+Nov 20 18:40:01 science kernel: disk 3, wo:1, o:0, dev:sdc2
+
+But as mentioned, the RAID state is a bit odd.  sdc2 is still in the
+array and sdd2 is not.
+
+Can anyone suggest what is going on?  Thank you!
