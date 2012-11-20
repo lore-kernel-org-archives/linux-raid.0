@@ -1,99 +1,96 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm: use static major/minor numbers.
-Date: Wed, 21 Nov 2012 08:16:22 +1100
-Message-ID: <20121121081622.162d6f08@notabene.brown>
-References: <50AB7964.60002@mpstor.com>
+Subject: Re: split brain mode after reboot
+Date: Wed, 21 Nov 2012 08:22:52 +1100
+Message-ID: <20121121082252.3a9bb7db@notabene.brown>
+References: <50AB8EED.4000005@aei.mpg.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/3eRTanusNA+WQu_X9qGLfyn"; protocol="application/pgp-signature"
+ boundary="Sig_/JccA+KBrVBF4T76CJErKEl+"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50AB7964.60002@mpstor.com>
+In-Reply-To: <50AB8EED.4000005@aei.mpg.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Benjamin ESTRABAUD <be@mpstor.com>
-Cc: linux-raid@vger.kernel.org
+To: Carsten Aulbert <Carsten.Aulbert@aei.mpg.de>
+Cc: linux-raid@vger.kernel.org, "gerrit.kuehn@aei.mpg.de" <gerrit.kuehn@aei.mpg.de>
 List-Id: linux-raid.ids
 
---Sig_/3eRTanusNA+WQu_X9qGLfyn
+--Sig_/JccA+KBrVBF4T76CJErKEl+
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 20 Nov 2012 12:36:52 +0000 Benjamin ESTRABAUD <be@mpstor.com> wrote:
+On Tue, 20 Nov 2012 15:08:45 +0100 Carsten Aulbert
+<Carsten.Aulbert@aei.mpg.de> wrote:
 
-> Hi!
+> Hi all
 >=20
-> I recently updated mdadm-2.6.9 to mdadm-3.2.6 on a system (own busybox=20
-> based distro) that had its kernel version updated from 2.6.35 to 3.4.
+> a colleague of mine created a raid 1 on a fairly recent machine
 >=20
-> Everything works well apart from a feature I used that I seem to be=20
-> unable to reactivate:
+> Kernel 3.5.0-sabayon
 >=20
-> In the past, to ensure knowing the number of possible RAID devices that=20
-> could be created on the system, I used static major:minor mappings by=20
-> building the /dev/md/dXX and /dev/md/dXXpXX entries (with major 254, and=
-=20
-> three minors for each device for 3 partitions), allowing me to be=20
-> certain that 64 RAID devices could be created at all times.
+> mdadm - v3.2.3 - 23rd December 2011
 >=20
-> When creating an array, the /dev/md/dXX and dXXpXX devices "nodes" would=
-=20
-> be used (not recreated) and the major/minor number these devices point=20
-> to would be used for the actual MD block device.
+> During operation sda seemed to have been disconnected by the
+> system/motherboard/whatever but this was not detected before a reboot
+> was done, after the reboot, sda re-appeared but of course with a much
+> older version of the mirror:
 >=20
-> This was a very handy feature. With the latest mdadm, I simply cannot do=
-=20
-> that, as creating a /dev/md/dXX will in fact remove that device file and=
-=20
-> symlink it to /dev/md_dXX. I then created /dev/md_dXX devices prior to=20
-> creating an array, and got the following error message: "mdadm:=20
-> /dev/md_d3 exists but looks wrong, please fix".
+> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
+> [raid4] [multipath] [faulty]
+> md126 : active raid1 sdb1[1]
+>       4194240 blocks [2/1] [_U]
 >=20
-> Looking through the source I can see that mdadm basically verifies if=20
-> the file's major/minor matches the one that it had planned for the=20
-> device, which in this case doesn't.
+> md127 : active raid1 sdb3[1]
+>       235808704 blocks [2/1] [_U]
 >=20
-> Is there any way to work around that? Or in fact, I don't actually=20
-> *need* to use static major/minor numbers, but I need to know in advance=20
-> how many RAIDs I'll be able to create provided I'll always use 2=20
-> partitions for them and can provide the -amdp2 argument to mdadm to make=
-=20
-> sure that only 2 partitions devices nodes are created.
+> md0 : active raid1 sda1[0]
+>       4194240 blocks [2/1] [U_]
 >=20
-> Is there a way to know the maximum number of RAIDs that can be created,=20
-> provided that nothing else uses major 9 and 254?
+> md1 : active raid0 sda2[0] sdb2[1]
+>       8387584 blocks 512k chunks
 >=20
-> Thank you very much in advance for your help!
+> md2 : active raid1 sda3[0]
+>       235808704 blocks [2/1] [U_]
+>=20
+> unused devices: <none>
+>=20
+> As no vital information were on these disks, my question for the list is
+> just if this is an expected/wanted behavior after such an event and what
+> one could do to prevent this (besides monitoring via mdadm).
+>=20
 
-I don't really understand what your problem is.
+Expected - probably.
+Wanted - no.
 
-mdadm should create any devices it needs - unless it detects udev, in which
-case it leaves the device creation to udev.
+I think one half gets assembled by "mdadm --incremental" run from udev, and
+the other by a subsequence "mdadm -As" or similar.
 
-So simply don't create any md devices in /dev and let mdadm do whatever is
-required.
-Does that approach not suit your needs?  If not, why not?
+mdadm-3.3, which is still under development, has a fix for this so that
+--incremental and --assemble don't trip over each other.
+
+http://git.neil.brown.name/?p=3Dmdadm.git;a=3Dcommitdiff;h=3D0431869cec4c67=
+3309d9aa
 
 NeilBrown
 
---Sig_/3eRTanusNA+WQu_X9qGLfyn
+--Sig_/JccA+KBrVBF4T76CJErKEl+
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUKvzJjnsnt1WYoG5AQK3ig/7BaKrqVmv/UNnDCeEdmzn8kREtpmcUQuT
-Y370m5q04aeXs94nW9QBCmLD69UWlTyJwWBgv+4i0STH5bUu5MKQi5V6q4q0hvDK
-WLBmVJxISpziZ6UM3ks4Fv/T4loep91lQWo8Rjn7KSbIJAArdVoAC2+KQ1piRrDd
-4IqIAg/ZstSbIaru+mNgeTj/Z5x0vR6qa9l1rWn8C9ujTLffwHN79OVU2ByXRBKW
-/bo/TOWhtwXTBJiHNhh9bMJU/3wVe+eocxBhcVvsw4zW0iXeCpk4fD8lqxIqZb6a
-B0Y40rN4fqsSp4nnZRgplCPCI6y/BHCRfIpyCyk/BiiwKZ7qC4v5BobI7TTgVdQo
-+vZVnIlbADsm2ov9J3BrxJBBLl/Vr2ILAF+aI8Gl3cv7EWGeq7YWr7UO/H35IvHx
-xwabrtpMaMpyAj5JP5ITHr4vYPRmCfvYhHsaSAqCDy9XAI76biXkdgXq8RKjbT2A
-hL79XVHw20DKZoV7jrcNI6MB5094AlqNa5amnqmcq7dCo+hjsG3vuE81qpMhqmlj
-oQ4e0IBajO5vztfJsoPoI90YWEny/aHbNM6o8Jhuf7gJpH2g6aEcD+z71ECNnpY1
-Fw+s2Ai6l/byy1pUxJBaPwm8c4NaFD9RUH+IXd37ViJfeVXxmSn3U+0gIUUp4Ps9
-SyB4BUAVZOk=
-=EUrw
+iQIVAwUBUKv0rDnsnt1WYoG5AQKcDQ/7BMaFqvD1eZOkHQSKm/27XB0wvlJ/AhAT
+5HwuKcaXqa2Vze6f6mA3AjBwvP1vnuPIPnjt7A/PnD2fZLX256+sglrSfplo9Cv9
+QzwtAahPo8o/FWKxXZTDMoCpaMOae7a+/fmHHPjJpeMseR+g4ND9RObdndpCU7Cu
+Ey5qfLfiyyxnmVfzFlAi3Yryusen32eBVWGcn/H+lo7NIv9qE5C7s2vgyVUy9r/x
+cu8849CbZXjCv9Nsmyq+qSxovwzYfDxjLeU0J97cYxewYm93BKaxYz46Okty2z7y
+5oibAG/VrVMaNQfXIySvma7eL2CgWTELyBRW6cxrqt+jje9Yf/WUwK6DwDI41/LK
+CPt1YJ3kDZae/RTA7X8z1RoMs0Y7mKlkN3p3SFdBPgBHy1Im470XC92y/WLEpdyq
+FY913Zv9h1qH21lf91PkxlUG5d683SM3g9byUPU+wX1Y7rWt62o8f+ZMrG/o/nue
+wq0djGG5R/alVK+YyHY6Bfrle6MDuXxM3kA3QLq35KBE8BeAf3Yn/ifCCfF1qGxW
+4aZNsRlVv3U5en+eTr2ww650+IEzzU13+B0OVTpQWvhiXuQCfEA/ZBVP3OZ7tYbf
+glfmnJ/UnBHIwr02gKZsdnDIdOYOYe/H9tm61dRnvlMKB/Ra0nV8SmXgOrSBvmpt
+f142XZpG4Kw=
+=uOxP
 -----END PGP SIGNATURE-----
 
---Sig_/3eRTanusNA+WQu_X9qGLfyn--
+--Sig_/JccA+KBrVBF4T76CJErKEl+--
