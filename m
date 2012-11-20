@@ -1,70 +1,65 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: Re: [PATCH V1] md:For aborted a resync by request,using ->curr_resync as the last completed request rather than ->curr_resync_completed.
-Date: Tue, 20 Nov 2012 09:06:06 +0800
-Message-ID: <201211200906034247120@gmail.com>
-References: <201211191957314065143@gmail.com>,
-	<20121120090725.7de3348a@notabene.brown>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Where can i download mdadm 3.3
+Date: Tue, 20 Nov 2012 12:26:22 +1100
+Message-ID: <20121120122622.34f9bacd@notabene.brown>
+References: <CAGmni9ozPTrqeg+RLBu=J8NEqqK95nwf0ymK7qA7DgpZNRHX=A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/ZE_.HuBUZGCM2ZpuTej1uc2"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAGmni9ozPTrqeg+RLBu=J8NEqqK95nwf0ymK7qA7DgpZNRHX=A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Salatiel Filho <salatiel.filho@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Pk9uIE1vbiwgMTkgTm92IDIwMTIgMTk6NTc6MzQgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVu
-Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gVjAtLT5WMToNCj4+IEFzIHN1Z2dlc3RlZCBieSBu
-ZWlsLCBpdCBhZGRlZCBhIGZsYWcgTURfUkVDT1ZFUllfRVJST1IgdG8gZGlmZmVyZW50aWF0ZSBi
-ZXR3ZWVuIGFuDQo+PiBhYm9ydC1kdWUtdG8tZXJyb3IgYW5kIGFuIGFib3J0LWR1ZS10by1yZXF1
-ZXN0LldlIG9ubHkgZGVhbCB3aXRoIHRoZSBsYXRlciBjYXNlLg0KPj4gDQo+PiBUaGFua3MhDQo+
-PiBKaWFucGVuZw0KPj4gDQo+PiBBYm9ydGluZyBhIHJlc3luYyBtYXliZSBieSBpby1lcnJvcixv
-ciByZXF1ZXN0KHN0b3AgYXJyYXkgb3IgcmVib290DQo+PiBzeXN0ZW0pLg0KPj4gU28gd2UgYWRk
-IGEgZmxhZyBNRF9SRUNPVkVSWV9FUlJPUiB0byBkaWZmZXJlbnRpYXRlIGJldHdlZW4gYW4NCj4+
-IGFib3J0LWR1ZS10by1lcnJvciBhbmQgYW4gYWJvcnQtZHVlLXRvLXJlcXVlc3QuDQo+PiBGb3Ig
-dGhlIGxhdGVyIGNhc2Usd2hlbiByZXN5bmMgYWJvcnRlZCxpdCBleGVjDQo+PiB3YWl0X2V2ZW50
-KG1kZGV2LT5yZWNvdmVyeV93YWl0LCAhYXRvbWljX3JlYWQoJm1kZGV2LT5yZWNvdmVyeV9hY3Rp
-dmUpKS4NCj4+IFNvIHRoZSAtPmN1cnJfcmVzeW5jIGlzIHRoZSBsYXN0IGNvbXBsZXRlZCByZXF1
-ZXN0Lg0KPj4gDQo+PiBTaWduZWQtb2ZmLWJ5OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFp
-bC5jb20+DQo+PiAtLS0NCj4+ICBkcml2ZXJzL21kL21kLmMgfCAgIDEwICsrKysrKysrLS0NCj4+
-ICBkcml2ZXJzL21kL21kLmggfCAgICAyICsrDQo+PiAgMiBmaWxlcyBjaGFuZ2VkLCAxMCBpbnNl
-cnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0KPj4gDQo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9t
-ZC9tZC5jIGIvZHJpdmVycy9tZC9tZC5jDQo+PiBpbmRleCA5YWI3NjhhLi41MTk5NjU3IDEwMDY0
-NA0KPj4gLS0tIGEvZHJpdmVycy9tZC9tZC5jDQo+PiArKysgYi9kcml2ZXJzL21kL21kLmMNCj4+
-IEBAIC03MTcyLDYgKzcxNzIsNyBAQCB2b2lkIG1kX2RvbmVfc3luYyhzdHJ1Y3QgbWRkZXYgKm1k
-ZGV2LCBpbnQgYmxvY2tzLCBpbnQgb2spDQo+PiAgCXdha2VfdXAoJm1kZGV2LT5yZWNvdmVyeV93
-YWl0KTsNCj4+ICAJaWYgKCFvaykgew0KPj4gIAkJc2V0X2JpdChNRF9SRUNPVkVSWV9JTlRSLCAm
-bWRkZXYtPnJlY292ZXJ5KTsNCj4+ICsJCXNldF9iaXQoTURfUkVDT1ZFUllfRVJST1IsICZtZGRl
-di0+cmVjb3ZlcnkpOw0KPj4gIAkJbWRfd2FrZXVwX3RocmVhZChtZGRldi0+dGhyZWFkKTsNCj4+
-ICAJCS8vIHN0b3AgcmVjb3ZlcnksIHNpZ25hbCBkb19zeW5jIC4uLi4NCj4+ICAJfQ0KPj4gQEAg
-LTc1NTgsOCArNzU1OSwxMyBAQCB2b2lkIG1kX2RvX3N5bmMoc3RydWN0IG1kX3RocmVhZCAqdGhy
-ZWFkKQ0KPj4gIAkJCQkJcHJpbnRrKEtFUk5fSU5GTw0KPj4gIAkJCQkJICAgICAgICJtZDogY2hl
-Y2twb2ludGluZyAlcyBvZiAlcy5cbiIsDQo+PiAgCQkJCQkgICAgICAgZGVzYywgbWRuYW1lKG1k
-ZGV2KSk7DQo+PiAtCQkJCQltZGRldi0+cmVjb3ZlcnlfY3AgPQ0KPj4gLQkJCQkJCW1kZGV2LT5j
-dXJyX3Jlc3luY19jb21wbGV0ZWQ7DQo+PiArCQkJCQlpZiAodGVzdF9iaXQoTURfUkVDT1ZFUllf
-RVJST1IsDQo+PiArCQkJCQkJJm1kZGV2LT5yZWNvdmVyeV9jcCkpDQo+PiArCQkJCQkJbWRkZXYt
-PnJlY292ZXJ5X2NwID0NCj4+ICsJCQkJCQkJbWRkZXYtPmN1cnJfcmVzeW5jX2NvbXBsZXRlZDsN
-Cj4+ICsJCQkJCWVsc2UNCj4+ICsJCQkJCQltZGRldi0+cmVjb3ZlcnlfY3AgPQ0KPj4gKwkJCQkJ
-CQltZGRldi0+Y3Vycl9yZXN5bmM7DQo+PiAgCQkJCX0NCj4+ICAJCQl9IGVsc2UNCj4+ICAJCQkJ
-bWRkZXYtPnJlY292ZXJ5X2NwID0gTWF4U2VjdG9yOw0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
-bWQvbWQuaCBiL2RyaXZlcnMvbWQvbWQuaA0KPj4gaW5kZXggYWY0NDNhYi4uYzI5ZTYyZSAxMDA2
-NDQNCj4+IC0tLSBhL2RyaXZlcnMvbWQvbWQuaA0KPj4gKysrIGIvZHJpdmVycy9tZC9tZC5oDQo+
-PiBAQCAtMzA3LDYgKzMwNyw3IEBAIHN0cnVjdCBtZGRldiB7DQo+PiAgCSAqIFJFUVVFU1Q6ICB1
-c2VyLXNwYWNlIGhhcyByZXF1ZXN0ZWQgYSBzeW5jICh1c2VkIHdpdGggU1lOQykNCj4+ICAJICog
-Q0hFQ0s6ICAgIHVzZXItc3BhY2UgcmVxdWVzdCBmb3IgY2hlY2stb25seSwgbm8gcmVwYWlyDQo+
-PiAgCSAqIFJFU0hBUEU6ICBBIHJlc2hhcGUgaXMgaGFwcGVuaW5nDQo+PiArCSAqIEVSUk9SOiAg
-ICBzeW5jLWFjdGlvbiBpbnRlcnJ1cHRlZCBiZWNhdXNlIGlvLWVycm9yDQo+PiAgCSAqDQo+PiAg
-CSAqIElmIG5laXRoZXIgU1lOQyBvciBSRVNIQVBFIGFyZSBzZXQsIHRoZW4gaXQgaXMgYSByZWNv
-dmVyeS4NCj4+ICAJICovDQo+PiBAQCAtMzIwLDYgKzMyMSw3IEBAIHN0cnVjdCBtZGRldiB7DQo+
-PiAgI2RlZmluZQlNRF9SRUNPVkVSWV9DSEVDSwk3DQo+PiAgI2RlZmluZSBNRF9SRUNPVkVSWV9S
-RVNIQVBFCTgNCj4+ICAjZGVmaW5lCU1EX1JFQ09WRVJZX0ZST1pFTgk5DQo+PiArI2RlZmluZQlN
-RF9SRUNPVkVSWV9FUlJPUgkxMA0KPj4gIA0KPj4gIAl1bnNpZ25lZCBsb25nCQkJcmVjb3Zlcnk7
-DQo+PiAgCS8qIElmIGEgUkFJRCBwZXJzb25hbGl0eSBkZXRlcm1pbmVzIHRoYXQgcmVjb3Zlcnkg
-KG9mIGEgcGFydGljdWxhcg0KPg0KPg0KPg0KPlRoZSBhdHRhY2htZW50IHN0aWxsIGhhdmUgTVMt
-d2luZG93cyBsaW5lIGVuZGluZ3MgKCJcclxuIiBpbnN0ZWFkIG9mIGp1c3QNCj4iXG4iKSBidXQg
-aXQgd2Fzbid0IHRvbyBoYXJkIHRvIHN0cmlwIHRob3NlIG91dC4NCj4NCj5BcHBsaWVkLCB0aGFu
-a3MsDQo+TmVpbEJyb3duDQo+DQo+DQpTb3JyeSBmb3IgdGhhdCwgaSB3aWxsIGNoZWNrIGl0IGFu
-ZCBmaXguDQpUaGFua3MhDQpKaWFucGVuZw==
+--Sig_/ZE_.HuBUZGCM2ZpuTej1uc2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Sun, 18 Nov 2012 10:42:22 -0300 Salatiel Filho <salatiel.filho@gmail.com>
+wrote:
+
+> Hi guys, i will be building a few arrays very soon and i'd like to
+> test the badblock feature and the replaceable feature, but i haven`t
+> found where i can download the source of mdadm 1.3. Where can i get it
+> ?
+>
+You can't.  3.3 doesn't exist yet.
+
+However
+  git clone git://neil.brown.name/mdadm
+  cd mdadm
+  make
+
+will get you code that supports bad blocks and replaceable devices.
+
+Alternately you can get a tar file at
+
+   http://git.neil.brown.name/git?p=3Dmdadm.git;a=3Dsnapshot;h=3Dmaster
+
+NeilBrown
+
+--Sig_/ZE_.HuBUZGCM2ZpuTej1uc2
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUKrcPjnsnt1WYoG5AQIZ+A/+I0+dxrG950DeVR81doJFOONGN7aBvzvs
+OlHRTrf4PM09nmNbI9wdXoc1Y1N2WE87G3BOwfngP6Lqaqq2jrs01JxQVsX/dFJJ
+hIKgyM1B2qq3g6RMzmnR+z6ZjejMqS2PHhY/SPi8nmIZcHkRvlQFi9GHR2EIFfs/
+/oPIl9uPyiQ5mafw4o00MXzu4tzf0vts9ReST+eXRLnJyzTLLvXZUus4ptDH3Yqb
+ojgKtfjwycuVaE7feBM2x8PyNTrsi+Abny1eR4g2DWxvfFD/lEwrYw6r4z9M+82d
+AVn0EcvRdmWq5QgyyhnodkKKnvJ3ifpXmJbM4MH2/iGreHLbiU9jb5+nTcFIT5Fx
+HItmtCKvBqIGUCz6HoEkC/gM3q15HtAiPR07wpwJ5U2SyyqdL0IavOEm6JFO2JTg
+jArBq+LIjg+VV8Xx1+gwTBk0IBLUgt53uiYZj3GPKpLHHvdMAl3BFU9MSYz4FwxV
+dyA1+D96YfOQvoahlquT0XFLVakJ8tUBKBbLrlR0yQyADY2GGhRhdUnPyWgsCbeW
+3/Ud/rwEO4fmX3VVWiZp0ZhwILCaeSohVaUkO0UKuq2hU5cOaZZePyN1xYgDq+/I
+TkdG6GufTuX7tyiKwU/+W3JGuIruoTuZQfmOhkpd8NOpGC/0iWDr32l+lEI+ikf4
+5BZJQzqAeE8=
+=BXgY
+-----END PGP SIGNATURE-----
+
+--Sig_/ZE_.HuBUZGCM2ZpuTej1uc2--
