@@ -1,108 +1,112 @@
-From: Martijn <mailinglist@mindconnect.nl>
-Subject: Re: RAID1 performance and "task X blocked for more than 120 seconds"
-Date: Tue, 20 Nov 2012 10:14:39 +0100
-Message-ID: <50AB49FF.90009@mindconnect.nl>
-References: <50A92B52.7030905@mindconnect.nl> <50A94D9F.3060601@hardwarefreak.com> <50A958CE.5030902@mindconnect.nl> <50AA6392.2040006@hardwarefreak.com>
-Reply-To: mailinglist@mindconnect.nl
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50AA6392.2040006@hardwarefreak.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: stan@hardwarefreak.com
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH 2/2 v4] loop: Limit the number of requests in the bio list
+Date: Tue, 20 Nov 2012 10:23:05 +0100
+Message-ID: <1353403385-735-2-git-send-email-lczerner@redhat.com>
+References: <1353403385-735-1-git-send-email-lczerner@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1353403385-735-1-git-send-email-lczerner@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, jmoyer@redhat.com, akpm@linux-foundation.org, Lukas Czerner <lczerner@redhat.com>
 List-Id: linux-raid.ids
 
-Hi Stan,
+Currently there is not limitation of number of requests in the loop bio
+list. This can lead into some nasty situations when the caller spawns
+tons of bio requests taking huge amount of memory. This is even more
+obvious with discard where blkdev_issue_discard() will submit all bios
+for the range and wait for them to finish afterwards. On really big loop
+devices and slow backing file system this can lead to OOM situation as
+reported by Dave Chinner.
 
-On 19-11-2012 17:51, Stan Hoeppner wrote:
-> On 11/18/2012 3:53 PM, Martijn wrote:
->> Thank you for your response Stan.
->> On 18-11-2012 22:05, Stan Hoeppner wrote:
->>> On 11/18/2012 12:39 PM, Martijn wrote:
->>> Your previously mentioned symptoms were leading me to this, but this one
->>> kinda seals the deal.  This sounds like classic filesystem free space
->>> fragmentation.  What filesystem is this?  The 3GB of files--are they
->>> large or small files?
->>
->> Except for /boot, it's all ext3. Free space:
->> Filesystem            Size  Used Avail Use% Mounted on
->> /dev/md127p2           60G  1.1G   56G   2% /
->> /dev/md127p6          7.9G  149M  7.4G   2% /tmp
->> /dev/md127p1          243M   19M  212M   9% /boot
->> /dev/md127p3          709G  6.5G  667G   1% /home
->> /dev/md127p5          119G  420M  112G   1% /var
->>
->> Less than 10% usage on every partition. The filesystems have always been
->> empty. This data was amongst the very first data written to the /home.
->> All partitions where created using standard Linux fdisk and then
->> formatted using mkfs.ext3.
->>
->> The 3GB consists of very mixed content: mostly small files (~1KB), and
->> just a few bigger (50MB+).
->
-> Ok, so it's not a fragmentation issue.  When you copied the 3GB of files
-> from one directory to another on /home you said you experienced the
-> "same problem".  Could you describe that in more detail?  Also, do you
-> see any lines in dmesg showing any SATA links being reset, or any
-> disk/interface messages, either warnings or errors?
+With this patch we will wait in loop_make_request() if the number of
+bios in the loop bio list would exceed 'nr_congestion_on'.
+We'll wake up the process as we process the bios form the list. Some
+threshold hysteresis is in place to avoid high frequency oscillation.
 
-Thank you for taking the time to look into this. I have some news. 
-Although it's not 100% clear what exactly the cause is, chances are good 
-it's hardware and not software.
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+Reported-by: Dave Chinner <dchinner@redhat.com>
+---
+ v2: add threshold hysteresis
+ v3: Wait uninterruptible, use nr_congestion_off/on
+ v4: use wait_event_lock_irq()
 
-On your questions:
-- dmesg, logs in general: no entries suggesting ANY sort of trouble with 
-SATA, or any of the disks. Actually, no problems at all.
-- SMART on all drives look good. (more on this later)
-- Settings for devices in /sys all seem perfectly the same
-- hdparm settings all seem equal for all disks
-- No settings in BIOS that catch my attention. There's not that much to 
-set up anyway ;-)
+ drivers/block/loop.c |   10 ++++++++++
+ include/linux/loop.h |    3 +++
+ 2 files changed, 13 insertions(+), 0 deletions(-)
 
-The copy is a (not very exciting) cp -rv /old/ /new with source and 
-destination on the same partition. Immediately after it starts, the 
-machine starts to feel sluggish. Very shortly after that, other programs 
-you want to run start to pause for... many seconds, even minutes. This 
-continues until some time after the copy is done. Meanwhile, the 
-mentioned logentries appear.
-
-Looking at the list of files coming by with -v, the copy sometimes just 
-pauses for a while, on a file that isn't big. Then to continue copying 
-again after some time, then pausing again, etc.
-
-Last night I had a look together with a collegue and he suggested 
-testing write performance on seperate disks to better isolate the 
-problem. Make sure it's either the writing performance in general, or 
-just that of software RAID.
-
-- Read performances are good across all disks.
-
-We tested writing performance on the spare (sdc) and that seemed ok. 
-Then we put sda on fail and had the RAID rebuild itself with sdb and sdc 
-as active devices.
-
-- So, write performance on spare sdc seems good.
-
-Then, we tested write performance on sda:
-
-- Write performance on sda looks bad. 1/4th of that of sdc.
-- Write performance on sdb also looks bad, but we've not yet been able 
-to test the performance outside the RAID set, yet. The disk seems to 
-'lag' behind sdc when writing.
-
-We've put in an extra disk in (sdd) which seems to have good write 
-performance when tested seperately, and plan to rebuild the RAID on sdc 
-and sdd, then see what the true writing performance of sdb is.
-
-My collegue also noted that:
-
-- Requesting SMART regularly fails when the disk is still writing.
-
-So summing it up, it certainly seems that this is all caused by some 
-sort of hardware issue. Either with two of the disks (the formerly two 
-active devices in the RAID), the cables, or the controller. And more 
-importantly: probably not related to software.
-
-- Martijn
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index 54046e5..ae12512 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -463,6 +463,7 @@ out:
+  */
+ static void loop_add_bio(struct loop_device *lo, struct bio *bio)
+ {
++	lo->lo_bio_count++;
+ 	bio_list_add(&lo->lo_bio_list, bio);
+ }
+ 
+@@ -471,6 +472,7 @@ static void loop_add_bio(struct loop_device *lo, struct bio *bio)
+  */
+ static struct bio *loop_get_bio(struct loop_device *lo)
+ {
++	lo->lo_bio_count--;
+ 	return bio_list_pop(&lo->lo_bio_list);
+ }
+ 
+@@ -489,6 +491,10 @@ static void loop_make_request(struct request_queue *q, struct bio *old_bio)
+ 		goto out;
+ 	if (unlikely(rw == WRITE && (lo->lo_flags & LO_FLAGS_READ_ONLY)))
+ 		goto out;
++	if (lo->lo_bio_count >= q->nr_congestion_on)
++		wait_event_lock_irq(lo->lo_req_wait,
++				    lo->lo_bio_count < q->nr_congestion_off,
++				    lo->lo_lock);
+ 	loop_add_bio(lo, old_bio);
+ 	wake_up(&lo->lo_event);
+ 	spin_unlock_irq(&lo->lo_lock);
+@@ -546,6 +552,8 @@ static int loop_thread(void *data)
+ 			continue;
+ 		spin_lock_irq(&lo->lo_lock);
+ 		bio = loop_get_bio(lo);
++		if (lo->lo_bio_count < lo->lo_queue->nr_congestion_off)
++			wake_up(&lo->lo_req_wait);
+ 		spin_unlock_irq(&lo->lo_lock);
+ 
+ 		BUG_ON(!bio);
+@@ -873,6 +881,7 @@ static int loop_set_fd(struct loop_device *lo, fmode_t mode,
+ 	lo->transfer = transfer_none;
+ 	lo->ioctl = NULL;
+ 	lo->lo_sizelimit = 0;
++	lo->lo_bio_count = 0;
+ 	lo->old_gfp_mask = mapping_gfp_mask(mapping);
+ 	mapping_set_gfp_mask(mapping, lo->old_gfp_mask & ~(__GFP_IO|__GFP_FS));
+ 
+@@ -1673,6 +1682,7 @@ static int loop_add(struct loop_device **l, int i)
+ 	lo->lo_number		= i;
+ 	lo->lo_thread		= NULL;
+ 	init_waitqueue_head(&lo->lo_event);
++	init_waitqueue_head(&lo->lo_req_wait);
+ 	spin_lock_init(&lo->lo_lock);
+ 	disk->major		= LOOP_MAJOR;
+ 	disk->first_minor	= i << part_shift;
+diff --git a/include/linux/loop.h b/include/linux/loop.h
+index 6492181..460b60f 100644
+--- a/include/linux/loop.h
++++ b/include/linux/loop.h
+@@ -53,10 +53,13 @@ struct loop_device {
+ 
+ 	spinlock_t		lo_lock;
+ 	struct bio_list		lo_bio_list;
++	unsigned int		lo_bio_count;
+ 	int			lo_state;
+ 	struct mutex		lo_ctl_mutex;
+ 	struct task_struct	*lo_thread;
+ 	wait_queue_head_t	lo_event;
++	/* wait queue for incoming requests */
++	wait_queue_head_t	lo_req_wait;
+ 
+ 	struct request_queue	*lo_queue;
+ 	struct gendisk		*lo_disk;
+-- 
+1.7.7.6
