@@ -1,128 +1,70 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [md:for-next 15/15] drivers/md/md.c:7582:6: warning: passing
- argument 2 of 'constant_test_bit' from incompatible pointer type
-Date: Tue, 20 Nov 2012 11:21:05 +1100
-Message-ID: <20121120112105.23f15b54@notabene.brown>
-References: <50aac8b2.i4eO3rNuSChi5+J9%fengguang.wu@intel.com>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH V1] md:For aborted a resync by request,using ->curr_resync as the last completed request rather than ->curr_resync_completed.
+Date: Tue, 20 Nov 2012 09:06:06 +0800
+Message-ID: <201211200906034247120@gmail.com>
+References: <201211191957314065143@gmail.com>,
+	<20121120090725.7de3348a@notabene.brown>
+Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/jK9A_+L1crFe9BZmH1cifYX"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50aac8b2.i4eO3rNuSChi5+J9%fengguang.wu@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: kbuild test robot <fengguang.wu@intel.com>
-Cc: majianpeng <majianpeng@gmail.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/jK9A_+L1crFe9BZmH1cifYX
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Pk9uIE1vbiwgMTkgTm92IDIwMTIgMTk6NTc6MzQgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVu
+Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gVjAtLT5WMToNCj4+IEFzIHN1Z2dlc3RlZCBieSBu
+ZWlsLCBpdCBhZGRlZCBhIGZsYWcgTURfUkVDT1ZFUllfRVJST1IgdG8gZGlmZmVyZW50aWF0ZSBi
+ZXR3ZWVuIGFuDQo+PiBhYm9ydC1kdWUtdG8tZXJyb3IgYW5kIGFuIGFib3J0LWR1ZS10by1yZXF1
+ZXN0LldlIG9ubHkgZGVhbCB3aXRoIHRoZSBsYXRlciBjYXNlLg0KPj4gDQo+PiBUaGFua3MhDQo+
+PiBKaWFucGVuZw0KPj4gDQo+PiBBYm9ydGluZyBhIHJlc3luYyBtYXliZSBieSBpby1lcnJvcixv
+ciByZXF1ZXN0KHN0b3AgYXJyYXkgb3IgcmVib290DQo+PiBzeXN0ZW0pLg0KPj4gU28gd2UgYWRk
+IGEgZmxhZyBNRF9SRUNPVkVSWV9FUlJPUiB0byBkaWZmZXJlbnRpYXRlIGJldHdlZW4gYW4NCj4+
+IGFib3J0LWR1ZS10by1lcnJvciBhbmQgYW4gYWJvcnQtZHVlLXRvLXJlcXVlc3QuDQo+PiBGb3Ig
+dGhlIGxhdGVyIGNhc2Usd2hlbiByZXN5bmMgYWJvcnRlZCxpdCBleGVjDQo+PiB3YWl0X2V2ZW50
+KG1kZGV2LT5yZWNvdmVyeV93YWl0LCAhYXRvbWljX3JlYWQoJm1kZGV2LT5yZWNvdmVyeV9hY3Rp
+dmUpKS4NCj4+IFNvIHRoZSAtPmN1cnJfcmVzeW5jIGlzIHRoZSBsYXN0IGNvbXBsZXRlZCByZXF1
+ZXN0Lg0KPj4gDQo+PiBTaWduZWQtb2ZmLWJ5OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFp
+bC5jb20+DQo+PiAtLS0NCj4+ICBkcml2ZXJzL21kL21kLmMgfCAgIDEwICsrKysrKysrLS0NCj4+
+ICBkcml2ZXJzL21kL21kLmggfCAgICAyICsrDQo+PiAgMiBmaWxlcyBjaGFuZ2VkLCAxMCBpbnNl
+cnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0KPj4gDQo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9t
+ZC9tZC5jIGIvZHJpdmVycy9tZC9tZC5jDQo+PiBpbmRleCA5YWI3NjhhLi41MTk5NjU3IDEwMDY0
+NA0KPj4gLS0tIGEvZHJpdmVycy9tZC9tZC5jDQo+PiArKysgYi9kcml2ZXJzL21kL21kLmMNCj4+
+IEBAIC03MTcyLDYgKzcxNzIsNyBAQCB2b2lkIG1kX2RvbmVfc3luYyhzdHJ1Y3QgbWRkZXYgKm1k
+ZGV2LCBpbnQgYmxvY2tzLCBpbnQgb2spDQo+PiAgCXdha2VfdXAoJm1kZGV2LT5yZWNvdmVyeV93
+YWl0KTsNCj4+ICAJaWYgKCFvaykgew0KPj4gIAkJc2V0X2JpdChNRF9SRUNPVkVSWV9JTlRSLCAm
+bWRkZXYtPnJlY292ZXJ5KTsNCj4+ICsJCXNldF9iaXQoTURfUkVDT1ZFUllfRVJST1IsICZtZGRl
+di0+cmVjb3ZlcnkpOw0KPj4gIAkJbWRfd2FrZXVwX3RocmVhZChtZGRldi0+dGhyZWFkKTsNCj4+
+ICAJCS8vIHN0b3AgcmVjb3ZlcnksIHNpZ25hbCBkb19zeW5jIC4uLi4NCj4+ICAJfQ0KPj4gQEAg
+LTc1NTgsOCArNzU1OSwxMyBAQCB2b2lkIG1kX2RvX3N5bmMoc3RydWN0IG1kX3RocmVhZCAqdGhy
+ZWFkKQ0KPj4gIAkJCQkJcHJpbnRrKEtFUk5fSU5GTw0KPj4gIAkJCQkJICAgICAgICJtZDogY2hl
+Y2twb2ludGluZyAlcyBvZiAlcy5cbiIsDQo+PiAgCQkJCQkgICAgICAgZGVzYywgbWRuYW1lKG1k
+ZGV2KSk7DQo+PiAtCQkJCQltZGRldi0+cmVjb3ZlcnlfY3AgPQ0KPj4gLQkJCQkJCW1kZGV2LT5j
+dXJyX3Jlc3luY19jb21wbGV0ZWQ7DQo+PiArCQkJCQlpZiAodGVzdF9iaXQoTURfUkVDT1ZFUllf
+RVJST1IsDQo+PiArCQkJCQkJJm1kZGV2LT5yZWNvdmVyeV9jcCkpDQo+PiArCQkJCQkJbWRkZXYt
+PnJlY292ZXJ5X2NwID0NCj4+ICsJCQkJCQkJbWRkZXYtPmN1cnJfcmVzeW5jX2NvbXBsZXRlZDsN
+Cj4+ICsJCQkJCWVsc2UNCj4+ICsJCQkJCQltZGRldi0+cmVjb3ZlcnlfY3AgPQ0KPj4gKwkJCQkJ
+CQltZGRldi0+Y3Vycl9yZXN5bmM7DQo+PiAgCQkJCX0NCj4+ICAJCQl9IGVsc2UNCj4+ICAJCQkJ
+bWRkZXYtPnJlY292ZXJ5X2NwID0gTWF4U2VjdG9yOw0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
+bWQvbWQuaCBiL2RyaXZlcnMvbWQvbWQuaA0KPj4gaW5kZXggYWY0NDNhYi4uYzI5ZTYyZSAxMDA2
+NDQNCj4+IC0tLSBhL2RyaXZlcnMvbWQvbWQuaA0KPj4gKysrIGIvZHJpdmVycy9tZC9tZC5oDQo+
+PiBAQCAtMzA3LDYgKzMwNyw3IEBAIHN0cnVjdCBtZGRldiB7DQo+PiAgCSAqIFJFUVVFU1Q6ICB1
+c2VyLXNwYWNlIGhhcyByZXF1ZXN0ZWQgYSBzeW5jICh1c2VkIHdpdGggU1lOQykNCj4+ICAJICog
+Q0hFQ0s6ICAgIHVzZXItc3BhY2UgcmVxdWVzdCBmb3IgY2hlY2stb25seSwgbm8gcmVwYWlyDQo+
+PiAgCSAqIFJFU0hBUEU6ICBBIHJlc2hhcGUgaXMgaGFwcGVuaW5nDQo+PiArCSAqIEVSUk9SOiAg
+ICBzeW5jLWFjdGlvbiBpbnRlcnJ1cHRlZCBiZWNhdXNlIGlvLWVycm9yDQo+PiAgCSAqDQo+PiAg
+CSAqIElmIG5laXRoZXIgU1lOQyBvciBSRVNIQVBFIGFyZSBzZXQsIHRoZW4gaXQgaXMgYSByZWNv
+dmVyeS4NCj4+ICAJICovDQo+PiBAQCAtMzIwLDYgKzMyMSw3IEBAIHN0cnVjdCBtZGRldiB7DQo+
+PiAgI2RlZmluZQlNRF9SRUNPVkVSWV9DSEVDSwk3DQo+PiAgI2RlZmluZSBNRF9SRUNPVkVSWV9S
+RVNIQVBFCTgNCj4+ICAjZGVmaW5lCU1EX1JFQ09WRVJZX0ZST1pFTgk5DQo+PiArI2RlZmluZQlN
+RF9SRUNPVkVSWV9FUlJPUgkxMA0KPj4gIA0KPj4gIAl1bnNpZ25lZCBsb25nCQkJcmVjb3Zlcnk7
+DQo+PiAgCS8qIElmIGEgUkFJRCBwZXJzb25hbGl0eSBkZXRlcm1pbmVzIHRoYXQgcmVjb3Zlcnkg
+KG9mIGEgcGFydGljdWxhcg0KPg0KPg0KPg0KPlRoZSBhdHRhY2htZW50IHN0aWxsIGhhdmUgTVMt
+d2luZG93cyBsaW5lIGVuZGluZ3MgKCJcclxuIiBpbnN0ZWFkIG9mIGp1c3QNCj4iXG4iKSBidXQg
+aXQgd2Fzbid0IHRvbyBoYXJkIHRvIHN0cmlwIHRob3NlIG91dC4NCj4NCj5BcHBsaWVkLCB0aGFu
+a3MsDQo+TmVpbEJyb3duDQo+DQo+DQpTb3JyeSBmb3IgdGhhdCwgaSB3aWxsIGNoZWNrIGl0IGFu
+ZCBmaXguDQpUaGFua3MhDQpKaWFucGVuZw==
 
-On Tue, 20 Nov 2012 08:02:58 +0800 kbuild test robot <fengguang.wu@intel.co=
-m>
-wrote:
-
-> tree:   git://neil.brown.name/md for-next
-> head:   ef59c0770a46e77abba72994170ffe121e56a362
-> commit: ef59c0770a46e77abba72994170ffe121e56a362 [15/15] md: Use ->curr_r=
-esync as last completed request when cleanly aborting resync.
-> config: i386-randconfig-x070 (attached as .config)
->=20
-> All warnings:
->=20
-> drivers/md/md.c: In function 'md_do_sync':
-> drivers/md/md.c:7582:6: warning: passing argument 2 of 'constant_test_bit=
-' from incompatible pointer type [enabled by default]
-> In file included from include/linux/bitops.h:22:0,
->                  from include/linux/kernel.h:10,
->                  from include/linux/sched.h:15,
->                  from include/linux/kthread.h:5,
->                  from drivers/md/md.c:35:
-> arch/x86/include/asm/bitops.h:318:28: note: expected 'const volatile long=
- unsigned int *' but argument is of type 'sector_t *'
-> drivers/md/md.c:7582:6: warning: passing argument 2 of 'variable_test_bit=
-' from incompatible pointer type [enabled by default]
-> In file included from include/linux/bitops.h:22:0,
->                  from include/linux/kernel.h:10,
->                  from include/linux/sched.h:15,
->                  from include/linux/kthread.h:5,
->                  from drivers/md/md.c:35:
-> arch/x86/include/asm/bitops.h:324:19: note: expected 'const volatile long=
- unsigned int *' but argument is of type 'sector_t *'
->=20
-> vim +7582 +/constant_test_bit drivers/md/md.c
->=20
-> ^1da177e Linus Torvalds 2005-04-16  7566  	 */
-> ^1da177e Linus Torvalds 2005-04-16  7567   out:
-> 7c2c57c9 majianpeng     2012-07-03  7568  	blk_finish_plug(&plug);
-> ^1da177e Linus Torvalds 2005-04-16  7569  	wait_event(mddev->recovery_wai=
-t, !atomic_read(&mddev->recovery_active));
-> ^1da177e Linus Torvalds 2005-04-16  7570 =20
-> ^1da177e Linus Torvalds 2005-04-16  7571  	/* tell personality that we ar=
-e finished */
-> 57afd89f NeilBrown      2005-06-21  7572  	mddev->pers->sync_request(mdde=
-v, max_sectors, &skipped, 1);
-> ^1da177e Linus Torvalds 2005-04-16  7573 =20
-> dfc70645 NeilBrown      2008-05-23  7574  	if (!test_bit(MD_RECOVERY_CHEC=
-K, &mddev->recovery) &&
-> 5fd6c1dc NeilBrown      2006-06-26  7575  	    mddev->curr_resync > 2) {
-> 5fd6c1dc NeilBrown      2006-06-26  7576  		if (test_bit(MD_RECOVERY_SYNC=
-, &mddev->recovery)) {
-> 5fd6c1dc NeilBrown      2006-06-26  7577  			if (test_bit(MD_RECOVERY_INT=
-R, &mddev->recovery)) {
-> 5fd6c1dc NeilBrown      2006-06-26  7578  				if (mddev->curr_resync >=3D=
- mddev->recovery_cp) {
-> 5fd6c1dc NeilBrown      2006-06-26  7579  					printk(KERN_INFO
-> 61df9d91 NeilBrown      2006-10-03  7580  					       "md: checkpointing =
-%s of %s.\n",
-> 61df9d91 NeilBrown      2006-10-03  7581  					       desc, mdname(mddev)=
-);
-> ef59c077 majianpeng     2012-11-19 @7582  					if (test_bit(MD_RECOVERY_E=
-RROR,
-> ef59c077 majianpeng     2012-11-19  7583  						&mddev->recovery_cp))
-> ef59c077 majianpeng     2012-11-19  7584  						mddev->recovery_cp =3D
-> ef59c077 majianpeng     2012-11-19  7585  							mddev->curr_resync_compl=
-eted;
-
-
-Thanks again!  I've fixed it by merging the following.
-
-NeilBrown
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 13eb270..7816ab6 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -7580,7 +7580,7 @@ void md_do_sync(struct md_thread *thread)
- 					       "md: checkpointing %s of %s.\n",
- 					       desc, mdname(mddev));
- 					if (test_bit(MD_RECOVERY_ERROR,
--						&mddev->recovery_cp))
-+						&mddev->recovery))
- 						mddev->recovery_cp =3D
- 							mddev->curr_resync_completed;
- 					else
-
---Sig_/jK9A_+L1crFe9BZmH1cifYX
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUKrM8Tnsnt1WYoG5AQLSzw/7BESPjXSt9MYV2yv/efCCZRjE2aJQJVHE
-ElS/Sw3rbyS7b5KnFKJCCY2Ug+7qlN+krfAdOO9TSx6ax3oTDqjntnJJFePUceS4
-yWkyntwV+7+H/UNe6FkPnbekTV7XGlWUv0tMpBpceJ9tlkp2ImKiBgb0hVwEKjMK
-AltU6X55kTQN9v9qge9sxE5qbt4/mKikTDn+FZXJVD6JYALG+Zp2GZ7AobmmhYjM
-YcqdfKMmYwUE0vatSnFaOVl954ikGVcTeN5P7c6NU8blGd+wV5GywOMzw4+Jaas7
-q2aHdMc1nZ26rPlkBC2KItK5lo6tr0ABfvBtljyZGrBAnoVw+YJSXtPqvNoeJ8oj
-jVW/CQX3TzOILVa+hJ/2crm/yET6AK5QMi7uXdnYR4sRm34CjQmX7gZG2eKQWPyg
-gvkXv9eEtBnS7Edgn3NGILVKfY17fQMF+QAMjjDa94+CSqqjbM3q6rb6qON7sqFQ
-jY7vnuiUTRw02TWI4HhhjLbXB+XaNMvWloy8lbKXlPGc02JATuyl1d8ky+K908/f
-ZhK1nfItknA5rnLaUfogkyQrpEG9pyBOqPr6BEz8FwiFoDugAlpVSX0/UlWXk6fd
-EZefu74MSbPoQ+gIrC5RxymsA4UpJigrUjOcHD7m4uGSoE+CYt4dxhKUZYaSnjXC
-srEO1fQNXrQ=
-=11kd
------END PGP SIGNATURE-----
-
---Sig_/jK9A_+L1crFe9BZmH1cifYX--
