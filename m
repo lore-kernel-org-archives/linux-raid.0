@@ -1,204 +1,88 @@
-From: Kks Kbase <kks.kbase@yahoo.in>
-Subject: Adaptec RAID with smartctl issue
-Date: Wed, 21 Nov 2012 14:24:03 +0800 (SGT)
-Message-ID: <1353479043.26614.YahooMailNeo@web190604.mail.sg3.yahoo.com>
-Reply-To: Kks Kbase <kks.kbase@yahoo.in>
+From: Benjamin ESTRABAUD <be@mpstor.com>
+Subject: Re: mdadm: use static major/minor numbers.
+Date: Wed, 21 Nov 2012 12:26:00 +0000
+Message-ID: <50ACC858.6030105@mpstor.com>
+References: <50AB7964.60002@mpstor.com> <20121121081622.162d6f08@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20121121081622.162d6f08@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On 20/11/12 21:16, NeilBrown wrote:
+> On Tue, 20 Nov 2012 12:36:52 +0000 Benjamin ESTRABAUD <be@mpstor.com> wrote:
+>
+>> Hi!
+>>
+>> I recently updated mdadm-2.6.9 to mdadm-3.2.6 on a system (own busybox
+>> based distro) that had its kernel version updated from 2.6.35 to 3.4.
+>>
+>> Everything works well apart from a feature I used that I seem to be
+>> unable to reactivate:
+>>
+>> In the past, to ensure knowing the number of possible RAID devices that
+>> could be created on the system, I used static major:minor mappings by
+>> building the /dev/md/dXX and /dev/md/dXXpXX entries (with major 254, and
+>> three minors for each device for 3 partitions), allowing me to be
+>> certain that 64 RAID devices could be created at all times.
+>>
+>> When creating an array, the /dev/md/dXX and dXXpXX devices "nodes" would
+>> be used (not recreated) and the major/minor number these devices point
+>> to would be used for the actual MD block device.
+>>
+>> This was a very handy feature. With the latest mdadm, I simply cannot do
+>> that, as creating a /dev/md/dXX will in fact remove that device file and
+>> symlink it to /dev/md_dXX. I then created /dev/md_dXX devices prior to
+>> creating an array, and got the following error message: "mdadm:
+>> /dev/md_d3 exists but looks wrong, please fix".
+>>
+>> Looking through the source I can see that mdadm basically verifies if
+>> the file's major/minor matches the one that it had planned for the
+>> device, which in this case doesn't.
+>>
+>> Is there any way to work around that? Or in fact, I don't actually
+>> *need* to use static major/minor numbers, but I need to know in advance
+>> how many RAIDs I'll be able to create provided I'll always use 2
+>> partitions for them and can provide the -amdp2 argument to mdadm to make
+>> sure that only 2 partitions devices nodes are created.
+>>
+>> Is there a way to know the maximum number of RAIDs that can be created,
+>> provided that nothing else uses major 9 and 254?
+>>
+>> Thank you very much in advance for your help!
+> I don't really understand what your problem is.
+>
+> mdadm should create any devices it needs - unless it detects udev, in which
+> case it leaves the device creation to udev.
+>
+> So simply don't create any md devices in /dev and let mdadm do whatever is
+> required.
+> Does that approach not suit your needs?  If not, why not?
+>
+> NeilBrown
+Hi Neil,
 
-I have servers with Adaptec Hardware raid cards.=20
-When I checking the HDD health on smartctl getting proper output from=20
-one of the server but it doesn't perform well on another server. Also=20
-both the servers are same raid card model=A0=A0Adaptec 5805.
+mdadm creates the devices it needs quite well (there is no udev on this 
+system), but how can I tell how many maximum RAID devices mdadm will be 
+able to create before running out of major/minors, since their 
+allocation is done on the fly?
 
-Here is the result that I got expected:
+Will mdadm use all of "md" registered major (9) minor numbers (9:0-254)? 
+Will it also use the "mdp" registered ones (254) when running out?
 
-# smartctl -d sat --all /dev/sg4
-smartctl version 5.38 [x86_64-redhat-linux-gnu] Copyright (C) 2002-8 Br=
-uce Allen
-Home page is http://smartmontools.sourceforge.net/
+I need to know how many MD devices I'll be able to create in advance on 
+that system. Creating the devices beforehand helped with that, since I 
+had md_d0 254:0 up to md_d127 254:252, I knew that I could create a 
+maximum of 128 devices.
 
-=3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-Device Model: =A0 =A0 ST31000364AS
-Serial Number: =A0 =A09VPDBF40
-=46irmware Version: JD4B
-User Capacity: =A0 =A01,000,204,886,016 bytes
-Device is: =A0 =A0 =A0 =A0Not in smartctl database [for details use: -P=
- showall]
-ATA Version is: =A0 8
-ATA Standard is: =A0ATA-8-ACS revision 4
-Local Time is: =A0 =A0Sat Nov =A03 02:39:31 2012 GMT
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
+What's the maximum number of MD devices that can be created on a 
+udev-less system provided we specify 2 partitions in mdadm --create?
 
-=3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
-SMART overall-health self-assessment test result: PASSED
+Thank you very much in advance for your help.
 
-General SMART Values:
-Offline data collection status: =A0(0x82) Offline data collection activ=
-ity
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 was completed without error.
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 Auto Offline Data Collection: Enabled.
-Self-test execution status: =A0 =A0 =A0( =A0 0) The previous self-test =
-routine completed
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 without error or no self-test has ever
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 been run.
-Total time to complete Offline
-data collection: =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ( 617) seconds.
-Offline data collection
-capabilities: =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0(0x7b) SMART execu=
-te Offline immediate.
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 Auto Offline data collection on/off support.
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 Suspend Offline collection upon new
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 command.
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 Offline surface scan supported.
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 Self-test supported.
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 Conveyance Self-test supported.
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 Selective Self-test supported.
-SMART capabilities: =A0 =A0 =A0 =A0 =A0 =A0(0x0003) Saves SMART data be=
-fore entering
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 power-saving mode.
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 Supports SMART auto save timer.
-Error logging capability: =A0 =A0 =A0 =A0(0x01) Error logging supported=
-=2E
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 General Purpose Logging supported.
-Short self-test routine
-recommended polling time: =A0 =A0 =A0 =A0( =A0 1) minutes.
-Extended self-test routine
-recommended polling time: =A0 =A0 =A0 =A0( 181) minutes.
-Conveyance self-test routine
-recommended polling time: =A0 =A0 =A0 =A0( =A0 2) minutes.
-SCT capabilities: =A0 =A0 =A0 =A0 =A0 =A0 =A0(0x103f) SCT Status suppor=
-ted.
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 SCT Feature Control supported.
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 SCT Data Table supported.
-
-SMART Attributes Data Structure revision number: 10
-Vendor Specific SMART Attributes with Thresholds:
-ID# ATTRIBUTE_NAME =A0 =A0 =A0 =A0 =A0FLAG =A0 =A0 VALUE WORST THRESH T=
-YPE =A0 =A0 =A0UPDATED =A0WHEN_FAILED RAW_VALUE
-=A0 1 Raw_Read_Error_Rate =A0 =A0 0x000f =A0 119 =A0 099 =A0 006 =A0 =A0=
-Pre-fail =A0Always =A0 =A0 =A0 - =A0 =A0 =A0 212569658
-=A0 3 Spin_Up_Time =A0 =A0 =A0 =A0 =A0 =A00x0003 =A0 100 =A0 100 =A0 00=
-0 =A0 =A0Pre-fail =A0Always =A0 =A0 =A0 - =A0 =A0 =A0 0
-=A0 4 Start_Stop_Count =A0 =A0 =A0 =A00x0032 =A0 100 =A0 100 =A0 020 =A0=
- =A0Old_age =A0 Always =A0 =A0 =A0 - =A0 =A0 =A0 14
-=A0 5 Reallocated_Sector_Ct =A0 0x0033 =A0 100 =A0 100 =A0 036 =A0 =A0P=
-re-fail =A0Always =A0 =A0 =A0 - =A0 =A0 =A0 0
-=A0 7 Seek_Error_Rate =A0 =A0 =A0 =A0 0x000f =A0 085 =A0 060 =A0 030 =A0=
- =A0Pre-fail =A0Always =A0 =A0 =A0 - =A0 =A0 =A0 375127250
-=A0 9 Power_On_Hours =A0 =A0 =A0 =A0 =A00x0032 =A0 090 =A0 090 =A0 000 =
-=A0 =A0Old_age =A0 Always =A0 =A0 =A0 - =A0 =A0 =A0 8843
-=A010 Spin_Retry_Count =A0 =A0 =A0 =A00x0013 =A0 100 =A0 100 =A0 097 =A0=
- =A0Pre-fail =A0Always =A0 =A0 =A0 - =A0 =A0 =A0 0
-=A012 Power_Cycle_Count =A0 =A0 =A0 0x0032 =A0 100 =A0 100 =A0 020 =A0 =
-=A0Old_age =A0 Always =A0 =A0 =A0 - =A0 =A0 =A0 14
-183 Unknown_Attribute =A0 =A0 =A0 0x0032 =A0 100 =A0 100 =A0 000 =A0 =A0=
-Old_age =A0 Always =A0 =A0 =A0 - =A0 =A0 =A0 0
-184 Unknown_Attribute =A0 =A0 =A0 0x0032 =A0 100 =A0 100 =A0 099 =A0 =A0=
-Old_age =A0 Always =A0 =A0 =A0 - =A0 =A0 =A0 0
-187 Reported_Uncorrect =A0 =A0 =A00x0032 =A0 100 =A0 100 =A0 000 =A0 =A0=
-Old_age =A0 Always =A0 =A0 =A0 - =A0 =A0 =A0 0
-188 Unknown_Attribute =A0 =A0 =A0 0x0032 =A0 100 =A0 100 =A0 000 =A0 =A0=
-Old_age =A0 Always =A0 =A0 =A0 - =A0 =A0 =A0 0
-189 High_Fly_Writes =A0 =A0 =A0 =A0 0x003a =A0 100 =A0 100 =A0 000 =A0 =
-=A0Old_age =A0 Always =A0 =A0 =A0 - =A0 =A0 =A0 0
-190 Airflow_Temperature_Cel 0x0022 =A0 074 =A0 052 =A0 045 =A0 =A0Old_a=
-ge =A0 Always =A0 =A0 =A0 - =A0 =A0 =A0 26 (Lifetime Min/Max 24/28)
-194 Temperature_Celsius =A0 =A0 0x0022 =A0 026 =A0 048 =A0 000 =A0 =A0O=
-ld_age =A0 Always =A0 =A0 =A0 - =A0 =A0 =A0 26 (0 18 0 0)
-195 Hardware_ECC_Recovered =A00x001a =A0 036 =A0 020 =A0 000 =A0 =A0Old=
-_age =A0 Always =A0 =A0 =A0 - =A0 =A0 =A0 212569658
-197 Current_Pending_Sector =A00x0012 =A0 100 =A0 100 =A0 000 =A0 =A0Old=
-_age =A0 Always =A0 =A0 =A0 - =A0 =A0 =A0 0
-198 Offline_Uncorrectable =A0 0x0010 =A0 100 =A0 100 =A0 000 =A0 =A0Old=
-_age =A0 Offline =A0 =A0 =A0- =A0 =A0 =A0 0
-199 UDMA_CRC_Error_Count =A0 =A00x003e =A0 200 =A0 200 =A0 000 =A0 =A0O=
-ld_age =A0 Always =A0 =A0 =A0 - =A0 =A0 =A0 0
-240 Head_Flying_Hours =A0 =A0 =A0 0x0000 =A0 100 =A0 253 =A0 000 =A0 =A0=
-Old_age =A0 Offline =A0 =A0 =A0- =A0 =A0 =A0 44079249367717
-241 Unknown_Attribute =A0 =A0 =A0 0x0000 =A0 100 =A0 253 =A0 000 =A0 =A0=
-Old_age =A0 Offline =A0 =A0 =A0- =A0 =A0 =A0 4148400059
-242 Unknown_Attribute =A0 =A0 =A0 0x0000 =A0 100 =A0 253 =A0 000 =A0 =A0=
-Old_age =A0 Offline =A0 =A0 =A0- =A0 =A0 =A0 4242662455
-
-SMART Error Log Version: 1
-No Errors Logged
-
-SMART Self-test log structure revision number 1
-No self-tests have been logged. =A0[To run self-tests, use: smartctl -t=
-]
-
-
-SMART Selective self-test log data structure revision number 1
-=A0SPAN =A0MIN_LBA =A0MAX_LBA =A0CURRENT_TEST_STATUS
-=A0 =A0 1 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A00 =A0Not_testing
-=A0 =A0 2 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A00 =A0Not_testing
-=A0 =A0 3 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A00 =A0Not_testing
-=A0 =A0 4 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A00 =A0Not_testing
-=A0 =A0 5 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A00 =A0Not_testing
-Selective self-test flags (0x0):
-=A0 After scanning selected spans, do NOT read-scan remainder of disk.
-If Selective self-test is pending on power-up, resume after 0 minute de=
-lay.
-
-
-
-
-
-Here is the output from the server that doesn't perform well ,
-
-
-# smartctl -d sat --all /dev/sg4
-smartctl version 5.38 [x86_64-redhat-linux-gnu] Copyright (C) 2002-8 Br=
-uce Allen
-Home page is http://smartmontools.sourceforge.net/
-
-=3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-Device Model: =A0 =A0 ST31000556AS
-Serial Number: =A0 =A09VP4H6XY
-=46irmware Version: AB49
-User Capacity: =A0 =A01,000,204,886,016 bytes
-Device is: =A0 =A0 =A0 =A0Not in smartctl database [for details use: -P=
- showall]
-ATA Version is: =A0 8
-ATA Standard is: =A0ATA-8-ACS revision 4
-Local Time is: =A0 =A0Sat Nov =A03 02:40:49 2012 GMT
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
-
-SMART Disabled. Use option -s with argument 'on' to enable it.
-
-
-There is nothing display further with smartctl on this server.
-
-Anyone know what is the reason why the smartctl is not working on one s=
-erver with the same spec on another server?
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+Ben.
