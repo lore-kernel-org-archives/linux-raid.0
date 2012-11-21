@@ -1,46 +1,46 @@
-From: "George Spelvin" <linux@horizon.com>
+From: joystick <joystick@shiftmail.org>
 Subject: Re: want-replacement got stuck?
-Date: 21 Nov 2012 13:08:01 -0500
-Message-ID: <20121121180801.5601.qmail@science.horizon.com>
-References: <20121121224120.65129930@natsu>
+Date: Wed, 21 Nov 2012 20:21:24 +0100
+Message-ID: <50AD29B4.9050004@shiftmail.org>
+References: <20121121163300.30697.qmail@science.horizon.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121121224120.65129930@natsu>
+In-Reply-To: <20121121163300.30697.qmail@science.horizon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux@horizon.com, rm@romanrm.ru
-Cc: linux-raid@vger.kernel.org
+To: George Spelvin <linux@horizon.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> This is a message that your system even got a checksum error when verifying an
-> UDP packet received from the network -- something completely unrelated to
-> Ext4, MD or disks in general.
-> 
-> I'd say you just have bad RAM/motherboard/CPU or some related general hardware
-> failure.
+On 11/21/12 17:33, George Spelvin wrote:
+> Just to follow up to that earlier complaint, ext4 is now noticing some errors:
+>
 
-Please think a second and realize how ridiculous a suggestion that is.
+The following procedure MIGHT provide additional information (but might 
+also change the state of the array so I'm not 100% sure I'm suggesting 
+the best thing to do)
 
-The reason that network packet checksums exist is because networks
-sometimes corrupt packets.  It is not surprising to see one every
-few hours.
+cat /sys/block/md5/md/mismatch_cnt
+---> record it somewhere because it will be cleared
 
-The system is running on ECC memory, with few errors logged (but not zero;
-scrubbing logs work!) and has been very stable for years, including
-lengthy mprime (prime95) runs.
+echo check > /sys/block/md5/md/sync_action
+(wait for resync to finish)
+(note that this should not alter the data on the disks, it's a read-only 
+procedure)
 
-How about the more likely alternative that the packet was actually
-corrupted in the network?  Or even sent with a bad checksum as part
-of some sort of vulnerability scan?
+cat /sys/block/md5/md/mismatch_cnt
+---> record it again now
 
-Look at the packet:
-UDP: bad checksum. From 187.194.52.187:65535 to 71.41.210.146:6881 ulen 70
+this is relevant because if the hot replace procedure wrote wrong data 
+on one disk, it should be possible to determine that from parity as 
+described.
 
-Source: port 65535 is not a typical OS-chosen port number.
-The source host appears to be an ISP in Mexico.
-The destination port is a common bittorrent port, which is not in use.
+Another thing you can try, less invasive, is:
 
-This is some bot-net port-scanning.
+for i in /dev/sd[abcde]2 ; do echo $i ; mdadm -X /dev/sdY ; done
 
-The packet isn't in RAM for more than a few microseconds before the
-checksum is verified and rejected.  Any error in my machine would have
-to be in the network card (in which case it wouldn't affect the disk),
-or the RAM error rate would have to be so high it would insta-crash.
+this should tell you various things including which flags are on the 
+metadata of each disk, and which disks believe to be in the array and 
+which ones believe to be out.
+
+
