@@ -1,66 +1,46 @@
-From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Subject: Re: mdadm --fail doesn't mark device as failed?
-Date: Wed, 21 Nov 2012 18:47:15 +0100
-Message-ID: <50AD13A3.5040709@profitbricks.com>
-References: <1353514677.5795.14.camel@corn.betterworld.us>  <50AD0726.9090509@profitbricks.com>  <1353517421.5795.58.camel@corn.betterworld.us>  <50AD0B01.7020300@profitbricks.com> <1353518608.5795.76.camel@corn.betterworld.us>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: "George Spelvin" <linux@horizon.com>
+Subject: Re: want-replacement got stuck?
+Date: 21 Nov 2012 13:08:01 -0500
+Message-ID: <20121121180801.5601.qmail@science.horizon.com>
+References: <20121121224120.65129930@natsu>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1353518608.5795.76.camel@corn.betterworld.us>
+In-Reply-To: <20121121224120.65129930@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ross Boylan <ross@biostat.ucsf.edu>
+To: linux@horizon.com, rm@romanrm.ru
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 21.11.2012 18:23, Ross Boylan wrote:
-> On Wed, 2012-11-21 at 18:10 +0100, Sebastian Riemer wrote:
->> On 21.11.2012 18:03, Ross Boylan wrote:
->>> On Wed, 2012-11-21 at 17:53 +0100, Sebastian Riemer wrote:
->>>> On 21.11.2012 17:17, Ross Boylan wrote:
->>>>> After I failed and removed a partition, mdadm --examine seems to show
->>>>> that partition is fine.
->>>>>
->>>>> Perhaps related to this, I failed a partition and when I rebooted it
->>>>> came up as the sole member of its RAID array.
->>>>>
->>>>> Is this behavior expected?  Is there a way to make the failures more
->>>>> convincing?
->>>> Yes, it is expected behavior. Without "mdadm --fail" you can't remove a
->>>> device from the array. If you stop the array with the failed device,
->>>> then the state is stored in the superblock.
->>> I'm confused.  I did run mdadm --fail.  Are you saying that, in addition
->>> to doing that, I also need to manipulate sysfs as you describe below?
->>> Or were you assuming I didn't mdadm --fail?
->> You only need to set the value in the "errors" sysfs file additionally
->> to ensure that this device isn't used for assembly anymore.
->>
->> The kernel reports in "dmesg" then:
->> md: kicking non-fresh sdb1 from array!
->>
-> OK.  So if I understand correctly, mdadm -fail has no effect that
-> persists past a reboot, and doesn't write to disk anything that would
-> prevent the use of the failed RAID component.(*)  But if I write to
-> sysfs, the failure wil persist across reboots.
->
-> This behavior is quite surprising to me.  Is there some reason for this
-> design?
+> This is a message that your system even got a checksum error when verifying an
+> UDP packet received from the network -- something completely unrelated to
+> Ext4, MD or disks in general.
+> 
+> I'd say you just have bad RAM/motherboard/CPU or some related general hardware
+> failure.
 
-Yes, sometimes hardware has only a short issue and operates as expected
-afterwards. Therefore, there is an error threshold. It could be very
-annoying to zero the superblock and to resync everything only because
-there was a short controller issue or something similar. Without this
-you also couldn't remove and re-add devices for testing.
+Please think a second and realize how ridiculous a suggestion that is.
 
-> (*) Also the different update or last use times either aren't recorded
-> or don't affect the RAID assembly decision.  For example, in my case md1
-> included sda3 and sdc3.  I failed sdc3, so that only sda3 had the most
-> current data.  But when the system rebooted, md1 was assembled from sdc3
-> only.
+The reason that network packet checksums exist is because networks
+sometimes corrupt packets.  It is not surprising to see one every
+few hours.
 
-This is not the expected behavior. The superblock (at least metadata
-1.2) has an update timestamp "utime". If something changes the
-superblock on the remaining device only, it is clear that this device
-has the most current data.
-I'm not sure if this really works for your kernel and mdadm. Ask Neil
-Brown for further details.
+The system is running on ECC memory, with few errors logged (but not zero;
+scrubbing logs work!) and has been very stable for years, including
+lengthy mprime (prime95) runs.
+
+How about the more likely alternative that the packet was actually
+corrupted in the network?  Or even sent with a bad checksum as part
+of some sort of vulnerability scan?
+
+Look at the packet:
+UDP: bad checksum. From 187.194.52.187:65535 to 71.41.210.146:6881 ulen 70
+
+Source: port 65535 is not a typical OS-chosen port number.
+The source host appears to be an ISP in Mexico.
+The destination port is a common bittorrent port, which is not in use.
+
+This is some bot-net port-scanning.
+
+The packet isn't in RAM for more than a few microseconds before the
+checksum is verified and rejected.  Any error in my machine would have
+to be in the network card (in which case it wouldn't affect the disk),
+or the RAM error rate would have to be so high it would insta-crash.
