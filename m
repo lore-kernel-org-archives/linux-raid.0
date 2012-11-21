@@ -1,58 +1,52 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: want-replacement got stuck?
-Date: Wed, 21 Nov 2012 22:41:20 +0600
-Message-ID: <20121121224120.65129930@natsu>
-References: <20121120221145.9905.qmail@science.horizon.com>
-	<20121121163300.30697.qmail@science.horizon.com>
+From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Subject: Re: mdadm --fail doesn't mark device as failed?
+Date: Wed, 21 Nov 2012 17:53:58 +0100
+Message-ID: <50AD0726.9090509@profitbricks.com>
+References: <1353514677.5795.14.camel@corn.betterworld.us>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/w53ZKQqRePN_wZihX5nFc6H"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121121163300.30697.qmail@science.horizon.com>
+In-Reply-To: <1353514677.5795.14.camel@corn.betterworld.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: George Spelvin <linux@horizon.com>
+To: Ross Boylan <ross@biostat.ucsf.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/w53ZKQqRePN_wZihX5nFc6H
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 21.11.2012 17:17, Ross Boylan wrote:
+> After I failed and removed a partition, mdadm --examine seems to show
+> that partition is fine.
+>
+> Perhaps related to this, I failed a partition and when I rebooted it
+> came up as the sole member of its RAID array.
+>
+> Is this behavior expected?  Is there a way to make the failures more
+> convincing?
 
-On 21 Nov 2012 11:33:00 -0500
-"George Spelvin" <linux@horizon.com> wrote:
+Yes, it is expected behavior. Without "mdadm --fail" you can't remove a
+device from the array. If you stop the array with the failed device,
+then the state is stored in the superblock.
 
-> Nov 21 16:21:00 science kernel: UDP: bad checksum. From 187.194.52.187:65=
-535 to 71.41.210.146:6881 ulen 70
+There is a difference in the way mdadm does it and the sysfs method.
+mdadm sends an ioctl to the kernel. With the sysfs command the faulty
+state is stored immediately in the superblock.
 
-This is a message that your system even got a checksum error when verifying=
- an
-UDP packet received from the network -- something completely unrelated to
-Ext4, MD or disks in general.
+# echo faulty > /sys/block/md0/md/dev-sdb1/state
 
-I'd say you just have bad RAM/motherboard/CPU or some related general hardw=
-are
-failure.
+If you reassemble that you'll get the message:
+mdadm: device 0 in /dev/md0 has wrong state in superblock, but /dev/sdb1
+seems ok
 
---=20
-With respect,
-Roman
+There is a limit of how many errors are allowed on the device (usually 20).
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-"Stallman had a printer,
-with code he could not see.
-So he began to tinker,
-and set the software free."
+If you do the following additionally, your device won't be used for
+assembly anymore.
+# echo 20 > /sys/block/md0/md/dev-sdb1/errors
 
---Sig_/w53ZKQqRePN_wZihX5nFc6H
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+I guess this is related to: /sys/block/md0/md/max_read_errors.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+> The drive sdb in the following excerpt does appear to be experiencing
+> hardware problems.  However, the failed partition that became the md on
+> reboot was on a drive without any reported problems.
+>
 
-iEYEARECAAYFAlCtBDAACgkQTLKSvz+PZwi4mACfRiqqNJV8GJaStNeNFVZU81Jm
-bK4AoJHiQjk/hur4uNopa2zhgKrKJ4y9
-=7AsL
------END PGP SIGNATURE-----
-
---Sig_/w53ZKQqRePN_wZihX5nFc6H--
