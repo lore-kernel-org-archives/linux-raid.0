@@ -1,196 +1,125 @@
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: [PATCH 1/2] wait: add wait_event_lock_irq() interface
-Date: Wed, 21 Nov 2012 16:19:06 +0100 (CET)
-Message-ID: <alpine.LFD.2.00.1211211526320.28163@dhcp-1-104.brq.redhat.com>
-References: <1353403385-735-1-git-send-email-lczerner@redhat.com> <20121120121414.a402ca43.akpm@linux-foundation.org>
+From: Ross Boylan <ross@biostat.ucsf.edu>
+Subject: mdadm --fail doesn't mark device as failed?
+Date: Wed, 21 Nov 2012 08:17:57 -0800
+Message-ID: <1353514677.5795.14.camel@corn.betterworld.us>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20121120121414.a402ca43.akpm@linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Lukas Czerner <lczerner@redhat.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, axboe@kernel.dk, jmoyer@redhat.com, Neil Brown <neilb@suse.de>, David Howells <dhowells@redhat.com>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <a.p.zijlstra@chello.nl>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: ross@biostat.ucsf.edu
 List-Id: linux-raid.ids
 
-On Tue, 20 Nov 2012, Andrew Morton wrote:
+After I failed and removed a partition, mdadm --examine seems to show
+that partition is fine.
 
-> Date: Tue, 20 Nov 2012 12:14:14 -0800
-> From: Andrew Morton <akpm@linux-foundation.org>
-> To: Lukas Czerner <lczerner@redhat.com>
-> Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, axboe@kernel.dk,
->     jmoyer@redhat.com, Neil Brown <neilb@suse.de>,
->     David Howells <dhowells@redhat.com>, Ingo Molnar <mingo@elte.hu>,
->     Peter Zijlstra <a.p.zijlstra@chello.nl>
-> Subject: Re: [PATCH 1/2] wait: add wait_event_lock_irq() interface
-> 
-> On Tue, 20 Nov 2012 10:23:04 +0100
-> Lukas Czerner <lczerner@redhat.com> wrote:
-> 
-> > New wait_event_lock_irq{,cmd} macros added. This commit moves the
-> > private wait_event_lock_irq() macro from MD to regular wait includes,
-> > introduces new macro wait_event_lock_irq_cmd() instead of using the old
-> > method with omitting cmd parameter which is ugly and makes a use of new
-> > macros in the MD.
-> > 
-> > The use of new interface is when one have a special lock to protect data
-> > structures used in the condition, or one also needs to invoke "cmd"
-> > before putting it to sleep.
-> > 
-> > Both new macros are expected to be called with the lock taken. The lock
-> > is released before sleep and reacquired afterwards. We will leave the
-> > macro with the lock held.
-> 
-> Moving generic code out of md is a good thing.  It never should have
-> been put there.  Bad md.
-> 
-> > ...
-> >
-> > +#define __wait_event_lock_irq(wq, condition, lock, cmd) 		\
-> > +do {									\
-> > +	wait_queue_t __wait;						\
-> > +	init_waitqueue_entry(&__wait, current);				\
-> > +									\
-> 
-> The above two lines should be swapped - the blank line goes between
-> end-of-locals and start-of-code.
+Perhaps related to this, I failed a partition and when I rebooted it
+came up as the sole member of its RAID array.
 
-Good point.
+Is this behavior expected?  Is there a way to make the failures more
+convincing?
 
-> 
-> > +	add_wait_queue(&wq, &__wait);					\
-> > +	for (;;) {							\
-> > +		set_current_state(TASK_UNINTERRUPTIBLE);		\
-> > +		if (condition)						\
-> > +			break;						\
-> > +		spin_unlock_irq(&lock);					\
-> > +		cmd;							\
-> > +		schedule();						\
-> > +		spin_lock_irq(&lock);					\
-> > +	}								\
-> > +	current->state = TASK_RUNNING;					\
-> > +	remove_wait_queue(&wq, &__wait);				\
-> > +} while (0)
-> 
-> I'm scratching my head a bit over which situations this will be used
-> in, particularly outside md.
-> 
-> Because calling schedule() immediately after calling `cmd' might be a
-> problem for some callers.  Or at least, suboptimal.  If that evaluation
-> of `cmd' results in `condition' becoming true then we don't *want* to
-> call schedule().  Yes, `cmd' would have put this thread into
-> TASK_RUNNING, but it was just a waste of cycles.
-> 
-> So I wonder if we should retest `condition' there.  Or, perhaps, test
-> the return value of `cmd'.
+The drive sdb in the following excerpt does appear to be experiencing
+hardware problems.  However, the failed partition that became the md on
+reboot was on a drive without any reported problems.
 
-Right, it might makes sense to swap the lines and let cmd to be run
-after the schedule(). That way, if 'cmd' would result in 'condition'
-becoming true, then we would catch it before going to schedule()
-again.
+<terminal>
+markov:/# date; mdadm --examine -v /dev/sdb1
+Wed Nov 21 07:56:32 PST 2012
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 313d5489:7869305b:c4290e12:319afc54
+  Creation Time : Mon Dec 15 06:49:51 2008
+     Raid Level : raid1
+  Used Dev Size : 96256 (94.02 MiB 98.57 MB)
+     Array Size : 96256 (94.02 MiB 98.57 MB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
 
-> 
-> Also, wait_event() uses prepare_to_wait().  It's a bit neater and more
-> efficient because the wakeup removes the waiter from the waitqueue.  I
-> wonder if we can use prepare_to_wait() here.
+    Update Time : Wed Nov 21 07:37:14 2012
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : e28ac7f6 - correct
+         Events : 1696
 
-I suspect that it was a tradeoff between using the neat
-prepare_to_wait() with waitqueue removal, but having to lock the
-wait_queue_head_t->lock or using simply set_current_state() since
-we already hold external 'lock'.
 
-Whoever wrote the code originally thought that it was better this
-way, however since the waitqueue lock should not actually be
-contended at all here, I think it is ok to use prepare_to_wait().
+      Number   Major   Minor   RaidDevice State
+this     1       8       17        1      active sync   /dev/sdb1
 
-> 
-> Also, we will surely end up needing TASK_INTERRUPTIBLE versions of
-> these macros, so you may as well design for that (or actually implement
-> them) in version 1.
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       17        1      active sync   /dev/sdb1
+markov:/# mdadm --fail /dev/md1 /dev/sdb3
+mdadm: set /dev/sdb3 faulty in /dev/md1
+markov:/# mdadm --fail /dev/md0 /dev/sdb1
+mdadm: set /dev/sdb1 faulty in /dev/md0
+markov:/# mdadm --remove /dev/md0 /dev/sdb1
+mdadm: hot removed /dev/sdb1
+markov:/# mdadm --remove /dev/md1 /dev/sdb3
+mdadm: hot removed /dev/sdb3
+markov:/# date; mdadm --examine -v /dev/sdb3
+Wed Nov 21 07:57:54 PST 2012
+/dev/sdb3:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : b77027df:d6aa474a:c4290e12:319afc54
+  Creation Time : Mon Dec 15 06:50:18 2008
+     Raid Level : raid1
+ Used Dev Size : 730523648 (696.68 GiB 748.06 GB)
+     Array Size : 730523648 (696.68 GiB 748.06 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 1
 
-Sure, I can add the TASK_INTERRUPTIBLE version as well. The reason I
-did not included that initially was that I did not want to introduce
-unused code. But if you're ok with it, I'll add it.
+    Update Time : Wed Nov 21 07:56:44 2012
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : f322bc10 - correct
+         Events : 5067056
 
-> 
-> > +/**
-> > + * wait_event_lock_irq_cmd - sleep until a condition gets true. The
-> > + * 			     condition is checked under the lock. This
-> > + * 			     is expected to be called with the lock
-> > + * 			     taken.
-> > + * @wq: the waitqueue to wait on
-> > + * @condition: a C expression for the event to wait for
-> > + * @lock: a locked lock, which will be released before cmd and schedule()
-> > + * 	  and reacquired afterwards.
-> 
-> @lock isn't just any old lock.  It must have type spinlock_t.  It's
-> worth mentioning this here.  This is a significant restriction of this
-> interface!
 
-Right, it's better to be explicit.
+      Number   Major   Minor   RaidDevice State
+this     1       8       19        1      active sync   /dev/sdb3
 
-> 
-> > + * @cmd: a command which is invoked outside the critical section before
-> > + *       sleep
-> > + *
-> > + * The process is put to sleep (TASK_UNINTERRUPTIBLE) until the
-> > + * @condition evaluates to true. The @condition is checked each time
-> > + * the waitqueue @wq is woken up.
-> > + *
-> > + * wake_up() has to be called after changing any variable that could
-> > + * change the result of the wait condition.
-> > + *
-> > + * This is supposed to be called with holding the lock. The lock is
-> 
-> s/with/while/
-> 
-> > + * dropped before invoking the cmd and going to sleep and reacquired
-> 
-> s/reacquired/ is reacquired/
+   0     0       8        3        0      active sync   /dev/sda3
+   1     1       8       19        1      active sync   /dev/sdb3
+markov:/# mdadm -Q /dev/md0
+/dev/md0: 94.00MiB raid1 2 devices, 0 spares. Use mdadm --detail for more detail.
+markov:/# date; mdadm --detail /dev/md0
+Wed Nov 21 07:58:56 PST 2012
+/dev/md0:
+        Version : 00.90
+  Creation Time : Mon Dec 15 06:49:51 2008
+     Raid Level : raid1
+     Array Size : 96256 (94.02 MiB 98.57 MB)
+  Used Dev Size : 96256 (94.02 MiB 98.57 MB)
+   Raid Devices : 2
+  Total Devices : 1
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-Thanks!
--Lukas
+    Update Time : Wed Nov 21 07:57:35 2012
+          State : clean, degraded
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 0
+  Spare Devices : 0
 
-> 
-> > + * afterwards.
-> > + */
-> > +#define wait_event_lock_irq_cmd(wq, condition, lock, cmd) 		\
-> > +do {									\
-> > +	if (condition)	 						\
-> > +		break;							\
-> > +	__wait_event_lock_irq(wq, condition, lock, cmd);		\
-> > +} while (0)
-> > +
-> > +/**
-> > + * wait_event_lock_irq - sleep until a condition gets true. The
-> > + * 			 condition is checked under the lock. This
-> > + * 			 is expected to be called with the lock
-> > + * 			 taken.
-> > + * @wq: the waitqueue to wait on
-> > + * @condition: a C expression for the event to wait for
-> > + * @lock: a locked lock, which will be released before schedule()
-> > + * 	  and reacquired afterwards.
-> > + *
-> > + * The process is put to sleep (TASK_UNINTERRUPTIBLE) until the
-> > + * @condition evaluates to true. The @condition is checked each time
-> > + * the waitqueue @wq is woken up.
-> > + *
-> > + * wake_up() has to be called after changing any variable that could
-> > + * change the result of the wait condition.
-> > + *
-> > + * This is supposed to be called with holding the lock. The lock is
-> > + * dropped before going to sleep and reacquired afterwards.
-> > + */
-> > +#define wait_event_lock_irq(wq, condition, lock) 			\
-> > +do {									\
-> > +	if (condition)	 						\
-> > +		break;							\
-> > +	__wait_event_lock_irq(wq, condition, lock, );			\
-> > +} while (0)
-> > +
-> >  /*
-> >   * These are the old interfaces to sleep waiting for an event.
-> >   * They are racy.  DO NOT use them, use the wait_event* interfaces above.
-> >
-> > ...
-> >
-> 
+           UUID : 313d5489:7869305b:c4290e12:319afc54
+         Events : 0.1700
+
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       0        0        1      removed
+markov:/# mdadm --grow /dev/md0 -n 1 --force
+</terminal>
+
+
