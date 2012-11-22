@@ -1,110 +1,113 @@
-From: Tommy Apel Hansen <tommyapeldk@gmail.com>
-Subject: RAID5 performace issue
-Date: Thu, 22 Nov 2012 21:53:54 +0100
-Message-ID: <1767331.K4nRMCSJWv@workstation-home>
-Reply-To: Tommy Apel Hansen <tommyapeldk@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH 2/2 v5] loop: Limit the number of requests in the bio list
+Date: Thu, 22 Nov 2012 09:18:35 +0100
+Message-ID: <1353572315-4508-2-git-send-email-lczerner@redhat.com>
+References: <1353572315-4508-1-git-send-email-lczerner@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1353572315-4508-1-git-send-email-lczerner@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, jmoyer@redhat.com, akpm@linux-foundation.org, Lukas Czerner <lczerner@redhat.com>
 List-Id: linux-raid.ids
 
-Hello list,
-I'm experiencing some issus with RAID5 and 5 or more disks, while doign 
-sequencial 4k writes to and array with 5 or more disks I'm only getting 
-~279IOPs where when using 4 disks yields ~2752IOPs, it's a 1/10 in IOPs but 
-with more disks so the result should actually be better the more disks there 
-is, see results and test below.
+Currently there is not limitation of number of requests in the loop bio
+list. This can lead into some nasty situations when the caller spawns
+tons of bio requests taking huge amount of memory. This is even more
+obvious with discard where blkdev_issue_discard() will submit all bios
+for the range and wait for them to finish afterwards. On really big loop
+devices and slow backing file system this can lead to OOM situation as
+reported by Dave Chinner.
 
-Regards
-/Tommy
+With this patch we will wait in loop_make_request() if the number of
+bios in the loop bio list would exceed 'nr_congestion_on'.
+We'll wake up the process as we process the bios form the list. Some
+threshold hysteresis is in place to avoid high frequency oscillation.
 
-RAID5 5 disks:
-echo 16384 > /sys/block/md0/md/stripe_cache_size
-mkfs.xfs -l su=32k -d su=512k,sw=4 -f /dev/md0
-mdadm -D /dev/md0:
-        Version : 1.2
-  Creation Time : Wed Nov 21 20:36:46 2012
-     Raid Level : raid5
-     Array Size : 7814051840 (7452.06 GiB 8001.59 GB)
-  Used Dev Size : 1953512960 (1863.02 GiB 2000.40 GB)
-   Raid Devices : 5
-  Total Devices : 5
-    Persistence : Superblock is persistent
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+Reported-by: Dave Chinner <dchinner@redhat.com>
+---
+v2: add threshold hysteresis
+v3: Wait uninterruptible, use nr_congestion_off/on
+v4: use wait_event_lock_irq()
+v5: no change
 
-    Update Time : Thu Nov 22 20:59:27 2012
-          State : clean 
- Active Devices : 5
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 0
+ drivers/block/loop.c |   10 ++++++++++
+ include/linux/loop.h |    3 +++
+ 2 files changed, 13 insertions(+), 0 deletions(-)
 
-         Layout : right-asymmetric
-     Chunk Size : 512K
-fio sequential write ioengine=sync, iodepth=1 :
--- 512b bw=2207.3KB/s, iops=4414
--- 1k      bw=3586.4KB/s, iops=3586
--- 2k      bw=5584.7KB/s, iops=2792
--- 4k      bw=1119.6KB/s, iops=279
--- 8k      bw=2107.4KB/s, iops=263
--- 16k    bw=4438.3KB/s, iops=277
--- 32k    bw=6826.7KB/s, iops=213
--- 64k    bw=9167.5KB/s, iops=143
--- 128k  bw=16580KB/s, iops=129
-
-fio sequential read ioengine=sync, iodepth=1:
--- 512b bw=14069KB/s, iops=28137
--- 1k      bw=20511KB/s, iops=20511
--- 2k      bw=25173KB/s, iops=12586
--- 4k      bw=30654KB/s, iops=7663
--- 8k      bw=47503KB/s, iops=5937
--- 16k    bw=59487KB/s, iops=3717
--- 32k    bw=72496KB/s, iops=2265
--- 64k    bw=80117KB/s, iops=1251
--- 128k  bw=88286KB/s, iops=689
-
-RAID5 4 disks:
-mkfs.xfs -l su=32k -d su=512k,sw=3 -f /dev/md0
-mdadm -D /dev/md0
-        Version : 1.2
-  Creation Time : Thu Nov 22 21:29:45 2012
-     Raid Level : raid5
-     Array Size : 5860538880 (5589.05 GiB 6001.19 GB)
-  Used Dev Size : 1953512960 (1863.02 GiB 2000.40 GB)
-   Raid Devices : 4
-  Total Devices : 4
-    Persistence : Superblock is persistent
-
-    Update Time : Thu Nov 22 21:35:28 2012
-          State : clean 
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : right-asymmetric
-     Chunk Size : 512K
-fio sequential write ioengine=sync, iodepth=1 :
--- 512b bw=2553.2KB/s, iops=5107
--- 1k      bw=5486.9KB/s, iops=5486
--- 2k      bw=10785KB/s, iops=5392
--- 4k      bw=11012KB/s, iops=2752
--- 8k      bw=15316KB/s, iops=1914
--- 16k    bw=15933KB/s, iops=995
--- 32k    bw=17368KB/s, iops=542
--- 64k    bw=20633KB/s, iops=322
--- 128k  bw=26263KB/s, iops=205
-
-fio sequential read ioengine=sync, iodepth=1:
--- 512b bw=14112KB/s, iops=28224
--- 1k      bw=20512KB/s, iops=20512
--- 2k      bw=25199KB/s, iops=12599
--- 4k      bw=30438KB/s, iops=7609
--- 8k      bw=48065KB/s, iops=6008
--- 16k    bw=68692KB/s, iops=4293
--- 32k    bw=82708KB/s, iops=2584
--- 64k    bw=96403KB/s, iops=1506
--- 128k bw=111824KB/s, iops=873
-
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index 54046e5..ae12512 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -463,6 +463,7 @@ out:
+  */
+ static void loop_add_bio(struct loop_device *lo, struct bio *bio)
+ {
++	lo->lo_bio_count++;
+ 	bio_list_add(&lo->lo_bio_list, bio);
+ }
+ 
+@@ -471,6 +472,7 @@ static void loop_add_bio(struct loop_device *lo, struct bio *bio)
+  */
+ static struct bio *loop_get_bio(struct loop_device *lo)
+ {
++	lo->lo_bio_count--;
+ 	return bio_list_pop(&lo->lo_bio_list);
+ }
+ 
+@@ -489,6 +491,10 @@ static void loop_make_request(struct request_queue *q, struct bio *old_bio)
+ 		goto out;
+ 	if (unlikely(rw == WRITE && (lo->lo_flags & LO_FLAGS_READ_ONLY)))
+ 		goto out;
++	if (lo->lo_bio_count >= q->nr_congestion_on)
++		wait_event_lock_irq(lo->lo_req_wait,
++				    lo->lo_bio_count < q->nr_congestion_off,
++				    lo->lo_lock);
+ 	loop_add_bio(lo, old_bio);
+ 	wake_up(&lo->lo_event);
+ 	spin_unlock_irq(&lo->lo_lock);
+@@ -546,6 +552,8 @@ static int loop_thread(void *data)
+ 			continue;
+ 		spin_lock_irq(&lo->lo_lock);
+ 		bio = loop_get_bio(lo);
++		if (lo->lo_bio_count < lo->lo_queue->nr_congestion_off)
++			wake_up(&lo->lo_req_wait);
+ 		spin_unlock_irq(&lo->lo_lock);
+ 
+ 		BUG_ON(!bio);
+@@ -873,6 +881,7 @@ static int loop_set_fd(struct loop_device *lo, fmode_t mode,
+ 	lo->transfer = transfer_none;
+ 	lo->ioctl = NULL;
+ 	lo->lo_sizelimit = 0;
++	lo->lo_bio_count = 0;
+ 	lo->old_gfp_mask = mapping_gfp_mask(mapping);
+ 	mapping_set_gfp_mask(mapping, lo->old_gfp_mask & ~(__GFP_IO|__GFP_FS));
+ 
+@@ -1673,6 +1682,7 @@ static int loop_add(struct loop_device **l, int i)
+ 	lo->lo_number		= i;
+ 	lo->lo_thread		= NULL;
+ 	init_waitqueue_head(&lo->lo_event);
++	init_waitqueue_head(&lo->lo_req_wait);
+ 	spin_lock_init(&lo->lo_lock);
+ 	disk->major		= LOOP_MAJOR;
+ 	disk->first_minor	= i << part_shift;
+diff --git a/include/linux/loop.h b/include/linux/loop.h
+index 6492181..460b60f 100644
+--- a/include/linux/loop.h
++++ b/include/linux/loop.h
+@@ -53,10 +53,13 @@ struct loop_device {
+ 
+ 	spinlock_t		lo_lock;
+ 	struct bio_list		lo_bio_list;
++	unsigned int		lo_bio_count;
+ 	int			lo_state;
+ 	struct mutex		lo_ctl_mutex;
+ 	struct task_struct	*lo_thread;
+ 	wait_queue_head_t	lo_event;
++	/* wait queue for incoming requests */
++	wait_queue_head_t	lo_req_wait;
+ 
+ 	struct request_queue	*lo_queue;
+ 	struct gendisk		*lo_disk;
+-- 
+1.7.7.6
