@@ -1,105 +1,110 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID5 NAS Recovery...00.90.01 vs 00.90
-Date: Thu, 22 Nov 2012 16:02:48 +1100
-Message-ID: <20121122160248.42189273@notabene.brown>
-References: <CAKcp_7ZrR+L5jZBK3cd-z780Cw76XpwMuWmwtUGt=ecwbx_LPg@mail.gmail.com>
-	<20121121083936.1a4d4b13@notabene.brown>
-	<CAKcp_7YdAgfoVM_j+jQNE61cLoEVd+y75zfyPNy1wv9w7+jfdQ@mail.gmail.com>
+From: Tommy Apel Hansen <tommyapeldk@gmail.com>
+Subject: RAID5 performace issue
+Date: Thu, 22 Nov 2012 21:53:54 +0100
+Message-ID: <1767331.K4nRMCSJWv@workstation-home>
+Reply-To: Tommy Apel Hansen <tommyapeldk@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Qcb9.+21rk8e3S+CZeYWc53"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKcp_7YdAgfoVM_j+jQNE61cLoEVd+y75zfyPNy1wv9w7+jfdQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stephen Haran <steveharan@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/Qcb9.+21rk8e3S+CZeYWc53
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hello list,
+I'm experiencing some issus with RAID5 and 5 or more disks, while doign 
+sequencial 4k writes to and array with 5 or more disks I'm only getting 
+~279IOPs where when using 4 disks yields ~2752IOPs, it's a 1/10 in IOPs but 
+with more disks so the result should actually be better the more disks there 
+is, see results and test below.
 
-On Wed, 21 Nov 2012 12:29:53 -0500 Stephen Haran <steveharan@gmail.com> wro=
-te:
+Regards
+/Tommy
 
-> Thank you Neil for your reply comments below...
->=20
-> On Tue, Nov 20, 2012 at 4:39 PM, NeilBrown <neilb@suse.de> wrote:
-> > On Tue, 20 Nov 2012 15:41:57 -0500 Stephen Haran <steveharan@gmail.com>=
- wrote:
-> >
-> >> Hi, I'm trying to recover a Western Digital Share Space NAS.
-> >> I'm able to assemble the RAID5 and restore the LVM but it can't see
-> >> any filesystem.
-> >>
-> >> Below is a raid.log file that shows how the raid was configured when
-> >> it was working.
-> >> And also the output of mdadm -D showing the raid in it's current state.
-> >> Note the Version difference 00.90.01 vs. 0.90. And the array size
-> >> difference 2925293760  vs. 2925894144
-> >> I'm thinking this difference may be the reason Linux can not see a fil=
-esystem.
-> >
-> > Probably not - losing a few blocks from the end might make 'fsck' compl=
-ain,
-> > but it should still be able to see the filesystem.
-> >
-> > How did you test if you could see a filesystem?  'mount' or 'fsck -n' ?
->=20
-> Yes I tried both mount and fsck. It can't find the superblock.
-> Testdisk finds ext3 partitions but can not see data.
-> But looking with hexedit the data appears to still be there.
->=20
-> > It looks like you re-created the array recently (Nov 18 12:07:53 2012) =
- Why
-> > did you do that?
->=20
-> The end user attempted a firmware upgrade on the NAS box and could not ac=
-cess
-> their data afterwards. Not sure if the firmware update or the end user
-> did the re-create.
+RAID5 5 disks:
+echo 16384 > /sys/block/md0/md/stripe_cache_size
+mkfs.xfs -l su=32k -d su=512k,sw=4 -f /dev/md0
+mdadm -D /dev/md0:
+        Version : 1.2
+  Creation Time : Wed Nov 21 20:36:46 2012
+     Raid Level : raid5
+     Array Size : 7814051840 (7452.06 GiB 8001.59 GB)
+  Used Dev Size : 1953512960 (1863.02 GiB 2000.40 GB)
+   Raid Devices : 5
+  Total Devices : 5
+    Persistence : Superblock is persistent
 
-It looks like the devices have been repartioned.  The /dev/sdX4 partitions
-are 200Meg smaller than they were before.  Quite possible the start of the
-partitions has moved as well as the end.
-So the array created in these partitions will be quite different to what it
-was before.
+    Update Time : Thu Nov 22 20:59:27 2012
+          State : clean 
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
 
-I don't suppose you have the old partition tables, like you have the old
-"mdadm --detail" output?
+         Layout : right-asymmetric
+     Chunk Size : 512K
+fio sequential write ioengine=sync, iodepth=1 :
+-- 512b bw=2207.3KB/s, iops=4414
+-- 1k      bw=3586.4KB/s, iops=3586
+-- 2k      bw=5584.7KB/s, iops=2792
+-- 4k      bw=1119.6KB/s, iops=279
+-- 8k      bw=2107.4KB/s, iops=263
+-- 16k    bw=4438.3KB/s, iops=277
+-- 32k    bw=6826.7KB/s, iops=213
+-- 64k    bw=9167.5KB/s, iops=143
+-- 128k  bw=16580KB/s, iops=129
 
-If not, you need to find where the ext3 superblock is, deduce from that whe=
-re
-the start of the device should be (I don't know if the superblock is at the
-start of the device, or in the second block) and then recreate the partition
-table.
-The X4 partitions need to be at least 128K larger than the "used device siz=
-e".
+fio sequential read ioengine=sync, iodepth=1:
+-- 512b bw=14069KB/s, iops=28137
+-- 1k      bw=20511KB/s, iops=20511
+-- 2k      bw=25173KB/s, iops=12586
+-- 4k      bw=30654KB/s, iops=7663
+-- 8k      bw=47503KB/s, iops=5937
+-- 16k    bw=59487KB/s, iops=3717
+-- 32k    bw=72496KB/s, iops=2265
+-- 64k    bw=80117KB/s, iops=1251
+-- 128k  bw=88286KB/s, iops=689
 
-Good luck.
+RAID5 4 disks:
+mkfs.xfs -l su=32k -d su=512k,sw=3 -f /dev/md0
+mdadm -D /dev/md0
+        Version : 1.2
+  Creation Time : Thu Nov 22 21:29:45 2012
+     Raid Level : raid5
+     Array Size : 5860538880 (5589.05 GiB 6001.19 GB)
+  Used Dev Size : 1953512960 (1863.02 GiB 2000.40 GB)
+   Raid Devices : 4
+  Total Devices : 4
+    Persistence : Superblock is persistent
 
-NeilBrown
+    Update Time : Thu Nov 22 21:35:28 2012
+          State : clean 
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
 
---Sig_/Qcb9.+21rk8e3S+CZeYWc53
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+         Layout : right-asymmetric
+     Chunk Size : 512K
+fio sequential write ioengine=sync, iodepth=1 :
+-- 512b bw=2553.2KB/s, iops=5107
+-- 1k      bw=5486.9KB/s, iops=5486
+-- 2k      bw=10785KB/s, iops=5392
+-- 4k      bw=11012KB/s, iops=2752
+-- 8k      bw=15316KB/s, iops=1914
+-- 16k    bw=15933KB/s, iops=995
+-- 32k    bw=17368KB/s, iops=542
+-- 64k    bw=20633KB/s, iops=322
+-- 128k  bw=26263KB/s, iops=205
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+fio sequential read ioengine=sync, iodepth=1:
+-- 512b bw=14112KB/s, iops=28224
+-- 1k      bw=20512KB/s, iops=20512
+-- 2k      bw=25199KB/s, iops=12599
+-- 4k      bw=30438KB/s, iops=7609
+-- 8k      bw=48065KB/s, iops=6008
+-- 16k    bw=68692KB/s, iops=4293
+-- 32k    bw=82708KB/s, iops=2584
+-- 64k    bw=96403KB/s, iops=1506
+-- 128k bw=111824KB/s, iops=873
 
-iQIVAwUBUK2x+Dnsnt1WYoG5AQIZwxAAstVSZ4zM1Myo4WVcatVr0NR4R7IdEIX4
-icukEifF1P9ybild34FBMKZU/McotaBs30UVujnbT+4XcLhxLkoJZMuxAVcdPwA8
-5FXn+B3tw2L2040LJYrlp+UBAUi87CDfmcljQ+4b9kmCaLpFiM7XaoD91M8xTRPA
-powuCsuV1bazrBEspmzCJf653AJdOJ21Geshoko2V5mznZjLEF4OmWMV9qPb0VwZ
-jASCjPu61/+VCVIBG3pZSy/k2aoz1lf9lAa9FMKoOwrHkkClEoxzHifWgteEfpfI
-YKcuvlfGkAoaFC/hdrVRzsS9QprioGU/iJGEEM4jLvecQjCdR29mJFe79K3zeuvb
-cp4ym0gorPckreegGkIe/HeGRktpGsi3QDKVmPy2WS9Rms+SPGq++CtaVFOFGZha
-pqR0hFPDB5mILBejfmwW8krjaAkcwZzcfiBudJgtP9sXzs+GzwJM69zzeQH5ZDGS
-q4t+qiqeUdB0ObDpX/qWRAxfpoOkTjYVnLsjkx3MNGAlKDXA6yocv7DfRKDpfyVA
-pomtD1c5AVVKXc1owQ8JUt/W852k64p3f18pnkUtMqmD79lA8YY9n6AxkPuAIiFZ
-rh4tHaiQ0u3obVQQQn+MOireATIon/SO1bo4hN9b7E4+tvcdF1VlDS4eSfzSoK5n
-Cdgmw0mGthQ=
-=+3ik
------END PGP SIGNATURE-----
-
---Sig_/Qcb9.+21rk8e3S+CZeYWc53--
