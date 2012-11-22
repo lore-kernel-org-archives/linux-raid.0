@@ -1,63 +1,330 @@
 From: "George Spelvin" <linux@horizon.com>
 Subject: Re: want-replacement got stuck?
-Date: 21 Nov 2012 22:25:04 -0500
-Message-ID: <20121122032504.12679.qmail@science.horizon.com>
-References: <20121121211910.22223.qmail@science.horizon.com>
+Date: 22 Nov 2012 00:39:03 -0500
+Message-ID: <20121122053903.28496.qmail@science.horizon.com>
+References: <20121122052757.26082.qmail@science.horizon.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121121211910.22223.qmail@science.horizon.com>
+In-Reply-To: <20121122052757.26082.qmail@science.horizon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: joystick@shiftmail.org, linux-raid@vger.kernel.org, linux@horizon.com
+To: linux@horizon.com, neilb@suse.de
+Cc: joystick@shiftmail.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Some more information...
+Oops!  My manual patch application forgot a few lines.  (I left the
+"if (!r10_bio->devs[i].repl_bio) continue;" code in place while adding
+its replacement.)
 
-From the "stuck" state, I rebooted the machine.  It came up with 
+Here's a corrected patch.  (Again, -b, then the real thing.)
 
-md5 : active raid10 sde2[2] sdd2[3] sda2[0] sdb2[1]
-      725591552 blocks 256K chunks 2 near-copies [4/4] [UUUU]
-      bitmap: 172/173 pages [688KB], 2048KB chunk
+commit 0fbb6ffcf9485ac94c57759849ba415352c131da
+Author: NeilBrown <neilb@suse.de>
+Date:   Thu Nov 22 14:42:49 2012 +1100
 
-and e2fsck found severe problems, like multiply-referenced blocks.
+    md/raid10: close race that lose writes lost when replacement completes.
+    
+    When a replacement operation completes there is a small window
+    when the original device is marked 'faulty' and the replacement
+    still looks like a replacement.  The faulty should be removed and
+    the replacement moved in place very quickly, bit it isn't instant.
+    
+    So the code write out to the array must handle the possibility that
+    the only working device for some slot in the replacement - but it
+    doesn't.  If the primary device is faulty it just gives up.  This
+    can lead to corruption.
+    
+    So make the code more robust: if either  the primary or the
+    replacement is present and working, write to them.  Only when
+    neither are present do we give up.
+    
+    This bug has been present since replacement was introduced in
+    3.3, so it is suitable for any -stable kernel since then.
+    
+    Reported-by: "George Spelvin" <linux@horizon.com>
+    Cc: stable@vger.kernel.org
+    Signed-off-by: NeilBrown <neilb@suse.de>
 
-I compared sdd2 and sde2 with cmp, and it found tons of
-differences.  So I knew what the problem was.  All I havd to do
-was pick the right one to fail.
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index a48c215..06a359b 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1287,18 +1287,21 @@ retry_write:
+ 			blocked_rdev = rrdev;
+ 			break;
+ 		}
++		if (rdev && (test_bit(Faulty, &rdev->flags)
++			     || test_bit(Unmerged, &rdev->flags)))
++			rdev = NULL;
+ 		if (rrdev && (test_bit(Faulty, &rrdev->flags)
+ 			      || test_bit(Unmerged, &rrdev->flags)))
+ 			rrdev = NULL;
+ 
+ 		r10_bio->devs[i].bio = NULL;
+ 		r10_bio->devs[i].repl_bio = NULL;
+-		if (!rdev || test_bit(Faulty, &rdev->flags) ||
+-		    test_bit(Unmerged, &rdev->flags)) {
++
++		if (!rdev && !rrdev) {
+ 			set_bit(R10BIO_Degraded, &r10_bio->state);
+ 			continue;
+ 		}
+-		if (test_bit(WriteErrorSeen, &rdev->flags)) {
++		if (rdev && test_bit(WriteErrorSeen, &rdev->flags)) {
+ 			sector_t first_bad;
+ 			sector_t dev_sector = r10_bio->devs[i].addr;
+ 			int bad_sectors;
+@@ -1340,8 +1343,10 @@ retry_write:
+ 					max_sectors = good_sectors;
+ 			}
+ 		}
++		if (rdev) {
+ 			r10_bio->devs[i].bio = bio;
+ 			atomic_inc(&rdev->nr_pending);
++		}
+ 		if (rrdev) {
+ 			r10_bio->devs[i].repl_bio = bio;
+ 			atomic_inc(&rrdev->nr_pending);
+@@ -1397,18 +1402,17 @@ retry_write:
+ 	for (i = 0; i < conf->copies; i++) {
+ 		struct bio *mbio;
+ 		int d = r10_bio->devs[i].devnum;
+-		if (!r10_bio->devs[i].bio)
+-			continue;
+ 
++		if (r10_bio->devs[i].bio) {
++			struct md_rdev *rdev = conf->mirrors[d].rdev;
+ 			mbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
+ 			md_trim_bio(mbio, r10_bio->sector - bio->bi_sector,
+ 				    max_sectors);
+ 			r10_bio->devs[i].bio = mbio;
+ 
+-		mbio->bi_sector	= (r10_bio->devs[i].addr+
+-				   choose_data_offset(r10_bio,
+-						      conf->mirrors[d].rdev));
+-		mbio->bi_bdev = conf->mirrors[d].rdev->bdev;
++			mbio->bi_sector	= (r10_bio->devs[i].addr +
++					   choose_data_offset(r10_bio, rdev));
++			mbio->bi_bdev = rdev->bdev;
+ 			mbio->bi_end_io	= raid10_end_write_request;
+ 			mbio->bi_rw = WRITE | do_sync | do_fua;
+ 			mbio->bi_private = r10_bio;
+@@ -1420,24 +1424,23 @@ retry_write:
+ 			spin_unlock_irqrestore(&conf->device_lock, flags);
+ 			if (!mddev_check_plugged(mddev))
+ 				md_wakeup_thread(mddev->thread);
++		}
+ 
+-		if (!r10_bio->devs[i].repl_bio)
+-			continue;
+-
++		if (r10_bio->devs[i].repl_bio) {
++			struct md_rdev *rdev = conf->mirrors[d].replacement;
++			if (rdev == NULL) {
++				/* Replacement just got moved to main 'rdev' */
++				smp_mb();
++				rdev = conf->mirrors[d].rdev;
++			}
+ 			mbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
+ 			md_trim_bio(mbio, r10_bio->sector - bio->bi_sector,
+ 				    max_sectors);
+ 			r10_bio->devs[i].repl_bio = mbio;
+ 
+-		/* We are actively writing to the original device
+-		 * so it cannot disappear, so the replacement cannot
+-		 * become NULL here
+-		 */
+ 			mbio->bi_sector	= (r10_bio->devs[i].addr +
+-				   choose_data_offset(
+-					   r10_bio,
+-					   conf->mirrors[d].replacement));
+-		mbio->bi_bdev = conf->mirrors[d].replacement->bdev;
++					   choose_data_offset(r10_bio, rdev));
++			mbio->bi_bdev = rdev->bdev;
+ 			mbio->bi_end_io	= raid10_end_write_request;
+ 			mbio->bi_rw = WRITE | do_sync | do_fua;
+ 			mbio->bi_private = r10_bio;
+@@ -1450,6 +1453,7 @@ retry_write:
+ 			if (!mddev_check_plugged(mddev))
+ 				md_wakeup_thread(mddev->thread);
+ 		}
++	}
+ 
+ 	/* Don't remove the bias on 'remaining' (one_write_done) until
+ 	 * after checking if we need to go around again.
 
-Fortunately, I had the last RAID config on the screen of the
-machine I had sshed in from, and decided I truested sdd2 less,
-so failed it.
-
-After flushing the device cache (hdparm -f /dev/md5), the errors
-went away!  I was left with only what the original e2fsck -p had done
-before halting.  (Namely. some updates to i_blocks).
-
-Now I've zeroed sdd2's uperblock and added it back, and things seem
-to be working okay.
 
 
-NeilBrown <neilb@suse.de> wrote:
-> Yes.... this is a real worry.  Fortunately I know what is causing it.
+commit 0fbb6ffcf9485ac94c57759849ba415352c131da
+Author: NeilBrown <neilb@suse.de>
+Date:   Thu Nov 22 14:42:49 2012 +1100
 
-Yay!  Tell me when you have a patch to test.
+    md/raid10: close race that lose writes lost when replacement completes.
+    
+    When a replacement operation completes there is a small window
+    when the original device is marked 'faulty' and the replacement
+    still looks like a replacement.  The faulty should be removed and
+    the replacement moved in place very quickly, bit it isn't instant.
+    
+    So the code write out to the array must handle the possibility that
+    the only working device for some slot in the replacement - but it
+    doesn't.  If the primary device is faulty it just gives up.  This
+    can lead to corruption.
+    
+    So make the code more robust: if either  the primary or the
+    replacement is present and working, write to them.  Only when
+    neither are present do we give up.
+    
+    This bug has been present since replacement was introduced in
+    3.3, so it is suitable for any -stable kernel since then.
+    
+    Reported-by: "George Spelvin" <linux@horizon.com>
+    Cc: stable@vger.kernel.org
+    Signed-off-by: NeilBrown <neilb@suse.de>
 
-> Meanwhile you have a corrupted filesystem.  Sorry.
-> The nature of the corruption is that since the replacement finished
-> no writes have gone to slot-3 at all.  So if md ever devices to read
-> from slot 3 it will get stale data.
-
-That's sort of what the pattern of errors looked like.
-
-> I suggest you fail the sdd2, reboot, make sure one sda2, sb2, sde2 are
-> in the array, run fsck, and then if it seems happy enough, add sdc2
-> and/or sdd2 back in so they rebuild completely.
-
-I did this in a sort of bass-ackward way, but I accomplished it in
-the end.  And no data loss.  Yippee!
-
-> Thanks for helping to make md better by risking your data :-)
-I'm just glad I suffered less damage than my recent ext4 resizing
-experiments, which were.... not completely successful.
-
-
-Anyway, thanks for the help, and all the hard work.
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index a48c215..06a359b 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1287,18 +1287,21 @@ retry_write:
+ 			blocked_rdev = rrdev;
+ 			break;
+ 		}
++		if (rdev && (test_bit(Faulty, &rdev->flags)
++			     || test_bit(Unmerged, &rdev->flags)))
++			rdev = NULL;
+ 		if (rrdev && (test_bit(Faulty, &rrdev->flags)
+ 			      || test_bit(Unmerged, &rrdev->flags)))
+ 			rrdev = NULL;
+ 
+ 		r10_bio->devs[i].bio = NULL;
+ 		r10_bio->devs[i].repl_bio = NULL;
+-		if (!rdev || test_bit(Faulty, &rdev->flags) ||
+-		    test_bit(Unmerged, &rdev->flags)) {
++
++		if (!rdev && !rrdev) {
+ 			set_bit(R10BIO_Degraded, &r10_bio->state);
+ 			continue;
+ 		}
+-		if (test_bit(WriteErrorSeen, &rdev->flags)) {
++		if (rdev && test_bit(WriteErrorSeen, &rdev->flags)) {
+ 			sector_t first_bad;
+ 			sector_t dev_sector = r10_bio->devs[i].addr;
+ 			int bad_sectors;
+@@ -1340,8 +1343,10 @@ retry_write:
+ 					max_sectors = good_sectors;
+ 			}
+ 		}
+-		r10_bio->devs[i].bio = bio;
+-		atomic_inc(&rdev->nr_pending);
++		if (rdev) {
++			r10_bio->devs[i].bio = bio;
++			atomic_inc(&rdev->nr_pending);
++		}
+ 		if (rrdev) {
+ 			r10_bio->devs[i].repl_bio = bio;
+ 			atomic_inc(&rrdev->nr_pending);
+@@ -1397,58 +1402,57 @@ retry_write:
+ 	for (i = 0; i < conf->copies; i++) {
+ 		struct bio *mbio;
+ 		int d = r10_bio->devs[i].devnum;
+-		if (!r10_bio->devs[i].bio)
+-			continue;
+-
+-		mbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
+-		md_trim_bio(mbio, r10_bio->sector - bio->bi_sector,
+-			    max_sectors);
+-		r10_bio->devs[i].bio = mbio;
+ 
+-		mbio->bi_sector	= (r10_bio->devs[i].addr+
+-				   choose_data_offset(r10_bio,
+-						      conf->mirrors[d].rdev));
+-		mbio->bi_bdev = conf->mirrors[d].rdev->bdev;
+-		mbio->bi_end_io	= raid10_end_write_request;
+-		mbio->bi_rw = WRITE | do_sync | do_fua;
+-		mbio->bi_private = r10_bio;
+-
+-		atomic_inc(&r10_bio->remaining);
+-		spin_lock_irqsave(&conf->device_lock, flags);
+-		bio_list_add(&conf->pending_bio_list, mbio);
+-		conf->pending_count++;
+-		spin_unlock_irqrestore(&conf->device_lock, flags);
+-		if (!mddev_check_plugged(mddev))
+-			md_wakeup_thread(mddev->thread);
+-
+-		if (!r10_bio->devs[i].repl_bio)
+-			continue;
++		if (r10_bio->devs[i].bio) {
++			struct md_rdev *rdev = conf->mirrors[d].rdev;
++			mbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
++			md_trim_bio(mbio, r10_bio->sector - bio->bi_sector,
++				    max_sectors);
++			r10_bio->devs[i].bio = mbio;
++
++			mbio->bi_sector	= (r10_bio->devs[i].addr +
++					   choose_data_offset(r10_bio, rdev));
++			mbio->bi_bdev = rdev->bdev;
++			mbio->bi_end_io	= raid10_end_write_request;
++			mbio->bi_rw = WRITE | do_sync | do_fua;
++			mbio->bi_private = r10_bio;
+ 
+-		mbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
+-		md_trim_bio(mbio, r10_bio->sector - bio->bi_sector,
+-			    max_sectors);
+-		r10_bio->devs[i].repl_bio = mbio;
++			atomic_inc(&r10_bio->remaining);
++			spin_lock_irqsave(&conf->device_lock, flags);
++			bio_list_add(&conf->pending_bio_list, mbio);
++			conf->pending_count++;
++			spin_unlock_irqrestore(&conf->device_lock, flags);
++			if (!mddev_check_plugged(mddev))
++				md_wakeup_thread(mddev->thread);
++		}
+ 
+-		/* We are actively writing to the original device
+-		 * so it cannot disappear, so the replacement cannot
+-		 * become NULL here
+-		 */
+-		mbio->bi_sector	= (r10_bio->devs[i].addr +
+-				   choose_data_offset(
+-					   r10_bio,
+-					   conf->mirrors[d].replacement));
+-		mbio->bi_bdev = conf->mirrors[d].replacement->bdev;
+-		mbio->bi_end_io	= raid10_end_write_request;
+-		mbio->bi_rw = WRITE | do_sync | do_fua;
+-		mbio->bi_private = r10_bio;
++		if (r10_bio->devs[i].repl_bio) {
++			struct md_rdev *rdev = conf->mirrors[d].replacement;
++			if (rdev == NULL) {
++				/* Replacement just got moved to main 'rdev' */
++				smp_mb();
++				rdev = conf->mirrors[d].rdev;
++			}
++			mbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
++			md_trim_bio(mbio, r10_bio->sector - bio->bi_sector,
++				    max_sectors);
++			r10_bio->devs[i].repl_bio = mbio;
++
++			mbio->bi_sector	= (r10_bio->devs[i].addr +
++					   choose_data_offset(r10_bio, rdev));
++			mbio->bi_bdev = rdev->bdev;
++			mbio->bi_end_io	= raid10_end_write_request;
++			mbio->bi_rw = WRITE | do_sync | do_fua;
++			mbio->bi_private = r10_bio;
+ 
+-		atomic_inc(&r10_bio->remaining);
+-		spin_lock_irqsave(&conf->device_lock, flags);
+-		bio_list_add(&conf->pending_bio_list, mbio);
+-		conf->pending_count++;
+-		spin_unlock_irqrestore(&conf->device_lock, flags);
+-		if (!mddev_check_plugged(mddev))
+-			md_wakeup_thread(mddev->thread);
++			atomic_inc(&r10_bio->remaining);
++			spin_lock_irqsave(&conf->device_lock, flags);
++			bio_list_add(&conf->pending_bio_list, mbio);
++			conf->pending_count++;
++			spin_unlock_irqrestore(&conf->device_lock, flags);
++			if (!mddev_check_plugged(mddev))
++				md_wakeup_thread(mddev->thread);
++		}
+ 	}
+ 
+ 	/* Don't remove the bias on 'remaining' (one_write_done) until
