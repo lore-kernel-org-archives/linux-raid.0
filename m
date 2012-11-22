@@ -1,350 +1,87 @@
-From: "George Spelvin" <linux@horizon.com>
-Subject: Re: want-replacement got stuck?
-Date: 22 Nov 2012 00:27:57 -0500
-Message-ID: <20121122052757.26082.qmail@science.horizon.com>
-References: <20121122152249.0adcc076@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: mdadm: error when using multiple ARRAY <ignore> lines in
+ mdadm.conf
+Date: Thu, 22 Nov 2012 16:28:48 +1100
+Message-ID: <20121122162848.3a00f1f3@notabene.brown>
+References: <201211110343.43052.vapier@gentoo.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/71vls/7YB40IF+DMzl=xuur"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121122152249.0adcc076@notabene.brown>
+In-Reply-To: <201211110343.43052.vapier@gentoo.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux@horizon.com, neilb@suse.de
-Cc: joystick@shiftmail.org, linux-raid@vger.kernel.org
+To: Mike Frysinger <vapier@gentoo.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> wrote:
-> OK, below are two patches.
-> The first fixes the data corruption race.  You'll almost never hit it with
-> the bug that the second patch fixes, but in theory you could.  Without the
-> second patch you can hit it easily.
+--Sig_/71vls/7YB40IF+DMzl=xuur
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-This one doesn't apply cleanly to 3.6.7.  In particular, the large third hunk where
-you wrap some stuff in "if" that used to be handled by "continue".
+On Sun, 11 Nov 2012 03:43:42 -0500 Mike Frysinger <vapier@gentoo.org> wrote:
 
-The first difference is "mbio->bi_rw = WRITE | do_sync | do_fua | do_discard;",
-which is missing the "do_discard"part in my tree.  Not a biggie.
+> the mdadm.conf documentation indicates that <ignore> is special and can b=
+e=20
+> specified multiple times.  unfortunately, that is not the case:
+> 	mdadm: Device <ignore> given twice in config file
+> 	mdadm: Duplicate MD device names in conf file were found.
+> -mike
 
-The second difference, which I'm less confident of, is that entire
-"cb = blk_check_plugged(...); if (cb) plug = contaner_of(...)" block,
-which is also missing from 3.6.7. Instead, I just have
+Fix by following patch.
 
-                        if (!mddev_check_plugged(mddev))
-                                md_wakeup_thread(mddev->thread);
-
-Is it safe to just indent that inside the if() and leave it?
-
-Here's the patch I ended up applying.  First, the -b version (ignore
-whitespace changes), which makes it easier to read, then the real thing.
-
-(I also un-line-wrapped two instances of choose_data_offset that no
-longer needed to be broken to fit in 80 columns.)
+thanks,
+NeilBrown
 
 
-Does this look okay to you?  I'll reboot and test if you say so.
+=46rom 13f2dd6be5618ff556f9a364903e4b95558115e1 Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Thu, 22 Nov 2012 16:28:00 +1100
+Subject: [PATCH] conf: allow multiple arrays to be <ignore>d
 
+We currently complain if mdadm.conf contains multiple
+definitions for the same name.  Unfortunately this stops
+multiple arrays  from being <ignored>d.
 
-commit 1611c6944449fff9cfbf2a96db30d6d9e81f1979
-Author: NeilBrown <neilb@suse.de>
-Date:   Thu Nov 22 14:42:49 2012 +1100
+So exclude "<ignore>" from the duplicate-names test.
 
-    md/raid10: close race that lose writes lost when replacement completes.
-    
-    When a replacement operation completes there is a small window
-    when the original device is marked 'faulty' and the replacement
-    still looks like a replacement.  The faulty should be removed and
-    the replacement moved in place very quickly, bit it isn't instant.
-    
-    So the code write out to the array must handle the possibility that
-    the only working device for some slot in the replacement - but it
-    doesn't.  If the primary device is faulty it just gives up.  This
-    can lead to corruption.
-    
-    So make the code more robust: if either  the primary or the
-    replacement is present and working, write to them.  Only when
-    neither are present do we give up.
-    
-    This bug has been present since replacement was introduced in
-    3.3, so it is suitable for any -stable kernel since then.
-    
-    Reported-by: "George Spelvin" <linux@horizon.com>
-    Cc: stable@vger.kernel.org
-    Signed-off-by: NeilBrown <neilb@suse.de>
+Reported-by: Mike Frysinger <vapier@gentoo.org>
+Signed-off-by: NeilBrown <neilb@suse.de>
 
-diff -b --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index a48c215..60e5a65 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1287,18 +1287,21 @@ retry_write:
- 			blocked_rdev = rrdev;
- 			break;
- 		}
-+		if (rdev && (test_bit(Faulty, &rdev->flags)
-+			     || test_bit(Unmerged, &rdev->flags)))
-+			rdev = NULL;
- 		if (rrdev && (test_bit(Faulty, &rrdev->flags)
- 			      || test_bit(Unmerged, &rrdev->flags)))
- 			rrdev = NULL;
- 
- 		r10_bio->devs[i].bio = NULL;
- 		r10_bio->devs[i].repl_bio = NULL;
--		if (!rdev || test_bit(Faulty, &rdev->flags) ||
--		    test_bit(Unmerged, &rdev->flags)) {
-+
-+		if (!rdev && !rrdev) {
- 			set_bit(R10BIO_Degraded, &r10_bio->state);
+diff --git a/config.c b/config.c
+index 656d4e2..8461309 100644
+--- a/config.c
++++ b/config.c
+@@ -1095,6 +1095,8 @@ int conf_verify_devnames(struct mddev_ident *array_li=
+st)
+ 	for (a1 =3D array_list; a1; a1 =3D a1->next) {
+ 		if (!a1->devname)
  			continue;
- 		}
--		if (test_bit(WriteErrorSeen, &rdev->flags)) {
-+		if (rdev && test_bit(WriteErrorSeen, &rdev->flags)) {
- 			sector_t first_bad;
- 			sector_t dev_sector = r10_bio->devs[i].addr;
- 			int bad_sectors;
-@@ -1340,8 +1343,10 @@ retry_write:
- 					max_sectors = good_sectors;
- 			}
- 		}
-+		if (rdev) {
- 			r10_bio->devs[i].bio = bio;
- 			atomic_inc(&rdev->nr_pending);
-+		}
- 		if (rrdev) {
- 			r10_bio->devs[i].repl_bio = bio;
- 			atomic_inc(&rrdev->nr_pending);
-@@ -1400,15 +1405,16 @@ retry_write:
- 		if (!r10_bio->devs[i].bio)
- 			continue;
- 
-+		if (r10_bio->devs[i].bio) {
-+			struct md_rdev *rdev = conf->mirrors[d].rdev;
- 			mbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
- 			md_trim_bio(mbio, r10_bio->sector - bio->bi_sector,
- 				    max_sectors);
- 			r10_bio->devs[i].bio = mbio;
- 
--		mbio->bi_sector	= (r10_bio->devs[i].addr+
--				   choose_data_offset(r10_bio,
--						      conf->mirrors[d].rdev));
--		mbio->bi_bdev = conf->mirrors[d].rdev->bdev;
-+			mbio->bi_sector	= (r10_bio->devs[i].addr +
-+					   choose_data_offset(r10_bio, rdev));
-+			mbio->bi_bdev = rdev->bdev;
- 			mbio->bi_end_io	= raid10_end_write_request;
- 			mbio->bi_rw = WRITE | do_sync | do_fua;
- 			mbio->bi_private = r10_bio;
-@@ -1420,24 +1426,23 @@ retry_write:
- 			spin_unlock_irqrestore(&conf->device_lock, flags);
- 			if (!mddev_check_plugged(mddev))
- 				md_wakeup_thread(mddev->thread);
-+		}
- 
--		if (!r10_bio->devs[i].repl_bio)
--			continue;
--
-+		if (r10_bio->devs[i].repl_bio) {
-+			struct md_rdev *rdev = conf->mirrors[d].replacement;
-+			if (rdev == NULL) {
-+				/* Replacement just got moved to main 'rdev' */
-+				smp_mb();
-+				rdev = conf->mirrors[d].rdev;
-+			}
- 			mbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
- 			md_trim_bio(mbio, r10_bio->sector - bio->bi_sector,
- 				    max_sectors);
- 			r10_bio->devs[i].repl_bio = mbio;
- 
--		/* We are actively writing to the original device
--		 * so it cannot disappear, so the replacement cannot
--		 * become NULL here
--		 */
- 			mbio->bi_sector	= (r10_bio->devs[i].addr +
--				   choose_data_offset(
--					   r10_bio,
--					   conf->mirrors[d].replacement));
--		mbio->bi_bdev = conf->mirrors[d].replacement->bdev;
-+					   choose_data_offset(r10_bio, rdev));
-+			mbio->bi_bdev = rdev->bdev;
- 			mbio->bi_end_io	= raid10_end_write_request;
- 			mbio->bi_rw = WRITE | do_sync | do_fua;
- 			mbio->bi_private = r10_bio;
-@@ -1450,6 +1455,7 @@ retry_write:
- 			if (!mddev_check_plugged(mddev))
- 				md_wakeup_thread(mddev->thread);
- 		}
-+	}
- 
- 	/* Don't remove the bias on 'remaining' (one_write_done) until
- 	 * after checking if we need to go around again.
++		if (strcmp(a1->devname, "<ignore>") =3D=3D 0)
++			continue;
+ 		for (a2 =3D a1->next; a2; a2 =3D a2->next) {
+ 			if (!a2->devname)
+ 				continue;
 
+--Sig_/71vls/7YB40IF+DMzl=xuur
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
+iQIVAwUBUK24EDnsnt1WYoG5AQIu/g/+INrKPBJ1dkoMcMFlHNx3XfybPAbxvhfU
+R1FYO1vLOqBkhySyv1SU/ij+H2hwIWX3HI22gt8x62AP6xzZ92gDLxPNPsBRGdIG
+T5Nnk1/VDx8I/NwejqDF/M9Hsbwsb4m+AEQ70xC8U5MPe9MIE46neM3LazXoFmt/
+fqYUusyE6J+YYbF+myV9MQzEFPFM9h6owlsiP1U6CpEXeZllcIalsMJRcLAE/H+G
+hj3Kw5T59Y896+00VIoWjNBg7BFnJN7KEV5WN7DUKeU98aW6c4taJBxaoON0QHr/
+wZNEz5xiDgr0cAQo7MQJRlhObIvWl/iC6nbuYWyJHjow5FlCqSNMeNasEC+xaLGg
+WgDWS5LILvLs+gsgfszdkTXovtVW+LCptsAQRmfq3qa5wOgK5ZU9VFq1Th/iW33D
+7VAqZFFaA7H/lpKBeDIdtlv/Ii5YiXSDJGXaL/CeUPbV7zMhMMtQH2Ljw09mUJzS
+aWf5rVMnHzti69QB9l+a2ilBm2xdKZCB7zeYGGnottvYYSowraxoomANlhYh3smj
+yzZzyH+UzL/aipbXZtXubg74oDG6hW//e6b97Rd1casMpCkLQIQTEKCqkT5QPQOd
+3QGgXprljhdFZYC+JMH9v4yt6zTchd4NWxN9c/fa8kMAYUTiY957YWOmAOoS9XKs
+xK3esriZcyU=
+=UwkP
+-----END PGP SIGNATURE-----
 
-commit 1611c6944449fff9cfbf2a96db30d6d9e81f1979
-Author: NeilBrown <neilb@suse.de>
-Date:   Thu Nov 22 14:42:49 2012 +1100
-
-    md/raid10: close race that lose writes lost when replacement completes.
-    
-    When a replacement operation completes there is a small window
-    when the original device is marked 'faulty' and the replacement
-    still looks like a replacement.  The faulty should be removed and
-    the replacement moved in place very quickly, bit it isn't instant.
-    
-    So the code write out to the array must handle the possibility that
-    the only working device for some slot in the replacement - but it
-    doesn't.  If the primary device is faulty it just gives up.  This
-    can lead to corruption.
-    
-    So make the code more robust: if either  the primary or the
-    replacement is present and working, write to them.  Only when
-    neither are present do we give up.
-    
-    This bug has been present since replacement was introduced in
-    3.3, so it is suitable for any -stable kernel since then.
-    
-    Reported-by: "George Spelvin" <linux@horizon.com>
-    Cc: stable@vger.kernel.org
-    Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index a48c215..60e5a65 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1287,18 +1287,21 @@ retry_write:
- 			blocked_rdev = rrdev;
- 			break;
- 		}
-+		if (rdev && (test_bit(Faulty, &rdev->flags)
-+			     || test_bit(Unmerged, &rdev->flags)))
-+			rdev = NULL;
- 		if (rrdev && (test_bit(Faulty, &rrdev->flags)
- 			      || test_bit(Unmerged, &rrdev->flags)))
- 			rrdev = NULL;
- 
- 		r10_bio->devs[i].bio = NULL;
- 		r10_bio->devs[i].repl_bio = NULL;
--		if (!rdev || test_bit(Faulty, &rdev->flags) ||
--		    test_bit(Unmerged, &rdev->flags)) {
-+
-+		if (!rdev && !rrdev) {
- 			set_bit(R10BIO_Degraded, &r10_bio->state);
- 			continue;
- 		}
--		if (test_bit(WriteErrorSeen, &rdev->flags)) {
-+		if (rdev && test_bit(WriteErrorSeen, &rdev->flags)) {
- 			sector_t first_bad;
- 			sector_t dev_sector = r10_bio->devs[i].addr;
- 			int bad_sectors;
-@@ -1340,8 +1343,10 @@ retry_write:
- 					max_sectors = good_sectors;
- 			}
- 		}
--		r10_bio->devs[i].bio = bio;
--		atomic_inc(&rdev->nr_pending);
-+		if (rdev) {
-+			r10_bio->devs[i].bio = bio;
-+			atomic_inc(&rdev->nr_pending);
-+		}
- 		if (rrdev) {
- 			r10_bio->devs[i].repl_bio = bio;
- 			atomic_inc(&rrdev->nr_pending);
-@@ -1400,55 +1405,56 @@ retry_write:
- 		if (!r10_bio->devs[i].bio)
- 			continue;
- 
--		mbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
--		md_trim_bio(mbio, r10_bio->sector - bio->bi_sector,
--			    max_sectors);
--		r10_bio->devs[i].bio = mbio;
--
--		mbio->bi_sector	= (r10_bio->devs[i].addr+
--				   choose_data_offset(r10_bio,
--						      conf->mirrors[d].rdev));
--		mbio->bi_bdev = conf->mirrors[d].rdev->bdev;
--		mbio->bi_end_io	= raid10_end_write_request;
--		mbio->bi_rw = WRITE | do_sync | do_fua;
--		mbio->bi_private = r10_bio;
--
--		atomic_inc(&r10_bio->remaining);
--		spin_lock_irqsave(&conf->device_lock, flags);
--		bio_list_add(&conf->pending_bio_list, mbio);
--		conf->pending_count++;
--		spin_unlock_irqrestore(&conf->device_lock, flags);
--		if (!mddev_check_plugged(mddev))
--			md_wakeup_thread(mddev->thread);
--
--		if (!r10_bio->devs[i].repl_bio)
--			continue;
-+		if (r10_bio->devs[i].bio) {
-+			struct md_rdev *rdev = conf->mirrors[d].rdev;
-+			mbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
-+			md_trim_bio(mbio, r10_bio->sector - bio->bi_sector,
-+				    max_sectors);
-+			r10_bio->devs[i].bio = mbio;
-+
-+			mbio->bi_sector	= (r10_bio->devs[i].addr +
-+					   choose_data_offset(r10_bio, rdev));
-+			mbio->bi_bdev = rdev->bdev;
-+			mbio->bi_end_io	= raid10_end_write_request;
-+			mbio->bi_rw = WRITE | do_sync | do_fua;
-+			mbio->bi_private = r10_bio;
- 
--		mbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
--		md_trim_bio(mbio, r10_bio->sector - bio->bi_sector,
--			    max_sectors);
--		r10_bio->devs[i].repl_bio = mbio;
-+			atomic_inc(&r10_bio->remaining);
-+			spin_lock_irqsave(&conf->device_lock, flags);
-+			bio_list_add(&conf->pending_bio_list, mbio);
-+			conf->pending_count++;
-+			spin_unlock_irqrestore(&conf->device_lock, flags);
-+			if (!mddev_check_plugged(mddev))
-+				md_wakeup_thread(mddev->thread);
-+		}
- 
--		/* We are actively writing to the original device
--		 * so it cannot disappear, so the replacement cannot
--		 * become NULL here
--		 */
--		mbio->bi_sector	= (r10_bio->devs[i].addr +
--				   choose_data_offset(
--					   r10_bio,
--					   conf->mirrors[d].replacement));
--		mbio->bi_bdev = conf->mirrors[d].replacement->bdev;
--		mbio->bi_end_io	= raid10_end_write_request;
--		mbio->bi_rw = WRITE | do_sync | do_fua;
--		mbio->bi_private = r10_bio;
-+		if (r10_bio->devs[i].repl_bio) {
-+			struct md_rdev *rdev = conf->mirrors[d].replacement;
-+			if (rdev == NULL) {
-+				/* Replacement just got moved to main 'rdev' */
-+				smp_mb();
-+				rdev = conf->mirrors[d].rdev;
-+			}
-+			mbio = bio_clone_mddev(bio, GFP_NOIO, mddev);
-+			md_trim_bio(mbio, r10_bio->sector - bio->bi_sector,
-+				    max_sectors);
-+			r10_bio->devs[i].repl_bio = mbio;
-+
-+			mbio->bi_sector	= (r10_bio->devs[i].addr +
-+					   choose_data_offset(r10_bio, rdev));
-+			mbio->bi_bdev = rdev->bdev;
-+			mbio->bi_end_io	= raid10_end_write_request;
-+			mbio->bi_rw = WRITE | do_sync | do_fua;
-+			mbio->bi_private = r10_bio;
- 
--		atomic_inc(&r10_bio->remaining);
--		spin_lock_irqsave(&conf->device_lock, flags);
--		bio_list_add(&conf->pending_bio_list, mbio);
--		conf->pending_count++;
--		spin_unlock_irqrestore(&conf->device_lock, flags);
--		if (!mddev_check_plugged(mddev))
--			md_wakeup_thread(mddev->thread);
-+			atomic_inc(&r10_bio->remaining);
-+			spin_lock_irqsave(&conf->device_lock, flags);
-+			bio_list_add(&conf->pending_bio_list, mbio);
-+			conf->pending_count++;
-+			spin_unlock_irqrestore(&conf->device_lock, flags);
-+			if (!mddev_check_plugged(mddev))
-+				md_wakeup_thread(mddev->thread);
-+		}
- 	}
- 
- 	/* Don't remove the bias on 'remaining' (one_write_done) until
+--Sig_/71vls/7YB40IF+DMzl=xuur--
