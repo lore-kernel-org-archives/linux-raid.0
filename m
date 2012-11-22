@@ -1,84 +1,116 @@
-From: joystick <joystick@shiftmail.org>
-Subject: Re: want-replacement got stuck?
-Date: Wed, 21 Nov 2012 23:56:23 +0100
-Message-ID: <50AD5C17.6080203@shiftmail.org>
-References: <20121121211910.22223.qmail@science.horizon.com>
+From: Benjamin ESTRABAUD <be@mpstor.com>
+Subject: Re: mdadm: use static major/minor numbers.
+Date: Thu, 22 Nov 2012 11:26:00 +0000
+Message-ID: <50AE0BC8.8020405@mpstor.com>
+References: <50AB7964.60002@mpstor.com> <20121121081622.162d6f08@notabene.brown> <50ACC858.6030105@mpstor.com> <20121122075713.240e783d@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121121211910.22223.qmail@science.horizon.com>
+In-Reply-To: <20121122075713.240e783d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: George Spelvin <linux@horizon.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/21/12 22:19, George Spelvin wrote:
-> Here are the results from your suggestions.  The check produced something
-> interesting: it halted almost instantly, rather than doing anything.
+On 21/11/12 20:57, NeilBrown wrote:
+> On Wed, 21 Nov 2012 12:26:00 +0000 Benjamin ESTRABAUD <be@mpstor.com> wrote:
 >
-> # for i in /dev/sd[a-e]2 ; do echo ; mdadm -X /dev/$i ; done
+>> On 20/11/12 21:16, NeilBrown wrote:
+>>> On Tue, 20 Nov 2012 12:36:52 +0000 Benjamin ESTRABAUD <be@mpstor.com> wrote:
+>>>
+>>>> Hi!
+>>>>
+>>>> I recently updated mdadm-2.6.9 to mdadm-3.2.6 on a system (own busybox
+>>>> based distro) that had its kernel version updated from 2.6.35 to 3.4.
+>>>>
+>>>> Everything works well apart from a feature I used that I seem to be
+>>>> unable to reactivate:
+>>>>
+>>>> In the past, to ensure knowing the number of possible RAID devices that
+>>>> could be created on the system, I used static major:minor mappings by
+>>>> building the /dev/md/dXX and /dev/md/dXXpXX entries (with major 254, and
+>>>> three minors for each device for 3 partitions), allowing me to be
+>>>> certain that 64 RAID devices could be created at all times.
+>>>>
+>>>> When creating an array, the /dev/md/dXX and dXXpXX devices "nodes" would
+>>>> be used (not recreated) and the major/minor number these devices point
+>>>> to would be used for the actual MD block device.
+>>>>
+>>>> This was a very handy feature. With the latest mdadm, I simply cannot do
+>>>> that, as creating a /dev/md/dXX will in fact remove that device file and
+>>>> symlink it to /dev/md_dXX. I then created /dev/md_dXX devices prior to
+>>>> creating an array, and got the following error message: "mdadm:
+>>>> /dev/md_d3 exists but looks wrong, please fix".
+>>>>
+>>>> Looking through the source I can see that mdadm basically verifies if
+>>>> the file's major/minor matches the one that it had planned for the
+>>>> device, which in this case doesn't.
+>>>>
+>>>> Is there any way to work around that? Or in fact, I don't actually
+>>>> *need* to use static major/minor numbers, but I need to know in advance
+>>>> how many RAIDs I'll be able to create provided I'll always use 2
+>>>> partitions for them and can provide the -amdp2 argument to mdadm to make
+>>>> sure that only 2 partitions devices nodes are created.
+>>>>
+>>>> Is there a way to know the maximum number of RAIDs that can be created,
+>>>> provided that nothing else uses major 9 and 254?
+>>>>
+>>>> Thank you very much in advance for your help!
+>>> I don't really understand what your problem is.
+>>>
+>>> mdadm should create any devices it needs - unless it detects udev, in which
+>>> case it leaves the device creation to udev.
+>>>
+>>> So simply don't create any md devices in /dev and let mdadm do whatever is
+>>> required.
+>>> Does that approach not suit your needs?  If not, why not?
+>>>
+>>> NeilBrown
+>> Hi Neil,
+>>
+>> mdadm creates the devices it needs quite well (there is no udev on this
+>> system), but how can I tell how many maximum RAID devices mdadm will be
+>> able to create before running out of major/minors, since their
+>> allocation is done on the fly?
+>>
+>> Will mdadm use all of "md" registered major (9) minor numbers (9:0-254)?
+> Actually I think it is 9:0-4194303.  There are 22 bits for minor numbers.
+> And yes, md will use as many as needed (Though I haven't tested millions of
+> arrays - or even hundreds - so there might be bugs).
+Thanks, I actually did not realize there were that many minors available.
+Millions might be slightly more than I need ;)
+>> Will it also use the "mdp" registered ones (254) when running out?
+> mdp uses 4 bits for the partition, so 18 bits available for arrays.
+> Though you don't really need mdp any more as 'md' devices can now be
+> partitioned.
+I decided to follow the advice and not use "mdp" anymore and partition 
+"md" devices.
+>> I need to know how many MD devices I'll be able to create in advance on
+>> that system. Creating the devices beforehand helped with that, since I
+>> had md_d0 254:0 up to md_d127 254:252, I knew that I could create a
+>> maximum of 128 devices.
+> Creating the device files in /dev doesn't really have any effect on whether
+> the devices can be created.  It is a bit like creating a whole bunch of
+> symlinks to non-existent files, and assuming that means that the files can
+> later be created.
+Somehow on our older version of madm it created the MD device exactly as 
+the device was created in /dev: md/d1 was 254:4 like its pre-existing 
+device node and same for each and every MD node. But this is not 
+necessary if MD can create its own devices and not run out of device 
+nodes to allocate.
+>> What's the maximum number of MD devices that can be created on a
+>> udev-less system provided we specify 2 partitions in mdadm --create?
+> millions.
 >
->          Filename : /dev/sda2
->             Magic : 6d746962
->           Version : 4
->              UUID : 69952341:376cf679:a23623b9:31f68afb
->            Events : 8617657
->    Events Cleared : 8617657
->             State : OK
->         Chunksize : 2 MB
->            Daemon : 5s flush period
->        Write Mode : Normal
->         Sync Size : 725591552 (691.98 GiB 743.01 GB)
->            Bitmap : 354293 bits (chunks), 7421 dirty (2.1%)
+> NeilBrown
 >
+>
+>> Thank you very much in advance for your help.
+>>
+>> Regards,
+>> Ben.
+Thanks a lot for all your help Neil,
 
-Just this?
-I think there should have been additional fields like "Device Role", 
-"Array State", "layout"...
-try with --verbose maybe?
-
-The Events count is extremely high, I don't have it higher than 25000 on 
-very active servers, I'm not sure what it means. Also one of your 
-devices has a slightly lower count, and would confirm that it's failed 
-(spares follow the count continuously). I don't know that MD code well, 
-you might look into the driver what kind of events exactly increase the 
-count.
-
-Another test:
-cat /sys/block/md5/md/degraded
-returns 1 I suppose?
-
-The fact that check returns immediately might indicate that the array is 
-indeed degraded. In this case it is correct that check cannot be 
-performed on a degraded array because there is no parity/mirroring to 
-check/compare. The fact that for a brief instant you can see progress is 
-strange though (you might have a look at the code in the driver for 
-understanding that, but it's probably not so meaningful).
-
-But the ext4 errors must come from elsewhere. The fact that they become 
-apparent only after a rebuild (to sdc2) might indicate that the source 
-disk (mirror of sdd, which I don't know precisely what drive is in a 
-near-copies raid10) might have contained bad data, which maybe was 
-previously masked by sdd which was available and reads might have gone 
-preferably to sdd (the algorithm usually choses the nearest hdd head but 
-who knows...). In general your disks were in a bad shape, you can tell 
-that from:
- > Nov 20 11:49:06 science kernel: md/raid10:md5: sdd2: Raid device 
-exceeded read_error threshold [cur 21:max 20]
-I would have replaced the disk at the 2nd-3rd error maximum, you got up 
-to 21. But even considering this, MD should probably have behaved anyway 
-differently
-
-My guess is that the hot-replace to sdd failed (sdd failed during 
-hot-replace), but this error was not properly handled by MD (*). This is 
-the first time somebody reports onto the ML a case of failure of the 
-destination drive during hot-replace so there is not much experience, 
-you are a pioneer.
-(*) it might have erroneously failed sdc instead of failing sdd for 
-example, which looks like hot-replace has succeeded but sdd wouldn't 
-actually contain correct data...
-
-For the rest I don't really know what to say, except that it doesn't 
-look right. Let's hope Neil pops up.
-
+Regards,
+Ben.
