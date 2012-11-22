@@ -1,204 +1,103 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm: ARRAY <ignore> lines not correctly handled
-Date: Thu, 22 Nov 2012 17:05:06 +1100
-Message-ID: <20121122170506.1da4303f@notabene.brown>
-References: <201211110342.36095.vapier@gentoo.org>
+From: Carsten Aulbert <Carsten.Aulbert@aei.mpg.de>
+Subject: Re: split brain mode after reboot
+Date: Thu, 22 Nov 2012 07:20:11 +0100
+Message-ID: <50ADC41B.6090409@aei.mpg.de>
+References: <50AB8EED.4000005@aei.mpg.de> <20121121082252.3a9bb7db@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ykewigtIeg0zplb17WURkN8"; protocol="application/pgp-signature"
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms020009080608050006080703"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201211110342.36095.vapier@gentoo.org>
+In-Reply-To: <20121121082252.3a9bb7db@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Frysinger <vapier@gentoo.org>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, "gerrit.kuehn@aei.mpg.de" <gerrit.kuehn@aei.mpg.de>
 List-Id: linux-raid.ids
 
---Sig_/ykewigtIeg0zplb17WURkN8
-Content-Type: text/plain; charset=US-ASCII
+This is a cryptographically signed message in MIME format.
+
+--------------ms020009080608050006080703
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 11 Nov 2012 03:42:35 -0500 Mike Frysinger <vapier@gentoo.org> wrote:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-> the mdadm.conf man page states:
-> The ARRAY lines identify actual arrays.  The second word on the line may =
-be=20
-> the name of the device where the array is normally assembled, [...]. =20
-> Alternately the word <ignore> (complete with angle brackets) can be given=
- in=20
-> which case any array which matches the rest of the line will never be=20
-> automatically assembled.
->=20
-> so let's say i have a raid that looks like:
-> /dev/md0:
->         Version : 1.2
->   Creation Time : Wed Oct 31 16:05:49 2012
->      Raid Level : raid6
->      Array Size : 1953522688 (1863.02 GiB 2000.41 GB)
->   Used Dev Size : 976761344 (931.51 GiB 1000.20 GB)
->    Raid Devices : 4
->   Total Devices : 4
->     Persistence : Superblock is persistent
->=20
->     Update Time : Sun Nov 11 03:35:26 2012
->           State : clean=20
->  Active Devices : 4
-> Working Devices : 4
->  Failed Devices : 0
->   Spare Devices : 0
->=20
->          Layout : left-symmetric
->      Chunk Size : 512K
->=20
->            Name : vapier:0  (local to host vapier)
->            UUID : 51b812dc:094ea54b:f8f7b331:9982b16c
->          Events : 112048
->=20
->     Number   Major   Minor   RaidDevice State
->        0       8       32        0      active sync   /dev/sdc
->        1       8        0        1      active sync   /dev/sda
->        4       8       16        2      active sync   /dev/sdb
->        5       8       64        3      active sync   /dev/sde
->=20
-> the man page says i should be able to prevent this from being auto-assemb=
-led=20
-> via `mdamd -As` by doing something like:
-> ARRAY <ignore> uuid=3D51b812dc:094ea54b:f8f7b331:9982b16c
->=20
-> or perhaps:
-> DEVICE /dev/sd[abce]
-> ARRAY <ignore> devices=3D/dev/sda,/dev/sdb,/dev/sde,/dev/sdc
->=20
-> unfortunately, this turns out to not be the case.  mdadm goes ahead and a=
-uto-
-> assembles things anyways.  looking at the code, it seems that it's due to=
- the=20
-> code falling back if nothing was detected:
-> mdadm.c
-> ...
->     do {
->         failures =3D 0;
->         successes =3D 0;
->         rv =3D 0;
->         for (a =3D array_list; a ; a =3D a->next) {
->             int r;
->             if (a->assembled)
->                 continue;
->             if (a->devname &&  =20
->                 strcasecmp(a->devname, "<ignore>") =3D=3D 0)
->                 continue;
->=20
->             r =3D Assemble(ss, a->devname,
->                      a, NULL, c);
->             if (r =3D=3D 0) {
->                 a->assembled =3D 1;
->                 successes++;
->             } else
->                 failures++;
->             rv |=3D r;
->             cnt++;
->         }
->     } while (failures && successes);
->     if (c->homehost && cnt =3D=3D 0) {
->         /* Maybe we can auto-assemble something.
->          * Repeatedly call Assemble in auto-assemble mode
->          * until it fails
->          */
->         int rv2;
->         int acnt;
->         ident->autof =3D c->autof;
->         do {
->             struct mddev_dev *devlist =3D conf_get_devs();
->             acnt =3D 0;
->             do {
->                 rv2 =3D Assemble(ss, NULL,
->                            ident,
->                            devlist, c);
-> ...
->=20
-> the idea is to be able to have a system with multiple raids (some of whic=
-h are=20
-> dormant/backups), blacklist the ones that you want to keep idle, and brin=
-g=20
-> online all the rest.
-> -mike
+Hi Neil
 
-Thanks for the report.
-Fixed by the following patch.
+On 11/20/2012 10:22 PM, NeilBrown wrote:
+>=20
+> Expected - probably. Wanted - no.
+>=20
 
-Thanks,
-NeilBrown
+good :)
 
-=46rom 66eb2c93a619eb1d79dc653fd91add159aa3d1ff Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Thu, 22 Nov 2012 17:04:20 +1100
-Subject: [PATCH] Assemble: ensure that <ignore>d arrays are not
- auto-assembled.
+> I think one half gets assembled by "mdadm --incremental" run from
+> udev, and the other by a subsequence "mdadm -As" or similar.
+>=20
+> mdadm-3.3, which is still under development, has a fix for this so
+> that --incremental and --assemble don't trip over each other.
+>=20
+> http://git.neil.brown.name/?p=3Dmdadm.git;a=3Dcommitdiff;h=3D0431869cec=
+4c673309d9aa
 
-It isn't enough to simply not assemble arrays found to be called
-<ignore>, as the final stage of auto-assemble doesn't check for names
-in mdadm.conf.
+Great,
+>=20
+I think we'll wait for 3.3 and try to backport it to our
+current production systems.
 
-So add a check to Assemble, similar to the check in Incremental()
+Thanks!
 
-Reported-by: Mike Frysinger <vapier@gentoo.org>
-Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/Assemble.c b/Assemble.c
-index c2fa096..9ef1bf0 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -362,6 +362,8 @@ static int select_devices(struct mddev_dev *devlist,
- 			tmpdev =3D NULL;
- 			goto loop;
- 		} else {
-+			int rv =3D 0;
-+			struct mddev_ident *match;
-=20
- 			content =3D *contentp;
- 			tst->ss->getinfo_super(tst, content, NULL);
-@@ -370,7 +372,20 @@ static int select_devices(struct mddev_dev *devlist,
- 					   c->homehost, c->update,
- 					   report_missmatch ? devname : NULL))
- 				goto loop;
--			=09
-+
-+			match =3D conf_match(tst, content, devname,
-+					   report_missmatch ? c->verbose : -1,
-+					   &rv);
-+			if (!match && rv =3D=3D 2)
-+				goto loop;
-+			if (match && match->devname &&
-+			    strcasecmp(match->devname, "<ignore>") =3D=3D 0) {
-+				if (report_missmatch)
-+					pr_err("%s is a member of an explicitly ignored array\n",
-+					       devname);
-+				goto loop;
-+			}
-+
- 			/* should be safe to try an exclusive open now, we
- 			 * have rejected anything that some other mdadm might
- 			 * be looking at
-
---Sig_/ykewigtIeg0zplb17WURkN8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
+Carsten
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-iQIVAwUBUK3Akjnsnt1WYoG5AQJ8QRAAxBnVvwfyKXvqFWcwjn89DrzIZHP1XsXk
-vuJsHh4OczgmturpwR2BH6aA//k4/2RVul/BvdXIVWVj6RXwDrBiE4Zudb7RxVI2
-08VVxx4yFJAb14nVIExdBxM/5cg/R5O8BjU8CQFoAJOAIWWTzmAkKMhVHi6oKn8j
-vNczS7mjcNlZfyt72s5SUs3XpmZbcTXoFIeHjW65u0bX4hyki+ZNthUUUHS8Abgz
-ry/rX531Okv+5AfxVIpB2ArSAnO3icVfqH4zDfkhXeyNU2MFExFIFTEp1VU43QRE
-yVgMkkA3x74PlER0IMJuvuUoioA63gcWf887q3n9020GqtZ1N+eKgQfKN3vERtfs
-GL3zkEYNB27fzwhP7+yTVJhI721+thWtEqPyq8LJ0ZMu6XRjRa6RtwQy6jtEHC6c
-BvcHw49OT8GFlfz21pIT1RnKPEraimz4Tro2tyntLiBnF47XqHQyyQU3ZjJEw8WU
-/yMroHjEkSYinPMHfyL9ht1C8A+9iopb4gOPzCUmsWJXVFcsn0sxHW1jqdfa7aCn
-9L9D8PhkaupvKjjCEyeNnbzcPmMQLBMQdOivnmh1zNAK+IOT/A8lQOwxJzV0cVjC
-di7gEJSB8OZoUvBbLJDH8NVLEtjSRJVSwitM5QAbih3VQoc1elaklHUAm/gDnqV5
-c4m8cL322QY=
-=bb5B
+iEYEARECAAYFAlCtxBsACgkQvfAZOV3797y6ZACgk/puEYU+C2AX+SCVJz5ZhY83
+QaIAnRCpHW6zK2PYS6CU8+XiCkJwoQZ+
+=3DMnXg
 -----END PGP SIGNATURE-----
 
---Sig_/ykewigtIeg0zplb17WURkN8--
+
+--------------ms020009080608050006080703
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIE8DCC
+BOwwggPUoAMCAQICAkMDMA0GCSqGSIb3DQEBBQUAMDYxCzAJBgNVBAYTAkRFMRMwEQYDVQQK
+EwpHZXJtYW5HcmlkMRIwEAYDVQQDEwlHcmlkS2EtQ0EwHhcNMTIwNTAyMTQwMjI1WhcNMTMw
+NjAxMTQwMjI1WjA9MRMwEQYDVQQKEwpHZXJtYW5HcmlkMQwwCgYDVQQLEwNBRUkxGDAWBgNV
+BAMTD0NhcnN0ZW4gQXVsYmVydDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAOuh
+d5sXP9180l8F34z/ywkRt/cVUoZjHh4bumhIZbz8O+PQ6QDI8mbgFwoDPQAmmEs4lKV8F0Ur
+gRls+gEob+JybAepOFiZVa1YnLRnnvNcpKwi0fs7MIpvqUxCacIcc63UTD8A4/1N74zE2KpZ
+g1TDqaW5ypQpKk9bUXBnhrg19j5PN1Ch2DRPO9jzJXW13uRL1OfNoOZoANHheegtfCj1mwzp
+2naGvZea0EpqndKfUUHBrg9OQIwQJemXhWiJzJMv27l93+uSfvy2zvNXgXDFZr40p33Vx07C
+OD8UI0vela6idGxzwJ74aoQpvp7dSUEIgVFCgXCCXgvY/FxXk6UCAwEAAaOCAfswggH3MAwG
+A1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgSwMB0GA1UdDgQWBBSFaeVx9/3sSuG3fOgfU56/
+LWDaKzAfBgNVHSMEGDAWgBTGdckorNEL/Dz/ubUe0187gGISNDAlBgNVHREEHjAcgRpDYXJz
+dGVuLkF1bGJlcnRAYWVpLm1wZy5kZTAcBgNVHRIEFTATgRFncmlka2EtY2FAa2l0LmVkdTA1
+BgNVHR8ELjAsMCqgKKAmhiRodHRwOi8vZ3JpZC5memsuZGUvY2EvZ3JpZGthLWNybC5kZXIw
+KAYDVR0gBCEwHzAPBg0rBgEEAZQ2qywBAQEHMAwGCiqGSIb3TAUCAgEwEQYJYIZIAYb4QgEB
+BAQDAgWgME4GCWCGSAGG+EIBDQRBFj9DZXJ0aWZpY2F0ZSBpc3N1ZWQgdW5kZXIgQ1AvQ1BT
+IHYuIDEuNyBhdCBodHRwOi8vZ3JpZC5memsuZGUvY2EwJAYJYIZIAYb4QgECBBcWFWh0dHA6
+Ly9ncmlkLmZ6ay5kZS9jYTAzBglghkgBhvhCAQgEJhYkaHR0cDovL2dyaWQuZnprLmRlL2Nh
+L2dyaWRrYS1jcHMucGRmMDMGCWCGSAGG+EIBAwQmFiRodHRwOi8vZ3JpZC5memsuZGUvY2Ev
+Z3JpZGthLWNybC5kZXIwDQYJKoZIhvcNAQEFBQADggEBABK8nPkhGS1HzzGlCfI5CaFT19za
+d0H3tGc5OueBHxBO8DWyB3M1v1YyaOEDEvkL1Y1+RDAnYvoXgvgBQnGMWuy4SEnMpm1wIIMs
+pFM1Q1pPqJ+GdwYdmkwkVy4fs8TkDAy6AYkoGa7Cnxai1KlLHtxCS26uIiUcEhSmdMZOQT4w
+rYbtX1mQGZpg4BJ8YgjP1oazYCiHaQcumVYSOHb+HJQuAy35eBr6/82OHrF28V+UoN9EYuU7
+1RqAS9dtP6i7z34V7Tlx0zyzL99IyF5ZZMF6a18q7K9jrkXlTRYYcpGMMeH51XGe5hB1az5o
+fR7i8PzrlBwH5cn5BHDfjWHbcOgxggLOMIICygIBATA8MDYxCzAJBgNVBAYTAkRFMRMwEQYD
+VQQKEwpHZXJtYW5HcmlkMRIwEAYDVQQDEwlHcmlkS2EtQ0ECAkMDMAkGBSsOAwIaBQCgggFn
+MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTEyMTEyMjA2MjAx
+MVowIwYJKoZIhvcNAQkEMRYEFBqaGVPn+jkUSSPaErxgVyqFjW09MEsGCSsGAQQBgjcQBDE+
+MDwwNjELMAkGA1UEBhMCREUxEzARBgNVBAoTCkdlcm1hbkdyaWQxEjAQBgNVBAMTCUdyaWRL
+YS1DQQICQwMwTQYLKoZIhvcNAQkQAgsxPqA8MDYxCzAJBgNVBAYTAkRFMRMwEQYDVQQKEwpH
+ZXJtYW5HcmlkMRIwEAYDVQQDEwlHcmlkS2EtQ0ECAkMDMGwGCSqGSIb3DQEJDzFfMF0wCwYJ
+YIZIAWUDBAEqMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzAOBggqhkiG9w0DAgICAIAwDQYI
+KoZIhvcNAwICAUAwBwYFKw4DAgcwDQYIKoZIhvcNAwICASgwDQYJKoZIhvcNAQEBBQAEggEA
+uSYfGLhh+MoeQJQa/4HCgRrbZL+nsCN0BoEqF4PTpBfkN6Z7PEKxTLrltKo53FPM0AkSSAkK
+hvivrFalJH9BTbFzTrLY5VfPobbWZQuh86UTQUAZyc9DidBR/sRpE7FcPRiafp6v9E7pUvcm
+P0kNKW0L+Qf0uMfY/Oh9hAJLal3EMEV45Vt6p0ApSFwcWaJdybxRwAUVb0QETJjZpUrovqSk
+OxE9Nmfbzdlmrxa7akgTVnkZTefuLqh6YeXsq1sZvBEJDRsGf4LdL+gbccTg8OS+lWoPT8DV
+D9fdI5h7xw/bQa+pHPuw0Y4eZnaSTnyPADUIBHcXnsDLKOGTc9xLLQAAAAAAAA==
+--------------ms020009080608050006080703--
