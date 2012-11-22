@@ -1,421 +1,49 @@
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 1/2 v2] wait: add wait_event_lock_irq() interface
-Date: Thu, 22 Nov 2012 09:18:34 +0100
-Message-ID: <1353572315-4508-1-git-send-email-lczerner@redhat.com>
+From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Subject: Re: mdadm --fail doesn't mark device as failed?
+Date: Thu, 22 Nov 2012 10:43:46 +0100
+Message-ID: <50ADF3D2.9030206@profitbricks.com>
+References: <1353514677.5795.14.camel@corn.betterworld.us>  <50AD0726.9090509@profitbricks.com>  <1353517421.5795.58.camel@corn.betterworld.us>  <50AD0B01.7020300@profitbricks.com>  <1353518608.5795.76.camel@corn.betterworld.us>  <50AD13A3.5040709@profitbricks.com> <1353526912.5795.104.camel@corn.betterworld.us>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1353526912.5795.104.camel@corn.betterworld.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, axboe@kernel.dk, jmoyer@redhat.com, akpm@linux-foundation.org, Lukas Czerner <lczerner@redhat.com>, Neil Brown <neilb@suse.de>, David Howells <dhowells@redhat.com>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <a.p.zijlstra@chello.nl>
+To: Ross Boylan <ross@biostat.ucsf.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-New wait_event{_interruptible}_lock_irq{_cmd} macros added. This commit
-moves the private wait_event_lock_irq() macro from MD to regular wait
-includes, introduces new macro wait_event_lock_irq_cmd() instead of using
-the old method with omitting cmd parameter which is ugly and makes a use
-of new macros in the MD. It also introduces the _interruptible_ variant.
+On 21.11.2012 20:41, Ross Boylan wrote:
+> On Wed, 2012-11-21 at 18:47 +0100, Sebastian Riemer wrote:
+>
+>> Yes, sometimes hardware has only a short issue and operates as expected
+>> afterwards. Therefore, there is an error threshold. It could be very
+>> annoying to zero the superblock and to resync everything only because
+>> there was a short controller issue or something similar. Without this
+>> you also couldn't remove and re-add devices for testing.
+> So if my intention is to remove the "device" (in this case, partition)
+> across reboots is using sysfs as you indicated sufficient? 
 
-The use of new interface is when one have a special lock to protect data
-structures used in the condition, or one also needs to invoke "cmd"
-before putting it to sleep. "cmd" is always invoked before checking the
-"condition" so in case it will change the condition outcome we would not
-have to sleep unnecessarily.
+Yes, if you set a high number into sysfs file "errors", then you can
+even keep the superblock but don't ask me how to revert this change. I
+don't think that there is a "MakeGood" command.
 
-All new macros are expected to be called with the lock taken. The lock
-is released before sleep and is reacquired afterwards. We will leave the
-macro with the lock held.
+> Zeroing the superblock (--zero-superblock)?
 
-Note to DM: IMO this should also fix theoretical race on waitqueue while
-using simultaneously wait_event_lock_irq() and wait_event() because of
-lack of locking around current state setting and wait queue removal.
+That's the alternative but you loose superblock data.
 
-Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-Cc: Neil Brown <neilb@suse.de>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
----
-v2: add interruptible variant, swap cmd and schedule, use prepare_to_wait
+>  Removing the device (mdadm --remove)?
 
- drivers/md/md.c      |    2 +-
- drivers/md/md.h      |   26 --------
- drivers/md/raid1.c   |   15 ++---
- drivers/md/raid10.c  |   15 ++---
- drivers/md/raid5.c   |   12 ++--
- include/linux/wait.h |  166 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 186 insertions(+), 50 deletions(-)
+Here you need one of the methods above additionally.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 9ab768a..7e513a3 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -452,7 +452,7 @@ void md_flush_request(struct mddev *mddev, struct bio *bio)
- 	spin_lock_irq(&mddev->write_lock);
- 	wait_event_lock_irq(mddev->sb_wait,
- 			    !mddev->flush_bio,
--			    mddev->write_lock, /*nothing*/);
-+			    mddev->write_lock);
- 	mddev->flush_bio = bio;
- 	spin_unlock_irq(&mddev->write_lock);
- 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index af443ab..1e2fc3d 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -551,32 +551,6 @@ struct md_thread {
- 
- #define THREAD_WAKEUP  0
- 
--#define __wait_event_lock_irq(wq, condition, lock, cmd) 		\
--do {									\
--	wait_queue_t __wait;						\
--	init_waitqueue_entry(&__wait, current);				\
--									\
--	add_wait_queue(&wq, &__wait);					\
--	for (;;) {							\
--		set_current_state(TASK_UNINTERRUPTIBLE);		\
--		if (condition)						\
--			break;						\
--		spin_unlock_irq(&lock);					\
--		cmd;							\
--		schedule();						\
--		spin_lock_irq(&lock);					\
--	}								\
--	current->state = TASK_RUNNING;					\
--	remove_wait_queue(&wq, &__wait);				\
--} while (0)
--
--#define wait_event_lock_irq(wq, condition, lock, cmd) 			\
--do {									\
--	if (condition)	 						\
--		break;							\
--	__wait_event_lock_irq(wq, condition, lock, cmd);		\
--} while (0)
--
- static inline void safe_put_page(struct page *p)
- {
- 	if (p) put_page(p);
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 636bae0..f264a62 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -822,7 +822,7 @@ static void raise_barrier(struct r1conf *conf)
- 
- 	/* Wait until no block IO is waiting */
- 	wait_event_lock_irq(conf->wait_barrier, !conf->nr_waiting,
--			    conf->resync_lock, );
-+			    conf->resync_lock);
- 
- 	/* block any new IO from starting */
- 	conf->barrier++;
-@@ -830,7 +830,7 @@ static void raise_barrier(struct r1conf *conf)
- 	/* Now wait for all pending IO to complete */
- 	wait_event_lock_irq(conf->wait_barrier,
- 			    !conf->nr_pending && conf->barrier < RESYNC_DEPTH,
--			    conf->resync_lock, );
-+			    conf->resync_lock);
- 
- 	spin_unlock_irq(&conf->resync_lock);
- }
-@@ -864,8 +864,7 @@ static void wait_barrier(struct r1conf *conf)
- 				    (conf->nr_pending &&
- 				     current->bio_list &&
- 				     !bio_list_empty(current->bio_list)),
--				    conf->resync_lock,
--			);
-+				    conf->resync_lock);
- 		conf->nr_waiting--;
- 	}
- 	conf->nr_pending++;
-@@ -898,10 +897,10 @@ static void freeze_array(struct r1conf *conf)
- 	spin_lock_irq(&conf->resync_lock);
- 	conf->barrier++;
- 	conf->nr_waiting++;
--	wait_event_lock_irq(conf->wait_barrier,
--			    conf->nr_pending == conf->nr_queued+1,
--			    conf->resync_lock,
--			    flush_pending_writes(conf));
-+	wait_event_lock_irq_cmd(conf->wait_barrier,
-+				conf->nr_pending == conf->nr_queued+1,
-+				conf->resync_lock,
-+				flush_pending_writes(conf));
- 	spin_unlock_irq(&conf->resync_lock);
- }
- static void unfreeze_array(struct r1conf *conf)
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index d1295af..2530403 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -952,7 +952,7 @@ static void raise_barrier(struct r10conf *conf, int force)
- 
- 	/* Wait until no block IO is waiting (unless 'force') */
- 	wait_event_lock_irq(conf->wait_barrier, force || !conf->nr_waiting,
--			    conf->resync_lock, );
-+			    conf->resync_lock);
- 
- 	/* block any new IO from starting */
- 	conf->barrier++;
-@@ -960,7 +960,7 @@ static void raise_barrier(struct r10conf *conf, int force)
- 	/* Now wait for all pending IO to complete */
- 	wait_event_lock_irq(conf->wait_barrier,
- 			    !conf->nr_pending && conf->barrier < RESYNC_DEPTH,
--			    conf->resync_lock, );
-+			    conf->resync_lock);
- 
- 	spin_unlock_irq(&conf->resync_lock);
- }
-@@ -993,8 +993,7 @@ static void wait_barrier(struct r10conf *conf)
- 				    (conf->nr_pending &&
- 				     current->bio_list &&
- 				     !bio_list_empty(current->bio_list)),
--				    conf->resync_lock,
--			);
-+				    conf->resync_lock);
- 		conf->nr_waiting--;
- 	}
- 	conf->nr_pending++;
-@@ -1027,10 +1026,10 @@ static void freeze_array(struct r10conf *conf)
- 	spin_lock_irq(&conf->resync_lock);
- 	conf->barrier++;
- 	conf->nr_waiting++;
--	wait_event_lock_irq(conf->wait_barrier,
--			    conf->nr_pending == conf->nr_queued+1,
--			    conf->resync_lock,
--			    flush_pending_writes(conf));
-+	wait_event_lock_irq_cmd(conf->wait_barrier,
-+				conf->nr_pending == conf->nr_queued+1,
-+				conf->resync_lock,
-+				flush_pending_writes(conf));
- 
- 	spin_unlock_irq(&conf->resync_lock);
- }
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index c5439dc..2bf617d 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -466,7 +466,7 @@ get_active_stripe(struct r5conf *conf, sector_t sector,
- 	do {
- 		wait_event_lock_irq(conf->wait_for_stripe,
- 				    conf->quiesce == 0 || noquiesce,
--				    conf->device_lock, /* nothing */);
-+				    conf->device_lock);
- 		sh = __find_stripe(conf, sector, conf->generation - previous);
- 		if (!sh) {
- 			if (!conf->inactive_blocked)
-@@ -480,8 +480,7 @@ get_active_stripe(struct r5conf *conf, sector_t sector,
- 						    (atomic_read(&conf->active_stripes)
- 						     < (conf->max_nr_stripes *3/4)
- 						     || !conf->inactive_blocked),
--						    conf->device_lock,
--						    );
-+						    conf->device_lock);
- 				conf->inactive_blocked = 0;
- 			} else
- 				init_stripe(sh, sector, previous);
-@@ -1646,8 +1645,7 @@ static int resize_stripes(struct r5conf *conf, int newsize)
- 		spin_lock_irq(&conf->device_lock);
- 		wait_event_lock_irq(conf->wait_for_stripe,
- 				    !list_empty(&conf->inactive_list),
--				    conf->device_lock,
--				    );
-+				    conf->device_lock);
- 		osh = get_free_stripe(conf);
- 		spin_unlock_irq(&conf->device_lock);
- 		atomic_set(&nsh->count, 1);
-@@ -4000,7 +3998,7 @@ static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
- 		spin_lock_irq(&conf->device_lock);
- 		wait_event_lock_irq(conf->wait_for_stripe,
- 				    conf->quiesce == 0,
--				    conf->device_lock, /* nothing */);
-+				    conf->device_lock);
- 		atomic_inc(&conf->active_aligned_reads);
- 		spin_unlock_irq(&conf->device_lock);
- 
-@@ -6088,7 +6086,7 @@ static void raid5_quiesce(struct mddev *mddev, int state)
- 		wait_event_lock_irq(conf->wait_for_stripe,
- 				    atomic_read(&conf->active_stripes) == 0 &&
- 				    atomic_read(&conf->active_aligned_reads) == 0,
--				    conf->device_lock, /* nothing */);
-+				    conf->device_lock);
- 		conf->quiesce = 1;
- 		spin_unlock_irq(&conf->device_lock);
- 		/* allow reshape to continue */
-diff --git a/include/linux/wait.h b/include/linux/wait.h
-index 168dfe1..62ee600 100644
---- a/include/linux/wait.h
-+++ b/include/linux/wait.h
-@@ -550,6 +550,172 @@ do {									\
- 	__ret;								\
- })
- 
-+
-+#define __wait_event_lock_irq(wq, condition, lock, cmd)			\
-+do {									\
-+	DEFINE_WAIT(__wait);						\
-+									\
-+	cmd;								\
-+	for (;;) {							\
-+		prepare_to_wait(&wq, &__wait, TASK_UNINTERRUPTIBLE);	\
-+		if (condition)						\
-+			break;						\
-+		spin_unlock_irq(&lock);					\
-+		schedule();						\
-+		cmd;							\
-+		spin_lock_irq(&lock);					\
-+	}								\
-+	finish_wait(&wq, &__wait);					\
-+} while (0)
-+
-+/**
-+ * wait_event_lock_irq_cmd - sleep until a condition gets true. The
-+ *			     condition is checked under the lock. This
-+ *			     is expected to be called with the lock
-+ *			     taken.
-+ * @wq: the waitqueue to wait on
-+ * @condition: a C expression for the event to wait for
-+ * @lock: a locked spinlock_t, which will be released before schedule()
-+ *	  and cmd reacquired afterwards.
-+ * @cmd: a command which is invoked outside the critical section before
-+ *	 sleep
-+ *
-+ * The process is put to sleep (TASK_UNINTERRUPTIBLE) until the
-+ * @condition evaluates to true. The @condition is checked each time
-+ * the waitqueue @wq is woken up.
-+ *
-+ * wake_up() has to be called after changing any variable that could
-+ * change the result of the wait condition.
-+ *
-+ * This is supposed to be called while holding the lock. The lock is
-+ * dropped before going to sleep and invoking the cmd and is reacquired
-+ * afterwards.
-+ */
-+#define wait_event_lock_irq_cmd(wq, condition, lock, cmd)		\
-+do {									\
-+	if (condition)							\
-+		break;							\
-+	__wait_event_lock_irq(wq, condition, lock, cmd);		\
-+} while (0)
-+
-+/**
-+ * wait_event_lock_irq - sleep until a condition gets true. The
-+ *			 condition is checked under the lock. This
-+ *			 is expected to be called with the lock
-+ *			 taken.
-+ * @wq: the waitqueue to wait on
-+ * @condition: a C expression for the event to wait for
-+ * @lock: a locked spinlock_t, which will be released before schedule()
-+ *	  and reacquired afterwards.
-+ *
-+ * The process is put to sleep (TASK_UNINTERRUPTIBLE) until the
-+ * @condition evaluates to true. The @condition is checked each time
-+ * the waitqueue @wq is woken up.
-+ *
-+ * wake_up() has to be called after changing any variable that could
-+ * change the result of the wait condition.
-+ *
-+ * This is supposed to be called while holding the lock. The lock is
-+ * dropped before going to sleep and is reacquired afterwards.
-+ */
-+#define wait_event_lock_irq(wq, condition, lock)			\
-+do {									\
-+	if (condition)							\
-+		break;							\
-+	__wait_event_lock_irq(wq, condition, lock, );			\
-+} while (0)
-+
-+
-+#define __wait_event_interruptible_lock_irq(wq, condition,		\
-+					    lock, ret, cmd)		\
-+do {									\
-+	DEFINE_WAIT(__wait);						\
-+									\
-+	cmd;								\
-+	for (;;) {							\
-+		prepare_to_wait(&wq, &__wait, TASK_INTERRUPTIBLE);	\
-+		if (condition)						\
-+			break;						\
-+		if (signal_pending(current)) {				\
-+			ret = -ERESTARTSYS;				\
-+			break;						\
-+		}							\
-+		spin_unlock_irq(&lock);					\
-+		schedule();						\
-+		cmd;							\
-+		spin_lock_irq(&lock);					\
-+	}								\
-+	finish_wait(&wq, &__wait);					\
-+} while (0)
-+
-+/**
-+ * wait_event_interruptible_lock_irq_cmd - sleep until a condition gets true.
-+ *		The condition is checked under the lock. This is expected to
-+ *		be called with the lock taken.
-+ * @wq: the waitqueue to wait on
-+ * @condition: a C expression for the event to wait for
-+ * @lock: a locked spinlock_t, which will be released before schedule()
-+ *	  and cmd reacquired afterwards.
-+ * @cmd: a command which is invoked outside the critical section before
-+ *	 sleep
-+ *
-+ * The process is put to sleep (TASK_INTERRUPTIBLE) until the
-+ * @condition evaluates to true or a signal is received. The @condition is
-+ * checked each time the waitqueue @wq is woken up.
-+ *
-+ * wake_up() has to be called after changing any variable that could
-+ * change the result of the wait condition.
-+ *
-+ * This is supposed to be called while holding the lock. The lock is
-+ * dropped before going to sleep and invoking the cmd and is reacquired
-+ * afterwards.
-+ *
-+ * The macro will return -ERESTARTSYS if it was interrupted by a signal
-+ * and 0 if @condition evaluated to true.
-+ */
-+#define wait_event_interruptible_lock_irq_cmd(wq, condition, lock, cmd)	\
-+({									\
-+	int __ret = 0;							\
-+									\
-+	if (!(condition))						\
-+		__wait_event_interruptible_lock_irq(wq, condition,	\
-+						    lock, __ret, cmd);	\
-+	__ret;								\
-+})
-+
-+/**
-+ * wait_event_interruptible_lock_irq - sleep until a condition gets true.
-+ *		The condition is checked under the lock. This is expected
-+ *		to be called with the lock taken.
-+ * @wq: the waitqueue to wait on
-+ * @condition: a C expression for the event to wait for
-+ * @lock: a locked spinlock_t, which will be released before schedule()
-+ *	  and reacquired afterwards.
-+ *
-+ * The process is put to sleep (TASK_INTERRUPTIBLE) until the
-+ * @condition evaluates to true or signal is received. The @condition is
-+ * checked each time the waitqueue @wq is woken up.
-+ *
-+ * wake_up() has to be called after changing any variable that could
-+ * change the result of the wait condition.
-+ *
-+ * This is supposed to be called while holding the lock. The lock is
-+ * dropped before going to sleep and is reacquired afterwards.
-+ *
-+ * The macro will return -ERESTARTSYS if it was interrupted by a signal
-+ * and 0 if @condition evaluated to true.
-+ */
-+#define wait_event_interruptible_lock_irq(wq, condition, lock)		\
-+({									\
-+	int __ret = 0;							\
-+									\
-+	if (!(condition))						\
-+		__wait_event_interruptible_lock_irq(wq, condition,	\
-+						    lock, __ret, );	\
-+	__ret;								\
-+})
-+
-+
- /*
-  * These are the old interfaces to sleep waiting for an event.
-  * They are racy.  DO NOT use them, use the wait_event* interfaces above.
--- 
-1.7.7.6
+> In this particular case the partition was fine, and my thought was I
+> might add it back later.  But since the info would be dated, I guess
+> there was no real benefit to preserving the superblock.  I did want to
+> preserve the data in case things went catastrophically wrong.
+
+You don't really have a benefit of keeping the superblock. The only
+useful information is to which device it belonged to. In general you
+replace the failed drive and the new device is synced from the remaining
+good drive. Without the superblock you can read the actual data anyway
+starting from the data offset.
 
