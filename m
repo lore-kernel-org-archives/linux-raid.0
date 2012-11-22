@@ -1,49 +1,122 @@
-From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Subject: Re: mdadm --fail doesn't mark device as failed?
-Date: Thu, 22 Nov 2012 10:43:46 +0100
-Message-ID: <50ADF3D2.9030206@profitbricks.com>
-References: <1353514677.5795.14.camel@corn.betterworld.us>  <50AD0726.9090509@profitbricks.com>  <1353517421.5795.58.camel@corn.betterworld.us>  <50AD0B01.7020300@profitbricks.com>  <1353518608.5795.76.camel@corn.betterworld.us>  <50AD13A3.5040709@profitbricks.com> <1353526912.5795.104.camel@corn.betterworld.us>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: mdadm --wait returns while array under construction?
+Date: Thu, 22 Nov 2012 17:09:01 +1100
+Message-ID: <20121122170901.090fb0b0@notabene.brown>
+References: <1353434141.27671.13.camel@corn.betterworld.us>
+	<20121121084357.41f2f9d9@notabene.brown>
+	<1353516182.5795.39.camel@corn.betterworld.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/0Q+UnV4.v1u9kp_HFICsnLK"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1353526912.5795.104.camel@corn.betterworld.us>
+In-Reply-To: <1353516182.5795.39.camel@corn.betterworld.us>
 Sender: linux-raid-owner@vger.kernel.org
 To: Ross Boylan <ross@biostat.ucsf.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 21.11.2012 20:41, Ross Boylan wrote:
-> On Wed, 2012-11-21 at 18:47 +0100, Sebastian Riemer wrote:
->
->> Yes, sometimes hardware has only a short issue and operates as expected
->> afterwards. Therefore, there is an error threshold. It could be very
->> annoying to zero the superblock and to resync everything only because
->> there was a short controller issue or something similar. Without this
->> you also couldn't remove and re-add devices for testing.
-> So if my intention is to remove the "device" (in this case, partition)
-> across reboots is using sysfs as you indicated sufficient? 
+--Sig_/0Q+UnV4.v1u9kp_HFICsnLK
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Yes, if you set a high number into sysfs file "errors", then you can
-even keep the superblock but don't ask me how to revert this change. I
-don't think that there is a "MakeGood" command.
+On Wed, 21 Nov 2012 08:43:02 -0800 Ross Boylan <ross@biostat.ucsf.edu> wrot=
+e:
 
-> Zeroing the superblock (--zero-superblock)?
+> On Wed, 2012-11-21 at 08:43 +1100, NeilBrown wrote:
+> > On Tue, 20 Nov 2012 09:55:41 -0800 Ross Boylan <ross@biostat.ucsf.edu> =
+wrote:
+> >=20
+> > > While switching the disks a RAID 1 is based on I used the --wait comm=
+and
+> > > to wait for the rebuild to finish.  It returned immediately, but a
+> > > subsequent query showed it had not been rebuilt.  Have I misunderstood
+> > > something, or is this an error?
+> > >=20
+> > > While doing these commands a much larger rebuild was going on with a
+> > > different array, involving some of the same physical disks but differ=
+ent
+> > > partitions.  The partitions being rebuilt are on different physical
+> > > disks for the different arrays.
+> > >=20
+> > > Here are the logs, with version info at the end (Debian Lenny + more
+> > > recent kernel):
+> > ....
+> >=20
+> > > markov:~# uname -a
+> > > Linux markov 2.6.32-5-amd64 #1 SMP Wed Jan 12 03:40:32 UTC 2011 x86_6=
+4 GNU/Linux
+> > > markov:~# mdadm --version
+> > > mdadm - v2.6.7.2 - 14th November 2008
+> > >=20
+> > >=20
+> > > I notice that in this case, unlike the other array, the message during
+> > > the rebuild (the last detail report) does not include a line like
+> > > Rebuild Status : 0% complete
+> > >=20
+> > > I just tried --wait again to see if there was some kind of race, but
+> > > once again it returned immediately, though detail says the spare is
+> > > rebuilding.
+> >=20
+> > Can you test this patch to see if it fixes the problem?
+> >=20
+> > diff --git a/Monitor.c b/Monitor.c
+> > index c4d57c3..a5e7aaa 100644
+> > --- a/Monitor.c
+> > +++ b/Monitor.c
+> > @@ -973,7 +973,7 @@ int Wait(char *dev)
+> >  			if (e->devnum =3D=3D devnum)
+> >  				break;
+> > =20
+> > -		if (!e || e->percent < 0) {
+> > +		if (!e || e->percent =3D=3D RESYNC_NONE) {
+> >  			if (e && e->metadata_version &&
+> >  			    strncmp(e->metadata_version, "external:", 9) =3D=3D 0) {
+> >  				if (is_subarray(&e->metadata_version[9]))
+> >=20
+> >=20
+> > NeilBrown
+> Thanks for the patch.  I take it the current behavior is expected, if
+> undesirable?
 
-That's the alternative but you loose superblock data.
+Well, I didn't expect it until I looked in the code and saw the bug.  But n=
+ow
+I do ;-)
+Yes, undesirable.
 
->  Removing the device (mdadm --remove)?
+NeilBrown
 
-Here you need one of the methods above additionally.
 
-> In this particular case the partition was fine, and my thought was I
-> might add it back later.  But since the info would be dated, I guess
-> there was no real benefit to preserving the superblock.  I did want to
-> preserve the data in case things went catastrophically wrong.
+>=20
+> I'll try to apply it, but I'm in the middle of several system upgrades
+> and I may have trouble getting the source for the current system, since
+> it is out of date.
+>=20
+> I spent most of yesterday dealing with various RAID problems, which I
+> will detail in a separate message.
+> Thanks.
+> Ross
 
-You don't really have a benefit of keeping the superblock. The only
-useful information is to which device it belonged to. In general you
-replace the failed drive and the new device is synced from the remaining
-good drive. Without the superblock you can read the actual data anyway
-starting from the data offset.
 
+--Sig_/0Q+UnV4.v1u9kp_HFICsnLK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUK3BfTnsnt1WYoG5AQJ/yg//W1GW6y3RPp0JKF6TptbdJ8gbbgHAv3G7
+BiSsxNZbsyUF6uHoQ3NowVYAcL8YXB5Y7ua9gEYMR8comfEhcFTd2XFwX6dG7P5P
+e0zW3bNySjOj0yePe1SKyjTRaxMwTsBzCGaF6qZcuiDti4BKB0lTqb/OZJ6dWQvv
+aozJtPCyV7vGhjnG6AjKdrsIa2XiSbqprQFoUceTK2p0EsmlC97j9fDVg78n1XTl
+5s5XENF4DTcclhxrPm5oQuKUffJwDKbSWBvng3CdiHsWahBWMOpUMteDrmBDn8Rf
+un2NWiw9a+HwHHvV2eywmwD+/AotY0eONA3LIgogBNWw+pfRhWN4rtH9CnMyy+nH
+W1PJ//3jsh6E2vIe8sIrTW7+3IscIA3GkTE8N+M49VhSSx44fwRmmzKK162hMST+
+lJiEPaQUGbE3oMea71/1qZ4hJoCDUdrOdNYbWXB8YmIes+RVsHMfrJYe83SJAqbY
+8Lx1qaRz49YznJuO7V+bbb5lgC9Y94VZg5HqBmEoY7CtzfGrkI9VN/nW5DsMcycs
+FABmml4R0/jSJjzYKow9fGqHoN0C7hyV8ZPbITp6DRL+ty4rhJI28GKaMsCEMpfZ
+jwesi5sV/H0oxzHWrgyxa2mGXL234XdmAB85EOLkD35az5YTQGDEDuenHbl18R/c
+4juPv5EIHu0=
+=oQV8
+-----END PGP SIGNATURE-----
+
+--Sig_/0Q+UnV4.v1u9kp_HFICsnLK--
