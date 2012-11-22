@@ -1,89 +1,109 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm --fail doesn't mark device as failed?
-Date: Thu, 22 Nov 2012 15:40:27 +1100
-Message-ID: <20121122154027.39a21f09@notabene.brown>
-References: <1353514677.5795.14.camel@corn.betterworld.us>
+Subject: Re: want-replacement got stuck?
+Date: Thu, 22 Nov 2012 13:10:02 +1100
+Message-ID: <20121122131002.4944ce0d@notabene.brown>
+References: <20121120221145.9905.qmail@science.horizon.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Qzpaf.MWXx.DuTs6oz8fUPR"; protocol="application/pgp-signature"
+ boundary="Sig_/Z_hfgZr0k4F4tzdwtQpm=oE"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1353514677.5795.14.camel@corn.betterworld.us>
+In-Reply-To: <20121120221145.9905.qmail@science.horizon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ross Boylan <ross@biostat.ucsf.edu>
+To: George Spelvin <linux@horizon.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/Qzpaf.MWXx.DuTs6oz8fUPR
+--Sig_/Z_hfgZr0k4F4tzdwtQpm=oE
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 21 Nov 2012 08:17:57 -0800 Ross Boylan <ross@biostat.ucsf.edu> wrot=
-e:
+On 20 Nov 2012 17:11:45 -0500 "George Spelvin" <linux@horizon.com> wrote:
 
-> After I failed and removed a partition, mdadm --examine seems to show
-> that partition is fine.
-
-Correct.  When a device fails it is assumed that it has failed and probably
-cannot be written to.  So no attempt is made to write to it, so it will look
-unchanged to --examine.
-
-All the other devices in the array will record the fact that that device is
-now faulty, and their event counts are increased so their idea of the status
-of the various devices will take priority over the info stored on the faulty
-device - should it still be readable.
-
+> I have a RAID10 array with 4 active + 1 spare.
+> Kernel is 3.6.5, x86-64 but running 32-bit unserland.
 >=20
-> Perhaps related to this, I failed a partition and when I rebooted it
-> came up as the sole member of its RAID array.
-
-This is a bug which is fixed in my mdadm development tree which will
-eventually become mdadm-3.3.
-
-Does the other decice get assembled into a different array, so you
-end up with two arrays (split brain)?
-
-What can happen is "mdadm --incremental /dev/whatever" is call on each devi=
-ce
-and that results in the correct array (with non-failed device) being
-assembled.
-Then "mdadm -As" gets run and it sees the failed device and doesn't notice
-the other array, so it assembles the failed device into an array of its own.
-
-The fix causes "mdadm -As" to notice the arrays that "mdadm --incremental"
-has created.
-
-
+> After a recent failure on sdd2, the spare sdc2 was
+> activated and things looked something like (manual edit,
+> may not be perfectly faithful):
 >=20
-> Is this behavior expected?  Is there a way to make the failures more
-> convincing?
+> md5 : active raid10 sdd2[4](F) sdb2[1] sde2[2] sdc2[3] sda2[0]
+>       725591552 blocks 256K chunks 2 near-copies [4/4] [UUUU]
+>       bitmap: 50/173 pages [200KB], 2048KB chunk
+>=20
+> smartctl -A showed 1 pending sector, but badblocks didn't
+> find it, so I decided to play with moving things back:
+>=20
+> # badblocks -s -v /dev/sdd2
+> # mdadm /dev/md5 -r /dev/sdd2 -a /dev/sdd2
+> # echo want_replacement >  /sys/block/md5/md/dev-sdc2/state
+>=20
+> This ran for a while, but now it has stopped, with the following
+> configuration:
+>=20
+> md5 : active raid10 sdd2[3](R) sdb2[1] sde2[2] sdc2[4](F) sda2[0]
+>       725591552 blocks 256K chunks 2 near-copies [4/4] [UUU_]
+>       bitmap: 50/173 pages [200KB], 2048KB chunk
+>=20
+> # [530]# cat /sys/block/md5/md/dev-sd?2/state
+> in_sync
+> in_sync
+> faulty,want_replacement
+> in_sync,replacement
+> in_sync
+>=20
+> I'm not quite sure how to interpret this state, and why it is showing
+> "4/4" good drives but [UUU_].
 
-mdadm --zero /dev/whatever
+"4/4" means the array is not degraded.
+[UUU_] means that the drive in slot 3 is faulty.
+The way this can happen without the array being degraded is that the
+replacement is fully in-sync.
 
-after failing and removing the device.
-Or unplug it and put in an acid bath - that makes failure pretty convincing.
+What has happened is the replacement finished perfectly and the want-replace
+device was marked as faulty, but when md tried to remove that faulty device
+it found that it was still active.  Some request that has previously been
+sent hadn't completed yet.  So it couldn't remove it immediately.
+Unfortunately it doesn't retry in any great hurry .. or possibly at all.=20
+I'll have to look in to that and figure out the best fix.
+
+...
+> It appears to have completed:
+> Nov 20 18:40:01 science kernel: md: md5: recovery done.
+> Nov 20 18:40:01 science kernel: RAID10 conf printout:
+> Nov 20 18:40:01 science kernel: --- wd:4 rd:4
+> Nov 20 18:40:01 science kernel: disk 0, wo:0, o:1, dev:sda2
+> Nov 20 18:40:01 science kernel: disk 1, wo:0, o:1, dev:sdb2
+> Nov 20 18:40:01 science kernel: disk 2, wo:0, o:1, dev:sde2
+> Nov 20 18:40:01 science kernel: disk 3, wo:1, o:0, dev:sdc2
+>=20
+> But as mentioned, the RAID state is a bit odd.  sdc2 is still in the
+> array and sdd2 is not.
+
+Yes, it completed.  The "conf printout" doesn't mention replacement devices
+yet.  I guess it should..
 
 NeilBrown
 
---Sig_/Qzpaf.MWXx.DuTs6oz8fUPR
+--Sig_/Z_hfgZr0k4F4tzdwtQpm=oE
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUK2suznsnt1WYoG5AQLARA//aozwK2Ikp0LmaelHKzA8w2KSSIxVijQ9
-+I0rUh4T5w21DzCx7CiE96zeqqpV+yrC3AoyMrelGH7Lpawm3pE3LzDI+xryaCQX
-7WFLDSUvW4TRnvPPMu+N0iHcoyeThk6rO1QQUp0ZrdhM87vJxNDQWia4VhqcktrI
-bv9CVvEOEDdBENnxB66FYefjyU2TiObbFssqw5hcxU+GCABif1RR5xXCEF/05gIL
-TMAONe9NiBj5s2So2yI6b3rzk2G4tpW2bsgPkQFbko6+WwHKfkAxJ3xIsJOuK4sB
-s5eu1Qa63I7eWusVvj6psrW305pieSIsj6LPEuszFJ+j2fk7lwNb4dVwVVAZSzQv
-Lc+NeZ5W16hbp0wkF35Jpqfhp+p+oEAc/C4WyEyrrdK4UvRk9a211FTqq0mwAa6o
-5Pw+vpwhaYwjbSu2s5mucN3kAof76VrNmwYybZYVsS1jS4mVhYiMO0o+zf1gtaiJ
-ZDBsqCJqjHu+TPYjRwew6sb9jK0u0u8UwD3UwMaNc1HSXyj3sR3ICNjd5++177E9
-oCsRMtFkv7avp3/qANIKLAdvEksW4Y/EGNcrflG88HgnqDBGhJa9nrqEoAjLhytO
-iZi9Nx8R7Ckjw2RhO3fh1Amh7dleWUSdSeleZokmGidbyjNOEUzQFJWsOpk9qFWI
-URy+bkKXlFg=
-=+9US
+iQIVAwUBUK2Jejnsnt1WYoG5AQLEthAAoZReZA/Juz5VVd+0ULuuXv3JV2pU/XB8
+T6qW2GThctdwtIwcmg53Oe9HaidAYcKG+0svbF3M/G9gkIDkkdF8S9fPs6jkQMDr
+FYzWwjkxmMsz2sBupjgdVJAkd6UlrBC0w8s6RVgLHgd9GYLrCvZMGaxWQnBILp+n
+EthYTbTfhRc/zKTX0b546AqhAtZI8s1c4ptoh47CZwLgo4AAo8ygOeqdA+aBZCz8
+R59rb4/FI1n0EZGv4a8rsaRS3cIbcHzIA4JDXQXdYDlE9rTqYFSIFbdn5hqjx4dM
+HXd5c8XUOiNDrMx5KODzCfsY6sD+iaq/69ud1Pti8J85dLrvhXwnVZvChuW+dney
+73lzselh5r/GD59o8gDCigtBTg1jCxs8BS4CkmyUsz92lv+BoUcopdkyY8pw6kyj
+KlfINHapa2/y3QGIMqP6CNcTLl8p1/HqP6z0BlWqnX8js7Lio6AXjUXGB411wEwr
+uBLyt5FXjPb2JPSGmXgt/3vxRdQcdlG4GlfBdR9ZTmnk0pMW8oK3UJIDIC2OUHUi
+/c++cvYlbk5vaJsSOxmVpD8+tRydKBp4ebsfLjOyEMrGvMe8xQG/XVurTU1e7qpX
+nBkGej0YXpDrvGT3tLPC2zZSjal9dz/EBzMSxrEl2aTF5wk/+g3KrGp4CdhWTEco
+stHZPHxVWE0=
+=Kjl3
 -----END PGP SIGNATURE-----
 
---Sig_/Qzpaf.MWXx.DuTs6oz8fUPR--
+--Sig_/Z_hfgZr0k4F4tzdwtQpm=oE--
