@@ -1,109 +1,100 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: want-replacement got stuck?
-Date: Thu, 22 Nov 2012 13:10:02 +1100
-Message-ID: <20121122131002.4944ce0d@notabene.brown>
-References: <20121120221145.9905.qmail@science.horizon.com>
+Subject: [PULL REQUEST] Several bug fixes for md in 3.7
+Date: Sat, 24 Nov 2012 06:40:01 +1100
+Message-ID: <20121124064001.5a205e7f@notabene.brown>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Z_hfgZr0k4F4tzdwtQpm=oE"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121120221145.9905.qmail@science.horizon.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: George Spelvin <linux@horizon.com>
-Cc: linux-raid@vger.kernel.org
+ boundary="Sig_/lWDu.JgA0yHM9lC3y7OvzVQ"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: George Spelvin <linux@horizon.com>, Shaohua Li <shli@kernel.org>, majianpeng <majianpeng@gmail.com>, zhuwenfeng@kedacom.com, linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/Z_hfgZr0k4F4tzdwtQpm=oE
+--Sig_/lWDu.JgA0yHM9lC3y7OvzVQ
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On 20 Nov 2012 17:11:45 -0500 "George Spelvin" <linux@horizon.com> wrote:
 
-> I have a RAID10 array with 4 active + 1 spare.
-> Kernel is 3.6.5, x86-64 but running 32-bit unserland.
->=20
-> After a recent failure on sdd2, the spare sdc2 was
-> activated and things looked something like (manual edit,
-> may not be perfectly faithful):
->=20
-> md5 : active raid10 sdd2[4](F) sdb2[1] sde2[2] sdc2[3] sda2[0]
->       725591552 blocks 256K chunks 2 near-copies [4/4] [UUUU]
->       bitmap: 50/173 pages [200KB], 2048KB chunk
->=20
-> smartctl -A showed 1 pending sector, but badblocks didn't
-> find it, so I decided to play with moving things back:
->=20
-> # badblocks -s -v /dev/sdd2
-> # mdadm /dev/md5 -r /dev/sdd2 -a /dev/sdd2
-> # echo want_replacement >  /sys/block/md5/md/dev-sdc2/state
->=20
-> This ran for a while, but now it has stopped, with the following
-> configuration:
->=20
-> md5 : active raid10 sdd2[3](R) sdb2[1] sde2[2] sdc2[4](F) sda2[0]
->       725591552 blocks 256K chunks 2 near-copies [4/4] [UUU_]
->       bitmap: 50/173 pages [200KB], 2048KB chunk
->=20
-> # [530]# cat /sys/block/md5/md/dev-sd?2/state
-> in_sync
-> in_sync
-> faulty,want_replacement
-> in_sync,replacement
-> in_sync
->=20
-> I'm not quite sure how to interpret this state, and why it is showing
-> "4/4" good drives but [UUU_].
+Coming a bit late to the -rc party, but here are some bug fixes found
+recently through testing, regular usages, and code inspection.
 
-"4/4" means the array is not degraded.
-[UUU_] means that the drive in slot 3 is faulty.
-The way this can happen without the array being degraded is that the
-replacement is fully in-sync.
-
-What has happened is the replacement finished perfectly and the want-replace
-device was marked as faulty, but when md tried to remove that faulty device
-it found that it was still active.  Some request that has previously been
-sent hadn't completed yet.  So it couldn't remove it immediately.
-Unfortunately it doesn't retry in any great hurry .. or possibly at all.=20
-I'll have to look in to that and figure out the best fix.
-
-...
-> It appears to have completed:
-> Nov 20 18:40:01 science kernel: md: md5: recovery done.
-> Nov 20 18:40:01 science kernel: RAID10 conf printout:
-> Nov 20 18:40:01 science kernel: --- wd:4 rd:4
-> Nov 20 18:40:01 science kernel: disk 0, wo:0, o:1, dev:sda2
-> Nov 20 18:40:01 science kernel: disk 1, wo:0, o:1, dev:sdb2
-> Nov 20 18:40:01 science kernel: disk 2, wo:0, o:1, dev:sde2
-> Nov 20 18:40:01 science kernel: disk 3, wo:1, o:0, dev:sdc2
->=20
-> But as mentioned, the RAID state is a bit odd.  sdc2 is still in the
-> array and sdd2 is not.
-
-Yes, it completed.  The "conf printout" doesn't mention replacement devices
-yet.  I guess it should..
+Most worrying is a data corruption risk when 'replacing' devices in a RAID1=
+0.
+Maybe most interesting is that generic DISCARD support requires granularity=
+ to
+be a power of two, so RAID5 cannot make the  granularity be one-stripe in
+most cases.  This probably makes DISCARD on raid5 less than useful.
+Hopefully the generic code will get fixed.
 
 NeilBrown
 
---Sig_/Z_hfgZr0k4F4tzdwtQpm=oE
+
+The following changes since commit ed30be077e705e0dff53bfc51d23feb8aeeab78f:
+
+  MD RAID10: Fix oops when creating RAID10 arrays via dm-raid.c (2012-10-31=
+ 11:42:30 +1100)
+
+are available in the git repository at:
+
+  git://neil.brown.name/md/ tags/md-3.7-fixes
+
+for you to fetch changes up to 884162df2aadd7414bef4935e1a54976fd4e3988:
+
+  md/raid10: decrement correct pending counter when writing to replacement.=
+ (2012-11-22 15:12:42 +1100)
+
+----------------------------------------------------------------
+Several bug fixes for md in 3.7
+
+ - raid5 discard has problems
+ - raid10 replacement devices have problems
+ - bad block lock seqlock usage has problems
+ - dm-raid doesn't free everything
+
+----------------------------------------------------------------
+NeilBrown (6):
+      md: make sure everything is freed when dm-raid stops an array.
+      md/raid5: round discard alignment up to power of 2.
+      md/raid5: move resolving of reconstruct_state earlier in     stripe_h=
+andle.
+      md/raid5: Make sure we clear R5_Discard when discard is finished.
+      md/raid10: close race that lose writes lost when replacement complete=
+s.
+      md/raid10: decrement correct pending counter when writing to replacem=
+ent.
+
+majianpeng (2):
+      md: Reassigned the parameters if read_seqretry returned true in func =
+md_is_badblock.
+      md: Avoid write invalid address if read_seqretry returned true.
+
+ drivers/md/md.c     |  27 ++++++++---
+ drivers/md/raid10.c | 131 +++++++++++++++++++++++++++---------------------=
+----
+ drivers/md/raid5.c  |  79 ++++++++++++++++---------------
+ 3 files changed, 132 insertions(+), 105 deletions(-)
+
+--Sig_/lWDu.JgA0yHM9lC3y7OvzVQ
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUK2Jejnsnt1WYoG5AQLEthAAoZReZA/Juz5VVd+0ULuuXv3JV2pU/XB8
-T6qW2GThctdwtIwcmg53Oe9HaidAYcKG+0svbF3M/G9gkIDkkdF8S9fPs6jkQMDr
-FYzWwjkxmMsz2sBupjgdVJAkd6UlrBC0w8s6RVgLHgd9GYLrCvZMGaxWQnBILp+n
-EthYTbTfhRc/zKTX0b546AqhAtZI8s1c4ptoh47CZwLgo4AAo8ygOeqdA+aBZCz8
-R59rb4/FI1n0EZGv4a8rsaRS3cIbcHzIA4JDXQXdYDlE9rTqYFSIFbdn5hqjx4dM
-HXd5c8XUOiNDrMx5KODzCfsY6sD+iaq/69ud1Pti8J85dLrvhXwnVZvChuW+dney
-73lzselh5r/GD59o8gDCigtBTg1jCxs8BS4CkmyUsz92lv+BoUcopdkyY8pw6kyj
-KlfINHapa2/y3QGIMqP6CNcTLl8p1/HqP6z0BlWqnX8js7Lio6AXjUXGB411wEwr
-uBLyt5FXjPb2JPSGmXgt/3vxRdQcdlG4GlfBdR9ZTmnk0pMW8oK3UJIDIC2OUHUi
-/c++cvYlbk5vaJsSOxmVpD8+tRydKBp4ebsfLjOyEMrGvMe8xQG/XVurTU1e7qpX
-nBkGej0YXpDrvGT3tLPC2zZSjal9dz/EBzMSxrEl2aTF5wk/+g3KrGp4CdhWTEco
-stHZPHxVWE0=
-=Kjl3
+iQIVAwUBUK/RETnsnt1WYoG5AQIDVA/9E3fFaOIN3uPca9gTUxjdsfVMz31IhFfN
+XwV4cI4vS4iJz4LqbtHXHvpWejDcM1/+gSq/t1ptJkAF7JU4JvOennHsjx0GP0py
+daLXd4w764Rji1sos+LB019tdFUmGyKsHJ8MsETB+1Q4nDqZGbn1yTlPetkYtOL7
+VLpTrE2LtGfpQBtEIcg98m6dycZ+m5CkUsEYeBUUGcLs3sh/3haIySNl35L7CokR
+emihkbC48Yd6WUV+90hT9KAoRZsXZY6b7WRvHZPbAThSwNPtGc+iFaExOD3lLFDN
+Zc1MDMcp/j43ptxhvvekdXJBBgHMMZOxWFnd8k601EKSkjUFzDAUZNgZxqaxjAq+
+SY2PWQgotF8Ab4b5jU+AcRgDt7VALEAJBbPcosFTg72JDWgDnYmHXHmu7aIsuKLX
+4T4zD8S669ZKwdBERZEn3TGSUIsQqylSWBqTuog0g89IRVpXchBdRkpXEF00o7vU
+qlwX3bD+573mpCNUVJbQ85G0hTknTOda05yoO3eQIJ9LAEK/l+tWIGQ1Cbnz1LUE
+se6Os/wjOXB8gcy0LMzv7AAeJrSeOLdmORYR6GF5a1XTmpGQKTnF3F5VcUd/mhjG
+cqSp+VXAemj9WTUHW6PXw/pGgeJCL5hZkQ5Uv/u55FKs8HCtmd3/duRZBFTSuO+P
+UGs4chpwwjY=
+=ELKL
 -----END PGP SIGNATURE-----
 
---Sig_/Z_hfgZr0k4F4tzdwtQpm=oE--
+--Sig_/lWDu.JgA0yHM9lC3y7OvzVQ--
