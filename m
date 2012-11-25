@@ -1,53 +1,28 @@
-From: joystick <joystick@shiftmail.org>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
 Subject: Re: Suggestion for hot-replace
-Date: Sun, 25 Nov 2012 18:59:19 +0100
-Message-ID: <50B25C77.4000502@shiftmail.org>
-References: <50B1BCBD.70306@zytor.com>
+Date: Sun, 25 Nov 2012 19:01:52 +0100 (CET)
+Message-ID: <alpine.DEB.2.00.1211251900390.27834@uplift.swm.pp.se>
+References: <10107277.2.1353857505404.JavaMail.root@zimbra>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50B1BCBD.70306@zytor.com>
+In-Reply-To: <10107277.2.1353857505404.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Cc: Tommy Apel Hansen <tommyapeldk@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 11/25/12 07:37, H. Peter Anvin wrote:
-> I was looking at the hot-replace (want_replacement) feature, and I had 
-> a thought: it would be nice to have this in a form which *didn't* fail 
-> the incumbent drive after the operation is over, and instead turned it 
-> into a spare.  This would make it much easier and safer to 
-> periodically rotate and test any hot spares in the system.  The main 
-> problem with hot spares is that you don't actually know if they work 
-> properly until there is a failover...
->
->     -hpa
->
+On Sun, 25 Nov 2012, Roy Sigurd Karlsbakk wrote:
 
-Sorry I don't agree.
+> Btw, is there a way to replace a drive without failing one? In RAID-5, a 
+> common issue is to have a failed drive and then find bad sectors on 
+> another. In this setting (and possibly others), it'd be good to have md 
+> replace the drive while still active (like what can be done in ZFS).
 
-Firstly, it causes confusion. If you want a replacement in 90% of cases 
-it means that the current drive is defective. If you put the replaced 
-drive into the spare pool instead of kicking it out then you have to 
-remember (by serial number?) which one it was to actually remove it from 
-the system. If you forget to note it down, then you are in serious 
-troubles, because if that "spare" then gets caught in another (or the 
-same) array needing a recovery, you will have a high probability of 
-exotic and unexpected multiple failures situations.
+That is what "want_replacement" does. You need 2.6.33 or later however.
 
-Also, if you are uncertain of the health of your spares, risking your 
-array by throwing one into the array is definitely unwise. There are 
-other tecniques to test a spare that don't involve risking you array on 
-it: you can remove one spare from the spare pool (best if you have 2+ 
-spares but can also be done with 1), read/write all of it various times 
-as a validation, then re-add it back to the spares pool. Even just 
-reading it from beginning to end with dd could be enough and for this 
-you don't even have to remove it from the spare pool. And this doesn't 
-degrade the array performances, while your suggestion would.
+<http://pl.digipedia.org/usenet/thread/19071/39605/> is the thread for 
+someone else who asked similar question.
 
-Thirdly, if you really want that (imho unwise) behaviour, it's easy to 
-implement from userspace without asing the MD developers to do so: 
-monitor the replacement process, as soon as you see it terminating and 
-you see the target drive in Failed status, remove and re-add it back as 
-a spare. That's it.
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
