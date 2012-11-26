@@ -1,72 +1,48 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: a question about how to repair raid5
-Date: Mon, 26 Nov 2012 12:50:55 +0000
-Message-ID: <20121126125055.GA29049@cthulhu.home.robinhill.me.uk>
-References: <201211262032343900581@meganovo.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Know about chunk size
+Date: Mon, 26 Nov 2012 16:11:34 -0600
+Message-ID: <50B3E916.90205@hardwarefreak.com>
+References: <186704.2.1353915309639.JavaMail.root@zimbra>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="HcAYCG3uE/tztfnV"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201211262032343900581@meganovo.com>
+In-Reply-To: <186704.2.1353915309639.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: hanguozhong <hanguozhong@meganovo.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Cc: Kks Kbase <kks.kbase@yahoo.in>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 11/26/2012 1:35 AM, Roy Sigurd Karlsbakk wrote:
+>> I want to know what is best chunk size to create s/w raid devices?
+> 
+> That depends on the workload, file sizes etc. 
 
---HcAYCG3uE/tztfnV
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Correct.  And greatly depends on array type.
 
-On Mon Nov 26, 2012 at 08:32:38 +0800, hanguozhong wrote:
+> The default will probably do fine
 
-> Hi, every one:
-> I have a question about how to repair raid5.
-> Days ago, I received a email from the monitor of mdadm.=20
-> The email told me that there were lots of mismatch_cnt in the array.=20
-> Then I tried to find the solution of this problem on Google. Most solutio=
-ns were as the following:
->=20
-> #echo repair /sys/block/md0/md/sync_action
-> #echo "check" > /sys/block/md0/md/sync_action
-> #cat /sys/block/md0/md/mismatch_cnt
->=20
-> I did repair the array like the above.=20
-> But I found that it took lots of time to "repair" and "check" the array.=
-=20
-> Why there was a "check" after "repair"I did not know. And it spent as muc=
-h time as "repair".
-> Is it redundant? Anyone can help me?
+This is not true of metadata 1.2 and parity arrays in which case the
+default chunk size is 512KB.  That's way too large for anything but
+large file streaming workloads.  Most workloads involve metadata and
+small files.  This has been discussed previously in detail on this list
+and on the XFS list.  For most workloads other than large file
+streaming, mirroring+striping is best, but if you must use parity RAID a
+small chunk size of 32/64KB yields superior IO performance due to
+decreased overhead during RMW.
 
-That's the correct process, yes. The "check" will verify whether the
-parity block for each stripe is correct, whereas the "repair" will also
-rewrite any parity blocks which don't match. You rerun the "check" after
-the "repair" to ensure that everything has been repaired correctly (if
-there's still mismatches then it would point towards a problem with your
-setup somewhere). Both are doing a full read of all disks, so will take
-about the same time (the number of additional writes that the "repair"
-needs to do should not impact on the time significantly).
+>> Also is it possible to change the chunk size for an existing array?
 
-HTH,
-    Robin
+No.  You must destroy and recreate it with the new chunk size.  If one
+creates an array with an appropriate chunk size there is no need to ever
+change it, UNLESS the primary workload hitting the array changes from
+random IO to large streaming, or the reverse.  In such a case one
+typically builds a new server with a new array, or simply adds a new
+array to the existing server for the new workload.  If you are
+redeploying the server/array, destroy and recreate with the new optimal
+chunk size.
 
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+-- 
+Stan
 
---HcAYCG3uE/tztfnV
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAlCzZa4ACgkQShxCyD40xBJ4xQCgwxFh5LuFoZCz0eP7IX90E+Je
-vJ4AoK0ofVVZxR3n89Wjkknz7Cbpb/mp
-=UD8z
------END PGP SIGNATURE-----
-
---HcAYCG3uE/tztfnV--
