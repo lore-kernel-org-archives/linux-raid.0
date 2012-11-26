@@ -1,43 +1,27 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: Know about chunk size
-Date: Mon, 26 Nov 2012 08:35:09 +0100 (CET)
-Message-ID: <186704.2.1353915309639.JavaMail.root@zimbra>
-References: <1353813334.71701.YahooMailNeo@web190606.mail.sg3.yahoo.com>
+From: hanguozhong <hanguozhong@meganovo.com>
+Subject: a question about how to repair raid5
+Date: Mon, 26 Nov 2012 20:32:38 +0800
+Message-ID: <201211262032343900581@meganovo.com>
+Reply-To: hanguozhong <hanguozhong@meganovo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1353813334.71701.YahooMailNeo@web190606.mail.sg3.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kks Kbase <kks.kbase@yahoo.in>
-Cc: Linux Raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> I want to know what is best chunk size to create s/w raid devices?
+SGksIGV2ZXJ5IG9uZToNCkkgaGF2ZSBhIHF1ZXN0aW9uIGFib3V0IGhvdyB0byByZXBhaXIgcmFp
+ZDUuDQpEYXlzIGFnbywgSSByZWNlaXZlZCBhIGVtYWlsIGZyb20gdGhlIG1vbml0b3Igb2YgbWRh
+ZG0uIA0KVGhlIGVtYWlsIHRvbGQgbWUgdGhhdCB0aGVyZSB3ZXJlIGxvdHMgb2YgbWlzbWF0Y2hf
+Y250IGluIHRoZSBhcnJheS4gDQpUaGVuIEkgdHJpZWQgdG8gZmluZCB0aGUgc29sdXRpb24gb2Yg
+dGhpcyBwcm9ibGVtIG9uIEdvb2dsZS4gTW9zdCBzb2x1dGlvbnMgd2VyZSBhcyB0aGUgZm9sbG93
+aW5nOg0KDQojZWNobyByZXBhaXIgL3N5cy9ibG9jay9tZDAvbWQvc3luY19hY3Rpb24NCiNlY2hv
+ICJjaGVjayIgPiAvc3lzL2Jsb2NrL21kMC9tZC9zeW5jX2FjdGlvbg0KI2NhdCAvc3lzL2Jsb2Nr
+L21kMC9tZC9taXNtYXRjaF9jbnQNCg0KSSBkaWQgcmVwYWlyIHRoZSBhcnJheSBsaWtlIHRoZSBh
+Ym92ZS4gDQpCdXQgSSBmb3VuZCB0aGF0IGl0IHRvb2sgbG90cyBvZiB0aW1lIHRvICJyZXBhaXIi
+IGFuZCAiY2hlY2siIHRoZSBhcnJheS4gDQpXaHkgdGhlcmUgd2FzIGEgImNoZWNrIiBhZnRlciAi
+cmVwYWlyIkkgZGlkIG5vdCBrbm93LiBBbmQgaXQgc3BlbnQgYXMgbXVjaCB0aW1lIGFzICJyZXBh
+aXIiLg0KSXMgaXQgcmVkdW5kYW50PyBBbnlvbmUgY2FuIGhlbHAgbWU/DQo=
 
-That depends on the workload, file sizes etc. The default will probably=
- do fine
-
-> Also is it possible to change the chunk size for an existing array?
-
-AFAIK, no
-
-Vennlige hilsener / Best regards
-
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
