@@ -1,27 +1,40 @@
-From: hanguozhong <hanguozhong@meganovo.com>
-Subject: a question about how to repair raid5
-Date: Mon, 26 Nov 2012 20:32:38 +0800
-Message-ID: <201211262032343900581@meganovo.com>
-Reply-To: hanguozhong <hanguozhong@meganovo.com>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Checksumming RAID?
+Date: Mon, 26 Nov 2012 14:27:30 +0100 (CET)
+Message-ID: <14319197.21.1353936449959.JavaMail.root@zimbra>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-SGksIGV2ZXJ5IG9uZToNCkkgaGF2ZSBhIHF1ZXN0aW9uIGFib3V0IGhvdyB0byByZXBhaXIgcmFp
-ZDUuDQpEYXlzIGFnbywgSSByZWNlaXZlZCBhIGVtYWlsIGZyb20gdGhlIG1vbml0b3Igb2YgbWRh
-ZG0uIA0KVGhlIGVtYWlsIHRvbGQgbWUgdGhhdCB0aGVyZSB3ZXJlIGxvdHMgb2YgbWlzbWF0Y2hf
-Y250IGluIHRoZSBhcnJheS4gDQpUaGVuIEkgdHJpZWQgdG8gZmluZCB0aGUgc29sdXRpb24gb2Yg
-dGhpcyBwcm9ibGVtIG9uIEdvb2dsZS4gTW9zdCBzb2x1dGlvbnMgd2VyZSBhcyB0aGUgZm9sbG93
-aW5nOg0KDQojZWNobyByZXBhaXIgL3N5cy9ibG9jay9tZDAvbWQvc3luY19hY3Rpb24NCiNlY2hv
-ICJjaGVjayIgPiAvc3lzL2Jsb2NrL21kMC9tZC9zeW5jX2FjdGlvbg0KI2NhdCAvc3lzL2Jsb2Nr
-L21kMC9tZC9taXNtYXRjaF9jbnQNCg0KSSBkaWQgcmVwYWlyIHRoZSBhcnJheSBsaWtlIHRoZSBh
-Ym92ZS4gDQpCdXQgSSBmb3VuZCB0aGF0IGl0IHRvb2sgbG90cyBvZiB0aW1lIHRvICJyZXBhaXIi
-IGFuZCAiY2hlY2siIHRoZSBhcnJheS4gDQpXaHkgdGhlcmUgd2FzIGEgImNoZWNrIiBhZnRlciAi
-cmVwYWlyIkkgZGlkIG5vdCBrbm93LiBBbmQgaXQgc3BlbnQgYXMgbXVjaCB0aW1lIGFzICJyZXBh
-aXIiLg0KSXMgaXQgcmVkdW5kYW50PyBBbnlvbmUgY2FuIGhlbHAgbWU/DQo=
+Hi all
 
+I see from an article at http://pages.cs.wisc.edu/~bpkroth/cs736/md-che=
+cksums/md-checksums-paper.pdf that an implementation has been made to a=
+llow for ZFS-like checksumming inside Linux MD. However, this code does=
+n't seem to exist in any kernel trees. Does anyone know the current sta=
+tus for data checksumming in MD?
+
+--=20
+Vennlige hilsener / Best regards
+
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
