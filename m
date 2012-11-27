@@ -1,114 +1,49 @@
-From: Ross Boylan <ross@biostat.ucsf.edu>
-Subject: Re: mdadm --wait returns while array under construction? [patch
-	question]
-Date: Tue, 27 Nov 2012 10:28:33 -0800
-Message-ID: <1354040913.27664.11.camel@corn.betterworld.us>
-References: <1353434141.27671.13.camel@corn.betterworld.us>
-	 <20121121084357.41f2f9d9@notabene.brown>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: Know about chunk size
+Date: Tue, 27 Nov 2012 19:36:40 +0100
+Message-ID: <20121127183640.GA4109@lazy.lzy>
+References: <186704.2.1353915309639.JavaMail.root@zimbra>
+ <50B3E916.90205@hardwarefreak.com>
+ <1354001957.48019.YahooMailNeo@web190602.mail.sg3.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121121084357.41f2f9d9@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <1354001957.48019.YahooMailNeo@web190602.mail.sg3.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: ross@biostat.ucsf.edu, linux-raid@vger.kernel.org
+To: Kks Kbase <kks.kbase@yahoo.in>
+Cc: "stan@hardwarefreak.com" <stan@hardwarefreak.com>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 2012-11-21 at 08:43 +1100, NeilBrown wrote:
-> On Tue, 20 Nov 2012 09:55:41 -0800 Ross Boylan <ross@biostat.ucsf.edu> wrote:
-> 
-> > While switching the disks a RAID 1 is based on I used the --wait command
-> > to wait for the rebuild to finish.  It returned immediately, but a
-> > subsequent query showed it had not been rebuilt.  Have I misunderstood
-> > something, or is this an error?
-> > 
-> > While doing these commands a much larger rebuild was going on with a
-> > different array, involving some of the same physical disks but different
-> > partitions.  The partitions being rebuilt are on different physical
-> > disks for the different arrays.
-> > 
-> > Here are the logs, with version info at the end (Debian Lenny + more
-> > recent kernel):
-> ....
-> 
-> > markov:~# uname -a
-> > Linux markov 2.6.32-5-amd64 #1 SMP Wed Jan 12 03:40:32 UTC 2011 x86_64 GNU/Linux
-> > markov:~# mdadm --version
-> > mdadm - v2.6.7.2 - 14th November 2008
-> > 
-> > 
-> > I notice that in this case, unlike the other array, the message during
-> > the rebuild (the last detail report) does not include a line like
-> > Rebuild Status : 0% complete
-> > 
-> > I just tried --wait again to see if there was some kind of race, but
-> > once again it returned immediately, though detail says the spare is
-> > rebuilding.
-> 
-> Can you test this patch to see if it fixes the problem?
-> 
-> diff --git a/Monitor.c b/Monitor.c
-> index c4d57c3..a5e7aaa 100644
-> --- a/Monitor.c
-> +++ b/Monitor.c
-> @@ -973,7 +973,7 @@ int Wait(char *dev)
->  			if (e->devnum == devnum)
->  				break;
->  
-> -		if (!e || e->percent < 0) {
-> +		if (!e || e->percent == RESYNC_NONE) {
->  			if (e && e->metadata_version &&
->  			    strncmp(e->metadata_version, "external:", 9) == 0) {
->  				if (is_subarray(&e->metadata_version[9]))
-> 
-> 
-> NeilBrown
-My source for 2.6.7.2 looks somewhat different.  It only has 627 lines;
-I think this is the relevant code (at the end of the file):
-/* Not really Monitor but ... */
-int Wait(char *dev)
-{
-        struct stat stb;
-        int devnum;
-        int rv = 1;
+On Tue, Nov 27, 2012 at 03:39:17PM +0800, Kks Kbase wrote:
+[...]
+> >> Also is it possible to change the chunk size for an existing array=
+?
+>=20
+> No.=A0 You must destroy and recreate it with the new chunk size.=A0 I=
+f one
 
-        if (stat(dev, &stb) != 0) {
-                fprintf(stderr, Name ": Cannot find %s: %s\n", dev,
-                        strerror(errno));
-                return 2;
-        }
-        if (major(stb.st_rdev) == MD_MAJOR)
-                devnum = minor(stb.st_rdev);
-        else
-                devnum = -1-(minor(stb.st_rdev)/64);
+It seems to me it is possible.
 
-        while(1) {
-                struct mdstat_ent *ms = mdstat_read(1, 0);
-                struct mdstat_ent *e;
+Should be one option of "Grow", as far as I can remember.
 
-                for (e=ms ; e; e=e->next)
-                        if (e->devnum == devnum)
-                                break;
+The issue is, it is not possible to increase the size,
+unless it will fit the current number of chunks.
 
-                if (!e || e->percent < 0) {
-                        free_mdstat(ms);
-                        return rv;
-                }
-                free(ms);
-                rv = 0;
-                mdstat_wait(5);
-        }
-}
+So, for example, if the size is doubled, there should
+be an even number of chunks.
 
+=46urthermore, LVM will not be happy if the alignment is
+lost due to this. It will complain, but it will work.
 
-The section
-                if (!e || e->percent < 0) {
-                        free_mdstat(ms);
-                        return rv;
- is the only one with e->percent < 0.  Is it OK to change that to 
-if (!e || e->percent == RESYNC_NONE) {?
+bye,
 
-Thanks.
-Ross
+--=20
 
+piergiorgio
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
