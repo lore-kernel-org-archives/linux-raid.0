@@ -1,40 +1,37 @@
-From: Chris Murphy <lists@colorremedies.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: Checksumming RAID?
-Date: Tue, 27 Nov 2012 12:50:36 -0700
-Message-ID: <C516161F-6B9A-41D8-BFA0-7B6ACF848DB8@colorremedies.com>
-References: <11737275.28.1354044453853.JavaMail.root@zimbra>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Date: Tue, 27 Nov 2012 14:49:04 -0600
+Message-ID: <50B52740.5000201@hardwarefreak.com>
+References: <22100889.14.1354016374529.JavaMail.root@zimbra> <50B4B40B.3000807@hesbynett.no>
+Reply-To: stan@hardwarefreak.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <11737275.28.1354044453853.JavaMail.root@zimbra>
+In-Reply-To: <50B4B40B.3000807@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux Raid <linux-raid@vger.kernel.org>
+To: David Brown <david.brown@hesbynett.no>
+Cc: Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Linux Raid <linux-raid@vger.kernel.org>, Bernd Schubert <bernd.schubert@fastmail.fm>
 List-Id: linux-raid.ids
 
+On 11/27/2012 6:37 AM, David Brown wrote:
 
-On Nov 27, 2012, at 12:27 PM, Roy Sigurd Karlsbakk <roy@karlsbakk.net> wrote:
-
-> ----- Opprinnelig melding -----
->> On Nov 27, 2012, at 6:05 AM, David Brown <david.brown@hesbynett.no>
->> wrote:
->>> 
->>> It is /undetected/ disk errors that are a problem. Typical figures I
->>> have seen are around 1 in 1e12 4KB blocks - or 1 in 3e16 bits.
->> 
->> Is this with consumer SATA? Or other?
+> To do checksumming (and in particular, recovery), requires higher level
+> knowledge of the data.  The filesystem can track when it writes a file,
+> and update metadata (including, if desired, a data checksum) once it
+> knows the file is correctly stored.  But I don't think it can sensibly
+> be done at the block device level - the recovery procedure doesn't know
+> what is old data, what is new data, or which bit is important to the
+> filesystem.
 > 
-> According to a few studies I've read, the number of silent errors are identical on both consumer SATA drives and SAS drives. It's the density that makes errors, and the platters and disk heads are produced alike.
+> So I think it can make sense to use a filesystem like ZFS or BTRFS that
+> can do checksumming - that is a reasonable level to add the checksum.
 
-That's not what I'm reading:
+You'll see CRC in XFS in the future as well.  Some of the foundation is
+already laid to allow it, but IIRC it requires an on disk format change
+for full implementation.  On disk format changes are a big deal and are
+taken with great care.  IIRC XFS has only seen one or two in 18 years.
 
-Corruption detected in 8.5% of nearline disks, and 1.9% in enterprise disks.
-http://www.pdsi-scidac.org/events/PDSW09/resources/pdsw09_slides13.pdf
+-- 
+Stan
 
-In this study it's 0.86% of nearline, and 0.065% of enterprise disks developing checksum mismatches, out of 1.53 million disks.
-http://static.usenix.org/event/fast08/tech/full_papers/bairavasundaram/bairavasundaram.pdf
-
-The ratios are the same.
-
-
-Chris Murphy
