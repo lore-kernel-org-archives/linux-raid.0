@@ -1,203 +1,256 @@
-From: Ross Boylan <ross@biostat.ucsf.edu>
-Subject: Re: System runs with RAID but fails to reboot [explanation?]
-Date: Mon, 26 Nov 2012 15:48:42 -0800
-Message-ID: <1353973722.7078.51.camel@markov.biostat.ucsf.edu>
-References: <1353517137.5795.55.camel@corn.betterworld.us>
-	 <20121122155236.0e7689c6@notabene.brown>
-	 <1353716131.18439.29.camel@corn.betterworld.us>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Where can i download mdadm 3.3
+Date: Tue, 27 Nov 2012 11:13:06 +1100
+Message-ID: <20121127111306.6799c0cb@notabene.brown>
+References: <CAGmni9ozPTrqeg+RLBu=J8NEqqK95nwf0ymK7qA7DgpZNRHX=A@mail.gmail.com>
+	<20121120122622.34f9bacd@notabene.brown>
+	<CAGmni9oWcBYNyfKW4YQUPORRgz+hPM1tQ_jzWrOiNyZV2UmPEA@mail.gmail.com>
+	<CAGmni9rkwQO4iHjg+tHSiPQm7Hx_y86cgBUfyio=HrR1Sp9TDg@mail.gmail.com>
+	<20121121082500.411ea21b@notabene.brown>
+	<CAGmni9pqesseBqR-Udczt2BP8ewUguEawAZ=cLQW=nOPqFx-gQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/CpGBSUgrtPf8pp0JS7DTtn+"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1353716131.18439.29.camel@corn.betterworld.us>
+In-Reply-To: <CAGmni9pqesseBqR-Udczt2BP8ewUguEawAZ=cLQW=nOPqFx-gQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: ross@biostat.ucsf.edu, linux-raid@vger.kernel.org
+To: Salatiel Filho <salatiel.filho@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I may have an explanation for what happened, including why md0 and md1
-were treated differently.
-On Fri, 2012-11-23 at 16:15 -0800, Ross Boylan wrote:
-> On Thu, 2012-11-22 at 15:52 +1100, NeilBrown wrote:
-> > On Wed, 21 Nov 2012 08:58:57 -0800 Ross Boylan <ross@biostat.ucsf.edu> wrote:
-> > 
-> > > I spent most of yesterday dealing with the failure of my (md) RAID
-> > > arrays to come up on reboot.  If anyone can explain what happened or
-> > > what I can do to avoid it, I'd appreciate it.  Also, I'd like to know if
-> > > the failure of one device in a RAID 1 can contaminate the other with bad
-> > > data (I think the answer must be yes, in general, but I can hope).
-> > > 
-> > > In particular, I'll need to reinsert the disks I removed (described
-> > > below) without getting everything screwed up.
-> > > 
-> > > Linux 2.6.32 amd64 kernel.
-> > > 
-> > > I'll describe what I did for md1 first:
-> > > 
-> > > 1. At the start, system has 3 physically identical disks. sda and sdc
-> > > are twins and sdb is unused, though partitioned. md1 is a raid1 of sda3
-> > > and sdc3.  Disks have DOS partitions.
-> > > 2. Add 2 larger drives to the system.  They become sdd and sde.  These 2
-> > > are physically identical to each other, and bigger than the first batch
-> > > of drives.
-> > > 3. GPT format the drives with larger partitions than sda.
-> > > 4. mdadm --fail /dev/md1 /dev/sdc3
-> > > 5. mdadm --add /dev/md1 /dev/sdd4.  Wait for sync.
-> > > 6. madadm --add /dev/md1 /dev/sde4.
-> > > 7. mdadm --grow /dev/md1 -n 3.  Wait for sync.
-> > > 
-> > > md0 was same story except I only added sdd (and I used partitions sda1
-> > > and sdd2).
-> > > 
-> > > This all seemed to be working fine.
-> > > 
-> > > Reboot.
-> > > 
-> > > System came up with md0 as sda1 and sdd2, as expected.
-> > > But md1 was the failed sdc3 only.  Note I did not remove the partition
-> > > from md1; maybe I needed to?
-First, the Debian initrd I'm using does recognize GPT partitions, and so
-unrecognized partitions did not cause the problem.
+--Sig_/CpGBSUgrtPf8pp0JS7DTtn+
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Second, the initrd executes mdadm --assemble --scan --run --auto=yes.
-This uses conf/conf.d/md and etc/mdadm/mdadm.conf.   The latter includes
---num-devices for each array.  Since I did not regenerate this after
-changing the array sizes, it was 2 for both arrays.  man mdadm.conf says
-ARRAY  The ARRAY lines identify actual arrays.  The second word on  the
-    line  should  be  the name of the device where the array is nor-
-    mally assembled, such as /dev/md1.   Subsequent  words  identify
-    the  array,  or  identify  the  array as a member of a group. If
-    multiple identities are given,  then  a  component  device  must
-    match  ALL  identities  to be considered a match. [ num-devices is
-one of the identity keywords].
+On Sun, 25 Nov 2012 10:30:10 -0300 Salatiel Filho <salatiel.filho@gmail.com>
+wrote:
 
-This was fine for md0 (unless it should have been 3 because of the
-failed device), and at least consistent with the metadata on sdc3,
-formerly part of md1.  It was inconsistent with the metadata for md1 on
-its current components, sda3, sdd4, and sde4, all of which indicates a
-size of 3 (or 4 if failed devices count).
+> On Tue, Nov 20, 2012 at 6:25 PM, NeilBrown <neilb@suse.de> wrote:
+> >
+> > On Tue, 20 Nov 2012 14:00:35 -0300 Salatiel Filho <salatiel.filho@gmail=
+.com>
+> > wrote:
+> >
+> > > []'s
+> > > Salatiel
+> > >
+> > >
+> > > On Tue, Nov 20, 2012 at 8:02 AM, Salatiel Filho
+> > > <salatiel.filho@gmail.com> wrote:
+> > > > Thanks Neil !
+> > > > []'s
+> > > > Salatiel
+> > > >
+> > > >
+> > > > On Mon, Nov 19, 2012 at 10:26 PM, NeilBrown <neilb@suse.de> wrote:
+> > > >> On Sun, 18 Nov 2012 10:42:22 -0300 Salatiel Filho <salatiel.filho@=
+gmail.com>
+> > > >> wrote:
+> > > >>
+> > > >>> Hi guys, i will be building a few arrays very soon and i'd like to
+> > > >>> test the badblock feature and the replaceable feature, but i have=
+n`t
+> > > >>> found where i can download the source of mdadm 1.3. Where can i g=
+et it
+> > > >>> ?
+> > > >>>
+> > > >> You can't.  3.3 doesn't exist yet.
+> > > >>
+> > > >> However
+> > > >>   git clone git://neil.brown.name/mdadm
+> > > >>   cd mdadm
+> > > >>   make
+> > > >>
+> > > >> will get you code that supports bad blocks and replaceable devices.
+> > > >>
+> > > >> Alternately you can get a tar file at
+> > > >>
+> > > >>    http://git.neil.brown.name/git?p=3Dmdadm.git;a=3Dsnapshot;h=3Dm=
+aster
+> > > >>
+> > > >> NeilBrown
+> > >
+> > > Forgot to send a copy to the list:
+> > >
+> > >
+> > > Now the question, how do i enable badblock list ?
+> > > # mdadm -A /dev/md1 /dev/sd[bcd]2 --update=3Dbbl  ?
+> >
+> > Yes, I think that is right - does it work?
+> >
+> > >
+> > > I actually created also a new array
+> > > # mdadm -C -n4 -l5 -e 1.2 /dev/md2 /dev/sd[bcde]3 ,
+> > > but how do i verify if badblock support was enabled ?
+> >
+> > mdadm -E /dev/sdb3
+> >
+> > should show
+> >
+> >    Bad Block Log : 512 entries available at offset xxx sectors
+> >
+> > NeilBrown
+> >
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+>=20
+>=20
+> Well, about the tests:
+> I have put some data on a degraded raid 5 with 3 disks where one of
+> them has random read errors. After that i added a new disk and the
+> raid started to resync.
+> After 62.5% i started getting read errors on /dev/sdd2 and the array
+> stopped to resync.
 
-I do not know if the "must match" logic applies to --num-devices (since
-the manual says the option is mainly for compatibility with the output
-of --examine --scan), nor do I know if the --run option overrides the
-matching requirement.  But md0's components might match the num-devices
-in mdadm.conf, while md1's current components do not match. md1's old
-commponent does match.
+Any useful messages from the kernel log?
 
-I don't know if, before all that, udev triggers attempts to assemble
-arrays incrementally.  Nor do I know how such incremental assembly works
-when some of the candidate devices are out of date.
+>=20
+> 1) Shouldn`t badblocks be ignored to allow the recover of most data?
+> I can see in mdadm -E /dev/sdd2   Bad Block Log : 512 entries
+> available at offset 262128 sectors - bad blocks present.
 
-So the mismatch between the array size for md0, but not md1, might
-explain why md0 came up as expected, but md1 came up as a single, old
-partition instead of the 3 current ones.
+That's the theory.  And bad blocks found should be recorded on both sdd2 and
+the new device.
 
-However, it is awkward for this account that after I set the array sizes
-to 1 for both md0 and md1 (using partitions from sda)--which would be
-inconsistent with the size in mdadm.conf--they both came up.  There were
-fewer choices at that point, since I had removed all the other disks.
+>=20
+> 2) After stop the array and try to reassembled with   mdadm -A
+> /dev/md1 /dev/sd[bcde]2 --force i got the following message:
+> mdadm -A /dev/md1 /dev/sd[bcde]2 --force
+> mdadm: forcing event count in /dev/sdb2(0) from 87705 upto 87713
+> mdadm: forcing event count in /dev/sdc2(1) from 87705 upto 87713
+> mdadm: /dev/md1 has been started with 3 drives (out of 4).
 
-Third, my recent experience suggests something more is going on, and
-perhaps the count considerations just mentioned are not that important.
-I'll put what happened at the end, since it happened after everything
-else described here.
-> > > 
-> > > Shutdown, removed disk sdc for the computer.  Reboot.
-> > > /md0 is reassembled to but md1 is not, and so the system can not not
-> > > come up (since root is on md0).  BTW, md1 is used as a PV for LVM; md0
-> > > is /boot.
-> > > 
-> > > In at least some kernels the GPT partitions were not recognized in the
-> > > initrd of the boot process (Knoppix 6--same version of the kernel,
-> > > 2.6.32, as my system, though I'm not sure the kernel modules are same as
-> > > for Debian).  I'm not sure if the GPT partitions were recognized under
-> > > Debian in the initrd, though they obviously were in the running system
-> > > at the start.
-> > 
-> > Well if your initrd doesn't recognise GPT, then that would explain your
-> > problems.
-> I later found, using the Debian initrd, that arrays with fewer than the
-> expected number of devices (as in the n= paramter) do not get activated.
-> I think that's what you mean by "explain your problems." Or did you have
-> something else in mind?
-> 
-> At least I  think I found arrays with missing parts are not activated;
-> perhaps there was something else about my operations from knoppix 7
-> (described 2 paragraps below this) that helped.
-> 
-> The other problem with that discovery is that the first reboot activated
-> md1 with only 1 partition, even though md1 had never been configured
-> with <2.
-> 
-> Most of my theories have the character of being consistent with some
-> behavior I saw and inconsistent with other observed behavior.  Possibly
-> I misperceived or misremembered something.
-> > 
-> > > 
-> > > After much trashing, I pulled all drives but sda and sdb.  This was
-> > > still not sufficient to boot because the md's wouldn't come up. md0 was
-> > > reported as assembled, but was not readable.  I'm pretty sure that was
-> > > because it wasn't activated (--run) since md was waiting for the
-> > > expected number of disks (2).  md1, as before, wasn't assembled at all. 
-> > > 
-> > > >From knoppix  (v7, 32 bit) I activated both md's and shrunk them to size
-> > > 1 (--grow --force -n 1).  In retrospect this probably could have been
-> > > done from the initrd.
-> > > 
-> > > Then I was able to boot.
-> > > 
-> > > I repartitioned sdb and added it to the RAID arrays.  This led to hard
-> > > disk failures on sdb, though the arrays eventually were assembled.  I
-> > > failed and removed the sdb partitions from the arrays and shrunk them.
-> > > I hope the bad sdb has not screwed up the good  sda.
-> > 
-> > Its not entirely impossible (I've seen it happen) but it is very unlikely
-> > that hardware errors on one device will "infect" the other.
-> Our local sysadmin also believes the errors in sdb were either
-> corrected, or resulted in an error code, rather than ever sending bad
-> data back.  I'm proceeding on the assumption sda is OK.
-> > 
-> > > 
-> > > Thanks for any assistance you can offer.
-> > 
-> > What sort of assistance are you after?
-> I'm trying to understand what happened and how to avoid having it happen
-> again.
-> 
-> I'm also trying to understand under what conditions it is safe to insert
-> disks that have out of date versions of arrays in them.
-> 
-> > 
-> > first questions is: does the initrd handle GPT.  If not, fix that first.
-> That is the first thing I'll check when I'm at the machine.  The problem
-> with the "initrd didn't recognize GPT theory" was that in my very first
-> reboot md0 was assemebled from two partitions, one of which was on a GPT
-> disk. (another example of "all my theories have contradictory evidence")
-> 
-> Ross
-After running for awhile with both RAIDs having size 1 and using sda
-exclusively, I shut down the sytem, removed the physically failing sdb,
-and added the 2 GPT disks, formerly known as sdd and sde.  sdd has
-partitions that were part of md0 and md1; sde has a partition that was
-part of md1.  For simplicity I'll continue to refer to them as sdd and
-sde, even though they were called sdb and sdc in the new configuration.
+That doesn't look good.  Again, complete kernel messages might help.
 
-This time, md0 came up with sdd2 (which is old) only and md1 came up
-correctly with sda3 only.  Substantively sdd2 and sda1 are identical,
-since they hold /boot and there have been no recent changes to it.  
+>=20
+> and i noticed that sde2 was not added to the array.
+>=20
+> # mdadm -D /dev/md1
+> /dev/md1:
+>         Version : 1.2
+>   Creation Time : Tue Nov 20 08:43:35 2012
+>      Raid Level : raid5
+>      Array Size : 3918320640 (3736.80 GiB 4012.36 GB)
+>   Used Dev Size : 1306106880 (1245.60 GiB 1337.45 GB)
+>    Raid Devices : 4
+>   Total Devices : 3
+>     Persistence : Superblock is persistent
+>=20
+>   Intent Bitmap : Internal
+>=20
+>     Update Time : Sun Nov 25 10:04:06 2012
+>           State : active, degraded
+>  Active Devices : 3
+> Working Devices : 3
+>  Failed Devices : 0
+>   Spare Devices : 0
+>=20
+>          Layout : left-symmetric
+>      Chunk Size : 512K
+>=20
+>            Name : zotac:1  (local to host zotac)
+>            UUID : 93e55a39:94681b9d:4c0a1a15:cad51a71
+>          Events : 87713
+>=20
+>     Number   Major   Minor   RaidDevice State
+>        0       8       18        0      active sync   /dev/sdb2
+>        1       8       34        1      active sync   /dev/sdc2
+>        2       8       50        2      active sync   /dev/sdd2
+>        6       0        0        6      removed
+>=20
+>=20
+> After add it manually , mdadm -a /dev/md1 /dev/sde2
+> the rebuild started from the beginning, ignoring the recovery offset:
 
-This happened across 2 consecutive boots.  Once again, the older device
-(sdd2) was activated in preference to the newer one (sda1).
+That would be because the 'Events' number is too old so the 'recovery offse=
+t'
+is suspect.
 
-In terms of counts for md0, mdadm.conf continued to indicate 2; sda1
-indicates 1 device; and sdd2 indicates 2 devices + 1 failed device.
 
-BTW, by using break=bottom as a kernel parameter one can interrupt the
-initrd just after mdadm has run and see if the mappings are right.  For
-the 2nd boot I did just that, and then manually shutdown md0 and brought
-it back with sda1.  The code appears to offer break=post-mdadm as an
-alternative, but that did not work for me (there was no break).  These
-are Debian-specific tweaks, I believe.
+>=20
+> # mdadm -E /dev/sde2
+> /dev/sde2:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0xb
+>      Array UUID : 93e55a39:94681b9d:4c0a1a15:cad51a71
+>            Name : zotac:1  (local to host zotac)
+>   Creation Time : Tue Nov 20 08:43:35 2012
+>      Raid Level : raid5
+>    Raid Devices : 4
+>=20
+>  Avail Dev Size : 3592190757 (1712.89 GiB 1839.20 GB)
+>      Array Size : 3918320640 (3736.80 GiB 4012.36 GB)
+>   Used Dev Size : 2612213760 (1245.60 GiB 1337.45 GB)
+>     Data Offset : 262144 sectors
+>    Super Offset : 8 sectors
+> Recovery Offset : 1634547480 sectors
+>           State : clean
+>     Device UUID : 08019409:984c2217:21706201:039b6bbf
+>=20
+> Internal Bitmap : 8 sectors from superblock
+>     Update Time : Sun Nov 25 10:04:06 2012
+>   Bad Block Log : 512 entries available at offset 262128 sectors
+>        Checksum : bd6c4947 - correct
+>          Events : 87705
+>=20
+>          Layout : left-symmetric
+>      Chunk Size : 512K
+>=20
+>    Device Role : Active device 3
+>    Array State : AAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D =
+replacing)
+>=20
+>=20
+>=20
+> 3) What's the correct procedure that allows me recover most of the
+> data, ignoring the readerrors ?
+>=20
+> 4) I know that sdd2 has read errors at  sectors 1634863440 -
+> 1634863800, if i write zero directly to those sectors using 'dd' , how
+> will raid behave during rebuild? After a write it will probably be
+> able to read it again (i dont care about the data on those sectors) .
 
-Ross
+If it can read, it will, and will write to the new device.
 
+>=20
+> 5) Right now i am not using replaceable option , but where replaceable
+> option could help me here ?
+
+I don't think 'replaceable' is particularly relevant here.
+
+NeilBrown
+
+
+>=20
+>=20
+> Thanks !
+
+
+--Sig_/CpGBSUgrtPf8pp0JS7DTtn+
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBULQFkznsnt1WYoG5AQIZ2A//SqtCReLJ8baPBVvuEOipiXc0x9SwTATv
+RW1v9yJgL9gTLKt/tGADr4OqAo1AJtgzyXBg19ZQbFTHsoQI1KSt1v5N05kePfQ3
+3lfFWbTKkYoxVqV2/oc+9A6FsUJPbZu7WpcFXFWRfghfPiOV0z9B90k4YdHZVt7r
+4BPPES6YvQZ0F+60LunL2+tchxpB1b7PRV3XuWpMYkg32ZXvt+7xSXzpex5sFrxj
+fRtO0BmsPV5KCy4QHEkvvSr9OpkVuMwBFE2knc2WvB0cck/nikHSLsAuhh95aRZN
+63x8PRjE0utMUMXVwiBZgNuwkmGobnassyOyegiZsEtEkmRQnrg9X4jtyX4o2PP4
+yFKFRBUIfdxLyMf2N1F6HS5Vr7Y1w+ZqEiUGxUhpEsuofUZ0nyZSfwE9UxdFr9Hd
+IquwWMWZWSlU8iZ7/na422bz5wCHvsmtWe4fVYwEducBiGjNx1gsiMYDoCNlghDb
+0YJeeH3psjWxxzmuu/qmN4QldloG/kJyaEJLlDtmQL0wGl4q62jaNsns9uUd+Ol1
+0aTL+gj2g/BA6tdUv9ChlNU5FjR5IENYWH8tJrwe3ur8kk+OD6MPkpBu6ldmp5aA
+ojVch6y21wclrME+dh6GVGPLvg//bFHErIWzrwQ7vQizyvGP5er2LE5iOxn4hI46
++KhZ+mKy0OQ=
+=1oRj
+-----END PGP SIGNATURE-----
+
+--Sig_/CpGBSUgrtPf8pp0JS7DTtn+--
