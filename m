@@ -1,104 +1,124 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [BUG?] Grow on raid0 causes a level change to raid4 on metadata
- v1.2
-Date: Tue, 27 Nov 2012 11:38:32 +1100
-Message-ID: <20121127113832.51544a66@notabene.brown>
-References: <8565BDA60DEA9E4C91B1047AD1958FBE1DEC60DA@IRSMSX104.ger.corp.intel.com>
+Subject: Re: Hang in md-raid1 with 3.7-rcX
+Date: Tue, 27 Nov 2012 12:05:28 +1100
+Message-ID: <20121127120528.637099aa@notabene.brown>
+References: <CAPVoSvQNVnz=NrkNaZ4G_k76WuVaAJ24uEXkAyJvDNLHHPs1Kw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/f=wUIIw0rmdBV4TUdNzOX1j"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8565BDA60DEA9E4C91B1047AD1958FBE1DEC60DA@IRSMSX104.ger.corp.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Tomczak, Marcin" <marcin.tomczak@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Dorau, Lukasz" <lukasz.dorau@intel.com>
+ boundary="Sig_/+/BvzJH0uc1Pxr2lWE/tfst"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAPVoSvQNVnz=NrkNaZ4G_k76WuVaAJ24uEXkAyJvDNLHHPs1Kw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Torsten Kaiser <just.for.lkml@googlemail.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/f=wUIIw0rmdBV4TUdNzOX1j
+--Sig_/+/BvzJH0uc1Pxr2lWE/tfst
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 23 Nov 2012 14:06:09 +0000 "Tomczak, Marcin"
-<marcin.tomczak@intel.com> wrote:
+On Sat, 24 Nov 2012 10:18:44 +0100 Torsten Kaiser
+<just.for.lkml@googlemail.com> wrote:
 
-> Hi. There is a problem when I try to resize raid0 by adding disk to raid=
+> After my system got stuck with 3.7.0-rc2 as reported in
+> http://marc.info/?l=3Dlinux-kernel&m=3D135142236520624 LOCKDEP seem to
+> blame XFS, because it found 2 possible deadlocks. But after these
+> locking issues where fixed, my system got stuck again with 3.7.0-rc6
+> as reported in http://marc.info/?l=3Dlinux-kernel&m=3D135344072325490
+> Dave Chinner thinks its an issue within md, that it gets stuck and
+> that will then prevent any further xfs activity, and that I should
+> report it to the raid mailing list.
+>=20
+> The issue seems to be that multiple processes (kswapd0, xfsaild/md4
+> and flush-9:4) get stuck in md_super_wait() like this:
+> [<ffffffff816b1224>] schedule+0x24/0x60
+> [<ffffffff814f9dad>] md_super_wait+0x4d/0x80
+> [<ffffffff8105ca30>] ? __init_waitqueue_head+0x60/0x60
+> [<ffffffff81500753>] bitmap_unplug+0x173/0x180
+> [<ffffffff810b6acf>] ? write_cache_pages+0x12f/0x420
+> [<ffffffff810b6700>] ? set_page_dirty_lock+0x60/0x60
+> [<ffffffff814e8eb8>] raid1_unplug+0x98/0x110
+> [<ffffffff81278a6d>] blk_flush_plug_list+0xad/0x240
+> [<ffffffff81278c13>] blk_finish_plug+0x13/0x50
+>=20
+> The full hung-tasks stack traces and the output from SysRq+W can be
+> found at http://marc.info/?l=3Dlinux-kernel&m=3D135344072325490 or in the
+> LKML thread 'Hang in XFS reclaim on 3.7.0-rc3'.
+
+Yes, it does look like an md bug....
+Can you test to see if this fixes it?
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 636bae0..a0f7309 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -963,7 +963,7 @@ static void raid1_unplug(struct blk_plug_cb *cb, bool f=
+rom_schedule)
+ 	struct r1conf *conf =3D mddev->private;
+ 	struct bio *bio;
 =20
-> volume. I have checked the problem on mdadm v3.2.3 and on a code from=20
-> neil_master branch.
->=20
-> OS: Red Hat 6.3 GA
-> reproduction: always
-> system disk: sda
-> other disks: sdb, sdc, sdd
->=20
->=20
-> I. mdadm version: v3.2.3
->=20
-> # mdadm -CR /dev/md/vol metadata=3D1.2 -l 0 --size=3D4G -n 2 /dev/sdb /de=
-v/sdc
-> # mdadm -G /dev/md/vol -n 3 --add /dev/sdd
-> mdadm: /dev/md/vol: could not set level to raid4
->=20
->=20
-> II. mdadm version: branch neil_master
->=20
-> SHA1 ID: 30d48159710996be7770bfbfbddc826317b561aa
-> Monitor: don't complain about non-monitorable arrays in mdadm.conf
-> Author: NeilBrown <neilb@suse.de>  2012-10-24 04:09:09
-> Committer: NeilBrown <neilb@suse.de>  2012-10-24 04:09:09
->=20
-> # mdadm -CR /dev/md127 --metadata=3D1.2 -l 0 --size=3D15G -n 2 /dev/sdb /=
-dev/sdc
+-	if (from_schedule) {
++	if (from_schedule || current->bio_list) {
+ 		spin_lock_irq(&conf->device_lock);
+ 		bio_list_merge(&conf->pending_bio_list, &plug->pending);
+ 		conf->pending_count +=3D plug->pending_cnt;
 
---size isn't honoured for RAID0 (or Linear).  I should probably do something
-about that - generate a warning at least.
+>=20
+> I tried to understand how this could happen, but I don't see anything
+> wrong. Only that md_super_wait() looks like an open coded version of
+> __wait_event() and could be replaced by using it.
 
-> # mdadm -G /dev/md127 -n 3 --add /dev/sdd
-> mdadm: level of /dev/md127 changed to raid4
-> mdadm: added /dev/sdd
-> mdadm: this change will reduce the size of the array.
->        use --grow --array-size first to truncate array.
->        e.g. mdadm --grow /dev/md127 --array-size 47185920
-
-This happens because the metadata has a size recorded in it, but it is being
-ignored, which results in confusions.
+yeah.  md_super_wait was much more complex back when we had to support
+barrier operations.  When they were removed it was simplified a lot and as
+you say it could be simplifier further.  Patches welcome.
 
 
-> # cat /proc/mdstat
-> Personalities : [raid0] [raid6] [raid5] [raid4]
-> md127 : active raid4 sdd[3] sdc[1] sdb[0]
->       78107648 blocks super 1.2 level 4, 512k chunk, algorithm 5 [3/3] [U=
-UU]
 >=20
+> http://marc.info/?l=3Dlinux-raid&m=3D135283030027665 looks like the same
+> issue, but using ext4 instead of xfs.
+
+yes, sure does.
+
 >=20
-> What do you think about this mdadm behaviour?
+> My setup wrt. md is two normal sata disks on a normal ahci controller
+> (AMD SB850 southbridge).
+> Both disks are divided into 4 partitions and each one assembled into a
+> separate raid1.
+> One (md5) is used for swap, the others hold xfs filesystems for /boot/
+> (md4), / (md6) and /home/ (md7).
+>=20
+> I will try to provide any information you ask, but I can't reproduce
+> the hang on demand so gathering more information about that state is
+> not so easy, but I will try.
 
-Not ideal, but not a big problem if you avoid trying to set --size for RAID=
-0.
+I'm fairly confident the above patch will fixes it, and in any case it fixes
+a real bug.  So if you could just run with it and confirm in a week or so
+that the problem hasn't recurred, that might have to do.
 
+Thanks,
 NeilBrown
 
 
---Sig_/f=wUIIw0rmdBV4TUdNzOX1j
+--Sig_/+/BvzJH0uc1Pxr2lWE/tfst
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBULQLiDnsnt1WYoG5AQIwWg//blzJX9vBZSqNfsFMeSIQ1oe5tsSih/nB
-DxWlS0hNt/dnQfa+QyVxlHPKCFds/ICu1tAY6vqIaZgmBRTo4AsD99C4zKkERCyT
-iVlBRM6mqom0hxJs/YIE5CIFrqo8xpqZx4ePRPy2b+MGYjiHN+N6JICJSBKyE5YX
-gIvQr5d7xJtn5EJ5W3LVMkVkDLfausLWwV24HqiMSfmC5kDndISLRRbMTJVLexCw
-pOMeQ82n8J7S+zPsPueLElAvkncbU8FWfPj4eUcBRmWFD2JRcaGIv14sTHF9LE1J
-cJ6chcEMyR8RGkYDJUJPjMsmBS5axlUFCnOkzk/HPiydPvaLk17lzztQ3eG9aVQl
-Js2kXpx3a3xD3uMjcn+SeeevJpFzSbbMaOgYj9OFGr/a2+RS23aEEjWORPZNbd+r
-dKmV75lhRTnXZoqz5tLAyV9GU1pO8pj6wSX7k/TnmRvV1D1+qxJQCX9FOyIKlnfp
-43kc6VfT80uo3Ssm5ZHcC452+4RWUkxrKkWxNORp8db2vYlypVs5vl2nyckVW51q
-tJ9GKUaautr8fJZhV71EicuyJmDsvZBDEbEy+cGcEj92dDQleEmYCowy9WWfRyaD
-3m5RNZ48TCsFnMCfA4jy3c/AXg66Wc+4ArPL3AiGCL02hkyjdjPpmZFuqxqsOc/B
-Q1+NCzt97qI=
-=81yO
+iQIVAwUBULQR2Tnsnt1WYoG5AQJCIhAAmtFKz8Fh6BeQx0r4Wdatdr+eGCpLDkt6
+Hp82o28Azli95SU1yL+IPvpDeeCnQxY7yrjJ88wviyVwQvauNxszd3xPWvBkIELf
+EODvyeaizVOPWQLR0m34b/YcjvOHsG+xbicToh/PuECnbk3Q0GIDrXkLsCHknRpo
+esyJEK5j4TiTROeoBwzSnczvAazi3zCksvGFZmoZwLIziykFkNF4Jt+HZk5tz5Oq
+Z6BVQCkw7OPhuhvYe/RNMOYBtGIUjuCL+5wjKAhs0B//cQFNzw4aYIjt6uK5/x6d
+jLnLf77OL9m2+IWk63Jo11X/NHjx5S2OEE9SQA5QU2bRrMpoHVKwpVtTFhTkuXJp
+rlcrD6g7TBZThcuzX8L1jqlJQ8LvSZKZ74CUhuUkW7RiBcPxxYNETN7C65BbW9Wr
+NmqXnLnoutg6BnP5TCx/4d5nXZQmgz5oke92/NjATYSQdyZD66TJvOEGdBkwy89J
+qwTYsODiQwj7VDquF8lbiJaR5WDcKKGtRCSDEE5vumicfv5vyPNmEETqFIe+Xb7h
+dzGV6CsAH/Bq+EPhaaiTMhbF/IkzmHuc3r1T/myEcrcHSu979ydolxtDc3UtgdbM
+3eimczCOXEEUNAHbxZI2mJ1HHEaGiXM/cyrST3lZH5kztq7Fdsug7j3xV93UtFF3
+xlOG9iE7SfI=
+=a2JU
 -----END PGP SIGNATURE-----
 
---Sig_/f=wUIIw0rmdBV4TUdNzOX1j--
+--Sig_/+/BvzJH0uc1Pxr2lWE/tfst--
