@@ -1,111 +1,74 @@
-From: David Brown <david.brown@hesbynett.no>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
 Subject: Re: Checksumming RAID?
-Date: Tue, 27 Nov 2012 12:20:53 +0100
-Message-ID: <50B4A215.4000203@hesbynett.no>
-References: <14319197.21.1353936449959.JavaMail.root@zimbra> <50B48BAA.8060903@hesbynett.no> <50B4934F.6060105@fastmail.fm>
+Date: Tue, 27 Nov 2012 12:39:34 +0100 (CET)
+Message-ID: <22100889.14.1354016374529.JavaMail.root@zimbra>
+References: <50B4A215.4000203@hesbynett.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50B4934F.6060105@fastmail.fm>
+In-Reply-To: <50B4A215.4000203@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bernd Schubert <bernd.schubert@fastmail.fm>
-Cc: Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Linux Raid <linux-raid@vger.kernel.org>
+To: David Brown <david.brown@hesbynett.no>
+Cc: Linux Raid <linux-raid@vger.kernel.org>, Bernd Schubert <bernd.schubert@fastmail.fm>
 List-Id: linux-raid.ids
 
-On 27/11/2012 11:17, Bernd Schubert wrote:
-> On 11/27/2012 10:45 AM, David Brown wrote:
->> On 26/11/2012 14:27, Roy Sigurd Karlsbakk wrote:
->>> Hi all
->>>
->>> I see from an article at
->>> http://pages.cs.wisc.edu/~bpkroth/cs736/md-checksums/md-checksums-paper.pdf
->>>
->>>
->>> that an implementation has been made to allow for ZFS-like
->>> checksumming inside Linux MD. However, this code doesn't seem to
->>> exist in any kernel trees. Does anyone know the current status for
->>> data checksumming in MD?
->>>
->>
->> See <http://neil.brown.name/blog/20110227114201> for a discussion on
->> data checksums.
->>
->> As far as I have seen on this mailing list, there has been no "official"
->> work on checksums as described in that paper.  I suspect it's just a
->> matter of a student or two doing a project as part of their university
->> degree.  It's great that people can do that - they are free to take a
->> copy of the kernel, and experiment with new ideas.  If the ideas are
->> good, then it is possible to work it back into the mainline kernel
->> development.
->>
->> However, in this case I think there is not much support for data
->> checksumming amongst the "big boys" in this part of the Linux kernel -
->> as explained by Neil in his blog post.
->>
->> My first thought when reading the paper in question is that it doesn't
->> really add much that is actually useful.  md does not need checksums -
->> it already has a more powerful system for error detection and correction
->> through the parity blocks.  If you want more checksumming than raid5
->> gives you, then use raid6.
->>
->> What might be of interest for confirming the data integrity is so say
->> that whenever a block is to be read, the stripe it is in should be
->> scrubbed.  This would enforce regular scrubbing of data that is
->> regularly used, and give the same benefits as the article's data
->> checksumming.  It would lead to more disk reads when you have small
->> reads, but the overhead would be small for larger reads or for RMW
->> writes (since the whole stripe, minus the parity, is read in this case).
->>
->> However, referring to another of Neil's blog posts at
->> <http://neil.brown.name/blog/20100211050355>, you have to ask yourself
->> how likely is it that data will be read from the drive with an error,
->> but without the disk telling you of the error - and what can you
->> sensibly do about it?  You don't need checksums to tell you that there
->> is a problem reading data from the disk - the disk already has very
->> comprehensive checking of the data, and if that fails it will report an
->> error and the md layer will re-construct the data from the parity and
->> the rest of the stripe.
->
-> Thats the theory, real live unfortunately teaches a different story. I
-> just helped to recover as much data as possible from a troublesome
-> infortrend raid system, which again is part of a software raid. The
-> stupid hardware raid decided for unknown reasons to return different
-> data on each read. And this is already the 4th or 5th time that happened
-> (its a rather big installation and each time another hardware raid
-> causes the trouble).
-> And yes, I also aready have seen several hard disks to return wrong
-> data. That is actually the reason why some hardware raid vendors such as
-> DDN do parity reads all the time and then correct wrong data or entirely
-> fail the disks.
->
-> I will sent patches to better handle parity mismatches during the next
-> weeks (for performance reasons only for background checks).
->
-> Cheers,
-> Bernd
->
->
+> I can certainly sympathise with you, but I am not sure that data
+> checksumming would help here. If your hardware raid sends out
+> nonsense,
+> then it is going to be very difficult to get anything trustworthy. Th=
+e
+> obvious answer here is to throw out the broken hardware raid and use =
+a
+> system that works - but it is equally obvious that that is easier sai=
+d
+> than done! But I would find it hard to believe that this is a common
+> issue with hardware raid systems - it goes against the whole point of
+> data storage.
+>=20
+> There is always a chance of undetected read errors - the question is
+> if
+> the chances of such read errors, and the consequences of them, justif=
+y
+> the costs of extra checking. And if they /do/ justify extra checking,
+> are data checksums the right way?
 
-I can certainly sympathise with you, but I am not sure that data 
-checksumming would help here.  If your hardware raid sends out nonsense, 
-then it is going to be very difficult to get anything trustworthy.  The 
-obvious answer here is to throw out the broken hardware raid and use a 
-system that works - but it is equally obvious that that is easier said 
-than done!  But I would find it hard to believe that this is a common 
-issue with hardware raid systems - it goes against the whole point of 
-data storage.
+The chance of a silent corruption is rather small with your average 3TB=
+ home storage. On the other hand, if you had a petabyte or five, the ch=
+ances would be very high indeed to get silent corruption (ref the CERN =
+study done in 2007). In my last job, I worked with ZFS with ~350TiB sto=
+rage, and there we saw errors happen rather frequently, but then, since=
+ ZFS checksums data and uses it to deal with errors, we never saw any d=
+ata loss. That is, except on an older machine, running ZFS on a hardwar=
+e RAID controlled storage unit (NexSAN SATABeast). We had error corrupt=
+ion on that one as well, after a disk failure, and had to resort to res=
+toring from tape, since ZFS couldn't control the RAID.
 
-There is always a chance of undetected read errors - the question is if 
-the chances of such read errors, and the consequences of them, justify 
-the costs of extra checking.  And if they /do/ justify extra checking, 
-are data checksums the right way?  I agree with Neil's post that 
-end-to-end checksums (such as CRCs in a gzip file, or GPG integrity 
-checks) are the best check when they are possible, but they are not 
-always possible because they are not transparent.
+> I agree with Neil's post that
+> end-to-end checksums (such as CRCs in a gzip file, or GPG integrity
+> checks) are the best check when they are possible, but they are not
+> always possible because they are not transparent.
 
-mvh.,
+The problem with end-to-end-checksums at the application level, is it w=
+ill only be able to detect the error, not fix it, similar to the issues=
+ I mentioned above.
 
-David
+Vennlige hilsener / Best regards
 
-
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
