@@ -1,48 +1,24 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+From: Chris Murphy <lists@colorremedies.com>
 Subject: Re: Checksumming RAID?
-Date: Tue, 27 Nov 2012 20:27:33 +0100 (CET)
-Message-ID: <11737275.28.1354044453853.JavaMail.root@zimbra>
-References: <19CFC7BE-B333-4705-97C3-447B2807DCB8@colorremedies.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Date: Tue, 27 Nov 2012 12:36:34 -0700
+Message-ID: <DF6D0FEA-6098-49AC-938E-7E8C42AF5B73@colorremedies.com>
+References: <14319197.21.1353936449959.JavaMail.root@zimbra> <50B48BAA.8060903@hesbynett.no> <21000728-017E-4D06-B3B6-5A296BBC0A2F@colorremedies.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19CFC7BE-B333-4705-97C3-447B2807DCB8@colorremedies.com>
+In-Reply-To: <21000728-017E-4D06-B3B6-5A296BBC0A2F@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Linux Raid <linux-raid@vger.kernel.org>
+To: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
------ Opprinnelig melding -----
-> On Nov 27, 2012, at 6:05 AM, David Brown <david.brown@hesbynett.no>
-> wrote:
-> >
-> > It is /undetected/ disk errors that are a problem. Typical figures =
-I
-> > have seen are around 1 in 1e12 4KB blocks - or 1 in 3e16 bits.
->=20
-> Is this with consumer SATA? Or other?
 
-According to a few studies I've read, the number of silent errors are i=
-dentical on both consumer SATA drives and SAS drives. It's the density =
-that makes errors, and the platters and disk heads are produced alike.=1D
+On Nov 27, 2012, at 11:48 AM, Chris Murphy <lists@colorremedies.com> wrote:
 
-Vennlige hilsener / Best regards
+> Further in the case of raid5 single parity, it's ambiguous whether a bit error is attributable to parity or the data. Which is wrong? You don't actually know. With raid6 dual parity, there is no ambiguity if both sets of parity are used to reconstruct data and are compared to each other rather than one being blindly trusted, or more cheaply is to reconstruct the data once from either set of parity, compute a checksum and compare to the written checksum.
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Also a parity only solution, is in effect a RAID 6+ (dual+ parity) solution. RAID5 and lower are left out. And since RAID 10 and RAID 1+linear are scalable and parity solutions aren't, I think that a solution that works for them from the outset needs consideration.
+
+
+Chris Murphy
+
