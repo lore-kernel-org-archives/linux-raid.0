@@ -1,68 +1,34 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Checksumming RAID?
-Date: Tue, 27 Nov 2012 15:34:07 +0100
-Message-ID: <50B4CF5F.3010309@hesbynett.no>
-References: <25425956.18.1354024591879.JavaMail.root@zimbra>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH 2/2 v5] loop: Limit the number of requests in the bio list
+Date: Tue, 27 Nov 2012 11:58:57 -0500
+Message-ID: <x49haobdlta.fsf@segfault.boston.devel.redhat.com>
+References: <1353572315-4508-1-git-send-email-lczerner@redhat.com>
+	<1353572315-4508-2-git-send-email-lczerner@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <25425956.18.1354024591879.JavaMail.root@zimbra>
-Sender: linux-raid-owner@vger.kernel.org
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc: Linux Raid <linux-raid@vger.kernel.org>, Bernd Schubert <bernd.schubert@fastmail.fm>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1353572315-4508-2-git-send-email-lczerner@redhat.com> (Lukas
+	Czerner's message of "Thu, 22 Nov 2012 09:18:35 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, axboe@kernel.dk, akpm@linux-foundation.org
 List-Id: linux-raid.ids
 
-On 27/11/2012 14:56, Roy Sigurd Karlsbakk wrote:
->>> If this system is running RAID-6, recovery should be possible to
->>> check both parity chunks, right?
->>
->> Yes, of course. (And if anyone ever needs it, it is possible to
->> extend raid6 to 3 parity chunks. I've done the maths, but it is
->> not implemented - there doesn't seem to be a big need for it.) But
->> - again referring back to Neil's blog - if the low-level raid spots
->> a consistency error, it still cannot correct it reliably even with
->> 2 parity chunks, and should pass on a read error to the higher
->> level raid. Using raid6 at the low level would let you do a good
->> consistency check even in the case of a failed drive (or a known
->> read error on a drive) - or two simultaneous undetected read
->> errors. And raid6 on the higher level raid would let you correct
->> such errors, even when there are other errors around. You'd soon
->> reach the point where it is more likely for your disks to
->> spontaneously turn into a bowl of petunias than for read errors to
->> be undetected or unrecoverable.
+Lukas Czerner <lczerner@redhat.com> writes:
+
+> Currently there is not limitation of number of requests in the loop bio
+> list. This can lead into some nasty situations when the caller spawns
+> tons of bio requests taking huge amount of memory. This is even more
+> obvious with discard where blkdev_issue_discard() will submit all bios
+> for the range and wait for them to finish afterwards. On really big loop
+> devices and slow backing file system this can lead to OOM situation as
+> reported by Dave Chinner.
 >
-> That would be nice. So what should be done here in the first place,
-> is to change the code to allow parity data to be read and calculated
-> also on reads?
-
-Well, what should be done /first/ is to hope that some of the more 
-experienced md raid experts express an opinion on the idea - is it 
-possible, is it useful, and is it practical to implement?
-
-The main aim would be to add an option to a md arrays that will turn 
-each read into an implicit scrub or check of the whole stripe, and that 
-a consistency error there would return a read error to the next layer of 
-md raid.
-
-I can see plenty of scope for complications here, such as what to do on 
-normal (detected) read errors, or how to ensure that the upper layer 
-re-writes the whole stripe and not just part of it (or perhaps partial 
-re-writes would be enough).  I am fully aware that I'm just giving a 
-rough idea here - it needs a lot more thought before anyone can start 
-changing code.  But if my theory here is correct, and if it is practical 
-to implement, then it might be a useful tool for big data producers.
-
-mvh.,
-
-David
-
-
-
-
-
+> With this patch we will wait in loop_make_request() if the number of
+> bios in the loop bio list would exceed 'nr_congestion_on'.
+> We'll wake up the process as we process the bios form the list. Some
+> threshold hysteresis is in place to avoid high frequency oscillation.
 >
-> Vennlige hilsener / Best regards
->
-> roy
-
+> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+> Reported-by: Dave Chinner <dchinner@redhat.com>
+Acked-by: Jeff Moyer <jmoyer@redhat.com>
