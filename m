@@ -1,52 +1,75 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Hang in md-raid1 with 3.7-rcX
-Date: Tue, 27 Nov 2012 12:05:28 +1100
-Message-ID: <20121127120528.637099aa@notabene.brown>
-References: <CAPVoSvQNVnz=NrkNaZ4G_k76WuVaAJ24uEXkAyJvDNLHHPs1Kw@mail.gmail.com>
+Subject: Re: 3.7-rc4 hang with mdadm raid10 near layout, with 4 disks, and
+ an internal bitmap
+Date: Tue, 27 Nov 2012 12:19:14 +1100
+Message-ID: <20121127121914.77f6111e@notabene.brown>
+References: <50A28D53.2080409@brockmann-consult.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/+/BvzJH0uc1Pxr2lWE/tfst"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAPVoSvQNVnz=NrkNaZ4G_k76WuVaAJ24uEXkAyJvDNLHHPs1Kw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Torsten Kaiser <just.for.lkml@googlemail.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+ boundary="Sig_/wciJMMoWlmF2lYUR0k4juUT"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <50A28D53.2080409@brockmann-consult.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: Peter Maloney <peter.maloney@brockmann-consult.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/+/BvzJH0uc1Pxr2lWE/tfst
+--Sig_/wciJMMoWlmF2lYUR0k4juUT
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 24 Nov 2012 10:18:44 +0100 Torsten Kaiser
-<just.for.lkml@googlemail.com> wrote:
+On Tue, 13 Nov 2012 19:11:31 +0100 Peter Maloney
+<peter.maloney@brockmann-consult.de> wrote:
 
-> After my system got stuck with 3.7.0-rc2 as reported in
-> http://marc.info/?l=3Dlinux-kernel&m=3D135142236520624 LOCKDEP seem to
-> blame XFS, because it found 2 possible deadlocks. But after these
-> locking issues where fixed, my system got stuck again with 3.7.0-rc6
-> as reported in http://marc.info/?l=3Dlinux-kernel&m=3D135344072325490
-> Dave Chinner thinks its an issue within md, that it gets stuck and
-> that will then prevent any further xfs activity, and that I should
-> report it to the raid mailing list.
+> I am using kernel 3.7-rc4. I have 2 LV on a 4 disk raid10 near layout
+> mdadm device which I am trying to copy to another LV on the same VG
+> using dd. The mdadm device has an internal bitmap. When I copy the first
+> LV, it goes smoothly, but with the 2nd it hangs before it is done.
 >=20
-> The issue seems to be that multiple processes (kswapd0, xfsaild/md4
-> and flush-9:4) get stuck in md_super_wait() like this:
-> [<ffffffff816b1224>] schedule+0x24/0x60
-> [<ffffffff814f9dad>] md_super_wait+0x4d/0x80
-> [<ffffffff8105ca30>] ? __init_waitqueue_head+0x60/0x60
-> [<ffffffff81500753>] bitmap_unplug+0x173/0x180
-> [<ffffffff810b6acf>] ? write_cache_pages+0x12f/0x420
-> [<ffffffff810b6700>] ? set_page_dirty_lock+0x60/0x60
-> [<ffffffff814e8eb8>] raid1_unplug+0x98/0x110
-> [<ffffffff81278a6d>] blk_flush_plug_list+0xad/0x240
-> [<ffffffff81278c13>] blk_finish_plug+0x13/0x50
+> I don't know if I can reproduce it, so I'll just leave it broken with a
+> bitmap until this is resolved, and work around by using files for what
+> I'm trying to do right now. It's my home desktop machine.
 >=20
-> The full hung-tasks stack traces and the output from SysRq+W can be
-> found at http://marc.info/?l=3Dlinux-kernel&m=3D135344072325490 or in the
-> LKML thread 'Hang in XFS reclaim on 3.7.0-rc3'.
+> Should I start by installing 3.6.6 or 3.7.0-rc5?
+>=20
+> When I created my raid, I was probably using kernel 3.1 or 3.4.4. When I
+> added the bitmap, it was probably 3.7-rc2.
+>=20
+> # uname -a
+> Linux peter 3.7.0-rc4-1-default #7 SMP Sun Nov 4 23:11:57 CET 2012
+> x86_64 x86_64 x86_64 GNU/Linux
+>=20
 
-Yes, it does look like an md bug....
-Can you test to see if this fixes it?
+....
+
+
+Thanks for the report.
+Should be fixed by the following.
+
+NeilBrown
+
+Author: NeilBrown <neilb@suse.de>
+Date:   Tue Nov 27 12:14:40 2012 +1100
+
+    md/raid1{,0}: fix deadlock in bitmap_unplug.
+   =20
+    If the raid1 or raid10 unplug function gets called
+    from a make_request function (which is very possible) when
+    there are bios on the current->bio_list list, then it will not
+    be able to successfully call bitmap_unplug() and it could
+    need to submit more bios and wait for them to complete.
+    But they won't complete while current->bio_list is non-empty.
+   =20
+    So detect that case and handle the unplugging off to another thread
+    just like we already do when called from within the scheduler.
+   =20
+    RAID1 version of bug was introduced in 3.6, so that part of fix is
+    suitable for 3.6.y.  RAID10 part won't apply.
+   =20
+    Cc: stable@vger.kernel.org
+    Reported-by: Torsten Kaiser <just.for.lkml@googlemail.com>
+    Reported-by: Peter Maloney <peter.maloney@brockmann-consult.de>
+    Signed-off-by: NeilBrown <neilb@suse.de>
 
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
 index 636bae0..a0f7309 100644
@@ -62,63 +85,41 @@ rom_schedule)
  		spin_lock_irq(&conf->device_lock);
  		bio_list_merge(&conf->pending_bio_list, &plug->pending);
  		conf->pending_count +=3D plug->pending_cnt;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 0d5d0ff..c9acbd7 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1069,7 +1069,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, boo=
+l from_schedule)
+ 	struct r10conf *conf =3D mddev->private;
+ 	struct bio *bio;
+=20
+-	if (from_schedule) {
++	if (from_schedule || current->bio_list) {
+ 		spin_lock_irq(&conf->device_lock);
+ 		bio_list_merge(&conf->pending_bio_list, &plug->pending);
+ 		conf->pending_count +=3D plug->pending_cnt;
 
->=20
-> I tried to understand how this could happen, but I don't see anything
-> wrong. Only that md_super_wait() looks like an open coded version of
-> __wait_event() and could be replaced by using it.
-
-yeah.  md_super_wait was much more complex back when we had to support
-barrier operations.  When they were removed it was simplified a lot and as
-you say it could be simplifier further.  Patches welcome.
-
-
->=20
-> http://marc.info/?l=3Dlinux-raid&m=3D135283030027665 looks like the same
-> issue, but using ext4 instead of xfs.
-
-yes, sure does.
-
->=20
-> My setup wrt. md is two normal sata disks on a normal ahci controller
-> (AMD SB850 southbridge).
-> Both disks are divided into 4 partitions and each one assembled into a
-> separate raid1.
-> One (md5) is used for swap, the others hold xfs filesystems for /boot/
-> (md4), / (md6) and /home/ (md7).
->=20
-> I will try to provide any information you ask, but I can't reproduce
-> the hang on demand so gathering more information about that state is
-> not so easy, but I will try.
-
-I'm fairly confident the above patch will fixes it, and in any case it fixes
-a real bug.  So if you could just run with it and confirm in a week or so
-that the problem hasn't recurred, that might have to do.
-
-Thanks,
-NeilBrown
-
-
---Sig_/+/BvzJH0uc1Pxr2lWE/tfst
+--Sig_/wciJMMoWlmF2lYUR0k4juUT
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBULQR2Tnsnt1WYoG5AQJCIhAAmtFKz8Fh6BeQx0r4Wdatdr+eGCpLDkt6
-Hp82o28Azli95SU1yL+IPvpDeeCnQxY7yrjJ88wviyVwQvauNxszd3xPWvBkIELf
-EODvyeaizVOPWQLR0m34b/YcjvOHsG+xbicToh/PuECnbk3Q0GIDrXkLsCHknRpo
-esyJEK5j4TiTROeoBwzSnczvAazi3zCksvGFZmoZwLIziykFkNF4Jt+HZk5tz5Oq
-Z6BVQCkw7OPhuhvYe/RNMOYBtGIUjuCL+5wjKAhs0B//cQFNzw4aYIjt6uK5/x6d
-jLnLf77OL9m2+IWk63Jo11X/NHjx5S2OEE9SQA5QU2bRrMpoHVKwpVtTFhTkuXJp
-rlcrD6g7TBZThcuzX8L1jqlJQ8LvSZKZ74CUhuUkW7RiBcPxxYNETN7C65BbW9Wr
-NmqXnLnoutg6BnP5TCx/4d5nXZQmgz5oke92/NjATYSQdyZD66TJvOEGdBkwy89J
-qwTYsODiQwj7VDquF8lbiJaR5WDcKKGtRCSDEE5vumicfv5vyPNmEETqFIe+Xb7h
-dzGV6CsAH/Bq+EPhaaiTMhbF/IkzmHuc3r1T/myEcrcHSu979ydolxtDc3UtgdbM
-3eimczCOXEEUNAHbxZI2mJ1HHEaGiXM/cyrST3lZH5kztq7Fdsug7j3xV93UtFF3
-xlOG9iE7SfI=
-=a2JU
+iQIVAwUBULQVEjnsnt1WYoG5AQLM5g//fJtgrzM2enPkmfhiv5ZNPKahJgAFjRgF
+rrB9ONw0CvrrJbXmvIu7eEaWjGwXGrKicxkAYHyj77ee6FxJfCw1530kUzdxBnze
+Ug5QYxyz5bEA+B9swmKm05cuuVr5bQMGGbW0M67gpcknPN0QcaTmqlMKBz965bMt
+gXfbzY4meDT+Lu07NO1uiSzBlR/YFX5tZd983lq3gtjB4NH37iA5AotRlOZrzgl2
+NtbmFWVnzTQ5aeLrIofthofwXa+JqjNk4w9qCoVn1Pn1rs0cbrgaeorj/N4tv2J6
+ZqwaRKNESDPZVg8+v/x6fIWK1UXhgGqyFKMd+m/55kqyazBysh35IuPKzm2WDqPv
+9iT+9VgKJFor6zbwSRMXj7EgPjBsZQgCfUXxy24HsqhzpE1whZegQyAgWWMHoYoa
+koPR9KH3KhwQo2GI8igtXEE8GFOV7OL5oLFxaHQ9p24cJ1GmfxWzKIelh9X7amLn
+h3ms5hx43KF6kF0F8BigS2dSKYKruYRo4D29azwJaSq2ALBsd7tYbO5oTCqFZDw2
+IJZZEzkU4Btw+DtgL9XAMEdLnl7Jf2WNxvj7lPLsyKuNqE5tcIpwDndGiE+DT0/9
++9CX/r9nKb8s4pHdnOO//42tNwONDlTHiGb+9xRvUcOwSanj6Ue7p63xpGorZHlC
+BfO7R9L49FM=
+=rd1d
 -----END PGP SIGNATURE-----
 
---Sig_/+/BvzJH0uc1Pxr2lWE/tfst--
+--Sig_/wciJMMoWlmF2lYUR0k4juUT--
