@@ -1,43 +1,67 @@
-From: Chris Murphy <lists@colorremedies.com>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
 Subject: Re: Checksumming RAID?
-Date: Wed, 28 Nov 2012 12:16:52 -0700
-Message-ID: <7CDEA2A5-3B4A-444B-806E-E0A6CC9DD43E@colorremedies.com>
-References: <28168570.25.1354125110341.JavaMail.root@zimbra>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=windows-1252
+Date: Wed, 28 Nov 2012 20:18:15 +0100 (CET)
+Message-ID: <31757832.29.1354130295835.JavaMail.root@zimbra>
+References: <952F7343-6478-417E-BA06-D1B0E36519E0@colorremedies.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <28168570.25.1354125110341.JavaMail.root@zimbra>
+In-Reply-To: <952F7343-6478-417E-BA06-D1B0E36519E0@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux Raid <linux-raid@vger.kernel.org>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
-On Nov 28, 2012, at 10:51 AM, Roy Sigurd Karlsbakk <roy@karlsbakk.net> =
-wrote:
+> > That doesn't make sense. Nearline and enterprise drives are large
+> > 7k2 drives that come in consumer and enterprise models,
 >=20
-> Google had a study some years ago, which at that point showed desktop=
- drives and enterprise drives had about the same error rate. That may b=
-e slightly outdated now, but still=85
+> Nearline drives are in between consumer and enterprise.
 
-The only Google drive study I'm aware of is this one:
-http://static.googleusercontent.com/external_content/untrusted_dlcp/res=
-earch.google.com/en/us/archive/disk_failures.pdf
+Well, they are named enterprise=E2=80=A6
 
-That study is about drive failures, not SDC. They aren't looking at cor=
-ruption, but rather SMART errors relating to disk failure. And the disk=
-s are consumer grade, none were enterprise.
+> > Comparing "nearline" and "enterprise" like done here, is merely a
+> > comparison of small and large drives, where it's well known that th=
+e
+> > smaller (less dense) drives have less errors.
+>=20
+> The paper I cited doesn't support this. The nearline SATA with
+> hardware adapters to convert the interface to fibre channel. The
+> enterprise drives were already fibre channel. The paper discusses the
+> contribution of the adapter to checksum mismatches, but this alone
+> doesn't account for all of the higher rate of error in nearline SATA.
 
-The main finding of the study is the correlation (or lack thereof) of S=
-MART prediction of drive failure (the health status of the drive) to re=
-ality. It turns out SMART is not so great at doing this if you only tru=
-st the health status. You can get better prediction of drive failure by=
- taking specific attributes into account, but even this isn't completel=
-y reliable. New attributes are needed to better predict drive failures =
-is the take away.
+7k2 "nearline" SAS drives exist from several vendors, with SAS interfac=
+es without the need for adapters. Also, the interface, wheather SAS or =
+SATA or FC, doesn't really mean much when the drive is the same. SAS (a=
+nd FC?) has better timing and better controllers, but a SAS drive is a =
+SAS drive nonetheless if it has a SAS interface.
 
+> Further, the paper says "There is no clear indication that disk size
+> affects the probability of developing checksum mis- matches."
+>=20
+> At least when it comes to URE (which is not SDC), we note that the
+> manufacturer specs are the same for a model regardless of disk size.
 
-Chris Murphy--
+Then, if this is true, perhaps they should name their 4TB drives someth=
+ing else than "enterprise", which they do. Do you have more references =
+on this part?
+
+Vennlige hilsener / Best regards
+
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
 the body of a message to majordomo@vger.kernel.org
