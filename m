@@ -1,58 +1,50 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: Checksumming RAID?
-Date: Wed, 28 Nov 2012 18:51:50 +0100 (CET)
-Message-ID: <28168570.25.1354125110341.JavaMail.root@zimbra>
-References: <CACJz6Qs_Vafs85caOywTZHqGDCz2e6mKS4j1ssZCYSLtpKgaUw@mail.gmail.com>
+From: Chris Friesen <chris.friesen@genband.com>
+Subject: getting I/O errors in super_written()...any ideas what would cause
+ this?
+Date: Wed, 28 Nov 2012 11:52:17 -0600
+Message-ID: <50B64F51.6000402@genband.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACJz6Qs_Vafs85caOywTZHqGDCz2e6mKS4j1ssZCYSLtpKgaUw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Drew <drew.kay@gmail.com>
-Cc: Chris Murphy <lists@colorremedies.com>, Linux Raid <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-raid.ids
 
-> > That doesn't make sense. Nearline and enterprise drives are large
-> > 7k2 drives that come in consumer and enterprise models, such as
-> > Hitachi Deskstar and Ultrastar. The latter is said to have better
-> > bearings etc, although I don't know the difference for sure. With
-> > WDs large drives, most of the difference is said to be in the
-> > firmware (such as TLER in the enterprise/RAID drives). Comparing
-> > "nearline" and "enterprise" like done here, is merely a comparison
-> > of small and large drives, where it's well known that the smaller
-> > (less dense) drives have less errors.
-> >
->=20
-> Less dense but also the drives are probably the 10k & 15k RPM drives
-> which have to be built to better tolerances given the expectation
-> they'll be spinning for most of their five year life.
 
-So what you're saying is that the "enterprise" drives that spin on 7k2 =
-are just overpriced desktop drives? That really doesn't make sense. In =
-my vocabolary, "nearline" means "slower", not worse. It'd be really int=
-eresting to get some opinions from someone that actually knows this, or=
- perhaps some real-world statistics. Google had a study some years ago,=
- which at that point showed desktop drives and enterprise drives had ab=
-out the same error rate. That may be slightly outdated now, but still=E2=
-=80=A6
+Hi,
 
-Vennlige hilsener / Best regards
+I'm running 2.6.27 with LVM over software RAID 1 over a pair of SAS disks.
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Recently we started seeing messages of the following pattern:
+
+Nov 28 08:57:10 kernel: end_request: I/O error, dev sda, sector 1758169523
+Nov 28 08:57:10 kernel: md: super_written gets error=-5, uptodate=0
+Nov 28 08:57:10 kernel: raid1: Disk failure on sda2, disabling device.
+Nov 28 08:57:10 kernel: raid1: Operation continuing on 1 devices.
+
+We're working through our changes to figure out what might have 
+triggered it, but it seems likely the root cause lies in the core code.
+
+We're assuming it's a software issue since it's reproducible on multiple 
+new-ish systems, although so far we've only tried it on systems with one 
+particular configuration--we're planning on trying it with different 
+disks just to be sure.
+
+For what it's worth, we've seen the problems with disk write cache 
+enabled and disabled.
+
+Anyone have any ideas, or pointers as to what I should look at?
+
+Thanks,
+Chris
+
+
+-- 
+
+Chris Friesen
+Software Designer
+
+3500 Carling Avenue
+Ottawa, Ontario K2H 8E9
+www.genband.com
