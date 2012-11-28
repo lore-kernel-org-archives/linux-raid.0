@@ -1,38 +1,48 @@
 From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
 Subject: Re: Checksumming RAID?
-Date: Wed, 28 Nov 2012 11:56:28 +0100 (CET)
-Message-ID: <23882377.7.1354100188235.JavaMail.root@zimbra>
-References: <C516161F-6B9A-41D8-BFA0-7B6ACF848DB8@colorremedies.com>
+Date: Wed, 28 Nov 2012 11:58:01 +0100 (CET)
+Message-ID: <32402494.9.1354100281894.JavaMail.root@zimbra>
+References: <50B52740.5000201@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <C516161F-6B9A-41D8-BFA0-7B6ACF848DB8@colorremedies.com>
+In-Reply-To: <50B52740.5000201@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Linux Raid <linux-raid@vger.kernel.org>
+To: stan@hardwarefreak.com
+Cc: Linux Raid <linux-raid@vger.kernel.org>, Bernd Schubert <bernd.schubert@fastmail.fm>, David Brown <david.brown@hesbynett.no>
 List-Id: linux-raid.ids
 
-> > According to a few studies I've read, the number of silent errors
-> > are identical on both consumer SATA drives and SAS drives. It's the
-> > density that makes errors, and the platters and disk heads are
-> > produced alike.
+> > To do checksumming (and in particular, recovery), requires higher
+> > level
+> > knowledge of the data. The filesystem can track when it writes a
+> > file,
+> > and update metadata (including, if desired, a data checksum) once i=
+t
+> > knows the file is correctly stored. But I don't think it can
+> > sensibly
+> > be done at the block device level - the recovery procedure doesn't
+> > know
+> > what is old data, what is new data, or which bit is important to th=
+e
+> > filesystem.
+> >
+> > So I think it can make sense to use a filesystem like ZFS or BTRFS
+> > that
+> > can do checksumming - that is a reasonable level to add the
+> > checksum.
 >=20
-> That's not what I'm reading:
->=20
-> Corruption detected in 8.5% of nearline disks, and 1.9% in enterprise
-> disks.
-> http://www.pdsi-scidac.org/events/PDSW09/resources/pdsw09_slides13.pd=
-f
+> You'll see CRC in XFS in the future as well. Some of the foundation i=
+s
+> already laid to allow it, but IIRC it requires an on disk format
+> change
+> for full implementation. On disk format changes are a big deal and ar=
+e
+> taken with great care. IIRC XFS has only seen one or two in 18 years.
 
-That doesn't make sense. Nearline and enterprise drives are large 7k2 d=
-rives that come in consumer and enterprise models, such as Hitachi Desk=
-star and Ultrastar. The latter is said to have better bearings etc, alt=
-hough I don't know the difference for sure. With WDs large drives, most=
- of the difference is said to be in the firmware (such as TLER in the e=
-nterprise/RAID drives). Comparing "nearline" and "enterprise" like done=
- here, is merely a comparison of small and large drives, where it's wel=
-l known that the smaller (less dense) drives have less errors.
+I'm afraid that won't help much either, since it'll only allow for *det=
+ecting* the errors, and not *fixing* them (as with ZFS and Btrfs). Or p=
+erhaps if XFS can integrate with MD somehow?
 
 Vennlige hilsener / Best regards
 
