@@ -1,32 +1,35 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [PATCH] lib/raid6: Add AVX2 optimized recovery functions
-Date: Thu, 29 Nov 2012 14:28:10 -0800
-Message-ID: <50B7E17A.2020609@zytor.com>
-References: <1352411264-5156-1-git-send-email-james.t.kukunas@linux.intel.com> <m2obigf9xa.fsf@firstfloor.org> <50B7CFF8.7010401@zytor.com> <20121129211828.GZ16230@one.firstfloor.org>
+From: Oguz Yilmaz <oguzyilmazlist@gmail.com>
+Subject: Adding Raid 1 to Raid 0 on Linux
+Date: Fri, 30 Nov 2012 02:44:37 +0200
+Message-ID: <CAAo+KFmrVi4jd=F=Umjjf4VqdV8GW4oh24S+pO2yzteMVJf1Pg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20121129211828.GZ16230@one.firstfloor.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Jim Kukunas <james.t.kukunas@linux.intel.com>, Linux Raid <linux-raid@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Neil Brown <neilb@suse.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/29/2012 01:18 PM, Andi Kleen wrote:
-> 
->> Either way, this implementatin technique was used for the MMX/SSE
->> implementations without any problems for 9 years now.
-> 
-> It's still wrong.
-> 
-> Lying to the compiler usually bites you at some point.
-> 
+Hello,
 
-It's not lying to the compiler.  It is telling the compiler "do
-something that you have no way of knowing about".
+I have a system already configured with raid 1 with 2 disks:
 
-It would be lying to the compiler if the compiler was allowed to touch
-the FPU state, but it's not.
+/dev/md1             918347072 249416692 621528596  29% /var
+/dev/md0               9920532    160640   9247828   2% /tmp
 
-	-hpa
+# cat /proc/mdstat
+Personalities : [raid1]
+md1 : active raid1 sdc5[0] sdb5[1]
+      948035712 blocks [2/2] [UU]
+
+md0 : active raid1 sdc2[0] sdb2[1]
+      10241344 blocks [2/2] [UU]
+
+I have asked for changing this into Raid 0+1 (striped raid is
+mirrored, http://en.wikipedia.org/wiki/Nested_RAID_levels#RAID_0.2B1 )
+
+How can I change this partition into Raid 01 after adding 2 more disks
+without formatting?
+
+
+--
+Oguz YILMAZ
