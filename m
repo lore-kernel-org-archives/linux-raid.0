@@ -1,215 +1,127 @@
-From: Jim Kukunas <james.t.kukunas@linux.intel.com>
-Subject: [PATCH 2/2] lib/raid6: build proper files on corresponding arch
-Date: Fri, 30 Nov 2012 13:10:40 -0800
-Message-ID: <1354309840-9360-2-git-send-email-james.t.kukunas@linux.intel.com>
-References: <1354309840-9360-1-git-send-email-james.t.kukunas@linux.intel.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1354309840-9360-1-git-send-email-james.t.kukunas@linux.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Linux Raid <linux-raid@vger.kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Yuanhan Liu <yuanhan.liu@linux.intel.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 1/2 v3] wait: add wait_event_lock_irq() interface
+Date: Fri, 30 Nov 2012 13:43:53 -0800
+Message-ID: <20121130134353.eb4ba17e.akpm@linux-foundation.org>
+References: <1354272161-9173-1-git-send-email-lczerner@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1354272161-9173-1-git-send-email-lczerner@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, axboe@kernel.dk, jmoyer@redhat.com, Neil Brown <neilb@suse.de>, David Howells <dhowells@redhat.com>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <a.p.zijlstra@chello.nl>
 List-Id: linux-raid.ids
 
-From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+On Fri, 30 Nov 2012 11:42:40 +0100
+Lukas Czerner <lczerner@redhat.com> wrote:
 
-sse and avx2 stuff only exist on x86 arch, and we don't need to build
-altivec on x86. And we can do that at lib/raid6/Makefile.
+> New wait_event{_interruptible}_lock_irq{_cmd} macros added. This commit
+> moves the private wait_event_lock_irq() macro from MD to regular wait
+> includes, introduces new macro wait_event_lock_irq_cmd() instead of using
+> the old method with omitting cmd parameter which is ugly and makes a use
+> of new macros in the MD. It also introduces the _interruptible_ variant.
+> 
+> The use of new interface is when one have a special lock to protect data
+> structures used in the condition, or one also needs to invoke "cmd"
+> before putting it to sleep.
+> 
+> All new macros are expected to be called with the lock taken. The lock
+> is released before sleep and is reacquired afterwards. We will leave the
+> macro with the lock held.
+> 
+> Note to DM: IMO this should also fix theoretical race on waitqueue while
+> using simultaneously wait_event_lock_irq() and wait_event() because of
+> lack of locking around current state setting and wait queue removal.
+> 
+> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+> Cc: Neil Brown <neilb@suse.de>
+> Cc: David Howells <dhowells@redhat.com>
+> Cc: Ingo Molnar <mingo@elte.hu>
+> Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
+> ---
+> v2: add interruptible variant, swap cmd and schedule, use prepare_to_wait
+> v3: swap cmd and schedule so we call cmd before schedule
 
-Proposed-by: H. Peter Anvin <hpa@zytor.com>
-Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-Reviewed-by: H. Peter Anvin <hpa@zytor.com>
-Signed-off-by: Jim Kukunas <james.t.kukunas@linux.intel.com>
----
- lib/raid6/Makefile      |  9 ++++++---
- lib/raid6/altivec.uc    |  3 ---
- lib/raid6/mmx.c         |  2 +-
- lib/raid6/recov_avx2.c  |  4 ----
- lib/raid6/recov_ssse3.c |  4 ----
- lib/raid6/sse1.c        |  2 +-
- lib/raid6/sse2.c        |  8 ++------
- lib/raid6/test/Makefile | 23 ++++++++++++++++++-----
- 8 files changed, 28 insertions(+), 27 deletions(-)
+Your v3 patch reverts
+http://ozlabs.org/~akpm/mmots/broken-out/wait-add-wait_event_lock_irq-interface-fix.patch.
 
-diff --git a/lib/raid6/Makefile b/lib/raid6/Makefile
-index 3430711..9f7c184 100644
---- a/lib/raid6/Makefile
-+++ b/lib/raid6/Makefile
-@@ -1,8 +1,11 @@
- obj-$(CONFIG_RAID6_PQ)	+= raid6_pq.o
- 
--raid6_pq-y	+= algos.o recov.o recov_ssse3.o recov_avx2.o tables.o int1.o int2.o int4.o \
--		   int8.o int16.o int32.o altivec1.o altivec2.o altivec4.o \
--		   altivec8.o mmx.o sse1.o sse2.o avx2.o
-+raid6_pq-y	+= algos.o recov.o tables.o int1.o int2.o int4.o \
-+		   int8.o int16.o int32.o
-+
-+raid6_pq-$(CONFIG_X86) += recov_ssse3.o recov_avx2.o mmx.o sse1.o sse2.o avx2.o
-+raid6_pq-$(CONFIG_ALTIVEC) += altivec1.o altivec2.o altivec4.o altivec8.o
-+
- hostprogs-y	+= mktables
- 
- quiet_cmd_unroll = UNROLL  $@
-diff --git a/lib/raid6/altivec.uc b/lib/raid6/altivec.uc
-index b71012b..7cc12b5 100644
---- a/lib/raid6/altivec.uc
-+++ b/lib/raid6/altivec.uc
-@@ -24,13 +24,10 @@
- 
- #include <linux/raid/pq.h>
- 
--#ifdef CONFIG_ALTIVEC
--
- #include <altivec.h>
- #ifdef __KERNEL__
- # include <asm/cputable.h>
- # include <asm/switch_to.h>
--#endif
- 
- /*
-  * This is the C data type to use.  We use a vector of
-diff --git a/lib/raid6/mmx.c b/lib/raid6/mmx.c
-index 279347f..590c71c 100644
---- a/lib/raid6/mmx.c
-+++ b/lib/raid6/mmx.c
-@@ -16,7 +16,7 @@
-  * MMX implementation of RAID-6 syndrome functions
-  */
- 
--#if defined(__i386__) && !defined(__arch_um__)
-+#ifdef CONFIG_X86_32
- 
- #include <linux/raid/pq.h>
- #include "x86.h"
-diff --git a/lib/raid6/recov_avx2.c b/lib/raid6/recov_avx2.c
-index 43a9bab..e1eea43 100644
---- a/lib/raid6/recov_avx2.c
-+++ b/lib/raid6/recov_avx2.c
-@@ -8,8 +8,6 @@
-  * of the License.
-  */
- 
--#if (defined(__i386__) || defined(__x86_64__)) && !defined(__arch_um__)
--
- #if CONFIG_AS_AVX2
- 
- #include <linux/raid/pq.h>
-@@ -323,5 +321,3 @@ const struct raid6_recov_calls raid6_recov_avx2 = {
- #else
- #warning "your version of binutils lacks AVX2 support"
- #endif
--
--#endif
-diff --git a/lib/raid6/recov_ssse3.c b/lib/raid6/recov_ssse3.c
-index ecb710c..a916832 100644
---- a/lib/raid6/recov_ssse3.c
-+++ b/lib/raid6/recov_ssse3.c
-@@ -7,8 +7,6 @@
-  * of the License.
-  */
- 
--#if (defined(__i386__) || defined(__x86_64__)) && !defined(__arch_um__)
--
- #include <linux/raid/pq.h>
- #include "x86.h"
- 
-@@ -332,5 +330,3 @@ const struct raid6_recov_calls raid6_recov_ssse3 = {
- #endif
- 	.priority = 1,
- };
--
--#endif
-diff --git a/lib/raid6/sse1.c b/lib/raid6/sse1.c
-index 10dd919..f762971 100644
---- a/lib/raid6/sse1.c
-+++ b/lib/raid6/sse1.c
-@@ -21,7 +21,7 @@
-  * worthwhile as a separate implementation.
-  */
- 
--#if defined(__i386__) && !defined(__arch_um__)
-+#ifdef CONFIG_X86_32
- 
- #include <linux/raid/pq.h>
- #include "x86.h"
-diff --git a/lib/raid6/sse2.c b/lib/raid6/sse2.c
-index bc2d57d..85b82c8 100644
---- a/lib/raid6/sse2.c
-+++ b/lib/raid6/sse2.c
-@@ -17,8 +17,6 @@
+Here's what I've queued in -mm:
+
+--- a/include/linux/wait.h~wait-add-wait_event_lock_irq-interface-v3
++++ a/include/linux/wait.h
+@@ -555,14 +555,13 @@ do {									\
+ do {									\
+ 	DEFINE_WAIT(__wait);						\
+ 									\
+-	cmd;								\
+ 	for (;;) {							\
+ 		prepare_to_wait(&wq, &__wait, TASK_UNINTERRUPTIBLE);	\
+ 		if (condition)						\
+ 			break;						\
+ 		spin_unlock_irq(&lock);					\
+-		schedule();						\
+ 		cmd;							\
++		schedule();						\
+ 		spin_lock_irq(&lock);					\
+ 	}								\
+ 	finish_wait(&wq, &__wait);					\
+@@ -575,8 +574,8 @@ do {									\
+  *			     taken.
+  * @wq: the waitqueue to wait on
+  * @condition: a C expression for the event to wait for
+- * @lock: a locked spinlock_t, which will be released before schedule()
+- *	  and cmd reacquired afterwards.
++ * @lock: a locked spinlock_t, which will be released before cmd
++ *	  and schedule() and reacquired afterwards.
+  * @cmd: a command which is invoked outside the critical section before
+  *	 sleep
   *
+@@ -588,7 +587,7 @@ do {									\
+  * change the result of the wait condition.
+  *
+  * This is supposed to be called while holding the lock. The lock is
+- * dropped before going to sleep and invoking the cmd and is reacquired
++ * dropped before invoking the cmd and going to sleep and is reacquired
+  * afterwards.
   */
- 
--#if (defined(__i386__) || defined(__x86_64__)) && !defined(__arch_um__)
--
- #include <linux/raid/pq.h>
- #include "x86.h"
- 
-@@ -159,9 +157,7 @@ const struct raid6_calls raid6_sse2x2 = {
- 	1			/* Has cache hints */
- };
- 
--#endif
--
--#if defined(__x86_64__) && !defined(__arch_um__)
-+#ifdef CONFIG_X86_64
- 
- /*
-  * Unrolled-by-4 SSE2 implementation
-@@ -259,4 +255,4 @@ const struct raid6_calls raid6_sse2x4 = {
- 	1			/* Has cache hints */
- };
- 
--#endif
-+#endif /* CONFIG_X86_64 */
-diff --git a/lib/raid6/test/Makefile b/lib/raid6/test/Makefile
-index 754cbac..087332d 100644
---- a/lib/raid6/test/Makefile
-+++ b/lib/raid6/test/Makefile
-@@ -10,16 +10,31 @@ LD	 = ld
- AWK	 = awk -f
- AR	 = ar
- RANLIB	 = ranlib
-+OBJS	 = int1.o int2.o int4.o int8.o int16.o int32.o recov.o algos.o tables.o
- 
- ARCH := $(shell uname -m 2>/dev/null | sed -e /s/i.86/i386/)
- ifeq ($(ARCH),i386)
-         CFLAGS += -DCONFIG_X86_32
-+        IS_X86 = yes
- endif
- ifeq ($(ARCH),x86_64)
-         CFLAGS += -DCONFIG_X86_64
-+        IS_X86 = yes
-+endif
-+
-+ifeq ($(IS_X86),yes)
-+        OBJS   += mmx.o sse1.o sse2.o avx2.o recov_ssse3.o recov_avx2.o
-+        CFLAGS += $(shell echo "vpbroadcastb %xmm0, %ymm1" |	\
-+                    gcc -c -x assembler - >&/dev/null &&	\
-+                    rm ./-.o && echo -DCONFIG_AS_AVX2=1)
-+else
-+        HAS_ALTIVEC := $(shell echo -e '\#include <altivec.h>\nvector int a;' |\
-+                         gcc -c -x c - >&/dev/null && \
-+                         rm ./-.o && echo yes)
-+        ifeq ($(HAS_ALTIVEC),yes)
-+                OBJS += altivec1.o altivec2.o altivec4.o altivec8.o
-+        endif
- endif
--CFLAGS += $(shell echo "vpbroadcastb %xmm0, %ymm1"| gcc -c -x assembler - &&\
--	     rm ./-.o && echo -DCONFIG_AS_AVX2=1)
- 
- .c.o:
- 	$(CC) $(CFLAGS) -c -o $@ $<
-@@ -32,9 +47,7 @@ CFLAGS += $(shell echo "vpbroadcastb %xmm0, %ymm1"| gcc -c -x assembler - &&\
- 
- all:	raid6.a raid6test
- 
--raid6.a: int1.o int2.o int4.o int8.o int16.o int32.o mmx.o sse1.o sse2.o avx2.o \
--	 altivec1.o altivec2.o altivec4.o altivec8.o recov.o recov_ssse3.o recov_avx2.o algos.o \
--	 tables.o
-+raid6.a: $(OBJS)
- 	 rm -f $@
- 	 $(AR) cq $@ $^
- 	 $(RANLIB) $@
--- 
-1.8.0
-
+ #define wait_event_lock_irq_cmd(wq, condition, lock, cmd)		\
+@@ -631,7 +630,6 @@ do {									\
+ do {									\
+ 	DEFINE_WAIT(__wait);						\
+ 									\
+-	cmd;								\
+ 	for (;;) {							\
+ 		prepare_to_wait(&wq, &__wait, TASK_INTERRUPTIBLE);	\
+ 		if (condition)						\
+@@ -641,8 +639,8 @@ do {									\
+ 			break;						\
+ 		}							\
+ 		spin_unlock_irq(&lock);					\
+-		schedule();						\
+ 		cmd;							\
++		schedule();						\
+ 		spin_lock_irq(&lock);					\
+ 	}								\
+ 	finish_wait(&wq, &__wait);					\
+@@ -654,8 +652,8 @@ do {									\
+  *		be called with the lock taken.
+  * @wq: the waitqueue to wait on
+  * @condition: a C expression for the event to wait for
+- * @lock: a locked spinlock_t, which will be released before schedule()
+- *	  and cmd reacquired afterwards.
++ * @lock: a locked spinlock_t, which will be released before cmd and
++ *	  schedule() and reacquired afterwards.
+  * @cmd: a command which is invoked outside the critical section before
+  *	 sleep
+  *
+@@ -667,7 +665,7 @@ do {									\
+  * change the result of the wait condition.
+  *
+  * This is supposed to be called while holding the lock. The lock is
+- * dropped before going to sleep and invoking the cmd and is reacquired
++ * dropped before invoking the cmd and going to sleep and is reacquired
+  * afterwards.
+  *
+  * The macro will return -ERESTARTSYS if it was interrupted by a signal
+_
