@@ -1,42 +1,53 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Adding Raid 1 to Raid 0 on Linux
-Date: Thu, 29 Nov 2012 18:12:11 -0700
-Message-ID: <9AB1F362-3E78-43A7-94FA-53D6E1C12E2B@colorremedies.com>
-References: <CAAo+KFmrVi4jd=F=Umjjf4VqdV8GW4oh24S+pO2yzteMVJf1Pg@mail.gmail.com>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAo+KFmrVi4jd=F=Umjjf4VqdV8GW4oh24S+pO2yzteMVJf1Pg@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
+Subject: Re: [PATCH 1/2 v3] wait: add wait_event_lock_irq() interface
+Date: Fri, 30 Nov 2012 12:36:35 +0100 (CET)
+Message-ID: <alpine.LFD.2.00.1211301233320.8688@dhcp-1-104.brq.redhat.com>
+References: <1354272161-9173-1-git-send-email-lczerner@redhat.com> <20121130024842.5326d998.akpm@linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20121130024842.5326d998.akpm@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Lukas Czerner <lczerner@redhat.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, axboe@kernel.dk, jmoyer@redhat.com, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
+On Fri, 30 Nov 2012, Andrew Morton wrote:
 
-On Nov 29, 2012, at 5:44 PM, Oguz Yilmaz <oguzyilmazlist@gmail.com> wrote:
+> Date: Fri, 30 Nov 2012 02:48:42 -0800
+> From: Andrew Morton <akpm@linux-foundation.org>
+> To: Lukas Czerner <lczerner@redhat.com>
+> Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, axboe@kernel.dk,
+>     jmoyer@redhat.com, Neil Brown <neilb@suse.de>,
+>     David Howells <dhowells@redhat.com>, Ingo Molnar <mingo@elte.hu>,
+>     Peter Zijlstra <a.p.zijlstra@chello.nl>
+> Subject: Re: [PATCH 1/2 v3] wait: add wait_event_lock_irq() interface
+> 
+> On Fri, 30 Nov 2012 11:42:40 +0100 Lukas Czerner <lczerner@redhat.com> wrote:
+> 
+> > New wait_event{_interruptible}_lock_irq{_cmd} macros added. This commit
+> > moves the private wait_event_lock_irq() macro from MD to regular wait
+> > includes, introduces new macro wait_event_lock_irq_cmd() instead of using
+> > the old method with omitting cmd parameter which is ugly and makes a use
+> > of new macros in the MD. It also introduces the _interruptible_ variant.
+> > 
+> > The use of new interface is when one have a special lock to protect data
+> > structures used in the condition, or one also needs to invoke "cmd"
+> > before putting it to sleep.
+> > 
+> > All new macros are expected to be called with the lock taken. The lock
+> > is released before sleep and is reacquired afterwards. We will leave the
+> > macro with the lock held.
+> > 
+> > Note to DM: IMO this should also fix theoretical race on waitqueue while
+> > using simultaneously wait_event_lock_irq() and wait_event() because of
+> > lack of locking around current state setting and wait queue removal.
+> 
+> Does this fix the sparse warning which Fengguang just sent us?
 
-> Hello,
-> 
-> I have a system already configured with raid 1 with 2 disks:
-> 
-> /dev/md1             918347072 249416692 621528596  29% /var
-> /dev/md0               9920532    160640   9247828   2% /tmp
-> 
-> # cat /proc/mdstat
-> Personalities : [raid1]
-> md1 : active raid1 sdc5[0] sdb5[1]
->      948035712 blocks [2/2] [UU]
-> 
-> md0 : active raid1 sdc2[0] sdb2[1]
->      10241344 blocks [2/2] [UU]
-> 
-> I have asked for changing this into Raid 0+1 (striped raid is
-> mirrored, http://en.wikipedia.org/wiki/Nested_RAID_levels#RAID_0.2B1 )
-> 
-> How can I change this partition into Raid 01 after adding 2 more disks
-> without formatting?
+Which report from Fengguang do you have in mind ? I do not see any
+on linux-kernel today.
 
-I think you have to start from scratch. You can however stripe the mirrors and make it a RAID 10 which is more reliable anyway. I'm not sure what the difference is between separate steps for creating RAID 1, then RAID 0'ing those mirors, versus setting up RAID 10 from the outset as one step.
+/me going to see what spare reports
 
-
-Chris Murphy
+-Lukas
