@@ -1,90 +1,129 @@
-From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Subject: Re: Raid 0+1
-Date: Fri, 30 Nov 2012 17:25:08 +0100
-Message-ID: <50B8DDE4.5010900@profitbricks.com>
-References: <CAAo+KF=-XStwczZvxPh7jgLZzwEAD71XWWg0h5HBXekBO8-5vQ@mail.gmail.com> <50B8C26C.7000807@profitbricks.com> <20121130152954.GR29064@suse.de>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 1/2 v3] wait: add wait_event_lock_irq() interface
+Date: Fri, 30 Nov 2012 12:13:08 -0800
+Message-ID: <20121130121308.54d66bfe.akpm@linux-foundation.org>
+References: <1354272161-9173-1-git-send-email-lczerner@redhat.com>
+	<20121130024842.5326d998.akpm@linux-foundation.org>
+	<alpine.LFD.2.00.1211301233320.8688@dhcp-1-104.brq.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121130152954.GR29064@suse.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Lars Marowsky-Bree <lmb@suse.com>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <alpine.LFD.2.00.1211301233320.8688@dhcp-1-104.brq.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: =?UTF-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, axboe@kernel.dk, jmoyer@redhat.com, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On 30.11.2012 16:29, Lars Marowsky-Bree wrote:
-> On 2012-11-30T15:27:56, Sebastian Riemer <sebastian.riemer@profitbric=
-ks.com> wrote:
+On Fri, 30 Nov 2012 12:36:35 +0100 (CET)
+Luk=C3=A1=C5=A1 Czerner <lczerner@redhat.com> wrote:
+
+> On Fri, 30 Nov 2012, Andrew Morton wrote:
 >=20
->> Yes, it is possible but it only makes sense if you want to mirror to
->> another server as most people know that the alternative DRBD is too =
-slow
->> for serious storage requirements.
->>
->> Create the RAID-0 first, then take your RAID-0 device and e.g. an iS=
-CSI
->> device from another storage server with the same setup and create a
->> RAID-1 over them. Then, you've got your stacked MD layers.
->>
->> With the flag write-mostly you can even tell the read balancing that=
- the
->> remote device is slower than the local one.
+> > Date: Fri, 30 Nov 2012 02:48:42 -0800
+> > From: Andrew Morton <akpm@linux-foundation.org>
+> > To: Lukas Czerner <lczerner@redhat.com>
+> > Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, axboe=
+@kernel.dk,
+> >     jmoyer@redhat.com, Neil Brown <neilb@suse.de>,
+> >     David Howells <dhowells@redhat.com>, Ingo Molnar <mingo@elte.hu=
+>,
+> >     Peter Zijlstra <a.p.zijlstra@chello.nl>
+> > Subject: Re: [PATCH 1/2 v3] wait: add wait_event_lock_irq() interfa=
+ce
+> >=20
+> > On Fri, 30 Nov 2012 11:42:40 +0100 Lukas Czerner <lczerner@redhat.c=
+om> wrote:
+> >=20
+> > > New wait_event{_interruptible}_lock_irq{_cmd} macros added. This =
+commit
+> > > moves the private wait_event_lock_irq() macro from MD to regular =
+wait
+> > > includes, introduces new macro wait_event_lock_irq_cmd() instead =
+of using
+> > > the old method with omitting cmd parameter which is ugly and make=
+s a use
+> > > of new macros in the MD. It also introduces the _interruptible_ v=
+ariant.
+> > >=20
+> > > The use of new interface is when one have a special lock to prote=
+ct data
+> > > structures used in the condition, or one also needs to invoke "cm=
+d"
+> > > before putting it to sleep.
+> > >=20
+> > > All new macros are expected to be called with the lock taken. The=
+ lock
+> > > is released before sleep and is reacquired afterwards. We will le=
+ave the
+> > > macro with the lock held.
+> > >=20
+> > > Note to DM: IMO this should also fix theoretical race on waitqueu=
+e while
+> > > using simultaneously wait_event_lock_irq() and wait_event() becau=
+se of
+> > > lack of locking around current state setting and wait queue remov=
+al.
+> >=20
+> > Does this fix the sparse warning which Fengguang just sent us?
 >=20
-> That is somewhat orthogonal to the original discussion, but in which
-> benchmarks is this approach faster than DRBD - aren't the bottlenecks
-> still the spindle and the network IO?
+> Which report from Fengguang do you have in mind ? I do not see any
+> on linux-kernel today.
+>=20
+> /me going to see what spare reports
 >=20
 
-Hi Lars,
+On Fri, 30 Nov 2012 16:30:24 +0800
+kbuild test robot <fengguang.wu@intel.com> wrote:
 
-just "blktrace" DRBD while doing a file copy with at least 512 KiB
-read-ahead. Power off the secondary and "blktrace" again.
-
-Here is what you'll see:
-DRBD uses 128 KiB hashing functions. You can never get bigger IOs than
-that - bad for big sequential stuff.
-
-In the second test you'll see that DRBD has a dynamic IO request size
-detection. It always starts with 4 KiB limits. If you loose connection
-to the other host even your local IO is limited to 4 KiB. Sorry, but
-this is crap.
-
-There are lots of other performance related bugs in DRBD. If you run it
-in a virtual data center, then you'll see 4 KiB IOs while syncing
-because they use the blk limits as signed instead of unsigned and KVM
-initializes them as "-1U". They've fixed that one in 8.3.14 and 8.4.2.
-
-=46urthermore, there are lots of performance issues that you see clearl=
-y
-if you use a fast transport like QDR InfiniBand. We had ridiculous
-performance with that. DRBD introduces lots of latency.
-
-With SRP transport things are much better. Put MD RAID-1 on top and thi=
-s
-is nice! If you've got both rdevs as remote storage you can even have
-symmetric (both rdevs the same) latency with MD RAID-1.
-
-The write-intent bitmap of MD is really sophisticated!
-
-Cheers,
-Sebastian
-
-
---=20
-Sebastian Riemer
-Linux Kernel Developer - Storage
-
-We are looking for (SENIOR) LINUX KERNEL DEVELOPERS!
-
-ProfitBricks GmbH =95 Greifswalder Str. 207 =95 10405 Berlin, Germany
-www.profitbricks.com =95 sebastian.riemer@profitbricks.com
-
-Sitz der Gesellschaft: Berlin
-Registergericht: Amtsgericht Charlottenburg, HRB 125506 B
-Gesch=E4ftsf=FChrer: Andreas Gauger, Achim Weiss
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next=
+=2Egit akpm
+> head:   cfb65dadcd079ad4547407a1584bc6b96bd48bb3
+> commit: 2b29cdb6f98c86a1da4ec5335d6247392b7c6551 [35/476] wait: add w=
+ait_event_lock_irq() interface
+>=20
+>=20
+> sparse warnings:
+>=20
+> + drivers/block/drbd/drbd_int.h:2339:9: sparse: preprocessor token __=
+wait_event_lock_irq redefined
+> include/linux/wait.h:554:9: this was the original definition
+> + drivers/block/drbd/drbd_int.h:2358:9: sparse: preprocessor token wa=
+it_event_lock_irq redefined
+> include/linux/wait.h:621:9: this was the original definition
+> drivers/block/drbd/drbd_interval.h:12:63: sparse: dubious one-bit sig=
+ned bitfield
+> drivers/block/drbd/drbd_interval.h:13:22: sparse: dubious one-bit sig=
+ned bitfield
+> drivers/block/drbd/drbd_int.h:903:39: sparse: attribute 'require_cont=
+ext': unknown attribute
+> drivers/block/drbd/drbd_int.h:1123:69: sparse: attribute 'require_con=
+text': unknown attribute
+> drivers/block/drbd/drbd_int.h:1124:70: sparse: attribute 'require_con=
+text': unknown attribute
+> drivers/block/drbd/drbd_int.h:1125:59: sparse: attribute 'require_con=
+text': unknown attribute
+> drivers/block/drbd/drbd_int.h:1126:63: sparse: attribute 'require_con=
+text': unknown attribute
+> drivers/block/drbd/drbd_int.h:1127:60: sparse: attribute 'require_con=
+text': unknown attribute
+> drivers/block/drbd/drbd_int.h:1128:71: sparse: attribute 'require_con=
+text': unknown attribute
+> drivers/block/drbd/drbd_int.h:1129:65: sparse: attribute 'require_con=
+text': unknown attribute
+> drivers/block/drbd/drbd_int.h:1130:66: sparse: attribute 'require_con=
+text': unknown attribute
+> drivers/block/drbd/drbd_int.h:1335:74: sparse: attribute 'require_con=
+text': unknown attribute
+> drivers/block/drbd/drbd_int.h:1336:50: sparse: attribute 'require_con=
+text': unknown attribute
+> drivers/block/drbd/drbd_int.h:1338:51: sparse: attribute 'require_con=
+text': unknown attribute
+> drivers/block/drbd/drbd_int.h:1339:58: sparse: attribute 'require_con=
+text': unknown attribute
+> drivers/block/drbd/drbd_int.h:1340:54: sparse: attribute 'require_con=
+text': unknown attribute
+> drivers/block/drbd/drbd_int.h:1341:62: sparse: attribute 'require_con=
+text': unknown attribute
+> drivers/block/drbd/drbd_int.h:1435:92: sparse: attribute 'require_con=
+text': unknown attribute
