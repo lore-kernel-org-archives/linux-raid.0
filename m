@@ -1,41 +1,32 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH 2/2 v6] loop: Limit the number of requests in the bio list
-Date: Fri, 30 Nov 2012 08:57:23 -0500
-Message-ID: <x49txs7p518.fsf@segfault.boston.devel.redhat.com>
-References: <1354272161-9173-1-git-send-email-lczerner@redhat.com>
-	<1354272161-9173-2-git-send-email-lczerner@redhat.com>
+From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Subject: Re: Raid 0+1
+Date: Fri, 30 Nov 2012 15:27:56 +0100
+Message-ID: <50B8C26C.7000807@profitbricks.com>
+References: <CAAo+KF=-XStwczZvxPh7jgLZzwEAD71XWWg0h5HBXekBO8-5vQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1354272161-9173-2-git-send-email-lczerner@redhat.com> (Lukas
-	Czerner's message of "Fri, 30 Nov 2012 11:42:41 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, axboe@kernel.dk, akpm@linux-foundation.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAAo+KF=-XStwczZvxPh7jgLZzwEAD71XWWg0h5HBXekBO8-5vQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Oguz Yilmaz <oguzyilmazlist@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Lukas Czerner <lczerner@redhat.com> writes:
+On 30.11.2012 14:25, Oguz Yilmaz wrote:
+> What is the suggested way for making Raid 0+1 (not 1+0)?
+> Is it possible to make it without LVM?
 
-> Currently there is not limitation of number of requests in the loop bio
-> list. This can lead into some nasty situations when the caller spawns
-> tons of bio requests taking huge amount of memory. This is even more
-> obvious with discard where blkdev_issue_discard() will submit all bios
-> for the range and wait for them to finish afterwards. On really big loop
-> devices and slow backing file system this can lead to OOM situation as
-> reported by Dave Chinner.
->
-> With this patch we will wait in loop_make_request() if the number of
-> bios in the loop bio list would exceed 'nr_congestion_on'.
-> We'll wake up the process as we process the bios form the list. Some
-> threshold hysteresis is in place to avoid high frequency oscillation.
->
-> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> Reported-by: Dave Chinner <dchinner@redhat.com>
+Yes, it is possible but it only makes sense if you want to mirror to
+another server as most people know that the alternative DRBD is too slow
+for serious storage requirements.
 
-Lukas, please carry forward acked-by tags when there is no change so I
-don't have to keep acking.
+Create the RAID-0 first, then take your RAID-0 device and e.g. an iSCSI
+device from another storage server with the same setup and create a
+RAID-1 over them. Then, you've got your stacked MD layers.
 
-Thanks,
-Jeff
+With the flag write-mostly you can even tell the read balancing that the
+remote device is slower than the local one.
 
-Acked-by: Jeff Moyer <jmoyer@redhat.com>
+Cheers,
+Sebastian
