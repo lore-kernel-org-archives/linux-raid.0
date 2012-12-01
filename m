@@ -1,127 +1,56 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/2 v3] wait: add wait_event_lock_irq() interface
-Date: Fri, 30 Nov 2012 13:43:53 -0800
-Message-ID: <20121130134353.eb4ba17e.akpm@linux-foundation.org>
-References: <1354272161-9173-1-git-send-email-lczerner@redhat.com>
+From: Oguz Yilmaz <oguzyilmazlist@gmail.com>
+Subject: Re: Raid 0+1
+Date: Sat, 1 Dec 2012 15:11:55 +0200
+Message-ID: <CAAo+KFn82hYUak4mvqMfix8UEPC7uwdvmbmRFLikQFqYDjNrHg@mail.gmail.com>
+References: <CAAo+KF=-XStwczZvxPh7jgLZzwEAD71XWWg0h5HBXekBO8-5vQ@mail.gmail.com>
+ <50B8C26C.7000807@profitbricks.com> <50B8C55E.1050902@profitbricks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1354272161-9173-1-git-send-email-lczerner@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, axboe@kernel.dk, jmoyer@redhat.com, Neil Brown <neilb@suse.de>, David Howells <dhowells@redhat.com>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <a.p.zijlstra@chello.nl>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <50B8C55E.1050902@profitbricks.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 30 Nov 2012 11:42:40 +0100
-Lukas Czerner <lczerner@redhat.com> wrote:
+On Fri, Nov 30, 2012 at 4:40 PM, Sebastian Riemer
+<sebastian.riemer@profitbricks.com> wrote:
+> On 30.11.2012 15:27, Sebastian Riemer wrote:
+>> On 30.11.2012 14:25, Oguz Yilmaz wrote:
+>>> What is the suggested way for making Raid 0+1 (not 1+0)?
+>>> Is it possible to make it without LVM?
+>>
+>> Yes, it is possible but it only makes sense if you want to mirror to
+>> another server as most people know that the alternative DRBD is too slow
+>> for serious storage requirements.
+>>
+>> Create the RAID-0 first, then take your RAID-0 device and e.g. an iSCSI
+>> device from another storage server with the same setup and create a
+>> RAID-1 over them. Then, you've got your stacked MD layers.
+>>
 
-> New wait_event{_interruptible}_lock_irq{_cmd} macros added. This commit
-> moves the private wait_event_lock_irq() macro from MD to regular wait
-> includes, introduces new macro wait_event_lock_irq_cmd() instead of using
-> the old method with omitting cmd parameter which is ugly and makes a use
-> of new macros in the MD. It also introduces the _interruptible_ variant.
-> 
-> The use of new interface is when one have a special lock to protect data
-> structures used in the condition, or one also needs to invoke "cmd"
-> before putting it to sleep.
-> 
-> All new macros are expected to be called with the lock taken. The lock
-> is released before sleep and is reacquired afterwards. We will leave the
-> macro with the lock held.
-> 
-> Note to DM: IMO this should also fix theoretical race on waitqueue while
-> using simultaneously wait_event_lock_irq() and wait_event() because of
-> lack of locking around current state setting and wait queue removal.
-> 
-> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> Cc: Neil Brown <neilb@suse.de>
-> Cc: David Howells <dhowells@redhat.com>
-> Cc: Ingo Molnar <mingo@elte.hu>
-> Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
-> ---
-> v2: add interruptible variant, swap cmd and schedule, use prepare_to_wait
-> v3: swap cmd and schedule so we call cmd before schedule
 
-Your v3 patch reverts
-http://ozlabs.org/~akpm/mmots/broken-out/wait-add-wait_event_lock_irq-interface-fix.patch.
+Why do we need another storage server.
+IF I create
+md0 Raid0 (sda1 + sda2)
+md1 Raid0 (sdc1 + sdc2)
 
-Here's what I've queued in -mm:
+then is it possible to create
+md2 Raid1 (md0 + md1)
 
---- a/include/linux/wait.h~wait-add-wait_event_lock_irq-interface-v3
-+++ a/include/linux/wait.h
-@@ -555,14 +555,13 @@ do {									\
- do {									\
- 	DEFINE_WAIT(__wait);						\
- 									\
--	cmd;								\
- 	for (;;) {							\
- 		prepare_to_wait(&wq, &__wait, TASK_UNINTERRUPTIBLE);	\
- 		if (condition)						\
- 			break;						\
- 		spin_unlock_irq(&lock);					\
--		schedule();						\
- 		cmd;							\
-+		schedule();						\
- 		spin_lock_irq(&lock);					\
- 	}								\
- 	finish_wait(&wq, &__wait);					\
-@@ -575,8 +574,8 @@ do {									\
-  *			     taken.
-  * @wq: the waitqueue to wait on
-  * @condition: a C expression for the event to wait for
-- * @lock: a locked spinlock_t, which will be released before schedule()
-- *	  and cmd reacquired afterwards.
-+ * @lock: a locked spinlock_t, which will be released before cmd
-+ *	  and schedule() and reacquired afterwards.
-  * @cmd: a command which is invoked outside the critical section before
-  *	 sleep
-  *
-@@ -588,7 +587,7 @@ do {									\
-  * change the result of the wait condition.
-  *
-  * This is supposed to be called while holding the lock. The lock is
-- * dropped before going to sleep and invoking the cmd and is reacquired
-+ * dropped before invoking the cmd and going to sleep and is reacquired
-  * afterwards.
-  */
- #define wait_event_lock_irq_cmd(wq, condition, lock, cmd)		\
-@@ -631,7 +630,6 @@ do {									\
- do {									\
- 	DEFINE_WAIT(__wait);						\
- 									\
--	cmd;								\
- 	for (;;) {							\
- 		prepare_to_wait(&wq, &__wait, TASK_INTERRUPTIBLE);	\
- 		if (condition)						\
-@@ -641,8 +639,8 @@ do {									\
- 			break;						\
- 		}							\
- 		spin_unlock_irq(&lock);					\
--		schedule();						\
- 		cmd;							\
-+		schedule();						\
- 		spin_lock_irq(&lock);					\
- 	}								\
- 	finish_wait(&wq, &__wait);					\
-@@ -654,8 +652,8 @@ do {									\
-  *		be called with the lock taken.
-  * @wq: the waitqueue to wait on
-  * @condition: a C expression for the event to wait for
-- * @lock: a locked spinlock_t, which will be released before schedule()
-- *	  and cmd reacquired afterwards.
-+ * @lock: a locked spinlock_t, which will be released before cmd and
-+ *	  schedule() and reacquired afterwards.
-  * @cmd: a command which is invoked outside the critical section before
-  *	 sleep
-  *
-@@ -667,7 +665,7 @@ do {									\
-  * change the result of the wait condition.
-  *
-  * This is supposed to be called while holding the lock. The lock is
-- * dropped before going to sleep and invoking the cmd and is reacquired
-+ * dropped before invoking the cmd and going to sleep and is reacquired
-  * afterwards.
-  *
-  * The macro will return -ERESTARTSYS if it was interrupted by a signal
-_
+like md?
+
+Regards,
+
+>> With the flag write-mostly you can even tell the read balancing that the
+>> remote device is slower than the local one.
+>>
+>
+> I've forgotten to mention: You need a kernel >= 3.4.2 for this.
+>
+> Earlier kernels don't support bvec merging and therefore every IO is a
+> slow 4 KiB IO in that RAID 0+1 setup.
+>
+> Btw.: LVM also supports striping but letting LVM do striping is only
+> useful if you want to build RAID 1+0. The speed is the same as "RAID 1+0
+> + LVM". Only that raid10 driver doesn't scale good for >= 24 HDDs.
