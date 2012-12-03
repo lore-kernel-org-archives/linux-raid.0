@@ -1,96 +1,78 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Hang in md-raid1 with 3.7-rcX
-Date: Mon, 3 Dec 2012 06:52:45 +1100
-Message-ID: <20121203065245.4a95b386@notabene.brown>
-References: <CAPVoSvQNVnz=NrkNaZ4G_k76WuVaAJ24uEXkAyJvDNLHHPs1Kw@mail.gmail.com>
-	<20121127120528.637099aa@notabene.brown>
-	<CAPVoSvRssJSzjg1wZ8g9-05Y50xVkVcQqsnZ92Ru6mWZgGrfKg@mail.gmail.com>
-	<CAPVoSvTOQT65zYbz++jbbaT63VbVKchYdhip58R8S6cPxbW2cw@mail.gmail.com>
+From: Tudor Holton <tudor@smartguide.com.au>
+Subject: Spare disk not becoming active
+Date: Mon, 03 Dec 2012 11:04:14 +1100
+Message-ID: <50BBEC7E.7080200@smartguide.com.au>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ZwU7=tGDnCJkgs=IZnX1zeW"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAPVoSvTOQT65zYbz++jbbaT63VbVKchYdhip58R8S6cPxbW2cw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Torsten Kaiser <just.for.lkml@googlemail.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/ZwU7=tGDnCJkgs=IZnX1zeW
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hallo,
 
-On Sun, 2 Dec 2012 13:10:33 +0100 Torsten Kaiser
-<just.for.lkml@googlemail.com> wrote:
+I'm having some trouble with an array I have that has become degraded.
 
-> On Tue, Nov 27, 2012 at 8:08 AM, Torsten Kaiser
-> <just.for.lkml@googlemail.com> wrote:
-> > On Tue, Nov 27, 2012 at 2:05 AM, NeilBrown <neilb@suse.de> wrote:
-> >> Can you test to see if this fixes it?
-> >
-> > Patch applied, I will try to get it stuck again.
-> > I don't have a reliable reproducers, but if the problem persists I
-> > will definitly report back here.
->=20
-> With this patch I was not able to recreate the hang. Lacking an 100%
-> way of recreating this, I can't be completely sure of the fix, but as
-> you understood from the code how this hang could happen, I'm quite
-> confident that the fix is working.
->=20
-> (As I do not use the raid10 personality only patching raid1.c was
-> sufficient for me, I didn't test the version that also patched
-> raid10.c as its not even compiled on my kernel.)
->=20
-> Thanks for the fix!
+I have an array with this array state:
 
-And thanks for testing!
-Linus doesn't seem to have pulled in the fix yet, but hopefully it will be =
-in
-3.7.
-
-NeilBrown
-
->=20
-> Torsten
->=20
-> >> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> >> index 636bae0..a0f7309 100644
-> >> --- a/drivers/md/raid1.c
-> >> +++ b/drivers/md/raid1.c
-> >> @@ -963,7 +963,7 @@ static void raid1_unplug(struct blk_plug_cb *cb, b=
-ool from_schedule)
-> >>         struct r1conf *conf =3D mddev->private;
-> >>         struct bio *bio;
-> >>
-> >> -       if (from_schedule) {
-> >> +       if (from_schedule || current->bio_list) {
-> >>                 spin_lock_irq(&conf->device_lock);
-> >>                 bio_list_merge(&conf->pending_bio_list, &plug->pending=
-);
-> >>                 conf->pending_count +=3D plug->pending_cnt;
-> >>
+md101 : active raid1 sdf1[0] sdb1[2](S)
+       1953511936 blocks [2/1] [U_]
 
 
---Sig_/ZwU7=tGDnCJkgs=IZnX1zeW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+mdadm --detail says:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+/dev/md101:
+         Version : 0.90
+   Creation Time : Thu Jan 13 14:34:27 2011
+      Raid Level : raid1
+      Array Size : 1953511936 (1863.01 GiB 2000.40 GB)
+   Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
+    Raid Devices : 2
+   Total Devices : 2
+Preferred Minor : 101
+     Persistence : Superblock is persistent
 
-iQIVAwUBULuxjTnsnt1WYoG5AQLnyw/7BhVZpE23b7tYceA4c39Ul1iE3v7UXaKU
-t922kfxSIugJWSbKzOBjDzzz222CZZT1vbEGn1MGoD/dE47VEMQBMsUJe6GERcM/
-/UG9yo5dOtun6C4v1yPL6toE4yebIK0EBkB0DRc8UDCWjyyhtnZdGs1GD8ZC1MNg
-w18+59I8/KZoNxHbAA8VvWJnxHHxmNn50wLLJl14mGnBKjG4anIKMMAbiDnzmxDA
-ZeJgMo3Xj/FlBRcXG7r2XWp+pjcY8rdeNLrfcY6By6ATSn4DjOe84skCRUNSAHrB
-aodVPfKMAOjas529If+Ckzy0/arP1ILmcWafzEy8MO5RYESWr43tvJvhMF8GSjHf
-vQLg5yt6bYbieXtnNXvYMDcg8erirwaotTG6B55qX3YtEi8PQjYT55JOP1MjsddI
-nWvq+MVaJL2PK7TNugLNxbCo2+mIp0UaaEoY4dJU+Oo6u8Zet84oqAEC09LHXtQK
-KUxg3AfXZchmVN+dDiWfruGvRx6o/bfS9Dx1EwtTUjJkba55fQoS63PPf23gsza9
-jBiHLBOfTDcIfK46TX2ecBRtVq9FUKRz14NIGDZTcgUAGdAR2l7CkEYbC1TmfPdr
-7l6wBs5RsRvJEzOxyrhcLsQY8ztj4pYXb99hF3bWfMbpVRMQmKV7JAoepHoV8by3
-naEYrLbDARg=
-=rb27
------END PGP SIGNATURE-----
+     Update Time : Fri Nov 23 03:23:04 2012
+           State : clean, degraded
+  Active Devices : 1
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 1
 
---Sig_/ZwU7=tGDnCJkgs=IZnX1zeW--
+            UUID : 43e92a79:90295495:0a76e71e:56c99031 (local to host 
+barney)
+          Events : 0.2127
+
+     Number   Major   Minor   RaidDevice State
+        0       8       81        0      active sync /dev/sdf1
+        1       0        0        1      removed
+
+        2       8       17        -      spare   /dev/sdb1
+
+
+If I attempt to force the spare to become active it begins to recover:
+$ sudo mdadm -S /dev/md101
+mdadm: stopped /dev/md101
+$ sudo mdadm --assemble --force --no-degraded /dev/md101 /dev/sdf1 /dev/sdb1
+mdadm: /dev/md101 has been started with 1 drive (out of 2) and 1 spare.
+$ cat /proc/mdstat
+md101 : active raid1 sdf1[0] sdb1[2]
+       1953511936 blocks [2/1] [U_]
+       [>....................]  recovery =  0.0% (541440/1953511936) 
+finish=420.8min speed=77348K/sec
+
+This runs for the allotted time but returns to the state of spare.
+
+Neither disk partition report errors:
+$ cat /sys/block/md101/md/dev-sdf1/errors
+0
+$ cat /sys/block/md101/md/dev-sdb1/errors
+0
+
+Are there mdadm logs to find out why this is not recovering properly?  
+How otherwise do I debug this?
+
+Cheers,
+Tudor.
+
