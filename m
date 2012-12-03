@@ -1,117 +1,41 @@
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: [PATCH 1/2 v3] wait: add wait_event_lock_irq() interface
-Date: Mon, 3 Dec 2012 10:21:34 +0100 (CET)
-Message-ID: <alpine.LFD.2.00.1212031020180.6336@localhost>
-References: <1354272161-9173-1-git-send-email-lczerner@redhat.com> <20121130024842.5326d998.akpm@linux-foundation.org> <alpine.LFD.2.00.1211301233320.8688@dhcp-1-104.brq.redhat.com> <20121130121308.54d66bfe.akpm@linux-foundation.org>
+From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+Subject: Re: Checksumming RAID?
+Date: Mon, 3 Dec 2012 14:24:45 +0200
+Message-ID: <20121203122444.GV8912@reaktio.net>
+References: <14319197.21.1353936449959.JavaMail.root@zimbra>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-613886922-1354526505=:6336"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20121130121308.54d66bfe.akpm@linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, axboe@kernel.dk, jmoyer@redhat.com, Neil Brown <neilb@suse.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <14319197.21.1353936449959.JavaMail.root@zimbra>
+Sender: linux-raid-owner@vger.kernel.org
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Cc: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---8323328-613886922-1354526505=:6336
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-
-On Fri, 30 Nov 2012, Andrew Morton wrote:
-
-> Date: Fri, 30 Nov 2012 12:13:08 -0800
-> From: Andrew Morton <akpm@linux-foundation.org>
-> To: Lukáš Czerner <lczerner@redhat.com>
-> Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, axboe@kernel.dk,
->     jmoyer@redhat.com, Neil Brown <neilb@suse.de>
-> Subject: Re: [PATCH 1/2 v3] wait: add wait_event_lock_irq() interface
+On Mon, Nov 26, 2012 at 02:27:30PM +0100, Roy Sigurd Karlsbakk wrote:
+> Hi all
 > 
-> On Fri, 30 Nov 2012 12:36:35 +0100 (CET)
-> Lukáš Czerner <lczerner@redhat.com> wrote:
-> 
-> > On Fri, 30 Nov 2012, Andrew Morton wrote:
-> > 
-> > > Date: Fri, 30 Nov 2012 02:48:42 -0800
-> > > From: Andrew Morton <akpm@linux-foundation.org>
-> > > To: Lukas Czerner <lczerner@redhat.com>
-> > > Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, axboe@kernel.dk,
-> > >     jmoyer@redhat.com, Neil Brown <neilb@suse.de>,
-> > >     David Howells <dhowells@redhat.com>, Ingo Molnar <mingo@elte.hu>,
-> > >     Peter Zijlstra <a.p.zijlstra@chello.nl>
-> > > Subject: Re: [PATCH 1/2 v3] wait: add wait_event_lock_irq() interface
-> > > 
-> > > On Fri, 30 Nov 2012 11:42:40 +0100 Lukas Czerner <lczerner@redhat.com> wrote:
-> > > 
-> > > > New wait_event{_interruptible}_lock_irq{_cmd} macros added. This commit
-> > > > moves the private wait_event_lock_irq() macro from MD to regular wait
-> > > > includes, introduces new macro wait_event_lock_irq_cmd() instead of using
-> > > > the old method with omitting cmd parameter which is ugly and makes a use
-> > > > of new macros in the MD. It also introduces the _interruptible_ variant.
-> > > > 
-> > > > The use of new interface is when one have a special lock to protect data
-> > > > structures used in the condition, or one also needs to invoke "cmd"
-> > > > before putting it to sleep.
-> > > > 
-> > > > All new macros are expected to be called with the lock taken. The lock
-> > > > is released before sleep and is reacquired afterwards. We will leave the
-> > > > macro with the lock held.
-> > > > 
-> > > > Note to DM: IMO this should also fix theoretical race on waitqueue while
-> > > > using simultaneously wait_event_lock_irq() and wait_event() because of
-> > > > lack of locking around current state setting and wait queue removal.
-> > > 
-> > > Does this fix the sparse warning which Fengguang just sent us?
-> > 
-> > Which report from Fengguang do you have in mind ? I do not see any
-> > on linux-kernel today.
-> > 
-> > /me going to see what spare reports
-> > 
-> 
-> On Fri, 30 Nov 2012 16:30:24 +0800
-> kbuild test robot <fengguang.wu@intel.com> wrote:
-> 
-> > tree:   git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git akpm
-> > head:   cfb65dadcd079ad4547407a1584bc6b96bd48bb3
-> > commit: 2b29cdb6f98c86a1da4ec5335d6247392b7c6551 [35/476] wait: add wait_event_lock_irq() interface
-> > 
-> > 
-> > sparse warnings:
-> > 
-> > + drivers/block/drbd/drbd_int.h:2339:9: sparse: preprocessor token __wait_event_lock_irq redefined
-> > include/linux/wait.h:554:9: this was the original definition
-> > + drivers/block/drbd/drbd_int.h:2358:9: sparse: preprocessor token wait_event_lock_irq redefined
-> > include/linux/wait.h:621:9: this was the original definition
-> > drivers/block/drbd/drbd_interval.h:12:63: sparse: dubious one-bit signed bitfield
-> > drivers/block/drbd/drbd_interval.h:13:22: sparse: dubious one-bit signed bitfield
-> > drivers/block/drbd/drbd_int.h:903:39: sparse: attribute 'require_context': unknown attribute
-> > drivers/block/drbd/drbd_int.h:1123:69: sparse: attribute 'require_context': unknown attribute
-> > drivers/block/drbd/drbd_int.h:1124:70: sparse: attribute 'require_context': unknown attribute
-> > drivers/block/drbd/drbd_int.h:1125:59: sparse: attribute 'require_context': unknown attribute
-> > drivers/block/drbd/drbd_int.h:1126:63: sparse: attribute 'require_context': unknown attribute
-> > drivers/block/drbd/drbd_int.h:1127:60: sparse: attribute 'require_context': unknown attribute
-> > drivers/block/drbd/drbd_int.h:1128:71: sparse: attribute 'require_context': unknown attribute
-> > drivers/block/drbd/drbd_int.h:1129:65: sparse: attribute 'require_context': unknown attribute
-> > drivers/block/drbd/drbd_int.h:1130:66: sparse: attribute 'require_context': unknown attribute
-> > drivers/block/drbd/drbd_int.h:1335:74: sparse: attribute 'require_context': unknown attribute
-> > drivers/block/drbd/drbd_int.h:1336:50: sparse: attribute 'require_context': unknown attribute
-> > drivers/block/drbd/drbd_int.h:1338:51: sparse: attribute 'require_context': unknown attribute
-> > drivers/block/drbd/drbd_int.h:1339:58: sparse: attribute 'require_context': unknown attribute
-> > drivers/block/drbd/drbd_int.h:1340:54: sparse: attribute 'require_context': unknown attribute
-> > drivers/block/drbd/drbd_int.h:1341:62: sparse: attribute 'require_context': unknown attribute
-> > drivers/block/drbd/drbd_int.h:1435:92: sparse: attribute 'require_context': unknown attribute
+> I see from an article at http://pages.cs.wisc.edu/~bpkroth/cs736/md-checksums/md-checksums-paper.pdf that an implementation has been made to allow for ZFS-like checksumming inside Linux MD. However, this code doesn't seem to exist in any kernel trees. Does anyone know the current status for data checksumming in MD?
 > 
 
-I believe that Lars send patch for that already. So no,
+Afaik Linux md-raid raid0 and raid1 already supports T10 PI (Protection Information) and DIF (Data Integrity Fields) / DIX (Data Integrity Extensions).
 
-'[PATCH 1/2 v3] wait: add wait_event_lock_irq() interface'
+I wonder if it'd be possible to utilize this mdadm code with normal disks that don't have T10 PI support? ie. implement custom checksums in the "backend" with normal non-PI disks..
 
-does not fix the issue, but another patch should.
+T10 PI and DIF/DIX is a SCSI/SAS feature, so it's mostly available in new(ish) enterprise SAS disks and it's not available in SATA.. but I think there are plans to implement something similar in SATA aswell in the future.
 
-http://www.spinics.net/lists/linux-next/msg23042.html
+A couple of SAS HBAs (mpt2sas, for example) and some FC HBAs support DIF/DIX in Linux.
 
-Thanks!
--Lukas
---8323328-613886922-1354526505=:6336--
+The purpose of DIF/DIX is to allow passing and verifying end-to-end checksums from all the way from the applications to the disks.. and probably in more common case that'd be checksums all the way from filesystems to the disks.
+
+Some more links about T10 PI and DIF/DIX:
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=blob_plain;f=Documentation/block/data-integrity.txt;hb=HEAD
+https://oss.oracle.com/~mkp/docs/dix.pdf
+https://oss.oracle.com/~mkp/docs/osd2008-data-integrity.pdf
+https://oss.oracle.com/~mkp/docs/ols2008-petersen.pdf
+https://oss.oracle.com/~mkp/docs/ppdc.pdf
+
+
+-- Pasi
+
