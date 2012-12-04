@@ -1,82 +1,350 @@
-From: Dave Jiang <dave.jiang@intel.com>
-Subject: Re: getting I/O errors in super_written()...any ideas what would
- cause this?
-Date: Mon, 03 Dec 2012 14:59:49 -0700
-Message-ID: <50BD20D5.40606@intel.com>
-References: <8134827.27.1354128708501.JavaMail.root@zimbra> <50B67230.4080602@genband.com> <CADNH=7Hv2RgBv=0Xia=yMyzKmgAOgvxJSAKn2arcE7k1x_T4FQ@mail.gmail.com> <50B67417.2020606@genband.com> <50BD09EC.5060705@redhat.com> <50BD0F44.7010808@genband.com> <50BD1127.6090304@redhat.com> <50BD14B1.7000203@genband.com> <50BD17CD.8080206@intel.com> <50BD1B67.7090606@genband.com>
+From: "Joshua C." <joshuacov@gmail.com>
+Subject: mdadm: mdNN: pN size extends beyond EOD, truncated (cannot access
+ imsm windows raid from within linux)
+Date: Tue, 4 Dec 2012 10:50:08 +0100
+Message-ID: <CAKL7Q7ruBvRKN3cnwoKT42zewj-60ExMN0h-iPYKPaNXapFdUQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50BD1B67.7090606@genband.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Friesen <chris.friesen@genband.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Neil Brown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/03/2012 02:36 PM, Chris Friesen wrote:
-> On 12/03/2012 03:21 PM, Dave Jiang wrote:
->> On 12/03/2012 02:08 PM, Chris Friesen wrote:
->>> On 12/03/2012 02:52 PM, Ric Wheeler wrote:
->>>
->>>> I jumped into this thread late - can you repost detail on the specific
->>>> drive and HBA used here? In any case, it sounds like this is a better
->>>> topic for the linux-scsi or linux-ide list where most of the low level
->>>> storage people lurk :)
->>> Okay, expanding the receiver list. :)
->>>
->>> To recap:
->>>
->>> I'm running 2.6.27 with LVM over software RAID 1 over a pair of SAS disks.
->>> Disks are WD9001BKHG, controller is Intel C600.
->> Just curious what driver are you using with the C600. The upstream
->> driver for C600 didn't get accepted until 3.0-rc6 and all of the
->> outstanding patches weren't accepted until 3.7-rc. So I'd say 3.6 would
->> be your best bet until 3.7 is released. Did you attempt a backport of
->> the isci driver or using something like an LSI port on 2.6.27? Have you
->> verified the issue on a more recent kernel?
-> We're using a driver provided by the hardware vendor.  It appears to be 
-> a backport of version 1.0.1 of the isci driver.  We've been using it 
-> since mid-March or so.
+I have two 1TB disk that have been running in raid1 with the
+intel-p67-built-in controller. Those were created in bios (uefi;
+imsm-raids) and are actually fake(software) raids. Windows sees only
+his own (ntfs) raid and everything is fine. Under linux I set the
+partition type to 0xfd (linux auto raid) and mdadm can successfully
+see and access the linux raid partion.
 
-Yikes. There has been significant updates to libsas, libata, and isci
-driver since March. Looks like you are barely limping along. I would
-imagine the error handling and the hotplug would be a giant mess to say
-the least.
+However I cannot access my windows-raid-partition (/dev/md126p2 on
+/dev/sd[bc]) from within linux and get the following error: "md126: p2
+size 209711104 extends beyond EOD, truncated"
 
-> This is an embedded system, so as is all too common in that environment 
-> upgrading the whole kernel isn't an option since it requires support 
-> from multiple hardware/software vendors.
->
-> Upgrading just the driver might be possible--do you think it's likely as 
-> a cause for these errors?  The current driver has a binary firmware file 
-> that it uses--would we keep that with the new driver?
-You can certainly try but it needs the libsas, libata, and some block
-fixes to function in a stable fashion. Given that it was a backport by a
-vendor, one would wonder how much of libsas they actually backported.
-It's really difficult to say where the error is coming from without
-being able to verify on a later kernel. Is there any other I/O
-controller you can use to test this? I'm guessing the answer is no since
-it's embedded board. You are using a very old driver that is backported
-to a very old kernel that requires significant subsystem backporting as
-well. You may need to go poke your OS vendor and have them support the
-issue?
+Looking into the data, I see that my windows-raid-partition has
+actually 4! partitions on it. This should be wrong. This what
+mdadm-3.2.6 says about my disks under kernel-3.6.8.fc17.x86_64:
 
-The binary firmware file is really there in case you are not able to
-load your OEM parameter properly from the platform. It's there to allow
-you to limp if that is the case and by no means should be used for
-standard operation. You are suppose to get the appropriate values for
-your specific platform using a tool called phytune (which you should've
-gotten from your Intel field rep). You need to program those values and
-others into the OEM parameter block in the SPI flash of your platform.
-In your BIOS you need to have either the OROM or the EFI driver loaded
-during boot. The OROM or EFI driver then copies the values out of SPI
-flash at boot and provides it to the driver. Those parameters provide
-important timing values and others. If you are loading the wrong values
-against your platform, it is very possible that you could see I/O errors.
+===========================================
+[root@localhost]# mdadm -E /dev/md127
+/dev/md127:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.1.00
+    Orig Family : 88e429ad
+         Family : 1e27d1ba
+     Generation : 0001ad23
+     Attributes : All supported
+           UUID : 516f8fc8:bd5e663f:c254ea22:d30bb530
+       Checksum : 2438ebf9 correct
+    MPB Sectors : 1
+          Disks : 2
+   RAID Devices : 1
+
+  Disk00 Serial : WD-XXXXXXXXXXXX
+          State : active
+             Id : 00000002
+    Usable Size : 1953519880 (931.51 GiB 1000.20 GB)
+
+[Volume0]:
+           UUID : fa85ec01:25e9c177:da74f1e6:03284c35
+     RAID Level : 1
+        Members : 2
+          Slots : [UU]
+    Failed disk : none
+      This Slot : 0
+     Array Size : 1953519616 (931.51 GiB 1000.20 GB)
+   Per Dev Size : 1953519880 (931.51 GiB 1000.20 GB)
+  Sector Offset : 0
+    Num Stripes : 7630936
+     Chunk Size : 64 KiB
+       Reserved : 0
+  Migrate State : idle
+      Map State : normal
+    Dirty State : clean
+
+  Disk01 Serial : WD-XXXXXXXXXXXX
+          State : active
+             Id : 00000003
+    Usable Size : 1953519880 (931.51 GiB 1000.20 GB)
+===========================================
+[root@localhost]# mdadm -D /dev/md127
+/dev/md127:
+        Version : imsm
+     Raid Level : container
+  Total Devices : 2
+
+Working Devices : 2
 
 
+           UUID : 516f8fc8:bd5e663f:c254ea22:d30bb530
+  Member Arrays : /dev/md/Volume0
 
-> Chris
+    Number   Major   Minor   RaidDevice
+
+       0       8       32        -        /dev/sdc
+       1       8       16        -        /dev/sdb
+===========================================
+[root@localhost]# mdadm -E /dev/md126
+/dev/md126:
+   MBR Magic : aa55
+Partition[0] :   1743810560 sectors at         2048 (type fd)
+Partition[1] :    209711104 sectors at   1743812608 (type 07)
+===========================================
+[root@localhost]# mdadm -D /dev/md126
+/dev/md126:
+      Container : /dev/md127, member 0
+     Raid Level : raid1
+     Array Size : 976759808 (931.51 GiB 1000.20 GB)
+  Used Dev Size : 976759940 (931.51 GiB 1000.20 GB)
+   Raid Devices : 2
+  Total Devices : 2
+
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
 
 
+           UUID : fa85ec01:25e9c177:da74f1e6:03284c35
+    Number   Major   Minor   RaidDevice State
+       1       8       16        0      active sync   /dev/sdb
+       0       8       32        1      active sync   /dev/sdc
+===========================================
+[root@localhost]# mdadm -E /dev/md126p1
+===========================================
+[root@localhost]# mdadm -D /dev/md126p1
+/dev/md126p1:
+      Container : /dev/md127, member 0
+     Raid Level : raid1
+     Array Size : 871905280 (831.51 GiB 892.83 GB)
+  Used Dev Size : 976759940 (931.51 GiB 1000.20 GB)
+   Raid Devices : 2
+  Total Devices : 2
+
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+
+           UUID : fa85ec01:25e9c177:da74f1e6:03284c35
+    Number   Major   Minor   RaidDevice State
+       1       8       16        0      active sync   /dev/sdb
+       0       8       32        1      active sync   /dev/sdc
+===========================================
+[root@localhost]# mdadm -E /dev/md126p2
+/dev/md126p2:
+   MBR Magic : aa55
+Partition[0] :   1917848077 sectors at      6579571 (type 70)
+Partition[1] :   1818575915 sectors at   1953251627 (type 43)
+Partition[2] :           10 sectors at    225735265 (type 72)
+Partition[3] :        51890 sectors at   2642411520 (type 00)
+===========================================
+[root@localhost]# mdadm -D /dev/md126p2
+/dev/md126p2:
+      Container : /dev/md127, member 0
+     Raid Level : raid1
+     Array Size : 104853504 (100.00 GiB 107.37 GB)
+  Used Dev Size : 976759940 (931.51 GiB 1000.20 GB)
+   Raid Devices : 2
+  Total Devices : 2
+
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+
+           UUID : fa85ec01:25e9c177:da74f1e6:03284c35
+    Number   Major   Minor   RaidDevice State
+       1       8       16        0      active sync   /dev/sdb
+       0       8       32        1      active sync   /dev/sdc
+===========================================
+[root@localhost]# mdadm -E /dev/sdb
+/dev/sdb:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.1.00
+    Orig Family : 88e429ad
+         Family : 1e27d1ba
+     Generation : 0001ad29
+     Attributes : All supported
+           UUID : 516f8fc8:bd5e663f:c254ea22:d30bb530
+       Checksum : 2438ebff correct
+    MPB Sectors : 1
+          Disks : 2
+   RAID Devices : 1
+
+  Disk00 Serial : WD-XXXXXXXXXXXX
+          State : active
+             Id : 00000002
+    Usable Size : 1953519880 (931.51 GiB 1000.20 GB)
+
+[Volume0]:
+           UUID : fa85ec01:25e9c177:da74f1e6:03284c35
+     RAID Level : 1
+        Members : 2
+          Slots : [UU]
+    Failed disk : none
+      This Slot : 0
+     Array Size : 1953519616 (931.51 GiB 1000.20 GB)
+   Per Dev Size : 1953519880 (931.51 GiB 1000.20 GB)
+  Sector Offset : 0
+    Num Stripes : 7630936
+     Chunk Size : 64 KiB
+       Reserved : 0
+  Migrate State : idle
+      Map State : normal
+    Dirty State : clean
+
+  Disk01 Serial : WD-XXXXXXXXXXXX
+          State : active
+             Id : 00000003
+    Usable Size : 1953519880 (931.51 GiB 1000.20 GB)
+===========================================
+[root@localhost]# mdadm -E /dev/sdc
+/dev/sdc:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.1.00
+    Orig Family : 88e429ad
+         Family : 1e27d1ba
+     Generation : 0001ad29
+     Attributes : All supported
+           UUID : 516f8fc8:bd5e663f:c254ea22:d30bb530
+       Checksum : 2438ebff correct
+    MPB Sectors : 1
+          Disks : 2
+   RAID Devices : 1
+
+  Disk01 Serial : WD-XXXXXXXXXXXX
+          State : active
+             Id : 00000003
+    Usable Size : 1953519880 (931.51 GiB 1000.20 GB)
+
+[Volume0]:
+           UUID : fa85ec01:25e9c177:da74f1e6:03284c35
+     RAID Level : 1
+        Members : 2
+          Slots : [UU]
+    Failed disk : none
+      This Slot : 1
+     Array Size : 1953519616 (931.51 GiB 1000.20 GB)
+   Per Dev Size : 1953519880 (931.51 GiB 1000.20 GB)
+  Sector Offset : 0
+    Num Stripes : 7630936
+     Chunk Size : 64 KiB
+       Reserved : 0
+  Migrate State : idle
+      Map State : normal
+    Dirty State : clean
+
+  Disk00 Serial : WD-XXXXXXXXXXXX
+          State : active
+             Id : 00000002
+    Usable Size : 1953519880 (931.51 GiB 1000.20 GB)
+===========================================
+[root@localhost]# cat /proc/mdstat
+Personalities : [raid1]
+md126 : active raid1 sdb[1] sdc[0]
+      976759808 blocks super external:/md127/0 [2/2] [UU]
+
+md127 : inactive sdb[1](S) sdc[0](S)
+      5288 blocks super external:imsm
+
+unused devices: <none>
+===========================================
+[root@localhost]# cat /proc/partitions
+major minor  #blocks  name
+
+   7        0         16 loop0
+   7        1       2796 loop1
+   7        2     900352 loop2
+   7        3   10485760 loop3
+   7        4     524288 loop4
+   8        0   62522712 sda
+   8        1   18350080 sda1
+   8        2   44171264 sda2
+   8       16  976762584 sdb
+   8       32  976762584 sdc
+  11        0    1048575 sr0
+   8       48    3903488 sdd
+   8       49    3903456 sdd1
+ 253        0   10485760 dm-0
+ 253        1   10485760 dm-1
+   9      126  976759808 md126
+ 259        0  871905280 md126p1
+ 259        1  104853504 md126p2
+   8       64    2002943 sde
+   8       65    2002942 sde1
+===========================================
+[root@localhost]# mdadm --examine --scan
+ARRAY metadata=imsm UUID=516f8fc8:bd5e663f:c254ea22:d30bb530
+ARRAY /dev/md/Volume0 container=516f8fc8:bd5e663f:c254ea22:d30bb530
+member=0 UUID=fa85ec01:25e9c177:da74f1e6:03284c35
+===========================================
+[root@localhost]# mdadm --detail --scan
+ARRAY /dev/md127 metadata=imsm UUID=516f8fc8:bd5e663f:c254ea22:d30bb530
+ARRAY /dev/md/Volume0 container=/dev/md127 member=0
+UUID=fa85ec01:25e9c177:da74f1e6:03284c35
+===========================================
+[root@localhost]# dmesg  |grep md
+[    0.000000] Command line: initrd=initrd0.img
+root=live:UUID=406D-2540 rootfstype=vfat ro liveimg quiet  rhgb
+rd.luks=0 rd.md=0 rd.dm=0  BOOT_IMAGE=vmlinuz0
+[    0.000000] Kernel command line: initrd=initrd0.img
+root=live:UUID=406D-2540 rootfstype=vfat ro liveimg quiet  rhgb
+rd.luks=0 rd.md=0 rd.dm=0  BOOT_IMAGE=vmlinuz0
+[    1.277784] dracut: rd.md=0: removing MD RAID activation
+[    6.231138] md: bind<sdb>
+[    6.434862] md: bind<sdc>
+[    6.440260] md: bind<sdc>
+[    6.440383] md: bind<sdb>
+[    6.453438] md: raid1 personality registered for level 1
+[    6.453654] md/raid1:md126: active with 2 out of 2 mirrors
+[    6.453678] md126: detected capacity change from 0 to 1000202043392
+[    6.460137]  md126: p1 p2
+[    6.460268] md126: p2 size 209711104 extends beyond EOD, truncated
+[    6.464890] md: md126 switched to read-write mode.
+[    6.675396] md: export_rdev(sdc)
+[    6.675454] md: export_rdev(sdb)
+[   84.923953] md: export_rdev(sdc)
+[   84.924017] md: export_rdev(sdb)
+[   93.473151] md126: detected capacity change from 1000202043392 to 0
+[   93.473228] md: md126 stopped.
+[   93.473236] md: unbind<sdb>
+[   93.479847] md: export_rdev(sdb)
+[   93.479858] md: unbind<sdc>
+[   93.486826] md: export_rdev(sdc)
+[   93.493682] md: md126 stopped.
+[   95.923141] md: md127 stopped.
+[   95.923151] md: unbind<sdc>
+[   95.927344] md: export_rdev(sdc)
+[   95.927504] md: unbind<sdb>
+[   95.936313] md: export_rdev(sdb)
+[  824.206594] md: md127 stopped.
+[  824.210398] md: bind<sdc>
+[  824.210840] md: bind<sdb>
+[  824.241537] md: bind<sdc>
+[  824.241612] md: bind<sdb>
+[  824.245817] md/raid1:md126: active with 2 out of 2 mirrors
+[  824.245829] md126: detected capacity change from 0 to 1000202043392
+[  824.247377]  md126: p1 p2
+[  824.247545] md126: p2 size 209711104 extends beyond EOD, truncated
+[  824.261049] md: md126 switched to read-write mode.
+[  824.304567] md: export_rdev(sdc)
+[  824.304594] md: export_rdev(sdb)
+[  824.320417] md: export_rdev(sdc)
+[  824.320444] md: export_rdev(sdb)
+[ 1161.533446] EXT4-fs (md126p1): warning: maximal mount count
+reached, running e2fsck is recommended
+[ 1161.573164] EXT4-fs (md126p1): mounted filesystem with ordered data
+mode. Opts: (null)
+[ 1161.573169] SELinux: initialized (dev md126p1, type ext4), uses xattr
+===========================================
+
+Can someone take a look at why mdadm cannot access the windows-raid-partition?
+
+
+--joshua
