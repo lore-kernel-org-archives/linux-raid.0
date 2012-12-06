@@ -1,45 +1,46 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Checksumming RAID? / SCSI SAS T10 PI and DIF/DIX / T13 SATA EPP
-Date: Thu, 06 Dec 2012 11:10:08 +0000
-Message-ID: <50C07D10.3000207@anonymous.org.uk>
-References: <14319197.21.1353936449959.JavaMail.root@zimbra> <20121203122444.GV8912@reaktio.net> <20121203140946.GW8912@reaktio.net> <yq1vccgjp4o.fsf@sermon.lab.mkp.net>
+From: Chris Friesen <chris.friesen@genband.com>
+Subject: Re: getting I/O errors in super_written()...any ideas what would
+ cause this?
+Date: Thu, 06 Dec 2012 12:15:32 -0600
+Message-ID: <50C0E0C4.9050400@genband.com>
+References: <8134827.27.1354128708501.JavaMail.root@zimbra>		<50B67230.4080602@genband.com>	 <CADNH=7Hv2RgBv=0Xia=yMyzKmgAOgvxJSAKn2arcE7k1x_T4FQ@mail.gmail.com>	 <50B67417.2020606@genband.com> <50BD09EC.5060705@redhat.com>	 <50BD0F44.7010808@genband.com> <50BD1127.6090304@redhat.com>	 <50BD14B1.7000203@genband.com> <50BD1F45.1040802@redhat.com>	 <50BE7293.8060200@genband.com> <1354699254.2243.5.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <yq1vccgjp4o.fsf@sermon.lab.mkp.net>
+In-Reply-To: <1354699254.2243.5.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: =?UTF-8?B?UGFzaSBLw6Rya2vDpGluZW4=?= <pasik@iki.fi>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Linux Raid <linux-raid@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Neil Brown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 05/12/2012 19:05, Martin K. Petersen wrote:
->>>>>> "Pasi" =3D=3D Pasi K=C3=A4rkk=C3=A4inen <pasik@iki.fi> writes:
-> Pasi> (Added CC to Martin in the case he has some thoughts about gene=
-ric
-> Pasi> Linux checksumming RAID without T10 PI disks..)
+On 12/05/2012 03:20 AM, James Bottomley wrote:
+> On Tue, 2012-12-04 at 16:00 -0600, Chris Friesen wrote:
+>> As another data point, it looks like we may be doing a SEND DIAGNOSTIC
+>> command specifying the default self-test in addition to the background
+>> short self-test.  This seems a bit risky and excessive to me, but
+>> apparently the guy that wrote it is no longer with the company.
 >
-> There have been a few attempts at a checksumming DM target. However, =
-I
-> think btrfs is a much better solution for this stuff.
+> This is a really bad idea.  A lot of disks go out to lunch until the
+> diagnostics complete (the same goes for SMART diagnostics).  This means
+> that if you do diagnostics on a running device, the drivers start to get
+> timeouts on commands which are queued waiting for diagnostics to
+> complete ... if those go over the standard SCSI timeouts, we'll start to
+> try error recovery and likely have the disaster you see above.
 
-I think there's room for both. Checksumming at the block level, below m=
-d=20
-RAID so presumably in a DM target, could help avoid silent data=20
-corruption in such a way that the md layer could reconstruct valid data=
-=2E=20
-Checksumming at the filesystem level doesn't give you reconstruction -=20
-unless you add redundancy/RAID functions into the filesystem, which is =
-a=20
-whole other discussion.
+So it turns out that our problems are intermittently triggered when 
+running the default self test.  This agrees with the statement in 
+sg_senddiag to not do foreground self-tests on disks with mounted 
+filesystems.
 
-Cheers,
+We seem to be able to do background short self-tests (ie, SEND 
+DIAGNOSTIC command with self-test code of 001b and ST code of 0b) 
+without causing any problems.  Is this pushing our luck or is this 
+something that should work according to the spec and the linux stack? 
+The scsi spec indicates that in this case for most commands the test 
+will be paused and the command executed within 2 seconds, but I don't 
+know what the normal scsi timeouts are.
 
-John.
+Thanks for the input, this is very useful.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Chris
