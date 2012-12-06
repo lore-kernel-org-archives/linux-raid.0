@@ -1,44 +1,45 @@
-From: Jack Wang <jack.wang.usish@gmail.com>
-Subject: Re: Manually failing a disk during a md raid6 reshape
-Date: Thu, 6 Dec 2012 11:47:09 +0800
-Message-ID: <CA+res+RBGOVZ_ih8zRaRKdAbRfGM1PJDXmNi96WVh6ix+f4f+w@mail.gmail.com>
-References: <50BE44A8.1040502@ejane.org>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Checksumming RAID? / SCSI SAS T10 PI and DIF/DIX / T13 SATA EPP
+Date: Thu, 06 Dec 2012 11:10:08 +0000
+Message-ID: <50C07D10.3000207@anonymous.org.uk>
+References: <14319197.21.1353936449959.JavaMail.root@zimbra> <20121203122444.GV8912@reaktio.net> <20121203140946.GW8912@reaktio.net> <yq1vccgjp4o.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50BE44A8.1040502@ejane.org>
+In-Reply-To: <yq1vccgjp4o.fsf@sermon.lab.mkp.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: EJ Vincent <ej@ejane.org>
-Cc: linux-raid mailing list <linux-raid@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: =?UTF-8?B?UGFzaSBLw6Rya2vDpGluZW4=?= <pasik@iki.fi>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-2012/12/5 EJ Vincent <ej@ejane.org>:
-> Greetings,
+On 05/12/2012 19:05, Martin K. Petersen wrote:
+>>>>>> "Pasi" =3D=3D Pasi K=C3=A4rkk=C3=A4inen <pasik@iki.fi> writes:
+> Pasi> (Added CC to Martin in the case he has some thoughts about gene=
+ric
+> Pasi> Linux checksumming RAID without T10 PI disks..)
 >
-> I currently have a md raid6 reshape (growth, adding a disk) under-way.
-> Dmesg is beginning to fill up with:
->
-> [23661.913556] ata15.00: status: { DRDY }
-> [23661.914443] ata15.00: failed command: WRITE FPDMA QUEUED
-> [23661.915326] ata15.00: cmd 61/80:f0:00:34:e9/00:00:45:00:00/40 tag 30 ncq
-> 65536 out
-> [23661.915329]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4
-> (timeout)
-> [23661.917110] ata15.00: status: { DRDY }
-> [23661.917977] ata15: hard resetting link
-> [23664.116087] ata15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [23664.118667] ata15.00: configured for UDMA/100
-> [23664.118685] ata15.00: device reported invalid CHS sector 0
->
->
-> Also, any conjecture on what might lead to the above error(s)?
+> There have been a few attempts at a checksumming DM target. However, =
+I
+> think btrfs is a much better solution for this stuff.
 
-If you do not enable async scan, you may find the ataxx to sdx mapping
-from looking into dmesg.
+I think there's room for both. Checksumming at the block level, below m=
+d=20
+RAID so presumably in a DM target, could help avoid silent data=20
+corruption in such a way that the md layer could reconstruct valid data=
+=2E=20
+Checksumming at the filesystem level doesn't give you reconstruction -=20
+unless you add redundancy/RAID functions into the filesystem, which is =
+a=20
+whole other discussion.
 
-the error seems because disk not respouse ncq write command, lead to
-command timeout by upper layer, which lead to error handler action.
+Cheers,
 
-I gusse the reason is the faulty disk not return respounse in time.
+John.
 
-Jack
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
