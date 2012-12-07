@@ -1,56 +1,46 @@
 From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Subject: [PATCH] md: fix max_disks check in analyze_sbs
-Date: Fri,  7 Dec 2012 13:30:40 +0100
-Message-ID: <1354883440-22589-1-git-send-email-sebastian.riemer@profitbricks.com>
-Reply-To: linux-raid <linux-raid@vger.kernel.org>
+Subject: [Q] md: Why mddev->pers->status() '[2/1]' -  degraded in second value?
+Date: Fri, 07 Dec 2012 18:51:42 +0100
+Message-ID: <50C22CAE.1020505@profitbricks.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
-Cc: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-The number of disks starts at zero and is directly compared to
-greater than max_disks. The check has to start at one.
+Hi all,
 
-Furthermore, the number of disks is only updated if the level is
-multipath. For all other levels max_disks is always compared
-against zero.
-So make the number of disks count right for all levels.
+can somebody answer the question why in /proc/mdstat the degraded count
+is used in the second parameter and not in the first of the string "[2/=
+1]"?
 
-Signed-off-by: Sebastian Riemer <sebastian.riemer@profitbricks.com>
----
- drivers/md/md.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+Here is the related code:
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 6120071..f93fc79 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -3337,7 +3337,7 @@ static void analyze_sbs(struct mddev * mddev)
- 	rdev_for_each_safe(rdev, tmp, mddev) {
- 		if (mddev->max_disks &&
- 		    (rdev->desc_nr >= mddev->max_disks ||
--		     i > mddev->max_disks)) {
-+		     i+1 > mddev->max_disks)) {
- 			printk(KERN_WARNING
- 			       "md: %s: %s: only %d devices permitted\n",
- 			       mdname(mddev), bdevname(rdev->bdev, b),
-@@ -3355,13 +3355,14 @@ static void analyze_sbs(struct mddev * mddev)
- 				continue;
- 			}
- 		if (mddev->level == LEVEL_MULTIPATH) {
--			rdev->desc_nr = i++;
-+			rdev->desc_nr = i;
- 			rdev->raid_disk = rdev->desc_nr;
- 			set_bit(In_sync, &rdev->flags);
- 		} else if (rdev->raid_disk >= (mddev->raid_disks - min(0, mddev->delta_disks))) {
- 			rdev->raid_disk = -1;
- 			clear_bit(In_sync, &rdev->flags);
- 		}
-+		i++;
- 	}
- }
- 
--- 
-1.7.1
+from raid1.c:
+	seq_printf(seq, " [%d/%d] [", conf->raid_disks,
+		conf->raid_disks - mddev->degraded);
 
+In the other personalities it is the same. For me it would make more
+sense to see that I've got "[1/2]" (one of two) active.
+
+I couldn't find the explanation in "Documentation/md.txt".
+
+Cheers,
+Sebastian
+
+--=20
+Sebastian Riemer
+Linux Kernel Developer - Storage
+
+We are looking for (SENIOR) LINUX KERNEL DEVELOPERS!
+
+ProfitBricks GmbH =95 Greifswalder Str. 207 =95 10405 Berlin, Germany
+www.profitbricks.com =95 sebastian.riemer@profitbricks.com
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
