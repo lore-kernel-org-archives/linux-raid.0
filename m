@@ -1,194 +1,67 @@
-From: mwilck@arcor.de
-Subject: [PATCH 1/3] DDF: cleanly save the secondary DDF structure
-Date: Fri,  7 Dec 2012 23:38:59 +0100
-Message-ID: <1354919941-12070-2-git-send-email-mwilck@arcor.de>
-References: <1354919941-12070-1-git-send-email-mwilck@arcor.de>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1354919941-12070-1-git-send-email-mwilck@arcor.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: mwilck@arcor.de
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: getting I/O errors in super_written()...any ideas what would
+ cause this?
+Date: Sat, 08 Dec 2012 18:08:06 +0000
+Message-ID: <1354990086.2722.9.camel@dabdike.int.hansenpartnership.com>
+References: <8134827.27.1354128708501.JavaMail.root@zimbra>
+			<50B67230.4080602@genband.com>
+		 <CADNH=7Hv2RgBv=0Xia=yMyzKmgAOgvxJSAKn2arcE7k1x_T4FQ@mail.gmail.com>
+		 <50B67417.2020606@genband.com> <50BD09EC.5060705@redhat.com>
+		 <50BD0F44.7010808@genband.com> <50BD1127.6090304@redhat.com>
+		 <50BD14B1.7000203@genband.com> <50BD1F45.1040802@redhat.com>
+		 <50BE7293.8060200@genband.com>
+	 <1354699254.2243.5.camel@dabdike.int.hansenpartnership.com>
+	 <50C0E0C4.9050400@genband.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <50C0E0C4.9050400@genband.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Chris Friesen <chris.friesen@genband.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Neil Brown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Martin Wilck <mwilck@arcor.de>
+On Thu, 2012-12-06 at 12:15 -0600, Chris Friesen wrote:
+> On 12/05/2012 03:20 AM, James Bottomley wrote:
+> > On Tue, 2012-12-04 at 16:00 -0600, Chris Friesen wrote:
+> >> As another data point, it looks like we may be doing a SEND DIAGNOSTIC
+> >> command specifying the default self-test in addition to the background
+> >> short self-test.  This seems a bit risky and excessive to me, but
+> >> apparently the guy that wrote it is no longer with the company.
+> >
+> > This is a really bad idea.  A lot of disks go out to lunch until the
+> > diagnostics complete (the same goes for SMART diagnostics).  This means
+> > that if you do diagnostics on a running device, the drivers start to get
+> > timeouts on commands which are queued waiting for diagnostics to
+> > complete ... if those go over the standard SCSI timeouts, we'll start to
+> > try error recovery and likely have the disaster you see above.
+> 
+> So it turns out that our problems are intermittently triggered when 
+> running the default self test.  This agrees with the statement in 
+> sg_senddiag to not do foreground self-tests on disks with mounted 
+> filesystems.
+> 
+> We seem to be able to do background short self-tests (ie, SEND 
+> DIAGNOSTIC command with self-test code of 001b and ST code of 0b) 
+> without causing any problems.  Is this pushing our luck or is this 
+> something that should work according to the spec and the linux stack?
 
-So far, mdadm only saved the header of the secondary structure.
-With this patch, the full secondary DDF structure is saved
-consistently
----
- super-ddf.c |  136 +++++++++++++++++++++++++++++++++-------------------------
- 1 files changed, 77 insertions(+), 59 deletions(-)
+No one can tell you this.  The specs don't say what should happen on a
+diagnostic, how long it will take or how disruptive to the I/O flow it
+is.
 
-diff --git a/super-ddf.c b/super-ddf.c
-index 3b3c1f0..c336db4 100644
---- a/super-ddf.c
-+++ b/super-ddf.c
-@@ -2317,17 +2317,86 @@ static int remove_from_super_ddf(struct supertype *st, mdu_disk_info_t *dk)
-  */
- #define NULL_CONF_SZ	4096
- 
--static int __write_init_super_ddf(struct supertype *st)
-+static int __write_ddf_structure(struct dl *d, struct ddf_super *ddf, __u8 type, char *null_aligned)
- {
-+	unsigned long long sector;
-+	struct ddf_header *header;
-+	int fd, i, n_config, conf_size;
-+
-+	fd = d->fd;
-+	
-+	switch (type) {
-+	case DDF_HEADER_PRIMARY:
-+		header = &ddf->primary;
-+		sector = __be64_to_cpu(header->primary_lba);
-+		break;
-+	case DDF_HEADER_SECONDARY:
-+		header = &ddf->secondary;
-+		sector = __be64_to_cpu(header->secondary_lba);
-+		break;
-+	default:
-+		return 0;
-+	}
-+
-+	header->type = type;
-+	header->openflag = 0;
-+	header->crc = calc_crc(header, 512);
-+		
-+	lseek64(fd, sector<<9, 0);
-+	if (write(fd, header, 512) < 0)
-+		return 0;
-+
-+	ddf->controller.crc = calc_crc(&ddf->controller, 512);
-+	if (write(fd, &ddf->controller, 512) < 0)
-+		return 0;
-+
-+	ddf->phys->crc = calc_crc(ddf->phys, ddf->pdsize);
-+	if (write(fd, ddf->phys, ddf->pdsize) < 0)
-+		return 0;
-+	ddf->virt->crc = calc_crc(ddf->virt, ddf->vdsize);
-+	if (write(fd, ddf->virt, ddf->vdsize) < 0)
-+		return 0;
-+
-+	/* Now write lots of config records. */
-+	n_config = ddf->max_part;
-+	conf_size = ddf->conf_rec_len * 512;
-+	for (i = 0 ; i <= n_config ; i++) {
-+		struct vcl *c = d->vlist[i];
-+		if (i == n_config)
-+			c = (struct vcl*)d->spare;
-+
-+		if (c) {
-+			c->conf.crc = calc_crc(&c->conf, conf_size);
-+			if (write(fd, &c->conf, conf_size) < 0)
-+				break;
-+		} else {
-+			unsigned int togo = conf_size;
-+			while (togo > NULL_CONF_SZ) {
-+				if (write(fd, null_aligned, NULL_CONF_SZ) < 0)
-+					break;
-+				togo -= NULL_CONF_SZ;
-+			}
-+			if (write(fd, null_aligned, togo) < 0)
-+				break;
-+		}
-+	}
-+	if (i <= n_config)
-+		return 0;
-+
-+	d->disk.crc = calc_crc(&d->disk, 512);
-+	if (write(fd, &d->disk, 512) < 0)
-+		return 0;
- 
-+	return 1;
-+}
-+
-+static int __write_init_super_ddf(struct supertype *st)
-+{
- 	struct ddf_super *ddf = st->sb;
--	int i;
- 	struct dl *d;
--	int n_config;
--	int conf_size;
- 	int attempts = 0;
- 	int successes = 0;
--	unsigned long long size, sector;
-+	unsigned long long size;
- 	char *null_aligned;
- 
- 	if (posix_memalign((void**)&null_aligned, 4096, NULL_CONF_SZ) != 0) {
-@@ -2355,6 +2424,7 @@ static int __write_init_super_ddf(struct supertype *st)
- 		size /= 512;
- 		ddf->anchor.workspace_lba = __cpu_to_be64(size - 32*1024*2);
- 		ddf->anchor.primary_lba = __cpu_to_be64(size - 16*1024*2);
-+		ddf->anchor.secondary_lba = __cpu_to_be64(size - 31*1024*2);
- 		ddf->anchor.seq = __cpu_to_be32(1);
- 		memcpy(&ddf->primary, &ddf->anchor, 512);
- 		memcpy(&ddf->secondary, &ddf->anchor, 512);
-@@ -2363,64 +2433,12 @@ static int __write_init_super_ddf(struct supertype *st)
- 		ddf->anchor.seq = 0xFFFFFFFF; /* no sequencing in anchor */
- 		ddf->anchor.crc = calc_crc(&ddf->anchor, 512);
- 
--		ddf->primary.openflag = 0;
--		ddf->primary.type = DDF_HEADER_PRIMARY;
--
--		ddf->secondary.openflag = 0;
--		ddf->secondary.type = DDF_HEADER_SECONDARY;
--
--		ddf->primary.crc = calc_crc(&ddf->primary, 512);
--		ddf->secondary.crc = calc_crc(&ddf->secondary, 512);
--
--		sector = size - 16*1024*2;
--		lseek64(fd, sector<<9, 0);
--		if (write(fd, &ddf->primary, 512) < 0)
-+		if (!__write_ddf_structure(d, ddf, DDF_HEADER_PRIMARY, null_aligned))
- 			continue;
- 
--		ddf->controller.crc = calc_crc(&ddf->controller, 512);
--		if (write(fd, &ddf->controller, 512) < 0)
--			continue;
--
--		ddf->phys->crc = calc_crc(ddf->phys, ddf->pdsize);
--
--		if (write(fd, ddf->phys, ddf->pdsize) < 0)
-+		if (!__write_ddf_structure(d, ddf, DDF_HEADER_SECONDARY, null_aligned))
- 			continue;
- 
--		ddf->virt->crc = calc_crc(ddf->virt, ddf->vdsize);
--		if (write(fd, ddf->virt, ddf->vdsize) < 0)
--			continue;
--
--		/* Now write lots of config records. */
--		n_config = ddf->max_part;
--		conf_size = ddf->conf_rec_len * 512;
--		for (i = 0 ; i <= n_config ; i++) {
--			struct vcl *c = d->vlist[i];
--			if (i == n_config)
--				c = (struct vcl*)d->spare;
--
--			if (c) {
--				c->conf.crc = calc_crc(&c->conf, conf_size);
--				if (write(fd, &c->conf, conf_size) < 0)
--					break;
--			} else {
--				unsigned int togo = conf_size;
--				while (togo > NULL_CONF_SZ) {
--					if (write(fd, null_aligned, NULL_CONF_SZ) < 0)
--						break;
--					togo -= NULL_CONF_SZ;
--				}
--				if (write(fd, null_aligned, togo) < 0)
--					break;
--			}
--		}
--		if (i <= n_config)
--			continue;
--		d->disk.crc = calc_crc(&d->disk, 512);
--		if (write(fd, &d->disk, 512) < 0)
--			continue;
--
--		/* Maybe do the same for secondary */
--
- 		lseek64(fd, (size-1)*512, SEEK_SET);
- 		if (write(fd, &ddf->anchor, 512) < 0)
- 			continue;
--- 
-1.7.1
+> The scsi spec indicates that in this case for most commands the test 
+> will be paused and the command executed within 2 seconds, but I don't 
+> know what the normal scsi timeouts are.
+
+2 Seconds can be an eternity if you're pumping huge amounts of data to a
+disk: it causes a burp in the I/O chain which propagates back up the
+stack with unpredictable knock on consequences.  The standard SCSI
+timeouts are configurable under sysfs, but they're 30s.  It is known
+that EMC recommends 60s timeouts for arrays, for instance (which is why
+they're configurable).
+
+James
+
+
