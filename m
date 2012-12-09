@@ -1,67 +1,131 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: getting I/O errors in super_written()...any ideas what would
- cause this?
-Date: Sat, 08 Dec 2012 18:08:06 +0000
-Message-ID: <1354990086.2722.9.camel@dabdike.int.hansenpartnership.com>
-References: <8134827.27.1354128708501.JavaMail.root@zimbra>
-			<50B67230.4080602@genband.com>
-		 <CADNH=7Hv2RgBv=0Xia=yMyzKmgAOgvxJSAKn2arcE7k1x_T4FQ@mail.gmail.com>
-		 <50B67417.2020606@genband.com> <50BD09EC.5060705@redhat.com>
-		 <50BD0F44.7010808@genband.com> <50BD1127.6090304@redhat.com>
-		 <50BD14B1.7000203@genband.com> <50BD1F45.1040802@redhat.com>
-		 <50BE7293.8060200@genband.com>
-	 <1354699254.2243.5.camel@dabdike.int.hansenpartnership.com>
-	 <50C0E0C4.9050400@genband.com>
+From: g.esp@free.fr
+Subject: Test suite result with 3.4.23-rc1
+Date: Sun, 9 Dec 2012 23:43:56 +0100 (CET)
+Message-ID: <985219241.117232510.1355093036748.JavaMail.root@zimbra33-e6.priv.proxad.net>
+References: <1268818989.117216368.1355092191949.JavaMail.root@zimbra33-e6.priv.proxad.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <50C0E0C4.9050400@genband.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Chris Friesen <chris.friesen@genband.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Neil Brown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1268818989.117216368.1355092191949.JavaMail.root@zimbra33-e6.priv.proxad.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 2012-12-06 at 12:15 -0600, Chris Friesen wrote:
-> On 12/05/2012 03:20 AM, James Bottomley wrote:
-> > On Tue, 2012-12-04 at 16:00 -0600, Chris Friesen wrote:
-> >> As another data point, it looks like we may be doing a SEND DIAGNOSTIC
-> >> command specifying the default self-test in addition to the background
-> >> short self-test.  This seems a bit risky and excessive to me, but
-> >> apparently the guy that wrote it is no longer with the company.
-> >
-> > This is a really bad idea.  A lot of disks go out to lunch until the
-> > diagnostics complete (the same goes for SMART diagnostics).  This means
-> > that if you do diagnostics on a running device, the drivers start to get
-> > timeouts on commands which are queued waiting for diagnostics to
-> > complete ... if those go over the standard SCSI timeouts, we'll start to
-> > try error recovery and likely have the disaster you see above.
-> 
-> So it turns out that our problems are intermittently triggered when 
-> running the default self test.  This agrees with the statement in 
-> sg_senddiag to not do foreground self-tests on disks with mounted 
-> filesystems.
-> 
-> We seem to be able to do background short self-tests (ie, SEND 
-> DIAGNOSTIC command with self-test code of 001b and ST code of 0b) 
-> without causing any problems.  Is this pushing our luck or is this 
-> something that should work according to the spec and the linux stack?
+Hello
 
-No one can tell you this.  The specs don't say what should happen on a
-diagnostic, how long it will take or how disruptive to the I/O flow it
-is.
+I try to run mdadm test suite and have many tests failure with both mdadm-3.2.6 and git version.
+This was run on x86 on a cpu with only one core (AMD XP2800+). The distrib is debian stable except the kernel (3.4.23-rc1).
+package is compiled with
+make CXFLAGS="-O2" MAP_DIR='/var/run/mdadm' FAILED_SLOTS_DIR='/var/run/mdadm/failed-slots' test
 
-> The scsi spec indicates that in this case for most commands the test 
-> will be paused and the command executed within 2 seconds, but I don't 
-> know what the normal scsi timeouts are.
+mdadm-3.2.6 fail (and stop) at tests/07changelevels
 
-2 Seconds can be an eternity if you're pumping huge amounts of data to a
-disk: it causes a burp in the I/O chain which propagates back up the
-stack with unpredictable knock on consequences.  The standard SCSI
-timeouts are configurable under sysfs, but they're 30s.  It is known
-that EMC recommends 60s timeouts for arrays, for instance (which is why
-they're configurable).
+As git version support --keep-going, test suite give the following result :
 
-James
+sudo ./test --keep-going
+Testing on linux-3.4.23-rc1 kernel
+tests/00linear... succeeded
+tests/00multipath... succeeded
+tests/00raid0... succeeded
+tests/00raid1... succeeded
+tests/00raid10... succeeded
+tests/00raid4... succeeded
+tests/00raid5... succeeded
+tests/00raid6... succeeded
+tests/01r1fail... succeeded
+tests/01r5fail... succeeded
+tests/01r5integ... succeeded
+tests/01raid6integ... succeeded
+tests/02lineargrow... succeeded
+tests/02r1add... succeeded
+tests/02r1grow... succeeded
+tests/02r5grow... succeeded
+tests/02r6grow... succeeded
+tests/03r0assem... succeeded
+tests/03r5assem... succeeded
+tests/03r5assemV1... succeeded
+tests/04r0update... succeeded
+tests/04r1update... succeeded
+tests/05r1-add-internalbitmap... succeeded
+tests/05r1-add-internalbitmap-v1a... succeeded
+tests/05r1-add-internalbitmap-v1b... succeeded
+tests/05r1-add-internalbitmap-v1c... succeeded
+tests/05r1-bitmapfile... succeeded
+tests/05r1-grow-external... succeeded
+tests/05r1-grow-internal... succeeded
+tests/05r1-grow-internal-1... succeeded
+tests/05r1-internalbitmap... succeeded
+tests/05r1-internalbitmap-v1a... succeeded
+tests/05r1-internalbitmap-v1b... succeeded
+tests/05r1-internalbitmap-v1c... succeeded
+tests/05r1-n3-bitmapfile... succeeded
+tests/05r1-re-add... succeeded
+tests/05r1-re-add-nosuper... succeeded
+tests/05r1-remove-internalbitmap... succeeded
+tests/05r1-remove-internalbitmap-v1a... succeeded
+tests/05r1-remove-internalbitmap-v1b... succeeded
+tests/05r1-remove-internalbitmap-v1c... succeeded
+tests/05r5-bitmapfile... succeeded
+tests/05r5-internalbitmap... succeeded
+tests/05r6-bitmapfile... succeeded
+tests/06name... succeeded
+tests/06r5swap... succeeded
+tests/06sysfs... succeeded
+tests/06update-uuid... succeeded
+tests/06wrmostly... succeeded
+tests/07autoassemble... succeeded
+tests/07autodetect... succeeded
+tests/07changelevelintr... succeeded
+tests/07changelevels... FAILED - see /var/tmp/log-07changelevels for details
+tests/07layouts... succeeded
+tests/07reshape5intr... FAILED - see /var/tmp/log-07reshape5intr for details
+tests/07testreshape5... succeeded
+tests/08imsm-overlap... FAILED - see /var/tmp/log-08imsm-overlap for details
+tests/09imsm-assemble... FAILED - see /var/tmp/log-09imsm-assemble for details
+tests/09imsm-create-fail-rebuild... FAILED - see /var/tmp/log-09imsm-create-fail-rebuild for details
+tests/10ddf-create... FAILED - see /var/tmp/log-10ddf-create for details
+tests/11spare-migration... FAILED - see /var/tmp/log-11spare-migration for details
+tests/12imsm-r0_2d-grow-r0_3d... FAILED - see /var/tmp/log-12imsm-r0_2d-grow-r0_3d for details
+tests/12imsm-r0_2d-grow-r0_4d... FAILED - see /var/tmp/log-12imsm-r0_2d-grow-r0_4d for details
+tests/12imsm-r0_2d-grow-r0_5d... FAILED - see /var/tmp/log-12imsm-r0_2d-grow-r0_5d for details
+tests/12imsm-r0_3d-grow-r0_4d... FAILED - see /var/tmp/log-12imsm-r0_3d-grow-r0_4d for details
+tests/12imsm-r5_3d-grow-r5_4d... FAILED - see /var/tmp/log-12imsm-r5_3d-grow-r5_4d for details
+tests/12imsm-r5_3d-grow-r5_5d... FAILED - see /var/tmp/log-12imsm-r5_3d-grow-r5_5d for details
+tests/13imsm-r0_r0_2d-grow-r0_r0_4d... FAILED - see /var/tmp/log-13imsm-r0_r0_2d-grow-r0_r0_4d for details
+tests/13imsm-r0_r0_2d-grow-r0_r0_5d... FAILED - see /var/tmp/log-13imsm-r0_r0_2d-grow-r0_r0_5d for details
+tests/13imsm-r0_r0_3d-grow-r0_r0_4d... FAILED - see /var/tmp/log-13imsm-r0_r0_3d-grow-r0_r0_4d for details
+tests/13imsm-r0_r5_3d-grow-r0_r5_4d... FAILED - see /var/tmp/log-13imsm-r0_r5_3d-grow-r0_r5_4d for details
+tests/13imsm-r0_r5_3d-grow-r0_r5_5d... FAILED - see /var/tmp/log-13imsm-r0_r5_3d-grow-r0_r5_5d for details
+tests/13imsm-r5_r0_3d-grow-r5_r0_4d... FAILED - see /var/tmp/log-13imsm-r5_r0_3d-grow-r5_r0_4d for details
+tests/13imsm-r5_r0_3d-grow-r5_r0_5d... FAILED - see /var/tmp/log-13imsm-r5_r0_3d-grow-r5_r0_5d for details
+tests/14imsm-r0_3d_no_spares-migrate-r5_3d... FAILED - see /var/tmp/log-14imsm-r0_3d_no_spares-migrate-r5_3d for details
+tests/14imsm-r0_3d-r5_3d-migrate-r5_4d-r5_4d... FAILED - see /var/tmp/log-14imsm-r0_3d-r5_3d-migrate-r5_4d-r5_4d for details
+tests/14imsm-r0_r0_2d-takeover-r10_4d... FAILED - see /var/tmp/log-14imsm-r0_r0_2d-takeover-r10_4d for details
+tests/14imsm-r10_4d-grow-r10_5d... FAILED - see /var/tmp/log-14imsm-r10_4d-grow-r10_5d for details
+tests/14imsm-r10_r5_4d-takeover-r0_2d... FAILED - see /var/tmp/log-14imsm-r10_r5_4d-takeover-r0_2d for details
+tests/14imsm-r1_2d-grow-r1_3d... FAILED - see /var/tmp/log-14imsm-r1_2d-grow-r1_3d for details
+tests/14imsm-r1_2d-takeover-r0_2d... FAILED - see /var/tmp/log-14imsm-r1_2d-takeover-r0_2d for details
+tests/14imsm-r5_3d-grow-r5_5d-no-spares... FAILED - see /var/tmp/log-14imsm-r5_3d-grow-r5_5d-no-spares for details
+tests/14imsm-r5_3d-migrate-r4_3d... FAILED - see /var/tmp/log-14imsm-r5_3d-migrate-r4_3d for details
+tests/15imsm-r0_3d_64k-migrate-r0_3d_256k... FAILED - see /var/tmp/log-15imsm-r0_3d_64k-migrate-r0_3d_256k for details
+tests/15imsm-r5_3d_4k-migrate-r5_3d_256k... FAILED - see /var/tmp/log-15imsm-r5_3d_4k-migrate-r5_3d_256k for details
+tests/15imsm-r5_3d_64k-migrate-r5_3d_256k... FAILED - see /var/tmp/log-15imsm-r5_3d_64k-migrate-r5_3d_256k for details
+tests/15imsm-r5_6d_4k-migrate-r5_6d_256k... FAILED - see /var/tmp/log-15imsm-r5_6d_4k-migrate-r5_6d_256k for details
+tests/15imsm-r5_r0_3d_64k-migrate-r5_r0_3d_256k... FAILED - see /var/tmp/log-15imsm-r5_r0_3d_64k-migrate-r5_r0_3d_256k for details
+tests/16imsm-r0_3d-migrate-r5_4d... FAILED - see /var/tmp/log-16imsm-r0_3d-migrate-r5_4d for details
+tests/16imsm-r0_5d-migrate-r5_6d... FAILED - see /var/tmp/log-16imsm-r0_5d-migrate-r5_6d for details
+tests/16imsm-r5_3d-migrate-r0_3d... FAILED - see /var/tmp/log-16imsm-r5_3d-migrate-r0_3d for details
+tests/16imsm-r5_5d-migrate-r0_5d... FAILED - see /var/tmp/log-16imsm-r5_5d-migrate-r0_5d for details
+tests/18imsm-1d-takeover-r0_1d... FAILED - see /var/tmp/log-18imsm-1d-takeover-r0_1d for details
+tests/18imsm-1d-takeover-r1_2d... FAILED - see /var/tmp/log-18imsm-1d-takeover-r1_2d for details
+tests/18imsm-r0_2d-takeover-r10_4d... FAILED - see /var/tmp/log-18imsm-r0_2d-takeover-r10_4d for details
+tests/18imsm-r10_4d-takeover-r0_2d... FAILED - see /var/tmp/log-18imsm-r10_4d-takeover-r0_2d for details
+tests/18imsm-r1_2d-takeover-r0_1d... FAILED - see /var/tmp/log-18imsm-r1_2d-takeover-r0_1d for details
+tests/19raid6auto-repair... FAILED - see /var/tmp/log-19raid6auto-repair for details
+tests/19raid6repair... FAILED - see /var/tmp/log-19raid6repair for details
+tests/19repair-does-not-destroy... succeeded
 
+Are those tests failure know?
 
+Gilles
