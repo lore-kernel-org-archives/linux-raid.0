@@ -1,65 +1,46 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: problem with raid after reboot
-Date: Mon, 10 Dec 2012 10:04:53 -0500
-Message-ID: <50C5FA15.9000600@turmel.org>
-References: <CADzS=aqXh08P+ujEoJPMBxPiZ-PeEdk3x3iRW1ymAvhtpZcDmA@mail.gmail.com> <50C5EA89.40804@turmel.org> <CADzS=aq_83Nr55m+LFywx6LqHdwwkfzfBM+tPv8gcf6ono_j8g@mail.gmail.com>
+From: Martin Wilck <mwilck@arcor.de>
+Subject: DDF RAID 10 with md?
+Date: Mon, 10 Dec 2012 21:23:35 +0100
+Message-ID: <50C644C7.3060502@arcor.de>
+References: <1354919941-12070-1-git-send-email-mwilck@arcor.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADzS=aq_83Nr55m+LFywx6LqHdwwkfzfBM+tPv8gcf6ono_j8g@mail.gmail.com>
+In-Reply-To: <1354919941-12070-1-git-send-email-mwilck@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: bobzer <bobzer@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-Hi Mathieu,
+I wrote
 
-[Top-posting repaired.  Please don't.]
+> PS: These patches fix RAID1. I noticed that there are more severe problems 
+> when I create a RAID 10 in the BIOS. I'll try to fix that, too.
 
-[List address restored.  Please use reply-to-all on kernel.org lists.]
+I've digged a little further and from what I understand, the RAID10
+concept in DDF ("DDF_2SPANNED" is what by BIOS creates) is incompatible
+with that of MD RAID.
 
-On 12/10/2012 09:14 AM, bobzer wrote:
->> Hi Mathieu,
+So I guess there is no easy solution, short of implementing an entirely
+new RAID mapping in md.
 
-[trim /]
+Another possibility might be to setup the "spanning" block map of the
+DDF secondary RAID using dm. There would be some minor problems to
+overcome first though:
 
->> It looks like the superblocks didn't get updated together due to your
->> improper reboot.  (Event counts don't match.)
->>
->> I suggest you stop the array and reassemble with "--force", like so:
->>
->> mdadm --stop /dev/md0
->> mdadm --assemble --force /dev/md0 /dev/sd[bcd]1
->>
->> The "--force" option will instruct mdadm to ignore the event count
->> mismatch.
->>
->> You probably want to investigate why your array wasn't properly stopped
->> during shutdown.
+ 1 - Currently, if I configure RAID10 in the BIOS, md will only
+configure the first of the two basic RAID1 arrays.
+ 2 - When md is stopped and writes back the meta data, it will change
+the seq number only on the first basic arrays, thus corrupting the meta
+data of the RAID set.
 
-> Hi Phil,
-> thanks to help me.
->
-> what do you think of the array state ?it' s look strange no ?
->
->    Device Role : Active device 0
->    Array State : A.. ('A' == active, '.' == missing)
->
->    Device Role : Active device 1
->    Array State : AAA ('A' == active, '.' == missing)
->
->    Device Role : Active device 2
->    Array State : AAA ('A' == active, '.' == missing)
->
-> do you think it's a problem ?
+I'd suggest that md should bail out if a DDF secondary RAID level is
+encountered, knowing that this mapping is currently unsupported. That'd
+be certainly better than corrupting the metadata.
 
-It's a side-effect of the improper shutdown.  Two devices' superblocks
-weren't saved properly, and still show everything OK.  But their event
-counts are older than the one device that shows a problem.  So mdadm
-sees that one device as most up-to-date, and cannot start the raid5 from
-just that one.
+Regards
+Martin
 
-Please try the commands I recommended.
 
-Phil
+
