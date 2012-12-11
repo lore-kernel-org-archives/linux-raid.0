@@ -1,49 +1,26 @@
-From: Jonathan Brassow <jbrassow@redhat.com>
-Subject: [PATCH]  DM RAID:  Ensure the bitmap region_size is a power of 2
-Date: Tue, 11 Dec 2012 15:37:05 -0600
-Message-ID: <1355261825.26828.6.camel@f16>
+From: Alasdair G Kergon <agk@redhat.com>
+Subject: Re: [PATCH]  DM RAID:  Ensure the bitmap region_size is a power of 2
+Date: Tue, 11 Dec 2012 21:49:43 +0000
+Message-ID: <20121211214943.GC12788@agk.fab.redhat.com>
+References: <1355261825.26828.6.camel@f16>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1355261825.26828.6.camel@f16>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de, agk@redhat.com, jbrassow@redhat.com
+To: Jonathan Brassow <jbrassow@redhat.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de, agk@redhat.com
 List-Id: linux-raid.ids
 
-DM RAID:  Ensure the bitmap region_size is a power of 2
+On Tue, Dec 11, 2012 at 03:37:05PM -0600, Jon Brassow wrote:
+>  		if (min_region_size > (1 << 13)) {
+> +			/* region_size must be a power of 2 */
+> +			for (i = 13; min_region_size > (1 << i); i++);
+> +
+> +			region_size = (1 << i);
 
-If the user does not supply a region_size, a reasonable size is computed
-automatically.  However, region_size needs to be a power of 2 and the
-code was not properly ensuring that.
+Can the loop be replaced with a direct bit calculation, perhaps?
 
-Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
-
-Index: linux-upstream/drivers/md/dm-raid.c
-===================================================================
---- linux-upstream.orig/drivers/md/dm-raid.c
-+++ linux-upstream/drivers/md/dm-raid.c
-@@ -288,6 +288,7 @@ static int dev_parms(struct raid_set *rs
-  */
- static int validate_region_size(struct raid_set *rs, unsigned long region_size)
- {
-+	int i;
- 	unsigned long min_region_size = rs->ti->len / (1 << 21);
- 
- 	if (!region_size) {
-@@ -295,9 +296,12 @@ static int validate_region_size(struct r
- 		 * Choose a reasonable default.  All figures in sectors.
- 		 */
- 		if (min_region_size > (1 << 13)) {
-+			/* region_size must be a power of 2 */
-+			for (i = 13; min_region_size > (1 << i); i++);
-+
-+			region_size = (1 << i);
- 			DMINFO("Choosing default region size of %lu sectors",
- 			       region_size);
--			region_size = min_region_size;
- 		} else {
- 			DMINFO("Choosing default region size of 4MiB");
- 			region_size = 1 << 13; /* sectors */
-
+Alasdair
 
