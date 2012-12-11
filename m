@@ -1,54 +1,61 @@
-From: "Andris Berzins" <pkix@inbox.lv>
+From: Robin Hill <robin@robinhill.me.uk>
 Subject: Re: failed raid re-create changed dev size
-Date: Tue, 11 Dec 2012 16:35:15 +0200
-Message-ID: <1355236515.50c744a3720c1@mail.inbox.lv>
+Date: Tue, 11 Dec 2012 14:49:49 +0000
+Message-ID: <20121211144949.GB28593@cthulhu.home.robinhill.me.uk>
 References: <1355216495.50c6f66f123b1@mail.inbox.lv>
  <20121211092710.GA28593@cthulhu.home.robinhill.me.uk>
+ <1355236515.50c744a3720c1@mail.inbox.lv>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="v9Ux+11Zm5mwPlX6"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121211092710.GA28593@cthulhu.home.robinhill.me.uk>
+Content-Disposition: inline
+In-Reply-To: <1355236515.50c744a3720c1@mail.inbox.lv>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robin Hill <robin@robinhill.me.uk>
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
+To: Andris Berzins <pkix@inbox.lv>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Quoting "Robin Hill" <robin@robinhill.me.uk>:
->>> I don't know off the top of my head how to change the mdadm data offset
->>> unfortunately.
->>> 
-> There's no way in the current mdadm releases to do so. Neil does have a
-> version in git which will allow specifying the data offsets on a
-> disk-by-disk basis (as it is possible to have multiple offsets within an
-> array). If all the disks in your array were using an offset of 2048
-> though, then you'll just need to downgrade mdadm to 3.2.3 (or slightly
-> earlier) - from what I can find it was changed to 262144 for 3.2.4 (it
-> was 272 pre version 3.0, so don't go any further back than that).
 
-Downgraded to mdadm version 3.2.3 and re-created array successfully!
+--v9Ux+11Zm5mwPlX6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> You will likely have lost some data though, as the new superblocks will
-> have overwritten part of the data, so make sure you run a fsck
-> afterwards (start with fsck -n though, to make sure the overall array
-> looks okay first).
+On Tue Dec 11, 2012 at 04:35:15PM +0200, Andris Berzins wrote:
 
-Is it possible that no data was damaged? It is LUKS partition, i mapped it and run "fsck -n" on underlying ext3 partition, 
-but fsck returned immediately with status "clean".
+> Quoting "Robin Hill" <robin@robinhill.me.uk>:
+> >=20
+> > You will likely have lost some data though, as the new superblocks will
+> > have overwritten part of the data, so make sure you run a fsck
+> > afterwards (start with fsck -n though, to make sure the overall array
+> > looks okay first).
+>=20
+> Is it possible that no data was damaged? It is LUKS partition, i
+> mapped it and run "fsck -n" on underlying ext3 partition,=20
+> but fsck returned immediately with status "clean".
+>=20
+By default fsck will just check whether the filesystem is marked as
+dirty/clean and just skip running if it's clean. You'll need to use "-f"
+to force it to run.
 
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-> Good luck (and please make sure you try just forcing an assemble next
-> time),
+--v9Ux+11Zm5mwPlX6
+Content-Type: application/pgp-signature
 
-I will try to contact these blog authors, who suggested to re-create failed array instead of forcing an assemble, to make a 
-notice on their blogs.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
+iEYEARECAAYFAlDHSAwACgkQShxCyD40xBJPLwCg0aRooksZaOiZoiULgGY77qKE
+NkoAn2R3zVkHJgTI95kr4+guRw3c36yk
+=EdZB
+-----END PGP SIGNATURE-----
 
-> Robin
-> --
-> ___
-> ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-> / / )      | Little Jim says ....                            |
-> // !!       |      "He fallen in de water !!"                 |
-
+--v9Ux+11Zm5mwPlX6--
