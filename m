@@ -1,61 +1,49 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: failed raid re-create changed dev size
-Date: Tue, 11 Dec 2012 14:49:49 +0000
-Message-ID: <20121211144949.GB28593@cthulhu.home.robinhill.me.uk>
-References: <1355216495.50c6f66f123b1@mail.inbox.lv>
- <20121211092710.GA28593@cthulhu.home.robinhill.me.uk>
- <1355236515.50c744a3720c1@mail.inbox.lv>
+From: Jonathan Brassow <jbrassow@redhat.com>
+Subject: [PATCH]  DM RAID:  Ensure the bitmap region_size is a power of 2
+Date: Tue, 11 Dec 2012 15:37:05 -0600
+Message-ID: <1355261825.26828.6.camel@f16>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="v9Ux+11Zm5mwPlX6"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1355236515.50c744a3720c1@mail.inbox.lv>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andris Berzins <pkix@inbox.lv>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de, agk@redhat.com, jbrassow@redhat.com
 List-Id: linux-raid.ids
 
+DM RAID:  Ensure the bitmap region_size is a power of 2
 
---v9Ux+11Zm5mwPlX6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+If the user does not supply a region_size, a reasonable size is computed
+automatically.  However, region_size needs to be a power of 2 and the
+code was not properly ensuring that.
 
-On Tue Dec 11, 2012 at 04:35:15PM +0200, Andris Berzins wrote:
+Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
 
-> Quoting "Robin Hill" <robin@robinhill.me.uk>:
-> >=20
-> > You will likely have lost some data though, as the new superblocks will
-> > have overwritten part of the data, so make sure you run a fsck
-> > afterwards (start with fsck -n though, to make sure the overall array
-> > looks okay first).
->=20
-> Is it possible that no data was damaged? It is LUKS partition, i
-> mapped it and run "fsck -n" on underlying ext3 partition,=20
-> but fsck returned immediately with status "clean".
->=20
-By default fsck will just check whether the filesystem is marked as
-dirty/clean and just skip running if it's clean. You'll need to use "-f"
-to force it to run.
+Index: linux-upstream/drivers/md/dm-raid.c
+===================================================================
+--- linux-upstream.orig/drivers/md/dm-raid.c
++++ linux-upstream/drivers/md/dm-raid.c
+@@ -288,6 +288,7 @@ static int dev_parms(struct raid_set *rs
+  */
+ static int validate_region_size(struct raid_set *rs, unsigned long region_size)
+ {
++	int i;
+ 	unsigned long min_region_size = rs->ti->len / (1 << 21);
+ 
+ 	if (!region_size) {
+@@ -295,9 +296,12 @@ static int validate_region_size(struct r
+ 		 * Choose a reasonable default.  All figures in sectors.
+ 		 */
+ 		if (min_region_size > (1 << 13)) {
++			/* region_size must be a power of 2 */
++			for (i = 13; min_region_size > (1 << i); i++);
++
++			region_size = (1 << i);
+ 			DMINFO("Choosing default region size of %lu sectors",
+ 			       region_size);
+-			region_size = min_region_size;
+ 		} else {
+ 			DMINFO("Choosing default region size of 4MiB");
+ 			region_size = 1 << 13; /* sectors */
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
 
---v9Ux+11Zm5mwPlX6
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAlDHSAwACgkQShxCyD40xBJPLwCg0aRooksZaOiZoiULgGY77qKE
-NkoAn2R3zVkHJgTI95kr4+guRw3c36yk
-=EdZB
------END PGP SIGNATURE-----
-
---v9Ux+11Zm5mwPlX6--
