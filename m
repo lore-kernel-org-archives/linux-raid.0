@@ -1,21 +1,32 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: failed raid re-create changed dev size
-Date: Wed, 12 Dec 2012 09:04:12 +0800
-Message-ID: <50C7D80C.80802@fnarfbargle.com>
-References: <1355216495.50c6f66f123b1@mail.inbox.lv> <20121211092710.GA28593@cthulhu.home.robinhill.me.uk> <1355236515.50c744a3720c1@mail.inbox.lv>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Brassow Jonathan <jbrassow@redhat.com>
+Subject: Re: Find the mirror and sriping disks
+Date: Wed, 12 Dec 2012 08:47:48 -0600
+Message-ID: <6963DD27-7D1F-42FE-B444-58D5B40974D3@redhat.com>
+References: <1354863631.73810.YahooMailNeo@web190604.mail.sg3.yahoo.com>
+Mime-Version: 1.0 (Apple Message framework v1085)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1355236515.50c744a3720c1@mail.inbox.lv>
+In-Reply-To: <1354863631.73810.YahooMailNeo@web190604.mail.sg3.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Kks Kbase <kks.kbase@yahoo.in>
+Cc: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 11/12/12 22:35, Andris Berzins wrote:
+http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10
 
-> I will try to contact these blog authors, who suggested to re-create failed array instead of forcing an assemble, to make a
-> notice on their blogs.
->
+I also verified the layout of the various algorithms by writing a sequence of characters (A, B, C...) in stripe-width/chunk sizes.  Then I used 'hexdump -c' to look at each disk.  Works well.
 
-If you manage that you'll halve the traffic on this list!
+ brassow
+
+On Dec 7, 2012, at 1:00 AM, Kks Kbase wrote:
+
+> Hi Folks,
+> 
+> I have setup S/w raid level 10 with 6 disks. May I know how to find the mirrored and striped disks on my raid 10?
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
