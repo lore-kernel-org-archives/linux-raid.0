@@ -1,181 +1,126 @@
-From: Jonathan Brassow <jbrassow@redhat.com>
-Subject: [PATCH 1 of 2] MD RAID10:  Improve redundancy for 'far' and
- 'offset' algorithms
-Date: Wed, 12 Dec 2012 10:45:05 -0600
-Message-ID: <1355330705.26828.14.camel@f16>
+From: Joe Lawrence <Joe.Lawrence@stratus.com>
+Subject: Re: MD Raid1, ext4 and write same
+Date: Wed, 12 Dec 2012 12:54:53 -0500 (EST)
+Message-ID: <alpine.DEB.2.02.1212121250340.30895@jlaw-desktop.mno.stratus.com>
+References: <alpine.DEB.2.02.1212101704450.30895@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.2.02.1212101704450.30895@jlaw-desktop.mno.stratus.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de, agk@redhat.com, jbrassow@redhat.com
+To: Joe Lawrence <Joe.Lawrence@stratus.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de, martin.petersen@oracle.com
 List-Id: linux-raid.ids
 
-MD RAID10:  Improve redundancy for 'far' and 'offset' algorithms
+I can confirm the same issue with 3.7.0.  If anyone else is running with 
+raid1 and disks that support write same, can you give this a try? 
 
-The MD RAID10 'far' and 'offset' algorithms make copies of entire stripe
-widths - copying them to a different location on the same devices after
-shifting the stripe.  An example layout of each follows below:
+Thanks,
 
-	        "far" algorithm
-	dev1 dev2 dev3 dev4 dev5 dev6
-	==== ==== ==== ==== ==== ====
-	 A    B    C    D    E    F
-	 G    H    I    J    K    L
-	            ...
-	 F    A    B    C    D    E  --> Copy of stripe0, but shifted by 1
-	 L    G    H    I    J    K
-	            ...
+-- Joe
 
-		"offset" algorithm
-	dev1 dev2 dev3 dev4 dev5 dev6
-	==== ==== ==== ==== ==== ====
-	 A    B    C    D    E    F
-	 F    A    B    C    D    E  --> Copy of stripe0, but shifted by 1
-	 G    H    I    J    K    L
-	 L    G    H    I    J    K
-	            ...
+On Mon, 10 Dec 2012, Joe Lawrence wrote:
 
-Redundancy for these algorithms is gained by shifting the copied stripes
-a certain number of devices - in this case, 1.  This patch proposes the
-number of devices the copy be shifted by be changed from:
-	device# + near_copies
-to
-	device# + raid_disks/far_copies
-
-The above "far" algorithm example would now look like:
-	        "far" algorithm
-	dev1 dev2 dev3 dev4 dev5 dev6
-	==== ==== ==== ==== ==== ====
-	 A    B    C    D    E    F
-	 G    H    I    J    K    L
-	            ...
-	 D    E    F    A    B    C  --> Copy of stripe0, but shifted by 3
-	 J    K    L    G    H    I
-	            ...
-
-This has the affect of improving the redundancy of the array.  We can
-always sustain at least one failure, but sometimes more than one can
-be handled.  In the first examples, the pairs of devices that CANNOT fail
-together are:
-	(1,2) (2,3) (3,4) (4,5) (5,6) (1, 6) [40% of possible pairs]
-In the example where the copies are instead shifted by 3, the pairs of
-devices that cannot fail together are:
-	(1,4) (2,5) (3,6)                    [20% of possible pairs]
-
-Performing shifting in this way produces more redundancy and works especially
-well when the number of devices is a multiple of the number of copies.
-
-We cannot simply replace the old algorithms, so the 17th bit of the 'layout'
-variable is used to indicate whether we use the old or new method of computing
-the shift.  (This is similar to the way the 16th bit indicates whether the
-"far" algorithm or the "offset" algorithm is being used.)
-
-Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
-
-Index: linux-upstream/drivers/md/raid10.c
-===================================================================
---- linux-upstream.orig/drivers/md/raid10.c
-+++ linux-upstream/drivers/md/raid10.c
-@@ -38,6 +38,7 @@
-  *    near_copies (stored in low byte of layout)
-  *    far_copies (stored in second byte of layout)
-  *    far_offset (stored in bit 16 of layout )
-+ *    dev_stride (stored in bit 17 of layout )
-  *
-  * The data to be stored is divided into chunks using chunksize.
-  * Each device is divided into far_copies sections.
-@@ -51,8 +52,14 @@
-  * raid_disks.
-  *
-  * If far_offset is true, then the far_copies are handled a bit differently.
-- * The copies are still in different stripes, but instead of be very far apart
-- * on disk, there are adjacent stripes.
-+ * The copies are still in different stripes, but instead of being very far
-+ * apart on disk, there are adjacent stripes.
-+ *
-+ * If dev_stride is true, then the devices on which copies
-+ * are placed on for the 'far' and 'offset' algorithms changes from
-+ *         'device# + near_copies'
-+ * to
-+ *         'device# + raid_disks/far_copies'.
-  */
- 
- /*
-@@ -552,14 +559,13 @@ static void __raid10_find_phys(struct ge
- 	for (n = 0; n < geo->near_copies; n++) {
- 		int d = dev;
- 		sector_t s = sector;
--		r10bio->devs[slot].addr = sector;
- 		r10bio->devs[slot].devnum = d;
-+		r10bio->devs[slot].addr = s;
- 		slot++;
- 
- 		for (f = 1; f < geo->far_copies; f++) {
--			d += geo->near_copies;
--			if (d >= geo->raid_disks)
--				d -= geo->raid_disks;
-+			d += geo->dev_stride;
-+			d %= geo->raid_disks;
- 			s += geo->stride;
- 			r10bio->devs[slot].devnum = d;
- 			r10bio->devs[slot].addr = s;
-@@ -601,16 +607,16 @@ static sector_t raid10_find_virt(struct
- 		int fc;
- 		chunk = sector >> geo->chunk_shift;
- 		fc = sector_div(chunk, geo->far_copies);
--		dev -= fc * geo->near_copies;
-+		dev -= fc * geo->dev_stride;
- 		if (dev < 0)
- 			dev += geo->raid_disks;
- 	} else {
- 		while (sector >= geo->stride) {
- 			sector -= geo->stride;
--			if (dev < geo->near_copies)
--				dev += geo->raid_disks - geo->near_copies;
-+			if (dev < geo->dev_stride)
-+				dev += geo->raid_disks - geo->dev_stride;
- 			else
--				dev -= geo->near_copies;
-+				dev -= geo->dev_stride;
- 		}
- 		chunk = sector >> geo->chunk_shift;
- 	}
-@@ -3437,7 +3443,7 @@ static int setup_geo(struct geom *geo, s
- 		disks = mddev->raid_disks + mddev->delta_disks;
- 		break;
- 	}
--	if (layout >> 17)
-+	if (layout >> 18)
- 		return -1;
- 	if (chunk < (PAGE_SIZE >> 9) ||
- 	    !is_power_of_2(chunk))
-@@ -3449,6 +3455,10 @@ static int setup_geo(struct geom *geo, s
- 	geo->near_copies = nc;
- 	geo->far_copies = fc;
- 	geo->far_offset = fo;
-+	if (layout & (1<<17))
-+		geo->dev_stride = disks / fc;
-+	else
-+		geo->dev_stride = geo->near_copies;
- 	geo->chunk_mask = chunk - 1;
- 	geo->chunk_shift = ffz(~chunk);
- 	return nc*fc;
-Index: linux-upstream/drivers/md/raid10.h
-===================================================================
---- linux-upstream.orig/drivers/md/raid10.h
-+++ linux-upstream/drivers/md/raid10.h
-@@ -33,6 +33,10 @@ struct r10conf {
- 					       * far_offset, in which case it is
- 					       * 1 stripe.
- 					       */
-+		int             dev_stride;   /* distance to the next device
-+					       * on which a "far" or "offset"
-+					       * copy will be placed.
-+					       */
- 		int		chunk_shift; /* shift from chunks to sectors */
- 		sector_t	chunk_mask;
- 	} prev, geo;
-
-
+> Hi all,
+> 
+> I have run into an issue running MD Raid 1 with 3.7rc7 and trying to 
+> mount a newly created ext4 FS.  It seems that the act of mounting ext4 
+> (among other FS operations I imagine) is creating WRITE SAME cmds that I 
+> don't believe MD currently supports.
+> 
+> Find my config setup below, along with repro steps and potential analysis.  
+> Perhaps I'm doing something wrong, but everything leads me to believe that 
+> MD is not properly handling these commands as passed down from the block 
+> layer.  The result are plain WRITE cmds that result in the driver claiming 
+> adapter status of MPI2_IOCSTATUS_INVALID_SGL (invalid scatter gather list 
+> I presume?).
+> 
+> Setup: 
+> * Fedora 17
+> * Kernel version: 3.7.0-rc7
+> * mdadm version: mdadm - v3.2.6 - 25th October 2012
+> * LSISAS2008: FWVersion(12.00.00.00), ChipRevision(0x03), 
+> BiosVersion(07.23.01.00)
+> 
+> Repro:
+> Create a RAID1 pair with an internal bitmap between two SAS disk 
+> partitions.  Create an ext4 filesystem, then mount it.
+> 
+> mdadm --verbose --create /dev/md105 --bitmap=internal --level=1 \
+>       --raid-devices=2 /dev/sdr1 /dev/sdu1
+> mkfs.ext4 /dev/md105
+> mount /dev/md105 /mnt/md105
+> 
+> Immediately after mounting (the initial mount), the message log reports:
+> 
+> EXT4-fs (md105): mounted filesystem with ordered data mode. Opts: (null)
+> sd 2:0:1:0: [sdu] Unhandled error code
+> sd 2:0:1:0: [sdu]  
+> Result: hostbyte=DID_SOFT_ERROR driverbyte=DRIVER_OK
+> sd 2:0:1:0: [sdu] CDB: 
+> Write(10): 2a 00 00 04 39 08 00 10 00 00
+> end_request: I/O error, dev sdu, sector 276744
+> sd 1:0:1:0: [sdr] Unhandled error code
+> sd 1:0:1:0: [sdr]  
+> Result: hostbyte=DID_SOFT_ERROR driverbyte=DRIVER_OK
+> sd 1:0:1:0: [sdr] CDB: 
+> Write(10): 2a 00 00 04 39 08 00 10 00 00
+> end_request: I/O error, dev sdr, sector 276744
+> md/raid1:md105: Disk failure on sdr1, disabling device.
+> md/raid1:md105: Operation continuing on 1 devices.
+> md105: WRITE SAME failed. Manually zeroing.
+> sd 2:0:1:0: [sdu] Unhandled error code
+> sd 2:0:1:0: [sdu]  
+> Result: hostbyte=DID_SOFT_ERROR driverbyte=DRIVER_OK
+> sd 2:0:1:0: [sdu] CDB: 
+> Write(10): 2a 00 00 04 49 08 00 10 00 00
+> end_request: I/O error, dev sdu, sector 280840
+> md105: WRITE SAME failed. Manually zeroing.
+> sd 2:0:1:0: [sdu] Unhandled error code
+> sd 2:0:1:0: [sdu]  
+> Result: hostbyte=DID_SOFT_ERROR driverbyte=DRIVER_OK
+> sd 2:0:1:0: [sdu] CDB: 
+> Write(10): 2a 00 00 04 59 08 00 10 00 00
+> end_request: I/O error, dev sdu, sector 284936
+> md105: WRITE SAME failed. Manually zeroing.
+> 
+> (mpt2sas log_info msgs trimmed.)
+> 
+> 
+> Relevent Commit History:
+> 
+> * block: Implement support for WRITE SAME
+> commit 4363ac7c13a9a4b763c6e8d9fdbfc2468f3b8ca4
+> 
+> Adds lim->max_write_same_sectors = UINT_MAX; to blk_set_stacking_limits()
+>   Called by drivers/md/md.c :: md_alloc()
+> 
+> Adds max_write_same_sectors limit check in blk_set_stacking_limits()
+>   Called by drivers/md/raid1.c :: raid1_add_disk(), run()
+> 
+> The net effect is the max_write_same_sectors limit associated with the MD 
+> device is the minimum of its component block devices. (In my case, both
+> component disks, 
+> /sys/block/sdX/device/scsi_disk/W:X:Y:Z/max_write_same_blocks report 
+> 65536.)
+> 
+> 
+> * block: Make blkdev_issue_zeroout use WRITE SAME
+> commit 579e8f3c7b2ecf7db91398d942d76457a3ddba21
+> 
+> Adds a wrapper around blkdev_issue_zeroout() to create a WRITE SAME 
+> cmd if the block device's request queue limits max_write_same_sectors > 0.
+>   Called by ext4_init_inode_table during initial MD Raid1 ext4 mount.
+> 
+> In combination with the previous commit, ext4_init_inode_table will fire 
+> off WRITE SAME cmds, highlighting MD Raid1 non-support for this command.
+> 
+> 
+> I did try a potential fix that I will post seperately that zeroes out the 
+> max_write_same_sectors for the MD device before merging the component 
+> limits.  With that in place I could mount / copy / read with no issues.
+> 
+> Regards,
+> 
+> -- Joe
+> 
