@@ -1,26 +1,21 @@
-From: Alasdair G Kergon <agk@redhat.com>
-Subject: Re: [PATCH]  DM RAID:  Ensure the bitmap region_size is a power of 2
-Date: Tue, 11 Dec 2012 21:49:43 +0000
-Message-ID: <20121211214943.GC12788@agk.fab.redhat.com>
-References: <1355261825.26828.6.camel@f16>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: failed raid re-create changed dev size
+Date: Wed, 12 Dec 2012 09:04:12 +0800
+Message-ID: <50C7D80C.80802@fnarfbargle.com>
+References: <1355216495.50c6f66f123b1@mail.inbox.lv> <20121211092710.GA28593@cthulhu.home.robinhill.me.uk> <1355236515.50c744a3720c1@mail.inbox.lv>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1355261825.26828.6.camel@f16>
+In-Reply-To: <1355236515.50c744a3720c1@mail.inbox.lv>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jonathan Brassow <jbrassow@redhat.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.de, agk@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Dec 11, 2012 at 03:37:05PM -0600, Jon Brassow wrote:
->  		if (min_region_size > (1 << 13)) {
-> +			/* region_size must be a power of 2 */
-> +			for (i = 13; min_region_size > (1 << i); i++);
-> +
-> +			region_size = (1 << i);
+On 11/12/12 22:35, Andris Berzins wrote:
 
-Can the loop be replaced with a direct bit calculation, perhaps?
+> I will try to contact these blog authors, who suggested to re-create failed array instead of forcing an assemble, to make a
+> notice on their blogs.
+>
 
-Alasdair
-
+If you manage that you'll halve the traffic on this list!
