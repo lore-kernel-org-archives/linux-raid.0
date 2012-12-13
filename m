@@ -1,71 +1,32 @@
-From: "Andris Berzins" <pkix@inbox.lv>
-Subject: Re: failed raid re-create changed dev size
-Date: Thu, 13 Dec 2012 18:13:54 +0200
-Message-ID: <1355415234.50c9fec2e9592@mail.inbox.lv>
-References: <1355328659.50c8ac93db8a3@mail.inbox.lv>
- <20121213093040.GA17294@cthulhu.home.robinhill.me.uk>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: imsm: 32 bit sector counts and > 2TB disks
+Date: Thu, 13 Dec 2012 11:45:33 -0500
+Message-ID: <50CA062D.2000002@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121213093040.GA17294@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robin Hill <robin@robinhill.me.uk>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Quoting "Robin Hill" <robin@robinhill.me.uk>:
-> On Wed Dec 12, 2012 at 06:10:59PM +0200, Andris Berzins wrote:
-> 
->>>> Is it possible that no data was damaged? It is LUKS partition, i
->>>> mapped it and run "fsck -n" on underlying ext3 partition,
->>>> but fsck returned immediately with status "clean".
->>>> 
->>> By default fsck will just check whether the filesystem is marked as
->>> dirty/clean and just skip running if it's clean. You'll need to use "-f"
->>> to force it to run.
->> 
->> It seems that something got damaged. I have several traces as shown
->> below in dmesg.
->> 
->> Tried to run "fsck -f -n" but it looks that it will take several month
->> on this 15TB fs with billion files.
->> Any ideas?
->> 
-> Sorry, no. You've got a corrupted filesystem and fsck is the tool to fix
-> that. If you're certain that the array is now set up correctly (which it
-> probably is if LUKS is able to map it okay), then you can skip the "-n"
-> pass and proceed straight to repair. Depending on memory, you may also
-> want to look into setting up scratch_files in e2fsck.conf as it can suck
-> up a lot of memory for large filesystems. You may also want to look into
-> moving to ext4 once you've got the filesystem fixed - fsck times should
-> be much lower than with ext3.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Thank you for suggestions!
-fsck finished sooner than I thought. :)
-Very interesting. Turns out that this raid recreation with wrong offset did not damage underlying file system?
+It appears that the imsm format only uses 32 bits to represent the
+sector counts used from each disk.  It appears that at least on
+Windows, a disk > 2 TB works so could someone from intel explain how
+this is supposed to work?
 
-# fsck -f -n /dev/mapper/data
-fsck from util-linux 2.20.1
-e2fsck 1.42 (29-Nov-2011)
-Pass 1: Checking inodes, blocks, and sizes
-Pass 2: Checking directory structure
-Pass 3: Checking directory connectivity
-Pass 4: Checking reference counts
-Pass 5: Checking group summary information
-/dev/mapper/data: 121432484/457854976 files (0.1% non-contiguous), 2827329571/3662830720 blocks
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with undefined - http://www.enigmail.net/
 
-
-
-
-> 
-> The only other option would be to reformat and restore from backup.
-> 
-> Good luck,
-> Robin
-> --
-> ___
-> ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-> / / )      | Little Jim says ....                            |
-> // !!       |      "He fallen in de water !!"                 |
-
+iQEcBAEBAgAGBQJQygYtAAoJEJrBOlT6nu75CMMH/ibrw7zoKnt7aNHvSAKkxa8g
+1d1JBXYuIV3rbfVyvIIli4+laHg1hf9FmJBN7vluZSTgULZPxvtRBi+DvD/cCkkL
+yvzqACld5e2iZgTWG6cyFZeS73eVz2ah8XaHCNQB15pIu/2ZI9xWtgxk26r24Hei
+mgt/IbrGxs2NCryn4jJ4gpXwJYDpl/KqlLKtky+USvuaIxv6+sz/6Ab5B1RO/M78
+12M0GY71cxjcBwv4YTlgO/SVZjTwUZ+ZiJooiwiV5O+6xPJ+hO1QIyCl/z6a7Mlc
+2vE0q09ak3f85qK4/dQfOTOL0xbr62jfoJO6QwO96rK9PoCUkbjbBAk5fKPIggM=
+=5Los
+-----END PGP SIGNATURE-----
