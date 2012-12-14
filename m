@@ -1,54 +1,113 @@
-From: Brassow Jonathan <jbrassow@redhat.com>
-Subject: Re: [PATCH 1 of 2] MD RAID10:  Improve redundancy for 'far' and 'offset' algorithms
-Date: Thu, 13 Dec 2012 18:10:34 -0600
-Message-ID: <FDA0427C-37FE-43AD-992A-C78E86CACDC7@redhat.com>
-References: <1355330705.26828.14.camel@f16> <20121213122359.724138e2@notabene.brown>
-Mime-Version: 1.0 (Apple Message framework v1085)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Joe Lawrence <Joe.Lawrence@stratus.com>
+Subject: [PATCH] md: raid1,10: Handle REQ_WRITE_SAME flag in write bios
+Date: Fri, 14 Dec 2012 14:36:25 -0500 (EST)
+Message-ID: <alpine.DEB.2.02.1212141406480.30895@jlaw-desktop.mno.stratus.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121213122359.724138e2@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, agk@redhat.com
+To: linux-raid@vger.kernel.org
+Cc: Joe Lawrence <joe.lawrence@stratus.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, neilb@suse.de
 List-Id: linux-raid.ids
 
+Submitting patch for review... This sets the max_write_same_sectors for 
+the mdev request queue to its chunk_sectors (before merging its member 
+disk limits).  I believe this should keep the write same LBA sector count 
+inside the write intent bitmap granularity, but I'm not sure if the sector 
+range could cross bits and how could would be handled.  Any insight into 
+the bitmap side of things would be appreciated.
 
-On Dec 12, 2012, at 7:23 PM, NeilBrown wrote:
+Thanks,
 
->> 
->> This has the affect of improving the redundancy of the array.  We can
->> always sustain at least one failure, but sometimes more than one can
->> be handled.  In the first examples, the pairs of devices that CANNOT fail
->> together are:
->> 	(1,2) (2,3) (3,4) (4,5) (5,6) (1, 6) [40% of possible pairs]
->> In the example where the copies are instead shifted by 3, the pairs of
->> devices that cannot fail together are:
->> 	(1,4) (2,5) (3,6)                    [20% of possible pairs]
->> 
->> Performing shifting in this way produces more redundancy and works especially
->> well when the number of devices is a multiple of the number of copies.
-> 
-> Unfortunately it doesn't bring any benefit (I think) when the number of
-> devices is not a multiple of the number of copies.  And if we are going to
-> make a change, we should do the best we can.
-> 
-> An approach that has previously been suggested is to divide the devices up
-> into set which are ncopies in size or (for the last set) a little more and
-> and rotate within those sets.
-> So with 5 devices and two copies there are 2 sets, one of 2, one of 3.
-> 
->  A  B  C  D  E
->  B  A  D  E  C
-> 
-> The  only pairs where we cannot survive failure of both are pairs that are in
-> the same set.  This is as good as your scheme when raid_disks divides copies,
-> but better when it doesn't.
-> 
-> So unless there is a good reason not to, I would rather we go with the scheme
-> that gives the best in all cases.
+-- Joe
 
-I think I've got something now that works like this.  I've got to test and re-document.  I'll repost tomorrow or the day after.
+From d31c4569b3883475f293403fa4eed63f107616bb Mon Sep 17 00:00:00 2001
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Date: Fri, 14 Dec 2012 11:25:27 -0500
+Subject: [PATCH] md: raid1,10: Handle REQ_WRITE_SAME flag in write bios
 
- brassow
+Set mddev queue's max_write_same_sectors to its chunk_sector value (before
+disk_stack_limits merges the underlying disk limits.)  With that in place,
+be sure to handle writes coming down from the block layer that have the
+REQ_WRITE_SAME flag set.  That flag needs to be copied into any newly cloned
+write bio.
+
+Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+---
+ drivers/md/raid1.c  | 5 ++++-
+ drivers/md/raid10.c | 8 ++++++--
+ 2 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index a0f7309..c9ef213 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1001,6 +1001,7 @@ static void make_request(struct mddev *mddev, struct bio * bio)
+ 	const unsigned long do_flush_fua = (bio->bi_rw & (REQ_FLUSH | REQ_FUA));
+ 	const unsigned long do_discard = (bio->bi_rw
+ 					  & (REQ_DISCARD | REQ_SECURE));
++	const unsigned long do_same = (bio->bi_rw & REQ_WRITE_SAME);
+ 	struct md_rdev *blocked_rdev;
+ 	struct blk_plug_cb *cb;
+ 	struct raid1_plug_cb *plug = NULL;
+@@ -1302,7 +1303,8 @@ read_again:
+ 				   conf->mirrors[i].rdev->data_offset);
+ 		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
+ 		mbio->bi_end_io	= raid1_end_write_request;
+-		mbio->bi_rw = WRITE | do_flush_fua | do_sync | do_discard;
++		mbio->bi_rw =
++			WRITE | do_flush_fua | do_sync | do_discard | do_same;
+ 		mbio->bi_private = r1_bio;
+ 
+ 		atomic_inc(&r1_bio->remaining);
+@@ -2819,6 +2821,7 @@ static int run(struct mddev *mddev)
+ 	if (IS_ERR(conf))
+ 		return PTR_ERR(conf);
+ 
++	blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
+ 	rdev_for_each(rdev, mddev) {
+ 		if (!mddev->gendisk)
+ 			continue;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index c9acbd7..3d77a92 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1106,6 +1106,7 @@ static void make_request(struct mddev *mddev, struct bio * bio)
+ 	const unsigned long do_fua = (bio->bi_rw & REQ_FUA);
+ 	const unsigned long do_discard = (bio->bi_rw
+ 					  & (REQ_DISCARD | REQ_SECURE));
++	const unsigned long do_same = (bio->bi_rw & REQ_WRITE_SAME);
+ 	unsigned long flags;
+ 	struct md_rdev *blocked_rdev;
+ 	struct blk_plug_cb *cb;
+@@ -1461,7 +1462,8 @@ retry_write:
+ 							      rdev));
+ 			mbio->bi_bdev = rdev->bdev;
+ 			mbio->bi_end_io	= raid10_end_write_request;
+-			mbio->bi_rw = WRITE | do_sync | do_fua | do_discard;
++			mbio->bi_rw =
++				WRITE | do_sync | do_fua | do_discard | do_same;
+ 			mbio->bi_private = r10_bio;
+ 
+ 			atomic_inc(&r10_bio->remaining);
+@@ -1503,7 +1505,8 @@ retry_write:
+ 						   r10_bio, rdev));
+ 			mbio->bi_bdev = rdev->bdev;
+ 			mbio->bi_end_io	= raid10_end_write_request;
+-			mbio->bi_rw = WRITE | do_sync | do_fua | do_discard;
++			mbio->bi_rw =
++				WRITE | do_sync | do_fua | do_discard | do_same;
+ 			mbio->bi_private = r10_bio;
+ 
+ 			atomic_inc(&r10_bio->remaining);
+@@ -3578,6 +3581,7 @@ static int run(struct mddev *mddev)
+ 					 (conf->geo.raid_disks / conf->geo.near_copies));
+ 	}
+ 
++	blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
+ 	rdev_for_each(rdev, mddev) {
+ 		long long diff;
+ 		struct request_queue *q;
+-- 
+1.7.11.7
 
