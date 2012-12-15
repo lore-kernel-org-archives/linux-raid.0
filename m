@@ -1,26 +1,38 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] md: raid1,10: Handle REQ_WRITE_SAME flag in write bios
-Date: Fri, 14 Dec 2012 17:38:54 -0500
-Message-ID: <yq1wqwkcl8h.fsf@sermon.lab.mkp.net>
-References: <alpine.DEB.2.02.1212141406480.30895@jlaw-desktop.mno.stratus.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: I love md RAID
+Date: Sat, 15 Dec 2012 11:11:07 +0000
+Message-ID: <50CC5ACB.7090500@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1212141406480.30895@jlaw-desktop.mno.stratus.com>
-	(Joe Lawrence's message of "Fri, 14 Dec 2012 14:36:25 -0500 (EST)")
 Sender: linux-raid-owner@vger.kernel.org
-To: Joe Lawrence <Joe.Lawrence@stratus.com>
-Cc: linux-raid@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, neilb@suse.de
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>>>> "Joe" == Joe Lawrence <Joe.Lawrence@stratus.com> writes:
+Currently reshaping a 3TB (5-drive) RAID6 with 512K chunk into a 4TB 
+(6-drive) RAID6 with 64K chunk.
 
-Joe> This sets the max_write_same_sectors for the mdev request queue to
-Joe> its chunk_sectors (before merging its member disk limits).  
+Having set
+   echo 750000 > /proc/sys/dev/raid/speed_limit_min
+   echo 750000 > /proc/sys/dev/raid/speed_limit_max
+   echo 8192 > /sys/block/md1/md/stripe_cache_size
 
-Yep, that's the right approach.
+I am seeing /proc/mdstat report a reshape speed of ~40000K/sec. Viewing 
+iostat though shows 5 drives reading at ~50MB/s and 6 drives writing at 
+~40MB/s - probably about as fast as these SATA drives can manage. So in 
+fact the reshape is proceeding at ~160MB/sec of real data. Fantastic!
 
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+Perhaps slightly interestingly, I see slightly lower tps (transactions 
+per second) numbers on two of the drives. They happen to be Seagates, 
+while the others are Samsungs and Hitachis. I wonder whether the 
+Seagates accept larger read/write requests than the others, and the 
+kernel is able to amalgamate multiple requests, so we see slightly lower 
+tps.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Neil and everyone else concerned, thank you very much for all your 
+excellent work!
+
+Cheers,
+
+John.
