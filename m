@@ -1,92 +1,103 @@
-From: Jonathan Brassow <jbrassow@redhat.com>
-Subject: [PATCH 3 of 4] MD RAID10:  Improve redundancy for 'far' and
- 'offset' algorithms (part 2)
-Date: Mon, 17 Dec 2012 12:40:16 -0600
-Message-ID: <1355769616.15326.25.camel@f16>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: strange partition table and slow speeds
+Date: Mon, 17 Dec 2012 21:47:13 +0100 (CET)
+Message-ID: <28361073.8.1355777233170.JavaMail.root@zimbra>
+References: <CA+Z7oPgx6DgEbpJ6OEoMFTDbUPhq_b4UXp8SW-dPiVNYw17bjA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CA+Z7oPgx6DgEbpJ6OEoMFTDbUPhq_b4UXp8SW-dPiVNYw17bjA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de, agk@redhat.com, jbrassow@redhat.com
+To: Alex Pientka <alex.pientka@gmail.com>
+Cc: linux-raid@vger.kernel.org, Phil Turmel <philip@turmel.org>
 List-Id: linux-raid.ids
 
-MD RAID10:  Improve redundancy for 'far' and 'offset' algorithms (part 2)
+why would you want to use partitions for such a RAID in the first place=
+?
 
-This patch addresses raid arrays that have a number of devices that cannot
-be evenly divided by 'far_copies'.  (E.g. 5 devices, far_copies = 2)  This
-case must be handled differently because it causes that last set to be of
-a different size than the rest of the sets.  We must compute a new modulo
-for this last set so that copied chunks are properly wrapped around.
+----- Opprinnelig melding -----
+> That brings up the question: Any reason to get the partition table
+> fixed up? Is this just a cosmetic issue?
+> Alex
+>=20
+>=20
+> On Mon, Dec 17, 2012 at 12:41 PM, Phil Turmel <philip@turmel.org>
+> wrote:
+> > [Top-posting repaired. Please don't.]
+> >
+> > On 12/17/2012 12:26 PM, Alex Pientka wrote:
+> >> On Mon, Dec 17, 2012 at 12:18 PM, Phil Turmel <philip@turmel.org>
+> >> wrote:
+> >>> Hi Alex,
+> >>>
+> >>> On 12/17/2012 09:17 AM, Alex Pientka wrote:
+> >>>
+> >>> [trim /]
+> >>>>
+> >>>> /dev/md0:
+> >>>>         Version : 1.1
+> >>>
+> >>>                    ^^^^^
+> >>> You've deliberately chosen a metadata version that places the
+> >>> superblock
+> >>> at sector 0 of the given device. If that is a whole disk, it
+> >>> overwrites
+> >>> the partition table. The default metadata is v1.2 (which places
+> >>> the
+> >>> superblock at offset 4k) for this very reason.
+> >
+> >> I assume upgrading to v1.2 is not possible. The only other way
+> >> would
+> >> be to fail every raw device (one-by-one) and then create the fd
+> >> partition on it, correct?
+> >
+> > You could put the array back on partitions if you like. I'd make a
+> > complete backup, zero the superblocks, and use --create
+> > --assume-clean
+> > to switch to v1.2 in place (with due care to maintain the device
+> > order
+> > and data offsets).
+> >
+> > (Save the output of "mdadm -E /dev/sdXX" for each member device
+> > before
+> > you start.)
+> >
+> > However, that fdisk can't understand the partition table shouldn't
+> > be
+> > hurting anything, so I wouldn't make it a priority.
+> >
+> > BTW, partition type 'fd' is deprecated along with v0.90 metadata, a=
+s
+> > it
+> > only impacts kernel non-initramfs autoassembly, and that only works
+> > with
+> > DOS partition tables and v0.90 metadata.
+> >
+> > Phil
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
 
-Example use_far_sets=1, far_copies=2, near_copies=1, devices=5:
-                "far" algorithm
-        dev1 dev2 dev3 dev4 dev5
-	==== ==== ==== ==== ====
-	[ A   B ] [ C    D   E ]
-        [ G   H ] [ I    J   K ]
-                    ...
-        [ B   A ] [ E    C   D ] --> nominal set of 2 and last set of 3
-        [ H   G ] [ K    I   J ]     []'s show far/offset sets
+--=20
+Vennlige hilsener / Best regards
 
-Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
-
-Index: linux-upstream/drivers/md/raid10.c
-===================================================================
---- linux-upstream.orig/drivers/md/raid10.c
-+++ linux-upstream/drivers/md/raid10.c
-@@ -550,6 +550,13 @@ static void __raid10_find_phys(struct ge
- 	sector_t stripe;
- 	int dev;
- 	int slot = 0;
-+	int last_far_set_start, last_far_set_size;
-+
-+	last_far_set_start = (geo->raid_disks / geo->far_set_size) - 1;
-+	last_far_set_start *= geo->far_set_size;
-+
-+	last_far_set_size = geo->far_set_size;
-+	last_far_set_size += (geo->raid_disks % geo->far_set_size);
- 
- 	/* now calculate first sector/dev */
- 	chunk = r10bio->sector >> geo->chunk_shift;
-@@ -575,9 +582,16 @@ static void __raid10_find_phys(struct ge
- 		for (f = 1; f < geo->far_copies; f++) {
- 			set = d / geo->far_set_size;
- 			d += geo->near_copies;
--			d %= geo->far_set_size;
--			d += geo->far_set_size * set;
- 
-+			if ((geo->raid_disks % geo->far_set_size) &&
-+			    (d > last_far_set_start)) {
-+				d -= last_far_set_start;
-+				d %= last_far_set_size;
-+				d += last_far_set_start;
-+			} else {
-+				d %= geo->far_set_size;
-+				d += geo->far_set_size * set;
-+			}
- 			s += geo->stride;
- 			r10bio->devs[slot].devnum = d;
- 			r10bio->devs[slot].addr = s;
-@@ -615,6 +629,18 @@ static sector_t raid10_find_virt(struct
- 	struct geom *geo = &conf->geo;
- 	int far_set_start = (dev / geo->far_set_size) * geo->far_set_size;
- 	int far_set_size = geo->far_set_size;
-+	int last_far_set_start;
-+
-+	if (geo->raid_disks % geo->far_set_size) {
-+		last_far_set_start = (geo->raid_disks / geo->far_set_size) - 1;
-+		last_far_set_start *= geo->far_set_size;
-+
-+		if (dev >= last_far_set_start) {
-+			far_set_size = geo->far_set_size;
-+			far_set_size += (geo->raid_disks % geo->far_set_size);
-+			far_set_start = last_far_set_start;
-+		}
-+	}
- 
- 	offset = sector & geo->chunk_mask;
- 	if (geo->far_offset) {
-
-
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
