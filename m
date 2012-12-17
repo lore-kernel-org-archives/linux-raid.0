@@ -1,54 +1,35 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: strange partition table and slow speeds
-Date: Mon, 17 Dec 2012 12:41:54 -0500
-Message-ID: <50CF5962.3070007@turmel.org>
-References: <CA+Z7oPgjAsj3f571ocN9zS2sGjgdMsK97_H6qR20o1GPUJYVKQ@mail.gmail.com> <50CF53F2.30404@turmel.org> <CA+Z7oPi47kj9NyigH6TBZ+CyfW5u-5vHk3fUsKMEVR-7kSwayQ@mail.gmail.com>
+From: Jonathan Brassow <jbrassow@redhat.com>
+Subject: [PATCH 0 of 4]  MD RAID10:  Improve redundancy of RAID10 'far' and
+ 'offset' algorithms
+Date: Mon, 17 Dec 2012 12:33:23 -0600
+Message-ID: <1355769203.15326.20.camel@f16>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+Z7oPi47kj9NyigH6TBZ+CyfW5u-5vHk3fUsKMEVR-7kSwayQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alex Pientka <alex.pientka@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de, agk@redhat.com, jbrassow@redhat.com
 List-Id: linux-raid.ids
 
-[Top-posting repaired.  Please don't.]
+Neil,
 
-On 12/17/2012 12:26 PM, Alex Pientka wrote:
-> On Mon, Dec 17, 2012 at 12:18 PM, Phil Turmel <philip@turmel.org> wrote:
->> Hi Alex,
->>
->> On 12/17/2012 09:17 AM, Alex Pientka wrote:
->>
->> [trim /]
->>>
->>> /dev/md0:
->>>         Version : 1.1
->>
->>                    ^^^^^
->> You've deliberately chosen a metadata version that places the superblock
->> at sector 0 of the given device.  If that is a whole disk, it overwrites
->> the partition table.  The default metadata is v1.2 (which places the
->> superblock at offset 4k) for this very reason.
+I've changed the way 'far' and 'offset' algorithms are done to reflect
+your latest suggestions.  The case where there were a non-multiple of
+'far_copies' devices in the array was the tricky issue we were dealing
+with.  I've separated my patch into two - one dealing with the
+multiple-of-far_copies case and the other dealing with the non-multiple
+case.
 
-> I assume upgrading to v1.2 is not possible. The only other way would
-> be to fail every raw device (one-by-one) and then create the fd
-> partition on it, correct?
+I had to make some adjustments to the dm-raid patch that includes the
+new 'far' and 'offset' algorithms and I've included that revised patch
+in this set.
 
-You could put the array back on partitions if you like.  I'd make a
-complete backup, zero the superblocks, and use --create --assume-clean
-to switch to v1.2 in place (with due care to maintain the device order
-and data offsets).
+[PATCH 1 of 4]MD RAID10: Minor non-functional code changes
+[PATCH 2 of 4]MD RAID10:  Improve redundancy for 'far' and 'offset' algorithms (part 1)
+[PATCH 3 of 4]MD RAID10:  Improve redundancy for 'far' and 'offset' algorithms (part 2)
+[PATCH 4 of 4]DM RAID:  Add support for MD's RAID10 "far" and "offset" algorithms
 
-(Save the output of "mdadm -E /dev/sdXX" for each member device before
-you start.)
+Thanks,
+ brassow
 
-However, that fdisk can't understand the partition table shouldn't be
-hurting anything, so I wouldn't make it a priority.
-
-BTW, partition type 'fd' is deprecated along with v0.90 metadata, as it
-only impacts kernel non-initramfs autoassembly, and that only works with
-DOS partition tables and v0.90 metadata.
-
-Phil
