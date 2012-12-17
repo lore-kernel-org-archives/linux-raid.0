@@ -1,46 +1,31 @@
-From: shhuiw@gmail.com
-Subject: [PATCH] md: cleanup: move the comment for bio_clone_mddev to the right place
-Date: Sun, 16 Dec 2012 00:54:38 +0800
-Message-ID: <1355590478-5465-1-git-send-email-shhuiw@gmail.com>
+From: "Maik Purwin" <maik@purwin-it.de>
+Subject: (unknown)
+Date: Mon, 17 Dec 2012 01:59:17 +0100
+Message-ID: <a242a8e5475e737e42902d043d9cf4d0.squirrel@admin.purwin-it.de>
+Reply-To: maik@purwin-it.de
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Subject: 
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Wang Sheng-Hui <shhuiw@gmail.com>
+Hello,
+i make a misstake and disconnected 2 of my 6 disk in a software raid 5 on
+debian squeeze. After that the two disks reported as missing and spare so
+i have 4 on 4 in raid5.
 
-Place the comment before bio_clone_mddev instead of bio_alloc_mddev.
+after that i tried to add and re-add but without no efforts. Then i do this:
 
-Signed-off-by: Wang Sheng-Hui <shhuiw@gmail.com>
----
- drivers/md/md.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+mdadm --assemble /dev/md2 --scan --force
+mdadm: failed to add /dev/sdd4 to /dev/md2: Device or resource busy
+mdadm: /dev/md2 assembled from 4 drives and 1 spare - not enough to start
+the array.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index bd8bf09..e9ecab4 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -151,10 +151,6 @@ static const struct block_device_operations md_fops;
- 
- static int start_readonly;
- 
--/* bio_clone_mddev
-- * like bio_clone, but with a local bio set
-- */
--
- struct bio *bio_alloc_mddev(gfp_t gfp_mask, int nr_iovecs,
- 			    struct mddev *mddev)
- {
-@@ -170,6 +166,9 @@ struct bio *bio_alloc_mddev(gfp_t gfp_mask, int nr_iovecs,
- }
- EXPORT_SYMBOL_GPL(bio_alloc_mddev);
- 
-+/* bio_clone_mddev
-+ * like bio_clone, but with a local bio set
-+ */
- struct bio *bio_clone_mddev(struct bio *bio, gfp_t gfp_mask,
- 			    struct mddev *mddev)
- {
--- 
-1.7.10.4
+and now i didnt know to go on. i have fear to setup the raid new. I hope
+you can help.
+
+Many thx.
 
