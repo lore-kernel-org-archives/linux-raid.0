@@ -1,28 +1,33 @@
-From: Michael-John Turner <mj@mjturner.net>
-Subject: Re: WD "RED" drives - are they any good for mdadm?
-Date: Mon, 17 Dec 2012 16:29:58 +0000
-Message-ID: <20121217162958.GA8346@majestic.pimp.org.za>
-References: <50CF2112.1090406@gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: strange partition table and slow speeds
+Date: Mon, 17 Dec 2012 12:18:42 -0500
+Message-ID: <50CF53F2.30404@turmel.org>
+References: <CA+Z7oPgjAsj3f571ocN9zS2sGjgdMsK97_H6qR20o1GPUJYVKQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <50CF2112.1090406@gmail.com>
+In-Reply-To: <CA+Z7oPgjAsj3f571ocN9zS2sGjgdMsK97_H6qR20o1GPUJYVKQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: maurice <mhilarius@gmail.com>
+To: Alex Pientka <alex.pientka@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Dec 17, 2012 at 06:41:38AM -0700, maurice wrote:
-> Thinking about trying some WD "RED" drives for a build.
-> Model # WD20EFRX
+Hi Alex,
 
-I purchased four recently to extend a RAID6 set and they've been working
-just fine, although it's obviously still very early days. One thing to
-remember is that they're 4k sector drives - if you're using partitions, be
-sure to align them appropriately.
+On 12/17/2012 09:17 AM, Alex Pientka wrote:
 
--mj
--- 
- Michael-John Turner
- mj@mjturner.net      <>     http://mjturner.net/
+[trim /]
+> 
+> /dev/md0:
+>         Version : 1.1
+
+                   ^^^^^
+You've deliberately chosen a metadata version that places the superblock
+at sector 0 of the given device.  If that is a whole disk, it overwrites
+the partition table.  The default metadata is v1.2 (which places the
+superblock at offset 4k) for this very reason.
+
+HTH,
+
+Phil
