@@ -1,96 +1,62 @@
-From: Alex Pientka <alex.pientka@gmail.com>
-Subject: strange partition table and slow speeds
-Date: Mon, 17 Dec 2012 09:17:28 -0500
-Message-ID: <CA+Z7oPgjAsj3f571ocN9zS2sGjgdMsK97_H6qR20o1GPUJYVKQ@mail.gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: WD "RED" drives - are they any good for mdadm?
+Date: Mon, 17 Dec 2012 15:36:28 +0100 (CET)
+Message-ID: <alpine.DEB.2.00.1212171532380.17599@uplift.swm.pp.se>
+References: <50CF2112.1090406@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <50CF2112.1090406@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: maurice <mhilarius@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Afternoon,
+On Mon, 17 Dec 2012, maurice wrote:
 
-my 6x 2tb raid5 got moved into a different server. Before the move the
-system was using an intel sata2 ahci on board controller. Nothing
-special. Instead of creating a partition I pointed to the entire
-device aka /dev/sdc instead of /dev/sdc1. Running an fdisk against the
-drive doesn't come back with anything, but that is expected
+> Does anyone have any experience with these they would care to share?
 
-The new system uses a promise 16300 sata pci-x controller. Slower, but
-that system has more slots for drives. The drives got presented as a
-jbod through the raid controller bios. Right away on the boot up the
-linux system identified all the drives and put the /dev/md0 device
-together.
+I have three in production right now, having replaced failing green 
+drives. This is the one that's been running the longest, so far without 
+any problems at all. This is without any specific settings at all, just 
+plugged it in and added it to the md-raid.
 
-Currently mdadm adjusted every partition table. Running fdisk against
-any of the volumes comes back with this:
+=== START OF INFORMATION SECTION ===
+Device Model:     WDC WD20EFRX-68AX9N0
+Serial Number:    WD-WMC<snip>
+LU WWN Device Id: 5 0014ee 0035938bd
+Firmware Version: 80.00A80
+User Capacity:    2 000 398 934 016 bytes [2,00 TB]
+Sector Sizes:     512 bytes logical, 4096 bytes physical
+Device is:        Not in smartctl database [for details use: -P showall]
+ATA Version is:   9
+ATA Standard is:  Exact ATA specification draft version not indicated
+Local Time is:    Mon Dec 17 15:33:57 2012 CET
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
 
-Disk /dev/sdd: 2000.4 GB, 2000398934016 bytes, 3907029168 sectors
-Units = sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk identifier: 0xffffffff
-
-This doesn't look like a partition table
-Probably you selected the wrong device.
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdd1   ?  4294967295  8589934589  2147483647+  ff  BBT
-/dev/sdd2   ?  4294967295  8589934589  2147483647+  ff  BBT
-/dev/sdd3   ?  4294967295  8589934589  2147483647+  ff  BBT
-/dev/sdd4   ?  4294967295  8589934589  2147483647+  ff  BBT
-
-
-Yesterday for testing purposes I failed a drive, cleaned the partition
-table and then re-added it. The Disk identified got reset back to
-0xffffffff and the partition table looks the same again.
-
-/dev/md0:
-        Version : 1.1
-  Creation Time : Sat Apr 17 13:39:21 2010
-     Raid Level : raid5
-     Array Size : 9767567360 (9315.08 GiB 10001.99 GB)
-  Used Dev Size : 1953513472 (1863.02 GiB 2000.40 GB)
-   Raid Devices : 6
-  Total Devices : 6
-    Persistence : Superblock is persistent
-
-    Update Time : Thu Dec 13 09:33:38 2012
-          State : clean, degraded, recovering
- Active Devices : 5
-Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 1
-
-         Layout : left-symmetric
-     Chunk Size : 256K
-
- Rebuild Status : 35% complete
-
-           Name : amy:0
-           UUID : d64bd5fc:be602828:04c0c8c0:312502d9
-         Events : 2919684
-
-    Number   Major   Minor   RaidDevice State
-       6       8       32        0      active sync   /dev/sdc
-       7       8      112        1      active sync   /dev/sdh
-       8       8       64        2      active sync   /dev/sde
-       9       8       48        3      active sync   /dev/sdd
-       5       8       80        4      active sync   /dev/sdf
-      10       8       96        5      spare rebuilding   /dev/sdg
-
-The reason why I stared this work was to identify why my raid is so
-unbelievable slow at writing. After some adjustments dd can write a
-file around 52mb/s. hdparm does reads at 378mb/s. I should have used
-dd to do the read, but currently I am unable to do so.
-
-Currently I am rebuilding my block size from 256k down to 4k. A
-co-worker has the same setup as I do and his reads and writes are
-twice almost three times as fast. The difference is he has 4k size,
-uses 750gb and 500 gb drives (two different md devicse) and his
-partition table doesn't look like my table.
+SMART Attributes Data Structure revision number: 16
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED 
+WHEN_FAILED RAW_VALUE
+   1 Raw_Read_Error_Rate     0x002f   200   200   051    Pre-fail  Always       -       0
+   3 Spin_Up_Time            0x0027   178   175   021    Pre-fail  Always       -       4066
+   4 Start_Stop_Count        0x0032   100   100   000    Old_age   Always       -       15
+   5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail  Always       -       0
+   7 Seek_Error_Rate         0x002e   200   200   000    Old_age   Always       -       0
+   9 Power_On_Hours          0x0032   096   096   000    Old_age   Always       -       3406
+  10 Spin_Retry_Count        0x0032   100   253   000    Old_age   Always       -       0
+  11 Calibration_Retry_Count 0x0032   100   253   000    Old_age   Always       -       0
+  12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always       -       15
+192 Power-Off_Retract_Count 0x0032   200   200   000    Old_age   Always       -       14
+193 Load_Cycle_Count        0x0032   200   200   000    Old_age   Always       -       0
+194 Temperature_Celsius     0x0022   116   110   000    Old_age   Always       -       31
+196 Reallocated_Event_Count 0x0032   200   200   000    Old_age   Always       -       0
+197 Current_Pending_Sector  0x0032   200   200   000    Old_age   Always       -       0
+198 Offline_Uncorrectable   0x0030   100   253   000    Old_age   Offline      -       0
+199 UDMA_CRC_Error_Count    0x0032   200   200   000    Old_age   Always       -       0
+200 Multi_Zone_Error_Rate   0x0008   100   253   000    Old_age   Offline      -       0
 
 
-
-Alex
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
