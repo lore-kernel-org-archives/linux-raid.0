@@ -1,41 +1,23 @@
-From: Mike Alsop <mike.alsop@tbpl.com.au>
-Subject: Upgarding Mdadm
-Date: Tue, 18 Dec 2012 15:18:02 +0930
-Message-ID: <1355809682.2269.65.camel@mike-g73>
-Reply-To: mike.alsop@tbpl.com.au
+From: Alex Pientka <alex.pientka@gmail.com>
+Subject: super slow reshape speed after power failure
+Date: Tue, 18 Dec 2012 16:33:30 -0500
+Message-ID: <CA+Z7oPhgrmC+nNxdRXjNPdOTSRbmy_aEYm=m_sO=7H6fBjh3yw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi guys
+Currently I am converting my 6x 2tb raid5 from 256 chunk down to 4k.
+While the reshape was running it was running around 4mb/s, which is
+slow to begin with.
 
-I would mainly like to get some confirmation that I can upgrade my mdadm
-with source code on a system that is already running.
+Yesterday we lost power and afte the system came back up, I was able
+to bring the raid back up and running via 'export
+MDADM_GROW_ALLOW_OLD=1`. The current issue is that the reshape is
+running with only 700kb/s.
 
-I am running an Ubuntu 10.04 server which has a fairly early version of
-madm (straight from repository) and it has the problem that so many
-people have written about when rebooting or starting up. I have to have
-about 3 goes as it keeps complaining that one of the drives (by UUID) is
-not present. It is the drive listed in fstab, not the arrays. All of a
-sudden after a few attempts it starts up OK.
+Any ideas?
 
-Many of the articles refer to upgrading to mdadm 3.1.5 from the source
-code as a good fix.
-
-I haven't actually seen anyone write about the upgrade process itself,
-so my question boils down to asking if I can remove the repository
-version with apt-get, then install the new version from source on a
-system that is actually operating??
-
-Is anyone sure if it will work with Ubuntu 10.04 server?? Does anything
-else need upgrading.
-
-I would certainly appreciate any advice.
-
-Mike
-Australia
-
+Alex
