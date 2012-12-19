@@ -1,32 +1,55 @@
-From: Alex Pientka <alex.pientka@gmail.com>
-Subject: Re: super slow reshape speed after power failure
-Date: Wed, 19 Dec 2012 13:38:57 -0500
-Message-ID: <CA+Z7oPgp_fu3sFzJefoTzvd-eQUCv7qqS38ZkHes3EqysuM8Ng@mail.gmail.com>
-References: <CA+Z7oPhgrmC+nNxdRXjNPdOTSRbmy_aEYm=m_sO=7H6fBjh3yw@mail.gmail.com>
- <20690.985.485075.572934@tree.ty.sabi.co.UK>
+From: Ross Boylan <ross@biostat.ucsf.edu>
+Subject: how to proceed with possible corruption
+Date: Wed, 19 Dec 2012 13:06:35 -0800
+Message-ID: <1355951195.12402.33.camel@corn.betterworld.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20690.985.485075.572934@tree.ty.sabi.co.UK>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg@raid2.to.sabi.co.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: ross@biostat.ucsf.edu
 List-Id: linux-raid.ids
 
-I tried values up to 32768, but no difference.
-Alex
+Short version: I suspect some of my array components may be corrupt, and
+wonder what the best way is to  check for it and fix it.
+
+I have a VM  configued similarly to my real machine for testing.
+When I brought it up there were some complaints about the arrays and
+needing to resync them.  While the sync appeared to complete
+successfully, the VM was quite unstable afterwards, as it had not been
+before.
+
+The VM was most likely shut down abruptly when the real machine had a
+power failure.  Also, I had added a 3rd disk to my RAID-1 arrays since I
+last booted the VM, but my mdadm.conf had -num-devices=2 (which we have
+already established is a recipe for trouble).
+
+I installed a new kernel in the VM, and have not had problems since.  So
+I wonder if some of the kernel files got corrupted, and more generally
+if the virtual disks are trustworthy.
+
+Does this /proc/mdstat offer any clues about which disks might be a
+problem?
+
+Personalities : [raid1]
+md0 : active raid1 sda1[0] sdc1[2] sdb1[1]
+      96256 blocks [3/3] [UUU]
+
+md1 : active raid1 sdb3[0] sdc3[2] sda3[1]
+      8187712 blocks [3/3] [UUU]
+
+unused devices: <none>
+
+It seems odd the disks are out of order, that is not sda, sdb, sdc.
+
+I know I could fail some components and add them back to assure
+consistency, but this wouldn't tell me if they were inconsistent before
+that.  There's also the possibility they are  consisstent but corrupt.
+
+Rebuiding the VM would take significant time.
+
+Thanks for any advice.
+Ross Boylan
 
 
-On Wed, Dec 19, 2012 at 1:13 PM, Peter Grandi <pg@raid2.to.sabi.co.uk> wrote:
->> [ ... ]  reshape was running it was running around 4mb/s,
->> which is slow to begin with. [ ... resync too ... ]
->
-> A bigger value for 'md/stripe-cache' might help, alleviating
-> some alignment issues, but usually it is not like 10 times
-> better, but might be still worthwhile even if it will be still
-> slow.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
