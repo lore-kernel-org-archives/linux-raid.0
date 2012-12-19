@@ -1,74 +1,110 @@
-From: Ross Boylan <ross@biostat.ucsf.edu>
-Subject: Re: how to proceed with possible corruption
-Date: Wed, 19 Dec 2012 15:16:22 -0800
-Message-ID: <50D24AC6.2080105@biostat.ucsf.edu>
-References: <1355951195.12402.33.camel@corn.betterworld.us> <20121219223009.GA12347@cthulhu.home.robinhill.me.uk>
+From: Tudor Holton <tudor@smartguide.com.au>
+Subject: Re: Spare disk not becoming active
+Date: Thu, 20 Dec 2012 10:19:57 +1100
+Message-ID: <50D24B9D.8000801@smartguide.com.au>
+References: <50BBEC7E.7080200@smartguide.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20121219223009.GA12347@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <50BBEC7E.7080200@smartguide.com.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/19/2012 2:30 PM, Robin Hill wrote:
-> On Wed Dec 19, 2012 at 01:06:35PM -0800, Ross Boylan wrote:
+I don't mean to be rude, but it's been two weeks and my system is still 
+in this state.  Bump, anyone?
+
+A thorough search of the web (before I originally posted this to the 
+list) revealed nothing.  No explanation as to why this occurs seemed 
+apparent, only that it's happened a number of times.  Most reports 
+indicate that a complete stop of the array and reassemble fixes it, but 
+I tried that and it still returned to spare. Some reports indicated my 
+position but no response that seems complete.
+
+Eventually the discussions runs to wiping the disks and starting again.  
+That seems a bit drastic and I'm concerned that *one* of the disks is 
+faulty but not being reported as such, and I don't want to pick the 
+wrong one to wipe off the superblock.  mdadm reports no errors, but 
+SMART indicates there may be a problem with the *active* disk, which is 
+even more worrying because without making the spare active I can't 
+remove it to test it properly.
+
+Any ideas?
+
+Cheers,
+Tudor.
+
+On 03/12/12 11:04, Tudor Holton wrote:
+> Hallo,
 >
->> Short version: I suspect some of my array components may be corrupt, and
->> wonder what the best way is to  check for it and fix it.
->>
->> I have a VM  configued similarly to my real machine for testing.
->> When I brought it up there were some complaints about the arrays and
->> needing to resync them.  While the sync appeared to complete
->> successfully, the VM was quite unstable afterwards, as it had not been
->> before.
->>
->> The VM was most likely shut down abruptly when the real machine had a
->> power failure.  Also, I had added a 3rd disk to my RAID-1 arrays since I
->> last booted the VM, but my mdadm.conf had -num-devices=2 (which we have
->> already established is a recipe for trouble).
->>
->> I installed a new kernel in the VM, and have not had problems since.  So
->> I wonder if some of the kernel files got corrupted, and more generally
->> if the virtual disks are trustworthy.
->>
->> Does this /proc/mdstat offer any clues about which disks might be a
->> problem?
->>
->> Personalities : [raid1]
->> md0 : active raid1 sda1[0] sdc1[2] sdb1[1]
->>        96256 blocks [3/3] [UUU]
->>
->> md1 : active raid1 sdb3[0] sdc3[2] sda3[1]
->>        8187712 blocks [3/3] [UUU]
->>
->> unused devices: <none>
->>
->> It seems odd the disks are out of order, that is not sda, sdb, sdc.
->>
->> I know I could fail some components and add them back to assure
->> consistency, but this wouldn't tell me if they were inconsistent before
->> that.  There's also the possibility they are  consisstent but corrupt.
->>
-> The arrays are RAID1, so the order of the disks is irrelevant - they
-> data should be identical on all disks.
+> I'm having some trouble with an array I have that has become degraded.
 >
-> You can check whether the disks are all in sync by doing:
->      echo check > /sys/block/mdX/md/sync_action
+> I have an array with this array state:
 >
-> Once the check is complete (you can see the progress via /proc/mdstat)
-> then /sys/block/mdX/md/mismatch_cnt will indicate whether or not there
-> are any mismatches. If so, use "repair" instead of "check" in the above
-> command to resync the drives.
-Thank you for the tip.  This says there are no mismatches, and so I can 
-count on the components being in sync.
-> Otherwise, the issue could be filesystem corruption. A "fsck -f" on the
-> array should detect that.
-I think that's my next step.  My understanding is that this guarantees 
-the integrity of the file system, but not necessarily the integrity of 
-the contents of individual files.  I'm on ext3.
+> md101 : active raid1 sdf1[0] sdb1[2](S)
+>       1953511936 blocks [2/1] [U_]
 >
-> HTH,
->      Robin
+>
+> mdadm --detail says:
+>
+> /dev/md101:
+>         Version : 0.90
+>   Creation Time : Thu Jan 13 14:34:27 2011
+>      Raid Level : raid1
+>      Array Size : 1953511936 (1863.01 GiB 2000.40 GB)
+>   Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
+>    Raid Devices : 2
+>   Total Devices : 2
+> Preferred Minor : 101
+>     Persistence : Superblock is persistent
+>
+>     Update Time : Fri Nov 23 03:23:04 2012
+>           State : clean, degraded
+>  Active Devices : 1
+> Working Devices : 2
+>  Failed Devices : 0
+>   Spare Devices : 1
+>
+>            UUID : 43e92a79:90295495:0a76e71e:56c99031 (local to host 
+> barney)
+>          Events : 0.2127
+>
+>     Number   Major   Minor   RaidDevice State
+>        0       8       81        0      active sync /dev/sdf1
+>        1       0        0        1      removed
+>
+>        2       8       17        -      spare   /dev/sdb1
+>
+>
+> If I attempt to force the spare to become active it begins to recover:
+> $ sudo mdadm -S /dev/md101
+> mdadm: stopped /dev/md101
+> $ sudo mdadm --assemble --force --no-degraded /dev/md101 /dev/sdf1 
+> /dev/sdb1
+> mdadm: /dev/md101 has been started with 1 drive (out of 2) and 1 spare.
+> $ cat /proc/mdstat
+> md101 : active raid1 sdf1[0] sdb1[2]
+>       1953511936 blocks [2/1] [U_]
+>       [>....................]  recovery =  0.0% (541440/1953511936) 
+> finish=420.8min speed=77348K/sec
+>
+> This runs for the allotted time but returns to the state of spare.
+>
+> Neither disk partition report errors:
+> $ cat /sys/block/md101/md/dev-sdf1/errors
+> 0
+> $ cat /sys/block/md101/md/dev-sdb1/errors
+> 0
+>
+> Are there mdadm logs to find out why this is not recovering properly?  
+> How otherwise do I debug this?
+>
+> Cheers,
+> Tudor.
+>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
