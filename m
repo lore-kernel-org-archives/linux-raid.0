@@ -1,55 +1,39 @@
-From: Ross Boylan <ross@biostat.ucsf.edu>
-Subject: how to proceed with possible corruption
-Date: Wed, 19 Dec 2012 13:06:35 -0800
-Message-ID: <1355951195.12402.33.camel@corn.betterworld.us>
+From: Kubes <pkubat.mlist@freepricealerts.com>
+Subject: Expanding raid0
+Date: Wed, 19 Dec 2012 16:23:35 -0500
+Message-ID: <CAFn++Q4XMw9DLpg=d_WhkteW=qQ_cFct_kr4THfpcgZuYjyX+w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: ross@biostat.ucsf.edu
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Short version: I suspect some of my array components may be corrupt, and
-wonder what the best way is to  check for it and fix it.
+All,
 
-I have a VM  configued similarly to my real machine for testing.
-When I brought it up there were some complaints about the arrays and
-needing to resync them.  While the sync appeared to complete
-successfully, the VM was quite unstable afterwards, as it had not been
-before.
-
-The VM was most likely shut down abruptly when the real machine had a
-power failure.  Also, I had added a 3rd disk to my RAID-1 arrays since I
-last booted the VM, but my mdadm.conf had -num-devices=2 (which we have
-already established is a recipe for trouble).
-
-I installed a new kernel in the VM, and have not had problems since.  So
-I wonder if some of the kernel files got corrupted, and more generally
-if the virtual disks are trustworthy.
-
-Does this /proc/mdstat offer any clues about which disks might be a
-problem?
-
-Personalities : [raid1]
-md0 : active raid1 sda1[0] sdc1[2] sdb1[1]
-      96256 blocks [3/3] [UUU]
-
-md1 : active raid1 sdb3[0] sdc3[2] sda3[1]
-      8187712 blocks [3/3] [UUU]
-
-unused devices: <none>
-
-It seems odd the disks are out of order, that is not sda, sdb, sdc.
-
-I know I could fail some components and add them back to assure
-consistency, but this wouldn't tell me if they were inconsistent before
-that.  There's also the possibility they are  consisstent but corrupt.
-
-Rebuiding the VM would take significant time.
-
-Thanks for any advice.
-Ross Boylan
+I have yet to find THE definitive word (via any search and forums) if
+this is possible;  expanding a raid0 set by adding drives.  (Please, I
+know there is no redundancy, and that is fine as these volumes are
+really Amazon WS EBS volumes, so we only strip for speed improvements)
 
 
+
+It seem this works:
+  more /proc/diskstats
+  mdadm --create /dev/md0 --chunk=256 --level=0 --raid-devices=2 /dev/sd[b-c]
+  mdadm --detail /dev/md0
+  mkfs.xfs /dev/md0
+  mount /dev/md0 /mnt
+  vi /mnt/test
+  umount /dev/md0
+
+  mdadm --grow /dev/md0 --level=0 --backup-file=/tmp/grow
+--raid-devices=3 --add /dev/sdd   <= changes to raid4
+  mdadm --detail /dev/md0
+  mdadm --grow /dev/md0 --level=0 --backup-file=/tmp/grow  <== changes to raid0
+  mdadm --detail /dev/md0
+
+Can someone please confirm this correct and that raid0 can be
+expanded, or is there a better means to expand an raid0 raid set?
+
+Thanks!
