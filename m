@@ -1,41 +1,18 @@
-From: Tudor Holton <tudor@smartguide.com.au>
+From: Roger Heflin <rogerheflin@gmail.com>
 Subject: Re: Spare disk not becoming active
-Date: Thu, 20 Dec 2012 10:19:57 +1100
-Message-ID: <50D24B9D.8000801@smartguide.com.au>
+Date: Wed, 19 Dec 2012 18:03:13 -0600
+Message-ID: <CAAMCDefzx+eDVRqqX0kDz-xD-inzTYChLi=BvmViaMej-3iXLA@mail.gmail.com>
 References: <50BBEC7E.7080200@smartguide.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <50BBEC7E.7080200@smartguide.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Tudor Holton <tudor@smartguide.com.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I don't mean to be rude, but it's been two weeks and my system is still 
-in this state.  Bump, anyone?
-
-A thorough search of the web (before I originally posted this to the 
-list) revealed nothing.  No explanation as to why this occurs seemed 
-apparent, only that it's happened a number of times.  Most reports 
-indicate that a complete stop of the array and reassemble fixes it, but 
-I tried that and it still returned to spare. Some reports indicated my 
-position but no response that seems complete.
-
-Eventually the discussions runs to wiping the disks and starting again.  
-That seems a bit drastic and I'm concerned that *one* of the disks is 
-faulty but not being reported as such, and I don't want to pick the 
-wrong one to wipe off the superblock.  mdadm reports no errors, but 
-SMART indicates there may be a problem with the *active* disk, which is 
-even more worrying because without making the spare active I can't 
-remove it to test it properly.
-
-Any ideas?
-
-Cheers,
-Tudor.
-
-On 03/12/12 11:04, Tudor Holton wrote:
+On Sun, Dec 2, 2012 at 6:04 PM, Tudor Holton <tudor@smartguide.com.au> wrote:
 > Hallo,
 >
 > I'm having some trouble with an array I have that has become degraded.
@@ -66,8 +43,7 @@ On 03/12/12 11:04, Tudor Holton wrote:
 >  Failed Devices : 0
 >   Spare Devices : 1
 >
->            UUID : 43e92a79:90295495:0a76e71e:56c99031 (local to host 
-> barney)
+>            UUID : 43e92a79:90295495:0a76e71e:56c99031 (local to host barney)
 >          Events : 0.2127
 >
 >     Number   Major   Minor   RaidDevice State
@@ -80,13 +56,12 @@ On 03/12/12 11:04, Tudor Holton wrote:
 > If I attempt to force the spare to become active it begins to recover:
 > $ sudo mdadm -S /dev/md101
 > mdadm: stopped /dev/md101
-> $ sudo mdadm --assemble --force --no-degraded /dev/md101 /dev/sdf1 
-> /dev/sdb1
+> $ sudo mdadm --assemble --force --no-degraded /dev/md101 /dev/sdf1 /dev/sdb1
 > mdadm: /dev/md101 has been started with 1 drive (out of 2) and 1 spare.
 > $ cat /proc/mdstat
 > md101 : active raid1 sdf1[0] sdb1[2]
 >       1953511936 blocks [2/1] [U_]
->       [>....................]  recovery =  0.0% (541440/1953511936) 
+>       [>....................]  recovery =  0.0% (541440/1953511936)
 > finish=420.8min speed=77348K/sec
 >
 > This runs for the allotted time but returns to the state of spare.
@@ -97,14 +72,14 @@ On 03/12/12 11:04, Tudor Holton wrote:
 > $ cat /sys/block/md101/md/dev-sdb1/errors
 > 0
 >
-> Are there mdadm logs to find out why this is not recovering properly?  
-> How otherwise do I debug this?
+> Are there mdadm logs to find out why this is not recovering properly?  How
+> otherwise do I debug this?
 >
 > Cheers,
 > Tudor.
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+Did you look in the various /var/log/messages (current and previous
+ones) to see what it indicated happened the about the time it
+completed?
+
+There is almost certainly something in there indicating what went wrong.
