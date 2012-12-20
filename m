@@ -1,85 +1,62 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: Spare disk not becoming active
-Date: Wed, 19 Dec 2012 18:03:13 -0600
-Message-ID: <CAAMCDefzx+eDVRqqX0kDz-xD-inzTYChLi=BvmViaMej-3iXLA@mail.gmail.com>
-References: <50BBEC7E.7080200@smartguide.com.au>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: how to proceed with possible corruption
+Date: Thu, 20 Dec 2012 08:38:51 +0000
+Message-ID: <20121220083851.GA18661@cthulhu.home.robinhill.me.uk>
+References: <1355951195.12402.33.camel@corn.betterworld.us>
+ <20121219223009.GA12347@cthulhu.home.robinhill.me.uk>
+ <50D24AC6.2080105@biostat.ucsf.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="9amGYk9869ThD9tj"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50BBEC7E.7080200@smartguide.com.au>
+Content-Disposition: inline
+In-Reply-To: <50D24AC6.2080105@biostat.ucsf.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tudor Holton <tudor@smartguide.com.au>
+To: Ross Boylan <ross@biostat.ucsf.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Dec 2, 2012 at 6:04 PM, Tudor Holton <tudor@smartguide.com.au> wrote:
-> Hallo,
->
-> I'm having some trouble with an array I have that has become degraded.
->
-> I have an array with this array state:
->
-> md101 : active raid1 sdf1[0] sdb1[2](S)
->       1953511936 blocks [2/1] [U_]
->
->
-> mdadm --detail says:
->
-> /dev/md101:
->         Version : 0.90
->   Creation Time : Thu Jan 13 14:34:27 2011
->      Raid Level : raid1
->      Array Size : 1953511936 (1863.01 GiB 2000.40 GB)
->   Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
->    Raid Devices : 2
->   Total Devices : 2
-> Preferred Minor : 101
->     Persistence : Superblock is persistent
->
->     Update Time : Fri Nov 23 03:23:04 2012
->           State : clean, degraded
->  Active Devices : 1
-> Working Devices : 2
->  Failed Devices : 0
->   Spare Devices : 1
->
->            UUID : 43e92a79:90295495:0a76e71e:56c99031 (local to host barney)
->          Events : 0.2127
->
->     Number   Major   Minor   RaidDevice State
->        0       8       81        0      active sync /dev/sdf1
->        1       0        0        1      removed
->
->        2       8       17        -      spare   /dev/sdb1
->
->
-> If I attempt to force the spare to become active it begins to recover:
-> $ sudo mdadm -S /dev/md101
-> mdadm: stopped /dev/md101
-> $ sudo mdadm --assemble --force --no-degraded /dev/md101 /dev/sdf1 /dev/sdb1
-> mdadm: /dev/md101 has been started with 1 drive (out of 2) and 1 spare.
-> $ cat /proc/mdstat
-> md101 : active raid1 sdf1[0] sdb1[2]
->       1953511936 blocks [2/1] [U_]
->       [>....................]  recovery =  0.0% (541440/1953511936)
-> finish=420.8min speed=77348K/sec
->
-> This runs for the allotted time but returns to the state of spare.
->
-> Neither disk partition report errors:
-> $ cat /sys/block/md101/md/dev-sdf1/errors
-> 0
-> $ cat /sys/block/md101/md/dev-sdb1/errors
-> 0
->
-> Are there mdadm logs to find out why this is not recovering properly?  How
-> otherwise do I debug this?
->
-> Cheers,
-> Tudor.
 
-Did you look in the various /var/log/messages (current and previous
-ones) to see what it indicated happened the about the time it
-completed?
+--9amGYk9869ThD9tj
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-There is almost certainly something in there indicating what went wrong.
+On Wed Dec 19, 2012 at 03:16:22PM -0800, Ross Boylan wrote:
+
+> On 12/19/2012 2:30 PM, Robin Hill wrote:
+
+> > Otherwise, the issue could be filesystem corruption. A "fsck -f" on the
+> > array should detect that.
+> I think that's my next step.  My understanding is that this guarantees=20
+> the integrity of the file system, but not necessarily the integrity of=20
+> the contents of individual files.  I'm on ext3.
+>=20
+To check the files themselves, you'll have to have some info on their
+correct state. A lot of distributions will include this as part of the
+packaging, so that should be your first port of call (e.g. rpm
+--verify). I'm not aware of any other way to verify the file contents
+without previously having read their correct state (there's various file
+integrity checking tools, intended for security checks to prevent
+surreptitious replacement of system files).
+
+HTH,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
+
+--9amGYk9869ThD9tj
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAlDSzpsACgkQShxCyD40xBLAVACfZW6QQ4tAEFYl21dX5Jfe3iMy
+Ac4AoOAhZNU5RxSCsF8amk59qoWRruYq
+=jb0l
+-----END PGP SIGNATURE-----
+
+--9amGYk9869ThD9tj--
