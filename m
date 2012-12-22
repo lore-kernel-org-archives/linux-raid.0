@@ -1,29 +1,44 @@
-From: Thomas Fjellstrom <thomas@fjellstrom.ca>
-Subject: recommended way to add ssd cache to mdraid array
-Date: Fri, 21 Dec 2012 23:57:19 -0700
-Message-ID: <201212212357.19292.thomas@fjellstrom.ca>
-Reply-To: thomas@fjellstrom.ca
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Disk speed comparison
+Date: Sat, 22 Dec 2012 18:39:51 +0100 (CET)
+Message-ID: <27374116.4.1356197991689.JavaMail.root@zimbra>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I'm setting up a new nas box (7x2TB on a IBM M1015 8 port sas card flashed to 
-9211IT mode) and was thinking about adding an SSD cache to it. I've been 
-following bcache's development, but it seems to have stalled a bit.
+Hi all
 
-I've got a 240G Samsung 470/810 that I'd like to use for this.
+I have an array with 6 2TB drives plus a spare. While this works well, =
+I can from the munin graphs at http://munin.karlsbakk.net/munin/karlsba=
+kk.net/smilla.karlsbakk.net/index.html that the WD2001FASS drives (sd[b=
+cfg]) perform some 30% better than the  Hitachi HDS723020BLA642 drives =
+(sd[eh]). The drives are on a mixed set of controllers, so this shouldn=
+'t be relevant. Since they all are specified to spin on 7200RPM, I find=
+ it wierd that the performance difference shown by the Munin graph is s=
+o big.
 
-Also I was wondering if anyone has any tips on the best (or their preferred) 
-way to set up a "big" raid6 array with a single filesystem. I'm probably going 
-to stick with XFS, but I'm not married to it, if there's something better for 
-a big media (audio, video, disk images, backups, etc) volume I'd love to hear 
-about it.
+Anyone seen something similar?
 
--- 
-Thomas Fjellstrom
-thomas@fjellstrom.ca
+Vennlige hilsener / Best regards
+
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
