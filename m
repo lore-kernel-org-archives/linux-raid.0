@@ -1,73 +1,36 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: Disk speed comparison
-Date: Sun, 23 Dec 2012 06:29:39 +0100 (CET)
-Message-ID: <2944870.0.1356240579079.JavaMail.root@zimbra>
-References: <50D68FC0.70807@hardwarefreak.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Few questions about a raid array with 3 faulty spares
+Date: Sun, 23 Dec 2012 11:18:24 +0100 (CET)
+Message-ID: <alpine.DEB.2.00.1212231116420.17599@uplift.swm.pp.se>
+References: <CAH-e9vJ_WWAL=sabeoJ8ybM0Etbf5bcar1vnGWS9wrWJx=njTQ@mail.gmail.com> <CAH-e9v+YKqVVDpxN6W21fpWOxaNhCs7kr0uKT+33XtN0PUfe-A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: MULTIPART/MIXED; BOUNDARY="-137064504-1910787538-1356257904=:17599"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50D68FC0.70807@hardwarefreak.com>
+In-Reply-To: <CAH-e9v+YKqVVDpxN6W21fpWOxaNhCs7kr0uKT+33XtN0PUfe-A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: =?ISO-8859-15?Q?Gar=F0ar_Arnarsson?= <gardar@giraffi.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > I have an array with 6 2TB drives plus a spare. While this works
-> > well, I can from the munin graphs at
-> > http://munin.karlsbakk.net/munin/karlsbakk.net/smilla.karlsbakk.net=
-/index.html
-> > that the WD2001FASS drives (sd[bcfg]) perform some 30% better than
-> > the Hitachi HDS723020BLA642 drives (sd[eh]). The drives are on a
-> > mixed set of controllers, so this shouldn't be relevant. Since they
-> > all are specified to spin on 7200RPM, I find it wierd that the
-> > performance difference shown by the Munin graph is so big.
->=20
-> You've provided zero information about the controllers or the
-> configuration of the drives. If the SATA ASIC to which the Black
-> drives
-> are connected is AHCI and the other is not, then NCQ may account for
-> the
-> difference in performance. Or, both may currently be AHCI, but
-> possibly
-> the Hitachi drives perform better with NCQ disabled. This would not b=
-e
-> rare. If you laid partitions on the Hitachi drives and misaligned
-> them,
-> this could easily cause a 30% deficit. Etc, etc.
->=20
-> I doubt there is a 30% overall performance difference between these
-> two
-> drive models. The Black models are "enthusiast" class drives, and do
-> have some additional performance features, but not that I'd think
-> would
-> yield a 30% advantage.
->=20
-> You need to dig deeper into the details.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-no partitions on this setup, just plain drives. what munin tells me is =
-those WD drives are rather faster than the hitachis. As noted, all driv=
-es are on a mixed controller setup, the hitachis and wd drives share co=
-ntrollers for some. the only known common factor for the slow and fast =
-drives are their label.
+---137064504-1910787538-1356257904=:17599
+Content-Type: TEXT/PLAIN; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8BIT
 
---=20
-Vennlige hilsener / Best regards
+On Sat, 22 Dec 2012, Garðar Arnarsson wrote:
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I am thinking about moving the disks to other sata ports and then try to 
+> get the array running again. My question is what method I should use, 
+> force assemble? Re-add? Or something else?
+
+Start by sending mdadm -E for all the drives plus dmesg from when they 
+were kicked out. Do not pastebin, just send long email.
+
+Do *not* use mdadm --create --assume-clean or zero any superblocks until 
+all other options are exhausted.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
+---137064504-1910787538-1356257904=:17599--
