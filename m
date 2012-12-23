@@ -1,51 +1,38 @@
-From: Thomas Fjellstrom <thomas@fjellstrom.ca>
-Subject: Re: recommended way to add ssd cache to mdraid array
-Date: Sat, 22 Dec 2012 20:44:27 -0700
-Message-ID: <201212222044.27731.thomas@fjellstrom.ca>
-References: <201212212357.19292.thomas@fjellstrom.ca>
-Reply-To: thomas@fjellstrom.ca
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Disk speed comparison
+Date: Sat, 22 Dec 2012 22:59:44 -0600
+Message-ID: <50D68FC0.70807@hardwarefreak.com>
+References: <27374116.4.1356197991689.JavaMail.root@zimbra>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201212212357.19292.thomas@fjellstrom.ca>
+In-Reply-To: <27374116.4.1356197991689.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri Dec 21, 2012, Thomas Fjellstrom wrote:
-> I'm setting up a new nas box (7x2TB on a IBM M1015 8 port sas card flashed
-> to 9211IT mode) and was thinking about adding an SSD cache to it. I've
-> been following bcache's development, but it seems to have stalled a bit.
-> 
-> I've got a 240G Samsung 470/810 that I'd like to use for this.
-> 
-> Also I was wondering if anyone has any tips on the best (or their
-> preferred) way to set up a "big" raid6 array with a single filesystem. I'm
-> probably going to stick with XFS, but I'm not married to it, if there's
-> something better for a big media (audio, video, disk images, backups, etc)
-> volume I'd love to hear about it.
+On 12/22/2012 11:39 AM, Roy Sigurd Karlsbakk wrote:
 
-So my array has finally finished resyncing, and I've run a simple iozone test 
-on it formated with xfs, and I'm seeing some somewhat low write results:
+> I have an array with 6 2TB drives plus a spare. While this works well, I can from the munin graphs at http://munin.karlsbakk.net/munin/karlsbakk.net/smilla.karlsbakk.net/index.html that the WD2001FASS drives (sd[bcfg]) perform some 30% better than the  Hitachi HDS723020BLA642 drives (sd[eh]). The drives are on a mixed set of controllers, so this shouldn't be relevant. Since they all are specified to spin on 7200RPM, I find it wierd that the performance difference shown by the Munin graph is so big.
 
-moose@mrbig:/mnt/mrbig/data/test$ iozone -a -s 32G -r 8M
-                                                            random  random    
-bkwd   record   stride                                   
-              KB  reclen   write rewrite    read    reread    read   write    
-read  rewrite     read   fwrite frewrite   fread  freread
-        33554432    8192  212507  210382   630327   630852  372807  161710  
-388319  4922757   617347   210642   217122  717279   716150
+You've provided zero information about the controllers or the
+configuration of the drives.  If the SATA ASIC to which the Black drives
+are connected is AHCI and the other is not, then NCQ may account for the
+difference in performance.  Or, both may currently be AHCI, but possibly
+the Hitachi drives perform better with NCQ disabled.  This would not be
+rare.  If you laid partitions on the Hitachi drives and misaligned them,
+this could easily cause a 30% deficit.  Etc, etc.
 
-Is this normal for a 7 disk (2TB seagate barracudas) raid array on a pcie x8 
-sas controller?
+I doubt there is a 30% overall performance difference between these two
+drive models.  The Black models are "enthusiast" class drives, and do
+have some additional performance features, but not that I'd think would
+yield a 30% advantage.
 
-I was thinking it might be alignment issues, but there are no partitions on 
-the disks, and xfs seems to have correctly set up the sunit and swidth 
-settings (128/640 for a 7 disk raid6). While 200MB/s is probably more than I 
-need day to day, I'd like to make sure it is set up properly.
+You need to dig deeper into the details.
 
 -- 
-Thomas Fjellstrom
-thomas@fjellstrom.ca
+Stan
+
