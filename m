@@ -1,61 +1,119 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Disk speed comparison
-Date: Sun, 23 Dec 2012 16:04:13 -0600
-Message-ID: <50D77FDD.2050203@hardwarefreak.com>
-References: <2944870.0.1356240579079.JavaMail.root@zimbra>
-Reply-To: stan@hardwarefreak.com
+From: Tudor Holton <tudor@smartguide.com.au>
+Subject: Re: Spare disk not becoming active
+Date: Mon, 24 Dec 2012 18:24:46 +1100
+Message-ID: <50D8033E.9040006@smartguide.com.au>
+References: <50BBEC7E.7080200@smartguide.com.au> <CAAMCDefzx+eDVRqqX0kDz-xD-inzTYChLi=BvmViaMej-3iXLA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2944870.0.1356240579079.JavaMail.root@zimbra>
+In-Reply-To: <CAAMCDefzx+eDVRqqX0kDz-xD-inzTYChLi=BvmViaMej-3iXLA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Roger Heflin <rogerheflin@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/22/2012 11:29 PM, Roy Sigurd Karlsbakk wrote:
->>> I have an array with 6 2TB drives plus a spare. While this works
->>> well, I can from the munin graphs at
->>> http://munin.karlsbakk.net/munin/karlsbakk.net/smilla.karlsbakk.net/index.html
->>> that the WD2001FASS drives (sd[bcfg]) perform some 30% better than
->>> the Hitachi HDS723020BLA642 drives (sd[eh]). The drives are on a
->>> mixed set of controllers, so this shouldn't be relevant. Since they
->>> all are specified to spin on 7200RPM, I find it wierd that the
->>> performance difference shown by the Munin graph is so big.
+On 20/12/12 11:03, Roger Heflin wrote:
+> On Sun, Dec 2, 2012 at 6:04 PM, Tudor Holton <tudor@smartguide.com.au> wrote:
+>> Hallo,
 >>
->> You've provided zero information about the controllers or the
->> configuration of the drives. If the SATA ASIC to which the Black
->> drives
->> are connected is AHCI and the other is not, then NCQ may account for
->> the
->> difference in performance. Or, both may currently be AHCI, but
->> possibly
->> the Hitachi drives perform better with NCQ disabled. This would not be
->> rare. If you laid partitions on the Hitachi drives and misaligned
->> them,
->> this could easily cause a 30% deficit. Etc, etc.
+>> I'm having some trouble with an array I have that has become degraded.
 >>
->> I doubt there is a 30% overall performance difference between these
->> two
->> drive models. The Black models are "enthusiast" class drives, and do
->> have some additional performance features, but not that I'd think
->> would
->> yield a 30% advantage.
+>> I have an array with this array state:
 >>
->> You need to dig deeper into the details.
-> 
-> no partitions on this setup, just plain drives. what munin tells me is those WD drives are rather faster than the hitachis. As noted, all drives are on a mixed controller setup, the hitachis and wd drives share controllers for some. the only known common factor for the slow and fast drives are their label.
+>> md101 : active raid1 sdf1[0] sdb1[2](S)
+>>        1953511936 blocks [2/1] [U_]
+>>
+>>
+>> mdadm --detail says:
+>>
+>> /dev/md101:
+>>          Version : 0.90
+>>    Creation Time : Thu Jan 13 14:34:27 2011
+>>       Raid Level : raid1
+>>       Array Size : 1953511936 (1863.01 GiB 2000.40 GB)
+>>    Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
+>>     Raid Devices : 2
+>>    Total Devices : 2
+>> Preferred Minor : 101
+>>      Persistence : Superblock is persistent
+>>
+>>      Update Time : Fri Nov 23 03:23:04 2012
+>>            State : clean, degraded
+>>   Active Devices : 1
+>> Working Devices : 2
+>>   Failed Devices : 0
+>>    Spare Devices : 1
+>>
+>>             UUID : 43e92a79:90295495:0a76e71e:56c99031 (local to host barney)
+>>           Events : 0.2127
+>>
+>>      Number   Major   Minor   RaidDevice State
+>>         0       8       81        0      active sync /dev/sdf1
+>>         1       0        0        1      removed
+>>
+>>         2       8       17        -      spare   /dev/sdb1
+>>
+>>
+>> If I attempt to force the spare to become active it begins to recover:
+>> $ sudo mdadm -S /dev/md101
+>> mdadm: stopped /dev/md101
+>> $ sudo mdadm --assemble --force --no-degraded /dev/md101 /dev/sdf1 /dev/sdb1
+>> mdadm: /dev/md101 has been started with 1 drive (out of 2) and 1 spare.
+>> $ cat /proc/mdstat
+>> md101 : active raid1 sdf1[0] sdb1[2]
+>>        1953511936 blocks [2/1] [U_]
+>>        [>....................]  recovery =  0.0% (541440/1953511936)
+>> finish=420.8min speed=77348K/sec
+>>
+>> This runs for the allotted time but returns to the state of spare.
+>>
+>> Neither disk partition report errors:
+>> $ cat /sys/block/md101/md/dev-sdf1/errors
+>> 0
+>> $ cat /sys/block/md101/md/dev-sdb1/errors
+>> 0
+>>
+>> Are there mdadm logs to find out why this is not recovering properly?  How
+>> otherwise do I debug this?
+>>
+>> Cheers,
+>> Tudor.
+> Did you look in the various /var/log/messages (current and previous
+> ones) to see what it indicated happened the about the time it
+> completed?
+>
+> There is almost certainly something in there indicating what went wrong.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks.  I watched the logs messages during the recovery.  During the 
+last 0.1% (at 99.9%) messages like this appeared:
+Dec 24 18:20:32 barney kernel: [2796835.703313] sd 2:0:0:0: [sdf] 
+Unhandled sense code
+Dec 24 18:20:32 barney kernel: [2796835.703316] sd 2:0:0:0: [sdf] 
+Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Dec 24 18:20:32 barney kernel: [2796835.703320] sd 2:0:0:0: [sdf] Sense 
+Key : Medium Error [current] [descriptor]
+Dec 24 18:20:32 barney kernel: [2796835.703325] Descriptor sense data 
+with sense descriptors (in hex):
+Dec 24 18:20:32 barney kernel: [2796835.703327]         72 03 11 04 00 
+00 00 0c 00 0a 80 00 00 00 00 00
+Dec 24 18:20:32 barney kernel: [2796835.703335]         e8 e0 5f 86
+Dec 24 18:20:32 barney kernel: [2796835.703339] sd 2:0:0:0: [sdf] Add. 
+Sense: Unrecovered read error - auto reallocate failed
+Dec 24 18:20:32 barney kernel: [2796835.703345] sd 2:0:0:0: [sdf] CDB: 
+Read(10): 28 00 e8 e0 5f 7f 00 00 08 00
+Dec 24 18:20:32 barney kernel: [2796835.703353] end_request: I/O error, 
+dev sdf, sector 3907018630
+Dec 24 18:20:32 barney kernel: [2796835.703366] ata3: EH complete
+Dec 24 18:20:32 barney kernel: [2796835.703383] md/raid1:md101: sdf: 
+unrecoverable I/O read error for block 3907018496
 
-I just looked at your Munin graphs more closely.  Your interpretation of
-30% difference in performance doesn't seem to be accurate.  All 6 drives
-have nearly identical daily and weekly avg IOs and throughput.  The avg
-latency of the Hitachi drives is a few milliseconds higher, but this
-doesn't seem to be negatively affecting IOPS or throughput.
+Unfortunately, sdf is the active disk in this case.  So I guess my only 
+option left is to create a new array and copy as much over as it will 
+let me?
 
-How are you determining your claimed 30% performance deficit?  I don't
-see it.
-
--- 
-Stan
-
+Cheers,
+Tudor.
