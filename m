@@ -1,8 +1,9 @@
 From: Jaap Winius <jwinius@umrk.nl>
 Subject: Re: Can this array be recovered?
-Date: Tue, 25 Dec 2012 15:24:23 +0000 (UTC)
-Message-ID: <kbcgf7$ste$1@ger.gmane.org>
+Date: Tue, 25 Dec 2012 15:56:38 +0000 (UTC)
+Message-ID: <kbcibm$ste$2@ger.gmane.org>
 References: <kbb975$nj1$1@ger.gmane.org> <50D9422F.9010403@turmel.org>
+	<kbcgf7$ste$1@ger.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -11,30 +12,30 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 25 Dec 2012 01:05:35 -0500, Phil Turmel wrote:
+On Tue, 25 Dec 2012 15:24:23 +0000, Jaap Winius wrote:
 
-> Stop the array.  Create it again, but specify v0.90 or v1.0 metadata.
-> (v1.0 also puts the superblock at the end.)
+> ... pvscan still doesn't see anything on /dev/md1
+> and now also mentions "Incorrect metadata area
+> header checksum" when run.
 
-Okay, I used this command:
+The output of this command looks promising:
 
-# mdadm --create /dev/md1 --metadata=0.90 --level=1 --raid-devices=2 /dev/
-sd[ef]2
- 
-> Since v1.2 metadata skips the first 4k, the critical part of the LVM
-> metadata is probably intact, and it'll "just work".
+# pvscan -u
+  Incorrect metadata area header checksum
+  PV /dev/md2 with UUID 0iEU34-XNSd-vNpu-G3uW-2F1v-wEy9-Bw199N VG 
+volgrp3         lvm2 [931.51 GiB / 11.51 GiB free]
+  PV /dev/md0 with UUID Lb3KzG-9tZM-5MbQ-1DUa-5ErW-DYf1-NqvMJW VG 
+volgrp1         lvm2 [697.70 GiB / 5.44 GiB free]
+  PV /dev/md1 with UUID uWDdXr-8fRw-aJDG-SzdQ-
+yeIl-6dsv-28vJYs                    lvm2 [697.70 GiB]
+  Total: 3 [2.27 TiB] / in use: 2 [1.59 TiB] / in no VG: 1 [697.70 GiB]
 
-I like that you're so optimistic, but unfortunately pvscan still doesn't 
-see anything on /dev/md1 and now also mentions "Incorrect metadata area 
-header checksum" when run.
-
-> After you recover your data, you should consider rebuilding your array
-> with default (v1.2) metadata for everything other than your boot
-> filesystem.
-
-If I manage to get my array back, I will definitely give that a try.
+That last UUID is still associated with a bunch of volgrp2 objects in my 
+current LVM configuration (the old LVM volume on /dev/md1), even though 
+pvscan currently doesn't recognize it as such.
 
 Christmas cheers,
 
 Jaap
+
 
