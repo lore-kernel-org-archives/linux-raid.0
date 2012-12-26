@@ -1,79 +1,70 @@
-From: Jaap Winius <jwinius@umrk.nl>
-Subject: Re: Can this array be recovered?
-Date: Tue, 25 Dec 2012 17:06:39 +0000 (UTC)
-Message-ID: <kbcmeu$ste$3@ger.gmane.org>
-References: <kbb975$nj1$1@ger.gmane.org> <50D9422F.9010403@turmel.org>
-	<kbcgf7$ste$1@ger.gmane.org> <kbcibm$ste$2@ger.gmane.org>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re:
+Date: Tue, 25 Dec 2012 21:15:35 -0500
+Message-ID: <50DA5DC7.8000405@turmel.org>
+References: <CADzS=aoy=7sb7fdKy3tH3tHtbBmnm0vSQ4vyYK0SCX-Ekis0Uw@mail.gmail.com> <50D93BBC.5020206@turmel.org> <CADzS=ar9c7hC1Z7HT9pTUEnoPR+jeo8wdexrrsFbVfPnZ9Tbmg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CADzS=ar9c7hC1Z7HT9pTUEnoPR+jeo8wdexrrsFbVfPnZ9Tbmg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: bobzer <bobzer@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 25 Dec 2012 15:56:38 +0000, Jaap Winius wrote:
+On 12/25/2012 07:16 PM, bobzer wrote:
+> thanks to help me
 
-> # pvscan -u
->   Incorrect metadata area header checksum PV /dev/md2 with UUID
->   0iEU34-XNSd-vNpu-G3uW-2F1v-wEy9-Bw199N VG
-> volgrp3         lvm2 [931.51 GiB / 11.51 GiB free]
->   PV /dev/md0 with UUID Lb3KzG-9tZM-5MbQ-1DUa-5ErW-DYf1-NqvMJW VG
-> volgrp1         lvm2 [697.70 GiB / 5.44 GiB free]
->   PV /dev/md1 with UUID uWDdXr-8fRw-aJDG-SzdQ-
-> yeIl-6dsv-28vJYs                    lvm2 [697.70 GiB]
->   Total: 3 [2.27 TiB] / in use: 2 [1.59 TiB] / in no VG: 1 [697.70 GiB]
+No problem, but please *don't* top-post, and *do* trim replies.  Also,
+use reply-to-all on kernel.org mailing lists.
+
+> root@debian:~# mdadm -E /dev/sd[bcd]1
+> /dev/sdb1:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x0
+>      Array UUID : bf3c605b:9699aa55:d45119a2:7ba58d56
+>            Name : debian:0  (local to host debian)
+>   Creation Time : Sun Mar  4 22:49:14 2012
+>      Raid Level : raid5
+>    Raid Devices : 3
 > 
-> That last UUID is still associated with a bunch of volgrp2 objects in my
-> current LVM configuration (the old LVM volume on /dev/md1), even though
-> pvscan currently doesn't recognize it as such.
+>  Avail Dev Size : 3907021954 (1863.01 GiB 2000.40 GB)
+>      Array Size : 7814043136 (3726.03 GiB 4000.79 GB)
+>   Used Dev Size : 3907021568 (1863.01 GiB 2000.40 GB)
+>     Data Offset : 2048 sectors
+>    Super Offset : 8 sectors
+>           State : clean
+>     Device UUID : 5e71f69a:a78b0cd7:bbbb7ecb:cf81f9f6
+> 
+>     Update Time : Tue Dec 25 06:25:02 2012
+>   Bad Block Log : 512 entries available at offset 2032 sectors
+>        Checksum : 922ddaa8 - correct
+>          Events : 413
+> 
+>          Layout : left-symmetric
+>      Chunk Size : 128K
+> 
+>    Device Role : Active device 0
+>    Array State : A.. ('A' == active, '.' == missing)
+> mdadm: No md superblock detected on /dev/sdc1.
+> mdadm: No md superblock detected on /dev/sdd1.
 
-All that was needed at this point involved some LVM recovery procedures. 
-I did it like this:
+This is bad.  The two disks are still offline.  You must find and fix
+the hardware problem that is keeping these two disks from communicating.
+ Unless the two disks suffered a simultaneous power surge, the odds they
+are OK is good.  But look at your cables, controller, or power supply.
 
-# pvcreate --uuid uWDdXr-8fRw-aJDG-SzdQ-yeIl-6dsv-28vJYs --restorefile /
-etc/lvm/archive/volgrp2_00007.vg /dev/md1
-  Incorrect metadata area header checksum
-  Incorrect metadata area header checksum
-  Incorrect metadata area header checksum
-  Incorrect metadata area header checksum
-  Incorrect metadata area header checksum
-  Physical volume "/dev/md1" successfully created
+> I would like to understand too
+> dmesg (with the begin removed) show a lot of error :
+> http://pastebin.com/D1D8AKF9
 
-This restored my original LVM physical volume. However, the original 
-volume group was missing. To fix that I created one with the same name on 
-that same physical device:
+I browsed it: all attempts to communicate with those two drives failed.
+ That must be fixed first.  Then we can help you recover the data.  If
+you can plug the three drives into another machine, that would be the
+simplest way to isolate the problem.
 
-# vgcreate -v volgrp2 /dev/md1
-    Wiping cache of LVM-capable devices
-    Wiping cache of LVM-capable devices
-    Adding physical volume '/dev/md1' to volume group 'volgrp2'
-    Archiving volume group "volgrp2" metadata (seqno 0).
-    Creating volume group backup "/etc/lvm/backup/volgrp2" (seqno 1).
-  Volume group "volgrp2" successfully created
+HTH,
 
-Okay, but at this point the problem was that my logical volumes had yet 
-to be restored
-
-# vgcfgrestore -f /u21/backup/bitis/etc/2012-12-24@01:02:12/lvm/backup/
-volgrp2 volgrp2
-  Restored volume group volgrp2
-
-This restored the volume group descriptor area from an older automatic  
-backup file for this volume group. It worked: my old vicepb volume was 
-back! Still, I couldn't mount it until I did this:
-
-~# vgchange -ay
-  3 logical volume(s) in volume group "volgrp3" now active
-  1 logical volume(s) in volume group "volgrp2" now active
-  6 logical volume(s) in volume group "volgrp1" now active
-
-Finally, this allowed me to mount my volume and make all my data 
-available once again. 
-
-Thanks Phil!
-
-Chritmas cheers,
-
-Jaap
-
+Phil
