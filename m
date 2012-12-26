@@ -1,117 +1,84 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: [PATCH] raid5: Fix to_read/to_write judgement.
-Date: Wed, 26 Dec 2012 14:21:24 +0800
-Message-ID: <201212261421217496186@gmail.com>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: bobzer <bobzer@gmail.com>
+Subject: Re:
+Date: Wed, 26 Dec 2012 06:29:26 -0500
+Message-ID: <CADzS=arqtAw0nw9kz9FPGgcgtB9gk_UrLPnUo6V=h1p=th5Ddg@mail.gmail.com>
+References: <CADzS=aoy=7sb7fdKy3tH3tHtbBmnm0vSQ4vyYK0SCX-Ekis0Uw@mail.gmail.com>
+ <50D93BBC.5020206@turmel.org> <CADzS=ar9c7hC1Z7HT9pTUEnoPR+jeo8wdexrrsFbVfPnZ9Tbmg@mail.gmail.com>
+ <50DA5DC7.8000405@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <50DA5DC7.8000405@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: =?gb2312?B?1twsIPfo?= <qi.g.zhou@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-SW4gY29tbWl0IDFlZDg1MGYzNTZhMGE0MjIwLCBpdCByZW1vdmVkIHRob3NlIGp1ZGdlbWVudCBp
-biBmdW5jDQpoYW5kbGVfZmFpbGVkX3N0cmlwZS4NCkJ1dCBpIGZvdW5kIGl0IGNhbiBjYXVzZSBh
-IHdhcmluZyBlcnJvci4NCldoZW4gd3JvdGUgZGF0YSB0byBhIGZhaWxlZCByYWlkNSBhcnJheSwg
-dGhlIGtlcm5lbCB3aWxsIHByaW50IHRob3NlDQptZXNzYWdlczoNCg0KWyAgMzgxLjM1MDQ5NF0g
-c2VjdG9yPTJlMTgwIGk9MSAgIChudWxsKSAgKG51bGwpIChudWxsKSAobnVsbCkgMQ0KWyAgMzgx
-LjM1MDQ5NV0gLS0tLS0tLS0tLS0tWyBjdXQgaGVyZSBdLS0tLS0tLS0tLS0tDQpbICAzODEuMzUw
-NDk3XSBXQVJOSU5HOiBhdCBkcml2ZXJzL21kL3JhaWQ1LmM6MzU2DQpnZXRfYWN0aXZlX3N0cmlw
-ZSsweDU1Yy8weDViMCBbcmFpZDQ1Nl0oKQ0KWyAgMzgxLjM1MDQ5OF0gSGFyZHdhcmUgbmFtZTog
-VG8gQmUgRmlsbGVkIEJ5IE8uRS5NLg0KWyAgMzgxLjM1MDQ5OV0gTW9kdWxlcyBsaW5rZWQgaW46
-IHJhaWQ0NTYgYXN5bmNfcHEgYXN5bmNfeG9yIHhvcg0KYXN5bmNfbWVtY3B5IGFzeW5jX3JhaWQ2
-X3JlY292IHJhaWQ2X3BxIGFzeW5jX3R4IFtsYXN0IHVubG9hZGVkOnJhaWQ0NTZdDQpbICAzODEu
-MzUwNTA0XSBQaWQ6IDY5NzEsIGNvbW06IGZsdXNoLTk6MCBUYWludGVkOiBHICAgICAgICBXICBP
-IDMuOC4wLXJjMSsgIzENClsgIDM4MS4zNTA1MDVdIENhbGwgVHJhY2U6DQpbICAzODEuMzUwNTA3
-XSAgWzxmZmZmZmZmZjgxMDNhNDRhPl0gd2Fybl9zbG93cGF0aF9jb21tb24rMHg3YS8weGIwDQpb
-ICAzODEuMzUwNTA5XSAgWzxmZmZmZmZmZjgxMDNhNDk1Pl0gd2Fybl9zbG93cGF0aF9udWxsKzB4
-MTUvMHgyMA0KWyAgMzgxLjM1MDUxMl0gIFs8ZmZmZmZmZmZhMDA0NTRmYz5dIGdldF9hY3RpdmVf
-c3RyaXBlKzB4NTVjLzB4NWIwIFtyYWlkNDU2XQ0KWyAgMzgxLjM1MDUxNF0gIFs8ZmZmZmZmZmZh
-MDA0NTExZD5dID8gZ2V0X2FjdGl2ZV9zdHJpcGUrMHgxN2QvMHg1YjAgW3JhaWQ0NTZdDQpbICAz
-ODEuMzUwNTE3XSAgWzxmZmZmZmZmZjgxMDVkMTJiPl0gPyBwcmVwYXJlX3RvX3dhaXQrMHg1Yi8w
-eDkwDQpbICAzODEuMzUwNTE5XSAgWzxmZmZmZmZmZmEwMDRjM2QwPl0gbWFrZV9yZXF1ZXN0KzB4
-MWEwLzB4YTgwIFtyYWlkNDU2XQ0KWyAgMzgxLjM1MDUyMV0gIFs8ZmZmZmZmZmY4MTA1ZDI4MD5d
-ID8gYWRkX3dhaXRfcXVldWUrMHg2MC8weDYwDQpbICAzODEuMzUwNTIzXSAgWzxmZmZmZmZmZjgx
-NGM2YzY2Pl0gbWRfbWFrZV9yZXF1ZXN0KzB4YzYvMHgyMDANClsgIDM4MS4zNTA1MjZdICBbPGZm
-ZmZmZmZmODEwZTRhODk+XSA/IG1lbXBvb2xfYWxsb2MrMHg1OS8weDE2MA0KWyAgMzgxLjM1MDUy
-OF0gIFs8ZmZmZmZmZmY4MTI5MjhiMj5dIGdlbmVyaWNfbWFrZV9yZXF1ZXN0KzB4YzIvMHgxMDAN
-ClsgIDM4MS4zNTA1MzBdICBbPGZmZmZmZmZmODEyOTI5NTU+XSBzdWJtaXRfYmlvKzB4NjUvMHgx
-MzANClsgIDM4MS4zNTA1MzFdICBbPGZmZmZmZmZmODExNWRhNzA+XSBzdWJtaXRfYmgrMHgxMTAv
-MHgxZTANClsgIDM4MS4zNTA1MzNdICBbPGZmZmZmZmZmODExNjExMDg+XSBfX2Jsb2NrX3dyaXRl
-X2Z1bGxfcGFnZSsweDFjOC8weDM1MA0KWyAgMzgxLjM1MDUzNl0gIFs8ZmZmZmZmZmY4MTE1ZjNi
-MD5dID8gZW5kX2J1ZmZlcl9hc3luY19yZWFkKzB4MTMwLzB4MTMwDQpbICAzODEuMzUwNTM4XSAg
-WzxmZmZmZmZmZjgxMTYzZDAwPl0gPyBJX0JERVYrMHgxMC8weDEwDQpbICAzODEuMzUwNTQwXSAg
-WzxmZmZmZmZmZjgxMTYzZDAwPl0gPyBJX0JERVYrMHgxMC8weDEwDQpbICAzODEuMzUwNTQyXSAg
-WzxmZmZmZmZmZjgxMTYxMzU1Pl0gYmxvY2tfd3JpdGVfZnVsbF9wYWdlX2VuZGlvKzB4YzUvMHgx
-MDANClsgIDM4MS4zNTA1NDRdICBbPGZmZmZmZmZmODExNjEzYTA+XSBibG9ja193cml0ZV9mdWxs
-X3BhZ2UrMHgxMC8weDIwDQpbICAzODEuMzUwNTQ2XSAgWzxmZmZmZmZmZjgxMTY0NWMzPl0gYmxr
-ZGV2X3dyaXRlcGFnZSsweDEzLzB4MjANClsgIDM4MS4zNTA1NDhdICBbPGZmZmZmZmZmODEwZWI3
-ZDI+XSBfX3dyaXRlcGFnZSsweDEyLzB4NDANClsgIDM4MS4zNTA1NTBdICBbPGZmZmZmZmZmODEw
-ZWJjNjU+XSB3cml0ZV9jYWNoZV9wYWdlcysweDIxNS8weDQ5MA0KWyAgMzgxLjM1MDU1Ml0gIFs8
-ZmZmZmZmZmY4MTBlYjdjMD5dID8gc2V0X3BhZ2VfZGlydHlfbG9jaysweDUwLzB4NTANClsgIDM4
-MS4zNTA1NTRdICBbPGZmZmZmZmZmODEwZWJmMjU+XSBnZW5lcmljX3dyaXRlcGFnZXMrMHg0NS8w
-eDcwDQpbICAzODEuMzUwNTU2XSAgWzxmZmZmZmZmZjgxMGVkNmViPl0gZG9fd3JpdGVwYWdlcysw
-eDFiLzB4MzANClsgIDM4MS4zNTA1NThdICBbPGZmZmZmZmZmODExNTRiNzY+XSBfX3dyaXRlYmFj
-a19zaW5nbGVfaW5vZGUrMHgzNi8weDE3MA0KWyAgMzgxLjM1MDU2MF0gIFs8ZmZmZmZmZmY4MTA1
-Y2U3Nj5dID8gYml0X3dhaXRxdWV1ZSsweDE2LzB4YzANClsgIDM4MS4zNTA1NjNdICBbPGZmZmZm
-ZmZmODExNTZjOWI+XSB3cml0ZWJhY2tfc2JfaW5vZGVzKzB4MTliLzB4M2MwDQpbICAzODEuMzUw
-NTY1XSAgWzxmZmZmZmZmZjgxMTU2ZjU2Pl0gX193cml0ZWJhY2tfaW5vZGVzX3diKzB4OTYvMHhj
-MA0KWyAgMzgxLjM1MDU2N10gIFs8ZmZmZmZmZmY4MTE1NzE3Yj5dIHdiX3dyaXRlYmFjaysweDFm
-Yi8weDMyMA0KWyAgMzgxLjM1MDU2OV0gIFs8ZmZmZmZmZmY4MTBlYjYwNT5dID8gZ2xvYmFsX2Rp
-cnR5YWJsZV9tZW1vcnkrMHgxNS8weDQwDQpbICAzODEuMzUwNTcyXSAgWzxmZmZmZmZmZjgxMTU4
-ODA4Pl0gd2JfZG9fd3JpdGViYWNrKzB4MTI4LzB4MWQwDQpbICAzODEuMzUwNTc0XSAgWzxmZmZm
-ZmZmZjgxMTU4OTQzPl0gYmRpX3dyaXRlYmFja190aHJlYWQrMHg5My8weDI2MA0KWyAgMzgxLjM1
-MDU3Nl0gIFs8ZmZmZmZmZmY4MTE1ODhiMD5dID8gd2JfZG9fd3JpdGViYWNrKzB4MWQwLzB4MWQw
-DQpbICAzODEuMzUwNTc4XSAgWzxmZmZmZmZmZjgxMDVjOWJiPl0ga3RocmVhZCsweGJiLzB4YzAN
-ClsgIDM4MS4zNTA1ODBdICBbPGZmZmZmZmZmODEwNWM5MDA+XSA/IGZsdXNoX2t0aHJlYWRfd29y
-aysweDEyMC8weDEyMA0KWyAgMzgxLjM1MDU4Ml0gIFs8ZmZmZmZmZmY4MTZlZTBhYz5dIHJldF9m
-cm9tX2ZvcmsrMHg3Yy8weGIwDQpbICAzODEuMzUwNTg0XSAgWzxmZmZmZmZmZjgxMDVjOTAwPl0g
-PyBmbHVzaF9rdGhyZWFkX3dvcmsrMHgxMjAvMHgxMjANCg0KQmVjYXVzZSB0b193cml0ZSBkaWQg
-bm90IGRlY3JlYXNlLHNvICB0aGUgdG9fd3JpdGUgaXMgbGFyZ2VyIHRoYW4NCnplcm8uIFNvIGl0
-IHdpbGwgZXhlYzoNCj4gICAgICAgaWYgKHMudG9fd3JpdGUgJiYgIXNoLT5yZWNvbnN0cnVjdF9z
-dGF0ZSAmJiAhc2gtPmNoZWNrX3N0YXRlKQ0KPiAgICAgICAgICAgICAgIGhhbmRsZV9zdHJpcGVf
-ZGlydHlpbmcoY29uZiwgc2gsICZzLCBkaXNrcyk7DQpJbiBoYW5kbGVfc3RyaXBlX2RpcnR5aW5n
-LCBpdCB3aWxsIGNhbGwgZnVuYyBzY2hlZHVsZV9yZWNvbnN0cnVjdGlvbi4NCkluIGZ1bmMgc2No
-ZWR1bGVfcmVjb25zdHJ1Y3Rpb24sIGl0IHNldCBSNV9MT0NLRSBmbGFnLg0KU28gaW4gIGZ1bmMg
-aW5pdF9zdHJpcGUgcHJpbnQgdGhlIG1lc3NhZ2UgYW5kIGNhbGwgV0FSTl9PTkUoMSkuDQoNCk9u
-Y2Ugd2UgZGlzY3Vzc2VkIHRoaXMgcHJvYmxlbS5UaGUgaW5mbyBjYW4gZ2V0IGZyb20NCmh0dHA6
-Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvcmFpZC9tc2c0MDUxOS5odG1sLg0KDQpTbyBpIHVzZWQg
-bXkgcHJldmlvdXMgcGF0Y2ggdG8gcmVzZW5kLg0KDQpSZXBvcnRlZC1ieTogemhvdXFpIDxxaS5n
-Lnpob3VAZ21haWwuY29tPg0KVGVzdGVkLWJ5OiB6aG91cWkgPHFpLmcuemhvdUBnbWFpbC5jb20+
-DQpTaWduZWQtb2ZmLWJ5OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQotLS0N
-CiBkcml2ZXJzL21kL3JhaWQ1LmMgfCAgIDEwICsrKysrKystLS0NCiAxIGZpbGUgY2hhbmdlZCwg
-NyBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9t
-ZC9yYWlkNS5jIGIvZHJpdmVycy9tZC9yYWlkNS5jDQppbmRleCAxOWQ3N2EwLi41MmFkNzUxIDEw
-MDY0NA0KLS0tIGEvZHJpdmVycy9tZC9yYWlkNS5jDQorKysgYi9kcml2ZXJzL21kL3JhaWQ1LmMN
-CkBAIC0yNTIwLDggKzI1MjAsMTAgQEAgaGFuZGxlX2ZhaWxlZF9zdHJpcGUoc3RydWN0IHI1Y29u
-ZiAqY29uZiwgc3RydWN0IHN0cmlwZV9oZWFkICpzaCwNCiAJCWJpID0gc2gtPmRldltpXS50b3dy
-aXRlOw0KIAkJc2gtPmRldltpXS50b3dyaXRlID0gTlVMTDsNCiAJCXNwaW5fdW5sb2NrX2lycSgm
-c2gtPnN0cmlwZV9sb2NrKTsNCi0JCWlmIChiaSkNCisJCWlmIChiaSkgew0KKwkJCXMtPnRvX3dy
-aXRlLS07DQogCQkJYml0bWFwX2VuZCA9IDE7DQorCQl9DQogDQogCQlpZiAodGVzdF9hbmRfY2xl
-YXJfYml0KFI1X092ZXJsYXAsICZzaC0+ZGV2W2ldLmZsYWdzKSkNCiAJCQl3YWtlX3VwKCZjb25m
-LT53YWl0X2Zvcl9vdmVybGFwKTsNCkBAIC0yNTY5LDYgKzI1NzEsOCBAQCBoYW5kbGVfZmFpbGVk
-X3N0cmlwZShzdHJ1Y3QgcjVjb25mICpjb25mLCBzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoLA0KIAkJ
-CXNwaW5fdW5sb2NrX2lycSgmc2gtPnN0cmlwZV9sb2NrKTsNCiAJCQlpZiAodGVzdF9hbmRfY2xl
-YXJfYml0KFI1X092ZXJsYXAsICZzaC0+ZGV2W2ldLmZsYWdzKSkNCiAJCQkJd2FrZV91cCgmY29u
-Zi0+d2FpdF9mb3Jfb3ZlcmxhcCk7DQorCQkJaWYgKGJpKQ0KKwkJCQlzLT50b19yZWFkLS07DQog
-CQkJd2hpbGUgKGJpICYmIGJpLT5iaV9zZWN0b3IgPA0KIAkJCSAgICAgICBzaC0+ZGV2W2ldLnNl
-Y3RvciArIFNUUklQRV9TRUNUT1JTKSB7DQogCQkJCXN0cnVjdCBiaW8gKm5leHRiaSA9DQpAQCAt
-MzU3MSw3ICszNTc1LDcgQEAgc3RhdGljIHZvaWQgaGFuZGxlX3N0cmlwZShzdHJ1Y3Qgc3RyaXBl
-X2hlYWQgKnNoKQ0KIAkgKiBwYXJpdHksIG9yIHRvIHNhdGlzZnkgcmVxdWVzdHMNCiAJICogb3Ig
-dG8gbG9hZCBhIGJsb2NrIHRoYXQgaXMgYmVpbmcgcGFydGlhbGx5IHdyaXR0ZW4uDQogCSAqLw0K
-LQlpZiAocy50b19yZWFkIHx8IHMubm9uX292ZXJ3cml0ZQ0KKwlpZiAocy50b19yZWFkID4gMCB8
-fCBzLm5vbl9vdmVyd3JpdGUNCiAJICAgIHx8IChjb25mLT5sZXZlbCA9PSA2ICYmIHMudG9fd3Jp
-dGUgJiYgcy5mYWlsZWQpDQogCSAgICB8fCAocy5zeW5jaW5nICYmIChzLnVwdG9kYXRlICsgcy5j
-b21wdXRlIDwgZGlza3MpKQ0KIAkgICAgfHwgcy5yZXBsYWNpbmcNCkBAIC0zNTg0LDcgKzM1ODgs
-NyBAQCBzdGF0aWMgdm9pZCBoYW5kbGVfc3RyaXBlKHN0cnVjdCBzdHJpcGVfaGVhZCAqc2gpDQog
-CSAqIDIvIEEgJ2NoZWNrJyBvcGVyYXRpb24gaXMgaW4gZmxpZ2h0LCBhcyBpdCBtYXkgY2xvYmJl
-ciB0aGUgcGFyaXR5DQogCSAqICAgIGJsb2NrLg0KIAkgKi8NCi0JaWYgKHMudG9fd3JpdGUgJiYg
-IXNoLT5yZWNvbnN0cnVjdF9zdGF0ZSAmJiAhc2gtPmNoZWNrX3N0YXRlKQ0KKwlpZiAocy50b193
-cml0ZSA+IDAgJiYgIXNoLT5yZWNvbnN0cnVjdF9zdGF0ZSAmJiAhc2gtPmNoZWNrX3N0YXRlKQ0K
-IAkJaGFuZGxlX3N0cmlwZV9kaXJ0eWluZyhjb25mLCBzaCwgJnMsIGRpc2tzKTsNCiANCiAJLyog
-bWF5YmUgd2UgbmVlZCB0byBjaGVjayBhbmQgcG9zc2libHkgZml4IHRoZSBwYXJpdHkgZm9yIHRo
-aXMgc3RyaXBlDQotLSANCjEuNy45LjUNCg==
+thank you
+i just reboot to see the status of all my disk
+and i saw that all the superblock didn't say the same thing
+so i did :
+mdadm --stop /dev/md0
+mdadm --assemble --force /dev/md0 /dev/sd[bcd]1
 
+and now it's perfectly working
+thanks
+
+i'm currently looking for how to do a good monitoring
+
+On Tue, Dec 25, 2012 at 9:15 PM, Phil Turmel <philip@turmel.org> wrote:
+> On 12/25/2012 07:16 PM, bobzer wrote:
+>> thanks to help me
+>
+> No problem, but please *don't* top-post, and *do* trim replies.  Also,
+> use reply-to-all on kernel.org mailing lists.
+>
+>> root@debian:~# mdadm -E /dev/sd[bcd]1
+>> /dev/sdb1:
+>>           Magic : a92b4efc
+>>         Version : 1.2
+>>     Feature Map : 0x0
+>>      Array UUID : bf3c605b:9699aa55:d45119a2:7ba58d56
+>>            Name : debian:0  (local to host debian)
+>>   Creation Time : Sun Mar  4 22:49:14 2012
+>>      Raid Level : raid5
+>>    Raid Devices : 3
+>>
+>>  Avail Dev Size : 3907021954 (1863.01 GiB 2000.40 GB)
+>>      Array Size : 7814043136 (3726.03 GiB 4000.79 GB)
+>>   Used Dev Size : 3907021568 (1863.01 GiB 2000.40 GB)
+>>     Data Offset : 2048 sectors
+>>    Super Offset : 8 sectors
+>>           State : clean
+>>     Device UUID : 5e71f69a:a78b0cd7:bbbb7ecb:cf81f9f6
+>>
+>>     Update Time : Tue Dec 25 06:25:02 2012
+>>   Bad Block Log : 512 entries available at offset 2032 sectors
+>>        Checksum : 922ddaa8 - correct
+>>          Events : 413
+>>
+>>          Layout : left-symmetric
+>>      Chunk Size : 128K
+>>
+>>    Device Role : Active device 0
+>>    Array State : A.. ('A' == active, '.' == missing)
+>> mdadm: No md superblock detected on /dev/sdc1.
+>> mdadm: No md superblock detected on /dev/sdd1.
+>
+> This is bad.  The two disks are still offline.  You must find and fix
+> the hardware problem that is keeping these two disks from communicating.
+>  Unless the two disks suffered a simultaneous power surge, the odds they
+> are OK is good.  But look at your cables, controller, or power supply.
+>
+>> I would like to understand too
+>> dmesg (with the begin removed) show a lot of error :
+>> http://pastebin.com/D1D8AKF9
+>
+> I browsed it: all attempts to communicate with those two drives failed.
+>  That must be fixed first.  Then we can help you recover the data.  If
+> you can plug the three drives into another machine, that would be the
+> simplest way to isolate the problem.
+>
+> HTH,
+>
+> Phil
