@@ -1,84 +1,34 @@
-From: bobzer <bobzer@gmail.com>
-Subject: Re:
-Date: Wed, 26 Dec 2012 06:29:26 -0500
-Message-ID: <CADzS=arqtAw0nw9kz9FPGgcgtB9gk_UrLPnUo6V=h1p=th5Ddg@mail.gmail.com>
-References: <CADzS=aoy=7sb7fdKy3tH3tHtbBmnm0vSQ4vyYK0SCX-Ekis0Uw@mail.gmail.com>
- <50D93BBC.5020206@turmel.org> <CADzS=ar9c7hC1Z7HT9pTUEnoPR+jeo8wdexrrsFbVfPnZ9Tbmg@mail.gmail.com>
- <50DA5DC7.8000405@turmel.org>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Any risk switching mdadm to static?
+Date: Wed, 26 Dec 2012 09:57:39 -0800
+Message-ID: <CAK2H+ee_u3bc7ZgN9z9CJbuSN+8HVyeTLwRaCn5hCP1fB3w8NQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50DA5DC7.8000405@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-thank you
-i just reboot to see the status of all my disk
-and i saw that all the superblock didn't say the same thing
-so i did :
-mdadm --stop /dev/md0
-mdadm --assemble --force /dev/md0 /dev/sd[bcd]1
+Hi,
+   I run a bunch of home Gentoo systems most of which use mdadm,
+currently version 3.1.4. I do not currently use initramfs's on any of
+these systems but figure it's time for me to crawl out of my dark ages
+swamp and try to become more enlightened.
 
-and now it's perfectly working
-thanks
+   QUESTION: Is there an significant risk that a normal Gentoo system
+of the stable variety (I.e. - not ~amd64) would encounter any problems
+booting if mdadm-3.1.4 was rebuilt using the static flag? If it
+matters most of my RAIDs are metadata-0.9. One is 1.2.
 
-i'm currently looking for how to do a good monitoring
+   If I did encounter a problem and couldn't boot is there a way to recover?
 
-On Tue, Dec 25, 2012 at 9:15 PM, Phil Turmel <philip@turmel.org> wrote:
-> On 12/25/2012 07:16 PM, bobzer wrote:
->> thanks to help me
->
-> No problem, but please *don't* top-post, and *do* trim replies.  Also,
-> use reply-to-all on kernel.org mailing lists.
->
->> root@debian:~# mdadm -E /dev/sd[bcd]1
->> /dev/sdb1:
->>           Magic : a92b4efc
->>         Version : 1.2
->>     Feature Map : 0x0
->>      Array UUID : bf3c605b:9699aa55:d45119a2:7ba58d56
->>            Name : debian:0  (local to host debian)
->>   Creation Time : Sun Mar  4 22:49:14 2012
->>      Raid Level : raid5
->>    Raid Devices : 3
->>
->>  Avail Dev Size : 3907021954 (1863.01 GiB 2000.40 GB)
->>      Array Size : 7814043136 (3726.03 GiB 4000.79 GB)
->>   Used Dev Size : 3907021568 (1863.01 GiB 2000.40 GB)
->>     Data Offset : 2048 sectors
->>    Super Offset : 8 sectors
->>           State : clean
->>     Device UUID : 5e71f69a:a78b0cd7:bbbb7ecb:cf81f9f6
->>
->>     Update Time : Tue Dec 25 06:25:02 2012
->>   Bad Block Log : 512 entries available at offset 2032 sectors
->>        Checksum : 922ddaa8 - correct
->>          Events : 413
->>
->>          Layout : left-symmetric
->>      Chunk Size : 128K
->>
->>    Device Role : Active device 0
->>    Array State : A.. ('A' == active, '.' == missing)
->> mdadm: No md superblock detected on /dev/sdc1.
->> mdadm: No md superblock detected on /dev/sdd1.
->
-> This is bad.  The two disks are still offline.  You must find and fix
-> the hardware problem that is keeping these two disks from communicating.
->  Unless the two disks suffered a simultaneous power surge, the odds they
-> are OK is good.  But look at your cables, controller, or power supply.
->
->> I would like to understand too
->> dmesg (with the begin removed) show a lot of error :
->> http://pastebin.com/D1D8AKF9
->
-> I browsed it: all attempts to communicate with those two drives failed.
->  That must be fixed first.  Then we can help you recover the data.  If
-> you can plug the three drives into another machine, that would be the
-> simplest way to isolate the problem.
->
-> HTH,
->
-> Phil
+   Please note, I'm not asking right now about using mdadm from within
+an initramfs. I'm only trying to ensure that if I rebuild mdadm with
+the static flag the current system is still likely to boot OK.
+
+   Folks on the Gentoo list say they didn't have any problems
+switching, but they switched a long, long time ago so I'm just trying
+to be extra sure.
+
+Thanks in advance,
+Mark
