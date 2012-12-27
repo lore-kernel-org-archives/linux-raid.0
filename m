@@ -1,63 +1,42 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: md: kicking non-fresh sdf3 from array!
-Date: Thu, 27 Dec 2012 12:52:13 -0800
-Message-ID: <CAK2H+efAsceZge7==Y8KrXE0AKJJqRZH0G4SCzzdUewStGTqkg@mail.gmail.com>
-References: <CAK2H+effDWFWP32wO4vXPSQ16tgZKdBwvQRRiq+Qpy03VCE6xA@mail.gmail.com>
-	<50DCA819.80809@turmel.org>
-	<CAK2H+ecBALbrpshYQ5TZhuOJh_kgXqi_C90Zp-FtCgaE4dEgSw@mail.gmail.com>
-	<50DCAE69.1080003@turmel.org>
-	<50DCAEAD.3090205@turmel.org>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: possibly silly configuration question
+Date: Thu, 27 Dec 2012 22:11:40 +0100 (CET)
+Message-ID: <20756838.10.1356642700349.JavaMail.root@zimbra>
+References: <50DBCB88.5070408@meetinghouse.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50DCAEAD.3090205@turmel.org>
+In-Reply-To: <50DBCB88.5070408@meetinghouse.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Miles Fidelman <mfidelman@meetinghouse.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Dec 27, 2012 at 12:25 PM, Phil Turmel <philip@turmel.org> wrote:
-> Whoops!  The list was dropped...
->
-> On 12/27/2012 03:24 PM, Phil Turmel wrote:
->> On 12/27/2012 03:20 PM, Mark Knecht wrote:
->>> Thanks Phil,
->>>    I've added the device back in and the rebuild is proceeding.
->>>
->>>    So the new piece of info here for me is this idea of a bitmap. I'll
->>> have to go look into that, but a quick question - is that something
->>> that can be added to the RAID6 at this time, or can you only do that
->>> when you first build it? As I have some issue with my (possibly)
->>> initramfs I expect I'll kick the devices a few more times before I get
->>> it worked out. Would be nice if putting the disk back in didn't take
->>> so long.
->>
->> You can add a bitmap to any v1.x array after the fact with "--grow".  It
->> does add a little overhead to the write path, so you might not want it
->> in a heavily loaded server.  For a test-bed or other system prone to
->> crashes, it's a godsend.
->>
->> Phil
+> I find myself having four servers, each with 4 large disks, that I'm
+> trying to assemble into a high-availability cluster. (Note: I've got =
+4
+> gigE ports on each box, 2 set aside for outside access, 2 for
+> inter-node clustering)
 
+Why not glusterfs? It's designed for you needs=E2=80=A6
 
-So it was. Thanks for catching that.
+Vennlige hilsener / Best regards
 
-OK, so adding the bitmap looks straight-forward
-
-mdadm --grow --bitmap=internal /dev/md3
-
-and then wait, although I think I can continue to use the RAID while
-this is progressing.
-
-I cannot see that someone like me (or rather my usage model - home
-compute server doing 2 or 3 fairly heavily loaded Windows VMs most of
-the day) would want anything other than an internal bitmap, correct?
-Note that the VM files actually reside on a different RAID, which is
-rather unfortunately part of the same set of disks but different
-partitions. As I said, this has been a learning process. (!) My hope
-is that over time I can move all of these different things to this one
-RAID6, reclaim disk space, grow the RAID6, etc., until I get the whole
-disk back.
-
-Thanks,
-Mark
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
