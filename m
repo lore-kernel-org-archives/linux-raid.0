@@ -1,92 +1,55 @@
-From: Tommy Apel Hansen <tommyapeldk@gmail.com>
-Subject: Re: Any risk switching mdadm to static?
-Date: Wed, 26 Dec 2012 20:55:55 +0100
-Message-ID: <1356551755.3016.9.camel@workstation-home>
-References: <CAK2H+ee_u3bc7ZgN9z9CJbuSN+8HVyeTLwRaCn5hCP1fB3w8NQ@mail.gmail.com>
-	 <1356550368.3016.3.camel@workstation-home>
-	 <CAK2H+efpHB-Okn_PaitAKmLPKwmn1kNZzJpEvM-BW7fWWwrZVw@mail.gmail.com>
+From: Miles Fidelman <mfidelman@meetinghouse.net>
+Subject: possibly silly configuration question
+Date: Wed, 26 Dec 2012 23:16:08 -0500
+Message-ID: <50DBCB88.5070408@meetinghouse.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAK2H+efpHB-Okn_PaitAKmLPKwmn1kNZzJpEvM-BW7fWWwrZVw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Knecht <markknecht@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello Mark,
-Well if you need some inspiration then try and look into the genkernel
-image it might help you get along, one thing you could also do is to run
-through the whole examine process and let mdadm detect things along the
-way, but in case you want to include the initramfs into the kernel I
-would suggest to make the separate initramfs file first and confirm that
-it actually works before building it into the kernel as a full rebuild
-every time you want to change something might push your patience to full
-extend, just saying. 
+Hi Folks,
 
-/Tommy 
+I find myself having four servers, each with 4 large disks, that I'm 
+trying to assemble into a high-availability cluster.  (Note: I've got 4 
+gigE ports on each box, 2 set aside for outside access, 2 for inter-node 
+clustering)
 
-On Wed, 2012-12-26 at 11:45 -0800, Mark Knecht wrote:
-> On Wed, Dec 26, 2012 at 11:32 AM, Tommy Apel Hansen
-> <tommyapeldk@gmail.com> wrote:
-> > Hello Mark,
-> > if you use genkernel initramfs you shouldn't have any problems, just
-> > make sure you mdadm.conf is up to date when you ask genkernel to make
-> > the initramfs, what the initramfs does it to boot your system into a
-> > ramdisk and then initialize everything from there before pivoting into
-> > the real OS, worst case you'll end up in a rescure shell where you can
-> > start up the md's and then ask the system to use them after you exit the
-> > shell.
-> >
-> > /Tommy
-> 
-> Hi Tommy,
->    OK, that's interesting info and something I hadn't considered was the
-> impact of mdadm.conf. I'm not using genkernel - again, working by hand
-> as a learning experience. I'd like to build the image into my kernel and
-> not have it as a separate file on disk.
-> 
-> The kernel documentation and help on Genoo-Users has me
-> considering a config file something like the following which the kernel
-> build would use to create the initramfs image it includes in the
-> kernel file:
-> 
-> dir /bin 755 0 0
-> file /bin/busybox /bin/busybox 755 0 0
-> slink /bin/sh busybox 777 0 0
-> 
-> dir /realroot 755 0 0
-> dir /etc 755 0 0
-> dir /proc 755 0 0
-> dir /sys 755 0 0
-> 
-> dir /sbin 755 0 0
-> file /sbin/mdadm /sbin/mdadm 755 0 0
-> 
-> file /sbin/e2fsck /sbin/e2fsck 755 0 0
-> dir /lib 755 0 0
-> file /lib/libext2fs.so /usr/lib64/libext2fs.so 755 0 0
-> 
-> dir /dev 755 0 0
-> nod /dev/console 600 0 0 c 5 1
-> nod /dev/null 666 0 0 c 1 3
-> nod /dev/tty 666 0 0 c 5 0
-> nod /dev/urandom 666 0 0 c 1 9
-> 
-> file /init /usr/src/init.sh 755 0 0
-> 
-> 
-> 
-> It sounds like I should consider adding something like
-> 
-> file /etc/mdadm.conf /etc/mdadm.conf 755 0 0
-> 
-> to that. At least I'd have the data available in case I have to
-> start them by hand.
-> 
-> Thanks for your input!
-> 
-> - Mark
+Now it's easy enough to RAID disks on each server, and/or mirror disks 
+pair-wise with DRBD, but DRBD doesn't work as well with >2 servers.
 
+No what I really should do is separate storage nodes from compute nodes 
+- but I'm limited by rack space and chassis configuration of the 
+hardware I've got, and I've been thinking through various configurations 
+to make use of the resources at hand.
+
+One option is to put all the drives into one large pool managed by 
+gluster - but I expect that would result in some serious performance 
+hits (and gluster's replicated/distributed mode is fairly new).
+
+It's late at night and a thought occurred to me that is probably 
+wrongheaded (or at least silly) - but maybe I'm too tired to see any 
+obvious problems.  So I'd welcome 2nd (and 3rd) opinions.
+
+The basic notion:
+- mount all 16 drives as network block devices via iSCSI or AoE
+- build 4 RAID10 volumes - each volume consisting of one drive from each 
+server
+- run LVM on top of the RAID volumes
+- then use NFS or maybe OCFS2 to make volumes available across nodes
+- of course md would be running on only one node (for each array), so if 
+a node goes down, use pacemaker to startup md on another node, 
+reassemble the array, and remount everything
+
+Does this make sense, or is it totally crazy?
+
+Thanks much,
+
+Miles Fidelman
+
+-- 
+In theory, there is no difference between theory and practice.
+In practice, there is.   .... Yogi Berra
 
