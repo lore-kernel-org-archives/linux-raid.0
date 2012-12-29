@@ -1,49 +1,103 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Linear raid extend component
-Date: Sat, 29 Dec 2012 14:24:08 -0600
-Message-ID: <50DF5168.9050703@hardwarefreak.com>
-References: <CE9AB803-93DD-4A9A-BA97-FD5F323833DE@websitemanagers.com.au> <E2F855BB-D735-4186-8A0A-92DB8024A5DE@colorremedies.com>
-Reply-To: stan@hardwarefreak.com
+From: Ciprian Dorin Craciun <ciprian.craciun@gmail.com>
+Subject: Adding a fresh drive to a degraded RAID1 (not as spare but instead of
+ a "removed" device)
+Date: Sat, 29 Dec 2012 22:52:16 +0200
+Message-ID: <CA+Tk8fzcugVx1OoMnut4Dg8OEEmLNeFQj0qSNu8hrsrwENuJCw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <E2F855BB-D735-4186-8A0A-92DB8024A5DE@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/29/2012 12:14 PM, Chris Murphy wrote:
-> 
-> On Dec 29, 2012, at 4:44 AM, Adam Goryachev <adam@websitemanagers.com.au> wrote:
-> 
->>
->> Then when complete:
->> mdadm --grow /dev/md3 --size=max
-> 
-> In a VM I'm unable to get a linear device to grow. I think you can only grow linear by adding devices. You could partition the 3TB such that the 1st partition matches the total sectors of the partition on the replaced 1TB drive; then add the 2TB partition of the 3TB drive onto the end of the linear array. It'd work, but it's a weird configuration. You're better off reverting to the original setup, and adding the 3TB drives at the end, then growing the file system.
+    Hello all!
 
-Somebody posted the same scenario a few weeks ago.  The only 'proper'
-way to do this is to swap out the drives in the last RAID1 pair in the
-linear array.
+    Although I've done this a couple of times before, I don't know
+what I'm doing wrong here, but I can't add a device to a degraded
+RAID1...
 
-The whole point of the linear array, or concatenation, is to constantly
-add drives to expand.  Swapping drives in a concat with larger units was
-never anticipated as a valid growth option.  As Chris states, you can do
-this with partitions, but it is not elegant.
+    My guess is that it's either from the feature "mix" or something
+else that escapes me...
+    * I use LVM2 as MD members; (this worked before, thus I would exclude this;)
+    * I use "write intent bitmap";
+    * I use "write mostly"; (this has also worked before...)
 
-Since your total array size is ~3TB, if you're using XFS, you could
-simply do a dump to one of the new 3TB drives.  Afterwards you can
-simply blow away everything and start over, creating a RAID1 with the
-remaining 3TB drive but with a missing drive.  Then create the RAID1
-with the 2x 2TB drives.  Then create the linear array and format it.
-Then do a restore of the XFS filesystem.  Then add the 3TB drive to the
-missing RAID1.
+    Here are my commands:
+    * I create the degraded MD device:
+~~~~
+mdadm \
+    --verbose \
+    --create \
+    /dev/md/raid \
+    --level=raid1 \
+    --metadata=1.0 \
+    --raid-devices=3 \
+    --spare-devices=0 \
+    --write-behind=1024 \
+    --bitmap=internal \
+    --bitmap-chunk=1M \
+    --name=raid-device \
+    --auto=md \
+    /dev/mapper/raid-member-1 \
+    missing \
+    missing
+~~~~
+    * I then create an Ext2 file system and fill it;
+    * I then intend to add a new device to the mirror:
+~~~~
+mdadm \
+    --verbose \
+    --manage \
+    /dev/md/raid \
+    --add \
+    --write-mostly \
+    /dev/mapper/raid-member-2
+~~~~
 
-You can do the same thing with any filesystem but you'll be using 'cp
--a' or rsync, etc, to move the files around, which is much slower.
+    Unfortunately the `raid-member-2` appears as faulty and refuses to
+be added... Initially this disk was all `0x00`... But I've also tried
+to "zero" the superblock. (The block device is writable because I can
+zero it...)
+~~~~
+mdadm \
+    --zero-superblock \
+    --metadata=1.0 \
+    /dev/mapper/raid-member-2
+~~~~
 
--- 
-Stan
+    The output of query gives:
+~~~~
+        Version : 1.0
+  Creation Time : Sat Dec 29 15:44:26 2012
+     Raid Level : raid1
+     Array Size : 67108736 (64.00 GiB 68.72 GB)
+  Used Dev Size : 67108736 (64.00 GiB 68.72 GB)
+   Raid Devices : 3
+  Total Devices : 2
+    Persistence : Superblock is persistent
 
+  Intent Bitmap : Internal
+
+    Update Time : Sat Dec 29 22:56:15 2012
+          State : active, degraded
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 1
+  Spare Devices : 0
+
+           Name : ...
+           UUID : ...
+         Events : 591
+
+    Number   Major   Minor   RaidDevice State
+       0     254        0        0      active sync   /dev/dm-0
+       1       0        0        1      removed
+       2       0        0        2      removed
+
+       3     254        1        -      faulty writemostly spare   /dev/dm-1
+~~~~
+
+    I'm just lost... :)
+
+    Thanks for the help,
+    Ciprian.
