@@ -1,59 +1,36 @@
-From: Roman Mamedov <rm@romanrm.ru>
+From: "Alex Leach" <beamesleach@gmail.com>
 Subject: Re: RAID5 member disks shrunk
-Date: Thu, 3 Jan 2013 21:42:36 +0600
-Message-ID: <20130103214236.3fe60580@natsu>
-References: <op.wqcditj08s54ea@metabuntu>
+Date: Thu, 03 Jan 2013 18:05:22 -0000
+Message-ID: <op.wqcki8gm8s54ea@metabuntu>
+References: <op.wqcditj08s54ea@metabuntu> <20130103214236.3fe60580@natsu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/clP6C2P3EW2ijbU0n+.ILu1"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <op.wqcditj08s54ea@metabuntu>
+In-Reply-To: <20130103214236.3fe60580@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alex Leach <beamesleach@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/clP6C2P3EW2ijbU0n+.ILu1
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+(Replying again, on list. Sorry Roman)
 
-On Thu, 03 Jan 2013 15:33:55 -0000
-"Alex Leach" <beamesleach@gmail.com> wrote:
+On Thu, 03 Jan 2013 15:42:36 -0000, Roman Mamedov <rm@romanrm.ru> wrote:
 
->    9. Putting it back together, I accidentally connected one of the good =
-=20
-> RAID member drives to the SAS controller, and the SAS drive into one of =
-=20
-> the SATA ports, which has an Intel ICH10R controller.
+> Try checking if your controller/BIOS have shrunk the disk by  
+> establishing an
+> HPA on it, the easiest way to check if you have any is perhaps with
+>
+>   dmesg | grep HPA
+>
+> If that is indeed the case, you can control it with "hdparm -N" (see its  
+> man page).
+>
 
-Try checking if your controller/BIOS have shrunk the disk by establishing an
-HPA on it, the easiest way to check if you have any is perhaps with=20
+Thanks for the reply.
+The dmesg command produces no output. Anywhere else I should look?
 
-  dmesg | grep HPA
+Cheers,
+Alex
 
-If that is indeed the case, you can control it with "hdparm -N" (see its ma=
-n page).
-
---=20
-With respect,
-Roman
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-"Stallman had a printer,
-with code he could not see.
-So he began to tinker,
-and set the software free."
-
---Sig_/clP6C2P3EW2ijbU0n+.ILu1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlDlpuwACgkQTLKSvz+PZwjk1QCfXQ5VOUqpDKYKe0uro3adW1mN
-nyQAnjoiu3vt5yyeAxn+bHcf248mXeMP
-=g56N
------END PGP SIGNATURE-----
-
---Sig_/clP6C2P3EW2ijbU0n+.ILu1--
+-- 
+Using Opera's mail client: http://www.opera.com/mail/
