@@ -1,48 +1,136 @@
-From: "Alex Leach" <beamesleach@gmail.com>
-Subject: Re: RAID5 member disks shrunk
-Date: Thu, 03 Jan 2013 18:05:58 -0000
-Message-ID: <op.wqckj8gn8s54ea@metabuntu>
-References: <op.wqcditj08s54ea@metabuntu> <20130103214236.3fe60580@natsu>
+From: Benjamin ESTRABAUD <be@mpstor.com>
+Subject: Re: strange partition table and slow speeds
+Date: Fri, 04 Jan 2013 15:45:08 +0000
+Message-ID: <50E6F904.80808@mpstor.com>
+References: <CA+Z7oPgx6DgEbpJ6OEoMFTDbUPhq_b4UXp8SW-dPiVNYw17bjA@mail.gmail.com> <28361073.8.1355777233170.JavaMail.root@zimbra> <CA+Z7oPhX2+soO_DH8vibBWz=C1vsvajTgUqNGOACLGxNDAjZxw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130103214236.3fe60580@natsu>
+In-Reply-To: <CA+Z7oPhX2+soO_DH8vibBWz=C1vsvajTgUqNGOACLGxNDAjZxw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Alex Pientka <alex.pientka@gmail.com>
+Cc: Roy Sigurd Karlsbakk <roy@karlsbakk.net>, linux-raid@vger.kernel.org, Phil Turmel <philip@turmel.org>
 List-Id: linux-raid.ids
 
-On Thu, 03 Jan 2013 15:42:36 -0000, Roman Mamedov <rm@romanrm.ru> wrote:
+You simply don't have a partition table on those disks.
 
-> If that is indeed the case, you can control it with "hdparm -N" (see its  
-> man page).
+This is not a problem. Disks do not specifically need to be partitioned=
+=2E
+In a way, it's like if you did "mkfs.ext3 /dev/sdX" instead of=20
+"mkfs.ext3 /dev/sdXn". The entire drive (including the space for the=20
+partition table) can be expected to be used.
+
+The fact that it was there "before" and not anymore could be a fluke,=20
+some of the superblock may have only been written later on.
+
+The fact that it is not there will not affect performance in any way,=20
+and the array is likely the same as it always was.
+
+Regards,
+Ben.
+
+On 17/12/12 21:16, Alex Pientka wrote:
+> I want to understand why my partition table is suddenly different
+> moving it from one system to a different one. This happened after I
+> moved the 6 drives from one system to the new system.
+>
+> Is this the reason why I suddenly have such bad performance?
+> Alex
+>
+>
+> On Mon, Dec 17, 2012 at 3:47 PM, Roy Sigurd Karlsbakk <roy@karlsbakk.=
+net> wrote:
+>> why would you want to use partitions for such a RAID in the first pl=
+ace?
+>>
+>> ----- Opprinnelig melding -----
+>>> That brings up the question: Any reason to get the partition table
+>>> fixed up? Is this just a cosmetic issue?
+>>> Alex
+>>>
+>>>
+>>> On Mon, Dec 17, 2012 at 12:41 PM, Phil Turmel <philip@turmel.org>
+>>> wrote:
+>>>> [Top-posting repaired. Please don't.]
+>>>>
+>>>> On 12/17/2012 12:26 PM, Alex Pientka wrote:
+>>>>> On Mon, Dec 17, 2012 at 12:18 PM, Phil Turmel <philip@turmel.org>
+>>>>> wrote:
+>>>>>> Hi Alex,
+>>>>>>
+>>>>>> On 12/17/2012 09:17 AM, Alex Pientka wrote:
+>>>>>>
+>>>>>> [trim /]
+>>>>>>> /dev/md0:
+>>>>>>>          Version : 1.1
+>>>>>>                     ^^^^^
+>>>>>> You've deliberately chosen a metadata version that places the
+>>>>>> superblock
+>>>>>> at sector 0 of the given device. If that is a whole disk, it
+>>>>>> overwrites
+>>>>>> the partition table. The default metadata is v1.2 (which places
+>>>>>> the
+>>>>>> superblock at offset 4k) for this very reason.
+>>>>> I assume upgrading to v1.2 is not possible. The only other way
+>>>>> would
+>>>>> be to fail every raw device (one-by-one) and then create the fd
+>>>>> partition on it, correct?
+>>>> You could put the array back on partitions if you like. I'd make a
+>>>> complete backup, zero the superblocks, and use --create
+>>>> --assume-clean
+>>>> to switch to v1.2 in place (with due care to maintain the device
+>>>> order
+>>>> and data offsets).
+>>>>
+>>>> (Save the output of "mdadm -E /dev/sdXX" for each member device
+>>>> before
+>>>> you start.)
+>>>>
+>>>> However, that fdisk can't understand the partition table shouldn't
+>>>> be
+>>>> hurting anything, so I wouldn't make it a priority.
+>>>>
+>>>> BTW, partition type 'fd' is deprecated along with v0.90 metadata, =
+as
+>>>> it
+>>>> only impacts kernel non-initramfs autoassembly, and that only work=
+s
+>>>> with
+>>>> DOS partition tables and v0.90 metadata.
+>>>>
+>>>> Phil
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
+d"
+>>> in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>> --
+>> Vennlige hilsener / Best regards
+>>
+>> roy
+>> --
+>> Roy Sigurd Karlsbakk
+>> (+47) 98013356
+>> roy@karlsbakk.net
+>> http://blogg.karlsbakk.net/
+>> GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+>> --
+>> I all pedagogikk er det essensielt at pensum presenteres intelligibe=
+lt. Det er et element=E6rt imperativ for alle pedagoger =E5 unng=E5 eks=
+essiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilfelle=
+r eksisterer adekvate og relevante synonymer p=E5 norsk.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 
-Just checked out the man page, and ran "hdparm -N" on all RAID member
-devices. They all report that HPA is disabled.
-e.g.
-      $ sudo hdparm -N /dev/sdc
-
-/dev/sdc:
-    max sectors   = 586072368/586072368, HPA is disabled
-
-This number of sectors does seem like it would fit all the partitions from
-the previous array. However, the Size reported by mdadm seems to be
-smaller than what hdparm reports, judging from the error messages below.
-
-On Thu, 03 Jan 2013 15:33:55 -0000, Alex Leach <beamesleach@gmail.com>
-wrote:
-
->      $ sudo mdadm --create --verbose /dev/md/RAID5 --raid-devices=3  
-> --level=5 --chunk=64 --layout=la --size=293033600  
-> --uuid='789c5fd2b57d7def:89f68d3c' -e imsm /dev/sda /dev/sdg /dev/sdb
-> mdadm: /dev/sdb not enough space (586066062 < 586067200)
-> mdadm: /dev/sdb is smaller than given size. 0K < 293033600K + metadata
-> mdadm: /dev/sdc not enough space (586066062 < 586067200)
-> mdadm: /dev/sdc is not suitable for this array.
-> mdadm: create aborted
->
-
-
-Cheers,
-Alex
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
