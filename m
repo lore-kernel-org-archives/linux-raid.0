@@ -1,179 +1,153 @@
-From: Andras Korn <korn@raidlist.elan.rulez.org>
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
 Subject: Re: RAID10: how much does chunk size matter? Can partial chunks be
  written?
-Date: Sat, 5 Jan 2013 00:41:13 +0100
-Message-ID: <20130104234113.GA14799@hellgate>
+Date: Fri, 4 Jan 2013 23:43:14 +0000
+Message-ID: <20711.26898.420204.483371@tree.ty.sabi.co.UK>
 References: <20130104175458.GA3298@hellgate>
- <50E75CE2.8060105@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <50E75CE2.8060105@hardwarefreak.com>
+In-Reply-To: <20130104175458.GA3298@hellgate>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Jan 04, 2013 at 04:51:14PM -0600, Stan Hoeppner wrote:
+[ ... ]
 
-Hi,
+> md124 : active raid10 sdg3[6] sdd3[0] sda3[7] sdh3[3] sdf3[2] sde3[1]
+>       1914200064 blocks super 1.2 512K chunks 3 far-copies [6/6] [UUUUUU]
+>       bitmap: 4/15 pages [16KB], 65536KB chunk
 
-> > I have a RAID10 array with the default chunksize of 512k:
-> > 
-> > md124 : active raid10 sdg3[6] sdd3[0] sda3[7] sdh3[3] sdf3[2] sde3[1]
-> >       1914200064 blocks super 1.2 512K chunks 3 far-copies [6/6] [UUUUUU]
-> >       bitmap: 4/15 pages [16KB], 65536KB chunk
-> > 
-> > I have an application on top of it that writes blocks of 128k or less, using
-> > multiple threads, pretty randomly (but reads dominate, hence far-copies;
-> > large sequential reads are relatively frequent).
-> 
-> You've left out critical details:
-> 
-> 1.  What filesystem are you using?
+> [ ... ] writes blocks of 128k or less, using multiple threads,
+> pretty randomly (but reads dominate, hence far-copies; large
+> sequential reads are relatively frequent). I wonder whether
+> re-creating the array with a chunksize of 128k (or maybe even
+> just 64k) could be expected to improve write performance.
 
-The filesystem is the "application": it's zfsonlinux. I'm putting it on
-RAID10 instead of using the disks natively because I want to encrypt it
-using LUKS, and encrypting each disk separately seemed wasteful of CPU (I
-only have 3 cores).
+This is an amazingly underreported context in which to ask such
+a loaded yet vague question.
 
-I realize that I forsake some of the advantages of zfs by putting it on an
-mdraid array.
+It is one of the usual absurdist "contributions" to this mailing
+list, even if not as comically misconceived as many others.
 
-I think this answers your other questions.
+You have a complicated workload, with entirely different access
+profiles at different times, on who-knows-what disks, host
+adapter, memory, CPU, and you are not even reporting what is the
+current "performance" that should be improved.
 
-> > I wonder whether re-creating the array with a chunksize of 128k (or
-> > maybe even just 64k) could be expected to improve write performance. I
-> > assume the RAID10 implementation doesn't read-modify-write if writes are
-> > not aligned to chunk boundaries, does it? In that case, reducing the
-> > chunk size would just increase the likelihood of more than one disk (per
-> > copy) being necessary to service each request, and thus decrease
-> > performance, right?
-> 
-> RAID10 doesn't RMW because there is no parity, making chunk size less
-> critical than with RAID5/6 arrays.  To optimize this array you really
-> need to capture the IO traffic pattern of the application.  If your
-> chunk size is too large you may be creating IO hotspots on individual
-> disks, with the others idling to a degree.  It's actually really
-> difficult to use a chunk size that is "too small" that will decrease
-> performance.
+Nor even saying what "performance" matters (bandwidth or latency
+or transactions/s? average or maximum? caches enabled? ...).
 
-I'm not sure I follow, as far as the last sentence is concerned. If, ad
-absurdum, you use a chunksize of 512 bytes, then several disks will need to
-operate in lock-step to service any reasonably sized read request. If, on
-the other hand, the chunk size is large, there is a good chance that all of
-the data you're trying to read is in a single chunk, and therefore on a
-single disk. This leaves the other spindles free to seek elsewhere
-(servicing other requests).
+Never mind that rotating disks have rather different transfer
+rates outer/inner tracks, something that can mean very different
+tradeoffs depending on where the data lands. What about the
+filesystem and the chances that large transactions happen on
+logically contiguous block device sectors?
 
-The drawback of the large chunksize is that, as one thread only reads from
-one disk at a time, the read bandwidth of any one thread is limited to the
-throughput of a single disk.
+Just asking such a question is ridiculous.
 
-So, for reads, the large chunk sizes favour multi-threaded random access
-time, whereas small chunk sizes favour single-threaded sequential
-throughput. If there's a flaw in this chain of thought, plese point it out.
-:)
+The only way you are going to get something vaguely sensible is
+to run the same load on two identical configurations with
+different chunk sizes, and even that won't help you a lot if
+your workload is rather variable, as it is very likely to be.
 
-Writes are not much different: all copies of a chunk must be updated when it
-is written. If chunks are small, they are spread across more disks; thus a
-single write causes more disks to seek.
+> I assume the RAID10 implementation doesn't read-modify-write
+> if writes are not aligned to chunk boundaries, does it?
 
-> > I understand that small chunksizes favour single-threaded sequential
-> > workloads (because all disks can read/write simultaneously, thus adding
-> > their bandwidth together), 
-> 
-> This simply isn't true.  Small chunk sizes are preferable for almost all
-> workloads.  Large chunks are only optimal for single thread long
-> duration streaming writes/reads.
+If you have to assume this, instead of knowing it, you shouldn't
+ask absurd questions about complicated workloads and the fine
+points of chunk sizes.
 
-I think you have this backwards; see above. Imagine, for the sake of
-simplicity, a RAID0 array with a chunksize of 1 bit. For single thread
-sequential reads, the bandwidth of all disks is added together because they
-can all read at the same time. With a large chunksize, you only get this if
-you also read-ahead agressively.
+> I understand that small chunksizes favour single-threaded
+> sequential workloads (because all disks can read/write
+> simultaneously, thus adding their bandwidth together), whereas
+> large(r) chunksizes favour multi-threaded random access
+> (because a single disk may be enough to serve each request,
+> while the other disks serve other requests).
 
-> > whereas large(r) chunksizes favour multi-threaded
-> > random access (because a single disk may be enough to serve each request,
-> > while the other disks serve other requests).
-> 
-> Again, not true.  Everything depends on your workload:  the file sizes
-> involved, and the read/write patterns from/to those files.  For
-> instance, with your current 512KB chunk, if you're writing/reading 128KB
-> files, you're putting 4 files on disk1 then 4 files on disk2, then 4
-> files on disk3.  If you read them back in write order, even with 4
-> threads, you'll read the first 4 files from disk1 while disks 2/3 sit
-> idle.  If you use a 128KB chunk, each file gets written to a different
-> disk.  So when your 4 threads read them back each thread is accessing a
-> different, all 3 disks in parallel.
+That's a very peculiar way of looking at it.
 
-This is a specific bad case but not the average. Of course, if you know
-the access pattern with sufficient specificity, then you can optimise for
-it, but I don't. Many different applications will run on top of ZFS, with
-occasional peaks in utilisation. This includes a mailserver that normally
-has very little traffic but there are some mailing lists with low mail rates
-but many subscribers; there is a mediawiki instance with mysql that has
-seasonal as well as trending changes in its traffic etc. etc.
+Assuming that we are not talking about hw synchronized drives,
+as in RAID3 variants, the main issue with chunk size is that
+every IO large enough to involve more than one disk can incur
+massive latency from the disks not being at the same rotational
+position at the same time, and the worst case is that the IO
+takes a full disks rotation to complete, if completion matters.
 
-I can't anticipate the exact access pattern; I'm looking for something
-that'll work well in some abstract average sense.
+For example on a RAID0 of 2 disks capable of 7200RPM or 120RPS,
+a transfer of 2x512B sectors can take 8 milliseconds, delivering
+around 120KiB/s of throughput, thanks to an 8ms latency every
+1KiB.
 
-> And, this is exactly why we recommend nothing larger than a 32KB chunk
-> size for XFS, and this is why the md metadata 1.2 default chunk of 512KB
-> is insane.
+In case of _streaming_, with read ahead or write behind, with
+very good elevator algorithms, the latency due to the disks
+rotating independently can be somewhat hidden, and large chunk
+size obviously helps.
 
-I think the problem of the xfs journal is much smaller since delaylog became
-default; for highly metadata intensive workloads I'd recommend an external
-journal (it doesn't even need to be on a SSD because it's written
-sequentially).
+Conversely with a mostly random workload larger chunk size can
+restrict the maximum amount of parallelism, as the reduced
+interleaving *may* result in a higher chance that accesses from
+two threads will hit the same disk and thus the same disk arm.
 
-> Using a "small" chunk size spreads both metadata and file IO more evenly
-> across the spindles and yields more predictable performance.
+Also note that chunk size does not matter for each RAID1 "pair"
+in the RAID10, as there are no chunks, and for _reading_ the two
+disks are fully uncoupled, while for writing they are fully
+coupled. The chunk size that matters is solely that of the RAID0
+"on top" of the RAID1 pairs, and that perhaps in many situations
+does not matter a lot.
 
-... but sucks for multithreaded random reads.
+It is really complicated...
 
-> > So: can RAID10 issue writes that start at some offset from a chunk boundary?
-> 
-> The filesystem dictates where files are written, not md/RAID.
+My usual refrain is to tell people who don't get most of the
+subtle details of storage to just use RAID10 and not to worry
+too much, because RAID0 works well in almost every case, and if
+they have "performance" problems add more disks; usually as more
+pairs (rather than turning 2-disk RAID1s into 3-disk RAID1s,
+which can also be a good idea in several cases), as the number
+of arms and thus IOPS per TB of *used* capacity often is a big
+issue, as most storage "experts" eventually should figure out.
 
-Of course. What I meant was: "If the filesystem issues a write request that
-is not chunk-aligned, will RAID10 resort to read-modify-write, or just
-perform the write at the requested offset within the chunk?"
+In this case the only vague details as to "performance" goals
+are for writes of largish-block random multithreaded access, and
+more pairs seems the first thing to consider, as the setup has
+only got 3 pairs totaling something around 300-400 random IOPS,
+or with 128kiB writes probably overall write rates of 30-40MB/s
+even not considering the sequential read interference. Doubling
+the number of pairs is probably something to start with.
 
-> That said, I wouldn't use a 128KB chunk.  I'd use a 32KB chunk.  And
-> unless your application is doing some really funky stuff, going above
-> that mostly likely isn't going to give you any benefit, especially if
-> each of these 128KB writes is an individual file.  In that case you
-> definitely want a small chunk due to the metadata write load.
+So choosing RAID10 was a good idea, asking yourself whether
+vaguely undefined "performance" can be positively affected by
+some subtle detail of tuning is not.
 
-I still believe going much below 128k would require more seeking and thus
-hurt multithreaded random access performance.
+Note:
 
-If I use 32k chunks, every 128k block zfs writes will be spread across 4
-disks (and that's assuming the 128k write was 32k-aligned); as I'm using 6
-disks with 3 copies, evey disk will end up holding 2 chunks of a 128k write,
-a bit like this:
+  Long ago I used to prefer small chunk sizes (like 16KiB), but
+  the sequential speed of disks has improved a lot in the
+  meantime, while the rotational one(s) have been pretty much
+  constant for decades once 3600RPM disks stopped being
+  designed.
 
-disk1 | disk2 | disk3 | disk4 | disk5 | disk6
-  1       2       3       4       1       2
-  3       4       1       2       3       4
+  To make a very crude argument, assuming a common 7200RPM disk,
+  with a full rotation every 8ms, and presumably an average
+  offset among the disks of half a rotation or 4ms, ideally the
+  amount read or written in one go should be at least as such as
+  can be read or written in 4ms across all disks.
 
-Thus all disks will have to seek twice to serve this write, and four disks
-will have to seek to read this 128k block.
+  On a 10MB/s disk of several years ago one half rotation time
+  means 40KB, on a 100MB/s disks that becomes 400KB, and the
+  goal is ideally to minimize the time spent waiting for all the
+  disks to complete their work which begins the same 4ms apart,
+  so larger chunk sizes probably help, even if they may reduce
+  the degree of multihreading available, and the contemporary
+  disks that can do 100MB tend to be much bigger than the old
+  disks that could do 10MB/s but they have got only one arm.
 
-With 128k chunks, it'd look like this:
+  But with a small chunk size largish IO transactions will involve
+  as a rule contiguous chunks (if the filesystem is suitable), and
+  suitable elevators can still turn a 1MiB IO to 4 disks in much
+  the same pattern of transfers whether the chunk size if 16KiB or
+  128KiB, as in the end on each disk one has to transfer 256KiB of
+  physically contiguous sectors.
 
-disk1 | disk2 | disk3 | disk4 | disk5 | disk6
-  1       1       1
-
-Three disks would have to seek to serve the write (meanwhile, the other
-three can serve other writes), and any one of three can serve a read,
-leaving the others to seek in order to serve other requests.
-
-How is this reasoning flawed?
-
-Andras
-
--- 
-                     Andras Korn <korn at elan.rulez.org>
- Getting information from the Internet is like taking a drink from a hydrant.
+  Yes, it is complicated.
