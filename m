@@ -1,33 +1,51 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: RAID10: how much does chunk size matter? Can partial chunks be written?
-Date: Fri, 4 Jan 2013 18:30:25 -0700
-Message-ID: <B2ADDCFE-322D-401C-AB31-DA44458AC62A@colorremedies.com>
-References: <20130104175458.GA3298@hellgate> <50E75CE2.8060105@hardwarefreak.com> <20130104234113.GA14799@hellgate>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+From: Andras Korn <korn@raidlist.elan.rulez.org>
+Subject: Re: RAID10: how much does chunk size matter? Can partial chunks be
+ written?
+Date: Sat, 5 Jan 2013 08:44:07 +0100
+Message-ID: <20130105074406.GB16375@hellgate>
+References: <20130104175458.GA3298@hellgate>
+ <50E75CE2.8060105@hardwarefreak.com>
+ <20130104234113.GA14799@hellgate>
+ <50E777DC.1060804@hardwarefreak.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130104234113.GA14799@hellgate>
+Content-Disposition: inline
+In-Reply-To: <50E777DC.1060804@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Fri, Jan 04, 2013 at 06:46:20PM -0600, Stan Hoeppner wrote:
 
-On Jan 4, 2013, at 4:41 PM, Andras Korn <korn@raidlist.elan.rulez.org> wrote:
+> >> 1.  What filesystem are you using?
+> > 
+> > The filesystem is the "application": it's zfsonlinux. I'm putting it on
+> > RAID10 instead of using the disks natively because I want to encrypt it
+> > using LUKS, and encrypting each disk separately seemed wasteful of CPU (I
+> > only have 3 cores).
+> 
+> I just love when the other shoe drops and it turns out to be a size 13
+> boot... filled with lead.
+> 
+> Any reason why you intentionally omitted these critical details from
+> your initial post?
 
-> The filesystem is the "application": it's zfsonlinux. I'm putting it on
-> RAID10 instead of using the disks natively because I want to encrypt it
-> using LUKS, and encrypting each disk separately seemed wasteful of CPU (I
-> only have 3 cores).
+Yes: I thought I was asking a theoretical question, not for advice on tuning
+my specific setup, and thought - apparently correctly, I might add :) - that
+including these details would only get everyone sidetracked into trying to
+optimise for a specific application. I don't have a specific application
+with a specific access pattern because I have to run all sorts of
+applications on this box, on top of this array, simultaneously.
 
-Also, it's worth reading this, to hopefully ensure the backup system isn't also experimental.
+But meanwhile I think I have received an answer: the fact that zfs uses
+blocks of 128k or less does not automatically mean that write performance
+would suffer on a 512k-chunk RAID10 array because the Linux RAID10
+implementation, very sensibly, doesn't insist on writes being aligned to
+chunk boundaries.
 
-http://confessionsofalinuxpenguin.blogspot.com/2012/09/btrfs-vs-zfsonlinux-how-do-they-compare.html
+So thanks.
 
-I mean, think about it another way. You value the data, apparently, enough to encrypt it. But then you're willing to basically f around with the data by using a "nailing jello to a tree" approach for a file system. Quite honestly you should consider doing this on FreeBSD or OpenIndiana where there's native support for encryption, and for ZFS, no nail and jello required. People who care about their data, and need/want a resilient file system, do it on one of those two OSs.
-
-If FreeBSD/OpenIndiana are no ops, the way to do it on Linux is, XFS on nearline SATA or SAS SEDs, which have an order magnitude (at least) lower UER than consumer crap, and hence less of a reason why you need to 2nd guess the disks with a resilient file system. But even though also experimental, I'd still use Btrfs before I'd use ZFS on LUKS on Linux, just saying.
-
-
-Chris Murphy
-
+-- 
+                     Andras Korn <korn at elan.rulez.org>
+         Reality is merely an illusion, albeit a very persistent one.
