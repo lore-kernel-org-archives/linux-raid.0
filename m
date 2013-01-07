@@ -1,67 +1,114 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 4 of 4] DM RAID:  Add support for MD's RAID10 "far" and
- "offset" algorithms
-Date: Mon, 7 Jan 2013 17:05:54 +1100
-Message-ID: <20130107170554.3764bb45@notabene.brown>
-References: <1355769688.15326.26.camel@f16>
+From: Ciprian Dorin Craciun <ciprian.craciun@gmail.com>
+Subject: Re: Adding a fresh drive to a degraded RAID1 (not as spare but
+ instead of a "removed" device)
+Date: Mon, 7 Jan 2013 11:58:38 +0200
+Message-ID: <CA+Tk8fysDN4hFxs5-x=LeiM=Fci=ovVCwegpUwfVec_FFX0FCw@mail.gmail.com>
+References: <CA+Tk8fzcugVx1OoMnut4Dg8OEEmLNeFQj0qSNu8hrsrwENuJCw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/FQe9PtsO.RepK8U9KgzFd6W"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1355769688.15326.26.camel@f16>
+In-Reply-To: <CA+Tk8fzcugVx1OoMnut4Dg8OEEmLNeFQj0qSNu8hrsrwENuJCw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jonathan Brassow <jbrassow@redhat.com>
-Cc: linux-raid@vger.kernel.org, agk@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/FQe9PtsO.RepK8U9KgzFd6W
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+    Any feedback on this issue? (I guessed that the initial email was
+overlooked due to the holidays. :) )
 
-On Mon, 17 Dec 2012 12:41:28 -0600 Jonathan Brassow <jbrassow@redhat.com>
-wrote:
-
-
-> --- linux-upstream.orig/drivers/md/dm-raid.c
-> +++ linux-upstream/drivers/md/dm-raid.c
-> @@ -91,15 +91,44 @@ static struct raid_type {
->  	{"raid6_nc", "RAID6 (N continue)",		2, 4, 6, ALGORITHM_ROTATING_N_CONTI=
-NUE}
->  };
-> =20
-> +static char *raid10_md_layout_to_format(int layout)
-> +{
-> +	/*
-> +	 * Bit 16 and 17 stand for "offset" and "dev_stride"
-> +	 * Refer to MD's raid10.c for details
-> +	 */
-
-I don't think "bit 17" is "dev_stride" any more..  "use_far_sets" ??
-
-Thanks,
-NeilBrown
+    Thanks,
+    Ciprian.
 
 
---Sig_/FQe9PtsO.RepK8U9KgzFd6W
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUOplwjnsnt1WYoG5AQLlLBAAp+PKmNfLQAobn+9N8pAt9NCXlDJpV9sa
-AUPPI100h3m7OB3O+AxtsC1BTwGqtZiG8fDc1QeO77aNHM+pJB5GYRe2L8TsubWH
-BrMK07vL8KZmU24ipzWFVaBc2s4CVY7oI5ri8hmfQYLtVzDvoe30L0JDj3IbZ3vN
-O2mdGWv2SE4RwVvR28mSmZ9yTzlX21W0w6e1cHkUiGYuo4vIuR8Y8KeBtc/juUid
-k5DR6JD7pieFfIMI3K6JR8HDo5AmE8SXa36PFcyFbtMGaN5DkHz33DCAgFXo17+q
-Rl2uesNB4GAsAb/Zrt9loAhGXEmbuziicMK7h5SNVSFXxCjMhP6FSMwJt7nNvORE
-er6Xwfi2rDV7fBowJQZyioH5u1KU5S2WdP8bqdzU6RZ/ZxosqZ+ceUs3o3uGiGrd
-CcFKnRo7WDZyKZccC4qlJZk2eH/8hQbJrDnqZ1zuGAuKf54zQfqeYFa7aoHwPP7A
-ryqYwobND8L+wqym0lVLmqoXcI/6BM/1W2mU9XV59oZ9aLd2O+Vol87JADVE/wnG
-j1Qa3ZnLYPJHH9mc25IXVsCbiIcoM2rSbmQ09HrJNfdGhiZ82mNlI0Lus02E3iwL
-hCq1JzPMJEt1rc4xAu3n6xHuk09kVJK9n1i2oNXBipsdxYNbuGatfbutfh6evnAi
-AwnHlNK/7KQ=
-=1/Kj
------END PGP SIGNATURE-----
-
---Sig_/FQe9PtsO.RepK8U9KgzFd6W--
+On Sat, Dec 29, 2012 at 10:52 PM, Ciprian Dorin Craciun
+<ciprian.craciun@gmail.com> wrote:
+>     Hello all!
+>
+>     Although I've done this a couple of times before, I don't know
+> what I'm doing wrong here, but I can't add a device to a degraded
+> RAID1...
+>
+>     My guess is that it's either from the feature "mix" or something
+> else that escapes me...
+>     * I use LVM2 as MD members; (this worked before, thus I would exclude this;)
+>     * I use "write intent bitmap";
+>     * I use "write mostly"; (this has also worked before...)
+>
+>     Here are my commands:
+>     * I create the degraded MD device:
+> ~~~~
+> mdadm \
+>     --verbose \
+>     --create \
+>     /dev/md/raid \
+>     --level=raid1 \
+>     --metadata=1.0 \
+>     --raid-devices=3 \
+>     --spare-devices=0 \
+>     --write-behind=1024 \
+>     --bitmap=internal \
+>     --bitmap-chunk=1M \
+>     --name=raid-device \
+>     --auto=md \
+>     /dev/mapper/raid-member-1 \
+>     missing \
+>     missing
+> ~~~~
+>     * I then create an Ext2 file system and fill it;
+>     * I then intend to add a new device to the mirror:
+> ~~~~
+> mdadm \
+>     --verbose \
+>     --manage \
+>     /dev/md/raid \
+>     --add \
+>     --write-mostly \
+>     /dev/mapper/raid-member-2
+> ~~~~
+>
+>     Unfortunately the `raid-member-2` appears as faulty and refuses to
+> be added... Initially this disk was all `0x00`... But I've also tried
+> to "zero" the superblock. (The block device is writable because I can
+> zero it...)
+> ~~~~
+> mdadm \
+>     --zero-superblock \
+>     --metadata=1.0 \
+>     /dev/mapper/raid-member-2
+> ~~~~
+>
+>     The output of query gives:
+> ~~~~
+>         Version : 1.0
+>   Creation Time : Sat Dec 29 15:44:26 2012
+>      Raid Level : raid1
+>      Array Size : 67108736 (64.00 GiB 68.72 GB)
+>   Used Dev Size : 67108736 (64.00 GiB 68.72 GB)
+>    Raid Devices : 3
+>   Total Devices : 2
+>     Persistence : Superblock is persistent
+>
+>   Intent Bitmap : Internal
+>
+>     Update Time : Sat Dec 29 22:56:15 2012
+>           State : active, degraded
+>  Active Devices : 1
+> Working Devices : 1
+>  Failed Devices : 1
+>   Spare Devices : 0
+>
+>            Name : ...
+>            UUID : ...
+>          Events : 591
+>
+>     Number   Major   Minor   RaidDevice State
+>        0     254        0        0      active sync   /dev/dm-0
+>        1       0        0        1      removed
+>        2       0        0        2      removed
+>
+>        3     254        1        -      faulty writemostly spare   /dev/dm-1
+> ~~~~
+>
+>     I'm just lost... :)
+>
+>     Thanks for the help,
+>     Ciprian.
