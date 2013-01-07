@@ -1,114 +1,43 @@
-From: Ciprian Dorin Craciun <ciprian.craciun@gmail.com>
-Subject: Re: Adding a fresh drive to a degraded RAID1 (not as spare but
- instead of a "removed" device)
-Date: Mon, 7 Jan 2013 11:58:38 +0200
-Message-ID: <CA+Tk8fysDN4hFxs5-x=LeiM=Fci=ovVCwegpUwfVec_FFX0FCw@mail.gmail.com>
-References: <CA+Tk8fzcugVx1OoMnut4Dg8OEEmLNeFQj0qSNu8hrsrwENuJCw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Brassow Jonathan <jbrassow@redhat.com>
+Subject: Re: [PATCH 4 of 4] DM RAID:  Add support for MD's RAID10 "far" and "offset" algorithms
+Date: Mon, 7 Jan 2013 14:46:57 -0600
+Message-ID: <98BBD0AF-BD94-4954-B322-08DFE78589EE@redhat.com>
+References: <1355769688.15326.26.camel@f16> <20130107170554.3764bb45@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v1085)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+Tk8fzcugVx1OoMnut4Dg8OEEmLNeFQj0qSNu8hrsrwENuJCw@mail.gmail.com>
+In-Reply-To: <20130107170554.3764bb45@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>
 List-Id: linux-raid.ids
 
-    Any feedback on this issue? (I guessed that the initial email was
-overlooked due to the holidays. :) )
 
-    Thanks,
-    Ciprian.
+On Jan 7, 2013, at 12:05 AM, NeilBrown wrote:
 
+> On Mon, 17 Dec 2012 12:41:28 -0600 Jonathan Brassow <jbrassow@redhat.com>
+> wrote:
+> 
+> 
+>> --- linux-upstream.orig/drivers/md/dm-raid.c
+>> +++ linux-upstream/drivers/md/dm-raid.c
+>> @@ -91,15 +91,44 @@ static struct raid_type {
+>> 	{"raid6_nc", "RAID6 (N continue)",		2, 4, 6, ALGORITHM_ROTATING_N_CONTINUE}
+>> };
+>> 
+>> +static char *raid10_md_layout_to_format(int layout)
+>> +{
+>> +	/*
+>> +	 * Bit 16 and 17 stand for "offset" and "dev_stride"
+>> +	 * Refer to MD's raid10.c for details
+>> +	 */
+> 
+> I don't think "bit 17" is "dev_stride" any more..  "use_far_sets" ??
 
-On Sat, Dec 29, 2012 at 10:52 PM, Ciprian Dorin Craciun
-<ciprian.craciun@gmail.com> wrote:
->     Hello all!
->
->     Although I've done this a couple of times before, I don't know
-> what I'm doing wrong here, but I can't add a device to a degraded
-> RAID1...
->
->     My guess is that it's either from the feature "mix" or something
-> else that escapes me...
->     * I use LVM2 as MD members; (this worked before, thus I would exclude this;)
->     * I use "write intent bitmap";
->     * I use "write mostly"; (this has also worked before...)
->
->     Here are my commands:
->     * I create the degraded MD device:
-> ~~~~
-> mdadm \
->     --verbose \
->     --create \
->     /dev/md/raid \
->     --level=raid1 \
->     --metadata=1.0 \
->     --raid-devices=3 \
->     --spare-devices=0 \
->     --write-behind=1024 \
->     --bitmap=internal \
->     --bitmap-chunk=1M \
->     --name=raid-device \
->     --auto=md \
->     /dev/mapper/raid-member-1 \
->     missing \
->     missing
-> ~~~~
->     * I then create an Ext2 file system and fill it;
->     * I then intend to add a new device to the mirror:
-> ~~~~
-> mdadm \
->     --verbose \
->     --manage \
->     /dev/md/raid \
->     --add \
->     --write-mostly \
->     /dev/mapper/raid-member-2
-> ~~~~
->
->     Unfortunately the `raid-member-2` appears as faulty and refuses to
-> be added... Initially this disk was all `0x00`... But I've also tried
-> to "zero" the superblock. (The block device is writable because I can
-> zero it...)
-> ~~~~
-> mdadm \
->     --zero-superblock \
->     --metadata=1.0 \
->     /dev/mapper/raid-member-2
-> ~~~~
->
->     The output of query gives:
-> ~~~~
->         Version : 1.0
->   Creation Time : Sat Dec 29 15:44:26 2012
->      Raid Level : raid1
->      Array Size : 67108736 (64.00 GiB 68.72 GB)
->   Used Dev Size : 67108736 (64.00 GiB 68.72 GB)
->    Raid Devices : 3
->   Total Devices : 2
->     Persistence : Superblock is persistent
->
->   Intent Bitmap : Internal
->
->     Update Time : Sat Dec 29 22:56:15 2012
->           State : active, degraded
->  Active Devices : 1
-> Working Devices : 1
->  Failed Devices : 1
->   Spare Devices : 0
->
->            Name : ...
->            UUID : ...
->          Events : 591
->
->     Number   Major   Minor   RaidDevice State
->        0     254        0        0      active sync   /dev/dm-0
->        1       0        0        1      removed
->        2       0        0        2      removed
->
->        3     254        1        -      faulty writemostly spare   /dev/dm-1
-> ~~~~
->
->     I'm just lost... :)
->
->     Thanks for the help,
->     Ciprian.
+yes, s/dev_stride/use_far_sets/.
+
+Thanks for catching that.   I think there was a change made to dm-raid.c recently (an arg was removed from the mapping function) that causes this patch to not apply cleanly.  I correct the above and resend a fresh patch for this.
+
+ brassow
+
