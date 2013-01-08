@@ -1,74 +1,184 @@
-From: Chris Murphy <lists@colorremedies.com>
+From: Ross Boylan <ross@biostat.ucsf.edu>
 Subject: Re: How do I tell which disk failed?
-Date: Tue, 8 Jan 2013 10:36:55 -0700
-Message-ID: <8E6A9D9C-F5B6-4686-81CA-98721329BEEA@colorremedies.com>
-References: <1357610701.16366.13.camel@corn.betterworld.us> <50EBAC5D.8080000@hardwarefreak.com> <1357628351.16366.86.camel@corn.betterworld.us> <02B6762C-3755-4CE3-9AB1-A48D3384CACB@colorremedies.com> <1357631387.16366.131.camel@corn.betterworld.us> <F5C2E9CA-635E-4FA5-9C20-EB0F6AE94838@colorremedies.com> <1357637558.16366.154.camel@corn.betterworld.us>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Date: Tue, 08 Jan 2013 13:54:15 -0800
+Message-ID: <1357682055.3484.34.camel@markov.biostat.ucsf.edu>
+References: <1357610701.16366.13.camel@corn.betterworld.us>
+	 <50EBAC5D.8080000@hardwarefreak.com>
+	 <1357628351.16366.86.camel@corn.betterworld.us>
+	 <02B6762C-3755-4CE3-9AB1-A48D3384CACB@colorremedies.com>
+	 <1357631996.16366.139.camel@corn.betterworld.us>
+	 <3D8A55DE-C4A8-4639-A662-CD3FF228230F@colorremedies.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1357637558.16366.154.camel@corn.betterworld.us>
+In-Reply-To: <3D8A55DE-C4A8-4639-A662-CD3FF228230F@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ross Boylan <ross@biostat.ucsf.edu>
-Cc: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: ross@biostat.ucsf.edu, "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Tue, 2013-01-08 at 02:10 -0700, Chris Murphy wrote:
+> On Jan 8, 2013, at 12:59 AM, Ross Boylan <ross@biostat.ucsf.edu> wrot=
+e:
+> >=20
+> > Using /dev/sdb
+> > Model: ATA WDC WD2003FYYS-0 (scsi)
+> > Disk /dev/sdb: 3907029168s
+> > Sector size (logical/physical): 512B/512B
+> > Partition Table: gpt
+> >=20
+> > Number  Start     End          Size         File system  Name      =
+             Flags
+> > 1      34s       999999s      999966s                   extended bo=
+ot loaders
+> > 2      1000000s  2929687s     1929688s     ext3         /boot      =
+            boot
+> > 3      2929688s  6835937s     3906250s                  swap
+> > 4      6835938s  3907029134s  3900193197s               main
+> >=20
+> > Using /dev/sdc
+> > Model: ATA WDC WD2003FYYS-0 (scsi)
+> > Disk /dev/sdc: 3907029168s
+> > Sector size (logical/physical): 512B/512B
+> > Partition Table: gpt
+> >=20
+> > Number  Start     End          Size         File system  Name      =
+             Flags
+> > 1      34s       999999s      999966s                   extended bo=
+ot loaders
+> > 2      1000000s  2929687s     1929688s     ext3         boot       =
+            boot
+> > 3      2929688s  6835937s     3906250s                  swap
+> > 4      6835938s  3907029134s  3900193197s               main
+> >=20
+> > BTW the spec sheet for the WDC "red" drives says they use advanced
+> > formatting (I may not have the buzzword quite right) with physical
+> > sectors of 4k.  So the reported sector size is a fib.
+>=20
+> Yeah you're using an old version of parted for it to not recognize th=
+at the physical sectors are 4096 bytes. The thing is, that it's a 512e =
+disk, so the LBA's are still 512 bytes. And by the looks of it, your pa=
+rtitions are not aligned on those 4K physical sectors because the start=
+ value is 34s. In any recent fdisk or parted or gdisk, the start sector=
+ is 2048 (1MiB), and each partition is aligned on 8-sector boundaries. =
+So your disks aren't properly partitioned, and you're getting a perform=
+ance hit because of it.
+>=20
+> What I'm not getting is why your md0, comprised of sda1 at 192717s, a=
+nd sd[bc]2 are 1929688s. What am I missing here? Because those values a=
+ren't at all the same. It's a 10x difference.
+I'm migrating the array from an old, smaller disk (it was a pair of
+disks, but I've already pulled one) to newer larger disks.  Eventually
+the current sda will go away (I was going to keep using it, but given
+recent problems, as you suggest, best to ditch it) and the RAID arrays
+willl grow to fill the new space.
 
-On Jan 8, 2013, at 2:32 AM, Ross Boylan <ross@biostat.ucsf.edu> wrote:
+I manually specified the current layout of the bigger disks (sdb and c)=
+;
+at least some of the time I specified the exact sector. I picked 34
+because that seems to be the traditional offset for the first partition
+(and the one my tool generated when I gave it sizes in grosser units
+than sectors or told it to start at 0).
 
-> On Tue, 2013-01-08 at 01:48 -0700, Chris Murphy wrote:
->>> 
->> 
->> Not good. The current value is 56, the worst is 24, and the threshold is 0. These are high values. 
-> Do you mean 56, 24, and 0 are high values?  Or the raw values are high?
+Apparently some disks do a logical to physical remap that includes an
+offset as well as a change in the sector size.  Should I check for that=
+,
+or should I just assume that I should start my partitions on sectors
+that are multiples of 8?
 
-0 is the point at which the drive will change its health from passing to failing. It's gotten as low as 24. So I'd say it's pre-failing, it just isn't telling you that literally. As raw values go up, the current value goes down. The closer current and threshold are, the worse the health of the drive for that particular attribute. It's actually a bit more complicated than that, there's lots of discussion of this on the smatmontools site.
+You also asked what I meant by chatter in the logs about sdb.  Here are
+some entries from shortly before the system locked up:
+Jan  6 03:45:24 markov smartd[5368]: Device: /dev/sda, SMART Usage Attr=
+ibute: 190 Airflow_Temperature_Cel changed from 64 to 65
+Jan  6 03:45:24 markov smartd[5368]: Device: /dev/sda, SMART Usage Attr=
+ibute: 194 Temperature_Celsius changed from 36 to 35
+Jan  6 03:45:25 markov smartd[5368]: Device: /dev/sdb, SMART Usage Attr=
+ibute: 194 Temperature_Celsius changed from 108 to 109
 
-> Is the raw value wrapping around?
+I am less excited about that since discovering the message about sdb
+does not mean it's running at over 100 degrees celsius (the raw value i=
+s
+around 45).
 
-No idea.
+The logs from the restart show
+Jan  7 17:19:09 markov kernel: [    2.928055] ata2.00: SATA link down (=
+SStatus 0 SControl 0)
+Jan  7 17:19:09 markov kernel: [    2.928102] ata2.01: SATA link up 3.0=
+ Gbps (SStatus 123 SControl 300)
+Jan  7 17:19:09 markov kernel: [    2.944459] ata2.01: ATA-8: WDC WD200=
+3FYYS-02W0B1, 01.01D02, max UDMA/133
+Jan  7 17:19:09 markov kernel: [    2.944498] ata2.01: 3907029168 secto=
+rs, multi 16: LBA48 NCQ (depth 0/32)
+Jan  7 17:19:09 markov kernel: [    2.952486] ata2.01: configured for U=
+DMA/133
+Jan  7 17:19:09 markov kernel: [    2.952642] scsi 1:0:1:0: Direct-Acce=
+ss     ATA      WDC WD2003FYYS-0 01.0 PQ: 0 ANSI: 5
+Jan  7 17:19:09 markov kernel: [    2.952918] scsi 2:0:0:0: Direct-Acce=
+ss     ATA      WDC WD2003FYYS-0 01.0 PQ: 0 ANSI: 5
+Jan  7 17:19:09 markov kernel: [    2.953695] scsi 3:0:0:0: CD-ROM     =
+       TSSTcorp CDDVDW SH-S223B  SB00 PQ: 0 ANSI: 5
 
-> # date; smartctl -a /dev/sda
-> ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
->  1 Raw_Read_Error_Rate     0x000f   075   063   044    Pre-fail  Always       -       38010669
->  3 Spin_Up_Time            0x0003   099   099   000    Pre-fail  Always       -       0
->  4 Start_Stop_Count        0x0032   100   100   020    Old_age   Always       -       101
->  5 Reallocated_Sector_Ct   0x0033   099   099   036    Pre-fail  Always       -       31
->  7 Seek_Error_Rate         0x000f   078   060   030    Pre-fail  Always       -       65563711282
->  9 Power_On_Hours          0x0032   061   061   000    Old_age   Always       -       34776
-> 10 Spin_Retry_Count        0x0013   100   100   097    Pre-fail  Always       -       0
-> 12 Power_Cycle_Count       0x0032   100   037   020    Old_age   Always       -       102
-> 184 Unknown_Attribute       0x0032   100   100   099    Old_age   Always       -       0
-> 187 Reported_Uncorrect      0x0032   100   100   000    Old_age   Always       -       0
-> 188 Unknown_Attribute       0x0032   100   088   000    Old_age   Always       -       335
-> 189 High_Fly_Writes         0x003a   100   100   000    Old_age   Always       -       0
-> 190 Airflow_Temperature_Cel 0x0022   066   057   045    Old_age   Always       -       34 (Lifetime Min/Max 34/36)
-> 194 Temperature_Celsius     0x0022   034   043   000    Old_age   Always       -       34 (0 18 0 0)
-> 195 Hardware_ECC_Recovered  0x001a   044   024   000    Old_age   Always       -       38010669
-> 197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       0
-> 198 Offline_Uncorrectable   0x0010   100   100   000    Old_age   Offline      -       0
-> 199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   Always       -       0
+Jan  7 17:19:09 markov kernel: [    3.289403] md: md0 stopped.
+Jan  7 17:19:09 markov kernel: [    3.328423] md: md1 stopped.
+Jan  7 17:19:09 markov kernel: [    3.382868] md: bind<sdb4>
+Jan  7 17:19:09 markov kernel: [    3.383054] md: bind<sdc4>
+Jan  7 17:19:09 markov kernel: [    3.383347] md: bind<sda3>
+Jan  7 17:19:09 markov kernel: [    3.390925] raid1: md1 is not clean -=
+- starting background reconstruction
+Jan  7 17:19:09 markov kernel: [    3.390963] raid1: raid set md1 activ=
+e with 3 out of 3 mirrors
+Jan  7 17:19:09 markov kernel: [    3.391016] md1: detected capacity ch=
+ange from 0 to 748056215552
+Jan  7 17:19:09 markov kernel: [    3.391169]  md1: unknown partition t=
+able
 
-So there have been reallocated sectors, so some of them are bad. And since they tend to be located in groups, it probably explains why you had a slow initial rebuild that then sped up. Again, if it's under warranty, get rid of it. If it's not, well, I'd probably still get rid of it or use it for something inconsequential, after using hdparm to secure erase it (or use dd to write zeros, which is OK for HDDs, not OK for SSDs).
+Jan  7 17:19:09 markov kernel: [    2.220056] ata1.00: SATA link up 3.0=
+ Gbps (SStatus 123 SControl 300)
+Jan  7 17:19:09 markov kernel: [    2.220103] ata1.01: SATA link down (=
+SStatus 0 SControl 310)
+Jan  7 17:19:09 markov kernel: [    2.228670] ata1.00: ATA-8: ST3750330=
+NS, SN05, max UDMA/133
+Jan  7 17:19:09 markov kernel: [    2.228709] ata1.00: 1465149168 secto=
+rs, multi 16: LBA48 NCQ (depth 0/32)
+Jan  7 17:19:09 markov kernel: [    2.244690] ata1.00: configured for U=
+DMA/133
+Jan  7 17:19:09 markov kernel: [    2.244845] scsi 0:0:0:0: Direct-Acce=
+ss     ATA      ST3750330NS      SN05 PQ: 0 ANSI: 5
 
+Aside from the message that md1 isn't clean, the SATA link down message=
+s
+sound a little odd.  I'm not sure how to map from atax to disk, but ata=
+2
+seems to be one of the new disks (sdb or sdc) and ata1 is the old one
+(sda).
 
-> Fortunately, I've already got new disks in the machine.  The transition
-> has proved challenging.
-> 
-> I was more or less ready to go, but I wanted to do some experiments with
-> the alignment of partitions and other parameters.  Any suggestions would
-> be great.
+/dev/disk/by-path shows
+  lrwxrwxrwx 1 root root   9 2013-01-07 17:15 pci-0000:00:1f.2-scsi-0:0=
+:0:0 -> ../../sda
+  lrwxrwxrwx 1 root root   9 2013-01-07 17:15 pci-0000:00:1f.2-scsi-1:0=
+:1:0 -> ../../sdb
+  lrwxrwxrwx 1 root root   9 2013-01-07 17:15 pci-0000:00:1f.5-scsi-0:0=
+:0:0 -> ../../sdc
 
-You must've missed the other email I sent about alignment. The reds are not aligned. And you're using completely whacky partition sizes between sda and sd[bc] for reasons I don't understand.
+Ross
 
-http://www.spinics.net/lists/raid/msg41506.html
+>=20
+> And then with md1, comprised of sda3 at 1461047490s, and sd[bc]4 are =
+3900193197s. A 2.66x difference. What is this? sda1 is 696GiB, while sd=
+[bc]4 are 1.8TiB each? Ummm=E2=80=A6
+>=20
+>=20
+>=20
+>=20
+> Chris Murphy--
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
-> P.S. Here are the results for sdb, which has also been generating
-> chatter in the logs.
-
-What do you mean by chatter in the logs? I don't see anything wrong here, but as something like 35% of drive failures occur without SMART ever indicating a single problem, who knows.
-
-
-Chris Murphy
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
