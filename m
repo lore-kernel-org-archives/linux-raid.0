@@ -1,66 +1,83 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Trouble adding disk to degraded array
-Date: Wed, 09 Jan 2013 12:55:22 -0500
-Message-ID: <50EDAF0A.7030903@turmel.org>
-References: <CAJ=LqmbYG8H45M196ZuRcDMu9Ucz0t_pQenQbZtMKM9AhSqrpQ@mail.gmail.com> <CAJ=LqmasSo9WRmPAO6-RBE5N=zxg9vitWhdqcekbUO89oxKevA@mail.gmail.com>
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Subject: Re: recommended way to add ssd cache to mdraid array
+Date: Wed, 9 Jan 2013 11:41:52 -0700
+Message-ID: <201301091141.52238.thomas@fjellstrom.ca>
+References: <201212212357.19292.thomas@fjellstrom.ca> <201212222044.27731.thomas@fjellstrom.ca>
+Reply-To: thomas@fjellstrom.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJ=LqmasSo9WRmPAO6-RBE5N=zxg9vitWhdqcekbUO89oxKevA@mail.gmail.com>
+In-Reply-To: <201212222044.27731.thomas@fjellstrom.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Nicholas Ipsen(Sephiroth_VII)" <sephiroth7vii@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 01/09/2013 12:21 PM, Nicholas Ipsen(Sephiroth_VII) wrote:
-> I recently had mdadm mark a disk in my RAID5-array as faulty. As it
-> was within warranty, I returned it to the manufacturer, and have now
-> installed a new drive. However, when I try to add it, recovery fails
-> about halfway through,  with the newly added drive being marked as a
-> spare, and one of my other drives marked as faulty!
+On Sat Dec 22, 2012, you wrote:
+> On Fri Dec 21, 2012, Thomas Fjellstrom wrote:
+> > I'm setting up a new nas box (7x2TB on a IBM M1015 8 port sas card
+> > flashed to 9211IT mode) and was thinking about adding an SSD cache to
+> > it. I've been following bcache's development, but it seems to have
+> > stalled a bit.
+> > 
+> > I've got a 240G Samsung 470/810 that I'd like to use for this.
+> > 
+> > Also I was wondering if anyone has any tips on the best (or their
+> > preferred) way to set up a "big" raid6 array with a single filesystem.
+> > I'm probably going to stick with XFS, but I'm not married to it, if
+> > there's something better for a big media (audio, video, disk images,
+> > backups, etc) volume I'd love to hear about it.
 > 
-> I seem to have full access to my data when assembling the array
-> without the new disk using --force, and e2fsck reports no problems
-> with the filesystem.
+> So my array has finally finished resyncing, and I've run a simple iozone
+> test on it formated with xfs, and I'm seeing some somewhat low write
+> results:
 > 
-> What is happening here?
+> moose@mrbig:/mnt/mrbig/data/test$ iozone -a -s 32G -r 8M
+>                                                             random  random
+> bkwd   record   stride
+>               KB  reclen   write rewrite    read    reread    read   write
+> read  rewrite     read   fwrite frewrite   fread  freread
+>         33554432    8192  212507  210382   630327   630852  372807  161710
+> 388319  4922757   617347   210642   217122  717279   716150
+> 
+> Is this normal for a 7 disk (2TB seagate barracudas) raid array on a pcie
+> x8 sas controller?
+> 
+> I was thinking it might be alignment issues, but there are no partitions on
+> the disks, and xfs seems to have correctly set up the sunit and swidth
+> settings (128/640 for a 7 disk raid6). While 200MB/s is probably more than
+> I need day to day, I'd like to make sure it is set up properly.
 
-You haven't offered a great deal of information here, so I'll speculate:
- an unused sector one of your original drives has become unreadable (per
-most drive specs, occurs naturally about every 12TB read).  Since
-rebuilding an array involves computing parity for every stripe, the
-unused sector is read and triggers the unrecoverable read error (URE).
-Since the rebuild is incomplete, mdadm has no way to generate this
-sector from another source, and doesn't know it isn't used, so the drive
-is kicked out of the array.  You now have a double-degraded raid5, which
-cannot continue operating.
+So I've retested the array without bcache in th way, and my write speeds are 
+still a fraction of the read speeds. Is this normal for a setup like mine?
 
-If you post the output of dmesg, "mdadm -D /dev/mdX", and "mdadm -E
-/dev/sd[a-z]" (the latter with the appropriate member devices), we can
-be more specific.
+The iozone results are a bit odd as well, I'm seeing the write speeds get 
+worse as the record size goes up. To compare with the bcache result above:
 
-BTW, this exact scenario is why raid6 is so popular, and why weekly
-scrubbing is vital.
+                                                            random  random    
+bkwd   record   stride                                   
+              KB  reclen   write rewrite    read    reread    read   write    
+read  rewrite     read   fwrite frewrite   fread  freread
+        33554432    8192  177919  167524   632030   629077  371602  115228  
+384030  4934570   618061   161562   176033  708542   709788
 
-It's also possible that you are experiencing the side effects of an
-error timeout mismatch between your drives (defaults vary) and the linux
-driver stack (default 30s).  Drive timeout must be less than the driver
-timeout, or good drives will eventually be kicked out of your array.
-Enterprise drives default to 7 seconds.  Desktop drives all default to
-more than 60 seconds, and it seems most will spend up to 120 seconds.
+I'm pretty sure the bare results I got before I tested the bcache setup were 
+better than this, a little over 200MB/s. But with the current kernel, these 
+are the numbers I'm getting.
 
-Cheap desktop drives cannot change their timeout.  For those, you must
-change the driver timeout with:
+Specs:
+Intel Core i3-2120
+16GB 1333MHZ DDR3 ECC
+30GB Vertex 1 SSD for /
+IBM M1015 flashed with the LSI 9211-8i IT firmware
+7x2TB Seagate Baracuda HDDs in raid6 unpartitioned and formatted with XFS
 
-echo 120 >/sys/block/sdX/device/timeout
+This system is currently dedicated to nothing but NAS duties. Later on I might 
+get it doing other things, but right now, its actually doing nothing but 
+running a RAID6 array that I haven't started using yet, so there shouldn't be 
+too much getting in the way of the iozone tests.
 
-Better desktop drives will allow you to set a 7 second timeout with:
-
-smartctl -l scterc,70,70 /dev/sdX
-
-Either solution must be executed on each boot, or drive hot-swap.
-
-HTH,
-
-Phil
+-- 
+Thomas Fjellstrom
+thomas@fjellstrom.ca
