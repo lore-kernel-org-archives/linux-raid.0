@@ -1,59 +1,156 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: How do I tell which disk failed?
-Date: Tue, 8 Jan 2013 17:43:44 -0700
-Message-ID: <40AF2260-F675-4394-B669-74AF047AFEE6@colorremedies.com>
-References: <1357610701.16366.13.camel@corn.betterworld.us> <50EBAC5D.8080000@hardwarefreak.com> <1357628351.16366.86.camel@corn.betterworld.us> <02B6762C-3755-4CE3-9AB1-A48D3384CACB@colorremedies.com> <1357631996.16366.139.camel@corn.betterworld.us> <3D8A55DE-C4A8-4639-A662-CD3FF228230F@colorremedies.com> <1357682055.3484.34.camel@markov.biostat.ucsf.edu> <44902B51-EBD5-4D22-BC70-5D60F307CC08@colorremedies.com> <1357686788.3484.58.camel@markov.biostat.ucsf.edu>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Joe Lawrence <Joe.Lawrence@stratus.com>
+Subject: re: md: raid1,10: Handle REQ_WRITE_SAME flag in write bios
+Date: Tue, 8 Jan 2013 23:11:19 -0500 (EST)
+Message-ID: <alpine.DEB.2.02.1301082253320.25146@jlaw-desktop.mno.stratus.com>
+References: <20130108134415.GA840@elgon.mountain>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1357686788.3484.58.camel@markov.biostat.ucsf.edu>
+In-Reply-To: <20130108134415.GA840@elgon.mountain>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
+To: neilb@suse.de, linux-raid@vger.kernel.org
+Cc: Joe Lawrence <Joe.Lawrence@stratus.com>
 List-Id: linux-raid.ids
 
+On Tue, 8 Jan 2013, Dan Carpenter wrote:
 
-On Jan 8, 2013, at 4:13 PM, Ross Boylan <ross@biostat.ucsf.edu> wrote:
-
-> I didn't mean that the disk changed its sector size dynamically, just
-> that, e.g., it might have physical sectors of 4k but report that it has
-> (logical) sectors of 512.
-
-Reds are AF drives. Any 512e AF drive should be reported as having 512 bytes logical sector size, and 4096 byte physical sector size.
-
-
-> I'm not sure what you mean by the offset working.  I'm referring to the
-> fact that for some drives when you ask for logical sector n you actually
-> get physical sector n+1, n-2, or something like that.  This implies that
-> aligning on the logical sectors (meaning the ones the drive reports out)
-> might misalign on the physical ones.
-
-There are some drives floating around that have a jumper switch, targeted at Windows XP and older, that will do an offset like what you describe. The jumper isn't enabled by default, and you don't want to use it.
-
-
->> So you just need to use a more recent partition tool and repartition the disks correctly.
-> Correctly = start at multiples of 8?
-
-Don't think of it that way. You can come up with a partition sector start value divisible by 8 that is right in the middle of physical sector, which is what you don't want.
-
-Recent partitioning tools (i.e in the last 3 years at least), do the right thing if you don't 2nd guess them. First partition starts at 2048. Specify partition sizes in MiB. Now you won't have a problem.
-
+> Hello Joe Lawrence,
 > 
-> I thought 108 was the scaled smart score, which is between 0 and 255
-> with higher being better.  The raw value of 45 seemed more plausible as
-> an actual temperature, though I guess there's no guarantee of that.
-
-Yes.
-
-
+> This is a semi-automatic email about new static checker warnings.
 > 
-> sdb and sdc have similar numbers for Temperature_Celsius.
+> The patch aa992f57bd76: "md: raid1,10: Handle REQ_WRITE_SAME flag in 
+> write bios" from Dec 14, 2012, leads to the following Smatch 
+> complaint:
 > 
-> On the logs and sign of disk failure, it's quite possible I don't know
-> what I'm looking for.  Given their size and the fact that the drive
-> failure seems clear, I think I'll  spare you all the gory details.
+> drivers/md/raid10.c:3630 run()
+> 	 error: we previously assumed 'mddev->queue' could be null (see line 3619)
+> 
+> drivers/md/raid10.c
+>   3618		chunk_size = mddev->chunk_sectors << 9;
+>   3619		if (mddev->queue) {
+>                     ^^^^^^^^^^^^
+> Old check.
+> 
+>   3620			blk_queue_max_discard_sectors(mddev->queue,
+>   3621						      mddev->chunk_sectors);
+>   3622			blk_queue_io_min(mddev->queue, chunk_size);
+>   3623			if (conf->geo.raid_disks % conf->geo.near_copies)
+>   3624				blk_queue_io_opt(mddev->queue, chunk_size * conf->geo.raid_disks);
+>   3625			else
+>   3626				blk_queue_io_opt(mddev->queue, chunk_size *
+>   3627						 (conf->geo.raid_disks / conf->geo.near_copies));
+>   3628		}
+>   3629	
+>   3630		blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
+>                                                  ^^^^^^^^^^^^
+> New dereference.
+> 
+>   3631		rdev_for_each(rdev, mddev) {
+>   3632			long long diff;
+> 
+> regards,
+> dan carpenter
+> 
 
-I think you just have the one disk that's giving you trouble.
+Hi Neil,
 
+Here's a revised patch that should make the static checker happy.  If you 
+prefer a second patch instead, let me know.
 
-Chris Murphy
+Regards,
+
+-- Joe
+
+From 414901de959ea1873187fa3fecf2f00b107d40e2 Mon Sep 17 00:00:00 2001
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Date: Tue, 8 Jan 2013 23:02:38 -0500
+Subject: [PATCH 4/4] md: raid1,10: Handle REQ_WRITE_SAME flag in write bios
+
+Set mddev queue's max_write_same_sectors to its chunk_sector value (before
+disk_stack_limits merges the underlying disk limits.)  With that in place,
+be sure to handle writes coming down from the block layer that have the
+REQ_WRITE_SAME flag set.  That flag needs to be copied into any newly cloned
+write bio.
+
+Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+---
+ drivers/md/raid1.c  | 7 ++++++-
+ drivers/md/raid10.c | 9 +++++++--
+ 2 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index d5bddfc..6e5d5a5 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1000,6 +1000,7 @@ static void make_request(struct mddev *mddev, struct bio * bio)
+ 	const unsigned long do_flush_fua = (bio->bi_rw & (REQ_FLUSH | REQ_FUA));
+ 	const unsigned long do_discard = (bio->bi_rw
+ 					  & (REQ_DISCARD | REQ_SECURE));
++	const unsigned long do_same = (bio->bi_rw & REQ_WRITE_SAME);
+ 	struct md_rdev *blocked_rdev;
+ 	struct blk_plug_cb *cb;
+ 	struct raid1_plug_cb *plug = NULL;
+@@ -1301,7 +1302,8 @@ read_again:
+ 				   conf->mirrors[i].rdev->data_offset);
+ 		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
+ 		mbio->bi_end_io	= raid1_end_write_request;
+-		mbio->bi_rw = WRITE | do_flush_fua | do_sync | do_discard;
++		mbio->bi_rw =
++			WRITE | do_flush_fua | do_sync | do_discard | do_same;
+ 		mbio->bi_private = r1_bio;
+ 
+ 		atomic_inc(&r1_bio->remaining);
+@@ -2818,6 +2820,9 @@ static int run(struct mddev *mddev)
+ 	if (IS_ERR(conf))
+ 		return PTR_ERR(conf);
+ 
++	if (mddev->queue)
++		blk_queue_max_write_same_sectors(mddev->queue,
++						 mddev->chunk_sectors);
+ 	rdev_for_each(rdev, mddev) {
+ 		if (!mddev->gendisk)
+ 			continue;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 64d4824..1a74c12 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1105,6 +1105,7 @@ static void make_request(struct mddev *mddev, struct bio * bio)
+ 	const unsigned long do_fua = (bio->bi_rw & REQ_FUA);
+ 	const unsigned long do_discard = (bio->bi_rw
+ 					  & (REQ_DISCARD | REQ_SECURE));
++	const unsigned long do_same = (bio->bi_rw & REQ_WRITE_SAME);
+ 	unsigned long flags;
+ 	struct md_rdev *blocked_rdev;
+ 	struct blk_plug_cb *cb;
+@@ -1460,7 +1461,8 @@ retry_write:
+ 							      rdev));
+ 			mbio->bi_bdev = rdev->bdev;
+ 			mbio->bi_end_io	= raid10_end_write_request;
+-			mbio->bi_rw = WRITE | do_sync | do_fua | do_discard;
++			mbio->bi_rw =
++				WRITE | do_sync | do_fua | do_discard | do_same;
+ 			mbio->bi_private = r10_bio;
+ 
+ 			atomic_inc(&r10_bio->remaining);
+@@ -1502,7 +1504,8 @@ retry_write:
+ 						   r10_bio, rdev));
+ 			mbio->bi_bdev = rdev->bdev;
+ 			mbio->bi_end_io	= raid10_end_write_request;
+-			mbio->bi_rw = WRITE | do_sync | do_fua | do_discard;
++			mbio->bi_rw =
++				WRITE | do_sync | do_fua | do_discard | do_same;
+ 			mbio->bi_private = r10_bio;
+ 
+ 			atomic_inc(&r10_bio->remaining);
+@@ -3569,6 +3572,8 @@ static int run(struct mddev *mddev)
+ 	if (mddev->queue) {
+ 		blk_queue_max_discard_sectors(mddev->queue,
+ 					      mddev->chunk_sectors);
++		blk_queue_max_write_same_sectors(mddev->queue,
++						 mddev->chunk_sectors);
+ 		blk_queue_io_min(mddev->queue, chunk_size);
+ 		if (conf->geo.raid_disks % conf->geo.near_copies)
+ 			blk_queue_io_opt(mddev->queue, chunk_size * conf->geo.raid_disks);
+-- 
+1.7.11.7
+
