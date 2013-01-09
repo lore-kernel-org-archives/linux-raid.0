@@ -1,23 +1,42 @@
-From: Phil Turmel <philip@turmel.org>
+From: Tudor Holton <tudor@smartguide.com.au>
 Subject: Re: Trouble adding disk to degraded array
-Date: Wed, 09 Jan 2013 16:54:04 -0500
-Message-ID: <50EDE6FC.1060403@turmel.org>
+Date: Thu, 10 Jan 2013 09:33:20 +1100
+Message-ID: <50EDF030.2060502@smartguide.com.au>
 References: <CAJ=LqmbYG8H45M196ZuRcDMu9Ucz0t_pQenQbZtMKM9AhSqrpQ@mail.gmail.com> <CAJ=LqmasSo9WRmPAO6-RBE5N=zxg9vitWhdqcekbUO89oxKevA@mail.gmail.com> <50EDAF0A.7030903@turmel.org> <CAJ=LqmbKR1BczeFyGeQooDsPMf8PqriiD3z7i1_LjupGij5ewQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CAJ=LqmbKR1BczeFyGeQooDsPMf8PqriiD3z7i1_LjupGij5ewQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Nicholas Ipsen(Sephiroth_VII)" <sephiroth7vii@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Nicholas,
+Having been through this process recently, and I agree that the advice 
+will most likely lead the user to speculate on this as a potential 
+cause, is there some way we could more easily alert the user to this 
+situation?  Maybe we could mark the disk with a (URE) tag in mdstat (my 
+preference) and/or reporting the error as "md: URE error occurred during 
+read on disk X, aborting synchronization, returning discs [Y,Z...] to 
+spare"? Trailing logs during synchronization can take several hours on 
+large arrays (and busy servers) and cause alot of time wastage, 
+particularly if you don't know what you're looking for.
 
-[Top-posting fixed.  Please don't do that.]
+Since it first affected me I found this kind of question asked quite 
+regularly on a multitude of tech forums and alot of the responses I came 
+across were incorrect or misleading at best. Alot more were along the 
+lines of "That happened to me, and after trying to fix it for days I 
+just wiped the array and started again.  Then it happened to the array 
+again later.  mdadm is so unstable!"  Unfortunately we can't avoid 
+people blaming the software, but we can at least help them to diagnose 
+the problem more quicky and help their pain and our reputation.  :-)
 
-On 01/09/2013 04:18 PM, Nicholas Ipsen(Sephiroth_VII) wrote:
+Incidentally, is the state "active faulty" an allowed state? Because 
+that could be a good way to report it, also.
+
+On 10/01/13 08:18, Nicholas Ipsen(Sephiroth_VII) wrote:
+> --snip---
+>
 > On 9 January 2013 18:55, Phil Turmel <philip@turmel.org> wrote:
 >> On 01/09/2013 12:21 PM, Nicholas Ipsen(Sephiroth_VII) wrote:
 >>> I recently had mdadm mark a disk in my RAID5-array as faulty. As it
@@ -31,9 +50,8 @@ On 01/09/2013 04:18 PM, Nicholas Ipsen(Sephiroth_VII) wrote:
 >>> with the filesystem.
 >>>
 >>> What is happening here?
->>
 >> You haven't offered a great deal of information here, so I'll speculate:
->>  an unused sector one of your original drives has become unreadable (per
+>>   an unused sector one of your original drives has become unreadable (per
 >> most drive specs, occurs naturally about every 12TB read).  Since
 >> rebuilding an array involves computing parity for every stripe, the
 >> unused sector is read and triggers the unrecoverable read error (URE).
@@ -42,57 +60,4 @@ On 01/09/2013 04:18 PM, Nicholas Ipsen(Sephiroth_VII) wrote:
 >> is kicked out of the array.  You now have a double-degraded raid5, which
 >> cannot continue operating.
 >>
->> If you post the output of dmesg, "mdadm -D /dev/mdX", and "mdadm -E
->> /dev/sd[a-z]" (the latter with the appropriate member devices), we can
->> be more specific.
->>
->> BTW, this exact scenario is why raid6 is so popular, and why weekly
->> scrubbing is vital.
->>
->> It's also possible that you are experiencing the side effects of an
->> error timeout mismatch between your drives (defaults vary) and the linux
->> driver stack (default 30s).  Drive timeout must be less than the driver
->> timeout, or good drives will eventually be kicked out of your array.
->> Enterprise drives default to 7 seconds.  Desktop drives all default to
->> more than 60 seconds, and it seems most will spend up to 120 seconds.
->>
->> Cheap desktop drives cannot change their timeout.  For those, you must
->> change the driver timeout with:
->>
->> echo 120 >/sys/block/sdX/device/timeout
->>
->> Better desktop drives will allow you to set a 7 second timeout with:
->>
->> smartctl -l scterc,70,70 /dev/sdX
->>
->> Either solution must be executed on each boot, or drive hot-swap.
-
-> Hello Phil, thank you for your prompt reply. It's the first time I've
-> done any serious debugging work on mdadm, so please excuse my
-> inadequacies. I've attached the files you requested. If you could
-> please look through them and offer your thoughts, it'd be most
-> appreciated.
-
-I've looked at your dmesg, and it confirms that you had an unrecoverable
-read error on /dev/sdc1. The attachment that was supposed to be the
-output of "mdadm -E /dev/sd[abcde]1" was something else, but no big
-deal.  (Partition #1 is the array member, not the whole drive.)
-
-(You can put such things directly in the email in the future--easier to
-read.)
-
-At this point, you could try to re-write the sectors on /dev/sdc that
-are currently unreadable, to get them to relocate.  But I'd recommend
-using the spare with dd_rescue to copy everything readable from
-/dev/sdc.  (With the array stopped.)
-
-Then you can zero the superblock on /dev/sdc1, leave the copy in place,
-and restart the array with the copy.  Then add sdc1 to the array, and
-let mdadm rebuild (*to* sdc, instead of *from* sdc).
-
-This plan does depend on the problem with sdc being transient.  Many
-UREs are, and are fixed by writing over them.  Please show the output of:
-
-smartctl -x /dev/sdc
-
-Phil
+--snip--
