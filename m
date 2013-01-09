@@ -1,95 +1,98 @@
-From: <pg_mh@mh.to.sabi.co.UK>
-Subject: Re: How do I tell which disk failed?
-Date: Tue, 8 Jan 2013 21:24:14 +0000
-Message-ID: <20716.36478.963423.179073@tree.ty.sabi.co.uk>
-References: <1357610701.16366.13.camel@corn.betterworld.us>
-	<alpine.DEB.2.00.1301081054520.26235@uplift.swm.pp.se>
-	<1357665605.16366.161.camel@corn.betterworld.us>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Trouble adding disk to degraded array
+Date: Wed, 09 Jan 2013 16:54:04 -0500
+Message-ID: <50EDE6FC.1060403@turmel.org>
+References: <CAJ=LqmbYG8H45M196ZuRcDMu9Ucz0t_pQenQbZtMKM9AhSqrpQ@mail.gmail.com> <CAJ=LqmasSo9WRmPAO6-RBE5N=zxg9vitWhdqcekbUO89oxKevA@mail.gmail.com> <50EDAF0A.7030903@turmel.org> <CAJ=LqmbKR1BczeFyGeQooDsPMf8PqriiD3z7i1_LjupGij5ewQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-From: pg@lxra2.for.sabi.co.uk (Peter Grandi)
-In-Reply-To: <1357665605.16366.161.camel@corn.betterworld.us>
+In-Reply-To: <CAJ=LqmbKR1BczeFyGeQooDsPMf8PqriiD3z7i1_LjupGij5ewQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: "Nicholas Ipsen(Sephiroth_VII)" <sephiroth7vii@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-[ ... ]
+Hi Nicholas,
 
->>> Personalities : [raid1]
->>> md0 : active raid1 sda1[0] sdc2[2] sdb2[1]
->>>      96256 blocks [3/3] [UUU]
+[Top-posting fixed.  Please don't do that.]
+
+On 01/09/2013 04:18 PM, Nicholas Ipsen(Sephiroth_VII) wrote:
+> On 9 January 2013 18:55, Phil Turmel <philip@turmel.org> wrote:
+>> On 01/09/2013 12:21 PM, Nicholas Ipsen(Sephiroth_VII) wrote:
+>>> I recently had mdadm mark a disk in my RAID5-array as faulty. As it
+>>> was within warranty, I returned it to the manufacturer, and have now
+>>> installed a new drive. However, when I try to add it, recovery fails
+>>> about halfway through,  with the newly added drive being marked as a
+>>> spare, and one of my other drives marked as faulty!
 >>>
->>> md1 : active raid1 sda3[0] sdc4[2] sdb4[1]
->>>      730523648 blocks [3/3] [UUU]
->>>      [>....................]  resync =  0.4% (3382400/730523648) finish=14164.9min speed=855K/sec
+>>> I seem to have full access to my data when assembling the array
+>>> without the new disk using --force, and e2fsck reports no problems
+>>> with the filesystem.
+>>>
+>>> What is happening here?
+>>
+>> You haven't offered a great deal of information here, so I'll speculate:
+>>  an unused sector one of your original drives has become unreadable (per
+>> most drive specs, occurs naturally about every 12TB read).  Since
+>> rebuilding an array involves computing parity for every stripe, the
+>> unused sector is read and triggers the unrecoverable read error (URE).
+>> Since the rebuild is incomplete, mdadm has no way to generate this
+>> sector from another source, and doesn't know it isn't used, so the drive
+>> is kicked out of the array.  You now have a double-degraded raid5, which
+>> cannot continue operating.
+>>
+>> If you post the output of dmesg, "mdadm -D /dev/mdX", and "mdadm -E
+>> /dev/sd[a-z]" (the latter with the appropriate member devices), we can
+>> be more specific.
+>>
+>> BTW, this exact scenario is why raid6 is so popular, and why weekly
+>> scrubbing is vital.
+>>
+>> It's also possible that you are experiencing the side effects of an
+>> error timeout mismatch between your drives (defaults vary) and the linux
+>> driver stack (default 30s).  Drive timeout must be less than the driver
+>> timeout, or good drives will eventually be kicked out of your array.
+>> Enterprise drives default to 7 seconds.  Desktop drives all default to
+>> more than 60 seconds, and it seems most will spend up to 120 seconds.
+>>
+>> Cheap desktop drives cannot change their timeout.  For those, you must
+>> change the driver timeout with:
+>>
+>> echo 120 >/sys/block/sdX/device/timeout
+>>
+>> Better desktop drives will allow you to set a 7 second timeout with:
+>>
+>> smartctl -l scterc,70,70 /dev/sdX
+>>
+>> Either solution must be executed on each boot, or drive hot-swap.
 
->>> I see my array is reconstructing, but I can't tell which
->>> disk failed. [ ... ] The system is currently sluggish and
->>> the load is 13 [ ... ]
+> Hello Phil, thank you for your prompt reply. It's the first time I've
+> done any serious debugging work on mdadm, so please excuse my
+> inadequacies. I've attached the files you requested. If you could
+> please look through them and offer your thoughts, it'd be most
+> appreciated.
 
-If your kernel is one that puts IO wait in the load average
-that's expected if there is heavy IO load that makes resync
-slow.
+I've looked at your dmesg, and it confirms that you had an unrecoverable
+read error on /dev/sdc1. The attachment that was supposed to be the
+output of "mdadm -E /dev/sd[abcde]1" was something else, but no big
+deal.  (Partition #1 is the array member, not the whole drive.)
 
->> A more recent check show speed continuing to rise; [ ... ]
+(You can put such things directly in the email in the future--easier to
+read.)
 
-Perhaps because the 'fsck' ended, as the speed issue is likely
-to have been been a long 'fsck', consequent to an abrupt
-shutdown:
+At this point, you could try to re-write the sectors on /dev/sdc that
+are currently unreadable, to get them to relocate.  But I'd recommend
+using the spare with dd_rescue to copy everything readable from
+/dev/sdc.  (With the array stopped.)
 
->>  [ ... ] The resulting shutdown (which was a manual power
->> off) leaves the arrays and their components in a funky state.
->> When the system comes back, it fixes things up. [ ... ]
+Then you can zero the superblock on /dev/sdc1, leave the copy in place,
+and restart the array with the copy.  Then add sdc1 to the array, and
+let mdadm rebuild (*to* sdc, instead of *from* sdc).
 
-Plus the poor alignment of the 'sda' partitions cutting write
-rates very significantly. Your 'sd[bc]' disks instead are GPT
-partitioned and that is by default 1MiB aligned, but you
-probably used some very old tool and 'sd[bc]4' are 1KiB aligned:
+This plan does depend on the problem with sdc being transient.  Many
+UREs are, and are fixed by writing over them.  Please show the output of:
 
-  $ factor 6835938
-  6835938: 2 3 17 29 2311
+smartctl -x /dev/sdc
 
-Someone else has pointed out the large difference in partition
-sizes among 'sda' vs. 'sd[bc]'; while that does not cause speed
-issue, the RAID set will just reduce to the multiple of the
-smallest size. Indeed it is reported as 730m blocks, which is
-the equivalent of  1461047490s reported by 'fdisk' for 'sda3'.
-
-Probably you should have a 2-disk RAID1 of 'sd[bc]' alone.
-
->> Even if this did happen, in RAID 1 wouldn't some of the
->> componnents (partitions in my case) be deemed good and others
->> bad, with the latter resynced to match the former?  And if
->> that is happening, why can't I tell which partition(s) are
->> master (considered good) and which are not
-
-Because you haven't read some relevant documentation...
-
->> (being overwritten with contents of the master)?
-
-Two ways, for example:
-
-  * The "event counts" reported by will be different (higher
-    event count means more recent).
-
-  * 'iostat' will tell you which drives are being read and which
-    written.
-
-> I checked the logs and didn't see anything about a drive
-> failing, though there were some smartd reports of changes in
-> drive parameters like temperature.
-
-The kernel logs always tell if a resync is triggered by a
-failure, but note that a resync happens on a failure when a
-spare is added to the RAID set to replace the failed drive, or
-when the drives are out of sync because of an abrupt shutdown,
-which seems to be your case.
-
-Anyhow the ways to look at the health of the disk suggested by
-others are somewhat misleading. The first thing is to have a
-mental model of possible disk failure modes... Anyhow, the most
-relevant data are in 'smartctl -A' the number of reallocated
-sectors (too many indicates a failing disk) and the SMART
-selftest and error logs, to check the frequency of issues.
+Phil
