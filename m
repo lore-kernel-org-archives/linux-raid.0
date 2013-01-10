@@ -1,82 +1,220 @@
-From: Brassow Jonathan <jbrassow@redhat.com>
-Subject: Re: [PATCH] DM-RAID: Fix RAID10's check for sufficient redundancy
-Date: Thu, 10 Jan 2013 09:02:36 -0600
-Message-ID: <05723465-2748-4BF8-8268-63989289E5A2@redhat.com>
-References: <1357783259.9103.5.camel@f16> <1357783352.9103.7.camel@f16> <20130110170340.6f4d0508@notabene.brown>
-Mime-Version: 1.0 (Apple Message framework v1085)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: chris <tknchris@gmail.com>
+Subject: Recovery/Access of imsm raid via mdadm?
+Date: Thu, 10 Jan 2013 11:23:45 -0500
+Message-ID: <CAKnNFz96pxExLDpoX1Yi+m0ASb-pV9eUVwZ7xmNQE9LnQHWT_g@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130110170340.6f4d0508@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hello,
 
-On Jan 10, 2013, at 12:03 AM, NeilBrown wrote:
+I have a machine which was running a imsm raid volume, where the
+motherboard failed and I do not have access to another system with
+imsm. I remember noticing some time ago that mdadm could recognize
+these arrays, so I decided to try recovery in a spare machine with the
+disks from the array.
 
-> On Wed, 09 Jan 2013 20:02:32 -0600 Jonathan Brassow <jbrassow@redhat.com>
-> wrote:
-> 
->> 
->> On Wed, 2013-01-09 at 20:00 -0600, Jonathan Brassow wrote:
->>> DM RAID:  Fix RAID10's check for sufficient redundancy
->>> 
->>> Before attempting to activate a RAID array, it is checked for sufficient
->>> redundancy.  That is, we make sure that there are not too many failed
->>> devices - or devices specified for rebuild - to undermine our ability to
->>> activate the array.  The current code performs this check twice - once to
->>> ensure there were not too many devices specified for rebuild by the user
->>> ('validate_rebuild_devices') and again after possibly experiencing a failure
->>> to read the superblock ('analyse_superblocks').  Neither of these checks are
->>> sufficient.  The first check is done properly but with insufficient
->>> information about the possible failure state of the devices to make a good
->>> determination if the array can be activated.  The second check is simply
->>> done wrong in the case of RAID10 because it doesn't account for the
->>> independence of the stripes (i.e. mirror sets).  The solution is to use the
->>> properly written check ('validate_rebuild_devices'), but perform the check
->>> after the superblocks have been read and we know which devices have failed.
->>> This gives us one check instead of two and performs it in a location where
->>> it can be done right.
->>> 
->>> Only RAID10 was affected and it was affected in the following ways:
->>> - the code did not properly catch the condition where a user specified
->>>  a device for rebuild that already had a failed device in the same mirror
->>>  set.  (This condition would, however, be caught at a deeper level in MD.)
->>> - the code triggers a false positive and denies activation when devices in
->>>  independent mirror sets have failed - counting the failures as though they
->>>  were all in the same set.
->>> 
->>> The most likely place this error was introduced (or this patch should have
->>> been included) is in commit 4ec1e369 - first introduced in v3.7-rc1.
->>> 
->>> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
->> 
->> Neil,
->> 
->> This patch should apply cleanly on top of recent changes, but will not
->> apply cleanly on an older kernel (like 3.7) due to version # changes and
->> introduction of the new 'far' and 'offset' RAID10 algorithms.  If you
->> think this fix should be pushed back into 3.7 rather than just applying
->> on the latest code, I will make a patch for 3.7 - although I'm not
->> certain how I'd handle the version number conflict.
-> 
-> Thanks Jon, I've applied that patch.
-> 
-> I can't say if it should be back-ported.  What is the worst-case scenario if
-> something goes wrong?  Do the current user-space code contain appropriate
-> tests itself too?
-> 
-> I don't see how version numbers will be a concern - they are just comments in
-> a 'Documentation' file aren't they?   If necessary, add extra text to explain
-> any possible confusion.
+I guess my questions are:
+Is this the right forum for help with this?
+Am I even going down a feasible path here or is this array dependent
+on the HBA in some way?
+If it is possible any ideas of anything else I can do to debug this further?
 
-The first condition mentioned above isn't that big of a problem since MD will catch the error deeper down.  The second problem can be pretty bad, but is somewhat limited.  The array will run as you would expect while it is active.  It is only when you attempt to re-activate or repair the array that the problem would occur.  In that case, it would only activate if there are 'copies - 1' or less failed devices present.  This doesn't count any spares that may have been introduced.  So, if you had a 2-stripe, 2-copy array (i.e. 'AA BB') and 2 of the devices failed ('A- B-'), you would not be able to reactivate the array unless you replaced at least one of the devices with a spare (e.g. 'A- BS').  There is no corruption or anything, but loosing more than one device and not having any spares wou
- ld leave you in a pickle.
+The original array was a raid 5 of 4x2TB sata disks
 
-The version number is tricky because we use it to determine what features a target has.  Testing of a particular feature keys off of this number rather than the kernel version.  I will have unit tests to make sure this bug is fixed and does not resurface, but it will only run if version = 1.4.2.  I can't assign the 3.7 kernel with 1.4.2 because that also implies that the 'far' and 'offset' algorithms are there (introduced in 1.4.1).  Tests for those algorithms would then fail because the feature isn't actually there.  What I could do is choose 1.3.2 (one more than the 3.7 version number, 1.3.1).  This would signal the fix but avoid implying Mikulas' changes or the new algorithms.  Then I would simply test for '(version == 1.3.2) || (version > 1.4.1)' for this particular unit test.  For the
-  average bloke, things would just work the way they expect.
+When I examine the first disk, things look good:
 
- brassow
+mdadm --examine /dev/sdb
+mdadm: /dev/sdb is not attached to Intel(R) RAID controller.
+mdadm: /dev/sdb is not attached to Intel(R) RAID controller.
+/dev/sdb:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.3.00
+    Orig Family : 226cc5df
+         Family : 226cc5df
+     Generation : 000019dc
+     Attributes : All supported
+           UUID : b67ea029:aaea7da2:2540c1eb:ebe98af1
+       Checksum : 651263bf correct
+    MPB Sectors : 2
+          Disks : 4
+   RAID Devices : 1
 
+  Disk02 Serial : Z1E1RPA9
+          State : active
+             Id : 00030000
+    Usable Size : 3907024648 (1863.01 GiB 2000.40 GB)
+
+[Volume0]:
+           UUID : 51a415ba:dc9c8cd7:5b3ea8de:465b4630
+     RAID Level : 5
+        Members : 4
+          Slots : [__U_]
+    Failed disk : 0
+      This Slot : 2
+     Array Size : 11721072640 (5589.04 GiB 6001.19 GB)
+   Per Dev Size : 3907024648 (1863.01 GiB 2000.40 GB)
+  Sector Offset : 0
+    Num Stripes : 15261814
+     Chunk Size : 128 KiB
+       Reserved : 0
+  Migrate State : idle
+      Map State : failed
+    Dirty State : clean
+
+  Disk00 Serial : Z1E1AKPH:0
+          State : active
+             Id : ffffffff
+    Usable Size : 3907024648 (1863.01 GiB 2000.40 GB)
+
+  Disk01 Serial : Z24091Q5:0
+          State : active
+             Id : ffffffff
+    Usable Size : 3907024648 (1863.01 GiB 2000.40 GB)
+
+  Disk03 Serial : Z1E19E4K:0
+          State : active
+             Id : ffffffff
+    Usable Size : 3907024648 (1863.01 GiB 2000.40 GB)
+
+
+When I try to scan for arrays I get this:
+# mdadm --examine --scan
+HBAs of devices does not match (null) != (null)
+ARRAY metadata=imsm UUID=b67ea029:aaea7da2:2540c1eb:ebe98af1
+ARRAY /dev/md/Volume0 container=b67ea029:aaea7da2:2540c1eb:ebe98af1
+member=0 UUID=51a415ba:dc9c8cd7:5b3ea8de:465b4630
+ARRAY metadata=imsm UUID=b67ea029:aaea7da2:2540c1eb:ebe98af1
+ARRAY /dev/md/Volume0 container=b67ea029:aaea7da2:2540c1eb:ebe98af1
+member=0 UUID=51a415ba:dc9c8cd7:5b3ea8de:465b4630
+
+My first concern is the warning that the HBA is missing, the whole
+reason I am going at it this way is because I don't have the HBA.
+Second concern is duplicate detection of the same array.
+
+If i try to run # mdadm -As:
+mdadm: No arrays found in config file or automatically
+
+ I also tried adding the output from --examine --scan to
+/etc/mdadm/mdadm.conf but after trying that I now get blank output:
+
+# mdadm --assemble /dev/md/Volume0
+#
+# mdadm --assemble --scan
+#
+
+full examine of all disks involved:
+
+/dev/sdb:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.3.00
+    Orig Family : 226cc5df
+         Family : 226cc5df
+     Generation : 000019dc
+     Attributes : All supported
+           UUID : b67ea029:aaea7da2:2540c1eb:ebe98af1
+       Checksum : 651263bf correct
+    MPB Sectors : 2
+          Disks : 4
+   RAID Devices : 1
+
+  Disk02 Serial : Z1E1RPA9
+          State : active
+             Id : 00030000
+    Usable Size : 3907024648 (1863.01 GiB 2000.40 GB)
+
+[Volume0]:
+           UUID : 51a415ba:dc9c8cd7:5b3ea8de:465b4630
+     RAID Level : 5
+        Members : 4
+          Slots : [__U_]
+    Failed disk : 0
+      This Slot : 2
+     Array Size : 11721072640 (5589.04 GiB 6001.19 GB)
+   Per Dev Size : 3907024648 (1863.01 GiB 2000.40 GB)
+  Sector Offset : 0
+    Num Stripes : 15261814
+     Chunk Size : 128 KiB
+       Reserved : 0
+  Migrate State : idle
+      Map State : failed
+    Dirty State : clean
+
+  Disk00 Serial : Z1E1AKPH:0
+          State : active
+             Id : ffffffff
+    Usable Size : 3907024648 (1863.01 GiB 2000.40 GB)
+
+  Disk01 Serial : Z24091Q5:0
+          State : active
+             Id : ffffffff
+    Usable Size : 3907024648 (1863.01 GiB 2000.40 GB)
+
+  Disk03 Serial : Z1E19E4K:0
+          State : active
+             Id : ffffffff
+    Usable Size : 3907024648 (1863.01 GiB 2000.40 GB)
+/dev/sdc:
+   MBR Magic : aa55
+Partition[0] :   3907027057 sectors at           63 (type 42)
+/dev/sdd:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.3.00
+    Orig Family : 226cc5df
+         Family : 226cc5df
+     Generation : 000019d9
+     Attributes : All supported
+           UUID : b67ea029:aaea7da2:2540c1eb:ebe98af1
+       Checksum : 641438ba correct
+    MPB Sectors : 2
+          Disks : 4
+   RAID Devices : 1
+
+  Disk03 Serial : Z1E19E4K
+          State : active
+             Id : 00020000
+    Usable Size : 3907024648 (1863.01 GiB 2000.40 GB)
+
+[Volume0]:
+           UUID : 51a415ba:dc9c8cd7:5b3ea8de:465b4630
+     RAID Level : 5
+        Members : 4
+          Slots : [__UU]
+    Failed disk : 0
+      This Slot : 3
+     Array Size : 11721072640 (5589.04 GiB 6001.19 GB)
+   Per Dev Size : 3907024648 (1863.01 GiB 2000.40 GB)
+  Sector Offset : 0
+    Num Stripes : 15261814
+     Chunk Size : 128 KiB
+       Reserved : 0
+  Migrate State : idle
+      Map State : failed
+    Dirty State : clean
+
+  Disk00 Serial : Z1E1AKPH:0
+          State : active
+             Id : ffffffff
+    Usable Size : 3907024648 (1863.01 GiB 2000.40 GB)
+
+  Disk01 Serial : Z24091Q5:0
+          State : active
+             Id : ffffffff
+    Usable Size : 3907024648 (1863.01 GiB 2000.40 GB)
+
+  Disk02 Serial : Z1E1RPA9
+          State : active
+             Id : 00030000
+    Usable Size : 3907024648 (1863.01 GiB 2000.40 GB)
+/dev/sde:
+   MBR Magic : aa55
+Partition[0] :   4294967295 sectors at            1 (type ee)
+
+# dpkg -l | grep mdadm
+ii  mdadm                                                       3.2.5-1+b1
+
+thanks
+chris
