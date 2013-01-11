@@ -1,27 +1,64 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: recommended way to add ssd cache to mdraid array
-Date: Fri, 11 Jan 2013 10:46:53 -0700
-Message-ID: <3EE4457C-A185-4223-A84D-5BFBB204A94C@colorremedies.com>
-References: <201212212357.19292.thomas@fjellstrom.ca> <201301100349.46794.thomas@fjellstrom.ca> <6FD79D70-01A4-4DC9-9494-157773CD0F11@colorremedies.com> <201301110520.07128.thomas@fjellstrom.ca> <5C8F4DE0-5C1E-476F-BBA8-17A7D695E599@colorremedies.com>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: chris <tknchris@gmail.com>
+Subject: Re: Recovery/Access of imsm raid via mdadm?
+Date: Fri, 11 Jan 2013 12:53:35 -0500
+Message-ID: <CAKnNFz8sZta4Y0eoP1BN8yhdSasqAAx4W+cQs6woVmEdvyqP4A@mail.gmail.com>
+References: <CAKnNFz96pxExLDpoX1Yi+m0ASb-pV9eUVwZ7xmNQE9LnQHWT_g@mail.gmail.com>
+	<50EEF5E4.8070509@intel.com>
+	<CAKnNFz9arLw6NBr4y0E3T+tGc6E5F5CZdGtRjSjwZcSgyyLtgw@mail.gmail.com>
+	<CAA9_cmfD6GS1Bdg2OKcyBxCRicHvO__wXSYzmSE40mGA=ace8Q@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5C8F4DE0-5C1E-476F-BBA8-17A7D695E599@colorremedies.com>
+In-Reply-To: <CAA9_cmfD6GS1Bdg2OKcyBxCRicHvO__wXSYzmSE40mGA=ace8Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid Raid <linux-raid@vger.kernel.org>
+To: Dan Williams <djbw@fb.com>
+Cc: Dave Jiang <dave.jiang@intel.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Ok so I looked through the examine data and it appears the order of
+the disks was:
 
-On Jan 11, 2013, at 10:39 AM, Chris Murphy <lists@colorremedies.com> wrote:
-> 
-> They probably have a high ERC time out as all consumer disks do so you should also check /sys/block/sdX/device/timeout and make sure it's not significantly less than the drive. It may be possible for smartctl or hdparm to figure out what the drive ERC timeout is.
-> 
-> http://cgi.csc.liv.ac.uk/~greg/projects/erc/
+sde 0 - Z1E1AKPH
+sdc 1 - Z24091Q5
+sdb 2 - Z1E1RPA9
+sdd 3 - Z1E19E4K
 
-Actually what I wrote is misleading to the point it's wrong. You want the linux device time out to be greater than the device timeout. The device needs to be allowed to give up, and report back a read error to linux/md, so that md knows it should reconstruct the missing data from parity, and overwrite the (obviously) bad blocks causing the read error.
+So I was going to try the first possible combination and assemble with
+sde/sdc/sdb/missing, this is what I tried:
 
-If the linux device time out is even a little bit less than the drive's timeout, md never gets the sector read error, doesn't repair it, since linux boots the whole drive. Now instead of repairing a few sectors, you have a degraded array on your hands. Usual consumer drive time outs are quite high, they can be up to a couple minutes long. Linux device time out is 30 seconds.
+# export IMSM_NO_PLATFORM=1
+# mdadm --create --verbose /dev/md/imsm /dev/sde /dev/sdc /dev/sdd
+missing --raid-devices 4 --metadata=imsm
+mdadm: /dev/sde appears to be part of a raid array:
+    level=raid0 devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sde.
+mdadm: /dev/sdc appears to be part of a raid array:
+    level=raid0 devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sdc.
+mdadm: /dev/sdd appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sdd.
+mdadm: size set to 1953511431K
+Continue creating array? y
+mdadm: This level does not support missing devices
 
+The example commands I found for creating imsm array were like this:
+mdadm --create --verbose /dev/md/imsm /dev/sde /dev/sdc /dev/sdd
+missing --raid-devices 4 --metadata=imsm
+mdadm --create --verbose /dev/md/Volume0 /dev/md/imsm --raid-devices 4 --level 5
 
-Chris Murphy
+Should I be defining level=5 when creating /dev/md/imsm also? Or
+should I only do it for imsm container and omit it from creating
+/dev/md/Volume0?
+
+thanks for everything so far I feel like I'm pretty close, once I can
+get the arrays up with missing and dont have to worry about
+overwriting anything then I'm sure I can work out the right
+combination of disks and hopefully the disks with no imsm metadata
+arent so damaged I cant recover
+
+chris
+
+On Thu, Jan 10, 2013 at 8:42 PM, Dan Williams <djbw@fb.com> wrote:
+>
+>>
