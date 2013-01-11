@@ -1,32 +1,59 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Trouble adding disk to degraded array
-Date: Fri, 11 Jan 2013 15:07:41 +0100 (CET)
-Message-ID: <alpine.DEB.2.00.1301111505110.12098@uplift.swm.pp.se>
-References: <CAJ=LqmbYG8H45M196ZuRcDMu9Ucz0t_pQenQbZtMKM9AhSqrpQ@mail.gmail.com> <CAJ=LqmasSo9WRmPAO6-RBE5N=zxg9vitWhdqcekbUO89oxKevA@mail.gmail.com> <50EDAF0A.7030903@turmel.org> <CAJ=LqmbKR1BczeFyGeQooDsPMf8PqriiD3z7i1_LjupGij5ewQ@mail.gmail.com>
- <50EDF030.2060502@smartguide.com.au> <CAJ=LqmZKXqn+nGt8=Rt8QS9S7pVS7qyEaN8Cbb91D7XETEvFug@mail.gmail.com> <CAJ=LqmaouLfjy6O=wSEaC600dsApWrGGPrc0Yqs25Mvbm+0Hdw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: recommended way to add ssd cache to mdraid array
+Date: Fri, 11 Jan 2013 10:39:50 -0700
+Message-ID: <5C8F4DE0-5C1E-476F-BBA8-17A7D695E599@colorremedies.com>
+References: <201212212357.19292.thomas@fjellstrom.ca> <201301100349.46794.thomas@fjellstrom.ca> <6FD79D70-01A4-4DC9-9494-157773CD0F11@colorremedies.com> <201301110520.07128.thomas@fjellstrom.ca>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJ=LqmaouLfjy6O=wSEaC600dsApWrGGPrc0Yqs25Mvbm+0Hdw@mail.gmail.com>
+In-Reply-To: <201301110520.07128.thomas@fjellstrom.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nicholas Ipsen <NCLI@NCLI-design.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, 11 Jan 2013, Nicholas Ipsen wrote:
 
-> Hello again. I manage to recover most of the data using ddrescue and
-> various option, but I'm still left with 24576B missing. Of course,
-> it's probably nothing major in terms of lost files, but I can't help
-> but worry that it will cause issues when I add the replacement disk to
-> the array. Do you have any advice regarding this problem?
+On Jan 11, 2013, at 5:20 AM, Thomas Fjellstrom <thomas@fjellstrom.ca> wrote:
 
-Force an filesystem check. I don't see any problem with md-raid because of 
-these zero:ed 24576 bytes, the only thing that will care is the 
-filesystem.
+> On Thu Jan 10, 2013, Chris Murphy wrote:
+>> On Jan 10, 2013, at 3:49 AM, Thomas Fjellstrom <thomas@fjellstrom.ca> wrote:
+>>> A lot of it will be streaming. Some may end up being random read/writes.
+>>> The test is just to gauge over all performance of the setup. 600MBs read
+>>> is far more than I need, but having writes at 1/3 that seems odd to me.
+>> 
+>> Tell us how many disks there are, and what the chunk size is. It could be
+>> too small if you have too few disks which results in a small full stripe
+>> size for a video context. If you're using the default, it could be too big
+>> and you're getting a lot of RWM. Stan, and others, can better answer this.
+> 
+> As stated earlier, its a 7x2TB array.
 
-If you want to be 100% sure, run a "check" action on the md raid and make 
-sure you have no mismatches on the md layer.
+OK fair enough, and as asked earlier, what's the chunk size?
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+> 
+>> Another thing to look at is if you're using XFS, what your mount options
+>> are. Invariably with an array of this size you need to be mounting with
+>> the inode64 option.
+> 
+> I'm not sure, but I think that's the default.
+
+It's not but as Stan writes it may not be preferred for your application.
+
+>> 
+> 
+> Plain old seagate baracudas, so not the best but at least they aren't greens.
+
+They probably have a high ERC time out as all consumer disks do so you should also check /sys/block/sdX/device/timeout and make sure it's not significantly less than the drive. It may be possible for smartctl or hdparm to figure out what the drive ERC timeout is.
+
+http://cgi.csc.liv.ac.uk/~greg/projects/erc/
+
+
+> 
+> 
+> Debian seems to set up a weekly or monthly scrub, which I leave on due to 
+> reading that same fact.
+
+Unless there's a script to email you the results, you'll need to check it periodically. Or write a script that checks for reported errors and only sends an email if that's the case.
+
+Chris Murphy
+
