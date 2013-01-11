@@ -1,34 +1,65 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: recommended way to add ssd cache to mdraid array
-Date: Fri, 11 Jan 2013 16:17:58 -0600
-Message-ID: <50F08F96.1050909@hardwarefreak.com>
-References: <201212212357.19292.thomas@fjellstrom.ca> <201301110520.07128.thomas@fjellstrom.ca> <5C8F4DE0-5C1E-476F-BBA8-17A7D695E599@colorremedies.com> <201301111151.44384.thomas@fjellstrom.ca>
-Reply-To: stan@hardwarefreak.com
+From: "dan1" <dan1@edenpics.com>
+Subject: mdadm grow size gives device or resource busy error
+Date: Fri, 11 Jan 2013 23:55:46 +0100
+Message-ID: <BE5C56FCE65D44E28D3E1EC53ABC7BC3@home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201301111151.44384.thomas@fjellstrom.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: thomas@fjellstrom.ca
-Cc: Chris Murphy <lists@colorremedies.com>, linux-raid Raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 1/11/2013 12:51 PM, Thomas Fjellstrom wrote:
+Hi,
 
->> It's not but as Stan writes it may not be preferred for your application.
-> 
-> Hm, ok, it is in my mount line, so I'll try it with that off. Though I would 
-> be interested in hearing from Stan why it may not be good.
+I am trying to shrink an md partition to lower its size but that fails with 
+an error message.
 
-You should not do this.  This parameter is not a toggle switch intended
-to be flipped on/off at will, but changed only once and left there.
+My context is the following:
+/dev/md2 has 3 partitions: /dev/sdb3; /dev/sdc3; /dev/sdd3
+The array is 480 Gbytes big (only 30 Gbytes used).
+I want to resize it to 100Gbytes (hosting company only allows that size).
 
-Never change XFS parameters willy-nilly without knowing the
-consequences.  And currently you certainly do not know them.
+Following a procedure, I first resize the partition to 70Gbytes to let some 
+space:
+umount /dev/md2
+e2fsck /dev/md2
+resize2fs /dev/md2 70G
 
-I don't have time for the detailed explanation.  Ask on the XFS list.
+Then, I disable the bitmap:
+mdadm --grow /dev/md2 --bitmap none
+And I shrink the array to 100Gbytes (201x512x1024):
+mdadm --grow /dev/md2 --size=105381888
 
--- 
-Stan
+Doing this, it produces the following error message:
+mdadm: Cannot set size on array members.
+mdadm: Cannot set device size for /dev/md2: Device or resource busy
+
+If I look at the messages with "dmesg | tail" there is no error message due 
+to that manipulation.
+Some things to check:
+1. No rebuild is in progress (with cat /proc/mdstat): OK
+2. The array is unmounted: OK
+3. The proble doesn't come from the bitmap as it has been disabled before. 
+OK
+4. Opened files related to the md2 device are the following:
+lsof | grep md2
+md2_raid1    403    root    cwd    DIR    9,91    4096    2 /
+md2_raid1    403    root    rtd      DIR    9,91    4096    2 /
+md2_raid1    403    root    txt  unknown                        / 
+proc/403/exe
+
+I don't know if this is ok or not but I assume it is fine as I didn't mount 
+the array and didn't put any file on it in this session.
+
+The versions of my system are the following:
+Linux CentOS 6.3
+mdadm V3.2.3
+
+Thanks for any help.
+
+Daniel 
 
