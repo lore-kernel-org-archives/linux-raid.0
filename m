@@ -1,65 +1,58 @@
-From: "dan1" <dan1@edenpics.com>
-Subject: mdadm grow size gives device or resource busy error
-Date: Fri, 11 Jan 2013 23:55:46 +0100
-Message-ID: <BE5C56FCE65D44E28D3E1EC53ABC7BC3@home>
+From: Nicholas Ipsen <NCLI@ncli-design.com>
+Subject: Re: Trouble adding disk to degraded array
+Date: Sat, 12 Jan 2013 00:01:09 +0000
+Message-ID: <CAJ=Lqma76UUcg154ChSW1e48ZxPCf8dG7WMNH6PpvQGYF_v7vw@mail.gmail.com>
+References: <CAJ=LqmbYG8H45M196ZuRcDMu9Ucz0t_pQenQbZtMKM9AhSqrpQ@mail.gmail.com>
+ <CAJ=LqmasSo9WRmPAO6-RBE5N=zxg9vitWhdqcekbUO89oxKevA@mail.gmail.com>
+ <50EDAF0A.7030903@turmel.org> <CAJ=LqmbKR1BczeFyGeQooDsPMf8PqriiD3z7i1_LjupGij5ewQ@mail.gmail.com>
+ <50EDF030.2060502@smartguide.com.au> <CAJ=LqmZKXqn+nGt8=Rt8QS9S7pVS7qyEaN8Cbb91D7XETEvFug@mail.gmail.com>
+ <CAJ=LqmaouLfjy6O=wSEaC600dsApWrGGPrc0Yqs25Mvbm+0Hdw@mail.gmail.com> <alpine.DEB.2.00.1301111505110.12098@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.2.00.1301111505110.12098@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+Yikes, I may really have stepped in it with that filesystem check... I
+first mounted the filesystem, and everything looked fine after
+replacing sdc1 with sdd1. I then
+ran fsck -f /dev/md0, and it started to report problems after 10-15
+minutes. Here's one of them, they all said the same except for the
+block number:
 
-I am trying to shrink an md partition to lower its size but that fails with 
-an error message.
+"Error reading block 5767176 (Attempt to read block from filesystem
+resulted in short read) while reading inode and block bitmaps.  Ignore
+error<y>?"
 
-My context is the following:
-/dev/md2 has 3 partitions: /dev/sdb3; /dev/sdc3; /dev/sdd3
-The array is 480 Gbytes big (only 30 Gbytes used).
-I want to resize it to 100Gbytes (hosting company only allows that size).
+I just kept pressing y and then approving a forced rewrite, as I
+thought it was just a few blocks, but after approving 40 or so
+rewrites, I got cold feet, cancelled fsck, and tried to remount md0
+through nautilus. But it wouldn't. Instead, I get this message:
 
-Following a procedure, I first resize the partition to 70Gbytes to let some 
-space:
-umount /dev/md2
-e2fsck /dev/md2
-resize2fs /dev/md2 70G
+Error mounting /dev/md0 at
+/media/ubuntu/be265e78-0c46-41fb-96ba-fda269e74a60: Command-line
+`mount -t "ext4" -o "uhelper=udisks2,nodev,nosuid" "/dev/md0"
+"/media/ubuntu/be265e78-0c46-41fb-96ba-fda269e74a60"' exited with
+non-zero exit status 32: mount: wrong fs type, bad option, bad
+superblock on /dev/md0,
+       missing codepage or helper program, or other error
+       In some cases useful info is found in syslog - try
+       dmesg | tail  or so
 
-Then, I disable the bitmap:
-mdadm --grow /dev/md2 --bitmap none
-And I shrink the array to 100Gbytes (201x512x1024):
-mdadm --grow /dev/md2 --size=105381888
+Naturally, I ran dmesg | tail, and got this;
+[104349.032352] EXT4-fs (md0): can't read group descriptor 378
+[104350.997625] EXT4-fs (md0): can't read group descriptor 250
+[104739.002433] EXT4-fs (md0): can't read group descriptor 250
+[104780.612995] EXT4-fs (md0): can't read group descriptor 250
 
-Doing this, it produces the following error message:
-mdadm: Cannot set size on array members.
-mdadm: Cannot set device size for /dev/md2: Device or resource busy
+I then stopped the array, and restarted it, which gave me this message:
+mdadm: clearing FAULTY flag for device 1 in /dev/md0 for /dev/sdb1
 
-If I look at the messages with "dmesg | tail" there is no error message due 
-to that manipulation.
-Some things to check:
-1. No rebuild is in progress (with cat /proc/mdstat): OK
-2. The array is unmounted: OK
-3. The proble doesn't come from the bitmap as it has been disabled before. 
-OK
-4. Opened files related to the md2 device are the following:
-lsof | grep md2
-md2_raid1    403    root    cwd    DIR    9,91    4096    2 /
-md2_raid1    403    root    rtd      DIR    9,91    4096    2 /
-md2_raid1    403    root    txt  unknown                        / 
-proc/403/exe
+Note that this is not the device that was giving me trouble before,
+nor is it the on I replaced it with.
 
-I don't know if this is ok or not but I assume it is fine as I didn't mount 
-the array and didn't put any file on it in this session.
+What have I done wrong here?
 
-The versions of my system are the following:
-Linux CentOS 6.3
-mdadm V3.2.3
-
-Thanks for any help.
-
-Daniel 
-
+Nicholas Ipsen
