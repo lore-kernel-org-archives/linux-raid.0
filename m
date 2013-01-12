@@ -1,42 +1,50 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: recommended way to add ssd cache to mdraid array
-Date: Sat, 12 Jan 2013 13:06:19 +0100 (CET)
-Message-ID: <2258826.8.1357992379424.JavaMail.root@zimbra>
-References: <6FD79D70-01A4-4DC9-9494-157773CD0F11@colorremedies.com>
+Date: Sat, 12 Jan 2013 08:14:04 -0600
+Message-ID: <50F16FAC.7000509@hardwarefreak.com>
+References: <2258826.8.1357992379424.JavaMail.root@zimbra>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6FD79D70-01A4-4DC9-9494-157773CD0F11@colorremedies.com>
+In-Reply-To: <2258826.8.1357992379424.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: linux-raid Raid <linux-raid@vger.kernel.org>
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Cc: Chris Murphy <lists@colorremedies.com>, linux-raid Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> Unlikely to make up the difference is the scheduler. Parallel fs's
-> like XFS don't perform nearly as well with CFQ, so you should have a
-> kernel parameter elevator=3Dnoop.
+On 1/12/2013 6:06 AM, Roy Sigurd Karlsbakk wrote:
+>> Unlikely to make up the difference is the scheduler. Parallel fs's
+>> like XFS don't perform nearly as well with CFQ, so you should have a
+>> kernel parameter elevator=3Dnoop.
+>=20
+> uh=85 how can the filesystem chosen be relevant to the disk elevator?=
+=20
 
-uh=E2=80=A6 how can the filesystem chosen be relevant to the disk eleva=
-tor? CFQ will try to optimize access to reduce seeks and should be comp=
-letely independent on the filesystem used on top. Also, if you really w=
-ant to disable CFQ (which you shouldn't do on rotating rust, IMO), bett=
-er use deadline (which is default on newer kernels).
+It's the other way round.  The chosen elevator can cause problems with
+the filesystem.  You should find this relevant conversation amongst the
+lead XFS developers educational:
 
-Vennlige hilsener / Best regards
+http://oss.sgi.com/archives/xfs/2011-07/msg00464.html
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+> CFQ will try to optimize access to reduce seeks
+
+"Completely Fair Queuing" -- The name alone tells you how it works.  It
+most certainly does not do what you state.  Please read the brief
+Wikipedia article:  http://en.wikipedia.org/wiki/CFQ
+
+> and should be completely independent on the filesystem used on top.
+
+Operative word: "should"
+
+The USA should not be $16 Trillion in debt, but it is.  By internationa=
+l
+law whales should not be killed, but they still are.  Etc.
+
+--=20
+Stan
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
