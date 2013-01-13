@@ -1,43 +1,41 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: recommended way to add ssd cache to mdraid array
-Date: Sun, 13 Jan 2013 12:18:58 -0700
-Message-ID: <24DE0AA3-FAEF-4FF1-BAA5-B3A6B041C2B9@colorremedies.com>
-References: <201212212357.19292.thomas@fjellstrom.ca> <201301110520.07128.thomas@fjellstrom.ca> <5C8F4DE0-5C1E-476F-BBA8-17A7D695E599@colorremedies.com> <201301111151.44384.thomas@fjellstrom.ca>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Dan Williams <djbw@fb.com>
+Subject: Re: Recovery/Access of imsm raid via mdadm?
+Date: Sun, 13 Jan 2013 21:05:16 +0000
+Message-ID: <84A937D219C2B44EB8EA44831ACA1E4916D902C5@PRN-MBX02-3.TheFacebook.com>
+References: <CAKnNFz_25zLMquBphPb8xx=rrG2BquXjLuc1-ke+1ztoVaUOgA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201301111151.44384.thomas@fjellstrom.ca>
+In-Reply-To: <CAKnNFz_25zLMquBphPb8xx=rrG2BquXjLuc1-ke+1ztoVaUOgA@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <CACA5BD6CF31084BBC42A9DE87312EF6@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Thomas Fjellstrom <thomas@fjellstrom.ca>
-Cc: linux-raid Raid <linux-raid@vger.kernel.org>
+To: chris <tknchris@gmail.com>, Neil Brown <neilb@suse.de>
+Cc: Dave Jiang <dave.jiang@intel.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
-On Jan 11, 2013, at 11:51 AM, Thomas Fjellstrom <thomas@fjellstrom.ca> =
-wrote:
 
-> On Fri Jan 11, 2013, you wrote:
->> OK fair enough, and as asked earlier, what's the chunk size?
->=20
-> Ah, sorry, I missed that bit. I didn't tweak the chunk size, so I hav=
-e the=20
-> default 512K.
+On 1/13/13 11:00 AM, "chris" <tknchris@gmail.com> wrote:
 
-OK now that the subject has been sufficiently detoured=85=20
+>Neil/Dave,
+>
+>Is it not possible to create imsm container with missing disk?
+>If not, Is there any way to recreate the array with all disks but
+>prevent any kind of sync which may overwrite array data?
 
-Benchmarking can perhaps help you isolate causes for problems you're ha=
-ving, but you haven't said what problems you're having.  You're using b=
-enchmarking data to go looking for a problem. This is a GigE network to=
- the NAS? If it's wireless, who cares, all of these array numbers are b=
-etter than wireless bandwidth and latency. If it's GigE, all of your se=
-quential read write numbers exceed the bandwidth of wired. So what's th=
-e problem? You want better random read writes? Rebuild the array with a=
- 32KB or 64KB chunk size, knowing you may take a small hit on the large=
-r sequential read/writes.
+The example was in that link I sent:
 
-Chris Murphy--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+mdadm --create /dev/md/imsm /dev/sd[bde] -e imsm
+mdadm --create /dev/md/vol0 /dev/sde missing /dev/sdb /dev/sdd -n 4 -l 5
+
+The first command marks all devices as spares.  The second creates the
+degraded array.
+ 
+You probably want at least sdb and sdd in there since they have a copy of
+the metadata.
+
+--
+Dan
+
