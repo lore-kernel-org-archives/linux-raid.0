@@ -1,225 +1,188 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: [PATCH V1] raid5: Correct some failed-stripe because the badsector.
-Date: Mon, 14 Jan 2013 16:44:49 +0800
-Message-ID: <201301141644459529478@gmail.com>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Subject: Re: recommended way to add ssd cache to mdraid array
+Date: Mon, 14 Jan 2013 01:58:27 -0700
+Message-ID: <201301140158.27135.thomas@fjellstrom.ca>
+References: <201212212357.19292.thomas@fjellstrom.ca> <201301110535.12512.thomas@fjellstrom.ca> <1358121900.3019.1.camel@workstation-home>
+Reply-To: thomas@fjellstrom.ca
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1358121900.3019.1.camel@workstation-home>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, =?gb2312?B?sd8sINPq?= <ycbzzjlbyby@gmail.com>, =?gb2312?B?1twsIPfo?= <qi.g.zhou@gmail.com>
+To: Tommy Apel Hansen <tommyapeldk@gmail.com>
+Cc: stan@hardwarefreak.com, Chris Murphy <lists@colorremedies.com>, linux-raid Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-QXQgcHJlc2VudCBmb3IgZmFpbGVkLXN0cmlwZXMsdGhlIHdyaXRlL3JlYWQgb3BlcmF0aW9ucyB3
-aWxsIG9ubHkgcmV0dXJuIGVycm9yLkJ1dCB0aGVyZQ0KYXJlIHNvbWUgZmFpbGVkLXN0cmlwZXMg
-d2hpY2ggY2FuIGNvcnJlY3QgYnkgd3JpdGUgb3BlcmF0aW9uLg0KDQpGb3IgZXhhbXBsZToNCjE6
-Q3JlYXRlIGEgcmFpZDUgYnkgZm91ciBkaXNrcyBtaXNzaW5nL3NkYi9zZGMvc2RkLg0KMjpJZiBy
-ZWFkZWQgIGRhdGEgZnJvbSBzZGIgYW5kIG1ldCBlcnJvcixzbyB0aGUgc3RyaXBlIGlzIGZhaWxl
-ZC5CZWNhdXNlDQp0aGUgc3RyaXBlIHdhcyBkZWdyYWRlZCx0aGVyZSBpcyBubyBjaGFuY2UgdG8g
-Y29ycmVjdCB0aGUgcmVhZC1lcnJvci4NCjM6SWYgbGF0ZXIgd3JpdGUtc3RyaXBlIGNvbnRhaW5z
-IHNkYiB3aGljaCBvdmVyd3JpdGUuVGhlIHN0cmlwZSBoYXMgYQ0KY2hhbmNlIHRvIGNvcnJlY3Qu
-DQo0OklmIHN0ZXAzIHN1Y2Nlc3NlZCwgYWRkIGEgc3BhcmUgZGlzayB0byByYWlkLHRoZSByYWlk
-IGNhbiBiZSBhY3RpdmUNCmZyb20gZGVncmFkZWQuDQoNClRoZXJlIGFyZSB0d28gbWV0aG9kcyB0
-byBjb21wdXRlIHJhaWQ1IHBhcml0eSxyY3cgYW5kIHJtdy4NCkluIHRoaXMgc2l0dWF0aW9uLGl0
-IG9ubHkgdXNlZCByY3cuDQpUaGVyZSBhcmUgc29tZSBjb25kaXRpb25zIGZvciBjb3JyZWN0aW5n
-IGZhaWxlZC1zdHJpcGUNCkE6IGluIGEgc3RyaXBlIHRoZXJlIGFyZSBvbmx5IG9uZSBvciB0d28g
-YmFkZGlza3MobWF5YmUgZmF1bHR5L3JlbW92ZWQvcmVhZC1lcnJvci93cml0ZS1lcnJvcikuDQpC
-OiBpbiBhIHN0cmlwZSBmb3IgYmFkZGlza3MgZXhjbHVkZSBwYXJpdHkgZGlza3MsdGhleSBtdXN0
-IG92ZXJ3cml0ZS4NCkM6QWZ0ZXIgd3JpdGluZyBkYXRhLGZvciByZWFkLWVycm9yIGRpc2tzIGl0
-IG11c3QgcmVyZWFkIHRvIGNoZWNrLg0KDQoNClRlc3RlZC1ieTogUWkgWmhvdSA8cWkuZy56aG91
-QGdtYWlsLmNvbT4NClNpZ25lZC1vZmYtYnk6IFl1IEJpYW4gPHljYnp6amxieWJ5QGdtYWlsLmNv
-bT4NClNpZ25lZC1vZmYtYnk6IEppYW5wZW5nIE1hIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4NCi0t
-LQ0KIGRyaXZlcnMvbWQvcmFpZDUuYyB8ICAxMzMgKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrLS0tLS0tLQ0KIGRyaXZlcnMvbWQvcmFpZDUuaCB8ICAgIDkgKysr
-Kw0KIDIgZmlsZXMgY2hhbmdlZCwgMTI1IGluc2VydGlvbnMoKyksIDE3IGRlbGV0aW9ucygtKQ0K
-DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5jIGIvZHJpdmVycy9tZC9yYWlkNS5jDQpp
-bmRleCAxOWQ3N2EwLi5mZDhmZTU4IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9tZC9yYWlkNS5jDQor
-KysgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCkBAIC0yMjQsNiArMjI0LDcgQEAgc3RhdGljIHZvaWQg
-ZG9fcmVsZWFzZV9zdHJpcGUoc3RydWN0IHI1Y29uZiAqY29uZiwgc3RydWN0IHN0cmlwZV9oZWFk
-ICpzaCkNCiAJCQkgICAgPCBJT19USFJFU0hPTEQpDQogCQkJCW1kX3dha2V1cF90aHJlYWQoY29u
-Zi0+bWRkZXYtPnRocmVhZCk7DQogCQlhdG9taWNfZGVjKCZjb25mLT5hY3RpdmVfc3RyaXBlcyk7
-DQorCQljbGVhcl9iaXQoU1RSSVBFX0ZBSUxFRF9SRVJFQUQsICZzaC0+c3RhdGUpOw0KIAkJaWYg
-KCF0ZXN0X2JpdChTVFJJUEVfRVhQQU5ESU5HLCAmc2gtPnN0YXRlKSkgew0KIAkJCWxpc3RfYWRk
-X3RhaWwoJnNoLT5scnUsICZjb25mLT5pbmFjdGl2ZV9saXN0KTsNCiAJCQl3YWtlX3VwKCZjb25m
-LT53YWl0X2Zvcl9zdHJpcGUpOw0KQEAgLTE4MDAsNiArMTgwMSw3IEBAIHN0YXRpYyB2b2lkIHJh
-aWQ1X2VuZF9yZWFkX3JlcXVlc3Qoc3RydWN0IGJpbyAqIGJpLCBpbnQgZXJyb3IpDQogCQkJYXRv
-bWljX2FkZChTVFJJUEVfU0VDVE9SUywgJnJkZXYtPmNvcnJlY3RlZF9lcnJvcnMpOw0KIAkJCWNs
-ZWFyX2JpdChSNV9SZWFkRXJyb3IsICZzaC0+ZGV2W2ldLmZsYWdzKTsNCiAJCQljbGVhcl9iaXQo
-UjVfUmVXcml0ZSwgJnNoLT5kZXZbaV0uZmxhZ3MpOw0KKwkJCWNsZWFyX2JpdChSNV9GYWlsZWRS
-ZXJlYWQsICZzaC0+ZGV2W2ldLmZsYWdzKTsNCiAJCX0gZWxzZSBpZiAodGVzdF9iaXQoUjVfUmVh
-ZE5vTWVyZ2UsICZzaC0+ZGV2W2ldLmZsYWdzKSkNCiAJCQljbGVhcl9iaXQoUjVfUmVhZE5vTWVy
-Z2UsICZzaC0+ZGV2W2ldLmZsYWdzKTsNCiANCkBAIC0xODU1LDYgKzE4NTcsNyBAQCBzdGF0aWMg
-dm9pZCByYWlkNV9lbmRfcmVhZF9yZXF1ZXN0KHN0cnVjdCBiaW8gKiBiaSwgaW50IGVycm9yKQ0K
-IAkJZWxzZSB7DQogCQkJY2xlYXJfYml0KFI1X1JlYWRFcnJvciwgJnNoLT5kZXZbaV0uZmxhZ3Mp
-Ow0KIAkJCWNsZWFyX2JpdChSNV9SZVdyaXRlLCAmc2gtPmRldltpXS5mbGFncyk7DQorCQkJY2xl
-YXJfYml0KFI1X0ZhaWxlZFJlcmVhZCwgJnNoLT5kZXZbaV0uZmxhZ3MpOw0KIAkJCWlmICghKHNl
-dF9iYWQNCiAJCQkgICAgICAmJiB0ZXN0X2JpdChJbl9zeW5jLCAmcmRldi0+ZmxhZ3MpDQogCQkJ
-ICAgICAgJiYgcmRldl9zZXRfYmFkYmxvY2tzKA0KQEAgLTE5MTYsNiArMTkxOSw3IEBAIHN0YXRp
-YyB2b2lkIHJhaWQ1X2VuZF93cml0ZV9yZXF1ZXN0KHN0cnVjdCBiaW8gKmJpLCBpbnQgZXJyb3Ip
-DQogCQlpZiAoIXVwdG9kYXRlKSB7DQogCQkJc2V0X2JpdChXcml0ZUVycm9yU2VlbiwgJnJkZXYt
-PmZsYWdzKTsNCiAJCQlzZXRfYml0KFI1X1dyaXRlRXJyb3IsICZzaC0+ZGV2W2ldLmZsYWdzKTsN
-CisJCQljbGVhcl9iaXQoUjVfRmFpbGVkT3ZlcndyaXRlLCAmc2gtPmRldltpXS5mbGFncyk7DQog
-CQkJaWYgKCF0ZXN0X2FuZF9zZXRfYml0KFdhbnRSZXBsYWNlbWVudCwgJnJkZXYtPmZsYWdzKSkN
-CiAJCQkJc2V0X2JpdChNRF9SRUNPVkVSWV9ORUVERUQsDQogCQkJCQkmcmRldi0+bWRkZXYtPnJl
-Y292ZXJ5KTsNCkBAIC0yNTIzLDYgKzI1MjcsMTAgQEAgaGFuZGxlX2ZhaWxlZF9zdHJpcGUoc3Ry
-dWN0IHI1Y29uZiAqY29uZiwgc3RydWN0IHN0cmlwZV9oZWFkICpzaCwNCiAJCWlmIChiaSkNCiAJ
-CQliaXRtYXBfZW5kID0gMTsNCiANCisJCWlmICh0ZXN0X2FuZF9jbGVhcl9iaXQoUjVfRmFpbGVk
-T3ZlcndyaXRlLCAmc2gtPmRldltpXS5mbGFncykpDQorCQkJcy0+ZmFpbGVkX292ZXJ3cml0ZS0t
-Ow0KKwkJY2xlYXJfYml0KFI1X0JhZFBhcml0eSwgJnNoLT5kZXZbaV0uZmxhZ3MpOw0KKw0KIAkJ
-aWYgKHRlc3RfYW5kX2NsZWFyX2JpdChSNV9PdmVybGFwLCAmc2gtPmRldltpXS5mbGFncykpDQog
-CQkJd2FrZV91cCgmY29uZi0+d2FpdF9mb3Jfb3ZlcmxhcCk7DQogDQpAQCAtMjgzOCw2ICsyODQ2
-LDEwIEBAIHN0YXRpYyB2b2lkIGhhbmRsZV9zdHJpcGVfZGlydHlpbmcoc3RydWN0IHI1Y29uZiAq
-Y29uZiwNCiAJCXByX2RlYnVnKCJmb3JjZSBSQ1cgbWF4X2RlZ3JhZGVkPSV1LCByZWNvdmVyeV9j
-cD0lbGx1IHNoLT5zZWN0b3I9JWxsdVxuIiwNCiAJCQkgY29uZi0+bWF4X2RlZ3JhZGVkLCAodW5z
-aWduZWQgbG9uZyBsb25nKXJlY292ZXJ5X2NwLA0KIAkJCSAodW5zaWduZWQgbG9uZyBsb25nKXNo
-LT5zZWN0b3IpOw0KKwl9IGVsc2UgaWYgKHMtPmZhaWxlZCA+IGNvbmYtPm1heF9kZWdyYWRlZCkg
-ew0KKwkJLypGb3Igd3JpdGUgZmFpbGVkLXN0cmlwZSwgb25seSB1c2UgcmN3ICovDQorCQlyY3cg
-PSAxOw0KKwkJcm13ID0gMjsNCiAJfSBlbHNlIGZvciAoaSA9IGRpc2tzOyBpLS07ICkgew0KIAkJ
-Lyogd291bGQgSSBoYXZlIHRvIHJlYWQgdGhpcyBidWZmZXIgZm9yIHJlYWRfbW9kaWZ5X3dyaXRl
-ICovDQogCQlzdHJ1Y3QgcjVkZXYgKmRldiA9ICZzaC0+ZGV2W2ldOw0KQEAgLTI5MDAsOCArMjkx
-MiwxMyBAQCBzdGF0aWMgdm9pZCBoYW5kbGVfc3RyaXBlX2RpcnR5aW5nKHN0cnVjdCByNWNvbmYg
-KmNvbmYsDQogCQkJICAgICEodGVzdF9iaXQoUjVfVVBUT0RBVEUsICZkZXYtPmZsYWdzKSB8fA0K
-IAkJCSAgICAgIHRlc3RfYml0KFI1X1dhbnRjb21wdXRlLCAmZGV2LT5mbGFncykpKSB7DQogCQkJ
-CXJjdysrOw0KLQkJCQlpZiAoIXRlc3RfYml0KFI1X0luc3luYywgJmRldi0+ZmxhZ3MpKQ0KKwkJ
-CQlpZiAoIXRlc3RfYml0KFI1X0luc3luYywgJmRldi0+ZmxhZ3MpKSB7DQorCQkJCSAvKiBPbmx5
-IGZvciBhbGwgZGF0YS1kaXNrcyAhUjVfSW5zeW5jICovDQorCQkJCQlpZiAocy0+ZmFpbGVkID4g
-Y29uZi0+bWF4X2RlZ3JhZGVkICYmDQorCQkJCQkJIXRlc3RfYml0KFNUUklQRV9GQUlMRURfV1JJ
-VEUsICZzaC0+c3RhdGUpKQ0KKwkJCQkJCXNldF9iaXQoU1RSSVBFX0RFTEFZRUQsICZzaC0+c3Rh
-dGUpOw0KIAkJCQkJY29udGludWU7IC8qIGl0J3MgYSBmYWlsZWQgZHJpdmUgKi8NCisJCQkJfQ0K
-IAkJCQlpZiAoDQogCQkJCSAgdGVzdF9iaXQoU1RSSVBFX1BSRVJFQURfQUNUSVZFLCAmc2gtPnN0
-YXRlKSkgew0KIAkJCQkJcHJfZGVidWcoIlJlYWRfb2xkIGJsb2NrICINCkBAIC0zMzQ3LDkgKzMz
-NjQsMTQgQEAgc3RhdGljIHZvaWQgYW5hbHlzZV9zdHJpcGUoc3RydWN0IHN0cmlwZV9oZWFkICpz
-aCwgc3RydWN0IHN0cmlwZV9oZWFkX3N0YXRlICpzKQ0KIAkJCX0NCiAJCX0NCiAJCWNsZWFyX2Jp
-dChSNV9JbnN5bmMsICZkZXYtPmZsYWdzKTsNCi0JCWlmICghcmRldikNCi0JCQkvKiBOb3QgaW4t
-c3luYyAqLzsNCi0JCWVsc2UgaWYgKGlzX2JhZCkgew0KKwkJaWYgKCFyZGV2KSB7DQorCQkJcy0+
-bm93b3JrZWQrKzsNCisJCQlpZiAoKGRldi0+dG93cml0ZSAmJiB0ZXN0X2JpdChSNV9PVkVSV1JJ
-VEUsICZkZXYtPmZsYWdzKSkgfHwNCisJCQkJdGVzdF9iaXQoUjVfRmFpbGVkT3ZlcndyaXRlLCAm
-ZGV2LT5mbGFncykpIHsNCisJCQkJcy0+ZmFpbGVkX292ZXJ3cml0ZSsrOw0KKwkJCQlzZXRfYml0
-KFI1X0ZhaWxlZE92ZXJ3cml0ZSwgJmRldi0+ZmxhZ3MpOw0KKwkJCX0NCisJCX0gZWxzZSBpZiAo
-aXNfYmFkKSB7DQogCQkJLyogYWxzbyBub3QgaW4tc3luYyAqLw0KIAkJCWlmICghdGVzdF9iaXQo
-V3JpdGVFcnJvclNlZW4sICZyZGV2LT5mbGFncykgJiYNCiAJCQkgICAgdGVzdF9iaXQoUjVfVVBU
-T0RBVEUsICZkZXYtPmZsYWdzKSkgew0KQEAgLTMzNTksNiArMzM4MSwxMyBAQCBzdGF0aWMgdm9p
-ZCBhbmFseXNlX3N0cmlwZShzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoLCBzdHJ1Y3Qgc3RyaXBlX2hl
-YWRfc3RhdGUgKnMpDQogCQkJCXNldF9iaXQoUjVfSW5zeW5jLCAmZGV2LT5mbGFncyk7DQogCQkJ
-CXNldF9iaXQoUjVfUmVhZEVycm9yLCAmZGV2LT5mbGFncyk7DQogCQkJfQ0KKwkJCWlmICghdGVz
-dF9iaXQoV3JpdGVFcnJvclNlZW4sICZyZGV2LT5mbGFncykgJiYNCisJCQkJKChkZXYtPnRvd3Jp
-dGUgJiYgdGVzdF9iaXQoUjVfT1ZFUldSSVRFLCAmZGV2LT5mbGFncykpIHx8DQorCQkJCXRlc3Rf
-Yml0KFI1X0ZhaWxlZE92ZXJ3cml0ZSwgJmRldi0+ZmxhZ3MpKSkgew0KKwkJCQlzLT5mYWlsZWRf
-b3ZlcndyaXRlKys7DQorCQkJCXNldF9iaXQoUjVfRmFpbGVkT3ZlcndyaXRlLCAmZGV2LT5mbGFn
-cyk7DQorCQkJfSBlbHNlIGlmIChpID09IHNoLT5wZF9pZHggfHwgaSA9PSBzaC0+cWRfaWR4KQ0K
-KwkJCQlzZXRfYml0KFI1X0JhZFBhcml0eSwgJmRldi0+ZmxhZ3MpOw0KIAkJfSBlbHNlIGlmICh0
-ZXN0X2JpdChJbl9zeW5jLCAmcmRldi0+ZmxhZ3MpKQ0KIAkJCXNldF9iaXQoUjVfSW5zeW5jLCAm
-ZGV2LT5mbGFncyk7DQogCQllbHNlIGlmIChzaC0+c2VjdG9yICsgU1RSSVBFX1NFQ1RPUlMgPD0g
-cmRldi0+cmVjb3Zlcnlfb2Zmc2V0KQ0KQEAgLTM0MTAsMTQgKzM0MzksMzYgQEAgc3RhdGljIHZv
-aWQgYW5hbHlzZV9zdHJpcGUoc3RydWN0IHN0cmlwZV9oZWFkICpzaCwgc3RydWN0IHN0cmlwZV9o
-ZWFkX3N0YXRlICpzKQ0KIAkJCWNsZWFyX2JpdChSNV9SZWFkRXJyb3IsICZkZXYtPmZsYWdzKTsN
-CiAJCQljbGVhcl9iaXQoUjVfUmVXcml0ZSwgJmRldi0+ZmxhZ3MpOw0KIAkJfQ0KLQkJaWYgKHRl
-c3RfYml0KFI1X1JlYWRFcnJvciwgJmRldi0+ZmxhZ3MpKQ0KLQkJCWNsZWFyX2JpdChSNV9JbnN5
-bmMsICZkZXYtPmZsYWdzKTsNCisJCWlmICh0ZXN0X2JpdChSNV9SZWFkRXJyb3IsICZkZXYtPmZs
-YWdzKSkgew0KKwkJCS8qDQorCQkJICogRm9yIGZhaWxlZC1zdHJpcGUgd2hpY2ggY29udGFpbmVk
-IGJhZHNlY3RvcnMsYWZ0ZXIgd3JpdGluZw0KKwkJCSAqIGl0IHNob3VsZCByZXJlYWQgdG8gY2hl
-Y2suDQorCQkJICovDQorCQkJc3RydWN0IG1kX3JkZXYgKnJkZXYyID0gcmN1X2RlcmVmZXJlbmNl
-KGNvbmYtPmRpc2tzW2ldLnJkZXYpOw0KKwkJCWlmICghaXNfYmFkICYmIHJkZXYyICYmICF0ZXN0
-X2JpdChGYXVsdHksICZyZGV2Mi0+ZmxhZ3MpICYmDQorCQkJCXRlc3RfYml0KFI1X1VQVE9EQVRF
-LCAmZGV2LT5mbGFncykgJiYNCisJCQkJKHRlc3RfYml0KFI1X0ZhaWxlZE92ZXJ3cml0ZSwgJmRl
-di0+ZmxhZ3MpIHx8DQorCQkJCSB0ZXN0X2JpdChSNV9CYWRQYXJpdHksICZkZXYtPmZsYWdzKSB8
-fA0KKwkJCQkgdGVzdF9iaXQoUjVfRmFpbGVkUmVyZWFkLCAmZGV2LT5mbGFncykpKSB7DQorCQkJ
-CXNldF9iaXQoU1RSSVBFX0ZBSUxFRF9SRVJFQUQsICZzaC0+c3RhdGUpOw0KKwkJCQlzZXRfYml0
-KFI1X0ZhaWxlZFJlcmVhZCwgJmRldi0+ZmxhZ3MpOw0KKwkJCQljbGVhcl9iaXQoUjVfRmFpbGVk
-T3ZlcndyaXRlLCAmZGV2LT5mbGFncyk7DQorCQkJCWNsZWFyX2JpdChSNV9CYWRQYXJpdHksICZk
-ZXYtPmZsYWdzKTsNCisJCQl9IGVsc2UNCisJCQkJY2xlYXJfYml0KFI1X0luc3luYywgJmRldi0+
-ZmxhZ3MpOw0KKwkJfQ0KKw0KIAkJaWYgKCF0ZXN0X2JpdChSNV9JbnN5bmMsICZkZXYtPmZsYWdz
-KSkgew0KIAkJCWlmIChzLT5mYWlsZWQgPCAyKQ0KIAkJCQlzLT5mYWlsZWRfbnVtW3MtPmZhaWxl
-ZF0gPSBpOw0KIAkJCXMtPmZhaWxlZCsrOw0KIAkJCWlmIChyZGV2ICYmICF0ZXN0X2JpdChGYXVs
-dHksICZyZGV2LT5mbGFncykpDQogCQkJCWRvX3JlY292ZXJ5ID0gMTsNCisJCQlpZiAoaSA9PSBz
-aC0+cGRfaWR4KQ0KKwkJCQlzLT5wX2ZhaWxlZCA9IDE7DQorCQkJZWxzZSBpZiAoaSA9PSBzaC0+
-cWRfaWR4KQ0KKwkJCQlzLT5xX2ZhaWxlZCA9IDE7DQorDQogCQl9DQogCX0NCiAJaWYgKHRlc3Rf
-Yml0KFNUUklQRV9TWU5DSU5HLCAmc2gtPnN0YXRlKSkgew0KQEAgLTM0OTIsMTkgKzM1NDMsNDYg
-QEAgc3RhdGljIHZvaWQgaGFuZGxlX3N0cmlwZShzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoKQ0KIAl9
-DQogDQogCXByX2RlYnVnKCJsb2NrZWQ9JWQgdXB0b2RhdGU9JWQgdG9fcmVhZD0lZCINCi0JICAg
-ICAgICIgdG9fd3JpdGU9JWQgZmFpbGVkPSVkIGZhaWxlZF9udW09JWQsJWRcbiIsDQorCQkiIHRv
-X3dyaXRlPSVkIGZhaWxlZD0lZCBmYWlsZWRfbnVtPSVkLCVkIg0KKwkJIiBmYWlsZWRfb3Zlcndy
-aXRlPSVkIHBfZmFpbGVkPSVkIHFfZmFpbGVkPSVkXG4iLA0KIAkgICAgICAgcy5sb2NrZWQsIHMu
-dXB0b2RhdGUsIHMudG9fcmVhZCwgcy50b193cml0ZSwgcy5mYWlsZWQsDQotCSAgICAgICBzLmZh
-aWxlZF9udW1bMF0sIHMuZmFpbGVkX251bVsxXSk7DQorCSAgICAgICBzLmZhaWxlZF9udW1bMF0s
-IHMuZmFpbGVkX251bVsxXSwgcy5mYWlsZWRfb3ZlcndyaXRlLA0KKwkgICAgICAgcy5wX2ZhaWxl
-ZCwgcy5xX2ZhaWxlZCk7DQorDQogCS8qIGNoZWNrIGlmIHRoZSBhcnJheSBoYXMgbG9zdCBtb3Jl
-IHRoYW4gbWF4X2RlZ3JhZGVkIGRldmljZXMgYW5kLA0KIAkgKiBpZiBzbywgc29tZSByZXF1ZXN0
-cyBtaWdodCBuZWVkIHRvIGJlIGZhaWxlZC4NCiAJICovDQogCWlmIChzLmZhaWxlZCA+IGNvbmYt
-Pm1heF9kZWdyYWRlZCkgew0KLQkJc2gtPmNoZWNrX3N0YXRlID0gMDsNCi0JCXNoLT5yZWNvbnN0
-cnVjdF9zdGF0ZSA9IDA7DQotCQlpZiAocy50b19yZWFkK3MudG9fd3JpdGUrcy53cml0dGVuKQ0K
-LQkJCWhhbmRsZV9mYWlsZWRfc3RyaXBlKGNvbmYsIHNoLCAmcywgZGlza3MsICZzLnJldHVybl9i
-aSk7DQotCQlpZiAocy5zeW5jaW5nICsgcy5yZXBsYWNpbmcpDQotCQkJaGFuZGxlX2ZhaWxlZF9z
-eW5jKGNvbmYsIHNoLCAmcyk7DQorCQkvKg0KKwkJICpEaXNrcyB3aGljaCByZW1vdmVkIG9yIGZh
-dWx0eSBtdXN0IGxlc3Mgb3IgZXF1YWwgbWF4X2RlZ3JhZGVkDQorCQkgKi8NCisJCSBpZiAocy5u
-b3dvcmtlZCA8PSBjb25mLT5tYXhfZGVncmFkZWQgJiYNCisJCQkoKGNvbmYtPmxldmVsIDwgNiAm
-Jg0KKwkJCShzLmZhaWxlZCAtIHMuZmFpbGVkX292ZXJ3cml0ZSA8PSBzLnBfZmFpbGVkKSkgfHwN
-CisJCQkgKGNvbmYtPmxldmVsID09IDYgJiYNCisJCQkocy5mYWlsZWQgLSBzLmZhaWxlZF9vdmVy
-d3JpdGUgPD0gcy5wX2ZhaWxlZCArIHMucV9mYWlsZWQpKSkpIHsNCisJCQlzZXRfYml0KFNUUklQ
-RV9GQUlMRURfV1JJVEUsICZzaC0+c3RhdGUpOw0KKwkJCXByX2RlYnVnKCJzdHJpcGUoJWxsdSkg
-ZmFpbGVkLCB0cnkgdG8gcmVjb3JyZWN0XG4iLA0KKwkJCQkodW5zaWduZWQgbG9uZyBsb25nKXNo
-LT5zZWN0b3IpOw0KKwkJfSBlbHNlIGlmICgocy5ub3dvcmtlZCA8PSBjb25mLT5tYXhfZGVncmFk
-ZWQgJiYNCisJCQlzLmZhaWxlZF9vdmVyd3JpdGUgPiAwICYmDQorCQkJIXRlc3RfYml0KFNUUklQ
-RV9QUkVSRUFEX0FDVElWRSwgJnNoLT5zdGF0ZSkpKQ0KKwkJCXByX2RlYnVnKCJzdHJpcGUoJWxs
-ZCkgZGVsYXkgZm9yIGZhaWxlZC13cml0ZVxuIiwNCisJCQkodW5zaWduZWQgbG9uZyBsb25nKXNo
-LT5zZWN0b3IpOw0KKwkJIGVsc2Ugew0KKwkJCXNoLT5jaGVja19zdGF0ZSA9IDA7DQorCQkJc2gt
-PnJlY29uc3RydWN0X3N0YXRlID0gMDsNCisJCQljbGVhcl9iaXQoU1RSSVBFX0ZBSUxFRF9XUklU
-RSwgJnNoLT5zdGF0ZSk7DQorCQkJY2xlYXJfYml0KFNUUklQRV9GQUlMRURfUkVSRUFELCAmc2gt
-PnN0YXRlKTsNCisJCQlpZiAocy50b19yZWFkK3MudG9fd3JpdGUrcy53cml0dGVuKSB7DQorCQkJ
-CWhhbmRsZV9mYWlsZWRfc3RyaXBlKGNvbmYsIHNoLCAmcywgZGlza3MsICZzLnJldHVybl9iaSk7
-DQorCQkJCXByX2RlYnVnKCJoYW5kbGVfZmFpbGVkX3N0cmlwZTolbGxkXG4iLA0KKwkJCQkJKHVu
-c2lnbmVkIGxvbmcgbG9uZylzaC0+c2VjdG9yKTsNCisJCQl9DQorCQkJaWYgKHMuc3luY2luZyAr
-IHMucmVwbGFjaW5nKQ0KKwkJCQkgaGFuZGxlX2ZhaWxlZF9zeW5jKGNvbmYsIHNoLCAmcyk7DQor
-CQl9DQorDQogCX0NCiANCiAJLyogTm93IHdlIGNoZWNrIHRvIHNlZSBpZiBhbnkgd3JpdGUgb3Bl
-cmF0aW9ucyBoYXZlIHJlY2VudGx5DQpAQCAtMzUyNSw2ICszNjAzLDcgQEAgc3RhdGljIHZvaWQg
-aGFuZGxlX3N0cmlwZShzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoKQ0KIAkJQlVHX09OKHNoLT5xZF9p
-ZHggPj0gMCAmJg0KIAkJICAgICAgICF0ZXN0X2JpdChSNV9VUFRPREFURSwgJnNoLT5kZXZbc2gt
-PnFkX2lkeF0uZmxhZ3MpICYmDQogCQkgICAgICAgIXRlc3RfYml0KFI1X0Rpc2NhcmQsICZzaC0+
-ZGV2W3NoLT5xZF9pZHhdLmZsYWdzKSk7DQorCQljbGVhcl9iaXQoU1RSSVBFX0ZBSUxFRF9XUklU
-RSwgJnNoLT5zdGF0ZSk7DQogCQlmb3IgKGkgPSBkaXNrczsgaS0tOyApIHsNCiAJCQlzdHJ1Y3Qg
-cjVkZXYgKmRldiA9ICZzaC0+ZGV2W2ldOw0KIAkJCWlmICh0ZXN0X2JpdChSNV9MT0NLRUQsICZk
-ZXYtPmZsYWdzKSAmJg0KQEAgLTM2MjAsMTAgKzM2OTksMzAgQEAgc3RhdGljIHZvaWQgaGFuZGxl
-X3N0cmlwZShzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoKQ0KIAkJY2xlYXJfYml0KFNUUklQRV9TWU5D
-SU5HLCAmc2gtPnN0YXRlKTsNCiAJfQ0KIA0KLQkvKiBJZiB0aGUgZmFpbGVkIGRyaXZlcyBhcmUg
-anVzdCBhIFJlYWRFcnJvciwgdGhlbiB3ZSBtaWdodCBuZWVkDQotCSAqIHRvIHByb2dyZXNzIHRo
-ZSByZXBhaXIvY2hlY2sgcHJvY2Vzcw0KKwkvKg0KKwkgKiBJZiBzdHJpcGUgZmFpbGVkIGJlY2F1
-c2UgYmFkc2VjdG9yIGFuZA0KKwkgKiBjYW4gd3JpdGUgdG8gY29ycmVjdCB0aGUgYmFkc2VjdG9y
-DQorCSAqIHdlIHVzZWQgcmVhZGVyciByb3V0aW5lIHdoaWNoIHJld3JpdGUgYW5kIHJlcmVhZA0K
-IAkgKi8NCi0JaWYgKHMuZmFpbGVkIDw9IGNvbmYtPm1heF9kZWdyYWRlZCAmJiAhY29uZi0+bWRk
-ZXYtPnJvKQ0KKwlpZiAodGVzdF9iaXQoU1RSSVBFX0ZBSUxFRF9SRVJFQUQsICZzaC0+c3RhdGUp
-KSB7DQorCQlmb3IgKGkgPSBkaXNrczsgaS0tOyApIHsNCisJCQlzdHJ1Y3QgcjVkZXYgKmRldiA9
-ICZzaC0+ZGV2W2ldOw0KKwkJCWlmICh0ZXN0X2JpdChSNV9GYWlsZWRSZXJlYWQsICZkZXYtPmZs
-YWdzKQ0KKwkJCQkmJiAhdGVzdF9iaXQoUjVfTE9DS0VELCAmZGV2LT5mbGFncykNCisJCQkJJiYg
-dGVzdF9iaXQoUjVfVVBUT0RBVEUsICZkZXYtPmZsYWdzKSkgew0KKwkJCQkvKiBpdCBqdXN0IHdy
-b3RlIGFuZCBzdWNlc3NlZCxzbyBub3QNCisJCQkJICogbmVjZXNzYXJ5IHRvIHJld3JpdGUsb25s
-eSBzZXQgZmxhZw0KKwkJCQkgKi8NCisJCQkJc2V0X2JpdChSNV9SZVdyaXRlLCAmZGV2LT5mbGFn
-cyk7DQorCQkJCXNldF9iaXQoUjVfV2FudHJlYWQsICZkZXYtPmZsYWdzKTsNCisJCQkJc2V0X2Jp
-dChSNV9MT0NLRUQsICZkZXYtPmZsYWdzKTsNCisJCQkJcy5sb2NrZWQrKzsNCisJCQkJfQ0KKwkJ
-fQ0KKwl9IGVsc2UgaWYgKHMuZmFpbGVkIDw9IGNvbmYtPm1heF9kZWdyYWRlZCAmJiAhY29uZi0+
-bWRkZXYtPnJvKQ0KKwkJLyogSWYgdGhlIGZhaWxlZCBkcml2ZXMgYXJlIGp1c3QgYSBSZWFkRXJy
-b3IsIHRoZW4gd2UgbWlnaHQgbmVlZA0KKwkJICogdG8gcHJvZ3Jlc3MgdGhlIHJlcGFpci9jaGVj
-ayBwcm9jZXNzDQorCQkgKi8NCiAJCWZvciAoaSA9IDA7IGkgPCBzLmZhaWxlZDsgaSsrKSB7DQog
-CQkJc3RydWN0IHI1ZGV2ICpkZXYgPSAmc2gtPmRldltzLmZhaWxlZF9udW1baV1dOw0KIAkJCWlm
-ICh0ZXN0X2JpdChSNV9SZWFkRXJyb3IsICZkZXYtPmZsYWdzKQ0KZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvbWQvcmFpZDUuaCBiL2RyaXZlcnMvbWQvcmFpZDUuaA0KaW5kZXggMThiMmM0YS4uNzJmZDkz
-NCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbWQvcmFpZDUuaA0KKysrIGIvZHJpdmVycy9tZC9yYWlk
-NS5oDQpAQCAtMjUxLDYgKzI1MSwxMCBAQCBzdHJ1Y3Qgc3RyaXBlX2hlYWRfc3RhdGUgew0KIAkg
-Ki8NCiAJaW50IHN5bmNpbmcsIGV4cGFuZGluZywgZXhwYW5kZWQsIHJlcGxhY2luZzsNCiAJaW50
-IGxvY2tlZCwgdXB0b2RhdGUsIHRvX3JlYWQsIHRvX3dyaXRlLCBmYWlsZWQsIHdyaXR0ZW47DQor
-CS8qIE92ZXJ3cml0ZSBkaXNrcyB3aGljaCBmYXVsdHkgb3IgcmVtb3ZlZCBvciBjb250YWluZWQg
-YmFkc2VjdG9yICovDQorCWludCBmYWlsZWRfb3ZlcndyaXRlOw0KKwlpbnQgbm93b3JrZWQ7IC8q
-ZGlzayBmYXVsdHkgb3IgcmVtb3ZlZCovDQorDQogCWludCB0b19maWxsLCBjb21wdXRlLCByZXFf
-Y29tcHV0ZSwgbm9uX292ZXJ3cml0ZTsNCiAJaW50IGZhaWxlZF9udW1bMl07DQogCWludCBwX2Zh
-aWxlZCwgcV9mYWlsZWQ7DQpAQCAtMjk5LDYgKzMwMyw5IEBAIGVudW0gcjVkZXZfZmxhZ3Mgew0K
-IAkJCSAqIGRhdGEgaW4sIGFuZCBub3cgaXMgYSBnb29kIHRpbWUgdG8gd3JpdGUgaXQgb3V0Lg0K
-IAkJCSAqLw0KIAlSNV9EaXNjYXJkLAkvKiBEaXNjYXJkIHRoZSBzdHJpcGUgKi8NCisJUjVfRmFp
-bGVkT3ZlcndyaXRlLCAvKm92ZXJ3cml0ZSBvbiBkaXNrIHdoaWNoIHJlbW92ZWQgb3IgZmF1bHR5
-IG9yIGhhZCBiYWRzZWN0b3JzKi8NCisJUjVfRmFpbGVkUmVyZWFkLA0KKwlSNV9CYWRQYXJpdHks
-DQogfTsNCiANCiAvKg0KQEAgLTMyMyw2ICszMzAsOCBAQCBlbnVtIHsNCiAJU1RSSVBFX0NPTVBV
-VEVfUlVOLA0KIAlTVFJJUEVfT1BTX1JFUV9QRU5ESU5HLA0KIAlTVFJJUEVfT05fVU5QTFVHX0xJ
-U1QsDQorCVNUUklQRV9GQUlMRURfV1JJVEUsDQorCVNUUklQRV9GQUlMRURfUkVSRUFELA0KIH07
-DQogDQogLyoNCi0tIA0KMS43LjkuNQ0K
+On Sun Jan 13, 2013, Tommy Apel Hansen wrote:
+> Could you do me a favor and run the iozone test with the -I switch on so
+> that we can seen the actual speed of the array and not you RAM
 
+Sure. Though I thought running the test with a file size twice the size of ram 
+would help with that issue.
+
+> /Tommy
+> 
+> On Fri, 2013-01-11 at 05:35 -0700, Thomas Fjellstrom wrote:
+> > On Thu Jan 10, 2013, Stan Hoeppner wrote:
+> > > On 1/10/2013 3:36 PM, Chris Murphy wrote:
+> > > > On Jan 10, 2013, at 3:49 AM, Thomas Fjellstrom <thomas@fjellstrom.ca> 
+wrote:
+> > > >> A lot of it will be streaming. Some may end up being random
+> > > >> read/writes. The test is just to gauge over all performance of the
+> > > >> setup. 600MBs read is far more than I need, but having writes at
+> > > >> 1/3 that seems odd to me.
+> > > > 
+> > > > Tell us how many disks there are, and what the chunk size is. It
+> > > > could be too small if you have too few disks which results in a
+> > > > small full stripe size for a video context. If you're using the
+> > > > default, it could be too big and you're getting a lot of RWM. Stan,
+> > > > and others, can better answer this.
+> > > 
+> > > Thomas is using a benchmark, and a single one at that, to judge the
+> > > performance.  He's not using his actual workloads.  Tuning/tweaking to
+> > > increase the numbers in a benchmark could be detrimental to actual
+> > > performance instead of providing a boost.  One must be careful.
+> > > 
+> > > Regarding RAID6, it will always have horrible performance compared to
+> > > non-parity RAID levels and even RAID5, for anything but full stripe
+> > > aligned writes, which means writing new large files or doing large
+> > > appends to existing files.
+> > 
+> > Considering its a rather simple use case, mostly streaming video, and
+> > misc file sharing for my home network, an iozone test should be rather
+> > telling. Especially the full test, from 4k up to 16mb
+> > 
+> >                                                             random  random   
+> >                                                             bkwd   record  
+> >                                                             stride
+> >               
+> >               KB  reclen   write rewrite    read    reread    read  
+> >               write    read  rewrite     read   fwrite frewrite   fread 
+> >               freread
+> >         
+> >         33554432       4  243295  221756   628767   624081    1028   
+> >         4627   16822  7468777    17740   233295   231092  582036  
+> >         579131 33554432       8  241134  225728   628264   627015   
+> >         2027    8879   25977 10030302    19578   228923   233928  591478
+> >           584892 33554432      16  233758  228122   633406   618248   
+> >         3952   13635   35676 10166457    19968   227599   229698  579267
+> >           576850 33554432      32  232390  219484   625968   625627   
+> >         7604   18800   44252 10728450    24976   216880   222545  556513
+> >           555371 33554432      64  222936  206166   631659   627823  
+> >         14112   22837   52259 11243595    30251   196243   192755 
+> >         498602   494354 33554432     128  214740  182619   628604  
+> >         626407   25088   26719   64912 11232068    39867   198638  
+> >         185078  463505   467853 33554432     256  202543  185964  
+> >         626614   624367   44363   34763   73939 10148251    62349  
+> >         176724   191899  593517   595646 33554432     512  208081 
+> >         188584   632188   629547   72617   39145   84876  9660408   
+> >         89877   182736   172912  610681   608870 33554432    1024 
+> >         196429  166125   630785   632413  116793   51904  133342 
+> >         8687679   121956   168756   175225  620587   616722 33554432   
+> >         2048  185399  167484   622180   627606  188571   70789  218009 
+> >         5357136   370189   171019   166128  637830   637120 33554432   
+> >         4096  198340  188695   632693   628225  289971   95211  278098 
+> >         4836433   611529   161664   170469  665617   655268 33554432   
+> >         8192  177919  167524   632030   629077  371602  115228  384030 
+> >         4934570   618061   161562   176033  708542   709788 33554432  
+> >         16384  196639  183744   631478   627518  485622  133467  462861 
+> >         4890426   644615   175411   179795  725966   734364
+> > > 
+> > > However, everything is relative.  This RAID6 may have plenty of random
+> > > and streaming write/read throughput for Thomas.  But a single benchmark
+> > > isn't going to inform him accurately.
+> > 
+> > 200MB/s may be enough, but the difference between the read and write
+> > throughput is a bit unexpected. It's not a weak machine (core i3-2120,
+> > dual core 3.2Ghz with HT, 16GB ECC 1333Mhz ram), and this is basically
+> > all its going to be doing.
+> > 
+> > > > You said these are unpartitioned disks, I think. In which case
+> > > > alignment of 4096 byte sectors isn't a factor if these are AF disks.
+> > > > 
+> > > > Unlikely to make up the difference is the scheduler. Parallel fs's
+> > > > like XFS don't perform nearly as well with CFQ, so you should have a
+> > > > kernel parameter elevator=noop.
+> > > 
+> > > If the HBAs have [BB|FB]WC then one should probably use noop as the
+> > > cache schedules the actual IO to the drives.  If the HBAs lack cache,
+> > > then deadline often provides better performance.  Testing of each is
+> > > required on a system and workload basis.  With two identical systems
+> > > (hardware/RAID/OS) one may perform better with noop, the other with
+> > > deadline.  The determining factor is the applications' IO patterns.
+> > 
+> > Mostly streaming reads, some long rsync's to copy stuff back and forth,
+> > file share duties (downloads etc).
+> > 
+> > > > Another thing to look at is md/stripe_cache_size which probably needs
+> > > > to be higher for your application.
+> > > > 
+> > > > Another thing to look at is if you're using XFS, what your mount
+> > > > options are. Invariably with an array of this size you need to be
+> > > > mounting with the inode64 option.
+> > > 
+> > > The desired allocator behavior is independent of array size but, once
+> > > again, dependent on the workloads.  inode64 is only needed for large
+> > > filesystems with lots of files, where 1TB may not be enough for the
+> > > directory inodes.  Or, for mixed metadata/data heavy workloads.
+> > > 
+> > > For many workloads including databases, video ingestion, etc, the
+> > > inode32 allocator is preferred, regardless of array size.  This is the
+> > > linux-raid list so I'll not go into detail of the XFS allocators.
+> > 
+> > If you have the time and the desire, I'd like to hear about it off list.
+> > 
+> > > >> The reason I've selected RAID6 to begin with is I've read (on this
+> > > >> mailing list, and on some hardware tech sites) that even with SAS
+> > > >> drives, the rebuild/resync time on a large array using large disks
+> > > >> (2TB+) is long enough that it gives more than enough time for
+> > > >> another disk to hit a random read error,
+> > > > 
+> > > > This is true for high density consumer SATA drives. It's not nearly
+> > > > as applicable for low to moderate density nearline SATA which has an
+> > > > order of magnitude lower UER, or for enterprise SAS (and some
+> > > > enterprise SATA) which has yet another order of magnitude lower UER.
+> > > >  So it depends on the disks, and the RAID size, and the
+> > > > backup/restore strategy.
+> > > 
+> > > Yes, enterprise drives have a much larger spare sector pool.
+> > > 
+> > > WRT rebuild time, this is one more reason to use RAID10 or a concat of
+> > > RAID1s.  The rebuild time is low, constant, predictable.  For 2TB
+> > > drives about 5-6 hours at 100% rebuild rate.  And rebuild time, for
+> > > any array type, with gargantuan drives, is yet one more reason not to
+> > > use the largest drives you can get your hands on.  Using 1TB drives
+> > > will cut that to 2.5-3 hours, and using 500GB drives will cut it down
+> > > to 1.25-1.5 hours, as all these drives tend to have similar streaming
+> > > write rates.
+> > > 
+> > > To wit, as a general rule I always build my arrays with the smallest
+> > > drives I can get away with for the workload at hand.  Yes, for a given
+> > > TB total it increases acquisition cost of drives, HBAs, enclosures, and
+> > > cables, and power consumption, but it also increases spindle
+> > > count--thus performance-- while decreasing rebuild times
+> > > substantially/dramatically.
+> > 
+> > I'd go raid10 or something if I had the space, but this little 10TB nas
+> > (which is the goal, a small, quiet, not too slow, 10TB nas with some
+> > kind of redundancy) only fits 7 3.5" HDDs.
+> > 
+> > Maybe sometime in the future I'll get a big 3 or 4 u case with a crap
+> > load of 3.5" HDD bays, but for now, this is what I have (as well as my
+> > old array, 7x1TB RAID5+XFS in 4in3 hot swap bays with room for 8 drives,
+> > but haven't bothered to expand the old array, and I have the new one
+> > almost ready to go).
+> > 
+> > I don't know if it impacts anything at all, but when burning in these
+> > drives after I bought them, I ran the same full iozone test a couple
+> > times, and each drive shows 150MB/s read, and similar write times
+> > (100-120+?). It impressed me somewhat, to see a mechanical hard drive go
+> > that fast. I remember back a few years ago thinking 80MBs was fast for a
+> > HDD.
+
+
+-- 
+Thomas Fjellstrom
+thomas@fjellstrom.ca
