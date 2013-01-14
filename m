@@ -1,74 +1,308 @@
-From: Thomas Fjellstrom <thomas@fjellstrom.ca>
-Subject: Re: recommended way to add ssd cache to mdraid array
-Date: Mon, 14 Jan 2013 02:06:05 -0700
-Message-ID: <201301140206.05052.thomas@fjellstrom.ca>
-References: <201212212357.19292.thomas@fjellstrom.ca> <201301111151.44384.thomas@fjellstrom.ca> <24DE0AA3-FAEF-4FF1-BAA5-B3A6B041C2B9@colorremedies.com>
-Reply-To: thomas@fjellstrom.ca
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: RE: Recovery/Access of imsm raid via mdadm?
+Date: Mon, 14 Jan 2013 12:36:01 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB1904DDB8@IRSMSX102.ger.corp.intel.com>
+References: <CAKnNFz_25zLMquBphPb8xx=rrG2BquXjLuc1-ke+1ztoVaUOgA@mail.gmail.com>
+	<84A937D219C2B44EB8EA44831ACA1E4916D902C5@PRN-MBX02-3.TheFacebook.com>
+ <CAKnNFz8dZVgS7M_rmQx0c_S+jo46EGs2GWAHc99ziaAR5OQp+w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <24DE0AA3-FAEF-4FF1-BAA5-B3A6B041C2B9@colorremedies.com>
+In-Reply-To: <CAKnNFz8dZVgS7M_rmQx0c_S+jo46EGs2GWAHc99ziaAR5OQp+w@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: linux-raid Raid <linux-raid@vger.kernel.org>
+To: chris <tknchris@gmail.com>
+Cc: Dan Williams <djbw@fb.com>, Neil Brown <neilb@suse.de>, "Jiang, Dave" <dave.jiang@intel.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun Jan 13, 2013, Chris Murphy wrote:
-> On Jan 11, 2013, at 11:51 AM, Thomas Fjellstrom <thomas@fjellstrom.ca=
->=20
-wrote:
-> > On Fri Jan 11, 2013, you wrote:
-> >> OK fair enough, and as asked earlier, what's the chunk size?
-> >=20
-> > Ah, sorry, I missed that bit. I didn't tweak the chunk size, so I h=
-ave
-> > the default 512K.
->=20
-> OK now that the subject has been sufficiently detoured=85
->=20
-> Benchmarking can perhaps help you isolate causes for problems you're
-> having, but you haven't said what problems you're having.  You're usi=
-ng
-> benchmarking data to go looking for a problem. This is a GigE network=
- to
-> the NAS? If it's wireless, who cares, all of these array numbers are
-> better than wireless bandwidth and latency. If it's GigE, all of your
-> sequential read write numbers exceed the bandwidth of wired. So what'=
-s the
-> problem? You want better random read writes? Rebuild the array with a=
- 32KB
-> or 64KB chunk size, knowing you may take a small hit on the larger
-> sequential read/writes.
+On Monday, January 14, 2013 1:56 AM chris <tknchris@gmail.com> wrote:
+> 
+> Now when I try all the permutations of disks, they all fail with
+> "mdadm: failed to activate array."
+> 
 
-I did the "just ignore it" with my last array. This time around I figur=
-ed it=20
-would be a good idea to make sure everything is setup as correctly as i=
-s=20
-possible given the hardware I have, because once its setup, It's too la=
-te to=20
-fix any issues found that need changes to the lower level settings.
+There are 2 more possibilities you should try:
+# mdadm --create --verbose /dev/md/Volume0 /dev/sdc missing /dev/sdb /dev/sdd --raid-devices 4 --level=5
+and
+# mdadm --create --verbose /dev/md/Volume0 missing /dev/sde /dev/sdb /dev/sdd --raid-devices 4 --level=5
 
-To me, the write performance shown so far seems quite low, which hints =
-at a=20
-problem that could be solved with some config change before I put it in=
-to=20
-"production". I would like to get it right (as I can), and learn a litt=
-le in=20
-the process.
+Lukasz
 
-> Chris Murphy--
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
+
+> ATTEMPT #1
+> # export IMSM_NO_PLATFORM=1
+> # mdadm --create --verbose /dev/md/imsm /dev/sdb /dev/sdc /dev/sdd
+> /dev/sde --raid-devices 4 --metadata=imsm
+> mdadm: /dev/sdb appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: metadata will over-write last partition on /dev/sdb.
+> mdadm: /dev/sdc appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: metadata will over-write last partition on /dev/sdc.
+> mdadm: /dev/sdd appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: metadata will over-write last partition on /dev/sdd.
+> mdadm: /dev/sde appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: metadata will over-write last partition on /dev/sde.
+> mdadm: size set to 1953511431K
+> Continue creating array? y
+> mdadm: container /dev/md/imsm prepared.
+> # mdadm --create --verbose /dev/md/Volume0 /dev/sde missing /dev/sdb
+> /dev/sdd --raid-devices 4 --level=5
+> mdadm: layout defaults to left-symmetric
+> mdadm: layout defaults to left-symmetric
+> mdadm: super1.x cannot open /dev/sde: Device or resource busy
+> mdadm: chunk size defaults to 128K
+> mdadm: /dev/sde appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: partition table exists on /dev/sde but will be lost or
+>        meaningless after creating array
+> mdadm: /dev/sdb appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: partition table exists on /dev/sdb but will be lost or
+>        meaningless after creating array
+> mdadm: /dev/sdd appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: partition table exists on /dev/sdd but will be lost or
+>        meaningless after creating array
+> mdadm: size set to 1953511424K
+> Continue creating array? y
+> mdadm: Creating array inside imsm container /dev/md/imsm
+> mdadm: failed to activate array.
+> # mdadm --stop /dev/md/imsm
+> mdadm: stopped /dev/md/imsm
+> # cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> unused devices: <none>
+> 
+> ATTEMPT #2
+> # export IMSM_NO_PLATFORM=1
+> # mdadm --create --verbose /dev/md/imsm /dev/sdb /dev/sdc /dev/sdd
+> /dev/sde --raid-devices 4 --metadata=imsm
+> mdadm: /dev/sdb appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: metadata will over-write last partition on /dev/sdb.
+> mdadm: /dev/sdc appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: metadata will over-write last partition on /dev/sdc.
+> mdadm: /dev/sdd appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: metadata will over-write last partition on /dev/sdd.
+> mdadm: /dev/sde appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: metadata will over-write last partition on /dev/sde.
+> mdadm: size set to 1953511431K
+> Continue creating array? y
+> mdadm: container /dev/md/imsm prepared.
+> # mdadm --create --verbose /dev/md/Volume0 missing /dev/sdc /dev/sdb
+> /dev/sdd --raid-devices 4 --level=5
+> mdadm: layout defaults to left-symmetric
+> mdadm: layout defaults to left-symmetric
+> mdadm: super1.x cannot open /dev/sdc: Device or resource busy
+> mdadm: chunk size defaults to 128K
+> mdadm: /dev/sdc appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: partition table exists on /dev/sdc but will be lost or
+>        meaningless after creating array
+> mdadm: /dev/sdb appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: partition table exists on /dev/sdb but will be lost or
+>        meaningless after creating array
+> mdadm: /dev/sdd appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: partition table exists on /dev/sdd but will be lost or
+>        meaningless after creating array
+> mdadm: size set to 1953511424K
+> Continue creating array? y
+> mdadm: Creating array inside imsm container /dev/md/imsm
+> mdadm: failed to activate array.
+> # mdadm --stop /dev/md/imsm
+> mdadm: stopped /dev/md/imsm
+> # cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> unused devices: <none>
+> 
+> ATTEMPT #3
+> # export IMSM_NO_PLATFORM=1
+> # mdadm --create --verbose /dev/md/imsm /dev/sdb /dev/sdc /dev/sdd
+> /dev/sde --raid-devices 4 --metadata=imsm
+> mdadm: /dev/sdb appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: metadata will over-write last partition on /dev/sdb.
+> mdadm: /dev/sdc appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: metadata will over-write last partition on /dev/sdc.
+> mdadm: /dev/sdd appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: metadata will over-write last partition on /dev/sdd.
+> mdadm: /dev/sde appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: metadata will over-write last partition on /dev/sde.
+> mdadm: size set to 1953511431K
+> Continue creating array? y
+> mdadm: container /dev/md/imsm prepared.
+> # mdadm --create --verbose /dev/md/Volume0 /dev/sde /dev/sdc missing
+> /dev/sdd --raid-devices 4 --level=5
+> mdadm: layout defaults to left-symmetric
+> mdadm: layout defaults to left-symmetric
+> mdadm: super1.x cannot open /dev/sde: Device or resource busy
+> mdadm: chunk size defaults to 128K
+> mdadm: /dev/sde appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: partition table exists on /dev/sde but will be lost or
+>        meaningless after creating array
+> mdadm: /dev/sdc appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: partition table exists on /dev/sdc but will be lost or
+>        meaningless after creating array
+> mdadm: /dev/sdd appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: partition table exists on /dev/sdd but will be lost or
+>        meaningless after creating array
+> mdadm: size set to 1953511424K
+> Continue creating array? y
+> mdadm: Creating array inside imsm container /dev/md/imsm
+> mdadm: failed to activate array.
+> # mdadm --stop /dev/md/imsm
+> mdadm: stopped /dev/md/imsm
+> # cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> unused devices: <none>
+> 
+> ATTEMPT #4
+> # export IMSM_NO_PLATFORM=1
+> # mdadm --create --verbose /dev/md/imsm /dev/sdb /dev/sdc /dev/sdd
+> /dev/sde --raid-devices 4 --metadata=imsm
+> mdadm: /dev/sdb appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: metadata will over-write last partition on /dev/sdb.
+> mdadm: /dev/sdc appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: metadata will over-write last partition on /dev/sdc.
+> mdadm: /dev/sdd appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: metadata will over-write last partition on /dev/sdd.
+> mdadm: /dev/sde appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: metadata will over-write last partition on /dev/sde.
+> mdadm: size set to 1953511431K
+> Continue creating array? y
+> mdadm: container /dev/md/imsm prepared.
+> # mdadm --create --verbose /dev/md/Volume0 /dev/sde /dev/sdc /dev/sdb
+> missing --raid-devices 4 --level=5
+> mdadm: layout defaults to left-symmetric
+> mdadm: layout defaults to left-symmetric
+> mdadm: super1.x cannot open /dev/sde: Device or resource busy
+> mdadm: chunk size defaults to 128K
+> mdadm: /dev/sde appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: partition table exists on /dev/sde but will be lost or
+>        meaningless after creating array
+> mdadm: /dev/sdc appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: partition table exists on /dev/sdc but will be lost or
+>        meaningless after creating array
+> mdadm: /dev/sdb appears to be part of a raid array:
+>     level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+> mdadm: partition table exists on /dev/sdb but will be lost or
+>        meaningless after creating array
+> mdadm: size set to 1953511424K
+> Continue creating array? y
+> mdadm: Creating array inside imsm container /dev/md/imsm
+> mdadm: failed to activate array.
+> 
+> Also noticed this in dmesg, all the attemps generate the same output
+> but heres the dmesg output related to attempt #4:
+> 
+> [292271.903919] md: md127 stopped.
+> [292271.903938] md: unbind<sde>
+> [292271.914179] md: export_rdev(sde)
+> [292271.914424] md: unbind<sdd>
+> [292271.927499] md: export_rdev(sdd)
+> [292271.927728] md: unbind<sdc>
+> [292271.940823] md: export_rdev(sdc)
+> [292271.940979] md: unbind<sdb>
+> [292271.954153] md: export_rdev(sdb)
+> [292289.371545] md: bind<sdb>
+> [292289.371731] md: bind<sdc>
+> [292289.371877] md: bind<sdd>
+> [292289.372024] md: bind<sde>
+> [292295.910881] md: bind<sde>
+> [292295.911130] md: bind<sdc>
+> [292295.911314] md: bind<sdb>
+> [292295.923942] bio: create slab <bio-1> at 1
+> [292295.923965] md/raid:md126: not clean -- starting background
+> reconstruction
+> [292295.924000] md/raid:md126: device sdb operational as raid disk 2
+> [292295.924005] md/raid:md126: device sdc operational as raid disk 1
+> [292295.924009] md/raid:md126: device sde operational as raid disk 0
+> [292295.925149] md/raid:md126: allocated 4250kB
+> [292295.927268] md/raid:md126: cannot start dirty degraded array.
+> [292295.929666] RAID conf printout:
+> [292295.929677]  --- level:5 rd:4 wd:3
+> [292295.929683]  disk 0, o:1, dev:sde
+> [292295.929688]  disk 1, o:1, dev:sdc
+> [292295.929693]  disk 2, o:1, dev:sdb
+> [292295.930898] md/raid:md126: failed to run raid set.
+> [292295.930902] md: pers->run() failed ...
+> [292295.931079] md: md126 stopped.
+> [292295.931096] md: unbind<sdb>
+> [292295.944228] md: export_rdev(sdb)
+> [292295.944267] md: unbind<sdc>
+> [292295.958126] md: export_rdev(sdc)
+> [292295.958167] md: unbind<sde>
+> [292295.970902] md: export_rdev(sde)
+> [292296.219837] device-mapper: table: 252:1: raid45: unknown target type
+> [292296.219845] device-mapper: ioctl: error adding target to table
+> [292296.291542] device-mapper: table: 252:1: raid45: unknown target type
+> [292296.291548] device-mapper: ioctl: error adding target to table
+> [292296.310926] quiet_error: 1116 callbacks suppressed
+> [292296.310934] Buffer I/O error on device dm-0, logical block 3907022720
+> [292296.310940] Buffer I/O error on device dm-0, logical block 3907022721
+> [292296.310944] Buffer I/O error on device dm-0, logical block 3907022722
+> [292296.310949] Buffer I/O error on device dm-0, logical block 3907022723
+> [292296.310953] Buffer I/O error on device dm-0, logical block 3907022724
+> [292296.310958] Buffer I/O error on device dm-0, logical block 3907022725
+> [292296.310962] Buffer I/O error on device dm-0, logical block 3907022726
+> [292296.310966] Buffer I/O error on device dm-0, logical block 3907022727
+> [292296.310973] Buffer I/O error on device dm-0, logical block 3907022720
+> [292296.310977] Buffer I/O error on device dm-0, logical block 3907022721
+> [292296.319968] device-mapper: table: 252:1: raid45: unknown target type
+> [292296.319975] device-mapper: ioctl: error adding target to table
+> 
+> Any ideas from here? Am I up the creek without a paddle? :(
+> 
+> thanks to everyone for all your help so far
+> chris
+> 
+> On Sun, Jan 13, 2013 at 4:05 PM, Dan Williams <djbw@fb.com> wrote:
+> >
+> >
+> > On 1/13/13 11:00 AM, "chris" <tknchris@gmail.com> wrote:
+> >
+> >>Neil/Dave,
+> >>
+> >>Is it not possible to create imsm container with missing disk?
+> >>If not, Is there any way to recreate the array with all disks but
+> >>prevent any kind of sync which may overwrite array data?
+> >
+> > The example was in that link I sent:
+> >
+> > mdadm --create /dev/md/imsm /dev/sd[bde] -e imsm
+> > mdadm --create /dev/md/vol0 /dev/sde missing /dev/sdb /dev/sdd -n 4 -l 5
+> >
+> > The first command marks all devices as spares.  The second creates the
+> > degraded array.
+> >
+> > You probably want at least sdb and sdd in there since they have a copy of
+> > the metadata.
+> >
+> > --
+> > Dan
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---=20
-Thomas Fjellstrom
-thomas@fjellstrom.ca
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
