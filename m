@@ -1,189 +1,334 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: recommended way to add ssd cache to mdraid array
-Date: Sun, 13 Jan 2013 19:23:55 -0500
-Message-ID: <50F3501B.30002@turmel.org>
-References: <201212212357.19292.thomas@fjellstrom.ca> <201301100349.46794.thomas@fjellstrom.ca> <6FD79D70-01A4-4DC9-9494-157773CD0F11@colorremedies.com> <201301110520.07128.thomas@fjellstrom.ca> <5C8F4DE0-5C1E-476F-BBA8-17A7D695E599@colorremedies.com> <3EE4457C-A185-4223-A84D-5BFBB204A94C@colorremedies.com> <50F0B2B7.1080604@turmel.org> <4424E5BF-CDA7-4888-8C0F-988D20D8C2F7@colorremedies.com> <50F33198.9060302@turmel.org> <9974543B-24D0-46E9-9852-09DE1C2F6D12@colorremedies.com>
+From: chris <tknchris@gmail.com>
+Subject: Re: Recovery/Access of imsm raid via mdadm?
+Date: Sun, 13 Jan 2013 19:56:27 -0500
+Message-ID: <CAKnNFz8dZVgS7M_rmQx0c_S+jo46EGs2GWAHc99ziaAR5OQp+w@mail.gmail.com>
+References: <CAKnNFz_25zLMquBphPb8xx=rrG2BquXjLuc1-ke+1ztoVaUOgA@mail.gmail.com>
+	<84A937D219C2B44EB8EA44831ACA1E4916D902C5@PRN-MBX02-3.TheFacebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9974543B-24D0-46E9-9852-09DE1C2F6D12@colorremedies.com>
+In-Reply-To: <84A937D219C2B44EB8EA44831ACA1E4916D902C5@PRN-MBX02-3.TheFacebook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: linux-raid Raid <linux-raid@vger.kernel.org>
+To: Dan Williams <djbw@fb.com>
+Cc: Neil Brown <neilb@suse.de>, Dave Jiang <dave.jiang@intel.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 01/13/2013 06:20 PM, Chris Murphy wrote:
->=20
-> On Jan 13, 2013, at 3:13 PM, Phil Turmel <philip@turmel.org> wrote:
->>=20
->> I haven't examined the code in detail, just watched patches pass on
->> the list.  :-)  But as I understand it, the error is returned with
->> the request that it belongs to, and the MD does not look at the
->> drive error code itself.  So MD know what read it was, for which
->> member devices, but doesn't care if the error came from the drive
->> itself, or the controller, or the driver.
->=20
-> I think it does, but I don't know diddly about the code.
+Hi Dan,
 
-If you think about this, you'll realize that the driver *must* keep
-track of every unique request for the block device.  Otherwise, how
-would MD know what data was read and ready to use?  And what data was
-written so its buffer could be freed?  Reads are distinct from writes.
+OK so the container comes up just fine now:
 
-> Only the drive knows what LBA's exhibit read and write errors. The
-> linux driver doesn't. And the linux driver times out after 30 seconds
-> by default, which is an eternity. There isn't just one request
-> pending. There are dozens to hundreds of pending commands,
-> representing possibly tens of thousands of LBAs in the drive's own
-> cache.
+# mdadm --create --verbose /dev/md/imsm /dev/sdb /dev/sdc /dev/sdd
+/dev/sde --raid-devices 4 --metadata=imsm
+mdadm: /dev/sdb appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sdb.
+mdadm: /dev/sdc appears to be part of a raid array:
+    level=raid0 devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sdc.
+mdadm: /dev/sdd appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sdd.
+mdadm: /dev/sde appears to be part of a raid array:
+    level=raid0 devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sde.
+mdadm: size set to 1953511431K
+Continue creating array? y
+mdadm: container /dev/md/imsm prepared.
+root@Microknoppix:/mnt/external# cat /proc/mdstat
+Personalities :
+md126 : inactive sde[3](S) sdd[2](S) sdc[1](S) sdb[0](S)
+      4420 blocks super external:imsm
 
-But reads are separate from writes, and MD handles them differently.
-See the "md" man-page under "Recovery".
+Upon review it all looks good
+# mdadm --detail /dev/md/imsm
+/dev/md/imsm:
+        Version : imsm
+     Raid Level : container
+  Total Devices : 4
 
-> Once the drive goes into sector recovery, I'm pretty sure SATA
-> drives, unlike SAS, basically go silent. That's probably when the
-> linux timeout counter starts, in the meantime md is still talking to
-> the linux driver making more requests.
->=20
-> This is a huge pile of just requests, not even the data it
-> represents. Some of those requests made it to the drive, some are
-> with the linux driver. I think it's much easier/efficient, when linux
-> block device driver timeout arrives, for the linux driver to just
-> nullify all requests, gives the drive the boot (lalala i can't hear
-> you i don't care if you start talking to me again in 60 seconds), and
-> tells md with a single error that the drive isn't even available. And
-> I'd expect md does the only thing it can do if it gets such an error
-> which is the same as a write error; it flags the device in the array
-> as faulty. I'd be surprised if it tried to reconstruct data at all in
-> such a case, without an explicit read error and LBA reported by the
-> drive.
+Working Devices : 4
 
-This is just wrong.
+  Member Arrays :
 
-> But I don't know the code, so I'm talking out my ass.
+    Number   Major   Minor   RaidDevice
 
-:-)
+       0       8       16        -        /dev/sdb
+       1       8       32        -        /dev/sdc
+       2       8       48        -        /dev/sdd
+       3       8       64        -        /dev/sde
 
-[trim /]
 
->> Yes.  But in that case, they've probably lost arrays without=20
->> understanding why.
->=20
-> Maybe. I don't have data on this. If recovery occurs in less than 30
-> seconds, they effectively get no indication. They'd have to be
-> looking at ECC errors recorded by SMART. And not all drives record
-> that attribute.
+Now when I try all the permutations of disks, they all fail with
+"mdadm: failed to activate array."
 
-See all the assistance requests on this list where the OP says somethin=
-g
-to the effect of: "I don't understand! The (failed) drive appears to be=
- OK!"
+ATTEMPT #1
+# export IMSM_NO_PLATFORM=1
+# mdadm --create --verbose /dev/md/imsm /dev/sdb /dev/sdc /dev/sdd
+/dev/sde --raid-devices 4 --metadata=imsm
+mdadm: /dev/sdb appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sdb.
+mdadm: /dev/sdc appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sdc.
+mdadm: /dev/sdd appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sdd.
+mdadm: /dev/sde appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sde.
+mdadm: size set to 1953511431K
+Continue creating array? y
+mdadm: container /dev/md/imsm prepared.
+# mdadm --create --verbose /dev/md/Volume0 /dev/sde missing /dev/sdb
+/dev/sdd --raid-devices 4 --level=5
+mdadm: layout defaults to left-symmetric
+mdadm: layout defaults to left-symmetric
+mdadm: super1.x cannot open /dev/sde: Device or resource busy
+mdadm: chunk size defaults to 128K
+mdadm: /dev/sde appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: partition table exists on /dev/sde but will be lost or
+       meaningless after creating array
+mdadm: /dev/sdb appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: partition table exists on /dev/sdb but will be lost or
+       meaningless after creating array
+mdadm: /dev/sdd appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: partition table exists on /dev/sdd but will be lost or
+       meaningless after creating array
+mdadm: size set to 1953511424K
+Continue creating array? y
+mdadm: Creating array inside imsm container /dev/md/imsm
+mdadm: failed to activate array.
+# mdadm --stop /dev/md/imsm
+mdadm: stopped /dev/md/imsm
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+unused devices: <none>
 
-[trim /]
+ATTEMPT #2
+# export IMSM_NO_PLATFORM=1
+# mdadm --create --verbose /dev/md/imsm /dev/sdb /dev/sdc /dev/sdd
+/dev/sde --raid-devices 4 --metadata=imsm
+mdadm: /dev/sdb appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sdb.
+mdadm: /dev/sdc appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sdc.
+mdadm: /dev/sdd appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sdd.
+mdadm: /dev/sde appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sde.
+mdadm: size set to 1953511431K
+Continue creating array? y
+mdadm: container /dev/md/imsm prepared.
+# mdadm --create --verbose /dev/md/Volume0 missing /dev/sdc /dev/sdb
+/dev/sdd --raid-devices 4 --level=5
+mdadm: layout defaults to left-symmetric
+mdadm: layout defaults to left-symmetric
+mdadm: super1.x cannot open /dev/sdc: Device or resource busy
+mdadm: chunk size defaults to 128K
+mdadm: /dev/sdc appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: partition table exists on /dev/sdc but will be lost or
+       meaningless after creating array
+mdadm: /dev/sdb appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: partition table exists on /dev/sdb but will be lost or
+       meaningless after creating array
+mdadm: /dev/sdd appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: partition table exists on /dev/sdd but will be lost or
+       meaningless after creating array
+mdadm: size set to 1953511424K
+Continue creating array? y
+mdadm: Creating array inside imsm container /dev/md/imsm
+mdadm: failed to activate array.
+# mdadm --stop /dev/md/imsm
+mdadm: stopped /dev/md/imsm
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+unused devices: <none>
 
->>> Given the craptastic state of affairs that manufacturers disallow
->>> a simple setting change to ask the drive to do LESS error
->>> correction, the recommendation to buy a different drive that can
->>> be so configured, is the best suggestion.
->>=20
->> For a while, it was Hitachi Deskstar or enterprise.  Western
->> Digital's new "Red" series appears to be an attempt to deal with
->> the backlash.
->=20
-> Yeah I know. :-) But I mean all drives could have this. It's a
-> request for LESS, not more. I'm not asking for better ECC, although
-> that would be nice, merely a faster time out as a settable option.
+ATTEMPT #3
+# export IMSM_NO_PLATFORM=1
+# mdadm --create --verbose /dev/md/imsm /dev/sdb /dev/sdc /dev/sdd
+/dev/sde --raid-devices 4 --metadata=imsm
+mdadm: /dev/sdb appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sdb.
+mdadm: /dev/sdc appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sdc.
+mdadm: /dev/sdd appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sdd.
+mdadm: /dev/sde appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sde.
+mdadm: size set to 1953511431K
+Continue creating array? y
+mdadm: container /dev/md/imsm prepared.
+# mdadm --create --verbose /dev/md/Volume0 /dev/sde /dev/sdc missing
+/dev/sdd --raid-devices 4 --level=5
+mdadm: layout defaults to left-symmetric
+mdadm: layout defaults to left-symmetric
+mdadm: super1.x cannot open /dev/sde: Device or resource busy
+mdadm: chunk size defaults to 128K
+mdadm: /dev/sde appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: partition table exists on /dev/sde but will be lost or
+       meaningless after creating array
+mdadm: /dev/sdc appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: partition table exists on /dev/sdc but will be lost or
+       meaningless after creating array
+mdadm: /dev/sdd appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: partition table exists on /dev/sdd but will be lost or
+       meaningless after creating array
+mdadm: size set to 1953511424K
+Continue creating array? y
+mdadm: Creating array inside imsm container /dev/md/imsm
+mdadm: failed to activate array.
+# mdadm --stop /dev/md/imsm
+mdadm: stopped /dev/md/imsm
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+unused devices: <none>
 
-You don't seem to understand:  The hard drive industry loses revenue
-when people set up raid arrays with cheap drives, and then have the
-temerity to return good drives that have been (arguably) misapplied.
+ATTEMPT #4
+# export IMSM_NO_PLATFORM=1
+# mdadm --create --verbose /dev/md/imsm /dev/sdb /dev/sdc /dev/sdd
+/dev/sde --raid-devices 4 --metadata=imsm
+mdadm: /dev/sdb appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sdb.
+mdadm: /dev/sdc appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sdc.
+mdadm: /dev/sdd appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sdd.
+mdadm: /dev/sde appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: metadata will over-write last partition on /dev/sde.
+mdadm: size set to 1953511431K
+Continue creating array? y
+mdadm: container /dev/md/imsm prepared.
+# mdadm --create --verbose /dev/md/Volume0 /dev/sde /dev/sdc /dev/sdb
+missing --raid-devices 4 --level=5
+mdadm: layout defaults to left-symmetric
+mdadm: layout defaults to left-symmetric
+mdadm: super1.x cannot open /dev/sde: Device or resource busy
+mdadm: chunk size defaults to 128K
+mdadm: /dev/sde appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: partition table exists on /dev/sde but will be lost or
+       meaningless after creating array
+mdadm: /dev/sdc appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: partition table exists on /dev/sdc but will be lost or
+       meaningless after creating array
+mdadm: /dev/sdb appears to be part of a raid array:
+    level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+mdadm: partition table exists on /dev/sdb but will be lost or
+       meaningless after creating array
+mdadm: size set to 1953511424K
+Continue creating array? y
+mdadm: Creating array inside imsm container /dev/md/imsm
+mdadm: failed to activate array.
 
-Manufacturers have a financial interest in selling enterprise drives
-instead of desktop drives, and have made desktop drives painful to use
-in this application.  The manufacturers have even redefined "RAID".
-Supposedly "I" now stands for "Independent" instead of "Inexpensive".
+Also noticed this in dmesg, all the attemps generate the same output
+but heres the dmesg output related to attempt #4:
 
->>> And a very distant alternative 2 is to zero or Secure Erase the
->>> drive every so often, in hopes of avoiding bad sectors altogether
->>> =E2=80=94 is tedious, as well as implies either putting the drive i=
-nto a
->>> degraded state, or cycling a spare drive.
->>=20
->> No.  This still isn't safe.  UREs can happen at any time, and are
->> spec'd to occur at about every 12TB read.  Even on a freshly wiped
->> drive. Spares don't help either, as a rebuild onto a spare stresses
->> the rest of the array, and is likely to expose any developing
->> UREs.
->=20
-> Technically the spec statistic is "less than" 1 bit in 10^14 for a
-> consumer disk. So it's not that you will get a URE at 12TB, but that
-> you should be able to read at least 11.37TiB without a URE. It's
-> entirely within the tolerance if the mean occurrence happens 2 bits
-> shy of 10^15 bits, or 113TiB. By using "less than" the value is not a
-> mean. It's likely a lot higher than 12TB, or we'd have total mayhem
-> by now. That's only 3 reads of a 4TB drive otherwise. It's bad, but
-> not that bad.
+[292271.903919] md: md127 stopped.
+[292271.903938] md: unbind<sde>
+[292271.914179] md: export_rdev(sde)
+[292271.914424] md: unbind<sdd>
+[292271.927499] md: export_rdev(sdd)
+[292271.927728] md: unbind<sdc>
+[292271.940823] md: export_rdev(sdc)
+[292271.940979] md: unbind<sdb>
+[292271.954153] md: export_rdev(sdb)
+[292289.371545] md: bind<sdb>
+[292289.371731] md: bind<sdc>
+[292289.371877] md: bind<sdd>
+[292289.372024] md: bind<sde>
+[292295.910881] md: bind<sde>
+[292295.911130] md: bind<sdc>
+[292295.911314] md: bind<sdb>
+[292295.923942] bio: create slab <bio-1> at 1
+[292295.923965] md/raid:md126: not clean -- starting background reconstruction
+[292295.924000] md/raid:md126: device sdb operational as raid disk 2
+[292295.924005] md/raid:md126: device sdc operational as raid disk 1
+[292295.924009] md/raid:md126: device sde operational as raid disk 0
+[292295.925149] md/raid:md126: allocated 4250kB
+[292295.927268] md/raid:md126: cannot start dirty degraded array.
+[292295.929666] RAID conf printout:
+[292295.929677]  --- level:5 rd:4 wd:3
+[292295.929683]  disk 0, o:1, dev:sde
+[292295.929688]  disk 1, o:1, dev:sdc
+[292295.929693]  disk 2, o:1, dev:sdb
+[292295.930898] md/raid:md126: failed to run raid set.
+[292295.930902] md: pers->run() failed ...
+[292295.931079] md: md126 stopped.
+[292295.931096] md: unbind<sdb>
+[292295.944228] md: export_rdev(sdb)
+[292295.944267] md: unbind<sdc>
+[292295.958126] md: export_rdev(sdc)
+[292295.958167] md: unbind<sde>
+[292295.970902] md: export_rdev(sde)
+[292296.219837] device-mapper: table: 252:1: raid45: unknown target type
+[292296.219845] device-mapper: ioctl: error adding target to table
+[292296.291542] device-mapper: table: 252:1: raid45: unknown target type
+[292296.291548] device-mapper: ioctl: error adding target to table
+[292296.310926] quiet_error: 1116 callbacks suppressed
+[292296.310934] Buffer I/O error on device dm-0, logical block 3907022720
+[292296.310940] Buffer I/O error on device dm-0, logical block 3907022721
+[292296.310944] Buffer I/O error on device dm-0, logical block 3907022722
+[292296.310949] Buffer I/O error on device dm-0, logical block 3907022723
+[292296.310953] Buffer I/O error on device dm-0, logical block 3907022724
+[292296.310958] Buffer I/O error on device dm-0, logical block 3907022725
+[292296.310962] Buffer I/O error on device dm-0, logical block 3907022726
+[292296.310966] Buffer I/O error on device dm-0, logical block 3907022727
+[292296.310973] Buffer I/O error on device dm-0, logical block 3907022720
+[292296.310977] Buffer I/O error on device dm-0, logical block 3907022721
+[292296.319968] device-mapper: table: 252:1: raid45: unknown target type
+[292296.319975] device-mapper: ioctl: error adding target to table
 
-That's not really how the statistics work.  The spec just means that if
-you run a typically drive for some long time on some workload you'll
-average one URE every 10^14 bits.  What the actual shape of the
-distribution is varies through the life of the drive.  IIRC, Google's
-analysis was that the rate spikes early, then forms a gaussian
-distribution for the bulk of the life, then spikes again as mechanical
-parts wear out.
+Any ideas from here? Am I up the creek without a paddle? :(
 
->>> And at the point you're going to buy a spare drive for this
->>> fiasco, you might as well just buy drives suited for the
->>> purpose.
->>=20
->> Options are:
->>=20
->> A) Buy Enterprise drives.  They have appropriate error timeouts and
->> work properly with MD right out of the box.
->>=20
->> B) Buy Desktop drives with SCTERC support.  They have
->> inappropriate default timeouts, but can be set to an appropriate
->> value.  Udev or boot script assistance is needed to call smartctl
->> to set it.  They do *not* work properly with MD out of the box.
->>=20
->> C) Suffer with desktop drives without SCTERC support.  They cannot
->> be set to appropriate error timeouts.  Udev or boot script
->> assistance is needed to set a 120 second driver timeout in sysfs.
->> They do *not* work properly with MD out of the box.
->>=20
->> D) Lose your data during spare rebuild after your first URE.  (Odds
->> in proportion to array size.)
->=20
-> That's a good summary.
+thanks to everyone for all your help so far
+chris
 
-Yeah.  Not enough people hear it though.  If I was more than a very
-light user, I'd be on option A.  As it is, option B is best for me.
-
->> One last point bears repeating:  MD is *not* a backup system,
->> although some people leverage it's features for rotating off-site
->> backup disks. Raid arrays are all about *uptime*.  They will not
->> save you from accidental deletion or other operator errors.  They
->> will not save you if your office burns down.  You need a separate
->> backup system for critical files.
->=20
-> Yeah and that's why I'm sorta leery of this RAID 6 setup in the home.
-> I think that people are reading that the odds of an array failure
-> with RAID 5 are so high that they are better off adding one more
-> drive for dual-parity, and *still* not having a real backup and
-> restore plan. As if the RAID 6 is the faux-backup plan.
->=20
-> Some home NAS's, with BluRay vids, are so big that people just either
-> need to stop such behavior, or get a used LTO 2 or 3 drive for their
-> gargantuous backups.
-
-Well, for me, such material on hard drives *are* the backups.  I use
-"par2" for big backup files, not MD raid.  I also skip backups for my
-Hi-Def MythTV recordings.  Just not valuable enough.
-
-Phil
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sun, Jan 13, 2013 at 4:05 PM, Dan Williams <djbw@fb.com> wrote:
+>
+>
+> On 1/13/13 11:00 AM, "chris" <tknchris@gmail.com> wrote:
+>
+>>Neil/Dave,
+>>
+>>Is it not possible to create imsm container with missing disk?
+>>If not, Is there any way to recreate the array with all disks but
+>>prevent any kind of sync which may overwrite array data?
+>
+> The example was in that link I sent:
+>
+> mdadm --create /dev/md/imsm /dev/sd[bde] -e imsm
+> mdadm --create /dev/md/vol0 /dev/sde missing /dev/sdb /dev/sdd -n 4 -l 5
+>
+> The first command marks all devices as spares.  The second creates the
+> degraded array.
+>
+> You probably want at least sdb and sdd in there since they have a copy of
+> the metadata.
+>
+> --
+> Dan
+>
