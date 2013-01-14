@@ -1,164 +1,189 @@
-From: Tommy Apel Hansen <tommyapeldk@gmail.com>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: recommended way to add ssd cache to mdraid array
-Date: Mon, 14 Jan 2013 01:05:00 +0100
-Message-ID: <1358121900.3019.1.camel@workstation-home>
-References: <201212212357.19292.thomas@fjellstrom.ca>
-	 <6FD79D70-01A4-4DC9-9494-157773CD0F11@colorremedies.com>
-	 <50EF5A4B.7000502@hardwarefreak.com>
-	 <201301110535.12512.thomas@fjellstrom.ca>
+Date: Sun, 13 Jan 2013 19:23:55 -0500
+Message-ID: <50F3501B.30002@turmel.org>
+References: <201212212357.19292.thomas@fjellstrom.ca> <201301100349.46794.thomas@fjellstrom.ca> <6FD79D70-01A4-4DC9-9494-157773CD0F11@colorremedies.com> <201301110520.07128.thomas@fjellstrom.ca> <5C8F4DE0-5C1E-476F-BBA8-17A7D695E599@colorremedies.com> <3EE4457C-A185-4223-A84D-5BFBB204A94C@colorremedies.com> <50F0B2B7.1080604@turmel.org> <4424E5BF-CDA7-4888-8C0F-988D20D8C2F7@colorremedies.com> <50F33198.9060302@turmel.org> <9974543B-24D0-46E9-9852-09DE1C2F6D12@colorremedies.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201301110535.12512.thomas@fjellstrom.ca>
+In-Reply-To: <9974543B-24D0-46E9-9852-09DE1C2F6D12@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: thomas@fjellstrom.ca
-Cc: stan@hardwarefreak.com, Chris Murphy <lists@colorremedies.com>, linux-raid Raid <linux-raid@vger.kernel.org>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: linux-raid Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Could you do me a favor and run the iozone test with the -I switch on so
-that we can seen the actual speed of the array and not you RAM
+On 01/13/2013 06:20 PM, Chris Murphy wrote:
+>=20
+> On Jan 13, 2013, at 3:13 PM, Phil Turmel <philip@turmel.org> wrote:
+>>=20
+>> I haven't examined the code in detail, just watched patches pass on
+>> the list.  :-)  But as I understand it, the error is returned with
+>> the request that it belongs to, and the MD does not look at the
+>> drive error code itself.  So MD know what read it was, for which
+>> member devices, but doesn't care if the error came from the drive
+>> itself, or the controller, or the driver.
+>=20
+> I think it does, but I don't know diddly about the code.
 
-/Tommy
+If you think about this, you'll realize that the driver *must* keep
+track of every unique request for the block device.  Otherwise, how
+would MD know what data was read and ready to use?  And what data was
+written so its buffer could be freed?  Reads are distinct from writes.
 
-On Fri, 2013-01-11 at 05:35 -0700, Thomas Fjellstrom wrote:
-> On Thu Jan 10, 2013, Stan Hoeppner wrote:
-> > On 1/10/2013 3:36 PM, Chris Murphy wrote:
-> > > On Jan 10, 2013, at 3:49 AM, Thomas Fjellstrom <thomas@fjellstrom.ca> wrote:
-> > >> A lot of it will be streaming. Some may end up being random read/writes.
-> > >> The test is just to gauge over all performance of the setup. 600MBs
-> > >> read is far more than I need, but having writes at 1/3 that seems odd
-> > >> to me.
-> > > 
-> > > Tell us how many disks there are, and what the chunk size is. It could be
-> > > too small if you have too few disks which results in a small full stripe
-> > > size for a video context. If you're using the default, it could be too
-> > > big and you're getting a lot of RWM. Stan, and others, can better answer
-> > > this.
-> > 
-> > Thomas is using a benchmark, and a single one at that, to judge the
-> > performance.  He's not using his actual workloads.  Tuning/tweaking to
-> > increase the numbers in a benchmark could be detrimental to actual
-> > performance instead of providing a boost.  One must be careful.
-> > 
-> > Regarding RAID6, it will always have horrible performance compared to
-> > non-parity RAID levels and even RAID5, for anything but full stripe
-> > aligned writes, which means writing new large files or doing large
-> > appends to existing files.
-> 
-> Considering its a rather simple use case, mostly streaming video, and misc
-> file sharing for my home network, an iozone test should be rather telling.
-> Especially the full test, from 4k up to 16mb
-> 
->                                                             random  random    bkwd   record   stride                                   
->               KB  reclen   write rewrite    read    reread    read   write    read  rewrite     read   fwrite frewrite   fread  freread
->         33554432       4  243295  221756   628767   624081    1028    4627   16822  7468777    17740   233295   231092  582036   579131
->         33554432       8  241134  225728   628264   627015    2027    8879   25977 10030302    19578   228923   233928  591478   584892
->         33554432      16  233758  228122   633406   618248    3952   13635   35676 10166457    19968   227599   229698  579267   576850
->         33554432      32  232390  219484   625968   625627    7604   18800   44252 10728450    24976   216880   222545  556513   555371
->         33554432      64  222936  206166   631659   627823   14112   22837   52259 11243595    30251   196243   192755  498602   494354
->         33554432     128  214740  182619   628604   626407   25088   26719   64912 11232068    39867   198638   185078  463505   467853
->         33554432     256  202543  185964   626614   624367   44363   34763   73939 10148251    62349   176724   191899  593517   595646
->         33554432     512  208081  188584   632188   629547   72617   39145   84876  9660408    89877   182736   172912  610681   608870
->         33554432    1024  196429  166125   630785   632413  116793   51904  133342  8687679   121956   168756   175225  620587   616722
->         33554432    2048  185399  167484   622180   627606  188571   70789  218009  5357136   370189   171019   166128  637830   637120
->         33554432    4096  198340  188695   632693   628225  289971   95211  278098  4836433   611529   161664   170469  665617   655268
->         33554432    8192  177919  167524   632030   629077  371602  115228  384030  4934570   618061   161562   176033  708542   709788
->         33554432   16384  196639  183744   631478   627518  485622  133467  462861  4890426   644615   175411   179795  725966   734364
-> 
-> > However, everything is relative.  This RAID6 may have plenty of random
-> > and streaming write/read throughput for Thomas.  But a single benchmark
-> > isn't going to inform him accurately.
-> 
-> 200MB/s may be enough, but the difference between the read and write
-> throughput is a bit unexpected. It's not a weak machine (core i3-2120, dual
-> core 3.2Ghz with HT, 16GB ECC 1333Mhz ram), and this is basically all its
-> going to be doing.
-> 
-> > > You said these are unpartitioned disks, I think. In which case alignment
-> > > of 4096 byte sectors isn't a factor if these are AF disks.
-> > > 
-> > > Unlikely to make up the difference is the scheduler. Parallel fs's like
-> > > XFS don't perform nearly as well with CFQ, so you should have a kernel
-> > > parameter elevator=noop.
-> > 
-> > If the HBAs have [BB|FB]WC then one should probably use noop as the
-> > cache schedules the actual IO to the drives.  If the HBAs lack cache,
-> > then deadline often provides better performance.  Testing of each is
-> > required on a system and workload basis.  With two identical systems
-> > (hardware/RAID/OS) one may perform better with noop, the other with
-> > deadline.  The determining factor is the applications' IO patterns.
-> 
-> Mostly streaming reads, some long rsync's to copy stuff back and forth, file
-> share duties (downloads etc).
-> 
-> > > Another thing to look at is md/stripe_cache_size which probably needs to
-> > > be higher for your application.
-> > > 
-> > > Another thing to look at is if you're using XFS, what your mount options
-> > > are. Invariably with an array of this size you need to be mounting with
-> > > the inode64 option.
-> > 
-> > The desired allocator behavior is independent of array size but, once
-> > again, dependent on the workloads.  inode64 is only needed for large
-> > filesystems with lots of files, where 1TB may not be enough for the
-> > directory inodes.  Or, for mixed metadata/data heavy workloads.
-> > 
-> > For many workloads including databases, video ingestion, etc, the
-> > inode32 allocator is preferred, regardless of array size.  This is the
-> > linux-raid list so I'll not go into detail of the XFS allocators.
-> 
-> If you have the time and the desire, I'd like to hear about it off list.
-> 
-> > >> The reason I've selected RAID6 to begin with is I've read (on this
-> > >> mailing list, and on some hardware tech sites) that even with SAS
-> > >> drives, the rebuild/resync time on a large array using large disks
-> > >> (2TB+) is long enough that it gives more than enough time for another
-> > >> disk to hit a random read error,
-> > > 
-> > > This is true for high density consumer SATA drives. It's not nearly as
-> > > applicable for low to moderate density nearline SATA which has an order
-> > > of magnitude lower UER, or for enterprise SAS (and some enterprise SATA)
-> > > which has yet another order of magnitude lower UER.  So it depends on
-> > > the disks, and the RAID size, and the backup/restore strategy.
-> > 
-> > Yes, enterprise drives have a much larger spare sector pool.
-> > 
-> > WRT rebuild time, this is one more reason to use RAID10 or a concat of
-> > RAID1s.  The rebuild time is low, constant, predictable.  For 2TB drives
-> > about 5-6 hours at 100% rebuild rate.  And rebuild time, for any array
-> > type, with gargantuan drives, is yet one more reason not to use the
-> > largest drives you can get your hands on.  Using 1TB drives will cut
-> > that to 2.5-3 hours, and using 500GB drives will cut it down to 1.25-1.5
-> > hours, as all these drives tend to have similar streaming write rates.
-> > 
-> > To wit, as a general rule I always build my arrays with the smallest
-> > drives I can get away with for the workload at hand.  Yes, for a given
-> > TB total it increases acquisition cost of drives, HBAs, enclosures, and
-> > cables, and power consumption, but it also increases spindle count--thus
-> > performance-- while decreasing rebuild times substantially/dramatically.
-> 
-> I'd go raid10 or something if I had the space, but this little 10TB nas (which
-> is the goal, a small, quiet, not too slow, 10TB nas with some kind of
-> redundancy) only fits 7 3.5" HDDs.
-> 
-> Maybe sometime in the future I'll get a big 3 or 4 u case with a crap load of
-> 3.5" HDD bays, but for now, this is what I have (as well as my old array,
-> 7x1TB RAID5+XFS in 4in3 hot swap bays with room for 8 drives, but haven't
-> bothered to expand the old array, and I have the new one almost ready to go).
-> 
-> I don't know if it impacts anything at all, but when burning in these drives
-> after I bought them, I ran the same full iozone test a couple times, and each
-> drive shows 150MB/s read, and similar write times (100-120+?). It impressed me
-> somewhat, to see a mechanical hard drive go that fast. I remember back a few
-> years ago thinking 80MBs was fast for a HDD.
-> 
-> -- 
-> Thomas Fjellstrom
-> thomas@fjellstrom.ca
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Only the drive knows what LBA's exhibit read and write errors. The
+> linux driver doesn't. And the linux driver times out after 30 seconds
+> by default, which is an eternity. There isn't just one request
+> pending. There are dozens to hundreds of pending commands,
+> representing possibly tens of thousands of LBAs in the drive's own
+> cache.
 
+But reads are separate from writes, and MD handles them differently.
+See the "md" man-page under "Recovery".
 
+> Once the drive goes into sector recovery, I'm pretty sure SATA
+> drives, unlike SAS, basically go silent. That's probably when the
+> linux timeout counter starts, in the meantime md is still talking to
+> the linux driver making more requests.
+>=20
+> This is a huge pile of just requests, not even the data it
+> represents. Some of those requests made it to the drive, some are
+> with the linux driver. I think it's much easier/efficient, when linux
+> block device driver timeout arrives, for the linux driver to just
+> nullify all requests, gives the drive the boot (lalala i can't hear
+> you i don't care if you start talking to me again in 60 seconds), and
+> tells md with a single error that the drive isn't even available. And
+> I'd expect md does the only thing it can do if it gets such an error
+> which is the same as a write error; it flags the device in the array
+> as faulty. I'd be surprised if it tried to reconstruct data at all in
+> such a case, without an explicit read error and LBA reported by the
+> drive.
+
+This is just wrong.
+
+> But I don't know the code, so I'm talking out my ass.
+
+:-)
+
+[trim /]
+
+>> Yes.  But in that case, they've probably lost arrays without=20
+>> understanding why.
+>=20
+> Maybe. I don't have data on this. If recovery occurs in less than 30
+> seconds, they effectively get no indication. They'd have to be
+> looking at ECC errors recorded by SMART. And not all drives record
+> that attribute.
+
+See all the assistance requests on this list where the OP says somethin=
+g
+to the effect of: "I don't understand! The (failed) drive appears to be=
+ OK!"
+
+[trim /]
+
+>>> Given the craptastic state of affairs that manufacturers disallow
+>>> a simple setting change to ask the drive to do LESS error
+>>> correction, the recommendation to buy a different drive that can
+>>> be so configured, is the best suggestion.
+>>=20
+>> For a while, it was Hitachi Deskstar or enterprise.  Western
+>> Digital's new "Red" series appears to be an attempt to deal with
+>> the backlash.
+>=20
+> Yeah I know. :-) But I mean all drives could have this. It's a
+> request for LESS, not more. I'm not asking for better ECC, although
+> that would be nice, merely a faster time out as a settable option.
+
+You don't seem to understand:  The hard drive industry loses revenue
+when people set up raid arrays with cheap drives, and then have the
+temerity to return good drives that have been (arguably) misapplied.
+
+Manufacturers have a financial interest in selling enterprise drives
+instead of desktop drives, and have made desktop drives painful to use
+in this application.  The manufacturers have even redefined "RAID".
+Supposedly "I" now stands for "Independent" instead of "Inexpensive".
+
+>>> And a very distant alternative 2 is to zero or Secure Erase the
+>>> drive every so often, in hopes of avoiding bad sectors altogether
+>>> =E2=80=94 is tedious, as well as implies either putting the drive i=
+nto a
+>>> degraded state, or cycling a spare drive.
+>>=20
+>> No.  This still isn't safe.  UREs can happen at any time, and are
+>> spec'd to occur at about every 12TB read.  Even on a freshly wiped
+>> drive. Spares don't help either, as a rebuild onto a spare stresses
+>> the rest of the array, and is likely to expose any developing
+>> UREs.
+>=20
+> Technically the spec statistic is "less than" 1 bit in 10^14 for a
+> consumer disk. So it's not that you will get a URE at 12TB, but that
+> you should be able to read at least 11.37TiB without a URE. It's
+> entirely within the tolerance if the mean occurrence happens 2 bits
+> shy of 10^15 bits, or 113TiB. By using "less than" the value is not a
+> mean. It's likely a lot higher than 12TB, or we'd have total mayhem
+> by now. That's only 3 reads of a 4TB drive otherwise. It's bad, but
+> not that bad.
+
+That's not really how the statistics work.  The spec just means that if
+you run a typically drive for some long time on some workload you'll
+average one URE every 10^14 bits.  What the actual shape of the
+distribution is varies through the life of the drive.  IIRC, Google's
+analysis was that the rate spikes early, then forms a gaussian
+distribution for the bulk of the life, then spikes again as mechanical
+parts wear out.
+
+>>> And at the point you're going to buy a spare drive for this
+>>> fiasco, you might as well just buy drives suited for the
+>>> purpose.
+>>=20
+>> Options are:
+>>=20
+>> A) Buy Enterprise drives.  They have appropriate error timeouts and
+>> work properly with MD right out of the box.
+>>=20
+>> B) Buy Desktop drives with SCTERC support.  They have
+>> inappropriate default timeouts, but can be set to an appropriate
+>> value.  Udev or boot script assistance is needed to call smartctl
+>> to set it.  They do *not* work properly with MD out of the box.
+>>=20
+>> C) Suffer with desktop drives without SCTERC support.  They cannot
+>> be set to appropriate error timeouts.  Udev or boot script
+>> assistance is needed to set a 120 second driver timeout in sysfs.
+>> They do *not* work properly with MD out of the box.
+>>=20
+>> D) Lose your data during spare rebuild after your first URE.  (Odds
+>> in proportion to array size.)
+>=20
+> That's a good summary.
+
+Yeah.  Not enough people hear it though.  If I was more than a very
+light user, I'd be on option A.  As it is, option B is best for me.
+
+>> One last point bears repeating:  MD is *not* a backup system,
+>> although some people leverage it's features for rotating off-site
+>> backup disks. Raid arrays are all about *uptime*.  They will not
+>> save you from accidental deletion or other operator errors.  They
+>> will not save you if your office burns down.  You need a separate
+>> backup system for critical files.
+>=20
+> Yeah and that's why I'm sorta leery of this RAID 6 setup in the home.
+> I think that people are reading that the odds of an array failure
+> with RAID 5 are so high that they are better off adding one more
+> drive for dual-parity, and *still* not having a real backup and
+> restore plan. As if the RAID 6 is the faux-backup plan.
+>=20
+> Some home NAS's, with BluRay vids, are so big that people just either
+> need to stop such behavior, or get a used LTO 2 or 3 drive for their
+> gargantuous backups.
+
+Well, for me, such material on hard drives *are* the backups.  I use
+"par2" for big backup files, not MD raid.  I also skip backups for my
+Hi-Def MythTV recordings.  Just not valuable enough.
+
+Phil
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
