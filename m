@@ -1,89 +1,41 @@
-From: Tommy Apel <tommyapeldk@gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: recommended way to add ssd cache to mdraid array
-Date: Tue, 15 Jan 2013 11:47:55 +0100
-Message-ID: <CAGA4a+HQi=9R2Ri7MK+KCsdoCjh9+4fD+PYxN7JQBj3GL5pWow@mail.gmail.com>
-References: <201212212357.19292.thomas@fjellstrom.ca>
-	<201301141453.13819.thomas@fjellstrom.ca>
-	<50F4B5E5.30809@hardwarefreak.com>
-	<201301142052.06390.thomas@fjellstrom.ca>
-	<50F5157A.2080308@hardwarefreak.com>
+Date: Tue, 15 Jan 2013 05:19:58 -0600
+Message-ID: <50F53B5E.7000106@hardwarefreak.com>
+References: <201212212357.19292.thomas@fjellstrom.ca> <201301141453.13819.thomas@fjellstrom.ca> <50F4B5E5.30809@hardwarefreak.com> <201301142052.06390.thomas@fjellstrom.ca> <50F5157A.2080308@hardwarefreak.com> <CAGA4a+GFfQeR-D-vuKJizG4xPVP1iYxBU8k5cVuP2yOYTgCt=Q@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50F5157A.2080308@hardwarefreak.com>
+In-Reply-To: <CAGA4a+GFfQeR-D-vuKJizG4xPVP1iYxBU8k5cVuP2yOYTgCt=Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: thomas@fjellstrom.ca, Chris Murphy <lists@colorremedies.com>, linux-raid Raid <linux-raid@vger.kernel.org>
+To: Tommy Apel <tommyapeldk@gmail.com>
+Cc: linux-raid Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-If to follow you I can only assume that my server is better at
-administrating cache than Thomas' server according to these results,
-this doesn't tell me much about how the subsystem is handeling the io though.
+On 1/15/2013 3:02 AM, Tommy Apel wrote:
+> Stan: it is true what you are saying about the cache and real life usage
+> but if you suspect a problem with the array I would suggest testing array
+> rather than the buffer system in linux hence the use if O_DIRECT as that
+> will determine the array performance and not the vmem.
 
-        Command line used: iozone -a -s 128g -r 8m
-        Output is in Kbytes/sec
-        Time Resolution = 0.000001 seconds.
-        Processor cache size set to 1024 Kbytes.
-        Processor cache line size set to 32 bytes.
-        File stride size set to 17 * record size.
+If you really want to get to testing only the array you must bypass the
+filesystem as well using something like fio for your testing.  Simply
+bypassing the buffer cache only removes one obstacle of many in the IO path.
 
+But in Thomas case raw IO numbers still don't clear the fog for him
+because he has no idea what the numbers _should_ be in the first place.
+ He is assuming, due to lack of knowledge/experience, that write
+throughput that is ~1/3rd his read throughput is wrong.  It's not.  It
+is expected.
 
-               random   random
-                  KB  reclen      write    ewrite       read
-reread     read       write
-       134217728    8192  365802  371250   397293   399526  241641  265306
+To see this for himself all he need do is blow it away and create a 6
+disk RAID10 or layered RAID0 over 3 RAID1 pairs.  When he sees the much
+higher iozone write throughput with only 6 of his disks, only 3 spindles
+vs 5, then he'll finally understand their is a huge write performance
+penalty with RAID6.
 
+-- 
+Stan
 
-2013/1/15 Stan Hoeppner <stan@hardwarefreak.com>:
-> On 1/14/2013 9:52 PM, Thomas Fjellstrom wrote:
-> ...
->> I haven't been comparing it against my other system, as its kind of apples and
->> oranges. My old array, on somewhat similar hardware for the most part, but
->> uses older 1TB drives in RAID5.
-> ...
->> It is working. And I can live with it as is, but it does seem like something
->> isn't right. If thats just me jumping to conclusions, well thats fine then.
->> But 600MB/s+ reads vs 200MB/s writes seems a tad off.
->
-> It's not off.  As myself and others stated previously, this low write
-> performance is typical of RAID6, particularly for unaligned or partial
-> stripe writes--anything that triggers a RMW cycle.
->
->> I'm running the same iozone test on the old array, see how it goes. But its
->> currently in use, and getting full (84G free out of 5.5TB), so I'm not
->> positive how well it'll do as compared to if it was a fresh array like the new
->> nas array.
-> ...
->> Preliminary results show similar read/write patterns (140MB/s write, 380MB/s
->> read), albeit slower probably due to being well aged, in use, and maybe the
->> drive speeds (the 1TB drives are 20-40MB/s slower than the 2TB drives in a
->> straight read test, I can't remember the write differences).
->
-> Yes, the way in which the old filesystem has aged, and the difference in
-> single drive performance, will both cause lower numbers on the old hardware.
->
-> What you're really after, what you want to see, is iozone numbers from a
-> similar system with a 7 drive md/RAID6 array with XFS.  Only that will
-> finally convince you, one way or the other, that your array is doing
-> pretty much as well as it can, or not.  However, even once you've
-> established this, it still doesn't inform you as to how well the new
-> array will perform with your workloads.
->
-> On that note, someone stated you should run iozone using O_DIRECT writes
-> to get more accurate numbers, or more precisely, to eliminate the Linux
-> buffer cache from the equation.  Doing this actually makes your testing
-> LESS valid, because your real world use will likely include all buffered
-> IO, and no direct IO.
->
-> What you should be concentrating on right now is identifying if any of
-> your workloads make use of fsync.  If they do not, or if the majority do
-> not (Samba does not by default IIRC, neither does NFS), then you should
-> be running iozone with fsync disabled.  In other words, since you're not
-> comparing two similar systems, you should be tweaking iozone to best
-> mimic your real workloads.  Running iozone with buffer cache and with
-> fsync disable should produce higher write numbers, which should be
-> closer to what you will see with your real workloads.
->
-> --
-> Stan
->
