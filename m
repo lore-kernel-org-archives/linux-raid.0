@@ -1,41 +1,71 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
 Subject: Re: recommended way to add ssd cache to mdraid array
-Date: Mon, 14 Jan 2013 19:50:29 -0600
-Message-ID: <50F4B5E5.30809@hardwarefreak.com>
-References: <201212212357.19292.thomas@fjellstrom.ca> <201301141122.15322.thomas@fjellstrom.ca> <50F46075.2090903@hardwarefreak.com> <201301141453.13819.thomas@fjellstrom.ca>
-Reply-To: stan@hardwarefreak.com
+Date: Mon, 14 Jan 2013 20:25:53 -0700
+Message-ID: <201301142025.54033.thomas@fjellstrom.ca>
+References: <201212212357.19292.thomas@fjellstrom.ca> <201301141453.13819.thomas@fjellstrom.ca> <95B458E1-8825-44D1-BCD5-1796A1E69FAE@colorremedies.com>
+Reply-To: thomas@fjellstrom.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201301141453.13819.thomas@fjellstrom.ca>
+In-Reply-To: <95B458E1-8825-44D1-BCD5-1796A1E69FAE@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: thomas@fjellstrom.ca
-Cc: Tommy Apel Hansen <tommyapeldk@gmail.com>, Chris Murphy <lists@colorremedies.com>, linux-raid Raid <linux-raid@vger.kernel.org>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: linux-raid Raid <linux-raid@vger.kernel.org>, "stan@hardwarefreak.com Hoeppner" <stan@hardwarefreak.com>, Tommy Apel Hansen <tommyapeldk@gmail.com>
 List-Id: linux-raid.ids
 
-On 1/14/2013 3:53 PM, Thomas Fjellstrom wrote:
-
+On Mon Jan 14, 2013, Chris Murphy wrote:
+> On Jan 14, 2013, at 2:53 PM, Thomas Fjellstrom <thomas@fjellstrom.ca> wrote:
+> >                                                            random  random   
+> >                                                            bkwd   record  
+> >                                                            stride
+> >              
+> >              KB  reclen   write rewrite    read    reread    read   write
+> >                 read  rewrite     read   fwrite frewrite   fread 
+> >              freread
+> >        
+> >        33554432    8192  124664  121973   524509   527971  376880  104357
+> >         336083    40088   392683   213941   215453  631122   631617
+> > 
+> > I assume that is to you liking?
 > 
->                                                             random  random    bkwd   record   stride                                   
->               KB  reclen   write rewrite    read    reread    read   write    read  rewrite     read   fwrite frewrite   fread  freread
->         33554432    8192  124664  121973   524509   527971  376880  104357  336083    40088   392683   213941   215453  631122   631617
->
-> I assume that is to you liking?
+> No it's getting hosed for me too, I think it's just too wide for the forum.
+> Pastebin it. And I suggest you post the one that has the variable reclen
+> not just the 8MB result.
 
-Yes, much better.  Now, where is the output from the system you're
-comparing performance against?
+Forum? The email I got back views fine in my email program. Well mostly fine,
+one of the header lines is offset by one character.
 
-> As for the simple home server array, if it were so simple, it'd work out
-> of the box with no issues at all.
+> And also, now I'm confused because the above reclen8192 result doesn't
+> match with the one you posted from before, so I'm goingn to guess this is
+> the one with -I. My suggestion is that you put into the pastebin the
+> command you used to arrive at the results. Both are important.
 
-It is working.  And there are no issues, but for your subjective
-interpretation of the iozone data, assuming it is not working properly.
+Yeah, total screw up on my part there. I still had the contents from replying
+to Tommy with a different test. *sigh* *headdesk*
 
-This is why benchmarks of this sort are generally only good for
-comparing one system to another.
+http://pastebin.com/ffaKiKnN
+
+moose@mrbig:/mnt/mrbig/data/test$ time iozone -a -s 32G -r 8M
+                                                            random  random    bkwd   record   stride                                   
+      KB  reclen   write rewrite    read    reread    read   write    read  rewrite     read   fwrite frewrite   fread  freread
+33554432    8192  208232  210453   628247   630950  370444  163451  382472  4889055   618370   210211   216416  714091   709861
+
+> > p.s. I am seriously tempted to play your little flame game,
+> > but It's not worth the time.
+> 
+> Don't say that or people won't help. If it's your first day at the rodeo
+> taking a bit of a beating and you announce it's not worth it, most people
+> will agree with you and stop playing.
+
+I'm a little confused. People won't help if I state that I'm uninterested in a
+flame war? I've spent way more than enough time engaging in flame wars on the
+internet.
+
+> Chris Murphy
+
 
 -- 
-Stan
-
-
+Thomas Fjellstrom
+thomas@fjellstrom.ca
