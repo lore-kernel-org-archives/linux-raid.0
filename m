@@ -1,146 +1,84 @@
-From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Subject: RE: Recovery/Access of imsm raid via mdadm?
-Date: Tue, 15 Jan 2013 10:25:13 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB1904E2AC@IRSMSX102.ger.corp.intel.com>
-References: <CAKnNFz_25zLMquBphPb8xx=rrG2BquXjLuc1-ke+1ztoVaUOgA@mail.gmail.com>
-	<84A937D219C2B44EB8EA44831ACA1E4916D902C5@PRN-MBX02-3.TheFacebook.com>
-	<CAKnNFz8dZVgS7M_rmQx0c_S+jo46EGs2GWAHc99ziaAR5OQp+w@mail.gmail.com>
-	<D9FFE20C522965449E182ACE73889AEB1904DF39@IRSMSX102.ger.corp.intel.com>
- <CAKnNFz-Gy7vJjErKijV3=HV16Br_uq4rxfbbB9sFHHVi3SWtOw@mail.gmail.com>
+From: "Patelczyk, Maciej" <maciej.patelczyk@intel.com>
+Subject: RE: [PATCH] imsm: Forbid spanning between multiple controllers.
+Date: Tue, 15 Jan 2013 10:31:34 +0000
+Message-ID: <679865E03F4C71419D9847EA3AACB16316215258@IRSMSX102.ger.corp.intel.com>
+References: <20121109144636.2215.91684.stgit@localhost.localdomain>
+ <50EF3961.5050306@ubuntu.com>
+ <8565BDA60DEA9E4C91B1047AD1958FBE1DEC8F5B@IRSMSX104.ger.corp.intel.com>
+ <50F419F2.9050809@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKnNFz-Gy7vJjErKijV3=HV16Br_uq4rxfbbB9sFHHVi3SWtOw@mail.gmail.com>
+In-Reply-To: <50F419F2.9050809@ubuntu.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: chris <tknchris@gmail.com>
-Cc: Neil Brown <neilb@suse.de>, "Jiang, Dave" <dave.jiang@intel.com>, Linux-RAID <linux-raid@vger.kernel.org>, Dan Williams <djbw@fb.com>
+To: Phillip Susi <psusi@ubuntu.com>, "Tomczak, Marcin" <marcin.tomczak@intel.com>
+Cc: "neilb@suse.de" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Dorau, Lukasz" <lukasz.dorau@intel.com>
 List-Id: linux-raid.ids
 
-On Monday, January 14, 2013 4:25 PM chris <tknchris@gmail.com> wrote:
-> Ok thanks for the tips, I am imaging the disks now and will try after
-> that is done. Just out of curiousity what could become corrupted by
-> forcing the assemble? I was under the impression that as long as I
-> have one member missing that the only thing that would be touched is
-> metadata, is that right?
-> 
-Yes, that is right. I meant that using --force option it may be possible to assembly an array in the wrong way and data can be incorrect, so it is better to be careful.
-
-Lukasz
-
-> On Mon, Jan 14, 2013 at 9:24 AM, Dorau, Lukasz <lukasz.dorau@intel.com>
-> wrote:
-> > On Monday, January 14, 2013 3:11 PM Dorau, Lukasz
-> <lukasz.dorau@intel.com> wrote:
-> >> On Monday, January 14, 2013 1:56 AM chris <tknchris@gmail.com> wrote:
-> >> > [292295.923942] bio: create slab <bio-1> at 1
-> >> > [292295.923965] md/raid:md126: not clean -- starting background
-> >> > reconstruction
-> >> > [292295.924000] md/raid:md126: device sdb operational as raid disk 2
-> >> > [292295.924005] md/raid:md126: device sdc operational as raid disk 1
-> >> > [292295.924009] md/raid:md126: device sde operational as raid disk 0
-> >> > [292295.925149] md/raid:md126: allocated 4250kB
-> >> > [292295.927268] md/raid:md126: cannot start dirty degraded array.
-> >>
-> >> Hi
-> >>
-> >> *Remember to backup the disks you have before trying the following! *
-> >>
-> >> You can try starting dirty degraded array using:
-> >> #  mdadm --assemble --force ....
-> >>
-> >
-> > I meant adding --force option to:
-> > # mdadm --create --verbose --force /dev/md/Volume0 /dev/sdc missing
-> /dev/sdb /dev/sdd --raid-devices 4 --level=5
-> >
-> > Be very careful using "--force" option, because it can cause data corruption!
-> >
-> > Lukasz
-> >
-> >
-> >> See also the "Boot time assembly of degraded/dirty arrays" chapter in:
-> >> http://www.kernel.org/doc/Documentation/md.txt
-> >> (you can boot with option md-mod.start_dirty_degraded=1)
-> >>
-> >> Lukasz
-> >>
-> >>
-> >> > [292295.929666] RAID conf printout:
-> >> > [292295.929677]  --- level:5 rd:4 wd:3
-> >> > [292295.929683]  disk 0, o:1, dev:sde
-> >> > [292295.929688]  disk 1, o:1, dev:sdc
-> >> > [292295.929693]  disk 2, o:1, dev:sdb
-> >> > [292295.930898] md/raid:md126: failed to run raid set.
-> >> > [292295.930902] md: pers->run() failed ...
-> >> > [292295.931079] md: md126 stopped.
-> >> > [292295.931096] md: unbind<sdb>
-> >> > [292295.944228] md: export_rdev(sdb)
-> >> > [292295.944267] md: unbind<sdc>
-> >> > [292295.958126] md: export_rdev(sdc)
-> >> > [292295.958167] md: unbind<sde>
-> >> > [292295.970902] md: export_rdev(sde)
-> >> > [292296.219837] device-mapper: table: 252:1: raid45: unknown target type
-> >> > [292296.219845] device-mapper: ioctl: error adding target to table
-> >> > [292296.291542] device-mapper: table: 252:1: raid45: unknown target type
-> >> > [292296.291548] device-mapper: ioctl: error adding target to table
-> >> > [292296.310926] quiet_error: 1116 callbacks suppressed
-> >> > [292296.310934] Buffer I/O error on device dm-0, logical block
-> 3907022720
-> >> > [292296.310940] Buffer I/O error on device dm-0, logical block
-> 3907022721
-> >> > [292296.310944] Buffer I/O error on device dm-0, logical block
-> 3907022722
-> >> > [292296.310949] Buffer I/O error on device dm-0, logical block
-> 3907022723
-> >> > [292296.310953] Buffer I/O error on device dm-0, logical block
-> 3907022724
-> >> > [292296.310958] Buffer I/O error on device dm-0, logical block
-> 3907022725
-> >> > [292296.310962] Buffer I/O error on device dm-0, logical block
-> 3907022726
-> >> > [292296.310966] Buffer I/O error on device dm-0, logical block
-> 3907022727
-> >> > [292296.310973] Buffer I/O error on device dm-0, logical block
-> 3907022720
-> >> > [292296.310977] Buffer I/O error on device dm-0, logical block
-> 3907022721
-> >> > [292296.319968] device-mapper: table: 252:1: raid45: unknown target type
-> >> > [292296.319975] device-mapper: ioctl: error adding target to table
-> >> >
-> >> > Any ideas from here? Am I up the creek without a paddle? :(
-> >> >
-> >> > thanks to everyone for all your help so far
-> >> > chris
-> >> >
-> >> > On Sun, Jan 13, 2013 at 4:05 PM, Dan Williams <djbw@fb.com> wrote:
-> >> > >
-> >> > >
-> >> > > On 1/13/13 11:00 AM, "chris" <tknchris@gmail.com> wrote:
-> >> > >
-> >> > >>Neil/Dave,
-> >> > >>
-> >> > >>Is it not possible to create imsm container with missing disk?
-> >> > >>If not, Is there any way to recreate the array with all disks but
-> >> > >>prevent any kind of sync which may overwrite array data?
-> >> > >
-> >> > > The example was in that link I sent:
-> >> > >
-> >> > > mdadm --create /dev/md/imsm /dev/sd[bde] -e imsm
-> >> > > mdadm --create /dev/md/vol0 /dev/sde missing /dev/sdb /dev/sdd -n 4 -l
-> 5
-> >> > >
-> >> > > The first command marks all devices as spares.  The second creates the
-> >> > > degraded array.
-> >> > >
-> >> > > You probably want at least sdb and sdd in there since they have a copy of
-> >> > > the metadata.
-> >> > >
-> >> > > --
-> >> > > Dan
-> >> > >
-> >> > --
-> >> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >> > the body of a message to majordomo@vger.kernel.org
-> >> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBQaGlsbGlwIFN1c2kgW21haWx0
+bzpwc3VzaUB1YnVudHUuY29tXQ0KPiBTZW50OiBNb25kYXksIEphbnVhcnkgMTQsIDIwMTMgMzo0
+NSBQTQ0KPiBUbzogVG9tY3phaywgTWFyY2luDQo+IENjOiBuZWlsYkBzdXNlLmRlOyBsaW51eC1y
+YWlkQHZnZXIua2VybmVsLm9yZzsgUGF0ZWxjenlrLCBNYWNpZWo7DQo+IERvcmF1LCBMdWthc3oN
+Cj4gU3ViamVjdDogUmU6IFtQQVRDSF0gaW1zbTogRm9yYmlkIHNwYW5uaW5nIGJldHdlZW4gbXVs
+dGlwbGUNCj4gY29udHJvbGxlcnMuDQo+IA0KPiAtLS0tLUJFR0lOIFBHUCBTSUdORUQgTUVTU0FH
+RS0tLS0tDQo+IEhhc2g6IFNIQTENCj4gDQo+IE9uIDEvMTQvMjAxMyA4OjAyIEFNLCBUb21jemFr
+LCBNYXJjaW4gd3JvdGU6DQo+ID4gSGkuIFllcywgbWRhZG0gd2lsbCByZWZ1c2UgYW55IGNvbW1h
+bmRzLCB3aGVuIHlvdSB0cnkgdG8gdXNlIGRpc2tzDQo+ID4gYXR0YWNoZWQgdG8gbXVsdGlwbGUg
+Y29udHJvbGxlcnMuIEFsc28gbWRhZG0gc3VwcG9ydHMgSU1TTSBtZXRhZGF0YQ0KPiA+IG9ubHkg
+aWYgeW91IGhhdmUgYSBtYWNoaW5lIHdpdGggSW50ZWwgT1JPTSAoYW5kIHRoZSBwYXRjaCAiRm9y
+YmlkDQo+ID4gc3Bhbm5pbmciIGNoYW5nZXMgbm90aGluZyBhYm91dCBpdCkuDQo+IA0KPiBXaHkg
+aXMgdGhpcz8gIE9uZSBvZiB0aGUgbmljZSB0aGluZ3MgYWJvdXQgZG1yYWlkIHdhcyB0aGF0IHNp
+bmNlIGl0DQo+IHJlYWxseSB3YXMganVzdCBzb2Z0d2FyZSByYWlkLCBpZiB5b3VyIGNvbnRyb2xs
+ZXIgYmxldyB5b3UgY291bGQNCj4gcmVjb3ZlciB5b3VyIGRhdGEgYnkgbW92aW5nIHRoZSBkcml2
+ZXMgdG8gYW5vdGhlciBtYWNoaW5lIGFuZCBzdGlsbA0KPiByZWNvZ25pemUgdGhlbS4gIFdoeSBz
+aG91bGQgbWRhZG0gY2FyZSBhYm91dCB0aGUgY29udHJvbGxlcj8NCj4gDQo+IEkgc3VwcG9zZSBp
+dCBpcyBuaWNlIHRvIHdhcm4gcGVvcGxlIHRoYXQgdGhleSBhcmUgdHJ5aW5nIHRvIGNyZWF0ZSBh
+bg0KPiBhcnJheSB0aGF0IHRoZSBiaW9zIHdvbid0IHJlY29nbml6ZSwgYnV0IG1kYWRtIHNob3Vs
+ZCBub3QgcmVmdXNlIHRvIHJ1bg0KPiBhbiBhcnJheSBqdXN0IGJlY2F1c2Ugc29tZSBoYXJkd2Fy
+ZSB0aGF0IGlzIGNvbXBsZXRlbHkgdW5uZWNlc3NhcnkgaXMNCj4gbm90IGZvdW5kLg0KPiANCj4g
+DQoNCkhpIFBoaWxsaXAsDQoNCk1kYWRtIGRvZXMgbm90IGNhcmUgYWJvdXQgdGhlIGNvbnRyb2xs
+ZXIgdW5sZXNzIHlvdSBjcmVhdGVkIElNU00gYmFzZWQgUkFJRC4gQmFzaWNhbGx5IHlvdSBjYW4g
+Y3JlYXRlIHRoYXQgdHlwZSBvZiBSQUlEICpvbmx5KiBvbiBJbnRlbCBiYXNlZCBwbGF0Zm9ybXMg
+d2l0aCBPUk9NIGVuYWJsZWQuIEl0J3MgSW50ZWwgc29sdXRpb24sIHdlIHN1cHBvcnQgaXQgYW5k
+IHdlIG1haW50YWluIGl0LiBJdCdzIHZlcnkgc3BlY2lmaWMgdHlwZSBvZiBtZXRhZGF0YS4NCldl
+IHByb3ZpZGUgdGhpcyBmdW5jdGlvbmFsaXR5IGluIExpbnV4LCBXaW5kb3dzIGFuZCBPUk9NL3VF
+RkkuIEl0IG11c3QgYmUgY29tcGF0aWJsZSBiZXR3ZWVuIGFsbCB0aHJlZSBlbnZpcm9ubWVudHMu
+IElmIHlvdSBoYXZlIGR1YWwgYm9vdCBtYWNoaW5lIHlvdSBjYW4gc2FmZWx5IGJvb3QgaW50byBX
+aW5kb3dzIGFuZCB0aGVuIGludG8gTGludXggYW5kIHlvdXIgUkFJRCBWb2x1bWUgd2lsbCBiZSBp
+biBwcm9wZXIgc3RhdGUuDQoNCkRtcmFpZCBjYW5ub3QgYm9vdCBmcm9tIFJBSUQgVm9sdW1lLCBP
+Uk9NIGNhbiBib290IGZyb20gSU1TTSBSQUlEIFZvbHVtZSBkaXJlY3RseS4gWW91IGRvbid0IG5l
+ZWQgc2VwYXJhdGUgcGFydGl0aW9uLCBoYXJkIGRyaXZlIG9yIGFueXRoaW5nIGVsc2UuIElmIHlv
+dSBydW4gSW50ZWwgcGxhdGZvcm0geW91IGNhbiBib290IGRpcmVjdGx5IGZyb20gc3VwcG9ydGVk
+IFJBSUQgVm9sdW1lLiBUaGlzIGlzIGJlY2F1c2UgT1JPTSBzdXBwb3J0cyBpdC4gTWRhZG0gcmVz
+cGVjdHMgT1JPTSByZXN0cmljdGlvbnMgd2hlbiBjcmVhdGluZyBJTVNNIGJhc2VkIFJBSURzLg0K
+DQpTcGFubmluZyBpbiBMaW51eCBpcyBzb21ldGhpbmcgb2J2aW91cy4gSSBrbm93IHRoYXQgaXMg
+c2ltcGx5IHdvcmtzIGJlY2F1c2Ugb2YgTGludXggYXJjaGl0ZWN0dXJlLiBIb3dldmVyIHNwYW5u
+ZWQgUkFJRCBWb2x1bWVzIGFyZSBub3Qgc3VwcG9ydGVkIGluIE9ST00gYW5kIGluIFdpbmRvd3Mu
+IElmIHlvdSBhbGxvd2VkIGZvciBzcGFubmVkIFJBSUQgVm9sdW1lcyBpbiBMaW51eCB3ZSBvcGVu
+IHRoZSBQYW5kb3JhJ3MgYm94LiBJbiB0aGUgd29yc3QgY2FzZSB5b3Ugd2lsbCBsb3NlIHlvdSBk
+YXRhIHdoZW4gZW50ZXJpbmcgdG8gT1JPTSAoT1JPTSB3aWxsIHNlZSBvbmx5IG9uZSBzZXQgb2Yg
+ZGlza3MgYXR0YWNoZWQgdG8gb25lIGNvbnRyb2xsZXIgYW5kIGNhbiBtYXJrIFJBSUQgVm9sdW1l
+IGFzIEZhaWxlZCkgb3IgaWYgeW91IGJvb3QgdG8gV2luZG93cyAoV2luZG93cyBkcml2ZXIgd2ls
+bCBzZWUgdHdvIGZhaWxlZCBSQUlEIFZvbHVtZXMgaW4gdGhlIHdvcnN0IGNhc2UpLiBJbiBvdGhl
+ciBjYXNlIHlvdSB3aWxsIGhhdmUgUkFJRCBWb2x1bWUgbWFya2VkIGFzIERlZ3JhZGVkIGFuZCBy
+ZWJ1aWxkIHdpbGwgc3RhcnQuIEFuZCB3aGF0IGlmIHlvdSBjcmVhdGUgJ2Jvb3RhYmxlJyBSQUlE
+IFZvbHVtZT8gV2VsbCB5b3UgbWF5IG5vdCBiZSBhYmxlIHRvIGJvb3QgZnJvbSBpdCB3aGVuIGl0
+J3Mgc3Bhbm5lZC4NCg0KSXQncyBhbGwgYWJvdXQgY29tcGF0aWJpbGl0eS4gV2luZG93cyBhbmQg
+T1JPTSBkb24ndCBzdXBwb3J0IHNwYW5uZWQgUkFJRCBWb2x1bWVzIHNvIG11c3QgTGludXguDQoN
+Ck5vdGUgdGhhdCBtZGFkbSBpcyBub3QgbGltaXRlZCB0byBJTVNNIG1ldGFkYXRhLiBZb3UgY2Fu
+IHVzZSBEREYgb3IgbmF0aXZlIG1ldGFkYXRhLiBJdCdzIGp1c3QgYW4gb3B0aW9uLiBCdXQgaWYg
+eW91IHVzZSBJTVNNIG1ldGFkYXRhIHlvdSBhcmUgbGltaXRlZCB0byBJbnRlbCBwbGF0Zm9ybS4N
+Cg0KSSBob3BlIHRoYXQgSSBjbGFyaWZpZWQgYSBsaXR0bGUgYml0Lg0KbWFjaWVqDQoNCg0KDQoN
+Cj4gLS0tLS1CRUdJTiBQR1AgU0lHTkFUVVJFLS0tLS0NCj4gVmVyc2lvbjogR251UEcgdjIuMC4x
+NyAoTWluZ1czMikNCj4gQ29tbWVudDogVXNpbmcgR251UEcgd2l0aCBUaHVuZGVyYmlyZCAtIGh0
+dHA6Ly93d3cuZW5pZ21haWwubmV0Lw0KPiANCj4gaVFFY0JBRUJBZ0FHQlFKUTlCbnlBQW9KRUpy
+Qk9sVDZudTc1dGlrSC9qUUFzeDR3YXNlbEE2cnJLQzhhRkQ3Kw0KPiBvRzVwcGhUc2tTMTBpdWtr
+SkdYOGQrby9IaWlNTTY2SXVNcU0zdlJTTlpPNDBQNmFyaEFFVEUwMmp2Tlk5dkZODQo+IGZJNjFB
+TXBDdjBGdkJGdjgzUlJtaDE5SGtITFFFZ2l6dGNMUkk3R2VUTmw1YU9uQzR3azhOWS9ScXQwMjJi
+aFYNCj4gTUdIaWNrWFVETlh0b1dTWEUzeDAzYVhtOWN3akl3ZlBiRHJ0M2pPeXJmOUVxZ1paVzJq
+OHVxWTNQYkg1WmNhdg0KPiBzbEtqRk9hVnQ5OG52TGVETHBCSjZwUjR2S3EzUWF4K3BPUE5kdmxH
+RzBHQXFmdEgvaUVZSHNvcG1NNEQ0bzVMDQo+IDIxY0kxQ1JmbXlhRjhybzByeVpQSmtRVmU0Nllh
+NDFRYjF3ZDlZNnBnNW1mYnFHaXdiUXZNSGk3bzUzTWM3MD0NCj4gPU51bUoNCj4gLS0tLS1FTkQg
+UEdQIFNJR05BVFVSRS0tLS0tDQo=
