@@ -1,76 +1,146 @@
-From: Tommy Apel <tommyapeldk@gmail.com>
-Subject: Re: recommended way to add ssd cache to mdraid array
-Date: Tue, 15 Jan 2013 10:02:19 +0100
-Message-ID: <CAGA4a+GFfQeR-D-vuKJizG4xPVP1iYxBU8k5cVuP2yOYTgCt=Q@mail.gmail.com>
-References: <201212212357.19292.thomas@fjellstrom.ca>
-	<201301141453.13819.thomas@fjellstrom.ca>
-	<50F4B5E5.30809@hardwarefreak.com>
-	<201301142052.06390.thomas@fjellstrom.ca>
-	<50F5157A.2080308@hardwarefreak.com>
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: RE: Recovery/Access of imsm raid via mdadm?
+Date: Tue, 15 Jan 2013 10:25:13 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB1904E2AC@IRSMSX102.ger.corp.intel.com>
+References: <CAKnNFz_25zLMquBphPb8xx=rrG2BquXjLuc1-ke+1ztoVaUOgA@mail.gmail.com>
+	<84A937D219C2B44EB8EA44831ACA1E4916D902C5@PRN-MBX02-3.TheFacebook.com>
+	<CAKnNFz8dZVgS7M_rmQx0c_S+jo46EGs2GWAHc99ziaAR5OQp+w@mail.gmail.com>
+	<D9FFE20C522965449E182ACE73889AEB1904DF39@IRSMSX102.ger.corp.intel.com>
+ <CAKnNFz-Gy7vJjErKijV3=HV16Br_uq4rxfbbB9sFHHVi3SWtOw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50F5157A.2080308@hardwarefreak.com>
+In-Reply-To: <CAKnNFz-Gy7vJjErKijV3=HV16Br_uq4rxfbbB9sFHHVi3SWtOw@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid Raid <linux-raid@vger.kernel.org>
+To: chris <tknchris@gmail.com>
+Cc: Neil Brown <neilb@suse.de>, "Jiang, Dave" <dave.jiang@intel.com>, Linux-RAID <linux-raid@vger.kernel.org>, Dan Williams <djbw@fb.com>
 List-Id: linux-raid.ids
 
-Stan: it is true what you are saying about the cache and real life usage
-but if you suspect a problem with the array I would suggest testing array
-rather than the buffer system in linux hence the use if O_DIRECT as that
-will determine the array performance and not the vmem.
+On Monday, January 14, 2013 4:25 PM chris <tknchris@gmail.com> wrote:
+> Ok thanks for the tips, I am imaging the disks now and will try after
+> that is done. Just out of curiousity what could become corrupted by
+> forcing the assemble? I was under the impression that as long as I
+> have one member missing that the only thing that would be touched is
+> metadata, is that right?
+> 
+Yes, that is right. I meant that using --force option it may be possible to assembly an array in the wrong way and data can be incorrect, so it is better to be careful.
 
-On Jan 15, 2013 9:38 AM, "Stan Hoeppner" <stan@hardwarefreak.com> wrote:
->
-> On 1/14/2013 9:52 PM, Thomas Fjellstrom wrote:
-> ...
-> > I haven't been comparing it against my other system, as its kind of apples and
-> > oranges. My old array, on somewhat similar hardware for the most part, but
-> > uses older 1TB drives in RAID5.
-> ...
-> > It is working. And I can live with it as is, but it does seem like something
-> > isn't right. If thats just me jumping to conclusions, well thats fine then.
-> > But 600MB/s+ reads vs 200MB/s writes seems a tad off.
->
-> It's not off.  As myself and others stated previously, this low write
-> performance is typical of RAID6, particularly for unaligned or partial
-> stripe writes--anything that triggers a RMW cycle.
->
-> > I'm running the same iozone test on the old array, see how it goes. But its
-> > currently in use, and getting full (84G free out of 5.5TB), so I'm not
-> > positive how well it'll do as compared to if it was a fresh array like the new
-> > nas array.
-> ...
-> > Preliminary results show similar read/write patterns (140MB/s write, 380MB/s
-> > read), albeit slower probably due to being well aged, in use, and maybe the
-> > drive speeds (the 1TB drives are 20-40MB/s slower than the 2TB drives in a
-> > straight read test, I can't remember the write differences).
->
-> Yes, the way in which the old filesystem has aged, and the difference in
-> single drive performance, will both cause lower numbers on the old hardware.
->
-> What you're really after, what you want to see, is iozone numbers from a
-> similar system with a 7 drive md/RAID6 array with XFS.  Only that will
-> finally convince you, one way or the other, that your array is doing
-> pretty much as well as it can, or not.  However, even once you've
-> established this, it still doesn't inform you as to how well the new
-> array will perform with your workloads.
->
-> On that note, someone stated you should run iozone using O_DIRECT writes
-> to get more accurate numbers, or more precisely, to eliminate the Linux
-> buffer cache from the equation.  Doing this actually makes your testing
-> LESS valid, because your real world use will likely include all buffered
-> IO, and no direct IO.
->
-> What you should be concentrating on right now is identifying if any of
-> your workloads make use of fsync.  If they do not, or if the majority do
-> not (Samba does not by default IIRC, neither does NFS), then you should
-> be running iozone with fsync disabled.  In other words, since you're not
-> comparing two similar systems, you should be tweaking iozone to best
-> mimic your real workloads.  Running iozone with buffer cache and with
-> fsync disable should produce higher write numbers, which should be
-> closer to what you will see with your real workloads.
->
-> --
-> Stan
->
+Lukasz
+
+> On Mon, Jan 14, 2013 at 9:24 AM, Dorau, Lukasz <lukasz.dorau@intel.com>
+> wrote:
+> > On Monday, January 14, 2013 3:11 PM Dorau, Lukasz
+> <lukasz.dorau@intel.com> wrote:
+> >> On Monday, January 14, 2013 1:56 AM chris <tknchris@gmail.com> wrote:
+> >> > [292295.923942] bio: create slab <bio-1> at 1
+> >> > [292295.923965] md/raid:md126: not clean -- starting background
+> >> > reconstruction
+> >> > [292295.924000] md/raid:md126: device sdb operational as raid disk 2
+> >> > [292295.924005] md/raid:md126: device sdc operational as raid disk 1
+> >> > [292295.924009] md/raid:md126: device sde operational as raid disk 0
+> >> > [292295.925149] md/raid:md126: allocated 4250kB
+> >> > [292295.927268] md/raid:md126: cannot start dirty degraded array.
+> >>
+> >> Hi
+> >>
+> >> *Remember to backup the disks you have before trying the following! *
+> >>
+> >> You can try starting dirty degraded array using:
+> >> #  mdadm --assemble --force ....
+> >>
+> >
+> > I meant adding --force option to:
+> > # mdadm --create --verbose --force /dev/md/Volume0 /dev/sdc missing
+> /dev/sdb /dev/sdd --raid-devices 4 --level=5
+> >
+> > Be very careful using "--force" option, because it can cause data corruption!
+> >
+> > Lukasz
+> >
+> >
+> >> See also the "Boot time assembly of degraded/dirty arrays" chapter in:
+> >> http://www.kernel.org/doc/Documentation/md.txt
+> >> (you can boot with option md-mod.start_dirty_degraded=1)
+> >>
+> >> Lukasz
+> >>
+> >>
+> >> > [292295.929666] RAID conf printout:
+> >> > [292295.929677]  --- level:5 rd:4 wd:3
+> >> > [292295.929683]  disk 0, o:1, dev:sde
+> >> > [292295.929688]  disk 1, o:1, dev:sdc
+> >> > [292295.929693]  disk 2, o:1, dev:sdb
+> >> > [292295.930898] md/raid:md126: failed to run raid set.
+> >> > [292295.930902] md: pers->run() failed ...
+> >> > [292295.931079] md: md126 stopped.
+> >> > [292295.931096] md: unbind<sdb>
+> >> > [292295.944228] md: export_rdev(sdb)
+> >> > [292295.944267] md: unbind<sdc>
+> >> > [292295.958126] md: export_rdev(sdc)
+> >> > [292295.958167] md: unbind<sde>
+> >> > [292295.970902] md: export_rdev(sde)
+> >> > [292296.219837] device-mapper: table: 252:1: raid45: unknown target type
+> >> > [292296.219845] device-mapper: ioctl: error adding target to table
+> >> > [292296.291542] device-mapper: table: 252:1: raid45: unknown target type
+> >> > [292296.291548] device-mapper: ioctl: error adding target to table
+> >> > [292296.310926] quiet_error: 1116 callbacks suppressed
+> >> > [292296.310934] Buffer I/O error on device dm-0, logical block
+> 3907022720
+> >> > [292296.310940] Buffer I/O error on device dm-0, logical block
+> 3907022721
+> >> > [292296.310944] Buffer I/O error on device dm-0, logical block
+> 3907022722
+> >> > [292296.310949] Buffer I/O error on device dm-0, logical block
+> 3907022723
+> >> > [292296.310953] Buffer I/O error on device dm-0, logical block
+> 3907022724
+> >> > [292296.310958] Buffer I/O error on device dm-0, logical block
+> 3907022725
+> >> > [292296.310962] Buffer I/O error on device dm-0, logical block
+> 3907022726
+> >> > [292296.310966] Buffer I/O error on device dm-0, logical block
+> 3907022727
+> >> > [292296.310973] Buffer I/O error on device dm-0, logical block
+> 3907022720
+> >> > [292296.310977] Buffer I/O error on device dm-0, logical block
+> 3907022721
+> >> > [292296.319968] device-mapper: table: 252:1: raid45: unknown target type
+> >> > [292296.319975] device-mapper: ioctl: error adding target to table
+> >> >
+> >> > Any ideas from here? Am I up the creek without a paddle? :(
+> >> >
+> >> > thanks to everyone for all your help so far
+> >> > chris
+> >> >
+> >> > On Sun, Jan 13, 2013 at 4:05 PM, Dan Williams <djbw@fb.com> wrote:
+> >> > >
+> >> > >
+> >> > > On 1/13/13 11:00 AM, "chris" <tknchris@gmail.com> wrote:
+> >> > >
+> >> > >>Neil/Dave,
+> >> > >>
+> >> > >>Is it not possible to create imsm container with missing disk?
+> >> > >>If not, Is there any way to recreate the array with all disks but
+> >> > >>prevent any kind of sync which may overwrite array data?
+> >> > >
+> >> > > The example was in that link I sent:
+> >> > >
+> >> > > mdadm --create /dev/md/imsm /dev/sd[bde] -e imsm
+> >> > > mdadm --create /dev/md/vol0 /dev/sde missing /dev/sdb /dev/sdd -n 4 -l
+> 5
+> >> > >
+> >> > > The first command marks all devices as spares.  The second creates the
+> >> > > degraded array.
+> >> > >
+> >> > > You probably want at least sdb and sdd in there since they have a copy of
+> >> > > the metadata.
+> >> > >
+> >> > > --
+> >> > > Dan
+> >> > >
+> >> > --
+> >> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> >> > the body of a message to majordomo@vger.kernel.org
+> >> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
