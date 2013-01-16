@@ -1,35 +1,30 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: recommended way to add ssd cache to mdraid array
-Date: Wed, 16 Jan 2013 16:06:39 -0600
-Message-ID: <50F7246F.2040004@hardwarefreak.com>
-References: <201212212357.19292.thomas@fjellstrom.ca> <201301142052.06390.thomas@fjellstrom.ca> <50F5157A.2080308@hardwarefreak.com> <201301152231.43704.thomas@fjellstrom.ca>
-Reply-To: stan@hardwarefreak.com
+From: Dan Williams <djbw@fb.com>
+Subject: Re: Recovery/Access of imsm raid via mdadm?
+Date: Wed, 16 Jan 2013 14:47:49 -0800
+Message-ID: <CAA9_cmfYRoRrF_Q=VkNctyte3UMfbDiyJ7DgaryMnaFD-NV4ew@mail.gmail.com>
+References: <CAKnNFz_25zLMquBphPb8xx=rrG2BquXjLuc1-ke+1ztoVaUOgA@mail.gmail.com>
+	<84A937D219C2B44EB8EA44831ACA1E4916D902C5@PRN-MBX02-3.TheFacebook.com>
+	<CAKnNFz8dZVgS7M_rmQx0c_S+jo46EGs2GWAHc99ziaAR5OQp+w@mail.gmail.com>
+	<D9FFE20C522965449E182ACE73889AEB1904DF39@IRSMSX102.ger.corp.intel.com>
+	<CAKnNFz-Gy7vJjErKijV3=HV16Br_uq4rxfbbB9sFHHVi3SWtOw@mail.gmail.com>
+	<D9FFE20C522965449E182ACE73889AEB1904E2AC@IRSMSX102.ger.corp.intel.com>
+	<CAKnNFz_5dsukFe1TP9E1X4P-XYAR0timuDq=Wjb1Q4sdXPa=tg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201301152231.43704.thomas@fjellstrom.ca>
+In-Reply-To: <CAKnNFz_5dsukFe1TP9E1X4P-XYAR0timuDq=Wjb1Q4sdXPa=tg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: thomas@fjellstrom.ca
-Cc: Tommy Apel Hansen <tommyapeldk@gmail.com>, Chris Murphy <lists@colorremedies.com>, linux-raid Raid <linux-raid@vger.kernel.org>
+To: chris <tknchris@gmail.com>
+Cc: "Dorau, Lukasz" <lukasz.dorau@intel.com>, Neil Brown <neilb@suse.de>, "Jiang, Dave" <dave.jiang@intel.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 1/15/2013 11:31 PM, Thomas Fjellstrom wrote:
+On Wed, Jan 16, 2013 at 8:49 AM, chris <tknchris@gmail.com> wrote:
+> any idea why it wont assemble? I thought even if data was corrupt I
+> should be able to force it to assemble and look at it to determine if
+> it is corrupt or in tact
 
-> That gets me thinking. Maybe try a test with the record test size set to the 
-> stripe width, that would hopefully show some more accurate numbers.
+A bug in mdadm was introduced shortly after the "missing" support was
+added.  Looks like you need 3.2.6.
 
-That will give you less accurate numbers, if you're looking for numbers
-that reflect real world performance.  Again, in general, most real world
-writes are not stripe aligned, and not full width, especially with the
-insanely large 512KB chunk size.
-
-For all but a few workloads, storage should be designed and optimized
-assuming most writes will be unaligned or not full width, -not- assuming
-most will be full stripe writes.
-
--- 
-Stan
-
-
-
+--
+Dan
