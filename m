@@ -1,27 +1,30 @@
-From: Tommy Apel Hansen <tommyapeldk@gmail.com>
+From: keld@keldix.com
 Subject: Re: Suboptimal raid6 linear read speed
-Date: Wed, 16 Jan 2013 07:37:33 +0100
-Message-ID: <1358318253.3022.3.camel@workstation-home>
-References: <20130115123301.GA11948@rabbit.us> <50F55046.7050605@turmel.org>
-	 <20130115125507.GA12184@rabbit.us> <20130115170937.GA8831@kevin>
-	 <20130115195707.GA30921@www5.open-std.org> <20130116044335.GA10165@kevin>
+Date: Wed, 16 Jan 2013 10:36:51 +0100
+Message-ID: <20130116093651.GB1069@www5.open-std.org>
+References: <20130115123301.GA11948@rabbit.us> <50F55046.7050605@turmel.org> <20130115125507.GA12184@rabbit.us> <20130115170937.GA8831@kevin> <20130115195707.GA30921@www5.open-std.org> <20130116044335.GA10165@kevin>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <20130116044335.GA10165@kevin>
 Sender: linux-raid-owner@vger.kernel.org
 To: Charles Polisher <cpolish@surewest.net>
-Cc: keld@keldix.com, Peter Rabbitson <rabbit+list@rabbit.us>, Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+Cc: Peter Rabbitson <rabbit+list@rabbit.us>, Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
-1) you shouldn't use more than 2 drives for RAID1 as performance will be impacted (* at least that's what my own tests show)
-2) for RAID10 use "2 far-copies" (-p f2) as that seems to be the most optimal layout
+Hi Charles
 
-/Tommy
+It really does not show below which layout you use for RAID10. This is quite
+important as the different layouts of RAID10 have quite different 
+performance characteristics. The 'far' layout tends to be the fastest.
 
-On Tue, 2013-01-15 at 20:43 -0800, Charles Polisher wrote:
+Which command did you use to create the RAID10 array?
+
+best regards
+Keld
+
+On Tue, Jan 15, 2013 at 08:43:35PM -0800, Charles Polisher wrote:
 > keld@keldix.com wrote:
 > > >                                         Advantage     Advantage
 > > >                                         vs 4 drives   vs RAID0
@@ -55,5 +58,3 @@ On Tue, 2013-01-15 at 20:43 -0800, Charles Polisher wrote:
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
