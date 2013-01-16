@@ -1,45 +1,44 @@
 From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: [PATCH] imsm: Forbid spanning between multiple controllers.
-Date: Wed, 16 Jan 2013 08:49:22 +0000
-Message-ID: <50F66992.7090400@anonymous.org.uk>
-References: <20121109144636.2215.91684.stgit@localhost.localdomain> <50EF3961.5050306@ubuntu.com> <8565BDA60DEA9E4C91B1047AD1958FBE1DEC8F5B@IRSMSX104.ger.corp.intel.com> <50F419F2.9050809@ubuntu.com> <679865E03F4C71419D9847EA3AACB16316215258@IRSMSX102.ger.corp.intel.com> <50F56E52.1090302@ubuntu.com>
+Subject: Re: recommended way to add ssd cache to mdraid array
+Date: Wed, 16 Jan 2013 08:59:07 +0000
+Message-ID: <50F66BDB.3000203@anonymous.org.uk>
+References: <201212212357.19292.thomas@fjellstrom.ca> <201301142052.06390.thomas@fjellstrom.ca> <50F5157A.2080308@hardwarefreak.com> <201301152231.43704.thomas@fjellstrom.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50F56E52.1090302@ubuntu.com>
+In-Reply-To: <201301152231.43704.thomas@fjellstrom.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>
-Cc: "Patelczyk, Maciej" <maciej.patelczyk@intel.com>, "Tomczak, Marcin" <marcin.tomczak@intel.com>, "neilb@suse.de" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Dorau, Lukasz" <lukasz.dorau@intel.com>
+To: thomas@fjellstrom.ca
+Cc: stan@hardwarefreak.com, Tommy Apel Hansen <tommyapeldk@gmail.com>, Chris Murphy <lists@colorremedies.com>, linux-raid Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 15/01/2013 14:57, Phillip Susi wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
->
-> On 1/15/2013 5:31 AM, Patelczyk, Maciej wrote:
->> Hi Phillip,
+On 16/01/2013 05:31, Thomas Fjellstrom wrote:
+> On Tue Jan 15, 2013, Stan Hoeppner wrote:
+>> On 1/14/2013 9:52 PM, Thomas Fjellstrom wrote:
+>> ...
+>>> It is working. And I can live with it as is, but it does seem like
+>>> something isn't right. If thats just me jumping to conclusions, well
+>>> thats fine then. But 600MB/s+ reads vs 200MB/s writes seems a tad off.
 >>
->> Mdadm does not care about the controller unless you created IMSM
->> based RAID. Basically you can create that type of RAID *only* on
->> Intel based platforms with OROM enabled. It's Intel solution, we
->> support it and we maintain it. It's very specific type of metadata.
-[...]
+>> It's not off.  As myself and others stated previously, this low write
+>> performance is typical of RAID6, particularly for unaligned or partial
+>> stripe writes--anything that triggers a RMW cycle.
 >
-> Warnings about potentially troublesome situations are good, but
-> outright refusal is not.  Yes, I realize it would be a problem for
-> Windows due to the poor way the driver has to be implemented ( why
-> can't the OROM see other disks on other controllers? ), but sometimes
-> you don't care about that.  For instance, if you are setting up the
-> array on one machine where you can not connect all of the drives to
-> the same controller ( and do not care about booting from the array on
-> this machine ), but you are planning on moving them to a machine where
-> they will be.  This is just one example of many situations where you
-> need to be able to say "I know what I'm doing, go ahead anyway".
+> That gets me thinking. Maybe try a test with the record test size set to the
+> stripe width, that would hopefully show some more accurate numbers.
 
-Isn't there, or wasn't there, an environment variable for mdadm called 
-something like IMSM_PLATFORM_IGNORE for precisely this scenario? Is that 
-what this patch series disabled?
+Your 7-drive RAID-6 with 512K chunk will have a 2.5MB stripe width, or 
+stride, whichever is the correct term, on the basis of 5 data chunks. 
+Even still, a filesystem-level test cannot guarantee to be writing 
+records aligned to the array's data stripes.
+
+If you do another benchmark, try running iostat concurrently, to see how 
+many reads are happening during the write tests.
+
+At the same time, if in the real world you're doing streaming writes of 
+dozens of MB/s, I would expect that write caching would turn a good 
+proportion of the writes into full-stripe writes.
 
 Cheers,
 
