@@ -1,60 +1,47 @@
-From: keld@keldix.com
-Subject: Re: Suboptimal raid6 linear read speed
-Date: Wed, 16 Jan 2013 10:36:51 +0100
-Message-ID: <20130116093651.GB1069@www5.open-std.org>
-References: <20130115123301.GA11948@rabbit.us> <50F55046.7050605@turmel.org> <20130115125507.GA12184@rabbit.us> <20130115170937.GA8831@kevin> <20130115195707.GA30921@www5.open-std.org> <20130116044335.GA10165@kevin>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: [PATCH] imsm: Forbid spanning between multiple controllers.
+Date: Wed, 16 Jan 2013 08:49:22 +0000
+Message-ID: <50F66992.7090400@anonymous.org.uk>
+References: <20121109144636.2215.91684.stgit@localhost.localdomain> <50EF3961.5050306@ubuntu.com> <8565BDA60DEA9E4C91B1047AD1958FBE1DEC8F5B@IRSMSX104.ger.corp.intel.com> <50F419F2.9050809@ubuntu.com> <679865E03F4C71419D9847EA3AACB16316215258@IRSMSX102.ger.corp.intel.com> <50F56E52.1090302@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130116044335.GA10165@kevin>
+In-Reply-To: <50F56E52.1090302@ubuntu.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Charles Polisher <cpolish@surewest.net>
-Cc: Peter Rabbitson <rabbit+list@rabbit.us>, Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: "Patelczyk, Maciej" <maciej.patelczyk@intel.com>, "Tomczak, Marcin" <marcin.tomczak@intel.com>, "neilb@suse.de" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Dorau, Lukasz" <lukasz.dorau@intel.com>
 List-Id: linux-raid.ids
 
-Hi Charles
+On 15/01/2013 14:57, Phillip Susi wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+>
+> On 1/15/2013 5:31 AM, Patelczyk, Maciej wrote:
+>> Hi Phillip,
+>>
+>> Mdadm does not care about the controller unless you created IMSM
+>> based RAID. Basically you can create that type of RAID *only* on
+>> Intel based platforms with OROM enabled. It's Intel solution, we
+>> support it and we maintain it. It's very specific type of metadata.
+[...]
+>
+> Warnings about potentially troublesome situations are good, but
+> outright refusal is not.  Yes, I realize it would be a problem for
+> Windows due to the poor way the driver has to be implemented ( why
+> can't the OROM see other disks on other controllers? ), but sometimes
+> you don't care about that.  For instance, if you are setting up the
+> array on one machine where you can not connect all of the drives to
+> the same controller ( and do not care about booting from the array on
+> this machine ), but you are planning on moving them to a machine where
+> they will be.  This is just one example of many situations where you
+> need to be able to say "I know what I'm doing, go ahead anyway".
 
-It really does not show below which layout you use for RAID10. This is quite
-important as the different layouts of RAID10 have quite different 
-performance characteristics. The 'far' layout tends to be the fastest.
+Isn't there, or wasn't there, an environment variable for mdadm called 
+something like IMSM_PLATFORM_IGNORE for precisely this scenario? Is that 
+what this patch series disabled?
 
-Which command did you use to create the RAID10 array?
+Cheers,
 
-best regards
-Keld
+John.
 
-On Tue, Jan 15, 2013 at 08:43:35PM -0800, Charles Polisher wrote:
-> keld@keldix.com wrote:
-> > >                                         Advantage     Advantage
-> > >                                         vs 4 drives   vs RAID0
-> > > Config  Drives  Seq write   Seq  read   Write  Read   Write Read
-> > > ------  ------  ----------  ----------  ----- -----   ----  ----
-> > > RAID0   4        8.1MB/sec   9.3MB/sec   1.00  1.00   1.00  1.00
-> > > RAID0   8       16.8MB/sec  15.0MB/sec   2.07  1.61   1.00  1.00
-> > >  
-> > > RAID1   4        2.1MB/sec   3.6MB/sec   1.00  1.00   0.25  0.38
-> > > RAID1   8        1.6MB/sec   3.6MB/sec   0.76  1.00   0.09  0.24
-> > > 
-> > > RAID5   4       16.8MB/sec   9.1MB/sec   1.00  1.00   2.07  0.97
-> > > RAID5   8       17.2MB/sec  14.9MB/sec   1.02  1.63   2.12  1.60
-> > > 
-> > > RAID6   4       12.6MB/sec   7.9MB/sec   1.00  1.00   1.55  0.84
-> > > RAID6   8       14.4MB/sec  14.5MB/sec   1.63  1.83   1.77  1.55
-> > > 
-> > > RAID10  4        4.0MB/sec   7.3MB/sec   1.00  1.00   0.49  0.78
-> > > RAID10  8        6.3MB/sec  13.4MB/sec   1.57  1.83   0.37  0.89
-> > > 
-> > What layout are you using for RAID10?
-> > Is it Linux MD RAID10?
-> 
-> # cat /proc/mdstat 
-> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4] [multipath] 
-> md1 : active raid10 sdi[7] sdh[6] sdg[5] sdf[4] sde[3] sdd[2] sdc[1] sdb[0]
->       2118656 blocks 64K chunks 2 near-copies [8/8] [UUUUUUUU]
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
