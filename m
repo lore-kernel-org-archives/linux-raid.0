@@ -1,34 +1,43 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Suboptimal raid6 linear read speed
-Date: Thu, 17 Jan 2013 16:51:36 +0100 (CET)
-Message-ID: <alpine.DEB.2.00.1301171648260.12098@uplift.swm.pp.se>
-References: <20130115123301.GA11948@rabbit.us> <50F55046.7050605@turmel.org> <20130115125507.GA12184@rabbit.us> <50F614F7.20104@hardwarefreak.com> <20130116025857.GA31112@rabbit.us> <50F70DB7.6020104@hardwarefreak.com>
+From: chris <tknchris@gmail.com>
+Subject: Re: Recovery/Access of imsm raid via mdadm?
+Date: Thu, 17 Jan 2013 11:07:11 -0500
+Message-ID: <CAKnNFz9DSBrkk=NTUuQoQLvuoVQ3kMN_2m8pVGLxpYw=KMEGyw@mail.gmail.com>
+References: <CAKnNFz_25zLMquBphPb8xx=rrG2BquXjLuc1-ke+1ztoVaUOgA@mail.gmail.com>
+	<84A937D219C2B44EB8EA44831ACA1E4916D902C5@PRN-MBX02-3.TheFacebook.com>
+	<CAKnNFz8dZVgS7M_rmQx0c_S+jo46EGs2GWAHc99ziaAR5OQp+w@mail.gmail.com>
+	<D9FFE20C522965449E182ACE73889AEB1904DF39@IRSMSX102.ger.corp.intel.com>
+	<CAKnNFz-Gy7vJjErKijV3=HV16Br_uq4rxfbbB9sFHHVi3SWtOw@mail.gmail.com>
+	<D9FFE20C522965449E182ACE73889AEB1904E2AC@IRSMSX102.ger.corp.intel.com>
+	<CAKnNFz_5dsukFe1TP9E1X4P-XYAR0timuDq=Wjb1Q4sdXPa=tg@mail.gmail.com>
+	<CAA9_cmfYRoRrF_Q=VkNctyte3UMfbDiyJ7DgaryMnaFD-NV4ew@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50F70DB7.6020104@hardwarefreak.com>
+In-Reply-To: <CAA9_cmfYRoRrF_Q=VkNctyte3UMfbDiyJ7DgaryMnaFD-NV4ew@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dan Williams <djbw@fb.com>
+Cc: "Dorau, Lukasz" <lukasz.dorau@intel.com>, Neil Brown <neilb@suse.de>, "Jiang, Dave" <dave.jiang@intel.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 16 Jan 2013, Stan Hoeppner wrote:
+Dan,
 
-> This isn't a legitimate argument.  The probability of you being struck 
-> by lightning is greater than two drives in the same mirror in a 4 drive 
-> RAID10 dying before a rebuild completes.
+You hit the nail on the head, mdadm 3.2.6 is able to assemble and get
+the arrays online, now just going through the permutations to try to
+get recoverable data but at this point recovery is normal and
+non-intel specific.
 
-The probability of getting struck by lightning is a lot less than being 
-struck by a read error when rebuilding from the only remaining mirror when 
-one drive failed and you've replaced it.
+Thanks to everyone who helped!
 
-> I challenge you to do an exhaustive search for anyone, at any time in 
-> history, who was managing the array properly, suffering such a two drive 
-> failure and losing a RAID10 array, 4 drives or greater.  Note that 
-> controller failures with all drives on one controller don't count, as 
-> that failure mode will take down any array of any RAID level.
+chris
 
-<http://www.zdnet.com/blog/storage/why-raid-5-stops-working-in-2009/162> 
-is applicable to RAID1 and RAID10 as well as RAID5.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+On Wed, Jan 16, 2013 at 5:47 PM, Dan Williams <djbw@fb.com> wrote:
+> On Wed, Jan 16, 2013 at 8:49 AM, chris <tknchris@gmail.com> wrote:
+>> any idea why it wont assemble? I thought even if data was corrupt I
+>> should be able to force it to assemble and look at it to determine if
+>> it is corrupt or in tact
+>
+> A bug in mdadm was introduced shortly after the "missing" support was
+> added.  Looks like you need 3.2.6.
+>
+> --
+> Dan
