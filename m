@@ -1,44 +1,50 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Suboptimal raid6 linear read speed
-Date: Fri, 18 Jan 2013 02:31:19 -0600
-Message-ID: <50F90857.3010305@hardwarefreak.com>
-References: <20130115123301.GA11948@rabbit.us> <50F55046.7050605@turmel.org> <20130115125507.GA12184@rabbit.us> <50F614F7.20104@hardwarefreak.com> <20130116025857.GA31112@rabbit.us> <50F70DB7.6020104@hardwarefreak.com> <alpine.DEB.2.00.1301171648260.12098@uplift.swm.pp.se>
-Reply-To: stan@hardwarefreak.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH 0/2] add support for launching mdmon via systemd
+Date: Fri, 18 Jan 2013 09:43:10 +0100
+Message-ID: <1358498592-20827-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1301171648260.12098@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dledford@redhat.com, harald@redhat.com
 List-Id: linux-raid.ids
 
-On 1/17/2013 9:51 AM, Mikael Abrahamsson wrote:
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> The probability of getting struck by lightning is a lot less than being
-> struck by a read error when rebuilding from the only remaining mirror
-> when one drive failed and you've replaced it.
+Hi,
 
-The probability of a URE during rebuild increases with the number and
-size of the source drives being read to rebuild the failed drive.  Thus
-the probability of encountering a URE in the 1:1 drive scenario is
-extremely low, close to zero if you believe manufacturer specs.
+It's been an ongoing issue for a while trying to figure out how to
+handle launching mdmon from the initrd in Fedora and avoid it getting
+killed by systemd due to it ending up in the wrong cgroup (udev).
 
-> <http://www.zdnet.com/blog/storage/why-raid-5-stops-working-in-2009/162>
-> is applicable to RAID1 and RAID10 as well as RAID5.
+We tried simply attaching mdmon to the cgroup of systemd but it didn't
+really work, and in the end it seems to be more in line with the
+systemd mentality to have systemd spawn it. With these patches and a
+few pending changes to dracut, I am finally able to boot and reboot
+systems with 1 or 2 IMSM arrays.
 
-In Robin's example we're reading 12TB of sectors from 6 drives to
-complete the rebuild of one failed drive, so the overall probably of a
-URE is less than that of a single drive.  With RAID1/10 we're only
-reading 2TB, well below the URE rates for single drives.
+The patch for systemctl is implemented as a compile time option rather
+than a command line option, since I think it is something that the
+distro will decide. However we can make it a command line option if
+preferred.
 
-So, no, the "URE scare" being propagated these days doesn't affect
-RAID1/10.  If/when individual drive capacities exceed 10TB in the
-future, and if at that time the URE rates per drive do not improve,
--then- this phenomenon will affect RAID1/10.  But it does not currently
-with today's drives.
+I also have matching systemd .service files for this, which I am happy
+to contribute, but I am not sure if they are useful to other distros
+or not? We haven't had a history of including .service files with
+mdadm.
+
+Cheers,
+Jes
+
+
+Jes Sorensen (2):
+  Add support for launching mdmon via systemctl instead of fork/exec
+  execl() only returns in case of error
+
+ Makefile |  6 ++++++
+ mdmon.c  |  4 +++-
+ util.c   | 15 ++++++++++++++-
+ 3 files changed, 23 insertions(+), 2 deletions(-)
 
 -- 
-Stan
+1.7.11.7
 
