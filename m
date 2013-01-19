@@ -1,40 +1,38 @@
 From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: Suboptimal raid6 linear read speed
-Date: Sat, 19 Jan 2013 14:21:59 +0100 (CET)
-Message-ID: <20597456.6.1358601718986.JavaMail.root@zimbra>
-References: <50F9D32F.7090606@hardwarefreak.com>
+Subject: Re: Automatically adding spares on boot
+Date: Sat, 19 Jan 2013 19:27:58 +0100 (CET)
+Message-ID: <27416855.12.1358620078446.JavaMail.root@zimbra>
+References: <50EDA431.1090905@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50F9D32F.7090606@hardwarefreak.com>
+In-Reply-To: <50EDA431.1090905@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: linux-raid@vger.kernel.org, Mikael Abrahamsson <swmike@swm.pp.se>
+To: Can Jeuleers <can.jeuleers@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> >> The probability of a URE during rebuild increases with the number
-> >> and
-> >> size of the source drives being read to rebuild the failed drive.
-> >> Thus
-> >> the probability of encountering a URE in the 1:1 drive scenario is
-> >> extremely low, close to zero if you believe manufacturer specs.
-> >
-> > For a 2TB drive and BER 10^-14 (common for non-enterprise drives),
-> > the
-> > probability is 1/6 of a single URE for a read of the entire drive.
+> Over the years I've had various problems with the degree to which the
+> adding of spares on boot is automatic. There have been times when thi=
+s
+> has just worked, and other times (such as now) where it only works
+> very
+> occasionally (or not at all). Google is full of stories like this.
 >=20
-> If my math is correct, with a URE rate of 10E14, that's one URE for
-> every ~12.5TB read. So theoretically one would have to read the entir=
-e
-> 2TB drive more than 6 times before hitting the first URE. So it seems
-> unlikely that one would hit a URE during a mirror rebuild with such a
-> 2TB drive.
+> I have no clue why it's not working automatically, I just know that i=
+t
+> isn't.
+>=20
+> So I wrote a little script that automates this, and hooked it up to
+> mdmon as an event handler.
+>=20
+> It can probably do with an elegance upgrade, but it works for me.
 
-ok, perhaps, maybe, but then it's 17% chance of losing data after a mir=
-ror or raid-5 rebuild with 2TB drives, or the double of that if using 4=
-TB drives. That's not very amusing=E2=80=A6
-
+hm=E2=80=A6 I don't se the point, really. I have a RAID-6 with a spare,=
+ and last time a drive died, the spare kicked in automatically. Why wou=
+ld you add something at boot?
+--=20
 Vennlige hilsener / Best regards
 
 roy
