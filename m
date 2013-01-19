@@ -1,47 +1,56 @@
-From: Can Jeuleers <can.jeuleers@gmail.com>
-Subject: Re: Automatically adding spares on boot
-Date: Sat, 19 Jan 2013 09:23:03 +0100
-Message-ID: <50FA57E7.3020608@gmail.com>
-References: <50EDA431.1090905@gmail.com>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: Suboptimal raid6 linear read speed
+Date: Sat, 19 Jan 2013 14:21:59 +0100 (CET)
+Message-ID: <20597456.6.1358601718986.JavaMail.root@zimbra>
+References: <50F9D32F.7090606@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50EDA431.1090905@gmail.com>
+In-Reply-To: <50F9D32F.7090606@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: stan@hardwarefreak.com
+Cc: linux-raid@vger.kernel.org, Mikael Abrahamsson <swmike@swm.pp.se>
 List-Id: linux-raid.ids
 
-On 01/09/2013 06:09 PM, Can Jeuleers wrote:
-> Hi,
-> 
-> Over the years I've had various problems with the degree to which the
-> adding of spares on boot is automatic. There have been times when this
-> has just worked, and other times (such as now) where it only works very
-> occasionally (or not at all). Google is full of stories like this.
-> 
-> I have no clue why it's not working automatically, I just know that it
-> isn't.
-> 
-> So I wrote a little script that automates this, and hooked it up to
-> mdmon as an event handler.
-> 
-> It can probably do with an elegance upgrade, but it works for me.
-> 
-> HTH, Jan
+> >> The probability of a URE during rebuild increases with the number
+> >> and
+> >> size of the source drives being read to rebuild the failed drive.
+> >> Thus
+> >> the probability of encountering a URE in the 1:1 drive scenario is
+> >> extremely low, close to zero if you believe manufacturer specs.
+> >
+> > For a 2TB drive and BER 10^-14 (common for non-enterprise drives),
+> > the
+> > probability is 1/6 of a single URE for a read of the entire drive.
+>=20
+> If my math is correct, with a URE rate of 10E14, that's one URE for
+> every ~12.5TB read. So theoretically one would have to read the entir=
+e
+> 2TB drive more than 6 times before hitting the first URE. So it seems
+> unlikely that one would hit a URE during a mirror rebuild with such a
+> 2TB drive.
 
-Here is sample output of the script, which it mails to root:
+ok, perhaps, maybe, but then it's 17% chance of losing data after a mir=
+ror or raid-5 rebuild with 2TB drives, or the double of that if using 4=
+TB drives. That's not very amusing=E2=80=A6
 
-The UUID of component devices is 442e9934:97191d8e:6d0cf7a9:41621837
-(442e9934-9719-1d8e-6d0c-f7a941621837)
-Device /dev/sdb2 is already a member of the array
-Device /dev/sdd2 is already a member of the array
-Found device /dev/sde3 with the same UUID but not yet a component device.
-mdadm: re-added /dev/sde3
+Vennlige hilsener / Best regards
 
-It's a great shame that there does not appear to be a standard format
-for representing UUIDs: mdadm uses an 8:8:8:8 format, whereas blkid
-wants an 8-4-4-4-12 format. Hence the conversion shenanigans in the
-script. Makes the code brittle.
-
-Cheers, Jan
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
