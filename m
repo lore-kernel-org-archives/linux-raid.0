@@ -1,52 +1,47 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Suboptimal raid6 linear read speed
-Date: Sat, 19 Jan 2013 08:43:27 +0100 (CET)
-Message-ID: <alpine.DEB.2.00.1301190838440.12098@uplift.swm.pp.se>
-References: <20130115123301.GA11948@rabbit.us> <50F55046.7050605@turmel.org> <20130115125507.GA12184@rabbit.us> <50F614F7.20104@hardwarefreak.com> <20130116025857.GA31112@rabbit.us> <50F70DB7.6020104@hardwarefreak.com> <alpine.DEB.2.00.1301171648260.12098@uplift.swm.pp.se>
- <50F90857.3010305@hardwarefreak.com> <alpine.DEB.2.00.1301181015270.12098@uplift.swm.pp.se> <50F9D32F.7090606@hardwarefreak.com>
+From: Can Jeuleers <can.jeuleers@gmail.com>
+Subject: Re: Automatically adding spares on boot
+Date: Sat, 19 Jan 2013 09:23:03 +0100
+Message-ID: <50FA57E7.3020608@gmail.com>
+References: <50EDA431.1090905@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50F9D32F.7090606@hardwarefreak.com>
+In-Reply-To: <50EDA431.1090905@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, 18 Jan 2013, Stan Hoeppner wrote:
+On 01/09/2013 06:09 PM, Can Jeuleers wrote:
+> Hi,
+> 
+> Over the years I've had various problems with the degree to which the
+> adding of spares on boot is automatic. There have been times when this
+> has just worked, and other times (such as now) where it only works very
+> occasionally (or not at all). Google is full of stories like this.
+> 
+> I have no clue why it's not working automatically, I just know that it
+> isn't.
+> 
+> So I wrote a little script that automates this, and hooked it up to
+> mdmon as an event handler.
+> 
+> It can probably do with an elegance upgrade, but it works for me.
+> 
+> HTH, Jan
 
-> If my math is correct, with a URE rate of 10E14, that's one URE for 
-> every ~12.5TB read.  So theoretically one would have to read the entire 
-> 2TB drive more than 6 times before hitting the first URE.  So it seems 
-> unlikely that one would hit a URE during a mirror rebuild with such a 
-> 2TB drive.
+Here is sample output of the script, which it mails to root:
 
-Unlikely yes, but it also means one in 6 rebuilds (statistically) will 
-fail with URE. I'm not willing to take that chance, thus I use RAID6.
+The UUID of component devices is 442e9934:97191d8e:6d0cf7a9:41621837
+(442e9934-9719-1d8e-6d0c-f7a941621837)
+Device /dev/sdb2 is already a member of the array
+Device /dev/sdd2 is already a member of the array
+Found device /dev/sde3 with the same UUID but not yet a component device.
+mdadm: re-added /dev/sde3
 
-Usually, with scrubbing etc I'd imagine that the probability is better 
-than 1 in 6, but it's still a substantial risk.
+It's a great shame that there does not appear to be a standard format
+for representing UUIDs: mdadm uses an 8:8:8:8 format, whereas blkid
+wants an 8-4-4-4-12 format. Hence the conversion shenanigans in the
+script. Makes the code brittle.
 
-> This is math so there is no room for disagreement--there is one right 
-> answer.  Either mine is correct or yours is.  If my math is incorrect 
-> I'd certainly appreciate it if you, or anyone else, would explain where 
-> I'm in error, so I don't disseminate incorrect information in the 
-> future.  But given that the articles I've read on this subject agree 
-> with my math, I don't believe I'm in error.
-
-With a BER of 10^-14 you have a 16% risk of getting URE when reading an 
-entire 2TB drive. We both agree on that. You called the risk in comparison 
-with "getting hit by lightning" which I strongly disagree with.
-
-> I made the point in a previous post that I use the smallest drives I can 
-> get away with for a given array/workload/capacity, as performance is 
-> generally better and rebuild times much lower.  Potential URE issues 
-> provide yet another reason to use a higher count of smaller drives, 
-> though again, this doesn't tend to affect most RAID1/10 users, yet.
-
-It's important that people make informed decsision. With enterprise drives 
-(better BER) that are smaller (let's say 300 GB), the risk is greatly 
-reduced.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Cheers, Jan
