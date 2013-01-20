@@ -1,41 +1,51 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Suboptimal raid6 linear read speed
-Date: Sun, 20 Jan 2013 02:44:12 -0700
-Message-ID: <EA019A09-5DD6-463C-8331-F7BDCDA66F80@colorremedies.com>
-References: <20130115123301.GA11948@rabbit.us> <50F55046.7050605@turmel.org> <20130115125507.GA12184@rabbit.us> <50F614F7.20104@hardwarefreak.com> <20130116025857.GA31112@rabbit.us> <50F70DB7.6020104@hardwarefreak.com> <alpine.DEB.2.00.1301171648260.12098@uplift.swm.pp.se> <50F90857.3010305@hardwarefreak.com> <alpine.DEB.2.00.1301181015270.12098@uplift.swm.pp.se> <50F9D32F.7090606@hardwarefreak.com> <alpine.DEB.2.00.1301190838440.12098@uplift.swm.pp.se> <50FB22D8.5000803@hardwarefreak.com> <50FB3185.7060009@ultratux.net> <6675858F-43FC-48CE-B146-856F50481289@colorremedies.com> <50FB3F34.3000302@ultratux.net>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8BIT
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: Automatically adding spares on boot
+Date: Sun, 20 Jan 2013 12:51:42 +0100 (CET)
+Message-ID: <27071535.2.1358682702567.JavaMail.root@zimbra>
+References: <50FAE8CB.50802@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50FB3F34.3000302@ultratux.net>
+In-Reply-To: <50FAE8CB.50802@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
+To: Can Jeuleers <can.jeuleers@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+> Hope this clarifies. You don't need this script if your OS always
+> finds
+> your spares and adds them automatically to your arrays. Mine doesn't.
 
-On Jan 19, 2013, at 5:49 PM, Maarten <maarten@ultratux.net> wrote:
+Really, if md 'forgets' a spare on reboot, that's a bug and should be r=
+eported. This is how my raid looks
 
-> On 01/20/13 01:16, Chris Murphy wrote:
->> 
->> And then explain how the manufacturer spec does not actually report the URE in anything approaching "on average" terms, but *less than* 1 bit in 10^14. If you propose the manufacturers are incorrectly reporting the error rate, realize you're basically accusing them of a rather massive fraud because less than 1 bit of error in X, is a significantly different thing than "on average" 1 bit of error in X. This could be up to, but not including, a full order magnitude higher error rate than the published spec. It's not an insignificant difference.
-> 
-> All very nice, but that is not the point, is it.
+Personalities : [raid6] [raid5] [raid4] [linear] [multipath] [raid0] [r=
+aid1] [raid10]=20
+md0 : active raid6 sdg[5] sdh[6](S) sdc[7] sdb[0] sde[3] sdf[4] sdd[8]
+      7814051840 blocks super 1.2 level 6, 64k chunk, algorithm 2 [6/6]=
+ [UUUUUU]
+     =20
+unused devices: <none>
 
-It is the point. You stated simple math and yet the math appears to be wrong and you haven't explained otherwise.
+What distro/version is this?
 
-> The point is, to
-> calculate (or rather: estimate) the odds of an URE encounter when
-> reading 2TB, based on the figure one has for reading 12,5 TB. Whether
-> that 12,5 figure is correct or not, whether endorsed by manufacturers or
-> not, is totally irrelevant.  It simply boils down to, if there are 10
-> X's in every 10G Y's, then there are 2 X's in every 2G Y's. Yes ?
+Vennlige hilsener / Best regards
 
-So when in doubt just change the entire argument? That's absurd.
-
-What is a bit?
-What is a URE?
-How much data, in bits, is lost when a URE occurs?
-How often does a URE occur?
-
-
-Chris Murphy
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
