@@ -1,35 +1,73 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Suboptimal raid6 linear read speed
-Date: Sun, 20 Jan 2013 10:20:28 -0700
-Message-ID: <D90780D5-ED73-4A15-B3F7-34B34EC95B1A@colorremedies.com>
-References: <20130115123301.GA11948@rabbit.us> <50F55046.7050605@turmel.org> <20130115125507.GA12184@rabbit.us> <50F614F7.20104@hardwarefreak.com> <20130116025857.GA31112@rabbit.us> <50F70DB7.6020104@hardwarefreak.com> <alpine.DEB.2.00.1301171648260.12098@uplift.swm.pp.se> <50F90857.3010305@hardwarefreak.com> <alpine.DEB.2.00.1301181015270.12098@uplift.swm.pp.se> <50F9D32F.7090606@hardwarefreak.com> <alpine.DEB.2.00.1301190838440.12098@uplift.swm.pp.se> <50FB22D8.5000803@hardwarefreak.com> <50FB3185.7060009@ultratux.net> <6675858F-43FC-48CE-B146-856F50481289@colorremedies.com> <alpine.DEB.2.00.1301200720010.12098@uplift.swm.pp.se> <0D706465-8D7A-46B9-A685-0320E14EF44C@colorremedies.com> <alpine.DEB.2.00.1301201752460.12098@uplift.swm.pp.se> <82074DD2-0B53-455C-A287-7F6B677DFA43@colorremedi
- es.com> <alpine.DEB.2.00.1301201816460.12098@uplift.swm.pp.se>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: fsync() on read-only RAID triggers BUG
+Date: Sun, 20 Jan 2013 18:44:52 +0000
+Message-ID: <1358707492.24121.210.camel@deadeye.wl.decadent.org.uk>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-V9sYi4kXXcQNa6raUP4E"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1301201816460.12098@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, 696650@bugs.debian.org
 List-Id: linux-raid.ids
 
 
-On Jan 20, 2013, at 10:17 AM, Mikael Abrahamsson <swmike@swm.pp.se> wrote:
+--=-V9sYi4kXXcQNa6raUP4E
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> On Sun, 20 Jan 2013, Chris Murphy wrote:
-> 
->> Classic ad hominem attack. You are making this discussion about me, about my civility, rather than about the argument. Can you demonstrate the flaw in what I've said?
-> 
-> I tried, and you called it blabbing without saying what in it was wrong.
+We've had a report of the BUG in md_write_start() being triggered while
+running the Debian installer: <http://bugs.debian.org/696650>.
+Based on the call trace, I came up with the following script that
+reproduces this under Linux 3.2.35 and 3.7.3:
 
-I wrote in response:
+--- BEGIN ---
+#!/bin/bash -ex
 
-"You haven't said a single thing that contradicts what I've said."
+# Set up temporary RAID1 on /dev/md0
+dd if=3D/dev/zero of=3D/tmp/disk0 bs=3D1M count=3D1
+losetup /dev/loop0 /tmp/disk0
+dd if=3D/dev/zero of=3D/tmp/disk1 bs=3D1M count=3D1
+losetup /dev/loop1 /tmp/disk1
+yes | mdadm -C /dev/md0 -l 1 -n 2 /dev/loop{0,1}
 
-That's what was wrong. You said nothing relevant. You're just saying you don't buy it. Well, who the f cares what you don't or won't buy? Make your case. Saying what you believe is utterly ridiculously useless. Let's see the logical or mathematical flaw in what I've presented.
+# Make it read-only
+while ! mdadm -o /dev/md0; do sleep 1; done
 
+# Call fsync()
+python -c "import os; os.fsync(os.open('/dev/md0', os.O_RDWR))"
+--- END ---
 
+I assume that the sync request should be filtered out at some point
+before this assertion is made, since there can be nothing to sync.
 
-Chris Murphy
+Ben.
 
+--=20
+Ben Hutchings
+Never attribute to conspiracy what can adequately be explained by stupidity=
+.
+
+--=-V9sYi4kXXcQNa6raUP4E
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIVAwUAUPw7JOe/yOyVhhEJAQpaZw//S3/4VXISx6H+lxRTvyqmzhR2dFMjLFCn
+COkZLYjvO96WmtQKiWrTlPM8a5DyVEzGot4xcB14fjFkXW+3oorH6Dwn/P94Po8y
+6QB6ba80AD+Qv/nl9sKXlcM5ZBmzaZOAN3cIQzl2tHop8ZMFmzxZALVKf1pzZy/r
+QSjDRy611vGmh7j7mjpD6OHmIt9ItZWeQEo35AXqy8Xf+19aWlwHuQWvyF9X+uWQ
+aeRtELfnB9uf2ruKS+FpolyUTAROEPKk2bZpyqc1hh41v7poJVBdWb0peROSaqkK
+3DT9fShxOOp/VPCR39vEwT4wSuAd1Wodr01ozXE0L8rCf7XBLGKnPDr0CQpW8nfc
+OcZdRunqwg5H2eFLa2zO1tjsvXOEFHG788bIphZ1IqneDewOjBWd8yECMEHY+xDK
+nWRzFE44iPs77vyoUSPXO5TOqr/UjVI+s1wp3BzbFzh1Es918ekDGt26etVyHZxL
+7NCEIGOBGiEzKLmAsLbL5W5nUO1EjCyIkIrZBm+UTND0PT5WHbqNaIbHMp6S5CO1
+gVZjlNnFqZ0Uq1J1wB9kBzA5q3EEhaNHl3kyxRdEhONCcq7Rk8JKSDwmk72JtE42
+xBfjAOSM56vDrYsYTZnl3S56uF+oHZTOo85a3Q09x9z9n8p9/Y3tcrAOQT24etuZ
+ybcPkX8yZ18=
+=BgLd
+-----END PGP SIGNATURE-----
+
+--=-V9sYi4kXXcQNa6raUP4E--
