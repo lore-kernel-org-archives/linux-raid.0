@@ -1,51 +1,39 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+From: Can Jeuleers <can.jeuleers@gmail.com>
 Subject: Re: Automatically adding spares on boot
-Date: Sun, 20 Jan 2013 12:51:42 +0100 (CET)
-Message-ID: <27071535.2.1358682702567.JavaMail.root@zimbra>
-References: <50FAE8CB.50802@gmail.com>
+Date: Sun, 20 Jan 2013 13:00:47 +0100
+Message-ID: <50FBDC6F.80304@gmail.com>
+References: <27071535.2.1358682702567.JavaMail.root@zimbra>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50FAE8CB.50802@gmail.com>
+In-Reply-To: <27071535.2.1358682702567.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: Can Jeuleers <can.jeuleers@gmail.com>
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Hope this clarifies. You don't need this script if your OS always
-> finds
-> your spares and adds them automatically to your arrays. Mine doesn't.
+On 01/20/2013 12:51 PM, Roy Sigurd Karlsbakk wrote:
+>> Hope this clarifies. You don't need this script if your OS always
+>> finds
+>> your spares and adds them automatically to your arrays. Mine doesn't.
+> 
+> Really, if md 'forgets' a spare on reboot, that's a bug and should be reported.
 
-Really, if md 'forgets' a spare on reboot, that's a bug and should be r=
-eported. This is how my raid looks
+http://www.google.com/#hl=en&q=mdadm+does+not+add+spares+on+boot
 
-Personalities : [raid6] [raid5] [raid4] [linear] [multipath] [raid0] [r=
-aid1] [raid10]=20
-md0 : active raid6 sdg[5] sdh[6](S) sdc[7] sdb[0] sde[3] sdf[4] sdd[8]
-      7814051840 blocks super 1.2 level 6, 64k chunk, algorithm 2 [6/6]=
- [UUUUUU]
-     =20
-unused devices: <none>
+First hit.
 
-What distro/version is this?
+root@zotac:~# lsb_release -a
+No LSB modules are available.
+Distributor ID:	Ubuntu
+Description:	Ubuntu 11.10
+Release:	11.10
+Codename:	oneiric
+root@zotac:~# uname -a
+Linux zotac 3.0.0-30-generic #47-Ubuntu SMP Wed Jan 2 23:16:29 UTC 2013
+x86_64 x86_64 x86_64 GNU/Linux
+root@zotac:~# mdadm -V
+mdadm - v3.1.4 - 31st August 2010
 
-Vennlige hilsener / Best regards
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
