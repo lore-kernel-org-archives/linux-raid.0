@@ -1,47 +1,55 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
+From: Wolfgang Denk <wd@denx.de>
 Subject: Re: Suboptimal raid6 linear read speed
-Date: Sun, 20 Jan 2013 07:26:03 +0100 (CET)
-Message-ID: <alpine.DEB.2.00.1301200720010.12098@uplift.swm.pp.se>
-References: <20130115123301.GA11948@rabbit.us> <50F55046.7050605@turmel.org> <20130115125507.GA12184@rabbit.us> <50F614F7.20104@hardwarefreak.com> <20130116025857.GA31112@rabbit.us> <50F70DB7.6020104@hardwarefreak.com> <alpine.DEB.2.00.1301171648260.12098@uplift.swm.pp.se>
- <50F90857.3010305@hardwarefreak.com> <alpine.DEB.2.00.1301181015270.12098@uplift.swm.pp.se> <50F9D32F.7090606@hardwarefreak.com> <alpine.DEB.2.00.1301190838440.12098@uplift.swm.pp.se> <50FB22D8.5000803@hardwarefreak.com> <50FB3185.7060009@ultratux.net>
- <6675858F-43FC-48CE-B146-856F50481289@colorremedies.com>
+Date: Sun, 20 Jan 2013 10:04:26 +0100
+Message-ID: <20130120090426.8EE1A200609@gemini.denx.de>
+References: <20130115123301.GA11948@rabbit.us> <50F55046.7050605@turmel.org> <20130115125507.GA12184@rabbit.us> <50F614F7.20104@hardwarefreak.com> <20130116025857.GA31112@rabbit.us> <50F70DB7.6020104@hardwarefreak.com> <alpine.DEB.2.00.1301171648260.12098@uplift.swm.pp.se> <50F90857.3010305@hardwarefreak.com> <alpine.DEB.2.00.1301181015270.12098@uplift.swm.pp.se> <50F9D32F.7090606@hardwarefreak.com> <alpine.DEB.2.00.1301190838440.12098@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6675858F-43FC-48CE-B146-856F50481289@colorremedies.com>
+In-reply-to: <alpine.DEB.2.00.1301190838440.12098@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Maarten <maarten@ultratux.net>, linux-raid@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: Stan Hoeppner <stan@hardwarefreak.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 19 Jan 2013, Chris Murphy wrote:
+Dear Mikael Abrahamsson,
 
-> Please explain this basic, simple math, where a URE is equivalent to 1 
-> bit of information. And also, explain the simple math where bit of error 
-> is equal to a URE. And please explain the simple math in the context of 
-> a conventional HDD 512 byte sector, which is 4096 bits.
->
-> If you have a URE, you have lost not 1 bit. You have lost 4096 bits. A 
-> loss of 4096 bits in 12.5TB (not 12.5TiB) is an error rate of 1 bit of 
-> error in 2.44^10 bits. That is a gross difference from published error 
-> rates.
+In message <alpine.DEB.2.00.1301190838440.12098@uplift.swm.pp.se> you wrote:
+> 
+> > If my math is correct, with a URE rate of 10E14, that's one URE for 
+> > every ~12.5TB read.  So theoretically one would have to read the entire 
+> > 2TB drive more than 6 times before hitting the first URE.  So it seems 
+> > unlikely that one would hit a URE during a mirror rebuild with such a 
+> > 2TB drive.
+> 
+> Unlikely yes, but it also means one in 6 rebuilds (statistically) will 
+> fail with URE. I'm not willing to take that chance, thus I use RAID6.
 
-I have seen your point of view posted in other discussions, and I don't 
-buy it. I believe the manufacturers are talking about how many bits read 
-before there is one or more bit error (ie can't error correct the bit 
-errors on that sector, so now the whole sector is URE. Since the sector is 
-an atomic unit, the drive can't report a single bit error (even though 
-that's probably what it is), it'll URE the whole 4k bytes. The 
-manufacturer is still talking about what's on the platter, not what the OS 
-sees.
+Me too, as actually it will be probably more than one out of six
+failing.  The URE rate as published in the drive's documentation is
+only true under specific conditions.  These conditions may not be met
+during extended periods of more or less continuous operation of the
+drive, like during backups or RAID array rebuilds.
 
-Your view on how this works would mean that drives would read more than 
-10^3 more data before an URE, which from my empirical data isn't right. 
-Also, for a 4k sector drive, with your logic, would have 8 times better 
-BER ratio which I don't believe either.
+For example, years ago we had repeated cases of double errors taking
+down RAID 5 arrays with Maxtor MaXLine Plus II 7Y250M0; the pattern
+was always the same: a disk error during a backup run, followed by
+another disk error during rebuild.  This specific drive type gets
+extremely hot under continuous operaton, which greatly shifts the URE
+rate to the worse.  
 
-I believe Phil was spot on when it comes to how it works. His post "19 Jan 
-2013 18:53:41" is exactly how I believe things work.
+So even if the failure rate appears to be acceptable in theory, it may
+bite you hard when you lose your data in reality.
+
+Best regards,
+
+Wolfgang Denk
 
 -- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+Alliance: In international politics, the union  of  two  thieves  who
+have  their hands so deeply inserted in each other's pocket that they
+cannot separately plunder a third.                   - Ambrose Bierce
