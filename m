@@ -1,37 +1,79 @@
-From: Jes.Sorensen@redhat.com
-Subject: [PATCH 3/3] execl() only returns in case of error
-Date: Mon, 21 Jan 2013 14:22:58 +0100
-Message-ID: <1358774578-2183-4-git-send-email-Jes.Sorensen@redhat.com>
-References: <1358774578-2183-1-git-send-email-Jes.Sorensen@redhat.com>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Re: Suboptimal raid6 linear read speed
+Date: Tue, 22 Jan 2013 01:40:39 +1100
+Message-ID: <20130121144039.GA4103@rabbit.us>
+References: <20130115125507.GA12184@rabbit.us>
+ <50F614F7.20104@hardwarefreak.com>
+ <20130116025857.GA31112@rabbit.us>
+ <50F70DB7.6020104@hardwarefreak.com>
+ <alpine.DEB.2.00.1301171648260.12098@uplift.swm.pp.se>
+ <50F90857.3010305@hardwarefreak.com>
+ <alpine.DEB.2.00.1301181015270.12098@uplift.swm.pp.se>
+ <50F9D32F.7090606@hardwarefreak.com>
+ <alpine.DEB.2.00.1301190838440.12098@uplift.swm.pp.se>
+ <20732.17741.587765.199649@tree.ty.sabi.co.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1358774578-2183-1-git-send-email-Jes.Sorensen@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20732.17741.587765.199649@tree.ty.sabi.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dledford@redhat.com, harald@redhat.com
+To: Peter Grandi <pg@lxra2.for.sabi.co.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Thank you for the thorough reply. While I agree with *most* of what
+you say I have a comment and a followup question below.
 
-In case exec fails, fall through and print warning rather than just
-calling exit(1) silently.
+On Sun, Jan 20, 2013 at 07:28:13PM +0000, Peter Grandi wrote:
+> [ ... the original question on 2+2 RAID delivering 2x linear
+> transfers of 1x linear transfers ... ]
+> 
+> The original question was based on the (euphemism) very peculiar
+> belief that skipping over P/Q blocks has negligible cost.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- util.c | 1 -
- 1 file changed, 1 deletion(-)
+I was indeed very surprised to find out that the skipping is *not* free. 
+I am planning to do some research on whether it is possible to use 
+specific chunksizes so that when laid out on top of the physical media 
+the "skip penalty" is minimized. This will probably take me a while, but 
+I will come back to this thread with the results eventually.
 
-diff --git a/util.c b/util.c
-index 500b2bd..68fd27e 100644
---- a/util.c
-+++ b/util.c
-@@ -1705,7 +1705,6 @@ int start_mdmon(int devnum)
- 					}
- 				}
- 		}
--		exit(1);
- 	case -1: pr_err("cannot run mdmon. "
- 			 "Array remains readonly\n");
- 		return -1;
--- 
-1.7.11.7
+> Getting back to RAID, I feel (euphemism) dismayed when I read
+> (euphemism) superficialities like:
+> 
+>   "raid6 can lose any random 2 drives, while raid10 can't."
+> 
+> because they are based on the (euphemism) disregard of the very
+> many differences between the two, and that what matters is the
+> level of reliability and performance achievable with the same
+> budget. Because ultimately it is reliability/performance per
+> budget that matters, not (euphemism) uninformed issues of mere
+> geometry.
+
+I am not sure what you are saying... I see raid as a way for me to keep 
+a higher layer "online", while some of the physical drives fall on the 
+floor. In the case of 4 drives (very typical for mom&pop+consultant 
+shops with near-sufficient expertise but far-insufficient funds) a raid6 
+is the more obvious choice as it provides the array size of 2xdrives, 
+with reasonable redundancy (*ANY* 2 drives), and reasonable-ish 
+read/write rates in normal operation. With the prospect of minimizing the 
+skip-penalty the read rate (which is what matters, again, in most cases) 
+will go even higher.
+
+By the way "normal operation" is what I am basing my observation on, 
+because a degraded raid does not run for years without being taken care 
+of. If it does - someone is doing it wrong. Besides with raid6 the 
+degradation of operational speeds will be a contributing factor to 
+repair the array *sooner*.
+
+Compare to raid10, which has better read characteristics, but in order 
+to reach the "any 2 drives" bounty, one needs to assemble a -l 10 -n 4 
+-p f3, which isn't... very optimal (mom&pop just went from 2xsize to 
+1.3xsize).
+
+From your comment above I gather you disagree with this. Can you 
+elaborate more on the economics of mom&pop installations, and how my 
+assesment is (euphemism) wrong? :)
+
+Cheers
 
