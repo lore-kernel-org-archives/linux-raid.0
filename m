@@ -1,47 +1,52 @@
-From: Roger Heflin <rogerheflin@gmail.com>
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
 Subject: Re: Chances of silent errors?
-Date: Mon, 21 Jan 2013 16:16:00 -0600
-Message-ID: <CAAMCDee5T4iA6URWkBW5upr7Soj-BX6mefeEeHpXxKhzPWdDoA@mail.gmail.com>
+Date: Mon, 21 Jan 2013 22:39:22 +0000
+Message-ID: <20733.50074.56591.634684@tree.ty.sabi.co.uk>
 References: <28222077.12.1358798287217.JavaMail.root@zimbra>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <28222077.12.1358798287217.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc: linux-raid Raid <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Jan 21, 2013 at 1:58 PM, Roy Sigurd Karlsbakk <roy@karlsbakk.net> wrote:
-> Hi all
->
-> Coming from the zfs world, I've heard a few talk about the chances of "silent errors", meaning the checksum on the drives match, but the data being bad because of matching checksum (aka collisions). Does anyone in here know the relative chance of something like that happening with the checksums of current harddisks? Is the 1:10^14 or 1:10^15 chances for a URE in regard to this, or is that when the drive reports an error, or those two combined?
->
-> Vennlige hilsener / Best regards
+> Coming from the zfs world, I've heard a few talk about the
+> chances of "silent errors", meaning the checksum on the drives
+> match, but the data being bad because of matching checksum
+> (aka collisions). [ ... ]
 
-I don't know about that result and am interested in the results.
+That's a very narrow definition of "silent errors", they happen
+in any case where incorrect data has been written to persistent
+storage from memory, and yet no error has been signaled.
 
-On the silent corruption issues I have dealt with before both of them
-came back to controller issues, in one case the raid/disk controller
-had gone bad and would silently corrupt a block of data with a rate of
-about 1 in 3-10GB of reads (never saw/confirmed corruption on writes),
-in the other case because of the PCI-X bus speed being set too high (2
-cards in use should have been at 100mhz was at 133mhz) it would
-produce similar results on reads with blocks being corrupted about 1
-block in 2-3 gb of reads.     Based on past data I am guessing the
-silent corruption coming out of ram (non-ecc ram) and/or the
-controller is likely at least an order of magnitude more likely an
-issue on the disk.      The above referenced controllers were 2
-completely different controllers by completely different companies.
-I have never debugged corruption issues that was identified to be from
-the disk itself, so I would suspect that the disks checksums are alot
-more reliable that a lot of people believe and that the risk points
-are at the controller -> pci -> cpu level were things are not so
-carefully designed and checksummed.    Note that both of the
-controllers were from (at the time) widely respected companies and
-both were enterprise level cards (not home use cards--so cards that
-cost > $US1k ).     And we added checksums at the software level to
-give us end to end confirmation...as we had identified previous
-corruption do to software/library issues...so in application is much
-superior as it also catches software issues.
+A common cause of those is software or firmware (HBA, disk, ...)
+bugs, that either read or write the wrong blocks or modify them
+in transit.
+
+The classic report on this is from CERN's extensive testing:
+
+  http://w3.hepix.org/storage/hep_pdf/2007/Spring/kelemen-2007-HEPiX-Silent_Corruptions.pdf
+
+As to checksum collisions, that depends a bit on sector size and
+the type/length of checksum and "enterprise" drives can usually
+be formatted with different size sectors to accomodate different
+size checksums. I would also suspect that it is far more likely
+that very different blocks on the same disk have legitimately
+the same checksum than a slightly corrupted block gets the same
+checksum as the uncorrupted one...
+
+For some context the details of the very informative SAVVIO
+product manual here, page 15, the "Miscorrected Data" line:
+
+  http://www.seagate.com/internal-hard-drives/enterprise-hard-drives/hdd/savvio-15k/
+
+or also, page 43, the section "Protection Information".
+
+But note that the URE is the *Unrecovered* Error Rate, that is
+for errors that have been detected but not corrected, not the
+*Undetected* Error Rate.
+
+As someone famously said, as far as he knew his datacenter never
+had an undetected error.
