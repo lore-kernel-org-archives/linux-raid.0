@@ -1,252 +1,296 @@
-From: Jonathan Brassow <jbrassow@redhat.com>
-Subject: [PATCH - for v3.7] DM-RAID: Fix RAID10's check for sufficient
- redundancy
-Date: Tue, 22 Jan 2013 21:42:18 -0600
-Message-ID: <1358912538.5871.3.camel@f16>
-References: <1357783259.9103.5.camel@f16>
+From: John Gehring <john.gehring@gmail.com>
+Subject: Re: mdadm - assemble error - 'not enough to start the array while not clean'
+Date: Wed, 23 Jan 2013 11:50:50 -0700
+Message-ID: <CALwOXv+iX5DLcn2DERRfFLSncqMYhD_M6KYUsRT55LmUVjZdYg@mail.gmail.com>
+References: <CALwOXvLW=fQjBmsHZy9WzqkXJj8pDDX=nOU=GF=8mqMK_H3XJQ@mail.gmail.com>
+	<CALwOXv+uOgpnh3kPSZOShnzsK=J+g5P5aGOZToUVTA_N_fdrdg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1357783259.9103.5.camel@f16>
+In-Reply-To: <CALwOXv+uOgpnh3kPSZOShnzsK=J+g5P5aGOZToUVTA_N_fdrdg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de, agk@redhat.com, jbrassow@redhat.com
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil,
+I think I'm getting closer to understanding the issue, but still have
+some questions about the various states of the raid array. Ultimately,
+the 'assemble' command is resulting in the un-started state (not
+enough to start the array while not clean) because the array state
+does not include the 'clean' condition. What I've noticed is that
+after removing a device and prior to adding a device back to the
+array, the array state is: 'clean, degraded, resyncing'. But after a
+device is added back to the array, the state moves to: 'active,
+degraded, resyncing' (no longer clean!). At this point, if the array
+is stopped and then re-assembled, the array will not start.
 
- Here is the RAID10 redundancy check fix backported for linux-3.7
+Is there a good explanation for why the 'clean' state does not exist
+after adding a device back to the array?
 
-Thanks,
- brassow
-
-
-DM RAID:  Fix RAID10's check for sufficient redundancy
-
-Before attempting to activate a RAID array, it is checked for sufficient
-redundancy.  That is, we make sure that there are not too many failed
-devices - or devices specified for rebuild - to undermine our ability to
-activate the array.  The current code performs this check twice - once to
-ensure there were not too many devices specified for rebuild by the user
-('validate_rebuild_devices') and again after possibly experiencing a failure
-to read the superblock ('analyse_superblocks').  Neither of these checks are
-sufficient.  The first check is done properly but with insufficient
-information about the possible failure state of the devices to make a good
-determination if the array can be activated.  The second check is simply
-done wrong in the case of RAID10 because it doesn't account for the
-independence of the stripes (i.e. mirror sets).  The solution is to use the
-properly written check ('validate_rebuild_devices'), but perform the check
-after the superblocks have been read and we know which devices have failed.
-This gives us one check instead of two and performs it in a location where
-it can be done right.
-
-Only RAID10 was affected and it was affected in the following ways:
-- the code did not properly catch the condition where a user specified
-  a device for rebuild that already had a failed device in the same mirror
-  set.  (This condition would, however, be caught at a deeper level in MD.)
-- the code triggers a false positive and denies activation when devices in
-  independent mirror sets have failed - counting the failures as though they
-  were all in the same set.
-
-The most likely place this error was introduced (or this patch should have
-been included) is in commit 4ec1e369 - first introduced in v3.7-rc1.
-
-Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
-Index: linux-upstream/Documentation/device-mapper/dm-raid.txt
-===================================================================
---- linux-upstream.orig/Documentation/device-mapper/dm-raid.txt
-+++ linux-upstream/Documentation/device-mapper/dm-raid.txt
-@@ -141,3 +141,4 @@ Version History
- 1.2.0	Handle creation of arrays that contain failed devices.
- 1.3.0	Added support for RAID 10
- 1.3.1	Allow device replacement/rebuild for RAID 10
-+1.3.2   Fix/improve redundancy checking for RAID10
-Index: linux-upstream/drivers/md/dm-raid.c
-===================================================================
---- linux-upstream.orig/drivers/md/dm-raid.c
-+++ linux-upstream/drivers/md/dm-raid.c
-@@ -338,24 +338,22 @@ static int validate_region_size(struct r
- }
- 
- /*
-- * validate_rebuild_devices
-+ * validate_raid_redundancy
-  * @rs
-  *
-- * Determine if the devices specified for rebuild can result in a valid
-- * usable array that is capable of rebuilding the given devices.
-+ * Determine if there are enough devices in the array that haven't
-+ * failed (or are being rebuilt) to form a usable array.
-  *
-  * Returns: 0 on success, -EINVAL on failure.
-  */
--static int validate_rebuild_devices(struct raid_set *rs)
-+static int validate_raid_redundancy(struct raid_set *rs)
- {
- 	unsigned i, rebuild_cnt = 0;
- 	unsigned rebuilds_per_group, copies, d;
- 
--	if (!(rs->print_flags & DMPF_REBUILD))
--		return 0;
--
- 	for (i = 0; i < rs->md.raid_disks; i++)
--		if (!test_bit(In_sync, &rs->dev[i].rdev.flags))
-+		if (!test_bit(In_sync, &rs->dev[i].rdev.flags) ||
-+		    !rs->dev[i].rdev.sb_page)
- 			rebuild_cnt++;
- 
- 	switch (rs->raid_type->level) {
-@@ -391,27 +389,24 @@ static int validate_rebuild_devices(stru
- 		 *          A    A    B    B    C
- 		 *          C    D    D    E    E
- 		 */
--		rebuilds_per_group = 0;
- 		for (i = 0; i < rs->md.raid_disks * copies; i++) {
-+			if (!(i % copies))
-+				rebuilds_per_group = 0;
- 			d = i % rs->md.raid_disks;
--			if (!test_bit(In_sync, &rs->dev[d].rdev.flags) &&
-+			if ((!rs->dev[d].rdev.sb_page ||
-+			     !test_bit(In_sync, &rs->dev[d].rdev.flags)) &&
- 			    (++rebuilds_per_group >= copies))
- 				goto too_many;
--			if (!((i + 1) % copies))
--				rebuilds_per_group = 0;
- 		}
- 		break;
- 	default:
--		DMERR("The rebuild parameter is not supported for %s",
--		      rs->raid_type->name);
--		rs->ti->error = "Rebuild not supported for this RAID type";
--		return -EINVAL;
-+		if (rebuild_cnt)
-+			return -EINVAL;
- 	}
- 
- 	return 0;
- 
- too_many:
--	rs->ti->error = "Too many rebuild devices specified";
- 	return -EINVAL;
- }
- 
-@@ -662,9 +657,6 @@ static int parse_raid_params(struct raid
- 	}
- 	rs->md.dev_sectors = sectors_per_dev;
- 
--	if (validate_rebuild_devices(rs))
--		return -EINVAL;
--
- 	/* Assume there are no metadata devices until the drives are parsed */
- 	rs->md.persistent = 0;
- 	rs->md.external = 1;
-@@ -993,28 +985,10 @@ static int super_validate(struct mddev *
- static int analyse_superblocks(struct dm_target *ti, struct raid_set *rs)
- {
- 	int ret;
--	unsigned redundancy = 0;
- 	struct raid_dev *dev;
- 	struct md_rdev *rdev, *tmp, *freshest;
- 	struct mddev *mddev = &rs->md;
- 
--	switch (rs->raid_type->level) {
--	case 1:
--		redundancy = rs->md.raid_disks - 1;
--		break;
--	case 4:
--	case 5:
--	case 6:
--		redundancy = rs->raid_type->parity_devs;
--		break;
--	case 10:
--		redundancy = raid10_md_layout_to_copies(mddev->layout) - 1;
--		break;
--	default:
--		ti->error = "Unknown RAID type";
--		return -EINVAL;
--	}
--
- 	freshest = NULL;
- 	rdev_for_each_safe(rdev, tmp, mddev) {
- 		/*
-@@ -1043,44 +1017,43 @@ static int analyse_superblocks(struct dm
- 			break;
- 		default:
- 			dev = container_of(rdev, struct raid_dev, rdev);
--			if (redundancy--) {
--				if (dev->meta_dev)
--					dm_put_device(ti, dev->meta_dev);
-+			if (dev->meta_dev)
-+				dm_put_device(ti, dev->meta_dev);
- 
--				dev->meta_dev = NULL;
--				rdev->meta_bdev = NULL;
-+			dev->meta_dev = NULL;
-+			rdev->meta_bdev = NULL;
- 
--				if (rdev->sb_page)
--					put_page(rdev->sb_page);
-+			if (rdev->sb_page)
-+				put_page(rdev->sb_page);
- 
--				rdev->sb_page = NULL;
-+			rdev->sb_page = NULL;
- 
--				rdev->sb_loaded = 0;
-+			rdev->sb_loaded = 0;
- 
--				/*
--				 * We might be able to salvage the data device
--				 * even though the meta device has failed.  For
--				 * now, we behave as though '- -' had been
--				 * set for this device in the table.
--				 */
--				if (dev->data_dev)
--					dm_put_device(ti, dev->data_dev);
--
--				dev->data_dev = NULL;
--				rdev->bdev = NULL;
-+			/*
-+			 * We might be able to salvage the data device
-+			 * even though the meta device has failed.  For
-+			 * now, we behave as though '- -' had been
-+			 * set for this device in the table.
-+			 */
-+			if (dev->data_dev)
-+				dm_put_device(ti, dev->data_dev);
- 
--				list_del(&rdev->same_set);
-+			dev->data_dev = NULL;
-+			rdev->bdev = NULL;
- 
--				continue;
--			}
--			ti->error = "Failed to load superblock";
--			return ret;
-+			list_del(&rdev->same_set);
- 		}
- 	}
- 
- 	if (!freshest)
- 		return 0;
- 
-+	if (validate_raid_redundancy(rs)) {
-+		rs->ti->error = "Insufficient redundancy to activate array";
-+		return -EINVAL;
-+	}
-+
- 	/*
- 	 * Validation of the freshest device provides the source of
- 	 * validation for the remaining devices.
-@@ -1430,7 +1403,7 @@ static void raid_resume(struct dm_target
- 
- static struct target_type raid_target = {
- 	.name = "raid",
--	.version = {1, 3, 1},
-+	.version = {1, 3, 2},
- 	.module = THIS_MODULE,
- 	.ctr = raid_ctr,
- 	.dtr = raid_dtr,
+Thanks.
 
 
+After removing a device from the array:
+------------------------------------------------------------------------------------------------------
+mdadm-3.2.6$ sudo mdadm -D /dev/md1
+/dev/md1:
+        Version : 1.2
+  Creation Time : Wed Jan 23 11:06:45 2013
+     Raid Level : raid6
+     Array Size : 1503744 (1468.75 MiB 1539.83 MB)
+  Used Dev Size : 250624 (244.79 MiB 256.64 MB)
+   Raid Devices : 8
+  Total Devices : 7
+    Persistence : Superblock is persistent
+
+    Update Time : Wed Jan 23 11:07:06 2013
+          State : clean, degraded, resyncing
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 256K
+
+  Resync Status : 26% complete
+
+           Name : JLG-NexGenStorage:1  (local to host JLG-NexGenStorage)
+           UUID : 0100e727:8d91a5d9:67f0be9e:26be5623
+         Events : 8
+
+    Number   Major   Minor   RaidDevice State
+       0       8       16        0      active sync   /dev/sdb
+       1       8       32        1      active sync   /dev/sdc
+       2       8       48        2      active sync   /dev/sdd
+       3       8       64        3      active sync   /dev/sde
+       4       0        0        4      removed
+       5       8       96        5      active sync   /dev/sdg
+       6       8      112        6      active sync   /dev/sdh
+       7       8      128        7      active sync   /dev/sdi
+
+
+
+After adding a device back to the array:
+------------------------------------------------------------------------------------------------------
+
+mdadm-3.2.6$ sudo mdadm -D /dev/md1
+/dev/md1:
+        Version : 1.2
+  Creation Time : Wed Jan 23 11:06:45 2013
+     Raid Level : raid6
+     Array Size : 1503744 (1468.75 MiB 1539.83 MB)
+  Used Dev Size : 250624 (244.79 MiB 256.64 MB)
+   Raid Devices : 8
+  Total Devices : 8
+    Persistence : Superblock is persistent
+
+    Update Time : Wed Jan 23 11:07:27 2013
+          State : active, degraded, resyncing
+ Active Devices : 7
+Working Devices : 8
+ Failed Devices : 0
+  Spare Devices : 1
+
+         Layout : left-symmetric
+     Chunk Size : 256K
+
+  Resync Status : 52% complete
+
+           Name : JLG-NexGenStorage:1  (local to host JLG-NexGenStorage)
+           UUID : 0100e727:8d91a5d9:67f0be9e:26be5623
+         Events : 14
+
+    Number   Major   Minor   RaidDevice State
+       0       8       16        0      active sync   /dev/sdb
+       1       8       32        1      active sync   /dev/sdc
+       2       8       48        2      active sync   /dev/sdd
+       3       8       64        3      active sync   /dev/sde
+       4       0        0        4      removed
+       5       8       96        5      active sync   /dev/sdg
+       6       8      112        6      active sync   /dev/sdh
+       7       8      128        7      active sync   /dev/sdi
+
+       8       8       80        -      spare   /dev/sdf
+
+On Fri, Jan 18, 2013 at 6:37 PM, John Gehring <john.gehring@gmail.com> wrote:
+> I executed the assemble command with the verbose option and saw this:
+>
+> ~$ sudo mdadm --verbose --assemble /dev/md1
+> --uuid=0100e727:8d91a5d9:67f0be9e:26be5623
+> mdadm: looking for devices for /dev/md1
+> mdadm: no RAID superblock on /dev/sda5
+> mdadm: no RAID superblock on /dev/sda2
+> mdadm: no RAID superblock on /dev/sda1
+> mdadm: no RAID superblock on /dev/sda
+> mdadm: /dev/sdf is identified as a member of /dev/md1, slot -1.
+> mdadm: /dev/sdm is identified as a member of /dev/md1, slot 7.
+> mdadm: /dev/sdh is identified as a member of /dev/md1, slot 6.
+> mdadm: /dev/sdg is identified as a member of /dev/md1, slot 5.
+> mdadm: /dev/sde is identified as a member of /dev/md1, slot 3.
+> mdadm: /dev/sdd is identified as a member of /dev/md1, slot 2.
+> mdadm: /dev/sdc is identified as a member of /dev/md1, slot 1.
+> mdadm: /dev/sdb is identified as a member of /dev/md1, slot 0.
+> mdadm: added /dev/sdc to /dev/md1 as 1
+> mdadm: added /dev/sdd to /dev/md1 as 2
+> mdadm: added /dev/sde to /dev/md1 as 3
+> mdadm: no uptodate device for slot 4 of /dev/md1
+> mdadm: added /dev/sdg to /dev/md1 as 5
+> mdadm: added /dev/sdh to /dev/md1 as 6
+> mdadm: added /dev/sdm to /dev/md1 as 7
+> mdadm: failed to add /dev/sdf to /dev/md1: Device or resource busy
+> mdadm: added /dev/sdb to /dev/md1 as 0
+> mdadm: /dev/md1 assembled from 7 drives - not enough to start the
+> array while not clean - consider --force.
+>
+> This made me think that the zero-superblock command was not clearing
+> out data as well as I expected. (BTW, I re-ran the test and ran the
+> zero-superblock multiple times to get the 'mdadm: Unrecognised md
+> component device - /dev/sdf' response, but still ended up with the
+> assemble error.) Given that it looked to mdadm like the device still
+> had belonged to the raid array, I dd'd zero's into the device between
+> steps 8 and 9 (after running the zero-superblock command; probably
+> redundant) and this seems to have done the trick. If I zero out the
+> device (and I'm sure I can actually zero out more specific parts
+> related to the superblock area), then the final assemble command works
+> as desired.
+>
+> Still wouldn't mind hearing back about why this fails when I only take
+> the steps outlined in the message above.
+>
+> Thanks.
+>
+> On Thu, Jan 17, 2013 at 7:43 PM, John Gehring <john.gehring@gmail.com> wrote:
+>> I am receiving the following error when trying to assemble a raid set:
+>>
+>> mdadm: /dev/md1 assembled from 7 drives - not enough to start the
+>> array while not clean - consider --force.
+>>
+>> My machine environment and the steps are listed below. I'm happy to
+>> provide additional information.
+>>
+>> I have used the following steps to reliably reproduce the problem:
+>>
+>> 1 - echo "AUTO -all" >> /etc/mdadm.conf     : Do this in order to
+>> prevent auto assembly in a later step.
+>>
+>> 2 - mdadm --create /dev/md1 --level=6 --chunk=256 --raid-devices=8
+>> --uuid=0100e727:8d91a5d9:67f0be9e:26be5623 /dev/sdb /dev/sdc /dev/sdd
+>> /dev/sde /dev/sdf /dev/sdg /dev/sdh /dev/sdm
+>>    -  I originally detected this problem on a system with a 16 drive
+>> LSI sas back plane, but found I could create a similar 8-device array
+>> with a couple of 4-port USB hubs.
+>>
+>> 3 - Pull a drive from the raid set. This should be done prior to raid
+>> finishing the resync process. If you're using > 1 G USB devices, there
+>> should be ample time.
+>>    - sudo bash -c "/bin/echo -n 1 > /sys/block/sdf/device/delete"
+>>
+>> 4 - Inspect the raid status to be sure that the device is now marked as faulty.
+>>    - mdadm -D /dev/md1
+>>
+>> 5 - Remove the 'faulty' device from the raid set. Note that upon
+>> inspection of the raid data in the last step, you can see that the
+>> device name of the faulty device is not given.
+>>    - mdadm --manage /dev/md1 --remove faulty
+>>
+>> 6 - Stop the raid device.
+>>    - mdadm -S /dev/md1
+>>
+>> 7 - Rediscover the 'pulled' USB device. Note that I'm doing a virtual
+>> pull and insert of the USB device because I don't have to run the risk
+>> of bumping/reseating other USB devices on the same HUB.
+>>    - sudo bash -c "/bin/echo -n \"- - -\" > /sys/class/scsi_host/host23/scan"
+>>    - This step can be a little tricky because there are a good number
+>> of hostx devices in the /sys/class/scsi_host directory. You have to
+>> know how they are mapped or keep trying the command with different
+>> hostx dirs specified until your USB device shows back up in the /dev/
+>> directory.
+>>
+>> 8 - 'zero' the superblock on the newly discovered device.
+>>    - mdadm --zero-superblock /dev/sdf
+>>
+>> 9 - Try to assemble the raid set.
+>>   - mdadm --assemble /dev/md1 --uuid=0100e727:8d91a5d9:67f0be9e:26be5623
+>>
+>> results in =>  mdadm: /dev/md1 assembled from 7 drives - not enough to
+>> start the array while not clean - consider --force.
+>>
+>> Using the --force switch works, but I'm not confident that the
+>> integrity of the raid array has been maintained.
+>>
+>> My system:
+>>
+>> HP EliteBook 8740w
+>> ~$ cat /etc/issue
+>> Ubuntu 11.04 \n \l
+>>
+>> ~$ uname -a
+>> Linux JLG 2.6.38-16-generic #67-Ubuntu SMP Thu Sep 6 17:58:38 UTC 2012
+>> x86_64 x86_64 x86_64 GNU/Linux
+>>
+>> ~$ mdadm --version
+>> mdadm - v3.2.6 - 25th October 2012
+>>
+>> ~$ modinfo raid456
+>> filename:       /lib/modules/2.6.38-16-generic/kernel/drivers/md/raid456.ko
+>> alias:          raid6
+>> alias:          raid5
+>> alias:          md-level-6
+>> alias:          md-raid6
+>> alias:          md-personality-8
+>> alias:          md-level-4
+>> alias:          md-level-5
+>> alias:          md-raid4
+>> alias:          md-raid5
+>> alias:          md-personality-4
+>> description:    RAID4/5/6 (striping with parity) personality for MD
+>> license:        GPL
+>> srcversion:     2A567A4740BF3F0C5D13267
+>> depends:        async_raid6_recov,async_pq,async_tx,async_memcpy,async_xor
+>> vermagic:       2.6.38-16-generic SMP mod_unload modversions
+>>
+>> The raid set when it's happy:
+>>
+>> mdadm-3.2.6$ sudo mdadm -D /dev/md1
+>> /dev/md1:
+>>         Version : 1.2
+>>   Creation Time : Thu Jan 17 19:34:51 2013
+>>      Raid Level : raid6
+>>      Array Size : 1503744 (1468.75 MiB 1539.83 MB)
+>>   Used Dev Size : 250624 (244.79 MiB 256.64 MB)
+>>    Raid Devices : 8
+>>   Total Devices : 8
+>>     Persistence : Superblock is persistent
+>>
+>>     Update Time : Thu Jan 17 19:35:02 2013
+>>           State : active, resyncing
+>>  Active Devices : 8
+>> Working Devices : 8
+>>  Failed Devices : 0
+>>   Spare Devices : 0
+>>
+>>          Layout : left-symmetric
+>>      Chunk Size : 256K
+>>
+>>   Resync Status : 13% complete
+>>
+>>            Name : JLG:1  (local to host JLG)
+>>            UUID : 0100e727:8d91a5d9:67f0be9e:26be5623
+>>          Events : 3
+>>
+>>     Number   Major   Minor   RaidDevice State
+>>        0       8       16        0      active sync   /dev/sdb
+>>        1       8       32        1      active sync   /dev/sdc
+>>        2       8       48        2      active sync   /dev/sdd
+>>        3       8       64        3      active sync   /dev/sde
+>>        4       8       80        4      active sync   /dev/sdf
+>>        5       8       96        5      active sync   /dev/sdg
+>>        6       8      112        6      active sync   /dev/sdh
+>>        7       8      192        7      active sync   /dev/sdm
+>>
+>>
+>> Thank you to anyone who's taking the time to look at this.
+>>
+>> Cheers,
+>>
+>> John Gehring
