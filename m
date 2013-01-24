@@ -1,314 +1,286 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH - for v3.7] DM-RAID: Fix RAID10's check for sufficient
- redundancy
-Date: Thu, 24 Jan 2013 12:17:10 +1100
-Message-ID: <20130124121710.6220bb60@notabene.brown>
-References: <1357783259.9103.5.camel@f16>
-	<1358912538.5871.3.camel@f16>
+From: majianpeng <majianpeng@gmail.com>
+Subject: [RFC PATCH V1] raid1: rewrite the iobarrier
+Date: Thu, 24 Jan 2013 14:02:52 +0800
+Message-ID: <2013012414023278904611@gmail.com>
+Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ajuHnJz7+w0ec/EWABNPOUB"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1358912538.5871.3.camel@f16>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jonathan Brassow <jbrassow@redhat.com>
-Cc: linux-raid@vger.kernel.org, agk@redhat.com
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/ajuHnJz7+w0ec/EWABNPOUB
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+VGhlcmUgaXMgaW9iYXJyaWVyIGluIHJhaWQxIGJlY2F1c2UgdHdvIHJlYXNvbiByZXN5bmMvcmVj
+b3ZlcnkgIG9yIHJlY29uZmlndXJlIHRoZSBhcnJheS4NCkF0IHByZXNlbnQsaXQgc3VzcGVuZCBh
+bGwgbm9ybmFsIElPIHdoZW4gcmV5c3luYy9yZWNvdmV5Lg0KQnV0IGlmIG5vcm5hbCBJTyBpcyBv
+dXRyYW5nZSB0aGUgcmVzeW5jL3JlY292ZXJ5IHdpbmR3b3MsaXQgIGRvbid0IG5lZWQgdG8gaW9i
+YXJyaWVyLg0KU28gSSByZXdyaXRlIHRoZSBpb2JhcnJpZXIuDQpCZWNhdXNlIHRoZSByZWFzb25z
+IG9mIGJhcnJpZXIgYXJlIHR3byxzbyBpIHVzZSB0d28gZGlmZmVyZW50IG1ldGhvZHMuDQpGaXJz
+dCBmb3IgcmVzeW5jL3JlY292ZXJ5LCB0aGVyZSBpcyBhIHJleXNuYyB3aW5kb3cuVGhlIGVuZCBw
+b3NpdGlvbiBpcyAnbmV4dF9yZXN5bmMnLkJlY2F1c2UgdGhlIHJlc3luYyBkZXB0aCBpcyAgUkVT
+WU5DX0RFUFRIKDMyKSwNCnNvIHRoZSBzdGFydCBpcyAnbmV4dF9yZXN5bmMgLSBSRVNZTkNfU0VD
+VE9SICogUkVTWU5DX0RFUFRIJw0KVGhlIG5vcm5hbCBJTyBXaWxsIGJlIGRpdmlkZWQgaW50byB0
+aHJlZSBjYXRlZ29yaWVzIGJ5IHRoZSBsb2NhdGlvbi4NCmE6IGJlZm9yZSB0aGUgc3RhcnQgb2Yg
+cmVzeW5jIHdpbmRvdw0KYjogYmV0d2VlbiB0aGUgcmVzeW5jIHdpbmRvdw0KYzogYWZ0ZXIgdGhl
+IGVuZCBvZiByZXN5bmMgd2luZG93DQpGb3IgYSwgaXQgZG9uJ3QgYmFycmllci4NCkZvciBiLCBp
+dCBuZWVkIGJhcnJpZXIgYW5kIHVzZWQgdGhlIG9yaWdpbmFsIG1ldGhvZA0KRm9yIGMsIGl0IGRv
+bid0IGJhcnJpZXIgYnV0IGl0IG5lZWQgcmVjb3JkIHRoZSBtaW5pbXVtIHBvc2l0aW9uLklmIG5l
+eHQgcmVzeW5jIGlzIGxhcmdlciB0aGlzLCByZXN5bmMgYWN0aW9uIHdpbGwgc3VzcGVuZC5PdGhl
+cndpc2UgdmVyc2EuDQpJIHVzZWQgcmJ0cmVlIHRvIG9yZGVyIHRob3NlIGlvLg0KDQpGb3IgdGhl
+IHJlYXNvbiBvZiByZWNvbmZpZ3VyZSBvZiB0aGUgYXJyYXJ5LEkgcHJvcG9zZWQgYSBjb25jZXB0
+ICJmb3JjZV9iYXJyaWVyIi5XaGVuIHRoZXJlIGlzIGZvcmNlX2JhcnJpZXIsIGFsbCBOb3JuYW0g
+SU8gbXVzdCBiZSBzdXNwZW5kZWQuDQoNCk5PVEU6DQpCZWNhdXNlIHRoaXMgcHJvYmxlbSBpcyBh
+bHNvIGZvciByYWlkMTAsIGJ1dCBpIG9ubHkgZG8gaXQgZm9yIHJhaWQxLiBJdCBpcyBwb3N0IG91
+dCBtYWlubHkgdG8gbWFrZSBzdXJlIGl0IGlzIA0KZ29pbmcgaW4gdGhlIGNvcnJlY3QgZGlyZWN0
+aW9uIGFuZCBob3BlIHRvIGdldCBzb21lIGhlbHBmdWwgY29tbWVudHMgZnJvbSBvdGhlciBndXlz
+Lg0KSWYgdGhlIG1ldGhvZHMgaXMgYWNjZXB0ZWQsaSB3aWxsIHNlbmQgdGhlIHBhdGNoIGZvciBy
+YWlkMTAuDQoNClNpZ25lZC1vZmYtYnk6IEppYW5wZW5nIE1hIDxtYWppYW5wZW5nQGdtYWlsLmNv
+bT4NCi0tLQ0KIGRyaXZlcnMvbWQvcmFpZDEuYyB8ICAyMTggKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLQ0KIGRyaXZlcnMvbWQvcmFpZDEuaCB8ICAg
+MTEgKysrDQogMiBmaWxlcyBjaGFuZ2VkLCAxODQgaW5zZXJ0aW9ucygrKSwgNDUgZGVsZXRpb25z
+KC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQxLmMgYi9kcml2ZXJzL21kL3JhaWQx
+LmMNCmluZGV4IGQ1YmRkZmMuLjMxMTVmYjggMTAwNjQ0DQotLS0gYS9kcml2ZXJzL21kL3JhaWQx
+LmMNCisrKyBiL2RyaXZlcnMvbWQvcmFpZDEuYw0KQEAgLTM3LDYgKzM3LDcgQEANCiAjaW5jbHVk
+ZSA8bGludXgvbW9kdWxlLmg+DQogI2luY2x1ZGUgPGxpbnV4L3NlcV9maWxlLmg+DQogI2luY2x1
+ZGUgPGxpbnV4L3JhdGVsaW1pdC5oPg0KKyNpbmNsdWRlIDxsaW51eC9yYnRyZWUuaD4NCiAjaW5j
+bHVkZSAibWQuaCINCiAjaW5jbHVkZSAicmFpZDEuaCINCiAjaW5jbHVkZSAiYml0bWFwLmgiDQpA
+QCAtNjYsOCArNjcsOCBAQA0KICAqLw0KIHN0YXRpYyBpbnQgbWF4X3F1ZXVlZF9yZXF1ZXN0cyA9
+IDEwMjQ7DQogDQotc3RhdGljIHZvaWQgYWxsb3dfYmFycmllcihzdHJ1Y3QgcjFjb25mICpjb25m
+KTsNCi1zdGF0aWMgdm9pZCBsb3dlcl9iYXJyaWVyKHN0cnVjdCByMWNvbmYgKmNvbmYpOw0KK3N0
+YXRpYyB2b2lkIGFsbG93X2JhcnJpZXIoc3RydWN0IHIxY29uZiAqY29uZiwgaW50IHBvc2l0aW9u
+KTsNCitzdGF0aWMgdm9pZCBsb3dlcl9iYXJyaWVyKHN0cnVjdCByMWNvbmYgKmNvbmYsIGludCBm
+b3JjZSk7DQogDQogc3RhdGljIHZvaWQgKiByMWJpb19wb29sX2FsbG9jKGdmcF90IGdmcF9mbGFn
+cywgdm9pZCAqZGF0YSkNCiB7DQpAQCAtMjA3LDcgKzIwOCw3IEBAIHN0YXRpYyB2b2lkIHB1dF9i
+dWYoc3RydWN0IHIxYmlvICpyMV9iaW8pDQogDQogCW1lbXBvb2xfZnJlZShyMV9iaW8sIGNvbmYt
+PnIxYnVmX3Bvb2wpOw0KIA0KLQlsb3dlcl9iYXJyaWVyKGNvbmYpOw0KKwlsb3dlcl9iYXJyaWVy
+KGNvbmYsIDApOw0KIH0NCiANCiBzdGF0aWMgdm9pZCByZXNjaGVkdWxlX3JldHJ5KHN0cnVjdCBy
+MWJpbyAqcjFfYmlvKQ0KQEAgLTIzNSw2ICsyMzYsMTIgQEAgc3RhdGljIHZvaWQgY2FsbF9iaW9f
+ZW5kaW8oc3RydWN0IHIxYmlvICpyMV9iaW8pDQogCXN0cnVjdCBiaW8gKmJpbyA9IHIxX2Jpby0+
+bWFzdGVyX2JpbzsNCiAJaW50IGRvbmU7DQogCXN0cnVjdCByMWNvbmYgKmNvbmYgPSByMV9iaW8t
+Pm1kZGV2LT5wcml2YXRlOw0KKwlpbnQgcG9zaXRpb24gPSAwOw0KKw0KKwlpZiAodGVzdF9hbmRf
+Y2xlYXJfYml0KFIxQklPX0JFRk9SRV9SRVNZTkMsICZyMV9iaW8tPnN0YXRlKSkNCisJCXBvc2l0
+aW9uID0gMTsNCisJZWxzZSBpZiAodGVzdF9hbmRfY2xlYXJfYml0KFIxQklPX0FGVEVSX1JFU1lO
+QywgJnIxX2Jpby0+c3RhdGUpKQ0KKwkJcG9zaXRpb24gPSAyOw0KIA0KIAlpZiAoYmlvLT5iaV9w
+aHlzX3NlZ21lbnRzKSB7DQogCQl1bnNpZ25lZCBsb25nIGZsYWdzOw0KQEAgLTI0OSwxMSArMjU2
+LDE4IEBAIHN0YXRpYyB2b2lkIGNhbGxfYmlvX2VuZGlvKHN0cnVjdCByMWJpbyAqcjFfYmlvKQ0K
+IAkJY2xlYXJfYml0KEJJT19VUFRPREFURSwgJmJpby0+YmlfZmxhZ3MpOw0KIAlpZiAoZG9uZSkg
+ew0KIAkJYmlvX2VuZGlvKGJpbywgMCk7DQorDQorCQlpZiAocG9zaXRpb24gPT0gMikgew0KKwkJ
+CXVuc2lnbmVkIGxvbmcgZmxhZ3M7DQorCQkJc3Bpbl9sb2NrX2lycXNhdmUoJmNvbmYtPnJlc3lu
+Y19sb2NrLCBmbGFncyk7DQorCQkJcmJfZXJhc2UoJnIxX2Jpby0+bm9kZSwgJmNvbmYtPnJiX3Jv
+b3QpOw0KKwkJCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJmNvbmYtPnJlc3luY19sb2NrLCBmbGFn
+cyk7DQorCQl9DQogCQkvKg0KIAkJICogV2FrZSB1cCBhbnkgcG9zc2libGUgcmVzeW5jIHRocmVh
+ZCB0aGF0IHdhaXRzIGZvciB0aGUgZGV2aWNlDQogCQkgKiB0byBnbyBpZGxlLg0KIAkJICovDQot
+CQlhbGxvd19iYXJyaWVyKGNvbmYpOw0KKwkJYWxsb3dfYmFycmllcihjb25mLCBwb3NpdGlvbik7
+DQogCX0NCiB9DQogDQpAQCAtODE2LDcgKzgzMCw3IEBAIHN0YXRpYyB2b2lkIGZsdXNoX3BlbmRp
+bmdfd3JpdGVzKHN0cnVjdCByMWNvbmYgKmNvbmYpDQogICovDQogI2RlZmluZSBSRVNZTkNfREVQ
+VEggMzINCiANCi1zdGF0aWMgdm9pZCByYWlzZV9iYXJyaWVyKHN0cnVjdCByMWNvbmYgKmNvbmYp
+DQorc3RhdGljIHZvaWQgcmFpc2VfYmFycmllcihzdHJ1Y3QgcjFjb25mICpjb25mLCBpbnQgZm9y
+Y2UpDQogew0KIAlzcGluX2xvY2tfaXJxKCZjb25mLT5yZXN5bmNfbG9jayk7DQogDQpAQCAtODI2
+LDU2ICs4NDAsMTI1IEBAIHN0YXRpYyB2b2lkIHJhaXNlX2JhcnJpZXIoc3RydWN0IHIxY29uZiAq
+Y29uZikNCiANCiAJLyogYmxvY2sgYW55IG5ldyBJTyBmcm9tIHN0YXJ0aW5nICovDQogCWNvbmYt
+PmJhcnJpZXIrKzsNCisJaWYgKGZvcmNlKQ0KKwkJY29uZi0+Zm9yY2VfYmFycmllcisrOw0KIA0K
+IAkvKiBOb3cgd2FpdCBmb3IgYWxsIHBlbmRpbmcgSU8gdG8gY29tcGxldGUgKi8NCi0Jd2FpdF9l
+dmVudF9sb2NrX2lycShjb25mLT53YWl0X2JhcnJpZXIsDQotCQkJICAgICFjb25mLT5ucl9wZW5k
+aW5nICYmIGNvbmYtPmJhcnJpZXIgPCBSRVNZTkNfREVQVEgsDQorCWlmIChmb3JjZSkNCisJCXdh
+aXRfZXZlbnRfbG9ja19pcnEoY29uZi0+d2FpdF9iYXJyaWVyLA0KKwkJCSAgICAhKGNvbmYtPm5y
+X3BlbmRpbmcgKyBjb25mLT5ucl9iZWZvcmUgKyBjb25mLT5ucl9hZnRlcikgJiYNCisJCQkgICAg
+KGNvbmYtPmJhcnJpZXIgKyBjb25mLT5mb3JjZV9iYXJyaWVyKSA8IFJFU1lOQ19ERVBUSCwNCisJ
+CQkgICAgY29uZi0+cmVzeW5jX2xvY2spOw0KKwllbHNlDQorCQl3YWl0X2V2ZW50X2xvY2tfaXJx
+KGNvbmYtPndhaXRfYmFycmllciwNCisJCQkgICAgIWNvbmYtPm5yX3BlbmRpbmcgJiYNCisJCQkg
+ICAgKGNvbmYtPmJhcnJpZXIgKyBjb25mLT5mb3JjZV9iYXJyaWVyKSA8IFJFU1lOQ19ERVBUSA0K
+KwkJCSAgICAmJiAhKGNvbmYtPm5yX2FmdGVyICYmDQorCQkJCShjb25mLT5uZXh0X3Jlc3luYyAr
+IFJFU1lOQ19TRUNUT1JTIDwgY29uZi0+bmVhcl9wb3NpdGlvbikpLA0KIAkJCSAgICBjb25mLT5y
+ZXN5bmNfbG9jayk7DQogDQogCXNwaW5fdW5sb2NrX2lycSgmY29uZi0+cmVzeW5jX2xvY2spOw0K
+IH0NCiANCi1zdGF0aWMgdm9pZCBsb3dlcl9iYXJyaWVyKHN0cnVjdCByMWNvbmYgKmNvbmYpDQor
+c3RhdGljIHZvaWQgbG93ZXJfYmFycmllcihzdHJ1Y3QgcjFjb25mICpjb25mLCBpbnQgZm9yY2Up
+DQogew0KIAl1bnNpZ25lZCBsb25nIGZsYWdzOw0KIAlCVUdfT04oY29uZi0+YmFycmllciA8PSAw
+KTsNCiAJc3Bpbl9sb2NrX2lycXNhdmUoJmNvbmYtPnJlc3luY19sb2NrLCBmbGFncyk7DQogCWNv
+bmYtPmJhcnJpZXItLTsNCisJaWYgKGZvcmNlKQ0KKwkJY29uZi0+Zm9yY2VfYmFycmllci0tOw0K
+IAlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZjb25mLT5yZXN5bmNfbG9jaywgZmxhZ3MpOw0KIAl3
+YWtlX3VwKCZjb25mLT53YWl0X2JhcnJpZXIpOw0KIH0NCiANCi1zdGF0aWMgdm9pZCB3YWl0X2Jh
+cnJpZXIoc3RydWN0IHIxY29uZiAqY29uZikNCisvKm1heCByZXN5bmMvcmVjb3Zlcnkgc2l6ZSov
+DQorI2RlZmluZSBSRVNZTkNfV0lORE9XUyAoUkVTWU5DX0RFUFRIICogUkVTWU5DX1NFQ1RPUlMp
+DQorc3RhdGljIGludCAgd2FpdF9iYXJyaWVyKHN0cnVjdCByMWNvbmYgKmNvbmYsIHN0cnVjdCBi
+aW8gKmJpbykNCiB7DQorCWludCBwb3NpdGlvbiA9IDA7DQogCXNwaW5fbG9ja19pcnEoJmNvbmYt
+PnJlc3luY19sb2NrKTsNCi0JaWYgKGNvbmYtPmJhcnJpZXIpIHsNCisNCisJaWYgKGNvbmYtPmZv
+cmNlX2JhcnJpZXIgfHwgKGNvbmYtPmJhcnJpZXIgJiYgYmlvID09IE5VTEwpKSB7DQogCQljb25m
+LT5ucl93YWl0aW5nKys7DQotCQkvKiBXYWl0IGZvciB0aGUgYmFycmllciB0byBkcm9wLg0KLQkJ
+ICogSG93ZXZlciBpZiB0aGVyZSBhcmUgYWxyZWFkeSBwZW5kaW5nDQotCQkgKiByZXF1ZXN0cyAo
+cHJldmVudGluZyB0aGUgYmFycmllciBmcm9tDQotCQkgKiByaXNpbmcgY29tcGxldGVseSksIGFu
+ZCB0aGUNCi0JCSAqIHByZS1wcm9jZXNzIGJpbyBxdWV1ZSBpc24ndCBlbXB0eSwNCi0JCSAqIHRo
+ZW4gZG9uJ3Qgd2FpdCwgYXMgd2UgbmVlZCB0byBlbXB0eQ0KLQkJICogdGhhdCBxdWV1ZSB0byBn
+ZXQgdGhlIG5yX3BlbmRpbmcNCi0JCSAqIGNvdW50IGRvd24uDQotCQkgKi8NCiAJCXdhaXRfZXZl
+bnRfbG9ja19pcnEoY29uZi0+d2FpdF9iYXJyaWVyLA0KKwkJCSEoY29uZi0+Zm9yY2VfYmFycmll
+ciArIGNvbmYtPmJhcnJpZXIpIHx8DQorCQkJKGNvbmYtPmJhcnJpZXIgJiYNCisJCQkgKGNvbmYt
+Pm5yX3BlbmRpbmcgKyBjb25mLT5ucl9iZWZvcmUgKyBjb25mLT5ucl9hZnRlcikgJiYNCisJCQkg
+Y3VycmVudC0+YmlvX2xpc3QgJiYNCisJCQkgIWJpb19saXN0X2VtcHR5KGN1cnJlbnQtPmJpb19s
+aXN0KSksDQorCQkJY29uZi0+cmVzeW5jX2xvY2spOw0KKwkJY29uZi0+bnJfd2FpdGluZy0tOw0K
+KwkJY29uZi0+bnJfcGVuZGluZysrOw0KKwl9IGVsc2UgaWYgKHRlc3RfYml0KE1EX1JFQ09WRVJZ
+X1JVTk5JTkcsICZjb25mLT5tZGRldi0+cmVjb3ZlcnkpDQorCQkmJiB1bmxpa2VseShiaW8gIT0g
+TlVMTCkpIHsNCisJCS8qYmVmb3JlIHRoZSByZXN5bmMgd2luZG93Ki8NCisJCWlmICgoYmlvLT5i
+aV9zZWN0b3IgKyBiaW9fc2VjdG9ycyhiaW8pKSAgPA0KKwkJCShjb25mLT5uZXh0X3Jlc3luYyA/
+DQorCQkJIChjb25mLT5uZXh0X3Jlc3luYyAtIFJFU1lOQ19XSU5ET1dTKSA6IDApKSB7DQorCQkJ
+Y29uZi0+bnJfYmVmb3JlKys7DQorCQkJcG9zaXRpb24gPSAxOw0KKwkJfSBlbHNlIGlmIChiaW8t
+PmJpX3NlY3RvciA+PSBjb25mLT5uZXh0X3Jlc3luYykgew0KKwkJCWNvbmYtPm5yX2FmdGVyKys7
+DQorCQkJcG9zaXRpb24gPSAyOw0KKwkJCWlmIChiaW8tPmJpX3NlY3RvciA8IGNvbmYtPm5lYXJf
+cG9zaXRpb24pDQorCQkJCWNvbmYtPm5lYXJfcG9zaXRpb24gPSBiaW8tPmJpX3NlY3RvcjsNCisJ
+CX0gZWxzZSB7DQorCQkJaWYgKGNvbmYtPmJhcnJpZXIpIHsNCisJCQkJY29uZi0+bnJfd2FpdGlu
+ZysrOw0KKwkJCS8qIFdhaXQgZm9yIHRoZSBiYXJyaWVyIHRvIGRyb3AuDQorCQkJICogSG93ZXZl
+ciBpZiB0aGVyZSBhcmUgYWxyZWFkeSBwZW5kaW5nDQorCQkJICogcmVxdWVzdHMgKHByZXZlbnRp
+bmcgdGhlIGJhcnJpZXIgZnJvbQ0KKwkJCSAqIHJpc2luZyBjb21wbGV0ZWx5KSwgYW5kIHRoZQ0K
+KwkJCSAqIHByZS1wcm9jZXNzIGJpbyBxdWV1ZSBpc24ndCBlbXB0eSwNCisJCQkgKiB0aGVuIGRv
+bid0IHdhaXQsIGFzIHdlIG5lZWQgdG8gZW1wdHkNCisJCQkgKiB0aGF0IHF1ZXVlIHRvIGdldCB0
+aGUgbnJfcGVuZGluZw0KKwkJCSAqIGNvdW50IGRvd24uDQorCQkJICovDQorCQkJd2FpdF9ldmVu
+dF9sb2NrX2lycShjb25mLT53YWl0X2JhcnJpZXIsDQogCQkJCSAgICAhY29uZi0+YmFycmllciB8
+fA0KIAkJCQkgICAgKGNvbmYtPm5yX3BlbmRpbmcgJiYNCiAJCQkJICAgICBjdXJyZW50LT5iaW9f
+bGlzdCAmJg0KIAkJCQkgICAgICFiaW9fbGlzdF9lbXB0eShjdXJyZW50LT5iaW9fbGlzdCkpLA0K
+IAkJCQkgICAgY29uZi0+cmVzeW5jX2xvY2spOw0KLQkJY29uZi0+bnJfd2FpdGluZy0tOw0KLQl9
+DQotCWNvbmYtPm5yX3BlbmRpbmcrKzsNCisJCQljb25mLT5ucl93YWl0aW5nLS07DQorCQkJfQ0K
+KwkJCWNvbmYtPm5yX3BlbmRpbmcrKzsNCisJCX0NCisJfSBlbHNlDQorCQljb25mLT5ucl9wZW5k
+aW5nKys7DQogCXNwaW5fdW5sb2NrX2lycSgmY29uZi0+cmVzeW5jX2xvY2spOw0KKwlyZXR1cm4g
+cG9zaXRpb247DQogfQ0KIA0KLXN0YXRpYyB2b2lkIGFsbG93X2JhcnJpZXIoc3RydWN0IHIxY29u
+ZiAqY29uZikNCitzdGF0aWMgdm9pZCBhbGxvd19iYXJyaWVyKHN0cnVjdCByMWNvbmYgKmNvbmYs
+IGludCBwb3NpdGlvbikNCiB7DQogCXVuc2lnbmVkIGxvbmcgZmxhZ3M7DQorCXN0cnVjdCByYl9u
+b2RlICpub2RlOw0KKw0KIAlzcGluX2xvY2tfaXJxc2F2ZSgmY29uZi0+cmVzeW5jX2xvY2ssIGZs
+YWdzKTsNCi0JY29uZi0+bnJfcGVuZGluZy0tOw0KKwlzd2l0Y2ggKHBvc2l0aW9uKSB7DQorCWNh
+c2UgMDoNCisJCWNvbmYtPm5yX3BlbmRpbmctLTsNCisJCWJyZWFrOw0KKwljYXNlIDE6DQorCQlj
+b25mLT5ucl9iZWZvcmUtLTsNCisJCWJyZWFrOw0KKwljYXNlIDI6DQorCQlub2RlID0gcmJfZmly
+c3QoJmNvbmYtPnJiX3Jvb3QpOw0KKwkJY29uZi0+bnJfYWZ0ZXItLTsNCisJCWlmIChub2RlID09
+IE5VTEwpIHsNCisJCQlCVUdfT04oY29uZi0+bnJfYWZ0ZXIpOw0KKwkJCWNvbmYtPm5lYXJfcG9z
+aXRpb24gPSAwOw0KKwkJfSBlbHNlIHsNCisJCQlzdHJ1Y3QgcjFiaW8gKnIxX2JpbyA9DQorCQkJ
+CWNvbnRhaW5lcl9vZihub2RlLCBzdHJ1Y3QgcjFiaW8sIG5vZGUpOw0KKwkJCWNvbmYtPm5lYXJf
+cG9zaXRpb24gPSByMV9iaW8tPnNlY3RvcjsNCisJCX0NCisJCWJyZWFrOw0KKwlkZWZhdWx0Og0K
+KwkJQlVHKCk7DQorCX0NCiAJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmY29uZi0+cmVzeW5jX2xv
+Y2ssIGZsYWdzKTsNCiAJd2FrZV91cCgmY29uZi0+d2FpdF9iYXJyaWVyKTsNCiB9DQpAQCAtODk1
+LDE5ICs5NzgsMTkgQEAgc3RhdGljIHZvaWQgZnJlZXplX2FycmF5KHN0cnVjdCByMWNvbmYgKmNv
+bmYpDQogCSAqIHdlIGNvbnRpbnVlLg0KIAkgKi8NCiAJc3Bpbl9sb2NrX2lycSgmY29uZi0+cmVz
+eW5jX2xvY2spOw0KLQljb25mLT5iYXJyaWVyKys7DQorCWNvbmYtPmZvcmNlX2JhcnJpZXIrKzsN
+CiAJY29uZi0+bnJfd2FpdGluZysrOw0KIAl3YWl0X2V2ZW50X2xvY2tfaXJxX2NtZChjb25mLT53
+YWl0X2JhcnJpZXIsDQotCQkJCWNvbmYtPm5yX3BlbmRpbmcgPT0gY29uZi0+bnJfcXVldWVkKzEs
+DQotCQkJCWNvbmYtPnJlc3luY19sb2NrLA0KLQkJCQlmbHVzaF9wZW5kaW5nX3dyaXRlcyhjb25m
+KSk7DQorCQkoY29uZi0+bnJfcGVuZGluZyArIGNvbmYtPm5yX2JlZm9yZSArIGNvbmYtPm5yX2Fm
+dGVyKQ0KKwkJPT0gY29uZi0+bnJfcXVldWVkKzEsIGNvbmYtPnJlc3luY19sb2NrLA0KKwkJZmx1
+c2hfcGVuZGluZ193cml0ZXMoY29uZikpOw0KIAlzcGluX3VubG9ja19pcnEoJmNvbmYtPnJlc3lu
+Y19sb2NrKTsNCiB9DQogc3RhdGljIHZvaWQgdW5mcmVlemVfYXJyYXkoc3RydWN0IHIxY29uZiAq
+Y29uZikNCiB7DQogCS8qIHJldmVyc2UgdGhlIGVmZmVjdCBvZiB0aGUgZnJlZXplICovDQogCXNw
+aW5fbG9ja19pcnEoJmNvbmYtPnJlc3luY19sb2NrKTsNCi0JY29uZi0+YmFycmllci0tOw0KKwlj
+b25mLT5mb3JjZV9iYXJyaWVyLS07DQogCWNvbmYtPm5yX3dhaXRpbmctLTsNCiAJd2FrZV91cCgm
+Y29uZi0+d2FpdF9iYXJyaWVyKTsNCiAJc3Bpbl91bmxvY2tfaXJxKCZjb25mLT5yZXN5bmNfbG9j
+ayk7DQpAQCAtOTg2LDYgKzEwNjksMjggQEAgc3RhdGljIHZvaWQgcmFpZDFfdW5wbHVnKHN0cnVj
+dCBibGtfcGx1Z19jYiAqY2IsIGJvb2wgZnJvbV9zY2hlZHVsZSkNCiAJa2ZyZWUocGx1Zyk7DQog
+fQ0KIA0KK3N0YXRpYyBib29sIHJhaWQxX3JiX2luc2VydChzdHJ1Y3QgcmJfcm9vdCAqcm9vdCwg
+c3RydWN0IHIxYmlvICpiaW8pDQorew0KKwlzdHJ1Y3QgcmJfbm9kZSAqKm5ldyA9ICYocm9vdC0+
+cmJfbm9kZSk7DQorCXN0cnVjdCByYl9ub2RlICpwYXJlbnQgPSBOVUxMOw0KKwl3aGlsZSAoKm5l
+dykgew0KKwkJc3RydWN0IHIxYmlvICpyMWJpbyA9IGNvbnRhaW5lcl9vZigqbmV3LCBzdHJ1Y3Qg
+cjFiaW8sIG5vZGUpOw0KKw0KKwkJcGFyZW50ID0gKm5ldzsNCisNCisJCWlmIChiaW8tPnNlY3Rv
+ciA8IHIxYmlvLT5zZWN0b3IpDQorCQkJbmV3ID0gJigoKm5ldyktPnJiX2xlZnQpOw0KKwkJZWxz
+ZSBpZiAoYmlvLT5zZWN0b3IgPiByMWJpby0+c2VjdG9yKQ0KKwkJCW5ldyA9ICYoKCpuZXcpLT5y
+Yl9yaWdodCk7DQorCQllbHNlDQorCQkJcmV0dXJuIGZhbHNlOw0KKwl9DQorCXJiX2xpbmtfbm9k
+ZSgmYmlvLT5ub2RlLCBwYXJlbnQsIG5ldyk7DQorCXJiX2luc2VydF9jb2xvcigmYmlvLT5ub2Rl
+LCByb290KTsNCisNCisJcmV0dXJuIHRydWU7DQorDQorfQ0KIHN0YXRpYyB2b2lkIG1ha2VfcmVx
+dWVzdChzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBzdHJ1Y3QgYmlvICogYmlvKQ0KIHsNCiAJc3RydWN0
+IHIxY29uZiAqY29uZiA9IG1kZGV2LT5wcml2YXRlOw0KQEAgLTEwMDYsNiArMTExMSw3IEBAIHN0
+YXRpYyB2b2lkIG1ha2VfcmVxdWVzdChzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBzdHJ1Y3QgYmlvICog
+YmlvKQ0KIAlpbnQgZmlyc3RfY2xvbmU7DQogCWludCBzZWN0b3JzX2hhbmRsZWQ7DQogCWludCBt
+YXhfc2VjdG9yczsNCisJaW50IHBvc2l0aW9uOw0KIA0KIAkvKg0KIAkgKiBSZWdpc3RlciB0aGUg
+bmV3IHJlcXVlc3QgYW5kIHdhaXQgaWYgdGhlIHJlY29uc3RydWN0aW9uDQpAQCAtMTAzNSw3ICsx
+MTQxLDcgQEAgc3RhdGljIHZvaWQgbWFrZV9yZXF1ZXN0KHN0cnVjdCBtZGRldiAqbWRkZXYsIHN0
+cnVjdCBiaW8gKiBiaW8pDQogCQlmaW5pc2hfd2FpdCgmY29uZi0+d2FpdF9iYXJyaWVyLCAmdyk7
+DQogCX0NCiANCi0Jd2FpdF9iYXJyaWVyKGNvbmYpOw0KKwlwb3NpdGlvbiA9IHdhaXRfYmFycmll
+cihjb25mLCBiaW8pOw0KIA0KIAliaXRtYXAgPSBtZGRldi0+Yml0bWFwOw0KIA0KQEAgLTEwNTIs
+NiArMTE1OCwxOCBAQCBzdGF0aWMgdm9pZCBtYWtlX3JlcXVlc3Qoc3RydWN0IG1kZGV2ICptZGRl
+diwgc3RydWN0IGJpbyAqIGJpbykNCiAJcjFfYmlvLT5tZGRldiA9IG1kZGV2Ow0KIAlyMV9iaW8t
+PnNlY3RvciA9IGJpby0+Ymlfc2VjdG9yOw0KIA0KKwlpZiAocG9zaXRpb24gPT0gMSkNCisJCXNl
+dF9iaXQoUjFCSU9fQkVGT1JFX1JFU1lOQywgJnIxX2Jpby0+c3RhdGUpOw0KKwllbHNlIGlmIChw
+b3NpdGlvbiA9PSAyKSB7DQorCQlzZXRfYml0KFIxQklPX0FGVEVSX1JFU1lOQywgJnIxX2Jpby0+
+c3RhdGUpOw0KKw0KKwkJc3Bpbl9sb2NrX2lycSgmY29uZi0+cmVzeW5jX2xvY2spOw0KKwkJaWYg
+KCFyYWlkMV9yYl9pbnNlcnQoJmNvbmYtPnJiX3Jvb3QsIHIxX2JpbykpDQorCQkJQlVHKCk7DQor
+CQlzcGluX3VubG9ja19pcnEoJmNvbmYtPnJlc3luY19sb2NrKTsNCisJfQ0KKw0KKw0KIAkvKiBX
+ZSBtaWdodCBuZWVkIHRvIGlzc3VlIG11bHRpcGxlIHJlYWRzIHRvIGRpZmZlcmVudA0KIAkgKiBk
+ZXZpY2VzIGlmIHRoZXJlIGFyZSBiYWQgYmxvY2tzIGFyb3VuZCwgc28gd2Uga2VlcA0KIAkgKiB0
+cmFjayBvZiB0aGUgbnVtYmVyIG9mIHJlYWRzIGluIGJpby0+YmlfcGh5c19zZWdtZW50cy4NCkBA
+IC0xMjI5LDkgKzEzNDcsMTYgQEAgcmVhZF9hZ2FpbjoNCiAJCQlpZiAocjFfYmlvLT5iaW9zW2pd
+KQ0KIAkJCQlyZGV2X2RlY19wZW5kaW5nKGNvbmYtPm1pcnJvcnNbal0ucmRldiwgbWRkZXYpOw0K
+IAkJcjFfYmlvLT5zdGF0ZSA9IDA7DQotCQlhbGxvd19iYXJyaWVyKGNvbmYpOw0KKwkJYWxsb3df
+YmFycmllcihjb25mLCBwb3NpdGlvbik7DQorDQogCQltZF93YWl0X2Zvcl9ibG9ja2VkX3JkZXYo
+YmxvY2tlZF9yZGV2LCBtZGRldik7DQotCQl3YWl0X2JhcnJpZXIoY29uZik7DQorDQorCQlwb3Np
+dGlvbiA9IHdhaXRfYmFycmllcihjb25mLCBiaW8pOw0KKwkJaWYgKHBvc2l0aW9uID09IDEpDQor
+CQkJc2V0X2JpdChSMUJJT19CRUZPUkVfUkVTWU5DLCAmcjFfYmlvLT5zdGF0ZSk7DQorCQllbHNl
+IGlmIChwb3NpdGlvbiA9PSAyKQ0KKwkJCXNldF9iaXQoUjFCSU9fQUZURVJfUkVTWU5DLCAmcjFf
+YmlvLT5zdGF0ZSk7DQorDQogCQlnb3RvIHJldHJ5X3dyaXRlOw0KIAl9DQogDQpAQCAtMTQzNCwx
+MSArMTU1OSwxMiBAQCBzdGF0aWMgdm9pZCBwcmludF9jb25mKHN0cnVjdCByMWNvbmYgKmNvbmYp
+DQogDQogc3RhdGljIHZvaWQgY2xvc2Vfc3luYyhzdHJ1Y3QgcjFjb25mICpjb25mKQ0KIHsNCi0J
+d2FpdF9iYXJyaWVyKGNvbmYpOw0KLQlhbGxvd19iYXJyaWVyKGNvbmYpOw0KKwl3YWl0X2JhcnJp
+ZXIoY29uZiwgTlVMTCk7DQorCWFsbG93X2JhcnJpZXIoY29uZiwgMCk7DQogDQogCW1lbXBvb2xf
+ZGVzdHJveShjb25mLT5yMWJ1Zl9wb29sKTsNCiAJY29uZi0+cjFidWZfcG9vbCA9IE5VTEw7DQor
+CWNvbmYtPm5leHRfcmVzeW5jID0gMDsNCiB9DQogDQogc3RhdGljIGludCByYWlkMV9zcGFyZV9h
+Y3RpdmUoc3RydWN0IG1kZGV2ICptZGRldikNCkBAIC0xNTUwLDggKzE2NzYsOCBAQCBzdGF0aWMg
+aW50IHJhaWQxX2FkZF9kaXNrKHN0cnVjdCBtZGRldiAqbWRkZXYsIHN0cnVjdCBtZF9yZGV2ICpy
+ZGV2KQ0KIAkJICogd2Ugd2FpdCBmb3IgYWxsIG91dHN0YW5kaW5nIHJlcXVlc3RzIHRvIGNvbXBs
+ZXRlLg0KIAkJICovDQogCQlzeW5jaHJvbml6ZV9zY2hlZCgpOw0KLQkJcmFpc2VfYmFycmllcihj
+b25mKTsNCi0JCWxvd2VyX2JhcnJpZXIoY29uZik7DQorCQlyYWlzZV9iYXJyaWVyKGNvbmYsIDEp
+Ow0KKwkJbG93ZXJfYmFycmllcihjb25mLCAxKTsNCiAJCWNsZWFyX2JpdChVbm1lcmdlZCwgJnJk
+ZXYtPmZsYWdzKTsNCiAJfQ0KIAltZF9pbnRlZ3JpdHlfYWRkX3JkZXYocmRldiwgbWRkZXYpOw0K
+QEAgLTE2MDEsMTEgKzE3MjcsMTEgQEAgc3RhdGljIGludCByYWlkMV9yZW1vdmVfZGlzayhzdHJ1
+Y3QgbWRkZXYgKm1kZGV2LCBzdHJ1Y3QgbWRfcmRldiAqcmRldikNCiAJCQkgKi8NCiAJCQlzdHJ1
+Y3QgbWRfcmRldiAqcmVwbCA9DQogCQkJCWNvbmYtPm1pcnJvcnNbY29uZi0+cmFpZF9kaXNrcyAr
+IG51bWJlcl0ucmRldjsNCi0JCQlyYWlzZV9iYXJyaWVyKGNvbmYpOw0KKwkJCXJhaXNlX2JhcnJp
+ZXIoY29uZiwgMSk7DQogCQkJY2xlYXJfYml0KFJlcGxhY2VtZW50LCAmcmVwbC0+ZmxhZ3MpOw0K
+IAkJCXAtPnJkZXYgPSByZXBsOw0KIAkJCWNvbmYtPm1pcnJvcnNbY29uZi0+cmFpZF9kaXNrcyAr
+IG51bWJlcl0ucmRldiA9IE5VTEw7DQotCQkJbG93ZXJfYmFycmllcihjb25mKTsNCisJCQlsb3dl
+cl9iYXJyaWVyKGNvbmYsIDEpOw0KIAkJCWNsZWFyX2JpdChXYW50UmVwbGFjZW1lbnQsICZyZGV2
+LT5mbGFncyk7DQogCQl9IGVsc2UNCiAJCQljbGVhcl9iaXQoV2FudFJlcGxhY2VtZW50LCAmcmRl
+di0+ZmxhZ3MpOw0KQEAgLTI0MzQsNyArMjU2MCw3IEBAIHN0YXRpYyBzZWN0b3JfdCBzeW5jX3Jl
+cXVlc3Qoc3RydWN0IG1kZGV2ICptZGRldiwgc2VjdG9yX3Qgc2VjdG9yX25yLCBpbnQgKnNraXBw
+DQogDQogCWJpdG1hcF9jb25kX2VuZF9zeW5jKG1kZGV2LT5iaXRtYXAsIHNlY3Rvcl9ucik7DQog
+CXIxX2JpbyA9IG1lbXBvb2xfYWxsb2MoY29uZi0+cjFidWZfcG9vbCwgR0ZQX05PSU8pOw0KLQly
+YWlzZV9iYXJyaWVyKGNvbmYpOw0KKwlyYWlzZV9iYXJyaWVyKGNvbmYsIDApOw0KIA0KIAljb25m
+LT5uZXh0X3Jlc3luYyA9IHNlY3Rvcl9ucjsNCiANCkBAIC0yNzM0LDYgKzI4NjAsOCBAQCBzdGF0
+aWMgc3RydWN0IHIxY29uZiAqc2V0dXBfY29uZihzdHJ1Y3QgbWRkZXYgKm1kZGV2KQ0KIAljb25m
+LT5wZW5kaW5nX2NvdW50ID0gMDsNCiAJY29uZi0+cmVjb3ZlcnlfZGlzYWJsZWQgPSBtZGRldi0+
+cmVjb3ZlcnlfZGlzYWJsZWQgLSAxOw0KIA0KKwljb25mLT5yYl9yb290ID0gUkJfUk9PVDsNCisN
+CiAJZXJyID0gLUVJTzsNCiAJZm9yIChpID0gMDsgaSA8IGNvbmYtPnJhaWRfZGlza3MgKiAyOyBp
+KyspIHsNCiANCkBAIC0yODg4LDggKzMwMTYsOCBAQCBzdGF0aWMgaW50IHN0b3Aoc3RydWN0IG1k
+ZGV2ICptZGRldikNCiAJCQkgICBhdG9taWNfcmVhZCgmYml0bWFwLT5iZWhpbmRfd3JpdGVzKSA9
+PSAwKTsNCiAJfQ0KIA0KLQlyYWlzZV9iYXJyaWVyKGNvbmYpOw0KLQlsb3dlcl9iYXJyaWVyKGNv
+bmYpOw0KKwlyYWlzZV9iYXJyaWVyKGNvbmYsIDEpOw0KKwlsb3dlcl9iYXJyaWVyKGNvbmYsIDEp
+Ow0KIA0KIAltZF91bnJlZ2lzdGVyX3RocmVhZCgmbWRkZXYtPnRocmVhZCk7DQogCWlmIChjb25m
+LT5yMWJpb19wb29sKQ0KQEAgLTI5OTgsNyArMzEyNiw3IEBAIHN0YXRpYyBpbnQgcmFpZDFfcmVz
+aGFwZShzdHJ1Y3QgbWRkZXYgKm1kZGV2KQ0KIAkJcmV0dXJuIC1FTk9NRU07DQogCX0NCiANCi0J
+cmFpc2VfYmFycmllcihjb25mKTsNCisJcmFpc2VfYmFycmllcihjb25mLCAxKTsNCiANCiAJLyog
+b2ssIGV2ZXJ5dGhpbmcgaXMgc3RvcHBlZCAqLw0KIAlvbGRwb29sID0gY29uZi0+cjFiaW9fcG9v
+bDsNCkBAIC0zMDI5LDcgKzMxNTcsNyBAQCBzdGF0aWMgaW50IHJhaWQxX3Jlc2hhcGUoc3RydWN0
+IG1kZGV2ICptZGRldikNCiAJY29uZi0+cmFpZF9kaXNrcyA9IG1kZGV2LT5yYWlkX2Rpc2tzID0g
+cmFpZF9kaXNrczsNCiAJbWRkZXYtPmRlbHRhX2Rpc2tzID0gMDsNCiANCi0JbG93ZXJfYmFycmll
+cihjb25mKTsNCisJbG93ZXJfYmFycmllcihjb25mLCAxKTsNCiANCiAJc2V0X2JpdChNRF9SRUNP
+VkVSWV9ORUVERUQsICZtZGRldi0+cmVjb3ZlcnkpOw0KIAltZF93YWtldXBfdGhyZWFkKG1kZGV2
+LT50aHJlYWQpOw0KQEAgLTMwNDcsMTAgKzMxNzUsMTAgQEAgc3RhdGljIHZvaWQgcmFpZDFfcXVp
+ZXNjZShzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBpbnQgc3RhdGUpDQogCQl3YWtlX3VwKCZjb25mLT53
+YWl0X2JhcnJpZXIpOw0KIAkJYnJlYWs7DQogCWNhc2UgMToNCi0JCXJhaXNlX2JhcnJpZXIoY29u
+Zik7DQorCQlyYWlzZV9iYXJyaWVyKGNvbmYsIDEpOw0KIAkJYnJlYWs7DQogCWNhc2UgMDoNCi0J
+CWxvd2VyX2JhcnJpZXIoY29uZik7DQorCQlsb3dlcl9iYXJyaWVyKGNvbmYsIDEpOw0KIAkJYnJl
+YWs7DQogCX0NCiB9DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkMS5oIGIvZHJpdmVycy9t
+ZC9yYWlkMS5oDQppbmRleCAwZmYzNzE1Li42NjExYzE3IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9t
+ZC9yYWlkMS5oDQorKysgYi9kcml2ZXJzL21kL3JhaWQxLmgNCkBAIC0xLDYgKzEsNyBAQA0KICNp
+Zm5kZWYgX1JBSUQxX0gNCiAjZGVmaW5lIF9SQUlEMV9IDQogDQorDQogc3RydWN0IHJhaWQxX2lu
+Zm8gew0KIAlzdHJ1Y3QgbWRfcmRldgkqcmRldjsNCiAJc2VjdG9yX3QJaGVhZF9wb3NpdGlvbjsN
+CkBAIC02Miw5ICs2MywxNSBAQCBzdHJ1Y3QgcjFjb25mIHsNCiAJd2FpdF9xdWV1ZV9oZWFkX3QJ
+d2FpdF9iYXJyaWVyOw0KIAlzcGlubG9ja190CQlyZXN5bmNfbG9jazsNCiAJaW50CQkJbnJfcGVu
+ZGluZzsNCisJaW50CQkJbnJfYmVmb3JlOw0KKwlpbnQJCQlucl9hZnRlcjsNCiAJaW50CQkJbnJf
+d2FpdGluZzsNCiAJaW50CQkJbnJfcXVldWVkOw0KIAlpbnQJCQliYXJyaWVyOw0KKwlpbnQJCQlm
+b3JjZV9iYXJyaWVyOw0KKwkvKm5vcm1hbCBJTyB3aGljaCB0aGUgbmVhcmVzdCByZXN5bmMgd2lu
+ZG93Ki8NCisJc2VjdG9yX3QJCW5lYXJfcG9zaXRpb247DQorCXN0cnVjdCByYl9yb290CQlyYl9y
+b290Ow0KIA0KIAkvKiBTZXQgdG8gMSBpZiBhIGZ1bGwgc3luYyBpcyBuZWVkZWQsIChmcmVzaCBk
+ZXZpY2UgYWRkZWQpLg0KIAkgKiBDbGVhcmVkIHdoZW4gYSBzeW5jIGNvbXBsZXRlcy4NCkBAIC0x
+MDQsNiArMTExLDcgQEAgc3RydWN0IHIxY29uZiB7DQogICovDQogDQogc3RydWN0IHIxYmlvIHsN
+CisJc3RydWN0IHJiX25vZGUJCW5vZGU7DQogCWF0b21pY190CQlyZW1haW5pbmc7IC8qICdoYXZl
+IHdlIGZpbmlzaGVkJyBjb3VudCwNCiAJCQkJCSAgICAqIHVzZWQgZnJvbSBJUlEgaGFuZGxlcnMN
+CiAJCQkJCSAgICAqLw0KQEAgLTE1OCw2ICsxNjYsOSBAQCBzdHJ1Y3QgcjFiaW8gew0KICNkZWZp
+bmUJUjFCSU9fTWFkZUdvb2QgNw0KICNkZWZpbmUJUjFCSU9fV3JpdGVFcnJvciA4DQogDQorI2Rl
+ZmluZSBSMUJJT19CRUZPUkVfUkVTWU5DIDkNCisjZGVmaW5lIFIxQklPX0FGVEVSX1JFU1lOQyAg
+MTANCisNCiBleHRlcm4gaW50IG1kX3JhaWQxX2Nvbmdlc3RlZChzdHJ1Y3QgbWRkZXYgKm1kZGV2
+LCBpbnQgYml0cyk7DQogDQogI2VuZGlmDQotLSANCjEuNy45LjUNCg==
 
-On Tue, 22 Jan 2013 21:42:18 -0600 Jonathan Brassow <jbrassow@redhat.com>
-wrote:
-
-> Neil,
->=20
->  Here is the RAID10 redundancy check fix backported for linux-3.7
-
-Thanks.
-
-So this goes into 3.7.y and bumps the dm-raid version to 1.3.2
-
-It should also go into 3.8-rc and bump the dm-raid version there to 1.4.1
-
-Then "Add support for MD's RAID10 "far" and "offset" algorithms" which is d=
-ue
-to go into 3.9-rc should bump the dm-raid version to 1.4.2.
-
-Is that right?
-
-I' re-arranged the patches in my for-next to match this - please check I
-didn't mess anything up.  Then I'll send them off.
-
-Thanks,
-NeilBrown
-
-
->=20
-> Thanks,
->  brassow
->=20
->=20
-> DM RAID:  Fix RAID10's check for sufficient redundancy
->=20
-> Before attempting to activate a RAID array, it is checked for sufficient
-> redundancy.  That is, we make sure that there are not too many failed
-> devices - or devices specified for rebuild - to undermine our ability to
-> activate the array.  The current code performs this check twice - once to
-> ensure there were not too many devices specified for rebuild by the user
-> ('validate_rebuild_devices') and again after possibly experiencing a fail=
-ure
-> to read the superblock ('analyse_superblocks').  Neither of these checks =
-are
-> sufficient.  The first check is done properly but with insufficient
-> information about the possible failure state of the devices to make a good
-> determination if the array can be activated.  The second check is simply
-> done wrong in the case of RAID10 because it doesn't account for the
-> independence of the stripes (i.e. mirror sets).  The solution is to use t=
-he
-> properly written check ('validate_rebuild_devices'), but perform the check
-> after the superblocks have been read and we know which devices have faile=
-d.
-> This gives us one check instead of two and performs it in a location where
-> it can be done right.
->=20
-> Only RAID10 was affected and it was affected in the following ways:
-> - the code did not properly catch the condition where a user specified
->   a device for rebuild that already had a failed device in the same mirror
->   set.  (This condition would, however, be caught at a deeper level in MD=
-.)
-> - the code triggers a false positive and denies activation when devices in
->   independent mirror sets have failed - counting the failures as though t=
-hey
->   were all in the same set.
->=20
-> The most likely place this error was introduced (or this patch should have
-> been included) is in commit 4ec1e369 - first introduced in v3.7-rc1.
->=20
-> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
-> Index: linux-upstream/Documentation/device-mapper/dm-raid.txt
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-upstream.orig/Documentation/device-mapper/dm-raid.txt
-> +++ linux-upstream/Documentation/device-mapper/dm-raid.txt
-> @@ -141,3 +141,4 @@ Version History
->  1.2.0	Handle creation of arrays that contain failed devices.
->  1.3.0	Added support for RAID 10
->  1.3.1	Allow device replacement/rebuild for RAID 10
-> +1.3.2   Fix/improve redundancy checking for RAID10
-> Index: linux-upstream/drivers/md/dm-raid.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-upstream.orig/drivers/md/dm-raid.c
-> +++ linux-upstream/drivers/md/dm-raid.c
-> @@ -338,24 +338,22 @@ static int validate_region_size(struct r
->  }
-> =20
->  /*
-> - * validate_rebuild_devices
-> + * validate_raid_redundancy
->   * @rs
->   *
-> - * Determine if the devices specified for rebuild can result in a valid
-> - * usable array that is capable of rebuilding the given devices.
-> + * Determine if there are enough devices in the array that haven't
-> + * failed (or are being rebuilt) to form a usable array.
->   *
->   * Returns: 0 on success, -EINVAL on failure.
->   */
-> -static int validate_rebuild_devices(struct raid_set *rs)
-> +static int validate_raid_redundancy(struct raid_set *rs)
->  {
->  	unsigned i, rebuild_cnt =3D 0;
->  	unsigned rebuilds_per_group, copies, d;
-> =20
-> -	if (!(rs->print_flags & DMPF_REBUILD))
-> -		return 0;
-> -
->  	for (i =3D 0; i < rs->md.raid_disks; i++)
-> -		if (!test_bit(In_sync, &rs->dev[i].rdev.flags))
-> +		if (!test_bit(In_sync, &rs->dev[i].rdev.flags) ||
-> +		    !rs->dev[i].rdev.sb_page)
->  			rebuild_cnt++;
-> =20
->  	switch (rs->raid_type->level) {
-> @@ -391,27 +389,24 @@ static int validate_rebuild_devices(stru
->  		 *          A    A    B    B    C
->  		 *          C    D    D    E    E
->  		 */
-> -		rebuilds_per_group =3D 0;
->  		for (i =3D 0; i < rs->md.raid_disks * copies; i++) {
-> +			if (!(i % copies))
-> +				rebuilds_per_group =3D 0;
->  			d =3D i % rs->md.raid_disks;
-> -			if (!test_bit(In_sync, &rs->dev[d].rdev.flags) &&
-> +			if ((!rs->dev[d].rdev.sb_page ||
-> +			     !test_bit(In_sync, &rs->dev[d].rdev.flags)) &&
->  			    (++rebuilds_per_group >=3D copies))
->  				goto too_many;
-> -			if (!((i + 1) % copies))
-> -				rebuilds_per_group =3D 0;
->  		}
->  		break;
->  	default:
-> -		DMERR("The rebuild parameter is not supported for %s",
-> -		      rs->raid_type->name);
-> -		rs->ti->error =3D "Rebuild not supported for this RAID type";
-> -		return -EINVAL;
-> +		if (rebuild_cnt)
-> +			return -EINVAL;
->  	}
-> =20
->  	return 0;
-> =20
->  too_many:
-> -	rs->ti->error =3D "Too many rebuild devices specified";
->  	return -EINVAL;
->  }
-> =20
-> @@ -662,9 +657,6 @@ static int parse_raid_params(struct raid
->  	}
->  	rs->md.dev_sectors =3D sectors_per_dev;
-> =20
-> -	if (validate_rebuild_devices(rs))
-> -		return -EINVAL;
-> -
->  	/* Assume there are no metadata devices until the drives are parsed */
->  	rs->md.persistent =3D 0;
->  	rs->md.external =3D 1;
-> @@ -993,28 +985,10 @@ static int super_validate(struct mddev *
->  static int analyse_superblocks(struct dm_target *ti, struct raid_set *rs)
->  {
->  	int ret;
-> -	unsigned redundancy =3D 0;
->  	struct raid_dev *dev;
->  	struct md_rdev *rdev, *tmp, *freshest;
->  	struct mddev *mddev =3D &rs->md;
-> =20
-> -	switch (rs->raid_type->level) {
-> -	case 1:
-> -		redundancy =3D rs->md.raid_disks - 1;
-> -		break;
-> -	case 4:
-> -	case 5:
-> -	case 6:
-> -		redundancy =3D rs->raid_type->parity_devs;
-> -		break;
-> -	case 10:
-> -		redundancy =3D raid10_md_layout_to_copies(mddev->layout) - 1;
-> -		break;
-> -	default:
-> -		ti->error =3D "Unknown RAID type";
-> -		return -EINVAL;
-> -	}
-> -
->  	freshest =3D NULL;
->  	rdev_for_each_safe(rdev, tmp, mddev) {
->  		/*
-> @@ -1043,44 +1017,43 @@ static int analyse_superblocks(struct dm
->  			break;
->  		default:
->  			dev =3D container_of(rdev, struct raid_dev, rdev);
-> -			if (redundancy--) {
-> -				if (dev->meta_dev)
-> -					dm_put_device(ti, dev->meta_dev);
-> +			if (dev->meta_dev)
-> +				dm_put_device(ti, dev->meta_dev);
-> =20
-> -				dev->meta_dev =3D NULL;
-> -				rdev->meta_bdev =3D NULL;
-> +			dev->meta_dev =3D NULL;
-> +			rdev->meta_bdev =3D NULL;
-> =20
-> -				if (rdev->sb_page)
-> -					put_page(rdev->sb_page);
-> +			if (rdev->sb_page)
-> +				put_page(rdev->sb_page);
-> =20
-> -				rdev->sb_page =3D NULL;
-> +			rdev->sb_page =3D NULL;
-> =20
-> -				rdev->sb_loaded =3D 0;
-> +			rdev->sb_loaded =3D 0;
-> =20
-> -				/*
-> -				 * We might be able to salvage the data device
-> -				 * even though the meta device has failed.  For
-> -				 * now, we behave as though '- -' had been
-> -				 * set for this device in the table.
-> -				 */
-> -				if (dev->data_dev)
-> -					dm_put_device(ti, dev->data_dev);
-> -
-> -				dev->data_dev =3D NULL;
-> -				rdev->bdev =3D NULL;
-> +			/*
-> +			 * We might be able to salvage the data device
-> +			 * even though the meta device has failed.  For
-> +			 * now, we behave as though '- -' had been
-> +			 * set for this device in the table.
-> +			 */
-> +			if (dev->data_dev)
-> +				dm_put_device(ti, dev->data_dev);
-> =20
-> -				list_del(&rdev->same_set);
-> +			dev->data_dev =3D NULL;
-> +			rdev->bdev =3D NULL;
-> =20
-> -				continue;
-> -			}
-> -			ti->error =3D "Failed to load superblock";
-> -			return ret;
-> +			list_del(&rdev->same_set);
->  		}
->  	}
-> =20
->  	if (!freshest)
->  		return 0;
-> =20
-> +	if (validate_raid_redundancy(rs)) {
-> +		rs->ti->error =3D "Insufficient redundancy to activate array";
-> +		return -EINVAL;
-> +	}
-> +
->  	/*
->  	 * Validation of the freshest device provides the source of
->  	 * validation for the remaining devices.
-> @@ -1430,7 +1403,7 @@ static void raid_resume(struct dm_target
-> =20
->  static struct target_type raid_target =3D {
->  	.name =3D "raid",
-> -	.version =3D {1, 3, 1},
-> +	.version =3D {1, 3, 2},
->  	.module =3D THIS_MODULE,
->  	.ctr =3D raid_ctr,
->  	.dtr =3D raid_dtr,
->=20
-
-
---Sig_/ajuHnJz7+w0ec/EWABNPOUB
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUQCLljnsnt1WYoG5AQKmMBAAj4Brf0V1reSlzqHojjiQf0eSIEr52c50
-CO9zZ6HcOvcBp3d2L6D4tbGQb2/GntwSKDH07K0H9axVobbdPv4bvIuaNFRTGeda
-LSl51zpeQ/JJ5VJuY2nJS4TzTOo+6b3/0KExUr/El18LgBJVeIv832NWWRHrUCJr
-c1WTb/m1r4MOGpaQ7EsDeR6mjxsaUFV7Jhya7DmLw+xQZ8+irc6bKm7DfLNMbUIl
-UCLnKbfdnr21CnILaKy+HCVqk/IuGX8RGjlhHQsNa8vA4rJEXfyHAqWsv62XCqwF
-CfQrVsjMGFaikaTMfM3app/4Ay1D+O44XlboxDpBt2JFvMavP8u9+vtM9PK4dVkg
-ykS94vEsmGOnX83WHSBdOx6PzgnMta2XHvJcILkM6/qwxoIFk0YlMxnGoG7SA5j9
-mmK07aLl4tih0YlipLKi5IFWwHpDGPFoMFhCiY4SbPVzNuC/pdd+B8G2Odrm2Jvz
-cZyqVdI4HbsSPanoOdd17U7k5L3uyCX12h3f4Z1VfEh57JR5yQOLxyP7bczWIAcS
-4utuSVcEp4ltfWWOuNPcHw15YNPEjZxmb9XyJ7e8fqfzXwxlHwVHtJWNavOoRczu
-55bKR6Jy53Ush0xnZOmJuYaFxIivfuCms2rGjexNbPoaFmKnVYg7PDBZncufpFma
-97cXLMK0WYU=
-=EQPg
------END PGP SIGNATURE-----
-
---Sig_/ajuHnJz7+w0ec/EWABNPOUB--
