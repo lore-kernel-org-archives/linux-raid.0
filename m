@@ -1,85 +1,53 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
-Date: Sun, 27 Jan 2013 20:26:56 +0100
-Message-ID: <20130127192656.634892005AD@gemini.denx.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
+Date: Sun, 27 Jan 2013 12:45:19 -0700
+Message-ID: <CA3C3BC1-A00A-422B-A643-D5323FDC3F6A@colorremedies.com>
+References: <20130127192656.634892005AD@gemini.denx.de>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20130127192656.634892005AD@gemini.denx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Wolfgang Denk <wd@denx.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have seen "mismatch_cnt is not 0" warnings in the past, but that has
-always been with RAID 1 arrays, and with relatively small numbers on
-/sys/block/md*/md/mismatch_cnt; my understanding was that this was not
-actually critical.
 
-However, after updating to Fedora 18, I get this message from all
-updated
-systems that have RAID 6 arrays, and with _huge_ numbers of
-mismatch_cnt, like that:
+On Jan 27, 2013, at 12:26 PM, Wolfgang Denk <wd@denx.de> wrote:
 
-fter updating to Fedora 18, I get this message from all updated
-systems that have RAID 6 arrays, and with _huge_ numbers of
-mismatch_cnt, like that:
+> I have seen "mismatch_cnt is not 0" warnings in the past, but that has
+> always been with RAID 1 arrays, and with relatively small numbers on
+> /sys/block/md*/md/mismatch_cnt; my understanding was that this was not
+> actually critical.
 
-# mdadm -q --detail /dev/md0
-/dev/md0:
-        Version : 1.2
-  Creation Time : Mon Jan 14 14:20:34 2013
-     Raid Level : raid6
-     Array Size : 1459617792 (1392.00 GiB 1494.65 GB)
-  Used Dev Size : 243269632 (232.00 GiB 249.11 GB)
-   Raid Devices : 8
-  Total Devices : 8
-    Persistence : Superblock is persistent
+Well, you have a block on each drive that's supposed to be identical, and if there's a mismatch that means they're not identical and it's ambiguous which one is correct. So if the data on the drives is unimportant to retrieve correctly, then I guess it's not a critical error.
 
-    Update Time : Sun Jan 27 02:27:28 2013
-          State : clean 
- Active Devices : 8
-Working Devices : 8
- Failed Devices : 0
-  Spare Devices : 0
+> 
+> However, after updating to Fedora 18, I get this message from all
+> updated
+> systems that have RAID 6 arrays, and with _huge_ numbers of
+> mismatch_cnt, like that:
+> 
+> fter updating to Fedora 18, I get this message from all updated
+> systems that have RAID 6 arrays, and with _huge_ numbers of
+> mismatch_cnt, like that:
+> 
 
-         Layout : left-symmetric
-     Chunk Size : 16K
-
-           Name : XXX:0  (local to host XXX)
-           UUID : da015f96:138b37bf:d5ef71dc:8970ab15
-         Events : 8
-
-    Number   Major   Minor   RaidDevice State
-       0       8       49        0      active sync   /dev/sdd1
-       1       8       65        1      active sync   /dev/sde1
-       2       8       81        2      active sync   /dev/sdf1
-       3       8       97        3      active sync   /dev/sdg1
-       4       8      113        4      active sync   /dev/sdh1
-       5       8      129        5      active sync   /dev/sdi1
-       6       8      145        6      active sync   /dev/sdj1
-       7       8      161        7      active sync   /dev/sdk1
-# cat /sys/block/md0/md/mismatch_cnt
-362732152
+Bad paste. No messages provided.
 
 
-This is with mdadm v3.2.6 (mdadm-3.2.6-7.fc18.x86_64); except for the
-huge values of mismatch_cnt, I see no other indications for errors on
-the disk drives, RAID arrays or the file systems on top of these.
+> This is with mdadm v3.2.6 (mdadm-3.2.6-7.fc18.x86_64); except for the
+> huge values of mismatch_cnt, I see no other indications for errors on
+> the disk drives, RAID arrays or the file systems on top of these.
+> 
+> Is this some known (and hopefully harmless), issue, or must I worry
+> about our data?
 
-Is this some known (and hopefully harmless), issue, or must I worry
-about our data?
+It means there's a mismatch between parity and data. One of them is wrong, maybe both if there are many errors. So yeah I'd say it sounds like a problem.
+
+What's the smartctl -a look like for all drives? I imagine one or more have bad sectors, ECC errors, or UDMA/CRD errors.
 
 
-Thanks in advance.
+Chris Murphy
 
-Best regards,
-
-Wolfgang Denk
-
--- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-On the subject of C program indentation: "In My Egotistical  Opinion,
-most  people's  C  programs  should be indented six feet downward and
-covered with dirt."                               - Blair P. Houghton
