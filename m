@@ -1,12 +1,13 @@
-From: Chris Murphy <lists@colorremedies.com>
+From: Robin Hill <robin@robinhill.me.uk>
 Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
-Date: Sun, 27 Jan 2013 12:45:19 -0700
-Message-ID: <CA3C3BC1-A00A-422B-A643-D5323FDC3F6A@colorremedies.com>
+Date: Sun, 27 Jan 2013 20:05:57 +0000
+Message-ID: <20130127200557.GA10960@cthulhu.home.robinhill.me.uk>
 References: <20130127192656.634892005AD@gemini.denx.de>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="82I3+IH0IqGh5yIs"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <20130127192656.634892005AD@gemini.denx.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: Wolfgang Denk <wd@denx.de>
@@ -14,40 +15,48 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-On Jan 27, 2013, at 12:26 PM, Wolfgang Denk <wd@denx.de> wrote:
+--82I3+IH0IqGh5yIs
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Sun Jan 27, 2013 at 08:26:56 +0100, Wolfgang Denk wrote:
 
 > I have seen "mismatch_cnt is not 0" warnings in the past, but that has
 > always been with RAID 1 arrays, and with relatively small numbers on
 > /sys/block/md*/md/mismatch_cnt; my understanding was that this was not
 > actually critical.
-
-Well, you have a block on each drive that's supposed to be identical, and if there's a mismatch that means they're not identical and it's ambiguous which one is correct. So if the data on the drives is unimportant to retrieve correctly, then I guess it's not a critical error.
-
-> 
+>=20
 > However, after updating to Fedora 18, I get this message from all
 > updated
 > systems that have RAID 6 arrays, and with _huge_ numbers of
 > mismatch_cnt, like that:
-> 
-> fter updating to Fedora 18, I get this message from all updated
-> systems that have RAID 6 arrays, and with _huge_ numbers of
-> mismatch_cnt, like that:
-> 
+>=20
+<-snip->
+> # cat /sys/block/md0/md/mismatch_cnt
+> 362732152
+>=20
+Is this after having run a check, or just after boot? I've seen some odd
+numbers at times, but they've gone away after running a check
+(presumably something not being initialised).
 
-Bad paste. No messages provided.
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
+--82I3+IH0IqGh5yIs
+Content-Type: application/pgp-signature
 
-> This is with mdadm v3.2.6 (mdadm-3.2.6-7.fc18.x86_64); except for the
-> huge values of mismatch_cnt, I see no other indications for errors on
-> the disk drives, RAID arrays or the file systems on top of these.
-> 
-> Is this some known (and hopefully harmless), issue, or must I worry
-> about our data?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-It means there's a mismatch between parity and data. One of them is wrong, maybe both if there are many errors. So yeah I'd say it sounds like a problem.
+iEYEARECAAYFAlEFiKQACgkQShxCyD40xBK20gCdFUQFtTG/OmBg0V665JNBgH7G
+F+0AnAw71PUcWsy+QqsoN2lA+VL7NbQJ
+=KpmR
+-----END PGP SIGNATURE-----
 
-What's the smartctl -a look like for all drives? I imagine one or more have bad sectors, ECC errors, or UDMA/CRD errors.
-
-
-Chris Murphy
-
+--82I3+IH0IqGh5yIs--
