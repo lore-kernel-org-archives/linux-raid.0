@@ -1,62 +1,44 @@
-From: Robin Hill <robin@robinhill.me.uk>
+From: Wolfgang Denk <wd@denx.de>
 Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
-Date: Sun, 27 Jan 2013 20:05:57 +0000
-Message-ID: <20130127200557.GA10960@cthulhu.home.robinhill.me.uk>
-References: <20130127192656.634892005AD@gemini.denx.de>
+Date: Mon, 28 Jan 2013 00:10:04 +0100
+Message-ID: <20130127231004.6C4082033CC@gemini.denx.de>
+References: <20130127192656.634892005AD@gemini.denx.de> <CA3C3BC1-A00A-422B-A643-D5323FDC3F6A@colorremedies.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="82I3+IH0IqGh5yIs"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130127192656.634892005AD@gemini.denx.de>
+In-reply-to: <CA3C3BC1-A00A-422B-A643-D5323FDC3F6A@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
+To: Chris Murphy <lists@colorremedies.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Dear Chris Murphy,
 
---82I3+IH0IqGh5yIs
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In message <CA3C3BC1-A00A-422B-A643-D5323FDC3F6A@colorremedies.com> you wrote:
+> 
+> Well, you have a block on each drive that's supposed to be identical,
+> and if there's a mismatch that means they're not identical and it's
+> ambiguous which one is correct. So if the data on the drives is
+> unimportant to retrieve correctly, then I guess it's not a critical
+> error.
 
-On Sun Jan 27, 2013 at 08:26:56 +0100, Wolfgang Denk wrote:
+Heh, would I be running a RAID 6 array if the data was unimportant?
 
-> I have seen "mismatch_cnt is not 0" warnings in the past, but that has
-> always been with RAID 1 arrays, and with relatively small numbers on
-> /sys/block/md*/md/mismatch_cnt; my understanding was that this was not
-> actually critical.
->=20
-> However, after updating to Fedora 18, I get this message from all
-> updated
-> systems that have RAID 6 arrays, and with _huge_ numbers of
-> mismatch_cnt, like that:
->=20
-<-snip->
-> # cat /sys/block/md0/md/mismatch_cnt
-> 362732152
->=20
-Is this after having run a check, or just after boot? I've seen some odd
-numbers at times, but they've gone away after running a check
-(presumably something not being initialised).
+> What's the smartctl -a look like for all drives? I imagine one or more
+> have bad sectors, ECC errors, or UDMA/CRD errors.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+I see a some Hardware_ECC_Recovered; very few disks have 1
+Reallocated_Sector_Ct; there are no (0) Current_Pending_Sector,
+Offline_Uncorrectable, UDMA_CRC_Error_Count, Multi_Zone_Error_Rate, or
+Data_Address_Mark_Errs.
 
---82I3+IH0IqGh5yIs
-Content-Type: application/pgp-signature
+Best regards,
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+Wolfgang Denk
 
-iEYEARECAAYFAlEFiKQACgkQShxCyD40xBK20gCdFUQFtTG/OmBg0V665JNBgH7G
-F+0AnAw71PUcWsy+QqsoN2lA+VL7NbQJ
-=KpmR
------END PGP SIGNATURE-----
-
---82I3+IH0IqGh5yIs--
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+If God wanted me to touch my toes, he'd have put them on my knees.
