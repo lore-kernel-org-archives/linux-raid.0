@@ -1,25 +1,45 @@
-From: Chris Murphy <lists@colorremedies.com>
+From: Wolfgang Denk <wd@denx.de>
 Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
-Date: Mon, 28 Jan 2013 15:49:19 -0700
-Message-ID: <1CEFA702-4512-40C1-ABE4-0FF7F42D9F44@colorremedies.com>
+Date: Mon, 28 Jan 2013 23:59:35 +0100
+Message-ID: <20130128225935.B8E2B20004B@gemini.denx.de>
 References: <20130127192656.634892005AD@gemini.denx.de> <20130128173704.GA2329@lazy.lzy> <20130128190035.D943A294BAB@gemini.denx.de> <20130128191041.8E962200607@gemini.denx.de> <20130128192256.GB13803@lazy.lzy> <20130128201947.2B615200607@gemini.denx.de> <20130128204422.GA14115@lazy.lzy> <6D287BCE-96EB-4F91-AC5A-34CD7AD2C68D@colorremedies.com>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6D287BCE-96EB-4F91-AC5A-34CD7AD2C68D@colorremedies.com>
+In-reply-to: <6D287BCE-96EB-4F91-AC5A-34CD7AD2C68D@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: Wolfgang Denk <wd@denx.de>, linux-raid@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Dear Chris,
 
-On Jan 28, 2013, at 3:47 PM, Chris Murphy <lists@colorremedies.com> wrote:
+In message <6D287BCE-96EB-4F91-AC5A-34CD7AD2C68D@colorremedies.com> you wrote:
 > 
-> I think regression is going to be needed to find it. Hopefully the problem is restricted to parity computation and data chunks aren't affected; however if a URE occurs in a data chunk, it could be reconstructed incorrectly from bad parity so it's obviously still a big problem.
+> Yes, it sounds reproducible on more than one array, more than one HBA. Is it also more than one computer also, Wolfgang?
 
-Actually it also needs to be reproduced as well. Wolfgang, the arrays were created/running under what version of mdadm and kernel the last time you did a check and there were no problems?
+Correct, these are 3 different machines.
 
-And now you're on Fedora 18, but the problem appeared with what version of mdadm and kernel?
+> I think regression is going to be needed to find it. Hopefully the
+> problem is restricted to parity computation and data chunks aren't
+> affected; however if a URE occurs in a data chunk, it could be
+> reconstructed incorrectly from bad parity so it's obviously still a
+> big problem.
 
-Chris Murphy
+My gut feeling is that the data are still OK, but I have to admit that
+I inspected only a small fraction of the files, and I would like to
+avoid restoring the data from backup tapes to another system as long
+as possible.  So it indeed appears to me as if we had a sotware issue,
+computing incorrect parity data.
+
+Best regards,
+
+Wolfgang Denk
+
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+"Consistency requires you to be as ignorant today as you were a  year
+ago."                                              - Bernard Berenson
