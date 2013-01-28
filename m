@@ -1,214 +1,91 @@
-From: Theo Cabrerizo Diem <diem@carpediem.sh>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: help recovering a software raid5 device
-Date: Mon, 28 Jan 2013 15:33:19 +0100
-Message-ID: <CAAXKdzzS4MqhyvDxoJiFTe+BMdNFN+6VuPD=LpuKT5LO_nxoPg@mail.gmail.com>
-References: <CAAXKdzzERB_zzcdPPzuwdL+afFO334X3bck1EvrRV5rFvEEg6Q@mail.gmail.com>
-	<5105D435.8090401@turmel.org>
-	<CAAXKdzzajcx5Ee83fLo1bUbj8hYRh0aqJMcZykNHdgoUtLBkDg@mail.gmail.com>
-	<5106810C.9090406@turmel.org>
+Date: Mon, 28 Jan 2013 09:56:41 -0500
+Message-ID: <510691A9.4060403@turmel.org>
+References: <CAAXKdzzERB_zzcdPPzuwdL+afFO334X3bck1EvrRV5rFvEEg6Q@mail.gmail.com> <5105D435.8090401@turmel.org> <CAAXKdzzajcx5Ee83fLo1bUbj8hYRh0aqJMcZykNHdgoUtLBkDg@mail.gmail.com> <5106810C.9090406@turmel.org> <CAAXKdzzS4MqhyvDxoJiFTe+BMdNFN+6VuPD=LpuKT5LO_nxoPg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5106810C.9090406@turmel.org>
+In-Reply-To: <CAAXKdzzS4MqhyvDxoJiFTe+BMdNFN+6VuPD=LpuKT5LO_nxoPg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
+To: Theo Cabrerizo Diem <diem@carpediem.sh>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 28 January 2013 14:45, Phil Turmel <philip@turmel.org> wrote:
-> Hi Theo,
->
-> [list restored--please use reply-to-all for kernel.org lists]
->
-sorry about that.
+On 01/28/2013 09:33 AM, Theo Cabrerizo Diem wrote:
 
-> On 01/28/2013 05:04 AM, Theo Cabrerizo Diem wrote:
->> On 28 January 2013 02:28, Phil Turmel <philip@turmel.org> wrote:
->>> On 01/27/2013 08:52 AM, Theo Cabrerizo Diem wrote:
->>>> Hello,
->> snip
->>>>
->>>> I did read the wiki, and took a copy of mdadm --examine /dev/sd[ghij]1
->>>> before doing anything. I've tried to run :
->>>>
->>>> mdadm --create --assume-clean --level=5 --chunk 64 --raid-devices=4
->>>> /dev/md/stuff1 /dev/sdh1 /dev/sdg1 /dev/sdj1 /dev/sdi1
->>>
->>> For some reason, people are unwilling to use "--assemble --force", which
->>> is made for these situations.
->>>
->>> This is the correct device order, though, so you aren't toast yet.
->>>
->> As mentioned by Keith Keller, it is how is instructed on wiki. I had
->> the feeling it was not "right" since if you don't add --assume-clean
->> it would rebuild it empty, which is fairly dangerous imho ;)
+[trim /]
+
+> Is there a way that I could flag the raid device (or the partitions)
+> to not be auto-detected on boot ? I'm afraid that since the "mdadm
+> --create --assume-clean" completed successfuly before, a reboot on
+> this machine might bring the array fully online and, for example,
+> might trigger a check or resync of data. That would be the worse case.
+
+You would modify your mdadm.conf file per its man-page to not allow
+automatic assembly, then update your initramfs.  Both of these tasks
+vary by distro.
+
+[trim /]
+
+>> So your copy of mdadm is very new, and has the new defaults for data
+>> offset (leaving more room for a bad block log).  You need to boot with a
+>> slightly older liveCD or other rescue media to get a copy of mdadm that
+>> is about 1 year old.  Re-run the "mdadm --create --assume-clean" with
+>> that version of mdadm.
 >>
->> So before I mess it up even more, the proper command (in my case) would be :
+>> (The development version of mdadm has command-line syntax to set the
+>> data offset per device, but I don't believe it has been released yet.
+>> If you are comfortable using git and compiling your own utility, that
+>> would be another option.)
 >>
->> mdadm --assemble /dev/md/stuff1 --force /dev/sdh1 missing /dev/sdj1 /dev/sdi1
->>
->> right ? But I believe the superblock was already overwritten by the
->> suggested --create --assume-clean. Should it still be "safe" to try ?
->
-> Yes, it is now too late for "--assemble --force".
->
-Is there a way that I could flag the raid device (or the partitions)
-to not be auto-detected on boot ? I'm afraid that since the "mdadm
---create --assume-clean" completed successfuly before, a reboot on
-this machine might bring the array fully online and, for example,
-might trigger a check or resync of data. That would be the worse case.
+> I have no problem compiling the tools myself. I would actually prefer
+> that than triggering a reboot on the machine and having unpredictable
+> results from how it would be detected after the multiple attempts to
+> create the device.
+> 
+> Is only the userspace tool required for this update or should I build
+> also the kernel module too ?
 
->> I found curious that there's no option to force md to not write
->> anything to disks at all, a read-only mechanism for attempting to
->> recovery. Any attempt you make potential updates at minimal timestamps
->> that could change the original data.
->
-> Which is why saving the "--examine" output is so important.
->
->>>> - Should I attempt "mdadm --create" command with just the last 3 good
->>>> disks and a "missing" one or should I attempt with all four ?
->>>> - Any further suggestions to try to recover it ?
->>>
->>> I would leave out the disk that failed first (/dev/sdg1, I believe).
->>> Presumably there was still some activity on the system?
->>
->> Yes, the system was still up but "frozen" since any attempt to access
->> the raid device resulted in endless amounts of io error. I've
->> attempted an emergency sync and hard booted.
->
-> I meant activity between the first failure and the second.
+Just the userspace tool.
 
-Yes, the system was active between the failures, which I've figured
-out the mdadm cron mails were bouncing thus the first failure was
-unnoticed from my side. Being a sysadmin at work means not always you
-have the will to fix everything at home too ;) . Lesson learned.
+> Is there any means that would prevent the "mdadm --scan ..." usually
+> on ramdisks or init scripts for touching my array ? (i.e changing the
+> partition types, for example ? )
 
->
->>>> Following my output of mdadm --examine after a reboot (don't know why
->>>> the distro detected and assembled the raid with only two devices in a
->>>> inactive state)
->>>
->>> The appended --examine reports show a creation time from 2011, but an
->>> update time from just a little while ago.  Did you cancel the "--create"
->>> operation(s)?  (That would be good, actually.)
->>
->> The examine report was before any attempt of recovery. Unfortunately I
->> did run the --create --assume-clean commands as suggested on wiki :(
->> ..
->>
->>>
->>> Please show the saved "--examine" reports, and current "--examine" reports.
->>
->> Recent examine report:
->> http://pastie.org/5895552
->>
->> Saved examine report (same as previously attached):
->> http://pastie.org/5895849
->
-> In the future, paste these directly into the mail.  Who knows how long
-> pastie.org will hold on to these, and these mails will be archived
-> basically forever.
->
-> Anyways, they show your problem.
->
-> The original reports all have:
->
->>    Data Offset : 2048 sectors
->
-> Your recreated array devices have:
->
->>    Data Offset : 262144 sectors
+Just the mdadm.conf file that ends up in the initramfs.
 
-I'm grad to see there is still hope.
+> I'm using WD Caviar Green disks, which are "cheap desktop drives" :).
+> It is a home setup after all :( . I did got some WD "Red" series which
+> supposedly have a "NAS friendly" firmware. Will gladly report back if
+> those support SCTERC. They are less than 10% more expensive nowadays
+> than the "Green" series.
 
->
-> So your copy of mdadm is very new, and has the new defaults for data
-> offset (leaving more room for a bad block log).  You need to boot with a
-> slightly older liveCD or other rescue media to get a copy of mdadm that
-> is about 1 year old.  Re-run the "mdadm --create --assume-clean" with
-> that version of mdadm.
->
-> (The development version of mdadm has command-line syntax to set the
-> data offset per device, but I don't believe it has been released yet.
-> If you are comfortable using git and compiling your own utility, that
-> would be another option.)
->
-I have no problem compiling the tools myself. I would actually prefer
-that than triggering a reboot on the machine and having unpredictable
-results from how it would be detected after the multiple attempts to
-create the device.
+Yes, the Red drives are reported to support SCTERC.  You could modify
+the script to cover both cases:
 
-Is only the userspace tool required for this update or should I build
-also the kernel module too ?
+> #! /bin/bash
+> # Place in rc.local or wherever your distro expects boot-time scripts
+> #
+> for x in sdg sdh sdi sdj
+> do
+>     smartctl -l scterc,70,70 /dev/$x &>/dev/null || \
+>     echo 180 >/sys/block/$x/device/timeout
+> done
 
-Is there any means that would prevent the "mdadm --scan ..." usually
-on ramdisks or init scripts for touching my array ? (i.e changing the
-partition types, for example ? )
+Drives that don't accept the seven-second timeout will be given a long
+driver timeout.
 
->>> It wouldn't hurt to also post the "smartctl -x" for each of these drives.
->>>
->> http://pastie.org/5895385 (sdg - the really broken one - will RMA this
->> one after recovering or giving up)
->
-> It doesn't appear to be broken.  Just some pending sectors that'll
-> probably be cleaned up by a wipe, and would have been taken care of with
-> regular scrubbing.
->
->> http://pastie.org/5895387 (sdh - apparently clean)
->> http://pastie.org/5895388 (sdi - apparently clean)
->> http://pastie.org/5895389 (sdj - apparently clean)
->
-> These do show one critical piece of information that is probably the
-> only real problem in your system:
->
->> Warning: device does not support SCT Error Recovery Control command
->
-> You are using cheap desktop drives that do not support time limits on
-> error recovery.  They are completely *unsafe* to use "out-of-the-box" in
-> *any* raid array.
->
-> If they did support SCTERC, you could use a boot script to set short
-> timeouts.  Since they don't, your only option is a boot script to set
-> very long timeouts in the linux driver for each disk.
->
+[trim /]
 
-I'm using WD Caviar Green disks, which are "cheap desktop drives" :).
-It is a home setup after all :( . I did got some WD "Red" series which
-supposedly have a "NAS friendly" firmware. Will gladly report back if
-those support SCTERC. They are less than 10% more expensive nowadays
-than the "Green" series.
+> Once all this is solved, I would be more than happy to submit changes
+> to the current wiki page containing the additional information you
+> have been providing me that doesn't exists there, including pushing
+> the timeout to a long one.
 
->> #! /bin/bash
->> # Place in rc.local or wherever your distro expects boot-time scripts
->> #
->> for x in sdg sdh sdi sdj
->> do
->>     echo 180 >/sys/block/$x/device/timeout
->> done
->
+Please do.  And also strongly recommend people ask for help on this list
+if they are the least bit hesitant.
 
-Will write down this one.
+Phil
 
-> Long timeouts can have negative consequences for services that might be
-> using the array, but you have no choice.  If you don't do this, any
-> unrecoverable read error will cause the offending disk to be kicked out
-> instead of fixed.  (Including errors found during scrubbing.)
->
->> Thanks for stepping up for help :). I did use pastie.org to avoid a
->> wall of text. some of those outputs are even bigger what is allowed by
->> pastie. Let me know if you would prefer next outputs to be inline.
->
-> Yes.
->
-> HTH,
->
-> Phil
-
-Once all this is solved, I would be more than happy to submit changes
-to the current wiki page containing the additional information you
-have been providing me that doesn't exists there, including pushing
-the timeout to a long one.
-
-Cheers,
-
-Theo
