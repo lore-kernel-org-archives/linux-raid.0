@@ -1,85 +1,67 @@
 From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Subject: [PATCH v2] md: protect against crash upon fsync on ro array
-Date: Mon, 28 Jan 2013 11:32:03 +0100
-Message-ID: <510653A3.9090403@profitbricks.com>
-References: <1358707492.24121.210.camel@deadeye.wl.decadent.org.uk> <5102A01B.7000407@profitbricks.com> <1359229480.2894.21.camel@deadeye.wl.decadent.org.uk> <20130127163942.GA28572@infradead.org>
+Subject: [PATCH v3] md: protect against crash upon fsync on ro array
+Date: Mon, 28 Jan 2013 13:39:00 +0100
+Message-ID: <51067164.4050301@profitbricks.com>
+References: <1358707492.24121.210.camel@deadeye.wl.decadent.org.uk> <5102A01B.7000407@profitbricks.com> <1359229480.2894.21.camel@deadeye.wl.decadent.org.uk> <20130127163942.GA28572@infradead.org> <510653A3.9090403@profitbricks.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------090604020901070109050707"
+ boundary="------------020701060201050002000509"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130127163942.GA28572@infradead.org>
+In-Reply-To: <510653A3.9090403@profitbricks.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
 Cc: Ben Hutchings <ben@decadent.org.uk>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, 696650@bugs.debian.org
 List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
---------------090604020901070109050707
-Content-Type: text/plain; charset=ISO-8859-1
+--------------020701060201050002000509
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-Subject was: Re: fsync() on read-only RAID triggers BUG
-
-On 27.01.2013 17:39, Christoph Hellwig wrote:
-> On Sat, Jan 26, 2013 at 07:44:40PM +0000, Ben Hutchings wrote:
->> I applied this on top of 3.2.37 and it certainly fixes the crash.
->> However I wonder whether fsync() should fail or should immediately
->> succeed.  I don't know whether the installer expects it to succeed.
+On 28.01.2013 11:32, Sebastian Riemer wrote:
+> O.K., then I hope Neil applies the attached patch. I've changed the
+> return value to success.
 > 
-> It should succeed.
+> This is also something for linux-stable and should apply to many kernel
+> versions without an issue.
+> 
 
-O.K., then I hope Neil applies the attached patch. I've changed the
-return value to success.
+I've tried to race with continuous fsyncs against continuous "mdadm -o
+/dev/md0; mdadm -w /dev/md0;" in parallel but couldn't break it.
+Therefore, no additional locking is required and this part can be put
+directly before the RCU locking stuff and the suspended handling.
 
-This is also something for linux-stable and should apply to many kernel
-versions without an issue.
+I've attached version 3 of the patch.
 
---------------090604020901070109050707
+--------------020701060201050002000509
 Content-Type: text/plain; charset=UTF-8;
  name="0001-md-protect-against-crash-upon-fsync-on-ro-array.txt"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Content-Disposition: attachment;
- filename*0="0001-md-protect-against-crash-upon-fsync-on-ro-array.txt"
+ filename="0001-md-protect-against-crash-upon-fsync-on-ro-array.txt"
 
-From fe0357344877c9b9cc623fd582a4e0670e448317 Mon Sep 17 00:00:00 2001
-From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Date: Fri, 25 Jan 2013 12:46:59 +0100
-Subject: [PATCH v2] md: protect against crash upon fsync on ro array
-
-If an fsync occurrs on a read-only array, we need to send a
-completion for the IO and may not increment the active IO count.
-Otherwise, we hit a bug trace and can't stop the MD array anymore.
-
-By advice of Christoph Hellwig we silently return success.
-
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Ben Hutchings <ben@decadent.org.uk>
-Cc: NeilBrown <neilb@suse.de>
-Signed-off-by: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Reported-by: Ben Hutchings <ben@decadent.org.uk>
-
----
- drivers/md/md.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 3db3d1b..475e0be 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -322,6 +322,11 @@ static void md_make_request(struct request_queue *q, struct bio *bio)
- 		}
- 		finish_wait(&mddev->sb_wait, &__wait);
- 	}
-+	if (mddev->ro == 1 && unlikely(rw == WRITE)) {
-+		rcu_read_unlock();
-+		bio_endio(bio, 0);
-+		return;
-+	}
- 	atomic_inc(&mddev->active_io);
- 	rcu_read_unlock();
- 
--- 
-1.7.1
-
-
---------------090604020901070109050707--
+RnJvbSBmZTAzNTczNDQ4NzdjOWI5Y2M2MjNmZDU4MmE0ZTA2NzBlNDQ4MzE3IE1vbiBTZXAg
+MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBTZWJhc3RpYW4gUmllbWVyIDxzZWJhc3RpYW4ucmll
+bWVyQHByb2ZpdGJyaWNrcy5jb20+CkRhdGU6IEZyaSwgMjUgSmFuIDIwMTMgMTI6NDY6NTkg
+KzAxMDAKU3ViamVjdDogW1BBVENIIHYzXSBtZDogcHJvdGVjdCBhZ2FpbnN0IGNyYXNoIHVw
+b24gZnN5bmMgb24gcm8gYXJyYXkKCklmIGFuIGZzeW5jIG9jY3VycnMgb24gYSByZWFkLW9u
+bHkgYXJyYXksIHdlIG5lZWQgdG8gc2VuZCBhCmNvbXBsZXRpb24gZm9yIHRoZSBJTyBhbmQg
+bWF5IG5vdCBpbmNyZW1lbnQgdGhlIGFjdGl2ZSBJTyBjb3VudC4KT3RoZXJ3aXNlLCB3ZSBo
+aXQgYSBidWcgdHJhY2UgYW5kIGNhbid0IHN0b3AgdGhlIE1EIGFycmF5IGFueW1vcmUuCgpC
+eSBhZHZpY2Ugb2YgQ2hyaXN0b3BoIEhlbGx3aWcgd2Ugc2lsZW50bHkgcmV0dXJuIHN1Y2Nl
+c3MuCgpDYzogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBpbmZyYWRlYWQub3JnPgpDYzogQmVu
+IEh1dGNoaW5ncyA8YmVuQGRlY2FkZW50Lm9yZy51az4KQ2M6IE5laWxCcm93biA8bmVpbGJA
+c3VzZS5kZT4KU2lnbmVkLW9mZi1ieTogU2ViYXN0aWFuIFJpZW1lciA8c2ViYXN0aWFuLnJp
+ZW1lckBwcm9maXRicmlja3MuY29tPgpSZXBvcnRlZC1ieTogQmVuIEh1dGNoaW5ncyA8YmVu
+QGRlY2FkZW50Lm9yZy51az4KCi0tLQogZHJpdmVycy9tZC9tZC5jIHwgICAgNSArKysrKwog
+MSBmaWxlcyBjaGFuZ2VkLCA1IGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0pCgpkaWZm
+IC0tZ2l0IGEvZHJpdmVycy9tZC9tZC5jIGIvZHJpdmVycy9tZC9tZC5jCmluZGV4IDNkYjNk
+MWIuLjZiYTIwZjcgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbWQvbWQuYworKysgYi9kcml2ZXJz
+L21kL21kLmMKQEAgLTMwNyw2ICszMDcsMTAgQEAgc3RhdGljIHZvaWQgbWRfbWFrZV9yZXF1
+ZXN0KHN0cnVjdCByZXF1ZXN0X3F1ZXVlICpxLCBzdHJ1Y3QgYmlvICpiaW8pCiAJCWJpb19p
+b19lcnJvcihiaW8pOwogCQlyZXR1cm47CiAJfQorCWlmIChtZGRldi0+cm8gPT0gMSAmJiB1
+bmxpa2VseShydyA9PSBXUklURSkpIHsKKwkJYmlvX2VuZGlvKGJpbywgMCk7CisJCXJldHVy
+bjsKKwl9CiAJc21wX3JtYigpOyAvKiBFbnN1cmUgaW1wbGljYXRpb25zIG9mICAnYWN0aXZl
+JyBhcmUgdmlzaWJsZSAqLwogCXJjdV9yZWFkX2xvY2soKTsKIAlpZiAobWRkZXYtPnN1c3Bl
+bmRlZCkgewo=
+--------------020701060201050002000509--
