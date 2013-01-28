@@ -1,28 +1,39 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
-Date: Sun, 27 Jan 2013 18:42:43 -0700
-Message-ID: <6BCDA3B1-C137-486D-A45D-55912207AF3C@colorremedies.com>
-References: <20130127192656.634892005AD@gemini.denx.de> <5105D0EA.7080100@turmel.org>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Subject: Re: help recovering a software raid5 device
+Date: Sun, 27 Jan 2013 17:59:35 -0800
+Message-ID: <7l2ht9xg3a.ln2@goaway.wombat.san-francisco.ca.us>
+References: <CAAXKdzzERB_zzcdPPzuwdL+afFO334X3bck1EvrRV5rFvEEg6Q@mail.gmail.com>
+ <5105D435.8090401@turmel.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5105D0EA.7080100@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Wolfgang Denk <wd@denx.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Are the drives all the same model? What model? And are they AF disks?
+On 2013-01-28, Phil Turmel <philip@turmel.org> wrote:
+> On 01/27/2013 08:52 AM, Theo Cabrerizo Diem wrote:
+>> 
+>> I did read the wiki, and took a copy of mdadm --examine /dev/sd[ghij]1
+>> before doing anything. I've tried to run :
+>> 
+>> mdadm --create --assume-clean --level=5 --chunk 64 --raid-devices=4
+>> /dev/md/stuff1 /dev/sdh1 /dev/sdg1 /dev/sdj1 /dev/sdi1
+>
+> For some reason, people are unwilling to use "--assemble --force", which
+> is made for these situations.
 
-The mismatch number is not divisible by 16, yet your chunk size is 16KB. It is divisible by 4 and 8, so I'm going to guess that the physical sector size is 4096 bytes. If correct, I'm coming up with a maximum of 346GiB worth of sectors may be adversely affected, assuming every sector in the mismatch count is bad (which is probably not true, but could be).
+It is because the wiki suggests the --create --assume-clean strategy:
 
-What file system?
+https://raid.wiki.kernel.org/index.php/RAID_Recovery
 
-Have you done only a check or also a repair, either before or after the upgrade? (I'm not suggesting doing a repair now.)
+I thought I modified that page, but perhaps I am misremembering, or
+perhaps I wasn't sure of the best advice to put there.
 
-A check should cause URE's to be fixed, but you don't get a count against them because chunk and parity end up being the same for the check after being fixed.
+--keith
 
-Are there any messages in dmesg for the time of the check? I would like to know what was recorded in dmesg at the time the mismatches were found.
+-- 
+kkeller@wombat.san-francisco.ca.us
 
-Chris Murphy
+
