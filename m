@@ -1,262 +1,59 @@
 From: Wolfgang Denk <wd@denx.de>
 Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
-Date: Mon, 28 Jan 2013 07:27:46 +0100
-Message-ID: <20130128062746.3123B2580EC@gemini.denx.de>
-References: <20130127192656.634892005AD@gemini.denx.de> <5105D0EA.7080100@turmel.org>
+Date: Mon, 28 Jan 2013 07:36:56 +0100
+Message-ID: <20130128063656.BB93524E481@gemini.denx.de>
+References: <20130127192656.634892005AD@gemini.denx.de> <5105D0EA.7080100@turmel.org> <6BCDA3B1-C137-486D-A45D-55912207AF3C@colorremedies.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <5105D0EA.7080100@turmel.org>
+In-reply-to: <6BCDA3B1-C137-486D-A45D-55912207AF3C@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Phil Turmel,
+Dear Chris Murphy,
 
-In message <5105D0EA.7080100@turmel.org> you wrote:
->
-> >   Creation Time : Mon Jan 14 14:20:34 2013
+In message <6BCDA3B1-C137-486D-A45D-55912207AF3C@colorremedies.com> you wrote:
+> Are the drives all the same model? What model? And are they AF disks?
+
+All of the affected arrays are all of the same disks (one system 8 x
+Seagate NL35 ST3250623NS; one 6 x Seagate Barracuda ES.2 ST3250310NS;
+one 8 x Maxtor MaXLine Plus II 7Y250M0).
+
+To my understanding none of these are AF disks.
+
+
+> The mismatch number is not divisible by 16, yet your chunk size is 16KB. It is divisible by 4 and 8, so I'm going to guess that the physical sector size is 4096 bytes. If correct, I'm coming up with a maximum of 346GiB worth of sectors may be adversely 
+> affected, assuming every sector in the mismatch count is bad (which is probably not true, but could be).
+
+No.  These are all 512 byte sector drives.
+
+> What file system?
+
+ext4 on all of these.
+
+> Have you done only a check or also a repair, either before or after the upgrade? (I'm not suggesting doing a repair now.)
+
+I did only a check.  I rebootetd two of the systems, which made the
+mismatch_cnt go back to zero.  Of course I don;t know if this means
+everything is fine now.
+
+> A check should cause URE's to be fixed, but you don't get a count against them because chunk and parity end up being the same for the check after being fixed.
 > 
-> Something is missing from this story.  Was the original system created
-> this month, and immediately upgraded?  Or was there a "mdadm --create"
-> in this story you haven't told us about?
+> Are there any messages in dmesg for the time of the check? I would like to know what was recorded in dmesg at the time the mismatches were found.
 
-On one of the systems where I observe these problems the array was
-indeed recreated; this is running  set of old Maxtor MaXLine Plus II
-7Y250M0 drives, and the rebuild was done to throw out some drives that
-started growing number of reallocated sectors.
+There is absolutely nothing to be seen in the logs; I also routinely
+monitor the drives for reallocated, offline uncorrectable and pending
+sectors, and nothing can be seen here either.
 
-The two other systems have been running unmodified hardware-wise for
-many months.
-
-> Please share the output of "mdadm -E /dev/sd[defghijk]1".
-
-
-/dev/sdd1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : da015f96:138b37bf:d5ef71dc:8970ab15
-           Name : atlas.denx.de:0  (local to host atlas.denx.de)
-  Creation Time : Mon Jan 14 14:20:34 2013
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 489968447 (233.64 GiB 250.86 GB)
-     Array Size : 1459617792 (1392.00 GiB 1494.65 GB)
-  Used Dev Size : 486539264 (232.00 GiB 249.11 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 9d820d74:cd981ec5:b0d95ad6:37124d98
-
-    Update Time : Sun Jan 27 23:03:15 2013
-       Checksum : 9fe9401b - correct
-         Events : 8
-
-         Layout : left-symmetric
-     Chunk Size : 16K
-
-   Device Role : Active device 0
-   Array State : AAAAAAAA ('A' == active, '.' == missing)
-/dev/sde1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : da015f96:138b37bf:d5ef71dc:8970ab15
-           Name : atlas.denx.de:0  (local to host atlas.denx.de)
-  Creation Time : Mon Jan 14 14:20:34 2013
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 489970560 (233.64 GiB 250.86 GB)
-     Array Size : 1459617792 (1392.00 GiB 1494.65 GB)
-  Used Dev Size : 486539264 (232.00 GiB 249.11 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : d0494c53:30feb967:37f035e7:5665af56
-
-    Update Time : Sun Jan 27 23:03:15 2013
-       Checksum : f100de9d - correct
-         Events : 8
-
-         Layout : left-symmetric
-     Chunk Size : 16K
-
-   Device Role : Active device 6
-   Array State : AAAAAAAA ('A' == active, '.' == missing)
-/dev/sdf1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : da015f96:138b37bf:d5ef71dc:8970ab15
-           Name : atlas.denx.de:0  (local to host atlas.denx.de)
-  Creation Time : Mon Jan 14 14:20:34 2013
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 489970560 (233.64 GiB 250.86 GB)
-     Array Size : 1459617792 (1392.00 GiB 1494.65 GB)
-  Used Dev Size : 486539264 (232.00 GiB 249.11 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 6d84b3ee:3789d762:1de41934:986e51c2
-
-    Update Time : Sun Jan 27 23:03:15 2013
-       Checksum : 400ba165 - correct
-         Events : 8
-
-         Layout : left-symmetric
-     Chunk Size : 16K
-
-   Device Role : Active device 1
-   Array State : AAAAAAAA ('A' == active, '.' == missing)
-/dev/sdg1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : da015f96:138b37bf:d5ef71dc:8970ab15
-           Name : atlas.denx.de:0  (local to host atlas.denx.de)
-  Creation Time : Mon Jan 14 14:20:34 2013
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 489970560 (233.64 GiB 250.86 GB)
-     Array Size : 1459617792 (1392.00 GiB 1494.65 GB)
-  Used Dev Size : 486539264 (232.00 GiB 249.11 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 1605798c:a669952b:33d986ec:a25c7c1f
-
-    Update Time : Sun Jan 27 23:03:15 2013
-       Checksum : bc26e59d - correct
-         Events : 8
-
-         Layout : left-symmetric
-     Chunk Size : 16K
-
-   Device Role : Active device 2
-   Array State : AAAAAAAA ('A' == active, '.' == missing)
-/dev/sdh1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : da015f96:138b37bf:d5ef71dc:8970ab15
-           Name : atlas.denx.de:0  (local to host atlas.denx.de)
-  Creation Time : Mon Jan 14 14:20:34 2013
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 489970560 (233.64 GiB 250.86 GB)
-     Array Size : 1459617792 (1392.00 GiB 1494.65 GB)
-  Used Dev Size : 486539264 (232.00 GiB 249.11 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 90bdf4cd:1e05fd37:bd4d27d5:666c9924
-
-    Update Time : Sun Jan 27 23:03:15 2013
-       Checksum : f7c7bdde - correct
-         Events : 8
-
-         Layout : left-symmetric
-     Chunk Size : 16K
-
-   Device Role : Active device 3
-   Array State : AAAAAAAA ('A' == active, '.' == missing)
-/dev/sdi1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : da015f96:138b37bf:d5ef71dc:8970ab15
-           Name : atlas.denx.de:0  (local to host atlas.denx.de)
-  Creation Time : Mon Jan 14 14:20:34 2013
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 489970560 (233.64 GiB 250.86 GB)
-     Array Size : 1459617792 (1392.00 GiB 1494.65 GB)
-  Used Dev Size : 486539264 (232.00 GiB 249.11 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 2143a792:be518d02:b2ad54b6:fbf72cd7
-
-    Update Time : Sun Jan 27 23:03:15 2013
-       Checksum : 1acb7b9e - correct
-         Events : 8
-
-         Layout : left-symmetric
-     Chunk Size : 16K
-
-   Device Role : Active device 7
-   Array State : AAAAAAAA ('A' == active, '.' == missing)
-/dev/sdj1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : da015f96:138b37bf:d5ef71dc:8970ab15
-           Name : atlas.denx.de:0  (local to host atlas.denx.de)
-  Creation Time : Mon Jan 14 14:20:34 2013
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 489970560 (233.64 GiB 250.86 GB)
-     Array Size : 1459617792 (1392.00 GiB 1494.65 GB)
-  Used Dev Size : 486539264 (232.00 GiB 249.11 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 8d76c4b7:819e678e:c9c66587:9eea674f
-
-    Update Time : Sun Jan 27 23:03:15 2013
-       Checksum : 150f0784 - correct
-         Events : 8
-
-         Layout : left-symmetric
-     Chunk Size : 16K
-
-   Device Role : Active device 4
-   Array State : AAAAAAAA ('A' == active, '.' == missing)
-/dev/sdk1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : da015f96:138b37bf:d5ef71dc:8970ab15
-           Name : atlas.denx.de:0  (local to host atlas.denx.de)
-  Creation Time : Mon Jan 14 14:20:34 2013
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 489970560 (233.64 GiB 250.86 GB)
-     Array Size : 1459617792 (1392.00 GiB 1494.65 GB)
-  Used Dev Size : 486539264 (232.00 GiB 249.11 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 5d9ef991:6162ced4:d50c17e8:882b4e68
-
-    Update Time : Sun Jan 27 23:03:15 2013
-       Checksum : af427a2b - correct
-         Events : 8
-
-         Layout : left-symmetric
-     Chunk Size : 16K
-
-   Device Role : Active device 5
-   Array State : AAAAAAAA ('A' == active, '.' == missing)
-
-> Please also explain/share what you've done to conclude the filesystem is
-> error-free.
-
-fsck shows no errors, a full backup shows no errors, and a number of
-files I checked manually showed no corruption.  I'm aware that this is
-not a very reliable test.
+I would like to point out that all these systems have been up an
+running essentially unchanged for many months, even years (OK, the old
+Maxtor drive based one needs a disk swap every few weeks, but this is
+because the disks have reached EOL). No such problem has been observed
+ever before, but now it happens at the first check operation after
+switching to Fedora 18, simultaneous on all systems ...
 
 Best regards,
 
@@ -266,6 +63,6 @@ Wolfgang Denk
 DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
 HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
 Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-At the source of every error which is blamed on the computer you will
-find at least two human errors, including the error of blaming it  on
-the computer.
+What is wanted is not the will to believe,  but the will to find out,
+which is the exact opposite.
+		        -- Bertrand Russell, "Skeptical Essays", 1928
