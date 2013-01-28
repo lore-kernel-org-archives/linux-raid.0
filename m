@@ -1,67 +1,77 @@
 From: Wolfgang Denk <wd@denx.de>
 Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
-Date: Tue, 29 Jan 2013 00:18:39 +0100
-Message-ID: <20130128231840.03C37203AD5@gemini.denx.de>
-References: <20130127192656.634892005AD@gemini.denx.de> <20130128173704.GA2329@lazy.lzy> <20130128190035.D943A294BAB@gemini.denx.de> <20130128191041.8E962200607@gemini.denx.de> <20130128192256.GB13803@lazy.lzy> <20130128201947.2B615200607@gemini.denx.de> <20130128204422.GA14115@lazy.lzy>
+Date: Tue, 29 Jan 2013 00:23:16 +0100
+Message-ID: <20130128232316.7B60A203AD5@gemini.denx.de>
+References: <20130127192656.634892005AD@gemini.denx.de> <20130128173704.GA2329@lazy.lzy> <20130128190035.D943A294BAB@gemini.denx.de> <20130128191041.8E962200607@gemini.denx.de> <20130128192256.GB13803@lazy.lzy> <20130128201947.2B615200607@gemini.denx.de> <20130128204422.GA14115@lazy.lzy> <6D287BCE-96EB-4F91-AC5A-34CD7AD2C68D@colorremedies.com> <20130128225935.B8E2B20004B@gemini.denx.de> <ADB1B276-21F3-4006-A613-F979F931EDC3@colorremedies.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <20130128204422.GA14115@lazy.lzy>
+In-reply-to: <ADB1B276-21F3-4006-A613-F979F931EDC3@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Piergiorgio Sartor,
+Dear Chris,
 
-In message <20130128204422.GA14115@lazy.lzy> you wrote:
->
-> It could still be the data is as it was written,
-> but, for some reasons I could not imagine, the
-> parities (both) are not correct.
+In message <ADB1B276-21F3-4006-A613-F979F931EDC3@colorremedies.com> you=
+ wrote:
+>=20
+> > Correct, these are 3 different machines.
+>=20
+> Too bad. Better to test first, than commit so many computers and arra=
+ys
+> for such a major change.
 
-This is what I think at the moment, as all my samples of data so fare
-looked ok.
+In hindsight you are of course correct.  But then, these are still not
+really vitally critically systems, and I hve to admit that I did not
+expect such kind of problems.  I have installed a large number of
+=46edora releases before (all of them since FC4 actually, on quite a
+number of systems), and while there have always been some problems, I
+never ran into something like this before.
 
-> This could be in case of some software bug, which
-> would be quite a surprise, I must say.
+> Unclear. If parity chunks are both wrong, then that means you
+> effectively have partial RAID 0 depending on what parity chunks are
+> correct or not. I'm not recommending this, but if you set one disk to
+> faulty and started your file system and file tests again=C2=85 if the=
+y're
+> bad then indeed it's parity that's affected. If you don't get errors,
+> then it indicates the test method is insufficient to locate the error=
+s
+> and it could still be data that's affected.
 
-Indeed.  Guess how I feel...
+OK, I will keep this in mind. If needed, I can dedicate one of the
+systems to even a destructive test without too much actual loss.
 
-> Still, would be nice to check if the whole array
-> is it this state or if, sooner or later, some
-> knwon slot (with error) is found somewhere else.
+> It's a tenuous situation. It might be wise to pick a low priority
+> computer for regression, and hopefully the problem gets better rather
+> than worse. If the assumption is that the parity is bad, it needs to =
+be
+> recalculated with repair. If that goes well with tests and another ch=
+eck
+> scrub, then it's better to get on with additional regressions sooner
+> than later. Again in the meantime if you lost a drive, it could be a
+> real mess if the raid starts to rebuild bad data from parity. Or even
+> starts to write user data incorrectly too.
 
-Checks still running.  I see two things:
-
-- on the array where I was running "repair" before, raid6check reports
-  no errors so far - but still there is a mismatch_cnt = 362731480
-  raid6check is still running.
-
-- on the second machine, I have 558579 lines out output, 176 of which
-  are errors of type "Error detected at : disk slot unknown"; no other
-  errors reported so far.  raid6check is still running.
-
-- on the third machine, I have 5512894 lines out output, 1599431 of
-  which are errors of type "Error detected at : disk slot unknown"; no
-  other errors reported so far.  raid6check is still running.
-
-This smells really bad as if parity computation was broken...
-
-OK, add more hardware details...
-
-A: Supermicro X8SAX mainboard, Core i7 CPU 950 @ 3.07GHz, 24 GB RAM
-H: Supermicro X8ST3 mainboard, Xeon CPU W3565  @ 3.20GHz, 24 GB RAM
-X: Supermicro X8SAX mainboard, Core i7 CPU 950 @ 3.07GHz, 24 GB RAM
-
+Well, I did this - the repair worked without errors, but it left again
+a huge mismatch_cnt; raid6check on this array has not found any
+problems so far - even though I see mismatch_cnt =3D 362731480
 
 Best regards,
 
 Wolfgang Denk
 
--- 
+--=20
 DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
 HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
 Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-What is research but a blind date with knowledge?      -- Will Harvey
+O Staat!   Wie tief dir alle Besten fluchen!  Du bist kein Ziel.  Der
+Mensch mu=C3=9F weiter suchen.                     - Christian Morgenst=
+ern
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
