@@ -1,39 +1,33 @@
-From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Subject: Re: help recovering a software raid5 device
-Date: Sun, 27 Jan 2013 17:59:35 -0800
-Message-ID: <7l2ht9xg3a.ln2@goaway.wombat.san-francisco.ca.us>
-References: <CAAXKdzzERB_zzcdPPzuwdL+afFO334X3bck1EvrRV5rFvEEg6Q@mail.gmail.com>
- <5105D435.8090401@turmel.org>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
+Date: Mon, 28 Jan 2013 10:07:46 +0800
+Message-ID: <5105DD72.6080909@fnarfbargle.com>
+References: <20130127192656.634892005AD@gemini.denx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20130127192656.634892005AD@gemini.denx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Wolfgang Denk <wd@denx.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2013-01-28, Phil Turmel <philip@turmel.org> wrote:
-> On 01/27/2013 08:52 AM, Theo Cabrerizo Diem wrote:
->> 
->> I did read the wiki, and took a copy of mdadm --examine /dev/sd[ghij]1
->> before doing anything. I've tried to run :
->> 
->> mdadm --create --assume-clean --level=5 --chunk 64 --raid-devices=4
->> /dev/md/stuff1 /dev/sdh1 /dev/sdg1 /dev/sdj1 /dev/sdi1
+On 28/01/13 03:26, Wolfgang Denk wrote:
+> I have seen "mismatch_cnt is not 0" warnings in the past, but that has
+> always been with RAID 1 arrays, and with relatively small numbers on
+> /sys/block/md*/md/mismatch_cnt; my understanding was that this was not
+> actually critical.
 >
-> For some reason, people are unwilling to use "--assemble --force", which
-> is made for these situations.
+> However, after updating to Fedora 18, I get this message from all
+> updated
+> systems that have RAID 6 arrays, and with _huge_ numbers of
+> mismatch_cnt, like that:
 
-It is because the wiki suggests the --create --assume-clean strategy:
+I saw this when I put two drives from a 10 drive RAID6 on a sil3124 
+card. Unfortunately by the time I figured out what was going on my array 
+was trashed.
 
-https://raid.wiki.kernel.org/index.php/RAID_Recovery
-
-I thought I modified that page, but perhaps I am misremembering, or
-perhaps I wasn't sure of the best advice to put there.
-
---keith
-
--- 
-kkeller@wombat.san-francisco.ca.us
-
+Massive mismatch counts are indicative of an insidious problem further 
+down the storage stack. Check your drivers, cards, cables and PSU.
 
