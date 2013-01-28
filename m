@@ -1,54 +1,71 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
-Date: Mon, 28 Jan 2013 21:44:22 +0100
-Message-ID: <20130128204422.GA14115@lazy.lzy>
-References: <20130127192656.634892005AD@gemini.denx.de>
- <20130128173704.GA2329@lazy.lzy>
- <20130128190035.D943A294BAB@gemini.denx.de>
- <20130128191041.8E962200607@gemini.denx.de>
- <20130128192256.GB13803@lazy.lzy>
- <20130128201947.2B615200607@gemini.denx.de>
+From: NeilBrown <neilb@suse.de>
+Subject: [PULL REQUEST] md - one fix for dmraid in 3.8
+Date: Tue, 29 Jan 2013 09:00:24 +1100
+Message-ID: <20130129090024.02845387@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/HRj5arPfaudE=iYnTmMrC=z"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130128201947.2B615200607@gemini.denx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jonathan Brassow <jbrassow@redhat.com>, lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>, Alasdair G Kergon <agk@redhat.com>
 List-Id: linux-raid.ids
 
-On Mon, Jan 28, 2013 at 09:19:47PM +0100, Wolfgang Denk wrote:
-[...]
-> P(0) wrong at 1951871
-> Q(1) wrong at 1951871
-> Error detected at 1951871: disk slot unknown
-> ...
-> 
-> Does this allow to tell which disk it is?
+--Sig_/HRj5arPfaudE=iYnTmMrC=z
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Hi Wolfgang,
 
-unfortunately, this means more than one disk
-has data which cannot match the parities.
-If only one disk would have been corrupted, we
-could have seen it reported (apart from patological
-cases), but when the slot is "unknown" it means
-the detection was not possible.
+The following changes since commit 5f243b9b46a22e5790dbbc36f574c2417af49a41:
 
-It could still be the data is as it was written,
-but, for some reasons I could not imagine, the
-parities (both) are not correct.
+  Merge tag 'arm64-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/=
+cmarinas/linux-aarch64 (2013-01-04 10:41:54 -0800)
 
-This could be in case of some software bug, which
-would be quite a surprise, I must say.
+are available in the git repository at:
 
-Still, would be nice to check if the whole array
-is it this state or if, sooner or later, some
-knwon slot (with error) is found somewhere else.
 
-bye,
+  git://neil.brown.name/md/ tags/md-3.8-fixes
 
--- 
+for you to fetch changes up to 55ebbb59c1c6eb1b040f62b8c4ae0b724de6e55a:
 
-piergiorgio
+  DM-RAID: Fix RAID10's check for sufficient redundancy (2013-01-24 12:02:3=
+6 +1100)
+
+----------------------------------------------------------------
+Just one fix for md in 3.8
+
+dmraid assess redundancy and replacements slightly inaccurately which
+could lead to some degraded arrays failing to assemble.
+
+----------------------------------------------------------------
+Jonathan Brassow (1):
+      DM-RAID: Fix RAID10's check for sufficient redundancy
+
+ Documentation/device-mapper/dm-raid.txt |   1 +
+ drivers/md/dm-raid.c                    | 101 ++++++++++++----------------=
+----
+ 2 files changed, 38 insertions(+), 64 deletions(-)
+
+--Sig_/HRj5arPfaudE=iYnTmMrC=z
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUQb0+Dnsnt1WYoG5AQIPaxAAjt9LqGzE4GTzBjs+Y2IaaIeAZibWoz2+
+j93Q8fpExsw/BMLkg8eltgRp3yJH19rol39/KRCNr1lirNVF+/6zFAepEvFO2/i/
+ChfUOsmJwJKr+ADPtiXZQ8V8KYiTqPI8b33X3IVIgV9FNCO6mmG6LmpcZbRf8GGC
+XK/8yCUCciiFt4DjY2JpCsxQeI6iHHyFv6StQVuWQ+2C4LGjErZs13xLlTVvXe4A
+ZbDG8dC1Lxo7b0QtMZ5opBktAgWbGIC5UT6qevVhw9iOxTyBahhUhIMkK/spODXI
+BgOmj/pahnfnshxmIKTK5rLDk3X6gQw2mYIOf6wSrm0vjZC+I4IszP0667edLao4
+vQdnHPOqAWfdDdAs3XUCeIL0pHayCuqYbvq806LcmnU3aPBskOyiRH4IcrJwGqpJ
+A9ezvnEqe1iiLvdximXrrpU8bfaE06S3oz3hq1y2SDrysYQi+3hj27rjAlPjM9+z
+w3ivmV7j8T49Rx/Gcd1pAQzxnz732QfTKa6JGhRTLKx1YDyfcA9z5LxFM2V9UxCw
+b9UTqthxC9KCWKw8AiM7U58tBgOa3SpgQp9CFYgTcPT/gOksVPlemaL7epKLf8VT
+wSh7kKTk0eoKWVkoUCrh4aUjO0WURBAygAf7eK0panha6Q9R8Hh//Rm9FIreytOV
+EWl10VaugH8=
+=mVri
+-----END PGP SIGNATURE-----
+
+--Sig_/HRj5arPfaudE=iYnTmMrC=z--
