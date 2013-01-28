@@ -1,71 +1,35 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PULL REQUEST] md - one fix for dmraid in 3.8
-Date: Tue, 29 Jan 2013 09:00:24 +1100
-Message-ID: <20130129090024.02845387@notabene.brown>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/HRj5arPfaudE=iYnTmMrC=z"; protocol="application/pgp-signature"
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
+Date: Mon, 28 Jan 2013 15:47:13 -0700
+Message-ID: <6D287BCE-96EB-4F91-AC5A-34CD7AD2C68D@colorremedies.com>
+References: <20130127192656.634892005AD@gemini.denx.de> <20130128173704.GA2329@lazy.lzy> <20130128190035.D943A294BAB@gemini.denx.de> <20130128191041.8E962200607@gemini.denx.de> <20130128192256.GB13803@lazy.lzy> <20130128201947.2B615200607@gemini.denx.de> <20130128204422.GA14115@lazy.lzy>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20130128204422.GA14115@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jonathan Brassow <jbrassow@redhat.com>, lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>, Alasdair G Kergon <agk@redhat.com>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: Wolfgang Denk <wd@denx.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/HRj5arPfaudE=iYnTmMrC=z
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+
+On Jan 28, 2013, at 1:44 PM, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de> wrote:
 
 
-The following changes since commit 5f243b9b46a22e5790dbbc36f574c2417af49a41:
+> It could still be the data is as it was written,
+> but, for some reasons I could not imagine, the
+> parities (both) are not correct.
 
-  Merge tag 'arm64-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/=
-cmarinas/linux-aarch64 (2013-01-04 10:41:54 -0800)
+In RAID 6 are the two parity chunks in a stripe identical? If yes, does 'unknown' only tell us that the data chunk recomputed parity does not match either of the parity chunks; or does it tell us anything about whether the parity chunks themselves are still the same or different?
 
-are available in the git repository at:
+> 
+> This could be in case of some software bug, which
+> would be quite a surprise, I must say.
 
+Yes, it sounds reproducible on more than one array, more than one HBA. Is it also more than one computer also, Wolfgang?
 
-  git://neil.brown.name/md/ tags/md-3.8-fixes
+I think regression is going to be needed to find it. Hopefully the problem is restricted to parity computation and data chunks aren't affected; however if a URE occurs in a data chunk, it could be reconstructed incorrectly from bad parity so it's obviously still a big problem.
 
-for you to fetch changes up to 55ebbb59c1c6eb1b040f62b8c4ae0b724de6e55a:
+Chris Murphy
 
-  DM-RAID: Fix RAID10's check for sufficient redundancy (2013-01-24 12:02:3=
-6 +1100)
-
-----------------------------------------------------------------
-Just one fix for md in 3.8
-
-dmraid assess redundancy and replacements slightly inaccurately which
-could lead to some degraded arrays failing to assemble.
-
-----------------------------------------------------------------
-Jonathan Brassow (1):
-      DM-RAID: Fix RAID10's check for sufficient redundancy
-
- Documentation/device-mapper/dm-raid.txt |   1 +
- drivers/md/dm-raid.c                    | 101 ++++++++++++----------------=
-----
- 2 files changed, 38 insertions(+), 64 deletions(-)
-
---Sig_/HRj5arPfaudE=iYnTmMrC=z
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUQb0+Dnsnt1WYoG5AQIPaxAAjt9LqGzE4GTzBjs+Y2IaaIeAZibWoz2+
-j93Q8fpExsw/BMLkg8eltgRp3yJH19rol39/KRCNr1lirNVF+/6zFAepEvFO2/i/
-ChfUOsmJwJKr+ADPtiXZQ8V8KYiTqPI8b33X3IVIgV9FNCO6mmG6LmpcZbRf8GGC
-XK/8yCUCciiFt4DjY2JpCsxQeI6iHHyFv6StQVuWQ+2C4LGjErZs13xLlTVvXe4A
-ZbDG8dC1Lxo7b0QtMZ5opBktAgWbGIC5UT6qevVhw9iOxTyBahhUhIMkK/spODXI
-BgOmj/pahnfnshxmIKTK5rLDk3X6gQw2mYIOf6wSrm0vjZC+I4IszP0667edLao4
-vQdnHPOqAWfdDdAs3XUCeIL0pHayCuqYbvq806LcmnU3aPBskOyiRH4IcrJwGqpJ
-A9ezvnEqe1iiLvdximXrrpU8bfaE06S3oz3hq1y2SDrysYQi+3hj27rjAlPjM9+z
-w3ivmV7j8T49Rx/Gcd1pAQzxnz732QfTKa6JGhRTLKx1YDyfcA9z5LxFM2V9UxCw
-b9UTqthxC9KCWKw8AiM7U58tBgOa3SpgQp9CFYgTcPT/gOksVPlemaL7epKLf8VT
-wSh7kKTk0eoKWVkoUCrh4aUjO0WURBAygAf7eK0panha6Q9R8Hh//Rm9FIreytOV
-EWl10VaugH8=
-=mVri
------END PGP SIGNATURE-----
-
---Sig_/HRj5arPfaudE=iYnTmMrC=z--
