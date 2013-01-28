@@ -1,39 +1,85 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
-Date: Mon, 28 Jan 2013 11:27:41 +0100
-Message-ID: <20130128102741.E3473282D2B@gemini.denx.de>
-References: <20130127192656.634892005AD@gemini.denx.de> <5105D0EA.7080100@turmel.org> <6BCDA3B1-C137-486D-A45D-55912207AF3C@colorremedies.com> <20130128063656.BB93524E481@gemini.denx.de> <7BE0F80F-4730-41C0-80D0-AFD7996FDB4C@colorremedies.com>
+From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Subject: [PATCH v2] md: protect against crash upon fsync on ro array
+Date: Mon, 28 Jan 2013 11:32:03 +0100
+Message-ID: <510653A3.9090403@profitbricks.com>
+References: <1358707492.24121.210.camel@deadeye.wl.decadent.org.uk> <5102A01B.7000407@profitbricks.com> <1359229480.2894.21.camel@deadeye.wl.decadent.org.uk> <20130127163942.GA28572@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/mixed;
+ boundary="------------090604020901070109050707"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <7BE0F80F-4730-41C0-80D0-AFD7996FDB4C@colorremedies.com>
+In-Reply-To: <20130127163942.GA28572@infradead.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ben Hutchings <ben@decadent.org.uk>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, 696650@bugs.debian.org
 List-Id: linux-raid.ids
 
-Dear Chris,
+This is a multi-part message in MIME format.
+--------------090604020901070109050707
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-In message <7BE0F80F-4730-41C0-80D0-AFD7996FDB4C@colorremedies.com> you wrote:
+Subject was: Re: fsync() on read-only RAID triggers BUG
+
+On 27.01.2013 17:39, Christoph Hellwig wrote:
+> On Sat, Jan 26, 2013 at 07:44:40PM +0000, Ben Hutchings wrote:
+>> I applied this on top of 3.2.37 and it certainly fixes the crash.
+>> However I wonder whether fsync() should fail or should immediately
+>> succeed.  I don't know whether the installer expects it to succeed.
 > 
-> And what does fsck.ext4 -f -n get you?
+> It should succeed.
 
-No errors on any of the affected file systems.
+O.K., then I hope Neil applies the attached patch. I've changed the
+return value to success.
 
-> Switching to Fedora 18 means many things have changed so it's
-> harder to find out, if software, what's causing it. Is it kernel
-> itself, is it md, is it the HBA driver?
+This is also something for linux-stable and should apply to many kernel
+versions without an issue.
 
-Agreed. But as there are at least 2 different HBA brands involved it
-appears we can exclude this part.
+--------------090604020901070109050707
+Content-Type: text/plain; charset=UTF-8;
+ name="0001-md-protect-against-crash-upon-fsync-on-ro-array.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-md-protect-against-crash-upon-fsync-on-ro-array.txt"
 
-Best regards,
+From fe0357344877c9b9cc623fd582a4e0670e448317 Mon Sep 17 00:00:00 2001
+From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Date: Fri, 25 Jan 2013 12:46:59 +0100
+Subject: [PATCH v2] md: protect against crash upon fsync on ro array
 
-Wolfgang Denk
+If an fsync occurrs on a read-only array, we need to send a
+completion for the IO and may not increment the active IO count.
+Otherwise, we hit a bug trace and can't stop the MD array anymore.
 
+By advice of Christoph Hellwig we silently return success.
+
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Ben Hutchings <ben@decadent.org.uk>
+Cc: NeilBrown <neilb@suse.de>
+Signed-off-by: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Reported-by: Ben Hutchings <ben@decadent.org.uk>
+
+---
+ drivers/md/md.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 3db3d1b..475e0be 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -322,6 +322,11 @@ static void md_make_request(struct request_queue *q, struct bio *bio)
+ 		}
+ 		finish_wait(&mddev->sb_wait, &__wait);
+ 	}
++	if (mddev->ro == 1 && unlikely(rw == WRITE)) {
++		rcu_read_unlock();
++		bio_endio(bio, 0);
++		return;
++	}
+ 	atomic_inc(&mddev->active_io);
+ 	rcu_read_unlock();
+ 
 -- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-The world is no nursery.                              - Sigmund Freud
+1.7.1
+
+
+--------------090604020901070109050707--
