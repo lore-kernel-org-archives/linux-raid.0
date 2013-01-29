@@ -1,7 +1,7 @@
 From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
 Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
-Date: Tue, 29 Jan 2013 18:49:44 +0100
-Message-ID: <20130129174944.GA2396@lazy.lzy>
+Date: Tue, 29 Jan 2013 18:57:20 +0100
+Message-ID: <20130129175720.GB2396@lazy.lzy>
 References: <20130127192656.634892005AD@gemini.denx.de>
  <20130128173704.GA2329@lazy.lzy>
  <20130128190035.D943A294BAB@gemini.denx.de>
@@ -9,67 +9,84 @@ References: <20130127192656.634892005AD@gemini.denx.de>
  <20130128192256.GB13803@lazy.lzy>
  <20130128201947.2B615200607@gemini.denx.de>
  <20130128204422.GA14115@lazy.lzy>
- <6D287BCE-96EB-4F91-AC5A-34CD7AD2C68D@colorremedies.com>
+ <20130128231840.03C37203AD5@gemini.denx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <6D287BCE-96EB-4F91-AC5A-34CD7AD2C68D@colorremedies.com>
+In-Reply-To: <20130128231840.03C37203AD5@gemini.denx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Wolfgang Denk <wd@denx.de>, linux-raid@vger.kernel.org
+To: Wolfgang Denk <wd@denx.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jan 28, 2013 at 03:47:13PM -0700, Chris Murphy wrote:
+On Tue, Jan 29, 2013 at 12:18:39AM +0100, Wolfgang Denk wrote:
 [...]
-> In RAID 6 are the two parity chunks in a stripe identical? If yes, does 'unknown' only tell us that the data chunk recomputed parity does not match either of the parity chunks; or does it tell us anything about whether the parity chunks themselves are still the same or different?
+> This is what I think at the moment, as all my samples of data so fare
+> looked ok.
 
-Hi Chris,
+Hi Wolfgang,
 
-the two parities, P and Q, are not the same,
-they're different Reed-Solomon polynomials.
+my personal opinion would be to confirm
+*all* the data is OK, if you can.
+This will point to the parity calculation
+as error source, I guess.
 
-You'll find more detail here:
+> > This could be in case of some software bug, which
+> > would be quite a surprise, I must say.
+> 
+> Indeed.  Guess how I feel...
 
-http://www.kernel.org/pub/linux/kernel/people/hpa/raid6.pdf
+The lucky one... :-)
+ 
+> > Still, would be nice to check if the whole array
+> > is it this state or if, sooner or later, some
+> > knwon slot (with error) is found somewhere else.
+> 
+> Checks still running.  I see two things:
+> 
+> - on the array where I was running "repair" before, raid6check reports
+>   no errors so far - but still there is a mismatch_cnt = 362731480
+>   raid6check is still running.
 
-At the end of this document, it is explained
-what I've implemented in raid6check.
-The process is the following.
-The data is read (per stripe) and P, Q are
-then calculated.
-If the read P and Q are the same as the
-calculated ones, then it is *assumed* the
-data is OK.
-If P *or* (xor) Q does not match, then it
-is *assumed* the non matching one is wrong.
+As mentioned, the "repair" reports the
+number of repairs it did, so unless
+you ran a check after than, the number
+is expected, I guess.
+ 
+> - on the second machine, I have 558579 lines out output, 176 of which
+>   are errors of type "Error detected at : disk slot unknown"; no other
+>   errors reported so far.  raid6check is still running.
 
-If both, P and Q, do not match, then there
-is a calculation which returns us the slot
-(chunk position, if you want) where the
-error could be.
-If the slot is not in the ammissible range,
-for example if we have 5 data disk (0 to 4)
-and the calculation returns 10, then it
-means the error cannot be detected, which,
-in turn, means probably more than one slot
-has errors.
+Nah, ja, it is slow, I know...
+In any case, as wrote in another post, "unknown"
+means both parities are wrong and a suitable,
+guilty, slot cannot be found.
+So, either both parities are wrong and only
+them (best case scenario), or more than one
+disk has corruped data on the same stripe.
 
-The "unknown" above states exactly this,
-the two parities are not matching (P wrong,
-Q wrong at the same position) and the
-calculation cannot find which slot could
-be the corrupted one, so there could be
-more than one and, with only two parities,
-we cannot say anything more.
+> - on the third machine, I have 5512894 lines out output, 1599431 of
+>   which are errors of type "Error detected at : disk slot unknown"; no
+>   other errors reported so far.  raid6check is still running.
+> 
+> This smells really bad as if parity computation was broken...
 
-> I think regression is going to be needed to find it. Hopefully the problem is restricted to parity computation and data chunks aren't affected; however if a URE occurs in a data chunk, it could be reconstructed incorrectly from bad parity so it's obviously still a big problem.
+Uhm, as mentioned, it would be nice to
+find a specific error slot...
+Well, not so nice, but this would point
+to an HW problem.
+ 
+> OK, add more hardware details...
+> 
+> A: Supermicro X8SAX mainboard, Core i7 CPU 950 @ 3.07GHz, 24 GB RAM
+> H: Supermicro X8ST3 mainboard, Xeon CPU W3565  @ 3.20GHz, 24 GB RAM
+> X: Supermicro X8SAX mainboard, Core i7 CPU 950 @ 3.07GHz, 24 GB RAM
+ 
+What does the kernel log says about the choosen
+RAID6 algorithm?
 
-Maybe parities are not correctly calculated,
-but I wonder how this could be, given the
-amount of usage the code had and has.
-
-Unless the new VX optimization have a problem.
+There should be some information with "dmesg".
 
 bye,
 
