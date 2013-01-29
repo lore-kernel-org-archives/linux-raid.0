@@ -1,95 +1,47 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
 Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
-Date: Tue, 29 Jan 2013 18:57:20 +0100
-Message-ID: <20130129175720.GB2396@lazy.lzy>
-References: <20130127192656.634892005AD@gemini.denx.de>
- <20130128173704.GA2329@lazy.lzy>
- <20130128190035.D943A294BAB@gemini.denx.de>
- <20130128191041.8E962200607@gemini.denx.de>
- <20130128192256.GB13803@lazy.lzy>
- <20130128201947.2B615200607@gemini.denx.de>
- <20130128204422.GA14115@lazy.lzy>
- <20130128231840.03C37203AD5@gemini.denx.de>
+Date: Tue, 29 Jan 2013 19:02:06 +0100 (CET)
+Message-ID: <30125923.16.1359482526397.JavaMail.root@zimbra>
+References: <20130128232316.7B60A203AD5@gemini.denx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130128231840.03C37203AD5@gemini.denx.de>
+In-Reply-To: <20130128232316.7B60A203AD5@gemini.denx.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: Wolfgang Denk <wd@denx.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org, Chris Murphy <lists@colorremedies.com>
 List-Id: linux-raid.ids
 
-On Tue, Jan 29, 2013 at 12:18:39AM +0100, Wolfgang Denk wrote:
-[...]
-> This is what I think at the moment, as all my samples of data so fare
-> looked ok.
+> > Too bad. Better to test first, than commit so many computers and
+> > arrays for such a major change.
+>=20
+> In hindsight you are of course correct. But then, these are still not
+> really vitally critically systems, and I hve to admit that I did not
+> expect such kind of problems. I have installed a large number of
+> Fedora releases before (all of them since FC4 actually, on quite a
+> number of systems), and while there have always been some problems, I
+> never ran into something like this before.
 
-Hi Wolfgang,
+Not to be a bitch, but I'd recommend using something more stable on ser=
+vers than Fedora. CentOS or Ubuntu LTS are my open choices.
 
-my personal opinion would be to confirm
-*all* the data is OK, if you can.
-This will point to the parity calculation
-as error source, I guess.
+Vennlige hilsener / Best regards
 
-> > This could be in case of some software bug, which
-> > would be quite a surprise, I must say.
-> 
-> Indeed.  Guess how I feel...
-
-The lucky one... :-)
- 
-> > Still, would be nice to check if the whole array
-> > is it this state or if, sooner or later, some
-> > knwon slot (with error) is found somewhere else.
-> 
-> Checks still running.  I see two things:
-> 
-> - on the array where I was running "repair" before, raid6check reports
->   no errors so far - but still there is a mismatch_cnt = 362731480
->   raid6check is still running.
-
-As mentioned, the "repair" reports the
-number of repairs it did, so unless
-you ran a check after than, the number
-is expected, I guess.
- 
-> - on the second machine, I have 558579 lines out output, 176 of which
->   are errors of type "Error detected at : disk slot unknown"; no other
->   errors reported so far.  raid6check is still running.
-
-Nah, ja, it is slow, I know...
-In any case, as wrote in another post, "unknown"
-means both parities are wrong and a suitable,
-guilty, slot cannot be found.
-So, either both parities are wrong and only
-them (best case scenario), or more than one
-disk has corruped data on the same stripe.
-
-> - on the third machine, I have 5512894 lines out output, 1599431 of
->   which are errors of type "Error detected at : disk slot unknown"; no
->   other errors reported so far.  raid6check is still running.
-> 
-> This smells really bad as if parity computation was broken...
-
-Uhm, as mentioned, it would be nice to
-find a specific error slot...
-Well, not so nice, but this would point
-to an HW problem.
- 
-> OK, add more hardware details...
-> 
-> A: Supermicro X8SAX mainboard, Core i7 CPU 950 @ 3.07GHz, 24 GB RAM
-> H: Supermicro X8ST3 mainboard, Xeon CPU W3565  @ 3.20GHz, 24 GB RAM
-> X: Supermicro X8SAX mainboard, Core i7 CPU 950 @ 3.07GHz, 24 GB RAM
- 
-What does the kernel log says about the choosen
-RAID6 algorithm?
-
-There should be some information with "dmesg".
-
-bye,
-
--- 
-
-piergiorgio
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
