@@ -1,98 +1,78 @@
-From: Paul Menzel <pm.debian@googlemail.com>
-Subject: Re: [PATCH v5] md: protect against crash upon fsync on ro array
-Date: Tue, 29 Jan 2013 13:29:53 +0100
-Message-ID: <1359462593.2417.1.camel@mattotaupa>
-References: <1358707492.24121.210.camel@deadeye.wl.decadent.org.uk>
-	  <5102A01B.7000407@profitbricks.com>
-	  <1359229480.2894.21.camel@deadeye.wl.decadent.org.uk>
-	  <20130127163942.GA28572@infradead.org> <510653A3.9090403@profitbricks.com>
-	  <51067164.4050301@profitbricks.com>
-	 <1359438326.3367.41.camel@deadeye.wl.decadent.org.uk>
-	 <5107B03A.9030109@profitbricks.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
+Date: Tue, 29 Jan 2013 18:49:44 +0100
+Message-ID: <20130129174944.GA2396@lazy.lzy>
+References: <20130127192656.634892005AD@gemini.denx.de>
+ <20130128173704.GA2329@lazy.lzy>
+ <20130128190035.D943A294BAB@gemini.denx.de>
+ <20130128191041.8E962200607@gemini.denx.de>
+ <20130128192256.GB13803@lazy.lzy>
+ <20130128201947.2B615200607@gemini.denx.de>
+ <20130128204422.GA14115@lazy.lzy>
+ <6D287BCE-96EB-4F91-AC5A-34CD7AD2C68D@colorremedies.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-ge2tEvLZGPtX+DeOsm4d"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5107B03A.9030109@profitbricks.com>
+Content-Disposition: inline
+In-Reply-To: <6D287BCE-96EB-4F91-AC5A-34CD7AD2C68D@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Cc: Ben Hutchings <ben@decadent.org.uk>, Christoph Hellwig <hch@infradead.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, 696650@bugs.debian.org
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Wolfgang Denk <wd@denx.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Mon, Jan 28, 2013 at 03:47:13PM -0700, Chris Murphy wrote:
+[...]
+> In RAID 6 are the two parity chunks in a stripe identical? If yes, does 'unknown' only tell us that the data chunk recomputed parity does not match either of the parity chunks; or does it tell us anything about whether the parity chunks themselves are still the same or different?
 
---=-ge2tEvLZGPtX+DeOsm4d
-Content-Type: multipart/mixed; boundary="=-qbVCsBdhribWqhvBcES+"
+Hi Chris,
 
+the two parities, P and Q, are not the same,
+they're different Reed-Solomon polynomials.
 
---=-qbVCsBdhribWqhvBcES+
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+You'll find more detail here:
 
-Am Dienstag, den 29.01.2013, 12:19 +0100 schrieb Sebastian Riemer:
+http://www.kernel.org/pub/linux/kernel/people/hpa/raid6.pdf
 
-[=E2=80=A6]
+At the end of this document, it is explained
+what I've implemented in raid6check.
+The process is the following.
+The data is read (per stripe) and P, Q are
+then calculated.
+If the read P and Q are the same as the
+calculated ones, then it is *assumed* the
+data is OK.
+If P *or* (xor) Q does not match, then it
+is *assumed* the non matching one is wrong.
 
-> Any further objection?
+If both, P and Q, do not match, then there
+is a calculation which returns us the slot
+(chunk position, if you want) where the
+error could be.
+If the slot is not in the ammissible range,
+for example if we have 5 data disk (0 to 4)
+and the calculation returns 10, then it
+means the error cannot be detected, which,
+in turn, means probably more than one slot
+has errors.
 
-Small typo (occurs) in commit message.
+The "unknown" above states exactly this,
+the two parities are not matching (P wrong,
+Q wrong at the same position) and the
+calculation cannot find which slot could
+be the corrupted one, so there could be
+more than one and, with only two parities,
+we cannot say anything more.
 
+> I think regression is going to be needed to find it. Hopefully the problem is restricted to parity computation and data chunks aren't affected; however if a URE occurs in a data chunk, it could be reconstructed incorrectly from bad parity so it's obviously still a big problem.
 
-Thanks,
+Maybe parities are not correctly calculated,
+but I wonder how this could be, given the
+amount of usage the code had and has.
 
-Paul
+Unless the new VX optimization have a problem.
 
+bye,
 
---=-qbVCsBdhribWqhvBcES+
-Content-Disposition: attachment;
-	filename="0001-md-protect-against-crash-upon-fsync-on-ro-array.txt"
-Content-Transfer-Encoding: base64
-Content-Type: text/plain;
-	name="0001-md-protect-against-crash-upon-fsync-on-ro-array.txt";
-	charset="UTF-8"
+-- 
 
-RnJvbSBhZGZhYzRkZjk5ZWRjMWE4M2RjZWQ5YzczMjQ2NDYzNGQzMzgxYTlmIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQ0KRnJvbTogU2ViYXN0aWFuIFJpZW1lciA8c2ViYXN0aWFuLnJpZW1lckBw
-cm9maXRicmlja3MuY29tPg0KRGF0ZTogRnJpLCAyNSBKYW4gMjAxMyAxMjo0Njo1OSArMDEwMA0K
-U3ViamVjdDogW1BBVENIIHY1XSBtZDogcHJvdGVjdCBhZ2FpbnN0IGNyYXNoIHVwb24gZnN5bmMg
-b24gcm8gYXJyYXkNCg0KSWYgYW4gZnN5bmMgb2NjdXJzIG9uIGEgcmVhZC1vbmx5IGFycmF5LCB3
-ZSBuZWVkIHRvIHNlbmQgYQ0KY29tcGxldGlvbiBmb3IgdGhlIElPIGFuZCBtYXkgbm90IGluY3Jl
-bWVudCB0aGUgYWN0aXZlIElPIGNvdW50Lg0KT3RoZXJ3aXNlLCB3ZSBoaXQgYSBidWcgdHJhY2Ug
-YW5kIGNhbid0IHN0b3AgdGhlIE1EIGFycmF5IGFueW1vcmUuDQoNCkJ5IGFkdmljZSBvZiBDaHJp
-c3RvcGggSGVsbHdpZyB3ZSByZXR1cm4gc3VjY2VzcyB1cG9uIGEgZmx1c2gNCnJlcXVlc3QgYnV0
-IHdlIHJldHVybiAtRVJPRlMgZm9yIG90aGVyIHdyaXRlcy4NCldlIGRldGVjdCBmbHVzaCByZXF1
-ZXN0cyBieSBjaGVja2luZyBpZiB0aGUgYmlvIGhhcyB6ZXJvIHNlY3RvcnMuDQoNCkNjOiBDaHJp
-c3RvcGggSGVsbHdpZyA8aGNoQGluZnJhZGVhZC5vcmc+DQpDYzogQmVuIEh1dGNoaW5ncyA8YmVu
-QGRlY2FkZW50Lm9yZy51az4NCkNjOiBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+DQpTaWduZWQt
-b2ZmLWJ5OiBTZWJhc3RpYW4gUmllbWVyIDxzZWJhc3RpYW4ucmllbWVyQHByb2ZpdGJyaWNrcy5j
-b20+DQpSZXBvcnRlZC1ieTogQmVuIEh1dGNoaW5ncyA8YmVuQGRlY2FkZW50Lm9yZy51az4NCkFj
-a2VkLWJ5OiBQYXVsIE1lbnplbCA8cGF1bGVwYW50ZXJAdXNlcnMuc291cmNlZm9yZ2UubmV0Pg0K
-LS0tDQogZHJpdmVycy9tZC9tZC5jIHwgICAgNCArKysrDQogMSBmaWxlcyBjaGFuZ2VkLCA0IGlu
-c2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL21k
-LmMgYi9kcml2ZXJzL21kL21kLmMNCmluZGV4IDNkYjNkMWIuLjFlNjM0YTYgMTAwNjQ0DQotLS0g
-YS9kcml2ZXJzL21kL21kLmMNCisrKyBiL2RyaXZlcnMvbWQvbWQuYw0KQEAgLTMwNyw2ICszMDcs
-MTAgQEAgc3RhdGljIHZvaWQgbWRfbWFrZV9yZXF1ZXN0KHN0cnVjdCByZXF1ZXN0X3F1ZXVlICpx
-LCBzdHJ1Y3QgYmlvICpiaW8pDQogCQliaW9faW9fZXJyb3IoYmlvKTsNCiAJCXJldHVybjsNCiAJ
-fQ0KKwlpZiAobWRkZXYtPnJvID09IDEgJiYgdW5saWtlbHkocncgPT0gV1JJVEUpKSB7DQorCQli
-aW9fZW5kaW8oYmlvLCBiaW9fc2VjdG9ycyhiaW8pID09IDAgPyAwIDogLUVST0ZTKTsNCisJCXJl
-dHVybjsNCisJfQ0KIAlzbXBfcm1iKCk7IC8qIEVuc3VyZSBpbXBsaWNhdGlvbnMgb2YgICdhY3Rp
-dmUnIGFyZSB2aXNpYmxlICovDQogCXJjdV9yZWFkX2xvY2soKTsNCiAJaWYgKG1kZGV2LT5zdXNw
-ZW5kZWQpIHsNCi0tIA0KMS43LjENCg==
-
-
---=-qbVCsBdhribWqhvBcES+--
-
---=-ge2tEvLZGPtX+DeOsm4d
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEABECAAYFAlEHwMEACgkQPX1aK2wOHViZLACfZIK2sM/T+/AQSIMwjIbUycwN
-7DIAn0elK0jgK15M3RVxSZ56dN/cj0w5
-=aTPO
------END PGP SIGNATURE-----
-
---=-ge2tEvLZGPtX+DeOsm4d--
-
+piergiorgio
