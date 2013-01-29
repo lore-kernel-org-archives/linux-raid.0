@@ -1,42 +1,56 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+From: Paul Menzel <pm.debian@googlemail.com>
 Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
-Date: Tue, 29 Jan 2013 19:43:52 +0100 (CET)
-Message-ID: <8318607.18.1359485032182.JavaMail.root@zimbra>
-References: <20130129182842.94E102A1930@gemini.denx.de>
+Date: Tue, 29 Jan 2013 20:35:32 +0100
+Message-ID: <1359488132.5350.31.camel@mattotaupa>
+References: <20130127192656.634892005AD@gemini.denx.de>
+	 <20130128173704.GA2329@lazy.lzy>
+	 <20130128190035.D943A294BAB@gemini.denx.de>
+	 <20130128191041.8E962200607@gemini.denx.de>
+	 <20130128192256.GB13803@lazy.lzy>
+	 <20130128201947.2B615200607@gemini.denx.de>
+	 <20130128204422.GA14115@lazy.lzy>
+	 <6D287BCE-96EB-4F91-AC5A-34CD7AD2C68D@colorremedies.com>
+	 <20130129174944.GA2396@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-wadLpQS22t4w9Gmj6b1Q"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130129182842.94E102A1930@gemini.denx.de>
+In-Reply-To: <20130129174944.GA2396@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org, Chris Murphy <lists@colorremedies.com>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: Chris Murphy <lists@colorremedies.com>, Wolfgang Denk <wd@denx.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> And how would you ever get a stable RHEL or CentOS if not some brave,
-> fearless Knights of the Toggled Bit were courageous enough to test
-> such bleading edge software for you? ;-)
 
-Well, userspace software is one thing, but kernel stuff I prefer to be =
-*stable*, which isn't the case with Fedora or non-LTS Ubuntu releases. =
-Things do happen=E2=80=A6
+--=-wadLpQS22t4w9Gmj6b1Q
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Vennlige hilsener / Best regards
+Am Dienstag, den 29.01.2013, 18:49 +0100 schrieb Piergiorgio Sartor:
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[=E2=80=A6]
+
+> Unless the new VX optimization have a problem.
+
+What commits would these be?
+
+
+Thanks,
+
+Paul
+
+--=-wadLpQS22t4w9Gmj6b1Q
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEABECAAYFAlEIJIQACgkQPX1aK2wOHVhkwQCfdxh3niUM5FSXACuAx9IuisMR
+6nUAn3oSNSj74wSUhCwW6cln+zF+Y52q
+=NchI
+-----END PGP SIGNATURE-----
+
+--=-wadLpQS22t4w9Gmj6b1Q--
+
