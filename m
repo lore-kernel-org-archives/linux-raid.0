@@ -1,71 +1,109 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: Persistent failures with simple md setup
-Date: Wed, 30 Jan 2013 10:20:36 +0100 (CET)
-Message-ID: <14351602.2.1359537635927.JavaMail.root@zimbra>
-References: <1565063.1kpR7lz4Ph@xrated>
+From: Paul Menzel <pm.debian@googlemail.com>
+Subject: Re: [PATCH] Make --update=homehost work again.
+Date: Wed, 30 Jan 2013 11:46:06 +0100
+Message-ID: <1359542766.5755.46.camel@mattotaupa>
+References: <1359512808-14297-1-git-send-email-jmaggard10@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-7pY2rImS9Mzm5ew4hn9F"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1565063.1kpR7lz4Ph@xrated>
+In-Reply-To: <1359512808-14297-1-git-send-email-jmaggard10@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Hans-Peter Jansen <hpj@urpla.net>
+To: Justin Maggard <jmaggard10@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> ~# cat /proc/mdstat
-> Personalities : [raid1] [raid0] [raid10] [raid6] [raid5] [raid4]
-> md3 : active raid1 sda4[0]
-> 869702736 blocks super 1.0 [2/1] [U_]
-> bitmap: 57/415 pages [228KB], 1024KB chunk
->=20
-> md0 : active raid1 sda1[0]
-> 96376 blocks super 1.0 [2/1] [U_]
-> bitmap: 1/6 pages [4KB], 8KB chunk
->=20
-> md1 : active (auto-read-only) raid1 sdb2[1] sda2[0]
-> 2096468 blocks super 1.0 [2/2] [UU]
-> bitmap: 0/8 pages [0KB], 128KB chunk
->=20
-> md124 : active raid1 sdb3[1] sda3[0]
-> 104856180 blocks super 1.0 [2/2] [UU]
-> bitmap: 8/200 pages [32KB], 256KB chunk
-=2E..
-> for this case, but the behavior which partition is affected is random=
-,
-> only md124 seems stable (the root fs). The strange md naming was the
-> result of an upgrade installation. The device details are attached as
-> well.
->=20
-> It happens, that the active device even *switches* between boots,
-> which
-> is a perfect recipe for actually loosing data, hence this md doesn't
-> raise data security, it is the reason for loosing them.
->=20
-> Could some kind soul tell me, what's going on here?
 
-This looks somewhat familiar. I had a similar issue after install Ubunt=
-u 12.04 on my home server. IIRC udev/mdadm was out of sync, so that the=
- raid was started before all drives were ready. This was fixed around u=
-buntu 12.04.1. But then again, since it finds some of the partitions, a=
-nd not losing whole drives, this seems somewhat unlikely.
+--=-7pY2rImS9Mzm5ew4hn9F
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Vennlige hilsener / Best regards
+Dear Justin,
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+thank you for your patch.
+
+
+Am Dienstag, den 29.01.2013, 18:26 -0800 schrieb Justin Maggard:
+> Commit 1e2b276535cea41c348292a019bdda8a58cb1679
+
+Please not only add the hash, but also the summary, so people not having
+the Linus=E2=80=99 master checked out know what the original commit was abo=
+ut.
+Also CC the original commit author so s/he can comment.
+
+> broke homehost updating
+> functionality because it depended on each string comparison being done
+> even after we already found a match.  Fix this by using a goto instead.
+>=20
+> ---
+>  super0.c |    3 ++-
+>  super1.c |    3 ++-
+>  2 files changed, 4 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/super0.c b/super0.c
+> index ecb6b38..f15f1e0 100644
+> --- a/super0.c
+> +++ b/super0.c
+> @@ -554,10 +554,11 @@ static int update_super0(struct supertype *st, stru=
+ct mdinfo *info,
+>  	} else if (strcmp(update, "homehost") =3D=3D 0 &&
+>  		   homehost) {
+>  		uuid_set =3D 0;
+> -		update =3D "uuid";
+>  		info->uuid[0] =3D sb->set_uuid0;
+>  		info->uuid[1] =3D sb->set_uuid1;
+> +		goto update_uuid;
+>  	} else if (strcmp(update, "uuid") =3D=3D 0) {
+
+Would changing this from =C2=BBelse if =E2=80=A6=C2=AB to only =C2=BBif=C2=
+=AB also solve this and
+make it subjectively more clear?
+
+> + update_uuid:
+>  		if (!uuid_set && homehost) {
+>  			char buf[20];
+>  			char *hash =3D sha1_buffer(homehost,
+> diff --git a/super1.c b/super1.c
+> index 5bb1f01..fc31948 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -987,14 +987,15 @@ static int update_super1(struct supertype *st, stru=
+ct mdinfo *info,
+>  	} else if (strcmp(update, "homehost") =3D=3D 0 &&
+>  		   homehost) {
+>  		char *c;
+> -		update =3D "name";
+>  		c =3D strchr(sb->set_name, ':');
+>  		if (c)
+>  			strncpy(info->name, c+1, 31 - (c-sb->set_name));
+>  		else
+>  			strncpy(info->name, sb->set_name, 32);
+>  		info->name[32] =3D 0;
+> +		goto update_name;
+>  	} else if (strcmp(update, "name") =3D=3D 0) {
+> + update_name:
+>  		if (info->name[0] =3D=3D 0)
+>  			sprintf(info->name, "%d", info->array.md_minor);
+>  		memset(sb->set_name, 0, sizeof(sb->set_name));
+
+
+Thanks,
+
+Paul
+
+--=-7pY2rImS9Mzm5ew4hn9F
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEABECAAYFAlEI+e4ACgkQPX1aK2wOHVgnAgCfaAfeuaP5UDgX3I7IavhlMt4g
+tU4AnjhBIRVWzDJadlOuIcMGoMt7jLm3
+=5aYp
+-----END PGP SIGNATURE-----
+
+--=-7pY2rImS9Mzm5ew4hn9F--
+
