@@ -1,109 +1,48 @@
-From: Paul Menzel <pm.debian@googlemail.com>
-Subject: Re: [PATCH] Make --update=homehost work again.
-Date: Wed, 30 Jan 2013 11:46:06 +0100
-Message-ID: <1359542766.5755.46.camel@mattotaupa>
-References: <1359512808-14297-1-git-send-email-jmaggard10@gmail.com>
+From: Priya Kamala <priya.kamala@perpetual-data.com>
+Subject: FW: RAID-1 problem after device removal
+Date: Wed, 30 Jan 2013 11:00:05 +0000
+Message-ID: <5108FD35.7040508@perpetual-data.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-7pY2rImS9Mzm5ew4hn9F"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1359512808-14297-1-git-send-email-jmaggard10@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Maggard <jmaggard10@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Resending on behalf of a colleague as his mails are not getting through 
+to the list.
 
---=-7pY2rImS9Mzm5ew4hn9F
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-Dear Justin,
-
-
-thank you for your patch.
+-----Original Message-----
+From: Barry J Sturgeon [mailto:barry.sturgeon@perpetual-data.com]
+Sent: 30 January 2013 07:29
+To: 'linux-raid@vger.kernel.org'
+Subject: RE: RAID-1 problem after device removal
 
 
-Am Dienstag, den 29.01.2013, 18:26 -0800 schrieb Justin Maggard:
-> Commit 1e2b276535cea41c348292a019bdda8a58cb1679
+Hi,
+    When I SCSI-remove a drive from a RAID-1 partition I see the RAID
+partition correctly marked failed (F).
+However, all write attempts after this are quietly failing, even though the
+file system (XFS) and LVM are not reporting any errors.
+In other words.
 
-Please not only add the hash, but also the summary, so people not having
-the Linus=E2=80=99 master checked out know what the original commit was abo=
-ut.
-Also CC the original commit author so s/he can comment.
+cp * TEST_FOLDER; echo "scsi remove-single-device 1 0 1 0" >
+/proc/scsi/scsi; touch TEST_FILE
 
-> broke homehost updating
-> functionality because it depended on each string comparison being done
-> even after we already found a match.  Fix this by using a goto instead.
->=20
-> ---
->  super0.c |    3 ++-
->  super1.c |    3 ++-
->  2 files changed, 4 insertions(+), 2 deletions(-)
->=20
-> diff --git a/super0.c b/super0.c
-> index ecb6b38..f15f1e0 100644
-> --- a/super0.c
-> +++ b/super0.c
-> @@ -554,10 +554,11 @@ static int update_super0(struct supertype *st, stru=
-ct mdinfo *info,
->  	} else if (strcmp(update, "homehost") =3D=3D 0 &&
->  		   homehost) {
->  		uuid_set =3D 0;
-> -		update =3D "uuid";
->  		info->uuid[0] =3D sb->set_uuid0;
->  		info->uuid[1] =3D sb->set_uuid1;
-> +		goto update_uuid;
->  	} else if (strcmp(update, "uuid") =3D=3D 0) {
+The files from TEST_FOLDER and TEST_FILE appear on the file system, but when
+I reboot they have disappeared! Note that I do not see this issue with a
+RAID-5 AND does not occur on RAID-1 Superblock version 1.2.
+So I only see this with RAID-1 Superblock version 0.9.
 
-Would changing this from =C2=BBelse if =E2=80=A6=C2=AB to only =C2=BBif=C2=
-=AB also solve this and
-make it subjectively more clear?
+I have tried kernel 3.2.32 and 3.2.37 and the both show this behavior.
+The same test succeeds on 2.6. I am committed to 3.2.x so I cannot move
+further upstream.
 
-> + update_uuid:
->  		if (!uuid_set && homehost) {
->  			char buf[20];
->  			char *hash =3D sha1_buffer(homehost,
-> diff --git a/super1.c b/super1.c
-> index 5bb1f01..fc31948 100644
-> --- a/super1.c
-> +++ b/super1.c
-> @@ -987,14 +987,15 @@ static int update_super1(struct supertype *st, stru=
-ct mdinfo *info,
->  	} else if (strcmp(update, "homehost") =3D=3D 0 &&
->  		   homehost) {
->  		char *c;
-> -		update =3D "name";
->  		c =3D strchr(sb->set_name, ':');
->  		if (c)
->  			strncpy(info->name, c+1, 31 - (c-sb->set_name));
->  		else
->  			strncpy(info->name, sb->set_name, 32);
->  		info->name[32] =3D 0;
-> +		goto update_name;
->  	} else if (strcmp(update, "name") =3D=3D 0) {
-> + update_name:
->  		if (info->name[0] =3D=3D 0)
->  			sprintf(info->name, "%d", info->array.md_minor);
->  		memset(sb->set_name, 0, sizeof(sb->set_name));
-
+Am I doing something illegal?
+Does anybody recognize this?
+Any suggestions how I should proceed?
 
 Thanks,
-
-Paul
-
---=-7pY2rImS9Mzm5ew4hn9F
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEABECAAYFAlEI+e4ACgkQPX1aK2wOHVgnAgCfaAfeuaP5UDgX3I7IavhlMt4g
-tU4AnjhBIRVWzDJadlOuIcMGoMt7jLm3
-=5aYp
------END PGP SIGNATURE-----
-
---=-7pY2rImS9Mzm5ew4hn9F--
+    Barry
 
