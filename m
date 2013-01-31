@@ -1,35 +1,39 @@
 From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
-Date: Thu, 31 Jan 2013 10:14:35 -0700
-Message-ID: <3DB28596-B1D6-48A9-9520-4CF9D367E39D@colorremedies.com>
-References: <20130127192656.634892005AD@gemini.denx.de> <20130128173704.GA2329@lazy.lzy> <20130128190035.D943A294BAB@gemini.denx.de> <20130128191041.8E962200607@gemini.denx.de> <20130128192256.GB13803@lazy.lzy> <20130128201947.2B615200607@gemini.denx.de> <20130128204422.GA14115@lazy.lzy> <20130128231840.03C37203AD5@gemini.denx.de> <20130129175720.GB2396@lazy.lzy> <20130129184309.D65DD2A1846@gemini.denx.de> <20130129202433.GB7005@lazy.lzy> <20130131121220.F3CA220059E@gemini.denx.de>
+Subject: Re: RAID5 with 2 drive failure at the same time
+Date: Thu, 31 Jan 2013 10:46:17 -0700
+Message-ID: <CAF3D534-D907-4A88-AFAF-EA9B97C1D8BF@colorremedies.com>
+References: <510A4AAE.6000009@evilazrael.de> <20130131113820.GA20536@cthulhu.home.robinhill.me.uk> <510A6E54.5050001@evilazrael.de>
 Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130131121220.F3CA220059E@gemini.denx.de>
+In-Reply-To: <510A6E54.5050001@evilazrael.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: Christoph Nelles <evilazrael@evilazrael.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-On Jan 31, 2013, at 5:12 AM, Wolfgang Denk <wd@denx.de> wrote:
-> 
-> After running a "repair" on the array, both "check" and "raid6test"
-> would not report any further issues.
+On Jan 31, 2013, at 6:15 AM, Christoph Nelles <evilazrael@evilazrael.de> wrote:
 
-Yes but this would be consistent with a derivative parity, written to disk and then checked against an algorithm that expects derivative parity. What happens if you go back to the old kernel before all the problems were happening and you do a check? What happens if you go back to a Fedora kernel you know exhibited the problem and you do a check?
+> All drives are available again. And the seecond failed device reports
+> UREs. I will run badblocks on that device before continuing.
+> I attached the kernel logs of the first error and of the second error. I
+> hope i filtered them reasonably.
 
-Question for Piergiorgio is if check and raid6test use the same, or independent, code for checking parity?
+This looks like a write error, resulting in md immediately booting the drive. There's little point in using this drive again.
+
+Jan 28 00:23:36 router kernel: Write(16): 8a 00 00 00 00 01 36 b2 55 50 00 00 00 30 00 00
+Jan 28 00:23:36 router kernel: end_request: I/O error, dev sdg, sector 5212624208
+
+What does smartctl -a return for this drive?
 
 
-> I'll continue to watch this for a while, but I think I will not
-> "update" to a Fedora kernel for some time...
+> Exactly. I am running badblocks on that device. SMART reports one
+> "Pending Sector Count" :(
 
+I'm unclear on the efficacy of badblocks for testing. I'd use smartctl -t long and then -a to see if there are sector problems and at what LBA; and for removing bad blocks (force a remap) I'd use either dd zeros with e.g. bs=1M, or I'd use ATA Secure Erase which is faster.
 
-I think a bug needs to be filed with the information you have thus far.
-
+If you use the badblocks map when formatting a drive, e.g. using mkfs.ext4 -c, then it would allow you to use this disk but not in RAID. On top of raid, md gets the write error before the file system does, and boots the drive out of the array. Or on read error attempts to correct it. And even as a standalone drive do you really want to use a drive that can't remap future bad sectors?
 
 Chris Murphy
-
