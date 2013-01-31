@@ -1,78 +1,51 @@
 From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
-Date: Thu, 31 Jan 2013 13:41:58 -0700
-Message-ID: <261D7C10-29F9-4C95-9F98-4482A78D0700@colorremedies.com>
-References: <20130127192656.634892005AD@gemini.denx.de> <20130128173704.GA2329@lazy.lzy> <20130128190035.D943A294BAB@gemini.denx.de> <20130128191041.8E962200607@gemini.denx.de> <20130128192256.GB13803@lazy.lzy> <20130128201947.2B615200607@gemini.denx.de> <20130128204422.GA14115@lazy.lzy> <20130128231840.03C37203AD5@gemini.denx.de> <20130129175720.GB2396@lazy.lzy> <20130129184309.D65DD2A1846@gemini.denx.de> <20130129202433.GB7005@lazy.lzy> <20130131121220.F3CA220059E@gemini.denx.de> <3DB28596-B1D6-48A9-9520-4CF9D367E39D@colorremedies.com> <20130131183606.E4C23200276@gemini.denx.de> <1C562BB9-9FD8-482C-BE3E-E52A027A5C88@colorremedies.com> <20130131200547.63ABB200276@gemini.denx.de>
+Subject: Re: RAID5 with 2 drive failure at the same time
+Date: Thu, 31 Jan 2013 14:19:18 -0700
+Message-ID: <A40C3332-6A9E-4832-BBF2-860E3D1BF00A@colorremedies.com>
+References: <510A4AAE.6000009@evilazrael.de> <20130131113820.GA20536@cthulhu.home.robinhill.me.uk> <510A6E54.5050001@evilazrael.de> <CAF3D534-D907-4A88-AFAF-EA9B97C1D8BF@colorremedies.com> <510ABC1E.6060308@evilazrael.de>
 Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130131200547.63ABB200276@gemini.denx.de>
+In-Reply-To: <510ABC1E.6060308@evilazrael.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: Christoph Nelles <evilazrael@evilazrael.de>
+Cc: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
-On Jan 31, 2013, at 1:05 PM, Wolfgang Denk <wd@denx.de> wrote:
->=20
-> Ah!  Do you have any pointer for me how to access stuff there?
-http://koji.fedoraproject.org/koji/
-Type in kernel for search.
-Click on a result that has a green check for state.
-=46ind the rpm you want, right click download.
-
-You can use rpm -ivh --force to install an older kernel.
+Please reply to the list, not just to me personally.
 
 
->=20
->>> With the current Fedora kernel, the first check will report errors
->>> which do not go away permanently, not even with a "repair".
->>=20
->> This is 3.7.4-204?
->=20
-> Correct.
->=20
->> Hypothetically this should be reproducible by anyone using that kern=
-el, by creating a new raid6, running repair, and then running check and=
- confirming thee mismatch count is non-zero.
->=20
-> Actually just running check should be sufficient - that was how I
-> discovered the issue: I received warning mails from the "raid-check"
-> cron job.
+On Jan 31, 2013, at 11:46 AM, Christoph Nelles <evilazrael@evilazrael.de> wrote:
+> 
+> Am 31.01.2013 18:46, schrieb Chris Murphy:
+>> 
+>> This looks like a write error, resulting in md immediately booting
+>> the drive. There's little point in using this drive again.
+> 
+> Sure, but i think in the current half-rebuilt state, i will need the
+> striped data on that disk, am i correct about that?
 
-But check alone doesn't reproduce the problem because the check *might*=
- be finding valid mismatches, however unlikely on a new raid array. The=
- problem is doing a repair which should fix any mismatches, running che=
-ck still finding mismatches then is a huge bug for the scrub process fo=
-r sure; and if some parity is actually being computed wrong, or written=
- on disk wrong, then it's a possible data loss bug in addition. Not jus=
-t (maybe bogus) errors.
+Only if you have no backup, and you want to extract what you can.
 
+> Okay, a badblocks running in read-only mode may not be better than just
+> dd' ing the drive to /dev/null, but at least I can see if there more
+> read errors.
 
-> This is what surprises me most.  I would have expected at least some
-> "me too!" by now=85
+I don't see the point at all of learning about more read errors. This changes your strategy how? The array has failed. Either you want to backup what you can, or you don't. In either case, ultimately you're going to be creating a new array from scratch after you've tested and replaced the underlying drives.
 
-If there were a study that said 95% of users using md raid never do scr=
-ubs, either check or repair, I would not be surprised at all.
+> I am currently checking all drives and if that succeeds, i
+> will try this safe write-read test badblocks offers. Just want to be
+> safe that won't do any additional damage.
 
-> For me it is sufficient to:
->=20
-> - boot the 3.7.4-204
-> - bring up the array
-> - run "check"
->=20
-> It comes up with mismatch_cnt=3D0 after boot, and some huge number wh=
-ile
-> / after the check.
+I think this helps you exactly zero.
 
-If check is non-zero following a repair, with one kernel version but no=
-t another, it's a software bug.
+> My current goal is to get access to all of my data. Or at least to as
+> much data as possible. Then I can replace HDDs and upgrade to RAID6.
+
+I'd stop wasting time with badblocks. Either the array will assemble, or it won't. Maybe someone will respond whether assuming clean is a good idea to avoid any writes to the disks, which has a decent chance of causing sdg to be bounced again, mount the file system read only; and extract what you can.
+
+It seems to me data extraction the priority. Once you have the backup, you can test your individual array components, not now.
 
 Chris Murphy
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
