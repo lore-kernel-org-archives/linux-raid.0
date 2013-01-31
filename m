@@ -1,66 +1,157 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: Huge values of mismatch_cnt on RAID 6 arrays under Fedora 18
-Date: Thu, 31 Jan 2013 19:36:06 +0100
-Message-ID: <20130131183606.E4C23200276@gemini.denx.de>
-References: <20130127192656.634892005AD@gemini.denx.de> <20130128173704.GA2329@lazy.lzy> <20130128190035.D943A294BAB@gemini.denx.de> <20130128191041.8E962200607@gemini.denx.de> <20130128192256.GB13803@lazy.lzy> <20130128201947.2B615200607@gemini.denx.de> <20130128204422.GA14115@lazy.lzy> <20130128231840.03C37203AD5@gemini.denx.de> <20130129175720.GB2396@lazy.lzy> <20130129184309.D65DD2A1846@gemini.denx.de> <20130129202433.GB7005@lazy.lzy> <20130131121220.F3CA220059E@gemini.denx.de> <3DB28596-B1D6-48A9-9520-4CF9D367E39D@colorremedies.com>
+From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Subject: Re: [PATCH v5] md: protect against crash upon fsync on ro array
+Date: Thu, 31 Jan 2013 20:35:22 +0100
+Message-ID: <510AC77A.2000702@profitbricks.com>
+References: <1358707492.24121.210.camel@deadeye.wl.decadent.org.uk>   <5102A01B.7000407@profitbricks.com>   <1359229480.2894.21.camel@deadeye.wl.decadent.org.uk>   <20130127163942.GA28572@infradead.org> <510653A3.9090403@profitbricks.com>   <51067164.4050301@profitbricks.com>  <1359438326.3367.41.camel@deadeye.wl.decadent.org.uk>  <5107B03A.9030109@profitbricks.com> <1359462593.2417.1.camel@mattotaupa>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/mixed;
+ boundary="------------020704080002050700090001"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <3DB28596-B1D6-48A9-9520-4CF9D367E39D@colorremedies.com>
+In-Reply-To: <1359462593.2417.1.camel@mattotaupa>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Ben Hutchings <ben@decadent.org.uk>, Christoph Hellwig <hch@infradead.org>, Paul Menzel <pm.debian@googlemail.com>, linux-raid@vger.kernel.org, 696650@bugs.debian.org
 List-Id: linux-raid.ids
 
-Dear Chris Murphy,
+This is a multi-part message in MIME format.
+--------------020704080002050700090001
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-In message <3DB28596-B1D6-48A9-9520-4CF9D367E39D@colorremedies.com> you wrote:
+Hi Neil,
+
+please apply this patch! It is correct, now.
+
+It applies to 3.2.y, 3.4.y, 3.7.y and latest 3.8-rc5. All these versions
+are affected by this bug.
+
+3.0.y and 2.6.34.y are also affected. Please also find the patches for
+these versions attached. I've tested them. They work.
+
+The strange thing is that 2.6.32.y is immune against this bug. So it
+must be a regression. The patch restores the same behavior as present in
+2.6.32: fsync receives success.
+
+I've tested against the following versions: 3.8-rc5, 3.7.5, 3.4.28,
+3.2.37, 3.0.61, 2.6.34.14 and 2.6.32.60.
+
+Cheers,
+Sebastian
+
+
+On 29.01.2013 13:29, Paul Menzel wrote:
+>> Any further objection?
 > 
-> > After running a "repair" on the array, both "check" and "raid6test"
-> > would not report any further issues.
-> 
-> Yes but this would be consistent with a derivative parity, written
-> to disk and then checked against an algorithm that expects derivative
-> parity. What happens if you go back to the old kernel before all the
-> problems were happening and you do a check? What happens if you go
-> back to a Fedora kernel you know exhibited the problem and you do a
-> check?
+> Small typo (occurs) in commit message.
 
-I cannot test the exact old kernel I was running before any more;
-Fedora has released an update in the meantime, and they do not keep
-older updates around, only the very latest one - which is the same
-version as causes the problems.  When using the (really old) kernel
-from the installation media, I see the same behaviour as with current
-mainline: I have to run a "repair", and then the array is, and
-remains, clean.
 
-With the current Fedora kernel, the first check will report errors
-which do not go away permanently, not even with a "repair".
+--------------020704080002050700090001
+Content-Type: text/plain; charset=UTF-8;
+ name="0001-md-protect-against-crash-upon-fsync-on-ro-array.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="0001-md-protect-against-crash-upon-fsync-on-ro-array.txt"
 
-> Question for Piergiorgio is if check and raid6test use the same, or
-> independent, code for checking parity?
+RnJvbSBhZGZhYzRkZjk5ZWRjMWE4M2RjZWQ5YzczMjQ2NDYzNGQzMzgxYTlmIE1vbiBTZXAg
+MTcgMDA6MDA6MDAgMjAwMQ0KRnJvbTogU2ViYXN0aWFuIFJpZW1lciA8c2ViYXN0aWFuLnJp
+ZW1lckBwcm9maXRicmlja3MuY29tPg0KRGF0ZTogRnJpLCAyNSBKYW4gMjAxMyAxMjo0Njo1
+OSArMDEwMA0KU3ViamVjdDogW1BBVENIIHY1XSBtZDogcHJvdGVjdCBhZ2FpbnN0IGNyYXNo
+IHVwb24gZnN5bmMgb24gcm8gYXJyYXkNCg0KSWYgYW4gZnN5bmMgb2NjdXJzIG9uIGEgcmVh
+ZC1vbmx5IGFycmF5LCB3ZSBuZWVkIHRvIHNlbmQgYQ0KY29tcGxldGlvbiBmb3IgdGhlIElP
+IGFuZCBtYXkgbm90IGluY3JlbWVudCB0aGUgYWN0aXZlIElPIGNvdW50Lg0KT3RoZXJ3aXNl
+LCB3ZSBoaXQgYSBidWcgdHJhY2UgYW5kIGNhbid0IHN0b3AgdGhlIE1EIGFycmF5IGFueW1v
+cmUuDQoNCkJ5IGFkdmljZSBvZiBDaHJpc3RvcGggSGVsbHdpZyB3ZSByZXR1cm4gc3VjY2Vz
+cyB1cG9uIGEgZmx1c2gNCnJlcXVlc3QgYnV0IHdlIHJldHVybiAtRVJPRlMgZm9yIG90aGVy
+IHdyaXRlcy4NCldlIGRldGVjdCBmbHVzaCByZXF1ZXN0cyBieSBjaGVja2luZyBpZiB0aGUg
+YmlvIGhhcyB6ZXJvIHNlY3RvcnMuDQoNCkNjOiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGlu
+ZnJhZGVhZC5vcmc+DQpDYzogQmVuIEh1dGNoaW5ncyA8YmVuQGRlY2FkZW50Lm9yZy51az4N
+CkNjOiBOZWlsQnJvd24gPG5laWxiQHN1c2UuZGU+DQpTaWduZWQtb2ZmLWJ5OiBTZWJhc3Rp
+YW4gUmllbWVyIDxzZWJhc3RpYW4ucmllbWVyQHByb2ZpdGJyaWNrcy5jb20+DQpSZXBvcnRl
+ZC1ieTogQmVuIEh1dGNoaW5ncyA8YmVuQGRlY2FkZW50Lm9yZy51az4NCkFja2VkLWJ5OiBQ
+YXVsIE1lbnplbCA8cGF1bGVwYW50ZXJAdXNlcnMuc291cmNlZm9yZ2UubmV0Pg0KLS0tDQog
+ZHJpdmVycy9tZC9tZC5jIHwgICAgNCArKysrDQogMSBmaWxlcyBjaGFuZ2VkLCA0IGluc2Vy
+dGlvbnMoKyksIDAgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL21k
+LmMgYi9kcml2ZXJzL21kL21kLmMNCmluZGV4IDNkYjNkMWIuLjFlNjM0YTYgMTAwNjQ0DQot
+LS0gYS9kcml2ZXJzL21kL21kLmMNCisrKyBiL2RyaXZlcnMvbWQvbWQuYw0KQEAgLTMwNyw2
+ICszMDcsMTAgQEAgc3RhdGljIHZvaWQgbWRfbWFrZV9yZXF1ZXN0KHN0cnVjdCByZXF1ZXN0
+X3F1ZXVlICpxLCBzdHJ1Y3QgYmlvICpiaW8pDQogCQliaW9faW9fZXJyb3IoYmlvKTsNCiAJ
+CXJldHVybjsNCiAJfQ0KKwlpZiAobWRkZXYtPnJvID09IDEgJiYgdW5saWtlbHkocncgPT0g
+V1JJVEUpKSB7DQorCQliaW9fZW5kaW8oYmlvLCBiaW9fc2VjdG9ycyhiaW8pID09IDAgPyAw
+IDogLUVST0ZTKTsNCisJCXJldHVybjsNCisJfQ0KIAlzbXBfcm1iKCk7IC8qIEVuc3VyZSBp
+bXBsaWNhdGlvbnMgb2YgICdhY3RpdmUnIGFyZSB2aXNpYmxlICovDQogCXJjdV9yZWFkX2xv
+Y2soKTsNCiAJaWYgKG1kZGV2LT5zdXNwZW5kZWQpIHsNCi0tIA0KMS43LjENCg==
+--------------020704080002050700090001
+Content-Type: text/plain; charset=UTF-8;
+ name="0002-md-protect-against-crash-upon-fsync-on-ro-array-3.0.y.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename*0="0002-md-protect-against-crash-upon-fsync-on-ro-array-3.0.y.t";
+ filename*1="xt"
 
-My impression is that they must use different code - raid6test takes
-much, much longer and causes a much higher CPU load than running
-"check".
+RnJvbSA1OGVjYzU0ZWYyZWExNjkyYjJhNjA4MTgzOTAxNzA4ZDNjYWQ1MTIwIE1vbiBTZXAg
+MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBTZWJhc3RpYW4gUmllbWVyIDxzZWJhc3RpYW4ucmll
+bWVyQHByb2ZpdGJyaWNrcy5jb20+CkRhdGU6IEZyaSwgMjUgSmFuIDIwMTMgMTI6NDY6NTkg
+KzAxMDAKU3ViamVjdDogW1BBVENIIDMuMC55XSBtZDogcHJvdGVjdCBhZ2FpbnN0IGNyYXNo
+IHVwb24gZnN5bmMgb24gcm8gYXJyYXkKUmVwbHktVG86IGxpbnV4LXJhaWQgPGxpbnV4LXJh
+aWRAdmdlci5rZXJuZWwub3JnPgoKSWYgYW4gZnN5bmMgb2NjdXJzIG9uIGEgcmVhZC1vbmx5
+IGFycmF5LCB3ZSBuZWVkIHRvIHNlbmQgYQpjb21wbGV0aW9uIGZvciB0aGUgSU8gYW5kIG1h
+eSBub3QgaW5jcmVtZW50IHRoZSBhY3RpdmUgSU8gY291bnQuCk90aGVyd2lzZSwgd2UgaGl0
+IGEgYnVnIHRyYWNlIGFuZCBjYW4ndCBzdG9wIHRoZSBNRCBhcnJheSBhbnltb3JlLgoKQnkg
+YWR2aWNlIG9mIENocmlzdG9waCBIZWxsd2lnIHdlIHJldHVybiBzdWNjZXNzIHVwb24gYSBm
+bHVzaApyZXF1ZXN0IGJ1dCB3ZSByZXR1cm4gLUVST0ZTIGZvciBvdGhlciB3cml0ZXMuCldl
+IGRldGVjdCBmbHVzaCByZXF1ZXN0cyBieSBjaGVja2luZyBpZiB0aGUgYmlvIGhhcyB6ZXJv
+IHNlY3RvcnMuCgpDYzogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBpbmZyYWRlYWQub3JnPgpD
+YzogQmVuIEh1dGNoaW5ncyA8YmVuQGRlY2FkZW50Lm9yZy51az4KQ2M6IE5laWxCcm93biA8
+bmVpbGJAc3VzZS5kZT4KU2lnbmVkLW9mZi1ieTogU2ViYXN0aWFuIFJpZW1lciA8c2ViYXN0
+aWFuLnJpZW1lckBwcm9maXRicmlja3MuY29tPgpSZXBvcnRlZC1ieTogQmVuIEh1dGNoaW5n
+cyA8YmVuQGRlY2FkZW50Lm9yZy51az4KQWNrZWQtYnk6IFBhdWwgTWVuemVsIDxwYXVsZXBh
+bnRlckB1c2Vycy5zb3VyY2Vmb3JnZS5uZXQ+Ci0tLQogZHJpdmVycy9tZC9tZC5jIHwgICAg
+NCArKysrCiAxIGZpbGVzIGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMo
+LSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL21kLmMgYi9kcml2ZXJzL21kL21kLmMKaW5k
+ZXggOTgyNjJlNS4uNGVmNzVlOSAxMDA2NDQKLS0tIGEvZHJpdmVycy9tZC9tZC5jCisrKyBi
+L2RyaXZlcnMvbWQvbWQuYwpAQCAtMjk5LDYgKzI5OSwxMCBAQCBzdGF0aWMgaW50IG1kX21h
+a2VfcmVxdWVzdChzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSwgc3RydWN0IGJpbyAqYmlvKQog
+CQliaW9faW9fZXJyb3IoYmlvKTsKIAkJcmV0dXJuIDA7CiAJfQorCWlmIChtZGRldi0+cm8g
+PT0gMSAmJiB1bmxpa2VseShydyA9PSBXUklURSkpIHsKKwkJYmlvX2VuZGlvKGJpbywgYmlv
+X3NlY3RvcnMoYmlvKSA9PSAwID8gMCA6IC1FUk9GUyk7CisJCXJldHVybiAwOworCX0KIAlz
+bXBfcm1iKCk7IC8qIEVuc3VyZSBpbXBsaWNhdGlvbnMgb2YgICdhY3RpdmUnIGFyZSB2aXNp
+YmxlICovCiAJcmN1X3JlYWRfbG9jaygpOwogCWlmIChtZGRldi0+c3VzcGVuZGVkKSB7Ci0t
+IAoxLjcuMQoK
+--------------020704080002050700090001
+Content-Type: text/plain; charset=UTF-8;
+ name="0003-md-protect-against-crash-upon-fsync-on-ro-array-2.6.34.y.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename*0="0003-md-protect-against-crash-upon-fsync-on-ro-array-2.6.34.";
+ filename*1="y.txt"
 
-> I think a bug needs to be filed with the information you have thus far.
-
-I did this, actually in parallel with reporting the issues here:
-https://bugzilla.redhat.com/show_bug.cgi?id=904831
-
-I think the relevant Fedora people are on Cc:, but there was zero
-response so far; seems potential data loss is of no concern to the
-Fedora project :-(
-
-Best regards,
-
-Wolfgang Denk
-
--- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-You don't have to worry about me. I might have been born yesterday...
-but I stayed up all night.
+RnJvbSA1OGVjYzU0ZWYyZWExNjkyYjJhNjA4MTgzOTAxNzA4ZDNjYWQ1MTIwIE1vbiBTZXAg
+MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBTZWJhc3RpYW4gUmllbWVyIDxzZWJhc3RpYW4ucmll
+bWVyQHByb2ZpdGJyaWNrcy5jb20+CkRhdGU6IEZyaSwgMjUgSmFuIDIwMTMgMTI6NDY6NTkg
+KzAxMDAKU3ViamVjdDogW1BBVENIIDIuNi4zNC55XSBtZDogcHJvdGVjdCBhZ2FpbnN0IGNy
+YXNoIHVwb24gZnN5bmMgb24gcm8gYXJyYXkKUmVwbHktVG86IGxpbnV4LXJhaWQgPGxpbnV4
+LXJhaWRAdmdlci5rZXJuZWwub3JnPgoKSWYgYW4gZnN5bmMgb2NjdXJzIG9uIGEgcmVhZC1v
+bmx5IGFycmF5LCB3ZSBuZWVkIHRvIHNlbmQgYQpjb21wbGV0aW9uIGZvciB0aGUgSU8gYW5k
+IG1heSBub3QgaW5jcmVtZW50IHRoZSBhY3RpdmUgSU8gY291bnQuCk90aGVyd2lzZSwgd2Ug
+aGl0IGEgYnVnIHRyYWNlIGFuZCBjYW4ndCBzdG9wIHRoZSBNRCBhcnJheSBhbnltb3JlLgoK
+QnkgYWR2aWNlIG9mIENocmlzdG9waCBIZWxsd2lnIHdlIHJldHVybiBzdWNjZXNzIHVwb24g
+YSBmbHVzaApyZXF1ZXN0IGJ1dCB3ZSByZXR1cm4gLUVST0ZTIGZvciBvdGhlciB3cml0ZXMu
+CldlIGRldGVjdCBmbHVzaCByZXF1ZXN0cyBieSBjaGVja2luZyBpZiB0aGUgYmlvIGhhcyB6
+ZXJvIHNlY3RvcnMuCgpDYzogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBpbmZyYWRlYWQub3Jn
+PgpDYzogQmVuIEh1dGNoaW5ncyA8YmVuQGRlY2FkZW50Lm9yZy51az4KQ2M6IE5laWxCcm93
+biA8bmVpbGJAc3VzZS5kZT4KU2lnbmVkLW9mZi1ieTogU2ViYXN0aWFuIFJpZW1lciA8c2Vi
+YXN0aWFuLnJpZW1lckBwcm9maXRicmlja3MuY29tPgpSZXBvcnRlZC1ieTogQmVuIEh1dGNo
+aW5ncyA8YmVuQGRlY2FkZW50Lm9yZy51az4KQWNrZWQtYnk6IFBhdWwgTWVuemVsIDxwYXVs
+ZXBhbnRlckB1c2Vycy5zb3VyY2Vmb3JnZS5uZXQ+Ci0tLQogZHJpdmVycy9tZC9tZC5jIHwg
+ICAgNCArKysrCiAxIGZpbGVzIGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlv
+bnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL21kLmMgYi9kcml2ZXJzL21kL21kLmMK
+aW5kZXggZDhlNWFkYy4uYmExYzBiZSAxMDA2NDQKLS0tIGEvZHJpdmVycy9tZC9tZC5jCisr
+KyBiL2RyaXZlcnMvbWQvbWQuYwpAQCAtMjIxLDYgKzIyMSwxMCBAQCBzdGF0aWMgaW50IG1k
+X21ha2VfcmVxdWVzdChzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSwgc3RydWN0IGJpbyAqYmlv
+KQogCQliaW9faW9fZXJyb3IoYmlvKTsKIAkJcmV0dXJuIDA7CiAJfQorCWlmIChtZGRldi0+
+cm8gPT0gMSAmJiB1bmxpa2VseShiaW9fZGF0YV9kaXIoYmlvKSA9PSBXUklURSkpIHsKKwkJ
+YmlvX2VuZGlvKGJpbywgYmlvX3NlY3RvcnMoYmlvKSA9PSAwID8gMCA6IC1FUk9GUyk7CisJ
+CXJldHVybiAwOworCX0KIAlyY3VfcmVhZF9sb2NrKCk7CiAJaWYgKG1kZGV2LT5zdXNwZW5k
+ZWQgfHwgbWRkZXYtPmJhcnJpZXIpIHsKIAkJREVGSU5FX1dBSVQoX193YWl0KTsKCi0tIAox
+LjcuMQ==
+--------------020704080002050700090001--
