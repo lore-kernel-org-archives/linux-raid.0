@@ -1,91 +1,210 @@
-From: Hans-Peter Jansen <hpj@urpla.net>
-Subject: Re: Persistent failures with simple md setup
-Date: Wed, 30 Jan 2013 18:12:46 +0100
-Message-ID: <2432282.A1IPyQ9pEc@xrated>
-References: <1565063.1kpR7lz4Ph@xrated> <5108E2CC.4010806@profitbricks.com>
+From: Christoph Nelles <evilazrael@evilazrael.de>
+Subject: RAID5 with 2 drive failure at the same time
+Date: Thu, 31 Jan 2013 11:42:54 +0100
+Message-ID: <510A4AAE.6000009@evilazrael.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: multipart/mixed;
+ boundary="------------040905050201020706010905"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5108E2CC.4010806@profitbricks.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sebastian Riemer <sebastian.riemer@profitbricks.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Sebastian,
+This is a multi-part message in MIME format.
+--------------040905050201020706010905
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 
-thanks for your valuable response.
+Hi,
 
-Am Mittwoch, 30. Januar 2013, 10:07:24 schrieb Sebastian Riemer:
-> On 29.01.2013 23:14, Hans-Peter Jansen wrote:
-> [...]
-> 
-> > ~# cat /proc/mdstat
-> > Personalities : [raid1] [raid0] [raid10] [raid6] [raid5] [raid4]
-> > md3 : active raid1 sda4[0]
-> > 
-> >       869702736 blocks super 1.0 [2/1] [U_]
-> >       bitmap: 57/415 pages [228KB], 1024KB chunk
-> > 
-> > md0 : active raid1 sda1[0]
-> > 
-> >       96376 blocks super 1.0 [2/1] [U_]
-> >       bitmap: 1/6 pages [4KB], 8KB chunk
-> > 
-> > md1 : active (auto-read-only) raid1 sdb2[1] sda2[0]
-> > 
-> >       2096468 blocks super 1.0 [2/2] [UU]
-> >       bitmap: 0/8 pages [0KB], 128KB chunk
-> > 
-> > md124 : active raid1 sdb3[1] sda3[0]
-> > 
-> >       104856180 blocks super 1.0 [2/2] [UU]
-> >       bitmap: 8/200 pages [32KB], 256KB chunk
-> > 
-> > This looks like some kind of race during device detection.
-> > The full boot sequence log leading to this mess is attached.
-> 
-> [...]
-> 
-> > Could some kind soul tell me, what's going on here?
-> 
-> Funny, we've observed similar strange behavior when putting MD devices
-> on iSCSI/SRP exports. We connect to the SCSI target and udev does lots
-> of crap assembling only 1/2 or even 0/2 devices. This is why we disable
-> all udev rules related to MD and do it by custom scripts.
+i hope somebody on this ML can help me.
 
-Oh, I see. Forgot to mention, I do not enjoy fiddling in mkinitrd code ;-)  
-(been there, had to do that for my aufs2 based diskless setups)
+My RAID5 died last night during a rebuild when two drives failed (looks
+like a sata_mv problem). The RAID5 was rebuilding because one of the two
+drives failed before and after running badblocks for 2 days, i re-added
+it to the RAID.
 
-> In mdadm 3.2.6 a possible fix has been introduced.
-> 
-> Check: git log mdadm-3.2.5..mdadm-3.2.6
-> 
-> 
-> commit 090900c3d2eb5b3aef5251a21228483c32246cc7
-> Author: Harald Hoyer <harald@redhat.com>
-> Date:   Mon Aug 13 08:00:21 2012 +1000
-> 
->     udev-rules: prevent systemd from mount devices before they are ready.
-> 
-> commit b7e05d2373313dd8d0cb687479ad58a88f37d29f
-> Author: NeilBrown <neilb@suse.de>
-> Date:   Thu May 24 11:49:49 2012 +1000
-> 
->     udev-rules: prevent systemd from mount devices before they are ready.
-> 
-> 
-> Does mdadm 3.2.6 solve this?
+The used drives are from /dev/sdb1 to /dev/sdj1 (9 Drives, RAID5), the
+failed drives are sdj1 and sdg1
+The current situation is that I cannot start the RAID. I wanted to try
+readding on of the the drives, so removed it beforehand, making it a
+spare :\ The layout is as follows:
 
-Hmm, according to mdadm from openSUSE:12.1:Update, the relevant fixes should 
-be in place. It might be an unfortunate combination of this issue and the 
-asynchronously applied updates, interfered by the *switching* behavior. 
+    Number   Major   Minor   RaidDevice State
+       0       8       33        0      active sync   /dev/sdc1
+       1       0        0        1      removed
+       2       8      113        2      active sync   /dev/sdh1
+       3       8       49        3      active sync   /dev/sdd1
+       4       8      129        4      active sync   /dev/sdi1
+       5       0        0        5      removed
+       6       8       17        6      active sync   /dev/sdb1
+       7       8       81        7      active sync   /dev/sdf1
+       8       8       65        8      active sync   /dev/sde1
 
-I started with regenerating the initrds now, and a first reboot succeeded so 
-far. Good.
+Re-adding fails with a simple message:
+# mdadm -v /dev/md0 --re-add /dev/sdg1
+mdadm: --re-add for /dev/sdg1 to /dev/md0 is not possible
 
-Will ask my friend to reboot the system a dozen times tonight.
+I tried re-adding both failed drives at the same, with the same result.
 
-Thanks,
-Pete
+When examining the drives, sdj1 has the information from before the crash:
+   Device Role : Active device 5
+   Array State : AAAAAAAAA ('A' == active, '.' == missing)
+
+sdg1 looks like this
+   Device Role : spare
+   Array State : A.AAA.AAA ('A' == active, '.' == missing)
+
+The other look like
+   Device Role : Active device 6
+   Array State : A.AAA.AAA ('A' == active, '.' == missing)
+
+So looks that my repair tries made sdg1 a spare :\ I attached the full
+output to this mail.
+
+Is there anyway to restart the RAID from the information contained in
+drive sdj1? Perhaps via Incremental Build starting from one drive? Could
+that work? If the RAID wouldn't have been rebuilding before the crash, i
+would just recreate it with --assume-clean.
+
+Thanks in advance for any help
+
+Regards
+
+Christoph Nelles
+-- 
+Christoph Nelles
+
+E-Mail    : evilazrael@evilazrael.de
+Jabber    : eazrael@evilazrael.net      ICQ       : 78819723
+
+PGP-Key   : ID 0x424FB55B on subkeys.pgp.net
+            or http://evilazrael.net/pgp.txt
+
+
+--------------040905050201020706010905
+Content-Type: text/plain;
+ name="mdadm_examine_sdg1.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="mdadm_examine_sdg1.txt"
+
+# mdadm --examine /dev/sdg1
+/dev/sdg1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 6b21b3ed:d39d5a54:d4939113:77851cb6
+           Name : router:0  (local to host router)
+  Creation Time : Fri Apr 27 20:25:04 2012
+     Raid Level : raid5
+   Raid Devices : 9
+
+ Avail Dev Size : 5860529039 (2794.52 GiB 3000.59 GB)
+     Array Size : 46884229120 (22356.14 GiB 24004.73 GB)
+  Used Dev Size : 5860528640 (2794.52 GiB 3000.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : a1b16284:321fcdd0:93993ff5:832eee3a
+
+    Update Time : Thu Jan 31 00:50:44 2013
+       Checksum : 2391e873 - correct
+         Events : 27697
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : spare
+   Array State : A.AAA.AAA ('A' == active, '.' == missing)
+
+--------------040905050201020706010905
+Content-Type: text/plain;
+ name="mdadm_examine_sdj1.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="mdadm_examine_sdj1.txt"
+
+mdadm --examine /dev/sdj1
+/dev/sdj1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 6b21b3ed:d39d5a54:d4939113:77851cb6
+           Name : router:0  (local to host router)
+  Creation Time : Fri Apr 27 20:25:04 2012
+     Raid Level : raid5
+   Raid Devices : 9
+
+ Avail Dev Size : 5860529039 (2794.52 GiB 3000.59 GB)
+     Array Size : 46884229120 (22356.14 GiB 24004.73 GB)
+  Used Dev Size : 5860528640 (2794.52 GiB 3000.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 7023df83:d890ce04:fc28652e:094adffe
+
+    Update Time : Thu Jan 31 00:24:56 2013
+       Checksum : 542f70be - correct
+         Events : 27691
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 5
+   Array State : AAAAAAAAA ('A' == active, '.' == missing)
+
+--------------040905050201020706010905
+Content-Type: text/plain;
+ name="mdadm_detail.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="mdadm_detail.txt"
+
+IG1kYWRtIC0tZGV0YWlsIC9kZXYvbWQwDQovZGV2L21kMDoNCiAgICAgICAgVmVyc2lvbiA6
+IDEuMg0KICBDcmVhdGlvbiBUaW1lIDogRnJpIEFwciAyNyAyMDoyNTowNCAyMDEyDQogICAg
+IFJhaWQgTGV2ZWwgOiByYWlkNQ0KICBVc2VkIERldiBTaXplIDogLTENCiAgIFJhaWQgRGV2
+aWNlcyA6IDkNCiAgVG90YWwgRGV2aWNlcyA6IDcNCiAgICBQZXJzaXN0ZW5jZSA6IFN1cGVy
+YmxvY2sgaXMgcGVyc2lzdGVudA0KDQogICAgVXBkYXRlIFRpbWUgOiBUaHUgSmFuIDMxIDEw
+OjM2OjI4IDIwMTMNCiAgICAgICAgICBTdGF0ZSA6IGFjdGl2ZSwgRkFJTEVELCBOb3QgU3Rh
+cnRlZA0KIEFjdGl2ZSBEZXZpY2VzIDogNw0KV29ya2luZyBEZXZpY2VzIDogNw0KIEZhaWxl
+ZCBEZXZpY2VzIDogMA0KICBTcGFyZSBEZXZpY2VzIDogMA0KDQogICAgICAgICBMYXlvdXQg
+OiBsZWZ0LXN5bW1ldHJpYw0KICAgICBDaHVuayBTaXplIDogNjRLDQoNCiAgICAgICAgICAg
+TmFtZSA6IHJvdXRlcjowICAobG9jYWwgdG8gaG9zdCByb3V0ZXIpDQogICAgICAgICAgIFVV
+SUQgOiA2YjIxYjNlZDpkMzlkNWE1NDpkNDkzOTExMzo3Nzg1MWNiNg0KICAgICAgICAgRXZl
+bnRzIDogMjc2OTkNCg0KICAgIE51bWJlciAgIE1ham9yICAgTWlub3IgICBSYWlkRGV2aWNl
+IFN0YXRlDQogICAgICAgMCAgICAgICA4ICAgICAgIDMzICAgICAgICAwICAgICAgYWN0aXZl
+IHN5bmMgICAvZGV2L3NkYzENCiAgICAgICAxICAgICAgIDAgICAgICAgIDAgICAgICAgIDEg
+ICAgICByZW1vdmVkDQogICAgICAgMiAgICAgICA4ICAgICAgMTEzICAgICAgICAyICAgICAg
+YWN0aXZlIHN5bmMgICAvZGV2L3NkaDENCiAgICAgICAzICAgICAgIDggICAgICAgNDkgICAg
+ICAgIDMgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RkMQ0KICAgICAgIDQgICAgICAgOCAg
+ICAgIDEyOSAgICAgICAgNCAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGkxDQogICAgICAg
+NSAgICAgICAwICAgICAgICAwICAgICAgICA1ICAgICAgcmVtb3ZlZA0KICAgICAgIDYgICAg
+ICAgOCAgICAgICAxNyAgICAgICAgNiAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGIxDQog
+ICAgICAgNyAgICAgICA4ICAgICAgIDgxICAgICAgICA3ICAgICAgYWN0aXZlIHN5bmMgICAv
+ZGV2L3NkZjENCiAgICAgICA4ICAgICAgIDggICAgICAgNjUgICAgICAgIDggICAgICBhY3Rp
+dmUgc3luYyAgIC9kZXYvc2RlMQ==
+--------------040905050201020706010905
+Content-Type: text/plain;
+ name="mdadm_examine_sdb1.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="mdadm_examine_sdb1.txt"
+
+L2Rldi9zZGIxOg0KICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMNCiAgICAgICAgVmVyc2lv
+biA6IDEuMg0KICAgIEZlYXR1cmUgTWFwIDogMHgwDQogICAgIEFycmF5IFVVSUQgOiA2YjIx
+YjNlZDpkMzlkNWE1NDpkNDkzOTExMzo3Nzg1MWNiNg0KICAgICAgICAgICBOYW1lIDogcm91
+dGVyOjAgIChsb2NhbCB0byBob3N0IHJvdXRlcikNCiAgQ3JlYXRpb24gVGltZSA6IEZyaSBB
+cHIgMjcgMjA6MjU6MDQgMjAxMg0KICAgICBSYWlkIExldmVsIDogcmFpZDUNCiAgIFJhaWQg
+RGV2aWNlcyA6IDkNCg0KIEF2YWlsIERldiBTaXplIDogNTg2MDUyOTAzOSAoMjc5NC41MiBH
+aUIgMzAwMC41OSBHQikNCiAgICAgQXJyYXkgU2l6ZSA6IDQ2ODg0MjI5MTIwICgyMjM1Ni4x
+NCBHaUIgMjQwMDQuNzMgR0IpDQogIFVzZWQgRGV2IFNpemUgOiA1ODYwNTI4NjQwICgyNzk0
+LjUyIEdpQiAzMDAwLjU5IEdCKQ0KICAgIERhdGEgT2Zmc2V0IDogMjA0OCBzZWN0b3JzDQog
+ICBTdXBlciBPZmZzZXQgOiA4IHNlY3RvcnMNCiAgICAgICAgICBTdGF0ZSA6IGFjdGl2ZQ0K
+ICAgIERldmljZSBVVUlEIDogMjljNjI3NzY6ZTljNThjZTY6MWM2ZTlhYjE6MDQ2YWM0MTEN
+Cg0KICAgIFVwZGF0ZSBUaW1lIDogVGh1IEphbiAzMSAxMDozNjoyOCAyMDEzDQogICAgICAg
+Q2hlY2tzdW0gOiBiZTQ3M2QwMiAtIGNvcnJlY3QNCiAgICAgICAgIEV2ZW50cyA6IDI3Njk5
+DQoNCiAgICAgICAgIExheW91dCA6IGxlZnQtc3ltbWV0cmljDQogICAgIENodW5rIFNpemUg
+OiA2NEsNCg0KICAgRGV2aWNlIFJvbGUgOiBBY3RpdmUgZGV2aWNlIDYNCiAgIEFycmF5IFN0
+YXRlIDogQS5BQUEuQUFBICgnQScgPT0gYWN0aXZlLCAnLicgPT0gbWlzc2luZyk=
+--------------040905050201020706010905--
