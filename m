@@ -1,28 +1,33 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: RAID5 with 2 drive failure at the same time
-Date: Thu, 31 Jan 2013 15:48:42 -0700
-Message-ID: <BC51013D-AF5E-4934-9BE4-435EBAD69B30@colorremedies.com>
-References: <510A4AAE.6000009@evilazrael.de> <20130131113820.GA20536@cthulhu.home.robinhill.me.uk> <510A6E54.5050001@evilazrael.de> <CAF3D534-D907-4A88-AFAF-EA9B97C1D8BF@colorremedies.com> <20130131221007.GA1447@cthulhu.home.robinhill.me.uk> <88758108-9333-4224-9006-8E44E717AB29@colorremedies.com>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: bobzer <bobzer@gmail.com>
+Subject: Re: migrate raid 5 to new server
+Date: Thu, 31 Jan 2013 18:44:23 -0500
+Message-ID: <CADzS=aqCQdqp66fLKz9Bn=JaYgU8e9QoWXC-WEaMhmRb8=XT4Q@mail.gmail.com>
+References: <CADzS=aqSvXZfVDA18u=kV2cTHiWSb6CraFxv+vNO7LzBsfQoPg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <88758108-9333-4224-9006-8E44E717AB29@colorremedies.com>
+In-Reply-To: <CADzS=aqSvXZfVDA18u=kV2cTHiWSb6CraFxv+vNO7LzBsfQoPg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robin Hill <robin@robinhill.me.uk>
-Cc: Christoph Nelles <evilazrael@evilazrael.de>, linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi,
+Anyone can help me ?
+Please :-)
 
-On Jan 31, 2013, at 3:40 PM, Chris Murphy <lists@colorremedies.com> wrote:
-> 
-> So the disk to possibly dd to another is the one with the write error, sdg1. But only if the idea is to not use --assume-clean. That way a reassemble can rebuild, and not encounter another write error on that drive.
+regards
+Mathieu
 
-I meant resync.
-
-But isn't a resync a state where md assumes parity is dirty and must be recreated? If so, what happens when sdj1 encounters UREs? If there's untrusted parity, does md just use what it has, or does it stop the array?
-
-
-
-Chris Murphy
-
+On Sun, Jan 27, 2013 at 8:32 PM, bobzer <bobzer@gmail.com> wrote:
+>
+> Hi
+> I need to move my raid 5 of 3 disk to a new server
+> The question is i have the bad block enabled  and  i'm running the
+> devel-3.3 version of mdadm
+> Which version of mdadm is the best for me ?
+> Do i need to use the same ? Can i upgrade?
+>
+> Do i have something special to do to migrate?
+>
+> Thanks
+> Mathieu
