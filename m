@@ -1,55 +1,58 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Raid 5 to 6 migration
-Date: Fri, 01 Feb 2013 13:22:50 -0500
-Message-ID: <510C07FA.4090405@turmel.org>
-References: <BLU0-SMTP433B0BCF64D448CC81098D2C91C0@phx.gbl>,<510C0075.9010908@turmel.org> <COL114-W137DD8871889508BBF087BC91C0@phx.gbl>
+From: bobzer <bobzer@gmail.com>
+Subject: Re: migrate raid 5 to new server
+Date: Fri, 1 Feb 2013 13:41:12 -0500
+Message-ID: <CADzS=aruq=m_Zp1=+8h7br-JGtRU-CCkQb_9xGKXo4Joa54orQ@mail.gmail.com>
+References: <CADzS=aqSvXZfVDA18u=kV2cTHiWSb6CraFxv+vNO7LzBsfQoPg@mail.gmail.com>
+ <CADzS=aqCQdqp66fLKz9Bn=JaYgU8e9QoWXC-WEaMhmRb8=XT4Q@mail.gmail.com>
+ <05E9DB5A-FD22-48DB-ABBA-CBBA6EA62562@colorremedies.com> <CADzS=arm1SNze6s8a2aEn0UjXTPNTmAU4ftQ1kpTP13VtbL7sQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <COL114-W137DD8871889508BBF087BC91C0@phx.gbl>
+In-Reply-To: <CADzS=arm1SNze6s8a2aEn0UjXTPNTmAU4ftQ1kpTP13VtbL7sQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Dominique C." <dcouot@hotmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Dominique,
+ok thank you very much
 
-[Top-posting repaired.  Please don't]
-
-On 02/01/2013 01:19 PM, Dominique C. wrote:
-[trim /]
-
->>> I was wondering what would be the best way to convert a 6 hdd raid 5 to
->>> raid 6. Ideally without having to reformat everything and lose all the
->>> data in the process. I have backups of the data but I don't look forward
->>> reinstalling everything on that server.
->>
->> 1) Add a seventh drive to the system.
->>
->> You can do this on the run if you have hotplug-capable sata ports or sas
->> ports.
->>
->> 2) Add that drive to the array w/ "mdadm --add"
->> 3) Convert array to raid6 w/ "mdadm --grow --level=raid6"
->>
->> You can do 2 & 3 on the run.
->>
->> 4) Monitor /proc/mdstat to see when it finishes.
-
-> Hi Phil,
+On Fri, Feb 1, 2013 at 1:37 PM, bobzer <bobzer@gmail.com> wrote:
 >
-> Thanks for your answer, however I forgot to mention one thing: I used
-6 hdd out of 6 possible. No possibility to expand at this stage....
-> The data only uses part of the space available.
-> Any other ideas ?
-
-Shrinking is usually possible, but there are many more steps, depending
-on what is in the array.
-
-Please provide more detail.  The output of "lsdrv"[1] might be a good start.
-
-Phil
-
-[1] http://github.com/pturmel/lsdrv
-
+> ok thank you very much
+>
+>
+> On Fri, Feb 1, 2013 at 1:14 PM, Chris Murphy <lists@colorremedies.com>
+> wrote:
+>>
+>>
+>> On Jan 31, 2013, at 4:44 PM, bobzer <bobzer@gmail.com> wrote:
+>>
+>> > Hi,
+>> > Anyone can help me ?
+>> > Please :-)
+>> >
+>> > regards
+>> > Mathieu
+>> >
+>> > On Sun, Jan 27, 2013 at 8:32 PM, bobzer <bobzer@gmail.com> wrote:
+>> >>
+>> >> Hi
+>> >> I need to move my raid 5 of 3 disk to a new server
+>> >> The question is i have the bad block enabled  and  i'm running the
+>> >> devel-3.3 version of mdadm
+>> >> Which version of mdadm is the best for me ?
+>> >> Do i need to use the same ? Can i upgrade?
+>> >>
+>> >> Do i have something special to do to migrate?
+>>
+>> I think this is bleeding edge is why no one has answered. If you're on a
+>> dev version of mdadm with a feature not on older versions it seems you must
+>> stay with a recent version kernel and mdadm; or you need to build a new
+>> array with the versions you're want to use and migrate the data. *shrug*
+>>
+>> Chris Murphy--
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
