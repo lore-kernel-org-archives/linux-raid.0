@@ -1,150 +1,107 @@
-From: John Spencer <maillist-mdadm@barfooze.de>
-Subject: [PATCH] three compatibility patches for musl libc
-Date: Sat, 02 Feb 2013 17:53:28 +0100
-Message-ID: <510D4488.4050306@barfooze.de>
+From: tomas.hodek@volny.cz
+Subject: raid1 read balance with write mostly
+Date: Sat, 02 Feb 2013 18:38:49 +0100 (CET)
+Message-ID: <36edd03089332985af9a97eeaf719cd3@mail1.volny.cz>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------010207090906070505030905"
+	boundary="=_b068263a2d9324714003e0ea4a8dcbc0"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: tomas.hodek@volny.cz
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------010207090906070505030905
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+--=_b068263a2d9324714003e0ea4a8dcbc0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 
+Hi
 
---------------010207090906070505030905
-Content-Type: text/x-patch;
- name="0001-platform-intel-canonicalize_file_name-is-not-portabl.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename*0="0001-platform-intel-canonicalize_file_name-is-not-portabl.pa";
- filename*1="tch"
+I have started to test md raid1 with one ssd and one hdd devices on 3.7.1 kernel (it has trim/discard on raid1). This raid has enabled write behind option and HDD device has enabled write mostly option.
+Original idea of write mostly option was "Read requests will only be sent if there is no other option."
 
-From 23114b8c77982717cc3ce3d437321c7fb0b1c918 Mon Sep 17 00:00:00 2001
-From: John Spencer <maillist-mdadm@barfooze.de>
-Date: Sat, 2 Feb 2013 17:26:45 +0100
-Subject: [PATCH 1/3] platform-intel: canonicalize_file_name() is not portable
+My first simple test workload was a building latest stable kernel (3.7.1) using 16 threads.
+But i saw some reading from hdd irrespective of a write workload, I saw also more then 1000ms read await while ssd had await about 1ms.  (I only used iostat -x.)
 
-this is a GLIBC specific feature and should not be used.
+I wanted to know why. I searched in source codes and i found  read_balance function in raid1.c.
 
-according to its manpage:
-"The call canonicalize_file_name(path) is equivalent
-to the call realpath(path, NULL)."
+If I read well this code and understand it - it do:
 
-thus, we use realpath so it works everywhere.
-
-Signed-off-by: John Spencer <maillist-mdadm@barfooze.de>
----
- platform-intel.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/platform-intel.c b/platform-intel.c
-index 0dcf07c..d8d4942 100644
---- a/platform-intel.c
-+++ b/platform-intel.c
-@@ -116,7 +116,7 @@ struct sys_dev *find_driver_devices(const char *bus, const char *driver)
- 
- 		list->dev_id = (__u16) dev_id;
- 		list->type = type;
--		list->path = canonicalize_file_name(path);
-+		list->path = realpath(path, NULL);
- 		list->next = NULL;
- 		if ((list->pci_id = strrchr(list->path, '/')) != NULL)
- 			list->pci_id++;
-@@ -459,7 +459,7 @@ char *devt_to_devpath(dev_t dev)
- 	char device[46];
- 
- 	sprintf(device, "/sys/dev/block/%d:%d/device", major(dev), minor(dev));
--	return canonicalize_file_name(device);
-+	return realpath(device, NULL);
- }
- 
- char *diskfd_to_devpath(int fd)
--- 
-1.7.3.4
+If a device has "write mostly" option and if we still have not selected device for reading (and if is_badblock function is ended with true), code select this device directly. This direct selection may be a mistake because overwrite this direct selection is possible only in special cases - if other possible device (without write mostly option) is idle or a request is a part of sequential reads. Standard way read_balance function is searching the nearest and/or the least used device. Such device is using only if we have not a directly selected device (also from write mosty code path).
 
 
---------------010207090906070505030905
-Content-Type: text/x-patch;
- name="0002-mdadm.h-fix-ugly-glibc-specific-ifdeffery.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename*0="0002-mdadm.h-fix-ugly-glibc-specific-ifdeffery.patch"
+I thing all code sequence 
 
-From 9467d1dcef907addbd9ef4f0f9068766674fd587 Mon Sep 17 00:00:00 2001
-From: John Spencer <maillist-mdadm@barfooze.de>
-Date: Sat, 2 Feb 2013 17:37:55 +0100
-Subject: [PATCH 2/3] mdadm.h: fix ugly glibc specific ifdeffery
+best_disk = disk; 
+continue;
 
-the code that was exposed on anything else than dietlibc and klibc
-is entirely glibc specific and broke the build on musl libc.
+in main for loop is not best way and that setting 
 
-Signed-off-by: John Spencer <maillist-mdadm@barfooze.de>
----
- mdadm.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+best_padding_disk  = disk;
+best_dist_disk = disk;
 
-diff --git a/mdadm.h b/mdadm.h
-index f1352e3..addd423 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -25,9 +25,9 @@
- #define	_GNU_SOURCE
- #define _FILE_OFFSET_BITS 64
- #include	<unistd.h>
--#if !defined(__dietlibc__) && !defined(__KLIBC__)
-+#ifdef __GLIBC__
- extern __off64_t lseek64 __P ((int __fd, __off64_t __offset, int __whence));
--#else
-+#elif !defined(lseek64)
- # if defined(__NO_STAT64) || __WORDSIZE != 32
- # define lseek64 lseek
- # endif
--- 
-1.7.3.4
+is better because it give chance find better alternative. In other words - change direct selection to worst possible alternative. 
+But i am not sure in all cases.
 
 
---------------010207090906070505030905
-Content-Type: text/x-patch;
- name="0003-remove-Werror-from-Makefile.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="0003-remove-Werror-from-Makefile.patch"
+I  made 2 version of a small patch to do it which change direct selection to setting write mostly device only as most distant and most pending possible device. Safe version is safe and reliable for future changes, now version is minimal for current code (up to 3.7.5). 
 
-From eb55533b387c0805ac11134bab1404108851ef04 Mon Sep 17 00:00:00 2001
-From: John Spencer <maillist-mdadm@barfooze.de>
-Date: Sat, 2 Feb 2013 17:40:20 +0100
-Subject: [PATCH 3/3] remove -Werror from Makefile
+This patch work well for me. I can mark ssd as fail, remove from and add in raid under workload without any trouble or additional kernel log items.
 
-using -Werror breaks the build for any libc/compiler combination
-the author didnt test yet, so it is insane to use it by default.
+I attach my patches to email.
 
-fixes build on musl libc.
-
-Signed-off-by: John Spencer <maillist-mdadm@barfooze.de>
----
- Makefile |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/Makefile b/Makefile
-index b9787d6..0169824 100644
---- a/Makefile
-+++ b/Makefile
-@@ -42,7 +42,7 @@ KLIBC_GCC = gcc -nostdinc -iwithprefix include -I$(KLIBC)/klibc/include -I$(KLIB
- 
- CC = $(CROSS_COMPILE)gcc
- CXFLAGS = -ggdb
--CWFLAGS = -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
-+CWFLAGS = -Wall -Wstrict-prototypes -Wextra -Wno-unused-parameter
- ifdef WARN_UNUSED
- CWFLAGS += -Wp,-D_FORTIFY_SOURCE=2 -O
- endif
--- 
-1.7.3.4
+Best regards
+Tomas Hodek 
 
 
---------------010207090906070505030905--
+--=_b068263a2d9324714003e0ea4a8dcbc0
+Content-Type: text/x-patch
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="raid1-balance-write-mostly_safe.patch"
+
+ZGlmZiAtdXIgbGludXgtMy43LjEtb2xkL2RyaXZlcnMvbWQvcmFpZDEuYyBs
+aW51eC0zLjcuMS1uZXcvZHJpdmVycy9tZC9yYWlkMS5jCi0tLSBsaW51eC0z
+LjcuMS1vbGQvZHJpdmVycy9tZC9yYWlkMS5jCTIwMTItMTItMTcgMjA6MTQ6
+NTQuMDAwMDAwMDAwICswMTAwCisrKyBsaW51eC0zLjcuMS1uZXcvZHJpdmVy
+cy9tZC9yYWlkMS5jCTIwMTMtMDEtMDkgMjA6NTc6NDcuOTI0NjEwNTAxICsw
+MTAwCkBAIC01NDgsNyArNTQ4LDcgQEAKIAkJaWYgKHRlc3RfYml0KFdyaXRl
+TW9zdGx5LCAmcmRldi0+ZmxhZ3MpKSB7CiAJCQkvKiBEb24ndCBiYWxhbmNl
+IGFtb25nIHdyaXRlLW1vc3RseSwganVzdAogCQkJICogdXNlIHRoZSBmaXJz
+dCBhcyBhIGxhc3QgcmVzb3J0ICovCi0JCQlpZiAoYmVzdF9kaXNrIDwgMCkg
+eworCQkJaWYgKGJlc3RfZGlzdF9kaXNrIDwgMCB8fCBiZXN0X3BlbmRpbmdf
+ZGlzayA8IDApIHsKIAkJCQlpZiAoaXNfYmFkYmxvY2socmRldiwgdGhpc19z
+ZWN0b3IsIHNlY3RvcnMsCiAJCQkJCQkmZmlyc3RfYmFkLCAmYmFkX3NlY3Rv
+cnMpKSB7CiAJCQkJCWlmIChmaXJzdF9iYWQgPCB0aGlzX3NlY3RvcikKQEAg
+LTU1Nyw3ICs1NTcsMTAgQEAKIAkJCQkJYmVzdF9nb29kX3NlY3RvcnMgPSBm
+aXJzdF9iYWQgLSB0aGlzX3NlY3RvcjsKIAkJCQl9IGVsc2UKIAkJCQkJYmVz
+dF9nb29kX3NlY3RvcnMgPSBzZWN0b3JzOwotCQkJCWJlc3RfZGlzayA9IGRp
+c2s7CisJCQkJaWYgKGJlc3RfZGlzdF9kaXNrIDwgMCkKKwkJCQkJYmVzdF9k
+aXN0X2Rpc2sgPSBkaXNrOworCQkJCWlmIChiZXN0X3BlbmRpbmdfZGlzayA8
+IDApCisJCQkJCWJlc3RfcGVuZGluZ19kaXNrID0gZGlzazsKIAkJCX0KIAkJ
+CWNvbnRpbnVlOwogCQl9Cg==
+
+--=_b068263a2d9324714003e0ea4a8dcbc0
+Content-Type: text/x-patch
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="raid1-balance-write-mostly_now.patch"
+
+ZGlmZiAtdXIgbGludXgtMy43LjEtb2xkL2RyaXZlcnMvbWQvcmFpZDEuYyBs
+aW51eC0zLjcuMS1uZXcvZHJpdmVycy9tZC9yYWlkMS5jCi0tLSBsaW51eC0z
+LjcuMS1vbGQvZHJpdmVycy9tZC9yYWlkMS5jCTIwMTItMTItMTcgMjA6MTQ6
+NTQuMDAwMDAwMDAwICswMTAwCisrKyBsaW51eC0zLjcuMS1uZXcvZHJpdmVy
+cy9tZC9yYWlkMS5jCTIwMTMtMDEtMDkgMjA6NTc6NDcuOTI0NjEwNTAxICsw
+MTAwCkBAIC01NDgsNyArNTQ4LDcgQEAKIAkJaWYgKHRlc3RfYml0KFdyaXRl
+TW9zdGx5LCAmcmRldi0+ZmxhZ3MpKSB7CiAJCQkvKiBEb24ndCBiYWxhbmNl
+IGFtb25nIHdyaXRlLW1vc3RseSwganVzdAogCQkJICogdXNlIHRoZSBmaXJz
+dCBhcyBhIGxhc3QgcmVzb3J0ICovCi0JCQlpZiAoYmVzdF9kaXNrIDwgMCkg
+eworCQkJaWYgKGJlc3RfZGlzdF9kaXNrIDwgMCkgewogCQkJCWlmIChpc19i
+YWRibG9jayhyZGV2LCB0aGlzX3NlY3Rvciwgc2VjdG9ycywKIAkJCQkJCSZm
+aXJzdF9iYWQsICZiYWRfc2VjdG9ycykpIHsKIAkJCQkJaWYgKGZpcnN0X2Jh
+ZCA8IHRoaXNfc2VjdG9yKQpAQCAtNTU3LDcgKzU1Nyw4IEBACiAJCQkJCWJl
+c3RfZ29vZF9zZWN0b3JzID0gZmlyc3RfYmFkIC0gdGhpc19zZWN0b3I7CiAJ
+CQkJfSBlbHNlCiAJCQkJCWJlc3RfZ29vZF9zZWN0b3JzID0gc2VjdG9yczsK
+LQkJCQliZXN0X2Rpc2sgPSBkaXNrOworCQkJCWJlc3RfZGlzdF9kaXNrID0g
+ZGlzazsKKwkJCQliZXN0X3BlbmRpbmdfZGlzayA9IGRpc2s7CiAJCQl9CiAJ
+CQljb250aW51ZTsKIAkJfQo=
+
+--=_b068263a2d9324714003e0ea4a8dcbc0--
