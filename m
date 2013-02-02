@@ -1,107 +1,77 @@
-From: tomas.hodek@volny.cz
-Subject: raid1 read balance with write mostly
-Date: Sat, 02 Feb 2013 18:38:49 +0100 (CET)
-Message-ID: <36edd03089332985af9a97eeaf719cd3@mail1.volny.cz>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="=_b068263a2d9324714003e0ea4a8dcbc0"
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: recovering RAID5 from multiple disk failures
+Date: Sat, 2 Feb 2013 13:20:12 -0700
+Message-ID: <B7E27E99-9C89-4FC5-A12D-EFFAB5EDE5EB@colorremedies.com>
+References: <kegcd6$6dl$1@ger.gmane.org> <510BC173.7070002@turmel.org> <kej2t8$vk8$1@ger.gmane.org> <510D184E.4070106@turmel.org>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <510D184E.4070106@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: tomas.hodek@volny.cz
+To: Phil Turmel <philip@turmel.org>
+Cc: Michael Ritzert <ksciplot@gmx.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=_b068263a2d9324714003e0ea4a8dcbc0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 
-Hi
+On Feb 2, 2013, at 6:44 AM, Phil Turmel <philip@turmel.org> wrote:
+> 
+> All of your drives are in perfect condition (no relocations at all).
 
-I have started to test md raid1 with one ssd and one hdd devices on 3.7.1 kernel (it has trim/discard on raid1). This raid has enabled write behind option and HDD device has enabled write mostly option.
-Original idea of write mostly option was "Read requests will only be sent if there is no other option."
+One disk has Current_Pending_Sector raw value 30, and read error rate of 1121.
+Another disk has  Current_Pending_Sector raw value 2350, and read error rate of 29439.
 
-My first simple test workload was a building latest stable kernel (3.7.1) using 16 threads.
-But i saw some reading from hdd irrespective of a write workload, I saw also more then 1000ms read await while ssd had await about 1ms.  (I only used iostat -x.)
+I think for new drives that's unreasonable. 
 
-I wanted to know why. I searched in source codes and i found  read_balance function in raid1.c.
+It's probably also unreasonable to trust a new drive without testing it. But some of the drives were tested by someone or something, and the test itself was aborted due to read failures, even though the disk was not flagged by SMART as "failed" or failure in progress. Example:
 
-If I read well this code and understand it - it do:
+# 1  Short offline       Completed: read failure       40%       766         329136144
+# 2  Short offline       Completed: read failure       10%       745         717909280
+# 3  Short offline       Completed: read failure       70%       714         327191864
+# 4  Extended offline    Completed: read failure       90%       695         329136144
+# 5  Short offline       Completed: read failure       80%       695         724561192
 
-If a device has "write mostly" option and if we still have not selected device for reading (and if is_badblock function is ended with true), code select this device directly. This direct selection may be a mistake because overwrite this direct selection is possible only in special cases - if other possible device (without write mostly option) is idle or a request is a part of sequential reads. Standard way read_balance function is searching the nearest and/or the least used device. Such device is using only if we have not a directly selected device (also from write mosty code path).
+Almost 100 hours ago, at least, problems with this disk were identified. Maybe this is a NAS feature limitation problem, but if the NAS is going to purport to do SMART testing and then fail to inform the user that the tests themselves are failing due to bad sectors, that's negligence in my opinion. Sadly it's common.
 
+These NAS products should have an option to test the drives: secure erase them, do long extended tests, make sure they finish, make sure they don't have sector pending errors, report to the user sector pending errors and what to do about it.
 
-I thing all code sequence 
-
-best_disk = disk; 
-continue;
-
-in main for loop is not best way and that setting 
-
-best_padding_disk  = disk;
-best_dist_disk = disk;
-
-is better because it give chance find better alternative. In other words - change direct selection to worst possible alternative. 
-But i am not sure in all cases.
+Otherwise, it's a crap product. The knowledge is available, the tools are there, the product just isn't using them.
 
 
-I  made 2 version of a small patch to do it which change direct selection to setting write mostly device only as most distant and most pending possible device. Safe version is safe and reliable for future changes, now version is minimal for current code (up to 3.7.5). 
+> Based on the event counts in your superblocks, I'd say disk1 was kicked out long ago due to a normal URE (hundreds of hours ago) and the array has been degraded ever since.
 
-This patch work well for me. I can mark ssd as fail, remove from and add in raid under workload without any trouble or additional kernel log items.
+I'm confused because the OP reports disk 1 and disk 4 as sdc3, disk 2 and disk 3 as sdb3; yet the superblock info has different checksums for each. So based on Update Time field, I'm curious what other information leads you to believe disk1 was kicked hundreds of hours ago:
 
-I attach my patches to email.
+disk 1:
+Fri Jan  4 15:11:07 2013
+disk 2:
+Fri Jan  4 16:33:36 2013
+disk 3:
+Fri Jan  4 16:32:27 2013
+disk 4:
+Fri Jan  4 16:33:36 2013
 
-Best regards
-Tomas Hodek 
+Nevertheless, over an hour and a half is a long time if the file system were being updated at all. There'd definitely be data/parity mismatches for disk1.
+
+If disk 1 is assumed to be useless, meaning force assemble the array in degraded mode; a URE or linux SCSI layer time out is to be avoided or the array as a whole fails. Every sector is needed. So what do you think about raising the linux scsi layer time out to maybe 2 minutes, and leaving the remaining drive's SCT ERC alone so that they don't time out sooner, but rather go into whatever deep recovery they have to in the hopes those bad sectors can be read?
+
+echo 120 >/sys/block/sdX/device/timeout
+
+I'm seeing from the SMART data, even though there are disks that have bad sectors, there are NO hardware ECC recovered events. So I don't know that we know those sectors are totally lost causes yet. If they are, seems like the array is toast unless disk 1 can somehow be included.
 
 
---=_b068263a2d9324714003e0ea4a8dcbc0
-Content-Type: text/x-patch
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="raid1-balance-write-mostly_safe.patch"
 
-ZGlmZiAtdXIgbGludXgtMy43LjEtb2xkL2RyaXZlcnMvbWQvcmFpZDEuYyBs
-aW51eC0zLjcuMS1uZXcvZHJpdmVycy9tZC9yYWlkMS5jCi0tLSBsaW51eC0z
-LjcuMS1vbGQvZHJpdmVycy9tZC9yYWlkMS5jCTIwMTItMTItMTcgMjA6MTQ6
-NTQuMDAwMDAwMDAwICswMTAwCisrKyBsaW51eC0zLjcuMS1uZXcvZHJpdmVy
-cy9tZC9yYWlkMS5jCTIwMTMtMDEtMDkgMjA6NTc6NDcuOTI0NjEwNTAxICsw
-MTAwCkBAIC01NDgsNyArNTQ4LDcgQEAKIAkJaWYgKHRlc3RfYml0KFdyaXRl
-TW9zdGx5LCAmcmRldi0+ZmxhZ3MpKSB7CiAJCQkvKiBEb24ndCBiYWxhbmNl
-IGFtb25nIHdyaXRlLW1vc3RseSwganVzdAogCQkJICogdXNlIHRoZSBmaXJz
-dCBhcyBhIGxhc3QgcmVzb3J0ICovCi0JCQlpZiAoYmVzdF9kaXNrIDwgMCkg
-eworCQkJaWYgKGJlc3RfZGlzdF9kaXNrIDwgMCB8fCBiZXN0X3BlbmRpbmdf
-ZGlzayA8IDApIHsKIAkJCQlpZiAoaXNfYmFkYmxvY2socmRldiwgdGhpc19z
-ZWN0b3IsIHNlY3RvcnMsCiAJCQkJCQkmZmlyc3RfYmFkLCAmYmFkX3NlY3Rv
-cnMpKSB7CiAJCQkJCWlmIChmaXJzdF9iYWQgPCB0aGlzX3NlY3RvcikKQEAg
-LTU1Nyw3ICs1NTcsMTAgQEAKIAkJCQkJYmVzdF9nb29kX3NlY3RvcnMgPSBm
-aXJzdF9iYWQgLSB0aGlzX3NlY3RvcjsKIAkJCQl9IGVsc2UKIAkJCQkJYmVz
-dF9nb29kX3NlY3RvcnMgPSBzZWN0b3JzOwotCQkJCWJlc3RfZGlzayA9IGRp
-c2s7CisJCQkJaWYgKGJlc3RfZGlzdF9kaXNrIDwgMCkKKwkJCQkJYmVzdF9k
-aXN0X2Rpc2sgPSBkaXNrOworCQkJCWlmIChiZXN0X3BlbmRpbmdfZGlzayA8
-IDApCisJCQkJCWJlc3RfcGVuZGluZ19kaXNrID0gZGlzazsKIAkJCX0KIAkJ
-CWNvbnRpbnVlOwogCQl9Cg==
+> Meaning that all of your troubles are due to timeout mismatch, lack of
+> scrubbing (or timeout error on the first scrub), and lack of backups.
+> Aim your disappointment elsewhere.
 
---=_b068263a2d9324714003e0ea4a8dcbc0
-Content-Type: text/x-patch
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="raid1-balance-write-mostly_now.patch"
+I tentatively agree. This is a case of maybe not the best drives out of the box, a contributing factor certainly is that they have bad sectors on arrival. Not good. Combine that with a NAS that doesn't properly set the SCT ERC on any of the drives. Combine that with whoever or whatever did the offline tests but did not report the aborts due to read failures to the user.
 
-ZGlmZiAtdXIgbGludXgtMy43LjEtb2xkL2RyaXZlcnMvbWQvcmFpZDEuYyBs
-aW51eC0zLjcuMS1uZXcvZHJpdmVycy9tZC9yYWlkMS5jCi0tLSBsaW51eC0z
-LjcuMS1vbGQvZHJpdmVycy9tZC9yYWlkMS5jCTIwMTItMTItMTcgMjA6MTQ6
-NTQuMDAwMDAwMDAwICswMTAwCisrKyBsaW51eC0zLjcuMS1uZXcvZHJpdmVy
-cy9tZC9yYWlkMS5jCTIwMTMtMDEtMDkgMjA6NTc6NDcuOTI0NjEwNTAxICsw
-MTAwCkBAIC01NDgsNyArNTQ4LDcgQEAKIAkJaWYgKHRlc3RfYml0KFdyaXRl
-TW9zdGx5LCAmcmRldi0+ZmxhZ3MpKSB7CiAJCQkvKiBEb24ndCBiYWxhbmNl
-IGFtb25nIHdyaXRlLW1vc3RseSwganVzdAogCQkJICogdXNlIHRoZSBmaXJz
-dCBhcyBhIGxhc3QgcmVzb3J0ICovCi0JCQlpZiAoYmVzdF9kaXNrIDwgMCkg
-eworCQkJaWYgKGJlc3RfZGlzdF9kaXNrIDwgMCkgewogCQkJCWlmIChpc19i
-YWRibG9jayhyZGV2LCB0aGlzX3NlY3Rvciwgc2VjdG9ycywKIAkJCQkJCSZm
-aXJzdF9iYWQsICZiYWRfc2VjdG9ycykpIHsKIAkJCQkJaWYgKGZpcnN0X2Jh
-ZCA8IHRoaXNfc2VjdG9yKQpAQCAtNTU3LDcgKzU1Nyw4IEBACiAJCQkJCWJl
-c3RfZ29vZF9zZWN0b3JzID0gZmlyc3RfYmFkIC0gdGhpc19zZWN0b3I7CiAJ
-CQkJfSBlbHNlCiAJCQkJCWJlc3RfZ29vZF9zZWN0b3JzID0gc2VjdG9yczsK
-LQkJCQliZXN0X2Rpc2sgPSBkaXNrOworCQkJCWJlc3RfZGlzdF9kaXNrID0g
-ZGlzazsKKwkJCQliZXN0X3BlbmRpbmdfZGlzayA9IGRpc2s7CiAJCQl9CiAJ
-CQljb250aW51ZTsKIAkJfQo=
+It's a collision of multiple "not good" events.
 
---=_b068263a2d9324714003e0ea4a8dcbc0--
+For a normal, non-degraded array, I read man 4 md to mean either a check or repair would "fix" bad sectors resulting in UREs: i.e. whether a data chunk or parity chunk, the URE'd sector will be overwritten with correct data.
+
+But what about --assemble --force where --assume-clean isn't accepted? Does this involve "check" behavior, or is the ensuing resync assuming data chunks are valid and parity chunks invalid (subject to being overwritten with recomputed parity)? If so, then what happens with a data chunk URE? Can this resync repair that?
+
+Chris Murphy
+
