@@ -1,41 +1,69 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: RAID5 with 2 drive failure at the same time
-Date: Sat, 2 Feb 2013 13:34:04 -0700
-Message-ID: <1582E753-C658-47A6-B5CE-C259954FEBEC@colorremedies.com>
-References: <510A4AAE.6000009@evilazrael.de> <20130131113820.GA20536@cthulhu.home.robinhill.me.uk> <510A6E54.5050001@evilazrael.de> <CAF3D534-D907-4A88-AFAF-EA9B97C1D8BF@colorremedies.com> <20130131221007.GA1447@cthulhu.home.robinhill.me.uk> <88758108-9333-4224-9006-8E44E717AB29@colorremedies.com> <20130201133455.GA24375@cthulhu.home.robinhill.me.uk> <9F0E4AF3-4358-425F-8078-C068D5BB9487@colorremedies.com> <20130201195734.GA16573@cthulhu.home.robinhill.me.uk> <510C5E3F.8090807@evilazrael.de> <510C6AB6.8040900@turmel.org> <510D36D7.5050704@evilazrael.de>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: raid1 read balance with write mostly
+Date: Sat, 02 Feb 2013 15:52:12 -0600
+Message-ID: <510D8A8C.5090505@hardwarefreak.com>
+References: <36edd03089332985af9a97eeaf719cd3@mail1.volny.cz>
+Reply-To: stan@hardwarefreak.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <510D36D7.5050704@evilazrael.de>
+In-Reply-To: <36edd03089332985af9a97eeaf719cd3@mail1.volny.cz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Nelles <evilazrael@evilazrael.de>, Phil Turmel <philip@turmel.org>
+To: tomas.hodek@volny.cz
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-On Feb 2, 2013, at 8:55 AM, Christoph Nelles <evilazrael@evilazrael.de> wrote:
+On 2/2/2013 11:38 AM, tomas.hodek@volny.cz wrote:
+> Hi
 > 
-> Am 02.02.2013 02:24, schrieb Phil Turmel:
->> 
+> I have started to test md raid1 with one ssd and one hdd devices on 3.7.1 kernel (it has trim/discard on raid1). This raid has enabled write behind option and HDD device has enabled write mostly option.
+> Original idea of write mostly option was "Read requests will only be sent if there is no other option."
 > 
->> Your descriptions and kernel logs suggest that is /dev/sdg, but the
->> "mdadm --examine" reports show /dev/sdg was in the array longer than
->> /dev/sdj.  Please elaborate.
+> My first simple test workload was a building latest stable kernel (3.7.1) using 16 threads.
+> But i saw some reading from hdd irrespective of a write workload, I saw also more then 1000ms read await while ssd had await about 1ms.  (I only used iostat -x.)
 > 
-> Where do you read that?
+> I wanted to know why. I searched in source codes and i found  read_balance function in raid1.c.
+> 
+> If I read well this code and understand it - it do:
+> 
+> If a device has "write mostly" option and if we still have not selected device for reading (and if is_badblock function is ended with true), code select this device directly. This direct selection may be a mistake because overwrite this direct selection is possible only in special cases - if other possible device (without write mostly option) is idle or a request is a part of sequential reads. Standard way read_balance function is searching the nearest and/or the least used device. Such device is using only if we have not a directly selected device (also from write mosty code path).
+> 
+> 
+> I thing all code sequence 
+> 
+> best_disk = disk; 
+> continue;
+> 
+> in main for loop is not best way and that setting 
+> 
+> best_padding_disk  = disk;
+> best_dist_disk = disk;
+> 
+> is better because it give chance find better alternative. In other words - change direct selection to worst possible alternative. 
+> But i am not sure in all cases.
 
-error1.txt and error2.txt attachments. A write error for sdg occurred three days before sdj.
+Did you test with a RAID1 of two mechanical drives?  I can envision a
+scenario of say a 300GB WD Raptor 10K mirrored to a 300GB partition on a
+3TB 5K 'green' drive.  The contents being the root filesystem, mirrored
+strictly for safety.  This is probably the same scenario you have in
+mind.  But in this case the IOPS performance difference is only 2:1,
+whereas with the SSD it's more than 50:1.  So under heavy read load, in
+this case we'd probably want the slow 3TB drive to contribute to the
+workload.  With your patch, will it still do so?
 
-From error1.txt:
-
-Jan 28 00:23:36 router kernel: Write(16): 8a 00 00 00 00 01 36 b2 55 50 00 00 00 30 00 00
-Jan 28 00:23:36 router kernel: end_request: I/O error, dev sdg, sector 5212624208
-
-From error2.txt
-Jan 31 00:34:13 router kernel: Read(16): 88 00 00 00 00 01 21 45 d3 08 00 00 04 00 00 00
-Jan 31 00:34:13 router kernel: end_request: I/O error, dev sdj, sector 4853191432
+-- 
+Stan
 
 
-Chris Murphy
+> 
+> I  made 2 version of a small patch to do it which change direct selection to setting write mostly device only as most distant and most pending possible device. Safe version is safe and reliable for future changes, now version is minimal for current code (up to 3.7.5). 
+> 
+> This patch work well for me. I can mark ssd as fail, remove from and add in raid under workload without any trouble or additional kernel log items.
+> 
+> I attach my patches to email.
+> 
+> Best regards
+> Tomas Hodek 
+> 
 
