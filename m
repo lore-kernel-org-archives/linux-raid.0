@@ -1,203 +1,308 @@
-From: Dominique <dcouot@hotmail.com>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: Raid 5 to 6 migration
-Date: Mon, 4 Feb 2013 13:51:03 +0100
-Message-ID: <BLU0-SMTP45011D3540FEA010403D4ABC9010@phx.gbl>
-References: <BLU0-SMTP433B0BCF64D448CC81098D2C91C0@phx.gbl>,<510C0075.9010908@turmel.org> <COL114-W137DD8871889508BBF087BC91C0@phx.gbl> <510C07FA.4090405@turmel.org>
+Date: Mon, 04 Feb 2013 13:39:26 -0500
+Message-ID: <5110005E.103@turmel.org>
+References: <BLU0-SMTP433B0BCF64D448CC81098D2C91C0@phx.gbl>,<510C0075.9010908@turmel.org> <COL114-W137DD8871889508BBF087BC91C0@phx.gbl> <510C07FA.4090405@turmel.org> <BLU0-SMTP45011D3540FEA010403D4ABC9010@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <510C07FA.4090405@turmel.org>
+In-Reply-To: <BLU0-SMTP45011D3540FEA010403D4ABC9010@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
+To: Dominique <dcouot@hotmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-DQpPbiAwMS8wMi8yMDEzIDE5OjIyLCBQaGlsIFR1cm1lbCB3cm90ZToNCj4gSGkgRG9taW5p
-cXVlLA0KPg0KPiBbVG9wLXBvc3RpbmcgcmVwYWlyZWQuICBQbGVhc2UgZG9uJ3RdDQo+DQo+
-IE9uIDAyLzAxLzIwMTMgMDE6MTkgUE0sIERvbWluaXF1ZSBDLiB3cm90ZToNCj4gW3RyaW0g
-L10NCj4NCj4+Pj4gSSB3YXMgd29uZGVyaW5nIHdoYXQgd291bGQgYmUgdGhlIGJlc3Qgd2F5
-IHRvIGNvbnZlcnQgYSA2IGhkZCByYWlkIDUgdG8NCj4+Pj4gcmFpZCA2LiBJZGVhbGx5IHdp
-dGhvdXQgaGF2aW5nIHRvIHJlZm9ybWF0IGV2ZXJ5dGhpbmcgYW5kIGxvc2UgYWxsIHRoZQ0K
-Pj4+PiBkYXRhIGluIHRoZSBwcm9jZXNzLiBJIGhhdmUgYmFja3VwcyBvZiB0aGUgZGF0YSBi
-dXQgSSBkb24ndCBsb29rIGZvcndhcmQNCj4+Pj4gcmVpbnN0YWxsaW5nIGV2ZXJ5dGhpbmcg
-b24gdGhhdCBzZXJ2ZXIuDQo+Pj4gMSkgQWRkIGEgc2V2ZW50aCBkcml2ZSB0byB0aGUgc3lz
-dGVtLg0KPj4+DQo+Pj4gWW91IGNhbiBkbyB0aGlzIG9uIHRoZSBydW4gaWYgeW91IGhhdmUg
-aG90cGx1Zy1jYXBhYmxlIHNhdGEgcG9ydHMgb3Igc2FzDQo+Pj4gcG9ydHMuDQo+Pj4NCj4+
-PiAyKSBBZGQgdGhhdCBkcml2ZSB0byB0aGUgYXJyYXkgdy8gIm1kYWRtIC0tYWRkIg0KPj4+
-IDMpIENvbnZlcnQgYXJyYXkgdG8gcmFpZDYgdy8gIm1kYWRtIC0tZ3JvdyAtLWxldmVsPXJh
-aWQ2Ig0KPj4+DQo+Pj4gWW91IGNhbiBkbyAyICYgMyBvbiB0aGUgcnVuLg0KPj4+DQo+Pj4g
-NCkgTW9uaXRvciAvcHJvYy9tZHN0YXQgdG8gc2VlIHdoZW4gaXQgZmluaXNoZXMuDQo+PiBI
-aSBQaGlsLA0KPj4NCj4+IFRoYW5rcyBmb3IgeW91ciBhbnN3ZXIsIGhvd2V2ZXIgSSBmb3Jn
-b3QgdG8gbWVudGlvbiBvbmUgdGhpbmc6IEkgdXNlZA0KPiA2IGhkZCBvdXQgb2YgNiBwb3Nz
-aWJsZS4gTm8gcG9zc2liaWxpdHkgdG8gZXhwYW5kIGF0IHRoaXMgc3RhZ2UuLi4uDQo+PiBU
-aGUgZGF0YSBvbmx5IHVzZXMgcGFydCBvZiB0aGUgc3BhY2UgYXZhaWxhYmxlLg0KPj4gQW55
-IG90aGVyIGlkZWFzID8NCj4gU2hyaW5raW5nIGlzIHVzdWFsbHkgcG9zc2libGUsIGJ1dCB0
-aGVyZSBhcmUgbWFueSBtb3JlIHN0ZXBzLCBkZXBlbmRpbmcNCj4gb24gd2hhdCBpcyBpbiB0
-aGUgYXJyYXkuDQo+DQo+IFBsZWFzZSBwcm92aWRlIG1vcmUgZGV0YWlsLiAgVGhlIG91dHB1
-dCBvZiAibHNkcnYiWzFdIG1pZ2h0IGJlIGEgZ29vZCBzdGFydC4NCj4NCj4gUGhpbA0KPg0K
-PiBbMV0gaHR0cDovL2dpdGh1Yi5jb20vcHR1cm1lbC9sc2Rydg0KPg0KPg0KPg0KSGkgUGhp
-bCwNCg0KQmFjayBmcm9tIHdlZWtlbmQsIGFuZCBzdGlsbCB3aXRoIG15IHByb2JsZW0uIE91
-dHB1dCBvZiBsc2RydiBpcyBhcyBmb2xsb3c6DQoNClBDSSBbYWhjaV0gMDA6MWYuMiBTQVRB
-IGNvbnRyb2xsZXI6IEludGVsIENvcnBvcmF0aW9uIDYgU2VyaWVzL0MyMDAgDQpTZXJpZXMg
-Q2hpcHNldCBGYW1pbHkgU0FUQSBBSENJIENvbnRyb2xsZXIgKHJldiAwNSkNCsOi4oCdxZNz
-Y3NpIDA6MDowOjAgQVRBICAgICAgV0RDIFdEMzBFWlJYLTAwTSB7V0QtV0NBV1oxNjE4MTQ5
-fQ0Kw6LigJ3igJrDouKAneKAnXNkYSAyLjczdCBbODowXSBQYXJ0aXRpb25lZCAoZ3B0KQ0K
-w6LigJ3igJogw6LigJ3Fk3NkYTEgOTUuMzdtIFs4OjFdIHZmYXQgezg5RUYtMDBGNH0NCsOi
-4oCd4oCaIMOi4oCd4oCaw6LigJ3igJ1Nb3VudGVkIGFzIC9kZXYvc2RhMSBAIC9ib290L2Vm
-aQ0Kw6LigJ3igJogw6LigJ3Fk3NkYTIgMjkuODBnIFs4OjJdIE1EIHJhaWQxICgwLzYpICh3
-LyBzZGQyLHNkZTIsc2RjMixzZGIyLHNkZjIpIA0KaW5fc3luYyAnc29saXB5bTowJyB7ZDJl
-Njg4NWItMmQyNS02YzVhLTVmM2QtZTlhOWE1ZGFhNzM2fQ0Kw6LigJ3igJogw6LigJ3igJrD
-ouKAneKAnW1kMCAyOS44MGcgWzk6MF0gTUQgdjEuMiByYWlkMSAoNikgY2xlYW4gDQp7ZDJl
-Njg4NWI6MmQyNTZjNWE6NWYzZGU5YTk6YTVkYWE3MzZ9DQrDouKAneKAmiDDouKAneKAmiAg
-ICAgICAgICAgICAgICAgIHN3YXAgezhlNTY1ZGZjLWM1ZmEtNGM3Ni1hYmU5LWYzYTVhNmU4
-ZmNmZn0NCsOi4oCd4oCaIMOi4oCdxZNzZGEzIDE4Ni4yNmcgWzg6M10gTUQgcmFpZDEgKDAv
-NikgKHcvIHNkZjMsc2RkMyxzZGUzLHNkYzMsc2RiMykgDQppbl9zeW5jICdzb2xpcHltOjEn
-IHs4OWQ2OWM2Zi0yZWEyLTIzZjUtYWVjOC1iNjdjNDAzNDg4YWR9DQrDouKAneKAmiDDouKA
-neKAmsOi4oCd4oCdbWQxIDE4Ni4yNmcgWzk6MV0gTUQgdjEuMiByYWlkMSAoNikgY2xlYW4g
-DQp7ODlkNjljNmY6MmVhMjIzZjU6YWVjOGI2N2M6NDAzNDg4YWR9DQrDouKAneKAmiDDouKA
-neKAmiDDouKAneKAmiAgICAgICAgICAgICAgICAgZXh0NCB7Y2E0YmZmMjItNDBkOC00YjMx
-LTg1OWUtYmJhMDYzZjAxZGYxfQ0Kw6LigJ3igJogw6LigJ3igJogw6LigJ3Fk01vdW50ZWQg
-YXMgDQovZGV2L2Rpc2svYnktdXVpZC9jYTRiZmYyMi00MGQ4LTRiMzEtODU5ZS1iYmEwNjNm
-MDFkZjEgQCAvDQrDouKAneKAmiDDouKAneKAmiDDouKAneKAnU1vdW50ZWQgYXMgDQovZGV2
-L2Rpc2svYnktdXVpZC9jYTRiZmYyMi00MGQ4LTRiMzEtODU5ZS1iYmEwNjNmMDFkZjEgQCAN
-Ci92YXIvc3Bvb2wvaHlsYWZheC9ldGMNCsOi4oCd4oCaIMOi4oCd4oCdc2RhNCAyLjUydCBb
-ODo0XSBNRCByYWlkNSAoMC82KSAody8gc2RkNCxzZGI0LHNkZTQsc2RjNCxzZGY0KSANCmlu
-X3N5bmMgJ3NvbGlweW06Micgezg0NjcyYjRjLThmYWUtN2YzOC1iYjRjLWM5MTFhYTlkNzQ0
-NH0NCsOi4oCd4oCaICDDouKAneKAnW1kMiAxMi41OXQgWzk6Ml0gTUQgdjEuMiByYWlkNSAo
-NikgY2xlYW4sIDUxMmsgQ2h1bmsgDQp7ODQ2NzJiNGM6OGZhZTdmMzg6YmI0Y2M5MTE6YWE5
-ZDc0NDR9DQrDouKAneKAmiAgIMOi4oCd4oCaICAgICAgICAgICAgICAgIGV4dDQge2E5Y2Zl
-OTVjLTFlNjItNGNmNi1iMmFhLTY1YWJiZDBjNzdlNH0NCsOi4oCd4oCaICAgw6LigJ3igJ1N
-b3VudGVkIGFzIC9kZXYvbWQyIEAgL3Nydg0Kw6LigJ3Fk3Njc2kgMTowOjA6MCBBVEEgICAg
-ICBXREMgV0QzMEVaUlgtMDBNIHtXRC1XQ0FXWjEzODI5OTB9DQrDouKAneKAmsOi4oCd4oCd
-c2RiIDIuNzN0IFs4OjE2XSBQYXJ0aXRpb25lZCAoZ3B0KQ0Kw6LigJ3igJogw6LigJ3Fk3Nk
-YjEgOTUuMzdtIFs4OjE3XSB2ZmF0IHs2RUZELTE2NTl9DQrDouKAneKAmiDDouKAncWTc2Ri
-MiAyOS44MGcgWzg6MThdIE1EIHJhaWQxICgxLzYpICh3LyBzZGEyLHNkZDIsc2RlMixzZGMy
-LHNkZjIpIA0KaW5fc3luYyAnc29saXB5bTowJyB7ZDJlNjg4NWItMmQyNS02YzVhLTVmM2Qt
-ZTlhOWE1ZGFhNzM2fQ0Kw6LigJ3igJogw6LigJ3igJrDouKAneKAnW1kMCAyOS44MGcgWzk6
-MF0gTUQgdjEuMiByYWlkMSAoNikgY2xlYW4gDQp7ZDJlNjg4NWI6MmQyNTZjNWE6NWYzZGU5
-YTk6YTVkYWE3MzZ9DQrDouKAneKAmiDDouKAneKAmiAgICAgICAgICAgICAgICAgIHN3YXAg
-ezhlNTY1ZGZjLWM1ZmEtNGM3Ni1hYmU5LWYzYTVhNmU4ZmNmZn0NCsOi4oCd4oCaIMOi4oCd
-xZNzZGIzIDE4Ni4yNmcgWzg6MTldIE1EIHJhaWQxICgxLzYpICh3LyBzZGYzLHNkZDMsc2Rl
-MyxzZGEzLHNkYzMpIA0KaW5fc3luYyAnc29saXB5bToxJyB7ODlkNjljNmYtMmVhMi0yM2Y1
-LWFlYzgtYjY3YzQwMzQ4OGFkfQ0Kw6LigJ3igJogw6LigJ3igJrDouKAneKAnW1kMSAxODYu
-MjZnIFs5OjFdIE1EIHYxLjIgcmFpZDEgKDYpIGNsZWFuIA0Kezg5ZDY5YzZmOjJlYTIyM2Y1
-OmFlYzhiNjdjOjQwMzQ4OGFkfQ0Kw6LigJ3igJogw6LigJ3igJogICAgICAgICAgICAgICAg
-ICAgZXh0NCB7Y2E0YmZmMjItNDBkOC00YjMxLTg1OWUtYmJhMDYzZjAxZGYxfQ0Kw6LigJ3i
-gJogw6LigJ3igJ1zZGI0IDIuNTJ0IFs4OjIwXSBNRCByYWlkNSAoMS82KSAody8gc2RkNCxz
-ZGE0LHNkZTQsc2RjNCxzZGY0KSANCmluX3N5bmMgJ3NvbGlweW06Micgezg0NjcyYjRjLThm
-YWUtN2YzOC1iYjRjLWM5MTFhYTlkNzQ0NH0NCsOi4oCd4oCaICDDouKAneKAnW1kMiAxMi41
-OXQgWzk6Ml0gTUQgdjEuMiByYWlkNSAoNikgY2xlYW4sIDUxMmsgQ2h1bmsgDQp7ODQ2NzJi
-NGM6OGZhZTdmMzg6YmI0Y2M5MTE6YWE5ZDc0NDR9DQrDouKAneKAmiAgICAgICAgICAgICAg
-ICAgICAgZXh0NCB7YTljZmU5NWMtMWU2Mi00Y2Y2LWIyYWEtNjVhYmJkMGM3N2U0fQ0Kw6Li
-gJ3Fk3Njc2kgMjowOjA6MCBBVEEgICAgICBXREMgV0QzMEVaUlgtMDBNIHtXRC1XQ0FXWjA5
-OTU1MDJ9DQrDouKAneKAmsOi4oCd4oCdc2RjIDIuNzN0IFs4OjMyXSBQYXJ0aXRpb25lZCAo
-Z3B0KQ0Kw6LigJ3igJogw6LigJ3Fk3NkYzEgOTUuMzdtIFs4OjMzXSB2ZmF0IHsxNkJGLUFB
-QkV9DQrDouKAneKAmiDDouKAncWTc2RjMiAyOS44MGcgWzg6MzRdIE1EIHJhaWQxICgyLzYp
-ICh3LyBzZGEyLHNkZDIsc2RlMixzZGIyLHNkZjIpIA0KaW5fc3luYyAnc29saXB5bTowJyB7
-ZDJlNjg4NWItMmQyNS02YzVhLTVmM2QtZTlhOWE1ZGFhNzM2fQ0Kw6LigJ3igJogw6LigJ3i
-gJrDouKAneKAnW1kMCAyOS44MGcgWzk6MF0gTUQgdjEuMiByYWlkMSAoNikgY2xlYW4gDQp7
-ZDJlNjg4NWI6MmQyNTZjNWE6NWYzZGU5YTk6YTVkYWE3MzZ9DQrDouKAneKAmiDDouKAneKA
-miAgICAgICAgICAgICAgICAgIHN3YXAgezhlNTY1ZGZjLWM1ZmEtNGM3Ni1hYmU5LWYzYTVh
-NmU4ZmNmZn0NCsOi4oCd4oCaIMOi4oCdxZNzZGMzIDE4Ni4yNmcgWzg6MzVdIE1EIHJhaWQx
-ICgyLzYpICh3LyBzZGYzLHNkZDMsc2RlMyxzZGEzLHNkYjMpIA0KaW5fc3luYyAnc29saXB5
-bToxJyB7ODlkNjljNmYtMmVhMi0yM2Y1LWFlYzgtYjY3YzQwMzQ4OGFkfQ0Kw6LigJ3igJog
-w6LigJ3igJrDouKAneKAnW1kMSAxODYuMjZnIFs5OjFdIE1EIHYxLjIgcmFpZDEgKDYpIGNs
-ZWFuIA0Kezg5ZDY5YzZmOjJlYTIyM2Y1OmFlYzhiNjdjOjQwMzQ4OGFkfQ0Kw6LigJ3igJog
-w6LigJ3igJogICAgICAgICAgICAgICAgICAgZXh0NCB7Y2E0YmZmMjItNDBkOC00YjMxLTg1
-OWUtYmJhMDYzZjAxZGYxfQ0Kw6LigJ3igJogw6LigJ3igJ1zZGM0IDIuNTJ0IFs4OjM2XSBN
-RCByYWlkNSAoMi82KSAody8gc2RkNCxzZGE0LHNkYjQsc2RlNCxzZGY0KSANCmluX3N5bmMg
-J3NvbGlweW06Micgezg0NjcyYjRjLThmYWUtN2YzOC1iYjRjLWM5MTFhYTlkNzQ0NH0NCsOi
-4oCd4oCaICDDouKAneKAnW1kMiAxMi41OXQgWzk6Ml0gTUQgdjEuMiByYWlkNSAoNikgY2xl
-YW4sIDUxMmsgQ2h1bmsgDQp7ODQ2NzJiNGM6OGZhZTdmMzg6YmI0Y2M5MTE6YWE5ZDc0NDR9
-DQrDouKAneKAmiAgICAgICAgICAgICAgICAgICAgZXh0NCB7YTljZmU5NWMtMWU2Mi00Y2Y2
-LWIyYWEtNjVhYmJkMGM3N2U0fQ0Kw6LigJ3Fk3Njc2kgMzowOjA6MCBBVEEgICAgICBXREMg
-V0QzMEVaUlgtMDBNIHtXRC1XQ0FXWjExMTgyMjZ9DQrDouKAneKAmsOi4oCd4oCdc2RkIDIu
-NzN0IFs4OjQ4XSBQYXJ0aXRpb25lZCAoZ3B0KQ0Kw6LigJ3igJogw6LigJ3Fk3NkZDEgOTUu
-MzdtIFs4OjQ5XSB2ZmF0IHs5NzhGLTIxQjJ9DQrDouKAneKAmiDDouKAncWTc2RkMiAyOS44
-MGcgWzg6NTBdIE1EIHJhaWQxICgzLzYpICh3LyBzZGEyLHNkZTIsc2RjMixzZGIyLHNkZjIp
-IA0KaW5fc3luYyAnc29saXB5bTowJyB7ZDJlNjg4NWItMmQyNS02YzVhLTVmM2QtZTlhOWE1
-ZGFhNzM2fQ0Kw6LigJ3igJogw6LigJ3igJrDouKAneKAnW1kMCAyOS44MGcgWzk6MF0gTUQg
-djEuMiByYWlkMSAoNikgY2xlYW4gDQp7ZDJlNjg4NWI6MmQyNTZjNWE6NWYzZGU5YTk6YTVk
-YWE3MzZ9DQrDouKAneKAmiDDouKAneKAmiAgICAgICAgICAgICAgICAgIHN3YXAgezhlNTY1
-ZGZjLWM1ZmEtNGM3Ni1hYmU5LWYzYTVhNmU4ZmNmZn0NCsOi4oCd4oCaIMOi4oCdxZNzZGQz
-IDE4Ni4yNmcgWzg6NTFdIE1EIHJhaWQxICgzLzYpICh3LyBzZGYzLHNkZTMsc2RhMyxzZGMz
-LHNkYjMpIA0KaW5fc3luYyAnc29saXB5bToxJyB7ODlkNjljNmYtMmVhMi0yM2Y1LWFlYzgt
-YjY3YzQwMzQ4OGFkfQ0Kw6LigJ3igJogw6LigJ3igJrDouKAneKAnW1kMSAxODYuMjZnIFs5
-OjFdIE1EIHYxLjIgcmFpZDEgKDYpIGNsZWFuIA0Kezg5ZDY5YzZmOjJlYTIyM2Y1OmFlYzhi
-NjdjOjQwMzQ4OGFkfQ0Kw6LigJ3igJogw6LigJ3igJogICAgICAgICAgICAgICAgICAgZXh0
-NCB7Y2E0YmZmMjItNDBkOC00YjMxLTg1OWUtYmJhMDYzZjAxZGYxfQ0Kw6LigJ3igJogw6Li
-gJ3igJ1zZGQ0IDIuNTJ0IFs4OjUyXSBNRCByYWlkNSAoMy82KSAody8gc2RhNCxzZGI0LHNk
-ZTQsc2RjNCxzZGY0KSANCmluX3N5bmMgJ3NvbGlweW06Micgezg0NjcyYjRjLThmYWUtN2Yz
-OC1iYjRjLWM5MTFhYTlkNzQ0NH0NCsOi4oCd4oCaICDDouKAneKAnW1kMiAxMi41OXQgWzk6
-Ml0gTUQgdjEuMiByYWlkNSAoNikgY2xlYW4sIDUxMmsgQ2h1bmsgDQp7ODQ2NzJiNGM6OGZh
-ZTdmMzg6YmI0Y2M5MTE6YWE5ZDc0NDR9DQrDouKAneKAmiAgICAgICAgICAgICAgICAgICAg
-ZXh0NCB7YTljZmU5NWMtMWU2Mi00Y2Y2LWIyYWEtNjVhYmJkMGM3N2U0fQ0Kw6LigJ3Fk3Nj
-c2kgNDowOjA6MCBBVEEgICAgICBXREMgV0QzMEVaUlgtMDBNIHtXRC1XQ0FXWjE2NDkzODV9
-DQrDouKAneKAmsOi4oCd4oCdc2RlIDIuNzN0IFs4OjY0XSBQYXJ0aXRpb25lZCAoZ3B0KQ0K
-w6LigJ3igJogw6LigJ3Fk3NkZTEgOTUuMzdtIFs4OjY1XSB2ZmF0IHs4ODc1LTJENTB9DQrD
-ouKAneKAmiDDouKAncWTc2RlMiAyOS44MGcgWzg6NjZdIE1EIHJhaWQxICg0LzYpICh3LyBz
-ZGEyLHNkZDIsc2RjMixzZGIyLHNkZjIpIA0KaW5fc3luYyAnc29saXB5bTowJyB7ZDJlNjg4
-NWItMmQyNS02YzVhLTVmM2QtZTlhOWE1ZGFhNzM2fQ0Kw6LigJ3igJogw6LigJ3igJrDouKA
-neKAnW1kMCAyOS44MGcgWzk6MF0gTUQgdjEuMiByYWlkMSAoNikgY2xlYW4gDQp7ZDJlNjg4
-NWI6MmQyNTZjNWE6NWYzZGU5YTk6YTVkYWE3MzZ9DQrDouKAneKAmiDDouKAneKAmiAgICAg
-ICAgICAgICAgICAgIHN3YXAgezhlNTY1ZGZjLWM1ZmEtNGM3Ni1hYmU5LWYzYTVhNmU4ZmNm
-Zn0NCsOi4oCd4oCaIMOi4oCdxZNzZGUzIDE4Ni4yNmcgWzg6NjddIE1EIHJhaWQxICg0LzYp
-ICh3LyBzZGYzLHNkZDMsc2RhMyxzZGMzLHNkYjMpIA0KaW5fc3luYyAnc29saXB5bToxJyB7
-ODlkNjljNmYtMmVhMi0yM2Y1LWFlYzgtYjY3YzQwMzQ4OGFkfQ0Kw6LigJ3igJogw6LigJ3i
-gJrDouKAneKAnW1kMSAxODYuMjZnIFs5OjFdIE1EIHYxLjIgcmFpZDEgKDYpIGNsZWFuIA0K
-ezg5ZDY5YzZmOjJlYTIyM2Y1OmFlYzhiNjdjOjQwMzQ4OGFkfQ0Kw6LigJ3igJogw6LigJ3i
-gJogICAgICAgICAgICAgICAgICAgZXh0NCB7Y2E0YmZmMjItNDBkOC00YjMxLTg1OWUtYmJh
-MDYzZjAxZGYxfQ0Kw6LigJ3igJogw6LigJ3igJ1zZGU0IDIuNTJ0IFs4OjY4XSBNRCByYWlk
-NSAoNC82KSAody8gc2RkNCxzZGE0LHNkYjQsc2RjNCxzZGY0KSANCmluX3N5bmMgJ3NvbGlw
-eW06Micgezg0NjcyYjRjLThmYWUtN2YzOC1iYjRjLWM5MTFhYTlkNzQ0NH0NCsOi4oCd4oCa
-ICDDouKAneKAnW1kMiAxMi41OXQgWzk6Ml0gTUQgdjEuMiByYWlkNSAoNikgY2xlYW4sIDUx
-MmsgQ2h1bmsgDQp7ODQ2NzJiNGM6OGZhZTdmMzg6YmI0Y2M5MTE6YWE5ZDc0NDR9DQrDouKA
-neKAmiAgICAgICAgICAgICAgICAgICAgZXh0NCB7YTljZmU5NWMtMWU2Mi00Y2Y2LWIyYWEt
-NjVhYmJkMGM3N2U0fQ0Kw6LigJ3igJ1zY3NpIDU6MDowOjAgQVRBICAgICAgV0RDIFdEMzBF
-WlJYLTAwTSB7V0QtV0NBV1oxMzgzMTUxfQ0KICDDouKAneKAnXNkZiAyLjczdCBbODo4MF0g
-UGFydGl0aW9uZWQgKGdwdCkNCiAgIMOi4oCdxZNzZGYxIDk1LjM3bSBbODo4MV0gdmZhdCB7
-QTg5Qi1EQzA1fQ0KICAgw6LigJ3Fk3NkZjIgMjkuODBnIFs4OjgyXSBNRCByYWlkMSAoNS82
-KSAody8gc2RhMixzZGQyLHNkZTIsc2RjMixzZGIyKSANCmluX3N5bmMgJ3NvbGlweW06MCcg
-e2QyZTY4ODViLTJkMjUtNmM1YS01ZjNkLWU5YTlhNWRhYTczNn0NCiAgIMOi4oCd4oCaw6Li
-gJ3igJ1tZDAgMjkuODBnIFs5OjBdIE1EIHYxLjIgcmFpZDEgKDYpIGNsZWFuIA0Ke2QyZTY4
-ODViOjJkMjU2YzVhOjVmM2RlOWE5OmE1ZGFhNzM2fQ0KICAgw6LigJ3igJogICAgICAgICAg
-ICAgICAgICBzd2FwIHs4ZTU2NWRmYy1jNWZhLTRjNzYtYWJlOS1mM2E1YTZlOGZjZmZ9DQog
-ICDDouKAncWTc2RmMyAxODYuMjZnIFs4OjgzXSBNRCByYWlkMSAoNS82KSAody8gc2RkMyxz
-ZGUzLHNkYTMsc2RjMyxzZGIzKSANCmluX3N5bmMgJ3NvbGlweW06MScgezg5ZDY5YzZmLTJl
-YTItMjNmNS1hZWM4LWI2N2M0MDM0ODhhZH0NCiAgIMOi4oCd4oCaw6LigJ3igJ1tZDEgMTg2
-LjI2ZyBbOToxXSBNRCB2MS4yIHJhaWQxICg2KSBjbGVhbiANCns4OWQ2OWM2ZjoyZWEyMjNm
-NTphZWM4YjY3Yzo0MDM0ODhhZH0NCiAgIMOi4oCd4oCaICAgICAgICAgICAgICAgICAgIGV4
-dDQge2NhNGJmZjIyLTQwZDgtNGIzMS04NTllLWJiYTA2M2YwMWRmMX0NCiAgIMOi4oCd4oCd
-c2RmNCAyLjUydCBbODo4NF0gTUQgcmFpZDUgKDUvNikgKHcvIHNkZDQsc2RhNCxzZGI0LHNk
-ZTQsc2RjNCkgDQppbl9zeW5jICdzb2xpcHltOjInIHs4NDY3MmI0Yy04ZmFlLTdmMzgtYmI0
-Yy1jOTExYWE5ZDc0NDR9DQogICAgw6LigJ3igJ1tZDIgMTIuNTl0IFs5OjJdIE1EIHYxLjIg
-cmFpZDUgKDYpIGNsZWFuLCA1MTJrIENodW5rIA0Kezg0NjcyYjRjOjhmYWU3ZjM4OmJiNGNj
-OTExOmFhOWQ3NDQ0fQ0KICAgICAgICAgICAgICAgICAgICAgIGV4dDQge2E5Y2ZlOTVjLTFl
-NjItNGNmNi1iMmFhLTY1YWJiZDBjNzdlNH0NClVTQiBbdXNiLXN0b3JhZ2VdIEJ1cyAwMDIg
-RGV2aWNlIDAwNDogSUQgMDU5ZjoxMDEwIExhQ2llLCBMdGQgRGVza3RvcCANCkhhcmQgRHJp
-dmUge1NUMzUwMDgzMEEgICAgICAgICAgICA5UUc2UkM1NH0NCsOi4oCd4oCdc2NzaSA2OjA6
-MDowIFNUMzUwMDgzIDBBUw0KICDDouKAneKAnXNkZyA0NjUuNzZnIFs4Ojk2XSBQYXJ0aXRp
-b25lZCAoZG9zKQ0KICAgw6LigJ3igJ1zZGcxIDQ2NS43NmcgWzg6OTddIGV4dDQgezRjMmY2
-YjkyLTgyOWQtNGU1My1iNTUzLWMwN2UwZjU3MWUwMn0NCiAgICDDouKAneKAnU1vdW50ZWQg
-YXMgL2Rldi9zZGcxIEAgL21udA0KT3RoZXIgQmxvY2sgRGV2aWNlcw0Kw6LigJ3Fk2xvb3Aw
-IDAuMDBrIFs3OjBdIEVtcHR5L1Vua25vd24NCsOi4oCdxZNsb29wMSAwLjAwayBbNzoxXSBF
-bXB0eS9Vbmtub3duDQrDouKAncWTbG9vcDIgMC4wMGsgWzc6Ml0gRW1wdHkvVW5rbm93bg0K
-w6LigJ3Fk2xvb3AzIDAuMDBrIFs3OjNdIEVtcHR5L1Vua25vd24NCsOi4oCdxZNsb29wNCAw
-LjAwayBbNzo0XSBFbXB0eS9Vbmtub3duDQrDouKAncWTbG9vcDUgMC4wMGsgWzc6NV0gRW1w
-dHkvVW5rbm93bg0Kw6LigJ3Fk2xvb3A2IDAuMDBrIFs3OjZdIEVtcHR5L1Vua25vd24NCsOi
-4oCdxZNsb29wNyAwLjAwayBbNzo3XSBFbXB0eS9Vbmtub3duDQrDouKAncWTcmFtMCA2NC4w
-MG0gWzE6MF0gRW1wdHkvVW5rbm93bg0Kw6LigJ3Fk3JhbTEgNjQuMDBtIFsxOjFdIEVtcHR5
-L1Vua25vd24NCsOi4oCdxZNyYW0yIDY0LjAwbSBbMToyXSBFbXB0eS9Vbmtub3duDQrDouKA
-ncWTcmFtMyA2NC4wMG0gWzE6M10gRW1wdHkvVW5rbm93bg0Kw6LigJ3Fk3JhbTQgNjQuMDBt
-IFsxOjRdIEVtcHR5L1Vua25vd24NCsOi4oCdxZNyYW01IDY0LjAwbSBbMTo1XSBFbXB0eS9V
-bmtub3duDQrDouKAncWTcmFtNiA2NC4wMG0gWzE6Nl0gRW1wdHkvVW5rbm93bg0Kw6LigJ3F
-k3JhbTcgNjQuMDBtIFsxOjddIEVtcHR5L1Vua25vd24NCsOi4oCdxZNyYW04IDY0LjAwbSBb
-MTo4XSBFbXB0eS9Vbmtub3duDQrDouKAncWTcmFtOSA2NC4wMG0gWzE6OV0gRW1wdHkvVW5r
-bm93bg0Kw6LigJ3Fk3JhbTEwIDY0LjAwbSBbMToxMF0gRW1wdHkvVW5rbm93bg0Kw6LigJ3F
-k3JhbTExIDY0LjAwbSBbMToxMV0gRW1wdHkvVW5rbm93bg0Kw6LigJ3Fk3JhbTEyIDY0LjAw
-bSBbMToxMl0gRW1wdHkvVW5rbm93bg0Kw6LigJ3Fk3JhbTEzIDY0LjAwbSBbMToxM10gRW1w
-dHkvVW5rbm93bg0Kw6LigJ3Fk3JhbTE0IDY0LjAwbSBbMToxNF0gRW1wdHkvVW5rbm93bg0K
-w6LigJ3igJ1yYW0xNSA2NC4wMG0gWzE6MTVdIEVtcHR5L1Vua25vd24NCg0KUmFpZCA1IHZv
-bHVtZSBpcyBtZDIgd2l0aCA2IGRpc2sgb3V0IG9mIDYgaW4gdXNlLiBObyBzcGFyZS5BbmQg
-bm8gc3BhY2UgDQp0byBhZGQgYW5vdGhlciBvbmUuLi4NCg0KRG9taW5pcXVlDQo=
+On 02/04/2013 07:51 AM, Dominique wrote:
+> Back from weekend, and still with my problem. Output of lsdrv is as f=
+ollow:
+
+Yuck, mangled utf-8.  Does it look that way on your console?
+[output w/ fixed tree characters pasted below]
+
+=46irst item, greatest importance:  You are using Western Digital Green
+drives.  These are *unsafe* to use in raid arrays of any kind "out of
+the box".  They do *not* support SCTERC.  You *must* use a boot-up
+script to set the linux driver timeouts to two minutes or more or you
+*will* crash this array.
+
+I recommend a three minute timeout.  Something like this:
+> for x in /sys/block/sd[abcdef]/driver/timeout ; do
+> 	echo 180 > $x
+> done
+
+in "rc.local" or wherever your distribution likes such things.  And
+don't wait for your next reboot--execute it now.
+
+If you don't have that in place, it suggests that your array is very ne=
+w
+or you are not running any regular "scrub".  It is important that you
+not be vulnerable during the reshape, as the array will be heavily
+exercised.  If you aren't regularly scrubbing, execute:
+> echo "check" >/sys/block/md2/md/sync_action
+
+then monitor /proc/mdstat until it completes.  (Several hours)  Then
+look at the mismatch count:
+> cat /sys/block/md2/md/mismatch_count
+
+It should be zero.
+
+Otherwise, your array is a simple ext4 filesystem without any apparent
+system dependencies.  So you should be able to do everything needed in
+your normal boot environment, just shutting down the services that are
+using the data in "/srv".  Once the filesystem itself is resized
+(possibly quite quickly if your array has a great deal of free space),
+the remainder of the work can occur online (with /srv mounted again and
+your services restarted).
+
+Here's your recipe:
+
+1) Stop all services using /srv, then unmount with:
+> umount /srv
+
+2) Make sure the filesystem is consistent:
+> fsck /dev/md2
+
+3) Determine resizing options:
+> resize2fs -P /dev/md2
+
+This will report the number of blocks needed for the current contents
+(usually in 4k blocks).  I don't recommend resizing all the way to the
+minimum, as it may take much longer.  Just make sure you can shrink to
+~10 terabytes.
+
+4) Resize:
+> resize2fs /dev/md2 10240G
+
+5) Verify Ok:
+> fsck -n /dev/md2
+
+6) Instruct md to temporarily use less than the future size of md2 (but
+more than the filesystem):
+> mdadm --grow /dev/md2 --array-size=3D10241G
+
+7) Verify Again:
+> fsck -n /dev/md2
+
+8) Instruct md to reshape to raid6 and view its progress:
+> mdadm --grow /dev/md2 --level=3Draid6 --raid-devices=3D6
+> cat /proc/mdstat
+
+ (The reshape will continue in the background.)
+
+9) If you need the services as soon as possible, the filesystem can be
+remounted at this point, and the services restarted.  If /srv is in you=
+r
+fstab, just use:
+> mount /srv
+
+10) Depending on the speed of your components, and how heavily you use
+the array, the reshape can take several hours to days.  I would expect
+yours to take at least 7 hours, best case.  Once complete, you can
+resize once more to the maximum available (this can be done while
+mounted and the services running):
+> mdadm --grow /dev/md2 --array-size=3Dmax
+> resize2fs /dev/md2
+
+If you run into any problems (or questions), let us know.
+
+Regards,
+
+Phil
+
+--
+
+PCI [ahci] 00:1f.2 SATA controller: Intel Corporation 6 Series/C200
+Series Chipset Family SATA AHCI Controller (rev 05)
+=E2=94=9Cscsi 0:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ1618149}
+=E2=94=82=E2=94=94sda 2.73t [8:0] Partitioned (gpt)
+=E2=94=82 =E2=94=9Csda1 95.37m [8:1] vfat {89EF-00F4}
+=E2=94=82 =E2=94=82=E2=94=94Mounted as /dev/sda1 @ /boot/efi
+=E2=94=82 =E2=94=9Csda2 29.80g [8:2] MD raid1 (0/6) (w/ sdd2,sde2,sdc2,=
+sdb2,sdf2)
+in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
+=E2=94=82 =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
+{d2e6885b:2d256c5a:5f3de9a9:a5daa736}
+=E2=94=82 =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3a5=
+a6e8fcff}
+=E2=94=82 =E2=94=9Csda3 186.26g [8:3] MD raid1 (0/6) (w/ sdf3,sdd3,sde3=
+,sdc3,sdb3)
+in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
+=E2=94=82 =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
+{89d69c6f:2ea223f5:aec8b67c:403488ad}
+=E2=94=82 =E2=94=82 =E2=94=82                 ext4 {ca4bff22-40d8-4b31-=
+859e-bba063f01df1}
+=E2=94=82 =E2=94=82 =E2=94=9CMounted as /dev/disk/by-uuid/ca4bff22-40d8=
+-4b31-859e-bba063f01df1 @ /
+=E2=94=82 =E2=94=82 =E2=94=94Mounted as /dev/disk/by-uuid/ca4bff22-40d8=
+-4b31-859e-bba063f01df1 @
+/var/spool/hylafax/etc
+=E2=94=82 =E2=94=94sda4 2.52t [8:4] MD raid5 (0/6) (w/ sdd4,sdb4,sde4,s=
+dc4,sdf4) in_sync
+'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
+=E2=94=82  =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Chun=
+k
+{84672b4c:8fae7f38:bb4cc911:aa9d7444}
+=E2=94=82   =E2=94=82                ext4 {a9cfe95c-1e62-4cf6-b2aa-65ab=
+bd0c77e4}
+=E2=94=82   =E2=94=94Mounted as /dev/md2 @ /srv
+=E2=94=9Cscsi 1:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ1382990}
+=E2=94=82=E2=94=94sdb 2.73t [8:16] Partitioned (gpt)
+=E2=94=82 =E2=94=9Csdb1 95.37m [8:17] vfat {6EFD-1659}
+=E2=94=82 =E2=94=9Csdb2 29.80g [8:18] MD raid1 (1/6) (w/ sda2,sdd2,sde2=
+,sdc2,sdf2)
+in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
+=E2=94=82 =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
+{d2e6885b:2d256c5a:5f3de9a9:a5daa736}
+=E2=94=82 =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3a5=
+a6e8fcff}
+=E2=94=82 =E2=94=9Csdb3 186.26g [8:19] MD raid1 (1/6) (w/ sdf3,sdd3,sde=
+3,sda3,sdc3)
+in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
+=E2=94=82 =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
+{89d69c6f:2ea223f5:aec8b67c:403488ad}
+=E2=94=82 =E2=94=82                   ext4 {ca4bff22-40d8-4b31-859e-bba=
+063f01df1}
+=E2=94=82 =E2=94=94sdb4 2.52t [8:20] MD raid5 (1/6) (w/ sdd4,sda4,sde4,=
+sdc4,sdf4)
+in_sync 'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
+=E2=94=82  =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Chun=
+k
+{84672b4c:8fae7f38:bb4cc911:aa9d7444}
+=E2=94=82                    ext4 {a9cfe95c-1e62-4cf6-b2aa-65abbd0c77e4=
+}
+=E2=94=9Cscsi 2:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ0995502}
+=E2=94=82=E2=94=94sdc 2.73t [8:32] Partitioned (gpt)
+=E2=94=82 =E2=94=9Csdc1 95.37m [8:33] vfat {16BF-AABE}
+=E2=94=82 =E2=94=9Csdc2 29.80g [8:34] MD raid1 (2/6) (w/ sda2,sdd2,sde2=
+,sdb2,sdf2)
+in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
+=E2=94=82 =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
+{d2e6885b:2d256c5a:5f3de9a9:a5daa736}
+=E2=94=82 =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3a5=
+a6e8fcff}
+=E2=94=82 =E2=94=9Csdc3 186.26g [8:35] MD raid1 (2/6) (w/ sdf3,sdd3,sde=
+3,sda3,sdb3)
+in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
+=E2=94=82 =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
+{89d69c6f:2ea223f5:aec8b67c:403488ad}
+=E2=94=82 =E2=94=82                   ext4 {ca4bff22-40d8-4b31-859e-bba=
+063f01df1}
+=E2=94=82 =E2=94=94sdc4 2.52t [8:36] MD raid5 (2/6) (w/ sdd4,sda4,sdb4,=
+sde4,sdf4)
+in_sync 'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
+=E2=94=82  =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Chun=
+k
+{84672b4c:8fae7f38:bb4cc911:aa9d7444}
+=E2=94=82                    ext4 {a9cfe95c-1e62-4cf6-b2aa-65abbd0c77e4=
+}
+=E2=94=9Cscsi 3:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ1118226}
+=E2=94=82=E2=94=94sdd 2.73t [8:48] Partitioned (gpt)
+=E2=94=82 =E2=94=9Csdd1 95.37m [8:49] vfat {978F-21B2}
+=E2=94=82 =E2=94=9Csdd2 29.80g [8:50] MD raid1 (3/6) (w/ sda2,sde2,sdc2=
+,sdb2,sdf2)
+in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
+=E2=94=82 =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
+{d2e6885b:2d256c5a:5f3de9a9:a5daa736}
+=E2=94=82 =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3a5=
+a6e8fcff}
+=E2=94=82 =E2=94=9Csdd3 186.26g [8:51] MD raid1 (3/6) (w/ sdf3,sde3,sda=
+3,sdc3,sdb3)
+in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
+=E2=94=82 =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
+{89d69c6f:2ea223f5:aec8b67c:403488ad}
+=E2=94=82 =E2=94=82                   ext4 {ca4bff22-40d8-4b31-859e-bba=
+063f01df1}
+=E2=94=82 =E2=94=94sdd4 2.52t [8:52] MD raid5 (3/6) (w/ sda4,sdb4,sde4,=
+sdc4,sdf4)
+in_sync 'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
+=E2=94=82  =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Chun=
+k
+{84672b4c:8fae7f38:bb4cc911:aa9d7444}
+=E2=94=82                    ext4 {a9cfe95c-1e62-4cf6-b2aa-65abbd0c77e4=
+}
+=E2=94=9Cscsi 4:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ1649385}
+=E2=94=82=E2=94=94sde 2.73t [8:64] Partitioned (gpt)
+=E2=94=82 =E2=94=9Csde1 95.37m [8:65] vfat {8875-2D50}
+=E2=94=82 =E2=94=9Csde2 29.80g [8:66] MD raid1 (4/6) (w/ sda2,sdd2,sdc2=
+,sdb2,sdf2)
+in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
+=E2=94=82 =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
+{d2e6885b:2d256c5a:5f3de9a9:a5daa736}
+=E2=94=82 =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3a5=
+a6e8fcff}
+=E2=94=82 =E2=94=9Csde3 186.26g [8:67] MD raid1 (4/6) (w/ sdf3,sdd3,sda=
+3,sdc3,sdb3)
+in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
+=E2=94=82 =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
+{89d69c6f:2ea223f5:aec8b67c:403488ad}
+=E2=94=82 =E2=94=82                   ext4 {ca4bff22-40d8-4b31-859e-bba=
+063f01df1}
+=E2=94=82 =E2=94=94sde4 2.52t [8:68] MD raid5 (4/6) (w/ sdd4,sda4,sdb4,=
+sdc4,sdf4)
+in_sync 'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
+=E2=94=82  =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Chun=
+k
+{84672b4c:8fae7f38:bb4cc911:aa9d7444}
+=E2=94=82                    ext4 {a9cfe95c-1e62-4cf6-b2aa-65abbd0c77e4=
+}
+=E2=94=94scsi 5:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ1383151}
+ =E2=94=94sdf 2.73t [8:80] Partitioned (gpt)
+  =E2=94=9Csdf1 95.37m [8:81] vfat {A89B-DC05}
+  =E2=94=9Csdf2 29.80g [8:82] MD raid1 (5/6) (w/ sda2,sdd2,sde2,sdc2,sd=
+b2)
+in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
+  =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
+{d2e6885b:2d256c5a:5f3de9a9:a5daa736}
+  =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3a5a6e8fcff=
+}
+  =E2=94=9Csdf3 186.26g [8:83] MD raid1 (5/6) (w/ sdd3,sde3,sda3,sdc3,s=
+db3)
+in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
+  =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
+{89d69c6f:2ea223f5:aec8b67c:403488ad}
+  =E2=94=82                   ext4 {ca4bff22-40d8-4b31-859e-bba063f01df=
+1}
+  =E2=94=94sdf4 2.52t [8:84] MD raid5 (5/6) (w/ sdd4,sda4,sdb4,sde4,sdc=
+4)
+in_sync 'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
+   =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Chunk
+{84672b4c:8fae7f38:bb4cc911:aa9d7444}
+                     ext4 {a9cfe95c-1e62-4cf6-b2aa-65abbd0c77e4}
+USB [usb-storage] Bus 002 Device 004: ID 059f:1010 LaCie, Ltd Desktop
+Hard Drive {ST3500830A            9QG6RC54}
+=E2=94=94scsi 6:0:0:0 ST350083 0AS
+ =E2=94=94sdg 465.76g [8:96] Partitioned (dos)
+  =E2=94=94sdg1 465.76g [8:97] ext4 {4c2f6b92-829d-4e53-b553-c07e0f571e=
+02}
+   =E2=94=94Mounted as /dev/sdg1 @ /mnt
+Other Block Devices
+=E2=94=9Cloop0 0.00k [7:0] Empty/Unknown
+=E2=94=9Cloop1 0.00k [7:1] Empty/Unknown
+=E2=94=9Cloop2 0.00k [7:2] Empty/Unknown
+=E2=94=9Cloop3 0.00k [7:3] Empty/Unknown
+=E2=94=9Cloop4 0.00k [7:4] Empty/Unknown
+=E2=94=9Cloop5 0.00k [7:5] Empty/Unknown
+=E2=94=9Cloop6 0.00k [7:6] Empty/Unknown
+=E2=94=9Cloop7 0.00k [7:7] Empty/Unknown
+=E2=94=9Cram0 64.00m [1:0] Empty/Unknown
+=E2=94=9Cram1 64.00m [1:1] Empty/Unknown
+=E2=94=9Cram2 64.00m [1:2] Empty/Unknown
+=E2=94=9Cram3 64.00m [1:3] Empty/Unknown
+=E2=94=9Cram4 64.00m [1:4] Empty/Unknown
+=E2=94=9Cram5 64.00m [1:5] Empty/Unknown
+=E2=94=9Cram6 64.00m [1:6] Empty/Unknown
+=E2=94=9Cram7 64.00m [1:7] Empty/Unknown
+=E2=94=9Cram8 64.00m [1:8] Empty/Unknown
+=E2=94=9Cram9 64.00m [1:9] Empty/Unknown
+=E2=94=9Cram10 64.00m [1:10] Empty/Unknown
+=E2=94=9Cram11 64.00m [1:11] Empty/Unknown
+=E2=94=9Cram12 64.00m [1:12] Empty/Unknown
+=E2=94=9Cram13 64.00m [1:13] Empty/Unknown
+=E2=94=9Cram14 64.00m [1:14] Empty/Unknown
+=E2=94=94ram15 64.00m [1:15] Empty/Unknown
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
