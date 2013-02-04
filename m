@@ -1,93 +1,55 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: What layout with 6x2TB, Intel Atom?
-Date: Mon, 4 Feb 2013 20:47:20 +0000
-Message-ID: <CADNH=7EzArrs91MqiUcNjtqh4J4ApDSJaPdttPoKncn7QSgQVw@mail.gmail.com>
+Date: Tue, 5 Feb 2013 03:12:32 +0600
+Message-ID: <20130205031232.61813f6c@natsu>
 References: <CADNH=7EUc7z-E=uo74-QqaKEUcrZiAYKaZqtSfFVbLKpfvt7og@mail.gmail.com>
-	<CADNH=7FxeF1qjYVpGcU1rW6LYDx=6e_LRa5+AUJqyV-hZ2K=XQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Rj/AUCqPhQ=/QXorMHt9Ty2"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADNH=7FxeF1qjYVpGcU1rW6LYDx=6e_LRa5+AUJqyV-hZ2K=XQ@mail.gmail.com>
+In-Reply-To: <CADNH=7EUc7z-E=uo74-QqaKEUcrZiAYKaZqtSfFVbLKpfvt7og@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: Mathias =?UTF-8?B?QnVyw6lu?= <mathias.buren@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 4 February 2013 20:29, Mathias Bur=C3=A9n <mathias.buren@gmail.com> =
-wrote:
-> On 4 February 2013 20:27, Mathias Bur=C3=A9n <mathias.buren@gmail.com=
-> wrote:
->> Hi list,
->>
->> I've an Intel Atom 330 running 32-bit Ubuntu, ~3.5GB RAM. The intent
->> is to store large media files (>4GB) for streaming by maximum 3
->> clients at any time. Very read heavy.
->> 6x 2TB HDDs are available, the crux is that 3 HDDs are on the on-boa=
-rd
->> SATA controller, the other 3 are on a Marvel PCI-E adapter
->>
+--Sig_/Rj/AUCqPhQ=/QXorMHt9Ty2
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-I was clearly not thinking when doing this. Now it's a 6 disk RAID10
-with far layout, 2 copies. Is the default chunk size of 512 a good
-option here?
+On Mon, 4 Feb 2013 20:27:42 +0000
+Mathias Bur=C3=A9n <mathias.buren@gmail.com> wrote:
 
-$ sudo mdadm --verbose --create md0 --level=3D10 --layout=3Df2
---raid-devices=3D6 /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sd=
-g
-mdadm: chunk size defaults to 512K
-mdadm: size set to 1953382912K
-mdadm: Defaulting to version 1.2 metadata
-mdadm: array /dev/md/md0 started.
+> I read that the far layout gives faster read performance compared to
+> standard RAID1 in a 2 HDD array, so that's why I used it. I then
+> created yet another RAID10 f2 layout of the 3x 2 disk RAID10 volumes,
+> giving me /dev/md124. Filesystem doesn't matter, I need something
+> that's stable with good performance over the RAID set.
+> I just realized that out of 12 TB raw space I now only have 3TB
+> available, heh. So I suppose I'm going for a different layout.
+>=20
+> Any opinions?
 
+Hello,
 
-$ cat /proc/mdstat
-Personalities : [raid10] [raid0]
-md127 : active raid10 sdg[5] sdf[4] sde[3] sdd[2] sdc[1] sdb[0]
-      5860147200 blocks super 1.2 512K chunks 2 far-copies [6/6] [UUUUU=
-U]
-      [>....................]  resync =3D  0.0% (775616/5860147200)
-finish=3D629.5min speed=3D155123K/sec
+Why won't you even consider RAID6? To me it seems like the perfect choice,
+given the details you described (mostly reads, large files, few clients).
+And the disk count is perfect, not too few and not too many, so to say :D
 
-unused devices: <none>
-@ion:~$ sudo mdadm -D /dev/md/md0
-/dev/md/md0:
-        Version : 1.2
-  Creation Time : Mon Feb  4 20:40:22 2013
-     Raid Level : raid10
-     Array Size : 5860147200 (5588.67 GiB 6000.79 GB)
-  Used Dev Size : 1953382400 (1862.89 GiB 2000.26 GB)
-   Raid Devices : 6
-  Total Devices : 6
-    Persistence : Superblock is persistent
+--=20
+With respect,
+Roman
 
-    Update Time : Mon Feb  4 20:40:22 2013
-          State : clean, resyncing
- Active Devices : 6
-Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 0
+--Sig_/Rj/AUCqPhQ=/QXorMHt9Ty2
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-         Layout : far=3D2
-     Chunk Size : 512K
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-  Resync Status : 0% complete
+iEYEARECAAYFAlEQJEAACgkQTLKSvz+PZwjzdwCeILe+ZKUf2faQ3Rt50UpGyIWF
+xwUAoIGqsDbZrmMJfiCGPIop84F7dNNJ
+=vRCz
+-----END PGP SIGNATURE-----
 
-           Name : ion:md0  (local to host ion)
-           UUID : 438e9a1a:bf840b03:05c36383:c965cb39
-         Events : 0
-
-    Number   Major   Minor   RaidDevice State
-       0       8       16        0      active sync   /dev/sdb
-       1       8       32        1      active sync   /dev/sdc
-       2       8       48        2      active sync   /dev/sdd
-       3       8       64        3      active sync   /dev/sde
-       4       8       80        4      active sync   /dev/sdf
-       5       8       96        5      active sync   /dev/sdg
-
-Kind regards,
-Mathias
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/Rj/AUCqPhQ=/QXorMHt9Ty2--
