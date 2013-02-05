@@ -1,44 +1,26 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: What layout with 6x2TB, Intel Atom?
-Date: Tue, 5 Feb 2013 01:04:02 +0100 (CET)
-Message-ID: <14844140.25.1360022642643.JavaMail.root@zimbra>
-References: <511040F5.1020407@hardwarefreak.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: Raid 5 to 6 migration
+Date: Tue, 05 Feb 2013 08:58:12 +0800
+Message-ID: <51105924.5010407@fnarfbargle.com>
+References: <BLU0-SMTP433B0BCF64D448CC81098D2C91C0@phx.gbl>,<510C0075.9010908@turmel.org> <COL114-W137DD8871889508BBF087BC91C0@phx.gbl> <510C07FA.4090405@turmel.org> <BLU0-SMTP45011D3540FEA010403D4ABC9010@phx.gbl> <5110005E.103@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <511040F5.1020407@hardwarefreak.com>
+In-Reply-To: <5110005E.103@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: =?utf-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: Dominique <dcouot@hotmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Fourth, even if your Marvell SATA card is PCIe x1 1.0 and limited to
-> 250MB/s, 500MB/s duplex, that shouldn't cause problems in daily use,
-> though it may very well slow down RAID operations such as rebuilds an=
-d
-> reshapes. If it's a 2.0 card operating in 2.0 mode, it's 500/1000
-> MB/s, exceeding the bandwidth of the 3 drives, and is ample.
+On 05/02/13 02:39, Phil Turmel wrote:
 
-250MB/s duplex or not. A 1Gbps ethernet link is 1Gbps either its duplex=
- or not.
+> First item, greatest importance:  You are using Western Digital Green
+> drives.  These are *unsafe* to use in raid arrays of any kind "out of
+> the box".  They do *not* support SCTERC.  You *must* use a boot-up
 
-Vennlige hilsener / Best regards
+Warning digression : How's this for odd. I have 10 WD20EARS drives in my 
+machine and 9 of them support SCTERC. Firmware version is the same 
+across all drives and I bought them at the same time.
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
