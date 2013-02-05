@@ -1,341 +1,203 @@
-From: Dominique <dcouot@hotmail.com>
-Subject: Re: Raid 5 to 6 migration
-Date: Tue, 5 Feb 2013 11:36:36 +0100
-Message-ID: <BLU0-SMTP1112AC3113196A419EBCD79C9000@phx.gbl>
-References: <BLU0-SMTP433B0BCF64D448CC81098D2C91C0@phx.gbl>,<510C0075.9010908@turmel.org> <COL114-W137DD8871889508BBF087BC91C0@phx.gbl> <510C07FA.4090405@turmel.org> <BLU0-SMTP45011D3540FEA010403D4ABC9010@phx.gbl> <5110005E.103@turmel.org>
+From: Brian Candler <B.Candler@pobox.com>
+Subject: Interpreting mdstat output
+Date: Tue, 5 Feb 2013 12:20:48 +0000
+Message-ID: <20130205122048.GA417@nsrc.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5110005E.103@turmel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+(Ubuntu 12.04.2, kernel 3.2.0-37-generic)
 
-On 04/02/2013 19:39, Phil Turmel wrote:
-> On 02/04/2013 07:51 AM, Dominique wrote:
->> Back from weekend, and still with my problem. Output of lsdrv is as =
-follow:
-> Yuck, mangled utf-8.  Does it look that way on your console?
-> [output w/ fixed tree characters pasted below]
->
-> First item, greatest importance:  You are using Western Digital Green
-> drives.  These are *unsafe* to use in raid arrays of any kind "out of
-> the box".  They do *not* support SCTERC.  You *must* use a boot-up
-> script to set the linux driver timeouts to two minutes or more or you
-> *will* crash this array.
->
-> I recommend a three minute timeout.  Something like this:
->> for x in /sys/block/sd[abcdef]/driver/timeout ; do
->> 	echo 180 > $x
->> done
-> in "rc.local" or wherever your distribution likes such things.  And
-> don't wait for your next reboot--execute it now.
->
-> If you don't have that in place, it suggests that your array is very =
-new
-> or you are not running any regular "scrub".  It is important that you
-> not be vulnerable during the reshape, as the array will be heavily
-> exercised.  If you aren't regularly scrubbing, execute:
->> echo "check" >/sys/block/md2/md/sync_action
-> then monitor /proc/mdstat until it completes.  (Several hours)  Then
-> look at the mismatch count:
->> cat /sys/block/md2/md/mismatch_count
-> It should be zero.
->
-> Otherwise, your array is a simple ext4 filesystem without any apparen=
-t
-> system dependencies.  So you should be able to do everything needed i=
-n
-> your normal boot environment, just shutting down the services that ar=
-e
-> using the data in "/srv".  Once the filesystem itself is resized
-> (possibly quite quickly if your array has a great deal of free space)=
-,
-> the remainder of the work can occur online (with /srv mounted again a=
-nd
-> your services restarted).
->
-> Here's your recipe:
->
-> 1) Stop all services using /srv, then unmount with:
->> umount /srv
-> 2) Make sure the filesystem is consistent:
->> fsck /dev/md2
-> 3) Determine resizing options:
->> resize2fs -P /dev/md2
-> This will report the number of blocks needed for the current contents
-> (usually in 4k blocks).  I don't recommend resizing all the way to th=
-e
-> minimum, as it may take much longer.  Just make sure you can shrink t=
-o
-> ~10 terabytes.
->
-> 4) Resize:
->> resize2fs /dev/md2 10240G
-> 5) Verify Ok:
->> fsck -n /dev/md2
-> 6) Instruct md to temporarily use less than the future size of md2 (b=
-ut
-> more than the filesystem):
->> mdadm --grow /dev/md2 --array-size=3D10241G
-> 7) Verify Again:
->> fsck -n /dev/md2
-> 8) Instruct md to reshape to raid6 and view its progress:
->> mdadm --grow /dev/md2 --level=3Draid6 --raid-devices=3D6
->> cat /proc/mdstat
->   (The reshape will continue in the background.)
->
-> 9) If you need the services as soon as possible, the filesystem can b=
-e
-> remounted at this point, and the services restarted.  If /srv is in y=
-our
-> fstab, just use:
->> mount /srv
-> 10) Depending on the speed of your components, and how heavily you us=
-e
-> the array, the reshape can take several hours to days.  I would expec=
-t
-> yours to take at least 7 hours, best case.  Once complete, you can
-> resize once more to the maximum available (this can be done while
-> mounted and the services running):
->> mdadm --grow /dev/md2 --array-size=3Dmax
->> resize2fs /dev/md2
-> If you run into any problems (or questions), let us know.
->
-> Regards,
->
-> Phil
->
-> --
->
-> PCI [ahci] 00:1f.2 SATA controller: Intel Corporation 6 Series/C200
-> Series Chipset Family SATA AHCI Controller (rev 05)
-> =E2=94=9Cscsi 0:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ1618149}
-> =E2=94=82=E2=94=94sda 2.73t [8:0] Partitioned (gpt)
-> =E2=94=82 =E2=94=9Csda1 95.37m [8:1] vfat {89EF-00F4}
-> =E2=94=82 =E2=94=82=E2=94=94Mounted as /dev/sda1 @ /boot/efi
-> =E2=94=82 =E2=94=9Csda2 29.80g [8:2] MD raid1 (0/6) (w/ sdd2,sde2,sdc=
-2,sdb2,sdf2)
-> in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
-> =E2=94=82 =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
-> {d2e6885b:2d256c5a:5f3de9a9:a5daa736}
-> =E2=94=82 =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3=
-a5a6e8fcff}
-> =E2=94=82 =E2=94=9Csda3 186.26g [8:3] MD raid1 (0/6) (w/ sdf3,sdd3,sd=
-e3,sdc3,sdb3)
-> in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
-> =E2=94=82 =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
-> {89d69c6f:2ea223f5:aec8b67c:403488ad}
-> =E2=94=82 =E2=94=82 =E2=94=82                 ext4 {ca4bff22-40d8-4b3=
-1-859e-bba063f01df1}
-> =E2=94=82 =E2=94=82 =E2=94=9CMounted as /dev/disk/by-uuid/ca4bff22-40=
-d8-4b31-859e-bba063f01df1 @ /
-> =E2=94=82 =E2=94=82 =E2=94=94Mounted as /dev/disk/by-uuid/ca4bff22-40=
-d8-4b31-859e-bba063f01df1 @
-> /var/spool/hylafax/etc
-> =E2=94=82 =E2=94=94sda4 2.52t [8:4] MD raid5 (0/6) (w/ sdd4,sdb4,sde4=
-,sdc4,sdf4) in_sync
-> 'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
-> =E2=94=82  =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Ch=
-unk
-> {84672b4c:8fae7f38:bb4cc911:aa9d7444}
-> =E2=94=82   =E2=94=82                ext4 {a9cfe95c-1e62-4cf6-b2aa-65=
-abbd0c77e4}
-> =E2=94=82   =E2=94=94Mounted as /dev/md2 @ /srv
-> =E2=94=9Cscsi 1:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ1382990}
-> =E2=94=82=E2=94=94sdb 2.73t [8:16] Partitioned (gpt)
-> =E2=94=82 =E2=94=9Csdb1 95.37m [8:17] vfat {6EFD-1659}
-> =E2=94=82 =E2=94=9Csdb2 29.80g [8:18] MD raid1 (1/6) (w/ sda2,sdd2,sd=
-e2,sdc2,sdf2)
-> in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
-> =E2=94=82 =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
-> {d2e6885b:2d256c5a:5f3de9a9:a5daa736}
-> =E2=94=82 =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3=
-a5a6e8fcff}
-> =E2=94=82 =E2=94=9Csdb3 186.26g [8:19] MD raid1 (1/6) (w/ sdf3,sdd3,s=
-de3,sda3,sdc3)
-> in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
-> =E2=94=82 =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
-> {89d69c6f:2ea223f5:aec8b67c:403488ad}
-> =E2=94=82 =E2=94=82                   ext4 {ca4bff22-40d8-4b31-859e-b=
-ba063f01df1}
-> =E2=94=82 =E2=94=94sdb4 2.52t [8:20] MD raid5 (1/6) (w/ sdd4,sda4,sde=
-4,sdc4,sdf4)
-> in_sync 'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
-> =E2=94=82  =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Ch=
-unk
-> {84672b4c:8fae7f38:bb4cc911:aa9d7444}
-> =E2=94=82                    ext4 {a9cfe95c-1e62-4cf6-b2aa-65abbd0c77=
-e4}
-> =E2=94=9Cscsi 2:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ0995502}
-> =E2=94=82=E2=94=94sdc 2.73t [8:32] Partitioned (gpt)
-> =E2=94=82 =E2=94=9Csdc1 95.37m [8:33] vfat {16BF-AABE}
-> =E2=94=82 =E2=94=9Csdc2 29.80g [8:34] MD raid1 (2/6) (w/ sda2,sdd2,sd=
-e2,sdb2,sdf2)
-> in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
-> =E2=94=82 =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
-> {d2e6885b:2d256c5a:5f3de9a9:a5daa736}
-> =E2=94=82 =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3=
-a5a6e8fcff}
-> =E2=94=82 =E2=94=9Csdc3 186.26g [8:35] MD raid1 (2/6) (w/ sdf3,sdd3,s=
-de3,sda3,sdb3)
-> in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
-> =E2=94=82 =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
-> {89d69c6f:2ea223f5:aec8b67c:403488ad}
-> =E2=94=82 =E2=94=82                   ext4 {ca4bff22-40d8-4b31-859e-b=
-ba063f01df1}
-> =E2=94=82 =E2=94=94sdc4 2.52t [8:36] MD raid5 (2/6) (w/ sdd4,sda4,sdb=
-4,sde4,sdf4)
-> in_sync 'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
-> =E2=94=82  =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Ch=
-unk
-> {84672b4c:8fae7f38:bb4cc911:aa9d7444}
-> =E2=94=82                    ext4 {a9cfe95c-1e62-4cf6-b2aa-65abbd0c77=
-e4}
-> =E2=94=9Cscsi 3:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ1118226}
-> =E2=94=82=E2=94=94sdd 2.73t [8:48] Partitioned (gpt)
-> =E2=94=82 =E2=94=9Csdd1 95.37m [8:49] vfat {978F-21B2}
-> =E2=94=82 =E2=94=9Csdd2 29.80g [8:50] MD raid1 (3/6) (w/ sda2,sde2,sd=
-c2,sdb2,sdf2)
-> in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
-> =E2=94=82 =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
-> {d2e6885b:2d256c5a:5f3de9a9:a5daa736}
-> =E2=94=82 =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3=
-a5a6e8fcff}
-> =E2=94=82 =E2=94=9Csdd3 186.26g [8:51] MD raid1 (3/6) (w/ sdf3,sde3,s=
-da3,sdc3,sdb3)
-> in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
-> =E2=94=82 =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
-> {89d69c6f:2ea223f5:aec8b67c:403488ad}
-> =E2=94=82 =E2=94=82                   ext4 {ca4bff22-40d8-4b31-859e-b=
-ba063f01df1}
-> =E2=94=82 =E2=94=94sdd4 2.52t [8:52] MD raid5 (3/6) (w/ sda4,sdb4,sde=
-4,sdc4,sdf4)
-> in_sync 'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
-> =E2=94=82  =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Ch=
-unk
-> {84672b4c:8fae7f38:bb4cc911:aa9d7444}
-> =E2=94=82                    ext4 {a9cfe95c-1e62-4cf6-b2aa-65abbd0c77=
-e4}
-> =E2=94=9Cscsi 4:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ1649385}
-> =E2=94=82=E2=94=94sde 2.73t [8:64] Partitioned (gpt)
-> =E2=94=82 =E2=94=9Csde1 95.37m [8:65] vfat {8875-2D50}
-> =E2=94=82 =E2=94=9Csde2 29.80g [8:66] MD raid1 (4/6) (w/ sda2,sdd2,sd=
-c2,sdb2,sdf2)
-> in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
-> =E2=94=82 =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
-> {d2e6885b:2d256c5a:5f3de9a9:a5daa736}
-> =E2=94=82 =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3=
-a5a6e8fcff}
-> =E2=94=82 =E2=94=9Csde3 186.26g [8:67] MD raid1 (4/6) (w/ sdf3,sdd3,s=
-da3,sdc3,sdb3)
-> in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
-> =E2=94=82 =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
-> {89d69c6f:2ea223f5:aec8b67c:403488ad}
-> =E2=94=82 =E2=94=82                   ext4 {ca4bff22-40d8-4b31-859e-b=
-ba063f01df1}
-> =E2=94=82 =E2=94=94sde4 2.52t [8:68] MD raid5 (4/6) (w/ sdd4,sda4,sdb=
-4,sdc4,sdf4)
-> in_sync 'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
-> =E2=94=82  =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Ch=
-unk
-> {84672b4c:8fae7f38:bb4cc911:aa9d7444}
-> =E2=94=82                    ext4 {a9cfe95c-1e62-4cf6-b2aa-65abbd0c77=
-e4}
-> =E2=94=94scsi 5:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ1383151}
->   =E2=94=94sdf 2.73t [8:80] Partitioned (gpt)
->    =E2=94=9Csdf1 95.37m [8:81] vfat {A89B-DC05}
->    =E2=94=9Csdf2 29.80g [8:82] MD raid1 (5/6) (w/ sda2,sdd2,sde2,sdc2=
-,sdb2)
-> in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
->    =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
-> {d2e6885b:2d256c5a:5f3de9a9:a5daa736}
->    =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3a5a6e8f=
-cff}
->    =E2=94=9Csdf3 186.26g [8:83] MD raid1 (5/6) (w/ sdd3,sde3,sda3,sdc=
-3,sdb3)
-> in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
->    =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
-> {89d69c6f:2ea223f5:aec8b67c:403488ad}
->    =E2=94=82                   ext4 {ca4bff22-40d8-4b31-859e-bba063f0=
-1df1}
->    =E2=94=94sdf4 2.52t [8:84] MD raid5 (5/6) (w/ sdd4,sda4,sdb4,sde4,=
-sdc4)
-> in_sync 'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
->     =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Chunk
-> {84672b4c:8fae7f38:bb4cc911:aa9d7444}
->                       ext4 {a9cfe95c-1e62-4cf6-b2aa-65abbd0c77e4}
-> USB [usb-storage] Bus 002 Device 004: ID 059f:1010 LaCie, Ltd Desktop
-> Hard Drive {ST3500830A            9QG6RC54}
-> =E2=94=94scsi 6:0:0:0 ST350083 0AS
->   =E2=94=94sdg 465.76g [8:96] Partitioned (dos)
->    =E2=94=94sdg1 465.76g [8:97] ext4 {4c2f6b92-829d-4e53-b553-c07e0f5=
-71e02}
->     =E2=94=94Mounted as /dev/sdg1 @ /mnt
-> Other Block Devices
-> =E2=94=9Cloop0 0.00k [7:0] Empty/Unknown
-> =E2=94=9Cloop1 0.00k [7:1] Empty/Unknown
-> =E2=94=9Cloop2 0.00k [7:2] Empty/Unknown
-> =E2=94=9Cloop3 0.00k [7:3] Empty/Unknown
-> =E2=94=9Cloop4 0.00k [7:4] Empty/Unknown
-> =E2=94=9Cloop5 0.00k [7:5] Empty/Unknown
-> =E2=94=9Cloop6 0.00k [7:6] Empty/Unknown
-> =E2=94=9Cloop7 0.00k [7:7] Empty/Unknown
-> =E2=94=9Cram0 64.00m [1:0] Empty/Unknown
-> =E2=94=9Cram1 64.00m [1:1] Empty/Unknown
-> =E2=94=9Cram2 64.00m [1:2] Empty/Unknown
-> =E2=94=9Cram3 64.00m [1:3] Empty/Unknown
-> =E2=94=9Cram4 64.00m [1:4] Empty/Unknown
-> =E2=94=9Cram5 64.00m [1:5] Empty/Unknown
-> =E2=94=9Cram6 64.00m [1:6] Empty/Unknown
-> =E2=94=9Cram7 64.00m [1:7] Empty/Unknown
-> =E2=94=9Cram8 64.00m [1:8] Empty/Unknown
-> =E2=94=9Cram9 64.00m [1:9] Empty/Unknown
-> =E2=94=9Cram10 64.00m [1:10] Empty/Unknown
-> =E2=94=9Cram11 64.00m [1:11] Empty/Unknown
-> =E2=94=9Cram12 64.00m [1:12] Empty/Unknown
-> =E2=94=9Cram13 64.00m [1:13] Empty/Unknown
-> =E2=94=9Cram14 64.00m [1:14] Empty/Unknown
-> =E2=94=94ram15 64.00m [1:15] Empty/Unknown
-> --
->
+I created a RAID5 array with 22 data disks and 2 hot spares, like this:
 
-Thanks for the detailled answer. I read through all of it to identify=20
-what I did not understood before starting. I have a few clarificacions=20
-for you and a few questions.
+    # mdadm --create /dev/md/dbs -l raid5 -n 22 -x 2 -c 512 -b internal /dev/sd{b..y}
 
-Yes, that's the way my console looks like. I usually don't have problem=
-=20
-with UTF8 output (i.e. not garbled), I figured it was the result of the=
-=20
-lsdrv.... Nasty to read, but it's all there.
+However I'm having difficultly understanding the mdstat output.
 
-I am running Ubuntu 12.04.1 server on this relatively new raid5 setup.
-I think I understood most of the reshaping instructions, but I need to=20
-clarify your point related to the timeout. I tried to execute it in a=20
-simple bash file and got stopped at the beginning just for the lack of =
-a=20
-timeoutfile?
+    # cat /proc/mdstat
+    Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
+    md127 : active raid5 sdw[24] sdy[23](S) sdx[22](S) sdv[20] sdu[19] sdt[18] sds[17] sdr[16] sdq[15] sdp[14] sdo[13] sdn[12] sdm[11] sdl[10] sdk[9] sdj[8] sdi[7] sdh[6] sdg[5] sdf[4] sde[3] sdd[2] sdc[1] sdb[0]
+          61532835840 blocks super 1.2 level 5, 512k chunk, algorithm 2 [22/21] [UUUUUUUUUUUUUUUUUUUUU_]
+          [=>...................]  recovery =  6.0% (176470508/2930135040) finish=706.9min speed=64915K/sec
+          bitmap: 0/22 pages [0KB], 65536KB chunk
 
-After looking for it, I realised that sd[abcdef] were all symlinks=20
-pointing to another part of the system, where there is no driver=20
-directory. After browsing, i figured out that /sys/block/sda/device did=
-=20
-led to a timeout file. Can you please confirm, it is the one we want ?
+    unused devices: <none>
+    # 
 
-A last point I need to clarify: is the reshaping (although long) data=20
-destructive (backup will be done in all cases)?
+Problems:
+
+1. The UUUU_ and [22/21] suggests that one disk is bad, but is that true?
+And if so which one?
+
+Output from "dmesg | grep -3 sd" is at end of this mail, and it doesn't show
+any errors.
+
+All the disks have the same event counter in the metadata:
+
+# for i in /dev/sd{b..y}; do mdadm --examine $i | grep Events; done | sort | uniq -c
+     24          Events : 594
+
+2. /proc/mdstat shows the member disks numbered 0..20 and 22..24, what
+happened to 21 ?
+
+I had previously initialised this array as a RAID6 and then changed my mind
+(mdadm --stop on the RAID6, then mdadm --create as shown above). Could that
+cause this?
 
 Thanks,
 
-Dominique
+Brian.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+[ 1521.456236] md: bind<sdb>
+[ 1521.562109] md: bind<sdc>
+[ 1521.642205] md: bind<sdd>
+[ 1521.742085] md: bind<sde>
+[ 1521.865477] md: bind<sdf>
+[ 1521.913948] md: bind<sdg>
+[ 1522.032447] md: bind<sdh>
+[ 1522.149983] md: bind<sdi>
+[ 1522.210146] md: bind<sdj>
+[ 1522.311450] md: bind<sdk>
+[ 1522.394621] md: bind<sdl>
+[ 1522.492218] md: bind<sdm>
+[ 1522.609674] md: bind<sdn>
+[ 1522.715425] md: bind<sdo>
+[ 1522.793035] md: bind<sdp>
+[ 1522.872313] md: bind<sdq>
+[ 1522.984171] md: bind<sdr>
+[ 1523.059627] md: bind<sds>
+[ 1523.146203] md: bind<sdt>
+[ 1523.257396] md: bind<sdu>
+[ 1523.367173] md: bind<sdv>
+[ 1523.459063] md: bind<sdx>
+[ 1523.503167] md: bind<sdy>
+[ 1523.602943] md: bind<sdw>
+[ 1523.604343] md/raid:md127: device sdv operational as raid disk 20
+[ 1523.604347] md/raid:md127: device sdu operational as raid disk 19
+[ 1523.604350] md/raid:md127: device sdt operational as raid disk 18
+[ 1523.604352] md/raid:md127: device sds operational as raid disk 17
+[ 1523.604354] md/raid:md127: device sdr operational as raid disk 16
+[ 1523.604356] md/raid:md127: device sdq operational as raid disk 15
+[ 1523.604358] md/raid:md127: device sdp operational as raid disk 14
+[ 1523.604361] md/raid:md127: device sdo operational as raid disk 13
+[ 1523.604363] md/raid:md127: device sdn operational as raid disk 12
+[ 1523.604365] md/raid:md127: device sdm operational as raid disk 11
+[ 1523.604367] md/raid:md127: device sdl operational as raid disk 10
+[ 1523.604369] md/raid:md127: device sdk operational as raid disk 9
+[ 1523.604371] md/raid:md127: device sdj operational as raid disk 8
+[ 1523.604373] md/raid:md127: device sdi operational as raid disk 7
+[ 1523.604376] md/raid:md127: device sdh operational as raid disk 6
+[ 1523.604378] md/raid:md127: device sdg operational as raid disk 5
+[ 1523.604380] md/raid:md127: device sdf operational as raid disk 4
+[ 1523.604382] md/raid:md127: device sde operational as raid disk 3
+[ 1523.604384] md/raid:md127: device sdd operational as raid disk 2
+[ 1523.604386] md/raid:md127: device sdc operational as raid disk 1
+[ 1523.604388] md/raid:md127: device sdb operational as raid disk 0
+[ 1523.605694] md/raid:md127: allocated 23216kB
+[ 1523.605802] md/raid:md127: raid level 5 active with 21 out of 22 devices, algorithm 2
+[ 1523.606250] RAID conf printout:
+[ 1523.606252]  --- level:5 rd:22 wd:21
+[ 1523.606254]  disk 0, o:1, dev:sdb
+[ 1523.606256]  disk 1, o:1, dev:sdc
+[ 1523.606258]  disk 2, o:1, dev:sdd
+[ 1523.606260]  disk 3, o:1, dev:sde
+[ 1523.606261]  disk 4, o:1, dev:sdf
+[ 1523.606263]  disk 5, o:1, dev:sdg
+[ 1523.606265]  disk 6, o:1, dev:sdh
+[ 1523.606266]  disk 7, o:1, dev:sdi
+[ 1523.606268]  disk 8, o:1, dev:sdj
+[ 1523.606270]  disk 9, o:1, dev:sdk
+[ 1523.606271]  disk 10, o:1, dev:sdl
+[ 1523.606273]  disk 11, o:1, dev:sdm
+[ 1523.606275]  disk 12, o:1, dev:sdn
+[ 1523.606277]  disk 13, o:1, dev:sdo
+[ 1523.606278]  disk 14, o:1, dev:sdp
+[ 1523.606280]  disk 15, o:1, dev:sdq
+[ 1523.606282]  disk 16, o:1, dev:sdr
+[ 1523.606283]  disk 17, o:1, dev:sds
+[ 1523.606285]  disk 18, o:1, dev:sdt
+[ 1523.606287]  disk 19, o:1, dev:sdu
+[ 1523.606289]  disk 20, o:1, dev:sdv
+[ 1523.606440] created bitmap (22 pages) for device md127
+[ 1523.609710] md127: bitmap initialized from disk: read 2/2 pages, set 44711 of 44711 bits
+[ 1523.819455] md127: detected capacity change from 0 to 63009623900160
+[ 1523.819488] RAID conf printout:
+[ 1523.819492]  --- level:5 rd:22 wd:21
+[ 1523.819495]  disk 0, o:1, dev:sdb
+[ 1523.819497]  disk 1, o:1, dev:sdc
+[ 1523.819499]  disk 2, o:1, dev:sdd
+[ 1523.819501]  disk 3, o:1, dev:sde
+[ 1523.819502]  disk 4, o:1, dev:sdf
+[ 1523.819504]  disk 5, o:1, dev:sdg
+[ 1523.819506]  disk 6, o:1, dev:sdh
+[ 1523.819508]  disk 7, o:1, dev:sdi
+[ 1523.819509]  disk 8, o:1, dev:sdj
+[ 1523.819511]  disk 9, o:1, dev:sdk
+[ 1523.819513]  disk 10, o:1, dev:sdl
+[ 1523.819515]  disk 11, o:1, dev:sdm
+[ 1523.819517]  disk 12, o:1, dev:sdn
+[ 1523.819518]  disk 13, o:1, dev:sdo
+[ 1523.819520]  disk 14, o:1, dev:sdp
+[ 1523.819522]  disk 15, o:1, dev:sdq
+[ 1523.819524]  disk 16, o:1, dev:sdr
+[ 1523.819525]  disk 17, o:1, dev:sds
+[ 1523.819527]  disk 18, o:1, dev:sdt
+[ 1523.819529]  disk 19, o:1, dev:sdu
+[ 1523.819531]  disk 20, o:1, dev:sdv
+[ 1523.819532]  disk 21, o:1, dev:sdw
+[ 1523.819539] RAID conf printout:
+[ 1523.819541]  --- level:5 rd:22 wd:21
+[ 1523.819543]  disk 0, o:1, dev:sdb
+[ 1523.819544]  disk 1, o:1, dev:sdc
+[ 1523.819546]  disk 2, o:1, dev:sdd
+[ 1523.819548]  disk 3, o:1, dev:sde
+[ 1523.819549]  disk 4, o:1, dev:sdf
+[ 1523.819551]  disk 5, o:1, dev:sdg
+[ 1523.819553]  disk 6, o:1, dev:sdh
+[ 1523.819554]  disk 7, o:1, dev:sdi
+[ 1523.819556]  disk 8, o:1, dev:sdj
+[ 1523.819558]  disk 9, o:1, dev:sdk
+[ 1523.819559]  disk 10, o:1, dev:sdl
+[ 1523.819561]  disk 11, o:1, dev:sdm
+[ 1523.819563]  disk 12, o:1, dev:sdn
+[ 1523.819564]  disk 13, o:1, dev:sdo
+[ 1523.819566]  disk 14, o:1, dev:sdp
+[ 1523.819568]  disk 15, o:1, dev:sdq
+[ 1523.819570]  disk 16, o:1, dev:sdr
+[ 1523.819571]  disk 17, o:1, dev:sds
+[ 1523.819573]  disk 18, o:1, dev:sdt
+[ 1523.819575]  disk 19, o:1, dev:sdu
+[ 1523.819576]  disk 20, o:1, dev:sdv
+[ 1523.819578]  disk 21, o:1, dev:sdw
+[ 1523.819579] RAID conf printout:
+[ 1523.819581]  --- level:5 rd:22 wd:21
+[ 1523.819583]  disk 0, o:1, dev:sdb
+[ 1523.819584]  disk 1, o:1, dev:sdc
+[ 1523.819586]  disk 2, o:1, dev:sdd
+[ 1523.819588]  disk 3, o:1, dev:sde
+[ 1523.819589]  disk 4, o:1, dev:sdf
+[ 1523.819591]  disk 5, o:1, dev:sdg
+[ 1523.819592]  disk 6, o:1, dev:sdh
+[ 1523.819594]  disk 7, o:1, dev:sdi
+[ 1523.819596]  disk 8, o:1, dev:sdj
+[ 1523.819597]  disk 9, o:1, dev:sdk
+[ 1523.819599]  disk 10, o:1, dev:sdl
+[ 1523.819601]  disk 11, o:1, dev:sdm
+[ 1523.819602]  disk 12, o:1, dev:sdn
+[ 1523.819604]  disk 13, o:1, dev:sdo
+[ 1523.819606]  disk 14, o:1, dev:sdp
+[ 1523.819607]  disk 15, o:1, dev:sdq
+[ 1523.819609]  disk 16, o:1, dev:sdr
+[ 1523.819611]  disk 17, o:1, dev:sds
+[ 1523.819612]  disk 18, o:1, dev:sdt
+[ 1523.819614]  disk 19, o:1, dev:sdu
+[ 1523.819616]  disk 20, o:1, dev:sdv
+[ 1523.819617]  disk 21, o:1, dev:sdw
+[ 1523.819761] md: recovery of RAID array md127
+[ 1523.819765] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+[ 1523.819767] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
