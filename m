@@ -1,7 +1,7 @@
 From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
 Subject: Re: What layout with 6x2TB, Intel Atom?
-Date: Tue, 5 Feb 2013 01:01:24 +0100 (CET)
-Message-ID: <733670.23.1360022484693.JavaMail.root@zimbra>
+Date: Tue, 5 Feb 2013 01:04:02 +0100 (CET)
+Message-ID: <14844140.25.1360022642643.JavaMail.root@zimbra>
 References: <511040F5.1020407@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
@@ -13,10 +13,15 @@ To: stan@hardwarefreak.com
 Cc: =?utf-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> Third, use XFS, and format with alignment to the md device:
-> ~$ mkfs.xfs -d su=3D512k,sw=3D4
+> Fourth, even if your Marvell SATA card is PCIe x1 1.0 and limited to
+> 250MB/s, 500MB/s duplex, that shouldn't cause problems in daily use,
+> though it may very well slow down RAID operations such as rebuilds an=
+d
+> reshapes. If it's a 2.0 card operating in 2.0 mode, it's 500/1000
+> MB/s, exceeding the bandwidth of the 3 drives, and is ample.
 
-Why? ext4 should be just as good for that, and better for metadata
+250MB/s duplex or not. A 1Gbps ethernet link is 1Gbps either its duplex=
+ or not.
 
 Vennlige hilsener / Best regards
 
