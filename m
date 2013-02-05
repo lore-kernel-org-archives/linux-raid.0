@@ -1,43 +1,48 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
 Subject: Re: 3TB drives failure rate (summary)
-Date: Wed, 06 Feb 2013 04:43:03 +1100
-Message-ID: <511144A7.4050208@websitemanagers.com.au>
-References: <11510711257.20121028131527@oudeis.org> <508D61A1.7020106@wildgooses.com> <508D65CF.1080904@gmail.com> <508DADC3.4080104@shiftmail.org> <508DB08D.20002@meetinghouse.net> <508DC6E9.8070001@shiftmail.org> <508DC922.7040400@meetinghouse.net> <20121029102919.1134a797@natsu> <508E3626.8080404@hesbynett.no> <508E7E68.1030202@turmel.org> <1494377384.20121031005457@oudeis.org> <50911AFF.9020707@turmel.org>
+Date: Tue, 5 Feb 2013 19:08:25 +0100 (CET)
+Message-ID: <27438597.16.1360087705797.JavaMail.root@zimbra>
+References: <511144A7.4050208@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50911AFF.9020707@turmel.org>
+In-Reply-To: <511144A7.4050208@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: =?UTF-8?B?UmFpbmVyIEbDvGdlbnN0ZWlu?= <rfu@oudeis.org>, linux-raid@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: =?utf-8?Q?Rainer_F=C3=BCgenstein?= <rfu@oudeis.org>, linux-raid@vger.kernel.org, Phil Turmel <philip@turmel.org>
 List-Id: linux-raid.ids
 
-On 31/10/12 23:35, Phil Turmel wrote:
-> I strongly encourage you to run "smartctl -l scterc /dev/sdX" for each
-> of your drives.  For any drive that warns that it doesn't support SCT
-> ERC, set the controller device timeout to 180 like so:
->
-> echo 180 >/sys/block/sdX/device/timeout
->
-> If the report says read or write ERC is disabled, run "smartctl -l
-> scterc,70,70 /dev/sdX" to set it to 7.0 seconds.
->
-> You then set up a boot-time script to do these adjustments at every restart.
+> I'm using some SSD's in a RAID, but smartctl -l scterc /dev/sdX says
+> it
+> doesn't support it.
+>=20
+> Do SSD's not support it because it is not relevant (ie, either the
+> data
+> is there or not, we always know immediately, never any "retry" or
+> whatever?)
+>=20
+> Or, should I be concerned about this?
 
-I'm using some SSD's in a RAID, but smartctl -l scterc /dev/sdX says it
-doesn't support it.
+My C300s support SCTERC, defaulting to 4 seconds timeout. How the SSD a=
+ctually handles errors, is probably implementation specific.
 
-Do SSD's not support it because it is not relevant (ie, either the data
-is there or not, we always know immediately, never any "retry" or whatever?)
+Vennlige hilsener / Best regards
 
-Or, should I be concerned about this?
-
-Thanks,
-Adam
-
--- 
-Adam Goryachev
-Website Managers
-www.websitemanagers.com.au
-
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
