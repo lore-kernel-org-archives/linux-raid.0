@@ -1,55 +1,43 @@
-From: Alexander 'Leo' Bergolth <leo@strike.wu.ac.at>
-Subject: Re: Align lvm or dm-crypt to stripe or chunk size?
-Date: Tue, 05 Feb 2013 17:25:41 +0100
-Message-ID: <51113285.20709@strike.wu.ac.at>
-References: <50F7C5F4.8080501@strike.wu.ac.at>
+From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Subject: Re: 3TB drives failure rate (summary)
+Date: Wed, 06 Feb 2013 04:43:03 +1100
+Message-ID: <511144A7.4050208@websitemanagers.com.au>
+References: <11510711257.20121028131527@oudeis.org> <508D61A1.7020106@wildgooses.com> <508D65CF.1080904@gmail.com> <508DADC3.4080104@shiftmail.org> <508DB08D.20002@meetinghouse.net> <508DC6E9.8070001@shiftmail.org> <508DC922.7040400@meetinghouse.net> <20121029102919.1134a797@natsu> <508E3626.8080404@hesbynett.no> <508E7E68.1030202@turmel.org> <1494377384.20121031005457@oudeis.org> <50911AFF.9020707@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50F7C5F4.8080501@strike.wu.ac.at>
+In-Reply-To: <50911AFF.9020707@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: =?UTF-8?B?UmFpbmVyIEbDvGdlbnN0ZWlu?= <rfu@oudeis.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/17/2013 10:35 AM, Alexander 'Leo' Bergolth wrote:
-> If using some kind of container like lvm or dm-crypt that has a
-> data-offset inside my md device...
-> Do I need to align the data offset to the stripe size (chunk-size*number
-> of data-bearing disks) or just to the chunk size?
-> 
-> If aligning to the chunk size is sufficient, could anyone give an
-> explanation? Doesn't this break filesystem alignment inside the
-> container? (I.e. the --stripe-width option)
+On 31/10/12 23:35, Phil Turmel wrote:
+> I strongly encourage you to run "smartctl -l scterc /dev/sdX" for each
+> of your drives.  For any drive that warns that it doesn't support SCT
+> ERC, set the controller device timeout to 180 like so:
+>
+> echo 180 >/sys/block/sdX/device/timeout
+>
+> If the report says read or write ERC is disabled, run "smartctl -l
+> scterc,70,70 /dev/sdX" to set it to 7.0 seconds.
+>
+> You then set up a boot-time script to do these adjustments at every restart.
 
-I've done some benchmarks using a raid-6 md-device (5 disks, 64k
-chunksize) with lvm (different data-offsets) and ext4 on top.
+I'm using some SSD's in a RAID, but smartctl -l scterc /dev/sdX says it
+doesn't support it.
 
-The ext4 filesystem is always aligned to the array
-(stride=16,stripe-width=48) but the data offset of the lvm physical
-volume is either the default of 2048 sectors (which isn't a multiple of
-the stripe size of 3*64k) or 384 sectors (3 data bearing disks * 64k
-chunks).
+Do SSD's not support it because it is not relevant (ie, either the data
+is there or not, we always know immediately, never any "retry" or whatever?)
 
-The results are available at
-http://leo.kloburg.at/tmp/raid-dataoffsets/
-
-It looks like it doesn't make any difference if the data offset is a
-multiple of the stripe size or just of the chunk size.
-
-But why doesn't a wrong data-offset break the --stripe-width hint given
-to mkfs.ext4???
-
-I'd really appreciate if someone could shed some light on that.
+Or, should I be concerned about this?
 
 Thanks,
---leo
-
-P.S.: The benchmarks were done with bonnie++, details can be found in
-bench.sh at the above URL.
+Adam
 
 -- 
-e-mail   ::: Leo.Bergolth (at) wu.ac.at
-fax      ::: +43-1-31336-906050
-location ::: IT-Services | Vienna University of Economics | Austria
+Adam Goryachev
+Website Managers
+www.websitemanagers.com.au
 
