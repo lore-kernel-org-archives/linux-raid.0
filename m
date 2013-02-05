@@ -1,43 +1,55 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: What layout with 6x2TB, Intel Atom?
-Date: Tue, 05 Feb 2013 08:17:09 -0600
-Message-ID: <51111465.8080603@hardwarefreak.com>
-References: <733670.23.1360022484693.JavaMail.root@zimbra>
-Reply-To: stan@hardwarefreak.com
+From: Alexander 'Leo' Bergolth <leo@strike.wu.ac.at>
+Subject: Re: Align lvm or dm-crypt to stripe or chunk size?
+Date: Tue, 05 Feb 2013 17:25:41 +0100
+Message-ID: <51113285.20709@strike.wu.ac.at>
+References: <50F7C5F4.8080501@strike.wu.ac.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <733670.23.1360022484693.JavaMail.root@zimbra>
+In-Reply-To: <50F7C5F4.8080501@strike.wu.ac.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2/4/2013 6:01 PM, Roy Sigurd Karlsbakk wrote:
->> Third, use XFS, and format with alignment to the md device:
->> ~$ mkfs.xfs -d su=512k,sw=4
+On 01/17/2013 10:35 AM, Alexander 'Leo' Bergolth wrote:
+> If using some kind of container like lvm or dm-crypt that has a
+> data-offset inside my md device...
+> Do I need to align the data offset to the stripe size (chunk-size*number
+> of data-bearing disks) or just to the chunk size?
 > 
-> Why? ext4 should be just as good for that, 
+> If aligning to the chunk size is sufficient, could anyone give an
+> explanation? Doesn't this break filesystem alignment inside the
+> container? (I.e. the --stripe-width option)
 
-XFS generally yields better performance with concurrency, and is simply
-a better filesystem across the board WRT performance, features, and
-tools.  And XFS has been designed and optimized since 1994 specifically
-for storing and streaming large files, making it a perfect fit for the
-OP's 4GB files.
+I've done some benchmarks using a raid-6 md-device (5 disks, 64k
+chunksize) with lvm (different data-offsets) and ext4 on top.
 
-Why use "just as good" when one can use the best?
+The ext4 filesystem is always aligned to the array
+(stride=16,stripe-width=48) but the data offset of the lvm physical
+volume is either the default of 2048 sectors (which isn't a multiple of
+the stripe size of 3*64k) or 384 sectors (3 data bearing disks * 64k
+chunks).
 
-> and better for metadata
+The results are available at
+http://leo.kloburg.at/tmp/raid-dataoffsets/
 
-XFS metadata performance has exceeded that of EXT4 since mainline kernel
-2.6.39 (May 2011) for workloads with medium to large concurrency (2-4
-threads or more).  It's single thread metadata performance is now not
-far behind EXT4.  Thus journal metadata performance is no longer a
-reason to avoid XFS.
+It looks like it doesn't make any difference if the data offset is a
+multiple of the stripe size or just of the chunk size.
 
-Regardless, metadata performance is irrelevant to the OP's stated workload.
+But why doesn't a wrong data-offset break the --stripe-width hint given
+to mkfs.ext4???
+
+I'd really appreciate if someone could shed some light on that.
+
+Thanks,
+--leo
+
+P.S.: The benchmarks were done with bonnie++, details can be found in
+bench.sh at the above URL.
 
 -- 
-Stan
+e-mail   ::: Leo.Bergolth (at) wu.ac.at
+fax      ::: +43-1-31336-906050
+location ::: IT-Services | Vienna University of Economics | Austria
 
