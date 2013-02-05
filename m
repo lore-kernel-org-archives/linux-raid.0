@@ -1,308 +1,341 @@
-From: "From Mrs. Doris Kula" <mrsdoriskula@gmail.com>
-Subject: From Mrs. Doris Kula
-Date: Mon, 4 Feb 2013 22:55:36 -0800 (PST)
-Message-ID: <1360047336.65576.YahooMailClassic__907.319869338785$1360047387$gmane$org@web5715.biz.mail.ne1.yahoo.com>
-Reply-To: mrsdoriskula@gmail.com
+From: Dominique <dcouot@hotmail.com>
+Subject: Re: Raid 5 to 6 migration
+Date: Tue, 5 Feb 2013 11:36:36 +0100
+Message-ID: <BLU0-SMTP1112AC3113196A419EBCD79C9000@phx.gbl>
+References: <BLU0-SMTP433B0BCF64D448CC81098D2C91C0@phx.gbl>,<510C0075.9010908@turmel.org> <COL114-W137DD8871889508BBF087BC91C0@phx.gbl> <510C07FA.4090405@turmel.org> <BLU0-SMTP45011D3540FEA010403D4ABC9010@phx.gbl> <5110005E.103@turmel.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="1178294230-1495668114-1360047336=:65576"
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5110005E.103@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---1178294230-1495668114-1360047336=:65576
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
 
-PLEASE OPEN ATTACHMENT FOR MY LETTER TO YOU
---1178294230-1495668114-1360047336=:65576
-Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document; name=From
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="From DORIS KULA.docx"
+On 04/02/2013 19:39, Phil Turmel wrote:
+> On 02/04/2013 07:51 AM, Dominique wrote:
+>> Back from weekend, and still with my problem. Output of lsdrv is as =
+follow:
+> Yuck, mangled utf-8.  Does it look that way on your console?
+> [output w/ fixed tree characters pasted below]
+>
+> First item, greatest importance:  You are using Western Digital Green
+> drives.  These are *unsafe* to use in raid arrays of any kind "out of
+> the box".  They do *not* support SCTERC.  You *must* use a boot-up
+> script to set the linux driver timeouts to two minutes or more or you
+> *will* crash this array.
+>
+> I recommend a three minute timeout.  Something like this:
+>> for x in /sys/block/sd[abcdef]/driver/timeout ; do
+>> 	echo 180 > $x
+>> done
+> in "rc.local" or wherever your distribution likes such things.  And
+> don't wait for your next reboot--execute it now.
+>
+> If you don't have that in place, it suggests that your array is very =
+new
+> or you are not running any regular "scrub".  It is important that you
+> not be vulnerable during the reshape, as the array will be heavily
+> exercised.  If you aren't regularly scrubbing, execute:
+>> echo "check" >/sys/block/md2/md/sync_action
+> then monitor /proc/mdstat until it completes.  (Several hours)  Then
+> look at the mismatch count:
+>> cat /sys/block/md2/md/mismatch_count
+> It should be zero.
+>
+> Otherwise, your array is a simple ext4 filesystem without any apparen=
+t
+> system dependencies.  So you should be able to do everything needed i=
+n
+> your normal boot environment, just shutting down the services that ar=
+e
+> using the data in "/srv".  Once the filesystem itself is resized
+> (possibly quite quickly if your array has a great deal of free space)=
+,
+> the remainder of the work can occur online (with /srv mounted again a=
+nd
+> your services restarted).
+>
+> Here's your recipe:
+>
+> 1) Stop all services using /srv, then unmount with:
+>> umount /srv
+> 2) Make sure the filesystem is consistent:
+>> fsck /dev/md2
+> 3) Determine resizing options:
+>> resize2fs -P /dev/md2
+> This will report the number of blocks needed for the current contents
+> (usually in 4k blocks).  I don't recommend resizing all the way to th=
+e
+> minimum, as it may take much longer.  Just make sure you can shrink t=
+o
+> ~10 terabytes.
+>
+> 4) Resize:
+>> resize2fs /dev/md2 10240G
+> 5) Verify Ok:
+>> fsck -n /dev/md2
+> 6) Instruct md to temporarily use less than the future size of md2 (b=
+ut
+> more than the filesystem):
+>> mdadm --grow /dev/md2 --array-size=3D10241G
+> 7) Verify Again:
+>> fsck -n /dev/md2
+> 8) Instruct md to reshape to raid6 and view its progress:
+>> mdadm --grow /dev/md2 --level=3Draid6 --raid-devices=3D6
+>> cat /proc/mdstat
+>   (The reshape will continue in the background.)
+>
+> 9) If you need the services as soon as possible, the filesystem can b=
+e
+> remounted at this point, and the services restarted.  If /srv is in y=
+our
+> fstab, just use:
+>> mount /srv
+> 10) Depending on the speed of your components, and how heavily you us=
+e
+> the array, the reshape can take several hours to days.  I would expec=
+t
+> yours to take at least 7 hours, best case.  Once complete, you can
+> resize once more to the maximum available (this can be done while
+> mounted and the services running):
+>> mdadm --grow /dev/md2 --array-size=3Dmax
+>> resize2fs /dev/md2
+> If you run into any problems (or questions), let us know.
+>
+> Regards,
+>
+> Phil
+>
+> --
+>
+> PCI [ahci] 00:1f.2 SATA controller: Intel Corporation 6 Series/C200
+> Series Chipset Family SATA AHCI Controller (rev 05)
+> =E2=94=9Cscsi 0:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ1618149}
+> =E2=94=82=E2=94=94sda 2.73t [8:0] Partitioned (gpt)
+> =E2=94=82 =E2=94=9Csda1 95.37m [8:1] vfat {89EF-00F4}
+> =E2=94=82 =E2=94=82=E2=94=94Mounted as /dev/sda1 @ /boot/efi
+> =E2=94=82 =E2=94=9Csda2 29.80g [8:2] MD raid1 (0/6) (w/ sdd2,sde2,sdc=
+2,sdb2,sdf2)
+> in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
+> =E2=94=82 =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
+> {d2e6885b:2d256c5a:5f3de9a9:a5daa736}
+> =E2=94=82 =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3=
+a5a6e8fcff}
+> =E2=94=82 =E2=94=9Csda3 186.26g [8:3] MD raid1 (0/6) (w/ sdf3,sdd3,sd=
+e3,sdc3,sdb3)
+> in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
+> =E2=94=82 =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
+> {89d69c6f:2ea223f5:aec8b67c:403488ad}
+> =E2=94=82 =E2=94=82 =E2=94=82                 ext4 {ca4bff22-40d8-4b3=
+1-859e-bba063f01df1}
+> =E2=94=82 =E2=94=82 =E2=94=9CMounted as /dev/disk/by-uuid/ca4bff22-40=
+d8-4b31-859e-bba063f01df1 @ /
+> =E2=94=82 =E2=94=82 =E2=94=94Mounted as /dev/disk/by-uuid/ca4bff22-40=
+d8-4b31-859e-bba063f01df1 @
+> /var/spool/hylafax/etc
+> =E2=94=82 =E2=94=94sda4 2.52t [8:4] MD raid5 (0/6) (w/ sdd4,sdb4,sde4=
+,sdc4,sdf4) in_sync
+> 'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
+> =E2=94=82  =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Ch=
+unk
+> {84672b4c:8fae7f38:bb4cc911:aa9d7444}
+> =E2=94=82   =E2=94=82                ext4 {a9cfe95c-1e62-4cf6-b2aa-65=
+abbd0c77e4}
+> =E2=94=82   =E2=94=94Mounted as /dev/md2 @ /srv
+> =E2=94=9Cscsi 1:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ1382990}
+> =E2=94=82=E2=94=94sdb 2.73t [8:16] Partitioned (gpt)
+> =E2=94=82 =E2=94=9Csdb1 95.37m [8:17] vfat {6EFD-1659}
+> =E2=94=82 =E2=94=9Csdb2 29.80g [8:18] MD raid1 (1/6) (w/ sda2,sdd2,sd=
+e2,sdc2,sdf2)
+> in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
+> =E2=94=82 =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
+> {d2e6885b:2d256c5a:5f3de9a9:a5daa736}
+> =E2=94=82 =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3=
+a5a6e8fcff}
+> =E2=94=82 =E2=94=9Csdb3 186.26g [8:19] MD raid1 (1/6) (w/ sdf3,sdd3,s=
+de3,sda3,sdc3)
+> in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
+> =E2=94=82 =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
+> {89d69c6f:2ea223f5:aec8b67c:403488ad}
+> =E2=94=82 =E2=94=82                   ext4 {ca4bff22-40d8-4b31-859e-b=
+ba063f01df1}
+> =E2=94=82 =E2=94=94sdb4 2.52t [8:20] MD raid5 (1/6) (w/ sdd4,sda4,sde=
+4,sdc4,sdf4)
+> in_sync 'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
+> =E2=94=82  =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Ch=
+unk
+> {84672b4c:8fae7f38:bb4cc911:aa9d7444}
+> =E2=94=82                    ext4 {a9cfe95c-1e62-4cf6-b2aa-65abbd0c77=
+e4}
+> =E2=94=9Cscsi 2:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ0995502}
+> =E2=94=82=E2=94=94sdc 2.73t [8:32] Partitioned (gpt)
+> =E2=94=82 =E2=94=9Csdc1 95.37m [8:33] vfat {16BF-AABE}
+> =E2=94=82 =E2=94=9Csdc2 29.80g [8:34] MD raid1 (2/6) (w/ sda2,sdd2,sd=
+e2,sdb2,sdf2)
+> in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
+> =E2=94=82 =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
+> {d2e6885b:2d256c5a:5f3de9a9:a5daa736}
+> =E2=94=82 =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3=
+a5a6e8fcff}
+> =E2=94=82 =E2=94=9Csdc3 186.26g [8:35] MD raid1 (2/6) (w/ sdf3,sdd3,s=
+de3,sda3,sdb3)
+> in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
+> =E2=94=82 =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
+> {89d69c6f:2ea223f5:aec8b67c:403488ad}
+> =E2=94=82 =E2=94=82                   ext4 {ca4bff22-40d8-4b31-859e-b=
+ba063f01df1}
+> =E2=94=82 =E2=94=94sdc4 2.52t [8:36] MD raid5 (2/6) (w/ sdd4,sda4,sdb=
+4,sde4,sdf4)
+> in_sync 'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
+> =E2=94=82  =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Ch=
+unk
+> {84672b4c:8fae7f38:bb4cc911:aa9d7444}
+> =E2=94=82                    ext4 {a9cfe95c-1e62-4cf6-b2aa-65abbd0c77=
+e4}
+> =E2=94=9Cscsi 3:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ1118226}
+> =E2=94=82=E2=94=94sdd 2.73t [8:48] Partitioned (gpt)
+> =E2=94=82 =E2=94=9Csdd1 95.37m [8:49] vfat {978F-21B2}
+> =E2=94=82 =E2=94=9Csdd2 29.80g [8:50] MD raid1 (3/6) (w/ sda2,sde2,sd=
+c2,sdb2,sdf2)
+> in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
+> =E2=94=82 =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
+> {d2e6885b:2d256c5a:5f3de9a9:a5daa736}
+> =E2=94=82 =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3=
+a5a6e8fcff}
+> =E2=94=82 =E2=94=9Csdd3 186.26g [8:51] MD raid1 (3/6) (w/ sdf3,sde3,s=
+da3,sdc3,sdb3)
+> in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
+> =E2=94=82 =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
+> {89d69c6f:2ea223f5:aec8b67c:403488ad}
+> =E2=94=82 =E2=94=82                   ext4 {ca4bff22-40d8-4b31-859e-b=
+ba063f01df1}
+> =E2=94=82 =E2=94=94sdd4 2.52t [8:52] MD raid5 (3/6) (w/ sda4,sdb4,sde=
+4,sdc4,sdf4)
+> in_sync 'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
+> =E2=94=82  =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Ch=
+unk
+> {84672b4c:8fae7f38:bb4cc911:aa9d7444}
+> =E2=94=82                    ext4 {a9cfe95c-1e62-4cf6-b2aa-65abbd0c77=
+e4}
+> =E2=94=9Cscsi 4:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ1649385}
+> =E2=94=82=E2=94=94sde 2.73t [8:64] Partitioned (gpt)
+> =E2=94=82 =E2=94=9Csde1 95.37m [8:65] vfat {8875-2D50}
+> =E2=94=82 =E2=94=9Csde2 29.80g [8:66] MD raid1 (4/6) (w/ sda2,sdd2,sd=
+c2,sdb2,sdf2)
+> in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
+> =E2=94=82 =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
+> {d2e6885b:2d256c5a:5f3de9a9:a5daa736}
+> =E2=94=82 =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3=
+a5a6e8fcff}
+> =E2=94=82 =E2=94=9Csde3 186.26g [8:67] MD raid1 (4/6) (w/ sdf3,sdd3,s=
+da3,sdc3,sdb3)
+> in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
+> =E2=94=82 =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
+> {89d69c6f:2ea223f5:aec8b67c:403488ad}
+> =E2=94=82 =E2=94=82                   ext4 {ca4bff22-40d8-4b31-859e-b=
+ba063f01df1}
+> =E2=94=82 =E2=94=94sde4 2.52t [8:68] MD raid5 (4/6) (w/ sdd4,sda4,sdb=
+4,sdc4,sdf4)
+> in_sync 'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
+> =E2=94=82  =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Ch=
+unk
+> {84672b4c:8fae7f38:bb4cc911:aa9d7444}
+> =E2=94=82                    ext4 {a9cfe95c-1e62-4cf6-b2aa-65abbd0c77=
+e4}
+> =E2=94=94scsi 5:0:0:0 ATA      WDC WD30EZRX-00M {WD-WCAWZ1383151}
+>   =E2=94=94sdf 2.73t [8:80] Partitioned (gpt)
+>    =E2=94=9Csdf1 95.37m [8:81] vfat {A89B-DC05}
+>    =E2=94=9Csdf2 29.80g [8:82] MD raid1 (5/6) (w/ sda2,sdd2,sde2,sdc2=
+,sdb2)
+> in_sync 'solipym:0' {d2e6885b-2d25-6c5a-5f3d-e9a9a5daa736}
+>    =E2=94=82=E2=94=94md0 29.80g [9:0] MD v1.2 raid1 (6) clean
+> {d2e6885b:2d256c5a:5f3de9a9:a5daa736}
+>    =E2=94=82                  swap {8e565dfc-c5fa-4c76-abe9-f3a5a6e8f=
+cff}
+>    =E2=94=9Csdf3 186.26g [8:83] MD raid1 (5/6) (w/ sdd3,sde3,sda3,sdc=
+3,sdb3)
+> in_sync 'solipym:1' {89d69c6f-2ea2-23f5-aec8-b67c403488ad}
+>    =E2=94=82=E2=94=94md1 186.26g [9:1] MD v1.2 raid1 (6) clean
+> {89d69c6f:2ea223f5:aec8b67c:403488ad}
+>    =E2=94=82                   ext4 {ca4bff22-40d8-4b31-859e-bba063f0=
+1df1}
+>    =E2=94=94sdf4 2.52t [8:84] MD raid5 (5/6) (w/ sdd4,sda4,sdb4,sde4,=
+sdc4)
+> in_sync 'solipym:2' {84672b4c-8fae-7f38-bb4c-c911aa9d7444}
+>     =E2=94=94md2 12.59t [9:2] MD v1.2 raid5 (6) clean, 512k Chunk
+> {84672b4c:8fae7f38:bb4cc911:aa9d7444}
+>                       ext4 {a9cfe95c-1e62-4cf6-b2aa-65abbd0c77e4}
+> USB [usb-storage] Bus 002 Device 004: ID 059f:1010 LaCie, Ltd Desktop
+> Hard Drive {ST3500830A            9QG6RC54}
+> =E2=94=94scsi 6:0:0:0 ST350083 0AS
+>   =E2=94=94sdg 465.76g [8:96] Partitioned (dos)
+>    =E2=94=94sdg1 465.76g [8:97] ext4 {4c2f6b92-829d-4e53-b553-c07e0f5=
+71e02}
+>     =E2=94=94Mounted as /dev/sdg1 @ /mnt
+> Other Block Devices
+> =E2=94=9Cloop0 0.00k [7:0] Empty/Unknown
+> =E2=94=9Cloop1 0.00k [7:1] Empty/Unknown
+> =E2=94=9Cloop2 0.00k [7:2] Empty/Unknown
+> =E2=94=9Cloop3 0.00k [7:3] Empty/Unknown
+> =E2=94=9Cloop4 0.00k [7:4] Empty/Unknown
+> =E2=94=9Cloop5 0.00k [7:5] Empty/Unknown
+> =E2=94=9Cloop6 0.00k [7:6] Empty/Unknown
+> =E2=94=9Cloop7 0.00k [7:7] Empty/Unknown
+> =E2=94=9Cram0 64.00m [1:0] Empty/Unknown
+> =E2=94=9Cram1 64.00m [1:1] Empty/Unknown
+> =E2=94=9Cram2 64.00m [1:2] Empty/Unknown
+> =E2=94=9Cram3 64.00m [1:3] Empty/Unknown
+> =E2=94=9Cram4 64.00m [1:4] Empty/Unknown
+> =E2=94=9Cram5 64.00m [1:5] Empty/Unknown
+> =E2=94=9Cram6 64.00m [1:6] Empty/Unknown
+> =E2=94=9Cram7 64.00m [1:7] Empty/Unknown
+> =E2=94=9Cram8 64.00m [1:8] Empty/Unknown
+> =E2=94=9Cram9 64.00m [1:9] Empty/Unknown
+> =E2=94=9Cram10 64.00m [1:10] Empty/Unknown
+> =E2=94=9Cram11 64.00m [1:11] Empty/Unknown
+> =E2=94=9Cram12 64.00m [1:12] Empty/Unknown
+> =E2=94=9Cram13 64.00m [1:13] Empty/Unknown
+> =E2=94=9Cram14 64.00m [1:14] Empty/Unknown
+> =E2=94=94ram15 64.00m [1:15] Empty/Unknown
+> --
+>
 
-UEsDBBQABgAIAAAAIQDd/JU3ZgEAACAFAAATAAgCW0NvbnRlbnRfVHlwZXNd
-LnhtbCCiBAIooAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC0VMtuwjAQvFfqP0S+Vomh
-h6qqCBz6OLZIpR9g7A1Y9Uv28vr7bgJEVQtBKuUSKVnvzOzsxIPR2ppsCTFp
-70rWL3osAye90m5Wso/JS37PsoTCKWG8g5JtILHR8PpqMNkESBl1u1SyOWJ4
-4DzJOViRCh/AUaXy0Qqk1zjjQchPMQN+2+vdcekdgsMcaww2HDxBJRYGs+c1
-fd4qiWASyx63B2uukokQjJYCSSlfOvWDJd8xFNTZnElzHdINyWD8IENdOU6w
-63sja6JWkI1FxFdhSQZf+ai48nJhaYaiG+aATl9VWkLbX6OF6CWkRJ5bU7QV
-K7Tb6z+qI+HGQPp/FVvcLnrSOY4+JE57OZsf6s0rUDlZESCihnZ1x0cHRLLs
-EsPvkLvGb1KAlHfgzbN/tgcNzEnKin6JiZgaOJvvV/Ja6JMiVjB9v5j738C7
-hLT5kz7+wYz9dVF3H0gdb+634RcAAAD//wMAUEsDBBQABgAIAAAAIQAekRq3
-8wAAAE4CAAALAAgCX3JlbHMvLnJlbHMgogQCKKAAAgAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAjJLbSgNBDIbvBd9hyH032woi0tneSKF3IusDhJnsAXcOzKTavr2jILpQ
-217m9OfLT9abg5vUO6c8Bq9hWdWg2JtgR99reG23iwdQWchbmoJnDUfOsGlu
-b9YvPJGUoTyMMaui4rOGQSQ+ImYzsKNchci+VLqQHEkJU4+RzBv1jKu6vsf0
-VwOamabaWQ1pZ+9AtcdYNl/WDl03Gn4KZu/Yy4kVyAdhb9kuYipsScZyjWop
-9SwabDDPJZ2RYqwKNuBpotX1RP9fi46FLAmhCYnP83x1nANaXg902aJ5x687
-HyFZLBZ9e/tDg7MvaD4BAAD//wMAUEsDBBQABgAIAAAAIQDWZLNR+gAAADED
-AAAcAAgBd29yZC9fcmVscy9kb2N1bWVudC54bWwucmVscyCiBAEooAABAAAA
-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
-AAALAAsAwQIAACUvAAAAAA==
+Thanks for the detailled answer. I read through all of it to identify=20
+what I did not understood before starting. I have a few clarificacions=20
+for you and a few questions.
 
---1178294230-1495668114-1360047336=:65576--
+Yes, that's the way my console looks like. I usually don't have problem=
+=20
+with UTF8 output (i.e. not garbled), I figured it was the result of the=
+=20
+lsdrv.... Nasty to read, but it's all there.
+
+I am running Ubuntu 12.04.1 server on this relatively new raid5 setup.
+I think I understood most of the reshaping instructions, but I need to=20
+clarify your point related to the timeout. I tried to execute it in a=20
+simple bash file and got stopped at the beginning just for the lack of =
+a=20
+timeoutfile?
+
+After looking for it, I realised that sd[abcdef] were all symlinks=20
+pointing to another part of the system, where there is no driver=20
+directory. After browsing, i figured out that /sys/block/sda/device did=
+=20
+led to a timeout file. Can you please confirm, it is the one we want ?
+
+A last point I need to clarify: is the reshaping (although long) data=20
+destructive (backup will be done in all cases)?
+
+Thanks,
+
+Dominique
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
