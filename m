@@ -1,48 +1,89 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: RAID performance
-Date: Thu, 7 Feb 2013 15:03:48 -0700
-Message-ID: <9DD5BA53-A9DF-4D8C-AE5C-BD6D69FAEF2C@colorremedies.com>
-References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <5113A2D6.20104@websitemanagers.com.au> <5113A3D4.6000605@turmel.org> <5113A4E9.5020005@websitemanagers.com.au> <5113A628.6010304@turmel.org>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Subject: mdadm: hot remove failed for /dev/sdg: Device or resource busy
+Date: Thu, 07 Feb 2013 14:52:30 -0800
+Message-ID: <eqndu9x4h8.ln2@goaway.wombat.san-francisco.ca.us>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5113A628.6010304@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, Dave Cundiff <syshackmin@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello all,
 
-On Feb 7, 2013, at 6:03 AM, Phil Turmel <philip@turmel.org> wrote:
+During a reshape of a RAID6, one of the disks in the array crashed hard.
+Normally, I would simply remove the drive from the array, replace the
+drive, and rebuild.  However, when I try to remove the drive, I get an
+error:
 
-> 
-> Trim is a per-sector property.  Once trimmed, it stays trimmed until you
-> write to *that* sector.
+# mdadm /dev/md127  --remove /dev/sdg
+mdadm: hot remove failed for /dev/sdg: Device or resource busy
 
-I agree, although I think technically it is an attribute of the page, since that's the smallest structure on an SSD for read/write. The page sizes appear to be either 4KB or 8KB, while the SSD basically lies to the OS and says its physical sector size is 512 bytes.
+I have done a fair amount of googling, but nothing seems to turn up
+advice on how to handle this situation.  Any suggestions?
 
-Once all pages in an SSD erase block are flagged for erase, which could be done with a SATA TRIM command or (dynamic or static) wear leveling by the SSD itself, then those pages can be erased.
+Some relevant outputs are below.  If other output is desired (mdadm -E)
+please let me know.  sdg is the failed device, and sdm is a spare which
+I would like to use to restart the rebuild/reshape.  The array itself
+seems perfectly fine at the moment--I can mount it, umount it, and read
+and write files with no problem.  (I currently have it umounted.)
 
-I think what the SSD vendors  have done is, since all requests by an OS are in 4KB blocks, whether or not those LBA's are 4K aligned (like is required for 512e AF disks), they can stuff any 4KB fs block into a 4KB or 8KB page, aligned.
+# uname -a
+Linux XXXXXXX 2.6.32-279.22.1.el6.x86_64 #1 SMP Wed Feb 6 03:10:46 UTC 2013 x86_64 x86_64 x86_64 GNU/Linux
+# mdadm --version
+mdadm - v3.2.3 - 23rd December 2011
+# cat /proc/mdstat 
+Personalities : [raid6] [raid5] [raid4] 
+md127 : active raid6 sdm[13](S) sdg[5](F) sdj[8] sdi[7] sdk[10] sdc[1] sdn[12] sdd[2] sde[3] sdf[4] sdh[6] sdb[0] sdl[11]
+      17578013184 blocks super 1.2 level 6, 512k chunk, algorithm 2 [12/11] [UUUUU_UUUUUU]
+      	resync=PENDING
+      
+unused devices: <none>
+# mdadm -D /dev/md127
+/dev/md127:
+        Version : 1.2
+  Creation Time : Thu Feb  9 15:10:28 2012
+     Raid Level : raid6
+     Array Size : 17578013184 (16763.70 GiB 17999.89 GB)
+  Used Dev Size : 1953112576 (1862.63 GiB 1999.99 GB)
+   Raid Devices : 12
+  Total Devices : 13
+    Persistence : Superblock is persistent
 
-> If you want to achieve something with trim, you would
-> trim on your clients and hope it passes all the way down the stack
-> through iSCSI to your LVs and then to MD and the SSDs.
+    Update Time : Thu Feb  7 14:37:04 2013
+          State : active, degraded, resyncing (PENDING) 
+ Active Devices : 11
+Working Devices : 12
+ Failed Devices : 1
+  Spare Devices : 1
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+  Delta Devices : 1, (11->12)
+
+           Name : XXXXXX:0
+           UUID : f660639e:5b7583ae:4c69519f:ea7c8c31
+         Events : 66091
+
+    Number   Major   Minor   RaidDevice State
+       0       8       16        0      active sync   /dev/sdb
+       1       8       32        1      active sync   /dev/sdc
+       2       8       48        2      active sync   /dev/sdd
+       3       8       64        3      active sync   /dev/sde
+       4       8       80        4      active sync   /dev/sdf
+       5       8       96        5      faulty spare rebuilding   /dev/sdg
+       6       8      112        6      active sync   /dev/sdh
+       7       8      128        7      active sync   /dev/sdi
+       8       8      144        8      active sync   /dev/sdj
+      10       8      160        9      active sync   /dev/sdk
+      11       8      176       10      active sync   /dev/sdl
+      12       8      208       11      active sync   /dev/sdn
+
+      13       8      192        -      spare   /dev/sdm
+
+-- 
+kkeller@wombat.san-francisco.ca.us
 
 
-TRIM probably does reduce the need for the firmware to do its own static wear leveling, but I don't know if it's that significant except for large deletions. If it were the case that SSD's reliably returned zeros for unassigned LBAs (i.e. LBAs previously TRIM'd), there could be some optimization for the lowest level to translate page sized writes of only zeros into TRIM commands.
-
-But for performance purposes, I don't see that it makes much difference. Over provisioning and dynamic wear leveling take care of the performance concern. And it seems to me the usual rules of thumbs for chunk size apply; maybe being a bit more on the conservative size (tending to smaller) makes more sense, to avoid large unnecessary RMW.
-
-On the one hand a chunk size exactly sized and aligned with an SSD erase block might seem ideal; but while it might improve the efficiency of the SSD garbage collecting those blocks, it translates into higher wear.
-
-> You just have nothing useful on the server side for trim to do.
-> (Although you should manually trim the unpartitioned space.  You only
-> need to do so once.)
-
-
-It's unclear to me that user over provisioning is necessary. The SSD is already over-provisioned. I can see where a mismatch in usage could be a problem, e.g. enterprise patterns while using consumer SSDs.
-
-
-Chris Murphy
