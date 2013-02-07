@@ -1,86 +1,98 @@
-From: Fredrik Lindgren <fli@wirebound.net>
-Subject: Re: RAID performance
-Date: Thu, 07 Feb 2013 18:12:11 +0100
-Message-ID: <5113E06B.7030808@wirebound.net>
-References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <51139799.2070004@fnarfbargle.com> <51139FEE.3020807@websitemanagers.com.au>
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: Re: RAID5 made with assume-clean
+Date: Thu, 7 Feb 2013 13:14:25 -0500
+Message-ID: <20130207181425.GA27682@animx.eu.org>
+References: <20130206115258.GA31466@animx.eu.org>
+ <20130206130254.GA12118@cthulhu.home.robinhill.me.uk>
+ <20130206145446.GA14892@animx.eu.org>
+ <20130207142933.GB16690@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51139FEE.3020807@websitemanagers.com.au>
+Content-Disposition: inline
+In-Reply-To: <20130207142933.GB16690@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: Brad Campbell <lists2009@fnarfbargle.com>, linux-raid@vger.kernel.org
+To: Robin Hill <robin@robinhill.me.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Robin Hill wrote:
+> On Wed Feb 06, 2013 at 09:54:46AM -0500, Wakko Warner wrote:
+> 
+> > Please keep me in CC.
+> > 
+> Then don't set the Mail-Followup-To header to point to the list,
+> otherwise you're strongly suggesting that you don't want to be CCed in
+> the replies.
 
-On 02/07/2013 01:37 PM, Adam Goryachev wrote:
-> On 07/02/13 23:01, Brad Campbell wrote:
->> On 07/02/13 18:19, Adam Goryachev wrote:
->>
->>> problem. Is there some way to instruct the disk (overnight) to TRIM the
->>> extra blank space, and do whatever it needs to tidy things up? Perhaps
->>> this would help, at least first thing in the morning if it isn't enough
->>> to get through the day. Potentially I could add a 6th SSD, reduce the
->>> partition size across all of them, just so there is more blank space to
->>> get through a full day worth of writes?
->> I have 6 SSD's in a RAID10, and with 3.7.x (I forget which x - 2 or 3
->> from memory) md will pass the TRIM down to the underlying devices (at
->> least for RAID10 and from memory 1).
-> Yes, I have read that the very new kernel has those patches, but I'm on
-> 2.6.x at the moment, and in addition, see below why they wouldn't help
-> anyway...
->
->> I have a cronjob that runs at midnight :
->> Based on the run times, and the bytes trimmed count I suspect it works.
->> All filesystems are ext4. Two of them are passed through encryption, but
->> that passes TRIM down also. I do not have the discard option on any
->> mounts (that way lies severe performance issues).
-> I don't have any FS on this RAID, it is like this:
-> 5 x SSD
-> RAID5 (doesn't support TRIM, though I've seen some patches but I think
-> they are not included in any kernel yet).
-> DRBD (doubt this supports TRIM
-> LVM (don't think it supports TRIM, maybe in newer kernel)
-> iSCSI (don't think it support TRIM
-> Windows 2003 and Windows 2000 (don't think it supports TRIM)
->
-> So, really, all I want to do is use TRIM on the portion of the drive
-> which is not partitioned at all, and I suspect the SSD knows that
-> section is available, but how do I tell the drive "please go and do a
-> cleanup now, because the users are all sleeping"?
->
-> BTW, I just created a small LV (15G) and ran a couple of write tests
-> (well, not proper one, but at least you get some idea how bad things are).
-> dd if=/dev/zero of=/dev/vg0/testlv oflag=direct bs=16k count=50k
-> ^C50695+0 records in
-> 50695+0 records out
-> 830586880 bytes (831 MB) copied, 99.4635 s, 8.4 MB/s
->
-> I killed it after waiting a while....  this is while most of the systems
-> are idle, except one which is currently being backed up (lots of reads,
-> small number of writes). This is indicative of IO starvation though, I
-> would have expected a significantly higher write performance?
->
-> While I was running the dd, I ran a iostat -x 5 in another session:
->
-> See text file attached for output, as seems to want to line wrap because
-> it is too wide....
->
-> dm-13 is the client (windows 2003) which is currently being backed up,
-> dm-14 is the testlv I'm writing to from the localhost.
+It wasn't supposed to be set.  I never configured mutt to do so.  I've set
+the follow up to my address.  I didn't know it was doing that.  Thanks for
+letting me know.
 
- From the iostat output it seems quite clear that the culprit is the
-drbd2 device. The /dev/sd[b-f] seems to have plenty more to give,
-even though they're doing some 1400 iops each (which seems a
-lot for the throughput you're seeing, why are the IOs towards the
-physical disks so small?).
+> > Robin Hill wrote:
+> > > What disks are they? I would expect a modern SATA disk to be able to
+> > > handle 120MB/s for sequential read, so 220 across the array would be
+> > > pretty normal.
+> > 
+> > They are old WDC 250 disks.  I did a DD test on them, they are 60mb/sec.  A
+> > DD test on the array gives me about 119mb/sec.  As I stated, the activity
+> > lights did not even come on during the check.  Nothing was done.  This is
+> > kernel 3.3.0.  
+> > 
+> That does seem odd then. I've never seen that happen before. Has the
+> array been stopped & restarted since the initial creation? It may be
+> that having created it with --assume-clean is setting something which
+> short-circuits the check process.
 
-Regarding that drbd device, Is there some mirroring being done to
-another machine by way of drbd? If so, with a sync-mirror to another
-machine over the network 8,4Mb/s could be quite "normal", right?
+I'm not sure.  Since the array (md0) is an LVM PV, I added another PV
+yesterday.  I moved the LVs to the new PV and recreated the array.  It did
+do the resync process.  All 3 activity lights were active.
 
-Regards,
-   Fredrik Lindgren
+> > > Not sure what the logic is on this. For a 3 disk array it'd need a
+> > > single read and 2 writes for a single chunk, whether it's doing RMW or
+> > > not. It will probably still do RMW though, as that avoids the
+> > > complication of special-casing things. I've had a quick look at the code
+> > > and I can't see any special casing (other than for a 2 disk array, where
+> > > the same data is written to both).
+> > 
+> > I know there's 2 ways to update the parity.
+> > 1) Read the other data blocks, calculate parity, modify parity block.  Or
+> > 2) Read the parity, read the old data, calculate new parity, write parity.
+> > 
+> > Obviously, with many disks, #2 is the best option.  With 3 disks, #1 would
+> > be the best option (IMO) especially when created with assume clean.
+> > 
+> Performance-wise there's little difference (though #2 may be slightly
+> quicker as it avoids a seek on one disk), but #1 makes the code more
+> complex and will only help in really obscure situations.
 
+I guess that depends.  On a 3 drive array, it wouldn't make a difference in
+performance, but #1 would always keep the parity accurate (barring disk
+errors).  #2 would make a difference in performance if there were more
+disks.  Say 10 and there were multiple writes.
+
+> > > That's definitely the safest option. If you can verify the data then you
+> > > could run a repair and a fsck before verifying/restoring the data, but
+> > > that'd take far longer than a simple rebuild and restore.
+> > 
+> > The data I added was transfered from one LVM PV to this one with pvmove. 
+> > One volume was DDd from the old disk that this array was replacing.  I saved
+> > the raw volume image to another server incase I messed something up (and the
+> > old disk was dying anyway)
+> > 
+> > I really wanted to know the answer to the problem where check didn't work.
+> > If I recreate the array, I'll add another drive to the VG and move the
+> > volumes off, recreate and move back.
+> > 
+> I'd suggest stopping & restarting the array (if this hasn't been done)
+> and rerunning the check (or just running a repair straightaway).
+
+As stated above, I just rebuilt the array.  The speed was expected at around
+60mb/sec.  Interestingly, if I issue a check on it, it still won't touch the
+disks the entire time it's checking the array.  I have another array in this
+machine and it does the same thing.  It may be a kernel bug with 3.3.0, not
+sure.
+
+-- 
+ Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
+ million bugs.
