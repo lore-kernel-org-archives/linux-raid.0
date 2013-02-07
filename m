@@ -1,26 +1,104 @@
 From: Adam Goryachev <mailinglists@websitemanagers.com.au>
 Subject: Re: RAID performance
-Date: Thu, 07 Feb 2013 23:37:02 +1100
-Message-ID: <51139FEE.3020807@websitemanagers.com.au>
-References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <51139799.2070004@fnarfbargle.com>
+Date: Thu, 07 Feb 2013 23:49:26 +1100
+Message-ID: <5113A2D6.20104@websitemanagers.com.au>
+References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030809040304080506080305"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51139799.2070004@fnarfbargle.com>
+In-Reply-To: <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <lists2009@fnarfbargle.com>
+To: Dave Cundiff <syshackmin@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------030809040304080506080305
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-
-On 07/02/13 23:01, Brad Campbell wrote:
-> On 07/02/13 18:19, Adam Goryachev wrote:
+On 07/02/13 22:07, Dave Cundiff wrote:
+> On Thu, Feb 7, 2013 at 5:19 AM, Adam Goryachev
+> <mailinglists@websitemanagers.com.au> wrote:
+>> On 07/02/13 20:07, Dave Cundiff wrote:
+>>> On Thu, Feb 7, 2013 at 1:48 AM, Adam Goryachev
+>>> <mailinglists@websitemanagers.com.au> wrote:
+>>> Why would you plug thousands of dollars of SSD into an onboard
+>>> controller? It's probably running off a 1x PCIE shared with every
+>>> other onboard device. An LSI 8x 8 port HBA will run you a few
+>>> hundred(less than 1 SSD) and let you melt your northbridge. At least
+>>> on my Supermicro X8DTL boards I had to add active cooling to it or it
+>>> would overheat and crash at sustained IO. I can hit 2 - 2.5GB a second
+>>> doing large sequential IO with Samsung 840 Pros on a RAID10.
+>>
+>> Because originally I was just using 4 x 2TB 7200 rpm disks in RAID10, I
+>> upgraded to SSD to improve performance (which it did), but hadn't (yet)
+>> upgraded the SATA controller because I didn't know if it would help.
+>>
+>> I'm seeing conflicting information here (buy SATA card or not)...
 > 
+> Its not going to help your remote access any. From your configuration
+> it looks like you are limited to 4 gigabits. At least as long as your
+> NICs are not in the slot shared with the disks. If they are you might
+> get some contention.
+> 
+> http://download.intel.com/support/motherboards/server/sb/g13326004_s1200bt_tps_r2_0.pdf
+> 
+> See page 17 for a block diagram of your motherboard. You have a 4x DMI
+> connection that PCI slot 3, your disks, and every other onboard device
+> share. That should be about 1.2GB(10Gigabits) of bandwidth. Your SSDs
+> alone could saturate that if you performed a local operation. Get your
+> NIC's going at 4Gig and all of it a sudden you'll really want that
+> SATA card in slot 4 or 5.
+
+OK, I'll have to check that the 4 x 1G ethernet are in slots 4 and 5
+now, not using the onboard ethernet, and not in slot 3...
+
+If I could get close to 4Gbps (ie, saturate the ethernet) then I think
+I'd be more than happy... I don't see my SSD's running at 400MB/s though
+anyway....
+
+>>>> 2) Move from a 5 disk RAID5 to a 8 disk RAID10, giving better data
+>>>> protection (can lose up to four drives) and hopefully better performance
+>>>> (main concern right now), and same capacity as current.
+>>>
+>>> I've had strange issues with anything other than RAID1 or 10 with SSD.
+>>> Even with the high IO and IOP rates of SSDs the parity calcs and extra
+>>> writes still seem to penalize you greatly.
+>>
+>> Maybe this is the single threaded nature of RAID5 (and RAID10) ?
+> 
+> I definitely see that. See below for a FIO run I just did on one of my RAID10s
+> 
+> md2 : active raid10 sdb3[1] sdf3[5] sde3[4] sdc3[2] sdd3[3] sda3[0]
+>       742343232 blocks super 1.2 32K chunks 2 near-copies [6/6] [UUUUUU]
+> 
+> seq-read: (g=0): rw=read, bs=64K-64K/64K-64K/64K-64K, ioengine=libaio,
+> iodepth=32
+> seq-write: (g=2): rw=write, bs=64K-64K/64K-64K/64K-64K,
+> ioengine=libaio, iodepth=32
+> 
+> Run status group 0 (all jobs):
+>    READ: io=4096.0MB, aggrb=2149.3MB/s, minb=2149.3MB/s,
+> maxb=2149.3MB/s, mint=1906msec, maxt=1906msec
+> 
+> Run status group 2 (all jobs):
+>   WRITE: io=4096.0MB, aggrb=1168.7MB/s, minb=1168.7MB/s,
+> maxb=1168.7MB/s, mint=3505msec, maxt=3505msec
+> 
+> These drives are pretty fresh and my writes are a whole gig less than
+> my read. Its not for lack of bandwidth either.
+
+Can you please show your command line used, so I can try a similar test
+and see a comparison?
+
+>>> Also if your kernel does not have md TRIM support you risk taking a
+>>> SEVERE performance hit on writes. Once you complete a full write pass
+>>> on your NAND the SSD controller will require extra time to complete a
+>>> write. if your IO is mostly small and random this can cause your NAND
+>>> to become fragmented. If the fragmentation becomes bad enough you'll
+>>> be lucky to get 1 spinning disk worth of write IO out of all 5
+>>> combined.
+>>
+>> This was the reason I made the partition (for raid) smaller than the
+>> disk, and left the rest un-partitioned. However, as you said, once I've
+>> fully written enough data to fill the raw disk capacity, I still have a
 >> problem. Is there some way to instruct the disk (overnight) to TRIM the
 >> extra blank space, and do whatever it needs to tidy things up? Perhaps
 >> this would help, at least first thing in the morning if it isn't enough
@@ -28,104 +106,32 @@ On 07/02/13 23:01, Brad Campbell wrote:
 >> partition size across all of them, just so there is more blank space to
 >> get through a full day worth of writes?
 > 
-> I have 6 SSD's in a RAID10, and with 3.7.x (I forget which x - 2 or 3
-> from memory) md will pass the TRIM down to the underlying devices (at
-> least for RAID10 and from memory 1).
+> There was a script called mdtrim that would use hdparm to manually
+> send the proper TRIM commands to the drives. I didn't bother looking
+> for a link because it scares me to death and you probably shouldn't
+> use it. If it gets the math wrong random data will disappear from your
+> disks.
 
-Yes, I have read that the very new kernel has those patches, but I'm on
-2.6.x at the moment, and in addition, see below why they wouldn't help
-anyway...
+Doesn't sound good... would be nice to use smartctl or similar to ask
+the drive "please tidy up now". The drive itself knows that the
+unpartitioned space is available.
 
-> I have a cronjob that runs at midnight :
-> Based on the run times, and the bytes trimmed count I suspect it works.
-> All filesystems are ext4. Two of them are passed through encryption, but
-> that passes TRIM down also. I do not have the discard option on any
-> mounts (that way lies severe performance issues).
+> As for changing partition sizes you really have to know what kinds of
+> IO you're doing. If all you're doing is hammering these things with
+> tiny IOs 24x7 its gonna end up with terrible write IO. At least my
+> SSDs do. If you have a decent mix of small and large it may not
+> fragment as badly. I ran random 4k against mine for 2 days before it
+> got miserably slow. Reading will always be fine.
 
-I don't have any FS on this RAID, it is like this:
-5 x SSD
-RAID5 (doesn't support TRIM, though I've seen some patches but I think
-they are not included in any kernel yet).
-DRBD (doubt this supports TRIM
-LVM (don't think it supports TRIM, maybe in newer kernel)
-iSCSI (don't think it support TRIM
-Windows 2003 and Windows 2000 (don't think it supports TRIM)
-
-So, really, all I want to do is use TRIM on the portion of the drive
-which is not partitioned at all, and I suspect the SSD knows that
-section is available, but how do I tell the drive "please go and do a
-cleanup now, because the users are all sleeping"?
-
-BTW, I just created a small LV (15G) and ran a couple of write tests
-(well, not proper one, but at least you get some idea how bad things are).
-dd if=/dev/zero of=/dev/vg0/testlv oflag=direct bs=16k count=50k
-^C50695+0 records in
-50695+0 records out
-830586880 bytes (831 MB) copied, 99.4635 s, 8.4 MB/s
-
-I killed it after waiting a while....  this is while most of the systems
-are idle, except one which is currently being backed up (lots of reads,
-small number of writes). This is indicative of IO starvation though, I
-would have expected a significantly higher write performance?
-
-While I was running the dd, I ran a iostat -x 5 in another session:
-
-See text file attached for output, as seems to want to line wrap because
-it is too wide....
-
-dm-13 is the client (windows 2003) which is currently being backed up,
-dm-14 is the testlv I'm writing to from the localhost.
-
-Suggestions on better testing methods or is this expected?
+Well, if I can re-trim daily, and have enough clean space to work for 2
+days, then I should never hit this problem.... Assuming it loses *that
+much* performance....
 
 Thanks,
 Adam
+
 
 -- 
 Adam Goryachev
 Website Managers
 www.websitemanagers.com.au
-
---------------030809040304080506080305
-Content-Type: text/plain; charset=UTF-8;
- name="stats.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="stats.txt"
-
-Device:         rrqm/s   wrqm/s     r/s     w/s   rsec/s   wsec/s avgrq-sz avgqu-sz   await  svctm  %util
-sda               0.00     0.00    0.00    0.20     0.00     1.60     8.00     0.00    0.00   0.00   0.00
-sdb               0.00     0.00  500.80  881.00  4648.20  7029.00     8.45     0.12    0.09   0.03   3.76
-sdc               0.00     0.00  509.60  895.20  4676.20  7142.60     8.41     0.11    0.08   0.03   4.08
-sdd               0.00     0.00  520.00  900.60  4753.80  7185.80     8.40     0.11    0.07   0.03   4.00
-sde               0.00     0.00  528.80  922.80  4831.20  7363.40     8.40     0.16    0.11   0.04   5.20
-sdf               0.60     0.00  515.00  906.60  4744.00  7233.80     8.43     0.14    0.10   0.04   5.04
-md1               0.00     0.00  200.60  601.40  4659.80 17917.60    28.15     0.00    0.00   0.00   0.00
-drbd2             0.00     0.00  200.60  599.80  4659.80 17916.00    28.21     1.15    1.45   1.25  99.84
-dm-1              0.00     0.00   29.00    4.60   464.00    67.40    15.82     0.01    0.26   0.21   0.72
-dm-5              0.00     0.00    0.20    2.80     1.60    13.40     5.00     0.01    2.40   1.60   0.48
-dm-13             0.00     0.00  170.20   67.40  4184.60  1129.60    22.37     0.14    0.58   0.38   8.96
-dm-21             0.00     0.00    0.00    0.60     0.00     8.00    13.33     0.00    0.00   0.00   0.00
-dm-29             0.00     0.00    0.20    0.80     1.60     9.60    11.20     0.00    0.80   0.80   0.08
-dm-37             0.00     0.00    0.20    0.00     1.60     0.00     8.00     0.00    0.00   0.00   0.00
-dm-45             0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
-dm-53             0.00     0.00    0.00    1.20     0.00     9.60     8.00     0.00    1.33   0.67   0.08
-dm-61             0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
-dm-65             0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
-dm-71             0.00     0.00    0.20    0.80     1.60    11.20    12.80     0.00    1.60   1.60   0.16
-dm-9              0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
-dm-15             0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
-dm-2              0.00     0.00    0.40    1.20     3.20     9.60     8.00     0.00    0.00   0.00   0.00
-dm-11             0.00     0.00    0.40    2.80     3.20    13.40     5.19     0.01    2.00   1.25   0.40
-dm-0              0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
-dm-3              0.00     0.00    0.00    0.60     0.00     4.80     8.00     0.00    2.67   1.33   0.08
-dm-4              0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
-dm-6              0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
-dm-7              0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
-dm-8              0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
-dm-10             0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
-dm-12             0.00     0.00    0.00    0.40     0.00     3.20     8.00     0.00    2.00   2.00   0.08
-dm-14             0.00     0.00    0.00  520.60     0.00 16659.20    32.00     1.00    1.92   1.92 100.00
-
-
---------------030809040304080506080305--
