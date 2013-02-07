@@ -1,67 +1,44 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+From: Carsten Aulbert <Carsten.Aulbert@aei.mpg.de>
 Subject: Re: RAID performance
-Date: Thu, 07 Feb 2013 21:19:36 +1100
-Message-ID: <51137FB8.6060003@websitemanagers.com.au>
-References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com>
+Date: Thu, 07 Feb 2013 11:29:26 +0100
+Message-ID: <51138206.5000301@aei.mpg.de>
+References: <51134E43.7090508@websitemanagers.com.au> <5113516C.5080606@aei.mpg.de> <51137DFA.5020406@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com>
+In-Reply-To: <51137DFA.5020406@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dave Cundiff <syshackmin@gmail.com>
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/02/13 20:07, Dave Cundiff wrote:
-> On Thu, Feb 7, 2013 at 1:48 AM, Adam Goryachev
-> <mailinglists@websitemanagers.com.au> wrote:
-> Why would you plug thousands of dollars of SSD into an onboard
-> controller? It's probably running off a 1x PCIE shared with every
-> other onboard device. An LSI 8x 8 port HBA will run you a few
-> hundred(less than 1 SSD) and let you melt your northbridge. At least
-> on my Supermicro X8DTL boards I had to add active cooling to it or it
-> would overheat and crash at sustained IO. I can hit 2 - 2.5GB a second
-> doing large sequential IO with Samsung 840 Pros on a RAID10.
+Hi
 
-Because originally I was just using 4 x 2TB 7200 rpm disks in RAID10, I
-upgraded to SSD to improve performance (which it did), but hadn't (yet)
-upgraded the SATA controller because I didn't know if it would help.
+On 02/07/2013 11:12 AM, Adam Goryachev wrote:
+> Do you have any information on what your workload is, or how/why these
+> values might help?
 
-I'm seeing conflicting information here (buy SATA card or not)...
+Most of our data servers are exporting data read-only via NFS. It helped
+well on these but more on download servers which allowed us to go from
+200k 4MB downloads per day to 1M/day while adding new files constantly.
 
->> 2) Move from a 5 disk RAID5 to a 8 disk RAID10, giving better data
->> protection (can lose up to four drives) and hopefully better performance
->> (main concern right now), and same capacity as current.
 > 
-> I've had strange issues with anything other than RAID1 or 10 with SSD.
-> Even with the high IO and IOP rates of SSDs the parity calcs and extra
-> writes still seem to penalize you greatly.
+> You are changing values significantly from the default, and I am
+> cautious that they may cause other issues. Also, someone else has
+> advised to reduce nr_requests rather than increasing it?
+> 
 
-Maybe this is the single threaded nature of RAID5 (and RAID10) ?
+I know, but these larger queues really helped a lot in re-ordering
+requests to better match the hardware underneath - but again, this was
+for hard drives with physical arms and not SSDs
 
-> Also if your kernel does not have md TRIM support you risk taking a
-> SEVERE performance hit on writes. Once you complete a full write pass
-> on your NAND the SSD controller will require extra time to complete a
-> write. if your IO is mostly small and random this can cause your NAND
-> to become fragmented. If the fragmentation becomes bad enough you'll
-> be lucky to get 1 spinning disk worth of write IO out of all 5
-> combined.
+Cheers
 
-This was the reason I made the partition (for raid) smaller than the
-disk, and left the rest un-partitioned. However, as you said, once I've
-fully written enough data to fill the raw disk capacity, I still have a
-problem. Is there some way to instruct the disk (overnight) to TRIM the
-extra blank space, and do whatever it needs to tidy things up? Perhaps
-this would help, at least first thing in the morning if it isn't enough
-to get through the day. Potentially I could add a 6th SSD, reduce the
-partition size across all of them, just so there is more blank space to
-get through a full day worth of writes?
-
-Regards,
-Adam
+Carsten
 
 -- 
-Adam Goryachev
-Website Managers
-www.websitemanagers.com.au
+Dr. Carsten Aulbert - Max Planck Institute for Gravitational Physics
+Callinstrasse 38, 30167 Hannover, Germany
+phone/fax: +49 511 762-17185 / -17193
+https://wiki.atlas.aei.uni-hannover.de/foswiki/bin/view/ATLAS/WebHome
