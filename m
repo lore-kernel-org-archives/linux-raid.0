@@ -1,58 +1,52 @@
-From: Adam Goryachev <adam@websitemanagers.com.au>
-Subject: Re: Raid1 to Raid 10
-Date: Sat, 09 Feb 2013 01:58:00 +1100
-Message-ID: <51151278.20806@websitemanagers.com.au>
-References: <S1758867Ab3BGRFg/20130207170536Z+12@vger.kernel.org> <5115090A.5040908@gmx.net>
+From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Subject: Re: RAID performance
+Date: Fri, 08 Feb 2013 11:00:03 +1100
+Message-ID: <4c6136c9-4deb-4baf-a861-ca562bbf1ecb@email.android.com>
+References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <51139799.2070004@fnarfbargle.com> <51139FEE.3020807@websitemanagers.com.au> <5113E06B.7030808@wirebound.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5115090A.5040908@gmx.net>
+In-Reply-To: <5113E06B.7030808@wirebound.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Cocolocko <cocolocko@gmx.net>
-Cc: linux-raid@vger.kernel.org
+To: Fredrik Lindgren <fli@wirebound.net>
+Cc: Brad Campbell <lists2009@fnarfbargle.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/02/13 01:17, Cocolocko wrote:
-> is it possible to expand/upgrade a existing Software Raid1 with two
-> harddisks under CentOS 6.3 to a Raid 10?
-> I want to put 2 more disks inside to have more speed for Databases and
-> KVM virtualisation with the Raid0.
-Personally, I'd do something like this:
-1) Physically add the 2 new drives
-2) Create a RAID10 array with two missing drives, something like:
-mdadm --create /dev/md10 --level=raid10 --raid-devices=4 /dev/sdc1
-missing /dev/sdd1 missing
-3) Unmount, stop using the existing RAID1
-4) Copy old RAID1 (md1) to new RAID10 (md10)
-dd if=/dev/md1 of=/dev/md10
-5) Destroy old RAID1
-mdadm -S /dev/md1
-mdadm --zero-superblock /dev/sda1
-mdadm --zero-superblock /dev/sdb1
-6) Add the old RAID1 devices to the RAID10
-mdadm --manage /dev/md10 --add /dev/sda1
-mdadm --manage /dev/md10 --add /dev/sdb1
+Fredrik Lindgren <fli@wirebound.net> wrote:
 
-You should check that all the above command lines are valid/correct, and
-especially the device names.
+>Hello,
+>
+>On 02/07/2013 01:37 PM, Adam Goryachev wrote:
+>> On 07/02/13 23:01, Brad Campbell wrote:
+>>> On 07/02/13 18:19, Adam Goryachev wrote:
+>> BTW, I just created a small LV (15G) and ran a couple of write tests
+>> (well, not proper one, but at least you get some idea how bad things
+>are).
+>> dd if=/dev/zero of=/dev/vg0/testlv oflag=direct bs=16k count=50k
+>> ^C50695+0 records in
+>> 50695+0 records out
+>> 830586880 bytes (831 MB) copied, 99.4635 s, 8.4 MB/s
+>>
+> From the iostat output it seems quite clear that the culprit is the
+>drbd2 device. The /dev/sd[b-f] seems to have plenty more to give,
+>even though they're doing some 1400 iops each (which seems a
+>lot for the throughput you're seeing, why are the IOs towards the
+>physical disks so small?).
+>
+>Regarding that drbd device, Is there some mirroring being done to
+>another machine by way of drbd? If so, with a sync-mirror to another
+>machine over the network 8,4Mb/s could be quite "normal", right?
 
-You might also like to carefully specify the chunk size, as this can
-impact performance.
+Thank you for the smack, I realise now that I was stupidly doing this late at night, and as you suggested, the secondary comes online after business hours. I will need to redo my test after manually disconnecting the secondary server after hours.
 
-Finally, you might consider with 4 disks will be enough, you can't grow
-a RAID10 array (except replace all disks with larger ones) to improve
-performance, so perhaps you should use 8 smaller disks instead of 4
-large disks and try and get faster disks (rpm) to maximise performance.
-
-Hope this helps.
+Please ignore the above data, I will re-test tonight and advise.
 
 Regards,
 Adam
 
--- 
+--
 Adam Goryachev
 Website Managers
-Ph: +61 2 8304 0000                            adam@websitemanagers.com.au
-Fax: +61 2 8304 0001                            www.websitemanagers.com.au
-
+www.websitemanagers.com.au
