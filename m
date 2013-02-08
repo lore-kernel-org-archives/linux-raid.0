@@ -1,30 +1,67 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: RAID performance
-Date: Fri, 8 Feb 2013 01:34:04 -0700
-Message-ID: <A48D2760-7317-475D-9A95-27DCD8C47DBD@colorremedies.com>
-References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <5113A2D6.20104@websitemanagers.com.au> <5113A3D4.6000605@turmel.org> <5113A4E9.5020005@websitemanagers.com.au> <5113A628.6010304@turmel.org> <9DD5BA53-A9DF-4D8C-AE5C-BD6D69FAEF2C@colorremedies.com> <C96434C1-FD46-456E-9FE2-C0B50727D219@colorremedies.com> <37E3C429-0A78-4DAE-BD2C-F23CF931BD91@colorremedies.com> <51149A66.6000308@websitemanagers.com.au> <DFB376BB-32B9-48DE-A7E9-A1B8F97982EF@colorremedies.com>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8BIT
+From: "Dragon" <Sunghost@gmx.de>
+Subject: Possible to rescue SW Raid5 with 2 missing Disks
+Date: Fri, 08 Feb 2013 10:17:00 +0100
+Message-ID: <20130208091700.256910@gmx.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <DFB376BB-32B9-48DE-A7E9-A1B8F97982EF@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: "stan@hardwarefreak.com Hoeppner" <stan@hardwarefreak.com>, Phil Turmel <philip@turmel.org>, "linux-raid@vger.kernel.org list" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello,
 
-On Feb 8, 2013, at 12:35 AM, Chris Murphy <lists@colorremedies.com> wrote:
-> 
-> I'm flummoxed off hand if an NTFS formatted iSCSI block device behaves exactly as an NTFS formatted LV; 
+my situation is this: i have 3 server with each of 6x3tb in an sw raid5 on a debian squeeze system. on top of this i use moosefs as a filecluster. the problem now is that for a very short time 2 of the disks failed. at this time there was no file activity only the filesync between the nodes of the cluster.
 
-The answer depends on whether you formatted the iSCSI target directly or partitioned it, then formatted the partition. If the latter, use kpartx -av to make the partition available under /dev/mapper and then you mount the device kpartx returns. Anyway the point was to run benchmarks on these; but if you have space in the VG you can make new (smaller) LVs for this, it's slightly safer.
+after that i cant rebuild the raid: "mdadm: /dev/md2 assembled from 4 drives and 1 spare - not enough to start the array."
 
-I'd benchmark one LV as a reference. Then two simultaneously. Then three. I think the more basic the test for now the better or there's just too much data. Then I'd do that same test on physical servers, over iSCSI (one, two, then three simultaneous targets). Then do that same test within a VM, over iSCSI.
+the superblock seems to be ok. and at least, by an advice from phil turmel, i tried a diffent kind of recreation with these results:
 
-Trust Stan and Phil on this more than me. I just think something appallingly obvious will materialize with simple tests, and then you can dig down deeper with more specific tests.
+Test1:
+mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 /dev/sd{a,b,c,d,e,f}4
+-> filesize 708MB with 20603326 lines and canceling at the end by e2fsck
+- bad superblock or partitiontable is damage
+- bad checksum of group or descriptor
+- lots of invalid inodes
+- canceld with lots of illegal blocks in inodes
 
-First though, sort out this write error business. That bugs me more than the benchmarking stuff. Client and server side write errors in an iSCSI context make me think of file system corruption, either the write error caused by file system corruption, or creating it.
+Test2:
+mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 /dev/sd{a,b,c,d,e}4 missing
+-> filesize 1,3GB  with 37614367 lines and canceling by e2fsck at the end
+- back to original superblock
+- bad superblock or damaged partitiontable at the beginning
+- lots of invalid inodes
+- canceld with iteration of inade
 
+Test3:
+mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 /dev/sd{a,b,c}4 missing /dev/sd{e,f}4
+-> filesize 1,4GB with 40745425 lines and canceling by e2fsck at the end
+- errors see test2
+- read error while reading next inode
 
-Chris Murphy
+Test4:
+mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 /dev/sd{a,b,c,f,e,d}4
+->filesize 874MB with 25412000 lines and break by e2fsck at the end
+- try original superblock
+- bad superblock or damaged partitiontable
+- than lots of checksumm  invalid deskriptor of group
+- at the end illegal block in inode to much invalid blocks in inode
+
+Test5:
+mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 /dev/sd{a,b,c}4 missing /dev/sd{e,d}4
+-> filesize 1,6GB with 45673505 lines and canceling at the end by e2fsck
+
+Test6:
+mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 /dev/sd{a,b,c,f,e}4 missing
+- try original superblock
+- bad superblock or damage partitiontable
+- lots of checksumm error in group deskriptor
+- ends with conflict in inode table with another filesystem block
+-> filesize 542MB with 15727702 lines and cancelingat the end by e2fsck
+
+Teset6 looks like the best one, but what do you think and perhaps what could i do else? Any further help?
+
+Many thanks
+Sunny
+
