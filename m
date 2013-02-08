@@ -1,45 +1,54 @@
-From: Daniel Browning <db@kavod.com>
-Subject: Re: WD "RED" drives - are they any good for mdadm?
-Date: Fri, 8 Feb 2013 15:05:33 -0800
-Message-ID: <201302081505.33831.db@kavod.com>
-References: <50CF2112.1090406@gmail.com> <5115727E.9050601@tmr.com>
+From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Subject: Re: mdadm: hot remove failed for /dev/sdg: Device or resource busy
+Date: Fri, 08 Feb 2013 15:08:14 -0800
+Message-ID: <u3dgu9x6mo.ln2@goaway.wombat.san-francisco.ca.us>
+References: <eqndu9x4h8.ln2@goaway.wombat.san-francisco.ca.us>
+ <csvfu9xsdm.ln2@goaway.wombat.san-francisco.ca.us>
+ <20130208195935.GA1575@cthulhu.home.robinhill.me.uk>
+ <am2gu9xjvm.ln2@goaway.wombat.san-francisco.ca.us>
+ <CALwOXvKmgnf8ebHhhyq08M7be_QeAjONzrqB_03UvKXfgafYGQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5115727E.9050601@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
-Cc: maurice <mhilarius@gmail.com>, Drew <drew.kay@gmail.com>, Bill Davidsen <davidsen@tmr.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday 08 February 2013 1:47:42 pm Bill Davidsen wrote:
-> maurice wrote:
-> > Thinking about trying some WD "RED" drives for a build.
-> > Model # WD20EFRX
-> >
-> > Does anyone have any experience with these they would care to share?
+On 2013-02-08, John Gehring <john.gehring@gmail.com> wrote:
+> Not sure, but you may want to read the thread:
+>
+> 6. 2012-01-03  Re: [PATCH] FIX: Cannot remove failed disk from conta
+> linux-rai NeilBrown
+>
+>
+> http://marc.info/?l=linux-raid&m=132555140730996&w=2
 
-I've bought 8 of them over the last 6 months. One was DOA. Right now they're 
-all in a linux md raid6 (LSI 9220-8i HBA) and working great. The reason I 
-selected this model is price per GB, TLER, and warranty.
+I'm not totally sure I understand, but are you implying that pulling the
+most recent version from git might help?  If so, unfortunately it did
+not help.  I'd already tried 3.2.6, and I just tried Neil's git repo,
+and neither was successful in removing the failed device:
 
-> But the actual seek time, rpm and such, didn't pop up in the few places
-> which I checked.
+# ~/mdadm/mdadm --version
+mdadm - v3.2.5 - 18th May 2012
+# ~/mdadm/mdadm /dev/md127 --remove /dev/sdg
+mdadm: hot remove failed for /dev/sdg: Device or resource busy
+# ~/mdadm-3.2.6/mdadm --version
+mdadm - v3.2.6 - 25th October 2012
+# ~/mdadm-3.2.6/mdadm /dev/md127 --remove /dev/sdg
+mdadm: hot remove failed for /dev/sdg: Device or resource busy
 
-This is one that I read before buying:
+I can see how the initial report might be similar to the current
+situation, but it seems like the patch wasn't able to remove the device.
+(I did check to make sure that my local downloaded versions of mdadm did
+indeed have the patch; both do.)
 
-http://www.storagereview.com/western_digital_red_nas_hard_drive_review_wd30efrx
+--keith
 
-On Friday 08 February 2013 2:31:24 pm Drew wrote:
-> I personally have used a 4 pack of these hung off a LSI 9204 raid
-> controller and performance is okay but not spectacular.
+-- 
+kkeller-usenet@wombat.san-francisco.ca.us
+(try just my userid to email me)
+AOLSFAQ=http://www.therockgarden.ca/aolsfaq.txt
+see X- headers for PGP signature information
 
-Agreed. I only get about 145 MB/s seq r/w on the outer edge of the spindle and 
-I'm guessing it will probably be around 80 MB/s on the inner edge. Definitely 
-not 15K enterprise drives. On the 8-disk raid6 I get about 130 MB/s rebuild, 
-1000 MB/s seq read.
 
---
-DB
