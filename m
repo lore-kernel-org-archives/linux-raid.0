@@ -1,54 +1,45 @@
-From: Drew <drew.kay@gmail.com>
+From: Daniel Browning <db@kavod.com>
 Subject: Re: WD "RED" drives - are they any good for mdadm?
-Date: Fri, 8 Feb 2013 14:31:24 -0800
-Message-ID: <CACJz6QvUX12rJXrFhxg6FVO3e5qzO8t7UxM8+j=a2qhL215LeQ@mail.gmail.com>
+Date: Fri, 8 Feb 2013 15:05:33 -0800
+Message-ID: <201302081505.33831.db@kavod.com>
 References: <50CF2112.1090406@gmail.com> <5115727E.9050601@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <5115727E.9050601@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: maurice <mhilarius@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
+Cc: maurice <mhilarius@gmail.com>, Drew <drew.kay@gmail.com>, Bill Davidsen <davidsen@tmr.com>
 List-Id: linux-raid.ids
 
-> No, they're available big and cheap, but I confess that I don't see why a
-> drive series (red) is needed for NAS use, as opposed to cabled (eSATA)
-> connection. Not sure how the drive use would be different, but they are, as
-> noted, big and cheap.
+On Friday 08 February 2013 1:47:42 pm Bill Davidsen wrote:
+> maurice wrote:
+> > Thinking about trying some WD "RED" drives for a build.
+> > Model # WD20EFRX
+> >
+> > Does anyone have any experience with these they would care to share?
 
-It makes sense to me at least.
+I've bought 8 of them over the last 6 months. One was DOA. Right now they're 
+all in a linux md raid6 (LSI 9220-8i HBA) and working great. The reason I 
+selected this model is price per GB, TLER, and warranty.
 
-The big differentiators between the Red & Green/Blue series is
-ERC/TLER and the warranty terms. The drives come equipped with TLER
-set, which is helpful if you run RAID sets, the reasons for which this
-group is well versed in. The drives are also warrantied for 3yrs (as
-opposed to 2yrs) *and* specifically allow for use in enclosures of up
-to 4 bays. Apparently the Green & Blues aren't covered if use in
-enclosures.
+> But the actual seek time, rpm and such, didn't pop up in the few places
+> which I checked.
 
-I think at the end of the day the addition of Red's was market driven
-as a lot of people purchase these little home RAID boxes and find out
-the warrany on cheap drives doesn't cover that use, but at the same
-time, won't speend several hundred dollars *each* on enterprise
-drives.
+This is one that I read before buying:
 
-I personally have used a 4 pack of these hung off a LSI 9204 raid
-controller and performance is okay but not spectacular. That'd be
-because of the drives supposedly vary from 5400 to 7200 rpm depending
-on load. I treat them like 5400rpm drives and the benchmarks seem to
-bear that out. Good for bulk storage in home use, not so good for bulk
-storage in commercial use, except perhaps in 3rd or 4th tier storage
-where who cares how fast they are, what I call legal drives. (As in,
-we only keep them around for data the auditors & legal types may
-want.)
+http://www.storagereview.com/western_digital_red_nas_hard_drive_review_wd30efrx
 
+On Friday 08 February 2013 2:31:24 pm Drew wrote:
+> I personally have used a 4 pack of these hung off a LSI 9204 raid
+> controller and performance is okay but not spectacular.
 
--- 
-Drew
+Agreed. I only get about 145 MB/s seq r/w on the outer edge of the spindle and 
+I'm guessing it will probably be around 80 MB/s on the inner edge. Definitely 
+not 15K enterprise drives. On the 8-disk raid6 I get about 130 MB/s rebuild, 
+1000 MB/s seq read.
 
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
-
-"This started out as a hobby and spun horribly out of control."
--Unknown
+--
+DB
