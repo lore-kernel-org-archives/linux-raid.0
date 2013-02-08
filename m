@@ -1,67 +1,47 @@
-From: "Dragon" <Sunghost@gmx.de>
-Subject: Possible to rescue SW Raid5 with 2 missing Disks
-Date: Fri, 08 Feb 2013 10:17:00 +0100
-Message-ID: <20130208091700.256910@gmx.net>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: RAID performance
+Date: Fri, 08 Feb 2013 07:04:17 -0600
+Message-ID: <5114F7D1.40809@hardwarefreak.com>
+References: <51134E43.7090508@websitemanagers.com.au> <511361B3.8060204@hardwarefreak.com> <5114A791.3060802@websitemanagers.com.au>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5114A791.3060802@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+On 2/8/2013 1:21 AM, Adam Goryachev wrote:
+> On 07/02/13 19:11, Stan Hoeppner wrote:
+>> On 2/7/2013 12:48 AM, Adam Goryachev wrote:
+>> Switching to noop may help a little, as may disablig NCQ, i.e. putting
+>> the driver in native IDE mode, or setting queue depth to 1.
+>>
+> 
+> I changed these two settings last night (noop and nr_request = 1) and
+> today seemed to produce more complaints, and more errors logged about
+> write failures, so I have restored nr_requests to 128 and the scheduler
+> back to deadline.
 
-my situation is this: i have 3 server with each of 6x3tb in an sw raid5 on a debian squeeze system. on top of this i use moosefs as a filecluster. the problem now is that for a very short time 2 of the disks failed. at this time there was no file activity only the filesync between the nodes of the cluster.
+/sys/block/sda/queue/nr_requests has nothing to do with the SATA queue
+depth.  nr_requests controls the queue size of the scheduler (elevator).
+ Decreasing that to a value of 1 will obviously have dire consequences,
+dramatically decreasing SSD throughput.
 
-after that i cant rebuild the raid: "mdadm: /dev/md2 assembled from 4 drives and 1 spare - not enough to start the array."
+I was referring to the NCQ queue depth on the C204 SATA controller.
+This may or may not be manually configurable with that hardware/driver,
+but fully autonegotiated between the chip and the SSDs.  Which is why I
+mentioned switching to the native IDE mode, which disabled NCQ entirely.
+ However, disabling NCQ, if it helps, is a very minor performance
+optimization, and won't have significant impact on your problem.
 
-the superblock seems to be ok. and at least, by an advice from phil turmel, i tried a diffent kind of recreation with these results:
+Regardless, after reading your previous email, which I'll respond to
+next, it seems pretty clear your overarching problem is a network
+architecture oversight/flaw.
 
-Test1:
-mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 /dev/sd{a,b,c,d,e,f}4
--> filesize 708MB with 20603326 lines and canceling at the end by e2fsck
-- bad superblock or partitiontable is damage
-- bad checksum of group or descriptor
-- lots of invalid inodes
-- canceld with lots of illegal blocks in inodes
-
-Test2:
-mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 /dev/sd{a,b,c,d,e}4 missing
--> filesize 1,3GB  with 37614367 lines and canceling by e2fsck at the end
-- back to original superblock
-- bad superblock or damaged partitiontable at the beginning
-- lots of invalid inodes
-- canceld with iteration of inade
-
-Test3:
-mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 /dev/sd{a,b,c}4 missing /dev/sd{e,f}4
--> filesize 1,4GB with 40745425 lines and canceling by e2fsck at the end
-- errors see test2
-- read error while reading next inode
-
-Test4:
-mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 /dev/sd{a,b,c,f,e,d}4
-->filesize 874MB with 25412000 lines and break by e2fsck at the end
-- try original superblock
-- bad superblock or damaged partitiontable
-- than lots of checksumm  invalid deskriptor of group
-- at the end illegal block in inode to much invalid blocks in inode
-
-Test5:
-mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 /dev/sd{a,b,c}4 missing /dev/sd{e,d}4
--> filesize 1,6GB with 45673505 lines and canceling at the end by e2fsck
-
-Test6:
-mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 /dev/sd{a,b,c,f,e}4 missing
-- try original superblock
-- bad superblock or damage partitiontable
-- lots of checksumm error in group deskriptor
-- ends with conflict in inode table with another filesystem block
--> filesize 542MB with 15727702 lines and cancelingat the end by e2fsck
-
-Teset6 looks like the best one, but what do you think and perhaps what could i do else? Any further help?
-
-Many thanks
-Sunny
+-- 
+Stan
 
