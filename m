@@ -1,138 +1,152 @@
-From: Dave Cundiff <syshackmin@gmail.com>
-Subject: Re: help please, can't mount/recover raid 5 array
-Date: Sat, 9 Feb 2013 18:00:31 -0500
-Message-ID: <CAKHEz2aE8dz3+GgfchYS7WsLxXjT+1adJbdeiBjqo2uiXzJbcw@mail.gmail.com>
-References: <CAHscji2-8KaKOA041VykHeA+jCEka5afgEoH=EHVGDak-D4UFg@mail.gmail.com>
+From: John Spencer <maillist-mdadm@barfooze.de>
+Subject: [PATCH] mdadm: fix portability issues encountered while building
+ against musl libc
+Date: Sun, 10 Feb 2013 00:15:51 +0100
+Message-ID: <5116D8A7.6070409@barfooze.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/mixed;
+ boundary="------------010301020904000807080001"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHscji2-8KaKOA041VykHeA+jCEka5afgEoH=EHVGDak-D4UFg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Daniel Sanabria <sanabria.d@gmail.com>
+To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Feb 9, 2013 at 4:03 PM, Daniel Sanabria <sanabria.d@gmail.com> wrote:
-> Hi,
->
-> I'm having issues with my raid 5 array after upgrading my os and I
-> have to say I'm desperate :-(
->
-> whenever I try to mount the array I get the following:
->
-> [root@lamachine ~]# mount /mnt/raid/
-> mount: /dev/sda3 is already mounted or /mnt/raid busy
-> [root@lamachine ~]#
->
-> and the messages log is recording the following:
->
-> Feb  9 20:25:10 lamachine kernel: [ 3887.287305] EXT4-fs (md2): VFS:
-> Can't find ext4 filesystem
-> Feb  9 20:25:10 lamachine kernel: [ 3887.304025] EXT4-fs (md2): VFS:
-> Can't find ext4 filesystem
-> Feb  9 20:25:10 lamachine kernel: [ 3887.320702] EXT4-fs (md2): VFS:
-> Can't find ext4 filesystem
-> Feb  9 20:25:10 lamachine kernel: [ 3887.353233] ISOFS: Unable to
-> identify CD-ROM format.
-> Feb  9 20:25:10 lamachine kernel: [ 3887.353571] FAT-fs (md2): invalid
-> media value (0x82)
-> Feb  9 20:25:10 lamachine kernel: [ 3887.368809] FAT-fs (md2): Can't
-> find a valid FAT filesystem
-> Feb  9 20:25:10 lamachine kernel: [ 3887.369140] hfs: can't find a HFS
-> filesystem on dev md2.
-> Feb  9 20:25:10 lamachine kernel: [ 3887.369665] hfs: unable to find
-> HFS+ superblock
->
-> /etc/fstab is as follows:
->
-> [root@lamachine ~]# cat /etc/fstab
->
-> #
-> # /etc/fstab
-> # Created by anaconda on Fri Feb  8 17:33:14 2013
-> #
-> # Accessible filesystems, by reference, are maintained under '/dev/disk'
-> # See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info
-> #
-> /dev/mapper/vg_bigblackbox-LogVol_root /                       ext4
-> defaults        1 1
-> UUID=7bee0f50-3e23-4a5b-bfb5-42006d6c8561 /boot                   ext4
->    defaults        1 2
-> UUID=48be851b-f021-0b64-e9fb-efdf24c84c5f /mnt/raid ext4 defaults 1 2
-> /dev/mapper/vg_bigblackbox-LogVol_opt /opt                    ext4
-> defaults        1 2
-> /dev/mapper/vg_bigblackbox-LogVol_tmp /tmp                    ext4
-> defaults        1 2
-> /dev/mapper/vg_bigblackbox-LogVol_var /var                    ext4
-> defaults        1 2
-> UUID=70933ff3-8ed0-4486-abf1-01f00023d1b2 swap                    swap
->    defaults        0 0
-> [root@lamachine ~]#
->
-> After the upgrade I had to assemble the array manually and didn't get
-> any errors but I was still getting the mount problem. I went ahead and
-> recreated it with mdadm --create --assume-clean and still the smae result.
->
-> here's some more info about md2:
-> [root@lamachine ~]# mdadm --misc --detail /dev/md2
-> /dev/md2:
->         Version : 1.2
->   Creation Time : Sat Feb  9 17:30:32 2013
->      Raid Level : raid5
->      Array Size : 511996928 (488.28 GiB 524.28 GB)
->   Used Dev Size : 255998464 (244.14 GiB 262.14 GB)
->    Raid Devices : 3
->   Total Devices : 3
->     Persistence : Superblock is persistent
->
->     Update Time : Sat Feb  9 20:47:46 2013
->           State : clean
->  Active Devices : 3
-> Working Devices : 3
->  Failed Devices : 0
->   Spare Devices : 0
->
->          Layout : left-symmetric
->      Chunk Size : 512K
->
->            Name : lamachine:2  (local to host lamachine)
->            UUID : 48be851b:f0210b64:e9fbefdf:24c84c5f
->          Events : 2
->
->     Number   Major   Minor   RaidDevice State
->        0       8        3        0      active sync   /dev/sda3
->        1       8       18        1      active sync   /dev/sdb2
->        2       8       34        2      active sync   /dev/sdc2
-> [root@lamachine ~]#
->
-> it looks like it know about how much space is being used which might
-> indicate that the data is still there?
->
-> what can I do to recover the data?
->
-> Any  help or guidance is more than welcome.
->
-> Thanks in advance,
->
-> Dan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This is a multi-part message in MIME format.
+--------------010301020904000807080001
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-What OS did you upgrade from and to? What OS was the array originally
-created on?
 
-Looks like you have LVM on top the of md array so the output of
-pvdisplay and vgdisplay would be useful.
+--------------010301020904000807080001
+Content-Type: text/x-patch;
+ name="0001-platform-intel-canonicalize_file_name-is-not-portabl.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-platform-intel-canonicalize_file_name-is-not-portabl.pa";
+ filename*1="tch"
 
-Did you specify metadata version when re-creating the array?
-Recreating the array at best changed the UUID, and depending on what
-OS the array was created on, overwrote the beginning of your
-partitions.
+From 23114b8c77982717cc3ce3d437321c7fb0b1c918 Mon Sep 17 00:00:00 2001
+From: John Spencer <maillist-mdadm@barfooze.de>
+Date: Sat, 2 Feb 2013 17:26:45 +0100
+Subject: [PATCH 1/3] platform-intel: canonicalize_file_name() is not portable
 
---
-Dave Cundiff
-System Administrator
-A2Hosting, Inc
-http://www.a2hosting.com
+this is a GLIBC specific feature and should not be used.
+
+according to its manpage:
+"The call canonicalize_file_name(path) is equivalent
+to the call realpath(path, NULL)."
+
+thus, we use realpath so it works everywhere.
+
+Signed-off-by: John Spencer <maillist-mdadm@barfooze.de>
+---
+ platform-intel.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/platform-intel.c b/platform-intel.c
+index 0dcf07c..d8d4942 100644
+--- a/platform-intel.c
++++ b/platform-intel.c
+@@ -116,7 +116,7 @@ struct sys_dev *find_driver_devices(const char *bus, const char *driver)
+ 
+ 		list->dev_id = (__u16) dev_id;
+ 		list->type = type;
+-		list->path = canonicalize_file_name(path);
++		list->path = realpath(path, NULL);
+ 		list->next = NULL;
+ 		if ((list->pci_id = strrchr(list->path, '/')) != NULL)
+ 			list->pci_id++;
+@@ -459,7 +459,7 @@ char *devt_to_devpath(dev_t dev)
+ 	char device[46];
+ 
+ 	sprintf(device, "/sys/dev/block/%d:%d/device", major(dev), minor(dev));
+-	return canonicalize_file_name(device);
++	return realpath(device, NULL);
+ }
+ 
+ char *diskfd_to_devpath(int fd)
+-- 
+1.7.3.4
+
+
+--------------010301020904000807080001
+Content-Type: text/x-patch;
+ name="0002-mdadm.h-fix-ugly-glibc-specific-ifdeffery.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0002-mdadm.h-fix-ugly-glibc-specific-ifdeffery.patch"
+
+From 9467d1dcef907addbd9ef4f0f9068766674fd587 Mon Sep 17 00:00:00 2001
+From: John Spencer <maillist-mdadm@barfooze.de>
+Date: Sat, 2 Feb 2013 17:37:55 +0100
+Subject: [PATCH 2/3] mdadm.h: fix ugly glibc specific ifdeffery
+
+the code that was exposed on anything else than dietlibc and klibc
+is entirely glibc specific and broke the build on musl libc.
+
+Signed-off-by: John Spencer <maillist-mdadm@barfooze.de>
+---
+ mdadm.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/mdadm.h b/mdadm.h
+index f1352e3..addd423 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -25,9 +25,9 @@
+ #define	_GNU_SOURCE
+ #define _FILE_OFFSET_BITS 64
+ #include	<unistd.h>
+-#if !defined(__dietlibc__) && !defined(__KLIBC__)
++#ifdef __GLIBC__
+ extern __off64_t lseek64 __P ((int __fd, __off64_t __offset, int __whence));
+-#else
++#elif !defined(lseek64)
+ # if defined(__NO_STAT64) || __WORDSIZE != 32
+ # define lseek64 lseek
+ # endif
+-- 
+1.7.3.4
+
+
+--------------010301020904000807080001
+Content-Type: text/x-patch;
+ name="0003-remove-Werror-from-Makefile.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="0003-remove-Werror-from-Makefile.patch"
+
+From eb55533b387c0805ac11134bab1404108851ef04 Mon Sep 17 00:00:00 2001
+From: John Spencer <maillist-mdadm@barfooze.de>
+Date: Sat, 2 Feb 2013 17:40:20 +0100
+Subject: [PATCH 3/3] remove -Werror from Makefile
+
+using -Werror breaks the build for any libc/compiler combination
+the author didnt test yet, so it is insane to use it by default.
+
+fixes build on musl libc.
+
+Signed-off-by: John Spencer <maillist-mdadm@barfooze.de>
+---
+ Makefile |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index b9787d6..0169824 100644
+--- a/Makefile
++++ b/Makefile
+@@ -42,7 +42,7 @@ KLIBC_GCC = gcc -nostdinc -iwithprefix include -I$(KLIBC)/klibc/include -I$(KLIB
+ 
+ CC = $(CROSS_COMPILE)gcc
+ CXFLAGS = -ggdb
+-CWFLAGS = -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
++CWFLAGS = -Wall -Wstrict-prototypes -Wextra -Wno-unused-parameter
+ ifdef WARN_UNUSED
+ CWFLAGS += -Wp,-D_FORTIFY_SOURCE=2 -O
+ endif
+-- 
+1.7.3.4
+
+
+--------------010301020904000807080001--
