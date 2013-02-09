@@ -1,46 +1,52 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: WD "RED" drives - are they any good for mdadm?
-Date: Sat, 9 Feb 2013 13:48:38 +0100
-Message-ID: <20130209124838.GA5415@lazy.lzy>
-References: <50CF2112.1090406@gmail.com>
- <5115727E.9050601@tmr.com>
- <CACJz6QvUX12rJXrFhxg6FVO3e5qzO8t7UxM8+j=a2qhL215LeQ@mail.gmail.com>
- <alpine.DEB.2.00.1302090905500.32644@uplift.swm.pp.se>
- <20130209082059.GA2372@lazy.lzy>
- <5116434A.6060300@fnarfbargle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: =?UTF-8?q?Thomas=20B=C3=A4chler?= <thomas@archlinux.org>
+Subject: [PATCH 1/2] Modernize udev rules
+Date: Sat,  9 Feb 2013 18:48:38 +0100
+Message-ID: <1360432119-15910-1-git-send-email-thomas@archlinux.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5116434A.6060300@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <lists2009@fnarfbargle.com>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de, =?UTF-8?q?Thomas=20B=C3=A4chler?= <thomas@archlinux.org>
 List-Id: linux-raid.ids
 
-On Sat, Feb 09, 2013 at 08:38:34PM +0800, Brad Campbell wrote:
-> On 09/02/13 16:20, Piergiorgio Sartor wrote:
-> 
-> >Does anybody know if the REDs support Staggered Spin Up?
-> >
-> >I could not find any info on that on WDC web site.
-> >
-> >In the past, some WDC HDDs supported SSU by software
-> >and/or by jumper, but on these it seems unknown.
-> 
-> All my WD drives (Greens and Blacks) do out of the box, so I'd
-> assume the RED does too. In fact, I think the last drive I tried
-> that did not was an old 250GB Maxtor. Everything else seems to.
+* $tempnode is deprecated, use $devnode
+* blkid -o udev output is deprecated, use IMPORT{builtin}="blkid" instead
+---
+ udev-md-raid.rules | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Maybe, but some do by software, some by jumper and
-some others by SATA pin. Or combinations of that.
-
-So, I was curious, since one WDC I've can be
-configure by jumper (and software) and it has
-the "instructions" on the HDD itself.
-
-bye,
-
+diff --git a/udev-md-raid.rules b/udev-md-raid.rules
+index cc7f5ef..ea97261 100644
+--- a/udev-md-raid.rules
++++ b/udev-md-raid.rules
+@@ -10,7 +10,7 @@ LABEL="md_inc"
+ 
+ # remember you can limit what gets auto/incrementally assembled by
+ # mdadm.conf(5)'s 'AUTO' and selectively whitelist using 'ARRAY'
+-ACTION=="add", RUN+="/sbin/mdadm --incremental $tempnode --offroot"
++ACTION=="add", RUN+="/sbin/mdadm --incremental $devnode --offroot"
+ ACTION=="remove", ENV{ID_PATH}=="?*", RUN+="/sbin/mdadm -If $name --path $env{ID_PATH}"
+ ACTION=="remove", ENV{ID_PATH}!="?*", RUN+="/sbin/mdadm -If $name"
+ 
+@@ -31,7 +31,7 @@ TEST!="md/array_state", ENV{SYSTEMD_READY}="0", GOTO="md_end"
+ ATTR{md/array_state}=="|clear|inactive", ENV{SYSTEMD_READY}="0", GOTO="md_end"
+ LABEL="md_ignore_state"
+ 
+-IMPORT{program}="/sbin/mdadm --detail --export $tempnode"
++IMPORT{program}="/sbin/mdadm --detail --export $devnode"
+ ENV{DEVTYPE}=="disk", ENV{MD_NAME}=="?*", SYMLINK+="disk/by-id/md-name-$env{MD_NAME}", OPTIONS+="string_escape=replace"
+ ENV{DEVTYPE}=="disk", ENV{MD_UUID}=="?*", SYMLINK+="disk/by-id/md-uuid-$env{MD_UUID}"
+ ENV{DEVTYPE}=="disk", ENV{MD_DEVNAME}=="?*", SYMLINK+="md/$env{MD_DEVNAME}"
+@@ -40,7 +40,7 @@ ENV{DEVTYPE}=="partition", ENV{MD_UUID}=="?*", SYMLINK+="disk/by-id/md-uuid-$env
+ ENV{DEVTYPE}=="partition", ENV{MD_DEVNAME}=="*[^0-9]", SYMLINK+="md/$env{MD_DEVNAME}%n"
+ ENV{DEVTYPE}=="partition", ENV{MD_DEVNAME}=="*[0-9]", SYMLINK+="md/$env{MD_DEVNAME}p%n"
+ 
+-IMPORT{program}="/sbin/blkid -o udev -p $tempnode"
++IMPORT{builtin}="blkid"
+ OPTIONS+="link_priority=100"
+ OPTIONS+="watch"
+ ENV{ID_FS_USAGE}=="filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=="?*", SYMLINK+="disk/by-uuid/$env{ID_FS_UUID_ENC}"
 -- 
+1.8.1.3
 
-piergiorgio
