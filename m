@@ -1,114 +1,126 @@
-From: Christoph Nelles <evilazrael@evilazrael.de>
-Subject: Re: RAID5 with 2 drive failure at the same time
-Date: Sun, 10 Feb 2013 21:48:51 +0100
-Message-ID: <511807B3.3070105@evilazrael.de>
-References: <20130131221007.GA1447@cthulhu.home.robinhill.me.uk> <88758108-9333-4224-9006-8E44E717AB29@colorremedies.com> <20130201133455.GA24375@cthulhu.home.robinhill.me.uk> <9F0E4AF3-4358-425F-8078-C068D5BB9487@colorremedies.com> <20130201195734.GA16573@cthulhu.home.robinhill.me.uk> <510C5E3F.8090807@evilazrael.de> <510C6AB6.8040900@turmel.org> <510D36D7.5050704@evilazrael.de> <510DBBB9.5030300@turmel.org> <510E88B3.8050505@evilazrael.de> <20130203215934.GB18805@cthulhu.home.robinhill.me.uk>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: help please, can't mount/recover raid 5 array
+Date: Sun, 10 Feb 2013 16:05:26 -0500
+Message-ID: <51180B96.9020500@turmel.org>
+References: <CAHscji2-8KaKOA041VykHeA+jCEka5afgEoH=EHVGDak-D4UFg@mail.gmail.com> <alpine.DEB.2.00.1302100728130.32644@uplift.swm.pp.se> <CAHscji0h5nHUssKi23BMfR=Ek+jSH+vK0odYNWkzrVDf6t18mw@mail.gmail.com> <CAHscji1enS+Crp23kMX_6pX-bhrDNZ3-7Lbg2dAOPRtJc_nEhw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130203215934.GB18805@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <CAHscji1enS+Crp23kMX_6pX-bhrDNZ3-7Lbg2dAOPRtJc_nEhw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Daniel Sanabria <sanabria.d@gmail.com>
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello ML,
+Hi Daniel,
 
-thanks Chris, Phil & Robin. You helped me alot.
+On 02/10/2013 04:36 AM, Daniel Sanabria wrote:
+> On 10 February 2013 09:17, Daniel Sanabria <sanabria.d@gmail.com> wrote:
+>> Hi Mikael,
+>>
+>> Yes I did. Here it is:
 
-After replacing the Marvell Controller with a LSI SAS2008-based
-Controller (IBM M1015 flashed to 9211-IT) the RAID was rebuilt
-successfully and is running clean and stable. So the cause of the
-problems was one HDD with UREs and the unstable Marvell controller. My
-next steps are going to RAID6 and a bigger chunk size and scrubbing the
-RAID periodically.
+[trim /]
 
-I have a last question. I am wondering that reading a huge file in the
-XFS on the Array is faster than reading the raw md0 device. Has anybody
-an explanation for that?
+>> /dev/sda3:
+>>           Magic : a92b4efc
+>>         Version : 0.90.00
 
-9 Drives RAID5, chunk size 64kb, Filesystem XFS not optimized:
-# echo 3 > /proc/sys/vm/drop_caches
-# dd if=dummy.file of=/dev/null bs=1M count=100k
-102400+0 records in
-102400+0 records out
-107374182400 bytes (107 GB) copied, 211.467 s, 508 MB/s
+=====================^^^^^^^
 
-# echo 3 > /proc/sys/vm/drop_caches
-# dd if=/dev/md0 of=/dev/null bs=1M count=100k
-102400+0 records in
-102400+0 records out
-107374182400 bytes (107 GB) copied, 263.738 s, 407 MB/s
+>>            UUID : 0deb6f79:aec7ed69:bfe78010:bc810f04
+>>   Creation Time : Thu Dec  3 22:12:24 2009
+>>      Raid Level : raid5
+>>   Used Dev Size : 255999936 (244.14 GiB 262.14 GB)
+>>      Array Size : 511999872 (488.28 GiB 524.29 GB)
+>>    Raid Devices : 3
+>>   Total Devices : 3
+>> Preferred Minor : 2
+>>
+>>     Update Time : Sat Feb  9 16:09:20 2013
+>>           State : clean
+>>  Active Devices : 3
+>> Working Devices : 3
+>>  Failed Devices : 0
+>>   Spare Devices : 0
+>>        Checksum : 8dd157e5 - correct
+>>          Events : 792552
+>>
+>>          Layout : left-symmetric
+>>      Chunk Size : 64K
 
-# echo 3 > /proc/sys/vm/drop_caches
-# dd if=/dev/md0 of=/dev/null bs=64k count=1600k
-1638400+0 records in
-1638400+0 records out
-107374182400 bytes (107 GB) copied, 253.76 s, 423 MB/s
+=====================^^^
 
-# echo 3 > /proc/sys/vm/drop_caches
-# dd if=/dev/md0 of=/dev/null bs=512k count=200k
-204800+0 records in
-204800+0 records out
-107374182400 bytes (107 GB) copied, 260.837 s, 412 MB/s
+>>
+>>       Number   Major   Minor   RaidDevice State
+>> this     0       8        3        0      active sync   /dev/sda3
+>>
+>>    0     0       8        3        0      active sync   /dev/sda3
+>>    1     1       8       18        1      active sync   /dev/sdb2
+>>    2     2       8       34        2      active sync   /dev/sdc2
 
-# echo 3 > /proc/sys/vm/drop_caches
-# dd if=/dev/md0 of=/dev/null bs=576k count=200k
-204800+0 records in
-204800+0 records out
-120795955200 bytes (121 GB) copied, 296.567 s, 407 MB/s
+From your original post:
 
-Once again thanks for all help
+> /dev/md2:
+>         Version : 1.2
 
-Kind Regards
+====================^^^
 
-Christoph
-
-Am 03.02.2013 22:59, schrieb Robin Hill:
-> On Sun Feb 03, 2013 at 04:56:35 +0100, Christoph Nelles wrote:
+>   Creation Time : Sat Feb  9 17:30:32 2013
+>      Raid Level : raid5
+>      Array Size : 511996928 (488.28 GiB 524.28 GB)
+>   Used Dev Size : 255998464 (244.14 GiB 262.14 GB)
+>    Raid Devices : 3
+>   Total Devices : 3
+>     Persistence : Superblock is persistent
 > 
->> Hi folks,
->>
->> the dd_rescue to the new HDD took 14hours. It looks like ddrescue is not
->> reading and writing in parallel. In the end 8kb couldn't be read after
->> 10 retries.
->>
-> Note that there's a difference between dd_rescue and ddrescue. GNU
-> ddrescue seems to be the better option nowadays,
+>     Update Time : Sat Feb  9 20:47:46 2013
+>           State : clean
+>  Active Devices : 3
+> Working Devices : 3
+>  Failed Devices : 0
+>   Spare Devices : 0
 > 
->> I just force-assembled the RAID with the new drive, but it failed almost
->> immediately with an WRITE FPDMA QUEUED error on one of the other drives
->> (sdj, formerly sdi). I tried immediately again, an this time one disk
->> was rejected but the RAID started on 8 devices, but xfs_repair failed
->> when one of the disks failed with an READ FPDMA QUEUED error :( and md
->> expelled the disk from the RAID.
->>
->> It looks more like a controller problem as all the messages comming from
->> the drives on the PCIe Marvell have all the line
->> ataXX: illegal qc_active transition (00000002->00000003)
->> I found only one similar report about that problem:
->> http://marc.info/?l=linux-ide&m=131475722021117
->>
->> Any recommendations for a decent and affordable SATA Controller with at
->> least 4 ports and faster than PCIe x1? Looks like there are only
->> Marvells and more expensive Enterprise RAID controllers.
->>
+>          Layout : left-symmetric
+>      Chunk Size : 512K
+
+====================^^^^
+
 > 
-> I can recommend the Intel RS2WC080 (or any other LSI SAS2008 based
-> controller). Quite frankly, any SAS controller is almost certainly
-> going to be better than the SATA equivalent (and for not a huge amount
-> more), while still supporting standard SATA drives.
+>            Name : lamachine:2  (local to host lamachine)
+>            UUID : 48be851b:f0210b64:e9fbefdf:24c84c5f
+>          Events : 2
 > 
-> Cheers,
->     Robin
+>     Number   Major   Minor   RaidDevice State
+>        0       8        3        0      active sync   /dev/sda3
+>        1       8       18        1      active sync   /dev/sdb2
+>        2       8       34        2      active sync   /dev/sdc2
 
+I don't know what possessed you to use "mdadm --create" to try to fix
+your system, but it is almost always the wrong first step.  But since
+you scrambled it with "mdadm --create", you'll have to fix it with
+"mdadm --create".
 
--- 
-Christoph Nelles
+mdadm --stop /dev/md2
 
-E-Mail    : evilazrael@evilazrael.de
-Jabber    : eazrael@evilazrael.net      ICQ       : 78819723
+mdadm --create --assume-clean /dev/md2 --metadata=0.90 \
+	--level=5 --raid-devices=3 --chunk=64 \
+	/dev/sda3 /dev/sdb2 /dev/sdc2
 
-PGP-Key   : ID 0x424FB55B on subkeys.pgp.net
-            or http://evilazrael.net/pgp.txt
+Then, you will have to reconstruct the beginning of the array, as much
+as 3MB worth, that was replaced with v1.2 metadata.  (The used dev size
+differs by 1472kB, suggesting that the new mdadm gave you a new data
+offset of 2048, and the rest is the difference in the chunk size.)
 
+Your original report and follow-ups have not clearly indicated what is
+on this 524GB array, so I can't be more specific.  If it is a
+filesystem, an fsck may fix it with modest losses.
+
+If it is another LVM PV, you may be able to do a vgrestore to reset the
+1st megabyte.  You didn't activate a bitmap on the array, so the
+remainder of the new metadata space was probably untouched.
+
+HTH,
+
+Phil
