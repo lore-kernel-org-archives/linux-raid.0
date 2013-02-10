@@ -1,62 +1,114 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: RAID performance
-Date: Sun, 10 Feb 2013 18:19:19 +0100 (CET)
-Message-ID: <alpine.DEB.2.00.1302101812060.32644@uplift.swm.pp.se>
-References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <511471EA.2000605@hardwarefreak.com>
- <5114A53B.9060103@websitemanagers.com.au> <5115316F.1090502@hardwarefreak.com> <5115478A.8010004@websitemanagers.com.au> <5115CC02.2010400@hardwarefreak.com> <d34a6caf-d1b5-403c-aee2-525a9b3c3db7@email.android.com> <51179F09.1020503@hardwarefreak.com>
- <6990fbda-f741-454a-80cd-bdcdfd8c971c@email.android.com>
+From: Christoph Nelles <evilazrael@evilazrael.de>
+Subject: Re: RAID5 with 2 drive failure at the same time
+Date: Sun, 10 Feb 2013 21:48:51 +0100
+Message-ID: <511807B3.3070105@evilazrael.de>
+References: <20130131221007.GA1447@cthulhu.home.robinhill.me.uk> <88758108-9333-4224-9006-8E44E717AB29@colorremedies.com> <20130201133455.GA24375@cthulhu.home.robinhill.me.uk> <9F0E4AF3-4358-425F-8078-C068D5BB9487@colorremedies.com> <20130201195734.GA16573@cthulhu.home.robinhill.me.uk> <510C5E3F.8090807@evilazrael.de> <510C6AB6.8040900@turmel.org> <510D36D7.5050704@evilazrael.de> <510DBBB9.5030300@turmel.org> <510E88B3.8050505@evilazrael.de> <20130203215934.GB18805@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6990fbda-f741-454a-80cd-bdcdfd8c971c@email.android.com>
+In-Reply-To: <20130203215934.GB18805@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: Stan Hoeppner <stan@hardwarefreak.com>Stan Hoeppner <stan@hardwarefreak.com>, Dave Cundiff <syshackmin@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 11 Feb 2013, Adam Goryachev wrote:
+Hello ML,
 
-> Nope, I'm saying that on 5 different (specifically machines 1, 4, 5, 6, 
-> 7) physical boxes, (the xen host) if I do a dd 
-> if=/dev/disk/by-path/iscsivm1 of=/dev/null on 5 machines concurrently, 
-> then they only get 20Mbps each. If I do one at a time, I get 130Mbps, if 
-> I do two at a time, I get 60Mbps, etc... If I do the same test on 
-> machines 1, 2, 3, 8 at the same time, each gets 130Mbps
+thanks Chris, Phil & Robin. You helped me alot.
 
-When you say Mbps, I read that as Megabit/s. Are you in fact referring to 
-megabyte/s?
+After replacing the Marvell Controller with a LSI SAS2008-based
+Controller (IBM M1015 flashed to 9211-IT) the RAID was rebuilt
+successfully and is running clean and stable. So the cause of the
+problems was one HDD with UREs and the unstable Marvell controller. My
+next steps are going to RAID6 and a bigger chunk size and scrubbing the
+RAID periodically.
 
-I suspect the load balancing (hasing) function on the switch terminating 
-the LAG is causing your problem. Typically this hashing function doesn't 
-look at load on individual links, but a specific src/dst/port hash points 
-to a certain link, and there isn't really anything you can do about it. 
-The only way around it is to go 10GE instead of the LAG, or move away from 
-the LAG and assign 4 different IPs, one per physical link, and then make 
-sure routing to/from server/client always goes onto the same link, cutting 
-worst-case down to two servers sharing one link (8 servers, 4 links).
+I have a last question. I am wondering that reading a huge file in the
+XFS on the Array is faster than reading the raw md0 device. Has anybody
+an explanation for that?
 
-> The problem is that (from my understanding) LACP will balance the 
-> traffic based on the destination MAC address, by default. So the 
-> bandwidth between any two machines is limited to a single 1Gbps link. So 
-> regardless of the number of ethernet ports on the DC box, it will only 
-> ever use a max of 1Gb[s to talk to the iSCSI server.
+9 Drives RAID5, chunk size 64kb, Filesystem XFS not optimized:
+# echo 3 > /proc/sys/vm/drop_caches
+# dd if=dummy.file of=/dev/null bs=1M count=100k
+102400+0 records in
+102400+0 records out
+107374182400 bytes (107 GB) copied, 211.467 s, 508 MB/s
 
-LACP is a way to set up a bunch of ports in a channel. It doesn't affect 
-how traffic will be shared, that is a property of the hardware/software 
-mix in the switch/operating (LACP is control plane, it's not forwarding 
-plane). Device egressing the packet onto a link decides what port it goes 
-out of, typically done on properties on L2, L3 and L4 (different for 
-different devices).
+# echo 3 > /proc/sys/vm/drop_caches
+# dd if=/dev/md0 of=/dev/null bs=1M count=100k
+102400+0 records in
+102400+0 records out
+107374182400 bytes (107 GB) copied, 263.738 s, 407 MB/s
 
-> However, if I configure Linux to use xmit_hash_policy=1 it will use the 
-> IP address and port (layer 3+4) to decide which trunk to use. It will 
-> still only use 1Gbps to talk to that IP:port combination.
+# echo 3 > /proc/sys/vm/drop_caches
+# dd if=/dev/md0 of=/dev/null bs=64k count=1600k
+1638400+0 records in
+1638400+0 records out
+107374182400 bytes (107 GB) copied, 253.76 s, 423 MB/s
 
-As expected. You do not want to send packets belonging to a single 
-"session" out different ports, because then you might get packet 
-reordering. This is called "per-packet load sharing", if it's desireable 
-then it might be possible to enable in the equipment. TCP doesn't like it 
-though, don't know how storage protocols react.
+# echo 3 > /proc/sys/vm/drop_caches
+# dd if=/dev/md0 of=/dev/null bs=512k count=200k
+204800+0 records in
+204800+0 records out
+107374182400 bytes (107 GB) copied, 260.837 s, 412 MB/s
+
+# echo 3 > /proc/sys/vm/drop_caches
+# dd if=/dev/md0 of=/dev/null bs=576k count=200k
+204800+0 records in
+204800+0 records out
+120795955200 bytes (121 GB) copied, 296.567 s, 407 MB/s
+
+Once again thanks for all help
+
+Kind Regards
+
+Christoph
+
+Am 03.02.2013 22:59, schrieb Robin Hill:
+> On Sun Feb 03, 2013 at 04:56:35 +0100, Christoph Nelles wrote:
+> 
+>> Hi folks,
+>>
+>> the dd_rescue to the new HDD took 14hours. It looks like ddrescue is not
+>> reading and writing in parallel. In the end 8kb couldn't be read after
+>> 10 retries.
+>>
+> Note that there's a difference between dd_rescue and ddrescue. GNU
+> ddrescue seems to be the better option nowadays,
+> 
+>> I just force-assembled the RAID with the new drive, but it failed almost
+>> immediately with an WRITE FPDMA QUEUED error on one of the other drives
+>> (sdj, formerly sdi). I tried immediately again, an this time one disk
+>> was rejected but the RAID started on 8 devices, but xfs_repair failed
+>> when one of the disks failed with an READ FPDMA QUEUED error :( and md
+>> expelled the disk from the RAID.
+>>
+>> It looks more like a controller problem as all the messages comming from
+>> the drives on the PCIe Marvell have all the line
+>> ataXX: illegal qc_active transition (00000002->00000003)
+>> I found only one similar report about that problem:
+>> http://marc.info/?l=linux-ide&m=131475722021117
+>>
+>> Any recommendations for a decent and affordable SATA Controller with at
+>> least 4 ports and faster than PCIe x1? Looks like there are only
+>> Marvells and more expensive Enterprise RAID controllers.
+>>
+> 
+> I can recommend the Intel RS2WC080 (or any other LSI SAS2008 based
+> controller). Quite frankly, any SAS controller is almost certainly
+> going to be better than the SATA equivalent (and for not a huge amount
+> more), while still supporting standard SATA drives.
+> 
+> Cheers,
+>     Robin
+
 
 -- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Christoph Nelles
+
+E-Mail    : evilazrael@evilazrael.de
+Jabber    : eazrael@evilazrael.net      ICQ       : 78819723
+
+PGP-Key   : ID 0x424FB55B on subkeys.pgp.net
+            or http://evilazrael.net/pgp.txt
+
