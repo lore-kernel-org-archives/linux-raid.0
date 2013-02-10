@@ -1,123 +1,154 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: RAID performance
-Date: Mon, 11 Feb 2013 08:57:44 +1100
-Message-ID: <511817D8.7020809@websitemanagers.com.au>
-References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <511471EA.2000605@hardwarefreak.com> <5114A53B.9060103@websitemanagers.com.au> <5115316F.1090502@hardwarefreak.com> <5115478A.8010004@websitemanagers.com.au> <5115CC02.2010400@hardwarefreak.com> <d34a6caf-d1b5-403c-aee2-525a9b3c3db7@email.android.com> <51179F09.1020503@hardwarefreak.com> <6990fbda-f741-454a-80cd-bdcdfd8c971c@email.android.com> <alpine.DEB.2.00.1302101812060.32644@uplift.swm.pp.se>
+From: Dave Cundiff <syshackmin@gmail.com>
+Subject: Re: help please, can't mount/recover raid 5 array
+Date: Sun, 10 Feb 2013 17:01:30 -0500
+Message-ID: <CAKHEz2ZKL54iuiDiJiVG8Ec-cJGRnjO_qYM7nF13KQPdKUYikQ@mail.gmail.com>
+References: <CAHscji2-8KaKOA041VykHeA+jCEka5afgEoH=EHVGDak-D4UFg@mail.gmail.com>
+	<alpine.DEB.2.00.1302100728130.32644@uplift.swm.pp.se>
+	<CAHscji0h5nHUssKi23BMfR=Ek+jSH+vK0odYNWkzrVDf6t18mw@mail.gmail.com>
+	<CAHscji1enS+Crp23kMX_6pX-bhrDNZ3-7Lbg2dAOPRtJc_nEhw@mail.gmail.com>
+	<51180B96.9020500@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1302101812060.32644@uplift.swm.pp.se>
+In-Reply-To: <51180B96.9020500@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Stan Hoeppner <stan@hardwarefreak.com>, Dave Cundiff <syshackmin@gmail.com>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Daniel Sanabria <sanabria.d@gmail.com>, Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/02/13 04:19, Mikael Abrahamsson wrote:
-> On Mon, 11 Feb 2013, Adam Goryachev wrote:
-> 
->> Nope, I'm saying that on 5 different (specifically machines 1, 4, 5,
->> 6, 7) physical boxes, (the xen host) if I do a dd
->> if=/dev/disk/by-path/iscsivm1 of=/dev/null on 5 machines concurrently,
->> then they only get 20Mbps each. If I do one at a time, I get 130Mbps,
->> if I do two at a time, I get 60Mbps, etc... If I do the same test on
->> machines 1, 2, 3, 8 at the same time, each gets 130Mbps
-> 
-> When you say Mbps, I read that as Megabit/s. Are you in fact referring
-> to megabyte/s?
+On Sun, Feb 10, 2013 at 4:05 PM, Phil Turmel <philip@turmel.org> wrote:
+> Hi Daniel,
+>
+> On 02/10/2013 04:36 AM, Daniel Sanabria wrote:
+>> On 10 February 2013 09:17, Daniel Sanabria <sanabria.d@gmail.com> wrote:
+>>> Hi Mikael,
+>>>
+>>> Yes I did. Here it is:
+>
+> [trim /]
+>
+>>> /dev/sda3:
+>>>           Magic : a92b4efc
+>>>         Version : 0.90.00
+>
+> =====================^^^^^^^
+>
+>>>            UUID : 0deb6f79:aec7ed69:bfe78010:bc810f04
+>>>   Creation Time : Thu Dec  3 22:12:24 2009
+>>>      Raid Level : raid5
+>>>   Used Dev Size : 255999936 (244.14 GiB 262.14 GB)
+>>>      Array Size : 511999872 (488.28 GiB 524.29 GB)
+>>>    Raid Devices : 3
+>>>   Total Devices : 3
+>>> Preferred Minor : 2
+>>>
+>>>     Update Time : Sat Feb  9 16:09:20 2013
+>>>           State : clean
+>>>  Active Devices : 3
+>>> Working Devices : 3
+>>>  Failed Devices : 0
+>>>   Spare Devices : 0
+>>>        Checksum : 8dd157e5 - correct
+>>>          Events : 792552
+>>>
+>>>          Layout : left-symmetric
+>>>      Chunk Size : 64K
+>
+> =====================^^^
+>
+>>>
+>>>       Number   Major   Minor   RaidDevice State
+>>> this     0       8        3        0      active sync   /dev/sda3
+>>>
+>>>    0     0       8        3        0      active sync   /dev/sda3
+>>>    1     1       8       18        1      active sync   /dev/sdb2
+>>>    2     2       8       34        2      active sync   /dev/sdc2
+>
+> From your original post:
+>
+>> /dev/md2:
+>>         Version : 1.2
+>
+> ====================^^^
+>
+>>   Creation Time : Sat Feb  9 17:30:32 2013
+>>      Raid Level : raid5
+>>      Array Size : 511996928 (488.28 GiB 524.28 GB)
+>>   Used Dev Size : 255998464 (244.14 GiB 262.14 GB)
+>>    Raid Devices : 3
+>>   Total Devices : 3
+>>     Persistence : Superblock is persistent
+>>
+>>     Update Time : Sat Feb  9 20:47:46 2013
+>>           State : clean
+>>  Active Devices : 3
+>> Working Devices : 3
+>>  Failed Devices : 0
+>>   Spare Devices : 0
+>>
+>>          Layout : left-symmetric
+>>      Chunk Size : 512K
+>
+> ====================^^^^
+>
+>>
+>>            Name : lamachine:2  (local to host lamachine)
+>>            UUID : 48be851b:f0210b64:e9fbefdf:24c84c5f
+>>          Events : 2
+>>
+>>     Number   Major   Minor   RaidDevice State
+>>        0       8        3        0      active sync   /dev/sda3
+>>        1       8       18        1      active sync   /dev/sdb2
+>>        2       8       34        2      active sync   /dev/sdc2
+>
+> I don't know what possessed you to use "mdadm --create" to try to fix
+> your system, but it is almost always the wrong first step.  But since
+> you scrambled it with "mdadm --create", you'll have to fix it with
+> "mdadm --create".
+>
+> mdadm --stop /dev/md2
+>
+> mdadm --create --assume-clean /dev/md2 --metadata=0.90 \
+>         --level=5 --raid-devices=3 --chunk=64 \
+>         /dev/sda3 /dev/sdb2 /dev/sdc2
+>
 
-Ooops, my mistake, yes, I meant MB/s for these results, because that is
-what dd provides output as.
+It looks like your using a dracut based boot system. Once you get the
+array created and mounting you'll need to update /etc/mdadm.conf with
+the new array information and run dracut to update your initrd with
+the new configuration. If not problems could crop up down the road.
 
-> I suspect the load balancing (hasing) function on the switch terminating
-> the LAG is causing your problem. Typically this hashing function doesn't
-> look at load on individual links, but a specific src/dst/port hash
-> points to a certain link, and there isn't really anything you can do
-> about it. The only way around it is to go 10GE instead of the LAG, or
-> move away from the LAG and assign 4 different IPs, one per physical
-> link, and then make sure routing to/from server/client always goes onto
-> the same link, cutting worst-case down to two servers sharing one link
-> (8 servers, 4 links).
+> Then, you will have to reconstruct the beginning of the array, as much
+> as 3MB worth, that was replaced with v1.2 metadata.  (The used dev size
+> differs by 1472kB, suggesting that the new mdadm gave you a new data
+> offset of 2048, and the rest is the difference in the chunk size.)
+>
+> Your original report and follow-ups have not clearly indicated what is
+> on this 524GB array, so I can't be more specific.  If it is a
+> filesystem, an fsck may fix it with modest losses.
+>
+> If it is another LVM PV, you may be able to do a vgrestore to reset the
+> 1st megabyte.  You didn't activate a bitmap on the array, so the
+> remainder of the new metadata space was probably untouched.
+>
 
-Given the flat topology, I think it is difficult (not impossible) to
-ensure that both inbound and outbound traffic will be sent/received on
-the correct interface. Since the route TO any of the 8 destinations is
-on the same network, linux would choose the lowest numbered interface
-(AFAIK) for all outbound traffic. Getting the right outbound interface
-is the first issue, once solved, ensuring that each interface will only
-send an ARP reply for its own IP is the second issue. Both of these are
-solvable...
+If the data on this array is important and without backups it would be
+a good idea to image the drives before you start doing anything else.
+Most of your data can likely be recovered but you can easily destroy
+it beyond conventional repair if your not very careful at this point.
 
-However, this adds lots of complexity, and this system is supposed to
-allow heartbeat to automatically move the 'floating' IP to the secondary
-server on failure, which certainly adds some complications there also.
-It'd be nice to avoid all that, but if that is what is needed, then I'll
-have to address all that.
+According to the fstab in the original post it looks like its just an
+ext4 filesystem on top of the md. If that is the case an fsck should
+get you going again after creating the array. You can try a regular
+fsck but your superblock is most likely gone. A backup superblock if
+needed is generally accessible by adding -b 32768 to the fsck.
+Hopefully you didn't have many files in the root of that filesystem.
+They are all most likely going to end up as random numbered files and
+directories in lost+found.
 
->> The problem is that (from my understanding) LACP will balance the
->> traffic based on the destination MAC address, by default. So the
->> bandwidth between any two machines is limited to a single 1Gbps link.
->> So regardless of the number of ethernet ports on the DC box, it will
->> only ever use a max of 1Gb[s to talk to the iSCSI server.
-> 
-> LACP is a way to set up a bunch of ports in a channel. It doesn't affect
-> how traffic will be shared, that is a property of the hardware/software
-> mix in the switch/operating (LACP is control plane, it's not forwarding
-> plane). Device egressing the packet onto a link decides what port it
-> goes out of, typically done on properties on L2, L3 and L4 (different
-> for different devices).
-> 
->> However, if I configure Linux to use xmit_hash_policy=1 it will use
->> the IP address and port (layer 3+4) to decide which trunk to use. It
->> will still only use 1Gbps to talk to that IP:port combination.
-> 
-> As expected. You do not want to send packets belonging to a single
-> "session" out different ports, because then you might get packet
-> reordering. This is called "per-packet load sharing", if it's desireable
-> then it might be possible to enable in the equipment. TCP doesn't like
-> it though, don't know how storage protocols react.
 
-Hmmm, so from my reading, it seems that out of order packets will never
-be received by the SAN, since the sender only has 1Gbps, and the switch
-will only deliver the data over one port anyway.
-
-However, the clients (8 physical machines) would certainly receive out
-of order packets, since the SAN is sending over 4 x 1Gbps of data, and
-the switch is delivering this too fast to the single 1Gbps port, and so
-probably add some packet loss when queues fill up, and this would slow
-everything down.
-
-I see a kernel option net.ipv4.tcp_reordering, would setting this value
-to a higher figure allow me to use RR for the bonded connections, even
-if the server has more total bandwidth than the recipient?
-
-If I use a 10G connection for the SAN, and multiple 1G connections for
-the clients, then I will still end up with a max of 1G read speed, since
-the switch will only deliver data on a single port. So to get better
-than 1G speed, I must use higher bandwidth channels, but using 10G on
-all machines allows a single server to "flood" the network...
-
-I suppose accepting max performance of 100MB/s for any individual client
-could be acceptable, and if I could ensure that each client would
-connect over a distinct port, I could drop in 2 x 4port ethernet devices
-to the SAN, but I suspect this won't work because either the switch or
-Linux will not properly balance the traffic. Potentially, I could
-manually configure the MAC address on the clients, leave Linux to use
-MAC based routing, such that the custom MAC address will calculate a
-unique port for each. That just leaves the switch sending traffic back
-to the SAN, and I don't know how I would go about that... Perhaps it
-uses the source MAC address to decide the destination trunk, which will
-either work because of the first fix above, or not work because of the
-first fix above (if the calculations on Linux are different to the
-switch)...
-
-I'm still at a loss on how to correctly configure my network to solve
-these issues, any hints would be appreciated.
-
-Regards,
-Adam
-
--- 
-Adam Goryachev
-Website Managers
-www.websitemanagers.com.au
+--
+Dave Cundiff
+System Administrator
+A2Hosting, Inc
+http://www.a2hosting.com
