@@ -1,59 +1,74 @@
-From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
+From: Dmitrijs Ledkovs <xnox@debian.org>
 Subject: Re: [PATCH 1/2] Modernize udev rules
-Date: Mon, 11 Feb 2013 11:19:34 +0100
-Message-ID: <5118C5B6.10500@archlinux.org>
-References: <1360432119-15910-1-git-send-email-thomas@archlinux.org> <20130211112016.3059ef95@notabene.brown> <5118ACE1.5020503@msgid.tls.msk.ru> <5118C3C0.2030708@archlinux.org> <5118C4F1.90203@msgid.tls.msk.ru>
+Date: Mon, 11 Feb 2013 10:44:45 +0000
+Message-ID: <CANBHLUh6TTWuq24iYKfKxkMoA65TNeq5wVCNnvKsYzNTzLz=Eg@mail.gmail.com>
+References: <1360432119-15910-1-git-send-email-thomas@archlinux.org>
+	<20130211112016.3059ef95@notabene.brown>
+	<5118ACE1.5020503@msgid.tls.msk.ru>
+	<5118C3C0.2030708@archlinux.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="----enig2LWDPXOHTQTQRFWBDFVJK"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5118C4F1.90203@msgid.tls.msk.ru>
+In-Reply-To: <5118C3C0.2030708@archlinux.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: linux-raid@vger.kernel.org
+To: =?UTF-8?Q?Thomas_B=C3=A4chler?= <thomas@archlinux.org>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
-------enig2LWDPXOHTQTQRFWBDFVJK
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: quoted-printable
+On 11 February 2013 10:11, Thomas B=C3=A4chler <thomas@archlinux.org> w=
+rote:
+> Am 11.02.2013 09:33, schrieb Michael Tokarev:
+>> 11.02.2013 04:20, NeilBrown wrote:
+>>> On Sat,  9 Feb 2013 18:48:38 +0100 Thomas B=C3=A4chler
+>>> <thomas@archlinux.org> wrote:
+>>
+>>>> -IMPORT{program}=3D"/sbin/blkid -o udev -p $tempnode"
+>>>> +IMPORT{builtin}=3D"blkid"
+>>
+>> Does this has additional udev version constrain?
+>> I mean, which is the minimum udev version to support this properly,
+>> do we care?
+>
+> Udev relies on devtmpfs and thus does not create devices since versio=
+n
+> 176, therefore $tempnode is deprecated and only $devnode should be us=
+ed
+> ($tempnode seems to be around for compatibility, no idea if/when it w=
+ill
+> be dropped).
+>
+> The blkid builtin is also available since udev 176. In latest
 
-Am 11.02.2013 11:16, schrieb Michael Tokarev:
-> Well, it was just a question.  Think about a distribution which is bein=
-g
-> upgraded from one release to another, -- inter-package versioned
-> dependencies
-> should be set correctly, so that the system will not be broken by upgra=
-ding
-> mdadm which relies on udev, but not upgrading udev.
+So 175 or 176? Neither debian nor ubuntu have 176 yet, only 175.
+And upgrading udev in debian/ubuntu is proving to be a hard task.
 
-That is true - and very important!
+Regards,
+
+Dmitrijs.
 
 
-
-------enig2LWDPXOHTQTQRFWBDFVJK
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBCAAGBQJRGMW2AAoJEChPw0yOSxol4soQAJQmPlY/xv4v45SanDUW686m
-Z8YIwJ1I6A/ZZ0mmcw72fvcuMQOYNjLP2SsCQzqBk4RskLToPxwUg7uxXs1gSA6Y
-MY33tbm/v6/FknJB0QOixBRE79CgVkugnZVer8Ub24NLiYiHHP9llwd7hYmvrNf7
-ipEsBaZREgO8h4KUwzwaJlmknqVQs3GrfEH2bKuFvCpE1knoiIjUKmgjHybpK9DD
-tNs8jSO3EwahPwFXQTe2Nu03ag2QKRyYfFcUpjwLGM96+EHOIwdrSy0OFhGGqV8t
-5ofUL48kdwTtq94ahlsAQn26TPbmKS1nuXP6AMTw60lsb392Q21J36P3dTf3kM0P
-9SDKhkNGDoJPBPbULjVKKUCqHJ9S2S+G0WpmBVe06OFEuFMC7TVbEXKrNqHp90Bj
-/5KY+v8nxxcbAQecf2QCmDGBv9Xoa9UNRbz9/CVwfKUCU8YCxogXMGBJiFz2kUB7
-MCOm/K4geWsah5F0MY9kyZsc/PQBwAz+24Ec5fcZw41i2mObFZr9GsD5eCR0TLw9
-dyQxo2fZ1n6eFs8RIbFTZlYuZx0N7cJPWWbjEFBsEPvalnbA/yDKPfanEh/isU6i
-Fs8KPM8q3i2LUat7i4jUYdNGxpNdNmpudtQajh7SuiUao3HoYW/1H0rO3FN3WzX1
-8Iy70ozo/ijjvtQiH+fR
-=BK4w
------END PGP SIGNATURE-----
-
-------enig2LWDPXOHTQTQRFWBDFVJK--
+> util-linux, the 'blkid -o udev' output is marked as deprecated, altho=
+ugh
+> Karel says it's not entirely going away for now.
+>
+> Why do we care? We want correct udev rules ($tempnode vs. $devnode), =
+and
+> the using builtin is faster and less error-prone than calling an
+> external tool (plus, it is used everywhere else in udev).
+>
+> As for compatibility: I see no reason why anyone would use a version =
+of
+> udev that is more than one year old (175) together with a mdadm versi=
+on
+> that is to be released in the future (3.2.7). If someone really wants
+> that, they should be competent enough to adjust the udev rules for th=
+eir
+> local build.
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
