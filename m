@@ -1,47 +1,63 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: RAID performance
-Date: Mon, 11 Feb 2013 20:49:12 +0100 (CET)
-Message-ID: <31549980.18.1360612152269.JavaMail.root@zimbra>
-References: <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com>
+From: EJ Vincent <ej@ejane.org>
+Subject: Re: raid/device failure
+Date: Mon, 11 Feb 2013 15:28:20 -0500
+Message-ID: <51195464.8040406@ejane.org>
+References: <201302101827.36116.thomas@fjellstrom.ca> <511852EF.9070201@turmel.org> <51185CDF.8000007@ejane.org> <51186900.4000608@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com>
+In-Reply-To: <51186900.4000608@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dave Cundiff <syshackmin@gmail.com>
-Cc: linux-raid@vger.kernel.org, Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Why would you plug thousands of dollars of SSD into an onboard
-> controller? It's probably running off a 1x PCIE shared with every
-> other onboard device. An LSI 8x 8 port HBA will run you a few
-> hundred(less than 1 SSD) and let you melt your northbridge. At least
-> on my Supermicro X8DTL boards I had to add active cooling to it or it
-> would overheat and crash at sustained IO. I can hit 2 - 2.5GB a secon=
-d
-> doing large sequential IO with Samsung 840 Pros on a RAID10.
+On 2/10/2013 10:44 PM, Phil Turmel wrote:
+> On 02/10/2013 09:52 PM, EJ Vincent wrote:
+>> On 2/10/2013 9:09 PM, Phil Turmel wrote:
+>>> Have these drives ever been scrubbed? (I vaguely recall you mentioning
+>>> new drives...) If they are new and already had a URE, I'd be concerned
+>>> about mishandling during shipping. If they aren't new, I'd
+>>> destructively exercise them and retest.
+>> Hi Phil,
+>>
+>> Could you elaborate on procedures and tools to thoroughly exercise newly
+>> purchased drives? Are you talking about programs such as 'badblocks'?
+> Yes, badblocks is convenient because it is part of e2fsprogs, which
+> pretty much ships by default in all distros.
+>
+> What I recommend:
+>
+> Record the complete drive status as unpacked:
+> 1) smartctl -x /dev/sdX >xxxx-as-received.smart.txt
+>
+> Userspace surface check:
+> 2) badblocks -w -b 4096 /dev/sdX
+>
+> Security erase (vital for SSDs):
+> 3a) hdparm --user-master u --security-set-pass password /dev/sdX
+> 3b) hdparm --user-master u --security-erase password /dev/sdX
+>
+> (wait until done)
+>
+> Long drive self-test:
+> 4) smartctl -t long /dev/sdX
+>
+> (wait until done)
+>
+> Record the complete drive status post-test:
+> 5) smartctl -x /dev/sdX >xxxx-as-tested.smart.txt
+>
+> I won't accept any reallocations in a new drive, and no more than single
+> digits in older drives.  In my (subjective) experience, once
+> reallocations get into double digits, their incidence seems to accelerate.
+>
+> I also pay extra attention to desktop drives with 30,000+ hours, as I
+> haven't had any get to 40,000.
+>
+> Phil
 
-Those onboard controllers are usually connect to 8x PCIe or similar. Al=
-so, those controllers from LSI won't allow TRIM support, which may come=
- in handy=E2=80=A6
+Very clear.  Thanks!
 
-Vennlige hilsener / Best regards
+-EJ
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
