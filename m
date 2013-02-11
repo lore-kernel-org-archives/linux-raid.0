@@ -1,268 +1,140 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCHv2 2/2] udev: Fix order of execution of the md rules
-Date: Mon, 11 Feb 2013 11:31:01 +1100
-Message-ID: <20130211113101.6ec5dfac@notabene.brown>
-References: <1360432119-15910-2-git-send-email-thomas@archlinux.org>
-	<1360442987-30856-1-git-send-email-thomas@archlinux.org>
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Subject: raid/device failure
+Date: Sun, 10 Feb 2013 18:27:35 -0700
+Message-ID: <201302101827.36116.thomas@fjellstrom.ca>
+Reply-To: thomas@fjellstrom.ca
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/KatM0iB=gyq0nJbTF3ZQtQ+"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1360442987-30856-1-git-send-email-thomas@archlinux.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Thomas =?ISO-8859-1?Q?B=E4chler?= <thomas@archlinux.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/KatM0iB=gyq0nJbTF3ZQtQ+
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+I've re-configured my NAS box (still haven't put it into "production") to be a 
+raid5 over 7 2TB consumer seagate barracuda drives, and with some tweaking, 
+performance was looking stellar.
 
-On Sat,  9 Feb 2013 21:49:47 +0100 Thomas B=C3=A4chler <thomas@archlinux.or=
-g>
-wrote:
+Unfortunately I started seeing some messages in dmesg that worried me:
 
-> Right now, the rules that run blkid on raid arrays are executed after
-> the assembly rules. This means incremental assembly will always fail
-> when raid arrays are again physical components of raid arrays.
+mpt2sas0: log_info(0x31110d01): originator(PL), code(0x11), sub_code(0x0d01)
 
-I'm not at all against splitting the udev rules into two files, but your
-reasoning seems a bit odd and I want to be sure that I understand.
+Now, nothing actually seemed amis other than those messages at that point. But 
+much later down the line I got the following: http://pastebin.com/a5uTs5fT
 
-We run "mdadm -I" based on the contents of ID_FS_TYPE, and ID_FS_TYPE is set
-by "blkid", which is called after the "mdadm -I" rules.  So why do they work
-at all?
+sd 0:0:7:0: [sdh]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+sd 0:0:7:0: [sdh]  Sense Key : Aborted Command [current] 
+sd 0:0:7:0: [sdh]  Add. Sense: Information unit iuCRC error detected
+sd 0:0:7:0: [sdh] CDB: Read(10): 28 00 3a 3e 30 08 00 02 98 00
+end_request: I/O error, dev sdh, sector 977154056
+md/raid:md0: read error corrected (8 sectors at 977154056 on sdh)
+md/raid:md0: read error corrected (8 sectors at 977154064 on sdh)
+md/raid:md0: read error corrected (8 sectors at 977154072 on sdh)
+md/raid:md0: read error corrected (8 sectors at 977154080 on sdh)
+md/raid:md0: read error corrected (8 sectors at 977154088 on sdh)
+md/raid:md0: read error corrected (8 sectors at 977154096 on sdh)
+md/raid:md0: read error corrected (8 sectors at 977154104 on sdh)
+md/raid:md0: read error corrected (8 sectors at 977154112 on sdh)
+md/raid:md0: read error corrected (8 sectors at 977154120 on sdh)
+md/raid:md0: read error corrected (8 sectors at 977154128 on sdh)
+mpt2sas0: log_info(0x31110d01): originator(PL), code(0x11), sub_code(0x0d01)
+mpt2sas0: log_info(0x31110d01): originator(PL), code(0x11), sub_code(0x0d01)
+mpt2sas0: log_info(0x31110d01): originator(PL), code(0x11), sub_code(0x0d01)
+sd 0:0:7:0: [sdh]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+sd 0:0:7:0: [sdh]  Sense Key : Aborted Command [current] 
+sd 0:0:7:0: [sdh]  Add. Sense: Information unit iuCRC error detected
+sd 0:0:7:0: [sdh] CDB: Read(10): 28 00 5e a1 c4 00 00 04 00 00
+end_request: I/O error, dev sdh, sector 1587659776
+sd 0:0:7:0: [sdh]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+sd 0:0:7:0: [sdh]  Sense Key : Aborted Command [current] 
+sd 0:0:7:0: [sdh]  Add. Sense: Information unit iuCRC error detected
+sd 0:0:7:0: [sdh] CDB: Read(10): 28 00 5e a1 d4 00 00 04 00 00
+end_request: I/O error, dev sdh, sector 1587663872
+sd 0:0:7:0: [sdh]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+sd 0:0:7:0: [sdh]  Sense Key : Aborted Command [current] 
+sd 0:0:7:0: [sdh]  Add. Sense: Information unit iuCRC error detected
+sd 0:0:7:0: [sdh] CDB: Read(10): 28 00 5e a1 e0 00 00 04 00 00
+end_request: I/O error, dev sdh, sector 1587666944
+sd 0:0:7:0: [sdh]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+sd 0:0:7:0: [sdh]  Sense Key : Aborted Command [current] 
+sd 0:0:7:0: [sdh]  Add. Sense: Information unit iuCRC error detected
+sd 0:0:7:0: [sdh] CDB: Read(10): 28 00 5e a1 e4 00 00 04 00 00
+end_request: I/O error, dev sdh, sector 1587667968
+sd 0:0:7:0: [sdh]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+sd 0:0:7:0: [sdh]  Sense Key : Aborted Command [current] 
+sd 0:0:7:0: [sdh]  Add. Sense: Information unit iuCRC error detected
+sd 0:0:7:0: [sdh] CDB: Read(10): 28 00 5e a1 ec 00 00 04 00 00
+end_request: I/O error, dev sdh, sector 1587670016
+sd 0:0:7:0: [sdh]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+sd 0:0:7:0: [sdh]  Sense Key : Aborted Command [current] 
+sd 0:0:7:0: [sdh]  Add. Sense: Information unit iuCRC error detected
+sd 0:0:7:0: [sdh] CDB: Read(10): 28 00 5e a1 f0 00 00 04 00 00
+end_request: I/O error, dev sdh, sector 1587671040
+raid5_end_read_request: 73 callbacks suppressed
+md/raid:md0: read error corrected (8 sectors at 1587660768 on sdh)
+md/raid:md0: read error corrected (8 sectors at 1587660776 on sdh)
+md/raid:md0: read error corrected (8 sectors at 1587660784 on sdh)
+md/raid:md0: read error corrected (8 sectors at 1587660792 on sdh)
+md/raid:md0: read error corrected (8 sectors at 1587663872 on sdh)
+md/raid:md0: read error corrected (8 sectors at 1587663880 on sdh)
+md/raid:md0: read error corrected (8 sectors at 1587663888 on sdh)
+md/raid:md0: read error corrected (8 sectors at 1587663896 on sdh)
+md/raid:md0: read error corrected (8 sectors at 1587663904 on sdh)
+md/raid:md0: read error corrected (8 sectors at 1587663912 on sdh)
+sd 0:0:7:0: [sdh]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+sd 0:0:7:0: [sdh]  Sense Key : Aborted Command [current] 
+sd 0:0:7:0: [sdh]  Add. Sense: Information unit iuCRC error detected
+sd 0:0:7:0: [sdh] CDB: Read(10): 28 00 5e a1 e4 00 00 04 00 00
+end_request: I/O error, dev sdh, sector 1587667968
+md/raid:md0: read error NOT corrected!! (sector 1587667968 on sdh).
+md/raid:md0: Disk failure on sdh, disabling device.
+md/raid:md0: Operation continuing on 6 devices.
+md/raid:md0: read error not correctable (sector 1587667976 on sdh).
+md/raid:md0: read error not correctable (sector 1587667984 on sdh).
+md/raid:md0: read error not correctable (sector 1587667992 on sdh).
+md/raid:md0: read error not correctable (sector 1587668000 on sdh).
+md/raid:md0: read error not correctable (sector 1587668008 on sdh).
+md/raid:md0: read error not correctable (sector 1587668016 on sdh).
+md/raid:md0: read error not correctable (sector 1587668024 on sdh).
+md/raid:md0: read error not correctable (sector 1587668032 on sdh).
+md/raid:md0: read error not correctable (sector 1587668040 on sdh).
+md/raid:md0: read error not correctable (sector 1587668048 on sdh).
+sd 0:0:7:0: [sdh]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+sd 0:0:7:0: [sdh]  Sense Key : Aborted Command [current] 
+sd 0:0:7:0: [sdh]  Add. Sense: Information unit iuCRC error detected
+sd 0:0:7:0: [sdh] CDB: Read(10): 28 00 5e a2 08 00 00 04 00 00
+end_request: I/O error, dev sdh, sector 1587677184
+RAID conf printout:
+ --- level:5 rd:7 wd:6
+ disk 0, o:1, dev:sda
+ disk 1, o:1, dev:sdb
+ disk 2, o:1, dev:sdc
+ disk 3, o:1, dev:sde
+ disk 4, o:1, dev:sdf
+ disk 5, o:1, dev:sdg
+ disk 6, o:0, dev:sdh
+RAID conf printout:
+ --- level:5 rd:7 wd:6
+ disk 0, o:1, dev:sda
+ disk 1, o:1, dev:sdb
+ disk 2, o:1, dev:sdc
+ disk 3, o:1, dev:sde
+ disk 4, o:1, dev:sdf
+ disk 5, o:1, dev:sdg
 
-Presumably something else is calling "blkid" ?
-That seems to be "persistent-storage.rules"  which calls "blkid" on some
-devices, but not on others.  That seems sub-optimal.   It is probably
-reasonable that it skips "sr*" (which is explicit) but for us it is
-unfortunate that it skips "md*".
+I've run full S.M.A.R.T. tests (except the conveyance test, probably run that 
+tonight and see what happens) on all drives in the array, and there are no 
+obvious warnings or errors in the S.M.A.R.T. restults at all. Including 
+reallocated (pending or not) sectors.
 
-I cannot see a good reason for persistent-storage-rules to skip 'md' device=
-s,
-so I would suggest that the best way to fix the problem is the fix that
-rules file.  Then we could remove the "blkid" call from the md rules which =
-is
-nice as it removes duplication.
+I've seen references while searching for possible causes, where people had 
+this error occur with faulty cables, or SAS backplanes. Is this a likely 
+senario? The cables are brand new, but anything is possible.
 
-We could still split the md rules files, but I would rather do that because
-it was a good and clean thing to do, not do that because it helps work arou=
-nd
-a short-coming in some other rules files.
+The card is a IBM M1015 8 port HBA flashed with the LSI 9211-8i IT firmware, 
+and no BIOS.
 
-Thoughts?
-
-Thanks,
-NeilBrown
-
-
-
->=20
-> Instead of simply reversing the order, split the rules up into two files,
-> one dealing with array properties and one dealing with assembly.
-> ---
->  Makefile                    |  5 +++--
->  udev-md-raid-arrays.rules   | 35 ++++++++++++++++++++++++++++++++
->  udev-md-raid-assembly.rules | 19 ++++++++++++++++++
->  udev-md-raid.rules          | 49 ---------------------------------------=
-------
->  4 files changed, 57 insertions(+), 51 deletions(-)
->  create mode 100644 udev-md-raid-arrays.rules
->  create mode 100644 udev-md-raid-assembly.rules
->  delete mode 100644 udev-md-raid.rules
->=20
-> diff --git a/Makefile b/Makefile
-> index b6edb23..ad0819d 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -262,8 +262,9 @@ install-man: mdadm.8 md.4 mdadm.conf.5 mdmon.8
->  	$(INSTALL) -D -m 644 md.4 $(DESTDIR)$(MAN4DIR)/md.4
->  	$(INSTALL) -D -m 644 mdadm.conf.5 $(DESTDIR)$(MAN5DIR)/mdadm.conf.5
-> =20
-> -install-udev: udev-md-raid.rules
-> -	$(INSTALL) -D -m 644 udev-md-raid.rules $(DESTDIR)$(UDEVDIR)/rules.d/64=
--md-raid.rules
-> +install-udev: udev-md-raid-arrays.rules udev-md-raid-assembly.rules
-> +	$(INSTALL) -D -m 644 udev-md-raid-arrays.rules $(DESTDIR)$(UDEVDIR)/rul=
-es.d/63-md-raid-arrays.rules
-> +	$(INSTALL) -D -m 644 udev-md-raid-assembly.rules $(DESTDIR)$(UDEVDIR)/r=
-ules.d/64-md-raid-assembly.rules
-> =20
->  install-systemd: systemd/mdmon@.service
->  	$(INSTALL) -D -m 644 systemd/mdmon@.service $(DESTDIR)$(SYSTEMD_DIR)/md=
-mon@.service
-> diff --git a/udev-md-raid-arrays.rules b/udev-md-raid-arrays.rules
-> new file mode 100644
-> index 0000000..0540ed8
-> --- /dev/null
-> +++ b/udev-md-raid-arrays.rules
-> @@ -0,0 +1,35 @@
-> +# do not edit this file, it will be overwritten on update
-> +
-> +SUBSYSTEM!=3D"block", GOTO=3D"md_end"
-> +
-> +# handle md arrays
-> +ACTION!=3D"add|change", GOTO=3D"md_end"
-> +KERNEL!=3D"md*", GOTO=3D"md_end"
-> +
-> +# partitions have no md/{array_state,metadata_version}, but should not
-> +# for that reason be ignored.
-> +ENV{DEVTYPE}=3D=3D"partition", GOTO=3D"md_ignore_state"
-> +
-> +# container devices have a metadata version of e.g. 'external:ddf' and
-> +# never leave state 'inactive'
-> +ATTR{md/metadata_version}=3D=3D"external:[A-Za-z]*", ATTR{md/array_state=
-}=3D=3D"inactive", GOTO=3D"md_ignore_state"
-> +TEST!=3D"md/array_state", ENV{SYSTEMD_READY}=3D"0", GOTO=3D"md_end"
-> +ATTR{md/array_state}=3D=3D"|clear|inactive", ENV{SYSTEMD_READY}=3D"0", G=
-OTO=3D"md_end"
-> +LABEL=3D"md_ignore_state"
-> +
-> +IMPORT{program}=3D"/sbin/mdadm --detail --export $devnode"
-> +ENV{DEVTYPE}=3D=3D"disk", ENV{MD_NAME}=3D=3D"?*", SYMLINK+=3D"disk/by-id=
-/md-name-$env{MD_NAME}", OPTIONS+=3D"string_escape=3Dreplace"
-> +ENV{DEVTYPE}=3D=3D"disk", ENV{MD_UUID}=3D=3D"?*", SYMLINK+=3D"disk/by-id=
-/md-uuid-$env{MD_UUID}"
-> +ENV{DEVTYPE}=3D=3D"disk", ENV{MD_DEVNAME}=3D=3D"?*", SYMLINK+=3D"md/$env=
-{MD_DEVNAME}"
-> +ENV{DEVTYPE}=3D=3D"partition", ENV{MD_NAME}=3D=3D"?*", SYMLINK+=3D"disk/=
-by-id/md-name-$env{MD_NAME}-part%n", OPTIONS+=3D"string_escape=3Dreplace"
-> +ENV{DEVTYPE}=3D=3D"partition", ENV{MD_UUID}=3D=3D"?*", SYMLINK+=3D"disk/=
-by-id/md-uuid-$env{MD_UUID}-part%n"
-> +ENV{DEVTYPE}=3D=3D"partition", ENV{MD_DEVNAME}=3D=3D"*[^0-9]", SYMLINK+=
-=3D"md/$env{MD_DEVNAME}%n"
-> +ENV{DEVTYPE}=3D=3D"partition", ENV{MD_DEVNAME}=3D=3D"*[0-9]", SYMLINK+=
-=3D"md/$env{MD_DEVNAME}p%n"
-> +
-> +IMPORT{builtin}=3D"blkid"
-> +OPTIONS+=3D"link_priority=3D100"
-> +OPTIONS+=3D"watch"
-> +ENV{ID_FS_USAGE}=3D=3D"filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=3D=
-=3D"?*", SYMLINK+=3D"disk/by-uuid/$env{ID_FS_UUID_ENC}"
-> +ENV{ID_FS_USAGE}=3D=3D"filesystem|other", ENV{ID_FS_LABEL_ENC}=3D=3D"?*"=
-, SYMLINK+=3D"disk/by-label/$env{ID_FS_LABEL_ENC}"
-> +
-> +LABEL=3D"md_end"
-> diff --git a/udev-md-raid-assembly.rules b/udev-md-raid-assembly.rules
-> new file mode 100644
-> index 0000000..b653265
-> --- /dev/null
-> +++ b/udev-md-raid-assembly.rules
-> @@ -0,0 +1,19 @@
-> +# do not edit this file, it will be overwritten on update
-> +
-> +# assemble md arrays
-> +
-> +SUBSYSTEM!=3D"block", GOTO=3D"md_inc_end"
-> +
-> +# handle potential components of arrays (the ones supported by md)
-> +ENV{ID_FS_TYPE}=3D=3D"ddf_raid_member|isw_raid_member|linux_raid_member"=
-, GOTO=3D"md_inc"
-> +GOTO=3D"md_inc_end"
-> +
-> +LABEL=3D"md_inc"
-> +
-> +# remember you can limit what gets auto/incrementally assembled by
-> +# mdadm.conf(5)'s 'AUTO' and selectively whitelist using 'ARRAY'
-> +ACTION=3D=3D"add", RUN+=3D"/sbin/mdadm --incremental $devnode --offroot"
-> +ACTION=3D=3D"remove", ENV{ID_PATH}=3D=3D"?*", RUN+=3D"/sbin/mdadm -If $n=
-ame --path $env{ID_PATH}"
-> +ACTION=3D=3D"remove", ENV{ID_PATH}!=3D"?*", RUN+=3D"/sbin/mdadm -If $nam=
-e"
-> +
-> +LABEL=3D"md_inc_end"
-> diff --git a/udev-md-raid.rules b/udev-md-raid.rules
-> deleted file mode 100644
-> index ea97261..0000000
-> --- a/udev-md-raid.rules
-> +++ /dev/null
-> @@ -1,49 +0,0 @@
-> -# do not edit this file, it will be overwritten on update
-> -
-> -SUBSYSTEM!=3D"block", GOTO=3D"md_end"
-> -
-> -# handle potential components of arrays (the ones supported by md)
-> -ENV{ID_FS_TYPE}=3D=3D"ddf_raid_member|isw_raid_member|linux_raid_member"=
-, GOTO=3D"md_inc"
-> -GOTO=3D"md_inc_skip"
-> -
-> -LABEL=3D"md_inc"
-> -
-> -# remember you can limit what gets auto/incrementally assembled by
-> -# mdadm.conf(5)'s 'AUTO' and selectively whitelist using 'ARRAY'
-> -ACTION=3D=3D"add", RUN+=3D"/sbin/mdadm --incremental $devnode --offroot"
-> -ACTION=3D=3D"remove", ENV{ID_PATH}=3D=3D"?*", RUN+=3D"/sbin/mdadm -If $n=
-ame --path $env{ID_PATH}"
-> -ACTION=3D=3D"remove", ENV{ID_PATH}!=3D"?*", RUN+=3D"/sbin/mdadm -If $nam=
-e"
-> -
-> -LABEL=3D"md_inc_skip"
-> -
-> -# handle md arrays
-> -ACTION!=3D"add|change", GOTO=3D"md_end"
-> -KERNEL!=3D"md*", GOTO=3D"md_end"
-> -
-> -# partitions have no md/{array_state,metadata_version}, but should not
-> -# for that reason be ignored.
-> -ENV{DEVTYPE}=3D=3D"partition", GOTO=3D"md_ignore_state"
-> -
-> -# container devices have a metadata version of e.g. 'external:ddf' and
-> -# never leave state 'inactive'
-> -ATTR{md/metadata_version}=3D=3D"external:[A-Za-z]*", ATTR{md/array_state=
-}=3D=3D"inactive", GOTO=3D"md_ignore_state"
-> -TEST!=3D"md/array_state", ENV{SYSTEMD_READY}=3D"0", GOTO=3D"md_end"
-> -ATTR{md/array_state}=3D=3D"|clear|inactive", ENV{SYSTEMD_READY}=3D"0", G=
-OTO=3D"md_end"
-> -LABEL=3D"md_ignore_state"
-> -
-> -IMPORT{program}=3D"/sbin/mdadm --detail --export $devnode"
-> -ENV{DEVTYPE}=3D=3D"disk", ENV{MD_NAME}=3D=3D"?*", SYMLINK+=3D"disk/by-id=
-/md-name-$env{MD_NAME}", OPTIONS+=3D"string_escape=3Dreplace"
-> -ENV{DEVTYPE}=3D=3D"disk", ENV{MD_UUID}=3D=3D"?*", SYMLINK+=3D"disk/by-id=
-/md-uuid-$env{MD_UUID}"
-> -ENV{DEVTYPE}=3D=3D"disk", ENV{MD_DEVNAME}=3D=3D"?*", SYMLINK+=3D"md/$env=
-{MD_DEVNAME}"
-> -ENV{DEVTYPE}=3D=3D"partition", ENV{MD_NAME}=3D=3D"?*", SYMLINK+=3D"disk/=
-by-id/md-name-$env{MD_NAME}-part%n", OPTIONS+=3D"string_escape=3Dreplace"
-> -ENV{DEVTYPE}=3D=3D"partition", ENV{MD_UUID}=3D=3D"?*", SYMLINK+=3D"disk/=
-by-id/md-uuid-$env{MD_UUID}-part%n"
-> -ENV{DEVTYPE}=3D=3D"partition", ENV{MD_DEVNAME}=3D=3D"*[^0-9]", SYMLINK+=
-=3D"md/$env{MD_DEVNAME}%n"
-> -ENV{DEVTYPE}=3D=3D"partition", ENV{MD_DEVNAME}=3D=3D"*[0-9]", SYMLINK+=
-=3D"md/$env{MD_DEVNAME}p%n"
-> -
-> -IMPORT{builtin}=3D"blkid"
-> -OPTIONS+=3D"link_priority=3D100"
-> -OPTIONS+=3D"watch"
-> -ENV{ID_FS_USAGE}=3D=3D"filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=3D=
-=3D"?*", SYMLINK+=3D"disk/by-uuid/$env{ID_FS_UUID_ENC}"
-> -ENV{ID_FS_USAGE}=3D=3D"filesystem|other", ENV{ID_FS_LABEL_ENC}=3D=3D"?*"=
-, SYMLINK+=3D"disk/by-label/$env{ID_FS_LABEL_ENC}"
-> -
-> -LABEL=3D"md_end"
-
-
---Sig_/KatM0iB=gyq0nJbTF3ZQtQ+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBURg7xTnsnt1WYoG5AQJKDA/9HkCa+dzWocUt40mNW9HnPCscAmTRKPXW
-UVF8RrpV91t6ZaH3LJgMVtOmQ5e0SWkxVpJNZLGhkR7sL+WipvObr5gUpKTBVsdx
-XzrD+2JQxM7itfhMxtvpxO9594mdbziQx42EhS/Ak6Tq3kvIinL6ue5T1MDBAFBZ
-MRg/xM7X14PNgk30+qouuw5is3i+hCghsFOD1Ce1GByfYUgUI1gXo37p18ZDkJTN
-hNnIW+Si9lW4SXBC6GpYzUPfdYH77BbVXIjMusxHvXCIiCsQJ1eL4fCMXNRRiY6L
-qXZm0gsIE+7l96lYOMFsKwEBJPimGPRo7oejgzsU6Hs4+qLMF9OKbvkok/h2vEl2
-DwNFToHoGhQCHZTpk4yrdBuJuJfqMfvJesCVfIKXMqDozEnGb0F8HNUIBHUUVGBj
-5E3NtsBAL1xAqhSVSb1xOfOyWKQfbqTtQHDjqVXSxM/Rcj9r5y+LZQVFPlQNUjku
-5RDzTo4Uc6E+NgaJCk3Uqw3Pd5RUDqK7vuaOsYndEWlaaC63rlcelxZYV1HIO2be
-5t1OHjB0G47lwN/nJcPRx4fiaNj6VIJR+F2TPzx/X3aIbyhsL00Kcs0mF5s3Fd7H
-7Rw89GFvmSVBUwq3CKNfWFzMj8JY6lWSAmJQ0A/iGvPkK7yVeSnQzlsEUhDYQYB1
-GNj1EVvPZPo=
-=/JKH
------END PGP SIGNATURE-----
-
---Sig_/KatM0iB=gyq0nJbTF3ZQtQ+--
+-- 
+Thomas Fjellstrom
+thomas@fjellstrom.ca
