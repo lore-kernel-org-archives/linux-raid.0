@@ -1,33 +1,87 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: [PATCH 1/2] Modernize udev rules
-Date: Mon, 11 Feb 2013 12:33:37 +0400
-Message-ID: <5118ACE1.5020503@msgid.tls.msk.ru>
-References: <1360432119-15910-1-git-send-email-thomas@archlinux.org> <20130211112016.3059ef95@notabene.brown>
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Subject: Re: raid/device failure
+Date: Mon, 11 Feb 2013 02:13:53 -0700
+Message-ID: <201302110213.53880.thomas@fjellstrom.ca>
+References: <23314523.6.1360571363962.JavaMail.root@zimbra>
+Reply-To: thomas@fjellstrom.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Content-Type: Text/Plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130211112016.3059ef95@notabene.brown>
+In-Reply-To: <23314523.6.1360571363962.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: =?UTF-8?B?VGhvbWFzIELDpGNobGVy?= <thomas@archlinux.org>, linux-raid@vger.kernel.org
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-11.02.2013 04:20, NeilBrown wrote:
-> On Sat,  9 Feb 2013 18:48:38 +0100 Thomas B=C3=A4chler <thomas@archli=
-nux.org> wrote:
+On February 11, 2013, Roy Sigurd Karlsbakk wrote:
+> > I've re-configured my NAS box (still haven't put it into "productio=
+n")
+> > to be a
+> > raid5 over 7 2TB consumer seagate barracuda drives, and with some
+> > tweaking, performance was looking stellar.
+>=20
+> Using that many drives in raid-5 is a bit risky. Better use raid-6=E2=
+=80=A6
+>=20
+> Just my 2c
 
->> -IMPORT{program}=3D"/sbin/blkid -o udev -p $tempnode"
->> +IMPORT{builtin}=3D"blkid"
+Yeah, I had first set it up in raid6. But I will have a separate backup=
+ array=20
+of this array. Nothing fancy, just a linear concat of some 3TB+1TB disk=
+s,=20
+though it may eventually get upgraded to a raid5 of 3TB disks.
 
-Does this has additional udev version constrain?
-I mean, which is the minimum udev version to support this properly,
-do we care?
+I've figured that if I lose three disks all within the 5 hour time it t=
+akes to=20
+do a full rebuild, I probably have larger problems to worry about than =
+losing=20
+my collection of random linux isos, even more random downloaded files, =
+debian=20
+apt mirror, one copy of my important backed up files, and miscelaneous =
+media=20
+files. I'll be running with the bitmap enabled, so if there are minor=20
+problems, the array will take minutes to resync rather than hours.
 
-Thanks,
+Also, since I've gotten decent power supplies and UPSs, I haven't had v=
+ery=20
+many issues with harddrives. I personally haven't had a drive failure t=
+hat=20
+wasn't within the first couple weeks of purchase in years. And I always=
+ try to=20
+make sure to stress test disks before putting them into service to weed=
+ out=20
+SIDS.
 
-/mjt
+This way I get the 10TB+ I was aiming for when I decided to build a NAS=
+=2E In=20
+raid6, I get 9.2TB or so. Very close I know ;)
+
+> Vennlige hilsener / Best regards
+>=20
+> roy
+> --
+> Roy Sigurd Karlsbakk
+> (+47) 98013356
+> roy@karlsbakk.net
+> http://blogg.karlsbakk.net/
+> GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+> --
+> I all pedagogikk er det essensielt at pensum presenteres intelligibel=
+t. Det
+> er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5 =
+eksessiv anvendelse
+> av idiomer med xenotyp etymologi. I de fleste tilfeller eksisterer
+> adekvate og relevante synonymer p=C3=A5 norsk. --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--=20
+Thomas Fjellstrom
+thomas@fjellstrom.ca
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
