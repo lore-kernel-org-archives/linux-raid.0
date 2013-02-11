@@ -1,63 +1,59 @@
-From: EJ Vincent <ej@ejane.org>
-Subject: Re: raid/device failure
-Date: Mon, 11 Feb 2013 15:28:20 -0500
-Message-ID: <51195464.8040406@ejane.org>
-References: <201302101827.36116.thomas@fjellstrom.ca> <511852EF.9070201@turmel.org> <51185CDF.8000007@ejane.org> <51186900.4000608@turmel.org>
+From: Dave Cundiff <syshackmin@gmail.com>
+Subject: Re: RAID performance
+Date: Mon, 11 Feb 2013 15:30:20 -0500
+Message-ID: <CAKHEz2Z-v+ax_tig49M6-D-Sjfd1mW7PajZmsGtGwvR+Bp+WEw@mail.gmail.com>
+References: <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com>
+	<31549980.18.1360612152269.JavaMail.root@zimbra>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51186900.4000608@turmel.org>
+In-Reply-To: <31549980.18.1360612152269.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Cc: linux-raid@vger.kernel.org, Adam Goryachev <mailinglists@websitemanagers.com.au>
 List-Id: linux-raid.ids
 
-On 2/10/2013 10:44 PM, Phil Turmel wrote:
-> On 02/10/2013 09:52 PM, EJ Vincent wrote:
->> On 2/10/2013 9:09 PM, Phil Turmel wrote:
->>> Have these drives ever been scrubbed? (I vaguely recall you mentioning
->>> new drives...) If they are new and already had a URE, I'd be concerned
->>> about mishandling during shipping. If they aren't new, I'd
->>> destructively exercise them and retest.
->> Hi Phil,
->>
->> Could you elaborate on procedures and tools to thoroughly exercise newly
->> purchased drives? Are you talking about programs such as 'badblocks'?
-> Yes, badblocks is convenient because it is part of e2fsprogs, which
-> pretty much ships by default in all distros.
+On Mon, Feb 11, 2013 at 2:49 PM, Roy Sigurd Karlsbakk <roy@karlsbakk.ne=
+t> wrote:
+>> Why would you plug thousands of dollars of SSD into an onboard
+>> controller? It's probably running off a 1x PCIE shared with every
+>> other onboard device. An LSI 8x 8 port HBA will run you a few
+>> hundred(less than 1 SSD) and let you melt your northbridge. At least
+>> on my Supermicro X8DTL boards I had to add active cooling to it or i=
+t
+>> would overheat and crash at sustained IO. I can hit 2 - 2.5GB a seco=
+nd
+>> doing large sequential IO with Samsung 840 Pros on a RAID10.
 >
-> What I recommend:
+> Those onboard controllers are usually connect to 8x PCIe or similar. =
+Also, those controllers from LSI won't allow TRIM support, which may co=
+me in handy=85
 >
-> Record the complete drive status as unpacked:
-> 1) smartctl -x /dev/sdX >xxxx-as-received.smart.txt
->
-> Userspace surface check:
-> 2) badblocks -w -b 4096 /dev/sdX
->
-> Security erase (vital for SSDs):
-> 3a) hdparm --user-master u --security-set-pass password /dev/sdX
-> 3b) hdparm --user-master u --security-erase password /dev/sdX
->
-> (wait until done)
->
-> Long drive self-test:
-> 4) smartctl -t long /dev/sdX
->
-> (wait until done)
->
-> Record the complete drive status post-test:
-> 5) smartctl -x /dev/sdX >xxxx-as-tested.smart.txt
->
-> I won't accept any reallocations in a new drive, and no more than single
-> digits in older drives.  In my (subjective) experience, once
-> reallocations get into double digits, their incidence seems to accelerate.
->
-> I also pay extra attention to desktop drives with 30,000+ hours, as I
-> haven't had any get to 40,000.
->
-> Phil
 
-Very clear.  Thanks!
+Be sure to check your motherboard documentation each time though. It
+turned out his was connected to a 4x DMI 2.0 bus which I had mistaken
+as a DMI 1.0 even after reading the docs. Thats approximately a 4x
+PCI. It was still shared with all the other devices on the motherboard
+including another 4x slot and gigabit ethernet adapters. Also it
+wasn't a very good SATA controller even. You can get onboards that are
+decent. I have several builds that come with onboard LSI SAS
+controllers. Just those are hooked directly to the northbridge on a
+dedicated 4x PCIE.
 
--EJ
+The LSI RAID doesn't support TRIM, I don't know any hardware
+controller that does at yet. I just use them as plain HBAs with md for
+the raid. When I get a kernel with the mdtrim patches TRIM will just
+magically(hopefully) start working.
 
+
+--=20
+Dave Cundiff
+System Administrator
+A2Hosting, Inc
+http://www.a2hosting.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
