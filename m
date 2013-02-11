@@ -1,48 +1,45 @@
-From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
 Subject: Re: raid/device failure
-Date: Mon, 11 Feb 2013 00:55:40 -0700
-Message-ID: <201302110055.40801.thomas@fjellstrom.ca>
-References: <201302101827.36116.thomas@fjellstrom.ca> <511863F7.2090108@fnarfbargle.com>
-Reply-To: thomas@fjellstrom.ca
+Date: Mon, 11 Feb 2013 09:29:24 +0100 (CET)
+Message-ID: <23314523.6.1360571363962.JavaMail.root@zimbra>
+References: <201302101827.36116.thomas@fjellstrom.ca>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <511863F7.2090108@fnarfbargle.com>
+In-Reply-To: <201302101827.36116.thomas@fjellstrom.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <lists2009@fnarfbargle.com>
+To: thomas@fjellstrom.ca
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On February 10, 2013, Brad Campbell wrote:
-> On 11/02/13 09:27, Thomas Fjellstrom wrote:
-> > sd 0:0:7:0: [sdh]  Add. Sense: Information unit iuCRC error detected
-> 
-> The CRC error there is the key. Check your cables, backplane & PSU.
-> 
+> I've re-configured my NAS box (still haven't put it into "production"=
+)
+> to be a
+> raid5 over 7 2TB consumer seagate barracuda drives, and with some
+> tweaking, performance was looking stellar.
 
-Very good to know. Thank you. :) Google had hinted the same thing. I've gone 
-into the machine and made sure everything was snug, just in case it was a lose 
-cable or connection on the backplane.
+Using that many drives in raid-5 is a bit risky. Better use raid-6=E2=80=
+=A6
 
-I've --add'ed the drive back to the array. I think that should make a simple 
-test to see if anything reallocates. After that, I'll try some more read and 
-mixed read-write tests to see if the error's going to pop up again, but so far 
-after a few hours, not even a single warning*.
+Just my 2c
 
-Should the problem come back, I'll follow up with a power test, then some 
-cable tests. Since it seemed that it was always erroring out on the same drive 
-(not 100% sure, but it seems like it), and if its not likely a drive problem, 
-it may be one SFF-8087 breakout cable, then swapping the cables should change 
-which drive it happens to, if it does I should know its the cable.
+Vennlige hilsener / Best regards
 
-* except for this: "[ 1052.626900] The scan_unevictable_pages sysctl/node-
-interface has been disabled for lack of a legitimate use case.  If you have 
-one, please send an email to linux-mm@kvack.org." and I have absolutely no 
-idea what caused that at this point and time. Also don't think its applicable.
-
-
--- 
-Thomas Fjellstrom
-thomas@fjellstrom.ca
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
