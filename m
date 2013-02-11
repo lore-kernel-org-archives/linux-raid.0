@@ -1,100 +1,268 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/2] Modernize udev rules
-Date: Mon, 11 Feb 2013 11:20:16 +1100
-Message-ID: <20130211112016.3059ef95@notabene.brown>
-References: <1360432119-15910-1-git-send-email-thomas@archlinux.org>
+Subject: Re: [PATCHv2 2/2] udev: Fix order of execution of the md rules
+Date: Mon, 11 Feb 2013 11:31:01 +1100
+Message-ID: <20130211113101.6ec5dfac@notabene.brown>
+References: <1360432119-15910-2-git-send-email-thomas@archlinux.org>
+	<1360442987-30856-1-git-send-email-thomas@archlinux.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/36muHo9t0175i=L92BX_0BT"; protocol="application/pgp-signature"
+ boundary="Sig_/KatM0iB=gyq0nJbTF3ZQtQ+"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1360432119-15910-1-git-send-email-thomas@archlinux.org>
+In-Reply-To: <1360442987-30856-1-git-send-email-thomas@archlinux.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Thomas =?ISO-8859-1?Q?B=E4chler?= <thomas@archlinux.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/36muHo9t0175i=L92BX_0BT
+--Sig_/KatM0iB=gyq0nJbTF3ZQtQ+
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Sat,  9 Feb 2013 18:48:38 +0100 Thomas B=C3=A4chler <thomas@archlinux.or=
+On Sat,  9 Feb 2013 21:49:47 +0100 Thomas B=C3=A4chler <thomas@archlinux.or=
 g>
 wrote:
 
-> * $tempnode is deprecated, use $devnode
-> * blkid -o udev output is deprecated, use IMPORT{builtin}=3D"blkid" inste=
-ad
-> ---
->  udev-md-raid.rules | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->=20
-> diff --git a/udev-md-raid.rules b/udev-md-raid.rules
-> index cc7f5ef..ea97261 100644
-> --- a/udev-md-raid.rules
-> +++ b/udev-md-raid.rules
-> @@ -10,7 +10,7 @@ LABEL=3D"md_inc"
-> =20
->  # remember you can limit what gets auto/incrementally assembled by
->  # mdadm.conf(5)'s 'AUTO' and selectively whitelist using 'ARRAY'
-> -ACTION=3D=3D"add", RUN+=3D"/sbin/mdadm --incremental $tempnode --offroot"
-> +ACTION=3D=3D"add", RUN+=3D"/sbin/mdadm --incremental $devnode --offroot"
->  ACTION=3D=3D"remove", ENV{ID_PATH}=3D=3D"?*", RUN+=3D"/sbin/mdadm -If $n=
-ame --path $env{ID_PATH}"
->  ACTION=3D=3D"remove", ENV{ID_PATH}!=3D"?*", RUN+=3D"/sbin/mdadm -If $nam=
-e"
-> =20
-> @@ -31,7 +31,7 @@ TEST!=3D"md/array_state", ENV{SYSTEMD_READY}=3D"0", GOT=
-O=3D"md_end"
->  ATTR{md/array_state}=3D=3D"|clear|inactive", ENV{SYSTEMD_READY}=3D"0", G=
-OTO=3D"md_end"
->  LABEL=3D"md_ignore_state"
-> =20
-> -IMPORT{program}=3D"/sbin/mdadm --detail --export $tempnode"
-> +IMPORT{program}=3D"/sbin/mdadm --detail --export $devnode"
->  ENV{DEVTYPE}=3D=3D"disk", ENV{MD_NAME}=3D=3D"?*", SYMLINK+=3D"disk/by-id=
-/md-name-$env{MD_NAME}", OPTIONS+=3D"string_escape=3Dreplace"
->  ENV{DEVTYPE}=3D=3D"disk", ENV{MD_UUID}=3D=3D"?*", SYMLINK+=3D"disk/by-id=
-/md-uuid-$env{MD_UUID}"
->  ENV{DEVTYPE}=3D=3D"disk", ENV{MD_DEVNAME}=3D=3D"?*", SYMLINK+=3D"md/$env=
-{MD_DEVNAME}"
-> @@ -40,7 +40,7 @@ ENV{DEVTYPE}=3D=3D"partition", ENV{MD_UUID}=3D=3D"?*", =
-SYMLINK+=3D"disk/by-id/md-uuid-$env
->  ENV{DEVTYPE}=3D=3D"partition", ENV{MD_DEVNAME}=3D=3D"*[^0-9]", SYMLINK+=
-=3D"md/$env{MD_DEVNAME}%n"
->  ENV{DEVTYPE}=3D=3D"partition", ENV{MD_DEVNAME}=3D=3D"*[0-9]", SYMLINK+=
-=3D"md/$env{MD_DEVNAME}p%n"
-> =20
-> -IMPORT{program}=3D"/sbin/blkid -o udev -p $tempnode"
-> +IMPORT{builtin}=3D"blkid"
->  OPTIONS+=3D"link_priority=3D100"
->  OPTIONS+=3D"watch"
->  ENV{ID_FS_USAGE}=3D=3D"filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=3D=
-=3D"?*", SYMLINK+=3D"disk/by-uuid/$env{ID_FS_UUID_ENC}"
+> Right now, the rules that run blkid on raid arrays are executed after
+> the assembly rules. This means incremental assembly will always fail
+> when raid arrays are again physical components of raid arrays.
 
-Applied, thanks.
+I'm not at all against splitting the udev rules into two files, but your
+reasoning seems a bit odd and I want to be sure that I understand.
 
+We run "mdadm -I" based on the contents of ID_FS_TYPE, and ID_FS_TYPE is set
+by "blkid", which is called after the "mdadm -I" rules.  So why do they work
+at all?
+
+Presumably something else is calling "blkid" ?
+That seems to be "persistent-storage.rules"  which calls "blkid" on some
+devices, but not on others.  That seems sub-optimal.   It is probably
+reasonable that it skips "sr*" (which is explicit) but for us it is
+unfortunate that it skips "md*".
+
+I cannot see a good reason for persistent-storage-rules to skip 'md' device=
+s,
+so I would suggest that the best way to fix the problem is the fix that
+rules file.  Then we could remove the "blkid" call from the md rules which =
+is
+nice as it removes duplication.
+
+We could still split the md rules files, but I would rather do that because
+it was a good and clean thing to do, not do that because it helps work arou=
+nd
+a short-coming in some other rules files.
+
+Thoughts?
+
+Thanks,
 NeilBrown
 
---Sig_/36muHo9t0175i=L92BX_0BT
+
+
+>=20
+> Instead of simply reversing the order, split the rules up into two files,
+> one dealing with array properties and one dealing with assembly.
+> ---
+>  Makefile                    |  5 +++--
+>  udev-md-raid-arrays.rules   | 35 ++++++++++++++++++++++++++++++++
+>  udev-md-raid-assembly.rules | 19 ++++++++++++++++++
+>  udev-md-raid.rules          | 49 ---------------------------------------=
+------
+>  4 files changed, 57 insertions(+), 51 deletions(-)
+>  create mode 100644 udev-md-raid-arrays.rules
+>  create mode 100644 udev-md-raid-assembly.rules
+>  delete mode 100644 udev-md-raid.rules
+>=20
+> diff --git a/Makefile b/Makefile
+> index b6edb23..ad0819d 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -262,8 +262,9 @@ install-man: mdadm.8 md.4 mdadm.conf.5 mdmon.8
+>  	$(INSTALL) -D -m 644 md.4 $(DESTDIR)$(MAN4DIR)/md.4
+>  	$(INSTALL) -D -m 644 mdadm.conf.5 $(DESTDIR)$(MAN5DIR)/mdadm.conf.5
+> =20
+> -install-udev: udev-md-raid.rules
+> -	$(INSTALL) -D -m 644 udev-md-raid.rules $(DESTDIR)$(UDEVDIR)/rules.d/64=
+-md-raid.rules
+> +install-udev: udev-md-raid-arrays.rules udev-md-raid-assembly.rules
+> +	$(INSTALL) -D -m 644 udev-md-raid-arrays.rules $(DESTDIR)$(UDEVDIR)/rul=
+es.d/63-md-raid-arrays.rules
+> +	$(INSTALL) -D -m 644 udev-md-raid-assembly.rules $(DESTDIR)$(UDEVDIR)/r=
+ules.d/64-md-raid-assembly.rules
+> =20
+>  install-systemd: systemd/mdmon@.service
+>  	$(INSTALL) -D -m 644 systemd/mdmon@.service $(DESTDIR)$(SYSTEMD_DIR)/md=
+mon@.service
+> diff --git a/udev-md-raid-arrays.rules b/udev-md-raid-arrays.rules
+> new file mode 100644
+> index 0000000..0540ed8
+> --- /dev/null
+> +++ b/udev-md-raid-arrays.rules
+> @@ -0,0 +1,35 @@
+> +# do not edit this file, it will be overwritten on update
+> +
+> +SUBSYSTEM!=3D"block", GOTO=3D"md_end"
+> +
+> +# handle md arrays
+> +ACTION!=3D"add|change", GOTO=3D"md_end"
+> +KERNEL!=3D"md*", GOTO=3D"md_end"
+> +
+> +# partitions have no md/{array_state,metadata_version}, but should not
+> +# for that reason be ignored.
+> +ENV{DEVTYPE}=3D=3D"partition", GOTO=3D"md_ignore_state"
+> +
+> +# container devices have a metadata version of e.g. 'external:ddf' and
+> +# never leave state 'inactive'
+> +ATTR{md/metadata_version}=3D=3D"external:[A-Za-z]*", ATTR{md/array_state=
+}=3D=3D"inactive", GOTO=3D"md_ignore_state"
+> +TEST!=3D"md/array_state", ENV{SYSTEMD_READY}=3D"0", GOTO=3D"md_end"
+> +ATTR{md/array_state}=3D=3D"|clear|inactive", ENV{SYSTEMD_READY}=3D"0", G=
+OTO=3D"md_end"
+> +LABEL=3D"md_ignore_state"
+> +
+> +IMPORT{program}=3D"/sbin/mdadm --detail --export $devnode"
+> +ENV{DEVTYPE}=3D=3D"disk", ENV{MD_NAME}=3D=3D"?*", SYMLINK+=3D"disk/by-id=
+/md-name-$env{MD_NAME}", OPTIONS+=3D"string_escape=3Dreplace"
+> +ENV{DEVTYPE}=3D=3D"disk", ENV{MD_UUID}=3D=3D"?*", SYMLINK+=3D"disk/by-id=
+/md-uuid-$env{MD_UUID}"
+> +ENV{DEVTYPE}=3D=3D"disk", ENV{MD_DEVNAME}=3D=3D"?*", SYMLINK+=3D"md/$env=
+{MD_DEVNAME}"
+> +ENV{DEVTYPE}=3D=3D"partition", ENV{MD_NAME}=3D=3D"?*", SYMLINK+=3D"disk/=
+by-id/md-name-$env{MD_NAME}-part%n", OPTIONS+=3D"string_escape=3Dreplace"
+> +ENV{DEVTYPE}=3D=3D"partition", ENV{MD_UUID}=3D=3D"?*", SYMLINK+=3D"disk/=
+by-id/md-uuid-$env{MD_UUID}-part%n"
+> +ENV{DEVTYPE}=3D=3D"partition", ENV{MD_DEVNAME}=3D=3D"*[^0-9]", SYMLINK+=
+=3D"md/$env{MD_DEVNAME}%n"
+> +ENV{DEVTYPE}=3D=3D"partition", ENV{MD_DEVNAME}=3D=3D"*[0-9]", SYMLINK+=
+=3D"md/$env{MD_DEVNAME}p%n"
+> +
+> +IMPORT{builtin}=3D"blkid"
+> +OPTIONS+=3D"link_priority=3D100"
+> +OPTIONS+=3D"watch"
+> +ENV{ID_FS_USAGE}=3D=3D"filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=3D=
+=3D"?*", SYMLINK+=3D"disk/by-uuid/$env{ID_FS_UUID_ENC}"
+> +ENV{ID_FS_USAGE}=3D=3D"filesystem|other", ENV{ID_FS_LABEL_ENC}=3D=3D"?*"=
+, SYMLINK+=3D"disk/by-label/$env{ID_FS_LABEL_ENC}"
+> +
+> +LABEL=3D"md_end"
+> diff --git a/udev-md-raid-assembly.rules b/udev-md-raid-assembly.rules
+> new file mode 100644
+> index 0000000..b653265
+> --- /dev/null
+> +++ b/udev-md-raid-assembly.rules
+> @@ -0,0 +1,19 @@
+> +# do not edit this file, it will be overwritten on update
+> +
+> +# assemble md arrays
+> +
+> +SUBSYSTEM!=3D"block", GOTO=3D"md_inc_end"
+> +
+> +# handle potential components of arrays (the ones supported by md)
+> +ENV{ID_FS_TYPE}=3D=3D"ddf_raid_member|isw_raid_member|linux_raid_member"=
+, GOTO=3D"md_inc"
+> +GOTO=3D"md_inc_end"
+> +
+> +LABEL=3D"md_inc"
+> +
+> +# remember you can limit what gets auto/incrementally assembled by
+> +# mdadm.conf(5)'s 'AUTO' and selectively whitelist using 'ARRAY'
+> +ACTION=3D=3D"add", RUN+=3D"/sbin/mdadm --incremental $devnode --offroot"
+> +ACTION=3D=3D"remove", ENV{ID_PATH}=3D=3D"?*", RUN+=3D"/sbin/mdadm -If $n=
+ame --path $env{ID_PATH}"
+> +ACTION=3D=3D"remove", ENV{ID_PATH}!=3D"?*", RUN+=3D"/sbin/mdadm -If $nam=
+e"
+> +
+> +LABEL=3D"md_inc_end"
+> diff --git a/udev-md-raid.rules b/udev-md-raid.rules
+> deleted file mode 100644
+> index ea97261..0000000
+> --- a/udev-md-raid.rules
+> +++ /dev/null
+> @@ -1,49 +0,0 @@
+> -# do not edit this file, it will be overwritten on update
+> -
+> -SUBSYSTEM!=3D"block", GOTO=3D"md_end"
+> -
+> -# handle potential components of arrays (the ones supported by md)
+> -ENV{ID_FS_TYPE}=3D=3D"ddf_raid_member|isw_raid_member|linux_raid_member"=
+, GOTO=3D"md_inc"
+> -GOTO=3D"md_inc_skip"
+> -
+> -LABEL=3D"md_inc"
+> -
+> -# remember you can limit what gets auto/incrementally assembled by
+> -# mdadm.conf(5)'s 'AUTO' and selectively whitelist using 'ARRAY'
+> -ACTION=3D=3D"add", RUN+=3D"/sbin/mdadm --incremental $devnode --offroot"
+> -ACTION=3D=3D"remove", ENV{ID_PATH}=3D=3D"?*", RUN+=3D"/sbin/mdadm -If $n=
+ame --path $env{ID_PATH}"
+> -ACTION=3D=3D"remove", ENV{ID_PATH}!=3D"?*", RUN+=3D"/sbin/mdadm -If $nam=
+e"
+> -
+> -LABEL=3D"md_inc_skip"
+> -
+> -# handle md arrays
+> -ACTION!=3D"add|change", GOTO=3D"md_end"
+> -KERNEL!=3D"md*", GOTO=3D"md_end"
+> -
+> -# partitions have no md/{array_state,metadata_version}, but should not
+> -# for that reason be ignored.
+> -ENV{DEVTYPE}=3D=3D"partition", GOTO=3D"md_ignore_state"
+> -
+> -# container devices have a metadata version of e.g. 'external:ddf' and
+> -# never leave state 'inactive'
+> -ATTR{md/metadata_version}=3D=3D"external:[A-Za-z]*", ATTR{md/array_state=
+}=3D=3D"inactive", GOTO=3D"md_ignore_state"
+> -TEST!=3D"md/array_state", ENV{SYSTEMD_READY}=3D"0", GOTO=3D"md_end"
+> -ATTR{md/array_state}=3D=3D"|clear|inactive", ENV{SYSTEMD_READY}=3D"0", G=
+OTO=3D"md_end"
+> -LABEL=3D"md_ignore_state"
+> -
+> -IMPORT{program}=3D"/sbin/mdadm --detail --export $devnode"
+> -ENV{DEVTYPE}=3D=3D"disk", ENV{MD_NAME}=3D=3D"?*", SYMLINK+=3D"disk/by-id=
+/md-name-$env{MD_NAME}", OPTIONS+=3D"string_escape=3Dreplace"
+> -ENV{DEVTYPE}=3D=3D"disk", ENV{MD_UUID}=3D=3D"?*", SYMLINK+=3D"disk/by-id=
+/md-uuid-$env{MD_UUID}"
+> -ENV{DEVTYPE}=3D=3D"disk", ENV{MD_DEVNAME}=3D=3D"?*", SYMLINK+=3D"md/$env=
+{MD_DEVNAME}"
+> -ENV{DEVTYPE}=3D=3D"partition", ENV{MD_NAME}=3D=3D"?*", SYMLINK+=3D"disk/=
+by-id/md-name-$env{MD_NAME}-part%n", OPTIONS+=3D"string_escape=3Dreplace"
+> -ENV{DEVTYPE}=3D=3D"partition", ENV{MD_UUID}=3D=3D"?*", SYMLINK+=3D"disk/=
+by-id/md-uuid-$env{MD_UUID}-part%n"
+> -ENV{DEVTYPE}=3D=3D"partition", ENV{MD_DEVNAME}=3D=3D"*[^0-9]", SYMLINK+=
+=3D"md/$env{MD_DEVNAME}%n"
+> -ENV{DEVTYPE}=3D=3D"partition", ENV{MD_DEVNAME}=3D=3D"*[0-9]", SYMLINK+=
+=3D"md/$env{MD_DEVNAME}p%n"
+> -
+> -IMPORT{builtin}=3D"blkid"
+> -OPTIONS+=3D"link_priority=3D100"
+> -OPTIONS+=3D"watch"
+> -ENV{ID_FS_USAGE}=3D=3D"filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=3D=
+=3D"?*", SYMLINK+=3D"disk/by-uuid/$env{ID_FS_UUID_ENC}"
+> -ENV{ID_FS_USAGE}=3D=3D"filesystem|other", ENV{ID_FS_LABEL_ENC}=3D=3D"?*"=
+, SYMLINK+=3D"disk/by-label/$env{ID_FS_LABEL_ENC}"
+> -
+> -LABEL=3D"md_end"
+
+
+--Sig_/KatM0iB=gyq0nJbTF3ZQtQ+
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBURg5QDnsnt1WYoG5AQLeYg/9FcxuiSTRUoGBLtK1Gce4ZpRJBP/Et7KC
-o0h9/PL6RCBYlz0KKMKtlztb0YPZsX5AZHJ49CKQUdibcx/roncUTW2X3bzNG9TW
-F64Tq0cCenEmMWT92cwnqCcD2W+UEs6CluB5im3Lo4IOZC41AHVl7JhcR99dg+n4
-fss/LWxJnhpHrpwKcawxV9PI84I0GSSq43HnsMMdEvOnaf0EL0OcGYjcpIk/44uA
-ORV6vyNpsjaY3ccTbNh6TcnQ2q2CUD+NZVpPOQQvM41oOMMn4RfUuxSpY9uhhfn+
-6XmfankRb7fjpq1r5gpu2xqfZGBfyhcDf/corJwrdRQYK9101J6lcWeTqshskFF3
-o2OPGnxTweeE1+pSfRfkTeq14wtAD8dgKSfAfrHR6y4Pcj7X8q/wtjPVhSTdtVKx
-5x3Ka3nher9FwW9ys5c3GR96cbK/ZorQNVkKypVQ0tZFihISOpwkKrbN/GW9s6Sg
-5Y7J6TZgXr6Cm3l1cbptGwjwJPSqk+1Pe/K5fjANOVmO8LTk0+mNGUIOdHJAwfjI
-JByyykLhqv9xpKqaTG/YIgA4dakGlfh/OwY4KGlzlMMcnI8RHwmyMkBtzBejr+/H
-VxKE2lsQbDtzu7fG1FVSvoRwAxhPwkIdJNoqiGmaioCty+Tyc49cxEEWA02ikLtn
-QDKyhlaRBPk=
-=Yuyt
+iQIVAwUBURg7xTnsnt1WYoG5AQJKDA/9HkCa+dzWocUt40mNW9HnPCscAmTRKPXW
+UVF8RrpV91t6ZaH3LJgMVtOmQ5e0SWkxVpJNZLGhkR7sL+WipvObr5gUpKTBVsdx
+XzrD+2JQxM7itfhMxtvpxO9594mdbziQx42EhS/Ak6Tq3kvIinL6ue5T1MDBAFBZ
+MRg/xM7X14PNgk30+qouuw5is3i+hCghsFOD1Ce1GByfYUgUI1gXo37p18ZDkJTN
+hNnIW+Si9lW4SXBC6GpYzUPfdYH77BbVXIjMusxHvXCIiCsQJ1eL4fCMXNRRiY6L
+qXZm0gsIE+7l96lYOMFsKwEBJPimGPRo7oejgzsU6Hs4+qLMF9OKbvkok/h2vEl2
+DwNFToHoGhQCHZTpk4yrdBuJuJfqMfvJesCVfIKXMqDozEnGb0F8HNUIBHUUVGBj
+5E3NtsBAL1xAqhSVSb1xOfOyWKQfbqTtQHDjqVXSxM/Rcj9r5y+LZQVFPlQNUjku
+5RDzTo4Uc6E+NgaJCk3Uqw3Pd5RUDqK7vuaOsYndEWlaaC63rlcelxZYV1HIO2be
+5t1OHjB0G47lwN/nJcPRx4fiaNj6VIJR+F2TPzx/X3aIbyhsL00Kcs0mF5s3Fd7H
+7Rw89GFvmSVBUwq3CKNfWFzMj8JY6lWSAmJQ0A/iGvPkK7yVeSnQzlsEUhDYQYB1
+GNj1EVvPZPo=
+=/JKH
 -----END PGP SIGNATURE-----
 
---Sig_/36muHo9t0175i=L92BX_0BT--
+--Sig_/KatM0iB=gyq0nJbTF3ZQtQ+--
