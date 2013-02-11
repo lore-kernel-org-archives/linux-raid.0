@@ -1,43 +1,33 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: raid/device failure
-Date: Mon, 11 Feb 2013 09:29:24 +0100 (CET)
-Message-ID: <23314523.6.1360571363962.JavaMail.root@zimbra>
-References: <201302101827.36116.thomas@fjellstrom.ca>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: [PATCH 1/2] Modernize udev rules
+Date: Mon, 11 Feb 2013 12:33:37 +0400
+Message-ID: <5118ACE1.5020503@msgid.tls.msk.ru>
+References: <1360432119-15910-1-git-send-email-thomas@archlinux.org> <20130211112016.3059ef95@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201302101827.36116.thomas@fjellstrom.ca>
+In-Reply-To: <20130211112016.3059ef95@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: thomas@fjellstrom.ca
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: =?UTF-8?B?VGhvbWFzIELDpGNobGVy?= <thomas@archlinux.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> I've re-configured my NAS box (still haven't put it into "production"=
-)
-> to be a
-> raid5 over 7 2TB consumer seagate barracuda drives, and with some
-> tweaking, performance was looking stellar.
+11.02.2013 04:20, NeilBrown wrote:
+> On Sat,  9 Feb 2013 18:48:38 +0100 Thomas B=C3=A4chler <thomas@archli=
+nux.org> wrote:
 
-Using that many drives in raid-5 is a bit risky. Better use raid-6=E2=80=
-=A6
+>> -IMPORT{program}=3D"/sbin/blkid -o udev -p $tempnode"
+>> +IMPORT{builtin}=3D"blkid"
 
-Just my 2c
+Does this has additional udev version constrain?
+I mean, which is the minimum udev version to support this properly,
+do we care?
 
-Vennlige hilsener / Best regards
+Thanks,
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+/mjt
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
