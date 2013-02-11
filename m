@@ -1,59 +1,31 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: raid/device failure
-Date: Sun, 10 Feb 2013 22:44:00 -0500
-Message-ID: <51186900.4000608@turmel.org>
-References: <201302101827.36116.thomas@fjellstrom.ca> <511852EF.9070201@turmel.org> <51185CDF.8000007@ejane.org>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: RAID performance
+Date: Mon, 11 Feb 2013 05:33:14 +0100 (CET)
+Message-ID: <alpine.DEB.2.00.1302110531340.32644@uplift.swm.pp.se>
+References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <511471EA.2000605@hardwarefreak.com>
+ <5114A53B.9060103@websitemanagers.com.au> <5115316F.1090502@hardwarefreak.com> <5115478A.8010004@websitemanagers.com.au> <5115CC02.2010400@hardwarefreak.com> <d34a6caf-d1b5-403c-aee2-525a9b3c3db7@email.android.com> <51179F09.1020503@hardwarefreak.com>
+ <6990fbda-f741-454a-80cd-bdcdfd8c971c@email.android.com> <alpine.DEB.2.00.1302101812060.32644@uplift.swm.pp.se> <511817D8.7020809@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51185CDF.8000007@ejane.org>
+In-Reply-To: <511817D8.7020809@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: EJ Vincent <ej@ejane.org>
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: Stan Hoeppner <stan@hardwarefreak.com>, Dave Cundiff <syshackmin@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/10/2013 09:52 PM, EJ Vincent wrote:
-> On 2/10/2013 9:09 PM, Phil Turmel wrote:
->> Have these drives ever been scrubbed? (I vaguely recall you mentioning
->> new drives...) If they are new and already had a URE, I'd be concerned
->> about mishandling during shipping. If they aren't new, I'd
->> destructively exercise them and retest.
-> 
-> Hi Phil,
-> 
-> Could you elaborate on procedures and tools to thoroughly exercise newly
-> purchased drives? Are you talking about programs such as 'badblocks'?
+On Mon, 11 Feb 2013, Adam Goryachev wrote:
 
-Yes, badblocks is convenient because it is part of e2fsprogs, which
-pretty much ships by default in all distros.
+> If I use a 10G connection for the SAN, and multiple 1G connections for 
+> the clients, then I will still end up with a max of 1G read speed, since 
+> the switch will only deliver data on a single port. So to get better 
+> than 1G speed, I must use higher bandwidth channels, but using 10G on 
+> all machines allows a single server to "flood" the network...
 
-What I recommend:
+If your equipment supports it, you should put in some kind of policer to 
+rate-limit traffic based on destination (or the whole port). Then you 
+could limit each server to 2-3 gigabit/s on their 10G port, and the file 
+server could get its entire 10G port (or limit that to 5-6 gigabit/s).
 
-Record the complete drive status as unpacked:
-1) smartctl -x /dev/sdX >xxxx-as-received.smart.txt
-
-Userspace surface check:
-2) badblocks -w -b 4096 /dev/sdX
-
-Security erase (vital for SSDs):
-3a) hdparm --user-master u --security-set-pass password /dev/sdX
-3b) hdparm --user-master u --security-erase password /dev/sdX
-
-(wait until done)
-
-Long drive self-test:
-4) smartctl -t long /dev/sdX
-
-(wait until done)
-
-Record the complete drive status post-test:
-5) smartctl -x /dev/sdX >xxxx-as-tested.smart.txt
-
-I won't accept any reallocations in a new drive, and no more than single
-digits in older drives.  In my (subjective) experience, once
-reallocations get into double digits, their incidence seems to accelerate.
-
-I also pay extra attention to desktop drives with 30,000+ hours, as I
-haven't had any get to 40,000.
-
-Phil
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
