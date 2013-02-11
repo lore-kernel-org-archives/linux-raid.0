@@ -1,154 +1,100 @@
-From: Dave Cundiff <syshackmin@gmail.com>
-Subject: Re: help please, can't mount/recover raid 5 array
-Date: Sun, 10 Feb 2013 17:01:30 -0500
-Message-ID: <CAKHEz2ZKL54iuiDiJiVG8Ec-cJGRnjO_qYM7nF13KQPdKUYikQ@mail.gmail.com>
-References: <CAHscji2-8KaKOA041VykHeA+jCEka5afgEoH=EHVGDak-D4UFg@mail.gmail.com>
-	<alpine.DEB.2.00.1302100728130.32644@uplift.swm.pp.se>
-	<CAHscji0h5nHUssKi23BMfR=Ek+jSH+vK0odYNWkzrVDf6t18mw@mail.gmail.com>
-	<CAHscji1enS+Crp23kMX_6pX-bhrDNZ3-7Lbg2dAOPRtJc_nEhw@mail.gmail.com>
-	<51180B96.9020500@turmel.org>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 1/2] Modernize udev rules
+Date: Mon, 11 Feb 2013 11:20:16 +1100
+Message-ID: <20130211112016.3059ef95@notabene.brown>
+References: <1360432119-15910-1-git-send-email-thomas@archlinux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/36muHo9t0175i=L92BX_0BT"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51180B96.9020500@turmel.org>
+In-Reply-To: <1360432119-15910-1-git-send-email-thomas@archlinux.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Daniel Sanabria <sanabria.d@gmail.com>, Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
+To: Thomas =?ISO-8859-1?Q?B=E4chler?= <thomas@archlinux.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Feb 10, 2013 at 4:05 PM, Phil Turmel <philip@turmel.org> wrote:
-> Hi Daniel,
->
-> On 02/10/2013 04:36 AM, Daniel Sanabria wrote:
->> On 10 February 2013 09:17, Daniel Sanabria <sanabria.d@gmail.com> wrote:
->>> Hi Mikael,
->>>
->>> Yes I did. Here it is:
->
-> [trim /]
->
->>> /dev/sda3:
->>>           Magic : a92b4efc
->>>         Version : 0.90.00
->
-> =====================^^^^^^^
->
->>>            UUID : 0deb6f79:aec7ed69:bfe78010:bc810f04
->>>   Creation Time : Thu Dec  3 22:12:24 2009
->>>      Raid Level : raid5
->>>   Used Dev Size : 255999936 (244.14 GiB 262.14 GB)
->>>      Array Size : 511999872 (488.28 GiB 524.29 GB)
->>>    Raid Devices : 3
->>>   Total Devices : 3
->>> Preferred Minor : 2
->>>
->>>     Update Time : Sat Feb  9 16:09:20 2013
->>>           State : clean
->>>  Active Devices : 3
->>> Working Devices : 3
->>>  Failed Devices : 0
->>>   Spare Devices : 0
->>>        Checksum : 8dd157e5 - correct
->>>          Events : 792552
->>>
->>>          Layout : left-symmetric
->>>      Chunk Size : 64K
->
-> =====================^^^
->
->>>
->>>       Number   Major   Minor   RaidDevice State
->>> this     0       8        3        0      active sync   /dev/sda3
->>>
->>>    0     0       8        3        0      active sync   /dev/sda3
->>>    1     1       8       18        1      active sync   /dev/sdb2
->>>    2     2       8       34        2      active sync   /dev/sdc2
->
-> From your original post:
->
->> /dev/md2:
->>         Version : 1.2
->
-> ====================^^^
->
->>   Creation Time : Sat Feb  9 17:30:32 2013
->>      Raid Level : raid5
->>      Array Size : 511996928 (488.28 GiB 524.28 GB)
->>   Used Dev Size : 255998464 (244.14 GiB 262.14 GB)
->>    Raid Devices : 3
->>   Total Devices : 3
->>     Persistence : Superblock is persistent
->>
->>     Update Time : Sat Feb  9 20:47:46 2013
->>           State : clean
->>  Active Devices : 3
->> Working Devices : 3
->>  Failed Devices : 0
->>   Spare Devices : 0
->>
->>          Layout : left-symmetric
->>      Chunk Size : 512K
->
-> ====================^^^^
->
->>
->>            Name : lamachine:2  (local to host lamachine)
->>            UUID : 48be851b:f0210b64:e9fbefdf:24c84c5f
->>          Events : 2
->>
->>     Number   Major   Minor   RaidDevice State
->>        0       8        3        0      active sync   /dev/sda3
->>        1       8       18        1      active sync   /dev/sdb2
->>        2       8       34        2      active sync   /dev/sdc2
->
-> I don't know what possessed you to use "mdadm --create" to try to fix
-> your system, but it is almost always the wrong first step.  But since
-> you scrambled it with "mdadm --create", you'll have to fix it with
-> "mdadm --create".
->
-> mdadm --stop /dev/md2
->
-> mdadm --create --assume-clean /dev/md2 --metadata=0.90 \
->         --level=5 --raid-devices=3 --chunk=64 \
->         /dev/sda3 /dev/sdb2 /dev/sdc2
->
+--Sig_/36muHo9t0175i=L92BX_0BT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-It looks like your using a dracut based boot system. Once you get the
-array created and mounting you'll need to update /etc/mdadm.conf with
-the new array information and run dracut to update your initrd with
-the new configuration. If not problems could crop up down the road.
+On Sat,  9 Feb 2013 18:48:38 +0100 Thomas B=C3=A4chler <thomas@archlinux.or=
+g>
+wrote:
 
-> Then, you will have to reconstruct the beginning of the array, as much
-> as 3MB worth, that was replaced with v1.2 metadata.  (The used dev size
-> differs by 1472kB, suggesting that the new mdadm gave you a new data
-> offset of 2048, and the rest is the difference in the chunk size.)
->
-> Your original report and follow-ups have not clearly indicated what is
-> on this 524GB array, so I can't be more specific.  If it is a
-> filesystem, an fsck may fix it with modest losses.
->
-> If it is another LVM PV, you may be able to do a vgrestore to reset the
-> 1st megabyte.  You didn't activate a bitmap on the array, so the
-> remainder of the new metadata space was probably untouched.
->
+> * $tempnode is deprecated, use $devnode
+> * blkid -o udev output is deprecated, use IMPORT{builtin}=3D"blkid" inste=
+ad
+> ---
+>  udev-md-raid.rules | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/udev-md-raid.rules b/udev-md-raid.rules
+> index cc7f5ef..ea97261 100644
+> --- a/udev-md-raid.rules
+> +++ b/udev-md-raid.rules
+> @@ -10,7 +10,7 @@ LABEL=3D"md_inc"
+> =20
+>  # remember you can limit what gets auto/incrementally assembled by
+>  # mdadm.conf(5)'s 'AUTO' and selectively whitelist using 'ARRAY'
+> -ACTION=3D=3D"add", RUN+=3D"/sbin/mdadm --incremental $tempnode --offroot"
+> +ACTION=3D=3D"add", RUN+=3D"/sbin/mdadm --incremental $devnode --offroot"
+>  ACTION=3D=3D"remove", ENV{ID_PATH}=3D=3D"?*", RUN+=3D"/sbin/mdadm -If $n=
+ame --path $env{ID_PATH}"
+>  ACTION=3D=3D"remove", ENV{ID_PATH}!=3D"?*", RUN+=3D"/sbin/mdadm -If $nam=
+e"
+> =20
+> @@ -31,7 +31,7 @@ TEST!=3D"md/array_state", ENV{SYSTEMD_READY}=3D"0", GOT=
+O=3D"md_end"
+>  ATTR{md/array_state}=3D=3D"|clear|inactive", ENV{SYSTEMD_READY}=3D"0", G=
+OTO=3D"md_end"
+>  LABEL=3D"md_ignore_state"
+> =20
+> -IMPORT{program}=3D"/sbin/mdadm --detail --export $tempnode"
+> +IMPORT{program}=3D"/sbin/mdadm --detail --export $devnode"
+>  ENV{DEVTYPE}=3D=3D"disk", ENV{MD_NAME}=3D=3D"?*", SYMLINK+=3D"disk/by-id=
+/md-name-$env{MD_NAME}", OPTIONS+=3D"string_escape=3Dreplace"
+>  ENV{DEVTYPE}=3D=3D"disk", ENV{MD_UUID}=3D=3D"?*", SYMLINK+=3D"disk/by-id=
+/md-uuid-$env{MD_UUID}"
+>  ENV{DEVTYPE}=3D=3D"disk", ENV{MD_DEVNAME}=3D=3D"?*", SYMLINK+=3D"md/$env=
+{MD_DEVNAME}"
+> @@ -40,7 +40,7 @@ ENV{DEVTYPE}=3D=3D"partition", ENV{MD_UUID}=3D=3D"?*", =
+SYMLINK+=3D"disk/by-id/md-uuid-$env
+>  ENV{DEVTYPE}=3D=3D"partition", ENV{MD_DEVNAME}=3D=3D"*[^0-9]", SYMLINK+=
+=3D"md/$env{MD_DEVNAME}%n"
+>  ENV{DEVTYPE}=3D=3D"partition", ENV{MD_DEVNAME}=3D=3D"*[0-9]", SYMLINK+=
+=3D"md/$env{MD_DEVNAME}p%n"
+> =20
+> -IMPORT{program}=3D"/sbin/blkid -o udev -p $tempnode"
+> +IMPORT{builtin}=3D"blkid"
+>  OPTIONS+=3D"link_priority=3D100"
+>  OPTIONS+=3D"watch"
+>  ENV{ID_FS_USAGE}=3D=3D"filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=3D=
+=3D"?*", SYMLINK+=3D"disk/by-uuid/$env{ID_FS_UUID_ENC}"
 
-If the data on this array is important and without backups it would be
-a good idea to image the drives before you start doing anything else.
-Most of your data can likely be recovered but you can easily destroy
-it beyond conventional repair if your not very careful at this point.
+Applied, thanks.
 
-According to the fstab in the original post it looks like its just an
-ext4 filesystem on top of the md. If that is the case an fsck should
-get you going again after creating the array. You can try a regular
-fsck but your superblock is most likely gone. A backup superblock if
-needed is generally accessible by adding -b 32768 to the fsck.
-Hopefully you didn't have many files in the root of that filesystem.
-They are all most likely going to end up as random numbered files and
-directories in lost+found.
+NeilBrown
 
+--Sig_/36muHo9t0175i=L92BX_0BT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
---
-Dave Cundiff
-System Administrator
-A2Hosting, Inc
-http://www.a2hosting.com
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBURg5QDnsnt1WYoG5AQLeYg/9FcxuiSTRUoGBLtK1Gce4ZpRJBP/Et7KC
+o0h9/PL6RCBYlz0KKMKtlztb0YPZsX5AZHJ49CKQUdibcx/roncUTW2X3bzNG9TW
+F64Tq0cCenEmMWT92cwnqCcD2W+UEs6CluB5im3Lo4IOZC41AHVl7JhcR99dg+n4
+fss/LWxJnhpHrpwKcawxV9PI84I0GSSq43HnsMMdEvOnaf0EL0OcGYjcpIk/44uA
+ORV6vyNpsjaY3ccTbNh6TcnQ2q2CUD+NZVpPOQQvM41oOMMn4RfUuxSpY9uhhfn+
+6XmfankRb7fjpq1r5gpu2xqfZGBfyhcDf/corJwrdRQYK9101J6lcWeTqshskFF3
+o2OPGnxTweeE1+pSfRfkTeq14wtAD8dgKSfAfrHR6y4Pcj7X8q/wtjPVhSTdtVKx
+5x3Ka3nher9FwW9ys5c3GR96cbK/ZorQNVkKypVQ0tZFihISOpwkKrbN/GW9s6Sg
+5Y7J6TZgXr6Cm3l1cbptGwjwJPSqk+1Pe/K5fjANOVmO8LTk0+mNGUIOdHJAwfjI
+JByyykLhqv9xpKqaTG/YIgA4dakGlfh/OwY4KGlzlMMcnI8RHwmyMkBtzBejr+/H
+VxKE2lsQbDtzu7fG1FVSvoRwAxhPwkIdJNoqiGmaioCty+Tyc49cxEEWA02ikLtn
+QDKyhlaRBPk=
+=Yuyt
+-----END PGP SIGNATURE-----
+
+--Sig_/36muHo9t0175i=L92BX_0BT--
