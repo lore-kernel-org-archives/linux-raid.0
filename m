@@ -1,79 +1,165 @@
-From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
-Subject: Re: [PATCH 1/2] Modernize udev rules
-Date: Mon, 11 Feb 2013 11:48:19 +0100
-Message-ID: <5118CC73.80005@archlinux.org>
-References: <1360432119-15910-1-git-send-email-thomas@archlinux.org> <20130211112016.3059ef95@notabene.brown> <5118ACE1.5020503@msgid.tls.msk.ru> <5118C3C0.2030708@archlinux.org> <CANBHLUh6TTWuq24iYKfKxkMoA65TNeq5wVCNnvKsYzNTzLz=Eg@mail.gmail.com>
+From: Daniel Sanabria <sanabria.d@gmail.com>
+Subject: Re: help please, can't mount/recover raid 5 array
+Date: Mon, 11 Feb 2013 12:49:04 +0000
+Message-ID: <CAHscji0+gvKgWGynAS4XhVeSpJ8AdR95ezLHvcP-wTacce=OXQ@mail.gmail.com>
+References: <CAHscji2-8KaKOA041VykHeA+jCEka5afgEoH=EHVGDak-D4UFg@mail.gmail.com>
+	<alpine.DEB.2.00.1302100728130.32644@uplift.swm.pp.se>
+	<CAHscji0h5nHUssKi23BMfR=Ek+jSH+vK0odYNWkzrVDf6t18mw@mail.gmail.com>
+	<CAHscji1enS+Crp23kMX_6pX-bhrDNZ3-7Lbg2dAOPRtJc_nEhw@mail.gmail.com>
+	<51180B96.9020500@turmel.org>
+	<CAKHEz2ZKL54iuiDiJiVG8Ec-cJGRnjO_qYM7nF13KQPdKUYikQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="----enig2SFIBBRIVRCSHTLRUJKGO"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CANBHLUh6TTWuq24iYKfKxkMoA65TNeq5wVCNnvKsYzNTzLz=Eg@mail.gmail.com>
+In-Reply-To: <CAKHEz2ZKL54iuiDiJiVG8Ec-cJGRnjO_qYM7nF13KQPdKUYikQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dmitrijs Ledkovs <xnox@debian.org>
-Cc: Michael Tokarev <mjt@tls.msk.ru>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Dave Cundiff <syshackmin@gmail.com>
+Cc: Phil Turmel <philip@turmel.org>, Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
-------enig2SFIBBRIVRCSHTLRUJKGO
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: quoted-printable
+Thanks a million Guys !!! I re-created the RAID and fsck it and it's
+mounting fine now. The array is my /home partition and I can't see any
+significant losses. But I'm still not sure what happened, I mean what
+consideration should I take next time I upgrade?
 
-Am 11.02.2013 11:44, schrieb Dmitrijs Ledkovs:
-> On 11 February 2013 10:11, Thomas B=E4chler <thomas@archlinux.org> wrot=
-e:
->> Am 11.02.2013 09:33, schrieb Michael Tokarev:
->>> 11.02.2013 04:20, NeilBrown wrote:
->>>> On Sat,  9 Feb 2013 18:48:38 +0100 Thomas B=E4chler
->>>> <thomas@archlinux.org> wrote:
->>>
->>>>> -IMPORT{program}=3D"/sbin/blkid -o udev -p $tempnode"
->>>>> +IMPORT{builtin}=3D"blkid"
->>>
->>> Does this has additional udev version constrain?
->>> I mean, which is the minimum udev version to support this properly,
->>> do we care?
+Thanks again,
+
+Daniel
+
+On 10 February 2013 22:01, Dave Cundiff <syshackmin@gmail.com> wrote:
+> On Sun, Feb 10, 2013 at 4:05 PM, Phil Turmel <philip@turmel.org> wrote:
+>> Hi Daniel,
 >>
->> Udev relies on devtmpfs and thus does not create devices since version=
-
->> 176, therefore $tempnode is deprecated and only $devnode should be use=
-d
->> ($tempnode seems to be around for compatibility, no idea if/when it wi=
-ll
->> be dropped).
+>> On 02/10/2013 04:36 AM, Daniel Sanabria wrote:
+>>> On 10 February 2013 09:17, Daniel Sanabria <sanabria.d@gmail.com> wrote:
+>>>> Hi Mikael,
+>>>>
+>>>> Yes I did. Here it is:
 >>
->> The blkid builtin is also available since udev 176. In latest
->=20
-> So 175 or 176? Neither debian nor ubuntu have 176 yet, only 175.
-> And upgrading udev in debian/ubuntu is proving to be a hard task.
-
-If I see this correctly, this was added after 175, so it first appeard
-in 176.
-
-
-
-------enig2SFIBBRIVRCSHTLRUJKGO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBCAAGBQJRGMxzAAoJEChPw0yOSxolCBYQAJalLHUenF1jgFrMe6qsYQnY
-crSkZYMqca5NoZq+mdEpmt1wZKuv7MYToeb2ZNH16QzGP3kp3yxlclsr0oH3BR1H
-6sLu9EY2jNdUeV6A8+0l2ZQ90GG07WDg9Q9eFnVmja3Yi/ktVwk6ndH2FTEp5bDF
-E0wOz6jrdhKrATEx4zBnKXTmVXvgyijrkgd9KQIcwfIpB/lw0/xbBsw4z0Mcc/4B
-sP8q5LKeuEByMVZUUq7CC0bes+ilRVYYLwxOVKle9efZ9nSJ8DshfYfkI6KQAS25
-CptvwgqbUP5eyWpD3V2onAqM4vYJCShftBzQPeeRXosHPfG48WjrSCV28eWphGUs
-GviYdrcUmH58tVmNlLddHtHNMG4Z1nBIXOIOwHZqiMpclPwUB78qx16mZrWC5sK5
-N/BYPLhqS7B+guxi/PW012Vdj0JR03owp6L1DeM+bfLBZDh3EY6CT0vJZL39Kwh4
-L1MVwzUTniOX+VOTIF+Af7Bi0hgPmEAxZdZjSYbkvK1bukMypzGRihs4/Ka7cU5Y
-0l5Hx3OGDovjGKtfniVOiLQ5xaOp0rC/tL+8E1/qV4/bFUU4/mBI5iGyA9Wmy5OA
-plQXwATmjdyOxvWdTNX/anMAE1PibUZ8EcjAe9rpoKeKZxnHN3R3W0cTVawKcRGG
-mAHnXHcyOqmnMkzgXQA3
-=qvFV
------END PGP SIGNATURE-----
-
-------enig2SFIBBRIVRCSHTLRUJKGO--
+>> [trim /]
+>>
+>>>> /dev/sda3:
+>>>>           Magic : a92b4efc
+>>>>         Version : 0.90.00
+>>
+>> =====================^^^^^^^
+>>
+>>>>            UUID : 0deb6f79:aec7ed69:bfe78010:bc810f04
+>>>>   Creation Time : Thu Dec  3 22:12:24 2009
+>>>>      Raid Level : raid5
+>>>>   Used Dev Size : 255999936 (244.14 GiB 262.14 GB)
+>>>>      Array Size : 511999872 (488.28 GiB 524.29 GB)
+>>>>    Raid Devices : 3
+>>>>   Total Devices : 3
+>>>> Preferred Minor : 2
+>>>>
+>>>>     Update Time : Sat Feb  9 16:09:20 2013
+>>>>           State : clean
+>>>>  Active Devices : 3
+>>>> Working Devices : 3
+>>>>  Failed Devices : 0
+>>>>   Spare Devices : 0
+>>>>        Checksum : 8dd157e5 - correct
+>>>>          Events : 792552
+>>>>
+>>>>          Layout : left-symmetric
+>>>>      Chunk Size : 64K
+>>
+>> =====================^^^
+>>
+>>>>
+>>>>       Number   Major   Minor   RaidDevice State
+>>>> this     0       8        3        0      active sync   /dev/sda3
+>>>>
+>>>>    0     0       8        3        0      active sync   /dev/sda3
+>>>>    1     1       8       18        1      active sync   /dev/sdb2
+>>>>    2     2       8       34        2      active sync   /dev/sdc2
+>>
+>> From your original post:
+>>
+>>> /dev/md2:
+>>>         Version : 1.2
+>>
+>> ====================^^^
+>>
+>>>   Creation Time : Sat Feb  9 17:30:32 2013
+>>>      Raid Level : raid5
+>>>      Array Size : 511996928 (488.28 GiB 524.28 GB)
+>>>   Used Dev Size : 255998464 (244.14 GiB 262.14 GB)
+>>>    Raid Devices : 3
+>>>   Total Devices : 3
+>>>     Persistence : Superblock is persistent
+>>>
+>>>     Update Time : Sat Feb  9 20:47:46 2013
+>>>           State : clean
+>>>  Active Devices : 3
+>>> Working Devices : 3
+>>>  Failed Devices : 0
+>>>   Spare Devices : 0
+>>>
+>>>          Layout : left-symmetric
+>>>      Chunk Size : 512K
+>>
+>> ====================^^^^
+>>
+>>>
+>>>            Name : lamachine:2  (local to host lamachine)
+>>>            UUID : 48be851b:f0210b64:e9fbefdf:24c84c5f
+>>>          Events : 2
+>>>
+>>>     Number   Major   Minor   RaidDevice State
+>>>        0       8        3        0      active sync   /dev/sda3
+>>>        1       8       18        1      active sync   /dev/sdb2
+>>>        2       8       34        2      active sync   /dev/sdc2
+>>
+>> I don't know what possessed you to use "mdadm --create" to try to fix
+>> your system, but it is almost always the wrong first step.  But since
+>> you scrambled it with "mdadm --create", you'll have to fix it with
+>> "mdadm --create".
+>>
+>> mdadm --stop /dev/md2
+>>
+>> mdadm --create --assume-clean /dev/md2 --metadata=0.90 \
+>>         --level=5 --raid-devices=3 --chunk=64 \
+>>         /dev/sda3 /dev/sdb2 /dev/sdc2
+>>
+>
+> It looks like your using a dracut based boot system. Once you get the
+> array created and mounting you'll need to update /etc/mdadm.conf with
+> the new array information and run dracut to update your initrd with
+> the new configuration. If not problems could crop up down the road.
+>
+>> Then, you will have to reconstruct the beginning of the array, as much
+>> as 3MB worth, that was replaced with v1.2 metadata.  (The used dev size
+>> differs by 1472kB, suggesting that the new mdadm gave you a new data
+>> offset of 2048, and the rest is the difference in the chunk size.)
+>>
+>> Your original report and follow-ups have not clearly indicated what is
+>> on this 524GB array, so I can't be more specific.  If it is a
+>> filesystem, an fsck may fix it with modest losses.
+>>
+>> If it is another LVM PV, you may be able to do a vgrestore to reset the
+>> 1st megabyte.  You didn't activate a bitmap on the array, so the
+>> remainder of the new metadata space was probably untouched.
+>>
+>
+> If the data on this array is important and without backups it would be
+> a good idea to image the drives before you start doing anything else.
+> Most of your data can likely be recovered but you can easily destroy
+> it beyond conventional repair if your not very careful at this point.
+>
+> According to the fstab in the original post it looks like its just an
+> ext4 filesystem on top of the md. If that is the case an fsck should
+> get you going again after creating the array. You can try a regular
+> fsck but your superblock is most likely gone. A backup superblock if
+> needed is generally accessible by adding -b 32768 to the fsck.
+> Hopefully you didn't have many files in the root of that filesystem.
+> They are all most likely going to end up as random numbered files and
+> directories in lost+found.
+>
+>
+> --
+> Dave Cundiff
+> System Administrator
+> A2Hosting, Inc
+> http://www.a2hosting.com
