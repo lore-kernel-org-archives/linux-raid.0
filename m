@@ -1,97 +1,58 @@
 From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
-Subject: Re: [PATCHv2 2/2] udev: Fix order of execution of the md rules
-Date: Mon, 11 Feb 2013 11:01:53 +0100
-Message-ID: <5118C191.7020409@archlinux.org>
-References: <1360432119-15910-2-git-send-email-thomas@archlinux.org> <1360442987-30856-1-git-send-email-thomas@archlinux.org> <20130211113101.6ec5dfac@notabene.brown>
+Subject: Re: [PATCH 1/2] Modernize udev rules
+Date: Mon, 11 Feb 2013 11:11:12 +0100
+Message-ID: <5118C3C0.2030708@archlinux.org>
+References: <1360432119-15910-1-git-send-email-thomas@archlinux.org> <20130211112016.3059ef95@notabene.brown> <5118ACE1.5020503@msgid.tls.msk.ru>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha256;
  protocol="application/pgp-signature";
- boundary="----enig2CATOOSRNHKACBFVOTNPT"
+ boundary="----enig2WERDRRLUPXTVSFEAWWTO"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130211113101.6ec5dfac@notabene.brown>
+In-Reply-To: <5118ACE1.5020503@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>, systemd Mailing List <systemd-devel@lists.freedesktop.org>
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
-------enig2CATOOSRNHKACBFVOTNPT
+------enig2WERDRRLUPXTVSFEAWWTO
 Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: quoted-printable
 
-Am 11.02.2013 01:31, schrieb NeilBrown:
-> On Sat,  9 Feb 2013 21:49:47 +0100 Thomas B=E4chler <thomas@archlinux.o=
-rg>
-> wrote:
+Am 11.02.2013 09:33, schrieb Michael Tokarev:
+> 11.02.2013 04:20, NeilBrown wrote:
+>> On Sat,  9 Feb 2013 18:48:38 +0100 Thomas B=E4chler
+>> <thomas@archlinux.org> wrote:
 >=20
->> Right now, the rules that run blkid on raid arrays are executed after
->> the assembly rules. This means incremental assembly will always fail
->> when raid arrays are again physical components of raid arrays.
+>>> -IMPORT{program}=3D"/sbin/blkid -o udev -p $tempnode"
+>>> +IMPORT{builtin}=3D"blkid"
 >=20
-> I'm not at all against splitting the udev rules into two files, but you=
-r
-> reasoning seems a bit odd and I want to be sure that I understand.
->=20
-> We run "mdadm -I" based on the contents of ID_FS_TYPE, and ID_FS_TYPE i=
-s set
-> by "blkid", which is called after the "mdadm -I" rules.  So why do they=
- work
-> at all?
+> Does this has additional udev version constrain?
+> I mean, which is the minimum udev version to support this properly,
+> do we care?
 
-If a new device, say /dev/md0 is added by udev, before the patch, the
-rules would do the following:
+Udev relies on devtmpfs and thus does not create devices since version
+176, therefore $tempnode is deprecated and only $devnode should be used
+($tempnode seems to be around for compatibility, no idea if/when it will
+be dropped).
 
-1) go to md_inc_skip, because ID_FS_TYPE is unset, thus skip incremental
-assembly.
-2) call blkid and set ID_FS_TYPE
+The blkid builtin is also available since udev 176. In latest
+util-linux, the 'blkid -o udev' output is marked as deprecated, although
+Karel says it's not entirely going away for now.
 
-If ID_FS_TYPE is again linux_raid_member, then it would have been
-necessary to call mdadm -I for /dev/md0 here.
+Why do we care? We want correct udev rules ($tempnode vs. $devnode), and
+the using builtin is faster and less error-prone than calling an
+external tool (plus, it is used everywhere else in udev).
 
-This is probably what happens here: https://bugs.archlinux.org/task/32558=
-
-
-The short version is: The reporter joins three disks as a RAID0 (md2),
-then combines md2 with another hard drive as RAID1.
-
-With my changes, incremental assembly should work in this case, because
-ID_FS_TYPE is set before incremental assembly tests for it.
-
-> Presumably something else is calling "blkid" ?
-> That seems to be "persistent-storage.rules"  which calls "blkid" on som=
-e
-> devices, but not on others.  That seems sub-optimal.   It is probably
-> reasonable that it skips "sr*" (which is explicit) but for us it is
-> unfortunate that it skips "md*".
-
-Yes, udev's standard rules skip md*, and I do not know why.
-
-> I cannot see a good reason for persistent-storage-rules to skip 'md' de=
-vices,
-> so I would suggest that the best way to fix the problem is the fix that=
-
-> rules file.  Then we could remove the "blkid" call from the md rules wh=
-ich is
-> nice as it removes duplication.
-
-CC'ing Kay here. Kay, is there a good reason to skip md* in
-60-persistent-storage.rules?
-
-> We could still split the md rules files, but I would rather do that bec=
-ause
-> it was a good and clean thing to do, not do that because it helps work =
-around
-> a short-coming in some other rules files.
-
-The "good reason" is that the rules fulfill two different tasks:
-1) Apply incremental assembly to RAID members.
-2) Set properties on RAID arrays.
-Two tasks means two separate files, so you can easily disable or
-override only one of them.
+As for compatibility: I see no reason why anyone would use a version of
+udev that is more than one year old (175) together with a mdadm version
+that is to be released in the future (3.2.7). If someone really wants
+that, they should be competent enough to adjust the udev rules for their
+local build.
 
 
 
-------enig2CATOOSRNHKACBFVOTNPT
+------enig2WERDRRLUPXTVSFEAWWTO
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="signature.asc"
@@ -100,19 +61,19 @@ Content-Disposition: attachment; filename="signature.asc"
 Version: GnuPG v2.0.19 (GNU/Linux)
 Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-iQIcBAEBCAAGBQJRGMGUAAoJEChPw0yOSxolBjsQAMK9+VZYYvWUGDQ9UO3UaCpE
-W5Cg1mMrx7dPPK7OxdXjY8jXsGeHz/7EbBMeGu4NKLu50sAEtKbsf2ZZt2C6s7n3
-uH8LnPSu56NX/0XtwxD9rFKGr5f6uubjqFFogBBZslu3ux8i+9iF3XdcPp4CxsJb
-NbTRT+MwPDgz5zxwDtYvIoJR+pzrV7TTfhxQNdXrKBwd9QwllaL+EuHgVAR+FbkK
-d5Qojbmfuxbx8iv1mRaqHgavtvAXu41zFAUKBN5GaI6bJbS2Z8N+Uh/ntJLlyEvv
-pGTGbTfJANCduQXsIh0PPDiurPLM0hpB0RLNR+bP4e3y+F9+qWescuMTbxWz7Wer
-5Uhyfq7ZBEMnS9ryPpO7k67SZTMpfv0wGA5X3uRSO0ytaIyDxa8VJN+kuSsl/fNZ
-M3ds2ti9YwFT17Ea/HEjb+b1lmV8IDHTnCfdxmLBsgWih2tQVNegIgDFHNbWtpDT
-dmi6O/Mybmi4Er6NnZm0njzhNI3Vwf8cjSUSywitDvoG/v5ucb7CzOlR2SwO9WQQ
-YfXlmcYuajxrLZstBluyTRti++2muw4xj5Sd6gv5vPN1mvKtf0Bc6HJP4nxcHpZP
-XwQTCN3zh10s5TcwBo5p3Yi2H4EukxfIUoG96BRIajKoccQtk1K1eF6/AEyOrnLg
-jo9t7gunID4KPeA6rVbm
-=Y9YJ
+iQIcBAEBCAAGBQJRGMPAAAoJEChPw0yOSxoleJIQAI3AWsGzgqcP6vpMhCint4a8
+XwFsXfxAuX9HnHE8g+YOt2ujyX8IV2sveXupY8O6qwcH2bQkO82oqW234Y1JPrSX
+OtvAFSFeHsUcX6MS3nBbkSK2wnFTBKLTWo3aLZ4ldn+9SKEqfKdx8dCxGumBv2ST
+iVRCBYKbtl0+qZVfnmC6OAEvpel2/FgMD3aiC3h00CV7PPo5LAZED3uKjAVLyBCP
+jWX44e8NKsMGinGRSCCDwxmfKGQJbBP99pOacnPuCmk33HcwJ3IZPyyIOV3fIdF5
+0IB97pgok1flrnFQpAefGYSdu2XrPHA5ItX7yGUqPCroJEDZfsteNp9YI76KmiLH
+CW3UX1pEGr9+hki0+wPe6ZsfHNl/yKHu1hhB8AatrCC2kyte2Tb4L9ZLII6kXSYv
+ugfLtIApbv5MBJJo5uJjPuhUy0zSKhr+rpkT7ySvLo/MTM6IpLdZgPA8nOsqUav/
+btRn5v2DEYUy48t1T+JBoqAZE3YNQcLYKG41/iWAjj2emL5bEVRVwU87nxTQUUaF
+dXf3gE+ERB456LAkyAcm549GAtrBBprSY9SSkcTKX/HgnPr7ftTuFVQ4u3XvdSlv
+iYTG9YxjMv/VgFsID229iLIEqTgecvNUE6ZmkqTh95u9jIXeKwBiSEqqI7maQedx
+Th2JI9KWi+B6RJmmBZGn
+=yuhy
 -----END PGP SIGNATURE-----
 
-------enig2CATOOSRNHKACBFVOTNPT--
+------enig2WERDRRLUPXTVSFEAWWTO--
