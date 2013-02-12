@@ -1,46 +1,34 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: Unable to reactivate a RAID10 mdadm device
-Date: Tue, 12 Feb 2013 23:05:53 +1100
-Message-ID: <511A3021.4020300@websitemanagers.com.au>
-References: <CAHhM8gBza3j-3qE3dRkZy14_cO-6EjOjW-zU8mtHVxhy6EWrtw@mail.gmail.com> <5119FE06.5070300@websitemanagers.com.au> <CAHhM8gDh4-hv4USoHOB_R7owNXBPpu=Vyq97osKnYL-RXpZzLw@mail.gmail.com> <CAHhM8gBiQNHU+WJ_FRTG9HdZx3CVsVyUse_UBQ4VQLJLie8PjQ@mail.gmail.com>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Shrinking raid array
+Date: Tue, 12 Feb 2013 10:52:52 -0500
+Message-ID: <511A6554.1010100@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHhM8gBiQNHU+WJ_FRTG9HdZx3CVsVyUse_UBQ4VQLJLie8PjQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Arun Khan <knura9@gmail.com>
-Cc: Linux MDADM Raid <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/02/13 22:34, Arun Khan wrote:
-> On Tue, Feb 12, 2013 at 5:00 PM, Arun Khan <knura9@gmail.com> wrote:
->> On Tue, Feb 12, 2013 at 2:02 PM, Adam Goryachev  wrote:
->>> You didn't mention the kernel version (or I've missed it) but that is my
->>> suggestion, certainly before you try anything destructive....
->> It was mentioned right at the beginning of my OP - Stock Debian Squeeze 2.6.32-5
->>
-> and I missed this one -
-> The System Rescue CD has kernel 3.2.19 and mdadm - v3.1.4 - 31st August 2010.
->
-> I am using System Rescue CD to recover /dev/md0.
-Sorry, I missed those then....
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Why don't you try using a debian stable rescue cd? It should have a
-similar version of mdadm and kernel to what you are using on the machine.
-I think the issue I mentioned was only in the kernel for a limited
-period of time, and I'm sure 2.6.x was not affected... I'd suggest you
-check the list archives if you need to know exactly which versions are
-affected.
+I'm working on shrinking a raid array and need some clarification on
+where the metadata goes and how large it is.  I have used -G with -Z
+and -z to reduce the used size of each disk, but the man page says you
+need some extra space at the end of the disk for the metadata ( format
+1.0 ), but doesn't specify exactly how much.  I need to know what the
+exact size of the reduced partition should be.
 
-Hope this helps...
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-Regards,
-Adam
-
-
--- 
-Adam Goryachev
-Website Managers
-www.websitemanagers.com.au
-
+iQEcBAEBAgAGBQJRGmVUAAoJEJrBOlT6nu7591gIAIxoEWfN0L84UhaEwbKjzaOi
+MXeCEdMjiGi5a4DCkl8FkKsrAHDHrmFKJ5hBr8u6DfS8rHyX7CmdUz5aVW1VhK/e
+/bo44Vsrl/Tj7nqBYX4rxm3yhPzN17tTGKcf0lunWXFg9Ykv4Gc4EefzSsjTPbZf
+oHepjklaik2tff3JCuxP7nv3I97BULmVvKJFKgeooK9QB6F5pRY1LnjRNhM91CKN
+zkvoi3mitmK6fGZ+N7PUiogv2TczvX6m+yeNFb7Qw7opsrdErh7TH752efeKQ4bU
+Iwomx1kYZT2k2swo+SahkZr58bfBkTzG5KZXUojEXO/pTX1vJFg+FOoVZ5m0bLY=
+=k41W
+-----END PGP SIGNATURE-----
