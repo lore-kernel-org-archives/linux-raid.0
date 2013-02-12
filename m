@@ -1,37 +1,39 @@
-From: Dave Cundiff <syshackmin@gmail.com>
-Subject: Re: Unable to reactivate a RAID10 mdadm device
-Date: Tue, 12 Feb 2013 16:28:04 -0500
-Message-ID: <CAKHEz2ZDznrROkXRF6Mzmb4vVwkfG1ab+GPCwaAqML3i89fsuw@mail.gmail.com>
-References: <CAHhM8gBza3j-3qE3dRkZy14_cO-6EjOjW-zU8mtHVxhy6EWrtw@mail.gmail.com>
-	<CAKHEz2bCyaqTa7dH-OFNR8_xs9O=XUD918vpVb+kL-gfOSq7gA@mail.gmail.com>
-	<CAHhM8gA4JkC0ORbg2NhdxmQA3Ufag1fy48SPU-jE+MsjD9SRgQ@mail.gmail.com>
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Subject: Re: raid/device failure
+Date: Tue, 12 Feb 2013 15:31:29 -0700
+Message-ID: <201302121531.29580.thomas@fjellstrom.ca>
+References: <201302101827.36116.thomas@fjellstrom.ca>
+Reply-To: thomas@fjellstrom.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHhM8gA4JkC0ORbg2NhdxmQA3Ufag1fy48SPU-jE+MsjD9SRgQ@mail.gmail.com>
+In-Reply-To: <201302101827.36116.thomas@fjellstrom.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Arun Khan <knura9@gmail.com>
-Cc: Linux MDADM Raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Feb 12, 2013 at 6:25 AM, Arun Khan <knura9@gmail.com> wrote:
-> I used 'watch cat /proc/mdstat' to watch the rebuild progress and the
-> progress bar showed completion (100%) mark.
-> When I broke out of this session and thereafter did 'cat /proc/mdstat'
->  I noticed that not only was /dev/sdb1 not added but /dev/sdc1 was
-> also not part of the array anymore.   With two failed devices,
-> /dev/md0 was still working mounted on /mnt/md0.
->
+On Sun February 10, 2013, Thomas Fjellstrom wrote:
+> I've re-configured my NAS box (still haven't put it into "production") to
+> be a raid5 over 7 2TB consumer seagate barracuda drives, and with some
+> tweaking, performance was looking stellar.
+> 
+> Unfortunately I started seeing some messages in dmesg that worried me:
+> 
+> mpt2sas0: log_info(0x31110d01): originator(PL), code(0x11),
+> sub_code(0x0d01)
+> 
+[snip]
 
-have you tried adding the --force option to assemble? I would leave
-out sdb since its an empty drive.
+So the more serrious issues are gone after some tests, but the above message 
+is back after a while:
 
-If that brings it online you can try a read-only fsck with -n to check
-the consistency of your data.
+mpt2sas0: log_info(0x31110d01): originator(PL), code(0x11), sub_code(0x0d01)
 
+I tried looking through the mpt code for the sub code 0x0d01, but it didn't 
+seem to be in the code at all. Does anyone know what that means?
 
 -- 
-Dave Cundiff
-System Administrator
-A2Hosting, Inc
-http://www.a2hosting.com
+Thomas Fjellstrom
+thomas@fjellstrom.ca
