@@ -1,49 +1,39 @@
 From: Arun Khan <knura9@gmail.com>
 Subject: Re: Unable to reactivate a RAID10 mdadm device
-Date: Tue, 12 Feb 2013 16:55:31 +0530
-Message-ID: <CAHhM8gA4JkC0ORbg2NhdxmQA3Ufag1fy48SPU-jE+MsjD9SRgQ@mail.gmail.com>
+Date: Tue, 12 Feb 2013 17:00:19 +0530
+Message-ID: <CAHhM8gDh4-hv4USoHOB_R7owNXBPpu=Vyq97osKnYL-RXpZzLw@mail.gmail.com>
 References: <CAHhM8gBza3j-3qE3dRkZy14_cO-6EjOjW-zU8mtHVxhy6EWrtw@mail.gmail.com>
-	<CAKHEz2bCyaqTa7dH-OFNR8_xs9O=XUD918vpVb+kL-gfOSq7gA@mail.gmail.com>
+	<5119FE06.5070300@websitemanagers.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKHEz2bCyaqTa7dH-OFNR8_xs9O=XUD918vpVb+kL-gfOSq7gA@mail.gmail.com>
+In-Reply-To: <5119FE06.5070300@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux MDADM Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Feb 12, 2013 at 2:12 PM, Dave Cundiff  wrote:
+On Tue, Feb 12, 2013 at 2:02 PM, Adam Goryachev  wrote:
 >
-> According to what I can see your array refuses to start because the
-> mirrored pair sdb1 and sdc1 are both out of sync. Both are showing an
-> event count of zero. That generally means the disk has never attempted
-> to sync. The device role of "spare" on both of these disks reinforces
-> that fact.
+> Within the last month or thereabouts, I saw a patch go past the list
+> which indicated that this might happen. Perhaps you need either a newer,
+> or older version of md (linux kernel) or mdadm.
+>
+> The issue was failing to start an array which had enough members to
+> start while a member was marked failed or something like that....
 
-Monday, evening when I swapped in a good HDD (with the /dev/sdb1
-member), the other three devices were working fine.
+Thanks.  I will try a Live distro with a newer  mdadm + kernel.
 
-In fact, the device /dev/md0 was mounted on /mnt/md0, using System
-Rescue CD Live session.
 
-> Are you sure sdc1 was active, sync'd, and in the array before sdb1 failed?
-> Could you have accidentally cleared the superblock on sdc1 as well?
+> You didn't mention the kernel version (or I've missed it) but that is my
+> suggestion, certainly before you try anything destructive....
 
-I used 'watch cat /proc/mdstat' to watch the rebuild progress and the
-progress bar showed completion (100%) mark.
-When I broke out of this session and thereafter did 'cat /proc/mdstat'
- I noticed that not only was /dev/sdb1 not added but /dev/sdc1 was
-also not part of the array anymore.   With two failed devices,
-/dev/md0 was still working mounted on /mnt/md0.
+It was mentioned right at the beginning of my OP - Stock Debian Squeeze 2.6.32-5
 
-I did not clear the superblock on /dev/sdc1.
+>
+> Or someone else may have a more sensible solution for you (hopefully).
 
-Tue AM, after reboot, /dev/md0 remains in inactive state.
+I hope so.   I can start afresh from the backups of the critical files
+but I stand to loose at least a day's worth of work :(
 
-Please let me know if you can think of anything that will get me out
-of this mess.
-
-I will try to use a  distro with a new version of mdadm + kernel.
-
-Thanks.
--- Arun Khan
+Thanks,
+--  Arun Khan
