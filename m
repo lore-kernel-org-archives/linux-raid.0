@@ -1,7 +1,7 @@
-From: Tobias Gunkel <tobias.gunkel@cloud-it-services.com>
-Subject: decreasing array --re-add fails
-Date: Tue, 12 Feb 2013 12:29:14 +0100
-Message-ID: <511A278A.7090802@cloud-it-services.com>
+From: Tobias Gunkel <tobias.gunkel@qumido.de>
+Subject: decreasing array size --re-add fails
+Date: Tue, 12 Feb 2013 12:33:22 +0100
+Message-ID: <511A2882.5050001@qumido.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
