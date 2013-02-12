@@ -1,34 +1,37 @@
-From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Subject: Re: mdadm: hot remove failed for /dev/sdg: Device or resource busy
-Date: Tue, 12 Feb 2013 12:31:59 -0800
-Message-ID: <velqu9x18l.ln2@goaway.wombat.san-francisco.ca.us>
-References: <eqndu9x4h8.ln2@goaway.wombat.san-francisco.ca.us>
- <csvfu9xsdm.ln2@goaway.wombat.san-francisco.ca.us>
- <20130208195935.GA1575@cthulhu.home.robinhill.me.uk>
- <am2gu9xjvm.ln2@goaway.wombat.san-francisco.ca.us>
- <CALwOXvKmgnf8ebHhhyq08M7be_QeAjONzrqB_03UvKXfgafYGQ@mail.gmail.com>
- <u3dgu9x6mo.ln2@goaway.wombat.san-francisco.ca.us>
+From: Dave Cundiff <syshackmin@gmail.com>
+Subject: Re: Unable to reactivate a RAID10 mdadm device
+Date: Tue, 12 Feb 2013 16:28:04 -0500
+Message-ID: <CAKHEz2ZDznrROkXRF6Mzmb4vVwkfG1ab+GPCwaAqML3i89fsuw@mail.gmail.com>
+References: <CAHhM8gBza3j-3qE3dRkZy14_cO-6EjOjW-zU8mtHVxhy6EWrtw@mail.gmail.com>
+	<CAKHEz2bCyaqTa7dH-OFNR8_xs9O=XUD918vpVb+kL-gfOSq7gA@mail.gmail.com>
+	<CAHhM8gA4JkC0ORbg2NhdxmQA3Ufag1fy48SPU-jE+MsjD9SRgQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAHhM8gA4JkC0ORbg2NhdxmQA3Ufag1fy48SPU-jE+MsjD9SRgQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Arun Khan <knura9@gmail.com>
+Cc: Linux MDADM Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all,
+On Tue, Feb 12, 2013 at 6:25 AM, Arun Khan <knura9@gmail.com> wrote:
+> I used 'watch cat /proc/mdstat' to watch the rebuild progress and the
+> progress bar showed completion (100%) mark.
+> When I broke out of this session and thereafter did 'cat /proc/mdstat'
+>  I noticed that not only was /dev/sdb1 not added but /dev/sdc1 was
+> also not part of the array anymore.   With two failed devices,
+> /dev/md0 was still working mounted on /mnt/md0.
+>
 
-Well, I was able to resolve the issue, by stopping the array and
-assembling (--force was needed).  The reshape picked up where it left
-off, minus one device, and when it completed, the spare was promoted
-and a rebuild started.  I'm still confused why the array wouldn't let go
-of the device, but at least there's a recourse that is relatively safe.
+have you tried adding the --force option to assemble? I would leave
+out sdb since its an empty drive.
 
-Thanks for all your help!
+If that brings it online you can try a read-only fsck with -n to check
+the consistency of your data.
 
---keith
 
 -- 
-kkeller@wombat.san-francisco.ca.us
-
-
+Dave Cundiff
+System Administrator
+A2Hosting, Inc
+http://www.a2hosting.com
