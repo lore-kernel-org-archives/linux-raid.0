@@ -1,52 +1,110 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: RAID performance
-Date: Thu, 14 Feb 2013 07:20:27 +1100
-Message-ID: <555253fb-86d2-448b-a85b-43dae1a2a33d@email.android.com>
-References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <511471EA.2000605@hardwarefreak.com> <5114A53B.9060103@websitemanagers.com.au> <5115316F.1090502@hardwarefreak.com> <5115478A.8010004@websitemanagers.com.au> <5115CC02.2010400@hardwarefreak.com> <d34a6caf-d1b5-403c-aee2-525a9b3c3db7@email.android.com> <51179F09.1020503@hardwarefreak.com> <6990fbda-f741-454a-80cd-bdcdfd8c971c@email.android.com> <5119AD1C.8030000@hardwarefreak.com> <5119D410.5090300@websitemanagers.com.au> <511B4719.6060607@hardwarefreak.com> <aecd39d9-2184-4df0-97bb-d63de0d29e5c@email.android.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Set disk faulty / hot disk remove ioctl bug for read-only MD?
+Date: Thu, 14 Feb 2013 08:55:21 +1100
+Message-ID: <20130214085521.6efe814e@notabene.brown>
+References: <alpine.DEB.2.02.1302121559540.11804@jlaw-desktop.mno.stratus.com>
+	<20130213133820.6496b074@notabene.brown>
+	<511B7CE6.5060806@profitbricks.com>
+	<511BA386.30304@profitbricks.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/vIu_y+2yp8Lhme/H.vRyUGL"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <aecd39d9-2184-4df0-97bb-d63de0d29e5c@email.android.com>
+In-Reply-To: <511BA386.30304@profitbricks.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.comStan Hoeppner <stan@hardwarefreak.com>
-Cc: Dave Cundiff <syshackmin@gmail.com>, linux-raid@vger.kernel.org
+To: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Cc: Joe Lawrence <Joe.Lawrence@stratus.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Well, it's 7am, and I'm still here.... It all didn't go as well as I had planned....
+--Sig_/vIu_y+2yp8Lhme/H.vRyUGL
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I initially could ping perfectly from either of the two IP's on the xen box to any of the 8 IP's on the san1, even ping -f worked perfectly. Whatever I did, I couldn't get a iscsiadm .... discover to work... I could see the packets being sent from the san box (tcpdump) but never received by the xen box.
+On Wed, 13 Feb 2013 15:30:30 +0100 Sebastian Riemer
+<sebastian.riemer@profitbricks.com> wrote:
 
-Eventually I pulled the disabled all except one ethernet device on both machines, still no luck. Finally, out of desperation I pulled the cables from both machines, dropped in a direct cable (ie, bypass the nice shiny new switch), and discover worked immediately. So I tried with the old switch, but same problem, so I've now connected each xen box direct to san1 ethernet port, so they now all get a dedicated 1 Gbps port each.
+> On 13.02.2013 12:45, Sebastian Riemer wrote:
+> > On 13.02.2013 03:38, NeilBrown wrote:
+> >> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> >> index 8b557d2..292cc2f 100644
+> >> --- a/drivers/md/md.c
+> >> +++ b/drivers/md/md.c
+> >> @@ -6529,7 +6529,17 @@ static int md_ioctl(struct block_device *bdev, =
+fmode_t mode,
+> >>  			mddev->ro =3D 0;
+> >>  			sysfs_notify_dirent_safe(mddev->sysfs_state);
+> >>  			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+> >> -			md_wakeup_thread(mddev->thread);
+> >> +			/* mddev_unlock will wake thread */
+> >> +			/* If a device failed while we were read-only, we
+> >> +			 * need to make sure the metadata is updated now.
+> >> +			 */
+> >> +			if (test_bit(MD_CHANGE_DEVS, &mddev->flags)) {
+> >> +				mddev_unlock(mddev);
+> >> +				wait_event(mddev->sb_wait,
+> >> +					   !test_bit(MD_CHANGE_DEVS, &mddev->flags) &&
+> >> +					   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
+> >> +				mddev_lock(mddev);
+> >> +			}
+> >>  		} else {
+> >>  			err =3D -EROFS;
+> >>  			goto abort_unlock;
+> >>
+> >=20
+> > Thanks, Neil!
+> >=20
+> > I can confirm the issue on 3.4.y and that your patch fixes it reliably.
+> >=20
+> > Acked-by: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+> >=20
+>=20
+> Damn, I've got a kernel which still crashes in
+> reap_sync_thread->raid1_spare_active() with NULL pointer dereference
+> although this patch is applied. So the fix isn't correct, yet.
+>=20
+> I did some "objdump -S" on raid1.ko and found the issue at the following
+> code location in raid1_spare_active():
+> #	for (i =3D 0; i < conf->raid_disks; i++) {
+> #		struct md_rdev *rdev =3D conf->mirrors[i].rdev;
+> #		struct md_rdev *repl =3D conf->mirrors[conf->raid_disks + i].rdev;
+>=20
+> A resync was pending (create without --assume-clean).
+> For me it looks like the faulty setting races with the syncer. The rdev
+> isn't registered in the personality anymore but the syncer tries to
+> access it for immediate resync.
+>=20
 
-I think the problem with the switch is that I didn't configure it properly to support the 9000 MTU, or something like that, which now makes more sense that lots of small packets are fine (not faulty cables, network cards, switches, etc) but big packets fail (like the response to a DiscoveryAll packet).
+Where exactly is it crashing?  Can I see the complete Oops message?
+The code you have identified cannot crash unless conf->raid_disks has become
+inconsistent with the allocation of ->mirrors, and that is very unlikely.
+Both 'rdev' and 'repl' are tested for NULL before they are used...
 
-Anyway, all systems are online, and I think I will leave things as is for now.
+If you can get me the Oops message I can probably narrow it down.
 
-What I have accomplished:
-1) All systems should be using dedicated 1Gbps for iSCSI and 1Gbps for everything else
-2) All hardware is physically installed
+Thanks,
+NeilBrown
 
-What I think I need next time
-1) 10 x colour coded 2m cables (management/user LAN ports), probably blue to match all the rest of the user cabling
-2) 8 cables in green (port 1 xen)
-3) 8 cables in yellow (port 2 xen)
-4) 8 cables in white (4 each for san1/san2 on 1st card)
-5) 8 cables in grey (4 each for san1/san2 on 2nd card)
-6) Lotsa cable ties to keep each bundle together
 
-Don't really know what colour cables are available, or even sure if it is such a good idea to use so many different colours.... Another option would be to stick with two colours, one for the iSCSI SAN network, and the second colour for the user LAN. Just makes it hard trying to work out which port/machine the other end of this random cable is connected to.....
+--Sig_/vIu_y+2yp8Lhme/H.vRyUGL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Anyway, monitoring systems say everything is ok, testing says it's working, so I'm off home. No pictures yet, so messy it's embarrassing, and it isn't even working properly. Hopefully when I'm finished it will be worth a picture or two :)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-Regards,
-Adam
+iQIVAwUBURwLyTnsnt1WYoG5AQJU+g//VSnjS2ty2NuMscl7zMUshhrC/z+g6MTJ
+tBStoZ0XYjsx3TP4NL/WVSVqsuSKqUb8cbn1gKnLn0w0ZUTBnFrE0sgajKih1jA+
+pTUzYuN4uymrC3Sby5pOErAKtCllCaI3WRJqgUIObbJG1qJKy7Z7A/TLsQIaZe63
+4tD/8fIEFgLRbfJ5GSV+UfvDBZTGwhIiI/H1YiYNivrudg7P+dV4rkVZ4/glSy2U
+epcwVaFRk+0+NLZKVvvUb+eq0fNFspIdTaYYNbZtGO1yV8eAGOg6dLuQ+gBobdoO
+/UA3oODk+Hi1NpDZy9BU0BbwRJObma5VMNXPxz5ThczhX8nFmchXFJG+i342gnvA
+Q84feLRiXt6+a8i/w6j5N/IxpcbQ2qGg36IPl1ow/yhbW9beLa3sXzgU5A7mHYuq
+ktlxmqBPLKYixCPUuLxnnMejZI/K8l7Bh3qF8yp5PDl+q4tfdG12zSBrkm6rfs0w
+PeaGO0+TSTB31k33/2ZJrIMhYcmZAcyePLoiKW7bQ50ER80hWTToo3RJwvUF8YSW
+cGwpidiuTufi5wQaX2XZK2TCzYhDmUfzY/z/1gW2tacFrmVvjesLgTcFWpp+Z27J
+GuihcQeZlOPyt2M4xzoKqnR0cUlIt6jY0tlMeUwbdoriz7gBvNx7qIdtgMGV671M
++Fn9SNpi3Sw=
+=WxoW
+-----END PGP SIGNATURE-----
 
-Regards,
-Adam
-
---
-Adam Goryachev
-Website Managers
-www.websitemanagers.com.au
+--Sig_/vIu_y+2yp8Lhme/H.vRyUGL--
