@@ -1,53 +1,84 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: RAID performance
-Date: Thu, 14 Feb 2013 15:42:37 -0700
-Message-ID: <9ABA2459-DB04-40CA-996E-D02FEE43291B@colorremedies.com>
-References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <5113A2D6.20104@websitemanagers.com.au> <CAKHEz2YgiQiknBXju9a=PR3zV1Hb7ux8yBZWywiTi=BXFm20GA@mail.gmail.com> <51150475.2020803@websitemanagers.com.au> <51157141.90205@hardwarefreak.com>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: Best practice for large storage?
+Date: Fri, 15 Feb 2013 00:23:13 +0100 (CET)
+Message-ID: <29597293.40.1360884193537.JavaMail.root@zimbra>
+References: <CAH3kUhGVt1iyn9tt=2-+f6H++obOGSK3x0pBBPZV8CFUXjp5yw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51157141.90205@hardwarefreak.com>
+In-Reply-To: <CAH3kUhGVt1iyn9tt=2-+f6H++obOGSK3x0pBBPZV8CFUXjp5yw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org list" <linux-raid@vger.kernel.org>
-Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, "stan@hardwarefreak.com Hoeppner" <stan@hardwarefreak.com>
+To: Roberto Spadim <rspadim@gmail.com>
+Cc: Jeff Johnson <jeff.johnson@aeoncomputing.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-(digging back through some things now that the higher priority tasks appear covered)
+xfs+lvm+mdadm works, but I'm still back to my original question. I don'=
+t care about what filesystem is on top, only about the storage undernea=
+th. Read the original question again, please
 
-
-On Feb 8, 2013, at 2:42 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
-
-> These tests use 4KB *aligned* IOs.
-
-It seems SSD's commonly now are 8KB paged. [1] [2] At least on OS X with a Samsung 830 SSD, I'm finding a meaningful difference between alignment on 4K vs a 1M alignment. [3] 
-
-Sequential write and rewrite aren't affected. Sequential Input is affected, 5.6% improvement by 8K aligning. Random Seeks see an 87% improvement with 1M alignment. I haven't retested to see if an 8K alignment produces as good a result as a 1M alignment. I haven't tested the full effect of Bonnie++ chunk size which is 8KB by default; but in all tests so far there's no meaningful difference between a chunk size of 4KB and 8KB.
-
-It's kindof annoying that SSD manufacturers aren't reporting a "physical sector" mapped to the SSD page size; similar to how 512e AF HDDs report 512 byte logical, 4096 byte physical sectors. The implication of an SSD reporting a 512 byte physical sector is that alignment doesn't matter. I think it might matter.
-
-
-> If you've partitioned the SSDs, and your partition boundaries fall in
-> the middle of erase blocks instead of perfectly between them, then your
-> IOs will be unaligned, and performance will suffer.
-
-There doesn't appear to be a way to know what LBA's mark such a boundary. [3] There also is inconsistent understanding of the erase block size, I see 128KB to 2MB erase block sizes published in media, but nothing from manufacturers. So I don't know how we'd know this.
-
-Also, everything I've read indicates that the LBA's in an erase block are not sequential. Only pages have sequential LBA's. LBA 0-7 could be a page on dye 4, while LBA 8-15 could be on dye 2. The firmware manages the relationship between LBAs and physical pages; similar to how HDD firmware will remap an LBA to a different physical sector in case of bad sectors; except in this case it's SOP to manage wear leveling and the fact a static mapping can likely mean mapping to physical pages that aren't yet erased (garbage collected). Writes would be significantly negatively impacted by this.
-
-Anyway, I'm skeptical we have sufficient knowledge beyond 4K or 8K alignment. At least on linux, fortunately, the now common default of LBA 2048 is of course aligned 0.5K through 1M. But it seems the LBA 40 set by Apple might not be a good idea.
+----- Opprinnelig melding -----=20
 
 
 
-[1]  http://arstechnica.com/information-technology/2012/06/inside-the-ssd-revolution-how-solid-state-disks-really-work/3/
-[2]  http://www.anandtech.com/show/4244/intel-ssd-320-review/2
-
-[3]  By that I mean a partition that starts on LBA 40 vs an LBA of 2048. OS X's Disk Utility defaults to using GPT partition scheme with partition 1 starting at LBA 40. Results are repeatable by setting to an LBA that is divisible by 8 sectors, but not divisible by 16; compared to an LBA that's divisible by 2048 sectors. (Sectors defined as a 512 byte sector.)
-
-[4]  "Over time SSDs can get into a fairly fragmented state, with pages distributed randomly all over the LBA range."
-http://www.anandtech.com/show/6328/samsung-ssd-840-pro-256gb-review/6
+xfs+lvm+mdadm don`t work? too complex?=20
 
 
 
-Chris Murphy
+2013/2/14 Roy Sigurd Karlsbakk < roy@karlsbakk.net >=20
 
+
+----- Opprinnelig melding -----=20
+
+> why not brtfs or xfs?=20
+
+Well, because btrfs isn't stable and doesn't support RAID-[56] unless y=
+ou're using the git tree for testing that, which is rather more unstabl=
+e than the rest, and xfs is just a filesystem that needs to sit on top =
+of a raid of some kind.=20
+
+
+
+Vennlige hilsener / Best regards=20
+
+roy=20
+--=20
+Roy Sigurd Karlsbakk=20
+(+47) 98013356=20
+roy@karlsbakk.net=20
+http://blogg.karlsbakk.net/=20
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt=20
+--=20
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.=20
+
+
+
+
+--=20
+Roberto Spadim=20
+
+
+--=20
+
+Vennlige hilsener / Best regards=20
+
+roy=20
+--=20
+Roy Sigurd Karlsbakk=20
+(+47) 98013356=20
+roy@karlsbakk.net=20
+http://blogg.karlsbakk.net/=20
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt=20
+--=20
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
