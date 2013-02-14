@@ -1,28 +1,19 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Possible to rescue SW Raid5 with 2 missing Disks
-Date: Thu, 14 Feb 2013 15:39:27 +0100 (CET)
-Message-ID: <alpine.DEB.2.00.1302141536580.32644@uplift.swm.pp.se>
-References: <20130214143149.282820@gmx.net>
+From: "Dragon" <Sunghost@gmx.de>
+Subject: Possible to rescue SW Raid5 with 2 missing Disks
+Date: Thu, 14 Feb 2013 16:01:28 +0100
+Message-ID: <20130214150128.53080@gmx.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130214143149.282820@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dragon <Sunghost@gmx.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 14 Feb 2013, Dragon wrote:
+Hi Mikael,
 
-> while nobody is answering i suggest that there is no better way like 
-> phil told, or my i wrong?
+yes i searched a bit but iam not sure if can use this, because an failure in trying something would couse more problems than i may have. i also didnt have a backup for 40TB ;(. Therefore someone with experience should help. creating and troubleshooting are two diffent kind of shoes ;)
 
-Have you looked throught the recent archives for all the other threads 
-about people prematurely doing --create, and the factors that affect this? 
-(data offset, order, superblock version etc)
+no i dindnt have a old version of examin from before ;(
 
-Please if you have mdadm --examine from before you destroyed the 
-original superblocks then that might help.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+sunny
