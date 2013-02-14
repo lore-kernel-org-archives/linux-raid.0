@@ -1,55 +1,50 @@
-From: Dave Cundiff <syshackmin@gmail.com>
-Subject: Re: Possible to rescue SW Raid5 with 2 missing Disks
-Date: Thu, 14 Feb 2013 12:18:27 -0500
-Message-ID: <CAKHEz2YWqKTchKs=STmDtWCoRroZVw3wKfjOkz793A=nrKy=hA@mail.gmail.com>
-References: <20130214150128.53080@gmx.net>
-	<alpine.DEB.2.00.1302141802460.32644@uplift.swm.pp.se>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Best practice for large storage?
+Date: Thu, 14 Feb 2013 18:28:46 +0100 (CET)
+Message-ID: <24358517.18.1360862926919.JavaMail.root@zimbra>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1302141802460.32644@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Dragon <Sunghost@gmx.de>, Linux MDADM Raid <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Feb 14, 2013 at 12:09 PM, Mikael Abrahamsson <swmike@swm.pp.se> wrote:
-> On Thu, 14 Feb 2013, Dragon wrote:
->
->> no i dindnt have a old version of examin from before ;(
->
+Hi all
 
-Are the 2 disks completely failed? Or just dropped from the array?
-Can you provide mdadm -E output from all devices that were in the array?
+It seems we may need some storage for video soon. This is a 20k studen =
+college in Norway, with rather a few on media related studies. Since th=
+ese students produce rather large amounts of raw material, typically to=
+ be stored during the semester, we may need some 50-100TiB, perhaps mor=
+e. I have setup systems with these amounts of storage earlier on ZFS, b=
+ut may be using Linux MD for this project. I'm aware of the lack of che=
+cksumming, snapshots etc with Linux, but may be using it because of mor=
+e Linux knowledge amongst the sysadmins here. In such a setup, I guess =
+nearline SAS drives on a SAS expander will be used, and with the amount=
+ of storage needed, I won't be using a single RAID-6 (too insecure) or =
+RAID-10 (too expensive) for the lot. In ZFS-land I used smallish VDEVs =
+(~10 drives each) in a large pool.
 
->
-> Do you know what version of kernel and mdadm was used to create the raid5 in
-> the first place? You should go back to that (at least the mdadm version) and
-> try the --create --assume-clean with that mdadm version. Several key factors
-> have changed between versions.
+ - Would using LVM on top of RAID-6 give me something similar?
+ - If so, should I stripe the RAID sets, and again, if striping them, w=
+ill it be as easy to add new RAID sets as we run out of space?
 
-I would not do a --create --assume-clean on your array until you have
-exhausted all other options. At 40TB this sounds like a very large
-array. With raid5 disk ordering among other things is VERY important.
+Thanks, and best regards
 
-
->
-> Look at this thread for a person with similar problem
-> <http://www.spinics.net/lists/raid/msg41732.html>, there is discussion about
-> data offset etc in there, might be a good start.
->
-> --
-> Mikael Abrahamsson    email: swmike@swm.pp.se
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+roy
 --
-Dave Cundiff
-System Administrator
-A2Hosting, Inc
-http://www.a2hosting.com
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
