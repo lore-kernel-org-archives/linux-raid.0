@@ -1,60 +1,75 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Possible to rescue SW Raid5 with 2 missing Disks
-Date: Thu, 14 Feb 2013 21:11:22 +0000
-Message-ID: <20130214211121.GA11925@cthulhu.home.robinhill.me.uk>
-References: <20130214210029.203940@gmx.net>
+From: "Dragon" <Sunghost@gmx.de>
+Subject: Possible to rescue SW Raid5 with 2 missing Disks
+Date: Thu, 14 Feb 2013 22:39:08 +0100
+Message-ID: <20130214213908.282850@gmx.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="NzB8fVQJ5HfG6fxh"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130214210029.203940@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dragon <Sunghost@gmx.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I heart that -force could be result in more problems - right? i do asswell:
+ mdadm -Af -vv /dev/md2
+mdadm: looking for devices for /dev/md2
+mdadm: cannot open device /dev/md/1: Device or resource busy
+mdadm: /dev/md/1 has wrong uuid.
+mdadm: cannot open device /dev/md/0: Device or resource busy
+mdadm: /dev/md/0 has wrong uuid.
+mdadm: /dev/sdf4 has wrong uuid.
+mdadm: cannot open device /dev/sdf3: Device or resource busy
+mdadm: /dev/sdf3 has wrong uuid.
+mdadm: cannot open device /dev/sdf2: Device or resource busy
+mdadm: /dev/sdf2 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdf1
+mdadm: /dev/sdf1 has wrong uuid.
+mdadm: cannot open device /dev/sdf: Device or resource busy
+mdadm: /dev/sdf has wrong uuid.
+mdadm: /dev/sde4 has wrong uuid.
+mdadm: cannot open device /dev/sde3: Device or resource busy
+mdadm: /dev/sde3 has wrong uuid.
+mdadm: cannot open device /dev/sde2: Device or resource busy
+mdadm: /dev/sde2 has wrong uuid.
+mdadm: no RAID superblock on /dev/sde1
+mdadm: /dev/sde1 has wrong uuid.
+mdadm: cannot open device /dev/sde: Device or resource busy
+mdadm: /dev/sde has wrong uuid.
+mdadm: /dev/sdc4 has wrong uuid.
+mdadm: cannot open device /dev/sdc3: Device or resource busy
+mdadm: /dev/sdc3 has wrong uuid.
+mdadm: cannot open device /dev/sdc2: Device or resource busy
+mdadm: /dev/sdc2 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdc1
+mdadm: /dev/sdc1 has wrong uuid.
+mdadm: cannot open device /dev/sdc: Device or resource busy
+mdadm: /dev/sdc has wrong uuid.
+mdadm: /dev/sdd4 has wrong uuid.
+mdadm: cannot open device /dev/sdd3: Device or resource busy
+mdadm: /dev/sdd3 has wrong uuid.
+mdadm: cannot open device /dev/sdd2: Device or resource busy
+mdadm: /dev/sdd2 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdd1
+mdadm: /dev/sdd1 has wrong uuid.
+mdadm: cannot open device /dev/sdd: Device or resource busy
+mdadm: /dev/sdd has wrong uuid.
+mdadm: /dev/sdb4 has wrong uuid.
+mdadm: cannot open device /dev/sdb3: Device or resource busy
+mdadm: /dev/sdb3 has wrong uuid.
+mdadm: cannot open device /dev/sdb2: Device or resource busy
+mdadm: /dev/sdb2 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdb1
+mdadm: /dev/sdb1 has wrong uuid.
+mdadm: cannot open device /dev/sdb: Device or resource busy
+mdadm: /dev/sdb has wrong uuid.
+mdadm: /dev/sda4 has wrong uuid.
+mdadm: cannot open device /dev/sda3: Device or resource busy
+mdadm: /dev/sda3 has wrong uuid.
+mdadm: cannot open device /dev/sda2: Device or resource busy
+mdadm: /dev/sda2 has wrong uuid.
+mdadm: no RAID superblock on /dev/sda1
+mdadm: /dev/sda1 has wrong uuid.
+mdadm: cannot open device /dev/sda: Device or resource busy
+mdadm: /dev/sda has wrong uuid.
 
---NzB8fVQJ5HfG6fxh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Thu Feb 14, 2013 at 10:00:29 +0100, Dragon wrote:
-
-> Hello,
->=20
-> the 40TB are in an filecluster and this machine is part of this. the
-> system consists of 6x3tb in sw raid5. there are four partions on each
-> machine. one with 100mb for the efi bios, one for the os in raid1, one
-> for the swap in raid5 and one for the files in raid5. the machine was
-> opened and the disk layed beside, i moved two disks slightly and in
-> this moment both spinded for a second down and the raid was gone.
-> there was no filetransfer but the raid couldnt rebuild because of
-> missing two disks.
->=20
-The standard option to try is a forced assembly - "mdadm -Af /dev/mdX"
-
-If that fails, then please retry with "-vv" as well and post both the
-output from the command and the dmesg output.
-
-HTH,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---NzB8fVQJ5HfG6fxh
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAlEdUvkACgkQShxCyD40xBJuswCfcAZ4uqs1s1RFZ/RDhF+e9uz0
-FIAAoNWQ2mmieJYMyW2wqlVs3SFYafzo
-=1GWw
------END PGP SIGNATURE-----
-
---NzB8fVQJ5HfG6fxh--
+it looks strang die device should sdX4...
