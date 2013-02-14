@@ -1,42 +1,43 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: Best practice for large storage?
-Date: Thu, 14 Feb 2013 19:27:44 +0100 (CET)
-Message-ID: <33445160.30.1360866464484.JavaMail.root@zimbra>
-References: <CAH3kUhFbR3coJSwPvqqOGrqcsvoJpdAPgAAiAgc_th1ym33DzA@mail.gmail.com>
+From: Joe Lawrence <Joe.Lawrence@stratus.com>
+Subject: Re: Set disk faulty / hot disk remove ioctl bug for read-only MD?
+Date: Thu, 14 Feb 2013 14:45:30 -0500 (EST)
+Message-ID: <alpine.DEB.2.02.1302140918310.11804@jlaw-desktop.mno.stratus.com>
+References: <alpine.DEB.2.02.1302121559540.11804@jlaw-desktop.mno.stratus.com> <20130213133820.6496b074@notabene.brown> <511B7CE6.5060806@profitbricks.com> <alpine.DEB.2.02.1302131255510.11804@jlaw-desktop.mno.stratus.com>
+ <20130214090113.01bc6788@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAH3kUhFbR3coJSwPvqqOGrqcsvoJpdAPgAAiAgc_th1ym33DzA@mail.gmail.com>
+In-Reply-To: <20130214090113.01bc6788@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <rspadim@gmail.com>
-Cc: Jeff Johnson <jeff.johnson@aeoncomputing.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Joe Lawrence <Joe.Lawrence@stratus.com>, Sebastian Riemer <sebastian.riemer@profitbricks.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------ Opprinnelig melding -----
-> why not brtfs or xfs?
+On Thu, 14 Feb 2013, NeilBrown wrote:
 
-Well, because btrfs isn't stable and doesn't support RAID-[56] unless y=
-ou're using the git tree for testing that, which is rather more unstabl=
-e than the rest, and xfs is just a filesystem that needs to sit on top =
-of a raid of some kind.
+> That all looks good.  I could probably argue that removing a device from a
+> read-only array should be permitted but I don't know that it is really
+> important.
+> 
+> 
+> > 
+> > Quick question for Neil -- should the sysfs MD component device state 
+> > file interface perform the same transition from auto-read-only to 
+> > read-write, or is that route intended for more granular changes?
+> > 
+> 
+> Good question.
+> I think they should definitely transition from auto-read-only to read-write.
+> Whether they should be denied  for read-only devices I'm less certain of.
+> I'll look into that.
 
-Vennlige hilsener / Best regards
+For example, if one disk of a read-only RAID1 happens to be removed, what 
+should the user do if he wants MD to release its references to that 
+device?  For read-write (and auto-read-only after your change), the user 
+can issue mdadm --fail then --remove.  However, if the MD is read-only, is 
+stopping the MD the only way to close the device?  What happens if the 
+disk is re-inserted and added to the MD?
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+
+-- Joe
