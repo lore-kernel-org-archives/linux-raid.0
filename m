@@ -1,105 +1,70 @@
-From: Roberto Spadim <rspadim@gmail.com>
-Subject: Re: Best practice for large storage?
-Date: Thu, 14 Feb 2013 21:42:04 -0200
-Message-ID: <CAH3kUhHG=jqKB1BdNh5YxR-TfE4Wh4-eOrGduhu2ksWtO4LJtA@mail.gmail.com>
-References: <CAH3kUhGVt1iyn9tt=2-+f6H++obOGSK3x0pBBPZV8CFUXjp5yw@mail.gmail.com>
-	<29597293.40.1360884193537.JavaMail.root@zimbra>
+From: Dave Cundiff <syshackmin@gmail.com>
+Subject: Re: Possible to rescue SW Raid5 with 2 missing Disks
+Date: Thu, 14 Feb 2013 19:59:43 -0500
+Message-ID: <CAKHEz2a3r=fLvHbvZ7yXA5386qga0yjSH6wn8X+e8HN9FzOUjQ@mail.gmail.com>
+References: <20130214210029.203940@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <29597293.40.1360884193537.JavaMail.root@zimbra>
+In-Reply-To: <20130214210029.203940@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc: Jeff Johnson <jeff.johnson@aeoncomputing.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Dragon <Sunghost@gmx.de>
+Cc: Linux MDADM Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-the problem is checksum? i really don't understand why the filesystem
-is not the problem, and why storage is the 'key'
+On Thu, Feb 14, 2013 at 4:00 PM, Dragon <Sunghost@gmx.de> wrote:
+> Hello,
+>
+> the 40TB are in an filecluster and this machine is part of this. the system consists of 6x3tb in sw raid5. there are four partions on each machine. one with 100mb for the efi bios, one for the os in raid1, one for the swap in raid5 and one for the files in raid5. the machine was opened and the disk layed beside, i moved two disks slightly and in this moment both spinded for a second down and the raid was gone. there was no filetransfer but the raid couldnt rebuild because of missing two disks.
+>
+> mdadm -E /dev/sdd4
+> /dev/sdd4:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x0
+>      Array UUID : 7b99380e:51d754cf:921c68e9:7b830d6a
+>            Name : mfsnode1:2  (local to host mfsnode1)
+>   Creation Time : Tue Feb  5 17:06:37 2013
+>      Raid Level : raid5
+>    Raid Devices : 6
+>
+>  Avail Dev Size : 5842757597 (2786.04 GiB 2991.49 GB)
+>      Array Size : 29213772800 (13930.21 GiB 14957.45 GB)
+>   Used Dev Size : 5842754560 (2786.04 GiB 2991.49 GB)
+>     Data Offset : 2048 sectors
+>    Super Offset : 8 sectors
+>           State : clean
+>     Device UUID : 0da58625:14ed8675:6a7c4ba4:337d8c4b
+>
+>     Update Time : Tue Feb  5 17:06:37 2013
 
-storage -> mdadm + harddisks / raid hardware + harddisks / network
-storage + hard disks -> here the key is data integrity WITHOUT SILENT
-DATA LOSS, today i only saw this on enterprise hardware raid
-controlers + enterprise sas disks
+This disk looks to have dropped first. The times on the others are identical.
 
-lvm + filesystem -> don't have problem increasing storage -> here a
-filesystem that can grow without problems is mandatory since you want
-but more disks... the lvm part is to easly work with devices
+>        Checksum : 5f97164a - correct
+>          Events : 0
+>
+>          Layout : left-symmetric
+>      Chunk Size : 512K
+>
+>    Device Role : Active device 5
+>    Array State : AAA.AA ('A' == active, '.' == missing)
 
-any part that i forgot?
+Lets see if we can just help the md driver along without having it
+scan, try this
 
-2013/2/14 Roy Sigurd Karlsbakk <roy@karlsbakk.net>:
-> xfs+lvm+mdadm works, but I'm still back to my original question. I do=
-n't care about what filesystem is on top, only about the storage undern=
-eath. Read the original question again, please
->
-> ----- Opprinnelig melding -----
->
->
->
-> xfs+lvm+mdadm don`t work? too complex?
->
->
->
-> 2013/2/14 Roy Sigurd Karlsbakk < roy@karlsbakk.net >
->
->
-> ----- Opprinnelig melding -----
->
->> why not brtfs or xfs?
->
-> Well, because btrfs isn't stable and doesn't support RAID-[56] unless=
- you're using the git tree for testing that, which is rather more unsta=
-ble than the rest, and xfs is just a filesystem that needs to sit on to=
-p of a raid of some kind.
->
->
->
-> Vennlige hilsener / Best regards
->
-> roy
-> --
-> Roy Sigurd Karlsbakk
-> (+47) 98013356
-> roy@karlsbakk.net
-> http://blogg.karlsbakk.net/
-> GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
-> --
-> I all pedagogikk er det essensielt at pensum presenteres intelligibel=
-t. Det er et element=E6rt imperativ for alle pedagoger =E5 unng=E5 ekse=
-ssiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilfeller=
- eksisterer adekvate og relevante synonymer p=E5 norsk.
->
->
->
->
-> --
-> Roberto Spadim
->
->
-> --
->
-> Vennlige hilsener / Best regards
->
-> roy
-> --
-> Roy Sigurd Karlsbakk
-> (+47) 98013356
-> roy@karlsbakk.net
-> http://blogg.karlsbakk.net/
-> GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
-> --
-> I all pedagogikk er det essensielt at pensum presenteres intelligibel=
-t. Det er et element=E6rt imperativ for alle pedagoger =E5 unng=E5 ekse=
-ssiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilfeller=
- eksisterer adekvate og relevante synonymer p=E5 norsk.
+mdadm -A /dev/md2 -R /dev/sda4 /dev/sdb4 /dev/sdc4 /dev/sdf4 /dev/sde4
 
+If that complains try
+
+mdadm -A /dev/md2 --force -R /dev/sda4 /dev/sdb4 /dev/sdc4 /dev/sdf4 /dev/sde4
+
+One of these should start your array with 1 missing disk. If neither
+work let me know the output.
 
 
 --
-Roberto Spadim
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave Cundiff
+System Administrator
+A2Hosting, Inc
+http://www.a2hosting.com
