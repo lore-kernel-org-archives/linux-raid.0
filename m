@@ -1,40 +1,22 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Possible to rescue SW Raid5 with 2 missing Disks
-Date: Fri, 15 Feb 2013 13:34:00 +0100 (CET)
-Message-ID: <alpine.DEB.2.00.1302151327170.32644@uplift.swm.pp.se>
-References: <20130214213908.282850@gmx.net> <alpine.DEB.2.00.1302151055500.32644@uplift.swm.pp.se> <511E1890.6060708@fnarfbargle.com> <alpine.DEB.2.00.1302151220060.32644@uplift.swm.pp.se> <511E263C.6070704@fnarfbargle.com>
+From: "Dragon" <Sunghost@gmx.de>
+Subject: Possible to rescue SW Raid5 with 2 missing Disks
+Date: Fri, 15 Feb 2013 13:59:36 +0100
+Message-ID: <20130215125936.166240@gmx.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <511E263C.6070704@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <lists2009@fnarfbargle.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 15 Feb 2013, Brad Campbell wrote:
+Hi Mikael and Brad,
 
-> Please don't get me wrong. There is no nice way of protecting fools from 
-> themselves short of revoking their license to breed, it's just from my 
-> severely opinionated viewpoint that this looks like a sane idea. I'm quite 
-> prepared to be slapped, and in fact probably need it.
+and thanks for the information. i appreciate this because i learned a lot. and you are right the internet is full of wrong things and yes i react a bit late because the problem is now, but as an excuse, i have not that time to study such a big subject like raid with all its interessting parts like the hardware, speed, possibilities, e.g. but i learned a lot by solve errors like this ;) and appreciate people like you at mailinglists and forums who helped.
 
-Well, yes, it's a sane idea.
+ok now its become difficult for me to follow because of my engl. understanding. what i understand out of your answers is:
+- force is not at all a problem
+- in the most cases do not use --create --assume-clean, else you know why
+-->  but what is the problem with this, please explain
 
-Right now it seems a significant part of new threads started on this list 
-is about people doing --create --assume-clean with a different version of 
-mdadm (so offset/chunk-size/whatever is wrong) or they have the wrong 
-order. In order to help them, I believe the default behaviour of 
---zero-superblock without any additional flags, should be to give hdparm 
-style message so that the user understands what is really going to happen, 
-and when the superblocks are zeroed, a mdadm --examine and --detail (if 
-the array is running) with a UUID/date should be saved somewhere.
-
-The aim would be to drive two things:
-
-People should think thrice about using --create --assume-clean. If they do 
-(or do --zero-superblock), detailed information should be saved for the 
-array and components before the operation was performed.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+In my case the superblock seems to be on all disks persistant, i use the same version and chunk-size.
