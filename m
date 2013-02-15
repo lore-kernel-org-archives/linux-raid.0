@@ -1,70 +1,56 @@
-From: Dave Cundiff <syshackmin@gmail.com>
-Subject: Re: Possible to rescue SW Raid5 with 2 missing Disks
-Date: Thu, 14 Feb 2013 19:59:43 -0500
-Message-ID: <CAKHEz2a3r=fLvHbvZ7yXA5386qga0yjSH6wn8X+e8HN9FzOUjQ@mail.gmail.com>
-References: <20130214210029.203940@gmx.net>
+From: Adam Goryachev <adam@websitemanagers.com.au>
+Subject: Re: Best practice for large storage?
+Date: Fri, 15 Feb 2013 12:01:53 +1100
+Message-ID: <511D8901.2020803@websitemanagers.com.au>
+References: <CAH3kUhGVt1iyn9tt=2-+f6H++obOGSK3x0pBBPZV8CFUXjp5yw@mail.gmail.com> <29597293.40.1360884193537.JavaMail.root@zimbra> <CAH3kUhHG=jqKB1BdNh5YxR-TfE4Wh4-eOrGduhu2ksWtO4LJtA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130214210029.203940@gmx.net>
+In-Reply-To: <CAH3kUhHG=jqKB1BdNh5YxR-TfE4Wh4-eOrGduhu2ksWtO4LJtA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dragon <Sunghost@gmx.de>
-Cc: Linux MDADM Raid <linux-raid@vger.kernel.org>
+To: Roberto Spadim <rspadim@gmail.com>
+Cc: Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Jeff Johnson <jeff.johnson@aeoncomputing.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Feb 14, 2013 at 4:00 PM, Dragon <Sunghost@gmx.de> wrote:
-> Hello,
+On 15/02/13 10:42, Roberto Spadim wrote:
+> the problem is checksum? i really don't understand why the filesystem
+> is not the problem, and why storage is the 'key'
 >
-> the 40TB are in an filecluster and this machine is part of this. the system consists of 6x3tb in sw raid5. there are four partions on each machine. one with 100mb for the efi bios, one for the os in raid1, one for the swap in raid5 and one for the files in raid5. the machine was opened and the disk layed beside, i moved two disks slightly and in this moment both spinded for a second down and the raid was gone. there was no filetransfer but the raid couldnt rebuild because of missing two disks.
+> storage -> mdadm + harddisks / raid hardware + harddisks / network
+> storage + hard disks -> here the key is data integrity WITHOUT SILENT
+> DATA LOSS, today i only saw this on enterprise hardware raid
+> controlers + enterprise sas disks
 >
-> mdadm -E /dev/sdd4
-> /dev/sdd4:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 7b99380e:51d754cf:921c68e9:7b830d6a
->            Name : mfsnode1:2  (local to host mfsnode1)
->   Creation Time : Tue Feb  5 17:06:37 2013
->      Raid Level : raid5
->    Raid Devices : 6
+> lvm + filesystem -> don't have problem increasing storage -> here a
+> filesystem that can grow without problems is mandatory since you want
+> but more disks... the lvm part is to easly work with devices
 >
->  Avail Dev Size : 5842757597 (2786.04 GiB 2991.49 GB)
->      Array Size : 29213772800 (13930.21 GiB 14957.45 GB)
->   Used Dev Size : 5842754560 (2786.04 GiB 2991.49 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : 0da58625:14ed8675:6a7c4ba4:337d8c4b
+> any part that i forgot?
 >
->     Update Time : Tue Feb  5 17:06:37 2013
+> 2013/2/14 Roy Sigurd Karlsbakk <roy@karlsbakk.net>:
+>> xfs+lvm+mdadm works, but I'm still back to my original question. I don't care about what filesystem is on top, only about the storage underneath. Read the original question again, please
 
-This disk looks to have dropped first. The times on the others are identical.
+I assume the question can be reduced to:
+1) You need a very large amount of space (requires a large number of disks)
+2) You need to be able to expand that space over time
+3) You want decent data redundancy
+4) You will have a reasonable amount of concurrent access by multiple users and want decent performance
 
->        Checksum : 5f97164a - correct
->          Events : 0
->
->          Layout : left-symmetric
->      Chunk Size : 512K
->
->    Device Role : Active device 5
->    Array State : AAA.AA ('A' == active, '.' == missing)
+From my readings of the list, it would seem the suggestion is to use RAID6 + concatenation, with around 6 to 8 drives in each RAID6, and use XFS with certain parameters to ensure it balances the directories across multiple groups of the RAID6. Basically, you want to put as many drives into each RAID6 to reduce wasted space, but not too many or else you will suffer a triple drive failure and lose the whole lot.
 
-Lets see if we can just help the md driver along without having it
-scan, try this
+If you did not need to grow the space, then you would use RAID60, and do striping, but I think you can't grow that, although some pages I just read suggest it might be possible to grow a raid0 by converting to raid4 and back again.
 
-mdadm -A /dev/md2 -R /dev/sda4 /dev/sdb4 /dev/sdc4 /dev/sdf4 /dev/sde4
+Another option would be to use LVM to join multiple RAID6's together
 
-If that complains try
+Don't know if this helps, but hopefully.
 
-mdadm -A /dev/md2 --force -R /dev/sda4 /dev/sdb4 /dev/sdc4 /dev/sdf4 /dev/sde4
+Regards,
+Adam
 
-One of these should start your array with 1 missing disk. If neither
-work let me know the output.
+-- 
+Adam Goryachev
+Website Managers
+Ph: +61 2 8304 0000                            adam@websitemanagers.com.au
+Fax: +61 2 8304 0001                            www.websitemanagers.com.au
 
-
---
-Dave Cundiff
-System Administrator
-A2Hosting, Inc
-http://www.a2hosting.com
