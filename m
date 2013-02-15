@@ -1,80 +1,28 @@
-From: Roberto Spadim <rspadim@gmail.com>
-Subject: Re: Best practice for large storage?
-Date: Thu, 14 Feb 2013 23:13:58 -0200
-Message-ID: <CAH3kUhGGmC9qW0fSRodBzKAArQsuTV2qHJtiVPFo2AV6WN3mng@mail.gmail.com>
-References: <CAH3kUhGVt1iyn9tt=2-+f6H++obOGSK3x0pBBPZV8CFUXjp5yw@mail.gmail.com>
-	<29597293.40.1360884193537.JavaMail.root@zimbra>
-	<CAH3kUhHG=jqKB1BdNh5YxR-TfE4Wh4-eOrGduhu2ksWtO4LJtA@mail.gmail.com>
-	<511D8901.2020803@websitemanagers.com.au>
-Mime-Version: 1.0
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: RAID performance
+Date: Thu, 14 Feb 2013 18:40:56 -0700
+Message-ID: <80A5C958-6E76-49BD-9CDC-3E8705B401C5@colorremedies.com>
+References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <5113A2D6.20104@websitemanagers.com.au> <CAKHEz2YgiQiknBXju9a=PR3zV1Hb7ux8yBZWywiTi=BXFm20GA@mail.gmail.com> <51150475.2020803@websitemanagers.com.au> <51157141.90205@hardwarefreak.com> <9ABA2459-DB04-40CA-996E-D02FEE43291B@colorremedies.com> <511D8AEF.8040202@websitemanagers.com.au>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <511D8901.2020803@websitemanagers.com.au>
+In-Reply-To: <511D8AEF.8040202@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <adam@websitemanagers.com.au>
-Cc: Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Jeff Johnson <jeff.johnson@aeoncomputing.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: "linux-raid@vger.kernel.org list" <linux-raid@vger.kernel.org>, "stan@hardwarefreak.com Hoeppner" <stan@hardwarefreak.com>
 List-Id: linux-raid.ids
 
-the point of performace is
-you will do a 'per user performace meter' or a 'total system performace'
-in others words... users will have each one a 'fixed' disk space? or
-every body will use the disks?
-a per user space could allow you to do a raid1 (or another raid) for
-about 100 users?! in other words, 100 users have a total of 320MB/s
-(sas) disk performace and 1tb of disk space? does your users need a
-low latency system? did you considered high cache? or ssd cache?
-if you tell that every body will use the whole system, how you want to
-share the disks? whould it be stripped or mirrored?
-stripped for better sequencial reading
-mirrored for better parallel reading
 
-what your system need?
+On Feb 14, 2013, at 6:10 PM, Adam Goryachev <mailinglists@websitemanagers.com.au> wrote:
+> 
+> So assuming I don't mind wasting a few MB per disk (I was leaving empty
+> space at the end of the partition anyway), what would I need to instruct
+> fdisk and/or md to do to get the alignment right?
+> 
+> Current partition/disk is as follows:
+> /dev/sdc1              63   931769999   465884968   fd  Lnx RAID auto
 
-2013/2/14 Adam Goryachev <adam@websitemanagers.com.au>:
-> On 15/02/13 10:42, Roberto Spadim wrote:
->> the problem is checksum? i really don't understand why the filesystem
->> is not the problem, and why storage is the 'key'
->>
->> storage -> mdadm + harddisks / raid hardware + harddisks / network
->> storage + hard disks -> here the key is data integrity WITHOUT SILENT
->> DATA LOSS, today i only saw this on enterprise hardware raid
->> controlers + enterprise sas disks
->>
->> lvm + filesystem -> don't have problem increasing storage -> here a
->> filesystem that can grow without problems is mandatory since you want
->> but more disks... the lvm part is to easly work with devices
->>
->> any part that i forgot?
->>
->> 2013/2/14 Roy Sigurd Karlsbakk <roy@karlsbakk.net>:
->>> xfs+lvm+mdadm works, but I'm still back to my original question. I don't care about what filesystem is on top, only about the storage underneath. Read the original question again, please
->
-> I assume the question can be reduced to:
-> 1) You need a very large amount of space (requires a large number of disks)
-> 2) You need to be able to expand that space over time
-> 3) You want decent data redundancy
-> 4) You will have a reasonable amount of concurrent access by multiple users and want decent performance
->
-> From my readings of the list, it would seem the suggestion is to use RAID6 + concatenation, with around 6 to 8 drives in each RAID6, and use XFS with certain parameters to ensure it balances the directories across multiple groups of the RAID6. Basically, you want to put as many drives into each RAID6 to reduce wasted space, but not too many or else you will suffer a triple drive failure and lose the whole lot.
->
-> If you did not need to grow the space, then you would use RAID60, and do striping, but I think you can't grow that, although some pages I just read suggest it might be possible to grow a raid0 by converting to raid4 and back again.
->
-> Another option would be to use LVM to join multiple RAID6's together
->
-> Don't know if this helps, but hopefully.
->
-> Regards,
-> Adam
->
-> --
-> Adam Goryachev
-> Website Managers
-> Ph: +61 2 8304 0000                            adam@websitemanagers.com.au
-> Fax: +61 2 8304 0001                            www.websitemanagers.com.au
->
+Yeah the old fdisk starts at LBA 63 which is not good because it's neither 4K nor 8K aligned. For a long time now fdisk starts new ones at 2048 which is 1MB aligned (and is of course also 8KB and 4KB aligned, among others so it's just easier to do that.) But for 4K and 8K alignment, start LBA 48, 64, 80, etc are also valid.
 
-
-
---
-Roberto Spadim
+Chris Murphy
