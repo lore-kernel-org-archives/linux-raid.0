@@ -1,47 +1,53 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: RAID performance - *Slow SSDs likely solved*
-Date: Fri, 15 Feb 2013 22:33:36 -0600
-Message-ID: <511F0C20.1000005@hardwarefreak.com>
-References: <51134E43.7090508@websitemanagers.com.au> <511361B3.8060204@hardwarefreak.com> <51137C57.7070509@websitemanagers.com.au>
-Reply-To: stan@hardwarefreak.com
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Possible to rescue SW Raid5 with 2 missing Disks
+Date: Sat, 16 Feb 2013 06:06:02 +0100 (CET)
+Message-ID: <alpine.DEB.2.00.1302160604150.32644@uplift.swm.pp.se>
+References: <20130215154120.95960@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51137C57.7070509@websitemanagers.com.au>
+In-Reply-To: <20130215154120.95960@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+To: Dragon <Sunghost@gmx.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2/7/2013 4:05 AM, Adam Goryachev wrote:
+On Fri, 15 Feb 2013, Dragon wrote:
 
-> Storage server:
-...
-> 5 x Intel 520s MLC 480G SATA3
-> Debian Stable .. *kernel 2.6.32-5-amd64*
+>          Magic : a92b4efc
+>        Version : 1.2
+>    Feature Map : 0x0
+>     Array UUID : 92a99ca0:8e22bc66:f8050881:78c344d9
+>           Name : mfsnode1:2  (local to host mfsnode1)
+>  Creation Time : Tue Jul 24 18:18:21 2012
+>     Raid Level : raid5
+>   Raid Devices : 6
+>
+> Avail Dev Size : 5842757597 (2786.04 GiB 2991.49 GB)
+>     Array Size : 29213783040 (13930.22 GiB 14957.46 GB)
+>  Used Dev Size : 5842756608 (2786.04 GiB 2991.49 GB)
+>    Data Offset : 2048 sectors
+>   Super Offset : 8 sectors
+>          State : clean
+>    Device UUID : 6a679a1d:f42d6b9f:a13cd977:0fdbea86
+>
+>    Update Time : Mon Dec 17 00:13:56 2012
+>       Checksum : 8c50873e - correct
+>         Events : 211768
+>
+>         Layout : left-symmetric
+>     Chunk Size : 512K
 
-There was a regression in 2.6.32 kernels that hammered SSD performance.
- Upgrade to linux-image-3.2.0-0.bpo.3-amd64 and it should fix it.  See:
+As far as I can tell, it looks like data offset, super offset,superblock 
+version all match what you have after doing --create. So this is good.
 
-http://www.archivum.info/linux-ide@vger.kernel.org/2010-02/00243/bad-performance-with-SSD-since-kernel-version-2.6.32.html
+> mdadm -E /dev/sdd4
+>         Events : 0
 
-http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=642729
+> mdadm -E /dev/sdf4
+>         Events : 0
 
-It was reverted in 2.6.33 upstream, and supposedly reverted in 2.6.32
-upstream stable.  But apparently, according to Ben Hutchings last
-comment in the Debian bug report, it hasn't been fixed yet in Debian
-2.6.32, and that was over a year ago.
-
-BTW, did you get the LSI card into the server yet, and if so have you
-run any FIO tests to compare with the previous onboard SATA2 numbers you
-posted?  Would be interesting to see what performance advantage, if any,
-it has over the onboard SATA2, and would also allow us to see just how
-much difference the new kernel makes.
-
-Also, which LSI board did you get, the 9211 or 9307?  You simply said
-you got the "recommended" one, or something like that.
+Do you have any idea how this happened?
 
 -- 
-Stan
-
+Mikael Abrahamsson    email: swmike@swm.pp.se
