@@ -1,207 +1,141 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: RAID performance - new kernel results
-Date: Sun, 17 Feb 2013 20:52:14 +1100
-Message-ID: <5120A84E.4020702@websitemanagers.com.au>
-References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <5113A2D6.20104@websitemanagers.com.au> <CAKHEz2YgiQiknBXju9a=PR3zV1Hb7ux8yBZWywiTi=BXFm20GA@mail.gmail.com> <51150475.2020803@websitemanagers.com.au>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: RAID performance
+Date: Sun, 17 Feb 2013 07:58:14 -0600
+Message-ID: <5120E1F6.2050906@hardwarefreak.com>
+References: <51134E43.7090508@websitemanagers.com.au> <5114A53B.9060103@websitemanagers.com.au> <5115316F.1090502@hardwarefreak.com> <5115478A.8010004@websitemanagers.com.au> <5115CC02.2010400@hardwarefreak.com> <d34a6caf-d1b5-403c-aee2-525a9b3c3db7@email.android.com> <51179F09.1020503@hardwarefreak.com> <6990fbda-f741-454a-80cd-bdcdfd8c971c@email.android.com> <5119AD1C.8030000@hardwarefreak.com> <5119D410.5090300@websitemanagers.com.au> <511B4719.6060607@hardwarefreak.com> <aecd39d9-2184-4df0-97bb-d63de0d29e5c@email.android.com> <555253fb-86d2-448b-a85b-43dae1a2a33d@email.android.com> <511CD709.6070506@hardwarefreak.com> <511E38C7.6000203@hardwarefreak.com> <c0057008-8681-4275-a6e2-e747c9711158@email.android.com> <511EDBCB.2000906@hardwarefreak.com> <bdc9707d-f948-430e-b1e6-28ad06bbe60a@e
+ mail.android.com> <5120356E.8000702@hardwarefreak.com> <91cffde0-b154-477d-90d2-68b15e91518c@email.android.com> <5120789B.1080804@hardwarefreak.com> <5120979C.9030703@websitemanagers.com.au>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51150475.2020803@websitemanagers.com.au>
+In-Reply-To: <5120979C.9030703@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dave Cundiff <syshackmin@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: Dave Cundiff <syshackmin@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/02/13 00:58, Adam Goryachev wrote:
-> On 08/02/13 02:32, Dave Cundiff wrote:
->> On Thu, Feb 7, 2013 at 7:49 AM, Adam Goryachev
->> <mailinglists@websitemanagers.com.au> wrote:
->>>> I definitely see that. See below for a FIO run I just did on one of my RAID10s
-> OK, some fio results.
->
-> Firstly, this is done against /tmp which is on the single standalone
-> Intel SSD used for the rootfs (shows some performance level of the
-> chipset I presume):
->
-> root@san1:/tmp/testing# fio /root/test.fio
-> seq-read: (g=0): rw=read, bs=64K-64K/64K-64K, ioengine=libaio, iodepth=32
-> seq-write: (g=1): rw=write, bs=64K-64K/64K-64K, ioengine=libaio, iodepth=32
-> Starting 2 processes
-> seq-read: Laying out IO file(s) (1 file(s) / 4096MB)
-> Jobs: 1 (f=1): [_W] [100.0% done] [0K/137M /s] [0/2133 iops] [eta 00m:00s]
-> seq-read: (groupid=0, jobs=1): err= 0: pid=4932
->   read : io=4096MB, bw=518840KB/s, iops=8106, runt=  8084msec
-> seq-write: (groupid=1, jobs=1): err= 0: pid=5138
->   write: io=4096MB, bw=136405KB/s, iops=2131, runt= 30749msec
-> Run status group 0 (all jobs):
->    READ: io=4096MB, aggrb=518840KB/s, minb=531292KB/s, maxb=531292KB/s,
-> mint=8084msec, maxt=8084msec
->
-> Run status group 1 (all jobs):
->   WRITE: io=4096MB, aggrb=136404KB/s, minb=139678KB/s, maxb=139678KB/s,
-> mint=30749msec, maxt=30749msec
->
-> Disk stats (read/write):
->   sda: ios=66570/66363, merge=10297/10453, ticks=259152/993304,
-> in_queue=1252592, util=99.34%
->
->
-> PS, I'm assuming I should omit the extra output similar to what you
-> did.... If I should include all info, I can re-run and provide...
->
-> This seems to indicate a read speed of 531M and write of 139M, which to
-> me says something is wrong. I thought write speed is slower, but not
-> that much slower?
->
-> Moving on, I've stopped the secondary DRBD, created a new LV (testlv) of
-> 15G, and formatted with ext4, mounted it, and re-run the test:
->
-> seq-read: (groupid=0, jobs=1): err= 0: pid=19578
->   read : io=4096MB, bw=640743KB/s, iops=10011, runt=  6546msec
-> seq-write: (groupid=1, jobs=1): err= 0: pid=19997
->   write: io=4096MB, bw=208765KB/s, iops=3261, runt= 20091msec
-> Run status group 0 (all jobs):
->    READ: io=4096MB, aggrb=640743KB/s, minb=656120KB/s, maxb=656120KB/s,
-> mint=6546msec, maxt=6546msec
->
-> Run status group 1 (all jobs):
->   WRITE: io=4096MB, aggrb=208765KB/s, minb=213775KB/s, maxb=213775KB/s,
-> mint=20091msec, maxt=20091msec
->
-> Disk stats (read/write):
->   dm-14: ios=65536/64841, merge=0/0, ticks=206920/469464,
-> in_queue=676580, util=98.89%, aggrios=0/0, aggrmerge=0/0, aggrticks=0/0,
-> aggrin_queue=0, aggrutil=0.00%
->     drbd2: ios=0/0, merge=0/0, ticks=0/0, in_queue=0, util=-nan%
->
-> dm-14 is the testlv
->
-> So, this indicates a max read speed of 656M and write of 213M, again,
-> write is very slow (about 30%).
->
-> With these figures, just 2 x 1Gbps links would saturate the write
-> performance of this RAID5 array.
->
-> Finally, changing the fio config file to point filename=/dev/vg0/testlv
-> (ie, raw LV, no filesystem):
-> seq-read: (groupid=0, jobs=1): err= 0: pid=10986
->   read : io=4096MB, bw=652607KB/s, iops=10196, runt=  6427msec
-> seq-write: (groupid=1, jobs=1): err= 0: pid=11177
->   write: io=4096MB, bw=202252KB/s, iops=3160, runt= 20738msec
-> Run status group 0 (all jobs):
->    READ: io=4096MB, aggrb=652606KB/s, minb=668269KB/s, maxb=668269KB/s,
-> mint=6427msec, maxt=6427msec
->
-> Run status group 1 (all jobs):
->   WRITE: io=4096MB, aggrb=202252KB/s, minb=207106KB/s, maxb=207106KB/s,
-> mint=20738msec, maxt=20738msec
->
-> Not much difference, which I didn't really expect...
->
-> So, should I be concerned about these results? Do I need to try to
-> re-run these tests at a lower layer (ie, remove DRBD and/or LVM from the
-> picture)? Are these meaningless and I should be running a different
-> test/set of tests/etc ?
+On 2/17/2013 2:41 AM, Adam Goryachev wrote:
+> On 17/02/13 17:28, Stan Hoeppner wrote:
 
-OK, I've upgraded to:
-Linux san1 3.2.0-0.bpo.4-amd64 #1 SMP Debian 3.2.35-2~bpo60+1 x86_64
-GNU/Linux
-I also upgraded to iscsitarget from testing, as there seemed a few fixes
-there, even though not the one I might have liked:
-ii  iscsitarget                         1.4.20.2-10.1               
-iSCSI Enterprise Target userland tools
-ii  iscsitarget-dkms                    1.4.20.2-10.1               
-iSCSI Enterprise Target kernel module source - dkms version
+> OK, in that case, you are correct, I've misunderstood you.
 
+This is my fault.  I should have explained explained that better.  I
+left it ambiguous.
 
-Then I re-ran the fio tests from above and here is what I get when
-testing against an LV which has a snapshot against it:
-seq-read: (groupid=0, jobs=1): err= 0: pid=10168
-  read : io=4096MB, bw=1920MB/s, iops=30724, runt=  2133msec
-seq-write: (groupid=1, jobs=1): err= 0: pid=10169
-  write: io=2236MB, bw=38097KB/s, iops=595, runt= 60094msec
-Run status group 0 (all jobs):
-   READ: io=4096MB, aggrb=1920MB/s, minb=1966MB/s, maxb=1966MB/s,
-mint=2133msec, maxt=2133msec
+> I'm unsure how to configure things to work that way...
+> 
+> I've run the following commands from the URL you posted previously:
+> http://linfrastructure.blogspot.com.au/2008/02/multipath-and-equallogic-iscsi.html
+> 
+> iscsiadm -m iface -I iface0 --op=new
+> iscsiadm -m iface -I iface1 --op=new
+> iscsiadm -m iface -I iface0 --op=update -n iface.hwaddress -v
+> 00:16:3E:XX:XX:XX
+> iscsiadm -m iface -I iface1 --op=update -n iface.hwaddress -v
+> 00:16:3E:XX:XX:XX
+> 
+> iscsiadm -m discovery -t st -p 10.X.X.X
+> 
+> The above command (discovery) finds 4 paths for each LUN, since it
+> automatically uses each interface to talk to each LUN. Do you know how
+> to stop that from happening? If I only allow a connection to a single IP
+> on the SAN, then it will only use one session from each interface.
 
-Run status group 1 (all jobs):
-  WRITE: io=2236MB, aggrb=38097KB/s, minb=39011KB/s, maxb=39011KB/s,
-mint=60094msec, maxt=60094msec
+This is what LUN masking is for.  I haven't seen your your target
+configuration, whether you're just using ietd.conf for access control,
+or if you're using column 4 in target defs in /etc/iscsi/targets.  So I
+can't help you setup your masking at this point.  It'll be complicated
+no matter what, as you are apparently currently allowing the world to
+see the LUNs.
 
-So, 1920MB/s read, that sounds good to me, almost 3 times faster,
-however, the write performance is pretty dismal :(
+Since you're not yet familiar with masking, simply use --interface and
+--portal with iscsiadm to discover and log into LUNs manually on a 1:1
+port basis.  This can be easily scripted.  See the man page for details.
 
-After removing the snapshot, here is another look:
-seq-read: (groupid=0, jobs=1): err= 0: pid=10222
-  read : io=4096MB, bw=2225MB/s, iops=35598, runt=  1841msec
-seq-write: (groupid=1, jobs=1): err= 0: pid=10223
-  write: io=4096MB, bw=111666KB/s, iops=1744, runt= 37561msec
-Run status group 0 (all jobs):
-   READ: io=4096MB, aggrb=2225MB/s, minb=2278MB/s, maxb=2278MB/s,
-mint=1841msec, maxt=1841msec
+> No, not quite. See below.
+...
+> The iSCSI bug is limiting the number of sessions that can be setup
+> within a very short time interval. It isn't a maximum number of
+> sessions. (I could verify this by disabling the automatic login, and
+> manually login to each LUN one by one (4 sessions at a time)). This is
+> why I can have 11 sessions from 8 machines at one time previously,
+> because only one machine would login at a time (unless they all booted
+> at exactly the same instant), and each one would only create 11
+> sessions. Same with the current work-around/setup, only 22 sessions per
+> machine, so only 22 being logged into at a time.
+> See this for a perhaps better explanation of the bug (that sort of isn't
+> a bug, just a default limitation):
+> http://blog.wpkg.org/2007/09/09/solving-reliability-and-scalability-problems-with-iscsi/
 
-Run status group 1 (all jobs):
-  WRITE: io=4096MB, aggrb=111666KB/s, minb=114346KB/s, maxb=114346KB/s,
-mint=37561msec, maxt=37561msec
+Got it.  Getting the issue above fixed also solves this problem, at
+least to a degree.
 
-A big improvement, 111MB/s write, and even better reads. However, this
-write speed still seems pretty slow.
+> After more reading, it seems there is still no package with this fix
+> included, 1.4.20.2-10.1 doesn't include it, and that is the most recent
+> version. The only solution to this would be to re-build the deb src
+> package with the additional one line patch, but if I get the above
+> solution (only one login from each interface) then I don't need it anyway.
 
-Another run after stopping the secondary DRBD sync:
-seq-read: (groupid=0, jobs=1): err= 0: pid=10708
-  read : io=4096MB, bw=2242MB/s, iops=35870, runt=  1827msec
-seq-write: (groupid=1, jobs=1): err= 0: pid=10709
-  write: io=4096MB, bw=560661KB/s, iops=8760, runt=  7481msec
-Run status group 0 (all jobs):
-   READ: io=4096MB, aggrb=2242MB/s, minb=2296MB/s, maxb=2296MB/s,
-mint=1827msec, maxt=1827msec
+Yes, you're right.  Apparently I didn't read the report thoroughly.
+It's a logins per unit time issue.  Fixing the excess logins should
+mitigate this pretty well.
 
-Run status group 1 (all jobs):
-  WRITE: io=4096MB, aggrb=560660KB/s, minb=574116KB/s, maxb=574116KB/s,
-mint=7481msec, maxt=7481msec
+>>> So, will see how this goes this week, then will try to upgrade the kernel, and also upgrade the iscsi target to fix both bugs and can then change back to MPIO with 4 paths (2:2).
+>>>
+>>> In fact, I suspect a significant part of this entire project performance issue could be attributed to the kernel bug. The user who reported the issue was getting slower performance from the SSD compared to an old HDD, and I'm losing a significant amount of performance from it (as you said, even 1Gbps should probably be sufficient).
 
-Now THAT is what I was hoping to see.... 2,242MB/s read, enough to
-saturate 18 x 1Gbps ports... and 560MB/s write, enough for 4.5 x 1Gbps,
-which is more than the maximum from 2 machines. So as long as I have the
-secondary DRBD disconnected during the day (I do), and don't have any
-LVM snapshots (I don't due to performance), then things should be a lot
-better.
+Yep.  Separating iSCSI traffic on the DC to another link seems to have
+helped quite a bit.  But my, oh my, that 3x plus increase in SSD
+throughput surely will help.  I'm still curious as to how much of that
+was the LSI and how much was the kernel bug fix.
 
-Now looking back at all this, I think I was probably suffering from a
-whole bunch of problems:
+On that note I'm going to start a clean thread regarding your 3x
+read/write throughput ratio deficit.
 
-1) Write cache enabled on windows
-2) iSCSI not configured to properly deal with intermittent/slow
-responses, queue forever instead of returning an error
-3) Not using multipath IO
-4) Server storage performance too slow to keep up (due to kernel bug in
-debian stable squeeze/2.6.32)
-5) Using LVM snapshots which degraded performance
-6) Using DRBD during the day with spinning disks on the secondary
-(couldn't keep up, slowed down the primary)
-7) Sharing a single ethernet for user traffic and SAN traffic, allowing
-one protocol to flood/block the other
-8) Using RR bonding with more ports on the SAN than the client, causing
-flooding, 802.3X pause frames, etc
+>> It seems pretty clear the SSD bug is affecting you.  However it seems
+>> your iSCSI issues are unrelated to the iSCSI "bug".
+> 
+> Nope, pretty sure the iSCSI bug is the issue... In addition, my
+> inability to work out how to tell iscsiadm to only create one session
+> from each interface. Solving this usage issue would get me back on track
+> and side-step the whole iSCSI bug anyway.
 
-I can't say that any one of the above fixed the problem, it has been
-getting progressively better as each item has been addressed. I'd like
-to think that its very close to done now.
-The only thing I still need to do is get rid of the bond0 on the SAN,
-change to use 8 individual IP's, and configure the clients to talk to
-two of the IP's on the san, but only one over each ethernet interface.
+Again, I think you're on money with the iscsi-target 32 limit bug, and
+you should be able to whip the sessions into shape with those cli
+options.  If not you can dig into masking, which will take a while
+longer, but is the standard method for this.
 
-I'd again like to say thanks to all the people who've helped out with
-this drama. I did forget to take those photo's, but I'll take some next
-time I'm in, I think I did a pretty good job overall, and it looks
-reasonably neat (by my standards anyway :)
+> I was considering a complete upgrade to debian testing on the mistaken
+> assumption that it would include:
+> 1) newer kernel (it does of course)
+> 2) newer iscsitarget (it does, but not new enough)
+> 3) newer drbd (it doesn't, but I'm already using a self compiled version
+> anyway from the upstream stable release).
+> 
+> So, of course, you are right. I will try a remote upgrade now to the
+> backport kernel, probably need to rebuild the dkms for iscsi, and
+> rebuild DRBD. None of which should impact on a remote reboot. Worst
+> case, it's only a 20 minute drive. This should resolve the SSD
+> performance, and leaves me with just resolving the usage of iscsiadm.
+> 
+> Thanks for your assistance, and patience with me, I appreciate it :)
 
-Regards,
-Adam
+I feel privileged to have been of continued assistance Adam. :)
+
+You have a bit of a unique setup there, and the hardware necessary for
+some extreme performance.  My heart sank when I saw the IO numbers you
+posted and I felt compelled to try to help.  Very few folks have a
+storage server, commercial or otherwise, with 2GB/s of read and 650MB/s
+of write throughput with 1.8TB of capacity.  Allow me to continue
+assisting and we'll get that write number up there with the read.
+
+I've been designing and building servers around channel parts for over
+15 years, and I prefer it any day to Dell/HP/IBM etc.  It's nice to see
+other folks getting out there on the bleeding edge building ultra high
+performance systems with channel gear.  We don't see systems like this
+on linux-raid very often.
 
 -- 
-Adam Goryachev
-Website Managers
-www.websitemanagers.com.au
+Stan
 
