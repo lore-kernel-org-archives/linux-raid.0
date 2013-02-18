@@ -1,26 +1,23 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: problems formatting raid5
-Date: Mon, 18 Feb 2013 13:01:15 +0100 (CET)
-Message-ID: <alpine.DEB.2.00.1302181300300.32644@uplift.swm.pp.se>
-References: <1361174312.47911.YahooMailNeo@web163006.mail.bf1.yahoo.com> <alpine.DEB.2.00.1302180915080.32644@uplift.swm.pp.se> <1361176372.31472.YahooMailNeo@web163005.mail.bf1.yahoo.com> <alpine.DEB.2.00.1302181045330.32644@uplift.swm.pp.se>
- <1361184290.49903.YahooMailNeo@web163001.mail.bf1.yahoo.com>
+From: "Dragon" <Sunghost@gmx.de>
+Subject: Possible to rescue SW Raid5 with 2 missing Disks
+Date: Mon, 18 Feb 2013 13:13:16 +0100
+Message-ID: <20130218121316.186000@gmx.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1361184290.49903.YahooMailNeo@web163001.mail.bf1.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: sk <sdk0084@yahoo.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 18 Feb 2013, sk wrote:
+Hello Mikael,
 
-> I have tried xfs as well and it was ok. However, later it hangs several 
-> times while transferring files and the only way to stop the transfer was 
-> rebooting.
+you give me hope ;). After that i do anything but inform this mailing list and communicat with phil who advise me to run fsck -n /dev/md2 and log the errors to an file. after that i tried various combinations, as i wrote in the first post. since that i do not write to the raid...
 
-Then you need to start looking at your logs. Seems you have some other 
-problem causing IO to stall.
+the problem starts as i wanted to move the disk in the open case slightly while its running. as i do so the sdd and sdf spins down and the error occured - yes it was my mistake ;(
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+perhaps its an problem how i create the partitions on the raid, because of the offset e.g.??
+
+what will we do next?
+
+thx all so far
