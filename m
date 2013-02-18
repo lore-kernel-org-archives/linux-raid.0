@@ -1,54 +1,26 @@
-From: Marcin Tomczak <marcin.tomczak@intel.com>
-Subject: [PATCH] imsm: Add NO_IMSM_PLATFORM flag description to manual.
-Date: Mon, 18 Feb 2013 12:51:40 +0100
-Message-ID: <20130218115140.2751.36089.stgit@localhost.localdomain>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: problems formatting raid5
+Date: Mon, 18 Feb 2013 13:01:15 +0100 (CET)
+Message-ID: <alpine.DEB.2.00.1302181300300.32644@uplift.swm.pp.se>
+References: <1361174312.47911.YahooMailNeo@web163006.mail.bf1.yahoo.com> <alpine.DEB.2.00.1302180915080.32644@uplift.swm.pp.se> <1361176372.31472.YahooMailNeo@web163005.mail.bf1.yahoo.com> <alpine.DEB.2.00.1302181045330.32644@uplift.swm.pp.se>
+ <1361184290.49903.YahooMailNeo@web163001.mail.bf1.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1361184290.49903.YahooMailNeo@web163001.mail.bf1.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, lukasz.dorau@intel.com
+To: sk <sdk0084@yahoo.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-SW4gZXhjZXB0aW9uYWwgY2FzZXMgdXNlciBjYW4gdXNlIE5PX0lNU01fUExBVEZPUk0gZmxhZyB0
-byB1c2UgSU1TTQptZXRhZGF0YSBSQUlEcyB3aXRob3V0IHZhbGlkIEludGVsIHBsYXRmb3JtLiBX
-aXRoIHRoaXMgZmxhZyBzZXQKbWRhZG0gZG9lcyBub3QgcGVyZm9ybSBhbnkgY29tcGF0aWJpbGl0
-eSBjaGVja3MuCgpOb3RlOiBVc2FnZSBvZiB0aGlzIGZsYWcgbWF5IGxlYWQgdG8gZGF0YSBsb3Nz
-IQoKU2lnbmVkLW9mZi1ieTogTWFyY2luIFRvbWN6YWsgPG1hcmNpbi50b21jemFrQGludGVsLmNv
-bT4KLS0tCiBtZGFkbS44LmluIHwgICAxOSArKysrKysrKysrKysrKysrKysrCiAxIGZpbGVzIGNo
-YW5nZWQsIDE5IGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvbWRh
-ZG0uOC5pbiBiL21kYWRtLjguaW4KaW5kZXggNTM1Y2MzOS4uM2VmMjBjNyAxMDA2NDQKLS0tIGEv
-bWRhZG0uOC5pbgorKysgYi9tZGFkbS44LmluCkBAIC0yNzE0LDYgKzI3MTQsMjUgQEAgdG8gJzEn
-LCB0aGUKIC5JIG1kYWRtCiB3aWxsIGNyZWF0ZSBhbmQgZGV2aWNlcyB0aGF0IGFyZSBuZWVkZWQu
-CiAKKy5UUAorLkIgSU1TTV9OT19QTEFURk9STQorQVRURU5USU9OISBVc2FnZSBvZiB0aGlzIGZs
-YWcgaXMgZXh0cmVtZWx5IGRhbmdlcm91cyEgWW91IHNob3VsZCB1c2UKK3RoaXMgZmxhZyBvbmx5
-IHdoZW4geW91IGtub3cgd2hhdCB5b3UgYXJlIGRvaW5nIGFuZCB3aGVuIGl0IGlzCituZWNlc3Nh
-cnkuIE1ha2UgYSBiYWNrdXAgYmVmb3JlIGFueSBhY3Rpb24uIFlvdSB1c2UgaXQgb24geW91ciBv
-d24KK3Jlc3BvbnNpYmlsaXR5IC0gdW5wcmVkaWN0YWJsZSBlZmZlY3RzIG1heSBhcHBlYXIgbXVj
-aCBsYXRlci4KKworVGhlIElNU01fTk9fUExBVEZPUk0gZmxhZyBjb25jZXJucyBvbmx5IElNU00g
-bWV0YWRhdGEuIEJ5IGRlZmF1bHQsIElNU00KK21ldGFkYXRhIGlzIHN1cHBvcnRlZCBvbmx5IGJ5
-IEludGVsIGJhc2VkIHBsYXRmb3JtcyB3aXRoIE9ST00gYW5kIGl0J3MKK3NoYXJlZCBiZXR3ZWVu
-IExpbnV4LCBNaWNyb3NvZnQgV2luZG93cyBhbmQgT1JPTSwgdGh1cyB5b3UgY2FuIHN3aXRjaAor
-YmV0d2VlbiB0aGVzZSBlbnZpcm9ubWVudHMgc2FmZWx5LiBXaGVuIHlvdSB1c2UgYSBtZGFkbSBj
-b21tYW5kIGFuZCB0aGUKK3ZhbHVlIG9mIHRoZSBmbGFnIGlzIHNldCB0byAnMScsIHRoZW4gbWRh
-ZG0gZG9lcyBub3QgY2FyZSBhYm91dCB0aGUKK2hhcmR3YXJlIGNvbmZpZ3VyYXRpb24gYW5kIE9S
-T00gcmVzdHJpY3Rpb25zLiBJdCBtYXkgY2F1c2UgYQorY29tcGF0aWJpbGl0eSBwcm9ibGVtIGFu
-ZCBPUk9NIG9yIFdpbmRvd3MgY2FuLCBmb3IgZXhhbXBsZSwgc2V0IHRoZQorc3RhdGUgb2YgdGhl
-IFJBSUQgdm9sdW1lIHRvIGZhaWxlZCBhbmQgdGhlbiB5b3UgbWF5IGxvc2UgYWxsIHlvdXIgZGF0
-YS4KK090aGVyIHBvc3NpYmxlIHNjZW5hcmlvIGlzIHRoYXQgY3JlYXRlZCBSQUlEIFZvbHVtZSB3
-aWxsIGJlCitpbmNvbXBhdGlibGUgd2l0aCB0YXJnZXQgcGxhdGZvcm0ncyBPUk9NIGFuZCB2b2x1
-bWUgd2lsbCBub3QgYmUKK2Fzc2VtYmxlZCBvbiB0aGF0IHBsYXRmb3JtLgorCiAuU0ggRVhBTVBM
-RVMKIAogLkIgIiAgbWRhZG0gXC1cLXF1ZXJ5IC9kZXYvbmFtZS1vZi1kZXZpY2UiCgotLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0KSW50ZWwgVGVjaG5vbG9neSBQb2xhbmQgc3AuIHogby5vLgp6IHNpZWR6aWJhIHcgR2Rh
-bnNrdQp1bC4gU2xvd2Fja2llZ28gMTczCjgwLTI5OCBHZGFuc2sKClNhZCBSZWpvbm93eSBHZGFu
-c2sgUG9sbm9jIHcgR2RhbnNrdSwgClZJSSBXeWR6aWFsIEdvc3BvZGFyY3p5IEtyYWpvd2VnbyBS
-ZWplc3RydSBTYWRvd2VnbywgCm51bWVyIEtSUyAxMDE4ODIKCk5JUCA5NTctMDctNTItMzE2Ckth
-cGl0YWwgemFrbGFkb3d5IDIwMC4wMDAgemwKClRoaXMgZS1tYWlsIGFuZCBhbnkgYXR0YWNobWVu
-dHMgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG1hdGVyaWFsIGZvcgp0aGUgc29sZSB1c2Ugb2Yg
-dGhlIGludGVuZGVkIHJlY2lwaWVudChzKS4gQW55IHJldmlldyBvciBkaXN0cmlidXRpb24KYnkg
-b3RoZXJzIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRl
-ZApyZWNpcGllbnQsIHBsZWFzZSBjb250YWN0IHRoZSBzZW5kZXIgYW5kIGRlbGV0ZSBhbGwgY29w
-aWVzLgo=
+On Mon, 18 Feb 2013, sk wrote:
 
+> I have tried xfs as well and it was ok. However, later it hangs several 
+> times while transferring files and the only way to stop the transfer was 
+> rebooting.
+
+Then you need to start looking at your logs. Seems you have some other 
+problem causing IO to stall.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
