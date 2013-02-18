@@ -1,41 +1,138 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+From: Steven Haigh <netwiz@crc.id.au>
 Subject: Re: problems formatting raid5
-Date: Mon, 18 Feb 2013 23:15:31 +0100 (CET)
-Message-ID: <30093318.24.1361225731112.JavaMail.root@zimbra>
-References: <2447962.20.1361211559180.JavaMail.root@zimbra>
+Date: Tue, 19 Feb 2013 09:59:12 +1100
+Message-ID: <5122B240.6060000@crc.id.au>
+References: <30093318.24.1361225731112.JavaMail.root@zimbra>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms030004050104030607020103"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2447962.20.1361211559180.JavaMail.root@zimbra>
+In-Reply-To: <30093318.24.1361225731112.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: sk <sdk0084@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> that's like BASE jumping with a large umbrella, as earlier noted.
-> Don't do that, it'll just hurt you. At least use RAID-5 and preferabl=
-y
-> use more RAID sets and RAID-0 or LVM on top.
+This is a cryptographically signed message in MIME format.
 
-Make that RAID-6
+--------------ms030004050104030607020103
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-Vennlige hilsener / Best regards
+On 19/02/2013 9:15 AM, Roy Sigurd Karlsbakk wrote:
+>> that's like BASE jumping with a large umbrella, as earlier noted.
+>> Don't do that, it'll just hurt you. At least use RAID-5 and preferably=
 
-roy
+>> use more RAID sets and RAID-0 or LVM on top.
+>
+> Make that RAID-6
+
+I agree. I think a more sane outlook on this would be 19 drives made up o=
+f:
+	* RAID Level: 6
+	* Hot Spares: 2
+
+Using RAID5 then its not a matter of if you are going to lose your=20
+array, its a matter of WHEN considering the number of spindles here.
+
+If you have the drives in separate enclosures or different controllers,=20
+have one spare per controller - ie don't but both spares on the same=20
+controller.
+
+*Maybe* if you are pushed for space, only use 1 hot spare - but be sure=20
+to have a drive sat in the anti-static bag on a shelf within walking=20
+distance of the server.
+
 --
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Steven Haigh
+
+Email: netwiz@crc.id.au
+Web: https://www.crc.id.au
+Phone: (03) 9001 6090 - 0412 935 897
+Fax: (03) 8338 0299
+
+
+--------------ms030004050104030607020103
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIMdTCC
+BjQwggQcoAMCAQICAR4wDQYJKoZIhvcNAQEFBQAwfTELMAkGA1UEBhMCSUwxFjAUBgNVBAoT
+DVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNp
+Z25pbmcxKTAnBgNVBAMTIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4XDTA3
+MTAyNDIxMDE1NVoXDTE3MTAyNDIxMDE1NVowgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1T
+dGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWdu
+aW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENs
+aWVudCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMcJg8zOLdgasSmkLhOr
+lr6KMoOMpohBllVHrdRvEg/q6r8jR+EK75xCGhR8ToREoqe7zM9/UnC6TS2y9UKTpT1v7RSM
+zR0t6ndl0TWBuUr/UXBhPk+Kmy7bI4yW4urC+y7P3/1/X7U8ocb8VpH/Clt+4iq7nirMcNh6
+qJR+xjOhV+VHzQMALuGYn5KZmc1NbJQYclsGkDxDz2UbFqE2+6vIZoL+jb9x4Pa5gNf1TwSD
+kOkikZB1xtB4ZqtXThaABSONdfmv/Z1pua3FYxnCFmdr/+N2JLKutIxMYqQOJebr/f/h5t95
+m4JgrM3Y/w7YX9d7YAL9jvN4SydHsU6n65cCAwEAAaOCAa0wggGpMA8GA1UdEwEB/wQFMAMB
+Af8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBRTcu2SnODaywFcfH6WNU7y1LhRgjAfBgNV
+HSMEGDAWgBROC+8apEBbpRdphzDKNGhD0EGu8jBmBggrBgEFBQcBAQRaMFgwJwYIKwYBBQUH
+MAGGG2h0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9jYTAtBggrBgEFBQcwAoYhaHR0cDovL3d3
+dy5zdGFydHNzbC5jb20vc2ZzY2EuY3J0MFsGA1UdHwRUMFIwJ6AloCOGIWh0dHA6Ly93d3cu
+c3RhcnRzc2wuY29tL3Nmc2NhLmNybDAnoCWgI4YhaHR0cDovL2NybC5zdGFydHNzbC5jb20v
+c2ZzY2EuY3JsMIGABgNVHSAEeTB3MHUGCysGAQQBgbU3AQIBMGYwLgYIKwYBBQUHAgEWImh0
+dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93
+d3cuc3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwDQYJKoZIhvcNAQEFBQADggIBAAqD
+CH14qywGXLhjjF6uHLkjd02hcdh9hrw+VUsv+q1eeQWB21jWj3kJ96AUlPCoEGZ/ynJNScWy
+6QMVQjbbMXltUfO4n4bGGdKo3awPWp61tjAFgraLJgDk+DsSvUD6EowjMTNx25GQgyYJ5RPI
+zKKR9tQW8gGK+2+RHxkUCTbYFnL6kl8Ch507rUdPPipJ9CgJFws3kDS3gOS5WFMxcjO5DwKf
+KSETEPrHh7p5shuuNktvsv6hxHTLhiMKX893gxdT3XLS9OKmCv87vkINQcNEcIIoFWbP9HOR
+z9v3vQwR4e3ksLc2JZOAFK+ssS5XMEoznzpihEP0PLc4dCBYjbvSD7kxgDwZ+Aj8Q9PkbvE9
+sIPP7ON0fz095HdThKjiVJe6vofq+n6b1NBc8XdrQvBmunwxD5nvtTW4vtN6VY7mUCmxsCie
+uoBJ9OlqmsVWQvifIYf40dJPZkk9YgGTzWLpXDSfLSplbY2LL9C9U0ptvjcDjefLTvqSFc7t
+w1sEhF0n/qpA2r0GpvkLRDmcSwVyPvmjFBGqUp/pNy8ZuPGQmHwFi2/14+xeSUDG2bwnsYJQ
+G2EdJCB6luQ57GEnTA/yKZSTKI8dDQa8Sd3zfXb19mOgSF0bBdXbuKhEpuP9wirslFe6fQ1t
+5j5R0xi72MZ8ikMu1RQZKCyDbMwazlHiMIIGOTCCBSGgAwIBAgIDBdMXMA0GCSqGSIb3DQEB
+BQUAMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMi
+U2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMvU3RhcnRDb20g
+Q2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0EwHhcNMTMwMTI5MTIyMTM0
+WhcNMTQwMTMwMjIzNjE4WjBXMRkwFwYDVQQNExA0MzM5TjFVWjZFS2ZBa0Y2MRkwFwYDVQQD
+DBBuZXR3aXpAY3JjLmlkLmF1MR8wHQYJKoZIhvcNAQkBFhBuZXR3aXpAY3JjLmlkLmF1MIIB
+IjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqz7eWA7Oi1ES6IIWwtRNtOa6cSj6GSio
+72D26TkCPm/vYamqS/9pluIyMO2TbGjMyveGxWZB9bDt+MnuI6yJ3spD6br5TUXQSqsgp1/g
+NXicgNmUHESd/A7+POEdYKMyTtXjVEqmR8R6uPtD78MBhIKQVZdBYGFuRBhrjoFMOnWARmXD
+47FG6eLH8jyeBi+RGEYEpBgTe1gFcoU1dCrjBqxAj47ALNgcHP4ffNX47DLvyhW2pMMaOYUh
+ga/UyQuPOpZcMAJdVI7dTIkbdipboEEE5pTdoIRI+F+XDLzO8bNkGLa1xLTWrbP048xxw3SL
+Aw/DmLYqQ+oC8vabAAqBIwIDAQABo4IC1jCCAtIwCQYDVR0TBAIwADALBgNVHQ8EBAMCBLAw
+HQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMB0GA1UdDgQWBBR/FxImYCufSdz0pG5w
+A8VPzNyaujAfBgNVHSMEGDAWgBRTcu2SnODaywFcfH6WNU7y1LhRgjAbBgNVHREEFDASgRBu
+ZXR3aXpAY3JjLmlkLmF1MIIBTAYDVR0gBIIBQzCCAT8wggE7BgsrBgEEAYG1NwECAzCCASow
+LgYIKwYBBQUHAgEWImh0dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwgfcGCCsG
+AQUFBwICMIHqMCcWIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MAMCAQEagb5U
+aGlzIGNlcnRpZmljYXRlIHdhcyBpc3N1ZWQgYWNjb3JkaW5nIHRvIHRoZSBDbGFzcyAxIFZh
+bGlkYXRpb24gcmVxdWlyZW1lbnRzIG9mIHRoZSBTdGFydENvbSBDQSBwb2xpY3ksIHJlbGlh
+bmNlIG9ubHkgZm9yIHRoZSBpbnRlbmRlZCBwdXJwb3NlIGluIGNvbXBsaWFuY2Ugb2YgdGhl
+IHJlbHlpbmcgcGFydHkgb2JsaWdhdGlvbnMuMDYGA1UdHwQvMC0wK6ApoCeGJWh0dHA6Ly9j
+cmwuc3RhcnRzc2wuY29tL2NydHUxLWNybC5jcmwwgY4GCCsGAQUFBwEBBIGBMH8wOQYIKwYB
+BQUHMAGGLWh0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9zdWIvY2xhc3MxL2NsaWVudC9jYTBC
+BggrBgEFBQcwAoY2aHR0cDovL2FpYS5zdGFydHNzbC5jb20vY2VydHMvc3ViLmNsYXNzMS5j
+bGllbnQuY2EuY3J0MCMGA1UdEgQcMBqGGGh0dHA6Ly93d3cuc3RhcnRzc2wuY29tLzANBgkq
+hkiG9w0BAQUFAAOCAQEAwsdSJioQIH5mEXlMBkQBZN9qrqCvDn4e92NKIX2LMPhVH01o0weH
+MEgkFMOBypbcPrwnZD51IL+ZfPmuDrcFJR9SPk4W95p3wLakMUBmvDPJ3IC+pa97+fU/GYsh
+q4dth+VlAIWJarpPV5ee6hAXGQEZvC2jyy5ukcjlr/oQxegb4hufgkLhKjqaq5UDs2be5q1N
+CBewezVmAbb/VDNVogP1xacnHn4rhllskMfGAda2DPCCaSMaJ3LcC5JRyfMkpKe5UxpVmVeM
+vGP8hYGI9DlFjwpqRCmIvD/Wl6oWWJc0HaLl6k+U3dngqEHhunzh3H6b/3lWOmEKQuI3Piy+
+oDGCA90wggPZAgEBMIGUMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRk
+LjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UE
+AxMvU3RhcnRDb20gQ2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0ECAwXT
+FzAJBgUrDgMCGgUAoIICHTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJ
+BTEPFw0xMzAyMTgyMjU5MTJaMCMGCSqGSIb3DQEJBDEWBBQUyZ/jJHZ6zcZ+DJVd7V/UXxjj
+KjBsBgkqhkiG9w0BCQ8xXzBdMAsGCWCGSAFlAwQBKjALBglghkgBZQMEAQIwCgYIKoZIhvcN
+AwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFAMAcGBSsOAwIHMA0GCCqGSIb3DQMC
+AgEoMIGlBgkrBgEEAYI3EAQxgZcwgZQwgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFy
+dENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5n
+MTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENsaWVu
+dCBDQQIDBdMXMIGnBgsqhkiG9w0BCRACCzGBl6CBlDCBjDELMAkGA1UEBhMCSUwxFjAUBgNV
+BAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRl
+IFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlh
+dGUgQ2xpZW50IENBAgMF0xcwDQYJKoZIhvcNAQEBBQAEggEASgyy+mIB283xk+tVcn2rXCYr
+Jx9okb5Hv1FMUsTNCBFhkCkQB7p/PSrrSHCGMNJl6vEGjBdVB5OrcH8fqhqyLaSlnRBVv9Xd
+TcEmG+1IKXXUqoZLJM02B+THHXWb8HgqZ+6TCESc1XHom7X5X0oZz7q0jcS4SkrGMxjdRLbm
+0sz/+XpIEfQqxoqKnIKQGVstULD6IyFgOrGxs635J9ft7NzCiYv9++DnK+Yp/i0iRf+3GjR9
+GWnRz6IweP+oB1q0qvy1RDoOmrKLBK+/1RHxZQu2z+s2LqG7ZbJyodxMAzvb81Qvf+Yh6HNY
++nT376q1Enkz49vlImGEJ650HNCUbgAAAAAAAA==
+--------------ms030004050104030607020103--
