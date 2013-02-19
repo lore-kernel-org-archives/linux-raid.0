@@ -1,122 +1,17 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: RAID performance
-Date: Tue, 19 Feb 2013 02:17:35 -0600
-Message-ID: <5123351F.5030903@hardwarefreak.com>
-References: <51134E43.7090508@websitemanagers.com.au> <5115478A.8010004@websitemanagers.com.au> <5115CC02.2010400@hardwarefreak.com> <d34a6caf-d1b5-403c-aee2-525a9b3c3db7@email.android.com> <51179F09.1020503@hardwarefreak.com> <6990fbda-f741-454a-80cd-bdcdfd8c971c@email.android.com> <5119AD1C.8030000@hardwarefreak.com> <5119D410.5090300@websitemanagers.com.au> <511B4719.6060607@hardwarefreak.com> <aecd39d9-2184-4df0-97bb-d63de0d29e5c@email.android.com> <555253fb-86d2-448b-a85b-43dae1a2a33d@email.android.com> <511CD709.6070506@hardwarefreak.com> <511E38C7.6000203@hardwarefreak.com> <c0057008-8681-4275-a6e2-e747c9711158@email.android.com> <511EDBCB.2000906@hardwarefreak.com> <bdc9707d-f948-430e-b1e6-28ad06bbe60a@email.android.com> <5120356E.8000702@hardwarefreak.com> <91cffde0-b154-477d-90d2
- -68b15e91518c@email.android.com> <5120789B.1080804@hardwarefreak.com> <5120979C.9030703@websitemanagers.com.au> <5120E1F6.2050906@hardwarefreak.com> <5120ED3F.7080904@websitemanagers.com.au>
-Reply-To: stan@hardwarefreak.com
+From: "Dragon" <Sunghost@gmx.de>
+Subject: Possible to rescue SW Raid5 with 2 missing Disks
+Date: Tue, 19 Feb 2013 16:19:21 +0100
+Message-ID: <20130219151921.320230@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5120ED3F.7080904@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: Dave Cundiff <syshackmin@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2/17/2013 8:46 AM, Adam Goryachev wrote:
+Hello,
+sorry for pushing, but any further doing to rescue the raid? sorry but the system didnt run since Dec... 
 
-> I'll start with this method... Haven't looked at the iscsiadm man page
-> again yet, but I suspect it shouldn't be too hard to work out. I'm also
-> thinking I could just run the discover and manually delete the
-> extraneous files the same as I was doing previously. I'll sort this out
-> next week.
-
-I strongly suggest you read/research and plan beforehand.  If you have
-not setup your SAN subnetting and Xen IP SAN ethernet port assignments
-correctly, you will not be able to use LUN masking, as it is based on
-subnet masks, to show/hide LUNs to initiators.  Which means you'll have
-to rip out and redo your IP assignments on the fly.
-
-Building a SAN such as this isn't something that can be done properly
-while flying by the seat of your pants.  It takes planning.
-
-> Well, hard to say, but here is the fio test result from the OS drive
-> before the kernel change:
->    READ: io=4096MB, aggrb=518840KB/s, minb=531292KB/s, maxb=531292KB/s,
-> mint=8084msec, maxt=8084msec
->   WRITE: io=4096MB, aggrb=136404KB/s, minb=139678KB/s, maxb=139678KB/s,
-> mint=30749msec, maxt=30749msec
-
-> Disk stats (read/write):
->   sda: ios=66570/66363, merge=10297/10453, ticks=259152/993304,
-> in_queue=1252592, util=99.34%
-
-This says /dev/sda
-
-> Here is the same test with the new kernel (note, this SSD is still
-> connected to the motherboard, I wasn't confident if the HBA drivers were
-> included in my kernel, when I installed it, etc.
-> 
->    READ: io=4096MB, aggrb=516349KB/s, minb=528741KB/s, maxb=528741KB/s,
-> mint=8123msec, maxt=8123msec
->   WRITE: io=4096MB, aggrb=143812KB/s, minb=147264KB/s, maxb=147264KB/s,
-> mint=29165msec, maxt=29165msec
-> 
-> Disk stats (read/write):
->   sdf: ios=66509/66102, merge=10342/10537, ticks=260504/937872,
-> in_queue=1198440, util=99.14%
-
-this says /dev/sdf
-
-> Interesting that there is very little difference.... I'm not sure why...
-
-Is this the same SSD?  Could be test parameters, controller, etc.  SSDs
-seem to be a little finicky WRT write queue depth.  Most seem to give
-lower seq write performance with a QD of 1 and level off at peak
-performance around QD of 3 to 4.  The IO request size plays a role as
-well.  Paste your FIO command line as well as the model of this OS SSD.
-
-> It would be interesting to re-test the onboard SATA performance, but I
-> assure you I really don't want to pull that machine apart again. (Some
-> insane person mounted it on the rack mount rails upside down!!! So it's
-> a real pita for something that is supposed to make life easier!
-
-WTF? How did you accomplish the upgrades?  Why didn't you flip it over
-at that time?  Wow....
-
-> So, it has been through some hoops, and has taken some effort, but at
-
-Put it through another hoop and get it mounted upright.  I still can't
-believe this...  you must be pulling our collective leg.
-
-> the end of the day, I think we have a much better solution than buying
-> any off the shelf SAN device, and most definitely get a lot more
-> flexibility. 
-
-Definitely cheaper, and more flexible should you need to run a filer
-(Samba) directly on the box.  Not NEARLY as easy to setup.  Nexsan has
-some nice gear that's a breeze to configure, nice intuitive web GUI.
-
-> Eventually the plan is to add a 3rd DRBD node at a remote
-> office for DR purposes.
-
-IIRC, DRBD isn't recommended for remote site use with public networks
-due to reliability.  Will you have a GbE metro ethernet connection, or two?
-
->> I've been designing and building servers around channel parts for over
->> 15 years, and I prefer it any day to Dell/HP/IBM etc.  It's nice to see
->> other folks getting out there on the bleeding edge building ultra high
->> performance systems with channel gear.  We don't see systems like this
->> on linux-raid very often.
-> 
-> I prefer the "channel parts systems" as well, though I was always a bit
-> afraid to build them for customers just in case it went wrong... I
-
-'Whitebox' or 'custom' if you prefer.  Selecting good quality components
-with solid manufacturer warranty and technical support, and performing
-extensive burn, in is the key to success.  I've had good luck with
-SuperMicro mainboards and chassis/backplanes.  Intel server boards are
-quality as well, but for many years I've been exclusively AMD for CPUs,
-for many reasons.  I do prefer Intel's NICs.
-
-> always build up my own stuff though. Of course, next time I need to do
-> something like this, I'll have a heck of a lot more knowledge and
-> confidence to do it.
-
-Unless you're always learning/doing new stuff IT gets boring.
-
--- 
-Stan
-
+thx
+sunny
