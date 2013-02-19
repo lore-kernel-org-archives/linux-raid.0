@@ -1,38 +1,35 @@
-From: "stone@heisl.org" <stone@heisl.org>
-Subject: Brocken Raid & LUKS
-Date: Tue, 19 Feb 2013 17:01:16 +0100
-Message-ID: <5123A1CC.2000003@heisl.org>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Possible to rescue SW Raid5 with 2 missing Disks
+Date: Tue, 19 Feb 2013 12:48:33 -0500
+Message-ID: <5123BAF1.1030600@turmel.org>
+References: <20130219151921.320230@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20130219151921.320230@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dragon <Sunghost@gmx.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hi guys.
+On 02/19/2013 10:19 AM, Dragon wrote:
+> Hello,
+> sorry for pushing, but any further doing to rescue the raid? sorry but the system didnt run since Dec... 
 
-yesterday my raid5 of 4 disk is broken and i dont find a better way as 
-to re-create it new.
-mdadm --create /dev/md2 --assume-clean --verbose --level=5 
---raid-devices=4 /dev/sdc1 /dev/sdd1 missing /dev/sdf1
+I still think you are at the point where duplicating your original disks
+onto backups so you can try the combinations I identified is the only
+*safe* way forward.  But only *safe* in the sense that if your first
+combination doesn't work, you can copy back and try another combination.
 
-my problem is now that i cannot open die LUKS on the device md2
-cryptsetup luksOpen /dev/md2 md2_nas
-Device /dev/md2 is not a valid LUKS device.
+I've yet to see any indication that the moosefs on top of your broken
+ext4 fs is likely to be saved.
 
-i found with an hexdump on the disk sdc1 and sdf1 the LUKS header
-hexdump -C /dev/sdc1 | head -40
-.....
-00100000  4c 55 4b 53 ba be 00 01  61 65 73 00 00 00 00 00 
-|LUKS....aes.....|
-....
+You should post the links to the "fsck -n" results of creating the array
+in the six combinations I had you try.
 
-so i think the header must be also on the md2 device but not on the 
-beginning.
-is my raid constrct false? must i reconstruct my array new?
+You should also repost the output of mdadm -D and mdadm -E from the
+original array that you shared with me on Dec 17.
 
-who can i bring my raid so up that i can open the LUKS and save all my data?
-
-thank you.
+Phil
 
