@@ -1,57 +1,62 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Brocken Raid & LUKS
-Date: Tue, 19 Feb 2013 12:57:51 -0500
-Message-ID: <5123BD1F.4060200@turmel.org>
-References: <5123A1CC.2000003@heisl.org>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: Possible to rescue SW Raid5 with 2 missing Disks
+Date: Tue, 19 Feb 2013 19:32:43 +0100 (CET)
+Message-ID: <16900460.19.1361298763813.JavaMail.root@zimbra>
+References: <5123BAF1.1030600@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5123A1CC.2000003@heisl.org>
+In-Reply-To: <5123BAF1.1030600@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "stone@heisl.org" <stone@heisl.org>
-Cc: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org, Dragon <Sunghost@gmx.de>
 List-Id: linux-raid.ids
 
-On 02/19/2013 11:01 AM, stone@heisl.org wrote:
-> hi guys.
-> 
-> yesterday my raid5 of 4 disk is broken and i dont find a better way as
-> to re-create it new.
-> mdadm --create /dev/md2 --assume-clean --verbose --level=5
-> --raid-devices=4 /dev/sdc1 /dev/sdd1 missing /dev/sdf1
-> 
-> my problem is now that i cannot open die LUKS on the device md2
-> cryptsetup luksOpen /dev/md2 md2_nas
-> Device /dev/md2 is not a valid LUKS device.
-> 
-> i found with an hexdump on the disk sdc1 and sdf1 the LUKS header
-> hexdump -C /dev/sdc1 | head -40
-> .....
-> 00100000  4c 55 4b 53 ba be 00 01  61 65 73 00 00 00 00 00
-> |LUKS....aes.....|
-> ....
-> 
-> so i think the header must be also on the md2 device but not on the
-> beginning.
-> is my raid constrct false? must i reconstruct my array new?
-> 
-> who can i bring my raid so up that i can open the LUKS and save all my
-> data?
+> > Hello,
+> > sorry for pushing, but any further doing to rescue the raid? sorry
+> > but the system didnt run since Dec...
+>=20
+> I still think you are at the point where duplicating your original
+> disks
+> onto backups so you can try the combinations I identified is the only
+> *safe* way forward. But only *safe* in the sense that if your first
+> combination doesn't work, you can copy back and try another
+> combination.
+>=20
+> I've yet to see any indication that the moosefs on top of your broken
+> ext4 fs is likely to be saved.
+>=20
+> You should post the links to the "fsck -n" results of creating the
+> array
+> in the six combinations I had you try.
+>=20
+> You should also repost the output of mdadm -D and mdadm -E from the
+> original array that you shared with me on Dec 17.
 
-Please post your "mdadm -E" reports for your disks from *before* you did
-"mdadm --create".  If you do not have these reports, some guessing may
-be required.  (And why did you choose mdadm --create?  That's a terrible
-step to take without good advice first.)
+IMHO you should be using ddrescue (preferalbly the one from GNU) to cop=
+y the disks onto new disks (at least the faulty ones). Do this first, s=
+ince additional access may result in more data loss. After doing that, =
+use the new drives for recovery, since they will (hopefully) not be thr=
+owing errors. Working live on bad drives isn't something I would recomm=
+end.
+--=20
+Vennlige hilsener / Best regards
 
-Also post "mdadm -E" reports for /dev/sdc1, sdd1, and sdf1 as they are
-now, so we can compare.
-
-If you still have dmesg from before and after the breakage, please post
-it too.
-
-The hexdump above is very valuable, and will certainly help make
-educated guesses (if necessary).
-
-Phil
-
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
