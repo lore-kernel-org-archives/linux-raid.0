@@ -1,62 +1,46 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: Possible to rescue SW Raid5 with 2 missing Disks
-Date: Tue, 19 Feb 2013 19:32:43 +0100 (CET)
-Message-ID: <16900460.19.1361298763813.JavaMail.root@zimbra>
-References: <5123BAF1.1030600@turmel.org>
+From: vincent Ferrer <vincentchicago1@gmail.com>
+Subject: Re: status of patches ( raid5 multiple threads )
+Date: Tue, 19 Feb 2013 11:22:06 -0800
+Message-ID: <CAEyJA_ubguH+9k_xXmjFwXN=QHp9E1t+UbTxFYdVqEAT59Lzrw@mail.gmail.com>
+References: <CAEyJA_uzE++2TDntK6pcdmgLgXbPE_9--XdHwdsFR72vaUeHng@mail.gmail.com>
+	<20120911094420.044cfa98@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5123BAF1.1030600@turmel.org>
+In-Reply-To: <20120911094420.044cfa98@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org, Dragon <Sunghost@gmx.de>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > Hello,
-> > sorry for pushing, but any further doing to rescue the raid? sorry
-> > but the system didnt run since Dec...
->=20
-> I still think you are at the point where duplicating your original
-> disks
-> onto backups so you can try the combinations I identified is the only
-> *safe* way forward. But only *safe* in the sense that if your first
-> combination doesn't work, you can copy back and try another
-> combination.
->=20
-> I've yet to see any indication that the moosefs on top of your broken
-> ext4 fs is likely to be saved.
->=20
-> You should post the links to the "fsck -n" results of creating the
-> array
-> in the six combinations I had you try.
->=20
-> You should also repost the output of mdadm -D and mdadm -E from the
-> original array that you shared with me on Dec 17.
+Hi  Neil / Shaohua,
 
-IMHO you should be using ddrescue (preferalbly the one from GNU) to cop=
-y the disks onto new disks (at least the faulty ones). Do this first, s=
-ince additional access may result in more data loss. After doing that, =
-use the new drives for recovery, since they will (hopefully) not be thr=
-owing errors. Working live on bad drives isn't something I would recomm=
-end.
---=20
-Vennlige hilsener / Best regards
+Did the patches for  "raid5  create multiple threads" got
+reviewed/merged into  3.8 kernel ?  Or otherwise what is the plan and
+current state of multi-thread raid5 support in latest linux kernels ?
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Appreciate your answers and great work.
+
+-Vincy
+
+
+
+On Mon, Sep 10, 2012 at 4:44 PM, NeilBrown <neilb@suse.de> wrote:
+> On Mon, 10 Sep 2012 11:45:18 -0700 vincent Ferrer <vincentchicago1@gmail.com>
+> wrote:
+>
+>> Hi Shaohua  (and linux-raid maintainers),
+>>
+>> Interested in knowing status of patches  "raid5  create multiple threads "
+>> http://www.spinics.net/lists/raid/msg39978.html
+>>
+>> Specifically want to know if it is available in any of the latest
+>> kernel releases 3.x ?
+>>
+>> Or otherwise when are these patches expected to get merged into linux
+>> kernel tree.
+>
+> I don't plan to submit them for 3.7, though I might for 3.8 if I get a change
+> to give them a proper review.
+>
+> NeilBrown
