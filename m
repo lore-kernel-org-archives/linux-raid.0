@@ -1,46 +1,26 @@
-From: vincent Ferrer <vincentchicago1@gmail.com>
-Subject: Re: status of patches ( raid5 multiple threads )
-Date: Tue, 19 Feb 2013 11:22:06 -0800
-Message-ID: <CAEyJA_ubguH+9k_xXmjFwXN=QHp9E1t+UbTxFYdVqEAT59Lzrw@mail.gmail.com>
-References: <CAEyJA_uzE++2TDntK6pcdmgLgXbPE_9--XdHwdsFR72vaUeHng@mail.gmail.com>
-	<20120911094420.044cfa98@notabene.brown>
+From: "Dragon" <Sunghost@gmx.de>
+Subject: Possible to rescue SW Raid5 with 2 missing Disks
+Date: Tue, 19 Feb 2013 21:36:38 +0100
+Message-ID: <20130219203638.6840@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120911094420.044cfa98@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi  Neil / Shaohua,
+Hi Phil and Roy and Salatiel who i didnt found in the mailinglist but in my inbox ;)
 
-Did the patches for  "raid5  create multiple threads" got
-reviewed/merged into  3.8 kernel ?  Or otherwise what is the plan and
-current state of multi-thread raid5 support in latest linux kernels ?
+@Phil 
+i did it in 6. 2013-02-15 show the old -E and -D outputs as well i post the output from fsck -n in the first post 25. 2013-02-08.
 
-Appreciate your answers and great work.
+@Roy
+your right i would do the same, but i hoped Mikael says "it looks good" that i dont have to buy another 6 disks and can recreate the raid with hopfully no errros ;)
 
--Vincy
+@Solatiel
+i didnt check both disks sdd and sdf of badblocks but i will do tonight and inform you. i think they didnt have anyone.
 
+best regards
 
-
-On Mon, Sep 10, 2012 at 4:44 PM, NeilBrown <neilb@suse.de> wrote:
-> On Mon, 10 Sep 2012 11:45:18 -0700 vincent Ferrer <vincentchicago1@gmail.com>
-> wrote:
->
->> Hi Shaohua  (and linux-raid maintainers),
->>
->> Interested in knowing status of patches  "raid5  create multiple threads "
->> http://www.spinics.net/lists/raid/msg39978.html
->>
->> Specifically want to know if it is available in any of the latest
->> kernel releases 3.x ?
->>
->> Or otherwise when are these patches expected to get merged into linux
->> kernel tree.
->
-> I don't plan to submit them for 3.7, though I might for 3.8 if I get a change
-> to give them a proper review.
->
-> NeilBrown
+sunny
