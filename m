@@ -1,41 +1,49 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Usefulness of RAID 4
-Date: Wed, 20 Feb 2013 12:15:50 -0600
-Message-ID: <512512D6.6080104@hardwarefreak.com>
-References: <D5F9E1BC-26C0-4585-9DD5-0C19570FBA17@colorremedies.com> <5123FF85.50105@hardwarefreak.com> <CBC74AA5-EA3C-4B35-B43E-9C1F12C864CE@colorremedies.com>
-Reply-To: stan@hardwarefreak.com
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Brocken Raid & LUKS
+Date: Wed, 20 Feb 2013 13:39:06 -0500
+Message-ID: <5125184A.6040707@turmel.org>
+References: <5123A1CC.2000003@heisl.org> <5123BD1F.4060200@turmel.org> <5123E4E9.3020609@heisl.org> <5123EB92.5090505@turmel.org> <5123EF45.6080405@heisl.org> <5123F7C7.7000406@turmel.org> <5123FB71.3060509@heisl.org> <5124196F.6090000@turmel.org> <512516C2.3010105@heisl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CBC74AA5-EA3C-4B35-B43E-9C1F12C864CE@colorremedies.com>
+In-Reply-To: <512516C2.3010105@heisl.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: "linux-raid@vger.kernel.org list" <linux-raid@vger.kernel.org>
+To: Stone <stone@heisl.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2/19/2013 4:46 PM, Chris Murphy wrote:
+On 02/20/2013 01:32 PM, Stone wrote:
+>>> Am 19.02.2013 23:08, schrieb Phil Turmel:
+>>>> Serious issue #1:
+>>>>
+>>>> You have unreadable sectors on sdc.  When you hit them during rebuild,
+>>>> sdc will be kicked out (again).  They might not be permanent errors,
+>>>> but
+>>>> you can't tell until the drive is given fresh data to write over them.
+>>>>
+>>>> You have two choices:
+>>>>
+>>>> 1) use ddrescue to copy sdc onto a new drive, then use it in place of
+>>>> sdc when you re-create the array, or
+>>>>
+>>>> 2) use badblocks to find the exact locations of the bad sectors, then
+>>>> write zeros to those sectors using dd.
+>>>>
+>>>> Either way, you have lost whatever those sectors used to hold.
 
-> But is it remotely practical/useful to use HDDs for data drives, and one SSD as the parity drive to eliminate the parity write bottleneck of RAID 4?
+> befor i will recreate the raid with an older mdadm i would search the
+> badblocks. is this right?
 
-I don't see how.  The SSD dedicated to parity must have the same
-capacity as the HDDs.  The largest non PCIe monster SDDs are right at
-1TB and the cheapest of those is ~$1000.  If the goal is to do an end
-run around slow parity writes of RAID4, then RAID10/0+1/etc with HDDs
-gives a lot more capacity and performance for the same or less money.
+Yes, and write zeros to those blocks to either fix them or relocate them.
 
-Hybrid RAID4 setup:
-2TB net capacity
-Mushkin Enhanced 2.5" 960GB =	$1000
-2x Hitachi 1TB 7.2K 2.5" =	$ 200
-				$1200
-RAID10 setup:
-6TB net capacity
-12x Hitachi 1TB 7.2K 2.5" =	$1200
+> i have check all drives and the sdc device had badblock:
+> Pass completed, 48 bad blocks found. (48/0/0 errors)
+> but die binary dont give me the info where they are..
+> i have used this command in a screen badblocks -v /dev/sdc1
 
-The RAID10 setup has 3x write performance and capacity for the same
-money, albeit with more power draw and more ports required.
+"man badblocks"
 
--- 
-Stan
+You should use the "-o" option to save the list.
 
+Phil
