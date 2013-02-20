@@ -1,205 +1,364 @@
-From: Adam Goryachev <adam@websitemanagers.com.au>
-Subject: Re: RAID performance
-Date: Thu, 21 Feb 2013 03:45:38 +1100
-Message-ID: <5124FDB2.10007@websitemanagers.com.au>
-References: <51134E43.7090508@websitemanagers.com.au> <5115CC02.2010400@hardwarefreak.com> <d34a6caf-d1b5-403c-aee2-525a9b3c3db7@email.android.com> <51179F09.1020503@hardwarefreak.com> <6990fbda-f741-454a-80cd-bdcdfd8c971c@email.android.com> <5119AD1C.8030000@hardwarefreak.com> <5119D410.5090300@websitemanagers.com.au> <511B4719.6060607@hardwarefreak.com> <aecd39d9-2184-4df0-97bb-d63de0d29e5c@email.android.com> <555253fb-86d2-448b-a85b-43dae1a2a33d@email.android.com> <511CD709.6070506@hardwarefreak.com> <511E38C7.6000203@hardwarefreak.com> <c0057008-8681-4275-a6e2-e747c9711158@email.android.com> <511EDBCB.2000906@hardwarefreak.com> <bdc9707d-f948-430e-b1e6-28ad06bbe60a@email.android.com> <5120356E.8000702@hardwarefreak.com> <91cffde0-b154-477d-90d2-68b15e91518c@email.android.com> <5120789B
- .1080804@hardwarefreak.com> <5120979C.9030703@websitemanagers.com.au> <5120E1F6.2050906@hardwarefreak.com> <5120ED3F.7080904@websitemanagers.com.au> <5123351F.5030903@hardwarefreak.com>
+From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Subject: Re: RAID performance - new kernel results - 5x SSD RAID5
+Date: Thu, 21 Feb 2013 04:10:15 +1100
+Message-ID: <51250377.509@websitemanagers.com.au>
+References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <5113A2D6.20104@websitemanagers.com.au> <CAKHEz2YgiQiknBXju9a=PR3zV1Hb7ux8yBZWywiTi=BXFm20GA@mail.gmail.com> <51150475.2020803@websitemanagers.com.au> <5120A84E.4020702@websitemanagers.com.au> <51222A81.9080600@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5123351F.5030903@hardwarefreak.com>
+In-Reply-To: <51222A81.9080600@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
+To: stan@hardwarefreak.com
 Cc: Dave Cundiff <syshackmin@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Stan Hoeppner <stan@hardwarefreak.com> wrote:
+On 19/02/13 00:20, Stan Hoeppner wrote:
+> On 2/17/2013 3:52 AM, Adam Goryachev wrote:
+> 
+>>    READ: io=4096MB, aggrb=2242MB/s, minb=2296MB/s, maxb=2296MB/s,
+>> mint=1827msec, maxt=1827msec
+> 
+>>   WRITE: io=4096MB, aggrb=560660KB/s, minb=574116KB/s, maxb=574116KB/s,
+>> mint=7481msec, maxt=7481msec
+> 
+> Our read throughput is almost exactly 4x the write throughput.  At the
+> hardware level, single SSD write throughput should only be ~10% lower
+> than read.  Sequential writes w/RAID5 should not cause RMW cycles so
+> that is not in play in these tests.  So why are writes so much slower?
+> Knowing these things, where should we start looking for our performance
+> killing needle in this haystack?
+> 
+> We know that the md/RAID5 driver still uses a single write thread in
+> kernel 3.2.35.  And given we're pushing over 500MB/s through md/RAID5 to
+> SSD storage, it's possible that this thread is eating all of one CPU
+> core with both IOs and parity calculations, limiting write throughput.
+> So that's the first place to look.  For your 7 second test run of FIO,
+> we could do some crude instrumenting.  Assuming you have top setup to
+> show individual Cpus (if not hit '1' in interactive mode to get them,
+> then exit), we can grab top output twice a seconds for 10 seconds, in
+> another terminal window.  So we do something like the following, giving
+> 3 seconds to switch windows and launch FIO.  (Or one could do it in  a
+> single window, writing a script to pipe the output of each to a file)
+> 
+> ~$ top -b -n 20 -d 0.5 |grep Cpu
+> 
+> yields 28 lines of this for 2 cores, 56 lies for 4 cores.
+> 
+> Cpu0 : 1.2%us, 0.5%sy, 1.8%ni, 96.4%id, 0.1%wa, 0.0%hi, 0.0%si, 0.0%st
+> Cpu1 : 1.1%us, 0.5%sy, 2.2%ni, 96.1%id, 0.1%wa, 0.0%hi, 0.0%si, 0.0%st
+> Cpu0 : 1.9%us, 1.9%sy, 0.0%ni, 96.2%id, 0.0%wa, 0.0%hi, 0.0%si, 0.0%st
+> Cpu1 : 0.0%us, 0.0%sy, 0.0%ni,100.0%id, 0.0%wa, 0.0%hi, 0.0%si, 0.0%st
+> 
+> This will give us a good idea of what the cores are doing during the FIO
+> run, as well as interrupt distribution, which CPUs are handling the
+> lower level IO threads, how long we're waiting on the SSDs, etc.  If any
+> core is at 98%+ during the run then md thread starvation is the problem.
 
->On 2/17/2013 8:46 AM, Adam Goryachev wrote:
->
->> I'll start with this method... Haven't looked at the iscsiadm man
->page
->> again yet, but I suspect it shouldn't be too hard to work out. I'm
->also
->> thinking I could just run the discover and manually delete the
->> extraneous files the same as I was doing previously. I'll sort this
->out
->> next week.
->
->I strongly suggest you read/research and plan beforehand.  If you have
->not setup your SAN subnetting and Xen IP SAN ethernet port assignments
->correctly, you will not be able to use LUN masking, as it is based on
->subnet masks, to show/hide LUNs to initiators.  Which means you'll have
->to rip out and redo your IP assignments on the fly.
->
->Building a SAN such as this isn't something that can be done properly
->while flying by the seat of your pants.  It takes planning.
+Didn't quite work, I had to run the top command like this:
+top -n20 -d 0.5 | grep Cpu
+Then press 1 after it started, it didn't save the state when running it
+interactively and then exiting.
+Output is as follows:
+Cpu0  :  0.1%us,  2.3%sy,  0.0%ni, 94.3%id,  3.0%wa,  0.0%hi,  0.3%si,
+0.0%st
+Cpu1  :  0.1%us,  0.5%sy,  0.0%ni, 98.5%id,  0.9%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu2  :  0.1%us,  0.2%sy,  0.0%ni, 99.3%id,  0.4%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu3  :  0.0%us,  0.3%sy,  0.0%ni, 97.8%id,  1.9%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu4  :  0.1%us,  0.1%sy,  0.0%ni, 99.7%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu5  :  0.1%us,  0.3%sy,  0.0%ni, 98.0%id,  1.5%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu6  :  0.1%us,  0.1%sy,  0.0%ni, 97.4%id,  2.4%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu7  :  0.0%us,  0.1%sy,  0.0%ni, 99.6%id,  0.2%wa,  0.0%hi,  0.0%si,
+0.0%st
 
-I'll work this one out, I don't think it is really relevant to the
-issues anymore anyway. I can get better than 1Gbps, and don't expect
-that to change much with this change.
+Cpu0  :  0.0%us, 47.9%sy,  0.0%ni, 50.0%id,  0.0%wa,  0.0%hi,  2.1%si,
+0.0%st
+Cpu1  :  0.0%us,  2.0%sy,  0.0%ni, 98.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu2  :  2.0%us, 35.3%sy,  0.0%ni,  0.0%id, 62.7%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu3  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu4  :  0.0%us,  3.8%sy,  0.0%ni, 96.2%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu5  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu6  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu7  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
 
->> Well, hard to say, but here is the fio test result from the OS drive
->> before the kernel change:
->>    READ: io=4096MB, aggrb=518840KB/s, minb=531292KB/s,
->maxb=531292KB/s,
->> mint=8084msec, maxt=8084msec
->>   WRITE: io=4096MB, aggrb=136404KB/s, minb=139678KB/s,
->maxb=139678KB/s,
->> mint=30749msec, maxt=30749msec
->
->> Disk stats (read/write):
->>   sda: ios=66570/66363, merge=10297/10453, ticks=259152/993304,
->> in_queue=1252592, util=99.34%
->
->This says /dev/sda
->
->> Here is the same test with the new kernel (note, this SSD is still
->> connected to the motherboard, I wasn't confident if the HBA drivers
->were
->> included in my kernel, when I installed it, etc.
->> 
->>    READ: io=4096MB, aggrb=516349KB/s, minb=528741KB/s,
->maxb=528741KB/s,
->> mint=8123msec, maxt=8123msec
->>   WRITE: io=4096MB, aggrb=143812KB/s, minb=147264KB/s,
->maxb=147264KB/s,
->> mint=29165msec, maxt=29165msec
->> 
->> Disk stats (read/write):
->>   sdf: ios=66509/66102, merge=10342/10537, ticks=260504/937872,
->> in_queue=1198440, util=99.14%
->
->this says /dev/sdf
+Cpu0  :  0.0%us, 37.3%sy,  0.0%ni, 62.7%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu1  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu2  :  0.0%us, 13.7%sy,  0.0%ni, 52.9%id, 33.3%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu3  :  2.0%us, 12.0%sy,  0.0%ni, 46.0%id, 40.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu4  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu5  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu6  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu7  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
 
-Remember sdb-sdf (the RAID5) were connected to onboard, and are now
-connected to the LSI. Linux is seeing the LSI card before the onboard
-drive (I assume) so it has now put them as sda-sde, and the onboard
-bootup SSD is now sdf... Messed with me when I was looking at some of
-the stats/graphs until I realised that too....
+Cpu0  :  0.0%us, 26.0%sy,  0.0%ni, 44.0%id, 26.0%wa,  0.0%hi,  4.0%si,
+0.0%st
+Cpu1  :  0.0%us,  7.7%sy,  0.0%ni, 82.7%id,  9.6%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu2  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu3  :  0.0%us,  4.0%sy,  0.0%ni, 86.0%id, 10.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu4  :  1.9%us,  1.9%sy,  0.0%ni, 96.2%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu5  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu6  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu7  :  0.0%us,  3.9%sy,  0.0%ni, 13.7%id, 82.4%wa,  0.0%hi,  0.0%si,
+0.0%st
 
->> Interesting that there is very little difference.... I'm not sure
->why...
->
->Is this the same SSD?  Could be test parameters, controller, etc.  SSDs
->seem to be a little finicky WRT write queue depth.  Most seem to give
->lower seq write performance with a QD of 1 and level off at peak
->performance around QD of 3 to 4.  The IO request size plays a role as
->well.  Paste your FIO command line as well as the model of this OS SSD.
+Cpu0  :  0.0%us, 10.2%sy,  0.0%ni, 51.0%id, 38.8%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu1  :  0.0%us,  2.0%sy,  0.0%ni, 86.0%id, 12.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu2  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu3  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu4  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu5  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu6  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu7  :  0.0%us,  0.7%sy,  0.0%ni, 66.2%id, 33.1%wa,  0.0%hi,  0.0%si,
+0.0%st
 
-Same ssd in both tests. fio command line was just fio test.fio
-The fio file was the one posted in this thread by another user as follows:
-[global]
-bs=64k
-ioengine=libaio
-iodepth=32
-size=4g
-direct=1
-runtime=60
-#directory=/dev/vg0/testlv
-filename=/tmp/testing/test
+Cpu0  :  0.0%us, 15.7%sy,  0.0%ni, 39.2%id, 41.2%wa,  0.0%hi,  3.9%si,
+0.0%st
+Cpu1  :  0.0%us,  4.0%sy,  0.0%ni, 82.0%id, 14.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu2  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu3  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu4  :  1.9%us,  1.9%sy,  0.0%ni, 96.2%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu5  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu6  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu7  :  0.0%us,  0.7%sy,  0.0%ni, 66.7%id, 32.7%wa,  0.0%hi,  0.0%si,
+0.0%st
 
-[seq-read]
-rw=read
-stonewall
+Cpu0  :  0.0%us, 12.2%sy,  0.0%ni, 55.1%id, 32.7%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu1  :  0.0%us,  6.0%sy,  0.0%ni, 56.0%id, 38.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu2  :  0.0%us,  1.9%sy,  0.0%ni, 98.1%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu3  :  0.0%us,  1.9%sy,  0.0%ni, 98.1%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu4  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu5  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu6  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu7  :  0.0%us,  0.7%sy,  0.0%ni, 66.2%id, 33.1%wa,  0.0%hi,  0.0%si,
+0.0%st
 
-[seq-write]
-rw=write
-stonewall
+Cpu0  :  0.0%us, 12.5%sy,  0.0%ni, 41.7%id, 45.8%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu1  :  0.0%us,  6.2%sy,  0.0%ni, 89.6%id,  4.2%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu2  :  0.0%us,  0.0%sy,  0.0%ni, 62.0%id, 38.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu3  :  0.0%us,  2.0%sy,  0.0%ni, 78.4%id, 19.6%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu4  :  0.0%us,  3.8%sy,  0.0%ni, 96.2%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu5  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu6  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu7  :  0.0%us,  1.9%sy,  0.0%ni, 57.7%id, 40.4%wa,  0.0%hi,  0.0%si,
+0.0%st
 
-Note, the "root ssd" is the /tmp/testing/test file, when testing MD
-performance on the RAID5 I'm using the /dev/vg0/testlv which is an LV on
-the DRBD on the RAID5 (md2), and I do the test with the DRBD disconnected.
+Cpu0  :  0.0%us, 13.7%sy,  0.0%ni, 33.3%id, 51.0%wa,  0.0%hi,  2.0%si,
+0.0%st
+Cpu1  :  0.0%us,  7.8%sy,  0.0%ni, 80.4%id, 11.8%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu2  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu3  :  0.0%us,  0.0%sy,  0.0%ni, 66.7%id, 33.3%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu4  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu5  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu6  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu7  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
 
->> It would be interesting to re-test the onboard SATA performance, but
->I
->> assure you I really don't want to pull that machine apart again.
->(Some
->> insane person mounted it on the rack mount rails upside down!!! So
->it's
->> a real pita for something that is supposed to make life easier!
->
->WTF? How did you accomplish the upgrades?  Why didn't you flip it over
->at that time?  Wow....
+Cpu0  :  0.0%us, 10.4%sy,  0.0%ni, 25.0%id, 62.5%wa,  0.0%hi,  2.1%si,
+0.0%st
+Cpu1  :  0.0%us,  8.0%sy,  0.0%ni, 88.0%id,  4.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu2  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu3  :  0.0%us,  0.7%sy,  0.0%ni, 66.7%id, 32.7%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu4  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu5  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu6  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu7  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
 
-A VERY good question, both of them.... I worked like a mechanic, from
-underneath... a real pain I would say. I didn't like the idea of trying
-to flip it by myself though, much better with someone else to help in
-the process.... I think my supplier gives me crappy rails/solutions,
-because they are always a pain to get them installed....
+Cpu0  :  0.0%us,  6.5%sy,  0.0%ni, 21.7%id, 71.7%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu1  :  0.0%us,  7.8%sy,  0.0%ni, 88.2%id,  3.9%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu2  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu3  :  0.0%us,  0.0%sy,  0.0%ni, 66.7%id, 33.3%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu4  :  1.9%us,  1.9%sy,  0.0%ni, 96.2%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu5  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu6  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu7  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
 
->> So, it has been through some hoops, and has taken some effort, but at
->
->Put it through another hoop and get it mounted upright.  I still can't
->believe this...  you must be pulling our collective leg.
+Cpu0  :  0.0%us, 14.0%sy,  0.0%ni, 34.0%id, 52.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu1  :  0.0%us,  9.8%sy,  0.0%ni, 80.4%id,  9.8%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu2  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu3  :  0.0%us,  1.3%sy,  0.0%ni, 65.8%id, 32.9%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu4  :  0.0%us,  2.0%sy,  0.0%ni, 98.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu5  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu6  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu7  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
 
-Nope... I'll try and get to it, but it will be a while before I can take
-it offline and have someone who can help fix it up... Maybe I'll call a
-friend on the weekend ...
+Cpu0  :  0.0%us, 12.5%sy,  0.0%ni, 29.2%id, 58.3%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu1  :  0.0%us,  6.0%sy,  0.0%ni, 86.0%id,  8.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu2  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu3  :  0.0%us,  0.7%sy,  0.0%ni, 66.2%id, 33.1%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu4  :  2.0%us,  0.0%sy,  0.0%ni, 98.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu5  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu6  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
+Cpu7  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,
+0.0%st
 
->> the end of the day, I think we have a much better solution than
->buying
->> any off the shelf SAN device, and most definitely get a lot more
->> flexibility. 
->
->Definitely cheaper, and more flexible should you need to run a filer
->(Samba) directly on the box.  Not NEARLY as easy to setup.  Nexsan has
->some nice gear that's a breeze to configure, nice intuitive web GUI.
+There was more, very similar figures... apart from the second sample
+above, there was never a single Cpu with close to 0% Idle, and I'm
+assuming the %CPU in wa state is basically "idle" waiting for the disk
+or something else to happen rather than the CPU actually being busy...
 
-The breeze to configure part would be nice :)
+> (If you have hyperthreading enabled, reboot and disable it.  It normally
+> decreases thread performance due to scheduling and context switching
+> overhead, among other things.  Not to mention it makes determining
+> actual CPU load more difficult.  In this exercise you'll needlessly have
+> twice as many lines of output to comb through.)
 
->> Eventually the plan is to add a 3rd DRBD node at a remote
->> office for DR purposes.
->
->IIRC, DRBD isn't recommended for remote site use with public networks
->due to reliability.  Will you have a GbE metro ethernet connection, or
->two?
+I'll have to go in after hours to do that. Hopefully over the weekend
+(BIOS setting and no remote KVM)... Can re-supply the results after that
+if you think it will make a difference.
 
-We have 10Mbps private connection. I think we can license the DRBD proxy
-which should handle the sync over a slower network. The main issue with
-DRBD is when you are not using the DRBD proxy.... The connection itself
-is very reliable though, just a matter of the bandwidth and whether it
-will be sufficient. I'll test beforehand by using either the switch or
-linux to configure a slower connection (maybe 7M or something), and see
-if it will work reasonably.
+> If md is peaking a single core, the next step is to optimize the single
+> thread performance.  There's not much you can do here but to optimize
+> the parity calculation rate and tweak buffering.  I'm no expert on this
+> but others here are.  IIRC you can tweak md to use the floating point
+> registers and SSEx/AVX instructions.  These FP execution units in the
+> CPU run in parallel to the integer units, and are 128 vs 64 bits wide
+> (256 for AVX).  So not only is the number crunching speed increased, but
+> it's done in parallel to the other instructions.  This makes the integer
+> units more available.  You should also increase your stripe_cache_size
+> if you haven't already.  Such optimizations won't help much overall--
+> we're talking 5-20% maybe-- because the bottleneck lay elsewhere in the
+> code.  Which brings us to...
+> 
+> The only other way I know of to increase single thread RAID5 write
+> performance substantially is to grab a very recent kernel and Shaohua
+> Li's patch set developed specifically for the single write thread
+> problem on RAID1/10/5/6.  His test numbers show improvements of 130-200%
+> increasing with drive count, but not linearly.  It is described here:
+> http://lwn.net/Articles/500200/
+> 
+> With current distro kernels and lots of SSDs, the only way to
+> significantly improve this single thread write performance is to use
+> nested md/RAID0 over smaller arrays to increase the thread count and
+> bring more cores into play.  With this you get one write thread per
+> constituent array.  Each thread receive one core of performance.  The
+> stripe over them has no threads and can scale to any numbers of cores.
+> 
+> Assuming you are currently write thread bound at ~560-600MB/s, adding
+> one more Intel SSD for 6 total gives us...
+> 
+> RAID0 over 3 RAID1, 3 threads-- should yield read speed between 1.5 and
+> 3GB/s depending on load, and increase your write speed to 1.6GB/s, for
+> the loss of 480G capacity.
+> 
+> RAID0 over 2 RAID5, 2 threads-- should yield between 2.2 and 2.6GB/s
+> read speed, and increase your write speed to ~1.1GB/s, for no change in
+> capacity.
+> 
+> Again, these numbers assume the low write performance is due to thread
+> starvation.
 
->>> I've been designing and building servers around channel parts for
->over
->>> 15 years, and I prefer it any day to Dell/HP/IBM etc.  It's nice to
->see
->>> other folks getting out there on the bleeding edge building ultra
->high
->>> performance systems with channel gear.  We don't see systems like
->this
->>> on linux-raid very often.
->> 
->> I prefer the "channel parts systems" as well, though I was always a
->bit
->> afraid to build them for customers just in case it went wrong... I
->
->'Whitebox' or 'custom' if you prefer.  Selecting good quality
->components
->with solid manufacturer warranty and technical support, and performing
->extensive burn, in is the key to success.  I've had good luck with
->SuperMicro mainboards and chassis/backplanes.  Intel server boards are
->quality as well, but for many years I've been exclusively AMD for CPUs,
->for many reasons.  I do prefer Intel's NICs.
+I don't think it is from my measurements...
 
-I've preferred AMD for years, but my supplier always prefers Intel, and
-for systems like this they get much better warranty support for Intel
-compared to almost any other brand, so I generally end up with Intel
-boards and CPU's for "important" servers... Always heard good things
-about Intel NIC's ...
+> The downside for both:  Neither of these configurations can be expanded
+> with a reshape and thus drives cannot be added.  That can be achieved by
+> using a linear layer atop these RAID0 devices, and adding new md devices
+> to the linear array later.  With this you don't get automatic even
+> distribution of IO for the linear array, but only for the constituent
+> striped arrays.  This isn't a bad tradeoff when IO flow analysis and
+> architectural planning are performed before a system is deployed.
 
->> always build up my own stuff though. Of course, next time I need to
->do
->> something like this, I'll have a heck of a lot more knowledge and
->> confidence to do it.
->
->Unless you're always learning/doing new stuff IT gets boring.
+I'll disable the hyperthreading, and re-test afterwards, but I'm not
+sure that will produce much of a result. Let me know if you think I
+should run any other tests to track it down...
 
-Very true.
+One thing I can see is a large number of interrupts and context switches
+which looks like it happened at the same time as a backup run. Perhaps I
+am getting too many interrrupts on the network cards or the SATA controller?
 
-Regards,
+Thanks,
 Adam
+
+-- 
+Adam Goryachev
+Website Managers
+www.websitemanagers.com.au
