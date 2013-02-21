@@ -1,52 +1,49 @@
-From: "stone@heisl.org" <stone@heisl.org>
-Subject: Re: Brocken Raid & LUKS
-Date: Thu, 21 Feb 2013 15:19:12 +0100
-Message-ID: <51262CE0.3000809@heisl.org>
-References: <5123A1CC.2000003@heisl.org> <5123BD1F.4060200@turmel.org> <5123E4E9.3020609@heisl.org> <5123EB92.5090505@turmel.org> <5123EF45.6080405@heisl.org> <5123F7C7.7000406@turmel.org> <5123FB71.3060509@heisl.org> <5124196F.6090000@turmel.org> <512516C2.3010105@heisl.org> <5125184A.6040707@turmel.org> <5125C6E9.4050802@heisl.org> <5125EBFD.3050802@heisl.org> <51262137.3040609@turmel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51262137.3040609@turmel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+From: Tim Gardner <tim.gardner@canonical.com>
+Subject: [PATCH linux-next v2] DM RAID: validate_raid_redundancy: Silence uninitialized variable warning
+Date: Thu, 21 Feb 2013 07:50:26 -0700
+Message-ID: <1361458226-8142-1-git-send-email-tim.gardner@canonical.com>
+References: <20130221131931.GA29577@agk-dp.fab.redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130221131931.GA29577@agk-dp.fab.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Tim Gardner <tim.gardner@canonical.com>, Alasdair Kergon <agk@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Am 21.02.2013 14:29, schrieb Phil Turmel:
-> On 02/21/2013 04:42 AM, stone@heisl.org wrote:
->
->> i think this is the right way -> dd if=/dev/zero of=/dev/sdc1 bs=4096
->> count=1 seek=1073006628 (result of badblocks in my case 48 piece's)?
-> Yes, but for safety when typing a command line, I always put of= last.
-> Just in case I hit the <enter> key accidentally:
-Thx for the hint ;-)
->> dd if=/dev/zero bs=4096 count=1 seek=1073006628 of=/dev/sdc1
->>> and this for all badblocks?
-> Yes.
->
-> You should double-check the filesystem blocksize--it is usually 4096 but
-> ext4 allows you to change it.  "fsck -n" will report the total size of
-> the filesystem in its blocks.  Divide that into the total size of the
-> device to get the block size.
->
-> Phil
->
-o greate idea :)
-but i dont get a good result
-fsck -n /dev/sdc1
-fsck from util-linux 2.20.1
-fsck: fsck.linux_raid_member: not found
-fsck: error 2 while executing fsck.linux_raid_member for /dev/sdc1
+drivers/md/dm-raid.c:453:53: warning: 'rebuilds_per_group' may be used uninitialized in this function [-Wuninitialized]
+drivers/md/dm-raid.c:383:11: note: 'rebuilds_per_group' was declared here
 
-fsck -n /dev/md2
-fsck from util-linux 2.20.1
-e2fsck 1.42 (29-Nov-2011)
-fsck.ext2: Superblock invalid, trying backup blocks...
-fsck.ext2: Bad magic number in super-block while trying to open /dev/md2
+It is impossible that rebuilds_per_group could be used before set, but set
+it to 0 anyways to silence GCC warnings.
 
-The superblock could not be read or does not describe a correct ext2
-filesystem.  If the device is valid and it really contains an ext2
-filesystem (and not swap or ufs or something else), then the superblock
-is corrupt, and you might try running e2fsck with an alternate superblock:
-     e2fsck -b 8193 <device>
+Cc: Alasdair Kergon <agk@redhat.com>
+Cc: dm-devel@redhat.com
+Cc: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+---
+
+v2 - Added GCC comment. Update commit log with a more definite explanation.
+
+As Neil has pointed out, https://lwn.net/Articles/529954/ indicates
+uninitialized_var() is going away.
+
+ drivers/md/dm-raid.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index 9d6bf19..1dbc341 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -380,7 +380,8 @@ static int validate_region_size(struct raid_set *rs, unsigned long region_size)
+ static int validate_raid_redundancy(struct raid_set *rs)
+ {
+ 	unsigned i, rebuild_cnt = 0;
+-	unsigned rebuilds_per_group, copies, d;
++	unsigned rebuilds_per_group = 0; /* GCC 4.6.3 */
++	unsigned copies, d;
+ 	unsigned group_size, last_group_start;
+ 
+ 	for (i = 0; i < rs->md.raid_disks; i++)
+-- 
+1.7.9.5
