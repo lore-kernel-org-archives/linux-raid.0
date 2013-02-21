@@ -1,96 +1,39 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH linux-next] DM RAID: validate_raid_redundancy: Silence
- uninitialized variable warning
-Date: Thu, 21 Feb 2013 09:37:44 +1100
-Message-ID: <20130221093744.3ad146c4@notabene.brown>
-References: <1361392278-59767-1-git-send-email-tim.gardner@canonical.com>
-	<1361398597.4895.24.camel@mattotaupa>
+From: vincent Ferrer <vincentchicago1@gmail.com>
+Subject: Re: status of patches ( raid5 multiple threads )
+Date: Wed, 20 Feb 2013 16:07:07 -0800
+Message-ID: <CAEyJA_tKQx=dn8Aa6Pgh6e9wf5qsPkp12EJ_+ydhqhNa3rrnWA@mail.gmail.com>
+References: <CAEyJA_uzE++2TDntK6pcdmgLgXbPE_9--XdHwdsFR72vaUeHng@mail.gmail.com>
+	<20120911094420.044cfa98@notabene.brown>
+	<CAEyJA_ubguH+9k_xXmjFwXN=QHp9E1t+UbTxFYdVqEAT59Lzrw@mail.gmail.com>
+	<20130220141309.1928358b@notabene.brown>
+	<CAEyJA_sJx12UHHjYs6HKNOZQQHjSFpnJieK=rqTHvjZVT7OmKg@mail.gmail.com>
+	<20130220151619.00a4ee00@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Nzd5Is/CwURP9gl+pwoR1D0"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1361398597.4895.24.camel@mattotaupa>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paul Menzel <pm.debian@googlemail.com>
-Cc: Tim Gardner <tim.gardner@canonical.com>, linux-kernel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, dm-devel@redhat.com, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20130220151619.00a4ee00@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/Nzd5Is/CwURP9gl+pwoR1D0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Neil
+I may be able to test it depending how compatible/portable patches are
+with kernel  version 3.4.27.
+Can you please give me rough estimate that how much effort it can be
+to back port raid5 patches to  3.4.27 kernel
 
-On Wed, 20 Feb 2013 23:16:37 +0100 Paul Menzel <pm.debian@googlemail.com>
-wrote:
+thanks !
+vincy
 
-> Dear Tim,
->=20
->=20
-> thanks for the patch.
->=20
->=20
-> Am Mittwoch, den 20.02.2013, 13:31 -0700 schrieb Tim Gardner:
->=20
-> Noting the `gcc` version and build environment is never wrong. ;-)
->=20
-> > drivers/md/dm-raid.c: In function 'raid_ctr':
-> > drivers/md/dm-raid.c:453:53: warning: 'rebuilds_per_group' may be used =
-uninitialized in this function [-Wuninitialized]
-> > drivers/md/dm-raid.c:383:11: note: 'rebuilds_per_group' was declared he=
-re
-> >=20
-> > It appears unlikely that rebuilds_per_group could be used before set,
->=20
-> Why? Otherwise the compiler would not complain, right?
-
-It is not simply unlikely, it is impossible.  But gcc isn't that clever yet.
-
-> > --- a/drivers/md/dm-raid.c
-> > +++ b/drivers/md/dm-raid.c
-> > @@ -380,7 +380,7 @@ static int validate_region_size(struct raid_set *rs=
-, unsigned long region_size)
-> >  static int validate_raid_redundancy(struct raid_set *rs)
-> >  {
-> >  	unsigned i, rebuild_cnt =3D 0;
-> > -	unsigned rebuilds_per_group, copies, d;
-> > +	unsigned rebuilds_per_group =3D 0, copies, d;
-
-This should either be:
-        unsigned uninitialized_var(rebuilds_per_group);
-        unsigned copies, d;
-
-which the old way and is being deprecated, but at least is consistent with
-the kernel as it is, or
-
-        unsigned rebuilds_per_group =3D 0 /* GCC */;
-	unsigned copies,d;
-
-which is apparently the new way which I believe is due to be imposed on the
-kernel immediately after 3.9-rc1
-   https://lwn.net/Articles/529954/
-
-NeilBrown
-
-
---Sig_/Nzd5Is/CwURP9gl+pwoR1D0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUSVQODnsnt1WYoG5AQLd3Q//UL3Ci1uFP3bUejUumo0dx6x4HAiopoYP
-88K1zfVw14QsX8lI4bXzQkBlVjnBhGeOLptZxqptN7ncbtVxpj2Mm576ZDj+cKkn
-DR/0z3sT9ezWlyqWizy0sjkOE/sP8XMs/Z7t11C1HjBLce2kO9NRbGjtD1zstYLD
-nYToJ8fjnrf5KeGd+TI/gL/02maiPIAKC6UiQR/auCnIg5Bc2m9aJYyUxgjHaxOI
-w91KLfPI6fMX1UJmWvIeYYCqOGctdbLnP4fB7CExDvgjEUSsd6CRpAaPvJe0+/g5
-R1Znn2MdqY5bDpMYE1LSeDGOecuEag1EOurNIkjhip9KKnegkfkvfvEZPtZ7fvNw
-O9t5OvYIi+bsGGxJTtNOldulcmWjL+sE7on2jLEGXKz/HSCu60YiXlfoU8XzXANc
-1tC3EoHE8LQ+bZzP1rMozBwmQk0dCHkJ6s+Nwu4Jch6/2czdGGvyvE1Ixrehogc5
-b6Y4ci+tXO1cZNJxWbawqlL3fFFwLuCBPPcVQkH2IiEPW1qQWDPemCnE4D1gubZS
-V1AGSqnRchRCGMxDe89i3uKJcbSUWTUbMoi8XDggjsNRsu8FtezHA7vGKJeJfOnB
-tKUETcKGmGiUPwsYkbn+3wDUAfprQyaIYZeo0RldmIBPyGM93MvtjgOQqx1vgLpV
-gmVI/MCdSgQ=
-=yQzY
------END PGP SIGNATURE-----
-
---Sig_/Nzd5Is/CwURP9gl+pwoR1D0--
+On Tue, Feb 19, 2013 at 8:16 PM, NeilBrown <neilb@suse.de> wrote:
+> On Tue, 19 Feb 2013 20:04:35 -0800 vincent Ferrer <vincentchicago1@gmail.com>
+> wrote:
+>
+>> Have'nt tested/tried  yet. Which kernel version these patches can work with ?
+>>
+> "the latest".
+>
+> They are in linux-next.  That might be the easiest place to try.
+>
+> NeilBrown
