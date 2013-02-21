@@ -1,64 +1,59 @@
-From: Stone <stone@heisl.org>
-Subject: Re: Brocken Raid & LUKS
-Date: Thu, 21 Feb 2013 18:47:19 +0100
-Message-ID: <51265DA7.2030209@heisl.org>
-References: <5123A1CC.2000003@heisl.org> <5123BD1F.4060200@turmel.org> <5123E4E9.3020609@heisl.org> <5123EB92.5090505@turmel.org> <5123EF45.6080405@heisl.org> <5123F7C7.7000406@turmel.org> <5123FB71.3060509@heisl.org> <5124196F.6090000@turmel.org> <512516C2.3010105@heisl.org> <5125184A.6040707@turmel.org> <5125C6E9.4050802@heisl.org> <5125EBFD.3050802@heisl.org> <51262137.3040609@turmel.org> <51262CE0.3000809@heisl.org> <51263785.2010001@turmel.org> <51263D9D.1080002@heisl.org> <51263F7E.7040207@turmel.org> <5126421E.3040702@turmel.org> <51264C18.8000201@heisl.org> <51264E26.9050100@turmel.org> <51264EBF.9090000@heisl.org> <51264F7F.3020508@turmel.org> <512650A1.7070103@heisl.org> <51265132.7070706@turmel.org> <512656B5.4090505@heisl.org> <51265824.4030407@heisl.org> <51265B0B.9020108@turm
- el.org>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: RAID performance - new kernel results - 5x SSD RAID5
+Date: Thu, 21 Feb 2013 18:41:12 +0100
+Message-ID: <51265C38.6000400@hesbynett.no>
+References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <5113A2D6.20104@websitemanagers.com.au> <CAKHEz2YgiQiknBXju9a=PR3zV1Hb7ux8yBZWywiTi=BXFm20GA@mail.gmail.com> <51150475.2020803@websitemanagers.com.au> <5120A84E.4020702@websitemanagers.com.au> <51222A81.9080600@hardwarefreak.com> <51250377.509@websitemanagers.com.au> <5125B8E5.5000502@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51265B0B.9020108@turmel.org>
+In-Reply-To: <5125B8E5.5000502@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: stan@hardwarefreak.com
+Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, Dave Cundiff <syshackmin@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Am 21.02.2013 18:36, schrieb Phil Turmel:
-> On 02/21/2013 12:23 PM, Stone wrote:
+On 21/02/13 07:04, Stan Hoeppner wrote:
+> FYI for future Linux server deployments, it's very rare that a server
+> workload will run better with HT enabled.  In fact they most often
+> perform quite a bit worse with HT enabled.  The ones that may perform
+> better are those such as IMAP servers with hundreds or thousands of user
+> processes, most sitting idle, or blocking on IO.  For a block IO server
+> with very few active processes, and processes that need all possible CPU
+> bandwidth for short intervals (mdraid5 write thread), HT reduces CPU
+> bandwidth due to switching between two hardware threads on one core.
 >
->> i coud try to restore the superblock. the filesystem is ext4....
->> is this the right way?
->> mke2fs -n -j /dev/mapper/md2_nas
-> Partly. (scary) Without the "-n", that will destroy everything!
+> Note that Intel abandoned HT with the 'core' series of CPUs, and
+> reintroduced it with the Nehalem series.  AMD has never implemented HT
+> (SMT) it its CPUs.  And if you recall Opterons beat the stuffing out of
+> Xeons for many, many years.
 >
->> mke2fs 1.41.14 (22-Dec-2010)
->> Filesystem label=
->> OS type: Linux
->> Block size=4096 (log=2)
->> Fragment size=4096 (log=2)
->> Stride=128 blocks, Stripe width=384 blocks
->> 366288896 inodes, 1465133568 blocks
->> 73256678 blocks (5.00%) reserved for the super user
->> First data block=0
->> Maximum filesystem blocks=0
->> 44713 block groups
->> 32768 blocks per group, 32768 fragments per group
->> 8192 inodes per group
->> Superblock backups stored on blocks:
->>          32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632,
->> 2654208,
->>          4096000, 7962624, 11239424, 20480000, 23887872, 71663616, 78675968,
->>          102400000, 214990848, 512000000, 550731776, 644972544
-> But it does give you the locations of the backup superblocks.  Use these
-> numbers, starting with 32768, as "xxxx" in:
->
-> fsck.ext4 -n -b xxxx /dev
->
-> Once you give it a superblock that hasn't been corrupted, it should be
-> able to check the rest of the filesystem.  There will be damage near the
-> beginning, and probably more damage where you had to put zeros.
->
-> If it looks like that, do it again without "-n" to actually fix it.
->
-> Phil
->
-ok. i think i dont understand you not complete.
-i restore now the superblock with --> fsck.ext4 -bv 4096000 
-/dev/mapper/md2_nas
 
-when this is done i make full filesystemcheck --> fsck.ext4 /dev/md2_nas
-and answer the quest questions.
+It is worth noting here that there are very different implementations of 
+HT.  Intel's first HT processors had severe problems with the cost of 
+context switches, and most loads performed better with HT disabled.  But 
+these days are long gone - the current HT processors are much more 
+effective.  On loads where there is a fair amount of processing going 
+on, then HT can help significantly.  If you are IO or memory bound, of 
+course, then HT will not help at all - and even the modern cheaper 
+context switches are not free, and may reduce the overall performance.
 
-right?
-thx.
+Also remember that when HT was first introduced in x86 cpus, OS's (Linux 
+and other unmentionable OS's) were not optimised for them - they treated 
+the fake cores like real ones.  These days Linux makes a distinction and 
+uses the fake cores appropriately.
+
+HT may not be of help in a pure file server setup, but in many other 
+server applications such as web servers (and IMAP, as you mentioned), HT 
+is a huge benefit.  It is not coincidence that the big server cpu 
+architectures (MIPS, Power, SPARC) all use 2 or even 4 time SMT.
+
+I have no numbers of my own to back this up - but I would certainly not 
+consider disabling HT on a server without very concrete reasoning.
+
+(I too was a great fan of AMD, and used them almost exclusively until 
+the Core 2 architecture from Intel.  And while I am glad that Intel have 
+made very nice chips in recent years, I think it is a shame that they 
+did so using ideas copied directly from AMD - and AMD can no longer 
+seriously compete.)
+
