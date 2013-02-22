@@ -1,168 +1,55 @@
-From: anon20120409 <anon20120409@gmail.com>
-Subject: help needed - broken raid 1 array - I think I messed up
-Date: Sat, 23 Feb 2013 00:29:34 +0200
-Message-ID: <5127F14E.3070600@gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Brocken Raid & LUKS
+Date: Fri, 22 Feb 2013 17:35:36 -0500
+Message-ID: <5127F2B8.4050601@turmel.org>
+References: <5123A1CC.2000003@heisl.org> <51262137.3040609@turmel.org> <51262CE0.3000809@heisl.org> <51263785.2010001@turmel.org> <51263D9D.1080002@heisl.org> <51263F7E.7040207@turmel.org> <5126421E.3040702@turmel.org> <51264C18.8000201@heisl.org> <51264E26.9050100@turmel.org> <51264EBF.9090000@heisl.org> <51264F7F.3020508@turmel.org> <512650A1.7070103@heisl.org> <51265132.7070706@turmel.org> <512656B5.4090505@heisl.org> <51265824.4030407@heisl.org> <51265B0B.9020108@turmel.org> <51265DA7.2030209@heisl.org> <512660B9.8090609@turmel.org> <5126629A.1090002@heisl.org> <51266360.9030402@turmel.org> <5126678D.9030101@heisl.org> <51266D73.5020700@turmel.org> <51267192.6090205@heisl.org> <51267467.9040603@turmel.org> <512675A6.1000801@heisl.org> <5126797C.8090105@heisl.org> <51269DE0.5070905@heis
+ l.org> <512748FA.2000709@heisl.org> <51277876.30008@turmel.org> <51278793.80904@heisl.org> <512790AE.2080102@turmel.org> <5127B64A.3000808@heisl.org> <5127D857.9090204@heisl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5127D857.9090204@heisl.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Stone <stone@heisl.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello everyone,
-I am not sure if I am using this mailing list correctly, but I have a 
-big problem with my raid setup. So if anyone is interested, please help...
+On 02/22/2013 03:43 PM, Stone wrote:
+> so hello again.
+> the script was running and i looked at my logs.
+> 
+> this results i have
+> with chunk-size 8,16,32,64,128 i have always the same error: Enter
+> passphrase for /dev/md2: No key available with this passphrase.
+> 
+> the first time to open it is possible with chunk 256
+> 
+> i send you some logs from 256 and 512
+> 
+> at 512 i get the first results with checksum errors.
+> i think the right size is 512?! but the filesystem is brocken?!
 
-I have a raid1 setup with 2 hdd. One day I saw in the SMART data of one 
-on the disks that it had some bad sectors, so I thought I must replace 
-that disk before it is too late. Following are the trial and error steps 
-that I took and messed up the situation...
+Damage near the beginning of your filesystem is expected, remember?
+Lots of damage further in is not expected, once we have the right settings.
 
-While the pc was off, I diconected the hdd with the bad sectors and 
-place in the same port a new disk (same model and brand).
+Very interesting.  Especially this with sdb-sdc-missing-sde:
 
-I entered the Matrix Raid system and as I remember it said something 
-like "One of you disks needs to be rebuilt, do you want to do this?" and 
-of course I presses yes.
-
-I tried to boot into ubuntu, but the drive was not mounted.
-
-So I thought I must sync the disks. I tried to mdadm --assemble --force, 
-but the disks were in use by dmraid (which I didnt know that existed), 
-so no results. I also tried different mdadm commands (--scan, --create, 
---examine), but I think nothing happened as the disks were busy by the 
-dmraid.
-
-After, I plug all 3 disks and reboot. Probably bad idea.
-*root@archive:~# dmraid -r*
-/dev/sdd: isw, "isw_eacbgfdicf", GROUP, ok, 2930277166 sectors, data@ 0 
-(new empty disk)
-/dev/sdc: isw, "isw_eacbgfdicf", GROUP, ok, 2930277166 sectors, data@ 0 
-(old disk without bad sectors)
-/dev/sdb: isw, "isw_dbaiefcihd", GROUP, ok, 2930277166 sectors, data@ 0 
-(old disk with bad sectors)
-*root@archive:~# dmraid -ay *
-ERROR: isw: wrong number of devices in RAID set "isw_dbaiefcihd_Volume0" 
-[1/2] on /dev/sdb
-ERROR: creating degraded mirror mapping for "isw_dbaiefcihd_Volume0"
-RAID set "isw_dbaiefcihd_Volume0" was not activated
-RAID set "isw_eacbgfdicf_Volume0" already active
-*root@archive:~# dmraid -s *
-ERROR: isw: wrong number of devices in RAID set "isw_dbaiefcihd_Volume0" 
-[1/2] on /dev/sdb
-*** Group superset isw_dbaiefcihd
---> *Inconsistent* Subset
-name   : isw_dbaiefcihd_Volume0
-size   : 2930272512
-stride : 128
-type   : mirror
-status : inconsistent
-subsets: 0
-devs   : 1
-spares : 0
-*** Group superset isw_eacbgfdicf
---> Active Subset
-name   : isw_eacbgfdicf_Volume0
-size   : 2930272512
-stride : 128
-type   : mirror
-status : nosync
-subsets: 0
-devs   : 2
-spares : 0
+> The filesystem size (according to the superblock) is 1465134336 blocks
+> The physical size of the device is 1465133568 blocks
+> Either the superblock or the partition table is likely to be corrupt!
+> Abort? no
 
 
-I reboot with only the 2 old disks pluged.
-*root@archive:~# dmraid -r*
-/dev/sdc: isw, "isw_eacbgfdicf", GROUP, ok, 2930277166 sectors, data@ 0 
-(old disk without bad sectors)
-/dev/sdb: isw, "isw_dbaiefcihd", GROUP, ok, 2930277166 sectors, data@ 0 
-(old disk with bad sectors)
-*root@archive:~# dmraid -s*
-ERROR: isw: wrong number of devices in RAID set "isw_dbaiefcihd_Volume0" 
-[1/2] on /dev/sdb
-ERROR: isw: wrong number of devices in RAID set "isw_eacbgfdicf_Volume0" 
-[1/2] on /dev/sdc
-*** Group superset isw_dbaiefcihd
---> *Inconsistent* Subset
-name   : isw_dbaiefcihd_Volume0
-size   : 2930272512
-stride : 128
-type   : mirror
-status : inconsistent
-subsets: 0
-devs   : 1
-spares : 0
-*** Group superset isw_eacbgfdicf
---> *Inconsistent* Subset
-name   : isw_eacbgfdicf_Volume0
-size   : 2930272512
-stride : 128
-type   : mirror
-status : inconsistent
-subsets: 0
-devs   : 1
-spares : 0
-*root@archive:~# sfdisk -d /dev/sdc | sfdisk /dev/sdb*
-Checking that no-one is using this disk right now ...
-OK
+I think this is the right device order, and the right chunk size.  It
+also best matches what we know of your original setup.  But the total
+size of the array device is 768 blocks smaller than it should be.  This
+should be solved.
 
-Disk /dev/sdb: 182401 cylinders, 255 heads, 63 sectors/track
+Please recreate the array with this combination, then show:
 
-sfdisk: ERROR: sector 0 does not have an msdos signature
-  /dev/sdb: unrecognized partition table type
-Old situation:
-No partitions found
+mdadm -D /dev/md2
+mdadm -E /dev/sd[bce]1
+cat /proc/partitions
+for x in /dev/sd[bce] ; do fdisk -l $x ; done
 
-sfdisk: ERROR: sector 0 does not have an msdos signature
-  /dev/sdc: unrecognized partition table type
-No partitions found
-New situation:
-No partitions found
-
-sfdisk: no partition table present.
-*root@archive:~# dmraid -rE*
-Do you really want to erase "isw" ondisk metadata on /dev/sdc ? [y/n] :n
-Do you really want to erase "isw" ondisk metadata on /dev/sdb ? [y/n] :y
-*root@archive:~# dmraid -R isw_eacbgfdicf /dev/sdb*
-ERROR: isw: wrong number of devices in RAID set "isw_eacbgfdicf_Volume0" 
-[1/2] on /dev/sdc
-isw: drive to rebuild: /dev/sdb
-
-RAID set "isw_eacbgfdicf_Volume0" was activated
-sgpio app not found
-sgpio app not found
-*root@archive:~# dmraid -r*
-/dev/sdc: isw, "isw_eacbgfdicf", GROUP, ok, 2930277166 sectors, data@ 0
-/dev/sdb: isw, "isw_eacbgfdicf", GROUP, ok, 2930277166 sectors, data@ 0
-*root@archive:~# dmraid -s*
-*** Group superset isw_eacbgfdicf
---> Active Subset
-name   : isw_eacbgfdicf_Volume0
-size   : 2930272512
-stride : 128
-type   : mirror
-status : ok
-subsets: 0
-devs   : 2
-spares : 0
-*root@archive:~# dmsetup status*
-isw_eacbgfdicf_Volume0: 0 2930272520 mirror 2 8:16 8:32 22357/22357 1 AA 
-1 core
-*root@archive:~# sudo mount -a*
-mount: wrong fs type, bad option, bad superblock on 
-/dev/mapper/isw_eacbgfdicf_Volume0,
-        missing codepage or helper program, or other error
-        In some cases useful info is found in syslog - try
-        dmesg | tail  or so
-*root@archive:~# dmraid -ay*
-RAID set "isw_eacbgfdicf_Volume0" already active
-
-and at this point I think that the old disk without bad sectors synced 
-from the blank new disk and I lost everything, but I am not sure.
-
-Any help is very appreciated...
-
-Thanks in advance!
-
+Phil
