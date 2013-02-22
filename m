@@ -1,40 +1,99 @@
-From: Charles Polisher <cpolish@surewest.net>
-Subject: Re: RAID performance
-Date: Fri, 22 Feb 2013 07:25:26 -0800
-Message-ID: <20130222152526.GC5411@kevin>
-References: <91cffde0-b154-477d-90d2-68b15e91518c@email.android.com>
- <5120789B.1080804@hardwarefreak.com>
- <5120979C.9030703@websitemanagers.com.au>
- <5120E1F6.2050906@hardwarefreak.com>
- <5120ED3F.7080904@websitemanagers.com.au>
- <5123351F.5030903@hardwarefreak.com>
- <5124FDB2.10007@websitemanagers.com.au>
- <51256E45.5080707@hardwarefreak.com>
- <51259011.1060600@websitemanagers.com.au>
- <5127545C.9040808@hardwarefreak.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Brocken Raid & LUKS
+Date: Fri, 22 Feb 2013 10:37:18 -0500
+Message-ID: <512790AE.2080102@turmel.org>
+References: <5123A1CC.2000003@heisl.org> <5125184A.6040707@turmel.org> <5125C6E9.4050802@heisl.org> <5125EBFD.3050802@heisl.org> <51262137.3040609@turmel.org> <51262CE0.3000809@heisl.org> <51263785.2010001@turmel.org> <51263D9D.1080002@heisl.org> <51263F7E.7040207@turmel.org> <5126421E.3040702@turmel.org> <51264C18.8000201@heisl.org> <51264E26.9050100@turmel.org> <51264EBF.9090000@heisl.org> <51264F7F.3020508@turmel.org> <512650A1.7070103@heisl.org> <51265132.7070706@turmel.org> <512656B5.4090505@heisl.org> <51265824.4030407@heisl.org> <51265B0B.9020108@turmel.org> <51265DA7.2030209@heisl.org> <512660B9.8090609@turmel.org> <5126629A.1090002@heisl.org> <51266360.9030402@turmel.org> <5126678D.9030101@heisl.org> <51266D73.5020700@turmel.org> <51267192.6090205@heisl.org> <51267467.9040603@turm
+ el.org> <512675A6.1000801@heisl.org> <5126797C.8090105@heisl.org> <51269DE0.5070905@heisl.org> <512748FA.2000709@heisl.org> <51277876.30008@turmel.org> <51278793.80904@heisl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5127545C.9040808@hardwarefreak.com>
+In-Reply-To: <51278793.80904@heisl.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: linux-raid@vger.kernel.org
+To: Stone <stone@heisl.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Stan Hoeppner wrote:
-> Not only does SuperMicro offer far more Intel server boards than Intel,
-> they also offer more AMD server boards than anyone.  Here's an
-> inexpensive server board for Opteron 3000 (AM3+) that has an integrated
-> 8 pot LSI 2308 (9207--same as yours):
-> http://www.supermicro.com/Aplus/motherboard/Opteron3000/SR56x0/H8SML-7.cfm
+On 02/22/2013 09:58 AM, Stone wrote:
+> Am 22.02.2013 14:53, schrieb Phil Turmel:
+>> On 02/22/2013 05:31 AM, stone@heisl.org wrote:
+>>> to work on the live cd is very slow.
+>>> i will kick out my two system drives and take one new and install a old
+>>> system (ubuntu 11.04, i think on this system i have created the first
+>>> time the raid) to it.
+>>>
+>>> do you have new infos from the hexdump or other news to try out some
+>>> things the get the raid and the luks running?
+>> Unfortunately, no.  The hexdump had no real superblock candidates that I
+>> could see.  That strongly suggests that there remain some ordering
+>> issues.  I would try chunk sizes down to 8k.  If that still doesn't
+>> work, consider re-creating with a different drive order--it's a slim
+>> possibility that "sdc1 sdd1 missing sdf1" isn't correct.
+>>
+>> Meanwhile, you haven't supplied the complete hexdump of your luks
+>> signature sector.  It may not help, but it would show the payload offset.
 
-Following this thread avidly, it has made me late for work twice this week.
+What about this part?
 
-With IPMI added it seems to retail for same price (Amazon USD$399):
-http://www.supermicro.com/aplus/motherboard/opteron3000/sr56x0/h8sml-7f.cfm
+> i have installed the system now with one system drive.
+> the raid devices are now: sdb1 sdc1 sdd1(brocken not sync) sde1
 
--- 
-Charles
+Ok.
 
+> i have now tested all chunk's from 512k to 8k
+> 512 Open Luks but no superblock
+> 256 Open Luks but no superblock
+> 128 No key available with this passphrase
+> 64 No key available with this passphrase
+> 32 No key available with this passphrase
+> 16 No key available with this passphrase
+> 8 No key available with this passphrase
 
+Ok, but on the smaller chunk sizes, the device order could impact
+interpretation of the key material.  You should repeat the small chunk
+tests with the drive order variations below.
+
+Make a grid with chunk size on one axis, and drive order on the other
+axis.  Mark each combination with yes or no if it can open luks.  If it
+can, save the output of "fsck -n" in a file.  This would be a good thing
+to script.
+
+After the script is done, look at all the saved files to see if any look
+like possible solutions.
+
+> 512k and 256k working better...
+> next tests:
+> mdadm --create /dev/md2 --assume-clean --chunk=512 --verbose --level=5
+> --raid-devices=4 /dev/sde1 /dev/sdb1 missing /dev/sdc1
+>     No Luks
+> mdadm --create /dev/md2 --assume-clean --chunk=512 --verbose --level=5
+> --raid-devices=4 /dev/sdc1 /dev/sdb1 missing /dev/sde1
+>     No Luks
+> mdadm --create /dev/md2 --assume-clean --chunk=512 --verbose --level=5
+> --raid-devices=4 /dev/sdc1 missing /dev/sdb1 /dev/sde1
+>     No Luks
+> mdadm --create /dev/md2 --assume-clean --chunk=512 --verbose --level=5
+> --raid-devices=4 /dev/sdb1 /dev/sde1 /dev/sdc1 missing
+>     fsck.ext4: Invalid argument while trying to open /dev/mapper/md2_nas
+>     fsck.ext4: Bad magic number in super-block while trying to open
+> /dev/mapper/md2_nas
+> mdadm --create /dev/md2 --assume-clean --chunk=512 --verbose --level=5
+> --raid-devices=4 /dev/sde1 /dev/sdc1 /dev/sdb1 missing
+>     No Luks
+> mdadm --create /dev/md2 --assume-clean --chunk=512 --verbose --level=5
+> --raid-devices=4 /dev/sdc1 /dev/sde1 /dev/sdb1 missing
+>     No Luks
+> mdadm --create /dev/md2 --assume-clean --chunk=512 --verbose --level=5
+> --raid-devices=4 /dev/sdb1 /dev/sdc1 /dev/sde1 missing
+>     fsck.ext4: Invalid argument while trying to open /dev/mapper/md2_nas
+>     fsck.ext4: Bad magic number in super-block while trying to open
+> /dev/mapper/md2_nas
+> 
+> do you think that i should try do mount the partion as RO? but i think
+> this is not working because the damaged filesystem. right?
+
+Do *not* mount at all.  Even a read-only mount isn't really
+read-only--it will try to play back the journal, and will try to write
+to the superblocks.
+
+Phil
