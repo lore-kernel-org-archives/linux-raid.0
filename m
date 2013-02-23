@@ -1,56 +1,81 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Brocken Raid & LUKS
-Date: Fri, 22 Feb 2013 23:36:50 -0500
-Message-ID: <51284762.2080202@turmel.org>
-References: <5123A1CC.2000003@heisl.org> <51263F7E.7040207@turmel.org> <5126421E.3040702@turmel.org> <51264C18.8000201@heisl.org> <51264E26.9050100@turmel.org> <51264EBF.9090000@heisl.org> <51264F7F.3020508@turmel.org> <512650A1.7070103@heisl.org> <51265132.7070706@turmel.org> <512656B5.4090505@heisl.org> <51265824.4030407@heisl.org> <51265B0B.9020108@turmel.org> <51265DA7.2030209@heisl.org> <512660B9.8090609@turmel.org> <5126629A.1090002@heisl.org> <51266360.9030402@turmel.org> <5126678D.9030101@heisl.org> <51266D73.5020700@turmel.org> <51267192.6090205@heisl.org> <51267467.9040603@turmel.org> <512675A6.1000801@heisl.org> <5126797C.8090105@heisl.org> <51269DE0.5070905@heisl.org> <512748FA.2000709@heisl.org> <51277876.30008@turmel.org> <51278793.80904@heisl.org> <512790AE.2080102@turmel.or
- g> <5127B64A.3000808@heisl.org> <5127D857.9090204@heisl.org> <5127F2B8.4050601@turmel.org> <5127F45F.5020608@heisl.org> <512827FC.7010403@turmel.org> <5128336E.5060809@heisl.org>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: RAID performance - new kernel results - 5x SSD RAID5
+Date: Sat, 23 Feb 2013 00:41:21 -0600
+Message-ID: <51286491.3030808@hardwarefreak.com>
+References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <5113A2D6.20104@websitemanagers.com.au> <CAKHEz2YgiQiknBXju9a=PR3zV1Hb7ux8yBZWywiTi=BXFm20GA@mail.gmail.com> <51150475.2020803@websitemanagers.com.au> <5120A84E.4020702@websitemanagers.com.au> <51222A81.9080600@hardwarefreak.com> <51250377.509@websitemanagers.com.au> <5125B8E5.5000502@hardwarefreak.com> <51265C38.6000400@hesbynett.no>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5128336E.5060809@heisl.org>
+In-Reply-To: <51265C38.6000400@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stone <stone@heisl.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: David Brown <david.brown@hesbynett.no>
+Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, Dave Cundiff <syshackmin@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/22/2013 10:11 PM, Stone wrote:
+On 2/21/2013 11:41 AM, David Brown wrote:
+...
+> HT may not be of help in a pure file server setup, but in many other
+> server applications such as web servers (and IMAP, as you mentioned), HT
+> is a huge benefit.  
 
-> no i have no idea why die partion table is wrong on /dev/sdc.
-> i can copy with dd the partion table from sdb to sdc...
-> example:
-> dd if=/dev/sdb of=sdb.part bs=512 count=1
-> dd if=sdb.part of=/dev/sdc bs=512 count=1
+HT benefits workloads with more heavy active processes than cores, which
+causes functional unit/pipeline contention.  If your workload has no
+resource contention, then HT is of no benefit.  In these cases having it
+enabled can actually decrease performance, yes, even with Intel's recent
+implementation, and it can cause other issues as I described earlier,
+such as simple system administration headaches.
 
-That won't work for gpt.
-http://en.wikipedia.org/wiki/GUID_Partition_Table
+> It is not coincidence that the big server cpu
+> architectures (MIPS, Power, SPARC) all use 2 or even 4 time SMT.
 
-> infos:
-> root@ubuntu:~/raid# parted /dev/sdb print
-> Model: ATA WDC WD20EARS-00M (scsi)
-> Disk /dev/sdb: 2000GB
-> Sector size (logical/physical): 512B/512B
-> Partition Table: gpt
-> 
-> Number  Start   End     Size    File system  Name  Flags
->  1      17,4kB  2000GB  2000GB                     raid
+Quoting Wikipedia again...but making incorrect assumptions about what it
+says.  MIPS CPUs haven't been used in a "big server" for a decade, the
+last machine being the Origin 3900, the CPU being the single core
+R16000A, which had no SMT.  HPC workloads don't benefit from it.  The
+short lived SiCortex machines were obviously "big" with up to 5832 cores
+using 6-way SMP SOCs.  These cores did not have SMT either.  And yes,
+the SiCortex section of the MIPS page is my edit, as well as some of the
+SGI related edits.  (Hated to see SiCortex fold as their machines not
+only offered performance and unique features, but had a cool aesthetic
+missing in the supercomputer space since the glory days of Cray)
 
-Uh oh.  Sector 34.  That start point is very bad for performance.
+Imagination Technologies today offers two MIPS IP cores with SMT, of
+over hundreds of cores/designs in their portfolio.  Both are used in
+embedded applications only.  Both are 32 bit CPUs.  And both hit the
+market within the past 2 years.  I.e. SMT is very new for MIPS chips.
 
-> root@ubuntu:~/raid# parted /dev/sdc print
-> Model: ATA WDC WD20EARS-00M (scsi)
-> Disk /dev/sdc: 2000GB
-> Sector size (logical/physical): 512B/512B
-> Partition Table: gpt
-> 
-> Number  Start   End     Size    File system  Name  Flags
->  1      1049kB  2000GB  2000GB
+WRT Power and SPARC these are targeted at consolidation workloads which
+can benefit from SMT.  Note that on the Power CPUs destined for HPC
+platforms SMT is typically disabled.
 
-This one is aligned for proper performance, but it appears to be the
-wrong alignment for getting your data back.  Yuck.
+So again, whether HT/SMT is of benefit depends entirely on the workload.
+ In Adam's iSCSI server case, it decidedly does not.
 
-Once you fix this partition table to get your data, take a backup of the
-array.  Then make a new array with partitions starting at sector 2048.
-Or no partitions at all.
+> I have no numbers of my own to back this up - but I would certainly not
+> consider disabling HT on a server without very concrete reasoning.
 
-Phil
+I've demonstrated the reasoning, twice now.  People fear what they don't
+understand.  You fear shutting off HT because you don't yet have a
+complete understanding of how it actually works, and when it actually helps.
+
+> (I too was a great fan of AMD, and used them almost exclusively until
+> the Core 2 architecture from Intel.  And while I am glad that Intel have
+> made very nice chips in recent years, I think it is a shame that they
+> did so using ideas copied directly from AMD - and AMD can no longer
+> seriously compete.)
+
+Absolute performance was no longer an issue long before Intel introduced
+the Core architecture.  The vast majority of cycles on all systems were
+executing the idle instruction, still are.  And there were/are few
+server applications deployed that performed significantly better with
+Xeon than Opteron.  Thus I continued with AMD for a few reasons.  The IO
+infrastructure was superior, and it wasn't until QuickPath that Intel
+caught up here.  And AMD still offers a better price/performance ratio.
+
+-- 
+Stan
+
+
+
