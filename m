@@ -1,69 +1,45 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: RAID performance - new kernel results - 5x SSD RAID5
-Date: Sun, 24 Feb 2013 14:36:35 -0600
-Message-ID: <512A79D3.9020502@hardwarefreak.com>
-References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <5113A2D6.20104@websitemanagers.com.au> <CAKHEz2YgiQiknBXju9a=PR3zV1Hb7ux8yBZWywiTi=BXFm20GA@mail.gmail.com> <51150475.2020803@websitemanagers.com.au> <5120A84E.4020702@websitemanagers.com.au> <51222A81.9080600@hardwarefreak.com> <51250377.509@websitemanagers.com.au> <5125B8E5.5000502@hardwarefreak.com> <5125C154.3090603@websitemanagers.com.au> <51272808.7070302@hardwarefreak.com>
-Reply-To: stan@hardwarefreak.com
+From: Stone <stone@heisl.org>
+Subject: Re: Brocken Raid & LUKS
+Date: Sun, 24 Feb 2013 21:38:05 +0100
+Message-ID: <512A7A2D.3040109@heisl.org>
+References: <5123A1CC.2000003@heisl.org> <5126678D.9030101@heisl.org> <51266D73.5020700@turmel.org> <51267192.6090205@heisl.org> <51267467.9040603@turmel.org> <512675A6.1000801@heisl.org> <5126797C.8090105@heisl.org> <51269DE0.5070905@heisl.org> <512748FA.2000709@heisl.org> <51277876.30008@turmel.org> <51278793.80904@heisl.org> <512790AE.2080102@turmel.org> <5127B64A.3000808@heisl.org> <5127D857.9090204@heisl.org> <5127F2B8.4050601@turmel.org> <5127F45F.5020608@heisl.org> <512827FC.7010403@turmel.org> <5128336E.5060809@heisl.org> <51284762.2080202@turmel.org> <51289798.7050500@heisl.org> <5128E9F4.5040700@turmel.org> <5129421C.7070105@heisl.org> <51295599.5040907@turmel.org> <51295B1B.2030404@heisl.org> <51299135.1000206@turmel.org> <5129BCCC.7090202@heisl.org> <512A2094.3020008@turmel.org
+ > <512A5A5A.5020904@heisl.org> <512A5CFA.6020205@turmel.org> <512A6897.3040809@heisl.org> <512A6F39.7090008@turmel.org> <512A74FA.8000100@heisl.org> <512A7730.7010600@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51272808.7070302@hardwarefreak.com>
+In-Reply-To: <512A7730.7010600@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: Dave Cundiff <syshackmin@gmail.com>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2/22/2013 2:10 AM, Stan Hoeppner wrote:
+Am 24.02.2013 21:25, schrieb Phil Turmel:
+> On 02/24/2013 03:15 PM, Stone wrote:
+>> Am 24.02.2013 20:51, schrieb Phil Turmel:
+>>> On 02/24/2013 02:23 PM, Stone wrote:
+>>>
+>>>> hm ok.
+>>>> what copy method recommend you?
+>>>> dd? (the duration is very long)
+>>> I normally use dc3dd.  For troublesome disks, gnu ddrescue is the better
+>>> choice.
+>> ok. this tool i do not know but i think this is the right way:
+>> ddrescue /dev/sdx /path/to/my/new/drive
+> If you have spares of the same size, simply duplicate to the spare:
+>
+> ddrescue -b 4096 /dev/sdx /dev/sdy
+>
+ok. i copy the disks to my nas and than i will have a look how many data 
+i can recover. if i can many data recover than i buy spare disk. if i 
+dont can recover my data than i can copy back from the nas to the disks 
+and try my luck with the secound case partiontable
 
-Revisiting this briefly...
+i started the copy to my nas with this command:
+with simple: ddrescue /dev/sdb /mnt/nas/TEMP/sdb.dd
 
-> 2.  Run fio using this job file and post the results:
-> 
-> [global]
-> filename=/dev/vg0/testlv (assuming this is still correct)
-> zero_buffers
-> numjobs=16
-> thread
-> group_reporting
-> blocksize=256k
-> ioengine=libaio
-> iodepth=16
-> direct=1
-> size=8g
-> 
-> [read]
-> rw=randread
-> stonewall
-> 
-> [write]
-> rw=randwrite
-> stonewall
+the rate over the network is good with 112mb/s
+i think i will finish the copy tomorrow.
 
-When you run the fio test above, use this for grabbing top output.  But
-first, if you haven't already, run top interactively and enable per CPU
-display, save by hitting 'w'.  Then use:
-
-~$ top -b -n 60 -d 0.25|grep Cpu|sort -n > /some.dir/some.file
-
-This will grab metrics 4 times per second instead of 2 as we did
-previously.  This will give better resolution.  It will also sort the
-output by CPU making it much easier to see the ramp and load trend on
-each.  It should have a run time of ~16 seconds, which should be plenty
-of time to launch fio and get the entire run in our top data.  I'm not
-sure if we were running it long enough previously to capture (all of)
-the write job.  It would probably be wise to upload the top output file
-to a pastebin and link it, as it will be 240 lines long.
-
-I'm quite anxious to see the random write results from the test above
-and the accompanying CPU burn.  The bandwidth numbers should be a bit
-surprising to you and others following this thread.  Ok, I'm probably
-sandbagging a bit.  They should shock you.
-
-Then, after everyone has retrieved their jaws from the floor I'll
-explain why the numbers are so much higher, and why proper test
-methodology is critical to benchmarking.
-
--- 
-Stan
-
+if i can copy data. is there a way to check the files of consistency?
+thx
