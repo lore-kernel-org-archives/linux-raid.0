@@ -1,28 +1,41 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Brocken Raid & LUKS
-Date: Sun, 24 Feb 2013 09:15:48 -0500
-Message-ID: <512A2094.3020008@turmel.org>
-References: <5123A1CC.2000003@heisl.org> <512656B5.4090505@heisl.org> <51265824.4030407@heisl.org> <51265B0B.9020108@turmel.org> <51265DA7.2030209@heisl.org> <512660B9.8090609@turmel.org> <5126629A.1090002@heisl.org> <51266360.9030402@turmel.org> <5126678D.9030101@heisl.org> <51266D73.5020700@turmel.org> <51267192.6090205@heisl.org> <51267467.9040603@turmel.org> <512675A6.1000801@heisl.org> <5126797C.8090105@heisl.org> <51269DE0.5070905@heisl.org> <512748FA.2000709@heisl.org> <51277876.30008@turmel.org> <51278793.80904@heisl.org> <512790AE.2080102@turmel.org> <5127B64A.3000808@heisl.org> <5127D857.9090204@heisl.org> <5127F2B8.4050601@turmel.org> <5127F45F.5020608@heisl.org> <512827FC.7010403@turmel.org> <5128336E.5060809@heisl.org> <51284762.2080202@turmel.org> <51289798.7050500@heisl.org>
-  <5128E9F4.5040700@turmel.org> <5129421C.7070105@heisl.org> <51295599.5040907@turmel.org> <51295B1B.2030404@heisl.org> <51299135.1000206@turmel.org> <5129BCCC.7090202@heisl.org>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: Unable to reactivate a RAID10 mdadm device
+Date: Sun, 24 Feb 2013 15:27:03 +0100 (CET)
+Message-ID: <2951248.2.1361716023024.JavaMail.root@zimbra>
+References: <CAHhM8gC0zgmAY1hZ9uPCa3F7oYO2vh-84m4XoZmSa0NrtsDbsw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5129BCCC.7090202@heisl.org>
+In-Reply-To: <CAHhM8gC0zgmAY1hZ9uPCa3F7oYO2vh-84m4XoZmSa0NrtsDbsw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stone <stone@heisl.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Arun Khan <knura9@gmail.com>
+Cc: Linux MDADM Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 02/24/2013 02:10 AM, Stone wrote:
+> I connected the new hard disk, partitioned /dev/sdb1 to match size an=
+d
+> partition id (fd),
 
-> e2fsck: aborted
-> 
-> the output have 711mb..
-> do you ned more examples?
-> what do you say to case1?
+Out of interest - why do you use partitions if you use whole drives for=
+ the RAID?
 
-I think you need to see case2.  Case #1 isn't very good.
+Vennlige hilsener / Best regards
 
-Phil
-
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
