@@ -1,44 +1,61 @@
-From: Arun Khan <knura9@gmail.com>
-Subject: Re: Unable to reactivate a RAID10 mdadm device
-Date: Mon, 25 Feb 2013 11:52:38 +0530
-Message-ID: <CAHhM8gDP+-V7tsxqD1jr5n5YB8LoDQoOT3Z4c0nVr1Lps29k9g@mail.gmail.com>
-References: <CAHhM8gC0zgmAY1hZ9uPCa3F7oYO2vh-84m4XoZmSa0NrtsDbsw@mail.gmail.com>
-	<2951248.2.1361716023024.JavaMail.root@zimbra>
+From: szlin <lin.sunze@gmail.com>
+Subject: Re-sync in RAID 1 with bitmap setting issue
+Date: Mon, 25 Feb 2013 16:50:31 +0800
+Message-ID: <CAFk6z8Nw7VWKGMFcmORq2sOvwfJmOhyCni5v9V_rxmupkDJf8Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2951248.2.1361716023024.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux MDADM Raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Feb 24, 2013 at 7:57 PM, Roy Sigurd Karlsbakk <roy@karlsbakk.net> wrote:
->> I connected the new hard disk, partitioned /dev/sdb1 to match size and
->> partition id (fd),
->
-> Out of interest - why do you use partitions if you use whole drives for the RAID?
->
+In order to increase the re-sync speed, I used a external bitmap to
+reduce RAID 1 re-sync time.
+But *sometimes* I still got a long re-sync time after RAID 1 is assembled.
 
-The system has a total of 5 disk devices.
+My test step.
+    1. Build up RAID 1 with external bitmap
+    2. Access data
+    3. * Hard power off *
+    4. Boot up system and check RAID1 status
 
-1. /dev/sda is a 4GB CF card with a minimal Debian Squeeze (amd64).
+Most of the time, the bitmap information is normal and re-sync time is
+very short.
+            Filename : /etc/mdadm/bitmap.bin
+            Magic : 6d746962
+            Version : 4
+            UUID : fb1fbcce:6fcce698:0df00c38:
+4aa8fa4e
+            Events : 1678
+            Events Cleared : 1678
+            State : OK
+            Chunksize : 64 MB
+            Daemon : 5s flush period
+            Write Mode : Normal
+            Sync Size : 97620160 (93.10 GiB 99.96 GB)
+            Bitmap : 1490 bits (chunks), 1 dirty (0.1%)
 
-The other four are in the order (SATA ports 0,1,2,3)
+But when I got a long long re-sync time, it seems like almost all bits
+in bitmap are dirty and I cannot understand what cause this weird
+situation.
+            Filename : /etc/mdadm/bitmap.bin
+            Magic : 6d746962
+            Version : 4
+            UUID : fb1fbcce:6fcce698:0df00c38:4aa8fa4e
+            Events : 1684
+            Events Cleared : 1678
+            State : OK
+            Chunksize : 64 MB
+            Daemon : 5s flush period
+            Write Mode : Normal
+            Sync Size : 97620160 (93.10 GiB 99.96 GB)
+            Bitmap : 1490 bits (chunks), 1475 dirty (99.0%)
 
-2. 250GB is /dev/sdb
-3. 160GB is /dev/sdc
-4. 160GB is /dev/sdd
-5. 160GB is /dev/sde
 
-/dev/sdb1 (part id=fd) is slightly larger than /dev/sd[cde]1,
-remainder of the disk /dev/sdb is used for /tmp, /var, /var/tmp/, /opt
-etc.
+Here is my test environment.
+Linux kernel:      2.6.31.8
+MDADM version: v3.2.5
 
-Partitions v/s Entire disk --
-The wiki link <https://raid.wiki.kernel.org/index.php/Partition_Types>
-suggests both are OK
-
-My understanding is that partid must be = fd for autodetect.   To play
-it safe, I have created partitions with part_id=fd.
-
--- Arun Khan
+Any suggestions on what I can do to stop this issue (adjust chunksize
+or flush period)?
+Thanks for any advices!
