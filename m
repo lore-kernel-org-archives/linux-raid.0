@@ -1,46 +1,43 @@
-From: Tregaron Bayly <tbayly@bluehost.com>
-Subject: Re: BUG  - raid 1 deadlock on handle_read_error / wait_barrier
-Date: Mon, 25 Feb 2013 09:11:02 -0700
-Message-ID: <1361808662.20264.4.camel@148>
-References: <1361487504.4863.54.camel@linux-lxtg.site>
-	 <20130225094350.4b8ef084@notabene.brown>
-	 <20130225110458.2b1b1e2d@notabene.brown>
-Reply-To: tbayly@bluehost.com
+From: Stone <stone@heisl.org>
+Subject: Re: Brocken Raid & LUKS
+Date: Mon, 25 Feb 2013 19:31:50 +0100
+Message-ID: <512BAE16.1020205@heisl.org>
+References: <5123A1CC.2000003@heisl.org> <51267192.6090205@heisl.org> <51267467.9040603@turmel.org> <512675A6.1000801@heisl.org> <5126797C.8090105@heisl.org> <51269DE0.5070905@heisl.org> <512748FA.2000709@heisl.org> <51277876.30008@turmel.org> <51278793.80904@heisl.org> <512790AE.2080102@turmel.org> <5127B64A.3000808@heisl.org> <5127D857.9090204@heisl.org> <5127F2B8.4050601@turmel.org> <5127F45F.5020608@heisl.org> <512827FC.7010403@turmel.org> <5128336E.5060809@heisl.org> <51284762.2080202@turmel.org> <51289798.7050500@heisl.org> <5128E9F4.5040700@turmel.org> <5129421C.7070105@heisl.org> <51295599.5040907@turmel.org> <51295B1B.2030404@heisl.org> <51299135.1000206@turmel.org> <5129BCCC.7090202@heisl.org> <512A2094.3020008@turmel.org> <512A5A5A.5020904@heisl.org> <512A5CFA.6020205@turmel.org
+ > <512A6897.3040809@heisl.org> <512A6F39.7090008@turmel.org> <512A74FA.8000100@heisl.org> <512A7730.7010600@turmel.org> <512A7A2D.3040109@heisl.org> <512A7BC6.5010406@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130225110458.2b1b1e2d@notabene.brown>
+In-Reply-To: <512A7BC6.5010406@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> Actually  don't bother.  I think I've found the problem.  It is related to
-> pending_count and is easy to fix.
-> Could you try this patch please?
-> 
-> Thanks.
-> NeilBrown
-> 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 6e5d5a5..fd86b37 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -967,6 +967,7 @@ static void raid1_unplug(struct blk_plug_cb *cb, bool from_schedule)
->  		bio_list_merge(&conf->pending_bio_list, &plug->pending);
->  		conf->pending_count += plug->pending_cnt;
->  		spin_unlock_irq(&conf->device_lock);
-> +		wake_up(&conf->wait_barrier);
->  		md_wakeup_thread(mddev->thread);
->  		kfree(plug);
->  		return;
+Am 24.02.2013 21:44, schrieb Phil Turmel:
+> On 02/24/2013 03:38 PM, Stone wrote:
+>> if i can copy data. is there a way to check the files of consistency?
+>> thx
+> I'm not sure which files' consistency you mean here...  the dd image in
+> your nas?  If so, you compute md5sums of each entire disk (rather time
+> consuming).
+>
+> If you mean the data inside your encrypted array...  You can only use
+> whatever consistency mechanisms you already have for those files, like
+> "par2" Reed-Solomon checksums.
+>
+> Phil
+i have a backup from the three devices and i switched back to partion 
+case 1 and i fire up the fsck:
 
-Running 15 hours now and no sign of the problem, which is 12 hours
-longer than it took to trigger the bug in the past.  I'll continue
-testing to be sure but I think this patch is a fix.
+fsck -y /dev/mapper/md2_nas
+fsck from util-linux 2.19.1
+e2fsck 1.41.14 (22-Dec-2010)
+fsck.ext4: Group descriptors look bad... trying backup blocks...
+The filesystem size (according to the superblock) is 1465134336 blocks
+The physical size of the device is 1465133568 blocks
+Either the superblock or the partition table is likely to be corrupt!
+Abort? yes
 
-Thanks for the fast response!
-
-Tregaron Bayly
-
+thats all?
+is my chance on case 1 over?
