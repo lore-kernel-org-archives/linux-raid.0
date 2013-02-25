@@ -1,29 +1,138 @@
-From: Divan Santana <divan@s-tainment.co.za>
+From: Steven Haigh <netwiz@crc.id.au>
 Subject: Re: Slow RAID 5 performance all of a sudden
-Date: Mon, 25 Feb 2013 23:24:22 +0200
-Message-ID: <512BD686.2020109@s-tainment.co.za>
-References: <50F27901.4070404@s-tainment.co.za> <512BC552.8090000@s-tainment.co.za> <512BCE1C.3080302@grumpydevil.homelinux.org>
-Reply-To: divan@s-tainment.co.za
+Date: Tue, 26 Feb 2013 08:29:25 +1100
+Message-ID: <512BD7B5.6040408@crc.id.au>
+References: <50F27901.4070404@s-tainment.co.za> <512BC552.8090000@s-tainment.co.za> <512BCE1C.3080302@grumpydevil.homelinux.org> <512BD686.2020109@s-tainment.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms040705080601000204050408"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <512BCE1C.3080302@grumpydevil.homelinux.org>
+In-Reply-To: <512BD686.2020109@s-tainment.co.za>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/25/2013 10:48 PM, Rudy Zijlstra wrote:
-> anything in dmesg or system log that gives a hint? 
-Unfortunately not. I've checked it thoroughly.
-Next step may just have to be a reload. Not sure what caused this or 
-that a reload will fix it.
+This is a cryptographically signed message in MIME format.
 
-Either way it seems it may have to be the next step in troubleshooting 
-this as I'm running out of ideas.
+--------------ms040705080601000204050408
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Best regards,
-Divan Santana
-+27 82 787 8522
+On 26/02/2013 8:24 AM, Divan Santana wrote:
+> On 02/25/2013 10:48 PM, Rudy Zijlstra wrote:
+>> anything in dmesg or system log that gives a hint?
+> Unfortunately not. I've checked it thoroughly.
+> Next step may just have to be a reload. Not sure what caused this or
+> that a reload will fix it.
+>
+> Either way it seems it may have to be the next step in troubleshooting
+> this as I'm running out of ideas.
+>
 
+I had this recently and it turned out to be the PCIe controller dropping =
+
+its IRQ and going into some kind of fallback mode. When this was=20
+happening, I'd be lucky to get 5-10Mb/sec read speed off the array=20
+instead of the normal 100+Mb/sec.
+
+Interestingly, the only thing I needed to do was relocate the card to=20
+another slot and it hasn't happened since.
+
+Don't just limit your search to md related stuff, check IRQs etc as=20
+well. /proc/interrupts is a good start - maybe if you do use a card for=20
+drives, try to not share IRQs between the card and other equipment...
+
+--=20
+Steven Haigh
+
+Email: netwiz@crc.id.au
+Web: http://www.crc.id.au
+Phone: (03) 9001 6090 - 0412 935 897
+Fax: (03) 8338 0299
+
+
+--------------ms040705080601000204050408
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIMdTCC
+BjQwggQcoAMCAQICAR4wDQYJKoZIhvcNAQEFBQAwfTELMAkGA1UEBhMCSUwxFjAUBgNVBAoT
+DVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNp
+Z25pbmcxKTAnBgNVBAMTIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4XDTA3
+MTAyNDIxMDE1NVoXDTE3MTAyNDIxMDE1NVowgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1T
+dGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWdu
+aW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENs
+aWVudCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMcJg8zOLdgasSmkLhOr
+lr6KMoOMpohBllVHrdRvEg/q6r8jR+EK75xCGhR8ToREoqe7zM9/UnC6TS2y9UKTpT1v7RSM
+zR0t6ndl0TWBuUr/UXBhPk+Kmy7bI4yW4urC+y7P3/1/X7U8ocb8VpH/Clt+4iq7nirMcNh6
+qJR+xjOhV+VHzQMALuGYn5KZmc1NbJQYclsGkDxDz2UbFqE2+6vIZoL+jb9x4Pa5gNf1TwSD
+kOkikZB1xtB4ZqtXThaABSONdfmv/Z1pua3FYxnCFmdr/+N2JLKutIxMYqQOJebr/f/h5t95
+m4JgrM3Y/w7YX9d7YAL9jvN4SydHsU6n65cCAwEAAaOCAa0wggGpMA8GA1UdEwEB/wQFMAMB
+Af8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBRTcu2SnODaywFcfH6WNU7y1LhRgjAfBgNV
+HSMEGDAWgBROC+8apEBbpRdphzDKNGhD0EGu8jBmBggrBgEFBQcBAQRaMFgwJwYIKwYBBQUH
+MAGGG2h0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9jYTAtBggrBgEFBQcwAoYhaHR0cDovL3d3
+dy5zdGFydHNzbC5jb20vc2ZzY2EuY3J0MFsGA1UdHwRUMFIwJ6AloCOGIWh0dHA6Ly93d3cu
+c3RhcnRzc2wuY29tL3Nmc2NhLmNybDAnoCWgI4YhaHR0cDovL2NybC5zdGFydHNzbC5jb20v
+c2ZzY2EuY3JsMIGABgNVHSAEeTB3MHUGCysGAQQBgbU3AQIBMGYwLgYIKwYBBQUHAgEWImh0
+dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93
+d3cuc3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwDQYJKoZIhvcNAQEFBQADggIBAAqD
+CH14qywGXLhjjF6uHLkjd02hcdh9hrw+VUsv+q1eeQWB21jWj3kJ96AUlPCoEGZ/ynJNScWy
+6QMVQjbbMXltUfO4n4bGGdKo3awPWp61tjAFgraLJgDk+DsSvUD6EowjMTNx25GQgyYJ5RPI
+zKKR9tQW8gGK+2+RHxkUCTbYFnL6kl8Ch507rUdPPipJ9CgJFws3kDS3gOS5WFMxcjO5DwKf
+KSETEPrHh7p5shuuNktvsv6hxHTLhiMKX893gxdT3XLS9OKmCv87vkINQcNEcIIoFWbP9HOR
+z9v3vQwR4e3ksLc2JZOAFK+ssS5XMEoznzpihEP0PLc4dCBYjbvSD7kxgDwZ+Aj8Q9PkbvE9
+sIPP7ON0fz095HdThKjiVJe6vofq+n6b1NBc8XdrQvBmunwxD5nvtTW4vtN6VY7mUCmxsCie
+uoBJ9OlqmsVWQvifIYf40dJPZkk9YgGTzWLpXDSfLSplbY2LL9C9U0ptvjcDjefLTvqSFc7t
+w1sEhF0n/qpA2r0GpvkLRDmcSwVyPvmjFBGqUp/pNy8ZuPGQmHwFi2/14+xeSUDG2bwnsYJQ
+G2EdJCB6luQ57GEnTA/yKZSTKI8dDQa8Sd3zfXb19mOgSF0bBdXbuKhEpuP9wirslFe6fQ1t
+5j5R0xi72MZ8ikMu1RQZKCyDbMwazlHiMIIGOTCCBSGgAwIBAgIDBdMXMA0GCSqGSIb3DQEB
+BQUAMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMi
+U2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMvU3RhcnRDb20g
+Q2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0EwHhcNMTMwMTI5MTIyMTM0
+WhcNMTQwMTMwMjIzNjE4WjBXMRkwFwYDVQQNExA0MzM5TjFVWjZFS2ZBa0Y2MRkwFwYDVQQD
+DBBuZXR3aXpAY3JjLmlkLmF1MR8wHQYJKoZIhvcNAQkBFhBuZXR3aXpAY3JjLmlkLmF1MIIB
+IjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqz7eWA7Oi1ES6IIWwtRNtOa6cSj6GSio
+72D26TkCPm/vYamqS/9pluIyMO2TbGjMyveGxWZB9bDt+MnuI6yJ3spD6br5TUXQSqsgp1/g
+NXicgNmUHESd/A7+POEdYKMyTtXjVEqmR8R6uPtD78MBhIKQVZdBYGFuRBhrjoFMOnWARmXD
+47FG6eLH8jyeBi+RGEYEpBgTe1gFcoU1dCrjBqxAj47ALNgcHP4ffNX47DLvyhW2pMMaOYUh
+ga/UyQuPOpZcMAJdVI7dTIkbdipboEEE5pTdoIRI+F+XDLzO8bNkGLa1xLTWrbP048xxw3SL
+Aw/DmLYqQ+oC8vabAAqBIwIDAQABo4IC1jCCAtIwCQYDVR0TBAIwADALBgNVHQ8EBAMCBLAw
+HQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMB0GA1UdDgQWBBR/FxImYCufSdz0pG5w
+A8VPzNyaujAfBgNVHSMEGDAWgBRTcu2SnODaywFcfH6WNU7y1LhRgjAbBgNVHREEFDASgRBu
+ZXR3aXpAY3JjLmlkLmF1MIIBTAYDVR0gBIIBQzCCAT8wggE7BgsrBgEEAYG1NwECAzCCASow
+LgYIKwYBBQUHAgEWImh0dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwgfcGCCsG
+AQUFBwICMIHqMCcWIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MAMCAQEagb5U
+aGlzIGNlcnRpZmljYXRlIHdhcyBpc3N1ZWQgYWNjb3JkaW5nIHRvIHRoZSBDbGFzcyAxIFZh
+bGlkYXRpb24gcmVxdWlyZW1lbnRzIG9mIHRoZSBTdGFydENvbSBDQSBwb2xpY3ksIHJlbGlh
+bmNlIG9ubHkgZm9yIHRoZSBpbnRlbmRlZCBwdXJwb3NlIGluIGNvbXBsaWFuY2Ugb2YgdGhl
+IHJlbHlpbmcgcGFydHkgb2JsaWdhdGlvbnMuMDYGA1UdHwQvMC0wK6ApoCeGJWh0dHA6Ly9j
+cmwuc3RhcnRzc2wuY29tL2NydHUxLWNybC5jcmwwgY4GCCsGAQUFBwEBBIGBMH8wOQYIKwYB
+BQUHMAGGLWh0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9zdWIvY2xhc3MxL2NsaWVudC9jYTBC
+BggrBgEFBQcwAoY2aHR0cDovL2FpYS5zdGFydHNzbC5jb20vY2VydHMvc3ViLmNsYXNzMS5j
+bGllbnQuY2EuY3J0MCMGA1UdEgQcMBqGGGh0dHA6Ly93d3cuc3RhcnRzc2wuY29tLzANBgkq
+hkiG9w0BAQUFAAOCAQEAwsdSJioQIH5mEXlMBkQBZN9qrqCvDn4e92NKIX2LMPhVH01o0weH
+MEgkFMOBypbcPrwnZD51IL+ZfPmuDrcFJR9SPk4W95p3wLakMUBmvDPJ3IC+pa97+fU/GYsh
+q4dth+VlAIWJarpPV5ee6hAXGQEZvC2jyy5ukcjlr/oQxegb4hufgkLhKjqaq5UDs2be5q1N
+CBewezVmAbb/VDNVogP1xacnHn4rhllskMfGAda2DPCCaSMaJ3LcC5JRyfMkpKe5UxpVmVeM
+vGP8hYGI9DlFjwpqRCmIvD/Wl6oWWJc0HaLl6k+U3dngqEHhunzh3H6b/3lWOmEKQuI3Piy+
+oDGCA90wggPZAgEBMIGUMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRk
+LjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UE
+AxMvU3RhcnRDb20gQ2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0ECAwXT
+FzAJBgUrDgMCGgUAoIICHTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJ
+BTEPFw0xMzAyMjUyMTI5MjVaMCMGCSqGSIb3DQEJBDEWBBSa0kapmYQz7G6gFPK9H5O8k6Yl
+zzBsBgkqhkiG9w0BCQ8xXzBdMAsGCWCGSAFlAwQBKjALBglghkgBZQMEAQIwCgYIKoZIhvcN
+AwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFAMAcGBSsOAwIHMA0GCCqGSIb3DQMC
+AgEoMIGlBgkrBgEEAYI3EAQxgZcwgZQwgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFy
+dENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5n
+MTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENsaWVu
+dCBDQQIDBdMXMIGnBgsqhkiG9w0BCRACCzGBl6CBlDCBjDELMAkGA1UEBhMCSUwxFjAUBgNV
+BAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRl
+IFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlh
+dGUgQ2xpZW50IENBAgMF0xcwDQYJKoZIhvcNAQEBBQAEggEAdlnIpfaf6RY1JX16W0sipJqf
+qs2SvTsUpi/9mwRS3yMtkj54GcMF3MGaHzBY9+5ALX4TxrZ/7gxZ6vnBXIMy2aeSf99UgaPD
+l+8yTluW/mGWa//YggIKuJPZVECHvgHXiJH5T3ORr6RKb3E0uki6yOw9Lg7Oi0EMA75CBAdx
+rqBcLQE3XEYr6/yE77ebXvne/BQ58l3s9bTB//09e31RHsSfq47QJyLuow3Hvdx3Sv3+UEJh
+a5pAa9jrR3dSgzhgvWRzt45F+qCyZtYUvt1eYKbUEo86QOYydvhbmA7X+1eUrOY26AV/Pb2Y
+tVnwg5rnyreJPfAJZtHTzVJd/r5NAQAAAAAAAA==
+--------------ms040705080601000204050408--
