@@ -1,93 +1,86 @@
-From: Dave Cundiff <syshackmin@gmail.com>
-Subject: Re: Backport Linux 3.7 MD RAID TRIM to Centos 6.3
-Date: Mon, 25 Feb 2013 17:42:48 -0500
-Message-ID: <CAKHEz2b3LyJMXLuW8vNsx8itEtbKEaWjNFn8GHud91wObYRwFQ@mail.gmail.com>
-References: <CAKHEz2ZUTqwhCgwkPM_1WSnU1PH=63pFss8WLJre9TixFGtv6Q@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: BUG  - raid 1 deadlock on handle_read_error / wait_barrier
+Date: Tue, 26 Feb 2013 09:54:52 +1100
+Message-ID: <20130226095452.32e2392b@notabene.brown>
+References: <1361487504.4863.54.camel@linux-lxtg.site>
+	<20130225094350.4b8ef084@notabene.brown>
+	<20130225110458.2b1b1e2d@notabene.brown>
+	<1361808662.20264.4.camel@148>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/yuzBHlhkj/qtM8xcUByJW=d"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKHEz2ZUTqwhCgwkPM_1WSnU1PH=63pFss8WLJre9TixFGtv6Q@mail.gmail.com>
+In-Reply-To: <1361808662.20264.4.camel@148>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux MDADM Raid <linux-raid@vger.kernel.org>
+To: tbayly@bluehost.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Dec 12, 2012 at 11:42 PM, Dave Cundiff <syshackmin@gmail.com> wrote:
-> I've been WAITING for TRIM to be added to the MD driver. Now that its in 3.7
-> I just can't wait for it filter down to the distros.
->
-> The patches submitted to 3.7 mostly apply to the RHEL/CentOS 6.3 kernel
-> source. Because RHEL pulls in random stuff from newer kernels its hard to
-> tell what other patching is needed. Before I go digging attempting to finish
-> applying and working out issues I was wondering if anyone more familiar
-> would know if there were other kernel patches that the TRIM patches depend
-> upon.
->
+--Sig_/yuzBHlhkj/qtM8xcUByJW=d
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-So I'm almost done with the backport. RedHat will probably be
-releasing it in one of their updates any second now but hey it was
-still fun.
+On Mon, 25 Feb 2013 09:11:02 -0700 Tregaron Bayly <tbayly@bluehost.com> wro=
+te:
 
-Linear/Raid0/Raid1 is working fine
-Raid5 I haven't touched
+> > Actually  don't bother.  I think I've found the problem.  It is related=
+ to
+> > pending_count and is easy to fix.
+> > Could you try this patch please?
+> >=20
+> > Thanks.
+> > NeilBrown
+> >=20
+> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> > index 6e5d5a5..fd86b37 100644
+> > --- a/drivers/md/raid1.c
+> > +++ b/drivers/md/raid1.c
+> > @@ -967,6 +967,7 @@ static void raid1_unplug(struct blk_plug_cb *cb, bo=
+ol from_schedule)
+> >  		bio_list_merge(&conf->pending_bio_list, &plug->pending);
+> >  		conf->pending_count +=3D plug->pending_cnt;
+> >  		spin_unlock_irq(&conf->device_lock);
+> > +		wake_up(&conf->wait_barrier);
+> >  		md_wakeup_thread(mddev->thread);
+> >  		kfree(plug);
+> >  		return;
+>=20
+> Running 15 hours now and no sign of the problem, which is 12 hours
+> longer than it took to trigger the bug in the past.  I'll continue
+> testing to be sure but I think this patch is a fix.
 
-Raid10 seems to be having an alignment issue thats disabling discard.
-This may be present in the mainline as well or I'm just missing some
-other kernel change between the two.
+Thanks.  I've added a "Tested-by" you to the patch header.
 
-The following is what set on my devices
+Should go to Linus, and thence to -stable in a day or 2.
 
-md2 : active raid10 sda3[5] sdf3[4] sde3[3] sdd3[2] sdc3[1] sdb3[0]
-      655491072 blocks super 1.2 512K chunks 2 near-copies [6/6] [UUUUUU]
+NeilBrown
 
-physical devices:
-discard_max_bytes: 2199023255040
-discard_granularity: 33553920
-discard_alignment: 0
-Phys/Log block size: 512
+>=20
+> Thanks for the fast response!
+>=20
+> Tregaron Bayly
 
-MD device:
-discard_max_bytes: 524288 (equal to chunk size)
-discard_granularity: 33553920 (same as physical)
-discard_alignment: 26769408
-Phys/Log block size: 512
 
-It appears I've missed something somewhere that should be bringing the
-granularity and the alignment of the md device down to more closely
-match its chunk size. When any size discard goes through
-blkdev_issue_discard the following code sets max_discard_sectors to 0
-and disables the feature.
+--Sig_/yuzBHlhkj/qtM8xcUByJW=d
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-/* Zero-sector (unknown) and one-sector granularities are the same.  */
-  granularity = max(q->limits.discard_granularity >> 9, 1U);
-  alignment = bdev_discard_alignment(bdev) >> 9;
-  alignment = sector_div(alignment, granularity);
-  printk("granularity: %d Alignment: %d\n", granularity, alignment);
-  /*
-   * Ensure that max_discard_sectors is of the proper
-   * granularity, so that requests stay aligned after a split.
-   */
-  max_discard_sectors = min(q->limits.max_discard_sectors, UINT_MAX >> 9);
-  printk("max_discard_sectors: %d\n", max_discard_sectors);
-  sector_div(max_discard_sectors, granularity);
-  max_discard_sectors *= granularity;
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-  printk("max_discard_sectors: %d\n", max_discard_sectors);
+iQIVAwUBUSvrvDnsnt1WYoG5AQI2qA//dj3d7y/ngPmgWlXWB0zheXb92oOsGvT2
+SXQ8NlsFYjD/kFuTlMZy/b1itAFSEFasUGgIoad7lg4zIfrdnb+dknBHcQFs5+va
+r7mOr86bTPF8KkzjE6MTMEFaRXiiLajAydvX0s7zmPHET9xzKO8xXpCVUuypCzm3
+2UDAfvuMTuIDJQSCIf6JNOWkNk/xx2c9lmBQ33TYkZOC1AdfqX+udzSd4GQHE3eY
+DwJ5UMGHrFFmIA8L0IrAI18YCG9m7u8zx5BYBDO7y0IfUzUGorn7J3BZ2A1vqD6B
+2Z7o9K03B2lDMXOubfOzTjINuxfbQjhE5BCT0sHFuR4bMf07cUu3hoEZ8Zru+o9j
+FTcTMevRrFzQKxbJP08ZRGKe0VeYKNffIH7ZZY3kylMEJw2lovMEMhBp2+GVvEjI
+Fdsza5aOBnYfRq7ql1252pBvFt+bLusEWdKH33QMP+TuKrTM5Hffuh+27ZWa0ZCq
+9H/Ktc8x2JwKSgm+3O4pbZ+j8T6YxgjHRkiwNy+tTcvX1a182p7Qswz7x96RL/z+
+ka7qJ29IGw3OjOlzTF5AvoYSXwm/G7dzZCIRez3Hy6U3T4k1DAtNhuG4kcOAQfI/
+vRFVDK31pZopI50Putcfsz/Cd3yOFMIYbWkDnQNdNgEy4t+Z7LPJssr+CxkqZZ0S
+5LcThggihCI=
+=vS/c
+-----END PGP SIGNATURE-----
 
-if (unlikely(!max_discard_sectors)) {
-    /* Avoid infinite loop below. Being cautious never hurts. */
-    return -EOPNOTSUPP;
-  }
-
-The values I get for the printks are as follows
-granularity: 65535 Alignment: 54332
-max_discard_sectors: 1024
-max_discard_sectors: 0
-
-Any pointers would be appreciated. Mainly I'm trying to figure out how
-the md block device sets its granularity and alignment.
-
---
-Dave Cundiff
-System Administrator
-A2Hosting, Inc
-http://www.a2hosting.com
+--Sig_/yuzBHlhkj/qtM8xcUByJW=d--
