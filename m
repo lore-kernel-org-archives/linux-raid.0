@@ -1,41 +1,54 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Damage when growing RAID 5 array
-Date: Tue, 26 Feb 2013 08:45:16 -0500
-Message-ID: <512CBC6C.70005@turmel.org>
-References: <C4E6825B-3AF2-40E7-BD1B-65F988171FF2@gmail.com> <512C2AF3.90501@turmel.org> <83A60D93-15DE-4F45-97E8-A5A0A5E9C09C@gmail.com> <512CB72F.3080807@turmel.org> <9BA0752B-60DD-4BC6-B5C3-B1FBC9C50268@gmail.com>
+From: Joe Lawrence <Joe.Lawrence@stratus.com>
+Subject: Re: BUG  - raid 1 deadlock on handle_read_error / wait_barrier
+Date: Tue, 26 Feb 2013 09:09:26 -0500 (EST)
+Message-ID: <alpine.DEB.2.02.1302260905390.1736@jlaw-desktop.mno.stratus.com>
+References: <1361487504.4863.54.camel@linux-lxtg.site>  <20130225094350.4b8ef084@notabene.brown>  <20130225110458.2b1b1e2d@notabene.brown> <1361808662.20264.4.camel@148>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9BA0752B-60DD-4BC6-B5C3-B1FBC9C50268@gmail.com>
+In-Reply-To: <1361808662.20264.4.camel@148>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kevin McAreavey <kevin.mcareavey@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Tregaron Bayly <tbayly@bluehost.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Kevin,
+Same here:  after ~15 hrs, ~300 surprise device removals and fio stress, 
+no hung tasks to report.
 
-[top-posting repaired--please don't do that.]
+-- Joe
 
-On 02/26/2013 08:41 AM, Kevin McAreavey wrote:
-> On 26 Feb 2013, at 13:22, Phil Turmel wrote:
+On Mon, 25 Feb 2013, Tregaron Bayly wrote:
+
+> > Actually  don't bother.  I think I've found the problem.  It is related to
+> > pending_count and is easy to fix.
+> > Could you try this patch please?
+> > 
+> > Thanks.
+> > NeilBrown
+> > 
+> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> > index 6e5d5a5..fd86b37 100644
+> > --- a/drivers/md/raid1.c
+> > +++ b/drivers/md/raid1.c
+> > @@ -967,6 +967,7 @@ static void raid1_unplug(struct blk_plug_cb *cb, bool from_schedule)
+> >  		bio_list_merge(&conf->pending_bio_list, &plug->pending);
+> >  		conf->pending_count += plug->pending_cnt;
+> >  		spin_unlock_irq(&conf->device_lock);
+> > +		wake_up(&conf->wait_barrier);
+> >  		md_wakeup_thread(mddev->thread);
+> >  		kfree(plug);
+> >  		return;
 > 
->> On 02/26/2013 04:47 AM, Kevin McAreavey wrote:
->>> Hi Phil,
->>>
->>> Unfortunately I didn't specify a backup-file when attempting to grow the array so I'm not able to run this.
->>
->> Hmmm.  That sounds like a bug.  It should have refused, I believe.  What
->> kernel and mdadm versions are involved here?
+> Running 15 hours now and no sign of the problem, which is 12 hours
+> longer than it took to trigger the bug in the past.  I'll continue
+> testing to be sure but I think this patch is a fix.
 > 
-> $ uname -srv
-> Linux 3.2.0-37-generic-pae #58-Ubuntu SMP Thu Jan 24 15:51:02 UTC 2013
->
-> $ mdadm --version
-> mdadm - v3.2.5 - 18th May 2012
->
-
-Try the assemble with "--backup-file=... --invalid-backup"
-The file must be outside the array, of course.
-
-Phil
+> Thanks for the fast response!
+> 
+> Tregaron Bayly
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
