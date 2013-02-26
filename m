@@ -1,52 +1,72 @@
-From: Kevin McAreavey <kevin.mcareavey@gmail.com>
-Subject: Re: Damage when growing RAID 5 array
-Date: Tue, 26 Feb 2013 14:18:19 +0000
-Message-ID: <A13EF8F0-EE86-42A6-976F-B05632C00682@gmail.com>
-References: <C4E6825B-3AF2-40E7-BD1B-65F988171FF2@gmail.com> <512C2AF3.90501@turmel.org> <83A60D93-15DE-4F45-97E8-A5A0A5E9C09C@gmail.com> <512CB72F.3080807@turmel.org> <9BA0752B-60DD-4BC6-B5C3-B1FBC9C50268@gmail.com> <512CBC6C.70005@turmel.org>
-Mime-Version: 1.0 (Apple Message framework v1085)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: "Dr. Greg Wettstein" <greg@wind.enjellic.com>
+Subject: When does RAID synchronization status update?
+Date: Tue, 26 Feb 2013 12:15:49 -0600
+Message-ID: <201302261815.r1QIFnDb015519@wind.enjellic.com>
+Reply-To: greg@enjellic.com
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <512CBC6C.70005@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 26 Feb 2013, at 13:45, Phil Turmel wrote:
+Good morning, hope the week is going well for everyone.
 
-> Hi Kevin,
-> 
-> [top-posting repaired--please don't do that.]
-> 
-> On 02/26/2013 08:41 AM, Kevin McAreavey wrote:
->> On 26 Feb 2013, at 13:22, Phil Turmel wrote:
->> 
->>> On 02/26/2013 04:47 AM, Kevin McAreavey wrote:
->>>> Hi Phil,
->>>> 
->>>> Unfortunately I didn't specify a backup-file when attempting to grow the array so I'm not able to run this.
->>> 
->>> Hmmm.  That sounds like a bug.  It should have refused, I believe.  What
->>> kernel and mdadm versions are involved here?
->> 
->> $ uname -srv
->> Linux 3.2.0-37-generic-pae #58-Ubuntu SMP Thu Jan 24 15:51:02 UTC 2013
->> 
->> $ mdadm --version
->> mdadm - v3.2.5 - 18th May 2012
->> 
-> 
-> Try the assemble with "--backup-file=... --invalid-backup"
-> The file must be outside the array, of course.
-> 
-> Phil
+We've noted an issue which spans several kernel releases which I
+wanted to bounce off the group collective.  We are currently observing
+the issue all the way from 2.6.32 to 3.4.x so if it is a legitimate
+problem it has been around for a long time.
 
-Hi Phil,
+In our spare time we've been working on putting together the mythical
+'incremental scrubber' which Neil has been talking about for a long
+time.  A utility which will start a 'check' run on an MD device and
+then capture the completion state after a pre-determined amount of
+time so the scrub can be halted and then re-started during the next
+evening's session.
 
-I ran that, it completed but didn't given me any message.
+When a synchronization or check run of an MD device starts the status
+of the check which is found in the following pseudo-file:
 
-To be honest, I think I'm just going to cut my losses and start over.  I don't really know what I'm doing at this point and I've probably just been making it worse.
+	/sys/block/mdN/md/sync_completed
 
-Thanks for your help!
-Kevin
+Seems to stall and only update at intermittent times while the
+/proc/mdstat pseudo-file provides continuous updates.
+
+I'm currently watching a 2.6.32.24 machine which had a RAID5
+synchronization started about 25 minutes ago.  The contents of the
+/proc/mdstat pseudo-file indicate its 6% completed while the
+/sys/block/mdN/md/sync_completed file for the device has yet to move
+from zero.
+
+I'm also watching a RAID5 synchronization on a 3.4.10 kernel and while
+/proc/mdstat is continuously updating the
+/sys/block/mdN/md/sync_completed file hasn't budged in about a half
+hour.
+
+As I was writing this I just noticed on the 2.6.32.24 machine the
+contents of the /sys/block/mdN/md/sync_completed file moved, in one
+swoop, from:
+
+	0 / 1463746176
+
+To:
+
+	91484144 / 1463746176
+
+With respect to providing status information for the re-start of a
+check scrub the behavior seems to be anomolous.
+
+Would be interested in experience from others or reflections from Neil.
+
+Have a good afternoon.
+
+Greg
+
+As always,
+Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
+4206 N. 19th Ave.           Specializing in information infra-structure
+Fargo, ND  58102            development.
+PH: 701-281-1686
+FAX: 701-281-3949           EMAIL: greg@enjellic.com
+------------------------------------------------------------------------------
+"A distributed system is one on which I cannot get any work done because 
+ a machine I have never heard of has crashed."
+                                -- Leslie Lamport
