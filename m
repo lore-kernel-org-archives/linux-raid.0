@@ -1,35 +1,25 @@
 From: Phil Turmel <philip@turmel.org>
-Subject: Re: Brocken Raid & LUKS
-Date: Mon, 25 Feb 2013 19:19:15 -0500
-Message-ID: <512BFF83.20004@turmel.org>
-References: <5123A1CC.2000003@heisl.org> <512675A6.1000801@heisl.org> <5126797C.8090105@heisl.org> <51269DE0.5070905@heisl.org> <512748FA.2000709@heisl.org> <51277876.30008@turmel.org> <51278793.80904@heisl.org> <512790AE.2080102@turmel.org> <5127B64A.3000808@heisl.org> <5127D857.9090204@heisl.org> <5127F2B8.4050601@turmel.org> <5127F45F.5020608@heisl.org> <512827FC.7010403@turmel.org> <5128336E.5060809@heisl.org> <51284762.2080202@turmel.org> <51289798.7050500@heisl.org> <5128E9F4.5040700@turmel.org> <5129421C.7070105@heisl.org> <51295599.5040907@turmel.org> <51295B1B.2030404@heisl.org> <51299135.1000206@turmel.org> <5129BCCC.7090202@heisl.org> <512A2094.3020008@turmel.org> <512A5A5A.5020904@heisl.org> <512A5CFA.6020205@turmel.org> <512A6897.3040809@heisl.org> <512A6F39.7090008@turmel.org
- > <512A74FA.8000100@heisl.org> <512A7730.7010600@turmel.org> <512A7A2D.3040109@heisl.org> <512A7BC6.5010406@turmel.org> <512BAE16.1020205@heisl.org> <512BC570.20609@heisl.org>
+Subject: Re: Damage when growing RAID 5 array
+Date: Mon, 25 Feb 2013 22:24:35 -0500
+Message-ID: <512C2AF3.90501@turmel.org>
+References: <C4E6825B-3AF2-40E7-BD1B-65F988171FF2@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <512BC570.20609@heisl.org>
+In-Reply-To: <C4E6825B-3AF2-40E7-BD1B-65F988171FF2@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stone <stone@heisl.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Kevin McAreavey <kevin.mcareavey@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/25/2013 03:11 PM, Stone wrote:
+On 02/25/2013 04:17 PM, Kevin McAreavey wrote:
 
->> i have a backup from the three devices and i switched back to partion
->> case 1 and i fire up the fsck:
->>
->> fsck -y /dev/mapper/md2_nas
->> fsck from util-linux 2.19.1
->> e2fsck 1.41.14 (22-Dec-2010)
->> fsck.ext4: Group descriptors look bad... trying backup blocks...
->> The filesystem size (according to the superblock) is 1465134336 blocks
->> The physical size of the device is 1465133568 blocks
->> Either the superblock or the partition table is likely to be corrupt!
->> Abort? yes
->>
->> thats all?
->> is my chance on case 1 over?
-> should i try a fsck -a?
+> $ sudo mdadm --assemble /dev/md1
+> mdadm: Failed to restore critical section for reshape, sorry.
+>       Possibly you needed to specify the --backup-file
 
-No, go to case #2.
+Did you follow this advice?  I doesn't look like it from the rest of
+your report.  (Reread that without the word "Possibly".)
+
+Phil
