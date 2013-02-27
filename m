@@ -1,72 +1,43 @@
-From: "Dr. Greg Wettstein" <greg@wind.enjellic.com>
-Subject: When does RAID synchronization status update?
-Date: Tue, 26 Feb 2013 12:15:49 -0600
-Message-ID: <201302261815.r1QIFnDb015519@wind.enjellic.com>
-Reply-To: greg@enjellic.com
+From: Dan Williams <djbw@fb.com>
+Subject: Re: [PATCH] md/raid456: remove depends on CONFIG_EXPERIMENTAL
+Date: Tue, 26 Feb 2013 17:27:45 -0800
+Message-ID: <CAA9_cmfa1hhijh4g_hSwMy_GR81rxjEFMurJwSvhBruh1R5dtw@mail.gmail.com>
+References: <20130223074001.GA5199@www.outflux.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20130223074001.GA5199@www.outflux.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Arjan van de Ven <arjan@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Alasdair G Kergon <agk@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 List-Id: linux-raid.ids
 
-Good morning, hope the week is going well for everyone.
+On Fri, Feb 22, 2013 at 11:40 PM, Kees Cook <keescook@chromium.org> wrote:
+> The CONFIG_EXPERIMENTAL config item has not carried much meaning for a
+> while now and is almost always enabled by default. As agreed during the
+> Linux kernel summit, remove it from any "depends on" lines in Kconfigs.
+>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Cc: Arjan van de Ven <arjan@linux.intel.com>
+> Cc: Dan Williams <dan.j.williams@intel.com>
+> Cc: Alasdair G Kergon <agk@redhat.com>
+> ---
+>  drivers/md/Kconfig |    1 -
+>  1 file changed, 1 deletion(-)
+>
+> diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+> index 7cdf359..0cc3a3d 100644
+> --- a/drivers/md/Kconfig
+> +++ b/drivers/md/Kconfig
+> @@ -158,7 +158,6 @@ config MULTICORE_RAID456
+>         bool "RAID-4/RAID-5/RAID-6 Multicore processing (EXPERIMENTAL)"
+>         depends on MD_RAID456
+>         depends on SMP
+> -       depends on EXPERIMENTAL
 
-We've noted an issue which spans several kernel releases which I
-wanted to bounce off the group collective.  We are currently observing
-the issue all the way from 2.6.32 to 3.4.x so if it is a legitimate
-problem it has been around for a long time.
+In this case MULTICORE_RAID456 and the related code should go as
+well... now that there are patches to supersede this implementation in
+md-next.
 
-In our spare time we've been working on putting together the mythical
-'incremental scrubber' which Neil has been talking about for a long
-time.  A utility which will start a 'check' run on an MD device and
-then capture the completion state after a pre-determined amount of
-time so the scrub can be halted and then re-started during the next
-evening's session.
-
-When a synchronization or check run of an MD device starts the status
-of the check which is found in the following pseudo-file:
-
-	/sys/block/mdN/md/sync_completed
-
-Seems to stall and only update at intermittent times while the
-/proc/mdstat pseudo-file provides continuous updates.
-
-I'm currently watching a 2.6.32.24 machine which had a RAID5
-synchronization started about 25 minutes ago.  The contents of the
-/proc/mdstat pseudo-file indicate its 6% completed while the
-/sys/block/mdN/md/sync_completed file for the device has yet to move
-from zero.
-
-I'm also watching a RAID5 synchronization on a 3.4.10 kernel and while
-/proc/mdstat is continuously updating the
-/sys/block/mdN/md/sync_completed file hasn't budged in about a half
-hour.
-
-As I was writing this I just noticed on the 2.6.32.24 machine the
-contents of the /sys/block/mdN/md/sync_completed file moved, in one
-swoop, from:
-
-	0 / 1463746176
-
-To:
-
-	91484144 / 1463746176
-
-With respect to providing status information for the re-start of a
-check scrub the behavior seems to be anomolous.
-
-Would be interested in experience from others or reflections from Neil.
-
-Have a good afternoon.
-
-Greg
-
-As always,
-Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
-4206 N. 19th Ave.           Specializing in information infra-structure
-Fargo, ND  58102            development.
-PH: 701-281-1686
-FAX: 701-281-3949           EMAIL: greg@enjellic.com
-------------------------------------------------------------------------------
-"A distributed system is one on which I cannot get any work done because 
- a machine I have never heard of has crashed."
-                                -- Leslie Lamport
+--
+Dan
