@@ -1,76 +1,80 @@
-From: "Dragon" <Sunghost@gmx.de>
-Subject: Possible to rescue SW Raid5 with 2 missing Disks
-Date: Wed, 27 Feb 2013 08:14:26 +0100
-Message-ID: <20130227071426.42800@gmx.net>
+From: Stone <stone@heisl.org>
+Subject: Re: Brocken Raid & LUKS
+Date: Wed, 27 Feb 2013 08:26:42 +0100
+Message-ID: <512DB532.2080306@heisl.org>
+References: <5123A1CC.2000003@heisl.org> <5126797C.8090105@heisl.org> <51269DE0.5070905@heisl.org> <512748FA.2000709@heisl.org> <51277876.30008@turmel.org> <51278793.80904@heisl.org> <512790AE.2080102@turmel.org> <5127B64A.3000808@heisl.org> <5127D857.9090204@heisl.org> <5127F2B8.4050601@turmel.org> <5127F45F.5020608@heisl.org> <512827FC.7010403@turmel.org> <5128336E.5060809@heisl.org> <51284762.2080202@turmel.org> <51289798.7050500@heisl.org> <5128E9F4.5040700@turmel.org> <5129421C.7070105@heisl.org> <51295599.5040907@turmel.org> <51295B1B.2030404@heisl.org> <51299135.1000206@turmel.org> <5129BCCC.7090202@heisl.org> <512A2094.3020008@turmel.org> <512A5A5A.5020904@heisl.org> <512A5CFA.6020205@turmel.org> <512A6897.3040809@heisl.org> <512A6F39.7090008@turmel.org> <512A74FA.8000100@heisl.org
+ > <512A7730.7010600@turmel.org> <512A7A2D.3040109@heisl.org> <512A7BC6.5010406@turmel.org> <512BAE16.1020205@heisl.org> <512BC570.20609@heisl.org> <512BFF83.20004@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <512BFF83.20004@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
-Mikael points me to the Permute array.pl Perlscript, but i dont get it run. i tried
-permute_array --md /dev/md2 --mount /mnt/md2 /dev/sd[a-f]4 
+Am 26.02.2013 01:19, schrieb Phil Turmel:
+> On 02/25/2013 03:11 PM, Stone wrote:
+>
+>>> i have a backup from the three devices and i switched back to partion
+>>> case 1 and i fire up the fsck:
+>>>
+>>> fsck -y /dev/mapper/md2_nas
+>>> fsck from util-linux 2.19.1
+>>> e2fsck 1.41.14 (22-Dec-2010)
+>>> fsck.ext4: Group descriptors look bad... trying backup blocks...
+>>> The filesystem size (according to the superblock) is 1465134336 blocks
+>>> The physical size of the device is 1465133568 blocks
+>>> Either the superblock or the partition table is likely to be corrupt!
+>>> Abort? yes
+>>>
+>>> thats all?
+>>> is my chance on case 1 over?
+>> should i try a fsck -a?
+> No, go to case #2.
+i dont understand anything
 
-Iam not sure how to and i wont to make a mistake, can you help for the right syntax? Anywhere i suggest we have to work out that:
+i have now three more disks an the mainboard for the spare copy.
+here now my new systeminfo:
+sda - system
+sdb - new spare
+sdc - new space
+sdd - new space
+sde - old raid
+sdf - old raid
+sdg - missing
+sdh - old raid
 
-- missing disk are sdd and sdf, while sdd looks like to fails at first
-- superblock and chunksize are 512 and on all correct
+i have take a copy from the sde sdf sdh to the new spare devices.
+ddrescue /dev/sde /dev/sdb --force
+ddrescue /dev/sdf /dev/sdc --force
+ddrescue /dev/sdh /dev/sdd --force
 
-here are the tests with the 6 combinations i tried in the past
+now i would test case #2 with fsck -y and i have a look with parted over 
+the devices.
+ALL devices (new space and old raid) have now the start sector at 34 and 
+not on 2048
+here a example:
+parted /dev/sdh unit s print
+Model: ATA WDC WD20EARS-00M (scsi)
+Disk /dev/sdh: 3907029168s
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
 
-Test1:
-mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 \
-                /dev/sd{a,b,c,d,e,f}4
--> filesize 708MB with 20603326 lines and canceling at the end by e2fsck
-- bad superblock or partitiontable is damage
-- bad checksum of group or descriptor
-- lots of invalid inodes
-- canceld with lots of illegal blocks in inodes
+Number  Start  End          Size         File system  Name  Flags
+  1      34s    3907029118s  3907029085s                     raid
 
-Test2:
-mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 /dev/sd{a,b,c,d,e}4 \
-                missing
--> filesize 1,3GB  with 37614367 lines and canceling by e2fsck at the end
-- back to original superblock
-- bad superblock or damaged partitiontable at the beginning
-- lots of invalid inodes
-- canceld with iteration of inade
+i dont understand this. all devices had his start sector on 2048 also 
+the one i changed for the case #1 test.
+how can this happend?
+if i try a
+mdadm --create /dev/md2 --assume-clean --chunk=512 --verbose --level=5 
+--raid-devices=4 /dev/sde1 /dev/sdf1 missing /dev/sdh1
+cryptsetup luksOpen /dev/md2 md2_nas
+i cant open luks because -> No key available with this passphrase
 
-Test3:
-mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 /dev/sd{a,b,c}4 \
-                missing /dev/sd{e,f}4
--> filesize 1,4GB with 40745425 lines and canceling by e2fsck at the end
-- errors see test2
-- read error while reading next inode
+i dont understand this.
+should i change the sector on all devices back to 2048 to check case #2?
 
-Test4:
-mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 \
-                /dev/sd{a,b,c,f,e,d}4
-->filesize 874MB with 25412000 lines and break by e2fsck at the end
-- try original superblock
-- bad superblock or damaged partitiontable
-- than lots of checksumm  invalid deskriptor of group
-- at the end illegal block in inode to much invalid blocks in inode
 
-Test5:
-mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 /dev/sd{a,b,c}4 \
-                missing /dev/sd{e,d}4
--> filesize 1,6GB with 45673505 lines and canceling at the end by e2fsck
-
-Test6:
-mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 /dev/sd{a,b,c,f,e}4 \
-                missing
-- try original superblock
-- bad superblock or damage partitiontable
-- lots of checksumm error in group deskriptor
-- ends with conflict in inode table with another filesystem block
--> filesize 542MB with 15727702 lines and cancelingat the end by e2fsck
-
-what would be the next step?
-- backup the disks
-- create best combination or all with 
-mdadm --create --level 5 -n 6 --chunk=512 --assume-clean /dev/md2 /dev/sd{x,x,x,x,x}4 missing
-- ??
