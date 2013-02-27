@@ -1,43 +1,35 @@
-From: Dan Williams <djbw@fb.com>
-Subject: Re: [PATCH] md/raid456: remove depends on CONFIG_EXPERIMENTAL
-Date: Tue, 26 Feb 2013 17:27:45 -0800
-Message-ID: <CAA9_cmfa1hhijh4g_hSwMy_GR81rxjEFMurJwSvhBruh1R5dtw@mail.gmail.com>
-References: <20130223074001.GA5199@www.outflux.net>
+From: Khurram Hassan <kfhassan@gmail.com>
+Subject: Rocketraid 640 raid 5 disabled
+Date: Wed, 27 Feb 2013 08:11:29 +0500
+Message-ID: <CAHijsZvKW0A5CWj01X7wp3fDfh9S0RtORnaVZYyE8McsLJLSAQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130223074001.GA5199@www.outflux.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Arjan van de Ven <arjan@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Alasdair G Kergon <agk@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Feb 22, 2013 at 11:40 PM, Kees Cook <keescook@chromium.org> wrote:
-> The CONFIG_EXPERIMENTAL config item has not carried much meaning for a
-> while now and is almost always enabled by default. As agreed during the
-> Linux kernel summit, remove it from any "depends on" lines in Kconfigs.
->
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Cc: Arjan van de Ven <arjan@linux.intel.com>
-> Cc: Dan Williams <dan.j.williams@intel.com>
-> Cc: Alasdair G Kergon <agk@redhat.com>
-> ---
->  drivers/md/Kconfig |    1 -
->  1 file changed, 1 deletion(-)
->
-> diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
-> index 7cdf359..0cc3a3d 100644
-> --- a/drivers/md/Kconfig
-> +++ b/drivers/md/Kconfig
-> @@ -158,7 +158,6 @@ config MULTICORE_RAID456
->         bool "RAID-4/RAID-5/RAID-6 Multicore processing (EXPERIMENTAL)"
->         depends on MD_RAID456
->         depends on SMP
-> -       depends on EXPERIMENTAL
+I have a disabled raid 5 (3 disks) array on a Rocketraid 640. The full
+sequence of events follows. After the array was shown as degraded, I
+checked the webgui (under windows 7) which showed hard disk 3 was bad,
+so changed this hard disk and the rebuild started. After a few hours,
+I got a loud continuous beep from the system. Upon checking it, I
+found that hard disk 1 had bad sectors and was offline. At this time,
+the rebuild showed 85.1% complete. I clicked rescan and it came back
+on online. At this time, I started copying data from the raid disk to
+another hard disk which was not on the raid controller. The raid disk
+had three volumes and I successfully copied the first volume data. It
+was during data copy from the 2nd volume that hard disk 1 gave bad
+sector message again and went offline. I clicked rescan, it came
+online but then hard disk 2 and hard disk 3 went offline and the array
+became disabled. The 3 disks are still recognized by the controller,
+but the array shows only the 1st hard disk as part of the array.
 
-In this case MULTICORE_RAID456 and the related code should go as
-well... now that there are patches to supersede this implementation in
-md-next.
+Can I use mdadm to recover this array or at least to get the 2nd hard
+disk as online so that I can copy data from it? I dont boot off the
+array; I have another hard disk for that purpose. I have installed
+ubuntu 12.04 on this boot hard disk and have loaded the driver for the
+controller in it. I dont see anyhard disk devices under /dev for it. I
+only have /dev/sdax which is for my boot hard disk.
 
---
-Dan
+Thanks.
