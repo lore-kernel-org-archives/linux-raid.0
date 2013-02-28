@@ -1,49 +1,77 @@
-From: Oliver Schinagl <oliver+list@schinagl.nl>
-Subject: Expanding array with multiple devices
-Date: Thu, 28 Feb 2013 21:27:15 +0100
-Message-ID: <512FBDA3.7080501@schinagl.nl>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Persistent failures with simple md setup
+Date: Fri, 1 Mar 2013 08:25:20 +1100
+Message-ID: <20130301082520.19be933a@notabene.brown>
+References: <1565063.1kpR7lz4Ph@xrated>
+	<4993918.JF2cWAHTeM@xrated>
+	<20130228144013.61dcfe6b@notabene.brown>
+	<2305721.Vu0zK2o09g@xrated>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/FFMp72lL1pq5gn1KDb_aqs3"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <2305721.Vu0zK2o09g@xrated>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Hans-Peter Jansen <hpj@urpla.net>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello list,
+--Sig_/FFMp72lL1pq5gn1KDb_aqs3
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I've looked online a bit, but didn't really find the answer to the 
-following question.
+On Thu, 28 Feb 2013 11:49:53 +0100 Hans-Peter Jansen <hpj@urpla.net> wrote:
 
-While expanding an existing raid is as simple as mdadm --add, followed 
-by an mdadm --grow, How would you go about this when expanding it with 
-multiple devices.
+This is what I asked for:
 
-A little bit of background. I have 8 2TB disks, 4 in a current raid5 
-array, which will be the donor disks en 4 'new' disk going to form the 
-basis of a new array. I want to change chunk size and re-format to ext4 
-to a) optimize the new array according to the new parameters 
-(stride,stripe-width) and (possibly) a new ondisk ext4 disk format (new 
-features added since last time). The old array was 4 disk raid5, the new 
-array will be 8 disk raid6.
+> > It really feels like a udev bug, but it is hard to be sure.
+> > Could you edit /etc/init.d/boot.md and add
+> >    echo BEFORE mdadm -IRs > /dev/kmsg
+> > just before the call the "$mdadm_BIN -IRs",
+> >    echo AFTER mdadm -IRs > /dev/kmsg
+> > just after that call, and
+> >    echo AFTER mdadm -Asc > /dev/mksg
+> > just after the call to "$mdadm_BIN -A -s -c $mdadm_CONFIG"
+> >=20
+> > And maybe put similar messages just before and after the =20
+> >     /sbin/udevadm settle ....
+> > call.
+> >=20
+> > If you can then reproduce the problem, the extra logging might tell us
+> > something useful.
+>=20
 
-So far, I have created a new raid6 array with the 4 'new' disks + 2 
-'missing' for the parity. I have done it this way, so that I would have 
-enough space to copy (and verify) files. having done a 4 disk raid6 
-without any missing devices, there would simply have not been enough 
-space. True I could have used 3 data disks, 1 parity and 1 missing.
+This is not at all the same thing:
 
-Anyway, my plan next, is to expand the array. I can think of the 
-following options.
+> I've enabled initrd (linuxrc=3Dtrace) and boot.md (#!/bin/sh -x) debuggin=
+g, hence=20
+> we should see the full story next time.
+>
 
-a) Remove 1 disk at a time from the old array, and add it to the new 
-array, first 2 disks would be parity, after that --growing the last two. 
-Big disadvantage is of course that there will be almost a week or two of 
-re-syncing going on.
+It might help, but I'm far from certain that it will be nearly as useful.
 
-b) Would be to somehow add all 'extra' disks at once, and have it rsync 
-it all in one go.
+NeilBrown
 
-Any idea's how best to expand all this?
+--Sig_/FFMp72lL1pq5gn1KDb_aqs3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Oliver
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUS/LRznsnt1WYoG5AQLBqBAAsJtVtOkCadU3Hiq717pXK2xLvtmX89td
+C3cK7+1Knbudx7Z6vpQXq1aOomvEC5C3R5LZFrwEOZX+HhRdoJ7Hs8yXj/2WR6KT
+9Kqh2p0nrbk1wu5+QD6Jp4DQCqZ1GYwkLv00Gh0SXy5VV/i1abytJSe5juDp1hYz
+F3QqsZfioSNx0CIVFXROR1Zkuzg0++ReKX97wh9deuIwGJiSNYP+U8Gb3TBseju7
+5GvBD4SohVANZMnCevNl1D/Z8CS9cBel2a2mOsCN+wBLMS0M7wKxllvwl2pvsqaU
+2gBHEkht60vAWqi7qmDg7r3Y4KExLoN+j+xwY8KfOn6QEqGwGKjFD3r4vasHDlwT
+SrISlp8ZiJ86pZMHAdIf0Ah1U0nkuvmdczxxTLYOUUPowUc8MYVnFixOwTygutgb
+uoz+Af05zz2y8W8CyvgpU7Ty65oWtVJpWS9gA2QyglVgP5UGDJEWQt4a/EBlcTC+
+q+F3T94lrGPTWki8wtzBxNKeM20eA4Zlcj0xRnPPat/8MR7HNX8P4RymLq5m4glQ
+WARmDdtDBtwc4dzenJPYSYEYzlsxwcLcxqOCmFlVuzjhzrfjAG8bb+IP8IWVO/h5
+x/seN5+jTD4z3TfBO5/C98VRFysQ13olw4JhDSnYKGh3ih/tG2oTSkoEnQzrmnNN
+4bvgdpvon0k=
+=gt0A
+-----END PGP SIGNATURE-----
+
+--Sig_/FFMp72lL1pq5gn1KDb_aqs3--
