@@ -1,315 +1,200 @@
-From: "Mr Jr. Laurent" <juniorlaur100@gmail.com>
-Subject: I PREFERRED YOUR HELP
-Date: Thu, 28 Feb 2013 01:49:37 -0800 (PST)
-Message-ID: <1362044977.91345.YahooMailRC__25927.4546559483$1362045013$gmane$org@web5718.biz.mail.ne1.yahoo.com>
-Reply-To: "Mr Jr. Laurent" <jrlaurent2000@gmail.com>
+From: Hans-Peter Jansen <hpj@urpla.net>
+Subject: Re: Persistent failures with simple md setup
+Date: Thu, 28 Feb 2013 11:49:53 +0100
+Message-ID: <2305721.Vu0zK2o09g@xrated>
+References: <1565063.1kpR7lz4Ph@xrated> <4993918.JF2cWAHTeM@xrated> <20130228144013.61dcfe6b@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="-1667998798-954689149-1362044977=:91345"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20130228144013.61dcfe6b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
----1667998798-954689149-1362044977=:91345
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Am Donnerstag, 28. Februar 2013, 14:40:13 schrieb NeilBrown:
+> On Wed, 27 Feb 2013 18:01:29 +0100 Hans-Peter Jansen <hpj@urpla.net> wrote:
+> 
+> > [I intentionally switched off line wrapping, since it renders the given information
+> >  inedible]
+> > 
+> > Hi Neil,
+> > 
+> > sorry for the delay. Meanwhile, I updated to mdadm 3.2.6, and recreated the initrd.
+> > Since I do the recreation on a regular base, no data salad appeared, but the initial
+> > issue persists. I trigger checking the related md on each manual intervention.
+> > 
+> > Hence approaching this again. 
+> > 
+> > That's a typical boot sequence:
+> 
+> BTW, you aren't the only one to hit this issue .... I think I'm starting to
+> get closer to the problem.
 
-I PREFERRED YOU (GO THROUGH THE ATTACHMENT FOR THE MESSAGE)
----1667998798-954689149-1362044977=:91345
-Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document; name="Laur.docx"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="Laur.docx"
+Nice to hear, will do my best to assist.
 
-UEsDBBQABgAIAAAAIQDd/JU3ZgEAACAFAAATAAgCW0NvbnRlbnRfVHlwZXNd
-LnhtbCCiBAIooAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC0VMtuwjAQvFfqP0S+Vomh
-h6qqCBz6OLZIpR9g7A1Y9Uv28vr7bgJEVQtBKuUSKVnvzOzsxIPR2ppsCTFp
-70rWL3osAye90m5Wso/JS37PsoTCKWG8g5JtILHR8PpqMNkESBl1u1SyOWJ4
-4DzJOViRCh/AUaXy0Qqk1zjjQchPMQN+2+vdcekdgsMcaww2HDxBJRYGs+c1
-fd4qiWASyx63B2uukokQjJYCSSlfOvWDJd8xFNTZnElzHdINyWD8IENdOU6w
-63sja6JWkI1FxFdhSQZf+ai48nJhaYaiG+aATl9VWkLbX6OF6CWkRJ5bU7QV
-K7Tb6z+qI+HGQPp/FVvcLnrSOY4+JE57OZsf6s0rUDlZESCihnZ1x0cHRLLs
-EsPvkLvGb1KAlHfgzbN/tgcNzEnKin6JiZgaOJvvV/Ja6JMiVjB9v5j738C7
-hLT5kz7+wYz9dVF3H0gdb+634RcAAAD//wMAUEsDBBQABgAIAAAAIQAekRq3
-8wAAAE4CAAALAAgCX3JlbHMvLnJlbHMgogQCKKAAAgAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAjJLbSgNBDIbvBd9hyH032woi0tneSKF3IusDhJnsAXcOzKTavr2jILpQ
-217m9OfLT9abg5vUO6c8Bq9hWdWg2JtgR99reG23iwdQWchbmoJnDUfOsGlu
-b9YvPJGUoTyMMaui4rOGQSQ+ImYzsKNchci+VLqQHEkJU4+RzBv1jKu6vsf0
-VwOamabaWQ1pZ+9AtcdYNl/WDl03Gn4KZu/Yy4kVyAdhb9kuYipsScZyjWop
-9SwabDDPJZ2RYqwKNuBpotX1RP9fi46FLAmhCYnP83x1nANaXg902aJ5x687
-HyFZLBZ9e/tDg7MvaD4BAAD//wMAUEsDBBQABgAIAAAAIQCDF/dDOgEAADEF
-AAAcAAgBd29yZC9fcmVscy9kb2N1bWVudC54bWwucmVscyCiBAEooAABAAAA
-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
-CwALAMECAABeMAAAAAA=
+> 
+> > 
+> > Feb 27 08:35:48 zaphkiel kernel: [    0.000000] Kernel command line: PROFILE=ibk root=/dev/disk/by-uuid/782b24f2-26f6-4ea9-ab8b-d377cd2ac97b console=ttyS0,19200 console=tty0 resume=/dev/md127 splash=silent  console=ttyS0,115200n8 vga=791
+> > Feb 27 08:35:48 zaphkiel kernel: [    6.816164] sd 0:0:0:0: [sda] 1953525168 512-byte logical blocks: (1.00 TB/931 GiB)
+> > Feb 27 08:35:48 zaphkiel kernel: [    6.862240] sd 1:0:0:0: [sdb] 1953525168 512-byte logical blocks: (1.00 TB/931 GiB)
+> > Feb 27 08:35:48 zaphkiel kernel: [    6.983157] sd 0:0:0:0: [sda] Write Protect is off
+> > Feb 27 08:35:48 zaphkiel kernel: [    7.011914] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> > Feb 27 08:35:48 zaphkiel kernel: [    7.011932] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+> > Feb 27 08:35:48 zaphkiel kernel: [    7.159045] sd 1:0:0:0: [sdb] Write Protect is off
+> > Feb 27 08:35:48 zaphkiel kernel: [    7.187766] sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+> > Feb 27 08:35:48 zaphkiel kernel: [    7.187783] sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+> > Feb 27 08:35:48 zaphkiel kernel: [    7.319637]  sda: sda1 sda2 sda3 sda4
+> > Feb 27 08:35:48 zaphkiel kernel: [    7.386469] sd 0:0:0:0: [sda] Attached SCSI disk
+> > Feb 27 08:35:48 zaphkiel kernel: [    7.414335]  sdb: sdb1 sdb2 sdb3 sdb4
+> > Feb 27 08:35:48 zaphkiel kernel: [    7.470597] sd 1:0:0:0: [sdb] Attached SCSI disk
+> > Feb 27 08:35:48 zaphkiel kernel: [    9.676078] PM: Checking hibernation image partition /dev/md127
+> > Feb 27 08:35:48 zaphkiel kernel: [    9.956010] sd 6:0:0:0: [sdc] Attached SCSI removable disk
+> > Feb 27 08:35:48 zaphkiel kernel: [   10.175875] sd 6:0:0:1: [sdd] Attached SCSI removable disk
+> > Feb 27 08:35:48 zaphkiel kernel: [   10.262999] sd 6:0:0:2: [sde] Attached SCSI removable disk
+> > Feb 27 08:35:48 zaphkiel kernel: [   10.299000] sd 6:0:0:3: [sdf] Attached SCSI removable disk
+> > Feb 27 08:35:48 zaphkiel kernel: [   10.618022] md: raid1 personality registered for level 1
+> > Feb 27 08:35:48 zaphkiel kernel: [   11.139833] md: bind<sda3>
+> > Feb 27 08:35:48 zaphkiel kernel: [   11.158438] md: bind<sdb3>
+> > Feb 27 08:35:48 zaphkiel kernel: [   11.200897] md/raid1:md124: active with 2 out of 2 mirrors
+> 
+> Presumably this is md124 being assembled in the initrd as it contains the
+> root filesystem.
 
----1667998798-954689149-1362044977=:91345--
+Correct.
+
+> 
+> > Feb 27 08:35:48 zaphkiel kernel: [   11.233921] created bitmap (200 pages) for device md124
+> > Feb 27 08:35:48 zaphkiel kernel: [   11.276742] md124: bitmap initialized from disk: read 13/13 pages, set 0 of 409595 bits
+> > Feb 27 08:35:48 zaphkiel kernel: [   11.356796] md124: detected capacity change from 0 to 107372728320
+> > Feb 27 08:35:48 zaphkiel kernel: [   11.395610]  md124: unknown partition table
+> > Feb 27 08:35:48 zaphkiel kernel: [   11.543579] md: raid0 personality registered for level 0
+> > Feb 27 08:35:48 zaphkiel kernel: [   11.583994] md: raid10 personality registered for level 10
+> > Feb 27 08:35:48 zaphkiel kernel: [   12.188576] md: raid6 personality registered for level 6
+> > Feb 27 08:35:48 zaphkiel kernel: [   12.220473] md: raid5 personality registered for level 5
+> > Feb 27 08:35:48 zaphkiel kernel: [   12.252320] md: raid4 personality registered for level 4
+> > Feb 27 08:35:48 zaphkiel kernel: [   12.318865] XFS (md124): Mounting Filesystem
+> > Feb 27 08:35:48 zaphkiel kernel: [   12.535666] XFS (md124): Ending clean mount
+> 
+> And now XFS has mounted that, so presumably about there the boot sequence
+> switches from initrd to real-root.  You have obviously removed some lines,
+> presumably because you thought brevity would help.  For future reference: it
+> doesn't.  I much prefer to see complete logs so I can correlate various parts
+> of the sequence and be sure I understand what I'm seeing.  But I probably
+> have enough here.
+
+Sorry, I grepped for 'md|sd' and removed some lines triggered from pata_amd, 
+which doesn't have any business in this scenario anyway (all sata). 
+
+Will remove this dangling driver from initrd later.
+
+We're leaving initrd here.
+
+> > Feb 27 08:35:48 zaphkiel kernel: [   22.720866] sd 0:0:0:0: Attached scsi generic sg0 type 0
+> > Feb 27 08:35:48 zaphkiel kernel: [   23.126126] sd 1:0:0:0: Attached scsi generic sg1 type 0
+> > Feb 27 08:35:48 zaphkiel kernel: [   23.203876] sd 6:0:0:0: Attached scsi generic sg2 type 0
+> > Feb 27 08:35:48 zaphkiel kernel: [   23.402184] sd 6:0:0:1: Attached scsi generic sg3 type 0
+> > Feb 27 08:35:48 zaphkiel kernel: [   23.725330] sd 6:0:0:2: Attached scsi generic sg4 type 0
+> > Feb 27 08:35:48 zaphkiel kernel: [   23.917899] sd 6:0:0:3: Attached scsi generic sg5 type 0
+> > Feb 27 08:35:48 zaphkiel kernel: [   24.492587] md: bind<sda2>
+> > Feb 27 08:35:48 zaphkiel kernel: [   24.711804] md: bind<sda1>
+> > Feb 27 08:35:48 zaphkiel kernel: [   24.821071] md: bind<sda4>
+> 
+> These are parts of 3 different arrays that are starting to be assembled in
+> parallel.  That must be udev running "mdadm -I /dev/sdaX" which will partly
+> assemble each array.  when the 'sdb' bits come along "mdadm -I /dev/sdbX"
+> should complete the assembly.
+
+Yes, exactly.
+
+> 
+> > Feb 27 08:35:48 zaphkiel kernel: [   25.607192] md: bind<sdb2>
+> > Feb 27 08:35:48 zaphkiel kernel: [   25.672335] md/raid1:md1: active with 2 out of 2 mirrors
+> > Feb 27 08:35:48 zaphkiel kernel: [   25.723678] created bitmap (8 pages) for device md1
+> > Feb 27 08:35:48 zaphkiel kernel: [   25.771764] md1: bitmap initialized from disk: read 1/1 pages, set 0 of 16379 bits
+> 
+> And there is the first one:  mdadm -I /dev/sdb2 must have been run by udev so
+> md1 got fully assembled.
+> 
+> 
+> > Feb 27 08:35:48 zaphkiel kernel: [   25.854963] md/raid1:md0: active with 1 out of 2 mirrors
+> 
+> But now md0 got assembled with waiting for sdb1.  This must have been the
+>    mdadm -IRs
+> in /etc/init.d/boot.md.  The purpose of this is to find any partially
+> assembled arrays and complete the assembly.  This is needed if, for example,
+> sdb has failed complete and would never be found.  However it shouldn't
+> happen yet.  It should wait until all the devices that have been discovered
+> have been processed.
+> A little early in the boot.md file you will see:
+>         if [ "$MDADM_DEVICE_TIMEOUT" -gt 0 ] ; then
+>             /sbin/udevadm settle --timeout="$MDADM_DEVICE_TIMEOUT"
+>         fi
+> 
+> so unless you have MDADM_DEVICE_TIMEOUT=0 in /etc/sysconfig/mdadm (which I
+> very much doubt) it should have already waited.  But there is no sign that it
+> did.  So maybe "udevadm settle" is broken?
+
+MDADM_DEVICE_TIMEOUT="60"
+
+As far as I can see, udevadm settle doesn't pick up all devices under some 
+circumstances. The man page says, it waits up to --timeout seconds for the
+event queue to become empty. Obviously, the event queue must be incomplete
+then, given, that one md is assembled already in initrd (12 seconds ago),
+and all other parts physically exist since then.
+
+Probably, the events got eaten already in initrd already, given that timing.
+
+> 
+> > Feb 27 08:35:48 zaphkiel kernel: [   25.886903] md1: detected capacity change from 0 to 2146783232
+> > Feb 27 08:35:48 zaphkiel kernel: [   25.929142] created bitmap (6 pages) for device md0
+> > Feb 27 08:35:48 zaphkiel kernel: [   25.958684]  md1: unknown partition table
+> > Feb 27 08:35:48 zaphkiel kernel: [   25.995737] md: bind<sdb4>
+> > Feb 27 08:35:48 zaphkiel kernel: [   26.012500] md0: bitmap initialized from disk: read 1/1 pages, set 0 of 12047 bits
+> > Feb 27 08:35:48 zaphkiel kernel: [   26.077270] md0: detected capacity change from 0 to 98689024
+> > Feb 27 08:35:48 zaphkiel kernel: [   26.168097] md/raid1:md3: active with 2 out of 2 mirrors
+> 
+> And here comes sdb4, so "mdadm -I /dev/sdb4" must have been run by udev.  And
+> it got in before the  "mdadm -IRs" managed to find that md0 was incomplete,
+> and started it.
+> 
+> 
+> > Feb 27 08:35:48 zaphkiel kernel: [   26.205258]  md0: unknown partition table
+> > Feb 27 08:35:48 zaphkiel kernel: [   26.242295] created bitmap (415 pages) for device md3
+> > Feb 27 08:35:48 zaphkiel kernel: [   26.304271] md3: bitmap initialized from disk: read 26/26 pages, set 1465 of 849320 bits
+> > Feb 27 08:35:48 zaphkiel kernel: [   26.392578] md3: detected capacity change from 0 to 890575601664
+> > Feb 27 08:35:48 zaphkiel kernel: [   26.575527]  md3: unknown partition table
+> > Feb 27 08:35:48 zaphkiel kernel: [   26.763091] Adding 2096464k swap on /dev/md1.  Priority:0 extents:1 across:2096464k 
+> > Feb 27 08:35:48 zaphkiel kernel: [   29.268318] XFS (md3): Mounting Filesystem
+> > Feb 27 08:35:48 zaphkiel kernel: [   29.521844] EXT4-fs (md0): mounting ext2 file system using the ext4 subsystem
+> > Feb 27 08:35:48 zaphkiel kernel: [   29.684176] EXT4-fs (md0): mounted filesystem without journal. Opts: acl,user_xattr
+> > Feb 27 08:35:48 zaphkiel kernel: [   30.356255] XFS (md3): Ending clean mount
+> > 
+> > Today, /dev/sdb1 of /dev/md0 vanished. Re-adding and checking doesn't revealed 
+> > any error, but it would be cool to get to the bottom of this, as re-adding some
+> > lost partitions to the md every second day *is* a real PITA.
+> > 
+> > What could I do to help resolving this issue? 
+> 
+> It really feels like a udev bug, but it is hard to be sure.
+> Could you edit /etc/init.d/boot.md and add
+>    echo BEFORE mdadm -IRs > /dev/kmsg
+> just before the call the "$mdadm_BIN -IRs",
+>    echo AFTER mdadm -IRs > /dev/kmsg
+> just after that call, and
+>    echo AFTER mdadm -Asc > /dev/mksg
+> just after the call to "$mdadm_BIN -A -s -c $mdadm_CONFIG"
+> 
+> And maybe put similar messages just before and after the  
+>     /sbin/udevadm settle ....
+> call.
+> 
+> If you can then reproduce the problem, the extra logging might tell us
+> something useful.
+
+I've enabled initrd (linuxrc=trace) and boot.md (#!/bin/sh -x) debugging, hence 
+we should see the full story next time.
+
+Thanks,
+Pete
