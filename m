@@ -1,24 +1,17 @@
-From: Alasdair G Kergon <agk@redhat.com>
-Subject: Re: [dm-devel] [patch] dm-cache-target: check for allocation failure
-Date: Fri, 1 Mar 2013 21:36:33 +0000
-Message-ID: <20130301213632.GE8373@agk.fab.redhat.com>
-References: <20130301202641.GA22066@longonot.mountain>
-Mime-Version: 1.0
+From: Brassow Jonathan <jbrassow@redhat.com>
+Subject: Periodically scanning RAID arrays for inconsistencies
+Date: Fri, 1 Mar 2013 15:50:05 -0600
+Message-ID: <81526C3C-7F95-4A17-B91B-8FD45BED55DE@redhat.com>
+Mime-Version: 1.0 (Apple Message framework v1085)
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130301202641.GA22066@longonot.mountain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Alasdair Kergon <agk@redhat.com>, linux-raid@vger.kernel.org, dm-devel@redhat.com, kbuild@01.org, kernel-janitors@vger.kernel.org
+To: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
+Cc: NeilBrown <neilb@suse.de>, Jonathan Brassow <jbrassow@redhat.com>
 List-Id: linux-raid.ids
 
-On Fri, Mar 01, 2013 at 11:26:41PM +0300, Dan Carpenter wrote:
-> The allocation here isn't checked.  I changed it to using kcalloc()
-> as a cleanup.  It adds integer overflow checking as well which makes
-> the code easier to audit.
- 
-Folded it in - thanks.
+Is there a way to periodically scan a RAID array to report any discrepancies?  This would be something like the initial synchronization, but would do nothing but report anomalies.  For example, it is possible for tracks to be altered when adjacent tracks are repeatedly written.  It might happen rarely, but without a periodic scan, you would never know about it.  Leaving aside the question of /what/ to do when an anomaly is found, I haven't seen any code or indication in the man page for 'mdadm' that would suggest this is currently possible.  Am I wrong?  Is there a way to do this?
 
-Alasdair
+ brassow
 
