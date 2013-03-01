@@ -1,7 +1,7 @@
 From: mwilck@arcor.de
-Subject: [PATCH 01/12] DDF: cleanly save the secondary DDF structure
-Date: Fri,  1 Mar 2013 23:28:22 +0100
-Message-ID: <1362176913-6804-2-git-send-email-mwilck@arcor.de>
+Subject: [PATCH 08/12] DDF: container_content_ddf: handle RAID layout for RAID10
+Date: Fri,  1 Mar 2013 23:28:29 +0100
+Message-ID: <1362176913-6804-9-git-send-email-mwilck@arcor.de>
 References: <1362176913-6804-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1362176913-6804-1-git-send-email-mwilck@arcor.de>
@@ -10,188 +10,131 @@ To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-So far, mdadm only saved the header of the secondary structure.
-With this patch, the full secondary DDF structure is saved
-consistently, too. Some vendor DDF implementations need it.
+This patch adds basic handling for the special case of RAID10.
 
 Signed-off-by: Martin Wilck <mwilck@arcor.de>
 ---
- super-ddf.c |  139 ++++++++++++++++++++++++++++++++++-------------------------
- 1 files changed, 80 insertions(+), 59 deletions(-)
+ super-ddf.c |   79 +++++++++++++++++++++++++++++++++++++++++++++++++---------
+ 1 files changed, 66 insertions(+), 13 deletions(-)
 
 diff --git a/super-ddf.c b/super-ddf.c
-index 3b3c1f0..7f943cb 100644
+index 4186038..01aa7d5 100644
 --- a/super-ddf.c
 +++ b/super-ddf.c
-@@ -2317,17 +2317,87 @@ static int remove_from_super_ddf(struct supertype *st, mdu_disk_info_t *dk)
-  */
- #define NULL_CONF_SZ	4096
+@@ -3121,12 +3121,45 @@ static int check_secondary(const struct vcl *vc)
  
--static int __write_init_super_ddf(struct supertype *st)
-+static int __write_ddf_structure(struct dl *d, struct ddf_super *ddf, __u8 type,
-+				 char *null_aligned)
+ #define NO_SUCH_REFNUM (0xFFFFFFFF)
+ static unsigned int get_pd_index_from_refnum(const struct vcl *vc,
+-					     __u32 refnum, unsigned int nmax)
++					     __u32 refnum, unsigned int nmax,
++					     const struct vd_config **bvd,
++					     unsigned int *idx)
  {
-+	unsigned long long sector;
-+	struct ddf_header *header;
-+	int fd, i, n_config, conf_size;
+-	unsigned int i;
+-	for (i = 0 ; i < nmax ; i++)
+-		if (vc->conf.phys_refnum[i] == refnum)
+-			return i;
++	unsigned int i, j, n, sec, cnt;
 +
-+	fd = d->fd;
++	cnt = __be16_to_cpu(vc->conf.prim_elmnt_count);
++	sec = (vc->conf.sec_elmnt_count == 1 ? 0 : vc->conf.sec_elmnt_seq);
 +
-+	switch (type) {
-+	case DDF_HEADER_PRIMARY:
-+		header = &ddf->primary;
-+		sector = __be64_to_cpu(header->primary_lba);
-+		break;
-+	case DDF_HEADER_SECONDARY:
-+		header = &ddf->secondary;
-+		sector = __be64_to_cpu(header->secondary_lba);
-+		break;
-+	default:
-+		return 0;
-+	}
-+
-+	header->type = type;
-+	header->openflag = 0;
-+	header->crc = calc_crc(header, 512);
-+
-+	lseek64(fd, sector<<9, 0);
-+	if (write(fd, header, 512) < 0)
-+		return 0;
-+
-+	ddf->controller.crc = calc_crc(&ddf->controller, 512);
-+	if (write(fd, &ddf->controller, 512) < 0)
-+		return 0;
- 
-+	ddf->phys->crc = calc_crc(ddf->phys, ddf->pdsize);
-+	if (write(fd, ddf->phys, ddf->pdsize) < 0)
-+		return 0;
-+	ddf->virt->crc = calc_crc(ddf->virt, ddf->vdsize);
-+	if (write(fd, ddf->virt, ddf->vdsize) < 0)
-+		return 0;
-+
-+	/* Now write lots of config records. */
-+	n_config = ddf->max_part;
-+	conf_size = ddf->conf_rec_len * 512;
-+	for (i = 0 ; i <= n_config ; i++) {
-+		struct vcl *c = d->vlist[i];
-+		if (i == n_config)
-+			c = (struct vcl *)d->spare;
-+
-+		if (c) {
-+			c->conf.crc = calc_crc(&c->conf, conf_size);
-+			if (write(fd, &c->conf, conf_size) < 0)
-+				break;
-+		} else {
-+			unsigned int togo = conf_size;
-+			while (togo > NULL_CONF_SZ) {
-+				if (write(fd, null_aligned, NULL_CONF_SZ) < 0)
-+					break;
-+				togo -= NULL_CONF_SZ;
-+			}
-+			if (write(fd, null_aligned, togo) < 0)
-+				break;
++	for (i = 0, j = 0 ; i < nmax ; i++) {
++		/* j counts valid entries for this BVD */
++		if (vc->conf.phys_refnum[i] != 0xffffffff)
++			j++;
++		if (vc->conf.phys_refnum[i] == refnum) {
++			*bvd = &vc->conf;
++			*idx = i;
++			return sec * cnt + j - 1;
 +		}
 +	}
-+	if (i <= n_config)
-+		return 0;
++	if (vc->other_bvds == NULL)
++		goto bad;
 +
-+	d->disk.crc = calc_crc(&d->disk, 512);
-+	if (write(fd, &d->disk, 512) < 0)
-+		return 0;
-+
-+	return 1;
-+}
-+
-+static int __write_init_super_ddf(struct supertype *st)
-+{
- 	struct ddf_super *ddf = st->sb;
--	int i;
- 	struct dl *d;
--	int n_config;
--	int conf_size;
- 	int attempts = 0;
- 	int successes = 0;
--	unsigned long long size, sector;
-+	unsigned long long size;
- 	char *null_aligned;
++	for (n = 1; n < vc->conf.sec_elmnt_count; n++) {
++		struct vd_config *vd = vc->other_bvds[n-1];
++		if (vd == NULL)
++			continue;
++		sec = vd->sec_elmnt_seq;
++		for (i = 0, j = 0 ; i < nmax ; i++) {
++			if (vd->phys_refnum[i] != 0xffffffff)
++				j++;
++			if (vd->phys_refnum[i] == refnum) {
++				*bvd = vd;
++				*idx = i;
++				return sec * cnt + j - 1;
++			}
++		}
++	}
++bad:
++	*bvd = NULL;
+ 	return NO_SUCH_REFNUM;
+ }
  
- 	if (posix_memalign((void**)&null_aligned, 4096, NULL_CONF_SZ) != 0) {
-@@ -2355,6 +2425,7 @@ static int __write_init_super_ddf(struct supertype *st)
- 		size /= 512;
- 		ddf->anchor.workspace_lba = __cpu_to_be64(size - 32*1024*2);
- 		ddf->anchor.primary_lba = __cpu_to_be64(size - 16*1024*2);
-+		ddf->anchor.secondary_lba = __cpu_to_be64(size - 31*1024*2);
- 		ddf->anchor.seq = __cpu_to_be32(1);
- 		memcpy(&ddf->primary, &ddf->anchor, 512);
- 		memcpy(&ddf->secondary, &ddf->anchor, 512);
-@@ -2363,64 +2434,14 @@ static int __write_init_super_ddf(struct supertype *st)
- 		ddf->anchor.seq = 0xFFFFFFFF; /* no sequencing in anchor */
- 		ddf->anchor.crc = calc_crc(&ddf->anchor, 512);
+@@ -3167,11 +3200,26 @@ static struct mdinfo *container_content_ddf(struct supertype *st, char *subarray
+ 		this->next = rest;
+ 		rest = this;
  
--		ddf->primary.openflag = 0;
--		ddf->primary.type = DDF_HEADER_PRIMARY;
--
--		ddf->secondary.openflag = 0;
--		ddf->secondary.type = DDF_HEADER_SECONDARY;
--
--		ddf->primary.crc = calc_crc(&ddf->primary, 512);
--		ddf->secondary.crc = calc_crc(&ddf->secondary, 512);
--
--		sector = size - 16*1024*2;
--		lseek64(fd, sector<<9, 0);
--		if (write(fd, &ddf->primary, 512) < 0)
--			continue;
--
--		ddf->controller.crc = calc_crc(&ddf->controller, 512);
--		if (write(fd, &ddf->controller, 512) < 0)
-+		if (!__write_ddf_structure(d, ddf, DDF_HEADER_PRIMARY,
-+					   null_aligned))
- 			continue;
+-		this->array.level = map_num1(ddf_level_num, vc->conf.prl);
+-		this->array.raid_disks =
+-			__be16_to_cpu(vc->conf.prim_elmnt_count);
+-		this->array.layout = rlq_to_layout(vc->conf.rlq, vc->conf.prl,
+-						   this->array.raid_disks);
++		if (vc->conf.sec_elmnt_count == 1) {
++			this->array.level = map_num1(ddf_level_num,
++						     vc->conf.prl);
++			this->array.raid_disks =
++				__be16_to_cpu(vc->conf.prim_elmnt_count);
++			this->array.layout =
++				rlq_to_layout(vc->conf.rlq, vc->conf.prl,
++					      this->array.raid_disks);
++		} else {
++			/* The only supported layout is RAID 10.
++			 * Compatibility has been checked in check_secondary()
++			 * above.
++			 */
++			this->array.level = 10;
++			this->array.raid_disks =
++				__be16_to_cpu(vc->conf.prim_elmnt_count)
++				* vc->conf.sec_elmnt_count;
++			this->array.layout = 0x100 |
++				__be16_to_cpu(vc->conf.prim_elmnt_count);
++		}
+ 		this->array.md_minor      = -1;
+ 		this->array.major_version = -1;
+ 		this->array.minor_version = -2;
+@@ -3213,6 +3261,9 @@ static struct mdinfo *container_content_ddf(struct supertype *st, char *subarray
+ 		for (pd = 0; pd < __be16_to_cpu(ddf->phys->used_pdes); pd++) {
+ 			struct mdinfo *dev;
+ 			struct dl *d;
++			const struct vd_config *bvd;
++			unsigned int iphys;
++			__u64 *lba_offset;
+ 			int stt;
  
--		ddf->phys->crc = calc_crc(ddf->phys, ddf->pdsize);
--
--		if (write(fd, ddf->phys, ddf->pdsize) < 0)
--			continue;
--
--		ddf->virt->crc = calc_crc(ddf->virt, ddf->vdsize);
--		if (write(fd, ddf->virt, ddf->vdsize) < 0)
-+		if (!__write_ddf_structure(d, ddf, DDF_HEADER_SECONDARY,
-+					   null_aligned))
- 			continue;
+ 			if (ddf->phys->entries[pd].refnum == 0xFFFFFFFF)
+@@ -3224,7 +3275,8 @@ static struct mdinfo *container_content_ddf(struct supertype *st, char *subarray
+ 				continue;
  
--		/* Now write lots of config records. */
--		n_config = ddf->max_part;
--		conf_size = ddf->conf_rec_len * 512;
--		for (i = 0 ; i <= n_config ; i++) {
--			struct vcl *c = d->vlist[i];
--			if (i == n_config)
--				c = (struct vcl*)d->spare;
--
--			if (c) {
--				c->conf.crc = calc_crc(&c->conf, conf_size);
--				if (write(fd, &c->conf, conf_size) < 0)
--					break;
--			} else {
--				unsigned int togo = conf_size;
--				while (togo > NULL_CONF_SZ) {
--					if (write(fd, null_aligned, NULL_CONF_SZ) < 0)
--						break;
--					togo -= NULL_CONF_SZ;
--				}
--				if (write(fd, null_aligned, togo) < 0)
--					break;
--			}
--		}
--		if (i <= n_config)
--			continue;
--		d->disk.crc = calc_crc(&d->disk, 512);
--		if (write(fd, &d->disk, 512) < 0)
--			continue;
--
--		/* Maybe do the same for secondary */
--
- 		lseek64(fd, (size-1)*512, SEEK_SET);
- 		if (write(fd, &ddf->anchor, 512) < 0)
- 			continue;
+ 			i = get_pd_index_from_refnum(
+-				vc, ddf->phys->entries[pd].refnum, ddf->mppe);
++				vc, ddf->phys->entries[pd].refnum,
++				ddf->mppe, &bvd, &iphys);
+ 			if (i == NO_SUCH_REFNUM)
+ 				continue;
+ 
+@@ -3250,8 +3302,9 @@ static struct mdinfo *container_content_ddf(struct supertype *st, char *subarray
+ 			dev->recovery_start = MaxSector;
+ 
+ 			dev->events = __be32_to_cpu(ddf->primary.seq);
+-			dev->data_offset = __be64_to_cpu(vc->lba_offset[i]);
+-			dev->component_size = __be64_to_cpu(vc->conf.blocks);
++			lba_offset =  (__u64 *)&bvd->phys_refnum[ddf->mppe];
++			dev->data_offset = __be64_to_cpu(lba_offset[iphys]);
++			dev->component_size = __be64_to_cpu(bvd->blocks);
+ 			if (d->devname)
+ 				strcpy(dev->name, d->devname);
+ 		}
 -- 
 1.7.3.4
