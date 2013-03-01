@@ -1,7 +1,7 @@
 From: mwilck@arcor.de
-Subject: [PATCH 06/12] DDF: container_content_ddf: change array disk search loop
-Date: Fri,  1 Mar 2013 23:28:27 +0100
-Message-ID: <1362176913-6804-7-git-send-email-mwilck@arcor.de>
+Subject: [PATCH 09/12] DDF: __write_init_super_ddf: use correct VD conf
+Date: Fri,  1 Mar 2013 23:28:30 +0100
+Message-ID: <1362176913-6804-10-git-send-email-mwilck@arcor.de>
 References: <1362176913-6804-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1362176913-6804-1-git-send-email-mwilck@arcor.de>
@@ -10,88 +10,73 @@ To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-When searching for container elements, loop over the known phys
-disks rather than the elements of the current configuration.
-
-This patch changes nothing in the logic or return value of the code.
-It just prepares extended logic for handling RAID10.
+When writing back the DDF structure, make sure that on each disk
+we write the configs that include this disk even if a secondary
+RAID level is present. Otherwise the secondary RAID will not be
+read correctly any more when we open the device next time.
 
 Signed-off-by: Martin Wilck <mwilck@arcor.de>
 ---
- super-ddf.c |   33 +++++++++++++++++++++------------
- 1 files changed, 21 insertions(+), 12 deletions(-)
+ super-ddf.c |   31 ++++++++++++++++++++++++-------
+ 1 files changed, 24 insertions(+), 7 deletions(-)
 
 diff --git a/super-ddf.c b/super-ddf.c
-index 5426d29..a5080dd 100644
+index 01aa7d5..4c3e6f4 100644
 --- a/super-ddf.c
 +++ b/super-ddf.c
-@@ -3051,6 +3051,17 @@ static int load_container_ddf(struct supertype *st, int fd,
+@@ -2377,6 +2377,11 @@ static int remove_from_super_ddf(struct supertype *st, mdu_disk_info_t *dk)
+  */
+ #define NULL_CONF_SZ	4096
  
- #endif /* MDASSEMBLE */
- 
-+#define NO_SUCH_REFNUM (0xFFFFFFFF)
 +static unsigned int get_pd_index_from_refnum(const struct vcl *vc,
-+					     __u32 refnum, unsigned int nmax)
-+{
-+	unsigned int i;
-+	for (i = 0 ; i < nmax ; i++)
-+		if (vc->conf.phys_refnum[i] == refnum)
-+			return i;
-+	return NO_SUCH_REFNUM;
-+}
++					     __u32 refnum, unsigned int nmax,
++					     const struct vd_config **bvd,
++					     unsigned int *idx);
 +
- static struct mdinfo *container_content_ddf(struct supertype *st, char *subarray)
+ static int __write_ddf_structure(struct dl *d, struct ddf_super *ddf, __u8 type,
+ 				 char *null_aligned)
  {
- 	/* Given a container loaded by load_super_ddf_all,
-@@ -3072,6 +3083,7 @@ static struct mdinfo *container_content_ddf(struct supertype *st, char *subarray
- 		struct mdinfo *this;
- 		char *ep;
- 		__u32 *cptr;
-+		unsigned int pd;
- 
- 		if (subarray &&
- 		    (strtoul(subarray, &ep, 10) != vc->vcnum ||
-@@ -3125,21 +3137,12 @@ static struct mdinfo *container_content_ddf(struct supertype *st, char *subarray
- 			devnum2devname(st->container_dev),
- 			this->container_member);
- 
--		for (i = 0 ; i < ddf->mppe ; i++) {
-+		for (pd = 0; pd < __be16_to_cpu(ddf->phys->used_pdes); pd++) {
- 			struct mdinfo *dev;
- 			struct dl *d;
- 			int stt;
--			int pd;
- 
--			if (vc->conf.phys_refnum[i] == 0xFFFFFFFF)
--				continue;
+@@ -2422,14 +2427,26 @@ static int __write_ddf_structure(struct dl *d, struct ddf_super *ddf, __u8 type,
+ 	n_config = ddf->max_part;
+ 	conf_size = ddf->conf_rec_len * 512;
+ 	for (i = 0 ; i <= n_config ; i++) {
+-		struct vcl *c = d->vlist[i];
+-		if (i == n_config)
++		struct vcl *c;
++		struct vd_config *vdc = NULL;
++		if (i == n_config) {
+ 			c = (struct vcl *)d->spare;
 -
--			for (pd = __be16_to_cpu(ddf->phys->used_pdes);
--			     pd--;)
--				if (ddf->phys->entries[pd].refnum
--				    == vc->conf.phys_refnum[i])
--					break;
--			if (pd < 0)
-+			if (ddf->phys->entries[pd].refnum == 0xFFFFFFFF)
- 				continue;
- 
- 			stt = __be16_to_cpu(ddf->phys->entries[pd].state);
-@@ -3147,10 +3150,16 @@ static struct mdinfo *container_content_ddf(struct supertype *st, char *subarray
- 			    != DDF_Online)
- 				continue;
- 
-+			i = get_pd_index_from_refnum(
-+				vc, ddf->phys->entries[pd].refnum, ddf->mppe);
-+			if (i == NO_SUCH_REFNUM)
-+				continue;
-+
- 			this->array.working_disks++;
- 
- 			for (d = ddf->dlist; d ; d=d->next)
--				if (d->disk.refnum == vc->conf.phys_refnum[i])
-+				if (d->disk.refnum ==
-+				    ddf->phys->entries[pd].refnum)
- 					break;
- 			if (d == NULL)
- 				/* Haven't found that one yet, maybe there are others */
++			if (c)
++				vdc = &c->conf;
++		} else {
++			unsigned int dummy;
++			c = d->vlist[i];
++			if (c)
++				get_pd_index_from_refnum(
++					c, d->disk.refnum,
++					ddf->mppe,
++					(const struct vd_config **)&vdc,
++					&dummy);
++		}
+ 		if (c) {
+-			c->conf.seqnum = ddf->primary.seq;
+-			c->conf.crc = calc_crc(&c->conf, conf_size);
+-			if (write(fd, &c->conf, conf_size) < 0)
++			vdc->seqnum = ddf->primary.seq;
++			vdc->crc = calc_crc(vdc, conf_size);
++			if (write(fd, vdc, conf_size) < 0)
+ 				break;
+ 		} else {
+ 			unsigned int togo = conf_size;
+@@ -3085,7 +3102,7 @@ static int check_secondary(const struct vcl *vc)
+ 	for (i = 0; i < conf->sec_elmnt_count-1; i++) {
+ 		const struct vd_config *bvd = vc->other_bvds[i];
+ 		if (bvd == NULL) {
+-			pr_err("BVD %d is missing", i+1);
++			pr_err("BVD %d is missing\n", i+1);
+ 			return -1;
+ 		}
+ 		if (bvd->srl != conf->srl) {
 -- 
 1.7.3.4
