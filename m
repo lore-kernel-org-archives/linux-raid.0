@@ -1,30 +1,53 @@
-From: Tregaron Bayly <tbayly@bluehost.com>
-Subject: Re: Periodically scanning RAID arrays for inconsistencies
-Date: Fri, 01 Mar 2013 15:10:59 -0700
-Message-ID: <1362175859.18278.76.camel@148>
-References: <81526C3C-7F95-4A17-B91B-8FD45BED55DE@redhat.com>
-Reply-To: tbayly@bluehost.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+From: mwilck@arcor.de
+Subject: [PATCH 12/12] Detail.c: call load_container for container subarrays
+Date: Fri,  1 Mar 2013 23:28:33 +0100
+Message-ID: <1362176913-6804-13-git-send-email-mwilck@arcor.de>
+References: <1362176913-6804-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <81526C3C-7F95-4A17-B91B-8FD45BED55DE@redhat.com>
+In-Reply-To: <1362176913-6804-1-git-send-email-mwilck@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brassow Jonathan <jbrassow@redhat.com>
-Cc: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
+To: neilb@suse.de, linux-raid@vger.kernel.org
+Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-On Fri, 2013-03-01 at 15:50 -0600, Brassow Jonathan wrote:
-> Is there a way to periodically scan a RAID array to report any discrepancies?
+Without calling load_container at this point, the
+info structure may be missing some important information.
+In particular, information about secondary DDF RAID levels
+may be wrong if information is only read from a single disk.
 
-Yes, it's possible - Redhat distributes a script called raid-check that
-is a good example of this very thing.
+If this fails, fall back to the previous code.
 
-Documentation/md.txt talks about 'check' and 'repair' as valid words for
-sync_action in sysfs.  The number of errors found will be reported to
-mismatch_cnt.  These can be found at /sys/block/md#/md for your array.
+Signed-off-by: Martin Wilck <mwilck@arcor.de>
+---
+ Detail.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
 
-hth,
-
-Tregaron
-
+diff --git a/Detail.c b/Detail.c
+index ab49803..9e52de8 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -103,13 +103,21 @@ int Detail(char *dev, struct context *c)
+ 		 * We want the name of the container, and the member
+ 		 */
+ 		int dn = st->container_dev;
++		int cfd, err;
+ 
+ 		member = subarray;
+ 		container = map_dev_preferred(dev2major(dn), dev2minor(dn), 1, c->prefer);
++		cfd = open_dev(st->container_dev);
++		if (cfd >= 0) {
++			err = st->ss->load_container(st, cfd, NULL);
++			close(cfd);
++			if (err == 0)
++				info = st->ss->container_content(st, subarray);
++		}
+ 	}
+ 
+ 	/* try to load a superblock */
+-	if (st) for (d = 0; d < max_disks; d++) {
++	if (st && !info) for (d = 0; d < max_disks; d++) {
+ 		mdu_disk_info_t disk;
+ 		char *dv;
+ 		int fd2;
+-- 
+1.7.3.4
