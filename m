@@ -1,7 +1,7 @@
 From: mwilck@arcor.de
-Subject: [PATCH 07/12] DDF: container_content_ddf: check for secondary RAID
-Date: Fri,  1 Mar 2013 23:28:28 +0100
-Message-ID: <1362176913-6804-8-git-send-email-mwilck@arcor.de>
+Subject: [PATCH 10/12] DDF: add sanity checks in compare_super_ddf
+Date: Fri,  1 Mar 2013 23:28:31 +0100
+Message-ID: <1362176913-6804-11-git-send-email-mwilck@arcor.de>
 References: <1362176913-6804-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1362176913-6804-1-git-send-email-mwilck@arcor.de>
@@ -10,108 +10,74 @@ To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-Check for supportable secondary RAID configurations.
-There is currently only one: RAID 10, if the stripe
-sizes and Basic volume sizes are all equal.
-
-With this patch, mdadm will not try to start unsupported
-secondary RAID level configurations any more.
+Besides container GUID, also check seqnum, physical and virtual
+disk numbers, and check match between local and global sections.
 
 Signed-off-by: Martin Wilck <mwilck@arcor.de>
 ---
- super-ddf.c |   73 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 73 insertions(+), 0 deletions(-)
+ super-ddf.c |   42 ++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 42 insertions(+), 0 deletions(-)
 
 diff --git a/super-ddf.c b/super-ddf.c
-index a5080dd..4186038 100644
+index 4c3e6f4..56c9721 100644
 --- a/super-ddf.c
 +++ b/super-ddf.c
-@@ -3051,6 +3051,74 @@ static int load_container_ddf(struct supertype *st, int fd,
+@@ -3371,6 +3371,9 @@ static int compare_super_ddf(struct supertype *st, struct supertype *tst)
+ 	 */
+ 	struct ddf_super *first = st->sb;
+ 	struct ddf_super *second = tst->sb;
++	struct dl *dl2;
++	struct vcl *vl2;
++	unsigned int max_vds, max_pds, pd, vd;
  
- #endif /* MDASSEMBLE */
+ 	if (!first) {
+ 		st->sb = tst->sb;
+@@ -3381,7 +3384,46 @@ static int compare_super_ddf(struct supertype *st, struct supertype *tst)
+ 	if (memcmp(first->anchor.guid, second->anchor.guid, DDF_GUID_LEN) != 0)
+ 		return 2;
  
-+static int check_secondary(const struct vcl *vc)
-+{
-+	const struct vd_config *conf = &vc->conf;
-+	int i;
++	if (first->anchor.seq != second->anchor.seq) {
++		dprintf("%s: sequence number mismatch %u/%u\n", __func__,
++			__be32_to_cpu(first->anchor.seq),
++			__be32_to_cpu(second->anchor.seq));
++		return 3;
++	}
++	if (first->max_part != second->max_part ||
++	    first->phys->used_pdes != second->phys->used_pdes ||
++	    first->virt->populated_vdes != second->virt->populated_vdes) {
++		dprintf("%s: PD/VD number mismatch\n", __func__);
++		return 3;
++	}
 +
-+	/* The only DDF secondary RAID level md can support is
-+	 * RAID 10, if the stripe sizes and Basic volume sizes
-+	 * are all equal.
-+	 * Other configurations could in theory be supported by exposing
-+	 * the BVDs to user space and using device mapper for the secondary
-+	 * mapping. So far we don't support that.
-+	 */
++	max_pds =  __be16_to_cpu(first->phys->used_pdes);
++	for (dl2 = second->dlist; dl2; dl2 = dl2->next) {
++		for (pd = 0; pd < max_pds; pd++)
++			if (first->phys->entries[pd].refnum == dl2->disk.refnum)
++				break;
++		if (pd == max_pds) {
++			dprintf("%s: no match for disk %08x\n", __func__,
++				__be32_to_cpu(dl2->disk.refnum));
++			return 3;
++		}
++	}
 +
-+	__u64 sec_elements[4] = {0, 0, 0, 0};
-+#define __set_sec_seen(n) (sec_elements[(n)>>6] |= (1<<((n)&63)))
-+#define __was_sec_seen(n) ((sec_elements[(n)>>6] & (1<<((n)&63))) != 0)
++	max_vds = __be16_to_cpu(first->active->max_vd_entries);
++	for (vl2 = second->conflist; vl2; vl2 = vl2->next) {
++		if (vl2->conf.magic != DDF_VD_CONF_MAGIC)
++			continue;
++		for (vd = 0; vd < max_vds; vd++)
++			if (!memcmp(first->virt->entries[vd].guid,
++				    vl2->conf.guid, DDF_GUID_LEN))
++				break;
++		if (vd == max_vds) {
++			dprintf("%s: no match for VD config\n", __func__);
++			return 3;
++		}
++	}
+ 	/* FIXME should I look at anything else? */
 +
-+	if (vc->other_bvds == NULL) {
-+		pr_err("No BVDs for secondary RAID found\n");
-+		return -1;
-+	}
-+	if (conf->prl != DDF_RAID1) {
-+		pr_err("Secondary RAID level only supported for mirrored BVD\n");
-+		return -1;
-+	}
-+	if (conf->srl != DDF_2STRIPED && conf->srl != DDF_2SPANNED) {
-+		pr_err("Secondary RAID level %d is unsupported\n",
-+		       conf->srl);
-+		return -1;
-+	}
-+	__set_sec_seen(conf->sec_elmnt_seq);
-+	for (i = 0; i < conf->sec_elmnt_count-1; i++) {
-+		const struct vd_config *bvd = vc->other_bvds[i];
-+		if (bvd == NULL) {
-+			pr_err("BVD %d is missing", i+1);
-+			return -1;
-+		}
-+		if (bvd->srl != conf->srl) {
-+			pr_err("Inconsistent secondary RAID level across BVDs\n");
-+			return -1;
-+		}
-+		if (bvd->prl != conf->prl) {
-+			pr_err("Different RAID levels for BVDs are unsupported\n");
-+			return -1;
-+		}
-+		if (bvd->prim_elmnt_count != conf->prim_elmnt_count) {
-+			pr_err("All BVDs must have the same number of primary elements\n");
-+			return -1;
-+		}
-+		if (bvd->chunk_shift != conf->chunk_shift) {
-+			pr_err("Different strip sizes for BVDs are unsupported\n");
-+			return -1;
-+		}
-+		if (bvd->array_blocks != conf->array_blocks) {
-+			pr_err("Different BVD sizes are unsupported\n");
-+			return -1;
-+		}
-+		__set_sec_seen(bvd->sec_elmnt_seq);
-+	}
-+	for (i = 0; i < conf->sec_elmnt_count; i++) {
-+		if (!__was_sec_seen(i)) {
-+			pr_err("BVD %d is missing\n", i);
-+			return -1;
-+		}
-+	}
-+	return 0;
-+}
-+
- #define NO_SUCH_REFNUM (0xFFFFFFFF)
- static unsigned int get_pd_index_from_refnum(const struct vcl *vc,
- 					     __u32 refnum, unsigned int nmax)
-@@ -3090,6 +3158,11 @@ static struct mdinfo *container_content_ddf(struct supertype *st, char *subarray
- 		     *ep != '\0'))
- 			continue;
+ 	return 0;
+ }
  
-+		if (vc->conf.sec_elmnt_count > 1) {
-+			if (check_secondary(vc) != 0)
-+				continue;
-+		}
-+
- 		this = xcalloc(1, sizeof(*this));
- 		this->next = rest;
- 		rest = this;
 -- 
 1.7.3.4
