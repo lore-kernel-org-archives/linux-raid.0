@@ -1,86 +1,72 @@
 From: mwilck@arcor.de
-Subject: DDF / RAID10 patch series for mdadm
-Date: Fri,  1 Mar 2013 23:28:21 +0100
-Message-ID: <1362176913-6804-1-git-send-email-mwilck@arcor.de>
+Subject: [PATCH 03/12] DDF: increase seq number when writing meta data
+Date: Fri,  1 Mar 2013 23:28:24 +0100
+Message-ID: <1362176913-6804-4-git-send-email-mwilck@arcor.de>
+References: <1362176913-6804-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1362176913-6804-1-git-send-email-mwilck@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-Hello Neil, hello everybody,
+Cleanly increase the seq number when the DDF structures are
+written, instead of always setting it back to 1.
 
-I am working on improved DDF support in mdadm. I would be grateful
-for a review on this patch series. The main new feature is support for
-RAID 10 in DDF, such that md is able to interoperate with an LSI 
-Megaraid Software RAID driver on a RAID10 array.
+Also, make sure that the sequential number of all headers and
+VD conf records is the same.
 
-The DDF/RAID10 support is not feature complete, but usable. Both
-assembly and incremental assembly work as expected. I verified that
-the 2+2 layout maps cleanly to that used by the LSI SW RAID stack. Meta
-data are saved cleanly and interpreted correctly by the LSI stack.
-What is yet missing is code to handle disk failures and additions.
-I would appreciate some guidance in that area, in particular how to test it.
+Signed-off-by: Martin Wilck <mwilck@arcor.de>
+---
+ super-ddf.c |   11 ++++++++++-
+ 1 files changed, 10 insertions(+), 1 deletions(-)
 
-In the DDF Spec, RAID10 is a special case of the broad "secondary RAID
-level" concept. The intersection between DDF RAID 10 and md RAID 10 is
-tiny - just the "near" layout with an even number of disks. Fortunately this
-is also the only type of "secondary RAID" supported by my LSI stack,
-and generally the most common multilevel RAID, AFAICT.
-
-The DDF 2nd level RAID concept would be matched more closely by a
-different approach where md only creates the BVDs and the secondary
-RAID is implemented with the device mapper on top of it. But I opted
-for the direct mapping of DDF RAID10 to md RAID10 for several reasons:
-1) dm wouldn't handle the generic "striped" and "spanned" secondary
-levels out-of-the box, either. 2) I wanted to take full benefit of the
-advanced features and performance of md RAID10 (it actually performed
-better than the LSI stack in a few simple benchmarks).  3) It is
-simpler to handle this way. 4) This is non-exclusive, code could still
-be added later to use dm for more "exotic" secondary DDF RAID levels.
-
-The series stars out with 3 patches I already submitted a while
-ago. They fix interoperability related to meta data handling, in particular
-DDF header locations and Sequential numbers. They are unrelated to RAID10.
-
-Patch 4..9 introduce support for DDF RAID 10. The current mdadm
-implementation of DDF ignores secondary level completely and stores
-only the BVD information in the super block, one BVD for every DDF
-"Virtual disk configuration record". I had to add an additional data
-structure to hold information about the "other BVDs" belonging to a
-second level RAID set. The most intersting stuff happens in
-container_content_ddf, which translates the DDF RAID 10 setup into md
-structures.
-
-Patch 10 adds some missing sanity checks in compare_super_ddf. Patch 11
-extends compare_super_ddf() such that information from the new disk that
-is missing in the current superblock is added. This fixes a problem where
-mdmon would save updated meta data only on those disks that were present
-while mdadm was started, not on disks added later.
-
-Finally, patch 12 is a small improvement to Detail() that results in
-better output of mdadm -D for complex DDF setups.
-
-Regards
-Martin
-
-Martin Wilck (12):
-  DDF: cleanly save the secondary DDF structure
-  DDF: use existing locations for primary and secondary DDF structure
-  DDF: increase seq number when writing meta data
-  DDF: added other_bvd to struct vcl
-  DDF: load_ddf_local: store VD conf for other BVDs
-  DDF: container_content_ddf: change array disk search loop
-  DDF: container_content_ddf: check for secondary RAID
-  DDF: container_content_ddf: handle RAID layout for RAID10
-  DDF: __write_init_super_ddf: use correct VD conf
-  DDF: add sanity checks in compare_super_ddf
-  DDF: compare_super_ddf: merge local info of other superblock
-  Detail.c: call load_container for container subarrays
-
- Detail.c    |   10 +-
- super-ddf.c |  556 ++++++++++++++++++++++++++++++++++++++++++++++++++---------
- 2 files changed, 484 insertions(+), 82 deletions(-)
-
+diff --git a/super-ddf.c b/super-ddf.c
+index 2f75fc3..e165927 100644
+--- a/super-ddf.c
++++ b/super-ddf.c
+@@ -2377,6 +2377,7 @@ static int __write_ddf_structure(struct dl *d, struct ddf_super *ddf, __u8 type,
+ 			c = (struct vcl *)d->spare;
+ 
+ 		if (c) {
++			c->conf.seqnum = ddf->primary.seq;
+ 			c->conf.crc = calc_crc(&c->conf, conf_size);
+ 			if (write(fd, &c->conf, conf_size) < 0)
+ 				break;
+@@ -2409,12 +2410,20 @@ static int __write_init_super_ddf(struct supertype *st)
+ 	int successes = 0;
+ 	unsigned long long size;
+ 	char *null_aligned;
++	__u32 seq;
+ 
+ 	if (posix_memalign((void**)&null_aligned, 4096, NULL_CONF_SZ) != 0) {
+ 		return -ENOMEM;
+ 	}
+ 	memset(null_aligned, 0xff, NULL_CONF_SZ);
+ 
++	if (ddf->primary.seq != 0xffffffff)
++		seq = __cpu_to_be32(__be32_to_cpu(ddf->primary.seq)+1);
++	else if (ddf->secondary.seq != 0xffffffff)
++		seq = __cpu_to_be32(__be32_to_cpu(ddf->secondary.seq)+1);
++	else
++		seq = __cpu_to_be32(1);
++
+ 	/* try to write updated metadata,
+ 	 * if we catch a failure move on to the next disk
+ 	 */
+@@ -2448,12 +2457,12 @@ static int __write_init_super_ddf(struct supertype *st)
+ 		else
+ 			ddf->anchor.secondary_lba =
+ 				__cpu_to_be64(size - 32*1024*2);
+-		ddf->anchor.seq = __cpu_to_be32(1);
+ 		memcpy(&ddf->primary, &ddf->anchor, 512);
+ 		memcpy(&ddf->secondary, &ddf->anchor, 512);
+ 
+ 		ddf->anchor.openflag = 0xFF; /* 'open' means nothing */
+ 		ddf->anchor.seq = 0xFFFFFFFF; /* no sequencing in anchor */
++		ddf->secondary.seq = ddf->primary.seq = seq;
+ 		ddf->anchor.crc = calc_crc(&ddf->anchor, 512);
+ 
+ 		if (!__write_ddf_structure(d, ddf, DDF_HEADER_PRIMARY,
 -- 
 1.7.3.4
