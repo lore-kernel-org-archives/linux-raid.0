@@ -1,17 +1,30 @@
-From: Brassow Jonathan <jbrassow@redhat.com>
-Subject: Periodically scanning RAID arrays for inconsistencies
-Date: Fri, 1 Mar 2013 15:50:05 -0600
-Message-ID: <81526C3C-7F95-4A17-B91B-8FD45BED55DE@redhat.com>
-Mime-Version: 1.0 (Apple Message framework v1085)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Tregaron Bayly <tbayly@bluehost.com>
+Subject: Re: Periodically scanning RAID arrays for inconsistencies
+Date: Fri, 01 Mar 2013 15:10:59 -0700
+Message-ID: <1362175859.18278.76.camel@148>
+References: <81526C3C-7F95-4A17-B91B-8FD45BED55DE@redhat.com>
+Reply-To: tbayly@bluehost.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <81526C3C-7F95-4A17-B91B-8FD45BED55DE@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
-Cc: NeilBrown <neilb@suse.de>, Jonathan Brassow <jbrassow@redhat.com>
+To: Brassow Jonathan <jbrassow@redhat.com>
+Cc: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Is there a way to periodically scan a RAID array to report any discrepancies?  This would be something like the initial synchronization, but would do nothing but report anomalies.  For example, it is possible for tracks to be altered when adjacent tracks are repeatedly written.  It might happen rarely, but without a periodic scan, you would never know about it.  Leaving aside the question of /what/ to do when an anomaly is found, I haven't seen any code or indication in the man page for 'mdadm' that would suggest this is currently possible.  Am I wrong?  Is there a way to do this?
+On Fri, 2013-03-01 at 15:50 -0600, Brassow Jonathan wrote:
+> Is there a way to periodically scan a RAID array to report any discrepancies?
 
- brassow
+Yes, it's possible - Redhat distributes a script called raid-check that
+is a good example of this very thing.
+
+Documentation/md.txt talks about 'check' and 'repair' as valid words for
+sync_action in sysfs.  The number of errors found will be reported to
+mismatch_cnt.  These can be found at /sys/block/md#/md for your array.
+
+hth,
+
+Tregaron
 
