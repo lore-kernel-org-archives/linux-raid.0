@@ -1,47 +1,44 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: Expanding array with multiple devices
-Date: Sat, 2 Mar 2013 15:07:15 +0100 (CET)
-Message-ID: <1801783.8.1362233235807.JavaMail.root@zimbra>
-References: <512FBDA3.7080501@schinagl.nl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <512FBDA3.7080501@schinagl.nl>
-Sender: linux-raid-owner@vger.kernel.org
-To: Oliver Schinagl <oliver+list@schinagl.nl>
-Cc: linux-raid@vger.kernel.org
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH] md: use set_bit_le and clear_bit_le
+Date: Sat,  2 Mar 2013 23:35:57 +0900
+Message-ID: <1362234957-5570-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> While expanding an existing raid is as simple as mdadm --add, followe=
-d
-> by an mdadm --grow, How would you go about this when expanding it wit=
-h
-> multiple devices.
+The value returned by test_and_set_bit_le() drivers/md/bitmap.c is not used.
+So just use set_bit_le(). The same goes for test_and_clear_bit_le().
 
-Given a RAID-5 on /dev/sd[bcde], I'd do
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
+---
+ drivers/md/bitmap.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-# mdadm --add /dev/md0 /dev/sd[fghi]
-# mdadm --grow --level=3D6 --raid-devices=3D8
-
-No need to create a new RAID and then move the data.
-
-Vennlige hilsener / Best regards
-
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index 4fd9d6a..5a2c754 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -846,7 +846,7 @@ static void bitmap_file_set_bit(struct bitmap *bitmap, sector_t block)
+ 	if (test_bit(BITMAP_HOSTENDIAN, &bitmap->flags))
+ 		set_bit(bit, kaddr);
+ 	else
+-		test_and_set_bit_le(bit, kaddr);
++		set_bit_le(bit, kaddr);
+ 	kunmap_atomic(kaddr);
+ 	pr_debug("set file bit %lu page %lu\n", bit, page->index);
+ 	/* record page number so it gets flushed to disk when unplug occurs */
+@@ -868,7 +868,7 @@ static void bitmap_file_clear_bit(struct bitmap *bitmap, sector_t block)
+ 	if (test_bit(BITMAP_HOSTENDIAN, &bitmap->flags))
+ 		clear_bit(bit, paddr);
+ 	else
+-		test_and_clear_bit_le(bit, paddr);
++		clear_bit_le(bit, paddr);
+ 	kunmap_atomic(paddr);
+ 	if (!test_page_attr(bitmap, page->index, BITMAP_PAGE_NEEDWRITE)) {
+ 		set_page_attr(bitmap, page->index, BITMAP_PAGE_PENDING);
+-- 
+1.8.1.2
