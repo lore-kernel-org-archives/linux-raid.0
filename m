@@ -1,72 +1,94 @@
-From: mwilck@arcor.de
-Subject: [PATCH 03/12] DDF: increase seq number when writing meta data
-Date: Fri,  1 Mar 2013 23:28:24 +0100
-Message-ID: <1362176913-6804-4-git-send-email-mwilck@arcor.de>
+From: Paul Menzel <pm.debian@googlemail.com>
+Subject: Re: [PATCH 12/12] Detail.c: call load_container for container
+ subarrays
+Date: Sat, 02 Mar 2013 08:47:45 +0100
+Message-ID: <1362210465.7752.3.camel@mattotaupa>
 References: <1362176913-6804-1-git-send-email-mwilck@arcor.de>
+	 <1362176913-6804-13-git-send-email-mwilck@arcor.de>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-UDTaP3bNdUv4IHqxw0Ea"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1362176913-6804-1-git-send-email-mwilck@arcor.de>
+In-Reply-To: <1362176913-6804-13-git-send-email-mwilck@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, linux-raid@vger.kernel.org
-Cc: mwilck@arcor.de
+To: mwilck@arcor.de
+Cc: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Cleanly increase the seq number when the DDF structures are
-written, instead of always setting it back to 1.
 
-Also, make sure that the sequential number of all headers and
-VD conf records is the same.
+--=-UDTaP3bNdUv4IHqxw0Ea
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Martin Wilck <mwilck@arcor.de>
----
- super-ddf.c |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
+Dear Martin,
 
-diff --git a/super-ddf.c b/super-ddf.c
-index 2f75fc3..e165927 100644
---- a/super-ddf.c
-+++ b/super-ddf.c
-@@ -2377,6 +2377,7 @@ static int __write_ddf_structure(struct dl *d, struct ddf_super *ddf, __u8 type,
- 			c = (struct vcl *)d->spare;
- 
- 		if (c) {
-+			c->conf.seqnum = ddf->primary.seq;
- 			c->conf.crc = calc_crc(&c->conf, conf_size);
- 			if (write(fd, &c->conf, conf_size) < 0)
- 				break;
-@@ -2409,12 +2410,20 @@ static int __write_init_super_ddf(struct supertype *st)
- 	int successes = 0;
- 	unsigned long long size;
- 	char *null_aligned;
-+	__u32 seq;
- 
- 	if (posix_memalign((void**)&null_aligned, 4096, NULL_CONF_SZ) != 0) {
- 		return -ENOMEM;
- 	}
- 	memset(null_aligned, 0xff, NULL_CONF_SZ);
- 
-+	if (ddf->primary.seq != 0xffffffff)
-+		seq = __cpu_to_be32(__be32_to_cpu(ddf->primary.seq)+1);
-+	else if (ddf->secondary.seq != 0xffffffff)
-+		seq = __cpu_to_be32(__be32_to_cpu(ddf->secondary.seq)+1);
-+	else
-+		seq = __cpu_to_be32(1);
-+
- 	/* try to write updated metadata,
- 	 * if we catch a failure move on to the next disk
- 	 */
-@@ -2448,12 +2457,12 @@ static int __write_init_super_ddf(struct supertype *st)
- 		else
- 			ddf->anchor.secondary_lba =
- 				__cpu_to_be64(size - 32*1024*2);
--		ddf->anchor.seq = __cpu_to_be32(1);
- 		memcpy(&ddf->primary, &ddf->anchor, 512);
- 		memcpy(&ddf->secondary, &ddf->anchor, 512);
- 
- 		ddf->anchor.openflag = 0xFF; /* 'open' means nothing */
- 		ddf->anchor.seq = 0xFFFFFFFF; /* no sequencing in anchor */
-+		ddf->secondary.seq = ddf->primary.seq = seq;
- 		ddf->anchor.crc = calc_crc(&ddf->anchor, 512);
- 
- 		if (!__write_ddf_structure(d, ddf, DDF_HEADER_PRIMARY,
--- 
-1.7.3.4
+
+thank you for your patches?
+
+
+Am Freitag, den 01.03.2013, 23:28 +0100 schrieb mwilck@arcor.de:
+> Without calling load_container at this point, the
+> info structure may be missing some important information.
+> In particular, information about secondary DDF RAID levels
+> may be wrong if information is only read from a single disk.
+>=20
+> If this fails, fall back to the previous code.
+>=20
+> Signed-off-by: Martin Wilck <mwilck@arcor.de>
+> ---
+>  Detail.c |   10 +++++++++-
+>  1 files changed, 9 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/Detail.c b/Detail.c
+> index ab49803..9e52de8 100644
+> --- a/Detail.c
+> +++ b/Detail.c
+> @@ -103,13 +103,21 @@ int Detail(char *dev, struct context *c)
+>  		 * We want the name of the container, and the member
+>  		 */
+>  		int dn =3D st->container_dev;
+> +		int cfd, err;
+> =20
+>  		member =3D subarray;
+>  		container =3D map_dev_preferred(dev2major(dn), dev2minor(dn), 1, c->pr=
+efer);
+> +		cfd =3D open_dev(st->container_dev);
+> +		if (cfd >=3D 0) {
+> +			err =3D st->ss->load_container(st, cfd, NULL);
+> +			close(cfd);
+> +			if (err =3D=3D 0)
+> +				info =3D st->ss->container_content(st, subarray);
+> +		}
+>  	}
+> =20
+>  	/* try to load a superblock */
+> -	if (st) for (d =3D 0; d < max_disks; d++) {
+> +	if (st && !info) for (d =3D 0; d < max_disks; d++) {
+
+Is it ensured that `info` has been always NULL without your patch? Maybe
+also add a comment too.
+
+>  		mdu_disk_info_t disk;
+>  		char *dv;
+>  		int fd2;
+
+
+Thanks,
+
+Paul
+
+--=-UDTaP3bNdUv4IHqxw0Ea
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEABECAAYFAlExrqEACgkQPX1aK2wOHVgKeACfS159ltu/N0F8PpQSz5x/HkKX
+MYIAnRljmp+kO84PEEudcfmsw0BrjCnN
+=3eeF
+-----END PGP SIGNATURE-----
+
+--=-UDTaP3bNdUv4IHqxw0Ea--
+
