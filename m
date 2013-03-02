@@ -1,40 +1,27 @@
-From: Phil Turmel <philip@turmel.org>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
 Subject: Re: Expanding array with multiple devices
-Date: Sat, 02 Mar 2013 12:22:43 -0500
-Message-ID: <51323563.4@turmel.org>
-References: <25032068.12.1362244556592.JavaMail.root@zimbra>
+Date: Sat, 2 Mar 2013 18:31:24 +0100 (CET)
+Message-ID: <alpine.DEB.2.00.1303021828510.14991@uplift.swm.pp.se>
+References: <25032068.12.1362244556592.JavaMail.root@zimbra> <51323563.4@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <25032068.12.1362244556592.JavaMail.root@zimbra>
+In-Reply-To: <51323563.4@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc: Oliver Schinagl <oliver+list@schinagl.nl>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Oliver Schinagl <oliver+list@schinagl.nl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/02/2013 12:15 PM, Roy Sigurd Karlsbakk wrote:
->> On 03/02/2013 09:07 AM, Roy Sigurd Karlsbakk wrote:
->>>> While expanding an existing raid is as simple as mdadm --add, 
->>>> followed by an mdadm --grow, How would you go about this when
->>>> expanding it with multiple devices.
->>>
->>> Given a RAID-5 on /dev/sd[bcde], I'd do
->>>
->>> # mdadm --add /dev/md0 /dev/sd[fghi]
->>> # mdadm --grow --level=6 --raid-devices=8
->>> 
->>> No need to create a new RAID and then move the data.
->> 
->> You missed the bit where he states he needs to use mkfs to switch 
->> filesystem features.
-> 
-> Oh, sorry. Then why not start off with an identical RAID-5, move the
-> data, and then expand as above? No dangling "missing" drives, just
-> plain and simple.
+On Sat, 2 Mar 2013, Phil Turmel wrote:
 
-I agree.  And the file copy to the raid5 would almost certainly run
-faster than any raid6 with "missing".  Then the reshape is one operation
-to both expand the drive count and switch to raid6.
+> I agree.  And the file copy to the raid5 would almost certainly run 
+> faster than any raid6 with "missing".  Then the reshape is one operation 
+> to both expand the drive count and switch to raid6.
 
-Phil
+If he's running 2.6.32 that option isn't available (if I remember 
+correctly). Since he didn't disclose what mdadm and kernel version he was 
+running, I suggested the safest path that works on most kernels and mdadm 
+versions.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
