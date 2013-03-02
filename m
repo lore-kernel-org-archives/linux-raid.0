@@ -1,48 +1,32 @@
 From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID performance - new kernel results - 5x SSD RAID5
-Date: Sat, 02 Mar 2013 12:07:07 -0500
-Message-ID: <513231BB.4070903@turmel.org>
-References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <5113A2D6.20104@websitemanagers.com.au> <CAKHEz2YgiQiknBXju9a=PR3zV1Hb7ux8yBZWywiTi=BXFm20GA@mail.gmail.com> <51150475.2020803@websitemanagers.com.au> <5120A84E.4020702@websitemanagers.com.au> <51222A81.9080600@hardwarefreak.com> <51250377.509@websitemanagers.com.au> <5125B8E5.5000502@hardwarefreak.com> <5125C154.3090603@websitemanagers.com.au> <51272808.7070302@hardwarefreak.com> <512A79D3.9020502@hardwarefreak.com> <5130D206.4090302@websitemanagers.com.au> <5131C338.8010402@hardwarefreak.com>
+Subject: Re: Expanding array with multiple devices
+Date: Sat, 02 Mar 2013 12:11:16 -0500
+Message-ID: <513232B4.7030404@turmel.org>
+References: <1801783.8.1362233235807.JavaMail.root@zimbra>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5131C338.8010402@hardwarefreak.com>
+In-Reply-To: <1801783.8.1362233235807.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, Linux RAID <linux-raid@vger.kernel.org>
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Cc: Oliver Schinagl <oliver+list@schinagl.nl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/02/2013 04:15 AM, Stan Hoeppner wrote:
-> On 3/1/2013 10:06 AM, Adam Goryachev wrote:
-
->> 15) "Make sure all LVs are aligned to the underlying md device geometry.
->>  This will eliminate any possible alignment issues."
->> What does this mean? The drive partitions are now aligned properly, but
->> how does LVM allocate the blocks for each LV, and how do I ensure it
->> does so optimally? How do I even check this?
+On 03/02/2013 09:07 AM, Roy Sigurd Karlsbakk wrote:
+>> While expanding an existing raid is as simple as mdadm --add, followed
+>> by an mdadm --grow, How would you go about this when expanding it with
+>> multiple devices.
 > 
-> I'm not an LVM user so I can't give you command lines.  But what I can
-> tell you follows, and it is somewhat critical to RMW performance, more
-> for rust but also for SSD to a lesser degree.
-
-Run "dmsetup table" and look at the start sectors for your volumes:
-
-> Fast-Root: 0 314572800 linear 9:3 3072
-
-This volume starts at sector 3072 (1.5MB) on /dev/sda3.  So the volume
-alignment within LVM is 512K.
-
->> Is it worth reducing the chunk size from 64k down to 16k or even smaller?
+> Given a RAID-5 on /dev/sd[bcde], I'd do
 > 
-> 64KB chunks should be fine here.  Any gains with a smaller chunk would
-> be small, and would pale in comparison to the amount of PITA required to
-> redo the array and everything currently sitting atop it.  Remember you'd
-> have to destroy it and start over.  You can't change chunk size of an
-> existing array.
+> # mdadm --add /dev/md0 /dev/sd[fghi]
+> # mdadm --grow --level=6 --raid-devices=8
+> 
+> No need to create a new RAID and then move the data.
 
-Actually, you can.  For levels 0 and 4,5,6.
-
-HTH,
+You missed the bit where he states he needs to use mkfs to switch
+filesystem features.
 
 Phil
+
