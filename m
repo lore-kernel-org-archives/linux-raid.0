@@ -1,33 +1,23 @@
 From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: Expanding array with multiple devices
-Date: Sat, 2 Mar 2013 20:14:28 +0100 (CET)
-Message-ID: <27995698.14.1362251668611.JavaMail.root@zimbra>
-References: <alpine.DEB.2.00.1303021828510.14991@uplift.swm.pp.se>
+Subject: About SSDs
+Date: Sat, 2 Mar 2013 21:09:32 +0100 (CET)
+Message-ID: <26440121.16.1362254972008.JavaMail.root@zimbra>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1303021828510.14991@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Oliver Schinagl <oliver+list@schinagl.nl>, linux-raid@vger.kernel.org, Phil Turmel <philip@turmel.org>
+To: Linux MDADM Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> > I agree. And the file copy to the raid5 would almost certainly run
-> > faster than any raid6 with "missing". Then the reshape is one
-> > operation
-> > to both expand the drive count and switch to raid6.
->=20
-> If he's running 2.6.32 that option isn't available (if I remember
-> correctly). Since he didn't disclose what mdadm and kernel version he
-> was running, I suggested the safest path that works on most kernels a=
-nd
-> mdadm versions.
+Hi
 
-You're right. If he's on Ubuntu Lucid, that should be solvable with an =
-upgrade to Precise with "do-release-upgrade", which has been stable for=
- some time.
+This isn't really about Linux MD, but it's woth reading=E2=80=A6
 
+http://www.zdnet.com/how-ssd-power-faults-scramble-your-data-7000011979=
+/
+
+--=20
 Vennlige hilsener / Best regards
 
 roy
