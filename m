@@ -1,27 +1,55 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Brocken Raid & LUKS
-Date: Sat, 02 Mar 2013 12:13:29 -0500
-Message-ID: <51323339.30501@turmel.org>
-References: <5123A1CC.2000003@heisl.org> <512DB532.2080306@heisl.org> <512E58C9.8080701@heisl.org> <2545996.qZhdRSH3AH@xrated> <512E63AD.6080600@heisl.org>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: Expanding array with multiple devices
+Date: Sat, 2 Mar 2013 18:15:56 +0100 (CET)
+Message-ID: <25032068.12.1362244556592.JavaMail.root@zimbra>
+References: <513232B4.7030404@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <512E63AD.6080600@heisl.org>
+In-Reply-To: <513232B4.7030404@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stone <stone@heisl.org>
-Cc: Hans-Peter Jansen <hpj@urpla.net>, linux-raid <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: Oliver Schinagl <oliver+list@schinagl.nl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi All,
+> On 03/02/2013 09:07 AM, Roy Sigurd Karlsbakk wrote:
+> >> While expanding an existing raid is as simple as mdadm --add,
+> >> followed
+> >> by an mdadm --grow, How would you go about this when expanding it
+> >> with
+> >> multiple devices.
+> >
+> > Given a RAID-5 on /dev/sd[bcde], I'd do
+> >
+> > # mdadm --add /dev/md0 /dev/sd[fghi]
+> > # mdadm --grow --level=3D6 --raid-devices=3D8
+> >
+> > No need to create a new RAID and then move the data.
+>=20
+> You missed the bit where he states he needs to use mkfs to switch
+> filesystem features.
 
-[Sorry about the delay--I had to travel this week.]
+Oh, sorry. Then why not start off with an identical RAID-5, move the da=
+ta, and then expand as above? No dangling "missing" drives, just plain =
+and simple.
 
-On 02/27/2013 02:51 PM, Stone wrote:
+Vennlige hilsener / Best regards
 
-> i also have set all drives to start with sector 34 and then i started a
-> fsck -y but the output was the same...
-
-So case #2 with "fsck -y" was just as bad.  I'm sorry, I'm out of ideas.
-
-Phil
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
