@@ -1,52 +1,72 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH] md/raid456: remove depends on CONFIG_EXPERIMENTAL
-Date: Mon, 4 Mar 2013 10:59:30 -0800
-Message-ID: <CAGXu5jKpdVFoEvbGv3K620XDx2bjqQYeCLE511h-071XaPQUGg@mail.gmail.com>
-References: <20130223074001.GA5199@www.outflux.net>
-	<CAA9_cmfa1hhijh4g_hSwMy_GR81rxjEFMurJwSvhBruh1R5dtw@mail.gmail.com>
+From: Emilio Hodge <whiz@home.nl>
+Subject: Problem creating raid10 f2 with 2 disks missing
+Date: Mon, 04 Mar 2013 20:59:25 +0100
+Message-ID: <5134FD1D.8080908@home.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAA9_cmfa1hhijh4g_hSwMy_GR81rxjEFMurJwSvhBruh1R5dtw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <djbw@fb.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Arjan van de Ven <arjan@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Alasdair G Kergon <agk@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Feb 26, 2013 at 5:27 PM, Dan Williams <djbw@fb.com> wrote:
-> On Fri, Feb 22, 2013 at 11:40 PM, Kees Cook <keescook@chromium.org> wrote:
->> The CONFIG_EXPERIMENTAL config item has not carried much meaning for a
->> while now and is almost always enabled by default. As agreed during the
->> Linux kernel summit, remove it from any "depends on" lines in Kconfigs.
->>
->> Signed-off-by: Kees Cook <keescook@chromium.org>
->> Cc: Arjan van de Ven <arjan@linux.intel.com>
->> Cc: Dan Williams <dan.j.williams@intel.com>
->> Cc: Alasdair G Kergon <agk@redhat.com>
->> ---
->>  drivers/md/Kconfig |    1 -
->>  1 file changed, 1 deletion(-)
->>
->> diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
->> index 7cdf359..0cc3a3d 100644
->> --- a/drivers/md/Kconfig
->> +++ b/drivers/md/Kconfig
->> @@ -158,7 +158,6 @@ config MULTICORE_RAID456
->>         bool "RAID-4/RAID-5/RAID-6 Multicore processing (EXPERIMENTAL)"
->>         depends on MD_RAID456
->>         depends on SMP
->> -       depends on EXPERIMENTAL
->
-> In this case MULTICORE_RAID456 and the related code should go as
-> well... now that there are patches to supersede this implementation in
-> md-next.
+When creating a raid 10 near with 2 copies there are 4 possibilities.
 
-Can my original patch go through as-is for Linus's tree? Right now,
-this is the last use of EXPERIMENTAL in v3.9-rc1. If we can drop it,
-we can remove the config item entirely from v3.9.
+mdadm -C /dev/md/tmp -n4 -c512 -l10 -pn2 -amd missing /dev/sdb9 
+/dev/sdc9 missing
+mdadm -C /dev/md/tmp -n4 -c512 -l10 -pn2 -amd /dev/sda9 missing 
+/dev/sdc9 missing
+mdadm -C /dev/md/tmp -n4 -c512 -l10 -pn2 -amd missing /dev/sdb9 missing 
+/dev/sdd9
+mdadm -C /dev/md/tmp -n4 -c512 -l10 -pn2 -amd /dev/sda9 missing missing 
+/dev/sdd9
 
--Kees
+When creating a raid 10 far with 2 copies only 2 possibilities work, why?
+I discovered this when I failed disk 2 and 3 of a raid10 f2 and got a 
+spectacular kernel oops.
 
--- 
-Kees Cook
-Chrome OS Security
+root@dimmel:~# mdadm -C /dev/md/tmp -n4 -c512 -l10 -pf2 -amd /dev/sda9 
+missing /dev/sdc9 missing
+mdadm: /dev/sda9 appears to be part of a raid array:
+     level=raid10 devices=4 ctime=Mon Mar  4 18:14:29 2013
+mdadm: /dev/sdc9 appears to be part of a raid array:
+     level=raid10 devices=4 ctime=Sat Mar  2 23:28:12 2013
+Continue creating array? y
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md/tmp started.
+
+root@dimmel:~# mdadm -C /dev/md/tmp -n4 -c512 -l10 -pf2 -amd missing 
+/dev/sdb9 missing /dev/sdd9
+mdadm: /dev/sdb9 appears to be part of a raid array:
+     level=raid10 devices=4 ctime=Mon Mar  4 18:17:27 2013
+mdadm: /dev/sdd9 appears to be part of a raid array:
+     level=raid10 devices=4 ctime=Mon Mar  4 18:15:33 2013
+Continue creating array? y
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md/tmp started.
+
+root@dimmel:~# mdadm -C /dev/md/tmp -n4 -c512 -l10 -pf2 -amd /dev/sda9 
+missing missing /dev/sdd9
+mdadm: /dev/sda9 appears to be part of a raid array:
+     level=raid10 devices=4 ctime=Mon Mar  4 18:15:02 2013
+mdadm: /dev/sdd9 appears to be part of a raid array:
+     level=raid10 devices=4 ctime=Sat Mar  2 23:28:12 2013
+Continue creating array? y
+mdadm: Defaulting to version 1.2 metadata
+mdadm: RUN_ARRAY failed: Input/output error
+
+root@dimmel:~# mdadm -C /dev/md/tmp -n4 -c512 -l10 -pf2 -amd missing 
+/dev/sdb9 /dev/sdc9 missing
+mdadm: /dev/sdb9 appears to be part of a raid array:
+     level=raid10 devices=4 ctime=Mon Mar  4 18:14:29 2013
+mdadm: /dev/sdc9 appears to be part of a raid array:
+     level=raid10 devices=4 ctime=Mon Mar  4 18:15:02 2013
+Continue creating array? y
+mdadm: Defaulting to version 1.2 metadata
+mdadm: RUN_ARRAY failed: Input/output error
+
+mdadm - v3.2.5 - 18th May 2012
+Linux dimmel 3.7.1 #2 SMP Thu Dec 20 21:20:41 CST 2012 x86_64 AMD 
+Phenom(tm) II X4 965 Processor AuthenticAMD GNU/Linux
+
+Emilio Hodge
