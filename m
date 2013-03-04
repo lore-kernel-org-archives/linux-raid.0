@@ -1,71 +1,116 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: Re: [PATCH 1/4] md/raid5: Reduce one write-operation when handle badsector
-Date: Mon, 4 Mar 2013 09:52:57 +0800
-Message-ID: <201303040952542954272@gmail.com>
-References: <201302281550584027165@gmail.com>,
-	<20130304124330.7eb81dde@notabene.brown>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 3/4] md: Don't do normal-write on unresync area of
+ replacement-disk.
+Date: Mon, 4 Mar 2013 13:04:35 +1100
+Message-ID: <20130304130435.4113d2a4@notabene.brown>
+References: <201302281550356268273@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/pIqKab8OR5orSL1IrDdAniX"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201302281550356268273@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: majianpeng <majianpeng@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Pk9uIFRodSwgMjggRmViIDIwMTMgMTU6NTE6MDEgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVu
-Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gRm9yIGJhZHNlY3RvcixpdCB0b29rIHR3byBzdGVw
-czpyZXdyaXRlIGFuZCByZXJlYWQuU28gZm9yDQo+PiB3cml0ZS1vcGVyYXRpb24saXQgbWFrZSBu
-byBzZW5zZSB0byByZXdyaXRlIGFmdGVyIHdyaXRlLW9wZXJhdGlvbi4NCj4NCj5QbGVhc2UgcGxl
-YXNlIHBsZWFzZSBwbGVhc2UgcGxlYXNlIHRyeSB0byBleHBsYWluIHlvdXJzZWxmIGJldHRlci4N
-Cj4NClNvcnJ5IGZvciB0aGF0LiANCj5UaGlzIHBhdGNoIGRvZXNuJ3QgbWFrZSBhbnkgc2Vuc2Uu
-ICBUaGUgd3JpdGUgc3VjY2VlZGVkLiAgV2Ugc2V0IHRoZSBNYWRlR29vZA0KPmZsYWcgc28gdGhh
-dCBsYXRlciBjb2RlIHdpbGwgcmVtb3ZlIHRoZSBibG9jayBmcm9tIHRoZSBiYWQtYmxvY2sgbGlz
-dC4NCj5UaGVyZSB3aWxsIGJlIG5vIHJlLXJlYWQgb3IgcmUtd3JpdGUuDQo+DQpGb3IgYSBzdHJp
-ZXAgd2hpY2ggY29udGFpbiBiYWRzZWN0b3IgaXMgZG9pbmcgd3JpdGUtb3BlcmF0aW9uLg0KSW4g
-YW5hbHlzZV9zdHJpcGUsIGl0IGNoZWNrIGJhZHNlY3RvciBhbmQgc2V0IFI1X1JlYWRFcnJvci4N
-CiB3cml0ZS0tLT5NYWRlR29vZC0+Y2xlYXIgYmFkYmxvY2sgbG9nLiBCdXQgaXQgY2FuJ3QgY2xl
-YXIgUjVfUmVhZEVycm9yIGZsYWcuDQpTbyBpdCB3aWxsIGV4ZWMgdGhvc2UgY29kZSBpbiBmdW5j
-IGhhbmRsZV9zdHJpcGU6DQo+ICAgICAgICAvKiBJZiB0aGUgZmFpbGVkIGRyaXZlcyBhcmUganVz
-dCBhIFJlYWRFcnJvciwgdGhlbiB3ZSBtaWdodCBuZWVkDQo+ICAgICAgICAgKiB0byBwcm9ncmVz
-cyB0aGUgcmVwYWlyL2NoZWNrIHByb2Nlc3MNCj4gICAgICAgICAqLw0KPiAgICAgICAgaWYgKHMu
-ZmFpbGVkIDw9IGNvbmYtPm1heF9kZWdyYWRlZCAmJiAhY29uZi0+bWRkZXYtPnJvKQ0KPiAgICAg
-ICAgICAgICAgICBmb3IgKGkgPSAwOyBpIDwgcy5mYWlsZWQ7IGkrKykgew0KPiAgICAgICAgICAg
-ICAgICAgICAgICAgIHN0cnVjdCByNWRldiAqZGV2ID0gJnNoLT5kZXZbcy5mYWlsZWRfbnVtW2ld
-XTsNCj4gICAgICAgICAgICAgICAgICAgICAgICBpZiAodGVzdF9iaXQoUjVfUmVhZEVycm9yLCAm
-ZGV2LT5mbGFncykNCj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgJiYgIXRlc3RfYml0KFI1
-X0xPQ0tFRCwgJmRldi0+ZmxhZ3MpDQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICYmIHRl
-c3RfYml0KFI1X1VQVE9EQVRFLCAmZGV2LT5mbGFncykNCj4gICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICkgeyAgDQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBpZiAoIXRl
-c3RfYml0KFI1X1JlV3JpdGUsICZkZXYtPmZsYWdzKSkgew0KPiAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICBzZXRfYml0KFI1X1dhbnR3cml0ZSwgJmRldi0+ZmxhZ3MpOw0K
-PiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzZXRfYml0KFI1X1JlV3Jp
-dGUsICZkZXYtPmZsYWdzKTsNCj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgc2V0X2JpdChSNV9MT0NLRUQsICZkZXYtPmZsYWdzKTsNCj4gICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgcy5sb2NrZWQrKzsNCj4gICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIH0gZWxzZSB7DQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIC8qIGxldCdzIHJlYWQgaXQgYmFjayAqLw0KPiAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICBzZXRfYml0KFI1X1dhbnRyZWFkLCAmZGV2LT5mbGFncyk7DQo+ICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc2V0X2JpdChSNV9MT0NLRUQsICZkZXYt
-PmZsYWdzKTsNCj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzLmxvY2tl
-ZCsrOw0KPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfSAgICANCj4gICAgICAgICAg
-ICAgICAgICAgICAgICB9ICAgIA0KPiAgICAgICAgICAgICAgICB9ICAgIA0KDQpCdXQgdGhlIGZs
-YWcgUmVXcml0ZSBjYW4ndCBzZXQuIFNvIGl0IGRvIHdyaXRlLW9wZXJhdG9pbiBhZ2Fpbi5UaGVu
-IGRvIHJlYWQtb3BlcmF0aW9uLg0KDQpUaGFua3MhDQpKaWFucGVuZyBNYQ0KPk5laWxCcm93bg0K
-Pg0KPg0KPj4gDQo+PiBTaWduZWQtb2ZmLWJ5OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFp
-bC5jb20+DQo+PiAtLS0NCj4+ICBkcml2ZXJzL21kL3JhaWQ1LmMgfCAgICA0ICsrKy0NCj4+ICAx
-IGZpbGUgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pDQo+PiANCj4+IGRp
-ZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LmMgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCj4+IGlu
-ZGV4IDE5ZDc3YTAuLjU5YzA1NjkgMTAwNjQ0DQo+PiAtLS0gYS9kcml2ZXJzL21kL3JhaWQ1LmMN
-Cj4+ICsrKyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gQEAgLTE5MjEsOCArMTkyMSwxMCBAQCBz
-dGF0aWMgdm9pZCByYWlkNV9lbmRfd3JpdGVfcmVxdWVzdChzdHJ1Y3QgYmlvICpiaSwgaW50IGVy
-cm9yKQ0KPj4gIAkJCQkJJnJkZXYtPm1kZGV2LT5yZWNvdmVyeSk7DQo+PiAgCQl9IGVsc2UgaWYg
-KGlzX2JhZGJsb2NrKHJkZXYsIHNoLT5zZWN0b3IsDQo+PiAgCQkJCSAgICAgICBTVFJJUEVfU0VD
-VE9SUywNCj4+IC0JCQkJICAgICAgICZmaXJzdF9iYWQsICZiYWRfc2VjdG9ycykpDQo+PiArCQkJ
-CSAgICAgICAmZmlyc3RfYmFkLCAmYmFkX3NlY3RvcnMpKSB7DQo+PiAgCQkJc2V0X2JpdChSNV9N
-YWRlR29vZCwgJnNoLT5kZXZbaV0uZmxhZ3MpOw0KPj4gKwkJCXNldF9iaXQoUjVfUmVXcml0ZSwg
-JnNoLT5kZXZbaV0uZmxhZ3MpOw0KPj4gKwkJfQ0KPj4gIAl9DQo+PiAgCXJkZXZfZGVjX3BlbmRp
-bmcocmRldiwgY29uZi0+bWRkZXYpOw0KPj4gIA0KPg0KPg==
+--Sig_/pIqKab8OR5orSL1IrDdAniX
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Thu, 28 Feb 2013 15:50:37 +0800 majianpeng <majianpeng@gmail.com> wrote:
+
+> Replacement is a fullsync which don't depent on bitmap.So regardless of
+> the presence and absence of bitmap, it do full resync.
+> If offset of normal io is larger than offset of resync,it will write
+> again when resync arrived this offset.
+
+This might be OK for RAID1 and RAID10 as recover is paused when writes
+happen, but that is not the case for RAID5, so it isn't safe to test against
+curr_resync - it gets updated a bit too later.
+
+Also you messed up the formatting in raid10.c
+
+I'm not convinced this optimisation is really worth it.
+
+NeilBrown
+
+
+>=20
+> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
+> ---
+>  drivers/md/raid1.c  |    4 +++-
+>  drivers/md/raid10.c |    4 +++-
+>  drivers/md/raid5.c  |    3 ++-
+>  3 files changed, 8 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index d5bddfc..142a5fa 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1173,7 +1173,9 @@ read_again:
+>  				set_bit(R1BIO_Degraded, &r1_bio->state);
+>  			continue;
+>  		}
+> -
+> +		if (test_bit(Replacement, &rdev->flags) &&
+> +			conf->mddev->curr_resync < r1_bio->sector)
+> +			continue;
+>  		atomic_inc(&rdev->nr_pending);
+>  		if (test_bit(WriteErrorSeen, &rdev->flags)) {
+>  			sector_t first_bad;
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 64d4824..bb11cfb 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1337,7 +1337,9 @@ retry_write:
+>  			     || test_bit(Unmerged, &rdev->flags)))
+>  			rdev =3D NULL;
+>  		if (rrdev && (test_bit(Faulty, &rrdev->flags)
+> -			      || test_bit(Unmerged, &rrdev->flags)))
+> +			|| test_bit(Unmerged, &rrdev->flags) ||=20
+> +			(test_bit(Replacement, &rrdev->flags) &&
+> +			conf->mddev->curr_resync < r10_bio->sector)))
+>  			rrdev =3D NULL;
+> =20
+>  		r10_bio->devs[i].bio =3D NULL;
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index bd49623..e0a2a39 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -602,7 +602,8 @@ static void ops_run_io(struct stripe_head *sh, struct=
+ stripe_head_state *s)
+>  			rdev =3D NULL;
+>  		if (rdev)
+>  			atomic_inc(&rdev->nr_pending);
+> -		if (rrdev && test_bit(Faulty, &rrdev->flags))
+> +		if (rrdev && (test_bit(Faulty, &rrdev->flags) ||
+> +			conf->mddev->curr_resync < sh->sector))
+>  			rrdev =3D NULL;
+>  		if (rrdev)
+>  			atomic_inc(&rrdev->nr_pending);
+
+
+--Sig_/pIqKab8OR5orSL1IrDdAniX
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUTQBMznsnt1WYoG5AQL0RA//WIMKIGvrLk3iQw98bWAefrVj0PyCP8w2
+kvOEXUPe+ex65YICKnxGPCuvkKmU2F1hQiqXaPa3eBKQAzuMq+lK9m6h4NrOK48s
+9G9PoCBtegG8xiJo0Q2HpAK8tSHEGGBFRqE9BhnXMAy9j5R+A6Q8yqhrCxvaEs64
+TaFC95ndlgw09FTHOPQJqvkfhUVA2K81InHj0h67dssCIWISwZ2sT37wqbfrIQEG
+ZYMPO3VIZVYP3CzvR3Ha3jBRyVkY4P9iQ7ezfpb7v26di9itcbbSikSVnx9lp1fP
+y8HJEJ1jIXx6dBDpr6vJ30Vn/xghyuZywOlc24BvAtskQ97ut3xMEua1D9Er3NYX
+C+CZNd9pC2VWsBnqGn60xBAhs1dmTjnRsHX83Ggmya6AJuH/GleK5vBvVwsGFlyJ
+0UDw4avN1wiXvGwyHjznftdnmZO3I5icnxDvJL1wbE5qzZM/4ODLSe3Z2Ot8i84+
+YPKnh6FBqyXmti3oH1zgklai530+OsuYvnCMCI/LckYdX46v/GZBQSSnMDy9rInH
+r3LZVgtuk1M1aGuDSu6blbHBhvAIow7OGF48aCRruhiUfKs2HwP3ZpUoms/qX+zI
+RIYDq4RHxw4tBh90bTcQXSc33CkFS/90Z3lPoNKvCNKy99zzDenHacrB0G1HGwja
+OpATOtaGxno=
+=RIux
+-----END PGP SIGNATURE-----
+
+--Sig_/pIqKab8OR5orSL1IrDdAniX--
