@@ -1,85 +1,53 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md: use set_bit_le and clear_bit_le
-Date: Mon, 4 Mar 2013 11:58:21 +1100
-Message-ID: <20130304115821.06bba2f5@notabene.brown>
-References: <1362234957-5570-1-git-send-email-akinobu.mita@gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID performance - new kernel results - 5x SSD RAID5
+Date: Sun, 03 Mar 2013 20:31:06 -0500
+Message-ID: <5133F95A.5040508@turmel.org>
+References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <5113A2D6.20104@websitemanagers.com.au> <CAKHEz2YgiQiknBXju9a=PR3zV1Hb7ux8yBZWywiTi=BXFm20GA@mail.gmail.com> <51150475.2020803@websitemanagers.com.au> <5120A84E.4020702@websitemanagers.com.au> <51222A81.9080600@hardwarefreak.com> <51250377.509@websitemanagers.com.au> <5125B8E5.5000502@hardwarefreak.com> <5125C154.3090603@websitemanagers.com.au> <51272808.7070302@hardwarefreak.com> <512A79D3.9020502@hardwarefreak.com> <5130D206.4090302@websitemanagers.com.au> <5131C338.8010402@hardwarefreak.com> <513231BB.4070903@turmel.org> <ac5cdf66-ba01-4d7b-bd7b-60fb67517ad
+ 4@email.android.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/FZrWcepgNLey4SAKwd8iDPT"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1362234957-5570-1-git-send-email-akinobu.mita@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <ac5cdf66-ba01-4d7b-bd7b-60fb67517ad4@email.android.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: stan@hardwarefreak.com, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/FZrWcepgNLey4SAKwd8iDPT
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 03/03/2013 10:19 AM, Adam Goryachev wrote:
+> Phil Turmel <philip@turmel.org> wrote:
+> 
+>> On 03/02/2013 04:15 AM, Stan Hoeppner wrote:
+>>> On 3/1/2013 10:06 AM, Adam Goryachev wrote:
+>>
+>>>> 15) "Make sure all LVs are aligned to the underlying md device
+>>>> geometry. This will eliminate any possible alignment issues."
+>>>> What does this mean? The drive partitions are now aligned properly,
+>>>> but how does LVM allocate the blocks for each LV, and how do I
+>>>> ensure it does so optimally? How do I even check this?
+>>>
+>>> I'm not an LVM user so I can't give you command lines.  But what I
+>>> can tell you follows, and it is somewhat critical to RMW performance,
+>>> more for rust but also for SSD to a lesser degree.
+>> Run "dmsetup table" and look at the start sectors for your volumes:
+>> Fast-Root: 0 314572800 linear 9:3 3072
+>> This volume starts at sector 3072 (1.5MB) on /dev/sda3.  So the volume
+>> alignment within LVM is 512K.
+> 
+> I see this (for the first LV)
+> vg0-hostname: 0 204808192 linear 147:2 512
+> So, I'm guessing mine is starting at 512, and is also aligned at 512k ?
 
-On Sat,  2 Mar 2013 23:35:57 +0900 Akinobu Mita <akinobu.mita@gmail.com>
-wrote:
+Not quite.  Those size and offset numbers are shown in *sectors*, so you
+have 256k alignment.  But that's exactly the minimum you need to match
+your raid5 chunk size, so you are good for the moment.
 
-> The value returned by test_and_set_bit_le() drivers/md/bitmap.c is not us=
-ed.
-> So just use set_bit_le(). The same goes for test_and_clear_bit_le().
->=20
-> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-> Cc: Neil Brown <neilb@suse.de>
-> Cc: linux-raid@vger.kernel.org
-> ---
->  drivers/md/bitmap.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-> index 4fd9d6a..5a2c754 100644
-> --- a/drivers/md/bitmap.c
-> +++ b/drivers/md/bitmap.c
-> @@ -846,7 +846,7 @@ static void bitmap_file_set_bit(struct bitmap *bitmap=
-, sector_t block)
->  	if (test_bit(BITMAP_HOSTENDIAN, &bitmap->flags))
->  		set_bit(bit, kaddr);
->  	else
-> -		test_and_set_bit_le(bit, kaddr);
-> +		set_bit_le(bit, kaddr);
->  	kunmap_atomic(kaddr);
->  	pr_debug("set file bit %lu page %lu\n", bit, page->index);
->  	/* record page number so it gets flushed to disk when unplug occurs */
-> @@ -868,7 +868,7 @@ static void bitmap_file_clear_bit(struct bitmap *bitm=
-ap, sector_t block)
->  	if (test_bit(BITMAP_HOSTENDIAN, &bitmap->flags))
->  		clear_bit(bit, paddr);
->  	else
-> -		test_and_clear_bit_le(bit, paddr);
-> +		clear_bit_le(bit, paddr);
->  	kunmap_atomic(paddr);
->  	if (!test_page_attr(bitmap, page->index, BITMAP_PAGE_NEEDWRITE)) {
->  		set_page_attr(bitmap, page->index, BITMAP_PAGE_PENDING);
+> Also, pvdisplay tells me the PE Size is 4M, so I'm assuming that regardless of how the LV's are arranged, they will always be 512k aligned?
 
-applied, thanks.
+256k, but yeah.
 
-NeilBrown
+> So, is that enough to be sure that this is not an issue?
 
---Sig_/FZrWcepgNLey4SAKwd8iDPT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+It looks to me like you are good on alignment.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUTPxrTnsnt1WYoG5AQKwoRAAhhyRlsnFZPkRL3Zfkzz3RKbKvfxdZLug
-hwa+ICEOygrMy1rbYhB3N/t+bY2MK+WhbBvXGr6B3lBdjN0qA0td7Xd2XSpBU0A0
-HMApqXAIrsV4z73iTXoN+t5xij1Do2kCSl0e4FE87YUK9nHOm1HTOW5MBynkj/iJ
-4zGiC7OWAbOzrrtqXIFytJUt6U+iesc9CUrzKnf+xKN4yYkxe/9wDUEliLIGMOFs
-wvBPhLpEu+h+5//9M8rb53jCQCOxZ9R3JIOmfSJrQHM81/acddwGiKCZyKUmH/wF
-OOptR9XxDJvmK6fS0rOcneeIcx7zc+BtRtGYab38KmYEmkfEVx4Vda/I1msfeE7Y
-tguYg8+SrZ9whPNxSn1yof8fmXaVt+baBBJ0UYXIZaaF5+QS8hFoXvOiG57JSrgu
-We+gq8Tk1dt2LQQjFmZezHJWi64wPLfke8JG07REUGuUyjHTTWg1z9S25IHtOA7J
-uAdhX7uZMK95yzZcSdI0iVhRCHvgaa4FS10O7tTvUuK99Ctwwjg3Ee57RZE3oNeW
-QkJtC/vfxxI0MQXZFKcfY1AlOGyaEsMxtGK8/nLFkECQcoQPYkzYD6UFgyCFtb68
-MHQk1469nuPA+J37eEPGdEJ6ysrzRZZhxAr7/nhauACdijfa+Phg1DQih7vDn6Py
-XgMuomRiW84=
-=hYfh
------END PGP SIGNATURE-----
-
---Sig_/FZrWcepgNLey4SAKwd8iDPT--
+Phil
