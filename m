@@ -1,67 +1,115 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Periodically scanning RAID arrays for inconsistencies
-Date: Mon, 4 Mar 2013 16:42:21 +1100
-Message-ID: <20130304164221.70d51311@notabene.brown>
-References: <81526C3C-7F95-4A17-B91B-8FD45BED55DE@redhat.com>
+Subject: Re: [PATCH] imsm: Add NO_IMSM_PLATFORM flag description to manual.
+Date: Mon, 4 Mar 2013 17:26:32 +1100
+Message-ID: <20130304172632.1168644a@notabene.brown>
+References: <20130218115140.2751.36089.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/tvhiup_EkbQLbPS9x2VfS8M"; protocol="application/pgp-signature"
+ boundary="Sig_/hndDjUbXwNCt7K8sEjemGgw"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <81526C3C-7F95-4A17-B91B-8FD45BED55DE@redhat.com>
+In-Reply-To: <20130218115140.2751.36089.stgit@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brassow Jonathan <jbrassow@redhat.com>
-Cc: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
+To: Marcin Tomczak <marcin.tomczak@intel.com>
+Cc: linux-raid@vger.kernel.org, lukasz.dorau@intel.com
 List-Id: linux-raid.ids
 
---Sig_/tvhiup_EkbQLbPS9x2VfS8M
+--Sig_/hndDjUbXwNCt7K8sEjemGgw
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 1 Mar 2013 15:50:05 -0600 Brassow Jonathan <jbrassow@redhat.com>
+On Mon, 18 Feb 2013 12:51:40 +0100 Marcin Tomczak <marcin.tomczak@intel.com>
 wrote:
 
-> Is there a way to periodically scan a RAID array to report any discrepanc=
-ies?  This would be something like the initial synchronization, but would d=
-o nothing but report anomalies.  For example, it is possible for tracks to =
-be altered when adjacent tracks are repeatedly written.  It might happen ra=
-rely, but without a periodic scan, you would never know about it.  Leaving =
-aside the question of /what/ to do when an anomaly is found, I haven't seen=
- any code or indication in the man page for 'mdadm' that would suggest this=
- is currently possible.  Am I wrong?  Is there a way to do this?
+> In exceptional cases user can use NO_IMSM_PLATFORM flag to use IMSM
+> metadata RAIDs without valid Intel platform. With this flag set
+> mdadm does not perform any compatibility checks.
 >=20
->  brassow
+> Note: Usage of this flag may lead to data loss!
+>=20
+> Signed-off-by: Marcin Tomczak <marcin.tomczak@intel.com>
+> ---
+>  mdadm.8.in |   19 +++++++++++++++++++
+>  1 files changed, 19 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/mdadm.8.in b/mdadm.8.in
+> index 535cc39..3ef20c7 100644
+> --- a/mdadm.8.in
+> +++ b/mdadm.8.in
+> @@ -2714,6 +2714,25 @@ to '1', the
+>  .I mdadm
+>  will create and devices that are needed.
+> =20
+> +.TP
+> +.B IMSM_NO_PLATFORM
+> +ATTENTION! Usage of this flag is extremely dangerous! You should use
+> +this flag only when you know what you are doing and when it is
+> +necessary. Make a backup before any action. You use it on your own
+> +responsibility - unpredictable effects may appear much later.
 
-echo check > /sys/block/mdX/md/sync_action
+I'm sorry, but I'm not going to include that sort of hyperbole in the man
+page.  A simple statement of what it does is sufficient.
 
-look for results in /sys/block/mdX/md/mismatch_cnt
-
-See "SCRUBBING AND MISMATCHES" in "man 4 md".
-
-Yes it would be nice if mdadm provided a nicer interface to this.  Patches
-welcome:-)
+I have applied this patch.
 
 NeilBrown
 
---Sig_/tvhiup_EkbQLbPS9x2VfS8M
+
+=46rom 401f095c39b732b4247bd728cb493eb7bb692298 Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Mon, 4 Mar 2013 17:25:36 +1100
+Subject: [PATCH] mdadm.8: Detail use for IMSM_NO_PLATFORM environment
+ variable.
+
+Suggested-by: Marcin Tomczak <marcin.tomczak@intel.com>
+
+diff --git a/mdadm.8.in b/mdadm.8.in
+index a3abc2d..1c06533 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -2710,6 +2710,21 @@ to '1', the
+ .I mdadm
+ will create and devices that are needed.
+=20
++.TP
++.B IMSM_NO_PLATFORM
++A key value of IMSM metadata is that it allows interoperability with
++boot ROMs on Intel platforms, and with other major operating systems.
++Consequently,
++.I mdadm
++will only allow an IMSM array to be created or modified if detects
++that it is running on an Intel platform which supports IMSM, and
++supports the particular configuration of IMSM that is being requested
++(some functionality requires newer OROM support).
++
++These checks can be suppressed by setting IMSM_NO_PLATFORM=3D1 in the
++environment.  This can be useful for testing or for disaster
++recovery.  You should be aware that interoperability may be
++compromised by setting this value.
+ .SH EXAMPLES
+=20
+ .B "  mdadm \-\-query /dev/name-of-device"
+
+
+--Sig_/hndDjUbXwNCt7K8sEjemGgw
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUTQ0PTnsnt1WYoG5AQLOsQ/6AnPNNMjmsiyMPsxvl0t4krYcZhdEWEVj
-tJx+ZYXMPAru0BtPNhINOC50I3GGqiH9vqUjrQ9fskdx/CGCPiEaOo1I3lP1fmdk
-C+FKJ4HRG5UBkYPuFzRfZ7O+Ov4QrZ+xVpKQvBkbg4I8+SJO8RwHwrfkq/NuhS6x
-yPk9tV3xWPXnyK7rxRE2NXggqRknMK0Qb8BE6QpEpDEHdvcBc/9RlUIZl9SJqNmo
-mnK35qApB2Xm5VdDHgbwSPL3MySo6AZTd/WvvwY9+ONbvi6cZYVVpthdH1yOnRA2
-RooFcSxjTqOCScJD9IlYfkUOn6v1VhhgTa72iBAyus22Ty8reF1O1o4eFA+R1MuS
-YQVehfIrckQ51qhmq0jzSxcP88AWFW3Erb8PtV9SNtMtBFxdRdECn01+aBNspVwz
-49BsCII7uvo98AqTanOUtfmNEz4LuNU2+ZoICSTRVfX6agnZTewTOVY6T6WNYgOF
-kvuuRQdx6MBcX966AVJb/v6utsOIWOOXWu8LztvH5uyIRNqczbMoOJm5TdbzGjIP
-fgdgopSGjixzBPWgAKvECHuB3yv+nijEVQN4fLifRs/tZ6i+JtBbfbp3jyfvKDCj
-Y1LH9+emc9savGf/ubHP5cdchfcKiywtAaR1HuMdJ8pM+u5d8/MzrYz3ichHsHY9
-Jl+ztlyESEc=
-=bMur
+iQIVAwUBUTQ+mDnsnt1WYoG5AQLaqBAAgyeJ0/2q15nbvxY9AbwInCpPj8VPfzAm
+RgIZ1JrnX4B/X+G4qWCTCWXDdNwqPooQL8wPqWXLDGiHVjMhkHudzws3unKBH6f5
+Lot3WCzB4Mg33JsHKcglS99k/M3iVFE8Mt4caqJ+S8jdLtVaqsiUqZPuWLh6Fd2S
+Xo+BxEel1cT/btwkxc0f7DrFIo/otAauvHVrorvjzCjK5/7TnkF4Tw3f+d6XJI3G
+Deq1p4NMdWKauOI3mecbR3VEF6iW9X3QIUOK1/7SBjLQWl+lFlZVRjUXdNhN3cvt
+JJfnjYZRv6qNduiiZnJ9SSBKNsKIdxyXO9a/5BQhg3Q4KQwT1xhu0QhHQLNL2zY4
+lEGbfDLAq0nQHGxQr90fkBq9R14MuU6/aQ/99MNIsuVS1x3hwDTnfvIzjehSKQCo
+9YJWN1cxtsntd3PkCs2utd0KdlM/75P7bhJHojZyVMwQtOD5nVEtLttk6CXAtqUe
+OeSzK1pDcgy9NyqVCUw7B74ZatyA71bLttAZrOFPcobeakeiTDYdGQYylDA5RLvD
+XLHG5Kq+BOmsA9fo93YhSfiO6FWDdEeqXiKsyK+HIHXKUuapGLtoiW4k7RAWUHKF
+TZI58BuYvGYWHL+iDf1yuHgm+pvH460lo7WxQGj8QwGxllGxX/TOhicJWaCG8Onr
+rH9wud1pZ7I=
+=oljS
 -----END PGP SIGNATURE-----
 
---Sig_/tvhiup_EkbQLbPS9x2VfS8M--
+--Sig_/hndDjUbXwNCt7K8sEjemGgw--
