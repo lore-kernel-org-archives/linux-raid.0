@@ -1,99 +1,53 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/4] md/raid5: Reduce one write-operation when handle
- badsector
-Date: Mon, 4 Mar 2013 13:25:33 +1100
-Message-ID: <20130304132533.571e8070@notabene.brown>
-References: <201302281550584027165@gmail.com>
-	<20130304124330.7eb81dde@notabene.brown>
-	<201303040952542954272@gmail.com>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH 1/4] md/raid5: Reduce one write-operation when handle badsector
+Date: Mon, 4 Mar 2013 10:37:09 +0800
+Message-ID: <2013030410370206658210@gmail.com>
+References: <201302281550584027165@gmail.com> <20130304124330.7eb81dde@notabene.brown> <201303040952542954272@gmail.com>,
+	<20130304132533.571e8070@notabene.brown>
+Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/.m9KgXSzh4Omn3qmLfSZRPq"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201303040952542954272@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/.m9KgXSzh4Omn3qmLfSZRPq
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Pk9uIE1vbiwgNCBNYXIgMjAxMyAwOTo1Mjo1NyArMDgwMCBtYWppYW5wZW5nIDxtYWppYW5wZW5n
+QGdtYWlsLmNvbT4gd3JvdGU6DQo+DQo+PiA+T24gVGh1LCAyOCBGZWIgMjAxMyAxNTo1MTowMSAr
+MDgwMCBtYWppYW5wZW5nIDxtYWppYW5wZW5nQGdtYWlsLmNvbT4gd3JvdGU6DQo+PiA+DQo+PiA+
+PiBGb3IgYmFkc2VjdG9yLGl0IHRvb2sgdHdvIHN0ZXBzOnJld3JpdGUgYW5kIHJlcmVhZC5TbyBm
+b3INCj4+ID4+IHdyaXRlLW9wZXJhdGlvbixpdCBtYWtlIG5vIHNlbnNlIHRvIHJld3JpdGUgYWZ0
+ZXIgd3JpdGUtb3BlcmF0aW9uLg0KPj4gPg0KPj4gPlBsZWFzZSBwbGVhc2UgcGxlYXNlIHBsZWFz
+ZSBwbGVhc2UgdHJ5IHRvIGV4cGxhaW4geW91cnNlbGYgYmV0dGVyLg0KPj4gPg0KPj4gU29ycnkg
+Zm9yIHRoYXQuIA0KPj4gPlRoaXMgcGF0Y2ggZG9lc24ndCBtYWtlIGFueSBzZW5zZS4gIFRoZSB3
+cml0ZSBzdWNjZWVkZWQuICBXZSBzZXQgdGhlIE1hZGVHb29kDQo+PiA+ZmxhZyBzbyB0aGF0IGxh
+dGVyIGNvZGUgd2lsbCByZW1vdmUgdGhlIGJsb2NrIGZyb20gdGhlIGJhZC1ibG9jayBsaXN0Lg0K
+Pj4gPlRoZXJlIHdpbGwgYmUgbm8gcmUtcmVhZCBvciByZS13cml0ZS4NCj4+ID4NCj4+IEZvciBh
+IHN0cmllcCB3aGljaCBjb250YWluIGJhZHNlY3RvciBpcyBkb2luZyB3cml0ZS1vcGVyYXRpb24u
+DQo+PiBJbiBhbmFseXNlX3N0cmlwZSwgaXQgY2hlY2sgYmFkc2VjdG9yIGFuZCBzZXQgUjVfUmVh
+ZEVycm9yLg0KPj4gIHdyaXRlLS0tPk1hZGVHb29kLT5jbGVhciBiYWRibG9jayBsb2cuIEJ1dCBp
+dCBjYW4ndCBjbGVhciBSNV9SZWFkRXJyb3IgZmxhZy4NCj4+IFNvIGl0IHdpbGwgZXhlYyB0aG9z
+ZSBjb2RlIGluIGZ1bmMgaGFuZGxlX3N0cmlwZToNCj4NCj5BZnRlciB5b3Ugd3JvdGUgdGhhdCwg
+ZGlkIHlvdSByZWFkIGl0IGFnYWluIHRvIHNlZSBpZiBpdCBtYWtlcyBhbnkgc2Vuc2U/ICBJdA0K
+PmRvZXMgYnV0IG9ubHkganVzdC4NCj4NCj5JJ2QgcmF0aGVyIGhhdmUgYSBnb29kIGV4cGxhbmF0
+aW9uIGluIHRoZSBjb2RlIHNvIGl0IGlzIGNsZWFyIHdoYXQgaXMgZ29pbmcNCj5vbi4NCj4NCj5k
+aWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5jIGIvZHJpdmVycy9tZC9yYWlkNS5jDQo+aW5k
+ZXggM2UwZWMxNi4uMjc3ZDljMiAxMDA2NDQNCj4tLS0gYS9kcml2ZXJzL21kL3JhaWQ1LmMNCj4r
+KysgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCj5AQCAtMTkxMSw4ICsxOTExLDE1IEBAIHN0YXRpYyB2
+b2lkIHJhaWQ1X2VuZF93cml0ZV9yZXF1ZXN0KHN0cnVjdCBiaW8gKmJpLCBpbnQgZXJyb3IpDQo+
+IAkJCQkJJnJkZXYtPm1kZGV2LT5yZWNvdmVyeSk7DQo+IAkJfSBlbHNlIGlmIChpc19iYWRibG9j
+ayhyZGV2LCBzaC0+c2VjdG9yLA0KPiAJCQkJICAgICAgIFNUUklQRV9TRUNUT1JTLA0KPi0JCQkJ
+ICAgICAgICZmaXJzdF9iYWQsICZiYWRfc2VjdG9ycykpDQo+KwkJCQkgICAgICAgJmZpcnN0X2Jh
+ZCwgJmJhZF9zZWN0b3JzKSkgew0KPiAJCQlzZXRfYml0KFI1X01hZGVHb29kLCAmc2gtPmRldltp
+XS5mbGFncyk7DQo+KwkJCWlmICh0ZXN0X2JpdChSNV9SZWFkRXJyb3IsICZzaC0+ZGV2W2ldLmZs
+YWdzKSkNCldoeSBkbyBpdCB0ZXN0IFI1X1JlYWRFcnJvcj8NCkV2ZW4gaWYgIGl0IGRpZG4ndCBz
+ZXQgUjVfUmVhZEVycm9yLCBpdCBhbHNvIGRvIGluIGFuYWx5c2Vfc3RyaXBlLg0KDQpUaGFua3Mh
+DQpKaWFucGVuZyBNYQ0KPisJCQkJLyogVGhhdCB3YXMgYSBzdWNjZXNzZnVsIHdyaXRlIHNvIG1h
+a2UNCj4rCQkJCSAqIHN1cmUgaXQgbG9va3MgbGlrZSB3ZSBhbHJlYWR5IGRpZA0KPisJCQkJICog
+YSByZS13cml0ZS4NCj4rCQkJCSAqLw0KPisJCQkJc2V0X2JpdChSNV9SZVdyaXRlLCAmc2gtPmRl
+dltpXS5mbGFncyk7DQo+KwkJfQ0KPiAJfQ0KPiAJcmRldl9kZWNfcGVuZGluZyhyZGV2LCBjb25m
+LT5tZGRldik7DQo+IA0KPlRoYW5rcywNCj5OZWlsQnJvd24NCj4=
 
-On Mon, 4 Mar 2013 09:52:57 +0800 majianpeng <majianpeng@gmail.com> wrote:
-
-> >On Thu, 28 Feb 2013 15:51:01 +0800 majianpeng <majianpeng@gmail.com> wro=
-te:
-> >
-> >> For badsector,it took two steps:rewrite and reread.So for
-> >> write-operation,it make no sense to rewrite after write-operation.
-> >
-> >Please please please please please try to explain yourself better.
-> >
-> Sorry for that.=20
-> >This patch doesn't make any sense.  The write succeeded.  We set the Mad=
-eGood
-> >flag so that later code will remove the block from the bad-block list.
-> >There will be no re-read or re-write.
-> >
-> For a striep which contain badsector is doing write-operation.
-> In analyse_stripe, it check badsector and set R5_ReadError.
->  write--->MadeGood->clear badblock log. But it can't clear R5_ReadError f=
-lag.
-> So it will exec those code in func handle_stripe:
-
-After you wrote that, did you read it again to see if it makes any sense?  =
-It
-does but only just.
-
-I'd rather have a good explanation in the code so it is clear what is going
-on.
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 3e0ec16..277d9c2 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1911,8 +1911,15 @@ static void raid5_end_write_request(struct bio *bi, =
-int error)
- 					&rdev->mddev->recovery);
- 		} else if (is_badblock(rdev, sh->sector,
- 				       STRIPE_SECTORS,
--				       &first_bad, &bad_sectors))
-+				       &first_bad, &bad_sectors)) {
- 			set_bit(R5_MadeGood, &sh->dev[i].flags);
-+			if (test_bit(R5_ReadError, &sh->dev[i].flags))
-+				/* That was a successful write so make
-+				 * sure it looks like we already did
-+				 * a re-write.
-+				 */
-+				set_bit(R5_ReWrite, &sh->dev[i].flags);
-+		}
- 	}
- 	rdev_dec_pending(rdev, conf->mddev);
-=20
-Thanks,
-NeilBrown
-
---Sig_/.m9KgXSzh4Omn3qmLfSZRPq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUTQGHTnsnt1WYoG5AQIyHA/+PXsuJEzWvA2eyUjFQh+yj5HB0C1j/8d8
-I6c1i3Ngb/gT9OWk7iJfuGtn4stZ5A3H7c5NV5s9INu+UKABvQ+ZpTjeK2Bx+gjC
-UMvr8byUAImfd6zrg9hdJ85dDz0W5WXN8hNvbckIqvjMG8XdA/lUItYvcPZSOHdq
-8TnqH1A/7cSXhWkBEWqvMbpqoO6bVlx1y4Vyg8JyND0O2xgA4vwSZphCA+J3zIHk
-8BOB87yF7WrxHxFDikMGiXDRX9uToFUXtvDHSBwC5xQjKWCk/MXZBfzYJtaYsUx+
-iaJLu7qpWLrJNKOn92+ySiwTYQqb9lP7Ed0nFX5eO5AHi2O08lCvL8UGzfpZtrHg
-UHQPeLWRz7JhopXNXl1RF6sbPAS8YYqHvleYqywmjEt4SoQABRZQWN/zkm3J0SrD
-Ci0QpPDQJHvvxacQ6gGirTrsrufD578de4PLGndTkuG6bipLlYzSHBSperYYhS1G
-YJpRFm/HJvsMInZlB5IcHucF3PySSt03EVxhtKo5yaKuVqyXBmmncBWU2Ai3b3t5
-mTHotcPZniRCVVbXFYuEY7nPIULNPcaxyG/gDpkZfq/pxxednT54Wm5LhQdE9Rgl
-1y6MUa4Iyl0w0ilm0vQ69A2DiulPlTfSw95rDUWyi7EuwKsmhFni5E6GYVwz4ERK
-iQAH72VQ6Rc=
-=R9va
------END PGP SIGNATURE-----
-
---Sig_/.m9KgXSzh4Omn3qmLfSZRPq--
