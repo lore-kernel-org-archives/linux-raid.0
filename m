@@ -1,115 +1,109 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] imsm: Add NO_IMSM_PLATFORM flag description to manual.
-Date: Mon, 4 Mar 2013 17:26:32 +1100
-Message-ID: <20130304172632.1168644a@notabene.brown>
-References: <20130218115140.2751.36089.stgit@localhost.localdomain>
+From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Subject: Re: RAID performance - new kernel results - 5x SSD RAID5
+Date: Mon, 04 Mar 2013 20:39:01 +1100
+Message-ID: <51346BB5.2010403@websitemanagers.com.au>
+References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <5113A2D6.20104@websitemanagers.com.au> <CAKHEz2YgiQiknBXju9a=PR3zV1Hb7ux8yBZWywiTi=BXFm20GA@mail.gmail.com> <51150475.2020803@websitemanagers.com.au> <5120A84E.4020702@websitemanagers.com.au> <51222A81.9080600@hardwarefreak.com> <51250377.509@websitemanagers.com.au> <5125B8E5.5000502@hardwarefreak.com> <5125C154.3090603@websitemanagers.com.au> <51272808.7070302@hardwarefreak.com> <512A79D3.9020502@hardwarefreak.com> <5130D206.4090302@websitemanagers.com.au> <5131C338.8010402@hardwarefreak.com> <513231BB.4070903@turmel.org> <ac5cdf66-ba01-4d7b-bd7b-60fb67517ad
+ 4@email.android.com> <5133F95A.5040508@turmel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/hndDjUbXwNCt7K8sEjemGgw"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130218115140.2751.36089.stgit@localhost.localdomain>
+In-Reply-To: <5133F95A.5040508@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marcin Tomczak <marcin.tomczak@intel.com>
-Cc: linux-raid@vger.kernel.org, lukasz.dorau@intel.com
+To: Phil Turmel <philip@turmel.org>
+Cc: stan@hardwarefreak.com, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/hndDjUbXwNCt7K8sEjemGgw
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 04/03/13 12:31, Phil Turmel wrote:
+> On 03/03/2013 10:19 AM, Adam Goryachev wrote:
+>> Phil Turmel <philip@turmel.org> wrote:
+>>
+>>> On 03/02/2013 04:15 AM, Stan Hoeppner wrote:
+>>>> On 3/1/2013 10:06 AM, Adam Goryachev wrote:
+>>>
+>>>>> 15) "Make sure all LVs are aligned to the underlying md device
+>>>>> geometry. This will eliminate any possible alignment issues."
+>>>>> What does this mean? The drive partitions are now aligned properly,
+>>>>> but how does LVM allocate the blocks for each LV, and how do I
+>>>>> ensure it does so optimally? How do I even check this?
+>>>>
+>>>> I'm not an LVM user so I can't give you command lines.  But what I
+>>>> can tell you follows, and it is somewhat critical to RMW performance,
+>>>> more for rust but also for SSD to a lesser degree.
+>>> Run "dmsetup table" and look at the start sectors for your volumes:
+>>> Fast-Root: 0 314572800 linear 9:3 3072
+>>> This volume starts at sector 3072 (1.5MB) on /dev/sda3.  So the volume
+>>> alignment within LVM is 512K.
+>>
+>> I see this (for the first LV)
+>> vg0-hostname: 0 204808192 linear 147:2 512
+>> So, I'm guessing mine is starting at 512, and is also aligned at 512k ?
+> 
+> Not quite.  Those size and offset numbers are shown in *sectors*, so you
+> have 256k alignment.  But that's exactly the minimum you need to match
+> your raid5 chunk size, so you are good for the moment.
 
-On Mon, 18 Feb 2013 12:51:40 +0100 Marcin Tomczak <marcin.tomczak@intel.com>
-wrote:
+Probably a silly question, but how do you convert from the information:
+Fast-Root: 0 314572800 linear 9:3 3072
+vg0-hostname: 0 204808192 linear 147:2 512
 
-> In exceptional cases user can use NO_IMSM_PLATFORM flag to use IMSM
-> metadata RAIDs without valid Intel platform. With this flag set
-> mdadm does not perform any compatibility checks.
->=20
-> Note: Usage of this flag may lead to data loss!
->=20
-> Signed-off-by: Marcin Tomczak <marcin.tomczak@intel.com>
-> ---
->  mdadm.8.in |   19 +++++++++++++++++++
->  1 files changed, 19 insertions(+), 0 deletions(-)
->=20
-> diff --git a/mdadm.8.in b/mdadm.8.in
-> index 535cc39..3ef20c7 100644
-> --- a/mdadm.8.in
-> +++ b/mdadm.8.in
-> @@ -2714,6 +2714,25 @@ to '1', the
->  .I mdadm
->  will create and devices that are needed.
-> =20
-> +.TP
-> +.B IMSM_NO_PLATFORM
-> +ATTENTION! Usage of this flag is extremely dangerous! You should use
-> +this flag only when you know what you are doing and when it is
-> +necessary. Make a backup before any action. You use it on your own
-> +responsibility - unpredictable effects may appear much later.
+My example was 512 sectors, assuming a sector size of 512 bytes, that
+provides 256kB (as you advised above).
 
-I'm sorry, but I'm not going to include that sort of hyperbole in the man
-page.  A simple statement of what it does is sufficient.
+Your example was 3072 sectors, again assuming a sector size of 512
+bytes, that becomes 1.5MB (as you stated above).
 
-I have applied this patch.
+So how come my system has an alignment of 256k (1 x offset) while yours
+has 512k (1.5M/3) ?
 
-NeilBrown
-
-
-=46rom 401f095c39b732b4247bd728cb493eb7bb692298 Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Mon, 4 Mar 2013 17:25:36 +1100
-Subject: [PATCH] mdadm.8: Detail use for IMSM_NO_PLATFORM environment
- variable.
-
-Suggested-by: Marcin Tomczak <marcin.tomczak@intel.com>
-
-diff --git a/mdadm.8.in b/mdadm.8.in
-index a3abc2d..1c06533 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -2710,6 +2710,21 @@ to '1', the
- .I mdadm
- will create and devices that are needed.
-=20
-+.TP
-+.B IMSM_NO_PLATFORM
-+A key value of IMSM metadata is that it allows interoperability with
-+boot ROMs on Intel platforms, and with other major operating systems.
-+Consequently,
-+.I mdadm
-+will only allow an IMSM array to be created or modified if detects
-+that it is running on an Intel platform which supports IMSM, and
-+supports the particular configuration of IMSM that is being requested
-+(some functionality requires newer OROM support).
-+
-+These checks can be suppressed by setting IMSM_NO_PLATFORM=3D1 in the
-+environment.  This can be useful for testing or for disaster
-+recovery.  You should be aware that interoperability may be
-+compromised by setting this value.
- .SH EXAMPLES
-=20
- .B "  mdadm \-\-query /dev/name-of-device"
+I'm assuming that in any case, as you suggested, the main thing is that
+the answer I got (256kB offset) was equal to the MD chunk size (64kB)
+multiplied by the number of data drives (4), or 256kB.
 
 
---Sig_/hndDjUbXwNCt7K8sEjemGgw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+>> Also, pvdisplay tells me the PE Size is 4M, so I'm assuming that regardless of how the LV's are arranged, they will always be 512k aligned?
+> 
+> 256k, but yeah.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+So LVM will not allocate any LV a block of space smaller than 4M, and
+I'm assuming will always be on a 4M boundary from the beginning of the
+device. Since 4MB is a mulitple of 256kB, then alignment is OK?
 
-iQIVAwUBUTQ+mDnsnt1WYoG5AQLaqBAAgyeJ0/2q15nbvxY9AbwInCpPj8VPfzAm
-RgIZ1JrnX4B/X+G4qWCTCWXDdNwqPooQL8wPqWXLDGiHVjMhkHudzws3unKBH6f5
-Lot3WCzB4Mg33JsHKcglS99k/M3iVFE8Mt4caqJ+S8jdLtVaqsiUqZPuWLh6Fd2S
-Xo+BxEel1cT/btwkxc0f7DrFIo/otAauvHVrorvjzCjK5/7TnkF4Tw3f+d6XJI3G
-Deq1p4NMdWKauOI3mecbR3VEF6iW9X3QIUOK1/7SBjLQWl+lFlZVRjUXdNhN3cvt
-JJfnjYZRv6qNduiiZnJ9SSBKNsKIdxyXO9a/5BQhg3Q4KQwT1xhu0QhHQLNL2zY4
-lEGbfDLAq0nQHGxQr90fkBq9R14MuU6/aQ/99MNIsuVS1x3hwDTnfvIzjehSKQCo
-9YJWN1cxtsntd3PkCs2utd0KdlM/75P7bhJHojZyVMwQtOD5nVEtLttk6CXAtqUe
-OeSzK1pDcgy9NyqVCUw7B74ZatyA71bLttAZrOFPcobeakeiTDYdGQYylDA5RLvD
-XLHG5Kq+BOmsA9fo93YhSfiO6FWDdEeqXiKsyK+HIHXKUuapGLtoiW4k7RAWUHKF
-TZI58BuYvGYWHL+iDf1yuHgm+pvH460lo7WxQGj8QwGxllGxX/TOhicJWaCG8Onr
-rH9wud1pZ7I=
-=oljS
------END PGP SIGNATURE-----
+If the MD stripe size was larger, eg, if I added 2 more drives it would
+become 64kB chunk x 6 data drives = 384kB. This would mean my LVM is no
+longer properly aligned. The first block of 4MB would start at 256kB
+which is smaller than the stripe size, and each 4MB block would most
+likely not line up since 4MB is not divisible by 384kB?
 
---Sig_/hndDjUbXwNCt7K8sEjemGgw--
+So, if I ever choose to expand the array to include a larger number of
+devices (as opposed to replacing all members with larger drives), what
+would I need to do to fix all this up?
+
+Re-partition to start the partition at a higher starting sector (such
+that 4M / start sector * 512 produces an integer)?
+
+That resolves the first LVM block, but to ensure all other blocks are
+properly aligned, is the best answer to upgrade to 8 x data drives
+(512kB stripe size)? Or is there some other magic solution I'm missing here?
+
+>> So, is that enough to be sure that this is not an issue?
+> It looks to me like you are good on alignment.
+
+Thanks.
+
+On 04/03/13 16:25, Stan Hoeppner wrote:
+> If you have no gaps between this one and your other LVs, and each of 
+> them is evenly divisible by 512 sectors, then they should all be
+> aligned.
+
+Given the 4MB size of the LVM blocks, does that automatically make this
+true? I thought it did, but given your above comment, I'm unsure.
+
+Thanks,
+Adam
+
+
+-- 
+Adam Goryachev
+Website Managers
+www.websitemanagers.com.au
