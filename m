@@ -1,69 +1,99 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: Re: [PATCH 3/4] md: Don't do normal-write on unresync area of replacement-disk.
-Date: Mon, 4 Mar 2013 10:24:16 +0800
-Message-ID: <201303041024138712338@gmail.com>
-References: <201302281550356268273@gmail.com>,
-	<20130304130435.4113d2a4@notabene.brown>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 1/4] md/raid5: Reduce one write-operation when handle
+ badsector
+Date: Mon, 4 Mar 2013 13:25:33 +1100
+Message-ID: <20130304132533.571e8070@notabene.brown>
+References: <201302281550584027165@gmail.com>
+	<20130304124330.7eb81dde@notabene.brown>
+	<201303040952542954272@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/.m9KgXSzh4Omn3qmLfSZRPq"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201303040952542954272@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: majianpeng <majianpeng@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Pk9uIFRodSwgMjggRmViIDIwMTMgMTU6NTA6MzcgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVu
-Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gUmVwbGFjZW1lbnQgaXMgYSBmdWxsc3luYyB3aGlj
-aCBkb24ndCBkZXBlbnQgb24gYml0bWFwLlNvIHJlZ2FyZGxlc3Mgb2YNCj4+IHRoZSBwcmVzZW5j
-ZSBhbmQgYWJzZW5jZSBvZiBiaXRtYXAsIGl0IGRvIGZ1bGwgcmVzeW5jLg0KPj4gSWYgb2Zmc2V0
-IG9mIG5vcm1hbCBpbyBpcyBsYXJnZXIgdGhhbiBvZmZzZXQgb2YgcmVzeW5jLGl0IHdpbGwgd3Jp
-dGUNCj4+IGFnYWluIHdoZW4gcmVzeW5jIGFycml2ZWQgdGhpcyBvZmZzZXQuDQo+DQo+VGhpcyBt
-aWdodCBiZSBPSyBmb3IgUkFJRDEgYW5kIFJBSUQxMCBhcyByZWNvdmVyIGlzIHBhdXNlZCB3aGVu
-IHdyaXRlcw0KPmhhcHBlbiwgYnV0IHRoYXQgaXMgbm90IHRoZSBjYXNlIGZvciBSQUlENSwgc28g
-aXQgaXNuJ3Qgc2FmZSB0byB0ZXN0IGFnYWluc3QNCj5jdXJyX3Jlc3luYyAtIGl0IGdldHMgdXBk
-YXRlZCBhIGJpdCB0b28gbGF0ZXIuDQo+DQotPmN1cnJfcmVzeW5jICsgU1RSSVBFX1NFQ1RPUlMg
-aXMgdGhlIG5leHQgc3RyaXBlIHdoaWNoIHdpbGxiZSByZXBsYWNlZC4NCkhvdyBhYm91dCB0aGUg
-LT5jdXJyX3Jlc3luYytTVFJJUEVfU0VDVE9SUz8NCg0KPkFsc28geW91IG1lc3NlZCB1cCB0aGUg
-Zm9ybWF0dGluZyBpbiByYWlkMTAuYw0KPg0KQ2FuIHlvdSBleHBsYWluIGluIGRldGFpbD8NCj5J
-J20gbm90IGNvbnZpbmNlZCB0aGlzIG9wdGltaXNhdGlvbiBpcyByZWFsbHkgd29ydGggaXQuDQo+
-DQpNYXliZSBmb3IgSEREIGRpc2ssIGl0IG9ubHkgaW1wcm92ZSBzcGVlZCBieSByZWR1Y2luZyBz
-b21lIHdyaXRlIG9wZXJhdGlvbi4NCkJ1dCBmb3Igc3NkIGRpc2ssIGl0IGNhbiByZWR1Y2Ugb25l
-IHdyaXRlLg0KDQpUaGFua3MhDQpKaWFucGVuZyBNYQ0KPk5laWxCcm93bg0KPg0KPg0KPj4gDQo+
-PiBTaWduZWQtb2ZmLWJ5OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQo+PiAt
-LS0NCj4+ICBkcml2ZXJzL21kL3JhaWQxLmMgIHwgICAgNCArKystDQo+PiAgZHJpdmVycy9tZC9y
-YWlkMTAuYyB8ICAgIDQgKysrLQ0KPj4gIGRyaXZlcnMvbWQvcmFpZDUuYyAgfCAgICAzICsrLQ0K
-Pj4gIDMgZmlsZXMgY2hhbmdlZCwgOCBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQ0KPj4g
-DQo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkMS5jIGIvZHJpdmVycy9tZC9yYWlkMS5j
-DQo+PiBpbmRleCBkNWJkZGZjLi4xNDJhNWZhIDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVycy9tZC9y
-YWlkMS5jDQo+PiArKysgYi9kcml2ZXJzL21kL3JhaWQxLmMNCj4+IEBAIC0xMTczLDcgKzExNzMs
-OSBAQCByZWFkX2FnYWluOg0KPj4gIAkJCQlzZXRfYml0KFIxQklPX0RlZ3JhZGVkLCAmcjFfYmlv
-LT5zdGF0ZSk7DQo+PiAgCQkJY29udGludWU7DQo+PiAgCQl9DQo+PiAtDQo+PiArCQlpZiAodGVz
-dF9iaXQoUmVwbGFjZW1lbnQsICZyZGV2LT5mbGFncykgJiYNCj4+ICsJCQljb25mLT5tZGRldi0+
-Y3Vycl9yZXN5bmMgPCByMV9iaW8tPnNlY3RvcikNCj4+ICsJCQljb250aW51ZTsNCj4+ICAJCWF0
-b21pY19pbmMoJnJkZXYtPm5yX3BlbmRpbmcpOw0KPj4gIAkJaWYgKHRlc3RfYml0KFdyaXRlRXJy
-b3JTZWVuLCAmcmRldi0+ZmxhZ3MpKSB7DQo+PiAgCQkJc2VjdG9yX3QgZmlyc3RfYmFkOw0KPj4g
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDEwLmMgYi9kcml2ZXJzL21kL3JhaWQxMC5jDQo+
-PiBpbmRleCA2NGQ0ODI0Li5iYjExY2ZiIDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVycy9tZC9yYWlk
-MTAuYw0KPj4gKysrIGIvZHJpdmVycy9tZC9yYWlkMTAuYw0KPj4gQEAgLTEzMzcsNyArMTMzNyw5
-IEBAIHJldHJ5X3dyaXRlOg0KPj4gIAkJCSAgICAgfHwgdGVzdF9iaXQoVW5tZXJnZWQsICZyZGV2
-LT5mbGFncykpKQ0KPj4gIAkJCXJkZXYgPSBOVUxMOw0KPj4gIAkJaWYgKHJyZGV2ICYmICh0ZXN0
-X2JpdChGYXVsdHksICZycmRldi0+ZmxhZ3MpDQo+PiAtCQkJICAgICAgfHwgdGVzdF9iaXQoVW5t
-ZXJnZWQsICZycmRldi0+ZmxhZ3MpKSkNCj4+ICsJCQl8fCB0ZXN0X2JpdChVbm1lcmdlZCwgJnJy
-ZGV2LT5mbGFncykgfHwgDQo+PiArCQkJKHRlc3RfYml0KFJlcGxhY2VtZW50LCAmcnJkZXYtPmZs
-YWdzKSAmJg0KPj4gKwkJCWNvbmYtPm1kZGV2LT5jdXJyX3Jlc3luYyA8IHIxMF9iaW8tPnNlY3Rv
-cikpKQ0KPj4gIAkJCXJyZGV2ID0gTlVMTDsNCj4+ICANCj4+ICAJCXIxMF9iaW8tPmRldnNbaV0u
-YmlvID0gTlVMTDsNCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LmMgYi9kcml2ZXJz
-L21kL3JhaWQ1LmMNCj4+IGluZGV4IGJkNDk2MjMuLmUwYTJhMzkgMTAwNjQ0DQo+PiAtLS0gYS9k
-cml2ZXJzL21kL3JhaWQ1LmMNCj4+ICsrKyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gQEAgLTYw
-Miw3ICs2MDIsOCBAQCBzdGF0aWMgdm9pZCBvcHNfcnVuX2lvKHN0cnVjdCBzdHJpcGVfaGVhZCAq
-c2gsIHN0cnVjdCBzdHJpcGVfaGVhZF9zdGF0ZSAqcykNCj4+ICAJCQlyZGV2ID0gTlVMTDsNCj4+
-ICAJCWlmIChyZGV2KQ0KPj4gIAkJCWF0b21pY19pbmMoJnJkZXYtPm5yX3BlbmRpbmcpOw0KPj4g
-LQkJaWYgKHJyZGV2ICYmIHRlc3RfYml0KEZhdWx0eSwgJnJyZGV2LT5mbGFncykpDQo+PiArCQlp
-ZiAocnJkZXYgJiYgKHRlc3RfYml0KEZhdWx0eSwgJnJyZGV2LT5mbGFncykgfHwNCj4+ICsJCQlj
-b25mLT5tZGRldi0+Y3Vycl9yZXN5bmMgPCBzaC0+c2VjdG9yKSkNCj4+ICAJCQlycmRldiA9IE5V
-TEw7DQo+PiAgCQlpZiAocnJkZXYpDQo+PiAgCQkJYXRvbWljX2luYygmcnJkZXYtPm5yX3BlbmRp
-bmcpOw0KPg0KPg==
+--Sig_/.m9KgXSzh4Omn3qmLfSZRPq
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, 4 Mar 2013 09:52:57 +0800 majianpeng <majianpeng@gmail.com> wrote:
+
+> >On Thu, 28 Feb 2013 15:51:01 +0800 majianpeng <majianpeng@gmail.com> wro=
+te:
+> >
+> >> For badsector,it took two steps:rewrite and reread.So for
+> >> write-operation,it make no sense to rewrite after write-operation.
+> >
+> >Please please please please please try to explain yourself better.
+> >
+> Sorry for that.=20
+> >This patch doesn't make any sense.  The write succeeded.  We set the Mad=
+eGood
+> >flag so that later code will remove the block from the bad-block list.
+> >There will be no re-read or re-write.
+> >
+> For a striep which contain badsector is doing write-operation.
+> In analyse_stripe, it check badsector and set R5_ReadError.
+>  write--->MadeGood->clear badblock log. But it can't clear R5_ReadError f=
+lag.
+> So it will exec those code in func handle_stripe:
+
+After you wrote that, did you read it again to see if it makes any sense?  =
+It
+does but only just.
+
+I'd rather have a good explanation in the code so it is clear what is going
+on.
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 3e0ec16..277d9c2 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1911,8 +1911,15 @@ static void raid5_end_write_request(struct bio *bi, =
+int error)
+ 					&rdev->mddev->recovery);
+ 		} else if (is_badblock(rdev, sh->sector,
+ 				       STRIPE_SECTORS,
+-				       &first_bad, &bad_sectors))
++				       &first_bad, &bad_sectors)) {
+ 			set_bit(R5_MadeGood, &sh->dev[i].flags);
++			if (test_bit(R5_ReadError, &sh->dev[i].flags))
++				/* That was a successful write so make
++				 * sure it looks like we already did
++				 * a re-write.
++				 */
++				set_bit(R5_ReWrite, &sh->dev[i].flags);
++		}
+ 	}
+ 	rdev_dec_pending(rdev, conf->mddev);
+=20
+Thanks,
+NeilBrown
+
+--Sig_/.m9KgXSzh4Omn3qmLfSZRPq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUTQGHTnsnt1WYoG5AQIyHA/+PXsuJEzWvA2eyUjFQh+yj5HB0C1j/8d8
+I6c1i3Ngb/gT9OWk7iJfuGtn4stZ5A3H7c5NV5s9INu+UKABvQ+ZpTjeK2Bx+gjC
+UMvr8byUAImfd6zrg9hdJ85dDz0W5WXN8hNvbckIqvjMG8XdA/lUItYvcPZSOHdq
+8TnqH1A/7cSXhWkBEWqvMbpqoO6bVlx1y4Vyg8JyND0O2xgA4vwSZphCA+J3zIHk
+8BOB87yF7WrxHxFDikMGiXDRX9uToFUXtvDHSBwC5xQjKWCk/MXZBfzYJtaYsUx+
+iaJLu7qpWLrJNKOn92+ySiwTYQqb9lP7Ed0nFX5eO5AHi2O08lCvL8UGzfpZtrHg
+UHQPeLWRz7JhopXNXl1RF6sbPAS8YYqHvleYqywmjEt4SoQABRZQWN/zkm3J0SrD
+Ci0QpPDQJHvvxacQ6gGirTrsrufD578de4PLGndTkuG6bipLlYzSHBSperYYhS1G
+YJpRFm/HJvsMInZlB5IcHucF3PySSt03EVxhtKo5yaKuVqyXBmmncBWU2Ai3b3t5
+mTHotcPZniRCVVbXFYuEY7nPIULNPcaxyG/gDpkZfq/pxxednT54Wm5LhQdE9Rgl
+1y6MUa4Iyl0w0ilm0vQ69A2DiulPlTfSw95rDUWyi7EuwKsmhFni5E6GYVwz4ERK
+iQAH72VQ6Rc=
+=R9va
+-----END PGP SIGNATURE-----
+
+--Sig_/.m9KgXSzh4Omn3qmLfSZRPq--
