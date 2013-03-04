@@ -1,134 +1,43 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: DDF / RAID10 patch series for mdadm
-Date: Mon, 4 Mar 2013 16:22:54 +1100
-Message-ID: <20130304162254.3ce38218@notabene.brown>
-References: <1362176913-6804-1-git-send-email-mwilck@arcor.de>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: RAID performance - new kernel results - 5x SSD RAID5
+Date: Sun, 03 Mar 2013 23:25:21 -0600
+Message-ID: <51343041.9010305@hardwarefreak.com>
+References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <5113A2D6.20104@websitemanagers.com.au> <CAKHEz2YgiQiknBXju9a=PR3zV1Hb7ux8yBZWywiTi=BXFm20GA@mail.gmail.com> <51150475.2020803@websitemanagers.com.au> <5120A84E.4020702@websitemanagers.com.au> <51222A81.9080600@hardwarefreak.com> <51250377.509@websitemanagers.com.au> <5125B8E5.5000502@hardwarefreak.com> <5125C154.3090603@websitemanagers.com.au> <51272808.7070302@hardwarefreak.com> <512A79D3.9020502@hardwarefreak.com> <5130D206.4090302@websitemanagers.com.au> <5131C338.8010402@hardwarefreak.com> <513231BB.4070903@turmel.org> <ac5cdf66-ba01-4d7b-bd7b-60fb67517ad
+ 4@email.android.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/jqU.uEoZ_ypBFGv=GP71uYl"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1362176913-6804-1-git-send-email-mwilck@arcor.de>
+In-Reply-To: <ac5cdf66-ba01-4d7b-bd7b-60fb67517ad4@email.android.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: mwilck@arcor.de
-Cc: linux-raid@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: Phil Turmel <philip@turmel.org>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/jqU.uEoZ_ypBFGv=GP71uYl
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 3/3/2013 9:19 AM, Adam Goryachev wrote:
+> Phil Turmel <philip@turmel.org> wrote:
+...
+>> Run "dmsetup table" and look at the start sectors for your volumes:
+>> Fast-Root: 0 314572800 linear 9:3 3072
+>> This volume starts at sector 3072 (1.5MB) on /dev/sda3.  So the volume
+>> alignment within LVM is 512K.
+> 
+> I see this (for the first LV)
+> vg0-hostname: 0 204808192 linear 147:2 512
+> So, I'm guessing mine is starting at 512, and is also aligned at 512k ?
+> 
+> Also, pvdisplay tells me the PE Size is 4M, so I'm assuming that regardless of how the LV's are arranged, they will always be 512k aligned?
+> 
+> So, is that enough to be sure that this is not an issue?
 
-On Fri,  1 Mar 2013 23:28:21 +0100 mwilck@arcor.de wrote:
+If it starts at sector 512, that should be the first sector of the 2nd
+md/RAID stripe, so the first sector of the LV is aligned.  204,808,192
+sectors divided by a 256KB stripe width equals 400,016 stripes (a whole
+number), so this partition is correctly aligned to the RAID device.  If
+you have no gaps between this one and your other LVs, and each of them
+is evenly divisible by 512 sectors, then they should all be aligned.
 
-> Hello Neil, hello everybody,
->=20
-> I am working on improved DDF support in mdadm. I would be grateful
-> for a review on this patch series. The main new feature is support for
-> RAID 10 in DDF, such that md is able to interoperate with an LSI=20
-> Megaraid Software RAID driver on a RAID10 array.
->=20
-> The DDF/RAID10 support is not feature complete, but usable. Both
-> assembly and incremental assembly work as expected. I verified that
-> the 2+2 layout maps cleanly to that used by the LSI SW RAID stack. Meta
-> data are saved cleanly and interpreted correctly by the LSI stack.
-> What is yet missing is code to handle disk failures and additions.
-> I would appreciate some guidance in that area, in particular how to test =
-it.
->=20
-> In the DDF Spec, RAID10 is a special case of the broad "secondary RAID
-> level" concept. The intersection between DDF RAID 10 and md RAID 10 is
-> tiny - just the "near" layout with an even number of disks. Fortunately t=
-his
-> is also the only type of "secondary RAID" supported by my LSI stack,
-> and generally the most common multilevel RAID, AFAICT.
->=20
-> The DDF 2nd level RAID concept would be matched more closely by a
-> different approach where md only creates the BVDs and the secondary
-> RAID is implemented with the device mapper on top of it. But I opted
-> for the direct mapping of DDF RAID10 to md RAID10 for several reasons:
-> 1) dm wouldn't handle the generic "striped" and "spanned" secondary
-> levels out-of-the box, either. 2) I wanted to take full benefit of the
-> advanced features and performance of md RAID10 (it actually performed
-> better than the LSI stack in a few simple benchmarks).  3) It is
-> simpler to handle this way. 4) This is non-exclusive, code could still
-> be added later to use dm for more "exotic" secondary DDF RAID levels.
->=20
-> The series stars out with 3 patches I already submitted a while
-> ago. They fix interoperability related to meta data handling, in particul=
-ar
-> DDF header locations and Sequential numbers. They are unrelated to RAID10.
->=20
-> Patch 4..9 introduce support for DDF RAID 10. The current mdadm
-> implementation of DDF ignores secondary level completely and stores
-> only the BVD information in the super block, one BVD for every DDF
-> "Virtual disk configuration record". I had to add an additional data
-> structure to hold information about the "other BVDs" belonging to a
-> second level RAID set. The most intersting stuff happens in
-> container_content_ddf, which translates the DDF RAID 10 setup into md
-> structures.
->=20
-> Patch 10 adds some missing sanity checks in compare_super_ddf. Patch 11
-> extends compare_super_ddf() such that information from the new disk that
-> is missing in the current superblock is added. This fixes a problem where
-> mdmon would save updated meta data only on those disks that were present
-> while mdadm was started, not on disks added later.
->=20
-> Finally, patch 12 is a small improvement to Detail() that results in
-> better output of mdadm -D for complex DDF setups.
->=20
-> Regards
-> Martin
->=20
-> Martin Wilck (12):
->   DDF: cleanly save the secondary DDF structure
->   DDF: use existing locations for primary and secondary DDF structure
->   DDF: increase seq number when writing meta data
->   DDF: added other_bvd to struct vcl
->   DDF: load_ddf_local: store VD conf for other BVDs
->   DDF: container_content_ddf: change array disk search loop
->   DDF: container_content_ddf: check for secondary RAID
->   DDF: container_content_ddf: handle RAID layout for RAID10
->   DDF: __write_init_super_ddf: use correct VD conf
->   DDF: add sanity checks in compare_super_ddf
->   DDF: compare_super_ddf: merge local info of other superblock
->   Detail.c: call load_container for container subarrays
->=20
->  Detail.c    |   10 +-
->  super-ddf.c |  556 ++++++++++++++++++++++++++++++++++++++++++++++++++---=
-------
->  2 files changed, 484 insertions(+), 82 deletions(-)
->=20
+-- 
+Stan
 
-Wow! Thanks for these!  Happy to see DDF getting some attention.
-
-I've applied all the patches (with a few minor cosmetic changes).  I haven't
-studied them all very closely, but I what I did examine looked good.
-
-If you could add some tests to the 'tests' directory to make sure that
-ddf/raid10 keeps working that would be great.
-
-Thanks,
-NeilBrown
-
---Sig_/jqU.uEoZ_ypBFGv=GP71uYl
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUTQvrjnsnt1WYoG5AQIWmxAAvkWdApDIry1JVwKoVsIJ5YAGN36KxsYg
-HNhz8aR0T5HL7NsjjDc6qAuxElwaVbPWOE1gl/XS06ymCoE9lu+EH2ASSkgZ2eZ1
-XICSLZNP5miZ5CS9pFfjASobmk5x3DTLFj6mjne1k0E2U3CJBceKcUi5S4FOyLYl
-AYwJEAmnJV2TygSALb90LNz8G/Q81ULMB9l3SvVcARM3ZUFq4NXTqjR+GVzNOG+Z
-2cdNKuC425l2wOu9W900+0db+QE9mfy4UbzyDoMDuVpALc7gyt3J2z3C5GDZ+wza
-QwhWR/vONOXPvhAhBQ1FozfOuqx/EEbdJ7x1auFVDDOvyIP+yMRcZ1eTZbhAUKpe
-+N9J/qFa4a1p0sjBPZ5Ng4wklQCCf8bFI7EXbxfcIerIjcvSbX3joqvZwDz3PZlF
-1TCIGxCsaAxc4AaOc7FuDL7yO6/hRYHVp+V04yVJIdn8MQtM9RW0Q2tmuQAMI0dg
-PhuwnCA2nSprKMPSLWcgmSHT2rFEoZa+P63S4fI+h/NpS+aVyLomCQxSRcml0Wwi
-cLsHxB8iiDBR1kgFEs+yikdyIHOjCw4+6POcVwRCtjVjQTSM0KkZfafn52gSRSlB
-Rv2E2J6nepBY5453ErTtzrk3xPV2Ubcn5+nqDB/N8USFOJYpqW/GLSDUAZteyR54
-29qPBMBmldw=
-=8hwt
------END PGP SIGNATURE-----
-
---Sig_/jqU.uEoZ_ypBFGv=GP71uYl--
