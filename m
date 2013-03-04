@@ -1,74 +1,69 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 4/4] md: Add prompt message about wantreplacement disk
- in /proc/mdstat
-Date: Mon, 4 Mar 2013 13:05:31 +1100
-Message-ID: <20130304130531.047b4879@notabene.brown>
-References: <201302281550256355711@gmail.com>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH 3/4] md: Don't do normal-write on unresync area of replacement-disk.
+Date: Mon, 4 Mar 2013 10:24:16 +0800
+Message-ID: <201303041024138712338@gmail.com>
+References: <201302281550356268273@gmail.com>,
+	<20130304130435.4113d2a4@notabene.brown>
+Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/UShXq+aZ9Kd3TMn_W/cFcDb"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201302281550256355711@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/UShXq+aZ9Kd3TMn_W/cFcDb
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Pk9uIFRodSwgMjggRmViIDIwMTMgMTU6NTA6MzcgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVu
+Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gUmVwbGFjZW1lbnQgaXMgYSBmdWxsc3luYyB3aGlj
+aCBkb24ndCBkZXBlbnQgb24gYml0bWFwLlNvIHJlZ2FyZGxlc3Mgb2YNCj4+IHRoZSBwcmVzZW5j
+ZSBhbmQgYWJzZW5jZSBvZiBiaXRtYXAsIGl0IGRvIGZ1bGwgcmVzeW5jLg0KPj4gSWYgb2Zmc2V0
+IG9mIG5vcm1hbCBpbyBpcyBsYXJnZXIgdGhhbiBvZmZzZXQgb2YgcmVzeW5jLGl0IHdpbGwgd3Jp
+dGUNCj4+IGFnYWluIHdoZW4gcmVzeW5jIGFycml2ZWQgdGhpcyBvZmZzZXQuDQo+DQo+VGhpcyBt
+aWdodCBiZSBPSyBmb3IgUkFJRDEgYW5kIFJBSUQxMCBhcyByZWNvdmVyIGlzIHBhdXNlZCB3aGVu
+IHdyaXRlcw0KPmhhcHBlbiwgYnV0IHRoYXQgaXMgbm90IHRoZSBjYXNlIGZvciBSQUlENSwgc28g
+aXQgaXNuJ3Qgc2FmZSB0byB0ZXN0IGFnYWluc3QNCj5jdXJyX3Jlc3luYyAtIGl0IGdldHMgdXBk
+YXRlZCBhIGJpdCB0b28gbGF0ZXIuDQo+DQotPmN1cnJfcmVzeW5jICsgU1RSSVBFX1NFQ1RPUlMg
+aXMgdGhlIG5leHQgc3RyaXBlIHdoaWNoIHdpbGxiZSByZXBsYWNlZC4NCkhvdyBhYm91dCB0aGUg
+LT5jdXJyX3Jlc3luYytTVFJJUEVfU0VDVE9SUz8NCg0KPkFsc28geW91IG1lc3NlZCB1cCB0aGUg
+Zm9ybWF0dGluZyBpbiByYWlkMTAuYw0KPg0KQ2FuIHlvdSBleHBsYWluIGluIGRldGFpbD8NCj5J
+J20gbm90IGNvbnZpbmNlZCB0aGlzIG9wdGltaXNhdGlvbiBpcyByZWFsbHkgd29ydGggaXQuDQo+
+DQpNYXliZSBmb3IgSEREIGRpc2ssIGl0IG9ubHkgaW1wcm92ZSBzcGVlZCBieSByZWR1Y2luZyBz
+b21lIHdyaXRlIG9wZXJhdGlvbi4NCkJ1dCBmb3Igc3NkIGRpc2ssIGl0IGNhbiByZWR1Y2Ugb25l
+IHdyaXRlLg0KDQpUaGFua3MhDQpKaWFucGVuZyBNYQ0KPk5laWxCcm93bg0KPg0KPg0KPj4gDQo+
+PiBTaWduZWQtb2ZmLWJ5OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQo+PiAt
+LS0NCj4+ICBkcml2ZXJzL21kL3JhaWQxLmMgIHwgICAgNCArKystDQo+PiAgZHJpdmVycy9tZC9y
+YWlkMTAuYyB8ICAgIDQgKysrLQ0KPj4gIGRyaXZlcnMvbWQvcmFpZDUuYyAgfCAgICAzICsrLQ0K
+Pj4gIDMgZmlsZXMgY2hhbmdlZCwgOCBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQ0KPj4g
+DQo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkMS5jIGIvZHJpdmVycy9tZC9yYWlkMS5j
+DQo+PiBpbmRleCBkNWJkZGZjLi4xNDJhNWZhIDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVycy9tZC9y
+YWlkMS5jDQo+PiArKysgYi9kcml2ZXJzL21kL3JhaWQxLmMNCj4+IEBAIC0xMTczLDcgKzExNzMs
+OSBAQCByZWFkX2FnYWluOg0KPj4gIAkJCQlzZXRfYml0KFIxQklPX0RlZ3JhZGVkLCAmcjFfYmlv
+LT5zdGF0ZSk7DQo+PiAgCQkJY29udGludWU7DQo+PiAgCQl9DQo+PiAtDQo+PiArCQlpZiAodGVz
+dF9iaXQoUmVwbGFjZW1lbnQsICZyZGV2LT5mbGFncykgJiYNCj4+ICsJCQljb25mLT5tZGRldi0+
+Y3Vycl9yZXN5bmMgPCByMV9iaW8tPnNlY3RvcikNCj4+ICsJCQljb250aW51ZTsNCj4+ICAJCWF0
+b21pY19pbmMoJnJkZXYtPm5yX3BlbmRpbmcpOw0KPj4gIAkJaWYgKHRlc3RfYml0KFdyaXRlRXJy
+b3JTZWVuLCAmcmRldi0+ZmxhZ3MpKSB7DQo+PiAgCQkJc2VjdG9yX3QgZmlyc3RfYmFkOw0KPj4g
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDEwLmMgYi9kcml2ZXJzL21kL3JhaWQxMC5jDQo+
+PiBpbmRleCA2NGQ0ODI0Li5iYjExY2ZiIDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVycy9tZC9yYWlk
+MTAuYw0KPj4gKysrIGIvZHJpdmVycy9tZC9yYWlkMTAuYw0KPj4gQEAgLTEzMzcsNyArMTMzNyw5
+IEBAIHJldHJ5X3dyaXRlOg0KPj4gIAkJCSAgICAgfHwgdGVzdF9iaXQoVW5tZXJnZWQsICZyZGV2
+LT5mbGFncykpKQ0KPj4gIAkJCXJkZXYgPSBOVUxMOw0KPj4gIAkJaWYgKHJyZGV2ICYmICh0ZXN0
+X2JpdChGYXVsdHksICZycmRldi0+ZmxhZ3MpDQo+PiAtCQkJICAgICAgfHwgdGVzdF9iaXQoVW5t
+ZXJnZWQsICZycmRldi0+ZmxhZ3MpKSkNCj4+ICsJCQl8fCB0ZXN0X2JpdChVbm1lcmdlZCwgJnJy
+ZGV2LT5mbGFncykgfHwgDQo+PiArCQkJKHRlc3RfYml0KFJlcGxhY2VtZW50LCAmcnJkZXYtPmZs
+YWdzKSAmJg0KPj4gKwkJCWNvbmYtPm1kZGV2LT5jdXJyX3Jlc3luYyA8IHIxMF9iaW8tPnNlY3Rv
+cikpKQ0KPj4gIAkJCXJyZGV2ID0gTlVMTDsNCj4+ICANCj4+ICAJCXIxMF9iaW8tPmRldnNbaV0u
+YmlvID0gTlVMTDsNCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LmMgYi9kcml2ZXJz
+L21kL3JhaWQ1LmMNCj4+IGluZGV4IGJkNDk2MjMuLmUwYTJhMzkgMTAwNjQ0DQo+PiAtLS0gYS9k
+cml2ZXJzL21kL3JhaWQ1LmMNCj4+ICsrKyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gQEAgLTYw
+Miw3ICs2MDIsOCBAQCBzdGF0aWMgdm9pZCBvcHNfcnVuX2lvKHN0cnVjdCBzdHJpcGVfaGVhZCAq
+c2gsIHN0cnVjdCBzdHJpcGVfaGVhZF9zdGF0ZSAqcykNCj4+ICAJCQlyZGV2ID0gTlVMTDsNCj4+
+ICAJCWlmIChyZGV2KQ0KPj4gIAkJCWF0b21pY19pbmMoJnJkZXYtPm5yX3BlbmRpbmcpOw0KPj4g
+LQkJaWYgKHJyZGV2ICYmIHRlc3RfYml0KEZhdWx0eSwgJnJyZGV2LT5mbGFncykpDQo+PiArCQlp
+ZiAocnJkZXYgJiYgKHRlc3RfYml0KEZhdWx0eSwgJnJyZGV2LT5mbGFncykgfHwNCj4+ICsJCQlj
+b25mLT5tZGRldi0+Y3Vycl9yZXN5bmMgPCBzaC0+c2VjdG9yKSkNCj4+ICAJCQlycmRldiA9IE5V
+TEw7DQo+PiAgCQlpZiAocnJkZXYpDQo+PiAgCQkJYXRvbWljX2luYygmcnJkZXYtPm5yX3BlbmRp
+bmcpOw0KPg0KPg==
 
-On Thu, 28 Feb 2013 15:50:28 +0800 majianpeng <majianpeng@gmail.com> wrote:
-
-> From file "/proc/mdstat",we only get the disk which replacing.But we
-> can't get the disk which want repalce.So add the info.
->=20
-> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
-> ---
->  drivers/md/md.c |    2 ++
->  1 file changed, 2 insertions(+)
->=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 3db3d1b..4935dbe 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -7017,6 +7017,8 @@ static int md_seq_show(struct seq_file *seq, void *=
-v)
->  				seq_printf(seq, "(S)"); /* spare */
->  			if (test_bit(Replacement, &rdev->flags))
->  				seq_printf(seq, "(R)");
-> +			if (test_bit(WantReplacement, &rdev->flags))
-> +				seq_printf(seq, "(WR)");
->  			sectors +=3D rdev->sectors;
->  		}
-> =20
-
-If you really need it you can get it from /sys.
-
-not applied.
-
-NeilBrown
-
---Sig_/UShXq+aZ9Kd3TMn_W/cFcDb
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUTQBaznsnt1WYoG5AQJl2xAAhExkFHaey28monMlrkqaBFr6lnFdiYjb
-wCDhPFF0FP/Ku2M1LAA1hmUMgsTryaExLF9zgpjPn4nSX4ojAuHNAt5ba6dwh6no
-+Bl5Shb+rcxT6CNCUyeh+NTP1SY4LAU1COXHF0nQ5Yuijv+rvAKk9h+scVlUKjrW
-wGCpafvxRC/FQ6zWk6G1y4PMgf5gYXnfqeTLA834fP8bPEgzj2lzUfX05zG4ZUOx
-tPw4ixSTIYk2rHXjVgtrYsdt9mL6JQIgzRqwWZAiOiKXbax/YxMB1/WogMvVeDEu
-UcebnhW0wbgProbn7HOFe2tnByI4E3kH7r+XMqgAdc0S3dplzKAJ5JYxDjlIV0Td
-UMYwAoV2YVzj8L18pLAnk7q8hTZyoCsF942iHTd0Em4MBqjkMmkFb24z/lcTO3bY
-dwSsphFVU5KgPbevCVqT8gWzykDDkFaXHVgpMhLquM+BOeoBTetfTD+yIEDrcXln
-0nlHHZWm3ut0crZaq4Hp0rxjNHd90+jqN7QY5pexaunNKDQOqWAaAQxCxom8M1zG
-cmzDfzjqCzHrzzYFtAsoxRPTJuGJpPtKxnXHAE8EmQRsEiYxVr1r70JfIA4bYeKp
-tyS055sH8YiJiLbSpufAPn7UVnL5hSjg/AKkpGjqGi3PzoScx1+zuWTqXsn+hvYf
-/3IzP4k/rpw=
-=/3iI
------END PGP SIGNATURE-----
-
---Sig_/UShXq+aZ9Kd3TMn_W/cFcDb--
