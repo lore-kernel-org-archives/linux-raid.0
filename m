@@ -1,76 +1,71 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/4] md/raid5: Tune judgements order.
-Date: Mon, 4 Mar 2013 12:49:40 +1100
-Message-ID: <20130304124940.398eda52@notabene.brown>
-References: <201302281550441221244@gmail.com>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH 1/4] md/raid5: Reduce one write-operation when handle badsector
+Date: Mon, 4 Mar 2013 09:52:57 +0800
+Message-ID: <201303040952542954272@gmail.com>
+References: <201302281550584027165@gmail.com>,
+	<20130304124330.7eb81dde@notabene.brown>
+Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/UwbHw_Y.4nBUnt4GraG.TBF"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201302281550441221244@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/UwbHw_Y.4nBUnt4GraG.TBF
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Pk9uIFRodSwgMjggRmViIDIwMTMgMTU6NTE6MDEgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVu
+Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gRm9yIGJhZHNlY3RvcixpdCB0b29rIHR3byBzdGVw
+czpyZXdyaXRlIGFuZCByZXJlYWQuU28gZm9yDQo+PiB3cml0ZS1vcGVyYXRpb24saXQgbWFrZSBu
+byBzZW5zZSB0byByZXdyaXRlIGFmdGVyIHdyaXRlLW9wZXJhdGlvbi4NCj4NCj5QbGVhc2UgcGxl
+YXNlIHBsZWFzZSBwbGVhc2UgcGxlYXNlIHRyeSB0byBleHBsYWluIHlvdXJzZWxmIGJldHRlci4N
+Cj4NClNvcnJ5IGZvciB0aGF0LiANCj5UaGlzIHBhdGNoIGRvZXNuJ3QgbWFrZSBhbnkgc2Vuc2Uu
+ICBUaGUgd3JpdGUgc3VjY2VlZGVkLiAgV2Ugc2V0IHRoZSBNYWRlR29vZA0KPmZsYWcgc28gdGhh
+dCBsYXRlciBjb2RlIHdpbGwgcmVtb3ZlIHRoZSBibG9jayBmcm9tIHRoZSBiYWQtYmxvY2sgbGlz
+dC4NCj5UaGVyZSB3aWxsIGJlIG5vIHJlLXJlYWQgb3IgcmUtd3JpdGUuDQo+DQpGb3IgYSBzdHJp
+ZXAgd2hpY2ggY29udGFpbiBiYWRzZWN0b3IgaXMgZG9pbmcgd3JpdGUtb3BlcmF0aW9uLg0KSW4g
+YW5hbHlzZV9zdHJpcGUsIGl0IGNoZWNrIGJhZHNlY3RvciBhbmQgc2V0IFI1X1JlYWRFcnJvci4N
+CiB3cml0ZS0tLT5NYWRlR29vZC0+Y2xlYXIgYmFkYmxvY2sgbG9nLiBCdXQgaXQgY2FuJ3QgY2xl
+YXIgUjVfUmVhZEVycm9yIGZsYWcuDQpTbyBpdCB3aWxsIGV4ZWMgdGhvc2UgY29kZSBpbiBmdW5j
+IGhhbmRsZV9zdHJpcGU6DQo+ICAgICAgICAvKiBJZiB0aGUgZmFpbGVkIGRyaXZlcyBhcmUganVz
+dCBhIFJlYWRFcnJvciwgdGhlbiB3ZSBtaWdodCBuZWVkDQo+ICAgICAgICAgKiB0byBwcm9ncmVz
+cyB0aGUgcmVwYWlyL2NoZWNrIHByb2Nlc3MNCj4gICAgICAgICAqLw0KPiAgICAgICAgaWYgKHMu
+ZmFpbGVkIDw9IGNvbmYtPm1heF9kZWdyYWRlZCAmJiAhY29uZi0+bWRkZXYtPnJvKQ0KPiAgICAg
+ICAgICAgICAgICBmb3IgKGkgPSAwOyBpIDwgcy5mYWlsZWQ7IGkrKykgew0KPiAgICAgICAgICAg
+ICAgICAgICAgICAgIHN0cnVjdCByNWRldiAqZGV2ID0gJnNoLT5kZXZbcy5mYWlsZWRfbnVtW2ld
+XTsNCj4gICAgICAgICAgICAgICAgICAgICAgICBpZiAodGVzdF9iaXQoUjVfUmVhZEVycm9yLCAm
+ZGV2LT5mbGFncykNCj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgJiYgIXRlc3RfYml0KFI1
+X0xPQ0tFRCwgJmRldi0+ZmxhZ3MpDQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICYmIHRl
+c3RfYml0KFI1X1VQVE9EQVRFLCAmZGV2LT5mbGFncykNCj4gICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICkgeyAgDQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBpZiAoIXRl
+c3RfYml0KFI1X1JlV3JpdGUsICZkZXYtPmZsYWdzKSkgew0KPiAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICBzZXRfYml0KFI1X1dhbnR3cml0ZSwgJmRldi0+ZmxhZ3MpOw0K
+PiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzZXRfYml0KFI1X1JlV3Jp
+dGUsICZkZXYtPmZsYWdzKTsNCj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgc2V0X2JpdChSNV9MT0NLRUQsICZkZXYtPmZsYWdzKTsNCj4gICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgcy5sb2NrZWQrKzsNCj4gICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIH0gZWxzZSB7DQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIC8qIGxldCdzIHJlYWQgaXQgYmFjayAqLw0KPiAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICBzZXRfYml0KFI1X1dhbnRyZWFkLCAmZGV2LT5mbGFncyk7DQo+ICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc2V0X2JpdChSNV9MT0NLRUQsICZkZXYt
+PmZsYWdzKTsNCj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzLmxvY2tl
+ZCsrOw0KPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfSAgICANCj4gICAgICAgICAg
+ICAgICAgICAgICAgICB9ICAgIA0KPiAgICAgICAgICAgICAgICB9ICAgIA0KDQpCdXQgdGhlIGZs
+YWcgUmVXcml0ZSBjYW4ndCBzZXQuIFNvIGl0IGRvIHdyaXRlLW9wZXJhdG9pbiBhZ2Fpbi5UaGVu
+IGRvIHJlYWQtb3BlcmF0aW9uLg0KDQpUaGFua3MhDQpKaWFucGVuZyBNYQ0KPk5laWxCcm93bg0K
+Pg0KPg0KPj4gDQo+PiBTaWduZWQtb2ZmLWJ5OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFp
+bC5jb20+DQo+PiAtLS0NCj4+ICBkcml2ZXJzL21kL3JhaWQ1LmMgfCAgICA0ICsrKy0NCj4+ICAx
+IGZpbGUgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pDQo+PiANCj4+IGRp
+ZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LmMgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCj4+IGlu
+ZGV4IDE5ZDc3YTAuLjU5YzA1NjkgMTAwNjQ0DQo+PiAtLS0gYS9kcml2ZXJzL21kL3JhaWQ1LmMN
+Cj4+ICsrKyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gQEAgLTE5MjEsOCArMTkyMSwxMCBAQCBz
+dGF0aWMgdm9pZCByYWlkNV9lbmRfd3JpdGVfcmVxdWVzdChzdHJ1Y3QgYmlvICpiaSwgaW50IGVy
+cm9yKQ0KPj4gIAkJCQkJJnJkZXYtPm1kZGV2LT5yZWNvdmVyeSk7DQo+PiAgCQl9IGVsc2UgaWYg
+KGlzX2JhZGJsb2NrKHJkZXYsIHNoLT5zZWN0b3IsDQo+PiAgCQkJCSAgICAgICBTVFJJUEVfU0VD
+VE9SUywNCj4+IC0JCQkJICAgICAgICZmaXJzdF9iYWQsICZiYWRfc2VjdG9ycykpDQo+PiArCQkJ
+CSAgICAgICAmZmlyc3RfYmFkLCAmYmFkX3NlY3RvcnMpKSB7DQo+PiAgCQkJc2V0X2JpdChSNV9N
+YWRlR29vZCwgJnNoLT5kZXZbaV0uZmxhZ3MpOw0KPj4gKwkJCXNldF9iaXQoUjVfUmVXcml0ZSwg
+JnNoLT5kZXZbaV0uZmxhZ3MpOw0KPj4gKwkJfQ0KPj4gIAl9DQo+PiAgCXJkZXZfZGVjX3BlbmRp
+bmcocmRldiwgY29uZi0+bWRkZXYpOw0KPj4gIA0KPg0KPg==
 
-On Thu, 28 Feb 2013 15:50:47 +0800 majianpeng <majianpeng@gmail.com> wrote:
-
-> To reduce the unnecessary function call in certain condtitions,it should
-> tune judgements order.
->=20
-> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
-> ---
->  drivers/md/raid5.c |    7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 59c0569..bd49623 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -4665,9 +4665,10 @@ static inline sector_t sync_request(struct mddev *=
-mddev, sector_t sector_nr, int
->  		*skipped =3D 1;
->  		return rv;
->  	}
-> -	if (!bitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks, 1) &&
-> -	    !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
-> -	    !conf->fullsync && sync_blocks >=3D STRIPE_SECTORS) {
-> +	if (!test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
-> +		!conf->fullsync &&
-> +		!bitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks, 1) &&
-> +		sync_blocks >=3D STRIPE_SECTORS) {
->  		/* we can skip this block, and probably more */
->  		sync_blocks /=3D STRIPE_SECTORS;
->  		*skipped =3D 1;
-
-applied, thanks (after fixing up the formatting).
-
-NeilBrown
-
---Sig_/UwbHw_Y.4nBUnt4GraG.TBF
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUTP9tDnsnt1WYoG5AQKC+w/+J73cR9hYhXkTZJLwhULnL9dt9T2EEitU
-v60FQ2TQQwbmt6tneuL1pSkNlRRUHYwqd1YMOO7WpDmLa3r+0kyautqyVMr+c19W
-cBWqdz7uPSLOWNp5ngSAKMBnrWjilFDdnC3nm2Dh1bhv2VGgANJkyyutX8dE87/c
-YaHdq34Pa0/8DoBluSWCV11kH5Qm6f2MfKGjX0u7DnBohvS3NgM35OIp1JWemvRD
-ctEpw+3THRipIacuVcdKCDBZ4vG8W8l4A8H55L//Bqxyp97iiOh5nJsTFDg/hPn/
-JsfQWoYFcT9m/l7EMUJwSpb7i5Mf1txC/7u0I4Pfl/s2/UWKvI5rrCwbGmrZKPI9
-m7T4C/nAaSAf306YbSiRdWGFPP799zmtB6BwV9mga5myBoqrr9y3Ztscv4B3pOTF
-Sj2fAhGkraIkH8bf4RwrnQLzGCy8A9tkWlhKNf6sBiQB5vcmdnVcv4jOpGLFdlCu
-G7OsHzJhRMPR0EfGjnOW+tWmlL/YQfui+qLGdVZQ38QQd0KzbgDMkF6xf8i0H+hW
-svwu0nMWoI38264XVh0Q3K37Mqb+Jgsm+SCVGrNZCURaYfLbCOQo5y+Mtv9lJu9Q
-ja50TslT75oIkzlKaXZRXVMNQwWVcDFUxggC5F7/dXuOaKD4H1ESblYZm8c8vJs/
-vop/yTfjHSo=
-=OKXV
------END PGP SIGNATURE-----
-
---Sig_/UwbHw_Y.4nBUnt4GraG.TBF--
