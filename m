@@ -1,103 +1,85 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PULL REQUEST] md updates for 3.9
-Date: Mon, 4 Mar 2013 11:16:40 +1100
-Message-ID: <20130304111640.32c428a0@notabene.brown>
+Subject: Re: [PATCH] md: use set_bit_le and clear_bit_le
+Date: Mon, 4 Mar 2013 11:58:21 +1100
+Message-ID: <20130304115821.06bba2f5@notabene.brown>
+References: <1362234957-5570-1-git-send-email-akinobu.mita@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/N6r4ySdiHrw0nrxpbyoZ0nl"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>, Jonathan Brassow <jbrassow@redhat.com>, Joe Lawrence <Joe.Lawrence@stratus.com>, Sebastian Riemer <sebastian.riemer@profitbricks.com>, Ben Hutchings <ben@decadent.org.uk>, Dan Williams <djbw@fb.com>, Kees Cook <keescook@chromium.org>, Tregaron Bayly <tbayly@bluehost.com>
+ boundary="Sig_/FZrWcepgNLey4SAKwd8iDPT"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1362234957-5570-1-git-send-email-akinobu.mita@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/N6r4ySdiHrw0nrxpbyoZ0nl
+--Sig_/FZrWcepgNLey4SAKwd8iDPT
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-The following changes since commit 19f949f52599ba7c3f67a5897ac6be14bfcb1200:
+On Sat,  2 Mar 2013 23:35:57 +0900 Akinobu Mita <akinobu.mita@gmail.com>
+wrote:
 
-  Linux 3.8 (2013-02-18 15:58:34 -0800)
+> The value returned by test_and_set_bit_le() drivers/md/bitmap.c is not us=
+ed.
+> So just use set_bit_le(). The same goes for test_and_clear_bit_le().
+>=20
+> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+> Cc: Neil Brown <neilb@suse.de>
+> Cc: linux-raid@vger.kernel.org
+> ---
+>  drivers/md/bitmap.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+> index 4fd9d6a..5a2c754 100644
+> --- a/drivers/md/bitmap.c
+> +++ b/drivers/md/bitmap.c
+> @@ -846,7 +846,7 @@ static void bitmap_file_set_bit(struct bitmap *bitmap=
+, sector_t block)
+>  	if (test_bit(BITMAP_HOSTENDIAN, &bitmap->flags))
+>  		set_bit(bit, kaddr);
+>  	else
+> -		test_and_set_bit_le(bit, kaddr);
+> +		set_bit_le(bit, kaddr);
+>  	kunmap_atomic(kaddr);
+>  	pr_debug("set file bit %lu page %lu\n", bit, page->index);
+>  	/* record page number so it gets flushed to disk when unplug occurs */
+> @@ -868,7 +868,7 @@ static void bitmap_file_clear_bit(struct bitmap *bitm=
+ap, sector_t block)
+>  	if (test_bit(BITMAP_HOSTENDIAN, &bitmap->flags))
+>  		clear_bit(bit, paddr);
+>  	else
+> -		test_and_clear_bit_le(bit, paddr);
+> +		clear_bit_le(bit, paddr);
+>  	kunmap_atomic(paddr);
+>  	if (!test_page_attr(bitmap, page->index, BITMAP_PAGE_NEEDWRITE)) {
+>  		set_page_attr(bitmap, page->index, BITMAP_PAGE_PENDING);
 
-are available in the git repository at:
+applied, thanks.
 
-  git://neil.brown.name/md tags/md-3.9
-
-for you to fetch changes up to f3378b48705154b9089affb2d2e939622aea68f1:
-
-  md: expedite metadata update when switching  read-auto -> active (2013-02=
--28 11:59:03 +1100)
-
-Thanks,
 NeilBrown
 
-
-
-----------------------------------------------------------------
-md updates for 3.9
-
-mostly little bugfixes.
-Only "feature" is a new RAID10 layout which slightly
-improves the number of sets of devices that can concurrently
-fail, without data loss.
-
-----------------------------------------------------------------
-Joe Lawrence (1):
-      md: raid1,10: Handle REQ_WRITE_SAME flag in write bios
-
-Jonathan Brassow (4):
-      MD RAID10: Minor non-functional code changes
-      MD RAID10: Improve redundancy for 'far' and 'offset' algorithms (part=
- 1)
-      MD RAID10: Improve redundancy for 'far' and 'offset' algorithms (part=
- 2)
-      DM RAID: Add support for MD's RAID10 "far" and "offset" algorithms
-
-NeilBrown (6):
-      md: fix two bugs when attempting to resize RAID0 array.
-      md: raid0: fix error return from create_stripe_zones.
-      md/raid0: improve error message when converting RAID4-with-spares to =
-RAID0
-      md/raid1,raid10: fix deadlock with freeze_array()
-      md: remove CONFIG_MULTICORE_RAID456
-      md: expedite metadata update when switching  read-auto -> active
-
-Sebastian Riemer (1):
-      md: protect against crash upon fsync on ro array
-
- Documentation/device-mapper/dm-raid.txt |  44 +++++++++++++---
- drivers/md/Kconfig                      |  11 ----
- drivers/md/dm-raid.c                    | 123 ++++++++++++++++++++++++++++=
-++++++++-------
- drivers/md/md.c                         |  19 ++++++-
- drivers/md/raid0.c                      |  13 +++--
- drivers/md/raid1.c                      |   8 ++-
- drivers/md/raid10.c                     |  97 ++++++++++++++++++++++++++--=
-------
- drivers/md/raid10.h                     |   5 ++
- drivers/md/raid5.c                      |  38 +------------
- 9 files changed, 256 insertions(+), 102 deletions(-)
-
---Sig_/N6r4ySdiHrw0nrxpbyoZ0nl
+--Sig_/FZrWcepgNLey4SAKwd8iDPT
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUTPn6Dnsnt1WYoG5AQJ+oBAAg+2xRZxttGjUsLj96mu1BCo97u9ink2V
-TSJ1KtIx2cPD6mVJTtoO+r0U4EdXNoAk2TbuqLTWmYW/O8qeSgARsefMxujJv6KJ
-hF9kEtrUowo0wYPqeYFVIrkL0llXcd3iVP+oj44D2SjuwrwnfHLX4uTO3k/Dfxif
-hHnKnM2lW+3hnNWijKxR4hjJv4INWlvIesrThJHyspzdnzP6z6C6sFEBkic5/J6o
-vIxBPvPUx3b6mSCIObNJ8BwUX7toT6ltMED4TPL1KUQEn1zsbWIYB1NVf7yZrHeC
-LCz/653qNxajJ/lJdmyM/0SVFZZ9UnKDXex8VCnZPzKIlJbsQ38y2UBxjPZtbTTz
-tGYH5w8BkQ8nTev/TOXPtjYWZJ0/RfuhSMuRzYXq6JDH3J9WLnFr/Mhv7FkAkRaP
-o5//dUPtAGh7dU9okUrm/KPnfbT36U5Eg83BDM9o4F2EIEfQVcFQMOr8PfFF2ROS
-5/F6fnz7Man6KxXGk/NZYashgTTrYtggUZC+s86iJGXM22kKyE3NWEAdREl2ncBw
-V0EiuhCwskLqmYcMdES63VdVKNzLoSs0uGOW/XdvCgQZChWJcYwy8Oxm/ZNIj3dm
-zp8hNm9qsmMXIm6pAxGOKb3KmzEYmRbF3BrORclQf0XPnhacAmuOCXAdAys0t3FI
-vFupkzlcYU4=
-=mPES
+iQIVAwUBUTPxrTnsnt1WYoG5AQKwoRAAhhyRlsnFZPkRL3Zfkzz3RKbKvfxdZLug
+hwa+ICEOygrMy1rbYhB3N/t+bY2MK+WhbBvXGr6B3lBdjN0qA0td7Xd2XSpBU0A0
+HMApqXAIrsV4z73iTXoN+t5xij1Do2kCSl0e4FE87YUK9nHOm1HTOW5MBynkj/iJ
+4zGiC7OWAbOzrrtqXIFytJUt6U+iesc9CUrzKnf+xKN4yYkxe/9wDUEliLIGMOFs
+wvBPhLpEu+h+5//9M8rb53jCQCOxZ9R3JIOmfSJrQHM81/acddwGiKCZyKUmH/wF
+OOptR9XxDJvmK6fS0rOcneeIcx7zc+BtRtGYab38KmYEmkfEVx4Vda/I1msfeE7Y
+tguYg8+SrZ9whPNxSn1yof8fmXaVt+baBBJ0UYXIZaaF5+QS8hFoXvOiG57JSrgu
+We+gq8Tk1dt2LQQjFmZezHJWi64wPLfke8JG07REUGuUyjHTTWg1z9S25IHtOA7J
+uAdhX7uZMK95yzZcSdI0iVhRCHvgaa4FS10O7tTvUuK99Ctwwjg3Ee57RZE3oNeW
+QkJtC/vfxxI0MQXZFKcfY1AlOGyaEsMxtGK8/nLFkECQcoQPYkzYD6UFgyCFtb68
+MHQk1469nuPA+J37eEPGdEJ6ysrzRZZhxAr7/nhauACdijfa+Phg1DQih7vDn6Py
+XgMuomRiW84=
+=hYfh
 -----END PGP SIGNATURE-----
 
---Sig_/N6r4ySdiHrw0nrxpbyoZ0nl--
+--Sig_/FZrWcepgNLey4SAKwd8iDPT--
