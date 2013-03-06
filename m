@@ -1,33 +1,65 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: DDF / RAID10 patch series for mdadm
-Date: Wed, 06 Mar 2013 19:26:09 +0100
-Message-ID: <51378A41.8020606@arcor.de>
-References: <1362176913-6804-1-git-send-email-mwilck@arcor.de> <20130304162254.3ce38218@notabene.brown>
+From: David Howells <dhowells@redhat.com>
+Subject: [PATCH 3/4] UAPI: Fix endianness conditionals in linux/raid/md_p.h
+Date: Wed, 06 Mar 2013 20:47:51 +0000
+Message-ID: <20130306204751.31327.18239.stgit@warthog.procyon.org.uk>
+References: <20130306204724.31327.43118.stgit@warthog.procyon.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130304162254.3ce38218@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-arch-owner@vger.kernel.org>
+In-Reply-To: <20130306204724.31327.43118.stgit@warthog.procyon.org.uk>
+Sender: linux-arch-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-arch@vger.kernel.org, sfr@canb.auug.org.au, Joakim.Tjernlund@transmode.se, arnd@arndb.de, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, akpm@linux-foundation.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+In the UAPI header files, __BIG_ENDIAN and __LITTLE_ENDIAN must be compared
+against __BYTE_ORDER in preprocessor conditionals where these are exposed to
+userspace (that is they're not inside __KERNEL__ conditionals).
 
-> Wow! Thanks for these!  Happy to see DDF getting some attention.
-> 
-> I've applied all the patches (with a few minor cosmetic changes).  I haven't
-> studied them all very closely, but I what I did examine looked good.
-> 
-> If you could add some tests to the 'tests' directory to make sure that
-> ddf/raid10 keeps working that would be great.
+However, in the main kernel the norm is to check for "defined(__XXX_ENDIAN)"
+rather than comparing against __BYTE_ORDER and this has incorrectly leaked
+into the userspace headers.
 
-Thanks a lot for applying. I'll have to study the test code to come up
-with test cases. There'll be some work to be done for Create first (not
-everyone has a BIOS RAID available for that).
+The definition of struct mdp_superblock_s in linux/raid/md_p.h is wrong in this
+way.  Note that userspace will likely interpret the ordering of the fields
+incorrectly as the big-endian variant on a little-endian machines - depending
+on header inclusion order.
 
-I am currently working on a second patch series that deals with failures
-and metadata updates.
+[!!!] NOTE [!!!]  This patch may adversely change the userspace API.  It might
+be better to fix the ordering of events_hi, events_lo, cp_events_hi and
+cp_events_lo in struct mdp_superblock_s / typedef mdp_super_t.
 
-Martin
+Signed-off-by: David Howells <dhowells@redhat.com>
+cc: Neil Brown <neilb@suse.de>
+cc: linux-raid@vger.kernel.org
+---
+
+ include/uapi/linux/raid/md_p.h |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
+index ee75353..fe1a540 100644
+--- a/include/uapi/linux/raid/md_p.h
++++ b/include/uapi/linux/raid/md_p.h
+@@ -145,16 +145,18 @@ typedef struct mdp_superblock_s {
+ 	__u32 failed_disks;	/*  4 Number of failed disks		      */
+ 	__u32 spare_disks;	/*  5 Number of spare disks		      */
+ 	__u32 sb_csum;		/*  6 checksum of the whole superblock        */
+-#ifdef __BIG_ENDIAN
++#if defined(__BYTE_ORDER) ? __BYTE_ORDER == __BIG_ENDIAN : defined(__BIG_ENDIAN)
+ 	__u32 events_hi;	/*  7 high-order of superblock update count   */
+ 	__u32 events_lo;	/*  8 low-order of superblock update count    */
+ 	__u32 cp_events_hi;	/*  9 high-order of checkpoint update count   */
+ 	__u32 cp_events_lo;	/* 10 low-order of checkpoint update count    */
+-#else
++#elif defined(__BYTE_ORDER) ? __BYTE_ORDER == __LITTLE_ENDIAN : defined(__LITTLE_ENDIAN)
+ 	__u32 events_lo;	/*  7 low-order of superblock update count    */
+ 	__u32 events_hi;	/*  8 high-order of superblock update count   */
+ 	__u32 cp_events_lo;	/*  9 low-order of checkpoint update count    */
+ 	__u32 cp_events_hi;	/* 10 high-order of checkpoint update count   */
++#else
++#error unspecified endianness
+ #endif
+ 	__u32 recovery_cp;	/* 11 recovery checkpoint sector count	      */
+ 	/* There are only valid for minor_version > 90 */
