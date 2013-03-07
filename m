@@ -1,64 +1,106 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: Raid 5/10 discard support broken in 3.8.2
-Date: Thu, 7 Mar 2013 19:26:17 +0100 (CET)
-Message-ID: <6351179.18.1362680777332.JavaMail.root@zimbra>
-References: <CAKHEz2bGDyb2=t5gVycfm9YJcUu9k9943JYQFxAtStwrjehUbg@mail.gmail.com>
+From: Jonathan Brassow <jbrassow@redhat.com>
+Subject: [PATCH] MD RAID5: Avoid accessing gendisk or queue structs when not
+ available
+Date: Thu, 07 Mar 2013 16:22:01 -0600
+Message-ID: <1362694921.28152.4.camel@f16>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKHEz2bGDyb2=t5gVycfm9YJcUu9k9943JYQFxAtStwrjehUbg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dave Cundiff <syshackmin@gmail.com>
-Cc: Linux MDADM Raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de, jbrassow@redhat.com
 List-Id: linux-raid.ids
 
-> > I'm not sure if TRIM/UNMAP is supported on that controller, even in
-> > HBA mode (and with IT firmware). I've also seen scterc fail to work
-> > on that controller as well, while working with an ordinary "stupid"
-> > controller on the same disk.
-> >
->=20
-> I had heard that as well. I believe it may have been only older
-> firmware or maybe just people trying to TRIM against a RAID. I'm
-> running recent firmware and it appears to execute the command
-> correctly against a single disk.
->=20
-> [root@a2simage:etc]$ mkfs.ext4 /dev/sda3
-> mke2fs 1.41.12 (17-May-2010)
-> Discarding device blocks: ^C825792/54624256
->=20
->=20
-> Mar 7 11:53:08 66 kernel: sd 0:0:0:0: [sda] Send:
-> Mar 7 11:53:08 66 kernel: 0xffff8805edd86c80
-> Mar 7 11:53:08 66 kernel: sd 0:0:0:0: [sda] CDB:
-> Mar 7 11:53:08 66 kernel: Unmap/Read sub-channel: 42 00 00 00 00 00 0=
-0
-> 00 18 00
-> Mar 7 11:53:08 66 kernel: buffer =3D 0xffff88062fe4a280, bufflen =3D =
-24,
-> queuecommand 0xffffffffa01d27e0
+MD RAID5:  Fix kernel oops when RAID4/5/6 is used via device-mapper
 
-Could it be as simple as the controller trying to send UNMAP to an (S)A=
-TA device? TRIM and UNMAP are different commands for ATA and SCSI, resp=
-ectively.
+Commit a9add5d (v3.8-rc1) added blktrace calls to the RAID4/5/6 driver.
+However, when device-mapper is used to create RAID4/5/6 arrays, the
+mddev->gendisk and mddev->queue fields are not setup.  Therefore, calling
+things like trace_block_bio_remap will cause a kernel oops.  This patch
+conditionalizes those calls on whether the proper fields exist to make
+the calls.  (Device-mapper will call trace_block_bio_remap on its own.)
 
-Vennlige hilsener / Best regards
+Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Index: linux-upstream/drivers/md/raid5.c
+===================================================================
+--- linux-upstream.orig/drivers/md/raid5.c
++++ linux-upstream/drivers/md/raid5.c
+@@ -671,9 +671,11 @@ static void ops_run_io(struct stripe_hea
+ 			bi->bi_next = NULL;
+ 			if (rrdev)
+ 				set_bit(R5_DOUBLE_LOCKED, &sh->dev[i].flags);
+-			trace_block_bio_remap(bdev_get_queue(bi->bi_bdev),
+-					      bi, disk_devt(conf->mddev->gendisk),
+-					      sh->dev[i].sector);
++
++			if (conf->mddev->gendisk)
++				trace_block_bio_remap(bdev_get_queue(bi->bi_bdev),
++						      bi, disk_devt(conf->mddev->gendisk),
++						      sh->dev[i].sector);
+ 			generic_make_request(bi);
+ 		}
+ 		if (rrdev) {
+@@ -701,9 +703,10 @@ static void ops_run_io(struct stripe_hea
+ 			rbi->bi_io_vec[0].bv_offset = 0;
+ 			rbi->bi_size = STRIPE_SIZE;
+ 			rbi->bi_next = NULL;
+-			trace_block_bio_remap(bdev_get_queue(rbi->bi_bdev),
+-					      rbi, disk_devt(conf->mddev->gendisk),
+-					      sh->dev[i].sector);
++			if (conf->mddev->gendisk)
++				trace_block_bio_remap(bdev_get_queue(rbi->bi_bdev),
++						      rbi, disk_devt(conf->mddev->gendisk),
++						      sh->dev[i].sector);
+ 			generic_make_request(rbi);
+ 		}
+ 		if (!rdev && !rrdev) {
+@@ -2862,8 +2865,10 @@ static void handle_stripe_dirtying(struc
+ 	set_bit(STRIPE_HANDLE, &sh->state);
+ 	if (rmw < rcw && rmw > 0) {
+ 		/* prefer read-modify-write, but need to get some data */
+-		blk_add_trace_msg(conf->mddev->queue, "raid5 rmw %llu %d",
+-				  (unsigned long long)sh->sector, rmw);
++		if (conf->mddev->queue)
++			blk_add_trace_msg(conf->mddev->queue,
++					  "raid5 rmw %llu %d",
++					  (unsigned long long)sh->sector, rmw);
+ 		for (i = disks; i--; ) {
+ 			struct r5dev *dev = &sh->dev[i];
+ 			if ((dev->towrite || i == sh->pd_idx) &&
+@@ -2913,7 +2918,7 @@ static void handle_stripe_dirtying(struc
+ 				}
+ 			}
+ 		}
+-		if (rcw)
++		if (rcw && conf->mddev->queue)
+ 			blk_add_trace_msg(conf->mddev->queue, "raid5 rcw %llu %d %d %d",
+ 					  (unsigned long long)sh->sector,
+ 					  rcw, qread, test_bit(STRIPE_DELAYED, &sh->state));
+@@ -4018,9 +4023,10 @@ static int chunk_aligned_read(struct mdd
+ 		atomic_inc(&conf->active_aligned_reads);
+ 		spin_unlock_irq(&conf->device_lock);
+ 
+-		trace_block_bio_remap(bdev_get_queue(align_bi->bi_bdev),
+-				      align_bi, disk_devt(mddev->gendisk),
+-				      raid_bio->bi_sector);
++		if (mddev->gendisk)
++			trace_block_bio_remap(bdev_get_queue(align_bi->bi_bdev),
++					      align_bi, disk_devt(mddev->gendisk),
++					      raid_bio->bi_sector);
+ 		generic_make_request(align_bi);
+ 		return 1;
+ 	} else {
+@@ -4114,7 +4120,8 @@ static void raid5_unplug(struct blk_plug
+ 		}
+ 		spin_unlock_irq(&conf->device_lock);
+ 	}
+-	trace_block_unplug(mddev->queue, cnt, !from_schedule);
++	if (mddev->queue)
++		trace_block_unplug(mddev->queue, cnt, !from_schedule);
+ 	kfree(cb);
+ }
+ 
+
+
