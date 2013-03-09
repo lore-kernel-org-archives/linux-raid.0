@@ -1,48 +1,59 @@
-From: Joseph Glanville <joseph.glanville@orionvm.com.au>
-Subject: Re: [PATCH] MD: Fix typos in MD documentation
-Date: Sat, 9 Mar 2013 04:35:16 +1100
-Message-ID: <CAOzFzEjA31yo7whp70D4fMiucsaoDJearRUBK5nQ8Ey+rqxZXA@mail.gmail.com>
-References: <1362694766.28152.1.camel@f16>
-	<1362733923.7193.30.camel@mattotaupa>
-	<AE55049E-63BD-4A47-96EB-04B113319571@redhat.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: Raid 5/10 discard support broken in 3.8.2
+Date: Sat, 09 Mar 2013 13:26:26 +0800
+Message-ID: <513AC802.8070306@fnarfbargle.com>
+References: <CAKHEz2a+gwCzj16s3P3UOFMezC=CFe3D2002yyNsA_E5+-Ci6Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AE55049E-63BD-4A47-96EB-04B113319571@redhat.com>
+In-Reply-To: <CAKHEz2a+gwCzj16s3P3UOFMezC=CFe3D2002yyNsA_E5+-Ci6Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brassow Jonathan <jbrassow@redhat.com>
-Cc: Paul Menzel <pm.debian@googlemail.com>, linux-raid@vger.kernel.org, neilb@suse.de
+To: Dave Cundiff <syshackmin@gmail.com>
+Cc: Linux MDADM Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 9 March 2013 00:28, Brassow Jonathan <jbrassow@redhat.com> wrote:
+On 06/03/13 12:20, Dave Cundiff wrote:
+> Hi all,
 >
-> On Mar 8, 2013, at 3:12 AM, Paul Menzel wrote:
+> It appears the Raid 5/10 discard support does not work in the mainline kernel.
 >
->> Am Donnerstag, den 07.03.2013, 16:19 -0600 schrieb Jonathan Brassow:
->>> MD:  Fix some typos/grammer in MD documentation
->>>
->>> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
->>>
->>> Index: linux-upstream/Documentation/md.txt
->>> ===================================================================
->>
->> Did you use `git format-patch`? If not, hopefully this patch can be
->> easily applied with `git am`.
+> I've been trying to backport it to a RHEL 6 kernel without success. I
+> finally managed to setup a mainline dev box and discovered it doesn't
+> work on it either!
 >
-> No.  I generally use 'quilt' and insert the patches into my email client.  If it's better to do something else, let me know and I will do that.
+> I'm now testing on a stock 3.8.2 kernel. The drives I'm using are
+> Samsung 840 Pro's hanging off an LSI 9211-8i. No backplane and each
+> drive has a dedicated channel. No RAID on the LSI, its just an HBA.
 >
->  brassow
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Take a look at git-format-patch and git-send-email. :)
+I'd be interested if you could test it against 3.7.9.
 
-Generally this is preferred as the patches can be applied
-automatically via git-am
+I have a 6 drive RAID10. 3 Drives are on the on-board AHCI, and the 
+other three are on an LSI 9240-8i (SAS2008 with mpt2sas module).
 
--- 
-CTO | Orion Virtualisation Solutions | www.orionvm.com.au
-Phone: 1300 56 99 52 | Mobile: 0428 754 846
+TRIM is being passed down the stack as after an fstrim of the ext4 fs on 
+the RAID the mismatch count goes through the roof.
+
+The 3 drives on the LSI are Intel 330 (which support deterministic read 
+after trim) while the drives on the AHCI are Samsung 830 (which are 
+*not* deterministic after trim).
+
+My raid is 6 drives in an n2 configuration, so three pairs of mirrors. 
+Each one a Samsung and an Intel.
+
+I used dd to pull off the first 2G of the first pair and ran vbindiff 
+over them.
+
+The differences are easily spotted where the Samsungs are returning data 
+and the Intels are returning zero. So the trim is most certainly making 
+its way down through the RAID10 and to the Intel 330 drives on the LSI 
+controller on kernel 3.7.9.
+
+It's a production machine, so I can't really pull it down to upgrade it 
+to 3.8.2.
+
+Hope this helps.
+
+Regards,
+Brad
