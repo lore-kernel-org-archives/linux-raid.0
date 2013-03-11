@@ -1,41 +1,103 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: Help with two momentarily failed drives out of a 4x3TB Raid 5
-Date: Mon, 11 Mar 2013 10:41:14 +0100 (CET)
-Message-ID: <29375201.0.1362994874930.JavaMail.root@zimbra>
-References: <CAAnFQG8Ca7fkr-vboobr_qmRMTn38U9QP5hiT-9Ps0BqWcunzw@mail.gmail.com>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: Re: [PATCH] md/raid456: remove depends on CONFIG_EXPERIMENTAL
+Date: Mon, 11 Mar 2013 11:27:44 +0100
+Message-ID: <1362997664.3137.52.camel@x61.thuisdomein>
+References: <20130223074001.GA5199@www.outflux.net>
+	 <CAA9_cmfa1hhijh4g_hSwMy_GR81rxjEFMurJwSvhBruh1R5dtw@mail.gmail.com>
+	 <20130228091110.7da87b53@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAnFQG8Ca7fkr-vboobr_qmRMTn38U9QP5hiT-9Ps0BqWcunzw@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Javier Marcet <jmarcet@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>, =?utf-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130228091110.7da87b53@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Chris Metcalf <cmetcalf@tilera.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Williams <djbw@fb.com>, Kees Cook <keescook@chromium.org>, Arjan van de Ven <arjan@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Alasdair G Kergon <agk@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 List-Id: linux-raid.ids
 
-> > As above. Also, I see no self-tests logged?
->=20
-> I hadn't done any test manually but I had smartd running and
-> configured.
+> Following will be in -next shortly.
+> 
+> NeilBrown
+> 
+> 
+> From 51acbcec6c42b24482bac18e42befc822524535d Mon Sep 17 00:00:00 2001
+> From: NeilBrown <neilb@suse.de>
+> Date: Thu, 28 Feb 2013 09:08:34 +1100
+> Subject: [PATCH] md: remove CONFIG_MULTICORE_RAID456
+> 
+> This doesn't seem to actually help and we have an alternate
+> multi-threading approach waiting in the wings, so just get
+> rid of this config option and associated code.
+> 
+> As a bonus, we remove one use of CONFIG_EXPERIMENTAL
+> 
+> Cc: Dan Williams <djbw@fb.com>
+> Cc: Kees Cook <keescook@chromium.org>
+> Signed-off-by: NeilBrown <neilb@suse.de>
 
-smartd won't run any tests unless you configure it to do so.
+That commit entered mainline in v3.9-rc2 (still as commit
+51acbcec6c42b24482bac18e42befc822524535d). It missed one instance of
+CONFIG_MULTICORE_RAID456, so this additional patch is needed (which also
+cleans that macro from two defconfig files). Compile tested, by the way.
 
-Vennlige hilsener / Best regards
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Paul Bolle
+
+From ab10e19eeca5ae271ae965418ff736db0230aab6 Mon Sep 17 00:00:00 2001
+From: Paul Bolle <pebolle@tiscali.nl>
+Date: Mon, 11 Mar 2013 11:16:25 +0100
+Subject: [PATCH] md: remove CONFIG_MULTICORE_RAID456 entirely
+
+Once instance of this Kconfig macro remained after commit
+51acbcec6c42b24482bac18e42befc822524535d ("md: remove
+CONFIG_MULTICORE_RAID456"). Remove that one too. And, while we're at it,
+also remove it from the defconfig files that carry it.
+
+Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+---
+ arch/tile/configs/tilegx_defconfig  | 1 -
+ arch/tile/configs/tilepro_defconfig | 1 -
+ drivers/md/raid5.h                  | 4 ----
+ 3 files changed, 6 deletions(-)
+
+diff --git a/arch/tile/configs/tilegx_defconfig b/arch/tile/configs/tilegx_defconfig
+index 8c5eff6..4768481 100644
+--- a/arch/tile/configs/tilegx_defconfig
++++ b/arch/tile/configs/tilegx_defconfig
+@@ -330,7 +330,6 @@ CONFIG_MD_RAID0=m
+ CONFIG_MD_RAID1=m
+ CONFIG_MD_RAID10=m
+ CONFIG_MD_RAID456=m
+-CONFIG_MULTICORE_RAID456=y
+ CONFIG_MD_FAULTY=m
+ CONFIG_BLK_DEV_DM=m
+ CONFIG_DM_DEBUG=y
+diff --git a/arch/tile/configs/tilepro_defconfig b/arch/tile/configs/tilepro_defconfig
+index e7a3dfc..dd2b8f0 100644
+--- a/arch/tile/configs/tilepro_defconfig
++++ b/arch/tile/configs/tilepro_defconfig
+@@ -324,7 +324,6 @@ CONFIG_MD_RAID0=m
+ CONFIG_MD_RAID1=m
+ CONFIG_MD_RAID10=m
+ CONFIG_MD_RAID456=m
+-CONFIG_MULTICORE_RAID456=y
+ CONFIG_MD_FAULTY=m
+ CONFIG_BLK_DEV_DM=m
+ CONFIG_DM_DEBUG=y
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 18b2c4a..31e2ec1 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -221,10 +221,6 @@ struct stripe_head {
+ 	struct stripe_operations {
+ 		int 		     target, target2;
+ 		enum sum_check_flags zero_sum_result;
+-		#ifdef CONFIG_MULTICORE_RAID456
+-		unsigned long	     request;
+-		wait_queue_head_t    wait_for_ops;
+-		#endif
+ 	} ops;
+ 	struct r5dev {
+ 		/* rreq and rvec are used for the replacement device when
+-- 
+1.7.11.7
