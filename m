@@ -1,67 +1,82 @@
-From: Javier Marcet <jmarcet@gmail.com>
+From: Chris Murphy <lists@colorremedies.com>
 Subject: Re: Help with two momentarily failed drives out of a 4x3TB Raid 5
-Date: Mon, 11 Mar 2013 20:41:35 +0100
-Message-ID: <CAAnFQG-FJo_2UDX-ws_TCUM5mpJAkMQtyJC_MUZNqUSQpnWj+Q@mail.gmail.com>
-References: <CAAnFQG8Ca7fkr-vboobr_qmRMTn38U9QP5hiT-9Ps0BqWcunzw@mail.gmail.com>
- <29375201.0.1362994874930.JavaMail.root@zimbra> <CAAnFQG__hwROJG1mE9BAaoapUDXTos+52udEp0yc6SfQz==DKA@mail.gmail.com>
- <CADNH=7E0788eV7zZKbWao4n1+WEMCcaX9sp7MkBgsCKrLmocSA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Date: Mon, 11 Mar 2013 14:18:07 -0600
+Message-ID: <62FAC682-2DDB-4912-97CF-3FACA3BD4B58@colorremedies.com>
+References: <CAAnFQG9b1mUj+BJ3-_N-HjQi2w2Vv5pg4RCErXW5axp32_7T4g@mail.gmail.com> <CADNH=7Ed79h5GetY5XWOu=kKX=YNqVYmN1J6K25MVMwkH_Soyw@mail.gmail.com> <CAAnFQG_KdzFS6u+RrAfdL5gaOa-ozz9YAtb36oFo-ZofaLyxEw@mail.gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADNH=7E0788eV7zZKbWao4n1+WEMCcaX9sp7MkBgsCKrLmocSA@mail.gmail.com>
+In-Reply-To: <CAAnFQG_KdzFS6u+RrAfdL5gaOa-ozz9YAtb36oFo-ZofaLyxEw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Cc: Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Mar 11, 2013 at 8:26 PM, Mathias Bur=C3=A9n <mathias.buren@gmai=
-l.com> wrote:
 
->> I have two disks still missing 30% of the long test but the two othe=
-r
->> ones stopped due to errors:
->>
->> http://bpaste.net/raw/83003/
->> 197 Current_Pending_Sector  0x0032   200   200   000    Old_age
->> Always       -       18
->>
->> http://bpaste.net/raw/83004/
->> 197 Current_Pending_Sector  0x0032   200   200   000    Old_age
->> Always       -       1
->>
->>
->> I am gonna pass badblocks on them but this does not look good.
->>
->> Could a faulty sata data cable cause those bad blocks? The disks are=
- 8
->> months old so I hope I can get them replaced.
+On Mar 10, 2013, at 6:33 PM, Javier Marcet <jmarcet@gmail.com> wrote:
 
-> I see read failures on the SMART self tests, that warrants an RMA. So=
-,
-> get that done. A faulty SATA cable would not do that, you'd rather se=
-e
-> CRC errors or other kernel log messages.
-
-All right, tomorrow I will request an RMA.
-
-One of the drives only shows one sector bad. I hope I can still get
-some/most of my data.
-
-I know that forcing a reassembly lets me mount the filesystem although
-at certain point causes a kernel backtrace and I believe most data is
-unreadable.
-
-How should I proceed to be able to get most of the data? Will I have
-to create a completely new array or can I somehow fix it adding new
-disks?
-
-Oh and thanks a lot for the help, I'm still a newbie with raids.
+> On Mon, Mar 11, 2013 at 1:12 AM, Mathias Bur=E9n <mathias.buren@gmail=
+=2Ecom> wrote:
+>>=20
+>> So how are the drivers doing? smartctl -a for all HDDs please.
+>=20
+> http://bpaste.net/raw/82828/
 
 
---=20
-Javier Marcet <jmarcet@gmail.com>
---
+Two of four drives report bad sectors as Current_Pending_Sector. We nee=
+d to see full dmesg for the time when the array collapsed to be sure, b=
+ut I bet dollars to donuts that disk 1 drops out for some reason (?) an=
+d shortly thereafter the other drive experiences ERR UNC for its bad se=
+ctor causing the array to collapse.
+
+The first disk ejected is probably not in sync with the array and needs=
+ to be rebuilt. The other drive might be slightly out of sync, but it's=
+ worth forcing assemble to find out. And then these bad sectors need to=
+ be repaired which is difficult if the first disk ejected happened befo=
+re too many writes to the array while it was degraded but before the ar=
+ray collapsed.
+
+The drives clearly are configured incorrectly with their controller and=
+/or the linux SCSI layer timeout for the block devices or you wouldn't =
+have bad sectors pending. Configured correctly, bad sectors are remappe=
+d in the course of a normally functioning array, as well as scheduled s=
+crubs.
+
+Ideally the drive SCT ERC is lowered to something like 70 deciseconds. =
+Or if that's not supported by the drives, then the controller and the b=
+lock device timeout needs to be raised to whatever the drive timeout is=
+ using:
+
+echo xxx >/sys/block/sdX/device/timeout
+
+xxs is in seconds. So for a 2 minute drive timeout, you'd need that to =
+be at least 120, maybe a few seconds more to make absolutely certain li=
+nux doesn't timeout the block device before the drive itself reports a =
+read error.
+
+
+> By 18:00 today I should have the smartctl results.
+
+Next to pointless in that it will stop the testing as soon as it finds =
+the first bad sector. But if you have that LBA you can use dd to zero j=
+ust that sector. While that corrupts the data in that sector, the data =
+is effectively gone anyway, and it will prevent another read error and =
+allow the rebuild to proceed.
+
+> Could a faulty sata data cable cause those bad blocks?=20
+
+No. Some bad sectors are normal. Many, or increasing occurrence is caus=
+e for them to be replaced under warranty.
+
+> How should I proceed to be able to get most of the data? Will I have
+> to create a completely new array or can I somehow fix it adding new
+> disks?
+
+You're better off recreating the array and restoring from backup. Fixin=
+g it will be tedious.
+
+
+Chris Murphy--
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
 the body of a message to majordomo@vger.kernel.org
