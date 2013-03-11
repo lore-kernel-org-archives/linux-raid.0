@@ -1,109 +1,36 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] MD: Prevent sysfs operations on uninitialized kobjects
-Date: Mon, 11 Mar 2013 11:35:22 +1100
-Message-ID: <20130311113522.71dd6435@notabene.brown>
-References: <1362695066.28152.7.camel@f16>
+From: Javier Marcet <jmarcet@gmail.com>
+Subject: Re: Help with two momentarily failed drives out of a 4x3TB Raid 5
+Date: Mon, 11 Mar 2013 01:41:06 +0100
+Message-ID: <CAAnFQG8cEhErcVyZAuvYxkBiv0Y0ps+6UHcu459MGxYYMbHXLA@mail.gmail.com>
+References: <CAAnFQG9b1mUj+BJ3-_N-HjQi2w2Vv5pg4RCErXW5axp32_7T4g@mail.gmail.com>
+ <CADNH=7Ed79h5GetY5XWOu=kKX=YNqVYmN1J6K25MVMwkH_Soyw@mail.gmail.com> <CAAnFQG_KdzFS6u+RrAfdL5gaOa-ozz9YAtb36oFo-ZofaLyxEw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/x.Ekv1de=1DVpJdsZc/VXaR"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1362695066.28152.7.camel@f16>
+In-Reply-To: <CAAnFQG_KdzFS6u+RrAfdL5gaOa-ozz9YAtb36oFo-ZofaLyxEw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jonathan Brassow <jbrassow@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/x.Ekv1de=1DVpJdsZc/VXaR
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Mon, Mar 11, 2013 at 1:33 AM, Javier Marcet <jmarcet@gmail.com> wrote:
 
-On Thu, 07 Mar 2013 16:24:26 -0600 Jonathan Brassow <jbrassow@redhat.com>
-wrote:
+>>> I have 4.5 TB used and right now I have the filesystem mounted and I
+>>> can use it yet the kernel is spiting that same trace over and over
+>>> again. I really don't know what would be the best thing to do right
+>>> now and would appreciate any help.
+>>
+>> So how are the drivers doing? smartctl -a for all HDDs please.
+>
+> http://bpaste.net/raw/82828/
 
-> MD: Prevent sysfs operations on uninitialized kobjects
->=20
-> Device-mapper does not use sysfs; but when device-mapper is leveraging
-> MD's RAID personalities, MD sometimes attempts to update sysfs.  This
-> patch adds checks for 'mddev-kobj.sd' in sysfs_[un]link_rdev to ensure
-> it is about to operate on something valid.  This patch also checks for
-> 'mddev->kobj.sd' before calling 'sysfs_notify' in 'remove_and_add_spares'.
-> Although 'sysfs_notify' already makes this check, doing so in
-> 'remove_and_add_spares' prevents an additional mutex operation.
->=20
-> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
->=20
-> Index: linux-upstream/drivers/md/md.h
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-upstream.orig/drivers/md/md.h
-> +++ linux-upstream/drivers/md/md.h
-> @@ -506,7 +506,7 @@ static inline char * mdname (struct mdde
->  static inline int sysfs_link_rdev(struct mddev *mddev, struct md_rdev *r=
-dev)
->  {
->  	char nm[20];
-> -	if (!test_bit(Replacement, &rdev->flags)) {
-> +	if (!test_bit(Replacement, &rdev->flags) && mddev->kobj.sd) {
->  		sprintf(nm, "rd%d", rdev->raid_disk);
->  		return sysfs_create_link(&mddev->kobj, &rdev->kobj, nm);
->  	} else
-> @@ -516,7 +516,7 @@ static inline int sysfs_link_rdev(struct
->  static inline void sysfs_unlink_rdev(struct mddev *mddev, struct md_rdev=
- *rdev)
->  {
->  	char nm[20];
-> -	if (!test_bit(Replacement, &rdev->flags)) {
-> +	if (!test_bit(Replacement, &rdev->flags) && mddev->kobj.sd) {
->  		sprintf(nm, "rd%d", rdev->raid_disk);
->  		sysfs_remove_link(&mddev->kobj, nm);
->  	}
-> Index: linux-upstream/drivers/md/md.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-upstream.orig/drivers/md/md.c
-> +++ linux-upstream/drivers/md/md.c
-> @@ -7646,10 +7646,8 @@ static int remove_and_add_spares(struct
->  				removed++;
->  			}
->  		}
-> -	if (removed)
-> -		sysfs_notify(&mddev->kobj, NULL,
-> -			     "degraded");
-> -
-> +	if (removed && mddev->kobj.sd)
-> +		sysfs_notify(&mddev->kobj, NULL, "degraded");
-> =20
->  	rdev_for_each(rdev, mddev) {
->  		if (rdev->raid_disk >=3D 0 &&
->=20
+As far as I can see there are only two read errors reported on
+/dev/sdb, nothing on the rest.
+
+Also, I finally put the raid completely offline since the data was not
+really readable in that state.
 
 
-Applied, thanks.
 
-NeilBrown
-
---Sig_/x.Ekv1de=1DVpJdsZc/VXaR
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUT0myjnsnt1WYoG5AQL7CBAAt3xEsDwKvzinlchfojhjjIJZueNuqNUp
-cpGFrXv0iUExj9aoP7K2JAosjYO1Vc33d2JMqfusUq7B0h7R6DO5EBhR/vhUDIIK
-8G/t4Y9joX4tthbyJZOxBva3Nw7o4sXl0Emjsozq33he3KLErhHs//v/IKIYwcYq
-QuG9bkVyMvmDg4s1GrmzTNtSvU27VfHKAuEX4qxjJdRzeB+R+Y7TSOXeypcoj0Df
-hz2hME3fL2B0d1U6gCxbHx5PkFf1Ac5PXJkW/jGMp512BozZSm3BeDq6/lGMJc2I
-+Ls81rHA9iz00L+BsZpWejhd2YWjv/zokuuHHmETBk8CNe/jUjy5NVwO4ibKeczb
-XHY657jKzNdMKqv5iti1Z/jQaMwrC2btkr6Ar9qroNznmi1OgsbpoDmpn7+0+5/U
-y5Jsu5Lhw1OHzSMg062qX47LJZppSuflKRdHGXG7XkhfbsMF3ASVoG/MO4e8Rrv0
-0nHeBhClTXss8bOJwDWoYy9gTkDJRR2kV1YGKXu71hC0YTBG6CrlErnnUTRhrzRA
-ldnaSiWQABX3lFFo4Nh42uounNrnjXGJzGeUGIcCVkyjVcpitTw7wdom5kQZ9nC5
-MQUrjzkzRQMsxoZyrjAF4N+JYaKm7ve/B6fToOPQxg8n4kREJNNhIkEQe73stceq
-L7vHavUS9Ho=
-=HC2T
------END PGP SIGNATURE-----
-
---Sig_/x.Ekv1de=1DVpJdsZc/VXaR--
+-- 
+Javier Marcet <jmarcet@gmail.com>
