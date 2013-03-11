@@ -1,98 +1,89 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: Help with two momentarily failed drives out of a 4x3TB Raid 5
-Date: Mon, 11 Mar 2013 00:12:09 +0000
-Message-ID: <CADNH=7Ed79h5GetY5XWOu=kKX=YNqVYmN1J6K25MVMwkH_Soyw@mail.gmail.com>
-References: <CAAnFQG9b1mUj+BJ3-_N-HjQi2w2Vv5pg4RCErXW5axp32_7T4g@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] MD: Fix typos in MD documentation
+Date: Mon, 11 Mar 2013 11:30:03 +1100
+Message-ID: <20130311113003.012b93c8@notabene.brown>
+References: <1362694766.28152.1.camel@f16>
+	<1362733923.7193.30.camel@mattotaupa>
+	<AE55049E-63BD-4A47-96EB-04B113319571@redhat.com>
+	<CAOzFzEjA31yo7whp70D4fMiucsaoDJearRUBK5nQ8Ey+rqxZXA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/.qlROUodwhqtIk1Yt39mQlP"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAnFQG9b1mUj+BJ3-_N-HjQi2w2Vv5pg4RCErXW5axp32_7T4g@mail.gmail.com>
+In-Reply-To: <CAOzFzEjA31yo7whp70D4fMiucsaoDJearRUBK5nQ8Ey+rqxZXA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Javier Marcet <jmarcet@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Joseph Glanville <joseph.glanville@orionvm.com.au>
+Cc: Brassow Jonathan <jbrassow@redhat.com>, Paul Menzel <pm.debian@googlemail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10 March 2013 23:48, Javier Marcet <jmarcet@gmail.com> wrote:
-> Hi,
->
-> I have been using what is my a 4x3TB Raid 5 rray for the last 8 months
-> without an issue but last week I got some recoverable reading errors.
-> Initially I forced an array check and it finished without problems but
-> the problem saw up again a day later. I remembered I saw a cable which
-> I thought I should replace the last time I had to open the server
-> case, but it was built into the case so I tried not to worry.
->
-> At first I tried to reassemble the array after checking all the
-> connections inside the case and left it overnight. It should have
-> finished today by noon. Instead I was greeted by a bunch of traces
-> like this:
->
-> 20614.984915] WARNING: at drivers/md/raid5.c:352 get_active_stripe+0x6bc/0x7c0()
-> [20614.984916] Hardware name: To Be Filled By O.E.M.
-> [20614.984916] Modules linked in: mt2063 drxk cx25840 cx23885
-> btcx_risc videobuf_dvb tveeprom cx2341x videobuf_dma_sg r8169
-> videobuf_core
-> [20614.984920] Pid: 10125, comm: kworker/u:0 Tainted: G        W
-> 3.7.10-himawari #1
-> [20614.984920] Call Trace:
-> [20614.984922]  [<ffffffff810b8eaa>] warn_slowpath_common+0x7a/0xb0
-> [20614.984923]  [<ffffffff810b8ef5>] warn_slowpath_null+0x15/0x20
-> [20614.984925]  [<ffffffff8163278c>] get_active_stripe+0x6bc/0x7c0
-> [20614.984926]  [<ffffffff810e99de>] ? __wake_up+0x4e/0x70
-> [20614.984928]  [<ffffffff81659ec4>] ? md_wakeup_thread+0x34/0x60
-> [20614.984929]  [<ffffffff810ddac6>] ? prepare_to_wait+0x56/0x90
-> [20614.984931]  [<ffffffff816368aa>] make_request+0x1aa/0x6f0
-> [20614.984932]  [<ffffffff810dd850>] ? finish_wait+0x80/0x80
-> [20614.984934]  [<ffffffff8165b935>] md_make_request+0x105/0x260
-> [20614.984935]  [<ffffffff813b0e92>] generic_make_request+0xc2/0x110
-> [20614.984937]  [<ffffffff81644aea>] bch_generic_make_request_hack+0x9a/0xa0
-> [20614.984938]  [<ffffffff81644eb3>] bch_generic_make_request+0x43/0x190
-> [20614.984939]  [<ffffffff816479f8>] write_dirty+0x78/0x120
-> [20614.984941]  [<ffffffff810d597a>] process_one_work+0x13a/0x4f0
-> [20614.984942]  [<ffffffff81647980>] ? read_dirty_submit+0xe0/0xe0
-> [20614.984944]  [<ffffffff810d73c5>] worker_thread+0x165/0x480
-> [20614.984946]  [<ffffffff810d7260>] ? busy_worker_rebind_fn+0x110/0x110
-> [20614.984947]  [<ffffffff810dd0cb>] kthread+0xbb/0xc0
-> [20614.984949]  [<ffffffff810dd010>] ? flush_kthread_worker+0x70/0x70
-> [20614.984950]  [<ffffffff8188872c>] ret_from_fork+0x7c/0xb0
-> [20614.984951]  [<ffffffff810dd010>] ? flush_kthread_worker+0x70/0x70
-> [20614.984952] ---[ end trace d2db072c18819bc0 ]---
-> [20614.984954] sector=8b909ff8 i=2           (null)           (null)
->         (null)           (null) 1
-> [20614.984955] ------------[ cut here ]------------
->
-> Thinking that it could still be a loose cable, I decided to order a
-> case more suited to host the raid (than the server case where the
-> drives share space with cards and cables). Meanwhile I left the drives
-> in such a way I could use reliable cables for the two with faulty
-> cables and tried to assemble the array again.
->
-> Initially it didn't want to, and I was using mdadm --force. It started
-> to rebuild after a few seconds, though. To my dismay it ended the same
-> way. Only this time I went back through the logs and saw when was the
-> first back trace: http://bpaste.net/raw/82819/
->
-> Here is my raid.status: http://bpaste.net/raw/82820/
->
-> I have read all the info in
-> https://raid.wiki.kernel.org/index.php/RAID_Recovery#Restore_array_by_recreating_.28after_multiple_device_failure.29
-> and before I lose any chance of copying the data (most of it at least)
-> trying to forcing a complete rebuild.
->
-> I have 4.5 TB used and right now I have the filesystem mounted and I
-> can use it yet the kernel is spiting that same trace over and over
-> again. I really don't know what would be the best thing to do right
-> now and would appreciate any help.
->
->
-> --
-> Javier Marcet <jmarcet@gmail.com>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/.qlROUodwhqtIk1Yt39mQlP
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-So how are the drivers doing? smartctl -a for all HDDs please.
+On Sat, 9 Mar 2013 04:35:16 +1100 Joseph Glanville
+<joseph.glanville@orionvm.com.au> wrote:
 
-Cheers,
-Mathias
+> On 9 March 2013 00:28, Brassow Jonathan <jbrassow@redhat.com> wrote:
+> >
+> > On Mar 8, 2013, at 3:12 AM, Paul Menzel wrote:
+> >
+> >> Am Donnerstag, den 07.03.2013, 16:19 -0600 schrieb Jonathan Brassow:
+> >>> MD:  Fix some typos/grammer in MD documentation
+> >>>
+> >>> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+> >>>
+> >>> Index: linux-upstream/Documentation/md.txt
+> >>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> >>
+> >> Did you use `git format-patch`? If not, hopefully this patch can be
+> >> easily applied with `git am`.
+> >
+> > No.  I generally use 'quilt' and insert the patches into my email clien=
+t.  If it's better to do something else, let me know and I will do that.
+> >
+> >  brassow
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+> Take a look at git-format-patch and git-send-email. :)
+>=20
+> Generally this is preferred as the patches can be applied
+> automatically via git-am
+>=20
+
+I had no difficulty applying the patch with "git am".
+
+Jon:  feel free to use quilt if that works for you.  If it ever causes
+problems, I'll let you know.
+
+Patch applied -thanks,
+NeilBrown
+
+--Sig_/.qlROUodwhqtIk1Yt39mQlP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUT0liznsnt1WYoG5AQKVPw/8CucW3dFgbhzyFeYdjadtZ9Rg74N9WX9d
+SWlS6Lv8mN1+dW7n5ylDNoAvXohbt5ltwCYSDHiMHXg3tdjeAHPfJdbdWkDsXfqO
+4SS3gYnRZhurZeC7rbrIeXryl/65Yt5msAIZgWrWSfYbHOpEAYmG17sPRNMFLgA4
++nuEMbN6AXi0rVPR1ZEZQhOvTuP1XdElRLzEsBaclwFEw8YrN5tabJlm/Qq5uXZ7
+eysQXlaYtj0OI6yVgMqC1YKc5R3Z8fpCUSWKxN5qp1UoNGxnj9ucMZsO6GsyFaF5
+VdUUfSQSRHVxH4GxZnLqyG1K8SQms8hGcMOSec+FaiQAwXXtgFnGPOOxUzmUew6+
+QbNRdM2uZoHvKwHvjog4ArB/UhdCEM01hSBfdc9hjWRl/X3hXndnaReMOJXHAL0y
+Zg7wbBF4K8g2RdoYW1Zr3JmRTxTJOr8x577+OuE+YoVFjU4BHmiqXfKrkDpsJCF9
+F337u6KbQvmbD4NMlECbloYKwDeA+fO27euw63qbuJxLuPKGN+iyJAcSOSUyTzz0
+DdMOkIYzjvVlenljf8zRm+cJVRq+5uCCgNvmQJnCA9duI8sZi8srDHquzgwbXx7P
+Kilc6J+ddydQADkGNe2+tsqvwORc1AGCSdI+/5KkcL06RSb80PuCRC7smtp4j5Fe
+BJQuTglIiPs=
+=TIVy
+-----END PGP SIGNATURE-----
+
+--Sig_/.qlROUodwhqtIk1Yt39mQlP--
