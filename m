@@ -1,228 +1,145 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: raid5 lockups post ca64cae96037de16e4af92678814f5d4bf0c1c65
-Date: Tue, 12 Mar 2013 12:32:24 +1100
-Message-ID: <20130312123224.62018981@notabene.brown>
-References: <wrfj1ubvi88x.fsf@redhat.com>
-	<20130305080010.6285b435@notabene.brown>
-	<wrfjlia2fd6h.fsf@redhat.com>
-	<20130306131804.0b39752a@notabene.brown>
-	<wrfj4ngog9h0.fsf@redhat.com>
-	<20130312093231.72c54735@notabene.brown>
+Subject: Re: [PATCH] md/raid456: remove depends on CONFIG_EXPERIMENTAL
+Date: Tue, 12 Mar 2013 12:36:30 +1100
+Message-ID: <20130312123630.36df75da@notabene.brown>
+References: <20130223074001.GA5199@www.outflux.net>
+	<CAA9_cmfa1hhijh4g_hSwMy_GR81rxjEFMurJwSvhBruh1R5dtw@mail.gmail.com>
+	<20130228091110.7da87b53@notabene.brown>
+	<1362997664.3137.52.camel@x61.thuisdomein>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/nr/TFzCtyH2mT3o68cBnbTh"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130312093231.72c54735@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>, Eryu Guan <eguan@redhat.com>
+ boundary="Sig_/xj5Yz6NJqb9.XvN6tYAc.uw"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1362997664.3137.52.camel@x61.thuisdomein>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Chris Metcalf <cmetcalf@tilera.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Williams <djbw@fb.com>, Kees Cook <keescook@chromium.org>, Arjan van de Ven <arjan@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Alasdair G Kergon <agk@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 List-Id: linux-raid.ids
 
---Sig_/nr/TFzCtyH2mT3o68cBnbTh
+--Sig_/xj5Yz6NJqb9.XvN6tYAc.uw
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 12 Mar 2013 09:32:31 +1100 NeilBrown <neilb@suse.de> wrote:
+On Mon, 11 Mar 2013 11:27:44 +0100 Paul Bolle <pebolle@tiscali.nl> wrote:
 
-> On Wed, 06 Mar 2013 10:31:55 +0100 Jes Sorensen <Jes.Sorensen@redhat.com>
-> wrote:
->=20
-
+> > Following will be in -next shortly.
 > >=20
-> > I am attaching the test script I am running too. It was written by Eryu
-> > Guan.
+> > NeilBrown
+> >=20
+> >=20
+> > From 51acbcec6c42b24482bac18e42befc822524535d Mon Sep 17 00:00:00 2001
+> > From: NeilBrown <neilb@suse.de>
+> > Date: Thu, 28 Feb 2013 09:08:34 +1100
+> > Subject: [PATCH] md: remove CONFIG_MULTICORE_RAID456
+> >=20
+> > This doesn't seem to actually help and we have an alternate
+> > multi-threading approach waiting in the wings, so just get
+> > rid of this config option and associated code.
+> >=20
+> > As a bonus, we remove one use of CONFIG_EXPERIMENTAL
+> >=20
+> > Cc: Dan Williams <djbw@fb.com>
+> > Cc: Kees Cook <keescook@chromium.org>
+> > Signed-off-by: NeilBrown <neilb@suse.de>
 >=20
-> Thanks for that.  I've tried using it but haven't managed to trigger a BUG
-> yet.  What size are the loop files?  I mostly use fairly small ones, but
-> maybe it needs to be bigger to trigger the problem.
+> That commit entered mainline in v3.9-rc2 (still as commit
+> 51acbcec6c42b24482bac18e42befc822524535d). It missed one instance of
+> CONFIG_MULTICORE_RAID456, so this additional patch is needed (which also
+> cleans that macro from two defconfig files). Compile tested, by the way.
+>=20
+>=20
+> Paul Bolle
 
-Shortly after I wrote that I got a bug-on!  It hasn't happened again though.
+Thanks Paul.
 
-This was using code without that latest patch I sent.  The bug was
-		BUG_ON(s->uptodate !=3D disks);
+I'll send this off to Linus some time in the next week or so.
 
-in the check_state_compute_result case of handle_parity_checks5() which is
-probably the same cause as your most recent BUG.
-
-I've revised my thinking a bit and am now running with this patch which I
-think should fix a problem that probably caused the symptoms we have seen.
-
-If you could run your tests for a while too and is whether it will still cr=
-ash
-for you, I'd really appreciate it.
 
 Thanks,
 NeilBrown
 
 
+>=20
+> >From ab10e19eeca5ae271ae965418ff736db0230aab6 Mon Sep 17 00:00:00 2001
+> From: Paul Bolle <pebolle@tiscali.nl>
+> Date: Mon, 11 Mar 2013 11:16:25 +0100
+> Subject: [PATCH] md: remove CONFIG_MULTICORE_RAID456 entirely
+>=20
+> Once instance of this Kconfig macro remained after commit
+> 51acbcec6c42b24482bac18e42befc822524535d ("md: remove
+> CONFIG_MULTICORE_RAID456"). Remove that one too. And, while we're at it,
+> also remove it from the defconfig files that carry it.
+>=20
+> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+> ---
+>  arch/tile/configs/tilegx_defconfig  | 1 -
+>  arch/tile/configs/tilepro_defconfig | 1 -
+>  drivers/md/raid5.h                  | 4 ----
+>  3 files changed, 6 deletions(-)
+>=20
+> diff --git a/arch/tile/configs/tilegx_defconfig b/arch/tile/configs/tileg=
+x_defconfig
+> index 8c5eff6..4768481 100644
+> --- a/arch/tile/configs/tilegx_defconfig
+> +++ b/arch/tile/configs/tilegx_defconfig
+> @@ -330,7 +330,6 @@ CONFIG_MD_RAID0=3Dm
+>  CONFIG_MD_RAID1=3Dm
+>  CONFIG_MD_RAID10=3Dm
+>  CONFIG_MD_RAID456=3Dm
+> -CONFIG_MULTICORE_RAID456=3Dy
+>  CONFIG_MD_FAULTY=3Dm
+>  CONFIG_BLK_DEV_DM=3Dm
+>  CONFIG_DM_DEBUG=3Dy
+> diff --git a/arch/tile/configs/tilepro_defconfig b/arch/tile/configs/tile=
+pro_defconfig
+> index e7a3dfc..dd2b8f0 100644
+> --- a/arch/tile/configs/tilepro_defconfig
+> +++ b/arch/tile/configs/tilepro_defconfig
+> @@ -324,7 +324,6 @@ CONFIG_MD_RAID0=3Dm
+>  CONFIG_MD_RAID1=3Dm
+>  CONFIG_MD_RAID10=3Dm
+>  CONFIG_MD_RAID456=3Dm
+> -CONFIG_MULTICORE_RAID456=3Dy
+>  CONFIG_MD_FAULTY=3Dm
+>  CONFIG_BLK_DEV_DM=3Dm
+>  CONFIG_DM_DEBUG=3Dy
+> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+> index 18b2c4a..31e2ec1 100644
+> --- a/drivers/md/raid5.h
+> +++ b/drivers/md/raid5.h
+> @@ -221,10 +221,6 @@ struct stripe_head {
+>  	struct stripe_operations {
+>  		int 		     target, target2;
+>  		enum sum_check_flags zero_sum_result;
+> -		#ifdef CONFIG_MULTICORE_RAID456
+> -		unsigned long	     request;
+> -		wait_queue_head_t    wait_for_ops;
+> -		#endif
+>  	} ops;
+>  	struct r5dev {
+>  		/* rreq and rvec are used for the replacement device when
 
-Subject: [PATCH] md/raid5: ensure sync and recovery don't happen at the same
- time.
 
-A number of problems can occur due to races between
-resync/recovery and discard.
-
-- if sync_request calls handle_stripe() while a discard is
-  happening on the stripe, it might call handle_stripe_clean_event
-  before all of the individual discard requests have completed
-  (so some devices are still locked, but not all).
-  Since commit ca64cae96037de16e4af92678814f5d4bf0c1c65
-     md/raid5: Make sure we clear R5_Discard when discard is finished.
-  this will cause R5_Discard to be cleared for the parity device,
-  so handle_stripe_clean_event will not be called when the other
-  devices do become unlocked, so their ->written will not be cleared.
-  This ultimately leads to a WARN_ON in init_stripe and a lock-up.
-
-- If handle_stripe_clean_event does clear R5_UPTODATE at an awkward
-  time for resync, it can lead to s->uptodate being less than disks
-  in handle_parity_checks5(), which triggers a BUG (because it is
-  one).
-
-So:
- - keep R5_Discard  on the parity device until all other devices have
-   completed their discard request
- - make sure don't try to have a 'discard' and a 'sync' action at
-   the same time.
-
-Reported-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 51af9da..c216dd3 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2609,6 +2609,8 @@ handle_failed_sync(struct r5conf *conf, struct stripe=
-_head *sh,
- 	int i;
-=20
- 	clear_bit(STRIPE_SYNCING, &sh->state);
-+	if (test_and_clear_bit(R5_Overlap, &sh->dev[sh->pd_idx].flags))
-+		wake_up(&conf->wait_for_overlap);
- 	s->syncing =3D 0;
- 	s->replacing =3D 0;
- 	/* There is nothing more to do for sync/check/repair.
-@@ -2782,6 +2784,7 @@ static void handle_stripe_clean_event(struct r5conf *=
-conf,
- {
- 	int i;
- 	struct r5dev *dev;
-+	int discard_pending =3D 0;
-=20
- 	for (i =3D disks; i--; )
- 		if (sh->dev[i].written) {
-@@ -2810,9 +2813,23 @@ static void handle_stripe_clean_event(struct r5conf =
-*conf,
- 						STRIPE_SECTORS,
- 					 !test_bit(STRIPE_DEGRADED, &sh->state),
- 						0);
--			}
--		} else if (test_bit(R5_Discard, &sh->dev[i].flags))
--			clear_bit(R5_Discard, &sh->dev[i].flags);
-+			} else if (test_bit(R5_Discard, &dev->flags))
-+				discard_pending =3D 1;
-+		}
-+	if (!discard_pending &&
-+	    test_bit(R5_Discard, &sh->dev[sh->pd_idx].flags)) {
-+		clear_bit(R5_Discard, &sh->dev[sh->pd_idx].flags);
-+		clear_bit(R5_UPTODATE, &sh->dev[sh->pd_idx].flags);
-+		if (sh->qd_idx >=3D 0) {
-+			clear_bit(R5_Discard, &sh->dev[sh->qd_idx].flags);
-+			clear_bit(R5_UPTODATE, &sh->dev[sh->qd_idx].flags);
-+		}
-+		/* now that discard is done we can proceed with any sync */
-+		clear_bit(STRIPE_DISCARD, &sh->state);
-+		if (test_bit(STRIPE_SYNC_REQUESTED, &sh->state))
-+			set_bit(STRIPE_HANDLE, &sh->state);
-+
-+	}
-=20
- 	if (test_and_clear_bit(STRIPE_FULL_WRITE, &sh->state))
- 		if (atomic_dec_and_test(&conf->pending_full_writes))
-@@ -3464,9 +3481,15 @@ static void handle_stripe(struct stripe_head *sh)
- 		return;
- 	}
-=20
--	if (test_and_clear_bit(STRIPE_SYNC_REQUESTED, &sh->state)) {
--		set_bit(STRIPE_SYNCING, &sh->state);
--		clear_bit(STRIPE_INSYNC, &sh->state);
-+	if (test_bit(STRIPE_SYNC_REQUESTED, &sh->state)) {
-+		spin_lock(&sh->stripe_lock);
-+		/* Cannot process 'sync' concurrently with 'discard' */
-+		if (!test_bit(STRIPE_DISCARD, &sh->state) &&
-+		    test_and_clear_bit(STRIPE_SYNC_REQUESTED, &sh->state)) {
-+			set_bit(STRIPE_SYNCING, &sh->state);
-+			clear_bit(STRIPE_INSYNC, &sh->state);
-+		}
-+		spin_unlock(&sh->stripe_lock);
- 	}
- 	clear_bit(STRIPE_DELAYED, &sh->state);
-=20
-@@ -3626,6 +3649,8 @@ static void handle_stripe(struct stripe_head *sh)
- 	    test_bit(STRIPE_INSYNC, &sh->state)) {
- 		md_done_sync(conf->mddev, STRIPE_SECTORS, 1);
- 		clear_bit(STRIPE_SYNCING, &sh->state);
-+		if (test_and_clear_bit(R5_Overlap, &sh->dev[sh->pd_idx].flags))
-+			wake_up(&conf->wait_for_overlap);
- 	}
-=20
- 	/* If the failed drives are just a ReadError, then we might need
-@@ -4222,6 +4247,13 @@ static void make_discard_request(struct mddev *mddev=
-, struct bio *bi)
- 		prepare_to_wait(&conf->wait_for_overlap, &w,
- 				TASK_UNINTERRUPTIBLE);
- 		spin_lock_irq(&sh->stripe_lock);
-+		if (test_bit(STRIPE_SYNCING, &sh->state)) {
-+			set_bit(R5_Overlap, &sh->dev[sh->pd_idx].flags);
-+			spin_unlock_irq(&sh->stripe_lock);
-+			release_stripe(sh);
-+			schedule();
-+			goto again;
-+		}
- 		for (d =3D 0; d < conf->raid_disks; d++) {
- 			if (d =3D=3D sh->pd_idx || d =3D=3D sh->qd_idx)
- 				continue;
-@@ -4233,6 +4265,7 @@ static void make_discard_request(struct mddev *mddev,=
- struct bio *bi)
- 				goto again;
- 			}
- 		}
-+		set_bit(STRIPE_DISCARD, &sh->state);
- 		finish_wait(&conf->wait_for_overlap, &w);
- 		for (d =3D 0; d < conf->raid_disks; d++) {
- 			if (d =3D=3D sh->pd_idx || d =3D=3D sh->qd_idx)
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 2afd835..996bdf3 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -324,6 +324,7 @@ enum {
- 	STRIPE_COMPUTE_RUN,
- 	STRIPE_OPS_REQ_PENDING,
- 	STRIPE_ON_UNPLUG_LIST,
-+	STRIPE_DISCARD,
- };
-=20
- /*
-
---Sig_/nr/TFzCtyH2mT3o68cBnbTh
+--Sig_/xj5Yz6NJqb9.XvN6tYAc.uw
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUT6FqDnsnt1WYoG5AQK29BAAqZImkQ361RdhCs2AKRr3bOaR+rLeg6ZN
-AKgrHtsCmm9Go+++GsQTgtHyiDBAUu85bcwSHFHEUNvluE60Ymsxj/uDKpxFQWod
-d/W0RNqx15F2mgm4EAvhtBhxuKkr26qJFMuaQ6xyoxXXNAi5qsYGcJ0zeDFynIN5
-mJJ31VhbOhuP0WRWqujmJ8wkJiwzMXp45VlQsOsL+rUpgskQPMQeQIh9g5XyZjY+
-VVlUu8fdJqutPU2QEGMXx7M48l9TlaCuNf4GftPd+18YUbwxhyHeHTUJmQA1wt1Q
-Ji7BpRaEwfaraA2NNLBlmYMcZXSB3L5Jb8VUqZ6NhMF3tMiqo/UuVkDtHMCcLa9X
-SKkeYsFRLt54YyIhc6+MB8rBaF55pNygO3lOPdunmsL7tM+THbjOdKsXhyhoazYW
-ruz43P+UK2oZn/wePlw3SCZGV7CadNs9EC0CEOaInh6bzZWYuyPUcV5770W+C86j
-FSrsTcGIaqshqaw9m19vU8VJn9OyqONtNvOXop5zGdrWYY3sH2tPm2GnRXuA7Ize
-VCWZIN/Mve3271v8cmw4MjXHFuU25CungPdfr3HVKVpO2W8ET+AhkTdxEMH/4zhE
-qwaX92DRAGRDJMcQ/90p3wM+rhH2oJYslqOQkTrKU0p+noVUyxGE+vPzpARIrrFL
-IO7GkhEe+TA=
-=iJ2w
+iQIVAwUBUT6Gnjnsnt1WYoG5AQIcVQ//eM7QYT4BJ2p3U1YXkRvxJBlSqt321NLJ
+HOhHlpZNwIYG5bUlD7GkYiLbotYKMF2QUv8l3ERzXGoumJr11shGkDIV/1NgmmUd
+QHHWxIVw0pJ6hN7bRsMoUokLREhdAiw5t0HlX1NRLkN1mVfQ1HcDI8+zNgochE05
+Pwg0YyeFEF+2GgZudg2YPn/MSwMRyDKV9O3+tJdaky13JHToNO2XSt6QL+S7deGd
+NOOIPt5oPnAKCEmflVMkDryHMe5+TUOQ6589Bue3hnhvwC2DplxeOktmD4+QxR8c
++tV4BQL2QZWbLYuKVNxZ9qkJhp7F1BESXUZqCYPHS6PsP68vKml75vTJeoTQunwW
+f/hxRaLnXadIGJ18hBjmUAwQsz0b0R2CCKUkVEfvcCEwmVyLFJaZV4cfmXimSObX
+ZCaBA0T2NxTUs9LTdgv0zw1UOwXWcf1al8bqZ65Ap113iMJcY8TFOz0vGlVeqQ9j
+9pXy511XELWbfS/8xHS7PrB5xtJOoTmyy3p79l58oIo+4MPYUE7DugKtPXTREGHa
+GFyM5qoK0CI6cYYJhucwYm9KZbbxDpkNfBr/daJi/Ux4/ZaSMBzZHSu74BzlIQKs
+rQz/sBRrVAB3hvR9WSW+7GZP2p/Owk/mJ4FD9hQAOZM1aoy3bQMOoOFJ4c8dw2/B
+AIxI2J5KItM=
+=0XQW
 -----END PGP SIGNATURE-----
 
---Sig_/nr/TFzCtyH2mT3o68cBnbTh--
+--Sig_/xj5Yz6NJqb9.XvN6tYAc.uw--
