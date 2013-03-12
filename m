@@ -1,90 +1,182 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: raid5 lockups post ca64cae96037de16e4af92678814f5d4bf0c1c65
-Date: Tue, 12 Mar 2013 14:45:44 +0100
-Message-ID: <wrfjobeo91fb.fsf@redhat.com>
-References: <wrfj1ubvi88x.fsf@redhat.com>
-	<20130305080010.6285b435@notabene.brown> <wrfjlia2fd6h.fsf@redhat.com>
-	<20130306131804.0b39752a@notabene.brown> <wrfj4ngog9h0.fsf@redhat.com>
-	<20130312093231.72c54735@notabene.brown>
-	<20130312123224.62018981@notabene.brown>
+From: Paul Taysom <taysom@google.com>
+Subject: Re: [PATCH] md: dm-verity: Fix to avoid a deadlock in dm-bufio
+Date: Tue, 12 Mar 2013 07:46:37 -0700
+Message-ID: <CAKwO_5E38qFYVM+DbnhuYOr9bs32nKKFTzcdqh-BZe=p8wDmYg@mail.gmail.com>
+References: <1362415549-18653-1-git-send-email-taysom@chromium.org>
+	<20130304174254.GF8913@agk.fab.redhat.com>
+	<CAKwO_5GwN8PCtK6tM=KWvZMJHb357O+Bh3TpF3k3vB_0x_FtpQ@mail.gmail.com>
+	<Pine.LNX.4.64.1303041711070.28666@file.rdu.redhat.com>
+	<CAKwO_5EEW3Aqoua1zBOa8s3mrEDf7ncOvg6t_AAeSnk0jYcUWg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130312123224.62018981@notabene.brown> (NeilBrown's message of
-	"Tue, 12 Mar 2013 12:32:24 +1100")
+In-Reply-To: <CAKwO_5EEW3Aqoua1zBOa8s3mrEDf7ncOvg6t_AAeSnk0jYcUWg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>, Eryu Guan <eguan@redhat.com>
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Paul Taysom <taysom@chromium.org>, agk@redhat.com, dm-devel@redhat.com, neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Mandeep Singh Baines <msb@chromium.org>, Olof Johansson <olofj@chromium.org>
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> writes:
-> On Tue, 12 Mar 2013 09:32:31 +1100 NeilBrown <neilb@suse.de> wrote:
+Looks good to me.
+
+On Tue, Mar 5, 2013 at 3:30 PM, Paul Taysom <taysom@google.com> wrote:
+> seconds_kernel_to_login: 8.17s
+> Passed all my other tests
 >
->> On Wed, 06 Mar 2013 10:31:55 +0100 Jes Sorensen <Jes.Sorensen@redhat.com>
->> wrote:
->> 
->
->> > 
->> > I am attaching the test script I am running too. It was written by Eryu
->> > Guan.
->> 
->> Thanks for that.  I've tried using it but haven't managed to trigger a BUG
->> yet.  What size are the loop files?  I mostly use fairly small ones, but
->> maybe it needs to be bigger to trigger the problem.
->
-> Shortly after I wrote that I got a bug-on!  It hasn't happened again though.
->
-> This was using code without that latest patch I sent.  The bug was
-> 		BUG_ON(s->uptodate != disks);
->
-> in the check_state_compute_result case of handle_parity_checks5() which is
-> probably the same cause as your most recent BUG.
->
-> I've revised my thinking a bit and am now running with this patch which I
-> think should fix a problem that probably caused the symptoms we have seen.
->
-> If you could run your tests for a while too and is whether it will still crash
-> for you, I'd really appreciate it.
-
-Hi Neil,
-
-Sorry I can't verify the line numbers of my old test since I managed to
-mess up my git tree in the process :(
-
-However running with this new patch I have just hit another but
-different case. Looks like a deadlock.
-
-This is basically running ca64cae96037de16e4af92678814f5d4bf0c1c65 with
-your patch applied on top, and nothing else.
-
-If you want me to try a more uptodate Linus tree, please let me know.
-
-Cheers,
-Jes
-
-
-[17635.205927] INFO: task mkfs.ext4:20060 blocked for more than 120 seconds.
-[17635.213543] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[17635.222291] mkfs.ext4       D ffff880236814100     0 20060  20026 0x00000080
-[17635.230199]  ffff8801bc8bbb98 0000000000000082 ffff88022f0be540 ffff8801bc8bbfd8
-[17635.238518]  ffff8801bc8bbfd8 ffff8801bc8bbfd8 ffff88022d47b2a0 ffff88022f0be540
-[17635.246837]  ffff8801cea1f430 000000000001d5f0 ffff8801c7f4f430 ffff88022169a400
-[17635.255161] Call Trace:
-[17635.257891]  [<ffffffff81614f79>] schedule+0x29/0x70
-[17635.263433]  [<ffffffffa0386ada>] make_request+0x6da/0x6f0 [raid456]
-[17635.270525]  [<ffffffff81084210>] ? wake_up_bit+0x40/0x40
-[17635.276560]  [<ffffffff814a6633>] md_make_request+0xc3/0x200
-[17635.282884]  [<ffffffff81134655>] ? mempool_alloc_slab+0x15/0x20
-[17635.289586]  [<ffffffff812c70d2>] generic_make_request+0xc2/0x110
-[17635.296393]  [<ffffffff812c7199>] submit_bio+0x79/0x160
-[17635.302232]  [<ffffffff811ca625>] ? bio_alloc_bioset+0x65/0x120
-[17635.308844]  [<ffffffff812ce234>] blkdev_issue_discard+0x184/0x240
-[17635.315748]  [<ffffffff812cef76>] blkdev_ioctl+0x3b6/0x810
-[17635.321877]  [<ffffffff811cb971>] block_ioctl+0x41/0x50
-[17635.327714]  [<ffffffff811a6aa9>] do_vfs_ioctl+0x99/0x580
-[17635.333745]  [<ffffffff8128a19a>] ? inode_has_perm.isra.30.constprop.60+0x2a/0x30
-[17635.342103]  [<ffffffff8128b6d7>] ? file_has_perm+0x97/0xb0
-[17635.348329]  [<ffffffff811a7021>] sys_ioctl+0x91/0xb0
-[17635.353972]  [<ffffffff810de9dc>] ? __audit_syscall_exit+0x3ec/0x450
-[17635.361070]  [<ffffffff8161e759>] system_call_fastpath+0x16/0x1b
-
+> On Mon, Mar 4, 2013 at 2:15 PM, Mikulas Patocka <mpatocka@redhat.com> wrote:
+>>
+>>
+>> On Mon, 4 Mar 2013, Paul Taysom wrote:
+>>
+>>> On Mon, Mar 4, 2013 at 9:42 AM, Alasdair G Kergon <agk@redhat.com> wrote:
+>>> > On Mon, Mar 04, 2013 at 08:45:48AM -0800, Paul Taysom wrote:
+>>> >> @@ -449,8 +468,14 @@ static void verity_prefetch_io(struct dm_verity *v, struct dm_verity_io *io)
+>>> >>                               hash_block_end = v->hash_blocks - 1;
+>>> >>               }
+>>> >>  no_prefetch_cluster:
+>>> >> -             dm_bufio_prefetch(v->bufio, hash_block_start,
+>>> >> -                               hash_block_end - hash_block_start + 1);
+>>> >> +             vw = kmalloc(sizeof(*vw), GFP_KERNEL);
+>>> >
+>>> > kmalloc?  mempool? ...
+>>> >
+>>> > Alasdair
+>>> >
+>>> The use of mempool would be a separate patch that would have to be
+>>> measured for performance impact.
+>>> -Paul
+>>>
+>>
+>> You don't have to use mempool. Just avoid prefetching if there is not
+>> enough memory for the prefetch structure.
+>>
+>> I reworked the patch, is uses an allocation that can fail and it generates
+>> just one workqueue entry for one request (the original patch generated one
+>> workqueue entry for hash tree level).
+>>
+>> Please test the patch and if it works and performs well, let's submit it.
+>>
+>> Mikulas
+>>
+>> ---
+>>
+>> Changed the dm-verity prefetching to use a worker thread to avoid
+>> a deadlock in dm-bufio.
+>>
+>> If generic_make_request is called recursively, it queues the I/O
+>> request on the current->bio_list without making the I/O request
+>> and returns. The routine making the recursive call cannot wait
+>> for the I/O to complete.
+>>
+>> The deadlock occurred when one thread grabbed the bufio_client
+>> mutex and waited for an I/O to complete but the I/O was queued
+>> on another thread's current->bio_list and it was waiting to get
+>> the mutex held by the first thread.
+>>
+>> The fix allows only one I/O request from dm-verity to dm-bufio
+>> per thread. To do this, the prefetch requests were queued on worker
+>> threads.
+>>
+>> In addition to avoiding the deadlock, this fix made a slight
+>> improvement in performance.
+>>
+>> seconds_kernel_to_login:
+>>   with prefetch:    8.43s
+>>   without prefetch: 9.2s
+>>   worker prefetch:  8.28s
+>>
+>> Signed-off-by: Paul Taysom <taysom@chromium.org>
+>> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+>> Cc: stable@kernel.org
+>> ---
+>>  drivers/md/dm-bufio.c  |    2 ++
+>>  drivers/md/dm-verity.c |   37 +++++++++++++++++++++++++++++++++----
+>>  2 files changed, 35 insertions(+), 4 deletions(-)
+>>
+>> Index: linux-3.8-fast/drivers/md/dm-verity.c
+>> ===================================================================
+>> --- linux-3.8-fast.orig/drivers/md/dm-verity.c  2013-03-04 22:49:20.000000000 +0100
+>> +++ linux-3.8-fast/drivers/md/dm-verity.c       2013-03-04 23:10:45.000000000 +0100
+>> @@ -93,6 +93,13 @@ struct dm_verity_io {
+>>          */
+>>  };
+>>
+>> +struct dm_verity_prefetch_work {
+>> +       struct work_struct work;
+>> +       struct dm_verity *v;
+>> +       sector_t block;
+>> +       unsigned n_blocks;
+>> +};
+>> +
+>>  static struct shash_desc *io_hash_desc(struct dm_verity *v, struct dm_verity_io *io)
+>>  {
+>>         return (struct shash_desc *)(io + 1);
+>> @@ -424,15 +431,18 @@ static void verity_end_io(struct bio *bi
+>>   * The root buffer is not prefetched, it is assumed that it will be cached
+>>   * all the time.
+>>   */
+>> -static void verity_prefetch_io(struct dm_verity *v, struct dm_verity_io *io)
+>> +static void verity_prefetch_io(struct work_struct *work)
+>>  {
+>> +       struct dm_verity_prefetch_work *pw =
+>> +               container_of(work, struct dm_verity_prefetch_work, work);
+>> +       struct dm_verity *v = pw->v;
+>>         int i;
+>>
+>>         for (i = v->levels - 2; i >= 0; i--) {
+>>                 sector_t hash_block_start;
+>>                 sector_t hash_block_end;
+>> -               verity_hash_at_level(v, io->block, i, &hash_block_start, NULL);
+>> -               verity_hash_at_level(v, io->block + io->n_blocks - 1, i, &hash_block_end, NULL);
+>> +               verity_hash_at_level(v, pw->block, i, &hash_block_start, NULL);
+>> +               verity_hash_at_level(v, pw->block + pw->n_blocks - 1, i, &hash_block_end, NULL);
+>>                 if (!i) {
+>>                         unsigned cluster = ACCESS_ONCE(dm_verity_prefetch_cluster);
+>>
+>> @@ -452,6 +462,25 @@ no_prefetch_cluster:
+>>                 dm_bufio_prefetch(v->bufio, hash_block_start,
+>>                                   hash_block_end - hash_block_start + 1);
+>>         }
+>> +
+>> +       kfree(pw);
+>> +}
+>> +
+>> +static void verity_submit_prefetch(struct dm_verity *v, struct dm_verity_io *io)
+>> +{
+>> +       struct dm_verity_prefetch_work *pw;
+>> +
+>> +       pw = kmalloc(sizeof(struct dm_verity_prefetch_work),
+>> +               GFP_NOIO | __GFP_NORETRY | __GFP_NOMEMALLOC | __GFP_NOWARN);
+>> +
+>> +       if (!pw)
+>> +               return;
+>> +
+>> +       INIT_WORK(&pw->work, verity_prefetch_io);
+>> +       pw->v = v;
+>> +       pw->block = io->block;
+>> +       pw->n_blocks = io->n_blocks;
+>> +       queue_work(v->verify_wq, &pw->work);
+>>  }
+>>
+>>  /*
+>> @@ -498,7 +527,7 @@ static int verity_map(struct dm_target *
+>>         memcpy(io->io_vec, bio_iovec(bio),
+>>                io->io_vec_size * sizeof(struct bio_vec));
+>>
+>> -       verity_prefetch_io(v, io);
+>> +       verity_submit_prefetch(v, io);
+>>
+>>         generic_make_request(bio);
+>>
+>> Index: linux-3.8-fast/drivers/md/dm-bufio.c
+>> ===================================================================
+>> --- linux-3.8-fast.orig/drivers/md/dm-bufio.c   2013-03-04 23:03:14.000000000 +0100
+>> +++ linux-3.8-fast/drivers/md/dm-bufio.c        2013-03-04 23:04:19.000000000 +0100
+>> @@ -1026,6 +1026,8 @@ void dm_bufio_prefetch(struct dm_bufio_c
+>>  {
+>>         struct blk_plug plug;
+>>
+>> +       BUG_ON(dm_bufio_in_request());
+>> +
+>>         blk_start_plug(&plug);
+>>         dm_bufio_lock(c);
+>>
