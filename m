@@ -1,145 +1,87 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md/raid456: remove depends on CONFIG_EXPERIMENTAL
-Date: Tue, 12 Mar 2013 12:36:30 +1100
-Message-ID: <20130312123630.36df75da@notabene.brown>
-References: <20130223074001.GA5199@www.outflux.net>
-	<CAA9_cmfa1hhijh4g_hSwMy_GR81rxjEFMurJwSvhBruh1R5dtw@mail.gmail.com>
-	<20130228091110.7da87b53@notabene.brown>
-	<1362997664.3137.52.camel@x61.thuisdomein>
+Subject: Re: [patch 2/2 v3]raid5: create multiple threads to handle stripes
+Date: Tue, 12 Mar 2013 12:39:27 +1100
+Message-ID: <20130312123927.16e49ea9@notabene.brown>
+References: <20120809085808.GB30111@kernel.org>
+	<20130307073123.GA5819@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/xj5Yz6NJqb9.XvN6tYAc.uw"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1362997664.3137.52.camel@x61.thuisdomein>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Chris Metcalf <cmetcalf@tilera.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Williams <djbw@fb.com>, Kees Cook <keescook@chromium.org>, Arjan van de Ven <arjan@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Alasdair G Kergon <agk@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ boundary="Sig_/OWFyjB9M_3jGUhHv7_fhNmg"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20130307073123.GA5819@kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@gmail.com
 List-Id: linux-raid.ids
 
---Sig_/xj5Yz6NJqb9.XvN6tYAc.uw
+--Sig_/OWFyjB9M_3jGUhHv7_fhNmg
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 11 Mar 2013 11:27:44 +0100 Paul Bolle <pebolle@tiscali.nl> wrote:
+On Thu, 7 Mar 2013 15:31:23 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-> > Following will be in -next shortly.
-> >=20
-> > NeilBrown
-> >=20
-> >=20
-> > From 51acbcec6c42b24482bac18e42befc822524535d Mon Sep 17 00:00:00 2001
-> > From: NeilBrown <neilb@suse.de>
-> > Date: Thu, 28 Feb 2013 09:08:34 +1100
-> > Subject: [PATCH] md: remove CONFIG_MULTICORE_RAID456
-> >=20
-> > This doesn't seem to actually help and we have an alternate
-> > multi-threading approach waiting in the wings, so just get
-> > rid of this config option and associated code.
-> >=20
-> > As a bonus, we remove one use of CONFIG_EXPERIMENTAL
-> >=20
-> > Cc: Dan Williams <djbw@fb.com>
-> > Cc: Kees Cook <keescook@chromium.org>
-> > Signed-off-by: NeilBrown <neilb@suse.de>
+> Hi Neil,
 >=20
-> That commit entered mainline in v3.9-rc2 (still as commit
-> 51acbcec6c42b24482bac18e42befc822524535d). It missed one instance of
-> CONFIG_MULTICORE_RAID456, so this additional patch is needed (which also
-> cleans that macro from two defconfig files). Compile tested, by the way.
+> I just noticed this one is missed. It used to be in your branch, but get
+> dropped some time. Is anything I missed? I can resend it if you like.
 >=20
+> Thanks,
+> Shaohua
 >=20
-> Paul Bolle
+> On Thu, Aug 09, 2012 at 04:58:08PM +0800, Shaohua Li wrote:
+> > This is a new tempt to make raid5 handle stripes in multiple threads, as
+> > suggested by Neil to have maxium flexibility and better numa binding. It
+> > basically is a combination of my first and second generation patches. By
+> > default, no multiple thread is enabled (all stripes are handled by raid=
+5d).
+> >=20
+> > An example to enable multiple threads:
+> > #echo 3 > /sys/block/md0/md/auxthread_number
+> > This will create 3 auxiliary threads to handle stripes. The threads can=
+ run
+> > on any cpus and handle stripes produced by any cpus.
+> >=20
+> > #echo 1-3 > /sys/block/md0/md/auxth0/cpulist
+> > This will bind auxiliary thread 0 to cpu 1-3, and this thread will only=
+ handle
+> > stripes produced by cpu 1-3. User tool can further change the thread's
+> > affinity, but the thread can only handle stripes produced by cpu 1-3 ti=
+ll the
+> > sysfs entry is changed again.
+> >=20
+> > If stripes produced by a CPU aren't handled by any auxiliary thread, su=
+ch
+> > stripes will be handled by raid5d. Otherwise, raid5d doesn't handle any
+> > stripes.
 
-Thanks Paul.
 
-I'll send this off to Linus some time in the next week or so.
+Hi Shaohua,
+ I still have this sitting in my queue, but I haven't had a chance to look =
+at
+ is properly yet - I'm sorry about that.  I'll try to get to it soon.
 
-
-Thanks,
 NeilBrown
 
-
->=20
-> >From ab10e19eeca5ae271ae965418ff736db0230aab6 Mon Sep 17 00:00:00 2001
-> From: Paul Bolle <pebolle@tiscali.nl>
-> Date: Mon, 11 Mar 2013 11:16:25 +0100
-> Subject: [PATCH] md: remove CONFIG_MULTICORE_RAID456 entirely
->=20
-> Once instance of this Kconfig macro remained after commit
-> 51acbcec6c42b24482bac18e42befc822524535d ("md: remove
-> CONFIG_MULTICORE_RAID456"). Remove that one too. And, while we're at it,
-> also remove it from the defconfig files that carry it.
->=20
-> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
-> ---
->  arch/tile/configs/tilegx_defconfig  | 1 -
->  arch/tile/configs/tilepro_defconfig | 1 -
->  drivers/md/raid5.h                  | 4 ----
->  3 files changed, 6 deletions(-)
->=20
-> diff --git a/arch/tile/configs/tilegx_defconfig b/arch/tile/configs/tileg=
-x_defconfig
-> index 8c5eff6..4768481 100644
-> --- a/arch/tile/configs/tilegx_defconfig
-> +++ b/arch/tile/configs/tilegx_defconfig
-> @@ -330,7 +330,6 @@ CONFIG_MD_RAID0=3Dm
->  CONFIG_MD_RAID1=3Dm
->  CONFIG_MD_RAID10=3Dm
->  CONFIG_MD_RAID456=3Dm
-> -CONFIG_MULTICORE_RAID456=3Dy
->  CONFIG_MD_FAULTY=3Dm
->  CONFIG_BLK_DEV_DM=3Dm
->  CONFIG_DM_DEBUG=3Dy
-> diff --git a/arch/tile/configs/tilepro_defconfig b/arch/tile/configs/tile=
-pro_defconfig
-> index e7a3dfc..dd2b8f0 100644
-> --- a/arch/tile/configs/tilepro_defconfig
-> +++ b/arch/tile/configs/tilepro_defconfig
-> @@ -324,7 +324,6 @@ CONFIG_MD_RAID0=3Dm
->  CONFIG_MD_RAID1=3Dm
->  CONFIG_MD_RAID10=3Dm
->  CONFIG_MD_RAID456=3Dm
-> -CONFIG_MULTICORE_RAID456=3Dy
->  CONFIG_MD_FAULTY=3Dm
->  CONFIG_BLK_DEV_DM=3Dm
->  CONFIG_DM_DEBUG=3Dy
-> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-> index 18b2c4a..31e2ec1 100644
-> --- a/drivers/md/raid5.h
-> +++ b/drivers/md/raid5.h
-> @@ -221,10 +221,6 @@ struct stripe_head {
->  	struct stripe_operations {
->  		int 		     target, target2;
->  		enum sum_check_flags zero_sum_result;
-> -		#ifdef CONFIG_MULTICORE_RAID456
-> -		unsigned long	     request;
-> -		wait_queue_head_t    wait_for_ops;
-> -		#endif
->  	} ops;
->  	struct r5dev {
->  		/* rreq and rvec are used for the replacement device when
-
-
---Sig_/xj5Yz6NJqb9.XvN6tYAc.uw
+--Sig_/OWFyjB9M_3jGUhHv7_fhNmg
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUT6Gnjnsnt1WYoG5AQIcVQ//eM7QYT4BJ2p3U1YXkRvxJBlSqt321NLJ
-HOhHlpZNwIYG5bUlD7GkYiLbotYKMF2QUv8l3ERzXGoumJr11shGkDIV/1NgmmUd
-QHHWxIVw0pJ6hN7bRsMoUokLREhdAiw5t0HlX1NRLkN1mVfQ1HcDI8+zNgochE05
-Pwg0YyeFEF+2GgZudg2YPn/MSwMRyDKV9O3+tJdaky13JHToNO2XSt6QL+S7deGd
-NOOIPt5oPnAKCEmflVMkDryHMe5+TUOQ6589Bue3hnhvwC2DplxeOktmD4+QxR8c
-+tV4BQL2QZWbLYuKVNxZ9qkJhp7F1BESXUZqCYPHS6PsP68vKml75vTJeoTQunwW
-f/hxRaLnXadIGJ18hBjmUAwQsz0b0R2CCKUkVEfvcCEwmVyLFJaZV4cfmXimSObX
-ZCaBA0T2NxTUs9LTdgv0zw1UOwXWcf1al8bqZ65Ap113iMJcY8TFOz0vGlVeqQ9j
-9pXy511XELWbfS/8xHS7PrB5xtJOoTmyy3p79l58oIo+4MPYUE7DugKtPXTREGHa
-GFyM5qoK0CI6cYYJhucwYm9KZbbxDpkNfBr/daJi/Ux4/ZaSMBzZHSu74BzlIQKs
-rQz/sBRrVAB3hvR9WSW+7GZP2p/Owk/mJ4FD9hQAOZM1aoy3bQMOoOFJ4c8dw2/B
-AIxI2J5KItM=
-=0XQW
+iQIVAwUBUT6HTznsnt1WYoG5AQJzcQ//Uj6XMRSnIrOv2kIvpcjnKIpy3fLFxe/6
+kfEBl2AaVv5+vWCRa4ncnOxpAsGaUv+rwVp+koiTGSpkBhnigDxlOVgfZo546Kux
+qzwZPLyIHzXSV3W8DnLpD7Zqtfz5+xwIqWBc4EtuIzsSaM95E2LEeAguB8NFwQXO
+7SnbvLYRghqkiX5WW2BazYS6ZfHtdMXsSpBAGFzKe3pvx2tfF/3isKW/9W0Yl4BE
+FxmXYiO49nSSErOCNk58nBWLCf5kO4lA5pHriqrrjAtcmAZhXOFJlvqx7LltQwl/
+XWzULbGGEo1a8t0yrgDbqqOc0EKqIkXZRY07Hb1RxLVTJIJyStaPX0p05lL1lL7U
+AJmSPk578Fonr1qkKrFGGOCQ95u8b53XQqU504bQxANVCoYGlu7AzezwI2k37tgW
+ryeg5RImoS2KklrIWq/EGYzrQEOFkPqIUPT+qTTTGZFYMreBV+L6IlMx0zBmk4Lu
+Lb4WSzC04U40ZVJPTmRtwqSWefvLuiGPnPNkNanI39OVQWfA697oNR4PHsm9P6Vz
+8uD58+fvGXJemjWNkmP5mePSsMMZ4RKwnZrW1ZTvlKz+30FOlhjKLao8AWDYmqki
+Qsq36RFNs56I89f4jL9CF1iU7NxHtpTL++w96oSUNl337nm3GTD0c2H/4mfDuwn0
+FvzF1fHd1mk=
+=VSXz
 -----END PGP SIGNATURE-----
 
---Sig_/xj5Yz6NJqb9.XvN6tYAc.uw--
+--Sig_/OWFyjB9M_3jGUhHv7_fhNmg--
