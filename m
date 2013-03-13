@@ -1,70 +1,28 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Persistent failures with simple md setup
-Date: Wed, 13 Mar 2013 11:52:35 +1100
-Message-ID: <20130313115235.01492c21@notabene.brown>
-References: <1565063.1kpR7lz4Ph@xrated>
-	<20130301082520.19be933a@notabene.brown>
-	<1659994.UpSJlIr5Mb@xrated>
-	<4291349.FrQcKOnicQ@xrated>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Help with two momentarily failed drives out of a 4x3TB Raid 5
+Date: Wed, 13 Mar 2013 05:13:00 +0100 (CET)
+Message-ID: <alpine.DEB.2.00.1303130512310.378@uplift.swm.pp.se>
+References: <CAAnFQG8Ca7fkr-vboobr_qmRMTn38U9QP5hiT-9Ps0BqWcunzw@mail.gmail.com> <29375201.0.1362994874930.JavaMail.root@zimbra> <CAAnFQG__hwROJG1mE9BAaoapUDXTos+52udEp0yc6SfQz==DKA@mail.gmail.com> <CADNH=7E0788eV7zZKbWao4n1+WEMCcaX9sp7MkBgsCKrLmocSA@mail.gmail.com>
+ <CAAnFQG_mJEAa=nPTOm0n7pjX7g8saLRTEtm-FDhP5+MYOOsH5Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/h.Ts/D9Qdgq3bE2nAA88aiD"; protocol="application/pgp-signature"
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4291349.FrQcKOnicQ@xrated>
+In-Reply-To: <CAAnFQG_mJEAa=nPTOm0n7pjX7g8saLRTEtm-FDhP5+MYOOsH5Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Hans-Peter Jansen <hpj@urpla.net>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Javier Marcet <jmarcet@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/h.Ts/D9Qdgq3bE2nAA88aiD
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, 12 Mar 2013, Javier Marcet wrote:
 
+> I have filed the RMAs and ordered a new disk so that I can at least copy 
+> some of the data. Yet I have been thinking I could clone the drive which 
+> is still part of the array and has one bad sector over the new one and 
+> try to assemble the raid with the clone.
+>
+> Could that work?
 
-hi,
- wonder if you could try one more test for me.
- With the other (echo BEFORE / echo AFTER etc) tracing still there, change =
-the
-   /sbin/udevadm settle --timeout=3D$MDADM_DEVICE_TIMEOUT
- to
+Yes, to use dd_rescue or gddrescue for this purpose is very common.
 
-   /sbin/udevadm --debug settle --timeout=3D$MDADM_DEVICE_TIMEOUT > /dev/km=
-sg 2>&1
-
- I found there is a case where "udevadm settle" can exit before the queue is
- empty.  It seems like a very unlikely scenario, but it seems clear that
- something "unlikely" is happening.
- I'm hoping to see
-    timeout waiting for udev queue
-
- appear in the logs when this runs.
-
- If you could add that and post the 'dmesg' output if you ever get that
- message - or maybe even if you don't - that would be very helpful.
-
-Thanks,
-NeilBrown
-
---Sig_/h.Ts/D9Qdgq3bE2nAA88aiD
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUT/N0znsnt1WYoG5AQKhfQ//SbCCK0cTf3LlgUzABeCLEq4l7h2TKUlq
-g7EaXAI8K3vJAAljy85W3B8IySqqNyCC6yLcbuFZplkFWzsw/81MhteFHg9qyhPm
-5ebesLz1qzUV9h9zDyxaZUadLDZCCh+1W7103aqNs2nR3K803rBYvj4H+tW6/zty
-6VwtL/NoR+O2Qep5iubTe6YrfX2WJXr3bX7kJl6alp4LaPCL2LUypzEoq39OcSbF
-hpGnKrKzVIJCGBb4B89+baET8ay5uU12H6ok/mpLB0LfhyHhzxp1hGQ5t63k3xT9
-j29J77u06ZLRQsF4LLc0hnyuc1DdKD816z0bMI91lNNJ9WiiViSbl3KTuopDIg3b
-eo5gsIUsf11j2L+dUW9pD9Y7thJpoWzDUHaDG7sV7wVpwsqTK6WNUTwCGlyNaDih
-s5CgRZ0MorigrerXRtGWah9VmqEnukBiUTrxuvgV0+R/+090Gj3xIBi4IWTdF8g3
-nAJXHrpwpmnm8ivM+Sd0MkQyj5nuoPVog2wq6UL07/GMYcXuOE+kxrOED3koC+xs
-IQwW7Q7c5x3ZMA9/rRoab0Ohu2C38IEz5nMr4zB1zMfScBBWdVkfqBb66g1qHUsQ
-90KGaxN6eIr33oDt65/2FX0seNUtasTEMfpwWgHSOLgZyyGBNzBV0ENFSVVlRaMo
-8LumEQVHnI8=
-=z5Hm
------END PGP SIGNATURE-----
-
---Sig_/h.Ts/D9Qdgq3bE2nAA88aiD--
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
