@@ -1,186 +1,55 @@
-From: Paul Taysom <taysom@google.com>
-Subject: Re: [PATCH] md: dm-verity: Fix to avoid a deadlock in dm-bufio
-Date: Wed, 13 Mar 2013 13:18:05 -0700
-Message-ID: <CAKwO_5GsCO3iLgmrHHjUYW0w-ZE6XJ_0RbhH5uEVCSsMDkG9qA@mail.gmail.com>
-References: <1362415549-18653-1-git-send-email-taysom@chromium.org>
-	<20130304174254.GF8913@agk.fab.redhat.com>
-	<CAKwO_5GwN8PCtK6tM=KWvZMJHb357O+Bh3TpF3k3vB_0x_FtpQ@mail.gmail.com>
-	<Pine.LNX.4.64.1303041711070.28666@file.rdu.redhat.com>
-	<CAKwO_5EEW3Aqoua1zBOa8s3mrEDf7ncOvg6t_AAeSnk0jYcUWg@mail.gmail.com>
-	<CAKwO_5E38qFYVM+DbnhuYOr9bs32nKKFTzcdqh-BZe=p8wDmYg@mail.gmail.com>
+From: Joel Young <jdy@cryregarder.com>
+Subject: RAID 0 of Two RAID 5s Stays Up When Component RAID fails
+Date: Thu, 14 Mar 2013 01:33:52 +0000 (UTC)
+Message-ID: <loom.20130314T022616-853@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAKwO_5E38qFYVM+DbnhuYOr9bs32nKKFTzcdqh-BZe=p8wDmYg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Paul Taysom <taysom@chromium.org>, agk@redhat.com, dm-devel@redhat.com, neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Mandeep Singh Baines <msb@chromium.org>, Olof Johansson <olofj@chromium.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Mar 12, 2013 at 7:46 AM, Paul Taysom <taysom@google.com> wrote:
-> Looks good to me.
->
-> On Tue, Mar 5, 2013 at 3:30 PM, Paul Taysom <taysom@google.com> wrote:
->> seconds_kernel_to_login: 8.17s
->> Passed all my other tests
->>
->> On Mon, Mar 4, 2013 at 2:15 PM, Mikulas Patocka <mpatocka@redhat.com> wrote:
->>>
->>>
->>> On Mon, 4 Mar 2013, Paul Taysom wrote:
->>>
->>>> On Mon, Mar 4, 2013 at 9:42 AM, Alasdair G Kergon <agk@redhat.com> wrote:
->>>> > On Mon, Mar 04, 2013 at 08:45:48AM -0800, Paul Taysom wrote:
->>>> >> @@ -449,8 +468,14 @@ static void verity_prefetch_io(struct dm_verity *v, struct dm_verity_io *io)
->>>> >>                               hash_block_end = v->hash_blocks - 1;
->>>> >>               }
->>>> >>  no_prefetch_cluster:
->>>> >> -             dm_bufio_prefetch(v->bufio, hash_block_start,
->>>> >> -                               hash_block_end - hash_block_start + 1);
->>>> >> +             vw = kmalloc(sizeof(*vw), GFP_KERNEL);
->>>> >
->>>> > kmalloc?  mempool? ...
->>>> >
->>>> > Alasdair
->>>> >
->>>> The use of mempool would be a separate patch that would have to be
->>>> measured for performance impact.
->>>> -Paul
->>>>
->>>
->>> You don't have to use mempool. Just avoid prefetching if there is not
->>> enough memory for the prefetch structure.
->>>
->>> I reworked the patch, is uses an allocation that can fail and it generates
->>> just one workqueue entry for one request (the original patch generated one
->>> workqueue entry for hash tree level).
->>>
->>> Please test the patch and if it works and performs well, let's submit it.
->>>
->>> Mikulas
->>>
->>> ---
->>>
->>> Changed the dm-verity prefetching to use a worker thread to avoid
->>> a deadlock in dm-bufio.
->>>
->>> If generic_make_request is called recursively, it queues the I/O
->>> request on the current->bio_list without making the I/O request
->>> and returns. The routine making the recursive call cannot wait
->>> for the I/O to complete.
->>>
->>> The deadlock occurred when one thread grabbed the bufio_client
->>> mutex and waited for an I/O to complete but the I/O was queued
->>> on another thread's current->bio_list and it was waiting to get
->>> the mutex held by the first thread.
->>>
->>> The fix allows only one I/O request from dm-verity to dm-bufio
->>> per thread. To do this, the prefetch requests were queued on worker
->>> threads.
->>>
->>> In addition to avoiding the deadlock, this fix made a slight
->>> improvement in performance.
->>>
->>> seconds_kernel_to_login:
->>>   with prefetch:    8.43s
->>>   without prefetch: 9.2s
->>>   worker prefetch:  8.28s
->>>
->>> Signed-off-by: Paul Taysom <taysom@chromium.org>
->>> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
->>> Cc: stable@kernel.org
->>> ---
->>>  drivers/md/dm-bufio.c  |    2 ++
->>>  drivers/md/dm-verity.c |   37 +++++++++++++++++++++++++++++++++----
->>>  2 files changed, 35 insertions(+), 4 deletions(-)
->>>
->>> Index: linux-3.8-fast/drivers/md/dm-verity.c
->>> ===================================================================
->>> --- linux-3.8-fast.orig/drivers/md/dm-verity.c  2013-03-04 22:49:20.000000000 +0100
->>> +++ linux-3.8-fast/drivers/md/dm-verity.c       2013-03-04 23:10:45.000000000 +0100
->>> @@ -93,6 +93,13 @@ struct dm_verity_io {
->>>          */
->>>  };
->>>
->>> +struct dm_verity_prefetch_work {
->>> +       struct work_struct work;
->>> +       struct dm_verity *v;
->>> +       sector_t block;
->>> +       unsigned n_blocks;
->>> +};
->>> +
->>>  static struct shash_desc *io_hash_desc(struct dm_verity *v, struct dm_verity_io *io)
->>>  {
->>>         return (struct shash_desc *)(io + 1);
->>> @@ -424,15 +431,18 @@ static void verity_end_io(struct bio *bi
->>>   * The root buffer is not prefetched, it is assumed that it will be cached
->>>   * all the time.
->>>   */
->>> -static void verity_prefetch_io(struct dm_verity *v, struct dm_verity_io *io)
->>> +static void verity_prefetch_io(struct work_struct *work)
->>>  {
->>> +       struct dm_verity_prefetch_work *pw =
->>> +               container_of(work, struct dm_verity_prefetch_work, work);
->>> +       struct dm_verity *v = pw->v;
->>>         int i;
->>>
->>>         for (i = v->levels - 2; i >= 0; i--) {
->>>                 sector_t hash_block_start;
->>>                 sector_t hash_block_end;
->>> -               verity_hash_at_level(v, io->block, i, &hash_block_start, NULL);
->>> -               verity_hash_at_level(v, io->block + io->n_blocks - 1, i, &hash_block_end, NULL);
->>> +               verity_hash_at_level(v, pw->block, i, &hash_block_start, NULL);
->>> +               verity_hash_at_level(v, pw->block + pw->n_blocks - 1, i, &hash_block_end, NULL);
->>>                 if (!i) {
->>>                         unsigned cluster = ACCESS_ONCE(dm_verity_prefetch_cluster);
->>>
->>> @@ -452,6 +462,25 @@ no_prefetch_cluster:
->>>                 dm_bufio_prefetch(v->bufio, hash_block_start,
->>>                                   hash_block_end - hash_block_start + 1);
->>>         }
->>> +
->>> +       kfree(pw);
->>> +}
->>> +
->>> +static void verity_submit_prefetch(struct dm_verity *v, struct dm_verity_io *io)
->>> +{
->>> +       struct dm_verity_prefetch_work *pw;
->>> +
->>> +       pw = kmalloc(sizeof(struct dm_verity_prefetch_work),
->>> +               GFP_NOIO | __GFP_NORETRY | __GFP_NOMEMALLOC | __GFP_NOWARN);
->>> +
->>> +       if (!pw)
->>> +               return;
->>> +
->>> +       INIT_WORK(&pw->work, verity_prefetch_io);
->>> +       pw->v = v;
->>> +       pw->block = io->block;
->>> +       pw->n_blocks = io->n_blocks;
->>> +       queue_work(v->verify_wq, &pw->work);
->>>  }
->>>
->>>  /*
->>> @@ -498,7 +527,7 @@ static int verity_map(struct dm_target *
->>>         memcpy(io->io_vec, bio_iovec(bio),
->>>                io->io_vec_size * sizeof(struct bio_vec));
->>>
->>> -       verity_prefetch_io(v, io);
->>> +       verity_submit_prefetch(v, io);
->>>
->>>         generic_make_request(bio);
->>>
->>> Index: linux-3.8-fast/drivers/md/dm-bufio.c
->>> ===================================================================
->>> --- linux-3.8-fast.orig/drivers/md/dm-bufio.c   2013-03-04 23:03:14.000000000 +0100
->>> +++ linux-3.8-fast/drivers/md/dm-bufio.c        2013-03-04 23:04:19.000000000 +0100
->>> @@ -1026,6 +1026,8 @@ void dm_bufio_prefetch(struct dm_bufio_c
->>>  {
->>>         struct blk_plug plug;
->>>
->>> +       BUG_ON(dm_bufio_in_request());
->>> +
->>>         blk_start_plug(&plug);
->>>         dm_bufio_lock(c);
->>>
+What should the output be for the following sequence:
 
-Signed-off-by: Paul Taysom <taysom@chromium.org>
+dd if=/dev/zero of=i1 bs=1M count=100
+dd if=/dev/zero of=i2 bs=1M count=100
+dd if=/dev/zero of=i3 bs=1M count=100
+dd if=/dev/zero of=i4 bs=1M count=100
+dd if=/dev/zero of=i5 bs=1M count=100
+dd if=/dev/zero of=i6 bs=1M count=100
+losetup /dev/loop1 i1
+losetup /dev/loop2 i2
+losetup /dev/loop3 i3
+losetup /dev/loop4 i4
+losetup /dev/loop5 i5
+losetup /dev/loop6 i6
+mdadm --create /dev/md0 --level=5 --raid-devices=3 \
+    /dev/loop1 /dev/loop2 /dev/loop3
+mdadm --create /dev/md1 --level=5 --raid-devices=3 \
+    /dev/loop4 /dev/loop5 /dev/loop6
+mdadm --create /dev/md2 --level=0 --raid-devices=2 \
+    /dev/md0 /dev/md1
+mdadm /dev/md0 --fail /dev/loop0
+mdadm /dev/md0 --fail /dev/loop1
+mdadm --detail /dev/md0
+mdadm --detail /dev/md2
+dd if=/dev/zero of=/dev/md2 bs=1M
+
+Shouldn't /dev/md2 be failed at this point?  Shouldn't the 
+dd get an error?  No error was reported.  /dev/md2 is writable.  
+Where are the writes going?
+
+What am I missing?
+
+This is running on fedora 18.  We saw the problem with production arrays on
+fedora 17.
+
+mdadm version: mdadm - v3.2.6 - 25th October 2012
+
+kernel:  3.7.9-201.fc18.x86_64
+
+Thanks,
+
+Joel
+
