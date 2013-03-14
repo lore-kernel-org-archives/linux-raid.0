@@ -1,28 +1,41 @@
-From: "Nikolay Kichukov" <nkichukov@taxback.com>
-Subject: Missing superblock on one of the raid devices on raid 0 with 1.2 metadata
-Date: Thu, 14 Mar 2013 16:27:32 +0200
-Message-ID: <1363271252.29407.20.camel@hanna64.taxback.ess.ie>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Missing superblock on one of the raid devices on raid 0 with
+ 1.2 metadata
+Date: Thu, 14 Mar 2013 11:32:47 -0400
+Message-ID: <5141ED9F.3060204@turmel.org>
+References: <1363271252.29407.20.camel@hanna64.taxback.ess.ie>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+In-Reply-To: <1363271252.29407.20.camel@hanna64.taxback.ess.ie>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Ivan Yordanov <iyordanov@taxback.com>
+To: Nikolay Kichukov <nkichukov@taxback.com>
+Cc: linux-raid@vger.kernel.org, Ivan Yordanov <iyordanov@taxback.com>
 List-Id: linux-raid.ids
 
-SGkgYWxsLA0KDQpXZSBhcmUgdHJ5aW5nIHRvIHJlY292ZXIgYSBicm9rZW4gcmFpZCAwLiBJdCBj
-b25zaXN0ZWQgb2YgNCByYWlkDQpkZXZpY2VzLiBPbmUgb2YgdGhlbSBnb3QgdGhlIG1ldGFkYXRh
-L3N1cGVyYmxvY2sgemVyb2VkIGFuZCBub3cgdGhlIHJhaWQNCmNhbm5vdCBhc3NlbWJsZS4NCg0K
-T1M6IEdlbnRvbyBMaW51eA0KDQpNeSBjb2xsZWFndWUgd2lsbCBiZSBhYmxlIHRvIHByb3ZpZGUg
-bW9yZSBpbmZvcm1hdGlvbiByZWdhcmRpbmcga2VybmVsDQp2ZXJzaW9uIGFuZCBtZGFkbSB2ZXJz
-aW9uLg0KDQpJcyB0aGVyZSBhIHdheSB0byBjb3B5IHRoZSBzdXBlcmJsb2NrL21ldGFkYXRhIGZy
-b20gb25lIG9mIHRoZSByZW1haW5pbmcNCmRyaXZlcyBhbmQgZWRpdCBpdCBwcmlvciB0byBwbGFj
-aW5nIGl0IG9uIHRoZSB6ZXJvZWQgZHJpdmUgc28gdGhhdCB0aGUNCnJhaWQgY2FuIGJlIGFzc2Vt
-YmxlZD8NCg0KQW55IGhpbnRzIGFuZCBwb2ludGVycyBhcmUgd2VsY29tZWQuIElzIGl0IHBvc3Np
-YmxlIHRvIGZpeCB0aGUgcmFpZCBpbg0KdGhlIGZpcnN0IHBsYWNlPyBJZiB5ZXMsIHRoZW4gaG93
-IGRvIHdlIGxvY2F0ZSB0aGUgc3VwZXJibG9jay9tZXRhZGF0YQ0KdGhhdCBuZWVkcyB0byBiZSBj
-b3BpZWQgYW5kIGVkaXRlZCBmcm9tIG9uZSBvZiB0aGUgcmFpZCBtZW1iZXIgZGV2aWNlcz8NCg0K
-VGhhbmsgeW91LA0KLU5pa29sYXkgS2ljaHVrb3YNCg==
+On 03/14/2013 10:27 AM, Nikolay Kichukov wrote:
+> Hi all,
+> 
+> We are trying to recover a broken raid 0. It consisted of 4 raid
+> devices. One of them got the metadata/superblock zeroed and now the raid
+> cannot assemble.
+> 
+> OS: Gentoo Linux
+> 
+> My colleague will be able to provide more information regarding kernel
+> version and mdadm version.
+> 
+> Is there a way to copy the superblock/metadata from one of the remaining
+> drives and edit it prior to placing it on the zeroed drive so that the
+> raid can be assembled?
+> 
+> Any hints and pointers are welcomed. Is it possible to fix the raid in
+> the first place? If yes, then how do we locate the superblock/metadata
+> that needs to be copied and edited from one of the raid member devices?
+
+Start by showing the output of "mdadm -E /dev/sdX" for all of the other
+member devices or partitions.  It's likely to be possible to fix your
+problem.
+
+Phil
