@@ -1,8 +1,8 @@
 From: Joel Young <jdy@cryregarder.com>
 Subject: Re: RAID 0 of Two RAID 5s Stays Up When Component RAID fails
-Date: Thu, 14 Mar 2013 04:02:15 +0000 (UTC)
-Message-ID: <loom.20130314T050006-722@post.gmane.org>
-References: <loom.20130314T022616-853@post.gmane.org> <13BA178C-2888-41FA-A237-13C1423794C4@colorremedies.com>
+Date: Thu, 14 Mar 2013 04:03:48 +0000 (UTC)
+Message-ID: <loom.20130314T050243-974@post.gmane.org>
+References: <loom.20130314T022616-853@post.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -11,23 +11,18 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Chris Murphy <lists <at> colorremedies.com> writes:
-> On Mar 13, 2013, at 7:33 PM, Joel Young <jdy <at> cryregarder.com> wrote:
->> mdadm /dev/md0 --fail /dev/loop0
-> 
-> loop0 isn't defined in any of your raids.
+Joel Young <jdy <at> cryregarder.com> writes:
+> mdadm /dev/md0 --fail /dev/loop0
+> mdadm /dev/md0 --fail /dev/loop1
 
-typo when transcribing my history session.  There is no loop0.
+That is a typo.  It is:
 
-mdadm /dev/md0 --fail /dev/loop1 
+mdadm /dev/md0 --fail /dev/loop1
 mdadm /dev/md0 --fail /dev/loop2
 
-> > Shouldn't /dev/md2 be failed at this point?
-> 
-> No.
+which should be clear since there was no loop0 created.
 
-No.  But it was.  Sorry for the confusion with the typo.
+Thanks for the on list and off list notifications of my sloppiness :-)
 
 Joel
-
 
