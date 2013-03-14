@@ -1,50 +1,63 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Strange / inconsistent behavior with mdadm -I -R
-Date: Thu, 14 Mar 2013 21:03:28 +0100
-Message-ID: <51422D10.3040000@arcor.de>
+From: Joel Young <jdy@cryregarder.com>
+Subject: Re: RAID 0 of Two RAID 5s Stays Up When Component RAID fails
+Date: Thu, 14 Mar 2013 22:13:46 +0000 (UTC)
+Message-ID: <loom.20130314T215046-573@post.gmane.org>
+References: <loom.20130314T022616-853@post.gmane.org> <loom.20130314T050243-974@post.gmane.org> <3CD9214B-FAE8-4DA5-BDBC-7A5FEB5AEC4B@colorremedies.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Neil,
+Chris Murphy <lists <at> colorremedies.com> writes:
 
-for my DDF/RAID10 work, I have been trying to figure out how mdadm -I -R
-is supposed to behave, and I have found strangeness I'd like to clarify,
-lest I make a mistake in my DDF/RAID10 code.
+> 
+> 
+> On Mar 13, 2013, at 10:03 PM, Joel Young <jdy <at> cryregarder.com> wrote:
 
-My test case is incremental assembly of a clean array running mdadm -I
--R by hand for each array device in turn.
+> > mdadm /dev/md0 --fail /dev/loop1
+> > mdadm /dev/md0 --fail /dev/loop2
+> 
+> In this case md0 is failed. And thus md2 is failed.
+> 
 
-1) native md and containers behave differently for RAID 1
+Yes md2 is broken, but it isn't failed according to:
 
-Both native and container RAID 1 are started in auto-read-only mode when
-the 1st disk is added. When the 2nd disk is added, the native md
-switches to "active" and starts a recovery which finishes immediately.
-Container arrays (tested: DDF), on the other hand, do not switch to
-"active" until a write attempt is made on the array. The problem is in
-the native case: after the switch to "active", no more disks can be
-added any more ("can only add $DISK as a spare").
+[root@quickstep delme_images]# mdadm --detail /dev/md2
+/dev/md2:
+        Version : 1.2
+  Creation Time : Wed Mar 13 18:25:17 2013
+     Raid Level : raid0
+     Array Size : 406528 (397.07 MiB 416.28 MB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
 
-IMO the container behavior makes more sense and matches the man page
-better than the native behavior. Do you agree? Would it be hard to fix that?
+    Update Time : Wed Mar 13 18:25:17 2013
+          State : clean 
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
 
-2) RAID1 skips recovery for clean arrays, RAID10 does not
+     Chunk Size : 512K
 
-Native RAID 10 behaves similar to RAID1 as described above. When the
-array can be started, it does so, in auto-read-mode. When the next disk
-is added after that, recovery starts, and the array switches to
-"active", and further disks can't be added the "simple way" any more.
-There's one important difference: in the RAID 10 case, the recovery
-doesn't finish immediately. Rather, md does a full recovery of the added
-disk although it was clean. This is wrong; I have come up with a patch
-for this which I will send in a follow-up email.
+           Name : quickstep:2  (local to host quickstep)
+           UUID : ca94a237:d63c25be:ff64fe0f:a41be44c
+         Events : 0
 
-I tested this behavior with kernels 2.6.32, 3.0, and 3.8, with the same
-result, using mdadm from the git tree.
+    Number   Major   Minor   RaidDevice State
+       0       9        1        0      active sync   /dev/md0
+       1       9        3        1      active sync   /dev/md1
 
-Regards
-Martin
+In /var/log/messages I get a bunch of buffer I/O errors on the device and
+a warning in drivers/md/raid5.c get_active_stripe+0x683/0x7a0 [raid456]()
+
+Shouldn't md2 have automatically failed?  Shouldn't writes immediately
+error out instead of pretending to complete?
+
+Joel
+
+
