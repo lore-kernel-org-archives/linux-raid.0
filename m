@@ -1,38 +1,33 @@
-From: Chris Murphy <lists@colorremedies.com>
+From: Joel Young <jdy@cryregarder.com>
 Subject: Re: RAID 0 of Two RAID 5s Stays Up When Component RAID fails
-Date: Wed, 13 Mar 2013 21:21:39 -0600
-Message-ID: <13BA178C-2888-41FA-A237-13C1423794C4@colorremedies.com>
-References: <loom.20130314T022616-853@post.gmane.org>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Date: Thu, 14 Mar 2013 04:02:15 +0000 (UTC)
+Message-ID: <loom.20130314T050006-722@post.gmane.org>
+References: <loom.20130314T022616-853@post.gmane.org> <13BA178C-2888-41FA-A237-13C1423794C4@colorremedies.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <loom.20130314T022616-853@post.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Joel Young <jdy@cryregarder.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-On Mar 13, 2013, at 7:33 PM, Joel Young <jdy@cryregarder.com> wrote:
+Chris Murphy <lists <at> colorremedies.com> writes:
+> On Mar 13, 2013, at 7:33 PM, Joel Young <jdy <at> cryregarder.com> wrote:
+>> mdadm /dev/md0 --fail /dev/loop0
 > 
-> mdadm /dev/md0 --fail /dev/loop0
+> loop0 isn't defined in any of your raids.
 
-loop0 isn't defined in any of your raids.
+typo when transcribing my history session.  There is no loop0.
 
+mdadm /dev/md0 --fail /dev/loop1 
+mdadm /dev/md0 --fail /dev/loop2
 
-> mdadm /dev/md0 --fail /dev/loop1
-
-This causes md0 to be degraded.
-
-> mdadm --detail /dev/md0
-> mdadm --detail /dev/md2
-> dd if=/dev/zero of=/dev/md2 bs=1M
+> > Shouldn't /dev/md2 be failed at this point?
 > 
-> Shouldn't /dev/md2 be failed at this point?
+> No.
 
-No.
+No.  But it was.  Sorry for the confusion with the typo.
 
+Joel
 
-Chris Murphy
 
