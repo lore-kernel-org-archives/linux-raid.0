@@ -1,28 +1,35 @@
 From: Chris Murphy <lists@colorremedies.com>
 Subject: Re: Putting grub back on new mirror disk
-Date: Thu, 14 Mar 2013 15:07:42 -0600
-Message-ID: <E1690A73-C20E-4EB9-97E9-ACDC22AE9904@colorremedies.com>
-References: <5141361F.7010505@vorgon.com> <CAD4F9C5-6A55-421A-BFAD-B23D72662054@colorremedies.com> <51423AAA.1070404@vorgon.com>
+Date: Thu, 14 Mar 2013 15:39:00 -0600
+Message-ID: <608C7548-918F-4F11-A874-3399D8691538@colorremedies.com>
+References: <5141361F.7010505@vorgon.com> <CAD4F9C5-6A55-421A-BFAD-B23D72662054@colorremedies.com> <51423AAA.1070404@vorgon.com> <E1690A73-C20E-4EB9-97E9-ACDC22AE9904@colorremedies.com> <51423CB4.6010803@vorgon.com> <947D0B46-E42D-41A6-A408-99CB4AAA374C@colorremedies.com> <514241A2.6020301@vorgon.com>
 Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51423AAA.1070404@vorgon.com>
+In-Reply-To: <514241A2.6020301@vorgon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Timothy D. Lenz" <tlenz@vorgon.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
-On Mar 14, 2013, at 3:01 PM, "Timothy D. Lenz" <tlenz@vorgon.com> wrote:
+On Mar 14, 2013, at 3:31 PM, Timothy D. Lenz <tlenz@vorgon.com> wrote:
 
-> Had a couple minutes, so here is the paste for just sda.
+> This message said no errors. does that mean grub is now back on sda correctly?
+
+That should be the case yes.
+
 > 
-> http://pastebin.com/5eMJELyx
+> Here is the current device.map:
+> (fd0)	/dev/fd0
+> (hd0)	/dev/disk/by-id/ata-ST3500413AS_Z3T69GCE
+> (hd1)	/dev/disk/by-id/ata-ST3500418AS_5VMJ49P1
+> (hd2)	/dev/disk/by-id/ata-ST3500320AS_9QM35MY5
+> (hd3)	/dev/disk/by-id/ata-ST3500820AS_9QM6V6JF
+> 
+> 
+> Hmm, wonder if that didn't update correctly as the replacement drive would have a different number.
 
-It's looking at the device.map, and it's also considering md0 as a grub device which doesn't seem correct. Try:
-
-grub-install --recheck /dev/sda
-
+? All four entries are different.
 
 Chris Murphy
