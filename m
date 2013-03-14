@@ -1,41 +1,37 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Missing superblock on one of the raid devices on raid 0 with
- 1.2 metadata
-Date: Thu, 14 Mar 2013 11:32:47 -0400
-Message-ID: <5141ED9F.3060204@turmel.org>
-References: <1363271252.29407.20.camel@hanna64.taxback.ess.ie>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: RAID 0 of Two RAID 5s Stays Up When Component RAID fails
+Date: Thu, 14 Mar 2013 12:09:54 -0600
+Message-ID: <3CD9214B-FAE8-4DA5-BDBC-7A5FEB5AEC4B@colorremedies.com>
+References: <loom.20130314T022616-853@post.gmane.org> <loom.20130314T050243-974@post.gmane.org>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1363271252.29407.20.camel@hanna64.taxback.ess.ie>
+In-Reply-To: <loom.20130314T050243-974@post.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nikolay Kichukov <nkichukov@taxback.com>
-Cc: linux-raid@vger.kernel.org, Ivan Yordanov <iyordanov@taxback.com>
+To: Joel Young <jdy@cryregarder.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/14/2013 10:27 AM, Nikolay Kichukov wrote:
-> Hi all,
-> 
-> We are trying to recover a broken raid 0. It consisted of 4 raid
-> devices. One of them got the metadata/superblock zeroed and now the raid
-> cannot assemble.
-> 
-> OS: Gentoo Linux
-> 
-> My colleague will be able to provide more information regarding kernel
-> version and mdadm version.
-> 
-> Is there a way to copy the superblock/metadata from one of the remaining
-> drives and edit it prior to placing it on the zeroed drive so that the
-> raid can be assembled?
-> 
-> Any hints and pointers are welcomed. Is it possible to fix the raid in
-> the first place? If yes, then how do we locate the superblock/metadata
-> that needs to be copied and edited from one of the raid member devices?
 
-Start by showing the output of "mdadm -E /dev/sdX" for all of the other
-member devices or partitions.  It's likely to be possible to fix your
-problem.
+On Mar 13, 2013, at 10:03 PM, Joel Young <jdy@cryregarder.com> wrote:
 
-Phil
+> Joel Young <jdy <at> cryregarder.com> writes:
+>> mdadm /dev/md0 --fail /dev/loop0
+>> mdadm /dev/md0 --fail /dev/loop1
+> 
+> That is a typo.  It is:
+> 
+> mdadm /dev/md0 --fail /dev/loop1
+> mdadm /dev/md0 --fail /dev/loop2
+
+In this case md0 is failed. And thus md2 is failed.
+
+> dd if=/dev/zero of=/dev/md2 bs=1M
+
+The block device is expected to still be there, I'm not sure what errors you should get, but if it were a real physical block device than a logical one, I'd expect there'd be messages in dmesg.
+
+If you had a mounted file system you were trying to write to I think you'd get more immediate error messages in the shell, not just in dmesg.
+
+
+Chris
