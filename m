@@ -1,35 +1,50 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Putting grub back on new mirror disk
-Date: Thu, 14 Mar 2013 15:39:00 -0600
-Message-ID: <608C7548-918F-4F11-A874-3399D8691538@colorremedies.com>
-References: <5141361F.7010505@vorgon.com> <CAD4F9C5-6A55-421A-BFAD-B23D72662054@colorremedies.com> <51423AAA.1070404@vorgon.com> <E1690A73-C20E-4EB9-97E9-ACDC22AE9904@colorremedies.com> <51423CB4.6010803@vorgon.com> <947D0B46-E42D-41A6-A408-99CB4AAA374C@colorremedies.com> <514241A2.6020301@vorgon.com>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Martin Wilck <mwilck@arcor.de>
+Subject: Strange / inconsistent behavior with mdadm -I -R
+Date: Thu, 14 Mar 2013 21:03:28 +0100
+Message-ID: <51422D10.3040000@arcor.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <514241A2.6020301@vorgon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
+Hello Neil,
 
-On Mar 14, 2013, at 3:31 PM, Timothy D. Lenz <tlenz@vorgon.com> wrote:
+for my DDF/RAID10 work, I have been trying to figure out how mdadm -I -R
+is supposed to behave, and I have found strangeness I'd like to clarify,
+lest I make a mistake in my DDF/RAID10 code.
 
-> This message said no errors. does that mean grub is now back on sda correctly?
+My test case is incremental assembly of a clean array running mdadm -I
+-R by hand for each array device in turn.
 
-That should be the case yes.
+1) native md and containers behave differently for RAID 1
 
-> 
-> Here is the current device.map:
-> (fd0)	/dev/fd0
-> (hd0)	/dev/disk/by-id/ata-ST3500413AS_Z3T69GCE
-> (hd1)	/dev/disk/by-id/ata-ST3500418AS_5VMJ49P1
-> (hd2)	/dev/disk/by-id/ata-ST3500320AS_9QM35MY5
-> (hd3)	/dev/disk/by-id/ata-ST3500820AS_9QM6V6JF
-> 
-> 
-> Hmm, wonder if that didn't update correctly as the replacement drive would have a different number.
+Both native and container RAID 1 are started in auto-read-only mode when
+the 1st disk is added. When the 2nd disk is added, the native md
+switches to "active" and starts a recovery which finishes immediately.
+Container arrays (tested: DDF), on the other hand, do not switch to
+"active" until a write attempt is made on the array. The problem is in
+the native case: after the switch to "active", no more disks can be
+added any more ("can only add $DISK as a spare").
 
-? All four entries are different.
+IMO the container behavior makes more sense and matches the man page
+better than the native behavior. Do you agree? Would it be hard to fix that?
 
-Chris Murphy
+2) RAID1 skips recovery for clean arrays, RAID10 does not
+
+Native RAID 10 behaves similar to RAID1 as described above. When the
+array can be started, it does so, in auto-read-mode. When the next disk
+is added after that, recovery starts, and the array switches to
+"active", and further disks can't be added the "simple way" any more.
+There's one important difference: in the RAID 10 case, the recovery
+doesn't finish immediately. Rather, md does a full recovery of the added
+disk although it was clean. This is wrong; I have come up with a patch
+for this which I will send in a follow-up email.
+
+I tested this behavior with kernels 2.6.32, 3.0, and 3.8, with the same
+result, using mdadm from the git tree.
+
+Regards
+Martin
