@@ -1,42 +1,54 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: md RAID1 passes I/O errors to the filesystem despite having
  alive mirrors?
-Date: Fri, 15 Mar 2013 12:07:47 +0100 (CET)
-Message-ID: <32050581.8.1363345666963.JavaMail.root@zimbra>
+Date: Fri, 15 Mar 2013 17:21:35 +0600
+Message-ID: <20130315172135.779185b5@natsu>
 References: <20130315041054.79eb5dcc@natsu>
+	<32050581.8.1363345666963.JavaMail.root@zimbra>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/RtENIRQZuzR0.aHbuQrLzK4"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130315041054.79eb5dcc@natsu>
+In-Reply-To: <32050581.8.1363345666963.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> What happened was:
-> - a device (sdg1) was added as a write-mostly member to a degraded
-> two-member RAID1 (md3) and started recovering;
+--Sig_/RtENIRQZuzR0.aHbuQrLzK4
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-May I be so frank as to guessing you found an old drive and added as wr=
-ite-mostly? sdg is the bad drive here=E2=80=A6
+On Fri, 15 Mar 2013 12:07:47 +0100 (CET)
+Roy Sigurd Karlsbakk <roy@karlsbakk.net> wrote:
 
-Vennlige hilsener / Best regards
+> > What happened was:
+> > - a device (sdg1) was added as a write-mostly member to a degraded
+> > two-member RAID1 (md3) and started recovering;
+>=20
+> May I be so frank as to guessing you found an old drive and added as writ=
+e-mostly? sdg is the bad drive here=E2=80=A6
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This is correct, but I should note that I did not add it as write-mostly ju=
+st
+because it's an older drive, but because it is my normal set-up for md3:
+a RAID1 mirror of a fast SSD (sdf) and a write-mostly HDD (sdg in this case=
+).
+
+--=20
+With respect,
+Roman
+
+--Sig_/RtENIRQZuzR0.aHbuQrLzK4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlFDBD8ACgkQTLKSvz+PZwhe9gCfeJiSfcQOKD7EvR+lWFX3EuKR
+mM4AnRtBZXlp/mjvOmunk0SqShiqTFyN
+=DNIq
+-----END PGP SIGNATURE-----
+
+--Sig_/RtENIRQZuzR0.aHbuQrLzK4--
