@@ -1,68 +1,150 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: md RAID1 passes I/O errors to the filesystem despite having
- alive mirrors?
-Date: Fri, 15 Mar 2013 12:10:35 +0600
-Message-ID: <20130315121035.68a7fae1@natsu>
-References: <20130315041054.79eb5dcc@natsu>
-	<FCBB3555-81D9-4C7E-87D5-9AFBE20ED529@colorremedies.com>
+From: "Ivan Yordanov" <iyordanov@taxback.com>
+Subject: Re: [Fwd: Re: Missing superblock on one of the raid devices on raid 0 with 1.2 metadata]
+Date: Fri, 15 Mar 2013 10:24:05 +0200
+Message-ID: <1363335845.18187.10.camel@gandalf.taxback.ess.ie>
+References: <1363335578.29317.0.camel@hanna64.taxback.ess.ie>
+Reply-To: "Ivan Yordanov" <iyordanov@taxback.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/rfzCM.byS.pigsFzszxpXbI"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <FCBB3555-81D9-4C7E-87D5-9AFBE20ED529@colorremedies.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <1363335578.29317.0.camel@hanna64.taxback.ess.ie>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: linux-raid@vger.kernel.org
+To: Nikolay Kichukov <nkichukov@taxback.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/rfzCM.byS.pigsFzszxpXbI
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Phil,
 
-On Thu, 14 Mar 2013 21:43:14 -0600
-Chris Murphy <lists@colorremedies.com> wrote:
+The detailed info for this broken raid 0 is here:
 
->=20
-> On Mar 14, 2013, at 4:10 PM, Roman Mamedov <rm@romanrm.ru> wrote:
-> >=20
-> > - shouldn't the reads have been quietly satisfied my md3 from sdf1, ins=
-tead of just passing the buck^W error
-> >  due to unreadable sdg1 to the higher (filesystem) layer?
->=20
-> What distro kernel and version?
+mdadm --version
+mdadm - v3.1.4 - 31st August 2010
 
-Debian Testing, but I use vanilla 3.7.6 kernel, not distro's.
+mdadm -E /dev/sda1
+mdadm: No md superblock detected on /dev/sda1.
 
-> Since you're not using btrfs raid1 there isn't a second copy maintained b=
-y btrfs itself, so it can't fix this. It's reporting a checksum failure for=
- the single copy of data on the md raid1. It is getting the data elsewhere =
-but it's btrfs saying that the checksum doesn't match.
+mdadm -E /dev/sdb1
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 314351c1:8fd287cb:21bd5e93:56aa71c7
+           Name : gandalf:0  (local to host gandalf)
+  Creation Time : Mon Aug 23 13:47:57 2010
+     Raid Level : raid0
+   Raid Devices : 4
 
-So my guess (but that's already something like an accusation and not a foun=
-ded
-one at the moment :) that maybe mdadm failed to properly get data elsewhere,
-and in case of errors it returned something like a zero-filled block, at wh=
-ich
-btrfs correctly complained?..
+ Avail Dev Size : 312574594 (149.05 GiB 160.04 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 4a303267:fd84a859:ecb68475:a797a615
 
-Point is, I thought no user of md3 (be it btrfs or not) should have noticed=
- any
-errors "below" it, and in my case this turned out not to be the case.
+    Update Time : Mon Aug 23 13:47:57 2010
+       Checksum : 2739d1d7 - correct
+         Events : 0
 
---=20
-With respect,
-Roman
+     Chunk Size : 512K
 
---Sig_/rfzCM.byS.pigsFzszxpXbI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+   Device Role : Active device 1
+   Array State : AAAA ('A' == active, '.' == missing)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+mdadm -E /dev/sdc1
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 314351c1:8fd287cb:21bd5e93:56aa71c7
+           Name : gandalf:0  (local to host gandalf)
+  Creation Time : Mon Aug 23 13:47:57 2010
+     Raid Level : raid0
+   Raid Devices : 4
 
-iEYEARECAAYFAlFCu1sACgkQTLKSvz+PZwj38ACbB5GqjtopSnlelYRCHWqikYbT
-JpsAnRIcCM/20qziot9fzQurUJBVNJXs
-=VIk0
------END PGP SIGNATURE-----
+ Avail Dev Size : 312574594 (149.05 GiB 160.04 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 72c265f4:76e8edcc:7154fd89:77478688
 
---Sig_/rfzCM.byS.pigsFzszxpXbI--
+    Update Time : Mon Aug 23 13:47:57 2010
+       Checksum : af0b14cf - correct
+         Events : 0
+
+     Chunk Size : 512K
+
+   Device Role : Active device 2
+   Array State : AAAA ('A' == active, '.' == missing)
+
+mdadm -E /dev/sdd1
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 314351c1:8fd287cb:21bd5e93:56aa71c7
+           Name : gandalf:0  (local to host gandalf)
+  Creation Time : Mon Aug 23 13:47:57 2010
+     Raid Level : raid0
+   Raid Devices : 4
+
+ Avail Dev Size : 312574594 (149.05 GiB 160.04 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : e5f46d32:b2e0f6b4:0b361c98:9689dcb2
+
+    Update Time : Mon Aug 23 13:47:57 2010
+       Checksum : d916338 - correct
+         Events : 0
+
+     Chunk Size : 512K
+
+   Device Role : Active device 3
+   Array State : AAAA ('A' == active, '.' == missing)
+
+
+uname -a  
+Linux gandalf 3.5.0vs2.3.4-vs2.3.4 #1 SMP Tue Jan 8 08:31:15 EET 2013
+x86_64 Intel(R) Core(TM) i3 CPU 530 @ 2.93GHz GenuineIntel GNU/Linux
+
+Thanks for your help
+Ivan Yordanov
+
+On Fri, 2013-03-15 at 10:19 +0200, Nikolay Kichukov wrote:
+> email message attachment, "Forwarded message - Re: Missing superblock
+> on one of the raid devices on raid 0 with 1.2 metadata"
+> > -------- Forwarded Message --------
+> > From: Phil Turmel <philip@turmel.org>
+> > To: Nikolay Kichukov <nkichukov@taxback.com>
+> > Cc: linux-raid@vger.kernel.org, Ivan Yordanov
+> > <iyordanov@taxback.com>
+> > Subject: Re: Missing superblock on one of the raid devices on raid 0
+> > with 1.2 metadata
+> > Date: Thu, 14 Mar 2013 11:32:47 -0400
+> > 
+> > On 03/14/2013 10:27 AM, Nikolay Kichukov wrote:
+> > > Hi all,
+> > > 
+> > > We are trying to recover a broken raid 0. It consisted of 4 raid
+> > > devices. One of them got the metadata/superblock zeroed and now the raid
+> > > cannot assemble.
+> > > 
+> > > OS: Gentoo Linux
+> > > 
+> > > My colleague will be able to provide more information regarding kernel
+> > > version and mdadm version.
+> > > 
+> > > Is there a way to copy the superblock/metadata from one of the remaining
+> > > drives and edit it prior to placing it on the zeroed drive so that the
+> > > raid can be assembled?
+> > > 
+> > > Any hints and pointers are welcomed. Is it possible to fix the raid in
+> > > the first place? If yes, then how do we locate the superblock/metadata
+> > > that needs to be copied and edited from one of the raid member devices?
+> > 
+> > Start by showing the output of "mdadm -E /dev/sdX" for all of the other
+> > member devices or partitions.  It's likely to be possible to fix your
+> > problem.
+> > 
+> > Phil
+
