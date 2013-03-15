@@ -1,68 +1,68 @@
 From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: md RAID1 passes I/O errors to the filesystem despite having
  alive mirrors?
-Date: Fri, 15 Mar 2013 12:02:57 +0600
-Message-ID: <20130315120257.60735a6f@natsu>
+Date: Fri, 15 Mar 2013 12:10:35 +0600
+Message-ID: <20130315121035.68a7fae1@natsu>
 References: <20130315041054.79eb5dcc@natsu>
-	<E8003AD2-CDB8-4007-A80C-D95350144C90@colorremedies.com>
+	<FCBB3555-81D9-4C7E-87D5-9AFBE20ED529@colorremedies.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/fW8LXeICxypcB45LcC2smkt"; protocol="application/pgp-signature"
+ boundary="Sig_/rfzCM.byS.pigsFzszxpXbI"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <E8003AD2-CDB8-4007-A80C-D95350144C90@colorremedies.com>
+In-Reply-To: <FCBB3555-81D9-4C7E-87D5-9AFBE20ED529@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Chris Murphy <lists@colorremedies.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/fW8LXeICxypcB45LcC2smkt
+--Sig_/rfzCM.byS.pigsFzszxpXbI
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 14 Mar 2013 22:04:17 -0600
+On Thu, 14 Mar 2013 21:43:14 -0600
 Chris Murphy <lists@colorremedies.com> wrote:
 
-> 2. sdg is encountering UNC read errors, probably bad sectors, why it's ne=
-w right?
+>=20
+> On Mar 14, 2013, at 4:10 PM, Roman Mamedov <rm@romanrm.ru> wrote:
+> >=20
+> > - shouldn't the reads have been quietly satisfied my md3 from sdf1, ins=
+tead of just passing the buck^W error
+> >  due to unreadable sdg1 to the higher (filesystem) layer?
+>=20
+> What distro kernel and version?
 
-It's not new, in fact it is in a questionable condition, but that's not the
-issue I am looking for help with, in fact I am glad if me using this disk
-suddenly helps uncover/solve some bug in mdadm :) I doubt it receives too m=
-uch
-testing with regard to its behavior in such rare circumstances (encountering
-bad sectors on a member configured as write-mostly with btrfs on top of
-everything, etc).
+Debian Testing, but I use vanilla 3.7.6 kernel, not distro's.
 
-> 3. md3 might be getting the mirrored copy off sdf, I can't actually tell
->=20
-> [  771.438945] btrfs: bdev /dev/md3 errs: wr 0, rd 9, flush 0, corrupt 0,=
- gen 0
->=20
-> That line is btrfs reporting read errors from md3, not corruptions.
->=20
-> [  771.439011] ata11: EH complete
-> [  771.439035] btrfs no csum found for inode 31016 start 5668864
-> [  771.479594] btrfs csum failed ino 31016 off 5668864 csum 2731683453 pr=
-ivate 0
->=20
-> What are your btrfs mount options? Are you using nodatasum or nodatacow?
+> Since you're not using btrfs raid1 there isn't a second copy maintained b=
+y btrfs itself, so it can't fix this. It's reporting a checksum failure for=
+ the single copy of data on the md raid1. It is getting the data elsewhere =
+but it's btrfs saying that the checksum doesn't match.
 
-rw,noatime,nodiratime,compress=3Dlzo,ssd,discard,space_cache,inode_cache
+So my guess (but that's already something like an accusation and not a foun=
+ded
+one at the moment :) that maybe mdadm failed to properly get data elsewhere,
+and in case of errors it returned something like a zero-filled block, at wh=
+ich
+btrfs correctly complained?..
+
+Point is, I thought no user of md3 (be it btrfs or not) should have noticed=
+ any
+errors "below" it, and in my case this turned out not to be the case.
 
 --=20
 With respect,
 Roman
 
---Sig_/fW8LXeICxypcB45LcC2smkt
+--Sig_/rfzCM.byS.pigsFzszxpXbI
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.12 (GNU/Linux)
 
-iEYEARECAAYFAlFCuZEACgkQTLKSvz+PZwg4tgCfYzwt5/5C0IYAPSqhJlP5Juzv
-Yj4AoIycUtlCkdNormtbs4LsTR6bFnaC
-=w7PP
+iEYEARECAAYFAlFCu1sACgkQTLKSvz+PZwj38ACbB5GqjtopSnlelYRCHWqikYbT
+JpsAnRIcCM/20qziot9fzQurUJBVNJXs
+=VIk0
 -----END PGP SIGNATURE-----
 
---Sig_/fW8LXeICxypcB45LcC2smkt--
+--Sig_/rfzCM.byS.pigsFzszxpXbI--
