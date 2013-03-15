@@ -1,54 +1,59 @@
-From: Roman Mamedov <rm@romanrm.ru>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
 Subject: Re: md RAID1 passes I/O errors to the filesystem despite having
  alive mirrors?
-Date: Fri, 15 Mar 2013 17:21:35 +0600
-Message-ID: <20130315172135.779185b5@natsu>
-References: <20130315041054.79eb5dcc@natsu>
-	<32050581.8.1363345666963.JavaMail.root@zimbra>
+Date: Fri, 15 Mar 2013 13:32:13 +0100 (CET)
+Message-ID: <3519169.10.1363350733597.JavaMail.root@zimbra>
+References: <20130315172135.779185b5@natsu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/RtENIRQZuzR0.aHbuQrLzK4"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <32050581.8.1363345666963.JavaMail.root@zimbra>
+In-Reply-To: <20130315172135.779185b5@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+To: Roman Mamedov <rm@romanrm.ru>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/RtENIRQZuzR0.aHbuQrLzK4
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 15 Mar 2013 12:07:47 +0100 (CET)
-Roy Sigurd Karlsbakk <roy@karlsbakk.net> wrote:
-
-> > What happened was:
-> > - a device (sdg1) was added as a write-mostly member to a degraded
-> > two-member RAID1 (md3) and started recovering;
+> > > What happened was:
+> > > - a device (sdg1) was added as a write-mostly member to a degrade=
+d
+> > > two-member RAID1 (md3) and started recovering;
+> >
+> > May I be so frank as to guessing you found an old drive and added a=
+s
+> > write-mostly? sdg is the bad drive here=E2=80=A6
 >=20
-> May I be so frank as to guessing you found an old drive and added as writ=
-e-mostly? sdg is the bad drive here=E2=80=A6
+> This is correct, but I should note that I did not add it as
+> write-mostly just
+> because it's an older drive, but because it is my normal set-up for
+> md3:
+> a RAID1 mirror of a fast SSD (sdf) and a write-mostly HDD (sdg in thi=
+s
+> case).
 
-This is correct, but I should note that I did not add it as write-mostly ju=
-st
-because it's an older drive, but because it is my normal set-up for md3:
-a RAID1 mirror of a fast SSD (sdf) and a write-mostly HDD (sdg in this case=
-).
+This makes perfectly sense, but the HDD obviously isn't good, and perha=
+ps some data were bad on the SSD as well. I'd replace the HDD with some=
+thing else, perhaps after a badblocks test, and at least with a short S=
+MART test, and rebuild. The errors on the filesystem should be solveabl=
+e with an fsck. If not, well, I hope you have a good backup=E2=80=A6
 
 --=20
-With respect,
-Roman
+Vennlige hilsener / Best regards
 
---Sig_/RtENIRQZuzR0.aHbuQrLzK4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlFDBD8ACgkQTLKSvz+PZwhe9gCfeJiSfcQOKD7EvR+lWFX3EuKR
-mM4AnRtBZXlp/mjvOmunk0SqShiqTFyN
-=DNIq
------END PGP SIGNATURE-----
-
---Sig_/RtENIRQZuzR0.aHbuQrLzK4--
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
