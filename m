@@ -1,103 +1,104 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] RAID10: Allow skipping recovery when clean arrays are
- assembled
-Date: Mon, 18 Mar 2013 10:06:45 +1100
-Message-ID: <20130318100645.3d5aa71c@notabene.brown>
+Subject: Re: Strange / inconsistent behavior with mdadm -I -R
+Date: Mon, 18 Mar 2013 10:35:10 +1100
+Message-ID: <20130318103510.45bdd4a8@notabene.brown>
 References: <51422D10.3040000@arcor.de>
-	<1363291891-10408-1-git-send-email-mwilck@arcor.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/f1brk.P1S917wgg4LRglKAK"; protocol="application/pgp-signature"
+ boundary="Sig_/8_9jpCeqoMclGnRHPDBxHYS"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1363291891-10408-1-git-send-email-mwilck@arcor.de>
+In-Reply-To: <51422D10.3040000@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: mwilck@arcor.de
+To: Martin Wilck <mwilck@arcor.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/f1brk.P1S917wgg4LRglKAK
+--Sig_/8_9jpCeqoMclGnRHPDBxHYS
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 14 Mar 2013 21:11:31 +0100 mwilck@arcor.de wrote:
+On Thu, 14 Mar 2013 21:03:28 +0100 Martin Wilck <mwilck@arcor.de> wrote:
 
-> From: Martin Wilck <mwilck@arcor.de>
+> Hello Neil,
 >=20
-> When an array is assembled incrementally with mdadm -I -R
-> and the array switches to "active" mode, md starts a recovery.
+> for my DDF/RAID10 work, I have been trying to figure out how mdadm -I -R
+> is supposed to behave, and I have found strangeness I'd like to clarify,
+> lest I make a mistake in my DDF/RAID10 code.
 >=20
-> If the array was clean, the "fullsync" flag will be 0. Skip
-> the full recovery in this case, as RAID1 does (the code was
-> actually copied from the sync_request() method of RAID1).
-> ---
->  drivers/md/raid10.c |   16 ++++++++++++++++
->  1 files changed, 16 insertions(+), 0 deletions(-)
+> My test case is incremental assembly of a clean array running mdadm -I
+> -R by hand for each array device in turn.
 >=20
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 64d4824..e373d88 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -2863,6 +2863,22 @@ static sector_t sync_request(struct mddev *mddev, =
-sector_t sector_nr,
->  		if (init_resync(conf))
->  			return 0;
-> =20
-> +	/*
-> +	 * Allow skipping a full rebuild for incremental assembly
-> +	 * of a clean array, like RAID1 does.
-> +	 */
-> +	if (mddev->bitmap =3D=3D NULL &&
-> +	    mddev->recovery_cp =3D=3D MaxSector &&
-> +	    !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
-> +	    conf->fullsync =3D=3D 0) {
-> +		*skipped =3D 1;
-> +		max_sector =3D mddev->dev_sectors;
-> +		if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ||
-> +		    test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
-> +			max_sector =3D mddev->resync_max_sectors;
-> +		return max_sector - sector_nr;
-> +	}
-> +
->   skipped:
->  	max_sector =3D mddev->dev_sectors;
->  	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ||
+> 1) native md and containers behave differently for RAID 1
+>=20
+> Both native and container RAID 1 are started in auto-read-only mode when
+> the 1st disk is added. When the 2nd disk is added, the native md
+> switches to "active" and starts a recovery which finishes immediately.
+> Container arrays (tested: DDF), on the other hand, do not switch to
+> "active" until a write attempt is made on the array. The problem is in
+> the native case: after the switch to "active", no more disks can be
+> added any more ("can only add $DISK as a spare").
+>=20
+> IMO the container behavior makes more sense and matches the man page
+> better than the native behavior. Do you agree? Would it be hard to fix th=
+at?
 
+Without -R, the array should remain inactive until all expected devices have
+been found.  Then it should switch:
+  to 'active' if the array is known to this host - i.e. listed
+       in /etc/mdadm.conf or has the right hostname in the metadata
+  to 'read-auto' if the array is not known to this host.
 
-Thanks Martin - looks good.
+With -R, it only stays inactive until we have the minimum devices needed for
+a functioning array.  Then it will switch to 'read-auto' or, if the array is
+known and all expected devices are present, it will switch to 'active'.
 
-However protocol requires that you add the magic string "Signed-off-by: your
-email address" to the patch.  This affirms that you have the right (from a
-copyright perspective) to contribute that patch - not that I doubt it, but =
-it
-is always good to have it in writing.
-See section 12 of "Documentation/SubmittingPatches".
+I think this is correct behaviour.  However I'm not quite sure from your
+description whether you are saying that it doesn't behave like this, or if
+you are saying that it does but it should behave differently.
 
-If you could just send me that line (you don't need to send the whole patch
-as well), I'll apply the patch.
+Maybe if you could provide a sequence of "mdadm" commands that produces an
+outcome different to what you would expect - that would reduce the chance
+that I get confused.
 
-Thanks,
+>=20
+> 2) RAID1 skips recovery for clean arrays, RAID10 does not
+>=20
+> Native RAID 10 behaves similar to RAID1 as described above. When the
+> array can be started, it does so, in auto-read-mode. When the next disk
+> is added after that, recovery starts, and the array switches to
+> "active", and further disks can't be added the "simple way" any more.
+> There's one important difference: in the RAID 10 case, the recovery
+> doesn't finish immediately. Rather, md does a full recovery of the added
+> disk although it was clean. This is wrong; I have come up with a patch
+> for this which I will send in a follow-up email.
+>=20
+
+I agree with your assessment here and with your patch, thanks.
+
 NeilBrown
 
---Sig_/f1brk.P1S917wgg4LRglKAK
+
+
+--Sig_/8_9jpCeqoMclGnRHPDBxHYS
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUUZMhTnsnt1WYoG5AQKRJA//YmMKmfH2aqGjZpqQdXLstyItzdP+hBxJ
-Vx7rXkPwuWFKk0cX8oNyCRdeTtsFtxOVsidVPw3UHBk3p7CZmR+LFJkuqG86V67Q
-S0Tyz4j1TwdJydYzkL4mN/Q/TBgiM/+TFaKS2qPrA2S6nWamD7G2Ugig4xe0hp+t
-MdAShK4NK7HCg5iICkvz6yYoTKIXR+QnhWBd2Fm/9eJkJ2/qxkVCXiXY9HpLxgim
-Dm+OWN1hirBYOul5gTehZl96pIur2AmEkBVVD42bViEsgiqH7bS61sVHq0itqVLJ
-5jwCB8kwWpomnfhm8JfAh4aX3k5ZRpXpBcFrKzxpTpcerCj57BpKQR20LPpz3Lld
-/brCvM70NJhtCqQH7xJ5CMSHf7UIGVHLV2+MGH2FKSHFWodrjWqBD7KokYACl8k0
-67UaM/coIvc1AjacVoZ7ABrbSuM1qp1rztfuYr87+NbhcXFwz9urtfWw9A3lybKh
-TrrapYT2k/iVaKg1oFp4PDk30Js62zMOXyr3wv3Nre//w10gEDGXq8oIB9DfIFmJ
-OUx2HkObaTC/GmGo3VzXAVUVDRMLvnTXSW/OjJ44TFLBQ52U49C/Xz6t01QwDBL1
-EuirQPeT0TWbmojNzHjIOB2MzDb+70qK+NMkYSLz1iFPuOrg1VMLp7OM1IAgrEJr
-6gKPxMV6Bcs=
-=RhOT
+iQIVAwUBUUZTLjnsnt1WYoG5AQKN/RAAqUprfm5x7WmoYCEHCVQBbUIO+tW0q36N
+c4ZBBj9FPTCsDOk8aetApLdj+Dg2oUNxd5tLYZ8iJh6PDpb0QrSY+Za/U87N/L7H
+nP2n5uFAn1OhaP/mkKnDEuF4vp8+T1AXVKgxqNUC71IpBE4z6OBc/Z/QjwtpcF1a
+7Bpa2CLvwNp/ExDY3DNIvQsSmvCoInjM83ZqaORk1XYRpDbc8HdoJFk4LPUl3AFa
+COmR3VHxaY53o0w2jqoRsXZvldxp2hQEzDyoO1o5CiV2O8OT+JkIfxxLjXC0oi/T
+d+/VfW4WcPpiP+2r2Om6IkD0rrDKcJvAnTmb49h67fW4JKRaHq+R4+lv5iFZG2Ll
+R12DGPV8Jxyr3vSfIirFVrOLZb7uOcWcA+NXHfCGuXP6iVww/MLSuoVnTuJ/XCxz
+EBhuFcu8In3hnjzWnCTmEKw/pXWeZ4mn7j0t6LsifXbh8p0jCxd5lTdb5daZoabn
+M50mHSivbOXIxwQks6wgiow5Tlxa+7mnhSpOI+9LbmBb1ek+xTZTD+0/sKMll0Yg
+sL62nvvOAmdo2pYU7FiiI8NNReol9eKbx2Wiy8JkNzwYYt6dwzhbPzuoqitLBQ6W
+FWziR6vUkHIZF0pV0DX9nsrllfoviXHPSpKpQKCLLXIAsBuLl0YoRTaR57kYb6KT
+ajuQw2xgRgs=
+=NVVf
 -----END PGP SIGNATURE-----
 
---Sig_/f1brk.P1S917wgg4LRglKAK--
+--Sig_/8_9jpCeqoMclGnRHPDBxHYS--
