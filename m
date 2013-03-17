@@ -1,63 +1,37 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: md RAID1 passes I/O errors to the filesystem despite having
- alive mirrors?
-Date: Sun, 17 Mar 2013 14:04:50 +0100 (CET)
-Message-ID: <1567316.0.1363525490131.JavaMail.root@zimbra>
-References: <E1F75819-ABCB-4C6F-85F4-1B812B168DB6@colorremedies.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: md RAID1 passes I/O errors to the filesystem despite having alive mirrors?
+Date: Sun, 17 Mar 2013 12:22:25 -0600
+Message-ID: <7926492C-F638-4EE0-8BFF-90E6F662D8C1@colorremedies.com>
+References: <1567316.0.1363525490131.JavaMail.root@zimbra>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <E1F75819-ABCB-4C6F-85F4-1B812B168DB6@colorremedies.com>
+In-Reply-To: <1567316.0.1363525490131.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > This is correct, but I should note that I did not add it as
-> > write-mostly just
-> > because it's an older drive, but because it is my normal set-up for
-> > md3:
-> > a RAID1 mirror of a fast SSD (sdf) and a write-mostly HDD (sdg in
-> > this case).
->=20
-> Again, I find it odd that sdg while rebuilding is reading any sectors=
-=2E
-> The read errors are coming from sdg. That it's also write-mostly
-> enhances the mystery why sdg is being read from.
->=20
-> I would fail the HDD, and btrfs scrub the array which in effect shoul=
-d
-> scrub only sdf. And it may also need an offline btrfsck. The source
-> (sdf) is already suspect because of btrfs not finding checksums where
-> it was expecting to find them, and then on top of this you're getting
-> sdg producing bad sector errors on reads.
 
-Have you done a SMART check of sdg? smartctl -H first, then smartctl -t=
- short, then smartctl -t long (with smartctl -H between them)
+On Mar 17, 2013, at 7:04 AM, Roy Sigurd Karlsbakk <roy@karlsbakk.net> wrote:
+> 
+> Have you done a SMART check of sdg? smartctl -H first, then smartctl -t short, then smartctl -t long (with smartctl -H between them)
 
-> You might also consider posting the configuration and full dmesg to
-> the btrfs list. I'm curious what btrfs developers think of this
-> configuration.
+The OP posted dmesg which clearly shows sdg reporting SATA ERR UNC messages with unreadable sectors. So we know sdg is a problem.
 
-It's not btrfs - it's below that.
+That doesn't explain why sdg is being read from during a rebuild of sdg. It doesn't explain whether md is getting data from sdf when there's a failed read from sdf.
 
-Vennlige hilsener / Best regards
+That's why I think sdg needs to be taken out of the array entirely, a drive KNOWN to have bad sectors while rebuilding simply shouldn't be used. ATA Secure Erase it, or write zeros to it, separately, while doing a btrfs scrub of md3. And yes it's probably worth while to also do a smartctl -t long on sdf (the SSD).
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+>> You might also consider posting the configuration and full dmesg to
+>> the btrfs list. I'm curious what btrfs developers think of this
+>> configuration.
+> 
+> It's not btrfs - it's below that.
+
+Btrfs is complaining about checksums not being found. But the configuration below btrfs, an SSD paired with an HDD set to write-mostly, isn't a configuration I've heard described on the btrfs list. Clearly in this setup, btrfs can't self-heal since it's not doing the raid1 itself. All it can do is report errors, which it's doing. So something's wrong with the file system too. It's not just a problem with sdg.
+
+
+Chris Murphy
