@@ -1,30 +1,63 @@
-From: Andrey Borzenkov <arvidjaar@gmail.com>
-Subject: Handling of stale array members in Linux MD
-Date: Sat, 16 Mar 2013 12:04:51 +0400
-Message-ID: <20130316120451.4cd714c3@opensuse.site>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: md RAID1 passes I/O errors to the filesystem despite having
+ alive mirrors?
+Date: Sun, 17 Mar 2013 14:04:50 +0100 (CET)
+Message-ID: <1567316.0.1363525490131.JavaMail.root@zimbra>
+References: <E1F75819-ABCB-4C6F-85F4-1B812B168DB6@colorremedies.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <E1F75819-ABCB-4C6F-85F4-1B812B168DB6@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm looking at adding validation of array members to grub2 array
-assembly code and have some questions.
+> > This is correct, but I should note that I did not add it as
+> > write-mostly just
+> > because it's an older drive, but because it is my normal set-up for
+> > md3:
+> > a RAID1 mirror of a fast SSD (sdf) and a write-mostly HDD (sdg in
+> > this case).
+>=20
+> Again, I find it odd that sdg while rebuilding is reading any sectors=
+=2E
+> The read errors are coming from sdg. That it's also write-mostly
+> enhances the mystery why sdg is being read from.
+>=20
+> I would fail the HDD, and btrfs scrub the array which in effect shoul=
+d
+> scrub only sdf. And it may also need an offline btrfsck. The source
+> (sdf) is already suspect because of btrfs not finding checksums where
+> it was expecting to find them, and then on top of this you're getting
+> sdg producing bad sector errors on reads.
 
-1. As far as I understand, two devices are compared basing on single 64
-bit event counter. I do not see any counter wrap around check. Is it
-something that can not ever happen?
+Have you done a SMART check of sdg? smartctl -H first, then smartctl -t=
+ short, then smartctl -t long (with smartctl -H between them)
 
-2. When array is declared ready for use? I.e. consider RAID10 with 4
-members where each mirror pair lost one member. E.g. due to
-connectivity failure. After some time system is rebooted and second
-pair is lost, but the first one is now available. So we get valid array
-(both stale members have the same event counter). Will array be
-assembled at this point? What happens if other two device appear later?
-Will the be kicked off array? 
+> You might also consider posting the configuration and full dmesg to
+> the btrfs list. I'm curious what btrfs developers think of this
+> configuration.
 
-Thank you in advance
+It's not btrfs - it's below that.
 
--andrey
+Vennlige hilsener / Best regards
+
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
