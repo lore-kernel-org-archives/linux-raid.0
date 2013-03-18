@@ -1,102 +1,176 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] MD: Quickly return errors if too many devices have
- failed.
-Date: Mon, 18 Mar 2013 10:49:05 +1100
-Message-ID: <20130318104905.4a70bc00@notabene.brown>
-References: <1363195764.24906.14.camel@f16>
+From: Shaohua Li <shli@kernel.org>
+Subject: [patch]raid5: make release_stripe lockless
+Date: Mon, 18 Mar 2013 12:31:46 +0800
+Message-ID: <20130318043146.GA7016@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/p1NoYEaq+e+VXtSGC1HMprw"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1363195764.24906.14.camel@f16>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Jonathan Brassow <jbrassow@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de
 List-Id: linux-raid.ids
 
---Sig_/p1NoYEaq+e+VXtSGC1HMprw
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+release_stripe still has big lock contention. We just add the stripe to a llist
+without taking device_lock. We let the raid5d thread to do the real stripe
+release, which must hold device_lock anyway. In this way, release_stripe
+doesn't hold any locks.
 
-On Wed, 13 Mar 2013 12:29:24 -0500 Jonathan Brassow <jbrassow@redhat.com>
-wrote:
+The side effect is the released stripes order is changed. But sounds not a big
+deal, stripes are never handled in order. And I thought block layer can already
+do nice request merge, which means order isn't that important.
 
-> Neil,
->=20
-> I've noticed that when too many devices fail in a RAID arrary that
-> addtional I/O will hang, yielding an endless supply of:
-> Mar 12 11:52:53 bp-01 kernel: Buffer I/O error on device md1, logical blo=
-ck 3
-> Mar 12 11:52:53 bp-01 kernel: lost page write due to I/O error on md1
-> Mar 12 11:52:53 bp-01 kernel: sector=3D800 i=3D3           (null)        =
-   (null) =20
->          (null)           (null) 1
+I kept the unplug release batch, which is unnecessary with this patch from lock
+contention avoid point of view, and actually if we delete it, the stripe_head
+release_list and lru can share storage. But the unplug release batch is also
+helpful for request merge. We probably can delay wakeup raid5d till unplug, but
+I'm still afraid of the case which raid5d is running.
 
-This is the third report in as many weeks that mentions that WARN_ON.
-The first two where quite different causes.
-I think this one is the same as the first one, which means it would be fixed
-by =20
-      md/raid5: schedule_construction should abort if nothing to do.
+Signed-off-by: Shaohua Li <shli@fusionio.com>
+---
+ drivers/md/raid5.c |   53 ++++++++++++++++++++++++++++++++++++++++++++++++-----
+ drivers/md/raid5.h |    3 +++
+ 2 files changed, 51 insertions(+), 5 deletions(-)
 
-which is commit 29d90fa2adbdd9f in linux-next.
-
-> Mar 12 11:52:53 bp-01 kernel: ------------[ cut here ]------------
-> Mar 12 11:52:53 bp-01 kernel: WARNING: at drivers/md/raid5.c:354 init_str=
-ipe+0x2d4/0x370 [raid456]()
-
->=20
-> Are other people seeing this, or is this an artifact of the way I am kill=
-ing
-> devices ('echo offline > /sys/block/$dev/device/state')?
-
-That is a perfectly good way to kill a device.
-
->=20
-> I would prefer to get immediate errors if nothing can be done to satisfy =
-the
-> request and I've been thinking of something like the attached patch.  The
-> patch below is incomplete.  It does not take into account any reshaping t=
-hat
-> is going on, nor does it try to figure out if a mirror set in RAID10 has =
-died;
-> but I hope it gets the basic idea across.
->=20
-> Is this a good way to handle this situation, or am I missing something?
-
-I think we do get immediate errors (once all bugs are fixed).
-Your patch does extra work for every request which is only of value if the
-array has failed - and it really doesn't make sense to optimise for a failed
-array.
-The current approach is to just try to satisfy a request and once we find
-that we need to do something that is impossible - return an error at that
-point.  I think that is best.
-
-Can you try the commit I identified and see if it makes the problem go away?
-
-Thanks,
-NeilBrown
-
-
---Sig_/p1NoYEaq+e+VXtSGC1HMprw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUUZWcTnsnt1WYoG5AQI5tQ/9FEoCyAhqcc7BkWRDQWjygoCLvC5cm8Wi
-nskwuon0KmTsVPnIX+VBNuz9v3bqB9QU/iCxTVS2hailu4a7E0i2fQMhJr2/0K+W
-JWfJhxr0yYQckkDJLoPwz7hnYgFi8ahOKdub/MqAyS1+5DjKzWgEAED/qlZmQEZN
-d57nK5zGuhmQPh79iyKVDN+4YWRmNSEW/I5mCtrU1xiOEwrKyDuPmgRGy/qWOoeH
-WTs+ekzPX5jmFjZGJcTlfH3ODuMOQC0CghFNDCNAV/c6hgONnc2PXneTeu3QLTe2
-75qw0CGGy/tAkV4zT7kSqv8KJLOcZvLMNdOuXbv/ZedCiYUTpeg0Tb4mhxNua41s
-uXvgaRnNwgoJZn/JmlK7DjDI+Naqj5mbqvp4JLvtge5fhqQ4x3mJRN65yK6UkhG6
-3pklRLuQK9nBNify3z9cnF+q1/L9+wrpUb/DXzrlOdpzMY+rndjEJTfBbhrBozkh
-oatDwZFn0ac9YYypivDz4+Ufcp8alY0Tkw6+QmqgUPfFsjT0VrNbtcy4neDFH56W
-eS5PSV1JPoXof8e2m3qQE9vGdWl0c9Twi7WZunPLWSOEGHW3Dmc4Icq6HeQ2wu96
-txt508ZkjIivG60v+29E6gqL7zeRQfwGpfRD7w9MXccB7egAWIW1+r+oc/4WGk3W
-Q+/c3K2FSpY=
-=7qgi
------END PGP SIGNATURE-----
-
---Sig_/p1NoYEaq+e+VXtSGC1HMprw--
+Index: linux/drivers/md/raid5.c
+===================================================================
+--- linux.orig/drivers/md/raid5.c	2013-03-18 08:49:43.276628437 +0800
++++ linux/drivers/md/raid5.c	2013-03-18 10:33:58.561988946 +0800
+@@ -262,12 +262,45 @@ static void __release_stripe(struct r5co
+ 		do_release_stripe(conf, sh);
+ }
+ 
++/* should hold conf->device_lock already */
++static int release_stripe_list(struct r5conf *conf)
++{
++	struct stripe_head *sh;
++	struct llist_node *node;
++	int count = 0;
++
++	while (1) {
++		node = llist_del_first(&conf->released_stripes);
++		if (!node)
++			break;
++		sh = llist_entry(node, struct stripe_head, release_list);
++		clear_bit(STRIPE_ON_RELEASE_LIST, &sh->state);
++		/*
++		 * Don't worry the bit is set here, because if the bit is set
++		 * again, the count is always > 1. This is true for
++		 * STRIPE_ON_UNPLUG_LIST bit too.
++		 */
++		__release_stripe(conf, sh);
++		count++;
++	}
++	return count;
++}
++
+ static void release_stripe(struct stripe_head *sh)
+ {
+ 	struct r5conf *conf = sh->raid_conf;
+ 	unsigned long flags;
++	bool wakeup;
+ 
++	if (test_and_set_bit(STRIPE_ON_RELEASE_LIST, &sh->state))
++		goto slow_path;
++	wakeup = llist_add(&sh->release_list, &conf->released_stripes);
++	if (wakeup)
++		md_wakeup_thread(conf->mddev->thread);
++	return;
++slow_path:
+ 	local_irq_save(flags);
++	/* we are ok here if STRIPE_ON_RELEASE_LIST is set or not */
+ 	if (atomic_dec_and_lock(&sh->count, &conf->device_lock)) {
+ 		do_release_stripe(conf, sh);
+ 		spin_unlock(&conf->device_lock);
+@@ -515,7 +548,8 @@ get_active_stripe(struct r5conf *conf, s
+ 			if (atomic_read(&sh->count)) {
+ 				BUG_ON(!list_empty(&sh->lru)
+ 				    && !test_bit(STRIPE_EXPANDING, &sh->state)
+-				    && !test_bit(STRIPE_ON_UNPLUG_LIST, &sh->state));
++				    && !test_bit(STRIPE_ON_UNPLUG_LIST, &sh->state)
++				    && !test_bit(STRIPE_ON_RELEASE_LIST, &sh->state));
+ 			} else {
+ 				if (!test_bit(STRIPE_HANDLE, &sh->state))
+ 					atomic_inc(&conf->active_stripes);
+@@ -4128,6 +4162,10 @@ static void raid5_unplug(struct blk_plug
+ 			 */
+ 			smp_mb__before_clear_bit();
+ 			clear_bit(STRIPE_ON_UNPLUG_LIST, &sh->state);
++			/*
++			 * STRIPE_ON_RELEASE_LIST could be set here. In that
++			 * case, the count is always > 1 here
++			 */
+ 			__release_stripe(conf, sh);
+ 			cnt++;
+ 		}
+@@ -4813,10 +4851,12 @@ static void raid5auxd(struct md_thread *
+ 	handled = 0;
+ 	spin_lock_irq(&conf->device_lock);
+ 	while (1) {
+-		int batch_size;
++		int batch_size, released;
++
++		released = release_stripe_list(conf);
+ 
+ 		batch_size = handle_active_stripes(conf, &auxth->work_mask);
+-		if (!batch_size)
++		if (!batch_size && !released)
+ 			break;
+ 		handled += batch_size;
+ 	}
+@@ -4851,7 +4891,9 @@ static void raid5d(struct md_thread *thr
+ 	spin_lock_irq(&conf->device_lock);
+ 	while (1) {
+ 		struct bio *bio;
+-		int batch_size;
++		int batch_size, released;
++
++		released = release_stripe_list(conf);
+ 
+ 		if (
+ 		    !list_empty(&conf->bitmap_list)) {
+@@ -4876,7 +4918,7 @@ static void raid5d(struct md_thread *thr
+ 		}
+ 
+ 		batch_size = handle_active_stripes(conf, &conf->work_mask);
+-		if (!batch_size)
++		if (!batch_size && !released)
+ 			break;
+ 		handled += batch_size;
+ 
+@@ -5471,6 +5513,7 @@ static struct r5conf *setup_conf(struct
+ 	INIT_LIST_HEAD(&conf->delayed_list);
+ 	INIT_LIST_HEAD(&conf->bitmap_list);
+ 	INIT_LIST_HEAD(&conf->inactive_list);
++	init_llist_head(&conf->released_stripes);
+ 	atomic_set(&conf->active_stripes, 0);
+ 	atomic_set(&conf->preread_active_stripes, 0);
+ 	atomic_set(&conf->active_aligned_reads, 0);
+Index: linux/drivers/md/raid5.h
+===================================================================
+--- linux.orig/drivers/md/raid5.h	2013-03-18 08:49:43.288628299 +0800
++++ linux/drivers/md/raid5.h	2013-03-18 10:33:18.018498653 +0800
+@@ -197,6 +197,7 @@ enum reconstruct_states {
+ struct stripe_head {
+ 	struct hlist_node	hash;
+ 	struct list_head	lru;	      /* inactive_list or handle_list */
++	struct llist_node	release_list;
+ 	struct r5conf		*raid_conf;
+ 	short			generation;	/* increments with every
+ 						 * reshape */
+@@ -324,6 +325,7 @@ enum {
+ 	STRIPE_COMPUTE_RUN,
+ 	STRIPE_OPS_REQ_PENDING,
+ 	STRIPE_ON_UNPLUG_LIST,
++	STRIPE_ON_RELEASE_LIST,
+ };
+ 
+ /*
+@@ -462,6 +464,7 @@ struct r5conf {
+ 	 */
+ 	atomic_t		active_stripes;
+ 	struct list_head	inactive_list;
++	struct llist_head	released_stripes;
+ 	wait_queue_head_t	wait_for_stripe;
+ 	wait_queue_head_t	wait_for_overlap;
+ 	int			inactive_blocked;	/* release of inactive stripes blocked,
