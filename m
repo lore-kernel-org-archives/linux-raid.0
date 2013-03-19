@@ -1,51 +1,60 @@
-From: Brassow Jonathan <jbrassow@redhat.com>
-Subject: Re: [PATCH] MD: Quickly return errors if too many devices have failed.
-Date: Tue, 19 Mar 2013 16:15:35 -0500
-Message-ID: <1C64DEE2-FCED-4B9A-A134-E03EA898A8B7@redhat.com>
-References: <1363195764.24906.14.camel@f16> <20130318104905.4a70bc00@notabene.brown>
-Mime-Version: 1.0 (Apple Message framework v1085)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Dan Williams <djbw@fb.com>
+Subject: Re: [patch]raid5: make release_stripe lockless
+Date: Tue, 19 Mar 2013 14:53:05 -0700
+Message-ID: <CAA9_cmeNpXtR91z8Ni=WBAZmiERvRTJre9Px47S-mzTOoNYucg@mail.gmail.com>
+References: <20130318043146.GA7016@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130318104905.4a70bc00@notabene.brown>
+In-Reply-To: <20130318043146.GA7016@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>, Jonathan Brassow <jbrassow@redhat.com>
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
+On Sun, Mar 17, 2013 at 9:31 PM, Shaohua Li <shli@kernel.org> wrote:
+> release_stripe still has big lock contention. We just add the stripe to a llist
+> without taking device_lock. We let the raid5d thread to do the real stripe
+> release, which must hold device_lock anyway. In this way, release_stripe
+> doesn't hold any locks.
+>
+> The side effect is the released stripes order is changed. But sounds not a big
+> deal, stripes are never handled in order. And I thought block layer can already
+> do nice request merge, which means order isn't that important.
+>
+> I kept the unplug release batch, which is unnecessary with this patch from lock
+> contention avoid point of view, and actually if we delete it, the stripe_head
+> release_list and lru can share storage. But the unplug release batch is also
+> helpful for request merge. We probably can delay wakeup raid5d till unplug, but
+> I'm still afraid of the case which raid5d is running.
+>
+> Signed-off-by: Shaohua Li <shli@fusionio.com>
+> ---
+>  drivers/md/raid5.c |   53 ++++++++++++++++++++++++++++++++++++++++++++++++-----
+>  drivers/md/raid5.h |    3 +++
+>  2 files changed, 51 insertions(+), 5 deletions(-)
+>
+> Index: linux/drivers/md/raid5.c
+> ===================================================================
+> --- linux.orig/drivers/md/raid5.c       2013-03-18 08:49:43.276628437 +0800
+> +++ linux/drivers/md/raid5.c    2013-03-18 10:33:58.561988946 +0800
+> @@ -262,12 +262,45 @@ static void __release_stripe(struct r5co
+>                 do_release_stripe(conf, sh);
+>  }
+>
+> +/* should hold conf->device_lock already */
+> +static int release_stripe_list(struct r5conf *conf)
+> +{
+> +       struct stripe_head *sh;
+> +       struct llist_node *node;
+> +       int count = 0;
+> +
+> +       while (1) {
+> +               node = llist_del_first(&conf->released_stripes);
+> +               if (!node)
+> +                       break;
+> +               sh = llist_entry(node, struct stripe_head, release_list);
 
-On Mar 17, 2013, at 6:49 PM, NeilBrown wrote:
-
-> On Wed, 13 Mar 2013 12:29:24 -0500 Jonathan Brassow <jbrassow@redhat.com>
-> wrote:
-> 
->> Neil,
->> 
->> I've noticed that when too many devices fail in a RAID arrary that
->> addtional I/O will hang, yielding an endless supply of:
->> Mar 12 11:52:53 bp-01 kernel: Buffer I/O error on device md1, logical block 3
->> Mar 12 11:52:53 bp-01 kernel: lost page write due to I/O error on md1
->> Mar 12 11:52:53 bp-01 kernel: sector=800 i=3           (null)           (null)  
->>         (null)           (null) 1
-> 
-> This is the third report in as many weeks that mentions that WARN_ON.
-> The first two where quite different causes.
-> I think this one is the same as the first one, which means it would be fixed
-> by  
->      md/raid5: schedule_construction should abort if nothing to do.
-> 
-> which is commit 29d90fa2adbdd9f in linux-next.
-
-Sorry, I don't see this commit in linux-next:
-(the "for-next" branch of) git://github.com/neilbrown/linux.git
-or git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
-
-Where should I be looking?
-
-I did grab a patch from an earlier discussion where you mentioned a similar commit ID.  It didn't solve the problem, but it did prevent an endless progression of the same error messages.  I only saw one instance of the above after the patch.
-
-I'm fairly certain that the hang was affecting more than just RAID5 though.  It also happened with raid1/10.  I'll go back with 3.9.0-rc3 and make sure that's true until I can figure out which 'linux-next' commit you are talking about.
-
-thanks,
- brassow
-
+Do we need a smp_mb__before_clear_bit() here to pair with the
+test_and_set_bit() to preclude re-adding the stripe_head before it is
+fully deleted?
