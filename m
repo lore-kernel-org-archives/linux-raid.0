@@ -1,71 +1,54 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: Strange / inconsistent behavior with mdadm -I -R
-Date: Tue, 19 Mar 2013 19:29:44 +0100
-Message-ID: <5148AE98.9020203@arcor.de>
-References: <51422D10.3040000@arcor.de> <20130318103510.45bdd4a8@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: mwilck@arcor.de
+Subject: [PATCH] RAID10: Allow skipping recovery when clean arrays are assembled
+Date: Tue, 19 Mar 2013 19:35:33 +0100
+Message-ID: <1363718133-7180-1-git-send-email-mwilck@arcor.de>
+References: <20130318103510.45bdd4a8@notabene.brown>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20130318103510.45bdd4a8@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de, linux-raid@vger.kernel.org
+Cc: Martin Wilck <mwilck@arcor.de>
 List-Id: linux-raid.ids
 
-On 03/18/2013 12:35 AM, NeilBrown wrote:
+When an array is assembled incrementally with mdadm -I -R
+and the array switches to "active" mode, md starts a recovery.
 
-> With -R, it only stays inactive until we have the minimum devices needed for
-> a functioning array.  Then it will switch to 'read-auto' or, if the array is
-> known and all expected devices are present, it will switch to 'active'.
+If the array was clean, the "fullsync" flag will be 0. Skip
+the full recovery in this case, as RAID1 does (the code was
+actually copied from the sync_request() method of RAID1).
 
-That's the point - I see the array switch to active *before* all
-expected devices are present. That causes further additions to fail.
+Signed-off-by: Martin Wilck <mwilck@arcor.de>
 
-> Maybe if you could provide a sequence of "mdadm" commands that produces an
-> outcome different to what you would expect - that would reduce the chance
-> that I get confused.
+---
+ drivers/md/raid10.c |   16 ++++++++++++++++
+ 1 files changed, 16 insertions(+), 0 deletions(-)
 
-Here is the sequence of mdadm commands to illustrate what I mean.
-I have a RAID10 array and I add the devices using mdadm -I -R in the
-sequence 1,3,2,4. After adding device 3, the array will be started in
-auto-read-only mode, which is fine.
-
-But then as soon as the next disk (/dev/tosh/rd2) is added, the array
-switches to "active" although it is neither written to, nor all disks
-have been added yet. Consequently, adding disk 4 fails.
-
-I expected the array to remain "auto-read-only" until either all 4
-devices are present, or it is opened for writing. This is how the
-container case is behaving (almost - it doesn't switch to active
-automatically until it's written to).
-
-# ./mdadm -C /dev/md0 -l 1 -n 4 /dev/tosh/rd[1-4] -pn2
-mdadm: array /dev/md0 started.
-(wait for initial build to finish)
-# mdadm -S /dev/md0
-mdadm: stopped /dev/md0
-# ./mdadm -v -I /dev/tosh/rd1 -R
-mdadm: /dev/tosh/rd1 attached to /dev/md/0, not enough to start (1).
-# ./mdadm -v -I /dev/tosh/rd3 -R
-mdadm: /dev/tosh/rd3 attached to /dev/md/0, which has been started.
-# cat /proc/mdstat
-Personalities : [raid1] [raid10]
-md0 : active (auto-read-only) raid10 dm-6[2] dm-4[0]
-      2094080 blocks super 1.2 512K chunks 2 near-copies [4/2] [U_U_]
-# ./mdadm -v -I /dev/tosh/rd2 -R; cat /proc/mdstat
-mdadm: /dev/tosh/rd2 attached to /dev/md/0 which is already active.
-Personalities : [raid1] [raid10]
-md0 : active raid10 dm-5[1] dm-6[2] dm-4[0]
-      2094080 blocks super 1.2 512K chunks 2 near-copies [4/2] [U_U_]
-      [>....................]  recovery =  0.0% (0/1047040)
-finish=1090.6min speed=0K/sec
-(wait for recovery to finish)
-# ./mdadm -v -I /dev/tosh/rd4 -R
-mdadm: can only add /dev/tosh/rd4 to /dev/md/0 as a spare, and
-force-spare is not set.
-mdadm: failed to add /dev/tosh/rd4 to existing array /dev/md/0: Invalid
-argument.
-
-Thanks,
-Martin
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 64d4824..e373d88 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2863,6 +2863,22 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr,
+ 		if (init_resync(conf))
+ 			return 0;
+ 
++	/*
++	 * Allow skipping a full rebuild for incremental assembly
++	 * of a clean array, like RAID1 does.
++	 */
++	if (mddev->bitmap == NULL &&
++	    mddev->recovery_cp == MaxSector &&
++	    !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
++	    conf->fullsync == 0) {
++		*skipped = 1;
++		max_sector = mddev->dev_sectors;
++		if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ||
++		    test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
++			max_sector = mddev->resync_max_sectors;
++		return max_sector - sector_nr;
++	}
++
+  skipped:
+ 	max_sector = mddev->dev_sectors;
+ 	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ||
+-- 
+1.7.1
