@@ -1,31 +1,30 @@
-From: Joel Young <jdy@cryregarder.com>
-Subject: Re: RAID 0 of Two RAID 5s Stays Up When Component RAID fails
-Date: Mon, 18 Mar 2013 23:57:20 +0000 (UTC)
-Message-ID: <loom.20130319T005432-235@post.gmane.org>
-References: <loom.20130314T022616-853@post.gmane.org>
-Mime-Version: 1.0
+From: Brassow Jonathan <jbrassow@redhat.com>
+Subject: Re: [PATCH] DM RAID:  Add message/status support for changing sync action
+Date: Tue, 19 Mar 2013 11:54:26 -0500
+Message-ID: <E2CB0342-096A-40AF-B9F3-FE8E5C815FA7@redhat.com>
+References: <1363380503.5163.2.camel@f16> <20130318093523.60bc52ac@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v1085)
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20130318093523.60bc52ac@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, agk@redhat.com, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-Joel Young <jdy <at> cryregarder.com> writes:
 
-> mdadm /dev/md0 --fail /dev/loop0
-> mdadm /dev/md0 --fail /dev/loop1
+On Mar 17, 2013, at 5:35 PM, NeilBrown wrote:
 
-I typod this when mailing the list.  It should have been:
-mdadm /dev/md0 --fail /dev/loop1
-mdadm /dev/md0 --fail /dev/loop2
+> 
+> In general, the patch looks good - particular as it includes documentation
+> changes!  When you get a very you are happy with I'll apply it.
+> 
+> Thanks,
+> NeilBrown
+> 
 
-In an off-list discussion with Neil Brown, he pointed out that
-just as we don't fail a drive when a sector goes bad, we don't
-fail a raid-0 if a component fails.
+I'll be sending out a version 2, which is split into two patches and addresses the comments made.
 
-At this time, I don't follow that reasoning, but I can work
-with it.
-
-Joel
+ brassow
 
