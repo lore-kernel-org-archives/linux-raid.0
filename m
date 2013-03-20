@@ -1,10 +1,11 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
+From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: Western Digital Green 3TB SATA3 experiences
-Date: Wed, 20 Mar 2013 09:28:07 +0100 (CET)
-Message-ID: <alpine.DEB.2.00.1303200926110.2309@uplift.swm.pp.se>
+Date: Wed, 20 Mar 2013 14:48:05 +0600
+Message-ID: <20130320144805.15140c70@natsu>
 References: <1363766982.51496ec6ea41f@mail.inbox.lv>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/AT0NWpmW6OXQMG5GkI7rDAS"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1363766982.51496ec6ea41f@mail.inbox.lv>
 Sender: linux-raid-owner@vger.kernel.org
@@ -12,27 +13,59 @@ To: Andris Berzins <pkix@inbox.lv>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 20 Mar 2013, Andris Berzins wrote:
+--Sig_/AT0NWpmW6OXQMG5GkI7rDAS
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 20 Mar 2013 10:09:42 +0200
+"Andris Berzins" <pkix@inbox.lv> wrote:
 
 > I am running RAID5 array on 6x 3TB WD SATA disks.
 > I have problems with all of these disks (including replaced one).
 > Disks are being randomly kicked out from array and SMART shows
-> pending sectors which usually can be fixed by read-write or write to that sector.
+> pending sectors which usually can be fixed by read-write or write to that=
+ sector.
 
-Drives with pending sectors should be RMAed.
+Perhaps you have a problem with something other than the drives, e.g.:
+
+- a bad or insufficient PSU, providing too low (or too high) voltage over 5V
+  or 12V (this could manifest only under load, too);
+
+- not enough cooling?=20
+
+- inadequate case, resulting in overly high vibration or even resonance?
+
 
 > Has anyone experienced something similar with WD green series?
+
+If you see a sectors repeatedly appearing that become unreadable but are fi=
+xed
+after a write, it is usually a symptom of a drive that is partially defecti=
+ve
+and should be exchanged.=20
+
+But since you have this symptom with all of them, maybe the cause is differ=
+ent.
+
+
 > Is this because of WD "green" series?
->
-> Anyone running raid on 3TB SATA drives can suggest model disk that
-> runs without problems?
 
-WD RED series is designed for this kind of usage and should not be kicked 
-out because the drive will return UNC in a timely fashion.
+No.
 
-<http://en.wikipedia.org/wiki/Error_recovery_control>. The WD Green series 
-is not designed for RAID usage and might get kicked out due to read 
-timeouts.
+--=20
+With respect,
+Roman
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+--Sig_/AT0NWpmW6OXQMG5GkI7rDAS
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlFJd8UACgkQTLKSvz+PZwhcewCeKXVmW/GhIMAVPd8CbaakGk1r
+TF8AoIyRi3MssVVWNLDWtyOMjoBfbtZs
+=Bikq
+-----END PGP SIGNATURE-----
+
+--Sig_/AT0NWpmW6OXQMG5GkI7rDAS--
