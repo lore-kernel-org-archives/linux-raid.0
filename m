@@ -1,71 +1,71 @@
-From: Roman Mamedov <rm@romanrm.ru>
+From: "Andris Berzins" <pkix@inbox.lv>
 Subject: Re: Western Digital Green 3TB SATA3 experiences
-Date: Wed, 20 Mar 2013 14:48:05 +0600
-Message-ID: <20130320144805.15140c70@natsu>
+Date: Wed, 20 Mar 2013 11:21:32 +0200
+Message-ID: <1363771292.51497f9ca4fb5@mail.inbox.lv>
 References: <1363766982.51496ec6ea41f@mail.inbox.lv>
+ <20130320144805.15140c70@natsu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/AT0NWpmW6OXQMG5GkI7rDAS"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1363766982.51496ec6ea41f@mail.inbox.lv>
+In-Reply-To: <20130320144805.15140c70@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andris Berzins <pkix@inbox.lv>
+To: Roman Mamedov <rm@romanrm.ru>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/AT0NWpmW6OXQMG5GkI7rDAS
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Quoting "Roman Mamedov" <rm@romanrm.ru>:
+> On Wed, 20 Mar 2013 10:09:42 +0200
+> "Andris Berzins" <pkix@inbox.lv> wrote:
+> 
+>> I am running RAID5 array on 6x 3TB WD SATA disks.
+>> I have problems with all of these disks (including replaced one).
+>> Disks are being randomly kicked out from array and SMART shows
+>> pending sectors which usually can be fixed by read-write or write to that se
+>>ctor.
+> 
+> Perhaps you have a problem with something other than the drives, e.g.:
+> 
+> - a bad or insufficient PSU, providing too low (or too high) voltage over 5V
+> or 12V (this could manifest only under load, too);
 
-On Wed, 20 Mar 2013 10:09:42 +0200
-"Andris Berzins" <pkix@inbox.lv> wrote:
+I have bought 550W PSU specially for this. The server is connected through APC UPS.
 
-> I am running RAID5 array on 6x 3TB WD SATA disks.
-> I have problems with all of these disks (including replaced one).
-> Disks are being randomly kicked out from array and SMART shows
-> pending sectors which usually can be fixed by read-write or write to that=
- sector.
+> - not enough cooling?
 
-Perhaps you have a problem with something other than the drives, e.g.:
-
-- a bad or insufficient PSU, providing too low (or too high) voltage over 5V
-  or 12V (this could manifest only under load, too);
-
-- not enough cooling?=20
-
-- inadequate case, resulting in overly high vibration or even resonance?
-
-
-> Has anyone experienced something similar with WD green series?
-
-If you see a sectors repeatedly appearing that become unreadable but are fi=
-xed
-after a write, it is usually a symptom of a drive that is partially defecti=
-ve
-and should be exchanged.=20
-
-But since you have this symptom with all of them, maybe the cause is differ=
-ent.
+Putting a hand temperature seems lightly warm.
 
 
-> Is this because of WD "green" series?
+> - inadequate case, resulting in overly high vibration or even resonance?
 
-No.
+Well, the case is average workstation case.
 
---=20
-With respect,
-Roman
 
---Sig_/AT0NWpmW6OXQMG5GkI7rDAS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+>> Has anyone experienced something similar with WD green series?
+> 
+> If you see a sectors repeatedly appearing that become unreadable but are fix
+>ed
+> after a write, it is usually a symptom of a drive that is partially defectiv
+>e
+> and should be exchanged.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+That one which I exchanged worked for 3 month without problems.
 
-iEYEARECAAYFAlFJd8UACgkQTLKSvz+PZwhcewCeKXVmW/GhIMAVPd8CbaakGk1r
-TF8AoIyRi3MssVVWNLDWtyOMjoBfbtZs
-=Bikq
------END PGP SIGNATURE-----
+> 
+> But since you have this symptom with all of them, maybe the cause is differe
+>nt.
+> 
+> 
+>> Is this because of WD "green" series?
+> 
+> No.
 
---Sig_/AT0NWpmW6OXQMG5GkI7rDAS--
+"Green" series are special because they spin down after 7 seconds and they do not
+return in timely manner when read error occurs.
+
+
+> 
+> --
+> With respect,
+> Roman
+
