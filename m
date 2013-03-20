@@ -1,62 +1,60 @@
-From: Roman Mamedov <rm@romanrm.ru>
+From: =?ISO-8859-15?Q?Rainer_F=FCgenstein?= <rfu@oudeis.org>
 Subject: Re: Western Digital Green 3TB SATA3 experiences
-Date: Wed, 20 Mar 2013 15:29:39 +0600
-Message-ID: <20130320152939.480374e9@natsu>
+Date: Wed, 20 Mar 2013 13:40:04 +0100
+Message-ID: <364487397.20130320134004@oudeis.org>
 References: <1363766982.51496ec6ea41f@mail.inbox.lv>
-	<20130320144805.15140c70@natsu>
-	<1363771292.51497f9ca4fb5@mail.inbox.lv>
+Reply-To: =?ISO-8859-15?Q?Rainer_F=FCgenstein?= <rfu@oudeis.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/06IJ.V6wX4fDa.y2ih+bTBx"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1363771292.51497f9ca4fb5@mail.inbox.lv>
+In-Reply-To: <1363766982.51496ec6ea41f@mail.inbox.lv>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andris Berzins <pkix@inbox.lv>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/06IJ.V6wX4fDa.y2ih+bTBx
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+andris,
 
-On Wed, 20 Mar 2013 11:21:32 +0200
-"Andris Berzins" <pkix@inbox.lv> wrote:
+yes, I had such a situation before. IIRC 4 out of 6 3TB WD caviar
+green drives were broken (3 more or less DoA, 1 failed after about 2
+months). sent those 4 back via RMA, the replacement drives work
+without problems (knocking on wood).
 
-> >> Is this because of WD "green" series?
-> >=20
-> > No.
->=20
-> "Green" series are special because they spin down after 7 seconds and the=
-y do not
-> return in timely manner when read error occurs.
+looks like they had a (big) bad batch manufactured and are now sending
+out proper ones as RMA replacements.
 
-They do not spin down after 7 seconds, they unload their heads. In any case
-this behavior is not expected to ever cause Current_Pending_Sectors rising
-(which are plain and simple unreadable sectors no matter how hard you try or
-how long you wait).
+nevertheless, next time I'll use WD RED drives, as recommended here
+frequently.
 
-You can disable the 7-second unload time behavior by using either "hdparm -=
-J"
-or using "idle3-tools" http://idle3-tools.sourceforge.net/ (also available =
-in
-Debian). I would indeed recommend doing that to reduce wear and tear on the
-head mechanism from constant loads/unloads; but I somewhat doubt this will
-make a difference in relation to your issue.
+cu
 
---=20
-With respect,
-Roman
 
---Sig_/06IJ.V6wX4fDa.y2ih+bTBx
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+AB> Hello,
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+AB> I am running RAID5 array on 6x 3TB WD SATA disks.
+AB> I have problems with all of these disks (including replaced one).
+AB> Disks are being randomly kicked out from array and SMART shows
+AB> pending sectors which usually can be fixed by read-write or write to that sector.
 
-iEYEARECAAYFAlFJgYMACgkQTLKSvz+PZwhkSACggmosaHtjy0FFcUJXTtZGaMNr
-+HYAoI2CKUSXgYBiNGau271OBkuV8P8Q
-=BeF0
------END PGP SIGNATURE-----
+AB> Has anyone experienced something similar with WD green series?
+AB> Is this because of WD "green" series?
 
---Sig_/06IJ.V6wX4fDa.y2ih+bTBx--
+AB> Anyone running raid on 3TB SATA drives can suggest model disk that
+AB> runs without problems?
+
+
+AB> Thank you!
+
+AB> --
+AB> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+AB> the body of a message to majordomo@vger.kernel.org
+AB> More majordomo info at  http://vger.kernel.org/majordomo-info.html 
+
+
+------------------------------------------------------------------------------
+Unix gives you just enough rope to hang yourself -- and then a couple of more 
+feet, just to be sure.
+(Eric Allman)
+------------------------------------------------------------------------------
+
