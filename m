@@ -1,71 +1,62 @@
-From: "Andris Berzins" <pkix@inbox.lv>
+From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: Western Digital Green 3TB SATA3 experiences
-Date: Wed, 20 Mar 2013 11:21:32 +0200
-Message-ID: <1363771292.51497f9ca4fb5@mail.inbox.lv>
+Date: Wed, 20 Mar 2013 15:29:39 +0600
+Message-ID: <20130320152939.480374e9@natsu>
 References: <1363766982.51496ec6ea41f@mail.inbox.lv>
- <20130320144805.15140c70@natsu>
+	<20130320144805.15140c70@natsu>
+	<1363771292.51497f9ca4fb5@mail.inbox.lv>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/06IJ.V6wX4fDa.y2ih+bTBx"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130320144805.15140c70@natsu>
+In-Reply-To: <1363771292.51497f9ca4fb5@mail.inbox.lv>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
+To: Andris Berzins <pkix@inbox.lv>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Quoting "Roman Mamedov" <rm@romanrm.ru>:
-> On Wed, 20 Mar 2013 10:09:42 +0200
-> "Andris Berzins" <pkix@inbox.lv> wrote:
-> 
->> I am running RAID5 array on 6x 3TB WD SATA disks.
->> I have problems with all of these disks (including replaced one).
->> Disks are being randomly kicked out from array and SMART shows
->> pending sectors which usually can be fixed by read-write or write to that se
->>ctor.
-> 
-> Perhaps you have a problem with something other than the drives, e.g.:
-> 
-> - a bad or insufficient PSU, providing too low (or too high) voltage over 5V
-> or 12V (this could manifest only under load, too);
+--Sig_/06IJ.V6wX4fDa.y2ih+bTBx
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I have bought 550W PSU specially for this. The server is connected through APC UPS.
+On Wed, 20 Mar 2013 11:21:32 +0200
+"Andris Berzins" <pkix@inbox.lv> wrote:
 
-> - not enough cooling?
+> >> Is this because of WD "green" series?
+> >=20
+> > No.
+>=20
+> "Green" series are special because they spin down after 7 seconds and the=
+y do not
+> return in timely manner when read error occurs.
 
-Putting a hand temperature seems lightly warm.
+They do not spin down after 7 seconds, they unload their heads. In any case
+this behavior is not expected to ever cause Current_Pending_Sectors rising
+(which are plain and simple unreadable sectors no matter how hard you try or
+how long you wait).
 
+You can disable the 7-second unload time behavior by using either "hdparm -=
+J"
+or using "idle3-tools" http://idle3-tools.sourceforge.net/ (also available =
+in
+Debian). I would indeed recommend doing that to reduce wear and tear on the
+head mechanism from constant loads/unloads; but I somewhat doubt this will
+make a difference in relation to your issue.
 
-> - inadequate case, resulting in overly high vibration or even resonance?
+--=20
+With respect,
+Roman
 
-Well, the case is average workstation case.
+--Sig_/06IJ.V6wX4fDa.y2ih+bTBx
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
->> Has anyone experienced something similar with WD green series?
-> 
-> If you see a sectors repeatedly appearing that become unreadable but are fix
->ed
-> after a write, it is usually a symptom of a drive that is partially defectiv
->e
-> and should be exchanged.
+iEYEARECAAYFAlFJgYMACgkQTLKSvz+PZwhkSACggmosaHtjy0FFcUJXTtZGaMNr
++HYAoI2CKUSXgYBiNGau271OBkuV8P8Q
+=BeF0
+-----END PGP SIGNATURE-----
 
-That one which I exchanged worked for 3 month without problems.
-
-> 
-> But since you have this symptom with all of them, maybe the cause is differe
->nt.
-> 
-> 
->> Is this because of WD "green" series?
-> 
-> No.
-
-"Green" series are special because they spin down after 7 seconds and they do not
-return in timely manner when read error occurs.
-
-
-> 
-> --
-> With respect,
-> Roman
-
+--Sig_/06IJ.V6wX4fDa.y2ih+bTBx--
