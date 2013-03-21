@@ -1,125 +1,109 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Strange / inconsistent behavior with mdadm -I -R
-Date: Thu, 21 Mar 2013 12:22:05 +1100
-Message-ID: <20130321122205.3fdca38c@notabene.brown>
-References: <51422D10.3040000@arcor.de>
-	<20130318103510.45bdd4a8@notabene.brown>
-	<5148AE98.9020203@arcor.de>
+Subject: Re: Persistent failures with simple md setup
+Date: Thu, 21 Mar 2013 14:24:59 +1100
+Message-ID: <20130321142459.2cd6b4da@notabene.brown>
+References: <1565063.1kpR7lz4Ph@xrated>
+	<20130313115235.01492c21@notabene.brown>
+	<1407824.2kxT8nEo5d@xrated>
+	<2777026.gm19DAWULs@xrated>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/6B_4X/dSwzilmaV8Kqt=Qmi"; protocol="application/pgp-signature"
+ boundary="Sig_/Q6sHWVEh5saAO0=x14v37HK"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5148AE98.9020203@arcor.de>
+In-Reply-To: <2777026.gm19DAWULs@xrated>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>
-Cc: linux-raid@vger.kernel.org
+To: Hans-Peter Jansen <hpj@urpla.net>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/6B_4X/dSwzilmaV8Kqt=Qmi
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/Q6sHWVEh5saAO0=x14v37HK
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 19 Mar 2013 19:29:44 +0100 Martin Wilck <mwilck@arcor.de> wrote:
+On Mon, 18 Mar 2013 12:20:57 +0100 Hans-Peter Jansen <hpj@urpla.net> wrote:
 
-> On 03/18/2013 12:35 AM, NeilBrown wrote:
+> Am Freitag, 15. M=E4rz 2013, 23:43:31 schrieb Hans-Peter Jansen:
+> > Am Mittwoch, 13. M=E4rz 2013, 11:52:35 schrieben Sie:
+> > > hi,
+> > >=20
+> > >  wonder if you could try one more test for me.
+> > >  With the other (echo BEFORE / echo AFTER etc) tracing still there, c=
+hange
+> > >=20
+> > > the /sbin/udevadm settle --timeout=3D$MDADM_DEVICE_TIMEOUT
+> > >=20
+> > >  to
+> > > =20
+> > >    /sbin/udevadm --debug settle --timeout=3D$MDADM_DEVICE_TIMEOUT >
+> > >    /dev/kmsg
+> > >=20
+> > > 2>&1
+> > >=20
+> > >  I found there is a case where "udevadm settle" can exit before the q=
+ueue
+> > >  is
+> > >=20
+> > > empty.  It seems like a very unlikely scenario, but it seems clear th=
+at
+> > > something "unlikely" is happening.
+> > >=20
+> > >  I'm hoping to see
+> > > =20
+> > >     timeout waiting for udev queue
+> > > =20
+> > >  appear in the logs when this runs.
+> > > =20
+> > >  If you could add that and post the 'dmesg' output if you ever get th=
+at
+> > >  message - or maybe even if you don't - that would be very helpful.
+> >=20
+> > Did that right now and disabled the sleep 10 in front, that provisional=
+ly
+> > "solved" this issue BTW. Now waiting for another md issue to occur.
 >=20
-> > With -R, it only stays inactive until we have the minimum devices neede=
-d for
-> > a functioning array.  Then it will switch to 'read-auto' or, if the arr=
-ay is
-> > known and all expected devices are present, it will switch to 'active'.
+> Here we go: (not censored in any way, and I hope to get the "window" righ=
+t:
+> md0 was affected this time.
 >=20
-> That's the point - I see the array switch to active *before* all
-> expected devices are present. That causes further additions to fail.
->=20
-> > Maybe if you could provide a sequence of "mdadm" commands that produces=
- an
-> > outcome different to what you would expect - that would reduce the chan=
-ce
-> > that I get confused.
->=20
-> Here is the sequence of mdadm commands to illustrate what I mean.
-> I have a RAID10 array and I add the devices using mdadm -I -R in the
-> sequence 1,3,2,4. After adding device 3, the array will be started in
-> auto-read-only mode, which is fine.
->=20
-> But then as soon as the next disk (/dev/tosh/rd2) is added, the array
-> switches to "active" although it is neither written to, nor all disks
-> have been added yet. Consequently, adding disk 4 fails.
->=20
-> I expected the array to remain "auto-read-only" until either all 4
-> devices are present, or it is opened for writing. This is how the
-> container case is behaving (almost - it doesn't switch to active
-> automatically until it's written to).
->=20
-> # ./mdadm -C /dev/md0 -l 1 -n 4 /dev/tosh/rd[1-4] -pn2
-> mdadm: array /dev/md0 started.
-> (wait for initial build to finish)
-> # mdadm -S /dev/md0
-> mdadm: stopped /dev/md0
-> # ./mdadm -v -I /dev/tosh/rd1 -R
-> mdadm: /dev/tosh/rd1 attached to /dev/md/0, not enough to start (1).
-> # ./mdadm -v -I /dev/tosh/rd3 -R
-> mdadm: /dev/tosh/rd3 attached to /dev/md/0, which has been started.
-> # cat /proc/mdstat
-> Personalities : [raid1] [raid10]
-> md0 : active (auto-read-only) raid10 dm-6[2] dm-4[0]
->       2094080 blocks super 1.2 512K chunks 2 near-copies [4/2] [U_U_]
-> # ./mdadm -v -I /dev/tosh/rd2 -R; cat /proc/mdstat
-> mdadm: /dev/tosh/rd2 attached to /dev/md/0 which is already active.
-> Personalities : [raid1] [raid10]
-> md0 : active raid10 dm-5[1] dm-6[2] dm-4[0]
->       2094080 blocks super 1.2 512K chunks 2 near-copies [4/2] [U_U_]
->       [>....................]  recovery =3D  0.0% (0/1047040)
-> finish=3D1090.6min speed=3D0K/sec
-> (wait for recovery to finish)
-> # ./mdadm -v -I /dev/tosh/rd4 -R
-> mdadm: can only add /dev/tosh/rd4 to /dev/md/0 as a spare, and
-> force-spare is not set.
-> mdadm: failed to add /dev/tosh/rd4 to existing array /dev/md/0: Invalid
-> argument.
->=20
-> Thanks,
-> Martin
 
-Thanks, that makes is all very clear.
+Thanks! Unfortunately it is not as helpful as I hoped, but it does suggest
+that "udevadm settle" does sometimes appear to misbehave even if there aren=
+'t
+any problems with the md array.
 
-The problem is that the ADD_NEW_DISK ioctl automatically converts from
-read-auto to active.
-There are two approaches I could take to addressing this.
-1/ change ADD_NEW_DISK to not cause that conversion.  I think that would ne=
-ed
-   to be conditional as some times it really should be changed.
-2/ change mdadm to not use ADD_NEW_DISK but instead add the disk my setting=
- it
-   up via sysfs.
+Could I ask for one more?
+Prefix the "udevadm settle " command with
+  strace  -o /tmp/udevadm.trace -s 500
 
-I'm not sure which is best and neither is completely straight forward.
-So for now:  I'll get back to you.
+(making sure that you have 'strace' installed) and then post the
+"/tmp/udevadm.trace" file.  Hopefully that will at least allow me to rule o=
+ut
+some possibilities.
 
 Thanks,
 NeilBrown
 
---Sig_/6B_4X/dSwzilmaV8Kqt=Qmi
+
+--Sig_/Q6sHWVEh5saAO0=x14v37HK
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUUpgvTnsnt1WYoG5AQK5rw/+IOjh0YGT9wVG3sB/U6U4ISB8oeRxvaB5
-rmIIFwF9wbhgulrx7Y4KuufN9scyVBS8kNuWLzT2szFP+iiQj7mAdhQM0Ld3WwGG
-zYAd/io6urb0a9kAcE7ezdWh1k1rp/QOQgEi3t7Z72xgnTA4cUTxSNqjitfzhagZ
-VBJ5QRLCwxpuV6qAziejcZZK9OGPK1OLAEgLSEnBuD0Q5tX/AC7+W3GiddlZ2pvQ
-bzG6D2svg2j/ON9Dl9te+90Vktn+SU/gKKEfBjFeGqe/GwLy771iFCkeI9glz+WB
-zEBYMyU3KCFxwoTt8Lrk8q+CKmHGMyEXveBTTk9/J7iMA9N2LGORacs8xNpCVYBV
-c1+KrHHde8Bz62/6/2lvTz49xldnSgZL8ayDPIIeB4gMuSbFVIJ5eEo6Shz1KA1K
-8F4eObA0rNzvJfUxVi+NOF+vYNUm1m3qe8B9PzKsh2sPW1zzMtz6MLdJGyhtGDy2
-frXbfUYDnoix/9YcOv5K55sUYZwvJXVfRYa2sjFiVRCh8pwLYOY9kbTRXNmIAdda
-Wb7jt9nPiDW5JjT3flvDtyJ1h/VVBviAd1JkYlcjpspm/PfUZb0SC8Y64x5TJQII
-Uj3USsLEcWHU2iYir7hyOoEkBL/ymscnXSObvMyZc05ncYp9urOtl5QNfECb83b/
-EvGViswhiqM=
-=yX+4
+iQIVAwUBUUp9jDnsnt1WYoG5AQJyDA//XEGiNJLF2ugLQwclXES6bQWj1NxplZk8
+aNzYFuvAe6gMSb2v5fUASHDQFysCtoG8B9KzOeoNv0esFtU8Mjtqd/LL3R8v7Ab7
+ADN5AYLtNptQpeQI6gBpCMVozHuumM9u/SH94Kb9WzPc238/rSfV+UqwkzHukJW3
+AplYH/8Y733QKttpKyBKkEsRkrbL6+puqEoNMIiWlE50/9Qmu3w5ihmO4ZsZjIl4
+BlUl3e83HKRsPAUKgf1IVcEPd9c/DM9tj9FX/c/ncVpalSqB76ISgwLUha3sbvfK
+qMjsJR+TXvs0w1MfFZJXY4rJ7g0ISgJSRywWi6tvDYBhgr3sIchj2YY9Xryeri66
+5BkMFUNOVOpDHic5inhicltjGMXIVjxbD0yqfZLw1jDNj8opiKbYugpQ4lkpRATb
+6Q7UGdsSbg8hw2GsFORK9UKEcJDMJNnQ9aV6GTSYuD/cTFgipdiDDq7UXOrzOzJi
+suxiZE9R6XkbQST0sYgWc4HlZS9pfcb4pc1NxB7eaKctzOXo+Dk5IktCL0srEe/2
+k9DE5McZtTHiccTzvqCxrQ4NNmxfckyM6q75XlBenFfpTZcBJlZz+bS1BW5EjhKh
+ifjt2wxIsSlSwRDD/+3fhtCb41RK7IoseBKCpwWayGSTv+9FtvZFXnTevf7vlbOH
+p2NNEFq4M+o=
+=KvQP
 -----END PGP SIGNATURE-----
 
---Sig_/6B_4X/dSwzilmaV8Kqt=Qmi--
+--Sig_/Q6sHWVEh5saAO0=x14v37HK--
