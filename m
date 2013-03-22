@@ -1,34 +1,37 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
+From: Mirko <mirko76@arcor.de>
 Subject: Re: Need help with my raid5
-Date: Fri, 22 Mar 2013 20:13:00 +0800
-Message-ID: <514C4ACC.9090605@fnarfbargle.com>
+Date: Fri, 22 Mar 2013 12:53:28 +0000 (UTC)
+Message-ID: <loom.20130322T134448-923@post.gmane.org>
 References: <loom.20130322T084406-543@post.gmane.org> <CAAMCDed0Pvs_+c6o5BvpVNi5ATZeu1abR1xeW=ikR8O9W5HJ1Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAMCDed0Pvs_+c6o5BvpVNi5ATZeu1abR1xeW=ikR8O9W5HJ1Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roger Heflin <rogerheflin@gmail.com>
-Cc: Mirko <mirko76@arcor.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 22/03/13 20:06, Roger Heflin wrote:
+> According to the above you removed device 3 not device 7....device 3
+> is missing...device 7 is still there and is a spare.
 
-> I have self wired hot swap enclosures and my method is to read from
-> the array and see which disk does not light up (confirm all others are
-> active) and then cancel that read and go back and read from the bad
-> disk to confirm which device that is, and if I want to be really save
-> cancel that read make sure that disk stops then read again just to
-> confirm I know what is what, no matter what you have, no matter how it
-> is incorrectly labeled/wired this method should always work right.
+Thats right. 
+ 
+> Put what you though was 7 back
+This device no longer exists.
 
-Just as a data point. I have a spreadsheet with the serial number of 
-each drive tied to the physical drive slot, so I know *exactly* which 
-drive to pull when one dies. Use hdparm to give you a list of serial 
-numbers to cut and paste into open-office, then just shuffle the cells 
-around as you pull each drive to check it's number. Takes no time to 
-create when you next have the machine down.
+> ...note that properly determining which
+> device is which is pretty difficult unless you have a commercial grade
+> wired enclosure from a tier 1 vendor that is actually labeled and
+> wired correctly (don't always count on that).
 
-Your method is good too, and I've used that when in a hurry and not 
-likely to cause damage if I get it wrong.
+I thought, every device has its fixed device number in the raid:
+
+mdadm -E /dev/sd[a-f]1 | grep Role
+   Device Role : Active device 1
+   Device Role : Active device 5
+   Device Role : spare
+   Device Role : Active device 0
+   Device Role : Active device 4
+   Device Role : Active device 2
+
+
