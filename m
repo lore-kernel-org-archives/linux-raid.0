@@ -1,54 +1,42 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: Need help with my raid5
-Date: Fri, 22 Mar 2013 10:37:47 -0500
-Message-ID: <CAAMCDeeympGaLMCfQKt32bJ-ZWtf08RCTv0=LZNP_r-kxn6fiQ@mail.gmail.com>
-References: <loom.20130322T084406-543@post.gmane.org> <CAAMCDed0Pvs_+c6o5BvpVNi5ATZeu1abR1xeW=ikR8O9W5HJ1Q@mail.gmail.com>
- <loom.20130322T134448-923@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: Western Digital Green 3TB SATA3 experiences
+Date: Fri, 22 Mar 2013 10:57:21 -0600
+Message-ID: <F21277E6-0F6B-4FA4-9DFC-554A3B58A0AB@colorremedies.com>
+References: <32413553.16.1363962140126.JavaMail.root@zimbra>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <loom.20130322T134448-923@post.gmane.org>
+In-Reply-To: <32413553.16.1363962140126.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mirko <mirko76@arcor.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Mar 22, 2013 at 7:53 AM, Mirko <mirko76@arcor.de> wrote:
->> According to the above you removed device 3 not device 7....device 3
->> is missing...device 7 is still there and is a spare.
->
-> Thats right.
->
->> Put what you though was 7 back
-> This device no longer exists.
 
-What do you mean no longer exists?
+On Mar 22, 2013, at 8:22 AM, Roy Sigurd Karlsbakk <roy@karlsbakk.net> wrote:
 
-If so, then you are likely restoring from backups as device 7 failed
-and device 3 was otherwise was removed and is now no longer viable.
-You may be able to do add a -f on the mdadm and force it
-online...typically it will force a previously declared missing/spare
-device to be re-evaluated and reused if it is good enough or failed
-for some reasons.
+> ----- Opprinnelig melding -----
+>> On Mar 21, 2013, at 10:17 AM, Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+>> wrote:
+>>> 
+>>> This is true. The only real difference between the blacks and the
+>>> 'enterprise' drives, is that the firmware isn't crippled.
+>> 
+>> No, another difference is the RE drives have another order magnitude
+>> lower URE. So they're statistically more reliable. And they don't have
+>> the implicit proscription to not use them in RAID other than 1 and 0.
+> 
+> They have a *reported* order of magnitude lower URE, but I'm not sure if that's *real*.
 
->
->> ...note that properly determining which
->> device is which is pretty difficult unless you have a commercial grade
->> wired enclosure from a tier 1 vendor that is actually labeled and
->> wired correctly (don't always count on that).
->
-> I thought, every device has its fixed device number in the raid:
->
-> mdadm -E /dev/sd[a-f]1 | grep Role
->    Device Role : Active device 1
->    Device Role : Active device 5
->    Device Role : spare
->    Device Role : Active device 0
->    Device Role : Active device 4
->    Device Role : Active device 2
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It's a statistically derived spec, and that's much more reliable than reality.
+
+If you were to do a real test to find out, it would take for fricking ever, it would be really expensive, and it would collect noisy data such that two independent studies wouldn't exactly agree with each other. You'd have to do it on a large population of drives, because drives are obviously not exactly identical. The spec applies to a population of the model, not a particular unit. And since the real test would have to be done over the service life of the drive model, the study results wouldn't be available for ~5 years after the ship date of an enterprise drive model.
+
+So what's real?
+
+There are all sorts of ways to reliably predict the failure of various parts in a product, and how that affects the whole theoretical unit and thus the model. When those predictions are found to be flawed, the statistical model is used to see if and what revisions the product needs to maintain its design specs, including the URE spec.
+
+The whole point of the URE isn't about what will happen to a particular drive. It's a reflection of a model population. Clearly, unrecoverable read error is rather massive with a totally dead drive.
+
+
+Chris Murphy
