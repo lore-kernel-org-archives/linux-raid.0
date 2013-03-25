@@ -1,83 +1,94 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PULL REQUEST] md fixes for 3.9
-Date: Sat, 23 Mar 2013 07:46:54 +1100
-Message-ID: <20130323074654.0504a06a@notabene.brown>
+From: "Paramasivam, Meenakshisundaram" <mparamas@iupui.edu>
+Subject: mdadm RAID6 faulty drive
+Date: Mon, 25 Mar 2013 16:02:28 +0000
+Message-ID: <B2B36B3006DB4C47A56D6BA19443F5D12DE79EF4@IU-MSSG-MBX110.ads.iu.edu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/DuhNWbmt226p5N6Ys_Eh420"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>, Paul Bolle <pebolle@tiscali.nl>, lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/DuhNWbmt226p5N6Ys_Eh420
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
 
-The following changes since commit f3378b48705154b9089affb2d2e939622aea68f1:
+Hi,
 
-  md: expedite metadata update when switching  read-auto -> active (2013-02=
--28 11:59:03 +1100)
+As a result of extended power outage, the FedoraCore 17 machine with mdadm RAID went down. Bringing it up, I noticed "faulty /dev/sdf" in mdadm -detail. However mdadm -E /dev/sdf shows "State : clean".  Details are shown below. When I tried to add the drive to array, resync fails (I see lots of eSATA bus resets), and I get the same message in mdadm -detail. 
 
-are available in the git repository at:
+Questions:
+1. How can a clean drive be reported faulty?
+2. Is there a easy way to mark drive (/dev/sdf) as "assume-clean" and add it?
 
-  git://neil.brown.name/md/ tags/md-3.9-fixes
+Please let me know if I should get an exact  replacement drive at this stage, pull out faulty /dev/sdf, and add the new drive to array. Thanks. 
 
-for you to fetch changes up to 238f5908bd48f9e2f4668e0289e88cba969d710c:
+Details:
+#mdadm --detail /dev/md2
+/dev/md2:
+        Version : 1.2
+  Creation Time : Thu Dec 20 13:08:56 2012
+     Raid Level : raid6
+     Array Size : 11720297472 (11177.35 GiB 12001.58 GB)
+  Used Dev Size : 1953382912 (1862.89 GiB 2000.26 GB)
+   Raid Devices : 8
+  Total Devices : 8
+    Persistence : Superblock is persistent
 
-  md: remove CONFIG_MULTICORE_RAID456 entirely (2013-03-20 13:21:14 +1100)
+    Update Time : Mon Mar 25 11:37:12 2013
+          State : clean, degraded 
+ Active Devices : 7
+Working Devices : 7
+Failed Devices : 1
+  Spare Devices : 0
 
-----------------------------------------------------------------
-A few bugfixes for md
+         Layout : left-symmetric
+     Chunk Size : 512K
 
- - recent regressions in raid5
- - recent regressions in dmraid
- - a few instances of CONFIG_MULTICORE_RAID456 linger
+           Name : RAIDvol1
+           UUID : 8a9eee70:89f2639b:68f5350d:11f444fe
+         Events : 1494
 
-Several tagged for -stable
+    Number   Major   Minor   RaidDevice State
+       0       0        0        0      removed
+       1       8       96        1      active sync   /dev/sdg
+       2       8      112        2      active sync   /dev/sdh
+       3       8      128        3      active sync   /dev/sdi
+       8       8       16        4      active sync   /dev/sdb
+       5       8       32        5      active sync   /dev/sdc
+       6       8       48        6      active sync   /dev/sdd
+       7       8       64        7      active sync   /dev/sde
 
-----------------------------------------------------------------
-Jonathan Brassow (2):
-      MD RAID5: Avoid accessing gendisk or queue structs when not available
-      MD: Prevent sysfs operations on uninitialized kobjects
+       9       8       80        -      faulty   /dev/sdf
 
-NeilBrown (2):
-      md/raid5: schedule_construction should abort if nothing to do.
-      md/raid5: ensure sync and DISCARD don't happen at the same time.
+# mdadm -E /dev/sdf
+/dev/sdf:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x2
+     Array UUID : 8a9eee70:89f2639b:68f5350d:11f444fe
+           Name : RAIDvol1
+  Creation Time : Thu Dec 20 13:08:56 2012
+     Raid Level : raid6
+   Raid Devices : 8
 
-Paul Bolle (1):
-      md: remove CONFIG_MULTICORE_RAID456 entirely
+Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
+     Array Size : 11720297472 (11177.35 GiB 12001.58 GB)
+  Used Dev Size : 3906765824 (1862.89 GiB 2000.26 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+Recovery Offset : 0 sectors
+          State : clean
+    Device UUID : 0a58fa5c:4d10f401:07dead3a:ec844676
 
- arch/tile/configs/tilegx_defconfig  |   1 -
- arch/tile/configs/tilepro_defconfig |   1 -
- drivers/md/md.c                     |   6 +-
- drivers/md/md.h                     |   4 +-
- drivers/md/raid5.c                  | 116 +++++++++++++++++++++++++-------=
-----
- drivers/md/raid5.h                  |   5 +-
- 6 files changed, 86 insertions(+), 47 deletions(-)
+    Update Time : Fri Mar 22 14:25:13 2013
+       Checksum : ba455125 - correct
+         Events : 1043
 
---Sig_/DuhNWbmt226p5N6Ys_Eh420
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+         Layout : left-symmetric
+     Chunk Size : 512K
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+   Device Role : Active device 0
+   Array State : AAAAAAAA ('A' == active, '.' == missing)
+#
 
-iQIVAwUBUUzDPjnsnt1WYoG5AQLbTA/+O5QnTcFyPCuoV+TCFmhcLDXuRH/gN+Kk
-kwLbtvsd9d6B5XhQJUzjJuMbkWhWwxfxBNsl0JIKJmzlOXwj0LeohfGKclinL1Mo
-40vhmpeIzri8WwZA09P2xZx7BTLVdNrPuTKKmoKATQSzDcsNKyoztanQbsYPr7eP
-HtLzO6qyklN2AWbMLWdatOWJc9X5SdRs5MLQSwDsT7K35wNWP/GzlQAdfy4LtIvg
-IGCdoiq/+LfzL2UdM6h/mstbv97zRH9Rs3+IccTaeqINPAkv8h6zzm5dEEshsF3p
-jcYEFJWr9ko6uaKhPAOzLl/NT1yuXzkHYvEAykXOCX97Gt5ydL/0mSUxtNJce5N9
-CRoSjSx8/aS+PZ6NwPbBAx8jdMgqBXdJrHXe+0mzY5JRhZDL9jEA70Xw5NA9+J4h
-06IUV6x0JrBxoOUPmbdYoR7Xb/ThALjSBchx0NsEUaLUVh8e3/XqLAjOoc2X/7+w
-CZInC83UAHN/Z3eXSsuf4IfO6eBInqEJgSzJtWwQZhpu7YG/nTzUyIDKi9OhXdTv
-3tH/qAA+ja7Na2sICfDvhSCiW6SF82v3N6nMvvqWSltuTgCdOgUqwaZNOZWnpeBA
-r/4KLmtx7ok7LZom6Lbd8HSgmIsLzx5T0njvPjWhQliLt31/c00PxLTeCtfbREjV
-Gg+nnrfsoLw=
-=ZJbZ
------END PGP SIGNATURE-----
-
---Sig_/DuhNWbmt226p5N6Ys_Eh420--
+Sundar
