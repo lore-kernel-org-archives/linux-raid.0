@@ -1,49 +1,55 @@
-From: maurice <mhilarius@gmail.com>
-Subject: Creating a RAID10 (near) for use in a CentOS 6 system
-Date: Mon, 25 Mar 2013 11:30:25 -0600
-Message-ID: <515089B1.9010607@gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: mdadm RAID6 faulty drive
+Date: Mon, 25 Mar 2013 13:43:50 -0400
+Message-ID: <51508CD6.50702@turmel.org>
+References: <B2B36B3006DB4C47A56D6BA19443F5D12DE79EF4@IU-MSSG-MBX110.ads.iu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <B2B36B3006DB4C47A56D6BA19443F5D12DE79EF4@IU-MSSG-MBX110.ads.iu.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Paramasivam, Meenakshisundaram" <mparamas@iupui.edu>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I come today, hat in hand, for some suggestions on a new install with 
-RAID10.
+On 03/25/2013 12:02 PM, Paramasivam, Meenakshisundaram wrote:
+> 
+> Hi,
+> 
+> As a result of extended power outage, the FedoraCore 17 machine with
+> mdadm RAID went down. Bringing it up, I noticed "faulty /dev/sdf" in
+> mdadm -detail. However mdadm -E /dev/sdf shows "State : clean".
+> Details are shown below. When I tried to add the drive to array,
+> resync fails (I see lots of eSATA bus resets), and I get the same
+> message in mdadm -detail.
+> 
+> Questions:
+> 1. How can a clean drive be reported faulty?
 
-I wish to install CentOS 6 on a new system.
-I am using 4 identical drives, and do not see any need to partition them.
-They are 2TB Hitachi Ultrastar (enterprise)drives.
+When the drive is kicked out for I/O errors its superblock is left as-is
+(just as if you pulled its sata cable).  The remaining devices'
+superblocks are marked to show the failed drive, and *their*
+superblocks' event count is bumped.  The failed status of that device is
+derived during assembly when its superblock is found to be stale.
 
-I wish to use RAID10, near
+> 2. Is there a easy way to mark drive (/dev/sdf) as "assume-clean" and
+> add it?
 
-Questions:
-Syntax: Creating near vs far. Is there a specific syntax to use?
+No.  The closest thing is to use a write-intent bitmap and "re-add"
+devices that are disconnected.
 
-I *think* this is what I need:
-mdadm --create /dev/md0 --run --level=10 --chunk=4 --raid-devices=4 
-/dev/sda /dev/sdb /dev/sdc /dev/sdd
+That's not your problem.
 
-Next question is about mdadm versions and kernels.
-CentOS 6 currently uses 2.6.32-358.2.1.el6
-Is there anything in that I should beware of?
+> Please let me know if I should get an exact  replacement drive at
+> this stage, pull out faulty /dev/sdf, and add the new drive to array.
+> Thanks.
 
-OTOH, one may get newer kernels by enabling elrepo
+You very likely need a new drive.  You might want to try plugging that
+drive into a different controller, or a different port on the same
+controller, just to narrow the diagnosis.
 
-http://elrepo.org/tiki/tiki-index.php
+You could also show us some of the kernel error messages, or show the
+output of "smartctl -x /dev/sdf".
 
-This will get me up to:
-     kernel-lt-3.0.70-1.el6.elrepo
-     kernel-ml-3.8.4-1.el6.elrepo
-
-Is that desirable in this case?
-
-Any thoughts and suggestions are most welcome..
-
-
--- 
-Cheers,
-Maurice Hilarius
-eMail: /mhilarius@gmail.com/
+Phil
