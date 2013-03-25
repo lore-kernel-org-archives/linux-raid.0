@@ -1,35 +1,27 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: RAID-10 with mixed block size HDDs
-Date: Mon, 25 Mar 2013 19:04:58 +0100
-Message-ID: <20130325180458.GA4833@lazy.lzy>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: Creating a RAID10 (near) for use in a CentOS 6 system
+Date: Mon, 25 Mar 2013 17:05:41 -0600
+Message-ID: <CC7A8866-EC41-48C7-9E92-25AE51E61D67@colorremedies.com>
+References: <515089B1.9010607@gmail.com> <51509025.2060402@gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <51509025.2060402@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: maurice <mhilarius@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all,
 
-I've a two disk RAID-10 (far 2, I guess).
-One HDD seems to be going to the HDD heaven,
-so I'm planning to change it.
+On Mar 25, 2013, at 11:57 AM, maurice <mhilarius@gmail.com> wrote:
 
-The most convenient HDD I found has 4K sectors,
-while the actual ones have 512 byte sectors.
+> Further to this, can anyone comment on creating partitions on the RAID10 device,
+> versus making separate partitions on the devices, for installation of the OS?
 
-All partitions and headers seem to be multiple
-of 4K, but I was wondering if there could be
-performance problems having a mixed setup.
+I'd partition the array, rather than make separate raid10 arrays from partitions. It's certainly easier to manage if there are issues. If a drive dies, you replace that drive, whereas if you partition the drives you have to partition it exactly right, and then add the partitions as replacements for each array you've created. I think that's a hassle.
 
-Any experience with that?
-Suggestions?
+The advantage of partitioning the drives with one partition (I'd use GPT for this), is that fdisk/gdisk/parted and other utils will see each drive as being partitioned (for linux software raid) rather than appearing as free space.
 
-Thanks,
 
-bye,
-
--- 
-
-piergiorgio
+Chris Murphy
