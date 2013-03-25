@@ -1,31 +1,44 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: RAID-10 with mixed block size HDDs
-Date: Mon, 25 Mar 2013 17:09:00 -0600
-Message-ID: <0619B2C8-EEFF-4B58-BF5E-A4ACA7A501AE@colorremedies.com>
-References: <20130325180458.GA4833@lazy.lzy>
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: mwilck@arcor.de
+Subject: Fixes for DDF test case (race conditions in mdmon)
+Date: Mon, 25 Mar 2013 23:10:58 +0000 (UTC)
+Message-ID: <1382695659-6231-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130325180458.GA4833@lazy.lzy>
+Date: Fri, 25 Oct 2013 12:07:31 +0200
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de, linux-raid@vger.kernel.org
+Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
+This is a series of patches to fix the DDF tests case(tests/10ddf-create).
 
-On Mar 25, 2013, at 12:04 PM, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de> wrote:
+Patch 3 fixes a problem that was implicitly introduced by commit 
+c1ea5a98 - "mdadm -Db" would now print UUIDs for subarrays, but the
+wrong ones.
 
-> Hi all,
-> 
-> I've a two disk RAID-10 (far 2, I guess).
-> One HDD seems to be going to the HDD heaven,
-> so I'm planning to change it.
-> 
-> The most convenient HDD I found has 4K sectors,
-> while the actual ones have 512 byte sectors.
+Patch 5-7 are the interesting part. The DDF test case kept failing for
+me right there where a comment already says "# This failed once. 
+The raid5 was resyncing". I tracked this down to race conditions
+between mdmon and the kernel when arrays are stopped - the kernel
+cleans up in sysfs and reading the attributes from there is unreliable.
+Files may have already vanished, read() may fail or even succeed
+with incorrect results.
 
-It is a 4Kn drive, or a 512e drive? If it's 512e, as long as you add the whole disk or ensure alignment, it's OK. For 4Kn drives, that may be a problem. But so far I've only seen 4Kn drives as large 3+TB external USB.
+The other patches are hopefully self-explaining.
 
+Regards
+Martin
 
-Chris Murphy
+Martin Wilck (8):
+  DDF: __write_ddf_structure: Fix wrong reference to ddf->primary
+  DDF: __write_init_super_ddf: just use seq number of active header
+  DDF: brief_detail_super_ddf: print correct UUID for subarrays
+  DDF: add code to debug state changes
+  monitor: don't call pselect() on deleted sysfs files
+  monitor: read_and_act: handle race conditions for resync_start
+  monitor: treat unreadable array_state as clean
+  tests/10ddf-create: omit log output check
+
+ monitor.c          |   38 ++++++++++++----
+ super-ddf.c        |  124 ++++++++++++++++++++++++++++++++++++++-------------
+ tests/10ddf-create |    6 +--
+ 3 files changed, 121 insertions(+), 47 deletions(-)
