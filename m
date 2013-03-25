@@ -1,27 +1,31 @@
 From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Creating a RAID10 (near) for use in a CentOS 6 system
-Date: Mon, 25 Mar 2013 17:05:41 -0600
-Message-ID: <CC7A8866-EC41-48C7-9E92-25AE51E61D67@colorremedies.com>
-References: <515089B1.9010607@gmail.com> <51509025.2060402@gmail.com>
+Subject: Re: RAID-10 with mixed block size HDDs
+Date: Mon, 25 Mar 2013 17:09:00 -0600
+Message-ID: <0619B2C8-EEFF-4B58-BF5E-A4ACA7A501AE@colorremedies.com>
+References: <20130325180458.GA4833@lazy.lzy>
 Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51509025.2060402@gmail.com>
+In-Reply-To: <20130325180458.GA4833@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: maurice <mhilarius@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-On Mar 25, 2013, at 11:57 AM, maurice <mhilarius@gmail.com> wrote:
+On Mar 25, 2013, at 12:04 PM, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de> wrote:
 
-> Further to this, can anyone comment on creating partitions on the RAID10 device,
-> versus making separate partitions on the devices, for installation of the OS?
+> Hi all,
+> 
+> I've a two disk RAID-10 (far 2, I guess).
+> One HDD seems to be going to the HDD heaven,
+> so I'm planning to change it.
+> 
+> The most convenient HDD I found has 4K sectors,
+> while the actual ones have 512 byte sectors.
 
-I'd partition the array, rather than make separate raid10 arrays from partitions. It's certainly easier to manage if there are issues. If a drive dies, you replace that drive, whereas if you partition the drives you have to partition it exactly right, and then add the partitions as replacements for each array you've created. I think that's a hassle.
-
-The advantage of partitioning the drives with one partition (I'd use GPT for this), is that fdisk/gdisk/parted and other utils will see each drive as being partitioned (for linux software raid) rather than appearing as free space.
+It is a 4Kn drive, or a 512e drive? If it's 512e, as long as you add the whole disk or ensure alignment, it's OK. For 4Kn drives, that may be a problem. But so far I've only seen 4Kn drives as large 3+TB external USB.
 
 
 Chris Murphy
