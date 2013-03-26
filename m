@@ -1,43 +1,49 @@
-From: Maurice Hilarius <maurice@harddata.com>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
 Subject: Re: Creating a RAID10 (near) for use in a CentOS 6 system
-Date: Tue, 26 Mar 2013 14:30:27 -0600
-Message-ID: <51520563.6010700@harddata.com>
-References: <17910863.12.1364329282837.JavaMail.root@zimbra>
+Date: Tue, 26 Mar 2013 21:37:27 +0100 (CET)
+Message-ID: <26589278.14.1364330247753.JavaMail.root@zimbra>
+References: <51520563.6010700@harddata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17910863.12.1364329282837.JavaMail.root@zimbra>
+In-Reply-To: <51520563.6010700@harddata.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+To: Maurice Hilarius <maurice@harddata.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 3/26/2013 2:21 PM, Roy Sigurd Karlsbakk wrote:
-> If you have 2x4TB and you want to setup the lot for booting and data, I'd recommend doing like the NAS boxes I've seen (well, only QNAP 410 IIRC). On that one, they chose to create partitions for / and swap (and perhaps /boot), and equal-ish partitions for those used for data. On those, you can place a RAID-10, or perhaps two RAID-1s and use LVM to stripe them. The latter is far more flexible, as RAID-10 lacks most of the flexibility other RAID leverls have.
-I have 4 x 2TB, actually.
-I am in the middle of this install now
-CentOS Anaconda installer seems to be happy with me creating a 4 disk 
-RAID1  (thanks for the suggestion, Brad C!) for /boot.
-And I created a 4 disk RAID10 for swap, and another for /
+> On 3/26/2013 2:21 PM, Roy Sigurd Karlsbakk wrote:
+> > If you have 2x4TB and you want to setup the lot for booting and
+> > data, I'd recommend doing like the NAS boxes I've seen (well, only
+> > QNAP 410 IIRC). On that one, they chose to create partitions for /
+> > and swap (and perhaps /boot), and equal-ish partitions for those
+> > used for data. On those, you can place a RAID-10, or perhaps two
+> > RAID-1s and use LVM to stripe them. The latter is far more flexible=
+,
+> > as RAID-10 lacks most of the flexibility other RAID leverls have.
 
-> If you don't need the extra IOPS from the RAID-10, I'd recommend using RAID-6 instead for even futher safety and flexibility (the ability to change to RAID-5 in need of more space, easier to grow etc).
-I want the performance.
-Yes, RAID6 is an option, too, but R10 should substantially outperform 
-it, and makes a lot less CPU load for the trouble.
-As far as growth goes, only 4 bays available , so not a factor in this 
-case, at least.
+> I have 4 x 2TB, actually.
 
-Once done I will run some tests and confirm that the performance is good 
-( or not).
+Erm, that's what I meant. I just wouldn't recommend using RAID-10, sinc=
+e it isn't very flexible. LVM on top of multiple mirrors is better.
 
-I still have heard nothing about any problems with the versions of 
-kernels and mdadm in this distro version.
-So are there none??
+Vennlige hilsener / Best regards
 
-Anyone?
-
--- 
-Cheers,
-Maurice Hilarius
-eMail: /mhilarius@gmail.com/
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
