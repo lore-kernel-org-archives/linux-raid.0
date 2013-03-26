@@ -1,51 +1,42 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: RAID-10 with mixed block size HDDs
-Date: Tue, 26 Mar 2013 20:05:51 +0100
-Message-ID: <20130326190551.GA2277@lazy.lzy>
-References: <20130325180458.GA4833@lazy.lzy>
- <0619B2C8-EEFF-4B58-BF5E-A4ACA7A501AE@colorremedies.com>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: mdadm RAID6 faulty drive
+Date: Tue, 26 Mar 2013 21:05:59 +0100 (CET)
+Message-ID: <13291185.10.1364328359906.JavaMail.root@zimbra>
+References: <51508CD6.50702@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <0619B2C8-EEFF-4B58-BF5E-A4ACA7A501AE@colorremedies.com>
+In-Reply-To: <51508CD6.50702@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org, Meenakshisundaram Paramasivam <mparamas@iupui.edu>
 List-Id: linux-raid.ids
 
-On Mon, Mar 25, 2013 at 05:09:00PM -0600, Chris Murphy wrote:
-> 
-> On Mar 25, 2013, at 12:04 PM, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de> wrote:
-> 
-> > Hi all,
-> > 
-> > I've a two disk RAID-10 (far 2, I guess).
-> > One HDD seems to be going to the HDD heaven,
-> > so I'm planning to change it.
-> > 
-> > The most convenient HDD I found has 4K sectors,
-> > while the actual ones have 512 byte sectors.
-> 
-> It is a 4Kn drive, or a 512e drive? If it's 512e, as long as you add the whole disk or ensure alignment, it's OK. For 4Kn drives, that may be a problem. But so far I've only seen 4Kn drives as large 3+TB external USB.
+> You could also show us some of the kernel error messages, or show the
+> output of "smartctl -x /dev/sdf".
 
-Hi Chris,
+I second that. Also, if the command above shows no errors, do tests wit=
+h smartctl -t short and -t long. If those succeed, you may try to re-ad=
+d it, but I wouldn't --assume-clean. Better go through a normal rebuild=
+ to see if any errors occur.
 
-thanks for the answer.
+Vennlige hilsener / Best regards
 
-Reading the specs it seems it can emulate the 512,
-so it should be a 512e.
-
-Thanks again,
-
-bye,
-
-pg
-
-> 
-> 
-> Chris Murphy
-
--- 
-
-piergiorgio
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
