@@ -1,31 +1,39 @@
 From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: Strange / inconsistent behavior with mdadm -I -R
-Date: Wed, 27 Mar 2013 21:29:56 +0100
-Message-ID: <515356C4.1000004@arcor.de>
-References: <51422D10.3040000@arcor.de>	<20130318103510.45bdd4a8@notabene.brown>	<5148AE98.9020203@arcor.de>	<20130321122205.3fdca38c@notabene.brown> <20130327165332.7118740c@notabene.brown>
+Subject: DDF test fails if default udev rules are active
+Date: Wed, 27 Mar 2013 21:44:21 +0100
+Message-ID: <51535A25.1040501@arcor.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130327165332.7118740c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On 03/27/2013 06:53 AM, NeilBrown wrote:
+Hi Neil,
 
-> I spend a while experimenting and such and I now have a patch which I am
-> happy with and I think fixes your issue.  It is included below.
-> 
-> If you could test and confirm, I'd appreciate it.
+with my latest patch set, the DDF test case (10-ddf-create) succeeds
+reliably for me, with one caveat: It works only if I disable the rule
+that runs "mdadm -I" on a newly discovered container. On my system
+(Centos 6.3) it is in /lib/udev/65-md-incremental.rules, and the rule is
 
-It fixes my test case nicely, thanks. The behavior is now exactly the
-same as in the container case, for both RAID10 and RAID1.
+SUBSYSTEM="block", ACTION="add|change", KERNEL="md*", \
+  ENV{MD_LEVEL}=="container", RUN+="/sbin/mdadm -I $env{DEVNAME}"
 
-I'm not quite sure what else to test.
+The reason is that the DDF test case runs mdadm -Asc after writing the
+conf file defining the container and 3 arrays.
 
-> I'll try to get to your DDF patches soon, but it might not be until next week.
+mdadm -Asc will first create the container. When it starts tries to
+create the member arrays, these have already been started by the udev
+rule above, causing the assembly to fail with the error message "member
+/dev/md127/1 in /dev/md127 is already assembled".
 
-Great, thanks and happy easter,
+I have done my testing with the above udev rule commented out, and all
+goes fine. But I am not sure if "mdadm -Asc /var/tmp/mdadm.conf" failing
+indicates a problem with the DDF code, or if it's really just a problem
+with the test case. Personally, I'd rather have a test case that
+succeeds by default on a system with standard configuration (which means
+the above udev rule should be active).
+
+What do you think?
 Martin
