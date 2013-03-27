@@ -1,79 +1,47 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: Possible to change chunk size on RAID-1 without re-init or
- destructive result?
-Date: Wed, 27 Mar 2013 12:23:46 -0700
-Message-ID: <CAK2H+eczN+fqWJv0r6WTA871R__jrrybS9ObdZ9dx6mX+Z=HHw@mail.gmail.com>
-References: <16639206.20.1364400094382.JavaMail.root@zimbra>
-	<51534450.8050905@hardwarefreak.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Possible to change chunk size on RAID-1 without re-init or destructive
+ result?
+Date: Wed, 27 Mar 2013 14:36:52 -0500
+Message-ID: <51534A54.4040301@hardwarefreak.com>
+References: <CAFCYAsfriik8VAPV9MVhsDtgqHTaKs3kzYoSLVQHaiYKfzjXZw@mail.gmail.com> <16639206.20.1364400094382.JavaMail.root@zimbra> <CAFCYAsfWTC+Yjkh-XO89M44bxt_7cjBB6kT+xdEfrr4L9QPZRw@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51534450.8050905@hardwarefreak.com>
+In-Reply-To: <CAFCYAsfWTC+Yjkh-XO89M44bxt_7cjBB6kT+xdEfrr4L9QPZRw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Jeff Johnson <jeff.johnson@aeoncomputing.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Jeff Johnson <jeff.johnson@aeoncomputing.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Mar 27, 2013 at 12:11 PM, Stan Hoeppner <stan@hardwarefreak.com=
-> wrote:
-> On 3/27/2013 11:01 AM, Roy Sigurd Karlsbakk wrote:
->> From the manual
->>
->>        -c, --chunk=3D
->>               Specify  chunk size of kibibytes.  The default when cr=
-eating an array is 512KB.  To ensure compatibility with ear=E2=80=90
->>               lier versions, the default when Building and array wit=
-h no persistent metadata is 64KB.  This is  only  meaningful
->>               for RAID0, RAID4, RAID5, RAID6, and RAID10.
->>
->> meaning - chunk size isn't relevant to a mirror
->
-> The man page should be changed to explicitly state that --chunk does =
-not
-> apply to RAID1 or --linear arrays.  Far too many people are having
-> trouble with this.  For those people the current docs are apparently =
-too
-> subtle.
->
-> --
-> Stan
+On 3/27/2013 11:23 AM, Jeff Johnson wrote:
 
+>       bitmap: 3/3 pages [12KB], 65536KB chunk
 
-'Subtle' is probably a good work. For me it took a few times reading
-the man page after looking at what I have here where it tells me
-nothing about chunk size on the RAID1.
+The above has ZERO to do with what you report below.
 
-Note that another level of understanding (which I don't have) has to
-do with getting chunk sizes that work well for my needs. That's a
-whole other kettle of fish...
+> It is very strange. the responsiveness on small file i/o tends to
+> support the notion that this mirror really has a 64MB chunk size. This
 
-Cheers,
-Mark
+No it doesn't.  You lack understanding of how disk mirroring works.
 
-mark@c2stable ~ $ cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid=
-4]
-md6 : active raid5 sdc6[1] sdd6[2] sdb6[0]
-      494833664 blocks super 1.1 level 5, 64k chunk, algorithm 2 [3/3] =
-[UUU]
-      bitmap: 0/2 pages [0KB], 65536KB chunk
+> is practically an order of magnitude larger than what is prudent. The
+> iowait on simple things like a sync or writing out small files seems
+> to support what mdstat is reporting. Of course, I'd like to change
+> this but how to do so without breaking the RAID or risking data is not
+> obvious.
 
-md3 : active raid6 sdd3[2] sdc3[1] sdb3[0] sde3[3] sdf3[5]
-      157305168 blocks super 1.2 level 6, 16k chunk, algorithm 2 [5/5] =
-[UUUUU]
+The IO latency you describe is unrelated to md.  It is most often caused
+by filesystem free space fragmentation.  How full is the filesystem in
+question?  If over 90 percent odds are good that this is your problem.
+If it's an XFS filesystem I can give you commands to show the free space
+map, which will answer the question definitively.  If EXTx you're on
+your own as I don't know the tools (if they exist).
 
-md7 : active raid6 sdd7[2] sdc7[1] sdb7[0] sde2[3] sdf2[4]
-      395387904 blocks super 1.2 level 6, 16k chunk, algorithm 2 [5/5] =
-[UUUUU]
+This IO latency can also be caused if hardware (disk/controller) is
+malfunctioning.  Look at 'smartctl -A' output for both drives.
 
-md126 : active raid1 sdb5[0] sdd5[2] sdc5[1]
-      52436032 blocks [3/3] [UUU]
+-- 
+Stan
 
-unused devices: <none>
-mark@c2stable ~ $
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
