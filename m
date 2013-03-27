@@ -1,35 +1,44 @@
-From: Vlad Cerny <vcerny@md-com.com>
-Subject: RAID hot_replace behavior with another disk failure
-Date: Wed, 27 Mar 2013 13:46:45 -0400 (EDT)
-Message-ID: <Pine.LNX.4.58.1303271344420.30908@omega.rcomp.org>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Possible to change chunk size on RAID-1 without re-init or destructive
+ result?
+Date: Wed, 27 Mar 2013 14:11:12 -0500
+Message-ID: <51534450.8050905@hardwarefreak.com>
+References: <16639206.20.1364400094382.JavaMail.root@zimbra>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <16639206.20.1364400094382.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Cc: Jeff Johnson <jeff.johnson@aeoncomputing.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 3/27/2013 11:01 AM, Roy Sigurd Karlsbakk wrote:
+> From the manual
+>=20
+>        -c, --chunk=3D
+>               Specify  chunk size of kibibytes.  The default when cre=
+ating an array is 512KB.  To ensure compatibility with ear=E2=80=90
+>               lier versions, the default when Building and array with=
+ no persistent metadata is 64KB.  This is  only  meaningful
+>               for RAID0, RAID4, RAID5, RAID6, and RAID10.
+>=20
+> meaning - chunk size isn't relevant to a mirror
 
-Hello,
+The man page should be changed to explicitly state that --chunk does no=
+t
+apply to RAID1 or --linear arrays.  Far too many people are having
+trouble with this.  For those people the current docs are apparently to=
+o
+subtle.
 
-I am trying to understand how the hot replace works because I suffered
-damages from multiple disk failures before.
+--=20
+Stan
 
-I initiated data migration from an active disk to a spare in RAID6
-(echo want_replacement) and the source disk failed. The procedure continued
-reconstructing the data from the other disks and finished as expected.
-
-I tested hot replace when another active disk failed during the procedure.
-The procedure finished, marked the original drive as faulty.
-(in kernel 3.4.11 the array remained degraded, even when adding
-additional spare, under 3.8.4 the automatic rebuild was performed after
-adding a spare).
-
-In an event of another disk failure I expected the hot replace to cancel
-the copy from the source functioning disk to the spare, and initiate
-the array rebuild using the spare.
-
-Is my expectation wrong?
-Thank you,
-
-Vlad
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
