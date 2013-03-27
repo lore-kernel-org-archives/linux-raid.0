@@ -1,42 +1,44 @@
-From: Tarak Anumolu <tarak.anumolu@samsung.com>
-Subject: Need some information about mdadm 3.2.5
-Date: Wed, 27 Mar 2013 05:17:19 +0000 (GMT)
-Message-ID: <29343933.117831364361439771.JavaMail.weblogic@epml26>
-Reply-To: tarak.anumolu@samsung.com
+From: Jeff Johnson <jeff.johnson@aeoncomputing.com>
+Subject: Possible to change chunk size on RAID-1 without re-init or
+ destructive result?
+Date: Tue, 26 Mar 2013 22:30:01 -0700
+Message-ID: <CAFCYAsfriik8VAPV9MVhsDtgqHTaKs3kzYoSLVQHaiYKfzjXZw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-MIME-version: 1.0
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-DQpIaQ0KDQpNeSBuYW1lIGlzIFRBUkFLLg0KDQpXZSBnb3Qgc29tZSBwcm9ibGVtIGluIHVzaW5n
-IG1kYWRtIDMuMi41Lg0KDQpXZSBhcmUgdHJ5aW5nIHRvIGRvIFJBSUQgb3BlcmF0aW9uIG9uIDgg
-aGFyZGRpc2tzIGVhY2ggb2Ygc2l6ZSAxVEIgd2l0aCA3IGhhcmRkaXNrcyBhcyByYWlkIGRldmlj
-ZXMgYW5kIDEgaGFyZCBkaXNrIGFzIHNwYXJlIGRldmljZS4NCg0KQ29tbWFuZCA6IG1kYWRtIC1D
-IC9kZXYvbWQwIC1mIC0tbWV0YS12ZXJzaW9uIDAuOSAtbDUgLW43IC14MSAvZGV2L3NkW2EtaF0x
-DQoNCkFmdGVyIHRoZSBSQUlEIG9wZXJhdGlvbiBpcyBjb21wbGV0ZWQgd2hlbiB3ZSBjaGVjayB0
-aGUgc3RhdHVzLFdlIGFyZSBnZXR0aW5nIHRoZSBmb2xsb3dpbmcgZXJyb3JzLg0KDQogIyBwYXJ0
-ZWQgLSBzICAvZGV2L21kMCBwcmludA0KIE1vZGVsOiBMaW51eCBTb2Z0d2FyZSBSQUlEIEFycmF5
-IChtZCkNCiBEaXNrIC9kZXYvbWQwOiA2MDAxR0INCiBTZWN0b3Igc2l6ZSAobG9naWNhbC9waHlz
-aWNhbCk6IDUxMkIvNTEyQg0KIFBhcnRpdGlvbiBUYWJsZTogZ3B0DQogTnVtYmVyIFN0YXJ0IEVu
-ZCBTaXplIEZpbGUgc3lzdGVtIE5hbWUgRmxhZ3MNCiAxIDEwNDlrQiA2MC4wR0IgNjAuMEdCIHhm
-cyBwcmltYXJ5DQogMiA2MC4wR0IgNjAwMUdCIDU5NDFHQiBwcmltYXJ5DQoNCiMgcGFydGVkIC1z
-IC9kZXYvbWQwIHByaW50IA0KRXJyb3I6IC9kZXYvbWQwOiB1bnJlY29nbmlzZWQgZGlzayBsYWJl
-bCANCg0KIyBwYXJ0ZWQgLXMgL2Rldi9tZDAgcHJpbnQgDQpFcnJvcjogcGFydGl0aW9uIGxlbmd0
-aCBvZiAyMzQ0MjE1ODU5MiBzZWN0b3JzIGV4Y2VlZHMgdGhlIGxvb3AtcGFydGl0aW9uLXRhYmxl
-LWltcG9zZWQgbWF4aW11bSBvZiA0Mjk0OTY3Mjk1IA0KDQpGWUkgT3VyIGtlcm5lbCB2ZXJzaW9u
-IGlzIExpbnV4IG1wYzg1MzZkcyAyLjYuMzIuDQoNCkNhbiB5b3UgcGxlYXNlIHRlbGwgbWUgd2hl
-dGhlciB0aGVyZSBhcmUgYW55IGNvbXBhdGliaWxpdHkgaXNzdWVzIHdpdGggdGhlIGtlcm5lbCBh
-bmQgd2hldGhlciB0aGVyZSBpcyBhbnkgbGltaXRhdGlvbiBvbiByYWlkIGRldmljZXMuDQoNCldo
-ZW4gd2UgdHJ5IHdpdGggNSBIYXJkZGlza3MsIHdlIGRpZG4ndCBmYWNlIGFueSBwcm9ibGVtLg0K
-DQpXZSBhcmUgZmFjaW5nIHRoaXMgcHJvYmxlbSB3aGVuIHdlIHRyeSB0byBkbyBSQUlEIG9wZXJh
-dGlvbiB3aXRoIG1vcmUgdGhhbiA1IGhhcmRkaXNrcy4NCg0KUGxlYXNlIGhlbHAgbWUgb24gdGhp
-cy4uDQoNCg0KDQpUaGFua3MgJiBSZWdhcmRzDQoNClRhcmFrIFJhbWdvcGFsIEFudW1vbHUgDQpT
-ZWN1cml0eSBTb2x1dGlvbiBEaXZpc2lvbg0KU0FNU1VORyBURUNIV0lOIENPLixMVEQNClRFTCA6
-KzgyIC03MC03MTQ3LTgzOTYNCk1vYmlsZTogKzgyLTEwLTcyNDktODM5Ng0KRS1tYWlsIDogdGFy
-YWsuYW51bW9sdUBzYW1zdW5nLmNvbQ==
+Greetings,
+
+I have a RAID-1, two disk volume that was created with a strange chunk
+size. For reasons I won't go into here removing the data and
+redefining a new RAID-1 volume with a different chunk size is
+presently not a viable option.
+
+Since this is a two disk mirror I should, /*theoretically*/ be able to
+redefine the chunk size without impacting existing data. I have never
+attempted such a thing and am not sure how best to go about it. I know
+in a striped data level like RAID-5 or RAID-6 this would absolutely
+not be possible.
+
+I know I would have to set a different chunk size in the superblock.
+Google and wiki research do not show a clear method to do this.
+
+Any suggestions are appreciated.
+
+--Jeff
 
 
+-- 
+------------------------------
+Jeff Johnson
+Co-Founder
+Aeon Computing
+
+jeff.johnson@aeoncomputing.com
+www.aeoncomputing.com
+t: 858-412-3810 x101   f: 858-412-3845
+
+4170 Morena Boulevard, Suite D - San Diego, CA 92117
