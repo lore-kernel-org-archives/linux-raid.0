@@ -1,169 +1,233 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] MD: Quickly return errors if too many devices have
- failed.
-Date: Thu, 28 Mar 2013 11:13:27 +1100
-Message-ID: <20130328111327.0e64cdc6@notabene.brown>
-References: <1363195764.24906.14.camel@f16>
-	<20130318104905.4a70bc00@notabene.brown>
-	<1C64DEE2-FCED-4B9A-A134-E03EA898A8B7@redhat.com>
-	<20130320134611.4c9b0e75@notabene.brown>
-	<AE87208C-5B7F-4949-8A99-F8841ADD5B1F@redhat.com>
-	<20130321100450.6b82dbfa@notabene.brown>
-	<6F836B18-FF2D-4CFC-BC1B-5F4F6313DF06@redhat.com>
+Subject: Re: [patch]raid5: make release_stripe lockless
+Date: Thu, 28 Mar 2013 11:45:46 +1100
+Message-ID: <20130328114546.207e1d74@notabene.brown>
+References: <20130318043146.GA7016@kernel.org>
+	<CAA9_cmeNpXtR91z8Ni=WBAZmiERvRTJre9Px47S-mzTOoNYucg@mail.gmail.com>
+	<20130320005548.GA1343@kernel.org>
+	<20130322063617.GA22668@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/IbC++g39c_kd7Z=HCc1QbaS"; protocol="application/pgp-signature"
+ boundary="Sig_/q5RBmMHZHSJf1RmFsTlVfr9"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6F836B18-FF2D-4CFC-BC1B-5F4F6313DF06@redhat.com>
+In-Reply-To: <20130322063617.GA22668@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brassow Jonathan <jbrassow@redhat.com>
-Cc: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
+To: Shaohua Li <shli@kernel.org>
+Cc: Dan Williams <djbw@fb.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/IbC++g39c_kd7Z=HCc1QbaS
+--Sig_/q5RBmMHZHSJf1RmFsTlVfr9
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 21 Mar 2013 08:58:54 -0500 Brassow Jonathan <jbrassow@redhat.com>
-wrote:
+On Fri, 22 Mar 2013 14:36:17 +0800 Shaohua Li <shli@kernel.org> wrote:
 
 >=20
-> On Mar 20, 2013, at 6:04 PM, NeilBrown wrote:
+> Subject: raid5: make release_stripe lockless
 >=20
-> > On Wed, 20 Mar 2013 15:56:03 -0500 Brassow Jonathan <jbrassow@redhat.co=
-m>
-> > wrote:
-> >=20
-> >>=20
-> >> On Mar 19, 2013, at 9:46 PM, NeilBrown wrote:
-> >>=20
-> >>> On Tue, 19 Mar 2013 16:15:35 -0500 Brassow Jonathan <jbrassow@redhat.=
-com>
-> >>> wrote:
-> >>>=20
-> >>>>=20
-> >>>> On Mar 17, 2013, at 6:49 PM, NeilBrown wrote:
-> >>>>=20
-> >>>>> On Wed, 13 Mar 2013 12:29:24 -0500 Jonathan Brassow <jbrassow@redha=
-t.com>
-> >>>>> wrote:
-> >>>>>=20
-> >>>>>> Neil,
-> >>>>>>=20
-> >>>>>> I've noticed that when too many devices fail in a RAID arrary that
-> >>>>>> addtional I/O will hang, yielding an endless supply of:
-> >>>>>> Mar 12 11:52:53 bp-01 kernel: Buffer I/O error on device md1, logi=
-cal block 3
-> >>>>>> Mar 12 11:52:53 bp-01 kernel: lost page write due to I/O error on =
-md1
-> >>>>>> Mar 12 11:52:53 bp-01 kernel: sector=3D800 i=3D3           (null) =
-          (null) =20
-> >>>>>>       (null)           (null) 1
-> >>>>>=20
-> >>>>> This is the third report in as many weeks that mentions that WARN_O=
-N.
-> >>>>> The first two where quite different causes.
-> >>>>> I think this one is the same as the first one, which means it would=
- be fixed
-> >>>>> by =20
-> >>>>>    md/raid5: schedule_construction should abort if nothing to do.
-> >>>>>=20
-> >>>>> which is commit 29d90fa2adbdd9f in linux-next.
-> >>>>=20
-> >>>> Sorry, I don't see this commit in linux-next:
-> >>>> (the "for-next" branch of) git://github.com/neilbrown/linux.git
-> >>>> or git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
-> >>>>=20
-> >>>> Where should I be looking?
-> >>>=20
-> >>> Sorry, I probably messed up.
-> >>> I meant this commit:
-> >>> http://git.neil.brown.name/?p=3Dmd.git;a=3Dcommitdiff;h=3Dce7d363aaf1=
-e28be8406a2976220944ca487e8ca
-> >>=20
-> >> Yes, I found this patch in 'for-next'.  I tested 3.9.0-rc3 with and wi=
-thout this patch.  The good news is that my issue with RAID5 appears to be =
-fixed with this patch.  To test, I simply created a 1GB RAID array, let it =
-sync, killed all of the devices and then issued a 40M write request (4M blo=
-ck size).  Before the patch, I would see the kernel warnings and it would t=
-ake 7+ minutes to finish the 40M write.  After the patch, I don't see the k=
-ernel warnings or call traces and it takes < 1 sec to finish the 40M write.=
-  That's good.  Will this patch make it back to 3.[78]?
-> >>=20
-> >> However, I also found that RAID1 can take 2.5 min to perform the write=
- and RAID10 can take 9+ min.  Hung task messages with call traces and many =
-many errors are the result.  This is bad.  I haven't figured out why these =
-are so slow yet.
-> >=20
-> > What happens if you take RAID out of the picture?
-> > i.e. write to a single device, then "kill" that device, then try issuin=
-g a
-> > 40M write request to it.
-> >=20
-> > If that takes 2.5 minutes to resolve, then I think it is correct for RA=
-ID1 to
-> > also take 2.5 minutes to resolve.=20
-> > If it resolves much more quickly than it does with RAID1, then that is a
-> > problem we should certainly address.
+> release_stripe still has big lock contention. We just add the stripe to a=
+ llist
+> without taking device_lock. We let the raid5d thread to do the real stripe
+> release, which must hold device_lock anyway. In this way, release_stripe
+> doesn't hold any locks.
 >=20
-> The test is a little different because once you offline a device, you can=
-'t open it.  So, I had to start I/O and then kill the device.  I still get =
-158MB/s - 3 orders of magnitude faster than RAID1.  Besides, if RAID10 take=
-s 9+ minutes to complete, we'd still have something to fix.  I have also te=
-sted this with an "error" device and it also returns in sub-second time.
+> The side effect is the released stripes order is changed. But sounds not =
+a big
+> deal, stripes are never handled in order. And I thought block layer can a=
+lready
+> do nice request merge, which means order isn't that important.
 >=20
->  brassow
->=20
-> [root@bp-01 ~]# off.sh sda
-> Turning off sda
-> [root@bp-01 ~]# dd if=3D/dev/zero of=3D/dev/sda1 bs=3D4M count=3D10
-> dd: opening `/dev/sda1': No such device or address
-> [root@bp-01 ~]# on.sh sda
-> Turning on sda
-> [root@bp-01 ~]# dd if=3D/dev/zero of=3D/dev/sda bs=3D4M count=3D1000 &
-> [1] 5203
-> [root@bp-01 ~]# off.sh sda
-> Turning off sda
-> [root@bp-01 ~]# 1000+0 records in
-> 1000+0 records out
-> 4194304000 bytes (4.2 GB) copied, 26.5564 s, 158 MB/s
->=20
+> I kept the unplug release batch, which is unnecessary with this patch fro=
+m lock
+> contention avoid point of view, and actually if we delete it, the stripe_=
+head
+> release_list and lru can share storage. But the unplug release batch is a=
+lso
+> helpful for request merge. We probably can delay wakeup raid5d till unplu=
+g, but
+> I'm still afraid of the case which raid5d is running.
 
-Maybe if you could show me some/all of the error messages that you get duri=
-ng
-these long delays it might help.  Also the error messages you (presumably)
-got from the kernel from the above plain-disk test.
+Looks good, thanks.
 
-It should quickly fail all but one copy of the data, then try writing to th=
-at
-copy exactly the same way that it would write to a plain disk.
+One comment:
 
-For RAID10 large writes have to be chopped up for striping, so the extra
-requests which all have to fail could be the reason for the extra delay with
-RAID10.
+
+> +/* should hold conf->device_lock already */
+> +static int release_stripe_list(struct r5conf *conf)
+> +{
+> +	struct stripe_head *sh;
+> +	struct llist_node *node;
+> +	int count =3D 0;
+> +
+> +	while (1) {
+> +		node =3D llist_del_first(&conf->released_stripes);
+> +		if (!node)
+> +			break;
+
+Why not:
+ llist_for_each_entry(sh, llist_delete_all(&conf->released_stripes), releas=
+e_list) {
+      clear_bit()
+      __release_stripe(conf, sh);
+      count++;
+ }
+
+??
 
 NeilBrown
 
---Sig_/IbC++g39c_kd7Z=HCc1QbaS
+> +		sh =3D llist_entry(node, struct stripe_head, release_list);
+> +		/*
+> +		 * llist_del_first() uses cmpxchg, so implies a memory fence.
+> +		 * It's guaranteed the stripe isn't in released_stripes list
+> +		 * now, clearing STRIPE_ON_RELEASE_LIST is safe.
+> +		 */
+> +		clear_bit(STRIPE_ON_RELEASE_LIST, &sh->state);
+> +		/*
+> +		 * Don't worry the bit is set here, because if the bit is set
+> +		 * again, the count is always > 1. This is true for
+> +		 * STRIPE_ON_UNPLUG_LIST bit too.
+> +		 */
+> +		__release_stripe(conf, sh);
+> +		count++;
+> +	}
+> +	return count;
+> +}
+> +
+>  static void release_stripe(struct stripe_head *sh)
+>  {
+>  	struct r5conf *conf =3D sh->raid_conf;
+>  	unsigned long flags;
+> +	bool wakeup;
+> =20
+> +	if (test_and_set_bit(STRIPE_ON_RELEASE_LIST, &sh->state))
+> +		goto slow_path;
+> +	wakeup =3D llist_add(&sh->release_list, &conf->released_stripes);
+> +	if (wakeup)
+> +		md_wakeup_thread(conf->mddev->thread);
+> +	return;
+> +slow_path:
+>  	local_irq_save(flags);
+> +	/* we are ok here if STRIPE_ON_RELEASE_LIST is set or not */
+>  	if (atomic_dec_and_lock(&sh->count, &conf->device_lock)) {
+>  		do_release_stripe(conf, sh);
+>  		spin_unlock(&conf->device_lock);
+> @@ -515,7 +553,8 @@ get_active_stripe(struct r5conf *conf, s
+>  			if (atomic_read(&sh->count)) {
+>  				BUG_ON(!list_empty(&sh->lru)
+>  				    && !test_bit(STRIPE_EXPANDING, &sh->state)
+> -				    && !test_bit(STRIPE_ON_UNPLUG_LIST, &sh->state));
+> +				    && !test_bit(STRIPE_ON_UNPLUG_LIST, &sh->state)
+> +				    && !test_bit(STRIPE_ON_RELEASE_LIST, &sh->state));
+>  			} else {
+>  				if (!test_bit(STRIPE_HANDLE, &sh->state))
+>  					atomic_inc(&conf->active_stripes);
+> @@ -4128,6 +4167,10 @@ static void raid5_unplug(struct blk_plug
+>  			 */
+>  			smp_mb__before_clear_bit();
+>  			clear_bit(STRIPE_ON_UNPLUG_LIST, &sh->state);
+> +			/*
+> +			 * STRIPE_ON_RELEASE_LIST could be set here. In that
+> +			 * case, the count is always > 1 here
+> +			 */
+>  			__release_stripe(conf, sh);
+>  			cnt++;
+>  		}
+> @@ -4813,10 +4856,12 @@ static void raid5auxd(struct md_thread *
+>  	handled =3D 0;
+>  	spin_lock_irq(&conf->device_lock);
+>  	while (1) {
+> -		int batch_size;
+> +		int batch_size, released;
+> +
+> +		released =3D release_stripe_list(conf);
+> =20
+>  		batch_size =3D handle_active_stripes(conf, &auxth->work_mask);
+> -		if (!batch_size)
+> +		if (!batch_size && !released)
+>  			break;
+>  		handled +=3D batch_size;
+>  	}
+> @@ -4851,7 +4896,9 @@ static void raid5d(struct md_thread *thr
+>  	spin_lock_irq(&conf->device_lock);
+>  	while (1) {
+>  		struct bio *bio;
+> -		int batch_size;
+> +		int batch_size, released;
+> +
+> +		released =3D release_stripe_list(conf);
+> =20
+>  		if (
+>  		    !list_empty(&conf->bitmap_list)) {
+> @@ -4876,7 +4923,7 @@ static void raid5d(struct md_thread *thr
+>  		}
+> =20
+>  		batch_size =3D handle_active_stripes(conf, &conf->work_mask);
+> -		if (!batch_size)
+> +		if (!batch_size && !released)
+>  			break;
+>  		handled +=3D batch_size;
+> =20
+> @@ -5471,6 +5518,7 @@ static struct r5conf *setup_conf(struct
+>  	INIT_LIST_HEAD(&conf->delayed_list);
+>  	INIT_LIST_HEAD(&conf->bitmap_list);
+>  	INIT_LIST_HEAD(&conf->inactive_list);
+> +	init_llist_head(&conf->released_stripes);
+>  	atomic_set(&conf->active_stripes, 0);
+>  	atomic_set(&conf->preread_active_stripes, 0);
+>  	atomic_set(&conf->active_aligned_reads, 0);
+> Index: linux/drivers/md/raid5.h
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux.orig/drivers/md/raid5.h	2013-03-21 10:34:56.452256640 +0800
+> +++ linux/drivers/md/raid5.h	2013-03-21 10:34:57.256246529 +0800
+> @@ -197,6 +197,7 @@ enum reconstruct_states {
+>  struct stripe_head {
+>  	struct hlist_node	hash;
+>  	struct list_head	lru;	      /* inactive_list or handle_list */
+> +	struct llist_node	release_list;
+>  	struct r5conf		*raid_conf;
+>  	short			generation;	/* increments with every
+>  						 * reshape */
+> @@ -324,6 +325,7 @@ enum {
+>  	STRIPE_COMPUTE_RUN,
+>  	STRIPE_OPS_REQ_PENDING,
+>  	STRIPE_ON_UNPLUG_LIST,
+> +	STRIPE_ON_RELEASE_LIST,
+>  };
+> =20
+>  /*
+> @@ -462,6 +464,7 @@ struct r5conf {
+>  	 */
+>  	atomic_t		active_stripes;
+>  	struct list_head	inactive_list;
+> +	struct llist_head	released_stripes;
+>  	wait_queue_head_t	wait_for_stripe;
+>  	wait_queue_head_t	wait_for_overlap;
+>  	int			inactive_blocked;	/* release of inactive stripes blocked,
+
+
+--Sig_/q5RBmMHZHSJf1RmFsTlVfr9
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUVOLJznsnt1WYoG5AQKHqQ/+O7Xb+kCv2RphhPJzVjDzj//ne4bZw628
-cZiyZauKt2Y4lzQRVubZzGIA/cws4lOlhEiY4hi8NdfIbwnqPqFNcMG7iY8Bv2zB
-nZog1DwVvnOCoIw0CWwulilp9MIcn4khOjzwurG589DajEJLirIMjBbMRjvKgRRN
-8iG35oOEYrdKDrtHrjGwYO+fBVGpC5cfT4yBLuGFMP0ZK2FKLLj+wnkOaTmciATW
-XyPx9r/NYSV0Vqk/NhVZV2RWLj1Ff4fILVGmvRJF2ovsKyqiXxdNyvv48lVGD97U
-bUbwRVI14GQQsGbN6MdEM00PO8VT2FsggyI4+IH7lSgV2qRqQNUo3sLvmfK1O2s5
-Snw6AfB/LmJS8vEhPJMjJ5NCn61xbG1rv3fsw4tZk9Yct71nEsOs8bD/VkLAme7o
-BnGwcTZg2BTmymWiaK86puMJ++mFM/ksV2gIDybSak0d3u8EiFn+S23yWDqciUiX
-mwLsiHKSX1D5LOMnNDtpN8bTo8OGvYshrGVKLBbfRbsCUinJKflU25ylJTmT2+Td
-cWIqR8fQV+j3SnoVHTd3JGOArsNg34Duls19C+6UV7cWxbW/girLx85BvSxF+ALK
-fpvEa9ORRvXGZ/l4hbvmGSIZ9VcK74Cun9E68OXqtVlNG2NpLtBRpCtdQSGf1Ku4
-Ra/PpueRI3k=
-=dwRW
+iQIVAwUBUVOSujnsnt1WYoG5AQIPmA//cCNbSiN6l+DIwXypG9FWUVHiJ0kEL7Qy
+o7MFlE6JvHcKqm/9rtCl6Bs28P0evty7jrKvaqrgTtIsf7tFwh5vgFi4ywe6ThuW
+/oYZlJpeebcrJwQOqrGqZkhWFprvGACxYyWRC7DcqOxwFQBdYu6WarajCqPEJSoC
+SpGZoHjHLqP2evD5LEHmO8WhAXEUc1lXqcJRB4maL591248Z1raKqxztwxt1aLiK
+ZtlSIupdGHFcQcBi067VcCCmbxflxAb6uheEI8jOVwSs7ElR74/GBCKLFa28i6uK
+W73bZAIAdnhrgnf4objhHCPdVGdJWdo0ojoo+VL1ne9ObNXd1/tJbwMa9C0m8+J/
+UOncmb3lOgmvil7TZKFzsmFPdER6zTQg7BfmRBkr/EviQKUERhQYh+E8NXB7+tW7
+DOKU22/8Iblw/Ygu2bKpSKHXDbMl6/Oadw6UZllyPxXgAIcsKPil/Vd7po57jmV9
+/w87BVfQLsQnCS6zVoyfRgCoxgI4DMR2E1ufaMN4HSodXc6b6nUygtqGsg7eCExj
+DCiVC15AuxFxGiOy8HOfRAZ+JaCFjLk5sD+yDcRfwaRLXkhIcJtRkT6vXx9+q8qy
+HGCvtZcePuFoyOeeYTTP0o9gn7GW1aAxn8n1ru7ULA5h/0j4MLJ/Kh1EI92j5+cP
+oTSOdm7O9RU=
+=QVa5
 -----END PGP SIGNATURE-----
 
---Sig_/IbC++g39c_kd7Z=HCc1QbaS--
+--Sig_/q5RBmMHZHSJf1RmFsTlVfr9--
