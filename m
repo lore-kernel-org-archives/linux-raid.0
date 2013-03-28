@@ -1,159 +1,130 @@
-From: Tarak Anumolu <tarak.anumolu@samsung.com>
-Subject: Problem with mdadm 3.2.5
-Date: Thu, 28 Mar 2013 06:36:03 +0000 (GMT)
-Message-ID: <11024273.158671364452562535.JavaMail.weblogic@epml26>
-Reply-To: tarak.anumolu@samsung.com
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [patch 2/2 v3]raid5: create multiple threads to handle stripes
+Date: Thu, 28 Mar 2013 17:47:44 +1100
+Message-ID: <20130328174744.79b04058@notabene.brown>
+References: <20120809085808.GB30111@kernel.org>
+	<20130307073123.GA5819@kernel.org>
+	<20130312123927.16e49ea9@notabene.brown>
+	<513FCBE3.90205@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/=6Hvhixzgi_3hCAex4TGcaD"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-MIME-version: 1.0
+In-Reply-To: <513FCBE3.90205@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sam Bingner <sam@bingner.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, hpj@urpla.net
+To: stan@hardwarefreak.com
+Cc: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, dan.j.williams@gmail.com
 List-Id: linux-raid.ids
 
-DQpIaQ0KDQpGWUksIFdlIGZvbGxvd2VkIHRoZSBiZWxvdyBzdGVwcyBhbmQgQXQgdGhlIGVuZCB5
-b3UgY2FuIHNlZSB0aGUgcHJvYmxlbSB3aXRoIHRoZSBmaWxlIHN5c3RlbS4NCg0KUkFJRCBvcGVy
-YXRpb24gb24gOCBoYXJkZGlza3MgZWFjaCBvZiBzaXplIDFUQiB3aXRoIDcgaGFyZGRpc2tzIGFz
-IHJhaWQgZGV2aWNlcyBhbmQgMSBoYXJkIGRpc2sgYXMgc3BhcmUgZGV2aWNlIGdvdCBzdWNjZWVk
-Lg0KDQojcGFydGVkIC1zIC9kZXYvbWQwIHByaW50DQpNb2RlbDogTGludXggU29mdHdhcmUgUkFJ
-RCBBcnJheSAobWQpDQpEaXNrIC9kZXYvbWQwOiA2MDAxR0INClNlY3RvciBzaXplIChsb2dpY2Fs
-L3BoeXNpY2FsKTogNTEyQi81MTJCDQpQYXJ0aXRpb24gVGFibGU6IGdwdA0KTnVtYmVyICBTdGFy
-dCAgIEVuZCAgICAgU2l6ZSAgICBGaWxlIHN5c3RlbSAgTmFtZSAgICAgRmxhZ3MNCiAxICAgICAg
-MTA0OWtCICA2MC4wR0IgIDYwLjBHQiAgeGZzICAgICAgICAgIHByaW1hcnkNCiAyICAgICAgNjAu
-MEdCICA2MDAxR0IgIDU5NDFHQiAgeGZzICAgICAgICAgIHByaW1hcnkNCg0KDQpUaGVuIFdlIGNy
-ZWF0ZSAyIHBhcnRpdGlvbnMgbWQwcDEgYW5kIG1kMHAyLg0KDQojY2F0IC9wcm9jL3BhcnRpdGlv
-bnMNCm1ham9yIG1pbm9yICAjYmxvY2tzICBuYW1lDQogIDMxICAgICAgICAwICAgICAgIDgxOTIg
-bXRkYmxvY2swDQogIDMxICAgICAgICAxICAgICAxMzEwNzIgbXRkYmxvY2sxDQogICA4ICAgICAg
-ICAwICA5NzY3NjI1ODQgc2RhDQogICA4ICAgICAgICAxICA5NzY3NjA4MzIgc2RhMQ0KICAgOCAg
-ICAgICAxNiAgOTc2NzYyNTg0IHNkYg0KICAgOCAgICAgICAxNyAgOTc2NzYwODMyIHNkYjENCiAg
-IDggICAgICAgMzIgIDk3Njc2MjU4NCBzZGMNCiAgIDggICAgICAgMzMgIDk3Njc2MDgzMiBzZGMx
-DQogICA4ICAgICAgIDQ4ICA5NzY3NjI1ODQgc2RkDQogICA4ICAgICAgIDQ5ICA5NzY3NjA4MzIg
-c2RkMQ0KICAgOCAgICAgICA2NCAgOTc2NzYyNTg0IHNkZQ0KICAgOCAgICAgICA2NSAgOTc2NzYw
-ODMyIHNkZTENCiAgIDggICAgICAgODAgIDk3Njc2MjU4NCBzZGYNCiAgIDggICAgICAgODEgIDk3
-Njc2MDgzMiBzZGYxDQogICA4ICAgICAgIDk2ICA5NzY3NjI1ODQgc2RnDQogICA4ICAgICAgIDk3
-ICA5NzY3NjA4MzIgc2RnMQ0KICAgOCAgICAgIDExMiAgOTc2NzYyNTg0IHNkaA0KICAgOCAgICAg
-IDExMyAgOTc2NzYwODMyIHNkaDENCiAgIDkgICAgICAgIDAgNTg2MDU2MzQ1NiBtZDANCiAyNTkg
-ICAgICAgIDAgICA1ODYwNDU0NCBtZDBwMQ0KIDI1OSAgICAgICAgMSA1ODAxOTU3Mzc2IG1kMHAy
-DQoNCioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKg0KICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgIElUJ1MgRklORSBVUFRPIEhFUkUNCioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKg0KDQpOb3cgd2UgZmFpbGVkIGhhcmRkaXNrLTENCg0KIyBtZGFkbSAtZiAv
-ZGV2L21kMCAvZGV2L3NkYTENCg0KIyBtZGFkbSAtRCAvZGV2L21kMA0KL2Rldi9tZDA6DQogICAg
-ICAgIFZlcnNpb24gOiAwLjkwDQogIENyZWF0aW9uIFRpbWUgOiBXZWQgTWFyIDI3IDExOjEwOjI0
-IDIwMTMNCiAgICAgUmFpZCBMZXZlbCA6IHJhaWQ1DQogICAgIEFycmF5IFNpemUgOiA1ODYwNTYz
-NDU2ICg1NTg5LjA3IEdpQiA2MDAxLjIyIEdCKQ0KICBVc2VkIERldiBTaXplIDogOTc2NzYwNTc2
-ICg5MzEuNTEgR2lCIDEwMDAuMjAgR0IpDQogICBSYWlkIERldmljZXMgOiA3DQogIFRvdGFsIERl
-dmljZXMgOiA3DQpQcmVmZXJyZWQgTWlub3IgOiAwDQogICAgUGVyc2lzdGVuY2UgOiBTdXBlcmJs
-b2NrIGlzIHBlcnNpc3RlbnQNCiAgSW50ZW50IEJpdG1hcCA6IEludGVybmFsDQogICAgVXBkYXRl
-IFRpbWUgOiBUaHUgTWFyIDI4IDAxOjAzOjU3IDIwMTMNCiAgICAgICAgICBTdGF0ZSA6IGFjdGl2
-ZSwgZGVncmFkZWQsIHJlY292ZXJpbmcNCiBBY3RpdmUgRGV2aWNlcyA6IDYNCldvcmtpbmcgRGV2
-aWNlcyA6IDcNCiBGYWlsZWQgRGV2aWNlcyA6IDANCiAgU3BhcmUgRGV2aWNlcyA6IDENCiAgICAg
-ICAgIExheW91dCA6IGxlZnQtc3ltbWV0cmljDQogICAgIENodW5rIFNpemUgOiAyNTZLDQogUmVi
-dWlsZCBTdGF0dXMgOiAwJSBjb21wbGV0ZQ0KICAgICAgICAgICBVVUlEIDogZGViYWRiZTA6NDli
-NGZlOTA6MjQ0NzI3ODc6Mjk2MjFlY2EgKGxvY2FsIHRvIGhvc3QgbXBjODUzNmRzKQ0KICAgICAg
-ICAgRXZlbnRzIDogMC4xNQ0KICAgIE51bWJlciAgIE1ham9yICAgTWlub3IgICBSYWlkRGV2aWNl
-IFN0YXRlDQogICAgICAgNyAgICAgICA4ICAgICAgMTEzICAgICAgICAwICAgICAgc3BhcmUgcmVi
-dWlsZGluZyAgIC9kZXYvc2RoMQ0KICAgICAgIDEgICAgICAgOCAgICAgICAxNyAgICAgICAgMSAg
-ICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGIxDQogICAgICAgMiAgICAgICA4ICAgICAgIDMzICAg
-ICAgICAyICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkYzENCiAgICAgICAzICAgICAgIDggICAg
-ICAgNDkgICAgICAgIDMgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RkMQ0KICAgICAgIDQgICAg
-ICAgOCAgICAgICA2NSAgICAgICAgNCAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGUxDQogICAg
-ICAgNSAgICAgICA4ICAgICAgIDgxICAgICAgICA1ICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3Nk
-ZjENCiAgICAgICA2ICAgICAgIDggICAgICAgOTcgICAgICAgIDYgICAgICBhY3RpdmUgc3luYyAg
-IC9kZXYvc2RnMQ0KDQpOb3cgaGFyZGRpc2stMSBpcyByZXZvdmVyaW5nDQoNCiNjYXQgL3Byb2Mv
-bWRzdGF0DQpQZXJzb25hbGl0aWVzIDogW3JhaWQ2XSBbcmFpZDVdIFtyYWlkNF0NCm1kMCA6IGFj
-dGl2ZSByYWlkNSBzZGgxWzddIHNkZzFbNl0gc2RmMVs1XSBzZGUxWzRdIHNkZDFbM10gc2RjMVsy
-XSBzZGIxWzFdDQogICAgICA1ODYwNTYzNDU2IGJsb2NrcyBsZXZlbCA1LCAyNTZrIGNodW5rLCBh
-bGdvcml0aG0gMiBbNy82XSBbX1VVVVVVVV0NCiAgICAgIFs+Li4uLi4uLi4uLi4uLi4uLi4uLi5d
-ICByZWNvdmVyeSA9ICAwLjElICgxNjA0MTY0Lzk3Njc2MDU3NikgZmluaXNoPTMyNC4ybWluIHNw
-ZWVkPTUwMTMwSy9zZWMNCiAgICAgIGJpdG1hcDogMC84IHBhZ2VzIFswS0JdLCA2NTUzNktCIGNo
-dW5rDQoNCg0KI3BhcnRlZCAtcyAvZGV2L21kMCBwcmludA0KTW9kZWw6IExpbnV4IFNvZnR3YXJl
-IFJBSUQgQXJyYXkgKG1kKQ0KRGlzayAvZGV2L21kMDogNjAwMUdCDQpTZWN0b3Igc2l6ZSAobG9n
-aWNhbC9waHlzaWNhbCk6IDUxMkIvNTEyQg0KUGFydGl0aW9uIFRhYmxlOiBncHQNCk51bWJlciAg
-U3RhcnQgICBFbmQgICAgIFNpemUgICAgRmlsZSBzeXN0ZW0gIE5hbWUgICAgIEZsYWdzDQogMSAg
-ICAgIDEwNDlrQiAgNjAuMEdCICA2MC4wR0IgIHhmcyAgICAgICAgICBwcmltYXJ5DQogMiAgICAg
-IDYwLjBHQiAgNjAwMUdCICA1OTQxR0IgIHhmcyAgICAgICAgICBwcmltYXJ5DQoNCg0KV2hpbGUg
-cmVjb3ZlcmluZyB0aGUgaGFyZGRpc2ssIHRvIHRlc3QgdGhlIHBvd2VyIGZhaWx1cmUvIHJlc3Rh
-cnRpbmcgc2l0dWF0aW9uLCB3ZSB1bm1vdW50IHRoZSBwYXJ0aXRpb25zLg0KDQojdW1vdW50IC9k
-ZXYvbWQwcFsxMl0NCg0KDQpBZ2FpbiB0cnkgdG8gbW91bnQgdGhlIHBhcnRpdGlvbnMgYnV0IGZh
-aWxlZC4NCg0KDQojbW91bnQgL2Rldi9tZDBwMSAvbW50L21kMHAxDQpVREYtZnM6IE5vIHBhcnRp
-dGlvbiBmb3VuZCAoMSkNCkZpbGVzeXN0ZW0gIm1kMHAxIjogRGlzYWJsaW5nIGJhcnJpZXJzLCB0
-cmlhbCBiYXJyaWVyIHdyaXRlIGZhaWxlZA0KDQojIG1vdW50IC9kZXYvbWQwcDIgL21udC9tZDBw
-Mg0KZ3Jvd19idWZmZXJzOiByZXF1ZXN0ZWQgb3V0LW9mLXJhbmdlIGJsb2NrIDE4NDQ2NzQ0MDcy
-NDI4NTY0NDc5IGZvciBkZXZpY2UgbWQwcDINCmdyb3dfYnVmZmVyczogcmVxdWVzdGVkIG91dC1v
-Zi1yYW5nZSBibG9jayAxODQ0Njc0NDA3MjQyODU2NDIyMyBmb3IgZGV2aWNlIG1kMHAyDQpncm93
-X2J1ZmZlcnM6IHJlcXVlc3RlZCBvdXQtb2YtcmFuZ2UgYmxvY2sgMTg0NDY3NDQwNzI0Mjg1NjQ0
-NzggZm9yIGRldmljZSBtZDBwMg0KZ3Jvd19idWZmZXJzOiByZXF1ZXN0ZWQgb3V0LW9mLXJhbmdl
-IGJsb2NrIDE4NDQ2NzQ0MDcyNDI4NTY0MjIyIGZvciBkZXZpY2UgbWQwcDINCmdyb3dfYnVmZmVy
-czogcmVxdWVzdGVkIG91dC1vZi1yYW5nZSBibG9jayAxODQ0Njc0NDA3MjQyODU2NDQ4MCBmb3Ig
-ZGV2aWNlIG1kMHAyDQpncm93X2J1ZmZlcnM6IHJlcXVlc3RlZCBvdXQtb2YtcmFuZ2UgYmxvY2sg
-MTg0NDY3NDQwNzI0Mjg1NjQyMjQgZm9yIGRldmljZSBtZDBwMg0KZ3Jvd19idWZmZXJzOiByZXF1
-ZXN0ZWQgb3V0LW9mLXJhbmdlIGJsb2NrIDE4NDQ2NzQ0MDcyNDI4NTY0NDc3IGZvciBkZXZpY2Ug
-bWQwcDINCg0KDQojcGFydGVkIC1zIC9kZXYvbWQwIHByaW50DQpNb2RlbDogTGludXggU29mdHdh
-cmUgUkFJRCBBcnJheSAobWQpDQpEaXNrIC9kZXYvbWQwOiA2MDAxR0INClNlY3RvciBzaXplIChs
-b2dpY2FsL3BoeXNpY2FsKTogNTEyQi81MTJCDQpQYXJ0aXRpb24gVGFibGU6IGdwdA0KDQpOdW1i
-ZXIgIFN0YXJ0ICAgRW5kICAgICBTaXplICAgIEZpbGUgc3lzdGVtICBOYW1lICAgICBGbGFncw0K
-IDEgICAgICAxMDQ5a0IgIDYwLjBHQiAgNjAuMEdCICB4ZnMgICAgICAgICAgcHJpbWFyeQ0KIDIg
-ICAgICA2MC4wR0IgIDYwMDFHQiAgNTk0MUdCICAgICAgICAgICAgICAgcHJpbWFyeQ0KDQpGaWxl
-c3lzdGVtIGlzIG5vdCBzaG93bi4NCg0KDQpIYXJkZGlzayBSZWNvdmVyeSBpcyBjb21wbGV0ZWQN
-Cg0KIyBjYXQgL3Byb2MvbWRzdGF0DQpQZXJzb25hbGl0aWVzIDogW3JhaWQ2XSBbcmFpZDVdIFty
-YWlkNF0NCm1kMCA6IGFjdGl2ZSByYWlkNSBzZGgxWzBdIHNkZzFbNl0gc2RmMVs1XSBzZGUxWzRd
-IHNkZDFbM10gc2RjMVsyXSBzZGIxWzFdDQogICAgICA1ODYwNTYzNDU2IGJsb2NrcyBsZXZlbCA1
-LCAyNTZrIGNodW5rLCBhbGdvcml0aG0gMiBbNy83XSBbVVVVVVVVVV0NCiAgICAgIGJpdG1hcDog
-MS84IHBhZ2VzIFs0S0JdLCA2NTUzNktCIGNodW5rDQoNCiNwYXJ0ZWQgLXMgL2Rldi9tZDAgcHJp
-bnQNCk1vZGVsOiBMaW51eCBTb2Z0d2FyZSBSQUlEIEFycmF5IChtZCkNCkRpc2sgL2Rldi9tZDA6
-IDYwMDFHQg0KU2VjdG9yIHNpemUgKGxvZ2ljYWwvcGh5c2ljYWwpOiA1MTJCLzUxMkINClBhcnRp
-dGlvbiBUYWJsZTogZ3B0DQoNCk51bWJlciAgU3RhcnQgICBFbmQgICAgIFNpemUgICAgRmlsZSBz
-eXN0ZW0gIE5hbWUgICAgIEZsYWdzDQogMSAgICAgIDEwNDlrQiAgNjAuMEdCICA2MC4wR0IgIHhm
-cyAgICAgICAgICBwcmltYXJ5DQogMiAgICAgIDYwLjBHQiAgNjAwMUdCICA1OTQxR0IgICAgICAg
-ICAgICAgICBwcmltYXJ5DQoNCkZpbGVzeXN0ZW0gaXMgZW1wdHkuLi4uLi4uLi4NCg0KDQpQbGVh
-c2UgdGVsbCBtZSBpZiBJIGRpZCBhbnkgdGhpbmcgd3JvbmcuDQoNCg0KVGhhbmtzDQpUYXJhayBB
-bnVtb2x1DQoNCg0KDQoNCg0KLS0tLS0tLSBPcmlnaW5hbCBNZXNzYWdlIC0tLS0tLS0NClNlbmRl
-ciA6IFNhbSBCaW5nbmVyPHNhbUBiaW5nbmVyLmNvbT4NCkRhdGUgOiBNYXIgMjcsIDIwMTMgMTk6
-NTEgKEdNVCswOTowMCkNClRpdGxlIDogUmU6IE5lZWQgc29tZSBpbmZvcm1hdGlvbiBhYm91dCBt
-ZGFkbSAzLjIuNQ0KDQpPbiBNYXIgMjYsIDIwMTMsIGF0IDExOjI4IFBNLCBIYW5zLVBldGVyIEph
-bnNlbiB3cm90ZToNCg0KPiBIaSBUYXJhaywNCj4gDQo+IE9uIE1pdHR3b2NoLCAyNy4gTeRyeiAy
-MDEzIDA1OjE3OjE5IFRhcmFrIEFudW1vbHUgd3JvdGU6DQo+PiBIaQ0KPj4gDQo+PiBNeSBuYW1l
-IGlzIFRBUkFLLg0KPj4gDQo+PiBXZSBnb3Qgc29tZSBwcm9ibGVtIGluIHVzaW5nIG1kYWRtIDMu
-Mi41Lg0KPj4gDQo+PiBXZSBhcmUgdHJ5aW5nIHRvIGRvIFJBSUQgb3BlcmF0aW9uIG9uIDggaGFy
-ZGRpc2tzIGVhY2ggb2Ygc2l6ZSAxVEIgd2l0aCA3DQo+PiBoYXJkZGlza3MgYXMgcmFpZCBkZXZp
-Y2VzIGFuZCAxIGhhcmQgZGlzayBhcyBzcGFyZSBkZXZpY2UuDQo+IA0KPj4gQ29tbWFuZCA6IG1k
-YWRtIC1DIC9kZXYvbWQwIC1mIC0tbWV0YS12ZXJzaW9uIDAuOSAtbDUgLW43IC14MSAvZGV2L3Nk
-W2EtaF0xDQo+IA0KPiBPYnZpb3VzbHksIHlvdSBhbHJlYWR5IGNyZWF0ZWQgcGFydGl0aW9ucyBv
-biB5b3VyIGhhcmRkaXNrcy4NCj4gDQo+PiBBZnRlciB0aGUgUkFJRCBvcGVyYXRpb24gaXMgY29t
-cGxldGVkIHdoZW4gd2UgY2hlY2sgdGhlIHN0YXR1cywNCj4gDQo+IEJld2FyZSwgdGhlIHJhaWQg
-Y3JlYXRpb24gaXMgYSBsb25nIHByb2Nlc3MsIHdvcmtpbmcgaW4gYmFja2dyb3VuZC4NCj4gDQo+
-IFRvIGNoZWNrIHlvdXIgbWQsIHVzZTogImNhdCAvcHJvYy9tZHN0YXQiLiBUaGlzIGlzIHRoZSBt
-b3N0IGltcG9ydGFudCBjb21tYW5kIA0KPiBpbiB1c2luZyBsaW51eCBtZC4NCj4gDQo+PiBXZSBh
-cmUNCj4+IGdldHRpbmcgdGhlIGZvbGxvd2luZyBlcnJvcnMuDQo+IA0KPj4gIyBwYXJ0ZWQgLSBz
-ICAvZGV2L21kMCBwcmludA0KPj4gTW9kZWw6IExpbnV4IFNvZnR3YXJlIFJBSUQgQXJyYXkgKG1k
-KQ0KPj4gRGlzayAvZGV2L21kMDogNjAwMUdCDQo+PiBTZWN0b3Igc2l6ZSAobG9naWNhbC9waHlz
-aWNhbCk6IDUxMkIvNTEyQg0KPj4gUGFydGl0aW9uIFRhYmxlOiBncHQNCj4+IE51bWJlciBTdGFy
-dCBFbmQgU2l6ZSBGaWxlIHN5c3RlbSBOYW1lIEZsYWdzDQo+PiAxIDEwNDlrQiA2MC4wR0IgNjAu
-MEdCIHhmcyBwcmltYXJ5DQo+PiAyIDYwLjBHQiA2MDAxR0IgNTk0MUdCIHByaW1hcnkNCj4gDQo+
-IE5vdywgeW91IHdhbnQgdG8gYWNjZXNzIHRoZSBtZCBwYXJ0aXRpb24gYXMgYSBoYXJkZGlzaz8h
-Pw0KPiANCj4gV2hhdCB5b3UncmUgdHJ5aW5nIHRvIGRvIG1ha2VzIGxpdHRsZSBzZW5zZS4gVGhp
-bmsgb2YgdGhlIG1kIHBhcnRpdGlvbiBhcyBhbiANCj4gb3JkaW5hcnkgb25lLiBQYXJ0aXRpb25p
-bmcgaGFwcGVucyAqYmVmb3JlKiBtZCBjcmVhdGlvbiAoaWYgbmVjZXNzYXJ5IGF0IGFsbCwgDQo+
-IGFzIHlvdSBjYW4gY3JlYXRlIHlvdXIgbWRzIGRpcmVjdGx5IG9uIHRoZSBoYXJkZGlza3MsIGFz
-IGxvbmcgYXMgeW91IG5lZWQganVzdCANCj4gb25lIG1kLCBhbmQgZG9uJ3Qgd2FudCB0byBib290
-IGZyb20gaXQpLiBUaGUgKm5leHQqIGxvZ2ljYWwgc3RlcCBoZXJlIGlzIA0KPiBjcmVhdGluZyBh
-IGZpbGVzeXN0ZW0gb24gdGhlIG1kIHBhcnRpdGlvbi4gDQo+IA0KPiBFLmcuOiBta2ZzLnhmcyAv
-ZGV2L21kMA0KPiANCj4gVGhlbiBhc3NpZ24gYSBtb3VudCBwb2ludCAoaW4gL2V0Yy9mc3RhYiks
-IGFuZCB1c2UgaXQuIENhbGwgYmFjayAodG8gdGhpcyBNTCksIA0KPiB3aGVuIHlvdSByZWFjaGVk
-IHRoaXMgcG9pbnQsIGFzIHRoZXJlIGFyZSBhIGZldyBtb3JlIGltcG9ydGFudCBzdGVwcyB0byBm
-b2xsb3cgDQo+IGZvciBtYXhpbXVtIGVuam95bWVudC4NCj4gDQo+IENoZWVycywNCj4gUGV0ZQ0K
-PiANCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUg
-InVuc3Vic2NyaWJlIGxpbnV4LXJhaWQiIGluDQo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBt
-YWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6
-Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KDQoNCkkgd291bGQgb25seSBh
-ZGQgdGhhdCBpZiB5b3UgZG8gd2FudCB0byBzcGxpdCBpdCBpbnRvIHNtYWxsZXIgc2VjdGlvbnMs
-IHlvdSBtYXkgYmUgaW50ZXJlc3RlZCBpbiBMVk0gb24gUkFJRC4gIEkgYWxzbyB3b25kZXIgd2h5
-IHlvdSBjaG9zZSBtZXRhZGF0YSAwLjkgYXMgdGhhdCBsaW1pdHMgeW91IGluIHRoZSBmdXR1cmUg
-aWYgeW91IGV2ZXIgd2lzaCB0byB1c2UgbGFyZ2UgZGV2aWNlcyAoPjJUQiBvciA0VEIgZGVwZW5k
-aW5nIG9uIHlvdXIga2VybmVsKQ==
+--Sig_/=6Hvhixzgi_3hCAex4TGcaD
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 12 Mar 2013 19:44:19 -0500 Stan Hoeppner <stan@hardwarefreak.com>
+wrote:
+
+> On 3/11/2013 8:39 PM, NeilBrown wrote:
+> > On Thu, 7 Mar 2013 15:31:23 +0800 Shaohua Li <shli@kernel.org> wrote:
+> ...
+> >>> #echo 1-3 > /sys/block/md0/md/auxth0/cpulist
+> >>> This will bind auxiliary thread 0 to cpu 1-3, and this thread will on=
+ly handle
+> >>> stripes produced by cpu 1-3. User tool can further change the thread's
+> >>> affinity, but the thread can only handle stripes produced by cpu 1-3 =
+till the
+> >>> sysfs entry is changed again.
+>=20
+> Would it not be better to use the existing cpusets infrastructure for
+> this, instead of manually binding threads to specific cores or sets of
+> cores?
+>=20
+> Also, I understand the hot cache issue driving the desire to have a raid
+> thread only process stripes created by its CPU.  But what of the
+> scenario where an HPC user pins application threads to cores and needs
+> all the L1/L2 cache?  Say this user has a dual socket 24 core NUMA
+> system with 2 NUMA nodes per socket, 4 nodes total.  Each NUMA node has
+> 6 cores and shared L3 cache.  The user pins 5 processes to 5 cores in
+> each node, and wants to pin a raid thread to the remaining core in each
+> node to handle the write IO generated by the 5 user threads on the node.
+>=20
+> Does your patch series allow this?  Using the above example, if the user
+> creates 4 cpusets, can he assign a raid thread to that set and the
+> thread will execute on any core in the set, and only that set, on any
+> stripes created by any CPU in that set, and only that set?
+>=20
+> The infrastructure for this already exists, has since 2004.  And it
+> seems is more flexible than what you've implemented here.  I suggest we
+> make use of it, as it is the kernel standard for doing such things.
+>=20
+> See:  http://man7.org/linux/man-pages/man7/cpuset.7.html
+>=20
+> > Hi Shaohua,
+> >  I still have this sitting in my queue, but I haven't had a chance to l=
+ook at
+> >  is properly yet - I'm sorry about that.  I'll try to get to it soon.
+>=20
+
+Thanks for this feedback.  The interface is the thing I am most concerned
+about getting right at this stage, and is exactly what you are commenting o=
+n.
+
+The current code allows you to request N separate raid threads, and to tie
+each one to a subset of processors.  This tying is in two senses.  The
+thread can only run on cpus in the subset, and the requests queued by any
+given processor will preferentially be processed by threads tied to that
+processor.
+
+It does sound a lot like cpusets could be used instead of lists of CPUs.
+However it does merge the two different cpuset concepts which you seem to
+suggest might not be ideal, and maybe it isn't.
+
+A completely general solution might be to allow each thread to handle
+requests from one cpuset, and run on any processor in another cpuset.
+Would that be too much flexibility?
+
+cpusets are a config option, so we would need to only enable multithreads if
+CONFIG_CPUSETS were set.  Is this unnecessarily restrictive?  Are there any
+other cases of kernel threads binding to cpusets?  If there aren't I'd be a
+but cautious of being the first, I as have very little familiarity with this
+stuff.
 
 
+I still like the idea of an 'ioctl' which a process can call and will cause
+it to start handling requests.
+The process could bind itself to whatever cpu or cpuset it wanted to, then
+could call the ioctl on the relevant md array, and pass in a bitmap of cpus
+which indicate which requests it wants to be responsible for.  The current
+kernel thread will then only handle requests that no-one else has put their
+hand up for.  This leave all the details of configuration in user-space
+(where I think it belongs).
+
+Shaohua - have you given any thought to that approach.
+
+If anyone else has any familiarity with multithreading and numa and cpu
+affinity and would like to share some thoughts, I am all ears.
+
+NeilBrown
+
+--Sig_/=6Hvhixzgi_3hCAex4TGcaD
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUVPnkDnsnt1WYoG5AQIk2A//RHg3OhZp1P6/nzOyR2WKvY1Ybvcwi+iE
+RFniowsjo8RBOCiMERx9UJscG4J1oLqu47eck88B4whzJA1ga5mXG6/CJK8Egwbn
+ieGtLU0edoGFmCVtSzYi0l36Bk/nDYuVemuWJR+UVcNBti1PHhXmZGog5oX2ITiv
+/mV1dcUp+iYOM/b0JWgVDfWhS+YJmpBcAJpm3QGu2OcHIHvClHAmm8sirmMywLaW
+CNXhiZdDf3JnjhTOfpMJhMJiZaH7ESTFLzWlD1zZPnA094ESekmc4nZk38l5untj
+33zH9smC6ZwrF6lVrvvx/N23om216IcS/kzK1w3VOjiYelUCIcr898CM+4PwspR5
+VgdLlrYE3Mj0sLlv2bFBcNqBdnn4mM2/XDymTAwQTx85GeXG9TStJIKgLFnR6oWI
+HBSAZ9262JXwbhbpT3nMjMgpgUtc+bkK8PAuLps+CwLbDoUpg0z+yD2fEaOTxOnV
+RX5ZL/Oo8MrBwwbY27d7MrzS/bBgIWznq2SodjsMm/AlG5rQhzevCcK45oCyEjxn
+/OtxIV/hbTLB2vDrkelIS2F5NuoTPk17T4N2t0LJBUWx4lvQWX7xnWS5BWRGsFqb
+aNC0B7YxUk0zWXyDtfZLH/pmw1dvgMW1yoqGTOLbg1N/ARmpplWfR9HuylCQ7hHA
+L6fg7ywdEBI=
+=l4N0
+-----END PGP SIGNATURE-----
+
+--Sig_/=6Hvhixzgi_3hCAex4TGcaD--
