@@ -1,59 +1,120 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: RAID-10 with mixed block size HDDs
-Date: Fri, 29 Mar 2013 10:04:45 +0100
-Message-ID: <20130329090445.GA2339@lazy.lzy>
-References: <20130325180458.GA4833@lazy.lzy>
- <18578566.4.1364517088232.JavaMail.root@zimbra>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: [patch 2/2 v3]raid5: create multiple threads to handle stripes
+Date: Fri, 29 Mar 2013 04:36:14 -0500
+Message-ID: <5155608E.9050800@hardwarefreak.com>
+References: <20120809085808.GB30111@kernel.org> <20130307073123.GA5819@kernel.org> <20130312123927.16e49ea9@notabene.brown> <513FCBE3.90205@hardwarefreak.com> <20130328174744.79b04058@notabene.brown> <20130329023407.GA19943@kernel.org>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18578566.4.1364517088232.JavaMail.root@zimbra>
+In-Reply-To: <20130329023407.GA19943@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, dan.j.williams@gmail.com, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, Joe Landman <joe.landman@gmail.com>
 List-Id: linux-raid.ids
 
-On Fri, Mar 29, 2013 at 01:31:28AM +0100, Roy Sigurd Karlsbakk wrote:
-> ----- Opprinnelig melding -----
-> > Hi all,
-> >=20
-> > I've a two disk RAID-10 (far 2, I guess).
->=20
-> You can't grow a RAID-10=E2=80=A6
+I'm CC'ing Joe Landman as he's already building systems of the caliber
+that would benefit from this write threading and may need configurable
+CPU scheduling.  Joe I've not seen a post from you on linux-raid in a
+while so I don't know if you've been following this topic.  Shaohua has
+created patch sets to eliminate, or dramatically mitigate, the horrible
+single threaded write performance of md/RAID 1, 10, 5, 6 on SSD.
+Throughput no longer hits a wall due to peaking one core, as with the
+currently shipping kernel code.  Your thoughts?
 
-I know, I've to replace a disk, non add.
+On 3/28/2013 9:34 PM, Shaohua Li wrote:
+...
+> Frankly I don't like the cpuset way. It might just work, but it's just another
+> API to control process affinity and has no essential difference against my
+> approach (which directly sets process affinity). Generally we use cpuset
+> instead of process affinity is because of something like inherit affinity.
+> While the raid5 process doesn't involve those.
 
-bye,
+First I should again state I'm not a developer, but a sysadmin, and this
+is the viewpoint from which I speak.
 
-pg
-=20
-> Vennlige hilsener / Best regards
->=20
-> roy
-> --
-> Roy Sigurd Karlsbakk
-> (+47) 98013356
-> roy@karlsbakk.net
-> http://blogg.karlsbakk.net/
-> GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
-> --
-> I all pedagogikk er det essensielt at pensum presenteres intelligibel=
-t. Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=
-=A5 eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste t=
-ilfeller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The essential difference I see is the user interface the sysadmin will
+employ to tweak thread placement/behavior.  Hypothetically, say I have a
+64 socket Altix UV machine w/8 core CPUs, 512 cores.  Each node board
+has two sockets, two distinct NUMA nodes, 64 total, but these share a
+NUMALink hub interface chip connection to the rest of the machine, and
+share a PCIe mezzanine interface.
 
---=20
+We obviously want to keep md/RAID housekeeping bandwidth (stripe cache,
+RMW reads, etc) isolated to the node where it is attached so it doesn't
+needlessly traverse NUMALink eating precious, limited, 'high' latency
+NUMAlink system interconnect bandwidth.  We need to keep that free for
+our parallel application which is eating 100% of the other 504 cores and
+saturating NUMAlink with MPI and file IO traffic.
 
-piergiorgio
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So lets say I have one NUMA node out of 64 dedicated to block device IO.
+ It has a PCIe x8 v2 IB 4x QDR HBA (4GB/s) connection to a SAN box with
+18 SSDs (and 128 SAS rust).  The SAN RAID ASIC can't keep up with SSD
+RAID5 IO rates while also doing RAID for the rust.  So we export the
+SSDs individually and we make 2x 9 drive md/RAID5 arrays.  I've already
+created a cpuset with this NUMA node for strictly storage related
+processes including but not limited to XFS utils, backup processes,
+snapshots, etc, so that the only block IO traversing NUMAlink is user
+application data.  Now I add another 18 SSDs to the SAN chassis, and
+another IB HBA to this node board.
+
+Ideally, my md/RAID write threads should already be bound to this
+cpuset.  So all I should need to do is add this 2nd node to the cpuset
+and I'm done.  No need to monkey with additional md/RAID specific
+interfaces.
+
+Now, that's the simple scenario.  On this particular machine's
+architecture, you have two NUMA nodes per physical node, so expanding
+storage hardware on the same node board should be straightforward above.
+ However, most Altix UV machines will have storage HBAs plugged into
+many node boards.  If we create one cpuset and put all the md/RAID write
+theads in it, then we get housekeeping RAID IO traversing the NUMAlink
+interconnect.  So in this case we'd want to pin the threads to the
+physical node board where the PCIe cards, and thus disks, are attached.
+
+The 'easy' way to do this is simply create multiple cpusets, one for
+each storage node.  But then you have the downside of administration
+headaches, because you may need to pin your FS utils, backup, etc to a
+different storage cpuset depending on which HBAs the filesystem resides,
+and do this each and every time, which is a nightmare with scheduled
+jobs.  Thus in this case its probably best to retain the single storage
+cpuset and simply make sure the node boards share the same upstream
+switch hop, keeping the traffic as local as possible.  The kernel
+scheduler might already have some NUMA scheduling intelligence here that
+works automagically even within a cpuset, to minimize this.  I simply
+lack knowledge in this area.
+
+>> I still like the idea of an 'ioctl' which a process can call and will cause
+>> it to start handling requests.
+>> The process could bind itself to whatever cpu or cpuset it wanted to, then
+>> could call the ioctl on the relevant md array, and pass in a bitmap of cpus
+>> which indicate which requests it wants to be responsible for.  The current
+>> kernel thread will then only handle requests that no-one else has put their
+>> hand up for.  This leave all the details of configuration in user-space
+>> (where I think it belongs).
+> 
+> The 'ioctl' way is interesting. But there are something we need answer:
+> 
+> 1. How kernel knows if there will be process to handle one cpu's requests
+> before an 'ioctl' is called? I suppose you want 2 ioctls. One ioctl telles
+> kernel the process handles request from cpus of a cpumask. The other ioctl does
+> request handling. The process must sleep in the ioctl to wait requests.
+> 
+> 2. If a process is killed in the middle, how kernel knows? Do you want to hook
+> something in task management code? For normal process exit, we need another
+> ioctl to tell kernel the process is exiting.
+> 
+> The only difference between this way and my way is if the request handling task
+> is userspace or kernel space. In both ways, you need set affinity and uses
+> ioctl/sysfs to control requests source for the process.
+
+Being a non dev I lack requisite knowledge to comment on ioctls.  I'll
+simply reiterate that whatever you go with should make use of an
+existing familiar user interface where this same scheduling is already
+handled, which is cpusets.  The only difference being kernel vs user
+space.  Which may turn out to be a problem, I dunno.
+
+-- 
+Stan
+
