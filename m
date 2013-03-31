@@ -1,63 +1,64 @@
-From: CoolCold <coolthecold@gmail.com>
-Subject: Re: MD does not wait for drives on start-up with kernels 3.8+
-Date: Sun, 31 Mar 2013 09:36:30 +0400
-Message-ID: <CAGqmV7qmPHYpm1rinfsh5W-mgqo+Va2RvQtZoy-5AazYFAHYdg@mail.gmail.com>
-References: <20130330190538.4e3c1771@natsu>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Possible to change chunk size on RAID-1 without re-init or destructive
+ result?
+Date: Sun, 31 Mar 2013 10:56:41 -0500
+Message-ID: <51585CB9.5020208@hardwarefreak.com>
+References: <16639206.20.1364400094382.JavaMail.root@zimbra> <51534450.8050905@hardwarefreak.com> <CAK2H+eczN+fqWJv0r6WTA871R__jrrybS9ObdZ9dx6mX+Z=HHw@mail.gmail.com> <51535252.2080105@hardwarefreak.com> <CAK2H+ecbcH-dqM6OAcip68-NkRf8w3eDC7ZCx0-QGteKURXvpw@mail.gmail.com> <51536DDD.5010800@hardwarefreak.com> <CAK2H+edehoVSrEbD_Hh_rE79V0MvgHPcrxNJiOh7_suhGdAXSA@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130330190538.4e3c1771@natsu>
+In-Reply-To: <CAK2H+edehoVSrEbD_Hh_rE79V0MvgHPcrxNJiOh7_suhGdAXSA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: linux-raid@vger.kernel.org
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Jeff Johnson <jeff.johnson@aeoncomputing.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-In similar situation (but on 2.6.2x kernels i AFAIR, with scsi drives)
-I've used rootdelay param -
-http://lists.debian.org/debian-user/2012/01/msg00748.html to make md
-assembly succeed. Hope this will help you too.
+On 3/27/2013 5:18 PM, Mark Knecht wrote:
+> On Wed, Mar 27, 2013 at 3:08 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+>> On 3/27/2013 4:06 PM, Mark Knecht wrote:
+>>
+>>> All that said, I still don't really know if I was starting over today
+>>> how to choose a new chunk size. That still eludes me. I've sort of
+>>> decided that's one of those things that make you guys pros and me just
+>>> a user. :-)
+>>
+>> Chunk size is mostly dictated by your workload IO patterns, and the
+>> number and latency of your spindles.
+> 
+> Is there a way for me to measure, say over a whole day or some fixed
+> time, what the workload really looks like?
 
-P.S. to Neil B.
-Just wondering why md prints something like "md: md0 stopped" - why it
-is stopped without being started, this confuses me all the time? Is
-this message just to indicate that array isn't assembled, not started?
-If so, I'd suggest to change it to something like:
-"md: md0 is in stopped state"
+That's not the way to go about this.
 
-On Sat, Mar 30, 2013 at 5:05 PM, Roman Mamedov <rm@romanrm.ru> wrote:
-> Hello,
->
-> I got a bizzare problem after trying to upgrade from 3.7.10 (which works fine)
-> to 3.8.3 or 3.9-rc3 (fail in the same way):
->
-> It looks like on the newer kernels MD does not wait for all drives to finish
-> registering before trying to bring up the arrays. As a result, on newer
-> kernels my arrays always come up with only 5 out of 7 members active.
->
-> dmesg 3.7.10:  http://romanrm.ru/dl/mdadm/dmesg37.txt
-> dmesg 3.9-rc3: http://romanrm.ru/dl/mdadm/dmesg39.txt
->
-> As you can see on 3.7.10 drives continue to go online until about 3.89sec
-> (Hitachi) and 4.26sec (card reader, unrelated), and only THEN, at 5.15sec the
-> md0 starts; it has all drives and everything is good.
->
-> On 3.9-rc3 (and 3.8.3), md0 tries to become active VERY EARLY at 2.64sec of
-> boot-up!!! Of course missing drives which appear later, and of those, members
-> of it should have been two Hitachi drives coming up at 3.33sec and 3.87sec.
-> So it starts degraded with 5 of 7 devices only.
->
-> What's up with this? I understand this might be not an md problem but an
-> udev(?) one; but how do I go about solving this?
->
-> --
-> With respect,
-> Roman
->
-> (resending this message since the previous one with largish attachments
-> didn't seem to make it to the list; also used a different dmesg for 3.7)
+> The machine is a basic Gentoo desktop machine running KDE. The only
+> workload where I really care about performance is that I run a bunch
+> of Virtualbox Win 7 & Win XP VMs where I need to the performance to be
+> as good as I can reasonably get. The problem I have is these VMs are
+> either 1 huge file (40-50GB in a single file) or many 2GB files. I
+> haven't a clue how Windows & Virtualbox is accessing what it sees as a
+> virtual drive and then underlying that how the vbox drivers are using
+> the system to get to the RAID.
 
+So you have a bunch of Windows VM guests that write to large sparse
+files residing on what, EXT4?  NTFS block size is 4KB so that's your
+smallest IO.
 
+> It would be interesting to set some program running, probably on a
+> weekend or sometime when performance isn't so critical, and see what
+> sort of data gets collected, assuming there's a program that does that
+> sort of thing.
+
+Again, that's not the way to approach this.  What would be informative
+to know is what applications you're running in these Windows VMs.  The
+application dictates the write pattern.  You don't need a "collector" to
+tell you that.  You just need to know the application(s).  If you're
+just running productivity apps (web/mail/pdf/etc) inside these VMs then
+there's nothing to optimize WRT RAID stripe parameters as you have no
+sustained write IO.  So what are the Windows apps?
 
 -- 
-Best regards,
-[COOLCOLD-RIPN]
+Stan
+
+
