@@ -1,98 +1,76 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: Solving the raid write performance problems
-Date: Tue, 2 Apr 2013 18:33:02 +0200
-Message-ID: <20130402163301.GA2287@lazy.lzy>
-References: <loom.20130402T133516-865@post.gmane.org>
+From: Barrett Lewis <barrett.lewis.mitsi@gmail.com>
+Subject: Suggested use of --invalid-backup?
+Date: Tue, 2 Apr 2013 15:20:13 -0500
+Message-ID: <CAPSPcXjRvY-1tCH2CFPOWcNbRZBOCReZqmT4WPdAcbSECreN=w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <loom.20130402T133516-865@post.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Landmann <sfrazt@googlemail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Apr 02, 2013 at 11:36:13AM +0000, Peter Landmann wrote:
-> Hi,
-> 
-> i'm a university student in end phase and considering to write my master thesis
-> about the md raid performance issues and to implement a prototype to solve it.
-> 
-> What i have done and know:
-> 1. I wrote a (internal) paper to measure raid performance with SSDs with freebsd
-> software raid implementations and md raid under linux. I tested RAID 0 and RAID
-> 5 with up to 6 Intel SSDs (X25-M G2, each 20k Write and 40k read OPS) and esp
-> for RAID 5 it doesn't scaled. With my fio and general environment (bs 4k,
-> iodepth 256, direct=1, randomwrite, spare capacity 87,5%, noop scheduler, latest
-> mainline kernel from git, amd phenom II 1055T 2,8 GHz, 8GB ram) i got
-> SSDs IOPS
-> 3    14497.7
-> 4    14005
-> 5    17172.3
-> 6    19779 
-> 
-> 2. AFAIK the main problem is that md uses only one write thread for each raid
-> instance and their is a patch in work but still not availible.
-> 
-> So my questions:
-> 1. Is this problem solved (i know it isn't in mainline)? Is there still some
-> work to do?
-> 2. If not solved: Why isn't solved already (time? technical problem? priority?
-> Not solvable?)
-> 3. Is it the only problem? With my tests i captured detailed cpu stats and no
-> cpu core was nearly at its capacity. So there are known other big reasons for
-> perfomance issues?
-> For example: 6 SSD randomwrite:
-> CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest   %idle
-> all    1,17    0,00   12,67   12,71    3,27    3,05    0,00    0,00   67,13
-> 0    1,41    0,00    7,88   15,42    0,07    0,15    0,00    0,00   75,07
-> 1    0,00    0,00   38,04    3,14   19,20   18,08    0,00    0,00   21,54
-> 2    1,50    0,00    7,55   14,78    0,07    0,02    0,00    0,00   76,08
-> 3    1,09    0,00    7,31   12,15    0,05    0,02    0,00    0,00   79,38
-> 4    1,35    0,00    7,41   12,94    0,07    0,00    0,00    0,00   78,23
-> 5    1,65    0,00    7,78   17,84    0,12    0,03    0,00    0,00   72,57
-> 
-> 4. Is this (bringing the raid performance to or near the theoretically
-> performance) a work that a man can archieve in less then 6 months without
-> practical experience in kernel hacking (and i'm not a genuis :( )
+I was reshaping a 5x2tb raid5 to a 6x2tb raid6.  Not knowing that
+ubuntu deletes the /tmp/ folder each reboot, I specified my
+--backup-file as /tmp/raid-backup.bak (this is not part of the array).
+ At 15.1% the system hung sufficiently that REISUB and the reset
+button were ignored and I had to hold the power button down to reset
+the server.  After booting back from the crash, the array would not
+start, and ubuntu had deleted the backup file (and everything else in
+/tmp).
 
-Hi Peter,
+The superblock already says it's raid6, all members are present and
+the event counters are the same on all disks.  I tried
 
-I would not be so sure the issue (if any) is in the
-multi threading.
+ubuntu@ubuntu:~$ sudo mdadm --assemble --force --run --verbose
+/dev/md0 /dev/sd[abcdef]
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sda is identified as a member of /dev/md0, slot 4.
+mdadm: /dev/sdb is identified as a member of /dev/md0, slot 0.
+mdadm: /dev/sdc is identified as a member of /dev/md0, slot 5.
+mdadm: /dev/sdd is identified as a member of /dev/md0, slot 2.
+mdadm: /dev/sde is identified as a member of /dev/md0, slot 3.
+mdadm: /dev/sdf is identified as a member of /dev/md0, slot 1.
+mdadm:/dev/md0 has an active reshape - checking if critical section
+needs to be restored
+mdadm: Failed to find backup of critical section
+mdadm: Failed to restore critical section for reshape, sorry.
+      Possibly you needed to specify the --backup-file
 
-Chunk size, stripe cache size, all make a difference
-in terms of write performances.
 
-I had a 4 HDDs (rotating) RAID-5, changing the stripe
-cache from the default (256, I guess) to the max possible
-(32768) made the writes scaling up linearly to the max
-theoretical (4 HDDs) from the initial one (1 HDD).
+My understanding is that the backup file is only for some early
+critical part of the reshape and that it isn=92t even used after that.
+15% into 8tb is well over a terrabyte so wouldn=92t that be far past an=
+y
+filesystem metadata?  So what exactly is implied (about the state of
+the reshape) by the fact that programmatically it is still requiring
+the backup file?
 
-Furthermore, the motherboard chipset controlling the 6
-SSDs can be a bottleneck too.
-I've seen huge differences between different types.
+I have read the manpage on the --invalid-backup command but I didn't
+clearly get "use it here, not here" type of information.  I have the
+OS drive (with deleted /tmp/raid-backup.bak) in a data recovery
+process.  If I actually get the backup file recovered, it could
+potentially have corrupted bits.  Is the best course of action to:
+Supply the (potentially corrupted, but maybe some percent ok)
+recovered backup file as the legitimate backup file (without
+--invalid-backup)? (could this be worse than --invalid-backup and a
+blank file?)
+Supply the (potentially corrupted) recovered backup file WITH --invalid=
+-backup?
+Supply --invalid-backup and an empty file?
 
-My suggestion would be to start with a baseline using
-RAID-0 (same number of SSDs or one less than RAID-5)
-and then see what's the maximum possible.
+Or if I am on the wrong path, let me know of any other thoughts or
+suggestions you might have.
 
-Hope this helps,
+If I get nothing useful back from data recovery, and I have to supply
+--invalid-backup with a blank file, considering the reshape made it to
+15%, how much chance is there that the array could assemble and resume
+reshape?  I would gladly accept the corruption of some files vs losing
+the whole file system (obviously).
 
-bye,
-
-pg
-
-> 
-> Thanks in advance for your responses,
-> Peter Landmann
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-
-piergiorgio
+Thanks!
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
