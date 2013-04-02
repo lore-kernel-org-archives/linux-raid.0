@@ -1,71 +1,32 @@
-From: keld@keldix.com
+From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: Solving the raid write performance problems
-Date: Tue, 2 Apr 2013 16:14:18 +0200
-Message-ID: <20130402141418.GA2941@www5.open-std.org>
-References: <loom.20130402T133516-865@post.gmane.org>
+Date: Tue, 02 Apr 2013 11:10:41 -0500
+Message-ID: <515B0301.7030002@hardwarefreak.com>
+References: <loom.20130402T133516-865@post.gmane.org> <2420596.ZXG94NVieB@xrated>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <loom.20130402T133516-865@post.gmane.org>
+In-Reply-To: <2420596.ZXG94NVieB@xrated>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Landmann <sfrazt@googlemail.com>
-Cc: linux-raid@vger.kernel.org
+To: Hans-Peter Jansen <hpj@urpla.net>
+Cc: Peter Landmann <sfrazt@googlemail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Apr 02, 2013 at 11:36:13AM +0000, Peter Landmann wrote:
-> Hi,
-> 
-> i'm a university student in end phase and considering to write my master thesis
-> about the md raid performance issues and to implement a prototype to solve it.
-> 
-> What i have done and know:
-> 1. I wrote a (internal) paper to measure raid performance with SSDs with freebsd
-> software raid implementations and md raid under linux. I tested RAID 0 and RAID
-> 5 with up to 6 Intel SSDs (X25-M G2, each 20k Write and 40k read OPS) and esp
-> for RAID 5 it doesn't scaled. With my fio and general environment (bs 4k,
-> iodepth 256, direct=1, randomwrite, spare capacity 87,5%, noop scheduler, latest
-> mainline kernel from git, amd phenom II 1055T 2,8 GHz, 8GB ram) i got
-> SSDs IOPS
-> 3    14497.7
-> 4    14005
-> 5    17172.3
-> 6    19779 
-> 
-> 2. AFAIK the main problem is that md uses only one write thread for each raid
-> instance and their is a patch in work but still not availible.
-> 
-> So my questions:
-> 1. Is this problem solved (i know it isn't in mainline)? Is there still some
-> work to do?
-> 2. If not solved: Why isn't solved already (time? technical problem? priority?
-> Not solvable?)
-> 3. Is it the only problem? With my tests i captured detailed cpu stats and no
-> cpu core was nearly at its capacity. So there are known other big reasons for
-> perfomance issues?
-> For example: 6 SSD randomwrite:
-> CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest   %idle
-> all    1,17    0,00   12,67   12,71    3,27    3,05    0,00    0,00   67,13
-> 0    1,41    0,00    7,88   15,42    0,07    0,15    0,00    0,00   75,07
-> 1    0,00    0,00   38,04    3,14   19,20   18,08    0,00    0,00   21,54
-> 2    1,50    0,00    7,55   14,78    0,07    0,02    0,00    0,00   76,08
-> 3    1,09    0,00    7,31   12,15    0,05    0,02    0,00    0,00   79,38
-> 4    1,35    0,00    7,41   12,94    0,07    0,00    0,00    0,00   78,23
-> 5    1,65    0,00    7,78   17,84    0,12    0,03    0,00    0,00   72,57
-> 
-> 4. Is this (bringing the raid performance to or near the theoretically
-> performance) a work that a man can archieve in less then 6 months without
-> practical experience in kernel hacking (and i'm not a genuis :( )
-> 
-> Thanks in advance for your responses,
-> Peter Landmann
+On 4/2/2013 8:29 AM, Hans-Peter Jansen wrote:
 
-Are you only investigating SSDs? Ore are you also looking at ordinary rotating disks?
+> Next, check, if you can address Stan Hoeppner's remarks from that thread.
+> 
+> Compare test runs with variation in # of cores and numa affinity, nothing 
+> else. Be careful about the SSD state regarding wear leveling. Provide 
+> performance comparison charts.
 
-I think you should also look at RAID1 raid6  and raid10 near,offset and far.
+NUMA affinity is only applicable for multi-socket systems, or single
+socket systems using a dual die MCM CPU, such as the AMD Magny Cours and
+Interlagos.  Thus any work on NUMA optimization requires such a system,
+or possibly a simulator.
 
-Maybe there are bottlenecks other places in the system. There is more on performance and
-bottlenecks on the wiki.
+-- 
+Stan
 
-best regards
-Keld
