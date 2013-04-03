@@ -1,46 +1,39 @@
-From: keld@keldix.com
+From: Peter Landmann <sfrazt@googlemail.com>
 Subject: Re: RAID 5 doesn't scale
-Date: Wed, 3 Apr 2013 17:23:15 +0200
-Message-ID: <20130403152315.GA19412@www5.open-std.org>
+Date: Wed, 3 Apr 2013 15:31:18 +0000 (UTC)
+Message-ID: <loom.20130403T171527-93@post.gmane.org>
 References: <loom.20130403T122905-373@post.gmane.org> <515C2C3C.3020400@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <515C2C3C.3020400@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Peter Landmann <sfrazt@googlemail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Peter
+Stan Hoeppner <stan <at> hardwarefreak.com> writes:
 
-In general Linux RAID 5 scales well,
-See https://raid.wiki.kernel.org/index.php/Performance
-
-Best regards
-keld
-
-On Wed, Apr 03, 2013 at 08:18:52AM -0500, Stan Hoeppner wrote:
+> 
 > On 4/3/2013 6:00 AM, Peter Landmann wrote:
 > 
 > You didn't mention your stripe_cache_size value.  It'll make a lot of
 > difference.  Make sure it's at least 4096.  The default is 256.
-> 
-> ~$ /bin/echo 4096 > /sys/block/md[X]/md/stripe_cache_size
-> 
-> > FIO settings:
-> > bs=4096
-> > iodepth=248
-> > direct=1
-> > continue_on_error=1
-> > rw=randwrite
-> > ioengine=libaio
-> > norandommap
-> > refill_buffers
-> > group_reporting
-> 
-> > numjobs=1
+
+You are very right.
+I increased it to 4096 - 32768 and the performance increased much.
+Also i played a bit with deadline parameters and it helped also to increase 
+performance.
+
+With Raid 5 and 6 SSDs i got 33936 IOPS (fio settings as before) which is not 
+far away from theoretical 40000 (i know from former tests that the performance 
+could be increased for some more jobs).
+
+For your info: With Raid 6 and 6 SSDs i got 32526 IOPS which is also a very good 
+result.
+
+So i conclude that there is no (big) problem with scalability at this hw level, 
+right?
+
 > 
 > ^^^^^^^^^^^  Even when using AIO you're still serialized when using a
 > single thread, regardless of queue depth.  Thus there is non trivial
@@ -59,6 +52,7 @@ On Wed, Apr 03, 2013 at 08:18:52AM -0500, Stan Hoeppner wrote:
 > iodepth=16
 > direct=1
 > size=8G
+Yeah, that brings me near 40k IOPS (Raid 5, 6 SSDs)
 > 
 > > So you have an idea why the real performance is only 50% of the theoretical 
 > > performance? 
@@ -81,11 +75,16 @@ On Wed, Apr 03, 2013 at 08:18:52AM -0500, Stan Hoeppner wrote:
 > random write may not improve as much.  The limitation here is a function
 > of the SSD controller on the X25-M G2, not md/RAID5.  If you test 5
 > drives in md/RAID0 you'll see a bump in random write IOPS.
-> 
-> -- 
-> Stan
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+FYI: The scheduler makes the difference. If you alternate writes and reades in 
+small steps (R W R R W R W W R ..) then the performce decreases heavily. If you 
+group read and write operations (20xW  20xR 20xW ..)then the performance will be 
+better. Tested it without raid and a patched fio (and noop scheduler). But 
+deadline scheduler can reach the same i learned.
+
+
+Thx for your informations and hints
+Peter
+
+
+
