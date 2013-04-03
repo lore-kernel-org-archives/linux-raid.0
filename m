@@ -1,76 +1,80 @@
-From: Barrett Lewis <barrett.lewis.mitsi@gmail.com>
-Subject: Suggested use of --invalid-backup?
-Date: Tue, 2 Apr 2013 15:20:13 -0500
-Message-ID: <CAPSPcXjRvY-1tCH2CFPOWcNbRZBOCReZqmT4WPdAcbSECreN=w@mail.gmail.com>
+From: Steven Haigh <netwiz@crc.id.au>
+Subject: Xen disk write slowness in kernel 3.8.x
+Date: Wed, 03 Apr 2013 13:05:47 +1100
+Message-ID: <515B8E7B.8070104@crc.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Transfer-Encoding: 7bit
+Return-path: <xen-devel-bounces@lists.xen.org>
+List-Unsubscribe: <http://lists.xen.org/cgi-bin/mailman/options/xen-devel>,
+	<mailto:xen-devel-request@lists.xen.org?subject=unsubscribe>
+List-Post: <mailto:xen-devel@lists.xen.org>
+List-Help: <mailto:xen-devel-request@lists.xen.org?subject=help>
+List-Subscribe: <http://lists.xen.org/cgi-bin/mailman/listinfo/xen-devel>,
+	<mailto:xen-devel-request@lists.xen.org?subject=subscribe>
+Sender: xen-devel-bounces@lists.xen.org
+Errors-To: xen-devel-bounces@lists.xen.org
+To: "Xen-devel@lists.xensource.com" <Xen-devel@lists.xensource.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I was reshaping a 5x2tb raid5 to a 6x2tb raid6.  Not knowing that
-ubuntu deletes the /tmp/ folder each reboot, I specified my
---backup-file as /tmp/raid-backup.bak (this is not part of the array).
- At 15.1% the system hung sufficiently that REISUB and the reset
-button were ignored and I had to hold the power button down to reset
-the server.  After booting back from the crash, the array would not
-start, and ubuntu had deleted the backup file (and everything else in
-/tmp).
+Hi all,
 
-The superblock already says it's raid6, all members are present and
-the event counters are the same on all disks.  I tried
+I'm still trying to track down the cause of disk write slowness when 
+passing through disks to a DomU.
 
-ubuntu@ubuntu:~$ sudo mdadm --assemble --force --run --verbose
-/dev/md0 /dev/sd[abcdef]
-mdadm: looking for devices for /dev/md0
-mdadm: /dev/sda is identified as a member of /dev/md0, slot 4.
-mdadm: /dev/sdb is identified as a member of /dev/md0, slot 0.
-mdadm: /dev/sdc is identified as a member of /dev/md0, slot 5.
-mdadm: /dev/sdd is identified as a member of /dev/md0, slot 2.
-mdadm: /dev/sde is identified as a member of /dev/md0, slot 3.
-mdadm: /dev/sdf is identified as a member of /dev/md0, slot 1.
-mdadm:/dev/md0 has an active reshape - checking if critical section
-needs to be restored
-mdadm: Failed to find backup of critical section
-mdadm: Failed to restore critical section for reshape, sorry.
-      Possibly you needed to specify the --backup-file
+I've restructured things a little and now pass the raid array (/dev/md3) 
+directly to the DomU. When running a xfs_fsr on the filesystem from 
+within the Dom0, I get the following:
 
+# iostat -m 5
+(....)
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+            0.11    0.00    9.23   44.64    0.21   45.81
 
-My understanding is that the backup file is only for some early
-critical part of the reshape and that it isn=92t even used after that.
-15% into 8tb is well over a terrabyte so wouldn=92t that be far past an=
-y
-filesystem metadata?  So what exactly is implied (about the state of
-the reshape) by the fact that programmatically it is still requiring
-the backup file?
+Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
+sdc             286.20        17.22        34.15         86        170
+sdf             284.20        17.45        34.43         87        172
+sdd             217.40        17.25        34.15         86        170
+sde             211.00        17.25        34.38         86        171
+md3            1095.40        69.20        67.18        346        335
 
-I have read the manpage on the --invalid-backup command but I didn't
-clearly get "use it here, not here" type of information.  I have the
-OS drive (with deleted /tmp/raid-backup.bak) in a data recovery
-process.  If I actually get the backup file recovered, it could
-potentially have corrupted bits.  Is the best course of action to:
-Supply the (potentially corrupted, but maybe some percent ok)
-recovered backup file as the legitimate backup file (without
---invalid-backup)? (could this be worse than --invalid-backup and a
-blank file?)
-Supply the (potentially corrupted) recovered backup file WITH --invalid=
--backup?
-Supply --invalid-backup and an empty file?
+This is with the RAID6 mounted on /mnt/fileshare from within the Dom0. 
+Speeds are about what I would expect for the task that is going on.
 
-Or if I am on the wrong path, let me know of any other thoughts or
-suggestions you might have.
+With no changes at all to the setup or the RAID, I attach the same RAID6 
+array to a DomU:
 
-If I get nothing useful back from data recovery, and I have to supply
---invalid-backup with a blank file, considering the reshape made it to
-15%, how much chance is there that the array could assemble and resume
-reshape?  I would gladly accept the corruption of some files vs losing
-the whole file system (obviously).
+# xm block-attach zeus.vm phy:/dev/md3 xvdb w
 
-Thanks!
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Now run xfs_fsr from within the DomU, I look at the same output from 
+iostat on Dom0:
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+            0.00    0.00    2.35    0.00    0.34   97.31
+
+Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
+sdc             702.40        11.28        16.09         56         80
+sdf             701.00        11.26        16.15         56         80
+sdd             698.00        11.18        15.95         55         79
+sde             700.60        11.27        16.19         56         80
+md3            1641.00        30.30        29.87        151        149
+
+I'm seeing this consistently across all methods of speed testing (dd, 
+bonnie++, etc).
+
+If I remove and attach a single disk from the array and run tests on 
+that, I obtain full speed for the single drive. As soon as the array is 
+passed, the speed drops significantly (as seen above).
+
+I have copied in the linux-raid list to this - as it seems to only 
+affect md arrays passed to the Xen DomU guests.
+
+Where do we start debugging this?
+
+-- 
+Steven Haigh
+
+Email: netwiz@crc.id.au
+Web: https://www.crc.id.au
+Phone: (03) 9001 6090 - 0412 935 897
+Fax: (03) 8338 0299
