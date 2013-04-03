@@ -1,90 +1,98 @@
-From: Peter Landmann <sfrazt@googlemail.com>
-Subject: Re: RAID 5 doesn't scale
-Date: Wed, 3 Apr 2013 15:31:18 +0000 (UTC)
-Message-ID: <loom.20130403T171527-93@post.gmane.org>
-References: <loom.20130403T122905-373@post.gmane.org> <515C2C3C.3020400@hardwarefreak.com>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: [PULL REQUEST] md updates for 3.9
+Date: Wed, 3 Apr 2013 19:56:34 +0300
+Message-ID: <CAGRgLy6XOEy5Aa8OE6t1G3V4MwO6VcTON9hRGgMzgTOxG9V+LQ@mail.gmail.com>
+References: <20130304111640.32c428a0@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20130304111640.32c428a0@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: joe.lawrence@stratus.com, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Stan Hoeppner <stan <at> hardwarefreak.com> writes:
+Hi Neil,
 
-> 
-> On 4/3/2013 6:00 AM, Peter Landmann wrote:
-> 
-> You didn't mention your stripe_cache_size value.  It'll make a lot of
-> difference.  Make sure it's at least 4096.  The default is 256.
+On Mon, Mar 4, 2013 at 2:16 AM, NeilBrown <neilb@suse.de> wrote:
+>
+> The following changes since commit
+> 19f949f52599ba7c3f67a5897ac6be14bfcb1200:
+>
+>   Linux 3.8 (2013-02-18 15:58:34 -0800)
+>
+> are available in the git repository at:
+>
+>   git://neil.brown.name/md tags/md-3.9
+>
+> for you to fetch changes up to f3378b48705154b9089affb2d2e939622aea68f1:
+>
+>   md: expedite metadata update when switching  read-auto -> active
+> (2013-02-28 11:59:03 +1100)
+>
+> Thanks,
+> NeilBrown
+>
+>
+>
+> ----------------------------------------------------------------
+> md updates for 3.9
+>
+> mostly little bugfixes.
+> Only "feature" is a new RAID10 layout which slightly
+> improves the number of sets of devices that can concurrently
+> fail, without data loss.
+>
+> ----------------------------------------------------------------
+> Joe Lawrence (1):
+>       md: raid1,10: Handle REQ_WRITE_SAME flag in write bios
 
-You are very right.
-I increased it to 4096 - 32768 and the performance increased much.
-Also i played a bit with deadline parameters and it helped also to increase 
-performance.
+Can this patch be ported to 3.8.x kernel (e.g., 3.8.2)?
 
-With Raid 5 and 6 SSDs i got 33936 IOPS (fio settings as before) which is not 
-far away from theoretical 40000 (i know from former tests that the performance 
-could be increased for some more jobs).
+Currently, we have code that calls blkdev_issue_zeroout() to an MD
+raid1 block device, but it calls blkdev_issue_write_same(), which is
+not supported properly by MD raid1 in this kernel:( So we get junk
+instead of zeroed data...
 
-For your info: With Raid 6 and 6 SSDs i got 32526 IOPS which is also a very good 
-result.
+Any advice?
 
-So i conclude that there is no (big) problem with scalability at this hw level, 
-right?
-
-> 
-> ^^^^^^^^^^^  Even when using AIO you're still serialized when using a
-> single thread, regardless of queue depth.  Thus there is non trivial
-> latency between IO operations.  Retest with only these global parameters
-> to get some concurrency.  Along with a larger stripe cache your numbers
-> should go up substantially.  This test runs 4 threads/core to ensure you
-> saturate md with IO.
-> 
-> [global]
-> zero_buffers
-> numjobs=24
-> thread
-> group_reporting
-> blocksize=4096
-> ioengine=libaio
-> iodepth=16
-> direct=1
-> size=8G
-Yeah, that brings me near 40k IOPS (Raid 5, 6 SSDs)
-> 
-> > So you have an idea why the real performance is only 50% of the theoretical 
-> > performance? 
-> 
-> Three reasons:  IO latency, limited stripe_cache_size, parity RMW
-> 
-> > No cpu core is at its limits.
-> 
-> Because you're not cycle limited but latency limited.  With this FIO
-> test your CPU burn should increase a bit.
-> 
-> > As i said in my other post. I would be interested to solve the problem but i 
-> > have problems to identify it.
-> 
-> Note also that you're doing 4KB random writes against RAID5.  This is
-> going to generate substantial RMW cycles.  The Intel X25-M G2 is not a
-> speed daemon.  Its published max 4KB IOPS throughput is for purely
-> random writes, not the read+write pattern created by parity RMW.  So
-> while your random read should get a nice jump with this test, your
-> random write may not improve as much.  The limitation here is a function
-> of the SSD controller on the X25-M G2, not md/RAID5.  If you test 5
-> drives in md/RAID0 you'll see a bump in random write IOPS.
-
-FYI: The scheduler makes the difference. If you alternate writes and reades in 
-small steps (R W R R W R W W R ..) then the performce decreases heavily. If you 
-group read and write operations (20xW  20xR 20xW ..)then the performance will be 
-better. Tested it without raid and a patched fio (and noop scheduler). But 
-deadline scheduler can reach the same i learned.
-
-
-Thx for your informations and hints
-Peter
+Thanks,
+Alex.
 
 
 
+
+
+>
+> Jonathan Brassow (4):
+>       MD RAID10: Minor non-functional code changes
+>       MD RAID10: Improve redundancy for 'far' and 'offset' algorithms
+> (part 1)
+>       MD RAID10: Improve redundancy for 'far' and 'offset' algorithms
+> (part 2)
+>       DM RAID: Add support for MD's RAID10 "far" and "offset" algorithms
+>
+> NeilBrown (6):
+>       md: fix two bugs when attempting to resize RAID0 array.
+>       md: raid0: fix error return from create_stripe_zones.
+>       md/raid0: improve error message when converting RAID4-with-spares to
+> RAID0
+>       md/raid1,raid10: fix deadlock with freeze_array()
+>       md: remove CONFIG_MULTICORE_RAID456
+>       md: expedite metadata update when switching  read-auto -> active
+>
+> Sebastian Riemer (1):
+>       md: protect against crash upon fsync on ro array
+>
+>  Documentation/device-mapper/dm-raid.txt |  44 +++++++++++++---
+>  drivers/md/Kconfig                      |  11 ----
+>  drivers/md/dm-raid.c                    | 123
+> ++++++++++++++++++++++++++++++++++++-------
+>  drivers/md/md.c                         |  19 ++++++-
+>  drivers/md/raid0.c                      |  13 +++--
+>  drivers/md/raid1.c                      |   8 ++-
+>  drivers/md/raid10.c                     |  97
+> ++++++++++++++++++++++++++--------
+>  drivers/md/raid10.h                     |   5 ++
+>  drivers/md/raid5.c                      |  38 +------------
+>  9 files changed, 256 insertions(+), 102 deletions(-)
