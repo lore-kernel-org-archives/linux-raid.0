@@ -1,69 +1,46 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Peter Landmann <sfrazt@googlemail.com>
 Subject: Re: RAID 5 doesn't scale
-Date: Wed, 03 Apr 2013 16:15:38 -0500
-Message-ID: <515C9BFA.2010701@hardwarefreak.com>
-References: <loom.20130403T122905-373@post.gmane.org> <515C2C3C.3020400@hardwarefreak.com> <515C73B3.5060704@arcor.de>
-Reply-To: stan@hardwarefreak.com
+Date: Wed, 3 Apr 2013 21:19:52 +0000 (UTC)
+Message-ID: <loom.20130403T231317-873@post.gmane.org>
+References: <loom.20130403T122905-373@post.gmane.org> <515C2C3C.3020400@hardwarefreak.com> <515C73B3.5060704@arcor.de> <loom.20130403T223431-541@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <515C73B3.5060704@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>
-Cc: Peter Landmann <sfrazt@googlemail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/3/2013 1:23 PM, Martin Wilck wrote:
-> On 04/03/2013 03:18 PM, Stan Hoeppner wrote:
+ 
+> I'm very sorry but now i can't confirm anymore that stripe_cache_size 
+helps.
 > 
->> You didn't mention your stripe_cache_size value.  It'll make a lot of
->> difference.  Make sure it's at least 4096.  The default is 256.
+> My test was to short. With every minute the IOPS decrease. So 
+> stripe_cache_size does only help for very short tests. 
+> 
+> I will provide details in another post.
+> 
 
-Actually, the default is 128, not 256, at least with 3.2.6.  Not sure
-about previous/later versions.
 
-> I'm not getting it - why would stripe cache size matter in a random
-> read/write test? 
+Now i wish i could delete the post. As the SSD performance decrease with 
+running time (within minutes) i'm not sure if the better performance with 
+higher stripe_cache_size would be constant over time or is more a effect 
+from a fresh empty cache that ceases with time (in my scenario with writing 
+many small random blocks)
 
-It's very similar to the effect of a greater quantity of write back
-cache on a hardware RAID controller.  Which is why it dramatically
-affects write throughput but not read.  I believe the proper way to view
-this is as a temporary workspace, where md can assemble the stripes to
-be written out to the block layer, and store chunks which are read in
-for RMW cycles.  As with many things in computing, increasing the size
-of this working space allows the md driver to work more efficiently.
-See below for exactly how it works.
+Short tests results:
 
-> If the disks are large enough and the pattern is really
-> random, the cache should hardly ever be hit (s_c_z = 4096 =^ 16MB cache
-> per disk, that's 0.01% of disk size for a 160GB SSD).
+Raid 5, 3 SSD
+stripe_cache_size 	noop	deadline (tuned)
+256	                18914	18730
+16384	                18161	19766
 
-You seem to be assuming the md "stripe cache" functions like some kind
-of generic dumb filesystem cache.  It does not.
+Raid 5, 4 SSD
+stripe_cache_size 	noop	deadline (tuned)
+256	                11863	13716
+16384	                13186	14688
 
-> I read that Peter confirmed the influence of stripe_cache_size, but I'd
-> like to understand why it matters in this case.
 
-If you think the throughput increase in this thread is impressive, see:
- http://marc.info/?l=linux-raid&m=136241443706663&w=2
 
-About half way down there is a table showing the effects of
-stripe_cache_size from 2048 to 32768.  Write throughput increased over
-600MB/s, from 1018MB/s to 1628MB/s, simply by increasing
-stripe_cache_size from 2048 to 4096, and decreased as the stripe cache
-was made larger.  Thus every system has a sweet spot.  This was with 5
-Intel 500GB SSDs w/the SandForce 2281 controller, attached to an LSI
-9207-8i.  md/RAID5
-
-I'd love to explain exactly how the stripe cache works, but to do that I
-must first understand it.  And I've been unable to find documentation
-describing the inner workings of the stripe cache.  And since I'm
-neither a C nor kernel programmer, I can't look at the code and
-understand it, nor then write a document for others.  So if you really
-want that explanation you'll need to start another thread and bribe Neil
-into explaining it.
-
--- 
-Stan
+Peter
 
