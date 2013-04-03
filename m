@@ -1,98 +1,81 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: [PULL REQUEST] md updates for 3.9
-Date: Wed, 3 Apr 2013 19:56:34 +0300
-Message-ID: <CAGRgLy6XOEy5Aa8OE6t1G3V4MwO6VcTON9hRGgMzgTOxG9V+LQ@mail.gmail.com>
-References: <20130304111640.32c428a0@notabene.brown>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: RAID 5 doesn't scale
+Date: Wed, 03 Apr 2013 13:35:11 -0500
+Message-ID: <515C765F.50500@hardwarefreak.com>
+References: <loom.20130403T122905-373@post.gmane.org> <515C2C3C.3020400@hardwarefreak.com> <loom.20130403T171527-93@post.gmane.org>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130304111640.32c428a0@notabene.brown>
+In-Reply-To: <loom.20130403T171527-93@post.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: joe.lawrence@stratus.com, linux-raid <linux-raid@vger.kernel.org>
+To: Peter Landmann <sfrazt@googlemail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+On 4/3/2013 10:31 AM, Peter Landmann wrote:
+> Stan Hoeppner <stan <at> hardwarefreak.com> writes:
+> 
+>>
+>> On 4/3/2013 6:00 AM, Peter Landmann wrote:
+>>
+>> You didn't mention your stripe_cache_size value.  It'll make a lot of
+>> difference.  Make sure it's at least 4096.  The default is 256.
+> 
+> You are very right.
+> I increased it to 4096 - 32768 and the performance increased much.
 
-On Mon, Mar 4, 2013 at 2:16 AM, NeilBrown <neilb@suse.de> wrote:
->
-> The following changes since commit
-> 19f949f52599ba7c3f67a5897ac6be14bfcb1200:
->
->   Linux 3.8 (2013-02-18 15:58:34 -0800)
->
-> are available in the git repository at:
->
->   git://neil.brown.name/md tags/md-3.9
->
-> for you to fetch changes up to f3378b48705154b9089affb2d2e939622aea68f1:
->
->   md: expedite metadata update when switching  read-auto -> active
-> (2013-02-28 11:59:03 +1100)
->
-> Thanks,
-> NeilBrown
->
->
->
-> ----------------------------------------------------------------
-> md updates for 3.9
->
-> mostly little bugfixes.
-> Only "feature" is a new RAID10 layout which slightly
-> improves the number of sets of devices that can concurrently
-> fail, without data loss.
->
-> ----------------------------------------------------------------
-> Joe Lawrence (1):
->       md: raid1,10: Handle REQ_WRITE_SAME flag in write bios
+Be careful here.  Increasing stripe_cache_size increases memory
+consumption of md dramatically.  Formula:  stripe_cache_size * 4096
+bytes * drive_count = RAM usage.  For a 6 drive array that's
 
-Can this patch be ported to 3.8.x kernel (e.g., 3.8.2)?
+stripe_cache_size	RAM consumed
+ 4096			 96MB
+ 8192			192MB
+16384			384MB
+32768			768MB
 
-Currently, we have code that calls blkdev_issue_zeroout() to an MD
-raid1 block device, but it calls blkdev_issue_write_same(), which is
-not supported properly by MD raid1 in this kernel:( So we get junk
-instead of zeroed data...
+Thus you want to select a value that gives you the best combination of
+performance and lowest memory usage, unless you're not concerned about RAM.
 
-Any advice?
+> Also i played a bit with deadline parameters and it helped also to increase 
+> performance.
+...
+> With Raid 5 and 6 SSDs i got 33936 IOPS (fio settings as before) which is not 
+> far away from theoretical 40000 (i know from former tests that the performance 
+> could be increased for some more jobs).
 
-Thanks,
-Alex.
+Always test with parallel threads.  If you don't you're not getting a
+realistic picture of what md/RAID and the hardware are capable of.
+
+> For your info: With Raid 6 and 6 SSDs i got 32526 IOPS which is also a very good 
+> result.
+> 
+> So i conclude that there is no (big) problem with scalability at this hw level, 
+> right?
+
+Yes.  What this demonstrates is that one Thuban core at 2.8-3.3GHz can
+apparently execute the md/RAID5/6 write threads faster than these 6
+X25-M G2 SSDs can sink the writes.  If your CPU was a 1.6GHz Atom and/or
+these were newer SATAIII Sandforce based SSDs, you'd peak a CPU core
+long before the SSDs run out of headroom.
+
+> FYI: The scheduler makes the difference. If you alternate writes and reades in 
+> small steps (R W R R W R W W R ..) then the performce decreases heavily. If you 
+> group read and write operations (20xW  20xR 20xW ..)then the performance will be 
+> better. Tested it without raid and a patched fio (and noop scheduler). But 
+> deadline scheduler can reach the same i learned.
+
+The scheduler can play a difference, but with SSDs noop usually gives
+the best results.  With some SATA/drive controller combos deadline may
+be better.  CFQ is rarely, if ever, good for performance.
+
+> Thx for your informations and hints
+
+You bet.
+
+-- 
+Stan
 
 
-
-
-
->
-> Jonathan Brassow (4):
->       MD RAID10: Minor non-functional code changes
->       MD RAID10: Improve redundancy for 'far' and 'offset' algorithms
-> (part 1)
->       MD RAID10: Improve redundancy for 'far' and 'offset' algorithms
-> (part 2)
->       DM RAID: Add support for MD's RAID10 "far" and "offset" algorithms
->
-> NeilBrown (6):
->       md: fix two bugs when attempting to resize RAID0 array.
->       md: raid0: fix error return from create_stripe_zones.
->       md/raid0: improve error message when converting RAID4-with-spares to
-> RAID0
->       md/raid1,raid10: fix deadlock with freeze_array()
->       md: remove CONFIG_MULTICORE_RAID456
->       md: expedite metadata update when switching  read-auto -> active
->
-> Sebastian Riemer (1):
->       md: protect against crash upon fsync on ro array
->
->  Documentation/device-mapper/dm-raid.txt |  44 +++++++++++++---
->  drivers/md/Kconfig                      |  11 ----
->  drivers/md/dm-raid.c                    | 123
-> ++++++++++++++++++++++++++++++++++++-------
->  drivers/md/md.c                         |  19 ++++++-
->  drivers/md/raid0.c                      |  13 +++--
->  drivers/md/raid1.c                      |   8 ++-
->  drivers/md/raid10.c                     |  97
-> ++++++++++++++++++++++++++--------
->  drivers/md/raid10.h                     |   5 ++
->  drivers/md/raid5.c                      |  38 +------------
->  9 files changed, 256 insertions(+), 102 deletions(-)
