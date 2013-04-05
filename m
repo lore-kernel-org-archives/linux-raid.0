@@ -1,36 +1,43 @@
-From: Maik Zumstrull <maik@zumstrull.net>
-Subject: Re: RAID barely usable on my home machine
-Date: Fri, 5 Apr 2013 10:06:58 +0200
-Message-ID: <CAO=zWD+5GHjJCD0Z64ZQFR=98ysRyd0o2U=t4ER8mJaSpwQDuQ@mail.gmail.com>
-References: <CAO=zWDLfnBJBFgm4H67XEqsKPP=+Ayk3Jd4OUdEfmLXsvNGdog@mail.gmail.com>
-	<CAAMCDeeY1S+TMyiFpVjEFX3K66JaxcwBFV+zDRD6eyRfM2Qxsw@mail.gmail.com>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: multiple disk failures in an md raid6 array
+Date: Fri, 5 Apr 2013 10:25:42 +0200 (CEST)
+Message-ID: <17354834.2.1365150342620.JavaMail.root@zimbra>
+References: <515CBC33.20402@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAMCDeeY1S+TMyiFpVjEFX3K66JaxcwBFV+zDRD6eyRfM2Qxsw@mail.gmail.com>
+In-Reply-To: <515CBC33.20402@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roger Heflin <rogerheflin@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, 700975 <700975@bugs.debian.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org, Mike Vanhorn <michael.vanhorn@wright.edu>
 List-Id: linux-raid.ids
 
-On Fri, Apr 5, 2013 at 2:16 AM, Roger Heflin <rogerheflin@gmail.com> wrote:
+> for x in /sys/block/sd[cdfghij] ; do echo $x: $(< $x/device/timeout) =
+;
+> done >timeout.txt
 
-> lspci look like this for the controller:
-> SATA controller: Marvell Technology Group Ltd. Device 9230 (rev 10)
->
-> 4pt sata3.0 6gbit or is yours a different one?
+I never made that one work. This one did, though
 
-Mine looks slightly different (included somewhere in my mail), but
-should be a device in the same family.
+# for x in /sys/block/sd[cdfghij] ; do echo -n "$x: "; cat $x/device/ti=
+meout; done
 
-> I have the issue also, I have eliminated all smart hits against the
-> disks and no incidents since then.
+Vennlige hilsener / Best regards
 
-Not a great workaround as such, first of all, running SMART against
-your storage is kind of recommended, and secondly, as I said, udisks2
-will also SMART your disks occasionally, which you have to uninstall
-parts of GNOME to get rid of.
-
-> I have seagate 1.5tb drives on mine that had had the issues.
-
-Suggests it's not something about my drives, as I have WD Red disks.
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
