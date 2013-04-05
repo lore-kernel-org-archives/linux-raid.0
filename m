@@ -1,36 +1,26 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: multiple disk failures in an md raid6 array
-Date: Fri, 05 Apr 2013 08:05:35 -0400
-Message-ID: <515EBE0F.5090201@turmel.org>
-References: <17354834.2.1365150342620.JavaMail.root@zimbra>
+From: Kent Overstreet <koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: bcache: BUG in fuzz testing without devices
+Date: Fri, 5 Apr 2013 14:21:10 -0700
+Message-ID: <20130405212110.GD15749@google.com>
+References: <515B056E.6010002@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17354834.2.1365150342620.JavaMail.root@zimbra>
-Sender: linux-raid-owner@vger.kernel.org
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc: linux-raid@vger.kernel.org, Mike Vanhorn <michael.vanhorn@wright.edu>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-bcache-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <515B056E.6010002-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Sender: linux-bcache-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: NeilBrown <neilb-l3A5Bk7waGM@public.gmane.org>, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-raid.ids
 
-On 04/05/2013 04:25 AM, Roy Sigurd Karlsbakk wrote:
->> for x in /sys/block/sd[cdfghij] ; do echo $x: $(< $x/device/timeout) ;
->> done >timeout.txt
+On Tue, Apr 02, 2013 at 12:21:02PM -0400, Sasha Levin wrote:
+> Hi all,
 > 
-> I never made that one work. This one did, though
+> It seems that trying to fuzz bcache without any devices triggers a BUG:
 > 
-> # for x in /sys/block/sd[cdfghij] ; do echo -n "$x: "; cat $x/device/timeout; done
-> 
-> Vennlige hilsener / Best regards
+> That BUG looks very intentional there, any reason for adding it instead of exiting
+> if there aren't any devices?
 
-Curious.  Works fine here:
-
-# for x in /sys/block/sd[abcd] ; do echo $x $(< $x/device/timeout) ; done
-/sys/block/sda 30
-/sys/block/sdb 30
-/sys/block/sdc 30
-/sys/block/sdd 30
-
-Not that it matters, much.  Use what works for you.
-
-Phil
+The fuzz tester is meant to stress test some of the btree code - it's a
+purely in memory test. But it looks like it's rotted - thanks for the
+bug report, I'll disable it for now.
