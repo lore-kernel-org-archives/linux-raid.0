@@ -1,53 +1,36 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: multiple disk failures in an md raid6 array
-Date: Fri, 5 Apr 2013 19:06:42 +0200 (CEST)
-Message-ID: <11216784.20.1365181602157.JavaMail.root@zimbra>
-References: <515EBE0F.5090201@turmel.org>
+Date: Fri, 05 Apr 2013 08:05:35 -0400
+Message-ID: <515EBE0F.5090201@turmel.org>
+References: <17354834.2.1365150342620.JavaMail.root@zimbra>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <515EBE0F.5090201@turmel.org>
+In-Reply-To: <17354834.2.1365150342620.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
 Cc: linux-raid@vger.kernel.org, Mike Vanhorn <michael.vanhorn@wright.edu>
 List-Id: linux-raid.ids
 
-> > # for x in /sys/block/sd[cdfghij] ; do echo -n "$x: "; cat
-> > $x/device/timeout; done
-> >
-> > Vennlige hilsener / Best regards
->=20
-> Curious. Works fine here:
->=20
-> # for x in /sys/block/sd[abcd] ; do echo $x $(< $x/device/timeout) ;
-> done
-> /sys/block/sda 30
-> /sys/block/sdb 30
-> /sys/block/sdc 30
-> /sys/block/sdd 30
->=20
-> Not that it matters, much. Use what works for you.
+On 04/05/2013 04:25 AM, Roy Sigurd Karlsbakk wrote:
+>> for x in /sys/block/sd[cdfghij] ; do echo $x: $(< $x/device/timeout) ;
+>> done >timeout.txt
+> 
+> I never made that one work. This one did, though
+> 
+> # for x in /sys/block/sd[cdfghij] ; do echo -n "$x: "; cat $x/device/timeout; done
+> 
+> Vennlige hilsener / Best regards
 
-probably a typo - works now :P
+Curious.  Works fine here:
 
---=20
-Vennlige hilsener / Best regards
+# for x in /sys/block/sd[abcd] ; do echo $x $(< $x/device/timeout) ; done
+/sys/block/sda 30
+/sys/block/sdb 30
+/sys/block/sdc 30
+/sys/block/sdd 30
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Not that it matters, much.  Use what works for you.
+
+Phil
