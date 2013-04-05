@@ -1,63 +1,53 @@
-From: Peter Maloney <peter.maloney@brockmann-consult.de>
-Subject: Re: RAID barely usable on my home machine
-Date: Fri, 05 Apr 2013 10:58:46 +0200
-Message-ID: <515E9246.3080200@brockmann-consult.de>
-References: <CAO=zWDLfnBJBFgm4H67XEqsKPP=+Ayk3Jd4OUdEfmLXsvNGdog@mail.gmail.com> <CAAMCDeeY1S+TMyiFpVjEFX3K66JaxcwBFV+zDRD6eyRfM2Qxsw@mail.gmail.com> <CAO=zWD+5GHjJCD0Z64ZQFR=98ysRyd0o2U=t4ER8mJaSpwQDuQ@mail.gmail.com>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: multiple disk failures in an md raid6 array
+Date: Fri, 5 Apr 2013 19:06:42 +0200 (CEST)
+Message-ID: <11216784.20.1365181602157.JavaMail.root@zimbra>
+References: <515EBE0F.5090201@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CAO=zWD+5GHjJCD0Z64ZQFR=98ysRyd0o2U=t4ER8mJaSpwQDuQ@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Maik Zumstrull <maik@zumstrull.net>
-Cc: Roger Heflin <rogerheflin@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, 700975 <700975@bugs.debian.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <515EBE0F.5090201@turmel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org, Mike Vanhorn <michael.vanhorn@wright.edu>
 List-Id: linux-raid.ids
 
-On 2013-04-05 10:06, Maik Zumstrull wrote:
-> On Fri, Apr 5, 2013 at 2:16 AM, Roger Heflin <rogerheflin@gmail.com> wrote:
->
->> lspci look like this for the controller:
->> SATA controller: Marvell Technology Group Ltd. Device 9230 (rev 10)
->>
->> 4pt sata3.0 6gbit or is yours a different one?
-> Mine looks slightly different (included somewhere in my mail), but
-> should be a device in the same family.
->
->> I have the issue also, I have eliminated all smart hits against the
->> disks and no incidents since then.
-> Not a great workaround as such, first of all, running SMART against
-> your storage is kind of recommended, and secondly, as I said, udisks2
-> will also SMART your disks occasionally, which you have to uninstall
-> parts of GNOME to get rid of.
-This reminds me of an old thread in freebsd-scsi, where a guy with some
-SAS disks and a SAS2008 controller would have his disks 'lost' if he
-used smartctl on routine, and could reproduce it reliably by spamming a
-disk with smartctl -a (but smartctl -i, and something else would not
-reproduce it). And he found that to solve it, he can change the "disk
-tags" to much lower. I think "disk tags" might be equivalent to the
-nr_requests in Linux.
+> > # for x in /sys/block/sd[cdfghij] ; do echo -n "$x: "; cat
+> > $x/device/timeout; done
+> >
+> > Vennlige hilsener / Best regards
+>=20
+> Curious. Works fine here:
+>=20
+> # for x in /sys/block/sd[abcd] ; do echo $x $(< $x/device/timeout) ;
+> done
+> /sys/block/sda 30
+> /sys/block/sdb 30
+> /sys/block/sdc 30
+> /sys/block/sdd 30
+>=20
+> Not that it matters, much. Use what works for you.
 
-Here is the thread:
-http://osdir.com/ml/freebsd-scsi/2011-11/msg00006.html
->> I have seagate 1.5tb drives on mine that had had the issues.
-> Suggests it's not something about my drives, as I have WD Red disks.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+probably a typo - works now :P
 
+--=20
+Vennlige hilsener / Best regards
 
--- 
-
---------------------------------------------
-Peter Maloney
-Brockmann Consult
-Max-Planck-Str. 2
-21502 Geesthacht
-Germany
-Tel: +49 4152 889 300
-Fax: +49 4152 889 333
-E-mail: peter.maloney@brockmann-consult.de
-Internet: http://www.brockmann-consult.de
---------------------------------------------
-
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
