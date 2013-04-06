@@ -1,215 +1,54 @@
 From: Oliver Schinagl <oliver+list@schinagl.nl>
-Subject: Help, array corrupted after clean shutdown.
-Date: Sat, 06 Apr 2013 13:24:59 +0200
-Message-ID: <5160060B.8020603@schinagl.nl>
+Subject: Re: Help, array corrupted after clean shutdown.
+Date: Sat, 06 Apr 2013 14:04:42 +0200
+Message-ID: <51600F5A.3010607@schinagl.nl>
+References: <5160060B.8020603@schinagl.nl> <alpine.DEB.2.00.1304061354170.23668@uplift.swm.pp.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.2.00.1304061354170.23668@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On 04/06/13 13:58, Mikael Abrahamsson wrote:
+> On Sat, 6 Apr 2013, Oliver Schinagl wrote:
+>
+>> All that said when I did the assemble with the 'guessed' 3 correct
+>> drives. Did of course increase the events count. sdc1 of course didn't
+>> partake in this. Assuming that it is in sync with the rest, what is
+>> the worst that can happen? And does the --read-only flag protect
+>> against it?
+>
+>> /dev/sdc1:
+>>    Update Time : Sat Mar 16 20:20:47 2013
+>>       Checksum : a7686a57 - correct
+>>         Events : 180132
+>
+> As you probably already know, using sdc1 will mean you'll be playing
+> with part of the array that is out of date by 3 weeks (this update time
+> indicates that sdc1 fell out on Mar 16).
+>
+> So I would definitely stay away from sdc1. It seems you have made a lot
+> of changes lately (your create time is in 2010 and on Mar 16 2013 you
+> were up to 180k events, and then now three weeks later the rest of the
+> drives are at 513k events, that seems like a of writes has been done to
+> the array the past tree weeks?).
+>
+> So sdc1 is definitely not in sync according to this information. Using
+> it is risky, but as a last resort, sure.
+>
+While I agree with your findings, I seriously doubt that it did actually 
+fall out of the array. Logs do not indicate this fact and I'm not so 
+sure there was a huge difference in activity since mar 16th.
 
-I've had a powerfailure today, to which my UPS responded nicely and made 
-my server shutdown normally. One would expect everything is well, right? 
-The array, as far as I know, was operating without problems before the 
-shutdown, all 4 devices where normally online. mdadm sends me an e-mail 
-if something is wrong, so does smartctl.
+Though I will admit I have been cloing, checkout/in a lot of git repo's 
+so that could increase this of course, but 3x more then its entire lifetime?
 
-First thing I noticed that I had 2 (S) drives for /dev/md101. I thus 
-started examining things. First I thought that it was some mdadm 
-weirdness, where it failed to assemble the drive with all components.
-mdadm -A /dev/md101 /dev/sd[cdef]1 failed and gave the same result. 
-Something was really wrong.
-
-I checked and compared the output of mdadm --examine on all drives (like 
--Evvvs below) and found that /dev/sdc1's events count was wrong.
-/dev/sdf1 and /dev/sdd1 matched (and later sde1 too, but more on that in 
-a sec). So sdc1 may have been dropped from the array without me knowing 
-it, unlikely put possible. The odd thing is the huge difference in event 
-counts, but all four are marked as ACTIVE.
-
-So then onto sde1; why was it failing on that. The gpt table was 
-completly gone. 00000. Gone. I used hexdump to examine the drive 
-further, and at 0x00041000 there was the mdraid table, as one would 
-expect. Good, so it looks like only the gpt has been wiped for some 
-misterious reason. Re-creating the gpt quickly revealed mdadm's 
-information was still correct (as can be seen below).
-
-So ignore sdc1 and assemble the drive as is should be fine? Right? No.
-mdadm -A /dev/md101 /dev/sd[def]1 worked without error.
-
-I always do a fsck before and after a reboot (unless of course I can't 
-do the shutdown fsck) and verify /proc/mdadm after a boot. So before 
-mounting, as always, I tried to run fsck /dev/md101 -C -; but that came 
-up with tons of errors. I didn't fix anything and aborted.
-
-And here we are now. I can't just copy the entire disk (1.5TB per disk) 
-and 'experiment', I don't have 4 spare disks. The first thing I would 
-want to try is is mdadm -A /dev/sd[cdf]1 --force (leave out the possibly 
-corrupted sde1) and see what that does.
-
-
-All that said when I did the assemble with the 'guessed' 3 correct 
-drives. Did of course increase the events count. sdc1 of course didn't 
-partake in this. Assuming that it is in sync with the rest, what is the 
-worst that can happen? And does the --read-only flag protect against it?
-
-
-Linux riley 3.7.4-gentoo #2 SMP Tue Feb 5 16:20:59 CET 2013 x86_64 AMD 
-Phenom(tm) II X4 905e Processor AuthenticAMD GNU/Linux
-
-riley tmp # mdadm --version
-mdadm - v3.1.4 - 31st August 2010
-
-
-riley tmp # mdadm -Evvvvs
-/dev/sdf1:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x0
-      Array UUID : 2becc012:2d317133:2447784c:1aab300d
-            Name : riley:data01  (local to host riley)
-   Creation Time : Tue Apr 27 18:03:37 2010
-      Raid Level : raid5
-    Raid Devices : 4
-
-  Avail Dev Size : 2930276351 (1397.26 GiB 1500.30 GB)
-      Array Size : 8790827520 (4191.79 GiB 4500.90 GB)
-   Used Dev Size : 2930275840 (1397.26 GiB 1500.30 GB)
-     Data Offset : 272 sectors
-    Super Offset : 8 sectors
-           State : clean
-     Device UUID : 97877935:04c16c5f:0746cb98:63bffb4c
-
-     Update Time : Sat Apr  6 11:46:03 2013
-        Checksum : b585717a - correct
-          Events : 512993
-
-          Layout : left-symmetric
-      Chunk Size : 256K
-
-    Device Role : Active device 1
-    Array State : AA.A ('A' == active, '.' == missing)
-mdadm: No md superblock detected on /dev/sdf.
-/dev/sde1:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x0
-      Array UUID : 2becc012:2d317133:2447784c:1aab300d
-            Name : riley:data01  (local to host riley)
-   Creation Time : Tue Apr 27 18:03:37 2010
-      Raid Level : raid5
-    Raid Devices : 4
-
-  Avail Dev Size : 2930275847 (1397.26 GiB 1500.30 GB)
-      Array Size : 8790827520 (4191.79 GiB 4500.90 GB)
-   Used Dev Size : 2930275840 (1397.26 GiB 1500.30 GB)
-     Data Offset : 776 sectors
-    Super Offset : 8 sectors
-           State : clean
-     Device UUID : 3f48d5a8:e3ee47a1:23c8b895:addd3dd0
-
-     Update Time : Sat Apr  6 11:46:03 2013
-        Checksum : eaec006b - correct
-          Events : 512993
-
-          Layout : left-symmetric
-      Chunk Size : 256K
-
-    Device Role : Active device 3
-    Array State : AA.A ('A' == active, '.' == missing)
-mdadm: No md superblock detected on /dev/sde.
-/dev/sdd1:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x0
-      Array UUID : 2becc012:2d317133:2447784c:1aab300d
-            Name : riley:data01  (local to host riley)
-   Creation Time : Tue Apr 27 18:03:37 2010
-      Raid Level : raid5
-    Raid Devices : 4
-
-  Avail Dev Size : 2930276351 (1397.26 GiB 1500.30 GB)
-      Array Size : 8790827520 (4191.79 GiB 4500.90 GB)
-   Used Dev Size : 2930275840 (1397.26 GiB 1500.30 GB)
-     Data Offset : 272 sectors
-    Super Offset : 8 sectors
-           State : clean
-     Device UUID : 236f6c48:2a1bcf6b:a7d7d861:53950637
-
-     Update Time : Sat Apr  6 11:46:03 2013
-        Checksum : 87f31abb - correct
-          Events : 512993
-
-          Layout : left-symmetric
-      Chunk Size : 256K
-
-    Device Role : Active device 0
-    Array State : AA.A ('A' == active, '.' == missing)
-mdadm: No md superblock detected on /dev/sdd.
-/dev/sdc1:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x0
-      Array UUID : 2becc012:2d317133:2447784c:1aab300d
-            Name : riley:data01  (local to host riley)
-   Creation Time : Tue Apr 27 18:03:37 2010
-      Raid Level : raid5
-    Raid Devices : 4
-
-  Avail Dev Size : 2930276351 (1397.26 GiB 1500.30 GB)
-      Array Size : 8790827520 (4191.79 GiB 4500.90 GB)
-   Used Dev Size : 2930275840 (1397.26 GiB 1500.30 GB)
-     Data Offset : 272 sectors
-    Super Offset : 8 sectors
-           State : active
-     Device UUID : 3ce8e262:ad864aee:9055af9b:6cbfd47f
-
-     Update Time : Sat Mar 16 20:20:47 2013
-        Checksum : a7686a57 - correct
-          Events : 180132
-
-          Layout : left-symmetric
-      Chunk Size : 256K
-
-    Device Role : Active device 2
-    Array State : AAAA ('A' == active, '.' == missing)
-mdadm: No md superblock detected on /dev/sdc.
-
-
-Before I assembled the array for the first time (mdadm -A /dev/md101 
-/dev/sdd1 /dev/sde1 /dev/sdf1), this is how it looked like:
-So identical to the above, wtih the exception of the number of events.
-
-riley tmp # mdadm --examine /dev/sde1
-/dev/sde1:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x0
-      Array UUID : 2becc012:2d317133:2447784c:1aab300d
-            Name : riley:data01  (local to host riley)
-   Creation Time : Tue Apr 27 18:03:37 2010
-      Raid Level : raid5
-    Raid Devices : 4
-
-  Avail Dev Size : 2930275847 (1397.26 GiB 1500.30 GB)
-      Array Size : 8790827520 (4191.79 GiB 4500.90 GB)
-   Used Dev Size : 2930275840 (1397.26 GiB 1500.30 GB)
-     Data Offset : 776 sectors
-    Super Offset : 8 sectors
-           State : clean
-     Device UUID : 3f48d5a8:e3ee47a1:23c8b895:addd3dd0
-
-     Update Time : Sat Apr  6 09:44:30 2013
-        Checksum : eaebe3ea - correct
-          Events : 512989
-
-          Layout : left-symmetric
-      Chunk Size : 256K
-
-    Device Role : Active device 3
-    Array State : AA.A ('A' == active, '.' == missing)
-
+Anyway, last resort sounds where this will be heading, I'm scare of 
+running fsck on the array, fixing things and then still have something 
+unusable, and even the last resort method not working. So is this all 
+doable, in read-only mode. And what are the chances of accessing certain 
+data even when doing so?
