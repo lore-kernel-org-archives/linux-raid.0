@@ -1,143 +1,429 @@
-From: Oliver Schinagl <oliver+list@schinagl.nl>
-Subject: Re: Help, array corrupted after clean shutdown.
-Date: Sun, 07 Apr 2013 19:12:26 +0200
-Message-ID: <5161A8FA.2080906@schinagl.nl>
-References: <5160060B.8020603@schinagl.nl> <CACj=ugTsNd87z4Uq_KdZa_HJYFNTtxwZJ76bv0GNHUj8D66YTA@mail.gmail.com> <51603BF2.404@schinagl.nl> <CACj=ugSH2YBrePTKy3e36H4fcHpKQ8ywxrJoLJwbqtbvOR+pEQ@mail.gmail.com> <5160630D.9000508@schinagl.nl> <CACj=ugQR6hjw0qchJiOtgyWd8VRGs_pkZCBXHbQwjrKFz4u=Xg@mail.gmail.com> <51619195.9070507@schinagl.nl> <CACj=ugTozdbEKvzeNZ4ZjH67P2mqFAicj_SJM6Ui9pUT64oPeg@mail.gmail.com>
+From: George Shuklin <george.shuklin@gmail.com>
+Subject: Re: mpt2sas + raid10 goes boom
+Date: Mon, 08 Apr 2013 12:24:00 +0400
+Message-ID: <51627EA0.9050503@gmail.com>
+References: <20130408071834.GA15457@onthe.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACj=ugTozdbEKvzeNZ4ZjH67P2mqFAicj_SJM6Ui9pUT64oPeg@mail.gmail.com>
+In-Reply-To: <20130408071834.GA15457@onthe.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Durval Menezes <durval.menezes@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Chris Dunlop <chris@onthe.net.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08-04-13 10:10, Durval Menezes wrote:
-> Hi Oliver.
->
-> On Sun, Apr 7, 2013 at 12:32 PM, Oliver Schinagl
-> <oliver+list@schinagl.nl> wrote:
->> On 06-04-13 20:59, Durval Menezes wrote:
->>> Hi Oliver,
->>>
->>>
->>> On Sat, Apr 6, 2013 at 3:01 PM, Oliver Schinagl <oliver+list@schinagl.nl
->>> <mailto:oliver+list@schinagl.nl>> wrote:
->>>
->>>      On 04/06/13 19:44, Durval Menezes wrote:
->>>
->>>          Hi Oliver,
->>>
->>>          Seems most of your problems are filesystem corruption (the
->>>          extN family
->>>          is well known for lack of robustness).
->>>
->>>          I would try to mount the filesystem read-only (without fsck)
->>>          and copy
->>>          off as much data as possible... Then fsck and try to copy the
->>>          rest.
->>>
->>>          Good luck.
->>>
->>>      It fails to mount ;)
->>>
->>>      How can I ensure that the array is not corrupt however (while
->>>      degraded)? At least that way, I can try my luck with ext4 tools.
->>>
->>>
->>> If the array was not degraded, I would try an array check:
->>>
->>> |echo check > /sys/block/md0/md/sync_action|
->>>
->>> Then, if you had no (or very little) mismatches, I would consider it OK.
->>> But as your array is in degraded mode, you have no redundancy to enable you
->>> to check... :-/
->> I guess the 'order' wouldn't have mattered. I would have expected some
->> very basic check was available.
->>
->> Maybe for raid8 :p; Thinking along the lines, every block has an id, and
->> each stripe has maching id's. If the id's no longer match, something is
->> wrong. Would probably only waste space in the end.
-> And time ;-)
->
->> Anyhow, I may have panicked a little to early. mount did indeed fail to
->> mount, checking dmesg revealed a little more:
->> [  117.665385] EXT4-fs (md102): mounted filesystem with writeback data
->> mode. Opts: commit=120,data=writeback
->> [  126.743000] EXT4-fs (md101): ext4_check_descriptors: Checksum for group
->> 0 failed (42475!=15853)
->> [  126.743003] EXT4-fs (md101): group descriptors corrupted!
->>
->> I asked on linux-ext4 what could be going wrong, fsck-ing -n does show
->> (all?) group-descriptors not matching.
-> Ouch :-/
->
->> Mounting ro however works
-> Glad to hear it. When you said that "it fails to mount", I thought you
-> had tried mounting read-only as I suggested.
-mount complained, like when you use an invalid filesystem. The error 
-could have been more descriptive. I tried mounting RO after you 
-mentioned it (and marking the array as read-only).
->
->> and all data appears to be correct from a quick
->> investigation (my virtual machines start normally, so if that is ok, the
->> rest must be too.
-> So probably only ext4 allocation metadata (which I think is what the
-> group descriptors are) got corrupted... probably your data survived
-> OK.
-Looks like, the disk reports an unhealthy amount of freespace. But every 
-single group descriptor got corrupted. Starting from 0, 1 .. 32k (and 
-then I ctrl-c-ed). It's odd to get corrupted in that way. Well the 
-checksum didn't match. I'd rather think either the on-disk format 
-changed since 2010 somewhat, or usertools work differently.
+Try newer version of mpt2sas. Older versions (f.e. vanilla linux 2.6.32=
+)=20
+has problems with real load.
 
-Side story mode, I have an android tablet with ext4 filesystem for 
-/data. The tablet runs a 3.0 kernel. A few weeks ago, the tablet refused 
-to boot. I booted from SD card into a stock GNU/Linux 3.4 enviroment and 
-ran fdisk. Same thing, all group descriptors where corrupt (didn't 
-match). fsck ran for 10 minutes and its still working fine.
+08.04.2013 11:18, Chris Dunlop =D0=BF=D0=B8=D1=88=D0=B5=D1=82:
+> G'day,
 >
->> I am now in the progress of copying, and rsycn -car the
->> data to a temporary spot.
-> After your data is copied, try validating it with whatever tools
-> available, for example: for compressed files, try checking them (ex:
-> "tar tvzf" for tar.gz files); if it's your root partition, try
-> checking your distribution packages (rpm -Va on RPM distros, for
-> example), etc. If it shows any corrupted data, it might point you
-> towards things that need restoring, and if it shows nothing wrong, it
-> will give you confidence that the rest of your (uncheckable) data is
-> possibly good too.
-It does look that the data survived just fine. It is a pure data disk, 
-but did contain some virtual machines. kvm runs them all fine at the moment.
-
-While I could just fsck the fs and get it all good again, I have now all 
-data from the device. I will use that to increase the chunksize from 256 
-to 512k, and remake the fs with those new parameters. I'm sure fsck will 
-most likly fix it and nothing will be wrong. I'm simply not willing to 
-take the risk now that the disks are empty anyway.
+> On a LSI 9211-8i controller with IT firmware, when I use mdadm
+> to create a 4-disk raid10 and mount it, the controller reports
+> errors on all 4 disks, then the disks go read-only (kern.log
+> below).
 >
->> Thanks for all the help though, I probably would
->> have kept trying to fix the array first.
-> No prob, and good luck with the rest of your recovery!
-Thank you ;)
+> A raid6 using the same sets of disks works without any problems.
 >
+> Has anyone had any success or similar failures with similar
+> hardware, and/or have any idea what might be going on?
 >
->> I'm still wondering why my entire (and only the) partition table was gone.
-> One theory: as your shutdown was clean, then ext4 allocation metadata
-> has probably been badly mangled in memory before the shutdown, so some
-> of your data was possibly written over the start of the disk,
-> clobbering the GPT.
+> The command sequence used is:
 >
-> Off (Linux md RAID) topic: If I were in your place, I would start
-> worrying how the in-memory metadata was SILENTLY mangled in the first
-> place... do you use ECC memory, for example? Also, I would consider
-> (now that you will have to mkfs the mangled partition to restore your
-> data anyway) using a filesystem that has multiple metadata copies and
-> also the means for not only finding out about silent corruptions but
-> also for fixing them, to say nothing of a built-in RAID with no
-> write-hole and that gives your data the same silent-corruption
-> detection-and-fixing feature: http://zfsonlinux.org/
+> mdadm --create /dev/md4 --raid-devices=3D4 --level=3Draid10 --layout=3D=
+o2 --bitmap=3Dinternal /dev/sd{f,j,k,m}
+> mkfs.ext4 /dev/md4
+> mount -onoatime /dev/md4 /mnt
+>
+> (Note: the mkfs and mount are done immediately after the mdadm
+> returns, i.e. the raid has only just started syncing.)
+>
+> This happens with linux-3.7.3, and 3.7.10, and LSI firmware
+> versions 14 and 15, and with 4 x WD20EFRX (the original config),
+> and 2 x ST2000DL003 + 2 x WD20EADS disks (a test config).
 >
 > Cheers,
+>
+> Chris
+>
+> ---------------------------------------------------------------------=
+-
+> kern.log
+> ---------------------------------------------------------------------=
+-
+> Apr  8 15:08:13 b4 kernel: [  409.230164] md/raid10:md4: not clean --=
+ starting background reconstruction
+> Apr  8 15:08:13 b4 kernel: [  409.230227] md/raid10:md4: active with =
+4 out of 4 devices
+> Apr  8 15:08:13 b4 kernel: [  409.230442] created bitmap (30 pages) f=
+or device md4
+> Apr  8 15:08:13 b4 kernel: [  409.233333] md4: bitmap initialized fro=
+m disk: read 2 pages, set 59613 of 59613 bits
+> Apr  8 15:08:14 b4 kernel: [  409.303719] md4: detected capacity chan=
+ge from 0 to 4000525058048
+> Apr  8 15:08:14 b4 kernel: [  409.326603]  md4: unknown partition tab=
+le
+> Apr  8 15:08:20 b4 kernel: [  415.821209] md: resync of RAID array md=
+4
+> Apr  8 15:08:20 b4 kernel: [  415.821271] md: minimum _guaranteed_  s=
+peed: 1000 KB/sec/disk.
+> Apr  8 15:08:20 b4 kernel: [  415.821333] md: using maximum available=
+ idle IO bandwidth (but not more than 200000 KB/sec) for resync.
+> Apr  8 15:08:20 b4 kernel: [  415.821415] md: using 128k window, over=
+ a total of 3906762752k.
+> Apr  8 15:08:33 b4 kernel: [  428.762213] EXT4-fs (md4): mounted file=
+system with ordered data mode. Opts: (null)
+> Apr  8 15:08:41 b4 kernel: [  436.345890] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:41 b4 kernel: [  436.345977] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:41 b4 kernel: [  436.346062] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:41 b4 kernel: [  436.346138] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:41 b4 kernel: [  436.346215] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:41 b4 kernel: [  436.346291] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:41 b4 kernel: [  436.346367] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:41 b4 kernel: [  436.346443] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:41 b4 kernel: [  436.346519] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:41 b4 kernel: [  436.346595] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:42 b4 kernel: [  437.594032] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:42 b4 kernel: [  437.594119] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:42 b4 kernel: [  437.594202] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:42 b4 kernel: [  437.594278] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:42 b4 kernel: [  437.594355] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:42 b4 kernel: [  437.594431] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:43 b4 kernel: [  438.842232] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:43 b4 kernel: [  438.842319] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:43 b4 kernel: [  438.842402] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:43 b4 kernel: [  438.842479] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:43 b4 kernel: [  438.842555] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:43 b4 kernel: [  438.842631] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:44 b4 kernel: [  440.090321] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:44 b4 kernel: [  440.090408] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:44 b4 kernel: [  440.090491] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:44 b4 kernel: [  440.090567] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:44 b4 kernel: [  440.090644] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:44 b4 kernel: [  440.090720] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:46 b4 kernel: [  441.338473] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:46 b4 kernel: [  441.338560] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:46 b4 kernel: [  441.338644] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:46 b4 kernel: [  441.338721] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:46 b4 kernel: [  441.338797] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:46 b4 kernel: [  441.338873] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:47 b4 kernel: [  442.586623] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:47 b4 kernel: [  442.586707] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:47 b4 kernel: [  442.586717] sd 0:0:5:0: [sdf] Unhandled=
+ error code
+> Apr  8 15:08:47 b4 kernel: [  442.586719] sd 0:0:5:0: [sdf]
+> Apr  8 15:08:47 b4 kernel: [  442.586720] Result: hostbyte=3DDID_SOFT=
+_ERROR driverbyte=3DDRIVER_OK
+> Apr  8 15:08:47 b4 kernel: [  442.586722] sd 0:0:5:0: [sdf] CDB:
+> Apr  8 15:08:47 b4 kernel: [  442.586728] Write(10): 2a 00 00 04 1c 0=
+0 00 04 00 00
+> Apr  8 15:08:47 b4 kernel: [  442.586730] end_request: I/O error, dev=
+ sdf, sector 269312
+> Apr  8 15:08:47 b4 kernel: [  442.587114] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:47 b4 kernel: [  442.587192] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:47 b4 kernel: [  442.587268] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:47 b4 kernel: [  442.587344] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:47 b4 kernel: [  442.587355] sd 0:0:9:0: [sdj] Unhandled=
+ error code
+> Apr  8 15:08:47 b4 kernel: [  442.587356] sd 0:0:9:0: [sdj]
+> Apr  8 15:08:47 b4 kernel: [  442.587357] Result: hostbyte=3DDID_SOFT=
+_ERROR driverbyte=3DDRIVER_OK
+> Apr  8 15:08:47 b4 kernel: [  442.587359] sd 0:0:9:0: [sdj] CDB:
+> Apr  8 15:08:47 b4 kernel: [  442.587364] Write(10): 2a 00 00 04 1c 0=
+0 00 04 00 00
+> Apr  8 15:08:47 b4 kernel: [  442.587366] end_request: I/O error, dev=
+ sdj, sector 269312
+> Apr  8 15:08:47 b4 kernel: [  442.588919] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:47 b4 kernel: [  442.588996] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:47 b4 kernel: [  442.589006] sd 0:0:10:0: [sdk] Unhandle=
+d error code
+> Apr  8 15:08:47 b4 kernel: [  442.589008] sd 0:0:10:0: [sdk]
+> Apr  8 15:08:47 b4 kernel: [  442.589009] Result: hostbyte=3DDID_SOFT=
+_ERROR driverbyte=3DDRIVER_OK
+> Apr  8 15:08:47 b4 kernel: [  442.589011] sd 0:0:10:0: [sdk] CDB:
+> Apr  8 15:08:47 b4 kernel: [  442.589016] Write(10): 2a 00 00 04 1d 1=
+0 00 02 f0 00
+> Apr  8 15:08:47 b4 kernel: [  442.589018] end_request: I/O error, dev=
+ sdk, sector 269584
+> Apr  8 15:08:47 b4 kernel: [  442.589396] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:47 b4 kernel: [  442.589468] sd 0:0:10:0: [sdk] Unhandle=
+d error code
+> Apr  8 15:08:47 b4 kernel: [  442.589471] sd 0:0:10:0: [sdk]
+> Apr  8 15:08:47 b4 kernel: [  442.589473] Result: hostbyte=3DDID_SOFT=
+_ERROR driverbyte=3DDRIVER_OK
+> Apr  8 15:08:47 b4 kernel: [  442.589475] sd 0:0:10:0: [sdk] CDB:
+> Apr  8 15:08:47 b4 kernel: [  442.589480] Write(10): 2a 00 00 04 18 0=
+0 00 04 00 00
+> Apr  8 15:08:47 b4 kernel: [  442.589482] end_request: I/O error, dev=
+ sdk, sector 268288
+> Apr  8 15:08:47 b4 kernel: [  442.589560] md/raid10:md4: Disk failure=
+ on sdk1, disabling device.
+> Apr  8 15:08:47 b4 kernel: [  442.589565] md/raid10:md4: Disk failure=
+ on sdj1, disabling device.
+> Apr  8 15:08:47 b4 kernel: [  442.589565] md/raid10:md4: Operation co=
+ntinuing on 2 devices.
+> Apr  8 15:08:47 b4 kernel: [  442.589959] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:47 b4 kernel: [  442.590036] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:47 b4 kernel: [  442.590046] sd 0:0:12:0: [sdm] Unhandle=
+d error code
+> Apr  8 15:08:47 b4 kernel: [  442.590048] sd 0:0:12:0: [sdm]
+> Apr  8 15:08:47 b4 kernel: [  442.590049] Result: hostbyte=3DDID_SOFT=
+_ERROR driverbyte=3DDRIVER_OK
+> Apr  8 15:08:47 b4 kernel: [  442.590050] sd 0:0:12:0: [sdm] CDB:
+> Apr  8 15:08:47 b4 kernel: [  442.590055] Write(10): 2a 00 00 04 19 1=
+0 00 02 f0 00
+> Apr  8 15:08:47 b4 kernel: [  442.590057] end_request: I/O error, dev=
+ sdm, sector 268560
+> Apr  8 15:08:47 b4 kernel: [  442.590437] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:47 b4 kernel: [  442.590513] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:47 b4 kernel: [  442.590552] sd 0:0:12:0: [sdm] Unhandle=
+d error code
+> Apr  8 15:08:47 b4 kernel: [  442.590554] sd 0:0:12:0: [sdm]
+> Apr  8 15:08:47 b4 kernel: [  442.590555] Result: hostbyte=3DDID_SOFT=
+_ERROR driverbyte=3DDRIVER_OK
+> Apr  8 15:08:47 b4 kernel: [  442.590556] sd 0:0:12:0: [sdm] CDB:
+> Apr  8 15:08:47 b4 kernel: [  442.590561] Write(10): 2a 00 00 04 1c 0=
+0 00 04 00 00
+> Apr  8 15:08:47 b4 kernel: [  442.590562] end_request: I/O error, dev=
+ sdm, sector 269312
+> Apr  8 15:08:47 b4 kernel: [  442.590913] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:48 b4 kernel: [  443.834819] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:48 b4 kernel: [  443.834907] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:48 b4 kernel: [  443.834989] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:48 b4 kernel: [  443.835065] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:48 b4 kernel: [  443.835141] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:49 b4 kernel: [  445.082918] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:49 b4 kernel: [  445.083006] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:49 b4 kernel: [  445.083089] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:49 b4 kernel: [  445.083165] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:49 b4 kernel: [  445.083241] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:51 b4 kernel: [  446.331061] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:51 b4 kernel: [  446.331149] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:51 b4 kernel: [  446.331232] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:51 b4 kernel: [  446.331309] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:52 b4 kernel: [  447.579212] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:52 b4 kernel: [  447.579281] sd 0:0:5:0: [sdf] Unhandled=
+ error code
+> Apr  8 15:08:52 b4 kernel: [  447.579282] sd 0:0:5:0: [sdf]
+> Apr  8 15:08:52 b4 kernel: [  447.579284] Result: hostbyte=3DDID_SOFT=
+_ERROR driverbyte=3DDRIVER_OK
+> Apr  8 15:08:52 b4 kernel: [  447.579285] sd 0:0:5:0: [sdf] CDB:
+> Apr  8 15:08:52 b4 kernel: [  447.579290] Write(10): 2a 00 00 04 18 0=
+0 00 04 00 00
+> Apr  8 15:08:52 b4 kernel: [  447.579292] end_request: I/O error, dev=
+ sdf, sector 268288
+> Apr  8 15:08:52 b4 kernel: [  447.579628] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:52 b4 kernel: [  447.579700] sd 0:0:9:0: [sdj] Unhandled=
+ error code
+> Apr  8 15:08:52 b4 kernel: [  447.579702] sd 0:0:9:0: [sdj]
+> Apr  8 15:08:52 b4 kernel: [  447.579705] Result: hostbyte=3DDID_SOFT=
+_ERROR driverbyte=3DDRIVER_OK
+> Apr  8 15:08:52 b4 kernel: [  447.579707] sd 0:0:9:0: [sdj] CDB:
+> Apr  8 15:08:52 b4 kernel: [  447.579712] Write(10): 2a 00 00 04 18 0=
+0 00 04 00 00
+> Apr  8 15:08:52 b4 kernel: [  447.579714] end_request: I/O error, dev=
+ sdj, sector 268288
+> Apr  8 15:08:52 b4 kernel: [  447.580031] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:52 b4 kernel: [  447.580103] sd 0:0:10:0: [sdk] Unhandle=
+d error code
+> Apr  8 15:08:52 b4 kernel: [  447.580105] sd 0:0:10:0: [sdk]
+> Apr  8 15:08:52 b4 kernel: [  447.580108] Result: hostbyte=3DDID_SOFT=
+_ERROR driverbyte=3DDRIVER_OK
+> Apr  8 15:08:52 b4 kernel: [  447.580110] sd 0:0:10:0: [sdk] CDB:
+> Apr  8 15:08:52 b4 kernel: [  447.580115] Write(10): 2a 00 00 04 24 0=
+0 00 01 08 00
+> Apr  8 15:08:52 b4 kernel: [  447.580116] end_request: I/O error, dev=
+ sdk, sector 271360
+> Apr  8 15:08:52 b4 kernel: [  447.580434] mpt2sas0: log_info(0x311203=
+20): originator(PL), code(0x12), sub_code(0x0320)
+> Apr  8 15:08:52 b4 kernel: [  447.580505] sd 0:0:12:0: [sdm] Unhandle=
+d error code
+> Apr  8 15:08:52 b4 kernel: [  447.580507] sd 0:0:12:0: [sdm]
+> Apr  8 15:08:52 b4 kernel: [  447.580508] Result: hostbyte=3DDID_SOFT=
+_ERROR driverbyte=3DDRIVER_OK
+> Apr  8 15:08:52 b4 kernel: [  447.580511] sd 0:0:12:0: [sdm] CDB:
+> Apr  8 15:08:52 b4 kernel: [  447.580516] Write(10): 2a 00 00 04 20 0=
+0 00 01 08 00
+> Apr  8 15:08:52 b4 kernel: [  447.580518] end_request: I/O error, dev=
+ sdm, sector 270336
+> Apr  8 15:08:53 b4 kernel: [  448.614727] md/raid10:md4: Disk failure=
+ on sdm1, disabling device.
+> Apr  8 15:08:53 b4 kernel: [  448.614727] md/raid10:md4: Operation co=
+ntinuing on 1 devices.
+> Apr  8 15:08:53 b4 kernel: [  448.656989] md/raid10:md4: Disk failure=
+ on sdf1, disabling device.
+> Apr  8 15:08:53 b4 kernel: [  448.656989] md/raid10:md4: Operation co=
+ntinuing on 0 devices.
+> Apr  8 15:08:53 b4 kernel: [  448.657142] md4: WRITE SAME failed. Man=
+ually zeroing.
+> Apr  8 15:08:53 b4 kernel: [  448.657178] Buffer I/O error on device =
+md4, logical block 488144896
+> Apr  8 15:08:53 b4 kernel: [  448.657179] lost page write due to I/O =
+error on md4
+> Apr  8 15:08:53 b4 kernel: [  448.657182] JBD2: Error -5 detected whe=
+n updating journal superblock for md4-8.
+> Apr  8 15:08:53 b4 kernel: [  448.657708] Aborting journal on device =
+md4-8.
+> Apr  8 15:08:53 b4 kernel: [  448.657794] Buffer I/O error on device =
+md4, logical block 488144896
+> Apr  8 15:08:53 b4 kernel: [  448.657875] lost page write due to I/O =
+error on md4
+> Apr  8 15:08:53 b4 kernel: [  448.657952] JBD2: Error -5 detected whe=
+n updating journal superblock for md4-8.
+> Apr  8 15:08:54 b4 kernel: [  449.663626] md: md4: resync done.
+> Apr  8 15:08:54 b4 kernel: [  449.666948] md: checkpointing resync of=
+ md4.
+> Apr  8 15:08:54 b4 kernel: [  449.667275] RAID10 conf printout:
+> Apr  8 15:08:54 b4 kernel: [  449.667279]  --- wd:0 rd:4
+> Apr  8 15:08:54 b4 kernel: [  449.667282]  disk 0, wo:1, o:0, dev:sdm=
+1
+> Apr  8 15:08:54 b4 kernel: [  449.667284]  disk 1, wo:1, o:0, dev:sdk=
+1
+> Apr  8 15:08:54 b4 kernel: [  449.667286]  disk 2, wo:1, o:0, dev:sdj=
+1
+> Apr  8 15:08:54 b4 kernel: [  449.667288]  disk 3, wo:1, o:0, dev:sdf=
+1
+> Apr  8 15:08:54 b4 kernel: [  449.713524] RAID10 conf printout:
+> Apr  8 15:08:54 b4 kernel: [  449.713528]  --- wd:0 rd:4
+> Apr  8 15:08:54 b4 kernel: [  449.713531]  disk 0, wo:1, o:0, dev:sdm=
+1
+> Apr  8 15:08:54 b4 kernel: [  449.713533]  disk 1, wo:1, o:0, dev:sdk=
+1
+> Apr  8 15:08:54 b4 kernel: [  449.713535]  disk 2, wo:1, o:0, dev:sdj=
+1
+> Apr  8 15:08:54 b4 kernel: [  449.713541] RAID10 conf printout:
+> Apr  8 15:08:54 b4 kernel: [  449.713543]  --- wd:0 rd:4
+> Apr  8 15:08:54 b4 kernel: [  449.713545]  disk 0, wo:1, o:0, dev:sdm=
+1
+> Apr  8 15:08:54 b4 kernel: [  449.713547]  disk 1, wo:1, o:0, dev:sdk=
+1
+> Apr  8 15:08:54 b4 kernel: [  449.713549]  disk 2, wo:1, o:0, dev:sdj=
+1
+> Apr  8 15:08:54 b4 kernel: [  449.803374] RAID10 conf printout:
+> Apr  8 15:08:54 b4 kernel: [  449.803378]  --- wd:0 rd:4
+> Apr  8 15:08:54 b4 kernel: [  449.803381]  disk 0, wo:1, o:0, dev:sdm=
+1
+> Apr  8 15:08:54 b4 kernel: [  449.803383]  disk 1, wo:1, o:0, dev:sdk=
+1
+> Apr  8 15:08:54 b4 kernel: [  449.803387] RAID10 conf printout:
+> Apr  8 15:08:54 b4 kernel: [  449.803389]  --- wd:0 rd:4
+> Apr  8 15:08:54 b4 kernel: [  449.803391]  disk 0, wo:1, o:0, dev:sdm=
+1
+> Apr  8 15:08:54 b4 kernel: [  449.803393]  disk 1, wo:1, o:0, dev:sdk=
+1
+> Apr  8 15:08:54 b4 kernel: [  449.893250] RAID10 conf printout:
+> Apr  8 15:08:54 b4 kernel: [  449.893254]  --- wd:0 rd:4
+> Apr  8 15:08:54 b4 kernel: [  449.893257]  disk 0, wo:1, o:0, dev:sdm=
+1
+> Apr  8 15:08:54 b4 kernel: [  449.893261] RAID10 conf printout:
+> Apr  8 15:08:54 b4 kernel: [  449.893263]  --- wd:0 rd:4
+> Apr  8 15:08:54 b4 kernel: [  449.893265]  disk 0, wo:1, o:0, dev:sdm=
+1
+> Apr  8 15:08:54 b4 kernel: [  449.983101] RAID10 conf printout:
+> Apr  8 15:08:54 b4 kernel: [  449.983105]  --- wd:0 rd:4
+> Apr  8 15:08:54 b4 kernel: [  449.983325] md: resync of RAID array md=
+4
+> Apr  8 15:08:54 b4 kernel: [  449.983404] md: minimum _guaranteed_  s=
+peed: 1000 KB/sec/disk.
+> Apr  8 15:08:54 b4 kernel: [  449.983490] md: using maximum available=
+ idle IO bandwidth (but not more than 200000 KB/sec) for resync.
+> Apr  8 15:08:54 b4 kernel: [  449.983607] md: using 128k window, over=
+ a total of 3906762752k.
+> Apr  8 15:08:54 b4 kernel: [  449.983817] md: md4: resync done.
+> Apr  8 15:08:54 b4 kernel: [  449.987338] RAID10 conf printout:
+> Apr  8 15:08:54 b4 kernel: [  449.987342]  --- wd:0 rd:4
+> Apr  8 15:09:05 b4 kernel: [  460.616633] Buffer I/O error on device =
+md4, logical block 0
+> Apr  8 15:09:05 b4 kernel: [  460.616697] lost page write due to I/O =
+error on md4
+> Apr  8 15:09:05 b4 kernel: [  460.616760] EXT4-fs error (device md4):=
+ ext4_put_super:858: Couldn't clean up the journal
+> Apr  8 15:09:05 b4 kernel: [  460.616901] EXT4-fs (md4): Remounting f=
+ilesystem read-only
+> Apr  8 15:09:05 b4 kernel: [  460.616957] EXT4-fs (md4): previous I/O=
+ error to superblock detected
+> Apr  8 15:09:05 b4 kernel: [  460.617017] Buffer I/O error on device =
+md4, logical block 0
+> Apr  8 15:09:05 b4 kernel: [  460.617074] lost page write due to I/O =
+error on md4
+> ---------------------------------------------------------------------=
+-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
