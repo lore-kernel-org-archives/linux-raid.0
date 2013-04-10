@@ -1,43 +1,65 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Converting a regular (non-RAID) HD into a (degraded) RAID 1
- installation in-place
-Date: Wed, 10 Apr 2013 07:20:01 +0200 (CEST)
-Message-ID: <alpine.DEB.2.00.1304100713520.23668@uplift.swm.pp.se>
-References: <CAOtrxKNxLDDOkD-9A-1fxPO-SGH97ZBMWt0aG5Eej7osx73LnA@mail.gmail.com>
+From: NightStrike <nightstrike@gmail.com>
+Subject: Re: mdadm + intel matrix
+Date: Wed, 10 Apr 2013 01:48:36 -1000
+Message-ID: <CAF1jjLurfkk2w49KcGUmg0yEUoJLtAh7KfGow3sm3nGQUg3jCg@mail.gmail.com>
+References: <CAF1jjLtMKmvQrZqO9Uv5vW6VGSJ8OmJZ8G3QxNZ6oGXr-3kS_Q@mail.gmail.com>
+ <20130410145359.4a864dcf@notabene.brown>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-137064504-1902154990-1365570917=:23668"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOtrxKNxLDDOkD-9A-1fxPO-SGH97ZBMWt0aG5Eej7osx73LnA@mail.gmail.com>
+In-Reply-To: <20130410145359.4a864dcf@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-15?Q?Rog=E9rio_Brito?= <rbrito@ime.usp.br>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Tue, Apr 9, 2013 at 6:53 PM, NeilBrown <neilb@suse.de> wrote:
+> On Tue, 9 Apr 2013 03:20:44 -1000 NightStrike <nightstrike@gmail.com> wrote:
+>
+>> Neil,
+>>
+>> I have been talking to a lot of irc types, and ultimately, they all
+>> want me to just contact you directly (even people on
+>> oftc/#kernelnewbies).
+>
+> The correct advice is to email linux-raid@vger.kernel.org (you don't need to
+> be subscribed) and to optionally Cc me.
+> I've Cc:ed this reply to linux-raid.
 
----137064504-1902154990-1365570917=:23668
-Content-Type: TEXT/PLAIN; CHARSET=ISO-8859-15; FORMAT=flowed
-Content-Transfer-Encoding: 8BIT
+Noted
 
-On Tue, 9 Apr 2013, Rogério Brito wrote:
+>> Basically, using mdadm with the Intel Matrix fakeraid doesn't work
+>> right anymore.  I can't tell you with what kernel it stopped, but I
+>> can tell you that it is broken with archlinux 3.8.5, which is a
+>> vanilla kernel plus a console logging patch.  Here's what happens:
+>>
+>> 1) Create a new raid in the Option Rom
+>> 2) Boot up and see md126 and md127, respectively ArchRaid_0 and imsm0.
+>> 3) Run all sorts of read only things, like mdadm --detail-platform, all good
+>> 4) Run cfdisk /dev/md/ArchRaid_0 (which points to md126), set up my partitions
+>> 5) Hit "Write" to write the partition table
+>> 6) Everything hangs
+>
+> I've had this reported on openSUSE too.  I haven't yet had a chance to look
+> into it properly.
+> It sounds like "mdmon" is not running - or not working correctly.
+>
+> On the first attempt to write to the array, md signals mdmon and waits for
+> the array to be marked "active".
+> mdmon should notice this, update the metadata on the array to record that the
+> array is active (so if a crash happens a resync will be force) and then tell
+> md that the array is active.  md notices and allows the write.
+>
+> Something in this sequence is not working.
+> Does everything "unhang" if you run
+>    mdmon md127 &
+>
+> ??
 
-> I would like to understand better this situation and I can provide all 
-> the details (commands) that I tried so far.
+YES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-My recommendation would be to choose a metadatatype that stores the 
-metadata at the end of the partition, and before this you shrink your ext4 
-fs by 100 megabyte or alike, and then after you see this correctly through 
-the md device, you resize it again to "max".
+THANK YOU!!!!!!!!!!!!!!!11111oneone!!!!!!!!!!
 
-You didn't state if you needed partitions here, but I would imagine not.
 
-So let's say you have sdb1 with ext4 fs. Shrink fs on sdb1 by 100 
-megabyte. mdadm --create md0 raid1 on sdb1 with metadata v1.0, then you 
-can most likely mount ext4 properly on md0, and after this you can resize 
-the fs to max size. Now you have md0 on sdb1 and one missing, then you can 
-add sdc1 to this to have a fully functioning raid1 setup.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
----137064504-1902154990-1365570917=:23668--
+I eagerly await an official fix, and in the meantime, I will use your
+workaround.
