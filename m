@@ -1,10 +1,10 @@
 From: Hans-Peter Jansen <hpj@urpla.net>
 Subject: Re: Persistent failures with simple md setup
-Date: Wed, 10 Apr 2013 15:28:46 +0200
-Message-ID: <1430094.3QZa2HEWkg@xrated>
+Date: Wed, 10 Apr 2013 15:44:25 +0200
+Message-ID: <113804746.rOsYdmQaaH@xrated>
 References: <1565063.1kpR7lz4Ph@xrated> <2777026.gm19DAWULs@xrated> <20130321142459.2cd6b4da@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="nextPart1703132.HCMDoCQzdq"
+Content-Type: multipart/mixed; boundary="nextPart3359910.aJqLgxpeD4"
 Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20130321142459.2cd6b4da@notabene.brown>
@@ -15,63 +15,11 @@ List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
 
---nextPart1703132.HCMDoCQzdq
+--nextPart3359910.aJqLgxpeD4
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset="iso-8859-1"
 
 On Donnerstag, 21. M=E4rz 2013 14:24:59 NeilBrown wrote:
-> On Mon, 18 Mar 2013 12:20:57 +0100 Hans-Peter Jansen <hpj@urpla.net> =
-wrote:
-> > Am Freitag, 15. M=E4rz 2013, 23:43:31 schrieb Hans-Peter Jansen:
-> > > Am Mittwoch, 13. M=E4rz 2013, 11:52:35 schrieben Sie:
-> > > > hi,
-> > > >=20
-> > > >  wonder if you could try one more test for me.
-> > > >  With the other (echo BEFORE / echo AFTER etc) tracing still th=
-ere,
-> > > >  change
-> > > >=20
-> > > > the /sbin/udevadm settle --timeout=3D$MDADM_DEVICE_TIMEOUT
-> > > >=20
-> > > >  to
-> > > > =20
-> > > >    /sbin/udevadm --debug settle --timeout=3D$MDADM_DEVICE_TIMEO=
-UT >
-> > > >    /dev/kmsg
-> > > >=20
-> > > > 2>&1
-> > > >=20
-> > > >  I found there is a case where "udevadm settle" can exit before=
- the
-> > > >  queue
-> > > >  is
-> > > >=20
-> > > > empty.  It seems like a very unlikely scenario, but it seems cl=
-ear
-> > > > that
-> > > > something "unlikely" is happening.
-> > > >=20
-> > > >  I'm hoping to see
-> > > > =20
-> > > >     timeout waiting for udev queue
-> > > > =20
-> > > >  appear in the logs when this runs.
-> > > > =20
-> > > >  If you could add that and post the 'dmesg' output if you ever =
-get
-> > > >  that
-> > > >  message - or maybe even if you don't - that would be very help=
-ful.
-> > >=20
-> > > Did that right now and disabled the sleep 10 in front, that
-> > > provisionally
-> > > "solved" this issue BTW. Now waiting for another md issue to occu=
-r.
-> >=20
-> > Here we go: (not censored in any way, and I hope to get the "window=
-"
-> > right:
-> > md0 was affected this time.
 >=20
 > Thanks! Unfortunately it is not as helpful as I hoped, but it does su=
 ggest
@@ -94,8 +42,7 @@ with two degraded arrays: md0 and md1.
 
 Cheers,
 Pete
-
---nextPart1703132.HCMDoCQzdq
+--nextPart3359910.aJqLgxpeD4
 Content-Disposition: attachment; filename="udevadm.trace.gz"
 Content-Transfer-Encoding: base64
 Content-Type: application/x-gzip; name="udevadm.trace.gz"
@@ -198,5 +145,5 @@ yMSIiHEcYKPDBLSv2NzMDOtYMMQkM1PqNpDAppoamJHQQLIwsjAewFk0Q7yrfQzxrvYxxLbaBxoG
 5nSZmYdYZgZsr8MzmCbq2kecU2hQraZGxORNiFoLIxpMoUHMNgeKIKbQLIyNcU6hQdWbGRMxhQZV
 a2lGTJkCVgvam0x8mQLRYmZExNo+sFoToM8UUisygQkYtNQdts3RVsGeCwBCcgqpQ2gAAA==
 
---nextPart1703132.HCMDoCQzdq--
+--nextPart3359910.aJqLgxpeD4--
 
