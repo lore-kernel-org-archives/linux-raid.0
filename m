@@ -1,149 +1,48 @@
-From: Hans-Peter Jansen <hpj@urpla.net>
-Subject: Re: Persistent failures with simple md setup
-Date: Wed, 10 Apr 2013 15:44:25 +0200
-Message-ID: <113804746.rOsYdmQaaH@xrated>
-References: <1565063.1kpR7lz4Ph@xrated> <2777026.gm19DAWULs@xrated> <20130321142459.2cd6b4da@notabene.brown>
+From: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Subject: [PATCH] Manage.c: Try to get EXCL access more times while stopping
+ the array
+Date: Wed, 10 Apr 2013 16:00:29 +0200
+Message-ID: <20130410140029.19194.22973.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="nextPart3359910.aJqLgxpeD4"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130321142459.2cd6b4da@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com, lukasz.dorau@intel.com
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
+If mdadm does not get EXCL access to the array
+and it is managed by mdmon, it should flush monitor
+and try again, because there still can be (for example)
+a process that is finishing aborting reshape.
+If this fails couple of times, mdadm should stop trying,
+print an error and abort stopping the array.
 
---nextPart3359910.aJqLgxpeD4
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"
+Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+---
+ Manage.c |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-On Donnerstag, 21. M=E4rz 2013 14:24:59 NeilBrown wrote:
->=20
-> Thanks! Unfortunately it is not as helpful as I hoped, but it does su=
-ggest
-> that "udevadm settle" does sometimes appear to misbehave even if ther=
-e
-> aren't any problems with the md array.
->=20
-> Could I ask for one more?
-> Prefix the "udevadm settle " command with
->   strace  -o /tmp/udevadm.trace -s 500
->=20
-> (making sure that you have 'strace' installed) and then post the
-> "/tmp/udevadm.trace" file.  Hopefully that will at least allow me to =
-rule
-> out some possibilities.
-
-After reducing the timeout to 40 secs, we're able to catch a failure to=
-day
-with two degraded arrays: md0 and md1.
-
-Cheers,
-Pete
---nextPart3359910.aJqLgxpeD4
-Content-Disposition: attachment; filename="udevadm.trace.gz"
-Content-Transfer-Encoding: base64
-Content-Type: application/x-gzip; name="udevadm.trace.gz"
-
-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
-
---nextPart3359910.aJqLgxpeD4--
+diff --git a/Manage.c b/Manage.c
+index 6267c0c..f557662 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -222,7 +222,15 @@ int Manage_runstop(char *devname, int fd, int runstop,
+ 		 * to stop is probably a bad idea.
+ 		 */
+ 		close(fd);
+-		fd = open(devname, O_RDONLY|O_EXCL);
++		count = 10;
++		while (((fd = open(devname, O_RDONLY|O_EXCL)) < 0 ||
++				strcmp(fd2devnm(fd), devnm) != 0)
++				&& mdmon_running(devnm) && count) {
++				if (fd >= 0)
++					close(fd);
++				flush_mdmon(devnm);
++				count--;
++		}
+ 		if (fd < 0 || strcmp(fd2devnm(fd), devnm) != 0) {
+ 			if (fd >= 0)
+ 				close(fd);
 
