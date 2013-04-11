@@ -1,30 +1,45 @@
-From: Maik Zumstrull <maik@zumstrull.net>
-Subject: Re: RAID barely usable on my home machine
-Date: Thu, 11 Apr 2013 14:18:43 +0200
-Message-ID: <CAO=zWDKoLpyf7bzg++XXE25xWZ21Ot-Pu-ezPw1hD-p0Lzn6aQ@mail.gmail.com>
-References: <CAO=zWDLfnBJBFgm4H67XEqsKPP=+Ayk3Jd4OUdEfmLXsvNGdog@mail.gmail.com>
-	<20130405082347.GA32145@cthulhu.home.robinhill.me.uk>
+From: "Vanhorn, Mike" <michael.vanhorn@wright.edu>
+Subject: Odd --examine output
+Date: Thu, 11 Apr 2013 12:47:31 +0000
+Message-ID: <CD8C2921.40FB6%michael.vanhorn@wright.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20130405082347.GA32145@cthulhu.home.robinhill.me.uk>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, 700975@bugs.debian.org, robin@robinhill.me.uk
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
+Content-ID: <C9C8F1EA7DAC59448043602D76232066@prod.exchangelabs.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Apr 5, 2013 at 10:23 AM, Robin Hill <robin@robinhill.me.uk> wrote:
-> On Thu Apr 04, 2013 at 10:13:05 +0200, Maik Zumstrull wrote:
 
->> I've managed to find a configuration on my home desktop where a
->> particular RAID array is barely usable.
+These two disks are (or, at least, were) part of my failed level 6 array.
+What does this output indicate?
 
-> I used to have the same issues on one of my machines. The solution was
-> to buy a decent SAS/SATA HBA (I went with the Intel RS2WC080, but see
-> http://blog.zorinaq.com/?e=10 for a more complete list), which now works
-> perfectly with exactly the same drives as before.
+# mdadm --examine /dev/sdg
+/dev/sdg:
+   MBR Magic : aa55
+Partition[0] :   3907024002 sectors at           63 (type fd)
+# mdadm --examine /dev/sdh
+/dev/sdh:
+   MBR Magic : aa55
+Partition[0] :   3907024002 sectors at           63 (type fd)
 
-Calling that a "solution" seems generous, but since it doesn't look
-like this'll get fixed any time soon, I decided to go the same way and
-just ordered LSI SAS 9211-8i.
+Why doesn't it instead give the same sort of metadata that the other disks
+show? It's as if there is no raid superblock on these two disks, but how
+is this possible if the disks have been part of a working array?
 
-Thanks for the list, that seems like a very useful resource.
+
+---
+Mike VanHorn
+Senior Computer Systems Administrator
+College of Engineering and Computer Science
+Wright State University
+265 Russ Engineering Center
+937-775-5157
+michael.vanhorn@wright.edu
+http://www.cecs.wright.edu/~mvanhorn/
+
+
+
+
