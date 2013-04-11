@@ -1,59 +1,72 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Odd --examine output
-Date: Thu, 11 Apr 2013 17:15:37 -0400
-Message-ID: <516727F9.9020008@turmel.org>
-References: <CD8C946E.4111D%michael.vanhorn@wright.edu>
+From: "Vanhorn, Mike" <michael.vanhorn@wright.edu>
+Subject: Re: multiple disk failures in an md raid6 array
+Date: Thu, 11 Apr 2013 20:48:42 +0000
+Message-ID: <CD8C97E6.4113A%michael.vanhorn@wright.edu>
+References: <51671EC0.9000707@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CD8C946E.4111D%michael.vanhorn@wright.edu>
+In-Reply-To: <51671EC0.9000707@turmel.org>
+Content-Language: en-US
+Content-ID: <262146580FCE9949AE758027EE4DC67E@prod.exchangelabs.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Vanhorn, Mike" <michael.vanhorn@wright.edu>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>, Mike VanHorn <mr_vanhorn@yahoo.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 04/11/2013 04:31 PM, Vanhorn, Mike wrote:
+>>
+>>
+>>
+>>Also, Microsoft's mail server from whence my message was
+>> originating has been blacklisted on your server, so I am
+>> sending this to you from my personal account on Yahoo!.
+>
+>You really need to fix your server, then, or just use this yahoo
+>account for linux-raid.  My server just uses standard SPF validation
+>and common dns blacklists.
 
-> So, if I created the array using version 1.2 of the metadata and the
-> devices specified are sd[cdefghij]1, then why am I not able to see that
-> metadata now?
-> 
-> I am really confused.
+Well, I have no control over that, as the University is a Microsoft
+customer, but it appears it's been cleared up now because things are going
+through again.
 
-Version 0.90 metadata, which lives at the end of the disk or partition,
-doesn't include a length or other piece of partition geometry that
-clearly identifies the beginning of the array.  So v0.90 metadata that
-belongs to the last partition of a disk can be mistaken for metadata
-belonging to that whole disk, and vice versa.
+>Are you already doing weekly scrubs and drive self-tests?
 
-v1.x metadata has more device info, so this can't happen to v1.0
-metadata, even though it is at the end of the device as well.  v1.1 and
-v1.2 metadata are at the beginning, therefore won't be found with the
-wrong starting sector.
+Yes. I have it do a scrub by writing "check" to
+/sys/block/md0/md/sync_action from cron.weekly, and I have a weekly script
+that runs smart tests, too.
 
-I suspect what happened to your system:
+>Do you still have the complete dmesg from the original triple
+>failure?
 
-1) Old array running w/ v0.90 metadata on /dev/sd[]1 is taken out of
-service.
-2) New array w/ v1.2 metdata is created, but for some reason, the v0.90
-metadata doesn't get destroyed.
-3) Partition tables on certain disks are wiped, hiding the v1.2 metadata.
+Unfortunately, no. I thought I kept it, but I have either misplaced the
+file or just didn't do it like I thought I did.
 
-I'm not sure if any particular version of mdadm would do #2, but it is
-plausible.
+There has been a reboot since the failure, and sde has magically come back
+and seems to be okay, so the only "bad" disk is actually sdj, which was
+the space.  However, see my other thread about "Odd --examine output" for
+more info; I haven't been able to reassemble the array (and I should have
+enough disks) because the metadata doesn't seem to be in the right place.
+On /dev/sd[cdefi], there is one set of metadata (from what I believe was
+an earlier rendition of the array, such that this data is now invalid) and
+on /dev/sd[gh]1, there is a newer set of metadata, the dates for which
+correspond with when this array was created. So, I'm thinking that the
+metadata is actually on /dev/sd[cdefi]1, but I can't get to it because
+those devices don't exist (such that I can't run, for example, mdadm -E
+/dev/sdc1, because /dev/sdc1 doesn't exist).
 
-#3 is quite concerning, as it suggest the presence of a rogue program
-with admin rights, or a rogue administrator, or a *really* questionable
-device driver.
+As I stated in the other thread, I am very confused.
 
-Anyways, if you copy the partition table from a properly working drive
-to one of the oddballs, it might expose the original partition data,
-including the v1.2 metadata.  (Although, you seem to have partitions
-starting at sector 63--a real performance killer for modern drives.)
+---
+Mike VanHorn
+Senior Computer Systems Administrator
+College of Engineering and Computer Science
+Wright State University
+265 Russ Engineering Center
+937-775-5157
+michael.vanhorn@wright.edu
+http://www.cecs.wright.edu/~mvanhorn/
 
-There's other data I suggested you collect in my response to your
-original inquiry.  There'd be much less guesswork in my replies if you
-supplied it.
 
-Phil
+
+
