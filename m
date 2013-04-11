@@ -1,61 +1,96 @@
-From: "Vanhorn, Mike" <michael.vanhorn@wright.edu>
-Subject: Re: Odd --examine output
-Date: Thu, 11 Apr 2013 20:31:08 +0000
-Message-ID: <CD8C946E.4111D%michael.vanhorn@wright.edu>
-References: <CD8C2921.40FB6%michael.vanhorn@wright.edu>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: multiple disk failures in an md raid6 array
+Date: Thu, 11 Apr 2013 16:36:16 -0400
+Message-ID: <51671EC0.9000707@turmel.org>
+References: <1365607598.94859.YahooMailNeo@web161904.mail.bf1.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CD8C2921.40FB6%michael.vanhorn@wright.edu>
-Content-Language: en-US
-Content-ID: <92ACBFEB5A72B4408AD3465E9F010355@prod.exchangelabs.com>
+In-Reply-To: <1365607598.94859.YahooMailNeo@web161904.mail.bf1.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Mike VanHorn <mr_vanhorn@yahoo.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi Mike,
 
->Why doesn't it instead give the same sort of metadata that the other disks
->show? It's as if there is no raid superblock on these two disks, but how
->is this possible if the disks have been part of a working array?
+On 04/10/2013 11:26 AM, Mike VanHorn wrote:
+> For some reason, my replies to the linux-raid list aren't going
+> through, and not all of the messages from the list seem to be
+> getting to me, either, so I hope it is okay that I am replying
+> to you directly.
 
-Update: by chance, I discovered that if I
+It's ok, but I am adding the list back.
 
- mdadm -e /dev/sdg1
+> Also, Microsoft's mail server from whence my message was
+> originating has been blacklisted on your server, so I am
+> sending this to you from my personal account on Yahoo!.
 
-then I get the output of the superblock. That is, the superblock is found
-on the partition (apparently) but not on the disk device. This also works
-for disk sdh, for which I couldn't find a superblock, either. However, for
-the rest of the disks from the array (sd[cdefi]), there is no such device
-as "sdc1", for example.
+You really need to fix your server, then, or just use this yahoo
+account for linux-raid.  My server just uses standard SPF validation
+and common dns blacklists.
 
-I have also discovered that for the drives where mdadm -e /dev/sdc (just
-the disk) works, the version of the metadata is 0.90.00, where as those
-other two where the superblock is on the partition (i.e. sdg1), the
-version is 1.2. This makes more sense, since I create the array originally
-(back in December) with the following command:
+> In your reply, you said
+> 
+>> I recommend:
+>>
+>> 1) Fix timeouts as needed.  Either set your drives' ERC to 7.0
+>> seconds, or raise the driver timeouts ~180 seconds.
+> 
+> As it turns out, the drives in question aren't ERC capable:
+> 
+> # smartctl -l scterc,70,70 /dev/sdc
+> smartctl 5.42 2011-10-20 r3458 [x86_64-linux-2.6.18-308.13.1.el5] (local
+> build)
+> Copyright (C) 2002-11 by Bruce Allen, http://smartmontools.sourceforge.net
+> <http://smartmontools.sourceforge.net/>
+> 
+> Warning: device does not support SCT Error Recovery Control command
+> #
+> 
+> However, when I do the following
+> 
+> for x in /sys/block/sd[cdfghij] ; do echo $x: $(< $x/device/timeout) ;
+> done>timeout.txt
+> 
+> I get output such as
+> 
+> /sys/block/sdj: 180
+> 
+> because it seems that I've previously discovered that they aren't ERC capable, as I'm setting the timeout in /etc/rc.local like so:
+> 
+> echo 180 >/sys/block/sdc/device/timeout
+> echo 180 >/sys/block/sdd/device/timeout
+> echo 180 >/sys/block/sde/device/timeout
+> echo 180 >/sys/block/sdf/device/timeout
+> echo 180 >/sys/block/sdg/device/timeout
+> echo 180 >/sys/block/sdh/device/timeout
+> echo 180 >/sys/block/sdi/device/timeout
+> echo 180 >/sys/block/sdj/device/timeout
+> 
+> Doing this is what is meant by changing the driver's timeout, correct?
 
- mdadm --create --verbose /dev/md0 --metadata=1.2 --level=6
---raid-devices=7 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1
-/dev/sdh1 /dev/sdi1 --spare-devices=1 /dev/sdj1
+Yes.
 
+> Should I be setting this for an even longer period of time?
 
-So, if I created the array using version 1.2 of the metadata and the
-devices specified are sd[cdefghij]1, then why am I not able to see that
-metadata now?
+No.
 
-I am really confused.
+> Thank you for helping me to understand what is going on!
 
----
-Mike VanHorn
-Senior Computer Systems Administrator
-College of Engineering and Computer Science
-Wright State University
-265 Russ Engineering Center
-937-775-5157
-michael.vanhorn@wright.edu
-http://www.cecs.wright.edu/~mvanhorn/
+Are you already doing weekly scrubs and drive self-tests?
 
+Do you still have the complete dmesg from the original triple
+failure?
 
+> Mike VanHorn
+> Senior Computer Systems Administrator
+> College of Engineering and Computer Science
+> Wright State University
+> 265 Russ Engineering Center
+> 937-775-5157
+> michael.vanhorn@wright.edu
+> http://www.cecs.wright.edu/~mvanhorn/
 
-
+Phil
