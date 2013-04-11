@@ -1,45 +1,37 @@
-From: "Vanhorn, Mike" <michael.vanhorn@wright.edu>
-Subject: Odd --examine output
-Date: Thu, 11 Apr 2013 12:47:31 +0000
-Message-ID: <CD8C2921.40FB6%michael.vanhorn@wright.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH 0/1] Reduce unnecessary opens of raid members
+Date: Thu, 11 Apr 2013 15:18:32 +0200
+Message-ID: <1365686313-30833-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
-Content-ID: <C9C8F1EA7DAC59448043602D76232066@prod.exchangelabs.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: harald@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-These two disks are (or, at least, were) part of my failed level 6 array.
-What does this output indicate?
+Hi,
 
-# mdadm --examine /dev/sdg
-/dev/sdg:
-   MBR Magic : aa55
-Partition[0] :   3907024002 sectors at           63 (type fd)
-# mdadm --examine /dev/sdh
-/dev/sdh:
-   MBR Magic : aa55
-Partition[0] :   3907024002 sectors at           63 (type fd)
+I am posting this on Harald's request. This avoids unncessary double
+opens of raid members and also has the side effect of not triggering
+udev notify twice.
 
-Why doesn't it instead give the same sort of metadata that the other disks
-show? It's as if there is no raid superblock on these two disks, but how
-is this possible if the disks have been part of a working array?
+Jes
 
 
----
-Mike VanHorn
-Senior Computer Systems Administrator
-College of Engineering and Computer Science
-Wright State University
-265 Russ Engineering Center
-937-775-5157
-michael.vanhorn@wright.edu
-http://www.cecs.wright.edu/~mvanhorn/
+Harald Hoyer (1):
+  prevent double open(O_RDWR) on raid creation
 
+ Kill.c        | 28 +++++++++++++++++-----------
+ Manage.c      |  2 +-
+ mdadm.c       |  4 ++--
+ mdadm.h       |  2 +-
+ super-ddf.c   |  2 +-
+ super-intel.c |  2 +-
+ super0.c      |  2 +-
+ super1.c      |  2 +-
+ 8 files changed, 25 insertions(+), 19 deletions(-)
 
-
+-- 
+1.8.1.4
 
