@@ -1,7 +1,7 @@
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH 7/8] dm thin: use generic helper to set max_discard_sectors
-Date: Sat, 13 Apr 2013 22:39:59 +0900
-Message-ID: <1365860399-21465-1-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH 8/8] bcache: use generic helper to set max_discard_sectors
+Date: Sat, 13 Apr 2013 22:40:16 +0900
+Message-ID: <1365860416-21499-1-git-send-email-linkinjeon@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: dwmw2@infradead.org, axboe@kernel.dk, shli@kernel.org, Paul.Clements@steeleye.com, npiggin@kernel.dk, neilb@suse.de, cjb@laptop.org, adrian.hunter@intel.com
@@ -26,22 +26,21 @@ This patch fixes this issue.
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Vivek Trivedi <t.vivek@samsung.com>
 ---
- drivers/md/dm-thin.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/md/bcache/super.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/md/dm-thin.c b/drivers/md/dm-thin.c
-index 905b75f..237295a 100644
---- a/drivers/md/dm-thin.c
-+++ b/drivers/md/dm-thin.c
-@@ -2513,7 +2513,8 @@ static void set_discard_limits(struct pool_c *pt, struct queue_limits *limits)
- 	struct pool *pool = pt->pool;
- 	struct queue_limits *data_limits;
- 
--	limits->max_discard_sectors = pool->sectors_per_block;
-+	blk_queue_max_discard_sectors(bdev_get_queue(pt->data_dev->bdev),
-+					pool->sectors_per_block);
- 
- 	/*
- 	 * discard_granularity is just a hint, and not enforced.
+diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+index f3bf310..d87ab31 100644
+--- a/drivers/md/bcache/super.c
++++ b/drivers/md/bcache/super.c
+@@ -746,7 +746,7 @@ static int bcache_device_init(struct bcache_device *d, unsigned block_size)
+ 	q->limits.max_sectors		= UINT_MAX;
+ 	q->limits.max_segment_size	= UINT_MAX;
+ 	q->limits.max_segments		= BIO_MAX_PAGES;
+-	q->limits.max_discard_sectors	= UINT_MAX;
++	blk_queue_max_discard_sectors(q, UINT_MAX >> 9);
+ 	q->limits.io_min		= block_size;
+ 	q->limits.logical_block_size	= block_size;
+ 	q->limits.physical_block_size	= block_size;
 -- 
 1.7.9.5
