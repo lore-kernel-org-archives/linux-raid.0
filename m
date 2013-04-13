@@ -1,55 +1,66 @@
-From: Gimpbully <gimpbully@gmail.com>
-Subject: array went wonky
-Date: Fri, 12 Apr 2013 22:41:11 -0700
-Message-ID: <474B6DA3-FED2-4674-9707-1BC43378CB90@gmail.com>
-Mime-Version: 1.0 (Mac OS X Mail 6.3 \(1503\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: [PATCH 0/8] fix max discard sectors limit
+Date: Sat, 13 Apr 2013 22:37:29 +0900
+Message-ID: <1365860249-21193-1-git-send-email-linkinjeon@gmail.com>
+Return-path: <linux-mmc-owner@vger.kernel.org>
+Sender: linux-mmc-owner@vger.kernel.org
+To: dwmw2@infradead.org, axboe@kernel.dk, shli@kernel.org, Paul.Clements@steeleye.com, npiggin@kernel.dk, neilb@suse.de, cjb@laptop.org, adrian.hunter@intel.com
+Cc: linux-mtd@lists.infradead.org, nbd-general@lists.sourceforge.net, linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>
 List-Id: linux-raid.ids
 
-Good Evening Folks,
-     Alright, I have a 5 disk raid5, it's worked for years.  Today a disk went "click click" and I dropped the cold spare I had in and started a rebuild.  Everything was great until I checked around 35% rebuild and everything was in the toilet.  Here is the current -E info.  Any advise would be *amazingly* appreciated.  (I can't believe I didn't just put the spare in and just go RAID5...).
+From: Namjae Jeon <namjae.jeon@samsung.com>
 
-/dev/sda1:
-         Events : 25952
-this     4       8        1        4      active sync   /dev/sda1
-   0     0       8       33        0      active sync   /dev/sdc1
-   2     2       8       65        2      active sync   /dev/sde1
-   4     4       8        1        4      active sync   /dev/sda1
-   5     5       8       81        5      spare   /dev/sdf1
-/dev/sdb1:
-         Events : 25944
-this     1       8       17        1      active sync   /dev/sdb1
-   0     0       8       33        0      active sync   /dev/sdc1
-   1     1       8       17        1      active sync   /dev/sdb1
-   2     2       8       65        2      active sync   /dev/sde1
-   4     4       8        1        4      active sync   /dev/sda1
-   5     5       8       81        5      spare   /dev/sdf1
-/dev/sdc1:
-         Events : 25952
-this     0       8       33        0      active sync   /dev/sdc1
-   0     0       8       33        0      active sync   /dev/sdc1
-   2     2       8       65        2      active sync   /dev/sde1
-   4     4       8        1        4      active sync   /dev/sda1
-   5     5       8       81        5      spare   /dev/sdf1
-/dev/sde1:
-         Events : 25952
-this     2       8       65        2      active sync   /dev/sde1
-   0     0       8       33        0      active sync   /dev/sdc1
-   2     2       8       65        2      active sync   /dev/sde1
-   4     4       8        1        4      active sync   /dev/sda1
-   5     5       8       81        5      spare   /dev/sdf1
-/dev/sdf1:
-         Events : 25952
-this     5       8       81        5      spare   /dev/sdf1
-   0     0       8       33        0      active sync   /dev/sdc1
-   2     2       8       65        2      active sync   /dev/sde1
-   4     4       8        1        4      active sync   /dev/sda1
-   5     5       8       81        5      spare   /dev/sdf1
+linux-v3.8-rc1 and later support for plug for blkdev_issue_discard with
+commit 0cfbcafcae8b7364b5fa96c2b26ccde7a3a296a9 
+(block: add plug for blkdev_issue_discard )
 
+For example,
+1) DISCARD rq-1 with size size 4GB
+2) DISCARD rq-2 with size size 1GB
+
+If these 2 discard requests get merged, final request size will be 5GB.
+
+In this case, request's __data_len field may overflow as it can store
+max 4GB(unsigned int).
+
+This issue was observed while doing mkfs.f2fs on 5GB SD card:
+https://lkml.org/lkml/2013/4/1/292
+
+# mkfs.f2fs /dev/mmcblk0p3
+Info: sector size = 512
+Info: total sectors = 11370496 (in 512bytes)
+Info: zone aligned segment0 blkaddr: 512
+[  257.789764] blk_update_request: bio idx 0 >= vcnt 0
+
+mkfs process gets stuck in D state and I see the following in the dmesg:
+
+[  257.789733] __end_that: dev mmcblk0: type=1, flags=122c8081
+[  257.789764]   sector 4194304, nr/cnr 2981888/4294959104
+[  257.789764]   bio df3840c0, biotail df3848c0, buffer   (null), len 1526726656
+[  257.789764] blk_update_request: bio idx 0 >= vcnt 0
+[  257.794921] request botched: dev mmcblk0: type=1, flags=122c8081
+[  257.794921]   sector 4194304, nr/cnr 2981888/4294959104
+[  257.794921]   bio df3840c0, biotail df3848c0, buffer   (null), len 1526726656
+
+Few drivers(e.g. mmc, mtd..) set q->limits.max_discard_sectors
+more than UINT_MAX >> 9 sectors which is incorrect and it may lead to overflow
+of request's __data_len field if merged discard request's size exceeds 4GB.
+
+This patchset fixes this issue by updating helper function
+blk_queue_max_discard_sectors which is used to set max_discard_sectors limit.
+
+This patchset also replaces "q->limits.max_discard_sector = max_discard_sectors"
+with blk_queue_max_discard_sectors call in other drivers like mmc, mtd etc.
+
+Namjae Jeon (8):
+  block: fix max discard sectors limit
+  mmc: fix max_discard_sectors
+  mtd: use generic helper to set max_discard_sectors
+  loop: use generic helper to set max_discard_sectors
+  nbd: use generic helper to set max_discard_sectors
+  brd: use generic helper to set max_discard_sectors
+  dm thin: use generic helper to set max_discard_sectors
+  bcache: use generic helper to set max_discard_sectors
 -- 
-~~~~~~~~~
-He hates these cans
+1.7.9.5
+
