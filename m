@@ -1,115 +1,84 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: RAID1 member mysteriously failing on 3.8+
-Date: Mon, 15 Apr 2013 14:56:52 +0600
-Message-ID: <20130415145652.302d87f1@natsu>
+From: Oliver Schinagl <oliver+list@schinagl.nl>
+Subject: Re: md RAID5: Disk wrongly marked "spare", need to force re-add it
+Date: Sun, 14 Apr 2013 19:30:08 +0200
+Message-ID: <516AE7A0.4070504@schinagl.nl>
+References: <516869D2.9030506@bucksch.org> <516B3077.9020507@schinagl.nl> <516B590C.5060807@bucksch.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/5uDsaINrT_OMY/HzZO4+2xk"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <516B590C.5060807@bucksch.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ben Bucksch <linux.news@bucksch.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/5uDsaINrT_OMY/HzZO4+2xk
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 15-04-13 03:34, Ben Bucksch wrote:
+> Hey Oliver,
+>
+> first off: thanks for trying to help me.
+>
+> Oliver Schinagl wrote, On 15.04.2013 00:40:
+>> Firstly, have you written anything TOO the array while resyncing? If 
+>> not, chances are your array is in a reasonable shape still.
+>
+> I did write to the array (in fact, I did a bonnie++, which in 
+> retrospective is very stupid, and I'm upset I did it, but hindsight is 
+> 20/20 - I assumed the array was fine at that time), BUT if you look at 
+> the "event count" of each drive, the sdl marked "spare" has an event 
+> count just 2 lower then all the others, so they are very close.
+>
+>> Now check the event count for all your drivers and compare. If the 
+>> 'broken' drive is only a few off (1 or 2 I think i spotted below, try 
+>> the following) 
+>
+> Exactly.
+>
+>> The 'spare' drive, I don't know what its status is.
+>
+> According to SMART, it's just fine. Its event status is very close to 
+> the others.
+>
+>> Theoretically, I would assume that the resync the data written to the 
+>> disk is exactly the same as it was before, so keep that in mind as a 
+>> last resort.
+>
+> Yes, that's my plan. My question is: HOW can I tell mdadm to use it?
+>
+>> mdadm --run --force -A /dev/md0 /dev/sd...
+>
+> I've tried that, and it tells me the array can't be started, because I 
+> have RAID 5 with 8 drives (in normal situation), 6 good drives, and 2 
+> spares (1 working fine, 1 with hardware failure). So, after this 
+> command, I end up in "inactive" operation mode.
+Make sure to list all known 'good' devices (don't list the really broken 
+device). --run --force should make it come up.
+I recently (see previous thread) had an issue aswel and I found the 
+order of commands mattered. I may have put the wrong ones up here. Doing 
+history | grep mdadm the last used command, and thus probably the right 
+one was:
 
-Hello,
+mdadm --assemble --run --force /dev/md0 /dev/sd[1-7].
 
-Continuing on the dangerous and exciting journey with trying to upgrade my
-system from a 3.7.10 kernel to 3.8.7, I face the following problem.
+Make sure to mdadm --stop /dev/md0 before trying to assemble it.
+>
+>> Now the broken drive. Check your cables!! and run smartctl on it to 
+>> give smart a chance to 'fix' the drive somewhat and check its 
+>> status/health. ...
+>> If it fails again (at 80% because of hardware failure) you can't 
+>> re-use the broken disk. It really is broken :p
+>
+> It failed twice during resync, at around the same point, and smartctl 
+> tells me it's broken, so I assume it's gone for good. (Also, the 
+> failed drive is also marked as "spare" currently.)
+>
+>> your very last hope, is to not use the broken drive, and 'force' the 
+>> above using the earlier marked spare.
+>
+> How? I haven't managed to do that, that's my whole question.
+>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-In a RAID1 array of an SSD and a HDD marked as write-mostly, mdadm at some
-point just randomly decides that a device has failed, despite NO dmesg
-messages that would confirm that anything at all happened to the device (at=
- 133s).
-
-Then I notice this, remove(413s) and re-add(418s) the device. It starts
-rebuilding, but just after 10 seconds, "fails" again! (428s). This can repe=
-at
-and repeat, I can't readd it and have it rebuild successfully.
-
-If a device truly failed in some way, I'd expect dmesg errors from e.g. the=
- ATA layer, etc.
-But there is none; also what leads me to suspicion that this is some sort o=
-f a
-bug, is the fact that this same array works perfectly on the older (3.7.10)
-kernel.
-
-...
-[   22.984532] r8169 0000:04:00.0 eth0: link up
-[   22.984541] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
-[   22.984584] IPv6: ADDRCONF(NETDEV_CHANGE): eth0.2: link becomes ready
-[   22.996464] NFSD: Using /var/lib/nfs/v4recovery as the NFSv4 state recov=
-ery directory
-[   22.996712] NFSD: starting 90-second grace period (net ffffffff81cb36c0)
-[   41.315150] ata1.00: configured for UDMA/133
-[   41.315164] ata1: EH complete
-[   41.329004] ata2.00: configured for UDMA/133
-[   41.329019] ata2: EH complete
-[   41.330625] ata3.00: configured for UDMA/133
-[   41.330640] ata3: EH complete
-[   41.333116] ata4.00: configured for UDMA/133
-[   41.333130] ata4: EH complete
-[   41.335766] ata5.00: configured for UDMA/133
-[   41.335781] ata5: EH complete
-[   41.356118] ata7.00: configured for UDMA/133
-[   41.356133] ata7: EH complete
-[   41.362298] ata12.00: configured for UDMA/133
-[   41.362313] ata12: EH complete
-[   41.362483] ata13.00: configured for UDMA/133
-[   41.362491] ata13: EH complete
-[   41.369409] ata11.00: configured for UDMA/133
-[   41.369424] ata11: EH complete
-[  133.191756] md/raid1:md3: Disk failure on sdg1, disabling device.
-[  133.191756] md/raid1:md3: Operation continuing on 1 devices.
-[  133.194892] RAID1 conf printout:
-[  133.194901]  --- wd:1 rd:2
-[  133.194906]  disk 0, wo:0, o:1, dev:sdf1
-[  133.194911]  disk 1, wo:1, o:0, dev:sdg1
-[  133.198199] RAID1 conf printout:
-[  133.198213]  --- wd:1 rd:2
-[  133.198219]  disk 0, wo:0, o:1, dev:sdf1
-[  413.692816] md: unbind<sdg1>
-[  413.692863] md: export_rdev(sdg1)
-[  413.718257] device label home devid 1 transid 568912 /dev/md3
-[  418.696848] md: bind<sdg1>
-[  418.699066] RAID1 conf printout:
-[  418.699074]  --- wd:1 rd:2
-[  418.699080]  disk 0, wo:0, o:1, dev:sdf1
-[  418.699085]  disk 1, wo:1, o:1, dev:sdg1
-[  418.704862] md: recovery of RAID array md3
-[  418.704873] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[  418.704879] md: using maximum available idle IO bandwidth (but not more =
-than 200000 KB/sec) for recovery.
-[  418.704888] md: using 128k window, over a total of 58579264k.
-[  418.763888] device label home devid 1 transid 568912 /dev/md3
-[  428.464670] md/raid1:md3: Disk failure on sdg1, disabling device.
-[  428.464670] md/raid1:md3: Operation continuing on 1 devices.
-[  428.979635] md: md3: recovery done.
-[  428.984824] RAID1 conf printout:
-[  428.984836]  --- wd:1 rd:2
-[  428.984843]  disk 0, wo:0, o:1, dev:sdf1
-[  428.984848]  disk 1, wo:1, o:0, dev:sdg1
-[  428.987765] RAID1 conf printout:
-[  428.987771]  --- wd:1 rd:2
-[  428.987777]  disk 0, wo:0, o:1, dev:sdf1
-
-
---=20
-With respect,
-Roman
-
---Sig_/5uDsaINrT_OMY/HzZO4+2xk
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlFrwNQACgkQTLKSvz+PZwj64QCeJdCr777fpMDBt3w2eukC5OZl
-5GcAn0fFUJELSnhL5RXavjg1uEX4q4/3
-=jlp+
------END PGP SIGNATURE-----
-
---Sig_/5uDsaINrT_OMY/HzZO4+2xk--
