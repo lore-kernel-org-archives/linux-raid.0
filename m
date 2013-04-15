@@ -1,24 +1,36 @@
 From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: RAID performance - new kernel results
-Date: Mon, 15 Apr 2013 18:49:32 +0200 (CEST)
-Message-ID: <1707770.10.1366044572589.JavaMail.root@zimbra>
-References: <516BF13B.4010704@websitemanagers.com.au>
+Subject: Re: Odd --examine output
+Date: Mon, 15 Apr 2013 20:42:54 +0200 (CEST)
+Message-ID: <10112252.14.1366051374769.JavaMail.root@zimbra>
+References: <CD917B51.41713%michael.vanhorn@wright.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <516BF13B.4010704@websitemanagers.com.au>
+In-Reply-To: <CD917B51.41713%michael.vanhorn@wright.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: linux-raid@vger.kernel.org
+To: Mike Vanhorn <michael.vanhorn@wright.edu>
+Cc: Phil Turmel <philip@turmel.org>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> The storage server has a single bond0 with 8 x Gbps ethernet
-> connections for the iSCSI network
+> >NOT a guess. Back up what you can, while you can, and start over. Us=
+e
+> >"fdisk -u" so you can ensure partitions start on multiples of eight
+> >(8)
+> >sectors. (Modern fdisk uses 1MB alignment by default. Highly
+> >recommended.)
+> >
+> >
+>=20
+> So, if I start the partition at sector 64 (rather than 63), that's
+> better,
+> right (since 64 is a multiple of 8)? Or is there more math to do and
+> I'm still not getting it?
 
-What sort of bonding? 802.3ad or something else? if using the former, t=
-his probably won't work on the non-managed switch. if using the latter,=
- then please detail
+I still don't understand why people use partitions for RAID when the wh=
+ole drive is used anyway. Partitions were invented to partition things =
+up and are of no use if you want to spend the whole drive's space for R=
+AID use (or otherwise).
 
 Vennlige hilsener / Best regards
 
