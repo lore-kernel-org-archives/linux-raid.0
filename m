@@ -1,119 +1,91 @@
-From: Namjae Jeon <linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 2/8] mmc: fix max_discard_sectors
-Date: Mon, 15 Apr 2013 16:52:54 +0900
-Message-ID: <CAKYAXd8EPHoeKY3GUZof+uzHRQ78EW68DuJfjKx=xXs45uYkOQ@mail.gmail.com>
-References: <1365860309-21261-1-git-send-email-linkinjeon@gmail.com>
-	<516BAA36.9030500@intel.com>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Re: MD does not wait for drives on start-up with kernels 3.8+
+Date: Mon, 15 Apr 2013 14:45:30 +0600
+Message-ID: <20130415144530.183d7b31@natsu>
+References: <20130330190538.4e3c1771@natsu>
+	<CAGqmV7qmPHYpm1rinfsh5W-mgqo+Va2RvQtZoy-5AazYFAHYdg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <nbd-general-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-In-Reply-To: <516BAA36.9030500-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/nbd-general>,
-	<mailto:nbd-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=nbd-general>
-List-Post: <mailto:nbd-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-List-Help: <mailto:nbd-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/nbd-general>,
-	<mailto:nbd-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
-Errors-To: nbd-general-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-To: Adrian Hunter <adrian.hunter-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, nbd-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Vivek Trivedi <t.vivek-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, npiggin-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, neilb-l3A5Bk7waGM@public.gmane.org, dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, Paul.Clements-G8/ITkJZaeZWk0Htik3J/w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cjb-2X9k7bc8m7Mdnm+yROfE0A@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/eRCKzIZlsBMQ7mEV.3jn_qv"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAGqmV7qmPHYpm1rinfsh5W-mgqo+Va2RvQtZoy-5AazYFAHYdg@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: CoolCold <coolthecold@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2013/4/15, Adrian Hunter <adrian.hunter-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>:
-> On 13/04/13 16:38, Namjae Jeon wrote:
->> From: Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
->>
->> https://lkml.org/lkml/2013/4/1/292
->> As per above discussion, there is possibility that request's __data_len
->> field may overflow when max_discard_sectors greater than UINT_MAX >> 9
->>
->> If multiple discard requests get merged, merged discard request's
->> size exceeds 4GB, there is possibility that merged discard request's
->> __data_len field may overflow.
->>
->> This patch fixes this issue.
->>
->> Reported-by: Max Filippov <jcmvbkbc-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->> Signed-off-by: Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
->> Signed-off-by: Vivek Trivedi <t.vivek-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
->> Tested-by: Max Filippov <jcmvbkbc-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->> ---
->>  drivers/mmc/card/queue.c |    2 +-
->>  drivers/mmc/core/core.c  |    4 ++--
->>  2 files changed, 3 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/mmc/card/queue.c b/drivers/mmc/card/queue.c
->> index 9447a0e..54726b7 100644
->> --- a/drivers/mmc/card/queue.c
->> +++ b/drivers/mmc/card/queue.c
->> @@ -166,7 +166,7 @@ static void mmc_queue_setup_discard(struct
->> request_queue *q,
->>  		return;
->>
->>  	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, q);
->> -	q->limits.max_discard_sectors = max_discard;
->> +	blk_queue_max_discard_sectors(q, max_discard);
->>  	if (card->erased_byte == 0 && !mmc_can_discard(card))
->>  		q->limits.discard_zeroes_data = 1;
->>  	q->limits.discard_granularity = card->pref_erase << 9;
->> diff --git a/drivers/mmc/core/core.c b/drivers/mmc/core/core.c
->> index 7b435a3..6ee530c 100644
->> --- a/drivers/mmc/core/core.c
->> +++ b/drivers/mmc/core/core.c
->> @@ -2058,7 +2058,7 @@ static unsigned int mmc_do_calc_max_discard(struct
->> mmc_card *card,
->>  	if (card->erase_shift)
->>  		max_qty = UINT_MAX >> card->erase_shift;
->>  	else if (mmc_card_sd(card))
->> -		max_qty = UINT_MAX;
->> +		max_qty = UINT_MAX >> 9;
->
-> No.  This function calculates max discard for the card not the block layer.
->  Apply the block layer limitation at the block layer interface e.g.
-> in mmc_queue_setup_discard()
-Hi Adrian,
-Okay, I will remove change in mmc_do_calc_max_discard and mmc_calc_max_discard.
+--Sig_/eRCKzIZlsBMQ7mEV.3jn_qv
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
->> @@ -166,7 +166,7 @@ static void mmc_queue_setup_discard(struct
->> request_queue *q,
->>  		return;
->>
->>  	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, q);
->> -	q->limits.max_discard_sectors = max_discard;
->> +	blk_queue_max_discard_sectors(q, max_discard);
->>  	if (card->erased_byte == 0 && !mmc_can_discard(card))
->>  		q->limits.discard_zeroes_data = 1;
-Above change will handle max discard sectors as we have updated
-blk_queue_max_discard_sectors to check upper limit of max discard
-sectors as UINT_MAX >> 9.
+On Sun, 31 Mar 2013 09:36:30 +0400
+CoolCold <coolthecold@gmail.com> wrote:
 
-Thanks.
->
->>  	else
->>  		max_qty = UINT_MAX / card->erase_size;
->>
->> @@ -2100,7 +2100,7 @@ unsigned int mmc_calc_max_discard(struct mmc_card
->> *card)
->>  	unsigned int max_discard, max_trim;
->>
->>  	if (!host->max_discard_to)
->> -		return UINT_MAX;
->> +		return UINT_MAX >> 9;
->
-> Ditto.
->
->>
->>  	/*
->>  	 * Without erase_group_def set, MMC erase timeout depends on clock
->>
->
->
+> In similar situation (but on 2.6.2x kernels i AFAIR, with scsi drives)
+> I've used rootdelay param -
+> http://lists.debian.org/debian-user/2012/01/msg00748.html to make md
+> assembly succeed. Hope this will help you too.
 
-------------------------------------------------------------------------------
-Precog is a next-generation analytics platform capable of advanced
-analytics on semi-structured data. The platform includes APIs for building
-apps and a phenomenal toolset for data science. Developers can use
-our toolset for easy data analysis & visualization. Get a free account!
-http://www2.precog.com/precogplatform/slashdotnewsletter
+Thanks, rootdelay=3D10 seems to have solved the problem.
+
+...
+[    3.860538] scsi 12:0:0:0: Direct-Access     ATA      Hitachi HDS5C302 M=
+L6O PQ: 0 ANSI: 5
+[    3.860716] sd 12:0:0:0: Attached scsi generic sg8 type 0
+[    3.860879] sd 12:0:0:0: [sdi] 3907029168 512-byte logical blocks: (2.00=
+ TB/1.81 TiB)
+[    3.860906] sd 12:0:0:0: [sdi] Write Protect is off
+[    3.860908] sd 12:0:0:0: [sdi] Mode Sense: 00 3a 00 00
+[    3.860920] sd 12:0:0:0: [sdi] Write cache: enabled, read cache: enabled=
+, doesn't support DPO or FUA
+[    3.872747]  sdi: sdi1 sdi2 sdi3
+[    3.873014] sd 12:0:0:0: [sdi] Attached SCSI disk
+[    4.144402] scsi 14:0:0:0: Direct-Access     ChipsBnk   Multi-Reader   4=
+082 PQ: 0 ANSI: 2
+[    4.145294] sd 14:0:0:0: Attached scsi generic sg9 type 0
+[    4.147579] sd 14:0:0:0: [sdj] Attached SCSI removable disk
+[    4.179650] ata14: SATA link down (SStatus 0 SControl 300)
+[    4.601802] hid-generic 0003:051D:0002.0001: hiddev0,hidraw0: USB HID v1=
+.10 Device [American Power Conversion Back-UPS RS 500 FW:30.j5.I USB FW:j5]=
+ on usb-0000:00:12.0-3/input0
+[    4.601987] input: Logitech HID compliant keyboard as /devices/pci0000:0=
+0/0000:00:12.2/usb1/1-6/1-6.1/1-6.1:1.0/input/input2
+[    4.602051] hid-generic 0003:046D:C30E.0002: input,hidraw1: USB HID v1.1=
+0 Keyboard [Logitech HID compliant keyboard] on usb-0000:00:12.2-6.1/input0
+[    4.606121] input: Logitech HID compliant keyboard as /devices/pci0000:0=
+0/0000:00:12.2/usb1/1-6/1-6.1/1-6.1:1.1/input/input3
+[    4.606647] hid-generic 0003:046D:C30E.0003: input,hidraw2: USB HID v1.1=
+0 Device [Logitech HID compliant keyboard] on usb-0000:00:12.2-6.1/input1
+[   12.537344] nbd: registered device at major 43
+[   12.599970] md: md0 stopped.
+[   12.603855] md: bind<sde3>
+[   12.604029] md: bind<sda3>
+[   12.604139] md: bind<sdi3>
+[   12.604290] md: bind<sdc3>
+[   12.604618] md: bind<sdb3>
+[   12.604779] md: bind<sdd3>
+[   12.604982] md: bind<sdh3>
+...
+
+This was NOT required on any of the previous kernels, so I wonder why all of
+sudden with the 3.8+ kernels my system needs an extra "crutch" just to keep
+starting up properly.
+
+
+--=20
+With respect,
+Roman
+
+--Sig_/eRCKzIZlsBMQ7mEV.3jn_qv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlFrvisACgkQTLKSvz+PZwgn+ACdGr5rwItluOXoDXaP94Q/dTnG
+68AAn2XdVrKo1WNWsbhyuIoVpA24o4d8
+=oypx
+-----END PGP SIGNATURE-----
+
+--Sig_/eRCKzIZlsBMQ7mEV.3jn_qv--
