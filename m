@@ -1,91 +1,115 @@
 From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: MD does not wait for drives on start-up with kernels 3.8+
-Date: Mon, 15 Apr 2013 14:45:30 +0600
-Message-ID: <20130415144530.183d7b31@natsu>
-References: <20130330190538.4e3c1771@natsu>
-	<CAGqmV7qmPHYpm1rinfsh5W-mgqo+Va2RvQtZoy-5AazYFAHYdg@mail.gmail.com>
+Subject: RAID1 member mysteriously failing on 3.8+
+Date: Mon, 15 Apr 2013 14:56:52 +0600
+Message-ID: <20130415145652.302d87f1@natsu>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/eRCKzIZlsBMQ7mEV.3jn_qv"; protocol="application/pgp-signature"
+ boundary="Sig_/5uDsaINrT_OMY/HzZO4+2xk"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGqmV7qmPHYpm1rinfsh5W-mgqo+Va2RvQtZoy-5AazYFAHYdg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/eRCKzIZlsBMQ7mEV.3jn_qv
+--Sig_/5uDsaINrT_OMY/HzZO4+2xk
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 31 Mar 2013 09:36:30 +0400
-CoolCold <coolthecold@gmail.com> wrote:
+Hello,
 
-> In similar situation (but on 2.6.2x kernels i AFAIR, with scsi drives)
-> I've used rootdelay param -
-> http://lists.debian.org/debian-user/2012/01/msg00748.html to make md
-> assembly succeed. Hope this will help you too.
+Continuing on the dangerous and exciting journey with trying to upgrade my
+system from a 3.7.10 kernel to 3.8.7, I face the following problem.
 
-Thanks, rootdelay=3D10 seems to have solved the problem.
+In a RAID1 array of an SSD and a HDD marked as write-mostly, mdadm at some
+point just randomly decides that a device has failed, despite NO dmesg
+messages that would confirm that anything at all happened to the device (at=
+ 133s).
+
+Then I notice this, remove(413s) and re-add(418s) the device. It starts
+rebuilding, but just after 10 seconds, "fails" again! (428s). This can repe=
+at
+and repeat, I can't readd it and have it rebuild successfully.
+
+If a device truly failed in some way, I'd expect dmesg errors from e.g. the=
+ ATA layer, etc.
+But there is none; also what leads me to suspicion that this is some sort o=
+f a
+bug, is the fact that this same array works perfectly on the older (3.7.10)
+kernel.
 
 ...
-[    3.860538] scsi 12:0:0:0: Direct-Access     ATA      Hitachi HDS5C302 M=
-L6O PQ: 0 ANSI: 5
-[    3.860716] sd 12:0:0:0: Attached scsi generic sg8 type 0
-[    3.860879] sd 12:0:0:0: [sdi] 3907029168 512-byte logical blocks: (2.00=
- TB/1.81 TiB)
-[    3.860906] sd 12:0:0:0: [sdi] Write Protect is off
-[    3.860908] sd 12:0:0:0: [sdi] Mode Sense: 00 3a 00 00
-[    3.860920] sd 12:0:0:0: [sdi] Write cache: enabled, read cache: enabled=
-, doesn't support DPO or FUA
-[    3.872747]  sdi: sdi1 sdi2 sdi3
-[    3.873014] sd 12:0:0:0: [sdi] Attached SCSI disk
-[    4.144402] scsi 14:0:0:0: Direct-Access     ChipsBnk   Multi-Reader   4=
-082 PQ: 0 ANSI: 2
-[    4.145294] sd 14:0:0:0: Attached scsi generic sg9 type 0
-[    4.147579] sd 14:0:0:0: [sdj] Attached SCSI removable disk
-[    4.179650] ata14: SATA link down (SStatus 0 SControl 300)
-[    4.601802] hid-generic 0003:051D:0002.0001: hiddev0,hidraw0: USB HID v1=
-.10 Device [American Power Conversion Back-UPS RS 500 FW:30.j5.I USB FW:j5]=
- on usb-0000:00:12.0-3/input0
-[    4.601987] input: Logitech HID compliant keyboard as /devices/pci0000:0=
-0/0000:00:12.2/usb1/1-6/1-6.1/1-6.1:1.0/input/input2
-[    4.602051] hid-generic 0003:046D:C30E.0002: input,hidraw1: USB HID v1.1=
-0 Keyboard [Logitech HID compliant keyboard] on usb-0000:00:12.2-6.1/input0
-[    4.606121] input: Logitech HID compliant keyboard as /devices/pci0000:0=
-0/0000:00:12.2/usb1/1-6/1-6.1/1-6.1:1.1/input/input3
-[    4.606647] hid-generic 0003:046D:C30E.0003: input,hidraw2: USB HID v1.1=
-0 Device [Logitech HID compliant keyboard] on usb-0000:00:12.2-6.1/input1
-[   12.537344] nbd: registered device at major 43
-[   12.599970] md: md0 stopped.
-[   12.603855] md: bind<sde3>
-[   12.604029] md: bind<sda3>
-[   12.604139] md: bind<sdi3>
-[   12.604290] md: bind<sdc3>
-[   12.604618] md: bind<sdb3>
-[   12.604779] md: bind<sdd3>
-[   12.604982] md: bind<sdh3>
-...
-
-This was NOT required on any of the previous kernels, so I wonder why all of
-sudden with the 3.8+ kernels my system needs an extra "crutch" just to keep
-starting up properly.
+[   22.984532] r8169 0000:04:00.0 eth0: link up
+[   22.984541] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+[   22.984584] IPv6: ADDRCONF(NETDEV_CHANGE): eth0.2: link becomes ready
+[   22.996464] NFSD: Using /var/lib/nfs/v4recovery as the NFSv4 state recov=
+ery directory
+[   22.996712] NFSD: starting 90-second grace period (net ffffffff81cb36c0)
+[   41.315150] ata1.00: configured for UDMA/133
+[   41.315164] ata1: EH complete
+[   41.329004] ata2.00: configured for UDMA/133
+[   41.329019] ata2: EH complete
+[   41.330625] ata3.00: configured for UDMA/133
+[   41.330640] ata3: EH complete
+[   41.333116] ata4.00: configured for UDMA/133
+[   41.333130] ata4: EH complete
+[   41.335766] ata5.00: configured for UDMA/133
+[   41.335781] ata5: EH complete
+[   41.356118] ata7.00: configured for UDMA/133
+[   41.356133] ata7: EH complete
+[   41.362298] ata12.00: configured for UDMA/133
+[   41.362313] ata12: EH complete
+[   41.362483] ata13.00: configured for UDMA/133
+[   41.362491] ata13: EH complete
+[   41.369409] ata11.00: configured for UDMA/133
+[   41.369424] ata11: EH complete
+[  133.191756] md/raid1:md3: Disk failure on sdg1, disabling device.
+[  133.191756] md/raid1:md3: Operation continuing on 1 devices.
+[  133.194892] RAID1 conf printout:
+[  133.194901]  --- wd:1 rd:2
+[  133.194906]  disk 0, wo:0, o:1, dev:sdf1
+[  133.194911]  disk 1, wo:1, o:0, dev:sdg1
+[  133.198199] RAID1 conf printout:
+[  133.198213]  --- wd:1 rd:2
+[  133.198219]  disk 0, wo:0, o:1, dev:sdf1
+[  413.692816] md: unbind<sdg1>
+[  413.692863] md: export_rdev(sdg1)
+[  413.718257] device label home devid 1 transid 568912 /dev/md3
+[  418.696848] md: bind<sdg1>
+[  418.699066] RAID1 conf printout:
+[  418.699074]  --- wd:1 rd:2
+[  418.699080]  disk 0, wo:0, o:1, dev:sdf1
+[  418.699085]  disk 1, wo:1, o:1, dev:sdg1
+[  418.704862] md: recovery of RAID array md3
+[  418.704873] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+[  418.704879] md: using maximum available idle IO bandwidth (but not more =
+than 200000 KB/sec) for recovery.
+[  418.704888] md: using 128k window, over a total of 58579264k.
+[  418.763888] device label home devid 1 transid 568912 /dev/md3
+[  428.464670] md/raid1:md3: Disk failure on sdg1, disabling device.
+[  428.464670] md/raid1:md3: Operation continuing on 1 devices.
+[  428.979635] md: md3: recovery done.
+[  428.984824] RAID1 conf printout:
+[  428.984836]  --- wd:1 rd:2
+[  428.984843]  disk 0, wo:0, o:1, dev:sdf1
+[  428.984848]  disk 1, wo:1, o:0, dev:sdg1
+[  428.987765] RAID1 conf printout:
+[  428.987771]  --- wd:1 rd:2
+[  428.987777]  disk 0, wo:0, o:1, dev:sdf1
 
 
 --=20
 With respect,
 Roman
 
---Sig_/eRCKzIZlsBMQ7mEV.3jn_qv
+--Sig_/5uDsaINrT_OMY/HzZO4+2xk
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.12 (GNU/Linux)
 
-iEYEARECAAYFAlFrvisACgkQTLKSvz+PZwgn+ACdGr5rwItluOXoDXaP94Q/dTnG
-68AAn2XdVrKo1WNWsbhyuIoVpA24o4d8
-=oypx
+iEYEARECAAYFAlFrwNQACgkQTLKSvz+PZwj64QCeJdCr777fpMDBt3w2eukC5OZl
+5GcAn0fFUJELSnhL5RXavjg1uEX4q4/3
+=jlp+
 -----END PGP SIGNATURE-----
 
---Sig_/eRCKzIZlsBMQ7mEV.3jn_qv--
+--Sig_/5uDsaINrT_OMY/HzZO4+2xk--
