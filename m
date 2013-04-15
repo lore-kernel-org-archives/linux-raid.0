@@ -1,57 +1,42 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: MD does not wait for drives on start-up with kernels 3.8+
-Date: Mon, 15 Apr 2013 19:11:57 +0600
-Message-ID: <20130415191157.72b630c3@natsu>
-References: <20130330190538.4e3c1771@natsu>
-	<CAGqmV7qmPHYpm1rinfsh5W-mgqo+Va2RvQtZoy-5AazYFAHYdg@mail.gmail.com>
-	<20130415144530.183d7b31@natsu>
-	<20130415203449.4d121b32@notabene.brown>
+From: "Vanhorn, Mike" <michael.vanhorn@wright.edu>
+Subject: Re: Odd --examine output
+Date: Mon, 15 Apr 2013 13:46:43 +0000
+Message-ID: <CD917B51.41713%michael.vanhorn@wright.edu>
+References: <51681FB2.8060803@turmel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/I/kPHFb8Pj.jwuA21+yvqyS"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130415203449.4d121b32@notabene.brown>
+In-Reply-To: <51681FB2.8060803@turmel.org>
+Content-Language: en-US
+Content-ID: <82136C1225848F4A895778414F290C3F@prod.exchangelabs.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: CoolCold <coolthecold@gmail.com>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/I/kPHFb8Pj.jwuA21+yvqyS
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 4/12/13 10:52 AM, "Phil Turmel" <philip@turmel.org> wrote:
 
-On Mon, 15 Apr 2013 20:34:49 +1000
-NeilBrown <neilb@suse.de> wrote:
+>NOT a guess.  Back up what you can, while you can, and start over.  Use
+>"fdisk -u" so you can ensure partitions start on multiples of eight (8)
+>sectors.  (Modern fdisk uses 1MB alignment by default.  Highly
+>recommended.)
+>
+>
 
-> > This was NOT required on any of the previous kernels, so I wonder why a=
-ll of
-> > sudden with the 3.8+ kernels my system needs an extra "crutch" just to =
-keep
-> > starting up properly.
->=20
-> This is almost certainly not directly related to the kernel.  It seems cl=
-ear
-> that some change in the kernel has resulted in the difference, but it is
-> probably indirect and really a bug elsewhere.
->=20
-> What distro are you using?  Is systemd in use?
+So, if I start the partition at sector 64 (rather than 63), that's better,
+right (since 64 is a multiple of 8)? Or is there more math to do and I'm
+still not getting it?
 
-Debian Testing, no systemd.
+---
+Mike VanHorn
+Senior Computer Systems Administrator
+College of Engineering and Computer Science
+Wright State University
+265 Russ Engineering Center
+937-775-5157
+michael.vanhorn@wright.edu
+http://www.cecs.wright.edu/~mvanhorn/
 
---=20
-With respect,
-Roman
 
---Sig_/I/kPHFb8Pj.jwuA21+yvqyS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
 
-iEYEARECAAYFAlFr/J0ACgkQTLKSvz+PZwjiDwCglsWxrs6UIaOF6CXqefQZGnzT
-uFwAoIB2qZW7LOY69buSpsBWIbwYwEyi
-=G0ro
------END PGP SIGNATURE-----
-
---Sig_/I/kPHFb8Pj.jwuA21+yvqyS--
