@@ -1,78 +1,94 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Odd --examine output
-Date: Tue, 16 Apr 2013 09:58:57 +0100
-Message-ID: <20130416085857.GB25795@cthulhu.home.robinhill.me.uk>
-References: <CD917B51.41713%michael.vanhorn@wright.edu>
- <10112252.14.1366051374769.JavaMail.root@zimbra>
- <20844.24431.814932.275104@quad.stoffel.home>
+From: Oliver Schinagl <oliver+list@schinagl.nl>
+Subject: Re: raid 1 errors then I failed and removed the drive. now cant tell
+ which one it was?
+Date: Mon, 15 Apr 2013 19:20:47 +0200
+Message-ID: <516C36EF.2040909@schinagl.nl>
+References: <20130416042742.GA12964@earthlink.net> <20130416074601.GA25795@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="xgyAXRrhYN0wYx8y"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20844.24431.814932.275104@quad.stoffel.home>
+In-Reply-To: <20130416074601.GA25795@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Mitchell Laks <mlaks@post.harvard.edu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 16-04-13 09:46, Robin Hill wrote:
+> On Tue Apr 16, 2013 at 12:27:42AM -0400, Mitchell Laks wrote:
+>
+>> Hi,
+>>
+>> I store lots of data on a raid1 created with mdadm on debian sid  using kernel
+>> Linux  3.2.0-2-amd64 #1 SMP Fri Apr 6 05:01:55 UTC 2012 x86_64 GNU/Linux.
+>>
+>> Now I was backing up the data from the raid to another external drive
+>> and the errors began
+>>
+>> [730636.445918] ata1.00: error: { UNC }
+>> [730636.464576] ata1.00: configured for UDMA/33
+>> [730636.464584] ata1: EH complete
+>> [730638.110558] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+>> [730638.115052] ata1.00: port_status 0x20200000
+>> [730638.119441] ata1.00: failed command: READ DMA
+>> [730638.123848] ata1.00: cmd c8/00:08:ef:9f:90/00:00:00:00:00/e1 tag 0 dma 4096 in
+>> [730638.123850]          res 51/40:00:f4:9f:90/40:00:01:00:00/e1 Emask 0x9 (media error)
+>> [730638.132821] ata1.00: status: { DRDY ERR }
+>> [730638.137305] ata1.00: error: { UNC }
+>> [730638.157256] ata1.00: configured for UDMA/33
+>> [730638.157262] ata1: EH complete
+>> [730639.802239] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+>> [730639.806730] ata1.00: port_status 0x20200000
+>> [730639.811111] ata1.00: failed command: READ DMA
+>> [730639.815511] ata1.00: cmd c8/00:08:ef:9f:90/00:00:00:00:00/e1 tag 0 dma 4096 in
+>> [730639.815513]          res 51/40:00:f4:9f:90/40:00:01:00:00/e1 Emask 0x9 (media error)
+>> [730639.824457] ata1.00: status: { DRDY ERR }
+>> [730639.828930] ata1.00: error: { UNC }
+>> [730639.848936] ata1.00: configured for UDMA/33
+>>
+>> they seemed to be coming from drive /dev/sda1 of the raid while
+>> /dev/sdb1 was ok
+>> so i did
+>> mdadm /dev/md0 -f /dev/sda1
+>> mdadm /dev/md0 -r /dev/sda1
+>>
+>> then I rsynced from the remaining drive to /dev/sdd1 an external
+>> drive. No more errors.
+>>
+>> However I forgot to label the usable drive by creating a file on it or
+>> editing a file on it.
+>>
+>> But now I shut down and unplug one of the two drives, then run
+>> mdadm -E /dev/sda1
+>> it seems to be the good (unfailed) drive
+>>
+>> But similarly when  I unplug the other drive and put this one back
+>> i still get it listed as an unfailed drive
+>>
+>> how can i figure out which is the failed drive and which is the
+>> remaining one????
+>>
+> Normally, the event count and update time will indicate which was
+> failed, but if you've restarted with each drive in separately then this
+> may have updated both. The obvious way to check in this case would be to
+> do a read test of the drive (dd if=/dev/sda1 of=/dev/null bs=1M) or a
+> SMART test - if you get errors then it's the failed one.
+smartctl -a /dev/disk should tell you any failures from its log all 
+ready. Think pending errors or offline unrecoverable are key points to 
+look at. If that also doesn't tell you which one is which, ata1 is the 
+first sata port, but if you allready unplugged, that won't help you either.
 
---xgyAXRrhYN0wYx8y
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+If smartctl -t long /dev/disk doesn't result in any errors being found 
+on both disks, chances are, the disks 'spare block recovery' mechanism 
+kicked in and your disk is 'as good as new'. Personally, I would order a 
+new disk and have it ready since once these errors start, the end is 
+near. Chances are however, it'll work for years :)
 
-On Mon Apr 15, 2013 at 04:13:35PM -0400, John Stoffel wrote:
+Since you know the external drive is functioning properly and is up to 
+date, wipe the superblock on both internal disks, add 1 to the externa 
+driver, 'grow' the array to 3 disks', add the 2nd internal disks, run a 
+'check' to be very sure, grow to 2 disks removing the external from the 
+chain again.
+>
+> Cheers,
+>      Robin
 
-> >>>>> "Roy" =3D=3D Roy Sigurd Karlsbakk <roy@karlsbakk.net> writes:
->=20
-> >> >NOT a guess. Back up what you can, while you can, and start over. Use
-> >> >"fdisk -u" so you can ensure partitions start on multiples of eight
-> >> >(8)
-> >> >sectors. (Modern fdisk uses 1MB alignment by default. Highly
-> >> >recommended.)
-> >> >
-> >> >
-> >>=20
-> >> So, if I start the partition at sector 64 (rather than 63), that's
-> >> better,
-> >> right (since 64 is a multiple of 8)? Or is there more math to do and
-> >> I'm still not getting it?
->=20
-> Roy> I still don't understand why people use partitions for RAID when
-> Roy> the whole drive is used anyway. Partitions were invented to
-> Roy> partition things up and are of no use if you want to spend the
-> Roy> whole drive's space for RAID use (or otherwise).
->=20
-> Because if I take a 2tb disk a I put a partition on there which is a
-> bit smaller than the full disk, if I then add a new 2tb (or any other
-> size) disk which says it's 2tb, but it's really a bit smaller, then
-> I'm not screwed.  I've had it happen.
->=20
-Recently? AFAIK, all modern drives (everything over 320G-ish IIRC) use
-standardised sizes (i.e. any 2TB disk will present exactly the same
-number of sectors). I recall reading that all the manufacturers agreed
-to do this to prevent just this sort of issue, though I can't find a
-reference to it now.
-
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---xgyAXRrhYN0wYx8y
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAlFtEtAACgkQShxCyD40xBKuDwCg4cEBqDrUCYG3BadD+/Rn2qdo
-mGAAoKMxAFEJ85qNhtj/VTLrjiTtkq1o
-=HTXO
------END PGP SIGNATURE-----
-
---xgyAXRrhYN0wYx8y--
