@@ -1,68 +1,82 @@
-From: Ben Bucksch <linux.news@bucksch.org>
-Subject: Re: md RAID5: Disk wrongly marked "spare", need to force re-add it
-Date: Mon, 15 Apr 2013 03:34:04 +0200
-Message-ID: <516B590C.5060807@bucksch.org>
-References: <516869D2.9030506@bucksch.org> <516B3077.9020507@schinagl.nl>
+From: Adrian Hunter <adrian.hunter@intel.com>
+Subject: Re: [PATCH 2/8] mmc: fix max_discard_sectors
+Date: Mon, 15 Apr 2013 10:20:22 +0300
+Message-ID: <516BAA36.9030500@intel.com>
+References: <1365860309-21261-1-git-send-email-linkinjeon@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <516B3077.9020507@schinagl.nl>
-Sender: linux-raid-owner@vger.kernel.org
-To: Oliver Schinagl <oliver+list@schinagl.nl>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-mmc-owner@vger.kernel.org>
+In-Reply-To: <1365860309-21261-1-git-send-email-linkinjeon@gmail.com>
+Sender: linux-mmc-owner@vger.kernel.org
+To: Namjae Jeon <linkinjeon@gmail.com>
+Cc: dwmw2@infradead.org, axboe@kernel.dk, shli@kernel.org, Paul.Clements@steeleye.com, npiggin@kernel.dk, neilb@suse.de, cjb@laptop.org, linux-mtd@lists.infradead.org, nbd-general@lists.sourceforge.net, linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>, Vivek Trivedi <t.vivek@samsung.com>
 List-Id: linux-raid.ids
 
-Hey Oliver,
+On 13/04/13 16:38, Namjae Jeon wrote:
+> From: Namjae Jeon <namjae.jeon@samsung.com>
+> 
+> https://lkml.org/lkml/2013/4/1/292
+> As per above discussion, there is possibility that request's __data_len
+> field may overflow when max_discard_sectors greater than UINT_MAX >> 9
+> 
+> If multiple discard requests get merged, merged discard request's
+> size exceeds 4GB, there is possibility that merged discard request's
+> __data_len field may overflow.
+> 
+> This patch fixes this issue.
+> 
+> Reported-by: Max Filippov <jcmvbkbc@gmail.com>
+> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+> Signed-off-by: Vivek Trivedi <t.vivek@samsung.com>
+> Tested-by: Max Filippov <jcmvbkbc@gmail.com>
+> ---
+>  drivers/mmc/card/queue.c |    2 +-
+>  drivers/mmc/core/core.c  |    4 ++--
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/mmc/card/queue.c b/drivers/mmc/card/queue.c
+> index 9447a0e..54726b7 100644
+> --- a/drivers/mmc/card/queue.c
+> +++ b/drivers/mmc/card/queue.c
+> @@ -166,7 +166,7 @@ static void mmc_queue_setup_discard(struct request_queue *q,
+>  		return;
+>  
+>  	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, q);
+> -	q->limits.max_discard_sectors = max_discard;
+> +	blk_queue_max_discard_sectors(q, max_discard);
+>  	if (card->erased_byte == 0 && !mmc_can_discard(card))
+>  		q->limits.discard_zeroes_data = 1;
+>  	q->limits.discard_granularity = card->pref_erase << 9;
+> diff --git a/drivers/mmc/core/core.c b/drivers/mmc/core/core.c
+> index 7b435a3..6ee530c 100644
+> --- a/drivers/mmc/core/core.c
+> +++ b/drivers/mmc/core/core.c
+> @@ -2058,7 +2058,7 @@ static unsigned int mmc_do_calc_max_discard(struct mmc_card *card,
+>  	if (card->erase_shift)
+>  		max_qty = UINT_MAX >> card->erase_shift;
+>  	else if (mmc_card_sd(card))
+> -		max_qty = UINT_MAX;
+> +		max_qty = UINT_MAX >> 9;
 
-first off: thanks for trying to help me.
+No.  This function calculates max discard for the card not the block layer.
+ Apply the block layer limitation at the block layer interface e.g.
+in mmc_queue_setup_discard()
 
-Oliver Schinagl wrote, On 15.04.2013 00:40:
-> Firstly, have you written anything TOO the array while resyncing? If 
-> not, chances are your array is in a reasonable shape still.
+>  	else
+>  		max_qty = UINT_MAX / card->erase_size;
+>  
+> @@ -2100,7 +2100,7 @@ unsigned int mmc_calc_max_discard(struct mmc_card *card)
+>  	unsigned int max_discard, max_trim;
+>  
+>  	if (!host->max_discard_to)
+> -		return UINT_MAX;
+> +		return UINT_MAX >> 9;
 
-I did write to the array (in fact, I did a bonnie++, which in 
-retrospective is very stupid, and I'm upset I did it, but hindsight is 
-20/20 - I assumed the array was fine at that time), BUT if you look at 
-the "event count" of each drive, the sdl marked "spare" has an event 
-count just 2 lower then all the others, so they are very close.
+Ditto.
 
-> Now check the event count for all your drivers and compare. If the 
-> 'broken' drive is only a few off (1 or 2 I think i spotted below, try 
-> the following) 
-
-Exactly.
-
-> The 'spare' drive, I don't know what its status is.
-
-According to SMART, it's just fine. Its event status is very close to 
-the others.
-
-> Theoretically, I would assume that the resync the data written to the 
-> disk is exactly the same as it was before, so keep that in mind as a 
-> last resort.
-
-Yes, that's my plan. My question is: HOW can I tell mdadm to use it?
-
-> mdadm --run --force -A /dev/md0 /dev/sd...
-
-I've tried that, and it tells me the array can't be started, because I 
-have RAID 5 with 8 drives (in normal situation), 6 good drives, and 2 
-spares (1 working fine, 1 with hardware failure). So, after this 
-command, I end up in "inactive" operation mode.
-
-> Now the broken drive. Check your cables!! and run smartctl on it to 
-> give smart a chance to 'fix' the drive somewhat and check its 
-> status/health. ...
-> If it fails again (at 80% because of hardware failure) you can't 
-> re-use the broken disk. It really is broken :p
-
-It failed twice during resync, at around the same point, and smartctl 
-tells me it's broken, so I assume it's gone for good. (Also, the failed 
-drive is also marked as "spare" currently.)
-
-> your very last hope, is to not use the broken drive, and 'force' the 
-> above using the earlier marked spare.
-
-How? I haven't managed to do that, that's my whole question.
+>  
+>  	/*
+>  	 * Without erase_group_def set, MMC erase timeout depends on clock
+> 
 
