@@ -1,44 +1,67 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Use RAID-6!
-Date: Tue, 16 Apr 2013 18:44:31 +0200 (CEST)
-Message-ID: <15345091.8.1366130671716.JavaMail.root@zimbra>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: Question about resync in RAID5
+Date: Tue, 16 Apr 2013 17:55:22 +0100
+Message-ID: <20130416165522.GA14744@cthulhu.home.robinhill.me.uk>
+References: <20130416102452.GC25795@cthulhu.home.robinhill.me.uk>
+ <4915289.2.1366127167165.JavaMail.root@zimbra>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="YZ5djTAD1cGYuMQK"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4915289.2.1366127167165.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Cc: linux-raid@vger.kernel.org, Robin Dong <robin.k.dong@gmail.com>
 List-Id: linux-raid.ids
 
-Hi all
 
-After reading this list for some time, there's a single mode of failure=
- that's repeated over and over: RAID-5 loses a drive and finds bad data=
- on another (or just loses another). This is rather normal, far more th=
-an documented by the disk vendors. This is also the case with "professi=
-onal" systems with "enterprise" drives.
+--YZ5djTAD1cGYuMQK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-So, if you can afford another drive, please use RAID-6. Do *not* trust =
-RAID-5 with something like 8 drives.
+On Tue Apr 16, 2013 at 05:46:07PM +0200, Roy Sigurd Karlsbakk wrote:
 
-Also, maybe this should be on an FAQ/RAID tutorial somewhere?
+> > > Is there any method to just resync WRITTEN data to new-added-disk ?
+> > > Or any developing plan to add this feature?
+> >=20
+> > No, because md is a block device it has no knowledge of what data has
+> > actually been written to the disk or where it is stored. This means it
+> > has to rebuild the entire disk.
+> >=20
+> > There are plans to improve this by keeping track of which stripes have
+> > been written to, which should help (and will also mean no need for an
+> > initial RAID sync). I don't know whether this has progressed beyond
+> > the idea stage yet though.
+>=20
+> Interesting - do you have any docs about this? I haven't seen any talk
+> on this list about it...
+>=20
+It's from Neil's 2011 MD/RAID roadmap:
+    http://neil.brown.name/blog/20110216044002
 
-Vennlige hilsener / Best regards
+The basic idea was mentioned in a 2009 roadmap as well, but is a lot
+more fleshed out in the above one.
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
+
+--YZ5djTAD1cGYuMQK
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAlFtgnoACgkQShxCyD40xBJi4ACggXrBRQETBg5al1pVY4nvNRET
+C00AoLDm9jq98rja3vpKq5Jtxq3UWPsm
+=WIDS
+-----END PGP SIGNATURE-----
+
+--YZ5djTAD1cGYuMQK--
