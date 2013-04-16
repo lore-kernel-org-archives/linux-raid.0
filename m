@@ -1,41 +1,27 @@
 From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: RAID5 recovering
-Date: Tue, 16 Apr 2013 18:41:43 +0200 (CEST)
-Message-ID: <8381772.6.1366130503769.JavaMail.root@zimbra>
-References: <20130416143035.43533168@natsu>
+Subject: Use RAID-6!
+Date: Tue, 16 Apr 2013 18:44:31 +0200 (CEST)
+Message-ID: <15345091.8.1366130671716.JavaMail.root@zimbra>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130416143035.43533168@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: Pierre Martineau <pierre.martineau@inserm.fr>, linux-raid@vger.kernel.org, Robin Hill <robin@robinhill.me.uk>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> > Given the rebuild time for a 1To disk, I'd be wary of running RAID5
-> > - if
-> > you have the space, adding another disk and going to RAID6 will be
-> > much
-> > safer.
->=20
-> As I see it, 3 disks is about the only configuration where RAID5 stil=
-l
-> does make sense.
->=20
-> 4 disks is a tricky spot, RAID5 already feels a bit too dangerous, bu=
-t
-> RAID6 is still not space-efficient enough.
+Hi all
 
-Given the fact that all data demands grow, the space-efficiency part is=
- temporary, so I wouldn't worry too much about it. Helped a friend to s=
-etup a RAID-5 and after her initial drive failure occured, gave her a t=
-ip on getting a new one in addition to the RMAed one. 4 drives in RAID-=
-6 now, half a year after the initial failure, rock solid. If she gets a=
- double drive failure, well, the chances are good her data survives it.
+After reading this list for some time, there's a single mode of failure=
+ that's repeated over and over: RAID-5 loses a drive and finds bad data=
+ on another (or just loses another). This is rather normal, far more th=
+an documented by the disk vendors. This is also the case with "professi=
+onal" systems with "enterprise" drives.
 
-So yes, use RAID-6 if you can. Perhaps even with a spare if you've got =
-another drive and you don't need the extra space.
+So, if you can afford another drive, please use RAID-6. Do *not* trust =
+RAID-5 with something like 8 drives.
+
+Also, maybe this should be on an FAQ/RAID tutorial somewhere?
 
 Vennlige hilsener / Best regards
 
