@@ -1,31 +1,51 @@
-From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
 Subject: Re: Question about resync in RAID5
-Date: Tue, 16 Apr 2013 08:20:35 -0700
-Message-ID: <3r604axnso.ln2@goaway.wombat.san-francisco.ca.us>
-References: <1366106362-12886-1-git-send-email-sanbai@taobao.com>
- <516C62A8.4050900@schinagl.nl>
+Date: Tue, 16 Apr 2013 17:46:07 +0200 (CEST)
+Message-ID: <4915289.2.1366127167165.JavaMail.root@zimbra>
+References: <20130416102452.GC25795@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20130416102452.GC25795@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Robin Hill <robin@robinhill.me.uk>
+Cc: linux-raid@vger.kernel.org, Robin Dong <robin.k.dong@gmail.com>
 List-Id: linux-raid.ids
 
-On 2013-04-15, Oliver Schinagl <oliver+list@schinagl.nl> wrote:
-> I highly doubt it, since, as said above, the md layer could not ever 
-> possibly know what data is on the disk.
+> > Is there any method to just resync WRITTEN data to new-added-disk ?
+> > Or any developing plan to add this feature?
+>=20
+> No, because md is a block device it has no knowledge of what data has
+> actually been written to the disk or where it is stored. This means i=
+t
+> has to rebuild the entire disk.
+>=20
+> There are plans to improve this by keeping track of which stripes hav=
+e
+> been written to, which should help (and will also mean no need for an
+> initial RAID sync). I don't know whether this has progressed beyond
+> the idea stage yet though.
 
-In theory it could, if it recorded metadata about what it's written over
-the array's lifetime.  Some newer 3ware controllers claim to support
-this feature (it's called something like "rapid RAID recovery").  Their
-docs don't describe how or where this information is stored.
+Interesting - do you have any docs about this? I haven't seen any talk =
+on this list about it...
 
-But AFAICT md doesn't support this feature.
+Vennlige hilsener / Best regards
 
---keith
-
--- 
-kkeller@wombat.san-francisco.ca.us
-
-
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
