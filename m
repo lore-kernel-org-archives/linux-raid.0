@@ -1,40 +1,41 @@
 From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: raid 1 errors then I failed and removed the drive. now cant
- tell which one it was?
-Date: Tue, 16 Apr 2013 18:03:38 +0200 (CEST)
-Message-ID: <7574434.4.1366128218698.JavaMail.root@zimbra>
-References: <20130416042742.GA12964@earthlink.net>
+Subject: Re: RAID5 recovering
+Date: Tue, 16 Apr 2013 18:41:43 +0200 (CEST)
+Message-ID: <8381772.6.1366130503769.JavaMail.root@zimbra>
+References: <20130416143035.43533168@natsu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130416042742.GA12964@earthlink.net>
+In-Reply-To: <20130416143035.43533168@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mitchell Laks <mlaks@post.harvard.edu>
-Cc: linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.ru>
+Cc: Pierre Martineau <pierre.martineau@inserm.fr>, linux-raid@vger.kernel.org, Robin Hill <robin@robinhill.me.uk>
 List-Id: linux-raid.ids
 
-> [730639.815511] ata1.00: cmd c8/00:08:ef:9f:90/00:00:00:00:00/e1 tag =
-0
-> dma 4096 in
-> [730639.815513] res 51/40:00:f4:9f:90/40:00:01:00:00/e1 Emask 0x9
-> (media error)
-> [730639.824457] ata1.00: status: { DRDY ERR }
-> [730639.828930] ata1.00: error: { UNC }
-> [730639.848936] ata1.00: configured for UDMA/33
+> > Given the rebuild time for a 1To disk, I'd be wary of running RAID5
+> > - if
+> > you have the space, adding another disk and going to RAID6 will be
+> > much
+> > safer.
+>=20
+> As I see it, 3 disks is about the only configuration where RAID5 stil=
+l
+> does make sense.
+>=20
+> 4 disks is a tricky spot, RAID5 already feels a bit too dangerous, bu=
+t
+> RAID6 is still not space-efficient enough.
 
-If the drives support scterc, then it should be enabled to allow the dr=
-ive to fail a single sector quickly without going into deep recovery mo=
-de. Run "smartctl -l scterc /dev/disk" to check if it's enabled. To ena=
-ble it for drives supporting it, and allow higher timeouts for those wh=
-o don't, I have the following in my /etc/rc.local to do this:
+Given the fact that all data demands grow, the space-efficiency part is=
+ temporary, so I wouldn't worry too much about it. Helped a friend to s=
+etup a RAID-5 and after her initial drive failure occured, gave her a t=
+ip on getting a new one in addition to the RMAed one. 4 drives in RAID-=
+6 now, half a year after the initial failure, rock solid. If she gets a=
+ double drive failure, well, the chances are good her data survives it.
 
-for i in {b..h}
-do
-	dev=3Dsd$i
-	smartctl -l scterc,70,70 /dev/$dev || echo 180 > /sys/block/$dev/devic=
-e/timeout
-done
+So yes, use RAID-6 if you can. Perhaps even with a spare if you've got =
+another drive and you don't need the extra space.
 
 Vennlige hilsener / Best regards
 
