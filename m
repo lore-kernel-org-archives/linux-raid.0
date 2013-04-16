@@ -1,55 +1,60 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: RAID performance - new kernel results
-Date: Mon, 15 Apr 2013 15:42:44 -0500
-Message-ID: <516C6644.4010807@hardwarefreak.com>
-References: <51134E43.7090508@websitemanagers.com.au> <CAKHEz2YLpyyqo-3XX=pX+D49QP1Y0DNaKcBN=9tPQDjmHAPfdw@mail.gmail.com> <51137FB8.6060003@websitemanagers.com.au> <CAKHEz2ZyG5xQC78GykbWOfk9EF=r7jcSe_01P=bH7NuJuFBEvA@mail.gmail.com> <5113A2D6.20104@websitemanagers.com.au> <CAKHEz2YgiQiknBXju9a=PR3zV1Hb7ux8yBZWywiTi=BXFm20GA@mail.gmail.com> <51150475.2020803@websitemanagers.com.au> <5120A84E.4020702@websitemanagers.com.au> <20776.59138.27235.908118@quad.stoffel.home> <5130D2EB.1070507@websitemanagers.com.au> <20130310153518.GQ5411@kevin> <516BF13B.4010704@websitemanagers.com.au>
-Reply-To: stan@hardwarefreak.com
+From: Mitchell Laks <mlaks@post.harvard.edu>
+Subject: raid 1 errors then I failed and removed the drive. now cant tell
+ which one it was?
+Date: Tue, 16 Apr 2013 00:27:42 -0400
+Message-ID: <20130416042742.GA12964@earthlink.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <516BF13B.4010704@websitemanagers.com.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/15/2013 7:23 AM, Adam Goryachev wrote:
-...
-> I suspect that the single ping packets being lost are an indication of a
-> problem, but this should not impact the users (TCP should look after the
-> re-transmission, etc). Wether this is related to the longer 10-50 second
-> outage I'm not sure.
-...
-> All network cables were replaced with brand new cat6 cables (1m or 2M)
-> about 6 weeks ago.
+Hi,
 
-Server rack cables, but not *all* network cables.
+I store lots of data on a raid1 created with mdadm on debian sid  using kernel 
+Linux  3.2.0-2-amd64 #1 SMP Fri Apr 6 05:01:55 UTC 2012 x86_64 GNU/Linux.
 
-> In the meantime, if anyone has any hints or suggestions on why a LAN
-> might be dropping packets like this, I'd be really happy to hear it...
+Now I was backing up the data from the raid to another external drive and the errors began
 
-Sounds like a classic ground short or EMI issue.
+[730636.445918] ata1.00: error: { UNC }
+[730636.464576] ata1.00: configured for UDMA/33
+[730636.464584] ata1: EH complete
+[730638.110558] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+[730638.115052] ata1.00: port_status 0x20200000
+[730638.119441] ata1.00: failed command: READ DMA
+[730638.123848] ata1.00: cmd c8/00:08:ef:9f:90/00:00:00:00:00/e1 tag 0 dma 4096 in
+[730638.123850]          res 51/40:00:f4:9f:90/40:00:01:00:00/e1 Emask 0x9 (media error)
+[730638.132821] ata1.00: status: { DRDY ERR }
+[730638.137305] ata1.00: error: { UNC }
+[730638.157256] ata1.00: configured for UDMA/33
+[730638.157262] ata1: EH complete
+[730639.802239] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+[730639.806730] ata1.00: port_status 0x20200000
+[730639.811111] ata1.00: failed command: READ DMA
+[730639.815511] ata1.00: cmd c8/00:08:ef:9f:90/00:00:00:00:00/e1 tag 0 dma 4096 in
+[730639.815513]          res 51/40:00:f4:9f:90/40:00:01:00:00/e1 Emask 0x9 (media error)
+[730639.824457] ata1.00: status: { DRDY ERR }
+[730639.828930] ata1.00: error: { UNC }
+[730639.848936] ata1.00: configured for UDMA/33
 
-Inexpensive switches tend to lack per port electrical isolation
-circuitry.  Thus if there is a short across any of the 4 cable
-conductors the switch may lock up while the condition exists and return
-to normal operation when the condition is removed, possibly without
-manual intervention required, no reboot or power cycle.  The normal
-cause of this is a defective Ethernet transceiver in one of the devices
-connected to the switch, or a break in a cable.  Depending on the
-transceiver failure mode this can cause intermittent or permanent switch
-lockup while the device is connected.  In this case it would seem to be
-intermittent, if this is the cause of your problems.  This phenomenon is
-limited to copper links.  Fiber doesn't conduct electricity.
+they seemed to be coming from drive /dev/sda1 of the raid while /dev/sdb1 was ok
+so i did
+mdadm /dev/md0 -f /dev/sda1 
+mdadm /dev/md0 -r /dev/sda1
 
-Category 5/6 cable is pretty good at rejecting EMI/RFI.  But if the
-cable is run in close proximity to anything generating a significant
-stray magnetic field of the necessary amplitude, this may cause
-electromagnetic induction in the cables, generating a current.  This
-current can cause problems in the switch similar to that described above
-if the switch isn't designed to deal with such conditions.
+then I rsynced from the remaining drive to /dev/sdd1 an external drive. No more errors.
 
--- 
-Stan
+However I forgot to label the usable drive by creating a file on it or editing a file on it. 
 
+But now I shut down and unplug one of the two drives, then run 
+mdadm -E /dev/sda1
+it seems to be the good (unfailed) drive
+
+But similarly when  I unplug the other drive and put this one back
+i still get it listed as an unfailed drive
+
+how can i figure out which is the failed drive and which is the remaining one????
+
+Mitchell
