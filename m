@@ -1,69 +1,51 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Use RAID-6!
-Date: Tue, 16 Apr 2013 22:01:18 +0200
-Message-ID: <516DAE0E.5080209@hesbynett.no>
-References: <15345091.8.1366130671716.JavaMail.root@zimbra> <alpine.DEB.2.00.1304161905150.23668@uplift.swm.pp.se>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID performance - new kernel results
+Date: Tue, 16 Apr 2013 17:03:15 -0400
+Message-ID: <516DBC93.8030302@turmel.org>
+References: <20372204.0.1366140527266.JavaMail.root@zimbra>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1304161905150.23668@uplift.swm.pp.se>
+In-Reply-To: <20372204.0.1366140527266.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Linux RAID <linux-raid@vger.kernel.org>
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Cc: linux-raid@vger.kernel.org, Adam Goryachev <mailinglists@websitemanagers.com.au>
 List-Id: linux-raid.ids
 
-On 16/04/13 19:09, Mikael Abrahamsson wrote:
-> On Tue, 16 Apr 2013, Roy Sigurd Karlsbakk wrote:
->
->> Also, maybe this should be on an FAQ/RAID tutorial somewhere?
->
-> Question is, where should it be put so that people read it and actually
-> understand it.
->
-> This article is from 2007:
->
-> <http://www.zdnet.com/blog/storage/why-raid-5-stops-working-in-2009/162>
->
-> I've had people argue with me that the above article is wrong, but I
-> never udnerstood their logic. To me it makes perfect sense and I always
-> go RAID6.
->
-> I also think the work having more than 2 parity drives was very
-> promising. I'd rather have a 20 drive volume with 4 parity drives than
-> to LVM together two 10 drive RAID6:es (apart from obvious performance
-> penalties).
->
+On 04/16/2013 03:28 PM, Roy Sigurd Karlsbakk wrote:
+>>> I suspect that the single ping packets being lost are an
+>>> indication of a problem, but this should not impact the users
+>>> (TCP should look after the re-transmission, etc). Wether this is
+>>> related to the longer 10-50 second outage I'm not sure.
+>> 
+>> No, single lost pings are *not* a sign of a problem. It is
+>> perfectly normal for a network to have random traffic spikes that
+>> fill a switch's store-and-forward buffers. ICMP pings are
+>> *datagrams*, like UDP, so they aren't retransmitted when dropped.
+>> Losing them as infrequently as you say suggests your network isn't
+>> heavily loaded.
+> 
+> Switches (unlike bridges) do not use store-and-forward. They use
+> cut-through, meaning they use store-and-forward for the initial
+> packet from A to B and then store the path and switch it later,
+> sniffing the MAC addresses and just use pass-through.
 
-Raid calculations for a third parity are noticeably more time-consuming 
-than for the second parity of Raid6.  And with a bigger array with lots 
-of drives, you are going to have terrible RMW performance for small 
-writes.  However, as the multi-threaded scaling of Raid5 and Raid6 
-improves and makes its way into distro's standard kernels, it's going to 
-be more realistic - especially for machines with plenty of cores and 
-lots of RAM for stripe caches.
+Nothing you said changes my statement that switches often drop single
+packets.  The occasional dropped ping is a red herring.  A cheap switch
+that can't ever buffer will simply drop *more* random packets.
 
-I hope triple parity raid will make it into the kernel at some point. 
-I've done the main part of the maths involved, but not had the time to 
-work it into anything resembling real code.  I don't know if I 
-personally will ever make it into working code - but if anyone else is 
-at all interested in doing so, then I will certainly help with the maths.
+> As was said, the traffic on the network was minimal, so I really
+> doubt this had an impact. Getting 30 seconds+ of drops must come from
+> a bad network stack or a really bad switch, but then again, two
+> switches were tested, so I doubt the switches alone could do that.
 
-I am not sure there is much real-world need of triple parity raid for 
-normal arrays - even with better cpu scaling, it would still be a lot 
-slower than two raid6 arrays LVM'ed together.  I foresee it's main use 
-as a temporary measure during array maintenance.  For example, if you 
-have a raid6 and you want to swap out the drives for bigger ones, then 
-you could temporarily add an extra drive for a third parity using a 
-non-symmetrical layout.  Once this extra drive is synced, then you can 
-step through the other drives doing a replace-and-resync, knowing that 
-you still have the double parity safety.  Then at the end of the process 
-you drop the third parity again.
+We seem to violently agree here.  Multiple consecutive drops is a real
+problem.
 
-Quad parity has some limitations, especially if you want to keep the 
-first 3 parities compatible with triple parity.  In particular, you are 
-limited to 21 data disks.  There are, of course, ways to handle even 
-greater parity counts - but the cost in complexity and speed is 
-considerable.
+> What may be doing it, is bad (or perhaps incompatible) bonding
+> setup.
 
+My point was to not prematurely conclude that the problem is in the network.
 
+Phil
