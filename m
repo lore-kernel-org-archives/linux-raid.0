@@ -1,37 +1,25 @@
-From: Robert L Mathews <lists@tigertech.com>
-Subject: Re: Use RAID-6!
-Date: Tue, 16 Apr 2013 12:52:18 -0700
-Message-ID: <516DABF2.5050409@tigertech.com>
-References: <15345091.8.1366130671716.JavaMail.root@zimbra>
+From: Martin Wilck <mwilck@arcor.de>
+Subject: Re: Strange / inconsistent behavior with mdadm -I -R
+Date: Tue, 16 Apr 2013 21:09:06 +0200
+Message-ID: <516DA1D2.4070001@arcor.de>
+References: <51422D10.3040000@arcor.de>	<20130318103510.45bdd4a8@notabene.brown>	<5148AE98.9020203@arcor.de>	<20130321122205.3fdca38c@notabene.brown> <20130327165332.7118740c@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15345091.8.1366130671716.JavaMail.root@zimbra>
+In-Reply-To: <20130327165332.7118740c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/16/13 9:44 AM, Roy Sigurd Karlsbakk wrote:
+Hi Neil,
 
-> So, if you can afford another drive, please use RAID-6. Do *not* trust RAID-5 with something like 8 drives.
+On 03/27/2013 06:53 AM, NeilBrown wrote:
 
-Yep. This has been true for many years, too:
+> I'll try to get to your DDF patches soon, but it might not be until next week.
 
- http://www.miracleas.com/BAARF/
+Had any time for this yet?
 
-I personally don't even trust RAID 6. All our servers use three-disk
-RAID 1 setups, with disks from at least two different manufacturers to
-prevent against firmware bricking (although this is becoming more and
-more difficult as the industry consolidates).
-
-If (no, scratch that, "when") something goes horribly wrong, I can mount
-any of the disks as normal, non-RAID volumes. All I need is one disk to
-work. (If none of the disks are working, the RAID level is irrelevant...
- ;-)
-
-To me, that level of confidence is worth sacrificing quite a bit of
-performance and capacity. It has saved my bacon at least once.
-
--- 
-Robert L Mathews, Tiger Technologies, http://www.tigertech.net/
+Regards
+Martin
