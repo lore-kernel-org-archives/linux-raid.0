@@ -1,51 +1,36 @@
-From: Phil Turmel <philip@turmel.org>
+From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: RAID performance - new kernel results
-Date: Tue, 16 Apr 2013 17:03:15 -0400
-Message-ID: <516DBC93.8030302@turmel.org>
+Date: Tue, 16 Apr 2013 16:43:01 -0500
+Message-ID: <516DC5E5.4080401@hardwarefreak.com>
 References: <20372204.0.1366140527266.JavaMail.root@zimbra>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20372204.0.1366140527266.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
 To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc: linux-raid@vger.kernel.org, Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org, Adam Goryachev <mailinglists@websitemanagers.com.au>
 List-Id: linux-raid.ids
 
-On 04/16/2013 03:28 PM, Roy Sigurd Karlsbakk wrote:
->>> I suspect that the single ping packets being lost are an
->>> indication of a problem, but this should not impact the users
->>> (TCP should look after the re-transmission, etc). Wether this is
->>> related to the longer 10-50 second outage I'm not sure.
->> 
->> No, single lost pings are *not* a sign of a problem. It is
->> perfectly normal for a network to have random traffic spikes that
->> fill a switch's store-and-forward buffers. ICMP pings are
->> *datagrams*, like UDP, so they aren't retransmitted when dropped.
->> Losing them as infrequently as you say suggests your network isn't
->> heavily loaded.
-> 
-> Switches (unlike bridges) do not use store-and-forward. They use
-> cut-through, meaning they use store-and-forward for the initial
-> packet from A to B and then store the path and switch it later,
-> sniffing the MAC addresses and just use pass-through.
+On 4/16/2013 2:28 PM, Roy Sigurd Karlsbakk wrote:
 
-Nothing you said changes my statement that switches often drop single
-packets.  The occasional dropped ping is a red herring.  A cheap switch
-that can't ever buffer will simply drop *more* random packets.
+> Switches (unlike bridges) do not use store-and-forward. They use cut-through...
 
-> As was said, the traffic on the network was minimal, so I really
-> doubt this had an impact. Getting 30 seconds+ of drops must come from
-> a bad network stack or a really bad switch, but then again, two
-> switches were tested, so I doubt the switches alone could do that.
+This is incorrect Roy.  The default forwarding mode of all IEEE 802.3
+compliant switches is store and forward.  All unmanaged switches use
+this forwarding mode.  Cut-through is an optimization and is optional
+only on managed switches.
 
-We seem to violently agree here.  Multiple consecutive drops is a real
-problem.
+And these aren't the only two forwarding modes in managed switches
+today.  Switch routers do layer 3 as well as 2 forwarding, and switches
+offering VLANs, QOS, and other features use different forwarding methods
+still.  But TTBOMK, all vendors' managed switches default to store and
+forward, as that is the IEEE 802.3 standard.
 
-> What may be doing it, is bad (or perhaps incompatible) bonding
-> setup.
+-- 
+Stan
 
-My point was to not prematurely conclude that the problem is in the network.
 
-Phil
+
