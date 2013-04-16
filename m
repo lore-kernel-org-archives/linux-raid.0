@@ -1,47 +1,47 @@
 From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: Use RAID-6!
-Date: Tue, 16 Apr 2013 19:25:44 +0200 (CEST)
-Message-ID: <16433059.10.1366133144567.JavaMail.root@zimbra>
-References: <alpine.DEB.2.00.1304161905150.23668@uplift.swm.pp.se>
+Subject: Re: RAID performance - new kernel results
+Date: Tue, 16 Apr 2013 21:28:47 +0200 (CEST)
+Message-ID: <20372204.0.1366140527266.JavaMail.root@zimbra>
+References: <516C6018.5030800@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1304161905150.23668@uplift.swm.pp.se>
+In-Reply-To: <516C6018.5030800@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org, Adam Goryachev <mailinglists@websitemanagers.com.au>
 List-Id: linux-raid.ids
 
-> > Also, maybe this should be on an FAQ/RAID tutorial somewhere?
+> > I suspect that the single ping packets being lost are an indication
+> > of a
+> > problem, but this should not impact the users (TCP should look afte=
+r
+> > the
+> > re-transmission, etc). Wether this is related to the longer 10-50
+> > second
+> > outage I'm not sure.
 >=20
-> Question is, where should it be put so that people read it and
-> actually
-> understand it.
->=20
-> This article is from 2007:
->=20
-> <http://www.zdnet.com/blog/storage/why-raid-5-stops-working-in-2009/1=
-62>
->=20
-> I've had people argue with me that the above article is wrong, but I
-> never
-> udnerstood their logic. To me it makes perfect sense and I always go
-> RAID6.
->=20
-> I also think the work having more than 2 parity drives was very
-> promising.
-> I'd rather have a 20 drive volume with 4 parity drives than to LVM
-> together two 10 drive RAID6:es (apart from obvious performance
-> penalties).
+> No, single lost pings are *not* a sign of a problem. It is perfectly
+> normal for a network to have random traffic spikes that fill a
+> switch's
+> store-and-forward buffers. ICMP pings are *datagrams*, like UDP, so
+> they aren't retransmitted when dropped. Losing them as infrequently a=
+s
+> you say suggests your network isn't heavily loaded.
 
-I've been running RAIDz3 for a backup machine (zfs receive from the mai=
-n box), and the write performance was rather low. I'd rather use lvm or=
- raid-something over different raid-6 volumes. Spread out the risk fact=
-or. With ~8 drives in each raid-6 set, the risk is low enough to allow =
-for rather large volumes.
+Switches (unlike bridges) do not use store-and-forward. They use cut-th=
+rough, meaning they use store-and-forward for the initial packet from A=
+ to B and then store the path and switch it later, sniffing the MAC add=
+resses and just use pass-through.
 
---=20
+As was said, the traffic on the network was minimal, so I really doubt =
+this had an impact. Getting 30 seconds+ of drops must come from a bad n=
+etwork stack or a really bad switch, but then again, two switches were =
+tested, so I doubt the switches alone could do that.
+
+What may be doing it, is bad (or perhaps incompatible) bonding setup.
+
 Vennlige hilsener / Best regards
 
 roy
