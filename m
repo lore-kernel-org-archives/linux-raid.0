@@ -1,33 +1,27 @@
 From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
 Subject: Re: Use RAID-6!
-Date: Wed, 17 Apr 2013 19:27:18 +0200 (CEST)
-Message-ID: <32292886.12.1366219638178.JavaMail.root@zimbra>
-References: <516DABF2.5050409@tigertech.com>
+Date: Wed, 17 Apr 2013 19:50:56 +0200 (CEST)
+Message-ID: <8875788.14.1366221056458.JavaMail.root@zimbra>
+References: <516E8CD5.4040301@bucksch.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <516DABF2.5050409@tigertech.com>
+In-Reply-To: <516E8CD5.4040301@bucksch.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert L Mathews <lists@tigertech.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Ben Bucksch <linux.news@bucksch.org>
+Cc: Robert L Mathews <lists@tigertech.com>, Linux RAID <linux-raid@vger.kernel.org>, Adam Goryachev <mailinglists@websitemanagers.com.au>
 List-Id: linux-raid.ids
 
-> I personally don't even trust RAID 6. All our servers use three-disk
-> RAID 1 setups, with disks from at least two different manufacturers t=
-o
-> prevent against firmware bricking (although this is becoming more and
-> more difficult as the industry consolidates).
+> FWIW; I read a lot about RAID before using it, and I use it since 10
+> years. RAID5 is supposed to protect against 1 total harddrive failure=
+=2E
+> It doesn't. That's a bug, no matter how you put the light on it.
 
-You can *never* trust RAID alone. Even with ZFS, you can have problems =
-taking down a whole pool, even with RAIDz3 and ZFS' checksumming. A pow=
-er surge can take down half (or even all) the drives in the array, and =
-even with three-way mirrors, the chances are good your pool will die.
-
-So, choose something decent, like RAID-6 (RAIDz2) or mirrors, three-way=
- if you're paranoid, and keep a good backup, preferably offsite and on =
-tape. Tapes in a tape library can't be damaged much of a power surge (e=
-xcept perhaps those in the reader).
+Usually, the problem is someone using desktop drives without scterc ena=
+bled. If the drive goes into deep recovery, it'll time out from Linux' =
+point of view and flagged as bad. See my post in your original thread f=
+or more info.
 
 Vennlige hilsener / Best regards
 
