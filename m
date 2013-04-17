@@ -1,55 +1,52 @@
-From: Robert L Mathews <lists@tigertech.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: Use RAID-6!
-Date: Tue, 16 Apr 2013 22:22:48 -0700
-Message-ID: <516E31A8.9030607@tigertech.com>
-References: <15345091.8.1366130671716.JavaMail.root@zimbra> <516DABF2.5050409@tigertech.com> <516DAF21.5040409@aei.mpg.de> <516DD433.50100@tigertech.com> <20130417102052.20c40887@natsu>
+Date: Wed, 17 Apr 2013 01:06:00 -0500
+Message-ID: <516E3BC8.5080909@hardwarefreak.com>
+References: <15345091.8.1366130671716.JavaMail.root@zimbra> <516DABF2.5050409@tigertech.com> <516DAF21.5040409@aei.mpg.de> <516DD433.50100@tigertech.com> <516DEAD4.7080305@bucksch.org> <516DFC4F.5000908@websitemanagers.com.au> <516E24C8.9080803@tigertech.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130417102052.20c40887@natsu>
+In-Reply-To: <516E24C8.9080803@tigertech.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Robert L Mathews <lists@tigertech.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 4/16/13 9:20 PM, Roman Mamedov wrote:
+On 4/16/2013 11:27 PM, Robert L Mathews wrote:
 
-> You do know there is no "voting" system in md, right?
+> I avidly read the details of every RAID 5 [and 6] disaster on the list,
+> and almost every one would be trivially easy to fix under RAID 1, with
+> no risk of complete data loss. It's heartbreaking.
 
-Yes, but the question was "What do you do if you do a through check and
-both drives claim a data block is valid and intact, but data differs?"
-The implication was that the array has failed and you need to manually
-reconstruct data, perhaps sector-by-sector.
+I do read most of them as well.  But mirrors simply don't scale in
+either capacity or performance and thus aren't suitable.  If one needs a
+4TB+ filesystem today or more than combined ~150MB/s streaming write
+throughput one must use one of:
 
-Having three sources for a manual reconstruction outside of md reduces
-the "someone with two clocks never knows what time it is" problem. With
-three, you can make an informed guess about which one is wrong.
+1.  RAID10
+2.  RAID0 over RAID1 pairs/triples
+3.  A linear concat over pairs/triples w/XFS
+4.  RAID5 or RAID6
 
-I'm not saying that this is the primary reason to use three disks in
-RAID 1, because it's not. I've never needed to do sector-level recovery
-of an array. The primary reason is so that you can withstand two
-simultaneous disk failures, just as with RAID 6 vs. RAID 5.
+Each of these is most suitable for only subset of workloads, but all of
+them can scale to more than 4TB, whereas RAID1 cannot.  When
+SATA4/SAS1200 arrive offering 1.2GB/s interface rate, and SSDs hit 2-4TB
+capacity at reasonable prices, then I think you'll see more straight
+RAID1 being used in more of the systems that don't need any more total
+capacity.  But as many servers will always need more than this and will
+still use rust, striped/concatenated arrays will be with us for quite
+some time.
 
-
-> In general, you seem to be WAY too concerned about losing your RAID array;
-> this sounds like you are someone who doesn't make backups and tries to use
-> RAID as a replacement for them.
-
-No, that's definitely not the case. We have backup systems in multiple
-data centers, and our disaster recovery planning includes plane crashes
-that destroy live servers and so on.
-
-Many businesses require 100% availability. Losing an array on a server
-means downtime and telling paying customers "we lost the new data you
-stored since the last backup". Neither is acceptable if it's in any way
-avoidable, even if the last backup was minutes ago. Like you, I can
-easily recover from losing a couple of hours work, but my customers who
-run online stores are less sanguine about such things.
-
-By the way, I think I'm going to pin "you seem to be WAY too concerned
-about losing your RAID array" up on my wall. That's wonderful, because
-it's exactly how concerned I want to be.  ;-)
+And BTW, regarding your triplets setup, if you want to do that right
+according to your philosophy, then you need a dedicated SAS/SATA
+controller for each drive, each controller being of a different
+make/model with different firmware.  The old UNIX/Netware "duplexing"
+strategy but triplexing in this case.  But I doubt you're doing this.
+All 3 are probably connected to the single motherboard down SATA
+controller.
 
 -- 
-Robert L Mathews, Tiger Technologies, http://www.tigertech.net/
+Stan
 
