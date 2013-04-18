@@ -1,31 +1,58 @@
-From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Subject: RE: [PATCH] imsm: monitor: do not finish migration if there are no
- failed disks
-Date: Thu, 18 Apr 2013 11:26:09 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB19A53D34@IRSMSX102.ger.corp.intel.com>
-References: <20130418085136.8837.86343.stgit@localhost.localdomain>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: Odd --examine output
+Date: Thu, 18 Apr 2013 13:33:42 +0200 (CEST)
+Message-ID: <19242720.12.1366284822099.JavaMail.root@zimbra>
+References: <20130416085857.GB25795@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130418085136.8837.86343.stgit@localhost.localdomain>
-Content-Language: en-US
+In-Reply-To: <20130416085857.GB25795@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>, "neilb@suse.de" <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
+To: Robin Hill <robin@robinhill.me.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, John Stoffel <john@stoffel.org>
 List-Id: linux-raid.ids
 
-T24gVGh1cnNkYXksIEFwcmlsIDE4LCAyMDEzIDEwOjUyIEFNIEJhbGR5c2lhaywgUGF3ZWwgPHBh
-d2VsLmJhbGR5c2lha0BpbnRlbC5jb20+IHdyb3RlOg0KPiBGcm9tOiBQcnplbXlzbGF3IEN6YXJu
-b3dza2kNCj4gPHByemVteXNsYXcuaGF3cnlsZXdpY3ouY3phcm5vd3NraUBpbnRlbC5jb20+DQo+
-IA0KPiBUcmFuc2l0aW9uIGZyb20gImRlZ3JhZGVkIiB0byAicmVjb3ZlcnkiIG1hZGUgaW4gT1JP
-TSBpcyBzbGlnaHRseSBkaWZmZXJlbnQNCj4gdGhhbiB0aGUgc2FtZSB0cmFuc2lzaW9uIGluIG1k
-YWRtLiBNaXNzaW5nIGRpc2sgaXMgbm90IHJlbW92ZWQgZnJvbSBsaXN0IG9mDQo+IHJhaWQgZGV2
-aWNlcywgYnV0IGp1c3QgZnJvbSBtYXAuIFRoZXJlZm9yZSBtZGFkbSBzaG91bGQgbm90IGVuZCBt
-aWdyYXRpb24NCj4gYmFzaW5nIG9uIGV4aXN0ZW5jZSBvZiBsaXN0IG9mIG1pc3NpbmcgZGlza3Mg
-YnV0IHNob3VsZCByZWx5IG9uIGNvdW50IG9mDQo+IGZhaWxlZCBkaXNrcy4NCj4gDQo+IFNpZ25l
-ZC1vZmYtYnk6IFByemVteXNsYXcgQ3phcm5vd3NraQ0KPiA8cHJ6ZW15c2xhdy5oYXdyeWxld2lj
-ei5jemFybm93c2tpQGludGVsLmNvbT4NCj4gVGVzdGVkLWJ5OiBQYXdlbCBCYWxkeXNpYWsgPHBh
-d2VsLmJhbGR5c2lha0BpbnRlbC5jb20+DQoNCkFkZGluZyBhdXRob3IgKFByemVteXNsYXcgQ3ph
-cm5vd3NraSA8cHJ6ZW15c2xhdy5oYXdyeWxld2ljei5jemFybm93c2tpQGludGVsLmNvbT4pIHRv
-IENDLg0KDQotLQ0KTHVrYXN6DQo=
+> > Roy> I still don't understand why people use partitions for RAID
+> > when
+> > Roy> the whole drive is used anyway. Partitions were invented to
+> > Roy> partition things up and are of no use if you want to spend the
+> > Roy> whole drive's space for RAID use (or otherwise).
+> >
+> > Because if I take a 2tb disk a I put a partition on there which is =
+a
+> > bit smaller than the full disk, if I then add a new 2tb (or any
+> > other
+> > size) disk which says it's 2tb, but it's really a bit smaller, then
+> > I'm not screwed. I've had it happen.
+> >
+> Recently? AFAIK, all modern drives (everything over 320G-ish IIRC) us=
+e
+> standardised sizes (i.e. any 2TB disk will present exactly the same
+> number of sectors). I recall reading that all the manufacturers agree=
+d
+> to do this to prevent just this sort of issue, though I can't find a
+> reference to it now.
+
+Indeed - you have to go back to smaller drives than those in current pr=
+oduction to find varying sizes for equally labelled drive sizes.
+
+Vennlige hilsener / Best regards
+
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
