@@ -1,30 +1,34 @@
 From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: md RAID5: Disk wrongly marked "spare", need to force re-add it
-Date: Thu, 18 Apr 2013 16:18:38 +0200 (CEST)
-Message-ID: <31706911.18.1366294718929.JavaMail.root@zimbra>
-References: <516FF25B.4000907@bucksch.org>
+Subject: Re: Odd --examine output
+Date: Thu, 18 Apr 2013 16:22:08 +0200 (CEST)
+Message-ID: <27736223.20.1366294928235.JavaMail.root@zimbra>
+References: <20847.61219.343100.819285@quad.stoffel.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <516FF25B.4000907@bucksch.org>
+In-Reply-To: <20847.61219.343100.819285@quad.stoffel.home>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ben Bucksch <linux.news@bucksch.org>
-Cc: linux-raid@vger.kernel.org, Oliver Schinagl <oliver+list@schinagl.nl>
+To: John Stoffel <john@stoffel.org>
+Cc: Robin Hill <robin@robinhill.me.uk>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
------ Opprinnelig melding -----
-> To re-summarize (for full info, see first post of thread):
-> * There are 2 RAID5 arrays in the machine, each have 8 disks.
+> Roy> Indeed - you have to go back to smaller drives than those in
+> Roy> current production to find varying sizes for equally labelled
+> Roy> drive sizes.
+>=20
+> Who says it might never happen again, that drive makers go back to
+> varying block counts for disks? Or SSDs? Better safe than sorry, and
+> a gig of wasted space is cheap insurance. Plus, it gives you a place
+> to put boot blocks for GRUB, etc.
 
-Once more: 8 drives in RAID-5 isn't very safe. The chances are rather h=
-igh to get a double disk failure with that amount of drives in R5.
+Well, do as you please. When disk vendors standardise, they tend to kee=
+p those standards. As I said, the new drive was *smaller* than the olde=
+r one, so even if I had used partitions, problems would arise. If you'r=
+e paranoid, though, cut the drive size by 1-5%. Still, all the [124]TB =
+drives I've seen so far have had the same amount of sectors, from Hitac=
+hi, Seagate and WD.
 
-See the list for examples.
-
-Just my 2c
-
---=20
 Vennlige hilsener / Best regards
 
 roy
