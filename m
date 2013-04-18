@@ -1,7 +1,7 @@
 From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
 Subject: Re: Odd --examine output
-Date: Thu, 18 Apr 2013 13:33:42 +0200 (CEST)
-Message-ID: <19242720.12.1366284822099.JavaMail.root@zimbra>
+Date: Thu, 18 Apr 2013 13:37:13 +0200 (CEST)
+Message-ID: <30279327.14.1366285033501.JavaMail.root@zimbra>
 References: <20130416085857.GB25795@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
@@ -34,8 +34,13 @@ d
 > to do this to prevent just this sort of issue, though I can't find a
 > reference to it now.
 
-Indeed - you have to go back to smaller drives than those in current pr=
-oduction to find varying sizes for equally labelled drive sizes.
+Oh, and btw, last time I had an issue with varying drive sizes, I had t=
+wo drives in a MD mirror on a Sun^WOracle box (X2100 M2), and the new d=
+rive that arrived from Sun^WOracle, was *smaller* than the other one, e=
+ven though one of the argument I've heard for buying overpriced drives =
+from Sun^WOracle, was that they tuned their firmware to cap their drive=
+s to always expose the same amount of sectors. I guess that was just ma=
+rketing BS. I ended up reinstalling the box=E2=80=A6
 
 Vennlige hilsener / Best regards
 
