@@ -1,45 +1,57 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: Odd --examine output
-Date: Thu, 18 Apr 2013 09:03:31 -0400
-Message-ID: <20847.61219.343100.819285@quad.stoffel.home>
-References: <20130416085857.GB25795@cthulhu.home.robinhill.me.uk>
-	<19242720.12.1366284822099.JavaMail.root@zimbra>
+From: Ben Bucksch <linux.news@bucksch.org>
+Subject: Re: md RAID5: Disk wrongly marked "spare", need to force re-add it
+Date: Thu, 18 Apr 2013 15:17:15 +0200
+Message-ID: <516FF25B.4000907@bucksch.org>
+References: <516869D2.9030506@bucksch.org> <516B3077.9020507@schinagl.nl> <516B590C.5060807@bucksch.org> <516AE7A0.4070504@schinagl.nl> <516BD5E0.4040007@bucksch.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19242720.12.1366284822099.JavaMail.root@zimbra>
+In-Reply-To: <516BD5E0.4040007@bucksch.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc: Robin Hill <robin@robinhill.me.uk>, Linux RAID <linux-raid@vger.kernel.org>, John Stoffel <john@stoffel.org>
+To: Oliver Schinagl <oliver+list@schinagl.nl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+To re-summarize (for full info, see first post of thread):
+* There are 2 RAID5 arrays in the machine, each have 8 disks.
+* I upgraded Ubuntu 10.04 to 12.04.
+* After reboot, both arrays had each ejected one disk.
+   The ejected disks are working fine (at least now).
+* During the resync mandated by above ejection,
+    one other drive failed, this one fatally with a real hardware failure.
+* The second array resynced fine, further proving that the
+    disks ejected during upgrade were working.
+* Now I am left with: originally 8-disk RAID5, 6 disks are healthy,
+   1 disk with hardware failure, and 1 disk that was ejected, but is 
+working.
+* The latter is currently marked "spare" by md and has an event count
+   (only) 2 events lower than the other 6 disks.
+* My task is to get the latter disk back online *with* its data, without 
+resync.
 
->> > Roy> I still don't understand why people use partitions for RAID
->> > when
->> > Roy> the whole drive is used anyway. Partitions were invented to
->> > Roy> partition things up and are of no use if you want to spend the
->> > Roy> whole drive's space for RAID use (or otherwise).
->> >
->> > Because if I take a 2tb disk a I put a partition on there which is a
->> > bit smaller than the full disk, if I then add a new 2tb (or any
->> > other
->> > size) disk which says it's 2tb, but it's really a bit smaller, then
->> > I'm not screwed. I've had it happen.
->> >
->> Recently? AFAIK, all modern drives (everything over 320G-ish IIRC) use
->> standardised sizes (i.e. any 2TB disk will present exactly the same
->> number of sectors). I recall reading that all the manufacturers agreed
->> to do this to prevent just this sort of issue, though I can't find a
->> reference to it now.
+I desperately need help, please.
 
-Roy> Indeed - you have to go back to smaller drives than those in
-Roy> current production to find varying sizes for equally labelled
-Roy> drive sizes.
+Based on suggestions here by Oliver and on forums, I did (and the result 
+is):
 
-Who says it might never happen again, that drive makers go back to
-varying block counts for disks?  Or SSDs?  Better safe than sorry, and
-a gig of wasted space is cheap insurance.  Plus, it gives you a place
-to put boot blocks for GRUB, etc.  
+> # mdadm --stop /dev/md0
+> mdadm: stopped /dev/md0
+> # mdadm --assemble --run --force /dev/md0 /dev/sd[jlmnopq]
+> mdadm: failed to RUN_ARRAY /dev/md0: Input/output error
+> mdadm: Not enough devices to start the array.
+> # cat /proc/mdstat
+> md0 : inactive sdj[0] sdq[7] sdn[6] sdp[5] sdo[4] sdm[3]
+>       5860574976 blocks
+> (Note that sdl is not even listed)
+> # mdadm --re-add /dev/md0 /dev/sdl
+> mdadm: re-added /dev/sdl
+> # cat /proc/mdstat
+> md0 : inactive sdl[8](S) sdj[0] sdq[7] sdn[6] sdp[5] sdo[4] sdm[3]
+>       6837337472 blocks
+>
+> Now, sdl is listed, but as spare. I need it to be treated not as 
+> spare, but as good drive with correct data (well, almost, 2 events off 
+> only). How do I do that?
+>
 
-John
