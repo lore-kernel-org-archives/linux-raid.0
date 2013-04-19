@@ -1,126 +1,159 @@
-From: linux.news@bucksch.org
-Subject: Re: md RAID5: Disk wrongly marked "spare", need to force re-add it
-Date: Sat, 20 Apr 2013 00:56:17 +0200
-Message-ID: <5171CB91.1040708@bucksch.org>
-References: <516869D2.9030506@bucksch.org> <516B3077.9020507@schinagl.nl> <516B590C.5060807@bucksch.org> <516AE7A0.4070504@schinagl.nl> <516BD5E0.4040007@bucksch.org> <516FF25B.4000907@bucksch.org> <516FFC13.2030803@ultratux.net>
+From: Andrei Banu <andrei.banu@redhost.ro>
+Subject: Incredibly poor performance of mdraid-1 with 2 SSD Samsung 840 PRO
+Date: Sat, 20 Apr 2013 01:58:01 +0300
+Message-ID: <5171CBF9.9020701@redhost.ro>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <516FFC13.2030803@ultratux.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Maarten <maarten@ultratux.net>
 List-Id: linux-raid.ids
 
-Maarten wrote, On 18.04.2013 15:58:
-> On 18/04/13 15:17, Ben Bucksch wrote:
->> To re-summarize (for full info, see first post of thread):
->> * There are 2 RAID5 arrays in the machine, each have 8 disks.
->> * I upgraded Ubuntu 10.04 to 12.04.
->> * After reboot, both arrays had each ejected one disk.
->>    The ejected disks are working fine (at least now).
->> * During the resync mandated by above ejection,
->>     one other drive failed, this one fatally with a real hardware failure.
->> * The second array resynced fine, further proving that the
->>     disks ejected during upgrade were working.
->> * Now I am left with: originally 8-disk RAID5, 6 disks are healthy,
->>    1 disk with hardware failure, and 1 disk that was ejected, but is
->> working.
->> * The latter is currently marked "spare" by md and has an event count
->>    (only) 2 events lower than the other 6 disks.
->> * My task is to get the latter disk back online *with* its data, without
->> resync.
->>
->> I desperately need help, please.
->>
->> Based on suggestions here by Oliver and on forums, I did (and the result
->> is):
->>
->>> # mdadm --stop /dev/md0
->>> mdadm: stopped /dev/md0
->>> # mdadm --assemble --run --force /dev/md0 /dev/sd[jlmnopq]
->>> mdadm: failed to RUN_ARRAY /dev/md0:
->>> mdadm: Not enough devices to start the array.
-> At this point, does dmesg show anything pointing to that input/output
-> error ? The procedure is correct
+Hello!
 
-[630786.513314] md: md0 stopped.
-[630786.513341] md: unbind<sdl>
-[630786.590662] md: export_rdev(sdl)
-[630786.590744] md: unbind<sdj>
-[630786.670652] md: export_rdev(sdj)
-[630786.670887] md: unbind<sdq>
-[630786.750650] md: export_rdev(sdq)
-[630786.750707] md: unbind<sdn>
-[630786.830649] md: export_rdev(sdn)
-[630786.830712] md: unbind<sdp>
-[630786.910651] md: export_rdev(sdp)
-[630786.910710] md: unbind<sdo>
-[630786.990649] md: export_rdev(sdo)
-[630786.990700] md: unbind<sdm>
-[630787.070649] md: export_rdev(sdm)
-[630793.315121] md: md0 stopped.
-[630794.785328] md: bind<sdm>
-[630794.785512] md: bind<sdo>
-[630794.785695] md: bind<sdp>
-[630794.785891] md: bind<sdn>
-[630794.786643] md: bind<sdq>
-[630794.787009] md: bind<sdl>
-[630794.788164] md: bind<sdj>
-[630794.788236] md: kicking non-fresh sdl from array!
-[630794.788250] md: unbind<sdl>
-[630794.810082] md: export_rdev(sdl)
-[630794.812725] raid5: device sdj operational as raid disk 0
-[630794.812734] raid5: device sdq operational as raid disk 7
-[630794.812740] raid5: device sdn operational as raid disk 6
-[630794.812745] raid5: device sdp operational as raid disk 5
-[630794.812750] raid5: device sdo operational as raid disk 4
-[630794.812755] raid5: device sdm operational as raid disk 3
-[630794.813895] raid5: allocated 8490kB for md0
-[630794.813966] 0: w=1 pa=0 pr=8 m=1 a=2 r=8 op1=0 op2=0
-[630794.813974] 7: w=2 pa=0 pr=8 m=1 a=2 r=8 op1=0 op2=0
-[630794.813980] 6: w=3 pa=0 pr=8 m=1 a=2 r=8 op1=0 op2=0
-[630794.813986] 5: w=4 pa=0 pr=8 m=1 a=2 r=8 op1=0 op2=0
-[630794.813993] 4: w=5 pa=0 pr=8 m=1 a=2 r=8 op1=0 op2=0
-[630794.813999] 3: w=6 pa=0 pr=8 m=1 a=2 r=8 op1=0 op2=0
-[630794.814005] raid5: not enough operational devices for md0 (2/8 failed)
-[630794.820671] RAID5 conf printout:
-[630794.820675]  --- rd:8 wd:6
-[630794.820680]  disk 0, o:1, dev:sdj
-[630794.820685]  disk 3, o:1, dev:sdm
-[630794.820689]  disk 4, o:1, dev:sdo
-[630794.820693]  disk 5, o:1, dev:sdp
-[630794.820697]  disk 6, o:1, dev:sdn
-[630794.820701]  disk 7, o:1, dev:sdq
-[630794.820945] raid5: failed to run raid set md0
-[630794.826530] md: pers->run() failed ...
-[630794.834455] md: export_rdev(sdl)
-[630794.834463] md: export_rdev(sdl)
+I come to you with a difficult problem. We have a server otherwise 
+snappy fitted with mdraid-1 made of Samsung 840 PRO SSDs. If we copy a 
+larger file to the server (from the same server, from net doesn't 
+matter) the server load will increase from roughly 0.7 to over 100 (for 
+several GB files). Apparently the reason is that the raid can't write well.
 
-The problem is:
-md: kicking non-fresh sdl from array!
-thus:
-raid5: not enough operational devices for md0 (2/8 failed)
+Few examples:
 
-# mdadm -E /dev/sdl
-   Checksum : ca6e81a9 - correct      Events : 13274863
-# mdadm -E /dev/sdn
-   Checksum : c9a41046 - correct      Events : 13274865
+root [~]# dd if=testfile.tar.gz of=test20 oflag=sync bs=4M
+130+1 records in
+130+1 records out
+547682517 bytes (548 MB) copied, 7.99664 s, 68.5 MB/s
 
-So, the question is: How do I convince md not to be so anal retentive 
-and prevent me from accessing any of my data? The drive ***is fine***, 
-has practically all the data (I don't care about these 2 events), just 
-use it already. Nobody seems to know the magic shell commands to do that.
+And 10-20 seconds later I try the very same test:
 
-The lack of a proper shell command for that effectively constitutes a 
-dataloss bug. I've been patient, but I'm getting more and more upset at md.
-Thanks, Maarten, for your help. I hope 1) you or anybody else can help 
-me, and I hope 2) these kinds of problems will be fixed once and for 
-good by the devs.
+root [~]# dd if=testfile.tar.gz of=test21 oflag=sync bs=4M
+130+1 records in / 130+1 records out
+547682517 bytes (548 MB) copied, 52.1958 s, 10.5 MB/s
 
-> Good luck!
+A different test with 'bs=1G'
+root [~]# w
+  12:08:34 up 1 day, 13:09,  1 user,  load average: 0.37, 0.60, 0.72
 
-Thanks.
+root [~]# dd if=testfile.tar.gz of=test oflag=sync bs=1G
+0+1 records in / 0+1 records out
+547682517 bytes (548 MB) copied, 75.3476 s, 7.3 MB/s
 
-Ben
+root [~]# w
+  12:09:56 up 1 day, 13:11,  1 user,  load average: 39.29, 12.67, 4.93
+
+It needed 75 seconds to copy a half GB file and the server load 
+increased 100 times.
+
+And a final test:
+
+root@ [~]# dd if=/dev/zero of=test24 bs=64k count=16k conv=fdatasync
+16384+0 records in / 16384+0 records out
+1073741824 bytes (1.1 GB) copied, 61.8796 s, 17.4 MB/s
+
+This time the load spiked to only ~ 20.
+
+A few other peculiarities:
+
+root@ [~]# hdparm -t /dev/sda
+Timing buffered disk reads:  654 MB in  3.01 seconds = 217.55 MB/sec
+root@ [~]# hdparm -t /dev/sdb
+Timing buffered disk reads:  272 MB in  3.01 seconds =  90.44 MB/sec
+
+The read speed is very different between the 2 devices (the margin is 
+140%) but look what happens when I run it with --direct:
+
+root@ [~]# hdparm --direct -t /dev/sda
+Timing O_DIRECT disk reads:  788 MB in  3.00 seconds = 262.23 MB/sec
+root@ [~]# hdparm --direct -t /dev/sdb
+Timing O_DIRECT disk reads:  554 MB in  3.00 seconds = 184.53 MB/sec
+
+So the hardware seems to sustain speeds of about 200MB/s  on both 
+devices but it differs greatly.
+The measurement of sda increased 20% but sdb doubled. Maybe there's a 
+problem with the page cache?
+
+BACKGROUND INFORMATION
+Server type: general shared hosting server (3 weeks new)
+O/S: CentOS 6.4 / 64 bit (2.6.32-358.2.1.el6.x86_64)
+Hardware: SuperMicro 5017C-MTRF, E3-1270v2, 16GB RAM, 2 x Samsung 840 
+PRO 512GB
+Partitioning: ~ 100GB left for over-provisioning, ext 4:
+
+I believe it is aligned:
+
+root [~]# fdisk -lu
+
+Disk /dev/sda: 512.1 GB, 512110190592 bytes
+255 heads, 63 sectors/track, 62260 cylinders, total 1000215216 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00026d59
+
+    Device Boot      Start         End      Blocks   Id  System
+/dev/sda1            2048     4196351     2097152   fd  Linux raid 
+autodetect
+Partition 1 does not end on cylinder boundary.
+/dev/sda2   *     4196352     4605951      204800   fd  Linux raid 
+autodetect
+Partition 2 does not end on cylinder boundary.
+/dev/sda3         4605952   814106623   404750336   fd  Linux raid 
+autodetect
+
+Disk /dev/sdb: 512.1 GB, 512110190592 bytes
+255 heads, 63 sectors/track, 62260 cylinders, total 1000215216 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x0003dede
+
+    Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1            2048     4196351     2097152   fd  Linux raid 
+autodetect
+Partition 1 does not end on cylinder boundary.
+/dev/sdb2   *     4196352     4605951      204800   fd  Linux raid 
+autodetect
+Partition 2 does not end on cylinder boundary.
+/dev/sdb3         4605952   814106623   404750336   fd  Linux raid 
+autodetect
+
+The matrix is NOT degraded:
+
+root@ [~]# cat /proc/mdstat
+Personalities : [raid1]
+md0 : active raid1 sdb2[1] sda2[0]
+       204736 blocks super 1.0 [2/2] [UU]
+md2 : active raid1 sdb3[1] sda3[0]
+       404750144 blocks super 1.0 [2/2] [UU]
+md1 : active raid1 sdb1[1] sda1[0]
+       2096064 blocks super 1.1 [2/2] [UU]
+unused devices: <none>
+
+Write cache is on:
+
+root@ [~]# hdparm -W /dev/sda
+write-caching =  1 (on)
+root@ [~]# hdparm -W /dev/sdb
+write-caching =  1 (on)
+
+SMART seems to be OK:
+SMART overall-health self-assessment test result: PASSED (for both devices)
+
+I have tried changing IO scheduler with NOOP and deadline but I couldn't 
+see improvements.
+
+I have tried running fstrim but it errors out:
+
+root [~]# fstrim -v /
+fstrim: /: FITRIM ioctl failed: Operation not supported
+
+So I have changed /etc/fstab to contain noatime and discard and rebooted 
+the server but to no avail.
+
+I no longer know what to do. And I need to come up with some sort of a 
+solution (it's not reasonable nor acceptable to get at 3 digits loads 
+from copying several GBs worth of file). If anyone can help me, please do!
+
+Thanks in advance!
+Andy
