@@ -1,29 +1,26 @@
 From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
 Subject: Re: RAID50 boot problems
-Date: Fri, 19 Apr 2013 12:45:32 +0200 (CEST)
-Message-ID: <22897457.6.1366368332298.JavaMail.root@zimbra>
-References: <16868321.4.1366367759598.JavaMail.root@zimbra>
+Date: Fri, 19 Apr 2013 12:51:56 +0200 (CEST)
+Message-ID: <26874571.8.1366368716107.JavaMail.root@zimbra>
+References: <CAGA4a+FucP9SG5NDc079gD06G0vgS_PK3eCiiL2Lvx3sMC1U_g@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16868321.4.1366367759598.JavaMail.root@zimbra>
+In-Reply-To: <CAGA4a+FucP9SG5NDc079gD06G0vgS_PK3eCiiL2Lvx3sMC1U_g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Zvyagin <zvyagin.alexander@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Tommy Apel <tommyapeldk@gmail.com>
+Cc: Alexander Zvyagin <zvyagin.alexander@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> # If using nested MD, such as RAID5+0, another scan is needed
-> mdadm --assemble --scan
+----- Opprinnelig melding -----
+> The thing is that in order for this to work you need to have the
+> stripe scanned after the two 5s are created, I seem to recall that if
+> you put the stripe last in your mdadm.conf it will come up after the
+> 5s
 
-Btw, that probably won't be enough for you, since fstab etc is parsed b=
-efore rc.local is run. I tried to fix it with doing
-
-# If using nested MD, such as RAID5+0, another scan is needed
-mdadm --assemble --scan
-mount /testraid
-
-=E2=80=A6but for some reason the filesystem doesn't get mounted...
+I just tried to change the order in mdadm.conf, update-initramfs -u, re=
+boot, same thing. md9 doesn't come up until a manual -A --scan
 
 Vennlige hilsener / Best regards
 
