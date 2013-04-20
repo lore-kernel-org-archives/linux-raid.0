@@ -1,93 +1,81 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2 0/9] fix max discard sectors limit
-Date: Sat, 20 Apr 2013 12:50:39 -0700
-Message-ID: <1366487439.1993.9.camel@dabdike>
-References: <1366389602-19313-1-git-send-email-linkinjeon@gmail.com>
+From: Andrei Banu <andrei.banu@redhost.ro>
+Subject: Re: Incredibly poor performance of mdraid-1 with 2 SSD Samsung 840
+ PRO
+Date: Sun, 21 Apr 2013 02:25:14 +0300
+Message-ID: <517323DA.5010209@redhost.ro>
+References: <5171CBF9.9020701@redhost.ro> <CAH3kUhEaZGON=fAyVMZOz5fH_DcfKv=hCa96UCeK4pN7k81c_Q@mail.gmail.com> <51725458.7020109@redhost.ro> <CAH3kUhHxBiqugFQm=PPJNNe9jOdKy0etUjQNsoDz_LJNUCLCCQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mmc-owner@vger.kernel.org>
-In-Reply-To: <1366389602-19313-1-git-send-email-linkinjeon@gmail.com>
-Sender: linux-mmc-owner@vger.kernel.org
-To: Namjae Jeon <linkinjeon@gmail.com>
-Cc: dwmw2@infradead.org, axboe@kernel.dk, shli@kernel.org, Paul.Clements@steeleye.com, npiggin@kernel.dk, neilb@suse.de, cjb@laptop.org, adrian.hunter@intel.com, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, nbd-general@lists.sourceforge.net, linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, jcmvbkbc@gmail.com, Namjae Jeon <namjae.jeon@samsung.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAH3kUhHxBiqugFQm=PPJNNe9jOdKy0etUjQNsoDz_LJNUCLCCQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 2013-04-20 at 01:40 +0900, Namjae Jeon wrote:
-> From: Namjae Jeon <namjae.jeon@samsung.com>
-> 
-> linux-v3.8-rc1 and later support for plug for blkdev_issue_discard with
-> commit 0cfbcafcae8b7364b5fa96c2b26ccde7a3a296a9 
-> (block: add plug for blkdev_issue_discard )
-> 
-> For example,
-> 1) DISCARD rq-1 with size size 4GB
-> 2) DISCARD rq-2 with size size 1GB
-> 
-> If these 2 discard requests get merged, final request size will be 5GB.
-> 
-> In this case, request's __data_len field may overflow as it can store
-> max 4GB(unsigned int).
-> 
-> This issue was observed while doing mkfs.f2fs on 5GB SD card:
-> https://lkml.org/lkml/2013/4/1/292
-> 
-> # mkfs.f2fs /dev/mmcblk0p3
-> Info: sector size = 512
-> Info: total sectors = 11370496 (in 512bytes)
-> Info: zone aligned segment0 blkaddr: 512
-> [  257.789764] blk_update_request: bio idx 0 >= vcnt 0
-> 
-> mkfs process gets stuck in D state and I see the following in the dmesg:
-> 
-> [  257.789733] __end_that: dev mmcblk0: type=1, flags=122c8081
-> [  257.789764]   sector 4194304, nr/cnr 2981888/4294959104
-> [  257.789764]   bio df3840c0, biotail df3848c0, buffer   (null), len 1526726656
-> [  257.789764] blk_update_request: bio idx 0 >= vcnt 0
-> [  257.794921] request botched: dev mmcblk0: type=1, flags=122c8081
-> [  257.794921]   sector 4194304, nr/cnr 2981888/4294959104
-> [  257.794921]   bio df3840c0, biotail df3848c0, buffer   (null), len 1526726656
-> 
-> Few drivers(e.g. mmc, mtd..) set q->limits.max_discard_sectors
-> more than UINT_MAX >> 9 sectors which is incorrect and it may lead to overflow
-> of request's __data_len field if merged discard request's size exceeds 4GB.
-> 
-> This patchset fixes this issue by updating helper function
-> blk_queue_max_discard_sectors which is used to set max_discard_sectors limit.
-> 
-> This patchset also replaces "q->limits.max_discard_sector = max_discard_sectors"
-> with blk_queue_max_discard_sectors call in other drivers like mmc, mtd etc.
+The previous test was done with "noop" for scheduler (the speed test 
+completed at about 8MB/s). Then I rebooted the server and redone the 
+test (also with noop) and the result was slightly better but not as it 
+should be (21MB/s). A third test 5-10 minute later (after the load 
+subsided) completed at 16MB/s.  A fourth test ended with 14.6MB/s.
 
-I really don't understand this explanation.  How can you be affected by
-the incorrect setting of q->limits.max_discard sectors when  n the
-blkdev_issue_discard() code you see:
+Something else: the weekly auto raid check started a little time ago and 
+it's going at an average of 60MB/s (anywhere between 25 and 100MB/s) 
+with noop, cfq and deadline. A raid check with ordinary mechanical 
+drives gets done at about 160MB/s on the outer cylinders. Why are these 
+SSDs so slow?
 
-	max_discard_sectors = min(q->limits.max_discard_sectors, UINT_MAX >>
-9);
+These are the result from the 21MB/s test (5 seconds delay):
 
-?
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read kB_wrtn
+sda             204.94      1918.02       389.30    1367719 277605
+sdb             154.80      1196.21       389.30     853008 277605
+md1               0.65         2.59         0.00 1848          0
+md2             355.45      3106.05       388.53    2214890 277056
+md0               1.10         2.90         0.01 2069          9
 
-The problem is not that we issue discards bigger than __data_len can
-allow, the problem is that we merge them larger than __data_len will
-allow.  That means the merge code needs fixing to pay attention to
-max_discard_sectors, so isn't this the correct fix:
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read kB_wrtn
+sda             583.40     42764.80     29452.90     213824 147264
+sdb             234.80     23172.00     14950.50     115860 74752
+md1               0.00         0.00         0.00 0          0
+md2            8079.60     65886.40     29862.40     329432 149312
+md0               0.00         0.00         0.00 0          0
 
-James
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read kB_wrtn
+sda              15.00         1.60      1740.00          8 8700
+sdb              15.00         0.00      7196.80          0 35984
+md1               0.00         0.00         0.00 0          0
+md2             333.20         1.60      1330.40          8 6652
+md0               0.00         0.00         0.00 0          0
 
----
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read kB_wrtn
+sda             167.20       538.40     37432.80       2692 187164
+sdb              86.20        16.00     33688.80         80 168444
+md1               0.00         0.00         0.00 0          0
+md2            9510.80       572.80     37934.40       2864 189672
+md0               0.00         0.00         0.00 0          0
 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 78feda9..33f358f 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -838,7 +838,7 @@ static inline unsigned int blk_queue_get_max_sectors(struct request_queue *q,
- 						     unsigned int cmd_flags)
- {
- 	if (unlikely(cmd_flags & REQ_DISCARD))
--		return q->limits.max_discard_sectors;
-+		return min(q->limits.max_discard_sectors, UINT_MAX >> 9);
- 
- 	if (unlikely(cmd_flags & REQ_WRITE_SAME))
- 		return q->limits.max_write_same_sectors;
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read kB_wrtn
+sda             150.20       585.60     29090.40       2928 145452
+sdb              71.20        44.00     30355.20        220 151776
+md1               0.00         0.00         0.00 0          0
+md2            7306.20       615.20     28998.40       3076 144992
+md0               0.00         0.00         0.00 0          0
 
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read kB_wrtn
+sda             257.20      1624.00      9913.80       8120 49569
+sdb             137.20       372.00     21438.60       1860 107193
+md1               0.00         0.00         0.00 0          0
+md2            2600.80      1991.20      9504.00       9956 47520
+md0               0.00         0.00         0.00 0          0
 
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read kB_wrtn
+sda             186.80       972.80       292.70       4864 1463
+sdb             150.40       733.60       292.70       3668 1463
+md1               0.00         0.00         0.00 0          0
+md2             283.80      1706.40       291.20       8532 1456
+md0               0.00         0.00         0.00 0          0
+
+If you have any idea what can I do to improve this please let me know.
+
+Thanks!!
