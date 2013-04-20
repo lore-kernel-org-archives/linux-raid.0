@@ -1,101 +1,93 @@
-From: Oliver Schinagl <oliver+list@schinagl.nl>
-Subject: Re: md RAID5: Disk wrongly marked "spare", need to force re-add it
-Date: Sat, 20 Apr 2013 15:44:20 +0200
-Message-ID: <51729BB4.7010308@schinagl.nl>
-References: <516869D2.9030506@bucksch.org> <516B3077.9020507@schinagl.nl> <516B590C.5060807@bucksch.org> <516AE7A0.4070504@schinagl.nl> <516BD5E0.4040007@bucksch.org> <516FF25B.4000907@bucksch.org> <20130418143805.GA6558@cthulhu.home.robinhill.me.uk>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v2 0/9] fix max discard sectors limit
+Date: Sat, 20 Apr 2013 12:50:39 -0700
+Message-ID: <1366487439.1993.9.camel@dabdike>
+References: <1366389602-19313-1-git-send-email-linkinjeon@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130418143805.GA6558@cthulhu.home.robinhill.me.uk>
-Sender: linux-raid-owner@vger.kernel.org
-To: Ben Bucksch <linux.news@bucksch.org>, linux-raid@vger.kernel.org
+Return-path: <linux-mmc-owner@vger.kernel.org>
+In-Reply-To: <1366389602-19313-1-git-send-email-linkinjeon@gmail.com>
+Sender: linux-mmc-owner@vger.kernel.org
+To: Namjae Jeon <linkinjeon@gmail.com>
+Cc: dwmw2@infradead.org, axboe@kernel.dk, shli@kernel.org, Paul.Clements@steeleye.com, npiggin@kernel.dk, neilb@suse.de, cjb@laptop.org, adrian.hunter@intel.com, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, nbd-general@lists.sourceforge.net, linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, jcmvbkbc@gmail.com, Namjae Jeon <namjae.jeon@samsung.com>
 List-Id: linux-raid.ids
 
-On 04/18/13 16:38, Robin Hill wrote:
-> On Thu Apr 18, 2013 at 03:17:15PM +0200, Ben Bucksch wrote:
->
->> To re-summarize (for full info, see first post of thread):
->> * There are 2 RAID5 arrays in the machine, each have 8 disks.
->> * I upgraded Ubuntu 10.04 to 12.04.
->> * After reboot, both arrays had each ejected one disk.
->>     The ejected disks are working fine (at least now).
->> * During the resync mandated by above ejection,
->>      one other drive failed, this one fatally with a real hardware failure.
->> * The second array resynced fine, further proving that the
->>      disks ejected during upgrade were working.
->> * Now I am left with: originally 8-disk RAID5, 6 disks are healthy,
->>     1 disk with hardware failure, and 1 disk that was ejected, but is
->> working.
->> * The latter is currently marked "spare" by md and has an event count
->>     (only) 2 events lower than the other 6 disks.
->> * My task is to get the latter disk back online *with* its data, without
->> resync.
->>
->> I desperately need help, please.
->>
->> Based on suggestions here by Oliver and on forums, I did (and the result
->> is):
->>
->>> # mdadm --stop /dev/md0
->>> mdadm: stopped /dev/md0
->>> # mdadm --assemble --run --force /dev/md0 /dev/sd[jlmnopq]
->>> mdadm: failed to RUN_ARRAY /dev/md0: Input/output error
->>> mdadm: Not enough devices to start the array.
->>> # cat /proc/mdstat
->>> md0 : inactive sdj[0] sdq[7] sdn[6] sdp[5] sdo[4] sdm[3]
->>>        5860574976 blocks
->>> (Note that sdl is not even listed)
->>> # mdadm --re-add /dev/md0 /dev/sdl
->>> mdadm: re-added /dev/sdl
->>> # cat /proc/mdstat
->>> md0 : inactive sdl[8](S) sdj[0] sdq[7] sdn[6] sdp[5] sdo[4] sdm[3]
->>>        6837337472 blocks
->>>
-> That won't work here as sdl was being rebuilt at the time of the
-> failure. md therefore 'knows' that it doesn't have the correct data on
-> and can't be used to assemble the array (I think the array position of
-> the disk is only written to the metadata when recovery completes).
->
->>> Now, sdl is listed, but as spare. I need it to be treated not as
->>> spare, but as good drive with correct data (well, almost, 2 events off
->>> only). How do I do that?
->>>
-> I can see two options here:
->
-> - Image the known faulty disk to a new one and then use that to force
->    assemble the array (with the possibility of some data loss, depending
->    on how much can be read from the faulty disk).
-IF you have an extra spare disk, this probably is the best idea then. 
-The event count might not even be off at all.
+On Sat, 2013-04-20 at 01:40 +0900, Namjae Jeon wrote:
+> From: Namjae Jeon <namjae.jeon@samsung.com>
+> 
+> linux-v3.8-rc1 and later support for plug for blkdev_issue_discard with
+> commit 0cfbcafcae8b7364b5fa96c2b26ccde7a3a296a9 
+> (block: add plug for blkdev_issue_discard )
+> 
+> For example,
+> 1) DISCARD rq-1 with size size 4GB
+> 2) DISCARD rq-2 with size size 1GB
+> 
+> If these 2 discard requests get merged, final request size will be 5GB.
+> 
+> In this case, request's __data_len field may overflow as it can store
+> max 4GB(unsigned int).
+> 
+> This issue was observed while doing mkfs.f2fs on 5GB SD card:
+> https://lkml.org/lkml/2013/4/1/292
+> 
+> # mkfs.f2fs /dev/mmcblk0p3
+> Info: sector size = 512
+> Info: total sectors = 11370496 (in 512bytes)
+> Info: zone aligned segment0 blkaddr: 512
+> [  257.789764] blk_update_request: bio idx 0 >= vcnt 0
+> 
+> mkfs process gets stuck in D state and I see the following in the dmesg:
+> 
+> [  257.789733] __end_that: dev mmcblk0: type=1, flags=122c8081
+> [  257.789764]   sector 4194304, nr/cnr 2981888/4294959104
+> [  257.789764]   bio df3840c0, biotail df3848c0, buffer   (null), len 1526726656
+> [  257.789764] blk_update_request: bio idx 0 >= vcnt 0
+> [  257.794921] request botched: dev mmcblk0: type=1, flags=122c8081
+> [  257.794921]   sector 4194304, nr/cnr 2981888/4294959104
+> [  257.794921]   bio df3840c0, biotail df3848c0, buffer   (null), len 1526726656
+> 
+> Few drivers(e.g. mmc, mtd..) set q->limits.max_discard_sectors
+> more than UINT_MAX >> 9 sectors which is incorrect and it may lead to overflow
+> of request's __data_len field if merged discard request's size exceeds 4GB.
+> 
+> This patchset fixes this issue by updating helper function
+> blk_queue_max_discard_sectors which is used to set max_discard_sectors limit.
+> 
+> This patchset also replaces "q->limits.max_discard_sector = max_discard_sectors"
+> with blk_queue_max_discard_sectors call in other drivers like mmc, mtd etc.
 
-Use ddrescue though, check the options and possibilities, going start -> 
-end and end -> start Let is try very often. You get the idea.
+I really don't understand this explanation.  How can you be affected by
+the incorrect setting of q->limits.max_discard sectors when  n the
+blkdev_issue_discard() code you see:
 
-You could use the spare disk for this, but that removes any option in 
-trying to recover using that. (Hex editing the superblock, possible but 
-not easy). IF you have enough room on the other array, you can always dd 
-if=/dev/spare of=file_on_array
+	max_discard_sectors = min(q->limits.max_discard_sectors, UINT_MAX >>
+9);
 
-Also, make a backup of your superblock!! dd if=/dev/sd* 
-of=sd*.superblock size=<superblocksize> count=1
+?
 
-> - Modify the metadata on sdl so that it shows as being a valid member of
->    the array. This will require either manual editing of the superblock,
->    or rerunning the "mdadm --create" command with the correct mdadm
->    version (so data offsets match), disk order and parameters (chunk
->    size, etc). If done correctly then there should be no data loss
->    (providing that sdl, when re-added to the array, used the same data
->    offset as it originally had), but get anything wrong any you'll be
->    even further up the creek.
->
-> Personally I'd look into option one first. Despite the probability of
-> some data loss, I think it's a lower risk option overall.
-I agree, best option would be that
+The problem is not that we issue discards bigger than __data_len can
+allow, the problem is that we merge them larger than __data_len will
+allow.  That means the merge code needs fixing to pay attention to
+max_discard_sectors, so isn't this the correct fix:
 
-oliver
->
-> Cheers,
->      Robin
->
+James
+
+---
+
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 78feda9..33f358f 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -838,7 +838,7 @@ static inline unsigned int blk_queue_get_max_sectors(struct request_queue *q,
+ 						     unsigned int cmd_flags)
+ {
+ 	if (unlikely(cmd_flags & REQ_DISCARD))
+-		return q->limits.max_discard_sectors;
++		return min(q->limits.max_discard_sectors, UINT_MAX >> 9);
+ 
+ 	if (unlikely(cmd_flags & REQ_WRITE_SAME))
+ 		return q->limits.max_write_same_sectors;
+
 
