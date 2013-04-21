@@ -1,82 +1,70 @@
-From: Ben Bucksch <linux.news@bucksch.org>
-Subject: Re: md RAID5: Disk wrongly marked "spare", need to force re-add it
-Date: Mon, 22 Apr 2013 00:00:48 +0200
-Message-ID: <51746190.30102@bucksch.org>
-References: <516869D2.9030506@bucksch.org> <516B3077.9020507@schinagl.nl> <516B590C.5060807@bucksch.org> <516AE7A0.4070504@schinagl.nl> <516BD5E0.4040007@bucksch.org> <516FF25B.4000907@bucksch.org> <516FFC13.2030803@ultratux.net> <5171CB91.1040708@bucksch.org> <5171EED3.8030505@bucksch.org> <5171F52D.4040701@bucksch.org> <51739405.1060805@fnarfbargle.com> <5173A159.70202@bucksch.org> <5173C353.6080008@fnarfbargle.com> <51742D22.2080601@turmel.org>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: RAID50 boot problems
+Date: Mon, 22 Apr 2013 08:10:15 +1000
+Message-ID: <20130422081015.206aed16@notabene.brown>
+References: <20130419174509.5892c4bd@natsu>
+	<6085629.18.1366387086623.JavaMail.root@zimbra>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/md_E.TYXavslddsU_oytxC1"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51742D22.2080601@turmel.org>
+In-Reply-To: <6085629.18.1366387086623.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Cc: Roman Mamedov <rm@romanrm.ru>, linux-raid <linux-raid@vger.kernel.org>, Alexander Zvyagin <zvyagin.alexander@gmail.com>
 List-Id: linux-raid.ids
 
-Phil Turmel wrote, On 21.04.2013 20:17:
-> I'm sorry you've been sucked into exchanges with this troll.
->
-[referring to me]
+--Sig_/md_E.TYXavslddsU_oytxC1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Thank you. I came here for help. I *desperately* needed help with an 
-actual, real problem. My goal was to rescue my data, and make sure this 
-never happens again to anybody else. The goal of a troll is to enrage 
-people and cause useless debate.
+On Fri, 19 Apr 2013 17:58:06 +0200 (CEST) Roy Sigurd Karlsbakk
+<roy@karlsbakk.net> wrote:
 
-Before I came here, I had already extensively searched on Google, and 
-found lots of unhelpful comments. I wanted to avoid these. 
-Unfortunately, I found the same kind of responses here. Responses like 
-"You should have used ABC" are not helpful to the problem at hand at 
-all, and in fact only serve to enrage the person so "advised". Such 
-advise is fair enough when offered *after* actual practical help.
+> > On Wed, 17 Apr 2013 20:45:40 +0200
+> > Alexander Zvyagin <zvyagin.alexander@gmail.com> wrote:
+> >=20
+> > > I have almost working RAID50 (two RAID5 forms RAID0) in my
+> > > Linux-mint13. When booting the system always ends up in initramfs
+> > > shell, saying it cannot find the "root".
+> >=20
+> > Post a full dmesg of a failed boot-up;
+> >=20
+> > also try "rootdelay=3D10" kernel command line parameter.
+>=20
+> Please see http://paste.ubuntu.com/5721934/ for the full list, taken with=
+ network console. This is with rootdelay=3D10
 
-A few people had tried to help, but could not, because apparently there 
-is no safe command to do what I need.
+The "bind" messages are in random order so presumably udev running 'mdadm -=
+I'
+on each device as it appear to add it to an array.
+However when the md0 and md1 devices appear, udev isn't being run on that.
+So it looks like your udev rules file is wrong.
+Find out which file(s) in /{etc,lib,usr/lib}/udev/rules.d mention mdadm and
+post them.
 
->> Again : "Good news: In my desperation, I now ran the following dangerous
->> command: mdadm --create /dev/md0 --assume-clean --level=raid5 -n 8
->> --chunk=64 --layout=left-symmetric --metadata=0.90 /dev/sdj missing
->> /dev/sdl /dev/sd[mopnq]"
-> I did find it interesting that Ben tried this on his own, given that's
-> the very advice he demanded not be given in his OP.
+NeilBrown
 
-That's not correct. I wrote:
-"Please do NOT respond with re-"create" the array - unless you can give 
-me the exact --create command that would recover it with data - other 
-people tried this based on suggestions in forums and they lost all data"
+--Sig_/md_E.TYXavslddsU_oytxC1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Note the "unless". Unfortunately, nonewithstanding my disclaimer, 
-several people suggested 1) to use the disk that I already wrote is 
-(really, actually) dead 2) hexediting superblocks (without any info on 
-how) 3) using --create (ditto), but *nobody* offered the exact command 
-to run. (I had posted all relevant device info for that purpose.)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-I didn't feel comfortable with --create, but when nobody offered a real 
-alternative, I saw no other option than to try that. Yet, I was wrong to 
-do that, because:
+iQIVAwUBUXRjxznsnt1WYoG5AQJCxhAAu1Cs1PEbQ36cjjfvmj/8MWWipS065bMx
+CmKweMrwRZHuwb5xLIVh19qqs27x4bPEu285gApQKJIcFFUe+8HFQLkgYzQg4gom
+SOI8J/3aaEwz7sRn27CatoEs1V73an9YXzFAoYfTNvmsYmjoFkH8xavTla3w03+0
+1Aj8iR2NedRHBFeYmEoCeS0n8gYkQwdwlmNT7sc/UetgfheKIgn9OqQu+UQ36YCi
+jgKrCsNmomI4NqPz5YOEnL2sYnB/iV/b9eS+jGVEJr/rhJWwue5doNM9COxy3ceF
+9nM0QGzJ1nCeyNkvvMkECu8+hrh0T05cWlpBUkWOKWI+osYVp67XqYHF5NdmQOBM
+3dUdXJakzxcQiEEWnUP8rC8Ld/8TKeGjYQeTYuDD2yjq0Ptil9v3D4kDdNzFTyHl
+WR6Vb3AaxHQyWdMNb/V0E06gqUI7MSxNDHNdSdUOCzQB8CVj4PphDcIksyQCWbvo
+1k7K9kqcUMdx/41S+56niOyKV3Zeur16KNAg2LNdfp80lxCRbcqsVcjpfMtFfOEy
+dNvYv2mPp0mGvnRqm9HLLcGgaBZlPatM0LfbB8OJMuHmvKH8vGM0P0jTVGjoelET
+kPAn5aUdKwyhl8QuTfsB0zcZePbaTDKtS83s+pnjT0xvsKeLt+5pqCUPkxtFgyf5
+E+EXHslTJe0=
+=Olp1
+-----END PGP SIGNATURE-----
 
-> The construct /dev/sd[mopnq] expands as if it was specified
-> /dev/sd[mnopq].  His misunderstanding of bracket syntax has wrecked his
-> array.  If he had used braces, or spelled out all the devices, he'd
-> probably be fine right now.
->
-> If he tries again, with this in mind, he might still be fine.
-
-Ah, thanks. This is what I consider practical help. Thank you. Indeed, I 
-had no idea (not even thought of the mere possibility) that the shell 
-would reorder my [] device list. And in fact:
-# cat /proc/mdstat
-md0 : active raid5 sdq[7] sdp[6] sdo[5] sdn[4] sdm[3] sdl[2] sdj[0]
-
-So, the [] was indeed what killed me and caused my dataloss. 
-Unfortunately, the most important FS on the array is now totally corrupted.
-
-FWIW, this is exactly why I had asked for a concrete --create command 
-for my case.
-
-> That's a significant consideration when non-native English is 
-> involved. But it's clearly not the case here.
-
-FWIW, I am not a native English speaker.
-
-Ben
-
+--Sig_/md_E.TYXavslddsU_oytxC1--
