@@ -1,85 +1,138 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Odd CPU usage in the last stage of a raid5 reshape
-Date: Mon, 22 Apr 2013 08:28:33 +1000
-Message-ID: <20130422082833.34724ab9@notabene.brown>
-References: <20130419075404.GA1938@frosties>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Incredibly poor performance of mdraid-1 with 2 SSD Samsung 840
+ PRO
+Date: Sun, 21 Apr 2013 18:17:22 -0500
+Message-ID: <51747382.1010105@hardwarefreak.com>
+References: <5171CBF9.9020701@redhost.ro> <51732E2B.6090607@hardwarefreak.com> <5174501F.80509@redhost.ro>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/k+kJ8zv+K6Jt6or=4ufdOE="; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130419075404.GA1938@frosties>
+In-Reply-To: <5174501F.80509@redhost.ro>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
+To: Andrei Banu <andrei.banu@redhost.ro>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/k+kJ8zv+K6Jt6or=4ufdOE=
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 4/21/2013 3:46 PM, Andrei Banu wrote:
+> Hello,
+> 
+> At this point I probably should state that I am not an experienced
+> sysadmin. 
 
-On Fri, 19 Apr 2013 09:54:04 +0200 Goswin von Brederlow <goswin-v-b@web.de>
-wrote:
+Things are becoming more clear now.
 
-> Hi,
->=20
-> I'm still reshaping a 2 disk raid5 to 3 disks. It has now progressed
-> past the 50% mark so all data has been reshaped. So now the kernel
-> simply writes zeroes (I assume) to all 3 disks. There are no more
-> reads, only writes.
->=20
-> Now what is odd is the cpu usage:
->=20
-> /proc/mdsata:
-> md0 : active raid5 sdd1[3] sdc1[2] sda1[0]
->       3907015168 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3] =
-[UUU]
->       [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>........]  reshape =3D 62.0% =
-(2425537964/3907015168) finish=3D22
-> 0.0min speed=3D112230K/sec
->=20
-> iostat -k 10:
-> Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
-> sda             834.40         0.00    103372.60          0    1033726
-> md0               0.00         0.00         0.00          0          0
-> sdc             813.90         0.00    104601.80          0    1046018
-> sdd             718.50         0.00    104499.40          0    1044994
->=20
-> top:
->   PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND     =
-     =20
->  2058 root      20   0     0    0    0 R   96  0.0   1106:40 md0_raid5
-> 18379 root      20   0     0    0    0 R   50  0.0 324:11.19 md0_reshape
->=20
-> Is the kernel zero filling the raid device and computing the XOR of
-> zeroes for the parity blocks? Wouldn't it be less cpu consuming to
-> insert zero filled stripes directly into the stripe cache?
->=20
+> Knowing this, I do have a server management company but they
+> said they don't know what to do 
 
-Yes, the kernel is computing an XOR of the zeros to determine the parity
-block.  This certainly could be optimised, but it is hardly a priority.
+So you own this hardware and it is colocated, correct?
 
-NeilBrown
+> so now I am trying to fix things myself
+> but I am something of a noob. I normally try to keep my actions to
+> cautious config changes and testing. 
 
---Sig_/k+kJ8zv+K6Jt6or=4ufdOE=
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Why did you choose Centos?  Was this installed by the company?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+> I have never done a kernel update.
+> Any easy way to do this?
 
-iQIVAwUBUXRoETnsnt1WYoG5AQK8gA/+NsA1/EdwnhkSGkCmfLZo07XF0OYqWNew
-40q2Fj8UqOo7J1+GMP8tZbbh1HJ+43gq1a8XlVljRxjY56TYiLc52QRNZJd9+Cso
-JGUavdu6i3ul+D9Y3qNdoLRqRdg5KmFS/V3qk8Drbbw2D4lwldUqce8V+53GBnft
-s63yUJBbCBQuBBxlY4AHg33rQl7XR7PG/H/nk7b2fapzKyEOloEnEJweng3Dne5c
-78lqFQVe1EkSfrbXtfFzukQ9u8/qWJjNFm+qOrSPb6Ce2Rcy1LCUgCe/JzN94T4Y
-UO1m9gIpTYawed/Hs48KNQNnUDk0GFO7JpvAZpVGAimhwnOChqkiBI09wAgBJ7Ey
-VCYWuAJXbJghJ76YqDL/+Yd0ShhI0wyNWxZXArK8fQH35B88TcAwIf0ZBpBnDZ8+
-DePi3ebYowV7dnA2bHegFKDa9X17qrhEhIvyVCSy+L43Uyie228HkZ691oNi+HZw
-93SNbJMZytKjHTtlVo5t1HUKO5QS3Q9YrVks5EETfV1x7fmGYoqDZWmaDZNhQ8oq
-RscsQBUrlJjMbIaZCLmmk/2HkqnZO4AB1KoA1H/uQm++D+tbCbZEcxzP9OjpcR1E
-CToxY+zNbgUcS4LUoc71ZqzXN7ZKVTJQlIq9CrCIUFLNRWSJCwvT0IXHp6iJ5OJ3
-ASSL9LnGy6Y=
-=YG4+
------END PGP SIGNATURE-----
+It may not be necessary, at least to solve any SSD performance problems
+anyway.  Reexamining your numbers shows you hit 262MB/s to /dev/sda.
+That's 65% of SATA2 interface bandwidth, so this kernel probably does
+have the patch.  Your problem lie elsewhere.
 
---Sig_/k+kJ8zv+K6Jt6or=4ufdOE=--
+> Regarding your second advice (to purchase a decent HBA) I have already
+> thought about it but I guess it comes with it's own drivers that need to
+> be compiled into initramfs etc. 
+
+The default CentOS (RHEL) initramfs should include mptsas, which
+supports all the LSI HBAs.  The LSI caching RAID cards are supported as
+well with megaraid_sas.
+
+The question is, do you really need more than the ~260MB/s of peak
+throughput you currently have?  And is it worth the hassle?
+
+> So I am trying to replace the baseboard
+> with one with SATA3 support to avoid any configuration changes (the old
+> board has the C202 chipset and the new one has C204 so I guess this
+> replacement is as simple as it gets - just remove the old board and plug
+> the new one without any software changes or recompiles). Again I need to
+> say this server is in production and I can't move the data or the users.
+> I can have a few hours downtime during the night but that's about all.
+
+It's not clear your problem is hardware bandwidth.  In fact it seems the
+problem lie elsewhere.  It may simply be that you're running these tests
+while other substantial IO is occurring.  Actually, your numbers show
+this is exactly the case.  What they don't show is how much other IO is
+hitting the SSDs while you're running your tests.
+
+> Regarding the kernel upgrade, do we need to compile one from source or
+> there's an easier way?
+
+I don't believe at this point you need a new kernel to fix the problem
+you have.  If this patch was not present you'd not be able to get
+260MB/s from SATA2.  Your problem lie elsewhere.
+
+In the future, instead of making a post saying "md is slow, my SSDs are
+slow" and pasting test data which appears to back that claim, you'd be
+better served by describing a general problem, such as "users say the
+system is slow and I think it may be md or SSD related".  This way we
+don't waste time following a troubleshooting path based on incorrect
+assumptions, as we've done here.  Or at least as I've done here, as I'm
+the only one assisting.
+
+Boot all users off the system, shut down any daemons that may generate
+any meaningful load on the disks or CPUs.  Disable any encryption or
+compression.  Then rerun your tests while completely idle.  Then we'll
+go from there.
+
+-- 
+Stan
+
+
+> Thanks!
+> 
+> On 21/04/2013 3:09 AM, Stan Hoeppner wrote:
+>> On 4/19/2013 5:58 PM, Andrei Banu wrote:
+>>
+>>> I come to you with a difficult problem. We have a server otherwise
+>>> snappy fitted with mdraid-1 made of Samsung 840 PRO SSDs. If we copy a
+>>> larger file to the server (from the same server, from net doesn't
+>>> matter) the server load will increase from roughly 0.7 to over 100 (for
+>>> several GB files). Apparently the reason is that the raid can't write
+>>> well.
+>> ...
+>>> 547682517 bytes (548 MB) copied, 7.99664 s, 68.5 MB/s
+>>> 547682517 bytes (548 MB) copied, 52.1958 s, 10.5 MB/s
+>>> 547682517 bytes (548 MB) copied, 75.3476 s, 7.3 MB/s
+>>> 1073741824 bytes (1.1 GB) copied, 61.8796 s, 17.4 MB/s
+>>> Timing buffered disk reads:  654 MB in  3.01 seconds = 217.55 MB/sec
+>>> Timing buffered disk reads:  272 MB in  3.01 seconds =  90.44 MB/sec
+>>> Timing O_DIRECT disk reads:  788 MB in  3.00 seconds = 262.23 MB/sec
+>>> Timing O_DIRECT disk reads:  554 MB in  3.00 seconds = 184.53 MB/sec
+>> ...
+>>
+>> Obviously this is frustrating, but the fix should be pretty easy.
+>>
+>>> O/S: CentOS 6.4 / 64 bit (2.6.32-358.2.1.el6.x86_64)
+>> I'd guess your problem is the following regression.  I don't believe
+>> this regression is fixed in Red Hat 2.6.32-* kernels:
+>>
+>> http://www.archivum.info/linux-ide@vger.kernel.org/2010-02/00243/bad-performance-with-SSD-since-kernel-version-2.6.32.html
+>>
+>>
+>> After I discovered this regression and recommended Adam Goryachev
+>> upgrade from Debian 2.6.32 to 3.2.x, his SSD RAID5 throughput increased
+>> by a factor of 5x, though much of this was due testing methods.  His raw
+>> SSD throughput more than doubled per drive.  The thread detailing this
+>> is long but is a good read:
+>>
+>> http://marc.info/?l=linux-raid&m=136098921212920&w=2
+>>
+> 
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
