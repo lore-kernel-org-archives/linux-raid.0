@@ -1,56 +1,67 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: md RAID5: Disk wrongly marked "spare", need to force re-add it
-Date: Sun, 21 Apr 2013 13:07:52 +0200 (CEST)
-Message-ID: <17077622.2.1366542472549.JavaMail.root@zimbra>
-References: <5173A159.70202@bucksch.org>
+From: Tommy Apel <tommyapeldk@gmail.com>
+Subject: Re: Incredibly poor performance of mdraid-1 with 2 SSD Samsung 840 PRO
+Date: Sun, 21 Apr 2013 14:23:48 +0200
+Message-ID: <CAGA4a+EMvLJMqufWjfmze9FZ_sDRBE0SCbOe0UYXRNOLU=DUTw@mail.gmail.com>
+References: <5171CBF9.9020701@redhost.ro>
+	<CAH3kUhEaZGON=fAyVMZOz5fH_DcfKv=hCa96UCeK4pN7k81c_Q@mail.gmail.com>
+	<51725458.7020109@redhost.ro>
+	<CAH3kUhHxBiqugFQm=PPJNNe9jOdKy0etUjQNsoDz_LJNUCLCCQ@mail.gmail.com>
+	<51732422.1050109@redhost.ro>
+	<5173536C.2040108@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5173A159.70202@bucksch.org>
+In-Reply-To: <5173536C.2040108@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ben Bucksch <linux.news@bucksch.org>
-Cc: linux-raid@vger.kernel.org, Brad Campbell <lists2009@fnarfbargle.com>
+To: stan@hardwarefreak.com
+Cc: Andrei Banu <andrei.banu@redhost.ro>, linux-raid Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> Brad Campbell wrote, On 21.04.2013 09:23:
-> > As others have already told you, md does not go randomly kicking
-> > drives from arrays. Your system had a failure of some kind which
-> > caused the loss of two drives.
->=20
-> You ignore the facts and do "mi mi mi" in face of bugs reports. 2
-> different arrays lost 1 drive, both at the same time at reboot after
-> the
-> OS upgrade, and both drives are working fine. Facts.
->=20
-> And even *if* they had a temporary error, my case shows why it's a
-> *bug*
-> to kick them out of the array. And it's a *bug* to not let me put the=
-m
-> back in with data. Tons of other people have suffered dataloss becaus=
-e
-> of various temporary, easily recoverable problems and these 2 bugs.
->=20
-> People like you are the reason why people like me suffer dataloss.
+Hello, FYI I'm getting ~68MB/s on two intel330 in RAID1 aswell on
+vanilla 3.8.8 and 3.9.0-rc3 when writing random data and ~236MB/s
+writing from /dev/zero
 
-Well, just restore from backup. Shouldn't be too hard.
+mdadm -C /dev/md0 -l 1 -n 2 --assume-clean --force --run /dev/sdb /dev/sdc
+openssl enc -aes-128-ctr -pass pass:"$(dd if=/dev/urandom bs=128
+count=1 2>/dev/null | base64)" -nosalt < /dev/zero | pv -pterb >
+/run/fill ~1.06GB/s
+dd if=/run/fill of=/dev/null bs=1M count=1024 iflag=fullblock ~5.7GB/s
+dd if=/run/fill of=/dev/md0 bs=1M count=1024 oflag=direct ~68MB/s
+dd if=/dev/zero of=/dev/md0 bs=1M count=1024 oflag=direct ~236MB/s
 
-Vennlige hilsener / Best regards
+iostat claiming 100% util on both drives when doing so, running both
+deadline and noop scheduler,
+doing the same with 4 threads and offset by 1.1GB on the disk and
+taske set to 4 cores makes no difference, still ~68MB/s with random
+data
+# for x in `seq 0 4`; do taskset -c $x dd if=/run/fill of=/dev/md0
+bs=1M count=1024 seek=$(($x * 1024)) oflag=direct & done
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+/Tommy
+
+2013/4/21 Stan Hoeppner <stan@hardwarefreak.com>:
+> On 4/20/2013 6:26 PM, Andrei Banu wrote:
+>
+>> They are connected through SATA2 ports (this does explain the read speed
+>> but not the pitiful write one) in AHCI.
+>
+> These SSDs are capable of 500MB/s, and cost ~$1000 USD.  Spend ~$200 USD
+> on a decent HBA.  The 6G SAS/SATA LSI 9211-4i seems perfectly suited to
+> your RAID1 SSD application.  It is a 4 port enterprise JBOD HBA that
+> also supports ASIC level RAID 1, 1E, 10.
+>
+> Also, the difference in throughput your show between RAID maintenance,
+> direct device access, and filesystem access suggests you have something
+> running between the block and filesystem layers, for instance LUKS.
+> Though LUKS alone shouldn't hammer your CPU and IO throughput so
+> dramatically.  However, if the SSDs do compression or encryption
+> automatically, and I believe the 840s do, the LUKS encrypted blocks may
+> cause the SSD firmware to take considerably more time to process the blocks.
+>
+> --
+> Stan
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
