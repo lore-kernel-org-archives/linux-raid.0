@@ -1,89 +1,82 @@
-From: NeilBrown <neilb@suse.de>
+From: Ben Bucksch <linux.news@bucksch.org>
 Subject: Re: md RAID5: Disk wrongly marked "spare", need to force re-add it
-Date: Mon, 22 Apr 2013 07:50:26 +1000
-Message-ID: <20130422075026.04b63081@notabene.brown>
-References: <516869D2.9030506@bucksch.org>
-	<516B3077.9020507@schinagl.nl>
-	<516B590C.5060807@bucksch.org>
-	<516AE7A0.4070504@schinagl.nl>
-	<516BD5E0.4040007@bucksch.org>
-	<516FF25B.4000907@bucksch.org>
-	<516FFC13.2030803@ultratux.net>
-	<5171CB91.1040708@bucksch.org>
-	<5171EED3.8030505@bucksch.org>
-	<5171F52D.4040701@bucksch.org>
+Date: Mon, 22 Apr 2013 00:00:48 +0200
+Message-ID: <51746190.30102@bucksch.org>
+References: <516869D2.9030506@bucksch.org> <516B3077.9020507@schinagl.nl> <516B590C.5060807@bucksch.org> <516AE7A0.4070504@schinagl.nl> <516BD5E0.4040007@bucksch.org> <516FF25B.4000907@bucksch.org> <516FFC13.2030803@ultratux.net> <5171CB91.1040708@bucksch.org> <5171EED3.8030505@bucksch.org> <5171F52D.4040701@bucksch.org> <51739405.1060805@fnarfbargle.com> <5173A159.70202@bucksch.org> <5173C353.6080008@fnarfbargle.com> <51742D22.2080601@turmel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/aJpbgoi0+WCKp_XwVNtrsMP"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5171F52D.4040701@bucksch.org>
+In-Reply-To: <51742D22.2080601@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ben Bucksch <linux.news@bucksch.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/aJpbgoi0+WCKp_XwVNtrsMP
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Phil Turmel wrote, On 21.04.2013 20:17:
+> I'm sorry you've been sucked into exchanges with this troll.
+>
+[referring to me]
 
-On Sat, 20 Apr 2013 03:53:49 +0200 Ben Bucksch <linux.news@bucksch.org> wro=
-te:
+Thank you. I came here for help. I *desperately* needed help with an 
+actual, real problem. My goal was to rescue my data, and make sure this 
+never happens again to anybody else. The goal of a troll is to enrage 
+people and cause useless debate.
 
-> Ben Bucksch wrote, On 20.04.2013 03:26:
-> > I can read my files again, without problem, all is happy.=20
->=20
-> Actually, no. XFS filesystem structure is not sane. I must have done=20
-> something wrong. (If possible, please let me know what, all data should=20
-> be posted.)
->=20
-> At first, it looked OK, as if only one recently written directory was=20
-> broken. I unmounted one of the FS, did xfs_repair, and after=20
-> re-mounting, almost all directories are gone. Almost 100% dataloss. I=20
-> can't describe how upset I am against md.
+Before I came here, I had already extensively searched on Google, and 
+found lots of unhelpful comments. I wanted to avoid these. 
+Unfortunately, I found the same kind of responses here. Responses like 
+"You should have used ABC" are not helpful to the problem at hand at 
+all, and in fact only serve to enrage the person so "advised". Such 
+advise is fair enough when offered *after* actual practical help.
 
-So data was accessible before "xfs_repair", is not accessible after
-'xfs_repair', yet you blame md rather than xfs_repair?  Interesting.
+A few people had tried to help, but could not, because apparently there 
+is no safe command to do what I need.
 
-You've clearly had a bad experience - I'm sorry about that.
-I doubt there is anything you can do to unrepair whatever xfs_repair did, b=
-ut
-the place to ask would be on the xfs list.
+>> Again : "Good news: In my desperation, I now ran the following dangerous
+>> command: mdadm --create /dev/md0 --assume-clean --level=raid5 -n 8
+>> --chunk=64 --layout=left-symmetric --metadata=0.90 /dev/sdj missing
+>> /dev/sdl /dev/sd[mopnq]"
+> I did find it interesting that Ben tried this on his own, given that's
+> the very advice he demanded not be given in his OP.
 
-NeilBrown
+That's not correct. I wrote:
+"Please do NOT respond with re-"create" the array - unless you can give 
+me the exact --create command that would recover it with data - other 
+people tried this based on suggestions in forums and they lost all data"
 
->=20
-> Oh, and in case you're wondering about my backup: That's gone, too, due=20
-> to bugs in btrfs that trashed the FS and also stopped the dedicated=20
-> backup machine from booting automatically, so I don't have any current=20
-> backup either.
->=20
-> Ben
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Note the "unless". Unfortunately, nonewithstanding my disclaimer, 
+several people suggested 1) to use the disk that I already wrote is 
+(really, actually) dead 2) hexediting superblocks (without any info on 
+how) 3) using --create (ditto), but *nobody* offered the exact command 
+to run. (I had posted all relevant device info for that purpose.)
 
+I didn't feel comfortable with --create, but when nobody offered a real 
+alternative, I saw no other option than to try that. Yet, I was wrong to 
+do that, because:
 
---Sig_/aJpbgoi0+WCKp_XwVNtrsMP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+> The construct /dev/sd[mopnq] expands as if it was specified
+> /dev/sd[mnopq].  His misunderstanding of bracket syntax has wrecked his
+> array.  If he had used braces, or spelled out all the devices, he'd
+> probably be fine right now.
+>
+> If he tries again, with this in mind, he might still be fine.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+Ah, thanks. This is what I consider practical help. Thank you. Indeed, I 
+had no idea (not even thought of the mere possibility) that the shell 
+would reorder my [] device list. And in fact:
+# cat /proc/mdstat
+md0 : active raid5 sdq[7] sdp[6] sdo[5] sdn[4] sdm[3] sdl[2] sdj[0]
 
-iQIVAwUBUXRfIjnsnt1WYoG5AQIKHQ/9HbFfCgfBrDXAsVsK9zAfw2pDFYU5/KTG
-RtsiFnLcJNK86VJN7siYgxir08rW5h2L7hjRmP6E+bnSTDzDdGCiZV6cbuiPwlBL
-91YidkTAz2EyGCAjyGSEzznfIttqZJajBRksi07AQoHLUfsEil1tVZa9eFnut+Jb
-I430lFV56qiHR5XjPQLKwYmraB0TISh17jqrHxSe1B9VT7Y6h7orOcxLOgz5qD2b
-JuHL6ARZ7JYk3NkqWHcycqy6yKMuJFyT7b0cdflMvRQHZXDfSQJsGcovjxcwIoxY
-ll1lGWhxGB1muzLNaKM2pKQmLHJi4bDTkrhK/lZuPV0fzd1tM8R5gBw32lmb4Ky6
-X3y83CEYxSlShMCIMdYo7n7fM3C3+HmjfIr4joO/E7Dvtwkwue7ZriwnJdErwOLL
-ytmInQvw+vfZSnCJR7JCNW/KLw2BPtHKWu/Hr0mjbFb4sBwzgVxDdTYV6zsbyWhp
-fDhAH3PB4FUZhEYjS57UMuyI8oWkyszTyE9ipszil0gCcxVV8jV1j+fJPF4lSa8Z
-F0SBorsJNbtZ5iO6ypWR3G/cva6vNvWXSEFxkzu4sAH7hD3Uk7tTEGzagCiLViSh
-tuk3FVawF/kZQmmwqwp1to5B3c2CiB29ZQHW0hNVVBddC0inP4dAxz8NuQv70JpT
-I8Yi/IsCBbU=
-=1lPi
------END PGP SIGNATURE-----
+So, the [] was indeed what killed me and caused my dataloss. 
+Unfortunately, the most important FS on the array is now totally corrupted.
 
---Sig_/aJpbgoi0+WCKp_XwVNtrsMP--
+FWIW, this is exactly why I had asked for a concrete --create command 
+for my case.
+
+> That's a significant consideration when non-native English is 
+> involved. But it's clearly not the case here.
+
+FWIW, I am not a native English speaker.
+
+Ben
+
