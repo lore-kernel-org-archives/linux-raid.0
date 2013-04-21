@@ -1,114 +1,50 @@
-From: Evgeny Koryanov <evgeny.koryanov@maris.no>
-Subject: Re: Raid recovery. Help wanted!
-Date: Sun, 21 Apr 2013 21:27:30 +0400
-Message-ID: <51742182.5040702@maris.no>
-References: <517410F6.8050605@maris.no> <CADNH=7Fv7NzE85P0ABorzWhsTEBKzd2Fnm27UxhsnmvVArqShg@mail.gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Reshape Shrink Hung Again
+Date: Sun, 21 Apr 2013 13:38:01 -0400
+Message-ID: <517423F9.7080203@turmel.org>
+References: <96A49024-A8A7-4ED9-82B1-5AE430374EBE@bingner.com> <B3E53A19-A67B-4F55-85B8-303DCFAA7363@bingner.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADNH=7Fv7NzE85P0ABorzWhsTEBKzd2Fnm27UxhsnmvVArqShg@mail.gmail.com>
+In-Reply-To: <B3E53A19-A67B-4F55-85B8-303DCFAA7363@bingner.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>
+To: Sam Bingner <sam@bingner.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 04/21/2013 04:26 AM, Sam Bingner wrote:
+> Am I doing something wrong in these emails?  I've yet to have a reply
+> from anybody related to this issue... should I submit it to a
+> bugtracker somewhere instead?  Do I need to provide some different
+> format for my email?  Is there a specific type of goat I should
+> sacrifice?
 
-On 21.04.2013 20:40, Mathias Bur=C3=A9n wrote:
-> On 21 April 2013 17:16, Evgeny Koryanov <evgeny.koryanov@maris.no> wr=
-ote:
->> Hello everybody!
->>
->> Yesterday I met a problem with one of raid5 arrays build by mdadm on=
- three
->> (sd[bcd]) 1.5T devices.
->> I found array in degraded state with sdd fail. Drive becomes fail st=
-ate
->> after power jump.
->> Server supplied by UPS but this seems was not good enough - server w=
-as not
->> rebooted but one drive as I said becomes fail state.
->> I simply reattaches it and array started rebuilding but fails after =
-couple
->> of %'s passed with sdc becomes fail!!!
->> I assemble array again with sd[bc] and tried to attach sdd again: pi=
-cture
->> repeated rebuild fails.
->> So I have sdb in sync state, sdc - failed and sdd spare. I checked S=
-MARTs of
->> drives to understand reason of such behavior and
->> found it clean on all devices. Than I tried to dd if=3D/dev/sd[bcd]
->> of=3D/dev/null and found that dd also fails with IO error.
->> After dd bad blocks started appears in SMART :)
->> Finally I have:
->> sdb - sync
->> sdc - fail
->> sdd - spare
->> states and a number of bads on each hdd in random places...
->>
->> Could any one suggest how can I assemble this array now in read-only=
- mode to
->> try to copy data?!
->> Theoretically data on sdd should not be rewritten and it still shoul=
-d be
->> possible to try recover data (meaning that bads appears in quite dif=
-ferent
->> places)...
->> May be you know utility which helps recover data or the way how to s=
-tart
->> array in read-only mode preventing becomes it to degraded state
->> and force md device to try recover data using readable places from e=
-ach
->> devise???
->> Or any other ideas appreciated! Thanks, any way...
->>
->> Best regards,
->>                  Evgeny.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Hi,
->
-> Could you post the smartctl -a output of all the drives? If 2 drives
-> are failling you might want to derescue them somewhere and assemble
-> the RAID from that.
->
-> Mathias
-Hi, Mathis.
+I don't think you're doing anything wrong--you just have an uncommon
+problem, and the options are non-obvious.  It sounds vaguely like a
+known kernel bug, but I can't call it to mind.  You are running a rather
+old kernel, so the pool of people who can help with it is certainly
+shrinking.
 
-Will post it tomorrow - it's down now and I'm not around.
-But as per your suggestion: still not clear for me is it good idea - as=
-=20
-soon as I will copy valid data to another drive
-information about bad's places will be lost (for md device driver) and=20
-bad blocks physically will be replaced by zeros.
-And what will happen after assembling and trying to read places where=20
-bad blocks was (where array marked sync and blocks are
-not consistent - redundant part zeroed) - will md read properly? will m=
-d=20
-mark drive fail as soon as find async (zeroed) block ans start resync..=
-=2E=20
-Actually I did not found in mdadm read-only assembling mode which will=20
-prevent such behavior!
+Suggestions:
 
-Best regards,
-                     Evgeny.
+1) Try a recent kernel on a livecd that supports mdadm, something like
+"SystemRescueCD" (my favorite).  Allow that newer kernel to assemble
+what it can.  If that gives you accessible data, you could then re-add
+that failed device.  If that works, you can go back to your runtime
+environment, with a now-working array, and plan a more leisurely system
+upgrade.
 
-  * English - detected
-  * English
-  * Russian
-  * Norwegian
+2) Abandon the 1/2MB of unrebuilt data on the array by recreating
+the array with "mdadm --create --assume-clean", using "missing" in place
+of sda2.  You have good dumps of your metadata, so that is relatively
+low-risk.  (Do verify that the chunk and data offset of the
+newly-created array match the originals before you allow anything to
+write to the array!  "fsck -n" is your friend.)  Then you can add sda2
+and let it rebuild.
 
-  * English
-  * Russian
-  * Norwegian
+Given that I've never had this problem, I'm not 100% confident in this
+advice.  You might want to wait a bit for folk with more 2.6.32
+experience to pipe up.
 
-<javascript:void(0);>
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Phil
