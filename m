@@ -1,150 +1,67 @@
-From: Tommy Apel <tommyapeldk@gmail.com>
-Subject: Re: Incredibly poor performance of mdraid-1 with 2 SSD Samsung 840 PRO
-Date: Mon, 22 Apr 2013 14:02:43 +0200
-Message-ID: <CAGA4a+HQGbtBo9wCQ_hbGdd0_==hmTx_Tw8UKw0PzvNcv-76og@mail.gmail.com>
-References: <5171CBF9.9020701@redhost.ro>
-	<CAH3kUhEaZGON=fAyVMZOz5fH_DcfKv=hCa96UCeK4pN7k81c_Q@mail.gmail.com>
-	<51725458.7020109@redhost.ro>
-	<CAH3kUhHxBiqugFQm=PPJNNe9jOdKy0etUjQNsoDz_LJNUCLCCQ@mail.gmail.com>
-	<51732422.1050109@redhost.ro>
-	<5173536C.2040108@hardwarefreak.com>
-	<CAGA4a+EMvLJMqufWjfmze9FZ_sDRBE0SCbOe0UYXRNOLU=DUTw@mail.gmail.com>
-	<51743F14.7020404@hardwarefreak.com>
-	<CAGA4a+Fsrum9vrtWbeKP4jWfT3JAAMK4Ci1HU6A2cMez1mwttw@mail.gmail.com>
-	<517488B7.9030505@hardwarefreak.com>
-	<CAGA4a+HS1EkQ0N1J0He25sWYeL6dhACO=zkVB6jSevZUUuOFBQ@mail.gmail.com>
-	<21ba656fc34d77a018772f603ba5b75f@redhost.ro>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Brassow Jonathan <jbrassow@redhat.com>
+Subject: Re: [PATCH] MD:  Do not increment resync_mismatches unless MD_RECOVERY_REQUESTED
+Date: Mon, 22 Apr 2013 11:26:16 -0500
+Message-ID: <2BD5F32D-4C11-4DA6-A38B-DFA030D78489@redhat.com>
+References: <1366402161.18514.1.camel@f16> <20130422103626.4cdcefae@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v1085)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <21ba656fc34d77a018772f603ba5b75f@redhost.ro>
+In-Reply-To: <20130422103626.4cdcefae@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrei Banu <andrei.banu@redhost.ro>, stan@hardwarefreak.com
-Cc: linux-raid Raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>, Jonathan Brassow <jbrassow@redhat.com>
 List-Id: linux-raid.ids
 
-Yes it can be run as it is, it will write to the file given by --filename=
 
-well from what I make of it so far I wouldn't rule out the bad device
-part but at the same time there could be other things involved
-although I don't belive it to be the md part
+On Apr 21, 2013, at 7:36 PM, NeilBrown wrote:
 
-Stan> do you know anything about the state of ext4 on centos 6.x ?
+> On Fri, 19 Apr 2013 15:09:21 -0500 Jonathan Brassow <jbrassow@redhat.com>
+> wrote:
+> 
+>> MD:  Do not increment resync_mismatches unless MD_RECOVERY_REQUESTED
+>> 
+>> resync_mismatches is used to display the number of differences that
+>> have been found or repaired during a scrubbing operation.  It is not
+>> meant to count anything during resync or repair operations.  (How
+>> much sense does it make to find resync_mismatches populated after an
+>> initial synchronization of the array?  After cleaning-up an unclean
+>> shutdown?  After [re]integrating a device into an existing array?)
+>> The incrementing of the variable must be restricted to when the user
+>> initiates a scrubbing operation (i.e. "check" or "repair").
+> 
+> How do you know what it is "meant" to do? :-)
 
-/Tommy
+Yes, I suppose I did infer the meaning, but I don't think it's too much of a stretch - especially given the commit message where 'resync_mismatches' was introduced.
+commit 9d88883e68f404d5581bd391713ceef470ea53a9
+Author: NeilBrown <neilb@suse.de>
+Date:   Tue Nov 8 21:39:26 2005 -0800
 
-2013/4/22 Andrei Banu <andrei.banu@redhost.ro>
->
-> Hi,
->
-> No worries about the typo. I ran iostat -x -m 2 for a few minutes and I get:
->
-> - 0-500KB/s 70% of the time
-> - 1-2MB/s 20% of the time
-> - 3-4MB/s 10% of the time.
->
-> It never went beyond 4MB/s write speed. But I guess none of this qualifies as a heavy write. Right?
->
-> The fio test can be carried out safely on an active production server just as you gave it?
->
-> Thanks!
-> Andrei
->
->
-> On 2013-04-22 10:51, Tommy Apel wrote:
->>
->> Stan>
->> That was exactly what I was trying to show, that you result may vary
->> depending on data and backing device, as far as the raid1 goes it
->> doesn't care much for the data beeing passed through it.
->>
->> Ben>
->> could you try to run iostat -x 2 for a few minuts just to make sure
->> there is no other I/O going on the device before running your tests,
->> and then run the tests with fio instead of dd ?
->>
->> fio write test > fio --rw=write --filename=testfile --bs=1048576
->> --size=4294967296 --ioengine=psync --end_fsync=1 --invalidate=1
->> --direct=1 --name=writeperftest
->>
->> /Tommy
->>
->> 2013/4/22 Stan Hoeppner <stan@hardwarefreak.com>:
->>>
->>> On 4/21/2013 2:56 PM, Tommy Apel wrote:
->>>>
->>>> Calm the f. down, I was just handing over some information, sorry your
->>>> day was ruined mr. high and mighty, use the info for whatever you want
->>>> to but flaming me is't going to help anyone.
->>>
->>>
->>> Your tantrum aside, the Intel 330, as well as all current Intel SSDs,
->>> uses the SandForce 2281 controller.  The SF2xxx series' write
->>> performance is limited by the compressibility of the data.  What you're
->>> doing below is simply showcasing the write bandwidth limitation of the
->>> SF2xxx controllers with incompressible data.
->>>
->>> This is not relevant to md.  And it's not relevant to Andrei.  It turns
->>> out that the Samsung 840 SSDs have consistent throughput because they
->>> don't rely on compression.
->>>
->>> --
->>> Stan
->>>
->>>
->>>> 2013/4/21 Stan Hoeppner <stan@hardwarefreak.com>:
->>>>>
->>>>> On 4/21/2013 7:23 AM, Tommy Apel wrote:
->>>>>>
->>>>>> Hello, FYI I'm getting ~68MB/s on two intel330 in RAID1 aswell on
->>>>>> vanilla 3.8.8 and 3.9.0-rc3 when writing random data and ~236MB/s
->>>>>> writing from /dev/zero
->>>>>>
->>>>>> mdadm -C /dev/md0 -l 1 -n 2 --assume-clean --force --run /dev/sdb /dev/sdc
->>>>>
->>>>>
->>>>>
->>>>>> openssl enc -aes-128-ctr -pass pass:"$(dd if=/dev/urandom bs=128
->>>>>> count=1 2>/dev/null | base64)" -nosalt < /dev/zero | pv -pterb >
->>>>>> /run/fill ~1.06GB/s
->>>>>
->>>>>
->>>>> What's the purpose of all of this?  Surely not simply to create random
->>>>> data, which is accomplished much more easily.  Are you sand bagging us
->>>>> here with a known bug, or simply trying to show off your mad skillz?
->>>>> Either way this is entirely unnecessary for troubleshooting an IO
->>>>> performance issue.  dd doesn't (shouldn't) care if the bits are random
->>>>> or not, though the Intel SSD controller might, as well as other layers
->>>>> you may have in your IO stack.  Keep it simple so we can isolate one
->>>>> layer at a time.
->>>>>
->>>>>> dd if=/run/fill of=/dev/null bs=1M count=1024 iflag=fullblock ~5.7GB/s
->>>>>> dd if=/run/fill of=/dev/md0 bs=1M count=1024 oflag=direct ~68MB/s
->>>>>> dd if=/dev/zero of=/dev/md0 bs=1M count=1024 oflag=direct ~236MB/s
->>>>>
->>>>>
->>>>> Noting the above, it's interesting that you omitted this test
->>>>>
->>>>>   dd if=/run/fill of=/dev/sdb bs=1M count=1024 oflag=direct
->>>>>
->>>>> preventing an apples to apples comparison between raw SSD device and
->>>>> md/RAID1 performance with your uber random file as input.
->>>>>
->>>>> --
->>>>> Stan
->>>>>
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>
->>>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+    [PATCH] md: teach raid5 the difference between 'check' and 'repair'.
+    
+    With this, raid5 can be asked to check parity without repairing it.  It also
+    keeps a count of the number of incorrect parity blocks found (mismatches) an
+    reports them through sysfs.
+    
+    Signed-off-by: Neil Brown <neilb@suse.de>
+    Cc: Greg KH <greg@kroah.com>
+    Signed-off-by: Andrew Morton <akpm@osdl.org>
+    Signed-off-by: Linus Torvalds <torvalds@osdl.org>
+Also, it seems that 'mismatches' is only ever talked about in reference to scrubbing operations.  (Although it does say in 'man 4 md', "This  is  set to zero when a scrub starts and is incremented whenever a sector is found that is a mismatch.", which could imply that 'mismatches' might be non-zero before a scrub operation starts.)  There is no indication anywhere that I can find what it would mean to have a non-zero 'mismatches' absent a scrub operation - perhaps we just assume "uninitialized".
+
+However, if it has come to mean something more since then or provides any sort of useful information, then I can see your point.  I find the behavior to be problematic.  A user creates an array and sometimes the value is non-zero - that could be alarming, causing the user to think the array needs immediate "repair".
+
+Anyway, I suppose I am simply bloviating if your mind is made up.  I can make due with the idea below of recording the "last_sync_action".  I'm thinking of recording the MD_RECOVERY_* flags that would define the type of sync_action - would you rather have a 'char *'?  If we kept the flags, I wonder if we could also use that to define acceptable sync_action transitions...  We don't, for example, particularly want "resync" -> "idle" -> "check" -> "idle" -> "resync" - especially if checkpoints are being made throughout.
+
+> While it might not be particularly useful, I see no point in hiding
+> information, and no desire to change what mismatch_cnt reports.
+> 
+> It may well be useful to somehow report what the real meaning for
+> mismatch_cnt is.  i.e. to report what the last sync_action was.
+> Then any use-space tool that reported mismatch_cnt, could adjust according to
+> whether the last operation was check/repair or resync/recovery/reshape. etc.
+> 
+> So if you were to provide a patch which adds "last_sync_action" or similar,
+> I'd certainly consider that.
+
+ brassow
