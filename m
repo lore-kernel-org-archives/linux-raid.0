@@ -1,78 +1,120 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Incredibly poor performance of mdraid-1 with 2 SSD Samsung 840
- PRO
-Date: Sun, 21 Apr 2013 19:47:51 -0500
-Message-ID: <517488B7.9030505@hardwarefreak.com>
-References: <5171CBF9.9020701@redhost.ro> <CAH3kUhEaZGON=fAyVMZOz5fH_DcfKv=hCa96UCeK4pN7k81c_Q@mail.gmail.com> <51725458.7020109@redhost.ro> <CAH3kUhHxBiqugFQm=PPJNNe9jOdKy0etUjQNsoDz_LJNUCLCCQ@mail.gmail.com> <51732422.1050109@redhost.ro> <5173536C.2040108@hardwarefreak.com> <CAGA4a+EMvLJMqufWjfmze9FZ_sDRBE0SCbOe0UYXRNOLU=DUTw@mail.gmail.com> <51743F14.7020404@hardwarefreak.com> <CAGA4a+Fsrum9vrtWbeKP4jWfT3JAAMK4Ci1HU6A2cMez1mwttw@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] DM RAID: Explicitly turn off bad block support
+Date: Mon, 22 Apr 2013 10:52:28 +1000
+Message-ID: <20130422105228.3948c69f@notabene.brown>
+References: <1366378224.14427.1.camel@f16>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/GiNmZlb2oFe6UL+pPAx+=77"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGA4a+Fsrum9vrtWbeKP4jWfT3JAAMK4Ci1HU6A2cMez1mwttw@mail.gmail.com>
+In-Reply-To: <1366378224.14427.1.camel@f16>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tommy Apel <tommyapeldk@gmail.com>
-Cc: Andrei Banu <andrei.banu@redhost.ro>, linux-raid Raid <linux-raid@vger.kernel.org>
+To: Jonathan Brassow <jbrassow@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/21/2013 2:56 PM, Tommy Apel wrote:
-> Calm the f. down, I was just handing over some information, sorry your
-> day was ruined mr. high and mighty, use the info for whatever you want
-> to but flaming me is't going to help anyone.
+--Sig_/GiNmZlb2oFe6UL+pPAx+=77
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Your tantrum aside, the Intel 330, as well as all current Intel SSDs,
-uses the SandForce 2281 controller.  The SF2xxx series' write
-performance is limited by the compressibility of the data.  What you're
-doing below is simply showcasing the write bandwidth limitation of the
-SF2xxx controllers with incompressible data.
+On Fri, 19 Apr 2013 08:30:24 -0500 Jonathan Brassow <jbrassow@redhat.com>
+wrote:
 
-This is not relevant to md.  And it's not relevant to Andrei.  It turns
-out that the Samsung 840 SSDs have consistent throughput because they
-don't rely on compression.
+> DM RAID:  Explicitly turn off bad block support
+>=20
+> DM RAID does not currently use the bad block tracking available in
+> MD.  'badblocks.shift' must be set to '-1' in order to explicitly
+> tell MD not to perform bad block related functions, like
+> narrow_write_error().
+>=20
+> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+>=20
+> Index: linux-upstream/drivers/md/dm-raid.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-upstream.orig/drivers/md/dm-raid.c
+> +++ linux-upstream/drivers/md/dm-raid.c
+> @@ -170,8 +170,10 @@ static struct raid_set *context_alloc(st
+>  	rs->md.delta_disks =3D 0;
+>  	rs->md.recovery_cp =3D 0;
+> =20
+> -	for (i =3D 0; i < raid_devs; i++)
+> +	for (i =3D 0; i < raid_devs; i++) {
+>  		md_rdev_init(&rs->dev[i].rdev);
+> +		rs->dev[i].rdev.badblocks.shift =3D -1; /* No bad block support */
+> +	}
+> =20
+>  	/*
+>  	 * Remaining items to be initialized by further RAID params:
+>=20
 
--- 
-Stan
+Thanks, but I don't think this is the right fix.
+md_rdev_init really should set shift to -1, because we can only support
+badblocks if the metadata explicitly supports it.
 
+What do you think of this instead?
 
-> 2013/4/21 Stan Hoeppner <stan@hardwarefreak.com>:
->> On 4/21/2013 7:23 AM, Tommy Apel wrote:
->>> Hello, FYI I'm getting ~68MB/s on two intel330 in RAID1 aswell on
->>> vanilla 3.8.8 and 3.9.0-rc3 when writing random data and ~236MB/s
->>> writing from /dev/zero
->>>
->>> mdadm -C /dev/md0 -l 1 -n 2 --assume-clean --force --run /dev/sdb /dev/sdc
->>
->>
->>> openssl enc -aes-128-ctr -pass pass:"$(dd if=/dev/urandom bs=128
->>> count=1 2>/dev/null | base64)" -nosalt < /dev/zero | pv -pterb >
->>> /run/fill ~1.06GB/s
->>
->> What's the purpose of all of this?  Surely not simply to create random
->> data, which is accomplished much more easily.  Are you sand bagging us
->> here with a known bug, or simply trying to show off your mad skillz?
->> Either way this is entirely unnecessary for troubleshooting an IO
->> performance issue.  dd doesn't (shouldn't) care if the bits are random
->> or not, though the Intel SSD controller might, as well as other layers
->> you may have in your IO stack.  Keep it simple so we can isolate one
->> layer at a time.
->>
->>> dd if=/run/fill of=/dev/null bs=1M count=1024 iflag=fullblock ~5.7GB/s
->>> dd if=/run/fill of=/dev/md0 bs=1M count=1024 oflag=direct ~68MB/s
->>> dd if=/dev/zero of=/dev/md0 bs=1M count=1024 oflag=direct ~236MB/s
->>
->> Noting the above, it's interesting that you omitted this test
->>
->>   dd if=/run/fill of=/dev/sdb bs=1M count=1024 oflag=direct
->>
->> preventing an apples to apples comparison between raw SSD device and
->> md/RAID1 performance with your uber random file as input.
->>
->> --
->> Stan
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Thanks,
+NeilBrown
 
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 41502cf..2166486 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1567,8 +1567,8 @@ static int super_1_load(struct md_rdev *rdev, struct =
+md_rdev *refdev, int minor_
+ 					     sector, count, 1) =3D=3D 0)
+ 				return -EINVAL;
+ 		}
+-	} else if (sb->bblog_offset =3D=3D 0)
+-		rdev->badblocks.shift =3D -1;
++	} else if (sb->bblog_offset !=3D 0)
++		rdev->badblocks.shift =3D 0;
+=20
+ 	if (!refdev) {
+ 		ret =3D 1;
+@@ -3227,7 +3227,7 @@ int md_rdev_init(struct md_rdev *rdev)
+ 	 * be used - I wonder if that matters
+ 	 */
+ 	rdev->badblocks.count =3D 0;
+-	rdev->badblocks.shift =3D 0;
++	rdev->badblocks.shift =3D -1; /* disabled until explicitly enabled */
+ 	rdev->badblocks.page =3D kmalloc(PAGE_SIZE, GFP_KERNEL);
+ 	seqlock_init(&rdev->badblocks.lock);
+ 	if (rdev->badblocks.page =3D=3D NULL)
+@@ -3299,9 +3299,6 @@ static struct md_rdev *md_import_device(dev_t newdev,=
+ int super_format, int supe
+ 			goto abort_free;
+ 		}
+ 	}
+-	if (super_format =3D=3D -1)
+-		/* hot-add for 0.90, or non-persistent: so no badblocks */
+-		rdev->badblocks.shift =3D -1;
+=20
+ 	return rdev;
+=20
+
+--Sig_/GiNmZlb2oFe6UL+pPAx+=77
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUXSJzDnsnt1WYoG5AQKitBAArizT42Ag5DqlVISmuIVdxN7qPxMrkkLa
+W6uEoJkOMtWz/IS3ZbYj13rg7HXlLsD18SvO2D8h9mSGp5lvUCSTcJ+mxUxkWjYq
+FvzDdjMaa7tfJlSUhNqG4nmN4LQTxvjTqR0Tsl5890YakVQnTtM6VQwnqhKHK1Yz
+64ys3Yt2aIDdjKYgkDP/kSOddeGQFZpZvykUdY2iEqNaiQpo3D1pQG8qEU9GRMyZ
+hbfLBT+xihO/qXgnWlY1skHiKTV1bIhOkjct+Vpu5Ddlm3KCEBF213Dvj34RggDY
+9OiVsZsTQRAYos1p1R2Dv4sU8P3aYakkURYuMoUbmXjrMtBCzniKYORfiaHcnffJ
+DVUrul5AUO/gfu3z1vBjHIfzmfiwfIRxGmr88gkIJVvtevtAd8ceLPpjQcukcJU4
+bgxTQgGifwwOjJvIl9jQtRwl5MlCkKbO2CnBcxIJX7qJyscTo1D1MF8pr8fZksHb
+Nxjwkz4Lpn2ONcQivPLjbiqssnXdl5eH+MD8Jd/RNQ4s7WRBdhRnn4KNpPllgYnI
+tuXH7+UkVFJ9c9BswYKoaNBGxUdGOCmkSGAoYg4SmxSq9B+ALedTOIeNrWopInx9
+49k+GpJViDunu2UnegCVQEAfBSRRIGhasnDWOoX7I7lNGeplJUV9BNSfv+XM/rx1
+6AHDCUZU1Bc=
+=lPAs
+-----END PGP SIGNATURE-----
+
+--Sig_/GiNmZlb2oFe6UL+pPAx+=77--
