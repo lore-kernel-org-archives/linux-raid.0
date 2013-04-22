@@ -1,98 +1,75 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] imsm: monitor: do not finish migration if there are no
- failed disks
-Date: Mon, 22 Apr 2013 16:21:55 +1000
-Message-ID: <20130422162155.6a832c64@notabene.brown>
-References: <20130418085136.8837.86343.stgit@localhost.localdomain>
+From: Vasiliy Tolstov <v.tolstov@selfip.ru>
+Subject: Re: mdadm raid1 regression
+Date: Mon, 22 Apr 2013 10:28:37 +0400
+Message-ID: <CACaajQuq=rAvm-uJLyhv3ufP=R4WGeXef5o9Tdi3EvTuoX=YRw@mail.gmail.com>
+References: <CACaajQv+HhzStC-U1RGz4ZWdn0-w4X3MyMM9GTJPOFeyrxtP3w@mail.gmail.com>
+ <20130422083549.7c1cff84@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/fDI_pOswmaQmM0Ewc7_ArMC"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130418085136.8837.86343.stgit@localhost.localdomain>
-Sender: linux-raid-owner@vger.kernel.org
-To: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Cc: linux-raid@vger.kernel.org, maciej.patelczyk@intel.com, lukasz.dorau@intel.com
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130422083549.7c1cff84@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: stable@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/fDI_pOswmaQmM0Ewc7_ArMC
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+2013/4/22 NeilBrown <neilb@suse.de>:
+>> Hello. I'm using linux 3.8.6 and mdadm 3.2.6 (from git).
+>> I have many raid1 arrays that have data offset 2048 (metadata 1.2,
+>> created with various mdadm versions but mostly 3.2.1 on linux 2.6.32).
+>> If i create raid1 with never mdadm on 3.8.6 i have data offset 8192?? Why?
+>
+> More room for various useful things.
+> In particular, if you one day want to convert this raid1 to a raid5, then
+> having a bit of extra space at the front will mean you can avoid a 'backup
+> file' and all the problems they cause (code for this isn't quite ready, but
+> is getting there).
+>
 
-On Thu, 18 Apr 2013 10:51:37 +0200 Pawel Baldysiak
-<pawel.baldysiak@intel.com> wrote:
+Very good news =)
 
-> From: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
->=20
-> Transition from "degraded" to "recovery" made in OROM is slightly differe=
-nt
-> than the same transision in mdadm. Missing disk is not removed from list =
-of
-> raid devices, but just from map. Therefore mdadm should not end migration
-> basing on existence of list of missing disks but should rely on count of
-> failed disks.
->=20
-> Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@i=
-ntel.com>
-> Tested-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> ---
->  super-intel.c |    9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
->=20
-> diff --git a/super-intel.c b/super-intel.c
-> index 24016b7..3f15b0f 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -6886,6 +6886,12 @@ static void handle_missing(struct intel_super *sup=
-er, struct imsm_dev *dev)
->  	if (!super->missing)
->  		return;
-> =20
-> +	/* When orom adds replacement for missing disk it does
-> +	 * not remove entry of missing disk, but just updates map with
-> +	 * new added disk. So it is not enough just to test if there is
-> +	 * any missing disk, we have to look if there are any failed disks
-> +	 * in map to stop migration */
-> +
->  	dprintf("imsm: mark missing\n");
->  	/* end process for initialization and rebuild only
->  	 */
-> @@ -6896,7 +6902,8 @@ static void handle_missing(struct intel_super *supe=
-r, struct imsm_dev *dev)
->  		failed =3D imsm_count_failed(super, dev, MAP_0);
->  		map_state =3D imsm_check_degraded(super, dev, failed, MAP_0);
-> =20
-> -		end_migration(dev, super, map_state);
-> +		if (failed)
-> +			end_migration(dev, super, map_state);
->  	}
->  	for (dl =3D super->missing; dl; dl =3D dl->next)
->  		mark_missing(dev, &dl->disk, dl->index);
->=20
+>>
+>> My problem:
+>> Sometimes i'm doing mdadm --zero-superblock on both parts of array and
+>> re-create it. On older systems i have no errors. On new (linux 3.8.6
+>> and mdadm 3.2.6) i get corrupted ext3 fs and partition table. Why this
+>> happening?
+>
+> Why are you doing that?
 
-applied, thanks.
+Our storage have two nodes each provides disk via srp to nodes. On
+each node we create separate lvm (we not using clvm) and assemble md.
+Sometimes we resize lvm and need to zero superblock, becouse sometimes
+we can still have old mdadm data on lvm part (from previous user for
+example). And then we add disk to raid we can get sometimes broken
+data (invalid sync).
 
-NeilBrown
+>
+>> P.S. If i use mdadm 3.2.2 i get data offset 4096 that not breaks data,
+>> but inconsistent with older versions.
+>
+> I suggest you use mdadm 3.2.2 then.
 
---Sig_/fDI_pOswmaQmM0Ewc7_ArMC
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Yes, i'm already do that, but i think that lates mdadm version with
+data-offset patches can solve my problems. Is that possible to correct
+it behaviour and write in docs which data offset used in which version
+of mdadm?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+>
+>> P.P.S. I'm try to specify --data-offset when create array but as i see
+>> - its ignored and data offset still have 8192).
+>
+> I'll try to make sure that works correctly for the next release.
+> Thanks for the report.
+>
+> NeilBrown
 
-iQIVAwUBUXTXAznsnt1WYoG5AQJOOA//TRLgQ++MU9vvZzheQ4EBdEn9z/O6i0tt
-xHYNTDA7LoQo2u4XlEz++Q6w0mQsdpHFKqPTDwP21CckTX/djuhSGkMXv7GtyC4t
-N/k6u9DpQs7z6e9aTGmQr3e/tkuMsyViaHNxpezN4nGb76yJJpdol5pShC/Xixf9
-Ov62tHt2X8/QaOqdaReIjIzBRnpGzoGba2NAznMbeTO3+X3fsI/u+37z2cGu5o31
-aWAmzBPpl+/x3GY60fK/djIAnDt53xaoEHo4d9plyJ5MVs1J0ci9LelfqsryYmsk
-Ef1wKJnMwGbeGawh06KANPuzQVdqtA4dQVtUWjZeY/j2cOjvqkqQPt0g41fToezx
-3pqj1gxfe7TQqsc3YKnxfoXqKmr7CFVPdGT82Pl2u7vAK4ZwYa9FuC7RulXxTr1J
-tySj7VVKSHhnmGcWi2PK5nAtPCYHC2ghaIM8k+Y4SGZcrtFEq0hsrvM3cL1xVsro
-KH+MKNqf9u5/vVUX75Y1GOqyJaB8QfF+1XNuz5Bm/Tv+i4JJumXjp1/JUFkCA1OC
-8Xwf4nClLK50qv7OiQDSr0AxiVRHwIafIQjTXzNs7gvHU6CPUnfDmnOmnp5tHzGC
-eE4PMdcPJ5c6cKIag4+TSLwGUBxcyOnw8O3rcJrMrcnAclyBPK7OBZ2m5l7zeSLS
-933iVnOZS6o=
-=PSwd
------END PGP SIGNATURE-----
+Thanks!
 
---Sig_/fDI_pOswmaQmM0Ewc7_ArMC--
+P.S. Very big thanks for all.
+
+
+--
+Vasiliy Tolstov,
+e-mail: v.tolstov@selfip.ru
+jabber: vase@selfip.ru
