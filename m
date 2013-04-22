@@ -1,144 +1,86 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] MD:  Do not increment resync_mismatches unless
- MD_RECOVERY_REQUESTED
-Date: Mon, 22 Apr 2013 10:36:26 +1000
-Message-ID: <20130422103626.4cdcefae@notabene.brown>
-References: <1366402161.18514.1.camel@f16>
+Subject: Re: [PATCH] DM RAID: Add ability to restore transiently failed
+ devices on resume
+Date: Mon, 22 Apr 2013 10:43:26 +1000
+Message-ID: <20130422104326.217ef2f8@notabene.brown>
+References: <1365712023.9799.1.camel@f16>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/h4q1lr7h600pD6q5pHW3bxc"; protocol="application/pgp-signature"
+ boundary="Sig_/REDHpfAjuTkhkmIr.ust_K0"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1366402161.18514.1.camel@f16>
+In-Reply-To: <1365712023.9799.1.camel@f16>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jonathan Brassow <jbrassow@redhat.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/h4q1lr7h600pD6q5pHW3bxc
+--Sig_/REDHpfAjuTkhkmIr.ust_K0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 19 Apr 2013 15:09:21 -0500 Jonathan Brassow <jbrassow@redhat.com>
+On Thu, 11 Apr 2013 15:27:03 -0500 Jonathan Brassow <jbrassow@redhat.com>
 wrote:
 
-> MD:  Do not increment resync_mismatches unless MD_RECOVERY_REQUESTED
+> DM RAID: Add ability to restore transiently failed devices on resume
 >=20
-> resync_mismatches is used to display the number of differences that
-> have been found or repaired during a scrubbing operation.  It is not
-> meant to count anything during resync or repair operations.  (How
-> much sense does it make to find resync_mismatches populated after an
-> initial synchronization of the array?  After cleaning-up an unclean
-> shutdown?  After [re]integrating a device into an existing array?)
-> The incrementing of the variable must be restricted to when the user
-> initiates a scrubbing operation (i.e. "check" or "repair").
-
-How do you know what it is "meant" to do? :-)
-
-While it might not be particularly useful, I see no point in hiding
-information, and no desire to change what mismatch_cnt reports.
-
-It may well be useful to somehow report what the real meaning for
-mismatch_cnt is.  i.e. to report what the last sync_action was.
-Then any use-space tool that reported mismatch_cnt, could adjust according =
-to
-whether the last operation was check/repair or resync/recovery/reshape. etc.
-
-So if you were to provide a patch which adds "last_sync_action" or similar,
-I'd certainly consider that.
-
-Thanks,
-NeilBrown
-
+> This patch adds code to the resume function to check over the devices
+> in the RAID array.  If any are found to be marked as failed and their
+> superblocks can be read, an attempt is made to reintegrate them into
+> the array.  This allows the user to refresh the array with a simple
+> suspend and resume of the array - rather than having to load a
+> completely new table, allocate and initialize all the structures and
+> throw away the old instantiation.
 >=20
 > Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
->=20
-> Index: linux-upstream/drivers/md/raid1.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-upstream.orig/drivers/md/raid1.c
-> +++ linux-upstream/drivers/md/raid1.c
-> @@ -1878,7 +1878,8 @@ static int process_checks(struct r1bio *
->  			}
->  		} else
->  			j =3D 0;
-> -		if (j >=3D 0)
-> +		if ((j >=3D 0) &&
-> +		    (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery)))
->  			atomic64_add(r1_bio->sectors, &mddev->resync_mismatches);
->  		if (j < 0 || (test_bit(MD_RECOVERY_CHECK, &mddev->recovery)
->  			      && test_bit(BIO_UPTODATE, &sbio->bi_flags))) {
-> Index: linux-upstream/drivers/md/raid10.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-upstream.orig/drivers/md/raid10.c
-> +++ linux-upstream/drivers/md/raid10.c
-> @@ -2071,7 +2071,10 @@ static void sync_request_write(struct md
->  					break;
->  			if (j =3D=3D vcnt)
->  				continue;
-> -			atomic64_add(r10_bio->sectors, &mddev->resync_mismatches);
-> +
-> +			if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
-> +				atomic64_add(r10_bio->sectors,
-> +					     &mddev->resync_mismatches);
->  			if (test_bit(MD_RECOVERY_CHECK, &mddev->recovery))
->  				/* Don't fix anything. */
->  				continue;
-> Index: linux-upstream/drivers/md/raid5.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-upstream.orig/drivers/md/raid5.c
-> +++ linux-upstream/drivers/md/raid5.c
-> @@ -2989,7 +2989,10 @@ static void handle_parity_checks5(struct
->  			 */
->  			set_bit(STRIPE_INSYNC, &sh->state);
->  		else {
-> -			atomic64_add(STRIPE_SECTORS, &conf->mddev->resync_mismatches);
-> +			if (test_bit(MD_RECOVERY_REQUESTED,
-> +				     &conf->mddev->recovery))
-> +				atomic64_add(STRIPE_SECTORS,
-> +					     &conf->mddev->resync_mismatches);
->  			if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
->  				/* don't try to repair!! */
->  				set_bit(STRIPE_INSYNC, &sh->state);
-> @@ -3141,7 +3144,10 @@ static void handle_parity_checks6(struct
->  				 */
->  			}
->  		} else {
-> -			atomic64_add(STRIPE_SECTORS, &conf->mddev->resync_mismatches);
-> +			if (test_bit(MD_RECOVERY_REQUESTED,
-> +				     &conf->mddev->recovery))
-> +				atomic64_add(STRIPE_SECTORS,
-> +					     &conf->mddev->resync_mismatches);
->  			if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
->  				/* don't try to repair!! */
->  				set_bit(STRIPE_INSYNC, &sh->state);
->=20
+
+Is this really a good idea? =20
+Just because you can read the superblock, that doesn't mean you can read any
+other block in the array.
+
+If the auto-recovery were optional I might consider it, but having it be
+enforced on every suspend/resume just doesn't seem safe to me.
+
+Have I misunderstood?
+
+Is this that hard to achieve in user-space?
 
 
---Sig_/h4q1lr7h600pD6q5pHW3bxc
+> +			if (test_bit(Faulty, &r->flags) && r->sb_page &&
+> +			    !read_disk_sb(r, r->sb_size)) {
+
+I know it is fairly widely used, especially for 'strcmp', but I absolutely
+despise this construct.
+  !read_disk_sb()
+sound like
+  "not read_disk_sb" or "could not read the disk's superblock" but it
+actually means "did not fail to read the disk's superblock" - the exact
+reverse.
+If 0 means success, I like to see an explicit test for 0:
+   read_disk_sb() =3D=3D 0
+
+NeilBrown
+
+
+--Sig_/REDHpfAjuTkhkmIr.ust_K0
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUXSGCjnsnt1WYoG5AQJWjxAAm7s/k6M2EEKX6zBGxHNKJVhvEfWY0PiQ
-dWT7H2O43EAKk8T6P3AbMYT/KPJ5BRLTvSPLUt82IoxzCaOXGg+bdJnM61nrX0fg
-VQnx9C/9AeyNbeiZ27D9CXYJsC29z0j5L+XDj6WkuoEUJG+VT6dKchw12BBwTH+Z
-u7fZky4IkSGB/Coyf5qkeM90TH5NJ5a/fYCNpGgO6g3koF0D8fYPMBbU/zes+LFx
-iOWFP1J3FCXaas61H86yGOwkConzDkn1aVljFDxCBLePfMdNnvk3ftAjz1HCP/C2
-NLGX9rgCR+dY08xad1LH4RnKpjF+4REtTez3G0+KyfP4QcLpqZqysJUFgoZuo0YI
-SCveARaduUvI5Qcr42+9vpvLPmmSsFfIrrarA5xJ0UIS/thNycwsGGSJcmRYxRaQ
-P91E3o7dKr21tBJRk5bpVSCVZu1PcVruGLkA8QhNnG78i9W8e11EJ2ayqKW1uAP3
-vvIqSczGneWNxAyWj54kzz+8kl1gWjxouw1bDCe04UQf5YqWFHghTA9QNO8bQ6CG
-uAtMJYhRXy2ZZq9ZbXr0/pTGiu2M0u9IvtkOUlxuozIPNQKkVRcnt3yFwpp6PAyb
-bnJcPOQNIcBb+0/whlATaRrwmyhL6e1a4gcFJL9HxuSW60VLsi8Yk1xdi9vJmRtB
-Qdhwk9ChwEA=
-=CIKX
+iQIVAwUBUXSHrjnsnt1WYoG5AQLZDg/+N4bj3VC7NMEhMIStXHheFWRkTEuD+Q/x
+zezzE5QLIIXJWqd4bnkjIqUx/lNpCnQGHjAD+bidySBwmuLOtEitt1kH05tnnmlE
+qTu8o+UF4A4uajWkpGqObQq4Pi3g+SJb1L5OriVKOGYxBvABT/owEh59l9qjNMo1
+01E5JyhuO8nsu57vBFaX7wF8sAlxYtygOS7lEHJuDvkvSK0qbk8pvSH52fhaHCyS
+uETgpBmO6PZ7BCrKqEJNwfpxW8GG9MRnh9UEX8cRtreSQYnCy+euk14cryIC934j
+0SOEUdBuRGkPZ4a0XEaTY7/xWLV55HQKUIz1V2QXfz654wQnIOMg8WCb2Mvm+2VN
+J+tb8OsqqS7qW2tXA7Adih36GCdLzwIGFdIcNr2UyaqCDMYnkdiMlYPCDAZI/xkD
+upLb2hAduVhfKzcGgR+GMMCe7NyHMplNj2QTthXwDqiBadwZ3ixx8UO4Q/f74/Mu
+pcqPnu4GAmZPT/PyzaiGnxKldkQfrO4MuUCWDJ3SxvNw8YLZy/lqLXFKs4kf/n4T
+zGBz1x9HoPTiCzjlP9aU80wVxPBUQwN7OKcrjgwFi6/qgjkhG6FbpneZST1qTKpg
+rwU63DVIsSNMLgeQGd3DJsJs8rkvH8dRYgbY0eTjvL+Yum+MxviYVJ51LfOlDwZB
+kYxTGbzmoS0=
+=udcb
 -----END PGP SIGNATURE-----
 
---Sig_/h4q1lr7h600pD6q5pHW3bxc--
+--Sig_/REDHpfAjuTkhkmIr.ust_K0--
