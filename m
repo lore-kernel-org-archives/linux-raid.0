@@ -1,86 +1,78 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] DM RAID: Add ability to restore transiently failed
- devices on resume
-Date: Mon, 22 Apr 2013 10:43:26 +1000
-Message-ID: <20130422104326.217ef2f8@notabene.brown>
-References: <1365712023.9799.1.camel@f16>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Incredibly poor performance of mdraid-1 with 2 SSD Samsung 840
+ PRO
+Date: Sun, 21 Apr 2013 19:47:51 -0500
+Message-ID: <517488B7.9030505@hardwarefreak.com>
+References: <5171CBF9.9020701@redhost.ro> <CAH3kUhEaZGON=fAyVMZOz5fH_DcfKv=hCa96UCeK4pN7k81c_Q@mail.gmail.com> <51725458.7020109@redhost.ro> <CAH3kUhHxBiqugFQm=PPJNNe9jOdKy0etUjQNsoDz_LJNUCLCCQ@mail.gmail.com> <51732422.1050109@redhost.ro> <5173536C.2040108@hardwarefreak.com> <CAGA4a+EMvLJMqufWjfmze9FZ_sDRBE0SCbOe0UYXRNOLU=DUTw@mail.gmail.com> <51743F14.7020404@hardwarefreak.com> <CAGA4a+Fsrum9vrtWbeKP4jWfT3JAAMK4Ci1HU6A2cMez1mwttw@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/REDHpfAjuTkhkmIr.ust_K0"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1365712023.9799.1.camel@f16>
+In-Reply-To: <CAGA4a+Fsrum9vrtWbeKP4jWfT3JAAMK4Ci1HU6A2cMez1mwttw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jonathan Brassow <jbrassow@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: Tommy Apel <tommyapeldk@gmail.com>
+Cc: Andrei Banu <andrei.banu@redhost.ro>, linux-raid Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/REDHpfAjuTkhkmIr.ust_K0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 4/21/2013 2:56 PM, Tommy Apel wrote:
+> Calm the f. down, I was just handing over some information, sorry your
+> day was ruined mr. high and mighty, use the info for whatever you want
+> to but flaming me is't going to help anyone.
 
-On Thu, 11 Apr 2013 15:27:03 -0500 Jonathan Brassow <jbrassow@redhat.com>
-wrote:
+Your tantrum aside, the Intel 330, as well as all current Intel SSDs,
+uses the SandForce 2281 controller.  The SF2xxx series' write
+performance is limited by the compressibility of the data.  What you're
+doing below is simply showcasing the write bandwidth limitation of the
+SF2xxx controllers with incompressible data.
 
-> DM RAID: Add ability to restore transiently failed devices on resume
->=20
-> This patch adds code to the resume function to check over the devices
-> in the RAID array.  If any are found to be marked as failed and their
-> superblocks can be read, an attempt is made to reintegrate them into
-> the array.  This allows the user to refresh the array with a simple
-> suspend and resume of the array - rather than having to load a
-> completely new table, allocate and initialize all the structures and
-> throw away the old instantiation.
->=20
-> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+This is not relevant to md.  And it's not relevant to Andrei.  It turns
+out that the Samsung 840 SSDs have consistent throughput because they
+don't rely on compression.
 
-Is this really a good idea? =20
-Just because you can read the superblock, that doesn't mean you can read any
-other block in the array.
-
-If the auto-recovery were optional I might consider it, but having it be
-enforced on every suspend/resume just doesn't seem safe to me.
-
-Have I misunderstood?
-
-Is this that hard to achieve in user-space?
+-- 
+Stan
 
 
-> +			if (test_bit(Faulty, &r->flags) && r->sb_page &&
-> +			    !read_disk_sb(r, r->sb_size)) {
+> 2013/4/21 Stan Hoeppner <stan@hardwarefreak.com>:
+>> On 4/21/2013 7:23 AM, Tommy Apel wrote:
+>>> Hello, FYI I'm getting ~68MB/s on two intel330 in RAID1 aswell on
+>>> vanilla 3.8.8 and 3.9.0-rc3 when writing random data and ~236MB/s
+>>> writing from /dev/zero
+>>>
+>>> mdadm -C /dev/md0 -l 1 -n 2 --assume-clean --force --run /dev/sdb /dev/sdc
+>>
+>>
+>>> openssl enc -aes-128-ctr -pass pass:"$(dd if=/dev/urandom bs=128
+>>> count=1 2>/dev/null | base64)" -nosalt < /dev/zero | pv -pterb >
+>>> /run/fill ~1.06GB/s
+>>
+>> What's the purpose of all of this?  Surely not simply to create random
+>> data, which is accomplished much more easily.  Are you sand bagging us
+>> here with a known bug, or simply trying to show off your mad skillz?
+>> Either way this is entirely unnecessary for troubleshooting an IO
+>> performance issue.  dd doesn't (shouldn't) care if the bits are random
+>> or not, though the Intel SSD controller might, as well as other layers
+>> you may have in your IO stack.  Keep it simple so we can isolate one
+>> layer at a time.
+>>
+>>> dd if=/run/fill of=/dev/null bs=1M count=1024 iflag=fullblock ~5.7GB/s
+>>> dd if=/run/fill of=/dev/md0 bs=1M count=1024 oflag=direct ~68MB/s
+>>> dd if=/dev/zero of=/dev/md0 bs=1M count=1024 oflag=direct ~236MB/s
+>>
+>> Noting the above, it's interesting that you omitted this test
+>>
+>>   dd if=/run/fill of=/dev/sdb bs=1M count=1024 oflag=direct
+>>
+>> preventing an apples to apples comparison between raw SSD device and
+>> md/RAID1 performance with your uber random file as input.
+>>
+>> --
+>> Stan
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-I know it is fairly widely used, especially for 'strcmp', but I absolutely
-despise this construct.
-  !read_disk_sb()
-sound like
-  "not read_disk_sb" or "could not read the disk's superblock" but it
-actually means "did not fail to read the disk's superblock" - the exact
-reverse.
-If 0 means success, I like to see an explicit test for 0:
-   read_disk_sb() =3D=3D 0
-
-NeilBrown
-
-
---Sig_/REDHpfAjuTkhkmIr.ust_K0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUXSHrjnsnt1WYoG5AQLZDg/+N4bj3VC7NMEhMIStXHheFWRkTEuD+Q/x
-zezzE5QLIIXJWqd4bnkjIqUx/lNpCnQGHjAD+bidySBwmuLOtEitt1kH05tnnmlE
-qTu8o+UF4A4uajWkpGqObQq4Pi3g+SJb1L5OriVKOGYxBvABT/owEh59l9qjNMo1
-01E5JyhuO8nsu57vBFaX7wF8sAlxYtygOS7lEHJuDvkvSK0qbk8pvSH52fhaHCyS
-uETgpBmO6PZ7BCrKqEJNwfpxW8GG9MRnh9UEX8cRtreSQYnCy+euk14cryIC934j
-0SOEUdBuRGkPZ4a0XEaTY7/xWLV55HQKUIz1V2QXfz654wQnIOMg8WCb2Mvm+2VN
-J+tb8OsqqS7qW2tXA7Adih36GCdLzwIGFdIcNr2UyaqCDMYnkdiMlYPCDAZI/xkD
-upLb2hAduVhfKzcGgR+GMMCe7NyHMplNj2QTthXwDqiBadwZ3ixx8UO4Q/f74/Mu
-pcqPnu4GAmZPT/PyzaiGnxKldkQfrO4MuUCWDJ3SxvNw8YLZy/lqLXFKs4kf/n4T
-zGBz1x9HoPTiCzjlP9aU80wVxPBUQwN7OKcrjgwFi6/qgjkhG6FbpneZST1qTKpg
-rwU63DVIsSNMLgeQGd3DJsJs8rkvH8dRYgbY0eTjvL+Yum+MxviYVJ51LfOlDwZB
-kYxTGbzmoS0=
-=udcb
------END PGP SIGNATURE-----
-
---Sig_/REDHpfAjuTkhkmIr.ust_K0--
