@@ -1,90 +1,144 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [BUG][PATCH] Fix: raid1/raid10 md devices leak memory when
- stopping
-Date: Mon, 22 Apr 2013 10:29:18 +1000
-Message-ID: <20130422102918.7e9df194@notabene.brown>
-References: <20130416.201507.1380418477042006122.taka@valinux.co.jp>
+Subject: Re: [PATCH] MD:  Do not increment resync_mismatches unless
+ MD_RECOVERY_REQUESTED
+Date: Mon, 22 Apr 2013 10:36:26 +1000
+Message-ID: <20130422103626.4cdcefae@notabene.brown>
+References: <1366402161.18514.1.camel@f16>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/404f/mTHyx+lB.xcuFwjDQc"; protocol="application/pgp-signature"
+ boundary="Sig_/h4q1lr7h600pD6q5pHW3bxc"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130416.201507.1380418477042006122.taka@valinux.co.jp>
+In-Reply-To: <1366402161.18514.1.camel@f16>
 Sender: linux-raid-owner@vger.kernel.org
-To: Hirokazu Takahashi <taka@valinux.co.jp>
+To: Jonathan Brassow <jbrassow@redhat.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/404f/mTHyx+lB.xcuFwjDQc
+--Sig_/h4q1lr7h600pD6q5pHW3bxc
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 16 Apr 2013 20:15:07 +0900 (JST) Hirokazu Takahashi
-<taka@valinux.co.jp> wrote:
+On Fri, 19 Apr 2013 15:09:21 -0500 Jonathan Brassow <jbrassow@redhat.com>
+wrote:
 
-> Hi.
+> MD:  Do not increment resync_mismatches unless MD_RECOVERY_REQUESTED
 >=20
-> Raid1 and raid10 devices leak memory every time they stop.
-> This is a patch for linux-3.9.0-rc7 to fix this problem.
->=20
-> Thanks,
-> Hirokazu Takahashi.
->=20
-> Signed-off-by: Hirokazu Takahashi <taka@valinux.co.jp>
-> ---
->  drivers/md/raid1.c  |    1 +
->  drivers/md/raid10.c |    1 +
->  2 files changed, 2 insertions(+), 0 deletions(-)
->=20
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index fd86b37..c055b92 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -2901,6 +2901,7 @@ static int stop(struct mddev *mddev)
->  	if (conf->r1bio_pool)
->  		mempool_destroy(conf->r1bio_pool);
->  	kfree(conf->mirrors);
-> +	safe_put_page(conf->tmppage);
->  	kfree(conf->poolinfo);
->  	kfree(conf);
->  	mddev->private =3D NULL;
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 77b562d..5a1010d 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -3810,6 +3810,7 @@ static int stop(struct mddev *mddev)
-> =20
->  	if (conf->r10bio_pool)
->  		mempool_destroy(conf->r10bio_pool);
-> +	safe_put_page(conf->tmppage);
->  	kfree(conf->mirrors);
->  	kfree(conf);
->  	mddev->private =3D NULL;
+> resync_mismatches is used to display the number of differences that
+> have been found or repaired during a scrubbing operation.  It is not
+> meant to count anything during resync or repair operations.  (How
+> much sense does it make to find resync_mismatches populated after an
+> initial synchronization of the array?  After cleaning-up an unclean
+> shutdown?  After [re]integrating a device into an existing array?)
+> The incrementing of the variable must be restricted to when the user
+> initiates a scrubbing operation (i.e. "check" or "repair").
 
-Thanks for the patch!
-I've queued it for 3.10-rc
+How do you know what it is "meant" to do? :-)
 
+While it might not be particularly useful, I see no point in hiding
+information, and no desire to change what mismatch_cnt reports.
+
+It may well be useful to somehow report what the real meaning for
+mismatch_cnt is.  i.e. to report what the last sync_action was.
+Then any use-space tool that reported mismatch_cnt, could adjust according =
+to
+whether the last operation was check/repair or resync/recovery/reshape. etc.
+
+So if you were to provide a patch which adds "last_sync_action" or similar,
+I'd certainly consider that.
+
+Thanks,
 NeilBrown
 
---Sig_/404f/mTHyx+lB.xcuFwjDQc
+>=20
+> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+>=20
+> Index: linux-upstream/drivers/md/raid1.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-upstream.orig/drivers/md/raid1.c
+> +++ linux-upstream/drivers/md/raid1.c
+> @@ -1878,7 +1878,8 @@ static int process_checks(struct r1bio *
+>  			}
+>  		} else
+>  			j =3D 0;
+> -		if (j >=3D 0)
+> +		if ((j >=3D 0) &&
+> +		    (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery)))
+>  			atomic64_add(r1_bio->sectors, &mddev->resync_mismatches);
+>  		if (j < 0 || (test_bit(MD_RECOVERY_CHECK, &mddev->recovery)
+>  			      && test_bit(BIO_UPTODATE, &sbio->bi_flags))) {
+> Index: linux-upstream/drivers/md/raid10.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-upstream.orig/drivers/md/raid10.c
+> +++ linux-upstream/drivers/md/raid10.c
+> @@ -2071,7 +2071,10 @@ static void sync_request_write(struct md
+>  					break;
+>  			if (j =3D=3D vcnt)
+>  				continue;
+> -			atomic64_add(r10_bio->sectors, &mddev->resync_mismatches);
+> +
+> +			if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
+> +				atomic64_add(r10_bio->sectors,
+> +					     &mddev->resync_mismatches);
+>  			if (test_bit(MD_RECOVERY_CHECK, &mddev->recovery))
+>  				/* Don't fix anything. */
+>  				continue;
+> Index: linux-upstream/drivers/md/raid5.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-upstream.orig/drivers/md/raid5.c
+> +++ linux-upstream/drivers/md/raid5.c
+> @@ -2989,7 +2989,10 @@ static void handle_parity_checks5(struct
+>  			 */
+>  			set_bit(STRIPE_INSYNC, &sh->state);
+>  		else {
+> -			atomic64_add(STRIPE_SECTORS, &conf->mddev->resync_mismatches);
+> +			if (test_bit(MD_RECOVERY_REQUESTED,
+> +				     &conf->mddev->recovery))
+> +				atomic64_add(STRIPE_SECTORS,
+> +					     &conf->mddev->resync_mismatches);
+>  			if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
+>  				/* don't try to repair!! */
+>  				set_bit(STRIPE_INSYNC, &sh->state);
+> @@ -3141,7 +3144,10 @@ static void handle_parity_checks6(struct
+>  				 */
+>  			}
+>  		} else {
+> -			atomic64_add(STRIPE_SECTORS, &conf->mddev->resync_mismatches);
+> +			if (test_bit(MD_RECOVERY_REQUESTED,
+> +				     &conf->mddev->recovery))
+> +				atomic64_add(STRIPE_SECTORS,
+> +					     &conf->mddev->resync_mismatches);
+>  			if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
+>  				/* don't try to repair!! */
+>  				set_bit(STRIPE_INSYNC, &sh->state);
+>=20
+
+
+--Sig_/h4q1lr7h600pD6q5pHW3bxc
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIUAwUBUXSEXjnsnt1WYoG5AQID/w/3d9v0TZEDf3+7GhvVKcx89tHSRuokXyTn
-yL5w+b1NlgQJKcHBhhFEKofIugGmHtLoVBP5oYxwmP4WpQxhoIAQ3sr2vwQ4Vvlf
-3OF9VZtmQA1oGOQY6hBMl+2qwZStq6UOf2D+DPCLh0D/HrsJA2EBHJv0DKnewFpY
-3v+XGF0tmnVJuhV18JtQHVshE+o/Kf94ynwr8wgxFLf5WDN4PshsgHRyMhza9gOu
-AcFYupAvftFnoJrDHeJaSIcpJKXRsy8zXa9v4HeR64x5vq2yf9GKjCa+YPNAY6hr
-BpS8gUsFieRWbuVXk+7G+oHLDIjvn9XRYtT385hb0pLT6kTWCD4D9jAh3+U2fhVm
-HEThCB9oqWJgr2xoW1vySnxP0KWS8vJ1ogUS5FexS5NkFfa02YF3Q/ByqbFL8JJ4
-Zc7l8G+g8LNQjC47tgyVzs+ikI/+yvVJXULIbRLUoaejWRwVQaieaWZG5H7lZ3Cz
-Sac0eG0x6vJSYerxkviaFqwO7UIxNUOC0eDnbbrMYQ0F878NiGdXy64ce3XhKW2c
-2GRyQUWmH/+RmTxH7Hwk0FANK+85V4tDYf/y/uzQ2jKmhWRP3rZWKePkmfe1gndn
-yXBgvgvH6oErAkWWR31NljLRq9izQJQIL1CLFPjEFx+GoAC8hmQWjSuktBqBFn16
-6XewDi8+Iw==
-=qsdn
+iQIVAwUBUXSGCjnsnt1WYoG5AQJWjxAAm7s/k6M2EEKX6zBGxHNKJVhvEfWY0PiQ
+dWT7H2O43EAKk8T6P3AbMYT/KPJ5BRLTvSPLUt82IoxzCaOXGg+bdJnM61nrX0fg
+VQnx9C/9AeyNbeiZ27D9CXYJsC29z0j5L+XDj6WkuoEUJG+VT6dKchw12BBwTH+Z
+u7fZky4IkSGB/Coyf5qkeM90TH5NJ5a/fYCNpGgO6g3koF0D8fYPMBbU/zes+LFx
+iOWFP1J3FCXaas61H86yGOwkConzDkn1aVljFDxCBLePfMdNnvk3ftAjz1HCP/C2
+NLGX9rgCR+dY08xad1LH4RnKpjF+4REtTez3G0+KyfP4QcLpqZqysJUFgoZuo0YI
+SCveARaduUvI5Qcr42+9vpvLPmmSsFfIrrarA5xJ0UIS/thNycwsGGSJcmRYxRaQ
+P91E3o7dKr21tBJRk5bpVSCVZu1PcVruGLkA8QhNnG78i9W8e11EJ2ayqKW1uAP3
+vvIqSczGneWNxAyWj54kzz+8kl1gWjxouw1bDCe04UQf5YqWFHghTA9QNO8bQ6CG
+uAtMJYhRXy2ZZq9ZbXr0/pTGiu2M0u9IvtkOUlxuozIPNQKkVRcnt3yFwpp6PAyb
+bnJcPOQNIcBb+0/whlATaRrwmyhL6e1a4gcFJL9HxuSW60VLsi8Yk1xdi9vJmRtB
+Qdhwk9ChwEA=
+=CIKX
 -----END PGP SIGNATURE-----
 
---Sig_/404f/mTHyx+lB.xcuFwjDQc--
+--Sig_/h4q1lr7h600pD6q5pHW3bxc--
