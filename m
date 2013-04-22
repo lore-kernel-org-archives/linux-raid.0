@@ -1,120 +1,119 @@
-From: Sam Bingner <sam@bingner.com>
-Subject: Re: Raid recovery. Help wanted!
-Date: Sun, 21 Apr 2013 23:37:53 +0000
-Message-ID: <190A45D8-1F37-460D-A44A-9E48F2EF7700@bingner.com>
-References: <517410F6.8050605@maris.no>
- <CADNH=7Fv7NzE85P0ABorzWhsTEBKzd2Fnm27UxhsnmvVArqShg@mail.gmail.com>,<51742182.5040702@maris.no>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Question about resync in RAID5
+Date: Mon, 22 Apr 2013 10:15:52 +1000
+Message-ID: <20130422101552.4eed452c@notabene.brown>
+References: <20130416102452.GC25795@cthulhu.home.robinhill.me.uk>
+	<4915289.2.1366127167165.JavaMail.root@zimbra>
+	<20130416165522.GA14744@cthulhu.home.robinhill.me.uk>
+	<CANsebLH0PcjV2nmcQ0TmEE_8XxF6pi53baSenV3qKwdRxioK+Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/gW=u7NOqOFZt+zXLd1l3jaJ"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51742182.5040702@maris.no>
-Content-Language: en-US
+In-Reply-To: <CANsebLH0PcjV2nmcQ0TmEE_8XxF6pi53baSenV3qKwdRxioK+Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Evgeny Koryanov <evgeny.koryanov@maris.no>
-Cc: =?iso-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Robin Dong <robin.k.dong@gmail.com>
+Cc: robin@robinhill.me.uk, linux-raid@vger.kernel.org, Tao Ma <tm@tao.ma>
 List-Id: linux-raid.ids
 
-On Apr 21, 2013, at 7:27 AM, "Evgeny Koryanov" <evgeny.koryanov@maris.n=
-o> wrote:
+--Sig_/gW=u7NOqOFZt+zXLd1l3jaJ
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, 17 Apr 2013 12:29:07 +0800 Robin Dong <robin.k.dong@gmail.com> wrot=
+e:
+
+> 2013/4/17 Robin Hill <robin@robinhill.me.uk>
+> >
+> > On Tue Apr 16, 2013 at 05:46:07PM +0200, Roy Sigurd Karlsbakk wrote:
+> >
+> > > > > Is there any method to just resync WRITTEN data to new-added-disk=
+ ?
+> > > > > Or any developing plan to add this feature?
+> > > >
+> > > > No, because md is a block device it has no knowledge of what data h=
+as
+> > > > actually been written to the disk or where it is stored. This means=
+ it
+> > > > has to rebuild the entire disk.
+> > > >
+> > > > There are plans to improve this by keeping track of which stripes h=
+ave
+> > > > been written to, which should help (and will also mean no need for =
+an
+> > > > initial RAID sync). I don't know whether this has progressed beyond
+> > > > the idea stage yet though.
+> > >
+> > > Interesting - do you have any docs about this? I haven't seen any talk
+> > > on this list about it...
+> > >
+> > It's from Neil's 2011 MD/RAID roadmap:
+> >     http://neil.brown.name/blog/20110216044002
+> >
+> > The basic idea was mentioned in a 2009 roadmap as well, but is a lot
+> > more fleshed out in the above one.
 >=20
-> On 21.04.2013 20:40, Mathias Bur=E9n wrote:
->> On 21 April 2013 17:16, Evgeny Koryanov <evgeny.koryanov@maris.no> w=
-rote:
->>> Hello everybody!
->>>=20
->>> Yesterday I met a problem with one of raid5 arrays build by mdadm o=
-n three
->>> (sd[bcd]) 1.5T devices.
->>> I found array in degraded state with sdd fail. Drive becomes fail s=
-tate
->>> after power jump.
->>> Server supplied by UPS but this seems was not good enough - server =
-was not
->>> rebooted but one drive as I said becomes fail state.
->>> I simply reattaches it and array started rebuilding but fails after=
- couple
->>> of %'s passed with sdc becomes fail!!!
->>> I assemble array again with sd[bc] and tried to attach sdd again: p=
-icture
->>> repeated rebuild fails.
->>> So I have sdb in sync state, sdc - failed and sdd spare. I checked =
-SMARTs of
->>> drives to understand reason of such behavior and
->>> found it clean on all devices. Than I tried to dd if=3D/dev/sd[bcd]
->>> of=3D/dev/null and found that dd also fails with IO error.
->>> After dd bad blocks started appears in SMART :)
->>> Finally I have:
->>> sdb - sync
->>> sdc - fail
->>> sdd - spare
->>> states and a number of bads on each hdd in random places...
->>>=20
->>> Could any one suggest how can I assemble this array now in read-onl=
-y mode to
->>> try to copy data?!
->>> Theoretically data on sdd should not be rewritten and it still shou=
-ld be
->>> possible to try recover data (meaning that bads appears in quite di=
-fferent
->>> places)...
->>> May be you know utility which helps recover data or the way how to =
-start
->>> array in read-only mode preventing becomes it to degraded state
->>> and force md device to try recover data using readable places from =
-each
->>> devise???
->>> Or any other ideas appreciated! Thanks, any way...
->>>=20
->>> Best regards,
->>>                 Evgeny.
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Hi,
->>=20
->> Could you post the smartctl -a output of all the drives? If 2 drives
->> are failling you might want to derescue them somewhere and assemble
->> the RAID from that.
->>=20
->> Mathias
-> Hi, Mathis.
 >=20
-> Will post it tomorrow - it's down now and I'm not around.
-> But as per your suggestion: still not clear for me is it good idea - =
-as soon as I will copy valid data to another drive
-> information about bad's places will be lost (for md device driver) an=
-d bad blocks physically will be replaced by zeros.
-> And what will happen after assembling and trying to read places where=
- bad blocks was (where array marked sync and blocks are
-> not consistent - redundant part zeroed) - will md read properly? will=
- md mark drive fail as soon as find async (zeroed) block ans start resy=
-nc... Actually I did not found in mdadm read-only assembling mode which=
- will prevent such behavior!
+> Hi, Neil
 >=20
-> Best regards,
->                    Evgeny.
+> Has anyone began to develope non-sync-bitmap feature? If not, I want to
+> take a chance.
+> Will the non-sync-bitmap be built on the write-intent-bitmap or I need to
+> create a new bitmap in 'array state info' of v1.x metadata?
 >=20
 
+Hi Robin et al,
 
-You want to use "ddrescue" which includes a log of bad blocks... (Be su=
-re to use a logfile when you run ddrescue for each drive) It can often =
-get all data off of failed drives because it will retry the bad blocks,=
- and if not it will hopefully only have a very small area.
+No, no implementation has been started.
 
-When it is done, you could conceivably have some program to do a recove=
-ry including the data in the log file to rebuild any other missing data=
-=2E.. But I don't think such a program is written yet.
+You cannot use the same bits as the write intent bitmap as they mean
+something different.  But you could possibly use the same storage space.
+i.e. have an alternate style of bitmap where there are two bits per 'chunk'.
+One bit maps "this was written recently, a resync might be needed after a
+crash" and the other means "This has been written since array create, so the
+chunk needs to be recovered to any spare".
 
-Essentially your first step is to recover as much of the actual data to=
- reliable disks as possible, then you will know what your situation rea=
-lly is...
+I don't know if this is the best approach - I haven't really thought about =
+it
+much.
 
-Sam--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+There are several parts to this:
+
+ 1/ decide how to store the new bitmap on disk, and implement that
+ 2/ decide how to store the new bitmap in memory and implement that.
+    It might be the same...
+ 3/ Set a bit in the new bitmap on each write (if it isn't set), and
+    trigger a resync of that chunk.
+ 4/ Update the recovery process for each level to honour this new bit
+ 5/ Allow "discard" operations to clear these bits.
+
+If you do proceed with this,  feel free to post a more concrete design befo=
+re
+proceeding to code - or just post code if you prefer.
+
+NeilBrown
+
+
+--Sig_/gW=u7NOqOFZt+zXLd1l3jaJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUXSBODnsnt1WYoG5AQIR+A/+JccdkDFDgmJMdQrd5FfHeoyyfWRMcKtA
+ZE9/kHPRWnLSPbWLSFwTOxmzPoi9a0pQlz7XPEsumyv9z+9AJ1/b9QvixJjQ7aNo
+f2aEcrmI7VXkeUGhTlpAKGh7wd46B1F12p6CFbaa6dhp0nAWt2nTW+QiOBFSyjLW
+ZEhJA1h0dIxOO+asjuOC7fxmvwOMJsCEbqm6faV8Ys+GEmn9AU4TD7Syc1D4PQa9
+MzjIg1EI2r5+sGFuMJ0BVIgwC8INwBeDhf/nYQtpXnxQIDMHnxcSgNnqQRYwhzMf
+l+aAOfrRfETvbPFnktbSm4orZgzwHwy9CfELH44zw7N4Mdt43v8kU5pEkNEAzCoR
+ni1vUkLKbIjKQWQJVzK6K1sbpVIcXn7tfr47alW3xFHUbMOogyqhN5ssl0n/kdFb
+Fb3CZr7CWyjcoJiRHBjMtbSANPH/6RVTPrB3zI0D+71ueUHQC4yhz+SZ5pUvBDil
+oUT5VXpnuepKAp11CpjMcLIECXvNLs/YGzzlbL+0tgWKnUijny5YJ825jgJPkVwS
+5SafL/r6PnuFXa6weBpnQdNhG8FbqtL1qe/twiEeSfK/o/k2H53TtNF99Z0rQHMo
+CXtzkuAZrVr1qsqJTnpIZs7s6YJvxMRNzU4cR21Yl/Yam7tMGXV4O5gi4H20j8f8
+SCef+5rXOoo=
+=M7G/
+-----END PGP SIGNATURE-----
+
+--Sig_/gW=u7NOqOFZt+zXLd1l3jaJ--
