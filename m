@@ -1,78 +1,89 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Incredibly poor performance of mdraid-1 with 2 SSD Samsung 840
- PRO
-Date: Tue, 23 Apr 2013 01:01:01 -0500
-Message-ID: <5176239D.6060209@hardwarefreak.com>
-References: <5171CBF9.9020701@redhost.ro>
-Reply-To: stan@hardwarefreak.com
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Fixes for DDF test case (race conditions in mdmon)
+Date: Tue, 23 Apr 2013 17:15:48 +1000
+Message-ID: <20130423171548.3d438b79@notabene.brown>
+References: <1382695659-6231-1-git-send-email-mwilck@arcor.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/mAXRbhxr2Mnw=gsH.Y=9NIa"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5171CBF9.9020701@redhost.ro>
+In-Reply-To: <1382695659-6231-1-git-send-email-mwilck@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrei Banu <andrei.banu@redhost.ro>
+To: mwilck@arcor.de
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/19/2013 5:58 PM, Andrei Banu wrote:
-> Hardware: SuperMicro 5017C-MTRF
+--Sig_/mAXRbhxr2Mnw=gsH.Y=9NIa
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Not relevant if you're using SATA ports 0-1, but may well be if using
-2-5, assuming this system isn't brand new.  As I said previously, you'd
-see some errors in dmesg if you had port/cable issues.  From:
+On Fri, 25 Oct 2013 12:07:31 +0200 mwilck@arcor.de wrote:
 
-Intel=AE 6 Series Chipset and Intel=AE C200 Series Chipset Specificatio=
-n Update
+> This is a series of patches to fix the DDF tests case(tests/10ddf-create).
+>=20
+> Patch 3 fixes a problem that was implicitly introduced by commit=20
+> c1ea5a98 - "mdadm -Db" would now print UUIDs for subarrays, but the
+> wrong ones.
+>=20
+> Patch 5-7 are the interesting part. The DDF test case kept failing for
+> me right there where a comment already says "# This failed once.=20
+> The raid5 was resyncing". I tracked this down to race conditions
+> between mdmon and the kernel when arrays are stopped - the kernel
+> cleans up in sysfs and reading the attributes from there is unreliable.
+> Files may have already vanished, read() may fail or even succeed
+> with incorrect results.
+>=20
+> The other patches are hopefully self-explaining.
+>=20
+> Regards
+> Martin
+>=20
+> Martin Wilck (8):
+>   DDF: __write_ddf_structure: Fix wrong reference to ddf->primary
+>   DDF: __write_init_super_ddf: just use seq number of active header
+>   DDF: brief_detail_super_ddf: print correct UUID for subarrays
+>   DDF: add code to debug state changes
+>   monitor: don't call pselect() on deleted sysfs files
+>   monitor: read_and_act: handle race conditions for resync_start
+>   monitor: treat unreadable array_state as clean
+>   tests/10ddf-create: omit log output check
+>=20
+>  monitor.c          |   38 ++++++++++++----
+>  super-ddf.c        |  124 ++++++++++++++++++++++++++++++++++++++--------=
+-----
+>  tests/10ddf-create |    6 +--
+>  3 files changed, 121 insertions(+), 47 deletions(-)
 
+Thanks for these, and sorry for the delay in getting to them
+(though the Date: field was
+   Date: Fri, 25 Oct 2013 12:07:31 +0200
+ so I've actually processed them 6 months before they will have been sent!!=
+!)
 
-Problem:  Due to a circuit design issue on Intel 6 Series Chipset and
-Intel C200 Series Chipset, electrical lifetime wear out may affect cloc=
-k
-distribution for SATA ports 2-5. This may manifest itself as a
-functional issue on SATA ports 2-5 over time.
+All make sense and have been applied and push out.
 
-=95The electrical lifetime wear out may result in device oxide degradat=
-ion
-which over time can cause drain to gate leakage current.
+NeilBrown
 
-=95This issue has time, temperature and voltage sensitivities.
+--Sig_/mAXRbhxr2Mnw=gsH.Y=9NIa
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Implication:  The increased leakage current may result in an unstable
-clock and potentially functional issues on SATA ports 2-5 in the form o=
-f
-receive errors, transmit errors, and unrecognized drives.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-=2E..
-=95SATA ports 0-1 are not affected by this design issue as they have
-separate clock generation circuitry.
+iQIVAwUBUXY1JDnsnt1WYoG5AQJbDRAAutnGlggvJHGCYqrCOLYFa9Ita1P6MZXB
+3KS2z4Au6K6PYp6ITVRtaS+fhSx7E2/PxqNE5aDyQ8IadibvztjVlzxCJob8eZWv
+FVcKyjBbO5qDrQJZp9mbsS8avRFFlcEwKDFsHHkkggRqjLFmr9JAWyAwk5Fxji1R
+qJAu9dIO27ah1o2/rjCkWTFfx0KGqdLe5fPEY22FF9Q3gTOLrre6G7M8FuZ8ro1D
+tabjvpOXPEw3yuN5FrgW4puNyTPkxfygTX97uLcPLUjZ3H9mpARPfxyr2sEuyjGS
+geNLruokMSAbcUXUGYYtdjwnYHQSgvPMEBokeAja4Idr0ZjPceAVbr06rONRo0Vu
+kMnehDiWbfGVZ3AoiyanLfHgHbQOml8WDPuKsGvXzVzm5siUjPZJK+vosYUDcZ3k
+KuFD/0+d5xNs+fDbNpmdXu8QizbnFqsIHEsflRaB9lmV1OlqrYcseamHrvZGl4pi
+pvcYbp59i033byusRIYAm6kNORpmKRy/hhm8v5U5rCqxw+cE0JWzgQT3cKYN0bMl
+qGJ5TfOKfn1S+hN/MDQqhZRs83sKUp6l95eQHZfi5hfTSUeChKyXb2uR4k5mZcRt
+0nfwD62kT5dJtTPnR+BJFVqaKP6bTX7/PBS2te73yJaRftcmxWSrvQ0lVJEuCI39
+DQP0Db0/a4A=
+=TzAA
+-----END PGP SIGNATURE-----
 
-Workaround:  Intel has worked with board and system manufacturers to
-identify and implement solutions for affected systems.
-
-=95Use only SATA ports 0-1.
-=95Use an add-in PCIe SATA bridge solution.
-
-
-Not all boards are affected by this.  You'd have to check the spec
-revision on your C202, which means contacting SuperMicro with your boar=
-d
-revision/serial number.  To be certain you're not affected simply use
-only ports 0-1.  But on that note...
-
-It may be an opportune time to consider dropping in a LSI 9211-4i.
-4GB/s raw throughput, plenty for 4 SSDs at full boogie should you
-expand.  The kit version comes with a 1-4 breakout cable for your 1U SM
-chassis drive backplane.  Even if we get your issue fixed via software
-and both drives are humming away at ~260MB/s, that nightly backup
-process you mentioned, and others, would surely benefit from an
-additional ~200MB/s throughput.
-
---=20
-Stan
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/mAXRbhxr2Mnw=gsH.Y=9NIa--
