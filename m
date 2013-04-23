@@ -1,30 +1,38 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: Fixes for DDF test case (race conditions in mdmon)
-Date: Tue, 23 Apr 2013 19:30:17 +0200
-Message-ID: <5176C529.5070109@arcor.de>
-References: <1382695659-6231-1-git-send-email-mwilck@arcor.de> <20130423171548.3d438b79@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: mwilck@arcor.de
+Subject: [PATCH] DDF: fix bug in compare_super_ddf
+Date: Tue, 23 Apr 2013 20:10:16 +0200
+Message-ID: <1366740616-7803-1-git-send-email-mwilck@arcor.de>
+References: <20130423171548.3d438b79@notabene.brown>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20130423171548.3d438b79@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de, linux-raid@vger.kernel.org
+Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-On 04/23/2013 09:15 AM, NeilBrown wrote:
+Fix bug in previous patch
+"DDF: compare_super_ddf: merge local info of other superblock"
 
-> Thanks for these, and sorry for the delay in getting to them
-> (though the Date: field was
->    Date: Fri, 25 Oct 2013 12:07:31 +0200
->  so I've actually processed them 6 months before they will have been sent!!!)
+Just discovered this bug in my last patch set - unfortunately, just after
+you committed it.
 
-Yeah, I had a problem with my RTC and didn't notice until I had sent out
-the patches. Sorry about that.
+Signed-off-by: Martin Wilck <mwilck@arcor.de>
+---
+ super-ddf.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> All make sense and have been applied and push out.
-
-Thanks a lot,
-Martin
-
+diff --git a/super-ddf.c b/super-ddf.c
+index 455f0f8..ea8439b 100644
+--- a/super-ddf.c
++++ b/super-ddf.c
+@@ -3514,7 +3514,7 @@ static int compare_super_ddf(struct supertype *st, struct supertype *tst)
+ 
+ 		vl1->next = first->conflist;
+ 		vl1->block_sizes = NULL;
+-		if (vl1->conf.sec_elmnt_count > 1) {
++		if (vl2->conf.sec_elmnt_count > 1) {
+ 			vl1->other_bvds = xcalloc(vl2->conf.sec_elmnt_count - 1,
+ 						  sizeof(struct vd_config *));
+ 		} else
+-- 
+1.7.3.4
