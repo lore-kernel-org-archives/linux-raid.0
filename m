@@ -1,55 +1,30 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: RAID50 boot problems
-Date: Tue, 23 Apr 2013 19:34:19 +0200 (CEST)
-Message-ID: <6909786.18.1366738459191.JavaMail.root@zimbra>
-References: <20944014.4.1366628571053.JavaMail.root@zimbra>
+From: Martin Wilck <mwilck@arcor.de>
+Subject: Re: Fixes for DDF test case (race conditions in mdmon)
+Date: Tue, 23 Apr 2013 19:30:17 +0200
+Message-ID: <5176C529.5070109@arcor.de>
+References: <1382695659-6231-1-git-send-email-mwilck@arcor.de> <20130423171548.3d438b79@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20944014.4.1366628571053.JavaMail.root@zimbra>
+In-Reply-To: <20130423171548.3d438b79@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Roman Mamedov <rm@romanrm.ru>, linux-raid <linux-raid@vger.kernel.org>, Alexander Zvyagin <zvyagin.alexander@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > > Please see http://paste.ubuntu.com/5721934/ for the full list,
-> > > taken
-> > > with network console. This is with rootdelay=3D10
-> >
-> > The "bind" messages are in random order so presumably udev running
-> > 'mdadm -I'
-> > on each device as it appear to add it to an array.
-> > However when the md0 and md1 devices appear, udev isn't being run o=
-n
-> > that.
-> > So it looks like your udev rules file is wrong.
-> > Find out which file(s) in /{etc,lib,usr/lib}/udev/rules.d mention
-> > mdadm and
-> > post them.
->=20
-> /lib/udev/rules.d/64-md-raid.rules is here
-> http://paste.ubuntu.com/5592227/
+On 04/23/2013 09:15 AM, NeilBrown wrote:
 
-Bug tested positive also on Ubuntu Precise (12.04) and reported to http=
-s://bugs.launchpad.net/ubuntu/+source/mdadm/+bug/1171945
+> Thanks for these, and sorry for the delay in getting to them
+> (though the Date: field was
+>    Date: Fri, 25 Oct 2013 12:07:31 +0200
+>  so I've actually processed them 6 months before they will have been sent!!!)
 
-Vennlige hilsener / Best regards
+Yeah, I had a problem with my RTC and didn't notice until I had sent out
+the patches. Sorry about that.
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> All make sense and have been applied and push out.
+
+Thanks a lot,
+Martin
+
