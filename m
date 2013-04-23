@@ -1,39 +1,54 @@
 From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: Incredibly poor performance of mdraid-1 with 2 SSD Samsung 840
  PRO
-Date: Mon, 22 Apr 2013 21:59:27 -0500
-Message-ID: <5175F90F.6060206@hardwarefreak.com>
-References: <5171CBF9.9020701@redhost.ro> <CAH3kUhEaZGON=fAyVMZOz5fH_DcfKv=hCa96UCeK4pN7k81c_Q@mail.gmail.com> <51725458.7020109@redhost.ro> <CAH3kUhHxBiqugFQm=PPJNNe9jOdKy0etUjQNsoDz_LJNUCLCCQ@mail.gmail.com> <51732422.1050109@redhost.ro> <5173536C.2040108@hardwarefreak.com> <CAGA4a+EMvLJMqufWjfmze9FZ_sDRBE0SCbOe0UYXRNOLU=DUTw@mail.gmail.com> <51743F14.7020404@hardwarefreak.com> <CAGA4a+Fsrum9vrtWbeKP4jWfT3JAAMK4Ci1HU6A2cMez1mwttw@mail.gmail.com> <517488B7.9030505@hardwarefreak.com> <CAGA4a+HS1EkQ0N1J0He25sWYeL6dhACO=zkVB6jSevZUUuOFBQ@mail.gmail.com> <21ba656fc34d77a018772f603ba5b75f@redhost.ro> <CAGA4a+HQGbtBo9wCQ_hbGdd0_==hmTx_Tw8UKw0PzvNcv-76og@mail.gmail.com>
+Date: Mon, 22 Apr 2013 23:39:38 -0500
+Message-ID: <5176108A.5020506@hardwarefreak.com>
+References: <5171CBF9.9020701@redhost.ro> <51732E2B.6090607@hardwarefreak.com> <5174501F.80509@redhost.ro> <51747382.1010105@hardwarefreak.com> <5175C388.2050500@redhost.ro>
 Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGA4a+HQGbtBo9wCQ_hbGdd0_==hmTx_Tw8UKw0PzvNcv-76og@mail.gmail.com>
+In-Reply-To: <5175C388.2050500@redhost.ro>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tommy Apel <tommyapeldk@gmail.com>
-Cc: Andrei Banu <andrei.banu@redhost.ro>, linux-raid Raid <linux-raid@vger.kernel.org>
+To: Andrei Banu <andrei.banu@redhost.ro>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/22/2013 7:02 AM, Tommy Apel wrote:
-> Yes it can be run as it is, it will write to the file given by --filename=
-> 
-> well from what I make of it so far I wouldn't rule out the bad device
-> part but at the same time there could be other things involved
-> although I don't belive it to be the md part
-> 
-> Stan> do you know anything about the state of ext4 on centos 6.x ?
+On 4/22/2013 6:11 PM, Andrei Banu wrote:
+...
+> 1. First test (bs=1G): same as always.
+> root [~]# dd if=testfile.tar.gz of=test oflag=sync bs=1G
+> 547682517 bytes (548 MB) copied, 53.3767 s, 10.3 MB/s
+...
+> root [~]# dd if=testfile.tar.gz of=test6 oflag=sync bs=4M
+> 547682517 bytes (548 MB) copied, 116.469 s, 4.7 MB/s
+...
+> Again, I don't think my problem is related to any concurrent I/O
+> starvation. These SSDs or this mdraid or I don't know what simply can't
+> take any sustained write task. And this is not due to the server load.
+> Even during very low server loads it's enough to write about 1GB of data
+> within a short time frame (minutes) to bring the I/O system to it's
+> knees for a considerable time (at least tens of minutes).
 
-Enough to assume it's not part of the problem here.  Andrei's hdparm
-below the filesystem layer throughput is bouncing up/down by ~100MB/s
-depending on when he runs it.
+Something's going on here.  Ditch dd for now.  What's the result of:
 
-If he's using LVM and has active snapshots that would definitely cause
-some extra load, but in that case given his 3 RAID1 pairs it should
-affect both drives equally.  And that's not what we're seeing.
+$ echo 3 > /proc/sys/vm/drop_caches
+$ time cp testfile.tar.gz testxx.tmp; sync
+548/real = xx MB/s
 
-I hope my last post gets him closer to identifying the problem.  The
-perf top and iotop data doing $bigfile copy should be instructive.
+And now ditch flushing FS buffers:
+$ echo 3 > /proc/sys/vm/drop_caches
+$ time cp testfile.tar.gz testxx.tmp
+548/real = xx MB/s
+
+And please paste this so we can see how you're mounting EXT4.
+$ cat /etc/fstab |grep ext
+
+Mounting data=journal will decrease write throughput by 50% as
+everything is written twice: once to the journal, once into the
+filesystem.  This wouldn't account for the entire performance deficit
+though.
 
 -- 
 Stan
