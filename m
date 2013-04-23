@@ -1,54 +1,78 @@
-From: Namjae Jeon <linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2 0/9] fix max discard sectors limit
-Date: Tue, 23 Apr 2013 14:16:28 +0900
-Message-ID: <CAKYAXd-PUJ2YXr7QMMw9HWzSXzOO=Yb_CCo7AyfrT-_MP5Sa6Q@mail.gmail.com>
-References: <1366389602-19313-1-git-send-email-linkinjeon@gmail.com>
-	<20130422212324.GB4704@localhost>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Incredibly poor performance of mdraid-1 with 2 SSD Samsung 840
+ PRO
+Date: Tue, 23 Apr 2013 01:01:01 -0500
+Message-ID: <5176239D.6060209@hardwarefreak.com>
+References: <5171CBF9.9020701@redhost.ro>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <nbd-general-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-In-Reply-To: <20130422212324.GB4704@localhost>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/nbd-general>,
-	<mailto:nbd-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=nbd-general>
-List-Post: <mailto:nbd-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-List-Help: <mailto:nbd-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/nbd-general>,
-	<mailto:nbd-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
-Errors-To: nbd-general-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-To: Kent Overstreet <koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, nbd-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, npiggin-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, neilb-l3A5Bk7waGM@public.gmane.org, dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Paul.Clements-G8/ITkJZaeZWk0Htik3J/w@public.gmane.org, adrian.hunter-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, jcmvbkbc-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cjb-2X9k7bc8m7Mdnm+yROfE0A@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5171CBF9.9020701@redhost.ro>
+Sender: linux-raid-owner@vger.kernel.org
+To: Andrei Banu <andrei.banu@redhost.ro>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2013/4/23, Kent Overstreet <koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>:
-> On Sat, Apr 20, 2013 at 01:40:02AM +0900, Namjae Jeon wrote:
->> From: Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
->>
->> linux-v3.8-rc1 and later support for plug for blkdev_issue_discard with
->> commit 0cfbcafcae8b7364b5fa96c2b26ccde7a3a296a9
->> (block: add plug for blkdev_issue_discard )
->>
->> For example,
->> 1) DISCARD rq-1 with size size 4GB
->> 2) DISCARD rq-2 with size size 1GB
->>
->> If these 2 discard requests get merged, final request size will be 5GB.
->>
->> In this case, request's __data_len field may overflow as it can store
->> max 4GB(unsigned int).
->
-> Complete NACK - like James said, this fix is nonsensical. This should be
-> fixed by just checking for overflow before merging requests, not with
-> weird hacks in the drivers.
-that agree to your opinion, and will change at only appropriate
-place(James'change) and will send the updated patch soon.
-Thanks.
->
+On 4/19/2013 5:58 PM, Andrei Banu wrote:
+> Hardware: SuperMicro 5017C-MTRF
 
-------------------------------------------------------------------------------
-Try New Relic Now & We'll Send You this Cool Shirt
-New Relic is the only SaaS-based application performance monitoring service 
-that delivers powerful full stack analytics. Optimize and monitor your
-browser, app, & servers with just a few lines of code. Try New Relic
-and get this awesome Nerd Life shirt! http://p.sf.net/sfu/newrelic_d2d_apr
+Not relevant if you're using SATA ports 0-1, but may well be if using
+2-5, assuming this system isn't brand new.  As I said previously, you'd
+see some errors in dmesg if you had port/cable issues.  From:
+
+Intel=AE 6 Series Chipset and Intel=AE C200 Series Chipset Specificatio=
+n Update
+
+
+Problem:  Due to a circuit design issue on Intel 6 Series Chipset and
+Intel C200 Series Chipset, electrical lifetime wear out may affect cloc=
+k
+distribution for SATA ports 2-5. This may manifest itself as a
+functional issue on SATA ports 2-5 over time.
+
+=95The electrical lifetime wear out may result in device oxide degradat=
+ion
+which over time can cause drain to gate leakage current.
+
+=95This issue has time, temperature and voltage sensitivities.
+
+Implication:  The increased leakage current may result in an unstable
+clock and potentially functional issues on SATA ports 2-5 in the form o=
+f
+receive errors, transmit errors, and unrecognized drives.
+
+=2E..
+=95SATA ports 0-1 are not affected by this design issue as they have
+separate clock generation circuitry.
+
+Workaround:  Intel has worked with board and system manufacturers to
+identify and implement solutions for affected systems.
+
+=95Use only SATA ports 0-1.
+=95Use an add-in PCIe SATA bridge solution.
+
+
+Not all boards are affected by this.  You'd have to check the spec
+revision on your C202, which means contacting SuperMicro with your boar=
+d
+revision/serial number.  To be certain you're not affected simply use
+only ports 0-1.  But on that note...
+
+It may be an opportune time to consider dropping in a LSI 9211-4i.
+4GB/s raw throughput, plenty for 4 SSDs at full boogie should you
+expand.  The kit version comes with a 1-4 breakout cable for your 1U SM
+chassis drive backplane.  Even if we get your issue fixed via software
+and both drives are humming away at ~260MB/s, that nightly backup
+process you mentioned, and others, would surely benefit from an
+additional ~200MB/s throughput.
+
+--=20
+Stan
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
