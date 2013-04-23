@@ -1,36 +1,54 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Incredibly poor performance of mdraid-1 with 2 SSD Samsung 840
- PRO
-Date: Tue, 23 Apr 2013 06:49:25 +0200 (CEST)
-Message-ID: <alpine.DEB.2.00.1304230648160.26743@uplift.swm.pp.se>
-References: <5171CBF9.9020701@redhost.ro> <51732E2B.6090607@hardwarefreak.com> <5174501F.80509@redhost.ro> <51747382.1010105@hardwarefreak.com> <5175C6D0.3030901@hardwarefreak.com>
+From: Namjae Jeon <linkinjeon-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2 0/9] fix max discard sectors limit
+Date: Tue, 23 Apr 2013 14:16:28 +0900
+Message-ID: <CAKYAXd-PUJ2YXr7QMMw9HWzSXzOO=Yb_CCo7AyfrT-_MP5Sa6Q@mail.gmail.com>
+References: <1366389602-19313-1-git-send-email-linkinjeon@gmail.com>
+	<20130422212324.GB4704@localhost>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5175C6D0.3030901@hardwarefreak.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Andrei Banu <andrei.banu@redhost.ro>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <nbd-general-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+In-Reply-To: <20130422212324.GB4704@localhost>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/nbd-general>,
+	<mailto:nbd-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=nbd-general>
+List-Post: <mailto:nbd-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+List-Help: <mailto:nbd-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/nbd-general>,
+	<mailto:nbd-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
+Errors-To: nbd-general-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+To: Kent Overstreet <koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, nbd-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, npiggin-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, neilb-l3A5Bk7waGM@public.gmane.org, dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Paul.Clements-G8/ITkJZaeZWk0Htik3J/w@public.gmane.org, adrian.hunter-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, jcmvbkbc-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cjb-2X9k7bc8m7Mdnm+yROfE0A@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 List-Id: linux-raid.ids
 
-On Mon, 22 Apr 2013, Stan Hoeppner wrote:
-
-> On 4/21/2013 6:17 PM, Stan Hoeppner wrote:
+2013/4/23, Kent Overstreet <koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>:
+> On Sat, Apr 20, 2013 at 01:40:02AM +0900, Namjae Jeon wrote:
+>> From: Namjae Jeon <namjae.jeon-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+>>
+>> linux-v3.8-rc1 and later support for plug for blkdev_issue_discard with
+>> commit 0cfbcafcae8b7364b5fa96c2b26ccde7a3a296a9
+>> (block: add plug for blkdev_issue_discard )
+>>
+>> For example,
+>> 1) DISCARD rq-1 with size size 4GB
+>> 2) DISCARD rq-2 with size size 1GB
+>>
+>> If these 2 discard requests get merged, final request size will be 5GB.
+>>
+>> In this case, request's __data_len field may overflow as it can store
+>> max 4GB(unsigned int).
 >
->> It may not be necessary, at least to solve any SSD performance problems
->> anyway.  Reexamining your numbers shows you hit 262MB/s to /dev/sda.
->> That's 65% of SATA2 interface bandwidth, so this kernel probably does
->> have the patch.  Your problem lie elsewhere.
+> Complete NACK - like James said, this fix is nonsensical. This should be
+> fixed by just checking for overflow before merging requests, not with
+> weird hacks in the drivers.
+that agree to your opinion, and will change at only appropriate
+place(James'change) and will send the updated patch soon.
+Thanks.
 >
-> Big correction.  That should state 87% of SATA2 interface bandwidth.  I
-> must have been thinking of three things at once when I fubar'd that, as
-> that's not simply a typo.
 
-As far as I know, the 300 megabyte/s of SATA2 bw doesn't include coding 
-overhead etc, so it's not theoretically possible to reach all the way up 
-to 300. From all tests I've seen, around 260-270 megabyte/s seems to be 
-maximum that can be achievable, so I'd say 262 MB/s is basically as much 
-as can be expected from SATA2.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+------------------------------------------------------------------------------
+Try New Relic Now & We'll Send You this Cool Shirt
+New Relic is the only SaaS-based application performance monitoring service 
+that delivers powerful full stack analytics. Optimize and monitor your
+browser, app, & servers with just a few lines of code. Try New Relic
+and get this awesome Nerd Life shirt! http://p.sf.net/sfu/newrelic_d2d_apr
