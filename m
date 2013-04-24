@@ -1,49 +1,72 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: RAID50 boot problems
-Date: Wed, 24 Apr 2013 22:01:21 +0200 (CEST)
-Message-ID: <5920558.6.1366833681367.JavaMail.root@zimbra>
-References: <6325382.2.1366806579476.JavaMail.root@zimbra>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 0/1] Quiet down automated tool checking noise
+Date: Thu, 25 Apr 2013 07:16:10 +1000
+Message-ID: <20130425071610.013a58d3@notabene.brown>
+References: <1366815616-28045-1-git-send-email-Jes.Sorensen@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/RKtGGU5=dnrEfrp2H1+q/Ov"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6325382.2.1366806579476.JavaMail.root@zimbra>
+In-Reply-To: <1366815616-28045-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Roman Mamedov <rm@romanrm.ru>, linux-raid <linux-raid@vger.kernel.org>, Alexander Zvyagin <zvyagin.alexander@gmail.com>
+To: Jes.Sorensen@redhat.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > Can you put your initrd (or initramfs or whatever Ubuntu calls it)
-> > somewhere
-> > that I can down load it? Or just email it to me, it's probably only
-> > about 10Meg.
+--Sig_/RKtGGU5=dnrEfrp2H1+q/Ov
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 24 Apr 2013 17:00:15 +0200 Jes.Sorensen@redhat.com wrote:
+
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
 >=20
-> Here are the ones for 12.04 x86 and 13.04 amd64. The same happen on
-> both
+> Hi,
 >=20
-> 12.04 http://karlsbakk.net/tmp/initrd.img-3.2.0-40-generic-pae
-> 13.04 http://karlsbakk.net/tmp/initrd.img-3.8.0-19-generic
+> Had an automated tool checking the help page moan that -a wasn't
+> documented in the --help output, so lets just add that and keep the
+> noise down :)
 
-Did you have time to looke into this?
+Should we add=20
+   --foreground -F
+too?
 
-thanks
+NeilBrown
 
-Vennlige hilsener / Best regards
+>=20
+> Cheers,
+> Jes
+>=20
+>=20
+>=20
+> Jes Sorensen (1):
+>   mdmon: Document that -a is equivalent to --all in --help output
+>=20
+>  mdmon.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--Sig_/RKtGGU5=dnrEfrp2H1+q/Ov
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUXhLmjnsnt1WYoG5AQJnBRAAlp41+tIU5N4ag+hApNKg3Hym45cyRnRD
+B+fuDCNtpIrq4OgtxEbQ6w/1+4rbMZlL863z0Ap4hIKWpSlDZJPaRsDQAC4Auxbu
+KYWts8JNakYDYU6j+ITpKZPH20SKKi/hkxE8KmmSyb535xEMEmtpEZs2CJnYWfF6
+ltBccr2ywYmJHMje4zI/N0t+NewBHsOmLTQZW8DSpbShRqtdjYbXiausJ/DbDk1p
+V/VWZQ5pSSUlGS9pZYmckqdQfk1stK2fGW7S6v7JkZQPsqvZzYrx2EFwLlp62T0k
+ROV1Q7HnBwRw79Fg+ljuTqplYlomLZAIQWdMfr7U0FlH9EgYRdq2P15N70+R4tEg
+HLuMHXqiHwQof4Gvj4+/M35w7sh3WIgBP5YsLaqdiaA9id0AJuRJnutM7fpEmJn8
+lRrgSwzCRLkpMhGKUMe4fGySizoerZELycmTc+eOHeGeEx8yp5fl30xRX5LanVMr
+x1WXH2nLAUn0i8fKGFVt1PER2LDkOL4Rh2G0YE2QjJFCOS9VAEVjJyqzV4xaQgy7
+WBOA/SZNE6GYaQsqquqig0K97WSMwLpZsfHYXoj9eAoGuzo79JWtrwnhkZw1menb
+ifW3954TvNoQL1L/HLircUgLAIXCKDFRiMe6pKs7QTpWSqN5QmuC0J7PxuqnCMRm
+UOiXCPE4Tgs=
+=rZLh
+-----END PGP SIGNATURE-----
+
+--Sig_/RKtGGU5=dnrEfrp2H1+q/Ov--
