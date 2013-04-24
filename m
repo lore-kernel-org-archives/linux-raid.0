@@ -1,108 +1,72 @@
-From: Tommy Apel <tommyapeldk@gmail.com>
-Subject: Re: Incredibly poor performance of mdraid-1 with 2 SSD Samsung 840 PRO
-Date: Wed, 24 Apr 2013 12:24:18 +0200
-Message-ID: <CAGA4a+EtGrgLaWnGreLMto_0WCWLxoBb3+OvQhENGE_uUaj1wA@mail.gmail.com>
-References: <5171CBF9.9020701@redhost.ro>
-	<51732E2B.6090607@hardwarefreak.com>
-	<5174501F.80509@redhost.ro>
-	<51747382.1010105@hardwarefreak.com>
-	<5a749bb56c88b6d6b8a806694b163bda@redhost.ro>
-	<5175F71A.8030805@hardwarefreak.com>
-	<51765FD7.8090309@redhost.ro>
-	<51775078.3000500@hardwarefreak.com>
-	<51779720.6040109@redhost.ro>
-	<5177A1E7.8030701@websitemanagers.com.au>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: RAID50 boot problems
+Date: Wed, 24 Apr 2013 13:19:47 +0200 (CEST)
+Message-ID: <1164635.0.1366802387038.JavaMail.root@zimbra>
+References: <20130424165201.67cc9d1e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5177A1E7.8030701@websitemanagers.com.au>
+In-Reply-To: <20130424165201.67cc9d1e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: Andrei Banu <andrei.banu@redhost.ro>, linux-raid Raid <linux-raid@vger.kernel.org>, stan@hardwarefreak.com
+To: NeilBrown <neilb@suse.de>
+Cc: Roman Mamedov <rm@romanrm.ru>, linux-raid <linux-raid@vger.kernel.org>, Alexander Zvyagin <zvyagin.alexander@gmail.com>
 List-Id: linux-raid.ids
 
-Looks to me like it's the journaled quota process that holds everything back.
+> > > /lib/udev/rules.d/64-md-raid.rules is here
+> > > http://paste.ubuntu.com/5592227/
+> >
+> > Bug tested positive also on Ubuntu Precise (12.04) and reported to
+> > https://bugs.launchpad.net/ubuntu/+source/mdadm/+bug/1171945
+>=20
+> This will run "mdadm --incremental $tempnode" on any device for which
+> ID_FS_TYPE is set to "linux_raid_member", which certainly seems
+> reasonable.
+>=20
+> What does:
+> udevadm info --query=3Dproperty --path=3D/dev/mdXXX | grep ID_FS_TYPE
+>=20
+> report for the raid5 arrays?
 
-2013/4/24 Adam Goryachev <mailinglists@websitemanagers.com.au>:
-> On 24/04/13 18:26, Andrei Banu wrote:
->> Hello,
->>
->> I am sorry for the irrelevant feedback. Where I misunderstood your
->> request, I filled in the blanks (poorly).
->>
->> 1. SWAP
->> root [~]# blkid | grep cef1d19d-2578-43db-9ffc-b6b70e227bfa
->> /dev/md1: UUID="cef1d19d-2578-43db-9ffc-b6b70e227bfa" TYPE="swap"
->>
->> So yes, swap is on md1. This *md1 has a size of 2GB*. Isn't this way
->> too low for a system with 16GB of memory?
->>
-> Provide the output of "free", if there is RAM available, then it isn't
-> too small (that is my personal opinion, but at least it won't affect
-> performance/operations until you are using most of that swap space).
->
->>
->> 3. root [~]# fdisk -lu /dev/sd*
->>
-> My mistake, I should have said:
-> fdisk -lu /dev/sd?
->
-> In any case, all of the relevant information was included, so no harm done.
->> Disk /dev/sda: 512.1 GB, 512110190592 bytes
->> 255 heads, 63 sectors/track, 62260 cylinders, total 1000215216 sectors
->> Units = sectors of 1 * 512 = 512 bytes
->> Sector size (logical/physical): 512 bytes / 512 bytes
->> I/O size (minimum/optimal): 512 bytes / 512 bytes
->> Disk identifier: 0x00026d59
->>
->>    Device Boot      Start         End      Blocks   Id  System
->> /dev/sda1            2048     4196351     2097152   fd  Linux raid
->> autodetect
->> Partition 1 does not end on cylinder boundary.
->> /dev/sda2   *     4196352     4605951      204800   fd  Linux raid
->> autodetect
->> Partition 2 does not end on cylinder boundary.
->> /dev/sda3         4605952   814106623   404750336   fd  Linux raid
->> autodetect
->>
->> Disk /dev/sdb: 512.1 GB, 512110190592 bytes
->> 255 heads, 63 sectors/track, 62260 cylinders, total 1000215216 sectors
->> Units = sectors of 1 * 512 = 512 bytes
->> Sector size (logical/physical): 512 bytes / 512 bytes
->> I/O size (minimum/optimal): 512 bytes / 512 bytes
->> Disk identifier: 0x0003dede
->>
->>    Device Boot      Start         End      Blocks   Id  System
->> /dev/sdb1            2048     4196351     2097152   fd  Linux raid
->> autodetect
->> Partition 1 does not end on cylinder boundary.
->> /dev/sdb2   *     4196352     4605951      204800   fd  Linux raid
->> autodetect
->> Partition 2 does not end on cylinder boundary.
->> /dev/sdb3         4605952   814106623   404750336   fd  Linux raid
->> autodetect
->>
-> I'm assuming from this you have three md RAID1 arrays where sda1/sdb1
-> are a pair, sda2/sdb2 are a pair and sda3/sdb3 are a pair?
->
-> Can you describe what is on each of these arrays?
-> Output of
-> cat /proc/mdstat
-> df
-> pvs
-> lvs
->
-> Might be helpful....
->
-> Regards,
-> Adam
->
-> --
-> Adam Goryachev
-> Website Managers
-> www.websitemanagers.com.au
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+root@raidtest:~# udevadm info --query=3Dproperty --path=3D/dev/md0
+device path not found
+root@raidtest:~# udevadm info --query=3Dproperty --path=3D/dev/md1
+device path not found
+
+> Looking bug report I see that md0 and md1 have
+> ID_FS_TYPE=3Dlinux_raid_member
+>=20
+> So that should be working.
+>=20
+> The fact that rootdelay=3D10 makes a difference suggests that it is
+> successfully assembling the raid0, but just taking a bit too long.
+> Maybe the script in the initrd needs "udevadm settle" just before it
+> attempts
+> to mount.
+>=20
+> Can you look inside the initrd and see if "udevadm settle" is used
+> anywhere?
+
+mdadm settle doesn't seem to be used there. I really don't know my way =
+around the bootup scripts that well, so I'm unsure where to add it=E2=80=
+=A6
+--=20
+Vennlige hilsener / Best regards
+
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
