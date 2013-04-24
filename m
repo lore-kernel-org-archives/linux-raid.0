@@ -1,93 +1,87 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID50 boot problems
-Date: Wed, 24 Apr 2013 16:52:01 +1000
-Message-ID: <20130424165201.67cc9d1e@notabene.brown>
-References: <20944014.4.1366628571053.JavaMail.root@zimbra>
-	<6909786.18.1366738459191.JavaMail.root@zimbra>
+Subject: Re: MD does not wait for drives on start-up with kernels 3.8+
+Date: Wed, 24 Apr 2013 17:12:48 +1000
+Message-ID: <20130424171248.235667a7@notabene.brown>
+References: <20130330190538.4e3c1771@natsu>
+	<CAGqmV7qmPHYpm1rinfsh5W-mgqo+Va2RvQtZoy-5AazYFAHYdg@mail.gmail.com>
+	<20130415144530.183d7b31@natsu>
+	<20130415203449.4d121b32@notabene.brown>
+	<20130415191157.72b630c3@natsu>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/06J.67JQpH0jcRZLpjf0UB="; protocol="application/pgp-signature"
+ boundary="Sig_/vwpc9DQo=O.O//N41hoUbC2"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6909786.18.1366738459191.JavaMail.root@zimbra>
+In-Reply-To: <20130415191157.72b630c3@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc: Roman Mamedov <rm@romanrm.ru>, linux-raid <linux-raid@vger.kernel.org>, Alexander Zvyagin <zvyagin.alexander@gmail.com>
+To: Roman Mamedov <rm@romanrm.ru>
+Cc: CoolCold <coolthecold@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/06J.67JQpH0jcRZLpjf0UB=
+--Sig_/vwpc9DQo=O.O//N41hoUbC2
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 23 Apr 2013 19:34:19 +0200 (CEST) Roy Sigurd Karlsbakk
-<roy@karlsbakk.net> wrote:
+On Mon, 15 Apr 2013 19:11:57 +0600 Roman Mamedov <rm@romanrm.ru> wrote:
 
-> > > > Please see http://paste.ubuntu.com/5721934/ for the full list,
-> > > > taken
-> > > > with network console. This is with rootdelay=3D10
-> > >
-> > > The "bind" messages are in random order so presumably udev running
-> > > 'mdadm -I'
-> > > on each device as it appear to add it to an array.
-> > > However when the md0 and md1 devices appear, udev isn't being run on
-> > > that.
-> > > So it looks like your udev rules file is wrong.
-> > > Find out which file(s) in /{etc,lib,usr/lib}/udev/rules.d mention
-> > > mdadm and
-> > > post them.
+> On Mon, 15 Apr 2013 20:34:49 +1000
+> NeilBrown <neilb@suse.de> wrote:
+>=20
+> > > This was NOT required on any of the previous kernels, so I wonder why=
+ all of
+> > > sudden with the 3.8+ kernels my system needs an extra "crutch" just t=
+o keep
+> > > starting up properly.
 > >=20
-> > /lib/udev/rules.d/64-md-raid.rules is here
-> > http://paste.ubuntu.com/5592227/
+> > This is almost certainly not directly related to the kernel.  It seems =
+clear
+> > that some change in the kernel has resulted in the difference, but it is
+> > probably indirect and really a bug elsewhere.
+> >=20
+> > What distro are you using?  Is systemd in use?
 >=20
-> Bug tested positive also on Ubuntu Precise (12.04) and reported to https:=
-//bugs.launchpad.net/ubuntu/+source/mdadm/+bug/1171945
+> Debian Testing, no systemd.
 >=20
-> Vennlige hilsener / Best regards
->=20
->
 
-This will run "mdadm --incremental $tempnode" on any device for which
-ID_FS_TYPE is set to "linux_raid_member", which certainly seems reasonable.
+Can you try something for me?
 
-What does:
-   udevadm info --query=3Dproperty --path=3D/dev/mdXXX | grep ID_FS_TYPE
+Edit   /usr/share/initramfs-tools/scripts/local-top/mdadm
 
-report for the raid5 arrays?
+and just before the line:
 
-Looking bug report I see that md0 and md1 have
-   ID_FS_TYPE=3Dlinux_raid_member
+  verbose && log_begin_msg "Assembling all MD arrays"
 
-So that should be working.
+insert
 
-The fact that rootdelay=3D10 makes a difference suggests that it is
-successfully assembling the raid0, but just taking a bit too long.
-Maybe the script in the initrd needs "udevadm settle" just before it attemp=
-ts
-to mount.
+  /sbin/udevadm settle
 
-Can you look inside the initrd and see if "udevadm settle" is used anywhere?
+Then try booting without the 'rootdelay=3D10'.
+
+If it doesn't (and the odds are at least even) then we have an awkward
+situation.  The kernel is discovering devices asynchronously but it isn't
+clear that there is any way to wait for it to "finish".
 
 NeilBrown
 
---Sig_/06J.67JQpH0jcRZLpjf0UB=
+--Sig_/vwpc9DQo=O.O//N41hoUbC2
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUXeBETnsnt1WYoG5AQKz2xAAgQK/CiYi+rE5lxYB4wT+M3IvbNuKLkvP
-4ccVg0Ron+2h35XZ5ERbbDOlXfbnLNc8moz91jKHjb+ToZbbfGULTqTbhv7fYZ5k
-J5rbk2EWemKw7RdzYUyzZQvCgCVXFetXpVDplTzH1cpxm1rNFH8rkQfdgXsk49GY
-go8QTu+EchwUgDqLpObTpvQXVfXo61VtUD4UBKIP+L/tx2DN/tUER7sorcuViOuK
-Gwm6EyVJ3U9N7VOKRR6r81t5obo3AQr5R4yOkVOeBg1UFTOuNreDAYwSLbAfZXcK
-6+jPasAEDJRFmMPl7vKdhh7ZmojhcnyDxbdgz3jqkgBMFVs/JJT2AR9V5zcVLkX4
-Wy0NIC2j6VI74hU6YtyfjVmgdMBkQ2weTwrEG/oKbXh96hkndErYTaYgGqmmMeOT
-fKJ/egYOzfLDaeCRoeDqr4C/DInX3oCrq7J1/nEIgdHXQ4hLAbJJC9hJrS5k8Izl
-tWTwRObTXeLKXdvuvmoMfTvsB5aYuGY0ErydtI2f7OFN/km3JTo1iBZ1F1ctX/bv
-b+wNF/WSkhj2M/x8Qat56WcLTmkjjWLz3q4qBvuOdAsP9QAI3Gs7jnpmSGt5raZs
-gE+5fGhiEPZaWbUNRhA3FX7kernCIWgLfYRVUrUHRnfWceKFxpXK4clQmP6IbF/r
-PNdx8D0qma4=
-=Y4vk
+iQIVAwUBUXeF8Dnsnt1WYoG5AQKFfRAAs+bjG2QI8L/xnkryWxQDSMwNlrqO4f4A
+4/CC9NRYIteeOWcqyJ5e+e7HkJSoiK5LsprqkIFEdo0xAV9U05MLXQC32ayn6wtc
+MMoV4wU/U3VqMasA9gTS+R+VCtvYt8oqW/H3TwvTNLt7nHDt2dljxZN4LIMQOJ3o
+3iLQ1h0sogl6Po9bzF+to80S98+5ALI32wX1K1yAVHEcd2KO8uA2ZkpSqPRHYWI+
+BaNTYsysfhW7k6f0EOVBtjjItuluc9/mRlVaJ3Up++YpCqttWiDJRtpqXoIFmw08
+1rr9qyiR5JNp0O96Es3JZTMC5xuIqVcypXcijDgYrVHVpJ0Pe6Zn6bY4V2MrJBgD
+NkocKb9tXlDPfHLGcGSBNPwCYrDxN0GZajiWeCgHyy9Z6O26muVYG21IH8csICaK
+/yzjyHBLAJFK0G7gltG0/CEBTt/JTkOs3VCz/4ug4W0Mjl5uyOKUSbCgu83Aa1D7
+9ZNw6q1YJ4H0ncjd5DjOBBhSIr/bYTyYSqx2bz93Bn0EN+CB5TQ3mTAVxzggEW1y
+6JZZnsAH/kOB53/k8dMR1Vg9RxvwIXDU1QZc/E5JUea/ZGgyg3RRzKS5vGhvhH4V
+NXLTvorVVQOJfzrocuwEEUAX4ky2+EDTb1+Q+18F1XygMLN65Dtu3++j/qfD8yvq
+YcLvQDMrOto=
+=hg4x
 -----END PGP SIGNATURE-----
 
---Sig_/06J.67JQpH0jcRZLpjf0UB=--
+--Sig_/vwpc9DQo=O.O//N41hoUbC2--
