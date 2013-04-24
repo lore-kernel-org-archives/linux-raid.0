@@ -1,107 +1,122 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: DDF test fails if default udev rules are active
-Date: Wed, 24 Apr 2013 16:13:48 +1000
-Message-ID: <20130424161348.1f7e3abc@notabene.brown>
-References: <51535A25.1040501@arcor.de>
+Subject: Re: [PATCH] DM RAID: Explicitly turn off bad block support
+Date: Wed, 24 Apr 2013 16:24:02 +1000
+Message-ID: <20130424162402.5f49cacf@notabene.brown>
+References: <1366378224.14427.1.camel@f16>
+	<20130422105228.3948c69f@notabene.brown>
+	<1EBA319B-13B9-4E75-A62F-C3F180A08C07@redhat.com>
+	<20130423100515.5c4c3ee6@notabene.brown>
+	<05873438-4768-4B95-A84B-076676764C82@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/wJX9WdhRrTgoQ037/su6n64"; protocol="application/pgp-signature"
+ boundary="Sig_/PvPOD0M.K3h2p8Q87.HpBeT"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51535A25.1040501@arcor.de>
+In-Reply-To: <05873438-4768-4B95-A84B-076676764C82@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>
-Cc: linux-raid@vger.kernel.org
+To: Brassow Jonathan <jbrassow@redhat.com>
+Cc: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/wJX9WdhRrTgoQ037/su6n64
+--Sig_/PvPOD0M.K3h2p8Q87.HpBeT
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 27 Mar 2013 21:44:21 +0100 Martin Wilck <mwilck@arcor.de> wrote:
+On Tue, 23 Apr 2013 22:48:50 -0500 Brassow Jonathan <jbrassow@redhat.com>
+wrote:
 
-> Hi Neil,
 >=20
-> with my latest patch set, the DDF test case (10-ddf-create) succeeds
-> reliably for me, with one caveat: It works only if I disable the rule
-> that runs "mdadm -I" on a newly discovered container. On my system
-> (Centos 6.3) it is in /lib/udev/65-md-incremental.rules, and the rule is
+> On Apr 22, 2013, at 7:05 PM, NeilBrown wrote:
 >=20
-> SUBSYSTEM=3D"block", ACTION=3D"add|change", KERNEL=3D"md*", \
->   ENV{MD_LEVEL}=3D=3D"container", RUN+=3D"/sbin/mdadm -I $env{DEVNAME}"
+> > On Mon, 22 Apr 2013 11:29:48 -0500 Brassow Jonathan <jbrassow@redhat.co=
+m>
+> > wrote:
+> >=20
+> >>=20
+> >> On Apr 21, 2013, at 7:52 PM, NeilBrown wrote:
+> >>=20
+> >>> On Fri, 19 Apr 2013 08:30:24 -0500 Jonathan Brassow <jbrassow@redhat.=
+com>
+> >>> wrote:
+> >>>=20
+> >>>> DM RAID:  Explicitly turn off bad block support
+> >>>>=20
+> >>>> DM RAID does not currently use the bad block tracking available in
+> >>>> MD.  'badblocks.shift' must be set to '-1' in order to explicitly
+> >>>> tell MD not to perform bad block related functions, like
+> >>>> narrow_write_error().
+> >>>>=20
+> >>>> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+> >>>>=20
+> >>>> Index: linux-upstream/drivers/md/dm-raid.c
+> >>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> >>>> --- linux-upstream.orig/drivers/md/dm-raid.c
+> >>>> +++ linux-upstream/drivers/md/dm-raid.c
+> >>>> @@ -170,8 +170,10 @@ static struct raid_set *context_alloc(st
+> >>>> 	rs->md.delta_disks =3D 0;
+> >>>> 	rs->md.recovery_cp =3D 0;
+> >>>>=20
+> >>>> -	for (i =3D 0; i < raid_devs; i++)
+> >>>> +	for (i =3D 0; i < raid_devs; i++) {
+> >>>> 		md_rdev_init(&rs->dev[i].rdev);
+> >>>> +		rs->dev[i].rdev.badblocks.shift =3D -1; /* No bad block support */
+> >>>> +	}
+> >>>>=20
+> >>>> 	/*
+> >>>> 	 * Remaining items to be initialized by further RAID params:
+> >>>>=20
+> >>>=20
+> >>> Thanks, but I don't think this is the right fix.
+> >>> md_rdev_init really should set shift to -1, because we can only suppo=
+rt
+> >>> badblocks if the metadata explicitly supports it.
+> >>>=20
+> >>> What do you think of this instead?
+> >>=20
+> >> I like it much better.  It means that the proper initialization is don=
+e centrally, rather than expecting every super block type to know enough to=
+ turn off things they may not know about.  I considered this, but went alon=
+g with the idea that it was the responsibility of the individual superblock=
+ handlers.
+> >>=20
+> >=20
+> > :-)
+> >=20
+> > Does this need to go to -stable?  Which versions, do you know?
 >=20
-> The reason is that the DDF test case runs mdadm -Asc after writing the
-> conf file defining the container and 3 arrays.
+> dm-raid was introduce in 2.6.38, I believe.  A quick check shows your pat=
+ch applies to v3.1+ (although I've only compiled and tested 3.9-rc8).  I wo=
+uld like to see the patch go into stable.
 >=20
-> mdadm -Asc will first create the container. When it starts tries to
-> create the member arrays, these have already been started by the udev
-> rule above, causing the assembly to fail with the error message "member
-> /dev/md127/1 in /dev/md127 is already assembled".
->=20
-> I have done my testing with the above udev rule commented out, and all
-> goes fine. But I am not sure if "mdadm -Asc /var/tmp/mdadm.conf" failing
-> indicates a problem with the DDF code, or if it's really just a problem
-> with the test case. Personally, I'd rather have a test case that
-> succeeds by default on a system with standard configuration (which means
-> the above udev rule should be active).
->=20
-> What do you think?
-> Martin
 
-Hi Martin,
- I think this is a real issue that has occasionally annoyed me a bit but
- never enough to make me seriously address it - so thanks for raising it.
-
- I generally would like the tests to run without any interference from udev,
- though I certainly see the value of testing in a "standard config" context
- too.
-
- Fortunately it appears to be easy to address.
-   udevadm control --stop-exec-queue
- will pause udev, and
-   udevadm control --start-exec-queue
- will cause udev to resume.
-
- So I suggest that we change the 'test' script to run:
-
-    udevadm settle; udevadm control --stop-exec-queue
-
- before running each test script, and
-
-    udevadm control --start-exec-queue
-
- after the script.
- Then if a script wants to run in "standard" context, it could simply put
-    udevadm control --start-exec-queue
- at the top.  The default would be to disable udev which is what most scrip=
-ts
- expect.
-
- Can you try that?
+OK, I've tagged it for -stable.  I won't try to get it into 3.9 as I think =
+it
+is too late, but it'll go into 3.10-rc1 and then to the relevant -stables.
 
 Thanks,
 NeilBrown
 
-
---Sig_/wJX9WdhRrTgoQ037/su6n64
+--Sig_/PvPOD0M.K3h2p8Q87.HpBeT
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUXd4HDnsnt1WYoG5AQJamxAAwIbEKHa/RfUJvRDLg/qs5ta+LvOz31hn
-/fUVredaWkUWQbcoweTG+Z4hOx9np0rqyK82ywqm+vK/UqzpWKvySgNUR4uiE+yl
-cWOTHAEteZPBAAooqLVUlHtwjC42Y2un8OhcP+DuU6Mn6CdGUpzEDBQkDj/IUDLW
-Q1ho3MdGfdIgr7KxGuExd9l//qpXBUit8b2fvC0pZoM7G+nOANiwNLDfrHS7z536
-N1/5qH5rGt5hmWxdlviw0NVVr5PhoZFnHFAThUFVUgHqLvDQSkfMhYK76g8TTIjl
-6NioA8T6vWeI1HQJpFOlC0KRSIc7pReALknah0y00wxOGime5BE3IQiGb1t0Gk47
-F85mcyhYUzZyfZ6HSzHHUAvf50oqgSQKwMu4QGH3TV0o7bc+kUNLgoepfDPDkJfn
-WHGlKZnXZIjrkmcTo4xLtzbOGr2sOHQi/7nxgniMKtJiOgNdbWB+cLprggZXrEXW
-NENkP9L/+yEyegFPLJ1Lk2KXJ4aGWcF9nkl5zD/CVcYM7189DZV4qIhWcmxo2m2k
-r1MW3lyI7M3iV4yI9UAIBXC+WxlqjnXLsbnnoNF64Tmt1o71s36VmXu33SQVl9qX
-jYn8PRaJRMemEO0ngoxjAvjf8HyNnsNSSCkMT6Atm+Gz3zGX6BoXpaj811su1Tqp
-4kufl1CaEZU=
-=estx
+iQIVAwUBUXd6gjnsnt1WYoG5AQLjbw//YCHAu5tm3ZOi7Pl3IBJUre9RfqHQ4hhg
+p+T+Rvh29E/t9i12+f6KsL4hf4btadsNLhiBlzW8wBKQIfFnWeMPcfseHzUS1IPG
++1AfB6EwkgfGN7mVRP9buCfrgkSqr3iEhDtb4Svd7uerRPHGrEjpumkozV30KMjJ
+bStDCpitJ1HVlBO3kuilzloVOOob+qYCxKJbePKEGHALWxK3PJPOVGzg5pNYYuxa
+UZSEP0h5KuxkTsDFJREwQ00cPa7TmF+++tON3pyTBGVqNOSsZkA/FedpgyIzU1it
+dWucRJnYkvBlrjAWnTZmflpsOh2pTwGy5NtTu9BswmquiaD66lmSBeg2nK3y2bkI
+NDwOCnH+RIi82O4oU4Quw96il8KZf4jBxZLhcnn1wG1jzL8PxsONA537X1kOOr2J
+Gm4duuixd65gaYkWs2di8AMylcSLTbQL1+dm8hHe43tQNBbRGDsxV4R1mpXbKz7f
+y51mkoMYZb5p/jJPXFK6PwT6RwTPxyvzfdWs10cdp1Tmi4VRgpr0qKzooPslYRU8
+gWraAVPvpqfKOE2MWUdVZs5AlfV5KU4Qfsctvpl8LI3rdwAcGAHiZPNRarmjZssY
+UIYUvHwPQtFSu17vzccYwkBnLeZYe6LzhSk+ux3+RRybQ3vexiOIKhC9uYKIHEda
+NwWtjfgA1P0=
+=jXYp
 -----END PGP SIGNATURE-----
 
---Sig_/wJX9WdhRrTgoQ037/su6n64--
+--Sig_/PvPOD0M.K3h2p8Q87.HpBeT--
