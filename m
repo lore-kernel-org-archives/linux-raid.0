@@ -1,54 +1,80 @@
-From: Andrei Banu <andrei.banu@redhost.ro>
-Subject: Re: Incredibly poor performance of mdraid-1 with 2 SSD Samsung 840
- PRO
-Date: Thu, 25 Apr 2013 00:46:58 +0300
-Message-ID: <517852D2.2050109@redhost.ro>
-References: <5171CBF9.9020701@redhost.ro> <51732E2B.6090607@hardwarefreak.com> <5174501F.80509@redhost.ro> <51747382.1010105@hardwarefreak.com> <5a749bb56c88b6d6b8a806694b163bda@redhost.ro> <5175F71A.8030805@hardwarefreak.com> <51765FD7.8090309@redhost.ro> <51775078.3000500@hardwarefreak.com> <51779720.6040109@redhost.ro> <51780A3F.80104@hardwarefreak.com>
+From: Dmitrijs Ledkovs <xnox@debian.org>
+Subject: Re: RAID50 boot problems
+Date: Wed, 24 Apr 2013 23:44:20 +0100
+Message-ID: <CANBHLUikjsxOvBLkgAk4UDzwa3UPZ=jmTGhDzuMW31HLPCCu8Q@mail.gmail.com>
+References: <20944014.4.1366628571053.JavaMail.root@zimbra>
+	<6909786.18.1366738459191.JavaMail.root@zimbra>
+	<20130424165201.67cc9d1e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51780A3F.80104@hardwarefreak.com>
+In-Reply-To: <20130424165201.67cc9d1e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Roman Mamedov <rm@romanrm.ru>, linux-raid <linux-raid@vger.kernel.org>, Alexander Zvyagin <zvyagin.alexander@gmail.com>
 List-Id: linux-raid.ids
 
-Hi,
-
-1. How can I at least start trying to find the daemon that might be 
-doing this?
-
-2. I am not sure what real time TRIM is. I thought there was the 
-'discard' option in
-fstab (which I tried and didn't help) and other command like trims 
-(fstrim - which
-errors out when run on / or mdtrim that seems somebody's experiment). But I
-am not sure what real time trim might be.
-
-I am not really sure where do I go from here. I am a bit lost as it 
-seems we hit
-a dead end.
-
-Thanks!
-Andrei Banu
-
-On 24/04/2013 7:37 PM, Stan Hoeppner wrote:
-> On 4/24/2013 3:26 AM, Andrei Banu wrote:
+On 24 April 2013 07:52, NeilBrown <neilb@suse.de> wrote:
+> On Tue, 23 Apr 2013 19:34:19 +0200 (CEST) Roy Sigurd Karlsbakk
+> <roy@karlsbakk.net> wrote:
 >
->> Total DISK READ: 0.00 B/s | Total DISK WRITE: 0.00 B/s
->>    TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN     IO> COMMAND
->>    541 be/3 root        0.00 B/s    0.00 B/s  0.00 % 96.96 % [jbd2/md2-8]
-> This seems to be your problem.  jbd2 (journal block device) is causing
-> 97% iowait, yet without doing much physical IO.  This is a component of
-> EXT4.  As this will fire intermittently it explains why you see such a
-> wide throughput gap between tests at different points in time.
+>> > > > Please see http://paste.ubuntu.com/5721934/ for the full list,
+>> > > > taken
+>> > > > with network console. This is with rootdelay=10
+>> > >
+>> > > The "bind" messages are in random order so presumably udev running
+>> > > 'mdadm -I'
+>> > > on each device as it appear to add it to an array.
+>> > > However when the md0 and md1 devices appear, udev isn't being run on
+>> > > that.
+>> > > So it looks like your udev rules file is wrong.
+>> > > Find out which file(s) in /{etc,lib,usr/lib}/udev/rules.d mention
+>> > > mdadm and
+>> > > post them.
+>> >
+>> > /lib/udev/rules.d/64-md-raid.rules is here
+>> > http://paste.ubuntu.com/5592227/
+>>
+>> Bug tested positive also on Ubuntu Precise (12.04) and reported to https://bugs.launchpad.net/ubuntu/+source/mdadm/+bug/1171945
+>>
+>> Vennlige hilsener / Best regards
+>>
+>>
 >
-> This isn't a bug or Google would reveal that.  Andrei, you need to
-> identify which daemon or kernel feature is causing this.  Do you happen
-> to have realtime TRIM enabled?  It is well known to bring IO to a crawl.
+> This will run "mdadm --incremental $tempnode" on any device for which
+> ID_FS_TYPE is set to "linux_raid_member", which certainly seems reasonable.
 >
-> If not realtime TRIM, I'd guess you turned a knob you should not have in
-> some config file, causing a daemon to frequently issue a few gazillion
-> atomic updates.
+> What does:
+>    udevadm info --query=property --path=/dev/mdXXX | grep ID_FS_TYPE
+>
+> report for the raid5 arrays?
+>
+> Looking bug report I see that md0 and md1 have
+>    ID_FS_TYPE=linux_raid_member
+>
+> So that should be working.
+>
+> The fact that rootdelay=10 makes a difference suggests that it is
+> successfully assembling the raid0, but just taking a bit too long.
+> Maybe the script in the initrd needs "udevadm settle" just before it attempts
+> to mount.
+>
+> Can you look inside the initrd and see if "udevadm settle" is used anywhere?
 >
 
+Yes, we do call and wait for udevadm to settle a few times, but it is
+still too short and may not be long enough to detect nested raid
+volumes and mount them properly in the correct order and non-degraded.
+I have a few thoughts on using a strategy similar to that in dracut /
+fedora to pass ids of the md arrays to assemble for rootfs device, and
+keep trying to assemble the rest of mdadm "on best effort" basis
+during boot.
+That way I am also hoping to finally get rid of the dreaded "boot
+degraded" boot option / question / prompt.
+This is still just design in progress and hasn't been implemented yet.
+I will be contacting this mailing list once I have something ready to
+improve raid assembly in ubuntu.
+
+Regards,
+
+Dmitrijs.
