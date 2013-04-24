@@ -1,113 +1,72 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Incredibly poor performance of mdraid-1 with 2 SSD Samsung 840
- PRO
-Date: Tue, 23 Apr 2013 22:24:40 -0500
-Message-ID: <51775078.3000500@hardwarefreak.com>
-References: <5171CBF9.9020701@redhost.ro> <51732E2B.6090607@hardwarefreak.com> <5174501F.80509@redhost.ro> <51747382.1010105@hardwarefreak.com> <5a749bb56c88b6d6b8a806694b163bda@redhost.ro> <5175F71A.8030805@hardwarefreak.com> <51765FD7.8090309@redhost.ro>
-Reply-To: stan@hardwarefreak.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Brassow Jonathan <jbrassow@redhat.com>
+Subject: Re: [PATCH] DM RAID: Explicitly turn off bad block support
+Date: Tue, 23 Apr 2013 22:48:50 -0500
+Message-ID: <05873438-4768-4B95-A84B-076676764C82@redhat.com>
+References: <1366378224.14427.1.camel@f16> <20130422105228.3948c69f@notabene.brown> <1EBA319B-13B9-4E75-A62F-C3F180A08C07@redhat.com> <20130423100515.5c4c3ee6@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v1085)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51765FD7.8090309@redhost.ro>
+In-Reply-To: <20130423100515.5c4c3ee6@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrei Banu <andrei.banu@redhost.ro>
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>, Jonathan Brassow <jbrassow@redhat.com>
 List-Id: linux-raid.ids
 
-On 4/23/2013 5:17 AM, Andrei Banu wrote:
 
-> I am sorry for the very long email. And thanks a lot for all your patience.
+On Apr 22, 2013, at 7:05 PM, NeilBrown wrote:
 
-From now on simply provide what is asked for.  That keeps the length
-manageable and the info relevant, and allows us to help you get to a
-solution more quickly without being bogged down.
+> On Mon, 22 Apr 2013 11:29:48 -0500 Brassow Jonathan <jbrassow@redhat.com>
+> wrote:
+> 
+>> 
+>> On Apr 21, 2013, at 7:52 PM, NeilBrown wrote:
+>> 
+>>> On Fri, 19 Apr 2013 08:30:24 -0500 Jonathan Brassow <jbrassow@redhat.com>
+>>> wrote:
+>>> 
+>>>> DM RAID:  Explicitly turn off bad block support
+>>>> 
+>>>> DM RAID does not currently use the bad block tracking available in
+>>>> MD.  'badblocks.shift' must be set to '-1' in order to explicitly
+>>>> tell MD not to perform bad block related functions, like
+>>>> narrow_write_error().
+>>>> 
+>>>> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+>>>> 
+>>>> Index: linux-upstream/drivers/md/dm-raid.c
+>>>> ===================================================================
+>>>> --- linux-upstream.orig/drivers/md/dm-raid.c
+>>>> +++ linux-upstream/drivers/md/dm-raid.c
+>>>> @@ -170,8 +170,10 @@ static struct raid_set *context_alloc(st
+>>>> 	rs->md.delta_disks = 0;
+>>>> 	rs->md.recovery_cp = 0;
+>>>> 
+>>>> -	for (i = 0; i < raid_devs; i++)
+>>>> +	for (i = 0; i < raid_devs; i++) {
+>>>> 		md_rdev_init(&rs->dev[i].rdev);
+>>>> +		rs->dev[i].rdev.badblocks.shift = -1; /* No bad block support */
+>>>> +	}
+>>>> 
+>>>> 	/*
+>>>> 	 * Remaining items to be initialized by further RAID params:
+>>>> 
+>>> 
+>>> Thanks, but I don't think this is the right fix.
+>>> md_rdev_init really should set shift to -1, because we can only support
+>>> badblocks if the metadata explicitly supports it.
+>>> 
+>>> What do you think of this instead?
+>> 
+>> I like it much better.  It means that the proper initialization is done centrally, rather than expecting every super block type to know enough to turn off things they may not know about.  I considered this, but went along with the idea that it was the responsibility of the individual superblock handlers.
+>> 
+> 
+> :-)
+> 
+> Does this need to go to -stable?  Which versions, do you know?
 
-> 1. DMESG doesn't show any "hard resetting link" at all.
+dm-raid was introduce in 2.6.38, I believe.  A quick check shows your patch applies to v3.1+ (although I've only compiled and tested 3.9-rc8).  I would like to see the patch go into stable.
 
-Then it seems you don't have hardware problems.
-
-> 2. The SSDs are connected to ATA 0 and ATA1. The server is brand new (or
-> at least it should be).
-
-Nor the Intel 6 Series SATA problem.
-
-> 3. Partition table:
-
-/etc/fstab contains mount points, not the partition table.
-
-> root [~]# cat /etc/fstab
-
-> UUID=cef1d19d-2578-43db-9ffc-b6b70e227bfa swap swap    defaults        0 0
-
-I can't discern from UUID where your swap partition is located.  Is it a
-partition directly on an SSD or is it a partition atop md1?
-
-> root [/]# echo 3 > /proc/sys/vm/drop_caches
-> root [~]# time cp largefile.tar.gz test03.tmp; time sync;
-
-You're slowing us down here.  Please execute commands as instructed
-without modification.  The above is wrong.  You don't call time twice.
-If you're worried about sync execution being included time, use:
-$ time (cp src.tmp src.temp; sync)
-
-Though it makes little difference as Linux is pretty good about flushing
-the last few write buffers.  But you missed the important part, the math
-for bandwidth determination:  548/real = xx MB/s
-
-This is cp not dd.  It's up to you to do the math.  Using time allows
-you to do so.  548MB is my example using your previous file size in your
-tests.  Modify accordingly if needed.
-
-*Important note*  The job of this list is to provide knowledge transfer,
-advice, and assistance.  You must do the work, and you must learn along
-the way.  We don't fix people's problems, as we don't have access to
-their computers.  What we do is *enable* people to fix their problems
-themselves.
-
-> After about 15 seconds the server load started to increase from 1,
-> spiked to 40 in about a minute and then it started decreasing.
-
-Please stop telling us this.  Linux load average is irrelevant.
-
-> 5. The perf top -U output during a dd copy:
-
-This was supposed to be executed before and simultaneously with the cp
-operation above.  Do you know how to use multiple terminal windows?
-
-> 6. iotop 
-
-Again, this was supposed to be run with the cp command, exited toward
-the end of the cp operation, then copy/pasted.
-
-is very dynamic and I am afraid the data I am providing will be
-> unclear but let me give a number of snapshots from during the large file
-> copy and maybe you can make something of it (samples a few seconds apart):
-
-> !!!!!! 6085 be/4 root        7.69 K/s 1004.85 M/s  0.00 %  0.00 % dd
-> if=largefile.tar.gz of=test10 oflag=sync bs=1G
-
-This is another example of why you don't use dd for IO testing, and
-especially with a block size of 1GB.  dd buffers into RAM up to
-$block_size bytes before it begins flushing to disk.  So what you're
-seeing here is that massive push at the beginning of the run.  Your SSDs
-in RAID1 peak at ~265MB/s.  iotop is showing 1GB/s, 4 times what the
-drives can do.  This is obviously not real.
-
-You can get away with oflag=sync using 1GB block size.  But if you run
-dd the only way it can be run for realistic results, using bs=4096 which
-matches every filesystem block size including EXTx, XFS, and JFS, then
-using iflag=sync will degrade your performance, an ack is required on
-each block.  That's what sync does.  With SSD it won't be nearly as
-dramatic as rust, where the difference in runtime is 100-200x slower due
-to rotational latency.
-
-> I appologize for such a lengthy email!
-
-Don't apologize, just don't send more information than needed,
-especially if you don't know it's relevant. ;)  Send only what's
-requested, and as requested, please.
-
--- 
-Stan
+ brassow
 
 
