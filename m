@@ -1,25 +1,36 @@
-From: Andrei Banu <andrei.banu@redhost.ro>
-Subject: Re: Incredibly poor performance of mdraid-1 with 2 SSD Samsung 840
- PRO
-Date: Thu, 25 Apr 2013 00:42:33 +0300
-Message-ID: <517851C9.2030605@redhost.ro>
-References: <5171CBF9.9020701@redhost.ro> <51732E2B.6090607@hardwarefreak.com> <5174501F.80509@redhost.ro> <51747382.1010105@hardwarefreak.com> <5a749bb56c88b6d6b8a806694b163bda@redhost.ro> <5175F71A.8030805@hardwarefreak.com> <51765FD7.8090309@redhost.ro> <51775078.3000500@hardwarefreak.com> <51779720.6040109@redhost.ro> <5177A1E7.8030701@websitemanagers.com.au> <CAGA4a+EtGrgLaWnGreLMto_0WCWLxoBb3+OvQhENGE_uUaj1wA@mail.gmail.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH 0/1] Quiet down automated tool checking noise
+Date: Wed, 24 Apr 2013 23:45:16 +0200
+Message-ID: <wrfjip3bk3gz.fsf@redhat.com>
+References: <1366815616-28045-1-git-send-email-Jes.Sorensen@redhat.com>
+	<20130425071610.013a58d3@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGA4a+EtGrgLaWnGreLMto_0WCWLxoBb3+OvQhENGE_uUaj1wA@mail.gmail.com>
+In-Reply-To: <20130425071610.013a58d3@notabene.brown> (NeilBrown's message of
+	"Thu, 25 Apr 2013 07:16:10 +1000")
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid Raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+NeilBrown <neilb@suse.de> writes:
+> On Wed, 24 Apr 2013 17:00:15 +0200 Jes.Sorensen@redhat.com wrote:
+>
+>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>> 
+>> Hi,
+>> 
+>> Had an automated tool checking the help page moan that -a wasn't
+>> documented in the --help output, so lets just add that and keep the
+>> noise down :)
+>
+> Should we add 
+>    --foreground -F
+> too?
 
-Why would it do that?
-And how do I fix this?
+Ahh good point, I forgot about it. Want me to respin it or add a patch
+on top?
 
-Thanks!
-
-On 24/04/2013 1:24 PM, Tommy Apel wrote:
-> Looks to me like it's the journaled quota process that holds everything back.\
-
+Cheers,
+Jes
