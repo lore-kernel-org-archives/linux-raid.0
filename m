@@ -1,138 +1,105 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID50 boot problems
-Date: Thu, 25 Apr 2013 09:44:17 +1000
-Message-ID: <20130425094417.4882607e@notabene.brown>
-References: <20944014.4.1366628571053.JavaMail.root@zimbra>
-	<6909786.18.1366738459191.JavaMail.root@zimbra>
-	<20130424165201.67cc9d1e@notabene.brown>
-	<CANBHLUikjsxOvBLkgAk4UDzwa3UPZ=jmTGhDzuMW31HLPCCu8Q@mail.gmail.com>
+From: Andrei Banu <andrei.banu@redhost.ro>
+Subject: Re: Incredibly poor performance of mdraid-1 with 2 SSD Samsung 840
+ PRO
+Date: Thu, 25 Apr 2013 13:11:42 +0300
+Message-ID: <d18a214b4409b4787adebff432d76b59@redhost.ro>
+References: <5171CBF9.9020701@redhost.ro>
+ <51732E2B.6090607@hardwarefreak.com> <5174501F.80509@redhost.ro>
+ <51747382.1010105@hardwarefreak.com>
+ <5a749bb56c88b6d6b8a806694b163bda@redhost.ro>
+ <5175F71A.8030805@hardwarefreak.com> <51765FD7.8090309@redhost.ro>
+ <51775078.3000500@hardwarefreak.com> <51779720.6040109@redhost.ro>
+ <51780A3F.80104@hardwarefreak.com> <517852D2.2050109@redhost.ro>
+ <CAH3kUhHnF0imY=CAHfzaQy4XJuOMgOtbHNp17EYzeSJR2en7Fg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/.GwLgT4Lbgz6yevckj7hup+"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CANBHLUikjsxOvBLkgAk4UDzwa3UPZ=jmTGhDzuMW31HLPCCu8Q@mail.gmail.com>
+In-Reply-To: <CAH3kUhHnF0imY=CAHfzaQy4XJuOMgOtbHNp17EYzeSJR2en7Fg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dmitrijs Ledkovs <xnox@debian.org>
-Cc: Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Roman Mamedov <rm@romanrm.ru>, linux-raid <linux-raid@vger.kernel.org>, Alexander Zvyagin <zvyagin.alexander@gmail.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/.GwLgT4Lbgz6yevckj7hup+
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Wed, 24 Apr 2013 23:44:20 +0100 Dmitrijs Ledkovs <xnox@debian.org> wrote:
+I don't have fstab discard option set. I was just enumerating the trim=20
+kinds I know. I did try discard but it didn't do anything good. And the=
+=20
+problem dated from before my discard test.
 
-> On 24 April 2013 07:52, NeilBrown <neilb@suse.de> wrote:
-> > On Tue, 23 Apr 2013 19:34:19 +0200 (CEST) Roy Sigurd Karlsbakk
-> > <roy@karlsbakk.net> wrote:
-> >
-> >> > > > Please see http://paste.ubuntu.com/5721934/ for the full list,
-> >> > > > taken
-> >> > > > with network console. This is with rootdelay=3D10
-> >> > >
-> >> > > The "bind" messages are in random order so presumably udev running
-> >> > > 'mdadm -I'
-> >> > > on each device as it appear to add it to an array.
-> >> > > However when the md0 and md1 devices appear, udev isn't being run =
-on
-> >> > > that.
-> >> > > So it looks like your udev rules file is wrong.
-> >> > > Find out which file(s) in /{etc,lib,usr/lib}/udev/rules.d mention
-> >> > > mdadm and
-> >> > > post them.
-> >> >
-> >> > /lib/udev/rules.d/64-md-raid.rules is here
-> >> > http://paste.ubuntu.com/5592227/
-> >>
-> >> Bug tested positive also on Ubuntu Precise (12.04) and reported to htt=
-ps://bugs.launchpad.net/ubuntu/+source/mdadm/+bug/1171945
-> >>
-> >> Vennlige hilsener / Best regards
-> >>
-> >>
-> >
-> > This will run "mdadm --incremental $tempnode" on any device for which
-> > ID_FS_TYPE is set to "linux_raid_member", which certainly seems reasona=
-ble.
-> >
-> > What does:
-> >    udevadm info --query=3Dproperty --path=3D/dev/mdXXX | grep ID_FS_TYPE
-> >
-> > report for the raid5 arrays?
-> >
-> > Looking bug report I see that md0 and md1 have
-> >    ID_FS_TYPE=3Dlinux_raid_member
-> >
-> > So that should be working.
-> >
-> > The fact that rootdelay=3D10 makes a difference suggests that it is
-> > successfully assembling the raid0, but just taking a bit too long.
-> > Maybe the script in the initrd needs "udevadm settle" just before it at=
-tempts
-> > to mount.
-> >
-> > Can you look inside the initrd and see if "udevadm settle" is used anyw=
-here?
-> >
+Regards!
+
+On 2013-04-25 00:53, Roberto Spadim wrote:
+> TRIM in ext4 =3D discard
+> 2013/4/24 Andrei Banu <andrei.banu@redhost.ro>
 >=20
-> Yes, we do call and wait for udevadm to settle a few times, but it is
-> still too short and may not be long enough to detect nested raid
-> volumes and mount them properly in the correct order and non-degraded.
-> I have a few thoughts on using a strategy similar to that in dracut /
-> fedora to pass ids of the md arrays to assemble for rootfs device, and
-> keep trying to assemble the rest of mdadm "on best effort" basis
-> during boot.
-> That way I am also hoping to finally get rid of the dreaded "boot
-> degraded" boot option / question / prompt.
-> This is still just design in progress and hasn't been implemented yet.
-> I will be contacting this mailing list once I have something ready to
-> improve raid assembly in ubuntu.
->=20
+>> Hi,
+>> 1. How can I at least start trying to find the daemon that might be=20
+>> doing this?
+>> 2. I am not sure what real time TRIM is. I thought there was the=20
+>> 'discard' option in
+>> fstab (which I tried and didn't help) and other command like trims=20
+>> (fstrim - which
+>> errors out when run on / or mdtrim that seems somebody's experiment)=
+=2E=20
+>> But I
+>> am not sure what real time trim might be.
+>> I am not really sure where do I go from here. I am a bit lost as it=20
+>> seems we hit
+>> a dead end.
+>> Thanks!
+>> Andrei Banu
+>> On 24/04/2013 7:37 PM, Stan Hoeppner wrote:
+>>=20
+>>> On 4/24/2013 3:26 AM, Andrei Banu wrote:
+>>>=20
+>>>> Total DISK READ: 0.00 B/s | Total DISK WRITE: 0.00 B/s
+>>>> =C2=A0 =C2=A0TID =C2=A0PRIO =C2=A0USER =C2=A0 =C2=A0 DISK READ =C2=
+=A0DISK WRITE =C2=A0SWAPIN =C2=A0 =C2=A0 IO>=20
+>>>> COMMAND
+>>>> =C2=A0 =C2=A0541 be/3 root =C2=A0 =C2=A0 =C2=A0 =C2=A00.00 B/s =C2=
+=A0 =C2=A00.00 B/s =C2=A00.00 % 96.96 %=20
+>>>> [jbd2/md2-8]
+>>> This seems to be your problem. =C2=A0jbd2 (journal block device) is=
+=20
+>>> causing
+>>> 97% iowait, yet without doing much physical IO. =C2=A0This is a com=
+ponent=20
+>>> of
+>>> EXT4. =C2=A0As this will fire intermittently it explains why you se=
+e such=20
+>>> a
+>>> wide throughput gap between tests at different points in time.
+>>> This isn't a bug or Google would reveal that. =C2=A0Andrei, you nee=
+d to
+>>> identify which daemon or kernel feature is causing this. =C2=A0Do y=
+ou=20
+>>> happen
+>>> to have realtime TRIM enabled? =C2=A0It is well known to bring IO t=
+o a=20
+>>> crawl.
+>>> If not realtime TRIM, I'd guess you turned a knob you should not=20
+>>> have in
+>>> some config file, causing a daemon to frequently issue a few=20
+>>> gazillion
+>>> atomic updates.
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+"=20
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.h=
+tml=20
+>> [1]
+> --
+> Roberto Spadim
+> Links:
+> ------
+> [1] http://vger.kernel.org/majordomo-info.html
 
-My current thinking is that the initramfs should *only* assemble arrays nee=
-ded
-to mount the root filesystems.  All other arrays should wait for root to be
-mounted so that real /etc/mdadm.conf (or /etc/mdadm/mdadm.conf) can be
-consulted.
-This can be achieved by putting
-  auto -all
-in mdadm.conf on the initramfs, then listing the arrays that are needed.
-
-I'm not convinced that your boot-degraded option is a bad thing.  Certainly
-it should be optional so unattended boot is possible, and we should do our
-best to minimise the number of times that it is consulted.  But there are
-times when it is better to know that something is wrong, than to proceed and
-do the wrong thing.
-
-A particularly bad case is a RAID1 pair where one device failed a few days
-ago.
-If after a reboot the good device is missing (cable problem?) and the bad
-device is visible, it could be best not to boot rather than to boot with an
-old root based on the old  'failed' device.
-
-NeilBrown
-
-
---Sig_/.GwLgT4Lbgz6yevckj7hup+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUXhuUTnsnt1WYoG5AQJz+w//fiVghTZgp0k6asNl2fnVWXNd2J+9L/za
-cbP9Kq7F+pY4kKa7xGvYk4jfEUjzHzFbA1tIKkrqWXnC1gMvt4QrqmoxfqYuJkd7
-+4RdsMz9ucPkPl31MpceD3V1wK/YwtKaVuC7M3zTqbyGKFzyGN22/P7AkV0xyT8v
-9XjYUQ/36paOxSFneAoCS38I0LonxGrrDP4JB1RNVFWo/2zJwtiVuV0mLwNW8UIW
-i6czYvrT8BOk1/yhCO9I50NT6Yo3U7lJ2hPq1baNtnl6dLTzh9fmngYhWGmbX1uO
-vC7CQLZpS6oHWOv+TWywEiEDNZxfsTW4epEDPNsng7xq53/xCFsRBhMuHdWm2r+y
-ml4Kn1RtCaRGu+PnfB4BSei07EIk1anoCCj35Tc3OwMsqa99Y1GYS12Z0MGziEt0
-F0FsNaRkX6TEi/g1MwLUEMJhvf647SAK5Pt8JmFf5fo+f8QNuqYQ7THxgwzHeCwa
-Od6ODLobVka6TrSbGrTYf4dO1ekQTj7Pslx732xyA7pw7H3Dnu7bg2g2fh5qzS91
-yP4oR3AjdMFZj5X+3S4K0Qmg8+68lui+f/S6/2iKK2wyeCNN3oT2lUzDe4U64Iwx
-qcwwcEKHPFbhhqPqNVM2f1sYb27g6na9QLt7wzgv7fTcEDnOs9Oomsb1/MQCdirs
-uZXNsUccals=
-=XseJ
------END PGP SIGNATURE-----
-
---Sig_/.GwLgT4Lbgz6yevckj7hup+--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
