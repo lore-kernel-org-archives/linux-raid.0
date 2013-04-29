@@ -1,109 +1,112 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: [PATCH] raid5: add support for rmw writes in raid6
-Date: Mon, 29 Apr 2013 09:10:12 +0200
-Message-ID: <517E1CD4.3060903@hesbynett.no>
-References: <20130418005609.6782.15041.stgit@dev279.prn2.facebook.com> <20130422142211.71a1ae8e@notabene.brown> <CAA9_cmdbZ_K5Wvo7BH1nPGvttL5As1ncnbPK1ax3TFvGOch6zw@mail.gmail.com> <20130429112957.4bd6cd71@notabene.brown>
+From: Harald Hoyer <harald@redhat.com>
+Subject: Re: [PATCH 1/1] prevent double open(O_RDWR) on raid creation
+Date: Mon, 29 Apr 2013 10:34:39 +0200
+Message-ID: <517E309F.6040608@redhat.com>
+References: <1365686313-30833-1-git-send-email-Jes.Sorensen@redhat.com> <1365686313-30833-2-git-send-email-Jes.Sorensen@redhat.com> <20130429105720.593fe99b@notabene.brown> <517E0621.5030700@redhat.com> <20130429161124.454e2fc9@notabene.brown> <517E13FF.6050308@redhat.com> <20130429165350.32329f90@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130429112957.4bd6cd71@notabene.brown>
+In-Reply-To: <20130429165350.32329f90@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Dan Williams <djbw@fb.com>, linux-raid <linux-raid@vger.kernel.org>, Kumar Sundararajan <kumar@fb.com>
+Cc: Jes.Sorensen@redhat.com, linux-raid@vger.kernel.org, Kay Sievers <kay@vrfy.org>
 List-Id: linux-raid.ids
 
-On 29/04/13 03:29, NeilBrown wrote:
-> On Fri, 26 Apr 2013 14:35:27 -0700 Dan Williams <djbw@fb.com> wrote:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 04/29/2013 08:53 AM, NeilBrown wrote:
+> On Mon, 29 Apr 2013 08:32:31 +0200 Harald Hoyer <harald@redhat.com> wrote:
 > 
->> On Sun, Apr 21, 2013 at 9:22 PM, NeilBrown <neilb@suse.de> wrote:
->>> On Wed, 17 Apr 2013 17:56:56 -0700 Dan Williams <djbw@fb.com> wrote:
->>>
->>>> From: Kumar Sundararajan <kumar@fb.com>
->>>>
->>>> Add support for rmw writes in raid6. This improves small write performance for most workloads.
->>>> Since there may be some configurations and workloads where rcw always outperforms rmw,
->>>> this feature is disabled by default. It can be enabled via sysfs. For example,
->>>>
->>>>       #echo 1 > /sys/block/md0/md/enable_rmw
->>>>
->>>> Signed-off-by: Kumar Sundararajan <kumar@fb.com>
->>>> Signed-off-by: Dan Williams <djbw@fb.com>
->>>> ---
->>>> Hi Neil,
->>>>
->>>> We decided to leave the enable in for the few cases where forced-rcw
->>>> outperformed rmw and there may be other cases out there.
->>>>
->>>> Thoughts?
->>>
->>> - More commentary would help.  The text at the top should explain enough so
->>>   when I read the code I am just verifying the text at the top, not trying to
->>>   figure out how it is supposed to work.
->>
->> Ok, along the lines of:
->>
->> "raid5 has supported sub-stripe writes by computing:
->>
->> P_new = P_old + D0_old + D0_new
+>> -----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1
 > 
-> The '0' looks out of place.  All 'D's are treated the same, so I would write
-> it
->    P_new = P_old + D_old + D_new
-> though that is a small point.
+>> On 04/29/2013 08:11 AM, NeilBrown wrote:
+>>> On Mon, 29 Apr 2013 07:33:21 +0200 Harald Hoyer <harald@redhat.com>
+>>> wrote:
+>>> 
+>>>> -----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1
+>>> 
+>>>> On 04/29/2013 02:57 AM, NeilBrown wrote:
+>>>>> On Thu, 11 Apr 2013 15:18:33 +0200 Jes.Sorensen@redhat.com wrote:
+>>>>> 
+>>>>>> From: Harald Hoyer <harald@redhat.com>
+>>>>>> 
+>>>>>> This does not trigger the udev inotify twice and saves a lot of
+>>>>>> blk I/O for the raid members.
+>>>>>> 
+>>>>>> Also fixes: https://bugzilla.redhat.com/show_bug.cgi?id=947815
+>>>>>> 
+>>>>>> Signed-off-by: Harald Hoyer <harald@redhat.com> Signed-off-by:
+>>>>>> Jes Sorensen <Jes.Sorensen@redhat.com>
+>>>>> 
+>>>>> (Sorry for delays.  Thanks for reminders).
+>>>>> 
+>>>>> That patch seems to make sense, but the description above is
+>>>>> awfully thin.
+>>>>> 
+>>>>> Why is double-open a problem exactly?  What does it make udev do?
+>>>>> And how does that related to ID_FS_TYPE being wrong as mentioned in
+>>>>> the bugzilla entry.
+>>>>> 
+>>>>> NeilBrown
+>>>>> 
+>>> 
+>>>> udevd with watch enabled (inotify on /dev/sd*) gets triggered on
+>>>> close(), when you opened it writeable. So, if you double open() and
+>>>> udev wakes up from the first close(), not all information are written
+>>>> to disk yet, it will not get the ID_FS_TYPE.
+>>> 
+>>>> Seems like the second close() does not trigger an inotify sometimes,
+>>>> so it is missing afterwards all the time.
+>>> 
+>>>> Watch via inotify is just a lazy workaround, so we don't have to
+>>>> modify every tool to emit a "change" uevent, after they changed the
+>>>> disk.
+>>> 
+>>> So udev have a "lazy workaround" so that other programs don't need to 
+>>> trigger a change, and as a result, I need to add some special code to 
+>>> mdadm. Doesn't seem like I'm getting any advantage out of this
+>>> laziness.
+>>> 
+>>> How about when udev gets an inotify for a block device, it first
+>>> checks that it can open it O_EXCL.  If not, it doesn't generate the
+>>> change event. That seems like the laziest option to me :-)
 > 
->>
->> For raid6 we add the following:
->>
->> P_new = P_old + D0_old + D0_new
-
-Correct (though I agree with Neil that "0" should be replaced by "i").
-
->>
->> Q_sub = Q_old + syndrome(D0_old)
-
-Wrong - using this terminology, Q_sub = syndrome(D0_old)
-
->> Q_sub = Q_old + g^0*D0_old
->> Q_new = Q_old + Q_sub + g^0*D0_new
+>> We cannot open with O_EXCL, because the device can be mounted, and
+>> O_EXCL would fail there.
 > 
-> But here the different Ds are different, so I would be using "Di" or similar.
 > 
->   P_new = P_old + Di_old + Di_new
-
-Correct.
-
+> If the device is mounted, why would you want udev to be doing anything to
+> it?
 > 
-> and I assume the two 'Q_sub' lines are meant to mean the same thing, so let's
-> take the second:
+> I assumed this was for things like "mkfs" so that as soon as you mkfs a 
+> filesystem udev could tell udisks to immediately mount it...  though I'm
+> not sure this is a good idea.
 > 
->   Q_sub = Q_old + g^i * Di_old
->   Q_new = Q_old + Q_sub + g^i * Di_new
+> I'm probably missing something important: what is the particular use case
+> for udev mapping a close-after-write to a change event?
 > 
+> Thanks, NeilBrown
 
-You've still got one "Q_old" too many, which means your algebra is wrong
-(Q_new reduces here to g^i * Di_new, which is clearly wrong).  But
-you've jumped to almost the right conclusion on the next line, proving
-that two wrongs sometimes do make a right!
+Well, you would not recognize LABEL or UUID or MD UUID changes, if you don't
+call blkid after a mkfs or mdadm or lvm action.
 
-> which looks odd as when that expands out, we add Q_old to Q_old and as  '+'
-> is 'xor', it disappears.  Maybe you mean:
-> 
->   Q_new = Q_sub + g^i * Di_new
-> ??
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-Q_sub = g^i * Di_old
-Q_new = Q_old - Q_sub + g^i * Di_new
-      = Q_old + g^i * Di_old + g^i * Di_new   (since "-" = "+")
-      = Q_old + g^i * (Di_old + Di_new)
-
-I can't say for sure (I know the maths, not the code), but I would
-expect this final version do be the most efficient for the calculations.
- By xor'ing Di_old and Di_new first, then multiplying by g^i, you'll
-half the number of costly g^i multiplications.
-
-
-mvh.,
-
-David
-
+iQIcBAEBAgAGBQJRfjCeAAoJEANOs3ABTfJwLQIP/iaKQFUYyE5tsw8zVVxw+ag6
+QPhs08y8JM1nPNyC4hd2BKLwx687eXVIR7Kyfx8i9L2dEHLn2ry+ROTAbfn1UEr2
+GjpD48wuNiohJKUZ5l8Wn3q8slboUImgHUkiZgtWII0pCk3vGo+/01WIWzSzDRlN
+PsI8TS4+wBIdZhfWMtzU65uXiZYoGpaURqIv+7xIgEN90mM45kE1FA/HJF8YZOBz
+H8CMI2pr+GUI/XCUjUYJK5m3y1sJCm5US5IsR4AqpQGlkU2G9pFQYRWFS4uYKOsF
+tjk7Fj8wFw51gz/dWGlKM9uK+iAFHVVorjFPdDJilSdswWP88JMrwlfAkivxbKSA
+6JsKEOSLlkuW5gNRl6Flg2/hLBmlJYUx3nXzT4WZWgibD4mkKAmY1uB0gnzE2/lm
+YP7dEs5WVo5Rl3lM+Mv6vqDl6dJCvg60AU3u5srWwfqUau81p5rYIuqXJ5Da4GcU
+njz6NUwzMm2FI91INDDi/GJzwi1bVV6CeTNiz3LNjd2+yr2dt0AFBZWQ3k1c+/rO
+WJ8NhN6dW8JZEL4VN5yfEht4x+kVnxqdTedAm5NtPooSD3we2w/e5u5im3FfUkJN
+GX4+Et2sE5gk70Es/u2Ws1tLOdpxZsUiU/HBgS51+8KBIumj+Me3BLZpGkvqwNm/
+vV2Fov6yJhM5E0/lYAhn
+=xI4C
+-----END PGP SIGNATURE-----
