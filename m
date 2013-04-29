@@ -1,70 +1,85 @@
-From: Harald Hoyer <harald@redhat.com>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: [PATCH 1/1] prevent double open(O_RDWR) on raid creation
-Date: Mon, 29 Apr 2013 07:33:21 +0200
-Message-ID: <517E0621.5030700@redhat.com>
-References: <1365686313-30833-1-git-send-email-Jes.Sorensen@redhat.com> <1365686313-30833-2-git-send-email-Jes.Sorensen@redhat.com> <20130429105720.593fe99b@notabene.brown>
+Date: Mon, 29 Apr 2013 16:11:24 +1000
+Message-ID: <20130429161124.454e2fc9@notabene.brown>
+References: <1365686313-30833-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1365686313-30833-2-git-send-email-Jes.Sorensen@redhat.com>
+	<20130429105720.593fe99b@notabene.brown>
+	<517E0621.5030700@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130429105720.593fe99b@notabene.brown>
+In-Reply-To: <517E0621.5030700@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Jes.Sorensen@redhat.com, linux-raid@vger.kernel.org
+To: Harald Hoyer <harald@redhat.com>
+Cc: Jes.Sorensen@redhat.com, linux-raid@vger.kernel.org, Kay Sievers <kay@vrfy.org>
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-On 04/29/2013 02:57 AM, NeilBrown wrote:
-> On Thu, 11 Apr 2013 15:18:33 +0200 Jes.Sorensen@redhat.com wrote:
-> 
->> From: Harald Hoyer <harald@redhat.com>
->> 
->> This does not trigger the udev inotify twice and saves a lot of blk I/O 
->> for the raid members.
->> 
->> Also fixes: https://bugzilla.redhat.com/show_bug.cgi?id=947815
->> 
->> Signed-off-by: Harald Hoyer <harald@redhat.com> Signed-off-by: Jes
->> Sorensen <Jes.Sorensen@redhat.com>
-> 
-> (Sorry for delays.  Thanks for reminders).
-> 
-> That patch seems to make sense, but the description above is awfully thin.
-> 
-> Why is double-open a problem exactly?  What does it make udev do?  And how 
-> does that related to ID_FS_TYPE being wrong as mentioned in the bugzilla 
-> entry.
-> 
-> NeilBrown
-> 
-
-udevd with watch enabled (inotify on /dev/sd*) gets triggered on close(), when
-you opened it writeable. So, if you double open() and udev wakes up from the
-first close(), not all information are written to disk yet, it will not get
-the ID_FS_TYPE.
-
-Seems like the second close() does not trigger an inotify sometimes, so it is
-missing afterwards all the time.
-
-Watch via inotify is just a lazy workaround, so we don't have to modify every
-tool to emit a "change" uevent, after they changed the disk.
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBAgAGBQJRfgYhAAoJEANOs3ABTfJw0uUQALrm0pEjlLd6XgojMTQ6xJGy
-y98MVcobi10O/WJyg3HV1RqjnYNu7wfpp+lFIzKRmE/sxIBj8X9ATFfjaopCGWYC
-/MPGsdehrCpGPPOZBlt47vTdoaKWB5meKsBm3X1I0AhA+uOxgeV2qfaijoOkHeim
-a4RbIUoOJIjIyvbdKCuVbs8mqcr62eMUiZBDPv/b3FcBtOOjYkWVZU14ylqujNtM
-WzE+soKyd6L70DvPWVY2KzJ4/5bg/fRuvFcc464k88hAqa8U36FU6MzfTuT4K+ZH
-a4FYJtpdrggL+IZuG5XToNR5lpR/YW/B1UBhfCjItXbr1dhX3alk+Y3xZCWvpbRF
-FFwAA1GJfcB8UmKp3loBX0YH4gJ8h8d6EITE0Quj38VqG4MlCl89J6ClQZYgXsf8
-ZCVDX+lomiQkEp5xYyC85hmwfwepibncqfqKef8+4ABc5xWswQr89gDFPVsFZUE/
-PbHzCUlAkz8lvuRSNH6k54b7nFeGn116eJgO7sKESt4uygP0o1A6WpWZI+YAMMg5
-CBkxrLYM/iERP7sf8kHr3Wd5EWJNTYm6UsJjVtWStGHuB7LNDo6qPBXxzf84Mkek
-1fnIqBfl6QDQBcYb+02p2vGhcTA+P/byi+j+eFQmwV8g2gbkwxhV6/t0Sizj57tC
-SlUZAaWHeeNK9HDgoNJ0
-=zkJO
------END PGP SIGNATURE-----
+LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBNb24s
+IDI5IEFwciAyMDEzIDA3OjMzOjIxICswMjAwIEhhcmFsZCBIb3llciA8aGFyYWxkQHJlZGhhdC5j
+b20+IHdyb3RlOg0KDQo+IC0tLS0tQkVHSU4gUEdQIFNJR05FRCBNRVNTQUdFLS0tLS0NCj4gSGFz
+aDogU0hBMQ0KPiANCj4gT24gMDQvMjkvMjAxMyAwMjo1NyBBTSwgTmVpbEJyb3duIHdyb3RlOg0K
+PiA+IE9uIFRodSwgMTEgQXByIDIwMTMgMTU6MTg6MzMgKzAyMDAgSmVzLlNvcmVuc2VuQHJlZGhh
+dC5jb20gd3JvdGU6DQo+ID4gDQo+ID4+IEZyb206IEhhcmFsZCBIb3llciA8aGFyYWxkQHJlZGhh
+dC5jb20+DQo+ID4+IA0KPiA+PiBUaGlzIGRvZXMgbm90IHRyaWdnZXIgdGhlIHVkZXYgaW5vdGlm
+eSB0d2ljZSBhbmQgc2F2ZXMgYSBsb3Qgb2YgYmxrIEkvTyANCj4gPj4gZm9yIHRoZSByYWlkIG1l
+bWJlcnMuDQo+ID4+IA0KPiA+PiBBbHNvIGZpeGVzOiBodHRwczovL2J1Z3ppbGxhLnJlZGhhdC5j
+b20vc2hvd19idWcuY2dpP2lkPTk0NzgxNQ0KPiA+PiANCj4gPj4gU2lnbmVkLW9mZi1ieTogSGFy
+YWxkIEhveWVyIDxoYXJhbGRAcmVkaGF0LmNvbT4gU2lnbmVkLW9mZi1ieTogSmVzDQo+ID4+IFNv
+cmVuc2VuIDxKZXMuU29yZW5zZW5AcmVkaGF0LmNvbT4NCj4gPiANCj4gPiAoU29ycnkgZm9yIGRl
+bGF5cy4gIFRoYW5rcyBmb3IgcmVtaW5kZXJzKS4NCj4gPiANCj4gPiBUaGF0IHBhdGNoIHNlZW1z
+IHRvIG1ha2Ugc2Vuc2UsIGJ1dCB0aGUgZGVzY3JpcHRpb24gYWJvdmUgaXMgYXdmdWxseSB0aGlu
+Lg0KPiA+IA0KPiA+IFdoeSBpcyBkb3VibGUtb3BlbiBhIHByb2JsZW0gZXhhY3RseT8gIFdoYXQg
+ZG9lcyBpdCBtYWtlIHVkZXYgZG8/ICBBbmQgaG93IA0KPiA+IGRvZXMgdGhhdCByZWxhdGVkIHRv
+IElEX0ZTX1RZUEUgYmVpbmcgd3JvbmcgYXMgbWVudGlvbmVkIGluIHRoZSBidWd6aWxsYSANCj4g
+PiBlbnRyeS4NCj4gPiANCj4gPiBOZWlsQnJvd24NCj4gPiANCj4gDQo+IHVkZXZkIHdpdGggd2F0
+Y2ggZW5hYmxlZCAoaW5vdGlmeSBvbiAvZGV2L3NkKikgZ2V0cyB0cmlnZ2VyZWQgb24gY2xvc2Uo
+KSwgd2hlbg0KPiB5b3Ugb3BlbmVkIGl0IHdyaXRlYWJsZS4gU28sIGlmIHlvdSBkb3VibGUgb3Bl
+bigpIGFuZCB1ZGV2IHdha2VzIHVwIGZyb20gdGhlDQo+IGZpcnN0IGNsb3NlKCksIG5vdCBhbGwg
+aW5mb3JtYXRpb24gYXJlIHdyaXR0ZW4gdG8gZGlzayB5ZXQsIGl0IHdpbGwgbm90IGdldA0KPiB0
+aGUgSURfRlNfVFlQRS4NCj4gDQo+IFNlZW1zIGxpa2UgdGhlIHNlY29uZCBjbG9zZSgpIGRvZXMg
+bm90IHRyaWdnZXIgYW4gaW5vdGlmeSBzb21ldGltZXMsIHNvIGl0IGlzDQo+IG1pc3NpbmcgYWZ0
+ZXJ3YXJkcyBhbGwgdGhlIHRpbWUuDQo+IA0KPiBXYXRjaCB2aWEgaW5vdGlmeSBpcyBqdXN0IGEg
+bGF6eSB3b3JrYXJvdW5kLCBzbyB3ZSBkb24ndCBoYXZlIHRvIG1vZGlmeSBldmVyeQ0KPiB0b29s
+IHRvIGVtaXQgYSAiY2hhbmdlIiB1ZXZlbnQsIGFmdGVyIHRoZXkgY2hhbmdlZCB0aGUgZGlzay4N
+Cg0KU28gdWRldiBoYXZlIGEgImxhenkgd29ya2Fyb3VuZCIgc28gdGhhdCBvdGhlciBwcm9ncmFt
+cyBkb24ndCBuZWVkIHRvIHRyaWdnZXINCmEgY2hhbmdlLCBhbmQgYXMgYSByZXN1bHQsIEkgbmVl
+ZCB0byBhZGQgc29tZSBzcGVjaWFsIGNvZGUgdG8gbWRhZG0uDQpEb2Vzbid0IHNlZW0gbGlrZSBJ
+J20gZ2V0dGluZyBhbnkgYWR2YW50YWdlIG91dCBvZiB0aGlzIGxhemluZXNzLg0KDQpIb3cgYWJv
+dXQgd2hlbiB1ZGV2IGdldHMgYW4gaW5vdGlmeSBmb3IgYSBibG9jayBkZXZpY2UsIGl0IGZpcnN0
+IGNoZWNrcw0KdGhhdCBpdCBjYW4gb3BlbiBpdCBPX0VYQ0wuICBJZiBub3QsIGl0IGRvZXNuJ3Qg
+Z2VuZXJhdGUgdGhlIGNoYW5nZSBldmVudC4NClRoYXQgc2VlbXMgbGlrZSB0aGUgbGF6aWVzdCBv
+cHRpb24gdG8gbWUgOi0pDQoNCk5laWxCcm93bg0KDQoNCj4gLS0tLS1CRUdJTiBQR1AgU0lHTkFU
+VVJFLS0tLS0NCj4gVmVyc2lvbjogR251UEcgdjEuNC4xMyAoR05VL0xpbnV4KQ0KPiBDb21tZW50
+OiBVc2luZyBHbnVQRyB3aXRoIFRodW5kZXJiaXJkIC0gaHR0cDovL3d3dy5lbmlnbWFpbC5uZXQv
+DQo+IA0KPiBpUUljQkFFQkFnQUdCUUpSZmdZaEFBb0pFQU5PczNBQlRmSncwdVVRQUxybTBwRWps
+TGQ2WGdvak1UUTZ4Skd5DQo+IHk5OE1WY29iaTEwTy9XSnlnM0hWMVJxam5ZTnU3d2ZwcCtsRkl6
+S1JtRS9zeElCajhYOUFURmZqYW9wQ0dXWUMNCj4gL01QR3NkZWhyQ3BHUFBPWkJsdDQ3dlRkb2FL
+V0I1bWVLc0JtM1gxSTBBaEErdU94Z2VWMnFmYWlqb09rSGVpbQ0KPiBhNFJiSVVvT0pJakl5dmJk
+S0N1VmJzOG1xY3I2MmVNVWlaQkRQdi9iM0ZjQnRPT2pZa1dWWlUxNHlscXVqTnRNDQo+IFd6RStz
+b0t5ZDZMNzBEdlBXVlkyS3pKNC81YmcvZlJ1dkZjYzQ2NGs4OGhBcWE4VTM2RlU2TXpmVHVUNEsr
+WkgNCj4gYTRGWUp0cGRyZ2dMK0ladUc1WFRvTlI1bHBSL1lXL0IxVUJoZkNqSXRYYnIxZGhYM2Fs
+aytZM3haQ1d2cGJSRg0KPiBGRndBQTFHSmZjQjhVbUtwM2xvQlgwWUg0Z0o4aDhkNkVJVEUwUXVq
+MzhWcUc0TWxDbDg5SjZDbFFaWWdYc2Y4DQo+IFpDVkRYK2xvbWlRa0VwNXhZeUM4NWhtd2Z3ZXBp
+Ym5jcWZxS2VmOCs0QUJjNXhXc3dRcjg5Z0RGUFZzRlpVRS8NCj4gUGJIekNVbEFrejhsdnVSU05I
+Nms1NGI3bkZlR24xMTZlSmdPN3NLRVN0NHV5Z1AwbzFBNldwV1pJK1lBTU1nNQ0KPiBDQmt4ckxZ
+TS9pRVJQN3NmOGtIcjNXZDVFV0pOVFltNlVzSmpWdFdTdEdIdUI3TE5EbzZxUEJYeHpmODRNa2Vr
+DQo+IDFmbklxQmZsNlFEUUJjWWIrMDJwMnZHaGNUQStQL2J5aStqK2VGUW13VjhnMmdia3d4aFY2
+L3QwU2l6ajU3dEMNCj4gU2xVWkFhV0hlZU5LOUhEZ29OSjANCj4gPXprSk8NCj4gLS0tLS1FTkQg
+UEdQIFNJR05BVFVSRS0tLS0tDQoNCi0tLS0tQkVHSU4gUEdQIFNJR05BVFVSRS0tLS0tDQpWZXJz
+aW9uOiBHbnVQRyB2Mi4wLjE5IChHTlUvTGludXgpDQoNCmlRSVZBd1VCVVg0UEREbnNudDFXWW9H
+NUFRSW5LQS8rUHlGbHIrc08wY0hSUVJ4RzZFTWkxVXk2NDlNQWYxdSsNClRPbnZzcFJOaWxIcyth
+Y2t4S095VDNaTkhZVXd5ZXliVktsQXZLdVo4eW5PYnRVbUUrRTdPbkdPY3FMbDI4TWwNCkFzOTJX
+MzV5NTZxUGwxY3pEaFgvVURBWkFMakkwRnJIY0RCSkx4ZWY4YldMWENzRW9VcFBlcUY1ZGRmbXN2
+ekwNCjdYUjlBaXk3TEhrQlhRYlBjaVluZVIxa1pIbnVORjN6QkZ0dDY4YkFuSzRoVjQxMjhMdW9o
+TTN2NkZNNENVNXENCmZpWnBvK2dxZUtkbnU3b2V2MFhoNmluYVA1TWZ1cEd2WUE5VVRUUGlSVi9S
+Zys5dHYyWS9oU0h0WUUvbXZXYkgNCmxMTEFIcTFlN1BjdTF3Q3dYbWxXMGgycGg1cmNzM3JCT2dR
+WXBGV2V0NjVuYkZrNzZxK05ZMDFtMHRxZWxWYnYNCjZ3dDFKVnlVeG9wSE15OUZMeXBnKy9jY3RE
+WUxpbWdERmQyZUc1QjJZWEwvbEY1RUJjbE0zUG1oTURSNklUdW4NCndXR2hidXJwZXJSd0tZVlpz
+enY5RW84VGV1MWVkLzFnRG5ENjlYbE9hOGRPT1h0ajk1V2NCREd6NnArMWhNL1ENCkg3Yld3WEVp
+WHJlTXJ2M1d0Q3ZvZ2hha00rdWw5UDN2WlhvODNWd3Y3eDdXRHRlRVE2WllVZTlDZFZ1TS9rM3IN
+CngrQ1l6N2tqZmtnMm9aRVptTjExcGUzVW9VK2VDQlIzRk9tMXh2YkVpUXQ1U1dabThtUmQ3djdZ
+MnFWSTNlM0MNClE5TTVyRUo4d3dzMjBKclJYSEV0a09DWDFGemVpWU9pNWNhbERXVXpmKzJBeVk4
+Nk5ZdjIxNFNNOThxV1hnanUNCkF5VWFJTzd1ME1nPQ0KPXpnOWkNCi0tLS0tRU5EIFBHUCBTSUdO
+QVRVUkUtLS0tLQ0K
