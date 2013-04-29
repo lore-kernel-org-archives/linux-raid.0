@@ -1,7 +1,7 @@
 From: Harald Hoyer <harald@redhat.com>
 Subject: Re: [PATCH 1/1] prevent double open(O_RDWR) on raid creation
-Date: Mon, 29 Apr 2013 10:34:39 +0200
-Message-ID: <517E309F.6040608@redhat.com>
+Date: Mon, 29 Apr 2013 10:40:11 +0200
+Message-ID: <517E31EB.8010703@redhat.com>
 References: <1365686313-30833-1-git-send-email-Jes.Sorensen@redhat.com> <1365686313-30833-2-git-send-email-Jes.Sorensen@redhat.com> <20130429105720.593fe99b@notabene.brown> <517E0621.5030700@redhat.com> <20130429161124.454e2fc9@notabene.brown> <517E13FF.6050308@redhat.com> <20130429165350.32329f90@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
@@ -88,25 +88,26 @@ On 04/29/2013 08:53 AM, NeilBrown wrote:
 > for udev mapping a close-after-write to a change event?
 > 
 > Thanks, NeilBrown
+> 
 
-Well, you would not recognize LABEL or UUID or MD UUID changes, if you don't
-call blkid after a mkfs or mdadm or lvm action.
 
+Anyway, if you don't want to play nicely with the inotify mechanism of udev,
+you have to inject the "change" uevent manually for every device mdadm changes.
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.13 (GNU/Linux)
 Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-iQIcBAEBAgAGBQJRfjCeAAoJEANOs3ABTfJwLQIP/iaKQFUYyE5tsw8zVVxw+ag6
-QPhs08y8JM1nPNyC4hd2BKLwx687eXVIR7Kyfx8i9L2dEHLn2ry+ROTAbfn1UEr2
-GjpD48wuNiohJKUZ5l8Wn3q8slboUImgHUkiZgtWII0pCk3vGo+/01WIWzSzDRlN
-PsI8TS4+wBIdZhfWMtzU65uXiZYoGpaURqIv+7xIgEN90mM45kE1FA/HJF8YZOBz
-H8CMI2pr+GUI/XCUjUYJK5m3y1sJCm5US5IsR4AqpQGlkU2G9pFQYRWFS4uYKOsF
-tjk7Fj8wFw51gz/dWGlKM9uK+iAFHVVorjFPdDJilSdswWP88JMrwlfAkivxbKSA
-6JsKEOSLlkuW5gNRl6Flg2/hLBmlJYUx3nXzT4WZWgibD4mkKAmY1uB0gnzE2/lm
-YP7dEs5WVo5Rl3lM+Mv6vqDl6dJCvg60AU3u5srWwfqUau81p5rYIuqXJ5Da4GcU
-njz6NUwzMm2FI91INDDi/GJzwi1bVV6CeTNiz3LNjd2+yr2dt0AFBZWQ3k1c+/rO
-WJ8NhN6dW8JZEL4VN5yfEht4x+kVnxqdTedAm5NtPooSD3we2w/e5u5im3FfUkJN
-GX4+Et2sE5gk70Es/u2Ws1tLOdpxZsUiU/HBgS51+8KBIumj+Me3BLZpGkvqwNm/
-vV2Fov6yJhM5E0/lYAhn
-=xI4C
+iQIcBAEBAgAGBQJRfjHrAAoJEANOs3ABTfJwgosP/i1btIR88rZ5z8eYB5P6sZqT
+XU0nUP1F4yMS1K4MOWDggQbuzcuxFowcnizg4Jje26c4z3kQ7Pj75GvqWwI3qqYp
++TdG+idu7kGPeQtYa05I567pj20D6nWYxC78aGJPlBU6C0qPvA1yXb7ui4NPJcw4
+2/oRH2BONpb62VCQKCB04rQhqOXnzp/9agaqAL7hJcUOsbJv8vceLW0rXD0RqTzO
+uQXQjUV2bYR73ySRZQWo2evaxZ/YgWDWL91h7R1O1wYvTclMNYqv+SQB9hDyrrDi
+mk4YFWxdRUmdIzyr6FkZUUTj1KSpmrW01PaaIi3ueHV27Pvmz+7+1jd5JVvw9GiM
+hm8Ob3baiGPMIfFZ7mfLBLlizBu0N4QTK5mm7D2btFS9phHb9/QzNpBtdAB15CTQ
+8UF4IZg9HnbkG8XAedW97D3QS40873kPp7UPtsScnFe7+VcOh05s3AzF9zznji/C
+kEcpPIjthK50RLniWBEoKNEjbfdpyF1PLsvQ7GkQNIoUHSveCPJQmaG0GV8AIPht
+tNteLCImjeaUf57bi/BfKk5L42dwe8wqfmBGw40nbzmavRrYHEvUK3CMMR3C7TRZ
+lvGzXInwxJpR2hkN8A9nX13FOX3YtVLXUtl5R6CVvcrYM6ZK78D1z5liiZcfKv2Y
+XiUwQtkeIlscVHeW1QdO
+=fzOH
 -----END PGP SIGNATURE-----
