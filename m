@@ -1,81 +1,131 @@
-From: Harald Hoyer <harald@redhat.com>
-Subject: Re: [PATCH 1/1] prevent double open(O_RDWR) on raid creation
-Date: Mon, 29 Apr 2013 10:54:05 +0200
-Message-ID: <517E352D.9010609@redhat.com>
-References: <1365686313-30833-1-git-send-email-Jes.Sorensen@redhat.com> <1365686313-30833-2-git-send-email-Jes.Sorensen@redhat.com> <20130429105720.593fe99b@notabene.brown> <517E0621.5030700@redhat.com> <20130429161124.454e2fc9@notabene.brown> <517E13FF.6050308@redhat.com> <20130429165350.32329f90@notabene.brown> <517E31EB.8010703@redhat.com> <517E3337.1080808@redhat.com>
+From: Kumar Sundararajan <kumar@fb.com>
+Subject: Re: [PATCH] raid5: add support for rmw writes in raid6
+Date: Mon, 29 Apr 2013 16:11:41 +0000
+Message-ID: <BA07AEDCFD3B5B4DAB0FF1D7B35E42DC5544BCFA@PRN-MBX01-4.TheFacebook.com>
+References: <517E1CD4.3060903@hesbynett.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <517E3337.1080808@redhat.com>
+In-Reply-To: <517E1CD4.3060903@hesbynett.no>
+Content-Language: en-US
+Content-ID: <1D2D960EB1DB09469E9AEFF045C8ACD9@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Jes.Sorensen@redhat.com, linux-raid@vger.kernel.org, Kay Sievers <kay@vrfy.org>
+To: David Brown <david.brown@hesbynett.no>, NeilBrown <neilb@suse.de>
+Cc: Dan Williams <djbw@fb.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
 
-On 04/29/2013 10:45 AM, Harald Hoyer wrote:
-> On 04/29/2013 10:40 AM, Harald Hoyer wrote:
->> On 04/29/2013 08:53 AM, NeilBrown wrote:
->>> On Mon, 29 Apr 2013 08:32:31 +0200 Harald Hoyer <harald@redhat.com> 
->>> wrote:
->>>> We cannot open with O_EXCL, because the device can be mounted, and 
->>>> O_EXCL would fail there.
-> 
-> 
->>> If the device is mounted, why would you want udev to be doing anything 
->>> to it?
-> 
->>> I assumed this was for things like "mkfs" so that as soon as you mkfs a
->>>  filesystem udev could tell udisks to immediately mount it...  though
->>> I'm not sure this is a good idea.
-> 
->>> I'm probably missing something important: what is the particular use 
->>> case for udev mapping a close-after-write to a change event?
-> 
->>> Thanks, NeilBrown
-> 
-> 
-> 
->> Anyway, if you don't want to play nicely with the inotify mechanism of 
->> udev, you have to inject the "change" uevent manually for every device 
->> mdadm changes.
-> 
-> *rant mode on*
-> 
-> I think we should drop the inotify mechanism from udev and say "f*** you"
-> to the tools... If they change s.th. on the disk, they can also emit a
-> "change" uevent to the kernel themselves.
-> 
 
-Oh, and the tools then also have wait for udev to settle..
+On 4/29/13 12:10 AM, "David Brown" <david.brown@hesbynett.no> wrote:
 
-Imagine a script doing:
+>On 29/04/13 03:29, NeilBrown wrote:
+>> On Fri, 26 Apr 2013 14:35:27 -0700 Dan Williams <djbw@fb.com> wrote:
+>> 
+>>> On Sun, Apr 21, 2013 at 9:22 PM, NeilBrown <neilb@suse.de> wrote:
+>>>> On Wed, 17 Apr 2013 17:56:56 -0700 Dan Williams <djbw@fb.com> wrote:
+>>>>
+>>>>> From: Kumar Sundararajan <kumar@fb.com>
+>>>>>
+>>>>> Add support for rmw writes in raid6. This improves small write
+>>>>>performance for most workloads.
+>>>>> Since there may be some configurations and workloads where rcw
+>>>>>always outperforms rmw,
+>>>>> this feature is disabled by default. It can be enabled via sysfs.
+>>>>>For example,
+>>>>>
+>>>>>       #echo 1 > /sys/block/md0/md/enable_rmw
+>>>>>
+>>>>> Signed-off-by: Kumar Sundararajan <kumar@fb.com>
+>>>>> Signed-off-by: Dan Williams <djbw@fb.com>
+>>>>> ---
+>>>>> Hi Neil,
+>>>>>
+>>>>> We decided to leave the enable in for the few cases where forced-rcw
+>>>>> outperformed rmw and there may be other cases out there.
+>>>>>
+>>>>> Thoughts?
+>>>>
+>>>> - More commentary would help.  The text at the top should explain
+>>>>enough so
+>>>>   when I read the code I am just verifying the text at the top, not
+>>>>trying to
+>>>>   figure out how it is supposed to work.
+>>>
+>>> Ok, along the lines of:
+>>>
+>>> "raid5 has supported sub-stripe writes by computing:
+>>>
+>>> P_new = P_old + D0_old + D0_new
+>> 
+>> The '0' looks out of place.  All 'D's are treated the same, so I would
+>>write
+>> it
+>>    P_new = P_old + D_old + D_new
+>> though that is a small point.
+>> 
+>>>
+>>> For raid6 we add the following:
+>>>
+>>> P_new = P_old + D0_old + D0_new
+>
+>Correct (though I agree with Neil that "0" should be replaced by "i").
+>
+>>>
+>>> Q_sub = Q_old + syndrome(D0_old)
+>
+>Wrong - using this terminology, Q_sub = syndrome(D0_old)
+>
+>>> Q_sub = Q_old + g^0*D0_old
+>>> Q_new = Q_old + Q_sub + g^0*D0_new
+>> 
+>> But here the different Ds are different, so I would be using "Di" or
+>>similar.
+>> 
+>>   P_new = P_old + Di_old + Di_new
+>
+>Correct.
+>
+>> 
+>> and I assume the two 'Q_sub' lines are meant to mean the same thing, so
+>>let's
+>> take the second:
+>> 
+>>   Q_sub = Q_old + g^i * Di_old
+>>   Q_new = Q_old + Q_sub + g^i * Di_new
+>> 
+>
+>You've still got one "Q_old" too many, which means your algebra is wrong
+>(Q_new reduces here to g^i * Di_new, which is clearly wrong).  But
+>you've jumped to almost the right conclusion on the next line, proving
+>that two wrongs sometimes do make a right!
+>
+>> which looks odd as when that expands out, we add Q_old to Q_old and as
+>>'+'
+>> is 'xor', it disappears.  Maybe you mean:
+>> 
+>>   Q_new = Q_sub + g^i * Di_new
+>> ??
+>
+>Q_sub = g^i * Di_old
+>Q_new = Q_old - Q_sub + g^i * Di_new
+>      = Q_old + g^i * Di_old + g^i * Di_new   (since "-" = "+")
+>      = Q_old + g^i * (Di_old + Di_new)
+>
+>I can't say for sure (I know the maths, not the code), but I would
+>expect this final version do be the most efficient for the calculations.
+> By xor'ing Di_old and Di_new first, then multiplying by g^i, you'll
+>half the number of costly g^i multiplications.
+>
+>
 
-# mdadm -A --uuid=<my-UUID> ....
-# mkfs  -L mylabel /dev/disk/by-uuid/<my-MD-UUID>
-# mount /dev/disk/by-label/mylabel /mnt
+Yes, I did consider this. But this scheme is harder to implement with how
+the rest of the code works,
+especially with writes covering more than one Di.
 
-This is all broken by design today:
-- - there is no guaranteed change event
-- - there is no automatic udev settle
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-iQIcBAEBAgAGBQJRfjUtAAoJEANOs3ABTfJw/8IP/jX1RUgSQQwqM5QG1JUVXOZT
-Q/Uzuf4bDSdlHMrM0FjH6KNNDgh80fqwKBnb/sCsSNVRYgHdlLJXTdFYfzzWPk4t
-2q7Rw/M8xQS9OnqzFy8BhkdvChyW8t9Pl2Owt4+6B++GJ+2ZZksb66ggsGca4bUE
-XjLDUVJ8zk+VjVyg0yFMtUMwbJ88q14I2b+eAnCenXt/RoIGqMIX5ds8PEiowQeo
-zVMjo0nXHyaDZPV6DkDIGtQ2vsnLGTc2V+SWzTH8vZJwbHERQNQczkcSiVFmt1JA
-kgOkcSiq80FSrNAkD/gYdmZ9Qy4Txo5y1/gnaoWubehkVctQpezdjWslnCY0HTKL
-ledREAUq562m9I5etIUINWjUyWJFLyBDD3a9TI3psg1dV4nNr7MmTf1OsCBaIhZt
-EvqXTyo03K0tgpQHUJCj/ZgNejgvoMJGVYIxMdIC64+gZcM3iHqMkkJjKHTvwc+7
-Hh0Mn8L/XwYX5PoBrOJrg3XAAt4S97gA/Opv90q7VrEz47+04KHzI5T4PQ2B8MzA
-S+CZyDGMAazwSXTmaaEenXOaQKnYepiMQ/kFMM5teyaRKOPg3HqMPHWQnJq+/+bC
-ktA3X7wFQ5QLa8v5G2TpVPxvwTY+8gpmYWzXx+qhFZAMQne3RLd7zQiclNzUFkLK
-Nhnvkqel+fvi/0rFVx/X
-=SYBt
------END PGP SIGNATURE-----
+Kumar
+
+
+>
+
