@@ -1,244 +1,103 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/1] prevent double open(O_RDWR) on raid creation
-Date: Mon, 29 Apr 2013 10:57:20 +1000
-Message-ID: <20130429105720.593fe99b@notabene.brown>
-References: <1365686313-30833-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1365686313-30833-2-git-send-email-Jes.Sorensen@redhat.com>
+Subject: Re: [patch]MD: ignore discard request for hard disks of hybid
+ raid1/raid10 array
+Date: Mon, 29 Apr 2013 11:03:12 +1000
+Message-ID: <20130429110312.5d329824@notabene.brown>
+References: <20130428102638.GB1753@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/fUlQTOfDJvHGXBt5uPM6LI."; protocol="application/pgp-signature"
+ boundary="Sig_/jYjW5vGn4PKAQJbSpsu2e04"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1365686313-30833-2-git-send-email-Jes.Sorensen@redhat.com>
+In-Reply-To: <20130428102638.GB1753@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: harald@redhat.com, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, M4rkusXXL@web.de
 List-Id: linux-raid.ids
 
---Sig_/fUlQTOfDJvHGXBt5uPM6LI.
+--Sig_/jYjW5vGn4PKAQJbSpsu2e04
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 11 Apr 2013 15:18:33 +0200 Jes.Sorensen@redhat.com wrote:
+On Sun, 28 Apr 2013 18:26:38 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-> From: Harald Hoyer <harald@redhat.com>
+> In SSD/hard disk hybid storage, discard request should be ignored for hard
+> disk. We used to be doing this way, but the unplug path forgets it.
 >=20
-> This does not trigger the udev inotify twice and saves a lot of blk I/O
-> for the raid members.
+> This is suitable for stable tree since v3.6.
 >=20
-> Also fixes:
-> https://bugzilla.redhat.com/show_bug.cgi?id=3D947815
+> Reported-and-tested-by: Markus <M4rkusXXL@web.de>
+> Signed-off-by: Shaohua Li <shli@fusionio.com>
+> ---
+>  drivers/md/raid1.c  |    7 ++++++-
+>  drivers/md/raid10.c |    7 ++++++-
+>  2 files changed, 12 insertions(+), 2 deletions(-)
 >=20
-> Signed-off-by: Harald Hoyer <harald@redhat.com>
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> Index: linux/drivers/md/raid1.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux.orig/drivers/md/raid1.c	2013-03-07 14:14:05.950824173 +0800
+> +++ linux/drivers/md/raid1.c	2013-04-28 08:57:17.874058434 +0800
+> @@ -981,7 +981,12 @@ static void raid1_unplug(struct blk_plug
+>  	while (bio) { /* submit pending writes */
+>  		struct bio *next =3D bio->bi_next;
+>  		bio->bi_next =3D NULL;
+> -		generic_make_request(bio);
+> +		if (unlikely((bio->bi_rw & REQ_DISCARD) &&
+> +		    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
+> +			/* Just ignore it */
+> +			bio_endio(bio, 0);
+> +		else
+> +			generic_make_request(bio);
+>  		bio =3D next;
+>  	}
+>  	kfree(plug);
+> Index: linux/drivers/md/raid10.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux.orig/drivers/md/raid10.c	2013-03-07 14:14:05.950824173 +0800
+> +++ linux/drivers/md/raid10.c	2013-04-28 08:57:44.765719067 +0800
+> @@ -1133,7 +1133,12 @@ static void raid10_unplug(struct blk_plu
+>  	while (bio) { /* submit pending writes */
+>  		struct bio *next =3D bio->bi_next;
+>  		bio->bi_next =3D NULL;
+> -		generic_make_request(bio);
+> +		if (unlikely((bio->bi_rw & REQ_DISCARD) &&
+> +		    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
+> +			/* Just ignore it */
+> +			bio_endio(bio, 0);
+> +		else
+> +			generic_make_request(bio);
+>  		bio =3D next;
+>  	}
+>  	kfree(plug);
 
-(Sorry for delays.  Thanks for reminders).
 
-That patch seems to make sense, but the description above is awfully thin.
-
-Why is double-open a problem exactly?  What does it make udev do?  And how
-does that related to ID_FS_TYPE being wrong as mentioned in the bugzilla
-entry.
+Applied, thanks.
 
 NeilBrown
 
-
-> ---
->  Kill.c        | 28 +++++++++++++++++-----------
->  Manage.c      |  2 +-
->  mdadm.c       |  4 ++--
->  mdadm.h       |  2 +-
->  super-ddf.c   |  2 +-
->  super-intel.c |  2 +-
->  super0.c      |  2 +-
->  super1.c      |  2 +-
->  8 files changed, 25 insertions(+), 19 deletions(-)
->=20
-> diff --git a/Kill.c b/Kill.c
-> index f2fdb85..b5c93ae 100644
-> --- a/Kill.c
-> +++ b/Kill.c
-> @@ -29,7 +29,7 @@
->  #include	"md_u.h"
->  #include	"md_p.h"
-> =20
-> -int Kill(char *dev, struct supertype *st, int force, int verbose, int no=
-excl)
-> +int Kill(char *dev, int oldfd, struct supertype *st, int force, int verb=
-ose, int noexcl)
->  {
->  	/*
->  	 * Nothing fancy about Kill.  It just zeroes out a superblock
-> @@ -42,21 +42,26 @@ int Kill(char *dev, struct supertype *st, int force, =
-int verbose, int noexcl)
-> =20
->  	int fd, rv =3D 0;
-> =20
-> -	if (force)
-> -		noexcl =3D 1;
-> -	fd =3D open(dev, O_RDWR|(noexcl ? 0 : O_EXCL));
-> -	if (fd < 0) {
-> -		if (verbose >=3D 0)
-> -			pr_err("Couldn't open %s for write - not zeroing\n",
-> -				dev);
-> -		return 2;
-> +	if (oldfd !=3D -1) {
-> +		fd =3D oldfd;
-> +	} else {
-> +		if (force)
-> +			noexcl =3D 1;
-> +		fd =3D open(dev, O_RDWR|(noexcl ? 0 : O_EXCL));
-> +		if (fd < 0) {
-> +			if (verbose >=3D 0)
-> +				pr_err("Couldn't open %s for write - not zeroing\n",
-> +					dev);
-> +			return 2;
-> +		}
->  	}
->  	if (st =3D=3D NULL)
->  		st =3D guess_super(fd);
->  	if (st =3D=3D NULL || st->ss->init_super =3D=3D NULL) {
->  		if (verbose >=3D 0)
->  			pr_err("Unrecognised md component device - %s\n", dev);
-> -		close(fd);
-> +		if (oldfd =3D=3D -1)
-> +			close(fd);
->  		return 2;
->  	}
->  	st->ignore_hw_compat =3D 1;
-> @@ -76,7 +81,8 @@ int Kill(char *dev, struct supertype *st, int force, in=
-t verbose, int noexcl)
->  			rv =3D 0;
->  		}
->  	}
-> -	close(fd);
-> +	if (oldfd =3D=3D -1)
-> +		close(fd);
->  	return rv;
->  }
-> =20
-> diff --git a/Manage.c b/Manage.c
-> index 6267c0c..509e921 100644
-> --- a/Manage.c
-> +++ b/Manage.c
-> @@ -785,7 +785,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
->  			return -1;
->  		}
-> =20
-> -		Kill(dv->devname, NULL, 0, -1, 0);
-> +		Kill(dv->devname, -1, NULL, 0, -1, 0);
->  		dfd =3D dev_open(dv->devname, O_RDWR | O_EXCL|O_DIRECT);
->  		if (mdmon_running(tst->container_devnm))
->  			tst->update_tail =3D &tst->updates;
-> diff --git a/mdadm.c b/mdadm.c
-> index 214afa3..d68ee96 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -1739,11 +1739,11 @@ static int misc_list(struct mddev_dev *devlist,
->  			continue;
->  		case KillOpt: /* Zero superblock */
->  			if (ss)
-> -				rv |=3D Kill(dv->devname, ss, c->force, c->verbose,0);
-> +				rv |=3D Kill(dv->devname, -1, ss, c->force, c->verbose, 0);
->  			else {
->  				int v =3D c->verbose;
->  				do {
-> -					rv |=3D Kill(dv->devname, NULL, c->force, v, 0);
-> +					rv |=3D Kill(dv->devname, -1, NULL, c->force, v, 0);
->  					v =3D -1;
->  				} while (rv =3D=3D 0);
->  				rv &=3D ~2;
-> diff --git a/mdadm.h b/mdadm.h
-> index c7b5183..e55dec5 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -1156,7 +1156,7 @@ extern int Monitor(struct mddev_dev *devlist,
->  		   int dosyslog, char *pidfile, int increments,
->  		   int share);
-> =20
-> -extern int Kill(char *dev, struct supertype *st, int force, int verbose,=
- int noexcl);
-> +extern int Kill(char *dev, int oldfd, struct supertype *st, int force, i=
-nt verbose, int noexcl);
->  extern int Kill_subarray(char *dev, char *subarray, int verbose);
->  extern int Update_subarray(char *dev, char *subarray, char *update, stru=
-ct mddev_ident *ident, int quiet);
->  extern int Wait(char *dev);
-> diff --git a/super-ddf.c b/super-ddf.c
-> index c5f6f5c..a88699c 100644
-> --- a/super-ddf.c
-> +++ b/super-ddf.c
-> @@ -2597,7 +2597,7 @@ static int write_init_super_ddf(struct supertype *s=
-t)
->  	} else {
->  		struct dl *d;
->  		for (d =3D ddf->dlist; d; d=3Dd->next)
-> -			while (Kill(d->devname, NULL, 0, -1, 1) =3D=3D 0);
-> +			while (Kill(d->devname, d->fd, NULL, 0, -1, 1) =3D=3D 0);
->  		return __write_init_super_ddf(st);
->  	}
->  }
-> diff --git a/super-intel.c b/super-intel.c
-> index 24016b7..743a7fc 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -5221,7 +5221,7 @@ static int write_init_super_imsm(struct supertype *=
-st)
->  	} else {
->  		struct dl *d;
->  		for (d =3D super->disks; d; d =3D d->next)
-> -			Kill(d->devname, NULL, 0, -1, 1);
-> +			Kill(d->devname, d->fd, NULL, 0, -1, 1);
->  		return write_super_imsm(st, 1);
->  	}
->  }
-> diff --git a/super0.c b/super0.c
-> index 1f4dc75..57b549e 100644
-> --- a/super0.c
-> +++ b/super0.c
-> @@ -779,7 +779,7 @@ static int write_init_super0(struct supertype *st)
->  			continue;
->  		if (di->fd =3D=3D -1)
->  			continue;
-> -		while (Kill(di->devname, NULL, 0, -1, 1) =3D=3D 0)
-> +		while (Kill(di->devname, di->fd, NULL, 0, -1, 1) =3D=3D 0)
->  			;
-> =20
->  		sb->disks[di->disk.number].state &=3D ~(1<<MD_DISK_FAULTY);
-> diff --git a/super1.c b/super1.c
-> index d0f1d5f..e3eeb80 100644
-> --- a/super1.c
-> +++ b/super1.c
-> @@ -1333,7 +1333,7 @@ static int write_init_super1(struct supertype *st)
->  		if (di->fd < 0)
->  			continue;
-> =20
-> -		while (Kill(di->devname, NULL, 0, -1, 1) =3D=3D 0)
-> +		while (Kill(di->devname, di->fd, NULL, 0, -1, 1) =3D=3D 0)
->  			;
-> =20
->  		sb->dev_number =3D __cpu_to_le32(di->disk.number);
-
-
---Sig_/fUlQTOfDJvHGXBt5uPM6LI.
+--Sig_/jYjW5vGn4PKAQJbSpsu2e04
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUX3FcDnsnt1WYoG5AQIS9hAAtfXN1n7/a0/94TAYQlDUBMViPDkmv/3C
-w7zG8CfLsu8gwSi/v1gSISRaQjjLFwfjLitg8TcxJ0YD5VMQBzo7AB5EFGhCTDQi
-rjzw5eaHg4n9QD8s3MG+bpydypFvHlh001D0OMAoT2F58JtbsLzL2FJBRBAu6pNH
-FcnaA1v8u50VI3ULWaVDb5uCKqoZFSB0wfvuXLCILOnDfbZ02QFK1hFDu5KhKCtU
-qtC5GykIQUtVme9SiARYxlbLNsc2Q+lSbbQ3TmeedBKDq5HhUSS7aqy8AM5DfyRy
-mHMO5llxIT28vs0Fe3fe5y/GRtNGfrFWQuSU8+4rWAvJXdXz7q4Emr0c/PH9sUw3
-v1C/QZpwMxmzkIPArpuZH6CQBE/dwm4XYFhGlIbl1QNtdRDCBNibTScIHEBurYdO
-UthR4b01DTT/ZN/AV+q1CAnuL1nunVmuRh8oZKXezBTyRjC/YAr+A/vLSHINOhJs
-CbOTvh4spudR+YsfPF2lFgkMUtGSjcWT5o06vVPnrkWsffC+H5JsZAG0XGposKHs
-fEtSVHcFUQjGB2C7LV9Ks6iTdX1Rf+YT9IDZhOVOcnSM48nLV2EoQLn3k0LNkD8N
-1z/L/+BQSfPJo0xpK+UHiwvLzA58Oo5VdSjDlcUWvWQW+zzrQ0oKX3gp9fRNxqlL
-Lsz15tECVqc=
-=1Z2a
+iQIVAwUBUX3G0Dnsnt1WYoG5AQKlCw/9FPlZ9DNOZi8Ja4NBJwvnR+p9fBf8Bhjo
+z7aBoltJk2Od+PajkDqLh2DoGbpvhzsLETU48UUTac3VuhlebDAzNPeZUPP7Exn6
+3VUuxfhzv4MG49OGvzwm+z0tdeJ0hP+DGbkd8jpgbXzl5UGLs1NCB2fWSdKdYFFk
+HYr195mfoOr7RrhPAqE9lAK/EN0u9Z/I7AZP/gHol3W/590TJPI7AewNuQC2UZyx
+j00DSrzDVbUiZS7aJ1T/6xlNr8PvFWTE9tJgPKavqG3wFBmLu5blnislIVUeD0Bi
+VCBlp5dxvWswKM64EiAwA+oQaZ+g0TUYJ5ApMy8FiSlO1Cq9PfQnTdAawL42Jsnv
+xt4pZ20G5tNB9RPetNePDVC6oI6IXsMoHjkIFqtPSgSQSmUQop/hrIeQ9qbgysEi
+Qfc7Rtg6hkUMchJIDw83lsO+EjaVkcZaQA0wSxLuG6MIFGUhpPbYq83+ikDI3tWf
+IwxvQqJ/k8fMbwibziZM91z4QDD9Fdctom/B4nhi1epanCrP/PbNthhIhMJEh8DP
+RMQivhmh7PypcnmxYJsPi+Wyg7gKsmjnrOBgiiYgq/Kun/GnA2FHvl9YtJxJJAAc
+Xv7ARHxzMjIMn++myQZvuAEdCtk1n8wTq3F+l00b+Ib+ypmkXtZOIMw8SRRG5I6+
+C1YRYka4bXU=
+=+Qw6
 -----END PGP SIGNATURE-----
 
---Sig_/fUlQTOfDJvHGXBt5uPM6LI.--
+--Sig_/jYjW5vGn4PKAQJbSpsu2e04--
