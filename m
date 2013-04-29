@@ -1,84 +1,109 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/1] prevent double open(O_RDWR) on raid creation
-Date: Mon, 29 Apr 2013 16:53:50 +1000
-Message-ID: <20130429165350.32329f90@notabene.brown>
-References: <1365686313-30833-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1365686313-30833-2-git-send-email-Jes.Sorensen@redhat.com>
-	<20130429105720.593fe99b@notabene.brown>
-	<517E0621.5030700@redhat.com>
-	<20130429161124.454e2fc9@notabene.brown>
-	<517E13FF.6050308@redhat.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: [PATCH] raid5: add support for rmw writes in raid6
+Date: Mon, 29 Apr 2013 09:10:12 +0200
+Message-ID: <517E1CD4.3060903@hesbynett.no>
+References: <20130418005609.6782.15041.stgit@dev279.prn2.facebook.com> <20130422142211.71a1ae8e@notabene.brown> <CAA9_cmdbZ_K5Wvo7BH1nPGvttL5As1ncnbPK1ax3TFvGOch6zw@mail.gmail.com> <20130429112957.4bd6cd71@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <517E13FF.6050308@redhat.com>
+In-Reply-To: <20130429112957.4bd6cd71@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Harald Hoyer <harald@redhat.com>
-Cc: Jes.Sorensen@redhat.com, linux-raid@vger.kernel.org, Kay Sievers <kay@vrfy.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Dan Williams <djbw@fb.com>, linux-raid <linux-raid@vger.kernel.org>, Kumar Sundararajan <kumar@fb.com>
 List-Id: linux-raid.ids
 
-LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBNb24s
-IDI5IEFwciAyMDEzIDA4OjMyOjMxICswMjAwIEhhcmFsZCBIb3llciA8aGFyYWxkQHJlZGhhdC5j
-b20+IHdyb3RlOg0KDQo+IC0tLS0tQkVHSU4gUEdQIFNJR05FRCBNRVNTQUdFLS0tLS0NCj4gSGFz
-aDogU0hBMQ0KPiANCj4gT24gMDQvMjkvMjAxMyAwODoxMSBBTSwgTmVpbEJyb3duIHdyb3RlOg0K
-PiA+IE9uIE1vbiwgMjkgQXByIDIwMTMgMDc6MzM6MjEgKzAyMDAgSGFyYWxkIEhveWVyIDxoYXJh
-bGRAcmVkaGF0LmNvbT4gd3JvdGU6DQo+ID4gDQo+ID4+IC0tLS0tQkVHSU4gUEdQIFNJR05FRCBN
-RVNTQUdFLS0tLS0gSGFzaDogU0hBMQ0KPiA+IA0KPiA+PiBPbiAwNC8yOS8yMDEzIDAyOjU3IEFN
-LCBOZWlsQnJvd24gd3JvdGU6DQo+ID4+PiBPbiBUaHUsIDExIEFwciAyMDEzIDE1OjE4OjMzICsw
-MjAwIEplcy5Tb3JlbnNlbkByZWRoYXQuY29tIHdyb3RlOg0KPiA+Pj4gDQo+ID4+Pj4gRnJvbTog
-SGFyYWxkIEhveWVyIDxoYXJhbGRAcmVkaGF0LmNvbT4NCj4gPj4+PiANCj4gPj4+PiBUaGlzIGRv
-ZXMgbm90IHRyaWdnZXIgdGhlIHVkZXYgaW5vdGlmeSB0d2ljZSBhbmQgc2F2ZXMgYSBsb3Qgb2Yg
-YmxrDQo+ID4+Pj4gSS9PIGZvciB0aGUgcmFpZCBtZW1iZXJzLg0KPiA+Pj4+IA0KPiA+Pj4+IEFs
-c28gZml4ZXM6IGh0dHBzOi8vYnVnemlsbGEucmVkaGF0LmNvbS9zaG93X2J1Zy5jZ2k/aWQ9OTQ3
-ODE1DQo+ID4+Pj4gDQo+ID4+Pj4gU2lnbmVkLW9mZi1ieTogSGFyYWxkIEhveWVyIDxoYXJhbGRA
-cmVkaGF0LmNvbT4gU2lnbmVkLW9mZi1ieTogSmVzIA0KPiA+Pj4+IFNvcmVuc2VuIDxKZXMuU29y
-ZW5zZW5AcmVkaGF0LmNvbT4NCj4gPj4+IA0KPiA+Pj4gKFNvcnJ5IGZvciBkZWxheXMuICBUaGFu
-a3MgZm9yIHJlbWluZGVycykuDQo+ID4+PiANCj4gPj4+IFRoYXQgcGF0Y2ggc2VlbXMgdG8gbWFr
-ZSBzZW5zZSwgYnV0IHRoZSBkZXNjcmlwdGlvbiBhYm92ZSBpcyBhd2Z1bGx5DQo+ID4+PiB0aGlu
-Lg0KPiA+Pj4gDQo+ID4+PiBXaHkgaXMgZG91YmxlLW9wZW4gYSBwcm9ibGVtIGV4YWN0bHk/ICBX
-aGF0IGRvZXMgaXQgbWFrZSB1ZGV2IGRvPyAgQW5kDQo+ID4+PiBob3cgZG9lcyB0aGF0IHJlbGF0
-ZWQgdG8gSURfRlNfVFlQRSBiZWluZyB3cm9uZyBhcyBtZW50aW9uZWQgaW4gdGhlDQo+ID4+PiBi
-dWd6aWxsYSBlbnRyeS4NCj4gPj4+IA0KPiA+Pj4gTmVpbEJyb3duDQo+ID4+PiANCj4gPiANCj4g
-Pj4gdWRldmQgd2l0aCB3YXRjaCBlbmFibGVkIChpbm90aWZ5IG9uIC9kZXYvc2QqKSBnZXRzIHRy
-aWdnZXJlZCBvbiBjbG9zZSgpLA0KPiA+PiB3aGVuIHlvdSBvcGVuZWQgaXQgd3JpdGVhYmxlLiBT
-bywgaWYgeW91IGRvdWJsZSBvcGVuKCkgYW5kIHVkZXYgd2FrZXMgdXANCj4gPj4gZnJvbSB0aGUg
-Zmlyc3QgY2xvc2UoKSwgbm90IGFsbCBpbmZvcm1hdGlvbiBhcmUgd3JpdHRlbiB0byBkaXNrIHll
-dCwgaXQNCj4gPj4gd2lsbCBub3QgZ2V0IHRoZSBJRF9GU19UWVBFLg0KPiA+IA0KPiA+PiBTZWVt
-cyBsaWtlIHRoZSBzZWNvbmQgY2xvc2UoKSBkb2VzIG5vdCB0cmlnZ2VyIGFuIGlub3RpZnkgc29t
-ZXRpbWVzLCBzbw0KPiA+PiBpdCBpcyBtaXNzaW5nIGFmdGVyd2FyZHMgYWxsIHRoZSB0aW1lLg0K
-PiA+IA0KPiA+PiBXYXRjaCB2aWEgaW5vdGlmeSBpcyBqdXN0IGEgbGF6eSB3b3JrYXJvdW5kLCBz
-byB3ZSBkb24ndCBoYXZlIHRvIG1vZGlmeQ0KPiA+PiBldmVyeSB0b29sIHRvIGVtaXQgYSAiY2hh
-bmdlIiB1ZXZlbnQsIGFmdGVyIHRoZXkgY2hhbmdlZCB0aGUgZGlzay4NCj4gPiANCj4gPiBTbyB1
-ZGV2IGhhdmUgYSAibGF6eSB3b3JrYXJvdW5kIiBzbyB0aGF0IG90aGVyIHByb2dyYW1zIGRvbid0
-IG5lZWQgdG8NCj4gPiB0cmlnZ2VyIGEgY2hhbmdlLCBhbmQgYXMgYSByZXN1bHQsIEkgbmVlZCB0
-byBhZGQgc29tZSBzcGVjaWFsIGNvZGUgdG8NCj4gPiBtZGFkbS4gRG9lc24ndCBzZWVtIGxpa2Ug
-SSdtIGdldHRpbmcgYW55IGFkdmFudGFnZSBvdXQgb2YgdGhpcyBsYXppbmVzcy4NCj4gPiANCj4g
-PiBIb3cgYWJvdXQgd2hlbiB1ZGV2IGdldHMgYW4gaW5vdGlmeSBmb3IgYSBibG9jayBkZXZpY2Us
-IGl0IGZpcnN0IGNoZWNrcyANCj4gPiB0aGF0IGl0IGNhbiBvcGVuIGl0IE9fRVhDTC4gIElmIG5v
-dCwgaXQgZG9lc24ndCBnZW5lcmF0ZSB0aGUgY2hhbmdlIGV2ZW50LiANCj4gPiBUaGF0IHNlZW1z
-IGxpa2UgdGhlIGxhemllc3Qgb3B0aW9uIHRvIG1lIDotKQ0KPiANCj4gV2UgY2Fubm90IG9wZW4g
-d2l0aCBPX0VYQ0wsIGJlY2F1c2UgdGhlIGRldmljZSBjYW4gYmUgbW91bnRlZCwgYW5kIE9fRVhD
-TA0KPiB3b3VsZCBmYWlsIHRoZXJlLg0KPiANCg0KSWYgdGhlIGRldmljZSBpcyBtb3VudGVkLCB3
-aHkgd291bGQgeW91IHdhbnQgdWRldiB0byBiZSBkb2luZyBhbnl0aGluZyB0byBpdD8NCg0KSSBh
-c3N1bWVkIHRoaXMgd2FzIGZvciB0aGluZ3MgbGlrZSAibWtmcyIgc28gdGhhdCBhcyBzb29uIGFz
-IHlvdSBta2ZzIGENCmZpbGVzeXN0ZW0gdWRldiBjb3VsZCB0ZWxsIHVkaXNrcyB0byBpbW1lZGlh
-dGVseSBtb3VudCBpdC4uLiAgdGhvdWdoIEknbSBub3QNCnN1cmUgdGhpcyBpcyBhIGdvb2QgaWRl
-YS4NCg0KSSdtIHByb2JhYmx5IG1pc3Npbmcgc29tZXRoaW5nIGltcG9ydGFudDogd2hhdCBpcyB0
-aGUgcGFydGljdWxhciB1c2UgY2FzZSBmb3INCnVkZXYgbWFwcGluZyBhIGNsb3NlLWFmdGVyLXdy
-aXRlIHRvIGEgY2hhbmdlIGV2ZW50Pw0KDQpUaGFua3MsDQpOZWlsQnJvd24NCi0tLS0tQkVHSU4g
-UEdQIFNJR05BVFVSRS0tLS0tDQpWZXJzaW9uOiBHbnVQRyB2Mi4wLjE5IChHTlUvTGludXgpDQoN
-CmlRSVZBd1VCVVg0WS9qbnNudDFXWW9HNUFRS3Z3QS8vWG9NRFFKclBiK0l1M1g4K0lnb213VDBQ
-WDU4UHFodTYNCmdUUTZvMUxHQk9YN2lyM2RkRm4wbkdON2RSWDA1ZG5nVmRiT1prVnFyWHdKZVBt
-K3VFOEU5K3RGTHNiNlZDd00NCjc3bVp1ZTQ0ZU5oTHBnVlEzQzdITXQxTFdCeTh0cmFEQnEwUGdK
-WWVOdTZ5T1hhUVRoK21JTnJKMncxYzJkcGUNCmhRbnZZR0l3WU9qNFNZRGo5SWJUdWJDd29Nbjlm
-NkIva0hGUTd4U2prZUxRRHJLdEUzeUltMFJmWUh0VUlYZ3oNCnZGOVpydHU5SEJsK0M0ek1xTHQ4
-cVB0TlVHV3ltZUdBcFBOWVUybjFSQWVLcUJLTC9DODh0ajdSZmowVFI1cXANClZzc0hQSit1dEd2
-TzlzWkFEcldGbTRjSE5BM3dIdWhYWUNRWkZMakRSU2lqSUxYZS92R2NJazBvb0VlcW1MU2oNCkcv
-bjFkcU1zZk9udk82K0k4NmtIbEpUYm91aGtwZFNUS1FpKzArVVJjdGplY042RnV0c0VoQ1dreU90
-T3NVV0sNCnYyWEZkd1VteDY0Slo2aDNTdE1qcFY3MGxFYVNab2hGdmduaWd5VDc1ckMvZkw1alBv
-UzBzczI4bzdkcjF1ck4NCmxVRGlWNE1icng1eFZEYWl4ZTk2T2VLUDFaSHh0WEtoQ1Y3LzZybW5S
-ZEZONkRRV05yV2FzaUZ6L0xPVmFmam4NCm5kYjZiYzVJTUxsN2IyKytKWTN5U1M2ajFNS0VuRm9x
-WGlPN1JxWmsyMFpQV0lrai9uYUNmbmsxdE9VeDZ0QTUNClUxTzN0cXVGbjNLWUdLUmwvaWRsMFho
-aDBOeG5EQ3c1Z0NwQnlTRmY3NE4xMFkwVkNZS3BrQUhzQUJzQk8vdVYNCkwrVERwV1pRSktFPQ0K
-PWRZRFcNCi0tLS0tRU5EIFBHUCBTSUdOQVRVUkUtLS0tLQ0K
+On 29/04/13 03:29, NeilBrown wrote:
+> On Fri, 26 Apr 2013 14:35:27 -0700 Dan Williams <djbw@fb.com> wrote:
+> 
+>> On Sun, Apr 21, 2013 at 9:22 PM, NeilBrown <neilb@suse.de> wrote:
+>>> On Wed, 17 Apr 2013 17:56:56 -0700 Dan Williams <djbw@fb.com> wrote:
+>>>
+>>>> From: Kumar Sundararajan <kumar@fb.com>
+>>>>
+>>>> Add support for rmw writes in raid6. This improves small write performance for most workloads.
+>>>> Since there may be some configurations and workloads where rcw always outperforms rmw,
+>>>> this feature is disabled by default. It can be enabled via sysfs. For example,
+>>>>
+>>>>       #echo 1 > /sys/block/md0/md/enable_rmw
+>>>>
+>>>> Signed-off-by: Kumar Sundararajan <kumar@fb.com>
+>>>> Signed-off-by: Dan Williams <djbw@fb.com>
+>>>> ---
+>>>> Hi Neil,
+>>>>
+>>>> We decided to leave the enable in for the few cases where forced-rcw
+>>>> outperformed rmw and there may be other cases out there.
+>>>>
+>>>> Thoughts?
+>>>
+>>> - More commentary would help.  The text at the top should explain enough so
+>>>   when I read the code I am just verifying the text at the top, not trying to
+>>>   figure out how it is supposed to work.
+>>
+>> Ok, along the lines of:
+>>
+>> "raid5 has supported sub-stripe writes by computing:
+>>
+>> P_new = P_old + D0_old + D0_new
+> 
+> The '0' looks out of place.  All 'D's are treated the same, so I would write
+> it
+>    P_new = P_old + D_old + D_new
+> though that is a small point.
+> 
+>>
+>> For raid6 we add the following:
+>>
+>> P_new = P_old + D0_old + D0_new
+
+Correct (though I agree with Neil that "0" should be replaced by "i").
+
+>>
+>> Q_sub = Q_old + syndrome(D0_old)
+
+Wrong - using this terminology, Q_sub = syndrome(D0_old)
+
+>> Q_sub = Q_old + g^0*D0_old
+>> Q_new = Q_old + Q_sub + g^0*D0_new
+> 
+> But here the different Ds are different, so I would be using "Di" or similar.
+> 
+>   P_new = P_old + Di_old + Di_new
+
+Correct.
+
+> 
+> and I assume the two 'Q_sub' lines are meant to mean the same thing, so let's
+> take the second:
+> 
+>   Q_sub = Q_old + g^i * Di_old
+>   Q_new = Q_old + Q_sub + g^i * Di_new
+> 
+
+You've still got one "Q_old" too many, which means your algebra is wrong
+(Q_new reduces here to g^i * Di_new, which is clearly wrong).  But
+you've jumped to almost the right conclusion on the next line, proving
+that two wrongs sometimes do make a right!
+
+> which looks odd as when that expands out, we add Q_old to Q_old and as  '+'
+> is 'xor', it disappears.  Maybe you mean:
+> 
+>   Q_new = Q_sub + g^i * Di_new
+> ??
+
+Q_sub = g^i * Di_old
+Q_new = Q_old - Q_sub + g^i * Di_new
+      = Q_old + g^i * Di_old + g^i * Di_new   (since "-" = "+")
+      = Q_old + g^i * (Di_old + Di_new)
+
+I can't say for sure (I know the maths, not the code), but I would
+expect this final version do be the most efficient for the calculations.
+ By xor'ing Di_old and Di_new first, then multiplying by g^i, you'll
+half the number of costly g^i multiplications.
+
+
+mvh.,
+
+David
+
