@@ -1,61 +1,71 @@
-From: Roberto Spadim <rspadim@gmail.com>
+From: Robin Hill <robin@robinhill.me.uk>
 Subject: Re: replacing drives
-Date: Tue, 30 Apr 2013 12:39:32 -0300
-Message-ID: <CAH3kUhGLW9oZjnCAAF=vF_m0_RK3u3NxscmWQFFznEEOnRoK3w@mail.gmail.com>
+Date: Tue, 30 Apr 2013 15:22:26 +0100
+Message-ID: <20130430142226.GB14347@cthulhu.home.robinhill.me.uk>
 References: <517A8EB5.8080100@supsi.ch>
-	<20130426155347.GA9928@cthulhu.home.robinhill.me.uk>
-	<517FC46A.1080702@supsi.ch>
-	<alpine.DEB.2.00.1304301519350.26743@uplift.swm.pp.se>
-	<517FD7BE.8040401@supsi.ch>
-	<517FDF24.9000807@turmel.org>
+ <20130426155347.GA9928@cthulhu.home.robinhill.me.uk>
+ <517FC46A.1080702@supsi.ch>
+ <alpine.DEB.2.00.1304301519350.26743@uplift.swm.pp.se>
+ <517FD12B.20608@supsi.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="oLBj+sq0vYjzfsbl"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <517FDF24.9000807@turmel.org>
+Content-Disposition: inline
+In-Reply-To: <517FD12B.20608@supsi.ch>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Roberto Nunnari <roberto.nunnari@supsi.ch>, Mikael Abrahamsson <swmike@swm.pp.se>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Roberto Nunnari <roberto.nunnari@supsi.ch>
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-check disk temperature via smartctl
-some sata disks stop running after 55C and wait any time (a day if
-needed) to get temperature down to +-53C and resume operation
 
-2013/4/30 Phil Turmel <philip@turmel.org>:
-> On 04/30/2013 10:39 AM, Roberto Nunnari wrote:
->> Mikael Abrahamsson wrote:
->>> On Tue, 30 Apr 2013, Roberto Nunnari wrote:
->>>
->>>> How do I increase that timeout?
->>>
->>> for x in /sys/block/sd[a-z] ; do echo 180  > $x/device/timeout ; done
->>
->> what the... these are SECONDS! What on earth could delay a sata attached
->> disk read for 30 (now 180) seconds if not a disk failure? I OS hang?
->> Sorry about that question, but I don't understand.. I have never seen
->> such a problem.
->
-> The worst horror stories on this mailing list are directly attributable
-> to this problem.  Usually after months or even years of apparently
-> trouble-free operation.
->
-> Consumer-grade drives intended for desktop usage are not
-> "out-of-the-box" compatible with RAID.  Some of them are configurable
-> after each power-up to behave like an enterprise drive.  The rest must
-> be accommodated with extended driver timeouts.
->
-> Search the list archives for "scterc", "timeout", and "URE" (or
-> combinations thereof).
->
-> Phil
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--oLBj+sq0vYjzfsbl
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Tue Apr 30, 2013 at 04:11:55PM +0200, Roberto Nunnari wrote:
 
+> Mikael Abrahamsson wrote:
+> > On Tue, 30 Apr 2013, Roberto Nunnari wrote:
+> >=20
+> >> How do I increase that timeout?
+> >=20
+> > for x in /sys/block/sd[a-z] ; do echo 180  > $x/device/timeout ; done
+> >=20
+>=20
+> You believe that this is not enough? What's the unit? milliseconds?
+> # for x in /sys/block/sd[a-z] ; do cat $x/device/timeout ; done
+> 30
+> 30
+> 30
+> 30
+>=20
+The units are seconds. According to WD[1], their drives can take up to 2
+minutes to timeout, but other manufacturers may differ. 30 seconds is
+definitely too short.
 
--- 
-Roberto Spadim
+[1] http://wdc.custhelp.com/app/answers/detail/a_id/1397/p/227,283/session/=
+L3RpbWUvMTMyMTQzOTc4NS9zaWQvdVhvYmpmSms%3D
+
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
+
+--oLBj+sq0vYjzfsbl
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAlF/06EACgkQShxCyD40xBKJXgCffrYLI4j87HHoxeaTut/d4j4W
+9GgAoJWsehFCnMFwNfvTrNBsZU4G2GXS
+=y67Z
+-----END PGP SIGNATURE-----
+
+--oLBj+sq0vYjzfsbl--
