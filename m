@@ -1,47 +1,91 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: [PATCH] raid5: add support for rmw writes in raid6
-Date: Tue, 30 Apr 2013 08:48:29 +0200
-Message-ID: <517F693D.5020700@hesbynett.no>
-References: <BA07AEDCFD3B5B4DAB0FF1D7B35E42DC5544BCFA@PRN-MBX01-4.TheFacebook.com> <517EC9D8.8000805@hesbynett.no> <CAA9_cme5Atj2y7aetaRDfiyaBERk-rWCOkw5k7=9YrgcKzYc7w@mail.gmail.com>
+From: Roberto Nunnari <roberto.nunnari@supsi.ch>
+Subject: Re: replacing drives
+Date: Tue, 30 Apr 2013 15:17:30 +0200
+Message-ID: <517FC46A.1080702@supsi.ch>
+References: <517A8EB5.8080100@supsi.ch> <20130426155347.GA9928@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAA9_cme5Atj2y7aetaRDfiyaBERk-rWCOkw5k7=9YrgcKzYc7w@mail.gmail.com>
+In-Reply-To: <20130426155347.GA9928@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <djbw@fb.com>
-Cc: Kumar Sundararajan <kumar@fb.com>, NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: Roberto Nunnari <roberto.nunnari@supsi.ch>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 30/04/13 02:05, Dan Williams wrote:
-> On Mon, Apr 29, 2013 at 12:28 PM, David Brown <david.brown@hesbynett.no> wrote:
->> For each data block you are changing, you will need to remove the old g^i *
->> Di_old then add in the new g^i * Di_new, so you can still use this
->> simplification to reduce the number of multiplies.  If you want to change
->> blocks "i" and "j", you thus do:
->>
->> Q_new = Q_old + g^i * (Di_old + Di_new) + g^j * (Dj_old + Dj_new)
->>
->> But as I say, I only know the maths - not the code.
+Robin Hill wrote:
+> On Fri Apr 26, 2013 at 04:27:01PM +0200, Roberto Nunnari wrote:
 > 
-> The issue is where to store those intermediate Di_old + Di_new results
-> without doubling the size of the stripe cache.
+>> Hi all.
+>>
+>> I'd like to replace two hd in raid1 with larger ones.
+>>
+>> I could just add the new drives in raid1 and mount it on /opt after a 
+>> dump/restore, but I'd prefer to just have to drives instead of four.. 
+>> less noise and less power consumption and noise.
+>>
+>> The question is: what whould be the best way to go?
+>> Tricks and tips? Drawbacks? Common errors?
+>>
+>> Any hint/advice welcome.
+>> Thank you. :-)
+>>
+>>
+>> present HD: two WD caviar green 500GB
+>> new HD: two WD caviar green 2TB
+>>
+> I don't think these have SCTERC configuration options, so you'll need to
+> make sure you increase the timeout in the storage stack to prevent read
+> timeouts from causing drives to be prematurely kicked out of the array.
+
+How do I increase that timeout?
+
+Also, the old HD are up and running for over 4 years now, and never got 
+any trouble.. just time to time a few warning on /dev/sdb from smartctl:
+
+Device: /dev/sdb, ATA error count increased from 27 to 28
+
+But I don't believe that's something to worry about..
+
+
 > 
+>> root@host1:~# uname -rms
+>> Linux 2.6.32-46-server x86_64
+>>
+> That'll be too old for the hot-replacement functionality, but that
+> doesn't make much difference for RAID1 anyway.
 
-(As before, I haven't looked at the code.  I justify my laziness by
-claiming that I might come up with fresh ideas without how to implement
-things.  But only you folks can say what takes more work, and what is
-riskier in the code.)
+ok.
 
-I don't see that you would need to double the size of the stripe cache.
- You might need an extra few block spaces, but not double the cache.
 
-Also, once you have done this calculation (assuming you did the easy
-P_new first), you no longer need to keep Di_old lying around - it's
-going to be replaced with the new stripe data.  So maybe you can do the
-operation as "Di_old += Di_new" - i.e., in place and without using more
-memory.  That is going to be faster too, as it is more cache friendly.
-On the other hand, it might involve more locking or other tracking
-mechanisms to avoid problems if something else is trying to access the
-same caches.
+> 
+>> root@host1:~# cat /proc/mdstat
+>> Personalities : [linear] [raid1] [multipath] [raid0] [raid6] [raid5] 
+>> [raid4] [raid10]
+>> md1 : active raid1 sda2[0] sdb2[1]
+>>        7812032 blocks [2/2] [UU]
+>>
+>> md2 : active raid1 sda3[0] sdb3[1]
+>>        431744960 blocks [2/2] [UU]
+>>
+>> md0 : active raid1 sda1[0] sdb1[1]
+>>        48827328 blocks [2/2] [UU]
+>>
+>> unused devices: <none>
+>>
+> The safest option would be:
+>  - add in the new disks
+>  - partition to at least the same size as your existing partitions (they
+>    can be larger)
+>  - add the new partitions into the arrays (they'll go in as spares)
 
+got till here..
+
+
+>  - grow the arrays to 4 members (this avoids any loss of redundancy)
+
+now the next step.. that's a raid1 array.. is it possible to grow the 
+arrays to 4 members?
+
+Thank you!
+
+Robi
