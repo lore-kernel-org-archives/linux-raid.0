@@ -1,71 +1,74 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: replacing drives
-Date: Tue, 30 Apr 2013 15:22:26 +0100
-Message-ID: <20130430142226.GB14347@cthulhu.home.robinhill.me.uk>
-References: <517A8EB5.8080100@supsi.ch>
- <20130426155347.GA9928@cthulhu.home.robinhill.me.uk>
- <517FC46A.1080702@supsi.ch>
- <alpine.DEB.2.00.1304301519350.26743@uplift.swm.pp.se>
- <517FD12B.20608@supsi.ch>
+From: Kumar Sundararajan <kumar@fb.com>
+Subject: Re: [PATCH] raid5: add support for rmw writes in raid6
+Date: Tue, 30 Apr 2013 16:10:20 +0000
+Message-ID: <BA07AEDCFD3B5B4DAB0FF1D7B35E42DC5544C4B2@PRN-MBX01-4.TheFacebook.com>
+References: <BA07AEDCFD3B5B4DAB0FF1D7B35E42DC5544C3D1@PRN-MBX01-4.TheFacebook.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="oLBj+sq0vYjzfsbl"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <517FD12B.20608@supsi.ch>
+In-Reply-To: <BA07AEDCFD3B5B4DAB0FF1D7B35E42DC5544C3D1@PRN-MBX01-4.TheFacebook.com>
+Content-Language: en-US
+Content-ID: <45799497631DE348BF57824A339C1081@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Nunnari <roberto.nunnari@supsi.ch>
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: David Brown <david.brown@hesbynett.no>, Dan Williams <djbw@fb.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
---oLBj+sq0vYjzfsbl
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Tue Apr 30, 2013 at 04:11:55PM +0200, Roberto Nunnari wrote:
+On 4/30/13 9:01 AM, "Kumar Sundararajan" <kumar@fb.com> wrote:
 
-> Mikael Abrahamsson wrote:
-> > On Tue, 30 Apr 2013, Roberto Nunnari wrote:
-> >=20
-> >> How do I increase that timeout?
-> >=20
-> > for x in /sys/block/sd[a-z] ; do echo 180  > $x/device/timeout ; done
-> >=20
->=20
-> You believe that this is not enough? What's the unit? milliseconds?
-> # for x in /sys/block/sd[a-z] ; do cat $x/device/timeout ; done
-> 30
-> 30
-> 30
-> 30
->=20
-The units are seconds. According to WD[1], their drives can take up to 2
-minutes to timeout, but other manufacturers may differ. 30 seconds is
-definitely too short.
+>
+>
+>On 4/29/13 11:48 PM, "David Brown" <david.brown@hesbynett.no> wrote:
+>
+>>On 30/04/13 02:05, Dan Williams wrote:
+>>> On Mon, Apr 29, 2013 at 12:28 PM, David Brown
+>>><david.brown@hesbynett.no> wrote:
+>>>> For each data block you are changing, you will need to remove the old
+>>>>g^i *
+>>>> Di_old then add in the new g^i * Di_new, so you can still use this
+>>>> simplification to reduce the number of multiplies.  If you want to
+>>>>change
+>>>> blocks "i" and "j", you thus do:
+>>>>
+>>>> Q_new = Q_old + g^i * (Di_old + Di_new) + g^j * (Dj_old + Dj_new)
+>>>>
+>>>> But as I say, I only know the maths - not the code.
+>>> 
+>>> The issue is where to store those intermediate Di_old + Di_new results
+>>> without doubling the size of the stripe cache.
+>>> 
+>>
+>>(As before, I haven't looked at the code.  I justify my laziness by
+>>claiming that I might come up with fresh ideas without how to implement
+>>things.  But only you folks can say what takes more work, and what is
+>>riskier in the code.)
+>>
+>>I don't see that you would need to double the size of the stripe cache.
+>> You might need an extra few block spaces, but not double the cache.
+>>
+>>Also, once you have done this calculation (assuming you did the easy
+>>P_new first), you no longer need to keep Di_old lying around - it's
+>>going to be replaced with the new stripe data.  So maybe you can do the
+>>operation as "Di_old += Di_new" - i.e., in place and without using more
+>>memory.  That is going to be faster too, as it is more cache friendly.
+>>On the other hand, it might involve more locking or other tracking
+>>mechanisms to avoid problems if something else is trying to access the
+>>same caches.
+>>
+>
+>Yes, I had seen your earlier mails on this topic and implemented it this
+>way initially.
+>However, this required us to either ask for stable pages or allocate an
+>extra "spare" page
+>for each disk in the array to hold the intermediate results.
 
-[1] http://wdc.custhelp.com/app/answers/detail/a_id/1397/p/227,283/session/=
-L3RpbWUvMTMyMTQzOTc4NS9zaWQvdVhvYmpmSms%3D
+Sorry, that should read -- one extra "spare" page per cpu for each disk
+in the array.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+>
+>>
+>
 
---oLBj+sq0vYjzfsbl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAlF/06EACgkQShxCyD40xBKJXgCffrYLI4j87HHoxeaTut/d4j4W
-9GgAoJWsehFCnMFwNfvTrNBsZU4G2GXS
-=y67Z
------END PGP SIGNATURE-----
-
---oLBj+sq0vYjzfsbl--
