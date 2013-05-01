@@ -1,191 +1,82 @@
-From: Roberto Spadim <rspadim@gmail.com>
-Subject: Re: replacing drives
-Date: Wed, 1 May 2013 15:14:40 -0300
-Message-ID: <CAH3kUhGnUe8gUCy7zncHYDa-ROaCgDFBCoi=qMkBnYDxQbSHSg@mail.gmail.com>
-References: <517A8EB5.8080100@supsi.ch>
-	<20130426155347.GA9928@cthulhu.home.robinhill.me.uk>
-	<517FC46A.1080702@supsi.ch>
-	<alpine.DEB.2.00.1304301519350.26743@uplift.swm.pp.se>
-	<517FD7BE.8040401@supsi.ch>
-	<517FDF24.9000807@turmel.org>
-	<CAH3kUhGLW9oZjnCAAF=vF_m0_RK3u3NxscmWQFFznEEOnRoK3w@mail.gmail.com>
-	<518075FA.107@fnarfbargle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Gimpbully <gimpbully@gmail.com>
+Subject: Re: array went wonky
+Date: Wed, 1 May 2013 11:59:16 -0700
+Message-ID: <15E1BF3C-2361-4FC7-8D19-AA319C187AF5@gmail.com>
+References: <474B6DA3-FED2-4674-9707-1BC43378CB90@gmail.com> <DC0F689B-F5E5-41F3-9CD4-74813E4A6108@bingner.com>,<F29438B9-DA12-40B1-8382-30886C95B5BD@gmail.com> <71F985BA-11B9-45E8-A17B-03F9CB5C8F52@bingner.com> <517FD8FB.7000006@turmel.org> <59BD334D-D9B3-4856-AEF3-F033E511B0DD@gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.3 \(1503\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <518075FA.107@fnarfbargle.com>
+In-Reply-To: <59BD334D-D9B3-4856-AEF3-F033E511B0DD@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <lists2009@fnarfbargle.com>
-Cc: Phil Turmel <philip@turmel.org>, Roberto Nunnari <roberto.nunnari@supsi.ch>, Mikael Abrahamsson <swmike@swm.pp.se>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: Sam Bingner <sam@bingner.com>, "<linux-raid@vger.kernel.org>" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-2013/4/30 Brad Campbell <lists2009@fnarfbargle.com>:
-> On 30/04/13 23:39, Roberto Spadim wrote:
->>
->> check disk temperature via smartctl
->> some sata disks stop running after 55C and wait any time (a day if
->> needed) to get temperature down to +-53C and resume operation
->>
->
-> G'day Roberto,
->
-> Have you got any data or model numbers to back this one up?
-> I've seen plenty of disks set the "warranty void" flag if they exceed 55C,
-> but I've never seen a disk stop or pause (and I've run some _very_ hot).
->
-> I'd be really interested in finding out a bit more about this.
->
-> Regards,
-> Brad
+Alright, so I've ddrescued 2 disks now:
+sda - clean
+sdb - SMART errors, kicked out of array
+sdc - SMART errors, kicked out of array
+sde - ddrescued copy of sdb
+sdf - original failed disk, replaced.  is now a ddrescued copy of sdc
 
+So I run 
 
+eduardo ~ # mdadm --assemble --force /dev/md127 /dev/sd{f,g,e,a}1
+mdadm: cannot open device /dev/sdf1: Device or resource busy
+mdadm: /dev/sdf1 has no superblock - assembly aborted
+eduardo ~ # 
 
-i replaced 4 old disk with this 'new' one:
-smartctl 5.41 2011-06-09 r3365 [x86_64-linux-2.6.39-ARCH] (local build)
-Copyright (C) 2002-11 by Bruce Allen, http://smartmontools.sourceforge.net
+Any ideas?
 
-=== START OF INFORMATION SECTION ===
-Model Family:     SAMSUNG SpinPoint F3
-Device Model:     SAMSUNG HD502HJ
-Serial Number:    S2BWJ60B237288
-LU WWN Device Id: 5 0024e9 4009a5bf6
-Firmware Version: 1AJ10001
-User Capacity:    500.107.862.016 bytes [500 GB]
-Sector Size:      512 bytes logical/physical
-Device is:        In smartctl database [for details use: -P show]
-ATA Version is:   8
-ATA Standard is:  ATA-8-ACS revision 6
-Local Time is:    Wed May  1 15:07:29 2013 BRT
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
+On Apr 30, 2013, at 7:48 AM, Gimpbully <gimpbully@gmail.com> wrote:
 
-=== START OF READ SMART DATA SECTION ===
-SMART overall-health self-assessment test result: PASSED
+> I have no intentions of recreating at all.  I fully understand the implications (I've had stripe orders go bad on truly massive scales before, I don't ever wanna experience that again), I just don't know mdadm as well as other vendor storage.
+> 
+> I was able to ddrescue a copy of sdb with no errors.  I assembled the array and got a file system metadata dump (this is HUGE) and it's currently rebuilding before I even look at data.  Thank you all for your help, patience was absolutely key here.
+> 
+> 
+> On Apr 30, 2013, at 7:45 AM, Phil Turmel <philip@turmel.org> wrote:
+> 
+>> On 04/30/2013 02:20 AM, Sam Bingner wrote:
+>>> On Apr 29, 2013, at 4:33 PM, "Gimpbully" <gimpbully@gmail.com>
+>>> wrote:
+>>>> On Apr 13, 2013, at 7:20 AM, Sam Bingner <sam@bingner.com> wrote:
+>>>> 
+>>>>> After that you can try to recreate the array with the proper
+>>>>> order (sdc1, sdb1, sde1, missing, sda1) and copy data off or add
+>>>>> the spare in again depending on if you were able to recover all
+>>>>> the data wih GNU ddrescue.
+>>>> 
+>>>> 
+>>>> What do you mean recreate?  what's the specific command?  something
+>>>> like:
+>>>> mdadm --create --assume-clean --level=5 --raid-devices=5 /dev/md127
+>>>> /dev/sdc1 /dev/sdb1 /sdv/sde1 missing  /dev/sda1
+>>> 
+>>> Don't recreate it - I said the wrong thing... You want to do an
+>>> assemble on them with force if possible... Recreate is last ditch and
+>>> make sure you have another copy if you do the previous command in
+>>> case it doesn't work right due to offsets etc...
+>>> 
+>>> try:
+>>> mdadm --stop /dev/md127
+>>> mdadm --assemble --force /dev/md127 /dev/sd{c,b,e,a}1
+>> 
+>> Yes.
+>> 
+>>> If you DO need to recreate it, what you showed looks correct.
+>> 
+>> NO!
+>> 
+>> The OP has *not* shared sufficient information on the array members to
+>> say that.  Since it has "worked for years", the odds of an offset error
+>> is *very* high.  Chunk size defaults are also likely to be different.
+>> 
+>> *Complete* output of "mdadm -E" for the array members is needed before
+>> any "--create" operation is attempted.  Plus the distro info, kernel
+>> version, and mdadm version .
+>> 
+>> Phil
+> 
 
-General SMART Values:
-Offline data collection status:  (0x00) Offline data collection activity
-                                        was never started.
-                                        Auto Offline Data Collection: Disabled.
-Self-test execution status:      (   0) The previous self-test routine completed
-                                        without error or no self-test has ever
-                                        been run.
-Total time to complete Offline
-data collection:                ( 4740) seconds.
-Offline data collection
-capabilities:                    (0x5b) SMART execute Offline immediate.
-                                        Auto Offline data collection
-on/off support.
-                                        Suspend Offline collection upon new
-                                        command.
-                                        Offline surface scan supported.
-                                        Self-test supported.
-                                        No Conveyance Self-test supported.
-                                        Selective Self-test supported.
-SMART capabilities:            (0x0003) Saves SMART data before entering
-                                        power-saving mode.
-                                        Supports SMART auto save timer.
-Error logging capability:        (0x01) Error logging supported.
-                                        General Purpose Logging supported.
-Short self-test routine
-recommended polling time:        (   2) minutes.
-Extended self-test routine
-recommended polling time:        (  79) minutes.
-SCT capabilities:              (0x003f) SCT Status supported.
-                                        SCT Error Recovery Control supported.
-                                        SCT Feature Control supported.
-                                        SCT Data Table supported.
-
-SMART Attributes Data Structure revision number: 16
-Vendor Specific SMART Attributes with Thresholds:
-ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE
-UPDATED  WHEN_FAILED RAW_VALUE
-  1 Raw_Read_Error_Rate     0x002f   100   100   051    Pre-fail
-Always       -       0
-  2 Throughput_Performance  0x0026   048   048   000    Old_age
-Always       -       5091
-  3 Spin_Up_Time            0x0023   082   081   025    Pre-fail
-Always       -       5638
-  4 Start_Stop_Count        0x0032   100   100   000    Old_age
-Always       -       19
-  5 Reallocated_Sector_Ct   0x0033   252   252   010    Pre-fail
-Always       -       0
-  7 Seek_Error_Rate         0x002e   252   252   051    Old_age
-Always       -       0
-  8 Seek_Time_Performance   0x0024   252   252   015    Old_age
-Offline      -       0
-  9 Power_On_Hours          0x0032   100   100   000    Old_age
-Always       -       5921
- 10 Spin_Retry_Count        0x0032   252   252   051    Old_age
-Always       -       0
- 11 Calibration_Retry_Count 0x0032   252   252   000    Old_age
-Always       -       0
- 12 Power_Cycle_Count       0x0032   100   100   000    Old_age
-Always       -       23
-191 G-Sense_Error_Rate      0x0022   252   252   000    Old_age
-Always       -       0
-192 Power-Off_Retract_Count 0x0022   252   252   000    Old_age
-Always       -       0
-194 Temperature_Celsius     0x0002   064   056   000    Old_age
-Always       -       27 (Min/Max 15/45)
-195 Hardware_ECC_Recovered  0x003a   100   100   000    Old_age
-Always       -       0
-196 Reallocated_Event_Count 0x0032   252   252   000    Old_age
-Always       -       0
-197 Current_Pending_Sector  0x0032   252   252   000    Old_age
-Always       -       0
-198 Offline_Uncorrectable   0x0030   252   252   000    Old_age
-Offline      -       0
-199 UDMA_CRC_Error_Count    0x0036   200   200   000    Old_age
-Always       -       0
-200 Multi_Zone_Error_Rate   0x002a   100   100   000    Old_age
-Always       -       2
-223 Load_Retry_Count        0x0032   252   252   000    Old_age
-Always       -       0
-225 Load_Cycle_Count        0x0032   100   100   000    Old_age
-Always       -       23
-
-SMART Error Log Version: 1
-No Errors Logged
-
-SMART Self-test log structure revision number 1
-Num  Test_Description    Status                  Remaining
-LifeTime(hours)  LBA_of_first_error
-# 1  Extended offline    Completed without error       00%      4074         -
-# 2  Extended offline    Completed without error       00%       383         -
-
-Note: selective self-test log revision number (0) not 1 implies that
-no selective self-test has ever been run
-SMART Selective self-test log data structure revision number 0
-Note: revision number not 1 implies that no selective self-test has
-ever been run
- SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
-    1        0        0  Completed [00% left] (0-65535)
-    2        0        0  Not_testing
-    3        0        0  Not_testing
-    4        0        0  Not_testing
-    5        0        0  Not_testing
-Selective self-test flags (0x0):
-  After scanning selected spans, do NOT read-scan remainder of disk.
-If Selective self-test is pending on power-up, resume after 0 minute delay.
-
-
-
-
-this disk model (SAMSUNG HD502HJ) stop and wait temperature get down
-again (they have about 6months of heavy read, and are not enterprise
-level), i have about 20 units, i replace every 6months, they are cheap
-and never lost information with this 6months interval, but i'm not
-surelly safe without a raid1 and backups, and of course it's a
-enterprise level system running not enterprise level hardware (ok it's
-wrong but still working)
-after 6months i replace the disk, i replace the first with 6months the
-second with 7, the third with 8 and the fourth with 9, after 6 months
-i replace normally each disk (the older have 9 months on the first
-replace), i had no problem yet, it's a raid1 4 disks setup running
-mariadb/mysql database with high read and low write, raid0/raid10
-don't work in this workload
-
-
-
---
-Roberto Spadim
