@@ -1,81 +1,40 @@
 From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: replacing drives
-Date: Thu, 2 May 2013 15:54:11 +0100
-Message-ID: <20130502145411.GA18405@cthulhu.home.robinhill.me.uk>
-References: <517A8EB5.8080100@supsi.ch>
- <20130426155347.GA9928@cthulhu.home.robinhill.me.uk>
- <518270A6.4090706@supsi.ch>
+Subject: Re: Anything left to try?
+Date: Thu, 2 May 2013 15:58:29 +0100
+Message-ID: <20130502145829.GB18405@cthulhu.home.robinhill.me.uk>
+References: <CAPSPcXjFQ9zDP9ZK8X3uZXHNKot5hS=0iwj04E_FrNa2Z8n++A@mail.gmail.com>
+ <C480F6221151144EA453A5C89300815601403A74@MBOX1.ds.sbdhi.com>
+ <CAPSPcXhS2O8ASH8Gsz8KE=oJp6y1K6VTi7Jf-=39uzNzG3SnJQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Kj7319i9nmIyA2yE"
+	protocol="application/pgp-signature"; boundary="ADZbWkCsHQ7r3kzd"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <518270A6.4090706@supsi.ch>
+In-Reply-To: <CAPSPcXhS2O8ASH8Gsz8KE=oJp6y1K6VTi7Jf-=39uzNzG3SnJQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Nunnari <roberto.nunnari@supsi.ch>
+To: Barrett Lewis <barrett.lewis.mitsi@gmail.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
---Kj7319i9nmIyA2yE
+--ADZbWkCsHQ7r3kzd
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Thu May 02, 2013 at 03:56:54PM +0200, Roberto Nunnari wrote:
+On Thu May 02, 2013 at 09:26:55AM -0500, Barrett Lewis wrote:
 
-> Robin Hill wrote:
-> > The safest option would be:
-> >  - add in the new disks
-> >  - partition to at least the same size as your existing partitions (they
-> >    can be larger)
-> >  - add the new partitions into the arrays (they'll go in as spares)
-> >  - grow the arrays to 4 members (this avoids any loss of redundancy)
-> >  - wait for the resync to complete
-> >  - install grub/lilo/syslinux to the new disks
+> That is a really good idea.  At minimum I will ddrescue the failed drives.
+> But even if I do that, is there a way to reassemble the array (even with
+> new drives) now that those components are marked failed?
 >=20
-> Ok.. got here.
->=20
->=20
-> >  - fail and remove the old disk partitions from the arrays
->=20
-> Now.. I may need some guidance for the next steps.. please correct me if=
-=20
-> I'm wrong..
->=20
-> to fail the old disk partition from the arrays I should:
-> mdadm -f /dev/md0 /dev/sda1
-> mdadm -f /dev/md1 /dev/sda2
-> mdadm -f /dev/md2 /dev/sda3
-> mdadm -f /dev/md0 /dev/sdc1
-> mdadm -f /dev/md1 /dev/sdc2
-> mdadm -f /dev/md2 /dev/sdc3
->=20
-> and to remove the old disk partition from the arrays I should:
-> mdadm -r /dev/md0 /dev/sda1
-> mdadm -r /dev/md1 /dev/sda2
-> mdadm -r /dev/md2 /dev/sda3
-> mdadm -r /dev/md0 /dev/sdc1
-> mdadm -r /dev/md1 /dev/sdc2
-> mdadm -r /dev/md2 /dev/sdc3
->=20
-> correct?
->=20
-Assuming sda & sdc are your old drives, yes (they were sda & sdb in your
-original mail, but possibly they've been reordered if you've rebooted
-with the new drives in).
-
->=20
-> >  - shrink the arrays back down to 2 members
->=20
-> to shrink the arrays back down to two members:
-> mdadm --grow --raid-devices=3D2 /dev/md0
-> mdadm --grow --raid-devices=3D2 /dev/md1
-> mdadm --grow --raid-devices=3D2 /dev/md2
->=20
-> correct?
->=20
-Yes, that's all correct.
+Yes, "mdadm -Af /dev/mdX" should reassemble the array, making use of the
+best set of drives available to get the array running - i.e. all the
+working drives plus the most-recently failed drive(s). It'll still be in
+a degraded state, but hopefully you can then get the other disk added
+(though you'll still have to keep your fingers crossed that there's no
+read error of any kind during the several days required to rebuild a 4T
+drive).
 
 Cheers,
     Robin
@@ -85,16 +44,16 @@ Cheers,
    / / )      | Little Jim says ....                            |
   // !!       |      "He fallen in de water !!"                 |
 
---Kj7319i9nmIyA2yE
+--ADZbWkCsHQ7r3kzd
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iEYEARECAAYFAlGCfhAACgkQShxCyD40xBJwtwCgko5UvdIpCGcDu2CIih43Sg6b
-0XgAoN5TKZBOnn/lUB0vvAjXJrh9aEDf
-=zvw4
+iEYEARECAAYFAlGCfxMACgkQShxCyD40xBJTuwCfT7Jq0HkDoNFD7bU3EnyXclXR
+dVkAoNZ87htNFQ05dlFrGTpq9yZCZvS3
+=v4ce
 -----END PGP SIGNATURE-----
 
---Kj7319i9nmIyA2yE--
+--ADZbWkCsHQ7r3kzd--
