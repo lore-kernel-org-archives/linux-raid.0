@@ -1,63 +1,61 @@
-From: Roberto Nunnari <roberto.nunnari@supsi.ch>
-Subject: Re: replacing drives
-Date: Thu, 02 May 2013 15:56:54 +0200
-Message-ID: <518270A6.4090706@supsi.ch>
-References: <517A8EB5.8080100@supsi.ch> <20130426155347.GA9928@cthulhu.home.robinhill.me.uk>
+From: Stefan Borggraefe <stefan@spybot.info>
+Subject: Re: Help with recovering a RAID5 array
+Date: Thu, 02 May 2013 16:17:04 +0200
+Message-ID: <1756409.rphx7Sd8Zh@chablis>
+References: <34199580.p6EyCyMeIZ@chablis> <3800236.bN8bMq2WMZ@chablis> <CADNH=7GNmLMZeAcueKmHP2QS=PKbgGBuR2GpM0yMGmDBDiijjQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130426155347.GA9928@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <CADNH=7GNmLMZeAcueKmHP2QS=PKbgGBuR2GpM0yMGmDBDiijjQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Nunnari <roberto.nunnari@supsi.ch>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Robin Hill wrote:
-> The safest option would be:
->  - add in the new disks
->  - partition to at least the same size as your existing partitions (they
->    can be larger)
->  - add the new partitions into the arrays (they'll go in as spares)
->  - grow the arrays to 4 members (this avoids any loss of redundancy)
->  - wait for the resync to complete
->  - install grub/lilo/syslinux to the new disks
+Am Donnerstag, 2. Mai 2013, 14:49:39 schrieb Mathias Bur=E9n:
+> Ugh, Adaptec, not my favourite controller. Do you have arcconf
+> installed? You could to arcconf getconfig 1 (or whatever your
+> controller number is) to grab some information regarding your
+> controller and the HDDs connected to it.
 
-Ok.. got here.
+arcconf getconfig 1
+Controllers found: 1
+----------------------------------------------------------------------
+Controller information
+----------------------------------------------------------------------
+   Controller Status                        : Inaccessible
 
+----------------------------------------------------------------------
+Logical device information
+----------------------------------------------------------------------
+   No logical devices configured
 
->  - fail and remove the old disk partitions from the arrays
-
-Now.. I may need some guidance for the next steps.. please correct me if 
-I'm wrong..
-
-to fail the old disk partition from the arrays I should:
-mdadm -f /dev/md0 /dev/sda1
-mdadm -f /dev/md1 /dev/sda2
-mdadm -f /dev/md2 /dev/sda3
-mdadm -f /dev/md0 /dev/sdc1
-mdadm -f /dev/md1 /dev/sdc2
-mdadm -f /dev/md2 /dev/sdc3
-
-and to remove the old disk partition from the arrays I should:
-mdadm -r /dev/md0 /dev/sda1
-mdadm -r /dev/md1 /dev/sda2
-mdadm -r /dev/md2 /dev/sda3
-mdadm -r /dev/md0 /dev/sdc1
-mdadm -r /dev/md1 /dev/sdc2
-mdadm -r /dev/md2 /dev/sdc3
-
-correct?
+----------------------------------------------------------------------
+Physical Device information
+----------------------------------------------------------------------
 
 
->  - shrink the arrays back down to 2 members
+Command completed successfully.
 
-to shrink the arrays back down to two members:
-mdadm --grow --raid-devices=2 /dev/md0
-mdadm --grow --raid-devices=2 /dev/md1
-mdadm --grow --raid-devices=2 /dev/md2
+Could this be because we do not use the hardware RAID features of
+the controller?
+=20
+> Do you have /dev/sg? devices? If so, smartctl -a might work on them.
 
-correct?
+Yes, but using smartctl -a/-x on these devices gives the same output as
+using it on the /dev/sd? devices. :(
 
-Thank you very much for your precious help!
+> Re the software RAID, I would double check the health of your HDDs
+> before attempting anything.
 
-Robi
+Ok, this makes sense.
+--=20
+Best regards,
+Stefan Borggraefe
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
