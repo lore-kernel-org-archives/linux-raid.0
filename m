@@ -1,121 +1,63 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: Help with recovering a RAID5 array
-Date: Thu, 2 May 2013 14:49:39 +0100
-Message-ID: <CADNH=7GNmLMZeAcueKmHP2QS=PKbgGBuR2GpM0yMGmDBDiijjQ@mail.gmail.com>
-References: <34199580.p6EyCyMeIZ@chablis>
-	<2322111.Fd18rzrueQ@chablis>
-	<CADNH=7EZFx1DPAiXMWav5S6FN+0Tb1JxNxrHVczfaDAEwW-oVA@mail.gmail.com>
-	<3800236.bN8bMq2WMZ@chablis>
+From: Roberto Nunnari <roberto.nunnari@supsi.ch>
+Subject: Re: replacing drives
+Date: Thu, 02 May 2013 15:56:54 +0200
+Message-ID: <518270A6.4090706@supsi.ch>
+References: <517A8EB5.8080100@supsi.ch> <20130426155347.GA9928@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3800236.bN8bMq2WMZ@chablis>
+In-Reply-To: <20130426155347.GA9928@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stefan Borggraefe <stefan@spybot.info>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Roberto Nunnari <roberto.nunnari@supsi.ch>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2 May 2013 14:29, Stefan Borggraefe <stefan@spybot.info> wrote:
-> Am Donnerstag, 2. Mai 2013, 14:17:04 schrieb Mathias Bur=C3=A9n:
->> On 2 May 2013 14:14, Stefan Borggraefe <stefan@spybot.info> wrote:
->> > Am Donnerstag, 2. Mai 2013, 13:30:22 schrieb Mathias Bur=C3=A9n:
->> >> I won't scold you for using RAID5 instead of RAID6 with this numb=
-er of
->> >> if drives and especially the size of the drives.
->> >>
->> >> Could you please post the output of smartctl -a for each device? =
-(from
->> >> smartmontools)
->> >>
->> >> That way we can verify which HDDs are broken, before proceeding.
->> >>
->> >> Mathias
->> >
->> > Hello Mathias,
->> >
->> > RAID6 would have been the safer option clearly, but we needed the
->> > extra-space and only had this number of drives available.
->> >
->> > Here the requested output:
->> >
->> > smartctl -a /dev/sdc
->> > smartctl 5.41 2011-06-09 r3365 [x86_64-linux-3.2.0-37-generic] (lo=
-cal
->> > build) Copyright (C) 2002-11 by Bruce Allen,
->> > http://smartmontools.sourceforge.net
->> >
->> > Vendor:               Hitachi
->> > Product:              HUS724040ALE640
->> > Revision:             MJAO
->> > User Capacity:        4.000.787.030.016 bytes [4,00 TB]
->> > Logical block size:   512 bytes
->> > Logical Unit id:      0x5000cca22bd08a85
->> > Serial number:              PK2331PAH5D0YT
->> > Device type:          disk
->> > Local Time is:        Thu May  2 15:09:16 2013 CEST
->> > Device supports SMART and is Enabled
->> > Temperature Warning Disabled or Not Supported
->> > SMART Health Status: OK
->> >
->> > [...]
->>
->> Hm are these behind some controller of sorts? What about smartctl -x=
- ?
->
-> We use an Adaptec 71605 controller. smartctl -x does not provide any =
-more
-> useful information, I suppose. I only post the output of one drive as=
- an
-> example this time. They all give a similar result.
->
-> smartctl -x /dev/sdc
-> smartctl 5.41 2011-06-09 r3365 [x86_64-linux-3.2.0-37-generic] (local=
- build)
-> Copyright (C) 2002-11 by Bruce Allen, http://smartmontools.sourceforg=
-e.net
->
-> Vendor:               Hitachi
-> Product:              HUS724040ALE640
-> Revision:             MJAO
-> User Capacity:        4.000.787.030.016 bytes [4,00 TB]
-> Logical block size:   512 bytes
-> Logical Unit id:      0x5000cca22bd08a85
-> Serial number:              PK2331PAH5D0YT
-> Device type:          disk
-> Local Time is:        Thu May  2 15:20:55 2013 CEST
-> Device supports SMART and is Enabled
-> Temperature Warning Disabled or Not Supported
-> SMART Health Status: OK
->
-> Current Drive Temperature:     <not available>
->
-> Error Counter logging not supported
-> Device does not support Self Test logging
-> Device does not support Background scan results logging
-> scsiPrintSasPhy Log Sense Failed [unsupported field in scsi command]
->
-> What about the state of the software RAID5? It would be great if I
-> could bring it back to a state where the filesystem on it is fully
-> working again without having to copy the 20 TB of data to it again
-> (copying this amount of data takes some time :( ).
-> --
-> Best regards,
-> Stefan Borggraefe
+Robin Hill wrote:
+> The safest option would be:
+>  - add in the new disks
+>  - partition to at least the same size as your existing partitions (they
+>    can be larger)
+>  - add the new partitions into the arrays (they'll go in as spares)
+>  - grow the arrays to 4 members (this avoids any loss of redundancy)
+>  - wait for the resync to complete
+>  - install grub/lilo/syslinux to the new disks
+
+Ok.. got here.
 
 
-Ugh, Adaptec, not my favourite controller. Do you have arcconf
-installed? You could to arcconf getconfig 1 (or whatever your
-controller number is) to grab some information regarding your
-controller and the HDDs connected to it.
+>  - fail and remove the old disk partitions from the arrays
 
-Do you have /dev/sg? devices? If so, smartctl -a might work on them.
-Re the software RAID, I would double check the health of your HDDs
-before attempting anything.
+Now.. I may need some guidance for the next steps.. please correct me if 
+I'm wrong..
 
-Mathias
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+to fail the old disk partition from the arrays I should:
+mdadm -f /dev/md0 /dev/sda1
+mdadm -f /dev/md1 /dev/sda2
+mdadm -f /dev/md2 /dev/sda3
+mdadm -f /dev/md0 /dev/sdc1
+mdadm -f /dev/md1 /dev/sdc2
+mdadm -f /dev/md2 /dev/sdc3
+
+and to remove the old disk partition from the arrays I should:
+mdadm -r /dev/md0 /dev/sda1
+mdadm -r /dev/md1 /dev/sda2
+mdadm -r /dev/md2 /dev/sda3
+mdadm -r /dev/md0 /dev/sdc1
+mdadm -r /dev/md1 /dev/sdc2
+mdadm -r /dev/md2 /dev/sdc3
+
+correct?
+
+
+>  - shrink the arrays back down to 2 members
+
+to shrink the arrays back down to two members:
+mdadm --grow --raid-devices=2 /dev/md0
+mdadm --grow --raid-devices=2 /dev/md1
+mdadm --grow --raid-devices=2 /dev/md2
+
+correct?
+
+Thank you very much for your precious help!
+
+Robi
