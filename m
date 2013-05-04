@@ -1,40 +1,42 @@
-From: Neil Matai <neil@matai.kiwi.nz>
-Subject: Re: Simultaneous assembly on multiple hosts
-Date: Sat, 4 May 2013 15:22:26 +1200
-Message-ID: <20130504032226.GE31411@chc-5.metaname.net>
-References: <20130504020146.GD31411@chc-5.metaname.net>
- <CALFpzo6CUZSeAcNK1A=8HdyjaGnKiN4Mtt01u_w=3p7WG-wY2A@mail.gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Failed during rebuild (raid5)
+Date: Sat, 4 May 2013 06:14:12 +0200 (CEST)
+Message-ID: <alpine.DEB.2.00.1305040606250.24367@uplift.swm.pp.se>
+References: <51839E4F.7050102@midgaard.us> <5183A1C7.5000905@mpstor.com> <20130503124023.GB27548@cthulhu.home.robinhill.me.uk> <20867.49429.400548.184315@quad.stoffel.home> <alpine.DEB.2.00.1305031826270.24367@uplift.swm.pp.se>
+ <20868.4128.968574.378273@quad.stoffel.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CALFpzo6CUZSeAcNK1A=8HdyjaGnKiN4Mtt01u_w=3p7WG-wY2A@mail.gmail.com>
+In-Reply-To: <20868.4128.968574.378273@quad.stoffel.home>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: John Stoffel <john@stoffel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 03, 2013 at 08:25:59PM -0600, Marcus Sorensen wrote:
-> > Is it dangerous have an array assembled on two hosts at the same time?
-> > Say I have servers A and B exporting devices a and b via ATA over
-> > Ethernet or similar to hosts C and D.  If a and b are components of an
-> > array then both C and D automatically assemble the array as soon as
-> > the components a and b are exported but is this safe (on the proviso
-> > that only one of C or D is ever writing to the array at any time and
-> > that there is no write-behind caching above the array device)?
-> Yes, it is dangerous. There are some limited situations where it may work,
-> without a bitmap and some cluster aware application in control of what
-> blocks are written, but you can't for example mount it ext4 and write to
-> only one side at a time. That's why people use drbd.
+On Fri, 3 May 2013, John Stoffel wrote:
 
-Sorry.  I should have said what it was for.  I realise that mounting a
-typical file system twice would be dangerous (also with drdb).  The
-intention would have been to live migrate guest systems between C and
-D so the file system remains mounted (once) inside the guest system
-but nowhere else.  Would it work in this scenario without a bitmap or
-would this scenario also lead to data loss?  Would it make any
-difference if 0.9 metadata were use to create the array?
+> 200T?  Isn't that a little big?  *grin* Actually I think the warning 
+> should be based on both number of devices in the array and the size of 
+> members and the speed of the individual devices.
 
-Many thanks,
+Yeah, I meant GB.
 
-- neil
+> Makeing a RADI5 with 10 RAM disks that are 10Gb each in size and can 
+> write at 500MB/s might not that bad a thing to do.  I'm being a little 
+> silly here, but I think the idea is right.  We need to account for all 
+> three factors of a RAID5 array:  number of devices, size, and speed of 
+> each devices.
 
+Well, yes, 3 devices might be ok for RAID5, but for 4 devices or more I 
+would like the operator to read a page and make a really informed 
+decision, warning them about the consequences of RAID5 on large drives.
+
+This page could also inform users about the mismatched SATA timeout (or we 
+actually get the SATA layer default changed from 30 to 180 seconds), 
+because right now I'd say 30 seconds isn't good for anything. RAID drives 
+have 7 seconds default before reporting an error, making 30 seconds too 
+long, and consumer drives have 120 seconds (?) making 30 seconds way too 
+short.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
