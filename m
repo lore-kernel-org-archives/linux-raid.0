@@ -1,42 +1,74 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Failed during rebuild (raid5)
-Date: Sat, 4 May 2013 06:14:12 +0200 (CEST)
-Message-ID: <alpine.DEB.2.00.1305040606250.24367@uplift.swm.pp.se>
-References: <51839E4F.7050102@midgaard.us> <5183A1C7.5000905@mpstor.com> <20130503124023.GB27548@cthulhu.home.robinhill.me.uk> <20867.49429.400548.184315@quad.stoffel.home> <alpine.DEB.2.00.1305031826270.24367@uplift.swm.pp.se>
- <20868.4128.968574.378273@quad.stoffel.home>
+From: Stefan Borggraefe <stefan@spybot.info>
+Subject: Re: Help with recovering a RAID5 array
+Date: Sat, 04 May 2013 13:13:27 +0200
+Message-ID: <1838659.cc600uVROo@rattle>
+References: <34199580.p6EyCyMeIZ@chablis> <CANU9nTnwx_3m3Ggebxgfe1RqKU6OMk59qnhecSmYvmC2cUeRnw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20868.4128.968574.378273@quad.stoffel.home>
+In-Reply-To: <CANU9nTnwx_3m3Ggebxgfe1RqKU6OMk59qnhecSmYvmC2cUeRnw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
+To: Ole Tange <tange@binf.ku.dk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 3 May 2013, John Stoffel wrote:
+Am Freitag, 3. Mai 2013, 10:38:52 schrieben Sie:
+> On Thu, May 2, 2013 at 2:24 PM, Stefan Borggraefe <stefan@spybot.info> 
+wrote:
+> > I am using a RAID5 software RAID on Ubuntu 12.04
+> > 
+> > It consits of 6 Hitachi drives with 4 TB and contains an ext 4 file
+> > system.
+> > 
+> > When I returned to this server this morning, the array was in the
+> > following
+> > state:
+> > 
+> > md126 : active raid5 sdc1[7](S) sdh1[4] sdd1[3](F) sde1[0] sdg1[6] sdf1[2]
+> > 
+> >       19535086080 blocks super 1.2 level 5, 512k chunk, algorithm 2 [6/4]
+> > 
+> > [U_U_UU]
+> > 
+> > sdc is the newly added hard disk, but now also sdd failed. :( It would be
+> > great if there was a way to have the this RAID5 working again. Perhaps
+> > sdc1
+> > can then be fully added to the array and after this drive sdd also
+> > exchanged.
+> I have had a few raid6 fail in a similar fashion: the 3rd drive
+> faliing during rebuild (Also 4 TB Hitachi by the way).
+> 
+> I tested if the drives were fine:
+> 
+>   parallel dd if={} of=/dev/null bs=1000k ::: /dev/sd?
+> 
+> And they were all fine. 
 
-> 200T?  Isn't that a little big?  *grin* Actually I think the warning 
-> should be based on both number of devices in the array and the size of 
-> members and the speed of the individual devices.
+Same for me.
 
-Yeah, I meant GB.
+> With only a few failing sectors (if any) I figured that very little
+> would be lost by forcing the failing drive online. Remove the spare
+> drive, and force the remaining online:
+> 
+>   mdadm -A --scan --force
 
-> Makeing a RADI5 with 10 RAM disks that are 10Gb each in size and can 
-> write at 500MB/s might not that bad a thing to do.  I'm being a little 
-> silly here, but I think the idea is right.  We need to account for all 
-> three factors of a RAID5 array:  number of devices, size, and speed of 
-> each devices.
+I removed the spare /dev/sdc1 from /dev/md126
 
-Well, yes, 3 devices might be ok for RAID5, but for 4 devices or more I 
-would like the operator to read a page and make a really informed 
-decision, warning them about the consequences of RAID5 on large drives.
+with
 
-This page could also inform users about the mismatched SATA timeout (or we 
-actually get the SATA layer default changed from 30 to 180 seconds), 
-because right now I'd say 30 seconds isn't good for anything. RAID drives 
-have 7 seconds default before reporting an error, making 30 seconds too 
-long, and consumer drives have 120 seconds (?) making 30 seconds way too 
-short.
+mdadm /dev/md126 --remove /dev/sdc1
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+After mdadm -A --scan --force the array is now in this state
+
+md126 : active raid5 sdh1[4] sdd1[3](F) sde1[0] sdg1[6] sdf1[2]
+      19535086080 blocks super 1.2 level 5, 512k chunk, algorithm 2 [6/4] 
+[U_U_UU]
+ 
+> Next step is to do fsck.
+
+I think this is not possible yet at this point. Don't I need to reassemble the 
+array using the --assume-clean option and with one missing drive first? Some 
+step is missing here.
+
+Stefan
