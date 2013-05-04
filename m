@@ -1,48 +1,208 @@
-From: "Rudy Zijlstra" <rudy@grumpydevil.homelinux.org>
-Subject: Re: RAID-6 with 3 missing disks
-Date: Sat, 4 May 2013 16:22:39 +0000
-Message-ID: <14872633-1367684555-cardhu_decombobulator_blackberry.rim.net-102434637-@b3.c7.bise7.blackberry>
-References: <20130504160804.GA2242@lazy.lzy>
-Reply-To: rudy@grumpydevil.homelinux.org
+From: Frederick Gnodtke <FGnodtke@cronosx.de>
+Subject: Help with failed raid 5
+Date: Sat, 04 May 2013 18:51:33 +0200
+Message-ID: <51853C95.5030008@cronosx.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130504160804.GA2242@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid-owner@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SGkNCg0KSSB3b3VsZCBzdGFydCB3aXRoIG1kYWRtIGFzc2VtYmxlIC0tZm9yY2UNCg0KRG8gbm90
-IHVzZSBjcmVhdGUgdW5sZXNzIGFsbCBlbHNlIGhhcyBmYWlsZWQNCg0KQ2hlZXJzDQoNClJ1ZHkN
-Ci0tLQ0KVmVyc3R1dXJkIG1ldCBtaWpuIEJsYWNrQmVycnkgdmFuIFZvZGFmb25lDQoNCi0tLS0t
-T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBQaWVyZ2lvcmdpbyBTYXJ0b3IgPHBpZXJnaW9y
-Z2lvLnNhcnRvckBuZXhnby5kZT4NClNlbmRlcjogbGludXgtcmFpZC1vd25lckB2Z2VyLmtlcm5l
-bC5vcmcNCkRhdGU6CVNhdCwgNCBNYXkgMjAxMyAxODowODowNCANClRvOiA8bGludXgtcmFpZEB2
-Z2VyLmtlcm5lbC5vcmc+DQpTdWJqZWN0OiBSQUlELTYgd2l0aCAzIG1pc3NpbmcgZGlza3MNCg0K
-SGkgYWxsLA0KDQpJIGtub3cgdGhpcyB3YXMgcHJvYmFibHkgYWxyZWFkeSBkaXNjdXNzZWQsIGJ1
-dA0KbWF5YmUgSSBuZWVkIHNvbWUgcmVmcmVzaC4NCg0KSSd2ZSBhIDEwIEhERHMgUkFJRC02IHdo
-aWNoLCBkdWUgdG8gbWlzaGFwIChkaXNrcw0Kd2VyZSBkaXNjb25uZWN0ZWQgYWNjaWRlbnRhbHkp
-LCBoYXMgbm93IDMgbWlzc2luZw0KZGV2aWNlcyBhbmQgY2Fubm90IGJlIGFzc2VtYmxlZC4NClRo
-ZSBkYXRhIHNob3VsZCBiZSBPSywgc2luY2Ugbm8gd3JpdGVzIHdlcmUgb2NjdXJyaW5nDQpkdXJp
-bmcgdGhlIGFjY2lkZW50LCBzbyBwdXR0aW5nIHRoZW0gdG9nZXRoZXIgYWdhaW4NCnNob3VsZCB3
-b3JrLg0KDQpBcyBmYXIgYXMgSSBrbm93LCBvbmUgb3B0aW9uIGlzIHRvIGNyZWF0ZSwgd2l0aA0K
-Im1kYWRtIC1DIiB0aGUgYXJyYXkgYWdhaW4sIGdpdmluZyB0aGUgZGlza3MgaW4NCnRoZSBwcm9w
-ZXIgb3JkZXIuDQoNClNpbmNlIGFsbCBIRERzIGFyZSByZWFkYWJsZSwgSSBndWVzcyAibWRhZG0g
-LUUiDQpzaG91bGQgcmV0dXJuIHRoZSByb2xlIG9mIGVhY2ggZGV2aWNlLg0KSXMgdGhpcyBjb3Jy
-ZWN0IGZvciB0aGUgY3JlYXRpb24gb3JkZXI/DQoNClNlY29uZCBxdWVzdGlvbiBpcyBhYm91dCB0
-aGUgIkRhdGEgT2Zmc2V0Iiwgc2luY2UNCnRoaXMgYXJyYXkgd2FzIGNyZWF0ZWQgd2l0aCBhbiBv
-bGRlciB2ZXJzaW9uIG9mDQoibWRhZG0iIGFuZCB0aGUgZGF0YSBvZmZzZXQgaXMgdmVyeSBjbG9z
-ZSB0byB0aGUNCnN1cGVyYmxvY2suDQpBcyBmYXIgYXMgSSBrbm93LCBuZXcgbWRhZG0gY3JlYXRl
-cyB0aGUgZGF0YSBhDQpiaXQgZmFyIGF3YXlzLg0KSXMgdGhlcmUgYW55IHdheSB0byBzcGVjaWZp
-eSB0aGUgcHJvcGVyIG9mZnNldD8NCg0KRmluYWxseSwgaXMgdGhlcmUgYW4gYWx0ZXJuYXRpdmUg
-dG8gIm1kYWRtIC1DIg0Kb3IgaXQgaXMgdGhlIG9ubHkgb3B0aW9uPw0KRm9yY2luZyBhc3NlbWJs
-eSBkb2VzIG5vdCB3b3JrLCBidXQgbWF5YmUgdGhlcmUNCmlzIGFub3RoZXIgd2F5IHRvIHRlbGwg
-bWRhZG0gdG8gcmVhbGx5IGFzc2VtYnkNCnRoZSBhcnJheSwgdGFraW5nIGludG8gYWNjb3VudCB0
-aGUgc3VwZXJibG9jaw0KaW5mb3JtYXRpb24sIHdoaWNoIGFyZSBhbGwgcmVhZGFibGUuDQoNClRo
-YW5rcyBhIGxvdCBpbiBhZHZhbmNlLA0KDQpieWUsDQoNCi0tIA0KDQpwaWVyZ2lvcmdpbw0KLS0N
-ClRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmli
-ZSBsaW51eC1yYWlkIiBpbg0KdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2Vy
-Lmtlcm5lbC5vcmcNCk1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5v
-cmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+Hi,
+
+I hope someone can help me with this as I am struggling with it since 
+this morning.
+
+The following scenario: I have a softwareraid 5 created using mdadm.
+It consisted out of 5 Disks, each of them 2000GB with one as spare-drive.
+The original mdadm.conf looked like this:
+
+# mdadm.conf
+#
+# Please refer to mdadm.conf(5) for information about this file.
+#
+
+# by default, scan all partitions (/proc/partitions) for MD superblocks.
+# alternatively, specify devices to scan, using wildcards if desired.
+DEVICE partitions
+
+# auto-create devices with Debian standard permissions
+CREATE owner=root group=disk mode=0666 auto=yes
+
+# automatically tag new arrays as belonging to the local system
+HOMEHOST <system>
+
+# instruct the monitoring daemon where to send mail alerts
+MAILADDR root
+
+# definitions of existing MD arrays
+
+# This file was auto-generated on Mon, 19 Nov 2012 09:30:14 -0800
+# by mkconf 3.1.4-1+8efb9d1+squeeze1
+ARRAY /dev/md/0 metadata=1.2 spares=1 name=CronosR:0 
+UUID=c008e97a:aacc7745:c8c49a31:08312d4e
+
+
+Everything was fine until this morning I tried to open a file and got an 
+I/O-Error. I rebooted the computer, stopped the raid, did an smartctl -t 
+long on all drives belonging to the raid, but they all seem to run quiet 
+well.
+Reassembling it using mdadm --assemble --scan --force did not lead to 
+anything so I tried to recreate it using "mdadm --create /dev/md0 
+--assume-clean --raid-devices=5 --level=5 /dev/sd[abdef]
+It created an array but there was no filesystem to mount.
+fsck could not detect an filesystem and I didn't relocate any "bad 
+blocks" as I was afraid this might reduce my chance to repair the raid 
+to zero.
+
+The original Superblocks of all disks befor recreating the array looked 
+like this (The raid already failed when I captured this):
+
+/dev/sdb:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : c008e97a:aacc7745:c8c49a31:08312d4e
+            Name : CronosR:0  (local to host CronosR)
+   Creation Time : Mon Nov 12 10:27:52 2012
+      Raid Level : raid5
+    Raid Devices : 5
+
+  Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
+      Array Size : 15628103680 (7452.06 GiB 8001.59 GB)
+   Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+     Data Offset : 2048 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : eec2e852:30e9cbcf:d90a5e2c:e176ee4b
+
+     Update Time : Sat May  4 02:48:00 2013
+        Checksum : 4479154a - correct
+          Events : 0
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : spare
+    Array State : .AA.A ('A' == active, '.' == missing)
+/dev/sdc:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : c008e97a:aacc7745:c8c49a31:08312d4e
+            Name : CronosR:0  (local to host CronosR)
+   Creation Time : Mon Nov 12 10:27:52 2012
+      Raid Level : raid5
+    Raid Devices : 5
+
+  Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
+      Array Size : 15628103680 (7452.06 GiB 8001.59 GB)
+   Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+     Data Offset : 2048 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 703f0adc:b164366b:50653ead:7072d192
+
+     Update Time : Sat May  4 02:48:00 2013
+        Checksum : 30c86354 - correct
+          Events : 0
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : spare
+    Array State : .AA.A ('A' == active, '.' == missing)
+/dev/sdd:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : c008e97a:aacc7745:c8c49a31:08312d4e
+            Name : CronosR:0  (local to host CronosR)
+   Creation Time : Mon Nov 12 10:27:52 2012
+      Raid Level : raid5
+    Raid Devices : 5
+
+  Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
+      Array Size : 15628103680 (7452.06 GiB 8001.59 GB)
+   Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+     Data Offset : 2048 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 3995e1e8:3188f2a6:f2afb876:9e024359
+
+     Update Time : Sat May  4 02:48:00 2013
+        Checksum : 9537952 - correct
+          Events : 836068
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 4
+    Array State : .AA.A ('A' == active, '.' == missing)
+/dev/sde:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : c008e97a:aacc7745:c8c49a31:08312d4e
+            Name : CronosR:0  (local to host CronosR)
+   Creation Time : Mon Nov 12 10:27:52 2012
+      Raid Level : raid5
+    Raid Devices : 5
+
+  Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
+      Array Size : 15628103680 (7452.06 GiB 8001.59 GB)
+   Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+     Data Offset : 2048 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 27b14550:17bf2abe:14352207:93c20bd3
+
+     Update Time : Sat May  4 02:48:00 2013
+        Checksum : 9222113a - correct
+          Events : 836068
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 2
+    Array State : .AA.A ('A' == active, '.' == missing)
+/dev/sdf:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : c008e97a:aacc7745:c8c49a31:08312d4e
+            Name : CronosR:0  (local to host CronosR)
+   Creation Time : Mon Nov 12 10:27:52 2012
+      Raid Level : raid5
+    Raid Devices : 5
+
+  Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
+      Array Size : 15628103680 (7452.06 GiB 8001.59 GB)
+   Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+     Data Offset : 2048 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 4bc817b1:8ac80143:798031df:caba2a52
+
+     Update Time : Sat May  4 02:48:00 2013
+        Checksum : cef9756a - correct
+          Events : 836068
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 1
+    Array State : .AA.A ('A' == active, '.' == missing)
+
+Is there any chance to recover the raid?
+Has anybody any idea?
+As I am just a poor student I didn't quiet have the money to do backups 
+so my private data would be lost if the raid failed.
+
+I would really appreciate your help!
+
+Thank you all in advance,
+Frederick Gnodtke
 
