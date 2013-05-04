@@ -1,100 +1,48 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+From: "Rudy Zijlstra" <rudy@grumpydevil.homelinux.org>
 Subject: Re: RAID-6 with 3 missing disks
-Date: Sat, 4 May 2013 18:30:06 +0200
-Message-ID: <20130504163006.GA3395@lazy.lzy>
+Date: Sat, 4 May 2013 16:22:39 +0000
+Message-ID: <14872633-1367684555-cardhu_decombobulator_blackberry.rim.net-102434637-@b3.c7.bise7.blackberry>
 References: <20130504160804.GA2242@lazy.lzy>
- <14872633-1367684555-cardhu_decombobulator_blackberry.rim.net-102434637-@b3.c7.bise7.blackberry>
+Reply-To: rudy@grumpydevil.homelinux.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <14872633-1367684555-cardhu_decombobulator_blackberry.rim.net-102434637-@b3.c7.bise7.blackberry>
+In-Reply-To: <20130504160804.GA2242@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid-owner@vger.kernel.org, linux-raid@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid-owner@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Rudy,
+SGkNCg0KSSB3b3VsZCBzdGFydCB3aXRoIG1kYWRtIGFzc2VtYmxlIC0tZm9yY2UNCg0KRG8gbm90
+IHVzZSBjcmVhdGUgdW5sZXNzIGFsbCBlbHNlIGhhcyBmYWlsZWQNCg0KQ2hlZXJzDQoNClJ1ZHkN
+Ci0tLQ0KVmVyc3R1dXJkIG1ldCBtaWpuIEJsYWNrQmVycnkgdmFuIFZvZGFmb25lDQoNCi0tLS0t
+T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBQaWVyZ2lvcmdpbyBTYXJ0b3IgPHBpZXJnaW9y
+Z2lvLnNhcnRvckBuZXhnby5kZT4NClNlbmRlcjogbGludXgtcmFpZC1vd25lckB2Z2VyLmtlcm5l
+bC5vcmcNCkRhdGU6CVNhdCwgNCBNYXkgMjAxMyAxODowODowNCANClRvOiA8bGludXgtcmFpZEB2
+Z2VyLmtlcm5lbC5vcmc+DQpTdWJqZWN0OiBSQUlELTYgd2l0aCAzIG1pc3NpbmcgZGlza3MNCg0K
+SGkgYWxsLA0KDQpJIGtub3cgdGhpcyB3YXMgcHJvYmFibHkgYWxyZWFkeSBkaXNjdXNzZWQsIGJ1
+dA0KbWF5YmUgSSBuZWVkIHNvbWUgcmVmcmVzaC4NCg0KSSd2ZSBhIDEwIEhERHMgUkFJRC02IHdo
+aWNoLCBkdWUgdG8gbWlzaGFwIChkaXNrcw0Kd2VyZSBkaXNjb25uZWN0ZWQgYWNjaWRlbnRhbHkp
+LCBoYXMgbm93IDMgbWlzc2luZw0KZGV2aWNlcyBhbmQgY2Fubm90IGJlIGFzc2VtYmxlZC4NClRo
+ZSBkYXRhIHNob3VsZCBiZSBPSywgc2luY2Ugbm8gd3JpdGVzIHdlcmUgb2NjdXJyaW5nDQpkdXJp
+bmcgdGhlIGFjY2lkZW50LCBzbyBwdXR0aW5nIHRoZW0gdG9nZXRoZXIgYWdhaW4NCnNob3VsZCB3
+b3JrLg0KDQpBcyBmYXIgYXMgSSBrbm93LCBvbmUgb3B0aW9uIGlzIHRvIGNyZWF0ZSwgd2l0aA0K
+Im1kYWRtIC1DIiB0aGUgYXJyYXkgYWdhaW4sIGdpdmluZyB0aGUgZGlza3MgaW4NCnRoZSBwcm9w
+ZXIgb3JkZXIuDQoNClNpbmNlIGFsbCBIRERzIGFyZSByZWFkYWJsZSwgSSBndWVzcyAibWRhZG0g
+LUUiDQpzaG91bGQgcmV0dXJuIHRoZSByb2xlIG9mIGVhY2ggZGV2aWNlLg0KSXMgdGhpcyBjb3Jy
+ZWN0IGZvciB0aGUgY3JlYXRpb24gb3JkZXI/DQoNClNlY29uZCBxdWVzdGlvbiBpcyBhYm91dCB0
+aGUgIkRhdGEgT2Zmc2V0Iiwgc2luY2UNCnRoaXMgYXJyYXkgd2FzIGNyZWF0ZWQgd2l0aCBhbiBv
+bGRlciB2ZXJzaW9uIG9mDQoibWRhZG0iIGFuZCB0aGUgZGF0YSBvZmZzZXQgaXMgdmVyeSBjbG9z
+ZSB0byB0aGUNCnN1cGVyYmxvY2suDQpBcyBmYXIgYXMgSSBrbm93LCBuZXcgbWRhZG0gY3JlYXRl
+cyB0aGUgZGF0YSBhDQpiaXQgZmFyIGF3YXlzLg0KSXMgdGhlcmUgYW55IHdheSB0byBzcGVjaWZp
+eSB0aGUgcHJvcGVyIG9mZnNldD8NCg0KRmluYWxseSwgaXMgdGhlcmUgYW4gYWx0ZXJuYXRpdmUg
+dG8gIm1kYWRtIC1DIg0Kb3IgaXQgaXMgdGhlIG9ubHkgb3B0aW9uPw0KRm9yY2luZyBhc3NlbWJs
+eSBkb2VzIG5vdCB3b3JrLCBidXQgbWF5YmUgdGhlcmUNCmlzIGFub3RoZXIgd2F5IHRvIHRlbGwg
+bWRhZG0gdG8gcmVhbGx5IGFzc2VtYnkNCnRoZSBhcnJheSwgdGFraW5nIGludG8gYWNjb3VudCB0
+aGUgc3VwZXJibG9jaw0KaW5mb3JtYXRpb24sIHdoaWNoIGFyZSBhbGwgcmVhZGFibGUuDQoNClRo
+YW5rcyBhIGxvdCBpbiBhZHZhbmNlLA0KDQpieWUsDQoNCi0tIA0KDQpwaWVyZ2lvcmdpbw0KLS0N
+ClRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmli
+ZSBsaW51eC1yYWlkIiBpbg0KdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2Vy
+Lmtlcm5lbC5vcmcNCk1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5v
+cmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
 
-thanks for the answer, but as mentioned at the end,
-"--force" assemby does not work.
-Reason is, 7 disks complains 3 are missing and the
-3 missing are assembed, since their superblock does
-not report errors.
-Of course, 3 disks are not enough to assembly the
-array, forced or not.
-
-bye,
-
-pg
-
-On Sat, May 04, 2013 at 04:22:39PM +0000, Rudy Zijlstra wrote:
-> Hi
-> 
-> I would start with mdadm assemble --force
-> 
-> Do not use create unless all else has failed
-> 
-> Cheers
-> 
-> Rudy
-> ---
-> Verstuurd met mijn BlackBerry van Vodafone
-> 
-> -----Original Message-----
-> From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-> Sender: linux-raid-owner@vger.kernel.org
-> Date:	Sat, 4 May 2013 18:08:04 
-> To: <linux-raid@vger.kernel.org>
-> Subject: RAID-6 with 3 missing disks
-> 
-> Hi all,
-> 
-> I know this was probably already discussed, but
-> maybe I need some refresh.
-> 
-> I've a 10 HDDs RAID-6 which, due to mishap (disks
-> were disconnected accidentaly), has now 3 missing
-> devices and cannot be assembled.
-> The data should be OK, since no writes were occurring
-> during the accident, so putting them together again
-> should work.
-> 
-> As far as I know, one option is to create, with
-> "mdadm -C" the array again, giving the disks in
-> the proper order.
-> 
-> Since all HDDs are readable, I guess "mdadm -E"
-> should return the role of each device.
-> Is this correct for the creation order?
-> 
-> Second question is about the "Data Offset", since
-> this array was created with an older version of
-> "mdadm" and the data offset is very close to the
-> superblock.
-> As far as I know, new mdadm creates the data a
-> bit far aways.
-> Is there any way to specifiy the proper offset?
-> 
-> Finally, is there an alternative to "mdadm -C"
-> or it is the only option?
-> Forcing assembly does not work, but maybe there
-> is another way to tell mdadm to really assemby
-> the array, taking into account the superblock
-> information, which are all readable.
-> 
-> Thanks a lot in advance,
-> 
-> bye,
-> 
-> -- 
-> 
-> piergiorgio
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-
-piergiorgio
