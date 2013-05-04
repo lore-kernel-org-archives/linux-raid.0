@@ -1,32 +1,54 @@
-From: maurice <mhilarius@gmail.com>
-Subject: Re: Failed during rebuild (raid5)
-Date: Sat, 04 May 2013 08:48:18 -0600
-Message-ID: <51851FB2.6080600@gmail.com>
-References: <51839E4F.7050102@midgaard.us> <5183A1C7.5000905@mpstor.com> <20130503124023.GB27548@cthulhu.home.robinhill.me.uk> <20867.49429.400548.184315@quad.stoffel.home> <5183CF09.1080605@turmel.org> <20867.58492.72376.428170@quad.stoffel.home> <20130503223257.3ec8025c@natsu>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: RAID-6 with 3 missing disks
+Date: Sat, 4 May 2013 18:08:04 +0200
+Message-ID: <20130504160804.GA2242@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130503223257.3ec8025c@natsu>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 5/3/2013 10:32 AM, Roman Mamedov wrote:
-> ..
-> with the point of this whole change being to pander to stupid and greedy
-> people (because using RAID5 and not RAID6 with a set-up of six 4 TB drives
-> is nothing but utter stupidity and greed).
-More likely is the "cheapness"of using consumer desktop drives, and then 
-acting outraged when they do not act reliably as enterprise drives.
+Hi all,
 
-Of course the drive manufacturers only make those expensive enterprise 
-drives to extract more money from us,
-they are really all the same, and it is all one big conspiracy!
+I know this was probably already discussed, but
+maybe I need some refresh.
 
+I've a 10 HDDs RAID-6 which, due to mishap (disks
+were disconnected accidentaly), has now 3 missing
+devices and cannot be assembled.
+The data should be OK, since no writes were occurring
+during the accident, so putting them together again
+should work.
+
+As far as I know, one option is to create, with
+"mdadm -C" the array again, giving the disks in
+the proper order.
+
+Since all HDDs are readable, I guess "mdadm -E"
+should return the role of each device.
+Is this correct for the creation order?
+
+Second question is about the "Data Offset", since
+this array was created with an older version of
+"mdadm" and the data offset is very close to the
+superblock.
+As far as I know, new mdadm creates the data a
+bit far aways.
+Is there any way to specifiy the proper offset?
+
+Finally, is there an alternative to "mdadm -C"
+or it is the only option?
+Forcing assembly does not work, but maybe there
+is another way to tell mdadm to really assemby
+the array, taking into account the superblock
+information, which are all readable.
+
+Thanks a lot in advance,
+
+bye,
 
 -- 
-Cheers,
-Maurice Hilarius
-eMail: /mhilarius@gmail.com/
+
+piergiorgio
