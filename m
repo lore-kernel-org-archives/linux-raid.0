@@ -1,135 +1,58 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: RAID-6 with 3 missing disks
-Date: Sun, 5 May 2013 10:43:34 +0200
-Message-ID: <20130505084334.GA2304@lazy.lzy>
-References: <20130504160804.GA2242@lazy.lzy>
- <14872633-1367684555-cardhu_decombobulator_blackberry.rim.net-102434637-@b3.c7.bise7.blackberry>
- <20130504163006.GA3395@lazy.lzy>
- <20130505125827.1cb1e320@notabene.brown>
+From: Andreas Boman <aboman@midgaard.us>
+Subject: Re: Failed during rebuild (raid5)
+Date: Sun, 05 May 2013 10:00:34 -0400
+Message-ID: <51866602.8000704@midgaard.us>
+References: <51839E4F.7050102@midgaard.us> <CANU9nTneT2CRWJhdN=d87Hb7W9M+apQH+fRE-S+sieZ-W6+hjg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130505125827.1cb1e320@notabene.brown>
+In-Reply-To: <CANU9nTneT2CRWJhdN=d87Hb7W9M+apQH+fRE-S+sieZ-W6+hjg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, linux-raid-owner@vger.kernel.org, linux-raid@vger.kernel.org
+To: Ole Tange <tange@binf.ku.dk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+On 05/03/2013 08:26 AM, Ole Tange wrote:
+> On Fri, May 3, 2013 at 1:23 PM, Andreas Boman<aboman@midgaard.us>  wrote:
+>
+>> This morning I came up to see the array degraded with two missing drives,
+>> another failed during the rebuild.
+> I just started this page for dealing with situations like yours:
+> https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID
+>
+>
+> /Ole
 
-On Sun, May 05, 2013 at 12:58:27PM +1000, NeilBrown wrote:
-> On Sat, 4 May 2013 18:30:06 +0200 Piergiorgio Sartor
-> <piergiorgio.sartor@nexgo.de> wrote:
-> 
-> > Hi Rudy,
-> > 
-> > thanks for the answer, but as mentioned at the end,
-> > "--force" assemby does not work.
-> > Reason is, 7 disks complains 3 are missing and the
-> > 3 missing are assembed, since their superblock does
-> > not report errors.
-> > Of course, 3 disks are not enough to assembly the
-> > array, forced or not.
-> 
-> Details please.  "--examine" output of every device would be a good start.
-> Output for "mdadm --assemble --force --verbose ....."
-> would help too.
+After having ddrescue running all night, it dropped to copying at a rate 
+of 512B/s. I interrupted it and restarted, it stays at that speed. shows 
+no errors:
 
-thanks for the answer.
-As mentioned in a sequent post, I fixed it by hex editing
-the superblock and restoring, in the 7 disks, the other 3
-missing.
-
-Anyway, I did not considered the "--verbose" option, thanks
-for the hint.
-
-Thanks again,
-
-bye,
-
-pg
-
-> 
-> NeilBrown
-> 
-> 
-> > 
-> > bye,
-> > 
-> > pg
-> > 
-> > On Sat, May 04, 2013 at 04:22:39PM +0000, Rudy Zijlstra wrote:
-> > > Hi
-> > > 
-> > > I would start with mdadm assemble --force
-> > > 
-> > > Do not use create unless all else has failed
-> > > 
-> > > Cheers
-> > > 
-> > > Rudy
-> > > ---
-> > > Verstuurd met mijn BlackBerry van Vodafone
-> > > 
-> > > -----Original Message-----
-> > > From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-> > > Sender: linux-raid-owner@vger.kernel.org
-> > > Date:	Sat, 4 May 2013 18:08:04 
-> > > To: <linux-raid@vger.kernel.org>
-> > > Subject: RAID-6 with 3 missing disks
-> > > 
-> > > Hi all,
-> > > 
-> > > I know this was probably already discussed, but
-> > > maybe I need some refresh.
-> > > 
-> > > I've a 10 HDDs RAID-6 which, due to mishap (disks
-> > > were disconnected accidentaly), has now 3 missing
-> > > devices and cannot be assembled.
-> > > The data should be OK, since no writes were occurring
-> > > during the accident, so putting them together again
-> > > should work.
-> > > 
-> > > As far as I know, one option is to create, with
-> > > "mdadm -C" the array again, giving the disks in
-> > > the proper order.
-> > > 
-> > > Since all HDDs are readable, I guess "mdadm -E"
-> > > should return the role of each device.
-> > > Is this correct for the creation order?
-> > > 
-> > > Second question is about the "Data Offset", since
-> > > this array was created with an older version of
-> > > "mdadm" and the data offset is very close to the
-> > > superblock.
-> > > As far as I know, new mdadm creates the data a
-> > > bit far aways.
-> > > Is there any way to specifiy the proper offset?
-> > > 
-> > > Finally, is there an alternative to "mdadm -C"
-> > > or it is the only option?
-> > > Forcing assembly does not work, but maybe there
-> > > is another way to tell mdadm to really assemby
-> > > the array, taking into account the superblock
-> > > information, which are all readable.
-> > > 
-> > > Thanks a lot in advance,
-> > > 
-> > > bye,
-> > > 
-> > > -- 
-> > > 
-> > > piergiorgio
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
+    Press Ctrl-C to interrupt
+           Initial status (read from logfile)
+     rescued:   557052 MB,  errsize:       0 B,  errors:       0
+     Current status
+     rescued:     1493 GB,  errsize:       0 B,  current rate:      512 B/s
+        ipos:   937316 MB,   errors:       0,    average rate:   16431 kB/s
+           opos:   937316 MB,     time from last successful read:       0 s
+           Copying non-tried blocks...
 
 
+However that is much too slow...
 
--- 
+Then, I decided to take a look at the superblocks and to my horror 
+discovered this:
 
-piergiorgio
+# mdadm --examine /dev/sd[b-g] >>raid.status
+mdadm: No md superblock detected on /dev/sdb.
+mdadm: No md superblock detected on /dev/sdc.
+mdadm: No md superblock detected on /dev/sdd.
+mdadm: No md superblock detected on /dev/sde.
+mdadm: No md superblock detected on /dev/sdf.
+mdadm: No md superblock detected on /dev/sdg.
+
+Can I recover still? What is going on here?
+
+Thanks,
+Andreas
+
