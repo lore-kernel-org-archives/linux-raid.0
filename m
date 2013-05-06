@@ -1,85 +1,208 @@
-From: Brassow Jonathan <jbrassow@redhat.com>
-Subject: Re: [PATCH - RFC] MD: Sync thread not properly shutdown after mddev_suspend()
-Date: Tue, 7 May 2013 08:25:40 -0500
-Message-ID: <9B569D3F-CAC3-408B-ACDF-EE19BE2E82A7@redhat.com>
-References: <1367525963.23442.4.camel@f16> <20130506161245.548b47a1@notabene.brown>
-Mime-Version: 1.0 (Apple Message framework v1085)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Ricky Burgin <ricky@burg.in>
+Subject: Successfully recovered Raid5 no longer boots
+Date: Mon, 06 May 2013 23:21:37 +0100
+Message-ID: <51882CF1.5000006@burg.in>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130506161245.548b47a1@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>, Jonathan Brassow <jbrassow@redhat.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello everybody,
 
-On May 6, 2013, at 1:12 AM, NeilBrown wrote:
+First time posting to this list, so please forgive any oversights with
+etiquette and missing information and such.
 
-> On Thu, 02 May 2013 15:19:23 -0500 Jonathan Brassow <jbrassow@redhat.com>
-> wrote:
-> 
->> MD: Sync thread not properly shutdown after mddev_suspend()
->> 
->> After performing an 'md_stop_writes' followed by an 'mddev_suspend',
->> it is possible to have 'MD_RECOVERY_RUNNING' set in mddev->recovery.
->> It doesn't happen often, but when it does, the recovery thread does
->> not restart properly after a resume.
->> 
->> The problem seems to come from 'md_stop_writes'.  This function is a
->> wrapper around '__md_stop_writes' - surrounding it with mddev_[un]lock
->> calls.  While '__md_stop_writes' properly cleans up the sync thread,
->> the subsequent 'mddev_unlock' call will wake up the personality thread,
->> which in turn calls 'md_check_recovery' - a function that sets
->> mddev->recovery flags and potentially launches the sync thread.
->> Effectively, this can undo what has just been done.
->> 
->> When 'mddev_suspend' is called, it sets the mddev->suspended variable.
->> This variable causes 'md_check_recovery' to simply return if set.  Thus,
->> it is better to reap the sync thread in mddev_suspend, because it cannot
->> be respawned until mddev_resume is called.
->> 
->> There are probably several ways to solve this problem.  The simplest way
->> was to add 'md_reap_sync_thread' to mddev_suspend.  It may be
->> better fixed in 'md_stop_writes' though.  We could also combine
->> 'md_stop_writes' and 'mddev_suspend' by calling '__md_stop_writes' from
->> within 'mddev_suspend' after mddev->suspended has been set.
->> 
->> Thoughts?
-> 
-> Thanks for the thorough analysis.
-> 
-> Your patch looks like it would work,  but it involves calling
-> md_reap_sync_thread() twice which is a little ugly.
-> 
-> How about this:
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 4c74424..3e2acfa 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -5277,8 +5277,8 @@ static void md_clean(struct mddev *mddev)
-> 
-> static void __md_stop_writes(struct mddev *mddev)
-> {
-> +	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-> 	if (mddev->sync_thread) {
-> -		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-> 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> 		md_reap_sync_thread(mddev);
-> 	}
-> 
-> 
-> Callers of md_stop_writes() already need to be prepared for
-> MD_RECOVERY_FROZEN to get set, and raid_resume() clears it for dm-raid.c, so
-> it should be safe.
-> An md_check_recovery won't start anything while MD_RECOVERY_FROZEN is set.
-> So this should *really* stop writes going to the devices.
-> 
-> Make sense?
+I've not long recovered a Raid-5 array compromising of 4 disks with 2
+failing (not failed) disks, with a 1-by-1 swap-out of new matching
+disks. I did this with a live CD and the data was totally fine,
+mountable, no issues at all.
 
-Yeah, that looks good, but give me a day or two to test it.   It seems that with the addition of this patch, the previous patch we added to revive failed devices on raid_resume sometimes fails.  I can't reproduce it by hand, but some of my automated tests will hit it ~ 1 out of 100 times.  So let me investigate a bit more.
+Then I go to boot it back up, and kernel output shows that only 2 of the
+4 disks could be brought up and the raid could naturally not be brought
+online, resulting in obvious failure. I panic, go back to the live CD,
+but nope, the raid is totally fine according to all the output.
 
- brassow
+I spoke to a friendly person on freenode's ##linux who suggested
+checking if all disks including the new ones were using the 0.9
+superblock that my older disks were, I jumped the gun a bit and decided
+to upgrade them all to 1.0, only to find the kernel of the system on
+disk did not have a version of md that supports that new superblock, so
+I downgraded it. I performed this by offlining the array and recreating
+it based on the output of --detail but specifically passing the
+superblock parameter, as per your Wiki instructions, still no good
+however. Didn't mess up the recreation as the partition still totally
+accessible via the live CD.
 
+It's at this point that I'm stuck, I've no idea what to do next and hope
+you can advise. Details below:
+
+System: CentOS 5.9, kernel 2.6.34.6
+
+> mdadm --examine /dev/sd*2
+> /dev/sda2:
+>           Magic : a92b4efc
+>         Version : 0.90.00
+>            UUID : 06dc023e:47dbfdaa:a4d2adc2:26fd5302 (local to host
+> localhost)
+>   Creation Time : Mon May  6 23:45:15 2013
+>      Raid Level : raid5
+>   Used Dev Size : 1462512576 (1394.76 GiB 1497.61 GB)
+>      Array Size : 4387537728 (4184.28 GiB 4492.84 GB)
+>    Raid Devices : 4
+>   Total Devices : 4
+> Preferred Minor : 0
+>
+>     Update Time : Mon May  6 23:47:24 2013
+>           State : clean
+>  Active Devices : 4
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 0
+>        Checksum : bdf0c5f1 - correct
+>          Events : 1
+>
+>          Layout : left-symmetric
+>      Chunk Size : 64K
+>
+>       Number   Major   Minor   RaidDevice State
+> this     0       8        2        0      active sync   /dev/sda2
+>
+>    0     0       8        2        0      active sync   /dev/sda2
+>    1     1       8       18        1      active sync   /dev/sdb2
+>    2     2       8       34        2      active sync   /dev/sdc2
+>    3     3       8       50        3      active sync   /dev/sdd2
+> /dev/sdb2:
+>           Magic : a92b4efc
+>         Version : 0.90.00
+>            UUID : 06dc023e:47dbfdaa:a4d2adc2:26fd5302 (local to host
+> localhost)
+>   Creation Time : Mon May  6 23:45:15 2013
+>      Raid Level : raid5
+>   Used Dev Size : 1462512576 (1394.76 GiB 1497.61 GB)
+>      Array Size : 4387537728 (4184.28 GiB 4492.84 GB)
+>    Raid Devices : 4
+>   Total Devices : 4
+> Preferred Minor : 0
+>
+>     Update Time : Mon May  6 23:47:24 2013
+>           State : clean
+>  Active Devices : 4
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 0
+>        Checksum : bdf0c603 - correct
+>          Events : 1
+>
+>          Layout : left-symmetric
+>      Chunk Size : 64K
+>
+>       Number   Major   Minor   RaidDevice State
+> this     1       8       18        1      active sync   /dev/sdb2
+>
+>    0     0       8        2        0      active sync   /dev/sda2
+>    1     1       8       18        1      active sync   /dev/sdb2
+>    2     2       8       34        2      active sync   /dev/sdc2
+>    3     3       8       50        3      active sync   /dev/sdd2
+> /dev/sdc2:
+>           Magic : a92b4efc
+>         Version : 0.90.00
+>            UUID : 06dc023e:47dbfdaa:a4d2adc2:26fd5302 (local to host
+> localhost)
+>   Creation Time : Mon May  6 23:45:15 2013
+>      Raid Level : raid5
+>   Used Dev Size : 1462512576 (1394.76 GiB 1497.61 GB)
+>      Array Size : 4387537728 (4184.28 GiB 4492.84 GB)
+>    Raid Devices : 4
+>   Total Devices : 4
+> Preferred Minor : 0
+>
+>     Update Time : Mon May  6 23:47:24 2013
+>           State : clean
+>  Active Devices : 4
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 0
+>        Checksum : bdf0c615 - correct
+>          Events : 1
+>
+>          Layout : left-symmetric
+>      Chunk Size : 64K
+>
+>       Number   Major   Minor   RaidDevice State
+> this     2       8       34        2      active sync   /dev/sdc2
+>
+>    0     0       8        2        0      active sync   /dev/sda2
+>    1     1       8       18        1      active sync   /dev/sdb2
+>    2     2       8       34        2      active sync   /dev/sdc2
+>    3     3       8       50        3      active sync   /dev/sdd2
+> /dev/sdd2:
+>           Magic : a92b4efc
+>         Version : 0.90.00
+>            UUID : 06dc023e:47dbfdaa:a4d2adc2:26fd5302 (local to host
+> localhost)
+>   Creation Time : Mon May  6 23:45:15 2013
+>      Raid Level : raid5
+>   Used Dev Size : 1462512576 (1394.76 GiB 1497.61 GB)
+>      Array Size : 4387537728 (4184.28 GiB 4492.84 GB)
+>    Raid Devices : 4
+>   Total Devices : 4
+> Preferred Minor : 0
+>
+>     Update Time : Mon May  6 23:47:24 2013
+>           State : clean
+>  Active Devices : 4
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 0
+>        Checksum : bdf0c627 - correct
+>          Events : 1
+>
+>          Layout : left-symmetric
+>      Chunk Size : 64K
+>
+>       Number   Major   Minor   RaidDevice State
+> this     3       8       50        3      active sync   /dev/sdd2
+>
+>    0     0       8        2        0      active sync   /dev/sda2
+>    1     1       8       18        1      active sync   /dev/sdb2
+>    2     2       8       34        2      active sync   /dev/sdc2
+>    3     3       8       50        3      active sync   /dev/sdd2
+>
+> mdadm --detail /dev/md0
+> /dev/md0:
+>         Version : 0.90
+>   Creation Time : Mon May  6 23:45:15 2013
+>      Raid Level : raid5
+>      Array Size : 4387537728 (4184.28 GiB 4492.84 GB)
+>   Used Dev Size : 1462512576 (1394.76 GiB 1497.61 GB)
+>    Raid Devices : 4
+>   Total Devices : 4
+> Preferred Minor : 0
+>     Persistence : Superblock is persistent
+>
+>     Update Time : Mon May  6 23:47:24 2013
+>           State : clean
+>  Active Devices : 4
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 0
+>
+>          Layout : left-symmetric
+>      Chunk Size : 64K
+>
+>            UUID : 06dc023e:47dbfdaa:a4d2adc2:26fd5302 (local to host
+> localhost)
+>          Events : 0.1
+>
+>     Number   Major   Minor   RaidDevice State
+>        0       8        2        0      active sync   /dev/sda2
+>        1       8       18        1      active sync   /dev/sdb2
+>        2       8       34        2      active sync   /dev/sdc2
+>        3       8       50        3      active sync   /dev/sdd2
+
+Many thanks in advance for any advice you have,
+Ricky Burgin
 
