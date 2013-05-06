@@ -1,90 +1,43 @@
-From: Stefan Borggraefe <stefan@spybot.info>
-Subject: Re: Help with recovering a RAID5 array
-Date: Mon, 06 May 2013 10:12:42 +0200
-Message-ID: <4918514.Nmbo5VakCk@chablis>
-References: <34199580.p6EyCyMeIZ@chablis> <1838659.cc600uVROo@rattle> <20130506163102.066b9264@notabene.brown>
+From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Subject: Re: Simultaneous assembly on multiple hosts
+Date: Mon, 06 May 2013 11:05:34 +0200
+Message-ID: <5187725E.5050803@profitbricks.com>
+References: <20130504020146.GD31411@chc-5.metaname.net> <20130506163203.7a65786b@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130506163102.066b9264@notabene.brown>
+In-Reply-To: <20130506163203.7a65786b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Neil Matai <neil@matai.kiwi.nz>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Am Montag, 6. Mai 2013, 16:31:02 schrieb NeilBrown:
-> On Sat, 04 May 2013 13:13:27 +0200 Stefan Borggraefe <stefan@spybot.info>
-> 
+On 06.05.2013 08:32, NeilBrown wrote:
+> On Sat, 4 May 2013 14:01:46 +1200 Neil Matai <neil@matai.kiwi.nz>
 > wrote:
-> > Am Freitag, 3. Mai 2013, 10:38:52 schrieben Sie:
-> > > On Thu, May 2, 2013 at 2:24 PM, Stefan Borggraefe <stefan@spybot.info>
-> > 
-> > wrote:
-> > > > I am using a RAID5 software RAID on Ubuntu 12.04
-> > > > 
-> > > > It consits of 6 Hitachi drives with 4 TB and contains an ext 4 file
-> > > > system.
-> > > > 
-> > > > When I returned to this server this morning, the array was in the
-> > > > following
-> > > > state:
-> > > > 
-> > > > md126 : active raid5 sdc1[7](S) sdh1[4] sdd1[3](F) sde1[0] sdg1[6]
-> > > > sdf1[2]
-> > > > 
-> > > >       19535086080 blocks super 1.2 level 5, 512k chunk, algorithm 2
-> > > >       [6/4]
-> > > > 
-> > > > [U_U_UU]
-> > > > 
-> > > > sdc is the newly added hard disk, but now also sdd failed. :( It would
-> > > > be
-> > > > great if there was a way to have the this RAID5 working again. Perhaps
-> > > > sdc1
-> > > > can then be fully added to the array and after this drive sdd also
-> > > > exchanged.
-> > > 
-> > > I have had a few raid6 fail in a similar fashion: the 3rd drive
-> > > faliing during rebuild (Also 4 TB Hitachi by the way).
-> > > 
-> > > I tested if the drives were fine:
-> > >   parallel dd if={} of=/dev/null bs=1000k ::: /dev/sd?
-> > > 
-> > > And they were all fine.
-> > 
-> > Same for me.
-> > 
-> > > With only a few failing sectors (if any) I figured that very little
-> > > would be lost by forcing the failing drive online. Remove the spare
-> > > 
-> > > drive, and force the remaining online:
-> > >   mdadm -A --scan --force
-> > 
-> > I removed the spare /dev/sdc1 from /dev/md126
-> > 
-> > with
-> > 
-> > mdadm /dev/md126 --remove /dev/sdc1
-> > 
-> > After mdadm -A --scan --force the array is now in this state
-> > 
-> > md126 : active raid5 sdh1[4] sdd1[3](F) sde1[0] sdg1[6] sdf1[2]
-> > 
-> >       19535086080 blocks super 1.2 level 5, 512k chunk, algorithm 2 [6/4]
-> > 
-> > [U_U_UU]
 > 
-> Did you stop the array first?
->   i.e.
->     mdadm --stop /dev/md126
->     mdadm -Asfvv
+>> Hi all,
+>> 
+>> Is it dangerous have an array assembled on two hosts at the same
+>> time? Say I have servers A and B exporting devices a and b via
+>> ATA over Ethernet or similar to hosts C and D.  If a and b are
+>> components of an array then both C and D automatically assemble
+>> the array as soon as the components a and b are exported but is
+>> this safe (on the proviso that only one of C or D is ever writing
+>> to the array at any time and that there is no write-behind
+>> caching above the array device)?
+>> 
 > 
-> NeilBrown
+> Yes, it is dangerous. Both hosts will try to update the metadata
+> and will trip over each other.
 
-Thank you Neil, yes this was my mistake. I realised it in the meantime and am 
-currently checking the file system using overlay files as suggested in
+This is why we've implemented automatic super block + bitmap reload
+upon first IO. Before, the MD device acts as a read-only device with
+read-only super block. This is rather complex to make it safe.
+This is also difficult to merge with mainline behavior.
 
-https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Force_assembly
--- 
-Best regards,
-Stefan Borggraefe
+Get yourself a kernel developer. ;-)
+
+Cheers,
+Sebastian
