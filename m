@@ -1,83 +1,42 @@
-From: Roberto Nunnari <roberto.nunnari@supsi.ch>
-Subject: Re: replacing drives
-Date: Mon, 06 May 2013 13:30:35 +0200
-Message-ID: <5187945B.2090207@supsi.ch>
-References: <517A8EB5.8080100@supsi.ch> <20130426155347.GA9928@cthulhu.home.robinhill.me.uk> <5183E592.6020409@supsi.ch>
+From: Ole Tange <tange@binf.ku.dk>
+Subject: Re: Linux mdadm --grow RAID6: Something wrong - reshape aborted
+Date: Mon, 6 May 2013 13:42:05 +0200
+Message-ID: <CANU9nTm6LDSR4JkP=UWfR3En02+g51Tq4pd5qNLBoNPjWY35Gw@mail.gmail.com>
+References: <CANU9nT=_7HYg14sR57qffH1B8KXUoRyghQC8P1oz2KxRbZr1jA@mail.gmail.com>
+ <20130506164434.2804bb68@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5183E592.6020409@supsi.ch>
+In-Reply-To: <20130506164434.2804bb68@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Nunnari <roberto.nunnari@supsi.ch>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Roberto Nunnari wrote:
-> Robin Hill wrote:
->> The safest option would be:
->>  - add in the new disks
->>  - partition to at least the same size as your existing partitions (they
->>    can be larger)
->>  - add the new partitions into the arrays (they'll go in as spares)
->>  - grow the arrays to 4 members (this avoids any loss of redundancy)
->>  - wait for the resync to complete
->>  - install grub/lilo/syslinux to the new disks
->>  - fail and remove the old disk partitions from the arrays
->>  - shrink the arrays back down to 2 members
->>  - remove the old disks
+On Mon, May 6, 2013 at 8:44 AM, NeilBrown <neilb@suse.de> wrote:
+> On Thu, 2 May 2013 13:56:09 +0200 Ole Tange <tange@binf.ku.dk> wrote:
+>
+:
+>> I thought this would be enough:
 >>
->> Then, if you're keeping the same number of partitions but increasing the
->> size:
-> 
-> Ok.. got here.
-> 
->>  - grow the arrays to fill the partitions
->>  - grow the filesystems to fill the arrays
-> 
-> Now the scary part.. so.. here I believe I should give the following 
-> commands:
-> 
-> mdadm --grow /dev/md0 --size=max
-> mdadm --grow /dev/md1 --size=max
-> mdadm --grow /dev/md2 --size=max
-> 
-> and after that
-> 
-> fsck /dev/md0
-> fsck /dev/md1
-> fsck /dev/md2
-> 
-> and
-> 
-> resize2fs /dev/md0
-> resize2fs /dev/md1
-> resize2fs /dev/md2
-> 
-> Correct?
-> 
-> 
-> .. I still have a couple of questions:
-> 
-> 1) how do I know if there's a bitmap?
-> 
-> 2) at present /dev/md2 usage is 100%.. could that cause any problem?
-> 
-> 3) the new drives are 2TG drives.. As around one year ago had trouble on 
-> linux (it was a server dated 2006 with CentOS 5) that would not handle 
-> drives larger than 2TB.. I wander what happens if one day one drive 
-> fails and the drive I'll buy to replace will be sold as 2TB but in 
-> reality slightly larger than 2TB.. what will happen? Will linux fail 
-> again to use a drive larger than 2TB?
-> At present I'm on ubuntu 10.04, all software from standard distribution.
-> 
-> Pitfalls I should know?
-> 
-> Thank you very much
-> Robi
+>>   mdadm -v --grow /dev/md1 --raid-devices=10 --backup-file=/root/back-md1
+:
+>> The last command works, but the 2 first commands fail with:
+>>
+>>   mdadm: Need to backup 7168K of critical section..
+>>   mdadm: /dev/md2: Something wrong - reshape aborted
+:
+> Very sensible to test first.  However to reshape a RAID6 from 9 to 10, you
+> need each device to be at least 7*8*chunksize*2 - possibly a bit more than
+> that.
+> Your script uses a chunksize of 128K, so you need at least 15Meg
+> Your script creates 1Meg devices.
+>
+> Try your test with a  much smaller chunk size and a somewhat larger device
+> size.
 
-Anybody on this, please?
+Spot on. If I adjust the size of the loop-back devices to 30M instead
+of 1M, then everything works.
 
-I'd really appreciate some guidance, especially for these last steps.
 
-Thank you and best regards.
-Robi
+/Ole
