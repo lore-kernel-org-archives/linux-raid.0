@@ -1,128 +1,60 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Help with recovering a RAID5 array
-Date: Mon, 6 May 2013 16:31:02 +1000
-Message-ID: <20130506163102.066b9264@notabene.brown>
-References: <34199580.p6EyCyMeIZ@chablis>
-	<CANU9nTnwx_3m3Ggebxgfe1RqKU6OMk59qnhecSmYvmC2cUeRnw@mail.gmail.com>
-	<1838659.cc600uVROo@rattle>
+Subject: Re: Simultaneous assembly on multiple hosts
+Date: Mon, 6 May 2013 16:32:03 +1000
+Message-ID: <20130506163203.7a65786b@notabene.brown>
+References: <20130504020146.GD31411@chc-5.metaname.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Fra.4G=JduEvOru8juSfDiW"; protocol="application/pgp-signature"
+ boundary="Sig_/uaF.Hn+A7j.G6s+tKNQTsjp"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1838659.cc600uVROo@rattle>
+In-Reply-To: <20130504020146.GD31411@chc-5.metaname.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stefan Borggraefe <stefan@spybot.info>
-Cc: Ole Tange <tange@binf.ku.dk>, linux-raid@vger.kernel.org
+To: Neil Matai <neil@matai.kiwi.nz>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/Fra.4G=JduEvOru8juSfDiW
+--Sig_/uaF.Hn+A7j.G6s+tKNQTsjp
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 04 May 2013 13:13:27 +0200 Stefan Borggraefe <stefan@spybot.info>
-wrote:
+On Sat, 4 May 2013 14:01:46 +1200 Neil Matai <neil@matai.kiwi.nz> wrote:
 
-> Am Freitag, 3. Mai 2013, 10:38:52 schrieben Sie:
-> > On Thu, May 2, 2013 at 2:24 PM, Stefan Borggraefe <stefan@spybot.info>=
-=20
-> wrote:
-> > > I am using a RAID5 software RAID on Ubuntu 12.04
-> > >=20
-> > > It consits of 6 Hitachi drives with 4 TB and contains an ext 4 file
-> > > system.
-> > >=20
-> > > When I returned to this server this morning, the array was in the
-> > > following
-> > > state:
-> > >=20
-> > > md126 : active raid5 sdc1[7](S) sdh1[4] sdd1[3](F) sde1[0] sdg1[6] sd=
-f1[2]
-> > >=20
-> > >       19535086080 blocks super 1.2 level 5, 512k chunk, algorithm 2 [=
-6/4]
-> > >=20
-> > > [U_U_UU]
-> > >=20
-> > > sdc is the newly added hard disk, but now also sdd failed. :( It woul=
-d be
-> > > great if there was a way to have the this RAID5 working again. Perhaps
-> > > sdc1
-> > > can then be fully added to the array and after this drive sdd also
-> > > exchanged.
-> > I have had a few raid6 fail in a similar fashion: the 3rd drive
-> > faliing during rebuild (Also 4 TB Hitachi by the way).
-> >=20
-> > I tested if the drives were fine:
-> >=20
-> >   parallel dd if=3D{} of=3D/dev/null bs=3D1000k ::: /dev/sd?
-> >=20
-> > And they were all fine.=20
+> Hi all,
 >=20
-> Same for me.
+> Is it dangerous have an array assembled on two hosts at the same time?
+> Say I have servers A and B exporting devices a and b via ATA over
+> Ethernet or similar to hosts C and D.  If a and b are components of an
+> array then both C and D automatically assemble the array as soon as
+> the components a and b are exported but is this safe (on the proviso
+> that only one of C or D is ever writing to the array at any time and
+> that there is no write-behind caching above the array device)?
 >=20
-> > With only a few failing sectors (if any) I figured that very little
-> > would be lost by forcing the failing drive online. Remove the spare
-> > drive, and force the remaining online:
-> >=20
-> >   mdadm -A --scan --force
->=20
-> I removed the spare /dev/sdc1 from /dev/md126
->=20
-> with
->=20
-> mdadm /dev/md126 --remove /dev/sdc1
->=20
-> After mdadm -A --scan --force the array is now in this state
->=20
-> md126 : active raid5 sdh1[4] sdd1[3](F) sde1[0] sdg1[6] sdf1[2]
->       19535086080 blocks super 1.2 level 5, 512k chunk, algorithm 2 [6/4]=
-=20
-> [U_U_UU]
 
-Did you stop the array first?
-  i.e.
-    mdadm --stop /dev/md126
-    mdadm -Asfvv
+Yes, it is dangerous.
+Both hosts will try to update the metadata and will trip over each other.
 
 NeilBrown
 
-
-> =20
-> > Next step is to do fsck.
->=20
-> I think this is not possible yet at this point. Don't I need to reassembl=
-e the=20
-> array using the --assume-clean option and with one missing drive first? S=
-ome=20
-> step is missing here.
->=20
-> Stefan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/Fra.4G=JduEvOru8juSfDiW
+--Sig_/uaF.Hn+A7j.G6s+tKNQTsjp
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUYdOJjnsnt1WYoG5AQIOVg/9GVTrzcafD2Ma6TJwh2DVgJAP7OJox+uY
-d/QF6midWhxUYzqSHq0VI7Y5ur7sfw+Vn7hnG8h7nTbqYqyl2cs6j+pFKH3srYn1
-ibCxxBU7ImW+J6OuwAHmODIVai42nx3HzRWlXFZ/9fIa5Ot/3fRk4SYHbIO5poaG
-nE1xhPTvClakTqPyGlNptNovSLWMePWxIBbaIpsCu7G/CEjKXj1vCUpb8P8dfMK8
-unEwn0mUobzO1GBa4sHE7TenkoQGusPLt9nrDGaUJ6MLX22O0FsJuZlHTyQ6s/oH
-Gky3hc+NtXv6xAifqald6sMYpTYcEa/s+4dYDZK6gEo55LtY8MbAygiSYzIqQh/i
-bzTvsdQbtRZ8hy/jDFbM6Tzc22wKO4Z3QhOtKJ9HGhO+hmWet1o+jClf8E52k0es
-pPm4nDAGiiAzezyZRlDLfqgOg71k41dVslEECoExyM7hB3Xt1Fl9wvmQwOiIt1RR
-YmZyhwAz9AXF9GqEYaoayq/3oABIgSeIkpWtUCMOA3vCzoObpatWo20tkuYLJcna
-UGQfnCxbmSAWOdCWRpWjO5ZMXKCWEisplOWe/+ehNuWM7PC5xKDg/DT1c0U8lXyt
-uO2JQEKqhXIJh8heOGHSSTfdqPVD119FSi3rTas6nJaqjoSkwmzCgEUzIsrBGNJu
-dVr+EmH5bTE=
-=l9AY
+iQIVAwUBUYdOYznsnt1WYoG5AQJ/rA/9E/H1dawxxttVLp3cRdWm7hhEH+HpzL9G
+oYsY5jim7navAz+DafDf4OVIFjFml2/44ZVwsh7/4QqEpYQCeubNHpOlG3WA6uGl
+76cfaRQKTh1LpkeWwJZwzOAiV9NriEw7ow8LQnpfPP7NHj7/T4gMDIFKkfWQGe/E
+ZVymKrzziFJUU+AjpkM+JQ4jMiONSKhSTO7GQToAacjcEChTeKMp4837D98SFUL4
+/97rhZrgzzUeWbXIWfh2Cdzqepe7e9n3C3BtfxQ639cl14ZIADzspxbD5WKImEu1
+O056X/SXmE2cn/E3ws5RTAZ7Yy7SCb0irNw2ygILgJfzhj2LlDIHyRABsJX+yiMd
+rGVFv815VBNb3GyzwNFzZVtOXDuhbTs9xPteU3Pjxe+JjSFjse/vyz38DzR2ly3r
+RYZknhmaaGLetxHtcy2709rf2zgcqCmLPkFYlEMsdujxsA4B1p03C1sNcDK8KyCv
+ZdgzYlUe5mfGmjs1cBHOtNrS604MBHOEvmLQIdBmDXIl4tJOX4R5gL4h1sEYMB8q
+L74ScDVBaZdekVF4bqhJVUPHuBgNmWf8+d/I315daGaBXm7Wg+65VTYM45JOunuC
+BhhDzbLZXNUBI4WpfL2QkNmKHrQbwgpQvo7+6fm7qTdI/8wwrMVJ5TWoW1Is7s0J
+4Z7sMN/SNP0=
+=J8A1
 -----END PGP SIGNATURE-----
 
---Sig_/Fra.4G=JduEvOru8juSfDiW--
+--Sig_/uaF.Hn+A7j.G6s+tKNQTsjp--
