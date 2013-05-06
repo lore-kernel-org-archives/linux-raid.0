@@ -1,149 +1,100 @@
-From: Sam Bingner <sam@bingner.com>
-Subject: Re: Reshape Shrink Hung Again
-Date: Mon, 6 May 2013 06:36:29 +0000
-Message-ID: <F83D995D-967D-4D89-9CE9-46A0305290C6@bingner.com>
-References: <96A49024-A8A7-4ED9-82B1-5AE430374EBE@bingner.com>
- <20130422072414.3e30882c@notabene.brown>
- <7A4C666A-D95E-41AB-96B2-5E75097D8BBB@bingner.com>
- <20130506152926.067d3459@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Linux mdadm --grow RAID6: Something wrong - reshape aborted
+Date: Mon, 6 May 2013 16:44:34 +1000
+Message-ID: <20130506164434.2804bb68@notabene.brown>
+References: <CANU9nT=_7HYg14sR57qffH1B8KXUoRyghQC8P1oz2KxRbZr1jA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/04q9Vev_XJH/IfikCILD/EC"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130506152926.067d3459@notabene.brown>
-Content-Language: en-US
-Content-ID: <D995A9EC345DEB4F90A97C10CD28FCF4@ds.sbdhi.com>
+In-Reply-To: <CANU9nT=_7HYg14sR57qffH1B8KXUoRyghQC8P1oz2KxRbZr1jA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Ole Tange <tange@binf.ku.dk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On May 5, 2013, at 7:29 PM, NeilBrown <neilb@suse.de> wrote:
+--Sig_/04q9Vev_XJH/IfikCILD/EC
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> On Wed, 1 May 2013 02:00:30 +0000 Sam Bingner <sam@bingner.com> wrote:
-> 
->> On Apr 21, 2013, at 11:24 AM, NeilBrown <neilb@suse.de> wrote:
->> 
->>> On Fri, 19 Apr 2013 08:29:37 +0000 Sam Bingner <sam@bingner.com> wrote:
->>> 
->>>> I'll start this off by saying that no data is in jeopardy, but I would like to track down the cause of this problem and fix it.  I originally thought it must have been due to the incorrect backup-file size with a raid array shrunk to smaller than the final size when it happened to me last time but this time this was not the case.
->>>> 
->>>> I initiated a shrink from a 4-drive RAID5 to a 3-drive RAID5, this shrink had no problems except that a drive failed right at the end of the reshape... then it hung at 99.9% and does not allow me to remove the failed drive from the array because it is "rebuilding".  I am not sure if the drive failed at the end, or if it was after it had gotten to 99.9% because I didn't see this until the next morning as it ran overnight.
->>>> 
->>>> Sam
->>>> 
->>>> root@fs:/var/log# uname -a
->>>> Linux fs 2.6.32-5-686 #1 SMP Mon Jan 16 16:04:25 UTC 2012 i686 GNU/Linux
->>>> 
->>>> Apr 17 22:37:41 fs kernel: [25860779.639762] md1: detected capacity change from 749122093056 to 499414728704
->>>> Apr 17 22:38:40 fs kernel: [25860837.912441] md: reshape of RAID array md1
->>>> Apr 17 22:38:40 fs kernel: [25860837.912447] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
->>>> Apr 17 22:38:40 fs kernel: [25860837.912452] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for reshape.
->>>> Apr 17 22:38:40 fs kernel: [25860837.912459] md: using 128k window, over a total of 243854848 blocks.
->>>> Apr 18 07:51:09 fs kernel: [25893987.273813] raid5: Disk failure on sda2, disabling device.
->>>> Apr 18 07:51:09 fs kernel: [25893987.273815] raid5: Operation continuing on 2 devices.
->>>> Apr 18 07:51:09 fs kernel: [25893987.287168] md: super_written gets error=-5, uptodate=0
->>>> Apr 18 07:51:10 fs kernel: [25893987.657039] md: md1: reshape done.
->>>> Apr 18 07:51:10 fs kernel: [25893987.781599] md: reshape of RAID array md1
->>>> Apr 18 07:51:10 fs kernel: [25893987.781607] md: minimum _guaranteed_  speed: 100 KB/sec/disk.
->>>> Apr 18 07:51:10 fs kernel: [25893987.781613] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for reshape.
->>>> Apr 18 07:51:10 fs kernel: [25893987.781620] md: using 128k window, over a total of 243854848 blocks.
->>>> 
->>>> 
->>>> md1 : active raid5 sdd2[3] sda2[0](F) sdc2[2] sdb2[4]
->>>>     487709696 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/2] [_UU]
->>>>     [===================>.]  reshape = 99.9% (243853824/243854848) finish=343.6min speed=0K/sec
->>>> 
->>> 
->>> Looks like a bug - probably in mdadm.
->>> mdadm needs to help the reshape over the last little bit, and md is probably
->>> waiting for it to do that.  This will be the only time in the whole process
->>> when the backup file is used.
->>> 
->>> I would try stopping the array and re-assembling it.  That might require a
->>> reboot.  If that doesn't fix it, let me know and I'll prioritise this.
->>> Otherwise - I've put it on my to-do list.  I'll try to reproduce and fix it
->>> in due course.
->>> 
->>> Thanks for the report,
->>> NeilBrown
->> 
->> Sorry for the delay in responding, the server was at a remote location and didn't have a remote console.  My attempt to make an initrd that provided me SSH failed for unknown reasons (it works now that I've got physical access to the server).  Based on the results below, it looks like the drive that did drop out was pretty much at the very end and I really don't think it was related to the error.  I can leave the system in this state and get you access to it to see if you desire.  This system was in the process of being decommissioned and soon after the failure the replacement came in.  This same error happened to me twice, but I also did another reshape where it didn't happen.  I can play with this system and try to duplicate it again also.  As I said, I'll be happy to do anything to h
- elp find the source of this. 
->> 
->> In any case, here is what happened from initramfs:
-> 
-> Thanks.
-> It looks like sda2 (first device in array) failed shortly after Thu Apr 18
-> 11:49:51 2013 when there was still 13MB to be reshaped.
-> Then the reshape froze with only 2MB to go.  Don't know why yet.
-> 
-> Could yo retry the assemble command with --verbose added?
-> i.e.
->  mdadm.static --assemble /dev/md0 --backup-file=/boot/backup.md --verbose
-> 
-> The 
->   export MDADM_GROW_ALLOW_OLD=1
-> and try again.
-> If that doesn't start the array, try adding
->   --invalid-backup
-> 
-> and report the results.
-> 
-> Thanks.
-> 
-> NeilBrown
-> 
+On Thu, 2 May 2013 13:56:09 +0200 Ole Tange <tange@binf.ku.dk> wrote:
 
-The backup.md file is all zeroes (and seems to have always been since it only uses it at the end?)  The --invalid-backup option seemed to work, but I guess then the question is why it was expecting valid data if it never put anything there to start with?  It seems to have actually happily backed up the 3MB after being told to accept an invalid backup...
+> I have a RAID60 that I want to expand.
+>=20
+> The current setup is: 2 axles each having 9 disks + 2 spares.
+>=20
+> The future wanted setup is: 4 axles each having 10 disks + 1 spare.
+>=20
+> So I need to do some --grow to reshape the drives.
+>=20
+> I thought this would be enough:
+>=20
+>   mdadm -v --grow /dev/md1 --raid-devices=3D10 --backup-file=3D/root/back=
+-md1
+>   mdadm -v --grow /dev/md2 --raid-devices=3D10 --backup-file=3D/root/back=
+-md2
+>   mdadm -v --grow /dev/md0 --raid-devices=3D4 --add /dev/md3 /dev/md4
+>=20
+> The last command works, but the 2 first commands fail with:
+>=20
+>   mdadm: Need to backup 7168K of critical section..
+>   mdadm: /dev/md2: Something wrong - reshape aborted
 
-I'm thinking it somehow froze originally trying to restore a backup that it never made?
+I assume you are getting this error when running a test with small loop-back
+devices - yes?
+Very sensible to test first.  However to reshape a RAID6 from 9 to 10, you
+need each device to be at least 7*8*chunksize*2 - possibly a bit more than
+that.
+Your script uses a chunksize of 128K, so you need at least 15Meg
+Your script creates 1Meg devices.
 
-Sam
+Try your test with a  much smaller chunk size and a somewhat larger device
+size.
 
-# ./mdadm.static --assemble --force --verbose /dev/md1 --backup-file=/boot/backup.md
-mdadm: looking for devices for /dev/md1
-mdadm: /dev/sdd2 is identified as a member of /dev/md1, slot 3.
-mdadm: /dev/sdc2 is identified as a member of /dev/md1, slot 2.
-mdadm: /dev/sdb2 is identified as a member of /dev/md1, slot 1.
-mdadm: /dev/sda2 is identified as a member of /dev/md1, slot 0.
-mdadm:/dev/md1 has an active reshape - checking if critical section needs to be restored
-mdadm: No backup metadata on /boot/backup.md
-mdadm: Failed to find backup of critical section
-mdadm: Failed to restore critical section for reshape, sorry.
+NeilBrown
 
-# export MDADM_GROW_ALLOW_OLD=1
-# ./mdadm.static --assemble --force --verbose /dev/md1 --backup-file=/boot/backup.md 
-mdadm: looking for devices for /dev/md1
-mdadm: /dev/sdd2 is identified as a member of /dev/md1, slot 3.
-mdadm: /dev/sdc2 is identified as a member of /dev/md1, slot 2.
-mdadm: /dev/sdb2 is identified as a member of /dev/md1, slot 1.
-mdadm: /dev/sda2 is identified as a member of /dev/md1, slot 0.
-mdadm:/dev/md1 has an active reshape - checking if critical section needs to be restored
-mdadm: No backup metadata on /boot/backup.md
-mdadm: Failed to find backup of critical section
-mdadm: Failed to restore critical section for reshape, sorry.
+>=20
+> How can I --grow a RAID6 to use more devices?
+>=20
+> Info about the system:
+>=20
+>   $ mdadm --version
+>   mdadm - v3.2.5 - 18th May 2012
+>   $ uname -r
+>   3.5.0-17-generic
+>=20
+> This URL includes a Makefile to reproduce the problem:
+> http://serverfault.com/questions/503832/linux-mdadm-grow-raid6-something-=
+wrong-reshape-aborted
+>=20
+>=20
+> /Ole
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-# ./mdadm.static --assemble --force --verbose /dev/md1 --backup-file=/boot/backup.md --invalid-backup
-mdadm: looking for devices for /dev/md1
-mdadm: /dev/sdd2 is identified as a member of /dev/md1, slot 3.
-mdadm: /dev/sdc2 is identified as a member of /dev/md1, slot 2.
-mdadm: /dev/sdb2 is identified as a member of /dev/md1, slot 1.
-mdadm: /dev/sda2 is identified as a member of /dev/md1, slot 0.
-mdadm:/dev/md1 has an active reshape - checking if critical section needs to be restored
-mdadm: No backup metadata on /boot/backup.md
-mdadm: Failed to find backup of critical section
-mdadm: continuing without restoring backup
-mdadm: added /dev/sda2 to /dev/md1 as 0 (possibly out of date)
-mdadm: added /dev/sdc2 to /dev/md1 as 2
-mdadm: added /dev/sdd2 to /dev/md1 as 3
-mdadm: added /dev/sdb2 to /dev/md1 as 1
-mdadm: Need to backup 3072K of critical section..
-mdadm: /dev/md1 has been started with 3 drives (out of 4).
 
-# cat /proc/mdstat 
-Personalities : [raid1] [raid6] [raid5] [raid4] 
-md1 : active raid5 sdb2[4] sdd2[3] sdc2[2]
-      487709696 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/2] [_UU]
-      [>....................]  recovery =  0.0% (167432/243854848) finish=121.2min speed=33486K/sec
+--Sig_/04q9Vev_XJH/IfikCILD/EC
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUYdRUjnsnt1WYoG5AQLJqg/9Ef81NJgLKtQPWx3LkC47YygwjGxEmSWJ
+H2cEB4Nr7XzlpemIqoe3/me4s04CJ/yjkFqGrEPTJLpACQ3J3tDRd2O906cmK9Iq
+YIMGOf22OSUtPbyOjTLjnF0vi+iiQXYk+mvJd7T4lExgTgCiTq+96ZN59cF03NqJ
+mDaa0NMzSPsUsgBJv2kpgXvDH1GIgYFrYzUCUynfKnU7rPOATtdRtzELxkG54MpE
+Lv6PYLxa0pP4SyL+R7vezNAXezh7rKICRaqkTQS3oFFGpzmI03HuhOCoAwqq3PdB
+swqCPeRF+8wQfD0DRnqJyOmo61pCEilbQYe2i6anKAandxZkgfjTjyClpGI6BPjC
+XetKo3iNHvLqoCS3eFW+1mfQ+aeMCwPQSiJ5wTwbFP2lBlP45q1vhaB7gKzBIOvK
+VZnl6u2798Ah1AX6s65DreT53iMyDrlNS3ssx9Ia8lazolE38YUeJ8RM+gTVuY7o
+tks1nUryrUMxzXXLd0aT3HlJQzoF7/YaMZdV9QqC8J/0cYgPch2egoblGlom1brH
+Fzu2Bh0C5ZTCmdYRrQKBzeQQGDfTaipZp+dfldAtUYa8mtpBih2FCEV855xrMAlC
+58AcDqZYvVCJLU1/SWQCTvf3dBIWDOJDODXZ2pJaQ/QBOAdSxV6Hpjpq6shKSZer
+3l6r+cYvVmk=
+=1l8x
+-----END PGP SIGNATURE-----
+
+--Sig_/04q9Vev_XJH/IfikCILD/EC--
