@@ -1,135 +1,128 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH - RFC] MD: Sync thread not properly shutdown after
- mddev_suspend()
-Date: Mon, 6 May 2013 16:12:45 +1000
-Message-ID: <20130506161245.548b47a1@notabene.brown>
-References: <1367525963.23442.4.camel@f16>
+Subject: Re: Help with recovering a RAID5 array
+Date: Mon, 6 May 2013 16:31:02 +1000
+Message-ID: <20130506163102.066b9264@notabene.brown>
+References: <34199580.p6EyCyMeIZ@chablis>
+	<CANU9nTnwx_3m3Ggebxgfe1RqKU6OMk59qnhecSmYvmC2cUeRnw@mail.gmail.com>
+	<1838659.cc600uVROo@rattle>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Dx7BGJ3QUGjyXETZ=M2aUVP"; protocol="application/pgp-signature"
+ boundary="Sig_/Fra.4G=JduEvOru8juSfDiW"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1367525963.23442.4.camel@f16>
+In-Reply-To: <1838659.cc600uVROo@rattle>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jonathan Brassow <jbrassow@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: Stefan Borggraefe <stefan@spybot.info>
+Cc: Ole Tange <tange@binf.ku.dk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/Dx7BGJ3QUGjyXETZ=M2aUVP
+--Sig_/Fra.4G=JduEvOru8juSfDiW
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 02 May 2013 15:19:23 -0500 Jonathan Brassow <jbrassow@redhat.com>
+On Sat, 04 May 2013 13:13:27 +0200 Stefan Borggraefe <stefan@spybot.info>
 wrote:
 
-> MD: Sync thread not properly shutdown after mddev_suspend()
->=20
-> After performing an 'md_stop_writes' followed by an 'mddev_suspend',
-> it is possible to have 'MD_RECOVERY_RUNNING' set in mddev->recovery.
-> It doesn't happen often, but when it does, the recovery thread does
-> not restart properly after a resume.
->=20
-> The problem seems to come from 'md_stop_writes'.  This function is a
-> wrapper around '__md_stop_writes' - surrounding it with mddev_[un]lock
-> calls.  While '__md_stop_writes' properly cleans up the sync thread,
-> the subsequent 'mddev_unlock' call will wake up the personality thread,
-> which in turn calls 'md_check_recovery' - a function that sets
-> mddev->recovery flags and potentially launches the sync thread.
-> Effectively, this can undo what has just been done.
->=20
-> When 'mddev_suspend' is called, it sets the mddev->suspended variable.
-> This variable causes 'md_check_recovery' to simply return if set.  Thus,
-> it is better to reap the sync thread in mddev_suspend, because it cannot
-> be respawned until mddev_resume is called.
->=20
-> There are probably several ways to solve this problem.  The simplest way
-> was to add 'md_reap_sync_thread' to mddev_suspend.  It may be
-> better fixed in 'md_stop_writes' though.  We could also combine
-> 'md_stop_writes' and 'mddev_suspend' by calling '__md_stop_writes' from
-> within 'mddev_suspend' after mddev->suspended has been set.
->=20
-> Thoughts?
-
-Thanks for the thorough analysis.
-
-Your patch looks like it would work,  but it involves calling
-md_reap_sync_thread() twice which is a little ugly.
-
-How about this:
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 4c74424..3e2acfa 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5277,8 +5277,8 @@ static void md_clean(struct mddev *mddev)
+> Am Freitag, 3. Mai 2013, 10:38:52 schrieben Sie:
+> > On Thu, May 2, 2013 at 2:24 PM, Stefan Borggraefe <stefan@spybot.info>=
 =20
- static void __md_stop_writes(struct mddev *mddev)
- {
-+	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	if (mddev->sync_thread) {
--		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
- 		md_reap_sync_thread(mddev);
- 	}
+> wrote:
+> > > I am using a RAID5 software RAID on Ubuntu 12.04
+> > >=20
+> > > It consits of 6 Hitachi drives with 4 TB and contains an ext 4 file
+> > > system.
+> > >=20
+> > > When I returned to this server this morning, the array was in the
+> > > following
+> > > state:
+> > >=20
+> > > md126 : active raid5 sdc1[7](S) sdh1[4] sdd1[3](F) sde1[0] sdg1[6] sd=
+f1[2]
+> > >=20
+> > >       19535086080 blocks super 1.2 level 5, 512k chunk, algorithm 2 [=
+6/4]
+> > >=20
+> > > [U_U_UU]
+> > >=20
+> > > sdc is the newly added hard disk, but now also sdd failed. :( It woul=
+d be
+> > > great if there was a way to have the this RAID5 working again. Perhaps
+> > > sdc1
+> > > can then be fully added to the array and after this drive sdd also
+> > > exchanged.
+> > I have had a few raid6 fail in a similar fashion: the 3rd drive
+> > faliing during rebuild (Also 4 TB Hitachi by the way).
+> >=20
+> > I tested if the drives were fine:
+> >=20
+> >   parallel dd if=3D{} of=3D/dev/null bs=3D1000k ::: /dev/sd?
+> >=20
+> > And they were all fine.=20
+>=20
+> Same for me.
+>=20
+> > With only a few failing sectors (if any) I figured that very little
+> > would be lost by forcing the failing drive online. Remove the spare
+> > drive, and force the remaining online:
+> >=20
+> >   mdadm -A --scan --force
+>=20
+> I removed the spare /dev/sdc1 from /dev/md126
+>=20
+> with
+>=20
+> mdadm /dev/md126 --remove /dev/sdc1
+>=20
+> After mdadm -A --scan --force the array is now in this state
+>=20
+> md126 : active raid5 sdh1[4] sdd1[3](F) sde1[0] sdg1[6] sdf1[2]
+>       19535086080 blocks super 1.2 level 5, 512k chunk, algorithm 2 [6/4]=
+=20
+> [U_U_UU]
 
+Did you stop the array first?
+  i.e.
+    mdadm --stop /dev/md126
+    mdadm -Asfvv
 
-Callers of md_stop_writes() already need to be prepared for
-MD_RECOVERY_FROZEN to get set, and raid_resume() clears it for dm-raid.c, so
-it should be safe.
-An md_check_recovery won't start anything while MD_RECOVERY_FROZEN is set.
-So this should *really* stop writes going to the devices.
-
-Make sense?
-
-Thanks,
 NeilBrown
 
 
-
->=20
-> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
->=20
-> Index: linux-upstream/drivers/md/md.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-upstream.orig/drivers/md/md.c
-> +++ linux-upstream/drivers/md/md.c
-> @@ -360,6 +360,7 @@ void mddev_suspend(struct mddev *mddev)
->  	mddev->pers->quiesce(mddev, 1);
 > =20
->  	del_timer_sync(&mddev->safemode_timer);
-> +	md_reap_sync_thread(mddev);
->  }
->  EXPORT_SYMBOL_GPL(mddev_suspend);
-> =20
+> > Next step is to do fsck.
 >=20
+> I think this is not possible yet at this point. Don't I need to reassembl=
+e the=20
+> array using the --assume-clean option and with one missing drive first? S=
+ome=20
+> step is missing here.
 >=20
+> Stefan
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
---Sig_/Dx7BGJ3QUGjyXETZ=M2aUVP
+--Sig_/Fra.4G=JduEvOru8juSfDiW
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUYdJ3Tnsnt1WYoG5AQLs4A/+NkL7YB0sF6b7LHPmWpgBTFV/JDMZHAs2
-0u/JEqSrPaARgZ2I/mqPhB0M7gTa+nNG3VevFpO5Fd0DnNqdB6QK+9+IzYjMOLEX
-pUy5jQoSjWDNCipYP40tY9o9Zhl8uH1n7s7g+BjsjdLtzY7zrWhwSglpDvXqAM5+
-+sDh3t1NxkV+o0g9E7EQysXObhets/W3KVsW0+CWaIYcT8QCMxlaVUdC51K+8xQb
-kesYbPqtvMuV+SbzNk1HrydZHok96GuBnP7UTwZe0xghLU5r3RFNzHXTbXZhTt8v
-XoFLqy7GiH5FGJrqgSiDI1DxwB+wJiH44CWc2hLZfubk3sWT+e8aIyFfNod9vwLG
-INRDzz4r4Bu53dbI+o7Q8eRNlAnMpcOYywkgNEpNyx/xxbNp2O91sUL5EbCpbEfh
-JN0EN738Vr716NmmUTa/vJ5q/T5T18CDm4+g7SHwLBlTjhWKNNnE/JCkem0GbubX
-vBUqedQyv5e3eDeeQyEqSr5jkqkdXQktvvpnFBTtBY3E/p//oh1ssLT+kAybhAVs
-8wjrzIy1akovlUa1NbZFqsKNgFm10Uix6KiPnvD8JcIQsRabzpWOKZv/lxcCPwv+
-LGuVk4JXF2EnBDsdMcSf7xEd9q/mEOiAl+df1FmzMbqldHZmNPzJ8NFv18PSbviF
-txC1+9USB0A=
-=WTM5
+iQIVAwUBUYdOJjnsnt1WYoG5AQIOVg/9GVTrzcafD2Ma6TJwh2DVgJAP7OJox+uY
+d/QF6midWhxUYzqSHq0VI7Y5ur7sfw+Vn7hnG8h7nTbqYqyl2cs6j+pFKH3srYn1
+ibCxxBU7ImW+J6OuwAHmODIVai42nx3HzRWlXFZ/9fIa5Ot/3fRk4SYHbIO5poaG
+nE1xhPTvClakTqPyGlNptNovSLWMePWxIBbaIpsCu7G/CEjKXj1vCUpb8P8dfMK8
+unEwn0mUobzO1GBa4sHE7TenkoQGusPLt9nrDGaUJ6MLX22O0FsJuZlHTyQ6s/oH
+Gky3hc+NtXv6xAifqald6sMYpTYcEa/s+4dYDZK6gEo55LtY8MbAygiSYzIqQh/i
+bzTvsdQbtRZ8hy/jDFbM6Tzc22wKO4Z3QhOtKJ9HGhO+hmWet1o+jClf8E52k0es
+pPm4nDAGiiAzezyZRlDLfqgOg71k41dVslEECoExyM7hB3Xt1Fl9wvmQwOiIt1RR
+YmZyhwAz9AXF9GqEYaoayq/3oABIgSeIkpWtUCMOA3vCzoObpatWo20tkuYLJcna
+UGQfnCxbmSAWOdCWRpWjO5ZMXKCWEisplOWe/+ehNuWM7PC5xKDg/DT1c0U8lXyt
+uO2JQEKqhXIJh8heOGHSSTfdqPVD119FSi3rTas6nJaqjoSkwmzCgEUzIsrBGNJu
+dVr+EmH5bTE=
+=l9AY
 -----END PGP SIGNATURE-----
 
---Sig_/Dx7BGJ3QUGjyXETZ=M2aUVP--
+--Sig_/Fra.4G=JduEvOru8juSfDiW--
