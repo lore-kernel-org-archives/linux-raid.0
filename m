@@ -1,45 +1,90 @@
-From: Brassow Jonathan <jbrassow@redhat.com>
-Subject: Re: [PATCH - v2] DM RAID: Add ability to restore transiently failed devices on resume
-Date: Mon, 6 May 2013 09:55:50 -0500
-Message-ID: <D4677729-5333-4EA4-B587-6D3270AFA108@redhat.com>
-References: <1365712023.9799.1.camel@f16> <1367522364.23442.1.camel@f16> <20130506160035.2b84bda5@notabene.brown>
-Mime-Version: 1.0 (Apple Message framework v1085)
-Content-Type: text/plain; charset=us-ascii
+From: Marek Becka <marek.becka@superhosting.cz>
+Subject: mdadm fails to assemble arrays with quotes in name
+Date: Mon, 06 May 2013 19:34:35 +0200
+Message-ID: <5187E9AB.4040904@superhosting.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130506160035.2b84bda5@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, agk@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
-On May 6, 2013, at 1:00 AM, NeilBrown wrote:
+By accident I have created an array with simple quotes in name:
 
-> On Thu, 02 May 2013 14:19:24 -0500 Jonathan Brassow <jbrassow@redhat.com>
-> wrote:
-> 
->> DM RAID: Add ability to restore transiently failed devices on resume
->> 
->> This patch adds code to the resume function to check over the devices
->> in the RAID array.  If any are found to be marked as failed and their
->> superblocks can be read, an attempt is made to reintegrate them into
->> the array.  This allows the user to refresh the array with a simple
->> suspend and resume of the array - rather than having to load a
->> completely new table, allocate and initialize all the structures and
->> throw away the old instantiation.
->> 
->> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
->> 
+mdadm --assemble /dev/md0 --name=\'newname\':0 --update=name /dev/sdb1 
+/dev/sdd1
 
-<snip/>
+My mdadm.conf contains following line:
 
->> +1.5.1   Add ability to restore transiently failed devices on resume.
->> 
-> 
-> 
-> Applied thanks.  I assume this is heading for 3.11 ?
+ARRAY /dev/md/0 metadata=1.2 UUID=0324aa8b:e17efd1a:bae27dd0:66fc7573 
+name='newname':0
 
-3.11 is fine.  thanks,
- brassow
+Mdadm fails to assemble this array. After removing the name from 
+mdadm.conf, everything works fine.
+
+mdadm  --assemble --scan -v 2>&1 | grep sd[bd]1
+mdadm: no RAID superblock on /dev/sdd1
+mdadm: no RAID superblock on /dev/sdb1
+mdadm: /dev/sdd1 has wrong uuid.
+mdadm: /dev/sdb1 has wrong uuid.
+mdadm: /dev/sdd1 has wrong name.
+mdadm: /dev/sdb1 has wrong name.
+
+I'm using mdadm - v3.2.5 - 18th May 2012 and kernel version 3.4.35. The 
+superblock contains:
+
+mdadm  --examine /dev/sdb1
+/dev/sdb1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : 0324aa8b:e17efd1a:bae27dd0:66fc7573
+            Name : 'newname':0
+   Creation Time : Thu Apr 11 17:54:28 2013
+      Raid Level : raid1
+    Raid Devices : 2
+
+  Avail Dev Size : 2097128 (1024.16 MiB 1073.73 MB)
+      Array Size : 1048564 (1024.16 MiB 1073.73 MB)
+     Data Offset : 24 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : e9094b42:d1f2e7e4:71b7a626:77e008aa
+
+     Update Time : Sat Apr 13 00:53:27 2013
+        Checksum : afddd58 - correct
+          Events : 36
+
+
+    Device Role : Active device 0
+    Array State : AA ('A' == active, '.' == missing)
+
+mdadm  --examine /dev/sdd1
+/dev/sdd1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : 0324aa8b:e17efd1a:bae27dd0:66fc7573
+            Name : 'newname':0
+   Creation Time : Thu Apr 11 17:54:28 2013
+      Raid Level : raid1
+    Raid Devices : 2
+
+  Avail Dev Size : 2097128 (1024.16 MiB 1073.73 MB)
+      Array Size : 1048564 (1024.16 MiB 1073.73 MB)
+     Data Offset : 24 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : a841cc4e:b37b0765:70225714:71c65fdd
+
+     Update Time : Sat Apr 13 00:53:27 2013
+        Checksum : b8a5eef2 - correct
+          Events : 36
+
+
+    Device Role : Active device 1
+    Array State : AA ('A' == active, '.' == missing)
 
