@@ -1,100 +1,90 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Linux mdadm --grow RAID6: Something wrong - reshape aborted
-Date: Mon, 6 May 2013 16:44:34 +1000
-Message-ID: <20130506164434.2804bb68@notabene.brown>
-References: <CANU9nT=_7HYg14sR57qffH1B8KXUoRyghQC8P1oz2KxRbZr1jA@mail.gmail.com>
+From: Stefan Borggraefe <stefan@spybot.info>
+Subject: Re: Help with recovering a RAID5 array
+Date: Mon, 06 May 2013 10:12:42 +0200
+Message-ID: <4918514.Nmbo5VakCk@chablis>
+References: <34199580.p6EyCyMeIZ@chablis> <1838659.cc600uVROo@rattle> <20130506163102.066b9264@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/04q9Vev_XJH/IfikCILD/EC"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CANU9nT=_7HYg14sR57qffH1B8KXUoRyghQC8P1oz2KxRbZr1jA@mail.gmail.com>
+In-Reply-To: <20130506163102.066b9264@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ole Tange <tange@binf.ku.dk>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/04q9Vev_XJH/IfikCILD/EC
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Am Montag, 6. Mai 2013, 16:31:02 schrieb NeilBrown:
+> On Sat, 04 May 2013 13:13:27 +0200 Stefan Borggraefe <stefan@spybot.info>
+> 
+> wrote:
+> > Am Freitag, 3. Mai 2013, 10:38:52 schrieben Sie:
+> > > On Thu, May 2, 2013 at 2:24 PM, Stefan Borggraefe <stefan@spybot.info>
+> > 
+> > wrote:
+> > > > I am using a RAID5 software RAID on Ubuntu 12.04
+> > > > 
+> > > > It consits of 6 Hitachi drives with 4 TB and contains an ext 4 file
+> > > > system.
+> > > > 
+> > > > When I returned to this server this morning, the array was in the
+> > > > following
+> > > > state:
+> > > > 
+> > > > md126 : active raid5 sdc1[7](S) sdh1[4] sdd1[3](F) sde1[0] sdg1[6]
+> > > > sdf1[2]
+> > > > 
+> > > >       19535086080 blocks super 1.2 level 5, 512k chunk, algorithm 2
+> > > >       [6/4]
+> > > > 
+> > > > [U_U_UU]
+> > > > 
+> > > > sdc is the newly added hard disk, but now also sdd failed. :( It would
+> > > > be
+> > > > great if there was a way to have the this RAID5 working again. Perhaps
+> > > > sdc1
+> > > > can then be fully added to the array and after this drive sdd also
+> > > > exchanged.
+> > > 
+> > > I have had a few raid6 fail in a similar fashion: the 3rd drive
+> > > faliing during rebuild (Also 4 TB Hitachi by the way).
+> > > 
+> > > I tested if the drives were fine:
+> > >   parallel dd if={} of=/dev/null bs=1000k ::: /dev/sd?
+> > > 
+> > > And they were all fine.
+> > 
+> > Same for me.
+> > 
+> > > With only a few failing sectors (if any) I figured that very little
+> > > would be lost by forcing the failing drive online. Remove the spare
+> > > 
+> > > drive, and force the remaining online:
+> > >   mdadm -A --scan --force
+> > 
+> > I removed the spare /dev/sdc1 from /dev/md126
+> > 
+> > with
+> > 
+> > mdadm /dev/md126 --remove /dev/sdc1
+> > 
+> > After mdadm -A --scan --force the array is now in this state
+> > 
+> > md126 : active raid5 sdh1[4] sdd1[3](F) sde1[0] sdg1[6] sdf1[2]
+> > 
+> >       19535086080 blocks super 1.2 level 5, 512k chunk, algorithm 2 [6/4]
+> > 
+> > [U_U_UU]
+> 
+> Did you stop the array first?
+>   i.e.
+>     mdadm --stop /dev/md126
+>     mdadm -Asfvv
+> 
+> NeilBrown
 
-On Thu, 2 May 2013 13:56:09 +0200 Ole Tange <tange@binf.ku.dk> wrote:
+Thank you Neil, yes this was my mistake. I realised it in the meantime and am 
+currently checking the file system using overlay files as suggested in
 
-> I have a RAID60 that I want to expand.
->=20
-> The current setup is: 2 axles each having 9 disks + 2 spares.
->=20
-> The future wanted setup is: 4 axles each having 10 disks + 1 spare.
->=20
-> So I need to do some --grow to reshape the drives.
->=20
-> I thought this would be enough:
->=20
->   mdadm -v --grow /dev/md1 --raid-devices=3D10 --backup-file=3D/root/back=
--md1
->   mdadm -v --grow /dev/md2 --raid-devices=3D10 --backup-file=3D/root/back=
--md2
->   mdadm -v --grow /dev/md0 --raid-devices=3D4 --add /dev/md3 /dev/md4
->=20
-> The last command works, but the 2 first commands fail with:
->=20
->   mdadm: Need to backup 7168K of critical section..
->   mdadm: /dev/md2: Something wrong - reshape aborted
-
-I assume you are getting this error when running a test with small loop-back
-devices - yes?
-Very sensible to test first.  However to reshape a RAID6 from 9 to 10, you
-need each device to be at least 7*8*chunksize*2 - possibly a bit more than
-that.
-Your script uses a chunksize of 128K, so you need at least 15Meg
-Your script creates 1Meg devices.
-
-Try your test with a  much smaller chunk size and a somewhat larger device
-size.
-
-NeilBrown
-
->=20
-> How can I --grow a RAID6 to use more devices?
->=20
-> Info about the system:
->=20
->   $ mdadm --version
->   mdadm - v3.2.5 - 18th May 2012
->   $ uname -r
->   3.5.0-17-generic
->=20
-> This URL includes a Makefile to reproduce the problem:
-> http://serverfault.com/questions/503832/linux-mdadm-grow-raid6-something-=
-wrong-reshape-aborted
->=20
->=20
-> /Ole
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/04q9Vev_XJH/IfikCILD/EC
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUYdRUjnsnt1WYoG5AQLJqg/9Ef81NJgLKtQPWx3LkC47YygwjGxEmSWJ
-H2cEB4Nr7XzlpemIqoe3/me4s04CJ/yjkFqGrEPTJLpACQ3J3tDRd2O906cmK9Iq
-YIMGOf22OSUtPbyOjTLjnF0vi+iiQXYk+mvJd7T4lExgTgCiTq+96ZN59cF03NqJ
-mDaa0NMzSPsUsgBJv2kpgXvDH1GIgYFrYzUCUynfKnU7rPOATtdRtzELxkG54MpE
-Lv6PYLxa0pP4SyL+R7vezNAXezh7rKICRaqkTQS3oFFGpzmI03HuhOCoAwqq3PdB
-swqCPeRF+8wQfD0DRnqJyOmo61pCEilbQYe2i6anKAandxZkgfjTjyClpGI6BPjC
-XetKo3iNHvLqoCS3eFW+1mfQ+aeMCwPQSiJ5wTwbFP2lBlP45q1vhaB7gKzBIOvK
-VZnl6u2798Ah1AX6s65DreT53iMyDrlNS3ssx9Ia8lazolE38YUeJ8RM+gTVuY7o
-tks1nUryrUMxzXXLd0aT3HlJQzoF7/YaMZdV9QqC8J/0cYgPch2egoblGlom1brH
-Fzu2Bh0C5ZTCmdYRrQKBzeQQGDfTaipZp+dfldAtUYa8mtpBih2FCEV855xrMAlC
-58AcDqZYvVCJLU1/SWQCTvf3dBIWDOJDODXZ2pJaQ/QBOAdSxV6Hpjpq6shKSZer
-3l6r+cYvVmk=
-=1l8x
------END PGP SIGNATURE-----
-
---Sig_/04q9Vev_XJH/IfikCILD/EC--
+https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Force_assembly
+-- 
+Best regards,
+Stefan Borggraefe
