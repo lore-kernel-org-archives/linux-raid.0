@@ -1,103 +1,76 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Help with failed raid 5
-Date: Sun, 05 May 2013 17:52:34 -0400
-Message-ID: <5186D4A2.2090509@turmel.org>
-References: <51853C95.5030008@cronosx.de>
+From: Sam Bingner <sam@bingner.com>
+Subject: Re: Failed during rebuild (raid5)
+Date: Mon, 6 May 2013 01:10:56 +0000
+Message-ID: <B121AE98-2918-4C9F-9138-F79E9348BFFB@bingner.com>
+References: <51839E4F.7050102@midgaard.us>
+ <CANU9nTneT2CRWJhdN=d87Hb7W9M+apQH+fRE-S+sieZ-W6+hjg@mail.gmail.com>
+ <51866602.8000704@midgaard.us>,<518693EF.6090802@midgaard.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51853C95.5030008@cronosx.de>
+In-Reply-To: <518693EF.6090802@midgaard.us>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Frederick Gnodtke <FGnodtke@cronosx.de>
-Cc: linux-raid@vger.kernel.org
+To: Andreas Boman <aboman@midgaard.us>
+Cc: Ole Tange <tange@binf.ku.dk>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Frederick,
+On May 5, 2013, at 7:17 AM, "Andreas Boman" <aboman@midgaard.us> wrote:
 
-On 05/04/2013 12:51 PM, Frederick Gnodtke wrote:
-> Hi,
+> On 05/05/2013 10:00 AM, Andreas Boman wrote:
+>> On 05/03/2013 08:26 AM, Ole Tange wrote:
+>>> On Fri, May 3, 2013 at 1:23 PM, Andreas Boman<aboman@midgaard.us>  wrote:
+>>> 
+>>>> This morning I came up to see the array degraded with two missing drives,
+>>>> another failed during the rebuild.
+>>> I just started this page for dealing with situations like yours:
+>>> https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID
+>>> 
+>>> 
+>>> /Ole
+>> 
+>> After having ddrescue running all night, it dropped to copying at a rate of 512B/s. I interrupted it and restarted, it stays at that speed. shows no errors:
+>> 
+>>   Press Ctrl-C to interrupt
+>>          Initial status (read from logfile)
+>>    rescued:   557052 MB,  errsize:       0 B,  errors:       0
+>>    Current status
+>>    rescued:     1493 GB,  errsize:       0 B,  current rate:      512 B/s
+>>       ipos:   937316 MB,   errors:       0,    average rate:   16431 kB/s
+>>          opos:   937316 MB,     time from last successful read:       0 s
+>>          Copying non-tried blocks...
+>> 
+>> 
+>> However that is much too slow...
+>> 
+>> Then, I decided to take a look at the superblocks and to my horror discovered this:
+>> 
+>> # mdadm --examine /dev/sd[b-g] >>raid.status
+>> mdadm: No md superblock detected on /dev/sdb.
+>> mdadm: No md superblock detected on /dev/sdc.
+>> mdadm: No md superblock detected on /dev/sdd.
+>> mdadm: No md superblock detected on /dev/sde.
+>> mdadm: No md superblock detected on /dev/sdf.
+>> mdadm: No md superblock detected on /dev/sdg.
+>> 
+>> Can I recover still? What is going on here?
+>> 
+>> Thanks,
+>> Andreas
+> Turns out the superblocks are there. I ran --examine on the disk instead of partition. OOps.
 > 
-> I hope someone can help me with this as I am struggling with it since
-> this morning.
+> I still have the problem with ddrescue being very slow, it is running at 512 B/s pretty much no matter what options I use. The ddrescued disk does NOT have a md superblock. I tried to ddrescue -i to skip and grab the last 3MB or so of the disk, that seemed to work, but I still don't have the superblock.
+> 
+> How do I find/recover the superblock from the original disk?
+> 
+> After that is done I'll try to get the array up with 4 disks, then add the spare and have it rebuild. After that I'll add a disk to go to raid 6.
+> 
+> Thanks,
+> Andreas
+> 
+You need to just let ddrescue run - it is probably on the area of the disk with problems.  When it gets past that it should speed up again.
 
-We may be able to help you.  Some critical information is missing.  For
-the record, running raid5 when you have a hot spare available to make it
-a raid6 is pretty much insane.
+If you just want to get the rest first you could add an entry to the log file saying some area around where you are now failed so that it goes back and tries it later, but I would not do that if I were you.
 
-> The following scenario: I have a softwareraid 5 created using mdadm.
-> It consisted out of 5 Disks, each of them 2000GB with one as spare-drive.
-> The original mdadm.conf looked like this:
-
-[trim /]
-
-> Everything was fine until this morning I tried to open a file and got an
-> I/O-Error. I rebooted the computer, stopped the raid, did an smartctl -t
-> long on all drives belonging to the raid, but they all seem to run quiet
-> well.
-
-> Reassembling it using mdadm --assemble --scan --force did not lead to
-> anything so I tried to recreate it using "mdadm --create /dev/md0
-> --assume-clean --raid-devices=5 --level=5 /dev/sd[abdef]
-
-Really bad choice.  Advice to use "--create --assume-clean" is scattered
-around the 'net, but there are terrible pitfalls.
-
-> It created an array but there was no filesystem to mount.
-> fsck could not detect an filesystem and I didn't relocate any "bad
-> blocks" as I was afraid this might reduce my chance to repair the raid
-> to zero.
-
-The device order you specified is certainly wrong, based on your
-original superblocks.
-
-> The original Superblocks of all disks befor recreating the array looked
-> like this (The raid already failed when I captured this):
-
-[trim /]
-
-You don't show the original superblock for /dev/sda.  We need it.
-
-From the given superblocks, your order would be /dev/sd{?,f,e,?,d,?},
-where the question marks would be various combinations of a, b, and c.
-
-The roles of sdb and sdc show as spare, either of which could have been
-the original spare.
-
-Please look in your system's syslog to see if you can find the raid
-assembly report from the last boot before the problem surfaced.  It
-would be an alternate source of drive roles.
-
-If you find that in syslog, there's a good chance you will also be able
-to find the drive error reports in syslog for the kickout of your
-drives.  Show us the excerpts.
-
-> Is there any chance to recover the raid?
-
-Yes.
-
-> Has anybody any idea?
-
-You may have to try multiple combinations of drive orders if it cannot
-be figured out from other information.  You *must* not mount your
-filesystem until we are certain the order is correct.
-
-> As I am just a poor student I didn't quiet have the money to do backups
-> so my private data would be lost if the raid failed.
-
-Excuses don't really matter.  Either we can help you or we can't.
-Everyone has limited funds, to some extent.  I recommend you prioritize
-your personal data as to that which gets backed up and that which
-doesn't.  Most people can't afford to *not* back up at least part of
-their data, but don't know until they lose it.
-
-> I would really appreciate your help!
-
-When people report array problems for drives that all appear healthy,
-certain suspicions arise.  Please also provide:
-
-1) "smartctl -x" output for each drive.
-2) "uname -a" output
-3) "mdadm --version" output
-
-Phil
+Sam
