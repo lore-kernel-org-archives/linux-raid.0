@@ -1,95 +1,67 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: --grow RAID6 gives: md: md_do_sync() got signal ... exiting +
- hang
-Date: Tue, 7 May 2013 21:54:36 +1000
-Message-ID: <20130507215436.46fb6857@notabene.brown>
+From: Ole Tange <tange@binf.ku.dk>
+Subject: Re: --grow RAID6 gives: md: md_do_sync() got signal ... exiting + hang
+Date: Tue, 7 May 2013 13:56:55 +0200
+Message-ID: <CANU9nTnGL8pR9Qnp_W-akDHz-ruqVOu5TLgJAE5aTTNC9DeOpQ@mail.gmail.com>
 References: <CANU9nTmqXjPFqU=p0vex2SgXjyv9L2NO5mafHoWqfH7n1kkhcw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/QK9NxCqSW0lKfqFU06dbm9v"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CANU9nTmqXjPFqU=p0vex2SgXjyv9L2NO5mafHoWqfH7n1kkhcw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ole Tange <tange@binf.ku.dk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/QK9NxCqSW0lKfqFU06dbm9v
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 7 May 2013 13:36:56 +0200 Ole Tange <tange@binf.ku.dk> wrote:
+On Tue, May 7, 2013 at 1:36 PM, Ole Tange <tange@binf.ku.dk> wrote:
 
 > I am expanding my 9 harddisk RAID6 to 10 harddisk RAID6:
->=20
-> md1 : active raid6 sdg[0] sdi[12](S) sdt[15](S) sdy[17](S) sdx[16](S)
-> sdh[8] sdw[13] sdo[14] sdk[5] sdd[11] sdc[3] sdv[9] sdn[10]
->       27349121408 blocks super 1.2 level 6, 128k chunk, algorithm 2
-> [9/9] [UUUUUUUUU]
->       bitmap: 2/2 pages [8KB], 1048576KB chunk
->=20
+:
 > It is, however, hanging the system.
->=20
-> # remove the bitmap
-> mdadm -v --grow /dev/md1 -b none
->=20
-> # Do the reshape
-> mdadm -v --grow /dev/md1 --raid-devices=3D10
-> --backup-file=3D/root/back-md1
-> mdadm: Need to backup 7168K of critical section..
->=20
-> cat /proc/mdstat
-> <<hangs>>
->=20
-> dmesg says:
->=20
-> [4328128.021614] md: reshape of RAID array md1
-> [4328128.021618] md: minimum _guaranteed_  speed: 10000 KB/sec/disk.
-> [4328128.021621] md: using maximum available idle IO bandwidth (but
-> not more than 30000 KB/sec) for reshape.
-> [4328128.021783] md: using 128k window, over a total of 3907017344k.
-> [4328128.312637] md: md_do_sync() got signal ... exiting
->=20
-> Disk I/O is blocked to the RAID.
->=20
-> What to do?
 
-What does
+I can mdadm -E:
+
+/dev/sdi:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : 242d6530:e2562ecb:1dcd2a97:15a1a868
+           Name : lemaitre:1  (local to host lemaitre)
+  Creation Time : Mon Nov  5 16:27:45 2012
+     Raid Level : raid6
+   Raid Devices : 10
+
+ Avail Dev Size : 7814035120 (3726.02 GiB 4000.79 GB)
+     Array Size : 31256138752 (29808.18 GiB 32006.29 GB)
+  Used Dev Size : 7814034688 (3726.02 GiB 4000.79 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 4b8de95b:90a2aed7:c0ae092b:a056dd95
+
+  Reshape pos'n : 8192 (8.00 MiB 8.39 MB)
+  Delta Devices : 1 (9->10)
+
+    Update Time : Tue May  7 13:12:19 2013
+       Checksum : a4f483fd - correct
+         Events : 298792
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 9
+   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
+
+So it seems stuck on the first 8 MB. Is it safe to reboot?
+
+This hangs:
+
   grep . /sys/block/md1/md/*
-show? Or does it hang?
-What about "mdadm --examine /dev/sd*"
 
-Did the "mdadm --grow" appear to complete, and return to the shell prompt?
+$ mdadm --version
+mdadm - v3.2.5 - 18th May 2012
 
-What kernel version?  What mdadm version?
+$ uname -r
+3.2.0-0.bpo.1-amd64
 
-A hanging /proc/mdstat is definitely not a good sign.  The "got signal ...
-exiting" isn't good either.  I would expect more messages with that.
-You didn't just "grep md" in dmesg did you?  That is a complete dmesg output
-for the entire time period that could possibly be relevant?
 
-NeilBrown
 
---Sig_/QK9NxCqSW0lKfqFU06dbm9v
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUYjrfDnsnt1WYoG5AQIypA/9FXzTi7KgPqe/H+CFDNOH/qmqS+pm7Nrj
-sPDBWuMNgcmFzQNnXY8OfAbIBPJllH5UFddJtdoUem8ol8OGmQ/7lI8dTb4o2Rsb
-wNlVWTEBw4DnxjXjsF2O+KbQ6KQ1JKeLiGICd9EzvU+F55DTYlAyqhb2g33ENL6Y
-V91D0qJinGoTuEdcEiOK12tQjzREfXiRiL4Mx/13vPf8XjYPHq7pVPLml1RtfAMG
-TP+Zdg5HqhAyTM4Gk03Q48GOQ8NYrgb+qhttwbA3uecSOpuZQNFCd167HAp1ZK4a
-QRhAzTFVR+XeoSKo7BTxlt2+r6kTNlmIsIXMQz4wU3f4AUcid3wG/MRvT5G4WEcf
-Uh6ISXCrT9Loo9pqZliW5W+c89ZGkqPc9dO7FeUqmPjohtWX91RDJyvT4rht5H02
-0WwHBH2DTv/lUNt1aWszPYqETVz2MiGTRmptG+2XXALm+VxfF1LMpMubTRGEuU3t
-0TCUhfgeS+yKi62YVkUzJtFp2I5lSbfpPK61Uw5R291Dbsyz8LlkWElR6kgbHTSf
-xxtsfEa9K0GcI2RjQaco4wwrtFzPjINDCrRZvlBiKs3mGY1Z+4bACGiebE9zdM1+
-8Xp6BJHzWpLc6eqVj/qadEYM5T9cm+yM+zGZNuhbes/sIN9q9UfIPOES4FFyizBg
-cZVElOA6QLA=
-=wC5o
------END PGP SIGNATURE-----
-
---Sig_/QK9NxCqSW0lKfqFU06dbm9v--
+/Ole
