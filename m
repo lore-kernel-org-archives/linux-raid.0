@@ -1,206 +1,174 @@
-From: Ricky <rickyorbixx@gmail.com>
-Subject: Successfully recovered Raid5 no longer boots
-Date: Tue, 7 May 2013 00:35:10 +0100
-Message-ID: <CALzQTgJZ0t018RAYvymP7=Po6-2N6RdiP=qgdojnMri_4mKzaw@mail.gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Failed during rebuild (raid5)
+Date: Mon, 06 May 2013 20:39:37 -0400
+Message-ID: <51884D49.3090602@turmel.org>
+References: <51839E4F.7050102@midgaard.us> <CANU9nTneT2CRWJhdN=d87Hb7W9M+apQH+fRE-S+sieZ-W6+hjg@mail.gmail.com> <51866602.8000704@midgaard.us> <518693EF.6090802@midgaard.us> <518721CD.2040108@turmel.org> <51878BD0.9010809@midgaard.us> <5187A3D2.6060109@turmel.org> <5188189D.1060806@midgaard.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5188189D.1060806@midgaard.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andreas Boman <aboman@midgaard.us>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello everybody,
+On 05/06/2013 04:54 PM, Andreas Boman wrote:
+> On 05/06/2013 08:36 AM, Phil Turmel wrote:
 
-First time posting to this list, so please forgive any oversights with
-etiquette and missing information and such.
+[trim /]
 
-I've not long recovered a Raid-5 array compromising of 4 disks with 2
-failing (not failed) disks, with a 1-by-1 swap-out of new matching
-disks. I did this with a live CD and the data was totally fine,
-mountable, no issues at all.
+>> Current versions of MD raid in the kernel allow multiple read errors per
+>> hour before kicking out a drive.  What kernel and mdadm versions are
+>> involved here?
+> kernel 2.6.32-5-amd64, mdadm 3.1.4 (debian 6.0.7)
 
-Then I go to boot it back up, and kernel output shows that only 2 of the
-4 disks could be brought up and the raid could naturally not be brought
-online, resulting in obvious failure. I panic, go back to the live CD,
-but nope, the raid is totally fine according to all the output.
+Ok.  Missing some neat features, but not a crisis.
 
-I spoke to a friendly person on freenode's ##linux who suggested
-checking if all disks including the new ones were using the 0.9
-superblock that my older disks were, I jumped the gun a bit and decided
-to upgrade them all to 1.0, only to find the kernel of the system on
-disk did not have a version of md that supports that new superblock, so
-I downgraded it. I performed this by offlining the array and recreating
-it based on the output of --detail but specifically passing the
-superblock parameter, as per your Wiki instructions, still no good
-however. Didn't mess up the recreation as the partition still totally
-accessible via the live CD.
+>>> Disk was sda at the time, sdb now don't ask why it reorders at times, I
+>>> don't know. Sometimes the on board boot disk is sda, sometimes it is the
+>>> last disk it seems.
+>>
+>> You need to document the device names vs. drive S/Ns so you don't mess
+>> up any "--create" operations.  This is one of the reasons "--create
+>> --assume-clean" is so dangerous. I recommend my own "lsdrv" @
+>> github.com/pturmel.  But an excerpt from
+>> "ls -l /dev/disk/by-id/" will do.
+>>
+>> Use of LABEL= and UUID= syntax in fstab and during boot is intended to
+>> mitigate the fact that the kernel cannot guarantee the order it finds
+>> devices during boot.
+>>
+> Noted, I'll look into this.
 
-It's at this point that I'm stuck, I've no idea what to do next and hope
-you can advise. Details below:
+Thanks to smartctl, we now have an index of drive names to serial
+numbers.  Whenever you create an array, document what drive is what
+role, just in case.
 
-System: CentOS 5.9, kernel 2.6.34.6
+[trim /]
 
-mdadm --examine /dev/sd*2
-/dev/sda2:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 06dc023e:47dbfdaa:a4d2adc2:26fd5302 (local to host
-localhost)
-  Creation Time : Mon May  6 23:45:15 2013
-     Raid Level : raid5
-  Used Dev Size : 1462512576 (1394.76 GiB 1497.61 GB)
-     Array Size : 4387537728 (4184.28 GiB 4492.84 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
+>>> I'm guessing its some kind of user error that prevents me from copying
+>>> that superblock.
+>>
+>> Yes, something destroyed it.
+> The superblock is available on the original drive, I can do mdadm -E
+> /dev/sdb all day long. It just hasn't transferred to the new disk.
 
-    Update Time : Mon May  6 23:47:24 2013
-          State : clean
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : bdf0c5f1 - correct
-         Events : 1
+Hmmm.  v0.90 is at the end of the member device.  Does your partition go
+all the way to the end?  Please show your partition tables:
 
-         Layout : left-symmetric
-     Chunk Size : 64K
+fdisk -lu /dev/sd[bcdefg]
 
-      Number   Major   Minor   RaidDevice State
-this     0       8        2        0      active sync   /dev/sda2
+>>> I'm still trying to determine if bringing the array up (--assemble
+>>> --force) using this disk with the missing data will be just bad or very
+>>> bad? I've been told that mdadm doesn't care, but what will it do when
+>>> data is missing in a chunk on this disk?
+>>
+>> Presuming you mean while using the ddrescued copy, then any bad data
+>> will show up in the array's files.  There's no help for that.
+> Right, but the array will come up and fdisk (xfs_repair) should be able
+> to get it going again with most data avalable? mdadm won't get wonky
+> when expected parity data isn't there for example?
 
-   0     0       8        2        0      active sync   /dev/sda2
-   1     1       8       18        1      active sync   /dev/sdb2
-   2     2       8       34        2      active sync   /dev/sdc2
-   3     3       8       50        3      active sync   /dev/sdd2
-/dev/sdb2:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 06dc023e:47dbfdaa:a4d2adc2:26fd5302 (local to host
-localhost)
-  Creation Time : Mon May  6 23:45:15 2013
-     Raid Level : raid5
-  Used Dev Size : 1462512576 (1394.76 GiB 1497.61 GB)
-     Array Size : 4387537728 (4184.28 GiB 4492.84 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
+Yes, xfs_repair will fix what's fixable.  It might not notice file
+contents that are no longer correct.
 
-    Update Time : Mon May  6 23:47:24 2013
-          State : clean
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : bdf0c603 - correct
-         Events : 1
+[trim /]
 
-         Layout : left-symmetric
-     Chunk Size : 64K
+>> /dev/sdb has six pending sectors--unrecoverable read errors that won't
+>> be resolved until those sectors are rewritten.  They might be normal
+>> transient errors that'll be fine after rewrite.  Or they might be
+>> unwritable, and the drive will have to re-allocate them.  You need
+>> regular "check" scrubs in a non-degraded array to catch these early and
+>> fix them.
+> I have smartd run daily 'short self test' and weekly 'long self test', I
+> guess that wasn't enough.
 
-      Number   Major   Minor   RaidDevice State
-this     1       8       18        1      active sync   /dev/sdb2
+No.  Each drive by itself cannot fix its own errors.  It needs its bad
+data *rewritten* by an upper layer.  MD will do this when it encounters
+read errors in a non-degraded array.  And it will test-read everything
+to trigger these corrections during a "check" scrub.  See the "Scrubbing
+and Mismatches" section of the "md" man-page.
 
-   0     0       8        2        0      active sync   /dev/sda2
-   1     1       8       18        1      active sync   /dev/sdb2
-   2     2       8       34        2      active sync   /dev/sdc2
-   3     3       8       50        3      active sync   /dev/sdd2
-/dev/sdc2:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 06dc023e:47dbfdaa:a4d2adc2:26fd5302 (local to host
-localhost)
-  Creation Time : Mon May  6 23:45:15 2013
-     Raid Level : raid5
-  Used Dev Size : 1462512576 (1394.76 GiB 1497.61 GB)
-     Array Size : 4387537728 (4184.28 GiB 4492.84 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
+As long as these errors aren't bunched together so much that MD exceeds
+its internal read error limits, the drives with these errors are fixed
+and stay on online.  More on this below, though.
 
-    Update Time : Mon May  6 23:47:24 2013
-          State : clean
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : bdf0c615 - correct
-         Events : 1
+>> Since ddrescue is struggling with this disk starting at 884471083, close
+>> to the point where MD kicked it, you might have a large damage area that
+>> can't be rewritten.
+>>
+>>> I have been wondering about that, it would be difficult to do (not to
+>>> mention I'd have to buy a bunch of large disks to backup to), but I have
+>>> (am) considered it.
+>>
+>> Be careful selecting drives.  The Samsung drive has ERC--you really want
+>> to pick drives that have it.
+> Noted, I'll look into what that is and hope that my new disks have it as
+> well.
 
-         Layout : left-symmetric
-     Chunk Size : 64K
+Your /dev/sdb {SAMSUNG HD154UI S1Y6J1LZ100168} has ERC, and it is set to
+the typical 7.0 seconds for RAID duty:
 
-      Number   Major   Minor   RaidDevice State
-this     2       8       34        2      active sync   /dev/sdc2
+> SCT Error Recovery Control:
+>            Read:     70 (7.0 seconds)
+>           Write:     70 (7.0 seconds)
 
-   0     0       8        2        0      active sync   /dev/sda2
-   1     1       8       18        1      active sync   /dev/sdb2
-   2     2       8       34        2      active sync   /dev/sdc2
-   3     3       8       50        3      active sync   /dev/sdd2
-/dev/sdd2:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 06dc023e:47dbfdaa:a4d2adc2:26fd5302 (local to host
-localhost)
-  Creation Time : Mon May  6 23:45:15 2013
-     Raid Level : raid5
-  Used Dev Size : 1462512576 (1394.76 GiB 1497.61 GB)
-     Array Size : 4387537728 (4184.28 GiB 4492.84 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
+Your /dev/sdc {SAMSUNG HD154UI S1XWJX0D300206} also has ERC, but it is
+disabled:
 
-    Update Time : Mon May  6 23:47:24 2013
-          State : clean
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : bdf0c627 - correct
-         Events : 1
+> SCT Error Recovery Control:
+>            Read: Disabled
+>           Write: Disabled
 
-         Layout : left-symmetric
-     Chunk Size : 64K
+Fortunately, it has no pending sectors (yet).
 
-      Number   Major   Minor   RaidDevice State
-this     3       8       50        3      active sync   /dev/sdd2
+Your /dev/sdd {SAMSUNG HD154UI S1XWJX0B900500} and /dev/sde {SAMSUNG
+HD154UI S1XWJ1KS813588} also have ERC, and are also disabled.
 
-   0     0       8        2        0      active sync   /dev/sda2
-   1     1       8       18        1      active sync   /dev/sdb2
-   2     2       8       34        2      active sync   /dev/sdc2
-   3     3       8       50        3      active sync   /dev/sdd2
+If ERC is available, but disabled, it can be enabled by a suitable
+script in /etc/local.d/ or in /etc/rc.local (Enterprise drives enable it
+by default, desktop disks do not.), like so:
 
-mdadm --detail /dev/md0
-/dev/md0:
-        Version : 0.90
-  Creation Time : Mon May  6 23:45:15 2013
-     Raid Level : raid5
-     Array Size : 4387537728 (4184.28 GiB 4492.84 GB)
-  Used Dev Size : 1462512576 (1394.76 GiB 1497.61 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
-    Persistence : Superblock is persistent
+# smartctl -l scterc,70,70 /dev/sdc
 
-    Update Time : Mon May  6 23:47:24 2013
-          State : clean
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
+Now for the bad news:
 
-         Layout : left-symmetric
-     Chunk Size : 64K
+Your /dev/sdf {ST3000DM001-1CH166 W1F1LTQY} and /dev/sdg
+{ST3000DM001-1CH166 W1F1LTQY} do not have ERC at all.  Modern "green"
+drives generally don't:
 
-           UUID : 06dc023e:47dbfdaa:a4d2adc2:26fd5302 (local to host
-localhost)
-         Events : 0.1
+> Warning: device does not support SCT Error Recovery Control command
 
-    Number   Major   Minor   RaidDevice State
-       0       8        2        0      active sync   /dev/sda2
-       1       8       18        1      active sync   /dev/sdb2
-       2       8       34        2      active sync   /dev/sdc2
-       3       8       50        3      active sync   /dev/sdd2
+Since these cannot be set to a short error timeout, the linux driver's
+timeout must be changed to tolerate 2+ minutes of error recovery.  I
+recommend 180 seconds.  This must be put in /etc/local.d/ or
+/etc/rc.local like so:
 
-Many thanks in advance for any advice you have,
-Ricky Burgin
+# echo 180 >/sys/block/sdf/device/timeout
+
+If you don't do this, "check" scrubbing will fail.  And by fail, I mean
+any ordinary URE will kick drives out instead of fixing them.  Search
+the archives for "scterc" and you'll find more detailed explanations
+(attached to horror stories).
+
+>> If I understand correctly, your current plan is to ddrescue sdb, then
+>> assemble degraded (with --force).  I agree with this plan, and I think
+>> you should not need to use "--create --assume-clean".  You will need to
+>> fsck the filesystem before you mount, and accept that some data will be
+>> lost.  Be sure to remove sdb from the system after you've duplicated it,
+>> as two drives with identical metadata will cause problems for MD.
+
+> Correct, that is the plan: Assemble degraded with the 3 'good' disks and
+> the ddrescued copy, xfs_repair and add the 5th disk back. Allow it to
+> resynch the array. Then reshape to raid 6. Allow that to finish, then
+> add another disk and grow the array/lvm/filesystem. Looking at a lot of
+> beating on the disks reshaping so much, but after that I should be fine
+> for a while. I'll probably add a hot spare as well.
+
+I would encourage you to take your backups of critical files as soon as
+the array is running, before you add a fifth disk.  Then you can add two
+disks and recover/reshape simultaneously.
+
+Phil
+
