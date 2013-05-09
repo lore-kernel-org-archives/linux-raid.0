@@ -1,39 +1,63 @@
-From: Sam Bingner <sam@bingner.com>
-Subject: Re: Reshape Shrink Hung Again
-Date: Thu, 9 May 2013 06:58:08 +0000
-Message-ID: <47109EB7-F38D-43A1-874B-23ED05537D92@bingner.com>
-References: <96A49024-A8A7-4ED9-82B1-5AE430374EBE@bingner.com>
-	<20130422072414.3e30882c@notabene.brown>
-	<7A4C666A-D95E-41AB-96B2-5E75097D8BBB@bingner.com>
-	<20130506152926.067d3459@notabene.brown>
-	<F83D995D-967D-4D89-9CE9-46A0305290C6@bingner.com>,<20130509161601.5804059f@notabene.brown>
+From: mashtin.bakir@gmail.com
+Subject: vess raid stripes disappear
+Date: Thu, 9 May 2013 07:29:41 -0400
+Message-ID: <CANSWD74J9HZCbE4ba1Y5UMRQjjDDZiof21-tUJOKdJmHBvuyXw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130509161601.5804059f@notabene.brown>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On May 8, 2013, at 8:16 PM, "NeilBrown" <neilb@suse.de> wrote:
+I have an interesting problem with a Vessraid 1830s.
+We have a few of these that work fine but one seems
+to lose its filesets. The only difference between the
+good ones and the bad one is that the bad one has firmware
+version 3.06 while the good ones are at 3.05 (This may
+not be relevant).
 
-> 
-> The backup.md file really should not have been empty.
-> Assuming you are sure it was the right file something must have gone wrong.
-> Not overly surprising as it is hard to test that particular stage of reshape:
-> an interruption to the reshape very late in a shrink could get messy.
-> 
-> I've made a note to try testing it when I next spend some time on mdadm.
-> 
-> Thanks,
-> NeilBrown
-> 
+Here's what happens. If I plug the raid into a 32 bit
+RHEL5 box with large files enabled, syslog does pick
+it up:
 
-That makes sense then, both times that I had this problem it was empty and there was nothing that could have caused it to have a problem.  I'll play with a couple things and see if I can find where the issue was also.
+kernel: Vendor: Promise  Model:VessRAID 1830s Rev: 0306
+Type: Direct-Access     ANSI SCSI revision: 05
+SCSI device sdc:2929686528 2048-byte hdwr sectors (5999998 MB)
 
-Thank you...
-Sam
 
+Using the web gui, I can carve out partitions,
+I make three stripes across 4 disks of 2Terabytes each
+using RAID5.
+cat /proc/partitions   shows the raw devices as well as
+the correct sizes. I then use gnu-parted (v3.1) to make the
+filesets:
+
+mklabel gpt
+mkpart primray 0 0
+set 1 raid on
+
+
+I create the fileset using
+
+mkfs.ext3 -m0 /dev/sdc1
+I can then mount the FS and write to it.
+
+If I either reboot the RAID or the host, the FS disappears
+ie cat/proc/partitions   shows only sdc, not sdc1.
+If I go back into parted, the label is intact
+But I can't even mkfs without re-creating the label/partition,
+in wich case I get:
+
+
+...Have been written, but we have been
+unable to
+inform the kernel of the change, probably because it/they are in use.  As a
+result, the old partition(s) will remain in use.  You should reboot now
+before
+making further changes.
+Ignore/Cancel? i
+
+
+Any ideas?
+
+Thanks
