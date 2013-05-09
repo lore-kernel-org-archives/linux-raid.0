@@ -1,52 +1,63 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: vess raid stripes disappear
-Date: Thu, 09 May 2013 18:23:23 +0200
-Message-ID: <518BCD7B.5020702@hesbynett.no>
-References: <CANSWD74J9HZCbE4ba1Y5UMRQjjDDZiof21-tUJOKdJmHBvuyXw@mail.gmail.com> <t7qs5axa4b.ln2@goaway.wombat.san-francisco.ca.us> <20130509211016.718dff41@natsu> <45ss5axrjb.ln2@goaway.wombat.san-francisco.ca.us>
+From: Emil Goode <emilgoode@gmail.com>
+Subject: [PATCH] bcache: Fix incompatible pointer type warning
+Date: Thu,  9 May 2013 22:39:26 +0200
+Message-ID: <1368131966-17512-1-git-send-email-emilgoode@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45ss5axrjb.ln2@goaway.wombat.san-francisco.ca.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Cc: linux-raid@vger.kernel.org
+To: koverstreet@google.com, neilb@suse.de
+Cc: linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Emil Goode <emilgoode@gmail.com>
 List-Id: linux-raid.ids
 
-On 09/05/13 17:32, Keith Keller wrote:
-> On 2013-05-09, Roman Mamedov <rm@romanrm.ru> wrote:
->>
->> I (also) was under impression that linux-raid is not just for md, but for a=
->> ll
->> kinds of RAID in GNU/Linux. It's just that historically it's mostly about m=
->> d.
->
-> Indeed, the majordomo info says only this:
->
-> "Welcome to the linux-raid mailing list, hosted on vger.kernel.org.
-> Discussions on this list should be relevant to using RAID technologies
-> with Linux. The list has a wiki howto at http://raid.wiki.kernel.org/"
->
-> This is somewhat contradictory with the wiki overview:
->
-> "This site is the Linux-raid kernel list community-managed reference for
-> Linux software RAID as implemented in recent 2.6 kernels."
->
-> So I admit to being a bit confused!  Is there a consensus among the
-> admins what the list topics should be?
->
+The function pointer release in struct block_device_operations
+should point to functions declared as void.
 
-I don't know if there is any "official" status here, but certainly most 
-threads are about md raid - and this is the best source of help and 
-information about md raid.  But dm-raid is also discussed here, and 
-occasionally hardware raid comes up.  There are some regulars here who 
-are very experienced with hardware raid and provide helpful advice - 
-there are times when hardware raid is a better solution than software raid.
+Sparse warnings:
 
-No one can be familiar with all the hardware raid implementations in 
-common use - but maybe the OP will get lucky and someone here can help. 
-  So it is certainly on-topic for the list, even if it is unlikely to 
-get a useful reply.
+drivers/md/bcache/super.c:656:27: warning:
+	incorrect type in initializer (different base types)
+	drivers/md/bcache/super.c:656:27:
+	expected void ( *release )( ... )
+	drivers/md/bcache/super.c:656:27:
+	got int ( static [toplevel] *<noident> )( ... )
 
+drivers/md/bcache/super.c:656:2: warning:
+	initialization from incompatible pointer type [enabled by default]
 
+drivers/md/bcache/super.c:656:2: warning:
+	(near initialization for =E2=80=98bcache_ops.release=E2=80=99) [enable=
+d by default]
 
+Signed-off-by: Emil Goode <emilgoode@gmail.com>
+---
+ drivers/md/bcache/super.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+index 76c7f6c..938bbff 100644
+--- a/drivers/md/bcache/super.c
++++ b/drivers/md/bcache/super.c
+@@ -637,11 +637,10 @@ static int open_dev(struct block_device *b, fmode=
+_t mode)
+ 	return 0;
+ }
+=20
+-static int release_dev(struct gendisk *b, fmode_t mode)
++static void release_dev(struct gendisk *b, fmode_t mode)
+ {
+ 	struct bcache_device *d =3D b->private_data;
+ 	closure_put(&d->cl);
+-	return 0;
+ }
+=20
+ static int ioctl_dev(struct block_device *b, fmode_t mode,
+--=20
+1.7.10.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
