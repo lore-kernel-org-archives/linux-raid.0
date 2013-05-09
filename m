@@ -1,256 +1,142 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Successfully recovered Raid5 no longer boots
-Date: Thu, 9 May 2013 15:09:28 +1000
-Message-ID: <20130509150928.51689192@notabene.brown>
-References: <CALzQTgJZ0t018RAYvymP7=Po6-2N6RdiP=qgdojnMri_4mKzaw@mail.gmail.com>
+Subject: Re: mdadm fails to assemble arrays with quotes in name
+Date: Thu, 9 May 2013 15:14:23 +1000
+Message-ID: <20130509151423.7c0e2256@notabene.brown>
+References: <5187E9AB.4040904@superhosting.cz>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/RR/jDiavufV+i55L6A/v0bT"; protocol="application/pgp-signature"
+ boundary="Sig_/XxoaX+vgc4m3p9HQIz65q7R"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CALzQTgJZ0t018RAYvymP7=Po6-2N6RdiP=qgdojnMri_4mKzaw@mail.gmail.com>
+In-Reply-To: <5187E9AB.4040904@superhosting.cz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ricky <rickyorbixx@gmail.com>
+To: Marek Becka <marek.becka@superhosting.cz>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/RR/jDiavufV+i55L6A/v0bT
+--Sig_/XxoaX+vgc4m3p9HQIz65q7R
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 7 May 2013 00:35:10 +0100 Ricky <rickyorbixx@gmail.com> wrote:
+On Mon, 06 May 2013 19:34:35 +0200 Marek Becka <marek.becka@superhosting.cz>
+wrote:
 
-> Hello everybody,
+> Hi,
 >=20
-> First time posting to this list, so please forgive any oversights with
-> etiquette and missing information and such.
+> By accident I have created an array with simple quotes in name:
 >=20
-> I've not long recovered a Raid-5 array compromising of 4 disks with 2
-> failing (not failed) disks, with a 1-by-1 swap-out of new matching
-> disks. I did this with a live CD and the data was totally fine,
-> mountable, no issues at all.
+> mdadm --assemble /dev/md0 --name=3D\'newname\':0 --update=3Dname /dev/sdb=
+1=20
+> /dev/sdd1
 >=20
-> Then I go to boot it back up, and kernel output shows that only 2 of the
-> 4 disks could be brought up and the raid could naturally not be brought
-> online, resulting in obvious failure. I panic, go back to the live CD,
-> but nope, the raid is totally fine according to all the output.
+> My mdadm.conf contains following line:
 >=20
-> I spoke to a friendly person on freenode's ##linux who suggested
-> checking if all disks including the new ones were using the 0.9
-> superblock that my older disks were, I jumped the gun a bit and decided
-> to upgrade them all to 1.0, only to find the kernel of the system on
-> disk did not have a version of md that supports that new superblock, so
-> I downgraded it. I performed this by offlining the array and recreating
-> it based on the output of --detail but specifically passing the
-> superblock parameter, as per your Wiki instructions, still no good
-> however. Didn't mess up the recreation as the partition still totally
-> accessible via the live CD.
->=20
-> It's at this point that I'm stuck, I've no idea what to do next and hope
-> you can advise. Details below:
->=20
-> System: CentOS 5.9, kernel 2.6.34.6
+> ARRAY /dev/md/0 metadata=3D1.2 UUID=3D0324aa8b:e17efd1a:bae27dd0:66fc7573=
+=20
+> name=3D'newname':0
 
-You probably need to find someone who knows something about the boot sequen=
-ce
-of Centos.
-Maybe  you need to create a new initrd with a new mdadm.conf in it.  Or may=
-be
-you just need to install grub onto the mbr or something.
+Try:
+   ..... name=3D"'newname':-"
+
+That should work.  Quotes are special.
+
+I should probably update the mdadm.conf manpage to mention that.
 
 NeilBrown
 
 
 >=20
-> mdadm --examine /dev/sd*2
-> /dev/sda2:
->           Magic : a92b4efc
->         Version : 0.90.00
->            UUID : 06dc023e:47dbfdaa:a4d2adc2:26fd5302 (local to host
-> localhost)
->   Creation Time : Mon May  6 23:45:15 2013
->      Raid Level : raid5
->   Used Dev Size : 1462512576 (1394.76 GiB 1497.61 GB)
->      Array Size : 4387537728 (4184.28 GiB 4492.84 GB)
->    Raid Devices : 4
->   Total Devices : 4
-> Preferred Minor : 0
+> Mdadm fails to assemble this array. After removing the name from=20
+> mdadm.conf, everything works fine.
 >=20
->     Update Time : Mon May  6 23:47:24 2013
->           State : clean
->  Active Devices : 4
-> Working Devices : 4
->  Failed Devices : 0
->   Spare Devices : 0
->        Checksum : bdf0c5f1 - correct
->          Events : 1
+> mdadm  --assemble --scan -v 2>&1 | grep sd[bd]1
+> mdadm: no RAID superblock on /dev/sdd1
+> mdadm: no RAID superblock on /dev/sdb1
+> mdadm: /dev/sdd1 has wrong uuid.
+> mdadm: /dev/sdb1 has wrong uuid.
+> mdadm: /dev/sdd1 has wrong name.
+> mdadm: /dev/sdb1 has wrong name.
 >=20
->          Layout : left-symmetric
->      Chunk Size : 64K
+> I'm using mdadm - v3.2.5 - 18th May 2012 and kernel version 3.4.35. The=20
+> superblock contains:
 >=20
->       Number   Major   Minor   RaidDevice State
-> this     0       8        2        0      active sync   /dev/sda2
+> mdadm  --examine /dev/sdb1
+> /dev/sdb1:
+>            Magic : a92b4efc
+>          Version : 1.2
+>      Feature Map : 0x0
+>       Array UUID : 0324aa8b:e17efd1a:bae27dd0:66fc7573
+>             Name : 'newname':0
+>    Creation Time : Thu Apr 11 17:54:28 2013
+>       Raid Level : raid1
+>     Raid Devices : 2
 >=20
->    0     0       8        2        0      active sync   /dev/sda2
->    1     1       8       18        1      active sync   /dev/sdb2
->    2     2       8       34        2      active sync   /dev/sdc2
->    3     3       8       50        3      active sync   /dev/sdd2
-> /dev/sdb2:
->           Magic : a92b4efc
->         Version : 0.90.00
->            UUID : 06dc023e:47dbfdaa:a4d2adc2:26fd5302 (local to host
-> localhost)
->   Creation Time : Mon May  6 23:45:15 2013
->      Raid Level : raid5
->   Used Dev Size : 1462512576 (1394.76 GiB 1497.61 GB)
->      Array Size : 4387537728 (4184.28 GiB 4492.84 GB)
->    Raid Devices : 4
->   Total Devices : 4
-> Preferred Minor : 0
+>   Avail Dev Size : 2097128 (1024.16 MiB 1073.73 MB)
+>       Array Size : 1048564 (1024.16 MiB 1073.73 MB)
+>      Data Offset : 24 sectors
+>     Super Offset : 8 sectors
+>            State : clean
+>      Device UUID : e9094b42:d1f2e7e4:71b7a626:77e008aa
 >=20
->     Update Time : Mon May  6 23:47:24 2013
->           State : clean
->  Active Devices : 4
-> Working Devices : 4
->  Failed Devices : 0
->   Spare Devices : 0
->        Checksum : bdf0c603 - correct
->          Events : 1
+>      Update Time : Sat Apr 13 00:53:27 2013
+>         Checksum : afddd58 - correct
+>           Events : 36
 >=20
->          Layout : left-symmetric
->      Chunk Size : 64K
 >=20
->       Number   Major   Minor   RaidDevice State
-> this     1       8       18        1      active sync   /dev/sdb2
+>     Device Role : Active device 0
+>     Array State : AA ('A' =3D=3D active, '.' =3D=3D missing)
 >=20
->    0     0       8        2        0      active sync   /dev/sda2
->    1     1       8       18        1      active sync   /dev/sdb2
->    2     2       8       34        2      active sync   /dev/sdc2
->    3     3       8       50        3      active sync   /dev/sdd2
-> /dev/sdc2:
->           Magic : a92b4efc
->         Version : 0.90.00
->            UUID : 06dc023e:47dbfdaa:a4d2adc2:26fd5302 (local to host
-> localhost)
->   Creation Time : Mon May  6 23:45:15 2013
->      Raid Level : raid5
->   Used Dev Size : 1462512576 (1394.76 GiB 1497.61 GB)
->      Array Size : 4387537728 (4184.28 GiB 4492.84 GB)
->    Raid Devices : 4
->   Total Devices : 4
-> Preferred Minor : 0
+> mdadm  --examine /dev/sdd1
+> /dev/sdd1:
+>            Magic : a92b4efc
+>          Version : 1.2
+>      Feature Map : 0x0
+>       Array UUID : 0324aa8b:e17efd1a:bae27dd0:66fc7573
+>             Name : 'newname':0
+>    Creation Time : Thu Apr 11 17:54:28 2013
+>       Raid Level : raid1
+>     Raid Devices : 2
 >=20
->     Update Time : Mon May  6 23:47:24 2013
->           State : clean
->  Active Devices : 4
-> Working Devices : 4
->  Failed Devices : 0
->   Spare Devices : 0
->        Checksum : bdf0c615 - correct
->          Events : 1
+>   Avail Dev Size : 2097128 (1024.16 MiB 1073.73 MB)
+>       Array Size : 1048564 (1024.16 MiB 1073.73 MB)
+>      Data Offset : 24 sectors
+>     Super Offset : 8 sectors
+>            State : clean
+>      Device UUID : a841cc4e:b37b0765:70225714:71c65fdd
 >=20
->          Layout : left-symmetric
->      Chunk Size : 64K
+>      Update Time : Sat Apr 13 00:53:27 2013
+>         Checksum : b8a5eef2 - correct
+>           Events : 36
 >=20
->       Number   Major   Minor   RaidDevice State
-> this     2       8       34        2      active sync   /dev/sdc2
 >=20
->    0     0       8        2        0      active sync   /dev/sda2
->    1     1       8       18        1      active sync   /dev/sdb2
->    2     2       8       34        2      active sync   /dev/sdc2
->    3     3       8       50        3      active sync   /dev/sdd2
-> /dev/sdd2:
->           Magic : a92b4efc
->         Version : 0.90.00
->            UUID : 06dc023e:47dbfdaa:a4d2adc2:26fd5302 (local to host
-> localhost)
->   Creation Time : Mon May  6 23:45:15 2013
->      Raid Level : raid5
->   Used Dev Size : 1462512576 (1394.76 GiB 1497.61 GB)
->      Array Size : 4387537728 (4184.28 GiB 4492.84 GB)
->    Raid Devices : 4
->   Total Devices : 4
-> Preferred Minor : 0
+>     Device Role : Active device 1
+>     Array State : AA ('A' =3D=3D active, '.' =3D=3D missing)
 >=20
->     Update Time : Mon May  6 23:47:24 2013
->           State : clean
->  Active Devices : 4
-> Working Devices : 4
->  Failed Devices : 0
->   Spare Devices : 0
->        Checksum : bdf0c627 - correct
->          Events : 1
->=20
->          Layout : left-symmetric
->      Chunk Size : 64K
->=20
->       Number   Major   Minor   RaidDevice State
-> this     3       8       50        3      active sync   /dev/sdd2
->=20
->    0     0       8        2        0      active sync   /dev/sda2
->    1     1       8       18        1      active sync   /dev/sdb2
->    2     2       8       34        2      active sync   /dev/sdc2
->    3     3       8       50        3      active sync   /dev/sdd2
->=20
-> mdadm --detail /dev/md0
-> /dev/md0:
->         Version : 0.90
->   Creation Time : Mon May  6 23:45:15 2013
->      Raid Level : raid5
->      Array Size : 4387537728 (4184.28 GiB 4492.84 GB)
->   Used Dev Size : 1462512576 (1394.76 GiB 1497.61 GB)
->    Raid Devices : 4
->   Total Devices : 4
-> Preferred Minor : 0
->     Persistence : Superblock is persistent
->=20
->     Update Time : Mon May  6 23:47:24 2013
->           State : clean
->  Active Devices : 4
-> Working Devices : 4
->  Failed Devices : 0
->   Spare Devices : 0
->=20
->          Layout : left-symmetric
->      Chunk Size : 64K
->=20
->            UUID : 06dc023e:47dbfdaa:a4d2adc2:26fd5302 (local to host
-> localhost)
->          Events : 0.1
->=20
->     Number   Major   Minor   RaidDevice State
->        0       8        2        0      active sync   /dev/sda2
->        1       8       18        1      active sync   /dev/sdb2
->        2       8       34        2      active sync   /dev/sdc2
->        3       8       50        3      active sync   /dev/sdd2
->=20
-> Many thanks in advance for any advice you have,
-> Ricky Burgin
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
---Sig_/RR/jDiavufV+i55L6A/v0bT
+--Sig_/XxoaX+vgc4m3p9HQIz65q7R
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUYsviDnsnt1WYoG5AQJfmQ//e3jDaiC15Es1rm03Io8h9UHipfw/nXta
-G7WRaI3pNjIc7U6RRDjENdn4bGwZ1oLnpCCkOx0DcYJ4Ea7Z55Orc4kw0zX2sbug
-Ta2bAr7SU4znFl0hAf82xkIX2243xZEO8VOGCXS8jGNOcfsFmEyI7CoZLseTSfUc
-OVF7G7hV8Np7BFDoJE9KtJsNQGxjv4MIs9dGCAn6BH3skogpPGc0M9Btfo8mk8PA
-l3V1NL7OIVnu0kMNqu2u+SYKf9jBSiU9hH5ab9wxAOXEJMDLyyjyq30kxaAwVTHI
-b3ENxYJP0cgbHz6bLZUjiH5pp9Mo/TO7EfcsOyBe31QTcEP079gnzyO2CWZIH6Kl
-lEFsfAFKepYbnap2eDvmTuK+aKY+gPKDM40ljl6JOlpagQHkcdq73cscF+HGGvyf
-Zms8LwD0ANn5MqjVXoS/6JjPLqT1Ee02eZhfYL6lJWSZZzbr53Wl/YoBMouS3cvv
-5v3xFsdPsQEaBLEpy25IhIa6TwcGF53U+tdpYsfWUXJyzrpt1el/J6D3o8SHbWd9
-44diF+TMEvllrGst61DL8xS/M0ZjQxBNA7gZaZDXsBUVoWZRVIvvcdfMG0uq1JZI
-hGZErWxqrfrFNro/xWR2ylC/2+VhLf2ZJYlxgUphupDIfuUYXixudCyoBncqC0+M
-pGpzmfxdK60=
-=ZTKD
+iQIVAwUBUYswrznsnt1WYoG5AQL6HBAAu0BHdhjh6U9WjyT2mma+rQAjMLmkQZST
+PQ5pzqmlAv+txgD06XyPVfcUScYo0Xm3+QDi/TBDHs3rzh45QnmA+q2FPKSVnjti
+Xk2tnoIQn3dpwUFk2fkwUTXRvHLyw2WsydWRb3zsWw0tWwdxSzM0pz/TPkTyaGXh
+7QOhWDOE3DVSKKvU10KTUV3R+Dnn7mVG3O/b9q7ZYLU8Em63pduES5fcws+u3ZxB
+59ThEB2QvbYNp4MQbZmgVO6s4bYOVb31F1CUfOhtTGTTERXLnkqh9/ab0UtSC8At
+qZLNzbs/ebQMrMwBCTADAd4IeiJu4cPEzn4NsRFUQ3hrWH5LXZwELG15WjGHnDdx
+uV0hUey0HBe0ULB9346WxSq9wWDwLA/+Z+dlbbyxcPqpw1HV/Mjp7vqZonkzRCQO
+HClpUQ3oFju4iLVZ3kts5srqKqqMjcx2N+Rx5TaGIFsEzx4PxF6KXMYDySSHiTXS
+3W05fI5JvhjwBYZ5o/nAGYbQfnd7o79eiS+tSvoZzDC9KfbE6+I973F6mXzVufmk
+Gd6DMvkmSQltM7obwsTcIz6M8mWz+ZsfcYHIcIRaqb3xuBxSfEgqObK5lTWx4n5L
+1gx+vDvEHWzL0BrMqg6iCrLs97ljW4M2L1/wnBg1KvVPnKmn/mqd/pPKeb3HktTm
+2CIP+PHRSNA=
+=+3VR
 -----END PGP SIGNATURE-----
 
---Sig_/RR/jDiavufV+i55L6A/v0bT--
+--Sig_/XxoaX+vgc4m3p9HQIz65q7R--
