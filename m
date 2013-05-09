@@ -1,35 +1,42 @@
-From: Dusty Mabe <dustymabe@gmail.com>
-Subject: Re: 0.90 vs 1.X - Differing behavior for device # during
- fail/remove/add operation
-Date: Thu, 9 May 2013 11:30:26 -0400
-Message-ID: <CAFfJ-R6Fgz+Mye2FX5D-+uaM0jgUe2j4nnE1ACyCwwk=9X-KPQ@mail.gmail.com>
-References: <CAFfJ-R58bqNKL+Q1Htp=KDzARi1GLamW9B7idFjnL+h6tYArkw@mail.gmail.com>
+From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Subject: Re: vess raid stripes disappear
+Date: Thu, 09 May 2013 08:32:20 -0700
+Message-ID: <45ss5axrjb.ln2@goaway.wombat.san-francisco.ca.us>
+References: <CANSWD74J9HZCbE4ba1Y5UMRQjjDDZiof21-tUJOKdJmHBvuyXw@mail.gmail.com>
+ <t7qs5axa4b.ln2@goaway.wombat.san-francisco.ca.us>
+ <20130509211016.718dff41@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFfJ-R58bqNKL+Q1Htp=KDzARi1GLamW9B7idFjnL+h6tYArkw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
-Cc: Dusty Mabe <dustymabe@gmail.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, May 8, 2013 at 1:39 PM, Dusty Mabe <dustymabe@gmail.com> wrote:
-> CentOS 6.3
-> 2.6.32-279.19.1
-> mdadm-3.2.3-9.el6.x86_64
+On 2013-05-09, Roman Mamedov <rm@romanrm.ru> wrote:
 >
->
-> I have noticed that the device number printed in the mdstat file gets
-> changed if you fail->remove->add a member device of a 1.X metadata
-> array, but for a 0.90 metadata array the device will go back to the
-> original value once recovery has finished.
->
->
-> Is this by design? I know 1.X version of metadata use dev_roles rather
-> than this_disk and the mdp_disk_t structure so maybe it is by design?
->
+> I (also) was under impression that linux-raid is not just for md, but for a=
+> ll
+> kinds of RAID in GNU/Linux. It's just that historically it's mostly about m=
+> d.
 
-Hey guys.. Sorry to be a pain. Has anyone seen this before? Is it by
-design or a known issue?
+Indeed, the majordomo info says only this:
 
-Dusty
+"Welcome to the linux-raid mailing list, hosted on vger.kernel.org.
+Discussions on this list should be relevant to using RAID technologies
+with Linux. The list has a wiki howto at http://raid.wiki.kernel.org/"
+
+This is somewhat contradictory with the wiki overview:
+
+"This site is the Linux-raid kernel list community-managed reference for
+Linux software RAID as implemented in recent 2.6 kernels."
+
+So I admit to being a bit confused!  Is there a consensus among the
+admins what the list topics should be?
+
+--keith
+
+-- 
+kkeller@wombat.san-francisco.ca.us
+
+
