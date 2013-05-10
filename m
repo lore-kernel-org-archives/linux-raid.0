@@ -1,96 +1,71 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+From: Tregaron Bayly <tbayly@bluehost.com>
 Subject: Re: Unusual RAID 1 recovery problem
-Date: Fri, 10 May 2013 20:13:49 +0200
-Message-ID: <20130510181349.GA5168@lazy.lzy>
+Date: Fri, 10 May 2013 13:23:30 -0600
+Message-ID: <1368213810.10126.35.camel@148>
 References: <1368207075.17201.49695.camel@amp>
+	 <20130510181349.GA5168@lazy.lzy>
+Reply-To: tbayly@bluehost.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1368207075.17201.49695.camel@amp>
+In-Reply-To: <20130510181349.GA5168@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Rowe <J.M.Rowe@exeter.ac.uk>
-Cc: linux-raid@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: John Rowe <J.M.Rowe@exeter.ac.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 10, 2013 at 06:31:15PM +0100, John Rowe wrote:
-> Following a system reinstall (an upgrade from Scientific Linux 5.x  to
-> to 6.x), I had a RAID1 array that  I could start manually with:
+On Fri, 2013-05-10 at 20:13 +0200, Piergiorgio Sartor wrote:
+> > This worked, following the usual warning about how the partitions had
+> > previously been part of an array. But now:
+> > 
+> > > mount -r /md0 /bob
+> > 
+> > refuses to do anything even if I try:
+> > 
+> > > mount -t ext2 -r /md0 /bob
+> > 
+> > I get an error message listing various possibilities such as "bad
+> > superblock". dmesg tells me it can't find an ext2 file system
+> > on /dev/md0
+> > 
+> > 
+> > Clearly I had misunderstood the meaning of "you can be sure that no data
+> > will be affected unless you actually write to the array" but I'm hoping
+> > there is still a way of accessing this unaffected data.
 > 
-> > mdadm --assemble /dev/md0 /dev/sda4 /dev/sdb4
+> Actually, you wrote to the array.
+> Using "create", you wrote a new superblock and, possibly,
+> a new "data offset".
 > 
-> but would not start automatically on reboot. SL is a RedHat clone and
-> all partitions were of type "fd".
+> Problem is that different versions of "mdadm" use different
+> offset for the data.
+> So now, likely, it could be your data starting point, were
+> ext2 should lie, is a bit more far than it was and ext2 is
+> not found anymore (obviously).
 > 
-> The above command worked fine and I could see all my data, but every
-> time I rebooted the RAID1 array wasn't there.
-> 
-> Encouraged by the reassuring words of the mdadm man page:
-> 
->         --assume-clean
->                       Tell mdadm that the array pre-existed and is known
->         to be clean.  It can be  useful  when trying to recover from a
->         major failure as you can be sure that no data will be affected
->         unless you actually write to the array.
->         
-> I tried:
-> 
-> > mdadm --create -l 1 -n 2 -assume-clean /dev/md0 /dev/sda4 /dev/sdb4
+> I think probably you can still recover you data, if the
+> offset could be somehow recovered.
 
-Why oh why?
-If assembly works, then the array is good,
-likely the problem was in the initramfs or
-the like.
+You are probably correct here.  The good news is that the filesystem is
+still likely intact if you haven't done any operations on the new md0
+device and you didn't choose a different raid metadata version when you
+recreated it.  
 
-> This worked, following the usual warning about how the partitions had
-> previously been part of an array. But now:
-> 
-> > mount -r /md0 /bob
-> 
-> refuses to do anything even if I try:
-> 
-> > mount -t ext2 -r /md0 /bob
-> 
-> I get an error message listing various possibilities such as "bad
-> superblock". dmesg tells me it can't find an ext2 file system
-> on /dev/md0
-> 
-> 
-> Clearly I had misunderstood the meaning of "you can be sure that no data
-> will be affected unless you actually write to the array" but I'm hoping
-> there is still a way of accessing this unaffected data.
+Your best solution is to figure out which version of mdadm was used to
+create this array originally and do your create again with that version.
+If you don't know what version was used or you can't get hold of it then
+you're going to have to figure out the true offset of the data.  This is
+most easily accomplished by finding an old mdadm -E output from this
+array.  If you don't have that you're going to have to go hunting on one
+of your disks looking for a 0x55 0xaa boot signature that could indicate
+an MBR.  Armed with the offset information you can either get the
+development version of mdadm which Phil Turmel indicates has a
+--data-offset option and create again or setup a loop device with that
+offset on sda4 or sdb4 and mount it to get your data off to a new
+device.
 
-Actually, you wrote to the array.
-Using "create", you wrote a new superblock and, possibly,
-a new "data offset".
+Good Luck,
 
-Problem is that different versions of "mdadm" use different
-offset for the data.
-So now, likely, it could be your data starting point, were
-ext2 should lie, is a bit more far than it was and ext2 is
-not found anymore (obviously).
+Tregaron
 
-I think probably you can still recover you data, if the
-offset could be somehow recovered.
-
-Of course, it could be I'm wrong and something else failed.
-
-bye,
-
-pg
-
-> 
-> Thanks.
-> 
-> John
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-
-piergiorgio
