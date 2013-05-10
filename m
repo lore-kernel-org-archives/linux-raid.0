@@ -1,45 +1,43 @@
-From: Sam Bingner <sam@bingner.com>
+From: Ricky Burgin <ricky@burg.in>
 Subject: Re: mdraid autodetect partially failing after disk replacement
-Date: Fri, 10 May 2013 04:08:44 +0000
-Message-ID: <7B5C6400-7359-406E-A798-720B31F5B982@bingner.com>
-References: <518AF9EB.7040402@burg.in>
+Date: Fri, 10 May 2013 05:52:59 +0100
+Message-ID: <8tj2wq0eu1swie7m884u2d8i.1368161579257@email.android.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <518AF9EB.7040402@burg.in>
-Content-Language: en-US
-Content-ID: <C0A0975F170A4F45AF2D2B899E932F16@ds.sbdhi.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ricky Burgin <ricky@burg.in>
-Cc: "<linux-raid@vger.kernel.org>" <linux-raid@vger.kernel.org>
+To: Sam Bingner <sam@bingner.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On May 8, 2013, at 3:20 PM, Ricky Burgin <ricky@burg.in> wrote:
+SGkgU2FtLAoKVGhhbmtzIGZvciB0aGUgcmVzcG9uc2UuIFVuZm9ydHVuYXRlbHkgdGhhdCdzIG5v
+dCB0aGUgY2FzZSwgdGhhdCB3YXMgb25lIG9mIHRoZSBmaXJzdCB0aGluZ3MgSSBjaGVja2VkLiBX
+aGF0IHZhcmlhYmxlcyBhcmUgY29uc2lkZXJlZCB3aGVuIGFkZGluZyBvciBleGNsdWRpbmcgZHJp
+dmVzIHRvIG9yIGZyb20gYSByYWlkIHZpYSBhdXRvZGV0ZWN0aW9uPyBUaGlzIHByb2JsZW0gZmVl
+bHMgc28gZXNvdGVyaWMgdGhhdCBpdCBtaWdodCBqdXN0IGJlIGEgYnVnLi4uIAoKSSdsbCBrZWVw
+IG9uIHRyeWluZyEKClJpY2t5CgpTYW0gQmluZ25lciA8c2FtQGJpbmduZXIuY29tPiB3cm90ZToK
+Cj5PbiBNYXkgOCwgMjAxMywgYXQgMzoyMCBQTSwgUmlja3kgQnVyZ2luIDxyaWNreUBidXJnLmlu
+PiB3cm90ZToKPgo+PiBIZWxsbyBhZ2FpbiwKPj4gCj4+IExpdHRsZSBiaXQgb2YgcHJvZ3Jlc3Mg
+c2luY2UgSSBsYXN0IGRyb3BwZWQgYSBtZXNzYWdlIGluIChzb3JyeSBmb3IgdGhlCj4+IGR1cGxp
+Y2F0ZSwgZGlkbid0IHRoaW5rIHRoZSBpbml0aWFsIG9uZSBnb3QgdGhyb3VnaCkuCj4+IAo+PiBU
+aGUga2VybmVsIGhhcyBtZHJhaWQgYnVpbHQgaW50byBpdCBhbmQgYWxsIGRpc2tzIGFyZSB1c2lu
+ZyAwLjkwCj4+IHN1cGVyYmxvY2tzLCBhbGwgJ2ZkJyBwYXJ0aXRpb25zLCBidXQgb25seSAyIG9y
+IDQgZGlza3MgYXJlIGJlaW5nCj4+IHJlY29nbmlzZWQgYW5kIGFwcGxpZWQgdG8gdGhlIGZyZXNo
+bHkgY3JlYXRlZCByYWlkIGFycmF5IHdoaWNoIHdvcmtzCj4+IGZpbmUgd2hlbiBtb3VudGVkIG9u
+IGFueSBvdGhlciBPUy4KPj4gCj4+IEFueSBzdWdnZXN0aW9ucyBmb3Igd2hhdCBjb3VsZCBjYXVz
+ZSBkaXNrcyB0byBiZSBvdmVybG9va2VkIGJ5IG1kcmFpZAo+PiBiZWZvcmUgdGhlIHJvb3QgZGV2
+aWNlIGlzIGV2ZW4gYXR0ZW1wdGVkIHRvIGJlIG1vdW50ZWQgd291bGQgYmUgdmVyeQo+PiBoZWxw
+ZnVsLCBJJ20gbm93IHRvdGFsbHkgYXQgYSBsb3NzIGFzIHRvIHdoYXQgdG8gZG8gZnJvbSBoZXJl
+Lgo+PiAKPj4gS2luZCByZWdhcmRzLAo+PiBSaWNreSBCdXJnaW4KPj4gLS0KPj4gVG8gdW5zdWJz
+Y3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXJh
+aWQiIGluCj4+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwu
+b3JnCj4+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFq
+b3Jkb21vLWluZm8uaHRtbAo+Cj5JcyBpdCBwb3NzaWJsZSB0aGF0IHlvdSBzdGlsbCBoYXZlIDEu
+eCBzdXBlcmJsb2NrcyBvbiB0d28gZHJpdmVzIHRoYXQgYXJlIGJlaW5nIGRldGVjdGVkIGJlZm9y
+ZSB0aGUgMC45IHN1cGVyYmxvY2tzIG9uIHRoaXMgT1M/ICBJIGRvbid0IGtub3cgaWYgdGhpcyBp
+cyBvciBpcyBub3QgcG9zc2libGUsIGJ1dCB0aGF0IGlzIHRoZSBvbmx5IHN0cmFuZ2VuZXNzIEkg
+c2VlIGZyb20geW91ciBwcmlvciBwb3N0cyBldGMuCj4KPllvdSBzaG91bGQgcHJvYmFibHkgYm9v
+dCB0aGF0IHZlcnNpb24gb2YgQ2VudE9TJ3MgcmVzY3VlIG1vZGUgYW5kIHNlZSBpZiB5b3UgaGF2
+ZSB0aGUgc2FtZSBpc3N1ZXMgdGhlcmUuLi4gCj4KPlNhbQ==
 
-> Hello again,
-> 
-> Little bit of progress since I last dropped a message in (sorry for the
-> duplicate, didn't think the initial one got through).
-> 
-> The kernel has mdraid built into it and all disks are using 0.90
-> superblocks, all 'fd' partitions, but only 2 or 4 disks are being
-> recognised and applied to the freshly created raid array which works
-> fine when mounted on any other OS.
-> 
-> Any suggestions for what could cause disks to be overlooked by mdraid
-> before the root device is even attempted to be mounted would be very
-> helpful, I'm now totally at a loss as to what to do from here.
-> 
-> Kind regards,
-> Ricky Burgin
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-Is it possible that you still have 1.x superblocks on two drives that are being detected before the 0.9 superblocks on this OS?  I don't know if this is or is not possible, but that is the only strangeness I see from your prior posts etc.
-
-You should probably boot that version of CentOS's rescue mode and see if you have the same issues there... 
-
-Sam
