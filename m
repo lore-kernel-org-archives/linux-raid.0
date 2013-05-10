@@ -1,117 +1,76 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: SOLVED Re: vess raid stripes disappear
-Date: Fri, 10 May 2013 02:55:34 -0500
-Message-ID: <518CA7F6.4000000@hardwarefreak.com>
-References: <CANSWD74J9HZCbE4ba1Y5UMRQjjDDZiof21-tUJOKdJmHBvuyXw@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: Stefan Borggraefe <stefan@spybot.info>
+Subject: Re: Help with recovering a RAID5 array
+Date: Fri, 10 May 2013 12:14:36 +0200
+Message-ID: <2377905.mzbW0zKCvF@chablis>
+References: <34199580.p6EyCyMeIZ@chablis> <20130506163102.066b9264@notabene.brown> <4918514.Nmbo5VakCk@chablis>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CANSWD74J9HZCbE4ba1Y5UMRQjjDDZiof21-tUJOKdJmHBvuyXw@mail.gmail.com>
+In-Reply-To: <4918514.Nmbo5VakCk@chablis>
 Sender: linux-raid-owner@vger.kernel.org
-To: mashtin.bakir@gmail.com
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>, Ole Tange <tange@binf.ku.dk>
 List-Id: linux-raid.ids
 
-On 5/9/2013 6:29 AM, mashtin.bakir@gmail.com wrote:
-> I have an interesting problem with a Vessraid 1830s.
-> We have a few of these that work fine but one seems
-> to lose its filesets. The only difference between the
-> good ones and the bad one is that the bad one has firmware
-> version 3.06 while the good ones are at 3.05 (This may
-> not be relevant).
-
-It's not a firmware problem Mashtin.  The problem here is incomplete
-education.  More accurately, the problem is that you've confused
-concepts of hardware RAID and Linux software RAID.  I will attempt to
-help you separate these so you understand the line in the sand
-separating the two.
-
-> Here's what happens. If I plug the raid into a 32 bit
-> RHEL5 box with large files enabled, syslog does pick
-> it up:
+Am Montag, 6. Mai 2013, 10:12:42 schrieb Stefan Borggraefe:
+> Am Montag, 6. Mai 2013, 16:31:02 schrieb NeilBrown:
+> > Did you stop the array first?
+> > 
+> >   i.e.
+> >   
+> >     mdadm --stop /dev/md126
+> >     mdadm -Asfvv
+> > 
+> > NeilBrown
 > 
-> kernel: Vendor: Promise  Model:VessRAID 1830s Rev: 0306
-> Type: Direct-Access     ANSI SCSI revision: 05
-> SCSI device sdc:2929686528 2048-byte hdwr sectors (5999998 MB)
-
-The kernel sees a single 6TB SCSI device/LUN presented by the Promise
-array..
-
-> Using the web gui, I can carve out partitions,
-
-The Promise web gui doesn't create partitions.  That's the job of the
-operating system.  What it does allow you to do is carve out multiple
-virtual drives from a single RAID set and export them as individual LUNs.
-
-> I make three stripes across 4 disks of 2Terabytes each
-> using RAID5.
-
-This is not possible with the Promise firmware.  I think you're simply
-using incorrect terminology here.  According to your dmesg output above
-you have created a single hardware RAID5 array of 4 disks, one 6TB
-virtual drive, and exported it as a single LUN.
-
-...
-> I then use gnu-parted (v3.1) to make the
-> filesets:
-
-parted doesn't create "filesets".  It creates partitions.  What are
-"filesets"?
-
-> mklabel gpt
-> mkpart primray 0 0
-
-Ok so you created a primary partition.
-
-> set 1 raid on
-
-^^^^^^^^^^^^^^^
-
-THIS IS THE PROBLEM.  "set 1 raid on" is used exclusively with Linux
-software RAID.  What this does is tell the Kernel to look for a software
-RAID superblock on the partition and auto start the array.  You are not
-using md/RAID, but hardware RAID, so the superblock doesn't exist.  This
-is the source of your problem.  This is where you have confused hardware
-and software RAID concepts.
-
-> I create the fileset using
-
-Ok so when you say "fileset" you actually mean "file system".
-
-> mkfs.ext3 -m0 /dev/sdc1
-> I can then mount the FS and write to it.
+> Thank you Neil, yes this was my mistake. I realised it in the meantime and
+> am currently checking the file system using overlay files as suggested in
 > 
-> If I either reboot the RAID or the host, the FS disappears
-> ie cat/proc/partitions   shows only sdc, not sdc1.
-> If I go back into parted, the label is intact
-> But I can't even mkfs without re-creating the label/partition,
-> in wich case I get:
+> https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID
 
-This is a direct result of "set 1 raid on" as explained above.  You
-should see other error messages in dmesg about no superblock being found.
+fsck.ext4 -y -C 0 /dev/md126
 
-> ...Have been written, but we have been
-> unable to
-> inform the kernel of the change, probably because it/they are in use.  As a
-> result, the old partition(s) will remain in use.  You should reboot now
-> before
-> making further changes.
-> Ignore/Cancel? i
+ended with
 
-Clearing the parted RAID flag on the partition should fix your problem,
-assuming you haven't done anything else wonky WRT software RAID and this
-partition that hasn't been presented here.
+[7543439.065625] Pid: 13706, comm: fsck.ext4 Tainted: G        W  O 3.2.0-37-
+generic #58-Ubuntu
+[7543439.065627] Call Trace:
+[7543439.065629]  [<ffffffff81067f0f>] warn_slowpath_common+0x7f/0xc0
+[7543439.065631]  [<ffffffff81067f6a>] warn_slowpath_null+0x1a/0x20
+[7543439.065634]  [<ffffffffa00aea35>] init_stripe+0x245/0x270 [raid456]
+[7543439.065637]  [<ffffffffa00b2772>] get_active_stripe+0x3a2/0x3c0 [raid456]
+[7543439.065639]  [<ffffffff814e67d9>] ? mddev_bio_destructor+0x19/0x20
+[7543439.065641]  [<ffffffff8108bbc0>] ? prepare_to_wait+0x60/0x90
+[7543439.065644]  [<ffffffffa00b5b94>] make_request+0x194/0x430 [raid456]
+[7543439.065646]  [<ffffffff813030d6>] ? throtl_find_tg+0x46/0x60
+[7543439.065647]  [<ffffffff8108bd20>] ? add_wait_queue+0x60/0x60
+[7543439.065650]  [<ffffffff814e5f10>] md_make_request+0xd0/0x200
+[7543439.065652]  [<ffffffff8111b145>] ? mempool_alloc_slab+0x15/0x20
+[7543439.065654]  [<ffffffff812f2264>] generic_make_request.part.50+0x74/0xb0
+[7543439.065656]  [<ffffffff812f2678>] generic_make_request+0x68/0x70
+[7543439.065658]  [<ffffffff812f2705>] submit_bio+0x85/0x110
+[7543439.065660]  [<ffffffff811afa2a>] ? bio_alloc_bioset+0x5a/0xf0
+[7543439.065662]  [<ffffffff811a997b>] submit_bh+0xeb/0x120
+[7543439.065664]  [<ffffffff811ac615>] block_read_full_page+0x225/0x390
+[7543439.065666]  [<ffffffff811b1700>] ? blkdev_get_blocks+0xd0/0xd0
+[7543439.065668]  [<ffffffff811190e5>] ? add_to_page_cache_locked+0x85/0xa0
+[7543439.065670]  [<ffffffff811b0dc8>] blkdev_readpage+0x18/0x20
+[7543439.065672]  [<ffffffff8111967d>] 
+do_generic_file_read.constprop.33+0x10d/0x440
+[7543439.065675]  [<ffffffff8111a74f>] generic_file_aio_read+0xef/0x280
+[7543439.065677]  [<ffffffff813bb14e>] ? tty_wakeup+0x3e/0x80
+[7543439.065679]  [<ffffffff81178d8a>] do_sync_read+0xda/0x120
+[7543439.065681]  [<ffffffff8129ee13>] ? security_file_permission+0x93/0xb0
+[7543439.065683]  [<ffffffff81179211>] ? rw_verify_area+0x61/0xf0
+[7543439.065684]  [<ffffffff811796f0>] vfs_read+0xb0/0x180
+[7543439.065686]  [<ffffffff8117980a>] sys_read+0x4a/0x90
+[7543439.065688]  [<ffffffff81665842>] system_call_fastpath+0x16/0x1b
+[7543439.065689] ---[ end trace cce84f1e6de88596 ]---
+[7543441.630145] quiet_error: 230464 callbacks suppressed
 
-Always remember this:  Any time your see "RAID" setup or configuration
-referenced in Linux documentation or cheat sheets on the web, it is
-invariably referring to a kernel software function, either md/RAID,
-dm-raid, etc.  It is never referring to hardware RAID devices.  If you
-have a hardware RAID device you will never configure anything RAID
-related in Linux, whether it be parted, grub, md, dm, etc.
-
+I think I will give up here and just start again with a clean RAID6 to copy 
+the data onto anew.
 -- 
-Stan
-
-
+Best regards,
+Stefan Borggraefe
