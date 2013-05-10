@@ -1,117 +1,117 @@
-From: Tregaron Bayly <tbayly@bluehost.com>
-Subject: Re: mdraid autodetect partially failing after disk replacement
-Date: Thu, 09 May 2013 23:52:19 -0600
-Message-ID: <1368165139.4029.41.camel@linux-lxtg.site>
-References: <8tj2wq0eu1swie7m884u2d8i.1368161579257@email.android.com>
-Reply-To: tbayly@bluehost.com
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: SOLVED Re: vess raid stripes disappear
+Date: Fri, 10 May 2013 02:55:34 -0500
+Message-ID: <518CA7F6.4000000@hardwarefreak.com>
+References: <CANSWD74J9HZCbE4ba1Y5UMRQjjDDZiof21-tUJOKdJmHBvuyXw@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8tj2wq0eu1swie7m884u2d8i.1368161579257@email.android.com>
+In-Reply-To: <CANSWD74J9HZCbE4ba1Y5UMRQjjDDZiof21-tUJOKdJmHBvuyXw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ricky Burgin <ricky@burg.in>
+To: mashtin.bakir@gmail.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ricky,
+On 5/9/2013 6:29 AM, mashtin.bakir@gmail.com wrote:
+> I have an interesting problem with a Vessraid 1830s.
+> We have a few of these that work fine but one seems
+> to lose its filesets. The only difference between the
+> good ones and the bad one is that the bad one has firmware
+> version 3.06 while the good ones are at 3.05 (This may
+> not be relevant).
 
-When talking about things that happen before the root device is mounted
-you are talking about the initial ramdisk. =20
+It's not a firmware problem Mashtin.  The problem here is incomplete
+education.  More accurately, the problem is that you've confused
+concepts of hardware RAID and Linux software RAID.  I will attempt to
+help you separate these so you understand the line in the sand
+separating the two.
 
-I'm not sure on the specifics for what you're running but can we presum=
-e
-that this is the root filesystem?  If it is we can deduce that an mdadm
-binary, mdadm.conf file and some udev rules to assemble the array need
-to exist in the initrd/initramfs.  There may also be a script that
-directly executes an mdadm incremental or assemble command.  If the
-array isn't being properly started then there could be a problem
-detecting the disks (driver issue), the mdadm.conf in the ramdisk could
-be incorrect (a devices line excluding the disks or something) or for
-some reason the udev rule or mdadm command isn't firing.  None of those
-seem likely given the sequence of events you talked about in your first
-thread on this problem, but we have to focus on what this system is
-doing at boot that your rescue environment isn't.
+> Here's what happens. If I plug the raid into a 32 bit
+> RHEL5 box with large files enabled, syslog does pick
+> it up:
+> 
+> kernel: Vendor: Promise  Model:VessRAID 1830s Rev: 0306
+> Type: Direct-Access     ANSI SCSI revision: 05
+> SCSI device sdc:2929686528 2048-byte hdwr sectors (5999998 MB)
 
-If your system uses dracut then you can use rdshell to poke around at
-what is happening when the root filesystem fails to mount.  You can loo=
-k
-at the device nodes that are created, run commands like blkid, and use
-mdadm to attempt assembling the array, for instance.  If you manage to
-get it assembled you can type 'exit' to continue booting.  This exercis=
-e
-could possibly shed some light on your problem - helping you understand
-what specifically is amiss in your pre-root environment that isn't wron=
-g
-when booting another OS (and ramdisk).
+The kernel sees a single 6TB SCSI device/LUN presented by the Promise
+array..
 
-Wish I could be more specific, but hopefully this gets you something
-more to look at.  I think this is what Neil was hinting at when he
-suggested that you might need to create a new initrd - which is what yo=
-u
-would probably end up doing to fix this anyway if you found something
-wrong in your initial ramdisk.
+> Using the web gui, I can carve out partitions,
 
-Hope this helps,
+The Promise web gui doesn't create partitions.  That's the job of the
+operating system.  What it does allow you to do is carve out multiple
+virtual drives from a single RAID set and export them as individual LUNs.
 
-Tregaron
+> I make three stripes across 4 disks of 2Terabytes each
+> using RAID5.
 
-On Fri, 2013-05-10 at 05:52 +0100, Ricky Burgin wrote:
-> Hi Sam,
->=20
-> Thanks for the response. Unfortunately that's not the case, that was =
-one of the first things I checked. What variables are considered when a=
-dding or excluding drives to or from a raid via autodetection? This pro=
-blem feels so esoteric that it might just be a bug...=20
->=20
-> I'll keep on trying!
->=20
-> Ricky
->=20
-> Sam Bingner <sam@bingner.com> wrote:
->=20
-> >On May 8, 2013, at 3:20 PM, Ricky Burgin <ricky@burg.in> wrote:
-> >
-> >> Hello again,
-> >>=20
-> >> Little bit of progress since I last dropped a message in (sorry fo=
-r the
-> >> duplicate, didn't think the initial one got through).
-> >>=20
-> >> The kernel has mdraid built into it and all disks are using 0.90
-> >> superblocks, all 'fd' partitions, but only 2 or 4 disks are being
-> >> recognised and applied to the freshly created raid array which wor=
-ks
-> >> fine when mounted on any other OS.
-> >>=20
-> >> Any suggestions for what could cause disks to be overlooked by mdr=
-aid
-> >> before the root device is even attempted to be mounted would be ve=
-ry
-> >> helpful, I'm now totally at a loss as to what to do from here.
-> >>=20
-> >> Kind regards,
-> >> Ricky Burgin
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-ra=
-id" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> >Is it possible that you still have 1.x superblocks on two drives tha=
-t are being detected before the 0.9 superblocks on this OS?  I don't kn=
-ow if this is or is not possible, but that is the only strangeness I se=
-e from your prior posts etc.
-> >
-> >You should probably boot that version of CentOS's rescue mode and se=
-e if you have the same issues there...=20
-> >
-> >SamNrybX=C7=A7v^)=DE=BA{.n+{{ay=1D=CA=87=DA=99,j=07fhz=1Ew=0Cj:+vwjm=
-=07zZ+=DD=A2j"!
+This is not possible with the Promise firmware.  I think you're simply
+using incorrect terminology here.  According to your dmesg output above
+you have created a single hardware RAID5 array of 4 disks, one 6TB
+virtual drive, and exported it as a single LUN.
+
+...
+> I then use gnu-parted (v3.1) to make the
+> filesets:
+
+parted doesn't create "filesets".  It creates partitions.  What are
+"filesets"?
+
+> mklabel gpt
+> mkpart primray 0 0
+
+Ok so you created a primary partition.
+
+> set 1 raid on
+
+^^^^^^^^^^^^^^^
+
+THIS IS THE PROBLEM.  "set 1 raid on" is used exclusively with Linux
+software RAID.  What this does is tell the Kernel to look for a software
+RAID superblock on the partition and auto start the array.  You are not
+using md/RAID, but hardware RAID, so the superblock doesn't exist.  This
+is the source of your problem.  This is where you have confused hardware
+and software RAID concepts.
+
+> I create the fileset using
+
+Ok so when you say "fileset" you actually mean "file system".
+
+> mkfs.ext3 -m0 /dev/sdc1
+> I can then mount the FS and write to it.
+> 
+> If I either reboot the RAID or the host, the FS disappears
+> ie cat/proc/partitions   shows only sdc, not sdc1.
+> If I go back into parted, the label is intact
+> But I can't even mkfs without re-creating the label/partition,
+> in wich case I get:
+
+This is a direct result of "set 1 raid on" as explained above.  You
+should see other error messages in dmesg about no superblock being found.
+
+> ...Have been written, but we have been
+> unable to
+> inform the kernel of the change, probably because it/they are in use.  As a
+> result, the old partition(s) will remain in use.  You should reboot now
+> before
+> making further changes.
+> Ignore/Cancel? i
+
+Clearing the parted RAID flag on the partition should fix your problem,
+assuming you haven't done anything else wonky WRT software RAID and this
+partition that hasn't been presented here.
+
+Always remember this:  Any time your see "RAID" setup or configuration
+referenced in Linux documentation or cheat sheets on the web, it is
+invariably referring to a kernel software function, either md/RAID,
+dm-raid, etc.  It is never referring to hardware RAID devices.  If you
+have a hardware RAID device you will never configure anything RAID
+related in Linux, whether it be parted, grub, md, dm, etc.
+
+-- 
+Stan
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
