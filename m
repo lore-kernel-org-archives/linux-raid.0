@@ -1,76 +1,48 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: Corruption during RAID5->RAID6 migration
-Date: Wed, 15 May 2013 03:13:03 +0600
-Message-ID: <20130515031303.653f6d56@natsu>
-References: <CAJDy474SBN7qMgccmkzc++=ZP43L1M=jVkyx_YVkqdZmbvwZfg@mail.gmail.com>
-	<20130515020814.77ff1407@natsu>
-	<CAJDy477412O8_saeP-YYxXSoQsgMy8jEgdfXa7p5_2V54nMG=Q@mail.gmail.com>
+From: "Niclas Arndt" <niclas@arndt.se>
+Subject: GRUB2 MBR/GPT sizing question
+Date: Wed, 15 May 2013 00:10:36 +0200
+Message-ID: <d3d9bbafd33a3a4b9df641357a9d47aa.squirrel@mail.arndt.se>
+Reply-To: niclas@arndt.se
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/6Eflamyq/6H/uUe/HkCs6+0"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJDy477412O8_saeP-YYxXSoQsgMy8jEgdfXa7p5_2V54nMG=Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: James Doebbler <jamesdoebbler@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/6Eflamyq/6H/uUe/HkCs6+0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Tue, 14 May 2013 15:56:57 -0500
-James Doebbler <jamesdoebbler@gmail.com> wrote:
+Sorry if this is slightly off-topic. I'm trying to figure out the HDD size
+limitation using GRUB2 MBR-only with three md raid sets:
 
-> Roman,
->=20
-> I suppose that means you think it's hardware-related then.  Do you
-> have any suggestions on what/how I might be able to recover?
->=20
-> Hardware details:
->=20
-> The motherboard is ECS A785GM-M with 6x internal SATAII and 2x eSATAII
-> I have installed 2 x SYBA SD-SA2PEX-2IR (SiI3132 Chipset), each with
-> 2x onboard SATAII
+6*2 TB Samsung HD204UI partitioned like so:
+Boot from sda MBR
+15 GB / on raid1 pair ext4
+15 GB swap on raid1 pair
+32 MB unused fat16 per drive
+1.9 TB /storage on raid 5 ext4 using all 6 drives
 
-Hello,
+The above has been working flawlessly on openSUSE 11.3, 11.4, 12.2, and
+initial install on 12.3. However, the first 12.3 kernel update replaced
+GRUB2 with a failing GRUB0.97(!).
 
-This card and in fact the 3132 chipset is known to corrupt data when both
-ports are accessed simultaneously at high speed.
+After much tinkering, I gdisk-converted the drives to a GRUB2 MBR+GPT with
+the 32 MB partition used for grub_bios. This survives the kernel update,
+so I think that I no longer have a problem. Either way, I would like to
+understand if I was wrong or if the kernel update is misbehaving.
 
-> http://lime-technology.com/wiki/index.php/Hardware_Compatibility
-> SYBA (PCI-E X1) 2 port SATA II (SiI3132)
-> Beware!!! There are numerous providers of SiL3132-based addon cards, and =
-a few of them (unknown how many) are known to be faulty, causing unseen (SI=
-LENT) data corruption - see
-> http://lime-technology.com/forum/index.php?topic=3D18428.msg167122#msg167=
-122
-> http://lime-technology.com/forum/index.php?topic=3D21052.msg187437#msg187=
-437
+Surely, MBR supports 2TB drives with 512-byte sectors even though there is
+a larger md raid?
 
-Earlier discussions on linux-raid:
-http://comments.gmane.org/gmane.linux.raid/30629
-http://permalink.gmane.org/gmane.linux.raid/33369
-http://comments.gmane.org/gmane.linux.raid/33346
+Similarly, another identical server with 4*4TB Deskstar 7K4000 drives had
+exactly the same MBR-only problem (also avoided by converting to MBR+GPT),
+but in this case it might still work with 4kB sectors. (But I'm not sure
+if this advanced format drive is actually using 4kB addressing rather than
+512B emulation.)
 
-Some more reports:
-http://s.lowendshare.com/4/1368565867.495.2013-05-14T211035Z-syba3132.png
-http://forum.ixbt.com/topic.cgi?id=3D11:35147-39#1199 (Russian)
+Could somebody please shed some light on this?
 
---=20
-With respect,
-Roman
+Thanks in advance
 
---Sig_/6Eflamyq/6H/uUe/HkCs6+0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlGSqN8ACgkQTLKSvz+PZwhu0QCdGp3yPhqzcvduDkYaC8AMyPpQ
-uPUAnjYfa1sk5sli48KSyx/IzIz6eveH
-=twCT
------END PGP SIGNATURE-----
-
---Sig_/6Eflamyq/6H/uUe/HkCs6+0--
+Niclas
