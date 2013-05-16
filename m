@@ -1,100 +1,51 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 9/9] mdadm: 'dump' support
-Date: Thu, 16 May 2013 15:11:59 +1000
-Message-ID: <20130516151159.70fe0aee@notabene.brown>
-References: <20110826020908.28015.52384.stgit@localhost6.localdomain6>
-	<20110826021445.28015.63357.stgit@localhost6.localdomain6>
-	<20110830125803.19ad660b@notabene.brown>
-	<20110830121203.Horde.wvD-Spk8pphOXLdzcMjKT1A@cakebox.homeunix.net>
+From: Ole Tange <tange@binf.ku.dk>
+Subject: Re: SpareMissing event, but spare not missing
+Date: Thu, 16 May 2013 10:02:04 +0200
+Message-ID: <CANU9nTkwe2H-xB3Zo6zcACv2UbqXuzVapUqZBzOfkiaBOLBXCw@mail.gmail.com>
+References: <CANU9nTm_TpyomQVSHNtQHVNMwRNKrZjs=YUv5PYmKoTV61Gvsg@mail.gmail.com>
+ <11898309.36.1368631469489.JavaMail.root@zimbra>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/1PU61CRBI2p6iiZ.7eosha_"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110830121203.Horde.wvD-Spk8pphOXLdzcMjKT1A@cakebox.homeunix.net>
+In-Reply-To: <11898309.36.1368631469489.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander =?ISO-8859-1?Q?K=FChn?= <alexander.kuehn@nagilum.de>
-Cc: Dan Williams <djbw@fb.com>, linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/1PU61CRBI2p6iiZ.7eosha_
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: quoted-printable
+On Wed, May 15, 2013 at 5:24 PM, Roy Sigurd Karlsbakk <roy@karlsbakk.ne=
+t> wrote:
+> - Anything in dmesg?
 
-On Tue, 30 Aug 2011 12:12:03 +0200 Alexander K=FChn
-<alexander.kuehn@nagilum.de> wrote:
+Nope.
 
->=20
-> Zitat von NeilBrown <neilb@suse.de>:
->=20
-> > On Thu, 25 Aug 2011 19:14:45 -0700 Dan Williams <dan.j.williams@intel.c=
-om>
-> > wrote:
-> >
-> >>   mdadm -E /dev/sda --dump=3Dfoo
-> >>
-> >> Creates a sparse file image of /dev/sda named foo with a copy of the
-> >> metadata instance found by -E.
-> >>
-> >> When used in the opposite direction:
-> >>
-> >>   mdadm -E foo --dump=3D/dev/sda
-> >>
-> >> ...can restore metadata to a given block device, assuming it is
-> >> identical size to the dump file.
-> >
-> > Suppose we did have a separate 'restore' function - what would it look =
-like?
-> > An option to create?
-> >
-> >   mdadm --create --restore=3Dsome-directory /dev/sda /dev/sdb
-> >
->=20
-> Yes, from a UI perspective having separate dump/restore options is =20
-> better. Since there is also dump(8)/restore(8) it would also keep the =20
-> nomenclature.
-> Otherwise I would rather name it "copy-metadata" or something as with =20
-> copying the user is or should be aware that the order or arguments =20
-> matters.
-> Alex.
+> - What does /etc/mdadm/mdadm.conf say?
 
-Nearly two years later, I've committed some functionality based on this.
+Good call. It was generated automatically when there were 4 spares, so
+it had 'spares=3D4' in it. And there are no longer 4 spares, which can
+explain the message.
 
-mdadm --dump=3D/root/md /dev/*
+I have now removed the 'spares=3D4' and restarted mdadm --monitor.
+Tomorrow we will see if that fixed it.
 
-will create files in /root/md/ with metadata from any device with metadata
-recognised by mdadm.
+> Also, using 20 disks in a single RAID-6 gives you the same chances fo=
+r a parity+1 error (or worse) as compared to 10 drives in RAID-5. I wou=
+ld really recommend using smaller (8+2?) RAID-6 sets and rather use LVM=
+ on top (which you may be doing already?). Even with proper cooling and=
+ enterprise drives, 20 drives in a single RAID-6 is asking for trouble=85
 
-mdadm --restore=3D/root/md /dev/*
+We are migrating to a RAID60 2x10.
 
-will restore it all.
+The major reason for this is the time to rebuild: To rebuild one of
+the 19 drives we have to read remaining 19 drives during which the
+performance will be slower. On our system rebuild would take at least
+4 days.
 
-More details in the man page.
-http://git.neil.brown.name/git?p=3Dmdadm.git;a=3Dblob;f=3Dmdadm.8.in;h=3Dc8=
-559dae8e789a30e0c4ee826745a42980629977;hb=3D74db60b00a43a5ae636477c10c24e92=
-3e76049ce
 
-NeilBrown
-
---Sig_/1PU61CRBI2p6iiZ.7eosha_
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUZRqnznsnt1WYoG5AQL0uA//de53QvuhAQRQGbxuMcrVl1+rjbOi8DbI
-DtWyHAI1DnoUQzTo90zOhcJsQQHJZcdjkOmt0T1AAyOmzKi66cF7x0CrOq+pU+L9
-WOInIaTDQVcyzQE1gugmQFWTplPhXh+/qz5U3nfzHLgPEoVbG0FDGlMdtbKyS1nt
-+EzToW5nI55fy0IroHn8lVjm3yQUqb8NNMWyQb4NNlXk2+piymYvwwk8xhhVRKyz
-SYtL7duec+uUQg+pOFiznstWRSBAhl8o2AbcmD27HAtvOphWsJWGppPVc+SlZ+XD
-jn6vTsZC39TUsUbPvf8Qvp7yh2dE033cn/epE8WNGjczppzvoVE7ub12FawFK2mZ
-4vneYGIcdIkZa/GCXMnTEahQp/01laSEJ0Ny8q/odsaV8rO+aNZqRR1DvozbCC9F
-PPlsam61fZpTG0TMBjzy/27iMJI2GPP6NH77jOnsZqF4NoEidRUqjvFWOV1sU+w/
-gx/Ynvbg6fdCH4mQ0KgGfK0zuAp4zBQceVLvms4dqO1j1/wrzN37Qep20zm17qrS
-dAFM1ViANVB1uT2MgJETj39ytsU/UPvQvKivhDo4hsOmnLvS0wvhRv6Of/EukDPT
-X7MNenXf3NTAnUMSfgm/2ZSTjxl+VOqHMxuQHzL1zpX6fcabABUqKC6asIDTMq67
-TSlTY2GEUuo=
-=CYB4
------END PGP SIGNATURE-----
-
---Sig_/1PU61CRBI2p6iiZ.7eosha_--
+/Ole
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
