@@ -1,51 +1,63 @@
-From: Ole Tange <tange@binf.ku.dk>
-Subject: Re: SpareMissing event, but spare not missing
-Date: Thu, 16 May 2013 10:02:04 +0200
-Message-ID: <CANU9nTkwe2H-xB3Zo6zcACv2UbqXuzVapUqZBzOfkiaBOLBXCw@mail.gmail.com>
-References: <CANU9nTm_TpyomQVSHNtQHVNMwRNKrZjs=YUv5PYmKoTV61Gvsg@mail.gmail.com>
- <11898309.36.1368631469489.JavaMail.root@zimbra>
+From: "Mo, Moore" <Moore.Mo@Polycom.com>
+Subject: RE: Kernel crash at md_seq_show of drivers/md/md.c
+Date: Thu, 16 May 2013 20:35:25 +0800
+Message-ID: <74AD8F6BA17DDA4EBE980849BC39C00D02803B6D@HKGMBOXPRD22.polycom.com>
+References: <74AD8F6BA17DDA4EBE980849BC39C00D02803790@HKGMBOXPRD22.polycom.com>
+ <20130516111905.671d02ff@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <11898309.36.1368631469489.JavaMail.root@zimbra>
+In-Reply-To: <20130516111905.671d02ff@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, May 15, 2013 at 5:24 PM, Roy Sigurd Karlsbakk <roy@karlsbakk.ne=
-t> wrote:
-> - Anything in dmesg?
-
-Nope.
-
-> - What does /etc/mdadm/mdadm.conf say?
-
-Good call. It was generated automatically when there were 4 spares, so
-it had 'spares=3D4' in it. And there are no longer 4 spares, which can
-explain the message.
-
-I have now removed the 'spares=3D4' and restarted mdadm --monitor.
-Tomorrow we will see if that fixed it.
-
-> Also, using 20 disks in a single RAID-6 gives you the same chances fo=
-r a parity+1 error (or worse) as compared to 10 drives in RAID-5. I wou=
-ld really recommend using smaller (8+2?) RAID-6 sets and rather use LVM=
- on top (which you may be doing already?). Even with proper cooling and=
- enterprise drives, 20 drives in a single RAID-6 is asking for trouble=85
-
-We are migrating to a RAID60 2x10.
-
-The major reason for this is the time to rebuild: To rebuild one of
-the 19 drives we have to read remaining 19 drives during which the
-performance will be slower. On our system rebuild would take at least
-4 days.
-
-
-/Ole
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+PiBPbiBXZWQsIDE1IE1heSAyMDEzIDIwOjExOjUyICswODAwICJNbywgTW9vcmUiIDxNb29yZS5N
+b0BQb2x5Y29tLmNvbT4gd3JvdGU6DQo+IA0KPiA+IERlYXIgTmVpbCwNCj4gPiANCj4gPiAgICAg
+VGhhbmsgeW91IGZvciB5b3VyIGNsdWUuIEkgbWFrZSBkZWVwZXIgdHJhY2UgYWZ0ZXIgdGhhdCBh
+bmQgZm91bmQgYW5vdGhlciBzdXNwaWNpb24gcG9pbnQuIEtlcm5lbCBtYXliZSB3YWtldXAgYSBt
+ZGtfdGhyZWFkIHdoaWNoIHdhcyBrZnJlZSBpbiBmYWlsZWQgY2FzZSBvZiBtZGRldi0+cGVycy0+
+cnVuKG1kZGV2KS4NCj4gPiANCj4gPiAgICAgRm9yIG1ha2Ugc3VyZSBteSBndWVzcywgSSBhZGQg
+c29tZSBwcmludGsgaW4gb3JkZXIgdG8gZ2V0IG1vcmUgaW5mby4gSXQgc2VlbXMgdGhhdCBtZF9z
+ZXFfc2hvdyB0cnkgdG8gd2FrZSB1cCBhIG1ka190aHJlYWQgaW4gbWRkZXZfdW5sb2NrKCkgYmVm
+b3JlIG1kX3NlcV9zaG93IHJldHVybiwgYnV0IHRoZSB0aHJlYWQgd2FzIGtmcmVlIGFscmVhZHkg
+YnkgIm91dF9mcmVlX2NvbmYiIGNhc2Ugb2YgcnVuKCkgZnVuY3Rpb24gaW4gZHJpdmVycy9tZC9y
+YWlkMTAuYy4NCj4gPiANCj4gPiAgICAgVGhlIE9vcHMgcmVwb3J0IGFzIGF0dGFjaGVkLg0KPiA+
+IA0KPiANCj4gSSBkb24ndCByZWFsbHkgaGF2ZSB0aW1lIGZvciBidWcgcmVwb3J0cyBhZ2FpbnN0
+IGFuY2llbnQga2VybmVscyAtIHNvcnJ5Lg0KPiBJZiB5b3UgdGhpbmsgeW91J3ZlIGZvdW5kIGEg
+YnVnLCBwbGVhc2UgYXQgbGVhc3QgbG9vayBpbiB0aGUgY3VycmVudCBtYWlubGluZSBrZXJuZWwg
+dG8gc2VlIGlmIHRoZSBjb2RlIGhhcyBjaGFuZ2VkLCBhbmQgcHJlZmVyYWJseSByZXByb2R1Y2Ug
+YWdhaW5zdCB0aGUgY3VycmVudCBtYWlubGluZSBrZXJuZWwuDQo+IA0KPiBJbiB0aGlzIGNhc2Ug
+dGhlIGJ1ZyB3YXMgZml4ZWQgYnkgY29tbWl0DQo+ICAgICAgIDAxZjk2YzBhOTkyMmNkOTkxOWJh
+ZjlkMTZmZWJkZjcwMTYxNzdhMTINCj4gMTggbW9udGhzIGFnbyAobGludXggMy4xKS4NCj4gDQoN
+ClRoYW5rcyB5b3VyIGluZm9ybWF0aW9uIGFuZCBzb3JyeSBhYm91dCB0aGF0IEkgaGF2ZW4ndCBs
+b29rIHRocm91Z2ggbGF0ZXN0IG1haW5saW5lIGtlcm5lbCB0aGlzIHRpbWUuIEkgd2lsbCBwYXkg
+YXR0ZW50aW9uIHRvIGl0IGluIGZ1dHVyZS4NCg0KSSBoYXZlIG1lcmdlZCB0aGUgcGF0Y2ggZnJv
+bSBsaW51eCAzLjEgKHdpdGggYSBsaXR0bGUgYWRhcHRhdGlvbiBmb3IgMi42LjM3KSwgYW5kIHZl
+cmlmaWVkIG9uIG15IGlzc3VlIHRoZWF0ZXIuIGl0IHdvcmtzIHdlbGwuIFRoZSBPb3BzIGRpc2Fw
+cGVhcmVkLiBUaGFuayB5b3UuDQoNCkNvdWxkIHlvdSBtaW5kIEkgYXNrIGFuIGV4dGVuZGVkIHF1
+ZXN0aW9uOiBUaGVyZSBpcyBhIE5VTEwgcG9pbnRlciBwcm90ZWN0b3IgaW4gbWRfd2FrZXVwX3Ro
+cmVhZC4gV2h5IG5vdCBzZXQgdGhlIHRocmVhZCBwb2ludGVyIHRvIE5VTEwgaW5zdGFudCBhZnRl
+ciBtZF91bnJlZ2lzdGVyX3RocmVhZCBpbiBmYWlsIGNhc2Ugb2YgcnVuPyBKdXN0IGxpa2UgYXMg
+ZmFpbCBjYXNlIG9mIHJhaWQ1IGltcGxlbWVudCBpbiAwMWY5NmMwYTk5MjJjZDk5MTliYWY5ZDE2
+ZmViZGY3MDE2MTc3YTEyfjEuIA0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5jIGIvZHJpdmVy
+cy9tZC9yYWlkNS5jDQppbmRleCA0MzcwOWZhLi5hYzVlOGI1IDEwMDY0NA0KLS0tIGEvZHJpdmVy
+cy9tZC9yYWlkNS5jDQorKysgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCkBAIC00OTQxLDggKzQ5NDEs
+NyBAQCBzdGF0aWMgaW50IHJ1bihtZGRldl90ICptZGRldikNCg0KICAgICAgICByZXR1cm4gMDsN
+CiBhYm9ydDoNCi0gICAgICAgbWRfdW5yZWdpc3Rlcl90aHJlYWQobWRkZXYtPnRocmVhZCk7DQot
+ICAgICAgIG1kZGV2LT50aHJlYWQgPSBOVUxMOw0KKyAgICAgICBtZF91bnJlZ2lzdGVyX3RocmVh
+ZCgmbWRkZXYtPnRocmVhZCk7DQogICAgICAgIGlmIChjb25mKSB7DQogICAgICAgICAgICAgICAg
+cHJpbnRfcmFpZDVfY29uZihjb25mKTsNCiAgICAgICAgICAgICAgICBmcmVlX2NvbmYoY29uZik7
+DQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoNCkkg
+c3VybWlzZSB0aGUgcmVhc29uIGlzOiB0aGUgcnVuKCkgcHJvY2VkdXJlIGlzIHJ1bm5pbmcgaW4g
+dGhlIGNvbnRleHQgd2hpY2ggd2FzIHBvaW50ZWQgYnkgbWRkZXYtPnRoZWFkIGl0c2VsZi4gSXMg
+aXQgcmlnaHQ/DQpCdXQgSSBoYXZlIHRyaWVkIHRoaXMgd2F5IGJlZm9yZSBJIHdyb3RlIHRoaXMg
+bWFpbCAoYWN0dWFsbHkgYmVmb3JlIG1lcmdlIHRoZSBjb21taXQgb2YgMy4xKS4gSXQgc2VlbXMg
+YWxzbyB3b3JrIHdlbGwuIFRoZSAid2FrZXVwIHRocmVhZCBvb3BzIiBkaXNhcHBlYXJlZCB0b28s
+IGFuZCBubyBhbm90aGVyIG9vcHMgb3IgS0VSTl9FUlIgcHJpbnQgb3V0cHV0Lg0KDQpRdWVzdGlv
+biBqdXN0IGZvciBteSB0ZWNoIGludGVyZXN0LiBFeGN1c2UgbWUgaWYgaXQgZGlzdHVyYiB5b3Uu
+DQoNCg0KDQpCZXN0IFJlZ2FyZHMsDQpNb29yZSjEqsSx9s4pDQo=
