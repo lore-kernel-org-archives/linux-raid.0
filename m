@@ -1,116 +1,84 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: [PATCH] raid5: After bio_reset, it must set some parameter of struct bio.
-Date: Fri, 17 May 2013 15:29:36 +0800
-Message-ID: <201305171529317358582@gmail.com>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: Calvin Owens <jcalvinowens@gmail.com>
+Subject: [PATCH] md: Partially revert 2f6db2a7, which broke raid5
+Date: Fri, 17 May 2013 16:32:23 -0500
+Message-ID: <20130517213223.GA2530@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: koverstreet <koverstreet@google.com>, NeilBrown <neilb@suse.de>
-Cc: axboe <axboe@kernel.dk>, linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kent Overstreet <koverstreet@google.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-SW4gY29tbWl0IDJmNmRiMmE3MDczNDUyYjEsIHJhaWQ1IHVzZWQgYmlvX3Jlc2V0LkJ1dCBLZW50
-IE92ZXJzdHJlZXQgDQpsZWFrIHNvbWUgZmllbGRzIG9mIGJpbyB0byBzZXQuU28gaXQgd2lsbCBj
-YXVzZSBidWdzOg0KWyAgMzU1Ljc0NjIzM10gbWQvcmFpZDptZDA6IHJhaWQgbGV2ZWwgNSBhY3Rp
-dmUgd2l0aCAzIG91dCBvZiA0IGRldmljZXMsIGFsZ29yaXRobSAyDQpbICAzNTUuNzgzNjUxXSAt
-LS0tLS0tLS0tLS1bIGN1dCBoZXJlIF0tLS0tLS0tLS0tLS0NClsgIDM1NS43ODM3MDddIGtlcm5l
-bCBCVUcgYXQgZHJpdmVycy9zY3NpL3Njc2lfbGliLmM6MTE5NiENClsgIDM1NS43ODM3NTZdIGlu
-dmFsaWQgb3Bjb2RlOiAwMDAwIFsjMV0gU01QIA0KWyAgMzU1Ljc4Mzg0Nl0gTW9kdWxlcyBsaW5r
-ZWQgaW46IHJhaWQ0NTYgYXN5bmNfcmFpZDZfcmVjb3YgYXN5bmNfbWVtY3B5IGFzeW5jX3BxIGFz
-eW5jX3hvciBhc3luY190eCBuZXRjb25zb2xlIGNvbmZpZ2ZzIGUxMDAwZSBidHJmcyB4b3IgcmFp
-ZDZfcHENClsgIDM1NS43ODQyMDhdIENQVTogMCBQSUQ6IDAgQ29tbTogc3dhcHBlci8wIE5vdCB0
-YWludGVkIDMuMTAuMC1yYzErICMxNTgNClsgIDM1NS43ODQyNjFdIEhhcmR3YXJlIG5hbWU6IFRv
-IEJlIEZpbGxlZCBCeSBPLkUuTS4gVG8gQmUgRmlsbGVkIEJ5IE8uRS5NLi9UbyBiZSBmaWxsZWQg
-YnkgTy5FLk0uLCBCSU9TIDA4MDAxNSAgMTEvMDkvMjAxMQ0KWyAgMzU1Ljc4NDMzNl0gdGFzazog
-ZmZmZmZmZmY4MWMxMDQ0MCB0aTogZmZmZmZmZmY4MWMwMDAwMCB0YXNrLnRpOiBmZmZmZmZmZjgx
-YzAwMDAwDQpbICAzNTUuNzg0Mzg2XSBSSVA6IDAwMTA6WzxmZmZmZmZmZjgxNDI4ZmQyPl0gIFs8
-ZmZmZmZmZmY4MTQyOGZkMj5dIHNjc2lfc2V0dXBfZnNfY21uZCsweDkyLzB4YTANClsgIDM1NS43
-ODQ0NjldIFJTUDogMDAxODpmZmZmODgwMGJkMjAzYzQ4ICBFRkxBR1M6IDAwMDEwMDQ2DQpbICAz
-NTUuNzg0NTE3XSBSQVg6IDAwMDAwMDAwMDAwMDAwMDAgUkJYOiBmZmZmODgwMDM2ZTFhMDAwIFJD
-WDogMDAwMDAwMDAwMDAwMDAwMg0KWyAgMzU1Ljc4NDU3MV0gUkRYOiBmZmZmZmZmZjgxMmFmYWIw
-IFJTSTogZmZmZjg4MDBiNWQ3NTE3OCBSREk6IGZmZmY4ODAwMzZlMWEwMDANClsgIDM1NS43ODQ1
-OTNdIFJCUDogZmZmZjg4MDBiZDIwM2M1OCBSMDg6IGZmZmY4ODAwYjVkNzQ3MzggUjA5OiAwMDAw
-MDAwMDAwMDAwMDAxDQpbICAzNTUuNzg0NTkzXSBSMTA6IDAwMDAwMDAwMDAwMDAwMDAgUjExOiAw
-MDAwMDAwMDAwMDEyYTAwIFIxMjogZmZmZjg4MDBiNWQ3NTE3OA0KWyAgMzU1Ljc4NDU5M10gUjEz
-OiBmZmZmODgwMDM2ZTFhMDAwIFIxNDogZmZmZjg4MDBiNTgzYTgwMCBSMTU6IDAwMDAwMDAwMDAw
-NDAwMDANClsgIDM1NS43ODQ1OTNdIEZTOiAgMDAwMDAwMDAwMDAwMDAwMCgwMDAwKSBHUzpmZmZm
-ODgwMGJkMjAwMDAwKDAwMDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMDANClsgIDM1NS43ODQ1OTNd
-IENTOiAgMDAxMCBEUzogMDAwMCBFUzogMDAwMCBDUjA6IDAwMDAwMDAwODAwNTAwM2INClsgIDM1
-NS43ODQ1OTNdIENSMjogMDAwMDAwMDAwMWRmYTAwOCBDUjM6IDAwMDAwMDAwYjZkMTEwMDAgQ1I0
-OiAwMDAwMDAwMDAwMDQwN2YwDQpbICAzNTUuNzg0NTkzXSBEUjA6IDAwMDAwMDAwMDAwMDAwMDAg
-RFIxOiAwMDAwMDAwMDAwMDAwMDAwIERSMjogMDAwMDAwMDAwMDAwMDAwMA0KWyAgMzU1Ljc4NDU5
-M10gRFIzOiAwMDAwMDAwMDAwMDAwMDAwIERSNjogMDAwMDAwMDBmZmZmMGZmMCBEUjc6IDAwMDAw
-MDAwMDAwMDA0MDANClsgIDM1NS43ODQ1OTNdIFN0YWNrOg0KWyAgMzU1Ljc4NDU5M10gIGZmZmY4
-ODAwYjVkNzUxNzggZmZmZjg4MDBiNThmMDAwMCBmZmZmODgwMGJkMjAzY2E4IGZmZmZmZmZmODE0
-Mzk0NTMNClsgIDM1NS43ODQ1OTNdICBmZmZmZmZmZjgyMWYyMTAwIDAwMDAwMDAxMDAwMGQ5OTMg
-ZmZmZjg4MDAwMDA4MDAwMCBmZmZmODgwMGI1OGYwMDAwDQpbICAzNTUuNzg0NTkzXSAgZmZmZjg4
-MDBiNWQ3NTE3OCBmZmZmZmZmZjgxYzAxZmQ4IGZmZmZmZmZmODFjMDFmZDggZmZmZjg4MDAzNmUx
-YTAwMA0KWyAgMzU1Ljc4NDU5M10gQ2FsbCBUcmFjZToNClsgIDM1NS43ODQ1OTNdICA8SVJRPiAN
-ClsgIDM1NS43ODQ1OTNdICBbPGZmZmZmZmZmODE0Mzk0NTM+XSBzZF9wcmVwX2ZuKzB4ZjMvMHg4
-MTANClsgIDM1NS43ODQ1OTNdICBbPGZmZmZmZmZmODEyOWUxODY+XSBibGtfcGVla19yZXF1ZXN0
-KzB4MTI2LzB4MjMwDQpbICAzNTUuNzg0NTkzXSAgWzxmZmZmZmZmZjgxNDI5N2NlPl0gc2NzaV9y
-ZXF1ZXN0X2ZuKzB4NGUvMHg0ZTANClsgIDM1NS43ODQ1OTNdICBbPGZmZmZmZmZmODEyOWNjZTQ+
-XSA/IGJsa19ydW5fcXVldWUrMHgyNC8weDUwDQpbICAzNTUuNzg0NTkzXSAgWzxmZmZmZmZmZjgx
-MjljNzczPl0gX19ibGtfcnVuX3F1ZXVlKzB4MzMvMHg0MA0KWyAgMzU1Ljc4NDU5M10gIFs8ZmZm
-ZmZmZmY4MTI5Y2NlZj5dIGJsa19ydW5fcXVldWUrMHgyZi8weDUwDQpbICAzNTUuNzg0NTkzXSAg
-WzxmZmZmZmZmZjgxNDI5MzYxPl0gc2NzaV9ydW5fcXVldWUrMHgxNTEvMHgyZjANClsgIDM1NS43
-ODQ1OTNdICBbPGZmZmZmZmZmODE0MDlkOTc+XSA/IHB1dF9kZXZpY2UrMHgxNy8weDIwDQpbICAz
-NTUuNzg0NTkzXSAgWzxmZmZmZmZmZjgxNDIyOGM0Pl0gPyBfX3Njc2lfcHV0X2NvbW1hbmQrMHg2
-NC8weGEwDQpbICAzNTUuNzg0NTkzXSAgWzxmZmZmZmZmZjgxNDJhODUyPl0gc2NzaV9uZXh0X2Nv
-bW1hbmQrMHg0Mi8weDYwDQpbICAzNTUuNzg0NTkzXSAgWzxmZmZmZmZmZjgxNDJhOWEyPl0gc2Nz
-aV9pb19jb21wbGV0aW9uKzB4ZDIvMHg2ZTANClsgIDM1NS43ODQ1OTNdICBbPGZmZmZmZmZmODEw
-OWU2ZWQ+XSA/IHRyYWNlX2hhcmRpcnFzX29uKzB4ZC8weDEwDQpbICAzNTUuNzg0NTkzXSAgWzxm
-ZmZmZmZmZjgxNDIxZGNjPl0gc2NzaV9maW5pc2hfY29tbWFuZCsweGFjLzB4ZjANClsgIDM1NS43
-ODQ1OTNdICBbPGZmZmZmZmZmODE0MmE3NTM+XSBzY3NpX3NvZnRpcnFfZG9uZSsweGEzLzB4MTQw
-DQpbICAzNTUuNzg0NTkzXSAgWzxmZmZmZmZmZjgxMmEzYWViPl0gYmxrX2RvbmVfc29mdGlycSsw
-eDdiLzB4OTANClsgIDM1NS43ODQ1OTNdICBbPGZmZmZmZmZmODEwNDY5NzA+XSBfX2RvX3NvZnRp
-cnErMHgxMDAvMHgyODANClsgIDM1NS43ODQ1OTNdICBbPGZmZmZmZmZmODEwNDZjOTU+XSBpcnFf
-ZXhpdCsweGI1LzB4YzANClsgIDM1NS43ODQ1OTNdICBbPGZmZmZmZmZmODE2OTY0NDM+XSBkb19J
-UlErMHg2My8weGUwDQpbICAzNTUuNzg0NTkzXSAgWzxmZmZmZmZmZjgxNjhjNGFmPl0gY29tbW9u
-X2ludGVycnVwdCsweDZmLzB4NmYNClsgIDM1NS43ODQ1OTNdICA8RU9JPiANClsgIDM1NS43ODQ1
-OTNdICBbPGZmZmZmZmZmODEwMGE1NzY+XSA/IGRlZmF1bHRfaWRsZSsweDI2LzB4MTAwDQpbICAz
-NTUuNzg0NTkzXSAgWzxmZmZmZmZmZjgxMDBhZTU2Pl0gYXJjaF9jcHVfaWRsZSsweDI2LzB4MzAN
-ClsgIDM1NS43ODQ1OTNdICBbPGZmZmZmZmZmODEwOGZmYWU+XSBjcHVfc3RhcnR1cF9lbnRyeSsw
-eDhlLzB4MjcwDQpbICAzNTUuNzg0NTkzXSAgWzxmZmZmZmZmZjgxNjZiYTAzPl0gcmVzdF9pbml0
-KzB4ZDMvMHhlMA0KWyAgMzU1Ljc4NDU5M10gIFs8ZmZmZmZmZmY4MTY2YjkzNT5dID8gcmVzdF9p
-bml0KzB4NS8weGUwDQpbICAzNTUuNzg0NTkzXSAgWzxmZmZmZmZmZjgxZWNiZTFiPl0gc3RhcnRf
-a2VybmVsKzB4M2I1LzB4M2MyDQpbICAzNTUuNzg0NTkzXSAgWzxmZmZmZmZmZjgxZWNiODZlPl0g
-PyByZXBhaXJfZW52X3N0cmluZysweDVlLzB4NWUNClsgIDM1NS43ODQ1OTNdICBbPGZmZmZmZmZm
-ODFlY2I1YTM+XSB4ODZfNjRfc3RhcnRfcmVzZXJ2YXRpb25zKzB4MmEvMHgyYw0KWyAgMzU1Ljc4
-NDU5M10gIFs8ZmZmZmZmZmY4MWVjYjY3MT5dIHg4Nl82NF9zdGFydF9rZXJuZWwrMHhjYy8weGNm
-DQpbICAzNTUuNzg0NTkzXSBDb2RlOiBjMyA0OCA4YiAwMCA0OCA4NSBjMCA3NCBiNyA0OCA4YiA0
-MCA0OCA0OCA4NSBjMCA3NCBhZSA0YyA4OSBlNiA0OCA4OSBkZiBmZiBkMCA4NSBjMCA3NCBhMiBl
-YiBkYyBiOCAwMiAwMCAwMCAwMCAwZiAxZiA0MCAwMCBlYiBkMSA8MGY+IDBiIDY2IDY2IDY2IDJl
-IDBmIDFmIDg0IDAwIDAwIDAwIDAwIDAwIDY2IDY2IDY2IDY2IDkwIDU1IDQ4IA0KWyAgMzU1Ljc4
-NDU5M10gUklQICBbPGZmZmZmZmZmODE0MjhmZDI+XSBzY3NpX3NldHVwX2ZzX2NtbmQrMHg5Mi8w
-eGEwDQpbICAzNTUuNzg0NTkzXSAgUlNQIDxmZmZmODgwMGJkMjAzYzQ4Pg0KDQpTaWduZWQtb2Zm
-LWJ5OiBKaWFucGVuZyBNYSA8bWFqaWFucGVuZ0BnbWFpbC5jb20+DQotLS0NCiBkcml2ZXJzL21k
-L3JhaWQ1LmMgfCA4ICsrKysrKy0tDQogMSBmaWxlIGNoYW5nZWQsIDYgaW5zZXJ0aW9ucygrKSwg
-MiBkZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2RyaXZl
-cnMvbWQvcmFpZDUuYw0KaW5kZXggOTM1OTgyOC4uNjYzMTRiNSAxMDA2NDQNCi0tLSBhL2RyaXZl
-cnMvbWQvcmFpZDUuYw0KKysrIGIvZHJpdmVycy9tZC9yYWlkNS5jDQpAQCAtNjQyLDggKzY0Miwx
-MCBAQCBzdGF0aWMgdm9pZCBvcHNfcnVuX2lvKHN0cnVjdCBzdHJpcGVfaGVhZCAqc2gsIHN0cnVj
-dCBzdHJpcGVfaGVhZF9zdGF0ZSAqcykNCiAgbWRfc3luY19hY2N0KHJkZXYtPmJkZXYsIFNUUklQ
-RV9TRUNUT1JTKTsNCg0KICBzZXRfYml0KFNUUklQRV9JT19TVEFSVEVELCAmc2gtPnN0YXRlKTsN
-Ci0NCiAgYmlvX3Jlc2V0KGJpKTsNCisNCisgYmktPmJpX3ZjbnQgPSBiaS0+YmlfbWF4X3ZlY3Mg
-PSAxOw0KKyBiaS0+YmlfaW9fdmVjID0gJihzaC0+ZGV2W2ldLnZlYyk7DQogIGJpLT5iaV9iZGV2
-ID0gcmRldi0+YmRldjsNCiAgYmktPmJpX3J3ID0gcnc7DQogIGJpLT5iaV9lbmRfaW8gPSAocncg
-JiBXUklURSkNCkBAIC02NjMsNyArNjY1LDYgQEAgc3RhdGljIHZvaWQgb3BzX3J1bl9pbyhzdHJ1
-Y3Qgc3RyaXBlX2hlYWQgKnNoLCBzdHJ1Y3Qgc3RyaXBlX2hlYWRfc3RhdGUgKnMpDQogICArIHJk
-ZXYtPmRhdGFfb2Zmc2V0KTsNCiAgaWYgKHRlc3RfYml0KFI1X1JlYWROb01lcmdlLCAmc2gtPmRl
-dltpXS5mbGFncykpDQogIGJpLT5iaV9ydyB8PSBSRVFfRkxVU0g7DQotDQogIGJpLT5iaV9pb192
-ZWNbMF0uYnZfbGVuID0gU1RSSVBFX1NJWkU7DQogIGJpLT5iaV9pb192ZWNbMF0uYnZfb2Zmc2V0
-ID0gMDsNCiAgYmktPmJpX3NpemUgPSBTVFJJUEVfU0laRTsNCkBAIC02ODQsNiArNjg1LDkgQEAg
-c3RhdGljIHZvaWQgb3BzX3J1bl9pbyhzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoLCBzdHJ1Y3Qgc3Ry
-aXBlX2hlYWRfc3RhdGUgKnMpDQogIHNldF9iaXQoU1RSSVBFX0lPX1NUQVJURUQsICZzaC0+c3Rh
-dGUpOw0KDQogIGJpb19yZXNldChyYmkpOw0KKw0KKyByYmktPmJpX3ZjbnQgPSByYmktPmJpX21h
-eF92ZWNzID0gMTsNCisgcmJpLT5iaV9pb192ZWMgPSAmKHNoLT5kZXZbaV0ucnZlYyk7DQogIHJi
-aS0+YmlfYmRldiA9IHJyZGV2LT5iZGV2Ow0KICByYmktPmJpX3J3ID0gcnc7DQogIEJVR19PTigh
-KHJ3ICYgV1JJVEUpKTsNCi0tIA0KMS44LjMucmMxLjQ0LmdiMzg3Yzc3DQoNCg0KLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0NCg0KbWFqaWFucGVuZw==
+Commit 2f6db2a7 was part of a series that cleaned up mdraid code by
+replacing explicit re-initialization of struct bio with bio_reset().
 
+In raid5 it incorrectly assumed that a couple initializations of its
+members was a full reset, erasing the existing data and unconditionally
+triggering the following BUG when assembling arrays:
+
+[   14.653072] kernel BUG at /home/calvinow/git/linux/drivers/scsi/scsi_lib.c:1196!
+[   14.653074] invalid opcode: 0000 [#1] PREEMPT SMP
+[   14.653076] CPU: 1 PID: 40 Comm: kworker/1:0H Not tainted 3.10.0-rc1-amd-00279-g8f710dd #3
+[   14.653077] Hardware name: System manufacturer System Product Name/M5A88-M, BIOS 0601    09/20/2011
+[   14.653082] Workqueue: kblockd blk_delay_work
+<snip>
+[   14.653123] Call Trace:
+[   14.653126]  [<ffffffff81477248>] sd_prep_fn+0x2c8/0xb70
+[   14.653129]  [<ffffffff812c8b70>] ? deadline_remove_request.isra.9+0x50/0x90
+[   14.653132]  [<ffffffff812b8f5b>] blk_peek_request+0xdb/0x210
+[   14.653134]  [<ffffffff81465f15>] scsi_request_fn+0x45/0x4e0
+[   14.653136]  [<ffffffff812b6a51>] __blk_run_queue+0x31/0x40
+[   14.653138]  [<ffffffff812b6a84>] blk_delay_work+0x24/0x40
+[   14.653141]  [<ffffffff8105dc2a>] process_one_work+0x1da/0x490
+[   14.653143]  [<ffffffff8105dbcd>] ? process_one_work+0x17d/0x490
+[   14.653145]  [<ffffffff8105e32a>] worker_thread+0x11a/0x370
+[   14.653147]  [<ffffffff8105e210>] ? rescuer_thread+0x2f0/0x2f0
+[   14.653149]  [<ffffffff81066296>] kthread+0xd6/0xe0
+[   14.653151]  [<ffffffff810661c0>] ? __kthread_unpark+0x50/0x50
+[   14.653154]  [<ffffffff816e4d6c>] ret_from_fork+0x7c/0xb0
+[   14.653156]  [<ffffffff810661c0>] ? __kthread_unpark+0x50/0x50
+[   14.653172] Code: <snip>
+[   14.653174] RIP  [<ffffffff81467329>] scsi_setup_fs_cmnd+0x89/0x90
+
+Signed-off-by: Calvin Owens <jcalvinowens@gmail.com>
+---
+ drivers/md/raid5.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 9359828..97be03f 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -643,7 +643,6 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 
+ 			set_bit(STRIPE_IO_STARTED, &sh->state);
+ 
+-			bio_reset(bi);
+ 			bi->bi_bdev = rdev->bdev;
+ 			bi->bi_rw = rw;
+ 			bi->bi_end_io = (rw & WRITE)
+@@ -664,9 +663,12 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 			if (test_bit(R5_ReadNoMerge, &sh->dev[i].flags))
+ 				bi->bi_rw |= REQ_FLUSH;
+ 
++			bi->bi_flags = 1 << BIO_UPTODATE;
++			bi->bi_idx = 0;
+ 			bi->bi_io_vec[0].bv_len = STRIPE_SIZE;
+ 			bi->bi_io_vec[0].bv_offset = 0;
+ 			bi->bi_size = STRIPE_SIZE;
++			bi->bi_next = NULL;
+ 			if (rrdev)
+ 				set_bit(R5_DOUBLE_LOCKED, &sh->dev[i].flags);
+ 
+@@ -683,7 +685,6 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 
+ 			set_bit(STRIPE_IO_STARTED, &sh->state);
+ 
+-			bio_reset(rbi);
+ 			rbi->bi_bdev = rrdev->bdev;
+ 			rbi->bi_rw = rw;
+ 			BUG_ON(!(rw & WRITE));
+-- 
+1.8.2.1
