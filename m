@@ -1,33 +1,20 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: Resync raid array problem
-Date: Mon, 20 May 2013 11:46:17 +0800
-Message-ID: <51999C89.6090001@fnarfbargle.com>
-References: <loom.20130520T035627-78@post.gmane.org> <7rfo6axs9j.ln2@goaway.wombat.san-francisco.ca.us>
+From: =?koi8-r?Q?=D4=C1=D4=D5=CE=D1?= <info@norrisfilmworks.com>
+Subject: =?koi8-r?Q?=F3=CB=CF=D2=CF=C5_=CF=D3=C9=CC=C9=D7=C1=CE=D8?=
+	=?koi8-r?Q?=C5?=
+Date: Mon, 20 May 2013 08:36:29 +0300
+Message-ID: <E16B8476A4A948CC8B6D9AE6421ABCA6@dnwiq>
+Reply-To: =?koi8-r?Q?=D4=C1=D4=D5=CE=D1?= <klassdivan@bigpond.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="koi8-r";
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7rfo6axs9j.ln2@goaway.wombat.san-francisco.ca.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: usedca@gmail.com, linux-raid@vger.kernel.org, ielaahhj@ytldfbxp.com, 2116@flexsps.ru, sat@piorit.ru
 List-Id: linux-raid.ids
 
-On 20/05/13 10:53, Keith Keller wrote:
-> On 2013-05-20, Tarak <tarakramgopal@gmail.com> wrote:
->> We sucessfully created a Raid array of 8 harddisks.
->> On power failure situation,
->
-> You should probably have some sort of redundant power for such an
-> array--either a UPS or backup power provided by a building generator.
->
-
-Can't agree with this strongly enough. Grab the best UPS you can afford 
-(and often that means getting a 10 year old one second hand and 
-replacing the batteries). Best investment I _ever_ made was a 2000 
-vintage APC SmartUPS 2200 and it cost all of about $200 second hand, 
-plus another $100 for new batteries.
-
-Also, look at adding a bitmap to your array. Then it will only resync 
-what it suspects might be dirty.
-
-
+ICD32SDTzc/WxdTFIMfP18/SydTYINDPINfFzMnLz8LSydTBztPLySDJ08vMwN7J1MXM2M7PINDP
+08zFINDF0tfPx88g2sHO0dTJ0S4g78LSwdTJ1Ngg09fPwCDExcrT1NfJ1MXM2M7P09TYIM3Oz8fP
+z8LSwdrOxcUsINDPxNrBztHU2NPRIM7BydDSxcvSwdPOxcrbyc0gxMXMz80uIPzL09DSxdPTIM/C
+1d7FzsnFLiD8y9PQ0sXT0y3L1dLTIMTM0SDExczBwN3JyCDQxdLX2cUg3cHHySDJINXHzNXCzKPO
+ztnILiDpztTF0s7F1CDNwcfB2snOOiBodHRwOi8vZ29vLmdsL1RYbHd5IC4gDQogDQo=
