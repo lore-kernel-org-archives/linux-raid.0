@@ -1,36 +1,34 @@
-From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+From: Sam Bingner <sam@bingner.com>
 Subject: Re: Resync raid array problem
-Date: Sun, 19 May 2013 19:53:59 -0700
-Message-ID: <7rfo6axs9j.ln2@goaway.wombat.san-francisco.ca.us>
+Date: Mon, 20 May 2013 03:43:54 +0000
+Message-ID: <A1D0A2E7-ADA2-474A-BF8E-B60BBAA59D53@bingner.com>
 References: <loom.20130520T035627-78@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <loom.20130520T035627-78@post.gmane.org>
+Content-Language: en-US
+Content-ID: <6345A29263B4054994657F52DD112DA5@ds.sbdhi.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Tarak <tarakramgopal@gmail.com>
+Cc: "<linux-raid@vger.kernel.org>" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2013-05-20, Tarak <tarakramgopal@gmail.com> wrote:
+On May 19, 2013, at 3:57 PM, Tarak <tarakramgopal@gmail.com> wrote:
+
+> Hi 
 > We sucessfully created a Raid array of 8 harddisks.
-> On power failure situation,
-
-You should probably have some sort of redundant power for such an
-array--either a UPS or backup power provided by a building generator.
-
-> the resync of raid array 
+> On power failure situation, the resync of raid array 
 > is taking too much of time almost equal to 
 > the time taken for creating the raid array of hard disks.
+> Anyone is having an idea about this..
+> Please help me on this.
+> 
+> Regards
+> Tarak
 
-IIRC, a RAID5 is created by making the array in degraded mode and
-resyncing the array.  So "create" and "resync" are basically equal in
-duration in this scenario.  (I think creating a RAID6 works differently,
-but it's possible that create and resync times are comparable as well.)
+If you enable a bitmap on the device it should significantly lower the resync times.... but of curse this should not be a normal occurrence, or you have bigger problems...
 
---keith
-
-
--- 
-kkeller@wombat.san-francisco.ca.us
-
+Sam
 
