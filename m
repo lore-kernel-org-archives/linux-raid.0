@@ -1,202 +1,57 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: BUG - raid 1 deadlock on handle_read_error / wait_barrier
-Date: Mon, 20 May 2013 17:17:53 +1000
-Message-ID: <20130520171753.002f07d9@notabene.brown>
-References: <1361487504.4863.54.camel@linux-lxtg.site>
-	<20130225094350.4b8ef084@notabene.brown>
-	<20130225110458.2b1b1e2d@notabene.brown>
-	<1361808662.20264.4.camel@148>
-	<alpine.DEB.2.02.1302260905390.1736@jlaw-desktop.mno.stratus.com>
-	<CAGRgLy45byT7fxLBOqU6ZNjpOL0Xmq6nNsiwJSCTq+kd1Ya7Jg@mail.gmail.com>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: Resync raid array problem
+Date: Mon, 20 May 2013 15:45:17 +0200 (CEST)
+Message-ID: <32232973.14.1369057517437.JavaMail.root@zimbra>
+References: <51999C89.6090001@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ccLGjPU91YsYvbXCovnLbz3"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy45byT7fxLBOqU6ZNjpOL0Xmq6nNsiwJSCTq+kd1Ya7Jg@mail.gmail.com>
+In-Reply-To: <51999C89.6090001@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: Tregaron Bayly <tbayly@bluehost.com>, linux-raid@vger.kernel.org, Shyam Kaushik <shyam@zadarastorage.com>
+To: Brad Campbell <lists2009@fnarfbargle.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/ccLGjPU91YsYvbXCovnLbz3
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+> On 20/05/13 10:53, Keith Keller wrote:
+> > On 2013-05-20, Tarak <tarakramgopal@gmail.com> wrote:
+> >> We sucessfully created a Raid array of 8 harddisks.
+> >> On power failure situation,
+> >
+> > You should probably have some sort of redundant power for such an
+> > array--either a UPS or backup power provided by a building
+> > generator.
+> >
+>=20
+> Can't agree with this strongly enough. Grab the best UPS you can
+> afford
+> (and often that means getting a 10 year old one second hand and
+> replacing the batteries). Best investment I _ever_ made was a 2000
+> vintage APC SmartUPS 2200 and it cost all of about $200 second hand,
+> plus another $100 for new batteries.
+>=20
+> Also, look at adding a bitmap to your array. Then it will only resync
+> what it suspects might be dirty.
 
-On Thu, 16 May 2013 17:07:04 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-wrote:
+oh - and if this is a raid-5 array, better get a new disk and change to=
+ raid-6. 8 drives in raid-5 is rather a lot=E2=80=A6
 
-> Hello Neil,
-> we are hitting issue that looks very similar; we are on kernel 3.8.2.
-> The array is a 2-device raid1, which experienced a drive failure, but
-> then drive was removed and re-added back to the array (although
-> rebuild never started). Relevant parts of the kernel log:
->=20
-> May 16 11:12:14  kernel: [46850.090499] md/raid1:md2: Disk failure on
-> dm-6, disabling device.
-> May 16 11:12:14  kernel: [46850.090499] md/raid1:md2: Operation
-> continuing on 1 devices.
-> May 16 11:12:14  kernel: [46850.090511] md: super_written gets
-> error=3D-5, uptodate=3D0
-> May 16 11:12:14  kernel: [46850.090676] md/raid1:md2: dm-6:
-> rescheduling sector 18040736
-> May 16 11:12:14  kernel: [46850.090764] md/raid1:md2: dm-6:
-> rescheduling sector 20367040
-> May 16 11:12:14  kernel: [46850.090826] md/raid1:md2: dm-6:
-> rescheduling sector 17613504
-> May 16 11:12:14  kernel: [46850.090883] md/raid1:md2: dm-6:
-> rescheduling sector 18042720
-> May 16 11:12:15  kernel: [46850.229970] md/raid1:md2: redirecting
-> sector 18040736 to other mirror: dm-13
-> May 16 11:12:15  kernel: [46850.257687] md/raid1:md2: redirecting
-> sector 20367040 to other mirror: dm-13
-> May 16 11:12:15  kernel: [46850.268731] md/raid1:md2: redirecting
-> sector 17613504 to other mirror: dm-13
-> May 16 11:12:15  kernel: [46850.398242] md/raid1:md2: redirecting
-> sector 18042720 to other mirror: dm-13
-> May 16 11:12:23  kernel: [46858.448465] md: unbind<dm-6>
-> May 16 11:12:23  kernel: [46858.456081] md: export_rdev(dm-6)
-> May 16 11:23:19  kernel: [47515.062547] md: bind<dm-6>
->=20
-> May 16 11:24:28  kernel: [47583.920126] INFO: task md2_raid1:15749
-> blocked for more than 60 seconds.
-> May 16 11:24:28  kernel: [47583.921829] "echo 0 >
-> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> May 16 11:24:28  kernel: [47583.923361] md2_raid1       D
-> 0000000000000001     0 15749      2 0x00000000
-> May 16 11:24:28  kernel: [47583.923367]  ffff880097c23c28
-> 0000000000000046 ffff880000000002 00000000982c43b8
-> May 16 11:24:28  kernel: [47583.923372]  ffff880097c23fd8
-> ffff880097c23fd8 ffff880097c23fd8 0000000000013f40
-> May 16 11:24:28  kernel: [47583.923376]  ffff880119b11740
-> ffff8800a5489740 ffff880097c23c38 ffff88011609d3c0
-> May 16 11:24:28  kernel: [47583.923381] Call Trace:
-> May 16 11:24:28  kernel: [47583.923395]  [<ffffffff816eb399>] schedule+0x=
-29/0x70
-> May 16 11:24:28  kernel: [47583.923402]  [<ffffffffa0516736>]
-> raise_barrier+0x106/0x160 [raid1]
-> May 16 11:24:28  kernel: [47583.923410]  [<ffffffff8107fcc0>] ?
-> add_wait_queue+0x60/0x60
-> May 16 11:24:28  kernel: [47583.923415]  [<ffffffffa0516af7>]
-> raid1_add_disk+0x197/0x200 [raid1]
-> May 16 11:24:28  kernel: [47583.923421]  [<ffffffff81567fa4>]
-> remove_and_add_spares+0x104/0x220
-> May 16 11:24:28  kernel: [47583.923426]  [<ffffffff8156a02d>]
-> md_check_recovery.part.49+0x40d/0x530
-> May 16 11:24:28  kernel: [47583.923429]  [<ffffffff8156a165>]
-> md_check_recovery+0x15/0x20
-> May 16 11:24:28  kernel: [47583.923433]  [<ffffffffa0517e42>]
-> raid1d+0x22/0x180 [raid1]
-> May 16 11:24:28  kernel: [47583.923439]  [<ffffffff81045cd9>] ?
-> default_spin_lock_flags+0x9/0x10
-> May 16 11:24:28  kernel: [47583.923443]  [<ffffffff81045cd9>] ?
-> default_spin_lock_flags+0x9/0x10
-> May 16 11:24:28  kernel: [47583.923449]  [<ffffffff815624ed>]
-> md_thread+0x10d/0x140
-> May 16 11:24:28  kernel: [47583.923453]  [<ffffffff8107fcc0>] ?
-> add_wait_queue+0x60/0x60
-> May 16 11:24:28  kernel: [47583.923457]  [<ffffffff815623e0>] ?
-> md_rdev_init+0x140/0x140
-> May 16 11:24:28  kernel: [47583.923461]  [<ffffffff8107f0d0>] kthread+0xc=
-0/0xd0
-> May 16 11:24:28  kernel: [47583.923465]  [<ffffffff8107f010>] ?
-> flush_kthread_worker+0xb0/0xb0
-> May 16 11:24:28  kernel: [47583.923472]  [<ffffffff816f506c>]
-> ret_from_fork+0x7c/0xb0
-> May 16 11:24:28  kernel: [47583.923476]  [<ffffffff8107f010>] ?
-> flush_kthread_worker+0xb0/0xb0
->=20
-> dm-13 is the good drive, dm-6 is the one that failed.
->=20
-> At this point, we have several threads calling submit_bio and all
-> stuck like this:
->=20
-> cat /proc/16218/stack
-> [<ffffffffa0516d6e>] wait_barrier+0xbe/0x160 [raid1]
-> [<ffffffffa0518627>] make_request+0x87/0xa90 [raid1]
-> [<ffffffff81561ed0>] md_make_request+0xd0/0x200
-> [<ffffffff8132bcaa>] generic_make_request+0xca/0x100
-> [<ffffffff8132bd5b>] submit_bio+0x7b/0x160
-> ...
->=20
-> And md raid1 thread stuck like this:
->=20
-> cat /proc/15749/stack
-> [<ffffffffa0516736>] raise_barrier+0x106/0x160 [raid1]
-> [<ffffffffa0516af7>] raid1_add_disk+0x197/0x200 [raid1]
-> [<ffffffff81567fa4>] remove_and_add_spares+0x104/0x220
-> [<ffffffff8156a02d>] md_check_recovery.part.49+0x40d/0x530
-> [<ffffffff8156a165>] md_check_recovery+0x15/0x20
-> [<ffffffffa0517e42>] raid1d+0x22/0x180 [raid1]
-> [<ffffffff815624ed>] md_thread+0x10d/0x140
-> [<ffffffff8107f0d0>] kthread+0xc0/0xd0
-> [<ffffffff816f506c>] ret_from_fork+0x7c/0xb0
-> [<ffffffffffffffff>] 0xffffffffffffffff
->=20
-> We have also two user-space threads stuck:
->=20
-> one is trying to read /sys/block/md2/md/array_state and its kernel stack =
-is:
-> # cat /proc/2251/stack
-> [<ffffffff81564602>] md_attr_show+0x72/0xf0
-> [<ffffffff8120f116>] fill_read_buffer.isra.8+0x66/0xf0
-> [<ffffffff8120f244>] sysfs_read_file+0xa4/0xc0
-> [<ffffffff8119b0d0>] vfs_read+0xb0/0x180
-> [<ffffffff8119b1f2>] sys_read+0x52/0xa0
-> [<ffffffff816f511d>] system_call_fastpath+0x1a/0x1f
-> [<ffffffffffffffff>] 0xffffffffffffffff
->=20
-> the other wants to read from /proc/mdstat and is:
-> [<ffffffff81563d2b>] md_seq_show+0x4b/0x540
-> [<ffffffff811bdd1b>] seq_read+0x16b/0x400
-> [<ffffffff811ff572>] proc_reg_read+0x82/0xc0
-> [<ffffffff8119b0d0>] vfs_read+0xb0/0x180
-> [<ffffffff8119b1f2>] sys_read+0x52/0xa0
-> [<ffffffff816f511d>] system_call_fastpath+0x1a/0x1f
-> [<ffffffffffffffff>] 0xffffffffffffffff
->=20
-> mdadm --detail also gets stuck if attempted, in stack like this:
-> cat /proc/2864/stack
-> [<ffffffff81564602>] md_attr_show+0x72/0xf0
-> [<ffffffff8120f116>] fill_read_buffer.isra.8+0x66/0xf0
-> [<ffffffff8120f244>] sysfs_read_file+0xa4/0xc0
-> [<ffffffff8119b0d0>] vfs_read+0xb0/0x180
-> [<ffffffff8119b1f2>] sys_read+0x52/0xa0
-> [<ffffffff816f511d>] system_call_fastpath+0x1a/0x1f
-> [<ffffffffffffffff>] 0xffffffffffffffff
->=20
-> Might your patch https://patchwork.kernel.org/patch/2260051/ fix this
+Vennlige hilsener / Best regards
 
-Probably.
-
-> issue? Is this patch alone applicable to kernel 3.8.2?
-
-Probably.
-
-> Can you pls kindly comment on this.
->=20
-
-NeilBrown
-
---Sig_/ccLGjPU91YsYvbXCovnLbz3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUZnOITnsnt1WYoG5AQIHug/8C2g3/ZlED0B/NUC+v9Xv1fvRvuQOzjdL
-tYKapCZzHFiFE+Wf+RbFDsdeH+NWbQL/hOt3sRVF9GLhvaaL3cAbnyPwbAR7EdJZ
-UQtUGi8vmrpZMGyFlfzw11Pblwv6OGOTeyh8PY+u43HRtb7UhCBHVZQjR/O2+v5w
-JaKJAsVQK3wX4RUdVgKOuiV/fji5KY+MSAoikxIRliRbbBGP1HADDInqJzCwjRt8
-adVIwSsT2+qjgg5nUve2tX5NknD/sBffNWMYK8rcIiml34a+DCRxt50OMGPnJ//m
-4R1tJ57RKSETQ+a3qjNX2JfSPUN/hPePd8+ycGTrSK9bX/EH/JTSWHjNFlUHRbXb
-iNRiU/ogP8fYhpmKYngjBS6raVQ+kJia76wFsHRw4uGawGfOe0QTAFCvfdBN3hZj
-IysKIH3V+zx9U0y1MezrwmdNUi/zQpbHjyQMIOokktmxB02nrz+HxwALxatQIumB
-WJUv3dh1WngG585+RtY6YgpqnWLHvZ6IegMNS/TtvGX141yHLrFiGvbkUhmBfihT
-cAnOvQ6CW+yBbiWBmF8WecjZHZk57V7tkjfUWe3nq/RTeU5H3gEsX/o1d/9f+hGv
-XMcQxaVIpmuJ7HSeSkhtFAaCQBf1mm2y9Qc+nJjpqfuJuaoTFMY8tEHZHOlJ4osd
-hPODEABQWE8=
-=bcRI
------END PGP SIGNATURE-----
-
---Sig_/ccLGjPU91YsYvbXCovnLbz3--
+roy
+--
+Roy Sigurd Karlsbakk
+(+47) 98013356
+roy@karlsbakk.net
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
+ Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
+ eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
+eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
