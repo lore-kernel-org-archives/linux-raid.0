@@ -1,34 +1,33 @@
-From: Sam Bingner <sam@bingner.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
 Subject: Re: Resync raid array problem
-Date: Mon, 20 May 2013 03:43:54 +0000
-Message-ID: <A1D0A2E7-ADA2-474A-BF8E-B60BBAA59D53@bingner.com>
-References: <loom.20130520T035627-78@post.gmane.org>
+Date: Mon, 20 May 2013 11:46:17 +0800
+Message-ID: <51999C89.6090001@fnarfbargle.com>
+References: <loom.20130520T035627-78@post.gmane.org> <7rfo6axs9j.ln2@goaway.wombat.san-francisco.ca.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <loom.20130520T035627-78@post.gmane.org>
-Content-Language: en-US
-Content-ID: <6345A29263B4054994657F52DD112DA5@ds.sbdhi.com>
+In-Reply-To: <7rfo6axs9j.ln2@goaway.wombat.san-francisco.ca.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tarak <tarakramgopal@gmail.com>
-Cc: "<linux-raid@vger.kernel.org>" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On May 19, 2013, at 3:57 PM, Tarak <tarakramgopal@gmail.com> wrote:
+On 20/05/13 10:53, Keith Keller wrote:
+> On 2013-05-20, Tarak <tarakramgopal@gmail.com> wrote:
+>> We sucessfully created a Raid array of 8 harddisks.
+>> On power failure situation,
+>
+> You should probably have some sort of redundant power for such an
+> array--either a UPS or backup power provided by a building generator.
+>
 
-> Hi 
-> We sucessfully created a Raid array of 8 harddisks.
-> On power failure situation, the resync of raid array 
-> is taking too much of time almost equal to 
-> the time taken for creating the raid array of hard disks.
-> Anyone is having an idea about this..
-> Please help me on this.
-> 
-> Regards
-> Tarak
+Can't agree with this strongly enough. Grab the best UPS you can afford 
+(and often that means getting a 10 year old one second hand and 
+replacing the batteries). Best investment I _ever_ made was a 2000 
+vintage APC SmartUPS 2200 and it cost all of about $200 second hand, 
+plus another $100 for new batteries.
 
-If you enable a bitmap on the device it should significantly lower the resync times.... but of curse this should not be a normal occurrence, or you have bigger problems...
+Also, look at adding a bitmap to your array. Then it will only resync 
+what it suspects might be dirty.
 
-Sam
 
