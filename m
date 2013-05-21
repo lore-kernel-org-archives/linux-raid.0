@@ -1,61 +1,101 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Jim Santos <iluvgadgets@gmail.com>
 Subject: Re: "Missing" RAID devices
-Date: Tue, 21 May 2013 17:06:59 -0500
-Message-ID: <519BF003.5080005@hardwarefreak.com>
-References: <CAGPLN=viGgdw0MM18tiNxwjNadg0cj8xjntW3ne1qMNkfgocaA@mail.gmail.com> <519B9F8C.3080104@redhat.com> <CACJz6Qvpf9yTzHTE6f5pErny1DLh7BvV3S+Q-Ekbb_-CEtKW1w@mail.gmail.com> <519BDC8C.1040202@hardwarefreak.com> <CACJz6QvU_o=mbSwaUEdE3WyD2ytipBYPch7pjBuov=NoxofhJg@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+Date: Tue, 21 May 2013 18:22:55 -0400
+Message-ID: <CAGPLN=uiUD3wnwt6DfELaLh+yqxkbrA=KetPiQHZrqq4FrS=HA@mail.gmail.com>
+References: <CAGPLN=viGgdw0MM18tiNxwjNadg0cj8xjntW3ne1qMNkfgocaA@mail.gmail.com>
+	<519B9351.4050708@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACJz6QvU_o=mbSwaUEdE3WyD2ytipBYPch7pjBuov=NoxofhJg@mail.gmail.com>
+In-Reply-To: <519B9351.4050708@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Drew <drew.kay@gmail.com>
-Cc: Jim Santos <iluvgadgets@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 5/21/2013 4:02 PM, Drew wrote:
-> On Tue, May 21, 2013 at 1:43 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
->> On 5/21/2013 12:03 PM, Drew wrote:
->>> Hi Jim,
->>>
->>> The other question I'd ask is why do you have 10 raid1 arrays on those
->>> two disks?
->>
->> No joke.  That setup is ridiculous.  RAID exists to guard against a
->> drive failure, not as a substitute for volume management.
->>
->>> Given you have an initramfs, at most you should have separate
->>> partitions (raid'd) for /boot & root. Everything else should be broken
->>> down using LVM. Way more flexible to move things around in future as
->>> required.
->>
->> LVM isn't even required.  Using partitions (atop MD) or a single large
->> filesystem (XFS) with quotas works just as well.
-> 
-> Agreed. For simple setups, a single boot & root is just fine.
-> 
-> I'd assumed the OP's reasons for using multiple partitions was valid,
-> so keeping those partitions over top a single raid array meant LVM was
-> the best choice.
+Hi,
 
-We don't have enough information yet to make such a determination.
-Multiple LVM devices may most closely mimic his current setup, but that
-doesn't mean it's the best choice.  It doesn't mean it's not either.  We
-simply haven't been informed why he was using 10 md/RAID1 devices.  My
-gut instinct says it's simply a lack of education, not a special
-requirement.
+Thanks for pointing out the initramfs problem.  I guess I should have
+figured that out myself, since I've had to update initramfs in the
+past, but it just totally slipped my mind.  And the strange device
+numbering just threw me complete off track.
 
-The principal reason for such a setup is to prevent runaway processes
-from filling the storage.  Thus /var which normally contains the logs
-and mail spool is often put on a separate partition.  This problem can
-also be addressed using filesystem quotas.
+As far as how the devices got numbered that way in the first place, I
+really don't know.  I assembled them and that is how it came out.
+Since I was initially doing this to learn about SW RAID, I'm sure that
+I made a rookie mistake or two along the way.
 
-There is more than one way to skin a cat, as they say.  If he's using
-these 10 partitions simply for organization purposes, then there's no
-need for 10 LVM devices nor FS quotas on a single FS, but simply a good
-directory hierarchy.
+The reason that there are so many filesystems is that I wanted to try
+to minimize any loss if one of them got corrupted.  Maybe it isn't the
+best way to do it, but it made sense to me at the time.  I am more
+than open to suggestions.
 
--- 
-Stan
+When I started doing this to better understand SW RAID, I wanted to
+make things as simple as possible so I didn't use the LVM.  That and
+it didn't seem like I would gain much by using it.  Al I need is
+simple RAID1 devices I never planned on changing the layout other than
+maybe increasing the size of the disks.  Maybe that flies in the face
+of 'best practices', since you can be sure what your future needs
+would be.  How would you suggest I set things up if I did use LVs?
 
+/boot and / are on a separate disk on RAID1 devices with 1.x
+superblocks.  At the moment, they are the only thing that aren't
+giving me a problem :-)
+
+Many thanks,
+
+JIm
+
+
+
+
+On Tue, May 21, 2013 at 11:31 AM, Phil Turmel <philip@turmel.org> wrote:
+> Hi Jim,
+>
+> On 05/21/2013 08:51 AM, Jim Santos wrote:
+>> Hi,
+>> I recently upgraded my 2 disk RAID-1 array from 1.5TB to 2TB disks.
+>> When I started I had 10 MD devices. Since the last partition was
+>> small, I removed the filesystems and deleted the associated RAID
+>> device. The I created two new devices and split the extra 500 GB
+>> between them. Everything was good until I rebooted. Now two of the
+>> raid devices are 'gone'.
+>
+> [snip /]
+>
+>> Notice the Preferred Minor numbers. It looks like the two new RAID
+>> devices took over the devices with the highest minor numbers.
+>
+> Preferred minors are only used when assembling with kernel internal
+> auto-assembly (deprecated), which only works on meta-data v0.90, and
+> only if an initramfs is not present.  Boot-time assembly is otherwise
+> governed by the copy of mdadm.conf in your initramfs.
+>
+> You appear to have failed to update your initramfs.  This is complicated
+> by your failure to avoid mdadm's "fallback" minor numbers that are used
+> when an array is assembled without an entry in mdadm.conf.
+>
+>> I don't know what I did to get into this situation, but could really
+>> use some help getting out of it.
+>
+> mdadm is called by modern initramfs boot scripts to assemble raid
+> devices as they are encountered.  If the given device is not a member of
+> an array listed in mdadm.conf, mdadm picks the next unused minor number
+> starting at 127 and counting down.  Mdadm must have found the members of
+> your new arrays before it found members of the arrays your old
+> mdadm.conf listed for md127 and md126.
+>
+> Any time you update your mdadm.conf in your root filesystem, you must
+> remember to regenerate your initramfs so mdadm has the correct
+> information at boot time (before root is mounted).
+>
+> To minimize future confusion, I recommend you renumber all of your
+> arrays in mdadm.conf starting with minor number 1.  Then update your
+> initramfs.  Then reboot.
+>
+> Your fstab uses uuids (wisely), so you don't need any particular minor
+> numbers.  So you can and should avoid the minor numbers mdadm will use
+> as defaults.
+>
+> HTH,
+>
+> Phil
