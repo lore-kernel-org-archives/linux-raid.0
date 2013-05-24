@@ -1,116 +1,74 @@
-From: Robert Goliasz <r.goliasz@digital-science.com>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: Attempt to change raid1 to raid0 results in division error in
  kernel
-Date: Fri, 24 May 2013 10:39:40 +0100
-Message-ID: <20130524093940.GA6493@gbl-macbook>
+Date: Fri, 24 May 2013 21:27:03 +1000
+Message-ID: <20130524212703.25af11fb@notabene.brown>
 References: <20130523104400.GA827@gbl-macbook>
- <519EC4FD.1090800@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=047d7b624d7415104004dd739412
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Q5vxIuHDcQkUbr/PBdDUZYt"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <519EC4FD.1090800@hardwarefreak.com>
+In-Reply-To: <20130523104400.GA827@gbl-macbook>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
+To: Robert Goliasz <r.goliasz@digital-science.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---047d7b624d7415104004dd739412
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Disposition: inline
+--Sig_/Q5vxIuHDcQkUbr/PBdDUZYt
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Hi Stan,
+On Thu, 23 May 2013 11:44:00 +0100 Robert Goliasz
+<r.goliasz@digital-science.com> wrote:
 
-Thanks for your reply.
+> Hi,
+>=20
+> When attempting to change raid level from 1 to 0 (I was doing some testing
+> trying to convert a raid1 array to a raid10 one), I got a division error.
+>=20
+> I'm on Debian sid, output of uname -a is:
+>=20
+>   Linux gbl-macbook 3.2.0-4-amd64 #1 SMP Debian 3.2.35-2 x86_64 GNU/Linux
+....
+> I attempted to run this:
+>=20
+>   gbl-macbook# mdadm --grow /dev/md0 -l 0
+>   zsh: segmentation fault  mdadm --grow /dev/md0 -l 0
+>   gbl-macbook#=20
+>=20
+> All my terminals have shown the following alert:
+>=20
+>   Message from syslogd@gbl-macbook at May 23 11:26:11 ...
+>    kernel:[569106.802042] divide error: 0000 [#1] SMP=20
 
-The point of my thread was to point out that a userland tool shouldn't
-be able to cause a kernel to crash. It also shouldn't segfault when given
-incorrect arguments.
-
-If conversion from raid1 to raid0 is supported but I didn't specify
-the right arguments, I should get an appropriate error message. If it's
-not supported, then I should also get an appropriate error message.
-My machine shouldn't crash because of me giving wrong arguments to mdadm.
-
-Another, smaller, issue is that if conversion from raid 1 to raid 0 is
-not supported then perhaps the mdadm manpage should be clearer about it,
-rather saying "Currently supported growth options [...] [are] changing the
-RAID level between 0, 1, 5, and 6"
-
->>   gbl-macbook# mdadm --grow /dev/md0 -l 0
->If it is possible, this command line won't work because you didn't
->specify a chunk size for the RAID0 stripe.  Every striped array type
->requires a chunk size.
-
-This doesn't seem to be correct, I'm able to at least create a RAID0 stripe
-without specifying the chunk size explicitly:
-
-  root@gbl-macbook:~# mdadm --create /dev/md1 -l 0 -n 2 /dev/vg0/v1 /dev/vg0/v2
-  mdadm: /dev/vg0/v1 appears to be part of a raid array:
-      level=raid1 devices=3 ctime=Thu May 23 11:13:33 2013
-  Continue creating array? y
-  mdadm: Defaulting to version 1.2 metadata
-  mdadm: array /dev/md1 started.
-  root@gbl-macbook:~# cat /proc/mdstat 
-  Personalities : [raid0] 
-  md1 : active raid0 dm-4[1] dm-3[0]
-        203776 blocks super 1.2 512k chunks
-        
-  unused devices: <none>
-  root@gbl-macbook:~# 
+Fixed by commit 24b961f811a3e790a9b93604d25 which is in linux-3.4
 
 
->> Afterwards, my mounted filesystem (/dev/md0) disappeared (it's no longer
->> mounted), and all operations related to software raid seem to fail:
->Well of course.  Experimenting with mdadm without knowing what you're
->doing will often result in lost/corrupted arrays and other forms of damage.
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=
+=3D24b961f811a3e790a9b93604d25
 
-I knew exactly what I was doing. I was testing whether conversion from raid1
-to raid0 was supported. I got an unexpected result in the form of a kernel
-crash. After discussing on IRC I was asked to report this here.
+NeilBrown
 
-I've concluded that it's not supported or broken and will not attempt to run
-this on a production machine.
-
--- 
-Robert Goliasz
-Infrastructure Engineer
-
--- 
-******************************************************************************** 
-  
-DISCLAIMER: This e-mail is confidential and should not be used by anyone 
-who is
-not the original intended recipient. If you have received this e-mail in 
-error
-please inform the sender and delete it from your mailbox or any other 
-storage
-mechanism. Neither Macmillan Publishers Limited nor any of its agents accept
-liability for any statements made which are clearly the sender's own and not
-expressly made on behalf of Macmillan Publishers Limited or one of its 
-agents.
-Please note that neither Macmillan Publishers Limited nor any of its agents
-accept any responsibility for viruses that may be contained in this e-mail 
-or
-its attachments and it is your responsibility to scan the e-mail and 
-attachments (if any). No contracts may be concluded on behalf of Macmillan 
-Publishers Limited or its agents by means of e-mail communication. 
-Macmillan 
-Publishers Limited Registered in England and Wales with registered number 
-785998 
-Registered Office Brunel Road, Houndmills, Basingstoke RG21 6XS   
-********************************************************************************
-
-
---047d7b624d7415104004dd739412
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+--Sig_/Q5vxIuHDcQkUbr/PBdDUZYt
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-iF4EAREIAAYFAlGfNVwACgkQd2qCTldmJRcjcAD8D5DCggv/O3I+Y9bb6MGav/Pu
-r6XnMKrI9BwCZCsX0hEA/ja81BKUnzI1cw5ctPrtDIz2hi6b+OORJVAzQWWf7qrI
-=2d3Y
+iQIVAwUBUZ9Ohznsnt1WYoG5AQIt6BAAjpaFTzNgN9fyCJP4+4/m6SYIYA4bzpt1
+9ZLHScbpkUi5z+Xn2cNhVHNFR58YoL4+udZbMiVxjmEzmINz/R6p0VKO8kWTaRvQ
+UjMZKTDyiNFhL0lxMHu14OQRV2TY9ehN4WtTutXDcvWPetCwpuJTRlWLZZfKk9Aa
+9rAkeZg2Hr/O/e0l0cMeTHIoFG1M5ssu2CH52P7VxX7qYJI4pYBoDz1bVUN4qAlA
++59QNZLxFqtwb6P6juQgQCb8irmIDhmjAFiw5J9KiJLlC1RGaPPKTs4yY8ABafO9
+QRnf7GCw4GdH8ZkF9jqtlYQ4l6FAxY8Psi8XPMTqhrf3dh+xza6XVh9QtAljzY0g
+b12FUomPm+7XMl7QMG42H6dCOX63Kk78rLSh34oPujRwTE3Lpv43PY5CsEmG3Ztc
+deyjN30Yj5eEgPLvwTTM0wbfq+x1HzQD3vCy3ZNEzr8tZrrlu+bRSKKZqXAXV9OT
+i9dVLoLp34hZtlvjy0iR0r5bs78It67bpXHVvRVRJVaQKD70NDvtVk+p/RZ3QSP/
+XaHh7L6wptZfG0LH7RNxUMweJfOtDKyIUWvr2ajDjbFAVS00VKF2QDxfVH4lgGe+
+FSD8/V2lfy1czEWagng323mulzZO02/TxUYFNTM37LjiCbXJ8QDQMRphpql94bGW
+cbsAy/GaqGc=
+=7qSM
 -----END PGP SIGNATURE-----
 
---047d7b624d7415104004dd739412--
+--Sig_/Q5vxIuHDcQkUbr/PBdDUZYt--
