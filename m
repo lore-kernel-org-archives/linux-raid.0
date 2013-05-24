@@ -1,55 +1,36 @@
 From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Attempt to change raid1 to raid0 results in division error in
- kernel
-Date: Thu, 23 May 2013 20:40:13 -0500
-Message-ID: <519EC4FD.1090800@hardwarefreak.com>
-References: <20130523104400.GA827@gbl-macbook>
+Subject: Re: "Missing" RAID devices
+Date: Thu, 23 May 2013 22:45:56 -0500
+Message-ID: <519EE274.5030905@hardwarefreak.com>
+References: <CAGPLN=viGgdw0MM18tiNxwjNadg0cj8xjntW3ne1qMNkfgocaA@mail.gmail.com> <519B9351.4050708@turmel.org> <CAGPLN=uiUD3wnwt6DfELaLh+yqxkbrA=KetPiQHZrqq4FrS=HA@mail.gmail.com> <519C0B13.3040906@turmel.org> <519D4A15.7020107@hardwarefreak.com> <519D541B.1090508@turmel.org> <519DB04B.5030505@hardwarefreak.com> <20130523083032.GA2579@www5.open-std.org>
 Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130523104400.GA827@gbl-macbook>
+In-Reply-To: <20130523083032.GA2579@www5.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert Goliasz <r.goliasz@digital-science.com>
-Cc: linux-raid@vger.kernel.org
+To: keld@keldix.com
+Cc: Phil Turmel <philip@turmel.org>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 5/23/2013 5:44 AM, Robert Goliasz wrote:
-> Hi,
-> 
-> When attempting to change raid level from 1 to 0 
+On 5/23/2013 3:30 AM, keld@keldix.com wrote:
+> On Thu, May 23, 2013 at 12:59:39AM -0500, Stan Hoeppner wrote:
 
-I don't even know if this is possible.
-
-> (I was doing some testing
-> trying to convert a raid1 array to a raid10 one), I got a division error.
+>> You may be tempted to use md/RAID10 of some layout
+>> to optimize for writes, but you'd gain nothing, and you'd lose some
+>> performance due to overhead.  The partitions you'll be using in this
+>> case are so small that they easily fit in a single physical disk track,
+>> thus no head movement is required to seek between sectors, only rotation
+>> of the platter.
 ...
->   gbl-macbook# mdadm --grow /dev/md0 -l 0
+> I think a raid10,far3 is a good choice for swap, then you will enjoy
+> RAID0-like reading speed. and good write speed (compared to raid6),
+> and a chance of live surviving if just one drive keeps functioning.
 
-If it is possible, this command line won't work because you didn't
-specify a chunk size for the RAID0 stripe.  Every striped array type
-requires a chunk size.
-
->   zsh: segmentation fault  mdadm --grow /dev/md0 -l 0
->   gbl-macbook# 
-...
-
-> Afterwards, my mounted filesystem (/dev/md0) disappeared (it's no longer
-> mounted), and all operations related to software raid seem to fail:
-
-Well of course.  Experimenting with mdadm without knowing what you're
-doing will often result in lost/corrupted arrays and other forms of damage.
-
-At this point you should simply start a new thread and ask:
-
-"How do I convert a RAID1 array to RAID0?"
-
-or
-
-"How do I convert a RAID1 array to RAID10?"
-
-instead of working backwards from your mistakes here.
+As I mention above, none of the md/RAID10 layouts will yield any added
+performance benefit for swap partitions.  And I state the reason why.
+If you think about this for a moment you should reach the same conclusion.
 
 -- 
 Stan
