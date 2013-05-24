@@ -1,34 +1,31 @@
-From: Drew <drew.kay@gmail.com>
-Subject: Re: Moving RAID1 disks between systems
-Date: Fri, 24 May 2013 11:30:05 -0700
-Message-ID: <CACJz6Qt-zULSobEDqo306gow4wAvx1LQdXBf3K5XHm36rDKE4Q@mail.gmail.com>
-References: <CAGPLN=s0nBeuHk75KSaKV2LS1MxYrdVmXjG7eM+dP36bOSbA-A@mail.gmail.com>
+From: Matt Garman <matthew.garman@gmail.com>
+Subject: raid10 physical layout?
+Date: Fri, 24 May 2013 13:49:30 -0500
+Message-ID: <20130524184930.GA9609@septictank.raw-sewage.fake>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGPLN=s0nBeuHk75KSaKV2LS1MxYrdVmXjG7eM+dP36bOSbA-A@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Jim Santos <iluvgadgets@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Jim,
 
-You should have no troubles reassembling the array on a new machine.
-From what I understand, md raid doesn't depend on device names for
-assembling arrays, it has some internal UUID's to distinguish which
-array a member disk belongs to.
+I'm looking into building a six-disk raid10.  The six disks are
+comprised of three from one manufacturer, and three from another.
 
-mdadm --assemble --scan is pretty much all you need (and won't break
-anything in the process)
+My intuition says that for better statistical reliability, the
+redundant data copies ought to fall on disks of different
+manufacturers.  I know I could achieve this easily by building a
+"classic" RAID1+0 system: three RAID-1 sets built by
+manufacturerA+manufacturerB pairs, then striping those mirrored sets
+in RAID-0.
 
+But based on what I've been reading, looks like mdadm's more
+sophisticated raid10 layout schemes give better performance.  For
+example, can I create a raid10,f2 set in such a way as to meet my
+"redundant copies on different manufacturer" criteria?
 
+Thanks,
+Matt
 
--- 
-Drew
-
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
-
-"This started out as a hobby and spun horribly out of control."
--Unknown
