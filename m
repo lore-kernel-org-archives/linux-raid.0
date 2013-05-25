@@ -1,34 +1,42 @@
 From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: raid10 physical layout?
-Date: Sat, 25 May 2013 15:31:33 +0200 (CEST)
-Message-ID: <7725748.4.1369488693863.JavaMail.root@zimbra>
-References: <519FBBE5.7050802@turmel.org>
+Subject: Re: Moving RAID1 disks between systems
+Date: Sat, 25 May 2013 21:44:36 +0200 (CEST)
+Message-ID: <10904484.6.1369511076742.JavaMail.root@zimbra>
+References: <CAGPLN=ut9sacwkYuaVbDP3u3dhm-WTZQw2gnAoVjMWFBEbqTCg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <519FBBE5.7050802@turmel.org>
+In-Reply-To: <CAGPLN=ut9sacwkYuaVbDP3u3dhm-WTZQw2gnAoVjMWFBEbqTCg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Matt Garman <matthew.garman@gmail.com>
+To: Jim Santos <iluvgadgets@gmail.com>
+Cc: linux-raid@vger.kernel.org, Drew <drew.kay@gmail.com>
 List-Id: linux-raid.ids
 
-> > I'm looking into building a six-disk raid10. The six disks are
-> > comprised of three from one manufacturer, and three from another.
->=20
-> > But based on what I've been reading, looks like mdadm's more
-> > sophisticated raid10 layout schemes give better performance. For
-> > example, can I create a raid10,f2 set in such a way as to meet my
-> > "redundant copies on different manufacturer" criteria?
->=20
-> Just alternate the manufacturers when you list the devices in the
-> "--create" operation. MD lays out raid10,f2 redundant data on adjacen=
-t
-> disks. (Wraps around.)
+----- Opprinnelig melding -----
+> On Fri, May 24, 2013 at 2:30 PM, Drew <drew.kay@gmail.com> wrote:
+> >
+> > Hi Jim,
+> >
+> > You should have no troubles reassembling the array on a new machine=
+=2E
+> > From what I understand, md raid doesn't depend on device names for
+> > assembling arrays, it has some internal UUID's to distinguish which
+> > array a member disk belongs to.
+> >
+> > mdadm --assemble --scan is pretty much all you need (and won't brea=
+k
+> > anything in the process)
+> >
+> >
+> Is there a way to rename md devices? It would be useful in general an=
+d
+> maybe necessary if assembling the arrays from the other system causes
+> md device name collisions
 
-You also may want to consider using LVM instead of md RAID-10, since th=
-e latter isn't very flexible - you can't add new drives or otherwise gr=
-ow raid-10 (atm).
+if you mean device name, it's configured in /etc/mdadm/mdadm.conf or si=
+milar (varies a bit between distros). that should hold the device name =
+and its UUID
 
 Vennlige hilsener / Best regards
 
