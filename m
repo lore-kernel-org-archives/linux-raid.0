@@ -1,69 +1,112 @@
-From: Andrea Bolandrina <andrea.bola@yahoo.it>
-Subject: Re: Best size partition for a mdadm array
-Date: Mon, 27 May 2013 10:44:09 +0100
-Message-ID: <CAOsORH9_zM1Df2BjOXHhPZ9J79n2XOu-eDabLz9Fqu4N0nED=g@mail.gmail.com>
-References: <CAOsORH9X6L+EZY5DEDfwbWkHPgL6Oz9yGC1JWf0nejLckVJg=w@mail.gmail.com>
- <51A2D4A5.6000907@smartguide.com.au> <CAOsORH-atqXVkkn+YWH+Q0pO0ZCKvRL3EWUpxa6h-GfsxsjdcQ@mail.gmail.com>
- <8b038c62bf256249769a7dc0bf565db4.squirrel@webmail.websitemanagers.com.au>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: mdadm --assemble considers event count for spares
+Date: Mon, 27 May 2013 13:05:34 +0300
+Message-ID: <CAGRgLy6fc8fF8KWoO7EEG6Uo8d4jUPPLcucwX-fNw9O5qKMJgg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8b038c62bf256249769a7dc0bf565db4.squirrel@webmail.websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: Tudor Holton <tudor@smartguide.com.au>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-The OS, as well as the swap partition, are on an SSD drive, therefore
-using the SSD would be much faster.
-Plus those disks will have enough to do having to keep the raid 6
-array in sync... :-)
+Hi Neil,
+It can happen that a spare has a higher event count than a in-array drive.
+For exampe: RAID1 with two drives is rebuilding one of the drives.
+Then the "good" drive fails. As a result, MD stops the rebuild and
+ejects the rebuilding drive from the array. The failed drive stays in
+the array, because RAID1 never ejects the last drive. However, the
+"good" drive fails all IOs, so the ejected drive has a larger event
+count now.
+Now if MD is stopped and re-assembled, mdadm considers the spare drive
+as the chosen one:
 
-From what pretty much all of you have suggested, there shouldn't be
-any changes in size with future disks I might purchase
-but it's still best to leave a few MB just in case...
+root@vc:/mnt/work/alex/mdadm-neil# ./mdadm --assemble /dev/md200
+--name=alex --config=none --homehost=vc --run --auto=md --metadata=1.2
+--verbose --verbose /dev/sdc2 /dev/sdd2
+mdadm: looking for devices for /dev/md200
+mdadm: /dev/sdc2 is identified as a member of /dev/md200, slot 0.
+mdadm: /dev/sdd2 is identified as a member of /dev/md200, slot -1.
+mdadm: added /dev/sdc2 to /dev/md200 as 0 (possibly out of date)
+mdadm: no uptodate device for slot 2 of /dev/md200
+mdadm: added /dev/sdd2 to /dev/md200 as -1
+mdadm: failed to RUN_ARRAY /dev/md200: Input/output error
+mdadm: Not enough devices to start the array.
 
-I will therefore leave 10MB at the end of each disk, pray for the best
-and, in case it goes horribly wrong,
-I'll blame all of you! Just kidding! LOL
+Kernel doesn't accept the non-spare drive considering it as non-fresh:
+May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.679396] md: md200 stopped.
+May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.686870] md: bind<sdc2>
+May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.687623] md: bind<sdd2>
+May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.687675] md: kicking
+non-fresh sdc2 from array!
+May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.687680] md: unbind<sdc2>
+May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.687683] md: export_rdev(sdc2)
+May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.693574]
+md/raid1:md200: active with 0 out of 2 mirrors
+May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.693583] md200:
+failed to create bitmap (-5)
 
-Cheers,
-Andrea
+This happens with the latest mdadm from git, and kernel 3.8.2.
 
-On Mon, May 27, 2013 at 10:11 AM, Adam Goryachev
-<mailinglists@websitemanagers.com.au> wrote:
-> On Mon, May 27, 2013 18:38, Andrea Bolandrina wrote:
->> Hi Tudor.
->>
->> All disks I have report the same size, even though they are different
->> brand/model
->
-> Discussion on this list in the past would suggest the manufacturers have
-> agreed to make equal sized drives in future, so this shouldn't really be
-> an issue for 2TB drives or larger.
->
->> If the 2 WD RED bahave as they should I might buy some more as soon as
->> the others fail,
->> otherwise I will try something different (that's why I want to keep
->> the system as flexible as possible).
->
-> Why not just put a 2G swap partition at the end of each drive, if needed,
-> you can reduce the swap partition on the new drive if it is a bit smaller
-> than the rest, you have up to 2G of flexibility.... (or 1G etc..) This
-> means the space isn't wasted overall, but there is no issue if you need to
-> make it a bit smaller/larger/etc...
->
->> The 2 samsung SMART infos are already "screaming for help" and,
->> actually, a third Samsung already failed last year.
->> Terrible drives, terrible support from Samsung that replaced the drive
->> (still under warranty) with a refurbished one that failed within 10
->> days from arrival.
->
-> Personally, apart from a "batch" of WD Caviar Black drives that all failed
-> within a week, of had really good experience with them, and also the WD
-> RE4 drives.... I haven't yet tried the red, but would be interested to
-> hear how you go.
->
-> Regards,
-> Adam
->
+Is this the expected behavior?
+Maybe mdadm should not consider spares at all for its "chosen_drive"
+logic, and perhaps not try to add them to the kernel?
+
+Superblocks of both drives:
+sdc2 - the "good" drive:
+/dev/sdc2:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 8e051cc5:c536d16e:72b413fa:e7049d4b
+           Name : zadara_vc:alex
+  Creation Time : Mon May 27 11:33:50 2013
+     Raid Level : raid1
+   Raid Devices : 2
+
+ Avail Dev Size : 975063127 (464.95 GiB 499.23 GB)
+     Array Size : 209715200 (200.00 GiB 214.75 GB)
+  Used Dev Size : 419430400 (200.00 GiB 214.75 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=1968 sectors, after=555632727 sectors
+          State : clean
+    Device UUID : 1f661ca3:fdc8b887:8d3638ab:f2cc0a40
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Mon May 27 11:34:57 2013
+       Checksum : 72a97357 - correct
+         Events : 9
+
+sdd2 - the "rebuilding" drive:
+/dev/sdd2:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 8e051cc5:c536d16e:72b413fa:e7049d4b
+           Name : zadara_vc:alex
+  Creation Time : Mon May 27 11:33:50 2013
+     Raid Level : raid1
+   Raid Devices : 2
+
+ Avail Dev Size : 976123417 (465.45 GiB 499.78 GB)
+     Array Size : 209715200 (200.00 GiB 214.75 GB)
+  Used Dev Size : 419430400 (200.00 GiB 214.75 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=1968 sectors, after=556693017 sectors
+          State : clean
+    Device UUID : 9abc7fa9:6bf95a51:51f2cd65:14232e81
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Mon May 27 11:35:56 2013
+       Checksum : 3e793a34 - correct
+         Events : 26
+
+
+   Device Role : spare
+   Array State : A. ('A' == active, '.' == missing, 'R' == replacing)
+
+
+Thanks,
+Alex.
