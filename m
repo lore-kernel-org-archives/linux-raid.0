@@ -1,71 +1,109 @@
-From: Vincent Pelletier <plr.vincent@gmail.com>
-Subject: Re: Spinning down idle disks?
-Date: Mon, 27 May 2013 08:46:17 +0200
-Message-ID: <201305270846.18198.plr.vincent@gmail.com>
-References: <20231564.0.1369565394879.JavaMail.root@zimbra>
+From: Andrea Bolandrina <andrea.bola@yahoo.it>
+Subject: Re: Best size partition for a mdadm array
+Date: Mon, 27 May 2013 09:38:50 +0100
+Message-ID: <CAOsORH-atqXVkkn+YWH+Q0pO0ZCKvRL3EWUpxa6h-GfsxsjdcQ@mail.gmail.com>
+References: <CAOsORH9X6L+EZY5DEDfwbWkHPgL6Oz9yGC1JWf0nejLckVJg=w@mail.gmail.com>
+ <51A2D4A5.6000907@smartguide.com.au>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20231564.0.1369565394879.JavaMail.root@zimbra>
+In-Reply-To: <51A2D4A5.6000907@smartguide.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+To: Tudor Holton <tudor@smartguide.com.au>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Le dimanche 26 mai 2013 12:49:54, Roy Sigurd Karlsbakk a =C3=A9crit :
-> Is it possible somehow to have linux spin down idle disks in an MD ra=
-id as
-> to use MD for a MAID (massive array of idle disks)? I tried to monito=
-r an
-> idle raid with blktrace, and it seems the array (and its members) is
-> accessed every two seconds for some reason. The array used with for t=
-he
-> testing is a idle, degraded raid-5.
+Hi Tudor.
 
-=46WIW, there is a small daemon to spin disks down in a - to me - cleve=
-r way:=20
-only reads from device reset spindown timeout. Writes are kept in cache=
- until=20
-an explicit flush happens.
+All disks I have report the same size, even though they are different
+brand/model
+#fdisk -l | grep Disk
+Disk /dev/sdc: 2000.4 GB, 2000398934016 bytes
+Disk /dev/sdd: 2000.4 GB, 2000398934016 bytes
+Disk /dev/sde: 2000.4 GB, 2000398934016 bytes
+Disk /dev/sdf: 2000.4 GB, 2000398934016 bytes
+Disk /dev/sdg: 2000.4 GB, 2000398934016 bytes
 
-http://noflushd.sourceforge.net/
+They are 2 WD RED (WDC WD20EFRX-68AX9N0),
+1 WD GREEN (WDC WD20EARX-00PASB0) and
+2 SAMSUNG (HD204UI).
 
-This allows skipping superblock refreshes (FS- and MD-level).
-It has a large drawback when using it for MD (and other composite devic=
-es): it=20
-doesn't look for slave devices, so if you tell it to control sda and sd=
-b and=20
-you have md0 on top of both, it will eventually spin down sda and sdb, =
-only to=20
-manually flush md0, spinning both up again.
+If the 2 WD RED bahave as they should I might buy some more as soon as
+the others fail,
+otherwise I will try something different (that's why I want to keep
+the system as flexible as possible).
 
-I've implemented a quick-hack workaround for this:
+The 2 samsung SMART infos are already "screaming for help" and,
+actually, a third Samsung already failed last year.
+Terrible drives, terrible support from Samsung that replaced the drive
+(still under warranty) with a refurbished one that failed within 10
+days from arrival.
 
-https://github.com/vpelletier/pynoflushd
+Anyway, regarding how much free space to leave, another user suggested
+2-10 MB should be sufficient.
 
-Both implementation have the drawback of increasing the frequency of wr=
-ites to=20
-the actual disk: as the daemon take over dirty_writeback_centisecs's jo=
-b using=20
-userspace-available flush methods (mine using BLKFLSBUF ioctl, the orig=
-inal=20
-using fsync on block device), something gets flushed which is usually n=
-ot (I=20
-wandered a bit in kernel code without finding how writeback code handle=
-s this=20
-timeout).
+Thanks for your infos.
+Andrea
 
-I think it would be nice to have an equivalent of dirty_writeback_centi=
-secs at=20
-device granularity, so that one doesn't have to delegate flushing to a=20
-userspace daemon.
-
-Regards,
---=20
-Vincent Pelletier
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Mon, May 27, 2013 at 4:36 AM, Tudor Holton <tudor@smartguide.com.au> wrote:
+> Hi Andrea,
+>
+> I noticed your question wasn't answered, so I'll give it a shot. Bear in
+> mind that I'm relatively new here, so take everything I say with a pinch
+> of
+> salt. :-)
+>
+> At some point in the past, manufacturers of hard disks released disks with
+> the same "marketing" size but different actual capacities.  For example,
+> instead of 1TB being a 1 Tebibyte 2^40 (1,099,511,627,776 bytes), they
+> sold
+> lower capacity drives by using a different base.   1TB could be 1000GB
+> (10^3*2^30 = 1,073,741,824,000 bytes), 1024GB (2^10*10^9 =
+> 1,024,000,000,000
+> bytes) or even a "true" Terabyte at 10^12 bytes (1,000,000,000,000 bytes).
+> If we were swapping brands, and moved from a 2^40 to a 10^12 model, then
+> our
+> array wouldn't fit anymore. :-(
+>
+> These days, things are a bit clearer as people understand the differences
+> between the Terabytes and Tebibytes.
+>
+> Thankfully, most modern disk sizes are standardised, but still with some
+> small variances.  It would be wise to look at the drives you have
+> purchased
+> and look at the actual storage capacity then take the lowest one and use
+> that.  You may want to add in some additional buffer, also, just in case.
+>
+> I hope that helps you make your decision. :-)
+>
+> Cheers,
+> Tudor.
+>
+>
+> On 24/05/13 19:25, Andrea Bolandrina wrote:
+>>
+>> Hi All,
+>>
+>> In choosing the right size for a mdadm array the manual sais:
+>> "Sometimes a replacement drive can be a little smaller than the
+>> original drives though this should be minimised by IDEMA standards.
+>> Such a replacement drive will be rejected by md.
+>> To guard against this it can be useful to set the initial size
+>> slightly smaller than the smaller device with the aim that it will
+>> still be larger than any replacement."
+>>
+>> I want to do a 5x2TB md (raid 6) array .
+>> Could you advise me how "slightly smaller" should my partitions be?
+>>
+>> 100MB smaller than the actual size? 1GB?
+>>
+>> Thank in advance for the attention.
+>>
+>> Regards,
+>> Andrea
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
