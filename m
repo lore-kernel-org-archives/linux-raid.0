@@ -1,88 +1,69 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Spinning down idle disks?
-Date: Sun, 26 May 2013 12:49:54 +0200 (CEST)
-Message-ID: <20231564.0.1369565394879.JavaMail.root@zimbra>
+From: Tudor Holton <tudor@smartguide.com.au>
+Subject: Re: Best size partition for a mdadm array
+Date: Mon, 27 May 2013 13:36:05 +1000
+Message-ID: <51A2D4A5.6000907@smartguide.com.au>
+References: <CAOsORH9X6L+EZY5DEDfwbWkHPgL6Oz9yGC1JWf0nejLckVJg=w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAOsORH9X6L+EZY5DEDfwbWkHPgL6Oz9yGC1JWf0nejLckVJg=w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Andrea Bolandrina <andrea.bola@yahoo.it>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all
+Hi Andrea,
 
-Is it possible somehow to have linux spin down idle disks in an MD raid=
- as to use MD for a MAID (massive array of idle disks)? I tried to moni=
-tor an idle raid with blktrace, and it seems the array (and its members=
-) is accessed every two seconds for some reason. The array used with fo=
-r the testing is a idle, degraded raid-5.
+I noticed your question wasn't answered, so I'll give it a shot. Bear in 
+mind that I'm relatively new here, so take everything I say with a pinch 
+of salt. :-)
 
-roy
+At some point in the past, manufacturers of hard disks released disks 
+with the same "marketing" size but different actual capacities.  For 
+example, instead of 1TB being a 1 Tebibyte 2^40 (1,099,511,627,776 
+bytes), they sold lower capacity drives by using a different base.   1TB 
+could be 1000GB (10^3*2^30 = 1,073,741,824,000 bytes), 1024GB (2^10*10^9 
+= 1,024,000,000,000 bytes) or even a "true" Terabyte at 10^12 bytes 
+(1,000,000,000,000 bytes).  If we were swapping brands, and moved from a 
+2^40 to a 10^12 model, then our array wouldn't fit anymore. :-(
 
-root@Mathsterk:~# blktrace -d /dev/md0 -o - | blkparse -i -
-  9,0    2        1     0.000000000 26793  A   W 5368711168 + 8 <- (252=
-,2) 0
-  9,0    2        2     0.000000879 26793  Q   W 5368711168 + 8 [(null)=
-]
-  9,0    1        3     0.020063084   372  C   W 5368711168 [0]
-  9,0    2        3     0.020113389 26793  A WBS 0 + 0 <- (252,2) 0
-  9,0    2        4     0.020114118 26793  Q WBS [kworker/u:1]
-  9,0    0        1     1.999791074  6948  A WBS 0 + 0 <- (252,2) 0
-  9,0    0        2     1.999792301  6948  Q WBS [kworker/u:2]
-  9,0    0        3     2.000000284  6948  A   W 5368711168 + 8 <- (252=
-,2) 0
-  9,0    0        4     2.000001050  6948  Q   W 5368711168 + 8 [kworke=
-r/u:2]
-  9,0    0        5     2.020065947  6948  A WBS 0 + 0 <- (252,2) 0
-  9,0    0        6     2.020066632  6948  Q WBS [kworker/u:2]
-  9,0    1        4     2.020018632   372  C   W 5368711168 [0]
-  9,0    0        7     3.999790266 26793  A WBS 0 + 0 <- (252,2) 0
-  9,0    0        8     3.999791552 26793  Q WBS [kworker/u:1]
-  9,0    0        9     4.000000435 26793  A   W 5368711168 + 8 <- (252=
-,2) 0
-  9,0    0       10     4.000001135 26793  Q   W 5368711168 + 8 [kworke=
-r/u:1]
-  9,0    0       11     4.020027371 26793  A WBS 0 + 0 <- (252,2) 0
-  9,0    0       12     4.020028051 26793  Q WBS [kworker/u:1]
-  9,0    1        5     4.019973885   372  C   W 5368711168 [0]
-  9,0    0       13     5.999788009  6948  A WBS 0 + 0 <- (252,2) 0
-  9,0    0       14     5.999789265  6948  Q WBS [kworker/u:2]
-  9,0    0       15     5.999999943  6948  A   W 5368711168 + 8 <- (252=
-,2) 0
-  9,0    0       16     6.000000676  6948  Q   W 5368711168 + 8 [kworke=
-r/u:2]
-  9,0    0       17     6.019936327  6948  A WBS 0 + 0 <- (252,2) 0
-  9,0    0       18     6.019937059  6948  Q WBS [kworker/u:2]
-  9,0    1        6     6.019883619   372  C   W 5368711168 [0]
-  9,0    2        5     8.019890546   372  C   W 5368711168 [0]
-  9,0    0       19     7.999785408 26793  A WBS 0 + 0 <- (252,2) 0
-  9,0    0       20     7.999786808 26793  Q WBS [kworker/u:1]
-  9,0    0       21     7.999997589 26793  A   W 5368711168 + 8 <- (252=
-,2) 0
-  9,0    0       22     7.999998282 26793  Q   W 5368711168 + 8 [kworke=
-r/u:1]
-  9,0    0       23     8.019948314 26793  A WBS 0 + 0 <- (252,2) 0
-  9,0    0       24     8.019949033 26793  Q WBS [kworker/u:1]
+These days, things are a bit clearer as people understand the 
+differences between the Terabytes and Tebibytes.
 
+Thankfully, most modern disk sizes are standardised, but still with some 
+small variances.  It would be wise to look at the drives you have 
+purchased and look at the actual storage capacity then take the lowest 
+one and use that.  You may want to add in some additional buffer, also, 
+just in case.
 
---=20
-Vennlige hilsener / Best regards
+I hope that helps you make your decision. :-)
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+Tudor.
+
+On 24/05/13 19:25, Andrea Bolandrina wrote:
+> Hi All,
+>
+> In choosing the right size for a mdadm array the manual sais:
+> "Sometimes a replacement drive can be a little smaller than the
+> original drives though this should be minimised by IDEMA standards.
+> Such a replacement drive will be rejected by md.
+> To guard against this it can be useful to set the initial size
+> slightly smaller than the smaller device with the aim that it will
+> still be larger than any replacement."
+>
+> I want to do a 5x2TB md (raid 6) array .
+> Could you advise me how "slightly smaller" should my partitions be?
+>
+> 100MB smaller than the actual size? 1GB?
+>
+> Thank in advance for the attention.
+>
+> Regards,
+> Andrea
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
