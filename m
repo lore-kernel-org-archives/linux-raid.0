@@ -1,11 +1,11 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: mdadm vs zfs for home server?
-Date: Mon, 27 May 2013 21:02:08 +0200 (CEST)
-Message-ID: <5156525.31.1369681328163.JavaMail.root@zimbra>
+Date: Tue, 28 May 2013 01:20:13 +0600
+Message-ID: <20130528012013.2d428584@natsu>
 References: <20130527180912.GA6068@septictank.raw-sewage.fake>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_//1Bwot/vPJse6ySw6GnMVdr"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20130527180912.GA6068@septictank.raw-sewage.fake>
 Sender: linux-raid-owner@vger.kernel.org
@@ -13,95 +13,43 @@ To: Matt Garman <matthew.garman@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Short answer: ZFS will guarantee the data is free of errors, but MD wil=
-l give you the flexibility of moving between RAID levels and adding dri=
-ves to existing RAIDs. I have been working with ZFS with some 400TB of =
-storage, and I considered using it for my home server, but chose MD bec=
-ause of the flexibility in there. ZFS requires you to plan your setup. =
-It allows you to add VDEVs, but data isn't balanced over the VDEVs. Tha=
-t will required block pointer rewrite, something that's been talked abo=
-ut for at least four years, but yet hasn't surfaced.
+--Sig_//1Bwot/vPJse6ySw6GnMVdr
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-just my 2c
+On Mon, 27 May 2013 13:09:12 -0500
+Matt Garman <matthew.garman@gmail.com> wrote:
 
-roy
-
------ Opprinnelig melding -----
-> Anyone out there have a home (or maybe small office) file server
-> that where they thought about native Linux software RAID (mdadm)
-> versus ZFS on Linux?
->=20
-> I currently have a raid6 array built from five low power (5400 rpm)
-> 3TB drives. I put an ext4 filesystem right on top of the md device
-> (no lvm). This array used to be comprised of 2TB drives; I've been
-> slowly replacing drives with 3TB versions as they went on sale.
->=20
-> I run a weekly check on the array ("raid-check" script on CentOS,
-> which is basically a fancy wrapper for "echo check >>
-> /sys/block/mdX/md/sync_action"). I shouldn't be surprised, but I've
-> noticed that this check now takes substantially longer (than it did
-> with the 2TB drives).
->=20
-> I got to thinking about the chances of data loss. First off: I do
-> have backups. But I want to take every "reasonable" precaution
-> against having to use the backups. Initially I started thinking
-> about zfs's raid-z3 (basically, triple-parity raid, the next logical
-> step in the raid5, raid6 progression). But then I decided that,
-> based on the check speed of my current raid6, maybe I want to get
-> away from parity-based raid all together.
->=20
-> Now I've got another 3TB drive on the way (rounding out the total to
-> six) and am leaning towards RAID-10. I don't need the performance,
-> but it should be more performant than raid6. And I assume (though I
-> could be very wrong) that the weekly "check" action ought to be much
-> faster than it is with raid6. Is this correct?
->=20
-> But after all that zfs reading, I'm wondering if that might not be
-> the way to go. I don't know how necessary it is, but I like the
+> the way to go.  I don't know how necessary it is, but I like the
 > idea of having the in-filesystem checksums to prevent "silent" data
 > corruption.
->=20
-> I went through a zfs tutorial, building a little raid10 pool out of
-> files (just to play with). Seems pretty straightforward. But I'm
-> still much more familiar with mdadm (not an expert by any means, but
-> quite comfortable with typical uses). So, does my lack of
-> experience with zfs offset it's data integrity checks? And
-> furthermore, zfs on linux has only recently been marked stable.
-> Although there is plenty of anecdotal comments that it's been stable
-> much longer (the zfs on linux guys are just ultra-conservative).
-> Still, doesn't mdadm have the considerable edge in terms of
-> "longtime stability"?
->=20
-> As I said initially, I'm in the thinking-it-through stage, just
-> looking to maybe get a discussion going as to why I should go one
-> way or the other.
->=20
-> Thanks,
-> Matt
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
+
+On some machines I run btrfs on top of MD RAID. In this configuration btrfs
+can't heal checksum errors, but will still detect them if they appear.
+
+btrfs now also has built-in RAID5 and RAID6 which *can* heal errors, but
+that's still way too immature for being actually used. In fact one may
+consider btrfs as a whole to be not mature enough yet, but in my experience
+without using fancy cutting edge features like RAID it generally works, and=
+ I
+don't remember seeing mailing list reports of any data loss or corruption f=
+rom
+anyone in a long time.
 
 --=20
-Vennlige hilsener / Best regards
+With respect,
+Roman
 
-roy
---
-Roy Sigurd Karlsbakk
-(+47) 98013356
-roy@karlsbakk.net
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt.=
- Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5=
- eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilf=
-eller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_//1Bwot/vPJse6ySw6GnMVdr
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlGjse0ACgkQTLKSvz+PZwjtpwCfcdEapcCYTpqH2mAf1l8wYdzP
+TU8An0NtbKrq3XjSWzDRO5LhH3mz7EDR
+=1S0u
+-----END PGP SIGNATURE-----
+
+--Sig_//1Bwot/vPJse6ySw6GnMVdr--
