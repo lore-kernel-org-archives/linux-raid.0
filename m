@@ -1,177 +1,88 @@
 From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: mdadm --assemble considers event count for spares
-Date: Tue, 28 May 2013 13:50:49 +0300
-Message-ID: <CAGRgLy4bHdxybSC9U8rw=bVM1Aq+HPir_Y6Cwv7obQg-oe-6RQ@mail.gmail.com>
-References: <CAGRgLy6fc8fF8KWoO7EEG6Uo8d4jUPPLcucwX-fNw9O5qKMJgg@mail.gmail.com>
-	<20130528111633.0ba7bed5@notabene.brown>
-	<CAGRgLy5-ACTy1SyQdNO4mbCY0MXzFueGmRsYhQ7tS=BqQRWrCw@mail.gmail.com>
-	<20130528191500.2a5bb83a@notabene.brown>
+Subject: RAD1 doesn't fail WRITE that was written only on a rebuilding drive
+Date: Tue, 28 May 2013 15:46:33 +0300
+Message-ID: <CAGRgLy6tHN7ZPwxxRM4pzVbKP5fS0PLeXrhKoeZ0XJqVrb0pVQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130528191500.2a5bb83a@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Neil,
-In my opinion (I may be wrong), a spare drive (raid_disk==-1) doesn't
-add any information to array assembly. It doesn't have a valid raid
-slot, and I don't see how its event count is relevant. I don't think a
-spare can help us much in figuring out array's latest state, which is
-what assembly code tries to do.
-So what I was thinking: mdadm --assemble doesn't consider spare drives
-(raid_disk=-1) at all. It simply skips over them in the initial loop
-after reading their superblocks. Perhaps it can keep them in a side
-list. Then array is assembled with non-spare drives only.
+Hello Neil,
+we continue testing last-drive RAID1 failure cases.
+We see the following issue:
 
-After array is assembled, we may choose one of the following:
-# User has to explicitly add the spare drives after array has been
-assembled. Assemble can warn that some spares have been left out, and
-tell the user what they are.
-# Assemble adds the spare drives (perhaps after zeroing their
-superblocks even), after it assembled the array with non-spare drives.
+# RAID1 with drives A and B; drive B was freshly-added and is rebuilding
+# Drive A fails
+# WRITE request arrives to the array. It is failed by drive A, so
+r1_bio is marked as R1BIO_WriteError, but the rebuilding drive B
+succeeds in writing it, so the same r1_bio is marked as
+R1BIO_Uptodate.
+# r1_bio arrives to handle_write_finished, badblocks are disabled,
+md_error()->error() does nothing because we don't fail the last drive
+of raid1
+# raid_end_bio_io()  calls call_bio_endio()
+# As a result, in call_bio_endio():
+	if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
+		clear_bit(BIO_UPTODATE, &bio->bi_flags);
+this code doesn't clear the BIO_UPTODATE flag, and the whole master
+WRITE succeeds, back to the upper layer.
 
+# This keeps happening until rebuild aborts, and drive B is ejected
+from the array[1]. After that, there is only one drive (A), so after
+it fails a WRITE, the master WRITE also fails.
+
+It should be noted, that I test a WRITE that is way ahead of
+recovery_offset of drive B. So after such WRITE fails, subsequent READ
+to the same place would fail, because drive A will fail it, and drive
+B cannot be attempted to READ from there (rebuild has not reached
+there yet).
+
+My concrete suggestion is that this behavior is not reasonable, and we
+should only count a successful WRITE to a drive that is marked as
+InSync. Please let me know what do you think?
+
+Thanks,
 Alex.
 
+[1]  Sometimes, it takes up to 2 minutes to eject the drive B, because
+rebuild stops and keeps restarting constantly. I am still to debug why
+rebuild aborts and then immediately restarts, and this keeps happening
+for a long time.
+May 27 20:44:09 vc kernel: [ 6470.446899] md: recovery of RAID array md4
+May 27 20:44:09 vc kernel: [ 6470.446903] md: minimum _guaranteed_
+speed: 10000 KB/sec/disk.
+May 27 20:44:09 vc kernel: [ 6470.446905] md: using maximum available
+idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
+May 27 20:44:09 vc kernel: [ 6470.446908] md: using 128k window, over
+a total of 477044736k.
+May 27 20:44:09 vc kernel: [ 6470.446910] md: resuming recovery of md4
+from checkpoint.
+May 27 20:44:09 vc kernel: [ 6470.543922] md: md4: recovery done.
+May 27 20:44:10 vc kernel: [ 6470.727096] md: recovery of RAID array md4
+May 27 20:44:10 vc kernel: [ 6470.727100] md: minimum _guaranteed_
+speed: 10000 KB/sec/disk.
+May 27 20:44:10 vc kernel: [ 6470.727102] md: using maximum available
+idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
+May 27 20:44:10 vc kernel: [ 6470.727105] md: using 128k window, over
+a total of 477044736k.
+May 27 20:44:10 vc kernel: [ 6470.727108] md: resuming recovery of md4
+from checkpoint.
+May 27 20:44:10 vc kernel: [ 6470.797421] md: md4: recovery done.
+May 27 20:44:10 vc kernel: [ 6470.983361] md: recovery of RAID array md4
+May 27 20:44:10 vc kernel: [ 6470.983365] md: minimum _guaranteed_
+speed: 10000 KB/sec/disk.
+May 27 20:44:10 vc kernel: [ 6470.983367] md: using maximum available
+idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
+May 27 20:44:10 vc kernel: [ 6470.983370] md: using 128k window, over
+a total of 477044736k.
+May 27 20:44:10 vc kernel: [ 6470.983372] md: resuming recovery of md4
+from checkpoint.
+May 27 20:44:10 vc kernel: [ 6471.109254] md: md4: recovery done.
+...
 
-
-On Tue, May 28, 2013 at 12:15 PM, NeilBrown <neilb@suse.de> wrote:
-> On Tue, 28 May 2013 11:56:26 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-> wrote:
->
->> Hi Neil,
->> can you please let me know what have you decided after/whether you had
->> time to think about this issue.
->
-> I don't actually plan to think about the issue, at least not in the short
-> term.
-> If you would like to propose a concrete solution, then I would probably be
-> motivated to think about that and give you some feedback.
->
-> NeilBrown
->
->>
->> Thanks,
->> Alex.
->>
->>
->>
->>
->> On Tue, May 28, 2013 at 4:16 AM, NeilBrown <neilb@suse.de> wrote:
->> > On Mon, 27 May 2013 13:05:34 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
->> > wrote:
->> >
->> >> Hi Neil,
->> >> It can happen that a spare has a higher event count than a in-array drive.
->> >> For exampe: RAID1 with two drives is rebuilding one of the drives.
->> >> Then the "good" drive fails. As a result, MD stops the rebuild and
->> >> ejects the rebuilding drive from the array. The failed drive stays in
->> >> the array, because RAID1 never ejects the last drive. However, the
->> >> "good" drive fails all IOs, so the ejected drive has a larger event
->> >> count now.
->> >> Now if MD is stopped and re-assembled, mdadm considers the spare drive
->> >> as the chosen one:
->> >>
->> >> root@vc:/mnt/work/alex/mdadm-neil# ./mdadm --assemble /dev/md200
->> >> --name=alex --config=none --homehost=vc --run --auto=md --metadata=1.2
->> >> --verbose --verbose /dev/sdc2 /dev/sdd2
->> >> mdadm: looking for devices for /dev/md200
->> >> mdadm: /dev/sdc2 is identified as a member of /dev/md200, slot 0.
->> >> mdadm: /dev/sdd2 is identified as a member of /dev/md200, slot -1.
->> >> mdadm: added /dev/sdc2 to /dev/md200 as 0 (possibly out of date)
->> >> mdadm: no uptodate device for slot 2 of /dev/md200
->> >> mdadm: added /dev/sdd2 to /dev/md200 as -1
->> >> mdadm: failed to RUN_ARRAY /dev/md200: Input/output error
->> >> mdadm: Not enough devices to start the array.
->> >>
->> >> Kernel doesn't accept the non-spare drive considering it as non-fresh:
->> >> May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.679396] md: md200 stopped.
->> >> May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.686870] md: bind<sdc2>
->> >> May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.687623] md: bind<sdd2>
->> >> May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.687675] md: kicking
->> >> non-fresh sdc2 from array!
->> >> May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.687680] md: unbind<sdc2>
->> >> May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.687683] md: export_rdev(sdc2)
->> >> May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.693574]
->> >> md/raid1:md200: active with 0 out of 2 mirrors
->> >> May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.693583] md200:
->> >> failed to create bitmap (-5)
->> >>
->> >> This happens with the latest mdadm from git, and kernel 3.8.2.
->> >>
->> >> Is this the expected behavior?
->> >
->> > I hadn't thought about it.
->> >
->> >> Maybe mdadm should not consider spares at all for its "chosen_drive"
->> >> logic, and perhaps not try to add them to the kernel?
->> >
->> > Probably not, no.
->> >
->> > NeilBrown
->> >
->> >
->> >
->> >>
->> >> Superblocks of both drives:
->> >> sdc2 - the "good" drive:
->> >> /dev/sdc2:
->> >>           Magic : a92b4efc
->> >>         Version : 1.2
->> >>     Feature Map : 0x1
->> >>      Array UUID : 8e051cc5:c536d16e:72b413fa:e7049d4b
->> >>            Name : zadara_vc:alex
->> >>   Creation Time : Mon May 27 11:33:50 2013
->> >>      Raid Level : raid1
->> >>    Raid Devices : 2
->> >>
->> >>  Avail Dev Size : 975063127 (464.95 GiB 499.23 GB)
->> >>      Array Size : 209715200 (200.00 GiB 214.75 GB)
->> >>   Used Dev Size : 419430400 (200.00 GiB 214.75 GB)
->> >>     Data Offset : 2048 sectors
->> >>    Super Offset : 8 sectors
->> >>    Unused Space : before=1968 sectors, after=555632727 sectors
->> >>           State : clean
->> >>     Device UUID : 1f661ca3:fdc8b887:8d3638ab:f2cc0a40
->> >>
->> >> Internal Bitmap : 8 sectors from superblock
->> >>     Update Time : Mon May 27 11:34:57 2013
->> >>        Checksum : 72a97357 - correct
->> >>          Events : 9
->> >>
->> >> sdd2 - the "rebuilding" drive:
->> >> /dev/sdd2:
->> >>           Magic : a92b4efc
->> >>         Version : 1.2
->> >>     Feature Map : 0x1
->> >>      Array UUID : 8e051cc5:c536d16e:72b413fa:e7049d4b
->> >>            Name : zadara_vc:alex
->> >>   Creation Time : Mon May 27 11:33:50 2013
->> >>      Raid Level : raid1
->> >>    Raid Devices : 2
->> >>
->> >>  Avail Dev Size : 976123417 (465.45 GiB 499.78 GB)
->> >>      Array Size : 209715200 (200.00 GiB 214.75 GB)
->> >>   Used Dev Size : 419430400 (200.00 GiB 214.75 GB)
->> >>     Data Offset : 2048 sectors
->> >>    Super Offset : 8 sectors
->> >>    Unused Space : before=1968 sectors, after=556693017 sectors
->> >>           State : clean
->> >>     Device UUID : 9abc7fa9:6bf95a51:51f2cd65:14232e81
->> >>
->> >> Internal Bitmap : 8 sectors from superblock
->> >>     Update Time : Mon May 27 11:35:56 2013
->> >>        Checksum : 3e793a34 - correct
->> >>          Events : 26
->> >>
->> >>
->> >>    Device Role : spare
->> >>    Array State : A. ('A' == active, '.' == missing, 'R' == replacing)
->> >>
->> >>
->> >> Thanks,
->> >> Alex.
->> >
->
+Up to now, I see that md_do_sync() is triggered by raid1d() calling
+md_check_recovery() first thing it does. Then
+md_check_recovery()->md_register_thread(md_do_sync).
