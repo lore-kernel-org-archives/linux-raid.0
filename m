@@ -1,105 +1,148 @@
-From: Ilia Mirkin <imirkin@alum.mit.edu>
-Subject: Re: [PATCH] md: Partially revert 2f6db2a7, which broke raid5
-Date: Tue, 28 May 2013 12:03:49 -0400
-Message-ID: <CAKb7UviiYUpatO5KtRzsD09pwf4Lz5PNmOVsqbNxVuyb2R18Rw@mail.gmail.com>
-References: <20130517213223.GA2530@gmail.com>
-	<20130518070515.GL19781@kernel.dk>
-	<20130519175145.GC19194@moria.home.lan>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: RAD1 doesn't fail WRITE that was written only on a rebuilding drive
+Date: Tue, 28 May 2013 23:12:38 +0300
+Message-ID: <CAGRgLy6qAmn8Fx08BPoAp7uYqWdO4KHuTqkmbTGHAGkWhWF9sg@mail.gmail.com>
+References: <CAGRgLy6tHN7ZPwxxRM4pzVbKP5fS0PLeXrhKoeZ0XJqVrb0pVQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130519175145.GC19194@moria.home.lan>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kent Overstreet <koverstreet@google.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Calvin Owens <jcalvinowens@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>, majianpeng@gmail.com
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAGRgLy6tHN7ZPwxxRM4pzVbKP5fS0PLeXrhKoeZ0XJqVrb0pVQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Sun, May 19, 2013 at 1:51 PM, Kent Overstreet <koverstreet@google.com> wrote:
-> On Sat, May 18, 2013 at 09:05:15AM +0200, Jens Axboe wrote:
->> On Fri, May 17 2013, Calvin Owens wrote:
->> > Commit 2f6db2a7 was part of a series that cleaned up mdraid code by
->> > replacing explicit re-initialization of struct bio with bio_reset().
->> >
->> > In raid5 it incorrectly assumed that a couple initializations of its
->> > members was a full reset, erasing the existing data and unconditionally
->> > triggering the following BUG when assembling arrays:
->> >
->> > [   14.653072] kernel BUG at /home/calvinow/git/linux/drivers/scsi/scsi_lib.c:1196!
->> > [   14.653074] invalid opcode: 0000 [#1] PREEMPT SMP
->> > [   14.653076] CPU: 1 PID: 40 Comm: kworker/1:0H Not tainted 3.10.0-rc1-amd-00279-g8f710dd #3
->> > [   14.653077] Hardware name: System manufacturer System Product Name/M5A88-M, BIOS 0601    09/20/2011
->> > [   14.653082] Workqueue: kblockd blk_delay_work
->> > <snip>
->> > [   14.653123] Call Trace:
->> > [   14.653126]  [<ffffffff81477248>] sd_prep_fn+0x2c8/0xb70
->> > [   14.653129]  [<ffffffff812c8b70>] ? deadline_remove_request.isra.9+0x50/0x90
->> > [   14.653132]  [<ffffffff812b8f5b>] blk_peek_request+0xdb/0x210
->> > [   14.653134]  [<ffffffff81465f15>] scsi_request_fn+0x45/0x4e0
->> > [   14.653136]  [<ffffffff812b6a51>] __blk_run_queue+0x31/0x40
->> > [   14.653138]  [<ffffffff812b6a84>] blk_delay_work+0x24/0x40
->> > [   14.653141]  [<ffffffff8105dc2a>] process_one_work+0x1da/0x490
->> > [   14.653143]  [<ffffffff8105dbcd>] ? process_one_work+0x17d/0x490
->> > [   14.653145]  [<ffffffff8105e32a>] worker_thread+0x11a/0x370
->> > [   14.653147]  [<ffffffff8105e210>] ? rescuer_thread+0x2f0/0x2f0
->> > [   14.653149]  [<ffffffff81066296>] kthread+0xd6/0xe0
->> > [   14.653151]  [<ffffffff810661c0>] ? __kthread_unpark+0x50/0x50
->> > [   14.653154]  [<ffffffff816e4d6c>] ret_from_fork+0x7c/0xb0
->> > [   14.653156]  [<ffffffff810661c0>] ? __kthread_unpark+0x50/0x50
->> > [   14.653172] Code: <snip>
->> > [   14.653174] RIP  [<ffffffff81467329>] scsi_setup_fs_cmnd+0x89/0x90
->> >
->> > Signed-off-by: Calvin Owens <jcalvinowens@gmail.com>
->>
->> Kent, there was a report on this issue yesterday as well. We need to get
->> this fixed up ASAP.
->
-> Sorry for the delay - been vacationing. Reproduced the original bug,
-> here's a patch that fixes it:
+Hi Neil,
+I have found why recovery is triggered again and again.
 
-I saw this issue as well, and your patch fixes it for me (feel free to
-add my Tested-By if necessary). It didn't appear to be in v3.10-rc3,
-or any relevant git repos I could find -- just want to make sure it
-didn't get lost somewhere down the line, since otherwise my system
-dies.
+After initial recovery aborts, raid1d() calls md_check_recovery(),
+which calls remove_and_add_spares().
+So remove_and_add_spares wants to eject the rebuilding drive from the
+array, but cannot because rdev->nr_pending>0:
+		if (rdev->raid_disk >= 0 &&
+		    !test_bit(Blocked, &rdev->flags) &&
+		    (test_bit(Faulty, &rdev->flags) ||
+		     ! test_bit(In_sync, &rdev->flags)) &&
+		    atomic_read(&rdev->nr_pending)==0) {
+if (mddev->pers->hot_remove_disk(
+...
 
+So instead it goes ahead and triggers another recovery in the
+following condition (by incrementing "spares"):
+	rdev_for_each(rdev, mddev) {
+		if (rdev->raid_disk >= 0 &&
+		    !test_bit(In_sync, &rdev->flags) &&
+		    !test_bit(Faulty, &rdev->flags))
+			spares++;
+
+So another recovery starts, aborts, is triggered again, aborts and so forth.
+
+Because conditions:
+test_bit(Faulty, &rdev->flags) || ! test_bit(In_sync, &rdev->flags)
+and
+!test_bit(In_sync, &rdev->flags) &&  !test_bit(Faulty, &rdev->flags))
+can both be true at the same time.
+
+Problem is that IOs keep coming in, because MD does not fail them as I
+discussed in the previous email. So nr_pending never gets to zero, or
+it takes it a long time to get to zero (totally racy), and we keep
+triggering and aborting recovery.
+
+Can we fix remove_and_add_spares() the following way:
+
+"if a drive qualifies for being removed from array, but cannot be
+removed because of nr_pending, don't try to trigger another recovery
+on it by returning doing spares++".
+
+This issue, however, is less critical, than the issue in the previous
+email, because the previous issue causes real data corruption: we
+WRITE only to the rebuilding drive, but we will not be reading from
+this drive, because it's still rebuilding. So the WRITEs are lost.
+
+Thanks,
+Alex.
+
+
+
+
+
+
+
+On Tue, May 28, 2013 at 3:46 PM, Alexander Lyakas
+<alex.bolshoy@gmail.com> wrote:
+> Hello Neil,
+> we continue testing last-drive RAID1 failure cases.
+> We see the following issue:
 >
+> # RAID1 with drives A and B; drive B was freshly-added and is rebuilding
+> # Drive A fails
+> # WRITE request arrives to the array. It is failed by drive A, so
+> r1_bio is marked as R1BIO_WriteError, but the rebuilding drive B
+> succeeds in writing it, so the same r1_bio is marked as
+> R1BIO_Uptodate.
+> # r1_bio arrives to handle_write_finished, badblocks are disabled,
+> md_error()->error() does nothing because we don't fail the last drive
+> of raid1
+> # raid_end_bio_io()  calls call_bio_endio()
+> # As a result, in call_bio_endio():
+>         if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
+>                 clear_bit(BIO_UPTODATE, &bio->bi_flags);
+> this code doesn't clear the BIO_UPTODATE flag, and the whole master
+> WRITE succeeds, back to the upper layer.
 >
-> commit 402f5db3708b2062795a384a3d8397cf702e27bc
-> Author: Kent Overstreet <koverstreet@google.com>
-> Date:   Sun May 19 10:27:07 2013 -0700
+> # This keeps happening until rebuild aborts, and drive B is ejected
+> from the array[1]. After that, there is only one drive (A), so after
+> it fails a WRITE, the master WRITE also fails.
 >
->     raid5: Initialize bi_vcnt
+> It should be noted, that I test a WRITE that is way ahead of
+> recovery_offset of drive B. So after such WRITE fails, subsequent READ
+> to the same place would fail, because drive A will fail it, and drive
+> B cannot be attempted to READ from there (rebuild has not reached
+> there yet).
 >
->     The patch that converted raid5 to use bio_reset() forgot to initialize
->     bi_vcnt.
+> My concrete suggestion is that this behavior is not reasonable, and we
+> should only count a successful WRITE to a drive that is marked as
+> InSync. Please let me know what do you think?
 >
->     Signed-off-by: Kent Overstreet <koverstreet@google.com>
->     Cc: NeilBrown <neilb@suse.de>
->     Cc: Jens Axboe <axboe@kernel.dk>
->     Cc: linux-raid@vger.kernel.org
+> Thanks,
+> Alex.
 >
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 9359828..753f318 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -664,6 +664,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
->                         if (test_bit(R5_ReadNoMerge, &sh->dev[i].flags))
->                                 bi->bi_rw |= REQ_FLUSH;
+> [1]  Sometimes, it takes up to 2 minutes to eject the drive B, because
+> rebuild stops and keeps restarting constantly. I am still to debug why
+> rebuild aborts and then immediately restarts, and this keeps happening
+> for a long time.
+> May 27 20:44:09 vc kernel: [ 6470.446899] md: recovery of RAID array md4
+> May 27 20:44:09 vc kernel: [ 6470.446903] md: minimum _guaranteed_
+> speed: 10000 KB/sec/disk.
+> May 27 20:44:09 vc kernel: [ 6470.446905] md: using maximum available
+> idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
+> May 27 20:44:09 vc kernel: [ 6470.446908] md: using 128k window, over
+> a total of 477044736k.
+> May 27 20:44:09 vc kernel: [ 6470.446910] md: resuming recovery of md4
+> from checkpoint.
+> May 27 20:44:09 vc kernel: [ 6470.543922] md: md4: recovery done.
+> May 27 20:44:10 vc kernel: [ 6470.727096] md: recovery of RAID array md4
+> May 27 20:44:10 vc kernel: [ 6470.727100] md: minimum _guaranteed_
+> speed: 10000 KB/sec/disk.
+> May 27 20:44:10 vc kernel: [ 6470.727102] md: using maximum available
+> idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
+> May 27 20:44:10 vc kernel: [ 6470.727105] md: using 128k window, over
+> a total of 477044736k.
+> May 27 20:44:10 vc kernel: [ 6470.727108] md: resuming recovery of md4
+> from checkpoint.
+> May 27 20:44:10 vc kernel: [ 6470.797421] md: md4: recovery done.
+> May 27 20:44:10 vc kernel: [ 6470.983361] md: recovery of RAID array md4
+> May 27 20:44:10 vc kernel: [ 6470.983365] md: minimum _guaranteed_
+> speed: 10000 KB/sec/disk.
+> May 27 20:44:10 vc kernel: [ 6470.983367] md: using maximum available
+> idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
+> May 27 20:44:10 vc kernel: [ 6470.983370] md: using 128k window, over
+> a total of 477044736k.
+> May 27 20:44:10 vc kernel: [ 6470.983372] md: resuming recovery of md4
+> from checkpoint.
+> May 27 20:44:10 vc kernel: [ 6471.109254] md: md4: recovery done.
+> ...
 >
-> +                       bi->bi_vcnt = 1;
->                         bi->bi_io_vec[0].bv_len = STRIPE_SIZE;
->                         bi->bi_io_vec[0].bv_offset = 0;
->                         bi->bi_size = STRIPE_SIZE;
-> @@ -701,6 +702,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
->                         else
->                                 rbi->bi_sector = (sh->sector
->                                                   + rrdev->data_offset);
-> +                       rbi->bi_vcnt = 1;
->                         rbi->bi_io_vec[0].bv_len = STRIPE_SIZE;
->                         rbi->bi_io_vec[0].bv_offset = 0;
->                         rbi->bi_size = STRIPE_SIZE;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> Up to now, I see that md_do_sync() is triggered by raid1d() calling
+> md_check_recovery() first thing it does. Then
+> md_check_recovery()->md_register_thread(md_do_sync).
