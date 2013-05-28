@@ -1,161 +1,92 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm --assemble considers event count for spares
-Date: Tue, 28 May 2013 11:16:33 +1000
-Message-ID: <20130528111633.0ba7bed5@notabene.brown>
-References: <CAGRgLy6fc8fF8KWoO7EEG6Uo8d4jUPPLcucwX-fNw9O5qKMJgg@mail.gmail.com>
+From: Ryan Wagoner <rswagoner@gmail.com>
+Subject: Re: mdadm vs zfs for home server?
+Date: Mon, 27 May 2013 23:09:59 -0400
+Message-ID: <CAGExVfugwRUx3HPbaGKCMUcmM52YEb36tbarvzy0UVUXZTjYBg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ISoNl8rU9iLzU/Se8NqxCLs"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy6fc8fF8KWoO7EEG6Uo8d4jUPPLcucwX-fNw9O5qKMJgg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
+To: Matt Garman <matthew.garman@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/ISoNl8rU9iLzU/Se8NqxCLs
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 27 May 2013 13:05:34 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-wrote:
-
-> Hi Neil,
-> It can happen that a spare has a higher event count than a in-array drive.
-> For exampe: RAID1 with two drives is rebuilding one of the drives.
-> Then the "good" drive fails. As a result, MD stops the rebuild and
-> ejects the rebuilding drive from the array. The failed drive stays in
-> the array, because RAID1 never ejects the last drive. However, the
-> "good" drive fails all IOs, so the ejected drive has a larger event
-> count now.
-> Now if MD is stopped and re-assembled, mdadm considers the spare drive
-> as the chosen one:
->=20
-> root@vc:/mnt/work/alex/mdadm-neil# ./mdadm --assemble /dev/md200
-> --name=3Dalex --config=3Dnone --homehost=3Dvc --run --auto=3Dmd --metadat=
-a=3D1.2
-> --verbose --verbose /dev/sdc2 /dev/sdd2
-> mdadm: looking for devices for /dev/md200
-> mdadm: /dev/sdc2 is identified as a member of /dev/md200, slot 0.
-> mdadm: /dev/sdd2 is identified as a member of /dev/md200, slot -1.
-> mdadm: added /dev/sdc2 to /dev/md200 as 0 (possibly out of date)
-> mdadm: no uptodate device for slot 2 of /dev/md200
-> mdadm: added /dev/sdd2 to /dev/md200 as -1
-> mdadm: failed to RUN_ARRAY /dev/md200: Input/output error
-> mdadm: Not enough devices to start the array.
->=20
-> Kernel doesn't accept the non-spare drive considering it as non-fresh:
-> May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.679396] md: md200 stopp=
-ed.
-> May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.686870] md: bind<sdc2>
-> May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.687623] md: bind<sdd2>
-> May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.687675] md: kicking
-> non-fresh sdc2 from array!
-> May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.687680] md: unbind<sdc2>
-> May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.687683] md: export_rdev=
-(sdc2)
-> May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.693574]
-> md/raid1:md200: active with 0 out of 2 mirrors
-> May 27 12:42:28 vsa-00000505-vc-0 kernel: [343203.693583] md200:
-> failed to create bitmap (-5)
->=20
-> This happens with the latest mdadm from git, and kernel 3.8.2.
->=20
-> Is this the expected behavior?
-
-I hadn't thought about it.
-
-> Maybe mdadm should not consider spares at all for its "chosen_drive"
-> logic, and perhaps not try to add them to the kernel?
-
-Probably not, no.
-
-NeilBrown
+On Mon, May 27, 2013 at 2:09 PM, Matt Garman <matthew.garman@gmail.com> wrote:
+>
+>
+> Anyone out there have a home (or maybe small office) file server
+> that where they thought about native Linux software RAID (mdadm)
+> versus ZFS on Linux?
+>
 
 
+I have a 4 x 1TB drive setup that was running CentOS 5 with mdadm and
+ext4 for the last 4 years. About 3 weeks ago I reinstalled with CentOS
+6 and ZFS on Linux. One of the deciding factors was I wanted the
+previous version tab in Windows to function since I access the shares
+mainly from Windows systems.
 
->=20
-> Superblocks of both drives:
-> sdc2 - the "good" drive:
-> /dev/sdc2:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x1
->      Array UUID : 8e051cc5:c536d16e:72b413fa:e7049d4b
->            Name : zadara_vc:alex
->   Creation Time : Mon May 27 11:33:50 2013
->      Raid Level : raid1
->    Raid Devices : 2
->=20
->  Avail Dev Size : 975063127 (464.95 GiB 499.23 GB)
->      Array Size : 209715200 (200.00 GiB 214.75 GB)
->   Used Dev Size : 419430400 (200.00 GiB 214.75 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D1968 sectors, after=3D555632727 sectors
->           State : clean
->     Device UUID : 1f661ca3:fdc8b887:8d3638ab:f2cc0a40
->=20
-> Internal Bitmap : 8 sectors from superblock
->     Update Time : Mon May 27 11:34:57 2013
->        Checksum : 72a97357 - correct
->          Events : 9
->=20
-> sdd2 - the "rebuilding" drive:
-> /dev/sdd2:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x1
->      Array UUID : 8e051cc5:c536d16e:72b413fa:e7049d4b
->            Name : zadara_vc:alex
->   Creation Time : Mon May 27 11:33:50 2013
->      Raid Level : raid1
->    Raid Devices : 2
->=20
->  Avail Dev Size : 976123417 (465.45 GiB 499.78 GB)
->      Array Size : 209715200 (200.00 GiB 214.75 GB)
->   Used Dev Size : 419430400 (200.00 GiB 214.75 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D1968 sectors, after=3D556693017 sectors
->           State : clean
->     Device UUID : 9abc7fa9:6bf95a51:51f2cd65:14232e81
->=20
-> Internal Bitmap : 8 sectors from superblock
->     Update Time : Mon May 27 11:35:56 2013
->        Checksum : 3e793a34 - correct
->          Events : 26
->=20
->=20
->    Device Role : spare
->    Array State : A. ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D re=
-placing)
->=20
->=20
-> Thanks,
-> Alex.
+I've looked at LVM solutions in the past, but there were multiple
+drawbacks. The recent LVM thin provisioning addresses some of the
+issues, but it still was cumbersome and drawn out dealing with the
+various layers.
 
+I also looked at Solaris (OpenIndiana and OmniOS) and FreeBSD.
+Obviously ZFS on Solaris just works and the performance seemed good.
+However I'm not as familiar with Solaris and there isn't a large
+community following for support. FreeBSD had terrible performance out
+of the box accessing the Samba shares. I would see spikes where I
+would get 70% of gigabit and then drop to 30% and back again. FreeBSD
+seems to always require tweaking for performance, which seems
+unnecessary when Linux has good performance out of the box.
 
---Sig_/ISoNl8rU9iLzU/Se8NqxCLs
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Going back to CentOS 6 I followed the http://zfsonlinux.org/
+directions and was up and running in minutes. Performance with Samba
+was great and the system has been rock solid. Accessing shares from
+Windows I can achieve 80-90% of gigabit. With ext4 I would see 90-100%
+utilization on a large copy, but the features are worth the small
+performance hit.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+I did turn compression on and atime off. I also set the recommended
+options for interoperability with Windows when creating the datasets.
 
-iQIVAwUBUaQFcjnsnt1WYoG5AQJKZhAArq2klcLE7EEcT3GBWyPLkka8AgN9Ehva
-O30R/k7r1bxbrAWQ8AC2C2sV01HoahkwbxzL+/q5DAaixBjnolJKNUpEBdNT8pXK
-AD7mnMtfiraxjmrtbOP65TWlhb6BrZPXz6YjmVAcH3vRip41qgZzZVyfDe4n3gjE
-3ALbITHZWfZlN58/NbSZuGz5eFZwEj7Ay+Hsb0M4QnmrIFzbrMIpRmXpDWG/vcyk
-0A1xYJUMJMe7UuMu+oqGTxtPlcjFvRhLht9QGNGcofc5e5Gs5N+t2yfX/MyObO4e
-3LyNYUh2No3tEN7vOAOxkePggjB4I4la+fixn8qCKAAuuXJDiFDmmQ5eey15qLHr
-wjwTeO2G5Dghv9++79XSmwSo1Ch0O3VRkS3Fpf4C/XQUTAMor7fdKqHWYlMAZpI9
-hpVa6a6lGlPm5bBMbJ0Ns+W32y/lP76hNBdG5PgZ8iSFRgc8GQvMapgcm4kNpIsT
-x0t2hy9iuG9JXqXJP6aw+AnSlEnEMHUYLY5bsrEhbD4eQzOOIQtE8EmZOJYBEJ5T
-phwc1supqXggDkGD83hQEaal4010gghPL72tcwrOpFvqay+GO8ghESvj74pNZ5gV
-HoROdCkPlckEXL0tiKVOr1QWuqO8hgjCEngbIoIo/yjxobqwF260lOIr2mqyBXkH
-RhNKEF0H/ZA=
-=0ngr
------END PGP SIGNATURE-----
+zfs set compress=on data
+zfs set atime=off data
 
---Sig_/ISoNl8rU9iLzU/Se8NqxCLs--
+zfs create -o casesensitivity=mixed -o nbmand=on data/share
+
+I am using the https://github.com/zfsonlinux/zfs-auto-snapshot script
+to create daily and weekly snapshots. You can disable snapshots per
+zfs dataset with
+
+zfs set com.sun:auto-snapshot=false data/share2
+
+With CentOS 6.4 Samba 3.6.9 has support for the format option of the
+vfs shadow_copy2 module. I added the following to /etc/samba/smb.conf
+and the previous versions tab populated.
+
+unix extensions = no
+
+[share]
+path = /data/share
+wide links = yes
+vfs objects = shadow_copy2
+shadow: snapdir = .zfs/snapshot
+shadow: format = zfs-auto-snap_daily-%Y-%m-%d-%H%M
+
+I added a cron.d job to weekly scrub the array like the raid-check script does.
+
+# Run system wide zfs scrub once a week on Sunday at 3am by default
+0 3 * * Sun root /usr/local/sbin/zfs-scrub
+
+Contents of the /usr/local/sbin/zfs-scrub file.
+
+#!/bin/sh
+for pool in `/sbin/zpool list -H | cut -f 1`
+do
+   /sbin/zpool scrub $pool
+done
+
+The only missing part is a script to check the zpool status command
+for errors and send an email alert.
+
+Ryan
