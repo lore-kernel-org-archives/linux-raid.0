@@ -1,29 +1,72 @@
-From: Kumar amit mehta <gmate.amit-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] md: bcache: io.c: fix a potential NULL pointer
- dereference
-Date: Tue, 28 May 2013 20:01:13 -0400
-Message-ID: <20130529000113.GA6648@gmail.com>
-References: <1369726275-5424-1-git-send-email-gmate.amit@gmail.com>
- <20130529002041.GC2291@google.com>
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Subject: Re: [PATCH] md: Partially revert 2f6db2a7, which broke raid5
+Date: Wed, 29 May 2013 13:43:57 +0100
+Message-ID: <20130529124357.GA15210@redhat.com>
+References: <20130517213223.GA2530@gmail.com>
+ <20130518070515.GL19781@kernel.dk>
+ <20130519175145.GC19194@moria.home.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-bcache-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20130529002041.GC2291-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: linux-bcache-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Kent Overstreet <koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: neilb-l3A5Bk7waGM@public.gmane.org, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20130519175145.GC19194@moria.home.lan>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kent Overstreet <koverstreet@google.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Calvin Owens <jcalvinowens@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>, majianpeng@gmail.com
 List-Id: linux-raid.ids
 
-On Tue, May 28, 2013 at 05:20:41PM -0700, Kent Overstreet wrote:
-> On Tue, May 28, 2013 at 12:31:15AM -0700, Kumar Amit Mehta wrote:
-> > bio_alloc_bioset returns NULL on failure. This fix adds a missing check
-> > for potential NULL pointer dereferencing.
-> 
-> Whoops, that's definitely a bug. Thanks, applied.
-> 
-> How'd you find it?
 
-Using smatch[1]
+On Sun, May 19, 2013 at 10:51:45AM -0700, Kent Overstreet wrote:
+> Sorry for the delay - been vacationing. Reproduced the original bug,
+> here's a patch that fixes it:
+> 
+> 
+> commit 402f5db3708b2062795a384a3d8397cf702e27bc
+> Author: Kent Overstreet <koverstreet@google.com>
+> Date:   Sun May 19 10:27:07 2013 -0700
+> 
+>     raid5: Initialize bi_vcnt
+>     
+>     The patch that converted raid5 to use bio_reset() forgot to initialize
+>     bi_vcnt.
+>     
+>     Signed-off-by: Kent Overstreet <koverstreet@google.com>
+>     Cc: NeilBrown <neilb@suse.de>
+>     Cc: Jens Axboe <axboe@kernel.dk>
+>     Cc: linux-raid@vger.kernel.org
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 9359828..753f318 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -664,6 +664,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+>  			if (test_bit(R5_ReadNoMerge, &sh->dev[i].flags))
+>  				bi->bi_rw |= REQ_FLUSH;
+>  
+> +			bi->bi_vcnt = 1;
+>  			bi->bi_io_vec[0].bv_len = STRIPE_SIZE;
+>  			bi->bi_io_vec[0].bv_offset = 0;
+>  			bi->bi_size = STRIPE_SIZE;
+> @@ -701,6 +702,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+>  			else
+>  				rbi->bi_sector = (sh->sector
+>  						  + rrdev->data_offset);
+> +			rbi->bi_vcnt = 1;
+>  			rbi->bi_io_vec[0].bv_len = STRIPE_SIZE;
+>  			rbi->bi_io_vec[0].bv_offset = 0;
+>  			rbi->bi_size = STRIPE_SIZE;
 
-[1] http://smatch.sourceforge.net/
+Ditto to the previous follow up.  We've been tracking this
+bug for nearly a month:
+
+https://bugzilla.redhat.com/show_bug.cgi?id=962079
+
+Please include this (or the other) patch to fix it.
+
+Rich.
+
+-- 
+Richard Jones, Virtualization Group, Red Hat http://people.redhat.com/~rjones
+virt-top is 'top' for virtual machines.  Tiny program with many
+powerful monitoring features, net stats, disk stats, logging, etc.
+http://people.redhat.com/~rjones/virt-top
