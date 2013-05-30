@@ -1,7 +1,7 @@
-From: Jens Axboe <axboe@kernel.dk>
+From: "Richard W.M. Jones" <rjones@redhat.com>
 Subject: Re: [PATCH] md: Partially revert 2f6db2a7, which broke raid5
-Date: Thu, 30 May 2013 08:42:21 +0200
-Message-ID: <20130530064221.GP22724@kernel.dk>
+Date: Thu, 30 May 2013 08:31:21 +0100
+Message-ID: <20130530073120.GP4515@redhat.com>
 References: <20130517213223.GA2530@gmail.com>
  <20130518070515.GL19781@kernel.dk>
  <20130519175145.GC19194@moria.home.lan>
@@ -15,10 +15,10 @@ Content-Disposition: inline
 In-Reply-To: <20130530092243.52fa17c3@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: "Richard W.M. Jones" <rjones@redhat.com>, Kent Overstreet <koverstreet@google.com>, Calvin Owens <jcalvinowens@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, majianpeng@gmail.com
+Cc: Jens Axboe <axboe@kernel.dk>, Kent Overstreet <koverstreet@google.com>, Calvin Owens <jcalvinowens@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, majianpeng@gmail.com
 List-Id: linux-raid.ids
 
-On Thu, May 30 2013, NeilBrown wrote:
+On Thu, May 30, 2013 at 09:22:43AM +1000, NeilBrown wrote:
 > On Wed, 29 May 2013 15:03:40 +0200 Jens Axboe <axboe@kernel.dk> wrote:
 > 
 > > On Wed, May 29 2013, Richard W.M. Jones wrote:
@@ -79,9 +79,14 @@ On Thu, May 30 2013, NeilBrown wrote:
 > 
 > Yes: please include it with your next round.  Thanks!
 
-Hah, in that case we could have waited for a long time! I'll add it to
-the current mix, thanks.
+BTW I tested this patch and it works, so:
+
+Tested-by: Richard W.M. Jones <rjones@redhat.com>
+
+Rich.
 
 -- 
-Jens Axboe
-
+Richard Jones, Virtualization Group, Red Hat http://people.redhat.com/~rjones
+Fedora Windows cross-compiler. Compile Windows programs, test, and
+build Windows installers. Over 100 libraries supported.
+http://fedoraproject.org/wiki/MinGW
