@@ -1,39 +1,46 @@
-From: Dominic Raferd <dominic@timedicer.co.uk>
-Subject: Re: SSD + Rust as raid1
-Date: Fri, 31 May 2013 09:52:49 +0100
-Message-ID: <51A864E1.9070903@timedicer.co.uk>
-References: <51A7C36F.4030605@timedicer.co.uk> <20130531133018.77cd9285@natsu> <51A85574.8080709@timedicer.co.uk> <20130531135434.5b6bdddb@natsu>
+From: Salatiel Filho <salatiel.filho@gmail.com>
+Subject: Disable raid auto assemble at boot
+Date: Fri, 31 May 2013 14:26:40 -0300
+Message-ID: <CAGmni9prcynqMeprE3Nmjzkn2QgTkeHPxq=qSGzQBrt_bAziCQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130531135434.5b6bdddb@natsu>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 31/05/2013 08:54, Roman Mamedov wrote:
-> On Fri, 31 May 2013 08:47:00 +0100
-> Dominic Raferd <dominic@timedicer.co.uk> wrote:
->
->> This is my idea too (see my OP), but I am concerned about optimisation
->> (--write-behind, --bitmap and --bitmap-chunk settings) especially for
->> writes.
->> --write-behind=16384
-> I think this will not work, you will have to use 16383.
+Could anyone tell me how can i avoid the auto assemble of my raid
+device during boot?
+I am running:
+debian 7.0 with kernel 3.9.3-amd64
 
-Oh, OK, so 16383 is the maximum then?
+#cat /proc/cmdline
+BOOT_IMAGE=/vmlinuz-3.9.3-amd64 root=/dev/sda2 ro quiet panic=3
+raid=noautodetect
 
->> --bitmap=/mnt/sda1/write-intent-bitmap.file
-> Save yourself lots of maintenance headache, just use --bitmap=internal
->
->> --bitmap-chunk=256M
-> Looks OK.
->
+#cat /etc/mdadm/mdadm.conf
+CREATE owner=root group=disk mode=0660 auto=yes
+HOMEHOST <system>
+MAILADDR root
+ARRAY /dev/md/md1 metadata=1.2 name=zotac:md1
+UUID=082dc730:aedd3e21:1820edc4:6f20acd0
+ARRAY /dev/md/md0 metadata=1.2 name=zotac:md0
+UUID=d260f467:92241c75:0c742da1:8af824f6
 
-Thanks Roman, but the problem with using --bitmap=internal is that, as 
-Neil Brown posted here on another topic a while ago, this requires a 
-synch write to both devices, and the use-case for which write-behind was 
-developed involved an external bitmap. Hence my plan to use external 
-bitmap file on a fast (SSD-based) separate partition - minimises any 
-slow-down caused by having to maintain the write-intent bitmap file.
+
+both /etc/init.d/mdadm and /etc/init.d/mdadm-raid are disabled.
+
+all raid components are set to FD type.
+
+And somehow the array is always assembled at boot.
+I started notice this 'forced auto assemble' after replace the 0.9
+metadata to 1.2 metadata.
+
+Thanks !
+
+
+
+
+
+[]'s
+Salatiel
