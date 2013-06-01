@@ -1,37 +1,63 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: SSD + Rust as raid1
-Date: Fri, 31 May 2013 23:37:11 -0500
-Message-ID: <51A97A77.2090406@hardwarefreak.com>
-References: <51A7C36F.4030605@timedicer.co.uk> <20130531133018.77cd9285@natsu> <51A93F86.4000400@hardwarefreak.com> <8qun7axaui.ln2@goaway.wombat.san-francisco.ca.us>
-Reply-To: stan@hardwarefreak.com
+From: Chris Finley <debenbain@gmail.com>
+Subject: Wiki-recovering failed raid, overlay problem
+Date: Fri, 31 May 2013 23:23:48 -0700
+Message-ID: <CAGXrYFTamGFyiOz34ZV+zaoXMA3D9z-eJjco3gApdK95QR9fPg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8qun7axaui.ln2@goaway.wombat.san-francisco.ca.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 5/31/2013 8:19 PM, Keith Keller wrote:
-> On 2013-06-01, Stan Hoeppner <stan@hardwarefreak.com> wrote:
->>
->> Today "HDD" can mean either mechanical hard disk drive or SSD. To easily
->> differentiate, it has become commonplace to refer to mechanical hard
->> drives simply as "rust" because it's quicker to type and universally
->> understood.  If this is the first time you're seeing this term that's a
->> bit surprising.
-> 
-> I think this is the only list I've ever seen "rust" used in this way.
+I am trying to recover a failed Raid 5 array by following the guide at
+https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID
 
-Then I'd guess you're not subbed to other storage specific lists, such
-as linux-scsi, linux-ide, xfs, etc.  Obviously not everyone uses this
-jargon, but it's becoming much more common.  I've been using it myself
-for quite some time.  Some people use "SRD" as well meaning "spinning
-rusty disk".  You'll commonly see "array of rust", "rusty RAID6", "SRD
-array", etc.  "rust" is here to stay.  Get used to it.
+Things go fine until I get to the command under "Setup the loop-device
+and the overlay device:"
 
--- 
-Stan
+parallel 'size=$(blockdev --getsize {}); loop=$(losetup -f --show --
+overlay-{/}); echo 0 $size snapshot {} $loop P 8 | dmsetup create {/}'
+::: $DEVICES
 
+This command gets me:
+device-mapper: reload ioctl failed: Device or resource busy
+Command failed
+device-mapper: reload ioctl failed: Device or resource busy
+Command failed
+device-mapper: reload ioctl failed: Device or resource busy
+Command failed
+device-mapper: reload ioctl failed: Device or resource busy
+Command failed
+
+The drives are not mounted. I am booting to a system on sda. I tried
+this in single-user mode with the same result. I tried searching for
+dmsetup help without luck.
+
+Any advise on the cause of this error would be greatly appreciated.
+
+The overlays are created in my current directory at 2.1TB each:
+-rw-r--r-- 1 root root 2.1T May 30 21:23 overlay-sdb1
+-rw-r--r-- 1 root root 2.1T May 30 21:23 overlay-sdc1
+-rw-r--r-- 1 root root 2.1T May 30 21:23 overlay-sdd1
+-rw-r--r-- 1 root root 2.1T May 30 21:23 overlay-sde1
+
+The loop devices appear to be created:
+root@mythserver:~# losetup -a
+/dev/loop0: [0807]:58851784 (/root/overlay-sdb1)
+/dev/loop1: [0807]:58851786 (/root/overlay-sdc1)
+/dev/loop2: [0807]:58851787 (/root/overlay-sdd1)
+/dev/loop3: [0807]:58851792 (/root/overlay-sde1)
+
+These are the entries that are piped into 'dmsetup create {/}':
+0 3907024002 snapshot /dev/sdb1 /dev/loop0 P 8
+0 3907024002 snapshot /dev/sdc1 /dev/loop1 P 8
+0 3907024002 snapshot /dev/sdd1 /dev/loop2 P 8
+0 3907024002 snapshot /dev/sde1 /dev/loop3 P 8
+
+Nothing has been created in /dev/mapper/
+root@mythserver:~# l /dev/mapper/
+total 0
+crw------- 1 root root 10, 236 May 30 23:55 control
+
+Again, thanks!
+Chris
