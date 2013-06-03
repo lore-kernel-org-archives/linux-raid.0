@@ -1,45 +1,60 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: RAID 10 Repairs
-Date: Mon, 03 Jun 2013 00:13:51 -0500
-Message-ID: <51AC260F.8050806@hardwarefreak.com>
-References: <CAE98Ua_Js7wpfkT7wAZhm79Y46t4Fqtfx3752SUO_+H-3jqqcQ@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: Dan Williams <dan.j.williams@gmail.com>
+Subject: Re: RAID-10 keeps aborting
+Date: Sun, 2 Jun 2013 22:47:22 -0700
+Message-ID: <CAA9_cmddLfReYeAhgwh5=j6ELMBNx5Oq7Gg8K+fo0PneaEfrVA@mail.gmail.com>
+References: <51AC1440.7020505@zytor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAE98Ua_Js7wpfkT7wAZhm79Y46t4Fqtfx3752SUO_+H-3jqqcQ@mail.gmail.com>
+In-Reply-To: <51AC1440.7020505@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rob Emanuele <rob@emanuele.us>
-Cc: linux-raid@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 6/2/2013 9:07 PM, Rob Emanuele wrote:
+On Sun, Jun 2, 2013 at 8:57 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+> Hello,
+>
+> I have a brand new server with a RAID-10 array.  The drives are a SAS
+> JBOD (mptsas) which I'm driving using Linux mdraid raid10.
+>
+> Unfortunately, although the server did burn-in fine, once put in
+> production I have so far had multiple cases (about once every 24 hours)
+> of the raid10 failing, with a mirror pair dropping out in very short
+> succession:
+>
+> Jun  2 20:23:05 terminus kernel: [83595.614689] md/raid10:md4: Disk
+> failure on sdb6, disabling device.
+> Jun  2 20:23:05 terminus kernel: [83595.614689] md/raid10:md4: Operation
+> continuing on 3 devices.
+> Jun  2 20:23:05 terminus kernel: [83595.703106] md/raid10:md4: Disk
+> failure on sdc6, disabling device.
+> Jun  2 20:23:05 terminus kernel: [83595.703106] md/raid10:md4: Operation
+> continuing on 2 devices.
+> Jun  2 20:23:05 terminus kernel: [83595.789234] md4: WRITE SAME failed.
+> Manually zeroing.
+>
+> Unfortunately, those two devices that just dropped out are of course the
+> mirrors of each other, causing filesystem corruption and shutdown in
+> very short order.
+>
+> There are no other kernel messages from the same time, and given the
+> timing (less than 90 ms apart) it would appear that this is a timeout of
+> some kind and not an actual disk failure.
 
-> So, I've been looking at repairing my RAID 10 software array. I have a
-> failing drive with incrementing SMART errors. I went to replace that
-> drive with a new drive.  The failing drive is 250,059,350,016 bytes
-> while the batch of new drives I bought as spares are 250,000,000,000
-> bytes.
-> 
-> When I add the new drive it tells me the drive is too small.  Is there
-> a way to shrink the array so that new new drives (any any other
-> replacement drives around 250G) will work in the array?
+Looks like the underlying devices just may not support write_same...
+if the device lies about support we don't find about it until the
+first attempt fails and md drops the devices.
 
-High Rob,
+> Are there any tunables I can tweak, or do I have a $4000 paperweight?
 
-They're 250GB drives.  Frankly what I'd do is get your investment back
-from those 'new' drives, though it probably wasn't much if acquired
-recently.  Acquire a number of 750GB, 1TB drives that yield similar
-total space after RAID10 overhead.  Build a new array, mkfs, copy all
-the data over, and decommission the old disks, then Ebay them.
+One hack to prove this may be to explicitly disable write_same before
+the array is assembled:
 
-Or just acquire two 2TB drives an mirror them.  20x 250GB drives in
-RAID10 is 2.5TB net space.  Surely you don't currently have 20 drives in
-this RAID array.  If you're acquiring 250GB drives in 2013 I'd guess
-you're not after performance.  So reducing spindle count shouldn't be an
-issue, should it?
+for i in /sys/class/scsi_disk/*/max_write_same_blocks; do echo 0 > $i; done
 
--- 
-Stan
+If this works then maybe md needs to be tolerant of write_same
+failures since the block layer will simply retry with zeroes.
 
+--
+Dan
