@@ -1,7 +1,7 @@
-From: Steve Bergman <sbergman27@gmail.com>
-Subject: Just want to verify that 3-drive RAID10 is stable
-Date: Sun, 2 Jun 2013 11:13:08 -0500
-Message-ID: <CAO9HMNF3692RSW5m7+usUQk7LYCovnSRVFtg9=K5qt7=6sqECw@mail.gmail.com>
+From: Rob Emanuele <rob@emanuele.us>
+Subject: RAID 10 Repairs
+Date: Sun, 2 Jun 2013 19:07:14 -0700
+Message-ID: <CAE98Ua_Js7wpfkT7wAZhm79Y46t4Fqtfx3752SUO_+H-3jqqcQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -9,14 +9,21 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Greetings!
 
-I'm setting up a Dell T310 server which has 4 SATA drives attached to
-the onboard SATA controllers. The 3-drive + 1 spare RAID10 option
-(really RAID1e, I suppose) supported by md looks quite attractive. But
-I'd like to verify that it is known to be production quality stable
-before using it. This will be running Scientific Linux 6.4 (AKA RHEL
-6.4).
+So, I've been looking at repairing my RAID 10 software array. I have a
+failing drive with incrementing SMART errors. I went to replace that
+drive with a new drive.  The failing drive is 250,059,350,016 bytes
+while the batch of new drives I bought as spares are 250,000,000,000
+bytes.
 
-Thanks,
-Steve Bergman
+When I add the new drive it tells me the drive is too small.  Is there
+a way to shrink the array so that new new drives (any any other
+replacement drives around 250G) will work in the array?
+
+Hearsay: I've heard there may be a way to convert the RAID 10 to a
+RAID 0 but I haven't had any success.
+
+Thanks for your help!
+
+--Rob
