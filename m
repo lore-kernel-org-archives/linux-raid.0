@@ -1,85 +1,94 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: RAD1 doesn't fail WRITE that was written only on a rebuilding
- drive
-Date: Tue, 4 Jun 2013 09:52:35 +1000
-Message-ID: <20130604095235.16261243@notabene.brown>
-References: <CAGRgLy6tHN7ZPwxxRM4pzVbKP5fS0PLeXrhKoeZ0XJqVrb0pVQ@mail.gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Wiki-recovering failed raid, overlay problem
+Date: Mon, 03 Jun 2013 20:00:38 -0400
+Message-ID: <51AD2E26.4040504@turmel.org>
+References: <CAGXrYFTamGFyiOz34ZV+zaoXMA3D9z-eJjco3gApdK95QR9fPg@mail.gmail.com> <51AA83FD.8080500@turmel.org> <CAGXrYFSgoLpKO-UHd_tvOh3gs3Ub2qqOKA48kPEA1Pr=cnrUhA@mail.gmail.com> <51AAA0B9.3050908@turmel.org> <CAGXrYFTyzG-hakGrU9j1=TSmjZHbzs2aRypJX=w8O4viS1+Dfg@mail.gmail.com> <51AB4E5C.5060909@turmel.org> <CAGXrYFSiYMDpeTESv_-aA7QsbV0gYnr1seUHWZuS1bWwABk5Pg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/0iJJvCXnosnFbgihYhaH_DI"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy6tHN7ZPwxxRM4pzVbKP5fS0PLeXrhKoeZ0XJqVrb0pVQ@mail.gmail.com>
+In-Reply-To: <CAGXrYFSiYMDpeTESv_-aA7QsbV0gYnr1seUHWZuS1bWwABk5Pg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Chris Finley <debenbain@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/0iJJvCXnosnFbgihYhaH_DI
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 06/03/2013 07:35 PM, Chris Finley wrote:
+> On Sun, Jun 2, 2013 at 6:53 AM, Phil Turmel <philip@turmel.org> wrote:
+> [trim /]
+>>
+>> There are numerous discussions in the archives...  search them for
+>> combinations of "scterc", "tler", and "ure".
+>>
+> It appears this has been a frequent issue over the last year. Thank
+> you for the background information, I understand what I was reading.
+> 
+>>
+>> So your device role order is /dev/sd{c,b,d,e}1.
+> 
+> [trim /]
+> 
+>> Anyways, the quickest way for you to have a running array is to use
+>> "mdadm --assemble --force /dev/md0 /dev/sd{c,b,e}1".  This leaves out
+>> the first dropped disk.  Any remaining UREs cannot be corrected while
+>> degraded, but the data on the first dropped disk is suspect.
+>>
+>> Feel free to use an overlay on /dev/md0 itself while making your first
+>> attempt to mount and access the data.  If you cannot get critical data,
+>> stop and re-assemble with all four devices.
+>>
+>> Phil
+>>
+> Thanks, I will do that.
+> 
+> I am correct in thinking that I should not set scterc to 7 seconds
+> initially, since there will not be any parity to correct the read
+> errors? Best would be to set the driver time-out to 180 seconds until
+> after the array is rebuilt?
 
-On Tue, 28 May 2013 15:46:33 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-wrote:
+Correct.
 
-> Hello Neil,
-> we continue testing last-drive RAID1 failure cases.
-> We see the following issue:
->=20
-> # RAID1 with drives A and B; drive B was freshly-added and is rebuilding
-> # Drive A fails
-> # WRITE request arrives to the array. It is failed by drive A, so
-> r1_bio is marked as R1BIO_WriteError, but the rebuilding drive B
-> succeeds in writing it, so the same r1_bio is marked as
-> R1BIO_Uptodate.
-> # r1_bio arrives to handle_write_finished, badblocks are disabled,
-> md_error()->error() does nothing because we don't fail the last drive
-> of raid1
-> # raid_end_bio_io()  calls call_bio_endio()
-> # As a result, in call_bio_endio():
-> 	if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
-> 		clear_bit(BIO_UPTODATE, &bio->bi_flags);
-> this code doesn't clear the BIO_UPTODATE flag, and the whole master
-> WRITE succeeds, back to the upper layer.
->=20
-> # This keeps happening until rebuild aborts, and drive B is ejected
-> from the array[1]. After that, there is only one drive (A), so after
-> it fails a WRITE, the master WRITE also fails.
->=20
-> It should be noted, that I test a WRITE that is way ahead of
-> recovery_offset of drive B. So after such WRITE fails, subsequent READ
-> to the same place would fail, because drive A will fail it, and drive
-> B cannot be attempted to READ from there (rebuild has not reached
-> there yet).
->=20
-> My concrete suggestion is that this behavior is not reasonable, and we
-> should only count a successful WRITE to a drive that is marked as
-> InSync. Please let me know what do you think?
+> I am concerned about read errors during the rebuild. With a failed and
+> rebuilding array, will the get drive kicked on an URE? Is it better to
+> use something like badblocks or dd_rescue to correct/mark the sectors
+> first and then rebuild? Either way, I'm going to lose that data, but
+> maybe there are some better tools for extracting data from a bad
+> sector?
 
-Sounds reasonable.  Could you make and test a patch?  Then I'll apply it.
+MD raid will tolerate a burst of up to 20 read errors on a device (in
+one hour), and up to 10 per hour after that.
 
-Thanks,
-NeilBrown
+If a drive is booted out, just reassemble and resume your backup
+efforts.  Or you can use dd_rescue to avoid it.  Six of one, ...
 
---Sig_/0iJJvCXnosnFbgihYhaH_DI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+> After the rebuild is complete, I should set the scterc to 7 seconds
+> and add a bitmap based write-intent log?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+Yes.  The write-intent log is useful but unrelated to your troubles.
+You really need a weekly cron job that'll start a "check" scrub on your
+array.  But:
 
-iQIVAwUBUa0sQznsnt1WYoG5AQK4zg//eKMMn1nkjZUu+PNWJHnkSQeMenYIuVA1
-JuhCAWrDasm1ng7Dnir1hSPMkc6Jt5qTjyLsNPXQZ5JMWocWR0OJ+QejHs1LD+vd
-tRABNUTYyWKRXZnYLbigivvcYOIe4SKWo8vDCq1NwkG5P3i+O/I214WK3j+WleLh
-7caM2it682gGCy4qNfpbQQhe/C3iSpZ8K8tx/KuYUxUPXZJILFout4RBb7oyuZSL
-1Pqk2P2GxZj+TiQl67aofv3rIu6D1P+2odwjsFJHDodfOV+6hzOLls1ReMdqak9K
-sHSxqMZ9neB4hDJbRUnNb6bffN7WoJzZZKFOUabgZhHL8juQYpDEjDLwrZZPxvZX
-bYtgRXE9bxSZikgDq/Mh+9wh0stSLqL1FKLk+C7AiYO76FTDDaVCL6kkic3N+S2k
-hr2MIWHnlBjZA3eOdM3zDB55hE8TVWsNmXwy1PH61S9DIsw7NPwwVivQ5y7kIvmx
-RWtari7XmfixkIf0F87fgyjHkRL2xC5+3jLYX+hRp+OZJC4+ZRVykVuvU5SCueOy
-wA4v+DFMS+CQF6P6wV1SaT6iGBhaQFi9OiwySBTazrPDA5IsojucT98OKgjw+ED3
-9ZXZg0K8G6TxdMTXVMsHKUqC/gFBT4aIPcEz391pL0EdhnF+cMb5kYMJRCtCJSqP
-6KRoUlsO8j8=
-=vM46
------END PGP SIGNATURE-----
+No, don't rebuild onto a 4th drive until after you make a backup of your
+critical data.  There's always the chance that the data you really want
+isn't on any pending UREs.  Rebuilding is sure to hit those.
 
---Sig_/0iJJvCXnosnFbgihYhaH_DI--
+> Does anyone learn these things the easy way :)
+
+Apparently not.  (Certainly not me.)  Anyways, the enterprise and
+hobbyist use cases are really quite different.  Enterprise users, who
+can easily justify premium components, have few problems.  Hobbyists who
+are trying to apply the original mean of "raid" (where "i" ==
+inexpensive) are prone to problems.
+
+And it isn't entirely the drive manufacturers' fault:  solo duty in a
+desktop really needs a different behavior than a member of a raid array.
+ However, I *do* fault vendors who have dropped scterc support to push
+hobbyists into enterprise products.  I think the market will punish them
+in the long term.
+
+> Much appreciated, Chris
+
+You're welcome.
+
+Phil
+
