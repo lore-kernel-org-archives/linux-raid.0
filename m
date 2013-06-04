@@ -1,94 +1,115 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Wiki-recovering failed raid, overlay problem
-Date: Mon, 03 Jun 2013 20:00:38 -0400
-Message-ID: <51AD2E26.4040504@turmel.org>
-References: <CAGXrYFTamGFyiOz34ZV+zaoXMA3D9z-eJjco3gApdK95QR9fPg@mail.gmail.com> <51AA83FD.8080500@turmel.org> <CAGXrYFSgoLpKO-UHd_tvOh3gs3Ub2qqOKA48kPEA1Pr=cnrUhA@mail.gmail.com> <51AAA0B9.3050908@turmel.org> <CAGXrYFTyzG-hakGrU9j1=TSmjZHbzs2aRypJX=w8O4viS1+Dfg@mail.gmail.com> <51AB4E5C.5060909@turmel.org> <CAGXrYFSiYMDpeTESv_-aA7QsbV0gYnr1seUHWZuS1bWwABk5Pg@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: RAD1 doesn't fail WRITE that was written only on a rebuilding
+ drive
+Date: Tue, 4 Jun 2013 10:04:03 +1000
+Message-ID: <20130604100403.2052b5ce@notabene.brown>
+References: <CAGRgLy6tHN7ZPwxxRM4pzVbKP5fS0PLeXrhKoeZ0XJqVrb0pVQ@mail.gmail.com>
+	<CAGRgLy6qAmn8Fx08BPoAp7uYqWdO4KHuTqkmbTGHAGkWhWF9sg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/TVP5J17R/kNncvAxfha3Vpx"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGXrYFSiYMDpeTESv_-aA7QsbV0gYnr1seUHWZuS1bWwABk5Pg@mail.gmail.com>
+In-Reply-To: <CAGRgLy6qAmn8Fx08BPoAp7uYqWdO4KHuTqkmbTGHAGkWhWF9sg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Finley <debenbain@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/03/2013 07:35 PM, Chris Finley wrote:
-> On Sun, Jun 2, 2013 at 6:53 AM, Phil Turmel <philip@turmel.org> wrote:
-> [trim /]
->>
->> There are numerous discussions in the archives...  search them for
->> combinations of "scterc", "tler", and "ure".
->>
-> It appears this has been a frequent issue over the last year. Thank
-> you for the background information, I understand what I was reading.
-> 
->>
->> So your device role order is /dev/sd{c,b,d,e}1.
-> 
-> [trim /]
-> 
->> Anyways, the quickest way for you to have a running array is to use
->> "mdadm --assemble --force /dev/md0 /dev/sd{c,b,e}1".  This leaves out
->> the first dropped disk.  Any remaining UREs cannot be corrected while
->> degraded, but the data on the first dropped disk is suspect.
->>
->> Feel free to use an overlay on /dev/md0 itself while making your first
->> attempt to mount and access the data.  If you cannot get critical data,
->> stop and re-assemble with all four devices.
->>
->> Phil
->>
-> Thanks, I will do that.
-> 
-> I am correct in thinking that I should not set scterc to 7 seconds
-> initially, since there will not be any parity to correct the read
-> errors? Best would be to set the driver time-out to 180 seconds until
-> after the array is rebuilt?
+--Sig_/TVP5J17R/kNncvAxfha3Vpx
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Correct.
+On Tue, 28 May 2013 23:12:38 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
 
-> I am concerned about read errors during the rebuild. With a failed and
-> rebuilding array, will the get drive kicked on an URE? Is it better to
-> use something like badblocks or dd_rescue to correct/mark the sectors
-> first and then rebuild? Either way, I'm going to lose that data, but
-> maybe there are some better tools for extracting data from a bad
-> sector?
+> Hi Neil,
+> I have found why recovery is triggered again and again.
+>=20
+> After initial recovery aborts, raid1d() calls md_check_recovery(),
+> which calls remove_and_add_spares().
+> So remove_and_add_spares wants to eject the rebuilding drive from the
+> array, but cannot because rdev->nr_pending>0:
+> 		if (rdev->raid_disk >=3D 0 &&
+> 		    !test_bit(Blocked, &rdev->flags) &&
+> 		    (test_bit(Faulty, &rdev->flags) ||
+> 		     ! test_bit(In_sync, &rdev->flags)) &&
+> 		    atomic_read(&rdev->nr_pending)=3D=3D0) {
+> if (mddev->pers->hot_remove_disk(
+> ...
+>=20
+> So instead it goes ahead and triggers another recovery in the
+> following condition (by incrementing "spares"):
+> 	rdev_for_each(rdev, mddev) {
+> 		if (rdev->raid_disk >=3D 0 &&
+> 		    !test_bit(In_sync, &rdev->flags) &&
+> 		    !test_bit(Faulty, &rdev->flags))
+> 			spares++;
+>=20
+> So another recovery starts, aborts, is triggered again, aborts and so for=
+th.
+>=20
+> Because conditions:
+> test_bit(Faulty, &rdev->flags) || ! test_bit(In_sync, &rdev->flags)
+> and
+> !test_bit(In_sync, &rdev->flags) &&  !test_bit(Faulty, &rdev->flags))
+> can both be true at the same time.
+>=20
+> Problem is that IOs keep coming in, because MD does not fail them as I
+> discussed in the previous email. So nr_pending never gets to zero, or
+> it takes it a long time to get to zero (totally racy), and we keep
+> triggering and aborting recovery.
+>=20
+> Can we fix remove_and_add_spares() the following way:
+>=20
+> "if a drive qualifies for being removed from array, but cannot be
+> removed because of nr_pending, don't try to trigger another recovery
+> on it by returning doing spares++".
 
-MD raid will tolerate a burst of up to 20 read errors on a device (in
-one hour), and up to 10 per hour after that.
+I'm not sure...  While that approach would address this particular problem
+I'm not convinced that it would always be correct.
 
-If a drive is booted out, just reassemble and resume your backup
-efforts.  Or you can use dd_rescue to avoid it.  Six of one, ...
+The 'recovery_disabled' field is supposed to stop this sort of thing, but it
+doesn't get activated here because it only stops the adding of devices to t=
+he
+array, and we never add a device.
 
-> After the rebuild is complete, I should set the scterc to 7 seconds
-> and add a bitmap based write-intent log?
+I would probably remove the nr_pending test from remove_add_and_spares and
+leave it to the personality routine to do that test (I think they already d=
+o).
+Then get ->hot_remove_disk to have a particular error status which means
+"don't try any recovery", which is returned if the ->recovery_disabled fiel=
+ds
+match.
+Then remove_and_add_spares need to check for this return value and act
+accordingly.
+Something like that.
 
-Yes.  The write-intent log is useful but unrelated to your troubles.
-You really need a weekly cron job that'll start a "check" scrub on your
-array.  But:
+Do you think that would  work?
 
-No, don't rebuild onto a 4th drive until after you make a backup of your
-critical data.  There's always the chance that the data you really want
-isn't on any pending UREs.  Rebuilding is sure to hit those.
+Thanks,
+NeilBrown
 
-> Does anyone learn these things the easy way :)
 
-Apparently not.  (Certainly not me.)  Anyways, the enterprise and
-hobbyist use cases are really quite different.  Enterprise users, who
-can easily justify premium components, have few problems.  Hobbyists who
-are trying to apply the original mean of "raid" (where "i" ==
-inexpensive) are prone to problems.
+--Sig_/TVP5J17R/kNncvAxfha3Vpx
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-And it isn't entirely the drive manufacturers' fault:  solo duty in a
-desktop really needs a different behavior than a member of a raid array.
- However, I *do* fault vendors who have dropped scterc support to push
-hobbyists into enterprise products.  I think the market will punish them
-in the long term.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-> Much appreciated, Chris
+iQIVAwUBUa0u8znsnt1WYoG5AQIYDw/9HJ6KdT2gDFz1o89mPlddHpV9vIfMycD6
+lrLRIoKyamheYjrToW9Ok9Xiqbh86rAQ4CGwB85/WaZ5iFwyMO6NRbilPKvxFMle
+SEfMlLxJ/0oCtGV7NF13nJwMSB6JJmhMqaGnH7zj6EOegOQDh76yS+ZZvFQE4q9u
+7fORWx5+7SXTA62UsJaEhYIOx5VykEXrx9udtH/lGpi3toImzmhsAk1qvOUhdhFB
+xMsgUG+WCl+MA6rI3y8ih7hTthtgDb4dSVcsznlfUhsTmegZFeG8Cl37SDiYGXmr
+B5v0xmNVhjjjPTeDBJHPlm/a06r6hlSrz9YB9KF8dDRSPxTCyC3rIxIRJ876nXhx
+FmRL0LS78I/uAGrI8PIhbUV0bzc/7rtof2s/9Fnt5hKxVhuqo3VgGG4Q2rnEUYe7
+PoM9B3/Ew6cuAiR3b5hpWCASNJpjCeAIzBw03fdM/iKgewSVpnkJmGz0hNmLPvAV
+UCZPbdMi3h3OmKLTTk00oYZ3sv8nFCsHijetCCA3RWcrGhL5CJap1Vs9JYeuzJXZ
+qxe3WZI9YDGfr9bpYDL3WkCMLJsdFOkJjVu40MdqMM7Og/NIMeZVmTP+2RUjyMNU
+0TvCsx44Y2fNwL4eea3Y9ajSGBKmeVCDobBTDJ5azIH5FTtvrBt+bzjtlKPDVknE
+zZGIK5hhpJY=
+=mKIx
+-----END PGP SIGNATURE-----
 
-You're welcome.
-
-Phil
-
+--Sig_/TVP5J17R/kNncvAxfha3Vpx--
