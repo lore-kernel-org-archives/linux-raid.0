@@ -1,34 +1,44 @@
-From: Steve Bergman <sbergman27@gmail.com>
-Subject: Confirm these stride and stripe-width values?
-Date: Wed, 5 Jun 2013 12:11:37 -0500
-Message-ID: <CAO9HMNEW1=PWJs0-YdsvPne-X=iW6-GzSpgo6pGr1_CwrQW8AA@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: RAID-10 keeps aborting
+Date: Wed, 05 Jun 2013 15:11:21 -0400
+Message-ID: <yq1vc5spe3q.fsf@sermon.lab.mkp.net>
+References: <51AC1440.7020505@zytor.com>
+	<CAA9_cmddLfReYeAhgwh5=j6ELMBNx5Oq7Gg8K+fo0PneaEfrVA@mail.gmail.com>
+	<51AC3283.4000403@zytor.com>
+	<CAA9_cme6tYpYnrZDbrDduwPCjVn+PFbx_rZNPFazBEU9EF0upw@mail.gmail.com>
+	<51ACBAA0.40604@zytor.com>
+	<CAA9_cmc3Gs91C4aV6okUw-=q+fACm1+dooyafOZi+Lnj+Ne_ig@mail.gmail.com>
+	<51ACD511.4030604@zytor.com> <yq1y5art543.fsf@sermon.lab.mkp.net>
+	<51AD2485.9000601@zytor.com>
+	<alpine.DEB.2.02.1306041132260.19072@jlaw-desktop.mno.stratus.com>
+	<51AF0CCF.8000909@itwm.fraunhofer.de>
+	<51AF232C.8060209@itwm.fraunhofer.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <51AF232C.8060209@itwm.fraunhofer.de> (Bernd Schubert's message
+	of "Wed, 05 Jun 2013 13:38:20 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
+To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+Cc: Joe Lawrence <joe.lawrence@stratus.com>, "H. Peter Anvin" <hpa@zytor.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dan Williams <dan.j.williams@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+>>>>> "Bernd" == Bernd Schubert <bernd.schubert@itwm.fraunhofer.de> writes:
 
-I've configured a dm logical volume with thin provisioning using a
-single md device which is configured as a 3-drive RAID-10 (aka RAID1e,
-I think) array in the default "near" configuration. My chunk size is
-the default 64k. And the fs is to use the default 4k blocks. There are
-3 devices + 1 spare.
+Bernd> And I also don't see any driver setting max_ws_blocks, so
+Bernd> everything except of libata gets the default of
+Bernd> SD_MAX_WS10_BLOCKS. 
+
+Yes. That's intentional. Unless the device provides MAXIMUM WRITE SAME
+BLOCKS in the BLOCK LIMITS VPD.
 
 
-I've used this command to format it as ext4:
+Bernd> As the correct handling in the md layer seems to be difficult,
+Bernd> can we send a fake request at device configuration time to figure
+Bernd> out if the device really support write-same?
 
-mkfs.ext4 -E stride=16 -E stripe-width=48 /dev/VolumeGroup/VolumeName
+The problem is that WRITE SAME is destructive. And unfortunately a block
+count of 0 means "write entire device".
 
-I'm seeing poor performance on writes. Only about 43MB/sec in
-bonnie++. By comparison, formatting XFS without specifying a stride or
-stripe-width gets me 83MB/s. (My understanding is that XFS
-autoconfigures the values when running on md/lvm2. It that correct?)
-
-Am I doing something wrong when I format the ext4 fs?
-
-Thanks for any guidance.
-
--Steve Bergman
+-- 
+Martin K. Petersen	Oracle Linux Engineering
