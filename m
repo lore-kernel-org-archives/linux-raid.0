@@ -1,29 +1,36 @@
-From: Drew <drew.kay@gmail.com>
-Subject: Re: RAID5 recovery
-Date: Wed, 5 Jun 2013 08:10:16 -0700
-Message-ID: <CACJz6QvMqGRYoj6MP1_kh=q0=spB5DrBFuP7v5d32NgGifHVRw@mail.gmail.com>
-References: <51AF28F2.3010701@gmail.com> <51AF3D4B.8030107@anonymous.org.uk>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: --no-degraded doesn't work
+Date: Wed, 05 Jun 2013 11:13:57 -0400
+Message-ID: <51AF55B5.8060704@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51AF3D4B.8030107@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Philipp Frauenfelder <philipp.frauenfelder@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Firstly, you say a hot-spare and one of the used discs failed. That would be
-> a 3-drive array with a spare, not a 4-drive array.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-The raid.status attachment he posted was apparently pre-recovery. It
-shows the system was a 4 disk array, so there was no "hot spare."
+It seems that --no-degraded and/or incremental assembly does not
+refuse to start a degraded array if one of the disks shows as being
+removed already, possibly by an explicit fail/remove at runtime, or
+manually starting the array without --no-degraded once.
 
+Shouldn't --no-degraded refuse to start a degraded array even if the
+missing disk already has been removed from the disk table in the
+superblock?
 
--- 
-Drew
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
-
-"This started out as a hobby and spun horribly out of control."
--Unknown
+iQEcBAEBAgAGBQJRr1W1AAoJEJrBOlT6nu75E5QIAMA7FQ7gu8E1ZS2IJSiik7Ap
+3JgEvt7vGlWEU8zexQHgmX7zbzIv1X7WaQfUNBdRfy8ZA2sUluv8LaiRqo4b4lSJ
+kP5/cYvDJo61PkyTDEFm6dG7V7zTiyVRwns+m2UrafMN0zy3O4Mm7ix+wrjitMsU
+IcRODfPvOoZ2wMcdlhSlK83vQcEG5gLKSOzCpVpai6a7m+HMDf9eTIm6iZbbjg1h
+Kbov0TNiHqa3zHUgaO60AxtclxQvytQpyrcqo6M4e/rRExNzuaRD3diIcMwJRClB
+uj+KTG9L/ek3YhC1m+1B+18Phi+VrRL74V4BUzIUDK2ta2uY9UZbbqmMTtPA9bg=
+=byYU
+-----END PGP SIGNATURE-----
