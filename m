@@ -1,253 +1,255 @@
-From: Claude Nobs <claudenobs@blunet.cc>
-Subject: Re: sas driver lockup during raid reshape. recoverable?
-Date: Thu, 6 Jun 2013 05:25:51 +0200
-Message-ID: <CAF82EXfXOrWtC-n765sKAxmfdfnOvH8BDReaHwrEi0oA1mT_Jw@mail.gmail.com>
-References: <CAF82EXfyLStKq3v7tJwmsHhB+731qgTZ9cUOWQncBEHk9pa4dQ@mail.gmail.com>
+From: Nic Wolfe <nic@wolfeden.ca>
+Subject: RAID6 growing interrupted, array won't assemble or resume growing
+Date: Thu, 6 Jun 2013 00:41:06 -0600
+Message-ID: <CAGjXdAhMHEFFc1C0XUSY_K1ZxwaRG-x=NEw9H2Aiv+YtNat-tw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAF82EXfyLStKq3v7tJwmsHhB+731qgTZ9cUOWQncBEHk9pa4dQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-mdadm --run /dev/md5 started the array successfully.
+First a little bit of background about my setup and how I got into this state:
 
-but can someone tell me if there was a data loss of about 1GB (event
-count got pushed up (not down as i expected!!???!!!))
+I'm running an older version of ubuntu with a 2.6.24.5 kernel and
+mdadm 2.6.3. I had a 5x2TB raid6 array which I attempted to grow to a
+6x2TB array. While it was growing I had some hardware problems and the
+disks in the array sporadically connected/disconnected. This put the
+array in a bad state.
 
-that would be much appreciated! thanks
+After fixing my hardware issues and getting the PC back up I had a
+problem where after booting mdadm would consume all my RAM trying to
+assemble my array (oom_killer started killing indiscriminately and I
+couldn't get on the PC to shut it down, had to power cycle it). I
+added some more memory (from 2GB to 4GB) and mdadm now only takes up
+about 70% before it exits with no results that I can tell. Below are
+the processes which run when I boot:
 
-On Thu, Jun 6, 2013 at 5:13 AM, Claude Nobs <claudenobs@blunet.cc> wrote:
-> Hi all
->
-> i had a sas driver failure leading to a failure of 4 drives out of 7+1
-> during a raid5 grow reshape.... first i tried mdadm -Avv then -Afvv
-> but it still doesn't work... is this recoverable?
->
-> bernstein@server:~$ sudo mdadm --assemble -vv /dev/md5 /dev/sd[efghijkl]1
-> mdadm: looking for devices for /dev/md5
-> mdadm: /dev/sde1 is identified as a member of /dev/md5, slot 5.
-> mdadm: /dev/sdf1 is identified as a member of /dev/md5, slot 4.
-> mdadm: /dev/sdg1 is identified as a member of /dev/md5, slot 6.
-> mdadm: /dev/sdh1 is identified as a member of /dev/md5, slot -1.
-> mdadm: /dev/sdi1 is identified as a member of /dev/md5, slot 0.
-> mdadm: /dev/sdj1 is identified as a member of /dev/md5, slot 2.
-> mdadm: /dev/sdk1 is identified as a member of /dev/md5, slot 1.
-> mdadm: /dev/sdl1 is identified as a member of /dev/md5, slot 3.
-> mdadm:/dev/md5 has an active reshape - checking if critical section
-> needs to be restored
-> mdadm: No backup metadata on device-6
-> mdadm: No backup metadata on device-7
-> mdadm: added /dev/sdi1 to /dev/md5 as 0 (possibly out of date)
-> mdadm: added /dev/sdk1 to /dev/md5 as 1 (possibly out of date)
-> mdadm: added /dev/sdj1 to /dev/md5 as 2 (possibly out of date)
-> mdadm: added /dev/sdl1 to /dev/md5 as 3 (possibly out of date)
-> mdadm: added /dev/sde1 to /dev/md5 as 5
-> mdadm: added /dev/sdg1 to /dev/md5 as 6
-> mdadm: added /dev/sdh1 to /dev/md5 as -1
-> mdadm: added /dev/sdf1 to /dev/md5 as 4
-> mdadm: /dev/md5 assembled from 3 drives and 1 spare - not enough to
-> start the array.
->
-> so i know the 4 drives attached to the sas card are now out of date,
-> verified by:
->
-> bernstein@server:~$ sudo mdadm -E /dev/sdl1
-> /dev/sdl1:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : dac93bfc:702d2146:9aed480b:916cc4fe
->            Name : server:5  (local to host server)
->   Creation Time : Fri Apr 15 20:16:31 2011
->      Raid Level : raid5
->    Raid Devices : 7
->
->  Avail Dev Size : 1953521392 (931.51 GiB 1000.20 GB)
->      Array Size : 5860563840 (5589.07 GiB 6001.22 GB)
->   Used Dev Size : 1953521280 (931.51 GiB 1000.20 GB)
->     Data Offset : 272 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : 6833d9f1:6b0461f1:4a784ee9:8e91d2f9
->
->   Reshape pos'n : 4031497728 (3844.74 GiB 4128.25 GB)
->   Delta Devices : 1 (6->7)
->
->     Update Time : Thu Jun 06 04:37:24 2013
->        Checksum : cde0f44f - correct
->          Events : 3428
->
->          Layout : left-symmetric
->      Chunk Size : 64K
->
->    Device Role : Active device 3
->    Array State : AAAAAAA ('A' == active, '.' == missing)
-> bernstein@server:~$ sudo mdadm -E /dev/sdj1
-> /dev/sdj1:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : dac93bfc:702d2146:9aed480b:916cc4fe
->            Name : server:5  (local to host server)
->   Creation Time : Fri Apr 15 20:16:31 2011
->      Raid Level : raid5
->    Raid Devices : 7
->
->  Avail Dev Size : 1953521392 (931.51 GiB 1000.20 GB)
->      Array Size : 5860563840 (5589.07 GiB 6001.22 GB)
->   Used Dev Size : 1953521280 (931.51 GiB 1000.20 GB)
->     Data Offset : 272 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : 6a4e2b2a:67487ba6:6ea4bad8:1a528bf3
->
->   Reshape pos'n : 4031497728 (3844.74 GiB 4128.25 GB)
->   Delta Devices : 1 (6->7)
->
->     Update Time : Thu Jun 06 04:47:33 2013
->        Checksum : a46e425d - correct
->          Events : 3430
->
->          Layout : left-symmetric
->      Chunk Size : 64K
->
->    Device Role : Active device 2
->    Array State : .AA.AAA ('A' == active, '.' == missing)
-> bernstein@server:~$ sudo mdadm -E /dev/sdk1
-> /dev/sdk1:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : dac93bfc:702d2146:9aed480b:916cc4fe
->            Name : server:5  (local to host server)
->   Creation Time : Fri Apr 15 20:16:31 2011
->      Raid Level : raid5
->    Raid Devices : 7
->
->  Avail Dev Size : 1953521392 (931.51 GiB 1000.20 GB)
->      Array Size : 5860563840 (5589.07 GiB 6001.22 GB)
->   Used Dev Size : 1953521280 (931.51 GiB 1000.20 GB)
->     Data Offset : 272 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : 0d82174d:83124ce9:947dea32:77cf5cdb
->
->   Reshape pos'n : 4032783744 (3845.96 GiB 4129.57 GB)
->   Delta Devices : 1 (6->7)
->
->     Update Time : Thu Jun 06 04:48:55 2013
->        Checksum : 4c53d5f1 - correct
->          Events : 3431
->
->          Layout : left-symmetric
->      Chunk Size : 64K
->
->    Device Role : Active device 1
->    Array State : .AA.AAA ('A' == active, '.' == missing)
-> bernstein@server:~$ sudo mdadm -E /dev/sdi1
-> /dev/sdi1:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : dac93bfc:702d2146:9aed480b:916cc4fe
->            Name : server:5  (local to host server)
->   Creation Time : Fri Apr 15 20:16:31 2011
->      Raid Level : raid5
->    Raid Devices : 7
->
->  Avail Dev Size : 1953521392 (931.51 GiB 1000.20 GB)
->      Array Size : 5860563840 (5589.07 GiB 6001.22 GB)
->   Used Dev Size : 1953521280 (931.51 GiB 1000.20 GB)
->     Data Offset : 272 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : 2fd2c79c:2c54ee4a:546057d7:8db5e2be
->
->   Reshape pos'n : 4031497728 (3844.74 GiB 4128.25 GB)
->   Delta Devices : 1 (6->7)
->
->     Update Time : Thu Jun 06 04:40:39 2013
->        Checksum : 8570efa1 - correct
->          Events : 3429
->
->          Layout : left-symmetric
->      Chunk Size : 64K
->
->    Device Role : Active device 0
->    Array State : AAA.AAA ('A' == active, '.' == missing)
->
->
-> compared to the rest :
->
-> bernstein@server:~$ sudo mdadm -E /dev/sde1
-> /dev/sde1:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : dac93bfc:702d2146:9aed480b:916cc4fe
->            Name : server:5  (local to host server)
->   Creation Time : Fri Apr 15 20:16:31 2011
->      Raid Level : raid5
->    Raid Devices : 7
->
->  Avail Dev Size : 1953521392 (931.51 GiB 1000.20 GB)
->      Array Size : 5860563840 (5589.07 GiB 6001.22 GB)
->   Used Dev Size : 1953521280 (931.51 GiB 1000.20 GB)
->     Data Offset : 272 sectors
->    Super Offset : 8 sectors
->           State : active
->     Device UUID : cedef881:6080f029:2d123ffc:a8fd8e84
->
->   Reshape pos'n : 4032783744 (3845.96 GiB 4129.57 GB)
->   Delta Devices : 1 (6->7)
->
->     Update Time : Thu Jun 06 15:35:42 2012
->        Checksum : 345efafb - correct
->          Events : 3440
->
->          Layout : left-symmetric
->      Chunk Size : 64K
->
->    Device Role : Active device 5
->    Array State : ....AAA ('A' == active, '.' == missing)
->
-> so i tried forcing:
->
-> bernstein@server:~$ sudo mdadm --assemble -fvv /dev/md5 /dev/sd[efghijkl]1
-> mdadm: looking for devices for /dev/md5
-> mdadm: /dev/sde1 is identified as a member of /dev/md5, slot 5.
-> mdadm: /dev/sdf1 is identified as a member of /dev/md5, slot 4.
-> mdadm: /dev/sdg1 is identified as a member of /dev/md5, slot 6.
-> mdadm: /dev/sdh1 is identified as a member of /dev/md5, slot -1.
-> mdadm: /dev/sdi1 is identified as a member of /dev/md5, slot 0.
-> mdadm: /dev/sdj1 is identified as a member of /dev/md5, slot 2.
-> mdadm: /dev/sdk1 is identified as a member of /dev/md5, slot 1.
-> mdadm: /dev/sdl1 is identified as a member of /dev/md5, slot 3.
-> mdadm: forcing event count in /dev/sdk1(1) from 3431 upto 3440
-> mdadm: forcing event count in /dev/sdj1(2) from 3430 upto 3440
-> mdadm: forcing event count in /dev/sdi1(0) from 3429 upto 3440
-> mdadm: forcing event count in /dev/sdl1(3) from 3428 upto 3440
-> mdadm: clearing FAULTY flag for device 7 in /dev/md5 for /dev/sdl1
-> mdadm: Marking array /dev/md5 as 'clean'
-> mdadm:/dev/md5 has an active reshape - checking if critical section
-> needs to be restored
-> mdadm: No backup metadata on device-6
-> mdadm: No backup metadata on device-7
-> mdadm: added /dev/sdk1 to /dev/md5 as 1
-> mdadm: added /dev/sdj1 to /dev/md5 as 2
-> mdadm: added /dev/sdl1 to /dev/md5 as 3
-> mdadm: added /dev/sdf1 to /dev/md5 as 4
-> mdadm: added /dev/sde1 to /dev/md5 as 5
-> mdadm: added /dev/sdg1 to /dev/md5 as 6
-> mdadm: added /dev/sdh1 to /dev/md5 as -1
-> mdadm: added /dev/sdi1 to /dev/md5 as 0
-> mdadm: /dev/md5 assembled from 7 drives and 1 spare - not enough to
-> start the array.
->
-> so now i have all devices, but it still doesn't work.
->
-> any help is appreciated!
->
-> thx
+root      3052  0.0  0.0   1704   468 ?        S<   23:23   0:00
+/lib/udev/watershed /sbin/mdadm --assemble --scan --no-degraded
+root      3053  0.0  0.0   1704   460 ?        S<   23:23   0:00
+/lib/udev/watershed /sbin/mdadm --assemble --scan --no-degraded
+root      3054  0.0  0.0   1704   460 ?        S<   23:23   0:00
+/lib/udev/watershed /sbin/mdadm --assemble --scan --no-degraded
+root      3055  0.0  0.0   1704   460 ?        S<   23:23   0:00
+/lib/udev/watershed /sbin/mdadm --assemble --scan --no-degraded
+root      3056  0.0  0.0   1704   464 ?        S<   23:23   0:00
+/lib/udev/watershed /sbin/mdadm --assemble --scan --no-degraded
+root      6677  0.0  0.0   2084   336 ?        Ss   23:26   0:00
+/sbin/mdadm --monitor --pid-file /var/run/mdadm/monitor.pid
+--daemonise --scan --syslog
+root      7072 42.1 67.1 2768196 2766984 ?     R<   23:42   7:01
+/sbin/mdadm --assemble --scan --no-degraded
+
+
+
+
+So anyway now that I have the system stable and all 6 drives hooked up
+I would very much like to get the array working again.
+
+I have the following in my mdadm.conf: ARRAY /dev/md1 level=raid6
+num-devices=5 UUID=4672ced4:81401dbc:52723fc8:3fe02f5a
+(it is currently commented out, note that it didn't get updated after
+growing to 6)
+
+Below is the --examine for all 6 drives:
+
+midgetspy@MidgetNAS:~$ sudo mdadm --examine /dev/sda
+mdadm: No md superblock detected on /dev/sda.
+midgetspy@MidgetNAS:~$ sudo mdadm --examine /dev/sdb
+/dev/sdb:
+          Magic : a92b4efc
+        Version : 00.91.00
+           UUID : 4672ced4:81401dbc:52723fc8:3fe02f5a (local to host MidgetNAS)
+  Creation Time : Wed Jun  2 21:11:18 2010
+     Raid Level : raid6
+  Used Dev Size : 1953431488 (1862.94 GiB 2000.31 GB)
+     Array Size : 7813725952 (7451.75 GiB 8001.26 GB)
+   Raid Devices : 6
+  Total Devices : 6
+Preferred Minor : 1
+
+  Reshape pos'n : 665856 (650.36 MiB 681.84 MB)
+  Delta Devices : 1 (5->6)
+
+    Update Time : Mon Oct 22 21:06:07 2012
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 2
+  Spare Devices : 0
+       Checksum : 146b8c4a - correct
+         Events : 0.1323352
+
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     2       8      176        2      active sync
+
+   0     0       0        0        0      removed
+   1     1       8      192        1      active sync
+   2     2       8      176        2      active sync
+   3     3       0        0        3      faulty removed
+   4     4       0        0        4      faulty removed
+   5     5      65        0        5      active sync
+
+   midgetspy@MidgetNAS:~$ sudo mdadm --examine /dev/sdc
+/dev/sdc:
+          Magic : a92b4efc
+        Version : 00.91.00
+           UUID : 4672ced4:81401dbc:52723fc8:3fe02f5a (local to host MidgetNAS)
+  Creation Time : Wed Jun  2 21:11:18 2010
+     Raid Level : raid6
+  Used Dev Size : 1953431488 (1862.94 GiB 2000.31 GB)
+     Array Size : 7813725952 (7451.75 GiB 8001.26 GB)
+   Raid Devices : 6
+  Total Devices : 6
+Preferred Minor : 1
+
+  Reshape pos'n : 665856 (650.36 MiB 681.84 MB)
+  Delta Devices : 1 (5->6)
+
+    Update Time : Mon Oct 22 21:06:07 2012
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 2
+  Spare Devices : 0
+       Checksum : 146b8c58 - correct
+         Events : 0.1323352
+
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     1       8      192        1      active sync
+
+   0     0       0        0        0      removed
+   1     1       8      192        1      active sync
+   2     2       8      176        2      active sync
+   3     3       0        0        3      faulty removed
+   4     4       0        0        4      faulty removed
+   5     5      65        0        5      active sync
+
+   midgetspy@MidgetNAS:~$ sudo mdadm --examine /dev/sdd
+/dev/sdd:
+          Magic : a92b4efc
+        Version : 00.91.00
+           UUID : 4672ced4:81401dbc:52723fc8:3fe02f5a (local to host MidgetNAS)
+  Creation Time : Wed Jun  2 21:11:18 2010
+     Raid Level : raid6
+  Used Dev Size : 1953431488 (1862.94 GiB 2000.31 GB)
+     Array Size : 7813725952 (7451.75 GiB 8001.26 GB)
+   Raid Devices : 6
+  Total Devices : 6
+Preferred Minor : 1
+
+  Reshape pos'n : 665856 (650.36 MiB 681.84 MB)
+  Delta Devices : 1 (5->6)
+
+    Update Time : Mon Oct 22 21:05:39 2012
+          State : clean
+ Active Devices : 6
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 146b8c05 - correct
+         Events : 0.1323342
+
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     0       8      208        0      active sync
+
+   0     0       8      208        0      active sync
+   1     1       8      192        1      active sync
+   2     2       8      176        2      active sync
+   3     3       8      224        3      active sync
+   4     4       8      240        4      active sync
+   5     5      65        0        5      active sync
+
+midgetspy@MidgetNAS:~$ sudo mdadm --examine /dev/sde
+/dev/sde:
+          Magic : a92b4efc
+        Version : 00.91.00
+           UUID : 4672ced4:81401dbc:52723fc8:3fe02f5a (local to host MidgetNAS)
+  Creation Time : Wed Jun  2 21:11:18 2010
+     Raid Level : raid6
+  Used Dev Size : 1953431488 (1862.94 GiB 2000.31 GB)
+     Array Size : 7813725952 (7451.75 GiB 8001.26 GB)
+   Raid Devices : 6
+  Total Devices : 6
+Preferred Minor : 1
+
+  Reshape pos'n : 665856 (650.36 MiB 681.84 MB)
+  Delta Devices : 1 (5->6)
+
+    Update Time : Mon Oct 22 21:05:58 2012
+          State : clean
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 146b8c4b - correct
+         Events : 0.1323350
+
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     3       8      224        3      active sync
+
+   0     0       0        0        0      removed
+   1     1       8      192        1      active sync
+   2     2       8      176        2      active sync
+   3     3       8      224        3      active sync
+   4     4       8      240        4      active sync
+   5     5      65        0        5      active sync
+
+midgetspy@MidgetNAS:~$ sudo mdadm --examine /dev/sdf
+/dev/sdf:
+          Magic : a92b4efc
+        Version : 00.91.00
+           UUID : 4672ced4:81401dbc:52723fc8:3fe02f5a (local to host MidgetNAS)
+  Creation Time : Wed Jun  2 21:11:18 2010
+     Raid Level : raid6
+  Used Dev Size : 1953431488 (1862.94 GiB 2000.31 GB)
+     Array Size : 7813725952 (7451.75 GiB 8001.26 GB)
+   Raid Devices : 6
+  Total Devices : 6
+Preferred Minor : 1
+
+  Reshape pos'n : 665856 (650.36 MiB 681.84 MB)
+  Delta Devices : 1 (5->6)
+
+    Update Time : Mon Oct 22 21:05:58 2012
+          State : clean
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 146b8c5d - correct
+         Events : 0.1323350
+
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     4       8      240        4      active sync
+
+   0     0       0        0        0      removed
+   1     1       8      192        1      active sync
+   2     2       8      176        2      active sync
+   3     3       8      224        3      active sync
+   4     4       8      240        4      active sync
+   5     5      65        0        5      active sync
+
+
+How should I proceed? I'm far enough out of my depth that I'm hesitant
+to try anything for fear of causing more damage. Should I update my
+mdadm.conf to have num-devices=6 and see if it sorts itself out? Try
+to force assemble the 5 drives with superblocks? Create a "new" array
+out of them?
+
+Any input would be greatly appreciated.
+
+Thanks,
+
+Nic
