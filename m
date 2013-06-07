@@ -1,88 +1,70 @@
-From: Sam Bingner <sam@bingner.com>
-Subject: Re: Import data from an array coming from another computer
-Date: Fri, 7 Jun 2013 11:27:32 +0000
-Message-ID: <DD8042EB-3FAF-4D96-A279-2BDBD96B03C4@bingner.com>
-References: <CAO5znavAuteVhzarkVEDHPOxs4RFx9j0tB51QXj5LUcREJbn=A@mail.gmail.com>
- <20130606145400.GA15336@sam-solutions.com>
- <CAO5znavkSqxqkSjmYtbTmuW7OkEkHexaX8vfohfaVp0asU+8ig@mail.gmail.com>
- <20130606151345.GA15605@sam-solutions.com>
- <CAO5znavf677nWNVuUJVRN_dEZH3QM1A1Lj8Oob1QdUwT2G3wsA@mail.gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Is this expected RAID10 performance?
+Date: Fri, 07 Jun 2013 07:39:40 -0500
+Message-ID: <51B1D48C.7050006@hardwarefreak.com>
+References: <CAO9HMNH4eFyshhhohw0wQ13j98BTRELTiWF9uDLp3vmFsOEfwQ@mail.gmail.com> <CAAMCDefb7TFXDOD7=aK-FjHVCQXMdiQKdz=CFJT4+q9rKR3KGA@mail.gmail.com> <CAGqvA+svdBvWTbwnzQjoHWQz6n0iEaAZzmu-EqKqdPx-AK0Zkg@mail.gmail.com> <CAO9HMNE3F-ZN0fQmHW7yz2JLRFaUqSYSaVpZe3KaXuaLMojV8w@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAO5znavf677nWNVuUJVRN_dEZH3QM1A1Lj8Oob1QdUwT2G3wsA@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <D8524900536B7E499BF4316C1A5C4F88@ds.sbdhi.com>
+In-Reply-To: <CAO9HMNE3F-ZN0fQmHW7yz2JLRFaUqSYSaVpZe3KaXuaLMojV8w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nicolas Michel <be.nicolas.michel@gmail.com>
-Cc: Aleh Suprunovich <a.suprunovich@sam-solutions.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Steve Bergman <sbergman27@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Jun 6, 2013, at 5:28 AM, Nicolas Michel <be.nicolas.michel@gmail.com> wrote:
+On 6/7/2013 5:44 AM, Steve Bergman wrote:
+> Stan, Roger, Alexander,
+> 
+> Thanks for the helpful posts. After posting, I decided to study up a
+> bit on what SATA 3Gb/s actually means. It turns out that the 3Gbit/s
+> bandwidth is aggregate per controller. 
 
-> 2013/6/6 Aleh Suprunovich <a.suprunovich@sam-solutions.com>:
->> On Thu, Jun 06, 2013 at 06:00:44PM +0300, Nicolas Michel wrote:
->>> It is better but it still doesn't work:
->>> $ mdadm --assemble /dev/md1 --run /dev/sdc1
->>> mdadm: failed to RUN_ARRAY /dev/md1: Input/output error
->>> mdadm: Not enough devices to start the array.
->>> 
->> 
->> One device should be enough to start RAID1 array. But here is something I missed
->> in your first message:
->> 
->> On Thu, Jun 06, 2013 at 05:47:33PM +0300, Nicolas Michel wrote:
->>> ############################################################
->>> # $ mdadm --examine /dev/sdc1
->>> # /dev/sdc1:
->>> #           Magic : a92b4efc
->>> #         Version : 0.90.00
->>> #            UUID : 76fc436c:be43bed5:f0f41dd6:3e9e1b96
->>> #   Creation Time : Fri Jun  8 04:21:19 2012
->>> #     Raid Level : raid1
->>> #   Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
->>> #     Array Size : 20980800 (20.01 GiB 21.48 GB)
->>> #   Raid Devices : 2
->>> #   Total Devices : 2
->>> #  Preferred Minor : 0
->>> #
->>> #    Update Time : Thu May 23 14:55:13 2013
->>> #          State : clean
->>> #  Active Devices : 1
->>> #  Working Devices : 2
->>> #  Failed Devices : 0
->>> #   Spare Devices : 1
->>> #        Checksum : b0ae04f1 - correct
->>> #          Events : 28935
->>> #
->>> #
->>> #       Number   Major   Minor   RaidDevice State
->>> # this     2       8        1        2      spare   /dev/sda1
->>> #
->>> #    0     0       0        0        0      removed
->>> #    1     1       8       17        1      active sync   /dev/sdb1
->>> #    2     2       8        1        2      spare   /dev/sda1
->>> ############################################################
->> 
->> Line starting from 'this' indicate that device you have was spare component of
->> array, so no information restore is possible with this disk. Do you have acess
->> to other drive, named /dev/sdb1 in your mdadm --examine output?
-> 
-> I didn't saw it. It is a possibility that the disk was configured as
-> spare in the IOMEGA device. The second disque have its GPT table
-> corrupt.
-> 
-> So it would mean that the data are lost since the first disk is
-> corrupted and the second, as a spare device, have no data on it.
-> 
-> (I'm not the one that configured in first place the IOMEGA device. The
-> guys that are using it came to me to see if I can recover their data)
-> 
-> 
+I don't know what you read but it was unequivocally wrong.  SATA
+specifies interface bandwidth per cable connection, i.e. per interface.
+ A 4 port 3G SATA controller has aggregate one way SATA interface b/w of
+12Gb/s. If you have a throughput limitation it would be the bus (slot)
+connection.
 
-With a RAID1 and 0.90 metadata you would be able to just use that disk directly without even assembling the array for recovery purposes.  If you don't see the data on it (as you probably won't since it is a spare) it's useless, but if you find an actual member disk this information may be useful for you.
+> This is a 4-port SATA
+> controller, so with 1 drive, the single drive gets all 3Gbit/s. With 4
+> operating simultaneously, each would get 750Mbit/s. There is supposed
+> to be about a 20% overhead involved in the SATA internals, so that
+> number drops to ~600Mbit/s. This is 75MByte/s, which is about what I'm
+> seeing on writes. For reads, I would expect to see ~300MBytes/s, and
+> am seeing 260MBytes/s, which is not too far off.
 
-Sam
+What you're seeing is a limitation of either a PCIe 1.0 x1 bus
+connection, 250MB/s, or a 66MHz/32bit or 33MHz/64bit PCI/-x slot,
+264MB/s.  You didn't mention the bus type.  Gotta be one of these three
+given your data.
 
+> This is not really a problem for me, as the workloads I'm concerned
+> about are seekier than this, and are not bandwidth limited....
+
+Until you have to perform a rebuild or some other b/w intensive
+operation.  Then having full b/w per drive comes in handy.
+
+> BTW Stan, for ext4 stride and stripe-width are specified in filesystem
+> blocks rather than in K. In this case, I'm using the default 4k block
+> size....
+
+This is what happens when XFS people try to help folks using inferior
+filesystems. ;)  Yes, you're absolutely correct.  I should have read
+mke2fs(8) before responding.  You can blame Ted et al for stealing XFS
+concepts and then changing the names and value quantities (out of guilt
+I guess).  FYI, in modern XFS, bytes are used for stripe unit/width
+values.  The whole point of alignment is matching RAID geometry.  RAID
+geometry is in bytes, not fs block size multiples.  Which is exactly why
+XFS moved away from this arcane system many years ago.
+
+If your workload has any parallelism, reformat that sucker with XFS with
+the defaults.  You'll get better random IOPS performance that with EXT4,
+and without alignment.  Many folks don't realize that with some
+workloads alignment is actually detrimental to performance, especially
+with small file workloads.
+
+-- 
+Stan
 
