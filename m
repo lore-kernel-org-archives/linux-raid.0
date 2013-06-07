@@ -1,226 +1,118 @@
-From: =?UTF-8?B?QXJrYWRpdXN6IEJ1YmHFgmE=?= <arkadiusz.bubala@open-e.com>
-Subject: Call trace when creating new array in MegaRAID Storage Manager
-Date: Fri, 07 Jun 2013 17:10:11 +0200
-Message-ID: <51B1F7D3.4010507@open-e.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Is this expected RAID10 performance?
+Date: Fri, 07 Jun 2013 15:51:38 -0500
+Message-ID: <51B247DA.5030705@hardwarefreak.com>
+References: <CAO9HMNH4eFyshhhohw0wQ13j98BTRELTiWF9uDLp3vmFsOEfwQ@mail.gmail.com> <CAAMCDefb7TFXDOD7=aK-FjHVCQXMdiQKdz=CFJT4+q9rKR3KGA@mail.gmail.com> <CAGqvA+svdBvWTbwnzQjoHWQz6n0iEaAZzmu-EqKqdPx-AK0Zkg@mail.gmail.com> <CAO9HMNE3F-ZN0fQmHW7yz2JLRFaUqSYSaVpZe3KaXuaLMojV8w@mail.gmail.com> <51B1D48C.7050006@hardwarefreak.com> <CAO9HMNHdyTg-LrZB0Mtyp16Zhstw_QETS5C3mtDsfgveWwe1_g@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAO9HMNHdyTg-LrZB0Mtyp16Zhstw_QETS5C3mtDsfgveWwe1_g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Steve Bergman <sbergman27@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
-I've got a problem with megaraid_sas driver and MegaRAID Storage=20
-Manager.  When I create new array I get following call trace:
+Given your stated needs this SATA limitation isn't an issue, but I
+thought I'd pass some information along so you might understand your
+Intel platform a little better,  as well as some issues with various
+Linux tools.
 
-[  200.476010] BUG: unable to handle kernel NULL pointer dereference at=
-=20
-00000000000000b8
-[  200.524556] IP: [<ffffffff814f1b37>] scsi_device_put+0x17/0x60
-[  200.560613] PGD 5f794c067 PUD 6005de067 PMD 0
-[  200.588325] Oops: 0000 [#1] SMP
-[  200.608430] CPU 0
-[  200.619792] Modules linked in: iscsi_scst(O) scst_vdisk(O) scst(O)=20
-libcrc32c ext2 drbd(O) iscsi_tcp libiscsi_tcp libiscsi=20
-scsi_transport_iscsi mpt2sas(O) scsi_transport_sas raid_class mptctl=20
-mptbase bonding sg megaraid_sas(O) e1000e(O) usbserial uhci_hcd ohci_hc=
-d=20
-ehci_hcd aufs [last unloaded: megaraid_sas]
-[  200.790885]
-[  200.800069] Pid: 9569, comm: kworker/0:2 Tainted: G           O=20
-3.4.47-oe64-00000-gbfd7af9 #28 Intel Corporation S1200BTL/S1200BTL
-[  200.872854] RIP: 0010:[<ffffffff814f1b37>]  [<ffffffff814f1b37>]=20
-scsi_device_put+0x17/0x60
-[  200.953484] RSP: 0000:ffff88060052ddc0  EFLAGS: 00010286
-[  201.016078] RAX: 0000000000000000 RBX: ffff8805f7a7c800 RCX:=20
-0000000000011af4
-[  201.090009] RDX: 0000000000011af3 RSI: 0000000000016558 RDI:=20
-ffff8805f7a7c800
-[  201.163762] RBP: ffff88060052ddd0 R08: 0000000000011af3 R09:=20
-ffff880606c02400
-[  201.237587] R10: ffffffff813d7bc5 R11: 00000000000163c0 R12:=20
-ffff8805f7a7c800
-[  201.311429] R13: ffff8806007084f0 R14: ffff880600708000 R15:=20
-0000000000000000
-[  201.385714] FS:  0000000000000000(0000) GS:ffff880607000000(0000)=20
-knlGS:0000000000000000
-[  201.466474] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[  201.533205] CR2: 00000000000000b8 CR3: 00000006005c6000 CR4:=20
-00000000000407f0
-[  201.609236] DR0: 0000000000000000 DR1: 0000000000000000 DR2:=20
-0000000000000000
-[  201.684749] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:=20
-0000000000000400
-[  201.760140] Process kworker/0:2 (pid: 9569, threadinfo=20
-ffff88060052c000, task ffff880602196740)
-[  201.845650] Stack:
-[  201.890482]  ffff8805f7a7c800 0000000000000004 ffff88060052de50=20
-ffffffffa005336c
-[  201.969957]  ffff88060052de10 ffff8805fdb50500 0000000000000000=20
-ffffffff81420b20
-[  202.049881]  ffff880600d31800 ffff880606c10400 ffff88060052de50=20
-ffffffff8141b1c0
-[  202.130160] Call Trace:
-[  202.180506]  [<ffffffffa005336c>] megasas_aen_polling+0x28c/0x610=20
-[megaraid_sas]
-[  202.262680]  [<ffffffff81420b20>] ? bit_clear_margins+0x1b0/0x1b0
-[  202.336430]  [<ffffffff8141b1c0>] ? fb_flashcursor+0x70/0x130
-[  202.407431]  [<ffffffff810a030d>] process_one_work+0x10d/0x3a0
-[  202.479553]  [<ffffffffa00530e0>] ? megasas_get_pd_list+0x400/0x400=20
-[megaraid_sas]
-[  202.563224]  [<ffffffff810a178a>] worker_thread+0xea/0x280
-[  202.634822]  [<ffffffff810a16a0>] ? manage_workers+0x190/0x190
-[  202.707888]  [<ffffffff810a5879>] kthread+0x99/0xb0
-[  202.774324]  [<ffffffff817bb2e4>] kernel_thread_helper+0x4/0x10
-[  202.846916]  [<ffffffff810a57e0>] ? flush_kthread_worker+0xb0/0xb0
-[  202.921219]  [<ffffffff817bb2e0>] ? gs_change+0x13/0x13
-[  202.989922] Code: 48 89 df c7 04 24 00 00 00 00 e8 a5 8f c1 ff e9 38=
-=20
-fe ff ff 55 48 89 e5 48 83 ec 10 4c 89 64 24 08 48 89 1c 24 49 89 fc 48=
-=20
-8b 07 <48> 8b 80 b8 00 00 00 48 8b 18 48 85 db 74 0d 48 89 df e8 12 f3
-[  203.221134] RIP  [<ffffffff814f1b37>] scsi_device_put+0x17/0x60
-[  203.293178]  RSP <ffff88060052ddc0>
-[  203.350741] CR2: 00000000000000b8
-[  203.406629] ---[ end trace cad1ef4253f2e576 ]---
-[  203.470420]  sdb: unknown partition table
-[  203.534405] sd 9:2:0:0: [sdb] Attached SCSI disk
-[  203.614925] BUG: unable to handle kernel paging request at=20
-fffffffffffffff8
-[  203.691122] IP: [<ffffffff810a51ab>] kthread_data+0xb/0x20
-[  203.758475] PGD 1c0e067 PUD 1c0f067 PMD 0
-[  203.817698] Oops: 0000 [#2] SMP
-[  203.871369] CPU 0
-[  203.882735] Modules linked in: iscsi_scst(O) scst_vdisk(O) scst(O)=20
-libcrc32c ext2 drbd(O) iscsi_tcp libiscsi_tcp libiscsi=20
-scsi_transport_iscsi mpt2sas(O) scsi_transport_sas raid_class mptctl=20
-mptbase bonding sg megaraid_sas(O) e1000e(O) usbserial uhci_hcd ohci_hc=
-d=20
-ehci_hcd aufs [last unloaded: megaraid_sas]
-[  204.225102]
-[  204.270216] Pid: 9569, comm: kworker/0:2 Tainted: G      D    O=20
-3.4.47-oe64-00000-gbfd7af9 #28 Intel Corporation S1200BTL/S1200BTL
-[  204.414715] RIP: 0010:[<ffffffff810a51ab>]  [<ffffffff810a51ab>]=20
-kthread_data+0xb/0x20
-[  204.499868] RSP: 0000:ffff88060052d928  EFLAGS: 00010092
-[  204.569199] RAX: 0000000000000000 RBX: ffff880602196ae0 RCX:=20
-ffffffff81e59e40
-[  204.650245] RDX: 00000009ff57d93d RSI: 0000000000000000 RDI:=20
-ffff880602196740
-[  204.730791] RBP: ffff88060052d928 R08: 0000000000000000 R09:=20
-0000000000000000
-[  204.810732] R10: 0000000000000400 R11: 0000000000000000 R12:=20
-0000000000000000
-[  204.890208] R13: ffff8806038c0000 R14: ffff8806070136c0 R15:=20
-0000000000000000
-[  204.969578] FS:  0000000000000000(0000) GS:ffff880607000000(0000)=20
-knlGS:0000000000000000
-[  205.055405] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[  205.126798] CR2: fffffffffffffff8 CR3: 000000060135e000 CR4:=20
-00000000000407f0
-[  205.206848] DR0: 0000000000000000 DR1: 0000000000000000 DR2:=20
-0000000000000000
-[  205.286878] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:=20
-0000000000000400
-[  205.366482] Process kworker/0:2 (pid: 9569, threadinfo=20
-ffff88060052c000, task ffff880602196740)
-[  205.456472] Stack:
-[  205.505785]  ffff88060052d958 ffffffff8109ec35 0000000000000009=20
-ffff880602196ae0
-[  205.589335]  0000000000000009 ffff8806038c0000 ffff88060052da78=20
-ffffffff817b16d9
-[  205.672548]  ffff880602089130 ffff880602089100 000000000052d9a8=20
-00000000000136c0
-[  205.754879] Call Trace:
-[  205.806271]  [<ffffffff8109ec35>] wq_worker_sleeping+0x15/0x80
-[  205.878483]  [<ffffffff817b16d9>] __schedule+0x579/0x860
-[  205.947281]  [<ffffffff810f4d02>] ? call_rcu_sched+0x12/0x20
-[  206.018419]  [<ffffffff817b1ce5>] schedule+0x45/0x60
-[  206.085229]  [<ffffffff8108961b>] do_exit+0x67b/0x980
-[  206.152329]  [<ffffffff810867d5>] ? kmsg_dump+0xb5/0x100
-[  206.220896]  [<ffffffff817b3907>] oops_end+0xe7/0xf0
-[  206.286749]  [<ffffffff81070a43>] no_context+0x1b3/0x2c0
-[  206.354142]  [<ffffffff81070e0d>] __bad_area_nosemaphore+0x12d/0x210
-[  206.427816]  [<ffffffff810b233f>] ? finish_task_switch+0x4f/0xe0
-[  206.499589]  [<ffffffff81070f8e>] bad_area_nosemaphore+0xe/0x10
-[  206.571075]  [<ffffffff817b5f3e>] do_page_fault+0x29e/0x4d0
-[  206.639632]  [<ffffffff8115abb7>] ? kfree+0x37/0x120
-[  206.703332]  [<ffffffff813d7bc5>] ? kobject_release+0x55/0x90
-[  206.770813]  [<ffffffff814ff9c6>] ?=20
-scsi_device_dev_release_usercontext+0x186/0x1a0
-[  206.849512]  [<ffffffff813d7a75>] ? kobject_put+0x35/0x70
-[  206.915042]  [<ffffffff814c2552>] ? put_device+0x12/0x20
-[  206.979323]  [<ffffffff814ff9d3>] ?=20
-scsi_device_dev_release_usercontext+0x193/0x1a0
-[  207.057596]  [<ffffffff817b2d65>] page_fault+0x25/0x30
-[  207.119899]  [<ffffffff813d7bc5>] ? kobject_release+0x55/0x90
-[  207.185406]  [<ffffffff814f1b37>] ? scsi_device_put+0x17/0x60
-[  207.250384]  [<ffffffffa005336c>] megasas_aen_polling+0x28c/0x610=20
-[megaraid_sas]
-[  207.325800]  [<ffffffff81420b20>] ? bit_clear_margins+0x1b0/0x1b0
-[  207.393399]  [<ffffffff8141b1c0>] ? fb_flashcursor+0x70/0x130
-[  207.459086]  [<ffffffff810a030d>] process_one_work+0x10d/0x3a0
-[  207.525397]  [<ffffffffa00530e0>] ? megasas_get_pd_list+0x400/0x400=20
-[megaraid_sas]
-[  207.602349]  [<ffffffff810a178a>] worker_thread+0xea/0x280
-[  207.666389]  [<ffffffff810a16a0>] ? manage_workers+0x190/0x190
-[  207.732026]  [<ffffffff810a5879>] kthread+0x99/0xb0
-[  207.791813]  [<ffffffff817bb2e4>] kernel_thread_helper+0x4/0x10
-[  207.858499]  [<ffffffff810a57e0>] ? flush_kthread_worker+0xb0/0xb0
-[  207.926139]  [<ffffffff817bb2e0>] ? gs_change+0x13/0x13
-[  207.987161] Code: 55 65 48 8b 04 25 c0 c6 00 00 48 8b 80 48 03 00 00=
-=20
-48 89 e5 8b 40 f0 c9 c3 66 66 66 90 66 66 90 48 8b 87 48 03 00 00 55 48=
-=20
-89 e5 <48> 8b 40 f8 c9 c3 66 66 66 90 66 66 66 90 66 66 66 90 66 66 90
-[  208.197951] RIP  [<ffffffff810a51ab>] kthread_data+0xb/0x20
-[  208.262038]  RSP <ffff88060052d928>
-[  208.313041] CR2: fffffffffffffff8
-[  208.362669] ---[ end trace cad1ef4253f2e577 ]---
-[  208.420739] Fixing recursive fault but reboot is needed!
+On 6/7/2013 7:59 AM, Steve Bergman wrote:
+> 66MHz/32bit matches the lshw output I posted. 
 
-RAID is created but server hangs and needs hard reboot. I'm using=20
-Intel(R) RAID Controller SRCSAS144E but problem occurs only on several=20
-machines.
+You cannot trust the bus information provided by lshw or lspci -v.  Why
+it is not correct I can't say as I've not looked at the code.  This is a
+known issue.  But I can tell you  a couple of things here you may want
+to know.
 
-Resignation from removing device from the scsi bus when host is scanned=
-=20
-helped.  Below is mentioned workaround:
+1.  The PCI bus interface provided by the 5 Series PCH is 33MHz, not
+    66MHz.  See 5.1.1 on page 123 of the 5/3400 Series chipset
+    datasheet:
 
+http://www.intel.com/content/dam/doc/datasheet/5-chipset-3400-chipset-datasheet.pdf
 
-Index: megaraid_sas_base.c
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- megaraid_sas_base.c    (wersja 29950)
-+++ megaraid_sas_base.c    (kopia robocza)
-@@ -6800,7 +6800,6 @@
-                      }
-                  } else {
-                      if (sdev1) {
--                        scsi_remove_device(sdev1);
-                          scsi_device_put(sdev1);
-                      }
-                  }
-@@ -6820,7 +6819,6 @@
-                      }
-                  } else {
-                      if (sdev1) {
--                        scsi_remove_device(sdev1);
-                          scsi_device_put(sdev1);
-                      }
-                  }
+> And the machine does
+> have 1 PCI-X slot. So I imagine they're using the same interface for
+> the onboard SATA controllers. Whatever it has, each of 2 pairs of SATA
+> ports seems to be on one of them.
 
---=20
-Best regards
-Arkadiusz Buba=C5=82a
-Open-E Poland Sp. z o.o.
-www.open-e.com
+2.  The SATA controllers do not attach to the PCI or PCIe interfaces.
+    They attach to the internal bus of the Intel PCH, and communicate
+    to the CPU directly via DMI at 2.5GB/s duplex.  See the diagram
+    on page 60 of the PDF linked above.  Also worth noting is that there
+    are two SATA controllers each with 3 SATA channels, 6 total.  Some
+    motherboards may not have connectors for all 6 channels.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+3.  The apparent bottleneck you're seeing is not due to the bandwidth
+    available on the back side of the SATA controllers.  It could be a
+    limitation within the SATA controllers themselves, or it could be
+    that you're using legacy IDE mode instead of AHCI, maybe both.
+
+As you said, performance isn't as critical as reliability.  So it's not
+worth your time to address this any further.  I'm simply supplying you
+with some limited information to correct a few misconceptions you have
+about the PCH capabilities.
+
+> No offense intended, 
+
+None taken.
+
+> but reliability is more important than
+> performance in this scenario. And although the machine is on a good
+> UPS with apcupsd installed, it's not sitting in a data center, but in
+> an office area. And I've found XFS to have pretty bad behavior on
+> unlcean shutdowns. 
+
+No doubt you have.  Note the last bug involving unclean shutdowns was
+fixed some 3-4 years ago.  You may want to take another look at XFS.
+
+> I'm used to the rock-solid reliability of ext3 in
+> ordered mode, 
+
+Heheh.  I'm guessing you don't read the Linux rags or LWN.  This has
+been covered extensively.  The EXT3 rock solid reliability was actually
+the result of a hack designed to fix another problem.  The inadvertent
+side effect was that all data was flushed out to disk every few seconds,
+5 IIRC.  This made EXT3 very reliable, at the cost of performance.  The
+bug was fixed and the hack removed in EXT4.  Then users and application
+developers started complaining about the lack of reliability of EXT4.
+EXT3 was "so reliable" that app devs stopped using fsync thinking it was
+no longer needed, that EXT3 had magically solved the data on disk issue.
+
+Google "o_ponies" for far more information.  Or simple read this:
+http://sandeen.net/wordpress/uncategorized/coming-clean-on-o_ponies/
+
+> so even ext4 seems a bit reckless to me. I did compare
+
+That's because you became acclimated to a broken filesystem, where, very
+unusually, what was broken actually provided a beneficial side effect.
+
+> XFS when it was configured to RAID1, and it was slightly better. Most
+> of what this machine will be doing is single-threaded. But XFS is not
+> an option for testing on an LV right now since the whole VG is sitting
+> on an RAID10 at the default 512k chunk size, and XFS doesn't support
+> larger than 256k chunks while maintaining optimal su and sw. I may
+
+Sure it does.  You simply end up with less than optimal log journal
+performance due to hotspots.  If your workload is not metadata heavy
+it's not an issue.  If your workload involves mostly allocation and
+files are stripe width size or larger, then you reap the benefit of
+alignment.  If not, you don't.  And, if allocations are small, or the
+workload is not allocation, you will likely decrease performance due to
+FS alignment.
+
+Worth noting, for the umpteenth time, is that the current md 512KB
+default chunk size is insanely high, not suitable for most workloads,
+and you should never use it.  See the archives of this list, the XFS
+archives, Google, etc, to understand the relationship between
+chunk/strip size, spindle count, workload allocation write patterns, and
+IO hot spots.
+
+But as you are stuck with EXT4, this is academic.  But, hopefully this
+information may have future value to you, and others.
+
+-- 
+Stan
+
