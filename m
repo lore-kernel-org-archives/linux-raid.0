@@ -1,89 +1,37 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID6 growing interrupted, array won't assemble or resume growing
-Date: Fri, 07 Jun 2013 08:43:54 -0400
-Message-ID: <51B1D58A.3010309@turmel.org>
-References: <CAGjXdAhMHEFFc1C0XUSY_K1ZxwaRG-x=NEw9H2Aiv+YtNat-tw@mail.gmail.com> <51B0C769.1070009@turmel.org> <CAGjXdAj+xsW=Ut9EUz65Ha_ZaGwgzJwRG6vh+9S60jpCK1qNpA@mail.gmail.com>
+From: Steve Bergman <sbergman27@gmail.com>
+Subject: Re: Is this expected RAID10 performance?
+Date: Fri, 7 Jun 2013 07:59:59 -0500
+Message-ID: <CAO9HMNHdyTg-LrZB0Mtyp16Zhstw_QETS5C3mtDsfgveWwe1_g@mail.gmail.com>
+References: <CAO9HMNH4eFyshhhohw0wQ13j98BTRELTiWF9uDLp3vmFsOEfwQ@mail.gmail.com>
+	<CAAMCDefb7TFXDOD7=aK-FjHVCQXMdiQKdz=CFJT4+q9rKR3KGA@mail.gmail.com>
+	<CAGqvA+svdBvWTbwnzQjoHWQz6n0iEaAZzmu-EqKqdPx-AK0Zkg@mail.gmail.com>
+	<CAO9HMNE3F-ZN0fQmHW7yz2JLRFaUqSYSaVpZe3KaXuaLMojV8w@mail.gmail.com>
+	<51B1D48C.7050006@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGjXdAj+xsW=Ut9EUz65Ha_ZaGwgzJwRG6vh+9S60jpCK1qNpA@mail.gmail.com>
+In-Reply-To: <51B1D48C.7050006@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nic Wolfe <nic@wolfeden.ca>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/07/2013 12:15 AM, Nic Wolfe wrote:
-> My original post had an error - sda is my boot drive, it's not part of
-> the array. The 6th drive is as follows:
-> 
-> /dev/sdg:
+66MHz/32bit matches the lshw output I posted. And the machine does
+have 1 PCI-X slot. So I imagine they're using the same interface for
+the onboard SATA controllers. Whatever it has, each of 2 pairs of SATA
+ports seems to be on one of them.
 
-[trim /]
+No offense intended, but reliability is more important than
+performance in this scenario. And although the machine is on a good
+UPS with apcupsd installed, it's not sitting in a data center, but in
+an office area. And I've found XFS to have pretty bad behavior on
+unlcean shutdowns. I'm used to the rock-solid reliability of ext3 in
+ordered mode, so even ext4 seems a bit reckless to me. I did compare
+XFS when it was configured to RAID1, and it was slightly better. Most
+of what this machine will be doing is single-threaded. But XFS is not
+an option for testing on an LV right now since the whole VG is sitting
+on an RAID10 at the default 512k chunk size, and XFS doesn't support
+larger than 256k chunks while maintaining optimal su and sw. I may
+grab the machine and bring it back to my office so that I can work
+with it "in person" over the weekend. It's currently remote to me.
 
->       Number   Major   Minor   RaidDevice State
-> this     5      65        0        5      active sync
-
-Before you move drives around, please spend some time correlating drive
-serial numbers to the "RaidDevice" number for each.  Just in case.  You
-may be able to get everything you need from /dev/disk/by-id/, but with a
-weird driver, I not sure.
-
->> Your reshape is barely started.  Presumably you specified a --backup
->> clause in the original --grow command.  You will need that file.
-> 
-> Embarrassingly I have no backup file from the grow operation.
-
-mdadm should have halted if it knew it was needed.  You may be ok.
-
->> Modern mdadm should be able to force assemble this and continue without
->> problems.  Rather than operate within a questionable environment, I
->> would strongly encourage you to perform the forced assembly with a
->> recent live cd.  I personally use "SystemRescueCD", and I know it has
->> the appropriate kernel support and tools.
->>
->> But.  You need to share more information about your hardware problems.
->> Dmesg, etc.  There are commonly-encountered configuration problems that
->> appear to be mysterious drive failures.  If you know all about error
->> recovery control, please elaborate.  Otherwise, please share the output
->> of "smartctl -x /dev/sdX" for all of your member devices.
-> 
-> My drives are connected to the machine through a poorly supported old
-> RAID card (rr2522) which required me to build the driver into my
-> kernel, so I don't think a live cd will work. I don't have enough SATA
-> slots in the machine to connect them all without it.
-
-Hmmm.  That's ugly.
-
-> If it isn't obvious by now, I definitely don't know anything about
-> error recovery control.
-
-Well, search the archive for terms like "scterc", "ure", and/or
-"timeout".  You'll need to address the issue if you don't have
-enterprise drives.
-
-> Since it's a RAID card and not just a hba each drive is presented to
-> the OS as a single drive JBOD array which means the OS doesn't see any
-> SMART info. I can see (at least some) SMART information through my
-> RAID card admin console and it claims they're all fine.
-
-Drives with pending unrecoverable read errors won't make it through a
-rebuild, but show "PASSED" to smart.  The details matter.
-
-> I am not having hardware problems at the moment, I only encountered
-> them when I had 16 drives running through the RAID card (I have
-> another 10 drive array). With the other array disconnected the card
-> seems to be behaving - there's nothing suspicious that I can see in
-> dmesg.
-
-That sounds like insufficient power.
-
-> In the meantime I will see if I can put together a machine with 6 SATA
-> ports and attempt to hook the drives up directly rather than through
-> the RAID card so I can use a live CD and get the SMART information for
-> you.
-
-Good plan, but do get the serial numbers vs. array role info.  Probably
-should finish the reshape in such a machine, too.
-
-Phil
+-Steve
