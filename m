@@ -1,48 +1,72 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: RAID-10 keeps aborting
-Date: Thu, 6 Jun 2013 19:19:37 -0700 (PDT)
-Message-ID: <yq1bo7ioe6e.fsf@sermon.lab.mkp.net>
-References: <51AC1440.7020505@zytor.com>
- <CAA9_cmddLfReYeAhgwh5=j6ELMBNx5Oq7Gg8K+fo0PneaEfrVA@mail.gmail.com>
- <51AC3283.4000403@zytor.com>
- <CAA9_cme6tYpYnrZDbrDduwPCjVn+PFbx_rZNPFazBEU9EF0upw@mail.gmail.com>
- <51ACBAA0.40604@zytor.com>
- <CAA9_cmc3Gs91C4aV6okUw-=q+fACm1+dooyafOZi+Lnj+Ne_ig@mail.gmail.com>
- <51ACD511.4030604@zytor.com> <yq1y5art543.fsf@sermon.lab.mkp.net>
- <CAA9_cmcoOYcFsJuuuJfC4aOUQxJ+6B_Z350HL70TXwYHF4_qGQ@mail.gmail.com>
- <yq1d2s1rcb7.fsf@sermon.lab.mkp.net> <51AE2A8C.4080508@zytor.com>
- <yq18v2prbum.fsf@sermon.lab.mkp.net>
- <CAA9_cmcBt3Mqt+iwrZFANoCef4YfopEPFbvYfEJgqFg8p7WtLQ@mail.gmail.com>
- <51AE3441.3000208@zytor.com>
- <CAA9_cmdSvThf_TRjtTSh3r6KOgF9RgzZ6GZPEeYoC2f_n_qz8A@mail.gmail.com>
- <51AEA4FE.3060900@zytor.com> <yq1mwr4pd9f.fsf@sermon.lab.mkp.net>
- <20130606142747.1fc17b7f@jlaw-desktop.mno.stratus.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Is this expected RAID10 performance?
+Date: Thu, 06 Jun 2013 22:25:35 -0500
+Message-ID: <51B152AF.90101@hardwarefreak.com>
+References: <CAO9HMNH4eFyshhhohw0wQ13j98BTRELTiWF9uDLp3vmFsOEfwQ@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130606142747.1fc17b7f@jlaw-desktop.mno.stratus.com> <(Joe>
- <Lawrence's> <message> <of> <"Thu> <> <6> <Jun> <2013> <14:27:47> <-0400")>
+In-Reply-To: <CAO9HMNH4eFyshhhohw0wQ13j98BTRELTiWF9uDLp3vmFsOEfwQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "H. Peter Anvin" <hpa@zytor.com>, Dan Williams <dan.j.williams@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: Steve Bergman <sbergman27@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Joe" == Joe Lawrence <joe.lawrence@stratus.com> writes:
+On 6/6/2013 6:52 PM, Steve Bergman wrote:
+> I have a Dell T310 server set up with 4 Seagate ST2000NM0011 2TB
+> drives connected to the 4 onboard SATA (3Gbit/s) ports of the
+> motherboard. Each drive is capable of doing sequential writes at
+> 151MB/s and sequential reads at 204MB/s according to bonnie++. I've
+> done an installation of Scientific Linux 6.4 (RHEL 6.4) and let the
+> installer set up the RAID10 and logical volumes. What I got was a
+> RAID10 device with a 512K chunk size, and ext4 extended options of
+> stride=128 & stripe-width=256, with a filesystem block size of 4k. All
+> of this seems correct to me.
 
-Joe> I'm looking at the changes in raid1.c and am confused as to why we
-Joe> did this in the first place (commit c8dc9c6):
+If this is vanilla RAID10, not one of md's custom layouts, then a 512K
+chunk gives an EXT4 stride of 512K and stripe-width of 1MB.  So your
+parameters don't match.  Fix your EXT4 alignment to match the array.
 
-Joe>         if (mddev->queue)
-Joe>                 blk_queue_max_write_same_sectors(mddev->queue, mddev-> chunk_sectors);
+> But when I run bonnie++ on the array (with ext4 mounted
+> data=writeback,nobarrier)  I get a sequential write speed of only
+> 160MB/s, and a sequential read speed of only 267MB/s. I've verified
+> that the drives' write caches are enabled.
 
-Joe> for RAID1, aren't chunk_sectors always going to be zero?  (At least
-Joe> on my machine, /sys/block/md*/queue/write_same_max_bytes for all md
-Joe> RAID1 devices are set to 0.)  This would have the effect of
-Joe> rendering bdev_write_same() always false for these MD devices.
+So with md/RAID10 you're getting about half of bonnie++ single disk+EXT4
+throughput.
 
-I'm guessing that's a copy and paste from my raid0 support. In the raid0
-case I set it to prevent straddling discard/write same commands.
+> "sar -d" shows all 4 drives in operation, writing 80MB/s during the
+> sequential write phase, which agrees with the 160MB/s I'm seeing for
+> the whole array. (I haven't monitored the read test with sar.)
+> 
+> Is this about what I should expect? I would have expected both read
+> and write speeds to be higher. As it stands, writes are barely any
+> faster than for a single drive. And reads are only ~30% faster.
+
+It's not uncommon to see individual drive throughput in md that is less
+than a single drive.  There are a number of things that affect this,
+including the benchmarks themselves, the number of concurrent threads
+issuing IOs (i.e. you need overlapping IO), the Linux tunables in
+/sys/block/sdX/queue/.  One of the most important is the elevator.  CFQ,
+typically the default, will yield sub optimal throughput with arrays,
+hard or soft.  With md and no HBA BBWC you'll want to use deadline.  If
+your bonnie test is using X threads for a single drive test then double
+that amount for your RAID10 test as you have 2x as many data spindles.
+
+What md/RAID10 layout did the installer choose for you?
+Does throughput improve when you change the EXT4 alignment?
+Have you performed any other throughput testing other than bonnie?
+Are you using buffered IO or O_DIRECT?
+
+One last note.  Test with parameters you will use in production.  Do not
+test with barriers disabled.  You need them in production to prevent
+filesystem corruption.  The point of benchmarking isn't to determine the
+absolute maximal throughput of the hardware.  The purpose is to
+determine how much of that you can actually get with your production
+workload.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Stan
+
