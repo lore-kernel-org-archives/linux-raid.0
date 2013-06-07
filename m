@@ -1,89 +1,88 @@
-From: Steve Bergman <sbergman27@gmail.com>
-Subject: Re: Is this expected RAID10 performance?
-Date: Fri, 7 Jun 2013 06:25:24 -0500
-Message-ID: <CAO9HMNG2M7KDke3A0c06G47kvVWgssu7ur47BN=0goc2ELDhKQ@mail.gmail.com>
-References: <CAO9HMNH4eFyshhhohw0wQ13j98BTRELTiWF9uDLp3vmFsOEfwQ@mail.gmail.com>
-	<CAAMCDefb7TFXDOD7=aK-FjHVCQXMdiQKdz=CFJT4+q9rKR3KGA@mail.gmail.com>
-	<CAGqvA+svdBvWTbwnzQjoHWQz6n0iEaAZzmu-EqKqdPx-AK0Zkg@mail.gmail.com>
-	<CAO9HMNE3F-ZN0fQmHW7yz2JLRFaUqSYSaVpZe3KaXuaLMojV8w@mail.gmail.com>
-	<20130607165236.60ac7451@natsu>
+From: Sam Bingner <sam@bingner.com>
+Subject: Re: Import data from an array coming from another computer
+Date: Fri, 7 Jun 2013 11:27:32 +0000
+Message-ID: <DD8042EB-3FAF-4D96-A279-2BDBD96B03C4@bingner.com>
+References: <CAO5znavAuteVhzarkVEDHPOxs4RFx9j0tB51QXj5LUcREJbn=A@mail.gmail.com>
+ <20130606145400.GA15336@sam-solutions.com>
+ <CAO5znavkSqxqkSjmYtbTmuW7OkEkHexaX8vfohfaVp0asU+8ig@mail.gmail.com>
+ <20130606151345.GA15605@sam-solutions.com>
+ <CAO5znavf677nWNVuUJVRN_dEZH3QM1A1Lj8Oob1QdUwT2G3wsA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130607165236.60ac7451@natsu>
+In-Reply-To: <CAO5znavf677nWNVuUJVRN_dEZH3QM1A1Lj8Oob1QdUwT2G3wsA@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <D8524900536B7E499BF4316C1A5C4F88@ds.sbdhi.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Nicolas Michel <be.nicolas.michel@gmail.com>
+Cc: Aleh Suprunovich <a.suprunovich@sam-solutions.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I don't have the source link handy, but it was an industry white
-paper. (I doubt you'll get it changed.)
+On Jun 6, 2013, at 5:28 AM, Nicolas Michel <be.nicolas.michel@gmail.com> wrote:
 
-There does seem to be some interface limitation here. Running "dd
-if=/dev/sdX of=/dev/null bs=512k" simultaneously for various
-combinations of drives gives me:
+> 2013/6/6 Aleh Suprunovich <a.suprunovich@sam-solutions.com>:
+>> On Thu, Jun 06, 2013 at 06:00:44PM +0300, Nicolas Michel wrote:
+>>> It is better but it still doesn't work:
+>>> $ mdadm --assemble /dev/md1 --run /dev/sdc1
+>>> mdadm: failed to RUN_ARRAY /dev/md1: Input/output error
+>>> mdadm: Not enough devices to start the array.
+>>> 
+>> 
+>> One device should be enough to start RAID1 array. But here is something I missed
+>> in your first message:
+>> 
+>> On Thu, Jun 06, 2013 at 05:47:33PM +0300, Nicolas Michel wrote:
+>>> ############################################################
+>>> # $ mdadm --examine /dev/sdc1
+>>> # /dev/sdc1:
+>>> #           Magic : a92b4efc
+>>> #         Version : 0.90.00
+>>> #            UUID : 76fc436c:be43bed5:f0f41dd6:3e9e1b96
+>>> #   Creation Time : Fri Jun  8 04:21:19 2012
+>>> #     Raid Level : raid1
+>>> #   Used Dev Size : 20980800 (20.01 GiB 21.48 GB)
+>>> #     Array Size : 20980800 (20.01 GiB 21.48 GB)
+>>> #   Raid Devices : 2
+>>> #   Total Devices : 2
+>>> #  Preferred Minor : 0
+>>> #
+>>> #    Update Time : Thu May 23 14:55:13 2013
+>>> #          State : clean
+>>> #  Active Devices : 1
+>>> #  Working Devices : 2
+>>> #  Failed Devices : 0
+>>> #   Spare Devices : 1
+>>> #        Checksum : b0ae04f1 - correct
+>>> #          Events : 28935
+>>> #
+>>> #
+>>> #       Number   Major   Minor   RaidDevice State
+>>> # this     2       8        1        2      spare   /dev/sda1
+>>> #
+>>> #    0     0       0        0        0      removed
+>>> #    1     1       8       17        1      active sync   /dev/sdb1
+>>> #    2     2       8        1        2      spare   /dev/sda1
+>>> ############################################################
+>> 
+>> Line starting from 'this' indicate that device you have was spare component of
+>> array, so no information restore is possible with this disk. Do you have acess
+>> to other drive, named /dev/sdb1 in your mdadm --examine output?
+> 
+> I didn't saw it. It is a possibility that the disk was configured as
+> spare in the IOMEGA device. The second disque have its GPT table
+> corrupt.
+> 
+> So it would mean that the data are lost since the first disk is
+> corrupted and the second, as a spare device, have no data on it.
+> 
+> (I'm not the one that configured in first place the IOMEGA device. The
+> guys that are using it came to me to see if I can recover their data)
+> 
+> 
 
-Port   A alone : 155MByte/s
-Ports A & B   :  105MByte/s per drive
-Ports A, B & C: 105MBytes/s per drive for A & B. 155MBytess's for C.
-Ports A, B, C & D: 105MBytes/s per drive
+With a RAID1 and 0.90 metadata you would be able to just use that disk directly without even assembling the array for recovery purposes.  If you don't see the data on it (as you probably won't since it is a spare) it's useless, but if you find an actual member disk this information may be useful for you.
 
-So there's an aggregate limitation of ~1.7Gbit/s per port pair, with
-A&B and C&D making up the pairs.
-
-More information on the interfaces:
-
-From lshw:
-
-description: IDE interface
-product: 5 Series/3400 Series Chipset 4 port SATA IDE Controller
-vendor: Intel Corporation
-physical id: 1f.2
-bus info: pci@0000:00:1f.2
-logical name: scsi0
-logical name: scsi1
-version: 05
-width: 32 bits
-clock: 66MHz
-capabilities: ide pm bus_master cap_list emulated
-configuration: driver=ata_piix latency=0
-resources: irq:20 ioport:dca0(size=8) ioport:dc90(size=4)
-ioport:dca8(size=8) ioport:dc94(size=4) ioport:dcc0(size=16)
-ioport:dcd0(size=16)
+Sam
 
 
-From dmesg:
-
-ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata1.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-
-
-From lspci:
-
-IDE interface: Intel Corporation 5 Series/3400 Series Chipset 4 port
-SATA IDE Controller (rev 05) (prog-if 8f [Master SecP SecO PriP PriO])
-Subsystem: Dell Device 02a4
-Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+
-Stepping- SERR- FastB2B- DisINTx-
-Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-Latency: 0
-Interrupt: pin A routed to IRQ 20
-Region 0: I/O ports at dca0 [size=8]
-Region 1: I/O ports at dc90 [size=4]
-Region 2: I/O ports at dca8 [size=8]
-Region 3: I/O ports at dc94 [size=4]
-Region 4: I/O ports at dcc0 [size=16]
-Region 5: I/O ports at dcd0 [size=16]
-Capabilities: [70] Power Management version 3
-Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-Capabilities: [b0] PCI Advanced Features
-AFCap: TP+ FLR+
- AFCtrl: FLR-
- AFStatus: TP-
- Kernel driver in use: ata_piix
- Kernel modules: ata_generic, pata_acpi, ata_piix
-
--Steve Bergman
