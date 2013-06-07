@@ -1,59 +1,38 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: SSD + Rust as raid1
-Date: Fri, 07 Jun 2013 18:23:56 -0400
-Message-ID: <51B25D7C.4090403@tmr.com>
-References: <51A7C36F.4030605@timedicer.co.uk> <20130531133018.77cd9285@natsu> <51A85574.8080709@timedicer.co.uk> <20130531135434.5b6bdddb@natsu> <51A864E1.9070903@timedicer.co.uk> <51ADA1AF.6040405@timedicer.co.uk>
+Subject: Re: Is this expected RAID10 performance?
+Date: Fri, 07 Jun 2013 17:43:46 -0400
+Message-ID: <51B25412.5050709@tmr.com>
+References: <CAO9HMNH4eFyshhhohw0wQ13j98BTRELTiWF9uDLp3vmFsOEfwQ@mail.gmail.com> <CAAMCDefb7TFXDOD7=aK-FjHVCQXMdiQKdz=CFJT4+q9rKR3KGA@mail.gmail.com> <CAGqvA+svdBvWTbwnzQjoHWQz6n0iEaAZzmu-EqKqdPx-AK0Zkg@mail.gmail.com> <CAO9HMNE3F-ZN0fQmHW7yz2JLRFaUqSYSaVpZe3KaXuaLMojV8w@mail.gmail.com> <20130607165236.60ac7451@natsu> <CAO9HMNG2M7KDke3A0c06G47kvVWgssu7ur47BN=0goc2ELDhKQ@mail.gmail.com> <51B1DD93.1010904@hardwarefreak.com> <CAO9HMNG0-hhgj1V+8yVe6F_mqsRAiJgZf+06vo-Pt0BUEYjS0A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51ADA1AF.6040405@timedicer.co.uk>
+In-Reply-To: <CAO9HMNG0-hhgj1V+8yVe6F_mqsRAiJgZf+06vo-Pt0BUEYjS0A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dominic Raferd <dominic@timedicer.co.uk>
-Cc: linux-raid@vger.kernel.org
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Dominic Raferd wrote:
->
-> On 31/05/2013 09:52, Dominic Raferd wrote:
->> On 31/05/2013 08:54, Roman Mamedov wrote:
->>> On Fri, 31 May 2013 08:47:00 +0100
->>> Dominic Raferd <dominic@timedicer.co.uk> wrote:
->>>
->>>> This is my idea too (see my OP), but I am concerned about optimisation
->>>> (--write-behind, --bitmap and --bitmap-chunk settings) especially for
->>>> writes.
->>>> --write-behind=16384
->>> I think this will not work, you will have to use 16383.
->> Oh, OK, so 16383 is the maximum then?
->>
->>>> --bitmap=/mnt/sda1/write-intent-bitmap.file
->>> Save yourself lots of maintenance headache, just use --bitmap=internal
->>>
->>>> --bitmap-chunk=256M
->>> Looks OK.
->>>
->> Thanks Roman, but the problem with using --bitmap=internal is that, as
->> Neil Brown posted here on another topic a while ago, this requires a
->> synch write to both devices, and the use-case for which write-behind was
->> developed involved an external bitmap. Hence my plan to use external
->> bitmap file on a fast (SSD-based) separate partition - minimises any
->> slow-down caused by having to maintain the write-intent bitmap file.
->>
->
-> I would be very grateful if someone could confirm whether, if I set up RAID1 
-> and with one of the drives specify --write-mostly --write-behind=n, that 
-> maximum 'n' is 16383, and also whether it is permitted in this configuration 
-> to set --bitmap=none and thus avoid the overhead of maintaining a write-intent 
-> bitmap file? (My thinking is that for my  needs the extra safety provided by 
-> the bitmap file is overkill and the slowing effect (and life-shortening of my 
-> SSD) might be more significant.) If I have to have a bitmap file, it is 
-> presumably faster to have a larger chunk size, is the maximum permitted 256M?
-
-If you want performance I think a too big chunk size will hurt you. And as I 
-understand the way repair on a RAID1 is done, without the bitmap you have a 
-chance of the older data on the HDD being used to "correct" the likely better 
-data on the SDD.
+Steve Bergman wrote:
+> I've used both CFQ and Deadline for testing. It doesn't make a
+> measurable difference for either the multiple dd's or for the
+> single-threaded C/ISAM rebuild. (In fact, deadline, while often better
+> for servers, can have problems with mixed sequential/random access
+> workloads. At least according to what I've seen over on the PostgreSQL
+> lists. It's no surprise that deadline doesn't help my single-threaded
+> workload. Also note that deadline has shown itself to be slightly
+> superior to noop for SSD's in certain benchmarks.) There's no one size
+> fits all answer. Until the particular workload is actually tested, it
+> *is* guesswork. I/O scheuling is too complicated for it to be
+> otherwise.
+Can't say one way or the other on SSD, but I can't measure any big benefit of 
+deadline on RAID-5 or RAID-10. I haven't done proper testing on RAID-6, so I 
+can't say.
+> Since this is an unusual RAID10 situation, and I have plenty of spare
+> processor available, I'm going to try RAID5 over the weekend. I've
+> never used it. But I'm guessing that parity might come at a lower
+> bandwidth cost than mirroring. Should be a fun weekend. :-)
+When testing RAID-10, but sure you set it up for 'far' copies, since this should 
+improve transfer rate, particularly under single thread read.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
