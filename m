@@ -1,70 +1,89 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Is this expected RAID10 performance?
-Date: Fri, 07 Jun 2013 07:39:40 -0500
-Message-ID: <51B1D48C.7050006@hardwarefreak.com>
-References: <CAO9HMNH4eFyshhhohw0wQ13j98BTRELTiWF9uDLp3vmFsOEfwQ@mail.gmail.com> <CAAMCDefb7TFXDOD7=aK-FjHVCQXMdiQKdz=CFJT4+q9rKR3KGA@mail.gmail.com> <CAGqvA+svdBvWTbwnzQjoHWQz6n0iEaAZzmu-EqKqdPx-AK0Zkg@mail.gmail.com> <CAO9HMNE3F-ZN0fQmHW7yz2JLRFaUqSYSaVpZe3KaXuaLMojV8w@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID6 growing interrupted, array won't assemble or resume growing
+Date: Fri, 07 Jun 2013 08:43:54 -0400
+Message-ID: <51B1D58A.3010309@turmel.org>
+References: <CAGjXdAhMHEFFc1C0XUSY_K1ZxwaRG-x=NEw9H2Aiv+YtNat-tw@mail.gmail.com> <51B0C769.1070009@turmel.org> <CAGjXdAj+xsW=Ut9EUz65Ha_ZaGwgzJwRG6vh+9S60jpCK1qNpA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAO9HMNE3F-ZN0fQmHW7yz2JLRFaUqSYSaVpZe3KaXuaLMojV8w@mail.gmail.com>
+In-Reply-To: <CAGjXdAj+xsW=Ut9EUz65Ha_ZaGwgzJwRG6vh+9S60jpCK1qNpA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steve Bergman <sbergman27@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Nic Wolfe <nic@wolfeden.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 6/7/2013 5:44 AM, Steve Bergman wrote:
-> Stan, Roger, Alexander,
+On 06/07/2013 12:15 AM, Nic Wolfe wrote:
+> My original post had an error - sda is my boot drive, it's not part of
+> the array. The 6th drive is as follows:
 > 
-> Thanks for the helpful posts. After posting, I decided to study up a
-> bit on what SATA 3Gb/s actually means. It turns out that the 3Gbit/s
-> bandwidth is aggregate per controller. 
+> /dev/sdg:
 
-I don't know what you read but it was unequivocally wrong.  SATA
-specifies interface bandwidth per cable connection, i.e. per interface.
- A 4 port 3G SATA controller has aggregate one way SATA interface b/w of
-12Gb/s. If you have a throughput limitation it would be the bus (slot)
-connection.
+[trim /]
 
-> This is a 4-port SATA
-> controller, so with 1 drive, the single drive gets all 3Gbit/s. With 4
-> operating simultaneously, each would get 750Mbit/s. There is supposed
-> to be about a 20% overhead involved in the SATA internals, so that
-> number drops to ~600Mbit/s. This is 75MByte/s, which is about what I'm
-> seeing on writes. For reads, I would expect to see ~300MBytes/s, and
-> am seeing 260MBytes/s, which is not too far off.
+>       Number   Major   Minor   RaidDevice State
+> this     5      65        0        5      active sync
 
-What you're seeing is a limitation of either a PCIe 1.0 x1 bus
-connection, 250MB/s, or a 66MHz/32bit or 33MHz/64bit PCI/-x slot,
-264MB/s.  You didn't mention the bus type.  Gotta be one of these three
-given your data.
+Before you move drives around, please spend some time correlating drive
+serial numbers to the "RaidDevice" number for each.  Just in case.  You
+may be able to get everything you need from /dev/disk/by-id/, but with a
+weird driver, I not sure.
 
-> This is not really a problem for me, as the workloads I'm concerned
-> about are seekier than this, and are not bandwidth limited....
+>> Your reshape is barely started.  Presumably you specified a --backup
+>> clause in the original --grow command.  You will need that file.
+> 
+> Embarrassingly I have no backup file from the grow operation.
 
-Until you have to perform a rebuild or some other b/w intensive
-operation.  Then having full b/w per drive comes in handy.
+mdadm should have halted if it knew it was needed.  You may be ok.
 
-> BTW Stan, for ext4 stride and stripe-width are specified in filesystem
-> blocks rather than in K. In this case, I'm using the default 4k block
-> size....
+>> Modern mdadm should be able to force assemble this and continue without
+>> problems.  Rather than operate within a questionable environment, I
+>> would strongly encourage you to perform the forced assembly with a
+>> recent live cd.  I personally use "SystemRescueCD", and I know it has
+>> the appropriate kernel support and tools.
+>>
+>> But.  You need to share more information about your hardware problems.
+>> Dmesg, etc.  There are commonly-encountered configuration problems that
+>> appear to be mysterious drive failures.  If you know all about error
+>> recovery control, please elaborate.  Otherwise, please share the output
+>> of "smartctl -x /dev/sdX" for all of your member devices.
+> 
+> My drives are connected to the machine through a poorly supported old
+> RAID card (rr2522) which required me to build the driver into my
+> kernel, so I don't think a live cd will work. I don't have enough SATA
+> slots in the machine to connect them all without it.
 
-This is what happens when XFS people try to help folks using inferior
-filesystems. ;)  Yes, you're absolutely correct.  I should have read
-mke2fs(8) before responding.  You can blame Ted et al for stealing XFS
-concepts and then changing the names and value quantities (out of guilt
-I guess).  FYI, in modern XFS, bytes are used for stripe unit/width
-values.  The whole point of alignment is matching RAID geometry.  RAID
-geometry is in bytes, not fs block size multiples.  Which is exactly why
-XFS moved away from this arcane system many years ago.
+Hmmm.  That's ugly.
 
-If your workload has any parallelism, reformat that sucker with XFS with
-the defaults.  You'll get better random IOPS performance that with EXT4,
-and without alignment.  Many folks don't realize that with some
-workloads alignment is actually detrimental to performance, especially
-with small file workloads.
+> If it isn't obvious by now, I definitely don't know anything about
+> error recovery control.
 
--- 
-Stan
+Well, search the archive for terms like "scterc", "ure", and/or
+"timeout".  You'll need to address the issue if you don't have
+enterprise drives.
 
+> Since it's a RAID card and not just a hba each drive is presented to
+> the OS as a single drive JBOD array which means the OS doesn't see any
+> SMART info. I can see (at least some) SMART information through my
+> RAID card admin console and it claims they're all fine.
+
+Drives with pending unrecoverable read errors won't make it through a
+rebuild, but show "PASSED" to smart.  The details matter.
+
+> I am not having hardware problems at the moment, I only encountered
+> them when I had 16 drives running through the RAID card (I have
+> another 10 drive array). With the other array disconnected the card
+> seems to be behaving - there's nothing suspicious that I can see in
+> dmesg.
+
+That sounds like insufficient power.
+
+> In the meantime I will see if I can put together a machine with 6 SATA
+> ports and attempt to hook the drives up directly rather than through
+> the RAID card so I can use a live CD and get the SMART information for
+> you.
+
+Good plan, but do get the serial numbers vs. array role info.  Probably
+should finish the reshape in such a machine, too.
+
+Phil
