@@ -1,48 +1,50 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Steve Bergman <sbergman27@gmail.com>
 Subject: Re: Is this expected RAID10 performance?
-Date: Fri, 07 Jun 2013 08:18:11 -0500
-Message-ID: <51B1DD93.1010904@hardwarefreak.com>
-References: <CAO9HMNH4eFyshhhohw0wQ13j98BTRELTiWF9uDLp3vmFsOEfwQ@mail.gmail.com> <CAAMCDefb7TFXDOD7=aK-FjHVCQXMdiQKdz=CFJT4+q9rKR3KGA@mail.gmail.com> <CAGqvA+svdBvWTbwnzQjoHWQz6n0iEaAZzmu-EqKqdPx-AK0Zkg@mail.gmail.com> <CAO9HMNE3F-ZN0fQmHW7yz2JLRFaUqSYSaVpZe3KaXuaLMojV8w@mail.gmail.com> <20130607165236.60ac7451@natsu> <CAO9HMNG2M7KDke3A0c06G47kvVWgssu7ur47BN=0goc2ELDhKQ@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+Date: Fri, 7 Jun 2013 08:54:43 -0500
+Message-ID: <CAO9HMNG0-hhgj1V+8yVe6F_mqsRAiJgZf+06vo-Pt0BUEYjS0A@mail.gmail.com>
+References: <CAO9HMNH4eFyshhhohw0wQ13j98BTRELTiWF9uDLp3vmFsOEfwQ@mail.gmail.com>
+	<CAAMCDefb7TFXDOD7=aK-FjHVCQXMdiQKdz=CFJT4+q9rKR3KGA@mail.gmail.com>
+	<CAGqvA+svdBvWTbwnzQjoHWQz6n0iEaAZzmu-EqKqdPx-AK0Zkg@mail.gmail.com>
+	<CAO9HMNE3F-ZN0fQmHW7yz2JLRFaUqSYSaVpZe3KaXuaLMojV8w@mail.gmail.com>
+	<20130607165236.60ac7451@natsu>
+	<CAO9HMNG2M7KDke3A0c06G47kvVWgssu7ur47BN=0goc2ELDhKQ@mail.gmail.com>
+	<51B1DD93.1010904@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAO9HMNG2M7KDke3A0c06G47kvVWgssu7ur47BN=0goc2ELDhKQ@mail.gmail.com>
+In-Reply-To: <51B1DD93.1010904@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steve Bergman <sbergman27@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 6/7/2013 6:25 AM, Steve Bergman wrote:
-> I don't have the source link handy, but it was an industry white
-> paper. (I doubt you'll get it changed.)
-> 
-> There does seem to be some interface limitation here. Running "dd
-> if=/dev/sdX of=/dev/null bs=512k" simultaneously for various
-> combinations of drives gives me:
+This is Scientific Linux (RHEL) 6.4. That's nominally kernel 2.6.32,
+but that doesn't tell one much. The RHEL kernel is the RHEL kernel,
+with features selected from far more recent kernels included, more
+being added with every point release. (e.g., I have the dm-thin target
+available in LVM2.)
 
-It's not a bus interface limitation.  The DMI link speed on the 5 Series
-PCH is 1.25GB/s each way.
+I've used both CFQ and Deadline for testing. It doesn't make a
+measurable difference for either the multiple dd's or for the
+single-threaded C/ISAM rebuild. (In fact, deadline, while often better
+for servers, can have problems with mixed sequential/random access
+workloads. At least according to what I've seen over on the PostgreSQL
+lists. It's no surprise that deadline doesn't help my single-threaded
+workload. Also note that deadline has shown itself to be slightly
+superior to noop for SSD's in certain benchmarks.) There's no one size
+fits all answer. Until the particular workload is actually tested, it
+*is* guesswork. I/O scheuling is too complicated for it to be
+otherwise.
 
-> Port   A alone : 155MByte/s
-> Ports A & B   :  105MByte/s per drive
-> Ports A, B & C: 105MBytes/s per drive for A & B. 155MBytess's for C.
-> Ports A, B, C & D: 105MBytes/s per drive
-> 
-> So there's an aggregate limitation of ~1.7Gbit/s per port pair, with
-> A&B and C&D making up the pairs.
+The chipset supports AHCI, but unfortunately it's turned off on the
+PET310, and the setting is not exposed in the BIOS setup, despite the
+fact that Dell advertises AHCI capability. It would do AHCI if I
+bought one of the optional SAS controllers.
 
-This may be a quirk of the 5 Series Southbridge.  But note you're using
-the standard ICH driver.  Switch to the AHCI driver and you may see some
-gains here.  Also try the deadline elevator.  I mentioned it because I
-intended for you to use it.  This wasn't an "optional" thing.  It will
-improve performance over CFQ.  This isn't guesswork.  Everyone in Linux
-storage knows this to be true.  As they all know to use noop with SSD
-and hardware RAID w/[F|B]BWC.
+Since this is an unusual RAID10 situation, and I have plenty of spare
+processor available, I'm going to try RAID5 over the weekend. I've
+never used it. But I'm guessing that parity might come at a lower
+bandwidth cost than mirroring. Should be a fun weekend. :-)
 
-Which kernel version and OS is this again?
+BTW, any recommendations on chunk size?
 
--- 
-Stan
-
+-Steve
