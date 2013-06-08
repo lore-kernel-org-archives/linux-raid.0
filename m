@@ -1,60 +1,49 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: RAID 10 Repairs
-Date: Sat, 08 Jun 2013 13:35:08 -0400
-Message-ID: <51B36B4C.4090101@tmr.com>
-References: <CAE98Ua_Js7wpfkT7wAZhm79Y46t4Fqtfx3752SUO_+H-3jqqcQ@mail.gmail.com> <51AC260F.8050806@hardwarefreak.com>
+From: keld@keldix.com
+Subject: Re: Is this expected RAID10 performance?
+Date: Sat, 8 Jun 2013 20:23:49 +0200
+Message-ID: <20130608182349.GA8119@www5.open-std.org>
+References: <CAO9HMNH4eFyshhhohw0wQ13j98BTRELTiWF9uDLp3vmFsOEfwQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51AC260F.8050806@hardwarefreak.com>
+Content-Disposition: inline
+In-Reply-To: <CAO9HMNH4eFyshhhohw0wQ13j98BTRELTiWF9uDLp3vmFsOEfwQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
+To: Steve Bergman <sbergman27@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Stan Hoeppner wrote:
-> On 6/2/2013 9:07 PM, Rob Emanuele wrote:
->
->> So, I've been looking at repairing my RAID 10 software array. I have a
->> failing drive with incrementing SMART errors. I went to replace that
->> drive with a new drive.  The failing drive is 250,059,350,016 bytes
->> while the batch of new drives I bought as spares are 250,000,000,000
->> bytes.
->>
->> When I add the new drive it tells me the drive is too small.  Is there
->> a way to shrink the array so that new new drives (any any other
->> replacement drives around 250G) will work in the array?
-> High Rob,
->
-> They're 250GB drives.  Frankly what I'd do is get your investment backecho "want_replacement" >/sys/block/md/NNN//md/dev-/XXX//state
-> from those 'new' drives, though it probably wasn't much if acquired
-> recently.  Acquire a number of 750GB, 1TB drives that yield similar
-> total space after RAID10 overhead.  Build a new array, mkfs, copy all
-> the data over, and decommission the old disks, then Ebay them.
-Assuming the that the kernel is semi-recent, you can put the new drive in the 
-array as a spare, then
-    echo "want_replacement" >/sys/block/md/NNN//md/dev-/XXX//state
-to copy the contents to the new member. The advantage is that any valid data on 
-the old failing drive is used rather than reconstructing each chunk. This is 
-faster and safer, since reconstruction sometimes finds a bad block on another drive.
+On Thu, Jun 06, 2013 at 06:52:03PM -0500, Steve Bergman wrote:
+> I have a Dell T310 server set up with 4 Seagate ST2000NM0011 2TB
+> drives connected to the 4 onboard SATA (3Gbit/s) ports of the
+> motherboard. Each drive is capable of doing sequential writes at
+> 151MB/s and sequential reads at 204MB/s according to bonnie++. I've
+> done an installation of Scientific Linux 6.4 (RHEL 6.4) and let the
+> installer set up the RAID10 and logical volumes. What I got was a
+> RAID10 device with a 512K chunk size, and ext4 extended options of
+> stride=128 & stripe-width=256, with a filesystem block size of 4k. All
+> of this seems correct to me.
+> 
+> But when I run bonnie++ on the array (with ext4 mounted
+> data=writeback,nobarrier)  I get a sequential write speed of only
+> 160MB/s, and a sequential read speed of only 267MB/s. I've verified
+> that the drives' write caches are enabled.
+> 
+> "sar -d" shows all 4 drives in operation, writing 80MB/s during the
+> sequential write phase, which agrees with the 160MB/s I'm seeing for
+> the whole array. (I haven't monitored the read test with sar.)
+> 
+> Is this about what I should expect? I would have expected both read
+> and write speeds to be higher. As it stands, writes are barely any
+> faster than for a single drive. And reads are only ~30% faster.
 
-When the data are moved, you can remove the old member from the array.
-> Or just acquire two 2TB drives an mirror them.  20x 250GB drives in
-> RAID10 is 2.5TB net space.  Surely you don't currently have 20 drives in
-> this RAID array.  If you're acquiring 250GB drives in 2013 I'd guess
-> you're not after performance.  So reducing spindle count shouldn't be an
-> issue, should it?
->
-Actually the only reason to use small drives any more is for performance, fast 
-drives (10k+ rpm) tend to be small. And expensive.
-I agree that this user probably isn't doing that.
-I see Newegg has decent TB drives for $59 now, not server grade, but decent stuff.
+We have a wiki page on performance at https://raid.wiki.kernel.org/index.php/Performance
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-   We are not out of the woods yet, but we know the direction and have
-taken the first step. The steps are many, but finite in number, and if
-we persevere we will reach our destination.  -me, 2010
+From the examples mentioned there you should be able to get something like
+300 MB/s sequential write and 700 MB/s sequential read. Raid1 and raid10,near could
+slow down your sequential read considerable, while raid10,far and raid5 should
+give you read speed in the 700 MB/s range. Have a look at the bonnie results reported for
+a variation on chunk size etc.
 
-
+best regards
+keld
