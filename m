@@ -1,85 +1,91 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Is this expected RAID10 performance?
-Date: Fri, 07 Jun 2013 18:33:14 -0500
-Message-ID: <51B26DBA.2030009@hardwarefreak.com>
-References: <CAO9HMNH4eFyshhhohw0wQ13j98BTRELTiWF9uDLp3vmFsOEfwQ@mail.gmail.com> <CAAMCDefb7TFXDOD7=aK-FjHVCQXMdiQKdz=CFJT4+q9rKR3KGA@mail.gmail.com> <CAGqvA+svdBvWTbwnzQjoHWQz6n0iEaAZzmu-EqKqdPx-AK0Zkg@mail.gmail.com> <CAO9HMNE3F-ZN0fQmHW7yz2JLRFaUqSYSaVpZe3KaXuaLMojV8w@mail.gmail.com> <20130607165236.60ac7451@natsu> <CAO9HMNG2M7KDke3A0c06G47kvVWgssu7ur47BN=0goc2ELDhKQ@mail.gmail.com> <51B1DD93.1010904@hardwarefreak.com> <CAO9HMNG0-hhgj1V+8yVe6F_mqsRAiJgZf+06vo-Pt0BUEYjS0A@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: Keith Phillips <spootsy.ootsy@gmail.com>
+Subject: Help with failed RAID-5 -> 6 migration
+Date: Sat, 8 Jun 2013 12:32:22 +0930
+Message-ID: <CAASLJ=5ewoeNPV1-fwRm3o6rCxQjCYxuJTZ5M9g7p-vFpgDW-w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAO9HMNG0-hhgj1V+8yVe6F_mqsRAiJgZf+06vo-Pt0BUEYjS0A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steve Bergman <sbergman27@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 6/7/2013 8:54 AM, Steve Bergman wrote:
-> This is Scientific Linux (RHEL) 6.4. That's nominally kernel 2.6.32,
-> but that doesn't tell one much. The RHEL kernel is the RHEL kernel,
-> with features selected from far more recent kernels included, more
-> being added with every point release. (e.g., I have the dm-thin target
-> available in LVM2.)
+Hi,
 
-Yeah, Red Hat marches to the beat of their own drummer.  Their version
-string is meaningless.  They have newer kernel features in their 2.6.32
-that rely on features only available in later upstream kernels, that
-can't be backported to 2.6.32. Thus the core kernel isn't based on 2.6.32.
+I have a problem. I'm worried I may have borked my array :/
 
-> I've used both CFQ and Deadline for testing. It doesn't make a
-> measurable difference for either the multiple dd's or for the
-> single-threaded C/ISAM rebuild. (In fact, deadline, while often better
-> for servers, can have problems with mixed sequential/random access
-> workloads. At least according to what I've seen over on the PostgreSQL
-> lists. It's no surprise that deadline doesn't help my single-threaded
-> workload. Also note that deadline has shown itself to be slightly
-> superior to noop for SSD's in certain benchmarks.) There's no one size
-> fits all answer. Until the particular workload is actually tested, it
-> *is* guesswork. I/O scheuling is too complicated for it to be
-> otherwise.
+I've been running a 3x2TB RAID-5 array and I recently got another 2TB
+drive, intending to bump it up to a 4x2TB RAID-6 array.
 
-Caveat:  I'm an XFS user.  CFQ simply gives sub par to horrible
-performance with XFS, regardless of workload or hardware.  The upstream
-developers haven't supported XFS on CFQ for many years.  Because of
-things like the note at the bottom of this FAQ entry:
-http://xfs.org/index.php/XFS_FAQ#Q:_I_want_to_tune_my_XFS_filesystems_for_.3Csomething.3E
+I stuck the new disk in and added it to the RAID array, as follows
+("/files" is on a non-RAID disk):
+mdadm --manage /dev/md0 --add /dev/sda
+mdadm --grow /dev/md0 --raid-devices 4 --level 6
+--backup-file=/files/mdadm-backup
 
-Considering one of, if not the, main reasons for using XFS is parallel
-IO, this speaks volumes about CFQ's suitability for high performance
-workloads.
+It seemed to work and the grow process started okay, reporting about 3
+days to completion (at ~8MB/s) which seemed really slow, but I left it
+anyway. Next morning, time to complete was several years and the
+kernel had spat out a bunch of I/O errors (lost those logs, sorry).
 
-> The chipset supports AHCI, but unfortunately it's turned off on the
+I figured the new disk must be at fault, because I'd done an array
+check recently and the others seemed okay. Hoping it might abort the
+grow, I failed the new disk:
+mdadm --manage /dev/md0 --fail /dev/sda
 
-Wow.  A huge Intel partner castrating their integrated SATA controllers.
+But mdadm kept reporting years to completion. So I rebooted.
 
-> PET310, and the setting is not exposed in the BIOS setup, despite the
-> fact that Dell advertises AHCI capability. It would do AHCI if I
-> bought one of the optional SAS controllers.
+Now I'd like to know - what state is my array in? If possible I'd like
+to get back to a working 3 disk RAID-5 configuration while I test the
+new disk and figure out what to do with it.
 
-Interesting.  SAS controllers typically don't use the AHCI interface.
-In fact I know of none.  Dell uses LSISAS ASICs on their SAS cards and
-mobo down on servers, and these use the LSI mptsas driver, not AHCI.
+The backup-file doesn't exist, and the stats on the array are as follows:
 
-> Since this is an unusual RAID10 situation, and I have plenty of spare
-> processor available, I'm going to try RAID5 over the weekend. I've
-> never used it. But I'm guessing that parity might come at a lower
-> bandwidth cost than mirroring. Should be a fun weekend. :-)
+--------------------------
+cat /proc/mdstat:
+--------------------------
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md0 : inactive sdd[1] sde[3] sdc[0] sda[4]
+      7814054240 blocks super 1.2
 
-If you're looking for increased performance look elsewhere.  RMW latency
-typically gives you random write throughput about 1/3rd to 1/5th that of
-RAID10 with the same drive count.  Sequential read may be slightly
-faster than vanilla RAID10.  However, as many are fond of mentioning,
-using the far layout can get you sequential read close to that of pure
-striping, so it'll be faster than RAID5 all around.  There never has
-been and never will be a performance advantage for RAID5, unless you're
-using SSDs where RMW latency is effectively zero.
+unused devices: <none>
+--------------------------
+mdadm --detail /dev/md0
+--------------------------
+/dev/md0:
+        Version : 1.2
+  Creation Time : Sun Jul 17 00:41:57 2011
+     Raid Level : raid6
+  Used Dev Size : 1953512960 (1863.02 GiB 2000.40 GB)
+   Raid Devices : 4
+  Total Devices : 4
+    Persistence : Superblock is persistent
 
-> BTW, any recommendations on chunk size?
+    Update Time : Sat Jun  8 11:00:43 2013
+          State : active, degraded, Not Started
+ Active Devices : 3
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 1
 
-32KB works well for just about any workload.  Exceptions would be HPC or
-media server workloads where you're writing files 10s of GB to TB in
-size, especially in parallel.
+         Layout : left-symmetric-6
+     Chunk Size : 512K
 
--- 
-Stan
+     New Layout : left-symmetric
 
+           Name : muncher:0  (local to host muncher)
+           UUID : 830b9ec8:ca8dac63:e31946a0:4c76ccf0
+         Events : 50599
+
+    Number   Major   Minor   RaidDevice State
+       0       8       32        0      active sync   /dev/sdc
+       1       8       48        1      active sync   /dev/sdd
+       3       8       64        2      active sync   /dev/sde
+       4       8        0        3      spare rebuilding   /dev/sda
+
+--------------------------
+
+Any advice greatly appreciated.
+
+Cheers,
+Keith
