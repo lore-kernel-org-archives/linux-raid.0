@@ -1,38 +1,55 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: SSD + Rust as raid1
-Date: Sat, 08 Jun 2013 13:11:38 -0400
-Message-ID: <51B365CA.6090409@tmr.com>
-References: <51A7C36F.4030605@timedicer.co.uk> <20130531133018.77cd9285@natsu> <51A85574.8080709@timedicer.co.uk> <20130531135434.5b6bdddb@natsu> <51A864E1.9070903@timedicer.co.uk> <51ADA1AF.6040405@timedicer.co.uk> <51B25D7C.4090403@tmr.com> <20130608162235.7ca32f4d@natsu>
+Subject: Re: RAID 10 Repairs
+Date: Sat, 08 Jun 2013 13:35:08 -0400
+Message-ID: <51B36B4C.4090101@tmr.com>
+References: <CAE98Ua_Js7wpfkT7wAZhm79Y46t4Fqtfx3752SUO_+H-3jqqcQ@mail.gmail.com> <51AC260F.8050806@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130608162235.7ca32f4d@natsu>
+In-Reply-To: <51AC260F.8050806@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
+To: stan@hardwarefreak.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Roman Mamedov wrote:
-> On Fri, 07 Jun 2013 18:23:56 -0400
-> Bill Davidsen <davidsen@tmr.com> wrote:
+Stan Hoeppner wrote:
+> On 6/2/2013 9:07 PM, Rob Emanuele wrote:
 >
->>> If I have to have a bitmap file, it is
->>> presumably faster to have a larger chunk size
->> If you want performance I think a too big chunk size will hurt you.
-> You are confusing the general array chunk sizes, and the bitmap chunk size. In
-> the latter, a larger size will universally give better performance (up to some
-> value, where it will perhaps start to flat out).
+>> So, I've been looking at repairing my RAID 10 software array. I have a
+>> failing drive with incrementing SMART errors. I went to replace that
+>> drive with a new drive.  The failing drive is 250,059,350,016 bytes
+>> while the batch of new drives I bought as spares are 250,000,000,000
+>> bytes.
+>>
+>> When I add the new drive it tells me the drive is too small.  Is there
+>> a way to shrink the array so that new new drives (any any other
+>> replacement drives around 250G) will work in the array?
+> High Rob,
 >
-If that were the case, then a bitmap would not be used, you could just have a 
-single bit, and make the chuck size the size of everything. Since that would 
-pretty much make the bitmap worthless, it suggests to me that there is in fact a 
-limit to the optimal chunk size, short of what the implementation max allows. I 
-think the optimal size is determined by usage, but there is probably some way to 
-measure it. I find that when it seems a "if some is good more is better" 
-approach fits a problem, I like to check that taking it to the limit would make 
-sense. The Latin IIRC is 'reducto ad absurbum' and has saved me from occasional 
-wretched excess.
+> They're 250GB drives.  Frankly what I'd do is get your investment backecho "want_replacement" >/sys/block/md/NNN//md/dev-/XXX//state
+> from those 'new' drives, though it probably wasn't much if acquired
+> recently.  Acquire a number of 750GB, 1TB drives that yield similar
+> total space after RAID10 overhead.  Build a new array, mkfs, copy all
+> the data over, and decommission the old disks, then Ebay them.
+Assuming the that the kernel is semi-recent, you can put the new drive in the 
+array as a spare, then
+    echo "want_replacement" >/sys/block/md/NNN//md/dev-/XXX//state
+to copy the contents to the new member. The advantage is that any valid data on 
+the old failing drive is used rather than reconstructing each chunk. This is 
+faster and safer, since reconstruction sometimes finds a bad block on another drive.
+
+When the data are moved, you can remove the old member from the array.
+> Or just acquire two 2TB drives an mirror them.  20x 250GB drives in
+> RAID10 is 2.5TB net space.  Surely you don't currently have 20 drives in
+> this RAID array.  If you're acquiring 250GB drives in 2013 I'd guess
+> you're not after performance.  So reducing spindle count shouldn't be an
+> issue, should it?
+>
+Actually the only reason to use small drives any more is for performance, fast 
+drives (10k+ rpm) tend to be small. And expensive.
+I agree that this user probably isn't doing that.
+I see Newegg has decent TB drives for $59 now, not server grade, but decent stuff.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
