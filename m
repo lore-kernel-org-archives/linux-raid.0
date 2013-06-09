@@ -1,71 +1,112 @@
-From: "Dr. Greg Wettstein" <greg@wind.enjellic.com>
-Subject: RAID1 growth of version 1.1/1.2 metadata violates least surprise.
-Date: Sun, 9 Jun 2013 09:33:05 -0500
-Message-ID: <201306091433.r59EX51u021372@wind.enjellic.com>
-Reply-To: greg@enjellic.com
+From: Steve Bergman <sbergman27@gmail.com>
+Subject: Re: Is this expected RAID10 performance?
+Date: Sun, 9 Jun 2013 15:06:18 -0500
+Message-ID: <CAO9HMNHPeXiMmXYtPb29Y2xiOFpznzmP8nBSV09UFCnMrYkEgQ@mail.gmail.com>
+References: <CAO9HMNHVNQcU=FumFnLRd9b0msMr8fr0z6SmL82dksu+6CNXYA@mail.gmail.com>
+	<51B47088.4000501@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <51B47088.4000501@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi, hope the week is starting out well for everyone.
+Hello Ric,
 
-We ran into an interesting issue secondary to the growth of a RAID1
-volume with version 1.1 metadata.  We are interested in reflections
-from Neil and/or others as to whether the problem can be addressed.
+I was not intending to reply in this thread, for reasons I gave at the
+end of my previous post. However, since it is you who are responding
+to me, and I have a great deal of respect for you, I don't want to
+ignore this.
 
-We grew a RAID1 mirror which had its two individual legs provided by
-SAN volumes from an SCST based target server.  We provisioned
-additional storage on the targets and then updated the advertised size
-of the two block devices.
+Firstly, let me say that I do not care about winning an argument,
+here.  What I've said, I felt I should say. And it is based upon my
+best understanding of the situation, and my own experiences as an
+admin. If my statements seemed overly strong, then... well... I've
+found "Strong Opinions, Loosely Held" to be a good strategy for
+learning things I might not otherwise have discovered.
 
-Following that we carried out a rescan of the block devices on the
-initiator and then used mdadm to 'grow' the size of the RAID1 mirror.
-That was about 4-5 months ago and we ended up running into issues when
-the machine was just recently rebooted.
+I'm not a particular advocate or detractor for/against any particular
+filesystem. But I do strongly believe in discussing the relative
+advantages and disadvantaged, and in particular benefits and risks of
+filesystems and filesystem features frankly and honestly. The
+particular risks of a filesystem or feature should get have equal
+visibility to prospective users as to the benefits. There's no denying
+the XFS has a mystique. It's something I've noticed since that day in
+1994 that the old SGI released the code under GPLv2. And if you did
+Google for "ZFS and zeroes" you surely noticed that many of the
+reports of trouble came from people who had no business using XFS in
+their environment in first place. And often based upon erroneous and
+incomplete information. And mixed in with those, there were folks who
+really thought they'd done their homework and still got bitten by one
+of the relative risks of "advanced and modern performance features". I
+believe that it is especially important for advocates of a filesystem
+to be forthright, honest, and frank about the relative risks. As doing
+otherwise hurts, in the long run, the reputation of the filesystem
+being advocated.
 
-The RAID1 mirror refused to assemble secondary to the superblocks on
-the individual devices having a different idea of the volume size as
-compared to the actual volume size.  The mdadm manpage makes reference
-to this problem in the section on the '-U' (update) functionality.
+Saying that "you can lose data with any filesystem" is true... but
+evasive, and misses the point. One could say that speeding down the
+interstate at 100mph on a motorcycle without a helmet isn't any more
+dangerous than driving a sedan with a "Five Star" safety rating at the
+speed limit, since after all, it's possible for people in the sedan to
+die in a crash, and there are even examples of this having happened.
+But that doesn't really address the issue in a constructive and honest
+way.
 
-It would seem to violate the notion of 'least surprise' for a grow
-command to work only to end up with a device which would not assemble
-without external intervention at some distant time in the future.  It
-isn't uncommon to have systems up for a year or more which tends to
-result in this issue being overlooked on systems which have been
-resized.
+But enough of that. I've already said everything that I feel I'm
+ethically bound to say on that topic. And I'm interested in your
+thoughts on the topic of delayed allocation and languages which either
+don't support the concept of fsync, or in which the capability it
+little known and/or seldom used. e.g. Python. It does support the
+concept of fsync. But that's almost never talked about in Python
+circles. (At least to my knowledge.) The function is not a 1st class
+player. But fsync() does exist, buried in the "os" module of the
+standard library alongside dirname(), basename(), copy(), etc. My
+distro of choice is Scientific Linux 6.4. (Essentially RHEL 6.4.) And
+a quick find/fgrep doesn't reveal any usage of fsync at all in any of
+the ".py" files which ship with the distro. Perhaps the Python VM
+invokes it automatically? Strace says no. And this is in an enterprise
+distro which clearly states in its Administrator Manual sections on
+Ext4 & XFS that you *must* use fsync to avoid losing data. I haven't
+checked Ruby or Perl, but I think it's a pretty good guess that I'd
+find the same thing.
 
-I'm assuming there is no technical reason why the superblocks on the
-individual devices cannot be updated as part of the grow.  Events such
-as adding/removing persistent bitmaps suggest this is a possibility.
-If its an issue of needing code we could investigate doing the
-legwork since it is an issue we would like to see addressed.
+However, I'd like to talk (and get your thoughts) about another
+language that doesn't support the concept of fsync. One that still
+maintains a surprising presence even today, particularly in
+government, but rarely gets talked about: COBOL. At a number of my
+sites, I have COBOL C/ISAM files to deal with. And at new sites that I
+take on, a common issue is that the filesystems have been mounted at
+the ext4 defaults (with delayed allocation turned on) and that the
+business has experienced data loss after an unexpected power loss, UPS
+failure, etc. (In fact *every* time I've seen this configuration and
+event I've observed data loss. The customer often just tacitly assumes
+this is just a flaw in the way Linux works. My first action is to
+mount nodelalloc, and this seems to do a great job of preventing
+future problems. In a recent event (last week) the Point of Sale line
+item file on a server was so badly corrupted that the C/ISAM rebuild
+utility could not rebuild it at all. Since this was new (and
+important) data which was not recoverable from the nightly backup, it
+involved 2 days worth of re-entering the data and then figuring out
+how to merge it with the PS data which had occurred during the
+intervening time.
 
-This behavior was experienced on a largely stock RHEL5 box with the
-following versions:
+Is this level of corruption expected behavior for delayed allocation?
+Or have I hit a bug that needs to be reported to the ext4 guys? Should
+delayed allocation be the default in an enterprise distribution which
+does not, itself, make proper use of fsync? Should the risks of
+delayed allocation be made more salient than they are to people who
+upgrade from say, RHEL5 to RHEL6? Should options which trade data
+integrity guarantees for performance be the defaults in any case? As
+an admin, I don't care about benchmark numbers. But I care very much
+about the issue of data endangerment "by default".
 
-	Kernel: 2.6.18-348.6.1.el5
-	mdadm:	v2.6.9
+SIncerely,
+Steve Bergman
 
-Obviously running Oracle.... :-)
-
-Any thoughts/suggestions would be appreciated.
-
-Have a good week.
-
-As always,
-Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
-4206 N. 19th Ave.           Specializing in information infra-structure
-Fargo, ND  58102            development.
-PH: 701-281-1686
-FAX: 701-281-3949           EMAIL: greg@enjellic.com
-------------------------------------------------------------------------------
-"Have you got your computer switched on?  Are you sure you've got all
- the latest patches?
-                                -- Microsoft Technical Support
-
-"Of course, you idiot!  Just put me through to someone who knows what
- they're doing."
-                                -- Andrew Tridgell
+P.S I very much enjoyed that "Future of Red Hat Enterprise Linux"
+event from Red Hat Summit 2012. While I don't necessarily advocate for
+any particular filesystem, I do find the general topic exciting. In
+fact, the entire suite of presentations was engaging and informative.
