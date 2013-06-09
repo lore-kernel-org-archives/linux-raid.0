@@ -1,47 +1,48 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Enlarging device of linear array
-Date: Sun, 09 Jun 2013 06:52:09 -0500
-Message-ID: <51B46C69.5030205@hardwarefreak.com>
-References: <20130608201810.26c19641@hoferr-x61s.hofer.rummelring> <20130609164728.6c21a2f6@natsu>
-Reply-To: stan@hardwarefreak.com
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: Is this expected RAID10 performance?
+Date: Sun, 09 Jun 2013 08:09:44 -0400
+Message-ID: <51B47088.4000501@redhat.com>
+References: <CAO9HMNHVNQcU=FumFnLRd9b0msMr8fr0z6SmL82dksu+6CNXYA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130609164728.6c21a2f6@natsu>
+In-Reply-To: <CAO9HMNHVNQcU=FumFnLRd9b0msMr8fr0z6SmL82dksu+6CNXYA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: Ramon Hofer <ramonhofer@bluewin.ch>, linux-raid@vger.kernel.org
+To: Steve Bergman <sbergman27@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 6/9/2013 5:47 AM, Roman Mamedov wrote:
-> On Sat, 8 Jun 2013 20:18:10 +0200
-> Ramon Hofer <ramonhofer@bluewin.ch> wrote:
-> 
->> My home server with a linear raid (md0) containing three raid5 (md1,
->> md2, md3) is still working wonderfully. Thanks again Stan!
->>
->> Now I'm planning to add a fourth raid5 to the linear array.
-> 
-> You should have used LVM instead of md linear to join your RAIDs into a single
-> block device. LVM allows placing a single logical volume over physical extents
-> placed in all sorts of non-contiguous, fragmented, overlapping fashions. You
-> could also transparently migrate portions of those physical extents between
-> physical arrays without even having to unmount the filesystem that you have on
-> the LV.
+On 06/08/2013 03:56 PM, Steve Bergman wrote:
+> Simply Googling "xfs zero" and sorting by date yields pages and pages
+> of recent report hits.
 
-FYI, I designed this architecture for Ramon.  He CC's linux-raid as a
-courtesy so that others may learn from his experience with it, and in
-the event I may be unavailable.
+This is a just silly. Try googling for "Santa Claus lives at the North Pole" or 
+"Do pixies really exist". Both queries will give you rock solid evidence that 
+you can share will us, down to a specific mail address for Santa :)
 
-Yes, LVM could have been used.  It was specifically not used because
-Ramon is using XFS, which is stripe aligned to each constituent RAID5
-array, which each contain a fixed set of allocation groups.  I'm sure
-you understand the negative performance implications involved when
-breaking alignment with parity RAID, or moving parts of an AG from one
-disk or array to another.
+For that matter, try googling "ext4 zero length files".
 
--- 
-Stan
+In my experience, which is based on first hand experience and direct knowledge, 
+what enterprise users and enterprise storage array vendors actually use when 
+constructing Linux based storage devices, XFS is by far the more popular choice.
+
+To be clear, you absolutely can lose data with *any* file system if you 
+misconfigure your storage, ignore the barriers, etc. That definitely includes ext4.
+
+The way ext4 and xfs both do things is a lot closer these days (mainly because 
+the ext4 developers have continually harvested good ideas from XFS with XFS 
+occasionally doing the same from ext4).
+
+For any application, I always encourage users to try out a few file systems and 
+see what is best for them.
+
+It is a lot more interesting to share your actual setup and results. Much less 
+interesting to echo uninformed, old claims.
+
+Regards,
+
+Ric
+
 
 
