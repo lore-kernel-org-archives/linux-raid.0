@@ -1,73 +1,45 @@
 From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: Is this expected RAID10 performance?
-Date: Mon, 10 Jun 2013 04:23:21 -0500
-Message-ID: <51B59B09.5070903@hardwarefreak.com>
-References: <CAO9HMNEThHrtzCK1A16uSxxHTBY-XxoCgpdV6u5PAhtWK=OuTQ@mail.gmail.com>
+Date: Mon, 10 Jun 2013 05:00:21 -0500
+Message-ID: <51B5A3B5.1050501@hardwarefreak.com>
+References: <CAO9HMNHVNQcU=FumFnLRd9b0msMr8fr0z6SmL82dksu+6CNXYA@mail.gmail.com> <51B47088.4000501@redhat.com> <CAO9HMNHPeXiMmXYtPb29Y2xiOFpznzmP8nBSV09UFCnMrYkEgQ@mail.gmail.com> <loom.20130610T000503-316@post.gmane.org> <CAO9HMNGwdLG7ubNP1gC7To9pNstuwZPDAeV03HDkUjh5MWB0Dg@mail.gmail.com> <51B5178C.5050900@sandeen.net> <CAO9HMNGQO55adys6f=s3fLRpEFbVYeLovXcSeXGAZOGLjdgXdA@mail.gmail.com>
 Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAO9HMNEThHrtzCK1A16uSxxHTBY-XxoCgpdV6u5PAhtWK=OuTQ@mail.gmail.com>
+In-Reply-To: <CAO9HMNGQO55adys6f=s3fLRpEFbVYeLovXcSeXGAZOGLjdgXdA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Steve Bergman <sbergman27@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 6/9/2013 6:53 PM, Steve Bergman wrote:
->> This is almost certainly a result of forced IDE mode.  With this you end
-> up with a master/slave setup between the drives on each controller, and
-> all of the other overhead of EIDE.
-> 
-> Thank you for that. Normally, I would not pursue the issue further, as
-> the server/filesystem is performing within 20%, on its most
-> challenging workload, of what it can do with the workload running in a
-> large tmpfs on the same machine. (I have lots of memory.) However, I'm
-> now engaged in the issue sufficiently that I'll be contacting Dell
-> tomorrow to ask them why we aren't getting what was advertised, and to
-> see if they have any suggestions.
-> 
-> So, would you expect the situation to change if there was some magic
-> way to make AHCI active?
+On 6/9/2013 9:37 PM, Steve Bergman wrote:
 
-I would expect AHCI mode to increase performance to a degree.  But quite
-frankly I don't know Intel's system ASICs well enough to make further
-predictions.  I only know such Intel ASICs from a published spec
-standpoint, not direct experience or problem reports.  I typically don't
-use motherboard down SATA controllers for server applications, but maybe
-for the occasional mirror on a less than critical machine.  I don't
-think the AHCI performance would be any worse.
+> I agree that this is off-topic. It started as a relevant question
+> (from me) about odd RAID10 performance I was seeing. Someone decided
+> to use it as an opportunity to sell me on XFS, and things went south
+> from there.
 
-As I stated previously, a ~$200 LSI HBA buys performance, flexibility,
-and some piece of mind.  For a home PC it doesn't make sense to buy an
-HBA at 2x the price of the motherboard.  For a business server using
-either a SHV desktop board, or low end server board, it very often makes
-sense.
+You're referring to me Steve, but your recollection/perception of the
+conversation is not accurate.  I did not try to sell you on XFS.  The
+conversation drifted toward XFS, but I was not attempting to sell you on
+it.  In fact, I said:
 
-> I will briefly address the filesystems thing. I'm not running down
-> XFS. If anything, I'm shaking the bushes to see if it prompts anyone
-> to tell me something that I don't know about XFS which might change my
-> assessment of when it might be appropriate for my customers' use. I
-> wouldn't mind at all being able to expand use of XFS in appropriate
-> situations, if only to get more experience with it.
+"If your workload has any parallelism, reformat that sucker with XFS
+with the defaults."
 
-I did not say you should use XFS.  I was merely rebutting some of the
-statements you made about XFS.  Ted, and others who've made similar
-statements, are correct.  You pick the filesystem that best meets your
-needs.  That's common sense.  I don't use XFS for my boot and root
-filesystems because it doesn't fit those needs in my case.  I certainly
-use it for user data.
+Then later in the thread I said:
 
-> Beyond that, I'm not sure it would be constructive for you and me to
-> continue that conversation. I've already posted my views, and
-> repeating just gets... well... repetitive. ;-)
+"But as you are stuck with EXT4, this is academic.  But, hopefully this
+information may have future value to you, and others."
 
-Of course not.  You've already covered all of this and much more in your
-replies to Ric, Eric, etc.
 
-Now we get to have the real discussion:  power. ;)  I know you'll have
-different thoughts there, as I made some statements with very broad
-general recommendations on runtimes.
+I'm not beating you up here Steve.  I'm trying to avoid being portrayed
+as the hustler on the corner slinging XFS to the kids. ;)
+
+Yes, I made positive comments about XFS, and some less than positive
+commends about EXT4.  That isn't selling.  That's partisan.
 
 -- 
 Stan
