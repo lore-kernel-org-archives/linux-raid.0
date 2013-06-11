@@ -1,129 +1,57 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Fwd: Help with failed RAID-5 -> 6 migration
-Date: Tue, 11 Jun 2013 06:44:14 -0400
-Message-ID: <51B6FF7E.1000707@turmel.org>
-References: <CAASLJ=5ewoeNPV1-fwRm3o6rCxQjCYxuJTZ5M9g7p-vFpgDW-w@mail.gmail.com> <51B3B7FF.9080800@turmel.org> <CAASLJ=5JkQ8L9fbrOSUKH8Y-a7PZgkTcCsi6PW=rhzsUPRF6ow@mail.gmail.com> <CAASLJ=7NyJHSMhfhmOFFVR8-7OT5sOp24_WJs-kd6zX54fOG7w@mail.gmail.com> <51B62A8A.9070108@turmel.org> <CAASLJ=52pzLpk179U=SY+5aGmEe+XcSfrEuBLC_o1ThPvAXfew@mail.gmail.com>
+From: "Vanhorn, Mike" <michael.vanhorn@wright.edu>
+Subject: Re: Help with failed RAID-5 -> 6 migration
+Date: Tue, 11 Jun 2013 12:42:41 +0000
+Message-ID: <CDDC92D8.471B8%michael.vanhorn@wright.edu>
+References: <51B6FF7E.1000707@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAASLJ=52pzLpk179U=SY+5aGmEe+XcSfrEuBLC_o1ThPvAXfew@mail.gmail.com>
+In-Reply-To: <51B6FF7E.1000707@turmel.org>
+Content-Language: en-US
+Content-ID: <7ECDA698DA37F045839B53F75F873480@prod.exchangelabs.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Keith Phillips <spootsy.ootsy@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>, Keith Phillips <spootsy.ootsy@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/10/2013 10:08 PM, Keith Phillips wrote:
-> Hi  Phil,
-> 
->> A big stack trace suggests other problems in your system.  Not that you
->> don't have potential I/O error issues, but there might be a kernel problem.
->>
->> Please show "uname -a" and "mdadm --version".
-> 
-> These are the verisons I currently have, which the migration was
-> attempted with. The array was originally constructed years ago,
-> probably with older kernel/mdadm versions:
-> 
-> Linux muncher 3.0.0-32-server #51-Ubuntu SMP Thu Mar 21 16:09:49 UTC
-> 2013 x86_64 x86_64 x86_64 GNU/Linux
-> 
-> mdadm - v3.1.4 - 31st August 2010
 
-If the recommendations below don't help, consider using a modern liveCD
-to complete the reshape.  I use SystemRescueCD myself, but I'm sure
-others would do fine, too.
+Using Keith Phillips' reported output from /proc/mdstat and mdadm
+--detail, I have a question:
 
->> The key thing to look for is a nonzero mismatch count in sysfs for that
->> array.  I'm not familiar with Ubuntu's script, so you might want to look
->> by hand at some future point.
-> 
-> I'll have a look in future. I do also have mdadm running daily via
-> cron with "--monitor --oneshot" - do you know if this checks the
-> "mismatch_cnt" file and reports errors?
+/proc/mdstat says that the array is "inactive":
 
-I don't think so.
+>>---------------------------
+>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+>> [raid4] [raid10]
+>> md0 : inactive sde[4] sdc[1] sdb[0] sdd[3]
+>>       7814054240 blocks super 1.2
+>> 
+>> unused devices: <none>
+>> ---------------------------
 
->>> Also, while poking yesterday I noticed I was getting warnings of the
->>> form "Device has wrong state in superblock but /dev/sde seems ok", so
->>> I tried a forced assemble:
->>> mdadm --assemble /dev/md0 --force
->>>
->>> Looks like it updated some info in the superblocks (and yes, I forgot
->>> to save the original output first!), but the array remains inactive. I
->>> have now sworn off poking around by myself, because I've no idea what
->>> to do from here.
->>
->> Please show /proc/mdstat again, along with "mdadm -D /dev/md0".
-> 
-> ---------------------------
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-> [raid4] [raid10]
-> md0 : inactive sde[4] sdc[1] sdb[0] sdd[3]
->       7814054240 blocks super 1.2
-> 
-> unused devices: <none>
-> ---------------------------
-> /dev/md0:
->         Version : 1.2
->   Creation Time : Sun Jul 17 00:41:57 2011
->      Raid Level : raid6
->   Used Dev Size : 1953512960 (1863.02 GiB 2000.40 GB)
->    Raid Devices : 4
->   Total Devices : 4
->     Persistence : Superblock is persistent
-> 
->     Update Time : Sat Jun  8 11:00:43 2013
->           State : active, degraded, Not Started
->  Active Devices : 3
-> Working Devices : 4
->  Failed Devices : 0
->   Spare Devices : 1
-> 
->          Layout : left-symmetric-6
->      Chunk Size : 512K
-> 
->      New Layout : left-symmetric
-> 
->            Name : muncher:0  (local to host muncher)
->            UUID : 830b9ec8:ca8dac63:e31946a0:4c76ccf0
->          Events : 50599
-> 
->     Number   Major   Minor   RaidDevice State
->        0       8       16        0      active sync   /dev/sdb
->        1       8       32        1      active sync   /dev/sdc
->        3       8       48        2      active sync   /dev/sdd
->        4       8       64        3      spare rebuilding   /dev/sde
-> ---------------------------
-> 
->>> for x in /sys/block/sd[acde]/device/timeout ; do echo $x $(< $x) ; done
->>> ----------------------------
->>> /sys/block/sdb/device/timeout 30
->>> /sys/block/sdc/device/timeout 30
->>> /sys/block/sdd/device/timeout 30
->>> /sys/block/sde/device/timeout 30
->>
->> Due to your green drives, you cannot leave these timeouts at 30 seconds.
->>  I recommend 180 seconds:
->>
->> for x in /sys/block/sd[bcde]/device/timeout ; do echo 180 >$x ; done
->>
->> (You should do this ASAP.  On the run is fine.)
->>
->> You will need your system to do this at every boot.  Most distros have
->> rc.local or a similar scripting mechanism you can use.
->>
->> Phil
-> 
-> Done - thanks for the tip.
+But mdadm --detail says
 
-Given the above data, I believe you should be able to just do "mdadm
-/dev/md0 --run" and watch it recover.
+>>           State : active, degraded, Not Started
 
-If it still gives you trouble, stop the array and reassemble with "-vv"
-and show what it reports.
+and goes on to show that the array is rebuilding using the spare. So, how
+can it be both "inactive" and "active", and be rebuilding but "Not
+Started"? 
 
-Also report any dmesg errors.
+I think this is just my un-clarity concerning what these terms mean.
 
-Phil
+Thanks!
+
+---
+Mike VanHorn
+Senior Computer Systems Administrator
+College of Engineering and Computer Science
+Wright State University
+265 Russ Engineering Center
+937-775-5157
+michael.vanhorn@wright.edu
+http://www.cecs.wright.edu/~mvanhorn/
+
+
+
 
