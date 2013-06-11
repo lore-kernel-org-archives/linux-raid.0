@@ -1,52 +1,35 @@
 From: Richard Laager <rlaager@wiktel.com>
-Subject: Prevent Autodetection
-Date: Tue, 11 Jun 2013 04:36:22 -0500
-Message-ID: <1370943382.26636.39.camel@watermelon.coderich.net>
+Subject: Re: Prevent Autodetection
+Date: Tue, 11 Jun 2013 05:33:55 -0500
+Message-ID: <1370946835.26636.40.camel@watermelon.coderich.net>
+References: <1370943382.26636.39.camel@watermelon.coderich.net>
+	 <CAFCYAscJyrFi0oTPn1v9Ey8LXgwHvt=pbWOe0SqMq2-WT5GGVA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-cZfiYNgI42P8IWRYvjqI"
+	boundary="=-GH6eanjnkBNjx8nU+6hQ"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAFCYAscJyrFi0oTPn1v9Ey8LXgwHvt=pbWOe0SqMq2-WT5GGVA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jeff Johnson <jeff.johnson@aeoncomputing.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-cZfiYNgI42P8IWRYvjqI
+--=-GH6eanjnkBNjx8nU+6hQ
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-I have a virtualization host running on an MD root filesystem. I also
-have two whole disks allocated to a virtualized guest which is doing an
-MD RAID1. The host is seeing the array (i.e. it shows up
-in /proc/mdstat). I'd like to prevent this, if for no other reason than
-if there's a problem with that array, it prevents (or at least delays)
-booting the host.
+On Tue, 2013-06-11 at 03:18 -0700, Jeff Johnson wrote:
+> Did you try changing the disk partition types from 'fd' (Linux MD
+> autodetect) to something like '83' (Linux)?
 
-I've tried setting "AUTO +1.x homehost -all" "AUTO homehost -all" and
-even "AUTO -all" in /etc/mdadm/mdadm.conf. I'm updating the initrd and
-rebooting after each change. I've tried "msdos" as well as GPT labels on
-the disks used by the guest. In every case I've tried, it's still
-imported.
-
-I'm running Ubuntu 12.04 "Precise" on both the host and the guest.
-
-$ uname -a
-Linux HOSTNAME 3.2.0-45-generic #70-Ubuntu SMP Wed May 29 20:12:06 UTC
-2013 x86_64 x86_64 x86_64 GNU/Linux
-
-$ mdadm --version
-mdadm - v3.2.5 - 18th May 2012
-
-Does this suggest the initrd scripts are broken on Ubuntu, am I doing
-something wrong, or is it just not possible to prevent this
-autodetection?
-
-Thanks for any insight you can provide!
+I did not with the msdos partition table, but I performed the equivalent
+with GPT ("set 2 raid off" in parted).
 
 --=20
 Richard
 
---=-cZfiYNgI42P8IWRYvjqI
+--=-GH6eanjnkBNjx8nU+6hQ
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 Content-Transfer-Encoding: 7bit
@@ -54,10 +37,10 @@ Content-Transfer-Encoding: 7bit
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.11 (GNU/Linux)
 
-iEYEABECAAYFAlG275YACgkQbfU6uV4fG85jlgCdG1LLdWcu9DJchbhyaUz3c2cB
-sM8AnRwJKomxyG8Y0V91nt0ho8lLy6ky
-=qO9q
+iEYEABECAAYFAlG2/RMACgkQbfU6uV4fG86v5wCfZ6Sz2WTcb/Ao/geZtUUfeIkf
+SiAAn354LHuTPss0e6ZguG51Wld3FwEH
+=BYOD
 -----END PGP SIGNATURE-----
 
---=-cZfiYNgI42P8IWRYvjqI--
+--=-GH6eanjnkBNjx8nU+6hQ--
 
