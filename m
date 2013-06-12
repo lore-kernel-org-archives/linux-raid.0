@@ -1,51 +1,52 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
 Subject: Re: RAID-10 keeps aborting
-Date: Wed, 12 Jun 2013 10:28:03 -0400
-Message-ID: <yq138snjte4.fsf@sermon.lab.mkp.net>
-References: <51AC1440.7020505@zytor.com>
-	<CAA9_cme6tYpYnrZDbrDduwPCjVn+PFbx_rZNPFazBEU9EF0upw@mail.gmail.com>
-	<51ACBAA0.40604@zytor.com>
-	<CAA9_cmc3Gs91C4aV6okUw-=q+fACm1+dooyafOZi+Lnj+Ne_ig@mail.gmail.com>
-	<51ACD511.4030604@zytor.com> <yq1y5art543.fsf@sermon.lab.mkp.net>
-	<CAA9_cmcoOYcFsJuuuJfC4aOUQxJ+6B_Z350HL70TXwYHF4_qGQ@mail.gmail.com>
-	<yq1d2s1rcb7.fsf@sermon.lab.mkp.net> <51AE2A8C.4080508@zytor.com>
-	<yq18v2prbum.fsf@sermon.lab.mkp.net>
-	<CAA9_cmcBt3Mqt+iwrZFANoCef4YfopEPFbvYfEJgqFg8p7WtLQ@mail.gmail.com>
-	<51AE3441.3000208@zytor.com>
-	<CAA9_cmdSvThf_TRjtTSh3r6KOgF9RgzZ6GZPEeYoC2f_n_qz8A@mail.gmail.com>
-	<51AEA4FE.3060900@zytor.com> <yq1mwr4pd9f.fsf@sermon.lab.mkp.net>
-	<20130606142747.1fc17b7f@jlaw-desktop.mno.stratus.com>
-	<yq1bo7ioe6e.fsf@sermon.lab.mkp.net>
-	<20130610101505.33b32d07@jlaw-desktop.mno.stratus.com>
-	<20130612131543.1c79e077@notabene.brown> <51B7F41F.9000605@zytor.com>
-	<51B8153D.1040708@itwm.fraunhofer.de>
+Date: Wed, 12 Jun 2013 07:29:12 -0700
+Message-ID: <51B885B8.9040600@zytor.com>
+References: <51AC1440.7020505@zytor.com> <51AC3283.4000403@zytor.com> <CAA9_cme6tYpYnrZDbrDduwPCjVn+PFbx_rZNPFazBEU9EF0upw@mail.gmail.com> <51ACBAA0.40604@zytor.com> <CAA9_cmc3Gs91C4aV6okUw-=q+fACm1+dooyafOZi+Lnj+Ne_ig@mail.gmail.com> <51ACD511.4030604@zytor.com> <yq1y5art543.fsf@sermon.lab.mkp.net> <CAA9_cmcoOYcFsJuuuJfC4aOUQxJ+6B_Z350HL70TXwYHF4_qGQ@mail.gmail.com> <yq1d2s1rcb7.fsf@sermon.lab.mkp.net> <51AE2A8C.4080508@zytor.com> <yq18v2prbum.fsf@sermon.lab.mkp.net> <CAA9_cmcBt3Mqt+iwrZFANoCef4YfopEPFbvYfEJgqFg8p7WtLQ@mail.gmail.com> <51AE3441.3000208@zytor.com> <CAA9_cmdSvThf_TRjtTSh3r6KOgF9RgzZ6GZPEeYoC2f_n_qz8A@mail.gmail.com> <51AEA4FE.3060900@zytor.com> <yq1mwr4pd9f.fsf@sermon.lab.mkp.net> <20130606142747.1fc17b7f@jlaw-desktop.mno.stratus.com> <yq1bo7ioe6e.fsf@sermon.lab.mkp.net> <2
+ 0130610101505.33b32d07@jlaw-desktop.mno.stratus.com> <20130612131543.1c79e077@notabene.brown> <51B7F41F.9000605@zytor.com> <yq17ghzjti4.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51B8153D.1040708@itwm.fraunhofer.de> (Bernd Schubert's message
-	of "Wed, 12 Jun 2013 08:29:17 +0200")
+In-Reply-To: <yq17ghzjti4.fsf@sermon.lab.mkp.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, NeilBrown <neilb@suse.de>, Joe Lawrence <joe.lawrence@stratus.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dan Williams <dan.j.williams@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: NeilBrown <neilb@suse.de>, Joe Lawrence <joe.lawrence@stratus.com>, Dan Williams <dan.j.williams@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>>>> "Bernd" == Bernd Schubert <bernd.schubert@itwm.fraunhofer.de> writes:
+On 06/12/2013 07:25 AM, Martin K. Petersen wrote:
+>>>>>> "hpa" == H Peter Anvin <hpa@zytor.com> writes:
+> 
+>>> If a drive has some quirky behaviour wrt WRITE SAME, then that should
+>>> be handled in some place where 'quirks' are handled - certainly not
+>>> in md.
+> 
+> hpa> The problem here is that you don't find out ahead of time.
+> 
+> hpa> Now, if I understand the issue at hand correctly is that the
+> hpa> reporting here was actually a Linux bug related to SATA drives
+> hpa> behind a SAS controller.  Martin, am I right?
+> 
+> Support for WRITE SAME is harder for us to detect. With discard we have
+> a set of device-reported bits we can use as triggers, not so for WRITE
+> SAME. And since it is a destructive command we can not simply issue one
+> at device discovery time to try whether it works.
+> 
+> Technically there's nothing that prevents a SAS controller's SCSI-ATA
+> Translation to handle WRITE SAME. The patch I posted simply adds another
+> heuristic. Namely that if we can see that the drive behind the SAS
+> controller is of the ATA persuasion we will not attempt to issue WRITE
+> SAME unless the controller explicitly advertises WRITE SAME support
+> using REPORT SUPPORTED OPERATION CODES.
+> 
+> Sadly we can not exclusively rely on RSOC when deciding whether WRITE
+> SAME is supported or not for devices in general. 95% of the WRITE
+> SAME-capable devices out there do not support RSOC :(
+> 
 
-Bernd> please correct me if I'm wrong, but I think the code
-Bernd> optimistically enabled WRITE_SAME for any drive, except of those
-Bernd> on a sata (libata) controller. 
+The second question is if we should disable WRITE SAME for raid1/10
+(what about raid0?) for 3.10/stable or if your patch really is
+sufficient... "just adds another heuristic" makes me nervous.
 
-Correct. WRITE SAME has been used extensively by RAID manufacturers for
-years. So pretty much any SCSI-class drive supports it.
+	-hpa
 
-The headache we ran into in this case was SATA drives behind a SAS
-controller.
-
-Bernd> Martins patch should improve that (I still need to test it on our
-Bernd> hardware), 
-
-Please do! James wants a tested-by from someone that's not me before he
-pushes the patch to Linus.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
