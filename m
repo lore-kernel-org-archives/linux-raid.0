@@ -1,175 +1,131 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RAD1 doesn't fail WRITE that was written only on a rebuilding
- drive
-Date: Wed, 12 Jun 2013 10:26:45 +1000
-Message-ID: <20130612102645.02794c8b@notabene.brown>
-References: <CAGRgLy6tHN7ZPwxxRM4pzVbKP5fS0PLeXrhKoeZ0XJqVrb0pVQ@mail.gmail.com>
-	<20130604095235.16261243@notabene.brown>
-	<CAGRgLy4SQTvc15quiU_YJreqG2ODGey3iUrLJjhQL4EcMwJFMA@mail.gmail.com>
+Subject: Re: BUG - raid 1 deadlock on handle_read_error / wait_barrier
+Date: Wed, 12 Jun 2013 10:42:07 +1000
+Message-ID: <20130612104207.65b0e3ef@notabene.brown>
+References: <1361487504.4863.54.camel@linux-lxtg.site>
+	<20130225094350.4b8ef084@notabene.brown>
+	<20130225110458.2b1b1e2d@notabene.brown>
+	<1361808662.20264.4.camel@148>
+	<alpine.DEB.2.02.1302260905390.1736@jlaw-desktop.mno.stratus.com>
+	<CAGRgLy45byT7fxLBOqU6ZNjpOL0Xmq6nNsiwJSCTq+kd1Ya7Jg@mail.gmail.com>
+	<20130520171753.002f07d9@notabene.brown>
+	<CAGRgLy5m8KxKPxJE+AbtYbBDzo9uo81wez1ba=H4VY3Jiq32WQ@mail.gmail.com>
+	<CAGRgLy4zTwopPS-cVwT1RKBr8pE7f3n-X3YLyFpktooQtTYGuQ@mail.gmail.com>
+	<20130604114924.37e4573c@notabene.brown>
+	<51B0A40A.2010208@bluehost.com>
+	<CAGRgLy5yWdo4qu5kKsaYjzTwRJNQB_87vPKOFx71FCUxjd6K_w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/YnQopvq1bXX+ATHDojMIaxR"; protocol="application/pgp-signature"
+ boundary="Sig_/ruNoKtg0fshDRPg4Q8O2UCn"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy4SQTvc15quiU_YJreqG2ODGey3iUrLJjhQL4EcMwJFMA@mail.gmail.com>
+In-Reply-To: <CAGRgLy5yWdo4qu5kKsaYjzTwRJNQB_87vPKOFx71FCUxjd6K_w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Shyam Kaushik <shyam@zadarastorage.com>, yair@zadarastorage.com, Tregaron Bayly <tbayly@bluehost.com>
 List-Id: linux-raid.ids
 
---Sig_/YnQopvq1bXX+ATHDojMIaxR
+--Sig_/ruNoKtg0fshDRPg4Q8O2UCn
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 4 Jun 2013 20:54:28 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+On Sat, 8 Jun 2013 12:45:41 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
 wrote:
 
-> Hello Neil,
+> Hi Neil,
+> after reading the code of raid1.c, I see that there's also
+> conf->retry_list, which is also flushed by raid1d, but not by
+> flush_pending_writes(). So I think it can also cause similar deadlock,
+> but I don't know how to fix it:(
 >=20
-> On Tue, Jun 4, 2013 at 2:52 AM, NeilBrown <neilb@suse.de> wrote:
-> > On Tue, 28 May 2013 15:46:33 +0300 Alexander Lyakas <alex.bolshoy@gmail=
-.com>
-> > wrote:
-> >
-> >> Hello Neil,
-> >> we continue testing last-drive RAID1 failure cases.
-> >> We see the following issue:
-> >>
-> >> # RAID1 with drives A and B; drive B was freshly-added and is rebuildi=
-ng
-> >> # Drive A fails
-> >> # WRITE request arrives to the array. It is failed by drive A, so
-> >> r1_bio is marked as R1BIO_WriteError, but the rebuilding drive B
-> >> succeeds in writing it, so the same r1_bio is marked as
-> >> R1BIO_Uptodate.
-> >> # r1_bio arrives to handle_write_finished, badblocks are disabled,
-> >> md_error()->error() does nothing because we don't fail the last drive
-> >> of raid1
-> >> # raid_end_bio_io()  calls call_bio_endio()
-> >> # As a result, in call_bio_endio():
-> >>       if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
-> >>               clear_bit(BIO_UPTODATE, &bio->bi_flags);
-> >> this code doesn't clear the BIO_UPTODATE flag, and the whole master
-> >> WRITE succeeds, back to the upper layer.
-> >>
-> >> # This keeps happening until rebuild aborts, and drive B is ejected
-> >> from the array[1]. After that, there is only one drive (A), so after
-> >> it fails a WRITE, the master WRITE also fails.
-> >>
-> >> It should be noted, that I test a WRITE that is way ahead of
-> >> recovery_offset of drive B. So after such WRITE fails, subsequent READ
-> >> to the same place would fail, because drive A will fail it, and drive
-> >> B cannot be attempted to READ from there (rebuild has not reached
-> >> there yet).
-> >>
-> >> My concrete suggestion is that this behavior is not reasonable, and we
-> >> should only count a successful WRITE to a drive that is marked as
-> >> InSync. Please let me know what do you think?
-> >
-> > Sounds reasonable.  Could you make and test a patch?  Then I'll apply i=
-t.
->=20
-> I read all the code of raid1.c, and it seems that we need to fix only
-> one place. With this fix, I don't see corruption after I fail and then
-> revive the last drive of raid1. I also attach the patch, in case Gmail
-> wraps it.
->=20
-> Also, with this fix, the rebuilding drive is ejected almost
-> immediately, so the second part of the problem doesn't happen now.
-> Although I will consider your suggestion for it later.
->=20
->=20
->=20
-> >From 8d25ada35b5e1ec6ea4c6da6e571ec691b34086a Mon Sep 17 00:00:00 2001
-> From: Alex Lyakas <alex@zadarastorage.com>
-> Date: Tue, 4 Jun 2013 20:42:21 +0300
-> Subject: [PATCH] md/raid1: consider WRITE as successful only if at least =
-one
->  non-Faulty and non-rebuilding drive completed it.
->=20
-> Without that fix, the following scenario could happen:
->=20
-> - RAID1 with drives A and B; drive B was freshly-added and is rebuilding
-> - Drive A fails
-> - WRITE request arrives to the array. It is failed by drive A, so
-> r1_bio is marked as R1BIO_WriteError, but the rebuilding drive B
-> succeeds in writing it, so the same r1_bio is marked as
-> R1BIO_Uptodate.
-> - r1_bio arrives to handle_write_finished, badblocks are disabled,
-> md_error()->error() does nothing because we don't fail the last drive
-> of raid1
-> - raid_end_bio_io()  calls call_bio_endio()
-> - As a result, in call_bio_endio():
->         if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
->                 clear_bit(BIO_UPTODATE, &bio->bi_flags);
-> this code doesn't clear the BIO_UPTODATE flag, and the whole master
-> WRITE succeeds, back to the upper layer.
->=20
-> So we returned success to the upper layer, even though we had written
-> the data onto the rebuilding drive only. But when we want to read the
-> data back, we would not read from the rebuilding drive, so this data
-> is lost.
->=20
-> Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
-> ---
->  drivers/md/raid1.c |   12 +++++++++++-
->  1 file changed, 11 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 6af167f..d8d159e 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -427,7 +427,17 @@ static void raid1_end_write_request(struct bio
-> *bio, int error)
->=20
->  		r1_bio->bios[mirror] =3D NULL;
->  		to_put =3D bio;
-> -		set_bit(R1BIO_Uptodate, &r1_bio->state);
-> +		/*
-> +		 * Do not set R1BIO_Uptodate if the current device is
-> +		 * rebuilding or Faulty. This is because we cannot use
-> +		 * such device for properly reading the data back (we could
-> +		 * potentially use it, if the current write would have felt
-> +		 * before rdev->recovery_offset, but for simplicity we don't
-> +		 * check this here.
-> +		 */
-> +		if (test_bit(In_sync, &conf->mirrors[mirror].rdev->flags) &&
-> +			!test_bit(Faulty, &conf->mirrors[mirror].rdev->flags))
-> +			set_bit(R1BIO_Uptodate, &r1_bio->state);
->=20
->  		/* Maybe we can clear some bad blocks. */
->  		if (is_badblock(conf->mirrors[mirror].rdev,
 
+Good point.
+Requests in retry_list are counted in nr_queued, which is checked in
+freeze_array().
 
-hi Alex,
- thanks for the excellent analysis and elegant patch.
+And freeze_array() already calls flush_pending_writes().
 
-I've applied it and create a similar patch for raid10 which has the same
-problem.
-I'll send them upstream sometime this week.
+So I suspect the right thing to do is use freeze_array() in place of
+raise_barrier().
+
+So maybe this is the right approach.
+
+Testing greatly appreciated...
 
 Thanks,
 NeilBrown
 
---Sig_/YnQopvq1bXX+ATHDojMIaxR
+
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 226dcd0..240b328 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1569,8 +1569,8 @@ static int raid1_add_disk(struct mddev *mddev, struct=
+ md_rdev *rdev)
+ 		 * we wait for all outstanding requests to complete.
+ 		 */
+ 		synchronize_sched();
+-		raise_barrier(conf);
+-		lower_barrier(conf);
++		freeze_array(conf);
++		unfreeze_array(conf);
+ 		clear_bit(Unmerged, &rdev->flags);
+ 	}
+ 	md_integrity_add_rdev(rdev, mddev);
+@@ -1620,11 +1620,11 @@ static int raid1_remove_disk(struct mddev *mddev, s=
+truct md_rdev *rdev)
+ 			 */
+ 			struct md_rdev *repl =3D
+ 				conf->mirrors[conf->raid_disks + number].rdev;
+-			raise_barrier(conf);
++			freeze_array(conf);
+ 			clear_bit(Replacement, &repl->flags);
+ 			p->rdev =3D repl;
+ 			conf->mirrors[conf->raid_disks + number].rdev =3D NULL;
+-			lower_barrier(conf);
++			unfreeze_array(conf);
+ 			clear_bit(WantReplacement, &rdev->flags);
+ 		} else
+ 			clear_bit(WantReplacement, &rdev->flags);
+@@ -3021,7 +3021,7 @@ static int raid1_reshape(struct mddev *mddev)
+ 		return -ENOMEM;
+ 	}
+=20
+-	raise_barrier(conf);
++	freeze_array(conf);
+=20
+ 	/* ok, everything is stopped */
+ 	oldpool =3D conf->r1bio_pool;
+@@ -3052,7 +3052,7 @@ static int raid1_reshape(struct mddev *mddev)
+ 	conf->raid_disks =3D mddev->raid_disks =3D raid_disks;
+ 	mddev->delta_disks =3D 0;
+=20
+-	lower_barrier(conf);
++	unfreeze_array(conf);
+=20
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	md_wakeup_thread(mddev->thread);
+
+--Sig_/ruNoKtg0fshDRPg4Q8O2UCn
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUbfARTnsnt1WYoG5AQKkpw//QAJZPnTQDtm9BFlRyQ06etpcQfCw+C+d
-2qI2Cbv/eMQtXsg/vuq+8ElcZ74A/JXbLANOfYYpaMjw6tGnBbYeZNp/1nhOiJ4Q
-5WzQkuQxcCsXrfeWkCBFkmsPD3mFylkAWfVHU94vb9kqF3ddLv2NxsHbyh6myq3R
-JkaQoHpqxhHSYJQzF6xJu8sPTjJ8mv/jA1AUan8njnzhE+XqpSOrUtAFTfbIcA5e
-WWXTNojYYwFzRoaITRg9J3B28VxJWT6Iqw5hiJmd5NoY7OcnK0wLmdmhkY2qYqa9
-638JFgQi25PA930gu5pf0avhQ2deIUphtsSjT4H8TFPnTD9a3iyo8dTAgwNYKdmD
-afEx7pvfE7z22PFi5i7gCTFky8KZuWOUM4H86+rA/zrCwYo2HTJMEnCdVBxK3nz4
-98YjbXmYVMhHgmkkUywL1XM6+lZNI+3ABBInkhaY63rYgi4bsPcXwSeoj6TfAINW
-PjWAkuus1uEMxmZiJGBpVjiThViORsbhktJCvZEa0Wm3VY14w4Ka6WEDjqmfgWUP
-etsZ84y9qc6Qc0hvz5IjYx+IgRjz5lXmW++HXRpkli2n81ydLzGsH2FIoMpnERI5
-eqGkNqm9WS0C+61GXJ7uyKuOEKviOHk9/pxboRJufQ7dnd87C3PMqCaVRddM3LjH
-VsSiGNHOOeA=
-=0ahO
+iQIVAwUBUbfD3znsnt1WYoG5AQLOEw/9HvfTq9oXazAJc8YfJs3OzRbj0zwknp9b
+/ICQu5/Su23loOqRI1Bqctlgcebb+nBFHlr78aIlqCeSC6Q0v7smmZGc5+I8BI94
+AArhkE0x9U7+VbGCqktGkH+Z2JmI9VtSpySF3vD7dO69sWuif+fx5D6z1jQytaaX
+aORsTsrNw4G+m6BoTcbHfVzsG/Pr+JvYrNz9zPqTuVYzZAmnmwMZb1XKhzJw5jPz
+7ofSfVz/suavlUKZRBe9UBL625JaYwpAw09g3IHSfxsE9L01jfMm6D7GgP6XSgJ+
+zHm5bzsVo40ATHCHOCMk93NzzDJckateMOPUht3A8Yo4mpoAudl37mSW5lPfMhz5
+kjXoS6Aw2PUucmnFmBpqHJ9fzzW6XkffoMAZy52ftY33vSSVModYuuZIFkOJ3ygt
+eNrhIWzmO0hJBy3sIe48VgaO6qmvpRpepTmqmgTjOSvM8I3VoBNLUsJAUAPFt4Fi
+h3Z3kLDqqClTpDXtUXAkYd53U3mQ7PARtTVlVSb9I19t+2qPnM72G5sd0ZsT7Zfw
+NGRF4nise+u6vvaa9EO36f1qMb/+YKy6GyMPBz4NlnMe+tPkOajfOtlTzQVdKitK
+8tu/gDDdlLuKyAraK4ZmQD2ao+0iXTbMCaMb6YmpOEQEhws/yY/xSf2t4wLI8bh0
+D75zS9lKc8Q=
+=BwYy
 -----END PGP SIGNATURE-----
 
---Sig_/YnQopvq1bXX+ATHDojMIaxR--
+--Sig_/ruNoKtg0fshDRPg4Q8O2UCn--
