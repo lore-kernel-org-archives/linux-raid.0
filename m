@@ -1,86 +1,102 @@
-From: Barrett Lewis <barrett.lewis.mitsi@gmail.com>
-Subject: Mdadm server eating drives
-Date: Wed, 12 Jun 2013 08:47:58 -0500
-Message-ID: <CAPSPcXizHpTnqfAGz7LDc3z+DSJUnOb7ukUdhbuFG6mJgs4=Bg@mail.gmail.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: Mdadm server eating drives
+Date: Wed, 12 Jun 2013 15:57:08 +0200
+Message-ID: <51B87E34.4020708@hesbynett.no>
+References: <CAPSPcXizHpTnqfAGz7LDc3z+DSJUnOb7ukUdhbuFG6mJgs4=Bg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAPSPcXizHpTnqfAGz7LDc3z+DSJUnOb7ukUdhbuFG6mJgs4=Bg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Barrett Lewis <barrett.lewis.mitsi@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I started about 1 year ago with a 5x2tb raid 5.  At the beginning of
-feburary, I came home from work and my drives were all making these
-crazy beeping noises.  At that point I was on kernel version .34
+Hi,
 
-I shutdown and rebooted the server and the raid array didn't come back
-online.  I noticed one drive was going up and down and determined that
-the drive had actual physical damage to the power connecter and was
-losing and regaining power through vibration.  No problem.  I bought
-another hard drive and mdadm started recovering to the new drive.
-Got it back to a Raid 5,  backed up my data, then started growing to a
-raid6, and my computer hung hard where even REISUB was ignored.  I
-restarted and resumed the grow.  Then I started getting errors like
-these, they repeat for a minute or two and then the device gets failed
-out of the array:
+Since you mentioned problems with power, are you sure your power supply
+is enough for all these drives?
 
-[  193.801507] ata4.00: exception Emask 0x0 SAct 0x40000063 SErr 0x0 action 0x0
-[  193.801554] ata4.00: irq_stat 0x40000008
-[  193.801581] ata4.00: failed command: READ FPDMA QUEUED
-[  193.801616] ata4.00: cmd 60/08:f0:98:c8:2b/00:00:10:00:00/40 tag 30
-ncq 4096 in
-[  193.801618]          res 51/40:08:98:c8:2b/00:00:10:00:00/40 Emask
-0x409 (media error) <F>
-[  193.801703] ata4.00: status: { DRDY ERR }
-[  193.801728] ata4.00: error: { UNC }
-[  193.804479] ata4.00: configured for UDMA/133
-[  193.804499] ata4: EH complete
+mvh.,
 
-First one one drive, then on another, then on another, as the slow
-grow to raid 6 was happening these messages kept coming up and taking
-drives down.  Eventually (over the course of the week long grow time)
-the failures were happening faster than I could recover them and I had
-to revert to ddrescueing raid components to keep it from going under
-the minimum components.  I ended up having to ddrescue 3 failed drives
-and force the array assembly to get back to 5 drives and by that time
-the arrays ext4 file system could no longer mount (said something
-about group descriptors being corrupted).  By this time, every one of
-the original drives has been replaced and this has been ongoing for 5
-months.  I didn't even want to do an fsck to *attempt* to fix the file
-system until I got a solid raid6.
+David
 
-I upgraded my kernel to .40, bought another hard drive and put it in
-there and started the grow.  Within an hour the system froze. I
-rebooted and restarted the array (and the grow), 2 hours later the
-system froze again, rebooted restarted the array (and the grow) again,
-and got those same errors again, this time on a drive that I had
-bought last month.  Frustrated (feeling like this will never end) I
-let it keep going, hoping to atleast get back to raid 5.  A few hours
-later I got these errors AGAIN on ANOTHER drive I got last month (of a
-differen't brand and model).  So now I'm back with a non functional
-array.  A pile of 6 dead drives (not counting the ones still in the
-computer, components of a now incomplete array).
 
-What is going on here?  If brand new drives from a month ago from two
-different manufacturers are failling, something else is going on.  Is
-it my motherboard?  I've run memtest for 15 hours so far with no
-errors, and ill let it go for 48 before I stop it, lets assume its not
-the RAM for now.
+On 12/06/13 15:47, Barrett Lewis wrote:
+> I started about 1 year ago with a 5x2tb raid 5.  At the beginning of
+> feburary, I came home from work and my drives were all making these
+> crazy beeping noises.  At that point I was on kernel version .34
+> 
+> I shutdown and rebooted the server and the raid array didn't come back
+> online.  I noticed one drive was going up and down and determined that
+> the drive had actual physical damage to the power connecter and was
+> losing and regaining power through vibration.  No problem.  I bought
+> another hard drive and mdadm started recovering to the new drive.
+> Got it back to a Raid 5,  backed up my data, then started growing to a
+> raid6, and my computer hung hard where even REISUB was ignored.  I
+> restarted and resumed the grow.  Then I started getting errors like
+> these, they repeat for a minute or two and then the device gets failed
+> out of the array:
+> 
+> [  193.801507] ata4.00: exception Emask 0x0 SAct 0x40000063 SErr 0x0 action 0x0
+> [  193.801554] ata4.00: irq_stat 0x40000008
+> [  193.801581] ata4.00: failed command: READ FPDMA QUEUED
+> [  193.801616] ata4.00: cmd 60/08:f0:98:c8:2b/00:00:10:00:00/40 tag 30
+> ncq 4096 in
+> [  193.801618]          res 51/40:08:98:c8:2b/00:00:10:00:00/40 Emask
+> 0x409 (media error) <F>
+> [  193.801703] ata4.00: status: { DRDY ERR }
+> [  193.801728] ata4.00: error: { UNC }
+> [  193.804479] ata4.00: configured for UDMA/133
+> [  193.804499] ata4: EH complete
+> 
+> First one one drive, then on another, then on another, as the slow
+> grow to raid 6 was happening these messages kept coming up and taking
+> drives down.  Eventually (over the course of the week long grow time)
+> the failures were happening faster than I could recover them and I had
+> to revert to ddrescueing raid components to keep it from going under
+> the minimum components.  I ended up having to ddrescue 3 failed drives
+> and force the array assembly to get back to 5 drives and by that time
+> the arrays ext4 file system could no longer mount (said something
+> about group descriptors being corrupted).  By this time, every one of
+> the original drives has been replaced and this has been ongoing for 5
+> months.  I didn't even want to do an fsck to *attempt* to fix the file
+> system until I got a solid raid6.
+> 
+> I upgraded my kernel to .40, bought another hard drive and put it in
+> there and started the grow.  Within an hour the system froze. I
+> rebooted and restarted the array (and the grow), 2 hours later the
+> system froze again, rebooted restarted the array (and the grow) again,
+> and got those same errors again, this time on a drive that I had
+> bought last month.  Frustrated (feeling like this will never end) I
+> let it keep going, hoping to atleast get back to raid 5.  A few hours
+> later I got these errors AGAIN on ANOTHER drive I got last month (of a
+> differen't brand and model).  So now I'm back with a non functional
+> array.  A pile of 6 dead drives (not counting the ones still in the
+> computer, components of a now incomplete array).
+> 
+> What is going on here?  If brand new drives from a month ago from two
+> different manufacturers are failling, something else is going on.  Is
+> it my motherboard?  I've run memtest for 15 hours so far with no
+> errors, and ill let it go for 48 before I stop it, lets assume its not
+> the RAM for now.
+> 
+> Not included in this history are SEVERAL times the machine locked up
+> harder than a REISUB, almost always during the heavy IO of component
+> recovery.  It seems to stay up for weeks when the array is inactive
+> (and I'm too busy with other things to deal with it) and then as soon
+> as I put a new drive in and the recovery starts, it hangs within an
+> hour, and does so every few hours, and eventually I get the "failed
+> command: READ FPDMA QUEUED status: { DRDY ERR } error: { UNC }" errors
+> and another drive falls off the array.
+> 
+> I don't mind buying a new motherboard if thats what it is (i've
+> already spent almost a grand on hard drives), I just want to get this
+> fixed/stable and the nightmare behind me.
+> 
+> Here is the dmesg output for my last boot where two drives failed at
+> 193 and 12196: http://paste.ubuntu.com/5753575/
+> 
+> Thanks for any thoughts on the matter
 
-Not included in this history are SEVERAL times the machine locked up
-harder than a REISUB, almost always during the heavy IO of component
-recovery.  It seems to stay up for weeks when the array is inactive
-(and I'm too busy with other things to deal with it) and then as soon
-as I put a new drive in and the recovery starts, it hangs within an
-hour, and does so every few hours, and eventually I get the "failed
-command: READ FPDMA QUEUED status: { DRDY ERR } error: { UNC }" errors
-and another drive falls off the array.
-
-I don't mind buying a new motherboard if thats what it is (i've
-already spent almost a grand on hard drives), I just want to get this
-fixed/stable and the nightmare behind me.
-
-Here is the dmesg output for my last boot where two drives failed at
-193 and 12196: http://paste.ubuntu.com/5753575/
-
-Thanks for any thoughts on the matter
