@@ -1,42 +1,44 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: RAID-10 keeps aborting
-Date: Wed, 12 Jun 2013 07:43:52 -0700 (PDT)
-Message-ID: <yq1li6fie3b.fsf@sermon.lab.mkp.net>
-References: <51AC1440.7020505@zytor.com> <51ACD511.4030604@zytor.com>
- <yq1y5art543.fsf@sermon.lab.mkp.net>
- <CAA9_cmcoOYcFsJuuuJfC4aOUQxJ+6B_Z350HL70TXwYHF4_qGQ@mail.gmail.com>
- <yq1d2s1rcb7.fsf@sermon.lab.mkp.net> <51AE2A8C.4080508@zytor.com>
- <yq18v2prbum.fsf@sermon.lab.mkp.net>
- <CAA9_cmcBt3Mqt+iwrZFANoCef4YfopEPFbvYfEJgqFg8p7WtLQ@mail.gmail.com>
- <51AE3441.3000208@zytor.com>
- <CAA9_cmdSvThf_TRjtTSh3r6KOgF9RgzZ6GZPEeYoC2f_n_qz8A@mail.gmail.com>
- <51AEA4FE.3060900@zytor.com> <yq1mwr4pd9f.fsf@sermon.lab.mkp.net>
- <20130606142747.1fc17b7f@jlaw-desktop.mno.stratus.com>
- <yq1bo7ioe6e.fsf@sermon.lab.mkp.net>
- <20130610101505.33b32d07@jlaw-desktop.mno.stratus.com>
- <20130612131543.1c79e077@notabene.brown> <51B7F41F.9000605@zytor.com>
- <yq17ghzjti4.fsf@sermon.lab.mkp.net> <51B885B8.9040600@zytor.com>
- <yq1txl3iejr.fsf@sermon.lab.mkp.net> <51B887AD.9000302@zytor.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Mdadm server eating drives
+Date: Wed, 12 Jun 2013 10:44:59 -0400
+Message-ID: <51B8896B.5000105@turmel.org>
+References: <CAPSPcXizHpTnqfAGz7LDc3z+DSJUnOb7ukUdhbuFG6mJgs4=Bg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51B887AD.9000302@zytor.com> <(H.> <Peter> <Anvin's> <message>
- <of> <"Wed> <> <12> <Jun> <2013> <07:37:33> <-0700")>
+In-Reply-To: <CAPSPcXizHpTnqfAGz7LDc3z+DSJUnOb7ukUdhbuFG6mJgs4=Bg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, NeilBrown <neilb@suse.de>, Joe Lawrence <joe.lawrence@stratus.com>, Dan Williams <dan.j.williams@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: Barrett Lewis <barrett.lewis.mitsi@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>>>> "hpa" == H Peter Anvin <hpa@zytor.com> writes:
+On 06/12/2013 09:47 AM, Barrett Lewis wrote:
+> I started about 1 year ago with a 5x2tb raid 5.  At the beginning of
+> feburary, I came home from work and my drives were all making these
+> crazy beeping noises.  At that point I was on kernel version .34
 
->> I don't believe there are any problems with raid0.
+[trim /]
 
-hpa> I was wondering if a WRITE SOME sent to raid0 would cause the array
-hpa> to get stopped or paniced.
+What you are experiencing is typical of a hobby-level user who bought
+non-raid-rated drives and is now experiencing timeout mismatch array
+failures due to a lack of error recovery control.
 
-raid0 doesn't do its own endio processing so an error will just bubble
-up to the generic code in blk-lib.
+I suggest you search the archives for various combinations of "scterc",
+"URE", "timeout", and "error recovery".  In the end, you almost
+certainly will need to either use "smartctl -l scterc,70,70" to turn on
+ERC in your drives, or use "echo 180 >/sys/block/sdX/device/timeout" to
+lengthen linux's standard driver command timeout.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Anyways, when you check in again, please report the output of the following:
+
+1) "mdadm -E /dev/sdX" for each member device or partition
+2) "mdadm -D /dev/mdX" for your array
+3) "smartctl -x /dev/sdX" for each member device
+4) "cat /proc/mdstat"
+5) "for x in /sys/block/sd*/device/timeout ; do echo $x $(< $x) ; done"
+6) "dmesg" (trimmed to relevant md and sd* messages)
+7) "cat /etc/mdadm.conf"
+
+Phil
+
