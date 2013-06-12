@@ -1,169 +1,134 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: BUG - raid 1 deadlock on handle_read_error / wait_barrier
-Date: Wed, 12 Jun 2013 11:30:28 +1000
-Message-ID: <20130612113028.1ee21189@notabene.brown>
-References: <1361487504.4863.54.camel@linux-lxtg.site>
-	<20130225094350.4b8ef084@notabene.brown>
-	<20130225110458.2b1b1e2d@notabene.brown>
-	<1361808662.20264.4.camel@148>
-	<alpine.DEB.2.02.1302260905390.1736@jlaw-desktop.mno.stratus.com>
-	<CAGRgLy45byT7fxLBOqU6ZNjpOL0Xmq6nNsiwJSCTq+kd1Ya7Jg@mail.gmail.com>
-	<20130520171753.002f07d9@notabene.brown>
-	<CAGRgLy5m8KxKPxJE+AbtYbBDzo9uo81wez1ba=H4VY3Jiq32WQ@mail.gmail.com>
-	<CAGRgLy4zTwopPS-cVwT1RKBr8pE7f3n-X3YLyFpktooQtTYGuQ@mail.gmail.com>
-	<20130604114924.37e4573c@notabene.brown>
-	<51B0A40A.2010208@bluehost.com>
+Subject: Re: RAID-10 keeps aborting
+Date: Wed, 12 Jun 2013 13:15:43 +1000
+Message-ID: <20130612131543.1c79e077@notabene.brown>
+References: <51AC1440.7020505@zytor.com>
+	<CAA9_cmddLfReYeAhgwh5=j6ELMBNx5Oq7Gg8K+fo0PneaEfrVA@mail.gmail.com>
+	<51AC3283.4000403@zytor.com>
+	<CAA9_cme6tYpYnrZDbrDduwPCjVn+PFbx_rZNPFazBEU9EF0upw@mail.gmail.com>
+	<51ACBAA0.40604@zytor.com>
+	<CAA9_cmc3Gs91C4aV6okUw-=q+fACm1+dooyafOZi+Lnj+Ne_ig@mail.gmail.com>
+	<51ACD511.4030604@zytor.com>
+	<yq1y5art543.fsf@sermon.lab.mkp.net>
+	<CAA9_cmcoOYcFsJuuuJfC4aOUQxJ+6B_Z350HL70TXwYHF4_qGQ@mail.gmail.com>
+	<yq1d2s1rcb7.fsf@sermon.lab.mkp.net>
+	<51AE2A8C.4080508@zytor.com>
+	<yq18v2prbum.fsf@sermon.lab.mkp.net>
+	<CAA9_cmcBt3Mqt+iwrZFANoCef4YfopEPFbvYfEJgqFg8p7WtLQ@mail.gmail.com>
+	<51AE3441.3000208@zytor.com>
+	<CAA9_cmdSvThf_TRjtTSh3r6KOgF9RgzZ6GZPEeYoC2f_n_qz8A@mail.gmail.com>
+	<51AEA4FE.3060900@zytor.com>
+	<yq1mwr4pd9f.fsf@sermon.lab.mkp.net>
+	<20130606142747.1fc17b7f@jlaw-desktop.mno.stratus.com>
+	<yq1bo7ioe6e.fsf@sermon.lab.mkp.net>
+	<20130610101505.33b32d07@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/byK/h4pU1kTI5IX+nmYTNtZ"; protocol="application/pgp-signature"
+ boundary="Sig_/snLE73m/W_sJmZRpuRLfJfT"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51B0A40A.2010208@bluehost.com>
+In-Reply-To: <20130610101505.33b32d07@jlaw-desktop.mno.stratus.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tregaron Bayly <tbayly@bluehost.com>
-Cc: Alexander Lyakas <alex.bolshoy@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, Shyam Kaushik <shyam@zadarastorage.com>, yair@zadarastorage.com
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "H. Peter Anvin" <hpa@zytor.com>, Dan Williams <dan.j.williams@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/byK/h4pU1kTI5IX+nmYTNtZ
+--Sig_/snLE73m/W_sJmZRpuRLfJfT
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 06 Jun 2013 09:00:26 -0600 Tregaron Bayly <tbayly@bluehost.com> wro=
-te:
+On Mon, 10 Jun 2013 10:15:05 -0400 Joe Lawrence <joe.lawrence@stratus.com>
+wrote:
 
-> On 06/03/2013 07:49 PM, NeilBrown wrote:
-> > On Sun, 2 Jun 2013 15:43:41 +0300 Alexander Lyakas <alex.bolshoy@gmail.=
-com>
-> > wrote:
-> >
-> >> Hello Neil,
-> >> I believe I have found what is causing the deadlock. It happens in two=
- flavors:
-> >>
-> >> 1)
-> >> # raid1d() is called, and conf->pending_bio_list is non-empty at this =
-point
-> >> # raid1d() calls md_check_recovery(), which eventually calls
-> >> raid1_add_disk(), which calls raise_barrier()
-> >> # Now raise_barrier will wait for conf->nr_pending to become 0, but it
-> >> cannot become 0, because there are bios sitting in
-> >> conf->pending_bio_list, which nobody will flush, because raid1d is the
-> >> one supposed to call flush_pending_writes(), either directly or via
-> >> handle_read_error. But it is stuck in raise_barrier.
-> >>
-> >> 2)
-> >> # raid1_add_disk() calls raise_barrier(), and waits for
-> >> conf->nr_pending to become 0, as before
-> >> # new WRITE comes and calls wait_barrier(), but this thread has a
-> >> non-empty current->bio_list
-> >> # In this case, the code allows the WRITE to go through
-> >> wait_barrier(), and trigger WRITEs to mirror legs, but these WRITEs
-> >> again end up in conf->pending_bio_list (either via raid1_unplug or
-> >> directly). But nobody will flush conf->pending_bio_list, because
-> >> raid1d is stuck in raise_barrier.
-> >>
-> >> Previously, for example in kernel 3.2, raid1_add_disk did not call
-> >> raise_barrier, so this problem did not happen.
-> >>
-> >> Attached is a reproduction with some prints that I added to
-> >> raise_barrier and wait_barrier (their code also attached). It
-> >> demonstrates case 2. It shows that once raise_barrier got called,
-> >> conf->nr_pending drops down, until it equals the number of
-> >> wait_barrier calls, that slipped through because of non-empty
-> >> current->bio_list. And at this point, this array hangs.
-> >>
-> >> Can you please comment on how to fix this problem. It looks like a
-> >> real deadlock.
-> >> We can perhaps call md_check_recovery() after flush_pending_writes(),
-> >> but this only makes the window smaller, not closes it entirely. But it
-> >> looks like we really should not be calling raise_barrier from raid1d.
-> >>
-> >> Thanks,
-> >> Alex.
-> >
-> > Hi Alex,
-> >   thanks for the analysis.
-> >
-> > Does the following patch fix it?  It makes raise_barrier  more  like
-> > freeze_array().
-> > If not, could you try making the same change to the first
-> > wait_event_lock_irq in raise_barrier?
-> >
-> > Thanks.
-> > NeilBrown
-> >
-> >
-> >
-> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> > index 328fa2d..d34f892 100644
-> > --- a/drivers/md/raid1.c
-> > +++ b/drivers/md/raid1.c
-> > @@ -828,9 +828,9 @@ static void raise_barrier(struct r1conf *conf)
-> >   	conf->barrier++;
-> >
-> >   	/* Now wait for all pending IO to complete */
-> > -	wait_event_lock_irq(conf->wait_barrier,
-> > -			    !conf->nr_pending && conf->barrier < RESYNC_DEPTH,
-> > -			    conf->resync_lock);
-> > +	wait_event_lock_irq_cmd(conf->wait_barrier,
-> > +				!conf->nr_pending && conf->barrier < RESYNC_DEPTH,
-> > +				conf->resync_lock, flush_pending_writes(conf));
-> >
-> >   	spin_unlock_irq(&conf->resync_lock);
-> >   }
-> >
+> A few outstanding questions that I have, maybe Neil or someone more
+> familiar with the code could answer.
 >=20
-> Neil,
->=20
-> This deadlock also cropped up in 3.4 between .37 and .38.  Passing flush_=
-pending_writes(conf) as cmd to wait_event_lock_irq seems to fix it there as=
- well.
->=20
-> --- linux-3.4.38/drivers/md/raid1.c     2013-03-28 13:12:41.000000000 -06=
-00
-> +++ linux-3.4.38.patch/drivers/md/raid1.c       2013-06-04 12:17:35.31419=
-4903 -0600
-> @@ -751,7 +751,7 @@
->          /* Now wait for all pending IO to complete */
->          wait_event_lock_irq(conf->wait_barrier,
->                              !conf->nr_pending && conf->barrier < RESYNC_=
-DEPTH,
-> -                           conf->resync_lock, );
-> +                           conf->resync_lock, flush_pending_writes(conf)=
-);
->  =20
->          spin_unlock_irq(&conf->resync_lock);
->   }
->=20
+> Q1 - Is mddev->chunk_sectors is always zero for RAID1?
 
-I suspect it was already there in 3.4.37 .. in fact I think it was there in
-3.4.
+Not always.  But often.  It is largely ignored.  I think the only effect is
+to round the size of the device down to a multiple of the chunk size.
 
-I'll mark the fix for including in 3.4-stable
+>=20
+> Q2 - I noticed handle_write_finished calls narrow_write_error to try and
+>      potentially avoid failing an entire device.  In my tests,
+>      narrow_write_error never succeeded as rdev->badblocks.shift =3D -1.
 
-Thanks for the report.
+Yes.  You would need a newer mdadm (from my git tree) to get badblocks.shift
+to something else.
+
+>=20
+>      I think this part of the bad block list code Neil has been working
+>      on.  I don't suppose this is the proper place for MD to reset
+>      write_same_max_bytes to disable future WRITE SAME and handling the
+>      individual writes here instead of the block layer?
+
+If a drive reports that WRITE SAME works, but it doesn't, then I'm not sure
+that I can be happy about working with that drive.
+If a drive has some quirky behaviour wrt WRITE SAME, then that should be
+handled in some place where 'quirks' are handled - certainly not in md.
+
+
+I've applied that patch below - thanks.
 
 NeilBrown
 
---Sig_/byK/h4pU1kTI5IX+nmYTNtZ
+
+>=20
+> Regards,
+>=20
+> -- Joe
+>=20
+>=20
+> From b12c24ee0fce802f35263da65d236694b01c99cf Mon Sep 17 00:00:00 2001
+> From: Joe Lawrence <joe.lawrence@stratus.com>
+> Date: Fri, 7 Jun 2013 15:25:54 -0400
+> Subject: [PATCH] raid1: properly set blk_queue_max_write_same_sectors
+>=20
+> MD RAID1 chunk_sectors will always be zero, unlike RAID0, so RAID1 does
+> not need to worry about limiting the write same sectors in that regard.
+> Let disk_stack_limits choose the minimum of the RAID1 components write
+> same values.
+>=20
+> Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+> ---
+>  drivers/md/raid1.c | 3 ---
+>  1 file changed, 3 deletions(-)
+>=20
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index fd86b37..3dc9ad6 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -2821,9 +2821,6 @@ static int run(struct mddev *mddev)
+>  	if (IS_ERR(conf))
+>  		return PTR_ERR(conf);
+> =20
+> -	if (mddev->queue)
+> -		blk_queue_max_write_same_sectors(mddev->queue,
+> -						 mddev->chunk_sectors);
+>  	rdev_for_each(rdev, mddev) {
+>  		if (!mddev->gendisk)
+>  			continue;
+
+
+--Sig_/snLE73m/W_sJmZRpuRLfJfT
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUbfPNDnsnt1WYoG5AQISnQ/9EMRfuWknACggb5egqSHIjEpZWYhliy1z
-+3lyyx7lWq0DSCOj2uPkmndSfrFobZ1d9vh4hhAJlC7R/VV1wOHUc4mZIUtF1bNv
-zativMrhVReqYngc1ITxp0KZoN/KTVvKorBj/hgvKIC4JeSPSFyDj0avIGeucRDp
-fm3fwpFHEOhq5g9ZQWFuhvgvju60hGoLVXq9YR3Pzv0ClFzWdpDUCLIc+85s4AQM
-8b5ZUYB++khzELQXAfu04FdGA+kBIQOmB4pzA4/u/q6L5cmKebwrxioZ3g/6pEAG
-NtX4CywkbXceikTZy1d8hm7xvtbX9U6mZaGSRU2E88f0DwKjlbfmLp8SXs1L1vm1
-IzoLaVqgaomKNBYfQOdkI6U01X6mnlFgFHU4GB52fN6R1P0z+yyAIC+j7hlkT31v
-sEYZKBez1zELQZH1CCdTMC1o0HvAaWD1ohXbBKWkZgLoopLyVng5Q31hlx/DJPGq
-Zmo52s3gjYvMuv6jh+qSBiJA1tYZYQLNmuf8J4DoDk5Krw8OMnd9gA9ktQWS2Ii+
-gy5CB7VqB7E36KyoMzN1HqW2rPZe3t6OY1u752A6FqTVczDgnuL7fhyTl21FQv42
-FxMFDuxRQbZzcvuUUHIJHggpXOsUl6D+lu3xVZ4/k/NCq0a7nTTouHHMk52P8FMb
-/V5n3ZFKT3s=
-=QjYl
+iQIVAwUBUbfn3znsnt1WYoG5AQIKQg/6AgjNIvGFIkP9HYBiKpSp0ubPfm4uqwoP
+RCtrF4XXibxOTFs9yMP1nKhtjD8NEy62+FtvJ1O/nlhDaVYx8bypGSOMhgEbkPS8
+u0gjI/LfWQcdnSqowhICqj/nlRhXWFuXW1m+ykWCpJmvzU8zGIcPagNFzu9HQjGG
+kFWBbmy1ImkoBavu7G1KbRjjZraFDY8S7glMGX+IjLRjWu/3XTrrvmXcvDgib6im
+BSKuvkv/cS/8f2+fgVSkAPqc8HqjjCmy1w0u0L8ZO8fonO42eW8j0wEeeF1H3rqS
+9yOGT2TvVDbGeQOxKDSsGMumXjLJ60/HFgmKd++B+1aALKv7mxaJbwsaDD1Iamhz
+YLKBeyz4/kWfsIq63CUOjJcIcOpSvw5x/ERMY9Jfyl6LwUYsB7bVqzuAKNgezj1w
+Y+tYC9zY/cHSjeD2l5Hk8AGsyw8d5oraml6GIJtJzSqd+vFt9YYwWs+A87zfmOR+
+8xsXNsjYaBz+jlw/OUBuoojw5XNkjWJ+JtcfEorNm1VQJOqdZ9WosK2EA3odZEXi
+O54m6pxwfkXamFbxkK46UTQGJKuX8+ssf+lgCV3CefSTDr3CvNcEbEA/STFbZ//y
+TEKw8rJULzOA4f+Z5oamo+70wkX23a2zFpCKPV0aH0znztGEZBXe4dODGn/j1V2y
+R6XpysWfAco=
+=Pz1Q
 -----END PGP SIGNATURE-----
 
---Sig_/byK/h4pU1kTI5IX+nmYTNtZ--
+--Sig_/snLE73m/W_sJmZRpuRLfJfT--
