@@ -1,45 +1,36 @@
-From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Subject: Re: [PATCH] scsi: Check if the device support WRITE_SAME_10
-Date: Wed, 12 Jun 2013 21:34:36 +0200
-Message-ID: <51B8CD4C.8060304@itwm.fraunhofer.de>
-References: <51AC1440.7020505@zytor.com> <CAA9_cmddLfReYeAhgwh5=j6ELMBNx5Oq7Gg8K+fo0PneaEfrVA@mail.gmail.com> <51AC3283.4000403@zytor.com> <CAA9_cme6tYpYnrZDbrDduwPCjVn+PFbx_rZNPFazBEU9EF0upw@mail.gmail.com> <51ACBAA0.40604@zytor.com> <CAA9_cmc3Gs91C4aV6okUw-=q+fACm1+dooyafOZi+Lnj+Ne_ig@mail.gmail.com> <51ACD511.4030604@zytor.com> <yq1y5art543.fsf@sermon.lab.mkp.net> <51AD2485.9000601@zytor.com> <alpine.DEB.2.02.1306041132260.19072@jlaw-desktop.mno.stratus.com> <51AF0CCF.8000909@itwm.fraunhofer.de> <51AF232C.8060209@itwm.fraunhofer.de> <51AF34E0.3030609@itwm.fraunhofer.de> <yq1r4ggpdy7.fsf@sermon.lab.mkp.net> <51AF9AF2.5000907@itwm.fraunhofer.de> <yq1fvwuoeck.fsf@sermon.lab.mkp.net>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: Re: RAID-10 keeps aborting
+Date: Wed, 12 Jun 2013 22:45:08 -0400 (EDT)
+Message-ID: <alpine.DEB.2.02.1306122242290.22555@jlaw-desktop.mno.stratus.com>
+References: <51AC1440.7020505@zytor.com> <CAA9_cmddLfReYeAhgwh5=j6ELMBNx5Oq7Gg8K+fo0PneaEfrVA@mail.gmail.com> <51AC3283.4000403@zytor.com> <CAA9_cme6tYpYnrZDbrDduwPCjVn+PFbx_rZNPFazBEU9EF0upw@mail.gmail.com> <51ACBAA0.40604@zytor.com>
+ <CAA9_cmc3Gs91C4aV6okUw-=q+fACm1+dooyafOZi+Lnj+Ne_ig@mail.gmail.com> <51ACD511.4030604@zytor.com> <yq1y5art543.fsf@sermon.lab.mkp.net> <CAA9_cmcoOYcFsJuuuJfC4aOUQxJ+6B_Z350HL70TXwYHF4_qGQ@mail.gmail.com> <yq1d2s1rcb7.fsf@sermon.lab.mkp.net> <51AE2A8C.4080508@zytor.com>
+ <yq18v2prbum.fsf@sermon.lab.mkp.net> <CAA9_cmcBt3Mqt+iwrZFANoCef4YfopEPFbvYfEJgqFg8p7WtLQ@mail.gmail.com> <51AE3441.3000208@zytor.com> <CAA9_cmdSvThf_TRjtTSh3r6KOgF9RgzZ6GZPEeYoC2f_n_qz8A@mail.gmail.com> <51AEA4FE.3060900@zytor.com> <yq1mwr4pd9f.fsf@sermon.lab.mkp.net>
+ <20130606142747.1fc17b7f@jlaw-desktop.mno.stratus.com> <yq1bo7ioe6e.fsf@sermon.lab.mkp.net> <20130610101505.33b32d07@jlaw-desktop.mno.stratus.com> <20130612131543.1c79e077@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <yq1fvwuoeck.fsf@sermon.lab.mkp.net>
+In-Reply-To: <20130612131543.1c79e077@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Joe Lawrence <joe.lawrence@stratus.com>, "H. Peter Anvin" <hpa@zytor.com>, Dan Williams <dan.j.williams@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Joe Lawrence <joe.lawrence@stratus.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "H. Peter Anvin" <hpa@zytor.com>, Dan Williams <dan.j.williams@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/07/2013 04:15 AM, Martin K. Petersen wrote:
->>>>>> "Bernd" == Bernd Schubert <bernd.schubert@itwm.fraunhofer.de> writes:
->
->>> max_t(unsigned long, max, SD_MAX_WS10_BLOCKS);
->
-> Bernd> Max? Not min_t()?
->
-> Brain fart. Updated patch with a few other adjustments.
->
-> I have tested this on a couple of JBODs with a mishmash of SATA and SAS
-> drives, including a few specimens that report MAX WRITE SAME BLOCKS.
->
+On Wed, 12 Jun 2013, NeilBrown wrote:
 
-Thanks for the update!
+> I've applied that patch below - thanks.
+> 
+> NeilBrown
+> > 
+> > From b12c24ee0fce802f35263da65d236694b01c99cf Mon Sep 17 00:00:00 2001
+> > From: Joe Lawrence <joe.lawrence@stratus.com>
+> > Date: Fri, 7 Jun 2013 15:25:54 -0400
+> > Subject: [PATCH] raid1: properly set blk_queue_max_write_same_sectors
+> > 
+[snip patch]
 
-I'm far too long at work again, but I managed to test it now and it 
-works fine for the ancient areca controller (ARC-1260) of this test-lab. 
-So you may add
+Hi Neil -- this patch was only to test out what RAID1 would do if the 
+blk_queue_max_write_same_sectors were set to enable WRITE SAME.  As HPA 
+and Martin point out, we should be disabling WRITE SAME for raid1/10 in 
+3.10 / stable for now.  Sorry for the confusion.
 
-Tested-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-
-and
-
-Reviewed-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-
-(although the latter probably does not count much for linux-scsi).
-
-
-Cheers,
-Bernd
+-- Joe
