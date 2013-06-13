@@ -1,50 +1,66 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Fwd: Help with failed RAID-5 -> 6 migration
-Date: Thu, 13 Jun 2013 10:09:17 -0400
-Message-ID: <51B9D28D.8040702@turmel.org>
-References: <CAASLJ=5ewoeNPV1-fwRm3o6rCxQjCYxuJTZ5M9g7p-vFpgDW-w@mail.gmail.com> <51B3B7FF.9080800@turmel.org> <CAASLJ=5JkQ8L9fbrOSUKH8Y-a7PZgkTcCsi6PW=rhzsUPRF6ow@mail.gmail.com> <CAASLJ=7NyJHSMhfhmOFFVR8-7OT5sOp24_WJs-kd6zX54fOG7w@mail.gmail.com> <51B62A8A.9070108@turmel.org> <CAASLJ=52pzLpk179U=SY+5aGmEe+XcSfrEuBLC_o1ThPvAXfew@mail.gmail.com> <51B6FF7E.1000707@turmel.org> <CAASLJ=6eEVY6DeZ=+9Aw6yXmqNSc5mygqtD_8y+MaUid6B_TcQ@mail.gmail.com> <51B88AB2.5060303@turmel.org> <CAASLJ=7=hnez3udgc4Voa_i7drZq_Y-8FkOgxt02_ROL5eD3qg@mail.gmail.com>
+From: Tommi Rantala <tt.rantala@gmail.com>
+Subject: Re: [PATCH linux-next v2] DM RAID: validate_raid_redundancy: Silence
+ uninitialized variable warning
+Date: Thu, 13 Jun 2013 18:30:45 +0300
+Message-ID: <CA+ydwtq_THgL87ESb4Z4T8pMhZUQiAX_9qac2agPwHABGEjuRA@mail.gmail.com>
+References: <20130221131931.GA29577@agk-dp.fab.redhat.com>
+	<1361458226-8142-1-git-send-email-tim.gardner@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAASLJ=7=hnez3udgc4Voa_i7drZq_Y-8FkOgxt02_ROL5eD3qg@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Keith Phillips <spootsy.ootsy@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1361458226-8142-1-git-send-email-tim.gardner@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tim Gardner <tim.gardner@canonical.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 06/13/2013 09:58 AM, Keith Phillips wrote:
->> You won't be able to assemble and run your array without a backup file.
->>  You said you lost your original, so you will have to use a blank one
->> and tell mdadm to ignore the invalid file.
-> 
-> Ah, didn't realise this was an option. After a brief googling it seems
-> my version of mdadm pre-dated the "--invalid-backup" option.
-> 
-> Cloned the git repo and built a newer version, and re-assembled with
-> an empty "--backup-file" and the "--invalid-backup" option. Now it's
-> chugging along happily again - at %20 and counting now, no errors in
-> sight!
+2013/2/21 Tim Gardner <tim.gardner@canonical.com>:
+> drivers/md/dm-raid.c:453:53: warning: 'rebuilds_per_group' may be used uninitialized in this function [-Wuninitialized]
+> drivers/md/dm-raid.c:383:11: note: 'rebuilds_per_group' was declared here
 
-Good to hear. :-)
+Hello, is this patch getting merged? I'm also seeing this exact same
+compiler warning in my mainline builds.
 
-> Will do an ext4 fsck once it's finished the grow. Are there any tips
-> for determining what data I trashed by losing the backup-file? Or is
-> it just a case of trying to access stuff and seeing what's broken?
+Tommi
 
-You have the reshape position where the process stopped in the original
-mdadm -E reports.  Use that to query for inodes that contain those
-sectors, then look up those inodes.
-
-A quick google came up with:
-http://smartmontools.sourceforge.net/badblockhowto.html
-
-You'll have to reinterpret that to use the sector offsets in your array
-rather than sector offset from smartctl.
-
-> Thanks so much for the help, Phil :)
-
-You're welcome.
-
-Phil
-
+>
+> It is impossible that rebuilds_per_group could be used before set, but set
+> it to 0 anyways to silence GCC warnings.
+>
+> Cc: Alasdair Kergon <agk@redhat.com>
+> Cc: dm-devel@redhat.com
+> Cc: Neil Brown <neilb@suse.de>
+> Cc: linux-raid@vger.kernel.org
+> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+> ---
+>
+> v2 - Added GCC comment. Update commit log with a more definite explanation.
+>
+> As Neil has pointed out, https://lwn.net/Articles/529954/ indicates
+> uninitialized_var() is going away.
+>
+>  drivers/md/dm-raid.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+> index 9d6bf19..1dbc341 100644
+> --- a/drivers/md/dm-raid.c
+> +++ b/drivers/md/dm-raid.c
+> @@ -380,7 +380,8 @@ static int validate_region_size(struct raid_set *rs, unsigned long region_size)
+>  static int validate_raid_redundancy(struct raid_set *rs)
+>  {
+>         unsigned i, rebuild_cnt = 0;
+> -       unsigned rebuilds_per_group, copies, d;
+> +       unsigned rebuilds_per_group = 0; /* GCC 4.6.3 */
+> +       unsigned copies, d;
+>         unsigned group_size, last_group_start;
+>
+>         for (i = 0; i < rs->md.raid_disks; i++)
+> --
+> 1.7.9.5
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
