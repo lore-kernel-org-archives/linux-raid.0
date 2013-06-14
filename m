@@ -1,130 +1,105 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Mdadm server eating drives
-Date: Thu, 13 Jun 2013 22:08:40 -0400
-Message-ID: <51BA7B28.9030808@turmel.org>
-References: <CAPSPcXizHpTnqfAGz7LDc3z+DSJUnOb7ukUdhbuFG6mJgs4=Bg@mail.gmail.com> <51B896A2.9090105@websitemanagers.com.au> <CAPSPcXihHrAi2TB9Fuxb1qOGMc_WzwGoXAA7nHdwe2knkO0LkQ@mail.gmail.com> <CAPSPcXib4YZ9Ah-jLvL_kPwpKHLxaGT0rNaDL4XQcFm=RtjcAQ@mail.gmail.com> <CAPSPcXhn8WKcZMVWhSDBVkRyqwo5XCyDc55f2sgr6davVsN5XA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPSPcXhn8WKcZMVWhSDBVkRyqwo5XCyDc55f2sgr6davVsN5XA@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Barrett Lewis <barrett.lewis.mitsi@gmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+From: Joe Perches <joe@perches.com>
+Subject: [Trivial PATCH 00/33] Remove uses of typedef ctl_table
+Date: Thu, 13 Jun 2013 19:37:25 -0700
+Message-ID: <cover.1371177118.git.joe@perches.com>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: Jiri Kosina <trivial@kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ia64@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, openipmi-developer@lists.sourceforge.net, linux-rdma@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, codalist@coda.cs.cmu.edu, linux-fsdevel@vger.kernel.org, linux-cachefs@redhat.com, linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com, keyrings@linux-nfs.org, netdev@vger.kernel.org, linux-mm@kvack.org, linux-security-module@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Barrett,
+It's clearer to use struct ctl_table instead
 
-Please interleave your replies, and trim unnecessary quotes.
+Joe Perches (33):
+  arm: kernel: isa: Convert use of typedef ctl_table to struct ctl_table
+  frv: Convert use of typedef ctl_table to struct ctl_table
+  ia64: crash: Convert use of typedef ctl_table to struct ctl_table
+  mips: lasat: sysctl: Convert use of typedef ctl_table to struct ctl_table
+  powerpc: idle: Convert use of typedef ctl_table to struct ctl_table
+  s390: Convert use of typedef ctl_table to struct ctl_table
+  tile: proc: Convert use of typedef ctl_table to struct ctl_table
+  x86: vdso: Convert use of typedef ctl_table to struct ctl_table
+  cdrom: Convert use of typedef ctl_table to struct ctl_table
+  char: Convert use of typedef ctl_table to struct ctl_table
+  infiniband: Convert use of typedef ctl_table to struct ctl_table
+  macintosh: Convert use of typedef ctl_table to struct ctl_table
+  md: Convert use of typedef ctl_table to struct ctl_table
+  sgi: xpc: Convert use of typedef ctl_table to struct ctl_table
+  parport: Convert use of typedef ctl_table to struct ctl_table
+  scsi_sysctl: Convert use of typedef ctl_table to struct ctl_table
+  coda: Convert use of typedef ctl_table to struct ctl_table
+  fscache: Convert use of typedef ctl_table to struct ctl_table
+  lockd: Convert use of typedef ctl_table to struct ctl_table
+  nfs: Convert use of typedef ctl_table to struct ctl_table
+  inotify: Convert use of typedef ctl_table to struct ctl_table
+  ntfs: Convert use of typedef ctl_table to struct ctl_table
+  ocfs2: Convert use of typedef ctl_table to struct ctl_table
+  quota: Convert use of typedef ctl_table to struct ctl_table
+  xfs: Convert use of typedef ctl_table to struct ctl_table
+  fs: Convert use of typedef ctl_table to struct ctl_table
+  key: Convert use of typedef ctl_table to struct ctl_table
+  ipv6: Convert use of typedef ctl_table to struct ctl_table
+  ndisc: Convert use of typedef ctl_table to struct ctl_table
+  ipc: Convert use of typedef ctl_table to struct ctl_table
+  sysctl: Convert use of typedef ctl_table to struct ctl_table
+  mm: Convert use of typedef ctl_table to struct ctl_table
+  security: keys: Convert use of typedef ctl_table to struct ctl_table
 
-On 06/13/2013 08:19 PM, Barrett Lewis wrote:
-> Sorry for the delay, I wanted to let the memtest run for 48 hours.
-> It's at 49 hours now with zero errors, so memory is pretty much ruled
-> out.
-> 
-> As far as power, I would *think* I have enough power.  The power
-> supply is a 500w Thermaltake TR2.  It's powering an Asrock z77 mobo
-> with an i5-3570k, and the only card on it is a dinky little 2 port
-> sata card my OS drive is on (the RAID components are plugged into the
-> mobo).  Eight 7200 drives and an SSD.  Tell me if this sounds
-> insufficient.
-> 
-> Phil, when you say "what you are experiencing", what do you mean
-> specifically?  The dmesg errors and drives falling off?  Or did you
-> mean the beeping noises (since thats the part you trimmed)?
+ arch/arm/kernel/isa.c              |  6 ++--
+ arch/frv/kernel/pm.c               |  8 +++---
+ arch/frv/kernel/sysctl.c           |  4 +--
+ arch/ia64/kernel/crash.c           |  4 +--
+ arch/ia64/kernel/perfmon.c         |  6 ++--
+ arch/mips/lasat/sysctl.c           | 14 ++++-----
+ arch/powerpc/kernel/idle.c         |  4 +--
+ arch/s390/appldata/appldata_base.c | 16 +++++------
+ arch/s390/kernel/debug.c           |  4 +--
+ arch/s390/mm/cmm.c                 |  6 ++--
+ arch/tile/kernel/proc.c            |  4 +--
+ arch/x86/vdso/vdso32-setup.c       |  4 +--
+ drivers/cdrom/cdrom.c              | 10 +++----
+ drivers/char/hpet.c                |  6 ++--
+ drivers/char/ipmi/ipmi_poweroff.c  |  6 ++--
+ drivers/char/random.c              |  8 +++---
+ drivers/char/rtc.c                 |  6 ++--
+ drivers/infiniband/core/ucma.c     |  2 +-
+ drivers/macintosh/mac_hid.c        |  8 +++---
+ drivers/md/md.c                    |  6 ++--
+ drivers/misc/sgi-xp/xpc_main.c     |  6 ++--
+ drivers/parport/procfs.c           | 58 +++++++++++++++++++-------------------
+ drivers/scsi/scsi_sysctl.c         |  6 ++--
+ fs/coda/sysctl.c                   |  4 +--
+ fs/dcache.c                        |  2 +-
+ fs/drop_caches.c                   |  2 +-
+ fs/eventpoll.c                     |  2 +-
+ fs/file_table.c                    |  4 +--
+ fs/fscache/main.c                  |  4 +--
+ fs/inode.c                         |  2 +-
+ fs/lockd/svc.c                     |  6 ++--
+ fs/nfs/nfs4sysctl.c                |  6 ++--
+ fs/nfs/sysctl.c                    |  6 ++--
+ fs/notify/inotify/inotify_user.c   |  2 +-
+ fs/ntfs/sysctl.c                   |  4 +--
+ fs/ocfs2/stackglue.c               |  8 +++---
+ fs/quota/dquot.c                   |  6 ++--
+ fs/xfs/xfs_sysctl.c                | 26 ++++++++---------
+ include/linux/key.h                |  2 +-
+ include/net/ipv6.h                 |  4 +--
+ include/net/ndisc.h                |  2 +-
+ ipc/ipc_sysctl.c                   | 14 ++++-----
+ ipc/mq_sysctl.c                    | 10 +++----
+ kernel/sysctl.c                    |  2 +-
+ kernel/utsname_sysctl.c            |  6 ++--
+ mm/page-writeback.c                |  2 +-
+ mm/page_alloc.c                    | 15 +++++-----
+ security/keys/sysctl.c             |  2 +-
+ 48 files changed, 174 insertions(+), 171 deletions(-)
 
-Drives dropping out when they shouldn't, and smartctl says "PASSED".
-This is *unavoidable* when you have mismatched device and driver timeouts.
+-- 
+1.8.1.2.459.gbcd45b4.dirty
 
-> Here is the data you requested
-> 
-> 1) mdadm -E /dev/sd[a-f]       http://pastie.org/8040826
-
-/dev/sdd and /dev/sde have old event counts ...
-
-> 2) mdadm -D /dev/md0          http://pastie.org/8040828
-
-... matching the array report ...
-
-> 3)
-> smartctl -x /dev/sda                   http://pastie.org/8040847
-
-Ok, but no error recovery support (typical of green drives).
-
-> smartctl -x /dev/sdb                   http://pastie.org/8040848
-
-Ok, green again.  No ERC.
-
-> smartctl -x /dev/sdc                   http://pastie.org/8040850
-
-Ok, with ERC support, but disabled.  Not a green drive.
-
-> smartctl -x /dev/sdd                   http://pastie.org/8040851
-
-Not Ok.  A few relocations, a couple pending errors.  ERC support
-present but disabled.
-
-> smartctl -x /dev/sde                   http://pastie.org/8040852
-
-Not Ok.  No relocations, but several pending errors.  No ERC.
-
-> smartctl -x /dev/sdf                   http://pastie.org/8040853
-
-Ok, but no ERC.
-
-> 4) cat /proc/mdstat                   http://pastie.org/8040859
-> 
-> 5) for x in /sys/block/sd*/device/timeout ; do echo $x $(< $x) ; done
->                  http://pastie.org/8040870
-
-All timeouts are still the default 30 seconds.  With enabled ERC
-support, these values must be two to three minutes.  I recommend 180
-seconds.  Your array *will not* complete a rebuild with dealing with
-this problem.
-
-> 6) dmesg | grep -e sd -e md                   http://pastie.org/8040871
-> (note that I have rebooted since the last dmesg link I posted (where
-> two drives failed) because I was running memtest, if I should do dmesg
-> differently, let me know)
-> 
-> 7) cat /etc/mdadm.conf                   http://pastie.org/8040876
-
-I generally simplify the ARRAY line to just the device and the UUID, but
-it is ok as is.
-
-> Adam, I wouldn't be opposed to spending the money on a good sata card,
-> but I'd like to get opinions from a few people first.  Any suggestions
-> on a good one for mdadm specifically?
-
-No need.  Just fix your timeouts.  For the two devices that support ERC,
-you need to turn it on:
-
-> smartctl -l scterc,70,70 /dev/sdc
-> smartctl -l scterc,70,70 /dev/sdd
-
-For the others, you need long timeouts in the linux driver:
-
-> for x in /sys/block/sd[abef]/device/timeout ; do echo 180 >$x ; done
-
-This must be done now, and at every power cycle or reboot.  rc.local or
-similar distro config is the appropriate place.  (Enterprise drives
-power up with ERC enabled.  As do raid-rated consumer drives like WD Red.)
-
-Then stop and re-assemble your array.  Use --force to reintegrate your
-problem drives.  Fortunately, this is a raid6--with compatible timeouts,
-your rebuild will succeed.  A URE on /dev/sdd would have to fall in the
-same place as a URE on /dev/sde to kill it.
-
-Upon completion, the UREs will either be fixed or relocated.  If any
-drive's relocations reach double digits, I'd replace it.
-
-Finally, after your array is recovered, set up a cron job that'll
-trigger a "check" scrub of your array on a regular basis.  I use a
-weekly scrub.  The scrub keeps UREs that develop on idle parts of your
-array from accumulating.  Note, the scrub itself will crash your array
-if your timeouts are mismatched and any UREs are lurking.
-
-I'll let you browse the archives for a more detailed explanation of
-*why* this happens.
-
-Phil
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
