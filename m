@@ -1,52 +1,94 @@
-From: Joe Perches <joe@perches.com>
-Subject: [Trivial PATCH 13/33] md: Convert use of typedef ctl_table to struct ctl_table
-Date: Thu, 13 Jun 2013 19:37:38 -0700
-Message-ID: <f688e5c8901e3fadf381ba5ba5cde664bd95ab93.1371177118.git.joe@perches.com>
-References: <cover.1371177118.git.joe@perches.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1371177118.git.joe@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jiri Kosina <trivial@kernel.org>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Barrett Lewis <barrett.lewis.mitsi@gmail.com>
+Subject: Re: Mdadm server eating drives
+Date: Fri, 14 Jun 2013 16:18:09 -0500
+Message-ID: <CAPSPcXh8C87whdXdzWgh97qiwLNZOjSB2OD_nxKCfmRL2GZ=Jg@mail.gmail.com>
+References: <CAPSPcXizHpTnqfAGz7LDc3z+DSJUnOb7ukUdhbuFG6mJgs4=Bg@mail.gmail.com>
+	<51B896A2.9090105@websitemanagers.com.au>
+	<CAPSPcXihHrAi2TB9Fuxb1qOGMc_WzwGoXAA7nHdwe2knkO0LkQ@mail.gmail.com>
+	<CAPSPcXib4YZ9Ah-jLvL_kPwpKHLxaGT0rNaDL4XQcFm=RtjcAQ@mail.gmail.com>
+	<CAPSPcXhn8WKcZMVWhSDBVkRyqwo5XCyDc55f2sgr6davVsN5XA@mail.gmail.com>
+	<51BA7B28.9030808@turmel.org>
+	<CAPSPcXgMxOF-C2Szu_nf4ZLDC8p+yJFOtvLPu7xy1DTW9VAHjg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAPSPcXgMxOF-C2Szu_nf4ZLDC8p+yJFOtvLPu7xy1DTW9VAHjg@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This typedef is unnecessary and should just be removed.
+On Thu, Jun 13, 2013 at 9:08 PM, Phil Turmel <philip@turmel.org> wrote:
+> Please interleave your replies, and trim unnecessary quotes.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/md/md.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+No problem.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 9b82377..f7edaf9 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -112,7 +112,7 @@ static inline int speed_max(struct mddev *mddev)
- 
- static struct ctl_table_header *raid_table_header;
- 
--static ctl_table raid_table[] = {
-+static struct ctl_table raid_table[] = {
- 	{
- 		.procname	= "speed_limit_min",
- 		.data		= &sysctl_speed_limit_min,
-@@ -130,7 +130,7 @@ static ctl_table raid_table[] = {
- 	{ }
- };
- 
--static ctl_table raid_dir_table[] = {
-+static struct ctl_table raid_dir_table[] = {
- 	{
- 		.procname	= "raid",
- 		.maxlen		= 0,
-@@ -140,7 +140,7 @@ static ctl_table raid_dir_table[] = {
- 	{ }
- };
- 
--static ctl_table raid_root_table[] = {
-+static struct ctl_table raid_root_table[] = {
- 	{
- 		.procname	= "dev",
- 		.maxlen		= 0,
--- 
-1.8.1.2.459.gbcd45b4.dirty
+>> smartctl -l scterc,70,70 /dev/sdc
+>> smartctl -l scterc,70,70 /dev/sdd
+>> for x in /sys/block/sd[abef]/device/timeout ; do echo 180 >$x ; done
+>
+> This must be done now, and at every power cycle or reboot.  rc.local or
+> similar distro config is the appropriate place.  (Enterprise drives
+> power up with ERC enabled.  As do raid-rated consumer drives like WD Red.)
+
+Seems that the drives themselves retained the ERC settings after a
+reboot.  But I went ahead and put scterc and the timeouts in rc.local.
+
+>
+> Then stop and re-assemble your array.  Use --force to reintegrate your
+> problem drives.  Fortunately, this is a raid6--with compatible timeouts,
+> your rebuild will succeed.  A URE on /dev/sdd would have to fall in the
+> same place as a URE on /dev/sde to kill it.
+
+It worked.  Yer a wizard!  Thank you!
+
+> Finally, after your array is recovered, set up a cron job that'll
+> trigger a "check" scrub of your array on a regular basis.  I use a
+> weekly scrub.  The scrub keeps UREs that develop on idle parts of your
+> array from accumulating.  Note, the scrub itself will crash your array
+> if your timeouts are mismatched and any UREs are lurking.
+
+I'll definatly do this.  When you talk about mismatched timeouts, do
+you mean matched between each of the components (as in
+/sys/block/sdX/device/timeout) or between that driver timeout and some
+device timeout per component?  If you mean between components, are my
+timeouts matched now, even though I did not raise the 30 seconds on
+the two drives with ERC?
+
+On Fri, Jun 14, 2013 at 4:16 PM, Barrett Lewis
+<barrett.lewis.mitsi@gmail.com> wrote:
+> On Thu, Jun 13, 2013 at 9:08 PM, Phil Turmel <philip@turmel.org> wrote:
+>> Please interleave your replies, and trim unnecessary quotes.
+>
+> No problem.
+>
+>>> smartctl -l scterc,70,70 /dev/sdc
+>>> smartctl -l scterc,70,70 /dev/sdd
+>>> for x in /sys/block/sd[abef]/device/timeout ; do echo 180 >$x ; done
+>>
+>> This must be done now, and at every power cycle or reboot.  rc.local or
+>> similar distro config is the appropriate place.  (Enterprise drives
+>> power up with ERC enabled.  As do raid-rated consumer drives like WD Red.)
+>
+> Seems that the drives themselves retained the ERC settings after a
+> reboot.  But I went ahead and put scterc and the timeouts in rc.local.
+>
+>>
+>> Then stop and re-assemble your array.  Use --force to reintegrate your
+>> problem drives.  Fortunately, this is a raid6--with compatible timeouts,
+>> your rebuild will succeed.  A URE on /dev/sdd would have to fall in the
+>> same place as a URE on /dev/sde to kill it.
+>
+> It worked.  Yer a wizard!  Thank you!
+>
+>> Finally, after your array is recovered, set up a cron job that'll
+>> trigger a "check" scrub of your array on a regular basis.  I use a
+>> weekly scrub.  The scrub keeps UREs that develop on idle parts of your
+>> array from accumulating.  Note, the scrub itself will crash your array
+>> if your timeouts are mismatched and any UREs are lurking.
+>
+> I'll definatly do this.  When you talk about mismatched timeouts, do
+> you mean matched between each of the components (as in
+> /sys/block/sdX/device/timeout) or between that driver timeout and some
+> device timeout per component?  If you mean between components, are my
+> timeouts matched now, even though I did not raise the 30 seconds on
+> the two drives with ERC?
