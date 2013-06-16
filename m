@@ -1,61 +1,66 @@
 From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
-Subject: Re: RAID 5: low sequential write performance?
-Date: Sun, 16 Jun 2013 22:27:34 +0100
-Message-ID: <20926.11718.556180.928129@tree.ty.sabi.co.uk>
-References: <51BCF46B.40704@fatooh.org>
+Subject: Re: Please assist with missing RAID 5 array.
+Date: Sun, 16 Jun 2013 22:17:04 +0100
+Message-ID: <20926.11088.591519.854183@tree.ty.sabi.co.uk>
+References: <E1156523F009E84DA3511789DCE62C8D018D8B76B3@EXCHANGE.paulalima.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51BCF46B.40704@fatooh.org>
+In-Reply-To: <E1156523F009E84DA3511789DCE62C8D018D8B76B3@EXCHANGE.paulalima.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> [ ... ] see a high number of read operations for each drive,
-> and I suspect that is related to the low performance, since
-> presumably the drives are having to seek in order to perform
-> these reads. I'm aware of the RAID 5 write penalty
+[ ... ]
+> DEVICE /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdb
+> ARRAY /dev/md0 level=raid5 devices=/dev/sdb,/dev/sdc,/dev/sdd,/dev/sde,/dev/sdb
 
-Yes, that's Read-Modify-Write.
+> ...Strangely /dev/sdb shows twice.
+[ ... ]
+> Jun 16 09:27:23 localhost kernel: md: bind<sdd>
+> Jun 16 09:27:23 localhost kernel: md: bind<sdb>
+> Jun 16 09:27:23 localhost kernel: md: bind<sdc>
+> Jun 16 09:27:23 localhost kernel: md: bind<sde>
+> Jun 16 09:27:23 localhost kernel: md: kicking non-fresh sdd from array!
+> Jun 16 09:27:23 localhost kernel: md: unbind<sdd>
+> Jun 16 09:27:23 localhost kernel: md: export_rdev(sdd)
+[ ... ]
+> Jun 16 09:27:23 localhost kernel: md/raid:md0: device sde operational as raid disk 3
+> Jun 16 09:27:23 localhost kernel: md/raid:md0: device sdc operational as raid disk 1
+> Jun 16 09:27:23 localhost kernel: md/raid:md0: allocated 4282kB
+> Jun 16 09:27:23 localhost kernel: md/raid:md0: not enough operational devices (2/4 failed)
+[ ... ]
+> ... note that this time the drives were recognized as standard
+> drives not md array components.
+[ ... ]
+> [root@localhost ~]# mdadm --examine /dev/sd[bcde]
+> /dev/sdb:
+>    MBR Magic : aa55
+> Partition[0] :   2930277167 sectors at            1 (type ee)
+[ ... ]
 
-> but does it still apply to large sequential writes that
-> traverse many stripes?
+The above seems rather confused, and we hope that you have
+backups.
 
-If the writes are striped aligned, things should be good. But
-there is no guarantee that the writes you issue to a '/dev/md'
-device will not be rescheduled by the IO subsystem, and even if
-you issue aligned logical writes the physical writes may not be
-aligned.
+There are many pages on the web on how to sort out "kicking
+non-fresh" situations (note the big difference between RAID1 and
+RAID5/RAID6), and indeed event counts are relevant.
 
-> I know this doesn't have anything to do with the filesystem--
-> I was able to reproduce the behavior on a test system, writing
-> directly to an otherwise unused array, using a single 768 MB
-> write() call.
+It is strange that 'sd[bcde]' are bound, but 'sdb' is not listed
+as being part of the RAID set.
 
-Usually writes via a filesystem are more likely to avoid RMW
-issues, as suitabky chosen filesystem designs take into account
-stripe alignment.
+But the strangest thing is that after you unplugged/plugged the
+drives now 'sd[bcde]' seem to come up as GPT partitioned drives,
+rather than MD members, at least according to 'mdadm --examine'.
 
-Some time ago I did some tests and I was also writing to a
-'/dev/md' device, but I found I got RMW only if using
-'O_DIRECT', while buffered writes ended up being aligned.
-Without going into details, it looked like that the Linux IO
-subsystem does significant reordering of requests, sometimes
-surprisingly, when directly accessing the block device, but not
-when writing files after creating a filesystem in that block
-device. Perhaps currently MD expects to be fronted by a
-filesystem.
+You should check in which order which drives came up, because
+the Linux kernel does not guarantee that drives will be assigned
+minor numbers in any given order (that is 'sd[abcde]' could be
+completely different drives every time you boot).
 
-> I measured chunk sizes at each power of 2 from 2^2 to 2^14
-> KB. The results of this are that smaller chunks performed the
-> best, [ ... ]
-
-Your Perl script is a bit convoluted. I prefer to keep it simple
-and use 'dd' advisedly to get upper boundaries.
-
-Anyhow, try using a stripe-aware filesystem like XFS, and also
-perhaps increase significantly the size of the stripe cache.
-That seems to help scheduling too. Changing the elevator on the
-member devices sometimes helps too (but is not necessarily
-related to RMW issues).
+Looking at '/proc/partitions' and using 'disktype /dev/sd?' and
+'blkid | sort -k 2,2' will help you figure out what's on your
+disks, and where the RAID set members are. Since these are
+identified by their MD metadata, in whichever order they are
+listed does not matter.
