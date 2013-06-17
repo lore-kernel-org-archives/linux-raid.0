@@ -1,145 +1,78 @@
-From: Corey Hickey <bugfood-ml@fatooh.org>
-Subject: Re: RAID 5: low sequential write performance?
-Date: Sun, 16 Jun 2013 23:39:14 -0700
-Message-ID: <51BEAF12.10909@fatooh.org>
-References: <51BCF46B.40704@fatooh.org> <20926.11718.556180.928129@tree.ty.sabi.co.uk>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: mdadm --assemble considers event count for spares
+Date: Mon, 17 Jun 2013 16:57:27 +1000
+Message-ID: <20130617165727.3a37c0e7@notabene.brown>
+References: <CAGRgLy6fc8fF8KWoO7EEG6Uo8d4jUPPLcucwX-fNw9O5qKMJgg@mail.gmail.com>
+	<20130528111633.0ba7bed5@notabene.brown>
+	<CAGRgLy5-ACTy1SyQdNO4mbCY0MXzFueGmRsYhQ7tS=BqQRWrCw@mail.gmail.com>
+	<20130528191500.2a5bb83a@notabene.brown>
+	<CAGRgLy4bHdxybSC9U8rw=bVM1Aq+HPir_Y6Cwv7obQg-oe-6RQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Ahr6kO1HDJQlK95VWve_gy."; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20926.11718.556180.928129@tree.ty.sabi.co.uk>
+In-Reply-To: <CAGRgLy4bHdxybSC9U8rw=bVM1Aq+HPir_Y6Cwv7obQg-oe-6RQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg@lxra2.for.sabi.co.UK>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2013-06-16 14:27, Peter Grandi wrote:
->> I know this doesn't have anything to do with the filesystem--
->> I was able to reproduce the behavior on a test system, writing
->> directly to an otherwise unused array, using a single 768 MB
->> write() call.
-> 
-> Usually writes via a filesystem are more likely to avoid RMW
-> issues, as suitabky chosen filesystem designs take into account
-> stripe alignment.
+--Sig_/Ahr6kO1HDJQlK95VWve_gy.
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Yeah.... but if I issue a single write() directly to the array without
-seeking anywhere, it should be aligned, at least I would expect.
+On Tue, 28 May 2013 13:50:49 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
 
-> Some time ago I did some tests and I was also writing to a
-> '/dev/md' device, but I found I got RMW only if using
-> 'O_DIRECT', while buffered writes ended up being aligned.
-> Without going into details, it looked like that the Linux IO
-> subsystem does significant reordering of requests, sometimes
-> surprisingly, when directly accessing the block device, but not
-> when writing files after creating a filesystem in that block
-> device. Perhaps currently MD expects to be fronted by a
-> filesystem.
+> Neil,
+> In my opinion (I may be wrong), a spare drive (raid_disk=3D=3D-1) doesn't
+> add any information to array assembly. It doesn't have a valid raid
+> slot, and I don't see how its event count is relevant. I don't think a
+> spare can help us much in figuring out array's latest state, which is
+> what assembly code tries to do.
+> So what I was thinking: mdadm --assemble doesn't consider spare drives
+> (raid_disk=3D-1) at all. It simply skips over them in the initial loop
+> after reading their superblocks. Perhaps it can keep them in a side
+> list. Then array is assembled with non-spare drives only.
+>=20
+> After array is assembled, we may choose one of the following:
+> # User has to explicitly add the spare drives after array has been
+> assembled. Assemble can warn that some spares have been left out, and
+> tell the user what they are.
+> # Assemble adds the spare drives (perhaps after zeroing their
+> superblocks even), after it assembled the array with non-spare drives.
 
-Hmm. I tried some more simple tests with dd right now, for chunk size
-512 (I'm only reporting single runs here, but I ran them a few times to
-make sure they were representative).
+Hi,
+ I have just committed
 
-Without O_DIRECT:
+  http://git.neil.brown.name/?p=3Dmdadm.git;a=3Dcommitdiff;h=3Df80057aec5d3=
+14798251e318555cb8ac92e4c06f
 
-icebox:~# dd if=/dev/zero bs=768M count=1 of=/dev/md3 conv=fdatasync
+which I believe fixes this issue.  If you can test and confirm I would
+appreciate it.
 
-1+0 records in
-1+0 records out
-805306368 bytes (805 MB) copied, 16.1938 s, 49.7 MB/s
+NeilBrown
 
-With O_DIRECT:
+--Sig_/Ahr6kO1HDJQlK95VWve_gy.
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-icebox:~# dd if=/dev/zero bs=768M count=1 of=/dev/md3 oflag=direct
-conv=fdatasync
-1+0 records in
-1+0 records out
-805306368 bytes (805 MB) copied, 18.1964 s, 44.3 MB/s
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-So, that doesn't seem to help. Interestingly, it did help when I tested
-with 16384 KB chunk size (34 MB/s --> 39 MB/s); but, I'll stick with 512
-KB chunks for now.
+iQIVAwUBUb6zVznsnt1WYoG5AQJT1hAAmI7fmejBc69wqfvy6ILwYDPjweIVGCRI
+0kxmMJuOGjYq/1ELQXjG+ZRW9i2X615r/qjaD+dWHrtrfmWbchdFScdXJfGUMMad
+8kPz8JENb1yYXvpNnuLbHnNbaI3ybCPzXKyTHPnpu+CKhEMSHQzCJ4irX9G3hHbw
+WArpAlZAgxGWPwDPKntck2nABQjoz1vtexTxfIMwiDUwAzOAmcWSwL+7k0yMM34E
+SGq947skwfSde5kQ4mCTRU9GtWHLRD3dviCab5cWCSnXiLV+L4Nh/p2wjYDmG2IS
+hoYDRDB4+0EImXBRjSDJT3F5nDAVch9q0/Fm6hy3Gh06foDj/6UP7irFQLYOj/W4
+Ke9nbCwAE0AQUeDqpiUu9KzAqpLL3kbONGO6HoL0D2wJPA3yqIGmf4ZhvwxrZYTm
+cc0LzjjBhy3mWMpAR13eK9tNCapdQTqCl3kDVLddrLeBF0R8rI/9yyX6vYT4wL0o
+XT9CZtHcrACnc6xOiFQ2L98AWHzsTTEKTJFv3CEXbFJu77OsGLyRg2grauizVff1
+/Z4q1Bjm3gkF2lvJ1qL7YJGS8JXfZqUQtPV37NmdxM2jvP5mgtQ5qD66fjQZaHgZ
+Jk+oNAT3ulur/f5+OTIiicciS9ISq8HKgrewnpVUNOIxylLPyZ20dhW5MLeYbNyV
+7qXEJhEUOZU=
+=ISq4
+-----END PGP SIGNATURE-----
 
->> I measured chunk sizes at each power of 2 from 2^2 to 2^14
->> KB. The results of this are that smaller chunks performed the
->> best, [ ... ]
-> 
-> Your Perl script is a bit convoluted. I prefer to keep it simple
-> and use 'dd' advisedly to get upper boundaries.
-
-Yeah... I had used dd for the early testing, but I wanted to try random
-data and /dev/urandom was so slow it added a large baseline to each test
-unless I read it into memory before starting the time measurements.
-
-The rest of the script is just for the setup, reporting, etc.
-
-> Anyhow, try using a stripe-aware filesystem like XFS, and also
-> perhaps increase significantly the size of the stripe cache.
-> That seems to help scheduling too. Changing the elevator on the
-> member devices sometimes helps too (but is not necessarily
-> related to RMW issues).
-
-The underlying devices were using cfq. noop and deadline were available,
-but they didn't make a noticeable difference.
-
-The stripe cache, however, made a huge difference. It was 256 (KB,
-right?) by default. Here are some average-of-three dd results (without
-O_DIRECT, as above).
-
-  256 KB: 50.2 MB/s
-  512 KB: 61.0 MB/s
- 1024 KB: 72.7 MB/s
- 2048 KB: 79.6 MB/s
- 4096 KB: 87.5 MB/s
- 8192 KB: 87.3 MB/s
-16384 KB: 89.8 MB/s
-32768 KB: 91.3 MB/s
-
-...then I tried O_DIRECT again with 32768 KB stripe cache, and it
-consistently gets slightly better results: 92.7 MB/s.
-
-This is just on some old dissimilar drives I stuffed into my old
-desktop, so I'm not expecting stellar performance. sdd is the slowest,
-and it only writes at 54.6 MB/s on its own, so 92.7 MB/s is not too
-shabby for the RAID, especially compared to the 49.7 MB/s I was getting
-before.
-
-I've been watching a dstat run this whole time, and increasing stripe
-cache sizes do indeed result in fewer reads, until they go away entirely
-at 32768 KB (except for a few reads at the end, which appear to be
-unrelated to RAID).
-
-32768 seems to be the maximum for the stripe cache. I'm quite happy to
-spend 32 MB for this. 256 KB seems quite low, especially since it's only
-half the default chunk size.
-
-
-Out of curiosity, I did some tests with xfs vs. ext4 on an empty
-filesystem. I'm not familiar with xfs, so I may be missing out on some
-tuning. This isn't really meant to be a comprehensive benchmark, but for
-a single sequential write with dd:
-
-mkfs.xfs /dev/m3
-direct: 89.8 MB/s  not direct: 90.0 MB/s
-
-mkfs.ext4 /dev/md3 -E lazy_itable_init=0
-direct: 86.2 MB/s  not direct: 85.4 MB/s
-
-mkfs.ext4 /dev/md3 -E lazy_itable_init=0,stride=128,stripe_width=256
-direct: 89.0 MB/s  not direct: 85.6 MB/s
-
-Anyway, xfs indeed did slightly better, so I may evaluate it further
-next time I rebuild my main array (the one that actually matters for all
-this testing. :) As far as that array goes, write performance went from
-30.2 MB/s to 53.1 MB/s. Not that great, unfortunately, but I'm using
-dm-crypt and that may be the bottleneck now. Reads are still present
-during a write (due to fragmentation, perhaps?), but they are minimal.
-
-
-Thanks Peter, your email was a great help to me. I'm still interested if
-you or anyone else has anything to comment on here, but I'm satisfied
-that I've managed to eliminate unnecessary read-modify-write as a source
-of slowness.
-
-Thanks,
-Corey
+--Sig_/Ahr6kO1HDJQlK95VWve_gy.--
