@@ -1,7 +1,7 @@
-From: Sec Capital Loan <sri_sunarjono@ums.ac.id>
+From: Sec Capital Loan <alucero@ciudaddemendoza.gov.ar>
 Subject: Quick Loans
-Date: Mon, 17 Jun 2013 12:46:44 +0700 (WIT)
-Message-ID: <151155211.738078.1371448004577.JavaMail.root__14865.0700030432$1371452548$gmane$org@ums.ac.id>
+Date: Mon, 17 Jun 2013 07:58:05 -0300 (ART)
+Message-ID: <1488474810.142860.1371466685027.JavaMail.root__1844.62964903123$1371468957$gmane$org@ciudaddemendoza.gov.ar>
 Reply-To: Sec Capital Loan <seccapittals@mit.tc>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
