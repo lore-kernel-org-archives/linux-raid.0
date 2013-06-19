@@ -1,90 +1,86 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID6 growing interrupted, array won't assemble or resume growing
-Date: Wed, 19 Jun 2013 14:36:52 -0400
-Message-ID: <51C1FA44.1070306@turmel.org>
-References: <CAGjXdAhMHEFFc1C0XUSY_K1ZxwaRG-x=NEw9H2Aiv+YtNat-tw@mail.gmail.com> <51B0C769.1070009@turmel.org> <CAGjXdAj+xsW=Ut9EUz65Ha_ZaGwgzJwRG6vh+9S60jpCK1qNpA@mail.gmail.com> <51B1D58A.3010309@turmel.org> <CAGjXdAjgRTho6r8EdM04wBNR90uvbt72cWmkNy9_AuEt-qi1hw@mail.gmail.com>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Growing a 5-drive RAID6 - some initial questions
+Date: Wed, 19 Jun 2013 14:39:58 -0700
+Message-ID: <CAK2H+edY8VKauwivLU5SJ6EU_ZOkTqxGvecYTNW2s5yC-xN4Og@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGjXdAjgRTho6r8EdM04wBNR90uvbt72cWmkNy9_AuEt-qi1hw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nic Wolfe <nic@wolfeden.ca>
-Cc: linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/19/2013 02:21 AM, Nic Wolfe wrote:
+Hi,
+   On my home server my / partition is a 5-drive RAID6 which doesn't
+extend to the full extent of the drive. I've now removed everything to
+the end of the drive (saved to external USB drives for now) and am
+interested in growing the RAID6 to use all the disk space available.
+Before I start I've got a couple of questions. Note that I have no
+storage space issues. I only use about 200GB total on this machine so
+the new, larger RAID6 will be more than large enough. I do value
+having RAID6 and being able to lose two drives.
 
->> Well, search the archive for terms like "scterc", "ure", and/or
->> "timeout".  You'll need to address the issue if you don't have
->> enterprise drives.
->>
-> 
-> [trim /]
+1) Is the fail/remove/partition/add method shown here a reasonable
+method for my task?
 
-You trimmed here...  Per the linked reports, you have this problem.
+https://raid.wiki.kernel.org/index.php/Growing
 
->> Drives with pending unrecoverable read errors won't make it through a
->> rebuild, but show "PASSED" to smart.  The details matter.
+2) The RAID is a 5-drive RAID6 using a 16K chunk size. Would
+performance be helped significantly using some other chunk size?
 
-Drive /dev/sdc has pending relocations.  Those are bad sectors that need
-to be rewritten to either fix them or relocate them.  You are unable to
-do that with your raid card because /dev/sdc does not support error
-recovery control.
+   I am not overly concerned about how long it takes to complete. It
+seems to me that failing 1 drive in a RAID6 built using 500GB RE3 WD
+drives is _reasonably_ safe. The drives came from 3 different orders
+at Amazon spanning about 8 months so I doubt they are from the same
+manufacturing run. I wouldn't expect each drive grow operation to take
+more than a few hours, but that's a total guess on my part having done
+no calculations.
 
-In fact, only your /dev/sdd supports it, and as a desktop drive, it
-defaults to "Off" on every power cycle.
+   Some additional RAID info follows at the end.
 
-[trim /]
+   I could run smartctl testing before starting but it's never shown a
+problem before.
 
-> OK I have built a PC with properly supported hardware that I can now
-> hook all my drives up to directly. Unfortunately because they were
-> being managed by the RAID card before as single drive JBOD arrays they
-> do not show up as md devices on the new PC, so I will have to attempt
-> to get this array running on the old PC with the old RAID/JBOD setup.
+Thanks in advance,
+Mark
 
-Some raid cards use part of the drive space to write management data,
-and show a smaller drive to the OS.  If this is your case, you can
-manually set up device mapper to expose the smaller areas as devices,
-and build the MD array from those.  Detailed information about your
-device sizes with and without the raid card would be needed.
+c2RAID6 ~ # cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
 
-> On the new PC I can see the SMART info but since the drives will have
-> to be managed by the RAID card anyway I'm not sure if it is prudent to
-> mess with the settings. It does sound like a good idea to maybe
-> increase the timeouts on the OS though ("echo 180
->> /sys/block/sd[bcdefg]/device/timeout"). And hopefully my problems
-> were just power in the first place?
+md3 : active raid6 sdb3[0] sdf3[5] sde3[3] sdd3[2] sdc3[1]
+      157305168 blocks super 1.2 level 6, 16k chunk, algorithm 2 [5/5] [UUUUU]
 
-No.  /dev/sdc is your problem.  There might be more, but they aren't
-exposed in SMART yet.
+unused devices: <none>
+c2RAID6 ~ #
 
-> In case it helps though:
-> 
-> sdb: http://pastebin.com/btrpcMF0
-> sdc: http://pastebin.com/kdcrf9mY
-> sdd: http://pastebin.com/S0nj9Ma9
-> sde: http://pastebin.com/G3vUZf92
-> sdf: http://pastebin.com/0P2LbDQq
-> sdg: http://pastebin.com/8q4vuU1a
+c2RAID6 ~ # mdadm -D /dev/md3
+/dev/md3:
+        Version : 1.2
+  Creation Time : Thu Dec 30 17:40:50 2010
+     Raid Level : raid6
+     Array Size : 157305168 (150.02 GiB 161.08 GB)
+  Used Dev Size : 52435056 (50.01 GiB 53.69 GB)
+   Raid Devices : 5
+  Total Devices : 5
+    Persistence : Superblock is persistent
 
-As noted above, you will not be able to use /dev/sdc with the raid card.
- You could try leaving it out and taking a backup with the degraded
-array.  That is what I would recommend first.
+    Update Time : Wed Jun 19 14:33:03 2013
+          State : active
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
 
-> Finally, I don't actually necessarily need to finish the reshape; I
-> just want to get the data off. Can I assemble the array as degraded
-> and just copy the data to a new location without finishing the
-> reshape? It seems that'd save a whole lot of writing and potential for
-> problems. If I can get the data off I can then blank the old drives
-> and start over properly without the sucky RAID card and with the
-> proper smart/erc settings. If that's possible how would I go about
-> doing that other than just trying to --assemble?
+         Layout : left-symmetric
+     Chunk Size : 16K
 
-Second choice is to figure out the "dmsetup" details to run without the
-raid card, set the driver timeouts to 180 for all but /dev/sdd.  Turn on
-scterc for that one.  Then let MD assemble and continue.  And take your
-backup.
+           Name : c2stable:3
+           UUID : de47f991:86d98467:0637635b:9c6d0591
+         Events : 22706
 
-Phil
-
+    Number   Major   Minor   RaidDevice State
+       0       8       19        0      active sync   /dev/sdb3
+       1       8       35        1      active sync   /dev/sdc3
+       2       8       51        2      active sync   /dev/sdd3
+       3       8       67        3      active sync   /dev/sde3
+       5       8       83        4      active sync   /dev/sdf3
+c2RAID6 ~ #
