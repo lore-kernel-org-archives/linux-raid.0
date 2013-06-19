@@ -1,48 +1,102 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: Proper way to delete an old RAID1?
-Date: Tue, 18 Jun 2013 13:02:30 -0700
-Message-ID: <CAK2H+edx7b81fVzRFOTYKw-hXfrgZF6Xgt4_WB=9zBrgJ3ZsLA@mail.gmail.com>
-References: <CAKFseUOGX=9MQLfs3JMdku7D8AOsnFHosKc0DHL3b2crWtqxRA@mail.gmail.com>
-	<CAK2H+eebtek=fRrXxLLdc27OO5xLXaq3r6jCYiPxoFkJcZD=8w@mail.gmail.com>
-	<CAKFseUNFi3zwrtJV37dp5EV0W5SA_QDwV+VtpYs6Z6+LXPLF3A@mail.gmail.com>
-	<CAK2H+edFOHXaeK0F8QQQMWpCya2X85LdzOMLhwYxQGwsA1Q5vg@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 2/6] Makefile: Allow the user to pass EXTRA_CFLAGS
+Date: Wed, 19 Jun 2013 10:07:30 +1000
+Message-ID: <20130619100730.0a0e5240@notabene.brown>
+References: <20130618090910.1161109.69430.stgit@fsdevel7.hpc.devnet.itwm.fhg.de>
+	<20130618090921.1161109.54531.stgit@fsdevel7.hpc.devnet.itwm.fhg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/jEAo9TwF=7J0yapslPRZGas"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAK2H+edFOHXaeK0F8QQQMWpCya2X85LdzOMLhwYxQGwsA1Q5vg@mail.gmail.com>
+In-Reply-To: <20130618090921.1161109.54531.stgit@fsdevel7.hpc.devnet.itwm.fhg.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Caspar Smit <c.smit@truebit.nl>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+Cc: piergiorgio.sartor@nexgo.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jun 18, 2013 at 12:08 PM, Mark Knecht <markknecht@gmail.com> wrote:
-> On Tue, Jun 18, 2013 at 12:01 PM, Caspar Smit <c.smit@truebit.nl> wrote:
->> Mark,
->>
->> His instructions at #3 are correct, #6 are incorrect (or someone has
->> to correct me and knows the --remove will work on an entire MD
->> device?).
->>
->>
->> Kind regards,
->> Caspar
->> Met vriendelijke groet,
->
-> You're right, I'm wrong. It was #6 I was referring to when I first posted.
->
-> Thanks for the correction. We'll see if anyone else suggests #6 actually works.
->
-> Cheers,
-> Mark
+--Sig_/jEAo9TwF=7J0yapslPRZGas
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I suppose one other small point on this topic, should anyone read it
-in the distant future, is that once I've stopped the RAID and zero'ed
-the superblocks the RAID itself is gone and cannot be reassembled but
-the partitions are still there, and they are still marked as 'Linux
-raid autodetect' in fdisk.
+On Tue, 18 Jun 2013 11:09:21 +0200 Bernd Schubert
+<bernd.schubert@itwm.fraunhofer.de> wrote:
 
-To move forward with growing other RAIDs I need to remove the existing
-but now unused partitions to make room for future changes.
+> Users might want to compile with optimization levels and
+> CXFLAGS as suggested in the Makefile comment does not work.
 
-Cheers,
-Mark
+Doesn't it?  It works for me.
+
+   make CXFLAGS=3D-O3
+
+compiled with "-O3".
+
+
+I haven't applied this patch (feel free to try to be more convincing) but h=
+as
+applied all the others (after removing a little bit of trailing white space=
+).
+
+Thanks,
+NeilBrown
+
+
+>=20
+> Signed-off-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+> ---
+>  Makefile |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/Makefile b/Makefile
+> index 8cb8d51..09e08fa 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -27,8 +27,8 @@
+>  #           Australia
+>  #
+> =20
+> -# define "CXFLAGS" to give extra flags to CC.
+> -# e.g.  make CXFLAGS=3D-O to optimise
+> +# define "EXTRA_CFLAGS" to give extra flags to CC.
+> +# e.g.  make EXTRA_CFLAGS=3D-O to optimise
+>  TCC =3D tcc
+>  UCLIBC_GCC =3D $(shell for nm in i386-uclibc-linux-gcc i386-uclibc-gcc; =
+do which $$nm > /dev/null && { echo $$nm ; exit; } ; done; echo false No uc=
+libc found )
+>  #DIET_GCC =3D diet gcc
+> @@ -41,7 +41,7 @@ KLIBC=3D/home/src/klibc/klibc-0.77
+>  KLIBC_GCC =3D gcc -nostdinc -iwithprefix include -I$(KLIBC)/klibc/includ=
+e -I$(KLIBC)/linux/include -I$(KLIBC)/klibc/arch/i386/include -I$(KLIBC)/kl=
+ibc/include/bits32
+> =20
+>  CC =3D $(CROSS_COMPILE)gcc
+> -CXFLAGS =3D -ggdb
+> +CXFLAGS =3D -ggdb $(EXTRA_CFLAGS)
+>  CWFLAGS =3D -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parame=
+ter
+>  ifdef WARN_UNUSED
+>  CWFLAGS +=3D -Wp,-D_FORTIFY_SOURCE=3D2 -O
+
+
+--Sig_/jEAo9TwF=7J0yapslPRZGas
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUcD2Qjnsnt1WYoG5AQJnNA/6A0lTm0hiIZ5vOVHHnq1LP8DGsmw6B9Wy
+/RuB/L38RvgBwy5tX/QrfBb6h8ZwiFGkk9k5Nkr1JUQ1MOJUak0sh1gNw1NRcCLc
+BPURPSOAni2A3+ueE3whJiiBcxzWBtVeMXp0Kde/6n1eksG0pxNJpp/smi3aItyF
+TK90rwx7A7f7/JOAMwf1op2qgILhnt003iYs+q6+f8TY/m0CPMZHNFZjzQP6zobq
+Z3UEhnIeC12Mj5PcRm4iU2rKEVD5evDxIAIjZHcSErF90ZCOJ6O2GP/xEhU9CSVx
+PVDY/MnXUTguLXl6YkKZ8uhJuygWHck+zRyl1qoaIsnQiiRCAnHdNXkM7yRoaSZG
+adeln2nAsyUL8qKvwgDTXU7SR2oYZ6HC1eTNkTa7ZT7R/zMYPhlCfXvACDfpEt0I
+sOdNE3Z9RSGcI/3VicC3BVm1ioouTVK55ZKthZXDIP9DxOgzZdP8bsKzziUrqgC0
+Q1He+ojNIkAQYHBhL9ad8aNJ5oYZbpZRXl8+Rb0PWjhmjBDIrtO+NROldohSvfA+
+SpgkmxM4dVsHqEPYaUIB5nu0cxcUXifRK73rBa//b6nSTOSDsPpm4XcXHo+BXKLi
+9e2A5UFyZUMXPjA3HTYBluMWZPH44B6afvF2N+uEqwP+riNlCMzvKFoy5ooli4U9
+n0NXE2mqBRU=
+=F+BU
+-----END PGP SIGNATURE-----
+
+--Sig_/jEAo9TwF=7J0yapslPRZGas--
