@@ -1,66 +1,86 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: Optimal value for bitmap-chunk option
-Date: Wed, 19 Jun 2013 10:38:38 +0600
-Message-ID: <20130619103838.7c3fb6e0@natsu>
-References: <51C057F9.3020005@qwarta.ru>
+From: Nic Wolfe <nic@wolfeden.ca>
+Subject: Re: RAID6 growing interrupted, array won't assemble or resume growing
+Date: Wed, 19 Jun 2013 00:21:03 -0600
+Message-ID: <CAGjXdAjgRTho6r8EdM04wBNR90uvbt72cWmkNy9_AuEt-qi1hw@mail.gmail.com>
+References: <CAGjXdAhMHEFFc1C0XUSY_K1ZxwaRG-x=NEw9H2Aiv+YtNat-tw@mail.gmail.com>
+	<51B0C769.1070009@turmel.org>
+	<CAGjXdAj+xsW=Ut9EUz65Ha_ZaGwgzJwRG6vh+9S60jpCK1qNpA@mail.gmail.com>
+	<51B1D58A.3010309@turmel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_//ojbf6g84OJnvb4sC6wRLSJ"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51C057F9.3020005@qwarta.ru>
+In-Reply-To: <51B1D58A.3010309@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?0KDQvtC80LDQvSDQkNC70LXQutGB0LXQtdCy?= <r.alekseev@qwarta.ru>
-Cc: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_//ojbf6g84OJnvb4sC6wRLSJ
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+> Before you move drives around, please spend some time correlating drive
+> serial numbers to the "RaidDevice" number for each.  Just in case.  You
+> may be able to get everything you need from /dev/disk/by-id/, but with a
+> weird driver, I not sure.
+>
 
-On Tue, 18 Jun 2013 16:52:09 +0400
-=D0=A0=D0=BE=D0=BC=D0=B0=D0=BD =D0=90=D0=BB=D0=B5=D0=BA=D1=81=D0=B5=D0=B5=
-=D0=B2  <r.alekseev@qwarta.ru> wrote:
+Done, thanks.
 
-> Hello,
->=20
-> I want to speed up rebuilding process of the raid to do that I'm going
-> to apply the command:
->=20
-> mdadm --grow --bitmap=3Dinternal --bitmap-chunk=3DNNNN /dev/mdX
->=20
-> But I don't know how to calculate optimal value of bitmap-chunk option.
-> How can I do that?
+>
+> Well, search the archive for terms like "scterc", "ure", and/or
+> "timeout".  You'll need to address the issue if you don't have
+> enterprise drives.
+>
 
-It's just the minimum granularity of pieces that get rebuilt after unclean
-shutdowns. E.g. if your array decides it's "dirty" in 5 different areas, wi=
-th
-a 16MB chunk the rebuild will process 5*16MB, but with a 128MB it will rebu=
-ild
-5*128MB. On modern systems the difference in time required to do the rebuild
-between these two will be negligible. But having a larger size helps
-noticeably in everyday operation (makes writes faster). So there is nothing=
- to
-"calculate" really, just use a reasonably large size like 128 or 256 MB.
+[trim /]
 
-https://raid.wiki.kernel.org/index.php/Write-intent_bitmap
-http://techblog.tgharold.com/2013/01/mdadm-using-bitmaps-to-speed-up-rebuil=
-ds.html
-http://blog.liw.fi/posts/write-intent-bitmaps/ (the 1st comment)
+>
+> Drives with pending unrecoverable read errors won't make it through a
+> rebuild, but show "PASSED" to smart.  The details matter.
+>
+>> I am not having hardware problems at the moment, I only encountered
+>> them when I had 16 drives running through the RAID card (I have
+>> another 10 drive array). With the other array disconnected the card
+>> seems to be behaving - there's nothing suspicious that I can see in
+>> dmesg.
+>
+> That sounds like insufficient power.
+>
+>> In the meantime I will see if I can put together a machine with 6 SATA
+>> ports and attempt to hook the drives up directly rather than through
+>> the RAID card so I can use a live CD and get the SMART information for
+>> you.
+>
+> Good plan, but do get the serial numbers vs. array role info.  Probably
+> should finish the reshape in such a machine, too.
 
---=20
-With respect,
-Roman
+OK I have built a PC with properly supported hardware that I can now
+hook all my drives up to directly. Unfortunately because they were
+being managed by the RAID card before as single drive JBOD arrays they
+do not show up as md devices on the new PC, so I will have to attempt
+to get this array running on the old PC with the old RAID/JBOD setup.
 
---Sig_//ojbf6g84OJnvb4sC6wRLSJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+On the new PC I can see the SMART info but since the drives will have
+to be managed by the RAID card anyway I'm not sure if it is prudent to
+mess with the settings. It does sound like a good idea to maybe
+increase the timeouts on the OS though ("echo 180
+>/sys/block/sd[bcdefg]/device/timeout"). And hopefully my problems
+were just power in the first place?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+In case it helps though:
 
-iEYEARECAAYFAlHBNc4ACgkQTLKSvz+PZwjKpQCfckXwud7Sbgg5XECZ2hcIltfK
-KlcAn2xWH4BZNVU10bjjL/MQ7357Mflk
-=44SF
------END PGP SIGNATURE-----
+sdb: http://pastebin.com/btrpcMF0
+sdc: http://pastebin.com/kdcrf9mY
+sdd: http://pastebin.com/S0nj9Ma9
+sde: http://pastebin.com/G3vUZf92
+sdf: http://pastebin.com/0P2LbDQq
+sdg: http://pastebin.com/8q4vuU1a
 
---Sig_//ojbf6g84OJnvb4sC6wRLSJ--
+Finally, I don't actually necessarily need to finish the reshape; I
+just want to get the data off. Can I assemble the array as degraded
+and just copy the data to a new location without finishing the
+reshape? It seems that'd save a whole lot of writing and potential for
+problems. If I can get the data off I can then blank the old drives
+and start over properly without the sucky RAID card and with the
+proper smart/erc settings. If that's possible how would I go about
+doing that other than just trying to --assemble?
+
+Thanks,
+
+Nic
