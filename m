@@ -1,102 +1,62 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/6] Makefile: Allow the user to pass EXTRA_CFLAGS
-Date: Wed, 19 Jun 2013 10:07:30 +1000
-Message-ID: <20130619100730.0a0e5240@notabene.brown>
+Subject: Re: [PATCH 0/6] raid6check fixes
+Date: Wed, 19 Jun 2013 10:08:03 +1000
+Message-ID: <20130619100803.03fde6d5@notabene.brown>
 References: <20130618090910.1161109.69430.stgit@fsdevel7.hpc.devnet.itwm.fhg.de>
-	<20130618090921.1161109.54531.stgit@fsdevel7.hpc.devnet.itwm.fhg.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/jEAo9TwF=7J0yapslPRZGas"; protocol="application/pgp-signature"
+ boundary="Sig_/BBx.kU9FfxbfEjBzr04xT/h"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130618090921.1161109.54531.stgit@fsdevel7.hpc.devnet.itwm.fhg.de>
+In-Reply-To: <20130618090910.1161109.69430.stgit@fsdevel7.hpc.devnet.itwm.fhg.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
 Cc: piergiorgio.sartor@nexgo.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/jEAo9TwF=7J0yapslPRZGas
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/BBx.kU9FfxbfEjBzr04xT/h
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 18 Jun 2013 11:09:21 +0200 Bernd Schubert
+On Tue, 18 Jun 2013 11:09:10 +0200 Bernd Schubert
 <bernd.schubert@itwm.fraunhofer.de> wrote:
 
-> Users might want to compile with optimization levels and
-> CXFLAGS as suggested in the Makefile comment does not work.
+> Here are a few raid6check fixes. This series also includes a patch for
+> Makefile to allow to build with optimizations. I only fixed raid6check
+> to build with -O3, but I don't have time left today to fix mdadm=20
+> (e.g. Grow.c:2237:41: error: =E2=80=98info2.data_offset=E2=80=99 may be u=
+sed uninitialized in this function [-Werror=3Duninitialized])
+>=20
 
-Doesn't it?  It works for me.
+Thanks for mentioning that.  I've fix that problem.
 
-   make CXFLAGS=3D-O3
-
-compiled with "-O3".
-
-
-I haven't applied this patch (feel free to try to be more convincing) but h=
-as
-applied all the others (after removing a little bit of trailing white space=
-).
-
-Thanks,
 NeilBrown
 
 
->=20
-> Signed-off-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-> ---
->  Makefile |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->=20
-> diff --git a/Makefile b/Makefile
-> index 8cb8d51..09e08fa 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -27,8 +27,8 @@
->  #           Australia
->  #
-> =20
-> -# define "CXFLAGS" to give extra flags to CC.
-> -# e.g.  make CXFLAGS=3D-O to optimise
-> +# define "EXTRA_CFLAGS" to give extra flags to CC.
-> +# e.g.  make EXTRA_CFLAGS=3D-O to optimise
->  TCC =3D tcc
->  UCLIBC_GCC =3D $(shell for nm in i386-uclibc-linux-gcc i386-uclibc-gcc; =
-do which $$nm > /dev/null && { echo $$nm ; exit; } ; done; echo false No uc=
-libc found )
->  #DIET_GCC =3D diet gcc
-> @@ -41,7 +41,7 @@ KLIBC=3D/home/src/klibc/klibc-0.77
->  KLIBC_GCC =3D gcc -nostdinc -iwithprefix include -I$(KLIBC)/klibc/includ=
-e -I$(KLIBC)/linux/include -I$(KLIBC)/klibc/arch/i386/include -I$(KLIBC)/kl=
-ibc/include/bits32
-> =20
->  CC =3D $(CROSS_COMPILE)gcc
-> -CXFLAGS =3D -ggdb
-> +CXFLAGS =3D -ggdb $(EXTRA_CFLAGS)
->  CWFLAGS =3D -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parame=
-ter
->  ifdef WARN_UNUSED
->  CWFLAGS +=3D -Wp,-D_FORTIFY_SOURCE=3D2 -O
+> I wanted to send the memleak-fixes much earlier, but then
+> I had been too busy. This patch is lightly tested, patches
+> from today are only build-tested.
 
 
---Sig_/jEAo9TwF=7J0yapslPRZGas
+--Sig_/BBx.kU9FfxbfEjBzr04xT/h
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUcD2Qjnsnt1WYoG5AQJnNA/6A0lTm0hiIZ5vOVHHnq1LP8DGsmw6B9Wy
-/RuB/L38RvgBwy5tX/QrfBb6h8ZwiFGkk9k5Nkr1JUQ1MOJUak0sh1gNw1NRcCLc
-BPURPSOAni2A3+ueE3whJiiBcxzWBtVeMXp0Kde/6n1eksG0pxNJpp/smi3aItyF
-TK90rwx7A7f7/JOAMwf1op2qgILhnt003iYs+q6+f8TY/m0CPMZHNFZjzQP6zobq
-Z3UEhnIeC12Mj5PcRm4iU2rKEVD5evDxIAIjZHcSErF90ZCOJ6O2GP/xEhU9CSVx
-PVDY/MnXUTguLXl6YkKZ8uhJuygWHck+zRyl1qoaIsnQiiRCAnHdNXkM7yRoaSZG
-adeln2nAsyUL8qKvwgDTXU7SR2oYZ6HC1eTNkTa7ZT7R/zMYPhlCfXvACDfpEt0I
-sOdNE3Z9RSGcI/3VicC3BVm1ioouTVK55ZKthZXDIP9DxOgzZdP8bsKzziUrqgC0
-Q1He+ojNIkAQYHBhL9ad8aNJ5oYZbpZRXl8+Rb0PWjhmjBDIrtO+NROldohSvfA+
-SpgkmxM4dVsHqEPYaUIB5nu0cxcUXifRK73rBa//b6nSTOSDsPpm4XcXHo+BXKLi
-9e2A5UFyZUMXPjA3HTYBluMWZPH44B6afvF2N+uEqwP+riNlCMzvKFoy5ooli4U9
-n0NXE2mqBRU=
-=F+BU
+iQIVAwUBUcD2Yznsnt1WYoG5AQLb2w//Qag5lE/R62sxclz6SAMT68WArPJNITGf
+cUEVILHwcPKRF300+XEJsRJZ6IpclUxz4sBw2FUKChK5SVPyAZbvkf8+z7asKJ6n
+ersGuESHRmjvya+QNUFP1zgJZYEhZT6t5ekfV26U44sqkT/rupH/NrdxkMuAW3nn
+HRs2XrVXb3Ilu8lITxFOlCDVPEaGR7GFhVcaCo1wOssMbhLTMfc5Ry8afxWub+EG
+crcAsJ50Hzs1DtlZE0DRHYseHNtKc8VvDdWYnIzP1zqb5oEYFv2dYIbnC7ironyT
+CdjVFs/gKwXUUHeyJ3tLBFkyJ9OE58qF0x2+r6lrJBaswlW8H6HT6UCXxZ9Ayg1v
+QbIeGrHD40tnYXG3FZpfvnL3M0uNfl6VqncH4kfaxUNE1OZKT2owWM8jQzWpCYxp
+cF7AjmQNlo25LBKkWNH2I3SJpXdxFGfQddgjX0upP70KnE3W25xs9El409LShtQ6
+KqfVYn/N+DwH/eQzVz/ZIniV2FapURLwUWjfkq54vfVjUdUI6BlyHlKlAhxIx4og
+PRlBN1Zk03B1zRZc/oRCyXyIw0uetgzfFNMwubtHN4clHjtKplGLq5e4wHpqJYDK
+WEQypLwpsF2WXUd5J59BrWjJ2cPKQuCrfTJzp4oXCx+3gQYDEB90+CMrQSEuV1vi
+Gt5Y33doz/I=
+=xNOM
 -----END PGP SIGNATURE-----
 
---Sig_/jEAo9TwF=7J0yapslPRZGas--
+--Sig_/BBx.kU9FfxbfEjBzr04xT/h--
