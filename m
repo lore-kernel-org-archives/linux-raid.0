@@ -1,48 +1,106 @@
-From: Caspar Smit <c.smit@truebit.nl>
-Subject: Re: Proper way to delete an old RAID1?
-Date: Thu, 20 Jun 2013 11:58:59 +0200
-Message-ID: <CAKFseUOAg31Lui6XQpNXgDSZ7d=pMWQQR9beoeDtreR+JV3JAQ@mail.gmail.com>
-References: <CAKFseUOGX=9MQLfs3JMdku7D8AOsnFHosKc0DHL3b2crWtqxRA@mail.gmail.com>
-	<CAK2H+eebtek=fRrXxLLdc27OO5xLXaq3r6jCYiPxoFkJcZD=8w@mail.gmail.com>
-	<CAKFseUNFi3zwrtJV37dp5EV0W5SA_QDwV+VtpYs6Z6+LXPLF3A@mail.gmail.com>
-	<CAK2H+edFOHXaeK0F8QQQMWpCya2X85LdzOMLhwYxQGwsA1Q5vg@mail.gmail.com>
+From: Jonathan Wilson <piercing_male@hotmail.com>
+Subject: Delete and re-purpose a mdadm raid partition
+Date: Thu, 20 Jun 2013 14:14:56 +0100
+Message-ID: <BLU0-SMTP47546CBE9D49D65539F974F988E0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAK2H+edFOHXaeK0F8QQQMWpCya2X85LdzOMLhwYxQGwsA1Q5vg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Knecht <markknecht@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-To all interested,
+Having made the spectacular mistake of undersizing my root partition I
+am inquiring the best way to delete an existing linear raid and create a
+new secondary / partition which will be used to install a fresh debian
+system.
 
-I tested the --remove option on an entire MD device it immediatly
-returned to the command prompt with no output/action whatsoever.
-The MD was still active and runnning. So I can confirm it does nothing
-and the instruction on the mentioned page are incorrect.
+I should also say that I'm not a linux expert, although computer
+literate and with experience of installing debian previously hence the
+detailed "check list."
 
-Tested with mdadm v3.1.4
+My system contains the following...
 
-Kind regards,
-Caspar
+2 "system and other data drives" on a 2 port sata card.
+6 "pure data drives, raid6" on motherboard.
 
-2013/6/18 Mark Knecht <markknecht@gmail.com>:
-> On Tue, Jun 18, 2013 at 12:01 PM, Caspar Smit <c.smit@truebit.nl> wrote:
->> Mark,
->>
->> His instructions at #3 are correct, #6 are incorrect (or someone has
->> to correct me and knows the --remove will work on an entire MD
->> device?).
->>
->>
->> Kind regards,
->> Caspar
->> Met vriendelijke groet,
->
-> You're right, I'm wrong. It was #6 I was referring to when I first posted.
->
-> Thanks for the correction. We'll see if anyone else suggests #6 actually works.
->
-> Cheers,
-> Mark
+The two system disks have the following (X=g or h) GPT partitions.
+
+sdX1 bios boot 1MB
+sdX2 Raid1 boot 210MB (md0)
+sdX3 Raid1 root 13GB (md1)<<< keep for old debian
+sdX4 Swap 9.7GB
+sdX5 Raid1 home 11GB (md2)(not used for users, root does have a small
+about of data/folders set up in it)
+sdX6 Linear 54GB (md3)<<< to be new root for new debian
+sdX7 Raid1 data 413GB (md4)
+
+I'm guessing what I need to do is with the existing debian install is
+the following. (this is where I need conformation)
+
+unmount the Linear volume /dev/md3
+
+stop the array
+
+Make sure the data on the volume(s) are blank by "dd'ing" into /dev/sdX6
+
+Create a new raid1 array on sdX6
+
+Do NOT update mdadm.conf <<< I believe nothing much will change here as
+the uuid of the underlying partition will not have changed also leaving
+it as it is will make sure it gets the existing /dev/md/3 slot.
+
+Make sure the array is started/synced ok.
+
+Create ext4 file system on md3
+
+Update fstab to reflect new uuid of new file system.
+
+Re-boot system, check all is well (in theory it should be). 
+
+
+
+At this point I start to go outside of mdadm but any help is much
+appreciated.
+
+
+As I don't have enough sata slots I'm going to have to do a bit of
+fiddling about...
+
+Get the network card firmware, place it and the iso and the hd-media
+files on md3's ext4 partition.
+
+re-boot and manually load/start from md3 (I believe as its raid1 it
+should be started ok by grub so will be accessible) the
+vmlinuz/initrd.gz which should then start the installation process.
+
+During the install only setup/define the md3 as / and also set the home
+on / (so it doesn't conflict with anything in md2's home); also set
+up /boot on the md0 (same as where the existing boot is located) leave
+all other file systems alone as will set them up once new debian is
+bootable.
+
+re-boot, check new install ok and / is on md3 (or what ever the new
+clean install has called it)
+
+re-boot, check old install is ok and is using the old / (which it should
+be as nothing changed as far as its concerned)
+
+re-boot to new debian, run grub-update to refresh bios boot partition on
+sdH
+
+reboot with removed sdG, test new and old boot's ok.
+
+reboot new install with re-attached sdG, test ok, update mdadm.conf and
+fstab to include all other file systems.
+
+final re-boot and test and data/application migration from old
+debian... 
+
+finished... hopefully!
+
+Thanks in advance, JonXx
+
+
+
+
