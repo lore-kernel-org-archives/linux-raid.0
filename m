@@ -1,59 +1,30 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: [PATCH 0/6] raid6check fixes
-Date: Thu, 20 Jun 2013 18:16:39 +0200
-Message-ID: <20130620161639.GA3033@lazy.lzy>
-References: <20130618090910.1161109.69430.stgit@fsdevel7.hpc.devnet.itwm.fhg.de>
- <20130619100803.03fde6d5@notabene.brown>
+From: Martin Wilck <mwilck@arcor.de>
+Subject: Re: [PATCH 2/2] Detail: deterministic ordering in --brief --verbose
+Date: Thu, 20 Jun 2013 22:26:23 +0200
+Message-ID: <51C3656F.4010107@arcor.de>
+References: <1371759665-5625-1-git-send-email-mwilck@arcor.de> <1371759665-5625-2-git-send-email-mwilck@arcor.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130619100803.03fde6d5@notabene.brown>
+In-Reply-To: <1371759665-5625-2-git-send-email-mwilck@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, piergiorgio.sartor@nexgo.de, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de
 List-Id: linux-raid.ids
 
-On Wed, Jun 19, 2013 at 10:08:03AM +1000, NeilBrown wrote:
-> On Tue, 18 Jun 2013 11:09:10 +0200 Bernd Schubert
-> <bernd.schubert@itwm.fraunhofer.de> wrote:
->=20
-> > Here are a few raid6check fixes. This series also includes a patch =
-for
-> > Makefile to allow to build with optimizations. I only fixed raid6ch=
-eck
-> > to build with -O3, but I don't have time left today to fix mdadm=20
-> > (e.g. Grow.c:2237:41: error: =E2=80=98info2.data_offset=E2=80=99 ma=
-y be used uninitialized in this function [-Werror=3Duninitialized])
-> >=20
->=20
-> Thanks for mentioning that.  I've fix that problem.
->=20
-> NeilBrown
->=20
->=20
-> > I wanted to send the memleak-fixes much earlier, but then
-> > I had been too busy. This patch is lightly tested, patches
-> > from today are only build-tested.
->=20
+On 06/20/2013 10:21 PM, mwilck@arcor.de wrote:
 
-Hi Neil,
+> (I confess: I use a modified "test" script that always runs
+> "mdadm --verbose" rather than "mdadm --quiet", otherwise this
+> wouldn't happen in 10ddf-create).
 
-BTW, what's your plan of including "raid6check"
-into a main release of "mdadm" package?
+... and this test failed after applying commit b3908491,
+that's the background for these two patches.
 
-Do you have "deadline" in mind?
+The standard test case that runs mdadm --quiet would not fail. But I
+still think these patches are useful. They simplify at least my testing
+& debugging.
 
-Thanks,
-
-bye,
-
---=20
-
-piergiorgio
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards
+Martin
