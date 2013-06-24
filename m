@@ -1,35 +1,66 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: Preparing for mdadm-3.3
-Date: Mon, 24 Jun 2013 06:44:25 -0700
-Message-ID: <CAK2H+ef9Zs0rQsGtB5BTOV6bYGXQ_n=Ld_9Lq63x9gBbDnFPog@mail.gmail.com>
-References: <20130624171818.71a9688a@notabene.brown>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: [PATCH 0/6] raid6check fixes
+Date: Mon, 24 Jun 2013 19:10:17 +0200
+Message-ID: <20130624171016.GA2237@lazy.lzy>
+References: <20130618090910.1161109.69430.stgit@fsdevel7.hpc.devnet.itwm.fhg.de>
+ <20130619100803.03fde6d5@notabene.brown>
+ <20130620161639.GA3033@lazy.lzy>
+ <20130624170458.568dafcb@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130624171818.71a9688a@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <20130624170458.568dafcb@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jun 24, 2013 at 12:18 AM, NeilBrown <neilb@suse.de> wrote:
-<SNIP>
->
-> I somehow got unsubscribed from linux-raid (again) a few weeks back, so if
-> anything was sent to the list and not me that I should know about, now might
-> be a good time to resend that too.
->
-> Thanks,
-> NeilBrown
+On Mon, Jun 24, 2013 at 05:04:58PM +1000, NeilBrown wrote:
+[...]
+> > Hi Neil,
+> > 
+> > BTW, what's your plan of including "raid6check"
+> > into a main release of "mdadm" package?
+> > 
+> > Do you have "deadline" in mind?
+> 
+> What exactly do you mean by that?
+> raid6check.c is already in the upstream git tree and was in mdadm-3.2.5.
 
-Neil,
-   Welcome back. :-)
+Hi Neil, I was under the impression you were
+holding back the patches from Robert (Buchholz).
 
-   I currently run mdadm-3.1.4 which is Gentoo stable. It seems that I
-cannot change chunk size if the new chunk size doesn't divide evenly
-into the number of sectors on the partition, or at least that's the
-way I understand the message. Is that anything you've either worked on
-or considered for mdadm?
+Probably I was wrong.
+ 
+> Do you mean when will it be included by distros?  That is really up to them.
+> I could get "make install" to install it I guess.
+> I haven't really thought about what would be required for that.
+> 
+> I'll add it to my list of things to think about.
+
+Well, that could be some thinking for 3.3, couldn't it? :-)
+
+In any case, yes, it would be nice to force a bit
+the hand of the distros by installing "raid6check" too.
 
 Thanks,
-Mark
+
+bye,
+
+pg
+
+> NeilBrown
+> 
+> > 
+> > Thanks,
+> > 
+> > bye,
+> > 
+> 
+
+
+
+-- 
+
+piergiorgio
