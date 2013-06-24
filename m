@@ -1,104 +1,77 @@
 From: NeilBrown <neilb@suse.de>
 Subject: Re: Preparing for mdadm-3.3
-Date: Tue, 25 Jun 2013 09:38:24 +1000
-Message-ID: <20130625093824.1723e2e3@notabene.brown>
+Date: Tue, 25 Jun 2013 09:42:11 +1000
+Message-ID: <20130625094211.20134bed@notabene.brown>
 References: <20130624171818.71a9688a@notabene.brown>
-	<CAK2H+ef9Zs0rQsGtB5BTOV6bYGXQ_n=Ld_9Lq63x9gBbDnFPog@mail.gmail.com>
+	<wrfjli5zfq1c.fsf@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/hT.WmDvFtfpnP3YK=PP/=IM"; protocol="application/pgp-signature"
+ boundary="Sig_/MIr4eLQFTefRfm2WGLYeNDV"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAK2H+ef9Zs0rQsGtB5BTOV6bYGXQ_n=Ld_9Lq63x9gBbDnFPog@mail.gmail.com>
+In-Reply-To: <wrfjli5zfq1c.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Knecht <markknecht@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/hT.WmDvFtfpnP3YK=PP/=IM
+--Sig_/MIr4eLQFTefRfm2WGLYeNDV
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 24 Jun 2013 06:44:25 -0700 Mark Knecht <markknecht@gmail.com> wrote:
+On Mon, 24 Jun 2013 18:10:23 +0200 Jes Sorensen <Jes.Sorensen@redhat.com>
+wrote:
 
-> On Mon, Jun 24, 2013 at 12:18 AM, NeilBrown <neilb@suse.de> wrote:
-> <SNIP>
-> >
-> > I somehow got unsubscribed from linux-raid (again) a few weeks back, so=
- if
-> > anything was sent to the list and not me that I should know about, now =
-might
-> > be a good time to resend that too.
-> >
-> > Thanks,
-> > NeilBrown
+> NeilBrown <neilb@suse.de> writes:
+> > Hi all,
+> >  it has been way too long since an mdadm release.  So I'm hoping to pul=
+l one
+> >  together over the next few weeks.  It will be mdadm-3.3
+> >  My goal is to have it out by 25th July (i.e. one month).
 >=20
-> Neil,
->    Welcome back. :-)
+> Hi Neil,
 >=20
->    I currently run mdadm-3.1.4 which is Gentoo stable. It seems that I
-> cannot change chunk size if the new chunk size doesn't divide evenly
-> into the number of sectors on the partition, or at least that's the
-> way I understand the message. Is that anything you've either worked on
-> or considered for mdadm?
+> I don't see any mention of hot replace support in your log. Did this get
+> canned or did I just lose track of everything? Admittedly my marbles
+> have gotten lost regularly the last couple of months.
 >=20
 
-In my mind, it should "obviously" work the way it does.  As you seem to thi=
-nk
-differently, at least one of us must be missing something.
+Hi Jes,
+ yes, hot replace support is something I should have mentioned but didn't
 
-Each device (in a striped array) must contribute an integer number of chunks
-to the array, otherwise you will get holes in the data.
-So if you set the chunk size to something that doesn't divide into the size
-of the device, then you will end up using less of the device.  And that mea=
-ns
-that they array will become smaller.
+   mdadm /dev/md0 --replace /dev/foo
 
-Making the array smaller will mostly likely cause you to lose data.
+ will try to replace /dev/foo with a spare.
 
-If you really want to do that, you can.  Just set the size to something
-appropriate and then change the chunk size.
-  mdadm -G /dev/mdXX --size=3Dsmaller
-  mdadm -G /dev/mdXX --chunk=3Ddifferent
+   mdadm /dev/md0 --replace /dev/foo --with /dev/bar
 
-Of course the "something appropriate" must be a multiple of both the old and
-the new chunk sizes.  As chunk sizes are mostly powers of 2, that shouldn't=
- be
-a problem.
+ will try to replace it with the spare "/dev/bar".
 
-Maybe when mdadm reports that the chunk size doesn't divide the device size,
-it could suggest a "--grow --size=3D" command to reduce the array size so t=
-hat
-it will.
+ Testing of that would be good too.
+ I'll be sure to mention that in the 3.3 announcement.  Thanks.
 
-Obviously you would need to resize any file system before resizing the arra=
-y.
-
-Does that address your issue?  Is there something that you are thinking that
-I am missing?
-
-Thanks,
 NeilBrown
 
---Sig_/hT.WmDvFtfpnP3YK=PP/=IM
+
+--Sig_/MIr4eLQFTefRfm2WGLYeNDV
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUcjYcDnsnt1WYoG5AQLvhxAAtGkuaddNyL2JdTsqNPxTAEcSJZtn7loa
-6k39PeXsaXRMitT5exuso8L0ddJScLG4gM2lUmf2EoV+rEOn+mfDi6QpUEgeIhGs
-PyApJGyV1oAsvF/IJv0gbhpKHW87VqcV8YgOBBEedIFECNhagpe8lk0QJINqeGmZ
-t03JT/wC3gtnF/n+cFryMoAt1yEZbHdwI3Zmr/hXDmztPtVbWxdMIlDkTeWhqbeY
-pcwoUKt79k6ERhWVG/gtpT4GkOwUHsNiN9MoeANczG9/7ub+rd3GXZCmat4Nb4Ag
-U6k0EmGC+JzGa5gcZ3feRBREhB/MKD7z5T6ancb2kHGnviGDWTuLp4TBtc3T701A
-L2e9HgXom0D2aZs5IFR8jE/sxqW2a/MWiRCaYQYatSR6vAmwQiwkEo2Wp+r5pDHp
-jan8aJBbqxIxNgfxnnHWKtyyMFvRZsfk7rSpEgMpA5rEYi2klPFvYJ8Yh6drNGHK
-p0yKIMkKIot3Nf2UWH7v9Sk/EttfX+u29cMGcw7z/TRS6S3gNSjwho4eXr8HXQdT
-7e/3wIeBJOdTZi3VG7GWecBmG+P3VM4MLrAroi/rjAKya09b4wNmSc3SMDUQo2O5
-NRITWfG53zD2/u+6K7HPmZT9YqepKprMJODt9Blbwukckb6MuZZ8dRwZOwKUzSVK
-nqrTMupbInM=
-=RgBG
+iQIVAwUBUcjZUznsnt1WYoG5AQJM8A//RjzCxKXi5t8drGXtG72xjFJnAxb6+nUa
+6Sh/dDADKKiINAZ1rSWRDdkj7g2jKlaulnrJbsVpTgOTJPHU++rshulU1vFCx7XI
+5tCt2qvftaNqqR1YMJVm2/+ExmupxRXo/kHONGz9mhOOyYkRYP/bRzqh5vVvoKAG
+t/SC1P4kV6C+jn6rqg+FA9KBPRyFKI8TzIB2RxXP9UrD+XrieMVDC0KqgWhEA47L
+ndgCjzjWI/cVIw35VPkOj6NGIajwnKGHZBK04cKfpEH5FIdie9VYeHqmfcGSdSV1
+N2LnZBgWgu/Q/GWhtUWWsuhxMEVsmKBigaK+di/QZQuv3q8uJ9NKrDHDLbLCn1Im
+R8Wkf1DbdDIyAnXkflzJtC/fu5lk0EJL5UjKMYy1QF7Z1wncoAiDXvk5vSE9mvqN
+LHqnQ9yv0sIeXjJi0AURsOEyKnuzQ1kPjXqOSBi8ztn1d4S4Hg3z5MdJx4rgSpiv
+kYbINI8890/O5a64RRJL9R4rSDhF2rjwIzS0sFa/qOOtHsJCiVHYKdhPeUGDxCeD
+M8YN08GAKhCE5gdU5ztDXeQBHpt8k35Wp9J8Pl/mBJPnXG+Nt4hafZ1B1e8+NQDD
+Rr3U87ToC/UCHiGZnexCBcejNstRmE7yrVG5WXTcQSuNICkvTZbZgBE8Hpv+COyw
+5yADO55jqik=
+=KkiS
 -----END PGP SIGNATURE-----
 
---Sig_/hT.WmDvFtfpnP3YK=PP/=IM--
+--Sig_/MIr4eLQFTefRfm2WGLYeNDV--
