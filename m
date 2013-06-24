@@ -1,95 +1,110 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Problem with Raid1 when all drives failed
-Date: Mon, 24 Jun 2013 17:08:24 +1000
-Message-ID: <20130624170824.39dc8d99@notabene.brown>
-References: <84A53BEA6EAC69439B7E311E9B17A76F0174829C@IRSMSX105.ger.corp.intel.com>
+Subject: Re: RAID1 growth of version 1.1/1.2 metadata violates least
+ surprise.
+Date: Mon, 24 Jun 2013 17:14:11 +1000
+Message-ID: <20130624171411.12a85fd8@notabene.brown>
+References: <201306091433.r59EX51u021372@wind.enjellic.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/+YVXI5Y2PLTUwV0TlDb.vma"; protocol="application/pgp-signature"
+ boundary="Sig_/bayCS6Oos=XY=rMQS9/yiTN"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <84A53BEA6EAC69439B7E311E9B17A76F0174829C@IRSMSX105.ger.corp.intel.com>
+In-Reply-To: <201306091433.r59EX51u021372@wind.enjellic.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: greg@enjellic.com
+Cc: greg@wind.enjellic.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/+YVXI5Y2PLTUwV0TlDb.vma
+--Sig_/bayCS6Oos=XY=rMQS9/yiTN
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 20 Jun 2013 06:22:32 +0000 "Baldysiak, Pawel"
-<pawel.baldysiak@intel.com> wrote:
+On Sun, 9 Jun 2013 09:33:05 -0500 "Dr. Greg Wettstein"
+<greg@wind.enjellic.com> wrote:
 
-> Hi Neil,
+> Hi, hope the week is starting out well for everyone.
 >=20
-> We have observed a strange behavior of a RAID1 volume when all its drives=
- failed.
-> Here is our test case:
+> We ran into an interesting issue secondary to the growth of a RAID1
+> volume with version 1.1 metadata.  We are interested in reflections
+> from Neil and/or others as to whether the problem can be addressed.
 >=20
-> Steps to reproduce:
-> 1. Create 2-drives RAID1 (tested on both native and IMSM metadata)
-> 2. Wait for the end of the initial resync=20
-> 3. Hot-unplug both drives of the RAID1 volume
+> We grew a RAID1 mirror which had its two individual legs provided by
+> SAN volumes from an SCST based target server.  We provisioned
+> additional storage on the targets and then updated the advertised size
+> of the two block devices.
 >=20
-> Actual behavior:
-> The RAID1 volume is still present in OS as a degraded one-drive array
-
-That is what I expect.
-
+> Following that we carried out a rescan of the block devices on the
+> initiator and then used mdadm to 'grow' the size of the RAID1 mirror.
+> That was about 4-5 months ago and we ended up running into issues when
+> the machine was just recently rebooted.
 >=20
-> Expected behavior:
-> Should a RAID volume disappear from OS?
-
-How exactly?  If the filesystem is mounted that would be impossible.
-
+> The RAID1 mirror refused to assemble secondary to the superblocks on
+> the individual devices having a different idea of the volume size as
+> compared to the actual volume size.  The mdadm manpage makes reference
+> to this problem in the section on the '-U' (update) functionality.
 >=20
-> I see that when a drive is removed from OS udev runs "mdadm -If <>" for m=
-issing member which tries to write "faulty" to the state of array's member.
-> I see also that md driver prevents from doing this operation for the last=
- drive in a RAID1 array, so when two drives fail nothing really happens to =
-the one that fails as the second one.
+> It would seem to violate the notion of 'least surprise' for a grow
+> command to work only to end up with a device which would not assemble
+> without external intervention at some distant time in the future.  It
+> isn't uncommon to have systems up for a year or more which tends to
+> result in this issue being overlooked on systems which have been
+> resized.
 >=20
-> It can be very dangerous, because if user has mounted file system at this=
- array it can lead to unstable work of system or even a system crash. More =
-over user does not have proper information about the state of an array.
-
-It shouldn't lead to a crash.  But it could certainly cause problems.
-Unplugged active devices often does.
-
+> I'm assuming there is no technical reason why the superblocks on the
+> individual devices cannot be updated as part of the grow.  Events such
+> as adding/removing persistent bitmaps suggest this is a possibility.
+> If its an issue of needing code we could investigate doing the
+> legwork since it is an issue we would like to see addressed.
 >=20
-> How should it work according to the design? Should mdadm stop volume when=
- all its members disappear?
+> This behavior was experienced on a largely stock RHEL5 box with the
+> following versions:
+>=20
+> 	Kernel: 2.6.18-348.6.1.el5
+> 	mdadm:	v2.6.9
+>=20
+> Obviously running Oracle.... :-)
+>=20
+> Any thoughts/suggestions would be appreciated.
+>=20
+> Have a good week.
 
-Have a look at the current code in my "master" branch.  When this happens it
-will try to stop the array (which will fail if the array is mounted), and
-will try to get "udisks" to unmount the array (which will fail if the
-filesytem is in use).
-So it goes a little way in the direction you want, but I think that what you
-are asking for is impossible with Linux.
+(sorry for the delay - I guess I was having too much fun that week....)
+
+Your description of events doesn't fit with my understanding of how things
+should work.
+It would help a lot to include actual error messages and "mdadm --examine"
+details of devices.
+
+Certainly if you provision underlying devices to be larger and then "grow"
+the array, then the superblocks should be updated and everything should work
+after a reboot.
+If you were using 0.90 or 1.0 metadata which is at the end of the device
+there could be confusion when reprovisioning devices (that is mainly with
+--update=3Ddevicesize is for), but 1.1 metadata should not be affected.
+
+So: I need details - sorry.
 
 NeilBrown
 
-
---Sig_/+YVXI5Y2PLTUwV0TlDb.vma
+--Sig_/bayCS6Oos=XY=rMQS9/yiTN
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUcfwaTnsnt1WYoG5AQIuTw//f4bom1nNGb+Md95zghbUsRYvh/DgH7Lh
-C0VgEzdzAd43M3ruSlhVLD/otgTBX2Upq1QGW67fAOWjNnXlOItXgwIeGwDF+5mB
-wV1GtgVujzVDijqXkMHLT8txRzr0wrtI1uGc2jaD7x37sWPbcl/WDs4w4jILMz+t
-OsbJWFSYcWPQefYzsRlcknJuEbqAymnsP68W1N24ZfNQ4lvGZYfMHQjTyqevu4G4
-w0I5D440nx3MPub9xCdYAzKb9VCGkAsc3TEisKk57AQZxuKSd18kcMJ+43eK0WBX
-62yTurseEq9w8ipxxcXT6yzRAikztr7C3bLb+f776YQS0JMa9Z8OAk2iAOCMaNVe
-J04Yj8DaRLcU2A532M69EphDfLXb6X45nObf03DP4bR7a5uw7LJ9A9ID2k9SAruB
-y2xZ5W2A7SqtcCBOF/jLTN9d/+t1R5cFDxI8E26X57AUNgZotSIiYuD5N1jRmrHi
-U3qO/TOpyCYL4yfNU1PE6A6ZY+VjBteFVOVOojwqeQXbwVJO4mqjPILpszdUDsxX
-w1iZMf8ErvPdTQGM2Qom4vfq1/7KDAKBtlJfw0SSlfWETyfwpU9kW8ansUZ167LD
-KRdrudfbNMa7grlii5QyMdb2VD8hNKmLXdxJa2P+3B/YaDevbOMOQzMUrj5fIzh7
-DOFfhP/2T1s=
-=TYAY
+iQIVAwUBUcfxwznsnt1WYoG5AQKDLA/+OlIlBG8caRic5QV0wk5qo2YIEcGwzF74
+WNbSx5iXSkLhshXmFrXgN6MVHlwzQTr+XshZKAhknKa/PICzBGFF7PFNqqc3KEHV
+Hg5ZXkXK5h6vzg4/CnRkvR4ws5bgaNvYBkmWLKpJGjlU4ITavaW1mN2AuK+rG2CD
+lOOyStUmlpzb2vHHiFlqSUOgdGHOf9uDWYj421HVajDFC9jvq/nYCxc2WQTFTBNQ
+RtOObmph+UlwFqs4LbCQJuKQh97QFSG4jRhbEu9hi0bKZaQz4MPlHQzkBadmf2S8
+v86vGaoBJ8j2DwJC6S4l0qoOSzyi+I1yWGUMtTYhTrPMqaiTGYHLxFYIDQI/FFt2
+Jwbiu6+g3vu82HXnFFP71w+pwxDulRfnrKQbljRw2GQ2n2bIFTeXbgIgz/upzPJy
+9YjjanoucoS/g6l86/DxrFXo4xSsrgTwYl0wOEM5ir/pFU55323hlkWOIu0XxnOV
+5UOTTs3ORoH0zm+2hevWJ4dF79Xo+5F/3553zdw5TU03cB9eSH5WJYQJLhc15xQR
+svM9WNxMBA7wq+Gh7LOpDeM6OBmRqT9X80yIfO7KkYriUrCQJbQZ3UmKr2qfCwTR
+tYCDWYSoaEDSpHfyVVgqX2hjE3qzRlJW06n61T/GkJzxowM/wHjde+x7dv/ST9Ms
+op8DfCFL8bs=
+=i8vF
 -----END PGP SIGNATURE-----
 
---Sig_/+YVXI5Y2PLTUwV0TlDb.vma--
+--Sig_/bayCS6Oos=XY=rMQS9/yiTN--
