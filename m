@@ -1,66 +1,104 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: [PATCH 0/6] raid6check fixes
-Date: Mon, 24 Jun 2013 19:10:17 +0200
-Message-ID: <20130624171016.GA2237@lazy.lzy>
-References: <20130618090910.1161109.69430.stgit@fsdevel7.hpc.devnet.itwm.fhg.de>
- <20130619100803.03fde6d5@notabene.brown>
- <20130620161639.GA3033@lazy.lzy>
- <20130624170458.568dafcb@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Preparing for mdadm-3.3
+Date: Tue, 25 Jun 2013 09:38:24 +1000
+Message-ID: <20130625093824.1723e2e3@notabene.brown>
+References: <20130624171818.71a9688a@notabene.brown>
+	<CAK2H+ef9Zs0rQsGtB5BTOV6bYGXQ_n=Ld_9Lq63x9gBbDnFPog@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/hT.WmDvFtfpnP3YK=PP/=IM"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130624170458.568dafcb@notabene.brown>
+In-Reply-To: <CAK2H+ef9Zs0rQsGtB5BTOV6bYGXQ_n=Ld_9Lq63x9gBbDnFPog@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, linux-raid@vger.kernel.org
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Jun 24, 2013 at 05:04:58PM +1000, NeilBrown wrote:
-[...]
-> > Hi Neil,
-> > 
-> > BTW, what's your plan of including "raid6check"
-> > into a main release of "mdadm" package?
-> > 
-> > Do you have "deadline" in mind?
-> 
-> What exactly do you mean by that?
-> raid6check.c is already in the upstream git tree and was in mdadm-3.2.5.
+--Sig_/hT.WmDvFtfpnP3YK=PP/=IM
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Hi Neil, I was under the impression you were
-holding back the patches from Robert (Buchholz).
+On Mon, 24 Jun 2013 06:44:25 -0700 Mark Knecht <markknecht@gmail.com> wrote:
 
-Probably I was wrong.
- 
-> Do you mean when will it be included by distros?  That is really up to them.
-> I could get "make install" to install it I guess.
-> I haven't really thought about what would be required for that.
-> 
-> I'll add it to my list of things to think about.
+> On Mon, Jun 24, 2013 at 12:18 AM, NeilBrown <neilb@suse.de> wrote:
+> <SNIP>
+> >
+> > I somehow got unsubscribed from linux-raid (again) a few weeks back, so=
+ if
+> > anything was sent to the list and not me that I should know about, now =
+might
+> > be a good time to resend that too.
+> >
+> > Thanks,
+> > NeilBrown
+>=20
+> Neil,
+>    Welcome back. :-)
+>=20
+>    I currently run mdadm-3.1.4 which is Gentoo stable. It seems that I
+> cannot change chunk size if the new chunk size doesn't divide evenly
+> into the number of sectors on the partition, or at least that's the
+> way I understand the message. Is that anything you've either worked on
+> or considered for mdadm?
+>=20
 
-Well, that could be some thinking for 3.3, couldn't it? :-)
+In my mind, it should "obviously" work the way it does.  As you seem to thi=
+nk
+differently, at least one of us must be missing something.
 
-In any case, yes, it would be nice to force a bit
-the hand of the distros by installing "raid6check" too.
+Each device (in a striped array) must contribute an integer number of chunks
+to the array, otherwise you will get holes in the data.
+So if you set the chunk size to something that doesn't divide into the size
+of the device, then you will end up using less of the device.  And that mea=
+ns
+that they array will become smaller.
+
+Making the array smaller will mostly likely cause you to lose data.
+
+If you really want to do that, you can.  Just set the size to something
+appropriate and then change the chunk size.
+  mdadm -G /dev/mdXX --size=3Dsmaller
+  mdadm -G /dev/mdXX --chunk=3Ddifferent
+
+Of course the "something appropriate" must be a multiple of both the old and
+the new chunk sizes.  As chunk sizes are mostly powers of 2, that shouldn't=
+ be
+a problem.
+
+Maybe when mdadm reports that the chunk size doesn't divide the device size,
+it could suggest a "--grow --size=3D" command to reduce the array size so t=
+hat
+it will.
+
+Obviously you would need to resize any file system before resizing the arra=
+y.
+
+Does that address your issue?  Is there something that you are thinking that
+I am missing?
 
 Thanks,
+NeilBrown
 
-bye,
+--Sig_/hT.WmDvFtfpnP3YK=PP/=IM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-pg
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-> NeilBrown
-> 
-> > 
-> > Thanks,
-> > 
-> > bye,
-> > 
-> 
+iQIVAwUBUcjYcDnsnt1WYoG5AQLvhxAAtGkuaddNyL2JdTsqNPxTAEcSJZtn7loa
+6k39PeXsaXRMitT5exuso8L0ddJScLG4gM2lUmf2EoV+rEOn+mfDi6QpUEgeIhGs
+PyApJGyV1oAsvF/IJv0gbhpKHW87VqcV8YgOBBEedIFECNhagpe8lk0QJINqeGmZ
+t03JT/wC3gtnF/n+cFryMoAt1yEZbHdwI3Zmr/hXDmztPtVbWxdMIlDkTeWhqbeY
+pcwoUKt79k6ERhWVG/gtpT4GkOwUHsNiN9MoeANczG9/7ub+rd3GXZCmat4Nb4Ag
+U6k0EmGC+JzGa5gcZ3feRBREhB/MKD7z5T6ancb2kHGnviGDWTuLp4TBtc3T701A
+L2e9HgXom0D2aZs5IFR8jE/sxqW2a/MWiRCaYQYatSR6vAmwQiwkEo2Wp+r5pDHp
+jan8aJBbqxIxNgfxnnHWKtyyMFvRZsfk7rSpEgMpA5rEYi2klPFvYJ8Yh6drNGHK
+p0yKIMkKIot3Nf2UWH7v9Sk/EttfX+u29cMGcw7z/TRS6S3gNSjwho4eXr8HXQdT
+7e/3wIeBJOdTZi3VG7GWecBmG+P3VM4MLrAroi/rjAKya09b4wNmSc3SMDUQo2O5
+NRITWfG53zD2/u+6K7HPmZT9YqepKprMJODt9Blbwukckb6MuZZ8dRwZOwKUzSVK
+nqrTMupbInM=
+=RgBG
+-----END PGP SIGNATURE-----
 
-
-
--- 
-
-piergiorgio
+--Sig_/hT.WmDvFtfpnP3YK=PP/=IM--
