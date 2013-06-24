@@ -1,93 +1,95 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 0/6] raid6check fixes
-Date: Mon, 24 Jun 2013 17:04:58 +1000
-Message-ID: <20130624170458.568dafcb@notabene.brown>
-References: <20130618090910.1161109.69430.stgit@fsdevel7.hpc.devnet.itwm.fhg.de>
-	<20130619100803.03fde6d5@notabene.brown>
-	<20130620161639.GA3033@lazy.lzy>
+Subject: Re: Problem with Raid1 when all drives failed
+Date: Mon, 24 Jun 2013 17:08:24 +1000
+Message-ID: <20130624170824.39dc8d99@notabene.brown>
+References: <84A53BEA6EAC69439B7E311E9B17A76F0174829C@IRSMSX105.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/s/WLhPzcnCq=3kj6_XIPIDX"; protocol="application/pgp-signature"
+ boundary="Sig_/+YVXI5Y2PLTUwV0TlDb.vma"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130620161639.GA3033@lazy.lzy>
+In-Reply-To: <84A53BEA6EAC69439B7E311E9B17A76F0174829C@IRSMSX105.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, linux-raid@vger.kernel.org
+To: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/s/WLhPzcnCq=3kj6_XIPIDX
-Content-Type: text/plain; charset=utf-8
+--Sig_/+YVXI5Y2PLTUwV0TlDb.vma
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 20 Jun 2013 18:16:39 +0200 Piergiorgio Sartor
-<piergiorgio.sartor@nexgo.de> wrote:
+On Thu, 20 Jun 2013 06:22:32 +0000 "Baldysiak, Pawel"
+<pawel.baldysiak@intel.com> wrote:
 
-> On Wed, Jun 19, 2013 at 10:08:03AM +1000, NeilBrown wrote:
-> > On Tue, 18 Jun 2013 11:09:10 +0200 Bernd Schubert
-> > <bernd.schubert@itwm.fraunhofer.de> wrote:
-> >=20
-> > > Here are a few raid6check fixes. This series also includes a patch for
-> > > Makefile to allow to build with optimizations. I only fixed raid6check
-> > > to build with -O3, but I don't have time left today to fix mdadm=20
-> > > (e.g. Grow.c:2237:41: error: =E2=80=98info2.data_offset=E2=80=99 may =
-be used uninitialized in this function [-Werror=3Duninitialized])
-> > >=20
-> >=20
-> > Thanks for mentioning that.  I've fix that problem.
-> >=20
-> > NeilBrown
-> >=20
-> >=20
-> > > I wanted to send the memleak-fixes much earlier, but then
-> > > I had been too busy. This patch is lightly tested, patches
-> > > from today are only build-tested.
-> >=20
->=20
 > Hi Neil,
 >=20
-> BTW, what's your plan of including "raid6check"
-> into a main release of "mdadm" package?
+> We have observed a strange behavior of a RAID1 volume when all its drives=
+ failed.
+> Here is our test case:
 >=20
-> Do you have "deadline" in mind?
+> Steps to reproduce:
+> 1. Create 2-drives RAID1 (tested on both native and IMSM metadata)
+> 2. Wait for the end of the initial resync=20
+> 3. Hot-unplug both drives of the RAID1 volume
+>=20
+> Actual behavior:
+> The RAID1 volume is still present in OS as a degraded one-drive array
 
-What exactly do you mean by that?
-raid6check.c is already in the upstream git tree and was in mdadm-3.2.5.
+That is what I expect.
 
-Do you mean when will it be included by distros?  That is really up to them.
-I could get "make install" to install it I guess.
-I haven't really thought about what would be required for that.
+>=20
+> Expected behavior:
+> Should a RAID volume disappear from OS?
 
-I'll add it to my list of things to think about.
+How exactly?  If the filesystem is mounted that would be impossible.
+
+>=20
+> I see that when a drive is removed from OS udev runs "mdadm -If <>" for m=
+issing member which tries to write "faulty" to the state of array's member.
+> I see also that md driver prevents from doing this operation for the last=
+ drive in a RAID1 array, so when two drives fail nothing really happens to =
+the one that fails as the second one.
+>=20
+> It can be very dangerous, because if user has mounted file system at this=
+ array it can lead to unstable work of system or even a system crash. More =
+over user does not have proper information about the state of an array.
+
+It shouldn't lead to a crash.  But it could certainly cause problems.
+Unplugged active devices often does.
+
+>=20
+> How should it work according to the design? Should mdadm stop volume when=
+ all its members disappear?
+
+Have a look at the current code in my "master" branch.  When this happens it
+will try to stop the array (which will fail if the array is mounted), and
+will try to get "udisks" to unmount the array (which will fail if the
+filesytem is in use).
+So it goes a little way in the direction you want, but I think that what you
+are asking for is impossible with Linux.
 
 NeilBrown
 
->=20
-> Thanks,
->=20
-> bye,
->=20
 
-
---Sig_/s/WLhPzcnCq=3kj6_XIPIDX
+--Sig_/+YVXI5Y2PLTUwV0TlDb.vma
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUcfvmjnsnt1WYoG5AQKjbRAAhLPhdDoa2a8XM0f6b0A+5+7iJuTDGISc
-JnMRbz12s7FFBCk8vVaTJOsAmBJD5i1wyAcvMFzdyMSwn2QfuuCs8XXKbV7M7PDw
-3H0uy0W4XSykW/XQ8USszqomADp0HlJlrLYjKJ3PkaeFEuuy4EKNob7l8BhhGNgv
-Dl3leHWf0VqPzZ/pSFfSyB5RwNeWDIDJS0Ln5gurfv/V/cP6h6DyasAHYph75Z+V
-3y0vhHDABCRWAubed1CX0scP3rZYp6BETLm4tOGy1iDHRVDRfUNnIiJdyIBZcds0
-U1uryweMiCg6mJtdT9QqH63ndDgJ0xDSd/a0POmc9oNFSHdLpOstdxmzlRdY5032
-5LpxRUtHL5acm17ajuBkq62L+vw7ETL5R2oqZVPhcdCUy/3+nlo6HpAx0e+YL9cy
-WJ47UWbuDyN0ehlD5Ayhh76K5Jo8qXqYCbIDF/EZbQI7NCdnf/PDWkrM+H1rgcGA
-+/p4Zg5swG69ckFKJ1q0GO90N29o94tlTy32qXkRb5PysvqZ7ps57QxOwr5viBOP
-7BWX0fRYeR/oD/d2jbAU/tdmSJyE17kP44lzaO/2632tYHU76qMfsBRNKESxXbxP
-v88qNzp0jsGx4UoNG09a5DQyX8vTNdVoiIl183QxO5SLx8JhciUOfcTxlgZLHwOU
-aiVu/euVJm0=
-=h54t
+iQIVAwUBUcfwaTnsnt1WYoG5AQIuTw//f4bom1nNGb+Md95zghbUsRYvh/DgH7Lh
+C0VgEzdzAd43M3ruSlhVLD/otgTBX2Upq1QGW67fAOWjNnXlOItXgwIeGwDF+5mB
+wV1GtgVujzVDijqXkMHLT8txRzr0wrtI1uGc2jaD7x37sWPbcl/WDs4w4jILMz+t
+OsbJWFSYcWPQefYzsRlcknJuEbqAymnsP68W1N24ZfNQ4lvGZYfMHQjTyqevu4G4
+w0I5D440nx3MPub9xCdYAzKb9VCGkAsc3TEisKk57AQZxuKSd18kcMJ+43eK0WBX
+62yTurseEq9w8ipxxcXT6yzRAikztr7C3bLb+f776YQS0JMa9Z8OAk2iAOCMaNVe
+J04Yj8DaRLcU2A532M69EphDfLXb6X45nObf03DP4bR7a5uw7LJ9A9ID2k9SAruB
+y2xZ5W2A7SqtcCBOF/jLTN9d/+t1R5cFDxI8E26X57AUNgZotSIiYuD5N1jRmrHi
+U3qO/TOpyCYL4yfNU1PE6A6ZY+VjBteFVOVOojwqeQXbwVJO4mqjPILpszdUDsxX
+w1iZMf8ErvPdTQGM2Qom4vfq1/7KDAKBtlJfw0SSlfWETyfwpU9kW8ansUZ167LD
+KRdrudfbNMa7grlii5QyMdb2VD8hNKmLXdxJa2P+3B/YaDevbOMOQzMUrj5fIzh7
+DOFfhP/2T1s=
+=TYAY
 -----END PGP SIGNATURE-----
 
---Sig_/s/WLhPzcnCq=3kj6_XIPIDX--
+--Sig_/+YVXI5Y2PLTUwV0TlDb.vma--
