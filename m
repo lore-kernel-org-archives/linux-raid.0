@@ -1,85 +1,86 @@
-From: mwilck@arcor.de
-Subject: [PATCH] Detail: Add container device to device list
-Date: Thu, 27 Jun 2013 21:39:27 +0200
-Message-ID: <1372361967-8124-1-git-send-email-mwilck@arcor.de>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: [PATCH 0/6] raid6check fixes
+Date: Thu, 27 Jun 2013 22:49:00 +0200
+Message-ID: <20130627204900.GA2240@lazy.lzy>
+References: <20130618090910.1161109.69430.stgit@fsdevel7.hpc.devnet.itwm.fhg.de>
+ <20130619100803.03fde6d5@notabene.brown>
+ <20130620161639.GA3033@lazy.lzy>
+ <20130624170458.568dafcb@notabene.brown>
+ <20130624171016.GA2237@lazy.lzy>
+ <20130625095422.29d3079b@notabene.brown>
+ <20130625164628.GA2261@lazy.lzy>
+ <20130627142719.5ffbf0ce@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20130627142719.5ffbf0ce@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, linux-raid@vger.kernel.org
-Cc: mwilck@arcor.de
+To: NeilBrown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, linux-raid@vger.kernel.org, Robert Buchholz <rbu@goodpoint.de>
 List-Id: linux-raid.ids
 
-    commit b3908491 "Detail: fix --brief --verbose" introduced a
-    problem when a mdadm.conf file generated with
-    "mdadm --Detail --brief --verbose" is later scanned with
-    "mdadm --Assemble --scan --config=mdadm.conf"
+On Thu, Jun 27, 2013 at 02:27:19PM +1000, NeilBrown wrote:
+[...]
+> I've just had a little look at raid6test - because some of the selftests were
+> failing.
+> 
+> The default output is rather verbose.  Verbose output can be good, but not as
+> the default I think.
+> 
+> However, more importantly, it pays too much heed to the chunksize.
+> 
+> If the start of one chunk on drive X is bad, and the end of a corresponding
+> chunk on drive Y is bad, then it will complain that it cannot figure out the
+> problem.
+> It shouldn't do that.  It shouldn't even look at whole chunks at a time.
+> 
+> It should look at blocks.  Maybe 512bytes or 1K or 4K any of those would do.
+> Then for each block it should figure out if there is a problem, and maybe
+> auto-fix it.
 
-    Subarrays of containers will not be scanned correctly any more,
-    because the container device, not being a member of the "devices"
-    list, is not scanned.
+Hi Neil,
 
-    This patch fixes that by adding the (generic) container device
-    to the devices list.
+thanks for the feedback.
 
-Signed-off-by: Martin Wilck <mwilck@arcor.de>
----
- Detail.c |   31 ++++++++++++++++++++++---------
- 1 files changed, 22 insertions(+), 9 deletions(-)
+I checked "mdadm" man page and it states that the chunk
+size is always a multiple of 4K (and a power of 2).
+I assume this is correct, so I would suggest 4K as
+block size. Also because of SSD and many HDD which
+are already 4K.
 
-diff --git a/Detail.c b/Detail.c
-index 031219a..2cc422c 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -32,6 +32,22 @@ static int cmpstringp(const void *p1, const void *p2)
- 	return strcmp(* (char * const *) p1, * (char * const *) p2);
- }
- 
-+static int _add_device(const char *dev, char ***p_devices,
-+		       int *p_max_devices, int n_devices)
-+{
-+	if (n_devices + 1 >= *p_max_devices) {
-+		*p_max_devices += 16;
-+		*p_devices = xrealloc(*p_devices, *p_max_devices *
-+				      sizeof(**p_devices));
-+		if (!*p_devices) {
-+			*p_max_devices = 0;
-+			return 0;
-+		}
-+	};
-+	(*p_devices)[n_devices] = xstrdup(dev);
-+	return n_devices + 1;
-+}
-+
- int Detail(char *dev, struct context *c)
- {
- 	/*
-@@ -642,15 +658,9 @@ This is pretty boring
- 		dv=map_dev_preferred(disk.major, disk.minor, 0, c->prefer);
- 		if (dv != NULL) {
- 			if (c->brief) {
--				if (n_devices + 1 >= max_devices) {
--					max_devices += 16;
--					devices = xrealloc(devices, max_devices
--							   *sizeof(*devices));
--					if (!devices)
--						goto out;
--				};
--				devices[n_devices] = xstrdup(dv);
--				n_devices++;
-+				n_devices = _add_device(dv, &devices,
-+							&max_devices,
-+							n_devices);
- 			} else
- 				printf("   %s", dv);
- 		}
-@@ -662,6 +672,9 @@ This is pretty boring
- 	if (st)
- 		st->ss->free_super(st);
- 
-+	if (container)
-+		n_devices = _add_device(get_md_name(st->container_devnm),
-+					&devices, &max_devices, n_devices);
- 	if (c->brief && c->verbose > 0 && devices) {
- 		qsort(devices, n_devices, sizeof(*devices), cmpstringp);
- 		printf("\n   devices=%s", devices[0]);
+What do you think?
+
+Does it seem reasonable to you?
+
+"raid6check" is processing and collecting statistics
+"per byte", I assume it should not need a big architectural
+change in order to fit 4K.
+
+About the verbosity, I know, this was already discussed.
+My idea was to reduce it, once the other code stabilize.
+
+Thanks,
+
+bye,
+
+pg
+
+> Having two blocks on different drives being bad might be cause for extra
+> warnings, but it doesn't make any difference if they are in the same stripe
+> or in different stripes.
+> 
+> i.e. the chunksize should be used only as part of the calculation to work out
+> the layout at any particular place in the array.  It should not be used as a
+> unit for reading and writing data.
+> 
+> In anyone feels like addressing that issue, I would be very receptive to
+> patches :-)
+> 
+> NeilBrown
+
+
+
 -- 
-1.7.1
+
+piergiorgio
