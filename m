@@ -1,80 +1,165 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: RAID1 repair GPF crash w/3.10-rc7
-Date: Mon, 1 Jul 2013 21:20:26 -0400 (EDT)
-Message-ID: <alpine.DEB.2.02.1307012118450.6694@jlaw-desktop.mno.stratus.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 1/2] select_devices: fix scanning of container members
+ with dev list
+Date: Tue, 2 Jul 2013 11:20:26 +1000
+Message-ID: <20130702112026.2047a1e9@notabene.brown>
+References: <1371759665-5625-1-git-send-email-mwilck@arcor.de>
+	<20130624165547.0c0bd93b@notabene.brown>
+	<51CC812C.3030500@arcor.de>
+	<51CC94A7.9070904@arcor.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/mf51U/CtrvB6Y_ivdGz13TU"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <51CC94A7.9070904@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Kent Overstreet <koverstreet@google.com>, NeilBrown <neilb@suse.de>
+To: Martin Wilck <mwilck@arcor.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Kent & Neil,
+--Sig_/mf51U/CtrvB6Y_ivdGz13TU
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I've hit a crash in MD during RAID1 repair while running 3.10-rc7:
+On Thu, 27 Jun 2013 21:38:15 +0200 Martin Wilck <mwilck@arcor.de> wrote:
 
-CPU: 1 PID: 987 Comm: md124_raid1 Tainted: GF          O 3.10.0-rc7.sra+ #2
-Hardware name: Stratus ftServer 2700/G7LAY, BIOS BIOS Version 6.2:52 04/09/2013
-task: ffff880164b818a0 ti: ffff880161b1c000 task.ti: ffff880161b1c000
-RIP: 0010:[<ffffffff812fd6dd>]  [<ffffffff812fd6dd>] memcpy+0xd/0x110
-RSP: 0018:ffff880161b1dcd0  EFLAGS: 00010246
-RAX: ffff880079e69000 RBX: ffff880161b1c000 RCX: 0000000000000200
-RDX: 0000000000000000 RSI: dadfe2db46463b6b RDI: ffff880079e69000
-RBP: ffff880161b1dd28 R08: 00000000000000ff R09: 0000000000000009
-R10: 0000000000001000 R11: 000000000000000a R12: 0000000000000000
-R13: ffff880154105040 R14: 000000006b6b6b6b R15: ffff8801541048b0
-FS:  0000000000000000(0000) GS:ffff88017b220000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007fe775086738 CR3: 00000001764b8000 CR4: 00000000000407e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Stack:
- ffffffff811c833a ffff880100001000 ffff880154104ec0 ffff880161b1dfd8
- ffff880154104830 ffff8801606e9598 ffff880154104830 ffff88015dd9b6d8
- ffff880174df8000 0000000000000001 ffff8801508b3738 ffff880161b1de38
-Call Trace:
- [<ffffffff811c833a>] ? bio_copy_data+0x12a/0x1c0
- [<ffffffffa004535e>] raid1d+0xa8e/0xe90 [raid1]
- [<ffffffff810737cb>] ? prepare_to_wait+0x5b/0x90
- [<ffffffff814c435d>] md_thread+0x11d/0x170
- [<ffffffff81073600>] ? wake_up_bit+0x40/0x40
- [<ffffffff814c4240>] ? md_rdev_init+0x110/0x110
- [<ffffffff81073080>] kthread+0xc0/0xd0
- [<ffffffff81072fc0>] ? flush_kthread_worker+0x80/0x80
- [<ffffffff81655d9c>] ret_from_fork+0x7c/0xb0
- [<ffffffff81072fc0>] ? flush_kthread_worker+0x80/0x80
-Code: 2b 43 50 88 43 4e 48 83 c4 08 5b 5d c3 90 e8 eb fb ff ff eb e6 90 90 90 90 90 90 90 90 90 48 89 f8 48 89 d1 48 c1 e9 03 83 e2 07 <f3> 48 a5 89 d1 f3 a4 c3 20 4c 8b 06 4c 8b 4e 08 4c 8b 56 10 4c 
-RIP  [<ffffffff812fd6dd>] memcpy+0xd/0x110
- RSP <ffff880161b1dcd0>
+> Hi Neil,
+>=20
+> I wrote:
+> > Well, the problem might be fixed differently by having "mdadm -Dbv" in
+> > the container case print the container device.
+>=20
+> I have come up with another patch, based on that idea, that I'll submit
+> in a minute. Do you like it better?
+>=20
 
-Crash analysis showed the struct bio *src bi_idx was set to bi_vcnt when
-the GPF occurred.  Further instrumentation of repeat incidents revealed
-bi_idx was set to bi_vnct on bio_copy_data() entry.  bio_copy_data() may
-handle copying from the middle of the bi_io_vec[], but it didn't cope
-well when the initial bio_iovec() call pointed past the end of
-bi_io_vec[].
+No I don't really.  The container name is already there is "container=3D" so
+shouldn't be in "device=3D" as wel.  I did like the factored out "add_devic=
+e",
+so I kept that :-)
 
-Commit d3b45c2 "raid1: use bio_copy_data()" introduced a slight change
-of behavior in process_checks(), which had been copying the entire
-bi_io_vec[], regardless of the source bio bi_idx value.  Reverting this
-commit appeased the MD RAID1 repair (no crashes and no mismatch_cnt
-after re-checking), but did not answer the question of why
-bio_copy_data() was called with a source bio bi_idx == bi_vcnt.
+However you have helped me understand what the issue is and I know how I wa=
+nt
+to fix it.
 
-A few trips through git bisect found process_checks() only started
-passing such bios in commit f79ea416 "block: Refactor
-blk_update_request()". 
+What I have ended up with is similar to your original patch, except that it
+only ignores "device=3D" early if "container=3D" is set, as that is the onl=
+y case
+that is really a problem.
 
-This leads me to believe that MD didn't expect the source bio bi_idx to
-have moved before it called bio_copy_data().  In the commit "block:
-Refactor blk_update_request()", bio_advance() increments bi_idx if
-!BIO_NO_ADVANCE_ITER_MASK, but I'm not sure if that's a clue or not...
-FWIW, bi_rw is set to 0.
+I've included my patch below and pushed it out into my git tree.
 
-Any ideas guys?  This is very repeatable (just create a new MD RAID1,
-force data differences to both sides and kick off a repair).
+Thanks for your persistence.
 
-Regards,
+NeilBrown
 
--- Joe   
+
+=46rom c39b2e633fd6eb82a8a8e822ef01339806b05bfa Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Tue, 2 Jul 2013 11:07:38 +1000
+Subject: [PATCH] Assemble: ignore devices=3D if container=3D is present.
+
+If "container=3D" is present, then we are going to assemble from the
+given container where that container is made of those devices or not.
+So in this case the "devices=3D" is purely documentation and is best
+ignored.
+
+As part of this, move the test on the "container=3D" value when that
+start with "/" up before the device is opened.  There sooner we test
+things, the better.
+
+Reported-by: Martin Wilck <mwilck@arcor.de>
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/Assemble.c b/Assemble.c
+index a0041c6..afe5b05 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -171,8 +171,20 @@ static int select_devices(struct mddev_dev *devlist,
+ 		if (tmpdev->used > 1)
+ 			continue;
+=20
+-		if (ident->devices &&
+-		    !match_oneof(ident->devices, devname)) {
++		if (ident->container) {
++			if (ident->container[0] =3D=3D '/' &&
++			    !same_dev(ident->container, devname)) {
++				if (report_mismatch)
++					pr_err("%s is not the container required (%s)\n",
++					       devname, ident->container);
++				continue;
++			}
++		} else if (ident->devices &&
++			   !match_oneof(ident->devices, devname)) {
++			/* Note that we ignore the "device=3D" identifier if a
++			 * "container=3D" is given.  Checking both is unnecessarily
++			 * complicated.
++			 */
+ 			if (report_mismatch)
+ 				pr_err("%s is not one of %s\n", devname, ident->devices);
+ 			continue;
+@@ -289,29 +301,20 @@ static int select_devices(struct mddev_dev *devlist,
+ 			}
+ 			close(dfd);
+=20
+-			if (ident->container) {
+-				if (ident->container[0] =3D=3D '/' &&
+-				    !same_dev(ident->container, devname)) {
++			if (ident->container && ident->container[0] !=3D '/') {
++				/* we have a uuid */
++				int uuid[4];
++
++				content =3D *contentp;
++				tst->ss->getinfo_super(tst, content, NULL);
++
++				if (!parse_uuid(ident->container, uuid) ||
++				    !same_uuid(content->uuid, uuid, tst->ss->swapuuid)) {
+ 					if (report_mismatch)
+-						pr_err("%s is not the container required (%s)\n",
+-						       devname, ident->container);
++						pr_err("%s has wrong UUID to be required container\n",
++						       devname);
+ 					goto loop;
+ 				}
+-				if (ident->container[0] !=3D '/') {
+-					/* we have a uuid */
+-					int uuid[4];
+-
+-					content =3D *contentp;
+-					tst->ss->getinfo_super(tst, content, NULL);
+-
+-					if (!parse_uuid(ident->container, uuid) ||
+-					    !same_uuid(content->uuid, uuid, tst->ss->swapuuid)) {
+-						if (report_mismatch)
+-							pr_err("%s has wrong UUID to be required container\n",
+-							       devname);
+-						goto loop;
+-					}
+-				}
+ 			}
+ 			/* It is worth looking inside this container.
+ 			 */
+
+--Sig_/mf51U/CtrvB6Y_ivdGz13TU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUdIq2jnsnt1WYoG5AQKtQBAAvccNzh9l1FmNtpQR1G9V+LvWQJkjxcu6
+w4aQBb20OzLtSHMkmXb6Zh4zyw4+sMLcZVoyezV2l9Gt3JyHx8mCqaqxHgjhklPB
+kxiEOydmAG21SbszPypX8VyamXuBT5SY9hxTpuw1CYKuqLiYXNpEKKmiETzabQQe
+IpiWIjlTe9zxh19mHDd0FXFMgEB2GM64aeYpqb6+hIAVwEUQ3eIXHLcNX0dAmWvO
+2Ucv9plY5p3icqIqBLKgaYFrlzpSqtxKylppJv1BGFz0vV+t6PqAEWHECDQA6av6
+mI5e1JzUrijI/hefL4jQhN/8qATqLFYR+4us0acLHv2p+KhJ7nhRCU1bKf6RNcVK
+FmmFUU9CONBUW0beY039qISLG/Y+lOkBGn9MPzdSZEjET+eIyk0SblI+H0lrcQRv
+j/3WblIl1OjZEZBkDxQuRjJfwjcP3KpVR3bXPM0PAd3Z8aoKWyjaxn4UNhDTigGf
+OtwZDTeVE8IAPOUoXMWnyADemAeJ+cOBEKKPwYg9sc66JhFdUaq57jS5EyDBamZF
+O6wsSp1lt05bzxMY22Ft7413sEReGFFrAdk8rquGwY0vvtad3hcbokjhTim5NHZb
+RPzTygY0qxTTN2uWh1uUHXgLQUztuyTDCZRbRIcw5xVDkZkCTBX2sFWAleTy7VX3
+k61wQSVFptQ=
+=4uxP
+-----END PGP SIGNATURE-----
+
+--Sig_/mf51U/CtrvB6Y_ivdGz13TU--
