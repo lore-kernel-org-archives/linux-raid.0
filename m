@@ -1,63 +1,68 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: RAID1 repair GPF crash w/3.10-rc7
-Date: Wed, 3 Jul 2013 17:49:51 -0400 (EDT)
-Message-ID: <alpine.DEB.2.02.1307031634440.9749@jlaw-desktop.mno.stratus.com>
-References: <alpine.DEB.2.02.1307012118450.6694@jlaw-desktop.mno.stratus.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Extending an existing RAID (10) array
+Date: Thu, 4 Jul 2013 09:24:02 +1000
+Message-ID: <20130704092402.6f3800ec@notabene.brown>
+References: <987a86de2c602b7d79c3b926fdfced80@kruemel.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/UxgrlMZFNhOJvoBxN/.N+p7"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1307012118450.6694@jlaw-desktop.mno.stratus.com>
+In-Reply-To: <987a86de2c602b7d79c3b926fdfced80@kruemel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
+To: cvb@kruemel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 1 Jul 2013, Joe Lawrence wrote:
+--Sig_/UxgrlMZFNhOJvoBxN/.N+p7
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> Hi Kent & Neil,
-> 
-> I've hit a crash in MD during RAID1 repair while running 3.10-rc7:
->
-> [ ... snip ... ]
+On Wed, 03 Jul 2013 21:04:00 +0200 cvb@kruemel.org wrote:
 
-Hi Neil,
+> Hi, I have a short and hopefully simple question: On
+>=20
+> https://raid.wiki.kernel.org/index.php/Growing
+>=20
+> there is a section on expanding existing partitions. Does the procedure=20
+> described there also apply to RAID 10 arrays?
+>=20
+> I'm asking, because the section above says explicitly that it only=20
+> applies to RAID level 1/4/5/6 arrays. The section on extending=20
+> partitions is silent on that point...
+>=20
+> I have a RAID 10 (software) array here, consisting of 4 disks. As one=20
+> of the disks is a bit flaky, I'm thinking of replacing the (all) disks,=20
+> maybe with bigger ones - if that should work.
+>=20
 
-Looking through the MD source, I'm trying to understand part of the
-RAID1 repair path.  I came up with a few questions:
+There are two dimensions for growing an array - it is good to be explicit.
+I think you are just talking about making the devices bigger without
+increasing the number of devices.
+This possible for RAID10 as long as it uses a 'near' or 'offset' layout.  It
+is not support for 'far' layout RAID10.
 
-1 - During user initiated RAID1 repair, is the loop at the bottom of
-sync_request(), under the bio_full label, responsible for submitting all
-of the initial read bios?
+NeilBrown
 
-2 - Does process_checks() later find the first uptodate read bio and
-copy its data into the other r1_bio->bios[] for write repair to the
-other disks?
+--Sig_/UxgrlMZFNhOJvoBxN/.N+p7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-If both are true, then perhaps the following applies to this crash...
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-Comments in commit f79ea416 "block: Refactor blk_update_request()" msg
-include:
+iQIVAwUBUdSykjnsnt1WYoG5AQKM8g/+NF/BTRMXqm80Fuh/9L2VMtIEc9Azy3DR
+MH2gl5na1AXTjrEJbr5nqfyxLWpdmyXtDVww8q9h+60+jYex3oiQ8uiPM6HXSOHe
+9UOPEDGFSBOyZ7VNq9E9QdAROkpfaXgphXP87bVPfsK748d1wRvchb8d16k0cd7/
+tLhou/f9zuedFm4zEFa1kWNLw3iv+7EbrWcc1Q8Qbk8mX4iiGAgFL/Rlz04USO8E
+m9ASuAQGdq26MsSduMt3WWrG4QCMpua/bUk+XnckU8lGF4b+PX/9r2yTUDGKGEnn
+AaprjXWRZEjjzq6wJh9OLoV9fZRQz5UzJTBMNSFVv/VhgOUdfSm8JzNH+EhE5jho
+MzIo0JJ1RuejcELVyLMc9qCpIayt9xQJoZ8CsgZzvWbGa2saEAof7PIO7e1ZOIdY
+evNIMvtFa99YdUS/gZGtqc+abzfys3X566YqEmgeYuE5dF5gkj7HOt/knYFupFq9
+9hZ/CR4xZAHcVfzXzVXBuPMWNhkpEI1apdeEbc1huV4zeoVtY4J6byyDtqWn1D9+
+dtmKJYs5wXi8TFEbuJjJNMDyBp841os87FwB2OJPZS5ab4Bkdh1FTR8EsdngOa/5
+VtFdoQjPNQ6/6Ri9z4A4u6bXBEVmG8Dy8zppBVP5Ktsziy5wkoXo9a35xZwAD87n
+e6xNpGAjIIg=
+=6ykY
+-----END PGP SIGNATURE-----
 
-    Note that req_bio_endio() now always calls bio_advance() - which
-    means it always loops over the biovec, not just on partial
-    completions.  Don't expect it to affect performance, but worth
-    noting.
-
-Now that process_checks() has been further modified for immutable bio
-prep (commit d3b45c2 "raid1: use bio_copy_data()"), it calls
-bio_copy_data() to fill in the write repair bios... which starts
-indexing the bi_bio_vec[] from wherever bi_idx happens to be.
-
-If this is indeed the case, I'm having trouble coming up with a good
-solution:
-
-  - Immutable bios means drivers don't touch bi_idx.  So MD shouldn't
-    "re-wind" the source bi_idx before calling bio_copy_data().
-
-  - bio_copy_data() could copy the entire source bi_bio_vec[], as MD had
-    done in the past, but that is that safe?  (ie, can we map bio
-    vectors once they have been iterated over?)
-
-Thanks,
-
--- Joe
+--Sig_/UxgrlMZFNhOJvoBxN/.N+p7--
