@@ -1,7 +1,7 @@
 From: mwilck@arcor.de
-Subject: [PATCH 23/27] DDF: guid_str: convenience function to print GUID for debugging
-Date: Wed,  3 Jul 2013 22:28:03 +0200
-Message-ID: <1372883287-8859-24-git-send-email-mwilck@arcor.de>
+Subject: [PATCH 21/27] DDF: add_to_super_ddf_bvd: use get_svd_state()
+Date: Wed,  3 Jul 2013 22:28:01 +0200
+Message-ID: <1372883287-8859-22-git-send-email-mwilck@arcor.de>
 References: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
@@ -10,45 +10,75 @@ To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-For debugging DDF structure changes, it is important to be able
-to identify VCs by their GUIDs.
+Reuse get_svd_state() rather than own state algorithm.
 
 Signed-off-by: Martin Wilck <mwilck@arcor.de>
 ---
- super-ddf.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+ super-ddf.c |   30 +++++++-----------------------
+ 1 files changed, 7 insertions(+), 23 deletions(-)
 
 diff --git a/super-ddf.c b/super-ddf.c
-index cd6f298..bfb7f22 100644
+index 96d13ae..0247ca5 100644
 --- a/super-ddf.c
 +++ b/super-ddf.c
-@@ -1293,6 +1293,17 @@ static void print_guid(char *guid, int tstamp)
- 	printf(")");
+@@ -2437,6 +2437,8 @@ static int init_super_ddf_bvd(struct supertype *st,
+ 	return 1;
  }
  
-+static const char *guid_str(const char *guid)
-+{
-+	static char buf[DDF_GUID_LEN*2+1];
-+	int i;
-+	char *p = buf;
-+	for (i = 0; i < DDF_GUID_LEN; i++)
-+		p += sprintf(p, "%02x", (unsigned char)guid[i]);
-+	*p = '\0';
-+	return (const char *) buf;
-+}
++static int get_svd_state(const struct ddf_super *, const struct vcl *);
 +
- static void examine_vd(int n, struct ddf_super *sb, char *guid)
- {
- 	int crl = sb->conf_rec_len;
-@@ -2789,6 +2800,9 @@ static int __write_ddf_structure(struct dl *d, struct ddf_super *ddf, __u8 type,
- 					&dummy);
- 		}
- 		if (c) {
-+			dprintf("writing conf record %i on disk %08x for %s/%u\n",
-+				i, d->disk.refnum, guid_str(vdc->guid),
-+				vdc->sec_elmnt_seq);
- 			vdc->seqnum = header->seq;
- 			vdc->crc = calc_crc(vdc, conf_size);
- 			if (write(fd, vdc, conf_size) < 0)
+ #ifndef MDASSEMBLE
+ static void add_to_super_ddf_bvd(struct supertype *st,
+ 				 mdu_disk_info_t *dk, int fd, char *devname)
+@@ -2454,7 +2456,6 @@ static void add_to_super_ddf_bvd(struct supertype *st,
+ 	struct dl *dl;
+ 	struct ddf_super *ddf = st->sb;
+ 	struct vd_config *vc;
+-	unsigned int working;
+ 	unsigned int i;
+ 	unsigned long long blocks, pos, esize;
+ 	struct extent *ex;
+@@ -2475,7 +2476,7 @@ static void add_to_super_ddf_bvd(struct supertype *st,
+ 
+ 	vc = &ddf->currentconf->conf;
+ 	if (vc->sec_elmnt_count > 1) {
+-		int n = __be16_to_cpu(vc->prim_elmnt_count);
++		unsigned int n = __be16_to_cpu(vc->prim_elmnt_count);
+ 		if (raid_disk >= n)
+ 			vc = ddf->currentconf->other_bvds[raid_disk / n - 1];
+ 		raid_disk %= n;
+@@ -2518,28 +2519,11 @@ static void add_to_super_ddf_bvd(struct supertype *st,
+ 	if (devname)
+ 		dl->devname = devname;
+ 
+-	/* Check how many working raid_disks, and if we can mark
+-	 * array as optimal yet
+-	 */
+-	working = 0;
+-
+-	for (i = 0; i < __be16_to_cpu(vc->prim_elmnt_count); i++)
+-		if (vc->phys_refnum[i] != 0xffffffff)
+-			working++;
+-
+-	/* Find which virtual_entry */
++	/* Check if we can mark array as optimal yet */
+ 	i = ddf->currentconf->vcnum;
+-	if (working == __be16_to_cpu(vc->prim_elmnt_count))
+-		ddf->virt->entries[i].state =
+-			(ddf->virt->entries[i].state & ~DDF_state_mask)
+-			| DDF_state_optimal;
+-
+-	if (vc->prl == DDF_RAID6 &&
+-	    working+1 == __be16_to_cpu(vc->prim_elmnt_count))
+-		ddf->virt->entries[i].state =
+-			(ddf->virt->entries[i].state & ~DDF_state_mask)
+-			| DDF_state_part_optimal;
+-
++	ddf->virt->entries[i].state =
++		(ddf->virt->entries[i].state & ~DDF_state_mask)
++		| get_svd_state(ddf, ddf->currentconf);
+ 	ddf->phys->entries[dl->pdnum].type &= ~__cpu_to_be16(DDF_Global_Spare);
+ 	ddf->phys->entries[dl->pdnum].type |= __cpu_to_be16(DDF_Active_in_VD);
+ 	ddf_set_updates_pending(ddf);
 -- 
 1.7.1
