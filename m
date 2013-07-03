@@ -1,7 +1,7 @@
 From: mwilck@arcor.de
-Subject: [PATCH 25/27] DDF: ddf_process_update: handle update of conf records for SVD
-Date: Wed,  3 Jul 2013 22:28:05 +0200
-Message-ID: <1372883287-8859-26-git-send-email-mwilck@arcor.de>
+Subject: [PATCH 27/27] tests/10ddf-create: add RAID 10 array
+Date: Wed,  3 Jul 2013 22:28:07 +0200
+Message-ID: <1372883287-8859-28-git-send-email-mwilck@arcor.de>
 References: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
@@ -10,40 +10,67 @@ To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-For secondary RAID, we need to check which BVD needs to be updated.
+This patch adds RAID10 support to the DDF test script.
+It actually passes!
 
 Signed-off-by: Martin Wilck <mwilck@arcor.de>
 ---
- super-ddf.c |   17 ++++++++++++++++-
- 1 files changed, 16 insertions(+), 1 deletions(-)
+ tests/10ddf-create |   15 ++++++++++++---
+ 1 files changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/super-ddf.c b/super-ddf.c
-index 8e1d502..77c00b2 100644
---- a/super-ddf.c
-+++ b/super-ddf.c
-@@ -4282,7 +4282,22 @@ static void ddf_process_update(struct supertype *st,
- 			/* An update, just copy the phys_refnum and lba_offset
- 			 * fields
- 			 */
--			memcpy(vcl->conf.phys_refnum, vc->phys_refnum,
-+			struct vd_config *conf = &vcl->conf;
-+			if (vcl->other_bvds != NULL &&
-+			    conf->sec_elmnt_seq != vc->sec_elmnt_seq) {
-+				unsigned int i;
-+				for (i = 1; i < conf->sec_elmnt_count; i++)
-+					if (vcl->other_bvds[i-1]->sec_elmnt_seq
-+					    == vc->sec_elmnt_seq)
-+						break;
-+				if (i == conf->sec_elmnt_count) {
-+					pr_err("%s/DDF_VD_CONF_MAGIC: BVD %u not found\n",
-+					       __func__, vc->sec_elmnt_seq);
-+					return;
-+				}
-+				conf = vcl->other_bvds[i-1];
-+			}
-+			memcpy(conf->phys_refnum, vc->phys_refnum,
- 			       mppe * (sizeof(__u32) + sizeof(__u64)));
- 		} else {
- 			/* A new VD_CONF */
+diff --git a/tests/10ddf-create b/tests/10ddf-create
+index 3055a5d..6f1f51d 100644
+--- a/tests/10ddf-create
++++ b/tests/10ddf-create
+@@ -14,17 +14,21 @@ mdadm -CR r0 -l0 -n5 /dev/md/ddf0 -z 5000
+ if mdadm -CR r0 -l1 -n2 /dev/md/ddf0 -z 5000
+ then echo >&2 create with same name should fail ; exit 1
+ fi
++mdadm -CR r10 -l10 -n4 -pn2 /dev/md/ddf0 -z 5000
+ mdadm -CR r1 -l1 -n2 /dev/md/ddf0
+ mdadm -CR r5 -l5 -n3 /dev/md/ddf0
+ testdev /dev/md/r0 5 5000 512
+-# r0 will use 4608 due to chunk size, so that leaves 28160 for the rest
+-testdev /dev/md/r1 1 28160 64
+-testdev /dev/md/r5 2 28160 512
++testdev /dev/md/r10 2 5000 512
++# r0/r10 will use 4608 due to chunk size, so that leaves 23552 for the rest
++testdev /dev/md/r1 1 23552 64
++testdev /dev/md/r5 2 23552 512
+ dd if=/dev/sda of=/dev/md/r0 || true
++dd if=/dev/sda of=/dev/md/r10 || true
+ dd if=/dev/sda of=/dev/md/r1 || true
+ dd if=/dev/sda of=/dev/md/r5 || true
+ 
+ s0=`sha1sum /dev/md/r0`
++s10=`sha1sum /dev/md/r10`
+ s1=`sha1sum /dev/md/r1`
+ s5=`sha1sum /dev/md/r5`
+ 
+@@ -35,12 +39,16 @@ mdadm -I /dev/md/ddf0
+ 
+ udevadm settle
+ s0a=`sha1sum /dev/md/r0`
++s10a=`sha1sum /dev/md/r10`
+ s1a=`sha1sum /dev/md/r1`
+ s5a=`sha1sum /dev/md/r5`
+ 
+ if [ "$s0" != "$s0a" ]; then
+    echo r0 did not match ; exit 1;
+ fi
++if [ "$s10" != "$s10a" ]; then
++   echo r10 did not match ; exit 1;
++fi
+ if [ "$s1" != "$s1a" ]; then
+    echo r1 did not match ; exit 1;
+ fi
+@@ -50,6 +58,7 @@ fi
+ 
+ # failure status just means it has completed already, so ignore it.
+ mdadm --wait /dev/md/r1 || true
++mdadm --wait /dev/md/r10 || true
+ mdadm --wait /dev/md/r5 || true
+ 
+ mdadm -Dbs > /var/tmp/mdadm.conf
 -- 
 1.7.1
