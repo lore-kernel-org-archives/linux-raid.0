@@ -1,7 +1,7 @@
 From: mwilck@arcor.de
-Subject: [PATCH 17/27] DDF: get_extents: support secondary RAID level
-Date: Wed,  3 Jul 2013 22:27:57 +0200
-Message-ID: <1372883287-8859-18-git-send-email-mwilck@arcor.de>
+Subject: [PATCH 18/27] DDF: add_to_super_ddf: allow empty slots in phys disk table
+Date: Wed,  3 Jul 2013 22:27:58 +0200
+Message-ID: <1372883287-8859-19-git-send-email-mwilck@arcor.de>
 References: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
@@ -10,80 +10,82 @@ To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-Use get_pd_index_from_refnum() in get_extents to determine
-matching VD. This will ensure RAID 10 (secondary RAID level)
-support, too.
-
-This also fixes a bug in the previous get_extents() code (missing
-__be16_to_cpu for conf.prim_elmnt_count).
-
-DDF test case (10ddf-create) verified.
+The used slots in the phys disk table aren't necessarily the
+first ones. Rather, unused entries are represented by entries
+where the GUID is all 0xff.
 
 Signed-off-by: Martin Wilck <mwilck@arcor.de>
 ---
- super-ddf.c |   30 ++++++++++++++----------------
- 1 files changed, 14 insertions(+), 16 deletions(-)
+ super-ddf.c |   29 +++++++++++++++++++++++------
+ 1 files changed, 23 insertions(+), 6 deletions(-)
 
 diff --git a/super-ddf.c b/super-ddf.c
-index f22c0e3..e7aa0ad 100644
+index e7aa0ad..093f2dc 100644
 --- a/super-ddf.c
 +++ b/super-ddf.c
-@@ -467,6 +467,11 @@ static void pr_state(const struct ddf_super *ddf, const char *msg) {}
- #define ddf_set_updates_pending(x) \
- 	do { (x)->updates_pending = 1; pr_state(x, __func__); } while (0)
+@@ -2242,6 +2242,8 @@ static int init_super_ddf(struct supertype *st,
+ 	pd->used_pdes = __cpu_to_be16(0);
+ 	pd->max_pdes = __cpu_to_be16(max_phys_disks);
+ 	memset(pd->pad, 0xff, 52);
++	for (i = 0; i < max_phys_disks; i++)
++		memset(pd->entries[i].guid, 0xff, DDF_GUID_LEN);
  
-+static unsigned int get_pd_index_from_refnum(const struct vcl *vc,
-+					     __u32 refnum, unsigned int nmax,
-+					     const struct vd_config **bvd,
-+					     unsigned int *idx);
-+
- static unsigned int calc_crc(void *buf, int len)
- {
- 	/* crcs are always at the same place as in the ddf_header */
-@@ -2289,23 +2294,21 @@ static struct extent *get_extents(struct ddf_super *ddf, struct dl *dl)
- 	 */
- 	struct extent *rv;
- 	int n = 0;
--	unsigned int i, j;
+ 	if (posix_memalign((void**)&vd, 512, vdsize) != 0) {
+ 		pr_err("%s could not allocate vd\n", __func__);
+@@ -2538,6 +2540,16 @@ static void add_to_super_ddf_bvd(struct supertype *st,
+ 	ddf_set_updates_pending(ddf);
+ }
+ 
++static unsigned int find_unused_pde(const struct ddf_super *ddf)
++{
 +	unsigned int i;
- 
- 	rv = xmalloc(sizeof(struct extent) * (ddf->max_part + 2));
- 
- 	for (i = 0; i < ddf->max_part; i++) {
-+		const struct vd_config *bvd;
-+		unsigned int ibvd;
- 		struct vcl *v = dl->vlist[i];
--		if (v == NULL)
-+		if (v == NULL ||
-+		    get_pd_index_from_refnum(v, dl->disk.refnum, ddf->mppe,
-+					     &bvd, &ibvd) == DDF_NOTFOUND)
- 			continue;
--		for (j = 0; j < v->conf.prim_elmnt_count; j++)
--			if (v->conf.phys_refnum[j] == dl->disk.refnum) {
--				/* This device plays role 'j' in  'v'. */
--				rv[n].start = __be64_to_cpu(
--					LBA_OFFSET(ddf, &v->conf)[j]);
--				rv[n].size = __be64_to_cpu(v->conf.blocks);
--				n++;
--				break;
--			}
-+		rv[n].start = __be64_to_cpu(LBA_OFFSET(ddf, bvd)[ibvd]);
-+		rv[n].size = __be64_to_cpu(bvd->blocks);
-+		n++;
- 	}
- 	qsort(rv, n, sizeof(*rv), cmp_extent);
- 
-@@ -2682,11 +2685,6 @@ static int remove_from_super_ddf(struct supertype *st, mdu_disk_info_t *dk)
++	for (i = 0; i < __be16_to_cpu(ddf->phys->max_pdes); i++) {
++		if (all_ff(ddf->phys->entries[i].guid))
++			return i;
++	}
++	return DDF_NOTFOUND;
++}
++
+ /* add a device to a container, either while creating it or while
+  * expanding a pre-existing container
   */
- #define NULL_CONF_SZ	4096
+@@ -2564,6 +2576,14 @@ static int add_to_super_ddf(struct supertype *st,
+ 	 * a phys_disk entry and a more detailed disk_data entry.
+ 	 */
+ 	fstat(fd, &stb);
++	n = find_unused_pde(ddf);
++	if (n == DDF_NOTFOUND) {
++		pr_err("%s: No free slot in array, cannot add disk\n",
++		       __func__);
++		return 1;
++	}
++	pde = &ddf->phys->entries[n];
++
+ 	if (posix_memalign((void**)&dd, 512,
+ 		           sizeof(*dd) + sizeof(dd->vlist[0]) * ddf->max_part) != 0) {
+ 		pr_err("%s could allocate buffer for new disk, aborting\n",
+@@ -2602,8 +2622,6 @@ static int add_to_super_ddf(struct supertype *st,
+ 	for (i = 0; i < ddf->max_part ; i++)
+ 		dd->vlist[i] = NULL;
  
--static unsigned int get_pd_index_from_refnum(const struct vcl *vc,
--					     __u32 refnum, unsigned int nmax,
--					     const struct vd_config **bvd,
--					     unsigned int *idx);
--
- static int __write_ddf_structure(struct dl *d, struct ddf_super *ddf, __u8 type,
- 				 char *null_aligned)
- {
+-	n = __be16_to_cpu(ddf->phys->used_pdes);
+-	pde = &ddf->phys->entries[n];
+ 	dd->pdnum = n;
+ 
+ 	if (st->update_tail) {
+@@ -2616,10 +2634,9 @@ static int add_to_super_ddf(struct supertype *st,
+ 		pd->used_pdes = __cpu_to_be16(n);
+ 		pde = &pd->entries[0];
+ 		dd->mdupdate = pd;
+-	} else {
+-		n++;
+-		ddf->phys->used_pdes = __cpu_to_be16(n);
+-	}
++	} else
++		ddf->phys->used_pdes = __cpu_to_be16(
++			1 + __be16_to_cpu(ddf->phys->used_pdes));
+ 
+ 	memcpy(pde->guid, dd->disk.guid, DDF_GUID_LEN);
+ 	pde->refnum = dd->disk.refnum;
 -- 
 1.7.1
