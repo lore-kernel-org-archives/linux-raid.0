@@ -1,7 +1,7 @@
 From: mwilck@arcor.de
-Subject: [PATCH 22/27] DDF: getinfo_super_ddf_bvd: lba_offset calculation for RAID10
-Date: Wed,  3 Jul 2013 22:28:02 +0200
-Message-ID: <1372883287-8859-23-git-send-email-mwilck@arcor.de>
+Subject: [PATCH 25/27] DDF: ddf_process_update: handle update of conf records for SVD
+Date: Wed,  3 Jul 2013 22:28:05 +0200
+Message-ID: <1372883287-8859-26-git-send-email-mwilck@arcor.de>
 References: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
@@ -10,44 +10,40 @@ To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-Secondary RAID needs some extra logic here, too.
+For secondary RAID, we need to check which BVD needs to be updated.
 
 Signed-off-by: Martin Wilck <mwilck@arcor.de>
 ---
- super-ddf.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+ super-ddf.c |   17 ++++++++++++++++-
+ 1 files changed, 16 insertions(+), 1 deletions(-)
 
 diff --git a/super-ddf.c b/super-ddf.c
-index 0247ca5..cd6f298 100644
+index 8e1d502..77c00b2 100644
 --- a/super-ddf.c
 +++ b/super-ddf.c
-@@ -1829,10 +1829,12 @@ static void getinfo_super_ddf_bvd(struct supertype *st, struct mdinfo *info, cha
- 	struct ddf_super *ddf = st->sb;
- 	struct vcl *vc = ddf->currentconf;
- 	int cd = ddf->currentdev;
-+	int n_prim;
- 	int j;
- 	struct dl *dl;
- 	int map_disks = info->array.raid_disks;
- 	__u32 *cptr;
-+	struct vd_config *conf;
- 
- 	memset(info, 0, sizeof(*info));
- 	if (layout_ddf2md(&vc->conf, &info->array) == -1)
-@@ -1844,6 +1846,14 @@ static void getinfo_super_ddf_bvd(struct supertype *st, struct mdinfo *info, cha
- 	info->array.chunk_size	  = 512 << vc->conf.chunk_shift;
- 	info->custom_array_size	  = 0;
- 
-+	conf = &vc->conf;
-+	n_prim = __be16_to_cpu(conf->prim_elmnt_count);
-+	if (conf->sec_elmnt_count > 1 && cd >= n_prim) {
-+		int ibvd = cd / n_prim - 1;
-+		cd %= n_prim;
-+		conf = vc->other_bvds[ibvd];
-+	}
-+
- 	if (cd >= 0 && (unsigned)cd < ddf->mppe) {
- 		info->data_offset =
- 			__be64_to_cpu(LBA_OFFSET(ddf, &vc->conf)[cd]);
+@@ -4282,7 +4282,22 @@ static void ddf_process_update(struct supertype *st,
+ 			/* An update, just copy the phys_refnum and lba_offset
+ 			 * fields
+ 			 */
+-			memcpy(vcl->conf.phys_refnum, vc->phys_refnum,
++			struct vd_config *conf = &vcl->conf;
++			if (vcl->other_bvds != NULL &&
++			    conf->sec_elmnt_seq != vc->sec_elmnt_seq) {
++				unsigned int i;
++				for (i = 1; i < conf->sec_elmnt_count; i++)
++					if (vcl->other_bvds[i-1]->sec_elmnt_seq
++					    == vc->sec_elmnt_seq)
++						break;
++				if (i == conf->sec_elmnt_count) {
++					pr_err("%s/DDF_VD_CONF_MAGIC: BVD %u not found\n",
++					       __func__, vc->sec_elmnt_seq);
++					return;
++				}
++				conf = vcl->other_bvds[i-1];
++			}
++			memcpy(conf->phys_refnum, vc->phys_refnum,
+ 			       mppe * (sizeof(__u32) + sizeof(__u64)));
+ 		} else {
+ 			/* A new VD_CONF */
 -- 
 1.7.1
