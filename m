@@ -1,7 +1,7 @@
 From: mwilck@arcor.de
-Subject: [PATCH 27/27] tests/10ddf-create: add RAID 10 array
-Date: Wed,  3 Jul 2013 22:28:07 +0200
-Message-ID: <1372883287-8859-28-git-send-email-mwilck@arcor.de>
+Subject: [PATCH 04/27] DDF: handle "open flag" according to spec
+Date: Wed,  3 Jul 2013 22:27:44 +0200
+Message-ID: <1372883287-8859-5-git-send-email-mwilck@arcor.de>
 References: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
@@ -10,67 +10,81 @@ To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-This patch adds RAID10 support to the DDF test script.
-It actually passes!
+The DDF spec mandates that the "open flag" be set to non-0 before
+writing a configuration, and reset to 0 when finished to indicate
+success.
 
 Signed-off-by: Martin Wilck <mwilck@arcor.de>
 ---
- tests/10ddf-create |   15 ++++++++++++---
- 1 files changed, 12 insertions(+), 3 deletions(-)
+ super-ddf.c |   26 ++++++++++++++++++--------
+ 1 files changed, 18 insertions(+), 8 deletions(-)
 
-diff --git a/tests/10ddf-create b/tests/10ddf-create
-index 3055a5d..6f1f51d 100644
---- a/tests/10ddf-create
-+++ b/tests/10ddf-create
-@@ -14,17 +14,21 @@ mdadm -CR r0 -l0 -n5 /dev/md/ddf0 -z 5000
- if mdadm -CR r0 -l1 -n2 /dev/md/ddf0 -z 5000
- then echo >&2 create with same name should fail ; exit 1
- fi
-+mdadm -CR r10 -l10 -n4 -pn2 /dev/md/ddf0 -z 5000
- mdadm -CR r1 -l1 -n2 /dev/md/ddf0
- mdadm -CR r5 -l5 -n3 /dev/md/ddf0
- testdev /dev/md/r0 5 5000 512
--# r0 will use 4608 due to chunk size, so that leaves 28160 for the rest
--testdev /dev/md/r1 1 28160 64
--testdev /dev/md/r5 2 28160 512
-+testdev /dev/md/r10 2 5000 512
-+# r0/r10 will use 4608 due to chunk size, so that leaves 23552 for the rest
-+testdev /dev/md/r1 1 23552 64
-+testdev /dev/md/r5 2 23552 512
- dd if=/dev/sda of=/dev/md/r0 || true
-+dd if=/dev/sda of=/dev/md/r10 || true
- dd if=/dev/sda of=/dev/md/r1 || true
- dd if=/dev/sda of=/dev/md/r5 || true
+diff --git a/super-ddf.c b/super-ddf.c
+index 45522f2..b806949 100644
+--- a/super-ddf.c
++++ b/super-ddf.c
+@@ -2518,6 +2518,7 @@ static int __write_ddf_structure(struct dl *d, struct ddf_super *ddf, __u8 type,
+ 	unsigned long long sector;
+ 	struct ddf_header *header;
+ 	int fd, i, n_config, conf_size;
++	int ret = 0;
  
- s0=`sha1sum /dev/md/r0`
-+s10=`sha1sum /dev/md/r10`
- s1=`sha1sum /dev/md/r1`
- s5=`sha1sum /dev/md/r5`
+ 	fd = d->fd;
  
-@@ -35,12 +39,16 @@ mdadm -I /dev/md/ddf0
+@@ -2535,23 +2536,23 @@ static int __write_ddf_structure(struct dl *d, struct ddf_super *ddf, __u8 type,
+ 	}
  
- udevadm settle
- s0a=`sha1sum /dev/md/r0`
-+s10a=`sha1sum /dev/md/r10`
- s1a=`sha1sum /dev/md/r1`
- s5a=`sha1sum /dev/md/r5`
+ 	header->type = type;
+-	header->openflag = 0;
++	header->openflag = 1;
+ 	header->crc = calc_crc(header, 512);
  
- if [ "$s0" != "$s0a" ]; then
-    echo r0 did not match ; exit 1;
- fi
-+if [ "$s10" != "$s10a" ]; then
-+   echo r10 did not match ; exit 1;
-+fi
- if [ "$s1" != "$s1a" ]; then
-    echo r1 did not match ; exit 1;
- fi
-@@ -50,6 +58,7 @@ fi
+ 	lseek64(fd, sector<<9, 0);
+ 	if (write(fd, header, 512) < 0)
+-		return 0;
++		goto out;
  
- # failure status just means it has completed already, so ignore it.
- mdadm --wait /dev/md/r1 || true
-+mdadm --wait /dev/md/r10 || true
- mdadm --wait /dev/md/r5 || true
+ 	ddf->controller.crc = calc_crc(&ddf->controller, 512);
+ 	if (write(fd, &ddf->controller, 512) < 0)
+-		return 0;
++		goto out;
  
- mdadm -Dbs > /var/tmp/mdadm.conf
+ 	ddf->phys->crc = calc_crc(ddf->phys, ddf->pdsize);
+ 	if (write(fd, ddf->phys, ddf->pdsize) < 0)
+-		return 0;
++		goto out;
+ 	ddf->virt->crc = calc_crc(ddf->virt, ddf->vdsize);
+ 	if (write(fd, ddf->virt, ddf->vdsize) < 0)
+-		return 0;
++		goto out;
+ 
+ 	/* Now write lots of config records. */
+ 	n_config = ddf->max_part;
+@@ -2590,13 +2591,22 @@ static int __write_ddf_structure(struct dl *d, struct ddf_super *ddf, __u8 type,
+ 		}
+ 	}
+ 	if (i <= n_config)
+-		return 0;
++		goto out;
+ 
+ 	d->disk.crc = calc_crc(&d->disk, 512);
+ 	if (write(fd, &d->disk, 512) < 0)
+-		return 0;
++		goto out;
+ 
+-	return 1;
++	ret = 1;
++out:
++	header->openflag = 0;
++	header->crc = calc_crc(header, 512);
++
++	lseek64(fd, sector<<9, 0);
++	if (write(fd, header, 512) < 0)
++		ret = 0;
++
++	return ret;
+ }
+ 
+ static int __write_init_super_ddf(struct supertype *st)
 -- 
 1.7.1
