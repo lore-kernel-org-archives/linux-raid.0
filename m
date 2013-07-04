@@ -1,75 +1,83 @@
 From: Christoph Anton Mitterer <calestyo@scientia.net>
-Subject: question about the best suited RAID level/layout
-Date: Thu, 04 Jul 2013 20:17:57 +0200
-Message-ID: <1372961877.8716.43.camel@heisenberg.scientia.net>
+Subject: some general questions on RAID
+Date: Thu, 04 Jul 2013 20:30:02 +0200
+Message-ID: <1372962602.8716.56.camel@heisenberg.scientia.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg="sha512";
 	protocol="application/x-pkcs7-signature";
-	boundary="=-Nx17mRXLKhdPyoWXWuzU"
+	boundary="=-9qzU3GW4be4Y4/rpLSSm"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-Nx17mRXLKhdPyoWXWuzU
+--=-9qzU3GW4be4Y4/rpLSSm
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
 Hi.
 
-I'm setting up a 5-bay NAS (based on a QNAP device), with my personal
-Debian on it, currently using only 4 devices though
-The focus is absolutely on data security/resilience,... and not at all
-on performance.
+Well for me personally these are follow up questions to my scenario
+presented here: http://thread.gmane.org/gmane.linux.raid/43405
 
-For that reasons, I bought 4 different (i.e. different vendors)
-enterprise SATA HDDs, well actually only three since three different and
-on type twice aren't that much vendors left, with the intention that, if
-there are flaws in the firmware or a production series, I'm hopefully
-not hit at all devices.
+But I think these questions would be generally interesting an I'd like
+to add them to the Debian FAQ for mdadm (and haven't found real good
+answers in the archives/google).
 
 
-Now questions comes, which RAID level to use, and I guess with the main
-focus on resilience there's only basically these options:
+1) I plan to use dmcrypt and LUKS and had the following stacking in
+mind:
+physical devices -> MD -> dmcrypt -> LVM (with multiple LVs) ->
+filesystems
 
-1) RAID1 with all disks mirrored (i.e. 4 copies of each chunk)
-I don't want that,... while it's the most secure one... it costs too
-many disks (I'd like to have two of them usable, i.e. 2x 4TB)
+Basically I use LVM for partitioning here ;-)
 
+Are there any issues with that order? E.g. I've heard rumours that
+dmcrypt on top of MD performs much worse than vice versa...
 
-2) RAID1+0
-AFAIU, its in every way (subtle) worse than RAID10, so no choice?
-
-
-3) RAID0+1
-AFAIU, it has higher probability to get the RAID broken...
-See e.g. http://aput.net/~jheiss/raid10/
-btw: Questions is... is that really true? Sure, the mdadm will think
-that a 0+1 might be broken... but the data may be still _completely_ in
-it... and one just has to manually get it out?!
+But when looking at potential disaster recovery... I think not having MD
+directly on top of the HDDs (especially having it above dmcrypt) seems
+stupid.
 
 
-4) RAID6 vs. RAID10
-I would have tended to RAID6, since I think it's more secure, as _ANY_
-two disks may fail,... and not just two disks of the different RAID1
-sets within it.
-And things would be probably easier, when I ever start to use the 5th
-bay...
+2) Chunks / Chunk size
+a) How does MD work in that matter... is it that it _always_ reads
+and/or writes FULL chunks?
+Guess it must at least do so on _write_ for the RAID levels with parity
+(5/6)... but what about read?
+And what about read/write with the non-parity RAID levels (1, 0, 10,
+linear)... is the chunk size of any real influence here (in terms of
+reading/writing)?
 
-Any pro/contra arguments?
+b) What's the currently suggested chunk size when having a undetermined
+mix of file sizes? Well it's obviously >=3D filesystem block size...
+dm-crypt blocksize is always 512B so far so this won't matter... but do
+the LVM physical extents somehow play in (I guess not,... and LVM PEs
+are _NOT_ always FULLY read and/or written - why should they? .. right?)
+=46rom our countless big (hardware) RAID systems at the faculty (we run a
+Tier-2 for the LHC Computing Grid)... experience seems that 256K is best
+for an undetermined mixture of small/medium/large files... and the
+biggest possible chunk size for mostly large files.
+But does the 256K apply to MD RAIDs as well?
 
-What about the layout options for RAID6 (if that would be THE choice)?
+
+3) Any extra benefit from the parity?
+What I mean is... does that parity give me kinda "integrity check"...
+I.e. when a drive fails completely (burns down or whatever)... then it's
+clear... the parity is used on rebuild to get the lost chunks back.
+
+But when I only have block errors... and do scrubbing... a) will it tell
+me that/which blocks are damaged... it will it be possible to recover
+the right value by the parity? Assuming of course that block
+error/damage doesn't mean the drive really tells me an error code for
+"BLOCK BROKEN"... but just gives me bogus data?
 
 
-
-Some more general questions in an extra mail few minutes from now :)
-
-
-Thanks so far,
+Thanks again,
 Chris.
 
---=-Nx17mRXLKhdPyoWXWuzU
+--=-9qzU3GW4be4Y4/rpLSSm
 Content-Type: application/x-pkcs7-signature; name="smime.p7s"
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Transfer-Encoding: base64
@@ -154,18 +162,18 @@ oY/0x3bjoVlX93GyxG4UXG1tQWbfG5Ox1ADD7svPPD0hgKlfY2X83eBfpPQr8IVxQdRnJfsasZeu
 1pmCE0HSbqUbmSeA5wupqAAxggLtMIIC6QIBATBbMFQxFDASBgNVBAoTC0NBY2VydCBJbmMuMR4w
 HAYDVQQLExVodHRwOi8vd3d3LkNBY2VydC5vcmcxHDAaBgNVBAMTE0NBY2VydCBDbGFzcyAzIFJv
 b3QCAwEBgjANBglghkgBZQMEAgMFAKCCAWMwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
-hkiG9w0BCQUxDxcNMTMwNzA0MTgxNzU3WjBPBgkqhkiG9w0BCQQxQgRAVHGygbNZOg7L8D2qMWWA
-+5j5Zg2SOA3JaSZk279GLAAvqRSZ5FF47qPLOJ6rC/Ayb/9wLjDmQ8k7r3meM+TH/zBqBgkrBgEE
+hkiG9w0BCQUxDxcNMTMwNzA0MTgzMDAzWjBPBgkqhkiG9w0BCQQxQgRAZefrAxP8Be1TvnrxMYe+
+FJhIjJr9XJd7i9rjXZmINg/0r0SOaiJxjec3akHN0ZhDHjnsjhiLT9QII1fF4cFdFDBqBgkrBgEE
 AYI3EAQxXTBbMFQxFDASBgNVBAoTC0NBY2VydCBJbmMuMR4wHAYDVQQLExVodHRwOi8vd3d3LkNB
 Y2VydC5vcmcxHDAaBgNVBAMTE0NBY2VydCBDbGFzcyAzIFJvb3QCAwEBgjBsBgsqhkiG9w0BCRAC
 CzFdoFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6Ly93d3cuQ0FjZXJ0
 Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAIDAQGCMA0GCSqGSIb3DQEBAQUABIIB
-AJhtRJxH2aa4AQheQCho/+1OGHMF6bZV3iMNZIUxkG3KAPmP0QvznmYy9gTrlCF95vIftXehwjN9
-VvPisIuw/+HNJ4VUEA0DmsKXcqFBZK0RzmIyb0amVgXFtH72S/PaUc8uUUocdhYk+N4T7PZ+tzx/
-omALxF79JNoPiWDguQViHc9VJFQFkQ1uBz4udqi6PHUm+A9Ylv/vjTMdMqoTWEH0gn8LGfj/yHQb
-aiQScZZUSSErDf16G32V+3CRR1vPjy0Hg2zQPdpqh4NeQ+sxDG8FrDZuhnoOT/vain7h5afwaUOn
-lnezsMD6h6uXzxfQ9XS8C0tdFyxISquRzknyc+IAAAAAAAA=
+ADS47GjcfFimK9NrSeRJ6j49L7tRWXTKXDJQBsfDFmxNqRFzu1pkgkSEjxbrb0A38L/5/euZk7I3
+GMB51iJs7NP3q3xsE1HIqQFImFkh64+hBPor7ECUrDaKLywbxqR9oasydfECCqhFy0R/wt/DR6IM
+lycnv3baKY6V2wyp9bgtFj4uZE6elqQczB7vtsmFsrKbP5ScCnmcscUN+Er73xWzP7LkT3u1XRih
+xpZwANFJOHaW8scvGQ9tSrHCCbNTlJZ0weI9EmPULMmLadql1p6vxn+WdmpVfTWBhcZpKoH7XUx8
+ErSYIagmBcmk1wqh6VKhyptA1lA2JN6QoAcg+sYAAAAAAAA=
 
 
---=-Nx17mRXLKhdPyoWXWuzU--
+--=-9qzU3GW4be4Y4/rpLSSm--
 
