@@ -1,98 +1,156 @@
 From: Christoph Anton Mitterer <calestyo@scientia.net>
-Subject: Re: question about the best suited RAID level/layout
-Date: Fri, 05 Jul 2013 00:58:07 +0200
-Message-ID: <1372978687.5249.52.camel@fermat.scientia.net>
-References: <1372961877.8716.43.camel@heisenberg.scientia.net>
-	 <51D5EC8A.40509@turmel.org>
+Subject: Re: some general questions on RAID
+Date: Fri, 05 Jul 2013 01:34:42 +0200
+Message-ID: <1372980882.5249.88.camel@fermat.scientia.net>
+References: <1372962602.8716.56.camel@heisenberg.scientia.net>
+	 <51D5F22C.70007@turmel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-pv7lyeqmUc6lAk+Ysubh"
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-EKldAWquzzuSx4rZ1swa"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51D5EC8A.40509@turmel.org>
+In-Reply-To: <51D5F22C.70007@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-pv7lyeqmUc6lAk+Ysubh
+--=-EKldAWquzzuSx4rZ1swa
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi Phil.
+On Thu, 2013-07-04 at 18:07 -0400, Phil Turmel wrote:
+> Last time I checked, dmcrypt treated barriers as no-ops, so filesystems
+> that rely on barriers for integrity can be scrambled.
+Whow... uhmm... that would be awful... (since I already use ext4 on top
+of dmcrypt..
+But wouldn't that be a general problem of dmcrypt, unrelated to any
+further stacking of LVM and/or MD?!
+
+> As such, where I
+> mix LVM and dmcrypt, I do it selectively on top of each LV.
+Don't understand what you exactly mean/do and why it should help against
+the barrier thingy?
 
 
-On Thu, 2013-07-04 at 17:43 -0400, Phil Turmel wrote:
-> > The focus is absolutely on data security/resilience,... and not at all
-> > on performance.
-> This particular statement trumps all other considerations.
-Sarcasm? (*Sheldon Cooper hat on*)
+> I believe dmcrypt is single-threaded, too.
+I've had thought that, too,..at least it used to be.
+So that would basically mean... if I put dmcrypt on top of MD, then one
+single thread would handle the whole encryption for the whole MD and
+therefore also on all of my (e.g. 4) devices?
+
+But when I do it the other way round... MD being on top of dmcrypt...
+than each physical device would get it's own dmcrypt device... and also
+it's own thread, using potentially more CPUs?
+
+Well the QNAP in question would have 2 cores with HT so 4 threads...
+anyone here with an idea whether the performance boost would be worth
+running dmcrypt below MD (which somehow sounds ugly and wrong).
 
 
-> Triple-copy raid10
-> across four drives can match that resiliency, with dramatically better
-> performance, but with a substantial cost in capacity.
-hmm I've briefly thought about that as well (just forgot to mention
-it)... for some reason (probably a non-reason) I've always had a bad
-feeling with respect to that uneven mixing (i.e. three copies on four
-disks), AFAIU that would look like (each same number being the same
-chunck:
-+---------+ +---------+ +---------+ +---------+
-|   sda   | |   sdb   | |   sdc   | |   sdd   |
-+---------+ +---------+ +---------+ +---------+
-  0  1  2     0  1  3     0  2  3     1  2  3
-  4  5  6     4  5  7     4  6  7     5  6  7
-  8  9  10    8  9  11    8  10 11    9  10 11
+> If either or both of those issues have been corrected, I wouldn't expect
+> the layering order to matter.  I'd be nice if a lurking dmcrypt dev or
+> enthusiast would chime in here.
+I've mailed Milan Broz a pointer to this thread and hope he finds some
+time to have a look at :)
 
-And that gives me again, any 2 disks... but so much better performance?
-
-With 4x 4TiB disks,.. RAID6 would give me 16/2 TiB... and the above
-would give me 16/3 TiB?!
-Quite a loss...
-
-And AFAIU it doesn't give me any better resilience than RAID6 (by tricks
-like probabilities or so)?
-
-Can it be grown? Like when I want to use the 5th bay? What would it be
-then, still any 2 out of 5?
+If so, a question in addition,... if it's not already done,... are there
+plans to make dmcrypt multi-threaded (so I could just wait for it and
+put MD below it)?
 
 
-> Two-failure resilience is vital to completing recovery after replacing a
-> failed drive, particularly when the read error rates of consumer-grade
-> drives are involved.
-Well,... I have enterprise disks, and I have backups on different
-media,... but nevertheless,... I wouldn't "risk" RAID5 for my precious
-data
+> > But when looking at potential disaster recovery... I think not having M=
+D
+> > directly on top of the HDDs (especially having it above dmcrypt) seems
+> > stupid.
+> I don't know that layering matters much in that case, but I can think of
+> many cases where it could complicate things.
+What exactly do you mean?
 
-> In your specific case, raid6 has one additional advantage: making future
-> expansion to the fifth bay a reliable, simple, no downtime event.
-Ah... so I couldn't online/offline grow a RAID10 with n/f/o=3D3 ?
-
-
-> In your situation, I would use raid6.  To mitigate the performance hit
-> on occasional random-access work, I would use a small chunk size (I use
-> 16k).  That will somewhat hurt peak linear performance, but even
-> bluray-equivalent media streams only amount to 5 MB/s or so.  That would
-> be 80 IOPS per device in such a four-drive raid6.
-I think RAID6 will be what I go for, at least unless the RAID10 with
-three blocks gives me any resilience bonus, which I can't see right now.
+My idea was that when MD is directly above the physical device... then I
+will roughly which kind block should be where and how data blocks should
+yield parity blocks... i.e. when I do disc forensics or plain dd access.
+When dmcrypt is below, though,... all physical devices will look
+completely like garbage.
 
 
-Any ideas about the layout? i.e. left-symmetric-6, right-symmetric-6,
-left-asymmetric-6, right-asymmetric-6, and parity-first-6 ?
+> > 2) Chunks / Chunk size
+> > a) How does MD work in that matter... is it that it _always_ reads
+> > and/or writes FULL chunks?
+>
+> No.  It does not.  It doesn't go below 4k though.
+So what does that mean exactly? It always reads/writes at least 4k
+blocks?
+
+
+> > Guess it must at least do so on _write_ for the RAID levels with parity
+> > (5/6)... but what about read?
+> No, not even for write.
+:-O
+
+> If an isolated 4k block is written to a raid6,
+> the corresponding 4k blocks from the other data drives in that stripe
+> are read, both corresponding parity blocks are computed, and the three
+> blocks are written.
+okay that's clear... but uhm... why having chuk sizes then? I mean
+what's the difference when having a 128k chunk vs. a 256k one... when
+the parity/data blocks seem to be split in 4k blocks,... or did I get
+that completely wrong?
+
+
+> > And what about read/write with the non-parity RAID levels (1, 0, 10,
+> > linear)... is the chunk size of any real influence here (in terms of
+> > reading/writing)?
+> Not really.  At least, I've seen nothing on this list that shows any
+> influence.
+So AFAIU now:
+a) Regardless the RAID level and regardless the chunk size,
+   - data blocks are read/written in 4KiB blocks
+   - when there IS parity information... then that parity information is _A=
+LWAYS_ read/computed/written in 4KiB blocks.
+b) The chunks basically just control how much consecutive data is on one
+device, thereby allowing to speed up / slow down reads/write for small /
+large files.
+But that should basically only matter on seeking devices, i.e. not on
+SSDs... thus the chunk size is irrelevant on SSDs...
+
+Is all that right? Phil, Neil? :D
 
 
 
-I'd have even one more question here: Has anyone experience with my idea
-of intentionally running devices of different vendors (Seagate, WD,
-HGST)... for resilience reasons?... Does it work out as I plan, or are
-there any hidden caveats I can't see which make the resilience (not the
-performance) worse?
+> > b) What's the currently suggested chunk size when having a undetermined
+> > [snip]
+> For parity raid, large chunk sizes are crazy, IMHO.  As I pointed out in
+> another mail, I use 16k for all of mine.
+Sounds contradicting to the 4 KiB parity blocks idea?! So why? Or do you
+have by chance a URL to your other mail? :)
 
 
 
-Thanks :),
+> > 3) Any extra benefit from the parity?
+> > [snip]
+> This capability exists as a separate userspace utility "raid6check" that
+> is in the process of acceptance into the mdadm toolkit.
+Interesting... just looking at it.
+
+>   It is not built
+> into the kernel, and Neil Brown has a long blog post explaining why it
+> shouldn't ever be.
+I'll search for it...
+
+>   Built-in "check" scrubs will report such mismatches,
+> and the built-in "repair" scrub fixes them by recomputing all parity
+> from the data blocks.
+So that basically means, that parity RAID (i.e. RAID6) *HAS* an
+resilience advantage even over the 3 block copy RAID10 version that
+we've discussed over there[0], right?
+
+
+
+Thanks a lot,
 Chris.
 
---=-pv7lyeqmUc6lAk+Ysubh
+[0] http://thread.gmane.org/gmane.linux.raid/43405/focus=3D43407
+
+--=-EKldAWquzzuSx4rZ1swa
 Content-Type: application/x-pkcs7-signature; name="smime.p7s"
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Transfer-Encoding: base64
@@ -177,17 +235,17 @@ duOhWVf3cbLEbhRcbW1BZt8bk7HUAMPuy888PSGAqV9jZfzd4F+k9CvwhXFB1Gcl+xqxl67WmYIT
 QdJupRuZJ4DnC6moADGCAr0wggK5AgEBMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNV
 BAsTFWh0dHA6Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAID
 AQGCMAkGBSsOAwIaBQCgggE3MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTEzMDcwNDIyNTgwN1owIwYJKoZIhvcNAQkEMRYEFBOzoMwrsjJpMZxtTBmO+cb43SRFMGoG
+MQ8XDTEzMDcwNDIzMzQ0MVowIwYJKoZIhvcNAQkEMRYEFA1CvFpZK6gFeLWZJi4Does+5Nq7MGoG
 CSsGAQQBgjcQBDFdMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6Ly93
 d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAIDAQGCMGwGCyqGSIb3
 DQEJEAILMV2gWzBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwGA1UECxMVaHR0cDovL3d3dy5D
 QWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290AgMBAYIwDQYJKoZIhvcNAQEB
-BQAEggEANW106iQf6XlqLzmz+w52yPB6R3YE6RI/CCMhhKlkon1hDWUENm6dsYvQkOYMiyQkBAsR
-WFYDu5kz69ahWcvoUBAvY7Nrwdrs75GC8g4XNzKwujEYNIe+eOZ1K9LR4dPFw8N6ZRcLysHB+Pbw
-mPdqGTIK9pol2gPFbjfj3RxFBqEmLnEZ2eOSvzMV1h4X9h6GLTde53ukEmKPntPINm7hWBpVZA38
-IiYRUcUW3lg5VGZDHUbfkQJ48liWN7UOQpd2vX2oGLSYcG9Pt7WaPnl7tpi+i45xIfLdVMhWs1O2
-BswDnI3jwZN/qvk32g9GKg8U+9VvpB6vg0Orwg0zbq3QTQAAAAAAAA==
+BQAEggEAZBuIpV/tFY4QDO3o3YldY4jGmGKHI1v2dIdKjfzn48OILXxl30pK1Tixhpd72lTN9KGZ
+aE4Q8wpFWFtTj2o0pgXcS1F8dcr1jXqcUbRpBU0qnzuG2WJaJiMVz9169HaaVd46cQI528pipiop
+5F77lZKMi/1uluT40mit93lRVh78xiobFpwDaOyh8ogXmvI4vxL5iWgfOJNGQN+Q82HCRzyn437e
+hVV1M8A5GQbu94Oj8ytK1p6Irn/LSKEy6kvUZVZlkEha5K+JEXvvz8oB7Tm4+yphRNIDF/suxWHG
+ttoprcKKNfhgpbQkunMNRV5c/MI2yty916uW4F3C2yMYsQAAAAAAAA==
 
 
---=-pv7lyeqmUc6lAk+Ysubh--
+--=-EKldAWquzzuSx4rZ1swa--
 
