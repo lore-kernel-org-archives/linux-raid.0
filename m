@@ -1,59 +1,42 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: question about the best suited RAID level/layout
-Date: Thu, 04 Jul 2013 20:12:17 -0500
-Message-ID: <51D61D71.5090406@hardwarefreak.com>
-References: <1372961877.8716.43.camel@heisenberg.scientia.net>  <51D5EC8A.40509@turmel.org> <1372978687.5249.52.camel@fermat.scientia.net>
-Reply-To: stan@hardwarefreak.com
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: some general questions on RAID
+Date: Fri, 05 Jul 2013 09:13:09 +0800
+Message-ID: <51D61DA5.9090507@fnarfbargle.com>
+References: <1372962602.8716.56.camel@heisenberg.scientia.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1372978687.5249.52.camel@fermat.scientia.net>
+In-Reply-To: <1372962602.8716.56.camel@heisenberg.scientia.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: Christoph Anton Mitterer <calestyo@scientia.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 7/4/2013 5:58 PM, Christoph Anton Mitterer wrote:
+On 05/07/13 02:30, Christoph Anton Mitterer wrote:
+> Hi.
+>
+> Well for me personally these are follow up questions to my scenario
+> presented here: http://thread.gmane.org/gmane.linux.raid/43405
+>
+> But I think these questions would be generally interesting an I'd like
+> to add them to the Debian FAQ for mdadm (and haven't found real good
+> answers in the archives/google).
+>
+>
+> 1) I plan to use dmcrypt and LUKS and had the following stacking in
+> mind:
+> physical devices -> MD -> dmcrypt -> LVM (with multiple LVs) ->
+> filesystems
 
-> I'd have even one more question here: Has anyone experience with my idea
-> of intentionally running devices of different vendors (Seagate, WD,
-> HGST)... for resilience reasons?... Does it work out as I plan, or are
-> there any hidden caveats I can't see which make the resilience (not the
-> performance) worse?
+I have two arrays with dmcrypt on top of MD.
+Array 1 is 4 x Seagate 15k SAS drives in a RAID10 f2.
+Array 2 is 6 x 240G SSD's in a RAID10 n2.
 
-1.  You'll need to use partitions underneath md because the drives will
-all be slightly difference capacity.  You'll need to identify the
-capacity of the smallest drive and create partitions a few MiB smaller
-than this on all drives.  This should assure that any replacement drive
-which is slightly smaller will be usable in the array.
+Array 2 is partitoned. All run ext4.
+The CPU is an AMD FX8350. I can max out all arrays with sequential or 
+random r/w loads. So dmcrypt is not a limiting factor for me.
 
-Screwing around with all of this is a PITA.  When I build arrays I use
-identical drives and put identical spares in storage.  I don't leave
-hot/warm/cold spares in the chassis.  This simply degrades performance.
-Hot swap was invented for a reason.  Some folks prefer online spares an
-unattended auto rebuild.  Not every time a drive is kicked is a rebuild
-required.  I wanna look things over before I start a rebuild.
-
-
-2.  HGST is a brand created due to Western Digital's acquisition of
-Hitachi Data System's disk drive unit.  The drives are Hitachi's final
-production units relabeled with a different name and serial number.
-Three years from now when that HGST drive fails, Western Digital will
-replace it with a Western Digital produced drive.
-
-There are now currently only 3 hard disk drive vendors on the planet
-AFAIK:  Seagate, Toshiba, and Western Digital.  In the not too distance
-future Toshiba's disk drive unit will probably be acquired by one of the
-other two and we'll have two drive vendors.  At that point the lack of
-entropy will make this type of "game plan" useless.  You'll have to pick
-drives from different lines in each vendors' lineup, which means a mix
-of consumer and enterprise models.  Then you'll lose ERC/TLER on some
-drives.
-
-IMO the practical disadvantages of using dissimilar drives outweighs the
-theoretical benefits.
-
--- 
-Stan
+When I say max out, I run into bandwidth limits on the hardware before 
+dmcrypt gets in the way.
 
