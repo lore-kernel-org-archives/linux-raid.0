@@ -1,69 +1,49 @@
 From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: question about the best suited RAID level/layout
-Date: Sat, 06 Jul 2013 03:36:59 -0500
-Message-ID: <51D7D72B.4070401@hardwarefreak.com>
-References: <1372961877.8716.43.camel@heisenberg.scientia.net>  <51D5EC8A.40509@turmel.org> <1372978687.5249.52.camel@fermat.scientia.net>  <51D61D71.5090406@hardwarefreak.com> <1373071585.5395.45.camel@fermat.scientia.net>
+Subject: Re: some general questions on RAID
+Date: Sat, 06 Jul 2013 03:52:42 -0500
+Message-ID: <51D7DADA.50200@hardwarefreak.com>
+References: <1372962602.8716.56.camel@heisenberg.scientia.net>  <51D5F22C.70007@turmel.org> <1373074400.10569.49.camel@fermat.scientia.net>
 Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1373071585.5395.45.camel@fermat.scientia.net>
+In-Reply-To: <1373074400.10569.49.camel@fermat.scientia.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: Christoph Anton Mitterer <calestyo@scientia.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 7/5/2013 7:46 PM, Christoph Anton Mitterer wrote:
-> On Thu, 2013-07-04 at 20:12 -0500, Stan Hoeppner wrote:
-...
-> btw: It was interesting to see,... that all 3 different drives (from WD,
-> HGST, Seagate)... exported _exactly_ the same amount of space.
+On 7/5/2013 8:33 PM, Christoph Anton Mitterer wrote:
+> One more on that, which I've just thought about:
+> 
+> On Thu, 2013-07-04 at 18:07 -0400, Phil Turmel wrote:
+>> I believe dmcrypt is single-threaded, too.
+> Even if that is still true... and it with dmcrypt below MD it would run
+> with _one_ thread _per_ physical device... while the other way round
+> (dmcrypt on top of MD) it would run with _only one_ thread over the
+> _whole_ MD device (and thus also all disks)...
+> 
+> ...would the former really give a performance benefit (or wouldn't it be
+> actually much worse).
 
-You did state these are all enterprise class drives.
+Yes.
 
->> ... I don't leave
->> hot/warm/cold spares in the chassis.
-...
->>   This simply degrades performance.
+> Since even though you'd have one dmcrypt thread per disk now,... each of
+> them would have to en/decrypt the "same" actual data for different
+> devices... so while you have 4x threads... you need to do 4x
+> en/decryption works.
 
-> Why should it? If the spare is unused?
+This would only be true if using n-way mirroring.
 
-The answer is rather obvious.  If spares are in the chassis one has
-fewer active array spindles.
+> Which wouldn't be the case when having dmcrypt on top of MD... sure
+> you'd only have one thread...
 
->> 2.  HGST is a brand created due to Western Digital's acquisition of
->> Hitachi Data System's disk drive unit.
-
-> Sure... but I think they still use their own technology/firmware... at
-> least for now?
-
-For now.
-
->>   The drives are Hitachi's final
->> production units relabeled with a different name and serial number.
->> Three years from now when that HGST drive fails, Western Digital will
->> replace it with a Western Digital produced drive.
-
-> Sure about that? Wasn't there some agreement that HGST belongs to WD but
-> produces independently...?
-
-That wouldn't make sense for either party.  Where did you read this?
-Got a link?
-
-> and Toshiba got something from the
-> WD/HGST trade and already announced a 3.5" enterprise disk out of that.
-
-Toshiba has been producing 3.5" enterprise drives for years.  Got a link
-showing that Toshiba received technology from the WD/Hitachi acquisition?
-
->> IMO the practical disadvantages of using dissimilar drives outweighs the
->> theoretical benefits.
-
-> So... which are the practical disadvantages?
-
-I already stated many of them.  You don't seem to be following along
-very well.
+You misunderstand the way this works.  With striped md RAID each chunk
+goes to a different disk.  All chunks contain dissimilar data.  If you
+use dmcrypt at the lowest level of the stack you have one dmcrypt thread
+per chunk, each processing 1/n of the load.  There is no duplication of
+work.
 
 -- 
 Stan
