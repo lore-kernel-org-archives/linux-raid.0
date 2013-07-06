@@ -1,50 +1,87 @@
 From: Christoph Anton Mitterer <calestyo@scientia.net>
 Subject: Re: question about the best suited RAID level/layout
-Date: Sat, 06 Jul 2013 02:36:16 +0200
-Message-ID: <1373070976.5395.26.camel@fermat.scientia.net>
+Date: Sat, 06 Jul 2013 02:46:25 +0200
+Message-ID: <1373071585.5395.45.camel@fermat.scientia.net>
 References: <1372961877.8716.43.camel@heisenberg.scientia.net>
 	 <51D5EC8A.40509@turmel.org> <1372978687.5249.52.camel@fermat.scientia.net>
-	 <51D61C58.2020207@fnarfbargle.com>
+	 <51D61D71.5090406@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-/nUJRw6SbtQNAUJhFjot"
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-8yAyY/KWQ1SPzHucdAgW"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51D61C58.2020207@fnarfbargle.com>
+In-Reply-To: <51D61D71.5090406@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-/nUJRw6SbtQNAUJhFjot
+--=-8yAyY/KWQ1SPzHucdAgW
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi Brad.
+On Thu, 2013-07-04 at 20:12 -0500, Stan Hoeppner wrote:
+> 1.  You'll need to use partitions underneath md because the drives will
+> all be slightly difference capacity.
+Well it doesn't have to be partitions... you can simply manually specify
+a somewhat smaller size for the RAID... but of course one should leave
+some gap.
+I'll probably doe it via partitions, though ;)
 
-On Fri, 2013-07-05 at 09:07 +0800, Brad Campbell wrote:
-> Both have had great reliability, so that's not really a good=20
-> data point for you.
-Well but it's not a bad point either, is it?
-And when we remember back at the issues (IIRC) Seagate had with the
-firmwares of some of it's devices, that suddenly stopped working at some
-special date... than it could easily happen you're screwed with having
-all disks from one vendor i.e. with the same type.
-
-I vaguely remember that back then there were even cases where firmware
-updates didn't help anymore... but I may be wrong on that.
+btw: It was interesting to see,... that all 3 different drives (from WD,
+HGST, Seagate)... exported _exactly_ the same amount of space.
 
 
+> You'll need to identify the
+> capacity of the smallest drive and create partitions a few MiB smaller
+> than this on all drives.  This should assure that any replacement drive
+> which is slightly smaller will be usable in the array.
+Sure...
 
-> What I *have* found over the years is the importance of weeding out=20
-> early failures.
-Sure... I ran some 4 passes of badblock scans... well that may not be as
-intensive as your several-weeks-test,... but 80 hours of constant
-reading/writing is at least something.
 
 
-Thanks,
+> Screwing around with all of this is a PITA.  When I build arrays I use
+> identical drives and put identical spares in storage.  I don't leave
+> hot/warm/cold spares in the chassis.
+Well but that's another field of questions ;)
+
+>   This simply degrades performance.
+Why should it? If the spare is unused?
+
+
+> Hot swap was invented for a reason.  Some folks prefer online spares an
+> unattended auto rebuild.  Not every time a drive is kicked is a rebuild
+> required.  I wanna look things over before I start a rebuild.
+I also think that for my personal home use case hot/warm/cold spares
+won't be of much use... but if you run a big data centre things look
+different... and hot spares are not replaced by hot swap ;)
+
+
+> 2.  HGST is a brand created due to Western Digital's acquisition of
+> Hitachi Data System's disk drive unit.
+Sure... but I think they still use their own technology/firmware... at
+least for now?
+
+>   The drives are Hitachi's final
+> production units relabeled with a different name and serial number.
+> Three years from now when that HGST drive fails, Western Digital will
+> replace it with a Western Digital produced drive.
+Sure about that? Wasn't there some agreement that HGST belongs to WD but
+produces independently...?
+Anyway... that's off topic... for now at least the disks are not
+identical (which was my goal)... and Toshiba got something from the
+WD/HGST trade and already announced a 3.5" enterprise disk out of that.
+
+
+
+> IMO the practical disadvantages of using dissimilar drives outweighs the
+> theoretical benefits.
+So... which are the practical disadvantages?
+
+
+Cheers,
 Chris.
 
---=-/nUJRw6SbtQNAUJhFjot
+
+--=-8yAyY/KWQ1SPzHucdAgW
 Content-Type: application/x-pkcs7-signature; name="smime.p7s"
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Transfer-Encoding: base64
@@ -129,17 +166,17 @@ duOhWVf3cbLEbhRcbW1BZt8bk7HUAMPuy888PSGAqV9jZfzd4F+k9CvwhXFB1Gcl+xqxl67WmYIT
 QdJupRuZJ4DnC6moADGCAr0wggK5AgEBMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNV
 BAsTFWh0dHA6Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAID
 AQGCMAkGBSsOAwIaBQCgggE3MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTEzMDcwNjAwMzYxNlowIwYJKoZIhvcNAQkEMRYEFCEdyypqOqbChv+cJq3edkKmOGPOMGoG
+MQ8XDTEzMDcwNjAwNDYyNVowIwYJKoZIhvcNAQkEMRYEFC7ZG4I371ckqyhwFBZL33NrsI8kMGoG
 CSsGAQQBgjcQBDFdMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6Ly93
 d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAIDAQGCMGwGCyqGSIb3
 DQEJEAILMV2gWzBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwGA1UECxMVaHR0cDovL3d3dy5D
 QWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290AgMBAYIwDQYJKoZIhvcNAQEB
-BQAEggEAKtE1Ltb5dkQJ0qLU8IhdW+GfcAtKDolIS/V/FDNAP09h1VRVl0X/v4JQ0tb2DiUvzclm
-b7tibbe0sPVcqLHUYdKjO2uSxVqU6+W1nFdGMeA7RYudZdOK6GIrLa3gRJKGURLjH/s0yYO6SSP+
-qL/ZXBy5YZ2nqF8CPaSNeg/GiFOCJDeIeCaSZKEd3R1YdnnlY7dmp+wwaM17Tx382V/0vzXk7SvL
-bj/DjNCYzdgO6Ux8ViqocumnaT4lM/7mB3S3h6BBbdRQav3Swbe8zVGS88dy3H9HYshxES8snDLG
-whyjOcltJEW+C6lhroDjdUCEkXkVpbibkbGty9MM4vm+hgAAAAAAAA==
+BQAEggEAnKJJzogVgDpgUlQPNRrZpNbU4P4jksua6DwEf/oFM1/+UT11Ulny4icNvuGSlzqBBQB2
+03yQm6g4ULkslBJOWp54YlPLEY7X0uuVdvzmnmYkmWUsQZT9YeEizPl6iM2oAUXKgl8JQxNjziBh
+IvMFx29eSvqRREK9xfkr6eeD2nj4ZTTlCtgMftD1ZaAjqXWLVch78KSpyJ+vJPVS0Wfanlq1oKgY
+5cgSq1/Qs0yAh1erAMAFPMsN0JUBlhONs4uNCrFt76UwdhG3nLL9n8cNvube5Gmhb5/uFRDSp06r
+gT85sVr2owSY7/kax4EFFfOSlY2Q5vMH4lpHUjD9N3lKKgAAAAAAAA==
 
 
---=-/nUJRw6SbtQNAUJhFjot--
+--=-8yAyY/KWQ1SPzHucdAgW--
 
