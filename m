@@ -1,49 +1,31 @@
 From: Brad Campbell <lists2009@fnarfbargle.com>
 Subject: Re: question about the best suited RAID level/layout
-Date: Fri, 05 Jul 2013 09:07:36 +0800
-Message-ID: <51D61C58.2020207@fnarfbargle.com>
-References: <1372961877.8716.43.camel@heisenberg.scientia.net>  <51D5EC8A.40509@turmel.org> <1372978687.5249.52.camel@fermat.scientia.net>
+Date: Sat, 06 Jul 2013 13:29:08 +0800
+Message-ID: <51D7AB24.1030003@fnarfbargle.com>
+References: <1372961877.8716.43.camel@heisenberg.scientia.net>  <51D5EC8A.40509@turmel.org> <1372978687.5249.52.camel@fermat.scientia.net>  <51D61C58.2020207@fnarfbargle.com> <1373070976.5395.26.camel@fermat.scientia.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1372978687.5249.52.camel@fermat.scientia.net>
+In-Reply-To: <1373070976.5395.26.camel@fermat.scientia.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: Christoph Anton Mitterer <calestyo@scientia.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 05/07/13 06:58, Christoph Anton Mitterer wrote:
+On 06/07/13 08:36, Christoph Anton Mitterer wrote:
+> Hi Brad.
+>
 
-> I'd have even one more question here: Has anyone experience with my idea
-> of intentionally running devices of different vendors (Seagate, WD,
-> HGST)... for resilience reasons?... Does it work out as I plan, or are
-> there any hidden caveats I can't see which make the resilience (not the
-> performance) worse?
+> And when we remember back at the issues (IIRC) Seagate had with the
+> firmwares of some of it's devices, that suddenly stopped working at some
+> special date...
 
-I've got both here. A large RAID-6 comprised entirely of single brand, 
-single type consumer drives and a smaller RAID-10 built from a diverse 
-selection. Both have had great reliability, so that's not really a good 
-data point for you.
+I had 10 of those in a RAID-6 at the time. Luckily the firmware bug only 
+manifested itself on a re-start of the drive, and as I probably drop 
+power to the machine once a year (if that), I could drop them out of the 
+array one at a time, upgrade the firmware and re-add it to the array.
 
-What I *have* found over the years is the importance of weeding out 
-early failures. Before I commit a disk to service, I subject it to a 
-couple of weeks of hard work. I usually knock up a quick and dirty bash 
-script with multiple concurrent instances of dd reading and writing to 
-differing parts of the disk simultaneously, with a bonnie++ run for good 
-measure. With all this going on at the same time the drive mechanism 
-gets a serious workout and the drive stays warmer than it will in actual 
-service. If I have the chance, I do all the drives simultaneously and 
-preferably in the machine they are going to spend the next couple of 
-years. If I can't do that, then I have a burn-in chassis built from a 
-retired server that can do 15 at a time.
+A messy process to be sure, but no risk of data loss that way.
 
-This has proven quite effective in spotting the early life failures. I 
-generally find (for consumer drives) if they pass this they'll last the 
-3 years of 24/7 I use them for before I replace them. My enterprise 
-drives are a different story, and I have some here with just over 38k 
-hours on them. I'll probably replace them for bigger drives before they 
-ever fail.
 
-Regards,
-Brad
