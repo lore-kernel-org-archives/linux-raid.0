@@ -1,74 +1,78 @@
 From: Christoph Anton Mitterer <calestyo@scientia.net>
 Subject: Re: question about the best suited RAID level/layout
-Date: Sat, 06 Jul 2013 02:55:07 +0200
-Message-ID: <1373072107.10569.12.camel@fermat.scientia.net>
+Date: Sat, 06 Jul 2013 03:11:06 +0200
+Message-ID: <1373073066.10569.30.camel@fermat.scientia.net>
 References: <1372961877.8716.43.camel@heisenberg.scientia.net>
-	 <51D6A9B9.9080908@hesbynett.no>
+	 <51D5EC8A.40509@turmel.org> <1372978687.5249.52.camel@fermat.scientia.net>
+	 <51D6CBF9.2020100@turmel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-CNDZwpNOOnR9aQv0QpwA"
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-Dbkef/8Rv9GLCVMEpNJK"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51D6A9B9.9080908@hesbynett.no>
+In-Reply-To: <51D6CBF9.2020100@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-CNDZwpNOOnR9aQv0QpwA
+--=-Dbkef/8Rv9GLCVMEpNJK
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2013-07-05 at 13:10 +0200, David Brown wrote:
-> I apologise if this is preaching to the converted.  When you are
-> concerned about data resilience, RAID is only part of the answer - I
-> just want to make sure you have considered everything else.
-Sure... I make regular complete backups, on different types of storage
-media (magnetic vs. optical - yes I do fear very strong coronal mass
-ejections ;-) )... being placed in different locations (even different
-cities ;)
-
-> The main benefit of RAID is availability - you don't have downtime when
-> a disk fails.  It also ensures that you don't lose data that is created
-> between backup runs.  But it is not the solution for data safety and
-> reliability - that is what backups are for.
-Sure...
+On Fri, 2013-07-05 at 09:36 -0400, Phil Turmel wrote:
+> You picked "redundancy".  Leaves only only one axis to consider: speed
+> vs. capacity.
+Well thinking about that "raid6check" tool you told me over in the other
+thread,...
+which AFAIU does what I was talking about, namely telling me which block
+is the correct one if I have bad blocks (and the disk itself can't tell)
+and not whole drive failures,.. where at least a two-block copy RAID10
+would not be able to...
+...then I think RAID6 is THE solution for me, given resilience has the
+highest priority, as RAID10 with c/f/o=3D3 cannot do that.
 
 
-> You need to look at the complete picture here.  What are the risks to
-> your data?  Is a double disk failure /really/ the most likely failure
-> scenario?  Have you considered the likelihood and consequences of other
-> failure types?  In my experience, user error is a bigger risk to data
-> loss than a double disk failure - I have more often restored from backup
-> due to someone deleting the wrong files (or losing them due to slipping
-> when dragging-and-dropping) than from disk problems, even with non-raid
-> setups.
-Hehe... I once accidentally mke2fs'ed (instead of fsck) over my main
-personal data fs (and fucking e2fsprogs don't check for existing
-fs/containers, AFAIK till today)... and back then my most recent backup
-was really old... like 2 years or so...
-I invested like 2 weeks of ext4 forensic and managed to basically
-recover all of the data out of the overwritten fs... ;)
+> Precisely.  This is "raid10,near3".  You can look up the "offset" and
+> "far" variants.
+Actually I had written some ASCII art visualisations for the Debian
+mdadm FAQ (and perhaps also the md(4) manpage) yesterday... I just wait
+for some minor answers from Neil to publish them... so I already had a
+look at these.
+But AFAIU, they make absolutely no difference for resilience... and
+while far/offset improve performance in some use cases,... they make it
+worse in others.
+
+
+> > And that gives me again, any 2 disks... but so much better performance?
+> Dramatically.
+I guess I'll do some benchmarking.. ;)
+
+
+> At four drives, no.  Any two.  With five, there are some combinations of
+> three missing drives that'll still run.
+Was thinking about that as well... but as you said it's a "it might
+survive"... not a "it will survive", right?!
 
 
 
-> Raid will help if one of your disk dies, but it will not help against
-> fire or theft, or hardware failure on the NAS, or software failure, or
-> user error, or malware (if you have windows clients), or power failure,
-> or any one of a number of different scenarios.
->=20
-> So depending on your circumstances, you might get better "data
-> security/resilience" by putting the extra disks in a second machine at a
-> second location, or other mixed primary/secondary arrangements.
-sure... see above... I do have a good backup strategy now :)
+> > Any ideas about the layout? i.e. left-symmetric-6, right-symmetric-6,
+> > left-asymmetric-6, right-asymmetric-6, and parity-first-6 ?
+> Certainly not any of the "-6" suffixes.
+Ah.... I just see that the RAID5 layouts are also for RAID6 ^^
 
-Anyway... for the daily growth of data... RAID does a good "backup-like"
-job in helping me against disk failures... since I simlpy can't backup
-everything every day...
+> Those isolate Q on the last
+> disk, hurting streaming performance, and setting up the possibility of
+> uneven performance when degraded.  The default left-symmetric gives the
+> best chunk distribution for general use.
+I see... I was just searching for but haven't found anything really
+good... actually nothing at all ^^
+Does anyone know some place where the layouts for RAID5/6 are
+(thoroughly) explained?
 
 
-Cheers,
+Cheers & thanks,
 Chris.
 
---=-CNDZwpNOOnR9aQv0QpwA
+--=-Dbkef/8Rv9GLCVMEpNJK
 Content-Type: application/x-pkcs7-signature; name="smime.p7s"
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Transfer-Encoding: base64
@@ -153,17 +157,17 @@ duOhWVf3cbLEbhRcbW1BZt8bk7HUAMPuy888PSGAqV9jZfzd4F+k9CvwhXFB1Gcl+xqxl67WmYIT
 QdJupRuZJ4DnC6moADGCAr0wggK5AgEBMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNV
 BAsTFWh0dHA6Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAID
 AQGCMAkGBSsOAwIaBQCgggE3MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTEzMDcwNjAwNTUwNVowIwYJKoZIhvcNAQkEMRYEFGFUGp1xRUa+Aw5DHQX9SoZ/UOYyMGoG
+MQ8XDTEzMDcwNjAxMTEwNlowIwYJKoZIhvcNAQkEMRYEFO6m7t/nW+3/kWYuVLj3CPX7PpALMGoG
 CSsGAQQBgjcQBDFdMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6Ly93
 d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAIDAQGCMGwGCyqGSIb3
 DQEJEAILMV2gWzBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwGA1UECxMVaHR0cDovL3d3dy5D
 QWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290AgMBAYIwDQYJKoZIhvcNAQEB
-BQAEggEAgcCa8V+j7TGQ60VFgIwcC/LJQj2oL0zwUEMg25Cb3JlboZ8sJ8xi7gJP4nypKcOlGgoH
-sV8L57K6Qf0axCCr9oDPcFUzwoRf+DTfqJyu3tQc42PsC9eioO4l+s9/hkWnPLIyElMHQshqG29Z
-slK0+ti/aplI+joH7S1V2rmXn8NYs1H72/Hr4NtAKbdZpfmazKd+IfgI5ksjdezwx+yi3qIXgC7A
-nIZf5sHuwxtRfEfRJjnt45GSw0x0pBL4qpSpYaZ8cRwCuTEYKJX20+dGLSl8H2sLVAwVhFiUI8rW
-09C+XC3+gGQ29RpJiH4CyrJD8LTPSgttY9YReCkSSMEwZgAAAAAAAA==
+BQAEggEASRPVlGPqLiMJogMuuKhMcEC/oQZv+SgoHvA33KThCGl9Hcrv4lYW2OCIVykvWlgtlp6X
+ccKxN2b1RWvwVU/mwjfDNtfuHHVpfiZLKh+hx56NEX8Fv8RMxWHPLjZGCZffCdabhQw6KQbFaN+i
+B8yE4IRrbEqMlbGSsegmgvOMTLLItWg/TKoEnUZu2pTFRW6iq8wfTqD4vbBjupecX8QDsH9tN2p2
+rSQjn9bpBDgw+L6RTfcZINLEuRfc5awkMOa2lyjxhDVM5M2oneR262zwEFRuRZurc9pBTO/TTUBD
+b6ZUVmA1jKTJ7pmF28KEZwF8O8DOB8qIVjVZDt0+ilG/+QAAAAAAAA==
 
 
---=-CNDZwpNOOnR9aQv0QpwA--
+--=-Dbkef/8Rv9GLCVMEpNJK--
 
