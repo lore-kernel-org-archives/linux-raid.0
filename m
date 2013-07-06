@@ -1,49 +1,35 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: question about the best suited RAID level/layout
-Date: Sat, 6 Jul 2013 09:40:02 +0200
-Message-ID: <20130706074001.GA2387@lazy.lzy>
-References: <1372961877.8716.43.camel@heisenberg.scientia.net>
- <51D5EC8A.40509@turmel.org>
- <1372978687.5249.52.camel@fermat.scientia.net>
- <51D61C58.2020207@fnarfbargle.com>
- <1373070976.5395.26.camel@fermat.scientia.net>
+From: Kai Stian Olstad <kai.stian.olstad@gmail.com>
+Subject: Re: Aren't 2TB+ disk sizes supposed to be standardized?
+Date: Sat, 06 Jul 2013 09:50:25 +0200
+Message-ID: <51D7CC41.1090105@gmail.com>
+References: <51D65778.9010502@smartguide.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1373070976.5395.26.camel@fermat.scientia.net>
+In-Reply-To: <51D65778.9010502@smartguide.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Anton Mitterer <calestyo@scientia.net>
-Cc: linux-raid@vger.kernel.org
+To: Tudor Holton <tudor@smartguide.com.au>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, Jul 06, 2013 at 02:36:16AM +0200, Christoph Anton Mitterer wrote:
-[...]
-> Well but it's not a bad point either, is it?
-> And when we remember back at the issues (IIRC) Seagate had with the
-> firmwares of some of it's devices, that suddenly stopped working at some
-> special date... than it could easily happen you're screwed with having
-> all disks from one vendor i.e. with the same type.
+On 07/05/2013 07:19 AM, Tudor Holton wrote:
+> $ sudo fdisk -l
+> Disk /dev/sdc: 2000.4 GB, 2000397852160 bytes
+> 255 heads, 63 sectors/track, 243201 cylinders, total 3907027055 sectors
 > 
-> I vaguely remember that back then there were even cases where firmware
-> updates didn't help anymore... but I may be wrong on that.
+> $ sudo smartctl -a /dev/sdc
+> Model Family:     Seagate Barracuda (SATA 3Gb/s, 4K Sectors)
+> Device Model:     ST2000DM001-1CH164
+> Firmware Version: CC43
+> User Capacity:    2,000,397,852,160 bytes [2.00 TB]
 
-Hi Chris,
+According to the product manual this disk has guaranteed sectors count
+of 3,907,029,168 (one sector counts as 512 bytes).
 
-we have some workstation with RAID5, 4 HDDs, from
-4 different vendors (at that time there were 4).
+3,907,029,168 * 512 = 2,000,398,934,016 bytes
 
-We notice smart errors at a different rate, time and
-type, but almost always in the same way for each brand.
-
-In other words, yes, it helped to have different brands.
-
-The only thing, you must confirm the size.
-Ours are all identical, but I can imagine there could
-be minor differences, expecially from 512B to 4096B.
-
-bye,
+As Mikael wrote is probably your controller.
 
 -- 
-
-piergiorgio
+Kai Stian Olstad
