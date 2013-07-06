@@ -1,42 +1,77 @@
 From: Christoph Anton Mitterer <calestyo@scientia.net>
 Subject: Re: question about the best suited RAID level/layout
-Date: Sat, 06 Jul 2013 16:52:05 +0200
-Message-ID: <1373122325.5217.8.camel@fermat.scientia.net>
+Date: Sat, 06 Jul 2013 17:04:11 +0200
+Message-ID: <1373123051.5217.19.camel@fermat.scientia.net>
 References: <1372961877.8716.43.camel@heisenberg.scientia.net>
 	 <51D5EC8A.40509@turmel.org> <1372978687.5249.52.camel@fermat.scientia.net>
-	 <51D61C58.2020207@fnarfbargle.com>
-	 <1373070976.5395.26.camel@fermat.scientia.net>
-	 <20130706074001.GA2387@lazy.lzy>
+	 <51D61D71.5090406@hardwarefreak.com>
+	 <1373071585.5395.45.camel@fermat.scientia.net>
+	 <51D7D72B.4070401@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-1+nzXcWAJ3/kwwNemxo0"
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-m69bSC693kbmB/yAKHfV"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130706074001.GA2387@lazy.lzy>
+In-Reply-To: <51D7D72B.4070401@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-1+nzXcWAJ3/kwwNemxo0
+--=-m69bSC693kbmB/yAKHfV
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi Piergiorgio
+On Sat, 2013-07-06 at 03:36 -0500, Stan Hoeppner wrote:
+> >> hot/warm/cold spares in the chassis.
+> >>   This simply degrades performance.
+> > Why should it? If the spare is unused?
+> The answer is rather obvious.  If spares are in the chassis one has
+> fewer active array spindles.
+Sorry... still don't get it...
+When you have another drive in the chassis... which is not actively used
+by the RAID, but just waiting as a hot spare for a failing device and
+rebuild becoming necessary...
+Apart from power consumption and more heat... how should that affect the
+read/write performance of the RAID?
 
-On Sat, 2013-07-06 at 09:40 +0200, Piergiorgio Sartor wrote:
-> We notice smart errors at a different rate, time and
-> type, but almost always in the same way for each brand.
-Guess you mean SMART here ;)
 
-> The only thing, you must confirm the size.
-> Ours are all identical, but I can imagine there could
-> be minor differences, expecially from 512B to 4096B.
-Sure...
+> > Sure about that? Wasn't there some agreement that HGST belongs to WD bu=
+t
+> > produces independently...?
+>=20
+> That wouldn't make sense for either party.  Where did you read this?
+I vaguely remember this being part for some anti trust obligations...
 
-Thanks :)
+> Got a link?
+The only thing I've found right now was:
+https://en.wikipedia.org/wiki/HGST#History
+"It was agreed that WD would operate with WD Technologies and HGST as
+wholly owned subsidiaries and they would compete in the marketplace with
+separate brands and product lines."
+But the next sentence about Toshiba may indicate that HGST stops 3.5"
+business?!
 
+
+> > and Toshiba got something from the
+> > WD/HGST trade and already announced a 3.5" enterprise disk out of that.
+> Toshiba has been producing 3.5" enterprise drives for years.  Got a link
+> showing that Toshiba received technology from the WD/Hitachi acquisition?
+Again, see Wikipedia.
+
+
+> I already stated many of them.  You don't seem to be following along
+> very well.
+Well you only named one may need to use partitions (which I do not see
+why this should be a disadvantage)... and that in few years... there
+might be only some vendors left and (by then) the idea wouldn't work
+anymore; but even if that would happen, that's still no reason for not
+doing it now?
+Anything else I've missed or didn't understand as a disadvantage?
+
+
+Cheers,
 Chris.
 
---=-1+nzXcWAJ3/kwwNemxo0
+--=-m69bSC693kbmB/yAKHfV
 Content-Type: application/x-pkcs7-signature; name="smime.p7s"
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Transfer-Encoding: base64
@@ -121,17 +156,17 @@ duOhWVf3cbLEbhRcbW1BZt8bk7HUAMPuy888PSGAqV9jZfzd4F+k9CvwhXFB1Gcl+xqxl67WmYIT
 QdJupRuZJ4DnC6moADGCAr0wggK5AgEBMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNV
 BAsTFWh0dHA6Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAID
 AQGCMAkGBSsOAwIaBQCgggE3MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTEzMDcwNjE0NTIwNVowIwYJKoZIhvcNAQkEMRYEFHnoI3xeqs6f+Ym7Ktqg3a1yCcf1MGoG
+MQ8XDTEzMDcwNjE1MDQxMVowIwYJKoZIhvcNAQkEMRYEFATW1Wfve9OZJ+Gdp5Vr2EHk8fywMGoG
 CSsGAQQBgjcQBDFdMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6Ly93
 d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAIDAQGCMGwGCyqGSIb3
 DQEJEAILMV2gWzBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwGA1UECxMVaHR0cDovL3d3dy5D
 QWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290AgMBAYIwDQYJKoZIhvcNAQEB
-BQAEggEAPHb91LQZcZhykhEvvwC1MpN77lGVtpQgEHE1BiBy5SVuPR2FVdxC/g/tKEECxbzk0NOJ
-+rGnh9SoQQK9ddYbDdPxtNwcO/z5KMyOeqGjNF/NidtoyQcmbtHOENN1XjMIHNTWxi8i+pecXTOe
-z/NBzMcAzlGUwoEhdTtthX5Z58J9j9bKxuDAa9EAxhSPbVVj6yXruXVnXibeVnb19OQ1HGOaagdu
-RpsoTRpcrJ9P4raoTVZoJOQVM0GXmfL7+WHYb/ljjTWVHrXldozJpEZEhd36cCKW+VOZNUiFRb6t
-DYAYt4YMRBaOgtdX96IGCftOy673wZI4gSdWREo2G9WOvgAAAAAAAA==
+BQAEggEAprZJIqfOSU5qDiL2QGdcguaa7C2du4IBDf5ycT2tXPEy+RU3nE9lUWWmHhsZbo3AhG9F
++Xch6LOF/rnWI35vD9pwvVpseDO+rVojlMBb+OUKUPjj4uPvXR+2qs1cWqHIQ66e8j5PXCKJjhXJ
+8NflcSaHudqRYhviRKSQa2FMNe+RFXIAfmCsVCtx+rssd2fcnrctd4LpZ5GXJIo7XRNf874Bj9m7
+Cn4BlPtOhuN41G3Pvv6rGEEIOD2TZWUgNBJqpORjHpPNh+Z+TKIS7x5ErAFWM5ZeMLrtCBxZn/7t
+q9RUm9h4qKlQP//BEVDjyYCP6dpkoPFkntd5UyEe8hDxuwAAAAAAAA==
 
 
---=-1+nzXcWAJ3/kwwNemxo0--
+--=-m69bSC693kbmB/yAKHfV--
 
