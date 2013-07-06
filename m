@@ -1,65 +1,49 @@
-From: Sam Bingner <sam@bingner.com>
-Subject: Re: some general questions on RAID (OT)
-Date: Sat, 6 Jul 2013 06:23:48 +0000
-Message-ID: <CDFCDAFC.1379B%sam@bingner.com>
-References: <1373073799.10569.41.camel@fermat.scientia.net>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: question about the best suited RAID level/layout
+Date: Sat, 6 Jul 2013 09:40:02 +0200
+Message-ID: <20130706074001.GA2387@lazy.lzy>
+References: <1372961877.8716.43.camel@heisenberg.scientia.net>
+ <51D5EC8A.40509@turmel.org>
+ <1372978687.5249.52.camel@fermat.scientia.net>
+ <51D61C58.2020207@fnarfbargle.com>
+ <1373070976.5395.26.camel@fermat.scientia.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1373073799.10569.41.camel@fermat.scientia.net>
-Content-Language: en-US
-Content-ID: <3DF22B92BD79024E9B642FC3B21188DA@ds.sbdhi.com>
+Content-Disposition: inline
+In-Reply-To: <1373070976.5395.26.camel@fermat.scientia.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Anton Mitterer <calestyo@scientia.net>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Christoph Anton Mitterer <calestyo@scientia.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The TS-879 and 1079 have Intel i3 Processors, and use a normal socket. =
- I
-replaced it with an E3-1275 Xeon processor.  You can use Sandy bridge b=
-ut
-they do not have BIOS support for Ivy bridge processors.  I also replac=
-ed
-my memory with 16GB ECC memory.
+On Sat, Jul 06, 2013 at 02:36:16AM +0200, Christoph Anton Mitterer wrote:
+[...]
+> Well but it's not a bad point either, is it?
+> And when we remember back at the issues (IIRC) Seagate had with the
+> firmwares of some of it's devices, that suddenly stopped working at some
+> special date... than it could easily happen you're screwed with having
+> all disks from one vendor i.e. with the same type.
+> 
+> I vaguely remember that back then there were even cases where firmware
+> updates didn't help anymore... but I may be wrong on that.
 
-I did a lot of research about this stuff before buying it, which is why=
- I
-went with the TS-1079 Pro.  Works great with debian except for some lac=
-k
-of LED support on a couple drives and the LCD always says "Booting=8A"
+Hi Chris,
 
-Sam
+we have some workstation with RAID5, 4 HDDs, from
+4 different vendors (at that time there were 4).
 
-On 7/5/13 3:23 PM, "Christoph Anton Mitterer" <calestyo@scientia.net>
-wrote:
+We notice smart errors at a different rate, time and
+type, but almost always in the same way for each brand.
 
->On Fri, 2013-07-05 at 01:39 +0000, Sam Bingner wrote:
->> That is because your CPU has encryption features - the QNAP devices
->> largely do not; I replaced the CPU in mine with one that had encrypt=
-ion
->> features because otherwise there was nothing that could bring the
->> performance above about 80MB/sec
->That's a bit off topic now to my questions, but I guess many other
->people using RAIDs on their QNAPs might be interested later as well:
->which QNAP do you have exactly?
->
->I mean they all have either ARM based CPUs, or Atom... so in my case, =
-a
->D2700 with an FCBGA559... which CPU (that has AESNI) could you find fo=
-r
->that? Since AFAIK there are no[0] Atoms at all with AESNI?
->
->
->Cheers,
->Chris.
->
->
->[0]=20
->http://ark.intel.com/search/advanced/?s=3Dt&Sockets=3DFCBGA559&AESTech=
-=3Dtrue
+In other words, yes, it helped to have different brands.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The only thing, you must confirm the size.
+Ours are all identical, but I can imagine there could
+be minor differences, expecially from 512B to 4096B.
+
+bye,
+
+-- 
+
+piergiorgio
