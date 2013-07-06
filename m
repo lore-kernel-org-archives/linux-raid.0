@@ -1,43 +1,51 @@
 From: Christoph Anton Mitterer <calestyo@scientia.net>
-Subject: Re: some general questions on RAID (OT)
-Date: Sat, 06 Jul 2013 03:23:19 +0200
-Message-ID: <1373073799.10569.41.camel@fermat.scientia.net>
-References: <CDFB4726.1374F%sam@bingner.com>
+Subject: Re: some general questions on RAID
+Date: Sat, 06 Jul 2013 03:33:20 +0200
+Message-ID: <1373074400.10569.49.camel@fermat.scientia.net>
+References: <1372962602.8716.56.camel@heisenberg.scientia.net>
+	 <51D5F22C.70007@turmel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-u8uPP1+6prydvuFwe/a3"
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-9pIaFDtESdTYCFbQrXi+"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CDFB4726.1374F%sam@bingner.com>
+In-Reply-To: <51D5F22C.70007@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-u8uPP1+6prydvuFwe/a3
+--=-9pIaFDtESdTYCFbQrXi+
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2013-07-05 at 01:39 +0000, Sam Bingner wrote:
-> That is because your CPU has encryption features - the QNAP devices
-> largely do not; I replaced the CPU in mine with one that had encryption
-> features because otherwise there was nothing that could bring the
-> performance above about 80MB/sec
-That's a bit off topic now to my questions, but I guess many other
-people using RAIDs on their QNAPs might be interested later as well:
-which QNAP do you have exactly?
+One more on that, which I've just thought about:
 
-I mean they all have either ARM based CPUs, or Atom... so in my case, a
-D2700 with an FCBGA559... which CPU (that has AESNI) could you find for
-that? Since AFAIK there are no[0] Atoms at all with AESNI?
+On Thu, 2013-07-04 at 18:07 -0400, Phil Turmel wrote:
+> I believe dmcrypt is single-threaded, too.
+Even if that is still true... and it with dmcrypt below MD it would run
+with _one_ thread _per_ physical device... while the other way round
+(dmcrypt on top of MD) it would run with _only one_ thread over the
+_whole_ MD device (and thus also all disks)...
+
+...would the former really give a performance benefit (or wouldn't it be
+actually much worse).
+
+Since even though you'd have one dmcrypt thread per disk now,... each of
+them would have to en/decrypt the "same" actual data for different
+devices... so while you have 4x threads... you need to do 4x
+en/decryption works.
+
+Which wouldn't be the case when having dmcrypt on top of MD... sure
+you'd only have one thread...
+
+
+Does that sound reasonable?
+
 
 
 Cheers,
 Chris.
 
-
-[0] http://ark.intel.com/search/advanced/?s=3Dt&Sockets=3DFCBGA559&AESTech=
-=3Dtrue
-
---=-u8uPP1+6prydvuFwe/a3
+--=-9pIaFDtESdTYCFbQrXi+
 Content-Type: application/x-pkcs7-signature; name="smime.p7s"
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Transfer-Encoding: base64
@@ -122,17 +130,17 @@ duOhWVf3cbLEbhRcbW1BZt8bk7HUAMPuy888PSGAqV9jZfzd4F+k9CvwhXFB1Gcl+xqxl67WmYIT
 QdJupRuZJ4DnC6moADGCAr0wggK5AgEBMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNV
 BAsTFWh0dHA6Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAID
 AQGCMAkGBSsOAwIaBQCgggE3MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTEzMDcwNjAxMjMxOVowIwYJKoZIhvcNAQkEMRYEFN22IHZ46sfn0ZuY+Pj8kTfVAiL5MGoG
+MQ8XDTEzMDcwNjAxMzMyMFowIwYJKoZIhvcNAQkEMRYEFOeYhT1mm363Ttdb1x6j2FHv4VMQMGoG
 CSsGAQQBgjcQBDFdMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6Ly93
 d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAIDAQGCMGwGCyqGSIb3
 DQEJEAILMV2gWzBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwGA1UECxMVaHR0cDovL3d3dy5D
 QWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290AgMBAYIwDQYJKoZIhvcNAQEB
-BQAEggEAJhN5WCZyGIlZzBaKADxRSYzUBApqGpPxMtE7L5osue8Vm0lIa9vMCmHudTcxWF2zAHXJ
-a0yITRHinhuJ59i3icRBXM0a/qV4G3ablls3VmXhURd6wJy2qnk4+oVaTA5Z/teqYNLafV0xAI37
-DZWpnGMWlFOiPsWRC2L0iWUH+CkJllH3zo+34pahi/pb9g8t41SMDEAXc82gV9uNlgYSp2Ow4z5E
-dQwB504K1RCaO0/V7SVqK/sUR6Q1mXSczsIR1LJus+N8f8F1jt5pXJWeHu0npUJjlD4P0muYisXW
-5IAx9fhntN+nXWcFwNkEPnAPpZ02bYdw0nEsOlaHB4eZYAAAAAAAAA==
+BQAEggEAhwRWj4BMVuT1veOkonH66BamMD+Jks1V3fpdFYkJfB88bQXRAFrA+lUU32P7RdrwiyEL
+WFl66XsFt/jmW6fHPfahNPuyDRhW0wB9LLf6rQw4Q+4XgTMTZHMDwk08hg2eB/NCs5QXcFtwiPMh
+3Pf573ms62YcJXQWCa+jcMJ7dUHU4o3mX5L2v4YVWUdGOAGcv3IXN5FooDs0NDuUmiRLL1H7WudU
+LVSupOy+f5J9ERAHcbeXVTvl4Jwl7mZ7CXjARFTUWb7Xpl1vvWvklWMHgaq6Y9ObLzx/ulnHJzGt
+ezjJ5CZTrM1tyDza6oVE8kuLnNqoC3CZG4yADXIptIEAswAAAAAAAA==
 
 
---=-u8uPP1+6prydvuFwe/a3--
+--=-9pIaFDtESdTYCFbQrXi+--
 
