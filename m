@@ -1,47 +1,42 @@
 From: Christoph Anton Mitterer <calestyo@scientia.net>
 Subject: Re: question about the best suited RAID level/layout
-Date: Sat, 06 Jul 2013 16:49:02 +0200
-Message-ID: <1373122142.5217.7.camel@fermat.scientia.net>
+Date: Sat, 06 Jul 2013 16:52:05 +0200
+Message-ID: <1373122325.5217.8.camel@fermat.scientia.net>
 References: <1372961877.8716.43.camel@heisenberg.scientia.net>
 	 <51D5EC8A.40509@turmel.org> <1372978687.5249.52.camel@fermat.scientia.net>
 	 <51D61C58.2020207@fnarfbargle.com>
 	 <1373070976.5395.26.camel@fermat.scientia.net>
-	 <51D7AB24.1030003@fnarfbargle.com>
+	 <20130706074001.GA2387@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-jFHraaKqOFfl2u7KetoX"
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-1+nzXcWAJ3/kwwNemxo0"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51D7AB24.1030003@fnarfbargle.com>
+In-Reply-To: <20130706074001.GA2387@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-jFHraaKqOFfl2u7KetoX
+--=-1+nzXcWAJ3/kwwNemxo0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2013-07-06 at 13:29 +0800, Brad Campbell wrote:
-> A messy process to be sure, but no risk of data loss that way.
-Sure... but that might not always be possible at all... imagine you're
-hit by a power outage (okay one could argue, that one must run an
-UPS)... or kernel panic...
+Hi Piergiorgio
 
-Or people being very paranoid (like me) probably won't let their
-dm-crypt encrypted devices run when being away (freeze attacks against
-the RAM)...
+On Sat, 2013-07-06 at 09:40 +0200, Piergiorgio Sartor wrote:
+> We notice smart errors at a different rate, time and
+> type, but almost always in the same way for each brand.
+Guess you mean SMART here ;)
 
+> The only thing, you must confirm the size.
+> Ours are all identical, but I can imagine there could
+> be minor differences, expecially from 512B to 4096B.
+Sure...
 
-Anyway... I guess this goes off topic ;)
+Thanks :)
 
-
-But I see that you have not real point *against* running devices from
-different vendors either. Correct me if I'm wrong ;)
-
-
-Cheers,
 Chris.
 
---=-jFHraaKqOFfl2u7KetoX
+--=-1+nzXcWAJ3/kwwNemxo0
 Content-Type: application/x-pkcs7-signature; name="smime.p7s"
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Transfer-Encoding: base64
@@ -126,17 +121,17 @@ duOhWVf3cbLEbhRcbW1BZt8bk7HUAMPuy888PSGAqV9jZfzd4F+k9CvwhXFB1Gcl+xqxl67WmYIT
 QdJupRuZJ4DnC6moADGCAr0wggK5AgEBMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNV
 BAsTFWh0dHA6Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAID
 AQGCMAkGBSsOAwIaBQCgggE3MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTEzMDcwNjE0NDg1N1owIwYJKoZIhvcNAQkEMRYEFLgcMNijGSr2ajcpW3+0QMV6L8tJMGoG
+MQ8XDTEzMDcwNjE0NTIwNVowIwYJKoZIhvcNAQkEMRYEFHnoI3xeqs6f+Ym7Ktqg3a1yCcf1MGoG
 CSsGAQQBgjcQBDFdMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6Ly93
 d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAIDAQGCMGwGCyqGSIb3
 DQEJEAILMV2gWzBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwGA1UECxMVaHR0cDovL3d3dy5D
 QWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290AgMBAYIwDQYJKoZIhvcNAQEB
-BQAEggEAj0AK0JBef7QDJjeO+g0trooOZJUWi1IjjEyfALp1IgWiO5MI6DQ9Fkq0ApmtbKB1e+JX
-TzbrPD600rD7RlB2p/kb6QnMX5pozHxuxHx+d4SEPENHvDxFy9uJvxzuLrWD+EejZQp0dLijc4cW
-K8/SnelZAHCVFMB+nkKn6tO7vJjg20/eod4qMN3vR5LTsHwXWLDCm20G18p6S3VPv3EKvhgU2IGS
-zhzUAbw12qCLBvTvt/9AQPXojSllI/EeJSj6F3jKIfhMWf2MAAvqiD8VWfwgi39pg53kEEbUgcxH
-47yWXfImf0SDe6lnH0yBqzxVXfwqIET/4DZl/bchGpP3xwAAAAAAAA==
+BQAEggEAPHb91LQZcZhykhEvvwC1MpN77lGVtpQgEHE1BiBy5SVuPR2FVdxC/g/tKEECxbzk0NOJ
++rGnh9SoQQK9ddYbDdPxtNwcO/z5KMyOeqGjNF/NidtoyQcmbtHOENN1XjMIHNTWxi8i+pecXTOe
+z/NBzMcAzlGUwoEhdTtthX5Z58J9j9bKxuDAa9EAxhSPbVVj6yXruXVnXibeVnb19OQ1HGOaagdu
+RpsoTRpcrJ9P4raoTVZoJOQVM0GXmfL7+WHYb/ljjTWVHrXldozJpEZEhd36cCKW+VOZNUiFRb6t
+DYAYt4YMRBaOgtdX96IGCftOy673wZI4gSdWREo2G9WOvgAAAAAAAA==
 
 
---=-jFHraaKqOFfl2u7KetoX--
+--=-1+nzXcWAJ3/kwwNemxo0--
 
