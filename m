@@ -1,78 +1,43 @@
 From: Christoph Anton Mitterer <calestyo@scientia.net>
-Subject: Re: question about the best suited RAID level/layout
-Date: Sat, 06 Jul 2013 03:11:06 +0200
-Message-ID: <1373073066.10569.30.camel@fermat.scientia.net>
-References: <1372961877.8716.43.camel@heisenberg.scientia.net>
-	 <51D5EC8A.40509@turmel.org> <1372978687.5249.52.camel@fermat.scientia.net>
-	 <51D6CBF9.2020100@turmel.org>
+Subject: Re: some general questions on RAID (OT)
+Date: Sat, 06 Jul 2013 03:23:19 +0200
+Message-ID: <1373073799.10569.41.camel@fermat.scientia.net>
+References: <CDFB4726.1374F%sam@bingner.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-Dbkef/8Rv9GLCVMEpNJK"
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-u8uPP1+6prydvuFwe/a3"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51D6CBF9.2020100@turmel.org>
+In-Reply-To: <CDFB4726.1374F%sam@bingner.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-Dbkef/8Rv9GLCVMEpNJK
+--=-u8uPP1+6prydvuFwe/a3
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2013-07-05 at 09:36 -0400, Phil Turmel wrote:
-> You picked "redundancy".  Leaves only only one axis to consider: speed
-> vs. capacity.
-Well thinking about that "raid6check" tool you told me over in the other
-thread,...
-which AFAIU does what I was talking about, namely telling me which block
-is the correct one if I have bad blocks (and the disk itself can't tell)
-and not whole drive failures,.. where at least a two-block copy RAID10
-would not be able to...
-...then I think RAID6 is THE solution for me, given resilience has the
-highest priority, as RAID10 with c/f/o=3D3 cannot do that.
+On Fri, 2013-07-05 at 01:39 +0000, Sam Bingner wrote:
+> That is because your CPU has encryption features - the QNAP devices
+> largely do not; I replaced the CPU in mine with one that had encryption
+> features because otherwise there was nothing that could bring the
+> performance above about 80MB/sec
+That's a bit off topic now to my questions, but I guess many other
+people using RAIDs on their QNAPs might be interested later as well:
+which QNAP do you have exactly?
+
+I mean they all have either ARM based CPUs, or Atom... so in my case, a
+D2700 with an FCBGA559... which CPU (that has AESNI) could you find for
+that? Since AFAIK there are no[0] Atoms at all with AESNI?
 
 
-> Precisely.  This is "raid10,near3".  You can look up the "offset" and
-> "far" variants.
-Actually I had written some ASCII art visualisations for the Debian
-mdadm FAQ (and perhaps also the md(4) manpage) yesterday... I just wait
-for some minor answers from Neil to publish them... so I already had a
-look at these.
-But AFAIU, they make absolutely no difference for resilience... and
-while far/offset improve performance in some use cases,... they make it
-worse in others.
-
-
-> > And that gives me again, any 2 disks... but so much better performance?
-> Dramatically.
-I guess I'll do some benchmarking.. ;)
-
-
-> At four drives, no.  Any two.  With five, there are some combinations of
-> three missing drives that'll still run.
-Was thinking about that as well... but as you said it's a "it might
-survive"... not a "it will survive", right?!
-
-
-
-> > Any ideas about the layout? i.e. left-symmetric-6, right-symmetric-6,
-> > left-asymmetric-6, right-asymmetric-6, and parity-first-6 ?
-> Certainly not any of the "-6" suffixes.
-Ah.... I just see that the RAID5 layouts are also for RAID6 ^^
-
-> Those isolate Q on the last
-> disk, hurting streaming performance, and setting up the possibility of
-> uneven performance when degraded.  The default left-symmetric gives the
-> best chunk distribution for general use.
-I see... I was just searching for but haven't found anything really
-good... actually nothing at all ^^
-Does anyone know some place where the layouts for RAID5/6 are
-(thoroughly) explained?
-
-
-Cheers & thanks,
+Cheers,
 Chris.
 
---=-Dbkef/8Rv9GLCVMEpNJK
+
+[0] http://ark.intel.com/search/advanced/?s=3Dt&Sockets=3DFCBGA559&AESTech=
+=3Dtrue
+
+--=-u8uPP1+6prydvuFwe/a3
 Content-Type: application/x-pkcs7-signature; name="smime.p7s"
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Transfer-Encoding: base64
@@ -157,17 +122,17 @@ duOhWVf3cbLEbhRcbW1BZt8bk7HUAMPuy888PSGAqV9jZfzd4F+k9CvwhXFB1Gcl+xqxl67WmYIT
 QdJupRuZJ4DnC6moADGCAr0wggK5AgEBMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNV
 BAsTFWh0dHA6Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAID
 AQGCMAkGBSsOAwIaBQCgggE3MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTEzMDcwNjAxMTEwNlowIwYJKoZIhvcNAQkEMRYEFO6m7t/nW+3/kWYuVLj3CPX7PpALMGoG
+MQ8XDTEzMDcwNjAxMjMxOVowIwYJKoZIhvcNAQkEMRYEFN22IHZ46sfn0ZuY+Pj8kTfVAiL5MGoG
 CSsGAQQBgjcQBDFdMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6Ly93
 d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAIDAQGCMGwGCyqGSIb3
 DQEJEAILMV2gWzBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwGA1UECxMVaHR0cDovL3d3dy5D
 QWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290AgMBAYIwDQYJKoZIhvcNAQEB
-BQAEggEASRPVlGPqLiMJogMuuKhMcEC/oQZv+SgoHvA33KThCGl9Hcrv4lYW2OCIVykvWlgtlp6X
-ccKxN2b1RWvwVU/mwjfDNtfuHHVpfiZLKh+hx56NEX8Fv8RMxWHPLjZGCZffCdabhQw6KQbFaN+i
-B8yE4IRrbEqMlbGSsegmgvOMTLLItWg/TKoEnUZu2pTFRW6iq8wfTqD4vbBjupecX8QDsH9tN2p2
-rSQjn9bpBDgw+L6RTfcZINLEuRfc5awkMOa2lyjxhDVM5M2oneR262zwEFRuRZurc9pBTO/TTUBD
-b6ZUVmA1jKTJ7pmF28KEZwF8O8DOB8qIVjVZDt0+ilG/+QAAAAAAAA==
+BQAEggEAJhN5WCZyGIlZzBaKADxRSYzUBApqGpPxMtE7L5osue8Vm0lIa9vMCmHudTcxWF2zAHXJ
+a0yITRHinhuJ59i3icRBXM0a/qV4G3ablls3VmXhURd6wJy2qnk4+oVaTA5Z/teqYNLafV0xAI37
+DZWpnGMWlFOiPsWRC2L0iWUH+CkJllH3zo+34pahi/pb9g8t41SMDEAXc82gV9uNlgYSp2Ow4z5E
+dQwB504K1RCaO0/V7SVqK/sUR6Q1mXSczsIR1LJus+N8f8F1jt5pXJWeHu0npUJjlD4P0muYisXW
+5IAx9fhntN+nXWcFwNkEPnAPpZ02bYdw0nEsOlaHB4eZYAAAAAAAAA==
 
 
---=-Dbkef/8Rv9GLCVMEpNJK--
+--=-u8uPP1+6prydvuFwe/a3--
 
