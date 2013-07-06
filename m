@@ -1,77 +1,38 @@
 From: Christoph Anton Mitterer <calestyo@scientia.net>
-Subject: Re: question about the best suited RAID level/layout
-Date: Sat, 06 Jul 2013 17:04:11 +0200
-Message-ID: <1373123051.5217.19.camel@fermat.scientia.net>
-References: <1372961877.8716.43.camel@heisenberg.scientia.net>
-	 <51D5EC8A.40509@turmel.org> <1372978687.5249.52.camel@fermat.scientia.net>
-	 <51D61D71.5090406@hardwarefreak.com>
-	 <1373071585.5395.45.camel@fermat.scientia.net>
-	 <51D7D72B.4070401@hardwarefreak.com>
+Subject: Re: some general questions on RAID (OT)
+Date: Sat, 06 Jul 2013 17:11:09 +0200
+Message-ID: <1373123469.5217.23.camel@fermat.scientia.net>
+References: <CDFCDAFC.1379B%sam@bingner.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-m69bSC693kbmB/yAKHfV"
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-Vlc06OCIAUP/k24r4362"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51D7D72B.4070401@hardwarefreak.com>
+In-Reply-To: <CDFCDAFC.1379B%sam@bingner.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-m69bSC693kbmB/yAKHfV
+--=-Vlc06OCIAUP/k24r4362
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2013-07-06 at 03:36 -0500, Stan Hoeppner wrote:
-> >> hot/warm/cold spares in the chassis.
-> >>   This simply degrades performance.
-> > Why should it? If the spare is unused?
-> The answer is rather obvious.  If spares are in the chassis one has
-> fewer active array spindles.
-Sorry... still don't get it...
-When you have another drive in the chassis... which is not actively used
-by the RAID, but just waiting as a hot spare for a failing device and
-rebuild becoming necessary...
-Apart from power consumption and more heat... how should that affect the
-read/write performance of the RAID?
+On Sat, 2013-07-06 at 06:23 +0000, Sam Bingner wrote:
+> Works great with debian except for some lack
+> of LED support on a couple drives and the LCD always says "Booting=C5=A0"
+I tried a lot to get the LEDs/buzzers/buttons working (but doesn't seem
+to be easy on the Intel based devices), you may be interested in:
+http://thread.gmane.org/gmane.linux.kernel/1508763
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D712283
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D712191
+https://github.com/groeck/it87/issues/1
 
-
-> > Sure about that? Wasn't there some agreement that HGST belongs to WD bu=
-t
-> > produces independently...?
->=20
-> That wouldn't make sense for either party.  Where did you read this?
-I vaguely remember this being part for some anti trust obligations...
-
-> Got a link?
-The only thing I've found right now was:
-https://en.wikipedia.org/wiki/HGST#History
-"It was agreed that WD would operate with WD Technologies and HGST as
-wholly owned subsidiaries and they would compete in the marketplace with
-separate brands and product lines."
-But the next sentence about Toshiba may indicate that HGST stops 3.5"
-business?!
-
-
-> > and Toshiba got something from the
-> > WD/HGST trade and already announced a 3.5" enterprise disk out of that.
-> Toshiba has been producing 3.5" enterprise drives for years.  Got a link
-> showing that Toshiba received technology from the WD/Hitachi acquisition?
-Again, see Wikipedia.
-
-
-> I already stated many of them.  You don't seem to be following along
-> very well.
-Well you only named one may need to use partitions (which I do not see
-why this should be a disadvantage)... and that in few years... there
-might be only some vendors left and (by then) the idea wouldn't work
-anymore; but even if that would happen, that's still no reason for not
-doing it now?
-Anything else I've missed or didn't understand as a disadvantage?
+Getting the LCD work is very easy... though (see also the links above).
 
 
 Cheers,
 Chris.
 
---=-m69bSC693kbmB/yAKHfV
+--=-Vlc06OCIAUP/k24r4362
 Content-Type: application/x-pkcs7-signature; name="smime.p7s"
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Transfer-Encoding: base64
@@ -156,17 +117,17 @@ duOhWVf3cbLEbhRcbW1BZt8bk7HUAMPuy888PSGAqV9jZfzd4F+k9CvwhXFB1Gcl+xqxl67WmYIT
 QdJupRuZJ4DnC6moADGCAr0wggK5AgEBMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNV
 BAsTFWh0dHA6Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAID
 AQGCMAkGBSsOAwIaBQCgggE3MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTEzMDcwNjE1MDQxMVowIwYJKoZIhvcNAQkEMRYEFATW1Wfve9OZJ+Gdp5Vr2EHk8fywMGoG
+MQ8XDTEzMDcwNjE1MTEwOVowIwYJKoZIhvcNAQkEMRYEFHs0rrvjCfMRaoaYj/ZGfv4qAs+jMGoG
 CSsGAQQBgjcQBDFdMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6Ly93
 d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAIDAQGCMGwGCyqGSIb3
 DQEJEAILMV2gWzBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwGA1UECxMVaHR0cDovL3d3dy5D
 QWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290AgMBAYIwDQYJKoZIhvcNAQEB
-BQAEggEAprZJIqfOSU5qDiL2QGdcguaa7C2du4IBDf5ycT2tXPEy+RU3nE9lUWWmHhsZbo3AhG9F
-+Xch6LOF/rnWI35vD9pwvVpseDO+rVojlMBb+OUKUPjj4uPvXR+2qs1cWqHIQ66e8j5PXCKJjhXJ
-8NflcSaHudqRYhviRKSQa2FMNe+RFXIAfmCsVCtx+rssd2fcnrctd4LpZ5GXJIo7XRNf874Bj9m7
-Cn4BlPtOhuN41G3Pvv6rGEEIOD2TZWUgNBJqpORjHpPNh+Z+TKIS7x5ErAFWM5ZeMLrtCBxZn/7t
-q9RUm9h4qKlQP//BEVDjyYCP6dpkoPFkntd5UyEe8hDxuwAAAAAAAA==
+BQAEggEAjZ39M9GS494GLB4i4g1uJ5v67W6Y5t8X+r3FbkAZJLYBE2JSOorQr9mBqew++8sFeK10
+rF3mNczEk8svsXMs0xNQzoVcice/Xci6/zwxcstsQBgAT6D0uJBd7Kd5X8tCbvoXjEs7VMwBSd89
+Mpdf9oKwygUzPCQv6ugziKm0W15qFxsFhsCEm7krgxd2Vw4Xqd4OxVyhGqk+6G1ZrHYE6UeBdAJZ
+EFD94t8KVxaUo6dFHiA1bC9vatZlY/yiG7j0VXHoKmaFcy/4TJQTmXUJOS5PmKQ8zTQTQHyWPohG
+0qBvoLRq7jMcm9bIgK2xNQo2K8Bs7pxF/XQVW0nWZv/XDAAAAAAAAA==
 
 
---=-m69bSC693kbmB/yAKHfV--
+--=-Vlc06OCIAUP/k24r4362--
 
