@@ -1,87 +1,74 @@
 From: Christoph Anton Mitterer <calestyo@scientia.net>
 Subject: Re: question about the best suited RAID level/layout
-Date: Sat, 06 Jul 2013 02:46:25 +0200
-Message-ID: <1373071585.5395.45.camel@fermat.scientia.net>
+Date: Sat, 06 Jul 2013 02:55:07 +0200
+Message-ID: <1373072107.10569.12.camel@fermat.scientia.net>
 References: <1372961877.8716.43.camel@heisenberg.scientia.net>
-	 <51D5EC8A.40509@turmel.org> <1372978687.5249.52.camel@fermat.scientia.net>
-	 <51D61D71.5090406@hardwarefreak.com>
+	 <51D6A9B9.9080908@hesbynett.no>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-8yAyY/KWQ1SPzHucdAgW"
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-CNDZwpNOOnR9aQv0QpwA"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51D61D71.5090406@hardwarefreak.com>
+In-Reply-To: <51D6A9B9.9080908@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-8yAyY/KWQ1SPzHucdAgW
+--=-CNDZwpNOOnR9aQv0QpwA
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2013-07-04 at 20:12 -0500, Stan Hoeppner wrote:
-> 1.  You'll need to use partitions underneath md because the drives will
-> all be slightly difference capacity.
-Well it doesn't have to be partitions... you can simply manually specify
-a somewhat smaller size for the RAID... but of course one should leave
-some gap.
-I'll probably doe it via partitions, though ;)
+On Fri, 2013-07-05 at 13:10 +0200, David Brown wrote:
+> I apologise if this is preaching to the converted.  When you are
+> concerned about data resilience, RAID is only part of the answer - I
+> just want to make sure you have considered everything else.
+Sure... I make regular complete backups, on different types of storage
+media (magnetic vs. optical - yes I do fear very strong coronal mass
+ejections ;-) )... being placed in different locations (even different
+cities ;)
 
-btw: It was interesting to see,... that all 3 different drives (from WD,
-HGST, Seagate)... exported _exactly_ the same amount of space.
-
-
-> You'll need to identify the
-> capacity of the smallest drive and create partitions a few MiB smaller
-> than this on all drives.  This should assure that any replacement drive
-> which is slightly smaller will be usable in the array.
+> The main benefit of RAID is availability - you don't have downtime when
+> a disk fails.  It also ensures that you don't lose data that is created
+> between backup runs.  But it is not the solution for data safety and
+> reliability - that is what backups are for.
 Sure...
 
 
-
-> Screwing around with all of this is a PITA.  When I build arrays I use
-> identical drives and put identical spares in storage.  I don't leave
-> hot/warm/cold spares in the chassis.
-Well but that's another field of questions ;)
-
->   This simply degrades performance.
-Why should it? If the spare is unused?
-
-
-> Hot swap was invented for a reason.  Some folks prefer online spares an
-> unattended auto rebuild.  Not every time a drive is kicked is a rebuild
-> required.  I wanna look things over before I start a rebuild.
-I also think that for my personal home use case hot/warm/cold spares
-won't be of much use... but if you run a big data centre things look
-different... and hot spares are not replaced by hot swap ;)
-
-
-> 2.  HGST is a brand created due to Western Digital's acquisition of
-> Hitachi Data System's disk drive unit.
-Sure... but I think they still use their own technology/firmware... at
-least for now?
-
->   The drives are Hitachi's final
-> production units relabeled with a different name and serial number.
-> Three years from now when that HGST drive fails, Western Digital will
-> replace it with a Western Digital produced drive.
-Sure about that? Wasn't there some agreement that HGST belongs to WD but
-produces independently...?
-Anyway... that's off topic... for now at least the disks are not
-identical (which was my goal)... and Toshiba got something from the
-WD/HGST trade and already announced a 3.5" enterprise disk out of that.
+> You need to look at the complete picture here.  What are the risks to
+> your data?  Is a double disk failure /really/ the most likely failure
+> scenario?  Have you considered the likelihood and consequences of other
+> failure types?  In my experience, user error is a bigger risk to data
+> loss than a double disk failure - I have more often restored from backup
+> due to someone deleting the wrong files (or losing them due to slipping
+> when dragging-and-dropping) than from disk problems, even with non-raid
+> setups.
+Hehe... I once accidentally mke2fs'ed (instead of fsck) over my main
+personal data fs (and fucking e2fsprogs don't check for existing
+fs/containers, AFAIK till today)... and back then my most recent backup
+was really old... like 2 years or so...
+I invested like 2 weeks of ext4 forensic and managed to basically
+recover all of the data out of the overwritten fs... ;)
 
 
 
-> IMO the practical disadvantages of using dissimilar drives outweighs the
-> theoretical benefits.
-So... which are the practical disadvantages?
+> Raid will help if one of your disk dies, but it will not help against
+> fire or theft, or hardware failure on the NAS, or software failure, or
+> user error, or malware (if you have windows clients), or power failure,
+> or any one of a number of different scenarios.
+>=20
+> So depending on your circumstances, you might get better "data
+> security/resilience" by putting the extra disks in a second machine at a
+> second location, or other mixed primary/secondary arrangements.
+sure... see above... I do have a good backup strategy now :)
+
+Anyway... for the daily growth of data... RAID does a good "backup-like"
+job in helping me against disk failures... since I simlpy can't backup
+everything every day...
 
 
 Cheers,
 Chris.
 
-
---=-8yAyY/KWQ1SPzHucdAgW
+--=-CNDZwpNOOnR9aQv0QpwA
 Content-Type: application/x-pkcs7-signature; name="smime.p7s"
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Transfer-Encoding: base64
@@ -166,17 +153,17 @@ duOhWVf3cbLEbhRcbW1BZt8bk7HUAMPuy888PSGAqV9jZfzd4F+k9CvwhXFB1Gcl+xqxl67WmYIT
 QdJupRuZJ4DnC6moADGCAr0wggK5AgEBMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNV
 BAsTFWh0dHA6Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAID
 AQGCMAkGBSsOAwIaBQCgggE3MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTEzMDcwNjAwNDYyNVowIwYJKoZIhvcNAQkEMRYEFC7ZG4I371ckqyhwFBZL33NrsI8kMGoG
+MQ8XDTEzMDcwNjAwNTUwNVowIwYJKoZIhvcNAQkEMRYEFGFUGp1xRUa+Aw5DHQX9SoZ/UOYyMGoG
 CSsGAQQBgjcQBDFdMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6Ly93
 d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAIDAQGCMGwGCyqGSIb3
 DQEJEAILMV2gWzBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwGA1UECxMVaHR0cDovL3d3dy5D
 QWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290AgMBAYIwDQYJKoZIhvcNAQEB
-BQAEggEAnKJJzogVgDpgUlQPNRrZpNbU4P4jksua6DwEf/oFM1/+UT11Ulny4icNvuGSlzqBBQB2
-03yQm6g4ULkslBJOWp54YlPLEY7X0uuVdvzmnmYkmWUsQZT9YeEizPl6iM2oAUXKgl8JQxNjziBh
-IvMFx29eSvqRREK9xfkr6eeD2nj4ZTTlCtgMftD1ZaAjqXWLVch78KSpyJ+vJPVS0Wfanlq1oKgY
-5cgSq1/Qs0yAh1erAMAFPMsN0JUBlhONs4uNCrFt76UwdhG3nLL9n8cNvube5Gmhb5/uFRDSp06r
-gT85sVr2owSY7/kax4EFFfOSlY2Q5vMH4lpHUjD9N3lKKgAAAAAAAA==
+BQAEggEAgcCa8V+j7TGQ60VFgIwcC/LJQj2oL0zwUEMg25Cb3JlboZ8sJ8xi7gJP4nypKcOlGgoH
+sV8L57K6Qf0axCCr9oDPcFUzwoRf+DTfqJyu3tQc42PsC9eioO4l+s9/hkWnPLIyElMHQshqG29Z
+slK0+ti/aplI+joH7S1V2rmXn8NYs1H72/Hr4NtAKbdZpfmazKd+IfgI5ksjdezwx+yi3qIXgC7A
+nIZf5sHuwxtRfEfRJjnt45GSw0x0pBL4qpSpYaZ8cRwCuTEYKJX20+dGLSl8H2sLVAwVhFiUI8rW
+09C+XC3+gGQ29RpJiH4CyrJD8LTPSgttY9YReCkSSMEwZgAAAAAAAA==
 
 
---=-8yAyY/KWQ1SPzHucdAgW--
+--=-CNDZwpNOOnR9aQv0QpwA--
 
