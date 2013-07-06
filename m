@@ -1,38 +1,43 @@
 From: Christoph Anton Mitterer <calestyo@scientia.net>
-Subject: Re: some general questions on RAID (OT)
-Date: Sat, 06 Jul 2013 17:11:09 +0200
-Message-ID: <1373123469.5217.23.camel@fermat.scientia.net>
-References: <CDFCDAFC.1379B%sam@bingner.com>
+Subject: Re: some general questions on RAID
+Date: Sat, 06 Jul 2013 17:15:15 +0200
+Message-ID: <1373123715.5217.27.camel@fermat.scientia.net>
+References: <1372962602.8716.56.camel@heisenberg.scientia.net>
+	 <51D5F22C.70007@turmel.org> <1373074400.10569.49.camel@fermat.scientia.net>
+	 <51D7DADA.50200@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-Vlc06OCIAUP/k24r4362"
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-vsh/LbojUC8NF9e8tOaY"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CDFCDAFC.1379B%sam@bingner.com>
+In-Reply-To: <51D7DADA.50200@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-Vlc06OCIAUP/k24r4362
+--=-vsh/LbojUC8NF9e8tOaY
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2013-07-06 at 06:23 +0000, Sam Bingner wrote:
-> Works great with debian except for some lack
-> of LED support on a couple drives and the LCD always says "Booting=C5=A0"
-I tried a lot to get the LEDs/buzzers/buttons working (but doesn't seem
-to be easy on the Intel based devices), you may be interested in:
-http://thread.gmane.org/gmane.linux.kernel/1508763
-http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D712283
-http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D712191
-https://github.com/groeck/it87/issues/1
+On Sat, 2013-07-06 at 03:52 -0500, Stan Hoeppner wrote:
+> > Since even though you'd have one dmcrypt thread per disk now,... each o=
+f
+> > them would have to en/decrypt the "same" actual data for different
+> > devices... so while you have 4x threads... you need to do 4x
+> > en/decryption works.
+>=20
+> This would only be true if using n-way mirroring.
+Ah yes...
+(as you already assumed) I missed the point with striping... ;) ...
 
-Getting the LCD work is very easy... though (see also the links above).
+But also for RAID5/6 you shouldn't get n times the performance (when n
+is the number of disks), probably "only" about (n-1) times respectively
+(n-2) times, right?
 
 
 Cheers,
 Chris.
 
---=-Vlc06OCIAUP/k24r4362
+--=-vsh/LbojUC8NF9e8tOaY
 Content-Type: application/x-pkcs7-signature; name="smime.p7s"
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Transfer-Encoding: base64
@@ -117,17 +122,17 @@ duOhWVf3cbLEbhRcbW1BZt8bk7HUAMPuy888PSGAqV9jZfzd4F+k9CvwhXFB1Gcl+xqxl67WmYIT
 QdJupRuZJ4DnC6moADGCAr0wggK5AgEBMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNV
 BAsTFWh0dHA6Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAID
 AQGCMAkGBSsOAwIaBQCgggE3MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTEzMDcwNjE1MTEwOVowIwYJKoZIhvcNAQkEMRYEFHs0rrvjCfMRaoaYj/ZGfv4qAs+jMGoG
+MQ8XDTEzMDcwNjE1MTUxNVowIwYJKoZIhvcNAQkEMRYEFLz06ez3AAZGnLAVb4cnYjkxY26CMGoG
 CSsGAQQBgjcQBDFdMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6Ly93
 d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAIDAQGCMGwGCyqGSIb3
 DQEJEAILMV2gWzBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwGA1UECxMVaHR0cDovL3d3dy5D
 QWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290AgMBAYIwDQYJKoZIhvcNAQEB
-BQAEggEAjZ39M9GS494GLB4i4g1uJ5v67W6Y5t8X+r3FbkAZJLYBE2JSOorQr9mBqew++8sFeK10
-rF3mNczEk8svsXMs0xNQzoVcice/Xci6/zwxcstsQBgAT6D0uJBd7Kd5X8tCbvoXjEs7VMwBSd89
-Mpdf9oKwygUzPCQv6ugziKm0W15qFxsFhsCEm7krgxd2Vw4Xqd4OxVyhGqk+6G1ZrHYE6UeBdAJZ
-EFD94t8KVxaUo6dFHiA1bC9vatZlY/yiG7j0VXHoKmaFcy/4TJQTmXUJOS5PmKQ8zTQTQHyWPohG
-0qBvoLRq7jMcm9bIgK2xNQo2K8Bs7pxF/XQVW0nWZv/XDAAAAAAAAA==
+BQAEggEAMJjmZRN/0I/0yNm/EmqhL89JhN7Syf5J1wA3NCAzGpjROVLIOurnu/dUxmGxI0tlHIEc
+5E3C+meH1ySZXyQ2oM3WXeBJ2Rsl7Ur51c6FCTMvgOk1k5oU1rfOhvtpp4ZJ8ZQjqEPEj3EUly7o
+CwK181eJrBE4EX+/4IzyftUwqQy26rkDczjLGsFmKo4GT4IPFt1SiLUvfz7aVR7yznkHjWf0SLU5
+1IORL+82RqG4vFH60GqDhEkJmoPsAslhk5WlqDOxi9yDYWXa8bFi3HT1J/AaNcsWKgKnI8m++njU
+Ubcih3OR3c2VUXjuI15ILnCNpAfHw7A8bNlutphHYcQDBgAAAAAAAA==
 
 
---=-Vlc06OCIAUP/k24r4362--
+--=-vsh/LbojUC8NF9e8tOaY--
 
