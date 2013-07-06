@@ -1,31 +1,65 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: question about the best suited RAID level/layout
-Date: Sat, 06 Jul 2013 13:29:08 +0800
-Message-ID: <51D7AB24.1030003@fnarfbargle.com>
-References: <1372961877.8716.43.camel@heisenberg.scientia.net>  <51D5EC8A.40509@turmel.org> <1372978687.5249.52.camel@fermat.scientia.net>  <51D61C58.2020207@fnarfbargle.com> <1373070976.5395.26.camel@fermat.scientia.net>
+From: Sam Bingner <sam@bingner.com>
+Subject: Re: some general questions on RAID (OT)
+Date: Sat, 6 Jul 2013 06:23:48 +0000
+Message-ID: <CDFCDAFC.1379B%sam@bingner.com>
+References: <1373073799.10569.41.camel@fermat.scientia.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=Windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1373070976.5395.26.camel@fermat.scientia.net>
+In-Reply-To: <1373073799.10569.41.camel@fermat.scientia.net>
+Content-Language: en-US
+Content-ID: <3DF22B92BD79024E9B642FC3B21188DA@ds.sbdhi.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Anton Mitterer <calestyo@scientia.net>
-Cc: linux-raid@vger.kernel.org
+To: Christoph Anton Mitterer <calestyo@scientia.net>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/07/13 08:36, Christoph Anton Mitterer wrote:
-> Hi Brad.
+The TS-879 and 1079 have Intel i3 Processors, and use a normal socket. =
+ I
+replaced it with an E3-1275 Xeon processor.  You can use Sandy bridge b=
+ut
+they do not have BIOS support for Ivy bridge processors.  I also replac=
+ed
+my memory with 16GB ECC memory.
+
+I did a lot of research about this stuff before buying it, which is why=
+ I
+went with the TS-1079 Pro.  Works great with debian except for some lac=
+k
+of LED support on a couple drives and the LCD always says "Booting=8A"
+
+Sam
+
+On 7/5/13 3:23 PM, "Christoph Anton Mitterer" <calestyo@scientia.net>
+wrote:
+
+>On Fri, 2013-07-05 at 01:39 +0000, Sam Bingner wrote:
+>> That is because your CPU has encryption features - the QNAP devices
+>> largely do not; I replaced the CPU in mine with one that had encrypt=
+ion
+>> features because otherwise there was nothing that could bring the
+>> performance above about 80MB/sec
+>That's a bit off topic now to my questions, but I guess many other
+>people using RAIDs on their QNAPs might be interested later as well:
+>which QNAP do you have exactly?
 >
+>I mean they all have either ARM based CPUs, or Atom... so in my case, =
+a
+>D2700 with an FCBGA559... which CPU (that has AESNI) could you find fo=
+r
+>that? Since AFAIK there are no[0] Atoms at all with AESNI?
+>
+>
+>Cheers,
+>Chris.
+>
+>
+>[0]=20
+>http://ark.intel.com/search/advanced/?s=3Dt&Sockets=3DFCBGA559&AESTech=
+=3Dtrue
 
-> And when we remember back at the issues (IIRC) Seagate had with the
-> firmwares of some of it's devices, that suddenly stopped working at some
-> special date...
-
-I had 10 of those in a RAID-6 at the time. Luckily the firmware bug only 
-manifested itself on a re-start of the drive, and as I probably drop 
-power to the machine once a year (if that), I could drop them out of the 
-array one at a time, upgrade the firmware and re-add it to the array.
-
-A messy process to be sure, but no risk of data loss that way.
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
