@@ -1,62 +1,46 @@
 From: Christoph Anton Mitterer <calestyo@scientia.net>
 Subject: Re: question about the best suited RAID level/layout
-Date: Sun, 07 Jul 2013 19:26:20 +0200
-Message-ID: <1373217980.5246.9.camel@fermat.scientia.net>
+Date: Sun, 07 Jul 2013 19:39:21 +0200
+Message-ID: <1373218761.5246.11.camel@fermat.scientia.net>
 References: <1372961877.8716.43.camel@heisenberg.scientia.net>
 	 <51D5EC8A.40509@turmel.org> <1372978687.5249.52.camel@fermat.scientia.net>
-	 <51D61D71.5090406@hardwarefreak.com>
-	 <1373071585.5395.45.camel@fermat.scientia.net>
-	 <51D7D72B.4070401@hardwarefreak.com>
-	 <1373123051.5217.19.camel@fermat.scientia.net>
-	 <51D99B36.6040106@hardwarefreak.com>
+	 <51D6CBF9.2020100@turmel.org>
+	 <1373073066.10569.30.camel@fermat.scientia.net>
+	 <51D77ECF.5090909@turmel.org> <1373133349.8557.5.camel@fermat.scientia.net>
+	 <51D9631D.403@fastmail.fm>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-GeR11IK4T7K0c/2ZWsUI"
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-d2shC2+BF6MDkTC/hO7+"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51D99B36.6040106@hardwarefreak.com>
+In-Reply-To: <51D9631D.403@fastmail.fm>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-GeR11IK4T7K0c/2ZWsUI
+--=-d2shC2+BF6MDkTC/hO7+
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2013-07-07 at 11:45 -0500, Stan Hoeppner wrote:
-> Maybe an example will help.  Is a 12 drive array faster than a 10 drive
-> array?  Yes, of course.  If your chassis holds 12 drives and you assign
-> two as spares, then you have 10 drives in your array.  That's 20%
-> slower.  If you keep spares on a shelf and hot swap them in after
-> failure, you can have all 12 drives in your array and not lose that 20%
-> performance.
-Ah... okay I see what you were talking about ... sure... but it's not
-the hot swap that will (directly) degrade performance... ist because you
-don't use all your slots and thereby not getting out the maxmimum
-performance gain possible due to the striping...
+On Sun, 2013-07-07 at 14:46 +0200, Bernd Schubert wrote:
+> The block layer has no knowledge which file a block belongs to.
+Sure...
 
+>  Even for
+> file systems that is hard task to figure out, as only inodes store
+> information which blocks they use. So if you would want to figure out
+> the corresponding file, you first need to scan through all inodes and
+> search for the specific block. Once you have the corresponding inode you
+> need to find directory-entries referencing it. So lots of expensive
+> reverse searching.
+Well of course nothing that should run online in the RAID drivers... but
+when you have a tool like raid6check or similar... it sounds nice if it
+would tell you which files were affected (if any).
 
-> Well of course.  By designing your storage with dissimilar drives to
-> avoid a rare, show stopping, firmware bug that may or may not be present
-> in a specific drive model, you're simultaneously exposing yourself to
-> other issues because the firmware doesn't match.  Performance will be
-> suboptimal as your drives will have difference response times.
-Sure, but as said performance isn't the main goal...
-
-
-> Additionally, timeout and error handling will likely be different,
-> causing the same.  Interpreting S.M.A.R.T. data will be difficult
-> because each of the drives will report various metrics differently, etc,
-> etc.  So instead of only being required to become intimately familiar
-> with one drive model, you must do so for 4 or 5 drive models.
-Sure..
-
-
-Thanks for your comments.
 
 Cheers,
 Chris.
 
---=-GeR11IK4T7K0c/2ZWsUI
+--=-d2shC2+BF6MDkTC/hO7+
 Content-Type: application/x-pkcs7-signature; name="smime.p7s"
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Transfer-Encoding: base64
@@ -141,17 +125,17 @@ duOhWVf3cbLEbhRcbW1BZt8bk7HUAMPuy888PSGAqV9jZfzd4F+k9CvwhXFB1Gcl+xqxl67WmYIT
 QdJupRuZJ4DnC6moADGCAr0wggK5AgEBMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNV
 BAsTFWh0dHA6Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAID
 AQGCMAkGBSsOAwIaBQCgggE3MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTEzMDcwNzE3MjYxOFowIwYJKoZIhvcNAQkEMRYEFCmpfC+s8giNZMbTwQiNwM/cw7GVMGoG
+MQ8XDTEzMDcwNzE3MzkyMVowIwYJKoZIhvcNAQkEMRYEFFD/QsSc+c2dipcAGbbEKgtez+NpMGoG
 CSsGAQQBgjcQBDFdMFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6Ly93
 d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAIDAQGCMGwGCyqGSIb3
 DQEJEAILMV2gWzBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwGA1UECxMVaHR0cDovL3d3dy5D
 QWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290AgMBAYIwDQYJKoZIhvcNAQEB
-BQAEggEAfsQCSVCsFARVl1B+DoMuGjj73HE3doXg9WHsDp0EO12VVLEa6nJCKXC9GYV7h0icL23A
-G6CXpSGJximVElf2AFCRUQ+mypQjuTNRswyfx+ARrnvFLLL/3c8Iax5SCA7N/V64lfk/ARqATuEC
-j3LLHMGc6arGAveNDtC0DCm3fBY02mGa/eY5pjkpvrYdBFp15sPRPZxXmGAegA+C0HpOzRgg1JlT
-eUFYFzawLLjDcspqxIWnkuss7KMdLXrFqoecPEO5eAHxIy5Q52hVZiYUcSYCc1Oz7wLhfGPEE0sc
-SSQQzuAc7utyLl3yYDW8QtSeRlxS/Ny8s6F/7am6pkfd8wAAAAAAAA==
+BQAEggEAMuMPFk6j/NB4HMiv6uvAzaLsV3FftYtX5AoF8gLz3joFPtkTTJt8w2LpF9LI9IRDO9Mi
+H+0dW4iVwb5n5gSa9Q1KYicgJNVvr53Cm+MdQJauq9S1DTzIlWb32J1pV/ADiVdnge5sm0dC2OWQ
+z5XgXELuDYVBNHNC9kroppEbfMeM/QQH159pB7pe+WKrR2oyJyHa9zAkTitWpEFc4R9yTg46iPbL
+ou/cRrCXTSeRb7PN1avD3x580gzDQIbm9FtIy5hmSMa21EnmwxDmTN4BP/WuMO1UHoY4u/cv9bv0
+Fh2vFA2kRLJ5QQbXBIhtfMcBESQVYiWcXJGQRox59sO3MQAAAAAAAA==
 
 
---=-GeR11IK4T7K0c/2ZWsUI--
+--=-d2shC2+BF6MDkTC/hO7+--
 
