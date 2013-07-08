@@ -1,7 +1,7 @@
 From: mwilck@arcor.de
-Subject: [PATCH 33/39] DDF: getinfo_super_ddf_bvd: fix raid_disk calculation
-Date: Mon,  8 Jul 2013 23:50:42 +0200
-Message-ID: <1373320248-7520-7-git-send-email-mwilck@arcor.de>
+Subject: [PATCH 34/39] DDF: fix endianness of refnum in debug messages
+Date: Mon,  8 Jul 2013 23:50:43 +0200
+Message-ID: <1373320248-7520-8-git-send-email-mwilck@arcor.de>
 References: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
@@ -10,34 +10,53 @@ To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-The return value of disk.raid_disk may be wrong.
-The old code was using raiddisk, which is only valid with auto
-layout. This leads to errors when arrays are created with
-specified disks and mdmon is already running, like this:
-
-mdadm -CR /dev/md/container -n5 $d1 $d2 $d3 $d4 $d5
-mdadm -CR /dev/md/r5 -n5 -l5 /dev/md/container -z 5000
-mdadm -CR /dev/md/r1 -n2 -l1 $d1 $d2
-  => resulting array will use wrong disks
-
-This patch fixes that.
+This makes it easier to match the debug output to existing
+structures.
 ---
- super-ddf.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ super-ddf.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
 diff --git a/super-ddf.c b/super-ddf.c
-index bff420c..7da4ce0 100644
+index 7da4ce0..c96fac5 100644
 --- a/super-ddf.c
 +++ b/super-ddf.c
-@@ -1887,7 +1887,8 @@ static void getinfo_super_ddf_bvd(struct supertype *st, struct mdinfo *info, cha
- 	if (dl) {
- 		info->disk.major = dl->major;
- 		info->disk.minor = dl->minor;
--		info->disk.raid_disk = dl->raiddisk;
-+		info->disk.raid_disk = cd + conf->sec_elmnt_seq
-+			* __be16_to_cpu(conf->prim_elmnt_count);
- 		info->disk.number = dl->pdnum;
- 		info->disk.state = (1<<MD_DISK_SYNC)|(1<<MD_DISK_ACTIVE);
+@@ -2805,7 +2805,8 @@ static int __write_ddf_structure(struct dl *d, struct ddf_super *ddf, __u8 type,
+ 		}
+ 		if (c) {
+ 			dprintf("writing conf record %i on disk %08x for %s/%u\n",
+-				i, d->disk.refnum, guid_str(vdc->guid),
++				i, __be32_to_cpu(d->disk.refnum),
++				guid_str(vdc->guid),
+ 				vdc->sec_elmnt_seq);
+ 			vdc->seqnum = header->seq;
+ 			vdc->crc = calc_crc(vdc, conf_size);
+@@ -3894,7 +3895,7 @@ static int compare_super_ddf(struct supertype *st, struct supertype *tst)
+ 		}
+ 		first->dlist = dl1;
+ 		dprintf("%s: added disk %d: %08x\n", __func__, dl1->pdnum,
+-			dl1->disk.refnum);
++			__be32_to_cpu(dl1->disk.refnum));
  	}
+ 
+ 	return 0;
+@@ -4097,7 +4098,7 @@ static void ddf_set_disk(struct active_array *a, int n, int state)
+ 		 * If it is now in_sync, insert it. */
+ 		dprintf("%s: phys disk not found for %d: %d/%d ref %08x\n",
+ 			__func__, dl->pdnum, dl->major, dl->minor,
+-			dl->disk.refnum);
++			__be32_to_cpu(dl->disk.refnum));
+ 		dprintf("%s: array %u disk %u ref %08x pd %d\n",
+ 			__func__, inst, n_bvd, vc->phys_refnum[n_bvd], pd);
+ 		if ((state & DS_INSYNC) && ! (state & DS_FAULTY)) {
+@@ -4432,7 +4433,8 @@ static void ddf_process_update(struct supertype *st,
+ 				if (dn == DDF_NOTFOUND)
+ 					continue;
+ 				dprintf("dev %d/%08x has %s (sec=%u) at %d\n",
+-					dl->pdnum, dl->disk.refnum,
++					dl->pdnum,
++					__be32_to_cpu(dl->disk.refnum),
+ 					guid_str(conf->guid),
+ 					conf->sec_elmnt_seq, vn);
+ 				/* Clear the Transition flag */
 -- 
 1.7.1
