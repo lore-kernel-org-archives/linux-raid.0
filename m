@@ -1,7 +1,7 @@
 From: mwilck@arcor.de
-Subject: [PATCH 35/39] DDF: add debug message in add_super_ddf_bvd
-Date: Mon,  8 Jul 2013 23:50:44 +0200
-Message-ID: <1373320248-7520-9-git-send-email-mwilck@arcor.de>
+Subject: [PATCH 36/39] DDF: ddf_process_update: add debug messages fore adding VDs
+Date: Mon,  8 Jul 2013 23:50:45 +0200
+Message-ID: <1373320248-7520-10-git-send-email-mwilck@arcor.de>
 References: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
@@ -10,24 +10,37 @@ To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
+Add some debug messages for the DDF_VIRTR_RECORDS_MAGIC case.
 ---
- super-ddf.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ super-ddf.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
 diff --git a/super-ddf.c b/super-ddf.c
-index c96fac5..1b9944f 100644
+index 1b9944f..1cb0a9f 100644
 --- a/super-ddf.c
 +++ b/super-ddf.c
-@@ -2551,6 +2551,10 @@ static void add_to_super_ddf_bvd(struct supertype *st,
- 		| get_svd_state(ddf, ddf->currentconf);
- 	ddf->phys->entries[dl->pdnum].type &= ~__cpu_to_be16(DDF_Global_Spare);
- 	ddf->phys->entries[dl->pdnum].type |= __cpu_to_be16(DDF_Active_in_VD);
-+	dprintf("%s: added disk %d/%08x to VD %d/%s as disk %d\n",
-+		__func__, dl->pdnum, __be32_to_cpu(dl->disk.refnum),
-+		ddf->currentconf->vcnum, guid_str(vc->guid),
-+		dk->raid_disk);
- 	ddf_set_updates_pending(ddf);
- }
+@@ -4356,6 +4356,13 @@ static void ddf_process_update(struct supertype *st,
+ 				return;
+ 		} else {
  
++			ent = find_vde_by_guid(ddf, vd->entries[0].guid);
++			if (ent != DDF_NOTFOUND) {
++				dprintf("%s: VD %s exists already in slot %d\n",
++					__func__, guid_str(vd->entries[0].guid),
++					ent);
++				return;
++			}
+ 			ent = find_unused_vde(ddf);
+ 			if (ent == DDF_NOTFOUND)
+ 				return;
+@@ -4364,6 +4371,8 @@ static void ddf_process_update(struct supertype *st,
+ 				__cpu_to_be16(
+ 					1 + __be16_to_cpu(
+ 						ddf->virt->populated_vdes));
++			dprintf("%s: added VD %s in slot %d\n",
++				__func__, guid_str(vd->entries[0].guid), ent);
+ 		}
+ 		ddf_set_updates_pending(ddf);
+ 		break;
 -- 
 1.7.1
