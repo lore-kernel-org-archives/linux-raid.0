@@ -1,103 +1,63 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: DDF/RAID10 patch series
-Date: Mon, 8 Jul 2013 16:53:14 +1000
-Message-ID: <20130708165314.1e400134@notabene.brown>
-References: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: Re: RAID1 repair GPF crash w/3.10-rc7
+Date: Mon, 8 Jul 2013 16:06:56 -0400
+Message-ID: <20130708160656.6cb8e74b@jlaw-desktop.mno.stratus.com>
+References: <alpine.DEB.2.02.1307012118450.6694@jlaw-desktop.mno.stratus.com>
+ <alpine.DEB.2.02.1307031634440.9749@jlaw-desktop.mno.stratus.com>
+ <20130704105337.2a06cbfd@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/8CI=F.jJ=xHB6Mr8Q5nAs66"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
+In-Reply-To: <20130704105337.2a06cbfd@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: mwilck@arcor.de
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, kmo@daterainc.com
 List-Id: linux-raid.ids
 
---Sig_/8CI=F.jJ=xHB6Mr8Q5nAs66
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+[+cc Kent's new mail?]
 
-On Wed,  3 Jul 2013 22:27:40 +0200 mwilck@arcor.de wrote:
+On Thu, 4 Jul 2013 10:53:37 +1000
+NeilBrown <neilb@suse.de> wrote:
+> 
+> I would propose "bio_rewind" that exactly undoes any "bio_advance". 
+>
+> [ ... snip ...]
+> 
+> Then call that on pbio at the same place we call bio_reset on sbio.
+> 
+> You could probably also call bio_rewind on sbio, and remove lots of that
+> code for setting the bio up again.
 
-> This is the DDF/RAID10 patch series I announced.
->=20
-> The whole patch set is aimed at making --Create work with DDF/RAID10.
-> When --Create eventually works, RAID10 can be added to the DDF
-> regression test.
->=20
-> With this patch set, DDF is still far from the level of functionality
-> present in IMSM, but getting a little closer.
->=20
-> The patch set also includes some cleanup patches and debug code which
-> I needed to find the bugs in earlier versions, and which might be useful
-> later as well.
->=20
-> Please review and test.
->=20
-> Regards
-> Martin
->=20
-> Martin Wilck (27):
->   DDF (cleanup): use a common macro for failed searches
->   DDF: check_secondary: fix treatment of missing BVDs
->   DDF: load_ddf_headers: use secondary header as fallback
->   DDF: handle "open flag" according to spec
->   DDF: Implement store_super_ddf
->   DDF: ddf_open_new: implement minimal consistency check
->   DDF: find_vdcr: account for secondary RAID level
->   DDF: ddf_set_disk: move status logic to separate function
->   DDF: get_svd_state: Status logic for secondary RAID level
->   DDF: allow empty slots in virt disk table
->   DDF: layout_ddf2md: new DDF->md RAID layout conversion
->   DDF: layout_md2ddf: new md->DDF layout conversion
->   DDF: Simplify allocation of "other BVDs"
->   DDF: init_super_ddf_bvd: initialize other bvds
->   DDF: validate_geometry_ddf: support RAID10
->   DDF: use LBA_OFFSET macro instead of lba_offset field
->   DDF: get_extents: support secondary RAID level
->   DDF: add_to_super_ddf: allow empty slots in phys disk table
->   DDF: add_to_super_ddf: Use same amount of workspace as other disks
->   DDF: add_to_super_ddf: RAID10 changes
->   DDF: add_to_super_ddf_bvd: use get_svd_state()
->   DDF: getinfo_super_ddf_bvd: lba_offset calculation for RAID10
->   DDF: guid_str: convenience function to print GUID for debugging
->   DDF: ddf_set_array_state: more meaningful output
->   DDF: ddf_process_update: handle update of conf records for SVD
->   DDF: ddf_process_update: Fix vlist treatment for SVDs
->   tests/10ddf-create: add RAID 10 array
->=20
->  super-ddf.c        | 1134 +++++++++++++++++++++++++++++++++-------------=
-------
->  tests/10ddf-create |   15 +-
->  2 files changed, 739 insertions(+), 410 deletions(-)
+This appears to work for my test case (no crashes or post repair
+mismatch_cnt):
 
+  mdadm --fail /dev/$MD /dev/sda3
+  mdadm --remove /dev/$MD /dev/sda3
+  dd if=/dev/urandom of=/dev/$MD bs=1M count=500
+  mdadm --stop /dev/$MD
 
-Thanks. I've applied all these (with the changes that I have already
-mentioned and a couple of other  tiny things).
-I'll do some testing too at some stage.
+  mdadm --create /dev/$MD --level=1 --assume-clean --raid-devices=2 \
+  	--bitmap=internal /dev/sda3 /dev/sdi3
+  echo repair > /sys/block/$MD/md/sync_action
 
-NeilBrown
+I'll reply to this email with the patches that implement your
+suggested changes.  Feel free to combine or redo them, posting them here
+was the easiest way to provide my signed-off should you need it.
 
---Sig_/8CI=F.jJ=xHB6Mr8Q5nAs66
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Although it works, having to rewind the bio io_vec index (and
+clearing the bi_next pointers) before calling bio_copy_data feels a
+bit clunky.  What bio_copy_data is really doing is
+"bio_copy_remaining_data in a bio chain," whereas MD wants 
+"bio_copy_completed_data from a single bio".
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+I took a look at Kent's tree and a lot of the block layer handling was
+simplified through the bvec_iter.  I don't know if that code is
+destined for 3.11.  If so, it would probably be easier to retest and
+base any MD changes off of his.  And for 3.10 stable, the minimal
+fix would be for MD to just manipulate the bi_idx itself (or revert
+calling bio_copy_data altogether.)
 
-iQIVAwUBUdph2jnsnt1WYoG5AQKmPRAAqdLVoZMGNUt1KobJQkVXzmHNeDRtvEaB
-ueRH7M04PGByWYMeqQOfvE/4C16TvbzzYn7dkLcetb/zKFVssi0wBHyS6IN8kJpq
-QTxviJyyOD5kdOrvv5+DW5oLa+N+v80cuOgfa55m4YqIS/XhBeawSb/4ElUMAiX+
-Zxbf726+BsfhdhA5BK9r5hicNHl6l5J8lY9jAt3/CJT7GzQWTcBJ5IWwZiC2lC+v
-GdLG6ho7aRdb7U39iOsBPj+kYDRWzp6P+8zSpu8lnuLgGITknCqvXqUitNkKkfVh
-NeVcX5ziUMNccbjgMG2PFs5n8jRFdgAKQ0tlGe6BtKha1X1Aa1wEMe+naSZeLYV9
-5njr69NIWhG+fC70+9Ulrz6SCUR4ljLcAZ4PRL5NvpR5weNpfwoDV6PK85wW8BF6
-oS7PyQ+CE/UyPr5CHLsPo6R7N95aN1sdZeIRTXvaAStoFfqhqYyJs07cdrs1KOCj
-rsVCS35hGjc5nstI9xPBdH7OgAogEOdKf7YEX2JlhwJnhI+R5/omDhuVFFRYMvKR
-Rj6U48Ay6BWWZf+/0L1aJ2DvcmT3ItdxWAKbx9J3easkJKXk12FyFhwMI35gWnSI
-ZsuKSNUBOvBs2FMBCYuCCXkH5H/jcQWwgPTPWwRS9XXTz3sTaFUJyN9WQB/H/kHb
-aE685/RE7Zo=
-=ZiMg
------END PGP SIGNATURE-----
+Regards,
 
---Sig_/8CI=F.jJ=xHB6Mr8Q5nAs66--
+-- Joe
