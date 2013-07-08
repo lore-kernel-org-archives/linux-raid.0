@@ -1,40 +1,52 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: [PATCH 11/27] DDF: layout_ddf2md: new DDF->md RAID layout conversion
-Date: Mon, 08 Jul 2013 23:06:31 +0200
-Message-ID: <51DB29D7.5030207@arcor.de>
-References: <1372883287-8859-1-git-send-email-mwilck@arcor.de>	<1372883287-8859-12-git-send-email-mwilck@arcor.de> <20130708164820.3a344e28@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: mwilck@arcor.de
+Subject: Fixes for the DDF patch series
+Date: Mon,  8 Jul 2013 23:50:36 +0200
+Message-ID: <1373320248-7520-1-git-send-email-mwilck@arcor.de>
+References: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130708164820.3a344e28@notabene.brown>
+In-Reply-To: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de, linux-raid@vger.kernel.org
+Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-On 07/08/2013 08:48 AM, NeilBrown wrote:
+Hi Neil,
 
->> -static struct num_mapping ddf_level_num[] = {
->> -	{ DDF_RAID0, 0 },
->> -	{ DDF_RAID1, 1 },
->> -	{ DDF_RAID3, LEVEL_UNSUPPORTED },
->> -	{ DDF_RAID4, 4 },
->> -	{ DDF_RAID5, 5 },
->> -	{ DDF_RAID1E, LEVEL_UNSUPPORTED },
->> -	{ DDF_JBOD, LEVEL_UNSUPPORTED },
->> -	{ DDF_CONCAT, LEVEL_LINEAR },
->> -	{ DDF_RAID5E, LEVEL_UNSUPPORTED },
->> -	{ DDF_RAID5EE, LEVEL_UNSUPPORTED },
->> -	{ DDF_RAID6, 6},
->> -	{ MAXINT, MAXINT }
->> -};
-> 
-> Ooops.  You removed that while there was still a user.
-> Code must compile after each patch!
-> I've delayed the removal of this structure to the next patch, which removes
-> the last user.
+This series fixes some issues I found with my last series of patches.
+The new series is based on your merges as of Jul 8, 2013. 
+To avoid confusionwith the previous series, I started numbering at 28.
+Moreover, it implements kill_subarray(), so that array creation and
+deletion works with DDF.
 
-Sorry for that. It happened when I tried to cleanup + reorder my patches.
+Basically, there were two problems: 1. Array creation would fail if 
+the set of devices was given explicitly rather than doing auto-layout, and 
+mdmon was already running; 2. Creation of RAID10 would fail if mdmon
+was already running.
 
+29 and 30 are optional, but I think they're correct.
+31 implements kill_subarray().
+32 and 33 are the fixes for problem 1.
+34-38 are just debug messages that I needed to track the problems down.
+39 is the fix for problem 2.
+
+Regards
 Martin
+
+Martin Wilck (12):
+  test/10-ddf-create: fix comments
+  Monitor: Don't write metadata in inactive array state
+  DDF: write_init_super_ddf: don't zero superblocks for subarrays
+  DDF: implement kill_subarray
+  DDF: getinfo_super_ddf_bvd: identify disk by refnum
+  DDF: getinfo_super_ddf_bvd: fix raid_disk calculation
+  DDF: fix endianness of refnum in debug messages
+  DDF: add debug message in add_super_ddf_bvd
+  DDF: ddf_process_update: add debug messages fore adding VDs
+  DDF: guid_str: more readable output
+  DDF: ddf_process_update: some more debug messages
+  DDF: ddf_process_update: Fix updates for SVDs
+
+ monitor.c          |    3 +-
+ super-ddf.c        |  241 ++++++++++++++++++++++++++++++++++++++++++----------
+ tests/10ddf-create |    3 +-
+ 3 files changed, 199 insertions(+), 48 deletions(-)
