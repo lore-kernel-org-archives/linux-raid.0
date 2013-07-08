@@ -1,63 +1,77 @@
 From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: RAID1 repair GPF crash w/3.10-rc7
-Date: Mon, 8 Jul 2013 16:06:56 -0400
-Message-ID: <20130708160656.6cb8e74b@jlaw-desktop.mno.stratus.com>
-References: <alpine.DEB.2.02.1307012118450.6694@jlaw-desktop.mno.stratus.com>
- <alpine.DEB.2.02.1307031634440.9749@jlaw-desktop.mno.stratus.com>
- <20130704105337.2a06cbfd@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 1/2] block: add bio_rewind() to reset bio_vec
+Date: Mon,  8 Jul 2013 16:25:13 -0400
+Message-ID: <1373315114-16625-1-git-send-email-joe.lawrence@stratus.com>
+References: <20130708160656.6cb8e74b@jlaw-desktop.mno.stratus.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130704105337.2a06cbfd@notabene.brown>
+In-Reply-To: <20130708160656.6cb8e74b@jlaw-desktop.mno.stratus.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, kmo@daterainc.com
+To: linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>, kmo@daterainc.com, Joe Lawrence <joe.lawrence@stratus.com>
 List-Id: linux-raid.ids
 
-[+cc Kent's new mail?]
+Provide a mechanism for drivers to "rewind" a bio, essentially undoing
+all bio_advance() calls on the bio. After the rewind, the bio idx will
+be 0, size and sector reset, and each bio_vec len and offset restored to
+their initial values.
 
-On Thu, 4 Jul 2013 10:53:37 +1000
-NeilBrown <neilb@suse.de> wrote:
-> 
-> I would propose "bio_rewind" that exactly undoes any "bio_advance". 
->
-> [ ... snip ...]
-> 
-> Then call that on pbio at the same place we call bio_reset on sbio.
-> 
-> You could probably also call bio_rewind on sbio, and remove lots of that
-> code for setting the bio up again.
+Suggested-by: NeilBrown <neilb@suse.de>
+Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+---
+ fs/bio.c            | 27 +++++++++++++++++++++++++++
+ include/linux/bio.h |  1 +
+ 2 files changed, 28 insertions(+)
 
-This appears to work for my test case (no crashes or post repair
-mismatch_cnt):
+diff --git a/fs/bio.c b/fs/bio.c
+index 94bbc04..04309df 100644
+--- a/fs/bio.c
++++ b/fs/bio.c
+@@ -833,6 +833,33 @@ void bio_advance(struct bio *bio, unsigned bytes)
+ EXPORT_SYMBOL(bio_advance);
+ 
+ /**
++ * bio_rewind - reset a bio to its start
++ * @bio:        bio to rewind
++ *
++ * This resets bi_sector, bi_size and bi_idx; completely undoing all
++ * bio_advances on the @bio.
++ */
++void bio_rewind(struct bio *bio)
++{
++	int bytes = 0;
++
++	if (bio->bi_idx < bio->bi_vcnt && bio_iovec(bio)->bv_offset > 0) {
++		bytes = bio_iovec(bio)->bv_offset;
++		bio_iovec(bio)->bv_offset -= bytes;
++		bio_iovec(bio)->bv_len += bytes;
++	}
++	while (bio->bi_idx) {
++		bio->bi_idx -= 1;
++		bio_iovec(bio)->bv_len += bio_iovec(bio)->bv_offset;
++		bio_iovec(bio)->bv_offset = 0;
++		bytes += bio_iovec(bio)->bv_len;
++	}
++	bio->bi_size += bytes;
++	bio->bi_sector -= bytes >> 9;
++}
++EXPORT_SYMBOL(bio_rewind);
++
++/**
+  * bio_alloc_pages - allocates a single page for each bvec in a bio
+  * @bio: bio to allocate pages for
+  * @gfp_mask: flags for allocation
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index ef24466..e2082fb 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -258,6 +258,7 @@ extern int bio_phys_segments(struct request_queue *, struct bio *);
+ 
+ extern int submit_bio_wait(int rw, struct bio *bio);
+ extern void bio_advance(struct bio *, unsigned);
++extern void bio_rewind(struct bio *);
+ 
+ extern void bio_init(struct bio *);
+ extern void bio_reset(struct bio *);
+-- 
+1.8.1.4
 
-  mdadm --fail /dev/$MD /dev/sda3
-  mdadm --remove /dev/$MD /dev/sda3
-  dd if=/dev/urandom of=/dev/$MD bs=1M count=500
-  mdadm --stop /dev/$MD
-
-  mdadm --create /dev/$MD --level=1 --assume-clean --raid-devices=2 \
-  	--bitmap=internal /dev/sda3 /dev/sdi3
-  echo repair > /sys/block/$MD/md/sync_action
-
-I'll reply to this email with the patches that implement your
-suggested changes.  Feel free to combine or redo them, posting them here
-was the easiest way to provide my signed-off should you need it.
-
-Although it works, having to rewind the bio io_vec index (and
-clearing the bi_next pointers) before calling bio_copy_data feels a
-bit clunky.  What bio_copy_data is really doing is
-"bio_copy_remaining_data in a bio chain," whereas MD wants 
-"bio_copy_completed_data from a single bio".
-
-I took a look at Kent's tree and a lot of the block layer handling was
-simplified through the bvec_iter.  I don't know if that code is
-destined for 3.11.  If so, it would probably be easier to retest and
-base any MD changes off of his.  And for 3.10 stable, the minimal
-fix would be for MD to just manipulate the bi_idx itself (or revert
-calling bio_copy_data altogether.)
-
-Regards,
-
--- Joe
