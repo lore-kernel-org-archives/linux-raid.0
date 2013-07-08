@@ -1,7 +1,7 @@
 From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: [PATCH 1/2] block: add bio_rewind() to reset bio_vec
-Date: Mon,  8 Jul 2013 16:25:13 -0400
-Message-ID: <1373315114-16625-1-git-send-email-joe.lawrence@stratus.com>
+Subject: [PATCH 2/2] md: raid1: use bio_rewind() before bio_copy_data()
+Date: Mon,  8 Jul 2013 16:25:14 -0400
+Message-ID: <1373315114-16625-2-git-send-email-joe.lawrence@stratus.com>
 References: <20130708160656.6cb8e74b@jlaw-desktop.mno.stratus.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20130708160656.6cb8e74b@jlaw-desktop.mno.stratus.com>
@@ -10,68 +10,64 @@ To: linux-raid@vger.kernel.org
 Cc: NeilBrown <neilb@suse.de>, kmo@daterainc.com, Joe Lawrence <joe.lawrence@stratus.com>
 List-Id: linux-raid.ids
 
-Provide a mechanism for drivers to "rewind" a bio, essentially undoing
-all bio_advance() calls on the bio. After the rewind, the bio idx will
-be 0, size and sector reset, and each bio_vec len and offset restored to
-their initial values.
+bio_copy_data() cannot execute on a fully completed source (or
+destination) bio.  MD RAID1 is recycling a completed read bio for RAID
+repair purposes and needs to fix up the source and destination bios for
+bio_copy_data(): in particular, the io-vector index needs to be rewound
+and the bios unchained.
 
 Suggested-by: NeilBrown <neilb@suse.de>
 Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
 ---
- fs/bio.c            | 27 +++++++++++++++++++++++++++
- include/linux/bio.h |  1 +
- 2 files changed, 28 insertions(+)
+ drivers/md/raid1.c | 28 +++++-----------------------
+ 1 file changed, 5 insertions(+), 23 deletions(-)
 
-diff --git a/fs/bio.c b/fs/bio.c
-index 94bbc04..04309df 100644
---- a/fs/bio.c
-+++ b/fs/bio.c
-@@ -833,6 +833,33 @@ void bio_advance(struct bio *bio, unsigned bytes)
- EXPORT_SYMBOL(bio_advance);
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 6e17f81..bb1e80f 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1861,7 +1861,6 @@ static int process_checks(struct r1bio *r1_bio)
+ 		int j;
+ 		struct bio *pbio = r1_bio->bios[primary];
+ 		struct bio *sbio = r1_bio->bios[i];
+-		int size;
  
- /**
-+ * bio_rewind - reset a bio to its start
-+ * @bio:        bio to rewind
-+ *
-+ * This resets bi_sector, bi_size and bi_idx; completely undoing all
-+ * bio_advances on the @bio.
-+ */
-+void bio_rewind(struct bio *bio)
-+{
-+	int bytes = 0;
-+
-+	if (bio->bi_idx < bio->bi_vcnt && bio_iovec(bio)->bv_offset > 0) {
-+		bytes = bio_iovec(bio)->bv_offset;
-+		bio_iovec(bio)->bv_offset -= bytes;
-+		bio_iovec(bio)->bv_len += bytes;
-+	}
-+	while (bio->bi_idx) {
-+		bio->bi_idx -= 1;
-+		bio_iovec(bio)->bv_len += bio_iovec(bio)->bv_offset;
-+		bio_iovec(bio)->bv_offset = 0;
-+		bytes += bio_iovec(bio)->bv_len;
-+	}
-+	bio->bi_size += bytes;
-+	bio->bi_sector -= bytes >> 9;
-+}
-+EXPORT_SYMBOL(bio_rewind);
-+
-+/**
-  * bio_alloc_pages - allocates a single page for each bvec in a bio
-  * @bio: bio to allocate pages for
-  * @gfp_mask: flags for allocation
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index ef24466..e2082fb 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -258,6 +258,7 @@ extern int bio_phys_segments(struct request_queue *, struct bio *);
- 
- extern int submit_bio_wait(int rw, struct bio *bio);
- extern void bio_advance(struct bio *, unsigned);
-+extern void bio_rewind(struct bio *);
- 
- extern void bio_init(struct bio *);
- extern void bio_reset(struct bio *);
+ 		if (sbio->bi_end_io != end_sync_read)
+ 			continue;
+@@ -1887,28 +1886,11 @@ static int process_checks(struct r1bio *r1_bio)
+ 			rdev_dec_pending(conf->mirrors[i].rdev, mddev);
+ 			continue;
+ 		}
+-		/* fixup the bio for reuse */
+-		bio_reset(sbio);
+-		sbio->bi_vcnt = vcnt;
+-		sbio->bi_size = r1_bio->sectors << 9;
+-		sbio->bi_sector = r1_bio->sector +
+-			conf->mirrors[i].rdev->data_offset;
+-		sbio->bi_bdev = conf->mirrors[i].rdev->bdev;
+-		sbio->bi_end_io = end_sync_read;
+-		sbio->bi_private = r1_bio;
+-
+-		size = sbio->bi_size;
+-		for (j = 0; j < vcnt ; j++) {
+-			struct bio_vec *bi;
+-			bi = &sbio->bi_io_vec[j];
+-			bi->bv_offset = 0;
+-			if (size > PAGE_SIZE)
+-				bi->bv_len = PAGE_SIZE;
+-			else
+-				bi->bv_len = size;
+-			size -= PAGE_SIZE;
+-		}
+-
++		/* copy pbio io_vec data into sbio, but first reset io_vec
++		 * index and unchain both */
++		bio_rewind(pbio);
++		bio_rewind(sbio);
++		pbio->bi_next = sbio->bi_next = NULL;
+ 		bio_copy_data(sbio, pbio);
+ 	}
+ 	return 0;
 -- 
 1.8.1.4
 
