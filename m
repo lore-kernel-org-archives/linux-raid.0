@@ -1,139 +1,126 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm ignoring X as it reports Y as failed
-Date: Mon, 8 Jul 2013 13:58:58 +1000
-Message-ID: <20130708135858.347c941e@notabene.brown>
-References: <20130706210614.180228gmgmc172qu@mail.netbox.cz>
+Subject: Re: some general questions on RAID
+Date: Mon, 8 Jul 2013 14:48:23 +1000
+Message-ID: <20130708144823.5cc872b9@notabene.brown>
+References: <1372962602.8716.56.camel@heisenberg.scientia.net>
+	<51D5F22C.70007@turmel.org>
+	<1372980882.5249.88.camel@fermat.scientia.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/9z=7I.4cj3yGRR_R9eDZ_P5"; protocol="application/pgp-signature"
+ boundary="Sig_/U.Enegi5HHzv9xqqOGQWJAS"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130706210614.180228gmgmc172qu@mail.netbox.cz>
+In-Reply-To: <1372980882.5249.88.camel@fermat.scientia.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marek Jaros <mjaros1@nbox.cz>
+To: Christoph Anton Mitterer <calestyo@scientia.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/9z=7I.4cj3yGRR_R9eDZ_P5
+--Sig_/U.Enegi5HHzv9xqqOGQWJAS
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 06 Jul 2013 21:06:14 +0200 "Marek Jaros" <mjaros1@nbox.cz> wrote:
+On Fri, 05 Jul 2013 01:34:42 +0200 Christoph Anton Mitterer
+<calestyo@scientia.net> wrote:
 
-> Hey everybody.
->=20
-> To keep it short, I have a RAID-5 mdraid, just today 2 out of the 5 =20
-> drives dropped out. It was a cable issue and has since been fixed. The =20
-> array was not being written to or utilized in other way so no data has =20
-> been lost.
->=20
-> However when I attempted to reassemble the array with
->=20
-> mdadm --assemble --force --verbose /dev/md0 /dev/sdc /dev/sdd /dev/sde =20
-> /dev/sdf /dev/sdg
->=20
->=20
-> I got the folowing errors
->=20
-> mdadm: looking for devices for /dev/md0
-> mdadm: /dev/sdc is identified as a member of /dev/md0, slot 0.
-> mdadm: /dev/sdd is identified as a member of /dev/md0, slot 1.
-> mdadm: /dev/sde is identified as a member of /dev/md0, slot 2.
-> mdadm: /dev/sdf is identified as a member of /dev/md0, slot 3.
-> mdadm: /dev/sdg is identified as a member of /dev/md0, slot 4.
-> mdadm: ignoring /dev/sde as it reports /dev/sdc as failed
-> mdadm: ignoring /dev/sdf as it reports /dev/sdc as failed
-> mdadm: ignoring /dev/sdg as it reports /dev/sdc as failed
-> mdadm: added /dev/sdd to /dev/md0 as 1
-> mdadm: no uptodate device for slot 2 of /dev/md0
-> mdadm: no uptodate device for slot 3 of /dev/md0
-> mdadm: no uptodate device for slot 4 of /dev/md0
-> mdadm: added /dev/sdc to /dev/md0 as 0
-> mdadm: /dev/md0 assembled from 2 drives - not enough to start the array.
->=20
->=20
-> After doing --examine* I indeed found out that the StateArray info =20
-> inside the superblock has marked the first two drives as missing. That =20
-> is however not true anymore but I can't force it to assemble the array =20
-> or update the superblock info.
->=20
-> So is there anyway to force mdadm to assemble the array? Or perhaps =20
-> edit the superblock info manually? I'd rather avoid having to recreate =20
-> the array from scratch.
->=20
-> Any help or pointers with more info are highly appreciated. Thank you.
->=20
 
-Hi again,
- could you tell me what kernel you are running?  Because as far as I can te=
-ll
- the state of the devices that you reported is impossible!
+>=20
+> > > 2) Chunks / Chunk size
+> > > a) How does MD work in that matter... is it that it _always_ reads
+> > > and/or writes FULL chunks?
+> >
+> > No.  It does not.  It doesn't go below 4k though.
+> So what does that mean exactly? It always reads/writes at least 4k
+> blocks?
 
-The interesting bit of the --examine output is:
+RAID1 reads or writes whatever block size the filesystem sends
+RAID0,10 read or write whatever block size the filesystem sends up to the
+chunk size (and obviously less than chunksize when not aligned with the
+chunksize).
 
-/dev/sdc:
-     Update Time : Sat Jul  6 14:43:14 2013
-          Events : 2742
-    Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
-/dev/sdd:
-     Update Time : Sat Jul  6 14:29:42 2013
-          Events : 2742
-    Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
-/dev/sde:
-     Update Time : Sat Jul  6 14:46:15 2013
-          Events : 2742
-    Array State : ..AAA ('A' =3D=3D active, '.' =3D=3D missing)
-/dev/sdg:
-     Update Time : Sat Jul  6 14:46:15 2013
-          Events : 2742
-    Array State : ..AAA ('A' =3D=3D active, '.' =3D=3D missing)
+RAID4/5/6 read the same as RAID0 when not degraded.
+When degraded or when writing, RAID4/5/6 does all IO in 4K blocks (hoping
+that the lower layers will merge as appropriate).
 
- From this I can see that:
-   at 14:29:42 everything was fine and all the superblocks were updated.
-   at 14:43:13 everything still seemed to be fine and md tried to update the
-               superblock again (it does that from time to time) but failed
-               to write to /dev/sdd.  This would have triggered an error so
-               it would have marked sdd as faulty and updated the superbloc=
-ks
-               again.
-Probably when it tried it found that the write to sdc failed to, so it mark=
-ed
-that as faulty and tried again.
-   at 14:46:15 it wrote out metadata to sde and sdg reporting that sdc and =
-sdd
-                were faulty.
+>=20
+>=20
+> > > Guess it must at least do so on _write_ for the RAID levels with pari=
+ty
+> > > (5/6)... but what about read?
+> > No, not even for write.
+> :-O
+>=20
+> > If an isolated 4k block is written to a raid6,
+> > the corresponding 4k blocks from the other data drives in that stripe
+> > are read, both corresponding parity blocks are computed, and the three
+> > blocks are written.
+> okay that's clear... but uhm... why having chuk sizes then? I mean
+> what's the difference when having a 128k chunk vs. a 256k one... when
+> the parity/data blocks seem to be split in 4k blocks,... or did I get
+> that completely wrong?
 
-Every time that it updates the superblock when the array is degraded it must
-update the 'Events' count.  However the Events count at 14:46:15 (after 2
-devices have failed) is the same as it was at 14:43:14 before anything had
-failed.  That is really wrong.
+A sequential read that only hits one chunk will be served faster than one
+which hits two chunks.  So making the chunksize 1-2 times your typical block
+size for random reads can help read performance.
+For very large sequential reads it shouldn't really matter though large chu=
+nk
+sizes tend to result in larger IO requests to the underlying devices.
+For very small random reads it shouldn't really matter either.
 
-Hence the question.  I need to know if this is a bug that has already been
-fixed (I cannot find a fix, but you never know), or if the bug is still
-present and I need to hunt some more.
+For writes, you want the stripe size (chunksize * (drives - parity_drives))
+to match the typical size for writes - and you want those writes to be
+aligned.
 
-Thanks,
+So the ideal load is smallish reads and largish writes with a chunksize
+between the two.
+
+>=20
+>=20
+> > > And what about read/write with the non-parity RAID levels (1, 0, 10,
+> > > linear)... is the chunk size of any real influence here (in terms of
+> > > reading/writing)?
+> > Not really.  At least, I've seen nothing on this list that shows any
+> > influence.
+> So AFAIU now:
+> a) Regardless the RAID level and regardless the chunk size,
+>    - data blocks are read/written in 4KiB blocks
+>    - when there IS parity information... then that parity information is =
+_ALWAYS_ read/computed/written in 4KiB blocks.
+> b) The chunks basically just control how much consecutive data is on one
+> device, thereby allowing to speed up / slow down reads/write for small /
+> large files.
+> But that should basically only matter on seeking devices, i.e. not on
+> SSDs... thus the chunk size is irrelevant on SSDs...
+
+Seeks are cheaper in SSDs than on spinning rust but the cost is not zero.
+
+If you are concerned about the effect of chunksize on performance, you shou=
+ld
+measure the performance of your hardware with your workload with differing
+chunk sizes and come to your own conclusion.
+All anyone else can do is offer generalities.
+
 NeilBrown
 
---Sig_/9z=7I.4cj3yGRR_R9eDZ_P5
+--Sig_/U.Enegi5HHzv9xqqOGQWJAS
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUdo5Ajnsnt1WYoG5AQJ67Q/+MyiNFrPv/vWxLVE8MeVtCto1HbRGgGCj
-kXW5jEc2qVoHFDY2SGXH2Bf29f1mrW4bMBettrCS7FFvPc5wxZONjcZfIOQTfsWQ
-Lg8MBo4fZ95nmdkoFoE8xx44QIO6OVaC5JAyTgzTTdvh7vj39ljq3NhgzkzP5yAR
-deM2qMPdDXubCTyeKAP9GnVnWsqBJiAfBk6WLCATEPGIe+bnRb0XmrWJryLKysDF
-E9lyWD41QmmH/3KUg/7RA5lvPPkoersoaLzg6mOv43JGlDssEzk3Du+8+e9TfFNO
-6Uky4+qSEjHIObGZb1gkdimxHn5PiuYI14XlyeDEv1/Qj3gbHcUiYjoXunIsh8cq
-5FWErBvNL6S1rqHIDBCXveG1/dBUh1bUG2os8caJCXx/gW3+yQPttNEvUZW0lxzp
-GmL5K9IHKo0j0CyHAx8WDUC8Au0vDhQeevmqB9WcD2naLVQURkkBuP/tel5v6Prn
-TFgvcrK7wBzrVE5PLpqVTNwqmfq+IxRrtaE6unzCt0eUDtvklwxKTkCTv4vhSyT9
-aaD3rx8+N/kXV2ebUhRzhbeKWRWgUTatK5zDr9IwMMghWTyXNDi0QKZWzrdXFsKu
-cKJ3InKr9hG+KP2nNmgTXTw1T9k7AEgjX+F0HsoKgHm3L1BS2ko72a5/HEMKf/fN
-HW2Ol5D6/ZY=
-=3uq/
+iQIVAwUBUdpElznsnt1WYoG5AQL3Bg//Z5FHYghLw+jRKrwGfc/HFXgVrFGj+xnl
+Nzy1rcgAeznFy2tvdxwVWwVicr7+DqKhnRGU0rOelZ9FGkyCu95RKS83iuYJrk31
+EJ7rBDRs5KQll7VGM7DfsSs1KHTXSdEZTz3tkk4RdZL0IbPj6VMSA85ai/+jiC+m
+bZis4TISLqPsAHePplya6eOf4XLK+lbhAkQhm0Wc9tyCPQ/16I3BUq0j9lU1f0f/
+0bvaaCUNBYyINkeotlrgmZf4FkRoKnmYNtiCNeUifBlHoy3nhZVATF18X0P3/YsC
+QO3EB+sDW6djAxiWT3BAfjdn1Znw2+nDWTRMiNEwsB6ScFTecdrVHWVQAP4SDj+D
+of9FFEErTUDgXJKVNIW3we6h29jTti6QjiBgw3Gr981PdNVbBVFtk1E4X+vHCCeK
+sKiwCyKf1Gyy9eXB9KqW+hOkqUjD+ykZtrTJzrS26F0nTcOs7sNFhAZW7+jFTa5H
+SUVx5IjYDBAxEkhknLbUk4kttAcERTDH8SU1noU2S6jkvlHLG0KmOURKkdamO/2M
+kjr8uvCHppPV5e1nN0QAd+3WIB0wASzo19hy0Tt4KUL49GgfeCZl+VguzF/DDNt5
+bTGynCxfDPhypL/dDbgCgWsTz7XXSUgziFc3SS5csvtYG8KqDfFVxwfRR3987hOR
+baf3nTFo8c4=
+=kPar
 -----END PGP SIGNATURE-----
 
---Sig_/9z=7I.4cj3yGRR_R9eDZ_P5--
+--Sig_/U.Enegi5HHzv9xqqOGQWJAS--
