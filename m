@@ -1,11 +1,11 @@
 From: NeilBrown <neilb@suse.de>
 Subject: Re: mdadm ignoring X as it reports Y as failed
-Date: Mon, 8 Jul 2013 11:28:11 +1000
-Message-ID: <20130708112811.5b3fad4b@notabene.brown>
+Date: Mon, 8 Jul 2013 13:58:58 +1000
+Message-ID: <20130708135858.347c941e@notabene.brown>
 References: <20130706210614.180228gmgmc172qu@mail.netbox.cz>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ahhGC5vhNIhyheV+3YtTph."; protocol="application/pgp-signature"
+ boundary="Sig_/9z=7I.4cj3yGRR_R9eDZ_P5"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20130706210614.180228gmgmc172qu@mail.netbox.cz>
 Sender: linux-raid-owner@vger.kernel.org
@@ -13,7 +13,7 @@ To: Marek Jaros <mjaros1@nbox.cz>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/ahhGC5vhNIhyheV+3YtTph.
+--Sig_/9z=7I.4cj3yGRR_R9eDZ_P5
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
@@ -50,21 +50,6 @@ On Sat, 06 Jul 2013 21:06:14 +0200 "Marek Jaros" <mjaros1@nbox.cz> wrote:
 > mdadm: added /dev/sdc to /dev/md0 as 0
 > mdadm: /dev/md0 assembled from 2 drives - not enough to start the array.
 >=20
-
-Try the same assemble command, but rearrange the devices so that one of sde
-sdf sdg is first.  That might work.
-
-The super blocks all have the same event count, but report different things
-about which devices have failed.  That shouldn't really happen but it
-obviously did.
-I'll see if I can figure out how to make mdadm cope correctly with this
-situation.
-
-Thanks for the report,
-
-NeilBrown
-
-
 >=20
 > After doing --examine* I indeed found out that the StateArray info =20
 > inside the superblock has marked the first two drives as missing. That =20
@@ -77,151 +62,78 @@ NeilBrown
 >=20
 > Any help or pointers with more info are highly appreciated. Thank you.
 >=20
->=20
-> Regards,
->=20
-> Marek Jaros
->=20
->=20
-> *--examine output here:
->=20
-> /dev/sdc:
->            Magic : a92b4efc
->          Version : 1.2
->      Feature Map : 0x0
->       Array UUID : 43222604:a15a957d:313d7b6c:d087ba6a
->             Name : YSGARD:0
->    Creation Time : Thu Apr 25 12:38:17 2013
->       Raid Level : raid5
->     Raid Devices : 5
->=20
->   Avail Dev Size : 1953263024 (931.39 GiB 1000.07 GB)
->       Array Size : 3906525184 (3725.55 GiB 4000.28 GB)
->    Used Dev Size : 1953262592 (931.39 GiB 1000.07 GB)
->      Data Offset : 262144 sectors
->     Super Offset : 8 sectors
->            State : clean
->      Device UUID : d2a4d8ed:b2c2bf12:6d553d16:7aabe804
->=20
->      Update Time : Sat Jul  6 14:43:14 2013
->         Checksum : 1b569235 - correct
->           Events : 2742
->=20
->           Layout : left-symmetric
->       Chunk Size : 512K
->=20
->     Device Role : Active device 0
->     Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
-> /dev/sdd:
->            Magic : a92b4efc
->          Version : 1.2
->      Feature Map : 0x0
->       Array UUID : 43222604:a15a957d:313d7b6c:d087ba6a
->             Name : YSGARD:0
->    Creation Time : Thu Apr 25 12:38:17 2013
->       Raid Level : raid5
->     Raid Devices : 5
->=20
->   Avail Dev Size : 1953263024 (931.39 GiB 1000.07 GB)
->       Array Size : 3906525184 (3725.55 GiB 4000.28 GB)
->    Used Dev Size : 1953262592 (931.39 GiB 1000.07 GB)
->      Data Offset : 262144 sectors
->     Super Offset : 8 sectors
->            State : clean
->      Device UUID : f729ddca:adb2eaec:748ad0b6:0e321903
->=20
->      Update Time : Sat Jul  6 14:29:42 2013
->         Checksum : 7149bfc6 - correct
->           Events : 2742
->=20
->           Layout : left-symmetric
->       Chunk Size : 512K
->=20
->     Device Role : Active device 1
->     Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
-> /dev/sde:
->            Magic : a92b4efc
->          Version : 1.2
->      Feature Map : 0x0
->       Array UUID : 43222604:a15a957d:313d7b6c:d087ba6a
->             Name : YSGARD:0
->    Creation Time : Thu Apr 25 12:38:17 2013
->       Raid Level : raid5
->     Raid Devices : 5
->=20
->   Avail Dev Size : 1953263024 (931.39 GiB 1000.07 GB)
->       Array Size : 3906525184 (3725.55 GiB 4000.28 GB)
->    Used Dev Size : 1953262592 (931.39 GiB 1000.07 GB)
->      Data Offset : 262144 sectors
->     Super Offset : 8 sectors
->            State : clean
->      Device UUID : 83aea2f7:dc6a7d68:0d875248:c54d2bc9
->=20
->      Update Time : Sat Jul  6 14:46:15 2013
->         Checksum : 713418b2 - correct
->           Events : 2742
->=20
->           Layout : left-symmetric
->       Chunk Size : 512K
->=20
->     Device Role : Active device 2
->     Array State : ..AAA ('A' =3D=3D active, '.' =3D=3D missing)
-> /dev/sdg:
->            Magic : a92b4efc
->          Version : 1.2
->      Feature Map : 0x0
->       Array UUID : 43222604:a15a957d:313d7b6c:d087ba6a
->             Name : YSGARD:0
->    Creation Time : Thu Apr 25 12:38:17 2013
->       Raid Level : raid5
->     Raid Devices : 5
->=20
->   Avail Dev Size : 1953263024 (931.39 GiB 1000.07 GB)
->       Array Size : 3906525184 (3725.55 GiB 4000.28 GB)
->    Used Dev Size : 1953262592 (931.39 GiB 1000.07 GB)
->      Data Offset : 262144 sectors
->     Super Offset : 8 sectors
->            State : clean
->      Device UUID : b8295773:a4a73e18:6a097100:15ecc829
->=20
->      Update Time : Sat Jul  6 14:46:15 2013
->         Checksum : b565f15d - correct
->           Events : 2742
->=20
->           Layout : left-symmetric
->       Chunk Size : 512K
->=20
->     Device Role : Active device 4
->     Array State : ..AAA ('A' =3D=3D active, '.' =3D=3D missing)
->=20
-> ----------------------------------------------------------------
-> This message was sent using IMP, the Internet Messaging Program.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+Hi again,
+ could you tell me what kernel you are running?  Because as far as I can te=
+ll
+ the state of the devices that you reported is impossible!
 
---Sig_/ahhGC5vhNIhyheV+3YtTph.
+The interesting bit of the --examine output is:
+
+/dev/sdc:
+     Update Time : Sat Jul  6 14:43:14 2013
+          Events : 2742
+    Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
+/dev/sdd:
+     Update Time : Sat Jul  6 14:29:42 2013
+          Events : 2742
+    Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
+/dev/sde:
+     Update Time : Sat Jul  6 14:46:15 2013
+          Events : 2742
+    Array State : ..AAA ('A' =3D=3D active, '.' =3D=3D missing)
+/dev/sdg:
+     Update Time : Sat Jul  6 14:46:15 2013
+          Events : 2742
+    Array State : ..AAA ('A' =3D=3D active, '.' =3D=3D missing)
+
+ From this I can see that:
+   at 14:29:42 everything was fine and all the superblocks were updated.
+   at 14:43:13 everything still seemed to be fine and md tried to update the
+               superblock again (it does that from time to time) but failed
+               to write to /dev/sdd.  This would have triggered an error so
+               it would have marked sdd as faulty and updated the superbloc=
+ks
+               again.
+Probably when it tried it found that the write to sdc failed to, so it mark=
+ed
+that as faulty and tried again.
+   at 14:46:15 it wrote out metadata to sde and sdg reporting that sdc and =
+sdd
+                were faulty.
+
+Every time that it updates the superblock when the array is degraded it must
+update the 'Events' count.  However the Events count at 14:46:15 (after 2
+devices have failed) is the same as it was at 14:43:14 before anything had
+failed.  That is really wrong.
+
+Hence the question.  I need to know if this is a bug that has already been
+fixed (I cannot find a fix, but you never know), or if the bug is still
+present and I need to hunt some more.
+
+Thanks,
+NeilBrown
+
+--Sig_/9z=7I.4cj3yGRR_R9eDZ_P5
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUdoVqznsnt1WYoG5AQLWWg/9HruOEWxom9eltSz894KSOQprMvIoKRoI
-MLwibbubQaFjy/WcACPRytcVXTgEjrgYeVn9tmDYyTLxT/9Ci5NWeI1kos3mF2B2
-T56mchu/1FDsPDTj6jYgYhU9qyyqyoe6XwV3hEseWPp4v914d/EfDBwN1ryAzG9q
-0hZBMP69edNLTUOpBrHu9yAjS3Rh9TMbkLdGMLoZEOO8dG4rqYf5r4G7D2iFB0sT
-mNHyJudw6pmigdVICN82e72hzymSoQVMo4Ts5uaPl8SvShV5MYWbVNMw7Y2+1ihs
-+exqotpci7/Dz1G5wYFztsmyd1wKZeLnMS3BMBUh+OJEiZI3b+q6pNkxao6rRbLg
-qlaq+PIvxQ/iKHWJq5Ck8wPu0SMEJBt8+9AwezQaPG+5bLd5A02pEjOykDa4e1PY
-pErTl7/U6MBjvs0/MGXyRhpeg/K1lcj3RjzMpk1t4/k/WcmMsHYzhN/zf58RhRFQ
-Nlf6W/NTwkAzSRa9elK9g7sA+u4+O6ztTCq/phiXmiJ4c2YakzPMWU+gPAjZfMqk
-9ETHiTAh+3VW6BYznd6Q3MHiRgk4eSVPbWU19VhB7U8r+ba8utwcqLNoYnwp2qY1
-+EbkvFKQgjid9+AAOdeKnSVJ7kTo5k4dypckFPW6GZk4cWJ+NwblNP006LHaY3CH
-kIzEUaD95X8=
-=cfiQ
+iQIVAwUBUdo5Ajnsnt1WYoG5AQJ67Q/+MyiNFrPv/vWxLVE8MeVtCto1HbRGgGCj
+kXW5jEc2qVoHFDY2SGXH2Bf29f1mrW4bMBettrCS7FFvPc5wxZONjcZfIOQTfsWQ
+Lg8MBo4fZ95nmdkoFoE8xx44QIO6OVaC5JAyTgzTTdvh7vj39ljq3NhgzkzP5yAR
+deM2qMPdDXubCTyeKAP9GnVnWsqBJiAfBk6WLCATEPGIe+bnRb0XmrWJryLKysDF
+E9lyWD41QmmH/3KUg/7RA5lvPPkoersoaLzg6mOv43JGlDssEzk3Du+8+e9TfFNO
+6Uky4+qSEjHIObGZb1gkdimxHn5PiuYI14XlyeDEv1/Qj3gbHcUiYjoXunIsh8cq
+5FWErBvNL6S1rqHIDBCXveG1/dBUh1bUG2os8caJCXx/gW3+yQPttNEvUZW0lxzp
+GmL5K9IHKo0j0CyHAx8WDUC8Au0vDhQeevmqB9WcD2naLVQURkkBuP/tel5v6Prn
+TFgvcrK7wBzrVE5PLpqVTNwqmfq+IxRrtaE6unzCt0eUDtvklwxKTkCTv4vhSyT9
+aaD3rx8+N/kXV2ebUhRzhbeKWRWgUTatK5zDr9IwMMghWTyXNDi0QKZWzrdXFsKu
+cKJ3InKr9hG+KP2nNmgTXTw1T9k7AEgjX+F0HsoKgHm3L1BS2ko72a5/HEMKf/fN
+HW2Ol5D6/ZY=
+=3uq/
 -----END PGP SIGNATURE-----
 
---Sig_/ahhGC5vhNIhyheV+3YtTph.--
+--Sig_/9z=7I.4cj3yGRR_R9eDZ_P5--
