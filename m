@@ -1,7 +1,7 @@
 From: mwilck@arcor.de
-Subject: [PATCH 29/39] Monitor: Don't write metadata in inactive array state
-Date: Mon,  8 Jul 2013 23:50:38 +0200
-Message-ID: <1373320248-7520-3-git-send-email-mwilck@arcor.de>
+Subject: [PATCH 30/39] DDF: write_init_super_ddf: don't zero superblocks for subarrays
+Date: Mon,  8 Jul 2013 23:50:39 +0200
+Message-ID: <1373320248-7520-4-git-send-email-mwilck@arcor.de>
 References: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
@@ -10,29 +10,33 @@ To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-The kernel docs state that meta data is never written in states
-clear, inactive, suspended, readonly, and read_auto.
-Why should this be different for containers?
+commit d682f344 inserted this call to "Kill" in write_init_super_ddf:
 
-We need to write metadata when the array is disabled, though.
-Tested with the DDF (10*) and IMSM (9*) tests, works.
+    "Matching the functionality already in super0 and super1, when
+    we first create a container, remove any other recognisable metadata to
+    ensure it doesn't cause confusion."
+
+But we should do this only at first container creation, not when
+subarrays are created later.
 ---
- monitor.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ super-ddf.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/monitor.c b/monitor.c
-index 47432b2..67b40b1 100644
---- a/monitor.c
-+++ b/monitor.c
-@@ -416,7 +416,8 @@ static int read_and_act(struct active_array *a)
- 	if (sync_completed > a->last_checkpoint)
- 		a->last_checkpoint = sync_completed;
- 
--	a->container->ss->sync_metadata(a->container);
-+	if (deactivate || a->curr_state >= clean)
-+		a->container->ss->sync_metadata(a->container);
- 	dprintf("%s(%d): state:%s action:%s next(", __func__, a->info.container_member,
- 		array_states[a->curr_state], sync_actions[a->curr_action]);
- 
+diff --git a/super-ddf.c b/super-ddf.c
+index 8f60b72..87584fa 100644
+--- a/super-ddf.c
++++ b/super-ddf.c
+@@ -2964,8 +2964,9 @@ static int write_init_super_ddf(struct supertype *st)
+ 		return 0;
+ 	} else {
+ 		struct dl *d;
+-		for (d = ddf->dlist; d; d=d->next)
+-			while (Kill(d->devname, NULL, 0, -1, 1) == 0);
++		if (!currentconf)
++			for (d = ddf->dlist; d; d=d->next)
++				while (Kill(d->devname, NULL, 0, -1, 1) == 0);
+ 		return __write_init_super_ddf(st);
+ 	}
+ }
 -- 
 1.7.1
