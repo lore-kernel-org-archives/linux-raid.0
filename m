@@ -1,41 +1,41 @@
 From: Milan Broz <gmazyland@gmail.com>
 Subject: Re: some general questions on RAID
-Date: Mon, 08 Jul 2013 07:25:53 +0200
-Message-ID: <51DA4D61.2090708@gmail.com>
-References: <1372962602.8716.56.camel@heisenberg.scientia.net> <51D5F22C.70007@turmel.org> <51D9A7CF.6000700@gmail.com> <20130708145316.4486d0dc@notabene.brown>
+Date: Mon, 08 Jul 2013 07:40:21 +0200
+Message-ID: <51DA50C5.6080106@gmail.com>
+References: <1372962602.8716.56.camel@heisenberg.scientia.net>  <51D5F22C.70007@turmel.org>  <51D9A7CF.6000700@gmail.com>  <1373220112.5246.20.camel@fermat.scientia.net> <51D9B863.9010509@gmail.com> <1373230299.5246.175.camel@fermat.scientia.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130708145316.4486d0dc@notabene.brown>
+In-Reply-To: <1373230299.5246.175.camel@fermat.scientia.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Phil Turmel <philip@turmel.org>, Christoph Anton Mitterer <calestyo@scientia.net>, linux-raid@vger.kernel.org
+To: Christoph Anton Mitterer <calestyo@scientia.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/08/2013 06:53 AM, NeilBrown wrote:
-> On Sun, 07 Jul 2013 19:39:27 +0200 Milan Broz <gmazyland@gmail.com> wrote:
-> 
-> 
->> So if you have multiple IOs submitted in parallel from *different* CPUs,
->> they are processed in parallel.
->>
->> If you have MD over dmcrypt, this can cause problem that MD sumbits all IOs
->> with the same cpu context and dmcrypt cannot run it in parallel.
-> 
-> For RAID1 and RAID10 this isn't true any more.
-> 
-> Commit f54a9d0e59c4bea3db733921ca9147612a6f292c
-> in 3.6 changed this for RAID1 and a similar commit did for RAID10.
-> RAID4/5/6 still submit from a single thread as you say.
+On 07/07/2013 10:51 PM, Christoph Anton Mitterer wrote:
+> On Sun, 2013-07-07 at 20:50 +0200, Milan Broz wrote:
+>> For LUKS is it trivial, LVM is more complex
+>> but should align to MD chunk/stripe properly as well.
+> Shouldn't one get that automatically by simply setting the
+> --dataalignment of the PVs to a multiple of the chunk size (or even
+> better of the stripe size)... and shouldn't the default alignment
+> against the 1MiB boundary (as in LUKS) work just well?
 
-Ah, sorry, missed that change, thanks Neil!
+Try to not use --dataalignment explicitly.
+It should be detected automatically through topology ioctl
+(both for LVM and LUKS). (You can verify that itopology info
+propagates correctly through stack by using lsblk -t).
 
-So then it should perform much better.
-(But IIRC most reports about dmcrypt performance was either over
-high-speed SSD without AES-NI or over RAID5 - case like huge ftp archive
-where they need redundancy & offline data security.
-But here current design should be help...)
+Only if you know that something is wrong overwrite it
+(and perhaps report bug to LVM, it should detect it properly now).
+
+Default 1MiB alignment should work even for LVM IIRC.
+
+IOW I am saying that for newly created array (e.g. like MD->dmcrypt->LVM)
+you should get optimal alignment for performance without black magic.
+
+(Also LVM can use MD RAID internally now but let's not complicate
+already too complex device stack :)
 
 Milan
-
