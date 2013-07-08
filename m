@@ -1,126 +1,63 @@
 From: NeilBrown <neilb@suse.de>
 Subject: Re: some general questions on RAID
-Date: Mon, 8 Jul 2013 14:48:23 +1000
-Message-ID: <20130708144823.5cc872b9@notabene.brown>
+Date: Mon, 8 Jul 2013 14:53:16 +1000
+Message-ID: <20130708145316.4486d0dc@notabene.brown>
 References: <1372962602.8716.56.camel@heisenberg.scientia.net>
 	<51D5F22C.70007@turmel.org>
-	<1372980882.5249.88.camel@fermat.scientia.net>
+	<51D9A7CF.6000700@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/U.Enegi5HHzv9xqqOGQWJAS"; protocol="application/pgp-signature"
+ boundary="Sig_/hsFSdkRgVA5ip1+T2kxYfjm"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1372980882.5249.88.camel@fermat.scientia.net>
+In-Reply-To: <51D9A7CF.6000700@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Anton Mitterer <calestyo@scientia.net>
-Cc: linux-raid@vger.kernel.org
+To: Milan Broz <gmazyland@gmail.com>
+Cc: Phil Turmel <philip@turmel.org>, Christoph Anton Mitterer <calestyo@scientia.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/U.Enegi5HHzv9xqqOGQWJAS
+--Sig_/hsFSdkRgVA5ip1+T2kxYfjm
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 05 Jul 2013 01:34:42 +0200 Christoph Anton Mitterer
-<calestyo@scientia.net> wrote:
+On Sun, 07 Jul 2013 19:39:27 +0200 Milan Broz <gmazyland@gmail.com> wrote:
 
 
+> So if you have multiple IOs submitted in parallel from *different* CPUs,
+> they are processed in parallel.
 >=20
-> > > 2) Chunks / Chunk size
-> > > a) How does MD work in that matter... is it that it _always_ reads
-> > > and/or writes FULL chunks?
-> >
-> > No.  It does not.  It doesn't go below 4k though.
-> So what does that mean exactly? It always reads/writes at least 4k
-> blocks?
+> If you have MD over dmcrypt, this can cause problem that MD sumbits all I=
+Os
+> with the same cpu context and dmcrypt cannot run it in parallel.
 
-RAID1 reads or writes whatever block size the filesystem sends
-RAID0,10 read or write whatever block size the filesystem sends up to the
-chunk size (and obviously less than chunksize when not aligned with the
-chunksize).
+For RAID1 and RAID10 this isn't true any more.
 
-RAID4/5/6 read the same as RAID0 when not degraded.
-When degraded or when writing, RAID4/5/6 does all IO in 4K blocks (hoping
-that the lower layers will merge as appropriate).
-
->=20
->=20
-> > > Guess it must at least do so on _write_ for the RAID levels with pari=
-ty
-> > > (5/6)... but what about read?
-> > No, not even for write.
-> :-O
->=20
-> > If an isolated 4k block is written to a raid6,
-> > the corresponding 4k blocks from the other data drives in that stripe
-> > are read, both corresponding parity blocks are computed, and the three
-> > blocks are written.
-> okay that's clear... but uhm... why having chuk sizes then? I mean
-> what's the difference when having a 128k chunk vs. a 256k one... when
-> the parity/data blocks seem to be split in 4k blocks,... or did I get
-> that completely wrong?
-
-A sequential read that only hits one chunk will be served faster than one
-which hits two chunks.  So making the chunksize 1-2 times your typical block
-size for random reads can help read performance.
-For very large sequential reads it shouldn't really matter though large chu=
-nk
-sizes tend to result in larger IO requests to the underlying devices.
-For very small random reads it shouldn't really matter either.
-
-For writes, you want the stripe size (chunksize * (drives - parity_drives))
-to match the typical size for writes - and you want those writes to be
-aligned.
-
-So the ideal load is smallish reads and largish writes with a chunksize
-between the two.
-
->=20
->=20
-> > > And what about read/write with the non-parity RAID levels (1, 0, 10,
-> > > linear)... is the chunk size of any real influence here (in terms of
-> > > reading/writing)?
-> > Not really.  At least, I've seen nothing on this list that shows any
-> > influence.
-> So AFAIU now:
-> a) Regardless the RAID level and regardless the chunk size,
->    - data blocks are read/written in 4KiB blocks
->    - when there IS parity information... then that parity information is =
-_ALWAYS_ read/computed/written in 4KiB blocks.
-> b) The chunks basically just control how much consecutive data is on one
-> device, thereby allowing to speed up / slow down reads/write for small /
-> large files.
-> But that should basically only matter on seeking devices, i.e. not on
-> SSDs... thus the chunk size is irrelevant on SSDs...
-
-Seeks are cheaper in SSDs than on spinning rust but the cost is not zero.
-
-If you are concerned about the effect of chunksize on performance, you shou=
-ld
-measure the performance of your hardware with your workload with differing
-chunk sizes and come to your own conclusion.
-All anyone else can do is offer generalities.
+Commit f54a9d0e59c4bea3db733921ca9147612a6f292c
+in 3.6 changed this for RAID1 and a similar commit did for RAID10.
+RAID4/5/6 still submit from a single thread as you say.
 
 NeilBrown
 
---Sig_/U.Enegi5HHzv9xqqOGQWJAS
+
+--Sig_/hsFSdkRgVA5ip1+T2kxYfjm
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUdpElznsnt1WYoG5AQL3Bg//Z5FHYghLw+jRKrwGfc/HFXgVrFGj+xnl
-Nzy1rcgAeznFy2tvdxwVWwVicr7+DqKhnRGU0rOelZ9FGkyCu95RKS83iuYJrk31
-EJ7rBDRs5KQll7VGM7DfsSs1KHTXSdEZTz3tkk4RdZL0IbPj6VMSA85ai/+jiC+m
-bZis4TISLqPsAHePplya6eOf4XLK+lbhAkQhm0Wc9tyCPQ/16I3BUq0j9lU1f0f/
-0bvaaCUNBYyINkeotlrgmZf4FkRoKnmYNtiCNeUifBlHoy3nhZVATF18X0P3/YsC
-QO3EB+sDW6djAxiWT3BAfjdn1Znw2+nDWTRMiNEwsB6ScFTecdrVHWVQAP4SDj+D
-of9FFEErTUDgXJKVNIW3we6h29jTti6QjiBgw3Gr981PdNVbBVFtk1E4X+vHCCeK
-sKiwCyKf1Gyy9eXB9KqW+hOkqUjD+ykZtrTJzrS26F0nTcOs7sNFhAZW7+jFTa5H
-SUVx5IjYDBAxEkhknLbUk4kttAcERTDH8SU1noU2S6jkvlHLG0KmOURKkdamO/2M
-kjr8uvCHppPV5e1nN0QAd+3WIB0wASzo19hy0Tt4KUL49GgfeCZl+VguzF/DDNt5
-bTGynCxfDPhypL/dDbgCgWsTz7XXSUgziFc3SS5csvtYG8KqDfFVxwfRR3987hOR
-baf3nTFo8c4=
-=kPar
+iQIVAwUBUdpFvDnsnt1WYoG5AQJn9RAArL1Oi1qgoFJOlx4lpktsD77VW5JWQh8T
+5/H7u0cxcyl8Khcpcacor1xpjaaFoDB+ngpD28g1zx5AJpGEoD99/+WW8LyQUJzr
+3apnxxJsrbZkoj26tueZ/mw1iMc0GupJqu+GIWvHSMkbwDxDa/j6kT45eRDNg0Cr
+9WlpEj8QfIvrTiWztE5A+4aXCOSWq3qbW263bOfH11rHqiWrI+8HdHZZ+W8PLt8I
+AFSkbwTJQkzHir2SerMifXTiTxOjDWnpwhAIauubDGMEjCxZZbtS7V3WEubgt+Z+
+a2s7o6eyBhapp8zpvUPGM71viQZws+5j7Uce6bbVrW7dZjU2P73NPrGlJ2iuvJlb
+c2AYQOIKNEtBVc3WE68pyf4S6T4NXk92TncvFLp5xMC51IPsqKxp9lVvFmvxKA52
+ItdFYUhBb7WejDm9a9eC14CaCHvh2Clsx14RQ9txhJSlqWbTCJZUlbFG3veMikgG
+rsD/hd8L/oddCUHJMHQAYPWIw0VLKhoCm+tb0u1ipjCs6i1CrXYRHl3ywIiBM2qk
+d24pm/lMCQ2WJpscU145GhJmFhAY92NcGs+KyerpxeMjpQpP/ANVWTH29oP1DOIv
+zwUqivvUHWNBG85CE2c9nl3p+dE0sicTGt7Uj5r6b9x3gpxpwlPq5IOkXh+4OYOJ
+i4GUakdTpL4=
+=U2Fh
 -----END PGP SIGNATURE-----
 
---Sig_/U.Enegi5HHzv9xqqOGQWJAS--
+--Sig_/hsFSdkRgVA5ip1+T2kxYfjm--
