@@ -1,73 +1,83 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: question about the best suited RAID level/layout
-Date: Tue, 09 Jul 2013 10:50:04 -0500
-Message-ID: <51DC312C.6070503@hardwarefreak.com>
-References: <1372961877.8716.43.camel@heisenberg.scientia.net>  <51D5EC8A.40509@turmel.org> <1372978687.5249.52.camel@fermat.scientia.net>  <51D61D71.5090406@hardwarefreak.com>  <1373071585.5395.45.camel@fermat.scientia.net>  <51D7D72B.4070401@hardwarefreak.com>  <1373123051.5217.19.camel@fermat.scientia.net>  <51D99B36.6040106@hardwarefreak.com> <1373217980.5246.9.camel@fermat.scientia.net>
-Reply-To: stan@hardwarefreak.com
+From: martin f krafft <madduck@madduck.net>
+Subject: Extending a =?iso-8859-1?Q?4=D73Tb?= RAID10
+Date: Tue, 9 Jul 2013 20:22:22 +0200
+Message-ID: <20130709182222.GA3952@fishbowl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="J/dobhs11T7y2rNN"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1373217980.5246.9.camel@fermat.scientia.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Anton Mitterer <calestyo@scientia.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 7/7/2013 12:26 PM, Christoph Anton Mitterer wrote:
-> On Sun, 2013-07-07 at 11:45 -0500, Stan Hoeppner wrote:
->> Maybe an example will help.  Is a 12 drive array faster than a 10 drive
->> array?  Yes, of course.  If your chassis holds 12 drives and you assign
->> two as spares, then you have 10 drives in your array.  That's 20%
->> slower.  If you keep spares on a shelf and hot swap them in after
->> failure, you can have all 12 drives in your array and not lose that 20%
->> performance.
 
-> Ah... okay I see what you were talking about ... sure... 
+--J/dobhs11T7y2rNN
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> but it's not
-> the hot swap that will (directly) degrade performance...  
+Hello,
 
-You seem to be having significant trouble parsing/digesting the
-information given to you.  I didn't state, nor suggest, nor imply that
-hot swap degrades performance.  Not sure how you ended up with this
-idea.  I'll chalk it up to lack of knowledge/experience.
+We have a RAID10 across 4 3TB drives (metadata version 1.2,
+2 offset-copies, bitmaps), with LVM on top. We are running out of
+space, but we don't really want to invest in 4 new 4TB drives right
+now.
 
-> ist because you
-> don't use all your slots and thereby not getting out the maxmimum
-> performance gain possible due to the striping...
+Is it possible to replace only two of the 3TB drives with 4TB drives
+and get an extra terrabyte into the array somehow?
 
-Yes.  I stated this twice now.  Glad you finally got it. ;)
+Anything I tried so far on a test system didn't work. I can add the
+new devices to the RAID, but if I try to grow the array to the new
+size, I get:
 
->> Well of course.  By designing your storage with dissimilar drives to
->> avoid a rare, show stopping, firmware bug that may or may not be present
->> in a specific drive model, you're simultaneously exposing yourself to
->> other issues because the firmware doesn't match.  Performance will be
->> suboptimal as your drives will have difference response times.
+  mdadm: component size of /dev/md2 unchanged at X
 
-> Sure, but as said performance isn't the main goal...
+Do I have to fail two drives, create a new RAID10, add a new LVM PV
+on it, and pvmove the data over, all the while hoping that none of
+the four disks die =E2=80=94 even though there is a backup (the two failed
+drives), that's a one-shot backup and that is too risky.
 
-It would benefit you greatly if you'd stop rebutting the information
-presented to you, digest the information, commit it to memory, and use
-it or not, now or in the future.  I am not a salesman trying to convince
-you to use one method or another.  I am a teacher presenting you with
-both pros and cons of multiple configuration options.  There is no need
-for argument or rebuttal here.
+That said, it isn't even possible to have a RAID10 across 2x2 pairs
+of disks with different sizes, is it? Why not? I'd really rather
+avoid pulling two RAID1s together with LVM, although I guess that is
+essentially the same as RAID10.
 
->> Additionally, timeout and error handling will likely be different,
->> causing the same.  Interpreting S.M.A.R.T. data will be difficult
->> because each of the drives will report various metrics differently, etc,
->> etc.  So instead of only being required to become intimately familiar
->> with one drive model, you must do so for 4 or 5 drive models.
+Thanks,
 
-> Sure..
+--=20
+martin | http://madduck.net/ | http://two.sentenc.es/
+=20
+"the pure and simple truth is rarely pure and never simple."
+                                                      -- oscar wilde
+=20
+spamtraps: madduck.bogus@madduck.net
 
-You're discounting expert insight out of hand because it doesn't agree
-with your predisposition, and you are being adversarial with those
-presenting conflicting information.  You're acting a bit like the
-immature Kim Jong-un, but you are presumably unable to have those who
-disagree with you executed or imprisoned.  Thankfully.
+--J/dobhs11T7y2rNN
+Content-Type: application/pgp-signature; name="digital_signature_gpg.asc"
+Content-Description: Digital signature (see http://martin-krafft.net/gpg/sig-policy/999bbcc4/current)
 
--- 
-Stan
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQLvBAEBCgDZBQJR3FTcwBEaaHR0cDovL21hcnRpbi1rcmFmZnQubmV0L2dwZy9z
+aWctcG9saWN5LzU1Yzk4ODJkOTk5YmJjYzQvMjAxMTAxMjQxMTI1P3NoYTUxMnN1
+bT0xY2FkOTZmZDI3ZDMyMzNmNTNlMjI4NDk1MzM2NDgxMDdlNWVlOGQ1YmU2NTUy
+NTFkNzRjOGYxYzVjM2JjNDJmMjMwNGZhNTE1MTUwZjdiZDRkZDA1ZTk4MTk5MjRm
+MDQ5NTEzZWU5OTYyY2E3MTcwOWY4MWQ5NDUxNTg1MmJkOAAKCRBVyYgtmZu8xPFz
+EADF3Un7xVhWbgx4V9ag5fc2iO0dFldooHr0olrvwwx4Jy+ojWu7oVb6ASaoHoZG
+9OYEfsuqi9Y52pqFZlpQJy4wmhrRjOAx9n4hzpvRLj8yNKWBHdTSFGqQ4IVBNczy
+hoko9y+69IxdIX/hgQaCUeNBt6MOqE4C4Bb3YeN4xrYpV/v3c8+78aQCiydnFRYL
+0SGHEoAOo1f+p58IawapP1IhrLgRXmX5Sn6lm+37s8pfRoGiei0C0BJgid71j3AD
+kPBu+bVbZzYzuogHmsBNCJ3Fkh3TVBiJHVFTrxYgdRqtXUvpsQbeDCw8/atypYtT
+mIqBIpSWtDCu1WFZt/ByVyR2ydmczrt2wpKTpFx2VgcONPYAeUdft4eYeMPMpJv+
+tAGXYN+QmCHrzhMlYZHwI894T0mBWj8xcQGnjmDoHflFTJfPaGal9krWXQjlPadg
+1Pb4uEgV8Z2eMBuufeNuA4mHnbAv1vKBXE3YZJIHTjdWTY0i+yiMZ3B603ITvgyq
+6t6REELcSayigzBSQ1MThqkiY7LXTyB00onk6ZWOIiePJzKAQVytkDzjp4T+DSxz
+u3JCAKaDyRHz7/VBDCQ+FwB+6ezsUL6B/pMArqoD5+CT9JwLCmNwXjD5BjLIEaY1
+fol/TmFxnYB9qSF0euuc9kd+3JUDzOuNfV1mLa55fXSnFA==
+=ddxc
+-----END PGP SIGNATURE-----
+
+--J/dobhs11T7y2rNN--
 
