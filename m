@@ -1,180 +1,121 @@
-From: mwilck@arcor.de
-Subject: [PATCH 39/39] DDF: ddf_process_update: Fix updates for SVDs
-Date: Mon,  8 Jul 2013 23:50:48 +0200
-Message-ID: <1373320248-7520-13-git-send-email-mwilck@arcor.de>
-References: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 2/2] md: raid1: use bio_rewind() before bio_copy_data()
+Date: Tue, 9 Jul 2013 14:33:52 +1000
+Message-ID: <20130709143352.4a5d616c@notabene.brown>
+References: <20130708160656.6cb8e74b@jlaw-desktop.mno.stratus.com>
+	<1373315114-16625-2-git-send-email-joe.lawrence@stratus.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Y8o/3glqqsl26m87Tl=JmHL"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1372883287-8859-1-git-send-email-mwilck@arcor.de>
+In-Reply-To: <1373315114-16625-2-git-send-email-joe.lawrence@stratus.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, linux-raid@vger.kernel.org
-Cc: mwilck@arcor.de
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: linux-raid@vger.kernel.org, kmo@daterainc.com
 List-Id: linux-raid.ids
 
-The "indirect" code path for adding VDs was not working correctly
-for secondary RAID level. The "other BVDs" were not transmitted
-to mdmon. Thus mdmon wouldn't build up correct information, and
-RAID creation would fail when mdmon was already running on the container.
+--Sig_/Y8o/3glqqsl26m87Tl=JmHL
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-This patch fixes this.
----
- super-ddf.c |   86 +++++++++++++++++++++++++++++++++++++++++------------------
- 1 files changed, 60 insertions(+), 26 deletions(-)
+On Mon,  8 Jul 2013 16:25:14 -0400 Joe Lawrence <joe.lawrence@stratus.com>
+wrote:
 
-diff --git a/super-ddf.c b/super-ddf.c
-index b80bb3b..b74cc51 100644
---- a/super-ddf.c
-+++ b/super-ddf.c
-@@ -2940,7 +2940,8 @@ static int write_init_super_ddf(struct supertype *st)
- 		/* queue the virtual_disk and vd_config as metadata updates */
- 		struct virtual_disk *vd;
- 		struct vd_config *vc;
--		int len;
-+		int len, tlen;
-+		unsigned int i;
- 
- 		if (!currentconf) {
- 			int len = (sizeof(struct phys_disk) +
-@@ -2967,9 +2968,13 @@ static int write_init_super_ddf(struct supertype *st)
- 
- 		/* Then the vd_config */
- 		len = ddf->conf_rec_len * 512;
--		vc = xmalloc(len);
-+		tlen = len * currentconf->conf.sec_elmnt_count;
-+		vc = xmalloc(tlen);
- 		memcpy(vc, &currentconf->conf, len);
--		append_metadata_update(st, vc, len);
-+		for (i = 1; i < currentconf->conf.sec_elmnt_count; i++)
-+			memcpy((char *)vc + i*len, currentconf->other_bvds[i-1],
-+			       len);
-+		append_metadata_update(st, vc, tlen);
- 
- 		/* FIXME I need to close the fds! */
- 		return 0;
-@@ -4254,6 +4259,27 @@ static int kill_subarray_ddf(struct supertype *st)
- 	return 0;
- }
- 
-+static void copy_matching_bvd(struct ddf_super *ddf,
-+			      struct vd_config *conf,
-+			      const struct metadata_update *update)
-+{
-+	unsigned int mppe =
-+		__be16_to_cpu(ddf->anchor.max_primary_element_entries);
-+	unsigned int len = ddf->conf_rec_len * 512;
-+	char *p;
-+	struct vd_config *vc;
-+	for (p = update->buf; p < update->buf + update->len; p += len) {
-+		vc = (struct vd_config *) p;
-+		if (vc->sec_elmnt_seq == conf->sec_elmnt_seq) {
-+			memcpy(conf->phys_refnum, vc->phys_refnum,
-+			       mppe * (sizeof(__u32) + sizeof(__u64)));
-+			return;
-+		}
-+	}
-+	pr_err("%s: no match for BVD %d of %s in update\n", __func__,
-+	       conf->sec_elmnt_seq, guid_str(conf->guid));
-+}
-+
- static void ddf_process_update(struct supertype *st,
- 			       struct metadata_update *update)
- {
-@@ -4293,7 +4319,7 @@ static void ddf_process_update(struct supertype *st,
- 	struct dl *dl;
- 	unsigned int mppe;
- 	unsigned int ent;
--	unsigned int pdnum, pd2;
-+	unsigned int pdnum, pd2, len;
- 
- 	dprintf("Process update %x\n", *magic);
- 
-@@ -4386,9 +4412,14 @@ static void ddf_process_update(struct supertype *st,
- 
- 	case DDF_VD_CONF_MAGIC:
- 		mppe = __be16_to_cpu(ddf->anchor.max_primary_element_entries);
--		if ((unsigned)update->len != ddf->conf_rec_len * 512)
--			return;
- 		vc = (struct vd_config*)update->buf;
-+		len = ddf->conf_rec_len * 512;
-+		if ((unsigned int)update->len != len * vc->sec_elmnt_count) {
-+			pr_err("%s: %s: insufficient data (%d) for %u BVDs\n",
-+			       __func__, guid_str(vc->guid), update->len,
-+			       vc->sec_elmnt_count);
-+			return;
-+		}
- 		for (vcl = ddf->conflist; vcl ; vcl = vcl->next)
- 			if (memcmp(vcl->conf.guid, vc->guid, DDF_GUID_LEN) == 0)
- 				break;
-@@ -4398,36 +4429,28 @@ static void ddf_process_update(struct supertype *st,
- 			/* An update, just copy the phys_refnum and lba_offset
- 			 * fields
- 			 */
--			struct vd_config *conf = &vcl->conf;
--			if (vcl->other_bvds != NULL &&
--			    conf->sec_elmnt_seq != vc->sec_elmnt_seq) {
--				unsigned int i;
--				for (i = 1; i < conf->sec_elmnt_count; i++)
--					if (vcl->other_bvds[i-1]->sec_elmnt_seq
--					    == vc->sec_elmnt_seq)
--						break;
--				if (i == conf->sec_elmnt_count) {
--					pr_err("%s/DDF_VD_CONF_MAGIC: BVD %u not found\n",
--					       __func__, vc->sec_elmnt_seq);
--					return;
--				}
--				conf = vcl->other_bvds[i-1];
--			}
--			memcpy(conf->phys_refnum, vc->phys_refnum,
--			       mppe * (sizeof(__u32) + sizeof(__u64)));
-+			unsigned int i;
-+			copy_matching_bvd(ddf, &vcl->conf, update);
-+			for (i = 1; i < vc->sec_elmnt_count; i++)
-+				copy_matching_bvd(ddf, vcl->other_bvds[i-1],
-+						  update);
- 		} else {
- 			/* A new VD_CONF */
-+			unsigned int i;
- 			if (!update->space)
- 				return;
- 			vcl = update->space;
- 			update->space = NULL;
- 			vcl->next = ddf->conflist;
--			memcpy(&vcl->conf, vc, update->len);
-+			memcpy(&vcl->conf, vc, len);
- 			ent = find_vde_by_guid(ddf, vc->guid);
- 			if (ent == DDF_NOTFOUND)
- 				return;
- 			vcl->vcnum = ent;
- 			ddf->conflist = vcl;
-+			for (i = 1; i < vc->sec_elmnt_count; i++)
-+				memcpy(vcl->other_bvds[i-1],
-+				       update->buf + len * i, len);
- 		}
- 		/* Set DDF_Transition on all Failed devices - to help
- 		 * us detect those that are no longer in use
-@@ -4539,11 +4562,22 @@ static void ddf_prepare_update(struct supertype *st,
- 	 */
- 	struct ddf_super *ddf = st->sb;
- 	__u32 *magic = (__u32*)update->buf;
--	if (*magic == DDF_VD_CONF_MAGIC)
-+	if (*magic == DDF_VD_CONF_MAGIC) {
-+		struct vcl *vcl;
-+		struct vd_config *conf = (struct vd_config *) update->buf;
- 		if (posix_memalign(&update->space, 512,
- 				   offsetof(struct vcl, conf)
--				   + ddf->conf_rec_len * 512) != 0)
-+				   + ddf->conf_rec_len * 512) != 0) {
-+			update->space = NULL;
-+			return;
-+		}
-+		vcl = update->space;
-+		vcl->conf.sec_elmnt_count = conf->sec_elmnt_count;
-+		if (alloc_other_bvds(ddf, vcl) != 0) {
-+			free(update->space);
- 			update->space = NULL;
-+		}
-+	}
- }
- 
- /*
--- 
-1.7.1
+> bio_copy_data() cannot execute on a fully completed source (or
+> destination) bio.  MD RAID1 is recycling a completed read bio for RAID
+> repair purposes and needs to fix up the source and destination bios for
+> bio_copy_data(): in particular, the io-vector index needs to be rewound
+> and the bios unchained.
+>=20
+> Suggested-by: NeilBrown <neilb@suse.de>
+> Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+
+Thanks Joe.
+
+Jens:  are you happy with this?  If so is it OK for me to forward to Linus
+and -stable for 3.10, or would you rather?
+The follow-on patch which uses the so avoid a crash is=20
+
+http://marc.info/?l=3Dlinux-raid&m=3D137331514131503&w=3D2
+
+(This is sitting near the top of "git://neil.brown.name/md for-next" if you
+want to cherry-pick it).
+
+Thanks,
+NeilBrown
+
+> ---
+>  drivers/md/raid1.c | 28 +++++-----------------------
+>  1 file changed, 5 insertions(+), 23 deletions(-)
+>=20
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 6e17f81..bb1e80f 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1861,7 +1861,6 @@ static int process_checks(struct r1bio *r1_bio)
+>  		int j;
+>  		struct bio *pbio =3D r1_bio->bios[primary];
+>  		struct bio *sbio =3D r1_bio->bios[i];
+> -		int size;
+> =20
+>  		if (sbio->bi_end_io !=3D end_sync_read)
+>  			continue;
+> @@ -1887,28 +1886,11 @@ static int process_checks(struct r1bio *r1_bio)
+>  			rdev_dec_pending(conf->mirrors[i].rdev, mddev);
+>  			continue;
+>  		}
+> -		/* fixup the bio for reuse */
+> -		bio_reset(sbio);
+> -		sbio->bi_vcnt =3D vcnt;
+> -		sbio->bi_size =3D r1_bio->sectors << 9;
+> -		sbio->bi_sector =3D r1_bio->sector +
+> -			conf->mirrors[i].rdev->data_offset;
+> -		sbio->bi_bdev =3D conf->mirrors[i].rdev->bdev;
+> -		sbio->bi_end_io =3D end_sync_read;
+> -		sbio->bi_private =3D r1_bio;
+> -
+> -		size =3D sbio->bi_size;
+> -		for (j =3D 0; j < vcnt ; j++) {
+> -			struct bio_vec *bi;
+> -			bi =3D &sbio->bi_io_vec[j];
+> -			bi->bv_offset =3D 0;
+> -			if (size > PAGE_SIZE)
+> -				bi->bv_len =3D PAGE_SIZE;
+> -			else
+> -				bi->bv_len =3D size;
+> -			size -=3D PAGE_SIZE;
+> -		}
+> -
+> +		/* copy pbio io_vec data into sbio, but first reset io_vec
+> +		 * index and unchain both */
+> +		bio_rewind(pbio);
+> +		bio_rewind(sbio);
+> +		pbio->bi_next =3D sbio->bi_next =3D NULL;
+>  		bio_copy_data(sbio, pbio);
+>  	}
+>  	return 0;
+
+
+--Sig_/Y8o/3glqqsl26m87Tl=JmHL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUduSsDnsnt1WYoG5AQJz5Q//XexKDPm67x0+aoVZtjnVSxXrWo9BV1AA
+6XSxRS6kqD3fm+Slo9xC2G2ODt398HWqAo2KQwitLdW8C09CcD5ZIqkjgQH7Zhps
+lwFggIrNZFr8vBXO/NaiLiVK2k+Fc4v29ein8PD1MF0iiLKIC1ug9ABgKYiRcmTF
+etM1mJ3TudMlAFGXrytuYVAgkgM7uliGlo04zQEx9Wh3qu3BSF233Fnr6MKjpJRT
+OVhzeFoYXbh+vVXIxNdiFtX30IvLcLneGnJfKzW31KvkMST7Nlgq3ED1sSSlhM5b
+B0BRHm8D3NeWJt/ImZnKZhRLawK7w8QBtSxGBNEGYkVJAzMYgQ3/fkj5ABHaEihu
+dOMXjB/5rDRDyHGqQTr2WT1kQJmKBxOKvjZichoffmHK1gKdfGyr2pGoJvaGOWvB
+W+GFbqXpnKJNzxAViuRfjDPoTLjNQt46CUB3bGKRoyhoostZSJxBgLeFZWUzUsbz
+5kAnVjh+RwLgt++Ig4tNn34WOsPk/C8wZZRlBQx1z4nH8ya29A8TE8tjiKFUxO/d
+N4TZMNL9oYCZf2dWD5ctogTUmbzjzYC2TWfx9cGz65CEBbq2WZLVOqHY4BLchlOt
+gwgRcuGHu7PUXGmPYUcHg6MSw2PMXoT/9YG9XiDmY1O6ekbuGanztSUb8hF4wKlD
+YrEl/xhUzjU=
+=d3UR
+-----END PGP SIGNATURE-----
+
+--Sig_/Y8o/3glqqsl26m87Tl=JmHL--
