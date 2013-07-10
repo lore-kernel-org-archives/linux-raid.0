@@ -1,57 +1,57 @@
-From: Curtis <serverascode@gmail.com>
-Subject: Re: Determining if a stripe/RAID0 has failed
-Date: Tue, 9 Jul 2013 15:52:30 -0600
-Message-ID: <CAJ_JamBgpWepch6CjtE_z_LU2P=wrt5Q9hF=QTEoA-zs9kW0nA@mail.gmail.com>
-References: <CAJ_JamCpdFHRyYOzEg=yH4k_rv0KnZD8UJ_GwvSrSmHHOSzFAA@mail.gmail.com>
-	<20130710074609.37ff918d@notabene.brown>
+From: Ole Tange <tange@binf.ku.dk>
+Subject: Re-shape raid0 acts up
+Date: Wed, 10 Jul 2013 13:56:49 +0200
+Message-ID: <CANU9nT=Fz0QkBm6FQkTcfN_iZk9BC_fhDRacXUKs=0SJ33H_zQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130710074609.37ff918d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jul 9, 2013 at 3:46 PM, NeilBrown <neilb@suse.de> wrote:
-> On Tue, 9 Jul 2013 15:33:29 -0600 Curtis <serverascode@gmail.com> wrote:
->
->> Hi All,
->>
->> I'm wondering what the best way to determine when a RAID0 has failed?
->>
->> We have some stateless servers that use a stripe/RAID0, but we'll need
->> to know if it failed so we can pull it out of the "cluster" and
->> rebuild it. It would be better to find out sooner than later that the
->> stripe has failed.
->>
->> I know from reading the man page that I can't use mdadm to monitor the
->> stripe. Is it basically just that the device becomes unusable in some
->> fashion?
->>
->
-> How would you determine if a lone drive had failed?
-> Presumably by error messages in the kernel logs, or similar.
-> Use exactly the same mechanism to test if a RAID0 has failed.
+I tested reshaping a raid0 on 2 devices to 4 devices.
 
-Ok, that makes total sense, thanks. :)
+It seems the reshape first converted to RAID4 and then quickly
+converted to RAID0.
 
->
-> (A "RAID0" doesn't fail as whole.  Bits of it might, other bits might keep
-> working, just like a drive which can lose some sectors but other sectors keep
-> working.  Certainly a whole drive can fail if it's logic-board dies.
-> Similarly a whole RAID0 can fail if the SATA/SCSI/USB controller dies.)
+I have now done that on a bigger array. The only change that I am aware of is:
 
-Noted.
+* The 2+2 devices are much larger (25 TB each compared to 1 GB each)
+* The system has crashed during the reshape
 
-Thanks again,
-Curtis.
+So right now the system looks like this:
 
->
-> NeilBrown
+Personalities : [raid6] [raid5] [raid4]
+md3 : active raid4 md1[0] md5[3] md4[4] md2[1]
+      109396484096 blocks super 1.2 level 4, 512k chunk, algorithm 0
+[5/4] [UUUU_]
+
+which looks like the RAID4 just before the final step.
+
+I then tried:
+
+# mdadm --grow /dev/md3 -n 4 -l 0 --backup-file reshape.bak
+
+But that seems to cause the reshape to go through the full 100 TB again:
+
+root@lemaitre:/lemaitre-internal# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md3 : active raid4 dm-0[0] dm-3[3] dm-2[4] dm-1[1]
+      109396484096 blocks super 1.2 level 4, 512k chunk, algorithm 0
+[5/4] [UUUU_]
+      [>....................]  reshape =  0.0% (28100/27349121024)
+finish=32428.7min speed=14050K/sec
+
+So I cancelled that and rolled back to the situation before (this was
+possible because I ran this on overlay files):
+
+Personalities : [raid6] [raid5] [raid4]
+md3 : active raid4 md1[0] md5[3] md4[4] md2[1]
+      109396484096 blocks super 1.2 level 4, 512k chunk, algorithm 0
+[5/4] [UUUU_]
+
+Can I convert that to RAID0? Can I do that without having to wait the
+2-3 weeks a full reshape takes?
 
 
-
---
-Twitter: @serverascode
-Blog: serverascode.com
+/Ole
