@@ -1,33 +1,40 @@
-From: Phil Turmel <philip@turmel.org>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
 Subject: Re: Query regarding disk failure
-Date: Wed, 10 Jul 2013 13:30:41 -0400
-Message-ID: <51DD9A41.5090307@turmel.org>
-References: <51DD4EF0.6020509@perpetual-data.com> <20130710131119.GA26658@cthulhu.home.robinhill.me.uk> <51DD6D07.1060401@perpetual-data.com> <51DD74F0.8020006@turmel.org> <51DD79B4.3000102@perpetual-data.com> <51DD7C2C.2080901@turmel.org> <51DD8185.7070201@perpetual-data.com>
+Date: Wed, 10 Jul 2013 19:47:45 +0200 (CEST)
+Message-ID: <alpine.DEB.2.00.1307101945400.8891@uplift.swm.pp.se>
+References: <51DD4EF0.6020509@perpetual-data.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51DD8185.7070201@perpetual-data.com>
+In-Reply-To: <51DD4EF0.6020509@perpetual-data.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Priya Kamala <priya.kamala@perpetual-data.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/10/2013 11:45 AM, Priya Kamala wrote:
-> On 10/07/2013 16:22, Phil Turmel wrote:
->> Did you have an idea of number of read error events?  "Pending" sector
->> counts on the problem drive might be a useful number to report.  (Or
->> just report complete output of "smartctl -x" for each drive.)
-> Unfortunately I don't have this information, as this is a post-mortem
-> analysis of the failure on a customer system.
->> Meanwhile, what distro, kernel, and mdadm versions are involved here?
-> I'm working with a distro based on Centos running 2.6.21.1 kernel and
-> mdadm 2.6.
+On Wed, 10 Jul 2013, Priya Kamala wrote:
 
-That explains your experience.  Your kernel dates from April 2007.
-Tolerance for corrected read errors was added in December 2009.  (Robert
-Becker, 1e50915f, to be specific.)
+> If a single disk develops bad sector(s) that affects only a single 
+> stripe within a given RAID-5 configuration and these bad sectors are 
+> discovered when running a "check/resync" (echo check > 
+> /sys/block/mdX/md/sync_action), does this result in the entire disk 
+> being removed from the RAID? In other words, is access to the other good 
+> stripes on the drive disabled as well? If so, why is it done this way? 
+> In case the kernel version makes a difference to the behaviour, I'm 
+> working with 2.6.21.1.
 
-You need a newer kernel.
+If drive is kicked, it could be because it's a consumer drive which 
+doesn't support TLER/ERC.
 
-Phil
+Do:
+
+for x in /sys/block/sd[a-z] ; do echo 180  > $x/device/timeout ; done
+
+This should mean the disk isn't kicked from the array unless it's really 
+broken.
+
+But as was mentioned in another mail in your thread, you really should 
+upgrade your kernel. It's really old.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
