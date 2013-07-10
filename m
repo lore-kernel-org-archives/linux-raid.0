@@ -1,119 +1,28 @@
 From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: [PATCH 05/27] DDF: Implement store_super_ddf
-Date: Wed, 10 Jul 2013 19:37:24 +0200
-Message-ID: <51DD9BD4.1090208@arcor.de>
-References: <1372883287-8859-1-git-send-email-mwilck@arcor.de>	<1372883287-8859-6-git-send-email-mwilck@arcor.de> <20130708154810.561ba2a2@notabene.brown>
+Subject: mdadm -Db switches array to write-pending?!
+Date: Wed, 10 Jul 2013 19:54:09 +0200
+Message-ID: <51DD9FC1.2060200@arcor.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130708154810.561ba2a2@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Hi Neil,
+Hi Neil, hi all,
 
->> This patch implements the previously unsupported case where
->> store_super_ddf is called with a non-empty superblock.
->>
->> For DDF, writing meta data to just one disk makes no sense.
->> We would run the risk of writing inconsistent meta data
->> to the devices. So just call __write_init_super_ddf and
->> write to all devices, including the one passed by the caller.
->>
->> This patch assumes that the device to store the superblock on
->> has already been added to the DDF structure. Otherwise, an
->> error message will be emitted.
->>
->> Signed-off-by: Martin Wilck <mwilck@arcor.de>
-> 
-> I'm not sure I really like this.  If mdadm is calling ->store_super, then it
-> wants to write to just one device.  It will quite possibly call
-> ->store_super on all devices, and with your change that will write to all
-> devices multiple times.
-> So maybe a different interface is needed?
+I discovered a weird behavior of mdadm -Db - it will switch a RAID array
+from read-auto state to write-pending. For DDF (and possibly other
+formats) this will cause metadata writes.
 
-The point is the sequence number handling. If the sequence number
-increases, it would be dangerous to write only one superblock.
+If I read the code correctly, the reason is that mdadm -Db will use the
+GET_BITMAP_FILE ioctl, which calls md_allow_write(). I saw this on a
+CentOS 6.3 kernel but comparing the code I didn't see a difference in
+recent kernels.
 
-But perhaps it can be done otherwise, I need to examine that further.
-First I need a clear understanding what this API is used for.
+I am wondering if this is intentional, and if no, if anything could be
+done about it. It is certainly surprising behavior.
 
-> What is the big-picture effect of this patch?  What mdadm function now works
-> that didn't work before?
-
-To be honest, I don't know. I came up with this patch when scanning
-through the code looking for possible problems. This is not necessary to
-make mdadm -e ddf -C -l10 work.
-
+Regards
 Martin
-
-> 
-> Thanks,
-> NeilBrown
-> 
-> 
-> 
->> ---
->>  super-ddf.c |   41 +++++++++++++++++++++++++++++++++++------
->>  1 files changed, 35 insertions(+), 6 deletions(-)
->>
->> diff --git a/super-ddf.c b/super-ddf.c
->> index b806949..b3c846d 100644
->> --- a/super-ddf.c
->> +++ b/super-ddf.c
->> @@ -3471,15 +3471,44 @@ static int store_super_ddf(struct supertype *st, int fd)
->>  	if (!ddf)
->>  		return 1;
->>  
->> -	/* ->dlist and ->conflist will be set for updates, currently not
->> -	 * supported
->> -	 */
->> -	if (ddf->dlist || ddf->conflist)
->> -		return 1;
->> -
->>  	if (!get_dev_size(fd, NULL, &dsize))
->>  		return 1;
->>  
->> +	if (ddf->dlist || ddf->conflist) {
->> +		struct stat sta;
->> +		struct dl *dl;
->> +		int ofd, ret;
->> +
->> +		if (fstat(fd, &sta) == -1 || !S_ISBLK(sta.st_mode)) {
->> +			pr_err("%s: file descriptor for invalid device\n",
->> +			       __func__);
->> +			return 1;
->> +		}
->> +		for (dl = ddf->dlist; dl; dl = dl->next)
->> +			if (dl->major == (int)major(sta.st_rdev) &&
->> +			    dl->minor == (int)minor(sta.st_rdev))
->> +				break;
->> +		if (!dl) {
->> +			pr_err("%s: couldn't find disk %d/%d\n", __func__,
->> +			       (int)major(sta.st_rdev),
->> +			       (int)minor(sta.st_rdev));
->> +			return 1;
->> +		}
->> +		/*
->> +		   For DDF, writing to just one disk makes no sense.
->> +		   We would run the risk of writing inconsistent meta data
->> +		   to the devices. So just call __write_init_super_ddf and
->> +		   write to all devices, including this one.
->> +		   Use the fd passed to this function, just in case dl->fd
->> +		   is invalid.
->> +		 */
->> +		ofd = dl->fd;
->> +		dl->fd = fd;
->> +		ret =  __write_init_super_ddf(st);
->> +		dl->fd = ofd;
->> +		return ret;
->> +	}
->> +
->>  	if (posix_memalign(&buf, 512, 512) != 0)
->>  		return 1;
->>  	memset(buf, 0, 512);
-> 
-
