@@ -1,35 +1,42 @@
-From: Kent Overstreet <kmo-PEzghdH756F8UrSeD/g0lQ@public.gmane.org>
-Subject: Re: [patch -next] bcache: check for allocation failures
-Date: Wed, 10 Jul 2013 18:48:34 -0700
-Message-ID: <20130711014834.GE13527@kmo-pixel>
-References: <20130705060307.GB14443@elgon.mountain>
+From: voady4cool <voady4cool@libero.it>
+Subject: hi
+Date: Fri, 12 Jul 2013 10:22:09 +0200 (CEST)
+Message-ID: <27265293.22038721373617329151.JavaMail.defaultUser__30023.7436350018$1373617369$gmane$org@defaultHost>
+Reply-To: vera.matine@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-bcache-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20130705060307.GB14443-mgFCXtclrQlZLf2FXnZxJA@public.gmane.org>
-Sender: linux-bcache-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: Gabriel de Perthuis <g2p.code-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Neil Brown <neilb-l3A5Bk7waGM@public.gmane.org>, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: vera.matine@yahoo.com
 List-Id: linux-raid.ids
 
-On Fri, Jul 05, 2013 at 09:05:46AM +0300, Dan Carpenter wrote:
-> There is a missing NULL check after the kzalloc().
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-> 
-> diff --git a/drivers/md/bcache/sysfs.c b/drivers/md/bcache/sysfs.c
-> index 48f0353..4fe6ab2 100644
-> --- a/drivers/md/bcache/sysfs.c
-> +++ b/drivers/md/bcache/sysfs.c
-> @@ -232,6 +232,8 @@ STORE(__cached_dev)
->  			bch_uuid_write(dc->disk.c);
->  		}
->  		env = kzalloc(sizeof(struct kobj_uevent_env), GFP_KERNEL);
-> +		if (!env)
-> +			return -ENOMEM;
->  		add_uevent_var(env, "DRIVER=bcache");
->  		add_uevent_var(env, "CACHED_UUID=%pU", dc->sb.uuid),
->  		add_uevent_var(env, "CACHED_LABEL=%s", buf);
 
-Thanks - applied
+Ciao
+il mio nome =C3=A8 vera devo dire che scintilla il mio interesse per un=
+ buon=20
+partner, mi piacerebbe sapere di pi=C3=B9 per lo scambio di amore e di =
+amicizia, non=20
+esitate a inviarmi una e-mail attraverso il mio id mail (vera.matine @ =
+yahoo.
+com) Please in modo che io vi mander=C3=B2 la mia foto e ti dir=C3=A0 d=
+i pi=C3=B9 su myself.
+awaiting tua mail in modo che si pu=C3=B2 qui passare da qui, Prenditi =
+cura.
+
+Hello
+my name is vera i must say it spark my interest for a good partner,i wi=
+ll like=20
+to know you more to exchange love and friendship, Please feel free to s=
+end me a=20
+mail through my mail id ( vera.matine@yahoo.com ) so that i will send y=
+ou my=20
+picture and tell you more about myself.awaiting your mail so that can h=
+ere move=20
+on from here,Take care.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
