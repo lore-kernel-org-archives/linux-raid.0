@@ -1,116 +1,52 @@
-From: David Lang <david@lang.hm>
-Subject: Re: 3.10: discard/trim support on md-raid1?
-Date: Tue, 16 Jul 2013 01:22:28 -0700 (PDT)
-Message-ID: <alpine.DEB.2.02.1307160121020.16723@nftneq.ynat.uz>
-References: <001701ce7fb4$889bdd40$99d397c0$@lucidpixels.com> <20130716171527.7c6cb722@notabene.brown> <CAO9zADz6UTdxSoUySha=p4j4eGtomnctAZ2WVAFew1Z=-scrrw@mail.gmail.com>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: MD RAID 1 fail/remove/add corruption in 3.10
+Date: Tue, 16 Jul 2013 14:49:20 -0400
+Message-ID: <20130716144920.39f428b7@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAO9zADz6UTdxSoUySha=p4j4eGtomnctAZ2WVAFew1Z=-scrrw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: NeilBrown <neilb@suse.de>, open list <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>, Martin Wilck <mwilck@arcor.de>
 List-Id: linux-raid.ids
 
-Part of this depends on the exact failure mode. I've seen cases where drives 
-fail, and the drive does a bunch of retries, then the OS does a bunch of 
-retries, and eventually the read fails, but in the meantime, everything stalls 
-for a long time.
+Hi Neil, Martin,
 
-I've even seen the same thing in at least one case where there was a hardware 
-RAID card in use.
+While testing patches to fix RAID1 repair GPF crash w/3.10-rc7
+( http://thread.gmane.org/gmane.linux.raid/43351 ), I encountered disk
+corruption when repeatedly failing, removing, and adding MD RAID1
+component disks to their array.  The RAID1 was created with an internal
+write bitmap and the test was run against alternating disks in the
+set.  I bisected this behavior back to commit 7ceb17e8 "md: Allow
+devices to be re-added to a read-only array", specifically these lines
+of code:
 
-David Lang
+remove_and_add_spares:
 
-On Tue, 16 Jul 2013, Justin Piszcz wrote:
++		if (rdev->saved_raid_disk >= 0 && mddev->in_sync) {
++			spin_lock_irq(&mddev->write_lock);
++			if (mddev->in_sync)
++				/* OK, this device, which is in_sync,
++				 * will definitely be noticed before
++				 * the next write, so recovery isn't
++				 * needed.
++				 */
++				rdev->recovery_offset = mddev->recovery_cp;
++			spin_unlock_irq(&mddev->write_lock);
++		}
++		if (mddev->ro && rdev->recovery_offset != MaxSector)
++			/* not safe to add this disk now */
++			continue;
 
-> Thanks for the replies,
->
-> After some further testing..
-> When I ran a repair on the md's sync_action, the system would reduce
-> I/O to the RAID-1 to 14kb/s or even less when it hit a certain number
-> of blocks and effectively locked the system every time.
-> It turned out to be a bad SSD (it also failed Intel's Secure Erase), I RMA'd it.
-> Interesting though that it did not drop out of the array but froze the
-> system (the failure scenario was odd).
->
-> Justin.
->
->
->
-> On Tue, Jul 16, 2013 at 3:15 AM, NeilBrown <neilb@suse.de> wrote:
->> On Sat, 13 Jul 2013 06:34:19 -0400 "Justin Piszcz" <jpiszcz@lucidpixels.com>
->> wrote:
->>
->>> Hello,
->>>
->>> Running 3.10 and I see the following for an md-raid1 of two SSDs:
->>>
->>> Checking /sys/block/md1/queue:
->>> add_random: 0
->>> discard_granularity: 512
->>> discard_max_bytes: 2147450880
->>> discard_zeroes_data: 0
->>> hw_sector_size: 512
->>> iostats: 0
->>> logical_block_size: 512
->>> max_hw_sectors_kb: 32767
->>> max_integrity_segments: 0
->>> max_sectors_kb: 512
->>> max_segment_size: 65536
->>> max_segments: 168
->>> minimum_io_size: 512
->>> nomerges: 0
->>> nr_requests: 128
->>> optimal_io_size: 0
->>> physical_block_size: 512
->>> read_ahead_kb: 8192
->>> rotational: 1
->>> rq_affinity: 0
->>> scheduler: none
->>> write_same_max_bytes: 0
->>>
->>> What should be seen:
->>> rotational: 0
->>
->> What has "rotational" got to do with "supports discard"?
->> There may be some correlation, but it isn't causal.
->>
->>> And possibly:
->>> discard_zeroes_data: 1
->>
->> This should be set as the 'or' of the same value from component devices.  And
->> does not enable or disable the use of discard.
->>
->> I don't think that "does this device support discard" appears in sysfs.
->>
->> I believe trim does work on md/raid1 if the underlying devices all support it.
->>
->> NeilBrown
->>
->>
->>
->>>
->>> Can anyone confirm if there is a workaround to allow TRIM when using
->>> md-raid1?
->>>
->>> Some related discussion here:
->>> http://us.generation-nt.com/answer/md-rotational-attribute-help-206571222.ht
->>> ml
->>> http://www.progtown.com/topic343938-ssd-strange-itself-conducts.html
->>>
->>>
->>> Justin.
->>>
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
+when I #ifdef 0 these lines out, leaving rdev->recovery_offset = 0,
+then my tests run without incident.
+
+If there is any instrumentation I can apply to remove_and_add_spares
+I'll be happy to gather more data.  I'll send an attached copy of
+my test programs in a reply so this mail doesn't get bounced by
+any spam filters.
+
+Thanks,
+
+-- Joe
