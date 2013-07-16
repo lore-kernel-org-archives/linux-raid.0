@@ -1,120 +1,103 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: MD RAID 1 fail/remove/add corruption in 3.10
-Date: Tue, 16 Jul 2013 15:05:25 -0400
-Message-ID: <20130716150525.2f03e407@jlaw-desktop.mno.stratus.com>
-References: <20130716144920.39f428b7@jlaw-desktop.mno.stratus.com>
+From: CoolCold <coolthecold@gmail.com>
+Subject: Re: 3.10: discard/trim support on md-raid1?
+Date: Wed, 17 Jul 2013 00:44:15 +0400
+Message-ID: <CAGqmV7qf14zrsimCMRsVWobq8SpLaavxPQvEyU6N=f1nBgvFHQ@mail.gmail.com>
+References: <001701ce7fb4$889bdd40$99d397c0$@lucidpixels.com>
+	<20130716171527.7c6cb722@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="MP_/X4L92Jj3vX0gKXEzEwfrDsZ"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130716144920.39f428b7@jlaw-desktop.mno.stratus.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: NeilBrown <neilb@suse.de>, Martin Wilck <mwilck@arcor.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130716171527.7c6cb722@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Linux kernel <linux-kernel@vger.kernel.org>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---MP_/X4L92Jj3vX0gKXEzEwfrDsZ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Neil, I've tryed to look around commit logs but failed to find commit
+where discard/trim were added.
+I was looking via
+http://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/log/drivers/md?id=9f2a940965286754f3a34d5737c3097c05db8725&qt=grep&q=discard+support
+, tryed just "discard" without support - found commits about dm, not
+md, though.
 
-Attached are the test scripts:
+Can you shed some light here? Thanks in advance.
 
-  mdcreate - create three MD RAID1 pairs with internal bitmaps, create
-             an {ext4,xfs,btrfs} filesystem
+(resent in plaintext mode, please reply to this one)
 
-  break_md - loop between the two component disks, failing and then
-             re-adding them.  Calls mdtest script in between test-runs.
 
-  mdtest - stops fio tests on MD, umounts, issues RAID "check", fsck on
-           each MD.  If the fsck fails, return failure.  If fsck is
-           good, then mount and restart fio tests.
+On Tue, Jul 16, 2013 at 11:15 AM, NeilBrown <neilb@suse.de> wrote:
+> On Sat, 13 Jul 2013 06:34:19 -0400 "Justin Piszcz" <jpiszcz@lucidpixels.com>
+> wrote:
+>
+>> Hello,
+>>
+>> Running 3.10 and I see the following for an md-raid1 of two SSDs:
+>>
+>> Checking /sys/block/md1/queue:
+>> add_random: 0
+>> discard_granularity: 512
+>> discard_max_bytes: 2147450880
+>> discard_zeroes_data: 0
+>> hw_sector_size: 512
+>> iostats: 0
+>> logical_block_size: 512
+>> max_hw_sectors_kb: 32767
+>> max_integrity_segments: 0
+>> max_sectors_kb: 512
+>> max_segment_size: 65536
+>> max_segments: 168
+>> minimum_io_size: 512
+>> nomerges: 0
+>> nr_requests: 128
+>> optimal_io_size: 0
+>> physical_block_size: 512
+>> read_ahead_kb: 8192
+>> rotational: 1
+>> rq_affinity: 0
+>> scheduler: none
+>> write_same_max_bytes: 0
+>>
+>> What should be seen:
+>> rotational: 0
+>
+> What has "rotational" got to do with "supports discard"?
+> There may be some correlation, but it isn't causal.
+>
+>> And possibly:
+>> discard_zeroes_data: 1
+>
+> This should be set as the 'or' of the same value from component devices.  And
+> does not enable or disable the use of discard.
+>
+> I don't think that "does this device support discard" appears in sysfs.
+>
+> I believe trim does work on md/raid1 if the underlying devices all support it.
+>
+> NeilBrown
+>
+>
+>
+>>
+>> Can anyone confirm if there is a workaround to allow TRIM when using
+>> md-raid1?
+>>
+>> Some related discussion here:
+>> http://us.generation-nt.com/answer/md-rotational-attribute-help-206571222.ht
+>> ml
+>> http://www.progtown.com/topic343938-ssd-strange-itself-conducts.html
+>>
+>>
+>> Justin.
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Usually I would see RAID mismatch_cnt of non-zero after the first or
-second disk break.  Then, within a few iterations one of the fsck
-programs (usually xfs or btrfs) would complain.
 
-These scripts were cobbled together in the last day or two, so standard
-disclaimers apply :)
 
-Regards,
-
--- Joe
---MP_/X4L92Jj3vX0gKXEzEwfrDsZ
-Content-Type: application/x-shellscript
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename=break_md.sh
-
-IyEvYmluL2Jhc2gKCk1EX0RFVklDRVM9Im1kMSBtZDIgbWQzIgpNRF9ESVNLUz0ic2RhIHNkaSIK
-CmZ1bmN0aW9uIGZhaWxfZGlzaygpCnsKICBsb2NhbCBkaXNrPSQxCgogIG1kYWRtIC0tZmFpbCAv
-ZGV2L21kMSAvZGV2LyR7ZGlza30xCiAgbWRhZG0gLS1mYWlsIC9kZXYvbWQyIC9kZXYvJHtkaXNr
-fTIKICBtZGFkbSAtLWZhaWwgL2Rldi9tZDMgL2Rldi8ke2Rpc2t9MwogIHNsZWVwIDFzCiAgbWRh
-ZG0gLS1yZW1vdmUgL2Rldi9tZDEgL2Rldi8ke2Rpc2t9MQogIG1kYWRtIC0tcmVtb3ZlIC9kZXYv
-bWQyIC9kZXYvJHtkaXNrfTIKICBtZGFkbSAtLXJlbW92ZSAvZGV2L21kMyAvZGV2LyR7ZGlza30z
-CiAgc2xlZXAgMXMKfQoKZnVuY3Rpb24gYWRkX2Rpc2soKQp7CiAgbG9jYWwgZGlzaz0kMQogIAog
-IG1kYWRtIC0tYWRkIC9kZXYvbWQxIC9kZXYvJHtkaXNrfTEKICBzbGVlcCAxcwogIHdoaWxlIFsg
-YGNhdCAvc3lzL2Jsb2NrL21kMS9tZC9zeW5jX2FjdGlvbmAgIT0gImlkbGUiIF0gOyBkbyBzbGVl
-cCAxczsgZG9uZQoKICBtZGFkbSAtLWFkZCAvZGV2L21kMiAvZGV2LyR7ZGlza30yCiAgc2xlZXAg
-MXMKICB3aGlsZSBbIGBjYXQgL3N5cy9ibG9jay9tZDIvbWQvc3luY19hY3Rpb25gICE9ICJpZGxl
-IiBdIDsgZG8gc2xlZXAgMXM7IGRvbmUKCiAgbWRhZG0gLS1hZGQgL2Rldi9tZDMgL2Rldi8ke2Rp
-c2t9MwogIHNsZWVwIDFzCiAgd2hpbGUgWyBgY2F0IC9zeXMvYmxvY2svbWQzL21kL3N5bmNfYWN0
-aW9uYCAhPSAiaWRsZSIgXSA7IGRvIHNsZWVwIDFzOyBkb25lCn0KCmNvdW50PTAKd2hpbGUgOgpk
-bwoKICBjb3VudD0kKChjb3VudCsxKSkKICBlY2hvICIqKiogSXRlcmF0aW9uICR7Y291bnR9Igog
-IC4vbWR0ZXN0CiAgcnY9JD8KICBpZiBbWyAkcnYgIT0gMCBdXSA7IHRoZW4KICAgIGVjaG8gIiAg
-RmFpbHVyZSwgcmV0dXJuIHZhbDogJHJ2IgogICAgZXhpdCAkcnYKICBmaQogIAogIGZhaWxfZGlz
-ayAic2RhIgogIHNsZWVwIDYwcwogIGFkZF9kaXNrICJzZGEiCiAgc2xlZXAgNjBzCiAgCiAgLi9t
-ZHRlc3QKICBydj0kPwogIGlmIFtbICRydiAhPSAwIF1dIDsgdGhlbgogICAgZWNobyAiICBGYWls
-dXJlLCByZXR1cm4gdmFsOiAkcnYiCiAgICBleGl0ICRydgogIGZpCiAgCiAgZmFpbF9kaXNrICJz
-ZGkiCiAgc2xlZXAgNjBzCiAgYWRkX2Rpc2sgInNkaSIKICBzbGVlcCA2MHMKCmRvbmUKCg==
-
---MP_/X4L92Jj3vX0gKXEzEwfrDsZ
-Content-Type: application/x-shellscript
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename=mdcreate.sh
-
-IyEvYmluL2Jhc2gKCnVtb3VudCAvbW50L21kMQp1bW91bnQgL21udC9tZDIKdW1vdW50IC9tbnQv
-bWQzCgptZGFkbSAtLXN0b3AgL2Rldi9tZCoKCm1kYWRtIC0temVyby1zdXBlcmJsb2NrIC9kZXYv
-c2RhWzEyM10gL2Rldi9zZGlbMTIzXQoKbWRhZG0gLS1jcmVhdGUgL2Rldi9tZDEgLS1sZXZlbD0x
-IC0tcmFpZC1kZXZpY2VzPTIgLS1iaXRtYXA9aW50ZXJuYWwgL2Rldi9zZGExIC9kZXYvc2RpMQpt
-ZGFkbSAtLWNyZWF0ZSAvZGV2L21kMiAtLWxldmVsPTEgLS1yYWlkLWRldmljZXM9MiAtLWJpdG1h
-cD1pbnRlcm5hbCAvZGV2L3NkYTIgL2Rldi9zZGkyCm1kYWRtIC0tY3JlYXRlIC9kZXYvbWQzIC0t
-bGV2ZWw9MSAtLXJhaWQtZGV2aWNlcz0yIC0tYml0bWFwPWludGVybmFsIC9kZXYvc2RhMyAvZGV2
-L3NkaTMKCm1rZnMuZXh0NCAvZGV2L21kMQpta2ZzLnhmcyAtZiAvZGV2L21kMgpta2ZzLmJ0cmZz
-IC1mIC9kZXYvbWQzCgo=
-
---MP_/X4L92Jj3vX0gKXEzEwfrDsZ
-Content-Type: application/x-shellscript
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename=mdtest.sh
-
-IyEvYmluL2Jhc2gKCk1EX0RFVklDRVM9Im1kMSBtZDIgbWQzIgoKRklPPSIvcm9vdC9maW8vZmlv
-IgpGSU9fR0xPQkFMPSItLW5hbWU9Z2xvYmFsIC0tc2l6ZT0xRyAtLW5yZmlsZXM9MTAwMCAtLXJl
-YWR3cml0ZT1yYW5kcncgLS1sb29wcz0xMCIKRklPX0xPRz0iL3Jvb3QvZmlvL2Zpby5vdXQiCgpm
-dW5jdGlvbiBmaW9fc3RhcnQoKSB7CiAgbG9jYWwgZmlvX21kPSIiCiAgZm9yIG1kIGluICRNRF9E
-RVZJQ0VTOyBkbwogICAgZmlvX21kPSIkZmlvX21kIC0tbmFtZT0kbWQgLS1kaXJlY3Rvcnk9L21u
-dC8kbWQvZmlvIgogICAgbWtkaXIgLXAgL21udC8kbWQvZmlvCiAgZG9uZQoKICAkRklPICRGSU9f
-R0xPQkFMICRmaW9fbWQgPiAkRklPX0xPRyAyPiYxICYKfQoKZnVuY3Rpb24gZmlvX3N0b3AoKSB7
-CiAga2lsbGFsbCBmaW8KICB3aGlsZSBwZ3JlcCAtdSByb290IGZpbyA+IC9kZXYvbnVsbDsgZG8g
-c2xlZXAgMTsgZG9uZQp9CgpmdW5jdGlvbiBmc2NrKCkgewoKICBsb2NhbCBmc3R5cGU9YGJsa2lk
-ICQxIHwgc2VkICdzLy4qVFlQRT0iXChbQS1aYS16MC05XSpcKSIuKi9cMS9nJ2AKICAKICBjYXNl
-ICIkZnN0eXBlIiBpbgogICJleHQzIikgIGZzY2suZXh0MyAtbiAkMSA7OwogICJleHQ0IikgIGZz
-Y2suZXh0NCAtbiAkMSA7OwogICJ4ZnMiKSAgIHhmc19yZXBhaXIgLW4gJDEgOzsKICAiYnRyZnMi
-KSBidHJmc2NrICQxIDs7CiAgKikgcmV0dXJuIDAgOzsKICBlc2FjCgogIHJldHVybiAkPwp9Cgpm
-dW5jdGlvbiBtZF9jaGVjaygpIHsKCiAgbG9jYWwgc3luYz0iL3N5cy9ibG9jay8kMS9tZC9zeW5j
-X2FjdGlvbiIKICBsb2NhbCBtaXNtYXRjaD0iL3N5cy9ibG9jay8kMS9tZC9taXNtYXRjaF9jbnQi
-CiAgbG9jYWwgY291bnQ9MAoKICBlY2hvICJjaGVjayIgPiAkc3luYwogIHdoaWxlIFsgYGNhdCAk
-c3luY2AgIT0gImlkbGUiIF0gOyBkbyBzbGVlcCAxczsgZG9uZQoKICBjb3VudD1gY2F0ICRtaXNt
-YXRjaGAKICBpZiBbICRjb3VudCA9PSAwIF0gOyB0aGVuCiAgICByZXR1cm4gMAogIGVsc2UKICAg
-IGVjaG8gIiRzeW5jID0gJGNvdW50IgogICAgcmV0dXJuIDEKICBmaQp9CgoKZWNobyAiKioqIFN0
-b3BwaW5nIGZpbyB0ZXN0cy4uLiIKZmlvX3N0b3AKCmVjaG8gIioqKiBVbm1vdW50aW5nIE1EIGRl
-dmljZXMuLi4iCmZvciBtZCBpbiAkTURfREVWSUNFUzsgZG8KICB1bW91bnQgL2Rldi8kbWQKZG9u
-ZQoKZm9yIG1kIGluICRNRF9ERVZJQ0VTOyBkbwogIGVjaG8gIioqKiBDaGVja2luZyBNRCBSQUlE
-IC9kZXYvJG1kLi4uIgogIG1kX2NoZWNrICRtZAojICBydj0kPwojICBpZiBbWyAkcnYgIT0gMCBd
-XSA7IHRoZW4KIyAgICBleGl0ICRydgojICBmaQpkb25lCgpmb3IgbWQgaW4gJE1EX0RFVklDRVM7
-IGRvCiAgZWNobyAiKioqIENoZWNraW5nIEZTIG9uIC9kZXYvJG1kLi4uIgogIGZzY2sgL2Rldi8k
-bWQKICBydj0kPwogIGlmIFtbICRydiAhPSAwIF1dIDsgdGhlbgogICAgZWNobyAiICBGYWlsdXJl
-LCByZXR1cm4gdmFsOiAkcnYiCiAgICBleGl0ICRydgogIGZpCmRvbmUKCmVjaG8gIioqKiBNb3Vu
-dGluZyBNRCBkZXZpY2VzLi4uIgpmb3IgbWQgaW4gJE1EX0RFVklDRVM7IGRvCiAgbW91bnQgL2Rl
-di8kbWQgL21udC8kbWQKZG9uZQoKZWNobyAiKioqIFJlc3RhcnRpbmcgZmlvIHRlc3RzLi4uIgpm
-aW9fc3RhcnQKCmVjaG8gIlN1Y2Nlc3MhIgpleGl0IDAK
-
---MP_/X4L92Jj3vX0gKXEzEwfrDsZ--
+-- 
+Best regards,
+[COOLCOLD-RIPN]
