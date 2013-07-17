@@ -1,121 +1,213 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: MD RAID 1 fail/remove/add corruption in 3.10
-Date: Wed, 17 Jul 2013 14:53:31 +1000
-Message-ID: <20130717145331.5ee6c200@notabene.brown>
-References: <20130716144920.39f428b7@jlaw-desktop.mno.stratus.com>
-	<51E606EF.7070801@fnarfbargle.com>
+Subject: Re: RAID1 repair GPF crash w/3.10-rc7
+Date: Wed, 17 Jul 2013 16:12:30 +1000
+Message-ID: <20130717161230.2d96fa62@notabene.brown>
+References: <alpine.DEB.2.02.1307012118450.6694@jlaw-desktop.mno.stratus.com>
+	<alpine.DEB.2.02.1307031634440.9749@jlaw-desktop.mno.stratus.com>
+	<20130704105337.2a06cbfd@notabene.brown>
+	<20130708160656.6cb8e74b@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/HkeQi9SN2PQ4tUx6gODPut9"; protocol="application/pgp-signature"
+ boundary="Sig_/caX1TKNUL7d8.SJOYU++/uh"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51E606EF.7070801@fnarfbargle.com>
+In-Reply-To: <20130708160656.6cb8e74b@jlaw-desktop.mno.stratus.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <lists2009@fnarfbargle.com>
-Cc: Joe Lawrence <joe.lawrence@stratus.com>, linux-raid@vger.kernel.org, Martin Wilck <mwilck@arcor.de>
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: linux-raid@vger.kernel.org, kmo@daterainc.com
 List-Id: linux-raid.ids
 
---Sig_/HkeQi9SN2PQ4tUx6gODPut9
+--Sig_/caX1TKNUL7d8.SJOYU++/uh
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 17 Jul 2013 10:52:31 +0800 Brad Campbell <lists2009@fnarfbargle.com>
+On Mon, 8 Jul 2013 16:06:56 -0400 Joe Lawrence <joe.lawrence@stratus.com>
 wrote:
 
-> On 17/07/13 02:49, Joe Lawrence wrote:
-> > Hi Neil, Martin,
+> [+cc Kent's new mail?]
+>=20
+> On Thu, 4 Jul 2013 10:53:37 +1000
+> NeilBrown <neilb@suse.de> wrote:
+> >=20
+> > I would propose "bio_rewind" that exactly undoes any "bio_advance".=20
 > >
-> > While testing patches to fix RAID1 repair GPF crash w/3.10-rc7
-> > ( http://thread.gmane.org/gmane.linux.raid/43351 ), I encountered disk
-> > corruption when repeatedly failing, removing, and adding MD RAID1
-> > component disks to their array.  The RAID1 was created with an internal
-> > write bitmap and the test was run against alternating disks in the
-> > set.  I bisected this behavior back to commit 7ceb17e8 "md: Allow
-> > devices to be re-added to a read-only array", specifically these lines
-> > of code:
+> > [ ... snip ...]
+> >=20
+> > Then call that on pbio at the same place we call bio_reset on sbio.
+> >=20
+> > You could probably also call bio_rewind on sbio, and remove lots of that
+> > code for setting the bio up again.
 >=20
-> This sounds like an issue I just bumped up against in RAID-5.
-> I have a test box with a RAID-5 comprised of 2 x 2TB drives, and 6=20
-> RAID-0's of 2 x 1TB drives.
+> This appears to work for my test case (no crashes or post repair
+> mismatch_cnt):
 >=20
+>   mdadm --fail /dev/$MD /dev/sda3
+>   mdadm --remove /dev/$MD /dev/sda3
+>   dd if=3D/dev/urandom of=3D/dev/$MD bs=3D1M count=3D500
+>   mdadm --stop /dev/$MD
 >=20
-> root@test:/root# cat /proc/mdstat
-> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
-> md3 : active raid5 md20[0] md25[8] md24[7] md22[6] sdl[4] sdn[3] md23[2]=
-=20
-> md21[1]
->        13673683968 blocks super 1.2 level 5, 512k chunk, algorithm 2=20
-> [8/8] [UUUUUUUU]
->        bitmap: 0/15 pages [0KB], 65536KB chunk
+>   mdadm --create /dev/$MD --level=3D1 --assume-clean --raid-devices=3D2 \
+>   	--bitmap=3Dinternal /dev/sda3 /dev/sdi3
+>   echo repair > /sys/block/$MD/md/sync_action
 >=20
-> md22 : active raid0 sdk[0] sdm[1]
->        1953524736 blocks super 1.2 512k chunks
+> I'll reply to this email with the patches that implement your
+> suggested changes.  Feel free to combine or redo them, posting them here
+> was the easiest way to provide my signed-off should you need it.
 >=20
-> md20 : active raid0 sdj[0] sdo[1]
->        1953522688 blocks super 1.2 512k chunks
+> Although it works, having to rewind the bio io_vec index (and
+> clearing the bi_next pointers) before calling bio_copy_data feels a
+> bit clunky.  What bio_copy_data is really doing is
+> "bio_copy_remaining_data in a bio chain," whereas MD wants=20
+> "bio_copy_completed_data from a single bio".
 >=20
-> md21 : active raid0 sdh[0] sdi[1]
->        1953524736 blocks super 1.2 512k chunks
+> I took a look at Kent's tree and a lot of the block layer handling was
+> simplified through the bvec_iter.  I don't know if that code is
+> destined for 3.11.  If so, it would probably be easier to retest and
+> base any MD changes off of his.  And for 3.10 stable, the minimal
+> fix would be for MD to just manipulate the bi_idx itself (or revert
+> calling bio_copy_data altogether.)
 >=20
-> md25 : active raid0 sda[0] sdb[1]
->        2441900544 blocks super 1.2 512k chunks
->=20
-> md23 : active raid0 sdd[0] sde[1]
->        1953522688 blocks super 1.2 512k chunks
->=20
-> md24 : active raid0 sdf[0] sdg[1]
->        1953524736 blocks super 1.2 512k chunks
->=20
-> I was running a check over md3 whilst rsyncing a load of data onto it.
-> md20 was ejected some time during this process. (A smart query issued=20
-> caused a timeout on one of the drives). I removed md20, stopped md20,=20
-> started md20 and re-added md20.
->=20
-> This should have caused a re-build as the bitmap would have been way out=
-=20
-> of sync, however it immediately reported the rebuild complete and left=20
-> the array mostly trashed. (about 500,000 mismatch counts).
->=20
-> kernel at the time was late in the 3.11-rc1 merge window.=20
-> 3.10.0-09289-g9903883
->=20
-> I've been meaning to try and reproduce it, but as each operation takes=20
-> about 5 hours it's slow going.
->=20
-> This is a test array, so it has no data value. I'm happy to try to=20
-> reproduce this fault if it would help any.
->=20
-> Regards,
-> Brad
 
+Hi,
+ just letting you know I've decided to fix this differently for 3.11 and
+ 3.10.y.
 
-Hi Brad,
- yes, sounds like the same problem, with same solution for now.  Remove the
- code that Joe highlighted.
+I noticed there was another problem in that code, in that the len argument
+passed to memcmp was bv_len which might have been modified.
 
-Thanks.
+So I moved the "fix up the bio" code to the top of the function and applied
+it to all relevant bios.
+
+I'd still like to go with bio_rewind or similar, but it's probably best for
+that to wait for the other bio stuff to settle.  Maybe it won't be needed.
 
 NeilBrown
 
---Sig_/HkeQi9SN2PQ4tUx6gODPut9
+
+commit 9a3856f56b467425e13a19d95524524e76eab040
+Author: NeilBrown <neilb@suse.de>
+Date:   Wed Jul 17 15:19:29 2013 +1000
+
+    md/raid1: fix bio handling problems in process_checks()
+   =20
+    Recent change to use bio_copy_data() in raid1 when repairing
+    an array is faulty.
+   =20
+    The underlying may have changed the bio in various ways using
+    bio_advance and these need to be undone not just for the 'sbio' which
+    is being copied to, but also the 'pbio' (primary) which is being
+    copied from.
+   =20
+    So perform the reset on all bios that were read from and do it early.
+   =20
+    This also ensure that the sbio->bi_io_vec[j].bv_len passed to
+    memcmp is correct.
+   =20
+    Reported-by: Joe Lawrence <joe.lawrence@stratus.com>
+    Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index ec73458..d60412c 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1849,6 +1849,36 @@ static int process_checks(struct r1bio *r1_bio)
+ 	int i;
+ 	int vcnt;
+=20
++	/* Fix variable parts of all bios */
++	vcnt =3D (r1_bio->sectors + PAGE_SIZE / 512 - 1) >> (PAGE_SHIFT - 9);
++	for (i =3D 0; i < conf->raid_disks * 2; i++) {
++		int j;
++		int size;
++		struct bio *b =3D r1_bio->bios[i];
++		if (b->bi_end_io !=3D end_sync_read)
++			continue;
++		/* fixup the bio for reuse */
++		bio_reset(b);
++		b->bi_vcnt =3D vcnt;
++		b->bi_size =3D r1_bio->sectors << 9;
++		b->bi_sector =3D r1_bio->sector +
++			conf->mirrors[i].rdev->data_offset;
++		b->bi_bdev =3D conf->mirrors[i].rdev->bdev;
++		b->bi_end_io =3D end_sync_read;
++		b->bi_private =3D r1_bio;
++
++		size =3D b->bi_size;
++		for (j =3D 0; j < vcnt ; j++) {
++			struct bio_vec *bi;
++			bi =3D &b->bi_io_vec[j];
++			bi->bv_offset =3D 0;
++			if (size > PAGE_SIZE)
++				bi->bv_len =3D PAGE_SIZE;
++			else
++				bi->bv_len =3D size;
++			size -=3D PAGE_SIZE;
++		}
++	}
+ 	for (primary =3D 0; primary < conf->raid_disks * 2; primary++)
+ 		if (r1_bio->bios[primary]->bi_end_io =3D=3D end_sync_read &&
+ 		    test_bit(BIO_UPTODATE, &r1_bio->bios[primary]->bi_flags)) {
+@@ -1857,12 +1887,10 @@ static int process_checks(struct r1bio *r1_bio)
+ 			break;
+ 		}
+ 	r1_bio->read_disk =3D primary;
+-	vcnt =3D (r1_bio->sectors + PAGE_SIZE / 512 - 1) >> (PAGE_SHIFT - 9);
+ 	for (i =3D 0; i < conf->raid_disks * 2; i++) {
+ 		int j;
+ 		struct bio *pbio =3D r1_bio->bios[primary];
+ 		struct bio *sbio =3D r1_bio->bios[i];
+-		int size;
+=20
+ 		if (sbio->bi_end_io !=3D end_sync_read)
+ 			continue;
+@@ -1888,27 +1916,6 @@ static int process_checks(struct r1bio *r1_bio)
+ 			rdev_dec_pending(conf->mirrors[i].rdev, mddev);
+ 			continue;
+ 		}
+-		/* fixup the bio for reuse */
+-		bio_reset(sbio);
+-		sbio->bi_vcnt =3D vcnt;
+-		sbio->bi_size =3D r1_bio->sectors << 9;
+-		sbio->bi_sector =3D r1_bio->sector +
+-			conf->mirrors[i].rdev->data_offset;
+-		sbio->bi_bdev =3D conf->mirrors[i].rdev->bdev;
+-		sbio->bi_end_io =3D end_sync_read;
+-		sbio->bi_private =3D r1_bio;
+-
+-		size =3D sbio->bi_size;
+-		for (j =3D 0; j < vcnt ; j++) {
+-			struct bio_vec *bi;
+-			bi =3D &sbio->bi_io_vec[j];
+-			bi->bv_offset =3D 0;
+-			if (size > PAGE_SIZE)
+-				bi->bv_len =3D PAGE_SIZE;
+-			else
+-				bi->bv_len =3D size;
+-			size -=3D PAGE_SIZE;
+-		}
+=20
+ 		bio_copy_data(sbio, pbio);
+ 	}
+
+--Sig_/caX1TKNUL7d8.SJOYU++/uh
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUeYjSznsnt1WYoG5AQJrAQ/6AtfrbZRODzcC49r1/9pKgcZkWhlh4pIr
-DgyiAUPUe0n9hE1/wix0y4VHO0DrHnPYQudYWG9vMJJPplkehugSboEH6jBJe5rk
-MXntM+wGKi5ykIa02K/rbuG2WZzeYLDx/LwYRPOTONuLX6a4B0x/mvC8iA0m2c6l
-+kD5e9TUeTJxuMDzOGGEkrnHP493N/W6+atn91igeqxocpvKJMTJKP0xB4lNHc7L
-iq0Zd2oSfD+iDMp8GdXORVLWa3mshvqCGPglXyrFMNjNvLrGIa1QI+kKuRPcz4VD
-8756aFqqSebJ7WZkR33VRT+HxzuYfNC2ymqZTV6hQ1KF7/De/N4ma0J3VdMIfZ1a
-ItE895jxki/klxFsrLUgqE0x6gWEhUYB/ksZix5okyXg3Ari4TkKmCYwFxCT+pb7
-DfkRkATsiOPgLZXcDttjUEkyvXcWRCbta8KyNAAJCZBS4bwS6qLVoJV+ZAfEsHoR
-5ct9t+B90IEBdLbhypm8CN4I65/MyEQa12+oHml59GMQPD1ZvKK73RdVebGJiNiB
-G2Tiv7hTjd2IVZQ6WtByid0Qpbk9QKMMwI7djPpTF/FztVh0spgx33IWFVZr0P/b
-XWmLyKlnBND88p2Hj5vk86wKyePwzfseAWWG1Kn6PMUm3DW8XXclzg0MalbQCLCK
-Sct3OCSqVBk=
-=oPjb
+iQIVAwUBUeY1zjnsnt1WYoG5AQLBWxAAmNaq/6Wq7e1nn1Hdsxr3hFP6ELeQCmEx
+YJq2d3bakdAd3Rhokohjp0dG/dHbuG89fRjwwq35ZNjwHlm/Vx83doro1mq/5wZ6
+zPjCWVVlob3U1Da1Jh/xOLDjYV24REhDnfVULCP7bdLvgzqYOCPzmAr2tBr1XxkK
++aF+5+chjNx1bKvYkP69PBSwNizJOjuI2qz1V5xS7X1kCF3XfYQXBM/gQokLfZp1
+/G3r0eTA9ClF3tqgUR8/nx25ZYunct/G1d8oiKms5HHKZzvjEvXZcrdVjjsFQT2W
+pjdiObwI2iG1ZPx7lqpt/I+Us0XN3HOfPT6WpqJanf+mbiuA0o+LZFJ0y8sUc38e
+FG8p2SANTOaCoJGNLqEH7hnh8mb7WPOFRtm7nINbqhdNQTtWcaQNoubtPeiPUyT+
+WW3uRZgZl3ycO1BVH9KV/G6a6Gc/I9yehnb3bt8bxrlH8ZTQs/Szz1RYetg9zbxh
+w1hiOC9kvGzSf6QXyl7i1/4+tLdndRdhIWrNeYZomnv5k8NutqAHIF8YLZgj6RBI
+4296tyyNtqIvdhr5TuV92t4w4p+QJRkx0ee+Nu5jkigKxU/M3++sjLgfKRmNuOX4
+zRU8EltniK2BnW+vZXeiSSAhLUYYnX6jgk+WOKruODAiRT6Hsh2htd42gETLgN4e
+QFNCKUrf0q0=
+=PAeT
 -----END PGP SIGNATURE-----
 
---Sig_/HkeQi9SN2PQ4tUx6gODPut9--
+--Sig_/caX1TKNUL7d8.SJOYU++/uh--
