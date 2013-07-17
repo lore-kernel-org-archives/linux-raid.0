@@ -1,58 +1,63 @@
-From: Brassow Jonathan <jbrassow@redhat.com>
-Subject: Re: Scrubbing "check" not working for RAID10 in 3.10-rc1+
-Date: Wed, 17 Jul 2013 13:24:55 -0500
-Message-ID: <6EB9BA19-19FB-49D0-B9B6-EF886B54DAE7@redhat.com>
-References: <1372141160.2016.0.camel@f16> <20130625163221.6f25f83d@notabene.brown> <3D105022-CB87-4BA7-9ACB-A31A2B25694D@redhat.com> <20130716170130.44a0db05@notabene.brown>
-Mime-Version: 1.0 (Apple Message framework v1085)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Backup file size when migrating from raid5 to raid6?
+Date: Thu, 18 Jul 2013 06:51:59 +1000
+Message-ID: <20130718065159.0a40207e@notabene.brown>
+References: <CAH-e9vLTY2eo0p3ud5FaWNe_2f8hej0aitFuu8K0M1RZdObiXQ@mail.gmail.com>
+	<CAH-e9vLiK6=HmDjM=Ub7p_Lxrp_L0x1bkAa2oP=ykajqvtkfDQ@mail.gmail.com>
+	<loom.20130717T145156-76@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/oyRtDZfIWbJ0a8aiWhE4nBO"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130716170130.44a0db05@notabene.brown>
+In-Reply-To: <loom.20130717T145156-76@post.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Boyan Alexiev <alexiev@resonance.bg>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+--Sig_/oyRtDZfIWbJ0a8aiWhE4nBO
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On Jul 16, 2013, at 2:01 AM, NeilBrown wrote:
+On Wed, 17 Jul 2013 13:01:15 +0000 (UTC) Boyan Alexiev <alexiev@resonance.b=
+g>
+wrote:
 
-> On Mon, 15 Jul 2013 10:35:07 -0500 Brassow Jonathan <jbrassow@redhat.com>
-> wrote:
-> 
->> 
->> On Jun 25, 2013, at 1:32 AM, NeilBrown wrote:
->> 
->>> On Tue, 25 Jun 2013 01:19:20 -0500 Jonathan Brassow <jbrassow@redhat.com>
->>> wrote:
->>> 
->>>> Neil,
->>>> 
->>>> I've noticed that the "check" operation no longer works for RAID10.  It
->>>> works just fine for the other RAIDs.  The ("data-check") sync_thread
->>>> kicks off just fine, sync_request_write() is called, but it never gets
->>>> past:
->>>>       if (i == conf->copies)
->>>>               goto done;
->>>> The test I am performing creates a RAID array, waits for it to sync,
->>>> shuts it down, writes random data to one of the devices, assembles the
->>>> array, and then runs a "check" - there should be descrepancies.  The
->>>> descrepancies are found and recorded in resync_mismatches for all RAIDs
->>>> <= 3.9 and only for non-RAID10 3.10-rc1+.
->>> 
->>> I just tried on 3.10-rc5+ and it works as expected.
->>> If you can provide a test script that fails, I'll look into it.
->> 
->> Just tried 3.10 - it fails for me there too.  I'll send you the script I use shortly.
->> 
->> thanks,
->> brassow
->> 
->> (vacation ends soon.)
-> :-)
-> 
-> Thanks.  This patch seems to fix it.
+> If You have array with 9 devices and add another one You may at same time
+> grow array and change raid level. In this case You not need backup file.
+> Please try this:
+> mdadm --grow /dev/md0 --raid-devices=3D10 --level=3D6=20
+>=20
 
-Yes, it does.  Thanks!
+You can only skip the backup file if you  are increasing the number of *dat=
+a*
+devices.  I don't think your example does that.
 
- brassow
+(However with mdadm-3.3 this problem goes away if you have a new enough
+kernel).
 
+NeilBrown
+
+--Sig_/oyRtDZfIWbJ0a8aiWhE4nBO
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUecD9Dnsnt1WYoG5AQL4nA//XC6umlxRP7BX3FZnVeQQeeLPua4slmx1
+zMi9dEchWLj/r/0utJvJDIvtdKjkHTVuB5cEcuE1jiszHc/Q/MAVbbL1HvFVVADU
+vTbSGJeRdkmOIHGP9gnSewERBaxdtEaC+NXM+WYg1hbTaJ5t+WQvFKcE0OBWQdkW
+NSWyFnEnBbfRfbeay4m7cTjhGoJZAj4x5cj8K2x4UfSEZwQuvQeC24OPEATCkKSM
+M1Nq1IOjgrhH7mBh8eOs5WeH/BUaz8+96JbBC+CLsIa8HFq23CZZVqhcclIZkEhY
+D428O8vKI/whBTPwthc7BPrHPuvdb5Yuh/BR/YaTJ65Izj+G7HNTsbubQX5acPGb
+TgUupHP8451ePfZwmZjcvFK3V8OfGv+VLZ8+DPdUTOmL2pEUK1dJTmVH07q3zsUx
+TSyH9eDBMlKZzIKMCp22VL8DmIc+5VaC6X54qhftikEPGO9XpYfufNQwKPVA8uJA
+L5QBJjnl2XfYru5NK9TPS8LbDDyTt9r72vMvTEkW++ab9lgrKR+aTqLX6kKRziov
+k8PLalVKl33YoP9wS9f8gMtAaHwtG3kCY63EBoUUjHOlQ/Dl1OhyexE5OGxkMzS2
+eqW41f7DNljlWmxE2kNFPWmkaDCrO64qtSQQINVK7eoWWKKvCmqI3qOVtTNL6N+v
+hR0/UxHi4Yg=
+=rRPJ
+-----END PGP SIGNATURE-----
+
+--Sig_/oyRtDZfIWbJ0a8aiWhE4nBO--
