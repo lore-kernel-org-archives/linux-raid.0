@@ -1,156 +1,78 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: 3.10: discard/trim support on md-raid1?
-Date: Wed, 17 Jul 2013 11:48:39 +1000
-Message-ID: <20130717114839.4a67b142@notabene.brown>
-References: <001701ce7fb4$889bdd40$99d397c0$@lucidpixels.com>
-	<20130716171527.7c6cb722@notabene.brown>
-	<CAGqmV7qf14zrsimCMRsVWobq8SpLaavxPQvEyU6N=f1nBgvFHQ@mail.gmail.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: MD RAID 1 fail/remove/add corruption in 3.10
+Date: Wed, 17 Jul 2013 10:52:31 +0800
+Message-ID: <51E606EF.7070801@fnarfbargle.com>
+References: <20130716144920.39f428b7@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/omkt2qr2rdYJGFRv+E_twTQ"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGqmV7qf14zrsimCMRsVWobq8SpLaavxPQvEyU6N=f1nBgvFHQ@mail.gmail.com>
+In-Reply-To: <20130716144920.39f428b7@jlaw-desktop.mno.stratus.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Linux kernel <linux-kernel@vger.kernel.org>, Linux RAID <linux-raid@vger.kernel.org>
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>, Martin Wilck <mwilck@arcor.de>
 List-Id: linux-raid.ids
 
---Sig_/omkt2qr2rdYJGFRv+E_twTQ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 17/07/13 02:49, Joe Lawrence wrote:
+> Hi Neil, Martin,
+>
+> While testing patches to fix RAID1 repair GPF crash w/3.10-rc7
+> ( http://thread.gmane.org/gmane.linux.raid/43351 ), I encountered disk
+> corruption when repeatedly failing, removing, and adding MD RAID1
+> component disks to their array.  The RAID1 was created with an internal
+> write bitmap and the test was run against alternating disks in the
+> set.  I bisected this behavior back to commit 7ceb17e8 "md: Allow
+> devices to be re-added to a read-only array", specifically these lines
+> of code:
 
-On Wed, 17 Jul 2013 00:44:15 +0400 CoolCold <coolthecold@gmail.com> wrote:
-
-> Neil, I've tryed to look around commit logs but failed to find commit
-> where discard/trim were added.
-> I was looking via
-> http://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/log/d=
-rivers/md?id=3D9f2a940965286754f3a34d5737c3097c05db8725&qt=3Dgrep&q=3Ddisca=
-rd+support
-> , tryed just "discard" without support - found commits about dm, not
-> md, though.
->=20
-> Can you shed some light here? Thanks in advance.
->=20
-> (resent in plaintext mode, please reply to this one)
-
-Did you try:
-    grep -i discard drivers/md/raid1.c
-??
-
-commit 2ff8cc2c6d4e323de71a42affeb3041fa17d5b10
-Author: Shaohua Li <shli@fusionio.com>
-Date:   Thu Oct 11 13:28:54 2012 +1100
-
-    md: raid 1 supports TRIM
-
-is the commit that introduced discard support for md/raid1.c
-
-NeilBrown
+This sounds like an issue I just bumped up against in RAID-5.
+I have a test box with a RAID-5 comprised of 2 x 2TB drives, and 6 
+RAID-0's of 2 x 1TB drives.
 
 
->=20
->=20
-> On Tue, Jul 16, 2013 at 11:15 AM, NeilBrown <neilb@suse.de> wrote:
-> > On Sat, 13 Jul 2013 06:34:19 -0400 "Justin Piszcz" <jpiszcz@lucidpixels=
-.com>
-> > wrote:
-> >
-> >> Hello,
-> >>
-> >> Running 3.10 and I see the following for an md-raid1 of two SSDs:
-> >>
-> >> Checking /sys/block/md1/queue:
-> >> add_random: 0
-> >> discard_granularity: 512
-> >> discard_max_bytes: 2147450880
-> >> discard_zeroes_data: 0
-> >> hw_sector_size: 512
-> >> iostats: 0
-> >> logical_block_size: 512
-> >> max_hw_sectors_kb: 32767
-> >> max_integrity_segments: 0
-> >> max_sectors_kb: 512
-> >> max_segment_size: 65536
-> >> max_segments: 168
-> >> minimum_io_size: 512
-> >> nomerges: 0
-> >> nr_requests: 128
-> >> optimal_io_size: 0
-> >> physical_block_size: 512
-> >> read_ahead_kb: 8192
-> >> rotational: 1
-> >> rq_affinity: 0
-> >> scheduler: none
-> >> write_same_max_bytes: 0
-> >>
-> >> What should be seen:
-> >> rotational: 0
-> >
-> > What has "rotational" got to do with "supports discard"?
-> > There may be some correlation, but it isn't causal.
-> >
-> >> And possibly:
-> >> discard_zeroes_data: 1
-> >
-> > This should be set as the 'or' of the same value from component devices=
-.  And
-> > does not enable or disable the use of discard.
-> >
-> > I don't think that "does this device support discard" appears in sysfs.
-> >
-> > I believe trim does work on md/raid1 if the underlying devices all supp=
-ort it.
-> >
-> > NeilBrown
-> >
-> >
-> >
-> >>
-> >> Can anyone confirm if there is a workaround to allow TRIM when using
-> >> md-raid1?
-> >>
-> >> Some related discussion here:
-> >> http://us.generation-nt.com/answer/md-rotational-attribute-help-206571=
-222.ht
-> >> ml
-> >> http://www.progtown.com/topic343938-ssd-strange-itself-conducts.html
-> >>
-> >>
-> >> Justin.
-> >>
-> >>
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-raid" =
-in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
->=20
->=20
->=20
+root@test:/root# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md3 : active raid5 md20[0] md25[8] md24[7] md22[6] sdl[4] sdn[3] md23[2] 
+md21[1]
+       13673683968 blocks super 1.2 level 5, 512k chunk, algorithm 2 
+[8/8] [UUUUUUUU]
+       bitmap: 0/15 pages [0KB], 65536KB chunk
 
+md22 : active raid0 sdk[0] sdm[1]
+       1953524736 blocks super 1.2 512k chunks
 
---Sig_/omkt2qr2rdYJGFRv+E_twTQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+md20 : active raid0 sdj[0] sdo[1]
+       1953522688 blocks super 1.2 512k chunks
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+md21 : active raid0 sdh[0] sdi[1]
+       1953524736 blocks super 1.2 512k chunks
 
-iQIVAwUBUeX3+Dnsnt1WYoG5AQICig//Ts9VuZYzRMo0KRkcLaCV8QZXcKHxIBi5
-NWI+H2A4YJ2dmKM6DnBM9iGBufdmbLZbRHS/oL4wUfpPrMh4btXUJvKAq+hT5SzX
-DEmi6JEEgcokf/Fchflo+uBHZJzk+T4bqg2OFxqCbPtcztW8PyIQk0Yt24caKmK1
-twy1KvRBmOGluquU1PAOVffeB0/OqDayUTALHjTB5XbUznqAlrvTtxFe4BCubi6/
-AT7ZYeZGtAlLPDiqPSSlXASG5gCDSC59Zv8zgjEVPrVIFxWj81Wv1vwseEbrRlQM
-ZzB5jb1fs0+SqG9iDkXKUiKXA4JP16TkjUpOrCLlKeuxuVxY4zVX9QehaP+J63gU
-Fb0jyJz/xZcPJLw3yyoLTRiTbvSJS2N6XnNdgjXNXaSxMnAaq2i9UVsjOCA3yfej
-APbSZclnKf7x83clUKAG+tn/DTDKRGFhhmmRjBMPeO1W7YDw5klGoMp3bpuBdLKe
-KMHsyKU6Gd0r11Afxo62cxmOdiWH6zHX0IFbaidZKkO1Mb0fU6S0Hd0lafq35K1Q
-CDoBimnxlQqPk969zFPb9ub21NNORMbiTbC8UgA/efVIzqnLla+mxnh1fWdf6Xjl
-M54U3E9M5LGGifB8z0cJVaEfzNTa8LOz1gTy6ytegmHXKxJPRaR91aL7q86ohoxx
-e08+4UpZHis=
-=ZHe1
------END PGP SIGNATURE-----
+md25 : active raid0 sda[0] sdb[1]
+       2441900544 blocks super 1.2 512k chunks
 
---Sig_/omkt2qr2rdYJGFRv+E_twTQ--
+md23 : active raid0 sdd[0] sde[1]
+       1953522688 blocks super 1.2 512k chunks
+
+md24 : active raid0 sdf[0] sdg[1]
+       1953524736 blocks super 1.2 512k chunks
+
+I was running a check over md3 whilst rsyncing a load of data onto it.
+md20 was ejected some time during this process. (A smart query issued 
+caused a timeout on one of the drives). I removed md20, stopped md20, 
+started md20 and re-added md20.
+
+This should have caused a re-build as the bitmap would have been way out 
+of sync, however it immediately reported the rebuild complete and left 
+the array mostly trashed. (about 500,000 mismatch counts).
+
+kernel at the time was late in the 3.11-rc1 merge window. 
+3.10.0-09289-g9903883
+
+I've been meaning to try and reproduce it, but as each operation takes 
+about 5 hours it's slow going.
+
+This is a test array, so it has no data value. I'm happy to try to 
+reproduce this fault if it would help any.
+
+Regards,
+Brad
