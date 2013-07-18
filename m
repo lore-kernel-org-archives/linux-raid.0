@@ -1,36 +1,34 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: shown disk sizes
-Date: Thu, 18 Jul 2013 09:35:01 +0200 (CEST)
-Message-ID: <alpine.DEB.2.00.1307180929280.8891@uplift.swm.pp.se>
-References: <1374071867.25339.14.camel@heisenberg.scientia.net> <20130718094327.7d46949e@notabene.brown>
+From: Michael Heide <lkml662@der-he.de>
+Subject: write-mostly vs. write-behind
+Date: Thu, 18 Jul 2013 09:25:10 +0200
+Message-ID: <20130718092510.6f4a6fd6@tbb-phenom>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130718094327.7d46949e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Christoph Anton Mitterer <calestyo@scientia.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 18 Jul 2013, NeilBrown wrote:
+Hi,
 
->> Last but not least... when the tools print values like "10.00 GiB 10.74
->> GB"... wouldn't it be better if they printed "~10.00 GiB ~10.74 GB" or
->> something like this to show that the values are rounded and not
->> _exactly_ 10 GiB... could be helpful to avoid misalignment issues.
->
-> Would that really help?  Given that 10.00GiB is not exactly the same as
-> 10.74GB, isn't it obvious that they must be approximations?
->
-> I'm not exactly against adding '~' but it doesn't seem necessary.
-> Does anyone else have thoughts?
+the md manpage says there are write-mostly and write-behind options for 
+md raid1 and you can use write-behind on devices where write-mostly
+is activated. 
 
-When I studied rounding I was taught that 10.74 implied values could be 
-between 10.744999999... and 10.735000000... Same goes with 10.00 can be 
-between 10.004999999... and 99.995000000...
+I'm using a small low-power home-server with a HDD and an usb flash drive, 
+where one HDD partition (with important data) is mirrored (raid1) to 
+the flash drive. (other data is not that important)
 
-As long as the value numbers are correctly rounded, I don't feel there is 
-a need to put the "~" in there. 10.74GB doesn't imply 10.7400000000000.
+The flash drive (usb-stick / pen-drive / usb-key) is faster in reads and 
+slower in writes than the HDD. So read requests are slow because of the
+slower HDD and write requests are even slower because of the slow flash
+drive.
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+I would like to use "write-mostly" with the HDD and "write-behind" with
+the flash drive. That's impossible with Linux MD Raids, right?
+
+Regards
+Michael
+
+(I'm not subscribed)
