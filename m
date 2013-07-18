@@ -1,23 +1,32 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: [PATCH 05/27] DDF: Implement store_super_ddf
-Date: Thu, 18 Jul 2013 20:51:01 +0200
-Message-ID: <51E83915.8000309@arcor.de>
-References: <1372883287-8859-1-git-send-email-mwilck@arcor.de>	<1372883287-8859-6-git-send-email-mwilck@arcor.de>	<20130708154810.561ba2a2@notabene.brown>	<51DD9BD4.1090208@arcor.de> <20130715153141.4ac1cef9@notabene.brown>
+From: Francis Moreau <francis.moro@gmail.com>
+Subject: How does md(adm) work with fake-raid ?
+Date: Thu, 18 Jul 2013 22:37:32 +0200
+Message-ID: <CAC9WiBjU_A0jsB4KoX4B9ohT4TD3cYuDdioM6hSWfK13Otjs-Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130715153141.4ac1cef9@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/15/2013 07:31 AM, NeilBrown wrote:
+Hello,
 
-> I've reverted it then - I really don't think it is wanted.
+Sorry if the question is stupid but I'm a rookie in md things, but I'd
+like to understand the big picture here.
 
-AFAICS it's not reverted yet. Sending a new patch series that IMO does
-the Right Thing now, and essentially reverts the part you didn't like.
+I've been told to use mdadm whenever possible even if my raid is
+handled by the bios (fake raid) which use the ddf metadata format.
+(unfortunately it seems that I can't desactive this fake raid in
+favour of linux soft raid). It's RAID1 BTW.
 
-Martin
+So my question is rather simple: in my understanding the bios is doing
+the mirroring, but when setting up the md device, linux (kernel or
+userspace, I don't really know) also handles the mirroring for RAID1
+personnality. Is Linux clever enough to see that the mirroring is done
+by the bios in my case ?
+
+Could anybody teach me the big picture ?
+
+Thanks a lot.
+--
+Francis
