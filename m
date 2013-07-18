@@ -1,44 +1,39 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Hlep hardware selection
-Date: Thu, 18 Jul 2013 17:34:13 -0500
-Message-ID: <51E86D65.6020707@hardwarefreak.com>
-References: <CAH3kUhHWQ3tNr843=oO+JacEG8uTvqhXsyx0WvN8Dk+F_tDGoA@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: Ian Pilcher <arequipeno@gmail.com>
+Subject: Re: Disks supporting ERC?
+Date: Thu, 18 Jul 2013 17:31:34 -0500
+Message-ID: <ks9qc3$rvb$1@ger.gmane.org>
+References: <29200828.19.1367778433299.JavaMail.root@zimbra>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAH3kUhHWQ3tNr843=oO+JacEG8uTvqhXsyx0WvN8Dk+F_tDGoA@mail.gmail.com>
+In-Reply-To: <29200828.19.1367778433299.JavaMail.root@zimbra>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 7/18/2013 4:26 PM, Roberto Spadim wrote:
-> Hi guys, i'm a bit distant from last hardware
-> i need four disks (enterprise level ~ 120 to 300gb)
-> two ssd (for cache via bcache,dmcache or flashcache ~ 120gb or less)
-> and a raid controller card that i could use smartctl and others tools
-> to check disk status
-> 
-> any help is welcome, i don't know if here is the better place to ask,
-> or if anyone know some high level forum / list for hardware updates
-> i need true fail safe disks (enterprise use), i'm talking about
-> checksum of disk, silent error detection or maybe silent error prof
+On 05/05/2013 01:27 PM, Roy Sigurd Karlsbakk wrote:
+> Anyone that knows what drive vendors that still sell 7k2 desktop
+> drives supporting scterc? WD is all out, and I have the impression
+> that others are following this.
 
-You've presented somewhat of a fairy land smorgasbord wish list, not an
-actual set of requirements.  Maybe if provide an actual set of
-requirements you'd get some real answers.  I.e.
+I just purchased 5 Toshiba DT01ACA200 2TB drives, and smartctl reports
+that they DO support scterc.
 
-My workload needs net capacity X, Y IOPS, and Z bandwidth.  I want to
-use a real enterprise caliber RAID card with battery/flash backed write
-cache, and I want to use enterprise class drives.  My budget is $AAAA.
+Toshiba apparently purchased HGST's 3.5" HDD business from Western
+Digital.  As a relatively unknown brand, they're probably incented to
+maximize the value of their offerings, at least for the time being.  (At
+$85 for a RAID-friendly 7200RPM 2TB drive, I'd say that they're doing a
+fine job!)  :-)
 
-Will the drives will be housed in an external SAS JBOD hot swap chassis
-or in a hot swap SAS backplane in an existing server?  If you're not
-using hot swap backplanes none of your "enterprise" aspirations are valid.
+HTH
+
+BTW, does anyone know if anyone is maintaining a list/wiki of RAID-
+compatible consumer/desktop drives?
 
 -- 
-Stan
-
+========================================================================
+Ian Pilcher                                         arequipeno@gmail.com
+Sometimes there's nothing left to do but crash and burn...or die trying.
+========================================================================
 
