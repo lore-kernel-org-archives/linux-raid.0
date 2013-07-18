@@ -1,32 +1,26 @@
-From: Francis Moreau <francis.moro@gmail.com>
-Subject: How does md(adm) work with fake-raid ?
-Date: Thu, 18 Jul 2013 22:37:32 +0200
-Message-ID: <CAC9WiBjU_A0jsB4KoX4B9ohT4TD3cYuDdioM6hSWfK13Otjs-Q@mail.gmail.com>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Hlep hardware selection
+Date: Thu, 18 Jul 2013 18:26:57 -0300
+Message-ID: <CAH3kUhHWQ3tNr843=oO+JacEG8uTvqhXsyx0WvN8Dk+F_tDGoA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+Hi guys, i'm a bit distant from last hardware
+i need four disks (enterprise level ~ 120 to 300gb)
+two ssd (for cache via bcache,dmcache or flashcache ~ 120gb or less)
+and a raid controller card that i could use smartctl and others tools
+to check disk status
 
-Sorry if the question is stupid but I'm a rookie in md things, but I'd
-like to understand the big picture here.
+any help is welcome, i don't know if here is the better place to ask,
+or if anyone know some high level forum / list for hardware updates
+i need true fail safe disks (enterprise use), i'm talking about
+checksum of disk, silent error detection or maybe silent error prof
 
-I've been told to use mdadm whenever possible even if my raid is
-handled by the bios (fake raid) which use the ddf metadata format.
-(unfortunately it seems that I can't desactive this fake raid in
-favour of linux soft raid). It's RAID1 BTW.
+thanks again guys
 
-So my question is rather simple: in my understanding the bios is doing
-the mirroring, but when setting up the md device, linux (kernel or
-userspace, I don't really know) also handles the mirroring for RAID1
-personnality. Is Linux clever enough to see that the mirroring is done
-by the bios in my case ?
-
-Could anybody teach me the big picture ?
-
-Thanks a lot.
 --
-Francis
+Roberto Spadim
