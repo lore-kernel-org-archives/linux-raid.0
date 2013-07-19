@@ -1,53 +1,69 @@
-From: Miles Fidelman <mfidelman@meetinghouse.net>
-Subject: md raid across physical servers?
-Date: Thu, 18 Jul 2013 21:26:13 -0400
-Message-ID: <51E895B5.9010500@meetinghouse.net>
+From: Francis Moreau <francis.moro@gmail.com>
+Subject: Re: How does md(adm) work with fake-raid ?
+Date: Fri, 19 Jul 2013 09:02:20 +0200
+Message-ID: <CAC9WiBgJnw0vVn66ZYeUGQ06PzSEdULOt3hr9sx7XM9m9rhs5Q@mail.gmail.com>
+References: <CAC9WiBjU_A0jsB4KoX4B9ohT4TD3cYuDdioM6hSWfK13Otjs-Q@mail.gmail.com>
+	<51E85949.2020107@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <51E85949.2020107@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: st0ff.npl@gmail.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm trying to figure out if this is a stupid idea or not, comments please:
+Hi,
 
-I have a small, somewhat aging, 4-node cluster (legacy of a former 
-web-hosting business), that currently hosts a few web sites and a 
-mailing list server for some local community groups.  I've also been 
-using it as a development sandbox, and playing with technology a bit.
+On Thu, Jul 18, 2013 at 11:08 PM, Stefan /*St0fF*/ H=FCbner
+<st0ff.npl@googlemail.com> wrote:
+> Am 18.07.2013 22:37, schrieb Francis Moreau:
+>> Hello,
+>>
+>> Sorry if the question is stupid but I'm a rookie in md things, but I=
+'d
+>> like to understand the big picture here.
+>
+> Probably a bit of good googling would have given your answers right a=
+way.
+>
 
-Right now, I have it set up for poor-man's high availability:
-- each node has 4 2TB drives, and 2 gigE NICs - 1 net is used for 
-outside communication, 1 for node-to-node stuff
-- xen virtualization, with a couple of VMs for production, and others 
-for development/playing around
-- md RAID-10 on each node
-- DRBD across pairs of nodes to support the production VMs, with 
-pacemaker-based failover
+Not really. You think such because you might have missed the point of
+my question which is about how does coexists with bios raid.
 
-I keep looking for ways to get beyond the pairwise nature of DRBD, but 
-don't quite have the horsepower or memory to spare to run something like 
-Gluster to provide replication across a cluster file system.
+>>
+>> I've been told to use mdadm whenever possible even if my raid is
+>> handled by the bios (fake raid) which use the ddf metadata format.
+>> (unfortunately it seems that I can't desactive this fake raid in
+>> favour of linux soft raid). It's RAID1 BTW.
+>
+> There are two types of fakeraid that I know of.  Intel and MegaRAID/L=
+SI
+> emulation.  Those are NOT handled by the BIOS, the boot process is
+> handled by the special op-rom integrated into the BIOS.
 
-The following thought keeps coming to mind: what about mounting drives 
-using AoE, then running md RAID across the nodes?
-- use LVM to create and manage logical volumes on each node
-- publish a group of logical volumes via AoE (e.g., 1 from each of the 4 
-servers)
-- use md within a VM, to assemble a RAID10 array
-- if a node fails, taking down the VM, it's instance of md, and the 
-volume on that node, failover to another node, bring up the same VM, and 
-it's instance of md will re-assemble the array from the 3 remaining nodes
+Well what's the difference ? Of course a bios is not a piece of
+hardware with a dedicated cpu. So when I said it's handled by the
+bios, I obviously meant that there's a software stored in the firmware
+which is executed by my the processor and this soft can be configured
+through the bios.
 
-Does this make any sense?  Will it work with any kind of performance at 
-all?  Am I all wet?
+>  After any
+> kernel is booted, all RAID processing shall be done by the respective
+> driver.  And none use DDF afaik.  Intel uses its own metadata format
+> (referred to as IMSM), LSI also uses its own format (those fakeraid
+> drives can be attached to f.e. a MegaRAID 9266 controller and your RA=
+ID
+> is then recognized - those 9266 f.e. can create DDF arrays).
 
-Thanks for any comments.
+You probably have missed a lot more.
 
-Miles Fidelman
-
--- 
-In theory, there is no difference between theory and practice.
-In practice, there is.   .... Yogi Berra
-
+Bye,
+--
+=46rancis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
