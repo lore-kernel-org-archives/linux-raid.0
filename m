@@ -1,74 +1,77 @@
-From: Francis Moreau <francis.moro@gmail.com>
+From: "Jiang, Dave" <dave.jiang@intel.com>
 Subject: Re: How does md(adm) work with fake-raid ?
-Date: Fri, 19 Jul 2013 09:08:16 +0200
-Message-ID: <CAC9WiBiup8RfusZo51DjAsTOLyr1F-LxgGGCWRCakYURskz7rA@mail.gmail.com>
+Date: Fri, 19 Jul 2013 15:58:06 +0000
+Message-ID: <1374249486.26689.3.camel@djiang5-linux2.ch.intel.com>
 References: <CAC9WiBjU_A0jsB4KoX4B9ohT4TD3cYuDdioM6hSWfK13Otjs-Q@mail.gmail.com>
-	<51E86613.9050505@arcor.de>
+	 <51E86646.8020107@arcor.de>
+	 <CANBHLUi9+hJo8w4V6Bi_3kHDoph4yB7C=sCb5ZSGOB0K1WKGow@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51E86613.9050505@arcor.de>
+In-Reply-To: <CANBHLUi9+hJo8w4V6Bi_3kHDoph4yB7C=sCb5ZSGOB0K1WKGow@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <E07E7D9B7B7C8D47A122C4B8824AF9AF@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>
-Cc: linux-raid@vger.kernel.org
+To: Dmitrijs Ledkovs <xnox@debian.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
-
-On Fri, Jul 19, 2013 at 12:02 AM, Martin Wilck <mwilck@arcor.de> wrote:
->
-> Fake RAID uses a part of every disk to record information about the RAID
-> arrays. This is called meta data, and your BIOS uses it for setting up
-> the drives.
->
-> Under Linux, first you need a low level SATA or SAS driver that detects
-> your physical drives, e.g. the ahci driver.
->
-> md can then detect the DDF meta data on your disk just like the BIOS,
-> assemble the array(s), mirror the data, and do other RAID operations.
->
-
-Yes, but my question is about how md cooperate with the BIOS in this case ?
-
-> Distributions can set this up automatically. Currently most distros
-> don't do this for DDF (they do it only for fake RAID using the Intel
-> Matrix (IMSM) format). For DDF, for historical reasons, most
-> distributions will setup a mapping using dmraid (device mapper based
-> mirroring). That will also basically work, but it isn't a
-> fully-functional RAID implementation such as MD. The magic to set up
-> either MD or dmraid automatically as disks are detected is hidden in the
-> distro's udev rules, and possibly in the distro's installer logic.
-
-That's true, and I'm in the process of "fixing" the default setup
-(dmraid, done during my distro installation) with MD.
-
->
-> The DDF functionality in mdadm is not quite as complete as for other
-> meta data formats, in particular IMSM. I am currently working on
-> improving it, because I want to use just a similar fake RAID under Linux
-> as you, and fully benefit from MD's feature set.
-
-That's an interesting information thanks.
-
->
-> Before doing real work with DDF on your system, make sure that the BIOS
-> still detects your drives correctly after MD/DDF has written its meta
-> data (this happens when an array is shut down, for example).
-> There is a small but non-zero risk that the BIOS may reject the
-> configuration as written by MD. The same may happen e.g. for a Windows
-> fake RAID driver.
-
-That's a good idea.
-
-Are there any procedures described out there that I could follow to
-test MD DFF ?
-
->
-> If you experience any problems, be sure to report them here.
->
-
-I will.
-
-Thank you.
---
-Francis
+T24gVGh1LCAyMDEzLTA3LTE4IGF0IDIzOjM1ICswMDAwLCBEbWl0cmlqcyBMZWRrb3ZzIHdyb3Rl
+Og0KPiBPbiAxOCBKdWx5IDIwMTMgMjM6MDMsIE1hcnRpbiBXaWxjayA8bXdpbGNrQGFyY29yLmRl
+PiB3cm90ZToNCj4gPiBPbiAwNy8xOC8yMDEzIDEwOjM3IFBNLCBGcmFuY2lzIE1vcmVhdSB3cm90
+ZToNCj4gPj4gSGVsbG8sDQo+ID4+DQo+ID4+IFNvcnJ5IGlmIHRoZSBxdWVzdGlvbiBpcyBzdHVw
+aWQgYnV0IEknbSBhIHJvb2tpZSBpbiBtZCB0aGluZ3MsIGJ1dCBJJ2QNCj4gPj4gbGlrZSB0byB1
+bmRlcnN0YW5kIHRoZSBiaWcgcGljdHVyZSBoZXJlLg0KPiA+Pg0KPiA+PiBJJ3ZlIGJlZW4gdG9s
+ZCB0byB1c2UgbWRhZG0gd2hlbmV2ZXIgcG9zc2libGUgZXZlbiBpZiBteSByYWlkIGlzDQo+ID4+
+IGhhbmRsZWQgYnkgdGhlIGJpb3MgKGZha2UgcmFpZCkgd2hpY2ggdXNlIHRoZSBkZGYgbWV0YWRh
+dGEgZm9ybWF0Lg0KPiA+PiAodW5mb3J0dW5hdGVseSBpdCBzZWVtcyB0aGF0IEkgY2FuJ3QgZGVz
+YWN0aXZlIHRoaXMgZmFrZSByYWlkIGluDQo+ID4+IGZhdm91ciBvZiBsaW51eCBzb2Z0IHJhaWQp
+LiBJdCdzIFJBSUQxIEJUVy4NCj4gPj4NCj4gPj4gU28gbXkgcXVlc3Rpb24gaXMgcmF0aGVyIHNp
+bXBsZTogaW4gbXkgdW5kZXJzdGFuZGluZyB0aGUgYmlvcyBpcyBkb2luZw0KPiA+PiB0aGUgbWly
+cm9yaW5nLCBidXQgd2hlbiBzZXR0aW5nIHVwIHRoZSBtZCBkZXZpY2UsIGxpbnV4IChrZXJuZWwg
+b3INCj4gPj4gdXNlcnNwYWNlLCBJIGRvbid0IHJlYWxseSBrbm93KSBhbHNvIGhhbmRsZXMgdGhl
+IG1pcnJvcmluZyBmb3IgUkFJRDENCj4gPj4gcGVyc29ubmFsaXR5LiBJcyBMaW51eCBjbGV2ZXIg
+ZW5vdWdoIHRvIHNlZSB0aGF0IHRoZSBtaXJyb3JpbmcgaXMgZG9uZQ0KPiA+PiBieSB0aGUgYmlv
+cyBpbiBteSBjYXNlID8NCj4gPj4NCj4gPj4gQ291bGQgYW55Ym9keSB0ZWFjaCBtZSB0aGUgYmln
+IHBpY3R1cmUgPw0KPiA+DQo+ID4gRmFrZSBSQUlEIHVzZXMgYSBwYXJ0IG9mIGV2ZXJ5IGRpc2sg
+dG8gcmVjb3JkIGluZm9ybWF0aW9uIGFib3V0IHRoZSBSQUlEDQo+ID4gYXJyYXlzLiBUaGlzIGlz
+IGNhbGxlZCBtZXRhIGRhdGEsIGFuZCB5b3VyIEJJT1MgdXNlcyBpdCBmb3Igc2V0dGluZyB1cA0K
+PiA+IHRoZSBkcml2ZXMuDQo+ID4NCj4gPiBVbmRlciBMaW51eCwgZmlyc3QgeW91IG5lZWQgYSBs
+b3cgbGV2ZWwgU0FUQSBvciBTQVMgZHJpdmVyIHRoYXQgZGV0ZWN0cw0KPiA+IHlvdXIgcGh5c2lj
+YWwgZHJpdmVzLCBlLmcuIHRoZSBhaGNpIGRyaXZlci4NCj4gPg0KPiA+IG1kIGNhbiB0aGVuIGRl
+dGVjdCB0aGUgRERGIG1ldGEgZGF0YSBvbiB5b3VyIGRpc2sganVzdCBsaWtlIHRoZSBCSU9TLA0K
+PiA+IGFzc2VtYmxlIHRoZSBhcnJheShzKSwgbWlycm9yIHRoZSBkYXRhLCBhbmQgZG8gb3RoZXIg
+UkFJRCBvcGVyYXRpb25zLg0KPiA+DQo+ID4gRGlzdHJpYnV0aW9ucyBjYW4gc2V0IHRoaXMgdXAg
+YXV0b21hdGljYWxseS4gQ3VycmVudGx5IG1vc3QgZGlzdHJvcw0KPiA+IGRvbid0IGRvIHRoaXMg
+Zm9yIERERiAodGhleSBkbyBpdCBvbmx5IGZvciBmYWtlIFJBSUQgdXNpbmcgdGhlIEludGVsDQo+
+ID4gTWF0cml4IChJTVNNKSBmb3JtYXQpLiBGb3IgRERGLCBmb3IgaGlzdG9yaWNhbCByZWFzb25z
+LCBtb3N0DQo+ID4gZGlzdHJpYnV0aW9ucyB3aWxsIHNldHVwIGEgbWFwcGluZyB1c2luZyBkbXJh
+aWQgKGRldmljZSBtYXBwZXIgYmFzZWQNCj4gPiBtaXJyb3JpbmcpLiBUaGF0IHdpbGwgYWxzbyBi
+YXNpY2FsbHkgd29yaywgYnV0IGl0IGlzbid0IGENCj4gPiBmdWxseS1mdW5jdGlvbmFsIFJBSUQg
+aW1wbGVtZW50YXRpb24gc3VjaCBhcyBNRC4gVGhlIG1hZ2ljIHRvIHNldCB1cA0KPiA+IGVpdGhl
+ciBNRCBvciBkbXJhaWQgYXV0b21hdGljYWxseSBhcyBkaXNrcyBhcmUgZGV0ZWN0ZWQgaXMgaGlk
+ZGVuIGluIHRoZQ0KPiA+IGRpc3RybydzIHVkZXYgcnVsZXMsIGFuZCBwb3NzaWJseSBpbiB0aGUg
+ZGlzdHJvJ3MgaW5zdGFsbGVyIGxvZ2ljLg0KPiA+DQo+IA0KPiBUaGVyZSBwYXRjaGVzIHBvc3Rl
+ZCB0byBkZWJpYW4gYnVnIHRyYWNrZXIgdG8gZW5hYmxlIHVzaW5nIG1kYWRtIGluDQo+IHRoZSBp
+bnN0YWxsZXIgdG8gYXNzZW1ibGUvc2V0dXAgSU1TTS9EREYgcmFpZCBhcnJheXMsIGFuZCB0aHVz
+IHVzaW5nDQo+IG1kYWRtLg0KPiBJIGhhdmVuJ3QgaW50ZWdyYXRlZCB0aG9zZSwgYnV0IGFtIHBs
+YW5uaW5nIHRvIHdvcmsgb24gbWVyZ2luZyB0aGVtIHNvb24uDQo+IA0KPiBBdCB0aGUgbW9tZW50
+IGRtcmFpZCBpcyB1c2VkIGJ5IGRlZmF1bHQgZm9yIGJvdGggSU1TTS9EREYgb24gRGViaWFuL1Vi
+dW50dS4NCj4gDQo+IE15IGV4cGVyaWVuY2Ugd2l0aCB0aGVzZSBmYWtlcmFpZCBhcnJheXMgaXMg
+dmVyeSBsaW1pdHRlZCwgYW5kIEknZA0KPiB3YW50IHRvIGVucXVpcmUgb2YgcHJvcGVyIG1pZ3Jh
+dGlvbiBzdHJhdGVnaWVzIGZyb20gZG1yYWlkIHRvIG1kYWRtLg0KPiBXaGlsc3QgbG9va2luZyBh
+dCB0aGUgdWRldiBydWxlcywgYXQgdGhlIG1vbWVudCwgaSBoYXZlIGRpc2FibGUNCj4gSU1TTS9E
+REYgZnJvbSBhc3NlbWJseSBpbiBtZGFkbSB1ZGV2IHJ1bGVzLCBiZWNhdXNlIGRtcmFpZCBoYXMg
+YSBuaWNlDQo+IHByb3BlcnR5IG9mICJhY3RpdmF0aW5nIGFueXRoaW5nIGl0IGZpbmRzIi4NCj4g
+SSBzdXBwb3NlIGhhdmluZyBib3RoIG1kYWRtICYgZG1yYWlkIHJhY2luZyB0byBhY3RpdmF0ZSB0
+aG9zZSBkcml2ZXMNCj4gd291bGRuJ3QgYmUgbmljZS4NCj4gDQo+IEhvdyB3b3VsZCBvbmUgbWln
+cmF0ZSBmcm9tIGRtcmFpZCB0byBtZGFkbT8gSSB3YXMgcG9uZGVyaW5nIGFib3V0DQo+IGRyYXN0
+aWMgbWVhc3VyZXM6IHBhdGNoIG91dCBJU01TIHN1cHBvcnQgb3V0IG9mIGRtcmFpZCwgbWFrZSBk
+bXJhaWQNCj4gcGFja2FnZSBkZXBlbmQgb24gbWRhZG0gYW5kIG1ha2UgbWRhZG0gYWN0aXZhdGUg
+SVNNUyBkcml2ZXMgYnkNCj4gZGVmYXVsdC4NCj4gQnV0IHRoYXQgc291bmRzIGhhcnNoLCBhcyBJ
+IHdvdWxkbid0IHdhbnQgdG8gY3JpcHBsZSBkbXJhaWQgcGFja2FnZQ0KPiBmb3IgdGhvc2Ugd2hv
+IHN0aWxsIHByZWZlciB0byB1c2UgaXQuDQo+IA0KPiBBcmUgdGhlcmUgZGlzdHJpYnV0aW9ucyB3
+aGljaCBzd2l0Y2hlZCB0byBtZGFkbSBieSBkZWZhdWx0IGZvciBJU01TPyBTdXNlPyENCg0KQUZB
+SUsgZm9yIElNU00sIEZlZG9yYSwgU0xFUzExc3AyLCBhbmQgUkhFTCA2LnggYWxsIGFyZSB1c2lu
+ZyBNRFJBSUQgYW5kDQpoYXZlIGJlZW4gZm9yIHF1aXRlIHNvbWUgdGltZXMuIA0K
