@@ -1,7 +1,7 @@
 From: mwilck@arcor.de
-Subject: [PATCH 4/6] tests/10ddf-create: create RAID5 first
-Date: Fri, 19 Jul 2013 21:04:13 +0200
-Message-ID: <1374260655-5788-5-git-send-email-mwilck@arcor.de>
+Subject: [PATCH 5/6] test: increase number of devices to 13
+Date: Fri, 19 Jul 2013 21:04:14 +0200
+Message-ID: <1374260655-5788-6-git-send-email-mwilck@arcor.de>
 References: <1374260655-5788-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1374260655-5788-1-git-send-email-mwilck@arcor.de>
@@ -10,40 +10,32 @@ To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-Let the first created array be RAID5 rather than RAID0. This makes
-the test harder than before, because everything after the first
-Create has do be done indirectly through mdmon.
+extended DDF/RAID10 tests need 6 disks for DDF.
 ---
- tests/10ddf-create |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+ test |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/tests/10ddf-create b/tests/10ddf-create
-index 9eb1c5c..50c85ae 100644
---- a/tests/10ddf-create
-+++ b/tests/10ddf-create
-@@ -11,18 +11,18 @@
- set -e
+diff --git a/test b/test
+index 8a6418d..1c5aba1 100755
+--- a/test
++++ b/test
+@@ -64,7 +64,7 @@ config=/tmp/mdadm.conf
+ cleanup() {
+ 	udevadm settle
+ 	$mdadm -Ssq 2> /dev/null
+-	for d in 0 1 2 3 4 5 6 7  8 9 10 11 12
++	for d in 0 1 2 3 4 5 6 7  8 9 10 11 12 13
+ 	do
+ 	    losetup -d /dev/loop$d ; # rm -f $targetdir/mdtest$d
+ 	    rm -f /dev/disk/by-path/loop*
+@@ -80,7 +80,7 @@ do_setup() {
+   trap ctrl_c 2
  
- mdadm -CR /dev/md/ddf0 -e ddf -n 5 $dev8 $dev9 $dev10 $dev11 $dev12
--mdadm -CR r0 -l0 -n5 /dev/md/ddf0 -z 5000
--if mdadm -CR r0 -l1 -n2 /dev/md/ddf0 -z 5000
-+mdadm -CR r5 -l5 -n5 /dev/md/ddf0 -z 5000
-+if mdadm -CR r5 -l1 -n2 /dev/md/ddf0 -z 5000
- then echo >&2 create with same name should fail ; exit 1
- fi
- mdadm -CR r10 -l10 -n4 -pn2 /dev/md/ddf0 -z 5000
- mdadm -CR r1 -l1 -n2 /dev/md/ddf0
--mdadm -CR r5 -l5 -n3 /dev/md/ddf0
--testdev /dev/md/r0 5 5000 512
-+mdadm -CR r0 -l0 -n3 /dev/md/ddf0
-+testdev /dev/md/r5 4 5000 512
- testdev /dev/md/r10 2 5000 512
- # r0/r10 will use 4608 due to chunk size, so that leaves 23552 for the rest
- testdev /dev/md/r1 1 23552 64
--testdev /dev/md/r5 2 23552 512
-+testdev /dev/md/r0 3 23552 512
- dd if=/dev/sda of=/dev/md/r0 || true
- dd if=/dev/sda of=/dev/md/r10 || true
- dd if=/dev/sda of=/dev/md/r1 || true
+   devlist=
+-  for d in 0 1 2 3 4 5 6 7 8 9 10 11 12
++  for d in 0 1 2 3 4 5 6 7 8 9 10 11 12 13
+   do
+     sz=$size
+     if [ $d -gt 7 ]; then sz=$ddfsize ; fi
 -- 
 1.7.1
