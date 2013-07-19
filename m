@@ -1,69 +1,74 @@
 From: Francis Moreau <francis.moro@gmail.com>
 Subject: Re: How does md(adm) work with fake-raid ?
-Date: Fri, 19 Jul 2013 09:02:20 +0200
-Message-ID: <CAC9WiBgJnw0vVn66ZYeUGQ06PzSEdULOt3hr9sx7XM9m9rhs5Q@mail.gmail.com>
+Date: Fri, 19 Jul 2013 09:08:16 +0200
+Message-ID: <CAC9WiBiup8RfusZo51DjAsTOLyr1F-LxgGGCWRCakYURskz7rA@mail.gmail.com>
 References: <CAC9WiBjU_A0jsB4KoX4B9ohT4TD3cYuDdioM6hSWfK13Otjs-Q@mail.gmail.com>
-	<51E85949.2020107@gmail.com>
+	<51E86613.9050505@arcor.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51E85949.2020107@gmail.com>
+In-Reply-To: <51E86613.9050505@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: st0ff.npl@gmail.com
+To: Martin Wilck <mwilck@arcor.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Hello,
 
-On Thu, Jul 18, 2013 at 11:08 PM, Stefan /*St0fF*/ H=FCbner
-<st0ff.npl@googlemail.com> wrote:
-> Am 18.07.2013 22:37, schrieb Francis Moreau:
->> Hello,
->>
->> Sorry if the question is stupid but I'm a rookie in md things, but I=
-'d
->> like to understand the big picture here.
+On Fri, Jul 19, 2013 at 12:02 AM, Martin Wilck <mwilck@arcor.de> wrote:
 >
-> Probably a bit of good googling would have given your answers right a=
-way.
+> Fake RAID uses a part of every disk to record information about the RAID
+> arrays. This is called meta data, and your BIOS uses it for setting up
+> the drives.
+>
+> Under Linux, first you need a low level SATA or SAS driver that detects
+> your physical drives, e.g. the ahci driver.
+>
+> md can then detect the DDF meta data on your disk just like the BIOS,
+> assemble the array(s), mirror the data, and do other RAID operations.
 >
 
-Not really. You think such because you might have missed the point of
-my question which is about how does coexists with bios raid.
+Yes, but my question is about how md cooperate with the BIOS in this case ?
 
->>
->> I've been told to use mdadm whenever possible even if my raid is
->> handled by the bios (fake raid) which use the ddf metadata format.
->> (unfortunately it seems that I can't desactive this fake raid in
->> favour of linux soft raid). It's RAID1 BTW.
+> Distributions can set this up automatically. Currently most distros
+> don't do this for DDF (they do it only for fake RAID using the Intel
+> Matrix (IMSM) format). For DDF, for historical reasons, most
+> distributions will setup a mapping using dmraid (device mapper based
+> mirroring). That will also basically work, but it isn't a
+> fully-functional RAID implementation such as MD. The magic to set up
+> either MD or dmraid automatically as disks are detected is hidden in the
+> distro's udev rules, and possibly in the distro's installer logic.
+
+That's true, and I'm in the process of "fixing" the default setup
+(dmraid, done during my distro installation) with MD.
+
 >
-> There are two types of fakeraid that I know of.  Intel and MegaRAID/L=
-SI
-> emulation.  Those are NOT handled by the BIOS, the boot process is
-> handled by the special op-rom integrated into the BIOS.
+> The DDF functionality in mdadm is not quite as complete as for other
+> meta data formats, in particular IMSM. I am currently working on
+> improving it, because I want to use just a similar fake RAID under Linux
+> as you, and fully benefit from MD's feature set.
 
-Well what's the difference ? Of course a bios is not a piece of
-hardware with a dedicated cpu. So when I said it's handled by the
-bios, I obviously meant that there's a software stored in the firmware
-which is executed by my the processor and this soft can be configured
-through the bios.
+That's an interesting information thanks.
 
->  After any
-> kernel is booted, all RAID processing shall be done by the respective
-> driver.  And none use DDF afaik.  Intel uses its own metadata format
-> (referred to as IMSM), LSI also uses its own format (those fakeraid
-> drives can be attached to f.e. a MegaRAID 9266 controller and your RA=
-ID
-> is then recognized - those 9266 f.e. can create DDF arrays).
+>
+> Before doing real work with DDF on your system, make sure that the BIOS
+> still detects your drives correctly after MD/DDF has written its meta
+> data (this happens when an array is shut down, for example).
+> There is a small but non-zero risk that the BIOS may reject the
+> configuration as written by MD. The same may happen e.g. for a Windows
+> fake RAID driver.
 
-You probably have missed a lot more.
+That's a good idea.
 
-Bye,
+Are there any procedures described out there that I could follow to
+test MD DFF ?
+
+>
+> If you experience any problems, be sure to report them here.
+>
+
+I will.
+
+Thank you.
 --
-=46rancis
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Francis
