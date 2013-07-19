@@ -1,7 +1,7 @@
 From: mwilck@arcor.de
-Subject: [PATCH 1/6] DDF: err_bad_md_layout: fix return value
-Date: Fri, 19 Jul 2013 21:04:10 +0200
-Message-ID: <1374260655-5788-2-git-send-email-mwilck@arcor.de>
+Subject: [PATCH 3/6] DDF: getinfo_super_ddf_bvd: fix offset calculation for SVDs
+Date: Fri, 19 Jul 2013 21:04:12 +0200
+Message-ID: <1374260655-5788-4-git-send-email-mwilck@arcor.de>
 References: <1374260655-5788-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1374260655-5788-1-git-send-email-mwilck@arcor.de>
@@ -10,23 +10,29 @@ To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-This function must use -1 to indicate failure. Fix it.
+Fix a bug that caused the wrong conf record to be used to derive
+data offset and size on secondary RAID (RAID10).
 ---
- super-ddf.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ super-ddf.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/super-ddf.c b/super-ddf.c
-index 8c6fa6d..e23291f 100644
+index dc3f69b..d7da4c1 100644
 --- a/super-ddf.c
 +++ b/super-ddf.c
-@@ -500,7 +500,7 @@ static int err_bad_md_layout(const mdu_array_info_t *array)
- {
- 	pr_err("RAID%d layout %x with %d disks is unsupported for DDF\n",
- 	       array->level, array->layout, array->raid_disks);
--	return DDF_INVALID_LEVEL;
-+	return -1;
- }
+@@ -1881,11 +1881,11 @@ static void getinfo_super_ddf_bvd(struct supertype *st, struct mdinfo *info, cha
  
- static int layout_md2ddf(const mdu_array_info_t *array,
+ 	if (cd >= 0 && (unsigned)cd < ddf->mppe) {
+ 		info->data_offset =
+-			__be64_to_cpu(LBA_OFFSET(ddf, &vc->conf)[cd]);
++			__be64_to_cpu(LBA_OFFSET(ddf, conf)[cd]);
+ 		if (vc->block_sizes)
+ 			info->component_size = vc->block_sizes[cd];
+ 		else
+-			info->component_size = __be64_to_cpu(vc->conf.blocks);
++			info->component_size = __be64_to_cpu(conf->blocks);
+ 	}
+ 
+ 	for (dl = ddf->dlist; dl ; dl = dl->next)
 -- 
 1.7.1
