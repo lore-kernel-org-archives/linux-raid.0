@@ -1,81 +1,53 @@
-From: Dmitrijs Ledkovs <xnox@debian.org>
-Subject: Re: How does md(adm) work with fake-raid ?
-Date: Fri, 19 Jul 2013 00:35:24 +0100
-Message-ID: <CANBHLUi9+hJo8w4V6Bi_3kHDoph4yB7C=sCb5ZSGOB0K1WKGow@mail.gmail.com>
-References: <CAC9WiBjU_A0jsB4KoX4B9ohT4TD3cYuDdioM6hSWfK13Otjs-Q@mail.gmail.com>
-	<51E86646.8020107@arcor.de>
+From: Miles Fidelman <mfidelman@meetinghouse.net>
+Subject: md raid across physical servers?
+Date: Thu, 18 Jul 2013 21:26:13 -0400
+Message-ID: <51E895B5.9010500@meetinghouse.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51E86646.8020107@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 18 July 2013 23:03, Martin Wilck <mwilck@arcor.de> wrote:
-> On 07/18/2013 10:37 PM, Francis Moreau wrote:
->> Hello,
->>
->> Sorry if the question is stupid but I'm a rookie in md things, but I'd
->> like to understand the big picture here.
->>
->> I've been told to use mdadm whenever possible even if my raid is
->> handled by the bios (fake raid) which use the ddf metadata format.
->> (unfortunately it seems that I can't desactive this fake raid in
->> favour of linux soft raid). It's RAID1 BTW.
->>
->> So my question is rather simple: in my understanding the bios is doing
->> the mirroring, but when setting up the md device, linux (kernel or
->> userspace, I don't really know) also handles the mirroring for RAID1
->> personnality. Is Linux clever enough to see that the mirroring is done
->> by the bios in my case ?
->>
->> Could anybody teach me the big picture ?
->
-> Fake RAID uses a part of every disk to record information about the RAID
-> arrays. This is called meta data, and your BIOS uses it for setting up
-> the drives.
->
-> Under Linux, first you need a low level SATA or SAS driver that detects
-> your physical drives, e.g. the ahci driver.
->
-> md can then detect the DDF meta data on your disk just like the BIOS,
-> assemble the array(s), mirror the data, and do other RAID operations.
->
-> Distributions can set this up automatically. Currently most distros
-> don't do this for DDF (they do it only for fake RAID using the Intel
-> Matrix (IMSM) format). For DDF, for historical reasons, most
-> distributions will setup a mapping using dmraid (device mapper based
-> mirroring). That will also basically work, but it isn't a
-> fully-functional RAID implementation such as MD. The magic to set up
-> either MD or dmraid automatically as disks are detected is hidden in the
-> distro's udev rules, and possibly in the distro's installer logic.
->
+I'm trying to figure out if this is a stupid idea or not, comments please:
 
-There patches posted to debian bug tracker to enable using mdadm in
-the installer to assemble/setup IMSM/DDF raid arrays, and thus using
-mdadm.
-I haven't integrated those, but am planning to work on merging them soon.
+I have a small, somewhat aging, 4-node cluster (legacy of a former 
+web-hosting business), that currently hosts a few web sites and a 
+mailing list server for some local community groups.  I've also been 
+using it as a development sandbox, and playing with technology a bit.
 
-At the moment dmraid is used by default for both IMSM/DDF on Debian/Ubuntu.
+Right now, I have it set up for poor-man's high availability:
+- each node has 4 2TB drives, and 2 gigE NICs - 1 net is used for 
+outside communication, 1 for node-to-node stuff
+- xen virtualization, with a couple of VMs for production, and others 
+for development/playing around
+- md RAID-10 on each node
+- DRBD across pairs of nodes to support the production VMs, with 
+pacemaker-based failover
 
-My experience with these fakeraid arrays is very limitted, and I'd
-want to enquire of proper migration strategies from dmraid to mdadm.
-Whilst looking at the udev rules, at the moment, i have disable
-IMSM/DDF from assembly in mdadm udev rules, because dmraid has a nice
-property of "activating anything it finds".
-I suppose having both mdadm & dmraid racing to activate those drives
-wouldn't be nice.
+I keep looking for ways to get beyond the pairwise nature of DRBD, but 
+don't quite have the horsepower or memory to spare to run something like 
+Gluster to provide replication across a cluster file system.
 
-How would one migrate from dmraid to mdadm? I was pondering about
-drastic measures: patch out ISMS support out of dmraid, make dmraid
-package depend on mdadm and make mdadm activate ISMS drives by
-default.
-But that sounds harsh, as I wouldn't want to cripple dmraid package
-for those who still prefer to use it.
+The following thought keeps coming to mind: what about mounting drives 
+using AoE, then running md RAID across the nodes?
+- use LVM to create and manage logical volumes on each node
+- publish a group of logical volumes via AoE (e.g., 1 from each of the 4 
+servers)
+- use md within a VM, to assemble a RAID10 array
+- if a node fails, taking down the VM, it's instance of md, and the 
+volume on that node, failover to another node, bring up the same VM, and 
+it's instance of md will re-assemble the array from the 3 remaining nodes
 
-Are there distributions which switched to mdadm by default for ISMS? Suse?!
+Does this make any sense?  Will it work with any kind of performance at 
+all?  Am I all wet?
 
-Regards,
+Thanks for any comments.
 
-Dmitrijs.
+Miles Fidelman
+
+-- 
+In theory, there is no difference between theory and practice.
+In practice, there is.   .... Yogi Berra
+
