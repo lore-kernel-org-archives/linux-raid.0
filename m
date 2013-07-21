@@ -1,81 +1,55 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: --assemble --scan --no-degrades assembles+run degraded RAID1?
-Date: Sat, 20 Jul 2013 11:51:17 +1000
-Message-ID: <20130720115117.52cd203a@notabene.brown>
-References: <1374274071.5229.19.camel@fermat.scientia.net>
+From: "Justin Piszcz" <jpiszcz@lucidpixels.com>
+Subject: 3.10.1: echo repair > sync_action causes hang on RAID-1 (2 x SSD)
+Date: Sun, 21 Jul 2013 06:26:55 -0400
+Message-ID: <000501ce85fc$d3a60a10$7af21e30$@lucidpixels.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/b/ASuF_nufiqMpr4vfSuRnP"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1374274071.5229.19.camel@fermat.scientia.net>
+Content-Language: en-us
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Anton Mitterer <calestyo@scientia.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/b/ASuF_nufiqMpr4vfSuRnP
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Sat, 20 Jul 2013 00:47:51 +0200 Christoph Anton Mitterer
-<calestyo@scientia.net> wrote:
+When I run repair on an MD-RAID1 sync_action, the speed slows down and it
+stays like this (below) for hours.  
 
-> Hi.
->=20
-> This is just some minor thing I've noticed:
->=20
-> I intentionally degraded a 2-device RAID1,... and try to auto assemble
-> it via:
-> --assemble --scan --no-degrade
->=20
-> It seems this not only assembles the array but also runs it, at least I
-> can write to the /dev/md/foo file.
->=20
-> I'd have expected that this does not work... but it does...
->=20
->=20
-> Did I get anything wrong here?
+The system is then completely unresponsive to user input.  I have replaced a
+failing SSD; however, after a check, mismatch_cnt seems to increase over
+time.  When I run repair, the system freezes to user-input.  Has anyone else
+run into this issue with a RAID-1 volume (2 x SSD) using 0.90 metadata?
+Long ago I used to use this same configuration with two physical disks and
+there was never a problem.
 
-"--no-degraded" is a slight misnomer.  It should be
- "--no-degraded-unless-known-to-be-degraded".
+Even though I left a root shell open, this has no effect to break the
+resync:
+# echo idle > /sys/devices/virtual/block/md1/md/sync_action
 
-The case that it stops is when you shut down the array with the array worki=
-ng
-perfectly, remove a drive, the try to start the array up again.
-In this case the array doesn't know that it is degraded, so "--no-degraded"
-will stop it from being assembled.
+Every 1.0s: cat /proc/mdstat                            Sun Jul 21 06:15:38
+2013
 
-This is useful when device discovery is slow or unreliable.
+Personalities : [raid1]
+md1 : active raid1 sdc2[0] sdb2[1]
+      233381376 blocks [2/2] [UU]
+      [>....................]  resync =  0.0% (151616/233381376)
+finish=36171.5min speed=107K/sec
 
-NeilBrown
+md0 : active raid1 sdc1[0] sdb1[1]
+      1048512 blocks [2/2] [UU]
 
+unused devices: <none>
 
->=20
->=20
-> Cheers,
-> Chris.
+10 minutes later:
 
+      233381376 blocks [2/2] [UU]
+      [>....................]  resync =  0.0% (151616/233381376)
+finish=52219.3min speed=74K/sec
 
---Sig_/b/ASuF_nufiqMpr4vfSuRnP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Where it hangs (151616) or elsewhere, has been different each time I watched
+it, it does not appear to be hanging at the same block each time.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+Justin.
 
-iQIVAwUBUentFTnsnt1WYoG5AQIxVQ//RTcr+8SPiPS64tBkCSeatn7JGG5OFDr4
-yW6CkJQRLrw/WBME9dWH67czp1KCjZnomkm1wYfqBGszHWVvPOVD2XGRLE3bDVA0
-E21WILqkOhWf/tkb/UqRMrOLa3j+QXKmC6bsbig8TYBH6C5h1x2ADDbX1tTpzGrA
-j2KoPApkncrn1WyMfHQgiDQZ2Bj4pKZh68Bw+7/Pk/PS5stud3IdQSt0XXNIyj+X
-ThnwUybQuZlZ8VUQjpcLFJ0AjBNTqAO8pQf5p34kj5R/N5UJqzyBi/X1HuPpiSpX
-9uaSPq2hsU+cPj31587IWT3p2dgmR/dPBkhQ/5fVcbJqZONxQkjYN7N4TzttcKX4
-lgfYwMVq/sSIS/tKxaq6djnSxfTN5cBn8AqX6hqywEAmuH9FJ4tvPn3ZiYcMyu+r
-cAB4cKNPuww6iQxsqZIDyPZUcBwaNJlZWxvZ2M5d5cUVrF0Yu8i98Az5e0XlvPv2
-BZFmBRGHawOZip8AJCeqHPyBrVQ+R7PKrj6H6ptUu5A/9Xqwuf2KlU0hv2ounYWM
-ejZf8M7xsLvSDo6TQheJ/mG1d3dbkL4pR63GCBkmh1kV6rIKaXKlkRtdkhLD+bVv
-sGJItcGJQrHhvse5TI/eZ3KYKyHXNlhEfhVJnuL9o8wHZTRew+eV5IEPdfvVv1xf
-KRIrPQSDxzM=
-=oFKT
------END PGP SIGNATURE-----
-
---Sig_/b/ASuF_nufiqMpr4vfSuRnP--
