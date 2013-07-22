@@ -1,152 +1,94 @@
 From: Robin Dong <robin.k.dong@gmail.com>
-Subject: [PATCH 2/2 v2] md: set write-intent bit first in sync-bitmap for rwm in non-insync region.
-Date: Mon, 22 Jul 2013 14:07:51 +0800
-Message-ID: <1374473271-18551-2-git-send-email-robin.k.dong@gmail.com>
-References: <1374473271-18551-1-git-send-email-robin.k.dong@gmail.com>
+Subject: [PATCH v2] mdadm: add sync-bitmap to only resync WRITTEN data when adding new disk in raid array.
+Date: Mon, 22 Jul 2013 14:09:53 +0800
+Message-ID: <1374473393-18587-1-git-send-email-robin.k.dong@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1374473271-18551-1-git-send-email-robin.k.dong@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-From: Robin Dong <sanbai@taobao.com>
-
-If part of the RAID456 array is not in sync, then a read-modify-write cycle will
-update incorrect parity to new incorrect parity.  If you subsequently get a
-drive failure, any data on that drive in the not-in-sync region will be lost.
-
-To avoid this, we:
- 1. In first bitmap_endwrite to a not-in-sync region, set the write-intent bit and
-    wake up resync thread.
- 2. When resync finishes, set the sync bit and clear write-intent bit.
+We add a new feature named "MD_FEATURE_SYNCBITMAP" and set all bit to zero for initializing of sync-bitmap.
 
 Signed-off-by: Robin Dong <sanbai@taobao.com>
 Cc: NeilBrown <neilb@suse.de>
 ---
- drivers/md/bitmap.c |   51 ++++++++++++++++++++++++++++++++++++++++++++++++++-
- drivers/md/bitmap.h |    2 ++
- drivers/md/raid5.c  |   11 +++++++++++
- 3 files changed, 63 insertions(+), 1 deletions(-)
+changelog:
+v1 --> v2:
+ * Encode the presence of sync-bitmap into the version number in superblock of bitmap
+   Version great or equal to "5" means it has sync-bitmap.
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 0d894af..b4967c4 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -1447,6 +1447,24 @@ int bitmap_startwrite(struct bitmap *bitmap, sector_t offset, unsigned long sect
- }
- EXPORT_SYMBOL(bitmap_startwrite);
+v1: http://www.spinics.net/lists/raid/msg43569.html
+
+ bitmap.h |    6 ++++--
+ super1.c |   20 ++++++++++++++++++--
+ 2 files changed, 22 insertions(+), 4 deletions(-)
+
+diff --git a/bitmap.h b/bitmap.h
+index c8725a3..51894e5 100644
+--- a/bitmap.h
++++ b/bitmap.h
+@@ -7,11 +7,13 @@
+ #define BITMAP_H 1
  
-+void syncbitmap_endwrite(struct bitmap *bitmap, sector_t offset,
-+		bitmap_counter_t *bmc)
-+{
-+	struct mddev *mddev = bitmap->mddev;
-+
-+	if (mddev->level >= 4 &&
-+	    offset > mddev->curr_resync_completed) {
-+		*bmc |= NEEDED_MASK;
-+		if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
-+			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-+			set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
-+			md_wakeup_thread(mddev->sync_thread);
-+			sysfs_notify_dirent_safe(mddev->sysfs_action);
-+		}
-+	} else
-+		syncbitmap_file_set_bit(bitmap, offset);
-+}
-+
- void bitmap_endwrite(struct bitmap *bitmap, sector_t offset, unsigned long sectors,
- 		     int success, int behind)
- {
-@@ -1479,7 +1497,8 @@ void bitmap_endwrite(struct bitmap *bitmap, sector_t offset, unsigned long secto
- 			sysfs_notify_dirent_safe(bitmap->sysfs_can_clear);
- 		}
+ #define BITMAP_MAJOR_LO 3
+-/* version 4 insists the bitmap is in little-endian order
++/* version greater or equal to 4 insists the bitmap is in little-endian order
++ * version greater or equal to 5 insists it has sync-bitmap
+  * with version 3, it is host-endian which is non-portable
+  */
+-#define BITMAP_MAJOR_HI 4
++#define BITMAP_MAJOR_HI 6
+ #define	BITMAP_MAJOR_HOSTENDIAN 3
++#define	BITMAP_MAJOR_SYNCBITMAP 5
  
--		syncbitmap_file_set_bit(bitmap, offset);
-+		if (bitmap->mddev->bitmap_info.sync_bitmap)
-+			syncbitmap_endwrite(bitmap, offset, bmc);
+ #define BITMAP_MINOR 39
  
- 		if (!success && !NEEDED(*bmc))
- 			*bmc |= NEEDED_MASK;
-@@ -1502,6 +1521,36 @@ void bitmap_endwrite(struct bitmap *bitmap, sector_t offset, unsigned long secto
- }
- EXPORT_SYMBOL(bitmap_endwrite);
+diff --git a/super1.c b/super1.c
+index 0427205..e227665 100644
+--- a/super1.c
++++ b/super1.c
+@@ -2235,7 +2235,7 @@ static int write_bitmap1(struct supertype *st, int fd)
+ 	bitmap_super_t *bms = (bitmap_super_t*)(((char*)sb)+MAX_SB_SIZE);
+ 	int rv = 0;
+ 	void *buf;
+-	int towrite, n;
++	int towrite, syncbitmap_towrite, n;
+ 	struct align_fd afd;
  
-+void bitmap_in_synced(struct bitmap *bitmap, sector_t offset,
-+				unsigned long sectors)
-+{
-+	while (sectors) {
-+		sector_t blocks;
-+		unsigned long flags;
-+		bitmap_counter_t *bmc;
-+
-+		spin_lock_irqsave(&bitmap->counts.lock, flags);
-+		bmc = bitmap_get_counter(&bitmap->counts, offset, &blocks, 0);
-+		if (!bmc) {
-+			spin_unlock_irqrestore(&bitmap->counts.lock, flags);
-+			return;
-+		}
-+
-+		if (NEEDED(*bmc) || (!NEEDED(*bmc) && RESYNC(*bmc))) {
-+			*bmc &= ~NEEDED_MASK;
-+			syncbitmap_file_set_bit(bitmap, offset);
-+		}
-+
-+		spin_unlock_irqrestore(&bitmap->counts.lock, flags);
-+		offset += blocks;
-+		if (sectors > blocks)
-+			sectors -= blocks;
-+		else
-+			sectors = 0;
-+	}
-+}
-+EXPORT_SYMBOL(bitmap_in_synced);
-+
- static int __bitmap_start_sync(struct bitmap *bitmap, sector_t offset, sector_t *blocks,
- 			       int degraded)
- {
-diff --git a/drivers/md/bitmap.h b/drivers/md/bitmap.h
-index ddc30da..6d22d8b 100644
---- a/drivers/md/bitmap.h
-+++ b/drivers/md/bitmap.h
-@@ -253,6 +253,8 @@ int bitmap_startwrite(struct bitmap *bitmap, sector_t offset,
- 			unsigned long sectors, int behind);
- void bitmap_endwrite(struct bitmap *bitmap, sector_t offset,
- 			unsigned long sectors, int success, int behind);
-+void bitmap_in_synced(struct bitmap *bitmap, sector_t offset,
-+			unsigned long sectors);
- int bitmap_start_sync(struct bitmap *bitmap, sector_t offset, sector_t *blocks, int degraded);
- void bitmap_end_sync(struct bitmap *bitmap, sector_t offset, sector_t *blocks, int aborted);
- 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 2bf094a..bb7de94 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3622,6 +3622,8 @@ static void handle_stripe(struct stripe_head *sh)
- 	if ((s.syncing || s.replacing) && s.locked == 0 &&
- 	    test_bit(STRIPE_INSYNC, &sh->state)) {
- 		md_done_sync(conf->mddev, STRIPE_SECTORS, 1);
-+		bitmap_in_synced(conf->mddev->bitmap, sh->sector,
-+			STRIPE_SECTORS);
- 		clear_bit(STRIPE_SYNCING, &sh->state);
- 		if (test_and_clear_bit(R5_Overlap, &sh->dev[sh->pd_idx].flags))
- 			wake_up(&conf->wait_for_overlap);
-@@ -4690,6 +4692,15 @@ static inline sector_t sync_request(struct mddev *mddev, sector_t sector_nr, int
- 		return sync_blocks * STRIPE_SECTORS; /* keep things rounded to whole stripes */
+ 	init_afd(&afd, fd);
+@@ -2251,7 +2251,8 @@ static int write_bitmap1(struct supertype *st, int fd)
+ 	towrite = __le64_to_cpu(bms->sync_size) / (__le32_to_cpu(bms->chunksize)>>9);
+ 	towrite = (towrite+7) >> 3; /* bits to bytes */
+ 	towrite += sizeof(bitmap_super_t);
+-	towrite = ROUND_UP(towrite, 512);
++	towrite = ROUND_UP(towrite, 4096);
++	syncbitmap_towrite = towrite;
+ 	while (towrite > 0) {
+ 		n = towrite;
+ 		if (n > 4096)
+@@ -2263,6 +2264,21 @@ static int write_bitmap1(struct supertype *st, int fd)
+ 			break;
+ 		memset(buf, 0xff, 4096);
  	}
- 
-+	if (!test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
-+	    conf->fullsync &&
-+	    !syncbitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks) &&
-+	    sync_blocks >= STRIPE_SECTORS) {
-+		sync_blocks /= STRIPE_SECTORS;
-+		*skipped = 1;
-+		return sync_blocks * STRIPE_SECTORS;
++
++	/* write init sync-bitmap */
++	memset(buf, 0x00, 4096);
++	while (syncbitmap_towrite > 0) {
++		n = syncbitmap_towrite;
++		if (n > 4096)
++			n = 4096;
++		n = awrite(&afd, buf, n);
++		if (n > 0)
++			syncbitmap_towrite -= n;
++		else
++			break;
++		memset(buf, 0x00, 4096);
 +	}
 +
- 	bitmap_cond_end_sync(mddev->bitmap, sector_nr);
- 
- 	sh = get_active_stripe(conf, sector_nr, 0, 1, 0);
+ 	fsync(fd);
+ 	if (towrite)
+ 		rv = -2;
 -- 
 1.7.1
 
