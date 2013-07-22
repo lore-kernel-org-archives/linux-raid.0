@@ -1,96 +1,149 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: 3.10.1: echo repair > sync_action causes hang on RAID-1 (2 x
- SSD)
-Date: Mon, 22 Jul 2013 09:02:57 +1000
-Message-ID: <20130722090257.2faa0874@notabene.brown>
-References: <000501ce85fc$d3a60a10$7af21e30$@lucidpixels.com>
+Subject: Re: Problem with disk replacement
+Date: Mon, 22 Jul 2013 13:04:15 +1000
+Message-ID: <20130722130415.44b85e93@notabene.brown>
+References: <45ae92bb.4ffb.13ff2092e1d.Coremail.13691222965@163.com>
+	<7945ee0b.7d5e.13ff2acdc3f.Coremail.13691222965@163.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/DM87ExlRuyVsnCG9y2_4yty"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <000501ce85fc$d3a60a10$7af21e30$@lucidpixels.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+ boundary="Sig_/5jQPLx0ohSDP8osBWJu3eYe"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <7945ee0b.7d5e.13ff2acdc3f.Coremail.13691222965@163.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: qindehua <13691222965@163.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/DM87ExlRuyVsnCG9y2_4yty
+--Sig_/5jQPLx0ohSDP8osBWJu3eYe
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 21 Jul 2013 06:26:55 -0400 "Justin Piszcz" <jpiszcz@lucidpixels.com>
-wrote:
+On Fri, 19 Jul 2013 00:46:22 +0800 (CST) qindehua <13691222965@163.com> wro=
+te:
 
-> Hi,
+> Hi Neil,
+> I use kernel 3.9.6 and found data may lost while replacing a RAID disk us=
+ing --replace.
 >=20
-> When I run repair on an MD-RAID1 sync_action, the speed slows down and it
-> stays like this (below) for hours. =20
+> Here is the steps of the test case:
+> 1. Create 3-drives RAID5 and wait for resync done (I use 1GB disks in Vir=
+tualBox machine)
+> 2. Calculate the md5sum on the whole raid: dd if=3D/dev/md1 bs=3D1M iflag=
+=3Ddirect | md5sum
+> 3. add two spare disks to the raid: mdadm /dev/md1 -a /dev/sdi -a /dev/sdj
+> 4. mdadm --replace a disk then --fail another disk:
+>    mdadm /dev/md1 --replace /dev/sdb; sleep 3; mdadm /dev/md1 -f /dev/sdc
+> 5. wait for recovery done
+> 6. recalculate the md5sum on the whole raid: dd if=3D/dev/md1 bs=3D1M ifl=
+ag=3Ddirect | md5sum
 >=20
-> The system is then completely unresponsive to user input.  I have replace=
-d a
-> failing SSD; however, after a check, mismatch_cnt seems to increase over
-> time.  When I run repair, the system freezes to user-input.  Has anyone e=
-lse
-> run into this issue with a RAID-1 volume (2 x SSD) using 0.90 metadata?
-> Long ago I used to use this same configuration with two physical disks and
-> there was never a problem.
->=20
-> Even though I left a root shell open, this has no effect to break the
-> resync:
-> # echo idle > /sys/devices/virtual/block/md1/md/sync_action
->=20
-> Every 1.0s: cat /proc/mdstat                            Sun Jul 21 06:15:=
-38
-> 2013
->=20
-> Personalities : [raid1]
-> md1 : active raid1 sdc2[0] sdb2[1]
->       233381376 blocks [2/2] [UU]
->       [>....................]  resync =3D  0.0% (151616/233381376)
-> finish=3D36171.5min speed=3D107K/sec
->=20
-> md0 : active raid1 sdc1[0] sdb1[1]
->       1048512 blocks [2/2] [UU]
->=20
-> unused devices: <none>
->=20
-> 10 minutes later:
->=20
->       233381376 blocks [2/2] [UU]
->       [>....................]  resync =3D  0.0% (151616/233381376)
-> finish=3D52219.3min speed=3D74K/sec
->=20
-> Where it hangs (151616) or elsewhere, has been different each time I watc=
-hed
-> it, it does not appear to be hanging at the same block each time.
->=20
+> The md5sum of step 6 is NOT identical with that of step 2, this means dat=
+a is corrupted.
+> I found in step 4, when another disk was made failed, the replacing proce=
+ss was stopped,
+> and started recovering of the failed disk, and afterwards the replacing n=
+ot continue.
 
-Hi Justin,
- this is a known bug.  Fix has been accepted into mainline for 3.11-rc2.
- Hopefully it will get into 3.10.3 (too late for 3.10.2).
+Hi Qin,
+ thanks for the report.  I can easily reproduce the bug.
 
+I think this will fix it.  Could you please test and confirm that it fixes
+the problem for you too.
+
+Thanks,
 NeilBrown
 
---Sig_/DM87ExlRuyVsnCG9y2_4yty
+
+From: NeilBrown <neilb@suse.de>
+Date: Mon, 22 Jul 2013 12:57:21 +1000
+Subject: [PATCH] md/raid5: fix interaction of 'replace' and 'recovery'.
+
+If a device in a RAID4/5/6 is being replaced while another is being
+recovered, then the writes to the replacement device currently don't
+happen, resulting in corruption when the replacement completes and the
+new drive takes over.
+
+This is because the replacement writes are only triggered when
+'s.replacing' is set and not when the similar 's.sync' is set (which
+is the case during resync and recovery - it means all devices need to
+be read).
+
+So schedule those writes when s.replacing is set as well.
+
+In this case we cannot use "STRIPE_INSYNC" to record that the
+replacement has happened as that is needed for recording that any
+parity calculation is complete.  So introduce STRIPE_REPLACED to
+record if the replacement has happened.
+
+This bug was introduced in commit 9a3e1101b827a59ac9036a672f5fa8d5279d0fe2
+(md/raid5:  detect and handle replacements during recovery.)
+which introduced replacement for raid5.
+That was in 3.3-rc3, so any stable kernel since then would benefit
+from this fix.
+
+Cc: stable@vger.kernel.org (3.3+)
+Reported-by: qindehua <13691222965@163.com>
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 2bf094a..f0aa7abd 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3607,8 +3607,8 @@ static void handle_stripe(struct stripe_head *sh)
+ 			handle_parity_checks5(conf, sh, &s, disks);
+ 	}
+=20
+-	if (s.replacing && s.locked =3D=3D 0
+-	    && !test_bit(STRIPE_INSYNC, &sh->state)) {
++	if ((s.replacing || s.syncing) && s.locked =3D=3D 0
++	    && !test_bit(STRIPE_REPLACED, &sh->state)) {
+ 		/* Write out to replacement devices where possible */
+ 		for (i =3D 0; i < conf->raid_disks; i++)
+ 			if (test_bit(R5_UPTODATE, &sh->dev[i].flags) &&
+@@ -3617,7 +3617,9 @@ static void handle_stripe(struct stripe_head *sh)
+ 				set_bit(R5_LOCKED, &sh->dev[i].flags);
+ 				s.locked++;
+ 			}
+-		set_bit(STRIPE_INSYNC, &sh->state);
++		if (s.replacing)
++			set_bit(STRIPE_INSYNC, &sh->state);
++		set_bit(STRIPE_REPLACED, &sh->state);
+ 	}
+ 	if ((s.syncing || s.replacing) && s.locked =3D=3D 0 &&
+ 	    test_bit(STRIPE_INSYNC, &sh->state)) {
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index b0b663b..70c4932 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -306,6 +306,7 @@ enum {
+ 	STRIPE_SYNC_REQUESTED,
+ 	STRIPE_SYNCING,
+ 	STRIPE_INSYNC,
++	STRIPE_REPLACED,
+ 	STRIPE_PREREAD_ACTIVE,
+ 	STRIPE_DELAYED,
+ 	STRIPE_DEGRADED,
+
+--Sig_/5jQPLx0ohSDP8osBWJu3eYe
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUexooTnsnt1WYoG5AQJFEBAAkWIzG9qZJcywg24DkFpBdoJKNnGZzPlH
-IjJg0SB3fCLyPkFVppcd+lThKPekBmHm+yyOIvFHsgPp3scLPzbsX7Od7AkJgh9F
-ztL4Zp4WTPsCDStIE2tThy5qKj4fMB1Lp4zTN/T66CLOReECQ5YdsDehiqh3QY+S
-ottZ6mtuRll8p7QRTvZkJ3GCSVOJjBPeuE07u2ySEPYiljU2ZJN4UvskzdQ2qGXA
-i8STSEoLdxHcsGFt3UkZ5QRbbn6qKMXmq9sYVlVxWJ9N+FubHP/CN22w2QxrXcI+
-piV0TSp9Qxb2SNIvRjaCZ6NcL/pGS1NT8RbHzf52lNQ6nPSzBBNy6UlvuZ1AkuD/
-abGmUAtlefVBUyLn2zuhnfGm/T0P6iHxU+1QzztyPjdmKv7is+gSI+D0hcawG3EE
-JB0GnT91PYf0C+tCpnApjmcjzazr9Pi2SaG+GZJdYpDB3PcY3tNXaMpCWDr8o4fL
-LsagFdCPwFo8cqmybm92Ouu/cPwYKOKFhHB4i3Zskrzri27c9hOlCvaT+rXQgL5x
-M9QE+LiAyP7FodCvnZn3ICQtlVwOMGbSH9vbXKdsu/zLDxF7DhOVmZAtITSechDA
-Ljd+/hcFWKdix/JTfTXnQ8HFcf2+q+rBr5thqn14RzJOe0/AAAt+cwGHKb8nrbzf
-uEQ3Uc85rac=
-=OxEw
+iQIVAwUBUeyhLznsnt1WYoG5AQJYVw/8DJ63LEsSJ5dPddZs9vYWF4nofGg1W7Ph
+R6qem8M+L4L9Dwfu2aqtcq0yCwT7uuNiu0pJSD2WkgEYa1E5E4bmj1wFsmMhxjff
+irgNIJdsQoISTidcE8hjG+RpmipAD72qe10yJyRVato9ddBtH6dy/ze2qsF/YnyJ
+mndA0k5w9DQycHT5+iQ1EDqDsdIo37nD8PO5o0FvWBDKJOCGYs0vFKGSv/nEUs5t
+XpVmH8kGl13KMOuZ8RSZq5GRJJFXQcK2FSA7TfXf7SaXsE5Dj3P/dsJjXhGJE3vL
+UVUVifboGfPuMEvdEI14GodpPgt3/ne/Bhockm1HjpJoBcU7HGb0nIPV7RnOLiWe
++lEBF01KKZAqfR2gV9WOZwrp3XPGfLEeAQojIIemUmHYivie/P/0YEAbozcoAG8y
+Lk7I1LPDCm91lHDShWdAGzSHMnNC8AkFecLZ2GvvHHQbPM3qeOvdGjB9GX8pxmnH
+bP3o4xDyNyCQofOvKa6MxXtBaYfCV19AMhq98zjAZsqv4J2u+712L7NuxCHCn1CC
+L76iFj9OND/TqkHUlI9YWdvanZVSNUcCudBd6gmnOSX0+BoNx6ZYkD/sDYy1vIB/
+Oy3mx1JyFhV7Eau+xP/yxkmcDTGyiBnOjU0omXDnFjzEGPxZW81VbQFlRdxu+RjI
+wJJNnTo2Y+c=
+=G4M4
 -----END PGP SIGNATURE-----
 
---Sig_/DM87ExlRuyVsnCG9y2_4yty--
+--Sig_/5jQPLx0ohSDP8osBWJu3eYe--
