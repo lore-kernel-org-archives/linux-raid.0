@@ -1,94 +1,105 @@
-From: Robin Dong <robin.k.dong@gmail.com>
-Subject: [PATCH v2] mdadm: add sync-bitmap to only resync WRITTEN data when adding new disk in raid array.
-Date: Mon, 22 Jul 2013 14:09:53 +0800
-Message-ID: <1374473393-18587-1-git-send-email-robin.k.dong@gmail.com>
+From: qindehua <qindehua@163.com>
+Subject: Re: Problem with disk replacement
+Date: Mon, 22 Jul 2013 18:23:57 +0800 (CST)
+Message-ID: <3391fc7f.14685.14005e82e81.Coremail.qindehua@163.com>
+References: <45ae92bb.4ffb.13ff2092e1d.Coremail.13691222965@163.com>
+ <7945ee0b.7d5e.13ff2acdc3f.Coremail.13691222965@163.com>
+ <20130722130415.44b85e93@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=GBK
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20130722130415.44b85e93@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: NeilBrown <neilb@suse.de>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We add a new feature named "MD_FEATURE_SYNCBITMAP" and set all bit to zero for initializing of sync-bitmap.
+Hi Neil,
+I have tested with this patch, and it fixes the problem.
+I have also tried various combinations of failing and replacing disks,
+with echo idle to /sys/block/md1/md/sync_action, they all work fine.
 
-Signed-off-by: Robin Dong <sanbai@taobao.com>
-Cc: NeilBrown <neilb@suse.de>
----
-changelog:
-v1 --> v2:
- * Encode the presence of sync-bitmap into the version number in superblock of bitmap
-   Version great or equal to "5" means it has sync-bitmap.
+Regards,
+Qin Dehua
 
-v1: http://www.spinics.net/lists/raid/msg43569.html
-
- bitmap.h |    6 ++++--
- super1.c |   20 ++++++++++++++++++--
- 2 files changed, 22 insertions(+), 4 deletions(-)
-
-diff --git a/bitmap.h b/bitmap.h
-index c8725a3..51894e5 100644
---- a/bitmap.h
-+++ b/bitmap.h
-@@ -7,11 +7,13 @@
- #define BITMAP_H 1
- 
- #define BITMAP_MAJOR_LO 3
--/* version 4 insists the bitmap is in little-endian order
-+/* version greater or equal to 4 insists the bitmap is in little-endian order
-+ * version greater or equal to 5 insists it has sync-bitmap
-  * with version 3, it is host-endian which is non-portable
-  */
--#define BITMAP_MAJOR_HI 4
-+#define BITMAP_MAJOR_HI 6
- #define	BITMAP_MAJOR_HOSTENDIAN 3
-+#define	BITMAP_MAJOR_SYNCBITMAP 5
- 
- #define BITMAP_MINOR 39
- 
-diff --git a/super1.c b/super1.c
-index 0427205..e227665 100644
---- a/super1.c
-+++ b/super1.c
-@@ -2235,7 +2235,7 @@ static int write_bitmap1(struct supertype *st, int fd)
- 	bitmap_super_t *bms = (bitmap_super_t*)(((char*)sb)+MAX_SB_SIZE);
- 	int rv = 0;
- 	void *buf;
--	int towrite, n;
-+	int towrite, syncbitmap_towrite, n;
- 	struct align_fd afd;
- 
- 	init_afd(&afd, fd);
-@@ -2251,7 +2251,8 @@ static int write_bitmap1(struct supertype *st, int fd)
- 	towrite = __le64_to_cpu(bms->sync_size) / (__le32_to_cpu(bms->chunksize)>>9);
- 	towrite = (towrite+7) >> 3; /* bits to bytes */
- 	towrite += sizeof(bitmap_super_t);
--	towrite = ROUND_UP(towrite, 512);
-+	towrite = ROUND_UP(towrite, 4096);
-+	syncbitmap_towrite = towrite;
- 	while (towrite > 0) {
- 		n = towrite;
- 		if (n > 4096)
-@@ -2263,6 +2264,21 @@ static int write_bitmap1(struct supertype *st, int fd)
- 			break;
- 		memset(buf, 0xff, 4096);
- 	}
-+
-+	/* write init sync-bitmap */
-+	memset(buf, 0x00, 4096);
-+	while (syncbitmap_towrite > 0) {
-+		n = syncbitmap_towrite;
-+		if (n > 4096)
-+			n = 4096;
-+		n = awrite(&afd, buf, n);
-+		if (n > 0)
-+			syncbitmap_towrite -= n;
-+		else
-+			break;
-+		memset(buf, 0x00, 4096);
-+	}
-+
- 	fsync(fd);
- 	if (towrite)
- 		rv = -2;
--- 
-1.7.1
-
+At 2013-07-22 11:04:15,NeilBrown <neilb@suse.de> wrote:
+>Hi Qin,
+> thanks for the report.  I can easily reproduce the bug.
+>
+>I think this will fix it.  Could you please test and confirm that it fixes
+>the problem for you too.
+>
+>Thanks,
+>NeilBrown
+>
+>
+>From: NeilBrown <neilb@suse.de>
+>Date: Mon, 22 Jul 2013 12:57:21 +1000
+>Subject: [PATCH] md/raid5: fix interaction of 'replace' and 'recovery'.
+>
+>If a device in a RAID4/5/6 is being replaced while another is being
+>recovered, then the writes to the replacement device currently don't
+>happen, resulting in corruption when the replacement completes and the
+>new drive takes over.
+>
+>This is because the replacement writes are only triggered when
+>'s.replacing' is set and not when the similar 's.sync' is set (which
+>is the case during resync and recovery - it means all devices need to
+>be read).
+>
+>So schedule those writes when s.replacing is set as well.
+>
+>In this case we cannot use "STRIPE_INSYNC" to record that the
+>replacement has happened as that is needed for recording that any
+>parity calculation is complete.  So introduce STRIPE_REPLACED to
+>record if the replacement has happened.
+>
+>This bug was introduced in commit 9a3e1101b827a59ac9036a672f5fa8d5279d0fe2
+>(md/raid5:  detect and handle replacements during recovery.)
+>which introduced replacement for raid5.
+>That was in 3.3-rc3, so any stable kernel since then would benefit
+>from this fix.
+>
+>Cc: stable@vger.kernel.org (3.3+)
+>Reported-by: qindehua <13691222965@163.com>
+>Signed-off-by: NeilBrown <neilb@suse.de>
+>
+>diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>index 2bf094a..f0aa7abd 100644
+>--- a/drivers/md/raid5.c
+>+++ b/drivers/md/raid5.c
+>@@ -3607,8 +3607,8 @@ static void handle_stripe(struct stripe_head *sh)
+> 			handle_parity_checks5(conf, sh, &s, disks);
+> 	}
+> 
+>-	if (s.replacing && s.locked == 0
+>-	    && !test_bit(STRIPE_INSYNC, &sh->state)) {
+>+	if ((s.replacing || s.syncing) && s.locked == 0
+>+	    && !test_bit(STRIPE_REPLACED, &sh->state)) {
+> 		/* Write out to replacement devices where possible */
+> 		for (i = 0; i < conf->raid_disks; i++)
+> 			if (test_bit(R5_UPTODATE, &sh->dev[i].flags) &&
+>@@ -3617,7 +3617,9 @@ static void handle_stripe(struct stripe_head *sh)
+> 				set_bit(R5_LOCKED, &sh->dev[i].flags);
+> 				s.locked++;
+> 			}
+>-		set_bit(STRIPE_INSYNC, &sh->state);
+>+		if (s.replacing)
+>+			set_bit(STRIPE_INSYNC, &sh->state);
+>+		set_bit(STRIPE_REPLACED, &sh->state);
+> 	}
+> 	if ((s.syncing || s.replacing) && s.locked == 0 &&
+> 	    test_bit(STRIPE_INSYNC, &sh->state)) {
+>diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+>index b0b663b..70c4932 100644
+>--- a/drivers/md/raid5.h
+>+++ b/drivers/md/raid5.h
+>@@ -306,6 +306,7 @@ enum {
+> 	STRIPE_SYNC_REQUESTED,
+> 	STRIPE_SYNCING,
+> 	STRIPE_INSYNC,
+>+	STRIPE_REPLACED,
+> 	STRIPE_PREREAD_ACTIVE,
+> 	STRIPE_DELAYED,
+> 	STRIPE_DEGRADED,
