@@ -1,58 +1,38 @@
-From: Holger Kiehl <Holger.Kiehl@dwd.de>
-Subject: Re: Should "mdadm --add" complain if the new device appears to have
- a filesystem on it?
-Date: Tue, 23 Jul 2013 07:41:53 +0000 (GMT)
-Message-ID: <alpine.LRH.2.02.1307230734590.12531@praktifix.dwd.de>
-References: <20130723113902.62368e3e@notabene.brown>
+From: Francis Moreau <francis.moro@gmail.com>
+Subject: MD array keeps resyncing after rebooting
+Date: Tue, 23 Jul 2013 11:46:16 +0200
+Message-ID: <CAC9WiBjm5-RJ=CfpXMG7CCBp7StzWDuhp5XyFs4hAW3sxX7Gfw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130723113902.62368e3e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux RAID <linux-raid@vger.kernel.org>, Christian Iversen <chrivers@iversen-net.dk>
+To: linux-raid@vger.kernel.org
+Cc: Martin Wilck <mwilck@arcor.de>
 List-Id: linux-raid.ids
 
-Hello Neil,
+Hello,
 
-first, many many thanks for all your good work on MD and always helping
-us here on this list!
+I'm using a RAID1 with DDF metadata format. The array has been
+initialized by the bios and contains my root partition.
 
-On Tue, 23 Jul 2013, NeilBrown wrote:
+After booting I waited for the RAID1 array to finish syncing then rebooting.
 
->
-> As you probably know, when you use "mdadm -C" to create an array, it will
-> check if the devices appear to contain a filesystem or similar already and
-> will complain if they do - requiring you do say "yes" or use "--run" to avoid
-> the warning.
->
-> However if you use "--add" to add a device to an existing array no such
-> checks are done.  So it isn't too hard to destroy all those cat photos you
-> have saved on a USB drive (because device names change every time you boot
-> and you got confused).
->
->
-> I could easily change "--add" to be more cautious, but that might break
-> existing scripts, which I would rather not do.
->
-> Or I could add a "policy" line to mdadm.conf which would indicate the policy
-> for "--add" - either "spare" or "force-spare".  But then I would need to
-> decide on a default.  The default should probably be safe otherwise people
-> probably won't change it until they get burned.  So people with scripts would
-> still experience breakage, but could now fix it easily with a "policy" line.
->
-> Or maybe "--add" should be deprecated so people have to choose between
-> "--re-add" or a new "--spare" with --spare requiring "--force" to destroy
-> data.
-> Then "--add" would generate a deprecation message which scripts could  ignore
-> but people might learn from.
->
->
-> I don't think there is an obviously-correct answer here so I'm open to
-> suggestions.  What do people think?
->
-I first thought of a --initialize, but I do not think it is any better.
-So I would vote for the second solution, depreciating --add and using
---spare plus --force.
+Then I rebooted but the sync restarts again:
 
-Holger
+# cat /proc/mdstat
+Personalities : [raid1]
+md126 : active raid1 sdb[1] sda[0]
+      975585280 blocks super external:/md127/0 [2/2] [UU]
+      [=>...................]  resync =  7.3% (71783424/975585280)
+finish=112.1min speed=134299K/sec
+
+md127 : inactive sdb[1](S) sda[0](S)
+      2354608 blocks super external:ddf
+
+unused devices: <none>
+
+Could anybody tell me what's happening ?
+
+Thanks
+--
+Francis
