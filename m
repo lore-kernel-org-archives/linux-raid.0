@@ -1,145 +1,324 @@
-From: Francis Moreau <francis.moro@gmail.com>
-Subject: Re: MD array keeps resyncing after rebooting
-Date: Tue, 23 Jul 2013 14:55:33 +0200
-Message-ID: <CAC9WiBjs4DQqt1G911OBALzSqn=o_=L1S4_K_MvUWhAu-rhtUw@mail.gmail.com>
-References: <CAC9WiBjm5-RJ=CfpXMG7CCBp7StzWDuhp5XyFs4hAW3sxX7Gfw@mail.gmail.com>
+From: Christoph Anton Mitterer <calestyo@scientia.net>
+Subject: Re: shown disk sizes
+Date: Tue, 23 Jul 2013 18:26:10 +0200
+Message-ID: <1374596770.8463.23.camel@heisenberg.scientia.net>
+References: <1374071867.25339.14.camel@heisenberg.scientia.net>
+	 <20130718094327.7d46949e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg="sha512";
+	protocol="application/x-pkcs7-signature";
+	boundary="=-D5aC47UfuMYmQpkTvZ5n"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAC9WiBjm5-RJ=CfpXMG7CCBp7StzWDuhp5XyFs4hAW3sxX7Gfw@mail.gmail.com>
+In-Reply-To: <20130718094327.7d46949e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Martin Wilck <mwilck@arcor.de>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jul 23, 2013 at 11:46 AM, Francis Moreau <francis.moro@gmail.com> wrote:
-> Hello,
->
-> I'm using a RAID1 with DDF metadata format. The array has been
-> initialized by the bios and contains my root partition.
->
-> After booting I waited for the RAID1 array to finish syncing then rebooting.
->
-> Then I rebooted but the sync restarts again:
->
-> # cat /proc/mdstat
-> Personalities : [raid1]
-> md126 : active raid1 sdb[1] sda[0]
->       975585280 blocks super external:/md127/0 [2/2] [UU]
->       [=>...................]  resync =  7.3% (71783424/975585280)
-> finish=112.1min speed=134299K/sec
->
-> md127 : inactive sdb[1](S) sda[0](S)
->       2354608 blocks super external:ddf
->
-> unused devices: <none>
->
-> Could anybody tell me what's happening ?
->
 
-More information taken from kernel logs:
+--=-D5aC47UfuMYmQpkTvZ5n
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-[    2.175802] SCSI subsystem initialized
-[    2.178912] libata version 3.00 loaded.
-[    2.184876] isci: Intel(R) C600 SAS Controller Driver - version 1.1.0
-[    2.185057] isci 0000:0e:00.0: driver configured for rev: 6 silicon
-[    2.185212] isci 0000:0e:00.0: OEM SAS parameters (version: 1.3)
-loaded (firmware)
-[    2.188451] isci 0000:0e:00.0: SCU controller 0: phy 3-0 cables:
-{short, short, short, short}
-[    2.191041] scsi0 : isci
-[    2.191755] isci 0000:0e:00.0: irq 71 for MSI/MSI-X
-[    2.191764] isci 0000:0e:00.0: irq 72 for MSI/MSI-X
-[    2.442020] Refined TSC clocksource calibration: 1799.999 MHz.
-[    2.442059] sas: phy-0:0 added to port-0:0, phy_mask:0x1 (5fcfffff00000001)
-[    2.442141] Switching to clocksource tsc
-[    2.491953] sas: DOING DISCOVERY on port 0, pid:5
-[    2.491976] sas: DONE DISCOVERY on port 0, pid:5, result:0
-[    2.491985] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
-[    2.492191] sas: ata1: end_device-0:0: dev error handler
-[    2.842323] ata1.00: ATA-8: ST1000NM0011         81Y9807
-81Y3867IBM, BB4A, max UDMA/133
-[    2.842469] ata1.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-[    2.843622] ata1.00: configured for UDMA/133
-[    2.843791] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0
-[    2.861663] scsi 0:0:0:0: Direct-Access     ATA      ST1000NM0011
-  BB4A PQ: 0 ANSI: 5
-[    2.865250] ahci 0000:00:1f.2: version 3.0
-[    2.865352] ahci 0000:00:1f.2: irq 73 for MSI/MSI-X
-[    2.865408] ahci 0000:00:1f.2: AHCI 0001.0300 32 slots 6 ports 1.5
-Gbps 0x1 impl SATA mode
-[    2.865555] ahci 0000:00:1f.2: flags: 64bit ncq sntf led clo pio
-slum part ems apst
-[    2.865700] ahci 0000:00:1f.2: setting latency timer to 64
-[    2.866183] scsi1 : ahci
-[    2.866466] scsi2 : ahci
-[    2.866746] scsi3 : ahci
-[    2.867032] scsi4 : ahci
-[    2.867316] scsi5 : ahci
-[    2.867562] scsi6 : ahci
-[    2.867722] ata2: SATA max UDMA/133 abar m2048@0x902ff000 port
-0x902ff100 irq 73
-[    2.867865] ata3: DUMMY
-[    2.867973] ata4: DUMMY
-[    2.868081] ata5: DUMMY
-[    2.868188] ata6: DUMMY
-[    2.868296] ata7: DUMMY
-[    3.210812] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[    3.211262] ata2.00: ATAPI: IBM SATA DEVICE 81Y3666, IB00, max UDMA/100
-[    3.212441] ata2.00: configured for UDMA/100
-[    3.214231] scsi 1:0:0:0: CD-ROM            IBM SATA DEVICE 81Y3666
-  IB00 PQ: 0 ANSI: 5
-[    3.284669] sd 0:0:0:0: [sda] 1953525168 512-byte logical blocks:
-(1.00 TB/931 GiB)
-[    3.284855] sd 0:0:0:0: [sda] Write Protect is off
-[    3.284970] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[    3.285008] sd 0:0:0:0: [sda] Write cache: disabled, read cache:
-enabled, doesn't support DPO or FUA
-[    3.402209] md: bind<sda>
-[    3.408409] md: bind<sda>
-[    3.430547] sas: phy-0:1 added to port-0:1, phy_mask:0x2 (5fcfffff00000002)
-[    3.430564] sas: DOING DISCOVERY on port 1, pid:88
-[    3.430647] sas: DONE DISCOVERY on port 1, pid:88, result:0
-[    3.430694] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
-[    3.430741] sas: ata1: end_device-0:0: dev error handler
-[    3.430754] sas: ata8: end_device-0:1: dev error handler
-[    3.660124] usb 1-1: new high-speed USB device number 2 using ehci_hcd
-[    3.810483] usb 1-1: New USB device found, idVendor=8087, idProduct=0024
-[    3.810605] usb 1-1: New USB device strings: Mfr=0, Product=0, SerialNumber=0
-[    3.811114] hub 1-1:1.0: USB hub found
-[    3.811313] hub 1-1:1.0: 6 ports detected
-[    3.850059] ata8.00: ATA-8: WD1003FBYX-23        81Y9807
-81Y3867IBM,     WB35, max UDMA/133
-[    3.850207] ata8.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-[    3.851914] ata8.00: configured for UDMA/133
-[    3.852068] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0
-[    3.870029] scsi 0:0:1:0: Direct-Access     ATA      WD1003FBYX-23
-  n/a  PQ: 0 ANSI: 5
-[    3.870326] sd 0:0:1:0: [sdb] 1953525168 512-byte logical blocks:
-(1.00 TB/931 GiB)
-[    3.870710] sd 0:0:1:0: [sdb] Write Protect is off
-[    3.870827] sd 0:0:1:0: [sdb] Mode Sense: 00 3a 00 00
-[    3.870862] sd 0:0:1:0: [sdb] Write cache: disabled, read cache:
-enabled, doesn't support DPO or FUA
-[    3.899616]  sdb: sdb1 sdb2 < sdb5 sdb6 >
-[    3.900677] sd 0:0:1:0: [sdb] Attached SCSI disk
-[    3.929662] usb 2-1: new high-speed USB device number 2 using ehci_hcd
-[    3.976356] md: bind<sdb>
-[    3.980302] md: bind<sdb>
-[    3.980487] md: export_rdev(sda)
-[    3.982381] md: raid1 personality registered for level 1
-[    3.982798] bio: create slab <bio-1> at 1
-[    3.983026] md/raid1:md126: not clean -- starting background reconstruction
-[    3.983155] md/raid1:md126: active with 2 out of 2 mirrors
-[    3.983288] md126: detected capacity change from 0 to 998999326720
-[    3.984714]  md126: p1 p2 < p5 p6 >
-[    4.362728] md: md126 switched to read-write mode.
-[    4.362980] md: resync of RAID array md126
-[    4.363107] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[    4.363224] md: using maximum available idle IO bandwidth (but not
-more than 200000 KB/sec) for resync.
-[    4.363437] md: using 128k window, over a total of 975585280k.
+On Thu, 2013-07-18 at 09:43 +1000, NeilBrown wrote:=20
+> > --examine gives for both devices:
+> > Avail Dev Size : 20969472 (10.00 GiB 10.74 GB)
+> >      Array Size : 20969328 (10.00 GiB 10.74 GB)
+> >   Used Dev Size : 20969328 (10.00 GiB 10.74 GB)
+> >     Data Offset : 2048 sectors
+> >    Super Offset : 8 sectors
+> >=20
+> > =3D> Avail is the available payload size on each component device,... s=
+o
+> > given that we have the first 2048S for the superblock/bitmap/etc... tha=
+t
+> > fits exactly.
+> >=20
+> > =3D> Why is the array size / used dev size smaller?
+>=20
+> Good question.  Not easy to answer ... it is rather convoluted.  Differen=
+t
+> bits of code try to reserve space for things differently and they don't e=
+nd
+> up agreeing.  I might try to simplify that.
 
-Thanks
---
-Francis
+
+I played a bit more around here,... and got even more confused:
+
+Made two files for losetup:
+-rw-r--r--  1 root root 524288000 Jul 23 17:41 image1
+-rw-r--r--  1 root root 524288000 Jul 23 17:41 image2
+
+And a RAID1 out of it:
+mdadm --create /dev/md/raid3 --verbose --metadata=3D1.2 --size=3Dmax
+--level=3Draid1  --name=3Draid3  --raid-devices=3D2 /dev/loop0 /dev/loop1
+
+Examine says:
+# mdadm --examine /dev/loop0
+/dev/loop0:
+Avail Dev Size : 1023488 (499.83 MiB 524.03 MB)
+     Array Size : 511680 (499.77 MiB 523.96 MB)
+  Used Dev Size : 1023360 (499.77 MiB 523.96 MB)
+    Data Offset : 512 sectors
+   Super Offset : 8 sectors
+
+
+Fines, so 524288000/512 - 512S =3D exactly the 1023488 Avail Dev size
+Array Size is in 1K and Used Dev Size in S, so these are identical.
+
+Questions
+1) How does mdadm choose the data alignment? It seems to also use
+completely "odd" numbers like 262144 sectors
+
+2) Again, some sectors (here 128 S) are missing... :(
+
+
+Now I did some fun:
+cat /dev/md/raid > image
+-rw-r--r--  1 root root 523960320 Jul 23 17:43 image
+=3D> which is just the ArraySize / Used Dev Size... hurray...
+I edited that file with an hexeditor with the following changes:=20
+# hd i
+00000000  43 41 4c 45 53 54 59 4f  5f 42 45 47 49 4e 00 00  |CALESTYO_BEGIN=
+..|
+00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |..............=
+..|
+*
+1f3afff0  00 00 00 00 43 41 4c 45  53 54 59 4f 5f 45 4e 44  |....CALESTYO_E=
+ND|
+1f3b0000
+
+and wrote it back (cat image > /dev/md/raid).
+
+Of course I couldn't resist to stop the raid and directly read the
+losetup image files:
+# hd image1=20
+00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |..............=
+..|
+*
+00001000  fc 4e 2b a9 01 00 00 00  00 00 00 00 00 00 00 00  |.N+...........=
+..|
+00001010  99 05 68 13 83 97 70 53  bd 98 b6 9e 04 9c 1a 79  |..h...pS......=
+.y|
+00001020  6c 63 67 2d 6c 72 7a 2d  70 75 70 70 65 74 3a 72  |lcg-lrz-puppet=
+:r|
+00001030  61 69 64 33 00 00 00 00  00 00 00 00 00 00 00 00  |aid3..........=
+..|
+00001040  ed a2 ee 51 00 00 00 00  01 00 00 00 00 00 00 00  |...Q..........=
+..|
+00001050  80 9d 0f 00 00 00 00 00  00 00 00 00 02 00 00 00  |..............=
+..|
+00001060  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |..............=
+..|
+*
+00001080  00 02 00 00 00 00 00 00  00 9e 0f 00 00 00 00 00  |..............=
+..|
+00001090  08 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |..............=
+..|
+000010a0  00 00 00 00 00 00 00 00  d4 58 14 b3 8c 07 e4 88  |.........X....=
+..|
+000010b0  fa f7 61 90 83 2b 4c 0d  00 00 00 00 00 00 00 00  |..a..+L.......=
+..|
+000010c0  2c a4 ee 51 00 00 00 00  13 00 00 00 00 00 00 00  |,..Q..........=
+..|
+000010d0  ff ff ff ff ff ff ff ff  c3 52 2b 16 80 00 00 00  |.........R+...=
+..|
+000010e0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |..............=
+..|
+*
+00001100  00 00 01 00 fe ff fe ff  fe ff fe ff fe ff fe ff  |..............=
+..|
+00001110  fe ff fe ff fe ff fe ff  fe ff fe ff fe ff fe ff  |..............=
+..|
+*
+00001200  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |..............=
+..|
+*
+00002000  62 69 74 6d 04 00 00 00  35 c5 62 da cf d2 21 ea  |bitm....5.b...=
+!.|
+00002010  1a e5 49 74 92 7b 49 2e  00 00 00 00 00 00 00 00  |..It.{I.......=
+..|
+00002020  00 00 00 00 00 00 00 00  80 9d 0f 00 00 00 00 00  |..............=
+..|
+00002030  00 00 00 00 00 00 00 04  05 00 00 00 00 00 00 00  |..............=
+..|
+00002040  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |..............=
+..|
+*
+00002100  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |..............=
+..|
+*
+00002200  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |..............=
+..|
+*
+00040000  43 41 4c 45 53 54 59 4f  5f 42 45 47 49 4e 00 00  |CALESTYO_BEGIN=
+..|
+00040010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |..............=
+..|
+*
+1f3efff0  00 00 00 00 43 41 4c 45  53 54 59 4f 5f 45 4e 44  |....CALESTYO_E=
+ND|
+1f3f0000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |..............=
+..|
+*
+1f400000
+
+(they are the same (especially the addresses) except some places in the
+header)
+
+Okay here we go: 0x00040000 =3D 262144 B =3D 512 S... hurray... the data
+starts at the data offset (who'd have expected this? :P)
+
+The total size: 0x1f400000 =3D 524288000 B =3D 1024000 S, which is just the
+size of my losetup image files
+
+Total size 0x1f400000 - 0x0x00040000 =3D 524025856 B =3D 1023488 S, which i=
+s
+again the Avail Size... (i.e. NOT the array size)
+
+And the 1f400000-1f3f0000 are just the "missing" 128S.
+Jihaw...
+
+3) Stupid question... are these 128S kept free for the 0.9/1.0
+superblock-in-the-end disease? ;)
+If so,... I'd have expected that this region is at least 64K and at most
+128K large,... but I've also had this:
+# mdadm --examine /dev/loop3
+/dev/loop3:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 968d9b80:d8714965:c3cb34cd:4d2952e6
+           Name : lcg-lrz-puppet:raid2  (local to host lcg-lrz-puppet)
+  Creation Time : Tue Jul 23 17:15:23 2013
+     Raid Level : raid1
+   Raid Devices : 2
+
+Avail Dev Size : 1048313856 (499.88 GiB 536.74 GB)
+     Array Size : 524156736 (499.87 GiB 536.74 GB)
+  Used Dev Size : 1048313472 (499.87 GiB 536.74 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : bbcfa311:0e61c19a:5eafe78e:f53b1c15
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Tue Jul 23 17:15:23 2013
+       Checksum : 23cbc3d7 - correct
+         Events : 0
+
+=3D> and there we have 384 S...
+
+
+
+I was working on some spreadsheat which should give one, starting from a
+few variables like first sector of the MD's component device partition,
+and so on... and especially the desired (usabel) array size... the
+necessary size for the the component device.
+Obviously, as long as I can't calculate how the size of the superblock
+comes together... I have no real chance
+
+
+Cheers,
+Chris.
+
+--=-D5aC47UfuMYmQpkTvZ5n
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgMFADCABgkqhkiG9w0BBwEAAKCCEP4w
+ggV1MIIDXaADAgECAgMBAYIwDQYJKoZIhvcNAQEFBQAwVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4x
+HjAcBgNVBAsTFWh0dHA6Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMg
+Um9vdDAeFw0xMjA3MjMxNDU2NDVaFw0xNDA3MjMxNDU2NDVaMHwxITAfBgNVBAMTGENocmlzdG9w
+aCBBbnRvbiBNaXR0ZXJlcjEkMCIGCSqGSIb3DQEJARYVY2FsZXN0eW9Ac2NpZW50aWEubmV0MTEw
+LwYJKoZIhvcNAQkBFiJtYWlsQGNocmlzdG9waC5hbnRvbi5taXR0ZXJlci5uYW1lMIIBIjANBgkq
+hkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqv+F91K5vyBwiGFMqj6wTehWdqZnfFeXqT8g5b3qrXWL
+ywSzcoD9xtyoRqAgOCX+PSmBpm6pPhe31VnBtc3HcBMe4rSico9/Z2H9h1l6IMVEnyhabWzoKbE3
+BFrsYJGthJCbhK072G8AhCk+5p+L+knLhQXN0Ph7MJbdY26o3M4vjsXFNbJL8TOYxo80cGD1LIh2
+SUZFqaIG24TVmTW8F4jD5Z9/NEwJa8kQK+VBNHUntXYNah4Reh0jSsGnq9Pg3Hf4KC+F0IR8QgBm
+SnwitMFUX9UnhLEvRQxjDI1tm+h6RxfjlV7moI68Ulh7bcdPhM/z2Q16XmaY12rc85pSRQIDAQAB
+o4IBJjCCASIwDAYDVR0TAQH/BAIwADBWBglghkgBhvhCAQ0ESRZHVG8gZ2V0IHlvdXIgb3duIGNl
+cnRpZmljYXRlIGZvciBGUkVFIGhlYWQgb3ZlciB0byBodHRwOi8vd3d3LkNBY2VydC5vcmcwQAYD
+VR0lBDkwNwYIKwYBBQUHAwQGCCsGAQUFBwMCBgorBgEEAYI3CgMEBgorBgEEAYI3CgMDBglghkgB
+hvhCBAEwMgYIKwYBBQUHAQEEJjAkMCIGCCsGAQUFBzABhhZodHRwOi8vb2NzcC5jYWNlcnQub3Jn
+MEQGA1UdEQQ9MDuBFWNhbGVzdHlvQHNjaWVudGlhLm5ldIEibWFpbEBjaHJpc3RvcGguYW50b24u
+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
++G8T/HNZ92ZCdB6K4/jc0m+YnMtHmJVABfvpAgMBAAGjgb8wgbwwDwYDVR0TAQH/BAUwAwEB/zBd
+BggrBgEFBQcBAQRRME8wIwYIKwYBBQUHMAGGF2h0dHA6Ly9vY3NwLkNBY2VydC5vcmcvMCgGCCsG
+AQUFBzAChhxodHRwOi8vd3d3LkNBY2VydC5vcmcvY2EuY3J0MEoGA1UdIARDMEEwPwYIKwYBBAGB
+kEowMzAxBggrBgEFBQcCARYlaHR0cDovL3d3dy5DQWNlcnQub3JnL2luZGV4LnBocD9pZD0xMDAN
+BgkqhkiG9w0BAQQFAAOCAgEAfwiIodoaUEnaifuhCHLzivcexDq0eVsgMLFF3sJd02Vp8cJdVFQ8
+hV+5e0KRwpn9G1Gbq0aloRBTnm2IrHNuLDOm8PSe4HXBPohFqeFmQ/5WWtF6QXj3QNpKOvELW6W7
+FgbmwueTuYVNl0+xHjhDgO+bDYzvuKdgAIdXfR5EHMsj75s8mZ2vtSkcRXkWlk0nbfEcbMPCVWSz
+vBTi86QfHjL8JxUFz90urj6CYXvwIRAY9kTqUzn53NCaIODGu+C7Wk/EmcgHvbW9otsuYg1CNEG8
+/4uK9VEiqogwAOKw1Ly+ZbrVA1d5m+jcyE34UO2RpVIooqz7Nlg+6ZQrkVCHG9Ze1ozM9w8QDFJO
+0BZh5eUKbL8Xx3JGV5yY9WxgY3pvXrlOL8i5ubtqhbyYDe35PpeENJSuAK+h5eeSbk698+LZFItc
+0usBbKAXpS0Q65x6Sr297s797SJAq3A4iPUKh2rCqwVgyUgF2lPB3kR3arPzPDztgLymOEopJF/+
+WTubJXpWYwBkuV2kYn1XNk+tg+8fklOgjndX3eVhET0jAJBMPPqjYJMEo6819g5qj09KYKeFBWxG
+oY/0x3bjoVlX93GyxG4UXG1tQWbfG5Ox1ADD7svPPD0hgKlfY2X83eBfpPQr8IVxQdRnJfsasZeu
+1pmCE0HSbqUbmSeA5wupqAAxggLtMIIC6QIBATBbMFQxFDASBgNVBAoTC0NBY2VydCBJbmMuMR4w
+HAYDVQQLExVodHRwOi8vd3d3LkNBY2VydC5vcmcxHDAaBgNVBAMTE0NBY2VydCBDbGFzcyAzIFJv
+b3QCAwEBgjANBglghkgBZQMEAgMFAKCCAWMwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
+hkiG9w0BCQUxDxcNMTMwNzIzMTYyNjEwWjBPBgkqhkiG9w0BCQQxQgRAfA3yMhSpcpKnHmkHHzn2
+/fbeBa90b+Kv/qNFHViDekcJ7UFO8VYQCRV34TjD5yFZUdl0rYUviTSd7vyE/DxWXDBqBgkrBgEE
+AYI3EAQxXTBbMFQxFDASBgNVBAoTC0NBY2VydCBJbmMuMR4wHAYDVQQLExVodHRwOi8vd3d3LkNB
+Y2VydC5vcmcxHDAaBgNVBAMTE0NBY2VydCBDbGFzcyAzIFJvb3QCAwEBgjBsBgsqhkiG9w0BCRAC
+CzFdoFswVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6Ly93d3cuQ0FjZXJ0
+Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdAIDAQGCMA0GCSqGSIb3DQEBAQUABIIB
+AH6z6JN4deuvMYr9pfFIhYBvhGdKOPTFvr+501vJ5NR18v50xxDSNkQXhruh6AWQBDvoqXrt7XZT
+JtoUgvxDG2oYh77BU2XtkZoXKYc3FXI/zPc2x7RB7EYmRyxPTMOHrz+k3gYFSLIzELII3s7a24um
+qk5Wj2v7+fjlUYYRVK5s3yKPKtmH0GVXTbDfY/Z5EEbxfL8tfGQXIZmIbR7gWLYrWSQ8Y3/xp9ga
+Z2IgGGSyRLyniASVKpRRYEVQjL4Jv74BmT/IrjIOsLnNgqVCLKxDEDtsmqMuQ5J1c1XxypIip7wR
+oS0jR3pgJON/4aTKWu+54INGDyeqE3ki2GtoNtIAAAAAAAA=
+
+
+--=-D5aC47UfuMYmQpkTvZ5n--
+
