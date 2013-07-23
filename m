@@ -1,20 +1,24 @@
-From: TC@zimbra.relato.net.br, idthida.choun@gmail.com
-Subject: Letter Of Intent
-Date: Wed, 24 Jul 2013 02:00:59 +0700
-Message-ID: <20130723190141.5885E5654B2@zimbra.relato.net.br>
-Reply-To: thida.choun@yahoo.com
+From: Martin Wilck <mwilck@arcor.de>
+Subject: Re: MD array keeps resyncing after rebooting
+Date: Tue, 23 Jul 2013 20:52:10 +0200
+Message-ID: <51EED0DA.3020901@arcor.de>
+References: <CAC9WiBjm5-RJ=CfpXMG7CCBp7StzWDuhp5XyFs4hAW3sxX7Gfw@mail.gmail.com> <CAC9WiBjs4DQqt1G911OBALzSqn=o_=L1S4_K_MvUWhAu-rhtUw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Description: Mail message body
+In-Reply-To: <CAC9WiBjs4DQqt1G911OBALzSqn=o_=L1S4_K_MvUWhAu-rhtUw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Francis Moreau <francis.moro@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Friend
+Which MD version are you using?
 
-It is my interest to contact you in respect of our client from your country who died 3 years ago leaving some huge amount of money in our bank without any next of kin or link to his family. I shall explain in details when I read your reply.You are my first contact, I shall wait for days and if I do not hear from you. I shall continue with my search,
+What you describe looks suspiciously like the problem I tried to solve
+with my patch "DDF: use existing locations for primary and secondary DDF
+structure".
 
-Thanks.
-Thida Choun
+Please give the current git version of mdadm a try.
+
+Martin
