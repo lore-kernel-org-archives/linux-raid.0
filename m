@@ -1,105 +1,77 @@
-From: qindehua <qindehua@163.com>
-Subject: Re: Problem with disk replacement
-Date: Mon, 22 Jul 2013 18:23:57 +0800 (CST)
-Message-ID: <3391fc7f.14685.14005e82e81.Coremail.qindehua@163.com>
-References: <45ae92bb.4ffb.13ff2092e1d.Coremail.13691222965@163.com>
- <7945ee0b.7d5e.13ff2acdc3f.Coremail.13691222965@163.com>
- <20130722130415.44b85e93@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Should "mdadm --add" complain if the new device appears to have a
+ filesystem on it?
+Date: Tue, 23 Jul 2013 11:39:02 +1000
+Message-ID: <20130723113902.62368e3e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GBK
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/_CXNwRr6=l+zFv6rcBSgR.6"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130722130415.44b85e93@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux RAID <linux-raid@vger.kernel.org>
+Cc: Christian Iversen <chrivers@iversen-net.dk>
 List-Id: linux-raid.ids
 
-Hi Neil,
-I have tested with this patch, and it fixes the problem.
-I have also tried various combinations of failing and replacing disks,
-with echo idle to /sys/block/md1/md/sync_action, they all work fine.
+--Sig_/_CXNwRr6=l+zFv6rcBSgR.6
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Regards,
-Qin Dehua
 
-At 2013-07-22 11:04:15,NeilBrown <neilb@suse.de> wrote:
->Hi Qin,
-> thanks for the report.  I can easily reproduce the bug.
->
->I think this will fix it.  Could you please test and confirm that it fixes
->the problem for you too.
->
->Thanks,
->NeilBrown
->
->
->From: NeilBrown <neilb@suse.de>
->Date: Mon, 22 Jul 2013 12:57:21 +1000
->Subject: [PATCH] md/raid5: fix interaction of 'replace' and 'recovery'.
->
->If a device in a RAID4/5/6 is being replaced while another is being
->recovered, then the writes to the replacement device currently don't
->happen, resulting in corruption when the replacement completes and the
->new drive takes over.
->
->This is because the replacement writes are only triggered when
->'s.replacing' is set and not when the similar 's.sync' is set (which
->is the case during resync and recovery - it means all devices need to
->be read).
->
->So schedule those writes when s.replacing is set as well.
->
->In this case we cannot use "STRIPE_INSYNC" to record that the
->replacement has happened as that is needed for recording that any
->parity calculation is complete.  So introduce STRIPE_REPLACED to
->record if the replacement has happened.
->
->This bug was introduced in commit 9a3e1101b827a59ac9036a672f5fa8d5279d0fe2
->(md/raid5:  detect and handle replacements during recovery.)
->which introduced replacement for raid5.
->That was in 3.3-rc3, so any stable kernel since then would benefit
->from this fix.
->
->Cc: stable@vger.kernel.org (3.3+)
->Reported-by: qindehua <13691222965@163.com>
->Signed-off-by: NeilBrown <neilb@suse.de>
->
->diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->index 2bf094a..f0aa7abd 100644
->--- a/drivers/md/raid5.c
->+++ b/drivers/md/raid5.c
->@@ -3607,8 +3607,8 @@ static void handle_stripe(struct stripe_head *sh)
-> 			handle_parity_checks5(conf, sh, &s, disks);
-> 	}
-> 
->-	if (s.replacing && s.locked == 0
->-	    && !test_bit(STRIPE_INSYNC, &sh->state)) {
->+	if ((s.replacing || s.syncing) && s.locked == 0
->+	    && !test_bit(STRIPE_REPLACED, &sh->state)) {
-> 		/* Write out to replacement devices where possible */
-> 		for (i = 0; i < conf->raid_disks; i++)
-> 			if (test_bit(R5_UPTODATE, &sh->dev[i].flags) &&
->@@ -3617,7 +3617,9 @@ static void handle_stripe(struct stripe_head *sh)
-> 				set_bit(R5_LOCKED, &sh->dev[i].flags);
-> 				s.locked++;
-> 			}
->-		set_bit(STRIPE_INSYNC, &sh->state);
->+		if (s.replacing)
->+			set_bit(STRIPE_INSYNC, &sh->state);
->+		set_bit(STRIPE_REPLACED, &sh->state);
-> 	}
-> 	if ((s.syncing || s.replacing) && s.locked == 0 &&
-> 	    test_bit(STRIPE_INSYNC, &sh->state)) {
->diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
->index b0b663b..70c4932 100644
->--- a/drivers/md/raid5.h
->+++ b/drivers/md/raid5.h
->@@ -306,6 +306,7 @@ enum {
-> 	STRIPE_SYNC_REQUESTED,
-> 	STRIPE_SYNCING,
-> 	STRIPE_INSYNC,
->+	STRIPE_REPLACED,
-> 	STRIPE_PREREAD_ACTIVE,
-> 	STRIPE_DELAYED,
-> 	STRIPE_DEGRADED,
+As you probably know, when you use "mdadm -C" to create an array, it will
+check if the devices appear to contain a filesystem or similar already and
+will complain if they do - requiring you do say "yes" or use "--run" to avo=
+id
+the warning.
+
+However if you use "--add" to add a device to an existing array no such
+checks are done.  So it isn't too hard to destroy all those cat photos you
+have saved on a USB drive (because device names change every time you boot
+and you got confused).
+
+
+I could easily change "--add" to be more cautious, but that might break
+existing scripts, which I would rather not do.
+
+Or I could add a "policy" line to mdadm.conf which would indicate the policy
+for "--add" - either "spare" or "force-spare".  But then I would need to
+decide on a default.  The default should probably be safe otherwise people
+probably won't change it until they get burned.  So people with scripts wou=
+ld
+still experience breakage, but could now fix it easily with a "policy" line.
+
+Or maybe "--add" should be deprecated so people have to choose between
+"--re-add" or a new "--spare" with --spare requiring "--force" to destroy
+data.
+Then "--add" would generate a deprecation message which scripts could  igno=
+re
+but people might learn from.
+
+
+I don't think there is an obviously-correct answer here so I'm open to
+suggestions.  What do people think?
+
+NeilBrown
+
+--Sig_/_CXNwRr6=l+zFv6rcBSgR.6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUe3etjnsnt1WYoG5AQICNRAAr83MKoPinj7PSpjVXYNpA+LKEsbD/R3J
+zu24+yQv9Rp/roxPEQfpEc7hDl5hlWra4PZsGBrtbICLjDTrTNvedSnKTYN6tIqm
+VmNfCpaay5uKFT1Ncssxobts/kKLGd1qtcjAlP39zKJd206R6/YAHwsmxzCUoKi5
+/9d6ykuBfibOx7k8AF01PfNK6deI3kM/LrDs2bGAYx9M1pLZAyL3W2z2h5PFFXBQ
+2NmJFRx4lMWwtzAXJH+IfowuIG2d8vNrtzdm32X0MgWzrYda7TowWB87VTwGjAuR
+Jz3zScn63x4VfMHJ+LvvttFjCrbrrQ25KaWsxmqyt8TtAtjpZbT9vN3vZCvzD4VY
+MLph1A4fxjLUaP6oJfbrC7KKBW+3iB4b2DRO9dso6j2p65w6eB7MjeS15U/TRtdl
+zmvECOCFjyrjXEXrw35+endWsrZmLskbE4AQ8Uknc2e/EA0qk9DCp573O0s9Nnn/
+ruwjqDFPCkaCY7LKjSTYBBz6oHHPpu9txVekaaYZv50Ydq6js5XCMYi0B9iC2ZEd
+Df+a+jWrK9l/p/FisgTodIboewZ2Ex/ajqdDst1KRDSVdwKded/ZDJmn0tDte+2s
+xaDfMYqFdR5kNqA/JmvzHs8AIbrzFhfhT3F9veLwOlKZo6RwRoljbLMziCHVSlTn
+0goHJx5UPEo=
+=cxNV
+-----END PGP SIGNATURE-----
+
+--Sig_/_CXNwRr6=l+zFv6rcBSgR.6--
