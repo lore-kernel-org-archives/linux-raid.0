@@ -1,20 +1,57 @@
-From: TC@zimbra.relato.net.br, idthida.choun@gmail.com
-Subject: Letter Of Intent
-Date: Wed, 24 Jul 2013 12:00:18 +0700
-Message-ID: <20130724050104.5856956D9B7@zimbra.relato.net.br>
-Reply-To: thida.choun@yahoo.com
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Help creating filesystem (xfs) and partitioning
+Date: Wed, 24 Jul 2013 01:56:34 -0500
+Message-ID: <51EF7AA2.9000604@hardwarefreak.com>
+References: <CAH3kUhFqX5fB0=eYbECxrR_52Yv3_v5oodG=6Z-8L_gcTwiC4Q@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Description: Mail message body
+In-Reply-To: <CAH3kUhFqX5fB0=eYbECxrR_52Yv3_v5oodG=6Z-8L_gcTwiC4Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Dear Friend
+On 7/23/2013 7:06 PM, Roberto Spadim wrote:
 
-It is my interest to contact you in respect of our client from your country who died 3 years ago leaving some huge amount of money in our bank without any next of kin or link to his family. I shall explain in details when I read your reply.You are my first contact, I shall wait for days and if I do not hear from you. I shall continue with my search,
+> /boot with 200mb, xfs filesystem and raid1
 
-Thanks.
-Thida Choun
+Using a journaling filesystem for /boot is pointless.  Use EXT2 instead.
+
+> swap with 20gb (or 10gb),
+> / with 100gb, xfs filesystem and raid1
+> /home with all disk left (near to 400gb), xfs filesystem and raid1
+
+It is ill advised to put more than one XFS filesystem on a single
+(effective) spindle which is what RAID1 is.  Doing so results in too
+many allocation groups, which results in head thrashing, which results
+in decreased performance.  Use a single XFS for rootfs and home, manage
+space by enabling and setting quotas.
+
+...
+> Now the point is, what's the best fdisk, mdadm, mkfs_xfs, tunefs,
+> smartctl and others tune tools and /sys /proc parameters?
+> I want a good align and performace
+
+None of these will increase your performance with a RAID1 pair.
+Switching your elevator from CFQ to deadline, and making sure NCQ is
+enabled and working properly, is about the best you can do to maximize
+md RAID1 performance.  And using a single XFS as I described above,
+instead of 2 or 3.
+
+If your workload(s) involve heavy mixed metadata and data changes, i.e.
+untar a kernel tarball then delete the directory tree, then mounting
+with inode64 will improve performance a bit.  inode64 has been made the
+default XFS allocator but I'm not sure with which kernel version that
+took affect.  To find out simply do "cat /proc/mounts".
+
+See mkfs.xfs(8), mount(8)
+http://xfs.org/index.php/XFS_FAQ
+http://xfs.org/docs/xfsdocs-xml-dev/XFS_Labs/tmp/en-US/html/xfs-quotas-lab.html
+
+-- 
+Stan
+
+
