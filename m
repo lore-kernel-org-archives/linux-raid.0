@@ -1,137 +1,74 @@
-From: Francis Moreau <francis.moro@gmail.com>
-Subject: Re: MD array keeps resyncing after rebooting
-Date: Wed, 24 Jul 2013 15:50:48 +0200
-Message-ID: <CAC9WiBjQz6MJxBuw+cLWFZ-vOsdbYYSKdE575emH_AG5EmnGdw@mail.gmail.com>
-References: <CAC9WiBjm5-RJ=CfpXMG7CCBp7StzWDuhp5XyFs4hAW3sxX7Gfw@mail.gmail.com>
-	<CAC9WiBjs4DQqt1G911OBALzSqn=o_=L1S4_K_MvUWhAu-rhtUw@mail.gmail.com>
-	<51EED0DA.3020901@arcor.de>
-	<51EED102.4020503@arcor.de>
-	<CAC9WiBgN1-HBEgqwo7CWor=nihCYUcOrYKhGxYTgbC-d4a7_-g@mail.gmail.com>
-	<51EEF3D3.7020305@arcor.de>
-	<CAC9WiBgrjrPRcHa5kh8TUfqN0rBBFC4M0_8iDkU3O0SOFgFW5g@mail.gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Help creating filesystem (xfs) and partitioning
+Date: Wed, 24 Jul 2013 12:28:35 -0500
+Message-ID: <51F00EC3.90605@hardwarefreak.com>
+References: <CAH3kUhFqX5fB0=eYbECxrR_52Yv3_v5oodG=6Z-8L_gcTwiC4Q@mail.gmail.com> <51EF7AA2.9000604@hardwarefreak.com> <CAH3kUhHoQiyhVotNpNDq-rcQ36vZbRrZvoEsUzyo0=9mz8=+3w@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAC9WiBgrjrPRcHa5kh8TUfqN0rBBFC4M0_8iDkU3O0SOFgFW5g@mail.gmail.com>
+In-Reply-To: <CAH3kUhHoQiyhVotNpNDq-rcQ36vZbRrZvoEsUzyo0=9mz8=+3w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>
-Cc: linux-raid@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Jul 24, 2013 at 6:32 AM, Francis Moreau <francis.moro@gmail.com> wrote:
-> On Tue, Jul 23, 2013 at 11:21 PM, Martin Wilck <mwilck@arcor.de> wrote:
->> On 07/23/2013 10:01 PM, Francis Moreau wrote:
->>> Hello Martin
->>>
->>> On Tue, Jul 23, 2013 at 8:52 PM, Martin Wilck <mwilck@arcor.de> wrote:
->>>> On 07/23/2013 08:52 PM, Martin Wilck wrote:
->>>>> Which MD version are you using?
->>>>
->>>> I meant: which mdadm version. Sorry.
->>>>
->>>
->>> I'm using mdadm version 3.2.3
->>>
->>> I'll give the current git version a try tomorrow.
->>>
->>> The thing is that I need to wait the sync to finish in order to test
->>> this problem. But the sync takes a while (> 4 hours, I don't remember
->>> exactly). Are there any ways to speed up the process ?
+On 7/24/2013 11:06 AM, Roberto Spadim wrote:
+> What about fdisk align?
+
+If the disks have 512 bytes per physical sector, the standard for over
+30 years, then there is nothing to align.  If the disks have 4096 bytes
+per physical sector and 512 per logical sector, i.e. Advanced Format
+disks, then you need to make sure your partitions are aligned to 4K
+boundaries.  Start your first partition at LBA sector 2048 and you
+should be golden.  And make sure each partition is evenly divisible by
+4096 bytes.  If you don't partition AF disks properly your 4K filesystem
+blocks will straddle two adjacent physical 4K sectors and cause drive
+internal read-modify-write.  This can cut performance by up to 50%.
+
+> Em 24/07/2013 03:56, "Stan Hoeppner" <stan@hardwarefreak.com> escreveu:
 >>
->> MD will adjust its speed while initializing, thus the fastest way is to
->> do nothing on the system, avoiding any other disk IO. This will cause MD
->> to use max bandwidth.
+>> On 7/23/2013 7:06 PM, Roberto Spadim wrote:
 >>
->> One thing you can do for testing is to create a smaller array which will
->> of course initialize faster.
->
-> Unfortunately I can't do that: the array was created by the BIOS and
-> AFAICS it does on the whole disks.
->
+>>> /boot with 200mb, xfs filesystem and raid1
 >>
->> Please run mdadm -E /dev/sdX for all RAID disks before and after reboot
->> and watch out for differences.
->
-> Will do.
->
+>> Using a journaling filesystem for /boot is pointless.  Use EXT2 instead.
+>>
+>>> swap with 20gb (or 10gb),
+>>> / with 100gb, xfs filesystem and raid1
+>>> /home with all disk left (near to 400gb), xfs filesystem and raid1
+>>
+>> It is ill advised to put more than one XFS filesystem on a single
+>> (effective) spindle which is what RAID1 is.  Doing so results in too
+>> many allocation groups, which results in head thrashing, which results
+>> in decreased performance.  Use a single XFS for rootfs and home, manage
+>> space by enabling and setting quotas.
+>>
+>> ...
+>>> Now the point is, what's the best fdisk, mdadm, mkfs_xfs, tunefs,
+>>> smartctl and others tune tools and /sys /proc parameters?
+>>> I want a good align and performace
+>>
+>> None of these will increase your performance with a RAID1 pair.
+>> Switching your elevator from CFQ to deadline, and making sure NCQ is
+>> enabled and working properly, is about the best you can do to maximize
+>> md RAID1 performance.  And using a single XFS as I described above,
+>> instead of 2 or 3.
+>>
+>> If your workload(s) involve heavy mixed metadata and data changes, i.e.
+>> untar a kernel tarball then delete the directory tree, then mounting
+>> with inode64 will improve performance a bit.  inode64 has been made the
+>> default XFS allocator but I'm not sure with which kernel version that
+>> took affect.  To find out simply do "cat /proc/mounts".
+>>
+>> See mkfs.xfs(8), mount(8)
+>> http://xfs.org/index.php/XFS_FAQ
+>>
+> http://xfs.org/docs/xfsdocs-xml-dev/XFS_Labs/tmp/en-US/html/xfs-quotas-lab.html
+>>
+>> --
+>> Stan
+>>
+>>
+> 
 
-So I let the sync to finish, it was with my old version of mdadm (3.2.3).
-
-While syncing, I installed the latest mdadm git version:
-
- $ mdadm --version
- mdadm - v3.3-rc1-94-g4441541 - 23th July 2013
-
-Note that I only installed the 2 binaries mdadm/mdmon, I leave the
-udev rules for md devices untouched.
-
-I regenerated the initramfs in order to use the new binaries when
-booting and now I can see some new warnings:
-
-  $ dracut -f
-  mdmon: Failed to load secondary DDF header on /dev/block/8:0
-  mdmon: Failed to load secondary DDF header on /dev/block/8:16
-  ...
-
-I ignored them for now.
-
-Now the latest version of mdadm is used :
-
-  $ cat /proc/mdstat
-  Personalities : [raid1]
-  md126 : active raid1 sdb[1] sda[0]
-        975585280 blocks super external:/md127/0 [2/2] [UU]
-
-  md127 : inactive sdb[1](S) sda[0](S)
-        2354608 blocks super external:ddf
-
-I run mdadm -E /dev/sdX for all RAID disks before and after reboot.
-I'm still having this warning:
-
-   mdmon: Failed to load secondary DDF header on /dev/sda
-
-You can find the differences below:
-
-diff -Nurp before/sda.txt after/sda.txt
---- before/sda.txt      2013-07-24 15:15:33.304015379 +0200
-+++ after/sda.txt       2013-07-24 15:49:09.520132838 +0200
-@@ -9,11 +9,11 @@ Controller GUID : 4C534920:20202020:FFFF
-   Redundant hdr : yes
-   Virtual Disks : 1
-
--      VD GUID[0] : 4C534920:20202020:80861D60:00000000:3F2103E0:00001450
--                  (LSI      07/24/13 12:18:08)
-+      VD GUID[0] : 4C534920:20202020:80861D60:00000000:3F213401:00001450
-+                  (LSI      07/24/13 15:43:29)
-          unit[0] : 0
-         state[0] : Optimal, Not Consistent
--   init state[0] : Fully Initialised
-+   init state[0] : Not Initialised
-        access[0] : Read/Write
-          Name[0] : array0
-  Raid Devices[0] : 2 (0 1)
-diff -Nurp before/sdb.txt after/sdb.txt
---- before/sdb.txt      2013-07-24 15:17:50.300581049 +0200
-+++ after/sdb.txt       2013-07-24 15:49:15.159997204 +0200
-@@ -9,11 +9,11 @@ Controller GUID : 4C534920:20202020:FFFF
-   Redundant hdr : yes
-   Virtual Disks : 1
-
--      VD GUID[0] : 4C534920:20202020:80861D60:00000000:3F2103E0:00001450
--                  (LSI      07/24/13 12:18:08)
-+      VD GUID[0] : 4C534920:20202020:80861D60:00000000:3F213401:00001450
-+                  (LSI      07/24/13 15:43:29)
-          unit[0] : 0
-         state[0] : Optimal, Not Consistent
--   init state[0] : Fully Initialised
-+   init state[0] : Not Initialised
-        access[0] : Read/Write
-          Name[0] : array0
-  Raid Devices[0] : 2 (0 1)
-
-
-Does this help ?
-
-Thanks
--- 
-Francis
