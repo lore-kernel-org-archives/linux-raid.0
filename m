@@ -1,58 +1,35 @@
-From: "Justin Piszcz" <jpiszcz@lucidpixels.com>
-Subject: RE: 3.10.1: echo repair > sync_action causes hang on RAID-1 (2 x SSD)
-Date: Thu, 25 Jul 2013 19:10:50 -0400
-Message-ID: <009801ce898c$34b83fc0$9e28bf40$@lucidpixels.com>
-References: <000501ce85fc$d3a60a10$7af21e30$@lucidpixels.com> <20130722090257.2faa0874@notabene.brown>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Help creating filesystem (xfs) and partitioning
+Date: Thu, 25 Jul 2013 18:27:52 -0500
+Message-ID: <51F1B478.4050901@hardwarefreak.com>
+References: <CAH3kUhFqX5fB0=eYbECxrR_52Yv3_v5oodG=6Z-8L_gcTwiC4Q@mail.gmail.com> <51F19E0F.5000400@tmr.com> <CAH3kUhEMtauLoymUL7k8s==4NtvX=CRzOJhhtfL2EdJzYygd+A@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130722090257.2faa0874@notabene.brown>
-Content-Language: en-us
-Sender: linux-kernel-owner@vger.kernel.org
-To: 'NeilBrown' <neilb@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAH3kUhEMtauLoymUL7k8s==4NtvX=CRzOJhhtfL2EdJzYygd+A@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Roberto Spadim <rspadim@gmail.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 7/25/2013 5:36 PM, Roberto Spadim wrote:
 
+> i don't know what's the best xfs parameters / fdisk parameters to
+> align disk with filesystem, should i add some parameter?
 
------Original Message-----
-From: NeilBrown [mailto:neilb@suse.de] 
-Sent: Sunday, July 21, 2013 7:03 PM
-To: Justin Piszcz
-Cc: linux-kernel@vger.kernel.org; linux-raid@vger.kernel.org
-Subject: Re: 3.10.1: echo repair > sync_action causes hang on RAID-1 (2 x
-SSD)
+You don't align a filesystem with fdisk.  fdisk creates partitions.  As
+I said earlier, start your first partition at sector 2048, and create
+each successive partition to be of a size evenly divisible by 4096 bytes.
 
-> Hi Justin,
->  this is a known bug.  Fix has been accepted into mainline for 3.11-rc2.
->  Hopefully it will get into 3.10.3 (too late for 3.10.2).
+WRT mkfs.xfs, use the defaults.  It reads the md config and configures
+automatically.  You only need to specify command line values when using
+hardware RAID or LVM atop hard or software RAID.
 
-> NeilBrown
+And in your case, with only two mirrored spindles, you simply can't do
+anything to tweak XFS performance anyway.
 
+-- 
+Stan
 
-Hi Neil,
-
-Did the fix by chance make it into 3.10.3?
-
-The same issue occurs with 3.10.3 for me as well:
-
-Every 1.0s: cat /proc/mdstat                            Thu Jul 25 19:09:46
-2013
-
-Personalities : [raid1]
-md1 : active raid1 sdc2[0] sdb2[1]
-      233381376 blocks [2/2] [UU]
-      [>....................]  resync =  0.0% (151488/233381376)
-finish=32045.3m
-in speed=121K/sec
-
-md0 : active raid1 sdc1[0] sdb1[1]
-      1048512 blocks [2/2] [UU]
-
-unused devices: <none>
-
-
-
-Justin.
