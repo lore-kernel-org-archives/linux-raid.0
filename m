@@ -1,64 +1,82 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Preparing for mdadm-3.3
-Date: Thu, 25 Jul 2013 18:02:30 +1000
-Message-ID: <20130725180230.79ac6360@notabene.brown>
-References: <20130624171818.71a9688a@notabene.brown>
+From: Shaohua Li <shli@kernel.org>
+Subject: [patch]raid5: fix stripe release order
+Date: Thu, 25 Jul 2013 16:26:42 +0800
+Message-ID: <20130725082642.GA6985@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/NSz54k23gxKSLj2I8jXsctu"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130624171818.71a9688a@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, ying.huang@intel.com
 List-Id: linux-raid.ids
 
---Sig_/NSz54k23gxKSLj2I8jXsctu
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, 24 Jun 2013 17:18:18 +1000 NeilBrown <neilb@suse.de> wrote:
+patch "make release_stripe lockless" changes the order stripes are released.
+Originally I thought block layer can take care of request merge, but it appears
+there are still some requests not merged. It's easy to fix the order.
 
->=20
-> Hi all,
->  it has been way too long since an mdadm release.  So I'm hoping to pull =
-one
->  together over the next few weeks.  It will be mdadm-3.3
->  My goal is to have it out by 25th July (i.e. one month).
->=20
+Signed-off-by: Shaohua Li <shli@fusionio.com>
+---
+ drivers/md/raid5.c    |    1 +
+ include/linux/llist.h |    1 +
+ lib/llist.c           |   27 +++++++++++++++++++++++++++
+ 3 files changed, 29 insertions(+)
 
-That would be .. today.  I didn't quite make it.
-I've just tagged mdadm-3.3-rc2 and pushed that out for anyone who wants to
-test.
-
-I still need to resolve whether I'm going to make --add safer (haven't real=
-ly
-thought more about it yet) and I need some self-tests for the bad-block log
-
-I'd like to release by July 31st, but I suspect it will be some time in the
-first half of August.
-
-NeilBrown
-
---Sig_/NSz54k23gxKSLj2I8jXsctu
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUfDbljnsnt1WYoG5AQLb4BAAuGlxz658rN0226wPXvjk2/7/WP3YhAGu
-wI9EupPvLYMWHShAtyQ70G8V0hV/cbzAmDxk0FSG7ba7Ob/P6Q4daJC3+iqQ2Ojj
-/s/GDo4mluIJZnsCE9O1Ve6+4BZKSOjjCm0ULxDhp843O/t26ZqjoBuqnsCfZY4S
-iu7Ny8Dqd4UWQoQuW79cVkwECXOxF4cxAJ88sxNDU0FGsoHpPFklDKnhlGr3jugH
-X6DhGHzsfoVOKpr/FdJp+HNZoKJVI0KsypHQ4dTpVFufUzRq/hvnbRf/lXo0QRhr
-0eG87FkYmNm8nUUyP999j6GRmsY4VnAKQMzks1KBqISBVOU6BA5UMpofFBELRIYI
-LopguoTvCuJvsZ1aIjGPz1otYEksoxRviPvFhkTTnx07o878owaPQz7rxu0yQp5J
-OF41fZxcNz6D7sys7jeR+yRV7EmxmwK+mC7qYoTv2tVSAGdoV0Wpd/fS1jf+yV9X
-auGsF1fbMycMRrIk1qQh45L3jArxSbXj1v66g5P05nCP6OtiY7oOfd9yKjPhQTni
-N6tACDdxdOevltwu7Pea4rlv74qslgTgyyipH88QI2uYy8dvkOJF/1Ys2GnMxk5O
-DTa58cvC/m33RL2icz185+j3Twpw+oy93NnXCNnNB4mTi4lPox8vtlgBQOzkZ/Vg
-LDtfsvjgsQk=
-=THWX
------END PGP SIGNATURE-----
-
---Sig_/NSz54k23gxKSLj2I8jXsctu--
+Index: linux/include/linux/llist.h
+===================================================================
+--- linux.orig/include/linux/llist.h	2013-07-24 09:09:41.014384439 +0800
++++ linux/include/linux/llist.h	2013-07-25 15:09:03.109026773 +0800
+@@ -172,4 +172,5 @@ static inline struct llist_node *llist_d
+ 
+ extern struct llist_node *llist_del_first(struct llist_head *head);
+ 
++extern struct llist_node *llist_reverse_order(struct llist_node *head);
+ #endif /* LLIST_H */
+Index: linux/lib/llist.c
+===================================================================
+--- linux.orig/lib/llist.c	2013-07-24 09:09:41.062383834 +0800
++++ linux/lib/llist.c	2013-07-25 16:08:40.096054565 +0800
+@@ -81,3 +81,30 @@ struct llist_node *llist_del_first(struc
+ 	return entry;
+ }
+ EXPORT_SYMBOL_GPL(llist_del_first);
++
++/*
++ * llist_reverse_order - reverse llist order
++ * @head: list head
++ *
++ * Return reversed list head
++ */
++struct llist_node *llist_reverse_order(struct llist_node *head)
++{
++	struct llist_node *second, *third;
++
++	if (head == NULL || head->next == NULL)
++		return head;
++	second = head->next;
++	head->next = NULL;
++
++	do {
++		third = second->next;
++		second->next = head;
++
++		head = second;
++		second = third;
++	} while (second);
++
++	return head;
++}
++EXPORT_SYMBOL_GPL(llist_reverse_order);
+Index: linux/drivers/md/raid5.c
+===================================================================
+--- linux.orig/drivers/md/raid5.c	2013-07-25 15:02:38.289865404 +0800
++++ linux/drivers/md/raid5.c	2013-07-25 15:35:33.201040089 +0800
+@@ -247,6 +247,7 @@ static int release_stripe_list(struct r5
+ 	struct llist_node *head;
+ 
+ 	head = llist_del_all(&conf->released_stripes);
++	head = llist_reverse_order(head);
+ 	while (head) {
+ 		sh = llist_entry(head, struct stripe_head, release_list);
+ 		head = llist_next(head);
