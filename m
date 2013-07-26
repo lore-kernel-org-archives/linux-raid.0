@@ -1,70 +1,56 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PULL REQUEST] 2 more bug fixes for md in 3.11
-Date: Fri, 26 Jul 2013 10:37:53 +1000
-Message-ID: <20130726103753.6e0fe5a5@notabene.brown>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Help creating filesystem (xfs) and partitioning
+Date: Thu, 25 Jul 2013 20:30:23 -0500
+Message-ID: <51F1D12F.8030507@hardwarefreak.com>
+References: <CAH3kUhFqX5fB0=eYbECxrR_52Yv3_v5oodG=6Z-8L_gcTwiC4Q@mail.gmail.com> <51F19E0F.5000400@tmr.com> <CAH3kUhEMtauLoymUL7k8s==4NtvX=CRzOJhhtfL2EdJzYygd+A@mail.gmail.com> <51F1B478.4050901@hardwarefreak.com> <CAH3kUhHzZ3DoA-mJiQG+27gai1=MZEu6t8JTMtmMvQ7q0ipEoQ@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/+QD4oyYgfnw7MxMokXXqWmE"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAH3kUhHzZ3DoA-mJiQG+27gai1=MZEu6t8JTMtmMvQ7q0ipEoQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Roberto Spadim <rspadim@gmail.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/+QD4oyYgfnw7MxMokXXqWmE
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 7/25/2013 7:36 PM, Roberto Spadim wrote:
+> ok =] in other words no problem about performace loss, just use one
+> xfs per disk, right?
+> the second doubt... i was thinking about /boot /home and /, in the
+> same partition, should i consider other design? a /boot with ext2 or
+> ext3 and a / with xfs?
 
-The following changes since commit 30bc9b53878a9921b02e3b5bc4283ac1c6de102a:
+What I would do:
 
-  md/raid1: fix bio handling problems in process_checks() (2013-07-18 14:18=
-:04 +1000)
+	swap	1GB partition on each disk
 
-are available in the git repository at:
+md RAID1
 
-  git://neil.brown.name/md tags/md/3.11-fixes
+/boot	ext2	100MB
+rootfs	XFS	remainder of disk
+home
+...
 
-for you to fetch changes up to f94c0b6658c7edea8bc19d13be321e3860a3fa54:
+> i'm considering only one partition with swap and one partition with
+> raid1+xfs, what you think?
 
-  md/raid5: fix interaction of 'replace' and 'recovery'. (2013-07-25 16:46:=
-57 +1000)
+I wouldn't do it.  See above.
 
-----------------------------------------------------------------
-2 more bugfixes for md in 3.11
+> in a crash (power failure) i will have better rescure with only one
+> partition? or many partitions?
 
-Both marked for -stable, both since 3.3.  I guess I should spend more
-time testing...
+Having a separate /boot is always a good idea.
 
-----------------------------------------------------------------
-NeilBrown (2):
-      md/raid10: remove use-after-free bug.
-      md/raid5: fix interaction of 'replace' and 'recovery'.
+And truthfully, for a system of this caliber, you don't really gain
+anything by using XFS, certainly not from a performance standpoint.  If
+you were already an XFS user on large systems and it was simply your "go
+to" filesystem, then using it on this system may make sense.  And if you
+don't have a working UPS, you should definitely stay away from XFS.
+Power failure shouldn't cause filesystem corruption, but it may well
+corrupt or zero out files that are open for write but not written.  XFS
+journals metadata, not data.
 
- drivers/md/raid10.c |  8 +++++++-
- drivers/md/raid5.c  | 15 ++++++++++-----
- drivers/md/raid5.h  |  1 +
- 3 files changed, 18 insertions(+), 6 deletions(-)
+-- 
+Stan
 
---Sig_/+QD4oyYgfnw7MxMokXXqWmE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUfHE4jnsnt1WYoG5AQJrLxAAoKxMwJU6eHNkl1GPwXXBy7uvbeUnoCak
-SGQq2I6j+N9KZ4XCAoG/rsnLhkns3fcEmzTeLa6lK8J3F24Z/XM0q/c+7L/VJdCf
-9oKXAHnUqJRULD48WECQwOBw2twMYTDEvp/9nRKsbR/jBFm+Svw2ZWuX4NDRwvt8
-OhguOvCB7momJA705NQJI63NqzIykmVx2K1+Ko//Jl3J+uJbQtmQA7ftGHS1Odmp
-Bomi1B/mjo1umcnegO8RLwMOCZbJ9PvJS5kciA+esq1XeCA2QDRzjYqNyo8tjxY/
-k5nnq3MaXmwY2NicwQa6M9Pgx9NTJo+n605N/V+lBZiQrXFXybjPdafO3ihSjooR
-h/X0UBgzGwQIgnOgAn/ckceft4VQ/FxaSui7cOhcogAad8oXlAOjMvGeK5Uhz6R6
-aDECJXf+Rs0xGCcKqgXu6W4Wgg9VhwIqfv4QBOx6fqbK6QLj1Us6XW1j331ULhm2
-50tBpGowoaGYbWEL93oUV4DsSOqB3I74UpJVtSsO3gIWOSpntt842MaAcI6i4xUx
-Dk6VrFyWyC9HlfWZD2CJ9uFlIrLNxw8WBoBbHnqucQUIkTQJY4O21INi9Et4xJkw
-stjgR4MFYpMTVL8cWOjwm/YkudZZYt/M7JpdDocLmcgg/m4dUJkprXTbfgV14fh7
-0dgPq/PPzgI=
-=XJ3X
------END PGP SIGNATURE-----
-
---Sig_/+QD4oyYgfnw7MxMokXXqWmE--
