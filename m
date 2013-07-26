@@ -1,94 +1,171 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm -Db switches array to write-pending?!
-Date: Sat, 27 Jul 2013 07:58:10 +1000
-Message-ID: <20130727075810.5c6d84d2@notabene.brown>
-References: <51DD9FC1.2060200@arcor.de>
-	<20130715151809.5fea8c78@notabene.brown>
-	<51E6FC4D.6080309@arcor.de>
-	<51F2B992.60203@arcor.de>
+From: Martin Wilck <mwilck@arcor.de>
+Subject: Suspicious test failure - mdmon misses recovery events on loop devices
+Date: Fri, 26 Jul 2013 22:58:05 +0200
+Message-ID: <51F2E2DD.8090204@arcor.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/5xW2oAIPp9R+ytBOTXMwz8e"; protocol="application/pgp-signature"
+Content-Type: multipart/mixed;
+ boundary="------------090408060108070505060002"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51F2B992.60203@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/5xW2oAIPp9R+ytBOTXMwz8e
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+This is a multi-part message in MIME format.
+--------------090408060108070505060002
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-On Fri, 26 Jul 2013 20:01:54 +0200 Martin Wilck <mwilck@arcor.de> wrote:
+Hi Neil, everybody,
 
-> Hi Neil,
->=20
-> On 07/17/2013 10:19 PM, Martin Wilck wrote:
-> > On 07/15/2013 07:18 AM, NeilBrown wrote:
-> >=20
-> >> Probably the  best thing to do is:
-> >>
-> >> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> >> index d059af5..b19a1c8 100644
-> >> --- a/drivers/md/md.c
-> >> +++ b/drivers/md/md.c
-> >> @@ -5629,10 +5629,7 @@ static int get_bitmap_file(struct mddev * mddev=
-, void __user * arg)
-> >>  	char *ptr, *buf =3D NULL;
-> >>  	int err =3D -ENOMEM;
-> >> =20
-> >> -	if (md_allow_write(mddev))
-> >> -		file =3D kmalloc(sizeof(*file), GFP_NOIO);
-> >> -	else
-> >> -		file =3D kmalloc(sizeof(*file), GFP_KERNEL);
-> >> +	file =3D kmalloc(sizeof(*file), GFP_NOIO);
-> >> =20
-> >>  	if (!file)
-> >>  		goto out;
-> >>
-> >>
-> >> A failure here is not likely and not catastrophic.
-> >>
-> >> Does it fix the situation for you?
-> >=20
-> > Yes it does.
-> > Martin
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >=20
->=20
-> Any particular reason why you haven't applied this patch in your git
-> tree http://git.neil.brown.name/?p=3Dmd.git;a=3Dsummary yet?
+I am currently pulling my hair over strange failures I am observing. I
+was trying to create a new unit test for DDF along the same lines as
+09imsm-create-fail-rebuild. That's of course a very important test -
+making sure that an array can actually recover from a disk failure.
 
-Hi Martin,
- you need to look in the for-next branch.
-http://git.neil.brown.name/?p=3Dmd.git;a=3Dshortlog;h=3Drefs/heads/for-next
+The script does just that - create a container with 2 subarrays, fail a
+disk, add a spare, and expect everything to be recovered after that.
 
-NeilBrown
+What I find is that the recovery actually works, but sometimes the meta
+data is broken after the test has finished. The added disk is shown in
+"Rebuilding" state and/or one or both subarrays are considered
+"degraded" although the kernel log clearly shows that the recovery
+finished. The problem occurs almost always if the test is done on loop
+devices, as in mdadm's "test" script. Just did another test, failed
+10/10 attempts on loop devices. If I use LVM logical volumes instead (on
+the same physical disk), the test never fails (0/10).
 
---Sig_/5xW2oAIPp9R+ytBOTXMwz8e
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+In the success case, the script prints only one line (its log file). In
+the bad case, it will print some more lines of mdadm -E information. The
+log file contains all the details.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+I have come to the conclusion that if the failure occurs, mdmon simply
+misses one or more state changes of the arrays and/or disks. For mdmon
+to notice that the recovery has finished, it is crucial to see a
+situation where sync_action is "idle", and had been "recover" before,
+for both subarrays. This happens if I run the test on LVM, but not if I
+run it on a loop device.
 
-iQIVAwUBUfLw8jnsnt1WYoG5AQKaWhAAnhU817/p23jHXtpeuQK4FtEBHYlb+tf9
-CVrAfx8PkMbnkizbinKpxpZ1iWje+DqJmg5kJqk9UuHLvTA6p1WsmAGidNSRz8tq
-g7UIbY9lOZV32VqOjJHIyJVyTu4QyJ7oTT+LQYFDV+GfsFZTNjK2nQrUuCu5jQeK
-ZEPIUBRzZwtza/32AdYKta88jYCRqe+0XbQkSV3kdzR907nACqB7fwRTh6F7Qbbe
-YAVYYmwcmIs0NejZKZsmcsGVRMAUWobDfvi7Eldch4fJAFf/8JNrbTl254/27t9V
-HBSYZhQmLAObwWqOCBFNXq384nBCdATuqchKqiMKCN8GxwZgZyBfHTKTl3WUwD9Z
-yTcAxXuPvmT5pBio2t4+HWvQK1okDmn/2ohi4lXEn+dz66a4M4Kyyy2FMMFz4H6r
-PuHiugzYaP8JmJl3vpNZV7hrC2/8HzMBmmVNdFhwiScyLwMI5tWX56KAoUmqM7oz
-JX6O9KptPwlKFQUxPq5EOeutDDwuwFGgyIXZ1ed4nYvr+lSa4mQsP+ZCnxxUufge
-g92L7aFPV+38y1YiA+h7Y0qguN0BMBQjAaX3PpQBQ4ouyJVTn23HZuRnX+/m5EIU
-Z+T3QcRMGOH9r2fWbhVjsluzV0WmSQdxHIw0R+S6T8aHebk64dhQO2kdPmhB1qN3
-jM+mr7x8MR0=
-=1caT
------END PGP SIGNATURE-----
+Thinking about it - what guarantee is there that mdmon catches a certain
+kernel status change? If I read the code correctly, mdmon will only
+catch it if
+ (a) the status change occurs while mdmon is in the select() call, and
+ (b) the status in sysfs doesn't change again between the return from
+select() and mdmon reading the sysfs file contents.
 
---Sig_/5xW2oAIPp9R+ytBOTXMwz8e--
+I can see no guarantee that this always works, and with my loop device
+test case I seem to have found a scenario where it actually doesn't. I
+suppose that mdmon may be busy writing the DDF metadata while the kernel
+event about finished recovery is arriving.
+
+My first idea was that the the cause were the loop devices on my CentOS6
+kernel not supporting O_DIRECT properly (recovery finishes almost
+immediately in the page cache, perhaps too quickly for mdmon to notice),
+but running a more recent kernel with proper O_DIRECT in the loop
+device, I still see the problem, although the recovery takes longer now.
+
+There is still a chance that I messed something up in DDF (I haven't
+seen the problem with IMSM), but it isn't likely given that the test
+always works fine on LVM. I am pretty much at my wit's end here and I'd
+like to solicit some advice.
+
+I'd definitely like to understand exactly what's going wrong here, but
+it's very hard to debug because it's a timing issue involving the
+kernel, mdadm, mdmon, and the manager. Adding debug code changes the
+probability to hit the problem
+
+Thanks for reading this far, I hope someone has an idea.
+
+Martin
+
+PS: In that context, reading mdmon-design.txt, is it allowed at all to
+add dprintf() messages in the code path called by mdmon? That would also
+affect some DDF methods where I currently have lots of debug code.
+
+--------------090408060108070505060002
+Content-Type: text/plain;
+ name="22-ddf-fail"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="22-ddf-fail"
+
+#! /bin/bash
+mdadm=/home/martin/mdadm/mdadm
+n=1
+log=$(printf /var/tmp/md-%04d.log $n)
+while [ -e $log ]; do
+    n=$((n+1))
+    log=$(printf /var/tmp/md-%04d.log $n)
+done
+echo log=$log
+
+exec 3>&2
+exec 1>$log 2>&1
+
+TRAP=
+trap 'eval "$TRAP"' 0
+
+set -x
+setup_lo() {
+    for i in `seq 8 13`; do
+	mknod /dev/loop$i b 7 $i
+	losetup /dev/loop$i /var/tmp/mdtest$i
+	eval "dev$i=/dev/loop$i"
+    done >/dev/null 2>&1
+    TRAP="cleanup_lo; $TRAP"
+}
+
+cleanup_lo() {
+    for i in `seq 8 13`; do
+	eval "losetup -d \$dev$i"
+    done >/dev/null 2>&1
+}
+
+setup_lvm() {
+    for i in `seq 8 13`; do
+	eval "dev$i=/dev/tosh/rd$((i-7))"
+    done
+}
+
+#setup_lvm
+setup_lo
+
+# for testing with IMSM instead of DDF
+#export IMSM_NO_PLATFORM=1
+#export IMSM_DEVNAME_AS_SERIAL=1
+#export IMSM_TEST_OROM=1
+#export MDADM_EXPERIMENTAL=1
+
+dmesg -c >/dev/null
+#date +"CREATE %H:%M:%S.%N"
+$mdadm --quiet -CR /dev/md/ddf -e ddf -n 4 $dev8 $dev9 $dev10 $dev11 --auto=yes
+$mdadm --quiet -CR /dev/md/vol1 $dev8 $dev9 $dev10 $dev11 -n 4 -l 5 -z 4000 -c 64 --auto=yes
+$mdadm --quiet -CR /dev/md/vol0 $dev8 $dev9 $dev10 $dev11 -n 4 -l 10 -z 9000 -c 64 --auto=yes
+$mdadm --quiet --wait /dev/md/vol[01]
+#date +"WAIT %H:%M:%S.%N"
+
+# get PID of mdmon for tracing
+#for x in $(ps --no-heading -Lo lwp -C mdmon); do trace_cmd="$trace_cmd -p $x"; done
+
+$mdadm --quiet --fail /dev/md/vol0 $dev11
+#date +"FAIL %H:%M:%S.%N"
+
+#strace -tt -x -o /tmp/md.str $trace_cmd &
+
+$mdadm --quiet --add /dev/md/ddf $dev12
+#date +"ADD %H:%M:%S.%N"
+
+$mdadm --quiet --wait /dev/md/vol[01]
+#date +"WAIT %H:%M:%S.%N"
+
+cat /proc/mdstat
+dmesg -c
+$mdadm -E $dev11
+$mdadm -E $dev12
+$mdadm -Ss
+
+# if strace was used above
+#cat /tmp/md.str
+set +x
+egrep -i 'error|failed|rebuilding|Degraded,' $log >&3
+
+--------------090408060108070505060002--
