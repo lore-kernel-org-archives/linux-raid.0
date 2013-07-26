@@ -1,27 +1,57 @@
-From: Roberto Spadim <rspadim@gmail.com>
-Subject: Re: Help creating filesystem (xfs) and partitioning
-Date: Fri, 26 Jul 2013 13:47:16 -0300
-Message-ID: <CAH3kUhGrHtRK3kjjKk-N-WPUk6T5Ni9a2zKxGNY5xDrVmEJ70A@mail.gmail.com>
-References: <CAH3kUhFqX5fB0=eYbECxrR_52Yv3_v5oodG=6Z-8L_gcTwiC4Q@mail.gmail.com>
-	<51F19E0F.5000400@tmr.com>
-	<CAH3kUhEMtauLoymUL7k8s==4NtvX=CRzOJhhtfL2EdJzYygd+A@mail.gmail.com>
-	<51F1B478.4050901@hardwarefreak.com>
-	<CAH3kUhHzZ3DoA-mJiQG+27gai1=MZEu6t8JTMtmMvQ7q0ipEoQ@mail.gmail.com>
-	<51F1D12F.8030507@hardwarefreak.com>
-	<CAH3kUhHtU84KrMoGSKi2hK1o3foBOkOLQ0-z5+Rb9hVsBX6cbg@mail.gmail.com>
-	<51F2A087.6040603@hardwarefreak.com>
+From: Martin Wilck <mwilck@arcor.de>
+Subject: Re: mdadm -Db switches array to write-pending?!
+Date: Fri, 26 Jul 2013 20:01:54 +0200
+Message-ID: <51F2B992.60203@arcor.de>
+References: <51DD9FC1.2060200@arcor.de> <20130715151809.5fea8c78@notabene.brown> <51E6FC4D.6080309@arcor.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51F2A087.6040603@hardwarefreak.com>
+In-Reply-To: <51E6FC4D.6080309@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-ok, well, i think i will continue the old style... xfs+raid1
-the only point is
+Hi Neil,
 
-only one partition for /
-two partitions for /boot /
-three partitions for /boot /home /
+On 07/17/2013 10:19 PM, Martin Wilck wrote:
+> On 07/15/2013 07:18 AM, NeilBrown wrote:
+> 
+>> Probably the  best thing to do is:
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index d059af5..b19a1c8 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -5629,10 +5629,7 @@ static int get_bitmap_file(struct mddev * mddev, void __user * arg)
+>>  	char *ptr, *buf = NULL;
+>>  	int err = -ENOMEM;
+>>  
+>> -	if (md_allow_write(mddev))
+>> -		file = kmalloc(sizeof(*file), GFP_NOIO);
+>> -	else
+>> -		file = kmalloc(sizeof(*file), GFP_KERNEL);
+>> +	file = kmalloc(sizeof(*file), GFP_NOIO);
+>>  
+>>  	if (!file)
+>>  		goto out;
+>>
+>>
+>> A failure here is not likely and not catastrophic.
+>>
+>> Does it fix the situation for you?
+> 
+> Yes it does.
+> Martin
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+Any particular reason why you haven't applied this patch in your git
+tree http://git.neil.brown.name/?p=md.git;a=summary yet?
+
+Martin
+
