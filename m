@@ -1,103 +1,64 @@
-From: "Justin Piszcz" <jpiszcz@lucidpixels.com>
-Subject: RE: 3.10.1: echo repair > sync_action causes hang on RAID-1 (2 x SSD)
-Date: Fri, 26 Jul 2013 05:56:51 -0400
-Message-ID: <001e01ce89e6$73f93b80$5bebb280$@lucidpixels.com>
-References: <000501ce85fc$d3a60a10$7af21e30$@lucidpixels.com> <20130722090257.2faa0874@notabene.brown> <009801ce898c$34b83fc0$9e28bf40$@lucidpixels.com> <20130726103549.1e6b0b92@notabene.brown>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Help creating filesystem (xfs) and partitioning
+Date: Fri, 26 Jul 2013 11:15:03 -0500
+Message-ID: <51F2A087.6040603@hardwarefreak.com>
+References: <CAH3kUhFqX5fB0=eYbECxrR_52Yv3_v5oodG=6Z-8L_gcTwiC4Q@mail.gmail.com> <51F19E0F.5000400@tmr.com> <CAH3kUhEMtauLoymUL7k8s==4NtvX=CRzOJhhtfL2EdJzYygd+A@mail.gmail.com> <51F1B478.4050901@hardwarefreak.com> <CAH3kUhHzZ3DoA-mJiQG+27gai1=MZEu6t8JTMtmMvQ7q0ipEoQ@mail.gmail.com> <51F1D12F.8030507@hardwarefreak.com> <CAH3kUhHtU84KrMoGSKi2hK1o3foBOkOLQ0-z5+Rb9hVsBX6cbg@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130726103549.1e6b0b92@notabene.brown>
-Content-Language: en-us
-Sender: linux-kernel-owner@vger.kernel.org
-To: 'NeilBrown' <neilb@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAH3kUhHtU84KrMoGSKi2hK1o3foBOkOLQ0-z5+Rb9hVsBX6cbg@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Roberto Spadim <rspadim@gmail.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 7/25/2013 8:47 PM, Roberto Spadim wrote:
+>> And truthfully, for a system of this caliber, you don't really gain
+>> anything by using XFS, certainly not from a performance standpoint.  If
+>> you were already an XFS user on large systems and it was simply your "go
+>> to" filesystem, then using it on this system may make sense.  And if you
+>> don't have a working UPS, you should definitely stay away from XFS.
+>> Power failure shouldn't cause filesystem corruption, but it may well
+>> corrupt or zero out files that are open for write but not written.  XFS
+>> journals metadata, not data.
+> 
+> i'm using xfs because i tested with ext4, xfs and reiserfs (v3) and
+> xfs was the fastest
+> i use UPS, but... well you know... some one can remove the power
+> cable... users sometime make mistakes :) hehe
+> i didn't tested the btrfs yet, i think it's not mature for production use
+> 
+> well power failure is a problem in any filesystem... what filesystem
+> you consider is the "best"?
 
+This depends on your use case and workloads.  EXT4 isn't suitable for
+large multi-TB filesystems with highly parallel workloads whereas XFS
+excels with these.  Neither XFS nor EXT4 are suitable for USB thumb drives.
 
------Original Message-----
-From: NeilBrown [mailto:neilb@suse.de] 
-Sent: Thursday, July 25, 2013 8:36 PM
-To: Justin Piszcz
-Cc: linux-kernel@vger.kernel.org; linux-raid@vger.kernel.org
-Subject: Re: 3.10.1: echo repair > sync_action causes hang on RAID-1 (2 x
-SSD)
+> considering that:
+> i'm running filesystem over md raid1
+> best = good power failure
+> files with >40gb (some mysql tables are big)
+> a big directory structure (root directory with man pages libs, linux
+> kernel and some packages that i compile (php, mariadb, apache), and
+> others linux tools, etc...)
+> a home directory with maybe many temporary files, mysql sometime
+> create temporary files for query sorting, in this case crud operations
+> happens very often, create file/put data/read/delete file
+> 
+> well i think it's a test scenario, but experiences/ideas are wellcome
 
-On Thu, 25 Jul 2013 19:10:50 -0400 "Justin Piszcz" <jpiszcz@lucidpixels.com>
-wrote:
+As long as you have a good working UPS and barriers enabled (the
+default) and working, then XFS should be fine.  XFS does a barrier write
+test during mount.  If the test fails it will log an error in dmesg and
+disable barriers.  This obviously requires corrective action.  Running
+without barriers can potentially cause serious metadata corruption and
+wreck the filesystem beyond repair due to drive caches not being
+flushed.  If the test passes, barriers are enabled, nothing is logged,
+and you're good to go.
 
-> Did the fix by chance make it into 3.10.3?
+-- 
+Stan
 
-No, it looks like it missed again.  I gather there was a large inflow of
-patches for -stable in the 3.11-rc1 merge window and Greg has been
-processing
-them in batches.  Hopefully in 3.10.4.
-
-The relevant patch is commit 30bc9b53878a9921b02e3 in mainline.
-
-NeilBrown
-
---
-
-Method to get patch via git and patch kernel:
-
-$ git clone
-git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-$ git log |grep 30bc9b53878a9921b02e3
-commit 30bc9b53878a9921b02e3b5bc4283ac1c6de102a
-$ git show 30bc9b53878a9921b02e3b5bc4283ac1c6de102a > /tmp/a
-# patch -p1 < /tmp/a
-patching file drivers/md/raid1.c
-Hunk #1 succeeded at 1848 (offset -1 lines).
-Hunk #2 succeeded at 1886 (offset -1 lines).
-Hunk #3 succeeded at 1915 (offset -1 lines).
-
-Reboot- tested, success, thanks..!
-
-One follow-up question:
-$ cat /sys/block/md1/md/mismatch_cnt
-314112
--> On a live RAID-1 (root filesystem) without swap, is it normal to have
-such a high mismatch_cnt even after a repair?
-
-First repair:
-Fri Jul 26 05:30:47 EDT 2013: The meta-device /dev/md1 has mismatch_cnt
-314112 sectors.
-Second repair:
-Fri Jul 26 05:30:47 EDT 2013: The meta-device /dev/md1 has mismatch_cnt
-313600 sectors.
-
-Should I be concerned?
-
-
-Testing the patch:
-
-Personalities : [raid1]
-md1 : active raid1 sdc2[0] sdb2[1]
-      233381376 blocks [2/2] [UU]
-      [>....................]  check =  0.3% (838976/233381376)
-finish=9.2min speed=419488K/sec
-
-md0 : active raid1 sdc1[0] sdb1[1]
-      1048512 blocks [2/2] [UU]
-
-Personalities : [raid1]
-md1 : active raid1 sdc2[0] sdb2[1]
-      233381376 blocks [2/2] [UU]
-      [===============>.....]  check = 77.5% (180889856/233381376)
-finish=2.5min speed=342654K/sec
-
-md0 : active raid1 sdc1[0] sdb1[1]
-      1048512 blocks [2/2] [UU]
-
-Personalities : [raid1]
-md1 : active raid1 sdc2[0] sdb2[1]
-      233381376 blocks [2/2] [UU]
-
-md0 : active raid1 sdc1[0] sdb1[1]
-      1048512 blocks [2/2] [UU]
-
-
-Justin.
