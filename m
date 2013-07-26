@@ -1,104 +1,27 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: 3.10.1: echo repair > sync_action causes hang on RAID-1 (2 x
- SSD)
-Date: Fri, 26 Jul 2013 10:35:49 +1000
-Message-ID: <20130726103549.1e6b0b92@notabene.brown>
-References: <000501ce85fc$d3a60a10$7af21e30$@lucidpixels.com>
-	<20130722090257.2faa0874@notabene.brown>
-	<009801ce898c$34b83fc0$9e28bf40$@lucidpixels.com>
+From: Roberto Spadim <rspadim@gmail.com>
+Subject: Re: Help creating filesystem (xfs) and partitioning
+Date: Thu, 25 Jul 2013 21:36:39 -0300
+Message-ID: <CAH3kUhHzZ3DoA-mJiQG+27gai1=MZEu6t8JTMtmMvQ7q0ipEoQ@mail.gmail.com>
+References: <CAH3kUhFqX5fB0=eYbECxrR_52Yv3_v5oodG=6Z-8L_gcTwiC4Q@mail.gmail.com>
+	<51F19E0F.5000400@tmr.com>
+	<CAH3kUhEMtauLoymUL7k8s==4NtvX=CRzOJhhtfL2EdJzYygd+A@mail.gmail.com>
+	<51F1B478.4050901@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/byXCCVTfDFfjBjDaqQ+vmLC"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <009801ce898c$34b83fc0$9e28bf40$@lucidpixels.com>
+In-Reply-To: <51F1B478.4050901@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/byXCCVTfDFfjBjDaqQ+vmLC
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+ok =] in other words no problem about performace loss, just use one
+xfs per disk, right?
+the second doubt... i was thinking about /boot /home and /, in the
+same partition, should i consider other design? a /boot with ext2 or
+ext3 and a / with xfs?
 
-On Thu, 25 Jul 2013 19:10:50 -0400 "Justin Piszcz" <jpiszcz@lucidpixels.com>
-wrote:
-
->=20
->=20
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]=20
-> Sent: Sunday, July 21, 2013 7:03 PM
-> To: Justin Piszcz
-> Cc: linux-kernel@vger.kernel.org; linux-raid@vger.kernel.org
-> Subject: Re: 3.10.1: echo repair > sync_action causes hang on RAID-1 (2 x
-> SSD)
->=20
-> > Hi Justin,
-> >  this is a known bug.  Fix has been accepted into mainline for 3.11-rc2.
-> >  Hopefully it will get into 3.10.3 (too late for 3.10.2).
->=20
-> > NeilBrown
->=20
->=20
-> Hi Neil,
->=20
-> Did the fix by chance make it into 3.10.3?
-
-No, it looks like it missed again.  I gather there was a large inflow of
-patches for -stable in the 3.11-rc1 merge window and Greg has been processi=
-ng
-them in batches.  Hopefully in 3.10.4.
-
-The relevant patch is commit 30bc9b53878a9921b02e3 in mainline.
-
-NeilBrown
-
-
-
->=20
-> The same issue occurs with 3.10.3 for me as well:
->=20
-> Every 1.0s: cat /proc/mdstat                            Thu Jul 25 19:09:=
-46
-> 2013
->=20
-> Personalities : [raid1]
-> md1 : active raid1 sdc2[0] sdb2[1]
->       233381376 blocks [2/2] [UU]
->       [>....................]  resync =3D  0.0% (151488/233381376)
-> finish=3D32045.3m
-> in speed=3D121K/sec
->=20
-> md0 : active raid1 sdc1[0] sdb1[1]
->       1048512 blocks [2/2] [UU]
->=20
-> unused devices: <none>
->=20
->=20
->=20
-> Justin.
-
-
---Sig_/byXCCVTfDFfjBjDaqQ+vmLC
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUfHEZTnsnt1WYoG5AQI+KxAAtvfmsjEd5bUn2qiAywJxNiwG0gFpbj7i
-dT/RcsTYkMo+DikBVM8GLzTJbttxAXYoQhSPOKn4G3SaeevYqvRSecpOELlh6d+M
-bImNTDFVuTxHUQh8qhDmpzTd7/cw4WyD6l6tmkf08WrZ1gXOgAiaVpaNajjbTkhc
-QSkcJU5FAunIup3iwYUrHkPFj/5mSq+n5FHUV11B6Yn7+mxa7CqD+6phByDG/ksS
-VWAcKl3ahc9Q4hnT7odUGu7e69sHBShMYHRUX4imGDL8nH96PJGznOdo58a9mSdU
-7hM0LrVvv0nCVpUe8f+sMKhzFxtSm7tBZD7AHQOIz8ZwaVqfgUhOHhww7PeM1aGN
-IdHODvqaxuqq/xDkOlg22IMosU4+9lsvcs+aOew38KYepz+pwdS9bDVTngCQdn7I
-u7vrBQj30VycEGKZGquT8eQAUYcCoixPGYh8jL7yRX3dMa5OAzp6SIqXG7320Ws4
-XIYyGiUwo1OUuUMSKxQMf54lh6ygOF1Hw63rFM1H1MuoXXIx7evjYP8ffJwaTpvh
-ImxwyD2pVlAUEZW+vhw6ld/2JktR5EGJYCg3cH6PuD2gLEqX2qQENGKmAdinB8ww
-aFW/N749Tk24UMe0x4WHlqXNxcYKB4M7GaiHpTlppwxm8rgB80pbTvjjf81CPEQO
-6M5/mXJZ4kQ=
-=J/Qj
------END PGP SIGNATURE-----
-
---Sig_/byXCCVTfDFfjBjDaqQ+vmLC--
+i'm considering only one partition with swap and one partition with
+raid1+xfs, what you think?
+in a crash (power failure) i will have better rescure with only one
+partition? or many partitions?
