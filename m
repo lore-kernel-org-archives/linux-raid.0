@@ -1,114 +1,62 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Recovery help? 4-disk RAID5 double-failure, but good disks have
- event count mismatch.
-Date: Sat, 27 Jul 2013 16:43:55 -0400
-Message-ID: <51F4310B.3050709@turmel.org>
-References: <CABR0jES0HHeyM6_7-whqLQgF6a+u4PCDAdyWPJ5Bp8g1umi2jA@mail.gmail.com>
+From: Marcus Sorensen <shadowsor@gmail.com>
+Subject: Re: raid10 centos5 vs. centos6 300% worse random write performance
+Date: Sat, 27 Jul 2013 15:01:51 -0600
+Message-ID: <CALFpzo71sjK6Cd=jZ_iQG8rRk5TatGsJ5FznD75ayTm1A5kH-g@mail.gmail.com>
+References: <loom.20130725T120703-146@post.gmane.org>
+	<alpine.DEB.2.00.1307251338050.8891@uplift.swm.pp.se>
+	<loom.20130727T221553-552@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CABR0jES0HHeyM6_7-whqLQgF6a+u4PCDAdyWPJ5Bp8g1umi2jA@mail.gmail.com>
+In-Reply-To: <loom.20130727T221553-552@post.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Michael <rmichael@edgeofthenet.org>
-Cc: linux-raid@vger.kernel.org
+To: Wes <wt75@gazeta.pl>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Richard,
+Seekmark is very simple. It opens a block device with O_RDWR and
+O_SYNC, divides the disk into block_size chunks, spawns a bunch of
+threads, and each one chooses a random block, seeks there, writes,
+then chooses another, seeks there, writes, etc.  There shouldn't be
+any write barrier issue, since there's no filesystem involved. You can
+also point it at a file on a filesystem and it will do the same with
+that file, the O_SYNC *should* flush on every write.
 
-On 07/27/2013 12:46 PM, Richard Michael wrote:
-> Hello everyone,
-> 
-> I have inherited a failed RAID5 and am attempting to recover as much
-> data as possible.   Full mdadm -E output at the bottom.
+There could be IO scheduler differences between the kernels.
 
-Please also supply "smartctl -x /dev/sdX" for each of your drives.
-
-> The RAID is 4 SATA disks, /dev/sd[abcd]3 and EXT4.
-> 
-> One disk is unable to talk to the controller, another is out-of-date,
-> the remaining two are current and match each other.
-> 
-> sdb spins up but fails to talk, the kernel hard resets the link
-> several times, then slows the link to 1.5Gb/s and retries, then
-> eventually gives up entirely (fail; then "EH complete").  I have no
-> /dev node, etc..
-
-Is this still true if you plug it into a different computer?
-
-> Bad sectors were found while ddrescue-coping sdc.  It was actually
-> kicked from the array back on 14-July-2013 02:26:00, and thus has a
-> lower event count than the remaining two good disks.
-> 
-> /dev/sdc3:
->   Update Time : Sun Jul 14 02:26:00 2013
->   Checksum : 5a16857a - correct
->   Events : 308375
-> 
-> 
-> The remaining, functioning, disks sd[ad]3 are in "sync" with each
-> other, but 10 days (~70,000 events) ahead of sdc3:
-> 
-> /dev/sd[ad]3:
->   Update Time : Wed Jul 24 14:01:52 2013
->   Checksum : d7cff537 - correct
->   Events : 378389
-
-Ok.  This all makes sense.
-
-
-> Questions:
-> 
-> 0/ Any thoughts on the best method to proceed with recovery?
-
-First, determine if the problem with /dev/sdb is a failed drive, failed
-cabling, or failed controller.  If either of the latter, attempt to
-force assembly with /dev/sd[abd] in a working controller/cabling
-environment.
-
-> 1/ What will happen if I --assemble --force?  I think the low event
-> count on sdc3 will be forced up to 378389 and the array will start
-> degraded.  The filesystem will be corrupted (missing "real/updated"
-> data on sdc3), but I can fsck and check lost+found to find damaged
-> file names.  I'll md5sum all against the latest (but old) "backup" to
-> find silent corruption.
-
-You are correct.  If /dev/sdb is truly dead, this is the best you can do.
-
-> 2/ Could the write intent bitmap on sd[ad]3 go far enough back to
-> replay the last ~70K events to sdc3?  Generally, what are the
-> limitations of the bitmap -- how many events can be replayed?  I'm not
-> sure I have a clear understanding of the WIBM.
-
-Write-intent bitmaps do not contain events.  Just markers for blocks of
-sectors that have been written to while an array is degraded.  The
-bitmap is an optimization useful when re-adding a failed drive to an
-otherwise working array.
-
-> 3/ Should the sdc superblock indicate information about it being
-> kicked?  It's listed as "clean" and sees all the drives active
-> ('AAAA').
-
-Drives are generally kicked out of an array when MD fails to write to
-them.  If MD cannot write to a drive, how do you expect it to update
-that drive's superblock?  Detecting this phenomenon (re-appearance of a
-failed drive) is precisely why each drive maintains an event count and a
-list of the other drives status.
-
-> 4/ Perhaps beyond the scope of linux-raid, I'm not sure what to do
-> about sdb.  I've tried different positions on the controller, and
-> re-orienting the drive (vertical, sideways, etc.).  I could send it
-> alone for recovery, perhaps.  I don't know how to get lower-level than
-> the kernel failing to talk to the device.  Perhaps a vendor diagnostic
-> tool?
-
-Try different controllers, different cables (power and data), and if all
-else fails, different computer.  If you do get it talking, include its
-"smartctl -x" report too.
-
-> Thank you very much in advance for your time and comments.  I hope
-> you're all having a better weekend than I am. :-)
-
-Hope this helps,
-
-Phil
+On Sat, Jul 27, 2013 at 2:22 PM, Wes <wt75@gazeta.pl> wrote:
+> Mikael Abrahamsson <swmike <at> swm.pp.se> writes:
+>
+>> Does seekmark use barriers to assure that data has actually been written?
+>> In that case it could be that 2.6.18 has different behaviour from 2.6.32
+>> when it comes to barriers and that explains the speed difference.
+>>
+>
+>
+>
+> Mikael, looks like you were right.
+>
+> Aside from seekmark I was also testing with random dd to not relay on single
+> measurment tool.
+>
+> I run found out it is not only related to raid but to block devices in
+> general. I run 'hdparm -W0 /dev/sda' on cetos5 and got the same poor
+> behavior of centos6.
+>
+> Anyway I cannot still find a way to enable drive write cache on centos6.
+> hdparm reports it is enabled but results are the same (poor) no matter
+> if after 'hdparm -W0 /dev/sda' or 'hdparm -W1 /dev/sda' so now I am guessing
+> write cache must be blocked somewhere in the kernel.
+>
+> I still cannot find a way to enable write cache in centos 6.
+> Booting with 'barriers=off' kernel parameter and 'barrier=0' in fstab does
+> not help.
+>
+>
+>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
