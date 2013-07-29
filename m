@@ -1,154 +1,135 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: 3.10.1: echo repair > sync_action causes hang on RAID-1 (2 x
- SSD)
-Date: Mon, 29 Jul 2013 15:56:55 +1000
-Message-ID: <20130729155655.38572fed@notabene.brown>
-References: <000501ce85fc$d3a60a10$7af21e30$@lucidpixels.com>
-	<20130722090257.2faa0874@notabene.brown>
-	<009801ce898c$34b83fc0$9e28bf40$@lucidpixels.com>
-	<20130726103549.1e6b0b92@notabene.brown>
-	<001e01ce89e6$73f93b80$5bebb280$@lucidpixels.com>
+Subject: Re: Suspicious test failure - mdmon misses recovery events on loop
+ devices
+Date: Mon, 29 Jul 2013 16:55:50 +1000
+Message-ID: <20130729165550.53c33bf3@notabene.brown>
+References: <51F2E2DD.8090204@arcor.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/+vNN0dWy8kXzo7pzO5Vn8zX"; protocol="application/pgp-signature"
+ boundary="Sig_/rRt2J.ide=wqdN.9LOsrHOe"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <001e01ce89e6$73f93b80$5bebb280$@lucidpixels.com>
+In-Reply-To: <51F2E2DD.8090204@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Martin Wilck <mwilck@arcor.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/+vNN0dWy8kXzo7pzO5Vn8zX
+--Sig_/rRt2J.ide=wqdN.9LOsrHOe
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 26 Jul 2013 05:56:51 -0400 "Justin Piszcz" <jpiszcz@lucidpixels.com>
-wrote:
+On Fri, 26 Jul 2013 22:58:05 +0200 Martin Wilck <mwilck@arcor.de> wrote:
+
+> Hi Neil, everybody,
+>=20
+> I am currently pulling my hair over strange failures I am observing. I
+> was trying to create a new unit test for DDF along the same lines as
+> 09imsm-create-fail-rebuild. That's of course a very important test -
+> making sure that an array can actually recover from a disk failure.
+>=20
+> The script does just that - create a container with 2 subarrays, fail a
+> disk, add a spare, and expect everything to be recovered after that.
+>=20
+> What I find is that the recovery actually works, but sometimes the meta
+> data is broken after the test has finished. The added disk is shown in
+> "Rebuilding" state and/or one or both subarrays are considered
+> "degraded" although the kernel log clearly shows that the recovery
+> finished. The problem occurs almost always if the test is done on loop
+> devices, as in mdadm's "test" script. Just did another test, failed
+> 10/10 attempts on loop devices. If I use LVM logical volumes instead (on
+> the same physical disk), the test never fails (0/10).
+>=20
+> In the success case, the script prints only one line (its log file). In
+> the bad case, it will print some more lines of mdadm -E information. The
+> log file contains all the details.
+>=20
+> I have come to the conclusion that if the failure occurs, mdmon simply
+> misses one or more state changes of the arrays and/or disks. For mdmon
+> to notice that the recovery has finished, it is crucial to see a
+> situation where sync_action is "idle", and had been "recover" before,
+> for both subarrays. This happens if I run the test on LVM, but not if I
+> run it on a loop device.
+>=20
+> Thinking about it - what guarantee is there that mdmon catches a certain
+> kernel status change? If I read the code correctly, mdmon will only
+> catch it if
+>  (a) the status change occurs while mdmon is in the select() call, and
+>  (b) the status in sysfs doesn't change again between the return from
+> select() and mdmon reading the sysfs file contents.
+>=20
+> I can see no guarantee that this always works, and with my loop device
+> test case I seem to have found a scenario where it actually doesn't. I
+> suppose that mdmon may be busy writing the DDF metadata while the kernel
+> event about finished recovery is arriving.
+>=20
+> My first idea was that the the cause were the loop devices on my CentOS6
+> kernel not supporting O_DIRECT properly (recovery finishes almost
+> immediately in the page cache, perhaps too quickly for mdmon to notice),
+> but running a more recent kernel with proper O_DIRECT in the loop
+> device, I still see the problem, although the recovery takes longer now.
+>=20
+> There is still a chance that I messed something up in DDF (I haven't
+> seen the problem with IMSM), but it isn't likely given that the test
+> always works fine on LVM. I am pretty much at my wit's end here and I'd
+> like to solicit some advice.
+>=20
+> I'd definitely like to understand exactly what's going wrong here, but
+> it's very hard to debug because it's a timing issue involving the
+> kernel, mdadm, mdmon, and the manager. Adding debug code changes the
+> probability to hit the problem
+>=20
+> Thanks for reading this far, I hope someone has an idea.
+
+Hi Martin.
+
+ I don't think the state change needs to happen while mdmon is in the select
+ call.  It just need to happen between one call to read_and_act, and the ne=
+xt.
+ And everything happens between one call and the next...
+
+ If sync_action is 'recovery' one time and then something else that isn't
+ 'idle' the next time, then that would cause the transition to get lost.
+ Can that ever happen?  Do you see a particular transition that bypasses
+ 'idle'?
+ It is possible there is some race here...
+
+ I'll try out your test script can see if I can reproduce  it.
+
+
 
 >=20
+> Martin
 >=20
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]=20
-> Sent: Thursday, July 25, 2013 8:36 PM
-> To: Justin Piszcz
-> Cc: linux-kernel@vger.kernel.org; linux-raid@vger.kernel.org
-> Subject: Re: 3.10.1: echo repair > sync_action causes hang on RAID-1 (2 x
-> SSD)
->=20
-> On Thu, 25 Jul 2013 19:10:50 -0400 "Justin Piszcz" <jpiszcz@lucidpixels.c=
-om>
-> wrote:
->=20
-> > Did the fix by chance make it into 3.10.3?
->=20
-> No, it looks like it missed again.  I gather there was a large inflow of
-> patches for -stable in the 3.11-rc1 merge window and Greg has been
-> processing
-> them in batches.  Hopefully in 3.10.4.
->=20
-> The relevant patch is commit 30bc9b53878a9921b02e3 in mainline.
->=20
-> NeilBrown
->=20
-> --
->=20
-> Method to get patch via git and patch kernel:
->=20
-> $ git clone
-> git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-> $ git log |grep 30bc9b53878a9921b02e3
-> commit 30bc9b53878a9921b02e3b5bc4283ac1c6de102a
-> $ git show 30bc9b53878a9921b02e3b5bc4283ac1c6de102a > /tmp/a
-> # patch -p1 < /tmp/a
-> patching file drivers/md/raid1.c
-> Hunk #1 succeeded at 1848 (offset -1 lines).
-> Hunk #2 succeeded at 1886 (offset -1 lines).
-> Hunk #3 succeeded at 1915 (offset -1 lines).
->=20
-> Reboot- tested, success, thanks..!
->=20
-> One follow-up question:
-> $ cat /sys/block/md1/md/mismatch_cnt
-> 314112
-> -> On a live RAID-1 (root filesystem) without swap, is it normal to have
-> such a high mismatch_cnt even after a repair?
->=20
-> First repair:
-> Fri Jul 26 05:30:47 EDT 2013: The meta-device /dev/md1 has mismatch_cnt
-> 314112 sectors.
-> Second repair:
-> Fri Jul 26 05:30:47 EDT 2013: The meta-device /dev/md1 has mismatch_cnt
-> 313600 sectors.
+> PS: In that context, reading mdmon-design.txt, is it allowed at all to
+> add dprintf() messages in the code path called by mdmon? That would also
+> affect some DDF methods where I currently have lots of debug code.
 
-Those two lines have exactly the same timestamp and  array name but differe=
-nt
-mismatch counts.  That is very strange.
-
-Did you run two consecutive 'repair's on the one array, both with the patch=
-ed
-kernel?  If so and the second mismatch_cnt wasn't zero (or close to
-it..maybe) then something is definitely wrong.
+Yes, you can have dprintf messages anywhere.  However if debugging is
+enabled, then I don't promise that mdmon will even try to survive low memory
+conditions.
 
 NeilBrown
 
-
->=20
-> Should I be concerned?
->=20
->=20
-> Testing the patch:
->=20
-> Personalities : [raid1]
-> md1 : active raid1 sdc2[0] sdb2[1]
->       233381376 blocks [2/2] [UU]
->       [>....................]  check =3D  0.3% (838976/233381376)
-> finish=3D9.2min speed=3D419488K/sec
->=20
-> md0 : active raid1 sdc1[0] sdb1[1]
->       1048512 blocks [2/2] [UU]
->=20
-> Personalities : [raid1]
-> md1 : active raid1 sdc2[0] sdb2[1]
->       233381376 blocks [2/2] [UU]
->       [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>.....]  check =3D 77=
-.5% (180889856/233381376)
-> finish=3D2.5min speed=3D342654K/sec
->=20
-> md0 : active raid1 sdc1[0] sdb1[1]
->       1048512 blocks [2/2] [UU]
->=20
-> Personalities : [raid1]
-> md1 : active raid1 sdc2[0] sdb2[1]
->       233381376 blocks [2/2] [UU]
->=20
-> md0 : active raid1 sdc1[0] sdb1[1]
->       1048512 blocks [2/2] [UU]
->=20
->=20
-> Justin.
->=20
-
-
---Sig_/+vNN0dWy8kXzo7pzO5Vn8zX
+--Sig_/rRt2J.ide=wqdN.9LOsrHOe
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUfYEKDnsnt1WYoG5AQLN2xAApE2JFdBRjs4r+Udi4Cf+4LDVwbN+7y/q
-9ijonMktuAgkcf9ybruHP6yG2aRueVajZWwZ3YzzDQZP3XLI3pfntc7rwe0k9am0
-EGairvnHyxkCsOnOcmdaQl4nnjidoH4OSMIYkYsHjoVsGiC/+jT4E9xRAaZPWUnH
-L7uU3jfZP32LtAodHaL+0OyQRxlIX1yl2lGy+j1wIwGaoyJabdX0lStHaiEK8eO0
-Kx/biLXPKq8S4ztm3XKtf0OCviKwhLWHjIjmYLiVZ5GnYWkAF13L+LJRpWoI2p9Z
-7xHdb6QzyELBCDKPm02Ed9MEqGblh6l4FM70P/FsMkUzWaSS1nBASNRy9B8X9bt2
-XWAevy/lcT4pPz16g9L9twYn5QUIJdl1JDllpTXo/XNEvtdGs3rpX58r/Ba9/5JA
-DLmIctSMfjNJo38FlJKDSpCq23/IFn4/zKtVopO3nNhAxMUGibgoGSot9ruChzIv
-sSANmD7KAZH2xIIex0t0ZJs9GkozhEBq899ICrsT1/MZ2ifFzhmMQg3oKhJJq3QS
-gWh7+efkzCULW+fMvlrNBQik/3vlsS6KNjOL9s66ZsC/P8kNaCTrQy97tv560Z1m
-+g5Jw3NLUSffOUDyylB0hJDWkeTk5X16WH6bgGxO1NBE2CnjVxr3vn+ZYnEB7ZdP
-Pzf+6psqQnE=
-=cIcR
+iQIVAwUBUfYR9jnsnt1WYoG5AQJeAA//T5GrVv5fZVKN5yYHj2+HSEMSDFMk8Gb6
+2xWuPqW5j/WT5W0zS/8DPqa65bpLtIXxd3AnE6OUs8pGAdWMPfYcPveOdDUuHNwe
+hBjqawnRXVJ8EtBUbFRWMjPuDu3yGWGlzngTIW+lHCRc/UC5lEMx/WPmzOP+fbpA
+z9o0ZCVBZBqAAwp5X8FDUM2OwHd5MdSA3uKDvnC/TrxqEgXtaCmC6LHY9SHOOq3G
+Nmoxf4cxZ4eb6oo/4MUrqDWmn3NQnSEIXcFO4cv/eeHTxJpsRqpWhfDv/DJxw+i6
+aqpnnxA1xoyCPUvc1HHkM8NvIF8DuR/G1IN10p2NDVkil8u4lWVgWgYeL+W75XoM
+/Lk9XFzCWS3316yNDkw0KvMtoSNKrQkot4RN3uxKl4rPH8jextIOBXpfwlAAjkIs
+WO/kUj0hjNLJ8hlSypQRFrz/sfmkD/KBqrLSGc0y3qrMdF5U/XeM1rfnRUMnq+nk
+YlhGYFNQomXOSxS4ClqNTGQFpvHGlL1MslQC7MaGB5pacfo3PeEgX2BQWWVRSBbQ
+5R+hxSZ+sEc0y12R1f2JR8Gkf8ofQ5fq7JfQRe/P4jsH2XWde4ZSkCHmh1qePZZC
+RRl+22AzTUOF9V0ni7KuGC/iP3Zgkh36BUbZXz/aNSWppKGgV0/1hdVuKfOLzflL
+WSDn60yKG04=
+=dKzX
 -----END PGP SIGNATURE-----
 
---Sig_/+vNN0dWy8kXzo7pzO5Vn8zX--
+--Sig_/rRt2J.ide=wqdN.9LOsrHOe--
