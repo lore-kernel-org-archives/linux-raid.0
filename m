@@ -1,49 +1,53 @@
-From: Tejun Heo <tj@kernel.org>
+From: Shaohua Li <shli@kernel.org>
 Subject: Re: [patch 1/3] raid5: offload stripe handle to workqueue
-Date: Tue, 30 Jul 2013 08:53:06 -0400
-Message-ID: <20130730125306.GC2599@htj.dyndns.org>
+Date: Tue, 30 Jul 2013 21:07:08 +0800
+Message-ID: <20130730130708.GA30352@kernel.org>
 References: <20130730055207.698660010@kernel.org>
  <20130730055257.527231772@kernel.org>
+ <20130730125306.GC2599@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20130730055257.527231772@kernel.org>
+In-Reply-To: <20130730125306.GC2599@htj.dyndns.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: shli@kernel.org
+To: Tejun Heo <tj@kernel.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, djbw@fb.com
 List-Id: linux-raid.ids
 
-Hello,
+On Tue, Jul 30, 2013 at 08:53:06AM -0400, Tejun Heo wrote:
+> Hello,
+> 
+> On Tue, Jul 30, 2013 at 01:52:08PM +0800, shli@kernel.org wrote:
+> > +static void raid5_wakeup_stripe_thread(struct stripe_head *sh)
+> > +{
+> > +	struct r5conf *conf = sh->raid_conf;
+> > +	struct r5worker_group *group;
+> > +	int i;
+> > +
+> > +	if (conf->worker_cnt_per_group == 0) {
+> > +		md_wakeup_thread(conf->mddev->thread);
+> > +		return;
+> > +	}
+> > +
+> > +	group = conf->worker_groups + cpu_to_group(sh->cpu);
+> > +
+> > +	for (i = 0; i < conf->worker_cnt_per_group; i++)
+> > +		queue_work_on(sh->cpu, raid5_wq, &group->workers[i].work);
+> > +}
+> 
+> Another general suggestion.  Using workqueue mechanism simply as
+> thread dispatching mechanism like above and then buliding your own
+> work dispatching code on top is usually a poor form.  It usually is
+> much better to assign a single unit of work to a single work item as
+> it allows things like per work unit flushing and much easier
+> implementation of freezing.  It's possible that you have some
+> overriding constraints here but if so it'd be nice if you can explain
+> it.
 
-On Tue, Jul 30, 2013 at 01:52:08PM +0800, shli@kernel.org wrote:
-> +static void raid5_wakeup_stripe_thread(struct stripe_head *sh)
-> +{
-> +	struct r5conf *conf = sh->raid_conf;
-> +	struct r5worker_group *group;
-> +	int i;
-> +
-> +	if (conf->worker_cnt_per_group == 0) {
-> +		md_wakeup_thread(conf->mddev->thread);
-> +		return;
-> +	}
-> +
-> +	group = conf->worker_groups + cpu_to_group(sh->cpu);
-> +
-> +	for (i = 0; i < conf->worker_cnt_per_group; i++)
-> +		queue_work_on(sh->cpu, raid5_wq, &group->workers[i].work);
-> +}
+Ok, I should explain here. I can't add a work_struct for each stripe, because
+this will stress workqueue very hard. My system handles > 1M/s stripes, which
+makes workqueue pool lock contended very hard.
 
-Another general suggestion.  Using workqueue mechanism simply as
-thread dispatching mechanism like above and then buliding your own
-work dispatching code on top is usually a poor form.  It usually is
-much better to assign a single unit of work to a single work item as
-it allows things like per work unit flushing and much easier
-implementation of freezing.  It's possible that you have some
-overriding constraints here but if so it'd be nice if you can explain
-it.
-
-Thanks.
-
--- 
-tejun
+Thanks,
+Shaohua
