@@ -1,68 +1,35 @@
-From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH] imsm: fix checking completion of RAID10 resync
-Date: Tue, 30 Jul 2013 15:59:25 +0200
-Message-ID: <20130730135925.30168.91570.stgit@localhost.localdomain>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [patch 3/3] raid5: only wakeup necessary threads
+Date: Tue, 30 Jul 2013 10:01:06 -0400
+Message-ID: <20130730140106.GE12016@htj.dyndns.org>
+References: <20130730055207.698660010@kernel.org>
+ <20130730055425.056034691@kernel.org>
+ <20130730124655.GB2599@htj.dyndns.org>
+ <20130730132414.GB30352@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, lukasz.dorau@intel.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20130730132414.GB30352@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, djbw@fb.com
 List-Id: linux-raid.ids
 
-If one creates RAID10 with IMSM metadata the is_resync_complete
-function returns '1' just when initial resync reaches 50%
+Hello, Shaohua.
 
-IMSM version of the is_resync_complete function has been added
-that handles the case of IMSM RAID10 correctly.
+On Tue, Jul 30, 2013 at 09:24:14PM +0800, Shaohua Li wrote:
+> In the raid5 case, it's very hard to keep the order the bios passed in, because
+> we need read some disks, calculate parity, and write some disks, the timing
+> could break any kind of order. Besides the workqueue handles 8 stripes one
+> time, so I suppose this keeps some order if there is.
 
+Of course, it can't be absolute but still keeping the relative
+ordering and temporal locality (ie. issue IOs in order once the XOR
+calculation of the whole source bio is done rather than issuing as
+each block completes calculation) would help quite a bit.
 
-Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
----
- super-intel.c |   20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+Thanks.
 
-diff --git a/super-intel.c b/super-intel.c
-index 4df33f4..0371713 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -1021,6 +1021,22 @@ static int is_failed(struct imsm_disk *disk)
- 	return (disk->status & FAILED_DISK) == FAILED_DISK;
- }
- 
-+/* IMSM version of is_resync_complete helper routine
-+ * to determine resync completion
-+ * since MaxSector is a moving target
-+ */
-+static int imsm_is_resync_complete(struct mdinfo *array)
-+{
-+	if (array->array.level != 10) {
-+		if (array->resync_start >= array->component_size)
-+			return 1;
-+	} else {
-+		if (array->resync_start >= 2*array->component_size)
-+			return 1;
-+	}
-+	return 0;
-+}
-+
- /* try to determine how much space is reserved for metadata from
-  * the last get_extents() entry on the smallest active disk,
-  * otherwise fallback to the default
-@@ -7119,12 +7135,12 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
- 		handle_missing(super, dev);
- 
- 	if (consistent == 2 &&
--	    (!is_resync_complete(&a->info) ||
-+	    (!imsm_is_resync_complete(&a->info) ||
- 	     map_state != IMSM_T_STATE_NORMAL ||
- 	     dev->vol.migr_state))
- 		consistent = 0;
- 
--	if (is_resync_complete(&a->info)) {
-+	if (imsm_is_resync_complete(&a->info)) {
- 		/* complete intialization / resync,
- 		 * recovery and interrupted recovery is completed in
- 		 * ->set_disk
-
+-- 
+tejun
