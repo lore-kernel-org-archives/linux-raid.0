@@ -1,72 +1,155 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Avoid double close()
-Date: Wed, 31 Jul 2013 08:52:56 +1000
-Message-ID: <20130731085256.5774273f@notabene.brown>
-References: <1375201803-9797-1-git-send-email-Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH] imsm: fix checking completion of RAID10 resync
+Date: Wed, 31 Jul 2013 09:22:40 +1000
+Message-ID: <20130731092240.3230bf7f@notabene.brown>
+References: <20130730135925.30168.91570.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/_bnX//xNoN2TCumm+=hvzL9"; protocol="application/pgp-signature"
+ boundary="Sig_/.6eI3OU5Vuq8Zouw7lBbbiT"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1375201803-9797-1-git-send-email-Jes.Sorensen@redhat.com>
+In-Reply-To: <20130730135925.30168.91570.stgit@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: linux-raid@vger.kernel.org
+To: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Cc: linux-raid@vger.kernel.org, lukasz.dorau@intel.com
 List-Id: linux-raid.ids
 
---Sig_/_bnX//xNoN2TCumm+=hvzL9
+--Sig_/.6eI3OU5Vuq8Zouw7lBbbiT
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 30 Jul 2013 18:30:03 +0200 Jes.Sorensen@redhat.com wrote:
+On Tue, 30 Jul 2013 15:59:25 +0200 Pawel Baldysiak
+<pawel.baldysiak@intel.com> wrote:
 
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> If one creates RAID10 with IMSM metadata the is_resync_complete
+> function returns '1' just when initial resync reaches 50%
 >=20
-> Coverity discovered a possible double close(fd2) in Grow.c. Avoided by
-> invalidating fd2 after the first close.
+> IMSM version of the is_resync_complete function has been added
+> that handles the case of IMSM RAID10 correctly.
 >=20
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+>=20
+> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
 > ---
->  Grow.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  super-intel.c |   20 ++++++++++++++++++--
+>  1 file changed, 18 insertions(+), 2 deletions(-)
 >=20
-> diff --git a/Grow.c b/Grow.c
-> index c1ae6e8..ff4ed5d 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -4685,6 +4685,8 @@ int Grow_continue_command(char *devname, int fd,
->  				continue;
->  			err =3D st->ss->load_super(st, fd2, NULL);
->  			close(fd2);
-> +			/* invalidate fd2 to avoid possible double close() */
-> +			fd2 =3D -1;
->  			if (err)
->  				continue;
->  			break;
+> diff --git a/super-intel.c b/super-intel.c
+> index 4df33f4..0371713 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -1021,6 +1021,22 @@ static int is_failed(struct imsm_disk *disk)
+>  	return (disk->status & FAILED_DISK) =3D=3D FAILED_DISK;
+>  }
+> =20
+> +/* IMSM version of is_resync_complete helper routine
+> + * to determine resync completion
+> + * since MaxSector is a moving target
+> + */
+> +static int imsm_is_resync_complete(struct mdinfo *array)
+> +{
+> +	if (array->array.level !=3D 10) {
+> +		if (array->resync_start >=3D array->component_size)
+> +			return 1;
+> +	} else {
+> +		if (array->resync_start >=3D 2*array->component_size)
+> +			return 1;
+> +	}
+> +	return 0;
+> +}
+> +
+>  /* try to determine how much space is reserved for metadata from
+>   * the last get_extents() entry on the smallest active disk,
+>   * otherwise fallback to the default
+> @@ -7119,12 +7135,12 @@ static int imsm_set_array_state(struct active_arr=
+ay *a, int consistent)
+>  		handle_missing(super, dev);
+> =20
+>  	if (consistent =3D=3D 2 &&
+> -	    (!is_resync_complete(&a->info) ||
+> +	    (!imsm_is_resync_complete(&a->info) ||
+>  	     map_state !=3D IMSM_T_STATE_NORMAL ||
+>  	     dev->vol.migr_state))
+>  		consistent =3D 0;
+> =20
+> -	if (is_resync_complete(&a->info)) {
+> +	if (imsm_is_resync_complete(&a->info)) {
+>  		/* complete intialization / resync,
+>  		 * recovery and interrupted recovery is completed in
+>  		 * ->set_disk
 
-Applied, thanks.
 
+Thanks.
+However the bug is not specific to intel, so should be fixed in common code.
+And "2*" is not really very general.
+
+The following patch should fix it properly.  If you can confirm that it fix=
+es
+the problem for you I would appreciate it.
+
+Thanks,
 NeilBrown
 
---Sig_/_bnX//xNoN2TCumm+=hvzL9
+=46rom 71d68ff62f945254240575cd836f5f2a09ced5d2 Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Wed, 31 Jul 2013 09:18:57 +1000
+Subject: [PATCH] Fix is_resync_complete for RAID10
+
+For RAID10, 'sync' numbers go up to the array size rather than the
+component size.  is_resync_complete() needs to allow for this.
+
+Reported-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/mdmon.h b/mdmon.h
+index 60fda38..5a8e120 100644
+--- a/mdmon.h
++++ b/mdmon.h
+@@ -91,7 +91,21 @@ extern int monitor_loop_cnt;
+  */
+ static inline int is_resync_complete(struct mdinfo *array)
+ {
+-	if (array->resync_start >=3D array->component_size)
+-		return 1;
+-	return 0;
++	unsigned long long sync_size =3D 0;
++	int ncopies, l;
++	switch(array->array.level) {
++	case 1:
++	case 4:
++	case 5:
++	case 6:
++		sync_size =3D array->component_size;
++		break;
++	case 10:
++		l =3D array->array.layout;
++		ncopies =3D (l & 0xff) * ((l >> 8) && 0xff);
++		sync_size =3D array->component_size * array->array.raid_disks;
++		sync_size /=3D ncopies;
++		break;
++	}
++	return array->resync_start >=3D sync_size;
+ }
+
+
+--Sig_/.6eI3OU5Vuq8Zouw7lBbbiT
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUfhDyDnsnt1WYoG5AQLGtA//Rc05RNJZQluS0CQ9WbAAp+m2Kwm/sNRI
-oJnzZzHiXaVWC/PxjprQCiv3MYQhUvV3ZJSH3k6PhBU+r/yspJgf/cHdSnGfx0Li
-CzjFyjiQj9dbO1N8+FGK0NnQv1WoMsMXxGVN5O+dUntMgWjmF+B25hAhPWZSzuQc
-fxZzDmwoKJN4pom8GWdmnK9vw04BWqL4PU8h2pLkznW/qiczDZ1LK66f5A3d6Xj+
-FRD79VRSEHM70zfIXHRoWZgqiONKMWItBEiwEXDNf7dyP/QjJf3uK40mwKGGToGU
-To4A1XfTuJyl0qwnfhREby+m+5zGgdh6/+eQZXVNZDyS0xGHc8G3pRJVw31i6ru9
-BYChZB63T/PBhEszFblp6jW46pHukAwd3dsqmprZRUoG+6Ywg3HyjwJQOcEsJoPH
-TpAUterLphJ0af++BV0EprdlyofOEA4SzDKV0VwNDEa8tA2voW/7HA/eOnEpYQzE
-zf3BnI+0vxOwKOzn2TZdljJG9d0ZYcQnZXJLZOkVFuOJ04JP7ERL2PF1Oqpfidu4
-r9KyBlGFeOu0EeLDVahxUk1IxquPeLACaeYfI3LY0lOyDpvoPOLCOhd29xVfww3i
-rw0yzYoRlz0fD9nOdhpjv4b/44H+n6sznPuVWPU0mYx9svl5kqkUemg602ai1FXa
-MkYvx5kFn3k=
-=tALs
+iQIVAwUBUfhKwDnsnt1WYoG5AQLVZBAAw5PTeZhKp+xVPeLJ4KGmYjZtntHje7dl
+jZyjX8hXTKv0Avvcjx7cY0Q3P7KmdkyaWswsFk7gXJqkpfP1sT36KKNR/3dZwVH8
+lo8k+7RTC+Xrvfa/ocIZOLe158J3a5PHsotJSS85mPmPiZTB5P4LjrCGHRyC192X
+Wr60ldMkZRJC0s0he+1b2Hs6QS1s8A67elw+WIpvOaSsrcth0cDLwDiroi6+G1wM
+TYKYf4LWZCEEAS4n6lMopzLRmPWTvMgTOX7l/CDcwqln15jMDFhKR6YGmoTmNxkR
+kWzoTn47rYKbyt1tDXO9ImhXlylvLv6ApaQ7hXtDlmxRhGuZxK8UgQXRgAgaki6v
+LlFO/7yqtrAGcIoVhD86+rRpU0BgzPlIIxovH3yKtrGYIGS35ASBT228ksHX6MWp
+KZelsT9V8SI1mgplGsNB8nOH+E3A+4/EgaypdjHylqgpVC/9Nq4Qewbb4HqzUKsL
+/uJUhFgXPCv4He6R+AhzyQVHbIaMG26yHarlfn8j6az7oy+Z9i4BPxlAKvS4dySe
+3uyMpDPNOHTC7600yy9ZZXo8eGqNWfPzPK/wE4i+I/5W9Yf+Hb0VfJnD4vGrHOtg
+DSF0Th/JNhRGHz1rsilBRrAeDqAMUK25kjIQWyhsq6DUyusQ8EaA4YeM+ZRvFNju
+NaAzfZl4VQk=
+=00cB
 -----END PGP SIGNATURE-----
 
---Sig_/_bnX//xNoN2TCumm+=hvzL9--
+--Sig_/.6eI3OU5Vuq8Zouw7lBbbiT--
