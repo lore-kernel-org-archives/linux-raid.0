@@ -1,80 +1,66 @@
 From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: ddf: remove failed devices that are no longer in use ?!?
-Date: Tue, 30 Jul 2013 21:24:24 +0200
-Message-ID: <51F812E8.1080004@arcor.de>
-References: <51F2E4B9.1020505@arcor.de> <20130730113435.3421a111@notabene.brown>
+Subject: Re: Suspicious test failure - mdmon misses recovery events on loop
+ devices
+Date: Tue, 30 Jul 2013 23:16:43 +0200
+Message-ID: <51F82D3B.6060104@arcor.de>
+References: <51F2E2DD.8090204@arcor.de>	<20130729165550.53c33bf3@notabene.brown>	<51F6D30F.7060007@arcor.de>	<51F6D3B1.1030800@arcor.de> <20130730104206.3ffc9f00@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130730113435.3421a111@notabene.brown>
+In-Reply-To: <20130730104206.3ffc9f00@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/30/2013 03:34 AM, NeilBrown wrote:
-> On Fri, 26 Jul 2013 23:06:01 +0200 Martin Wilck <mwilck@arcor.de> wrote:
+On 07/30/2013 02:42 AM, NeilBrown wrote:
+> On Mon, 29 Jul 2013 22:42:25 +0200 Martin Wilck <mwilck@arcor.de> wrote:
 > 
->> Hi Neil,
 >>
->> here is another question. 2 years ago you committed c7079c84 "ddf:
->> remove failed devices that are no longer in use", with the reasoning "it
->> isn't clear what (a phys disk record for every physically attached
->> device) means in the case of soft raid in a general purpose Linux computer".
+>>> My current idea to solve this is yet another separate thread just for
+>>> monitoring kernel state changes. Don't have it ready yet, though.
 >>
->> I am not sure if this was correct. A common use case for DDF is an
->> actual BIOS fake RAID, possibly dual-boot with a vendor soft-RAID driver
->> under Windows. Such other driver might be highly confused by mdadm
->> auto-removing devices. Not even "missing" devices need to be removed
->> from the meta data in DDF; they can be simply marked "missing".
+>> Another idea would be in manage_member, after queueing the metadata
+>> update and waking up the monitor, to wait for the metadata to finish
+>> processing before actually starting the recovery (writing "recover" to
+>> sync_action).
 >>
->> May I ask you to reconsider this, and possibly revert c7079c84?
 >> Martin
 > 
-> You may certainly ask ....
+> I hope an extra thread won't be necessary :-)
+
+I think the general problem that mdmon may be busy writing to disk while
+something changes in the kernel is real. But introducing an extra thread
+would make things even more complex as they are now, so it might be
+something to avoid.
+
+> I think that manage_member is the place to fix this.  However it might be
+> even simpler than you suggest.
 > 
-> I presumably had a motivation for that change.  Unfortunately I didn't record
-> the motivation, only the excuse.
+> We currently have
 > 
-> It probably comes down to a question of when *do* you remove phys disk
-> records?
-> I think that if I revert that patch we could get a situation where we keep
-> adding new phys disk records and fill up some table.
-
-How is this handled with native meta data? IMSM? Is there any reason to
-treat DDF special? In a hw RAID scenario, the user would remove the
-failed disk physically sooner or later, and it would switch to "missing"
-state. So here, I'd expect the user to call mdadm --remove.
-
-We already have find_unused_pde(). We could make this function try
-harder - when no empty slot is found, look for slots with
-"missing|failed" and then "missing" (or "failed"?) disks, and replace
-those with the new disk.
-
-> We should probably be recording some sort of WWN or path identifier in the
-> metadata and then have md check in /dev/disk/by-XXX to decide if the device
-> has really disappeared or is just failed.
-
-Look for "Cannot be bothered" in super-ddf.c :-)
-This is something that waits to be implemented, for SAS/SATA at least.
-
-> Maybe the 'path' field in phys_disk_entry could/should be used here.  However
-> we the BIOS might interpret that in a specific way that mdadm would need to
-> agree with....
+> 		replace_array(container, a, newa);
+> 		sysfs_set_str(&a->info, NULL, "sync_action", "recover");
 > 
-> If we can come up with a reasonably reliable way to remove phys disk records
-> at an appropriate time, I'm happy to revert this patch.  Until then I'm not
-> sure it is a good idea.....
+> monitor subsequently takes that 'newa', looks at 'sync_action', see that it
+> is 'idle' and assume that the recover never happened.
+> Suppose we change it to:
 > 
-> But I'm open to being convinced.
+> 		if (sysfs_set_str(&a->info, NULL, "sync_action", "recover") == 0)
+> 		        newa->prev_action = newa->curr_action = recovery;
+> 		replace_array(container, a, newa);
+> 
+> Then it wouldn't matter if monitor never saw the 'recovery' state as manager
+> explicitly told it that recovery had started.
+> 
+> Could you try that?
 
-Well, me too, I may be wrong, after all. Perhaps auto-removal is ok. I
-need to try it with fake RAID.
+Ingenious idea :-) Unfortunately it isn't sufficient. However this PLUS
+waiting for the metadata upate to finish makes my test succeed reliably
+(10/10, in the previous failure scenario). I'll send in the current
+status of patches in a minute.
 
 Martin
-
-
 > 
 > Thanks,
 > NeilBrown
