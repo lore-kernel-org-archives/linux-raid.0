@@ -1,35 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [patch 3/3] raid5: only wakeup necessary threads
-Date: Tue, 30 Jul 2013 10:01:06 -0400
-Message-ID: <20130730140106.GE12016@htj.dyndns.org>
-References: <20130730055207.698660010@kernel.org>
- <20130730055425.056034691@kernel.org>
- <20130730124655.GB2599@htj.dyndns.org>
- <20130730132414.GB30352@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130730132414.GB30352@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, djbw@fb.com
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH] Avoid double close()
+Date: Tue, 30 Jul 2013 18:30:03 +0200
+Message-ID: <1375201803-9797-1-git-send-email-Jes.Sorensen@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello, Shaohua.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-On Tue, Jul 30, 2013 at 09:24:14PM +0800, Shaohua Li wrote:
-> In the raid5 case, it's very hard to keep the order the bios passed in, because
-> we need read some disks, calculate parity, and write some disks, the timing
-> could break any kind of order. Besides the workqueue handles 8 stripes one
-> time, so I suppose this keeps some order if there is.
+Coverity discovered a possible double close(fd2) in Grow.c. Avoided by
+invalidating fd2 after the first close.
 
-Of course, it can't be absolute but still keeping the relative
-ordering and temporal locality (ie. issue IOs in order once the XOR
-calculation of the whole source bio is done rather than issuing as
-each block completes calculation) would help quite a bit.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ Grow.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Thanks.
-
+diff --git a/Grow.c b/Grow.c
+index c1ae6e8..ff4ed5d 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -4685,6 +4685,8 @@ int Grow_continue_command(char *devname, int fd,
+ 				continue;
+ 			err = st->ss->load_super(st, fd2, NULL);
+ 			close(fd2);
++			/* invalidate fd2 to avoid possible double close() */
++			fd2 = -1;
+ 			if (err)
+ 				continue;
+ 			break;
 -- 
-tejun
+1.8.3.1
+
