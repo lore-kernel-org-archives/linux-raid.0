@@ -1,60 +1,72 @@
-From: mwilck@arcor.de
-Subject: [PATCH 09/10] mdmon: manage_member: fix race condition during slow meta data writes
-Date: Tue, 30 Jul 2013 23:18:33 +0200
-Message-ID: <1375219114-5626-10-git-send-email-mwilck@arcor.de>
-References: <51F82D3B.6060104@arcor.de>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] Avoid double close()
+Date: Wed, 31 Jul 2013 08:52:56 +1000
+Message-ID: <20130731085256.5774273f@notabene.brown>
+References: <1375201803-9797-1-git-send-email-Jes.Sorensen@redhat.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/_bnX//xNoN2TCumm+=hvzL9"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51F82D3B.6060104@arcor.de>
+In-Reply-To: <1375201803-9797-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, linux-raid@vger.kernel.org
-Cc: mwilck@arcor.de
+To: Jes.Sorensen@redhat.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Martin Wilck <mwilck@arcor.de>
+--Sig_/_bnX//xNoN2TCumm+=hvzL9
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-In order to track kernel state changes, the monitor needs to
-notice changes in sysfs. If the changes are transient, and the
-monitor is busy writing meta data, it can happen that the changes
-are missed. This will cause the meta data to be inconsistent with
-the real state of the array.
+On Tue, 30 Jul 2013 18:30:03 +0200 Jes.Sorensen@redhat.com wrote:
 
-I can reproduce this in  a test scenario with a DDF container and
-two subarrays, where I set a disk to "failed" and then add a global
-hot-spare. On a typical MD test setup with loop devices, I can
-reliably reproduce a failure where the metadata show degraded members
-although the kernel finished the recovery successfully.
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>=20
+> Coverity discovered a possible double close(fd2) in Grow.c. Avoided by
+> invalidating fd2 after the first close.
+>=20
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> ---
+>  Grow.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>=20
+> diff --git a/Grow.c b/Grow.c
+> index c1ae6e8..ff4ed5d 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -4685,6 +4685,8 @@ int Grow_continue_command(char *devname, int fd,
+>  				continue;
+>  			err =3D st->ss->load_super(st, fd2, NULL);
+>  			close(fd2);
+> +			/* invalidate fd2 to avoid possible double close() */
+> +			fd2 =3D -1;
+>  			if (err)
+>  				continue;
+>  			break;
 
-This patch fixes this problem by applying two changes. First, when
-a metadata update is queued, wait until it is certain that the monitor
-actually applied these meta data (the for loop is actually needed to
-avoid failures completely in my test case). Second, after triggering the
-recovery, set prev_state of the changed array to "recover", in case
-the monitor misses the transient "recover" state.
+Applied, thanks.
 
-Signed-off-by: Martin Wilck <mwilck@arcor.de>
----
- managemon.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
+NeilBrown
 
-diff --git a/managemon.c b/managemon.c
-index a655108..40c863f 100644
---- a/managemon.c
-+++ b/managemon.c
-@@ -535,8 +535,14 @@ static void manage_member(struct mdstat_ent *mdstat,
- 		}
- 		queue_metadata_update(updates);
- 		updates = NULL;
-+		while (update_queue_pending || update_queue) {
-+			check_update_queue(container);
-+			usleep(15*1000);
-+		}
- 		replace_array(container, a, newa);
--		sysfs_set_str(&a->info, NULL, "sync_action", "recover");
-+		if (sysfs_set_str(&a->info, NULL, "sync_action", "recover")
-+		    == 0)
-+			newa->prev_action = recover;
- 		dprintf("%s: recovery started on %s\n", __func__,
- 			a->info.sys_name);
-  out:
--- 
-1.7.1
+--Sig_/_bnX//xNoN2TCumm+=hvzL9
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUfhDyDnsnt1WYoG5AQLGtA//Rc05RNJZQluS0CQ9WbAAp+m2Kwm/sNRI
+oJnzZzHiXaVWC/PxjprQCiv3MYQhUvV3ZJSH3k6PhBU+r/yspJgf/cHdSnGfx0Li
+CzjFyjiQj9dbO1N8+FGK0NnQv1WoMsMXxGVN5O+dUntMgWjmF+B25hAhPWZSzuQc
+fxZzDmwoKJN4pom8GWdmnK9vw04BWqL4PU8h2pLkznW/qiczDZ1LK66f5A3d6Xj+
+FRD79VRSEHM70zfIXHRoWZgqiONKMWItBEiwEXDNf7dyP/QjJf3uK40mwKGGToGU
+To4A1XfTuJyl0qwnfhREby+m+5zGgdh6/+eQZXVNZDyS0xGHc8G3pRJVw31i6ru9
+BYChZB63T/PBhEszFblp6jW46pHukAwd3dsqmprZRUoG+6Ywg3HyjwJQOcEsJoPH
+TpAUterLphJ0af++BV0EprdlyofOEA4SzDKV0VwNDEa8tA2voW/7HA/eOnEpYQzE
+zf3BnI+0vxOwKOzn2TZdljJG9d0ZYcQnZXJLZOkVFuOJ04JP7ERL2PF1Oqpfidu4
+r9KyBlGFeOu0EeLDVahxUk1IxquPeLACaeYfI3LY0lOyDpvoPOLCOhd29xVfww3i
+rw0yzYoRlz0fD9nOdhpjv4b/44H+n6sznPuVWPU0mYx9svl5kqkUemg602ai1FXa
+MkYvx5kFn3k=
+=tALs
+-----END PGP SIGNATURE-----
+
+--Sig_/_bnX//xNoN2TCumm+=hvzL9--
