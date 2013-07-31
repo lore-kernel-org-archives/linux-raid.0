@@ -1,37 +1,30 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [patch 1/3] raid5: offload stripe handle to workqueue
-Date: Wed, 31 Jul 2013 06:33:32 -0400
-Message-ID: <20130731103332.GE2810@htj.dyndns.org>
-References: <20130730055207.698660010@kernel.org>
- <20130730055257.527231772@kernel.org>
- <20130730125306.GC2599@htj.dyndns.org>
- <20130730130708.GA30352@kernel.org>
- <20130730135751.GD12016@htj.dyndns.org>
- <20130731012434.GA1504@kernel.org>
+From: Francis Moreau <francis.moro@gmail.com>
+Subject: question about mdmon --takeover
+Date: Wed, 31 Jul 2013 16:30:34 +0200
+Message-ID: <CAC9WiBgFPSeKGBYxYCkw8DHk4dS6=aBhCeiMGgkj2eNgtY0asw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130731012434.GA1504@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, djbw@fb.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Hello list,
 
-On Wed, Jul 31, 2013 at 09:24:34AM +0800, Shaohua Li wrote:
-> stripe is the work unit actually. As I said, if I queue a work for each stripe,
-> just queue_work() will make the system blast because of the pwq->pool->lock
-> contention. dispatching one work has another side effect that I can't add block
+I thought that using "--takeover" would hint mdmon to replace existing
+mdmon process, and therefore the old one would exit somehow.
 
-Hmmm.... I see.  I'm not familiar with the code base and could be
-missing something but how does the custom stripe dispatch queue
-synchronize?  Doesn't that make use of a lock anyway?  If so, how
-would scheduling separate work items be worse?  Also, can you please
-elaborate the block plug part?
+However after several "mdmon --takeover" I can see this:
+ $ ps aux | grep dmon
+root       233  0.0  0.2  80388 10752 ?        SLsl 14:02   0:00 @dmon
+--offroot md127
+root      3326  0.0  0.2  14920 10820 ?        SLsl 15:16   0:00 mdmon
+--takeover md127
+root      3343  0.0  0.2  14920 10820 ?        SLsl 15:17   0:00 mdmon
+--takeover md127
+
+Is this expected ?
 
 Thanks.
-
 -- 
-tejun
+Francis
