@@ -1,151 +1,70 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] tests/env-ddf-template: helper for new unit test
-Date: Wed, 31 Jul 2013 16:49:27 +1000
-Message-ID: <20130731164927.0b1a4181@notabene.brown>
-References: <1375219114-5626-11-git-send-email-mwilck@arcor.de>
-	<1375248992-7130-1-git-send-email-mwilck@arcor.de>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Reshape/Grow to fewer but bigger devices
+Date: Wed, 31 Jul 2013 03:18:03 -0500
+Message-ID: <51F8C83B.5070701@hardwarefreak.com>
+References: <CAHhAHviuST+LXb36-XOz+UtZiFv0j8AX+iZ0_gS2MCWZaYhiQg@mail.gmail.com> <CAHhAHvhek+ObrM3drgyfs3EH6itoyB2WjxkBK2TcmORw0N_STQ@mail.gmail.com> <20130731132858.10c67a46@notabene.brown>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/WSMSe.AUP6K2_H4U.fSWJZX"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1375248992-7130-1-git-send-email-mwilck@arcor.de>
+In-Reply-To: <20130731132858.10c67a46@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: mwilck@arcor.de
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Christian Nilsson <nikize@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/WSMSe.AUP6K2_H4U.fSWJZX
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 31 Jul 2013 07:36:32 +0200 mwilck@arcor.de wrote:
-
-> From: Martin Wilck <mwilck@arcor.de>
->=20
-> I forgot to check in this helper script, similar to the one for IMSM.
-> It is needed by tests/10ddf-create-fail-rebuild.
->=20
-> Signed-off-by: Martin Wilck <mwilck@arcor.de>
-> ---
->  tests/env-ddf-template |   76 ++++++++++++++++++++++++++++++++++++++++++=
-++++++
->  1 files changed, 76 insertions(+), 0 deletions(-)
->  create mode 100644 tests/env-ddf-template
->=20
-> diff --git a/tests/env-ddf-template b/tests/env-ddf-template
-> new file mode 100644
-> index 0000000..28e19d0
-> --- /dev/null
-> +++ b/tests/env-ddf-template
-> @@ -0,0 +1,76 @@
-> +ddf_check() {
-> +    udevadm settle
-> +    case $1 in
-> +    container )
-> +        grep -s "blocks super external:ddf" /proc/mdstat > /dev/null || {
-> +            echo >&2 "**Fatal** Correctly formed container not found"; c=
-at /proc/mdstat; exit 1; }
-> +        ;;
-> +    member )
-> +        t_member=3D$2
-> +        t_num_disks=3D$3
-> +        t_level=3D$4
-> +        t_rd_size=3D$5
-> +        t_size=3D$6
-> +        t_offset=3D$7
-> +        t_chunk=3D$8
-> +	t_layout=3D$9
-> +=09
-> +	if [ $t_chunk -ne 0 ]; then
-> +	    t_rd_size=3D$((t_rd_size & ~(t_chunk - 1)))
-> +        fi
-> +	case $t_level in
-> +	0) t_size=3D$((t_num_disks*$t_rd_size));;
-> +	1) t_size=3D$t_rd_size;;
-> +	4|5) t_size=3D$(((t_num_disks-1)*$t_rd_size));;
-> +	6) t_size=3D$(((t_num_disks-2)*$t_rd_size));;
-> +	10) t_size=3D$((t_num_disks*$t_rd_size/t_layout));;
-> +	esac
-> +
-> +        err=3D0
-> +
-> +        eval `stat -L -c "let major=3D0x%t; let minor=3D0x%T;" $t_member`
-> +        sysfs=3D/sys/dev/block/${major}:${minor}
-> +        if [ ! -f ${sysfs}/md/array_state ]; then
-> +            echo "**Fatal**: Array member $t_member not found" >&2; cat =
-/proc/mdstat >&2; exit 1
-> +        fi
-> +        _chunk=3D`cat ${sysfs}/md/chunk_size`
-> +        if [ $t_chunk -ne $((_chunk/1024)) ]; then
-> +            echo "**Error**: Chunk size mismatch - expected $t_chunk, ac=
-tual $_chunk" >&2
-> +            err=3D$((err + 1))
-> +        fi
-> +        for i in `seq 0 $((t_num_disks - 1))`; do
-> +	    _offset=3D`cat ${sysfs}/md/rd${i}/offset`
-> +	    if [ $t_offset -ne $((_offset / 2)) ]; then
-> +		echo "**Error**: Offset mismatch - expected $t_offset, actual $((_offs=
-et/2))" >&2
-> +		err=3D$((err + 1))
-> +	    fi
-> +	    _rd_size=3D`cat ${sysfs}/md/rd${i}/size`
-> +	    if [ $t_rd_size -ne $_rd_size ]; then
-> +		echo "**Error**: Component size mismatch - expected $t_rd_size, actual=
- $_rd_size" >&2
-> +		err=3D$((err + 1))
-> +	    fi
-> +        done
-> +        _size=3D`cat ${sysfs}/md/array_size`
-> +	[ o$_size =3D odefault ] && _size=3D$(($(cat ${sysfs}/size)/2))
-> +        if [ $t_size -ne $_size ]; then
-> +            echo "**Error**: Array size mismatch - expected $t_size, act=
-ual $_size" >&2
-> +            err=3D$((err + 1))
-> +        fi
-> +        if [ $err -gt 0 ]; then
-> +            echo "$t_member failed check" >&2
-> +            cat /proc/mdstat >&2
-> +            mdadm -E /dev/loop8 >&2
-> +            exit 1
-> +        fi
-> +        ;;
-> +    * )
-> +        echo >&2 "**Error** unknown check $1"; exit 1;
-> +    esac
-> +}
-> +
-> +container=3D/dev/md/ddf
-> +member0=3D/dev/md/vol0
-> +member1=3D/dev/md/vol1
-> +member2=3D/dev/md/vol2
-> +member3=3D/dev/md/vol3
-> +member4=3D/dev/md/vol4
+On 7/30/2013 10:28 PM, NeilBrown wrote:
+> On Wed, 31 Jul 2013 01:33:46 +0200 Christian Nilsson <nikize@gmail.com> wrote:
+...
+>> but just to explain:
+>> I have a 9 devices in a RAID5
+>> 6 of these are now 2TB disks (I really love hot replace!)
+>> while the other 3 are still 1TB disks
+>>
+>> I would now like to grow the array to 6x2TB instead of the present 9x1TB.
+>>
+>> Is this possible and I just can't find how, or have there just been to
+>> many other great features instead?
+>> (I have started a ext4 offline shrink.. but it is a real pain.)
+> 
+> Sorry, but this function hasn't been implemented yet.
 
 
-applied, thanks.
+Christian, there is an old storage industry axiom that goes something
+like "one can only afford as much storage as one can afford to back up".
 
-NeilBrown
+This says that you need sufficient storage media to backup the files
+residing in the filesystem on your primary storage array.  It seems
+clear that you currently have no such backup media nor strategy.  The
+only suitable consumer media with sufficient capacity would be more hard
+drives.
 
---Sig_/WSMSe.AUP6K2_H4U.fSWJZX
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+I'd suggest acquiring a pair of 4TB drives, or 3x3TB depending on price
+break, to use from this point forward strictly as backup media.  Create
+an md linear array of the new drives, format it with XFS.  Look at the
+directory structure of your existing array and based on that fire off
+multiple 'cp -a' commands in parallel to copy the dirs and files over.
+This method will get all backup disks in play due to AG parallelism in
+XFS, increasing throughput, and decreasing total backup time.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+Once you're backed up, blow away the original array and create a new
+one, but I suggest using your 6x2TB disks in RAID6 instead of RAID5.
+IMO, and that of many others here, RAID5 with many muti-TB disks is
+simply too prone to double disk failure during rebuilds/reshapes, silent
+data corruption due to the RAID5 write hole, etc, especially with
+consumer quality drives.  With many hi-cap consumer drives, RAID5 is a
+time bomb.
 
-iQIVAwUBUfizdznsnt1WYoG5AQKzCw//S7+eC/Myy/HErDE06v5SegngA+LQFEHx
-659QAVJ/h+JOKSKG2F6I2q942mfiLZA1hmZSNQcgNksXSg1hy7ag2ku4TAqU0Jkv
-eYyz3QVgWjpqjbVata7+UHh3AFZW3rRm3WQT7Rqp0KULLYa/WbvQdIudk47b4/ih
-68989d7EuVc5jnDjC4OY6RKGwenKf+KUIrbrCSyf+NugDXFt02/nsXfiG5EDQASP
-mA23+tKuAJMdLo6xez3pbccgJqJZZITSXVIsRTrjyQpjQcfL+1A4J4XqjsGLf4hp
-AeX60aNVJS9+sZl6HY9Jmu64bu8BOXz7KWP390AF2DJunfeRPesEYMwDB4fiYVbA
-E4Jds6x28pZzBXh6jgLwmJh4xCITrB+cOs3aGqiySsSZU7GYriW798lmcciz5zqO
-BKqBJiyF4iPaatCYBdZwtusIivHfywQLcIgshLG+Dz7exV/oQjcSr1ggKuiDGO4v
-b8l78+mfdMGKHR9A6GuKSP7OSmkAUCI8J8Cic2qQKa+BwxF6p2RRiEDgarnxsdpX
-HZdOw/bUypyPkK4cqkdiB0yFmzW6MwXXiauajVmeYWBIS7zOuw8lZo5InwKcSN03
-nF06X2ma92D6mz0yNY1D9W1ZPwZZfPpzqoLYzlcPShagd64jpCD01wrvbmmm4bEg
-vccVM08yYLU=
-=PxJt
------END PGP SIGNATURE-----
+So in the end you'll have 1TB less raw capacity, 8TB vs 9TB, but you'll
+be protected by double parity RAID6 and you'll have sufficient backup
+device capacity to safeguard your primary array, even if it's completely
+full.  Once everything is migrated you'll want to implement a scheduled
+backup strategy using rsync or something similar, so you're
+automatically backing up new files and those that have changed, on a
+daily schedule.  Nobody needs a backup until they need it.  Don't find
+yourself needing one and not having it.
 
---Sig_/WSMSe.AUP6K2_H4U.fSWJZX--
+-- 
+Stan
+
