@@ -1,71 +1,41 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Reshape/Grow to fewer but bigger devices
-Date: Wed, 31 Jul 2013 13:28:58 +1000
-Message-ID: <20130731132858.10c67a46@notabene.brown>
-References: <CAHhAHviuST+LXb36-XOz+UtZiFv0j8AX+iZ0_gS2MCWZaYhiQg@mail.gmail.com>
-	<CAHhAHvhek+ObrM3drgyfs3EH6itoyB2WjxkBK2TcmORw0N_STQ@mail.gmail.com>
+From: Martin Wilck <mwilck@arcor.de>
+Subject: Re: [PATCH 06/10] monitor: read_and_act: log status when called
+Date: Wed, 31 Jul 2013 07:28:23 +0200
+Message-ID: <51F8A077.8050104@arcor.de>
+References: <51F82D3B.6060104@arcor.de>	<1375219114-5626-7-git-send-email-mwilck@arcor.de> <20130731125933.0d6f0c6c@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Al4d9iPXe84BKLWy3zGCRuH"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHhAHvhek+ObrM3drgyfs3EH6itoyB2WjxkBK2TcmORw0N_STQ@mail.gmail.com>
+In-Reply-To: <20130731125933.0d6f0c6c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian Nilsson <nikize@gmail.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/Al4d9iPXe84BKLWy3zGCRuH
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 07/31/2013 04:59 AM, NeilBrown wrote:
+>  	}
+>> +	
+>> +	gettimeofday(&tv, NULL);
+>> +	fprintf(stderr, "%s(%d): %ld.%06ld state:%s prev:%s action:%s prev: %s start:%llu\n",
+>> +		__func__, a->info.container_member,
+>> +		tv.tv_sec, tv.tv_usec,
+>> +		array_states[a->curr_state],
+>> +		array_states[a->prev_state],
+>> +		sync_actions[a->curr_action],
+>> +		sync_actions[a->prev_action],
+>> +		a->info.resync_start
+>> +		);
+> 
+> I hope this was meant to be "dprintf" ???
+> 
+> I've made that change.
 
-On Wed, 31 Jul 2013 01:33:46 +0200 Christian Nilsson <nikize@gmail.com> wro=
-te:
+OOps sorry. That was part of a (failed) attempt of mine to print ONLY
+this message. I forgot to undo it later.
 
-> Hi,
->=20
-> I have tried to find an answer, but my "search fu powers" are now
-> coming to a end.
-> What i want to do was more or less detailed by Neil in
-> http://marc.info/?l=3Dlinux-raid&m=3D129785210102555
-> the section titled "When reshaping an array to fewer devices, allow
-> 'size' to be increased"
->=20
-> but just to explain:
-> I have a 9 devices in a RAID5
-> 6 of these are now 2TB disks (I really love hot replace!)
-> while the other 3 are still 1TB disks
->=20
-> I would now like to grow the array to 6x2TB instead of the present 9x1TB.
->=20
-> Is this possible and I just can't find how, or have there just been to
-> many other great features instead?
-> (I have started a ext4 offline shrink.. but it is a real pain.)
->=20
+Thanks a lot for spotting it.
 
-Sorry, but this function hasn't been implemented yet.
+Martin
 
-NeilBrown
 
---Sig_/Al4d9iPXe84BKLWy3zGCRuH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUfiEejnsnt1WYoG5AQJ3Fg//eVBi4LJ+36Dg5avcMXt+KMlBNsIk4ZuU
-o5trP7PciBaEkhOw2DuwOsiOm2VAjI6BsUSVoL9uniszJYBppm4YFecVwfwkENFA
-ppz/q59IVlEuFykBe9p9GNmkcImo/2n39j0feAVKXQ2TOE2C6+48Ji9l7T8/3yK8
-bLSNaC5XPRI3QA5CeSe3OO08zPtRUwuzL2o8SRGH9TX+gepW+v66HvvY/SLiFQvv
-ZEbj6I775R7W6VB9Whtruc9XNsbvrCyQm53EIzNqkkz6NsYXgsMgKG1lsB85o7BQ
-A/zgUMaJOmt3qyRiOr6koLJB6mTbRDqx3Z91ORhJU2r/pzl0aZOf3TMuMynp2qPY
-nh37af4B26W6EQYBkYxHGKAmGh3bKMvOAoDcfdW6A429ImCmLwa9nHqDl3HjLZhb
-FMr4gF5AQUR93W1zhkh1sQe4nA6kOyhZXuHa2COgpw08rrzfqlT0cj5mqK074AtE
-jjNk/kYLXtORz2f939EMqCYx9FD3Eo/af1NtGANp4ScyDihqo8uETZ0fw1lcEpT2
-yXMPfhQzfXzhau1EEVWKgeyRZZcr7dajjJMAubVB4matH6oRosPCAp1tF/vJ9toL
-nxhof4Xtcc7i54blfIjxFi1aePezDGw3rQIO5PKplLmzViIHBT81EnBtFrRUv7dA
-J4xTuguEmdE=
-=WNtb
------END PGP SIGNATURE-----
-
---Sig_/Al4d9iPXe84BKLWy3zGCRuH--
