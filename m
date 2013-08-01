@@ -1,66 +1,68 @@
 From: NeilBrown <neilb@suse.de>
 Subject: Re: Bugreport: mdmon will not start with latest git version when
  using ddf container
-Date: Thu, 1 Aug 2013 15:28:18 +1000
-Message-ID: <20130801152818.27cf61a5@notabene.brown>
+Date: Thu, 1 Aug 2013 16:50:52 +1000
+Message-ID: <20130801165052.3285cacc@notabene.brown>
 References: <51F953FA.5000400@gmail.com>
 	<20130801104433.1e7b41a5@notabene.brown>
 	<CAGkViCGM5-ztFSh3d-yh=P0HNfvcPYr6p7g3rDfkmx2+8YaqEw@mail.gmail.com>
+	<20130801152818.27cf61a5@notabene.brown>
+	<CAGkViCGbxJofuBbU41QvfQbBdaAEQKe3BhrSXmKZv17rGC4jzQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/rkB/wdygBeJ+oqepgWxHa9y"; protocol="application/pgp-signature"
+ boundary="Sig_/89tlFud6zM0wUJsGE2UsG4T"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGkViCGM5-ztFSh3d-yh=P0HNfvcPYr6p7g3rDfkmx2+8YaqEw@mail.gmail.com>
+In-Reply-To: <CAGkViCGbxJofuBbU41QvfQbBdaAEQKe3BhrSXmKZv17rGC4jzQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Albert Pauw <albert.pauw@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/rkB/wdygBeJ+oqepgWxHa9y
+--Sig_/89tlFud6zM0wUJsGE2UsG4T
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 1 Aug 2013 07:18:53 +0200 Albert Pauw <albert.pauw@gmail.com> wrote:
+On Thu, 1 Aug 2013 08:15:36 +0200 Albert Pauw <albert.pauw@gmail.com> wrote:
 
 > Hi Neil,
 >=20
-> both mdadm and mdmon come from the same location, /sbin, and are the newly
-> created one.
+> used /var/run/mdadm, and yes it is working now.
 >=20
-> I've attached the strace file. Hopefully you can find any clues in there.
+> Thanks,
+>=20
+> Albert
+>=20
+> P.S. Should this variable not set default to something like /var/run/mdadm
+> or /dev?
 >=20
 
-Yes I can.
-
-mdmon needs to create /run/mdadm but you don't have '/run'.
-try:
- make clean
- make MAP_DIR=3D/var/run/mdadm
-or maybe
- make MAP_DIR=3D/dev/.mdadm
+I believe that most distros are moving towards /run so I think that is the
+best default.
+I guess I could get the Makefile to check that the chosen directory exists.=
+..
 
 NeilBrown
 
---Sig_/rkB/wdygBeJ+oqepgWxHa9y
+--Sig_/89tlFud6zM0wUJsGE2UsG4T
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUfnx8jnsnt1WYoG5AQLxiQ//VGrBE+t3fsRVeSV5cyN5OrZamxEyRF6+
-u5+Cx8iTx8ixZitBuaNL1Rd0IgPbCbtbxMV+y34dC23bjSUEt13LaUFqEhfxdCBA
-Cf8nbxeIE372Zh40PzDCYhnvB0hTSpH12mFbMs3Ioq27o0dG1lo9jJvf4zacHPAy
-lzvnkJst0VkTg2qrjKpg705k30ehIdUx1Q9+DcG/hraNGatxdz2wyGuqNiUoLp7/
-HkqWPnIGXcbOuSyNzPtHN3iU0fuylnWib8O0YTDCME/50BH1PRuEQzdft/BGMRjY
-fXzK4nQg3JfBvpL+J/ognJOCho2yim6KtYCerCA7jlwkEl4p7KXHbwNrrwlPaARC
-6RvKOTZY2Dge2EUS+ZwAPsfLmO3ytF6WMYHSo4F7JbQ0lTlUiB/C9JA9oyJ+wmG6
-6xNCHsXSP+8kpBUH1SDGMVqLhutQ7grw3IQJB1HCGODK1obD4UrRXLTcl8jhMIV9
-ckRdrjb5n6TiKiIXBJNhqT5StIlBQoerUsHzq2yypiB9MTHwjkSRQtkIO12Mt6Vh
-9i8ccGKghaGSjDJDdA5V9ltwjBBETiWZC8pN5Yctj68CEchzoK/8sOPQjb1WtwF/
-UK3ohZ8rGEXyj3kpDJ1Y4JBKTkownM9cJ6TgfZvs7fNCL+Yyi1vD+3D2Guqpm/c1
-pC78Lv8Cs70=
-=+N9K
+iQIVAwUBUfoFTTnsnt1WYoG5AQLfyxAAm/6zBH1x5lSvsRD2ekIzxE6llezHi66h
++BengiJpuKo/Qw93YgiaGrlPdri/5NladsGdHyAnP6poKouBvXOi50Oy+X6CoJmW
+MpS/SU1J3Iss/94RUDNpmYKeR8B2VKXGI66ZyMFL8IiHImyutzXbBmQiX16DbkAv
++SCL3OcujBl4Kr60YTIH06w0W9eXEggNlaiXRfbodp0iVedDq1Kt4QYoIoJZl2jq
+l+e2AxXXWZbjnu81wHvF01vDB3ICkJ59J7VwToLDA+GzhmUk5RR7W2N1biUr4k/B
+JTl4xf48WnAHUo8JT7xcLbyiolitnAcp/bgR4tau3mvT50KibWP+HOmKYQIwWP9w
+SKYwXmfvXUR4YV5eMqnN/fybTDFY96rgJbDFA6PS0lxYY1W9XFiuWNEYAvxpg3F7
+7WrTtp9cmKhcZ+sV5106jgznkcPtPTk6FFZ0N61N+kXP+X1f2Vi69wAH4VBNOGtY
+Rm/gMUQn/NkDWYg4S0qmJUMaO30/8QPJl3ir+xaTw6zT+mAj1REJl13b2SUa4AiI
+eCWoPn58MncOKOIY/ckTZ2Vkw9LuGNOK+Pb9pbscBo0KR2devRTIBG6IRXWQJDLa
+p8dPI3mBlQogKcyjwV9RXEW6ugXKano3nLWDe4SVNa2jVbhyq6V8tCVI5Lc0jK6s
+Cg73LCZOcR8=
+=fYXy
 -----END PGP SIGNATURE-----
 
---Sig_/rkB/wdygBeJ+oqepgWxHa9y--
+--Sig_/89tlFud6zM0wUJsGE2UsG4T--
