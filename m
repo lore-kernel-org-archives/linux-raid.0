@@ -1,171 +1,103 @@
-From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Subject: RE: [PATCH] imsm: fix checking completion of RAID10 resync
-Date: Thu, 1 Aug 2013 12:32:50 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB1A5381ED@IRSMSX105.ger.corp.intel.com>
-References: <20130730135925.30168.91570.stgit@localhost.localdomain>
- <20130731092240.3230bf7f@notabene.brown>
- <D9FFE20C522965449E182ACE73889AEB1A537C60@IRSMSX105.ger.corp.intel.com>
+From: Francis Moreau <francis.moro@gmail.com>
+Subject: Re: MD array keeps resyncing after rebooting
+Date: Thu, 1 Aug 2013 15:28:09 +0200
+Message-ID: <CAC9WiBhno9_42DhtDZqffSwYNVJNuL5CJ5wv+_80y1GKPTKNNQ@mail.gmail.com>
+References: <CAC9WiBjm5-RJ=CfpXMG7CCBp7StzWDuhp5XyFs4hAW3sxX7Gfw@mail.gmail.com>
+	<CAC9WiBjs4DQqt1G911OBALzSqn=o_=L1S4_K_MvUWhAu-rhtUw@mail.gmail.com>
+	<51EED0DA.3020901@arcor.de>
+	<51EED102.4020503@arcor.de>
+	<CAC9WiBgN1-HBEgqwo7CWor=nihCYUcOrYKhGxYTgbC-d4a7_-g@mail.gmail.com>
+	<51EEF3D3.7020305@arcor.de>
+	<CAC9WiBgrjrPRcHa5kh8TUfqN0rBBFC4M0_8iDkU3O0SOFgFW5g@mail.gmail.com>
+	<CAC9WiBjQz6MJxBuw+cLWFZ-vOsdbYYSKdE575emH_AG5EmnGdw@mail.gmail.com>
+	<51F1754B.5000905@arcor.de>
+	<CAC9WiBhgF_-Ya7GW8DW0DcOQ-UhpN503hr=6_=46W5nbK04FTQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <D9FFE20C522965449E182ACE73889AEB1A537C60@IRSMSX105.ger.corp.intel.com>
-Content-Language: en-US
+In-Reply-To: <CAC9WiBhgF_-Ya7GW8DW0DcOQ-UhpN503hr=6_=46W5nbK04FTQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Martin Wilck <mwilck@arcor.de>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-On Thursday, August 01, 2013 10:47 AM Lukasz Dorau <lukasz.dorau@intel.com> wrote:
-> On Wednesday, July 31, 2013 1:23 AM NeilBrown <neilb@suse.de> wrote:
-> > On Tue, 30 Jul 2013 15:59:25 +0200 Pawel Baldysiak
-> > <pawel.baldysiak@intel.com> wrote:
-> >
-> > > If one creates RAID10 with IMSM metadata the is_resync_complete
-> > > function returns '1' just when initial resync reaches 50%
-> > >
-> > > IMSM version of the is_resync_complete function has been added
-> > > that handles the case of IMSM RAID10 correctly.
-> > >
-> > >
-> > > Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> > > ---
-> > >  super-intel.c |   20 ++++++++++++++++++--
-> > >  1 file changed, 18 insertions(+), 2 deletions(-)
-> > >
-> > > diff --git a/super-intel.c b/super-intel.c
-> > > index 4df33f4..0371713 100644
-> > > --- a/super-intel.c
-> > > +++ b/super-intel.c
-> > > @@ -1021,6 +1021,22 @@ static int is_failed(struct imsm_disk *disk)
-> > >  	return (disk->status & FAILED_DISK) == FAILED_DISK;
-> > >  }
-> > >
-> > > +/* IMSM version of is_resync_complete helper routine
-> > > + * to determine resync completion
-> > > + * since MaxSector is a moving target
-> > > + */
-> > > +static int imsm_is_resync_complete(struct mdinfo *array)
-> > > +{
-> > > +	if (array->array.level != 10) {
-> > > +		if (array->resync_start >= array->component_size)
-> > > +			return 1;
-> > > +	} else {
-> > > +		if (array->resync_start >= 2*array->component_size)
-> > > +			return 1;
-> > > +	}
-> > > +	return 0;
-> > > +}
-> > > +
-> > >  /* try to determine how much space is reserved for metadata from
-> > >   * the last get_extents() entry on the smallest active disk,
-> > >   * otherwise fallback to the default
-> > > @@ -7119,12 +7135,12 @@ static int imsm_set_array_state(struct
-> > active_array *a, int consistent)
-> > >  		handle_missing(super, dev);
-> > >
-> > >  	if (consistent == 2 &&
-> > > -	    (!is_resync_complete(&a->info) ||
-> > > +	    (!imsm_is_resync_complete(&a->info) ||
-> > >  	     map_state != IMSM_T_STATE_NORMAL ||
-> > >  	     dev->vol.migr_state))
-> > >  		consistent = 0;
-> > >
-> > > -	if (is_resync_complete(&a->info)) {
-> > > +	if (imsm_is_resync_complete(&a->info)) {
-> > >  		/* complete intialization / resync,
-> > >  		 * recovery and interrupted recovery is completed in
-> > >  		 * ->set_disk
-> >
-> >
-> > Thanks.
-> > However the bug is not specific to intel, so should be fixed in common code.
-> > And "2*" is not really very general.
-> >
-> > The following patch should fix it properly.  If you can confirm that it fixes
-> > the problem for you I would appreciate it.
-> >
-> 
-> Hi
-> 
-> Since Pawel is out of office I am responding instead of him.
-> Your patch does not work for IMSM now, because ncopies is equal 0 and
-> mdmon crashes after dividing by zero - see details below:
-> 
-> > Thanks,
-> > NeilBrown
-> >
-> > From 71d68ff62f945254240575cd836f5f2a09ced5d2 Mon Sep 17 00:00:00
-> 2001
-> > From: NeilBrown <neilb@suse.de>
-> > Date: Wed, 31 Jul 2013 09:18:57 +1000
-> > Subject: [PATCH] Fix is_resync_complete for RAID10
-> >
-> > For RAID10, 'sync' numbers go up to the array size rather than the
-> > component size.  is_resync_complete() needs to allow for this.
-> >
-> > Reported-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> > Signed-off-by: NeilBrown <neilb@suse.de>
-> >
-> > diff --git a/mdmon.h b/mdmon.h
-> > index 60fda38..5a8e120 100644
-> > --- a/mdmon.h
-> > +++ b/mdmon.h
-> > @@ -91,7 +91,21 @@ extern int monitor_loop_cnt;
-> >   */
-> >  static inline int is_resync_complete(struct mdinfo *array)
-> >  {
-> > -	if (array->resync_start >= array->component_size)
-> > -		return 1;
-> > -	return 0;
-> > +	unsigned long long sync_size = 0;
-> > +	int ncopies, l;
-> > +	switch(array->array.level) {
-> > +	case 1:
-> > +	case 4:
-> > +	case 5:
-> > +	case 6:
-> > +		sync_size = array->component_size;
-> > +		break;
-> > +	case 10:
-> > +		l = array->array.layout;
-> > +		ncopies = (l & 0xff) * ((l >> 8) && 0xff);
-> > +		sync_size = array->component_size * array->array.raid_disks;
-> 
-> At this point of code the following variables equal
-> (I have created RAID10 volume of size z=10G):
-> 
-> array->array.layout = 0
-> ncopies = 0
-> array->component_size = 20971520
-> array->array.raid_disks = 4
-> sync_size = 83886080
-> array->resync_start = 0
-> 
-> I will check why array->array.layout is equal 0.
-> 
+On Wed, Jul 31, 2013 at 9:36 PM, Francis Moreau <francis.moro@gmail.com> wrote:
+> Hello Martin,
+>
+> I finally managed to get more information.
+>
+> After the resync finished I have the following state:
+>
+> partial content of /sys/block/md126/md:
+> --------------------------------------
+> array_size           default
+> array_state          active
+> chunk_size           65536
+> component_size       975585280
+> degraded             0
+> layout               0
+> level                raid1
+> max_read_errors      20
+> metadata_version     external:/md127/0
+> mismatch_cnt         0
+> raid_disks           2
+> reshape_position     none
+> resync_start         none
+> safe_mode_delay      0.000
+> suspend_hi           0
+> suspend_lo           0
+> sync_action          idle
+> sync_completed       none
+>
+> # cat /proc/mdstat
+> Personalities : [raid1]
+> md126 : active raid1 sdb[1] sda[0]
+>       975585280 blocks super external:/md127/0 [2/2] [UU]
+>
+> md127 : inactive sdb[1](S) sda[0](S)
+>       2354608 blocks super external:ddf
+>
+> unused devices: <none>
+>
+> # mdadm -E /dev/sda | egrep "GUID|state"
+> Controller GUID : 4C534920:20202020:FFFFFFFF:FFFFFFFF:FFFFFFFF:FFFFFFFF
+>  Container GUID : 4C534920:20202020:80861D6B:10140432:3F14FDAD:5271FC67
+>       VD GUID[0] : 4C534920:20202020:80861D60:00000000:3F2A56A7:00001450
+>         state[0] : Optimal, Not Consistent
+>    init state[0] : Fully Initialised
+>
+> Same for /dev/sdb
+>
+> As you noticed the state is "Not Consistent". In my understanding it
+> becomes "Consistent" when  the array is stopped.
+>
+> I checked during the shudown process that the array is correctly
+> stopped since at that point I got:
+>
+> # mdadm -E /dev/sda | egrep "state"
+>         state[0] : Optimal, Consistent
+>    init state[0] : Fully Initialised
+>
+> After rebooting, it appears that the BIOS changed a part of VD
+> GUID[0]. I'm not sure if that can confuse the kernel and if it's the
+> reason why the kernel shows:
 
-There is another, more serious, problem.
-When we stop the array during initial resync (mdadm -Ss) 
-and the function is_resync_complete() is entered for the last time, 
-array->array.raid_disks already equals 0, because it is zero'ed by manager:
-        a->info.array.raid_disks = mdstat->raid_disks;
-at managemon.c:454.
-As a result sync_size equals 0 and is_resync_complete() incorrectly returns 1 and resync finishes...
+To be more accurate, I stopped during the initramfs execution before
+udev is started, therefore I'm pretty sure that no mdadm commands have
+been issued.
 
-It seems to be a race condition between monitor and manager - manager changes value of array.raid_disks too fast.
+And at this point, the kernel message "md/raid1:md126: not clean --
+starting background
+reconstruction" has not been emitted and I can see this:
 
-Regards,
-Lukasz
+# mdadm -E /dev/sda | egrep "state"
+        state[0] : Optimal, Consistent
+   init state[0] : Not Initialised
 
-> 
-> > +		sync_size /= ncopies;
-> > +		break;
-> > +	}
-> > +	return array->resync_start >= sync_size;
-> >  }
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So the "init state[0]" has been changed from "Initialised" to "Not Initialised".
+
+How is this possible ?
+
+Help much appreciated.
+-- 
+Francis
