@@ -1,25 +1,32 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: Bugreport ddf rebuild problems
-Date: Fri, 02 Aug 2013 00:09:41 +0200
-Message-ID: <51FADCA5.1080801@arcor.de>
-References: <51FAB74B.4030200@gmail.com>	<51FAB282.6040303@arcor.de> <CAGkViCFT0+qm9YAnAJM7JGgVg0RTJi8=HAYDTMs-mfhXinqdcg@mail.gmail.com> <51FACF7C.50400@arcor.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: mwilck@arcor.de
+Subject: [PATCH 1/4] mdmon: always get layout from sysfs
+Date: Fri,  2 Aug 2013 00:35:14 +0200
+Message-ID: <1375396517-8479-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51FACF7C.50400@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Albert Pauw <albert.pauw@gmail.com>, linux-raid@vger.kernel.org
+To: neilb@suse.de, linux-raid@vger.kernel.org
+Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-On 08/01/2013 11:13 PM, Martin Wilck wrote:
-> Can you please try the attached patch?
+commit 71d68ff62 uses the array layout. It needs to be initialized.
 
-DON'T use it, it's broken. I will send a better one in a minute.
+Signed-off-by: Martin Wilck <mwilck@arcor.de>
+---
+ managemon.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-
-> Regards,
-> Martin
-> 
-> 
-
+diff --git a/managemon.c b/managemon.c
+index 6cd93e5..21bf2bd 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -652,7 +652,7 @@ static void manage_new(struct mdstat_ent *mdstat,
+ 	mdi = sysfs_read(-1, mdstat->devnm,
+ 			 GET_LEVEL|GET_CHUNK|GET_DISKS|GET_COMPONENT|
+ 			 GET_DEGRADED|GET_SAFEMODE|
+-			 GET_DEVS|GET_OFFSET|GET_SIZE|GET_STATE);
++			 GET_DEVS|GET_OFFSET|GET_SIZE|GET_STATE|GET_LAYOUT);
+ 
+ 	if (!mdi)
+ 		return;
+-- 
+1.7.1
