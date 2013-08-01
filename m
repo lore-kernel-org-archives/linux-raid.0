@@ -1,68 +1,151 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Bugreport: mdmon will not start with latest git version when
- using ddf container
-Date: Thu, 1 Aug 2013 16:50:52 +1000
-Message-ID: <20130801165052.3285cacc@notabene.brown>
-References: <51F953FA.5000400@gmail.com>
-	<20130801104433.1e7b41a5@notabene.brown>
-	<CAGkViCGM5-ztFSh3d-yh=P0HNfvcPYr6p7g3rDfkmx2+8YaqEw@mail.gmail.com>
-	<20130801152818.27cf61a5@notabene.brown>
-	<CAGkViCGbxJofuBbU41QvfQbBdaAEQKe3BhrSXmKZv17rGC4jzQ@mail.gmail.com>
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: RE: [PATCH] imsm: fix checking completion of RAID10 resync
+Date: Thu, 1 Aug 2013 08:46:58 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB1A537C60@IRSMSX105.ger.corp.intel.com>
+References: <20130730135925.30168.91570.stgit@localhost.localdomain>
+ <20130731092240.3230bf7f@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/89tlFud6zM0wUJsGE2UsG4T"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGkViCGbxJofuBbU41QvfQbBdaAEQKe3BhrSXmKZv17rGC4jzQ@mail.gmail.com>
+In-Reply-To: <20130731092240.3230bf7f@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Albert Pauw <albert.pauw@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>, "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/89tlFud6zM0wUJsGE2UsG4T
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wednesday, July 31, 2013 1:23 AM NeilBrown <neilb@suse.de> wrote:
+> On Tue, 30 Jul 2013 15:59:25 +0200 Pawel Baldysiak
+> <pawel.baldysiak@intel.com> wrote:
+> 
+> > If one creates RAID10 with IMSM metadata the is_resync_complete
+> > function returns '1' just when initial resync reaches 50%
+> >
+> > IMSM version of the is_resync_complete function has been added
+> > that handles the case of IMSM RAID10 correctly.
+> >
+> >
+> > Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> > ---
+> >  super-intel.c |   20 ++++++++++++++++++--
+> >  1 file changed, 18 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/super-intel.c b/super-intel.c
+> > index 4df33f4..0371713 100644
+> > --- a/super-intel.c
+> > +++ b/super-intel.c
+> > @@ -1021,6 +1021,22 @@ static int is_failed(struct imsm_disk *disk)
+> >  	return (disk->status & FAILED_DISK) == FAILED_DISK;
+> >  }
+> >
+> > +/* IMSM version of is_resync_complete helper routine
+> > + * to determine resync completion
+> > + * since MaxSector is a moving target
+> > + */
+> > +static int imsm_is_resync_complete(struct mdinfo *array)
+> > +{
+> > +	if (array->array.level != 10) {
+> > +		if (array->resync_start >= array->component_size)
+> > +			return 1;
+> > +	} else {
+> > +		if (array->resync_start >= 2*array->component_size)
+> > +			return 1;
+> > +	}
+> > +	return 0;
+> > +}
+> > +
+> >  /* try to determine how much space is reserved for metadata from
+> >   * the last get_extents() entry on the smallest active disk,
+> >   * otherwise fallback to the default
+> > @@ -7119,12 +7135,12 @@ static int imsm_set_array_state(struct
+> active_array *a, int consistent)
+> >  		handle_missing(super, dev);
+> >
+> >  	if (consistent == 2 &&
+> > -	    (!is_resync_complete(&a->info) ||
+> > +	    (!imsm_is_resync_complete(&a->info) ||
+> >  	     map_state != IMSM_T_STATE_NORMAL ||
+> >  	     dev->vol.migr_state))
+> >  		consistent = 0;
+> >
+> > -	if (is_resync_complete(&a->info)) {
+> > +	if (imsm_is_resync_complete(&a->info)) {
+> >  		/* complete intialization / resync,
+> >  		 * recovery and interrupted recovery is completed in
+> >  		 * ->set_disk
+> 
+> 
+> Thanks.
+> However the bug is not specific to intel, so should be fixed in common code.
+> And "2*" is not really very general.
+> 
+> The following patch should fix it properly.  If you can confirm that it fixes
+> the problem for you I would appreciate it.
+> 
 
-On Thu, 1 Aug 2013 08:15:36 +0200 Albert Pauw <albert.pauw@gmail.com> wrote:
+Hi
 
-> Hi Neil,
->=20
-> used /var/run/mdadm, and yes it is working now.
->=20
+Since Pawel is out of office I am responding instead of him.
+Your patch does not work for IMSM now, because ncopies is equal 0 and mdmon crashes after dividing by zero - see details below:
+
 > Thanks,
->=20
-> Albert
->=20
-> P.S. Should this variable not set default to something like /var/run/mdadm
-> or /dev?
->=20
+> NeilBrown
+> 
+> From 71d68ff62f945254240575cd836f5f2a09ced5d2 Mon Sep 17 00:00:00 2001
+> From: NeilBrown <neilb@suse.de>
+> Date: Wed, 31 Jul 2013 09:18:57 +1000
+> Subject: [PATCH] Fix is_resync_complete for RAID10
+> 
+> For RAID10, 'sync' numbers go up to the array size rather than the
+> component size.  is_resync_complete() needs to allow for this.
+> 
+> Reported-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> Signed-off-by: NeilBrown <neilb@suse.de>
+> 
+> diff --git a/mdmon.h b/mdmon.h
+> index 60fda38..5a8e120 100644
+> --- a/mdmon.h
+> +++ b/mdmon.h
+> @@ -91,7 +91,21 @@ extern int monitor_loop_cnt;
+>   */
+>  static inline int is_resync_complete(struct mdinfo *array)
+>  {
+> -	if (array->resync_start >= array->component_size)
+> -		return 1;
+> -	return 0;
+> +	unsigned long long sync_size = 0;
+> +	int ncopies, l;
+> +	switch(array->array.level) {
+> +	case 1:
+> +	case 4:
+> +	case 5:
+> +	case 6:
+> +		sync_size = array->component_size;
+> +		break;
+> +	case 10:
+> +		l = array->array.layout;
+> +		ncopies = (l & 0xff) * ((l >> 8) && 0xff);
+> +		sync_size = array->component_size * array->array.raid_disks;
 
-I believe that most distros are moving towards /run so I think that is the
-best default.
-I guess I could get the Makefile to check that the chosen directory exists.=
-..
+At this point of code the following variables equal
+(I have created RAID10 volume of size z=10G):
 
-NeilBrown
+array->array.layout = 0 
+ncopies = 0 
+array->component_size = 20971520 
+array->array.raid_disks = 4 
+sync_size = 83886080
+array->resync_start = 0
 
---Sig_/89tlFud6zM0wUJsGE2UsG4T
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+I will check why array->array.layout is equal 0.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+Regards,
+Lukasz
 
-iQIVAwUBUfoFTTnsnt1WYoG5AQLfyxAAm/6zBH1x5lSvsRD2ekIzxE6llezHi66h
-+BengiJpuKo/Qw93YgiaGrlPdri/5NladsGdHyAnP6poKouBvXOi50Oy+X6CoJmW
-MpS/SU1J3Iss/94RUDNpmYKeR8B2VKXGI66ZyMFL8IiHImyutzXbBmQiX16DbkAv
-+SCL3OcujBl4Kr60YTIH06w0W9eXEggNlaiXRfbodp0iVedDq1Kt4QYoIoJZl2jq
-l+e2AxXXWZbjnu81wHvF01vDB3ICkJ59J7VwToLDA+GzhmUk5RR7W2N1biUr4k/B
-JTl4xf48WnAHUo8JT7xcLbyiolitnAcp/bgR4tau3mvT50KibWP+HOmKYQIwWP9w
-SKYwXmfvXUR4YV5eMqnN/fybTDFY96rgJbDFA6PS0lxYY1W9XFiuWNEYAvxpg3F7
-7WrTtp9cmKhcZ+sV5106jgznkcPtPTk6FFZ0N61N+kXP+X1f2Vi69wAH4VBNOGtY
-Rm/gMUQn/NkDWYg4S0qmJUMaO30/8QPJl3ir+xaTw6zT+mAj1REJl13b2SUa4AiI
-eCWoPn58MncOKOIY/ckTZ2Vkw9LuGNOK+Pb9pbscBo0KR2devRTIBG6IRXWQJDLa
-p8dPI3mBlQogKcyjwV9RXEW6ugXKano3nLWDe4SVNa2jVbhyq6V8tCVI5Lc0jK6s
-Cg73LCZOcR8=
-=fYXy
------END PGP SIGNATURE-----
+> +		sync_size /= ncopies;
+> +		break;
+> +	}
+> +	return array->resync_start >= sync_size;
+>  }
 
---Sig_/89tlFud6zM0wUJsGE2UsG4T--
