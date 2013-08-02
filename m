@@ -1,32 +1,63 @@
-From: keld@keldix.com
-Subject: Re: RFC swap over raid1
-Date: Fri, 2 Aug 2013 20:26:40 +0200
-Message-ID: <20130802182640.GA31414@www5.open-std.org>
-References: <51FAE985.1040809@redhat.com> <CAH3kUhH-uc-tXitqZ=xuUYz5A8GY_+dhy+LnvvZTR9gSUJ0Y4A@mail.gmail.com> <51FB63C8.2090300@hardwarefreak.com> <CAH3kUhE2ys1nGetLy0p=9rj2BxajAvBdWACFXHMe4TP81zNh=w@mail.gmail.com> <51FBD2DC.3010900@redhat.com> <CAH3kUhELqOF3kruP1j94g3Yd4PwKL91rgUjoLDS=CTK5ieBuhg@mail.gmail.com> <51FBDFDF.70008@redhat.com> <CAH3kUhGepSynVH_bbSGfvtfVL5-84=jXhCZu7m90F7uP7GU=aw@mail.gmail.com> <51FBE34B.3000504@redhat.com> <CAH3kUhH840NmKbzOitQCZoPTfO3Oo+RqeCVvb3T_m3uRhKM1aA@mail.gmail.com>
+From: Martin Wilck <mwilck@arcor.de>
+Subject: Re: MD array keeps resyncing after rebooting
+Date: Fri, 02 Aug 2013 20:19:28 +0200
+Message-ID: <51FBF830.5060606@arcor.de>
+References: <CAC9WiBjm5-RJ=CfpXMG7CCBp7StzWDuhp5XyFs4hAW3sxX7Gfw@mail.gmail.com>	<CAC9WiBjs4DQqt1G911OBALzSqn=o_=L1S4_K_MvUWhAu-rhtUw@mail.gmail.com>	<51EED0DA.3020901@arcor.de>	<51EED102.4020503@arcor.de>	<CAC9WiBgN1-HBEgqwo7CWor=nihCYUcOrYKhGxYTgbC-d4a7_-g@mail.gmail.com>	<51EEF3D3.7020305@arcor.de>	<CAC9WiBgrjrPRcHa5kh8TUfqN0rBBFC4M0_8iDkU3O0SOFgFW5g@mail.gmail.com>	<CAC9WiBjQz6MJxBuw+cLWFZ-vOsdbYYSKdE575emH_AG5EmnGdw@mail.gmail.com>	<51F1754B.5000905@arcor.de>	<CAC9WiBhgF_-Ya7GW8DW0DcOQ-UhpN503hr=6_=46W5nbK04FTQ@mail.gmail.com>	<51FAA5C3.8030109@arcor.de> <CAC9WiBhGyE=OJdSeL_OsPxtirhJ2=3WRsk=uBPiOTzMjBCf-dA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAH3kUhH840NmKbzOitQCZoPTfO3Oo+RqeCVvb3T_m3uRhKM1aA@mail.gmail.com>
+In-Reply-To: <CAC9WiBhGyE=OJdSeL_OsPxtirhJ2=3WRsk=uBPiOTzMjBCf-dA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
-Cc: Doug Ledford <dledford@redhat.com>, Stan Hoeppner <stan@hardwarefreak.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Francis Moreau <francis.moro@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Aug 02, 2013 at 02:29:50PM -0300, Roberto Spadim wrote:
-> nice, well, considering everything...
-> 
-> 1)partitions + raid1 is prefered for read speed and security
-> 2)fileswap only if i can't add partitions
-> 3)only use swap over single drive if don't have two devices (in this
-> case use raid1)
-> 4)there's no badblock layer in linux, each layer / filesystem must
-> implement it by yourself
-> 
-> that's all right?
+On 08/02/2013 02:46 PM, Francis Moreau wrote:
 
-I would use raid10,far for its faster read vs raid1.
-There is badblock handling in the raid layer.
+> Please tell me if you can find something suspicous.
 
-Best regards
-keld
+One thing that I can see is that your BIOS seems to use the same time
+stamp everywhere. It is clear from the dump that the BIOS has changed
+the timestamp in the VD GUID, too. The timestamp used in the
+"before-bios" data is 2013-08-02 08:21:10, the timestamp after is
+2013-08-02 14:27:27. Wonder if that fits?
+
+The spec says that the VD GUID consists of the vendor ID ("LSI     " in
+your case), controller type (the controller's PCI ID,
+8086:1d60:0000:0000), the 4-byte time stamp, and a "random number"
+(0000 1450). Strangely, I also have an LSI fake RAID and it uses the
+same random number. It even generated the same number through several
+RAID creations. Seems to be a truly strange random number generator :-)
+
+All in all, this makes your controller's RAID GUIDs very predictable.
+But they change whenever the timestamp changes. It also explains why
+this controller can't have more than a single array.
+
+But that's not what you wanted to know, right? Besides the time stamp,
+sequence number, and CRC32, there is actually no difference between the
+two dumps. The suspicious part is here, same in both dumps:
+
+00000860  00 00 ff ff ff ff ff ff  ff ff ff ff ff ff ff ff
+
+The first two bytes in thus line are the state and init state, and the
+meaning is "Optimal, consistent, *not initialized*".
+And this is before *and* after BIOS started. Suspiciously, this doesn't
+match what you wrote before:
+
+> I checked during the shudown process that the array is correctly
+> > stopped since at that point I got:
+> >
+> > # mdadm -E /dev/sda | egrep "state"
+> >         state[0] : Optimal, Consistent
+> >    init state[0] : Fully Initialised
+
+This would correspond to "00 02", and it's what we should see after
+initialization. On my system the BIOS sets "00 01" (Optimal, consistent,
+Quick Init in progress) when it first creates an array, because the BIOS
+doesn't do a full initialization. But "not initialized" is weird. The
+mdadm DDF code won't set this by itself, AFAIK. Please make sure again
+that the "before" data matches what mdadm/mdmon wrote just after
+stopping during shutdown.
+
+Regards
+Martin
