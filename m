@@ -1,63 +1,79 @@
 From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: MD array keeps resyncing after rebooting
-Date: Fri, 02 Aug 2013 20:19:28 +0200
-Message-ID: <51FBF830.5060606@arcor.de>
-References: <CAC9WiBjm5-RJ=CfpXMG7CCBp7StzWDuhp5XyFs4hAW3sxX7Gfw@mail.gmail.com>	<CAC9WiBjs4DQqt1G911OBALzSqn=o_=L1S4_K_MvUWhAu-rhtUw@mail.gmail.com>	<51EED0DA.3020901@arcor.de>	<51EED102.4020503@arcor.de>	<CAC9WiBgN1-HBEgqwo7CWor=nihCYUcOrYKhGxYTgbC-d4a7_-g@mail.gmail.com>	<51EEF3D3.7020305@arcor.de>	<CAC9WiBgrjrPRcHa5kh8TUfqN0rBBFC4M0_8iDkU3O0SOFgFW5g@mail.gmail.com>	<CAC9WiBjQz6MJxBuw+cLWFZ-vOsdbYYSKdE575emH_AG5EmnGdw@mail.gmail.com>	<51F1754B.5000905@arcor.de>	<CAC9WiBhgF_-Ya7GW8DW0DcOQ-UhpN503hr=6_=46W5nbK04FTQ@mail.gmail.com>	<51FAA5C3.8030109@arcor.de> <CAC9WiBhGyE=OJdSeL_OsPxtirhJ2=3WRsk=uBPiOTzMjBCf-dA@mail.gmail.com>
+Subject: Re: [PATCH 3/4] DDF: ddf_process_update: delete removed disks from
+ dlist
+Date: Fri, 02 Aug 2013 21:32:59 +0200
+Message-ID: <51FC096B.8070804@arcor.de>
+References: <1375396517-8479-1-git-send-email-mwilck@arcor.de> <1375396517-8479-3-git-send-email-mwilck@arcor.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAC9WiBhGyE=OJdSeL_OsPxtirhJ2=3WRsk=uBPiOTzMjBCf-dA@mail.gmail.com>
+In-Reply-To: <1375396517-8479-3-git-send-email-mwilck@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Francis Moreau <francis.moro@gmail.com>, linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/02/2013 02:46 PM, Francis Moreau wrote:
+Neil,
 
-> Please tell me if you can find something suspicous.
+This calls free() from monitor context - I am not certain if that's
+allowed and if no, what alternative there might be.
 
-One thing that I can see is that your BIOS seems to use the same time
-stamp everywhere. It is clear from the dump that the BIOS has changed
-the timestamp in the VD GUID, too. The timestamp used in the
-"before-bios" data is 2013-08-02 08:21:10, the timestamp after is
-2013-08-02 14:27:27. Wonder if that fits?
-
-The spec says that the VD GUID consists of the vendor ID ("LSI     " in
-your case), controller type (the controller's PCI ID,
-8086:1d60:0000:0000), the 4-byte time stamp, and a "random number"
-(0000 1450). Strangely, I also have an LSI fake RAID and it uses the
-same random number. It even generated the same number through several
-RAID creations. Seems to be a truly strange random number generator :-)
-
-All in all, this makes your controller's RAID GUIDs very predictable.
-But they change whenever the timestamp changes. It also explains why
-this controller can't have more than a single array.
-
-But that's not what you wanted to know, right? Besides the time stamp,
-sequence number, and CRC32, there is actually no difference between the
-two dumps. The suspicious part is here, same in both dumps:
-
-00000860  00 00 ff ff ff ff ff ff  ff ff ff ff ff ff ff ff
-
-The first two bytes in thus line are the state and init state, and the
-meaning is "Optimal, consistent, *not initialized*".
-And this is before *and* after BIOS started. Suspiciously, this doesn't
-match what you wrote before:
-
-> I checked during the shudown process that the array is correctly
-> > stopped since at that point I got:
-> >
-> > # mdadm -E /dev/sda | egrep "state"
-> >         state[0] : Optimal, Consistent
-> >    init state[0] : Fully Initialised
-
-This would correspond to "00 02", and it's what we should see after
-initialization. On my system the BIOS sets "00 01" (Optimal, consistent,
-Quick Init in progress) when it first creates an array, because the BIOS
-doesn't do a full initialization. But "not initialized" is weird. The
-mdadm DDF code won't set this by itself, AFAIK. Please make sure again
-that the "before" data matches what mdadm/mdmon wrote just after
-stopping during shutdown.
-
-Regards
 Martin
+
+On 08/02/2013 12:35 AM, mwilck@arcor.de wrote:
+> We currently remove Failed disks that aren't used by any VD.
+> If we do that, we need to remove the disks from the dlist as well.
+> Otherwise, the same pdnum may occur multiple times in the dlist.
+> 
+> This fixes the problem reported by Albert Pauw.
+> 
+> Signed-off-by: Martin Wilck <mwilck@arcor.de>
+> ---
+>  super-ddf.c |   25 ++++++++++++++++++++++---
+>  1 files changed, 22 insertions(+), 3 deletions(-)
+> 
+> diff --git a/super-ddf.c b/super-ddf.c
+> index 7a7f5fe..e1d0509 100644
+> --- a/super-ddf.c
+> +++ b/super-ddf.c
+> @@ -4366,6 +4366,19 @@ static void copy_matching_bvd(struct ddf_super *ddf,
+>  	       conf->sec_elmnt_seq, guid_str(conf->guid));
+>  }
+>  
+> +static void _delete_dl_by_refnum(struct ddf_super *ddf, be32 refnum)
+> +{
+> +	struct dl **pdl = &ddf->dlist, *d;
+> +	while (*pdl) {
+> +		if (be32_eq((*pdl)->disk.refnum, refnum)) {
+> +			d = *pdl;
+> +			*pdl = d->next;
+> +			free(d);
+> +		} else
+> +			pdl = &(*pdl)->next;
+> +	}
+> +}
+> +
+>  static void ddf_process_update(struct supertype *st,
+>  			       struct metadata_update *update)
+>  {
+> @@ -4638,9 +4651,15 @@ static void ddf_process_update(struct supertype *st,
+>  			if (be16_and(ddf->phys->entries[pdnum].state,
+>  				     cpu_to_be16(DDF_Failed))
+>  			    && be16_and(ddf->phys->entries[pdnum].state,
+> -					cpu_to_be16(DDF_Transition)))
+> -				/* skip this one */;
+> -			else if (pdnum == pd2)
+> +					cpu_to_be16(DDF_Transition))) {
+> +				/* skip this one and remove from dlist */
+> +				dprintf("%s: %08x no longer used, removing it\n",
+> +					__func__,
+> +					be32_to_cpu(ddf->phys->
+> +						    entries[pdnum].refnum));
+> +				_delete_dl_by_refnum(
+> +					ddf, ddf->phys->entries[pdnum].refnum);
+> +			} else if (pdnum == pd2)
+>  				pd2++;
+>  			else {
+>  				ddf->phys->entries[pd2] =
+
