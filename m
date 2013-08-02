@@ -1,35 +1,28 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: Bugreport ddf rebuild problems
-Date: Fri, 02 Aug 2013 00:37:13 +0200
-Message-ID: <51FAE319.6030604@arcor.de>
-References: <51FAB74B.4030200@gmail.com>	<51FAB282.6040303@arcor.de> <CAGkViCFT0+qm9YAnAJM7JGgVg0RTJi8=HAYDTMs-mfhXinqdcg@mail.gmail.com> <51FACF7C.50400@arcor.de> <51FADCA5.1080801@arcor.de>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: RFC swap over raid1
+Date: Fri, 02 Aug 2013 09:59:16 +0800
+Message-ID: <51FB1274.3000302@fnarfbargle.com>
+References: <CAH3kUhFoNKgHErujKuCLMvx_qbDa2dwhW+sMD=7W9W0hHTWB-w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51FADCA5.1080801@arcor.de>
+In-Reply-To: <CAH3kUhFoNKgHErujKuCLMvx_qbDa2dwhW+sMD=7W9W0hHTWB-w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Albert Pauw <albert.pauw@gmail.com>, linux-raid@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Albert,
+On 02/08/13 06:11, Roberto Spadim wrote:
+> hi guys, should i use raid1 with swap partitions? why?
 
-On 08/02/2013 12:09 AM, Martin Wilck wrote:
-> On 08/01/2013 11:13 PM, Martin Wilck wrote:
->> Can you please try the attached patch?
-> 
-> DON'T use it, it's broken. I will send a better one in a minute.
+> what's the advantages and disvantages?
 
-My latest patch series should fix this. The fix for your problem is 3/4,
-and I added your test case as 4/4. Retest is welcome.
 
-Martin
+In parallel to Doug's comments. A few years ago, I spent literally 
+*days* trying to figure out why random processes were dying on one of my 
+servers. It turned out there was a bad block in the swap partition (this 
+was pre-SMART). Ever since then, if I've used swap on a machine that was 
+important enough, I used RAID-1.
 
-> 
-> 
->> Regards,
->> Martin
->>
->>
-> 
 
