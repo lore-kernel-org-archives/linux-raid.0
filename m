@@ -1,38 +1,42 @@
-From: Roberto Spadim <roberto@spadim.com.br>
+From: Doug Ledford <dledford@redhat.com>
 Subject: Re: RFC swap over raid1
-Date: Fri, 2 Aug 2013 11:21:09 -0300
-Message-ID: <CAH3kUhE2ys1nGetLy0p=9rj2BxajAvBdWACFXHMe4TP81zNh=w@mail.gmail.com>
-References: <CAH3kUhFoNKgHErujKuCLMvx_qbDa2dwhW+sMD=7W9W0hHTWB-w@mail.gmail.com>
-	<51FAE985.1040809@redhat.com>
-	<CAH3kUhH-uc-tXitqZ=xuUYz5A8GY_+dhy+LnvvZTR9gSUJ0Y4A@mail.gmail.com>
-	<51FB63C8.2090300@hardwarefreak.com>
+Date: Fri, 02 Aug 2013 11:21:52 -0400
+Message-ID: <51FBCE90.2030603@redhat.com>
+References: <CAH3kUhFoNKgHErujKuCLMvx_qbDa2dwhW+sMD=7W9W0hHTWB-w@mail.gmail.com> <51FAE985.1040809@redhat.com> <CAH3kUhH-uc-tXitqZ=xuUYz5A8GY_+dhy+LnvvZTR9gSUJ0Y4A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51FB63C8.2090300@hardwarefreak.com>
+In-Reply-To: <CAH3kUhH-uc-tXitqZ=xuUYz5A8GY_+dhy+LnvvZTR9gSUJ0Y4A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Doug Ledford <dledford@redhat.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-hummm, wow very new informations to me...
+On 08/01/2013 10:01 PM, Roberto Spadim wrote:
+> the point is: using swap at two partitions / disks, is "better" than
+> using a swap over a md raid1? (or any other level?)
 
-today linux don't have a generic badblock remap?! that's what i understood?
-for example... ext2,3,4,xfs,reiserfs,zfs, and others fs, they handle
-badblock by their self? right?
+That depends on your goals.  If your goal is for your system to be
+resilient to disk failure, and you've put your filesystems on a raid
+device to be tolerant of failure, then your swap needs to be on one too
+or else you are undermining the work you did on your filesystems.  If
+that's not the case, then two swap partitions gets you twice the
+capacity, but slightly lower performance, than a raid1 swap device over
+the same partitions due to the fact that when you are swapping out,
+performance is about the same, but when swapping in, we can load balance
+reads and increase performance.  Of course, you only have half as much
+swap this way.
 
-it's a nice information i never thinked about a layer only for
-badblock reallocation, i read/write in this list of linux-raid when
-the started the badblock development, in some time near to raid1 write
-multithread
+> other point is... swap have a badblock feature? i think it's not
+> linux-raid but linux-vm or something like it...
+> for example if i'm using a disk and swap find a badblock, it will use
+> it? does swap handle bad blocks? it remove the device? continue using
+> it? or change the device priority?
 
-today the badblock of raid1 is embedded in the source? or it's easy to
-implement a new layer just to badblock realloc logic?
+The swap layer does not do bad blocks *while in use*.  You can pass in a
+list of badblocks when creating the device, in which case it won't ever
+use those blocks.  However, if a block *goes* bad while in use, and we
+get a read error, then whatever application was trying to page in that
+page of swap is going to get killed due to an unhandled page fault.
 
-about "mkswap -c" it just show information like you told, i'm a bit
-surprised about no badblock at swap that's information is new to me i
-will read about others os (freebsd, reactos, etc) to check how they
-handle this there
-
-I'm rethinking now about the swap as a file in a filesystem, this
-could increase security or another solution is better?
