@@ -1,42 +1,40 @@
-From: Lukasz Dorau <lukasz.dorau@intel.com>
-Subject: [PATCH] mdmon: let mdmon know the layout
-Date: Fri, 02 Aug 2013 10:14:45 +0200
-Message-ID: <20130802081445.7222.5151.stgit@gklab-154-244.igk.intel.com>
+From: Francis Moreau <francis.moro@gmail.com>
+Subject: Re: MD array keeps resyncing after rebooting
+Date: Fri, 2 Aug 2013 14:49:25 +0200
+Message-ID: <CAC9WiBj1ZR_zo5DdnWnFjCQVG_PC1h-n20XTY0gvZifznVNpPw@mail.gmail.com>
+References: <CAC9WiBjm5-RJ=CfpXMG7CCBp7StzWDuhp5XyFs4hAW3sxX7Gfw@mail.gmail.com>
+	<CAC9WiBjs4DQqt1G911OBALzSqn=o_=L1S4_K_MvUWhAu-rhtUw@mail.gmail.com>
+	<51EED0DA.3020901@arcor.de>
+	<51EED102.4020503@arcor.de>
+	<CAC9WiBgN1-HBEgqwo7CWor=nihCYUcOrYKhGxYTgbC-d4a7_-g@mail.gmail.com>
+	<51EEF3D3.7020305@arcor.de>
+	<CAC9WiBgrjrPRcHa5kh8TUfqN0rBBFC4M0_8iDkU3O0SOFgFW5g@mail.gmail.com>
+	<CAC9WiBjQz6MJxBuw+cLWFZ-vOsdbYYSKdE575emH_AG5EmnGdw@mail.gmail.com>
+	<51F1754B.5000905@arcor.de>
+	<CAC9WiBhgF_-Ya7GW8DW0DcOQ-UhpN503hr=6_=46W5nbK04FTQ@mail.gmail.com>
+	<51FAA5C3.8030109@arcor.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <51FAA5C3.8030109@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com
+To: Martin Wilck <mwilck@arcor.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The following commit:
+Hello Martin,
 
-	Fix is_resync_complete for RAID10
-	commit 71d68ff62f945254240575cd836f5f2a09ced5d2
+Thanks a lot for your help, that's really appreciated :)
 
-requires that mdmon knows the layout.
-So make manage_new() read the layout form sysfs.
+On Thu, Aug 1, 2013 at 8:15 PM, Martin Wilck <mwilck@arcor.de> wrote:
 
-Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
----
- managemon.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> Put the results somewhere where I can pick them up.
+>
 
-diff --git a/managemon.c b/managemon.c
-index 6cd93e5..7033c19 100644
---- a/managemon.c
-+++ b/managemon.c
-@@ -650,8 +650,8 @@ static void manage_new(struct mdstat_ent *mdstat,
- 		return;
- 
- 	mdi = sysfs_read(-1, mdstat->devnm,
--			 GET_LEVEL|GET_CHUNK|GET_DISKS|GET_COMPONENT|
--			 GET_DEGRADED|GET_SAFEMODE|
-+			 GET_LEVEL|GET_LAYOUT|GET_CHUNK|GET_DISKS|
-+			 GET_COMPONENT|GET_DEGRADED|GET_SAFEMODE|
- 			 GET_DEVS|GET_OFFSET|GET_SIZE|GET_STATE);
- 
- 	if (!mdi)
+Sent them privately since the result is quite small.
 
+Thanks.
+
+-- 
+Francis
