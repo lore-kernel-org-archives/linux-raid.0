@@ -1,79 +1,33 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: [PATCH 3/4] DDF: ddf_process_update: delete removed disks from
- dlist
-Date: Fri, 02 Aug 2013 21:32:59 +0200
-Message-ID: <51FC096B.8070804@arcor.de>
-References: <1375396517-8479-1-git-send-email-mwilck@arcor.de> <1375396517-8479-3-git-send-email-mwilck@arcor.de>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
+Subject: Re: RFC swap over raid1
+Date: Fri, 2 Aug 2013 23:31:54 +0200
+Message-ID: <20130802213154.GA6902@www5.open-std.org>
+References: <51FB63C8.2090300@hardwarefreak.com> <CAH3kUhE2ys1nGetLy0p=9rj2BxajAvBdWACFXHMe4TP81zNh=w@mail.gmail.com> <51FBD2DC.3010900@redhat.com> <CAH3kUhELqOF3kruP1j94g3Yd4PwKL91rgUjoLDS=CTK5ieBuhg@mail.gmail.com> <51FBDFDF.70008@redhat.com> <CAH3kUhGepSynVH_bbSGfvtfVL5-84=jXhCZu7m90F7uP7GU=aw@mail.gmail.com> <51FBE34B.3000504@redhat.com> <CAH3kUhH840NmKbzOitQCZoPTfO3Oo+RqeCVvb3T_m3uRhKM1aA@mail.gmail.com> <20130802182640.GA31414@www5.open-std.org> <CAH3kUhGmPe2oHNOgTsqCt_0EVMKLnB1afnX8tZ0tt5wSm2aZ3A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1375396517-8479-3-git-send-email-mwilck@arcor.de>
+Content-Disposition: inline
+In-Reply-To: <CAH3kUhGmPe2oHNOgTsqCt_0EVMKLnB1afnX8tZ0tt5wSm2aZ3A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: Doug Ledford <dledford@redhat.com>, Stan Hoeppner <stan@hardwarefreak.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil,
+On Fri, Aug 02, 2013 at 03:39:22PM -0300, Roberto Spadim wrote:
+> hum, swap "use" more sequencial writes or random writes?
+> i tested raid1 vs raid10,far for random writes/read and i'm using
+> raid1 for this kind of workload, for sequencial reads/writes the
+> raid10,far is faster (at least in my tests)
 
-This calls free() from monitor context - I am not certain if that's
-allowed and if no, what alternative there might be.
+swap use sequential writes, I think, when a process is swapped out.
+There is not much difference between the different mirrorred 
+raid layouts when it comes to random or sequential writes.
+anyway the elevator for the whole  disk orders writes.
 
-Martin
 
-On 08/02/2013 12:35 AM, mwilck@arcor.de wrote:
-> We currently remove Failed disks that aren't used by any VD.
-> If we do that, we need to remove the disks from the dlist as well.
-> Otherwise, the same pdnum may occur multiple times in the dlist.
-> 
-> This fixes the problem reported by Albert Pauw.
-> 
-> Signed-off-by: Martin Wilck <mwilck@arcor.de>
-> ---
->  super-ddf.c |   25 ++++++++++++++++++++++---
->  1 files changed, 22 insertions(+), 3 deletions(-)
-> 
-> diff --git a/super-ddf.c b/super-ddf.c
-> index 7a7f5fe..e1d0509 100644
-> --- a/super-ddf.c
-> +++ b/super-ddf.c
-> @@ -4366,6 +4366,19 @@ static void copy_matching_bvd(struct ddf_super *ddf,
->  	       conf->sec_elmnt_seq, guid_str(conf->guid));
->  }
->  
-> +static void _delete_dl_by_refnum(struct ddf_super *ddf, be32 refnum)
-> +{
-> +	struct dl **pdl = &ddf->dlist, *d;
-> +	while (*pdl) {
-> +		if (be32_eq((*pdl)->disk.refnum, refnum)) {
-> +			d = *pdl;
-> +			*pdl = d->next;
-> +			free(d);
-> +		} else
-> +			pdl = &(*pdl)->next;
-> +	}
-> +}
-> +
->  static void ddf_process_update(struct supertype *st,
->  			       struct metadata_update *update)
->  {
-> @@ -4638,9 +4651,15 @@ static void ddf_process_update(struct supertype *st,
->  			if (be16_and(ddf->phys->entries[pdnum].state,
->  				     cpu_to_be16(DDF_Failed))
->  			    && be16_and(ddf->phys->entries[pdnum].state,
-> -					cpu_to_be16(DDF_Transition)))
-> -				/* skip this one */;
-> -			else if (pdnum == pd2)
-> +					cpu_to_be16(DDF_Transition))) {
-> +				/* skip this one and remove from dlist */
-> +				dprintf("%s: %08x no longer used, removing it\n",
-> +					__func__,
-> +					be32_to_cpu(ddf->phys->
-> +						    entries[pdnum].refnum));
-> +				_delete_dl_by_refnum(
-> +					ddf, ddf->phys->entries[pdnum].refnum);
-> +			} else if (pdnum == pd2)
->  				pd2++;
->  			else {
->  				ddf->phys->entries[pd2] =
+It is more when you need to swap in a process, that you need the 
+read speed of raid10,far. Especially for big processes like firefox
+or libreoffice.
 
+Best regards
+Keld
