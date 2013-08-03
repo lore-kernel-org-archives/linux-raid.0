@@ -1,102 +1,106 @@
-From: Francis Moreau <francis.moro@gmail.com>
-Subject: Re: MD array keeps resyncing after rebooting
-Date: Sat, 3 Aug 2013 13:02:37 +0200
-Message-ID: <CAC9WiBj1STmwgUswei--dr1YSbnpPgc9M8thvGuAK1wziKa==Q@mail.gmail.com>
-References: <CAC9WiBjm5-RJ=CfpXMG7CCBp7StzWDuhp5XyFs4hAW3sxX7Gfw@mail.gmail.com>
-	<CAC9WiBjs4DQqt1G911OBALzSqn=o_=L1S4_K_MvUWhAu-rhtUw@mail.gmail.com>
-	<51EED0DA.3020901@arcor.de>
-	<51EED102.4020503@arcor.de>
-	<CAC9WiBgN1-HBEgqwo7CWor=nihCYUcOrYKhGxYTgbC-d4a7_-g@mail.gmail.com>
-	<51EEF3D3.7020305@arcor.de>
-	<CAC9WiBgrjrPRcHa5kh8TUfqN0rBBFC4M0_8iDkU3O0SOFgFW5g@mail.gmail.com>
-	<CAC9WiBjQz6MJxBuw+cLWFZ-vOsdbYYSKdE575emH_AG5EmnGdw@mail.gmail.com>
-	<51F1754B.5000905@arcor.de>
-	<CAC9WiBhgF_-Ya7GW8DW0DcOQ-UhpN503hr=6_=46W5nbK04FTQ@mail.gmail.com>
-	<51FAA5C3.8030109@arcor.de>
-	<CAC9WiBhGyE=OJdSeL_OsPxtirhJ2=3WRsk=uBPiOTzMjBCf-dA@mail.gmail.com>
-	<51FBF830.5060606@arcor.de>
+From: =?ISO-8859-1?Q?Uwe_W=E4chter?= <uwe.waechter@googlemail.com>
+Subject: help needed restoring data
+Date: Sat, 3 Aug 2013 15:59:38 +0200
+Message-ID: <CAHTsmnnifoZAP0x4NhPW6xDiJCF_idp6=gqDKjMY-yNFXQEF2A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51FBF830.5060606@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello Martin,
+Hi list,
+I have a problem with my raid 5 array based on 3 harddisks. I need
+help to find the best way to recover my data.
+So what happens ....
+First of all 1 harddisk fails with the message :
 
-First of all, thanks a lot for your detailed analysis.
+A Fail event had been detected on md device /dev/md/0.
 
-On Fri, Aug 2, 2013 at 8:19 PM, Martin Wilck <mwilck@arcor.de> wrote:
-> On 08/02/2013 02:46 PM, Francis Moreau wrote:
->
->> Please tell me if you can find something suspicous.
->
-> One thing that I can see is that your BIOS seems to use the same time
-> stamp everywhere. It is clear from the dump that the BIOS has changed
-> the timestamp in the VD GUID, too. The timestamp used in the
-> "before-bios" data is 2013-08-02 08:21:10, the timestamp after is
-> 2013-08-02 14:27:27. Wonder if that fits?
+It could be related to component device /dev/sde1.
 
-Probably. I booted the system at 8:21, let the resync finish and did
-the dump after. So it seems to fit.
 
->
-> The spec says that the VD GUID consists of the vendor ID ("LSI     " in
-> your case), controller type (the controller's PCI ID,
-> 8086:1d60:0000:0000), the 4-byte time stamp, and a "random number"
-> (0000 1450). Strangely, I also have an LSI fake RAID and it uses the
-> same random number. It even generated the same number through several
-> RAID creations. Seems to be a truly strange random number generator :-)
->
-> All in all, this makes your controller's RAID GUIDs very predictable.
-> But they change whenever the timestamp changes. It also explains why
-> this controller can't have more than a single array.
->
-> But that's not what you wanted to know, right?
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 sde1[4](F) sdc1[3] sdd1[0]
+      1953517568 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/2] [U_U]
 
-Well that was very instructive, thanks.
+unused devices: <none>
 
-> Besides the time stamp,
-> sequence number, and CRC32, there is actually no difference between the
-> two dumps. The suspicious part is here, same in both dumps:
->
-> 00000860  00 00 ff ff ff ff ff ff  ff ff ff ff ff ff ff ff
->
-> The first two bytes in thus line are the state and init state, and the
-> meaning is "Optimal, consistent, *not initialized*".
-> And this is before *and* after BIOS started. Suspiciously, this doesn't
-> match what you wrote before:
->
->> I checked during the shudown process that the array is correctly
->> > stopped since at that point I got:
->> >
->> > # mdadm -E /dev/sda | egrep "state"
->> >         state[0] : Optimal, Consistent
->> >    init state[0] : Fully Initialised
->
-> This would correspond to "00 02", and it's what we should see after
-> initialization. On my system the BIOS sets "00 01" (Optimal, consistent,
-> Quick Init in progress) when it first creates an array, because the BIOS
-> doesn't do a full initialization. But "not initialized" is weird. The
-> mdadm DDF code won't set this by itself, AFAIK. Please make sure again
-> that the "before" data matches what mdadm/mdmon wrote just after
-> stopping during shutdown.
 
-I'm pretty sure that's the "before" dump was just after stopping the
-array, this is how I proceed: during the shutdown, I stop the system
-right after "mdadm -S", then I checked the state  of the array with
-"mdadm -E", which was initialized for sure. Then I powered off the
-machine, removed one disk and did the "before" dump from my laptop.
-After that I booted the machine with the disk in place until grub menu
-appeared. I then powered off the machine and did the same procedure as
-previously to get "after" dump.
+No problem at this time, the raid is still running with 2 harddisks.
+The reason for the error was the following message of sde1
+Jul 27 06:38:31 fed1 kernel: [987606.852610] md/raid:md0: Disk failure
+on sde1, disabling device.
+Jul 27 06:38:31 fed1 kernel: [987606.852610] md/raid:md0: Operation
+continuing on 2 devices.
+Jul 27 06:38:31 fed1 kernel: [987606.852613] sd 4:0:0:0: [sde]
+Jul 27 06:38:31 fed1 kernel: [987606.852615] Result:
+hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+Jul 27 06:38:31 fed1 kernel: [987606.852617] sd 4:0:0:0: [sde] CDB:
+Jul 27 06:38:31 fed1 kernel: [987606.852618] Read(10): 28 00 36 d4 f0
+3f 00 02 98 00
+Jul 27 06:38:31 fed1 kernel: [987606.852625] end_request: I/O error,
+dev sde, sector 919924799
+Jul 27 06:38:31 fed1 kernel: [987606.852629] md/raid:md0: read error
+not correctable (sector 919924736 on sde1).
+Jul 27 06:38:31 fed1 kernel: [987606.852638] md/raid:md0: read error
+not correctable (sector 919924744 on sde1).
+Jul 27 06:38:31 fed1 kernel: [987606.852641] md/raid:md0: read error
+not correctable (sector 919924752 on sde1).
+Jul 27 06:38:31 fed1 kernel: [987606.852643] md/raid:md0: read error
+not correctable (sector 919924760 on sde1).
+Jul 27 06:38:31 fed1 kernel: [987606.852645] md/raid:md0: read error
+not correctable (sector 919924768 on sde1).
 
-Perhaps some data were still in a "cache" and was not written to the
-disk when the power-off/reboot did happen ?
 
-Maybe one thing that worths to note is that the same disk array
-configuration with the same system works fine on qemu.
--- 
-Francis
+A couple of hours later, just when I wanted to start backup the data
+partition the sdd also fails :-( with similar failures :
+
+A Fail event had been detected on md device /dev/md/0.
+
+It could be related to component device /dev/sdd1.
+
+
+Personalities : [raid6] [raid5] [raid4]
+
+md0 : active raid5 sde1[4](F) sdc1[3] sdd1[0](F)
+      1953517568 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/1] [__U]
+
+unused devices: <none>
+
+
+Jul 27 11:24:30 fed1 kernel: [1004773.836964] Add. Sense: Unrecovered
+read error - auto reallocate failed
+Jul 27 11:24:30 fed1 kernel: [1004773.836966] sd 3:0:0:0: [sdd] CDB:
+Jul 27 11:24:30 fed1 kernel: [1004773.836967] Read(10): 28 00 32 f7 0b
+6f 00 00 08 00
+Jul 27 11:24:30 fed1 kernel: [1004773.836975] end_request: I/O error,
+dev sdd, sector 855051119
+Jul 27 11:24:30 fed1 kernel: [1004773.836980] raid5_end_read_request:
+104 callbacks suppressed
+Jul 27 11:24:30 fed1 kernel: [1004773.836982] md/raid:md0: read error
+not correctable (sector 855051056 on sdd1).
+Jul 27 11:24:30 fed1 kernel: [1004773.836986] md/raid:md0: Disk
+failure on sdd1, disabling device.
+Jul 27 11:24:30 fed1 kernel: [1004773.836986] md/raid:md0: Operation
+continuing on 1 devices.
+Jul 27 11:24:30 fed1 kernel: [1004773.837009] ata4: EH complete
+Jul 27 11:24:30 fed1 kernel: [1004773.853284] Buffer I/O error on
+device dm-2, logical block 213806870
+Jul 27 11:24:30 fed1 kernel: [1004773.853291] Buffer I/O error on
+device dm-2, logical block 213806871
+Jul 27 11:24:30 fed1 kernel: [1004773.853296] EXT4-fs warning (device
+dm-2): ext4_end_bio:294: I/O error writing to inode 60040
+
+
+So I have 2 device sdd and sde with unreadable sectors. sdc has no errors.
+smartd[690]: Device: /dev/sde [SAT], 14 Currently unreadable (pending) sectors
+smartd[690]: Device: /dev/sdd [SAT], 11 Currently unreadable (pending) sectors
+
+What is the best way to rebuild the array with sdc and sdd only ?
+Can I correct unreadable sectors before rebuild the array or does it
+destroy the array.
+Do I need to change the 2 harddisks ?
+
+I hope you can help me restoring much data as possible.
+best regards Uwe
