@@ -1,33 +1,42 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
-Subject: Re: RFC swap over raid1
-Date: Fri, 2 Aug 2013 23:31:54 +0200
-Message-ID: <20130802213154.GA6902@www5.open-std.org>
-References: <51FB63C8.2090300@hardwarefreak.com> <CAH3kUhE2ys1nGetLy0p=9rj2BxajAvBdWACFXHMe4TP81zNh=w@mail.gmail.com> <51FBD2DC.3010900@redhat.com> <CAH3kUhELqOF3kruP1j94g3Yd4PwKL91rgUjoLDS=CTK5ieBuhg@mail.gmail.com> <51FBDFDF.70008@redhat.com> <CAH3kUhGepSynVH_bbSGfvtfVL5-84=jXhCZu7m90F7uP7GU=aw@mail.gmail.com> <51FBE34B.3000504@redhat.com> <CAH3kUhH840NmKbzOitQCZoPTfO3Oo+RqeCVvb3T_m3uRhKM1aA@mail.gmail.com> <20130802182640.GA31414@www5.open-std.org> <CAH3kUhGmPe2oHNOgTsqCt_0EVMKLnB1afnX8tZ0tt5wSm2aZ3A@mail.gmail.com>
+From: Sam Bingner <sam@bingner.com>
+Subject: Re: MD array keeps resyncing after rebooting
+Date: Sat, 3 Aug 2013 00:08:24 +0000
+Message-ID: <CE216D89.13F0C%sam@bingner.com>
+References: <51FBF830.5060606@arcor.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAH3kUhGmPe2oHNOgTsqCt_0EVMKLnB1afnX8tZ0tt5wSm2aZ3A@mail.gmail.com>
+In-Reply-To: <51FBF830.5060606@arcor.de>
+Content-Language: en-US
+Content-ID: <7673FD7BCBD7314287D2133B234CA0F8@ds.sbdhi.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
-Cc: Doug Ledford <dledford@redhat.com>, Stan Hoeppner <stan@hardwarefreak.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Martin Wilck <mwilck@arcor.de>, Francis Moreau <francis.moro@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Aug 02, 2013 at 03:39:22PM -0300, Roberto Spadim wrote:
-> hum, swap "use" more sequencial writes or random writes?
-> i tested raid1 vs raid10,far for random writes/read and i'm using
-> raid1 for this kind of workload, for sequencial reads/writes the
-> raid10,far is faster (at least in my tests)
+On 8/2/13 8:19 AM, "Martin Wilck" <mwilck@arcor.de> wrote:
 
-swap use sequential writes, I think, when a process is swapped out.
-There is not much difference between the different mirrorred 
-raid layouts when it comes to random or sequential writes.
-anyway the elevator for the whole  disk orders writes.
+>On 08/02/2013 02:46 PM, Francis Moreau wrote:
+>
+>>Please tell me if you can find something suspicous.
+>
+>The spec says that the VD GUID consists of the vendor ID ("LSI " in
+>your case), controller type (the controller's PCI ID,
+>8086:1d60:0000:0000), the 4-byte time stamp, and a "random number"
+>(0000 1450). Strangely, I also have an LSI fake RAID and it uses the
+>same random number. It even generated the same number through several
+>RAID creations. Seems to be a truly strange random number generator :-)
+>
 
+Perhaps the author reads xkcd and wrote something similar to the following:
 
-It is more when you need to swap in a process, that you need the 
-read speed of raid10,far. Especially for big processes like firefox
-or libreoffice.
+int getRandomNumber()
+{
+	return 0x1450;	// chosen by fair dice roll.
+			// guaranteed to be random.
+}
 
-Best regards
-Keld
+http://xkcd.com/221/
+
+Sam
+
