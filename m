@@ -1,42 +1,45 @@
-From: Sam Bingner <sam@bingner.com>
-Subject: Re: MD array keeps resyncing after rebooting
-Date: Sat, 3 Aug 2013 00:08:24 +0000
-Message-ID: <CE216D89.13F0C%sam@bingner.com>
-References: <51FBF830.5060606@arcor.de>
+From: Albert Pauw <albert.pauw@gmail.com>
+Subject: Re: Bugreport ddf rebuild problems
+Date: Sat, 03 Aug 2013 11:43:23 +0200
+Message-ID: <51FCD0BB.1040402@gmail.com>
+References: <51FAB74B.4030200@gmail.com>	<51FAB282.6040303@arcor.de> <CAGkViCFT0+qm9YAnAJM7JGgVg0RTJi8=HAYDTMs-mfhXinqdcg@mail.gmail.com> <51FACF7C.50400@arcor.de> <51FADCA5.1080801@arcor.de> <51FAE319.6030604@arcor.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51FBF830.5060606@arcor.de>
-Content-Language: en-US
-Content-ID: <7673FD7BCBD7314287D2133B234CA0F8@ds.sbdhi.com>
+In-Reply-To: <51FAE319.6030604@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>, Francis Moreau <francis.moro@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Martin Wilck <mwilck@arcor.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 8/2/13 8:19 AM, "Martin Wilck" <mwilck@arcor.de> wrote:
+Hi Martin,
 
->On 08/02/2013 02:46 PM, Francis Moreau wrote:
+I can confirm that patch 3/4 indeed fixed the problem.
+
+Thanks for your quick fix.
+
+Kind regards,
+
+Albert
+
+On 08/02/2013 12:37 AM, Martin Wilck wrote:
+> Hi Albert,
 >
->>Please tell me if you can find something suspicous.
+> On 08/02/2013 12:09 AM, Martin Wilck wrote:
+>> On 08/01/2013 11:13 PM, Martin Wilck wrote:
+>>> Can you please try the attached patch?
+>> DON'T use it, it's broken. I will send a better one in a minute.
+> My latest patch series should fix this. The fix for your problem is 3/4,
+> and I added your test case as 4/4. Retest is welcome.
 >
->The spec says that the VD GUID consists of the vendor ID ("LSI " in
->your case), controller type (the controller's PCI ID,
->8086:1d60:0000:0000), the 4-byte time stamp, and a "random number"
->(0000 1450). Strangely, I also have an LSI fake RAID and it uses the
->same random number. It even generated the same number through several
->RAID creations. Seems to be a truly strange random number generator :-)
+> Martin
 >
+>>
+>>> Regards,
+>>> Martin
+>>>
+>>>
 
-Perhaps the author reads xkcd and wrote something similar to the following:
 
-int getRandomNumber()
-{
-	return 0x1450;	// chosen by fair dice roll.
-			// guaranteed to be random.
-}
-
-http://xkcd.com/221/
-
-Sam
 
