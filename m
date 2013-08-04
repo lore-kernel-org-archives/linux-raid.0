@@ -1,77 +1,92 @@
-From: Albert Pauw <albert.pauw@gmail.com>
-Subject: Re: Bugreport ddf rebuild problems
-Date: Sun, 04 Aug 2013 11:47:54 +0200
-Message-ID: <51FE234A.4060808@gmail.com>
-References: <51FAB74B.4030200@gmail.com>	<51FAB282.6040303@arcor.de> <CAGkViCFT0+qm9YAnAJM7JGgVg0RTJi8=HAYDTMs-mfhXinqdcg@mail.gmail.com> <51FACF7C.50400@arcor.de> <51FADCA5.1080801@arcor.de> <51FAE319.6030604@arcor.de> <51FCD0BB.1040402@gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Advice for recovering array containing LUKS encrypted LVM volumes
+Date: Sun, 04 Aug 2013 08:09:48 -0500
+Message-ID: <51FE529C.6000502@hardwarefreak.com>
+References: <CAC38o7ScozDqspEH-FSyoa_W5W8s+VfYd1RTAitz574wMYqhkA@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <51FCD0BB.1040402@gmail.com>
+In-Reply-To: <CAC38o7ScozDqspEH-FSyoa_W5W8s+VfYd1RTAitz574wMYqhkA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>, linux-raid@vger.kernel.org
+To: P Orrifolius <porrifolius@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Martin,
+On 8/4/2013 12:49 AM, P Orrifolius wrote:
 
-I noticed another problem, with or without your patch, the problem occurs:
+> I have an 8 device RAID6.  There are 4 drives on each of two
+> controllers and it looks like one of the controllers failed
+> temporarily.  
 
-Zeroed the superblocks (just in case):
-mdadm --zero-superblock /dev/loop[1-6]
+Are you certain the fault was caused by HBA?  Hardware doesn't tend to
+fail temporarily.  It does often fail intermittently, before complete
+failure.  If you're certain it's the HBA you should replace it before
+attempting to bring the array back up.
 
-Created the container:
-mdadm -CR /dev/md127 -e ddf -l container -n 5 /dev/loop[1-5]
+Do you have 2 SFF8087 cables connected to two backplanes, or do you have
+8 discrete SATA cables connected directly to the 8 drives?  WRT the set
+of 4 drives that dropped, do these four share a common power cable to
+the PSU that is not shared by the other 4 drives?  The point of these
+questions is to make sure you know the source of the problem before
+proceeding.  It could be the HBA, but it could also be a
+power/cable/connection problem, a data/cable/connection problem, or a
+failed backplane.  Cheap backplanes, i.e. cheap hotswap drive cages
+often cause such intermittent problems as you've described here.
 
-Created an md device in the container, it used /dev/loop4 and 
-/dev/loop5, rebuild and finished
-mdadm -CR /dev/md0 -l raid1 -n 2 /dev/md127
-
-I fail one of the disks, it rebuild with one of the available unused 
-disks in the container:
-mdadm -f /dev/md0 /dev/loop4
-
-I add another md device.
-mdadm -CR /dev/md1 -l raid5 -n 3 /dev/md127
-
-This last one is the odd bit, it is build using the previously failed 
-disk. Looks like the container is not aware that /dev/loop4 has failed,
-en reuses it. Which is wrong. So the failed status is not kept.
-
-Regards,
-
-Albert
-
-
-
-On 08/03/2013 11:43 AM, Albert Pauw wrote:
-> Hi Martin,
+> The system has been rebooted and all the individual
+> drives are available again but the array has not auto-assembled,
+> presumably because the Events count is different... 92806 on 4 drives,
+> 92820 on the other 4.
 >
-> I can confirm that patch 3/4 indeed fixed the problem.
->
-> Thanks for your quick fix.
->
-> Kind regards,
->
-> Albert
->
-> On 08/02/2013 12:37 AM, Martin Wilck wrote:
->> Hi Albert,
->>
->> On 08/02/2013 12:09 AM, Martin Wilck wrote:
->>> On 08/01/2013 11:13 PM, Martin Wilck wrote:
->>>> Can you please try the attached patch?
->>> DON'T use it, it's broken. I will send a better one in a minute.
->> My latest patch series should fix this. The fix for your problem is 3/4,
->> and I added your test case as 4/4. Retest is welcome.
->>
->> Martin
->>
->>>
->>>> Regards,
->>>> Martin
->>>>
->>>>
->
+> And of course the sick feeling in my stomach tells me that I haven't
+> got recent backups of all the data on there.
 
+Given the nature of the failure you shouldn't have lost or had corrupted
+but a single stripe or maybe a few stripes.  Lets hope this did not
+include a bunch of XFS directory inodes.
 
+> What is the best/safest way to try and get the array up and working
+> again?  Should I just work through
+> https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID
+
+Again, get the hardware straightened out first or you'll continue to
+have problems.
+
+Once that's accomplished, skip to the "Force assembly" section in the
+guide you referenced.  You can ignore the preceding $OVERLAYS and disk
+copying steps because you know the problem wasn't/isn't the disks.
+Simply force assembly.
+
+> Is there anything special I can or should do given the raid is holding
+> encrypted LVM volumes?  The array is the only PV in a VG holding LVs
+> that are LUKS encrypted, within which are (mainly) XFS filesystems
+
+Due to the nature of the failure, which was 4 drives simultaneously
+going off line and potentially having partial stripes written, the only
+thing you can do is force assembly and clean up the damage, if there is
+any.  Best case scenario is that XFS journal replay works, and you maybe
+have a few zero length files if any were being modified in place at the
+time of the event.  Worse case scenario is directory inodes were being
+written and journal replay doesn't recover the damaged inodes.
+
+Any way you slice it, you simply have to cross your fingers and go.  If
+you didn't have many writes in flight at the time of the failure, you
+should come out of this ok.  You stated multiple XFS filesystems.  Some
+may be fine, others damaged.  Depends on what, if anything, was being
+written at the time.
+
+> The LVs/filesystems with the data I'd be most upset about losing
+> weren't decrypted/mounted at the time.  Is that likely to improve the
+> odds of recovery?
+
+Any filesystem that wasn't mounted should not have been touched by this
+failure.  The damage should be limited to the filesystem(s) atop the
+stripe(s) that were being flushed at the time of the failure.  From your
+description, I'd think the damage should be pretty limited, again
+assuming you had few writes in flight at the time.
+
+-- 
+Stan
 
