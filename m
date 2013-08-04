@@ -1,92 +1,133 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Advice for recovering array containing LUKS encrypted LVM volumes
-Date: Sun, 04 Aug 2013 08:09:48 -0500
-Message-ID: <51FE529C.6000502@hardwarefreak.com>
-References: <CAC38o7ScozDqspEH-FSyoa_W5W8s+VfYd1RTAitz574wMYqhkA@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: help needed restoring data
+Date: Sun, 04 Aug 2013 10:54:02 -0400
+Message-ID: <51FE6B0A.7020704@turmel.org>
+References: <CAHTsmnnifoZAP0x4NhPW6xDiJCF_idp6=gqDKjMY-yNFXQEF2A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAC38o7ScozDqspEH-FSyoa_W5W8s+VfYd1RTAitz574wMYqhkA@mail.gmail.com>
+In-Reply-To: <CAHTsmnnifoZAP0x4NhPW6xDiJCF_idp6=gqDKjMY-yNFXQEF2A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: P Orrifolius <porrifolius@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: =?UTF-8?B?VXdlIFfDpGNodGVy?= <uwe.waechter@googlemail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 8/4/2013 12:49 AM, P Orrifolius wrote:
+Good morning Uwe,
 
-> I have an 8 device RAID6.  There are 4 drives on each of two
-> controllers and it looks like one of the controllers failed
-> temporarily.  
+I see that you've gone unanswered for a while here...
 
-Are you certain the fault was caused by HBA?  Hardware doesn't tend to
-fail temporarily.  It does often fail intermittently, before complete
-failure.  If you're certain it's the HBA you should replace it before
-attempting to bring the array back up.
+On 08/03/2013 09:59 AM, Uwe W=C3=A4chter wrote:
+> Hi list,
+> I have a problem with my raid 5 array based on 3 harddisks. I need
+> help to find the best way to recover my data.
+> So what happens ....
+> First of all 1 harddisk fails with the message :
+>=20
+> A Fail event had been detected on md device /dev/md/0.
+>=20
+> It could be related to component device /dev/sde1.
+>=20
+>=20
+> Personalities : [raid6] [raid5] [raid4]
+> md0 : active raid5 sde1[4](F) sdc1[3] sdd1[0]
+>       1953517568 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3=
+/2] [U_U]
+>=20
+> unused devices: <none>
+>=20
+>=20
+> No problem at this time, the raid is still running with 2 harddisks.
+> The reason for the error was the following message of sde1
+> Jul 27 06:38:31 fed1 kernel: [987606.852610] md/raid:md0: Disk failur=
+e
+> on sde1, disabling device.
+> Jul 27 06:38:31 fed1 kernel: [987606.852610] md/raid:md0: Operation
+> continuing on 2 devices.
+> Jul 27 06:38:31 fed1 kernel: [987606.852613] sd 4:0:0:0: [sde]
+> Jul 27 06:38:31 fed1 kernel: [987606.852615] Result:
+> hostbyte=3DDID_BAD_TARGET driverbyte=3DDRIVER_OK
+> Jul 27 06:38:31 fed1 kernel: [987606.852617] sd 4:0:0:0: [sde] CDB:
+> Jul 27 06:38:31 fed1 kernel: [987606.852618] Read(10): 28 00 36 d4 f0
+> 3f 00 02 98 00
+> Jul 27 06:38:31 fed1 kernel: [987606.852625] end_request: I/O error,
+> dev sde, sector 919924799
+> Jul 27 06:38:31 fed1 kernel: [987606.852629] md/raid:md0: read error
+> not correctable (sector 919924736 on sde1).
+> Jul 27 06:38:31 fed1 kernel: [987606.852638] md/raid:md0: read error
+> not correctable (sector 919924744 on sde1).
+> Jul 27 06:38:31 fed1 kernel: [987606.852641] md/raid:md0: read error
+> not correctable (sector 919924752 on sde1).
+> Jul 27 06:38:31 fed1 kernel: [987606.852643] md/raid:md0: read error
+> not correctable (sector 919924760 on sde1).
+> Jul 27 06:38:31 fed1 kernel: [987606.852645] md/raid:md0: read error
+> not correctable (sector 919924768 on sde1).
 
-Do you have 2 SFF8087 cables connected to two backplanes, or do you have
-8 discrete SATA cables connected directly to the 8 drives?  WRT the set
-of 4 drives that dropped, do these four share a common power cable to
-the PSU that is not shared by the other 4 drives?  The point of these
-questions is to make sure you know the source of the problem before
-proceeding.  It could be the HBA, but it could also be a
-power/cable/connection problem, a data/cable/connection problem, or a
-failed backplane.  Cheap backplanes, i.e. cheap hotswap drive cages
-often cause such intermittent problems as you've described here.
+It seems that your drive was kicked out of the array on a *read* error.
+ Nowadays, that usually happens when a drive dies completely.  Your
+drives haven't, which suggests you are using an old kernel.  Current
+kernels tolerate some read errors in order to attempt to rewrite the
+problem locations.
 
-> The system has been rebooted and all the individual
-> drives are available again but the array has not auto-assembled,
-> presumably because the Events count is different... 92806 on 4 drives,
-> 92820 on the other 4.
->
-> And of course the sick feeling in my stomach tells me that I haven't
-> got recent backups of all the data on there.
+Please supply your platform details, kernel version, and mdadm version.
 
-Given the nature of the failure you shouldn't have lost or had corrupted
-but a single stripe or maybe a few stripes.  Lets hope this did not
-include a bunch of XFS directory inodes.
+> A couple of hours later, just when I wanted to start backup the data
+> partition the sdd also fails :-( with similar failures :
+>=20
+> A Fail event had been detected on md device /dev/md/0.
+>=20
+> It could be related to component device /dev/sdd1.
 
-> What is the best/safest way to try and get the array up and working
-> again?  Should I just work through
-> https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID
+This sounds like an array that is lightly used and has never been scrub=
+bed.
 
-Again, get the hardware straightened out first or you'll continue to
-have problems.
+[trim /]
 
-Once that's accomplished, skip to the "Force assembly" section in the
-guide you referenced.  You can ignore the preceding $OVERLAYS and disk
-copying steps because you know the problem wasn't/isn't the disks.
-Simply force assembly.
+> So I have 2 device sdd and sde with unreadable sectors. sdc has no er=
+rors.
+> smartd[690]: Device: /dev/sde [SAT], 14 Currently unreadable (pending=
+) sectors
+> smartd[690]: Device: /dev/sdd [SAT], 11 Currently unreadable (pending=
+) sectors
 
-> Is there anything special I can or should do given the raid is holding
-> encrypted LVM volumes?  The array is the only PV in a VG holding LVs
-> that are LUKS encrypted, within which are (mainly) XFS filesystems
+Regular scrubbing would have prevented these from accumulating, as long
+as your devices handle timeouts properly.  (You should search this
+list's archives for combinations of "ERC" "error recovery control"
+"scterc" and "device/timeout" for an education on this common problem.)
 
-Due to the nature of the failure, which was 4 drives simultaneously
-going off line and potentially having partial stripes written, the only
-thing you can do is force assembly and clean up the damage, if there is
-any.  Best case scenario is that XFS journal replay works, and you maybe
-have a few zero length files if any were being modified in place at the
-time of the event.  Worse case scenario is directory inodes were being
-written and journal replay doesn't recover the damaged inodes.
+> What is the best way to rebuild the array with sdc and sdd only ?
 
-Any way you slice it, you simply have to cross your fingers and go.  If
-you didn't have many writes in flight at the time of the failure, you
-should come out of this ok.  You stated multiple XFS filesystems.  Some
-may be fine, others damaged.  Depends on what, if anything, was being
-written at the time.
+A degraded raid5 cannot have any bad sectors, so you'd have to fix the
+bad sectors on /dev/sdd.  This is typically done with dd_rescue onto a
+spare drive.
 
-> The LVs/filesystems with the data I'd be most upset about losing
-> weren't decrypted/mounted at the time.  Is that likely to improve the
-> odds of recovery?
+If you avoided writing to the degraded array, this may not be your best
+recovery choice.  Did you have *anything* writing into the array during
+those couple hours?
 
-Any filesystem that wasn't mounted should not have been touched by this
-failure.  The damage should be limited to the filesystem(s) atop the
-stripe(s) that were being flushed at the time of the failure.  From your
-description, I'd think the damage should be pretty limited, again
-assuming you had few writes in flight at the time.
+> Can I correct unreadable sectors before rebuild the array or does it
+> destroy the array.
 
--- 
-Stan
+It doesn't destroy the array if you *only* rewrite the problem sectors.
+ But don't do this yet.  Providing more information will help us help
+you better.
 
+> Do I need to change the 2 harddisks ?
+
+Not enough information.  Please supply the full output of "smartctl -x"
+for all three drives.
+
+> I hope you can help me restoring much data as possible.
+
+I think we can help you save the vast majority of your data.
+
+> best regards Uwe
+
+Regards,
+
+Phil
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
