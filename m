@@ -1,68 +1,80 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Bugreport: mdmon will not start with latest git version when
- using ddf container
-Date: Mon, 5 Aug 2013 16:43:52 +1000
-Message-ID: <20130805164352.3a721dae@notabene.brown>
-References: <51F953FA.5000400@gmail.com>
-	<20130801104433.1e7b41a5@notabene.brown>
-	<CAGkViCGM5-ztFSh3d-yh=P0HNfvcPYr6p7g3rDfkmx2+8YaqEw@mail.gmail.com>
-	<20130801152818.27cf61a5@notabene.brown>
-	<CAGkViCGbxJofuBbU41QvfQbBdaAEQKe3BhrSXmKZv17rGC4jzQ@mail.gmail.com>
-	<20130801165052.3285cacc@notabene.brown>
-	<CAGkViCGcuv=Ves47LUedirzTPV6dxzRZKM2a2M0MFPgDdH8tZw@mail.gmail.com>
+Subject: Re: question about mdmon --takeover
+Date: Mon, 5 Aug 2013 16:59:08 +1000
+Message-ID: <20130805165908.2d1e291b@notabene.brown>
+References: <CAC9WiBgFPSeKGBYxYCkw8DHk4dS6=aBhCeiMGgkj2eNgtY0asw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/e_J9Qm+ltbn7dGB_8m0bfnf"; protocol="application/pgp-signature"
+ boundary="Sig_/EpohVwq.5_1c4OydGbGE0Jy"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGkViCGcuv=Ves47LUedirzTPV6dxzRZKM2a2M0MFPgDdH8tZw@mail.gmail.com>
+In-Reply-To: <CAC9WiBgFPSeKGBYxYCkw8DHk4dS6=aBhCeiMGgkj2eNgtY0asw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Albert Pauw <albert.pauw@gmail.com>
+To: Francis Moreau <francis.moro@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/e_J9Qm+ltbn7dGB_8m0bfnf
+--Sig_/EpohVwq.5_1c4OydGbGE0Jy
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 1 Aug 2013 10:00:56 +0200 Albert Pauw <albert.pauw@gmail.com> wrote:
+On Wed, 31 Jul 2013 16:30:34 +0200 Francis Moreau <francis.moro@gmail.com>
+wrote:
 
-> Hi Neil,
+> Hello list,
 >=20
-> just using standard Centos 6.4, looks like RedHat and its derivatives are
-> not going the /run route for now.
+> I thought that using "--takeover" would hint mdmon to replace existing
+> mdmon process, and therefore the old one would exit somehow.
 >=20
-> Yes, checking if it exists should be good. If not, resort to /var/run, and
-> when that does not exist, fall back to /dev.
-> That last step may be a bit superfluous, but a very safe fallback.
+> However after several "mdmon --takeover" I can see this:
+>  $ ps aux | grep dmon
+> root       233  0.0  0.2  80388 10752 ?        SLsl 14:02   0:00 @dmon
+> --offroot md127
+> root      3326  0.0  0.2  14920 10820 ?        SLsl 15:16   0:00 mdmon
+> --takeover md127
+> root      3343  0.0  0.2  14920 10820 ?        SLsl 15:17   0:00 mdmon
+> --takeover md127
 >=20
+> Is this expected ?
+>=20
+> Thanks.
 
-I rather not do too much guessing..
-For now I've changed the Makefile so that if the relevant directory doesn't
-exist it will fail and tell you how to avoid the failure.
+Nope.  That's not expected.
 
-Thanks,
+mdmon should send SIGTERM to the old mdmon and then wait for it to exit.
+
+If the new and old mdmon were compiled different and look for the pid file =
+in
+different directories that might explain what you see.
+
+If you compile mdadm from source it will use /run/mdadm.  However if your
+distro doesn't have /run the the distro-provided mdadm will be compiled
+differently.
+
+It is safe to kill the old mdmons once a new one is running, but you should
+probably find out what the incompatibility is...
+
 NeilBrown
 
---Sig_/e_J9Qm+ltbn7dGB_8m0bfnf
+--Sig_/EpohVwq.5_1c4OydGbGE0Jy
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUf9JqDnsnt1WYoG5AQJuXBAAswMkiOvDk7SPUvfyoyHHD1fb+4U9q/xD
-96ErackgIBSjEMm2TR7bHBbZpI/EgJsOpXDNUyexPHHODT/FVjsTnM7oQwQr3xZt
-3ECP6kzGwygIJin0AVtc8G7m4HOoNPIh5fh9a8jDK24IzgSUwA+ZDIE2rBijG/1t
-F8b1OgAh3MsalvetO4PqbMYYDwT0jvi0rToQqnaSjHdiKJ7bCEjLCl+WfGadHOFe
-1jnmVVD4jTrlBP7QUa7ymFubc+i0//bX2ayHP0I509I+wbdK0Lj/1m3XLPyPUK9j
-jmJCNu8i4WjWz15GtGmexbjr0abeXtLm0xZxCoOpswugLGFhiKQiJgZOvHZPDmjE
-5qefcfQCJ1CkiJVNoG4a0dOaLZNbM1+ML55C3UgChjiMmfuUkfYJuipVB/lwMfbq
-6t0z36qSLOHIlVoltJce/3HwS/tkouBvblS3uzVja7wMreVyGFrCEkWS8MYwT3LW
-8OeVvDOHk8hbLFCun8R94aFtSWzHevGff4tKVLI0ECKSRmk7FY0YUSPF+6SWCoj/
-iZgByQCiktwTHf92VsA+hZm2a4m1KXG7LME8k8JlKooWhYzYlynic9Vi0l0db4jT
-ITw3TqQ4FqHnwIBbLeqxKyyYtaGHi+4IhEVFsY833PaRdxvdqhbKkblg8piIEIOc
-ZZJCCLoOStE=
-=MJQD
+iQIVAwUBUf9NPDnsnt1WYoG5AQLzMw//exctyyZynihqkp9GSx2XkspyNsMsOnTd
+P5j9Ubi0DmYrD8nK5w3GcQqBnprdFuANeMlItkYfDERKMkkDfNHWkhgEjGNC/vIW
+hTctAnWlzZRfXfVxYjpWNkqaDO08tkz6XZW0uS2GvJjW3cWoeJsvWrgTOKwFKLr1
+hcCWq5ilg3HodKP2GHv0VbNV/jsInkio3Ci/pWjWZwaPdclzeXFchqq5NlUMiBKR
+4mMmtezXkjEo1yOOttQ9anTEb9p5+WHas7PcHVtRLz2E32PRm5ZkwRACPVYWOpKe
+nTwxlGu7eG7fmzwrwUO7DQXlIUazIdz1vnGeGarMxenkAYQ0A7U5rSE6gtmPhKUT
+B7eqe0qtmN7eoIjpTluQC2o1S+TqGPdslRWX6pGOkOgga33DJ2AS2vf9ORZ3DZst
+Qw5H/URzTabceUT+vDEST3Bx8TXnXaKJtuwRtPG7O9gRP1rt63oHWtsjq3JQqflF
+MVE5ZCtIbYeV77lqksnw2LEl9aDMBk0osDc6cF+4nwBwis7o+/TomwMx+w2WKAF6
+oMVHQjh+iYN6+1vNr+Ow4d9M4JaPckRzXGMrQa5f+fcJe+S+yWLos7mmXMHOCasS
+pZDXRCNlMX7z0uXJ2XcNc0ASKhQGcjYYpItQc0zzEPAhNQiHAqGSZhj5Ia0KkQ1b
+lNSm9mTGpp4=
+=GVq6
 -----END PGP SIGNATURE-----
 
---Sig_/e_J9Qm+ltbn7dGB_8m0bfnf--
+--Sig_/EpohVwq.5_1c4OydGbGE0Jy--
