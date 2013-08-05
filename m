@@ -1,65 +1,68 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Bugreport ddf rebuild problems
-Date: Mon, 5 Aug 2013 16:21:25 +1000
-Message-ID: <20130805162125.73d4ab90@notabene.brown>
-References: <CAGkViCHPvbmcehFvACBKVFFCw+DdnjqvK2uNGmvKrFki+n9n-Q@mail.gmail.com>
+Subject: Re: Bugreport: mdmon will not start with latest git version when
+ using ddf container
+Date: Mon, 5 Aug 2013 16:43:52 +1000
+Message-ID: <20130805164352.3a721dae@notabene.brown>
+References: <51F953FA.5000400@gmail.com>
+	<20130801104433.1e7b41a5@notabene.brown>
+	<CAGkViCGM5-ztFSh3d-yh=P0HNfvcPYr6p7g3rDfkmx2+8YaqEw@mail.gmail.com>
+	<20130801152818.27cf61a5@notabene.brown>
+	<CAGkViCGbxJofuBbU41QvfQbBdaAEQKe3BhrSXmKZv17rGC4jzQ@mail.gmail.com>
+	<20130801165052.3285cacc@notabene.brown>
+	<CAGkViCGcuv=Ves47LUedirzTPV6dxzRZKM2a2M0MFPgDdH8tZw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/7kQiiKdm=rLhQJCmdpqbwSi"; protocol="application/pgp-signature"
+ boundary="Sig_/e_J9Qm+ltbn7dGB_8m0bfnf"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGkViCHPvbmcehFvACBKVFFCw+DdnjqvK2uNGmvKrFki+n9n-Q@mail.gmail.com>
+In-Reply-To: <CAGkViCGcuv=Ves47LUedirzTPV6dxzRZKM2a2M0MFPgDdH8tZw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Albert Pauw <albert.pauw@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/7kQiiKdm=rLhQJCmdpqbwSi
+--Sig_/e_J9Qm+ltbn7dGB_8m0bfnf
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 1 Aug 2013 21:22:44 +0200 Albert Pauw <albert.pauw@gmail.com> wrote:
+On Thu, 1 Aug 2013 10:00:56 +0200 Albert Pauw <albert.pauw@gmail.com> wrote:
 
-> Now I've got it working, I checked a simple rebuild test with a ddf
-> container, containing two raidsets (raid 1 and raid 5).
+> Hi Neil,
 >=20
-> Having 6 loopback devices of 512 MB each I opened in a separate screen th=
-is
-> to monitor what happens:
+> just using standard Centos 6.4, looks like RedHat and its derivatives are
+> not going the /run route for now.
 >=20
-> while true; do clear; cat /proc/mdstat ; sleep 1; done
+> Yes, checking if it exists should be good. If not, resort to /var/run, and
+> when that does not exist, fall back to /dev.
+> That last step may be a bit superfluous, but a very safe fallback.
 >=20
 
-For future reference:
-   watch cat /proc/mdstat
-
-works very nicely for this sort of task.
-
-I believe the bug you described is fixed in the current git tree.  If you
-could confirm I would appreciate it.
+I rather not do too much guessing..
+For now I've changed the Makefile so that if the relevant directory doesn't
+exist it will fail and tell you how to avoid the failure.
 
 Thanks,
 NeilBrown
 
---Sig_/7kQiiKdm=rLhQJCmdpqbwSi
+--Sig_/e_J9Qm+ltbn7dGB_8m0bfnf
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUf9EZTnsnt1WYoG5AQIrmg//XrIv5Vridn9Rt9lFLigDzrZmwJzAGL0O
-LU+Hx6eL25zv9BdSeaJcoUWV5DvFdgl27HTrCPlH3q+vb5zgP0cxpzlumraPQXmD
-jLX1TptSyQggxLfIByI8nlLopENqYx5uq4Uwtc/M2ZvGm8YBh6jz8OpxO4Fz1Vfd
-FsR1qUVYw5jUm+UgW1kLb2vtIt9JMh3zMcQZEFrIDWof0f6WrT10A5yXEIn/sYUV
-wzCY42vaOdZx+4/Gl7aB+ini3IQxPwr+WbNPMuyFYgE5H6BbRUJjLH5Q6KvV+BfA
-6J7wIqnAQe1QwLu+5pCDDVnn0R1ahPDLq4ioapM13AWatCrs54uVvzTxhzUy4iZo
-RmLiS2EkxUM2gpRmlGYMJ/8iwY6T/gZOHGrxgxF1MI1skSg6LvjpaTqmkPJyi9KF
-/n5sm9s8bVA/KtG/QN3angcdru8rbdWhUrN4lKGk9WFr/4zrxFGTOT+6hv9xo1YW
-QHG6Fjya16et8O+u0/A0IWnL0yrQNhdB2UfD7ayf/IDjY8eW9IzIdthyZnBISpfh
-ikGBUJlAoU+JqnTb5X3mvW+lZ+d5Cm7to9+w5ltVLO54Fu18QgV2U/7yAtbfdxUv
-CnC7rmqWH2VoP8OIXjkRxMJ3Yx1fXA0I+jJdXe1Eory02lZn7mWScrh2mKOEBxV4
-sL234b+HjPg=
-=ZzzK
+iQIVAwUBUf9JqDnsnt1WYoG5AQJuXBAAswMkiOvDk7SPUvfyoyHHD1fb+4U9q/xD
+96ErackgIBSjEMm2TR7bHBbZpI/EgJsOpXDNUyexPHHODT/FVjsTnM7oQwQr3xZt
+3ECP6kzGwygIJin0AVtc8G7m4HOoNPIh5fh9a8jDK24IzgSUwA+ZDIE2rBijG/1t
+F8b1OgAh3MsalvetO4PqbMYYDwT0jvi0rToQqnaSjHdiKJ7bCEjLCl+WfGadHOFe
+1jnmVVD4jTrlBP7QUa7ymFubc+i0//bX2ayHP0I509I+wbdK0Lj/1m3XLPyPUK9j
+jmJCNu8i4WjWz15GtGmexbjr0abeXtLm0xZxCoOpswugLGFhiKQiJgZOvHZPDmjE
+5qefcfQCJ1CkiJVNoG4a0dOaLZNbM1+ML55C3UgChjiMmfuUkfYJuipVB/lwMfbq
+6t0z36qSLOHIlVoltJce/3HwS/tkouBvblS3uzVja7wMreVyGFrCEkWS8MYwT3LW
+8OeVvDOHk8hbLFCun8R94aFtSWzHevGff4tKVLI0ECKSRmk7FY0YUSPF+6SWCoj/
+iZgByQCiktwTHf92VsA+hZm2a4m1KXG7LME8k8JlKooWhYzYlynic9Vi0l0db4jT
+ITw3TqQ4FqHnwIBbLeqxKyyYtaGHi+4IhEVFsY833PaRdxvdqhbKkblg8piIEIOc
+ZZJCCLoOStE=
+=MJQD
 -----END PGP SIGNATURE-----
 
---Sig_/7kQiiKdm=rLhQJCmdpqbwSi--
+--Sig_/e_J9Qm+ltbn7dGB_8m0bfnf--
