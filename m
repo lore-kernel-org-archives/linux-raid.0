@@ -1,45 +1,20 @@
-From: Albert Pauw <albert.pauw@gmail.com>
-Subject: Re: Bugreport ddf rebuild problems
-Date: Mon, 5 Aug 2013 09:17:06 +0200
-Message-ID: <CAGkViCEekLv6gLJ9Y48GD=bO7LqMJC7DPSp-YGi1+wmKdCT8TA@mail.gmail.com>
-References: <CAGkViCHPvbmcehFvACBKVFFCw+DdnjqvK2uNGmvKrFki+n9n-Q@mail.gmail.com>
-	<20130805162125.73d4ab90@notabene.brown>
+From: "archer.wudong" <archer.wudong@gmail.com>
+Subject: when md raid1 superblock is bad block, what happens
+Date: Mon, 05 Aug 2013 17:25:10 +0800
+Message-ID: <51FF6F72.6090305@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130805162125.73d4ab90@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Neil,
-
-I will check the latest git version tonight and let you know.
-
-Thanks to you and Martin Wilck,
-
-Albert
-
-On 5 August 2013 08:21, NeilBrown <neilb@suse.de> wrote:
-> On Thu, 1 Aug 2013 21:22:44 +0200 Albert Pauw <albert.pauw@gmail.com> wrote:
->
->> Now I've got it working, I checked a simple rebuild test with a ddf
->> container, containing two raidsets (raid 1 and raid 5).
->>
->> Having 6 loopback devices of 512 MB each I opened in a separate screen this
->> to monitor what happens:
->>
->> while true; do clear; cat /proc/mdstat ; sleep 1; done
->>
->
-> For future reference:
->    watch cat /proc/mdstat
->
-> works very nicely for this sort of task.
->
-> I believe the bug you described is fixed in the current git tree.  If you
-> could confirm I would appreciate it.
->
-> Thanks,
-> NeilBrown
+aGkgYWxsLCBJIGhhdmUgc29tZSBxdWVzdGlvbnMgYWJvdXQgcmFpZDEgc3VwZXJibG9jayBhbmQg
+YmFkIGJsb2NrLg0Kd2hlbiBpIGNyZWF0ZSByYWlkMSB3aXRoIHR3byBkaXNrcywgdGhlIG1kIHdp
+bGwgd3JpdGUgc3VwZXJibG9jayB0byB0aGUgZGlzaywgaWYgdGhlIGxvY2F0aW9uIG9mIHN1cGVy
+YmxvY2sgaXMgYmFkICwgd2hhdCB3aWxsIGhhcHBlbnM/IHJlcG9ydCBjcmVhdGUgZXJyb3Igb3Ig
+YWRkIHRoZSBibG9jayB0byBiYWQtYmxvY2stbGlzdCBhbmQgcmVkaXJlY3Qgc3VwZXJibG9jayB0
+byBhbm90aGVyIHBsYWNlPw0KYW5vdGhlciBxdWVzdGlvbiwgaG93IG1hbnkgYmFkIGJsb2NrcyBj
+YW4gYmUgYWRkZWQgdG8gYmFkLWJsb2NrLWxpc3QsIHdoZW4gdGhlIGJhZC1ibG9jay1saXN0IGlz
+IGZ1bGwsIHRoZSByYWlkIHdpbGwgZGVncmFkZT8NCg0KVGhhbmsgWW91DQpXdSBEb25n
