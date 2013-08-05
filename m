@@ -1,133 +1,135 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: help needed restoring data
-Date: Sun, 04 Aug 2013 10:54:02 -0400
-Message-ID: <51FE6B0A.7020704@turmel.org>
-References: <CAHTsmnnifoZAP0x4NhPW6xDiJCF_idp6=gqDKjMY-yNFXQEF2A@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 3/4] DDF: ddf_process_update: delete removed disks from
+ dlist
+Date: Mon, 5 Aug 2013 15:11:35 +1000
+Message-ID: <20130805151135.08320f62@notabene.brown>
+References: <1375396517-8479-1-git-send-email-mwilck@arcor.de>
+	<1375396517-8479-3-git-send-email-mwilck@arcor.de>
+	<51FC096B.8070804@arcor.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/3CtB+29y3q9LglSDFK6=w9y"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHTsmnnifoZAP0x4NhPW6xDiJCF_idp6=gqDKjMY-yNFXQEF2A@mail.gmail.com>
+In-Reply-To: <51FC096B.8070804@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?VXdlIFfDpGNodGVy?= <uwe.waechter@googlemail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Martin Wilck <mwilck@arcor.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good morning Uwe,
+--Sig_/3CtB+29y3q9LglSDFK6=w9y
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I see that you've gone unanswered for a while here...
+On Fri, 02 Aug 2013 21:32:59 +0200 Martin Wilck <mwilck@arcor.de> wrote:
 
-On 08/03/2013 09:59 AM, Uwe W=C3=A4chter wrote:
-> Hi list,
-> I have a problem with my raid 5 array based on 3 harddisks. I need
-> help to find the best way to recover my data.
-> So what happens ....
-> First of all 1 harddisk fails with the message :
+> Neil,
 >=20
-> A Fail event had been detected on md device /dev/md/0.
->=20
-> It could be related to component device /dev/sde1.
->=20
->=20
-> Personalities : [raid6] [raid5] [raid4]
-> md0 : active raid5 sde1[4](F) sdc1[3] sdd1[0]
->       1953517568 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3=
-/2] [U_U]
->=20
-> unused devices: <none>
->=20
->=20
-> No problem at this time, the raid is still running with 2 harddisks.
-> The reason for the error was the following message of sde1
-> Jul 27 06:38:31 fed1 kernel: [987606.852610] md/raid:md0: Disk failur=
-e
-> on sde1, disabling device.
-> Jul 27 06:38:31 fed1 kernel: [987606.852610] md/raid:md0: Operation
-> continuing on 2 devices.
-> Jul 27 06:38:31 fed1 kernel: [987606.852613] sd 4:0:0:0: [sde]
-> Jul 27 06:38:31 fed1 kernel: [987606.852615] Result:
-> hostbyte=3DDID_BAD_TARGET driverbyte=3DDRIVER_OK
-> Jul 27 06:38:31 fed1 kernel: [987606.852617] sd 4:0:0:0: [sde] CDB:
-> Jul 27 06:38:31 fed1 kernel: [987606.852618] Read(10): 28 00 36 d4 f0
-> 3f 00 02 98 00
-> Jul 27 06:38:31 fed1 kernel: [987606.852625] end_request: I/O error,
-> dev sde, sector 919924799
-> Jul 27 06:38:31 fed1 kernel: [987606.852629] md/raid:md0: read error
-> not correctable (sector 919924736 on sde1).
-> Jul 27 06:38:31 fed1 kernel: [987606.852638] md/raid:md0: read error
-> not correctable (sector 919924744 on sde1).
-> Jul 27 06:38:31 fed1 kernel: [987606.852641] md/raid:md0: read error
-> not correctable (sector 919924752 on sde1).
-> Jul 27 06:38:31 fed1 kernel: [987606.852643] md/raid:md0: read error
-> not correctable (sector 919924760 on sde1).
-> Jul 27 06:38:31 fed1 kernel: [987606.852645] md/raid:md0: read error
-> not correctable (sector 919924768 on sde1).
+> This calls free() from monitor context - I am not certain if that's
+> allowed and if no, what alternative there might be.
 
-It seems that your drive was kicked out of the array on a *read* error.
- Nowadays, that usually happens when a drive dies completely.  Your
-drives haven't, which suggests you are using an old kernel.  Current
-kernels tolerate some read errors in order to attempt to rewrite the
-problem locations.
+Yes, I don't really like that.  And there is an 'fd' attached to the 'dl'
+which would need to be closed too.
 
-Please supply your platform details, kernel version, and mdadm version.
+This relates to the "ddf: remove failed devices that are no longer in use ?=
+!?"
+discussion we had earlier.  That patch isn't really right ... as you noticed
+by trying to fix it.
 
-> A couple of hours later, just when I wanted to start backup the data
-> partition the sdd also fails :-( with similar failures :
->=20
-> A Fail event had been detected on md device /dev/md/0.
->=20
-> It could be related to component device /dev/sdd1.
+I think this fix is safer and more in the spirit of the original.  It appea=
+rs
+to fix the problem for me, and feels "right" as well:-)
 
-This sounds like an array that is lightly used and has never been scrub=
-bed.
+It only removed pd entries for devices that really have disappeared.  If a
+device still exists in ->dlist, we don't remove the pde.
 
-[trim /]
+I applied the other patches in the series  - thank especially for the added
+test!
 
-> So I have 2 device sdd and sde with unreadable sectors. sdc has no er=
-rors.
-> smartd[690]: Device: /dev/sde [SAT], 14 Currently unreadable (pending=
-) sectors
-> smartd[690]: Device: /dev/sdd [SAT], 11 Currently unreadable (pending=
-) sectors
+Thanks,
+NeilBrown
 
-Regular scrubbing would have prevented these from accumulating, as long
-as your devices handle timeouts properly.  (You should search this
-list's archives for combinations of "ERC" "error recovery control"
-"scterc" and "device/timeout" for an education on this common problem.)
+=46rom 92939eb29175a0dc7c9c46ff70f95b76b693b796 Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Mon, 5 Aug 2013 14:56:23 +1000
+Subject: [PATCH] DDF: fix removal of failed devices.
 
-> What is the best way to rebuild the array with sdc and sdd only ?
+Commit c7079c84 arrange for DDF to forget about any device
+that is failed and not still marked as part of any array.
 
-A degraded raid5 cannot have any bad sectors, so you'd have to fix the
-bad sectors on /dev/sdd.  This is typically done with dd_rescue onto a
-spare drive.
+However such devices could still be part of the container and this
+removal and updating of 'pdnum' can result in multiple devices having
+the same pdnum.  This in turn easily leads to confusion and
+corruption.
 
-If you avoided writing to the degraded array, this may not be your best
-recovery choice.  Did you have *anything* writing into the array during
-those couple hours?
+So only discard pd entries for devices which are failed, not listed in
+any virtual device, and for which we don't have a handle on the
+device.
 
-> Can I correct unreadable sectors before rebuild the array or does it
-> destroy the array.
+pd entries will not get removed until a new device is added after
+the device has been removed from the container, either by
+"mdadm --remove" or by assembling without the failed devices.
 
-It doesn't destroy the array if you *only* rewrite the problem sectors.
- But don't do this yet.  Providing more information will help us help
-you better.
+Reported-by: Albert Pauw <albert.pauw@gmail.com>
+Analysed-by: Martin Wilck <mwilck@arcor.de>
+Signed-off-by: NeilBrown <neilb@suse.de>
 
-> Do I need to change the 2 harddisks ?
+diff --git a/super-ddf.c b/super-ddf.c
+index 20f4f25..b352a52 100644
+--- a/super-ddf.c
++++ b/super-ddf.c
+@@ -4635,13 +4635,19 @@ static void ddf_process_update(struct supertype *st,
+ 		 */
+ 		pd2 =3D 0;
+ 		for (pdnum =3D 0; pdnum < be16_to_cpu(ddf->phys->used_pdes);
+-		     pdnum++)
++		     pdnum++) {
+ 			if (be16_and(ddf->phys->entries[pdnum].state,
+ 				     cpu_to_be16(DDF_Failed))
+ 			    && be16_and(ddf->phys->entries[pdnum].state,
+-					cpu_to_be16(DDF_Transition)))
+-				/* skip this one */;
+-			else if (pdnum =3D=3D pd2)
++					cpu_to_be16(DDF_Transition))) {
++				/* skip this one unless in dlist*/
++				for (dl =3D ddf->dlist; dl; dl =3D dl->next)
++					if (dl->pdnum =3D=3D (int)pdnum)
++						break;
++				if (!dl)
++					continue;
++			}
++			if (pdnum =3D=3D pd2)
+ 				pd2++;
+ 			else {
+ 				ddf->phys->entries[pd2] =3D
+@@ -4651,6 +4657,7 @@ static void ddf_process_update(struct supertype *st,
+ 						dl->pdnum =3D pd2;
+ 				pd2++;
+ 			}
++		}
+ 		ddf->phys->used_pdes =3D cpu_to_be16(pd2);
+ 		while (pd2 < pdnum) {
+ 			memset(ddf->phys->entries[pd2].guid, 0xff,
 
-Not enough information.  Please supply the full output of "smartctl -x"
-for all three drives.
+--Sig_/3CtB+29y3q9LglSDFK6=w9y
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-> I hope you can help me restoring much data as possible.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-I think we can help you save the vast majority of your data.
+iQIVAwUBUf80Bznsnt1WYoG5AQLf0g/9EcnrSg7XpXfUo6BuasjxIjOJffbSkLUg
+DOi6qylTleKTgOvY+sXEN4efSRjsaP//vF/Z7Z+X6ydYoBC1ZUQ1d2nuJQBpw4sF
+rEK/h64+KXCiX4fQqgpA6LjBOQOyol1DtlMz77oFWxX9anUXqt2mTdy+nObdBcqw
+gGEt+w9iQSSr+d1pQIQ14KQM6unqltvW/2Ba/tGjbjT3e8nG/efOju/b2ZVDV1SG
+159xwh5qdM8rnhu7OYw5Fgpc5uOHxs91o804RhIA9gd4Ia6WWNrcU/JyZDN19l8U
+m2TZ86s5zncQUSo0MrZNv7u3gBWFIEIyb8kdyyWP/Lo2lf67apgxCK5aMYCUtday
+PzKoAHFhIaAgdOTdY1ZZ3gnLklmGGUaL/BV+bcP+YSwALkv30hqzB2eeeX6sk4JO
+lq89m0yfGmTF5fcu3V0Op8NzA380bYTXmkZ8091cxfGSukHd8cgM9jm/W3oTEBYJ
+rOULP9wND3vQ0mM1W+HIfaOROxjkPCdTJS1Dbg/CMB0MFHfetSEEdKkZdRXxfgo3
+h9/VZolSmgCK9hzESVy5J7fa1MEf2Zo7aP/k1NP6F49T3LWCZ/J+tcYAAHUgGi3N
+OMHLtbz0+aOayD0P3A774pZD9OmrvXK/8jN+O8asixQygB0Y5SW96IUwLnZPacdj
+b8f6fLqgRwI=
+=uaIE
+-----END PGP SIGNATURE-----
 
-> best regards Uwe
-
-Regards,
-
-Phil
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/3CtB+29y3q9LglSDFK6=w9y--
