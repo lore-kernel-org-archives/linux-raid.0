@@ -1,73 +1,109 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: when md raid1 superblock is bad block, what happens
-Date: Tue, 6 Aug 2013 11:47:07 +1000
-Message-ID: <20130806114707.0c3ffc07@notabene.brown>
-References: <CAAL-TMcqej1YYYoCJr3XV7GONYzUR4=8poMnzMcrzTjP7N84KQ@mail.gmail.com>
+From: P Orrifolius <porrifolius@gmail.com>
+Subject: Re: Advice for recovering array containing LUKS encrypted LVM volumes
+Date: Tue, 6 Aug 2013 13:54:05 +1200
+Message-ID: <CAC38o7TqO9m=6LDHxDiV=XYcfAdbnpa=GZuft-TAqFDvdqvJ4A@mail.gmail.com>
+References: <CAC38o7ScozDqspEH-FSyoa_W5W8s+VfYd1RTAitz574wMYqhkA@mail.gmail.com>
+	<51FE529C.6000502@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/recvJ35=/baXh27Mw6j8IRT"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAL-TMcqej1YYYoCJr3XV7GONYzUR4=8poMnzMcrzTjP7N84KQ@mail.gmail.com>
+In-Reply-To: <51FE529C.6000502@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dong Wu <archer.wudong@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: stan@hardwarefreak.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/recvJ35=/baXh27Mw6j8IRT
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Thanks for your response...
 
-On Tue, 6 Aug 2013 09:14:05 +0800 Dong Wu <archer.wudong@gmail.com> wrote:
+On 5 August 2013 01:09, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> On 8/4/2013 12:49 AM, P Orrifolius wrote:
+>
+>> I have an 8 device RAID6.  There are 4 drives on each of two
+>> controllers and it looks like one of the controllers failed
+>> temporarily.
+>
+> Are you certain the fault was caused by HBA?  Hardware doesn't tend to
+> fail temporarily.  It does often fail intermittently, before complete
+> failure.  If you're certain it's the HBA you should replace it before
+> attempting to bring the array back up.
+>
+> Do you have 2 SFF8087 cables connected to two backplanes, or do you have
+> 8 discrete SATA cables connected directly to the 8 drives?  WRT the set
+> of 4 drives that dropped, do these four share a common power cable to
+> the PSU that is not shared by the other 4 drives?
 
-> Hi all, I have some questions about raid1 superblock and bad block.
-> When I create raid1 with two disks, the md will write superblock to
-> the disk, if the location of superblock is bad, what will happens?
+The full setup, an el-cheapo rig used for media, backups etc at home, is:
 
-The drive will be removed from the array.
+8x2TB SATA drives, split across two Vantec NexStar HX4 enclosures.
+These separately powered enclosures have a single USB3 plug and a
+single eSATA plug.  The documentation states that a "Port Multiplier
+Is Required For eSATA".
 
-> Just report create error or add the block to bad-block-list and
-> redirect superblock to another place?
+The original intention was to connect them via eSATA directly to my
+motherboard.  Subsequently I determined that my motherboard only
+supports command-based not FIS.  I had a look for a FIS
+port-multiplier card but USB3 (which my motherboard doesn't support)
+controllers seemed about a 1/4 the price so I thought I'd try that
+out.  lsusb tells me that there are JMicron USB3-to-ATA bridges in the
+enclosures.
 
-No.  That would be nice but it isn't implemented.
-
-> another question, how many bad blocks can be added to bad-block-list,
-> when the bad-block-list is full, the raid will degrade?
-
-512 ranges of badblocks.  When it is full the array will degrade.
-
-NeilBrown
-
-
->=20
-> Thand you
->=20
-> Wu Dong
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So, each enclosure is actually connected by a single USB3 connection
+to one of two ports on a single controller.
 
 
---Sig_/recvJ35=/baXh27Mw6j8IRT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Logs show that all 4 drives connected to one of the ports were reset
+by the XHCI driver (more or less simultaneously) losing the drives and
+failing the array.  In the original failure they were back with the
+same /dev/sd? in a few minutes, but I guess the Event count had
+diverged already.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+Perhaps that suggests the enclosure bridge is at fault, unless an
+individual port on the controller freaked out.  Definitely not a power
+failure, could be a USB3 cable issue I guess.
 
-iQIVAwUBUgBVmznsnt1WYoG5AQKLXw//a0lA7bZGZvUgAOjag77H8jdXjCu0pVRJ
-OTU6bfKbFliCPIbZW+cJviq+u+Xu5izo7oORFRjcorEdEskrjNcbIiciFBaHH1pY
-OtnZQyVcvwycbCKfMIAgj99LjC/YKiUb6nMTyhdNzy3qu0QKE3sBiq/cArHfl+Gk
-iC1OKIoBX4UA9Qob1Nyf7wZvUhA1e7+AayjiaAndNowb1eFYVba65eoH5S2KqLAe
-RcQYLJmDV0RZV4UGXOHyJLT0LX7u9M8zjrYW0EbtZdQ9rcE5XV53pXE5rgwGONGn
-SovBcJEAq0rWr26etvGjpravKaOEm5IGorLxUSE0Msi5uCEdhuuPEZUapXHMV6DO
-uD0EnvOMDzLIW6+okp57XoQW4CMbiu8i5dGFf2DPsbSa+k427DFECrbkAr+Q7Kce
-+XjbSdFJiYwNzjI8+wE8a1lkI++ku4HWx/cWzo/5ZLyQLjFH0+g/js+ZoUYRzcpr
-TtwTwl3yaDXiqLjFuyjml4D/mHhHq6SpvDvbK8wBDnm8V94nzEworKWAINOjt7Jf
-rBSnyYKBNhk8vl+2BEhddy3vadL/9kpc1AWJMSjVrKobxGJ6mJKCS/1XIigOkS25
-nju+PnzsAFGmev5t6InIaaiOCtMbQagxntESuThx9Dox1UKvy4Nw8KyheDR5yyBZ
-wj3D1jtubMg=
-=yvxm
------END PGP SIGNATURE-----
+> The point of these
+> questions is to make sure you know the source of the problem before
+> proceeding.  It could be the HBA, but it could also be a
+> power/cable/connection problem, a data/cable/connection problem, or a
+> failed backplane.  Cheap backplanes, i.e. cheap hotswap drive cages
+> often cause such intermittent problems as you've described here.
 
---Sig_/recvJ35=/baXh27Mw6j8IRT--
+Truth is the USB3 has been a bit of a pain anyway... the enclosure
+bridge seems to prevent direct fdisk'ing and SMART at least.  My
+biggest concern was that it spits out copious 'needs
+XHCI_TRUST_TX_LENGTH quirk?' warnings.
+But I burned it in with a few weeks of read/write/validate work
+without any apparent negative consequence and it's been fine for about
+a year of uptime under light-moderate workload.  My trust was perhaps
+misplaced.
+
+>> What is the best/safest way to try and get the array up and working
+>> again?  Should I just work through
+>> https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID
+>
+> Again, get the hardware straightened out first or you'll continue to
+> have problems.
+
+It seems I'd probably be better of going to eSATA... any
+recommendations on port multipying controllers?
+
+Is the Highpoint RocketRAID 622 ok?  More expensive than I'd like but
+one of the few options that doesn't involve waiting on international
+shipping.
+
+>
+> Once that's accomplished, skip to the "Force assembly" section in the
+> guide you referenced.  You can ignore the preceding $OVERLAYS and disk
+> copying steps because you know the problem wasn't/isn't the disks.
+> Simply force assembly.
+
+Good news is I worked through the recovery instructions, including
+setting up the overlays (due to an excess of paranoia), and I was able
+to mount each XFS filesystem and get a seemingly good result from
+xfs_repair -n.
+
+Haven't managed to get my additional backups up to date yet due to USB
+reset happening again whilst trying but I presume the data will be
+ok... once I can get to it.
+
+Thanks.
