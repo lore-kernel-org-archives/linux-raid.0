@@ -1,95 +1,82 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RFC: handling of missing disks in DDF
-Date: Thu, 8 Aug 2013 09:04:23 +1000
-Message-ID: <20130808090423.4b806828@notabene.brown>
-References: <5202B633.3080807@arcor.de>
+Subject: Re: [PATCH] RAID: add tilegx SIMD implementation of raid6
+Date: Thu, 8 Aug 2013 09:27:07 +1000
+Message-ID: <20130808092707.7149ee90@notabene.brown>
+References: <201308072040.r77Kevx4016119@farm-0012.internal.tilera.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/YIgHFdq_JE=GeNFWhm7.R9p"; protocol="application/pgp-signature"
+ boundary="Sig_/CAegtB=VD9O6G_z0EQE1w2q"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5202B633.3080807@arcor.de>
+In-Reply-To: <201308072040.r77Kevx4016119@farm-0012.internal.tilera.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>
-Cc: linux-raid@vger.kernel.org
+To: Ken Steele <ken@tilera.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/YIgHFdq_JE=GeNFWhm7.R9p
+--Sig_/CAegtB=VD9O6G_z0EQE1w2q
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 07 Aug 2013 23:03:47 +0200 Martin Wilck <mwilck@arcor.de> wrote:
+On Wed, 7 Aug 2013 12:39:56 -0400 Ken Steele <ken@tilera.com> wrote:
 
-> Hi Neil, everyone,
+> This change adds TILE-Gx SIMD instructions to the software raid
+> (md), modeling the Altivec implementation. This is only for Syndrome
+> generation; there is more that could be done to improve recovery,
+> as in the recent Intel SSE3 recovery implementation.
 >=20
-> I'd like to get comments on the following concept for handling missing
-> disks. Currently we handle "Missing" and "Failed" almost equally, that's
-> not optimal.
+> The code unrolls 8 times; this turns out to be the best on tilegx
+> hardware among the set 1, 2, 4, 8 or 16.  The code reads one
+> cache-line of data from each disk, stores P and Q then goes to the
+> next cache-line.
 >=20
-> 1. Try to detect missing disks and mark them so in the meta data.
-> ddf_open_new() could do this. At the latest, it must be done before
-> writing the meta data (write_super or sync_metadata).
+> The test code in sys/linux/lib/raid6/test reports 2008 MB/s data
+> read rate for syndrome generation using 18 disks (16 data and 2
+> parity). It was 1512 MB/s before this SIMD optimizations. This is
+> running on 1 core with all the data in cache.
 >=20
-> 2. Detection of a missing disk should not force an immediate meta data
-> write, because the disk may be added soon. It's sufficient to mark a
-> disk as missing when we write the meta data for other reasons.
+> This is based on the paper The Mathematics of RAID-6.
+> (http://kernel.org/pub/linux/kernel/people/hpa/raid6.pdf).
 >=20
-> 3. Try to be smart when loading headers. A disk that was missing in a
-> previous run must have a lower seq number and time stamp in the meta
-> data than the other disks, and must be marked "Missing" there (but not
-> "Failed"). The meta data on the preciously missing disk should mark it
-> as "active/Online". In this case, use the newer meta data, and try to
-> re-integrate the previously missing disk (i.e. treat it as preferred
-> global spare).
->=20
-> 4. It's possible that an array wasn't written to while a disk had been
-> missing. In that case the disk could be re-added to the array without
-> recovery. The question is if we can detect this situation. I thought
-> first  the "Not Consistent" bit might be usable for that, but I doubt it
-> now. The spec isn't clear about whether "consistent" state means
-> consistency over all configured disks or only over present ones.
->=20
+> Signed-off-by: Ken Steele <ken@tilera.com>
+> Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
 
-Hi Martin.
-Thanks for looking into this.
+Thanks.  Looks credible and you've obviously tested it so I've added it to =
+my
+queue for the next merge window.
 
-Can you say why exactly that treating 'Missing' like 'Failed' is not
-optimal?  I find them to be very similar concepts.
+One tiny little change I made:
 
-Your idea for marking a missing device that reappears as a preferred spare =
-is
-probably a good one - is that incompatible with treating it as failed while
-it isn't present?
+>  clean:
+>  	rm -f *.o *.a mktables mktables.c *.uc int*.c altivec*.c tables.c raid6=
+test
+> +	rm tilegx*.c
 
-As soon as we mark an array as active (aka Not Consistent) we need to mark
-any missing devices as 'failed' in some way to ensure that the data is never
-seen as valid in the array.  Before that we can certainly be lazy about
-translating 'missing' to 'failed'...
-
-Maybe if you could give some more detail on the problem scenario??
+I made that "rm -f" for consistency.
 
 Thanks,
 NeilBrown
 
---Sig_/YIgHFdq_JE=GeNFWhm7.R9p
+
+--Sig_/CAegtB=VD9O6G_z0EQE1w2q
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUgLSdznsnt1WYoG5AQKOgw//TZ/KQHQSZCrL202D1GNE9WVZ240XuTJa
-Bk+VAiDBXUIzMDFbuJGjEx8nB9wFCTGD/8GoWOxD+3zji9+DZpc/bWdOpbSiqjYB
-bdPTRcO4wzQKZLJ31T8IyKHSj4GsOCZAD41vURycIxZ3hV5D5YCVTAvPuAl6Cwpx
-rh+h07wXqbxW8+KkJN6OsW52X9CiHU07z+a4aXu7Z1iEVwwlSrvXKeDZ9NwUKWVJ
-o6VTf3Xz0+RhtptZkvdnjBYWkX3QJYvkFo6TAyqBTO0ZCquvZJ06NNmWKTrnaJHu
-XfXGKLwIgOv3QBFKoXRkBGl4PifO8+DnyU7soEYmXhv3YVejsYwvWfT8dxmiXpo3
-TtXF7H5zJTcPl11Y0WB9RQeMgkD9+lLxWPrW7nAC7Q8lhRB13lzbtZv1j2S5hvOM
-qYJdEBPtct8d9+Jeay0mF+drZZA4TkBvdXwb3weO8yLZ83ZsUY/vbWYjjMUXJFVw
-3mmBXoTq+ts7emKu5tHBtZ7DMELkgX0Kvg8swxSsQczNWg7/dFk2J4Bah/nJ8nIu
-2DB4T85X44EirjdfAcCbNOThe0B0stIkntvRGfGileJGNKq70CPmroeihbcGsr/l
-sSJnJ69MlQoKZ/yczbI1Hn7Tx+fdn82O73PsV2/ZduNsP8qygmkk/+qm6u2Rfhgt
-3u4u05RGxnQ=
-=SS2w
+iQIVAwUBUgLXyznsnt1WYoG5AQK3uA/7Biq7BxvoTdaAkqIBO8dCgmZteMoX9bSf
+IPy1le3rlHF5T3jVRglFZatR8pXtZBKKBG3tqiOUhxp+9emfktKCOjlSJ5xAo83G
+1iAU3TLQirPKf8L+luafXIanJdIQjjwA1bVaHBkymKBxcGgzF5/HLA0TT7E/a5T4
+wW4S1JtY3cqMb9tY/NjXyz13ctD0AK0r1uuOlgZmQuTek63ja7JFkzyps15seVcJ
+BBkQ+l6K2WDLIDFY/JqL6hsTDOgrbTzquDMDqW7PpQA6T2hESLKtjHk4ncVOWJ3a
+sSfnpOuUIbH07oWrcNdKJZ0kb313rcY5KiNV0Els9E3UKjYsgD50KIXhNbMeBnDF
+hmhWPUtZezsQni7g2J182l3WZmsGOCu+CmGFZ1ffZT62mhViDRpz5YNGMByzziFu
+ftzVIR79afwex2BDmV90Epm47kw4bNMalYSPv0/aOc9KfX+T4XYO1nEGw2pOVtYQ
+tUWCuauszmtgAeuKEYmTK1SzoyqxtFw/sOfkGLHjij1bpfg9Ewfl62aa8FR+36zT
+vUyTbzqzol+4E0fxydmXPOvKUCloYOyBraDpwpHYwaQX+UFCp3R6sTwrkVTlw3RA
+XTwxHEhSxJY6OL/lO8EBdfd8LIyHLh+qLwewQGia7YBZ1p9bozLQXSj9SmoUSgUj
+3vToOqoyDTQ=
+=m4Y8
 -----END PGP SIGNATURE-----
 
---Sig_/YIgHFdq_JE=GeNFWhm7.R9p--
+--Sig_/CAegtB=VD9O6G_z0EQE1w2q--
