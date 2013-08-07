@@ -1,178 +1,43 @@
-From: Kent Overstreet <kmo@daterainc.com>
-Subject: [PATCH 03/22] bcache: Kill unaligned bvec hack
-Date: Wed,  7 Aug 2013 14:54:12 -0700
-Message-ID: <1375912471-5106-4-git-send-email-kmo@daterainc.com>
-References: <1375912471-5106-1-git-send-email-kmo@daterainc.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1375912471-5106-1-git-send-email-kmo@daterainc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: axboe@kernel.dk
-Cc: neilb@suse.de, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, Kent Overstreet <kmo@daterainc.com>
+From: Martin Wilck <mwilck@arcor.de>
+Subject: RFC: handling of missing disks in DDF
+Date: Wed, 07 Aug 2013 23:03:47 +0200
+Message-ID: <5202B633.3080807@arcor.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bcache has a hack to avoid cloning the biovec if it's all full pages -
-but with immutable biovecs coming this won't be necessary anymore.
+Hi Neil, everyone,
 
-For now, we remove the special case and always clone the bvec array so
-that the immutable biovec patches are simpler.
+I'd like to get comments on the following concept for handling missing
+disks. Currently we handle "Missing" and "Failed" almost equally, that's
+not optimal.
 
-Signed-off-by: Kent Overstreet <kmo@daterainc.com>
----
- drivers/md/bcache/bcache.h  |  1 -
- drivers/md/bcache/debug.c   |  4 ----
- drivers/md/bcache/request.c | 32 +++++---------------------------
- drivers/md/bcache/request.h |  2 +-
- drivers/md/bcache/super.c   |  4 ----
- 5 files changed, 6 insertions(+), 37 deletions(-)
+1. Try to detect missing disks and mark them so in the meta data.
+ddf_open_new() could do this. At the latest, it must be done before
+writing the meta data (write_super or sync_metadata).
 
-diff --git a/drivers/md/bcache/bcache.h b/drivers/md/bcache/bcache.h
-index b39f6f0..ec5f17c 100644
---- a/drivers/md/bcache/bcache.h
-+++ b/drivers/md/bcache/bcache.h
-@@ -443,7 +443,6 @@ struct bcache_device {
- 	unsigned long		sectors_dirty_last;
- 	long			sectors_dirty_derivative;
- 
--	mempool_t		*unaligned_bvec;
- 	struct bio_set		*bio_split;
- 
- 	unsigned		data_csum:1;
-diff --git a/drivers/md/bcache/debug.c b/drivers/md/bcache/debug.c
-index 88e6411..545680b 100644
---- a/drivers/md/bcache/debug.c
-+++ b/drivers/md/bcache/debug.c
-@@ -191,10 +191,6 @@ void bch_data_verify(struct search *s)
- 	struct bio_vec *bv;
- 	int i;
- 
--	if (!s->unaligned_bvec)
--		bio_for_each_segment(bv, s->orig_bio, i)
--			bv->bv_offset = 0, bv->bv_len = PAGE_SIZE;
--
- 	check = bio_clone(s->orig_bio, GFP_NOIO);
- 	if (!check)
- 		return;
-diff --git a/drivers/md/bcache/request.c b/drivers/md/bcache/request.c
-index 786a1a4..2c2e1c1 100644
---- a/drivers/md/bcache/request.c
-+++ b/drivers/md/bcache/request.c
-@@ -679,10 +679,14 @@ static void bio_complete(struct search *s)
- static void do_bio_hook(struct search *s)
- {
- 	struct bio *bio = &s->bio.bio;
--	memcpy(bio, s->orig_bio, sizeof(struct bio));
- 
-+	bio_init(bio);
-+	bio->bi_io_vec		= s->bv;
-+	bio->bi_max_vecs	= BIO_MAX_PAGES;
-+	__bio_clone(bio, s->orig_bio);
- 	bio->bi_end_io		= request_endio;
- 	bio->bi_private		= &s->cl;
-+
- 	atomic_set(&bio->bi_cnt, 3);
- }
- 
-@@ -694,16 +698,12 @@ static void search_free(struct closure *cl)
- 	if (s->op.cache_bio)
- 		bio_put(s->op.cache_bio);
- 
--	if (s->unaligned_bvec)
--		mempool_free(s->bio.bio.bi_io_vec, s->d->unaligned_bvec);
--
- 	closure_debug_destroy(cl);
- 	mempool_free(s, s->d->c->search);
- }
- 
- static struct search *search_alloc(struct bio *bio, struct bcache_device *d)
- {
--	struct bio_vec *bv;
- 	struct search *s = mempool_alloc(d->c->search, GFP_NOIO);
- 	memset(s, 0, offsetof(struct search, op.keys));
- 
-@@ -722,15 +722,6 @@ static struct search *search_alloc(struct bio *bio, struct bcache_device *d)
- 	s->start_time		= jiffies;
- 	do_bio_hook(s);
- 
--	if (bio->bi_size != bio_segments(bio) * PAGE_SIZE) {
--		bv = mempool_alloc(d->unaligned_bvec, GFP_NOIO);
--		memcpy(bv, bio_iovec(bio),
--		       sizeof(struct bio_vec) * bio_segments(bio));
--
--		s->bio.bio.bi_io_vec	= bv;
--		s->unaligned_bvec	= 1;
--	}
--
- 	return s;
- }
- 
-@@ -780,26 +771,13 @@ static void cached_dev_read_complete(struct closure *cl)
- static void request_read_error(struct closure *cl)
- {
- 	struct search *s = container_of(cl, struct search, cl);
--	struct bio_vec *bv;
--	int i;
- 
- 	if (s->recoverable) {
- 		/* Retry from the backing device: */
- 		trace_bcache_read_retry(s->orig_bio);
- 
- 		s->error = 0;
--		bv = s->bio.bio.bi_io_vec;
- 		do_bio_hook(s);
--		s->bio.bio.bi_io_vec = bv;
--
--		if (!s->unaligned_bvec)
--			bio_for_each_segment(bv, s->orig_bio, i)
--				bv->bv_offset = 0, bv->bv_len = PAGE_SIZE;
--		else
--			memcpy(s->bio.bio.bi_io_vec,
--			       bio_iovec(s->orig_bio),
--			       sizeof(struct bio_vec) *
--			       bio_segments(s->orig_bio));
- 
- 		/* XXX: invalidate cache */
- 
-diff --git a/drivers/md/bcache/request.h b/drivers/md/bcache/request.h
-index 57dc478..bee95a9 100644
---- a/drivers/md/bcache/request.h
-+++ b/drivers/md/bcache/request.h
-@@ -16,7 +16,6 @@ struct search {
- 	unsigned		cache_bio_sectors;
- 
- 	unsigned		recoverable:1;
--	unsigned		unaligned_bvec:1;
- 
- 	unsigned		write:1;
- 	unsigned		writeback:1;
-@@ -27,6 +26,7 @@ struct search {
- 
- 	/* Anything past op->keys won't get zeroed in do_bio_hook */
- 	struct btree_op		op;
-+	struct bio_vec		bv[BIO_MAX_PAGES];
- };
- 
- void bch_cache_read_endio(struct bio *, int);
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index 547c4c5..dc073eb 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -743,8 +743,6 @@ static void bcache_device_free(struct bcache_device *d)
- 		put_disk(d->disk);
- 
- 	bio_split_pool_free(&d->bio_split_hook);
--	if (d->unaligned_bvec)
--		mempool_destroy(d->unaligned_bvec);
- 	if (d->bio_split)
- 		bioset_free(d->bio_split);
- 	if (is_vmalloc_addr(d->stripe_sectors_dirty))
-@@ -778,8 +776,6 @@ static int bcache_device_init(struct bcache_device *d, unsigned block_size,
- 		return -ENOMEM;
- 
- 	if (!(d->bio_split = bioset_create(4, offsetof(struct bbio, bio))) ||
--	    !(d->unaligned_bvec = mempool_create_kmalloc_pool(1,
--				sizeof(struct bio_vec) * BIO_MAX_PAGES)) ||
- 	    bio_split_pool_init(&d->bio_split_hook) ||
- 	    !(d->disk = alloc_disk(1)) ||
- 	    !(q = blk_alloc_queue(GFP_KERNEL)))
--- 
-1.8.4.rc1
+2. Detection of a missing disk should not force an immediate meta data
+write, because the disk may be added soon. It's sufficient to mark a
+disk as missing when we write the meta data for other reasons.
+
+3. Try to be smart when loading headers. A disk that was missing in a
+previous run must have a lower seq number and time stamp in the meta
+data than the other disks, and must be marked "Missing" there (but not
+"Failed"). The meta data on the preciously missing disk should mark it
+as "active/Online". In this case, use the newer meta data, and try to
+re-integrate the previously missing disk (i.e. treat it as preferred
+global spare).
+
+4. It's possible that an array wasn't written to while a disk had been
+missing. In that case the disk could be re-added to the array without
+recovery. The question is if we can detect this situation. I thought
+first  the "Not Consistent" bit might be usable for that, but I doubt it
+now. The spec isn't clear about whether "consistent" state means
+consistency over all configured disks or only over present ones.
+
+Comments?
+Martin
