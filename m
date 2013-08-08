@@ -1,26 +1,25 @@
-From: Roberto Spadim <rspadim@gmail.com>
-Subject: Re: raid1 read io balancing algorithm
-Date: Thu, 8 Aug 2013 11:27:37 -0300
-Message-ID: <CAH3kUhF+JwO6KX2sWE+psVbBugx3nGfTiB_-jAvoPCj2vr77dw@mail.gmail.com>
-References: <20130808110452.464E2097@centrum.sk>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/22] Immutable biovecs, block layer changes
+Date: Thu, 8 Aug 2013 08:09:54 -0700
+Message-ID: <20130808150954.GA30092@infradead.org>
+References: <1375912471-5106-1-git-send-email-kmo@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130808110452.464E2097@centrum.sk>
+Content-Disposition: inline
+In-Reply-To: <1375912471-5106-1-git-send-email-kmo@daterainc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: struhlo@centrum.sk
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Kent Overstreet <kmo@daterainc.com>
+Cc: axboe@kernel.dk, neilb@suse.de, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hi, from what i remember, it's done only with device "last position"
-AKA "disk head position"
-the device with head position near to position being read is "selected"
-on sequencial reads, the last used device is used, considering that
-for sequencial reads a single disk is faster, because we don't waste
-3ms to positioning head to sector, that's near true if you don't have
-diferent devices speed (7200rpm + 10000rpm + 15000rpm + ssd)
+On Wed, Aug 07, 2013 at 02:54:09PM -0700, Kent Overstreet wrote:
+> _However_, I have more patches (that depend on this patch series) to get
+> that back - segment merging improvements that get rid of
+> bi_seg_front_size, bi_seg_back_size, and bi_phys_segments. Once all that
+> is in it should be a net reduction to the size of struct bio.
 
-the best source of this information is source code of raid1.c
-it's a function (i don't remember the name, but something like read_balancing)
+What is preventing you from sending those out as well?  While it's not
+absolutely nessecary it would certainly be good if we'd avoid a struct
+bio size regression.
 
-sorry many emails the mail list denied HTML emails
