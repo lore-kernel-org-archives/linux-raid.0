@@ -1,29 +1,24 @@
-From: <struhlo@centrum.sk>
-Subject: =?utf-8?q?raid1_read_io_balancing_algorithm?=
-Date: Thu, 08 Aug 2013 11:04:52 +0200
-Message-ID: <20130808110452.464E2097@centrum.sk>
+From: Roberto Spadim <rspadim@gmail.com>
+Subject: Re: raid1 read io balancing algorithm
+Date: Thu, 8 Aug 2013 11:26:41 -0300
+Message-ID: <CAH3kUhGVwK7aq5GK=uOqs5_NhxB=Jv=izXmMffN9OyKNMKY2ew@mail.gmail.com>
+References: <20130808110452.464E2097@centrum.sk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20130808110452.464E2097@centrum.sk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: struhlo@centrum.sk
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-=C2=A0
-hello,
-=C2=A0
-how can i check set what read io scheduling/balancing is done in radi1 =
-over md raid1 devices ?
-=C2=A0
-I have host based mirror over san devices, and to be honest i haven't f=
-ound any mention in the docu nor raid.wiki.kernel.org about how the rai=
-d1 read balancing is done.
-=C2=A0
-thanks
-br/s
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+hi, from what i remember, it's done only with device "last position"
+AKA "disk head position"
+the device with head position near to position being read is "selected"
+on sequencial reads, the last used device is used, considering that
+for sequencial reads a single disk is faster, because we don't waste
+3ms to positioning head to sector, that's near true if you don't have
+diferent devices speed (7200rpm + 10000rpm + 15000rpm + ssd)
+
+the best source of this information is source code of raid1.c
+it's a function (i don't remember the name, but something like read_balancing)
