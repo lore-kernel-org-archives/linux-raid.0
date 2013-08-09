@@ -1,104 +1,344 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Advice for recovering array containing LUKS encrypted LVM volumes
-Date: Thu, 08 Aug 2013 18:09:57 -0500
-Message-ID: <52042545.7020500@hardwarefreak.com>
-References: <CAC38o7ScozDqspEH-FSyoa_W5W8s+VfYd1RTAitz574wMYqhkA@mail.gmail.com> <51FE529C.6000502@hardwarefreak.com> <CAC38o7TqO9m=6LDHxDiV=XYcfAdbnpa=GZuft-TAqFDvdqvJ4A@mail.gmail.com> <52015093.3040100@hardwarefreak.com> <CAC38o7SZ=mGnKCOTrhi7zny3ajOF3BEmfouthN0XqVgXXANe4g@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: Kent Overstreet <kmo@daterainc.com>
+Subject: Re: [PATCH 04/22] block: Abstract out bvec iterator
+Date: Thu, 8 Aug 2013 17:09:43 -0700
+Message-ID: <20130809000943.GC15409@kmo-pixel>
+References: <1375912471-5106-1-git-send-email-kmo@daterainc.com>
+ <1375912471-5106-5-git-send-email-kmo@daterainc.com>
+ <2D8F228B-65AE-4046-A910-6B354AF0058E@coraid.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAC38o7SZ=mGnKCOTrhi7zny3ajOF3BEmfouthN0XqVgXXANe4g@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: P Orrifolius <porrifolius@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <2D8F228B-65AE-4046-A910-6B354AF0058E@coraid.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ed Cashin <ecashin@coraid.com>
+Cc: axboe@kernel.dk, neilb@suse.de, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 8/7/2013 2:34 AM, P Orrifolius wrote:
-> On 7 August 2013 07:37, Stan Hoeppner <stan@hardwarefreak.com> wrote:
->> It makes more sense to spend 50% more, $75, for the native 8 port LSI
->> enterprise SAS/SATA HBA for guaranteed stability/reliability and the
->> available 4GB/s aggregate drive bandwidth.
+On Wed, Aug 07, 2013 at 10:04:36PM -0400, Ed Cashin wrote:
+> On Aug 7, 2013, at 5:54 PM, Kent Overstreet wrote:
 > 
-> Do you have any opinion on the suitability of a
+> > Immutable biovecs are going to require an explicit iterator. To
+> > implement immutable bvecs, a later patch is going to add a bi_bvec_done
+> > member to this struct; for now, this patch effectively just renames
+> > things.
 > 
-> FUJITSU MEGARAID LSI 2008 DUAL MINI SAS D2607-a21
+> Hi, Kent Overstreet.  Thanks for Cc'ing me and for the promising work.
 > 
-> similar to those listed at
-> http://www.ebay.com/itm/181152217999?_trksid=p2048036#shId ?
+> Were you able to do sanity tests with aoe this time around?  Last time, basic I/O was not working with the immutable biovec patches applied.
 > 
-> Looks pretty similar to me... maybe identical if I'm not using any
-> hardware raid capabilities?  Possibly can be got for half the cost of
-> the LSI 9211-8i.
+> Here is my 28 June email about my experiences with git://evilpiepirate.org/~kent/linux-bcache.git at that time.  It also includes information about creating an easy software-only aoe test environment.
+> 
+>   http://thread.gmane.org/gmane.linux.kernel/1505222/focus=1517924
 
-I have no experience with the Fujitsu models.  I can tell you that this
-one is not an OEM LSI 9211-8i, but looks close at first glance.  It's
-Fujitsu's own design.  It may use custom Fujitsu firmware instead of
-LSI's which means you may not be able to flash standard LSI firmware
-onto it if it needs it.  It mentions nothing of HBA mode, only RAID
-mode.  Too many unknowns, and not enough documentation available.  I'd
-steer clear.
+Hey, thanks for testing it - sorry, I think I remember seeing that email
+last time and got sidetracked before I got around to setting up some
+tests.
 
-This is probably your best current option, at 1/2 the Fujitsu price:
+I think I've got it working now, it's running the same stress tests I
+use for bcache. Here's a fixed patch, I broke the aoe changes out into
+their own patch since they were more involved than most of the others:
 
-http://www.ebay.com/itm/Intel-SASUC8I-SAS-SATA-3Gb-s-PCIe-x8-Low-Profile-RAID-Controller-Refurbished/181108158926?_trksid=p2045573.m2042&_trkparms=aid%3D111000%26algo%3DREC.CURRENT%26ao%3D1%26asc%3D27%26meid%3D431256662585357660%26pid%3D100033%26prg%3D1011%26rk%3D2%26rkt%3D4%26sd%3D171093850996%26
+(I am seeing a bug where it's getting stuck after running stress tests
+for awhile, but I can reproduce that without the aoe changes too...)
 
-This 3Gb/s Intel is/was a very popular LSISAS1068e based board, takes
-standard LSI firmware.  Decent performer with md.  Discontinued, as the
-SAS1068 series chips were discontinued.  The 9211 series (SAS2008 chip)
-supersedes it.  Newegg was selling this exact Intel board new up to a
-few months ago for $149.  The 1068 chip is limited to max individual
-drive capacity of 2TB.  So you'll peak at 12TB net w/md RAID6 and 8x2TB
-drives.  Hard to beat at $75 USD.  Uses same cables I listed previously.
- In NH, USA, ships worldwide.  Seller has 99.8% on 17k+ sales.  If in
-your shoes this is the one I'd buy.
+From 351ff4cdbbc670321b87ad38b5d5edbbb2dd2cf1 Mon Sep 17 00:00:00 2001
+From: Kent Overstreet <kmo@daterainc.com>
+Date: Thu, 8 Aug 2013 16:48:33 -0700
+Subject: [PATCH] aoe: Convert to immutable biovecs
 
-Here's an OEM Dell that I'm pretty sure is the 9240-8i and it already
-has the IT firmware, which is what you'd want.  Better card than the
-Intel above, but this sale ships to USA only apparently.
+Now that we've got a mechanism for immutable biovecs -
+bi_iter.bi_bvec_done - we need to convert drivers to use primitives that
+respect it instead of using the bvec array directly.
 
-http://www.ebay.com/itm/NEW-Dell-SAS-SATA-2-0-6Gb-s-8-Port-2x4-PCI-e-HBA-LSISAS2008-IT-/171093850996?pt=US_Server_Disk_Controllers_RAID_Cards&hash=item27d5fcfb74
+The aoe code no longer has to manually iterate over partial bvecs, so
+some struct members go away - other struct members are effectively
+renamed:
 
-> Case-wise a http://www.bitfenix.com/global/en/products/chassis/shinobi
-> looks the best/cheapest option availble to me.  Hopefully the 2 front
-> fans will cool the main array enough, and I can jury-rig another fan
-> for the extra drives mounted in the 5.25" bays.
+buf->resid	-> buf->iter.bi_size
+buf->sector	-> buf->iter.bi_sector
 
-I didn't recommend the Shinobi because it has restricted and unbalanced
-airflow characteristics.  The 2 front air intake slits are too small to
-optimally cool 8 drives in the cage without significant pressure,
-requiring many, or stronger, fans to do the job.  It has large intakes
-on the chassis floor for mounting fans, which when left open will
-disrupt front intake and rear exhaust flows.  It can mount two front
-fans and top fans but they are not included.  After buying these fans
-its cost is higher than the Enermax.  But since the Enermax and others
-are not available to you, if you go with this Shinobi chassis, I
-recommend the following:
+f->bcnt		-> f->iter.bi_size
+f->lba		-> f->iter.bi_sector
 
-1.  Affix strips of 2" wide or wider clear box packing tape, or full
-sheet letter size contact paper, to the inside of both the bottom and
-top intake grills.  This will seal them and prevent airflow, and will be
-invisible from the outside.  I've done this many times, works great.
-This forces all intake air to come through the drive cages and out the
-rear fans.
+Signed-off-by: Kent Overstreet <kmo@daterainc.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: "Ed L. Cashin" <ecashin@coraid.com>
 
-2.  Use a PSU with a 120mm fan.
-
-3.  Toss out the included el cheapo rear 120mm fan and replace it with
-one of these, or a similar high quality model with 80-100 CFM flow rate
-and ~40 dB SPL:
-
-http://www.frozencpu.com/products/5642/fan-285/Panaflo_H1A_120mm_Hi-Speed_Fan_BX_w_RPM_Sensor_FBA12G12H1BX.html?tl=g36c15s562
-
-http://www.frozencpu.com/products/17229/fan-1059/Sanyo_Denki_120mm_x_38mm_High-Speed_Fan_-_1025_CFM_109R1212H1011.html?tl=g36c15s562
-
-http://www.frozencpu.com/products/15715/fan-986/Delta_120mm_x_25mm_Fan_-_827_CFM_AFB1212H-R00_Bare_Wire.html?tl=g36c15s60
-
-With one of these and a PSU fan you won't need any fans in front cage
-locations.  If you find it's too loud get a generic self adhesive foam
-damping kick.  They're quite effective.  If still too loud, use a fan
-controller, but don't turn it down to far.
-
--- 
-Stan
-
+diff --git a/drivers/block/aoe/aoe.h b/drivers/block/aoe/aoe.h
+index 025c41d..c5e1e9b 100644
+--- a/drivers/block/aoe/aoe.h
++++ b/drivers/block/aoe/aoe.h
+@@ -100,11 +100,8 @@ enum {
+ 
+ struct buf {
+ 	ulong nframesout;
+-	ulong resid;
+-	ulong bv_resid;
+-	sector_t sector;
+ 	struct bio *bio;
+-	struct bio_vec *bv;
++	struct bvec_iter iter;
+ 	struct request *rq;
+ };
+ 
+@@ -120,13 +117,10 @@ struct frame {
+ 	ulong waited;
+ 	ulong waited_total;
+ 	struct aoetgt *t;		/* parent target I belong to */
+-	sector_t lba;
+ 	struct sk_buff *skb;		/* command skb freed on module exit */
+ 	struct sk_buff *r_skb;		/* response skb for async processing */
+ 	struct buf *buf;
+-	struct bio_vec *bv;
+-	ulong bcnt;
+-	ulong bv_off;
++	struct bvec_iter iter;
+ 	char flags;
+ };
+ 
+diff --git a/drivers/block/aoe/aoecmd.c b/drivers/block/aoe/aoecmd.c
+index f17260b..cacd48e 100644
+--- a/drivers/block/aoe/aoecmd.c
++++ b/drivers/block/aoe/aoecmd.c
+@@ -196,8 +196,7 @@ aoe_freetframe(struct frame *f)
+ 
+ 	t = f->t;
+ 	f->buf = NULL;
+-	f->lba = 0;
+-	f->bv = NULL;
++	memset(&f->iter, 0, sizeof(f->iter));
+ 	f->r_skb = NULL;
+ 	f->flags = 0;
+ 	list_add(&f->head, &t->ffree);
+@@ -295,21 +294,14 @@ newframe(struct aoedev *d)
+ }
+ 
+ static void
+-skb_fillup(struct sk_buff *skb, struct bio_vec *bv, ulong off, ulong cnt)
++skb_fillup(struct sk_buff *skb, struct bio *bio, struct bvec_iter iter)
+ {
+ 	int frag = 0;
+-	ulong fcnt;
+-loop:
+-	fcnt = bv->bv_len - (off - bv->bv_offset);
+-	if (fcnt > cnt)
+-		fcnt = cnt;
+-	skb_fill_page_desc(skb, frag++, bv->bv_page, off, fcnt);
+-	cnt -= fcnt;
+-	if (cnt <= 0)
+-		return;
+-	bv++;
+-	off = bv->bv_offset;
+-	goto loop;
++	struct bio_vec bv;
++
++	__bio_for_each_segment(bv, bio, iter, iter)
++		skb_fill_page_desc(skb, frag++, bv.bv_page,
++				   bv.bv_offset, bv.bv_len);
+ }
+ 
+ static void
+@@ -346,12 +338,10 @@ ata_rw_frameinit(struct frame *f)
+ 	t->nout++;
+ 	f->waited = 0;
+ 	f->waited_total = 0;
+-	if (f->buf)
+-		f->lba = f->buf->sector;
+ 
+ 	/* set up ata header */
+-	ah->scnt = f->bcnt >> 9;
+-	put_lba(ah, f->lba);
++	ah->scnt = f->iter.bi_size >> 9;
++	put_lba(ah, f->iter.bi_sector);
+ 	if (t->d->flags & DEVFL_EXT) {
+ 		ah->aflags |= AOEAFL_EXT;
+ 	} else {
+@@ -360,11 +350,11 @@ ata_rw_frameinit(struct frame *f)
+ 		ah->lba3 |= 0xe0;	/* LBA bit + obsolete 0xa0 */
+ 	}
+ 	if (f->buf && bio_data_dir(f->buf->bio) == WRITE) {
+-		skb_fillup(skb, f->bv, f->bv_off, f->bcnt);
++		skb_fillup(skb, f->buf->bio, f->iter);
+ 		ah->aflags |= AOEAFL_WRITE;
+-		skb->len += f->bcnt;
+-		skb->data_len = f->bcnt;
+-		skb->truesize += f->bcnt;
++		skb->len += f->iter.bi_size;
++		skb->data_len = f->iter.bi_size;
++		skb->truesize += f->iter.bi_size;
+ 		t->wpkts++;
+ 	} else {
+ 		t->rpkts++;
+@@ -383,7 +373,6 @@ aoecmd_ata_rw(struct aoedev *d)
+ 	struct aoetgt *t;
+ 	struct sk_buff *skb;
+ 	struct sk_buff_head queue;
+-	ulong bcnt, fbcnt;
+ 
+ 	buf = nextbuf(d);
+ 	if (buf == NULL)
+@@ -392,39 +381,22 @@ aoecmd_ata_rw(struct aoedev *d)
+ 	if (f == NULL)
+ 		return 0;
+ 	t = *d->tgt;
+-	bcnt = d->maxbcnt;
+-	if (bcnt == 0)
+-		bcnt = DEFAULTBCNT;
+-	if (bcnt > buf->resid)
+-		bcnt = buf->resid;
+-	fbcnt = bcnt;
+-	f->bv = buf->bv;
+-	f->bv_off = f->bv->bv_offset + (f->bv->bv_len - buf->bv_resid);
+-	do {
+-		if (fbcnt < buf->bv_resid) {
+-			buf->bv_resid -= fbcnt;
+-			buf->resid -= fbcnt;
+-			break;
+-		}
+-		fbcnt -= buf->bv_resid;
+-		buf->resid -= buf->bv_resid;
+-		if (buf->resid == 0) {
+-			d->ip.buf = NULL;
+-			break;
+-		}
+-		buf->bv++;
+-		buf->bv_resid = buf->bv->bv_len;
+-		WARN_ON(buf->bv_resid == 0);
+-	} while (fbcnt);
+ 
+ 	/* initialize the headers & frame */
+ 	f->buf = buf;
+-	f->bcnt = bcnt;
+-	ata_rw_frameinit(f);
++	f->iter = buf->iter;
++	f->iter.bi_size = min_t(unsigned long,
++				d->maxbcnt ?: DEFAULTBCNT,
++				f->iter.bi_size);
++	bio_advance_iter(buf->bio, &buf->iter, f->iter.bi_size);
++
++	if (!buf->iter.bi_size)
++		d->ip.buf = NULL;
+ 
+ 	/* mark all tracking fields and load out */
+ 	buf->nframesout += 1;
+-	buf->sector += bcnt >> 9;
++
++	ata_rw_frameinit(f);
+ 
+ 	skb = skb_clone(f->skb, GFP_ATOMIC);
+ 	if (skb) {
+@@ -617,10 +589,7 @@ reassign_frame(struct frame *f)
+ 	skb = nf->skb;
+ 	nf->skb = f->skb;
+ 	nf->buf = f->buf;
+-	nf->bcnt = f->bcnt;
+-	nf->lba = f->lba;
+-	nf->bv = f->bv;
+-	nf->bv_off = f->bv_off;
++	nf->iter = f->iter;
+ 	nf->waited = 0;
+ 	nf->waited_total = f->waited_total;
+ 	nf->sent = f->sent;
+@@ -652,19 +621,19 @@ probe(struct aoetgt *t)
+ 	}
+ 	f->flags |= FFL_PROBE;
+ 	ifrotate(t);
+-	f->bcnt = t->d->maxbcnt ? t->d->maxbcnt : DEFAULTBCNT;
++	f->iter.bi_size = t->d->maxbcnt ? t->d->maxbcnt : DEFAULTBCNT;
+ 	ata_rw_frameinit(f);
+ 	skb = f->skb;
+-	for (frag = 0, n = f->bcnt; n > 0; ++frag, n -= m) {
++	for (frag = 0, n = f->iter.bi_size; n > 0; ++frag, n -= m) {
+ 		if (n < PAGE_SIZE)
+ 			m = n;
+ 		else
+ 			m = PAGE_SIZE;
+ 		skb_fill_page_desc(skb, frag, empty_page, 0, m);
+ 	}
+-	skb->len += f->bcnt;
+-	skb->data_len = f->bcnt;
+-	skb->truesize += f->bcnt;
++	skb->len += f->iter.bi_size;
++	skb->data_len = f->iter.bi_size;
++	skb->truesize += f->iter.bi_size;
+ 
+ 	skb = skb_clone(f->skb, GFP_ATOMIC);
+ 	if (skb) {
+@@ -936,12 +905,8 @@ bufinit(struct buf *buf, struct request *rq, struct bio *bio)
+ 	memset(buf, 0, sizeof(*buf));
+ 	buf->rq = rq;
+ 	buf->bio = bio;
+-	buf->resid = bio->bi_iter.bi_size;
+-	buf->sector = bio->bi_iter.bi_sector;
++	buf->iter = bio->bi_iter;
+ 	bio_pageinc(bio);
+-	buf->bv = __bio_iovec(bio);
+-	buf->bv_resid = buf->bv->bv_len;
+-	WARN_ON(buf->bv_resid == 0);
+ }
+ 
+ static struct buf *
+@@ -1126,24 +1091,19 @@ gettgt(struct aoedev *d, char *addr)
+ }
+ 
+ static void
+-bvcpy(struct bio_vec *bv, ulong off, struct sk_buff *skb, long cnt)
++bvcpy(struct sk_buff *skb, struct bio *bio, struct bvec_iter iter, long cnt)
+ {
+-	ulong fcnt;
+-	char *p;
+ 	int soff = 0;
+-loop:
+-	fcnt = bv->bv_len - (off - bv->bv_offset);
+-	if (fcnt > cnt)
+-		fcnt = cnt;
+-	p = page_address(bv->bv_page) + off;
+-	skb_copy_bits(skb, soff, p, fcnt);
+-	soff += fcnt;
+-	cnt -= fcnt;
+-	if (cnt <= 0)
+-		return;
+-	bv++;
+-	off = bv->bv_offset;
+-	goto loop;
++	struct bio_vec bv;
++
++	BUG_ON(cnt > iter.bi_size);
++	iter.bi_size = cnt;
++
++	__bio_for_each_segment(bv, bio, iter, iter) {
++		char *p = page_address(bv.bv_page) + bv.bv_offset;
++		skb_copy_bits(skb, soff, p, bv.bv_len);
++		soff += bv.bv_len;
++	}
+ }
+ 
+ void
+@@ -1236,7 +1196,7 @@ noskb:		if (buf)
+ 			clear_bit(BIO_UPTODATE, &buf->bio->bi_flags);
+ 			break;
+ 		}
+-		bvcpy(f->bv, f->bv_off, skb, n);
++		bvcpy(skb, f->buf->bio, f->iter, n);
+ 	case ATA_CMD_PIO_WRITE:
+ 	case ATA_CMD_PIO_WRITE_EXT:
+ 		spin_lock_irq(&d->lock);
+@@ -1279,7 +1239,7 @@ out:
+ 
+ 	aoe_freetframe(f);
+ 
+-	if (buf && --buf->nframesout == 0 && buf->resid == 0)
++	if (buf && --buf->nframesout == 0 && buf->iter.bi_size == 0)
+ 		aoe_end_buf(d, buf);
+ 
+ 	spin_unlock_irq(&d->lock);
+@@ -1734,7 +1694,7 @@ aoe_failbuf(struct aoedev *d, struct buf *buf)
+ {
+ 	if (buf == NULL)
+ 		return;
+-	buf->resid = 0;
++	buf->iter.bi_size = 0;
+ 	clear_bit(BIO_UPTODATE, &buf->bio->bi_flags);
+ 	if (buf->nframesout == 0)
+ 		aoe_end_buf(d, buf);
