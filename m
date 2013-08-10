@@ -1,33 +1,69 @@
 From: Carsten Aulbert <Carsten.Aulbert@aei.mpg.de>
 Subject: Re: Recovering from two almost simultaneously failed devices in RAID1
-Date: Sat, 10 Aug 2013 18:33:07 +0200
-Message-ID: <52066B43.1010901@aei.mpg.de>
-References: <52066A7A.5050007@aei.mpg.de>
+Date: Sat, 10 Aug 2013 19:39:39 +0200
+Message-ID: <52067ADB.8080100@aei.mpg.de>
+References: <52066A7A.5050007@aei.mpg.de> <52066B43.1010901@aei.mpg.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms080200010707030408000901"
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms020001000502030207000900"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52066A7A.5050007@aei.mpg.de>
+In-Reply-To: <52066B43.1010901@aei.mpg.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 This is a cryptographically signed message in MIME format.
 
---------------ms080200010707030408000901
+--------------ms020001000502030207000900
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-Addendum:
+*sigh*
 
-currently I cannot access either of the two devices, i.e. I fear I need
-to reboot the machine - possibly power cycle - to regain access to them.
+Thanks to me being at home and only IPMI access with relatively high
+latencies, I did not manage to boot into single user mode and the system
+booted up normally - luckily for me, both md and ext4 tell me, the file
+system is safe and ok.
+
+
+# mdadm --detail /dev/md2
+/dev/md2:
+        Version : 1.2
+  Creation Time : Fri Jul 27 11:58:50 2012
+     Raid Level : raid1
+     Array Size : 250050533 (238.47 GiB 256.05 GB)
+  Used Dev Size : 250050533 (238.47 GiB 256.05 GB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
+
+    Update Time : Sat Aug 10 19:38:01 2013
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+           Name : gitmaster:2  (local to host gitmaster)
+           UUID : 7cb262a7:54496605:238cc0bf:6fa6a3e9
+         Events : 61
+
+    Number   Major   Minor   RaidDevice State
+       0       8       49        0      active sync   /dev/sdd1
+       1       8       33        1      active sync   /dev/sdc1
+
+
+I think I got really lucky (still running checks on the git repositories
+on this md).
+
+Anyone who experienced such a problem with SSDs (or HDDs) being
+disconnected like this?
 
 Cheers
 
 Carsten
 
 
---------------ms080200010707030408000901
+--------------ms020001000502030207000900
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -59,16 +95,16 @@ O5w/wdtCTQ5Tpfr/n90KWYwVQ2er5dnKowu6j9YIj/dD8jJGk3T13rgzdnRzWtSQhjP8YIRf
 ql08NsUgDShjNiBo289K7fpBNdVLGNI/pIA8P1ratofCGBPvMdjp+cjhulQX5//qS1ctP0ux
 8MhY3kBMGynLkwibH5MiLfVSip0xggLOMIICygIBATA8MDYxCzAJBgNVBAYTAkRFMRMwEQYD
 VQQKEwpHZXJtYW5HcmlkMRIwEAYDVQQDEwlHcmlkS2EtQ0ECAk/QMAkGBSsOAwIaBQCgggFn
-MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTEzMDgxMDE2MzMw
-N1owIwYJKoZIhvcNAQkEMRYEFBs/Cg2v26YfnxzE10+IoyDRQaSGMEsGCSsGAQQBgjcQBDE+
+MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTEzMDgxMDE3Mzkz
+OVowIwYJKoZIhvcNAQkEMRYEFGmHGUHLIaiwVDhCGY1cfjEUeRxtMEsGCSsGAQQBgjcQBDE+
 MDwwNjELMAkGA1UEBhMCREUxEzARBgNVBAoTCkdlcm1hbkdyaWQxEjAQBgNVBAMTCUdyaWRL
 YS1DQQICT9AwTQYLKoZIhvcNAQkQAgsxPqA8MDYxCzAJBgNVBAYTAkRFMRMwEQYDVQQKEwpH
 ZXJtYW5HcmlkMRIwEAYDVQQDEwlHcmlkS2EtQ0ECAk/QMGwGCSqGSIb3DQEJDzFfMF0wCwYJ
 YIZIAWUDBAEqMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzAOBggqhkiG9w0DAgICAIAwDQYI
 KoZIhvcNAwICAUAwBwYFKw4DAgcwDQYIKoZIhvcNAwICASgwDQYJKoZIhvcNAQEBBQAEggEA
-L29f/xGlFzmpotmSgS69swyOpw+Wagjjhqab5SiOw6fhl8M63b00nrl4bQs0l7njNOBl6sBe
-xr2WejBcYINTlR9IDb1QC4pH5ZlIz9DQUA4v8FfAEN5v9ioDLfgmzFBbs28eLEfJvDom99zM
-BMK7c/BLVo+XKVfvvsvbj0xkV9VK5O2Ogr+IeSH578n1XxoeiR8q+I8ez4JumdNbNoe9pAJz
-weLryrsSxipNr5/R/44F5m6Wny3vmp1iZwqxXQfLKpnpU2JGxz4EjmiOCZ+fwedHXqDzLATG
-kOFH6MOJPy9+iKgktVXe8gOmVBZwbv8H9+V7srfLwqal4thQAhKPdgAAAAAAAA==
---------------ms080200010707030408000901--
+EhV1oc7aGAUxlXp0d0AaBDlTIS/s2/8zkDf1HGJP3hNg46zJi16AU30k/zddLTjXVKlhE8s4
+1oZ9Do+g/yj1gU+6cHuomVxM5o5G+PZnR7L8ww8S7/NP4ZX4pUp2AGnrr/OASoewSgd2oYw1
+rtSt1qi/S08HRSAFNoRblZs9J4v8w8UmsbS8HTVxkM8ls0AK08SBisi99+mKQB9vySxEIMl5
+Wt7vxFQ9/uk3ALHHORuienSOYl4qklma9UnAjAc3X3598cAWYF9k2XsTfpKdZefIzakobmYh
+jJeLWRcb3u1NTX40vcJloTCbcDFD0JqwntifKXJ+iJNFJeo1I17IPwAAAAAAAA==
+--------------ms020001000502030207000900--
