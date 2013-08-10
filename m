@@ -1,120 +1,173 @@
-From: Kent Overstreet <kmo@daterainc.com>
-Subject: Re: [PATCH 18/22] block: Generic bio chaining
-Date: Sat, 10 Aug 2013 00:38:55 -0700
-Message-ID: <20130810073855.GA9349@kmo-pixel>
-References: <1375912471-5106-1-git-send-email-kmo@daterainc.com>
- <1375912471-5106-19-git-send-email-kmo@daterainc.com>
+From: P Orrifolius <porrifolius@gmail.com>
+Subject: Re: Advice for recovering array containing LUKS encrypted LVM volumes
+Date: Sat, 10 Aug 2013 20:44:32 +1200
+Message-ID: <CAC38o7SgLO_jDmO7VPqOYRJbtJDeN_i8Nmf_fCv4=u7w1CWLSQ@mail.gmail.com>
+References: <CAC38o7ScozDqspEH-FSyoa_W5W8s+VfYd1RTAitz574wMYqhkA@mail.gmail.com>
+	<51FE529C.6000502@hardwarefreak.com>
+	<CAC38o7TqO9m=6LDHxDiV=XYcfAdbnpa=GZuft-TAqFDvdqvJ4A@mail.gmail.com>
+	<52015093.3040100@hardwarefreak.com>
+	<CAC38o7SZ=mGnKCOTrhi7zny3ajOF3BEmfouthN0XqVgXXANe4g@mail.gmail.com>
+	<52042545.7020500@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1375912471-5106-19-git-send-email-kmo@daterainc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: axboe@kernel.dk
-Cc: neilb@suse.de, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <52042545.7020500@hardwarefreak.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: stan@hardwarefreak.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Aug 07, 2013 at 02:54:27PM -0700, Kent Overstreet wrote:
-> This adds a generic mechanism for chaining bio completions. This is
-> going to be used for a bio_split() replacement, and some other things in
-> the future.
-> 
-> This is implemented with a new bio flag that bio_endio() checks; it
-> would definitely be cleaner to implement chaining with a bi_end_io
-> function, but since there's no limits on the depth of a bio chain (and
-> with arbitrary bio splitting coming this is going to be a real issue)
-> using an endio function would lead to unbounded stack usage.
-> 
-> Tail call optimization could solve that, but CONFIG_FRAME_POINTER
-> disables gcc's tail call optimization (-fno-optimize-sibling-calls) - so
-> we do it the hacky but safe way.
+On 9 August 2013 08:17, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> On 8/6/2013 9:22 PM, P Orrifolius wrote:
+>
+>> Just to give a little economic context, so as not to appear
+>> heedless of your advice, the relative prices of things are a bit
+>> different here. A Vantec costs about USD125, the LSI about USD360.
+>
+> You're probably looking at the retail "KIT".  Note I previously
+> specified the OEM model and separate cables because it's
+> significantly cheaper, by about $60, roughly 20%, here anyway.
 
-Btw, if you saw this patch and went "Wtf? What's the justification for
-inflating struct bio and sticking another atomic op in the fast path?" -
-here's the justification: The below patch gets me a 5% increase in
-throughput (doing 4k random reads, and on one core on an old gulftown so
-cpu bound).
+No, definitely the bare card (LSI00194).  The kit (LSI00195) is about
+30% more.
 
-(it also considerably simplifies a lot of random code, but there's a
-real performance win to drivers handling arbitrary size bios so upper
-layers don't have to care).
+>
+>> Anything vaguely enterprise-y or unusual tends to attract a larger
+>> markup.  And if you take purchasing power into account that LSI
+>> probably equates to about USD650 of beer/groceries... not directly
+>> relevant but it does mean the incremental cost is harder to bear.
+>
+> Widen your search to every online seller in the EU and I'd think you
+> can find what you want at a price you can afford.  Worth noting,
+> nearly every piece of personal electronics I buy comes from Newegg
+> which ships from 3 locations to here.
 
-From a6b23c56c722ffbf30ca78c14d21dd8615e11474 Mon Sep 17 00:00:00 2001
-From: Kent Overstreet <kmo@daterainc.com>
-Date: Sat, 10 Aug 2013 00:14:03 -0700
-Subject: [PATCH] mtip32xx: handle arbitrary size bios
+Actually the other side, I'm in NZ.  It's not just the tyranny of
+physical distance, I'm probably closer than almost everyone in the USA
+to the producers of this stuff, it's also market scale.  And an
+effective Customs enforcement.
+
+>> Putting cost aside, and the convenience of having occasionally just
+>> taken the two enclosures elsewhere for a few days, my biggest
+>> problem is an adequately sized and ventilated case.
+>
+> Such chassis abound on this side of the pond.  Surely there are
+> almost as many on that side.
+
+It's hard to get a good case here, at all or at a price close to eg
+Newegg.  It's mostly just 'pimped out' mid towers.  And the weight of
+the item makes one-off imports prohibitive.
+
+> Try to locate one of these Chenbro SR112 server chassis w/fixed
+> drive cage option,
+
+Pretty hard to source Chenbro cases here, could get a SR107 shipped in
+for about 3x the cost of the Shinobi.
 
 
-diff --git a/drivers/block/mtip32xx/mtip32xx.c b/drivers/block/mtip32xx/mtip32xx.c
-index 3ea8234..058d86c 100644
---- a/drivers/block/mtip32xx/mtip32xx.c
-+++ b/drivers/block/mtip32xx/mtip32xx.c
-@@ -2645,24 +2645,6 @@ static void mtip_hw_submit_io(struct driver_data *dd, sector_t sector,
- }
- 
- /*
-- * Release a command slot.
-- *
-- * @dd  Pointer to the driver data structure.
-- * @tag Slot tag
-- *
-- * return value
-- *      None
-- */
--static void mtip_hw_release_scatterlist(struct driver_data *dd, int tag,
--								int unaligned)
--{
--	struct semaphore *sem = unaligned ? &dd->port->cmd_slot_unal :
--							&dd->port->cmd_slot;
--	release_slot(dd->port, tag);
--	up(sem);
--}
--
--/*
-  * Obtain a command slot and return its associated scatter list.
-  *
-  * @dd  Pointer to the driver data structure.
-@@ -3913,21 +3895,22 @@ static void mtip_make_request(struct request_queue *queue, struct bio *bio)
- 
- 	sg = mtip_hw_get_scatterlist(dd, &tag, unaligned);
- 	if (likely(sg != NULL)) {
--		if (unlikely((bio)->bi_vcnt > MTIP_MAX_SG)) {
--			dev_warn(&dd->pdev->dev,
--				"Maximum number of SGL entries exceeded\n");
--			bio_io_error(bio);
--			mtip_hw_release_scatterlist(dd, tag, unaligned);
--			return;
--		}
--
- 		/* Create the scatter list for this bio. */
- 		bio_for_each_segment(bvec, bio, iter) {
--			sg_set_page(&sg[nents],
--					bvec.bv_page,
--					bvec.bv_len,
--					bvec.bv_offset);
--			nents++;
-+			if (unlikely(nents == MTIP_MAX_SG)) {
-+				struct bio *split = bio_clone(bio, GFP_NOIO);
-+
-+				split->bi_iter = iter;
-+				bio->bi_iter.bi_size -= iter.bi_size;
-+				bio_chain(split, bio);
-+				generic_make_request(split);
-+				break;
-+			}
-+
-+			sg_set_page(&sg[nents++],
-+				    bvec.bv_page,
-+				    bvec.bv_len,
-+				    bvec.bv_offset);
- 		}
- 
- 		/* Issue the read/write. */
-@@ -4040,6 +4023,7 @@ skip_create_disk:
- 	blk_queue_max_hw_sectors(dd->queue, 0xffff);
- 	blk_queue_max_segment_size(dd->queue, 0x400000);
- 	blk_queue_io_min(dd->queue, 4096);
-+	set_bit(QUEUE_FLAG_LARGEBIOS,	&dd->queue->queue_flags);
- 
- 	/*
- 	 * write back cache is not supported in the device. FUA depends on
+> With 10 drives you'd want to acquire something like 3 of these
+> http://www.newegg.com/Product/Product.aspx?Item=N82E16817995073 for
+> your 8 data array drives w/room for one more.
+
+Even plain drive cages are few and far between.  About USD38 for a
+http://www.lian-li.com/en/dt_portfolio/ex-36a2/ or USD30 for a
+http://www.thermaltake.com/products-model.aspx?id=C_00000235
+
+Sticks in my craw to pay a third of the cost of the Shinobi case for one
+of those.
+
+There are lots of backplaned cages, for more money, but I'm excluding
+those anyway on your warnings about cheap backplanes.
+
+
+>> I know from having 6 drives in 6 bays with a single 120mm HDD cage
+>> fan in my existing case that some drives get very hot.
+>
+> This is what happens when designers and consumers trend toward quiet
+>  over cooling power.  Your 120 probably has a free air rated output
+> of ~40 CFM, 800-1200 RPM, static pressure of ~.03" H2O.  Due to
+> turbulence through the drive cage and the ultra low pressure it's
+> probably only moving ~20 CFM or less over the drives.  The overall
+> chassis airflow is probably insufficient, and turbulent, so heat
+> isn't evacuated at a sufficient rate, causing Tcase to rise, making
+> the cage fan even less useful.  Each of the 6 drives are likely
+> receiving
+>
+> 20/6 = ~3.3 CFM or less from the cage fan.
+>
+> For comparison, a single NMB 120x38, model FBA12G 12H, spins 2500
+> RPM, moves 103 CFM, .26" H2O static pressure, 41.5 dB SPL.
+>
+> http://www.nmbtc.com/pdf/dcfans/fba12g.pdf
+>
+> It's ~4 times louder than your 120.  However, it moves ~5x more air
+> at ~8.7x higher static pressure.
+[snip]
+> This is why every quality server chassis you'll find has four sides
+> buttoned up, an open front, and fans only at the rear and/or in the
+> middle.  No side intake vent for CPUs, PCIe slots, etc.  Front to
+> back airflow only.  You don't find many well designed PC chassis
+> because most buyers are uneducated, and simply think "more fans is
+> better, dude!". This is also why cases with those ugly 8" side
+> intake fans sell like hot cakes.  The flow is horrible, but, "Dude,
+> look how huge my fan is!".
+
+And, in a small market, results in good cases being unobtainable/expensive.
+
+I'm with you on airflow... my current case has removed side fans,
+cardboard covering fan holes, duct tape over perforations and the front
+plastic hacksawed out to open up where they'd only put 4 or 5 tiny
+slits.  I'm not too picky about the ascetics.
+
+>> Do you have any opinion on the suitability of a FUJITSU MEGARAID
+>> LSI 2008 DUAL MINI SAS D2607-a21
+
+> I have no experience with the Fujitsu models.
+[snip]
+> Too many unknowns, and not enough documentation available.  I'd
+> steer clear.
+
+Ok.
+
+>
+> This is probably your best current option, at 1/2 the Fujitsu price:
+>
+> This 3Gb/s Intel is/was a very popular LSISAS1068e based board, takes
+> standard LSI firmware.
+
+> The 1068 chip is limited to max individual drive capacity of 2TB.
+>
+> Here's an OEM Dell that I'm pretty sure is the 9240-8i and it already
+> has the IT firmware, which is what you'd want.  Better card than the
+> Intel above, but this sale ships to USA only apparently.
+
+How does the 9240 differ from the 9211?  The only obvious difference
+that I can see is that the 9240 supports _less_ connected drives
+(unraided).  And yet it's 20-25% more expensive here retail.
+
+
+The number of devices connected won't be a problem but the 2TB limit may
+force me into an upgrade earlier.
+
+For these lightweight items it will be feasible for me to use an
+on-shipping service, as long as they're under a threshold for attracting
+additional Customs charges... which these cards will be.
+So I'll keep them in mind.
+
+
+> I didn't recommend the Shinobi because it has restricted and
+> unbalanced airflow characteristics.  The 2 front air intake slits
+> are too small to optimally cool 8 drives in the cage without
+> significant pressure
+
+Hmmmm... I was going to just leave the front panel off on the assumption
+that there are dust filters on the fan intakes, and that the panel can
+actually be removed.  Neither of which may be true in which case those
+little slits would be a serious problem.
+
+And, as you suggest, I was going to block up all the other inlets.
+
+And I'll take a look at better fans.
+
+
+Thanks.
