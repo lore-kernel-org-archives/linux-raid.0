@@ -1,141 +1,121 @@
-From: Jack Wang <jinpu.wang@profitbricks.com>
-Subject: Re: [BUG] md hang at schedule in  md_write_start
-Date: Wed, 14 Aug 2013 10:09:29 +0200
-Message-ID: <520B3B39.4060703@profitbricks.com>
-References: <52090E6D.10104@profitbricks.com> <20130813143115.55dd27d1@notabene.brown> <5209E37D.6050107@profitbricks.com> <20130814104410.10bb2259@notabene.brown>
+From: ariel.work@fmgirl.com
+Subject: Request for help with "1st time through" RAID array renaming
+Date: Wed, 14 Aug 2013 09:26:29 -0700
+Message-ID: <1376497589.7879.9787867.21A861C2@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130814104410.10bb2259@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Jack Wang <xjtuwjp@gmail.com>, Sebastian Riemer <sebastian.riemer@profitbricks.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/14/2013 02:44 AM, NeilBrown wrote:
-> On Tue, 13 Aug 2013 09:42:53 +0200 Jack Wang <jinpu.wang@profitbricks.com>
-> wrote:
-> 
->> On 08/13/2013 06:31 AM, NeilBrown wrote:
->>> On Mon, 12 Aug 2013 18:33:49 +0200 Jack Wang <jinpu.wang@profitbricks.com>
->>> wrote:
->>>
->>>> Hi Neil,
->>>>
->>>>
->>>> We've found md hang in our test, it's easy to reproduce with script
->>>> attached.
->>>>
->>>> We've tried 3.4 stable kernel and latest mainline, it still exists.
->>>>
->>>> Looks like flush bdi_writeback_workfn race with md_stop, no idea how to
->>>> fix it, could you kindly give us suggestions?
->>>>
->>>> Best regards,
->>>> Jack
->>>
->>> Thanks for the report.  I can see how that deadlock could happen.
->>>
->>> Can you please try this patch and confirm that it fixes it.
->>> I'm not really happy with this approach but nothing better occurs to me yet.
->>>
->>> NeilBrown
->>>
->>
->> Hi Neil,
->>
->> Thanks for quick fix, I tested on 3.4 stable and mainline, it works now.
->> Could you give more description about the bug and fix.
->>
-> Thanks for testing.
-> 
-> The problem:
->  If you open a block device (e.g. /dev/md0) and write to it the writes will
->  be buffered in the page cache until an 'fsync' or similar.
->  When the last open file descriptor on the block device is closed, that
->  triggers a flush even if there was no fsync.
->  So if you
->     dd > /dev/md0
->     mdadm --stop /dev/md0
->  The 'close' that happens when dd exits will flush the cache.  So when mdadm
->  opens /dev/md0 the cache will be empty.  This is the normal situation.
-> 
->  However if "mdadm --stop /dev/md0" open /dev/md0 before 'dd' exits, then
->  nothing will trigger the flush and that causes problems as I'll get to in a
->  minute.
->  Normally if this happened, mdadm would call the STOP_ARRAY ioctl which would
->  notice that there is an extra open (from dd) and would abort.
->  However "mdadm -S" retries a few times if it confirmed that the array wasn't
->  mounted.  Eventually it opens just before 'dd' closes.  The presence of the
->  "mdadm -D" might affect this - it might hold a lock that "mdadm -S" waits a
->  little while for.
-> 
->  Anyway by the time that "mdadm --stop" has called STOP_ARRAY on the open
->  file descriptor and got to do_md_stop() it is holding ->reconfig_mutex
->  (because md_ioctl() calls mddev_lock()).
->  While holding this mutex it calls sync_blockdev() to ensure the page cache
->  is flushed.  This is where the problem occurs.
->  If the array is currently marked 'clean' and there a dirty pages in the page
->  cache, md_write_start() while request that the superblock be marked 'dirty'.
->  This is handled by md_check_recovery() which is called by the array
->  managment thread.  However it will only update the superblock if it can get
->  ->reconfig_mutex.
-> 
->  So the "mdadm --stop" thread is holding ->reconfig_mutex and waiting for
->  dirty data to be flushed.  The flush thread is waiting for the superblock
->  the be updated by the array management thread.  The array management thread
->  won't update the superblock until it can get ->reconfig_mutex.
->  i.e. a deadlock.
-> 
->  One way to "fix" it would be to call md_allow_write() in do_md_stop() before
->  calling sync_blockdev().  This would remove the deadlock, but would often
->  modify the superblock unnecessarily.
-> 
->  I would be nice if I could check beforehand if sync_blockdev() will actually
->  write anything and then call md_allow_write() if it would.  But I don't
->  think that is possible.
-> 
->  So the approach I took in the patch I gave you was to set a flag in
->  do_md_stop to tell md_check_recovery() that it was ok to update the
->  superblock without holding a lock, because the lock is already held.
->  I don't really like that though.  It feels like it should be racy.
-> 
->  I could call sync_blockdev() *before* taking the ->reconfig_mutex but that
->  would be racy as another process could theoretically write after the
->  sync_blockdev, and close before do_md_stop() checks for other opens....
-> 
->  However maybe I could make use for ->open_mutex.  This guards opening and
->  destroying of the array, which are the issue here.
-> 
->  Before the mddev_lock() in md_ioctl() I could (in the STOP_ARRAY case)
->     lock ->open_mutex
->     check that mddev->openers is 1 - abort if not
->     set a flag
->     release ->open_mutex
->     call sync_blockdev.
-> 
->  Then in md_open()
->     after getting ->open_mutex, clear the flag.
-> 
->  Then in do_md_stop()
->     after getting ->open_mutex, if the flag is set, abort with EBUSY.
-> 
->  This would ensure that the page cache is not dirty when do_md_stop decides
->  to stop the array by flushing it early and making sure no-one else can open
->  it.
-> 
->  I think I like this approach better.
-> 
->  Could you retry the following patch instead?
-> 
-> Thanks
-> NeilBrown
+Hi all!
 
-Thanks Neil for informative description:), it is really helpful.
-I tried you new patch, it also works as expected.
+I inherited a bunch of servers with RAID arrays.  I'm doing a bunch of
+housekeeping/cleanup, documentation, etc.
 
-Best regards,
-Jack
+In this step I want to get RAID array naming straightened out.
 
+I read the mdadm manpage for
 
+	[create, build, grow]
+	-N, --name=
+
+and I _think_ that to set an array name, and also to REname it?, I need
+to do
+
+	sudo mdadm --assemble <array device> --name=NewName
+	--update=OldName <array's drives>
+
+I'm a bit sketchy on the exact steps to do that though.  Well, the exact
+steps to do that AND to NOT! screw things up!
+
+Do I have to boot from a different disk, unmounting the arrays?
+Disassembling them?  etc?
+
+I'd like to learn how to do this right.
+
+Here's an example of what's running on one server.  The OS is Opensuse.
+
+	uname -a
+		Linux arieltest.local 3.7.10-1.16-desktop #1 SMP PREEMPT
+		Fri May 31 20:21:23 UTC 2013 (97c14ba) x86_64 x86_64
+		x86_64 GNU/Linux
+	rpm -q mdadm
+		mdadm-3.2.6-3.4.1.x86_64
+
+Its got three arrays attached.
+
+	v0.90 RAID-1  <-- "/boot"
+	v1.00 RAID-1  <-- ROOT
+	v1.02 RAID-10 <-- storage
+
+I can't say why these were configured that way (that admin's long gone
+:-( ).  Once I get things all cleaned up around here, I'll start with a
+next-gen plan from scratch.  But for the time being, this is what I'm
+working with.
+
+This system boots OK.  The arrays report as
+
+	mdadm --detail --scan
+	  ARRAY /dev/md0         metadata=0.90                
+	  UUID=xxx...
+	  ARRAY /dev/md126       metadata=1.00 name=Rescue:1  
+	  UUID=yyy...
+	  ARRAY /dev/md2         metadata=1.02 name=server:md2
+	  UUID=zzz...
+
+	mdadm -D -s
+	  ARRAY /dev/md0         metadata=0.90                
+	  UUID=xxx...
+	  ARRAY /dev/md/Rescue:1 metadata=1.0  name=Rescue:1  
+	  UUID=yyy...
+	  ARRAY /dev/md2         metadata=1.2  name=server:md2
+	  UUID=zzz...
+
+Not sure why the devices are different between the two, or if that's a
+problem.
+
+The config file is
+
+	cat /etc/mdadm.conf
+		CREATE owner=root group=disk mode=0660 auto=yes
+		DEVICE /dev/disk/by-id/ata-[DISK1]-part2
+		/dev/disk/by-id/[DISK2]-part2
+		DEVICE /dev/disk/by-id/ata-[DISK1]-part1
+		/dev/disk/by-id/[DISK2]-part1 
+		DEVICE /dev/disk/by-id/ata-[DISK3]-part1
+		/dev/disk/by-id/ata-[DISK4]-part1
+		/dev/disk/by-id/ata-[DISK5]-part1
+		/dev/disk/by-id/ata-[DISK6]-part1
+		ARRAY /dev/md0  level=raid1  num-devices=2 metadata=0.90
+		UUID=xxx...
+		ARRAY /dev/md1  level=raid1  num-devices=2 metadata=1.00
+		UUID=yyy...
+		ARRAY /dev/md2  level=raid10 num-devices=4 metadata=1.02
+		name=server:md2 UUID=zzz...
+
+I want to end up with
+
+	boot ARRAY,    device == /dev/md0, name == server1_boot
+	ROOT ARRAY,    device == /dev/md1, name == server1_root
+	storage ARRAY, device == /dev/md2, name == server1_storage
+
+and have
+
+	mdadm --detail --scan
+	mdadm -D -s
+
+both report a consistent story.
+
+To "get there", I need to 1st boot from another drive, right?  Like a
+LiveCD, and -- at least -- unmount the arrays?
+
+Do I need to 'break' or disassemble them?
+
+Guess I'm looking for a little hand-holding on this once through.
+
+Thanks a lot for any help!
+
+Ariel
