@@ -1,83 +1,120 @@
-From: ariel.work@fmgirl.com
-Subject: Re: Request for help with "1st time through" RAID array renaming
-Date: Wed, 14 Aug 2013 17:22:59 -0700
-Message-ID: <1376526179.7584.9941035.0A00CCA2@webmail.messagingengine.com>
-References: <1376497589.7879.9787867.21A861C2@webmail.messagingengine.com>
- <1376501238.20717.9810207.70E4DA12@webmail.messagingengine.com>
- <20130815094636.3f804c9f@notabene.brown>
+From: <Matthias.Blaesing@persona.de>
+Subject: Recovery of RAID1 fails (added disks stays as spare)
+Date: Thu, 15 Aug 2013 09:09:40 +0000
+Message-ID: <FC7EE784B0E13748AA4FF80E6D4CD67212E27E@w8kmail2.konzern.intern>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130815094636.3f804c9f@notabene.brown>
+Content-Language: de-DE
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil
+Hello,
 
-> As the man page says, super-minor is only relevant for 0.90 metadata, and
-> updating it is automatic for 2.6 and later.  So this step is not needed.
+I'm currently fighting a server problem and have the feeling, that I'm =
+running into walls.
 
-Okay.  I wan't sure what that meant :-/
+Summary: On one of our servers we suffered from a hard disk error, that=
+ lead to a degraded array.
+The hardware was replaced and the array was rebuild. On one of the RAID=
+-Sets the newly added
+disk is not activated but stays as spare.
 
-> > 	mdadm --uuid=xxx... --update=name --name=server1_boot   
-> > 	--homehost="<none>" --assemble /dev/md0  /dev/sd[ab]1
-> > 	mdadm --uuid=yyy... --update=name --name=server1_root   
-> > 	--homehost="<none>" --assemble /dev/md1  /dev/sd[ab]2
-> > 	mdadm --uuid=zzz... --update=name --name=server1_storage
-> > 	--homehost="<none>" --assemble /dev/md2  /dev/sd[cdef]1
-> 
-> This should work and do what you expect, though "--assemble" needs to
-> come first.
+System: SUSE Linux Enterprise Server 11 (x86_64) 11.2
 
-Yeah, I got that figured out :-)  Need to set the mode.
+The current state:
 
-> And if you are explicitly listing the devices (/dev/sd[ab]1), then giving
-> the uuid as well is fairly pointless (though it doesn't hurt).
+# cat /proc/mdstat
 
-Now that I think about it, makes sense.
+Personalities : [raid1] [raid0] [raid10] [raid6] [raid5] [raid4]
+md3 : active raid1 sda3[2](S) sdb3[0]
+      970888192 blocks [2/1] [U_]
 
-> > How's that look?
-> Mostly good.
+md1 : active raid1 sda1[0] sdb1[1]
+      3911680 blocks [2/2] [UU]
 
-Okay.  So I took a swipe at it with the corrections you suggested.
+unused devices: <none>
 
-After `mkinitrd` and `shutdown -r now` I've now gotten an "md127" in
-there?
+# mdadm --detail /dev/md3
 
-	cat /proc/mdstat | grep md
-		md0 :   active raid1  sda1[0] sdb1[1]
-		md127 : active raid1  sda2[0] sdb2[2]
-		md2 :   active raid10 sdc1[0] sdf1[3] sde1[2] sdd1[1]
+/dev/md3:
+        Version : 0.90
+  Creation Time : Fri Feb  4 11:47:04 2011
+     Raid Level : raid1
+     Array Size : 970888192 (925.91 GiB 994.19 GB)
+  Used Dev Size : 970888192 (925.91 GiB 994.19 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 3
+    Persistence : Superblock is persistent
 
-	mdadm -D -s
-		ARRAY /dev/md0   metadata=0.90                          
-		 UUID=xxx
-		ARRAY /dev/md127 metadata=1.0  name=<none>:server_root  
-		 UUID=yyy
-		ARRAY /dev/md2   metadata=1.2 
-		name=<none>:server_storage UUID=zzz
+    Update Time : Thu Aug 15 10:22:07 2013
+          State : clean, degraded
+ Active Devices : 1
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 1
 
-Where my
+           UUID : e9d9c5f5:615c789e:3fb6082e:e5593158
+         Events : 0.18857541
 
-cat /etc/mdadm.conf
-	...
-	HOMEHOST <ignore>
-	ARRAY /dev/md0 level=raid1  num-devices=2 metadata=0.90         
-	                  UUID=xxx
-	ARRAY /dev/md1 level=raid1  num-devices=2 metadata=1.00
-	name=<none>:server_root    UUID=yyy
-	ARRAY /dev/md2 level=raid10 num-devices=4 metadata=1.02
-	name=<none>:server_storage UUID=zzz
+    Number   Major   Minor   RaidDevice State
+       0       8       19        0      active sync   /dev/sdb3
+       1       0        0        1      removed
 
-So the process seems to NOT blow things up.  That's filed away now!
+       2       8        3        -      spare   /dev/sda3
 
-And, "/dev/md0" and "/dev/md2" seem to be properly named/reporting in
-the mdadm, but not "/dev/md1".
+I would expect the raid system to move /dev/sda3 to number 1 and mark i=
+t as active.
 
-Did I screw up the mdadm.conf?  And SHOULD I have set a HOMEHOST to
-begin with ? (Fuzzy on when that's useful)
+Versions:
 
-Ariel
+# uname -a
+Linux 3.0.58-0.6.6-default #1 SMP Tue Feb 19 11:07:00 UTC 2013 (1576ecd=
+) x86_64 x86_64 x86_64 GNU/Linux
+# mdadm -V
+mdadm - v3.2.2 - 17th June 2011
+
+I tried:
+
+* removing /dev/sda3 from the array and add it back
+* removing /dev/sda3 from the array, zero the root block and add it bac=
+k (--zero-superblock)
+* removing /dev/sda3 from the array, reduce raid devices to one, add /d=
+ev/sda3 back
+* removing /dev/sda3 from the array, zero the first part of the disk (w=
+ith dd) and add it back
+
+I would really appreciate ideas how to fix this (preferably while runni=
+ng the system).
+
+
+Mit freundlichen Gr=FC=DFen
+
+Matthias Bl=E4sing
+Abt IT
+KompetenzCenter
+
+Tel.: 02351 950-344
+=46ax.: 02351 950-222
+mailto: matthias.blaesing@persona.de
+www.persona.de
+
+persona service Verwaltungs AG & Co. KG=20
+=46reisenbergstra=DFe 31 =95 58513 L=FCdenscheid =20
+Tel.: (02351) 950-0 =95 Fax: (02351) 950-222=20
+Sitz L=FCdenscheid =95 Registergericht Iserlohn, HRA Nr. 2930
+
+pers=F6nlich haftende Gesellschafterin: persona service AG
+Gartenstra=DFe 93 =95 CH-4002 Basel
+Handelsregister Basel, Nr. CH-270.3.012.836-8
+diese vertreten durch den Verwaltungsrat:
+Georg Breucker (Pr=E4sident) und Dr. Sebastian Burckhardt
+www.persona.de
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
