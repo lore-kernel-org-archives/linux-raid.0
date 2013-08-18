@@ -1,139 +1,141 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Recovery of RAID1 fails (added disks stays as spare)
-Date: Sat, 17 Aug 2013 10:50:37 +1000
-Message-ID: <20130817105037.3aea0b4f@notabene.brown>
-References: <FC7EE784B0E13748AA4FF80E6D4CD67212E27E@w8kmail2.konzern.intern>
+From: wangkaird <wangkaird@gmail.com>
+Subject: raid5: a problem of repeat recovery
+Date: Sun, 18 Aug 2013 21:28:21 +0800
+Message-ID: <1376832501.8512.5.camel@bogon>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/9xH+eOtgPynv3a8K9AvMv6G"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <FC7EE784B0E13748AA4FF80E6D4CD67212E27E@w8kmail2.konzern.intern>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matthias.Blaesing@persona.de
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/9xH+eOtgPynv3a8K9AvMv6G
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hello,
+I'm currently fighting a raid problem with a wired log as follows:
+(md19 is a 3-devices raid5)
 
-On Thu, 15 Aug 2013 09:09:40 +0000 <Matthias.Blaesing@persona.de> wrote:
+......
+Aug 13 09:40:06 node-0 kernel: md19: detected capacity change from
+2147483648 to 0
+Aug 13 09:40:06 node-0 kernel: md: md19 stopped.
+Aug 13 09:40:06 node-0 kernel: md: unbind<dm-117>
+Aug 13 09:40:06 node-0 kernel: md: export_rdev(dm-117)
+Aug 13 09:40:06 node-0 kernel: md: unbind<dm-420>
+Aug 13 09:40:06 node-0 kernel: md: bind<dm-420>
+Aug 13 09:40:06 node-0 kernel: raid5: device dm-420 operational as raid
+disk 1
+Aug 13 09:40:06 node-0 kernel: raid5: device dm-304 operational as raid
+disk 0
+Aug 13 09:40:06 node-0 kernel: raid5: allocated 3230kB for md19
+Aug 13 09:40:06 node-0 kernel: 1: w=1 pa=0 pr=3 m=1 a=0 r=3 op1=0 op2=0
+Aug 13 09:40:06 node-0 kernel: 0: w=2 pa=0 pr=3 m=1 a=0 r=3 op1=0 op2=0
+Aug 13 09:40:06 node-0 kernel: raid5: raid level 4 set md19 active with
+2 out of 3 devices, algorithm 0
+Aug 13 09:40:06 node-0 kernel: md19: bitmap initialized from disk: read
+1/1 pages, set 0 bits
+Aug 13 09:40:06 node-0 kernel: created bitmap (1 pages) for device md19
+Aug 13 09:40:06 node-0 kernel: md19: detected capacity change from 0 to
+2147483648
+Aug 13 09:40:06 node-0 kernel: md19: detected capacity change from 0 to
+2147483648
+Aug 13 09:40:06 node-0 kernel: md19: unknown partition table
+Aug 13 09:40:06 node-0 kernel: md: bind<dm-117>
+Aug 13 09:40:06 node-0 kernel: RAID5 conf printout:
+Aug 13 09:40:06 node-0 kernel: --- rd:3 wd:2
+Aug 13 09:40:06 node-0 kernel: disk 0, o:1, dev:dm-304
+Aug 13 09:40:06 node-0 kernel: disk 1, o:1, dev:dm-420
+Aug 13 09:40:06 node-0 kernel: disk 2, o:1, dev:dm-117
+Aug 13 09:40:06 node-0 kernel: md: recovery of RAID array md19
+Aug 13 09:40:06 node-0 kernel: md: minimum _guaranteed_  speed: 1000
+KB/sec/disk.
+Aug 13 09:40:06 node-0 kernel: md: using maximum available idle IO
+bandwidth (but not more than 400000 KB/sec) for recovery.
+Aug 13 09:40:06 node-0 kernel: md: using 128k window, over a total of
+1048576 blocks.
+Aug 13 09:40:06 node-0 kernel: md: md19: recovery done.
+Aug 13 09:40:06 node-0 kernel: RAID5 conf printout:
+Aug 13 09:40:06 node-0 kernel: --- rd:3 wd:3
+Aug 13 09:40:06 node-0 kernel: disk 0, o:1, dev:dm-304
+Aug 13 09:40:06 node-0 kernel: disk 1, o:1, dev:dm-420
+Aug 13 09:40:06 node-0 kernel: disk 2, o:1, dev:dm-117
 
-> Hello,
->=20
-> I'm currently fighting a server problem and have the feeling, that I'm ru=
-nning into walls.
->=20
-> Summary: On one of our servers we suffered from a hard disk error, that l=
-ead to a degraded array.
-> The hardware was replaced and the array was rebuild. On one of the RAID-S=
-ets the newly added
-> disk is not activated but stays as spare.
->=20
-> System: SUSE Linux Enterprise Server 11 (x86_64) 11.2
->=20
-> The current state:
->=20
-> # cat /proc/mdstat
->=20
-> Personalities : [raid1] [raid0] [raid10] [raid6] [raid5] [raid4]
-> md3 : active raid1 sda3[2](S) sdb3[0]
->       970888192 blocks [2/1] [U_]
->=20
-> md1 : active raid1 sda1[0] sdb1[1]
->       3911680 blocks [2/2] [UU]
->=20
-> unused devices: <none>
->=20
-> # mdadm --detail /dev/md3
->=20
-> /dev/md3:
->         Version : 0.90
->   Creation Time : Fri Feb  4 11:47:04 2011
->      Raid Level : raid1
->      Array Size : 970888192 (925.91 GiB 994.19 GB)
->   Used Dev Size : 970888192 (925.91 GiB 994.19 GB)
->    Raid Devices : 2
->   Total Devices : 2
-> Preferred Minor : 3
->     Persistence : Superblock is persistent
->=20
->     Update Time : Thu Aug 15 10:22:07 2013
->           State : clean, degraded
->  Active Devices : 1
-> Working Devices : 2
->  Failed Devices : 0
->   Spare Devices : 1
->=20
->            UUID : e9d9c5f5:615c789e:3fb6082e:e5593158
->          Events : 0.18857541
->=20
->     Number   Major   Minor   RaidDevice State
->        0       8       19        0      active sync   /dev/sdb3
->        1       0        0        1      removed
->=20
->        2       8        3        -      spare   /dev/sda3
->=20
-> I would expect the raid system to move /dev/sda3 to number 1 and mark it =
-as active.
->=20
-> Versions:
->=20
-> # uname -a
-> Linux 3.0.58-0.6.6-default #1 SMP Tue Feb 19 11:07:00 UTC 2013 (1576ecd) =
-x86_64 x86_64 x86_64 GNU/Linux
-> # mdadm -V
-> mdadm - v3.2.2 - 17th June 2011
->=20
-> I tried:
->=20
-> * removing /dev/sda3 from the array and add it back
-> * removing /dev/sda3 from the array, zero the root block and add it back =
-(--zero-superblock)
-> * removing /dev/sda3 from the array, reduce raid devices to one, add /dev=
-/sda3 back
-> * removing /dev/sda3 from the array, zero the first part of the disk (wit=
-h dd) and add it back
->=20
-> I would really appreciate ideas how to fix this (preferably while running=
- the system).
->=20
+An hour later, something wrong with dm-304. 
 
-Strange.  I would definitely have expected one of those to start the recove=
-ry.
-Does anything appear in the kernel logs (e.g. output of 'dmesg')?
-What does
-  grep . /sys/block/md3/md/*
-show?
-I don't suppose
-  echo recover > /sys/block/md3/md/sync_action
-helps?
-Is there still a kernel thread called
-    md3_raid1
-running?
+Aug 13 10:57:29 node-0 kernel: raid5: Disk failure on dm-304, disabling
+device.
+Aug 13 10:57:29 node-0 kernel: raid5: Operation continuing on 2 devices.
+Aug 13 10:57:29 node-0 kernel: md: recovery of RAID array md19
+Aug 13 10:57:29 node-0 kernel: md: minimum _guaranteed_  speed: 1000
+KB/sec/disk.
+Aug 13 10:57:29 node-0 kernel: md: using maximum available idle IO
+bandwidth (but not more than 400000 KB/sec) for recovery.
+Aug 13 10:57:29 node-0 kernel: md: using 128k window, over a total of
+1048576 blocks.
+Aug 13 10:57:29 node-0 kernel: md: resuming recovery of md19 from
+checkpoint.
+Aug 13 10:57:29 node-0 kernel: md: md19: recovery done.
+Aug 13 10:57:29 node-0 kernel: RAID5 conf printout:
+Aug 13 10:57:29 node-0 kernel: --- rd:3 wd:2
+Aug 13 10:57:29 node-0 kernel: disk 0, o:0, dev:dm-304
+Aug 13 10:57:29 node-0 kernel: disk 1, o:1, dev:dm-420
+Aug 13 10:57:29 node-0 kernel: disk 2, o:1, dev:dm-117
 
-NeilBrown
+And the wired thing begins. 
+The log as follows, was printed thousands of time.
 
---Sig_/9xH+eOtgPynv3a8K9AvMv6G
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Aug 13 10:57:29 node-0 kernel: md: recovery of RAID array md19
+Aug 13 10:57:29 node-0 kernel: md: minimum _guaranteed_  speed: 1000
+KB/sec/disk.
+Aug 13 10:57:29 node-0 kernel: md: using maximum available idle IO
+bandwidth (but not more than 400000 KB/sec) for recovery.
+Aug 13 10:57:29 node-0 kernel: md: using 128k window, over a total of
+1048576 blocks.
+Aug 13 10:57:29 node-0 kernel: md: resuming recovery of md19 from
+checkpoint.
+Aug 13 10:57:29 node-0 kernel: md: md19: recovery done.
+Aug 13 10:57:29 node-0 kernel: RAID5 conf printout:
+Aug 13 10:57:29 node-0 kernel: --- rd:3 wd:2
+Aug 13 10:57:29 node-0 kernel: disk 0, o:0, dev:dm-304
+Aug 13 10:57:29 node-0 kernel: disk 1, o:1, dev:dm-420
+Aug 13 10:57:29 node-0 kernel: disk 2, o:1, dev:dm-117
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+finally, it finished.
 
-iQIVAwUBUg7I3Tnsnt1WYoG5AQJcgw/8C3ctbhnMkOS5jXFcaBp3h/V9VdErFZ9o
-LatA44GxyVEZ7EunbZm4XrPdoPhgjs8G1AK01sEhelT2zJpzTpJqQ0BOMf6NMQrF
-OWKCBZrDt3eW+uCrFwNG+Hq2agnwlTygS0bflDtPtXCxCLvOpCvJBsrNoWg5zTID
-YBlTnpvG6aXrzPa7dzWBfvnOGupddqa46Sk4rhyyf/X442bu/kkj9ZACxbDDlSKx
-ly+NC17jvj1z54neAmg5F/8YvKEbnK6QTZzZRdFszr5O1WZGzhQeLazAFKtagmKS
-ma1Tgz/Jxc1xsCXAkE+nFj0F3q33dh519R2GAdA4Rr865iNflrI0KITWs81GEMnq
-lUAYeKbi1vq7lof94tk2jCnjGk2JLBJdFry+z2VoKfxBgrzZFi5fszWUWhnG0Coe
-msRtgzXjrFMZVzPzW/YJMVl4RgTFtuyxampKTperDJS44nP/qcdNiuVRxK+HTZ/0
-5r2I+xIGByPO6BrnpN1INc92YwXbVocg+OjYe9ZQPJB0IR0dc5ElLcsPp1Q65YSQ
-AZHSEanKzHWrjBJUEybPD8Dfp32b08vxCZ3ymvsjpB4Y0qHZkM/JPN3AZ2gz0c0T
-JDAJItsN3GBvAYX7QbMfVnt1BbJDhUtbuWP3WdUrDIEZScbknkDxK192cNlEb181
-HfCYnczFuc0=
-=0Doa
------END PGP SIGNATURE-----
+Aug 13 10:57:30 node-0 kernel: md: recovery of RAID array md19
+Aug 13 10:57:30 node-0 kernel: md: minimum _guaranteed_  speed: 1000
+KB/sec/disk.
+Aug 13 10:57:30 node-0 kernel: md: using maximum available idle IO
+bandwidth (but not more than 400000 KB/sec) for recovery.
+Aug 13 10:57:30 node-0 kernel: md: using 128k window, over a total of
+1048576 blocks.
+Aug 13 10:57:30 node-0 kernel: md: resuming recovery of md19 from
+checkpoint.
+Aug 13 10:57:30 node-0 kernel: md: md19: recovery done.
+Aug 13 10:57:30 node-0 kernel: end_request: I/O error, dev dm-297,
+sector 2048
+Aug 13 10:57:30 node-0 kernel: end_request: I/O error, dev dm-297,
+sector 1152
+Aug 13 10:57:30 node-0 kernel: end_request: I/O error, dev dm-297,
+sector 512
+Aug 13 10:57:30 node-0 kernel: end_request: I/O error, dev dm-297,
+sector 0
+Aug 13 10:57:30 node-0 kernel: RAID5 conf printout:
+Aug 13 10:57:30 node-0 kernel: --- rd:3 wd:2
+Aug 13 10:57:30 node-0 kernel: disk 0, o:0, dev:dm-304
+Aug 13 10:57:30 node-0 kernel: disk 1, o:1, dev:dm-420
+Aug 13 10:57:30 node-0 kernel: disk 2, o:1, dev:dm-117
+Aug 13 10:57:30 node-0 kernel: RAID5 conf printout:
+Aug 13 10:57:30 node-0 kernel: --- rd:3 wd:2
+Aug 13 10:57:30 node-0 kernel: disk 0, o:0, dev:dm-304
+Aug 13 10:57:30 node-0 kernel: disk 1, o:1, dev:dm-420
+Aug 13 10:57:30 node-0 kernel: disk 2, o:1, dev:dm-117
+Aug 13 10:57:30 node-0 kernel: RAID5 conf printout:
+Aug 13 10:57:30 node-0 kernel: --- rd:3 wd:2
+Aug 13 10:57:30 node-0 kernel: disk 1, o:1, dev:dm-420
+Aug 13 10:57:30 node-0 kernel: disk 2, o:1, dev:dm-117
 
---Sig_/9xH+eOtgPynv3a8K9AvMv6G--
+and then, dm-304, dm-420, dm-117 were unbound and exported.
+my system is centos 6.0 and the version of mdadm is 3.2.2 .
+This problem confuses me for a long time. Who can tell me what happened?
+
+
