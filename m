@@ -1,47 +1,39 @@
-From: Roberto Spadim <rspadim@gmail.com>
-Subject: Re: Small chunk size read performance penalty
-Date: Sun, 18 Aug 2013 19:16:51 -0300
-Message-ID: <CAH3kUhGs1nKD6qpo2qNWa85d+eA_Oxa9WyZEVq3f5eNk5ZyuCA@mail.gmail.com>
-References: <kurge6$qi0$1@ger.gmane.org>
+From: taejin1999@davinci.snu.ac.kr
+Subject: Does the chunk size of RAID5 really mean the "smallest atomic"
+ mass of data?
+Date: Mon, 19 Aug 2013 10:10:18 +0900
+Message-ID: <0d357591ae9c24e2e07dadd5ce7ee873.squirrel@davinci.snu.ac.kr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;charset=euc-KR
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <kurge6$qi0$1@ger.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ian Pilcher <arequipeno@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-i'm not sure, but maybe the problem is the same of small chunk size of raid-0
-the head move a lot for small works, while it could move less and do many job
+I have counted the number of write requests from the raid disks which are
+implemented as virtual block devices.
+The result is
+  ** the larger chunk size is, the more write requests are received per
+device.
 
-but i'm not sure about it
+I was wondering what the "chunk size" means on RAID5 of mdadm.
+According to below site, chunk is the smallest atomic mass of data that
+can be written to the device.
+(https://raid.wiki.kernel.org/index.php/RAID_setup)
 
-2013/8/18 Ian Pilcher <arequipeno@gmail.com>:
-> Can anyone point me to a good explanation of the read performance impact
-> of small (RAID-5 and RAID-6) chunk sizes?
->
-> I understand why large chunks hurt write performance, but I haven't been
-> able to reason through the small-chunk/read case, and my Interweb
-> searches haven't really turned anything up.
->
-> The "read penalty" is definitely there; I can see it in the test data
-> from my NAS.  I just don't understand *why* it's there.
->
-> Thanks!
->
-> --
-> ========================================================================
-> Ian Pilcher                                         arequipeno@gmail.com
-> Sometimes there's nothing left to do but crash and burn...or die trying.
-> ========================================================================
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The source code, however, seems to work differently.
+As I know, mdadm issues bio to each device in ops_run_io function.
+In the code, the size of bio is set to be only STRIPE_SIZE.
+I think the device would get STRIPE_SIZE-sized data which is smaller than
+the chunk size.
 
+Is the chunk size not smallest data that can be written to the device?
+Or is there any procedure that merge the STRIPE_SIZE-sized data into
+chunk-sized data?
 
+I am looking forward to your reply.
+Thank you.
 
--- 
-Roberto Spadim
+PS) Could you guess why more writes are issued for larger chunk size?
+
