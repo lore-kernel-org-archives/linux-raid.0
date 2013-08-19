@@ -1,65 +1,50 @@
-From: Roberto Spadim <rspadim@gmail.com>
+From: Ian Pilcher <arequipeno@gmail.com>
 Subject: Re: Small chunk size read performance penalty
-Date: Mon, 19 Aug 2013 00:01:47 -0300
-Message-ID: <CAH3kUhEr1o5n4Fgvz_4MV+o2fJ4h085fsHhK57szSB9y7rA9Dw@mail.gmail.com>
-References: <kurge6$qi0$1@ger.gmane.org>
+Date: Mon, 19 Aug 2013 00:49:13 -0500
+Message-ID: <kusbkh$il1$1@ger.gmane.org>
+References: <kurge6$qi0$1@ger.gmane.org> <521177A2.2010704@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <kurge6$qi0$1@ger.gmane.org>
+In-Reply-To: <521177A2.2010704@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ian Pilcher <arequipeno@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-HI Ian
-just some points that you should consider... it's an idea about the
-theory... don't think it's a main guide to linux-raid or anything
-else...
+On 08/18/2013 08:40 PM, Stan Hoeppner wrote:
+> Can you elaborate on your workload that demonstrates this?  Different
+> workloads behave differently with different chunk sizes.
 
-some basic things... a disk have one head arm, in other words it can
-read/write a sequence of bits, move, read/write more bits, move... etc
+dd ... at block sizes between 4KiB and 1MiB, on RAID-5 and -6 arrays
+with chunk sizes in the same range.
 
-when you use strip (raid-0, 5, 6, raid 10) you change how data is
-write, instead of a continous byte stream, you divide it in chunks...
-chunk 1 at disk 1 position 0, chunk 2 at disk 2 position 0, chunk 3 at
-disk1 position 1 .... etc... this place each disk close to one
-specific chunk
-example... considering a read from position 0 to last position of
-array: the disk used = chunk id % number_of_disks, with a chunk of
-128MB and two disks, and reading 1GB you will read 0-128MB from disk
-1, 128-256MB from disk 2, 256-384MB  from disk 1 ... etc
+Hardware is 5 7200 RPM SATA drives in a NAS (Thecus N5550) with an Atom
+D2550 processor and an ICH10R chipset.  The drives are all connected to
+the chipset's built-in AHCI controller.
 
-when you read more than one chunk, you use two heads arms (two disks)
-here you have speed boost, you must check what is the best chunk size
-for your work load, (and chunk should only be used when need, on some
-workloads raid1 is better)
+> If you can see it, then please demonstrate this read penalty with
+> numbers.  You obviously have test data from the same set of disks with
+> two different RAID5s of different chunk sizes.  This is required to see
+> such a difference in performance.  Please share this data with us.
 
-using two head you can read/write faster, but this is only nice for
-continous stream...
-when you need parallel works (many thread) you can use raid1 for read
-in parallel since it don't have chunks it can read data with only one
-disk, in other words... the workload can (when possible) be shared for
-1 disk / thread, if you have 10 disks using raid-1, you can have a
-nice performace for 10 threads without problems, for write the slowest
-disk will stall the write performace, but you should consider what you
-need...
+I've uploaded the data (in OpenDocument spreadsheet form) to Dropbox.  I
+think that it's accessible at this link:
 
-that's a superficial explain, the implementation can be a bit
-different, but explain the idea about the use of chunks
+  https://www.dropbox.com/s/4dq93th4wu5rr2y/nas_benchmarks.ods
 
-the workload tell what's better
-in my system sometimes raid1 is better than raid10 because i have many
-threads reading diferent parts of disk, in this case i can add many
-heads arms (disks) one for each important thread, and i have a good
-performace (considering a high load system), but if you need fast
-continous read, the chunk is VERY good
-for example if you need a read of 1GB, and have 10 disks, you can have
-a performace of 10x with a good chunk size, since each disk will be
-used when a chunk read is requested, and each disk can read parallel
-and continous (without many head movement)
-if you put a chunk size of 1GB and you need a read of 1GB, you don't
-have any performace boost from chunks...
+(This is my first attempt at sharing anything via Dropbox, so let me
+know if it doesn't work.)
 
-the best thing to do is TEST with your workload
-i think this can help, if not delete from your mail box :)
+I actually find your response really interesting.  From my Interweb
+searching, the "small stripe size read penalty" seems to be pretty
+widely accepted, much as the "large stripe size write penalty" is.  It
+certainly does show up in my data; as the chunk size increases reads of
+even small blocks get faster.
+
+-- 
+========================================================================
+Ian Pilcher                                         arequipeno@gmail.com
+Sometimes there's nothing left to do but crash and burn...or die trying.
+========================================================================
+
