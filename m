@@ -1,94 +1,72 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Small chunk size read performance penalty
-Date: Mon, 19 Aug 2013 21:28:43 -0500
-Message-ID: <5212D45B.4070505@hardwarefreak.com>
-References: <kurge6$qi0$1@ger.gmane.org> <521177A2.2010704@hardwarefreak.com> <kusbkh$il1$1@ger.gmane.org>
-Reply-To: stan@hardwarefreak.com
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Fix apparent cut-and-paste error in super_90_validate
+Date: Tue, 20 Aug 2013 12:46:39 +1000
+Message-ID: <20130820124639.5d75f837@notabene.brown>
+References: <20130820022632.GA12899@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <kusbkh$il1$1@ger.gmane.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Ian Pilcher <arequipeno@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/+j+FPggmC36y+LoqKIbPxMs"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130820022632.GA12899@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dave Jones <davej@redhat.com>
+Cc: linux-raid@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 8/19/2013 12:49 AM, Ian Pilcher wrote:
-> On 08/18/2013 08:40 PM, Stan Hoeppner wrote:
->> Can you elaborate on your workload that demonstrates this?  Different
->> workloads behave differently with different chunk sizes.
-> 
-> dd ... at block sizes between 4KiB and 1MiB, on RAID-5 and -6 arrays
-> with chunk sizes in the same range.
-> 
-> Hardware is 5 7200 RPM SATA drives in a NAS (Thecus N5550) with an Atom
-> D2550 processor and an ICH10R chipset.  The drives are all connected to
-> the chipset's built-in AHCI controller.
-> 
->> If you can see it, then please demonstrate this read penalty with
->> numbers.  You obviously have test data from the same set of disks with
->> two different RAID5s of different chunk sizes.  This is required to see
->> such a difference in performance.  Please share this data with us.
-> 
-> I've uploaded the data (in OpenDocument spreadsheet form) to Dropbox.  I
-> think that it's accessible at this link:
-> 
->   https://www.dropbox.com/s/4dq93th4wu5rr2y/nas_benchmarks.ods
-> 
-> (This is my first attempt at sharing anything via Dropbox, so let me
-> know if it doesn't work.)
-> 
-> I actually find your response really interesting.  From my Interweb
-> searching, the "small stripe size read penalty" seems to be pretty
-> widely accepted, much as the "large stripe size write penalty" is.  It
-> certainly does show up in my data; as the chunk size increases reads of
-> even small blocks get faster.
+--Sig_/+j+FPggmC36y+LoqKIbPxMs
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Everything in the world of storage performance depends on the workload.
- The statements above assume an unstated workload, and are so general as
-to not be worth repeating, and certainly not putting any stock in.
+On Mon, 19 Aug 2013 22:26:32 -0400 Dave Jones <davej@redhat.com> wrote:
 
-The former is true of large streaming workloads.  If your workload deals
-with small IO reads, such as mail serving, then a small stripe is not
-detrimental as the mail file you're reading is almost always smaller
-than the stripe size, and often smaller than the chunk size.  Using a
-large chunk/stripe with such a workload can create hotspots on some
-disks in the array, increasing latency, and decreasing throughput.
+> Setting a variable to itself probably wasn't the intention here.
 
-However, in this scenario, the big win is in write latency.  A large
-chunk/stripe size will generate a huge amount of unnecessary read IO
-during RMW cycles to recalculate parity when you write a new mail
-message into an existing stripe.  With an optimal chunk/stripe for this
-workload, you read few extra sectors during RMW.  It's often very
-difficult to get this balance right.  And even if you do, mail workloads
-are still many times slower on parity RAID than on mirrors or striped
-mirrors (RAID10).  This obviously depends on load.  Even "low end"
-modern server hardware with md RAID6 and a handful of disks can easily
-handle a few hundred active mail users.  Once you get into the thousands
-you'll need mirror based RAID as RMW latency will grind you to a halt.
-The same hardware is plenty.  You simply change the RAID level.  You'll
-need a couple more disks to maintain total capacity, but simply changing
-to mirror based RAID will increase throughput 5-15 fold, and decrease
-latency substantially.
+Probably not, no.
 
-Any "large stripe size write penalty" will be a function of mismatching
-the workload to the RAID stripe and/or array/drive hardware.  Using a
-large stripe with a mail workload will yield poor performance indeed due
-to large RMW bandwidth/latency.  Large stripe with this workload
-typically means >32-64KB.  Yes, that's stripe, not chunk.  For this
-workload using a 6 drive RAID6 you'd want an 8-16KB chunk for a 32-64KB
-stripe.  This is the opposite of the meme you quote above.  Again,
-workload dependent.
+Applied, thanks.
 
-If your workload is HPC file serving, where user files are 10s to 100s
-of GB, even TBs in size, then you'd want the largest chunk/strip/stripe
-your hardware can perform well with.  This may be as low as 512KB or it
-may be as large as 2MB.  And it will likely be hardware based RAID, not
-Linux md.
-
--- 
-Stan
+NeilBrown
 
 
+>=20
+> Signed-off-by: Dave Jones <davej@fedoraproject.org>
+>=20
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 9f13e13..b9cb9e4 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -1180,7 +1180,7 @@ static int super_90_validate(struct mddev *mddev, s=
+truct md_rdev *rdev)
+>  			mddev->bitmap_info.offset =3D
+>  				mddev->bitmap_info.default_offset;
+>  			mddev->bitmap_info.space =3D
+> -				mddev->bitmap_info.space;
+> +				mddev->bitmap_info.default_space;
+>  		}
+> =20
+>  	} else if (mddev->pers =3D=3D NULL) {
 
+
+--Sig_/+j+FPggmC36y+LoqKIbPxMs
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUhLYjznsnt1WYoG5AQJRvxAAs2mB7EXf+AbWh/PxnNhj1IjG9tQ1Ctqh
+JFej6VlDaUjFByjGqBiBVh9ZAWxXAjDbiTFHNqyBkeEfM2ELmd995F6M+lr8EubL
+JDOzRkBw2N48CkPnL3mQ+EPaKfIjMqQRe048rx07Z+Y8xFkupl4nBiVZRHBmzmkz
+m0mjEb5YhMXx5dsZxNUuPe/kvjTZ+0WRBs2JT8MvBzG/f125KL3mnCz+9C6Fd4YE
+BU2Qg9mu8k8fA8dwr+7QhHSaJooPeCiS/xV/+56Nc6wmjmGETIVZFQL7ImQupEGo
+H5t17HifABnjzbnzQTFDfCWUi2rGtNaye3c3MEmj9LRBusMGkxnFDodvY4Ha1n62
+Ete4/1+/qcp0/BPzjxfJdGhxaCB0HAWE1i6e/otLBKkMeziD6/z4w1MTpfa5IBC9
+ukGvHgg8hd+lfJjeM6Wl7buk5Qwj4mgdNPGKSO2wb7sIDBqXpmLealsjnkB/IYEv
+M5vnf1aP/NcI7A5XapyJy9bYodFk4N3cABb4DNAKrP/5PkI/8T2KMIPXx1Of9Nty
+ewsk10nsgrArYAF6EOEvE6Gokh/Kw2DQFN1ODJJFTbBTMUiD1rUJjqSQW4IGIWVO
+5W2F8dm3gdvhEsbth3F/peBXqYWFzqNsjjkcwmg+dBrhB3VUoyLQSlY/mhJw1g4P
+Thr3YA1FF8o=
+=yaVy
+-----END PGP SIGNATURE-----
+
+--Sig_/+j+FPggmC36y+LoqKIbPxMs--
