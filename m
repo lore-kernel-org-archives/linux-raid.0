@@ -1,72 +1,19 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Fix apparent cut-and-paste error in super_90_validate
-Date: Tue, 20 Aug 2013 12:46:39 +1000
-Message-ID: <20130820124639.5d75f837@notabene.brown>
-References: <20130820022632.GA12899@redhat.com>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: off - info about servers and linux mail lists
+Date: Tue, 20 Aug 2013 00:20:45 -0300
+Message-ID: <CAH3kUhEPBuBeGXQxn-n9GGH9-hQ8wnF6KS52ENTisigpKHHctA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/+j+FPggmC36y+LoqKIbPxMs"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130820022632.GA12899@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dave Jones <davej@redhat.com>
-Cc: linux-raid@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/+j+FPggmC36y+LoqKIbPxMs
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+hi guys, i think it's a bit offtopic, but in linux mail lists, there's
+a mail list specific for some servers or some mainboard/cpus ?
+i have a r210 dell server and want some more information about
+specific configurations at linux kernel, and don't know where to ask
 
-On Mon, 19 Aug 2013 22:26:32 -0400 Dave Jones <davej@redhat.com> wrote:
-
-> Setting a variable to itself probably wasn't the intention here.
-
-Probably not, no.
-
-Applied, thanks.
-
-NeilBrown
-
-
->=20
-> Signed-off-by: Dave Jones <davej@fedoraproject.org>
->=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 9f13e13..b9cb9e4 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -1180,7 +1180,7 @@ static int super_90_validate(struct mddev *mddev, s=
-truct md_rdev *rdev)
->  			mddev->bitmap_info.offset =3D
->  				mddev->bitmap_info.default_offset;
->  			mddev->bitmap_info.space =3D
-> -				mddev->bitmap_info.space;
-> +				mddev->bitmap_info.default_space;
->  		}
-> =20
->  	} else if (mddev->pers =3D=3D NULL) {
-
-
---Sig_/+j+FPggmC36y+LoqKIbPxMs
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUhLYjznsnt1WYoG5AQJRvxAAs2mB7EXf+AbWh/PxnNhj1IjG9tQ1Ctqh
-JFej6VlDaUjFByjGqBiBVh9ZAWxXAjDbiTFHNqyBkeEfM2ELmd995F6M+lr8EubL
-JDOzRkBw2N48CkPnL3mQ+EPaKfIjMqQRe048rx07Z+Y8xFkupl4nBiVZRHBmzmkz
-m0mjEb5YhMXx5dsZxNUuPe/kvjTZ+0WRBs2JT8MvBzG/f125KL3mnCz+9C6Fd4YE
-BU2Qg9mu8k8fA8dwr+7QhHSaJooPeCiS/xV/+56Nc6wmjmGETIVZFQL7ImQupEGo
-H5t17HifABnjzbnzQTFDfCWUi2rGtNaye3c3MEmj9LRBusMGkxnFDodvY4Ha1n62
-Ete4/1+/qcp0/BPzjxfJdGhxaCB0HAWE1i6e/otLBKkMeziD6/z4w1MTpfa5IBC9
-ukGvHgg8hd+lfJjeM6Wl7buk5Qwj4mgdNPGKSO2wb7sIDBqXpmLealsjnkB/IYEv
-M5vnf1aP/NcI7A5XapyJy9bYodFk4N3cABb4DNAKrP/5PkI/8T2KMIPXx1Of9Nty
-ewsk10nsgrArYAF6EOEvE6Gokh/Kw2DQFN1ODJJFTbBTMUiD1rUJjqSQW4IGIWVO
-5W2F8dm3gdvhEsbth3F/peBXqYWFzqNsjjkcwmg+dBrhB3VUoyLQSlY/mhJw1g4P
-Thr3YA1FF8o=
-=yaVy
------END PGP SIGNATURE-----
-
---Sig_/+j+FPggmC36y+LoqKIbPxMs--
+any help is wellcome, sorry the wrong place to post
+-- 
+Roberto Spadim
