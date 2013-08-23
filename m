@@ -1,29 +1,24 @@
 From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: Accesses to not yet running array
-Date: Fri, 23 Aug 2013 21:09:24 +0200
-Message-ID: <5217B364.1070704@arcor.de>
-References: <CAC9WiBgjEQxe_uymD6WW3Oj5Bm6aYD-RBD-8m3G40c1y3HUb0Q@mail.gmail.com>	<20130821090634.413491d8@notabene.brown>	<CAC9WiBiYYOjCVaa5tKVC7Lnkz7fcB2wHM0v2wdQUi=1Ufku5gA@mail.gmail.com> <CAC9WiBjBGD0J5vSe+q7y+UVGp2+++Ac++zeQ_=LUz9eQ-kCffA@mail.gmail.com>
+Subject: Installing CentOS 6.4 on DDF fake RAID with mdadm
+Date: Fri, 23 Aug 2013 23:15:02 +0200
+Message-ID: <5217D0D6.5030801@arcor.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAC9WiBjBGD0J5vSe+q7y+UVGp2+++Ac++zeQ_=LUz9eQ-kCffA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Francis Moreau <francis.moro@gmail.com>, NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/23/2013 12:00 PM, Francis Moreau wrote:
+A recipe for installing CentOS 6.4 on DDF fake RAID members using mdadm
+(not dmraid) can now be found on
+https://raid.wiki.kernel.org/index.php/DDF_Fake_RAID.
 
-> [ adding Martin in CC since it seems related to DDF... ]
+I tested it successfully both on VMs and real hardware, but it needs
+more testing.
 
-I reproduced it here. The problem is that mdmon isn't running. Simply
-try running "mdmon /dev/md127", and the mount should proceed.
+Feedback and test results are welcome. Please don't use this on
+production systems yet.
 
-You'd avoid the problem by running "mdadm -IR /dev/sda" in the first place.
-
-@Neil: This is unexpected, I think we need some code to start mdmon if
-necessary in Manage_run. I considered coming up with a patch, but you
-can do it much quicker, I think.
-
+Regards
 Martin
