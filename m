@@ -1,48 +1,88 @@
 From: Francis Moreau <francis.moro@gmail.com>
-Subject: Re: Accesses to not yet running array
-Date: Mon, 26 Aug 2013 09:30:04 +0200
-Message-ID: <CAC9WiBiJ5vwZ7ngxv3CXZhbDTT7X_mtocVAtixRny427XwfFag@mail.gmail.com>
-References: <CAC9WiBgjEQxe_uymD6WW3Oj5Bm6aYD-RBD-8m3G40c1y3HUb0Q@mail.gmail.com>
-	<20130821090634.413491d8@notabene.brown>
-	<CAC9WiBiYYOjCVaa5tKVC7Lnkz7fcB2wHM0v2wdQUi=1Ufku5gA@mail.gmail.com>
-	<CAC9WiBjBGD0J5vSe+q7y+UVGp2+++Ac++zeQ_=LUz9eQ-kCffA@mail.gmail.com>
-	<5217B364.1070704@arcor.de>
-	<20130826153021.6075fb8b@notabene.brown>
+Subject: Re: MD array keeps resyncing after rebooting
+Date: Mon, 26 Aug 2013 09:44:26 +0200
+Message-ID: <CAC9WiBjk70P_xTgH3_BFS8QREJnfY+-LAiR-2FnS3PaJKQ_1vw@mail.gmail.com>
+References: <CAC9WiBjm5-RJ=CfpXMG7CCBp7StzWDuhp5XyFs4hAW3sxX7Gfw@mail.gmail.com>
+	<CAC9WiBjs4DQqt1G911OBALzSqn=o_=L1S4_K_MvUWhAu-rhtUw@mail.gmail.com>
+	<51EED0DA.3020901@arcor.de>
+	<51EED102.4020503@arcor.de>
+	<CAC9WiBgN1-HBEgqwo7CWor=nihCYUcOrYKhGxYTgbC-d4a7_-g@mail.gmail.com>
+	<51EEF3D3.7020305@arcor.de>
+	<CAC9WiBgrjrPRcHa5kh8TUfqN0rBBFC4M0_8iDkU3O0SOFgFW5g@mail.gmail.com>
+	<CAC9WiBjQz6MJxBuw+cLWFZ-vOsdbYYSKdE575emH_AG5EmnGdw@mail.gmail.com>
+	<51F1754B.5000905@arcor.de>
+	<CAC9WiBhgF_-Ya7GW8DW0DcOQ-UhpN503hr=6_=46W5nbK04FTQ@mail.gmail.com>
+	<51FAA5C3.8030109@arcor.de>
+	<CAC9WiBhGyE=OJdSeL_OsPxtirhJ2=3WRsk=uBPiOTzMjBCf-dA@mail.gmail.com>
+	<51FBF830.5060606@arcor.de>
+	<CAC9WiBg8UT4iLsPCY8DgR9ysfj8OmJARnRfSuxtbUCx_+2eBDw@mail.gmail.com>
+	<52190167.10107@arcor.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130826153021.6075fb8b@notabene.brown>
+In-Reply-To: <52190167.10107@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Martin Wilck <mwilck@arcor.de>, linux-raid@vger.kernel.org
+To: Martin Wilck <mwilck@arcor.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Neil,
+Hi Martin,
 
-On Mon, Aug 26, 2013 at 7:30 AM, NeilBrown <neilb@suse.de> wrote:
-> On Fri, 23 Aug 2013 21:09:24 +0200 Martin Wilck <mwilck@arcor.de> wrote:
+On Sat, Aug 24, 2013 at 8:54 PM, Martin Wilck <mwilck@arcor.de> wrote:
+> Hi Francis,
 >
->> On 08/23/2013 12:00 PM, Francis Moreau wrote:
+>> On Fri, Aug 2, 2013 at 8:19 PM, Martin Wilck <mwilck@arcor.de> wrote:
+>>> On 08/02/2013 02:46 PM, Francis Moreau wrote:
+>>>
+>>>>>
+>>>>> # mdadm -E /dev/sda | egrep "state"
+>>>>>         state[0] : Optimal, Consistent
+>>>>>    init state[0] : Fully Initialised
+>>>
+>>> This would correspond to "00 02", and it's what we should see after
+>>> initialization. On my system the BIOS sets "00 01" (Optimal, consistent,
+>>> Quick Init in progress) when it first creates an array, because the BIOS
+>>> doesn't do a full initialization. But "not initialized" is weird. The
+>>> mdadm DDF code won't set this by itself, AFAIK. Please make sure again
+>>> that the "before" data matches what mdadm/mdmon wrote just after
+>>> stopping during shutdown.
 >>
->> > [ adding Martin in CC since it seems related to DDF... ]
+>> I did it again and got the same result: both disks have:
 >>
->> I reproduced it here. The problem is that mdmon isn't running. Simply
->> try running "mdmon /dev/md127", and the mount should proceed.
+>> 00000860  00 00 ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|
 >>
->> You'd avoid the problem by running "mdadm -IR /dev/sda" in the first place.
+>> and I checked again that "mdadm -E" reported an initialized state.
 >>
->> @Neil: This is unexpected, I think we need some code to start mdmon if
->> necessary in Manage_run. I considered coming up with a patch, but you
->> can do it much quicker, I think.
+>> Moreover this time I did a "sync" before dumping the ddf headers.
 >>
+>> So I'm quite lost, I can see only 2 cases:
+>>
+>>   - with my HW setup some metadata are not written to disks by the
+>> kernel but stood somewhere in RAM (cache)
+>>
+>>   - the state is not stored at address 00000860 (very unlikely)
+>>
+>>   - the dumps are incorrect
+>>
+>> How can I debug this more ?
+>>
+>> Thanks for your help.
 >
-> I've changed Manage_run() to call the same code that "mdadm -IRs" call, but
-> asking to just run the one array, not all arrays.
-> This should  do what is expected (I hope).
+> have you got any further insight?
 
+Unfortunately no progress on this issue, I'm really stuck. I'll try to
+test a different distribution to see if the same issue persist. Maybe
+CentOS ;)
 
-Any chance to get the same fix for 3.2.x release ?
+> I have LSI DDF fake RAID with mdadm
+> running on my system right now, and it seems to work nicely; no problems
+> over reboots.
+>
+> You may want to retry with my latest patch set. In particular, "DDF:
+> container_content_ddf: set safe_mode_delay > 0" might help.
 
-Thanks
+Will give it a test.
+
+Thanks.
 -- 
 Francis
