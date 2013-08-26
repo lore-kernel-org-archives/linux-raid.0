@@ -1,67 +1,63 @@
-From: Francis Moreau <francis.moro@gmail.com>
-Subject: Re: Accesses to not yet running array
-Date: Mon, 26 Aug 2013 10:16:34 +0200
-Message-ID: <CAC9WiBhjr9N=h9RQ4uOedvwjo8GCaV7Ov0erJcTQ8C9fw86S5Q@mail.gmail.com>
-References: <CAC9WiBgjEQxe_uymD6WW3Oj5Bm6aYD-RBD-8m3G40c1y3HUb0Q@mail.gmail.com>
-	<20130821090634.413491d8@notabene.brown>
-	<CAC9WiBiYYOjCVaa5tKVC7Lnkz7fcB2wHM0v2wdQUi=1Ufku5gA@mail.gmail.com>
-	<CAC9WiBjBGD0J5vSe+q7y+UVGp2+++Ac++zeQ_=LUz9eQ-kCffA@mail.gmail.com>
-	<5217B364.1070704@arcor.de>
-	<20130826153021.6075fb8b@notabene.brown>
-	<CAC9WiBiJ5vwZ7ngxv3CXZhbDTT7X_mtocVAtixRny427XwfFag@mail.gmail.com>
-	<20130826175307.2240e492@notabene.brown>
+From: majianpeng <majianpeng@gmail.com>
+Subject: Re: Re: [PATCH 3/3] raid1: Rewrite the implementation of iobarrier.
+Date: Mon, 26 Aug 2013 18:45:55 +0800
+Message-ID: <201308261845528793696@gmail.com>
+References: <201308191958041664556@gmail.com>,
+	<20130826174632.7224da0b@notabene.brown>
+Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130826175307.2240e492@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Martin Wilck <mwilck@arcor.de>, linux-raid@vger.kernel.org
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Aug 26, 2013 at 9:53 AM, NeilBrown <neilb@suse.de> wrote:
-> On Mon, 26 Aug 2013 09:30:04 +0200 Francis Moreau <francis.moro@gmail.com>
-> wrote:
->
->> Hello Neil,
->>
->> On Mon, Aug 26, 2013 at 7:30 AM, NeilBrown <neilb@suse.de> wrote:
->> > On Fri, 23 Aug 2013 21:09:24 +0200 Martin Wilck <mwilck@arcor.de> wrote:
->> >
->> >> On 08/23/2013 12:00 PM, Francis Moreau wrote:
->> >>
->> >> > [ adding Martin in CC since it seems related to DDF... ]
->> >>
->> >> I reproduced it here. The problem is that mdmon isn't running. Simply
->> >> try running "mdmon /dev/md127", and the mount should proceed.
->> >>
->> >> You'd avoid the problem by running "mdadm -IR /dev/sda" in the first place.
->> >>
->> >> @Neil: This is unexpected, I think we need some code to start mdmon if
->> >> necessary in Manage_run. I considered coming up with a patch, but you
->> >> can do it much quicker, I think.
->> >>
->> >
->> > I've changed Manage_run() to call the same code that "mdadm -IRs" call, but
->> > asking to just run the one array, not all arrays.
->> > This should  do what is expected (I hope).
->>
->>
->> Any chance to get the same fix for 3.2.x release ?
->
-> I think it would be a lot easier to just remove the "mdadm -R ..." calls.
-> Where exactly are they?  In some /etc/init.d script?
+Pk9uIE1vbiwgMTkgQXVnIDIwMTMgMTk6NTg6MDcgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVu
+Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KW3NuaXBdDQo+PiAtDQo+PiAtCS8qIE5vdyB3YWl0IGZv
+ciBhbGwgcGVuZGluZyBJTyB0byBjb21wbGV0ZSAqLw0KPj4gKwkvKiBGb3IgdGhvc2UgY29uZGl0
+aW9ucywgd2UgbXVzdCB3YWl0DQo+PiArCSAqIEE6YXJyYXkgaXMgaW4gZnJlZXplIHN0YXRlLg0K
+Pj4gKwkgKiBCOldoZW4gc3RhcnRpbmcgcmVzeW5jIGFuZCB0aGVyZSBhcmUgbm9ybWFsIElPDQo+
+PiArCSAqIEM6VGhlcmUgaXMgbm8gbm9ybmFsIGlvIGFmdGVyIHRocmVlIHRpbWVzIGluIHJlc3lu
+YyB3aW5kb3cNCj4+ICsJICogRDogdG90YWwgYmFycmllciBhcmUgbGVzcyB0aGFuIFJFU1lOQ19E
+RVBUSCovDQo+PiAgCXdhaXRfZXZlbnRfbG9ja19pcnEoY29uZi0+d2FpdF9iYXJyaWVyLA0KPj4g
+LQkJCSAgICAhY29uZi0+ZnJlZXplX2FycmF5ICYmIA0KPj4gLQkJCSAgICAhY29uZi0+bnJfcGVu
+ZGluZyAmJiBjb25mLT5iYXJyaWVyIDwgUkVTWU5DX0RFUFRILA0KPj4gKwkJCSAgICAhY29uZi0+
+ZnJlZXplX2FycmF5ICYmDQo+PiArCQkJICAgICgoY29uZi0+bmV4dF9yZXN5bmMgPCBSRVNZTkNf
+V0lORE9XX1NFQ1RPUlMNCj4+ICsJCQkJJiYgIWNvbmYtPm5yX3BlbmRpbmcpDQo+PiArCQkJICAg
+IHx8IChjb25mLT5uZXh0X3Jlc3luYyArIFJFU1lOQ19TRUNUT1JTDQo+PiArCQkJCSAgICA8PSBj
+b25mLT5hZnRlcl9yZXN5bmNfc2VjdG9yKSkNCj4+ICsJCQkgICAgJiYgY29uZi0+YmFycmllciA8
+IFJFU1lOQ19ERVBUSCwNCj4+ICAJCQkgICAgY29uZi0+cmVzeW5jX2xvY2spOw0KPg0KPkZvciAi
+QzpUaGVyZSBpcyBubyBub3JuYWwgaW8gYWZ0ZXIgdGhyZWUgdGltZXMgaW4gcmVzeW5jIHdpbmRv
+dyIgSSBleHBlY3RlZA0KPnRvIHNlZQ0KPiAgICAgICAgICBjb25mLT5hZnRlcl9yZXN5bmNfdGhy
+ZWVfY291bnQgPT0gMA0KPg0KPmJ1dCBJIGRvbid0IHNlZSB0aGF0LiAgV2h5IG5vdD8NCj4NCkkg
+dGhpbmsgdGhlcmUgYXJlIHR3byBtaXN0YWtlcy4NCkZvciB0aG9zZSBjb25kaXRpb25zLCB3ZSBt
+dXN0IHdhaXQ6DQpBOkFycmF5IGlzIGluIGZyZWV6ZSBzdGF0ZS4NCkI6Y29uZi0+bnJfcGVuZGlu
+ZyA+IDAgW0ZvciB0aGlzLCBmaXJ0bHksIGkgdGhpbmsgd2Ugc2hvdWxkIG9ubHkgY29uc2lkZXIg
+dGhlIHN0YXJ0aW5nIHJlc3luYy5JZiAtPm5yX3BlbmRpbmcgPiAwLHdlIG11c3Qgd2FpdA0Kd2hl
+dGhlciBvciBub3Qgc3RhcnRpbmcgcmVzeW5jLl0NCkM6Y29uZi0+bmV4dF9yZXN5bmMgKyBSRVNZ
+TkNfU0VDVE9SUyA+IGNvbmYtPmFmdGVyX3Jlc3luY19zZWN0b3IuDQpEOlRvdGFsIGJhcnJpZXIg
+YXJlIG1vcmUgdGhhbiBSRVNZTkNfREVQVEguDQoNCltzbmlwXQ0KDQo+DQo+PiAgCQlmb3IgKGog
+PSAwOyBqIDwgaTsgaisrKQ0KPj4gIAkJCWlmIChyMV9iaW8tPmJpb3Nbal0pDQo+PiAgCQkJCXJk
+ZXZfZGVjX3BlbmRpbmcoY29uZi0+bWlycm9yc1tqXS5yZGV2LCBtZGRldik7DQo+PiAgCQlyMV9i
+aW8tPnN0YXRlID0gMDsNCj4+IC0JCWFsbG93X2JhcnJpZXIoY29uZik7DQo+PiArCQlhbGxvd19i
+YXJyaWVyKGNvbmYsIG9sZCwgYmlvLT5iaV9zZWN0b3IpOw0KPj4gIAkJbWRfd2FpdF9mb3JfYmxv
+Y2tlZF9yZGV2KGJsb2NrZWRfcmRldiwgbWRkZXYpOw0KPj4gLQkJd2FpdF9iYXJyaWVyKGNvbmYp
+Ow0KPj4gKwkJYWZ0ZXJfdGhyZWV0aW1lc19yZXN5bmNfc2VjdG9yID0gd2FpdF9iYXJyaWVyKGNv
+bmYsIGJpbyk7DQo+PiArCQkvKg0KPj4gKwkJICogV2UgbXVzdCBtYWtlIHN1cmUgdGhlIG11bHRp
+IHIxYmlvcyBvZiBiaW8gaGF2ZQ0KPj4gKwkJICogdGhlIHNhbWUgdmFsdWUgb2YgYWZ0ZXJfdGhy
+ZWV0aW1lc19yZXN5bmNfc2VjdG9yDQo+PiArCQkgKi8NCj4+ICsJCWlmIChiaW8tPmJpX3BoeXNf
+c2VnbWVudHMgJiYgb2xkICYmDQo+PiArCQkJb2xkICE9IGFmdGVyX3RocmVldGltZXNfcmVzeW5j
+X3NlY3RvcikNCj4+ICsJCQkvKndhaXQgdGhlIGZvcm1lciByMWJpbyhzKSBjb21wbGV0ZWQqLw0K
+Pj4gKwkJCXdhaXRfZXZlbnQoY29uZi0+d2FpdF9iYXJyaWVyLA0KPj4gKwkJCQkJYmlvLT5iaV9w
+aHlzX3NlZ21lbnRzID09IDEpOw0KPg0KPkkgdGhpbmsgaXQgaXMgcXVpdGUgcG9zc2libGUgdGhh
+dCBiaV9waHlzX3NlZ21lbnRzPT0wIGF0IHRoaXMgcG9pbnQuDQo+U28geW91IHByb2JhYmx5IHdh
+bnQgIjw9IDEiLg0KPg0KTm8sIG9ubHkgdGhlcmUgYXJlIG11bHRpIHIxYmlvcyBvZiBiaW8sIGl0
+IG11c3Qgd2FpdCBwcmV2aW91cyByMWJpb3MgY29tcGxldGVkLlRoZSBsZWZ0IHIxYmlvIG1hZGUn
+YmlfcGh5c19zZWdtZW50cyA9IDEnLg0KSWYgdGhlcmUgaXMgb25lIHIxYmlvIG9mIGJpbywgaXQg
+Y2FuJ3Qgd2FpdC5JdCBvbmx5IG5lZWQgYWxsb3dfYmFycmllciBhbmQgcmV0cnkgd2FpdF9iYXJy
+aWVyLg0KDQoNCg0KRm9yIG90aGVyIGNvbW1lbnRzLCBpJ2xsIGFwcGx5Lg0KVGhhbmtzIQ0KSmlh
+bnBlbmcgTWE=
 
-Nope, it's in the initrd, in my case generated by dracut.
-
-Did you mean removing "mdadm -R ..." and add "mdadm -IRs ..." instead ?
-
->
-> You probably want "mdadm -IRs" there.
->
-
-Well, I thought there was a difference between running "mdadm -IRs"
-and the fix you did in Manage_run() and your fix was preferred.
-
--- 
-Francis
