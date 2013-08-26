@@ -1,104 +1,69 @@
 From: NeilBrown <neilb@suse.de>
 Subject: Re: Accesses to not yet running array
-Date: Mon, 26 Aug 2013 14:33:49 +1000
-Message-ID: <20130826143349.31afbefa@notabene.brown>
+Date: Mon, 26 Aug 2013 15:30:21 +1000
+Message-ID: <20130826153021.6075fb8b@notabene.brown>
 References: <CAC9WiBgjEQxe_uymD6WW3Oj5Bm6aYD-RBD-8m3G40c1y3HUb0Q@mail.gmail.com>
 	<20130821090634.413491d8@notabene.brown>
 	<CAC9WiBiYYOjCVaa5tKVC7Lnkz7fcB2wHM0v2wdQUi=1Ufku5gA@mail.gmail.com>
 	<CAC9WiBjBGD0J5vSe+q7y+UVGp2+++Ac++zeQ_=LUz9eQ-kCffA@mail.gmail.com>
 	<5217B364.1070704@arcor.de>
-	<CAC9WiBg7iRDAj40TFUJVq-TXcktNarhT=3_mCJhOkXnitF8HDQ@mail.gmail.com>
-	<CAC9WiBi=fDYmtLv6DPfskyMGfSHVk-J_=5fFsQkdWuigNcHGBw@mail.gmail.com>
-	<5218FE4F.7000209@arcor.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Jz5sbklCItbCre4M0b76iSY"; protocol="application/pgp-signature"
+ boundary="Sig_/fU7_GgYAU7OBP5wzKP+JEhK"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5218FE4F.7000209@arcor.de>
+In-Reply-To: <5217B364.1070704@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: Martin Wilck <mwilck@arcor.de>
 Cc: Francis Moreau <francis.moro@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/Jz5sbklCItbCre4M0b76iSY
+--Sig_/fU7_GgYAU7OBP5wzKP+JEhK
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 24 Aug 2013 20:41:19 +0200 Martin Wilck <mwilck@arcor.de> wrote:
+On Fri, 23 Aug 2013 21:09:24 +0200 Martin Wilck <mwilck@arcor.de> wrote:
 
-> On 08/24/2013 02:42 PM, Francis Moreau wrote:
-> > On Sat, Aug 24, 2013 at 2:40 PM, Francis Moreau <francis.moro@gmail.com=
-> wrote:
-> >> Hello Martin,
-> >>
-> >> On Fri, Aug 23, 2013 at 9:09 PM, Martin Wilck <mwilck@arcor.de> wrote:
-> >>> On 08/23/2013 12:00 PM, Francis Moreau wrote:
-> >>>
-> >>>> [ adding Martin in CC since it seems related to DDF... ]
-> >>>
-> >>> I reproduced it here. The problem is that mdmon isn't running. Simply
-> >>> try running "mdmon /dev/md127", and the mount should proceed.
-> >>>
-> >>
-> >> oh, ok, I should have noticed.
-> >>
-> >>> You'd avoid the problem by running "mdadm -IR /dev/sda" in the first =
-place.
-> >>
-> >> Actually this is how arrays are assembled during boot on some
-> >> distributions (Fedora for example).
-> >=20
-> > I meant the sequence:
-> >=20
-> > mdadm -I /dev/sda
-> > mdadm -I /dev/sdb
-> > mdadm -R /dev/mdxxx
-> >=20
-> > is used by distribution.
+> On 08/23/2013 12:00 PM, Francis Moreau wrote:
 >=20
-> CentOS 6 uses the following sequence:
+> > [ adding Martin in CC since it seems related to DDF... ]
 >=20
-> mdadm -I /dev/sda
-> mdadm -I /dev/sdb
-> mdadm -I /dev/mdXXX
+> I reproduced it here. The problem is that mdmon isn't running. Simply
+> try running "mdmon /dev/md127", and the mount should proceed.
 >=20
-> I don't see mdadm -R anywhere on CentOS.
-> You could change your udev rules to run "mdadm -IR /dev/mdXXX" instead.
-> Have you tried that?
+> You'd avoid the problem by running "mdadm -IR /dev/sda" in the first plac=
+e.
 >=20
-> I wonder if that woudn't be smarter anyway. Neil?
+> @Neil: This is unexpected, I think we need some code to start mdmon if
+> necessary in Manage_run. I considered coming up with a patch, but you
+> can do it much quicker, I think.
+>
 
-I don't think you want the udev rules to run "mdadm -IR ...".
-
-If 'mdadm -IR...' to be run at all, it should probably be
-   mdadm -IRs
-
-and it should happen after all attached busses have been scanned and udev h=
-as
-processed all new devices.
+I've changed Manage_run() to call the same code that "mdadm -IRs" call, but
+asking to just run the one array, not all arrays.
+This should  do what is expected (I hope).
 
 NeilBrown
 
---Sig_/Jz5sbklCItbCre4M0b76iSY
+--Sig_/fU7_GgYAU7OBP5wzKP+JEhK
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUhrarTnsnt1WYoG5AQKZZg//enUwrUq3OrxsWUDuzixBseRl0BFoANVt
-bKdGJSNX5kfAr2UBn/WMYvjvdjRyqKS15M59wY8naSo2ku0Cm5t4C6/Il5nLqhOs
-G5L8Ayg9AaD9W5190sFBCTMUSu8MXOGat3x6HrrdmjkPE/F94ZJmheQL7NxUTfJX
-vO/e9Sv6ctmPEhNQcs46EVtQ0cdFoNmZpNZpTO/IzJ6Ms1jD7xWb+dg74Iikr0g8
-FDFgXmwnC48bsbUNnp/SwAdIm8cGU6Vu7sBPqkQCHXIOMsKETcKLQzw3OMPL9jIF
-O9XqC25tUcXTPnSSEvZawo4es6DjKc+I67gvtfhSqZ4avA28UuSx66ml2TToitvT
-B1vI69wBvx8yLZYw+u38Age9AfX3vXrUTQ/Ukd1IZQZ+qnAGXlI8JhDcg4877OJX
-cDzg5vVV2mplpJ3w0gsBEX63Ln8SEwZZPMsZPz1UNpELYqeBO0ej7snzanWQh7hi
-qXp8pDMuPqoIGhwY3/Wfd2rlijFeLgpokZIVmDkvunuh2HCwQu3z8ISVtNmESqbi
-O6zzop/MbynBX0d5N/mvi63vXx9ehe7G4zTJHVc9mGbhnXkknquwuPAgYtb4/yuu
-/7MlgNrdnwVejVYgL9EWIyE1FCwS6ZF2HbHBbrcAoNpPQYZT7FyHp5ChfAIyr/nL
-N/krLKE1e88=
-=l2ev
+iQIVAwUBUhrn7Tnsnt1WYoG5AQLDchAAtv0KZS0UxsE3B8DW9VZxhMihJR/M9Quf
+Q/uk0ftvQ1cflRlHia02agItobAfQk6F8vFWk5AHMpcjpmlAtUQKmcZzdtLmJ6z8
+gLC52m23miY271q6Ozflspah4e76NtCzWXk5K7thIxLhzRNZE1EAALLSpzjpN1BJ
+D2YqbDLCQEerYuievXgJ7yI7hihRNHeahvvETwTULzrJq/E2dzU86FYn+m+p5lvZ
+Ogm06Hvf+aepugQtcKwzDenP6gyi1zzhvpjT3t/OHKGpEaJkPF+BX1JO/to2UVyF
+NUtWMT8HnKOB1RCS7ik2MqPQFb6Dgtk/TckdW8RMClm5zY+pstEeMxYLCIKlsTsB
+nXe/GJczBC9vgmslVXfDWqUY2Yv9IkY/1N3fTFIXStnUYBR4GgumuP4w7Jb3MpzO
+GA6MQ9RxYgErcPYOj/lY6v+wmwIyCKKlxWLiX6sEmPBeiApkXeoiIm9Gu4yWduGg
+9HDNzHDFINlSCoWUy4VMejU2UAXEB/RVIj2H2Z+a63goYmrOaCC+jy+ULGEhqaQK
+REPIVk0Dh9u8hn4jdqXO8Q80hh6biC1lRbzaRwwEQfr9MRDE/+LOtqaNzs1cwF4W
+B2FPc88zoT80v+F+aaQJhe+4vGcJAbme++77Ip/HXUdadpLXcbmav2uEwd12EwNy
++hoi3Z437Io=
+=cDSK
 -----END PGP SIGNATURE-----
 
---Sig_/Jz5sbklCItbCre4M0b76iSY--
+--Sig_/fU7_GgYAU7OBP5wzKP+JEhK--
