@@ -1,73 +1,86 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 3/3] raid1: Rewrite the implementation of iobarrier.
-Date: Mon, 26 Aug 2013 17:49:56 +1000
-Message-ID: <20130826174956.7beea63a@notabene.brown>
-References: <201308191958041664556@gmail.com>
+Subject: Re: Accesses to not yet running array
+Date: Mon, 26 Aug 2013 17:53:07 +1000
+Message-ID: <20130826175307.2240e492@notabene.brown>
+References: <CAC9WiBgjEQxe_uymD6WW3Oj5Bm6aYD-RBD-8m3G40c1y3HUb0Q@mail.gmail.com>
+	<20130821090634.413491d8@notabene.brown>
+	<CAC9WiBiYYOjCVaa5tKVC7Lnkz7fcB2wHM0v2wdQUi=1Ufku5gA@mail.gmail.com>
+	<CAC9WiBjBGD0J5vSe+q7y+UVGp2+++Ac++zeQ_=LUz9eQ-kCffA@mail.gmail.com>
+	<5217B364.1070704@arcor.de>
+	<20130826153021.6075fb8b@notabene.brown>
+	<CAC9WiBiJ5vwZ7ngxv3CXZhbDTT7X_mtocVAtixRny427XwfFag@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/xL_obv7_dAt05s.+iiMwUYv"; protocol="application/pgp-signature"
+ boundary="Sig_/S9PN8a2TT_7YrY=XAogfjdB"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201308191958041664556@gmail.com>
+In-Reply-To: <CAC9WiBiJ5vwZ7ngxv3CXZhbDTT7X_mtocVAtixRny427XwfFag@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Francis Moreau <francis.moro@gmail.com>
+Cc: Martin Wilck <mwilck@arcor.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/xL_obv7_dAt05s.+iiMwUYv
+--Sig_/S9PN8a2TT_7YrY=XAogfjdB
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 19 Aug 2013 19:58:07 +0800 majianpeng <majianpeng@gmail.com> wrote:
+On Mon, 26 Aug 2013 09:30:04 +0200 Francis Moreau <francis.moro@gmail.com>
+wrote:
 
-> @@ -846,10 +859,57 @@ static void lower_barrier(struct r1conf *conf)
->  	wake_up(&conf->wait_barrier);
->  }
-> =20
-> -static void wait_barrier(struct r1conf *conf)
-> +static sector_t wait_barrier(struct r1conf *conf, struct bio *bio)
->  {
-> +	sector_t sector =3D 0;
->  	spin_lock_irq(&conf->resync_lock);
-> -	if (conf->barrier) {
-> +	if (conf->barrier || unlikely(conf->freeze_array)) {
-> +		if (unlikely(!conf->freeze_array && bio) &&
+> Hello Neil,
+>=20
+> On Mon, Aug 26, 2013 at 7:30 AM, NeilBrown <neilb@suse.de> wrote:
+> > On Fri, 23 Aug 2013 21:09:24 +0200 Martin Wilck <mwilck@arcor.de> wrote:
+> >
+> >> On 08/23/2013 12:00 PM, Francis Moreau wrote:
+> >>
+> >> > [ adding Martin in CC since it seems related to DDF... ]
+> >>
+> >> I reproduced it here. The problem is that mdmon isn't running. Simply
+> >> try running "mdmon /dev/md127", and the mount should proceed.
+> >>
+> >> You'd avoid the problem by running "mdadm -IR /dev/sda" in the first p=
+lace.
+> >>
+> >> @Neil: This is unexpected, I think we need some code to start mdmon if
+> >> necessary in Manage_run. I considered coming up with a patch, but you
+> >> can do it much quicker, I think.
+> >>
+> >
+> > I've changed Manage_run() to call the same code that "mdadm -IRs" call,=
+ but
+> > asking to just run the one array, not all arrays.
+> > This should  do what is expected (I hope).
+>=20
+>=20
+> Any chance to get the same fix for 3.2.x release ?
 
-I forgot to mention this bit.
-If we need to test freeze_array here, then maybe that test should have been
-added in the previous patch which introduced "freeze_array"?
+I think it would be a lot easier to just remove the "mdadm -R ..." calls.
+Where exactly are they?  In some /etc/init.d script?
 
-And I think the field should be "array_frozen".  "freeze_array" sounds like
-an action so it is a suitable name for a function, but not for a variable.
-
-Also I think you probably mean "likely" rather than "unlikely" the second
-time???
-I rather avoid "likely" and "unlikely" calls unless they will really
-make an important difference.
-
+You probably want "mdadm -IRs" there.
 
 NeilBrown
 
-
---Sig_/xL_obv7_dAt05s.+iiMwUYv
+--Sig_/S9PN8a2TT_7YrY=XAogfjdB
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUhsIpDnsnt1WYoG5AQIXEg//RL+9CBEiHVEGObQx4eYr5Da+Wy1+NWkI
-9gFGNXgqLSXvrMa06uWqByB9dUCp2ocaFk0inww7h7k9YqGfs7s6DEFYUWreN1pz
-c9iroKs60kAv67sFpKDL37ohalp5CWA9LARbKeHd/yo2ebPYXrE00mpSsg07G75J
-n9EGzYiJG428PZgcXCDprxeT90orxkzZ1QxdJg8geGqivZ5QCNJNuvnDNdliekar
-BoDglCm8IzLek0Y/FfsIJJn4mazE4Wg6XfJ9y1kJ+UvM4lRg0cEBdI2kc8CBrlrg
-41BRS+620UrCVO2sMc1H2/bnIUU1Zg1+ct5oadN83WdnYheGBRdJbSn5Iv5T/adE
-80bc0T04ufE5tJdtrjG34M6L/XgKaF1nMpB7O+6c9mTFJAPZjtjbgpAGW5z66IuM
-mo78uH4A3kZEzzZgh7YwvpoN4UkJAPdwV0p7lJu026W1gyQIl+ofw95ArLSzUtTk
-BP4wL5kBxqMVze/UT2z4CsPgeezEVopjSfqEmIqq8R0emnyiUYrX/Cmnd0nqjrkO
-Y70VLKHvk78RyHnI+4uOO4MoK90GPFh55cSxj/5N++LlahppOipa4oU61op+CQD4
-ECKLHRyj/Ihwe54P8ceFj14U1FeOp7Ar3yEp4xwCVtZEi5CMUHtdq1z96BtGWIGN
-KJQQR8QXO1o=
-=FuWq
+iQIVAwUBUhsJYznsnt1WYoG5AQIxew/9FKRJ6Te1sQ2BgAHf57wY9rMtmDEySmNo
+zJvF3SGBLd5HRYAmSyenQTiKj85hgMOnUWjdpEuoqt9UEkXWMUG1JbWNdjCApo78
+NWEE+dsvQK9dsefNuzQwUNsps1cuztH/I4d1ETVogx0N/CY/vQqtpgynatpU06Ic
+W0pHIXBwnbNzRPtycyzHcnNpZMqtaV62eL6+5lJJRiXhlACbjMl8bwDDeGpnTJrg
+RE12eQlrUG0x1K1ubbxxjTD+Bnwf/bE4kCduXIhDi1pg9chNATUMinQZ5ipY/QwA
+XMHz19olFKBCIe9BcKudv9jZbcorYDq7E6msp6iiKA25nwk4nKHo4iJT5ejBg3/t
+BGh/FMWGbiXEf//6mKKEQ2Y5BWuwApIR44xGwpjKLH9G9SyaqJSePkH3m/bMJb7v
+9BWwJlsZAc0mkTgjIsScI2OriOCNcLq9gGNGsgBSJDSWSD6B6DwmCFNYzYvJcgZb
+ExNB7NaUvdcDrKutskS+JgAOcfjygjFEx3i9pMVtJHlarR4s3st4EvW9QhOMKq8a
+FxKb97Osbj1awRojSpMFTjFqwUbcSiQfV5s0ncgXcmz9GwoQ7sDHhlmlH8JtrTge
+SU/TcP8HPT/sgRRuUqk/26p7FgYKgTsifWyidvul8D7n8GkfQ1KpUA1/xdrJPihb
+3rURC5EWFWA=
+=WPGu
 -----END PGP SIGNATURE-----
 
---Sig_/xL_obv7_dAt05s.+iiMwUYv--
+--Sig_/S9PN8a2TT_7YrY=XAogfjdB--
