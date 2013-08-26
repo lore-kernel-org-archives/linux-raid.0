@@ -1,62 +1,104 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: MD array keeps resyncing after rebooting
-Date: Sat, 24 Aug 2013 20:54:31 +0200
-Message-ID: <52190167.10107@arcor.de>
-References: <CAC9WiBjm5-RJ=CfpXMG7CCBp7StzWDuhp5XyFs4hAW3sxX7Gfw@mail.gmail.com>	<CAC9WiBjs4DQqt1G911OBALzSqn=o_=L1S4_K_MvUWhAu-rhtUw@mail.gmail.com>	<51EED0DA.3020901@arcor.de>	<51EED102.4020503@arcor.de>	<CAC9WiBgN1-HBEgqwo7CWor=nihCYUcOrYKhGxYTgbC-d4a7_-g@mail.gmail.com>	<51EEF3D3.7020305@arcor.de>	<CAC9WiBgrjrPRcHa5kh8TUfqN0rBBFC4M0_8iDkU3O0SOFgFW5g@mail.gmail.com>	<CAC9WiBjQz6MJxBuw+cLWFZ-vOsdbYYSKdE575emH_AG5EmnGdw@mail.gmail.com>	<51F1754B.5000905@arcor.de>	<CAC9WiBhgF_-Ya7GW8DW0DcOQ-UhpN503hr=6_=46W5nbK04FTQ@mail.gmail.com>	<51FAA5C3.8030109@arcor.de>	<CAC9WiBhGyE=OJdSeL_OsPxtirhJ2=3WRsk=uBPiOTzMjBCf-dA@mail.gmail.com>	<51FBF830.5060606@arcor.de> <CAC9WiBg8UT4iLsPCY8DgR9ysfj8OmJARnRfSuxtbUCx_+2eBDw@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Accesses to not yet running array
+Date: Mon, 26 Aug 2013 14:33:49 +1000
+Message-ID: <20130826143349.31afbefa@notabene.brown>
+References: <CAC9WiBgjEQxe_uymD6WW3Oj5Bm6aYD-RBD-8m3G40c1y3HUb0Q@mail.gmail.com>
+	<20130821090634.413491d8@notabene.brown>
+	<CAC9WiBiYYOjCVaa5tKVC7Lnkz7fcB2wHM0v2wdQUi=1Ufku5gA@mail.gmail.com>
+	<CAC9WiBjBGD0J5vSe+q7y+UVGp2+++Ac++zeQ_=LUz9eQ-kCffA@mail.gmail.com>
+	<5217B364.1070704@arcor.de>
+	<CAC9WiBg7iRDAj40TFUJVq-TXcktNarhT=3_mCJhOkXnitF8HDQ@mail.gmail.com>
+	<CAC9WiBi=fDYmtLv6DPfskyMGfSHVk-J_=5fFsQkdWuigNcHGBw@mail.gmail.com>
+	<5218FE4F.7000209@arcor.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Jz5sbklCItbCre4M0b76iSY"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAC9WiBg8UT4iLsPCY8DgR9ysfj8OmJARnRfSuxtbUCx_+2eBDw@mail.gmail.com>
+In-Reply-To: <5218FE4F.7000209@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Francis Moreau <francis.moro@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Martin Wilck <mwilck@arcor.de>
+Cc: Francis Moreau <francis.moro@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Francis,
+--Sig_/Jz5sbklCItbCre4M0b76iSY
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> On Fri, Aug 2, 2013 at 8:19 PM, Martin Wilck <mwilck@arcor.de> wrote:
->> On 08/02/2013 02:46 PM, Francis Moreau wrote:
->>
->>>>
->>>> # mdadm -E /dev/sda | egrep "state"
->>>>         state[0] : Optimal, Consistent
->>>>    init state[0] : Fully Initialised
->>
->> This would correspond to "00 02", and it's what we should see after
->> initialization. On my system the BIOS sets "00 01" (Optimal, consistent,
->> Quick Init in progress) when it first creates an array, because the BIOS
->> doesn't do a full initialization. But "not initialized" is weird. The
->> mdadm DDF code won't set this by itself, AFAIK. Please make sure again
->> that the "before" data matches what mdadm/mdmon wrote just after
->> stopping during shutdown.
-> 
-> I did it again and got the same result: both disks have:
-> 
-> 00000860  00 00 ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|
-> 
-> and I checked again that "mdadm -E" reported an initialized state.
-> 
-> Moreover this time I did a "sync" before dumping the ddf headers.
-> 
-> So I'm quite lost, I can see only 2 cases:
-> 
->   - with my HW setup some metadata are not written to disks by the
-> kernel but stood somewhere in RAM (cache)
-> 
->   - the state is not stored at address 00000860 (very unlikely)
-> 
->   - the dumps are incorrect
-> 
-> How can I debug this more ?
-> 
-> Thanks for your help.
+On Sat, 24 Aug 2013 20:41:19 +0200 Martin Wilck <mwilck@arcor.de> wrote:
 
-have you got any further insight? I have LSI DDF fake RAID with mdadm
-running on my system right now, and it seems to work nicely; no problems
-over reboots.
+> On 08/24/2013 02:42 PM, Francis Moreau wrote:
+> > On Sat, Aug 24, 2013 at 2:40 PM, Francis Moreau <francis.moro@gmail.com=
+> wrote:
+> >> Hello Martin,
+> >>
+> >> On Fri, Aug 23, 2013 at 9:09 PM, Martin Wilck <mwilck@arcor.de> wrote:
+> >>> On 08/23/2013 12:00 PM, Francis Moreau wrote:
+> >>>
+> >>>> [ adding Martin in CC since it seems related to DDF... ]
+> >>>
+> >>> I reproduced it here. The problem is that mdmon isn't running. Simply
+> >>> try running "mdmon /dev/md127", and the mount should proceed.
+> >>>
+> >>
+> >> oh, ok, I should have noticed.
+> >>
+> >>> You'd avoid the problem by running "mdadm -IR /dev/sda" in the first =
+place.
+> >>
+> >> Actually this is how arrays are assembled during boot on some
+> >> distributions (Fedora for example).
+> >=20
+> > I meant the sequence:
+> >=20
+> > mdadm -I /dev/sda
+> > mdadm -I /dev/sdb
+> > mdadm -R /dev/mdxxx
+> >=20
+> > is used by distribution.
+>=20
+> CentOS 6 uses the following sequence:
+>=20
+> mdadm -I /dev/sda
+> mdadm -I /dev/sdb
+> mdadm -I /dev/mdXXX
+>=20
+> I don't see mdadm -R anywhere on CentOS.
+> You could change your udev rules to run "mdadm -IR /dev/mdXXX" instead.
+> Have you tried that?
+>=20
+> I wonder if that woudn't be smarter anyway. Neil?
 
-You may want to retry with my latest patch set. In particular, "DDF:
-container_content_ddf: set safe_mode_delay > 0" might help.
+I don't think you want the udev rules to run "mdadm -IR ...".
 
-Martin
+If 'mdadm -IR...' to be run at all, it should probably be
+   mdadm -IRs
+
+and it should happen after all attached busses have been scanned and udev h=
+as
+processed all new devices.
+
+NeilBrown
+
+--Sig_/Jz5sbklCItbCre4M0b76iSY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUhrarTnsnt1WYoG5AQKZZg//enUwrUq3OrxsWUDuzixBseRl0BFoANVt
+bKdGJSNX5kfAr2UBn/WMYvjvdjRyqKS15M59wY8naSo2ku0Cm5t4C6/Il5nLqhOs
+G5L8Ayg9AaD9W5190sFBCTMUSu8MXOGat3x6HrrdmjkPE/F94ZJmheQL7NxUTfJX
+vO/e9Sv6ctmPEhNQcs46EVtQ0cdFoNmZpNZpTO/IzJ6Ms1jD7xWb+dg74Iikr0g8
+FDFgXmwnC48bsbUNnp/SwAdIm8cGU6Vu7sBPqkQCHXIOMsKETcKLQzw3OMPL9jIF
+O9XqC25tUcXTPnSSEvZawo4es6DjKc+I67gvtfhSqZ4avA28UuSx66ml2TToitvT
+B1vI69wBvx8yLZYw+u38Age9AfX3vXrUTQ/Ukd1IZQZ+qnAGXlI8JhDcg4877OJX
+cDzg5vVV2mplpJ3w0gsBEX63Ln8SEwZZPMsZPz1UNpELYqeBO0ej7snzanWQh7hi
+qXp8pDMuPqoIGhwY3/Wfd2rlijFeLgpokZIVmDkvunuh2HCwQu3z8ISVtNmESqbi
+O6zzop/MbynBX0d5N/mvi63vXx9ehe7G4zTJHVc9mGbhnXkknquwuPAgYtb4/yuu
+/7MlgNrdnwVejVYgL9EWIyE1FCwS6ZF2HbHBbrcAoNpPQYZT7FyHp5ChfAIyr/nL
+N/krLKE1e88=
+=l2ev
+-----END PGP SIGNATURE-----
+
+--Sig_/Jz5sbklCItbCre4M0b76iSY--
