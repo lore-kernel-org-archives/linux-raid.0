@@ -1,63 +1,72 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: Re: [PATCH 3/3] raid1: Rewrite the implementation of iobarrier.
-Date: Mon, 26 Aug 2013 18:45:55 +0800
-Message-ID: <201308261845528793696@gmail.com>
-References: <201308191958041664556@gmail.com>,
-	<20130826174632.7224da0b@notabene.brown>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: Iruwen <iruwen@gmx.net>
+Subject: Disk with backup-file died during reshape
+Date: Mon, 26 Aug 2013 13:38:43 +0200
+Message-ID: <521B3E43.5050707@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Pk9uIE1vbiwgMTkgQXVnIDIwMTMgMTk6NTg6MDcgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVu
-Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KW3NuaXBdDQo+PiAtDQo+PiAtCS8qIE5vdyB3YWl0IGZv
-ciBhbGwgcGVuZGluZyBJTyB0byBjb21wbGV0ZSAqLw0KPj4gKwkvKiBGb3IgdGhvc2UgY29uZGl0
-aW9ucywgd2UgbXVzdCB3YWl0DQo+PiArCSAqIEE6YXJyYXkgaXMgaW4gZnJlZXplIHN0YXRlLg0K
-Pj4gKwkgKiBCOldoZW4gc3RhcnRpbmcgcmVzeW5jIGFuZCB0aGVyZSBhcmUgbm9ybWFsIElPDQo+
-PiArCSAqIEM6VGhlcmUgaXMgbm8gbm9ybmFsIGlvIGFmdGVyIHRocmVlIHRpbWVzIGluIHJlc3lu
-YyB3aW5kb3cNCj4+ICsJICogRDogdG90YWwgYmFycmllciBhcmUgbGVzcyB0aGFuIFJFU1lOQ19E
-RVBUSCovDQo+PiAgCXdhaXRfZXZlbnRfbG9ja19pcnEoY29uZi0+d2FpdF9iYXJyaWVyLA0KPj4g
-LQkJCSAgICAhY29uZi0+ZnJlZXplX2FycmF5ICYmIA0KPj4gLQkJCSAgICAhY29uZi0+bnJfcGVu
-ZGluZyAmJiBjb25mLT5iYXJyaWVyIDwgUkVTWU5DX0RFUFRILA0KPj4gKwkJCSAgICAhY29uZi0+
-ZnJlZXplX2FycmF5ICYmDQo+PiArCQkJICAgICgoY29uZi0+bmV4dF9yZXN5bmMgPCBSRVNZTkNf
-V0lORE9XX1NFQ1RPUlMNCj4+ICsJCQkJJiYgIWNvbmYtPm5yX3BlbmRpbmcpDQo+PiArCQkJICAg
-IHx8IChjb25mLT5uZXh0X3Jlc3luYyArIFJFU1lOQ19TRUNUT1JTDQo+PiArCQkJCSAgICA8PSBj
-b25mLT5hZnRlcl9yZXN5bmNfc2VjdG9yKSkNCj4+ICsJCQkgICAgJiYgY29uZi0+YmFycmllciA8
-IFJFU1lOQ19ERVBUSCwNCj4+ICAJCQkgICAgY29uZi0+cmVzeW5jX2xvY2spOw0KPg0KPkZvciAi
-QzpUaGVyZSBpcyBubyBub3JuYWwgaW8gYWZ0ZXIgdGhyZWUgdGltZXMgaW4gcmVzeW5jIHdpbmRv
-dyIgSSBleHBlY3RlZA0KPnRvIHNlZQ0KPiAgICAgICAgICBjb25mLT5hZnRlcl9yZXN5bmNfdGhy
-ZWVfY291bnQgPT0gMA0KPg0KPmJ1dCBJIGRvbid0IHNlZSB0aGF0LiAgV2h5IG5vdD8NCj4NCkkg
-dGhpbmsgdGhlcmUgYXJlIHR3byBtaXN0YWtlcy4NCkZvciB0aG9zZSBjb25kaXRpb25zLCB3ZSBt
-dXN0IHdhaXQ6DQpBOkFycmF5IGlzIGluIGZyZWV6ZSBzdGF0ZS4NCkI6Y29uZi0+bnJfcGVuZGlu
-ZyA+IDAgW0ZvciB0aGlzLCBmaXJ0bHksIGkgdGhpbmsgd2Ugc2hvdWxkIG9ubHkgY29uc2lkZXIg
-dGhlIHN0YXJ0aW5nIHJlc3luYy5JZiAtPm5yX3BlbmRpbmcgPiAwLHdlIG11c3Qgd2FpdA0Kd2hl
-dGhlciBvciBub3Qgc3RhcnRpbmcgcmVzeW5jLl0NCkM6Y29uZi0+bmV4dF9yZXN5bmMgKyBSRVNZ
-TkNfU0VDVE9SUyA+IGNvbmYtPmFmdGVyX3Jlc3luY19zZWN0b3IuDQpEOlRvdGFsIGJhcnJpZXIg
-YXJlIG1vcmUgdGhhbiBSRVNZTkNfREVQVEguDQoNCltzbmlwXQ0KDQo+DQo+PiAgCQlmb3IgKGog
-PSAwOyBqIDwgaTsgaisrKQ0KPj4gIAkJCWlmIChyMV9iaW8tPmJpb3Nbal0pDQo+PiAgCQkJCXJk
-ZXZfZGVjX3BlbmRpbmcoY29uZi0+bWlycm9yc1tqXS5yZGV2LCBtZGRldik7DQo+PiAgCQlyMV9i
-aW8tPnN0YXRlID0gMDsNCj4+IC0JCWFsbG93X2JhcnJpZXIoY29uZik7DQo+PiArCQlhbGxvd19i
-YXJyaWVyKGNvbmYsIG9sZCwgYmlvLT5iaV9zZWN0b3IpOw0KPj4gIAkJbWRfd2FpdF9mb3JfYmxv
-Y2tlZF9yZGV2KGJsb2NrZWRfcmRldiwgbWRkZXYpOw0KPj4gLQkJd2FpdF9iYXJyaWVyKGNvbmYp
-Ow0KPj4gKwkJYWZ0ZXJfdGhyZWV0aW1lc19yZXN5bmNfc2VjdG9yID0gd2FpdF9iYXJyaWVyKGNv
-bmYsIGJpbyk7DQo+PiArCQkvKg0KPj4gKwkJICogV2UgbXVzdCBtYWtlIHN1cmUgdGhlIG11bHRp
-IHIxYmlvcyBvZiBiaW8gaGF2ZQ0KPj4gKwkJICogdGhlIHNhbWUgdmFsdWUgb2YgYWZ0ZXJfdGhy
-ZWV0aW1lc19yZXN5bmNfc2VjdG9yDQo+PiArCQkgKi8NCj4+ICsJCWlmIChiaW8tPmJpX3BoeXNf
-c2VnbWVudHMgJiYgb2xkICYmDQo+PiArCQkJb2xkICE9IGFmdGVyX3RocmVldGltZXNfcmVzeW5j
-X3NlY3RvcikNCj4+ICsJCQkvKndhaXQgdGhlIGZvcm1lciByMWJpbyhzKSBjb21wbGV0ZWQqLw0K
-Pj4gKwkJCXdhaXRfZXZlbnQoY29uZi0+d2FpdF9iYXJyaWVyLA0KPj4gKwkJCQkJYmlvLT5iaV9w
-aHlzX3NlZ21lbnRzID09IDEpOw0KPg0KPkkgdGhpbmsgaXQgaXMgcXVpdGUgcG9zc2libGUgdGhh
-dCBiaV9waHlzX3NlZ21lbnRzPT0wIGF0IHRoaXMgcG9pbnQuDQo+U28geW91IHByb2JhYmx5IHdh
-bnQgIjw9IDEiLg0KPg0KTm8sIG9ubHkgdGhlcmUgYXJlIG11bHRpIHIxYmlvcyBvZiBiaW8sIGl0
-IG11c3Qgd2FpdCBwcmV2aW91cyByMWJpb3MgY29tcGxldGVkLlRoZSBsZWZ0IHIxYmlvIG1hZGUn
-YmlfcGh5c19zZWdtZW50cyA9IDEnLg0KSWYgdGhlcmUgaXMgb25lIHIxYmlvIG9mIGJpbywgaXQg
-Y2FuJ3Qgd2FpdC5JdCBvbmx5IG5lZWQgYWxsb3dfYmFycmllciBhbmQgcmV0cnkgd2FpdF9iYXJy
-aWVyLg0KDQoNCg0KRm9yIG90aGVyIGNvbW1lbnRzLCBpJ2xsIGFwcGx5Lg0KVGhhbmtzIQ0KSmlh
-bnBlbmcgTWE=
+Hi,
+
+the disk holding backup-file unfortunately died during an mdadm --grow 
+/dev/md0 --level=6 --raid-devices=4 --backup-file=/mnt/backup/md0.bak.
+The speed of the reshape dropped to 0K/sec, apart from that the RAID 
+seems fine.
+
+
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid6 sda1[4] sdc1[2] sdd1[3] sdb1[1]
+       2930271232 blocks super 1.2 level 6, 512k chunk, algorithm 18 
+[4/3] [UUU_]
+       [==========>..........]  reshape = 53.6% (786497536/1465135616) 
+finish=55405950.5min speed=0K/sec
+
+unused devices: <none>
+
+
+/dev/md0:
+         Version : 1.2
+   Creation Time : Fri Feb 11 21:10:18 2011
+      Raid Level : raid6
+      Array Size : 2930271232 (2794.52 GiB 3000.60 GB)
+   Used Dev Size : 1465135616 (1397.26 GiB 1500.30 GB)
+    Raid Devices : 4
+   Total Devices : 4
+     Persistence : Superblock is persistent
+
+     Update Time : Mon Aug 26 13:32:09 2013
+           State : clean, degraded, recovering
+  Active Devices : 3
+Working Devices : 4
+  Failed Devices : 0
+   Spare Devices : 1
+
+          Layout : left-symmetric-6
+      Chunk Size : 512K
+
+  Reshape Status : 53% complete
+      New Layout : left-symmetric
+
+            Name : backup:0  (local to host backup)
+            UUID : 832a100a:2996471b:51867bfa:aaf5c38f
+          Events : 1053146
+
+     Number   Major   Minor   RaidDevice State
+        3       8       49        0      active sync   /dev/sdd1
+        1       8       17        1      active sync   /dev/sdb1
+        2       8       33        2      active sync   /dev/sdc1
+        4       8        1        3      spare rebuilding   /dev/sda1
+
+
+What's the right thing to do now, is this recoverable? I have backups of 
+course and since the RAID is still working I could just copy everything 
+off and recreate it, but I'd rather fix this the "right way" than to set 
+up a new system.
+
+Thank you,
+Iruwen
 
