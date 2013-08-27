@@ -1,133 +1,98 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch 0/3 v2] raid5: make stripe handling multi-threading
-Date: Tue, 27 Aug 2013 17:34:26 +1000
-Message-ID: <20130827173426.027c40d6@notabene.brown>
-References: <20130812021803.325887805@kernel.org>
+From: Francis Moreau <francis.moro@gmail.com>
+Subject: Re: Accesses to not yet running array
+Date: Tue, 27 Aug 2013 10:11:03 +0200
+Message-ID: <CAC9WiBhXxZ=i3NPjaqS25PYK5HkPBVbXOFCyfeRjEnrobuajXg@mail.gmail.com>
+References: <CAC9WiBgjEQxe_uymD6WW3Oj5Bm6aYD-RBD-8m3G40c1y3HUb0Q@mail.gmail.com>
+	<20130821090634.413491d8@notabene.brown>
+	<CAC9WiBiYYOjCVaa5tKVC7Lnkz7fcB2wHM0v2wdQUi=1Ufku5gA@mail.gmail.com>
+	<CAC9WiBjBGD0J5vSe+q7y+UVGp2+++Ac++zeQ_=LUz9eQ-kCffA@mail.gmail.com>
+	<5217B364.1070704@arcor.de>
+	<CAC9WiBg7iRDAj40TFUJVq-TXcktNarhT=3_mCJhOkXnitF8HDQ@mail.gmail.com>
+	<CAC9WiBi=fDYmtLv6DPfskyMGfSHVk-J_=5fFsQkdWuigNcHGBw@mail.gmail.com>
+	<5218FE4F.7000209@arcor.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/wfPbY+Tc2G/457=HzZ2DTS4"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130812021803.325887805@kernel.org>
+In-Reply-To: <5218FE4F.7000209@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, djbw@fb.com, tj@kernel.org
+To: Martin Wilck <mwilck@arcor.de>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/wfPbY+Tc2G/457=HzZ2DTS4
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hello Martin,
 
-On Mon, 12 Aug 2013 10:18:03 +0800 Shaohua Li <shli@kernel.org> wrote:
+On Sat, Aug 24, 2013 at 8:41 PM, Martin Wilck <mwilck@arcor.de> wrote:
+> On 08/24/2013 02:42 PM, Francis Moreau wrote:
+>> On Sat, Aug 24, 2013 at 2:40 PM, Francis Moreau <francis.moro@gmail.com> wrote:
+>>> Hello Martin,
+>>>
+>>> On Fri, Aug 23, 2013 at 9:09 PM, Martin Wilck <mwilck@arcor.de> wrote:
+>>>> On 08/23/2013 12:00 PM, Francis Moreau wrote:
+>>>>
+>>>>> [ adding Martin in CC since it seems related to DDF... ]
+>>>>
+>>>> I reproduced it here. The problem is that mdmon isn't running. Simply
+>>>> try running "mdmon /dev/md127", and the mount should proceed.
+>>>>
+>>>
+>>> oh, ok, I should have noticed.
+>>>
+>>>> You'd avoid the problem by running "mdadm -IR /dev/sda" in the first place.
+>>>
+>>> Actually this is how arrays are assembled during boot on some
+>>> distributions (Fedora for example).
+>>
+>> I meant the sequence:
+>>
+>> mdadm -I /dev/sda
+>> mdadm -I /dev/sdb
+>> mdadm -R /dev/mdxxx
+>>
+>> is used by distribution.
+>
+> CentOS 6 uses the following sequence:
+>
+> mdadm -I /dev/sda
+> mdadm -I /dev/sdb
+> mdadm -I /dev/mdXXX
+>
+> I don't see mdadm -R anywhere on CentOS.
 
-> Neil,
->=20
-> This is another attempt to make raid5 stripe handling multi-threading.
-> Recent workqueue improvement for unbound workqueue looks very promising t=
-o the
-> raid5 usage. I had details in the first patch.
->=20
-> The patches are against your tree with patch 'raid5: make release_stripe
-> lockless' and 'raid5: fix stripe release order' but without 'raid5: create
-> multiple threads to handle stripes'
->=20
-> My test setup has 7 PCIe SSD, chunksize 8k, stripe_cache_size 2048. If en=
-abling
-> multi-threading, group_thread_cnt is set to 8.
->=20
-> randwrite	throughput(ratio) unpatch/patch		requestsize(sectors) unpatch/p=
-atch
-> 4k		1/5.9					8/8
-> 8k		1/5.5					16/13
-> 16k		1/4.8					16/13
-> 32k		1/4.6					18/14
-> 64k		1/4.7					17/13
-> 128k		1/4.2					23/16
-> 256k		1/3.5					41/21
-> 512k		1/3					75/28
-> 1M		1/2.6					134/34
->=20
-> For example, in 1M randwrite test, patched kernel is 2.6x faster, but ave=
-rage
-> request sending to each disk is drop to 34 sectors from 134 sectors long.
->=20
-> Currently the biggest problem is request size is dropped, because there a=
-re
-> multiple threads dispatching requests. This indicates multi-threading mig=
-ht not
-> be proper for all setup, so I disable it by default in this version. But =
-since
-> throughput is largly improved, I thought this isn't a blocking issue. I'm=
- still
-> working on improving this, maybe schedule stripes from one block plug as a
-> whole.
->=20
-> Thanks,
-> Shaohua
+After digging into the code of dracut, it seems that the bug (mdmon
+not started by mdadm -R /dev/mdxxx on incomplete array) seems to be
+known and a workaround exists.
 
+Basically the script which starts MD arrays (slightly modified by me
+to make it easier to read) does:
 
-Thanks.  I like this a lot more than the previous version.
+for md in /dev/md[0-9_]*; do
 
-It doesn't seem to apply exactly to my current 'for-next' - probably because
-I have moved things around and have a different set of patches applied :-(
-If you could rebase it on my current for-next I'll apply it and probably
-submit for next merge window.
-A couple of little changes I'd like made:
+    ...
 
-1/ alloc_thread_groups need to use GFP_NOIO, it least when called from
-raid5_store_group_thread_cnt.  At this point in time IO to the RAID5 is
-stalled so if the malloc needs to free memory it might wait for writeout to
-the RAID5 and so deadlock.  GFP_NOIO prevents that.
+    [ $(cat $md/array_state) != inactive ] && continue
 
-2/ could we move the
+    mdadm --offroot -R $md
 
-+                       if (!cpu_online(cpu)) {
-+                               cpu =3D cpumask_any(cpu_online_mask);
-+                               sh->cpu =3D cpu;
-+                       }
+    [ $(cat $md/array_state) = inactive ] && continue
 
-inside raid5_wakeup_stripe_thread() ?
+    # workaround for mdmon bug
+    [ $(cat $md/degraded) -gt 0 ] && mdmon --offroot --takeover $md
+done
 
-It isn't a perfect fit, but I think it is a better place for it.
-It could check list_empty(&sh->lru) and if it is empty, add to
-the appropriate group->handle_list.
+In theory this should fix the bug but it doesn't (looks like I'm
+really unlucky). Indeed at the time the script is run, the container
+device doesn't exist in /dev. Therefore the workaround is only
+executed on the MD array device. I can see the following message
+during the boot: "mdmon: md126 is not a container - cannot monitor"
 
-The code in do_release_stripe would become
-                else {
-                        clear_bit(STRIPE_DELAYED, &sh->state);
-                        clear_bit(STRIPE_BIT_DELAY, &sh->state);
-+                       if (conf->worker_cnt_per_group =3D=3D 0) {
-+                               list_add_tail(&sh->lru, &conf->handle_list);
-+                       } else {
-+                               raid5_wakeup_stripe_thread(sh);
-+                               return;
-+                       }
-                }
-                md_wakeup_thread(conf->mddev->thread);
+I tried to add "udevadm settle" before executing the workaround but
+that doesn't help.
 
-??
+> You could change your udev rules to run "mdadm -IR /dev/mdXXX" instead.
+> Have you tried that?
 
-NeilBrown
+I tried and it works fine.
 
---Sig_/wfPbY+Tc2G/457=HzZ2DTS4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUhxWgjnsnt1WYoG5AQJrww//VFZ5GWMaJZ2Vkkj4YXzwb0bpvvK+1yRa
-8MLvsEvp6VKkwst2Rs4JY1I2CWavnK9Qpo6m7ZtcQLBJV1RoJGUTE40EUJNRPqwW
-Ogm2wTjmoxaQR29j8ksiR6jmtbYoI/tx8u9Iu8WYx2kCEBLzjwr5zo0qLvgY3eIb
-sE+K0XjqYnD6u64IWL8MCpeyeyWw4VVUrLcMY/cOdRhR/kk5cIbVzXsJjH69ECn1
-ag4os5M8OObJCri4oBS9VG8XDKTaLoVoWp1fRmgiFAKuVw1Q85psrJoZf4tVXEjK
-D6ABYNJdgaIkvDbY23VdAc1gBjuU3R+6BxDRaZbk5oJjAVOCOAM6+G+PDgzU2dXq
-jcxXNVpB3phuijIpqqj+lCvV+hf5Tp7+1+Nx/XuKIb1NYwaAK8OUCB/ZIzsJDK5Y
-0TuSo9QT3/Pq8s81Ie/v/xAUGctUVteqcgZBB6WUG4TD+phIuPFfAZr159Zgjkpm
-EcRtSRntzRIcilkLl2Z+bU5zdZGl6pRR5Jppq31T0Z2bHair8FJW+kFR8UkTQn0N
-MNdfDZg8cNf7eFu0XCGwjFRBiPNQwKQkHBCzF7r0K1V5k8Z/2z+VSwlF+Kh8Xaao
-INeGgiJ6/8YI85vi2PF8RX5f/Y+11Bmraeu/5K5+ayPVMtP+ym/SasiMJCaqMeS5
-lBCRKCi50bg=
-=4f1R
------END PGP SIGNATURE-----
-
---Sig_/wfPbY+Tc2G/457=HzZ2DTS4--
+Thanks
+-- 
+Francis
