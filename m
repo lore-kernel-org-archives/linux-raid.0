@@ -1,209 +1,88 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [patch v3 5/5] raid5: only wakeup necessary threads
-Date: Tue, 27 Aug 2013 17:50:43 +0800
-Message-ID: <20130827095518.881234515@kernel.org>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [patch v3 2/5] raid5: fix stripe release order
+Date: Wed, 28 Aug 2013 13:41:50 +1000
+Message-ID: <20130828134150.678a5e1e@notabene.brown>
 References: <20130827095038.303090029@kernel.org>
+	<20130827095438.580030408@kernel.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/OcbUK+mxjLu=FfbEo1f+cf6"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline; filename=raid5-intelligent-wakeup.patch
+In-Reply-To: <20130827095438.580030408@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de, tj@kernel.org, dan.j.williams@gmail.com
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, tj@kernel.org, dan.j.williams@gmail.com
 List-Id: linux-raid.ids
 
-If there are no enough stripes to handle, we'd better not always queue all
-available work_structs. If one worker can only handle small or even none
-stripes, it will impact request merge and create lock contention.
+--Sig_/OcbUK+mxjLu=FfbEo1f+cf6
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-With this patch, the number of work_struct running will depend on pending
-stripes number. Note: some statistics info used in the patch are accessed without
-locking protection. This should doesn't matter, we just try best to avoid queue
-unnecessary work_struct.
 
-Signed-off-by: Shaohua Li <shli@fusionio.com>
----
- drivers/md/raid5.c |   50 ++++++++++++++++++++++++++++++++++++++++++++------
- drivers/md/raid5.h |    4 ++++
- 2 files changed, 48 insertions(+), 6 deletions(-)
+> +struct llist_node *llist_reverse_order(struct llist_node *head)
+> +{
+> +	struct llist_node *second, *third;
+> +
+> +	if (head =3D=3D NULL || head->next =3D=3D NULL)
+> +		return head;
+> +	second =3D head->next;
+> +	head->next =3D NULL;
+> +
+> +	do {
+> +		third =3D second->next;
+> +		second->next =3D head;
+> +
+> +		head =3D second;
+> +		second =3D third;
+> +	} while (second);
+> +
+> +	return head;
+> +}
+> +EXPORT_SYMBOL_GPL(llist_reverse_order);
 
-Index: linux/drivers/md/raid5.c
-===================================================================
---- linux.orig/drivers/md/raid5.c	2013-08-27 17:17:54.371899776 +0800
-+++ linux/drivers/md/raid5.c	2013-08-27 17:18:56.331120797 +0800
-@@ -77,6 +77,7 @@ static struct workqueue_struct *raid5_wq
- #define BYPASS_THRESHOLD	1
- #define NR_HASH			(PAGE_SIZE / sizeof(struct hlist_head))
- #define HASH_MASK		(NR_HASH - 1)
-+#define MAX_STRIPE_BATCH	8
- 
- static inline struct hlist_head *stripe_hash(struct r5conf *conf, sector_t sect)
- {
-@@ -209,6 +210,7 @@ static void raid5_wakeup_stripe_thread(s
- {
- 	struct r5conf *conf = sh->raid_conf;
- 	struct r5worker_group *group;
-+	int thread_cnt;
- 	int i, cpu = sh->cpu;
- 
- 	if (!cpu_online(cpu)) {
-@@ -220,6 +222,8 @@ static void raid5_wakeup_stripe_thread(s
- 		struct r5worker_group *group;
- 		group = conf->worker_groups + cpu_to_group(cpu);
- 		list_add_tail(&sh->lru, &group->handle_list);
-+		group->stripes_cnt++;
-+		sh->group = group;
- 	}
- 
- 	if (conf->worker_cnt_per_group == 0) {
-@@ -229,8 +233,26 @@ static void raid5_wakeup_stripe_thread(s
- 
- 	group = conf->worker_groups + cpu_to_group(sh->cpu);
- 
--	for (i = 0; i < conf->worker_cnt_per_group; i++)
--		queue_work_on(sh->cpu, raid5_wq, &group->workers[i].work);
-+	group->workers[0].working = true;
-+	/* at least one worker should run to avoid race */
-+	queue_work_on(sh->cpu, raid5_wq, &group->workers[0].work);
-+
-+	thread_cnt = group->stripes_cnt / MAX_STRIPE_BATCH - 1;
-+	/* wakeup more workers */
-+	for (i = 1; i < conf->worker_cnt_per_group && thread_cnt > 0; i++) {
-+		if (group->workers[i].working == false) {
-+			group->workers[i].working = true;
-+			queue_work_on(sh->cpu, raid5_wq,
-+				      &group->workers[i].work);
-+			thread_cnt--;
-+		} else if (group->workers[i].working_cnt <=
-+			   MAX_STRIPE_BATCH / 2)
-+			/*
-+			 * If a worker has no enough stripes handling, assume
-+			 * it will fetch more stripes soon.
-+			 */
-+			thread_cnt--;
-+	}
- }
- 
- static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh)
-@@ -575,6 +597,10 @@ get_active_stripe(struct r5conf *conf, s
- 				    !test_bit(STRIPE_EXPANDING, &sh->state))
- 					BUG();
- 				list_del_init(&sh->lru);
-+				if (sh->group) {
-+					sh->group->stripes_cnt--;
-+					sh->group = NULL;
-+				}
- 			}
- 		}
- 	} while (sh == NULL);
-@@ -4139,6 +4165,7 @@ static struct stripe_head *__get_priorit
- {
- 	struct stripe_head *sh = NULL, *tmp;
- 	struct list_head *handle_list = NULL;
-+	struct r5worker_group *wg = NULL;
- 
- 	if (conf->worker_cnt_per_group == 0) {
- 		handle_list = &conf->handle_list;
-@@ -4146,12 +4173,14 @@ static struct stripe_head *__get_priorit
- 			handle_list = NULL;
- 	} else if (group != ANY_GROUP) {
- 		handle_list = &conf->worker_groups[group].handle_list;
-+		wg = &conf->worker_groups[group];
- 		if (list_empty(handle_list))
- 			handle_list = NULL;
- 	} else {
- 		int i;
- 		for (i = 0; i < conf->group_cnt; i++) {
- 			handle_list = &conf->worker_groups[i].handle_list;
-+			wg = &conf->worker_groups[i];
- 			if (!list_empty(handle_list))
- 				break;
- 		}
-@@ -4200,11 +4229,16 @@ static struct stripe_head *__get_priorit
- 			if (conf->bypass_count < 0)
- 				conf->bypass_count = 0;
- 		}
-+		wg = NULL;
- 	}
- 
- 	if (!sh)
- 		return NULL;
- 
-+	if (wg) {
-+		wg->stripes_cnt--;
-+		sh->group = NULL;
-+	}
- 	list_del_init(&sh->lru);
- 	atomic_inc(&sh->count);
- 	BUG_ON(atomic_read(&sh->count) != 1);
-@@ -4911,8 +4945,8 @@ static int  retry_aligned_read(struct r5
- 	return handled;
- }
- 
--#define MAX_STRIPE_BATCH 8
--static int handle_active_stripes(struct r5conf *conf, int group)
-+static int handle_active_stripes(struct r5conf *conf, int group,
-+		struct r5worker *worker)
- {
- 	struct stripe_head *batch[MAX_STRIPE_BATCH], *sh;
- 	int i, batch_size = 0;
-@@ -4921,6 +4955,9 @@ static int handle_active_stripes(struct
- 			(sh = __get_priority_stripe(conf, group)) != NULL)
- 		batch[batch_size++] = sh;
- 
-+	if (worker)
-+		worker->working_cnt = batch_size;
-+
- 	if (batch_size == 0)
- 		return batch_size;
- 	spin_unlock_irq(&conf->device_lock);
-@@ -4955,11 +4992,12 @@ static void raid5_do_work(struct work_st
- 
- 		released = release_stripe_list(conf);
- 
--		batch_size = handle_active_stripes(conf, group_id);
-+		batch_size = handle_active_stripes(conf, group_id, worker);
- 		if (!batch_size && !released)
- 			break;
- 		handled += batch_size;
- 	}
-+	worker->working = false;
- 	pr_debug("%d stripes handled\n", handled);
- 
- 	spin_unlock_irq(&conf->device_lock);
-@@ -5017,7 +5055,7 @@ static void raid5d(struct md_thread *thr
- 			handled++;
- 		}
- 
--		batch_size = handle_active_stripes(conf, ANY_GROUP);
-+		batch_size = handle_active_stripes(conf, ANY_GROUP, NULL);
- 		if (!batch_size && !released)
- 			break;
- 		handled += batch_size;
-Index: linux/drivers/md/raid5.h
-===================================================================
---- linux.orig/drivers/md/raid5.h	2013-08-27 17:17:54.371899776 +0800
-+++ linux/drivers/md/raid5.h	2013-08-27 17:17:54.367900015 +0800
-@@ -213,6 +213,7 @@ struct stripe_head {
- 	enum reconstruct_states reconstruct_state;
- 	spinlock_t		stripe_lock;
- 	int			cpu;
-+	struct r5worker_group	*group;
- 	/**
- 	 * struct stripe_operations
- 	 * @target - STRIPE_OP_COMPUTE_BLK target
-@@ -369,12 +370,15 @@ struct disk_info {
- struct r5worker {
- 	struct work_struct work;
- 	struct r5worker_group *group;
-+	int working_cnt:8;
-+	bool working;
- };
- 
- struct r5worker_group {
- 	struct list_head handle_list;
- 	struct r5conf *conf;
- 	struct r5worker *workers;
-+	int stripes_cnt;
- };
- 
- struct r5conf {
+This is somewhat longer that necessary.
 
+struct llist_node *llist_reverse_order(struct llist_node *head)
+{
+	struct llist_node *new_head =3D NULL;
+
+	while (head) {
+		struct llist_node *tmp =3D head;
+		head =3D head->next;
+		tmp->next =3D new_head;
+		new_head =3D tmp;
+	}
+
+	return new_head;
+}
+
+I think that is short enough to just open-code in the top of
+release_stripe_list.
+
+Are you OK with that?
+
+NeilBrown
+
+--Sig_/OcbUK+mxjLu=FfbEo1f+cf6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUh1xfjnsnt1WYoG5AQJk7BAAp6rozjh3/5u4v8eqcQInmJLJgBbtDEFk
+BBLNzbe17GOZewAz7wg8W011dvrPlTu2JEPQB8qXiZnVW5RVtciZvXkOsupXYkb0
+No76GJrsTKsczeGyZIag+MKqdU7hWKajwr4GgfLhBE0Rbg0kKG+9/v47DPOE0OXi
+9T0iSVF6x24CbRtVmyDk8GA0U2yyEnNPU5on21j7ADvQiJ427Esshf/xZ4eaO0gw
+FWnOJQ0clUHL0cZ3NKM3n51W9d9VKmF4NdiJ9nQVIM4NRDnt1GXh5jhhwqaBJbwm
+uhH/+4JMXnNTdfq6o1L/vvgLFRasqAofnGudgg9D6fb1GpvcwjoNEUZzbfMoeHDr
+GpVPOeKwcYxoBUlX2gA9/y5JXftY/gKbFAxxEHrbinMF0tXErlc+nqc+P9R6tYgM
+QBJBMgenFG8nIwGpA0eIBvDYgcW7p5vu1tNOih+V/qSYq/nCarPp5i7QBPhg2wKU
+lZAtkYk/U0LO0g35QxeEd88lqqyQQf3AroVeflCYc/1hPIG4SOSN/utNHGHp4J7o
+HEMW6MO0DyHPniE0pSNTC13nG4paiBsYVAiZdjFWY/gPu173+vP07USMH49HW87g
+87PDnRLbRJbXe9AQbe7iWvX+0/jkmRCmoGN5D4twOBST0m2mnfKVF5BN3lyRJK4i
+LrHGRtV1Hi8=
+=Vaw6
+-----END PGP SIGNATURE-----
+
+--Sig_/OcbUK+mxjLu=FfbEo1f+cf6--
