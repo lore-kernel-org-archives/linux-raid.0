@@ -1,88 +1,95 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch v3 2/5] raid5: fix stripe release order
-Date: Wed, 28 Aug 2013 13:41:50 +1000
-Message-ID: <20130828134150.678a5e1e@notabene.brown>
+Subject: Re: [patch v3 3/5] raid5: offload stripe handle to workqueue
+Date: Wed, 28 Aug 2013 13:53:05 +1000
+Message-ID: <20130828135305.3f328d92@notabene.brown>
 References: <20130827095038.303090029@kernel.org>
-	<20130827095438.580030408@kernel.org>
+	<20130827095452.202091257@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/OcbUK+mxjLu=FfbEo1f+cf6"; protocol="application/pgp-signature"
+ boundary="Sig_/RelDit9Z5glkr.=mUrDDxo5"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130827095438.580030408@kernel.org>
+In-Reply-To: <20130827095452.202091257@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org, tj@kernel.org, dan.j.williams@gmail.com
 List-Id: linux-raid.ids
 
---Sig_/OcbUK+mxjLu=FfbEo1f+cf6
+--Sig_/RelDit9Z5glkr.=mUrDDxo5
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
+On Tue, 27 Aug 2013 17:50:41 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-> +struct llist_node *llist_reverse_order(struct llist_node *head)
-> +{
-> +	struct llist_node *second, *third;
+> -static struct stripe_head *__get_priority_stripe(struct r5conf *conf)
+> +static struct stripe_head *__get_priority_stripe(struct r5conf *conf, in=
+t group)
+>  {
+> -	struct stripe_head *sh;
+> +	struct stripe_head *sh =3D NULL, *tmp;
+> +	struct list_head *handle_list =3D NULL;
 > +
-> +	if (head =3D=3D NULL || head->next =3D=3D NULL)
-> +		return head;
-> +	second =3D head->next;
-> +	head->next =3D NULL;
-> +
-> +	do {
-> +		third =3D second->next;
-> +		second->next =3D head;
-> +
-> +		head =3D second;
-> +		second =3D third;
-> +	} while (second);
-> +
-> +	return head;
-> +}
-> +EXPORT_SYMBOL_GPL(llist_reverse_order);
+> +	if (conf->worker_cnt_per_group =3D=3D 0) {
+> +		handle_list =3D &conf->handle_list;
+> +		if (list_empty(handle_list))
+> +			handle_list =3D NULL;
+> +	} else if (group !=3D ANY_GROUP) {
+> +		handle_list =3D &conf->worker_groups[group].handle_list;
+> +		if (list_empty(handle_list))
+> +			handle_list =3D NULL;
+> +	} else {
+> +		int i;
+> +		for (i =3D 0; i < conf->group_cnt; i++) {
+> +			handle_list =3D &conf->worker_groups[i].handle_list;
+> +			if (!list_empty(handle_list))
+> +				break;
+> +		}
+> +		if (i =3D=3D conf->group_cnt)
+> +			handle_list =3D NULL;
+> +	}
 
-This is somewhat longer that necessary.
+Sorry, I meant to mention this last time...
 
-struct llist_node *llist_reverse_order(struct llist_node *head)
-{
-	struct llist_node *new_head =3D NULL;
+The setting of handle_list to NULL seems unnecessary.  It is sufficient to
+test if it is empty.
+The only interesting case is the last 'else' above.  That is only reached if
+worker_cnt_per_group !=3D 0 so handle_list will get set to some list_head.
+If all list_heads are empty, handle_list will be set to the last list_head
+so a list_empty(handle_list) test is perfectly safe.
 
-	while (head) {
-		struct llist_node *tmp =3D head;
-		head =3D head->next;
-		tmp->next =3D new_head;
-		new_head =3D tmp;
-	}
+Also with the current code:
+> =20
+>  	pr_debug("%s: handle: %s hold: %s full_writes: %d bypass_count: %d\n",
+>  		  __func__,
+> -		  list_empty(&conf->handle_list) ? "empty" : "busy",
+> +		  list_empty(handle_list) ? "empty" : "busy",
+                  ^^^^^^^^^^^^^^^^^^^^^^^
+This will crash.
 
-	return new_head;
-}
 
-I think that is short enough to just open-code in the top of
-release_stripe_list.
-
-Are you OK with that?
-
+Could you fix that up please?
+Thanks.
 NeilBrown
 
---Sig_/OcbUK+mxjLu=FfbEo1f+cf6
+--Sig_/RelDit9Z5glkr.=mUrDDxo5
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUh1xfjnsnt1WYoG5AQJk7BAAp6rozjh3/5u4v8eqcQInmJLJgBbtDEFk
-BBLNzbe17GOZewAz7wg8W011dvrPlTu2JEPQB8qXiZnVW5RVtciZvXkOsupXYkb0
-No76GJrsTKsczeGyZIag+MKqdU7hWKajwr4GgfLhBE0Rbg0kKG+9/v47DPOE0OXi
-9T0iSVF6x24CbRtVmyDk8GA0U2yyEnNPU5on21j7ADvQiJ427Esshf/xZ4eaO0gw
-FWnOJQ0clUHL0cZ3NKM3n51W9d9VKmF4NdiJ9nQVIM4NRDnt1GXh5jhhwqaBJbwm
-uhH/+4JMXnNTdfq6o1L/vvgLFRasqAofnGudgg9D6fb1GpvcwjoNEUZzbfMoeHDr
-GpVPOeKwcYxoBUlX2gA9/y5JXftY/gKbFAxxEHrbinMF0tXErlc+nqc+P9R6tYgM
-QBJBMgenFG8nIwGpA0eIBvDYgcW7p5vu1tNOih+V/qSYq/nCarPp5i7QBPhg2wKU
-lZAtkYk/U0LO0g35QxeEd88lqqyQQf3AroVeflCYc/1hPIG4SOSN/utNHGHp4J7o
-HEMW6MO0DyHPniE0pSNTC13nG4paiBsYVAiZdjFWY/gPu173+vP07USMH49HW87g
-87PDnRLbRJbXe9AQbe7iWvX+0/jkmRCmoGN5D4twOBST0m2mnfKVF5BN3lyRJK4i
-LrHGRtV1Hi8=
-=Vaw6
+iQIVAwUBUh10ITnsnt1WYoG5AQJDrxAAhVzKks1kuyKNvBVOoy2Sx1Dzm/u5vNPl
+rHo13nAnkrYLHgBygaIdgdGGUtLvDc4UhJRUDJyJns6NBo1bex1fzOaCQzAhXifJ
+uPI6Y1X8DiuP/+pD7orQYkckH1I1tLrhzfGQLAWEFGbTGIqQdvzzQ/MjGqDI63zs
+S71fYltTVGONJfVgNb3X4WEPt0PwT331FmxjREvr9mj4uxG1uT9BbhtZdckkz29H
+7L9cDi5U85vbYycj1T6hOETDDJo4b3gJxFwz/0Pdtxj490kvyXKZFYJIYDGnMFF8
+7EdiVjk8RxZ6W7BZtrOzy5WnibfHiWTR2BfYdkqdWezfMvvvYbLU9U3tQGPNHLhV
+vvXUeeznvf7s4a7orilkTEp/Gj5HIXAWAOtaeBVNVEgfRsUS6wmJttOuySoNGZuk
+U/nzrtAhLH/YlMKQgbsjhtKdF589LWKww4q6pXAC/HvCK0ymS3Cd8IadhwPtXBU6
+JhtWYyUFgnrWcakzjKCitIfjpznXgLsrRiOAuH/fRucWqzAxO36MxZkfxuAgqdbP
++0dslLWWOmIN28j8JHqtgCAUo6e7QoGBC5b4UiKJS0deZ41i+wMh9qfIBYpYGNQL
+hogtpWBha6la34tNFSRy6TMCJzZM4XT6E8rNLLP6AmYLomwZFqh9vC5KZqJiZlFK
+q2WQhseTnjw=
+=rNMs
 -----END PGP SIGNATURE-----
 
---Sig_/OcbUK+mxjLu=FfbEo1f+cf6--
+--Sig_/RelDit9Z5glkr.=mUrDDxo5--
