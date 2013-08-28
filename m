@@ -1,71 +1,99 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch 3/3] raid5: relieve lock contention in
- get_active_stripe()
-Date: Wed, 28 Aug 2013 14:32:52 +1000
-Message-ID: <20130828143252.1d48b04b@notabene.brown>
-References: <20130812022434.507702228@kernel.org>
-	<20130812022549.013010221@kernel.org>
-	<20130827131752.4d5ba375@notabene.brown>
-	<20130827085330.GA30133@kernel.org>
+Subject: Re: [PATCH 1/6] DDF: ddf_activate_spare: fix gcc -O2 uninitialized
+ warning
+Date: Wed, 28 Aug 2013 14:57:57 +1000
+Message-ID: <20130828145757.0baad436@notabene.brown>
+References: <1376677320-12816-1-git-send-email-mwilck@arcor.de>
+	<1376677320-12816-2-git-send-email-mwilck@arcor.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/eUrdUSVhcxkt8ZYAjqVpjo."; protocol="application/pgp-signature"
+ boundary="Sig_/V.xYrFJYoX/RBfWvUhDVX.."; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130827085330.GA30133@kernel.org>
+In-Reply-To: <1376677320-12816-2-git-send-email-mwilck@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, djbw@fb.com
+To: mwilck@arcor.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/eUrdUSVhcxkt8ZYAjqVpjo.
+--Sig_/V.xYrFJYoX/RBfWvUhDVX..
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 27 Aug 2013 16:53:30 +0800 Shaohua Li <shli@kernel.org> wrote:
+On Fri, 16 Aug 2013 20:21:55 +0200 mwilck@arcor.de wrote:
 
-> On Tue, Aug 27, 2013 at 01:17:52PM +1000, NeilBrown wrote:
-
+> The warning is spurious, but will break compilation with -O2.
 >=20
-> > Then get_active_stripe wouldn't need to worry about device_lock at all =
-and
-> > would only need to get the hash lock for the particular sector.  That s=
-hould
-> > make it a lot simpler.
+> Signed-off-by: Martin Wilck <mwilck@arcor.de>
+> ---
+>  super-ddf.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 >=20
-> did you mean get_active_stripe() doesn't need device_lock for any code pa=
-th?
-> How could it be safe? device_lock still protects something like handle_li=
-st,
-> delayed_list, which release_stripe() will use while a get_active_stripe c=
-an run
-> concurrently.
+> diff --git a/super-ddf.c b/super-ddf.c
+> index e3b3dca..95972ad 100644
+> --- a/super-ddf.c
+> +++ b/super-ddf.c
+> @@ -4779,7 +4779,7 @@ static struct mdinfo *ddf_activate_spare(struct act=
+ive_array *a,
+>  	struct ddf_super *ddf =3D a->container->sb;
+>  	int global_ok =3D 0;
+>  	struct mdinfo *rv =3D NULL;
+> -	struct mdinfo *di;
+> +	struct mdinfo *di =3D NULL;
+>  	struct metadata_update *mu;
+>  	struct dl *dl;
+>  	int i;
 
-Yes you will still need device_lock to protect list_del_init(&sh->lru),
-as well as the hash lock.
-Do you need device_lock anywhere else in there?
-
+I fixed this differently as below.
+Thanks,
 NeilBrown
 
---Sig_/eUrdUSVhcxkt8ZYAjqVpjo.
+=46rom bb925ff08beda785d42f5ff8a0f082d91c5caad4 Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Fri, 16 Aug 2013 20:21:55 +0200
+Subject: [PATCH] DDF: ddf_activate_spare: fix gcc -O2 uninitialized warning
+
+At this point 'di' and 'rv' both have the same value.  gcc doesn't
+realise that and a human reader might not either.
+'rv' makes more sense too, so use that.
+
+Signed-off-by: Martin Wilck <mwilck@arcor.de>
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/super-ddf.c b/super-ddf.c
+index e3b3dca..ee6499a 100644
+--- a/super-ddf.c
++++ b/super-ddf.c
+@@ -4959,7 +4959,7 @@ static struct mdinfo *ddf_activate_spare(struct activ=
+e_array *a,
+ 	 * Create a metadata_update record to update the
+ 	 * phys_refnum and lba_offset values
+ 	 */
+-	vc =3D find_vdcr(ddf, a->info.container_member, di->disk.raid_disk,
++	vc =3D find_vdcr(ddf, a->info.container_member, rv->disk.raid_disk,
+ 		       &n_bvd, &vcl);
+ 	if (vc =3D=3D NULL)
+ 		return NULL;
+
+--Sig_/V.xYrFJYoX/RBfWvUhDVX..
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUh19dDnsnt1WYoG5AQJrPxAAq8hv19R3A2fS1pvlTO9Thr7fnA4XJn9u
-KLfOR/m8MqlFjzj4NaLHDH7U8kPSNf1SlD6D5Nc3raInnD5dledIUcu15jFvMPRf
-xvczkBwawx6ueMFBND2tiqytFdJvIWkiyBtVzeiXLo9uvxixP/3QBluXLxlNm1st
-ziO+HWbjZnVKxjtMNh+8pqbq86z3Nld3HU35aY7hAOBBujrv3n6MvTWVuESMdE/z
-ijlh3YbQYHc8PDLAPKqeamqxOi6yR2nRLuXW+e0mzYAT/RfUNrApegNdYagbUgyp
-2IAB3FgJ/OrwTch/wLbQI3Z1nUb4HqzP5QYoxqtKsiJJVZmmtLw85FKpmZ2xXPBC
-z3F2QSJGTfd+SM/nBXbij5ffWV6p8tmbPuKB8QN2ffXC68gU0ch+9YyVbpZiwJ7c
-DoTWD0Nuo7apaDLKFTdR0Z56leed+zNKIdksefCA1kesSBXHCmJybbqprNu0QECv
-SoRa5eVdZ6rbtt+C8FfCDEMxHb13T5td2dYzOoEhK4tZupQ9sdgGu2MDe5v8uyVi
-Tmex5KMUY9KloXxGmf8AgeyreesuAJMQN2BrJshp2BRYpKPxKtu4oH1ZdYiVBJhQ
-nteUEoJGWiuka8flX8hrbxdKAKh7biyMNU/c/ceJy/frV652pFa8pzmMAKM5oXF3
-f0ERxp7hjew=
-=qpRa
+iQIVAwUBUh2DVTnsnt1WYoG5AQJ/tQ//Sqp4O0rlT8xydK70GzOyumk8NGL0mZDc
+Cxb7WBDNVHcqlz6JEM5sebctA9nIu3bBkL2GmxbxSq05vsdpTvIWU/T/Z1kHF29t
+CY5NnEYRCzqzwbHFJm6tdk40dkuGjKf6tCw3+UpUMwcb9IA3C/td93UO6dknbEOw
+hY7Z8Lzr8uFS55QW+cBEglgJshRB0W5jAPg2FgW64m/B7nKemkRLevrsD3q1PlaU
+RhHxPmYTpAivLXnMi07JG62EQGqOm4aATTLa7m7u6vyH7xQy7uapqDOpXAze44rT
+QUGB7vEpx74E+MStxKLrTEV1x0McwNyHlVOMrGnNQa8NlUA23BCb0UNaTIrdMyeM
+ZFoKOcSV35O4onQ/Mr+vtFqsrMmavgKvILot1yvqlwRXdlvJjrTWNaeXO7nDnPjV
+hfvNquB4UMukth2BvM8RE/I9rNdtFW5394aoGjFqT6j2X6AiEX9ZEXMK/LSduNQS
+N/GmVy8TC2UuZn632ixSXhHqXwOQAnIHNvmcSg0moBazyGDJr7SGe9wJgXuqGAnG
+KLbdAM3Oi79K4sreRMPP3I1dIxlD2+OGemkN477nlxNW3fJ8dtXjHz3PntCUyEGd
+8vYTeHf5pqTwAHsvS0IZS6PYjT6QZcjdFRiDyuJuPgGvoLIApb+QriJ/89mkHaeb
+KioIOsBr8fc=
+=NaOu
 -----END PGP SIGNATURE-----
 
---Sig_/eUrdUSVhcxkt8ZYAjqVpjo.--
+--Sig_/V.xYrFJYoX/RBfWvUhDVX..--
