@@ -1,95 +1,108 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch v3 3/5] raid5: offload stripe handle to workqueue
-Date: Wed, 28 Aug 2013 13:53:05 +1000
-Message-ID: <20130828135305.3f328d92@notabene.brown>
+Subject: Re: [patch v3 5/5] raid5: only wakeup necessary threads
+Date: Wed, 28 Aug 2013 14:13:04 +1000
+Message-ID: <20130828141304.5e6df26e@notabene.brown>
 References: <20130827095038.303090029@kernel.org>
-	<20130827095452.202091257@kernel.org>
+	<20130827095518.881234515@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/RelDit9Z5glkr.=mUrDDxo5"; protocol="application/pgp-signature"
+ boundary="Sig_/7dk83I6d8zlLHN5uRWmmqOd"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130827095452.202091257@kernel.org>
+In-Reply-To: <20130827095518.881234515@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org, tj@kernel.org, dan.j.williams@gmail.com
 List-Id: linux-raid.ids
 
---Sig_/RelDit9Z5glkr.=mUrDDxo5
+--Sig_/7dk83I6d8zlLHN5uRWmmqOd
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 27 Aug 2013 17:50:41 +0800 Shaohua Li <shli@kernel.org> wrote:
+On Tue, 27 Aug 2013 17:50:43 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-> -static struct stripe_head *__get_priority_stripe(struct r5conf *conf)
-> +static struct stripe_head *__get_priority_stripe(struct r5conf *conf, in=
-t group)
->  {
-> -	struct stripe_head *sh;
-> +	struct stripe_head *sh =3D NULL, *tmp;
-> +	struct list_head *handle_list =3D NULL;
-> +
-> +	if (conf->worker_cnt_per_group =3D=3D 0) {
-> +		handle_list =3D &conf->handle_list;
-> +		if (list_empty(handle_list))
-> +			handle_list =3D NULL;
-> +	} else if (group !=3D ANY_GROUP) {
-> +		handle_list =3D &conf->worker_groups[group].handle_list;
-> +		if (list_empty(handle_list))
-> +			handle_list =3D NULL;
-> +	} else {
-> +		int i;
-> +		for (i =3D 0; i < conf->group_cnt; i++) {
-> +			handle_list =3D &conf->worker_groups[i].handle_list;
-> +			if (!list_empty(handle_list))
-> +				break;
-> +		}
-> +		if (i =3D=3D conf->group_cnt)
-> +			handle_list =3D NULL;
-> +	}
 
-Sorry, I meant to mention this last time...
-
-The setting of handle_list to NULL seems unnecessary.  It is sufficient to
-test if it is empty.
-The only interesting case is the last 'else' above.  That is only reached if
-worker_cnt_per_group !=3D 0 so handle_list will get set to some list_head.
-If all list_heads are empty, handle_list will be set to the last list_head
-so a list_empty(handle_list) test is perfectly safe.
-
-Also with the current code:
+> @@ -229,8 +233,26 @@ static void raid5_wakeup_stripe_thread(s
 > =20
->  	pr_debug("%s: handle: %s hold: %s full_writes: %d bypass_count: %d\n",
->  		  __func__,
-> -		  list_empty(&conf->handle_list) ? "empty" : "busy",
-> +		  list_empty(handle_list) ? "empty" : "busy",
-                  ^^^^^^^^^^^^^^^^^^^^^^^
-This will crash.
+>  	group =3D conf->worker_groups + cpu_to_group(sh->cpu);
+> =20
+> -	for (i =3D 0; i < conf->worker_cnt_per_group; i++)
+> -		queue_work_on(sh->cpu, raid5_wq, &group->workers[i].work);
+> +	group->workers[0].working =3D true;
+> +	/* at least one worker should run to avoid race */
+> +	queue_work_on(sh->cpu, raid5_wq, &group->workers[0].work);
+> +
+> +	thread_cnt =3D group->stripes_cnt / MAX_STRIPE_BATCH - 1;
+> +	/* wakeup more workers */
+> +	for (i =3D 1; i < conf->worker_cnt_per_group && thread_cnt > 0; i++) {
+> +		if (group->workers[i].working =3D=3D false) {
+> +			group->workers[i].working =3D true;
+> +			queue_work_on(sh->cpu, raid5_wq,
+> +				      &group->workers[i].work);
+> +			thread_cnt--;
+> +		} else if (group->workers[i].working_cnt <=3D
+> +			   MAX_STRIPE_BATCH / 2)
+> +			/*
+> +			 * If a worker has no enough stripes handling, assume
+> +			 * it will fetch more stripes soon.
+> +			 */
+> +			thread_cnt--;
+> +	}
+>  }
+
+I don't really understand this  "working_cnt <=3D MAX_STRIPE_BATCH / 2"
+heuristic.  It is at best a very coarse estimate of how long until the work=
+er
+will get some more stripes to work on.
+I think I would simply not count any thread that is already working (except
+the first, which is always counted whether it is working or not)
+Do you see some particular gain from the counting?
 
 
-Could you fix that up please?
-Thanks.
+
+> -#define MAX_STRIPE_BATCH 8
+> -static int handle_active_stripes(struct r5conf *conf, int group)
+> +static int handle_active_stripes(struct r5conf *conf, int group,
+> +		struct r5worker *worker)
+>  {
+>  	struct stripe_head *batch[MAX_STRIPE_BATCH], *sh;
+>  	int i, batch_size =3D 0;
+> @@ -4921,6 +4955,9 @@ static int handle_active_stripes(struct
+>  			(sh =3D __get_priority_stripe(conf, group)) !=3D NULL)
+>  		batch[batch_size++] =3D sh;
+> =20
+> +	if (worker)
+> +		worker->working_cnt =3D batch_size;
+> +
+>  	if (batch_size =3D=3D 0)
+>  		return batch_size;
+
+I think this could possibly return with ->working still 'true'.
+I think it is safest to clear it on every exit from the function
+
+
+Thanks,
 NeilBrown
 
---Sig_/RelDit9Z5glkr.=mUrDDxo5
+--Sig_/7dk83I6d8zlLHN5uRWmmqOd
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUh10ITnsnt1WYoG5AQJDrxAAhVzKks1kuyKNvBVOoy2Sx1Dzm/u5vNPl
-rHo13nAnkrYLHgBygaIdgdGGUtLvDc4UhJRUDJyJns6NBo1bex1fzOaCQzAhXifJ
-uPI6Y1X8DiuP/+pD7orQYkckH1I1tLrhzfGQLAWEFGbTGIqQdvzzQ/MjGqDI63zs
-S71fYltTVGONJfVgNb3X4WEPt0PwT331FmxjREvr9mj4uxG1uT9BbhtZdckkz29H
-7L9cDi5U85vbYycj1T6hOETDDJo4b3gJxFwz/0Pdtxj490kvyXKZFYJIYDGnMFF8
-7EdiVjk8RxZ6W7BZtrOzy5WnibfHiWTR2BfYdkqdWezfMvvvYbLU9U3tQGPNHLhV
-vvXUeeznvf7s4a7orilkTEp/Gj5HIXAWAOtaeBVNVEgfRsUS6wmJttOuySoNGZuk
-U/nzrtAhLH/YlMKQgbsjhtKdF589LWKww4q6pXAC/HvCK0ymS3Cd8IadhwPtXBU6
-JhtWYyUFgnrWcakzjKCitIfjpznXgLsrRiOAuH/fRucWqzAxO36MxZkfxuAgqdbP
-+0dslLWWOmIN28j8JHqtgCAUo6e7QoGBC5b4UiKJS0deZ41i+wMh9qfIBYpYGNQL
-hogtpWBha6la34tNFSRy6TMCJzZM4XT6E8rNLLP6AmYLomwZFqh9vC5KZqJiZlFK
-q2WQhseTnjw=
-=rNMs
+iQIVAwUBUh140Dnsnt1WYoG5AQLPTQ/+J50xF6YYKLO0oEdHCwWbuvZv18TKBgXa
+3VOfck+NzJyAlkAWWqxFeAMd7+l4EFR3UH27YCLHYHp1SSEV9fMLh4EdgIfTdNbx
+Vz6Mj2J2aoWs65BEeet5T6jx4Dp24dDtVT8AIBcU/RmH78VwH44acodlVfg2VYua
+hjjJyQtJTMyX5P38u5FEv7MMqnvoQF4h/y2dstcFZNi1MJT1KE/VHyqqPNO2N85F
+bWYtJQ9evi4ZKhRCY9L3GWAwwlOJ8C4gmh+cj4cJ8sCS2Bx43rjJgGQpKjElB5DD
+4WjWp/sUZHW+JKEZY7uw8Tei/0UZIuBbT/HJgGEZ5TmrYlhguY/dX3n4a3oncIPH
+sil8TSN/LtrSozhQbk6IqyCGMmD9kOT0AsRTnH/ITj2T7LBm1y1oXuBlNSlv7xLo
+H8LlOP/N+AUA3oOU3iLt2BdaL3CvhnpMC21Xjb38bcfXhFHbiqIVrzLn9F6PwYAC
+PLMuX3TbZjKRdDnINjxQtMObMw521hkWBtSklrJD7ZQk1Hzh7mkHQNjLlvXjzeLE
+ip423FF/hXjD00C1GuKoK33VeWd7hZ18sEjJWeHCcB6AwioOW0GZr+LUNzLVNyhh
+dZxPeoIKsxjMRmQoVv6G5s6Uqk5j08pJczYOFWHAQNXs/uynmNHFNoNDh2b3YzOc
+hUNPvLZU9yA=
+=cghc
 -----END PGP SIGNATURE-----
 
---Sig_/RelDit9Z5glkr.=mUrDDxo5--
+--Sig_/7dk83I6d8zlLHN5uRWmmqOd--
