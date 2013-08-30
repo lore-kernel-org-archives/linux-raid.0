@@ -1,97 +1,41 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: RAID 10 on Fusion IO cards problems
-Date: Thu, 29 Aug 2013 20:27:11 -0500
-Message-ID: <521FF4EF.2020904@hardwarefreak.com>
-References: <CAGkViCEJqcGHZQgn0moxFbhHr_XJ0uswy1C4L_nrURR6VKCwSw@mail.gmail.com> <521FD62C.9070800@hardwarefreak.com>
-Reply-To: stan@hardwarefreak.com
+From: "Tsaousis, Costa" <costa@tsaousis.gr>
+Subject: raid 5 with 2 failed drives
+Date: Fri, 30 Aug 2013 04:55:56 +0300
+Message-ID: <CANL+Vpaxpo8cgT4T69N3TD3fd+-Mup=C144Bmdfn_CqpfZKLGg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <521FD62C.9070800@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: Albert Pauw <albert.pauw@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 8/29/2013 6:15 PM, Stan Hoeppner wrote:
-> On 8/29/2013 4:20 AM, Albert Pauw wrote:
+Hi all,
 
-> I am trying to get a RAID 10 configuration working at work, but seem
-> to hit a performance wall after 20 minutes into a DB creation session.
+I have a raid5 with 4 drives: sda, sdb, sdc, sdd.
 
-It may help if you explain what a "DB creation session" entails in this
-case.  If this is a write heavy process from the beginning of the run,
-the fact that you don't run into performance problems until 20 minutes
-in would suggest the problem is garbage collection at the SSDs.
+While I was in vacations sdb powered off (I guess a thermal issue). Anyway,
+the raid continued for several days in decreaded mode.
 
-However, since the single device w/filesystem doesn't exhibit the
-performance problem it would seem GC isn't the cause.  Thus it seems the
-process likely doesn't begin heavy write IO until 20 minutes in, at
-which point you hit the problem I described in my first reply below.
-I'm making logical deductions by analyzing the information you've
-presented.  They may not be wholly correct or there may be additional
-information that would change the analysis.
+One day before being able to replace the powered off drive, sdd, a second
+drive, broke (lots of read errors, including the raid superblock).
 
-A good description of the application's read/write profile would take a
-lot of the guesswork/deduction out of the equation, and would be very
-helpful in nailing down the root cause of this performance problem.
+sdb (the first drive) works, but it is several days behind the other 3.
 
-> ...
->> OS: Oracle Linux 5.9 (effectively RHEL 5.9), kernel  2.6.32-400.29.2.el5uek.
->> All utilities updates, mdadm (2.6.9 latest through updates).
-> ...
->> Two Fusion IO Duo cards, each Fusion IO device 640 GB, so four in total.
-> ...
->> mdadm --create --verbose /dev/md0 --level=10 --metadata=1.2
->> --chunk=512 --raid-devices=4 /dev/fioa /dev/fioc /dev/fiob /dev/fiod
->> --assume-clean -N md0
->>
->> When the performance turned out bad, after about 20 minutes, the
->> process was stopped. I broke the mirror, so the md0 device is only
->> striped, but the performance hit after 20 minutes happened again.
->>
->> The status of all cards are fine, no problems there. Then I created a
->> fs on only one device and have it run again. This time it worked fine.
->> The fs was in all cases ext3, no TRIM.
-> 
-> You've presented insufficient information to allow a definitive answer.
->  That said, it's very likely that you're hitting the same wall many
-> folks do with SSDs.  All md/RAID personalities are limited to a single
-> write thread which limits you to one CPU of IO throughput.  When writing
-> to a single device without md/RAID, block IOs can be processed by all
-> CPUs in parallel.  The Fusion IO device is likely sufficiently fast that
-> a single md/RAID10 thread can't saturate the device, so you run out of
-> CPU before IOPS.  This is very common with SSD and md/RAID.  Shaohua Li
-> has been busily working on patches for quite some time now to eliminate
-> this CPU bottleneck in md.
-> 
-> The fact that a single Fusion IO device with EXT3 on it is faster than
-> md/RAID10 strongly suggests this may be the cause.  If you have multiple
-> application threads or processes writing to a single device the IOs will
-> be processed on the same CPU (core) as the thread, so you can have IOs
-> in flight from all CPUs in parallel.  When using md/RAID all of that IO
-> must be shuttled to the md driver which can only execute on a single CPU
-> (core).  To verify this, simply run your tests again and monitor CPU
-> burn of the md/RAID10 thread.  If that CPU is 100% at any time then this
-> is the problem.
-> 
-> If this is true, you can immediately mitigate it by using a layered
-> md/RAID0 over md/RAID1 setup.  Doing this will give you two md/RAID1
-> write threads, doubling the number of CPU cores you can put into play.
-> To do this and maintain the card<->card mirror layout you described, you
-> will create an md/RAID1 with fioa and fioc, and another md/RAID1 with
-> fiob and fiod.  Then you'll create an md/RAID0 across these two md/RAID1
-> devices.  The md/RAID0 and linear personalities don't use write threads
-> and are thus not limited to a single CPU core.
-> 
-> One final suggestion.  Use XFS instead of EXT3/4.  You should get
-> significantly better performance with a parallel database workload.  But
-> I'd strongly suggest moving up to a RHEL 6.2+ clone if you do.  5.9 is
-> ancient, and there are tons of performance and stability enhancements in
-> newer kernels, specifically related to XFS.
+I thought the best way to get the most out of a possible reconstrution, is
+to ddrescue as much of sdd to sdb the then attempt to re-assemble the array
+with the 3 drives (2 fully functional + sdb with as much of sdd's data as
+possible), hopping that if I am lucky, the parts that cannot be read from
+sdd, will exist in sdb and may not have been changed in the few days that
+sdb was offline.
 
--- 
-Stan
+Is this going to work? Can I just "mix" data from 2 raid-5 drives to build
+an operational copy of the failed drives?
 
+Thanks.
 
+Costa
+
+PS: I have backup of important data, and I already have restored
+operations. However the array was also hosting a few TB of
+nice-to-have data, never backed up, which I am trying to rescue if
+possible.
