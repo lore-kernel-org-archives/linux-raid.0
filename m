@@ -1,48 +1,76 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: [PATCH 6/6] mdmon: allow disabling "@dmon" command name at compile
- time
-Date: Sun, 01 Sep 2013 19:20:13 +0200
-Message-ID: <5223774D.50405@arcor.de>
-References: <1376677320-12816-1-git-send-email-mwilck@arcor.de>	<1376677320-12816-7-git-send-email-mwilck@arcor.de> <20130828151505.222eaa0a@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [patch v3 5/5] raid5: only wakeup necessary threads
+Date: Mon, 2 Sep 2013 10:45:21 +1000
+Message-ID: <20130902104521.051c7fde@notabene.brown>
+References: <20130827095038.303090029@kernel.org>
+	<20130827095518.881234515@kernel.org>
+	<20130828141304.5e6df26e@notabene.brown>
+	<20130829074032.GA24012@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Pf4MWuCcstVRmg0DqGt3YTN"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130828151505.222eaa0a@notabene.brown>
+In-Reply-To: <20130829074032.GA24012@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, tj@kernel.org, dan.j.williams@gmail.com
 List-Id: linux-raid.ids
 
-On 08/28/2013 07:15 AM, NeilBrown wrote:
+--Sig_/Pf4MWuCcstVRmg0DqGt3YTN
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> Can you help me understand?  What is anaconda even looking for mdmon?
-> Does it need exactly "mdmon" or would "@mdmon" be OK?
+On Thu, 29 Aug 2013 15:40:32 +0800 Shaohua Li <shli@kernel.org> wrote:
+	return batch_size;
+> >=20
+> > I think this could possibly return with ->working still 'true'.
+> > I think it is safest to clear it on every exit from the function
+>=20
+> Ok, this one doesn't matter too, I fixed it.
+> =20
+> Subject:raid5: only wakeup necessary threads
+>=20
+> If there are no enough stripes to handle, we'd better not always queue all
+> available work_structs. If one worker can only handle small or even none
+> stripes, it will impact request merge and create lock contention.
+>=20
+> With this patch, the number of work_struct running will depend on pending
+> stripes number. Note: some statistics info used in the patch are accessed=
+ without
+> locking protection. This should doesn't matter, we just try best to avoid=
+ queue
+> unnecessary work_struct.
+>=20
+> Signed-off-by: Shaohua Li <shli@fusionio.com>
 
-To be precise, it's not anaconda but "loader", the C program that starts
-anaconda and cleans up after it. It looks exactly for "mdmon". See
-https://git.fedorahosted.org/cgit/anaconda.git/tree/loader/shutdown.c?h=rhel6-branch#n59
+Thanks.
+I removed the 'working_cnt' field as it wasn't being used, and have applied
+and push out the patch.
 
-> Does "started by systemd" mean that "systemctl start mdmon@mdXXX.service" was
-> used to start it?  In that case can't we put something in
-> systemd/mdmon@.service to make the right thing happen?
+NeilBrown
 
-Sorry for having explained unclearly. This is *not* a systemd
-environment. There is no regular "init" process running AFAICT, "loader"
-takes that role as far as necessary in the installation environment.
 
-> 
-> I'm going to hold off on this one for the moment.
 
-If this isn't applied, in the RHEL/CentOS 6 installation environment,
-"loader" will kill mdmon, and a subsequent "mdadm --wait-clean" will
-hang forever.
+--Sig_/Pf4MWuCcstVRmg0DqGt3YTN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Martin
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-> 
-> All others applied.
-> 
-> Thanks,
-> NeilBrown
+iQIVAwUBUiPfoTnsnt1WYoG5AQLG1w/+OBwkv1al+DcQRcTD12sll0YnMzBAKsMx
+CueyFjbDqkkC4J55Uw5mCHGysNvBK95zxpGYKESwbnos4cnjFW8s6wGnvjxzWx+Q
+d0l1xL23yN++quPoNzchTJzHFa64K0muTtNEZ4AuJ40T3Gg4tF4wt3mvdIFZbAmM
+9DnP9sId2ld2K3JmW/ko7Gi3u/3YC2NwNvDE1EXmF4A8hhz8EzjpTFjfgMh7MqCT
+DDysWbaL0CmCMMiStiYYSDG8pRZRUSCBvKjelmlBMXnKWHGPK1t/rB+KAMdS/wGU
+ddk/9xVBmZqcFjBwVj3BzWsvjYZv7HtFeKO3vdmPbipsG5BAEIH3JJTjhJsDh/RO
+1P19DuQTacFRhYQowR01xtsaMXQXWdxGDpkVY/eUu19HHj7jmdH8glE9066jahJT
+ZH8uYnswIonMvZ3ONwSgSrw+bAela0w0jLVoZsqBPiFcZrPu6U2PEfn85xEwyEUg
+oLyd18oiO9iKzo2+awntNFkxbW6mlbLBMS/7+K5g7iG665PyR+eZCqM505E/4PP3
+aYXNuLupSFXfDaGLHJKa0QrqILyFbj9oGnf/DPrk8iGGxObAtTH4CvqXzI6kqRoZ
+u0cT4NS1eAP8bH2mKBCie7XfstnuNzF/ja6jlDrjhWI8VHvkI+gDCRsujE96sP24
+LiZBhBFkI94=
+=cyt1
+-----END PGP SIGNATURE-----
 
+--Sig_/Pf4MWuCcstVRmg0DqGt3YTN--
