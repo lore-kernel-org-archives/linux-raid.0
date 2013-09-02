@@ -1,29 +1,58 @@
-From: Drew <drew.kay@gmail.com>
-Subject: Re: Mixing WD red with older seagates
-Date: Tue, 10 Sep 2013 05:24:58 -0700
-Message-ID: <CACJz6QtpJLj4UJ=WfthD0SxVPv0+h9k_w+buNJczQ+9BmtHHxQ@mail.gmail.com>
-References: <522D4369.80404@vorgon.com> <522D457D.1000900@smartguide.com.au> <BLU0-SMTP280B8900E5E83B76CADDD46983F0@phx.gbl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU0-SMTP280B8900E5E83B76CADDD46983F0@phx.gbl>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jonathan Wilson <piercing_male@hotmail.com>
-Cc: Tudor Holton <tudor@smartguide.com.au>, "Timothy D. Lenz" <tlenz@vorgon.com>, Linux RAID <linux-raid@vger.kernel.org>
+From: ycbzzjlby@gmail.com
+Subject: [PATCH] raid5: Retry R5_ReadNoMerge flag when hit a read error.
+Date: Sun,  1 Sep 2013 20:13:02 -0400
+Message-ID: <1378080782-9971-1-git-send-email-ycbzzjlby@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Bian Yu <bianyu@kedacom.com>
 List-Id: linux-raid.ids
 
-> From what I've read (assuming I understand correctly) they are a low-ish
-> vibration drive with some fancy head positioning for alignment... but
-> should be limited to 5 at most, or at least are intended for upto 5
-> drive systems, so I wonder if this means that more than 5 could suffer
-> from vibrations throwing disks out?
+From: Bian Yu <bianyu@kedacom.com>
 
-No.
+Because of block layer merge, one bio fails will cause other bios
+which belongs to the same request fails, so raid5_end_read_request
+will record all these bios as badblocks.
+If retry request with R5_ReadNoMerge flag to avoid bios merge,
+badblocks can only record sector which is bad exactly.
 
-RED's are a consumer drive with TLER enabled so it plays well in small
-NAS units. To protect their enterprise sales, they put an artificial
-limitation of 4-5 drives per NAS in the warranty terms.
+test:
+hdparm --yes-i-know-what-i-am-doing --make-bad-sector 300000 /dev/sdb
+mdadm -C /dev/md0 -l5 -n3 /dev/sd[bcd] --assume-clean
+mdadm /dev/md0 -f /dev/sdd
+mdadm /dev/md0 -r /dev/sdd
+mdadm --zero-superblock /dev/sdd
+mdadm /dev/md0 -a /dev/sdd
 
+1. Without this patch:
+cat /sys/block/md0/md/rd*/bad_blocks
+299776 256
+299776 256
 
+2. With this patch:
+cat /sys/block/md0/md/rd*/bad_blocks
+300000 8
+300000 8
+
+Signed-off-by: Bian Yu <bianyu@kedacom.com>
+---
+ drivers/md/raid5.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index ff1aecf..ee8c280 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1924,6 +1924,9 @@ static void raid5_end_read_request(struct bio * bi, int error)
+ 			       mdname(conf->mddev), bdn);
+ 		else
+ 			retry = 1;
++		if (set_bad && test_bit(In_sync, &rdev->flags)
++		    && !test_bit(R5_ReadNoMerge, &sh->dev[i].flags))
++			retry = 1;
+ 		if (retry)
+ 			if (test_bit(R5_ReadNoMerge, &sh->dev[i].flags)) {
+ 				set_bit(R5_ReadError, &sh->dev[i].flags);
 -- 
-Drew
+1.7.1
