@@ -1,42 +1,67 @@
-From: Roland 'ValiDOM' Jungnickel <vali2013@validom.de>
-Subject: [Question] Fail event during reshape raid5 -> raid6
-Date: Tue, 03 Sep 2013 09:20:00 +0200
-Message-ID: <52258DA0.4040704@validom.de>
+From: Francis Moreau <francis.moro@gmail.com>
+Subject: mdadm 3.3: issue with mdmon --takeover
+Date: Tue, 3 Sep 2013 17:54:55 +0200
+Message-ID: <CAC9WiBjg4Tbv_UM4o66-8jtFEYGvh3kuP6xSdnz7uL+fq3fZTQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Martin Wilck <mwilck@arcor.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hi!
+Hello Martin :)
 
-I started reshaping a 3-device raid5 to a 4-device raid6. After some 
-hours, I got a fail event on a harddrive which was already used in the 
-raid5.
+I gave 3.3 release a try and I have a first issue: basically starting
+mdmon (3.3) with --takeover twice make mdmon failing on the second
+run.
 
-There are two different raid-groups on these harddrives, a reshape of 
-the second one has not yet started.
+Please find details below:
 
-What would you suggest?
-* stop the reshape, go back to raid5 and start rebuild to the new disk 
-(how?)
-* just wait, hope and pray... ( there is no backup, I do not have 
-harddrives to backup to as this is just to much...)
+# cat /proc/mdstat
+Personalities : [raid1]
+md126 : active raid1 sdb[1] sda[0]
+      2064384 blocks super external:/md127/0 [2/2] [UU]
 
-md0 : active raid6 sdc2[0] sde2[4](F) sdb2[3] sdd2[1]
-       2858420224 blocks super 0.91 level 6, 64k chunk, algorithm 18 
-[4/2] [UU__]
-       [=>...................]  reshape =  7.8% (112662528/1429210112) 
-finish=4938.2min speed=4442K/sec
+md127 : inactive sdb[1](S) sda[0](S)
+      65536 blocks super external:ddf
 
-md1 : active raid5 sdc1[0] sde1[2] sdb1[3](S) sdd1[1]
-       1048575744 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+# ps aux | grep dmon
+root       311  0.4  1.0  80580 10944 ?        SLsl 17:46   0:00
+@sbin/mdmon --takeover md127
 
-(md1 not mounted, sde1 will fail once used/checked and the raid5 will 
-automatically start rebuild on sdb1)
+# ./mdmon --takeover --all
 
-Thanks!
-Vali
+# ps aux | grep dmon
+root      3182  1.3  1.0  15156 11056 ?        SLsl 17:50   0:00
+./mdmon --takeover md127
 
+# ./mdmon --takeover --all
+...
+monitor: wake ( )
+monitor: wake ( )
+monitor: wake ( )
+monitor: wake ( )
+monitor: wake ( )
+monitor: wake ( 12:array_state )
+read_and_act(0): 1378223477.512347 state:clean prev:clean action:idle
+prev: idle start:18446744073709551615
+ddf mark 0/Linux-MDdeadbeef00000000?Ob79e0c8b1n (5) clean 18446744073709551615
+manage_new: inst: 0 action: 11 state: 12
+mdmon: ddf_open_new: subarray 0 doesn't exist
+mdmon: failed to monitor external:/md127/0
+free_aa: sys_name: md126
+read_and_act(0): state:clean action:idle next( )
+manage_new: inst: 0 action: 20 state: 21
+ddf_open_new: new subarray 0, GUID: Linux-MDdeadbeef00000000?Ob79e0c8b1n
+free_aa: sys_name: md126
+caught sigterm, all clean... exiting
+monitor: wake ( )
+no arrays to monitor... exiting
+
+# ps aux | grep dmon
+#
+
+Thanks
+-- 
+Francis
