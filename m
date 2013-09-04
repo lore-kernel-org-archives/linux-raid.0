@@ -1,88 +1,152 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [Question] Fail event during reshape raid5 -> raid6
-Date: Wed, 4 Sep 2013 16:13:40 +1000
-Message-ID: <20130904161340.64754a57@notabene.brown>
-References: <52258DA0.4040704@validom.de>
+Subject: Re: [patch 3/3] raid5: relieve lock contention in
+ get_active_stripe()
+Date: Wed, 4 Sep 2013 16:41:32 +1000
+Message-ID: <20130904164132.177701e0@notabene.brown>
+References: <20130812022434.507702228@kernel.org>
+	<20130812022549.013010221@kernel.org>
+	<20130827131752.4d5ba375@notabene.brown>
+	<20130827085330.GA30133@kernel.org>
+	<20130828143252.1d48b04b@notabene.brown>
+	<20130828063953.GD17163@kernel.org>
+	<20130903160858.2175a41b@notabene.brown>
+	<20130903070228.GA25041@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/PWHIXKSLk0fqNlrFx3J1YoP"; protocol="application/pgp-signature"
+ boundary="Sig_/dIz9er8c18a=BP/8aSzscyn"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52258DA0.4040704@validom.de>
+In-Reply-To: <20130903070228.GA25041@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roland 'ValiDOM' Jungnickel <vali2013@validom.de>
-Cc: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, djbw@fb.com
 List-Id: linux-raid.ids
 
---Sig_/PWHIXKSLk0fqNlrFx3J1YoP
+--Sig_/dIz9er8c18a=BP/8aSzscyn
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 03 Sep 2013 09:20:00 +0200 Roland 'ValiDOM' Jungnickel
-<vali2013@validom.de> wrote:
+On Tue, 3 Sep 2013 15:02:28 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-> hi!
+> On Tue, Sep 03, 2013 at 04:08:58PM +1000, NeilBrown wrote:
+> > On Wed, 28 Aug 2013 14:39:53 +0800 Shaohua Li <shli@kernel.org> wrote:
+> >=20
+> > > On Wed, Aug 28, 2013 at 02:32:52PM +1000, NeilBrown wrote:
+> > > > On Tue, 27 Aug 2013 16:53:30 +0800 Shaohua Li <shli@kernel.org> wro=
+te:
+> > > >=20
+> > > > > On Tue, Aug 27, 2013 at 01:17:52PM +1000, NeilBrown wrote:
+> > > >=20
+> > > > >=20
+> > > > > > Then get_active_stripe wouldn't need to worry about device_lock=
+ at all and
+> > > > > > would only need to get the hash lock for the particular sector.=
+  That should
+> > > > > > make it a lot simpler.
+> > > > >=20
+> > > > > did you mean get_active_stripe() doesn't need device_lock for any=
+ code path?
+> > > > > How could it be safe? device_lock still protects something like h=
+andle_list,
+> > > > > delayed_list, which release_stripe() will use while a get_active_=
+stripe can run
+> > > > > concurrently.
+> > > >=20
+> > > > Yes you will still need device_lock to protect list_del_init(&sh->l=
+ru),
+> > > > as well as the hash lock.
+> > > > Do you need device_lock anywhere else in there?
+> > >=20
+> > > That's what I mean. So I need get both device_lock and hash_lock. To =
+not
+> > > deadlock, I need release hash_lock and relock device_lock/hash_lock. =
+Since I
+> > > release lock, I need recheck if I can find the stripe in hash again. =
+So the
+> > > seqcount locking doesn't simplify things here. I thought the seqlock =
+only fixes
+> > > one race. Did I miss anything?
+> >=20
+> > Can you order the locks so that you take the hash_lock first, then the
+> > device_lock?  That would be a lot simpler.
 >=20
-> I started reshaping a 3-device raid5 to a 4-device raid6. After some=20
-> hours, I got a fail event on a harddrive which was already used in the=20
-> raid5.
->=20
-> There are two different raid-groups on these harddrives, a reshape of=20
-> the second one has not yet started.
->=20
-> What would you suggest?
-> * stop the reshape, go back to raid5 and start rebuild to the new disk=20
-> (how?)
-> * just wait, hope and pray... ( there is no backup, I do not have=20
-> harddrives to backup to as this is just to much...)
->=20
-> md0 : active raid6 sdc2[0] sde2[4](F) sdb2[3] sdd2[1]
->        2858420224 blocks super 0.91 level 6, 64k chunk, algorithm 18=20
-> [4/2] [UU__]
->        [=3D>...................]  reshape =3D  7.8% (112662528/1429210112=
-)=20
-> finish=3D4938.2min speed=3D4442K/sec
->=20
-> md1 : active raid5 sdc1[0] sde1[2] sdb1[3](S) sdd1[1]
->        1048575744 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
->=20
-> (md1 not mounted, sde1 will fail once used/checked and the raid5 will=20
-> automatically start rebuild on sdb1)
->=20
+> Looks impossible. For example, in handle_active_stripes() we release seve=
+ral
+> stripes, we can't take hash_lock first.
 
-I would probably add the new good drive to the array (after some basic
-testing to ensure that it really is good).  Then stop the array and restart
-it.
-I think it will recovery and reshape at the same time though that might
-depend on what kernel you are using.
-Testing with loop-back devices should be fairly easy to confirm what will
-happen.
+"impossible" just takes a little longer :-)
 
-mdadm-3.3 (just released) can reverse a reshape for you.
-   mdadm --assemble /dev/md0 --update=3Drevert-reshape /dev/sd[dbc]2
-   --backup=3D/whatever
+do_release_stripe gets called with only device_lock held.  It gets passed an
+(initially) empty list_head too.
+If it wants to add the stripe to an inactive list it puts it on the given
+list_head instead.
 
+release_stripe(), after calling do_release_stripe() calls some function to
+grab the appropriate hash_lock for each stripe in the list_head and add it
+to that inactive list.
+
+release_stripe_list() might collect some stripes from from __release_stripe
+that need to go on an inactive list.  It arranges for them to be put on the
+right list, with the right lock, next time device_lock is dropped.  That
+might be in handle_active_stripes()
+
+activate_bit_delay might similarly collect stripes, which are handled the
+same way as those collected by release_stripe_list.
+etc.
+
+i.e. the hash_locks protect the various inactive lists.  device_lock protec=
+ts
+all the others.  If we need to add something to an inactive list while
+holding device_lock we delay until device_lock can be dropped.
+
+> =20
+> > > I saw your tree only has seqcount_write lock in one place, but there =
+are still
+> > > other places which changing quiesce, degraded. I thought we still nee=
+d lock all
+> > > locks like what I did.
+> >=20
+> > Can you be specific?  I thought I had convinced my self that I covered
+> > everything that was necessary, but I might have missed something.
+>=20
+> For example, raid5_quiesce() will change quiesce which get_active_stripe(=
+) will
+> use. So my point is get_active_stripe() still need get device_lock. Appea=
+rs you
+> agree get_active_stripe() need get device_lock. Maybe I confused your
+> comments.
+
+raid5_quiesce might reasonably take all of the hash_locks and then the
+device_lock - it is expected to be a rare event and can afford to be heavy
+handed.
+get_active_stripe() should only take device_lock for list_del_init(&sh->lru=
+).
+
+What else have I missed?
+
+Thanks,
 NeilBrown
 
---Sig_/PWHIXKSLk0fqNlrFx3J1YoP
+
+--Sig_/dIz9er8c18a=BP/8aSzscyn
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUibPlDnsnt1WYoG5AQL4OA//fCFUCJ1aSCxhtJwgPE0+/d+V2EBll63w
-EAavUtLDSZ3HIaM6snE8ZZCSuXsYb80F2VJ69xB5e32ENj8awH5J80ord7d3Gt9+
-Hgy7ZBpczd5QrT9cjFnQk9gotX2Q+KO+PyOckBnkOt0aG0O90+kGE583rLxsTVq+
-cK4jGVbDlVXMeuISa70J0PRSA51VFNLieUOi+sGRSC3t80KpTHkdDZ6QeEuldgyc
-v9LpKC4H6RNIZDEmz+qYU4QLk3TfG5IhLFJ1kepmMSsaWF7wp8e+OIU8trNr4ado
-y5avmjojkQP99dELUyFW+dMnha1lDGmWvK0OZO8MFXVgd7NdZfqxDVN6GoWjOsKm
-zyXoRk6HEeSct+2Fc63Eg5ZqDjgDyy1K2ys6VNrJ/Kwadqz4V5lfhH4hlppbmNOO
-8sxY73jnk138Pb7KQeRwkdy0HZOxXnsBW37DQ2lQgAG2gdCyoiIET6PIu0BsXsaJ
-gJWCj9SyqlXkpXVRNmow8uddADE24+R3gA6a4S7ysu1hoaH8nh+o1x/QJrlFjB5A
-Mwy+h4j3o9dL/kE2GYpmgy9soz/UsLdSdGiAz/YVRQ85Edpb4kktyLH1r7yU4nAG
-jRKcQzUGnNrcWpltJ5TFoArJ9kcoW2YBfZJbrFynE5R9D/nkjYUt+JQ2hsimqmbN
-35+gMxm79hc=
-=/k1V
+iQIVAwUBUibWHDnsnt1WYoG5AQImvw/9GkeU/3FfZiouYK6D5IAZ/6/SaG82WW23
+GDP2LYvte4yZKnjNtbN3ujswCG+YPWmivttORrIABeStdcNS62T7zL6rziKOEkpr
+3SzpMGxQgbF7EyXUU0HZYPUY6zVV32CFqXLdm3THetC0KVDoGMv2cM/qh97LekO4
+fiH13SgV4ahpxVpmUJ3kk8F2IRN09xdfLkNw//9epZGwjvU9SbkQ9KVT8W4w+cGW
+1CopravFlEosjNIRDrZ684dgnOXWWzKaqTR+Z6NcrH3oHgEcE/pdm2/N6/P7OzMk
+deI10dM2RXOnAP2bfEM36bNUBNr09CBlZaBzTw4iWyfChVkEuncJMA8r6ibrf9qG
+72jLw2HNZJw+IwCR6SrUaOQARN29nHTJH63VMB1EDAgqGYLGtboe1DV+eXR11B2m
+gYEC/zKtz9JwuYC8mJZMYhbd6yW/H1+PRN1mtpB59tcEC/R48k5vJoKOlEGxfv80
+XtAECju1yhaLBqM+M3UZFVa349D6g0p/JKjcnJUp+G++mm0UXv0vS7r9mkT1EIU6
+f2oxW3TcIo388zbaxN7mb93abVfDbkxLWHF5qLUyJa505Cg8Z2MT47YNT4d5356V
+FzwokXEzuPKvbxgDW2JNLnYLCbu2uJuwaXTUNCMjvLV86jCz5l7HHjzVnUCYZLOz
+TvbIWaRiMNQ=
+=fx/b
 -----END PGP SIGNATURE-----
 
---Sig_/PWHIXKSLk0fqNlrFx3J1YoP--
+--Sig_/dIz9er8c18a=BP/8aSzscyn--
