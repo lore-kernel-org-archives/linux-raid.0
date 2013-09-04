@@ -1,111 +1,88 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm 3.3: issue with mdmon --takeover
-Date: Wed, 4 Sep 2013 16:08:32 +1000
-Message-ID: <20130904160832.3627bcb8@notabene.brown>
-References: <CAC9WiBjg4Tbv_UM4o66-8jtFEYGvh3kuP6xSdnz7uL+fq3fZTQ@mail.gmail.com>
+Subject: Re: [Question] Fail event during reshape raid5 -> raid6
+Date: Wed, 4 Sep 2013 16:13:40 +1000
+Message-ID: <20130904161340.64754a57@notabene.brown>
+References: <52258DA0.4040704@validom.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/GNaWZDeTA9iZ3dDPjcA63ow"; protocol="application/pgp-signature"
+ boundary="Sig_/PWHIXKSLk0fqNlrFx3J1YoP"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAC9WiBjg4Tbv_UM4o66-8jtFEYGvh3kuP6xSdnz7uL+fq3fZTQ@mail.gmail.com>
+In-Reply-To: <52258DA0.4040704@validom.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Francis Moreau <francis.moro@gmail.com>
-Cc: Martin Wilck <mwilck@arcor.de>, linux-raid@vger.kernel.org
+To: Roland 'ValiDOM' Jungnickel <vali2013@validom.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/GNaWZDeTA9iZ3dDPjcA63ow
+--Sig_/PWHIXKSLk0fqNlrFx3J1YoP
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 3 Sep 2013 17:54:55 +0200 Francis Moreau <francis.moro@gmail.com>
-wrote:
+On Tue, 03 Sep 2013 09:20:00 +0200 Roland 'ValiDOM' Jungnickel
+<vali2013@validom.de> wrote:
 
-> Hello Martin :)
+> hi!
 >=20
-> I gave 3.3 release a try and I have a first issue: basically starting
-> mdmon (3.3) with --takeover twice make mdmon failing on the second
-> run.
+> I started reshaping a 3-device raid5 to a 4-device raid6. After some=20
+> hours, I got a fail event on a harddrive which was already used in the=20
+> raid5.
 >=20
-> Please find details below:
+> There are two different raid-groups on these harddrives, a reshape of=20
+> the second one has not yet started.
 >=20
-> # cat /proc/mdstat
-> Personalities : [raid1]
-> md126 : active raid1 sdb[1] sda[0]
->       2064384 blocks super external:/md127/0 [2/2] [UU]
+> What would you suggest?
+> * stop the reshape, go back to raid5 and start rebuild to the new disk=20
+> (how?)
+> * just wait, hope and pray... ( there is no backup, I do not have=20
+> harddrives to backup to as this is just to much...)
 >=20
-> md127 : inactive sdb[1](S) sda[0](S)
->       65536 blocks super external:ddf
+> md0 : active raid6 sdc2[0] sde2[4](F) sdb2[3] sdd2[1]
+>        2858420224 blocks super 0.91 level 6, 64k chunk, algorithm 18=20
+> [4/2] [UU__]
+>        [=3D>...................]  reshape =3D  7.8% (112662528/1429210112=
+)=20
+> finish=3D4938.2min speed=3D4442K/sec
 >=20
-> # ps aux | grep dmon
-> root       311  0.4  1.0  80580 10944 ?        SLsl 17:46   0:00
-> @sbin/mdmon --takeover md127
+> md1 : active raid5 sdc1[0] sde1[2] sdb1[3](S) sdd1[1]
+>        1048575744 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
 >=20
-> # ./mdmon --takeover --all
+> (md1 not mounted, sde1 will fail once used/checked and the raid5 will=20
+> automatically start rebuild on sdb1)
 >=20
-> # ps aux | grep dmon
-> root      3182  1.3  1.0  15156 11056 ?        SLsl 17:50   0:00
-> ./mdmon --takeover md127
->=20
-> # ./mdmon --takeover --all
-> ...
-> monitor: wake ( )
-> monitor: wake ( )
-> monitor: wake ( )
-> monitor: wake ( )
-> monitor: wake ( )
-> monitor: wake ( 12:array_state )
-> read_and_act(0): 1378223477.512347 state:clean prev:clean action:idle
-> prev: idle start:18446744073709551615
-> ddf mark 0/Linux-MDdeadbeef00000000?Ob79e0c8b1n (5) clean 184467440737095=
-51615
-> manage_new: inst: 0 action: 11 state: 12
-> mdmon: ddf_open_new: subarray 0 doesn't exist
-> mdmon: failed to monitor external:/md127/0
-> free_aa: sys_name: md126
-> read_and_act(0): state:clean action:idle next( )
-> manage_new: inst: 0 action: 20 state: 21
-> ddf_open_new: new subarray 0, GUID: Linux-MDdeadbeef00000000?Ob79e0c8b1n
-> free_aa: sys_name: md126
-> caught sigterm, all clean... exiting
-> monitor: wake ( )
-> no arrays to monitor... exiting
->=20
-> # ps aux | grep dmon
-> #
->=20
-> Thanks
 
-I can't easily reproduce this.
+I would probably add the new good drive to the array (after some basic
+testing to ensure that it really is good).  Then stop the array and restart
+it.
+I think it will recovery and reshape at the same time though that might
+depend on what kernel you are using.
+Testing with loop-back devices should be fairly easy to confirm what will
+happen.
 
-Can you run "mdmon --takeover" in one window, then the next "mdmon
---takeover" is a different window so we can clearly see which messages are
-coming from the mdmon which is exiting and which are coming from the mdmon
-which is starting.
-
-Thanks.
+mdadm-3.3 (just released) can reverse a reshape for you.
+   mdadm --assemble /dev/md0 --update=3Drevert-reshape /dev/sd[dbc]2
+   --backup=3D/whatever
 
 NeilBrown
 
---Sig_/GNaWZDeTA9iZ3dDPjcA63ow
+--Sig_/PWHIXKSLk0fqNlrFx3J1YoP
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUibOYDnsnt1WYoG5AQIJiQ//V/IKU+O0/KUPihWQkgCZ7o9qYzZULm0W
-oBLOIFmpnGCWL6SUIq6Rcvkh6GVjocabsUtVgfRA16xNJg27Zn9U8HQnQHLvVvSO
-QradU27pgmHPIOqI2y1sYsBZB1C7vXbjYh+qaMwYy3EDtBHFReXsGZ6KFN5ERGRQ
-PY9cdhDcmFpGtWujZfd87OOAPr/H9MxWD12XM9xbXW9b5nEoHCF8MXa+4mHDvBQm
-lXgAlQiww1Zq4JAujMmaSTzzqfERemNS2yK0M+uMH9d/5Xiy9nfFU5NeLlkK8WMK
-lBAenQ9UzJd9eW3DT/vi6y0zLIYSohyrqoed1lZu3O1kdV3GjJOmhQm7CJtvrqbv
-+1s87Fzz9Fg5KMY/qBC6DeeZuncF96lGxG617fI60YfNmhfEQfuvVudKa4xQa53U
-Nmak7+x5+sW7AA5HEqmRgAGgdfhrmpPi8N/eYPk0dDtUlgrPMbR4jK3UnPntj0Ew
-T8YRmunj2mOrYiGKHABmSooZRcCeRLpq7tpbBLi311zcf7tauR9UaOJEjpTuP/Ef
-P+gd02ecxWSm55go9cOKCoBCogjxhju8jovCY+h8ZjU4SlGqleuf7kZyBp+wfesx
-AcMDyMjzZJKYTN01m9/5ZsUNvXZiFid48JXaDNsu4pyoDf3zn3st2LVIZOa0ch1T
-6/GGZpQow2A=
-=6Sjh
+iQIVAwUBUibPlDnsnt1WYoG5AQL4OA//fCFUCJ1aSCxhtJwgPE0+/d+V2EBll63w
+EAavUtLDSZ3HIaM6snE8ZZCSuXsYb80F2VJ69xB5e32ENj8awH5J80ord7d3Gt9+
+Hgy7ZBpczd5QrT9cjFnQk9gotX2Q+KO+PyOckBnkOt0aG0O90+kGE583rLxsTVq+
+cK4jGVbDlVXMeuISa70J0PRSA51VFNLieUOi+sGRSC3t80KpTHkdDZ6QeEuldgyc
+v9LpKC4H6RNIZDEmz+qYU4QLk3TfG5IhLFJ1kepmMSsaWF7wp8e+OIU8trNr4ado
+y5avmjojkQP99dELUyFW+dMnha1lDGmWvK0OZO8MFXVgd7NdZfqxDVN6GoWjOsKm
+zyXoRk6HEeSct+2Fc63Eg5ZqDjgDyy1K2ys6VNrJ/Kwadqz4V5lfhH4hlppbmNOO
+8sxY73jnk138Pb7KQeRwkdy0HZOxXnsBW37DQ2lQgAG2gdCyoiIET6PIu0BsXsaJ
+gJWCj9SyqlXkpXVRNmow8uddADE24+R3gA6a4S7ysu1hoaH8nh+o1x/QJrlFjB5A
+Mwy+h4j3o9dL/kE2GYpmgy9soz/UsLdSdGiAz/YVRQ85Edpb4kktyLH1r7yU4nAG
+jRKcQzUGnNrcWpltJ5TFoArJ9kcoW2YBfZJbrFynE5R9D/nkjYUt+JQ2hsimqmbN
+35+gMxm79hc=
+=/k1V
 -----END PGP SIGNATURE-----
 
---Sig_/GNaWZDeTA9iZ3dDPjcA63ow--
+--Sig_/PWHIXKSLk0fqNlrFx3J1YoP--
